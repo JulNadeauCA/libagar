@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.68 2003/06/30 01:11:09 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.69 2003/07/03 07:24:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -49,15 +49,12 @@ const struct version widget_ver = {
 	0, 0
 };
 
-pthread_mutex_t widget_lock = PTHREAD_MUTEX_INITIALIZER;
-
 void
 widget_init(void *p, const char *type, const void *wops, int flags)
 {
 	struct widget *wid = p;
 
 	object_init(wid, "widget", type, wops);
-	OBJECT(wid)->flags |= OBJECT_RELOAD;
 	OBJECT(wid)->save_pfx = "/widgets";
 
 	strlcpy(wid->type, type, sizeof(wid->type));
@@ -71,61 +68,6 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->ncolors = 0;
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, NULL);
-}
-
-int
-widget_load(void *p, struct netbuf *buf)
-{
-	struct widget *wid = p;
-	int i;
-
-	if (version_read(buf, &widget_ver, NULL) != 0)
-		return (-1);
-	
-	copy_string(wid->type, buf, sizeof(wid->type));
-	wid->flags = (int)read_uint32(buf);
-	wid->ncolors = (int)read_uint32(buf);
-	if (wid->ncolors >= WIDGET_COLORS_MAX) {
-		error_set("color stack oflow");
-		return (-1);
-	}
-	for (i = 0; i < wid->ncolors; i++) {
-		Uint8 r, g, b, a;
-		char *name;
-
-		name = read_string(buf);
-		r = read_uint8(buf);
-		g = read_uint8(buf);
-		b = read_uint8(buf);
-		a = read_uint8(buf);
-		widget_map_color(wid, i, name, r, g, b, a);
-		free(name);
-	}
-	return (0);
-}
-
-int
-widget_save(void *p, struct netbuf *buf)
-{
-	struct widget *wid = p;
-	int i;
-
-	version_write(buf, &widget_ver);
-
-	write_string(buf, wid->type);
-	write_uint32(buf, (Uint32)wid->flags);
-	write_uint32(buf, wid->ncolors);
-	for (i = 0; i < wid->ncolors; i++) {
-		Uint8 r, g, b, a;
-
-		write_string(buf, wid->color_names[i]);
-		SDL_GetRGBA(wid->colors[i], vfmt, &r, &g, &b, &a);
-		write_uint8(buf, r);
-		write_uint8(buf, g);
-		write_uint8(buf, b);
-		write_uint8(buf, a);
-	}
-	return (0);
 }
 
 /* Bind a variable to a widget. */
