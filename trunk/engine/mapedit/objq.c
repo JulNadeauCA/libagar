@@ -154,7 +154,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 			srcsu = anim->frames[0];
 			break;
 		default:
-			fatal("bad noderef\n");
+			fatal("bad nref");
 		}
 
 		dprintf("constr: %d,%d\n", mv->constr.x, mv->constr.y);
@@ -180,7 +180,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 			    NODEREF_ANIM_AUTO);
 			break;
 		default:
-			fatal("bad noderef\n");
+			fatal("bad nref");
 		}
 		nref->flags |= mv->constr.nflags;
 
