@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.167 2003/05/20 11:26:16 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.168 2003/05/24 15:53:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -131,7 +131,7 @@ toolbar_window(struct window *tilesets_win)
 	struct window *win;
 	struct region *reg;
 	struct mapedit *med = &mapedit;
-	const int xdiv = 100, ydiv = 14;	/* XXX ridiculous */
+	const int xdiv = 100, ydiv = 13;	/* XXX ridiculous */
 
 	win = window_new("mapedit-toolbar", 0,
 	    0, 0,

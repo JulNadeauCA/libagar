@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.74 2003/05/22 05:42:03 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.75 2003/05/24 15:46:53 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -176,7 +176,6 @@ config_window(struct config *con)
 	win = window_generic_new(388, 362, "config-engine-settings");
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	window_set_caption(win, "Engine settings");
-	window_set_spacing(win, 2, 8);
 
 	/* Flags */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);

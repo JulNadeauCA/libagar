@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.187 2003/05/24 07:36:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.188 2003/05/24 15:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -282,11 +282,11 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	window_clamp(win);			/* Clamp to view area */
 
 	/* Fictitious widget geometry, for primitive operations and colors. */
-	win->wid.win = win;
-	win->wid.x = 0;
-	win->wid.y = 0;
-	win->wid.w = 0;
-	win->wid.h = 0;
+	WIDGET(win)->win = win;
+	WIDGET(win)->x = 0;
+	WIDGET(win)->y = 0;
+	WIDGET(win)->w = 0;
+	WIDGET(win)->h = 0;
 
 	TAILQ_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, &recursive_mutexattr);
@@ -695,7 +695,6 @@ cycle_widgets(struct window *win, int reverse)
 	} else {
 		nwid = TAILQ_NEXT(wid, widgets);
 	}
-
 	if (nwid != NULL) {
 		WIDGET_FOCUS(nwid);
 		return;
@@ -707,7 +706,7 @@ cycle_widgets(struct window *win, int reverse)
 				continue;
 
 			if (reverse) {
-				rreg = TAILQ_PREV(nreg, regionsq, regions);
+				rreg = TAILQ_NEXT(nreg, regions);
 				if (rreg != NULL) {
 					rwid = TAILQ_LAST(&rreg->widgets,
 					    widgetsq);
@@ -715,35 +714,14 @@ cycle_widgets(struct window *win, int reverse)
 						WIDGET_FOCUS(rwid);
 						return;
 					}
-				} else {
-					rreg = TAILQ_LAST(&win->regionsh,
-					    regionsq);
-					if (rreg != NULL) {
-						rwid = TAILQ_LAST(
-						    &rreg->widgets, widgetsq);
-						if (rwid != NULL) {
-							WIDGET_FOCUS(rwid);
-							return;
-						}
-					}
 				}
 			} else {
-				rreg = TAILQ_NEXT(nreg, regions);
+				rreg = TAILQ_PREV(nreg, regionsq, regions);
 				if (rreg != NULL) {
 					rwid = TAILQ_FIRST(&rreg->widgets);
 					if (rwid != NULL) {
 						WIDGET_FOCUS(rwid);
 						return;
-					}
-				} else {
-					rreg = TAILQ_FIRST(&win->regionsh);
-					if (rreg != NULL) {
-						rwid = TAILQ_FIRST(
-						    &rreg->widgets);
-						if (rwid != NULL) {
-							WIDGET_FOCUS(rwid);
-							return;
-						}
 					}
 				}
 			}
@@ -1486,8 +1464,14 @@ void
 window_resize(struct window *win)
 {
 	struct region *reg;
-	int regx, regy;
-	int xmar, ymar;
+	int xpadding = win->borderw + win->xspacing;
+	int ypadding = win->borderw + win->titleh;
+	int regx = xpadding;
+	int regy = ypadding;
+	int winx = win->rd.x + xpadding;
+	int winy = win->rd.y + ypadding;
+	int winw = win->rd.w - win->borderw*2 - 1;
+	int winh = win->rd.h - win->titleh - win->borderw*2;
 
 	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
@@ -1501,20 +1485,10 @@ window_resize(struct window *win)
 	}
 
 	window_clamp(win);
+	WIDGET(win)->w = win->rd.w;
+	WIDGET(win)->h = win->rd.h;
 
-	win->body.x = win->rd.x + win->borderw;
-	win->body.y = win->rd.y + win->borderw*2 + win->titleh;
-	win->body.w = win->rd.w - win->borderw*2;
-	win->body.h = win->rd.h - win->borderw*2 - win->titleh;
-
-	win->wid.w = win->rd.w;
-	win->wid.h = win->rd.h;
-
-	xmar = win->borderw + win->xspacing + 1;
-	ymar = win->borderw + win->titleh + 1;
-	regx = xmar;
-	regy = ymar;
-
+	/* Resize the regions. */
 	TAILQ_FOREACH_REVERSE(reg, &win->regionsh, regions, regionsq) {
 		struct widget *wid;
 		int x, y;
@@ -1522,22 +1496,19 @@ window_resize(struct window *win)
 		debug_n(DEBUG_RESIZE, " %s(%d,%d)\n", OBJECT(reg)->name,
 		    reg->x, reg->y);
 
-		/* Set the region's effective coordinates. */
 		if (reg->rx > 0) {			/* % of width */
-			reg->x = reg->rx * win->body.w / 100 +
-			    (win->body.x - win->rd.x);
+			reg->x = (reg->rx * winw / 100) + (winx - win->rd.x);
 			reg->x += win->xspacing;
 		} else {				/* auto position */
 			reg->x = regx;
 		}
 		if (reg->ry > 0) {			/* % of height */
-			reg->y = (reg->ry * win->body.h / 100) +
-			    (win->body.y - win->rd.y);
+			reg->y = (reg->ry * winh / 100) + (winy - win->rd.y);
 			reg->y += win->yspacing;
 		} else {				/* auto position */
 			reg->y = regy;
 		}
-
+		
 		/* Set the region's effective width. */
 		if (reg->rw < 0) {			/* auto size width */
 			reg->w = 0;
@@ -1550,24 +1521,18 @@ window_resize(struct window *win)
 				}
 				event_post(wid, "widget-scaled",
 				    "%i, %i", -1, -1);
-				if (reg->flags & REGION_HALIGN)
+				if (reg->flags & REGION_HALIGN) {
 					reg->w += wid->w + reg->xspacing;
-				else if (wid->h > reg->h)
+				} else if (wid->h > reg->h) {
 					reg->w = wid->w;
+				}
 			}
 		} else if (reg->rw > 0) {		/* % of window width */
-			if (reg->nwidgets > 1 && reg->flags & REGION_HALIGN) {
-				reg->w = reg->rw *
-				    (win->body.w -
-				     win->xspacing*(reg->nwidgets-1)) / 100;
-			} else {
-				reg->w = reg->rw *
-				    (win->body.w - win->xspacing) / 100;
-			}
+			reg->w = reg->rw * winw / 100;
 			reg->w -= win->xspacing;
 		} else if (reg->rw == 0) {		/* remaining space */
 			reg->x += win->xspacing;
-			reg->w = win->body.w - (regx - xmar) - win->xspacing;
+			reg->w = winw - (regx - xpadding) - win->xspacing;
 		}
 			
 		/* Set the region's effective height. */
@@ -1582,35 +1547,26 @@ window_resize(struct window *win)
 				}
 				event_post(wid, "widget-scaled", "%i, %i",
 				    -1, -1);
-				if (reg->flags & REGION_VALIGN)
+				if (reg->flags & REGION_VALIGN) {
 					reg->h += wid->h + reg->yspacing;
-				else if (wid->h > reg->h)
+				} else if (wid->h > reg->h) {
 					reg->h = wid->h;
+				}
 			}
 		} else if (reg->rh > 0) {		/* % of window height */
-			if (reg->nwidgets > 1 && reg->flags & REGION_VALIGN) {
-				reg->h = reg->rh *
-				    (win->body.h -
-				     win->yspacing*(reg->nwidgets-1)) / 100;
-				reg->h -= win->yspacing;
-			} else {
-				reg->h = reg->rh *
-				    (win->body.h - win->yspacing*2) / 100;
-			}
+			reg->h = reg->rh * winh / 100;
 		} else if (reg->rh == 0) {		/* remaining space */
 			reg->y += win->yspacing;
-			reg->h = win->body.h - (regy - ymar) - win->yspacing;
+			reg->h = winh - (regy - ypadding) - win->yspacing;
 		}
 
 		/* Resize the widgets. */
 		x = reg->x;
 		y = reg->y;
-
 		TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 			debug_n(DEBUG_RESIZE, "  %s(%d,%d)\n",
 			    OBJECT(wid)->name, x, y);
 
-			/* Set the widget's effective coordinates. */
 			wid->x = x;
 			wid->y = y;
 

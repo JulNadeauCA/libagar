@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.64 2003/05/22 08:16:27 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.65 2003/05/22 08:48:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -46,7 +46,6 @@ struct window {
 	int	 titleh;		/* Titlebar height */
 	int	 minw, minh;		/* Minimum window geometry */
 	int	 xspacing, yspacing;	/* Spacing between regions */
-	SDL_Rect body;			/* Area reserved for regions */
 
 	pthread_mutex_t	 lock;
 	SDL_Rect	 rd;				/* Current geometry */
