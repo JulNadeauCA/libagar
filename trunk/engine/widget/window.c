@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.25 2002/05/21 03:26:08 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.26 2002/05/22 02:03:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ window_new(char *caption, int flags, enum window_type type, int x, int y,
 /* XXX fucking insane */
 void
 window_init(struct window *win, struct viewport *view, char *caption,
-    int flags, enum window_type type, int x, int y, int w, int h)
+    int flags, enum window_type type, int rx, int ry, int rw, int rh)
 {
 	static int nwindow = 0;
 	char *name;
@@ -107,11 +107,23 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->flags = flags;
 	win->type = type;
 	win->spacing = 4;
-	win->body.x = x + win->borderw;
-	win->body.y = y + win->borderw*2 + win->titleh;
-	win->body.w = w - win->borderw*2;
-	win->body.h = h - win->borderw*2 - win->titleh;
+	win->redraw = 0;
+	win->focus = NULL;
 
+	for (win->x = 0; win->x < (rx * view->w / 100);
+	     win->x += view->map->tilew) ;;
+	for (win->y = 0; win->y < (ry * view->h / 100);
+	     win->y += view->map->tileh) ;;
+	for (win->w = 0; win->w < (rw * view->w / 100);
+	     win->w += view->map->tilew) ;;
+	for (win->h = 0; win->h < (rh * view->h / 100);
+	     win->h += view->map->tileh) ;;
+
+	win->body.x = win->x + win->borderw;
+	win->body.y = win->y + win->borderw*2 + win->titleh;
+	win->body.w = win->w - win->borderw*2;
+	win->body.h = win->h - win->borderw*2 - win->titleh;
+	
 	switch (win->type) {
 	case WINDOW_CUBIC:
 	case WINDOW_CUBIC2:
@@ -121,20 +133,14 @@ window_init(struct window *win, struct viewport *view, char *caption,
 		break;
 	}
 
-	win->x = x;
-	win->y = y;
-	win->w = w;
-	win->h = h;
-	win->redraw = 0;
-	
 	/* XXX pref */
 	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
 	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
 
-	win->vmask.x = (x / view->map->tilew) - view->mapxoffs;
-	win->vmask.y = (y / view->map->tileh) - view->mapyoffs;
-	win->vmask.w = (w / view->map->tilew);
-	win->vmask.h = (h / view->map->tilew);
+	win->vmask.x = (win->x / view->map->tilew) - view->mapxoffs;
+	win->vmask.y = (win->y / view->map->tileh) - view->mapyoffs;
+	win->vmask.w = (win->w / view->map->tilew);
+	win->vmask.h = (win->h / view->map->tilew);
 
 	SLIST_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, NULL);
@@ -160,37 +166,19 @@ post_widget_ev(void *parent, void *child, void *arg)
 	struct widget *wid = child;
 	struct window_event *wev;
 	SDL_Event *ev = arg;
-
+	
 	OBJECT_ASSERT(child, "widget");
-
+	
 	if (WIDGET_OPS(wid)->widget_event == NULL) {
 		return;
 	}
+	
+	wev = emalloc(sizeof(struct window_event));
+	wev->w = wid;
+	wev->flags = 0;
+	wev->ev = *ev;
 
-	switch (ev->type) {
-	case SDL_MOUSEBUTTONUP:
-	case SDL_MOUSEBUTTONDOWN:
-		if (WIDGET_INSIDE(wid, ev->button.x, ev->button.y)) {
-#ifdef WIDGET_DEBUG
-			dprintf("event 0x%x to %s\n", ev->type,
-			    OBJECT(wid)->name);
-#endif
-
-			wev = emalloc(sizeof(struct window_event));
-			wev->w = wid;
-			wev->flags = 0;
-			wev->ev = *ev;
-			pthread_create(&cbthread, NULL, dispatch_widget_event,
-			    wev);
-		}
-		break;
-	case SDL_KEYDOWN:
-	case SDL_KEYUP:
-		dprintf("key\n");
-		break;
-	default:
-		fatal("cannot handle event: %d\n", ev->type);
-	}
+	pthread_create(&cbthread, NULL, dispatch_widget_event, wev);
 }
 
 #define WINDOW_CORNER(win, xo, yo) do {				\
@@ -393,6 +381,7 @@ window_draw(struct window *win)
 	SDL_UpdateRect(v, win->x, win->y, win->w, win->h);
 	
 	/* Always redraw if this is an animated window. */
+	/* XXX use real time */
 	if (win->flags & WINDOW_ANIMATE) {
 		if (delta++ > 256) {
 			delta = 0;
@@ -516,7 +505,7 @@ window_draw_all(void)
  * Dispatch events to widgets and windows.
  * View must be locked.
  */
-void
+int
 window_event_all(struct viewport *view, SDL_Event *ev)
 {
 	struct region *reg;
@@ -533,19 +522,37 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 				SLIST_FOREACH(reg, &win->regionsh, regions) {
 					TAILQ_FOREACH(wid, &reg->widgetsh,
 					    widgets) {
-						post_widget_ev(reg, wid, ev);
+						if (WIDGET_INSIDE(wid,
+						    ev->button.x,
+						    ev->button.y)) {
+							post_widget_ev(reg,
+							    wid, ev);
+						}
 					}
 				}
 				pthread_mutex_unlock(&win->lock);
-				return;
+				return (1);
 			}
 			pthread_mutex_unlock(&win->lock);
 		}
 		break;
 	case SDL_KEYUP:
 	case SDL_KEYDOWN:
+		win = TAILQ_LAST(&view->windowsh, windows_head);
+		pthread_mutex_lock(&win->lock);
+		SLIST_FOREACH(reg, &win->regionsh, regions) {
+			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				if (wid == win->focus) {
+					post_widget_ev(reg, wid, ev);
+					pthread_mutex_unlock(&win->lock);
+					return (1);
+				}
+			}
+		}
+		pthread_mutex_unlock(&win->lock);
 		break;
 	}
+	return (0);
 }
 
 void
