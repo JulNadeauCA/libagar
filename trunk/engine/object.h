@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.20 2002/02/25 11:12:14 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.21 2002/03/03 06:24:37 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -39,6 +39,9 @@ struct object {
 
 	SLIST_ENTRY(object) wobjs;	/* Linked objects */
 };
+
+#define OBJECT(ob)	((struct object *)(ob))
+#define SPRITE(ob, sp)	OBJECT((ob))->sprites[(sp)]
 
 int	 object_init(struct object *, char *, int, struct obvec *vec);
 int	 object_addanim(struct object *, struct anim *);
