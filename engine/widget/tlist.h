@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.26 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.27 2003/06/09 18:37:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -85,6 +85,8 @@ extern DECLSPEC struct tlist_item	*tlist_item_index(struct tlist *, int);
 extern DECLSPEC struct tlist_item	*tlist_item_selected(struct tlist *);
 extern DECLSPEC struct tlist_item	*tlist_item_text(struct tlist *,
 					                 char *);
+extern DECLSPEC struct tlist_item	*tlist_item_first(struct tlist *);
+extern DECLSPEC struct tlist_item	*tlist_item_last(struct tlist *);
 __END_DECLS
 
 #include "close_code.h"

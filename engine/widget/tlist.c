@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.69 2003/06/10 06:57:42 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.70 2003/06/10 10:24:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -807,6 +807,30 @@ tlist_item_text(struct tlist *tl, char *text)
 	}
 	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
+}
+
+/* Return the first item of a list. */
+struct tlist_item *
+tlist_item_first(struct tlist *tl)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->lock);
+	it = TAILQ_FIRST(&tl->items);
+	pthread_mutex_unlock(&tl->lock);
+	return (it);
+}
+
+/* Return the last item of a list. */
+struct tlist_item *
+tlist_item_last(struct tlist *tl)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->lock);
+	it = TAILQ_LAST(&tl->items, tlist_itemq);
+	pthread_mutex_unlock(&tl->lock);
+	return (it);
 }
 
 /* Set the height to use for item display. */

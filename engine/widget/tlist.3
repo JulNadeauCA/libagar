@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.23 2003/06/09 18:37:11 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.24 2003/06/10 10:24:39 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -137,6 +137,12 @@ function sets the position of the scrollbar to
 .Pp
 .Ft "struct tlist_item *"
 .Fn tlist_item_text "struct tlist *tlist" "const char *text"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_item_first "struct tlist *tlist"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_item_last "struct tlist *tlist"
 .nr nS 0
 .Pp
 The
@@ -203,6 +209,12 @@ function searches
 for an item containing the
 .Fa text
 string and returns NULL if there is no such item.
+.Pp
+The
+.Fn tlist_item_first
+and
+.Fn tlist_item_last
+functions return the first and last items on the list.
 .Sh EVENTS
 The
 .Nm
