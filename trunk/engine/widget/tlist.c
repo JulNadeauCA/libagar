@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.50 2003/04/17 08:21:30 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.51 2003/05/04 01:48:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -98,6 +98,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	tl->dblclicked = NULL;
+	tl->dbltimer = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 
@@ -118,7 +119,13 @@ void
 tlist_destroy(void *p)
 {
 	struct tlist *tl = p;
-	
+
+	pthread_mutex_lock(&tl->lock);
+	if (tl->dbltimer != NULL) {
+		SDL_RemoveTimer(tl->dbltimer);
+	}
+	pthread_mutex_unlock(&tl->lock);
+
 	tlist_clear_items(tl);
 	pthread_mutex_destroy(&tl->lock);
 	object_destroy(&tl->sbar);
@@ -595,9 +602,12 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 				event_post(tl, "tlist-dblclick", "%p",
 				    tl->dblclicked);
 				tl->dblclicked = NULL;
+				tl->dbltimer = NULL;
 			} else {
 				dprintf("%s: double-click start\n",
 				    OBJECT(tl)->name);
+				if (tl->dbltimer != NULL)
+					SDL_RemoveTimer(tl->dbltimer);
 				tl->dblclicked = ti;
 				tl->dbltimer = SDL_AddTimer(DBLCLICK_DELAY,
 				    tlist_dblclick_expire, tl);
