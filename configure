@@ -1226,8 +1226,8 @@ echo "#undef HAVE_SMPEG" > config/have_smpeg.h
 fi
 if [ "${with_gettext}" != "no" ]
  then
-echo -n "checking for a gettext() function..."
-echo -n "checking for a gettext() function..." >> config.log
+echo -n "checking for a gettext library..."
+echo -n "checking for a gettext library..." >> config.log
 GETTEXT_CFLAGS=-I/usr/local/include
 GETTEXT_LIBS="-L/usr/local/lib -lintl"
 echo "ok"
@@ -1265,6 +1265,12 @@ else
 	echo "#undef HAVE_GETTEXT" > config/have_gettext.h
 
 	echo "no"
+fi
+if [ "${HAVE_GETTEXT}" != "" ]; then
+echo GETTEXT_CFLAGS=$GETTEXT_CFLAGS >> Makefile.config
+echo GETTEXT_LIBS=$GETTEXT_LIBS >> Makefile.config
+else
+NONE=1
 fi
 else
 echo "#undef HAVE_GETTEXT" > config/have_gettext.h
