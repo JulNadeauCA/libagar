@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.82 2002/12/04 03:27:36 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.83 2002/12/23 02:57:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/serialization.h>
+#include <config/xdebug.h>
 
 #include "compat/setenv.h"
 #include "compat/strlcat.h"
@@ -99,9 +102,9 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	mapediting = 0;			/* Map edition mode? */
 	gameinfo = gi;
 	
-	printf("AGAR engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", gameinfo->name, gameinfo->version);
 	printf("%s\n\n", gameinfo->copyright);
+	printf("Agar engine v%s\n", ENGINE_VERSION);
 
 #ifdef USE_X11
 	/* Try to set the window manager class name. */
@@ -194,6 +197,8 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
 	world_init(world, gameinfo->prog);
+	
+	world_attach(world, config);
 
 	/* Initialize the font engine. */
 	if (text_engine_init() != 0) {
@@ -202,8 +207,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 
 	/* Overrides */
 	if (fullscreen)
-		prop_set_uint32(config, "flags",
-		    prop_uint32(config, "flags") | CONFIG_FULLSCREEN);
+		prop_set_bool(config, "view.full-screen", 1);
 	if (w > 0)
 		prop_set_uint32(config, "view.w", w);
 	if (h > 0)
@@ -306,11 +310,12 @@ engine_start(void)
 	struct map *m;
 
 	/* Create the configuration settings window. */
-	config_init_wins(config);
+	config_window(config);
 
 #ifdef DEBUG
 	if (engine_debug > 0) {
 		monitor_init(&monitor, "debug-monitor");
+		world_attach(world, &monitor);
 	}
 #endif
 

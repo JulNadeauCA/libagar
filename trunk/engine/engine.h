@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.47 2002/11/28 07:36:36 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.48 2002/12/13 03:43:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -6,11 +6,12 @@
 
 #define ENGINE_VERSION	"1.0-beta"
 
-#include <engine/mcconfig.h>
+#include <config/debug.h>
+#include <config/serialization.h>
 
 #if !defined(__OpenBSD__)
 # ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 500	/* For recursive mutexes and pread()/pwrite() */
+# define _XOPEN_SOURCE 500	/* XXX recursive mutexes, pread and pwrite */
 # endif
 #endif
 
