@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.98 2002/11/16 00:57:39 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.99 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -418,10 +418,27 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
 	struct object *ob = p;
-	struct event *eev;
+	struct event *ev, *eev = NULL;
+	int newev = 0;
 
-	eev = emalloc(sizeof(struct event));
-	eev->name = name;
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(ev->name, name) == 0) {
+#if 0
+			dprintf("replacing %s's existing %s handler\n",
+			    ob->name, ev->name);
+#endif
+			eev = ev;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&ob->events_lock);
+
+	if (eev == NULL) {
+		eev = emalloc(sizeof(struct event));
+		eev->name = strdup(name);
+		newev = 1;
+	}
 	eev->flags = 0;
 	memset(eev->argv, 0, sizeof(union evarg) * EVENT_MAXARGS);
 	eev->argv[0].p = ob;
@@ -437,9 +454,11 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 		va_end(ap);
 	}
 
-	pthread_mutex_lock(&ob->events_lock);
-	TAILQ_INSERT_TAIL(&ob->events, eev, events);
-	pthread_mutex_unlock(&ob->events_lock);
+	if (newev) {
+		pthread_mutex_lock(&ob->events_lock);
+		TAILQ_INSERT_TAIL(&ob->events, eev, events);
+		pthread_mutex_unlock(&ob->events_lock);
+	}
 }
 
 static void *
