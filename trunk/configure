@@ -400,18 +400,19 @@ echo -n "checking __format__ attribute..." >> config.log
 cat << EOT > conftest.c
 #include <stdarg.h>
 
-void foo(char *, ...)
+void foo1(char *, ...)
      __attribute__((__format__ (printf, 1, 2)));
+void foo2(char *, ...)
+     __attribute__((__format__ (__printf__, 1, 2)));
 
-void
-foo(char *a, ...)
-{
-}
+void foo1(char *a, ...) {}
+void foo2(char *a, ...) {}
 
 int
 main(int argc, char *argv[])
 {
-	foo("foo %s", "bar");
+	foo1("foo %s", "bar");
+	foo2("foo %d", 1);
 	return (0);
 }
 
