@@ -1,19 +1,18 @@
-/*	$Csoft: error.h,v 1.11 2002/12/26 07:11:14 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.12 2003/01/18 06:18:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
 # define warning(fmt, args...) \
 	printf("%s: " fmt, __FUNCTION__ , ##args)
-# ifdef DEBUG
-#  define fatal(fmt, args...)						\
+# define fatal(fmt, args...)						\
 	do {								\
 		fprintf(stderr, "%s: " fmt, __FUNCTION__ , ##args);	\
+		fprintf(stderr, "\n");					\
 		abort();						\
 	} while (0)
-# endif
 #else
 # define warning	printf
-# define fatal		printf
+# define fatal		error_fatal
 #endif
 
 #define Free(p) do {		\
@@ -28,6 +27,7 @@ void	*erealloc(void *, size_t);
 
 const char	*error_get(void);
 void		 error_set(const char *, ...);
+void		 error_fatal(const char *, ...);
 
 #define Read(fd, buf, size) do {					\
 	ssize_t _Read_rv;						\
@@ -55,11 +55,11 @@ void		 error_set(const char *, ...);
 	}								\
 } while (0)
 
-#define elseek(fd, off, whence) do {					\
-	off_t _elseek_rv;						\
+#define Lseek(fd, off, whence) do {					\
+	off_t _Lseek_rv;						\
 									\
-	_elseek_rv = lseek((fd), (off), (whence));			\
-	if (_elseek_rv == -1) {						\
+	_Lseek_rv = lseek((fd), (off), (whence));			\
+	if (_Lseek_rv == -1) {						\
 		fatal("lseek(%ld, %s): %s\n", (long)off,		\
 		    (whence == SEEK_SET) ? "SEEK_SET" :			\
 		    (whence == SEEK_CUR) ? "SEEK_CUR" :			\
