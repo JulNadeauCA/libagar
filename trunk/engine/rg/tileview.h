@@ -1,10 +1,11 @@
-/*	$Csoft: tileview.h,v 1.12 2005/02/22 08:44:16 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.13 2005/02/27 05:55:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
 #define _AGAR_BG_TILEVIEW_H_
 
 #include <engine/widget/widget.h>
+#include <engine/widget/menu.h>
 #include <engine/rg/tileset.h>
 #include <engine/timeout.h>
 
@@ -62,6 +63,52 @@ struct tileview_ctrl {
 	TAILQ_ENTRY(tileview_ctrl) ctrls;
 };
 
+struct tileview_tool_ops {
+	const char *name;
+	const char *desc;
+	size_t len;
+	int flags;
+	int icon, cursor;
+
+	void		(*init)(void *);
+	void		(*destroy)(void *);
+	struct window  *(*edit)(void *);
+	void		(*keydown)(void *, int, int);
+	void		(*keyup)(void *, int, int);
+};
+
+struct tileview_bitmap_tool_ops {
+	struct tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, int, int, int);
+	void (*mousebuttonup)(void *, int, int, int);
+	void (*mousemotion)(void *, int, int, int, int);
+};
+
+struct tileview_sketch_tool_ops {
+	struct tileview_tool_ops ops;
+	void (*fmousebuttondown)(void *, double, double, int);
+	void (*fmousebuttonup)(void *, double, double, int);
+	void (*fmousemotion)(void *, double, double, double, double);
+};
+
+struct tileview_tool {
+	const struct tileview_tool_ops *ops;
+	struct tileview *tv;
+	int flags;
+#define TILEVIEW_TILE_TOOL	0x01	/* Call in default edition mode */
+#define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
+#define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
+#define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
+	TAILQ_ENTRY(tileview_tool) tools;
+};
+
+enum tileview_state {
+	TILEVIEW_TILE_EDIT,	/* Default edition mode */
+	TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
+	TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
+	TILEVIEW_PIXMAP_EDIT	/* A pixmap is being edited inline */
+};
+
 struct tileview {
 	struct widget wid;
 	struct tileset *ts;
@@ -82,20 +129,21 @@ struct tileview {
 	struct timeout redraw_to;	/* Auto redraw timeout */
 
 	int edit_mode;
-	enum {
-		TILEVIEW_TILE_EDIT,	/* Default edition mode */
-		TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
-		TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
-		TILEVIEW_PIXMAP_EDIT	/* A pixmap is being edited inline */
-	} state;
+	enum tileview_state state;
 	union {
 		struct {
 			struct tile_element *tel;
 			struct feature *ft;   
 			struct window *win;
+			struct AGMenu *menu;
+			struct AGMenuItem *menu_item;
+			struct window *menu_win;
 		} feature;
 		struct {
+			struct tile_element *tel;
 			struct sketch *sk;
+			struct window *win;
+			struct tileview_ctrl *ctrl;
 		} sketch;
 		struct {
 			struct tile_element *tel;
@@ -117,10 +165,12 @@ struct tileview {
 		Uint32 pc;			/* (for binding controls) */
 	} c;
 	TAILQ_HEAD(,tileview_ctrl) ctrls;	/* Binding controls */
+	TAILQ_HEAD(,tileview_tool) tools;
 };
 
 __BEGIN_DECLS
 struct tileview	*tileview_new(void *, struct tileset *, struct tile *, int);
+struct tileview_tool *tileview_reg_tool(struct tileview *, const void *);
 
 void tileview_init(struct tileview *, struct tileset *, struct tile *, int);
 void tileview_destroy(void *);

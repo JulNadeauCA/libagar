@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.15 2005/02/27 05:55:54 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.16 2005/02/27 06:52:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -43,6 +43,7 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/separator.h>
+#include <engine/widget/combo.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -72,8 +73,8 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	TAILQ_INIT(&px->brushes);
 
 	pixmap_begin_undoblk(px);
-	px->ublks[0].umods = Malloc(sizeof(struct pixmap_umod), M_RG);
-	px->ublks[0].numods = 0;
+	px->ublks[0].mods = Malloc(sizeof(struct pixmap_mod), M_RG);
+	px->ublks[0].nmods = 0;
 }
 
 struct pixmap_brush *
@@ -86,8 +87,6 @@ pixmap_insert_brush(struct pixmap *px, enum pixmap_brush_type type,
 	br->type = type;
 	br->name[0] = '\0';
 	br->flags = 0;
-	br->xorig = bpx->su->w/2;
-	br->yorig = bpx->su->h/2;
 	br->px = bpx;
 	br->px->nrefs++;
 	TAILQ_INSERT_TAIL(&px->brushes, br, brushes);
@@ -122,8 +121,8 @@ pixmap_load(struct pixmap *px, struct netbuf *buf)
 		copy_string(br->name, buf, sizeof(br->name));
 		br->type = (enum pixmap_brush_type)read_uint8(buf);
 		br->flags = (int)read_uint32(buf);
-		br->xorig = (int)read_sint16(buf);
-		br->yorig = (int)read_sint16(buf);
+		read_sint16(buf);			/* Pad: xorig */
+		read_sint16(buf);			/* Pad: yorig */
 		copy_string(br->px_name, buf, sizeof(br->px_name));
 		br->px = NULL;
 		TAILQ_INSERT_TAIL(&px->brushes, br, brushes);
@@ -150,8 +149,8 @@ pixmap_save(struct pixmap *px, struct netbuf *buf)
 		write_string(buf, br->name);
 		write_uint8(buf, (Uint8)br->type);
 		write_uint32(buf, (Uint32)br->flags);
-		write_sint16(buf, (Sint16)br->xorig);
-		write_sint16(buf, (Sint16)br->yorig);
+		write_sint16(buf, (Sint16)br->px->xorig);
+		write_sint16(buf, (Sint16)br->px->yorig);
 		write_string(buf, br->px->name);
 		nbrushes++;
 	}
@@ -172,7 +171,7 @@ pixmap_destroy(struct pixmap *px)
 		SDL_FreeSurface(px->su);
 
 	for (i = 0; i < px->nublks; i++) {
-		Free(px->ublks[i].umods, M_RG);
+		Free(px->ublks[i].mods, M_RG);
 	}
 	Free(px->ublks, M_RG);
 
@@ -231,7 +230,7 @@ update_tv(int argc, union evarg *argv)
 }
 
 static void
-update_brushes(int argc, union evarg *argv)
+poll_brushes(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct pixmap *px = argv[1].p;
@@ -239,12 +238,14 @@ update_brushes(int argc, union evarg *argv)
 	struct tlist_item *it;
 
 	tlist_clear_items(tl);
+	it = tlist_insert(tl, NULL, _("(none)"));
+	it->class = "brush";
+	it->p1 = NULL;
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
 		it = tlist_insert(tl, br->px->su, "%s%s %s",
-		    (br == px->curbrush) ? "(*) " : "",
+		    (br == px->curbrush) ? "*" : "",
 		    br->name,
-		    (br->type == PIXMAP_BRUSH_MONO) ? "(mono)" :
-		    (br->type == PIXMAP_BRUSH_RGB) ? "(rgb)" : "");
+		    (br->type == PIXMAP_BRUSH_RGB) ? "(rgb)" : "(mono)");
 		it->class = "brush";
 		it->p1 = br;
 	}
@@ -254,13 +255,12 @@ update_brushes(int argc, union evarg *argv)
 static void
 select_brush(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
+	struct combo *com = argv[0].p;
 	struct pixmap *px = argv[1].p;
-	struct pixmap_brush *br;
-	struct tlist_item *it;
+	struct tlist_item *it = argv[2].p;
+	struct pixmap_brush *br = it->p1;
 
-	if ((it = tlist_item_selected(tl)) != NULL)
-		px->curbrush = (px->curbrush == it->p1) ? NULL : it->p1;
+	px->curbrush = (px->curbrush == br) ? NULL : br;
 }
 
 static void
@@ -288,9 +288,8 @@ insert_brush(int argc, union evarg *argv)
 	struct tlist *tl = argv[2].p;
 	struct textbox *tb = argv[3].p;
 	struct radio *rad_types = argv[4].p;
-	struct mspinbutton *msb_origin = argv[5].p;
-	struct checkbox *cb_oneshot = argv[6].p;
-	struct window *dlg_win = argv[7].p;
+	struct checkbox *cb_oneshot = argv[5].p;
+	struct window *dlg_win = argv[6].p;
 	enum pixmap_brush_type btype;
 	struct pixmap *spx;
 	struct pixmap_brush *pbr;
@@ -307,11 +306,9 @@ insert_brush(int argc, union evarg *argv)
 	if (pbr->name[0] == '\0') {
 		strlcpy(pbr->name, spx->name, sizeof(pbr->name));
 	}
-	pbr->xorig = widget_get_int(msb_origin, "xvalue");
-	pbr->yorig = widget_get_int(msb_origin, "yvalue");
-	if (widget_get_int(cb_oneshot, "state"))
+	if (widget_get_int(cb_oneshot, "state")) {
 		pbr->flags |= PIXMAP_BRUSH_ONESHOT;
-
+	}
 	view_detach(dlg_win);
 }
 
@@ -320,7 +317,6 @@ update_bropts(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct textbox *tb_name = argv[1].p;
-	struct mspinbutton *msb_origin = argv[2].p;
 	struct tlist_item *it;
 	struct pixmap *spx;
 
@@ -329,8 +325,6 @@ update_bropts(int argc, union evarg *argv)
 	}
 	spx = it->p1;
 	textbox_printf(tb_name, "%s", spx->name);
-	mspinbutton_set_value(msb_origin, "xvalue", spx->su->w/2);
-	mspinbutton_set_value(msb_origin, "yvalue", spx->su->h/2);
 }
 
 static void
@@ -344,7 +338,6 @@ insert_brush_dlg(int argc, union evarg *argv)
 	struct textbox *tb_name;
 	struct button *bu;
 	struct radio *rad_types;
-	struct mspinbutton *msb_origin;
 	struct checkbox *cb_oneshot;
 	static const char *types[] = {
 		_("Monochromatic"),
@@ -359,10 +352,6 @@ insert_brush_dlg(int argc, union evarg *argv)
 	tb_name = Malloc(sizeof(struct textbox), M_OBJECT);
 	textbox_init(tb_name, _("Name: "));
 	
-	msb_origin = Malloc(sizeof(struct mspinbutton), M_OBJECT);
-	mspinbutton_init(msb_origin, ",", _("Origin: "));
-	mspinbutton_set_range(msb_origin, 0, TILE_SIZE_MAX-1);
-
 	cb_oneshot = Malloc(sizeof(struct checkbox), M_OBJECT);
 	checkbox_init(cb_oneshot, _("One-shot"));
 
@@ -376,8 +365,7 @@ insert_brush_dlg(int argc, union evarg *argv)
 		tlist_set_item_height(tl, TILESZ);
 		tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 		event_new(tl, "tlist-poll", poll_pixmaps, "%p", tv->ts);
-		event_new(tl, "tlist-selected", update_bropts, "%p,%p",
-		    tb_name, msb_origin);
+		event_new(tl, "tlist-selected", update_bropts, "%p", tb_name);
 		widget_focus(tl);
 	}
 	
@@ -386,7 +374,6 @@ insert_brush_dlg(int argc, union evarg *argv)
 		rad_types = radio_new(bo, types);
 		widget_set_int(rad_types, "value", 0);
 		object_attach(bo, tb_name);
-		object_attach(bo, msb_origin);
 		object_attach(bo, cb_oneshot);
 	}
 
@@ -396,8 +383,8 @@ insert_brush_dlg(int argc, union evarg *argv)
 	{
 		bu = button_new(bo, _("OK"));
 		event_new(bu, "button-pushed", insert_brush,
-		    "%p,%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
-		    msb_origin, cb_oneshot, win);
+		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
+		        cb_oneshot, win);
 	
 		bu = button_new(bo, _("Cancel"));
 		event_new(bu, "button-pushed", window_generic_detach, "%p",
@@ -513,18 +500,25 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
-		struct tlist *tl;
 		struct button *bu;
+		struct combo *com;
 
-		label_new(bo, LABEL_STATIC, _("Brushes:"));
-		tl = tlist_new(bo, TLIST_POLL);
-		event_new(tl, "tlist-poll", update_brushes, "%p", px);
-		event_new(tl, "tlist-dblclick", select_brush, "%p", px);
+		com = combo_new(bo, COMBO_POLL, _("Brush: "));
+		event_new(com->list, "tlist-poll", poll_brushes, "%p", px);
+		event_new(com, "combo-selected", select_brush, "%p", px);
+
+		if (px->curbrush != NULL) {
+			textbox_printf(com->tbox, "%s %s", px->curbrush->name,
+			    (px->curbrush->type == PIXMAP_BRUSH_RGB) ?
+			    "(rgb)" : "(mono)");
+		} else {
+			textbox_printf(com->tbox, _("(none)"));
+		}
 
 		bu = button_new(bo, _("Insert brush"));
 		WIDGET(bu)->flags |= WIDGET_WFILL;
-		event_new(bu, "button-pushed", insert_brush_dlg,
-		    "%p,%p,%p", tv, px, win);
+		event_new(bu, "button-pushed", insert_brush_dlg, "%p,%p,%p",
+		    tv, px, win);
 	}
 	return (win);
 }
@@ -537,17 +531,17 @@ pixmap_begin_undoblk(struct pixmap *px)
 
 	while (px->nublks > px->curblk+1) {
 		ublk = &px->ublks[px->nublks-1];
-		Free(ublk->umods, M_RG);
+		Free(ublk->mods, M_RG);
 		px->nublks--;
 	}
 
 	px->ublks = Realloc(px->ublks, ++px->nublks *
-	                    sizeof(struct pixmap_umod));
+	                    sizeof(struct pixmap_mod));
 	px->curblk++;
 
 	ublk = &px->ublks[px->curblk];
-	ublk->umods = Malloc(sizeof(struct pixmap_umod), M_RG);
-	ublk->numods = 0;
+	ublk->mods = Malloc(sizeof(struct pixmap_mod), M_RG);
+	ublk->nmods = 0;
 }
 
 void
@@ -561,15 +555,15 @@ pixmap_undo(struct tileview *tv, struct tile_element *tel)
 		return;
 
 	if (SDL_MUSTLOCK(tv->scaled)) { SDL_LockSurface(tv->scaled); }
-	for (i = 0; i < ublk->numods; i++) {
-		struct pixmap_umod *umod = &ublk->umods[i];
+	for (i = 0; i < ublk->nmods; i++) {
+		struct pixmap_mod *mod = &ublk->mods[i];
 
-		prim_put_pixel(px->su, umod->x, umod->y, umod->val);
+		prim_put_pixel(px->su, mod->x, mod->y, mod->val);
 #if 0
 		tileview_scaled_pixel(tv,
-		    tel->tel_pixmap.x + umod->x,
-		    tel->tel_pixmap.y + umod->y,
-		    umod->val);
+		    tel->tel_pixmap.x + mod->x,
+		    tel->tel_pixmap.y + mod->y,
+		    mod->val);
 #endif
 	}
 	if (SDL_MUSTLOCK(tv->scaled)) { SDL_UnlockSurface(tv->scaled); }
@@ -594,7 +588,7 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 {
 	struct pixmap *px = tel->tel_pixmap.px;
 	struct pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
-	struct pixmap_umod *umod;
+	struct pixmap_mod *mod;
 	Uint8 *src;
 	Uint8 r, g, b;
 	u_int v = (pixel & px->su->format->Amask) >>
@@ -604,26 +598,26 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 	int i;
 			
 	/* Look for an existing mod to this pixel in this block. */
-	for (i = ublk->numods-1; i >= 0; i--) {
-		umod = &ublk->umods[i];
-		if (umod->x == x && umod->y == y)
+	for (i = ublk->nmods-1; i >= 0; i--) {
+		mod = &ublk->mods[i];
+		if (mod->x == x && mod->y == y)
 			break;
 	}
 	if (i >= 0) {
 		if (once)
 			return (1);
 	} else {
-		ublk->umods = Realloc(ublk->umods, (ublk->numods+1) *
-				                   sizeof(struct pixmap_umod));
-		umod = &ublk->umods[ublk->numods++];
-		umod->type = PIXMAP_PIXEL_REPLACE;
-		umod->x = (Uint16)x;
-		umod->y = (Uint16)y;
+		ublk->mods = Realloc(ublk->mods, (ublk->nmods+1) *
+				                   sizeof(struct pixmap_mod));
+		mod = &ublk->mods[ublk->nmods++];
+		mod->type = PIXMAP_PIXEL_REPLACE;
+		mod->x = (Uint16)x;
+		mod->y = (Uint16)y;
 	
 		if (SDL_MUSTLOCK(px->su)) { SDL_LockSurface(px->su); }
 		src = (Uint8 *)px->su->pixels + y*px->su->pitch +
 		                                x*px->su->format->BytesPerPixel;
-		umod->val = *(Uint32 *)src;
+		mod->val = *(Uint32 *)src;
 		if (SDL_MUSTLOCK(px->su)) { SDL_UnlockSurface(px->su); }
 	}
 
@@ -756,6 +750,7 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 			Px = SDL_MapRGBA(brsu->format, r, g, b,
 			    (specA + brA)/2);
 
+			/* TODO use a specific mod type */
 			if (brA != 0)
 				pixmap_put_pixel(tv, tel, x0+x, y0+y, Px,
 				br->flags & PIXMAP_BRUSH_ONESHOT);
@@ -926,7 +921,7 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	if (keystate[SDLK_f]) {
 		pixmap_begin_undoblk(px);
 		pixmap_fill(tv, tel, x, y);
-	} else if (keystate[SDLK_p]) {
+	} else if (keystate[SDLK_c]) {
 		pixmap_pick(tv, tel, x, y);
 	} else {
 		tv->tv_pixmap.state = TILEVIEW_PIXMAP_FREEHAND;
@@ -951,19 +946,19 @@ pixmap_keydown(struct tileview *tv, struct tile_element *tel,
 	case SDLK_f:
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(fill_cursor);
+			SDL_SetCursor(cursors[FILL_CURSOR]);
 		}
 		break;
 	case SDLK_e:
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(erase_cursor);
+			SDL_SetCursor(cursors[ERASE_CURSOR]);
 		}
 		break;
-	case SDLK_p:
+	case SDLK_c:
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
-			SDL_SetCursor(pick_cursor);
+			SDL_SetCursor(cursors[PICK_CURSOR]);
 		}
 		break;
 	}
@@ -992,7 +987,7 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 	if (state == SDL_BUTTON_LEFT) {
 		Uint8 *keystate = SDL_GetKeyState(NULL);
 
-		if (keystate[SDLK_p])
+		if (keystate[SDLK_c])
 			pixmap_pick(tv, tel, x, y);
 	}
 }

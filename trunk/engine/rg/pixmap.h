@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.9 2005/02/23 07:37:11 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.10 2005/02/27 05:55:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -7,17 +7,17 @@
 
 #define PIXMAP_NAME_MAX	32
 
-enum pixmap_umod_type {
+enum pixmap_mod_type {
 	PIXMAP_PIXEL_REPLACE		/* Single pixel replace */
 };
-struct pixmap_umod {
-	enum pixmap_umod_type type;
+struct pixmap_mod {
+	enum pixmap_mod_type type;
 	Uint16 x, y;			/* Coordinates of pixel in pixmap */
 	Uint32 val;			/* Previous value */
 };
 struct pixmap_undoblk {
-	struct pixmap_umod *umods;	/* Undoable modifications */
-	unsigned int	   numods;
+	struct pixmap_mod *mods;	/* Undoable modifications */
+	unsigned int	  nmods;
 };
 
 enum pixmap_blend_mode {
@@ -40,7 +40,6 @@ struct pixmap_brush {
 	int flags;
 #define PIXMAP_BRUSH_ONESHOT 0x01	/* Don't mod the same pixel twice
 					   in the same pass */
-	int xorig, yorig;		/* Origin point */
 	char px_name[PIXMAP_NAME_MAX];	/* Pixmap reference */
 	struct pixmap *px;		/* Resolved pixmap */
 	TAILQ_ENTRY(pixmap_brush) brushes;
@@ -49,7 +48,7 @@ struct pixmap_brush {
 struct pixmap {
 	char name[PIXMAP_NAME_MAX];
 	int flags;
-	int xorig, yorig;		/* Pixmap origin (dflt to 0,0) */
+	int xorig, yorig;		/* Pixmap origin point */
 	struct tileset *ts;		/* Back pointer to tileset */
 	SDL_Surface *su;		/* Pixmap surface */
 	u_int nrefs;			/* Number of tile references */
@@ -85,8 +84,9 @@ void pixmap_keyup(struct tileview *, struct tile_element *, int, int);
 void pixmap_begin_undoblk(struct pixmap *);
 void pixmap_undo(struct tileview *, struct tile_element *);
 void pixmap_redo(struct tileview *, struct tile_element *);
-void pixmap_register_umod(struct pixmap *, enum pixmap_umod_type, Uint16,
+void pixmap_register_mod(struct pixmap *, enum pixmap_mod_type, Uint16,
                           Uint16, Uint32);
+
 int pixmap_put_pixel(struct tileview *, struct tile_element *, int, int,
                      Uint32, int);
 void pixmap_apply_brush(struct tileview *, struct tile_element *, int, int,
@@ -100,4 +100,4 @@ void		     pixmap_remove_brush(struct pixmap *,
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_RG_FEATURE_H_ */
+#endif	/* _AGAR_RG_PIXMAP_H_ */

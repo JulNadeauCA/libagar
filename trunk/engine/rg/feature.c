@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.6 2005/02/05 03:23:32 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.7 2005/02/11 04:50:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -173,11 +173,41 @@ feature_save(void *p, struct netbuf *buf)
 	ft->ops->save(ft, buf);
 }
 
-static void
-close_feature(int argc, union evarg *argv)
+void
+feature_open_menu(struct tileview *tv, int x, int y)
 {
-	struct tileview *tv = argv[1].p;
+	struct feature *ft = tv->tv_feature.ft;
+	
+	if (tv->tv_feature.menu != NULL)
+		feature_close_menu(tv);
 
-	tile_close_element(tv);
+	if (ft->ops->menu == NULL)
+		return;
+
+	tv->tv_feature.menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	menu_init(tv->tv_feature.menu);
+
+	tv->tv_feature.menu_item = menu_add_item(tv->tv_feature.menu, NULL);
+	tv->tv_feature.menu->sel_item = tv->tv_feature.menu_item;
+
+	ft->ops->menu(ft, tv->tv_feature.menu_item);
+
+	tv->tv_feature.menu_win = menu_expand(tv->tv_feature.menu,
+	    tv->tv_feature.menu_item, x, y);
+}
+
+void
+feature_close_menu(struct tileview *tv)
+{
+	struct AGMenu *menu = tv->tv_feature.menu;
+	struct AGMenuItem *item = tv->tv_feature.menu_item;
+
+	menu_collapse(menu, item);
+	object_destroy(menu);
+	Free(menu, M_OBJECT);
+
+	tv->tv_feature.menu = NULL;
+	tv->tv_feature.menu_item = NULL;
+	tv->tv_feature.menu_win = NULL;
 }
 

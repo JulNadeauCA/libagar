@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.7 2005/02/16 03:30:31 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.8 2005/02/19 07:21:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -56,6 +56,7 @@ const struct feature_ops fill_ops = {
 	fill_save,
 	NULL,		/* destroy */
 	fill_apply,
+	fill_menu,
 	fill_edit
 };
 
@@ -255,3 +256,92 @@ fill_apply(void *p, struct tile *t, int x, int y)
 	}
 }
 
+static void
+invert_colors(int argc, union evarg *argv)
+{
+	struct fill *fi = argv[1].p;
+	struct tileset *ts = FEATURE(fi)->ts;
+	Uint8 r, g, b, a;
+
+	switch (fi->type) {
+	case FILL_SOLID:
+		SDL_GetRGBA(fi->f_solid.c, ts->fmt, &r, &g, &b, &a);
+		r = 255 - r;
+		g = 255 - g;
+		b = 255 - b;
+		fi->f_solid.c = SDL_MapRGBA(ts->fmt, r, g, b, a);
+		break;
+	case FILL_HGRADIENT:
+	case FILL_VGRADIENT:
+	case FILL_CGRADIENT:
+		SDL_GetRGBA(fi->f_gradient.c1, ts->fmt, &r, &g, &b, &a);
+		r = 255 - r;
+		g = 255 - g;
+		b = 255 - b;
+		fi->f_gradient.c1 = SDL_MapRGBA(ts->fmt, r, g, b, a);
+		SDL_GetRGBA(fi->f_gradient.c2, ts->fmt, &r, &g, &b, &a);
+		r = 255 - r;
+		g = 255 - g;
+		b = 255 - b;
+		fi->f_gradient.c2 = SDL_MapRGBA(ts->fmt, r, g, b, a);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+swap_gradient(int argc, union evarg *argv)
+{
+	struct fill *fi = argv[1].p;
+	Uint32 cSave;
+
+	switch (fi->type) {
+	case FILL_HGRADIENT:
+	case FILL_VGRADIENT:
+	case FILL_CGRADIENT:
+		cSave = fi->f_gradient.c2;
+		fi->f_gradient.c2 = fi->f_gradient.c1;
+		fi->f_gradient.c1 = cSave;
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+set_type(int argc, union evarg *argv)
+{
+	struct fill *fi = argv[1].p;
+	int type = argv[2].i;
+
+	fi->type = type;
+}
+
+void
+fill_menu(void *p, struct AGMenuItem *mi)
+{
+	struct fill *fi = p;
+	struct AGMenuItem *mi_fill;
+
+	mi_fill = menu_action(mi, _("Fill type"), RG_FILL_ICON, NULL, NULL);
+	{
+		menu_action(mi_fill, _("Solid fill"), RG_FILL_ICON,
+		    set_type, "%p, %i", fi, FILL_SOLID);
+		menu_action(mi_fill, _("Horizontal gradient"),RG_HGRADIENT_ICON,
+		    set_type, "%p, %i", fi, FILL_HGRADIENT);
+		menu_action(mi_fill, _("Vertical gradient"), RG_VGRADIENT_ICON,
+		    set_type, "%p, %i", fi, FILL_VGRADIENT);
+		menu_action(mi_fill, _("Circular gradient"), RG_CGRADIENT_ICON,
+		    set_type, "%p, %i", fi, FILL_CGRADIENT);
+		menu_action(mi_fill, _("Pattern"), RG_TILING_ICON,
+		    set_type, "%p, %i", fi, FILL_PATTERN);
+	}
+	
+	menu_separator(mi);
+
+	menu_action(mi, _("Swap gradient colors"), RG_SWAP_ICON,
+	    swap_gradient, "%p", fi);
+	menu_action(mi, _("Invert colors"), RG_INVERT_ICON,
+	    invert_colors, "%p", fi);
+}

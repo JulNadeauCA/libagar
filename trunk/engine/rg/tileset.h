@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.4 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.5 2005/02/11 04:50:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_TILESET_H_
@@ -14,18 +14,10 @@ struct feature;
 #include <engine/rg/tile.h>
 #include <engine/rg/feature.h>
 #include <engine/rg/pixmap.h>
+#include <engine/rg/sketch.h>
 #include <engine/rg/prim.h>
 
 #include "begin_code.h"
-
-#define SKETCH_NAME_MAX 32
-
-struct sketch {
-	char name[SKETCH_NAME_MAX];
-	struct vg *vg;
-	u_int nrefs;
-	TAILQ_ENTRY(sketch) sketches;
-};
 
 struct tileset {
 	struct object obj;
