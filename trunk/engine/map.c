@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.67 2002/04/09 03:38:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.68 2002/04/10 09:24:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	}
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			node_init(&m->map[x][y], 0);
+			node_init(&m->map[y][x], 0);
 		}
 	}
 }
@@ -106,9 +106,9 @@ map_freenodes(struct map *m)
 {
 	Uint32 x, y;
 
-	for (x = 0; x < m->mapw; x++) {
-		for (y = 0; y < m->maph; y++) {
-			node_destroy(&m->map[x][y]);
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			node_destroy(&m->map[y][x]);
 		}
 		free(*(m->map + x));
 	}
@@ -263,7 +263,7 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[x][y];
+			struct node *node = &m->map[y][x];
 		
 			node_destroy(node);
 			node_init(node, nflags);
@@ -274,7 +274,7 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 		}
 	}
 
-	m->map[m->defx][m->defy].flags |= NODE_ORIGIN;
+	m->map[m->defy][m->defx].flags |= NODE_ORIGIN;
 }
 
 int
@@ -410,7 +410,7 @@ map_animate(struct map *m)
 				continue;
 			}
 
-			node = &m->map[x][y];
+			node = &m->map[y][x];
 			if (node->flags & NODE_OVERLAP) {
 				/* Will later draw in a synchronized fashion. */
 				continue;
@@ -423,7 +423,7 @@ map_animate(struct map *m)
 
 				/* Draw nearby nodes. */
 				if (x > 1) {
-					nnode = &m->map[x - 1][y]; /* Left */
+					nnode = &m->map[y][x - 1]; /* Left */
 					if (nnode->flags & NODE_OVERLAP &&
 					    vx > 1) {
 						MAPEDIT_PREDRAW(m, nnode,
@@ -437,7 +437,7 @@ map_animate(struct map *m)
 					}
 				}
 				if (x < m->mapw - 1) {
-					nnode = &m->map[x + 1][y]; /* Right */
+					nnode = &m->map[y][x + 1]; /* Right */
 					if (nnode->flags & NODE_OVERLAP &&
 					    vx < view->mapw + view->mapxoffs) {
 						MAPEDIT_PREDRAW(m, nnode,
@@ -451,7 +451,7 @@ map_animate(struct map *m)
 					}
 				}
 				if (y > 1) {
-					nnode = &m->map[x][y - 1]; /* Up */
+					nnode = &m->map[y - 1][x]; /* Up */
 					if (nnode->flags & NODE_OVERLAP &&
 					    vy > 1) {
 						MAPEDIT_PREDRAW(m, nnode,
@@ -465,7 +465,7 @@ map_animate(struct map *m)
 					}
 				}
 				if (y < m->maph - 1) {
-					nnode = &m->map[x][y + 1]; /* Down */
+					nnode = &m->map[y + 1][x]; /* Down */
 					if (nnode->flags & NODE_OVERLAP &&
 					    vy < view->maph + view->mapyoffs) {
 						MAPEDIT_PREDRAW(m, nnode,
@@ -530,7 +530,7 @@ map_draw(struct map *m)
 
 			rx = vx << m->shtilex;
 
-			node = &m->map[x][y];
+			node = &m->map[y][x];
 
 			if (node->nanims > 0 || (node->flags &
 			   (NODE_ANIM|NODE_OVERLAP))) {
@@ -581,6 +581,8 @@ map_draw(struct map *m)
  * for ob if offs is -1.
  *
  * Must be called on a locked map.
+ *
+ * XXX should be a macro
  */
 struct noderef *
 node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
@@ -648,7 +650,7 @@ map_load(void *ob, int fd)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[x][y];
+			struct node *node = &m->map[y][x];
 			Uint32 i, nnrefs;
 			
 			node->flags = fobj_read_uint32(fd);
@@ -684,7 +686,8 @@ map_load(void *ob, int fd)
 	pthread_mutex_unlock(&m->lock);
 
 	free(pobjs);
-	
+
+	/* XXX not sure about this */
 	m->redraw++;
 
 	return (0);
@@ -740,7 +743,7 @@ map_save(void *ob, int fd)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[x][y];
+			struct node *node = &m->map[y][x];
 			struct noderef *nref;
 			Uint32 nrefs = 0;
 			
@@ -777,7 +780,8 @@ map_save(void *ob, int fd)
 	pthread_mutex_unlock(&m->lock);
 
 	fobj_flush_buf(buf, fd);
-	dprintf("%s: %dx%d, %d refs\n", m->obj.name, m->mapw, m->maph, totrefs);
+	text_msg(5, TEXT_SLEEP, "%s: %dx%d, %d refs\n", m->obj.name,
+	    m->mapw, m->maph, totrefs);
 
 	free(pobjs);
 

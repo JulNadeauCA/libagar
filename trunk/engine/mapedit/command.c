@@ -51,7 +51,7 @@ mapedit_setpointer(struct mapedit *med, int enable)
 {
 	static int oxoffs = 0, oyoffs = 0;
 	struct noderef *nref;
-	struct node *node = &med->map->map[med->x][med->y];
+	struct node *node = &med->map->map[med->y][med->x];
 
 	if (enable) {
 		nref = node_addref(node, med, MAPEDIT_SELECT,
@@ -185,11 +185,11 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 {
 	struct map *map = med->map;
 
-	map->map[map->defx][map->defy].flags &= ~(NODE_ORIGIN);
+	map->map[map->defy][map->defx].flags &= ~(NODE_ORIGIN);
 	map->defx = *x;
 	map->defy = *y;
 
-	map->map[*x][*y].flags |= NODE_ORIGIN;
+	map->map[*y][*x].flags |= NODE_ORIGIN;
 
 	*x = map->defx;
 	*y = map->defy;
@@ -216,7 +216,7 @@ mapedit_loadmap(struct mapedit *med)
 	if (object_loadfrom(med->map, path) == 0) {
 		x = map->defx;
 		y = map->defy;
-		map->map[x][y].flags |= NODE_ORIGIN;
+		map->map[y][x].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
 		view_center(map->view, x, y);
@@ -250,7 +250,7 @@ mapedit_examine(struct map *em, int x, int y)
 	struct node *node;
 	int i;
 
-	node = &em->map[x][y];
+	node = &em->map[y][x];
 
 	sprintf(s, "<%dx%d>", x, y);
 

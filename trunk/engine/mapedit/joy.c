@@ -74,7 +74,7 @@ joy_axismotion(struct mapedit *med, SDL_Event *ev)
 void
 joy_button(struct mapedit *med, SDL_Event *ev)
 {
-	struct node *node = &med->map->map[med->x][med->y];
+	struct node *node = &med->map->map[med->y][med->x];
 	struct map *map = med->map;
 
 	pthread_mutex_lock(&map->lock);

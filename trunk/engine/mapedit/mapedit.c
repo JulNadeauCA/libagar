@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.72 2002/04/09 03:37:31 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.73 2002/04/11 05:39:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -256,7 +256,7 @@ mapedit_link(void *p)
 
 		m->defx = med->margs.mapw / 2;
 		m->defy = med->margs.maph - 2;
-		origin = &m->map[m->defx][m->defy];
+		origin = &m->map[m->defy][m->defx];
 		origin->flags |= NODE_ORIGIN;
 		new++;
 	}
@@ -294,7 +294,7 @@ mapedit_link(void *p)
 	mapedit_shadow(med);
 
 	pthread_mutex_lock(&m->lock);
-	node = &m->map[m->defx][m->defy];
+	node = &m->map[m->defy][m->defx];
 	node_addref(node, med, MAPEDIT_SELECT,
 	    MAPREF_ANIM|MAPREF_ANIM_INDEPENDENT);
 	node->flags |= (NODE_ANIM|NODE_ORIGIN);
@@ -341,7 +341,7 @@ mapedit_unlink(void *p)
 	curmapedit = NULL;
 
 	pthread_mutex_lock(&m->lock);
-	node = &m->map[med->x][med->y];
+	node = &m->map[med->y][med->x];
 	nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
 	if (nref != NULL) {
 		node_delref(node, nref);
@@ -573,7 +573,7 @@ mapedit_tilestack(struct mapedit *med)
 	rd.h = m->tileh;
 
 	i = 0;
-	TAILQ_FOREACH(nref, &(&m->map[med->x][med->y])->nrefsh, nrefs) {
+	TAILQ_FOREACH(nref, &(&m->map[med->y][med->x])->nrefsh, nrefs) {
 		if (++i > (med->tilestack.h / rd.h) - 1) {
 			return;
 		}
@@ -715,7 +715,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 
 		mapx = med->x;
 		mapy = med->y;
-		node = &med->map->map[mapx][mapy];
+		node = &med->map->map[mapy][mapx];
 
 		switch (ev->key.keysym.sym) {
 		case SDLK_INSERT:
@@ -871,11 +871,11 @@ mapedit_move(struct mapedit *med, Uint32 x, Uint32 y)
 {
 	struct node *node;
 
-	node = &med->map->map[med->x][med->y];
+	node = &med->map->map[med->y][med->x];
 	node_delref(node, node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM));
 	node->flags &= ~(NODE_ANIM);
 	
-	node = &med->map->map[x][y];
+	node = &med->map->map[y][x];
 	node_addref(node, med, MAPEDIT_SELECT,
 	    MAPREF_ANIM|MAPREF_ANIM_INDEPENDENT);
 	node->flags |= NODE_ANIM;
