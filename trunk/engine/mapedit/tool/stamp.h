@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.h,v 1.12 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.13 2003/04/25 09:47:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -18,12 +18,10 @@ struct stamp {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC void		 stamp_init(void *);
-extern DECLSPEC struct window	*stamp_window(void *);
-extern DECLSPEC int		 stamp_cursor(void *, struct mapview *,
-				              SDL_Rect *);
-extern DECLSPEC void		 stamp_effect(void *, struct mapview *,
-				              struct node *);
+void		 stamp_init(void *);
+struct window	*stamp_window(void *);
+int		 stamp_cursor(void *, struct mapview *, SDL_Rect *);
+void		 stamp_effect(void *, struct mapview *, struct node *);
 __END_DECLS
 
 #include "close_code.h"

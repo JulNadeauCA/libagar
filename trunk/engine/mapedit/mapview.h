@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.43 2003/06/11 23:03:58 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.44 2003/06/13 22:45:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -112,24 +112,23 @@ enum mapview_prop_labels {
 struct node;
 
 __BEGIN_DECLS
-extern DECLSPEC struct mapview	*mapview_new(void *, struct map *, int);
+struct mapview	*mapview_new(void *, struct map *, int);
 
-extern DECLSPEC void	 mapview_init(struct mapview *, struct map *, int);
-extern DECLSPEC void	 mapview_destroy(void *);
-extern DECLSPEC void	 mapview_draw(void *);
-extern DECLSPEC void	 mapview_scale(void *, int, int);
-extern DECLSPEC void	 mapview_prescale(struct mapview *, int, int);
+void	 mapview_init(struct mapview *, struct map *, int);
+void	 mapview_destroy(void *);
+void	 mapview_draw(void *);
+void	 mapview_scale(void *, int, int);
+void	 mapview_prescale(struct mapview *, int, int);
 
-extern DECLSPEC void	 mapview_node_edit_win(struct mapview *);
-extern __inline__ void	 mapview_draw_props(struct mapview *, struct node *,
-			                    int, int, int, int);
-extern DECLSPEC void	 mapview_center(struct mapview *, int, int);
-extern DECLSPEC int	 mapview_zoom(struct mapview *, int);
-extern DECLSPEC void	 mapview_map_coords(struct mapview *, int *, int *);
-extern DECLSPEC void	 mapview_set_selection(struct mapview *, int, int, int,
-			                       int);
-extern DECLSPEC int	 mapview_get_selection(struct mapview *, int *, int *,
-			                       int *, int *);
+void		 mapview_node_edit_win(struct mapview *);
+__inline__ void	 mapview_draw_props(struct mapview *, struct node *,
+		                    int, int, int, int);
+
+void	 mapview_center(struct mapview *, int, int);
+int	 mapview_zoom(struct mapview *, int);
+void	 mapview_map_coords(struct mapview *, int *, int *);
+void	 mapview_set_selection(struct mapview *, int, int, int, int);
+int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 __END_DECLS
 
 #include "close_code.h"

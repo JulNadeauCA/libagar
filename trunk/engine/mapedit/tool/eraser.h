@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.h,v 1.12 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.13 2003/04/25 09:47:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -16,12 +16,11 @@ struct eraser {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC void		 eraser_init(void *);
-extern DECLSPEC struct window	*eraser_window(void *);
-extern DECLSPEC void		 eraser_effect(void *, struct mapview *,
-				               struct node *);
-extern DECLSPEC int		 eraser_load(void *, int);
-extern DECLSPEC int		 eraser_save(void *, int);
+void		 eraser_init(void *);
+struct window	*eraser_window(void *);
+void		 eraser_effect(void *, struct mapview *, struct node *);
+int		 eraser_load(void *, int);
+int		 eraser_save(void *, int);
 __END_DECLS
 
 #include "close_code.h"

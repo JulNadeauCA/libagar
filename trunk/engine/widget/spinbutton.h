@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.1 2003/06/08 23:49:39 vedge Exp $	*/
+/*	$Csoft: spinbutton.h,v 1.2 2003/06/10 07:59:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
@@ -27,18 +27,18 @@ struct spinbutton {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct spinbutton *spinbutton_new(void *, const char *, ...);
+struct spinbutton *spinbutton_new(void *, const char *, ...);
 
-extern DECLSPEC void spinbutton_init(struct spinbutton *, const char *);
-extern DECLSPEC void spinbutton_destroy(void *);
-extern DECLSPEC void spinbutton_scale(void *, int, int);
-extern DECLSPEC void spinbutton_draw(void *);
+void	spinbutton_init(struct spinbutton *, const char *);
+void	spinbutton_destroy(void *);
+void	spinbutton_scale(void *, int, int);
+void	spinbutton_draw(void *);
 
-extern DECLSPEC void spinbutton_add(struct spinbutton *, int);
-extern DECLSPEC void spinbutton_set_value(struct spinbutton *, int);
-extern DECLSPEC void spinbutton_set_min(struct spinbutton *, int);
-extern DECLSPEC void spinbutton_set_max(struct spinbutton *, int);
-extern DECLSPEC void spinbutton_set_increment(struct spinbutton *, int);
+void	spinbutton_add(struct spinbutton *, int);
+void	spinbutton_set_value(struct spinbutton *, int);
+void	spinbutton_set_min(struct spinbutton *, int);
+void	spinbutton_set_max(struct spinbutton *, int);
+void	spinbutton_set_increment(struct spinbutton *, int);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.22 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.23 2003/06/09 01:31:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -20,8 +20,8 @@ struct primitive_ops {
 extern struct primitive_ops primitives;
 
 __BEGIN_DECLS
-extern DECLSPEC struct window	*primitive_config_window(void);
-extern DECLSPEC void		 primitives_init(void);
+struct window	*primitive_config_window(void);
+void		 primitives_init(void);
 __END_DECLS
 
 #include "close_code.h"

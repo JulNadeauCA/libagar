@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.13 2003/05/07 13:01:58 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.14 2003/06/06 02:47:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_TOOL_H_
@@ -56,12 +56,11 @@ enum {
 #define TOOL_OPS(t)	((struct tool_ops *)OBJECT((t))->ops)
 
 __BEGIN_DECLS
-extern DECLSPEC void	tool_init(struct tool *, const char *, const void *);
-extern DECLSPEC void	tool_destroy(void *);
-extern DECLSPEC void	tool_bind_key(void *, SDLMod, SDLKey,
-				      void (*)(void *, struct mapview *), int);
-
-extern DECLSPEC struct mapview	*tool_mapview(void);
+void	tool_init(struct tool *, const char *, const void *);
+void	tool_destroy(void *);
+void	tool_bind_key(void *, SDLMod, SDLKey,
+	              void (*)(void *, struct mapview *), int);
+struct mapview	*tool_mapview(void);
 __END_DECLS
 
 #include "close_code.h"

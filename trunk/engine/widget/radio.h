@@ -1,4 +1,4 @@
-/*	$Csoft: radio.h,v 1.9 2003/05/26 03:03:33 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.10 2003/06/06 03:18:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
@@ -21,11 +21,11 @@ struct radio {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct radio	*radio_new(void *, const char *[]);
-extern DECLSPEC void		 radio_init(struct radio *, const char *[]);
-extern DECLSPEC void	 	 radio_draw(void *);
-extern DECLSPEC void	 	 radio_scale(void *, int, int);
-extern DECLSPEC void		 radio_destroy(void *);
+struct radio	*radio_new(void *, const char *[]);
+void		 radio_init(struct radio *, const char *[]);
+void	 	 radio_draw(void *);
+void	 	 radio_scale(void *, int, int);
+void		 radio_destroy(void *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.h,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
+/*	$Csoft: unicode.h,v 1.2 2003/06/14 22:07:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_
@@ -19,20 +19,20 @@ enum unicode_conv {
 #define UNICODE_BOM_SWAPPED	0xfffe
 
 __BEGIN_DECLS
-extern DECLSPEC void	 unicode_init(void);
-extern DECLSPEC void	 unicode_destroy(void);
+void	 unicode_init(void);
+void	 unicode_destroy(void);
 
-extern DECLSPEC void	  unicode_convert(enum unicode_conv, Uint16 *,
-			                  const char *, size_t);
-extern __inline__ Uint16 *unicode_import(enum unicode_conv, const char *);
+__inline__ Uint16 *unicode_import(enum unicode_conv, const char *);
+void		   unicode_convert(enum unicode_conv, Uint16 *, const char *,
+		                   size_t);
 
-extern __inline__ size_t ucslen(const Uint16 *);
-extern DECLSPEC size_t	 ucslcpy(Uint16 *, const Uint16 *, size_t);
-extern DECLSPEC size_t	 ucslcat(Uint16 *, const Uint16 *, size_t);
-extern DECLSPEC Uint16	*ucsdup(const Uint16 *);
-extern DECLSPEC Uint16	*ucssep(Uint16 **, const Uint16 *);
+__inline__ size_t ucslen(const Uint16 *);
+size_t		  ucslcpy(Uint16 *, const Uint16 *, size_t);
+size_t		  ucslcat(Uint16 *, const Uint16 *, size_t);
+Uint16		 *ucsdup(const Uint16 *);
+Uint16		 *ucssep(Uint16 **, const Uint16 *);
 #ifdef DEBUG
-extern DECLSPEC void	 ucsdump(const Uint16 *);
+void		  ucsdump(const Uint16 *);
 #endif
 __END_DECLS
 

@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.30 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.31 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -9,12 +9,12 @@
 #include <stdio.h>
 
 __BEGIN_DECLS
-extern DECLSPEC void	_dprintf(const char *, ...);
-extern DECLSPEC void	_debug(int, const char *, ...);
-extern DECLSPEC void	_debug_n(int, const char *, ...);
-extern DECLSPEC void	_dprintf_noop(const char *, ...);
-extern DECLSPEC void	_debug_noop(int, const char *, ...);
-extern DECLSPEC void	_debug_n_noop(int, const char *, ...);
+void	_dprintf(const char *, ...);
+void	_debug(int, const char *, ...);
+void	_debug_n(int, const char *, ...);
+void	_dprintf_noop(const char *, ...);
+void	_debug_noop(int, const char *, ...);
+void	_debug_n_noop(int, const char *, ...);
 __END_DECLS
 
 #ifdef DEBUG

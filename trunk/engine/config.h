@@ -1,15 +1,15 @@
-/*	$Csoft: config.h,v 1.15 2003/06/13 03:59:50 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.16 2003/06/17 23:30:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
 
 struct config {
-	struct object	 obj;
+	struct object obj;
 	struct window	*settings;
-
 	pthread_mutex_t	lock;
 	char		*save_path;		/* Data file save path */
 };
+
 extern struct config *config;
 
 __BEGIN_DECLS

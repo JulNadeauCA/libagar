@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.20 2003/04/26 06:21:58 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.21 2003/06/17 23:30:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <sys/types.h>
@@ -39,15 +39,15 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-extern DECLSPEC char		*Strdup(const char *);
-extern DECLSPEC void		*Malloc(size_t);
-extern DECLSPEC void		*Realloc(void *, size_t);
-extern DECLSPEC ssize_t		 Write(int, const void *, size_t);
-extern DECLSPEC ssize_t		 Read(int, void *, size_t);
-extern DECLSPEC const char	*error_get(void);
-extern DECLSPEC void		 error_set(const char *, ...);
-extern DECLSPEC void		 error_fatal(const char *, ...);
-extern DECLSPEC void		 Asprintf(char **, const char *, ...);
+char		*Strdup(const char *);
+void		*Malloc(size_t);
+void		*Realloc(void *, size_t);
+ssize_t		 Write(int, const void *, size_t);
+ssize_t		 Read(int, void *, size_t);
+const char	*error_get(void);
+void		 error_set(const char *, ...);
+void		 error_fatal(const char *, ...);
+void		 Asprintf(char **, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: version.h,v 1.7 2003/04/12 01:45:31 vedge Exp $	*/
+/*	$Csoft: version.h,v 1.8 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VERSION_H_
@@ -15,9 +15,8 @@ struct version {
 #define VERSION_HOST_MAX	256
 
 __BEGIN_DECLS
-extern DECLSPEC int	version_read(struct netbuf *, const struct version *,
-			             struct version *);
-extern DECLSPEC void	version_write(struct netbuf *, const struct version *);
+int	version_read(struct netbuf *, const struct version *, struct version *);
+void	version_write(struct netbuf *, const struct version *);
 __END_DECLS
 
 #include "close_code.h"

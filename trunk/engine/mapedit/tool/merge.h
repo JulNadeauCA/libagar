@@ -1,4 +1,4 @@
-/*	$Csoft: merge.h,v 1.14 2003/04/25 09:47:08 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.15 2003/05/18 00:17:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -22,18 +22,15 @@ struct merge {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC void		 merge_init(void *);
-extern DECLSPEC struct window	*merge_window(void *);
-extern DECLSPEC void		 merge_effect(void *, struct mapview *,
-				              struct node *);
-extern DECLSPEC void		 merge_destroy(void *);
-extern DECLSPEC int		 merge_load(void *, struct netbuf *);
-extern DECLSPEC int		 merge_save(void *, struct netbuf *);
-extern DECLSPEC int		 merge_cursor(void *, struct mapview *,
-				              SDL_Rect *);
-extern DECLSPEC void		 merge_interpolate(struct merge *, struct map *,
-		                                   struct node *, struct node *,
-						   int, int, struct mapview *);
+void		 merge_init(void *);
+struct window	*merge_window(void *);
+void		 merge_effect(void *, struct mapview *, struct node *);
+void		 merge_destroy(void *);
+int		 merge_load(void *, struct netbuf *);
+int		 merge_save(void *, struct netbuf *);
+int		 merge_cursor(void *, struct mapview *, SDL_Rect *);
+void		 merge_interpolate(struct merge *, struct map *, struct node *,
+		                   struct node *, int, int, struct mapview *);
 __END_DECLS
 
 #include "close_code.h"

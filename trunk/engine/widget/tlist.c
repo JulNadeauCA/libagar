@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.74 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.75 2003/06/15 20:57:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -805,7 +805,7 @@ tlist_item_selected(struct tlist *tl)
 
 /* Return the first item matching a text string. */
 struct tlist_item *
-tlist_item_text(struct tlist *tl, char *text)
+tlist_item_text(struct tlist *tl, const char *text)
 {
 	struct tlist_item *it;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.81 2003/06/06 02:39:56 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.82 2003/06/13 02:47:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -84,50 +84,43 @@ struct object {
 	    (var) = (struct type *)TAILQ_PREV(OBJECT(var), objectq, cobjs))
 
 __BEGIN_DECLS
-extern DECLSPEC struct object	*object_new(void *, const char *, const char *,
-				            const void *);
-extern DECLSPEC void		 object_init(void *, const char *, const char *,
-				             const void *);
+struct object	*object_new(void *, const char *, const char *, const void *);
+void		 object_init(void *, const char *, const char *, const void *);
+void		 object_set_ops(void *, const void *);
 
-extern DECLSPEC int	 object_load_art(void *, const char *, int);
-extern DECLSPEC void	 object_attach(void *, void *);
-extern DECLSPEC void	 object_detach(void *, void *);
-extern DECLSPEC void	 object_move(void *, void *, void *);
-extern DECLSPEC char	*object_name(void *);
-extern DECLSPEC void	*object_find(void *, const char *);
+int	 object_load_art(void *, const char *, int);
+void	 object_attach(void *, void *);
+void	 object_detach(void *, void *);
+void	 object_move(void *, void *, void *);
+char	*object_name(void *);
+void	*object_find(void *, const char *);
 
-extern DECLSPEC int	 object_load(void *);
-extern DECLSPEC int	 object_save(void *);
-extern DECLSPEC void	 object_destroy(void *);
-extern DECLSPEC void	 object_edit(void *);
+int	 object_load(void *);
+int	 object_save(void *);
+void	 object_destroy(void *);
+void	 object_edit(void *);
 
-extern DECLSPEC void	 object_free_childs(struct object *);
-extern DECLSPEC void	 object_free_props(struct object *);
-extern DECLSPEC void 	 object_free_events(struct object *);
-extern DECLSPEC int	 object_path(const char *, const char *, char *,
-			             size_t);
+void	 object_free_childs(struct object *);
+void	 object_free_props(struct object *);
+void 	 object_free_events(struct object *);
+int	 object_path(const char *, const char *, char *, size_t);
 
-extern DECLSPEC int	 object_control(void *, const char *);
-extern DECLSPEC void	 object_center(void *);
-extern DECLSPEC void	 object_load_submap(void *, const char *);
-extern DECLSPEC int	 object_set_submap(void *, const char *);
+int	 object_control(void *, const char *);
+void	 object_center(void *);
+void	 object_load_submap(void *, const char *);
+int	 object_set_submap(void *, const char *);
 
-extern DECLSPEC void	 object_set_position(void *, struct map *, int, int,
-			                     int);
-extern DECLSPEC void	 object_unset_position(void *);
-extern DECLSPEC void	 object_save_position(void *, struct netbuf *);
-extern DECLSPEC int	 object_load_position(void *, struct netbuf *);
+void	 object_set_position(void *, struct map *, int, int, int);
+void	 object_unset_position(void *);
+void	 object_save_position(void *, struct netbuf *);
+int	 object_load_position(void *, struct netbuf *);
 
-extern DECLSPEC void	 object_table_init(struct object_table *);
-extern DECLSPEC void	 object_table_destroy(struct object_table *);
-extern DECLSPEC void	 object_table_insert(struct object_table *,
-			                     struct object *);
-extern DECLSPEC void	 object_table_save(struct object_table *,
-			                   struct netbuf *);
-extern DECLSPEC int	 object_table_load(struct object_table *,
-			                   struct netbuf *, const char *);
-
-extern DECLSPEC void	 object_set_ops(void *, const void *);
+void	 object_table_init(struct object_table *);
+void	 object_table_destroy(struct object_table *);
+void	 object_table_insert(struct object_table *, struct object *);
+void	 object_table_save(struct object_table *, struct netbuf *);
+int	 object_table_load(struct object_table *, struct netbuf *,
+	                   const char *);
 __END_DECLS
 
 #include "close_code.h"

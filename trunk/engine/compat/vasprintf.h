@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.h,v 1.4 2002/11/07 19:00:14 vedge Exp $	*/
+/*	$Csoft: vasprintf.h,v 1.5 2002/12/24 10:29:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_vasprintf.h>
@@ -10,6 +10,6 @@
 # include <stdio.h>
 #else
 # include <stdarg.h>
-extern int vasprintf(char **, const char *, va_list);
+int	vasprintf(char **, const char *, va_list);
 #endif
 

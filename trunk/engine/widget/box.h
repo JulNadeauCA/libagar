@@ -1,4 +1,4 @@
-/*	$Csoft: box.h,v 1.1 2003/06/06 02:57:44 vedge Exp $	*/
+/*	$Csoft: box.h,v 1.2 2003/06/10 06:58:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BOX_H_
@@ -29,15 +29,16 @@ struct box {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct box	*box_new(void *, enum box_type, int);
-extern DECLSPEC void		 box_init(struct box *, enum box_type, int);
-extern DECLSPEC void		 box_destroy(void *);
-extern DECLSPEC void		 box_draw(void *);
-extern DECLSPEC void		 box_scale(void *, int, int);
+struct box	*box_new(void *, enum box_type, int);
 
-extern DECLSPEC void		 box_set_homogenous(struct box *, int);
-extern DECLSPEC void		 box_set_padding(struct box *, int);
-extern DECLSPEC void		 box_set_spacing(struct box *, int);
+void	 box_init(struct box *, enum box_type, int);
+void	 box_destroy(void *);
+void	 box_draw(void *);
+void	 box_scale(void *, int, int);
+
+void	 box_set_homogenous(struct box *, int);
+void	 box_set_padding(struct box *, int);
+void	 box_set_spacing(struct box *, int);
 __END_DECLS
 
 #include "close_code.h"
