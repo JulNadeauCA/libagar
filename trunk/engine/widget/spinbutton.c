@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.12 2004/03/24 01:42:29 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.13 2004/03/25 04:23:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -78,7 +78,7 @@ spinbutton_bound(int argc, union evarg *argv)
 
 	if (strcmp(binding->name, "value") == 0) {
 		pthread_mutex_lock(&sbu->lock);
-		switch (binding->type) {
+		switch (binding->vtype) {
 		case WIDGET_INT:
 			sbu->min = INT_MIN+1;
 			sbu->max = INT_MAX-1;
@@ -112,7 +112,6 @@ spinbutton_bound(int argc, union evarg *argv)
 			sbu->max =  0x7fffffff-1;
 			break;
 		}
-		textbox_printf(sbu->input, "%d", *(int *)binding->p1);
 		pthread_mutex_unlock(&sbu->lock);
 	}
 }
@@ -220,36 +219,34 @@ void
 spinbutton_scale(void *p, int w, int h)
 {
 	struct spinbutton *sbu = p;
-	struct textbox *input = sbu->input;
-	struct button *incbu = sbu->incbu;
-	struct button *decbu = sbu->decbu;
 	int x = 0, y = 0;
+	int bw = 10;
+	int bh = h/2;
 
 	if (w == -1 && h == -1) {
 		WIDGET_SCALE(sbu->input, -1, -1);
-		WIDGET(sbu)->w = WIDGET(input)->w;
-		WIDGET(sbu)->h = WIDGET(input)->h;
-		x += WIDGET(sbu)->w;
-
-		WIDGET_SCALE(incbu, -1, -1);
-		WIDGET(sbu)->w += WIDGET(incbu)->w;
-		y += WIDGET(sbu)->h;
+		WIDGET(sbu)->w = WIDGET(sbu->input)->w;
+		WIDGET(sbu)->h = WIDGET(sbu->input)->h;
+		WIDGET_SCALE(sbu->incbu, -1, -1);
+		WIDGET_SCALE(sbu->decbu, -1, -1);
+		WIDGET(sbu)->w += max(WIDGET(sbu->incbu)->w,
+		                      WIDGET(sbu->decbu)->w);
 		return;
 	}
 
-	WIDGET(input)->x = x;
-	WIDGET(input)->y = y;
-	widget_scale(input, w - 10, h);
-	x += WIDGET(input)->w;
+	WIDGET(sbu->input)->x = x;
+	WIDGET(sbu->input)->y = y;
+	widget_scale(sbu->input, w - bw, h);
+	x += WIDGET(sbu->input)->w;
 
-	WIDGET(incbu)->x = x;
-	WIDGET(incbu)->y = y;
-	widget_scale(incbu, 10, h/2);
+	WIDGET(sbu->incbu)->x = x;
+	WIDGET(sbu->incbu)->y = y;
+	widget_scale(sbu->incbu, bw, bh);
 	y += h/2;
 
-	WIDGET(decbu)->x = x;
-	WIDGET(decbu)->y = y;
-	widget_scale(decbu, 10, h/2);
+	WIDGET(sbu->decbu)->x = x;
+	WIDGET(sbu->decbu)->y = y;
+	widget_scale(sbu->decbu, bw, bh);
 }
 
 void
@@ -280,7 +277,7 @@ spinbutton_add_value(struct spinbutton *sbu, ...)
 	maxb = widget_get_binding(sbu, "max", &max);
 
 	va_start(ap, sbu);
-	switch (valueb->type) {
+	switch (valueb->vtype) {
 	case WIDGET_INT:
 		{
 			int inc = va_arg(ap, int);
@@ -379,7 +376,7 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 	maxb = widget_get_binding(sbu, "max", &max);
 
 	va_start(ap, sbu);
-	switch (valueb->type) {
+	switch (valueb->vtype) {
 	case WIDGET_INT:
 		{
 			int i = va_arg(ap, int);
