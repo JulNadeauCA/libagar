@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.5 2002/02/01 02:03:34 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.6 2002/02/01 06:04:57 vedge Exp $	*/
 
 /*
  * Data shared by all character types.
@@ -29,7 +29,12 @@ struct character {
 #define CHAR_DASH	0x0010	/* Boost timer temporarily */
 	
 	SDL_TimerID timer;
+	SLIST_ENTRY(character) wchars;	/* Active characters */
+
+	void	 (*event_hook)(struct character *, SDL_Event *);
 };
+
+extern struct character *curchar;	/* Controlled character */
 
 struct character *char_create(char *, char *, int, int, int);
 
@@ -42,9 +47,12 @@ int	char_del(struct character *, struct map *, int, int);
 
 void	char_destroy(struct object *);
 int	char_link(void *);
-void	char_event(struct object *, SDL_Event *);
 void	char_setspeed(struct character *, Uint32);
+
+int	char_focus(struct character *);
+int	char_unfocus(struct character *);
+
 #ifdef DEBUG
-void	char_dump_char(void *, void *);
+void	char_dump(struct character *);
 #endif
 
