@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.42 2004/03/18 05:53:12 vedge Exp $
+#	$Csoft: Makefile,v 1.43 2004/04/25 02:11:01 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -56,9 +56,14 @@ deinstall-includes:
 	${FIND} . -follow -type f -name '*.h' -print \
 	    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
 	    | ${SUDO} ${SH}
-	(cd ${SRC} && ${FIND} . -follow -type f -name '*.h' -print \
-	    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
-	    | ${SUDO} ${SH})
+	@if [ "${SRC}" != "" ]; then \
+		echo "${FIND} ${SRC} -follow -type f -name '*.h' -print \
+		    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
+		    | ${SUDO} ${SH}"; \
+		(cd ${SRC} && ${FIND} . -follow -type f -name '*.h' -print \
+		    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
+		    | ${SUDO} ${SH}); \
+	fi
 
 .PHONY: clean cleandir install deinstall depend regress
 .PHONY: prereq configure clean-config release
