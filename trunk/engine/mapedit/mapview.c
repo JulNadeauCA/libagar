@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.102 2003/04/18 07:21:48 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.103 2003/04/24 04:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -970,8 +970,8 @@ mapview_lostfocus(int argc, union evarg *argv)
 void
 mapview_center(struct mapview *mv, int x, int y)
 {
-	*mv->ssx = 0;
-	*mv->ssy = 0;
+	*mv->ssx = *mv->tilew;
+	*mv->ssy = *mv->tileh;
 	mv->mx = x - mv->mw/2;
 	mv->my = y - mv->mh/2;
 
