@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.8 2003/01/05 08:42:27 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.9 2003/01/08 23:10:19 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -75,6 +75,8 @@ can be changed at runtime, and may include:
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
 #define TLIST_DROPDOWN		0x04  /* Drop-down menu */
+#define TLIST_POLL		0x08  /* Generate a tlist-poll event before
+					 each draw and each event. */
 .Ed
 .Pp
 The
