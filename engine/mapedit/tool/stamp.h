@@ -1,7 +1,7 @@
-/*	$Csoft: stamp.h,v 1.16 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.17 2003/09/07 04:17:37 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool.h>
+#include <engine/mapedit/tool/tool.h>
 
 #include "begin_code.h"
 

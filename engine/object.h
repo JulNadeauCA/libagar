@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.91 2003/08/26 07:55:00 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.92 2003/09/07 00:24:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -48,9 +48,6 @@ struct object_position {
  * This structure describes a dependency of an object toward another object.
  * If the count reaches OBJECT_DEP_MAX, the dependency cannot be removed
  * before the object is destroyed (object_del_dep() becomes a no-op).
- *
- * XXX we could use 64-bit count on 64-bit arches but the saves wouldn't
- * be portable to arches without 64-bit type.
  */
 struct object_dep {
 	struct object	*obj;		/* Object */
@@ -62,7 +59,6 @@ struct object_dep {
 #define OBJECT_TYPE_MAX	32
 #define OBJECT_NAME_MAX	64
 #define OBJECT_PATH_MAX	1024
-#define OBJECT_MAX_USED	(0xffffffff-2)
 
 TAILQ_HEAD(objectq, object);
 

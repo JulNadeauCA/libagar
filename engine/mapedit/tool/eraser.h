@@ -1,7 +1,7 @@
-/*	$Csoft: eraser.h,v 1.17 2003/08/29 04:56:06 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.18 2003/09/07 04:17:36 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool.h>
+#include <engine/mapedit/tool/tool.h>
 
 #include "begin_code.h"
 

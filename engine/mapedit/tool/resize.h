@@ -1,7 +1,7 @@
-/*	$Csoft: resize.h,v 1.10 2003/06/18 00:47:01 vedge Exp $	*/
+/*	$Csoft: resize.h,v 1.11 2003/09/07 04:17:37 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool.h>
+#include <engine/mapedit/tool/tool.h>
 
 #include "begin_code.h"
 

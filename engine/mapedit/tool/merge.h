@@ -1,7 +1,7 @@
-/*	$Csoft: merge.h,v 1.17 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.18 2003/09/07 04:17:37 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool.h>
+#include <engine/mapedit/tool/tool.h>
 
 #include "begin_code.h"
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.144 2003/08/26 07:55:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.145 2003/09/07 00:24:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -549,8 +549,8 @@ object_page_in(void *p, enum object_page_item item)
 			Free(ob->gfx_name);
 			goto fail;
 		}
-		if (++ob->gfx_used > OBJECT_MAX_USED) {
-			ob->gfx_used = OBJECT_MAX_USED;
+		if (++ob->gfx_used > OBJECT_DEP_MAX) {
+			ob->gfx_used = OBJECT_DEP_MAX;
 		}
 		break;
 	case OBJECT_AUDIO:
@@ -563,8 +563,8 @@ object_page_in(void *p, enum object_page_item item)
 		if (audio_fetch(ob) == -1) {
 			goto fail;
 		}
-		if (++ob->audio_used > OBJECT_MAX_USED) {
-			ob->audio_used = OBJECT_MAX_USED;
+		if (++ob->audio_used > OBJECT_DEP_MAX) {
+			ob->audio_used = OBJECT_DEP_MAX;
 		}
 		break;
 	case OBJECT_DATA:
@@ -589,8 +589,8 @@ object_page_in(void *p, enum object_page_item item)
 			}
 		}
 out:
-		if (++ob->data_used > OBJECT_MAX_USED) {
-			ob->data_used = OBJECT_MAX_USED;
+		if (++ob->data_used > OBJECT_DEP_MAX) {
+			ob->data_used = OBJECT_DEP_MAX;
 		}
 		break;
 	}
@@ -619,7 +619,7 @@ object_page_out(void *p, enum object_page_item item)
 		if (ob->gfx_used == 0)
 			fatal("neg gfx ref count");
 #endif
-		if (ob->gfx_used != OBJECT_MAX_USED &&
+		if (ob->gfx_used != OBJECT_DEP_MAX &&
 		    --ob->gfx_used == 0) {
 			gfx_unused(ob->gfx);
 			ob->gfx = NULL;
@@ -632,7 +632,7 @@ object_page_out(void *p, enum object_page_item item)
 #endif
 		debug(DEBUG_PAGING, "%s: -audio (used=%u)\n", ob->name,
 		    ob->audio_used);
-		if (ob->audio_used != OBJECT_MAX_USED &&
+		if (ob->audio_used != OBJECT_DEP_MAX &&
 		    --ob->audio_used == 0) {
 			audio_unused(ob->audio);
 			ob->audio = NULL;
@@ -650,7 +650,7 @@ object_page_out(void *p, enum object_page_item item)
 		if (ob->data_used == 0)
 			fatal("neg data ref count");
 #endif
-		if (ob->data_used != OBJECT_MAX_USED &&
+		if (ob->data_used != OBJECT_DEP_MAX &&
 		    --ob->data_used == 0) {
 			if (object_save(ob) == -1) {
 				goto fail;
