@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.27 2002/11/07 17:48:07 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.28 2002/11/09 06:06:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -329,6 +329,7 @@ mapview_draw(void *p)
 			}
 
 			if (mv->flags & MAPVIEW_GRID) {
+				/* XXX not esthetic */
 				primitives.line(mv,
 				    rx, 0,
 				    rx, WIDGET(mv)->h-1,
@@ -385,6 +386,7 @@ mapview_draw(void *p)
 			}
 		}
 		if (mv->flags & MAPVIEW_GRID) {
+			/* XXX not esthetic */
 			primitives.line(mv, 0, ry, WIDGET(mv)->w-1, ry,
 			   WIDGET_COLOR(mv, GRID_COLOR));
 		}
@@ -403,24 +405,28 @@ static void
 mapview_scroll(struct mapview *mv, int dir)
 {
 	switch (dir) {
+#if 0
 	case DIR_LEFT:
 		if (--mv->mx <= 0) {
 			mv->mx = 0;
 		}
 		break;
+	case DIR_RIGHT:
+		dprintf("mv->mx(%d) + 1 >= mv->map->mapw(%d) - mv->mw(%d)\n",
+		    mv->mx, mv->map->mapw, mv->mw);
+		if (mv->mx + 1 < mv->map->mapw - 1) {
+			mv->mx++;
+		}
+		break;
+#endif
 	case DIR_UP:
 		if (--mv->my <= 0) {
 			mv->my = 0;
 		}
 		break;
-	case DIR_RIGHT:
-		if (++mv->mx >= (mv->map->mapw - mv->mw)) {
-			mv->mx--;
-		}
-		break;
 	case DIR_DOWN:
-		if (++mv->my >= (mv->map->maph - mv->mh)) {
-			mv->my--;
+		if (mv->my + 1 < (mv->mh - mv->map->maph)) {
+			mv->my++;
 		}
 		break;
 	}
