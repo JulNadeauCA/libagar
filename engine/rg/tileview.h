@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.7 2005/02/12 09:54:44 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.8 2005/02/14 07:26:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -64,6 +64,7 @@ struct tileview {
 	struct tile *tile;
 	int zoom;			/* Display zoom (%) */
 	int pxsz;			/* Scaled pixel size (pixels) */
+	int pxlen;			/* Scaled pixel size (bytes) */
 	int xoffs, yoffs;		/* Display offset */
 	int xms, yms;			/* Cursor coords in surface (pixels) */
 	int xsub, ysub;			/* Cursor subpixel coords (v.pixels) */
@@ -128,6 +129,8 @@ void tileview_pixel2i(struct tileview *, int, int);
 void tileview_rect2(struct tileview *, int, int, int, int);
 void tileview_rect2o(struct tileview *, int, int, int, int);
 void tileview_circle2o(struct tileview *, int, int, int);
+
+void tileview_scaled_pixel(struct tileview *, int, int, Uint32);
 
 struct tileview_ctrl *tileview_insert_ctrl(struct tileview *,
 			                   enum tileview_ctrl_type,

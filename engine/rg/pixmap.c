@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.2 2005/02/12 09:54:44 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.3 2005/02/14 07:26:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,8 +31,9 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/mspinbutton.h>
 #include <engine/widget/spinbutton.h>
+#include <engine/widget/fspinbutton.h>
+#include <engine/widget/mspinbutton.h>
 #include <engine/widget/checkbox.h>
 
 #include "tileset.h"
@@ -46,6 +47,11 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->flags = flags;
 	px->nrefs = 0;
 	px->su = NULL;
+	px->bg = NULL;
+	px->h = 0.0;
+	px->s = 0.0;
+	px->v = 0.0;
+	px->a = 1.0;
 }
 
 void
@@ -55,14 +61,20 @@ pixmap_destroy(struct pixmap *px)
 	if (px->nrefs > 0)
 		dprintf("%s is referenced\n", px->name);
 #endif
+	if (px->su != NULL)
+		SDL_FreeSurface(px->su);
+	if (px->bg != NULL)
+		SDL_FreeSurface(px->bg);
 }
 
+/* Resize a pixmap and copy the previous surface at the given offset. */
 void
 pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 {
 	struct tileset *ts = px->ts;
 	SDL_Surface *nsu;
 
+	/* Create the new surface. */
 	nsu = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
 	    w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask,
@@ -72,6 +84,7 @@ pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 	if (nsu == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 
+	/* Copy the old surface over. */
 	if (px->su != NULL) {
 		SDL_Rect rd;
 
@@ -90,6 +103,17 @@ pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 		SDL_FreeSurface(px->su);
 	}
 	px->su = nsu;
+
+	/* Resize the background save surface. */
+	if (px->bg != NULL) {
+		SDL_FreeSurface(px->bg);
+	}
+	px->bg = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h,
+	    ts->fmt->BitsPerPixel,
+	    ts->fmt->Rmask,
+	    ts->fmt->Gmask,
+	    ts->fmt->Bmask,
+	    0);
 }
 
 struct window *
@@ -100,6 +124,7 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	struct mspinbutton *msb;
 	struct spinbutton *sb;
 	struct checkbox *cb;
+	struct box *bo;
 
 	win = window_new(0, NULL);
 	window_set_caption(win, _("Pixmap %s"), px->name);
@@ -116,26 +141,58 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	sb = spinbutton_new(win, _("Transparency: "));
 	widget_bind(sb, "value", WIDGET_INT, &tel->tel_pixmap.alpha);
 	spinbutton_set_range(sb, 0, 255);
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
+	{
+		struct fspinbutton *fsb;
 	
+		fsb = fspinbutton_new(win, NULL, _("Hue: "));
+		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->h);
+		fspinbutton_set_range(fsb, 0.0, 360.0);
+		fspinbutton_set_increment(fsb, 60);
+		
+		fsb = fspinbutton_new(win, NULL, _("Saturation: "));
+		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->s);
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.1);
+		
+		fsb = fspinbutton_new(win, NULL, _("Value: "));
+		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->v);
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.1);
+		
+		fsb = fspinbutton_new(win, NULL, _("Source alpha: "));
+		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->a);
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.1);
+	}
 	return (win);
 }
 
 void
-pixmap_mousebuttondown(struct tileview *tv, struct pixmap *px,
+pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     int x, int y, int button)
 {
-	dprintf("%d,%d,%d\n", x, y, button);
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 r, g, b;
+	Uint32 pc;
+
+	prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
+
+	pc = SDL_MapRGB(px->su->format, r, g, b);
+	prim_put_pixel(px->su, x, y, pc);
+	tileview_scaled_pixel(tv, tel->tel_pixmap.x+x, tel->tel_pixmap.y+y, pc);
 }
 
 void
-pixmap_mousebuttonup(struct tileview *tv, struct pixmap *px, int x, int y,
-    int button)
+pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
+    int y, int button)
 {
 	dprintf("%d,%d,%d\n", x, y, button);
 }
 
 void
-pixmap_mousemotion(struct tileview *tv, struct pixmap *px, int x, int y,
+pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	dprintf("%d,%d %d,%d %d\n", x, y, xrel, yrel, state);

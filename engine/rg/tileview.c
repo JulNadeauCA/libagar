@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.9 2005/02/12 10:31:37 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.10 2005/02/14 07:26:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -192,7 +192,7 @@ tileview_buttondown(int argc, union evarg *argv)
 			    sx <= tel->tel_pixmap.x+px->su->w &&
 			    sy >= tel->tel_pixmap.y &&
 			    sy <= tel->tel_pixmap.y+px->su->h) {
-				pixmap_mousebuttondown(tv, px,
+				pixmap_mousebuttondown(tv, tel,
 				    sx - tel->tel_pixmap.x,
 				    sy - tel->tel_pixmap.y,
 				    button);
@@ -250,7 +250,7 @@ tileview_buttonup(int argc, union evarg *argv)
 			struct tile_element *tel = tv->tv_pixmap.tel;
 			struct pixmap *px = tel->tel_pixmap.px;
 
-			pixmap_mousebuttonup(tv, px,
+			pixmap_mousebuttonup(tv, tel,
 			    tv->xms - tel->tel_pixmap.x,
 			    tv->yms - tel->tel_pixmap.y,
 			    button);
@@ -470,7 +470,7 @@ tileview_mousemotion(int argc, union evarg *argv)
 		    sx <= tel->tel_pixmap.x+px->su->w &&
 		    sy >= tel->tel_pixmap.y &&
 		    sy <= tel->tel_pixmap.y+px->su->h) {
-			pixmap_mousemotion(tv, px,
+			pixmap_mousemotion(tv, tel,
 			    sx - tel->tel_pixmap.x,
 			    sy - tel->tel_pixmap.y,
 			    sx - tv->xorig,
@@ -693,12 +693,13 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	    t->su->format->BitsPerPixel,
 	    t->su->format->Rmask, t->su->format->Gmask,
 	    t->su->format->Bmask, t->su->format->Amask);
-	tv->scaled->format->alpha = t->su->format->alpha;
-	tv->scaled->format->colorkey = t->su->format->colorkey;
-
 	if (tv->scaled == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
+	tv->pxlen = tv->pxsz*tv->scaled->format->BytesPerPixel;
+	tv->scaled->format->alpha = t->su->format->alpha;
+	tv->scaled->format->colorkey = t->su->format->colorkey;
+
 	widget_replace_surface(tv, 0, tv->scaled);
 
 	if (adj_offs) {
@@ -1020,6 +1021,41 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 
 	for (i = 0; i < ctrl->nhandles; i++)
 		draw_handle(tv, &ctrl->handles[i]);
+}
+
+/* Plot a scaled pixel on the tileview's cache surface. */
+void
+tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint32 pc)
+{
+	int sx = x*tv->pxsz;
+	int sy = y*tv->pxsz;
+	Uint8 *dst;
+
+	if (SDL_MUSTLOCK(tv->scaled))
+		SDL_LockSurface(tv->scaled);
+
+	if (tv->pxsz == 1) {
+		dst = (Uint8 *)tv->scaled->pixels + y*tv->scaled->pitch +
+		    x*tv->scaled->format->BytesPerPixel;
+		*(Uint32 *)dst = pc;
+	} else {
+		int px, py;
+		
+		dst = (Uint8 *)tv->scaled->pixels +
+		    sy*tv->scaled->pitch +
+		    sx*tv->scaled->format->BytesPerPixel;
+
+		for (py = 0; py < tv->pxsz; py++) {
+			for (px = 0; px < tv->pxsz; px++) {
+				*(Uint32 *)dst = pc;
+				dst += tv->scaled->format->BytesPerPixel;
+			}
+			dst += tv->scaled->pitch - tv->pxlen;
+		}
+	}
+
+	if (SDL_MUSTLOCK(tv->scaled))
+		SDL_UnlockSurface(tv->scaled);
 }
 
 void
