@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.4 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.5 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ vgobj_init(void *p, const char *name)
 	struct vgobj *vgo = p;
 
 	object_init(vgo, "vgobj", name, &vgobj_ops);
-	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID|VG_VISBBOXES);
+	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID);
 	vg_scale(vgo->vg, 8.5, 11, 1);
 }
 
