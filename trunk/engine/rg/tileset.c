@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.5 2005/01/30 05:41:25 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.6 2005/01/31 08:40:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -587,28 +587,28 @@ tileset_edit(void *p)
 	tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 	event_new(tl, "tlist-poll", poll_tileset, "%p", ts);
-	
+
+	mi = tlist_set_popup(tl, "tile");
+	{
+		ag_menu_action(mi, _("Edit tile..."), NULL, 0, 0,
+		    edit_tiles, "%p,%p,%p", ts, tl, win);
+		ag_menu_action(mi, _("Delete tile"), NULL, 0, 0,
+		    delete_tiles, "%p,%p", tl, ts);
+	}
+
 	m = ag_menu_new(win);
-	mi = ag_menu_add_item(m, _("Tiles"));
+	mi = ag_menu_add_item(m, _("Tileset"));
 	{
 		ag_menu_action(mi, _("Insert tile..."), NULL, 0, 0,
 		    insert_tile_dlg, "%p,%p", ts, win);
-		ag_menu_action(mi, _("Edit tile(s)"), NULL, 0, 0,
-		    edit_tiles, "%p,%p,%p", ts, tl, win);
-		ag_menu_action(mi, _("Delete tile(s)"), NULL, 0, 0,
-		    delete_tiles, "%p,%p", tl, ts);
-	}
-	
-	mi = ag_menu_add_item(m, _("Features"));
-	{
-	}
-	
-	mi = ag_menu_add_item(m, _("Sketches"));
-	{
-	}
-	
-	mi = ag_menu_add_item(m, _("Pixmaps"));
-	{
+#if 0
+		ag_menu_action(mi, _("Insert feature..."), NULL, 0, 0,
+		    insert_tile_dlg, "%p,%p", ts, win);
+		ag_menu_action(mi, _("Insert sketch..."), NULL, 0, 0,
+		    insert_tile_dlg, "%p,%p", ts, win);
+		ag_menu_action(mi, _("Insert pixmap..."), NULL, 0, 0,
+		    insert_tile_dlg, "%p,%p", ts, win);
+#endif
 	}
 
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
