@@ -1,8 +1,10 @@
-/*	$Csoft: widget.h,v 1.51 2003/02/02 21:16:15 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.52 2003/02/25 01:27:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
+
+#include <config/floating_point.h>
 
 #define WIDGET_MAX_COLORS	16
 
@@ -175,8 +177,10 @@ Uint16	 widget_get_uint16(void *, const char *);
 Sint16	 widget_get_sint16(void *, const char *);
 Uint32	 widget_get_uint32(void *, const char *);
 Sint32	 widget_get_sint32(void *, const char *);
+#ifdef FLOATING_POINT
 float	 widget_get_float(void *, const char *);
 double	 widget_get_double(void *, const char *);
+#endif
 char	*widget_get_string(void *, const char *);
 void	*widget_get_pointer(void *, const char *);
 
@@ -188,8 +192,10 @@ void	 widget_set_uint16(void *, const char *, Uint16);
 void	 widget_set_sint16(void *, const char *, Sint16);
 void	 widget_set_uint32(void *, const char *, Uint32);
 void	 widget_set_sint32(void *, const char *, Sint32);
+#ifdef FLOATING_POINT
 void	 widget_set_float(void *, const char *, float);
 void	 widget_set_double(void *, const char *, double);
+#endif
 void	 widget_set_string(void *, const char *, char *);
 void	 widget_set_pointer(void *, const char *, void *);
 
