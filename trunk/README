@@ -24,8 +24,8 @@ persistence. Typically, all of the code needed by an Agar game will take
 the form of object implementations, and some simple games which make use
 of the built-in object types will not require any code at all (besides
 the initialization in main(), of course). Agar provides some built-in object
-implementations, such as "map" for tile-based 2D levels, "vgobj" for vector
-drawings and "perso" for simple game characters.
+implementations, such as "map" for tile-based 2D levels, "drawing" for 2D
+sketches and "perso" for simple game characters.
 
 Availability
 ------------
