@@ -1,4 +1,4 @@
-$Csoft: README.mapedit,v 1.2 2002/04/22 03:37:23 vedge Exp $
+$Csoft: README.mapedit,v 1.3 2002/05/08 09:42:28 vedge Exp $
 
 The map editor manipulates map nodes and their properties.
 
@@ -38,6 +38,7 @@ Shift+'D':	Remove all references from the node.
 'S':		Save this map.
 'L':		Load this map.
 'X':		Print the current tile stack.
+'O':		Options window.
 
 'B':		Mark the node as blocked, or:
 'W':		Mark the node 'walkable'.

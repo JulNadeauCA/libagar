@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.33 2002/05/15 07:28:11 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.34 2002/06/03 18:36:56 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -40,7 +40,7 @@ struct gendir;
 struct mapedit {
 	struct	object obj;
 	
-	int	flags;	
+	Uint32	flags;	
 #define MAPEDIT_DRAWGRID	0x01	/* Draw a grid on the map (slow) */
 #define MAPEDIT_DRAWPROPS	0x02	/* Draw tile properties (slow) */
 #define MAPEDIT_INSERT		0x04	/* Insert mode (else replace) */
@@ -75,6 +75,8 @@ struct mapedit {
 	SDL_Rect objlist;		/* Region */
 	struct	 gendir olistw_dir;	/* Scrolling direction */
 	int	 objlist_offs;
+
+	struct	 window *settings_win;
 
 	/*
 	 * Map must be locked before this mutex is acquired, otherwise
