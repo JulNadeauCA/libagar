@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.5 2003/01/02 20:12:02 vedge Exp $
+#	$Csoft: dist.sh,v 1.6 2003/01/02 20:28:16 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
@@ -15,7 +15,8 @@ rm -fR `find agar-${DATE} \( -name CVS \
     -or -name \*.a \
     -or -name \*.core \
     -or -name .\*.swp \
-    -or -name .depend \)`
+    -or -name .depend \
+    -or -name .xvpics \)`
 
 echo "packaging"
 tar -f ${DISTFILE}.tar -c agar-${DATE}
