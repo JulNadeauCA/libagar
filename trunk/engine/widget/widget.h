@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.56 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.57 2003/05/08 11:59:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -12,18 +12,14 @@
 
 struct widget_ops {
 	const struct object_ops	obops;
-
-	/* Draw directly to video memory. */
-	void	 (*widget_draw)(void *);
-
-	/* Update cached surface. */
-	void	 (*widget_update)(void *, SDL_Surface *);
+	void			(*widget_draw)(void *);
+	void			(*widget_update)(void *, SDL_Surface *);
 };
 
 struct widget_color {
-	char	*name;		/* Identifier */
-	int	ind;		/* Index into color array */
-	SLIST_ENTRY(widget_color) colors;
+	char	*name;				/* Identifier */
+	int	 ind;				/* Index into color array */
+	SLIST_ENTRY(widget_color) colors;	/* Widget color scheme */
 };
 
 enum widget_binding_type {
@@ -51,10 +47,8 @@ struct widget_binding {
 	SLIST_ENTRY(widget_binding)	 bindings;
 };
 
-/* Structure shares the parent window's lock. */
 struct widget {
 	struct object	obj;
-
 	int		flags;
 #define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus */
 #define WIDGET_UNFOCUSED_MOTION	  0x02	/* Receive window-mousemotion events
@@ -64,7 +58,7 @@ struct widget {
 #define WIDGET_CLIPPING		  0x08	/* Set the clipping rectangle to the
 					   widget area before drawing. */
 
-	char		*type;		/* Widget type identifier */
+	char		*type;		/* Type of widget */
 	struct window	*win;		/* Parent window */
 	struct region	*reg;		/* Parent region */
 
@@ -78,18 +72,15 @@ struct widget {
 
 	SLIST_HEAD(, widget_binding)	 bindings;	/* Variable bindings */
 	pthread_mutex_t			 bindings_lock;
-	
-	TAILQ_ENTRY(widget)		widgets;	/* Region */
+
+	TAILQ_ENTRY(widget)		 widgets;	/* Region */
 };
 
-#define WIDGET(wi)	((struct widget *)(wi))
-#define WIDGET_OPS(ob)	((struct widget_ops *)OBJECT((ob))->ops)
-
+#define WIDGET(wi)		((struct widget *)(wi))
+#define WIDGET_OPS(ob)		((struct widget_ops *)OBJECT((ob))->ops)
 #define WIDGET_COLOR(wi,ind)	WIDGET(wi)->color[ind]
-
-/* Expand to absolute widget coordinates. */
-#define WIDGET_ABSX(wi)	((WIDGET((wi))->win->rd.x) + WIDGET((wi))->x)
-#define WIDGET_ABSY(wi)	((WIDGET((wi))->win->rd.y) + WIDGET((wi))->y)
+#define WIDGET_ABSX(wi)		((WIDGET((wi))->win->rd.x) + WIDGET((wi))->x)
+#define WIDGET_ABSY(wi)		((WIDGET((wi))->win->rd.y) + WIDGET((wi))->y)
 
 #define WIDGET_PUT_PIXEL(wid, wdrx, wdry, c)				\
 	 WINDOW_PUT_PIXEL(WIDGET((wid))->win,				\

@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.22 2003/03/20 01:19:39 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.23 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -19,6 +19,7 @@ struct button {
 	char		*caption;	/* String, or NULL */
 	SDL_Surface	*label_s;	/* Label (or image) */
 	SDL_Surface	*slabel_s;	/* Scaled label surface */
+	int		 padding;	/* Padding in pixels */
 	enum {
 		BUTTON_LEFT,
 		BUTTON_CENTER,
@@ -38,6 +39,7 @@ extern DECLSPEC void		 button_destroy(void *);
 extern DECLSPEC void		 button_draw(void *);
 extern DECLSPEC void		 button_enable(struct button *);
 extern DECLSPEC void		 button_disable(struct button *);
+extern DECLSPEC void		 button_set_padding(struct button *, int);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.182 2003/05/18 00:17:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.183 2003/05/22 05:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -86,8 +86,7 @@ static void	resize_reg(int, struct window *, struct region *);
 #ifdef DEBUG
 #define DEBUG_STATE		0x01
 #define DEBUG_RESIZE		0x02
-#define DEBUG_DRAW		0x04
-#define DEBUG_RESIZE_GEO	0x08
+#define DEBUG_RESIZE_GEO	0x04
 
 int	window_debug = 0;
 #define	engine_debug window_debug
@@ -466,10 +465,6 @@ window_draw(struct window *win)
 	struct widget *wid;
 	SDL_Rect rd = win->rd;
 	
-	debug_n(DEBUG_DRAW, "drawing %s (%ux%u):\n", OBJECT(win)->name,
-	    win->rd.w, win->rd.h);
-
-	/* Fill the background. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		rd.x = 0;
 		rd.y = 0;
@@ -477,79 +472,60 @@ window_draw(struct window *win)
 		    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 	}
 	
-	/* Draw the title bar. */
-	if (win->flags & WINDOW_TITLEBAR) {
+	if (win->flags & WINDOW_TITLEBAR)
 		window_draw_titlebar(win);
-	}
+	if (win->flags & WINDOW_HIDDEN_BODY)
+		goto out;
 
-	/* Render the widgets. */
-	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
-		TAILQ_FOREACH(reg, &win->regionsh, regions) {
-			SDL_Rect regclip_save;
+	TAILQ_FOREACH(reg, &win->regionsh, regions) {
+		SDL_Rect regclip_save;
 
-			debug_n(DEBUG_DRAW, " %s(%d,%d)\n", OBJECT(reg)->name,
-			    reg->x, reg->y);
+		if (reg->flags & REGION_CLIPPING) {
+			SDL_Rect regclip;
 
-			if (reg->flags & REGION_CLIPPING) {
-				SDL_Rect regclip;
+			regclip.x = win->rd.x+reg->x;
+			regclip.y = win->rd.y+reg->y;
+			regclip.w = reg->w;
+			regclip.h = reg->h;
+			SDL_GetClipRect(view->v, &regclip_save);
+			SDL_SetClipRect(view->v, &regclip);
+		}
 
-				regclip.x = win->rd.x+reg->x;
-				regclip.y = win->rd.y+reg->y;
-				regclip.w = reg->w;
-				regclip.h = reg->h;
-				SDL_GetClipRect(view->v, &regclip_save);
-				SDL_SetClipRect(view->v, &regclip);
-			}
-
-			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
-				SDL_Rect widclip_save;
+		TAILQ_FOREACH(wid, &reg->widgets, widgets) {
+			SDL_Rect widclip_save;
 			
-				debug_n(DEBUG_DRAW, "  %s(%d,%d)\n",
-				    OBJECT(wid)->name,
-				    wid->x, wid->y);
+			if (wid->flags & WIDGET_CLIPPING) {
+				SDL_Rect widclip;
 
-				if (wid->flags & WIDGET_CLIPPING) {
-					SDL_Rect widclip;
-
-					widclip.x = WIDGET_ABSX(wid);
-					widclip.y = WIDGET_ABSY(wid);
-					widclip.w = wid->w;
-					widclip.h = wid->h;
-					SDL_GetClipRect(view->v, &widclip_save);
-					SDL_SetClipRect(view->v, &widclip);
-				}
-
-				if (wid->w > 0 && wid->h > 0) {
-					if (wid->x < 0 || wid->y < 0) {
-						fatal("neg widget coords");
-					}
-					WIDGET_OPS(wid)->widget_draw(wid);
-				}
-
-				if (wid->flags & WIDGET_CLIPPING) {
-					SDL_SetClipRect(view->v, &widclip_save);
-				}
+				widclip.x = WIDGET_ABSX(wid);
+				widclip.y = WIDGET_ABSY(wid);
+				widclip.w = wid->w;
+				widclip.h = wid->h;
+				SDL_GetClipRect(view->v, &widclip_save);
+				SDL_SetClipRect(view->v, &widclip);
 			}
-			
-			if (reg->flags & REGION_CLIPPING) {
-				SDL_SetClipRect(view->v, &regclip_save);
-			}
+
+			if (wid->w > 0 && wid->h > 0)
+				WIDGET_OPS(wid)->widget_draw(wid);
+
+			if (wid->flags & WIDGET_CLIPPING)
+				SDL_SetClipRect(view->v, &widclip_save);
+		}
+		if (reg->flags & REGION_CLIPPING)
+			SDL_SetClipRect(view->v, &regclip_save);
 
 #ifdef DEBUG
-			if (prop_get_bool(config, "widget.reg-borders")) {
-				primitives.rect_outlined(win,
-				    reg->x, reg->y,
-				    reg->w, reg->h,
-				    SDL_MapRGB(vfmt, 255, 255, 255));
-			}
-#endif
+		if (prop_get_bool(config, "widget.reg-borders")) {
+			primitives.rect_outlined(win,
+			    reg->x, reg->y,
+			    reg->w, reg->h,
+			    SDL_MapRGB(vfmt, 255, 255, 255));
 		}
+#endif
 	}
 
-	/* Draw the window border and decorations. */
+out:
 	window_draw_frame(win);
-
-	/* Queue the video update. */
 	VIEW_UPDATE(win->rd);
 }
 
@@ -588,13 +564,12 @@ window_detach(void *parent, void *child)
 	free(reg);
 }
 
+/* Release resources allocated by a window. */
 void
 window_destroy(void *p)
 {
 	struct window *win = p;
 	struct region *reg, *nextreg = NULL;
-
-	OBJECT_ASSERT(win, "window");
 
 	for (reg = TAILQ_FIRST(&win->regionsh);
 	     reg != TAILQ_END(&win->regionsh);
@@ -609,6 +584,7 @@ window_destroy(void *p)
 	pthread_mutex_destroy(&win->lock);
 }
 
+/* Set the visibility bit on a window. */
 int
 window_show(struct window *win)
 {
@@ -625,10 +601,8 @@ window_show(struct window *win)
 	}
 	win->flags |= WINDOW_SHOWN;
 
-	if (win->flags & WINDOW_SAVE_POSITION) {
-		/* Try to load previously saved window geometry/coordinates. */
+	if (win->flags & WINDOW_SAVE_POSITION)
 		object_load(win, NULL);
-	}
 
 	view->focus_win = win;		/* Focus */
 
@@ -646,6 +620,7 @@ window_show(struct window *win)
 	return (0);
 }
 
+/* Clear the visibility bit on a window. */
 int
 window_hide(struct window *win)
 {
@@ -696,10 +671,8 @@ window_hide(struct window *win)
 		break;
 	}
 
-	/* Save the window position and geometry. */
-	if (win->flags & WINDOW_SAVE_POSITION) {
+	if (win->flags & WINDOW_SAVE_POSITION)
 		object_save(win, NULL);
-	}
 
 	pthread_mutex_unlock(&win->lock);
 	pthread_mutex_unlock(&view->lock);
@@ -718,10 +691,8 @@ cycle_widgets(struct window *win, int reverse)
 	struct widget *owid, *rwid;
 	struct widget *nwid;
 
-	if (wid == NULL) {
-		/* No focus */
+	if (wid == NULL)				/* No focus */
 		return;
-	}
 
 	if (reverse) {
 		nwid = TAILQ_PREV(wid, widgetsq, widgets);
@@ -736,9 +707,9 @@ cycle_widgets(struct window *win, int reverse)
 
 	TAILQ_FOREACH(nreg, &win->regionsh, regions) {
 		TAILQ_FOREACH(owid, &nreg->widgets, widgets) {
-			if (owid != wid) {
+			if (owid != wid)
 				continue;
-			}
+
 			if (reverse) {
 				rreg = TAILQ_PREV(nreg, regionsq, regions);
 				if (rreg != NULL) {
@@ -794,9 +765,8 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 	SDL_Rect oldpos, newpos, rfill1, rfill2;
 	Uint32 fillcolor = WIDGET_COLOR(win, BACKGROUND_FILL_COLOR);
 
-	if (view->gfx_engine == GFX_ENGINE_GUI) {
+	if (view->gfx_engine == GFX_ENGINE_GUI)
 		oldpos = win->rd;
-	}
 
 	/* Update the window coordinates, adjust to view area. */
 	win->rd.x += motion->xrel;
@@ -941,9 +911,8 @@ window_focus(struct window *win)
 	view->focus_win = NULL;
 
 	lastwin = TAILQ_LAST(&view->windows, windowq);
-	if (win != NULL && lastwin == win) {		/* Already focused? */
+	if (win != NULL && lastwin == win) 		/* Already focused? */
 		return;
-	}
 
 	if (lastwin != NULL) {
 #if 0
@@ -1036,17 +1005,6 @@ scan_wins:
 			 * flag set.
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
-#if 0
-				if (reg->flags & REGION_RESIZING) {
-					switch (view->winop) {
-					case VIEW_WINOP_REGRESIZE_LEFT:
-					case VIEW_WINOP_REGRESIZE_RIGHT:
-					default:
-						break;
-					}
-					window_resize(win);
-				}
-#endif
 				TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 					if ((WINDOW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
@@ -1087,9 +1045,6 @@ scan_wins:
 				goto next_win;
 			}
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
-				/* Clear the resize operation flag. */
-				reg->flags &= ~(REGION_RESIZING);
-
 				/* Send the mousebuttonup event to widgets. */
 				TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 					if ((WINDOW_FOCUSED(win) &&
@@ -1421,23 +1376,6 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		break;
 	}
 }
-
-#if 0
-/*
- * Resize a region with the mouse.
- * The window must be locked.
- */
-static void
-resize_reg(int op, struct window *win, struct region *reg)
-{
-	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) == 0) {
-		return;
-	}
-	view->winop = op;
-	view->wop_win = win;
-	reg->flags |= REGION_RESIZING;
-}
-#endif
 
 /* Update the window's caption. */
 void

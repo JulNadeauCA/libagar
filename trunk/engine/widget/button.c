@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.63 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.64 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -68,9 +68,7 @@ button_new(struct region *reg, char *caption, SDL_Surface *image, int flags,
 
 	button = Malloc(sizeof(struct button));
 	button_init(button, caption, image, flags, rw, rh);
-
 	region_attach(reg, button);
-
 	return (button);
 }
 
@@ -91,6 +89,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
+	b->padding = 2;
 	b->def.state = 0;
 
 	if (caption != NULL) {
@@ -138,22 +137,21 @@ button_destroy(void *p)
 static void
 button_scaled(int argc, union evarg *argv)
 {
-	const int xspace = 2, yspace = 1;
 	struct button *b = argv[0].p;
 	int nw, nh;
 
 	if (WIDGET(b)->rw == -1)
-		WIDGET(b)->w = b->label_s->w;
+		WIDGET(b)->w = b->label_s->w + b->padding;
 	if (WIDGET(b)->rh == -1)
-		WIDGET(b)->h = b->label_s->h;
+		WIDGET(b)->h = b->label_s->h + b->padding;
 
 	/* Scale the label to a reasonable size. */
 	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
-	if (nw > WIDGET(b)->w - xspace)
-		nw = WIDGET(b)->w - xspace;
+	if (nw > WIDGET(b)->w - 1)
+		nw = WIDGET(b)->w - 1;
 	nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
-	if (nh > WIDGET(b)->h - yspace)
-		nh = WIDGET(b)->h - yspace;
+	if (nh > WIDGET(b)->h - 1)
+		nh = WIDGET(b)->h - 1;
 
 	if (nw > b->label_s->w*2)
 		nw = b->label_s->w*2;
@@ -180,17 +178,15 @@ button_draw(void *p)
 	SDL_Surface *label = b->slabel_s;
 	int x = 0, y = 0;
 	int pressed;
+	
+	if (WIDGET(b)->w < b->padding*2 ||
+	    WIDGET(b)->h < b->padding*2)
+		return;
 
 	pressed = widget_get_bool(b, "state") || (b->flags & BUTTON_DISABLED);
-
-	/* Button */
 	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h, pressed ? -1 : 1,
 	    WIDGET_COLOR(b, FRAME_COLOR));
 	
-	if (WIDGET(b)->w < 8 || WIDGET(b)->h < 8)
-		return;
-
-	/* Label */
 	switch (b->justify) {
 	case BUTTON_LEFT:
 		x = xspace;
@@ -328,4 +324,10 @@ void
 button_disable(struct button *bu)
 {
 	bu->flags |= BUTTON_DISABLED;
+}
+
+void
+button_set_padding(struct button *bu, int padding)
+{
+	bu->padding = padding;
 }
