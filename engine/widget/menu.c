@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.1 2004/09/12 05:51:10 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.2 2004/09/29 05:49:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -94,15 +94,12 @@ ag_menu_collapse(struct AGMenu *m, struct AGMenuItem *item)
 	int i;
 
 	for (i = 0; i < item->nsubitems; i++) {
-		struct AGMenuItem *subitem = &item->subitems[i];
-
-		if (subitem->view != NULL &&
-		    subitem->view->panel != NULL) {
-			view_detach(subitem->view->panel);
-			subitem->view = NULL;
-		}
+		if (item->subitems[i].nsubitems > 0)
+			ag_menu_collapse(m, &item->subitems[i]);
 	}
-	if (item->view->panel != NULL) {
+	item->sel_subitem = NULL;
+	if (item->view != NULL &&
+	    item->view->panel != NULL) {
 		view_detach(item->view->panel);
 		item->view = NULL;
 	}

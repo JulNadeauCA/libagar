@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.1 2004/09/12 05:51:10 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.1 2004/09/29 05:49:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -98,31 +98,36 @@ static void
 mousemotion(int argc, union evarg *argv)
 {
 	struct AGMenuView *mview = argv[0].p;
-	struct AGMenuItem *pitem = mview->pitem, *subitem;
+	struct AGMenuItem *pitem = mview->pitem;
 	struct AGMenu *m = mview->pmenu;
 	int mx = argv[1].i;
 	int my = argv[2].i;
 	int y = 0, i;
 
-	if (mx < 0 || mx > WIDGET(mview)->w)
+	if (my < 0)
 		return;
-	
+	if (mx < 0)
+		goto selnone;
+
 	for (i = 0; i < pitem->nsubitems; i++) {
-		y += WIDGET_SURFACE(m,pitem->subitems[i].label)->h +
-		    mview->vspace;
-		if (y >= my)
-			break;
-	}
-	if (i == pitem->nsubitems) {
-	    	if (pitem->sel_subitem != NULL &&
-		    pitem->sel_subitem->nsubitems == 0) {
-			select_subitem(pitem, NULL);
+		struct AGMenuItem *subitem = &pitem->subitems[i];
+
+		y += WIDGET_SURFACE(m,subitem->label)->h + mview->vspace;
+		if (my < y) {
+			if (mx > WIDGET(mview)->w &&
+			    subitem->nsubitems == 0) {
+				goto selnone;
+			}
+			if (pitem->sel_subitem != subitem) {
+				select_subitem(pitem, subitem);
+			}
+			return;
 		}
-		return;
 	}
-	subitem = &pitem->subitems[i];
-	if (pitem->sel_subitem != subitem)
-		select_subitem(pitem, subitem);
+selnone:
+	if (pitem->sel_subitem != NULL &&
+	    pitem->sel_subitem->nsubitems == 0)
+		select_subitem(pitem, NULL);
 }
 
 static void
@@ -144,7 +149,7 @@ mousebuttonup(int argc, union evarg *argv)
 		SDL_Surface *label = WIDGET_SURFACE(m, subitem->label);
 
 		y += label->h + m->vspace;
-		if (my <= y) {
+		if (my < y) {
 			if (subitem->event != NULL) {
 				event_post(NULL, m, subitem->event->name, NULL);
 			}
