@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.8 2003/07/02 06:50:18 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.9 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ static struct widget_ops combo_ops = {
 };
 
 struct combo *
-combo_new(void *parent, const char *fmt, ...)
+combo_new(void *parent, int flags, const char *fmt, ...)
 {
 	char label[COMBO_LABEL_MAX];
 	struct combo *com;
@@ -63,7 +63,7 @@ combo_new(void *parent, const char *fmt, ...)
 	va_end(ap);
 
 	com = Malloc(sizeof(struct combo));
-	combo_init(com, label);
+	combo_init(com, label, flags);
 	object_attach(parent, com);
 	return (com);
 }
@@ -137,13 +137,12 @@ combo_select(int argc, union evarg *argv)
 static void
 combo_return(int argc, union evarg *argv)
 {
+	char s[TEXTBOX_STRING_MAX];
 	struct textbox *tbox = argv[0].p;
 	struct combo *com = argv[1].p;
-	char *s;
 
-	s = textbox_string(tbox);
+	textbox_copy_string(tbox, s, sizeof(s));
 	event_post(com, "combo-selected", "%s", s);
-	free(s);
 }
 
 #if 0
@@ -162,23 +161,32 @@ combo_mousebuttonup(int argc, union evarg *argv)
 #endif
 
 void
-combo_init(struct combo *com, const char *label)
+combo_init(struct combo *com, const char *label, int flags)
 {
 	widget_init(com, "combo", &combo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL|
 	    WIDGET_UNFOCUSED_BUTTONUP);
+	com->win = NULL;
+	com->flags = flags;
 
 	com->tbox = textbox_new(com, label);
 	com->button = button_new(com, " ... ");
 	button_set_sticky(com->button, 1);
 	button_set_padding(com->button, 1);
-	com->win = NULL;
+
 	com->list = Malloc(sizeof(struct tlist));
 	tlist_init(com->list, 0);
+	
+	if (flags & COMBO_MULTI)	com->list->flags |= TLIST_MULTI;
+	if (flags & COMBO_MULTI_STICKY)	com->list->flags |= TLIST_MULTI_STICKY;
+	if (flags & COMBO_POLL)		com->list->flags |= TLIST_POLL;
+	if (flags & COMBO_TREE)		com->list->flags |= TLIST_TREE;
 
 	event_new(com->button, "button-pushed", combo_expand, "%p", com);
 	event_new(com->list, "tlist-changed", combo_select, "%p", com);
 	event_new(com->tbox, "textbox-return", combo_return, "%p", com);
-//	event_new(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
+#if 0
+	event_new(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
+#endif
 }
 
 void
