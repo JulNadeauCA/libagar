@@ -1,0 +1,88 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.c1 "Overview"
+.pp
+\fBAgar\fP originally started in early 2002 as a free ("open source") engine for
+an 2D/tile-based role-playing game, \fITrek to the Cave\fP.
+One of the major design goals of Agar was the ability to maintain a large,
+fully persistent world, but still use memory efficiently.
+.pp
+The \fBAgar Engine\fP was since adapted to suit many more types of applications,
+including simulations, video edition and scientific applications.
+This was not the author's original intention, rather a consequence of his
+pursuit for a clean and general design.
+As the \fITrek to the Cave\fP level editor was constantly in the need for
+a more sophisticated user interface, aa window system and a set of
+\fIwidgets\fP were also developed.
+.c2 "Requirements"
+.pp
+Agar is written in ANSI C (\fIANSI X3.159-1989\fP), and requires the
+SDL cross-platform multimedia library, available from
+.Ur http://www.libsdl.org/ .
+Thread safety is only available for \fIPOSIX Threads\fP implementations that
+include support for mutexes of the recursive type, as required by the
+Version 2 of the \fISingle Unix Specification\fP (\fISUSv2\fP).
+.c2 "Agar License"
+.pp
+.(q
+.ps 8
+Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+All rights reserved.
+.sp 0.5
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+.sp 0.5
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+.br
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+.sp 0.5
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+.ps
+.)q
+.c2 "Agar Availability"
+.pp
+The latest version of Agar is available from
+.Ur http://agar.csoft.org/ .
+At the time of this writing, Agar has been successfully tested under the
+\fIOpenBSD\fP, \fINetBSD\fP, \fIFreeBSD\fP, \fILinux\fP and
+\fISGI\(rg IRIX\(rg\fP operating systems, but
+it is expected to run on all platforms supported by SDL.

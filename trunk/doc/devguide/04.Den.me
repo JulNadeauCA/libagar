@@ -1,0 +1,96 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.c1 "The .den archive format"
+.pp
+Agar stores multimedia data in
+.Xr den 5
+archives.
+Agar's build system compiles files in various formats into an archive file
+(with the
+.Pa .den
+suffix), using the
+.Xr dencomp 1
+utility.
+.c2 "Typical Makefile for a .den archive"
+.lp
+A typical
+.Pa Makefile
+for a \fIden\fP archive may look like:
+.Bd -lines
+DEN=		dark-castle.den
+DEN_DIR=	cave/dark-castle
+DEN_NAME=	"The Dark Castle in the Deep Forest"
+DEN_AUTHOR=	"Rodrigue"
+DEN_COPYRIGHT=	"2004 Rodrigue"
+
+OGG=	castle-music.ogg
+WAV=	castle-sounds.wav
+XCF=	castle.xcf \\
+	briques.xcf
+MPEG=	castle-intro.mpeg
+
+include ${TOP}/dencomp/Makefile.inc
+.Ed
+.lp
+The
+.Xr dencomp 1
+utility may also be invoked manually.
+As the
+.Xr den 5
+archive format was designed to allow language-specific overrides, each
+archive entry includes an optional ISO 639 language code.
+.Bd
+$ dencomp -o dark-castle.ogg -n 'The Dark Castle in the Deep Forest' \\
+    castle-music.ogg \\
+    castle-sounds-en.wav:en \\
+    castle-sounds-fr.wav:fr \\
+    castle-intro-en.mpeg:en \\
+    castle-intro-fr.mpeg:fr
+.Ed
+.pp
+In addition to
+.Xr dencomp 1 ,
+the Agar distribution comes with an utility to extract archive members,
+.Xr denex 1 .
+.sp 2
+.c2 "Recognized file formats"
+.pp
+Agar recognizes the following file formats:
+.Bd -fig "Recognized file formats"
+.TS
+center tab(@);
+lw(1i) lw(1i) lw(1i).
+Format@Typical extension@Purpose
+_
+
+Gimp XCF@.xcf@Sprites and animations
+WAVE file@.wav@Audio samples
+Ogg Vorbis@.ogg@Music, audio samples
+MPEG-1 stream@.mpeg@Videos
+.TE
+.Ed

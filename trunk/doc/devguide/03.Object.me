@@ -1,0 +1,264 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.c1 "The Object System"
+.pp
+The logic of Agar applications is built around a tree of persistent 
+\fBobjects\fP.
+In a game, for instance, these objects will be created by a level designer,
+and will typically include maps, characters, monsters and \fIdoodads\fP.
+Agar handles memory management, persistance and dependency issues for such
+objects, in a generic manner.
+.pp
+The programmer is free to implement new types of objects and derive objects
+from others.
+Several types of objects are already implemented as part of the base Agar
+engine, these include \fBmap\fP (layered, tile-based 2D maps) and \fBperso\fP
+(game characters).
+.c2 "The Type Switch"
+.pp
+When creating an object, Agar allocates enough space for the generic
+\fBobject\fP structure, as well as object derivate data, depending on the
+type of object.
+Exactly how much space is needed for a given type of object is defined by
+a table called the \fBtype switch\fP.
+This information is particularly useful for dynamically reconstructing
+objects from previously saved data.
+.c2 "Overview of the Object System"
+.c3 "Persistance"
+.pp
+One of the primary design goals of Agar is the ability to maintain a large,
+persistent world.
+The Object System provides interfaces for saving the state of objects in
+machine-independent format.
+Implementations of persistent objects provide \fBload\fP and \fBsave\fP
+routines, which typically use Agar's I/O library to read and write primitive
+data types.
+Agar also provides signature and versioning facilities.
+.c3 "Memory management"
+.pp
+Agar is able to accomodate complex applications such as a role-playing game
+with hundreds of maps, using limited resources.
+This is done using a paging algorithm, where the data is stored to disk
+(or network) when it is not needed, and loaded back into memory, on demand.
+.pp
+In addition, data (typically graphics, 3d models and sounds) may be shared
+between objects, while Agar keeps reference counts for purposes of garbage
+collection.
+.pp
+For example, in the case of a single player game, only the current map
+(and all of the graphics and sounds it references) have to remain in memory.
+.c3 "Dependencies"
+.pp
+The garbage collection process requires a way to tell whether an object
+is currently in use.
+To achieve this, the \fBobject\fP structure includes a dependency table,
+indicating the other objects this object depends upon.
+This way, it is possible to tell whether an given object is in use by traversing
+the object tree and searching for references to it.
+.c3 "Generic events"
+.pp
+The object structure includes a table to associate specific event handler
+functions to specific types of events, which are identified by strings.
+.pp
+The event system is used extensively by the widget system to deliver keyboard
+and mouse events, but it is also useful in games.
+.c3 "Generic properties"
+.pp
+The \fBobject\fP structure also includes a table of generic properties, which
+are simple key=value pairs, where the value may be one of many primitive
+types (notably integer, floating-point, string, pointer and boolean values).
+While this facility is much less useful than the event system, it proves to be
+helpful in situations where the level designers have to store miscellaneous
+data along with different objects.
+.c3 "Positionment"
+.pp
+Many game-related objects (characters, for once) occupy a unique position in
+the world.
+To accomodate this, the \fBobject\fP structure includes optional position
+information, such as the \fBmap\fP coordinates, orientation and associated
+input device, if any.
+.c2 "A sample object implementation"
+.pp
+Here is what the implementation of a persistent door object may look like.
+We want this object to preserve state as to whether the door is open/closed
+and locked.
+We also generate a unique key, which must be matched in order to
+open the door, if it is locked.
+Some doors may have to hold inscriptions, so we include a text string for
+this purpose.
+.c3 "Data structures"
+.pp
+We first define a \fBdoor\fP structure, which is derived from the
+\fBobject\fP structure.
+We also initialize a \fBversion\fP structure, for purposes of data file
+signing and versioning.
+The \fBobject_ops\fP structure which is passed to
+.Fn object_init
+indicates object-specific operations.
+.Bd -code "The \fBdoor\fP object's data structures"
+struct door {
+	struct object obj;
+	int open, locked, key;
+	char *inscription;
+};
+const struct version door_ver = {
+	"agar door",
+	0, 0
+};
+const struct object_ops door_ops = {
+	door_init,
+	NULL,		/* reinit */
+	NULL,		/* destroy */
+	door_load,
+	door_save,
+	door_edit
+};
+.Ed
+.c3 "Initialization"
+.pp
+The
+.Fn object_init
+function is invoked to initialize the \fBobject\fP part of the \fBdoor\fP
+structure.
+The \fBinit\fP operation is responsible for putting the \fBdoor\fP structure
+in a consistent state.
+A high-quality random 32-bit value is returned by
+.Fn arc4random \(dg .
+.(f
+\(dg As with many other functions, Agar includes a portable version of
+.Fn arc4random ,
+for operating systems without one.
+.)f
+We register an event handler function,
+.Fn door_open ,
+for the "door-open" event, and we initially display the submap "Closed".
+.Bd -code "Initialization of the \fBdoor\fP object"
+void
+door_init(void *obj, const char *name)
+{
+	struct door *door = obj;
+
+	object_init(door, "door", name, &door_ops);
+	door->open = 0;
+	door->locked = 0;
+	door->key = (int)arc4random();
+	door->inscription = NULL;
+	event_new(door, "door-open", door_open, NULL);
+	object_set_submap(door, "Closed");
+}
+.Ed
+.c3 "Load and save routines"
+.pp
+The object system will invoke the \fBload\fP operation to read the relevant
+parts of the door structure from file/network, and the \fBsave\fP operation
+to write its contents to machine independent format.
+Since \fBload\fP might be used to read data originating from the network,
+for instance, it is important to verify the consistency of the data.
+The \fBread_*\fP functions already perform some consistency checks of their
+own.
+.Bd -code "The \fBdoor\fP object's save and load routines"
+int
+door_load(void *obj, struct netbuf *buf)
+{
+	struct door *door = obj;
+
+	if (version_read(buf, &door_ver, NULL) != 0)
+		return (-1);
+
+	door->open = (int)read_uint8(buf);
+	door->locked = (int)read_uint8(buf);
+	door->key = (int)read_uint32(buf);
+	door->inscription = read_string(buf);
+
+	if (door->open && door->locked) {
+		error_set("Inconsistent state");
+		return (-1);
+	}
+	return (0);
+}
+
+int
+door_save(void *obj, struct netbuf *buf)
+{
+	struct door *door = obj;
+
+	version_write(buf, &door_ver);
+	write_uint8(buf, door->open);
+	write_uint8(buf, door->locked);
+	write_uint32(buf, (Uint32)door->key);
+	write_string(buf, door->inscription);
+	return (0);
+}
+.Ed
+.c3 "Event handlers"
+.pp
+Objects (such as characters) will attempt to open the door by posting it a
+"door-open" event using
+.Fn event_post
+or
+.Fn event_forward .
+We've already registered an event handler function for "door-open" in
+.Fn door_init .
+.Bd -code "The \fIdoor-open\fP event handler function"
+static void
+door_open(int argc, union evarg *argv)
+{
+	struct door *door = argv[0].p;
+	struct object *sender = argv[argc].p;
+	int key = argv[1].i;
+
+	if (door->locked) {
+		if (key != door->key) {
+			event_post(sender, "door-wrong-key", NULL);
+			return;
+		}
+		door->locked = 0;
+	}
+	door->open = 1;
+	object_set_submap(door, "Open");
+}
+.Ed
+.c3 "Submaps"
+.pp
+In Agar games, the \fBmap\fP object is used to represent not only levels, but
+also the appearance of certain objects inside those levels.
+For instance, the appearance of a character will be controlled by a set of
+maps, such as "Moving North", "Moving South", "Idle North", "Idle South" and
+so on.
+Among other things, it allows the game designers to apply transforms,
+such as "mirror", this way the artist does not have to come up with separate
+"Moving West" and "Moving East" sprites, for instance.
+.pp
+The
+.Fn object_set_submap
+function selects among a series of \fBmap\fPs attached to the object,
+which one should be laid on top of the level map, and moved as the object moves.
+.pp
+As far as our \fBdoor\fP object is concerned, the level designer will have
+to create two maps, "Closed" and "Open", and make sure that the relevant tiles
+have the \fIwalkable\fP flag in "Open".
