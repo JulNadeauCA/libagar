@@ -1,7 +1,7 @@
-/*	$Csoft: command.h,v 1.4 2002/02/17 08:16:04 vedge Exp $	*/
+/*	$Csoft: command.h,v 1.5 2002/03/05 17:04:25 vedge Exp $	*/
 
 void	mapedit_push(struct mapedit *, struct node *, int, int);
-void	mapedit_pop(struct mapedit *, struct node *);
+void	mapedit_pop(struct mapedit *, struct node *, int);
 void	mapedit_clearmap(struct mapedit *);
 void	mapedit_fillmap(struct mapedit *);
 void	mapedit_setorigin(struct mapedit *, int *, int *);

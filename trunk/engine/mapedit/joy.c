@@ -85,7 +85,7 @@ joy_button(struct mapedit *med, SDL_Event *ev)
 		mapedit_push(med, node, med->curoffs, med->curflags);
 		break;
 	case 2: /* Pop */
-		mapedit_pop(med, node);
+		mapedit_pop(med, node, 0);
 		break;
 	case 4: /* Tile list up */
 		gendir_set(&med->listw_dir, DIR_UP, 1);
