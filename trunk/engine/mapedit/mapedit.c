@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.193 2004/03/10 16:58:35 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.194 2004/03/17 12:42:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -223,7 +223,7 @@ mapedit_destroy(void *p)
 		     kbinding != SLIST_END(&tool->kbindings);
 		     kbinding = nkbinding) {
 			nkbinding = SLIST_NEXT(kbinding, kbindings);
-			free(kbinding);
+			Free(kbinding, M_MAPEDIT);
 		}
 		if (tool->destroy != NULL)
 			tool->destroy();
@@ -336,7 +336,7 @@ tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
 	struct tool *tool = p;
 	struct tool_kbinding *kbinding;
 
-	kbinding = Malloc(sizeof(struct tool_kbinding));
+	kbinding = Malloc(sizeof(struct tool_kbinding), M_MAPEDIT);
 	kbinding->key = keysym;
 	kbinding->mod = keymod;
 	kbinding->func = func;

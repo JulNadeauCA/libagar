@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.35 2004/01/23 03:53:30 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.36 2004/02/14 23:23:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ scrollbar_new(void *parent, enum scrollbar_type type)
 {
 	struct scrollbar *sb;
 
-	sb = Malloc(sizeof(struct scrollbar));
+	sb = Malloc(sizeof(struct scrollbar), M_OBJECT);
 	scrollbar_init(sb, type);
 	object_attach(parent, sb);
 	return (sb);

@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.8 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.9 2004/01/22 09:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -64,7 +64,7 @@ spinbutton_new(void *parent, const char *fmt, ...)
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	sbu = Malloc(sizeof(struct spinbutton));
+	sbu = Malloc(sizeof(struct spinbutton), M_OBJECT);
 	spinbutton_init(sbu, label);
 	object_attach(parent, sbu);
 	return (sbu);

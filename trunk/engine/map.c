@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.213 2004/03/17 17:30:25 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.214 2004/03/18 06:08:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -164,12 +164,12 @@ noderef_destroy(struct map *m, struct noderef *r)
 		}
 		break;
 	case NODEREF_WARP:
-		free(r->r_warp.map);
+		Free(r->r_warp.map, 0);
 		break;
 	default:
 		break;
 	}
-	free(r);
+	Free(r, M_MAP_NODEREF);
 }
 
 /* Allocate and initialize the node arrays. */
@@ -187,9 +187,9 @@ map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
 	pthread_mutex_lock(&m->lock);
 	m->mapw = w;
 	m->maph = h;
-	m->map = Malloc(h * sizeof(struct node *));
+	m->map = Malloc(h * sizeof(struct node *), M_MAP);
 	for (y = 0; y < h; y++) {
-		m->map[y] = Malloc(w * sizeof(struct node));
+		m->map[y] = Malloc(w * sizeof(struct node), M_MAP);
 		for (x = 0; x < w; x++) {
 			node_init(&m->map[y][x]);
 		}
@@ -211,9 +211,9 @@ map_free_nodes(struct map *m)
 			node = &m->map[y][x];
 			node_destroy(m, node);
 		}
-		free(m->map[y]);
+		Free(m->map[y], M_MAP);
 	}
-	free(m->map);
+	Free(m->map, M_MAP);
 	m->map = NULL;
 	pthread_mutex_unlock(&m->lock);
 }
@@ -222,7 +222,7 @@ map_free_nodes(struct map *m)
 static void
 map_free_layers(struct map *m)
 {
-	m->layers = Realloc(m->layers, 1 * sizeof(struct map_layer));
+	m->layers = Realloc(m->layers, 1 * sizeof(struct map_layer), M_MAP);
 	m->nlayers = 1;
 	map_init_layer(&m->layers[0], _("Layer 0"));
 }
@@ -304,7 +304,7 @@ map_new(void *parent, const char *name)
 {
 	struct map *m;
 
-	m = Malloc(sizeof(struct map));
+	m = Malloc(sizeof(struct map), M_OBJECT);
 	map_init(m, name);
 
 	if (parent != NULL)
@@ -342,7 +342,7 @@ map_init(void *obj, const char *name)
 	m->ssy = TILESZ;
 	m->cur_layer = 0;
 
-	m->layers = Malloc(1 * sizeof(struct map_layer));
+	m->layers = Malloc(1 * sizeof(struct map_layer), M_MAP);
 	m->nlayers = 1;
 	map_init_layer(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
@@ -365,7 +365,7 @@ map_push_layer(struct map *m, const char *name)
 		return (-1);
 	}
 	m->layers = Realloc(m->layers,
-	    (m->nlayers+1) * sizeof(struct map_layer));
+	    (m->nlayers+1) * sizeof(struct map_layer), M_MAP);
 	map_init_layer(&m->layers[m->nlayers], layname);
 	m->nlayers++;
 	return (0);
@@ -388,7 +388,7 @@ node_add_sprite(struct map *map, struct node *node, void *pobj, Uint32 offs)
 {
 	struct noderef *r;
 
-	r = Malloc(sizeof(struct noderef));
+	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_SPRITE);
 	r->r_sprite.obj = pobj;
 	r->r_sprite.offs = offs;
@@ -418,7 +418,7 @@ node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs,
 			fatal("paging gfx: %s", error_get());
 	}
 
-	r = Malloc(sizeof(struct noderef));
+	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_ANIM);
 	r->r_anim.obj = pobj;
 	r->r_anim.offs = offs;
@@ -438,7 +438,7 @@ node_add_warp(struct map *map, struct node *node, const char *mapname,
 {
 	struct noderef *r;
 
-	r = Malloc(sizeof(struct noderef));
+	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
 	noderef_init(r, NODEREF_WARP);
 	r->r_warp.map = Strdup(mapname);
 	r->r_warp.x = x;
@@ -551,7 +551,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 	TAILQ_FOREACH(trans, &sr->transforms, transforms) {
 		struct transform *ntrans;
 
-		ntrans = Malloc(sizeof(struct transform));
+		ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
 		transform_init(ntrans, trans->type, trans->nargs, trans->args);
 		TAILQ_INSERT_TAIL(&dr->transforms, ntrans, transforms);
 	}
@@ -560,7 +560,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 	TAILQ_FOREACH(mask, &sr->masks, masks) {
 		struct nodemask *nmask;
 
-		nmask = Malloc(sizeof(struct nodemask));
+		nmask = Malloc(sizeof(struct nodemask), M_NODEMASK);
 		nodemask_init(nmask, mask->type);
 		nodemask_copy(mask, dm, nmask);
 		TAILQ_INSERT_TAIL(&dr->masks, nmask, masks);
@@ -677,22 +677,7 @@ map_destroy(void *p)
 #ifdef THREADS
 	pthread_mutex_destroy(&m->lock);
 #endif
-	free(m->layers);
-}
-
-/* Convert cartesian to polar coordinates. */
-void
-map_c2pol(struct map *m, int cx, int cy, float *angle, float *vlen)
-{
-	
-}
-
-/* Convert polar to cartesian coordinates. */
-void
-map_pol2c(struct map *m, float angle, float vlen, int *cx, int *cy)
-{
-	*cx = (int)(vlen * cosf(angle));
-	*cy = (int)(vlen * sinf(angle));
+	Free(m->layers, M_MAP);
 }
 
 /*
@@ -803,10 +788,10 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	for (i = 0; i < ntrans; i++) {
 		struct transform *trans;
 
-		trans = Malloc(sizeof(struct transform));
+		trans = Malloc(sizeof(struct transform), M_NODEXFORM);
 		transform_init(trans, 0, 0, NULL);
 		if (transform_load(buf, trans) == -1) {
-			free(trans);
+			Free(trans, M_NODEXFORM);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&(*r)->transforms, trans, transforms);
@@ -820,10 +805,10 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	for (i = 0; i < nmasks; i++) {
 		struct nodemask *mask;
 
-		mask = Malloc(sizeof(struct nodemask));
+		mask = Malloc(sizeof(struct nodemask), M_NODEMASK);
 		nodemask_init(mask, 0);
 		if (nodemask_load(m, buf, mask) == -1) {
-			free(mask);
+			Free(mask, M_NODEMASK);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&(*r)->masks, mask, masks);
@@ -896,7 +881,8 @@ map_load(void *ob, struct netbuf *buf)
 	}
 	dprintf("%ux%u nodes, %u layers\n", m->mapw, m->maph, m->nlayers);
 	if (m->layers > 0) {
-		m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
+		m->layers = Malloc(m->nlayers * sizeof(struct map_layer),
+		    M_MAP);
 		for (i = 0; i < m->nlayers; i++) {
 			struct map_layer *lay = &m->layers[i];
 
@@ -1167,11 +1153,10 @@ noderef_draw_sprite(struct noderef *r)
 		     origsu->format->Gmask,
 		     origsu->format->Bmask,
 		     origsu->format->Amask);
-		if (su == NULL) {
+		if (su == NULL)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-		}
 		
-		ncsprite = Malloc(sizeof(struct gfx_cached_sprite));
+		ncsprite = Malloc(sizeof(struct gfx_cached_sprite), M_GFX);
 		ncsprite->su = su;
 		ncsprite->last_drawn = SDL_GetTicks();
 		TAILQ_INIT(&ncsprite->transforms);
@@ -1189,7 +1174,7 @@ noderef_draw_sprite(struct noderef *r)
 			trans->func(&su, trans->nargs, trans->args);
 			SDL_UnlockSurface(su);
 
-			ntrans = Malloc(sizeof(struct transform));
+			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
 			transform_init(ntrans, trans->type, trans->nargs,
 			    trans->args);
 			TAILQ_INSERT_TAIL(&ncsprite->transforms, ntrans,
@@ -1304,7 +1289,7 @@ map_edit(void *p)
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
 	
-	mv = Malloc(sizeof(struct mapview));
+	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 	mapview_init(mv, m, flags);
 
 	toolbar = toolbar_new(win, TOOLBAR_HORIZ);

@@ -1,7 +1,7 @@
-/*	$Csoft: monitor.c,v 1.51 2004/03/12 02:48:17 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.17 2004/01/03 04:25:11 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -26,13 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_jpeg.h>
-
 #include <engine/engine.h>
 
 #ifdef DEBUG
 
-#include <engine/map.h>
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
@@ -41,54 +38,72 @@
 
 #include "monitor.h"
 
-struct monitor monitor;		/* Debug monitor */
+extern struct error_mement error_mements[];
+static const char *mement_names[] = {
+	"generic",
+	"object",
+	"position",
+	"dep",
+	"prop",
+	"event",
+	"gfx",
+	"audio",
+	"map",
+	"map_noderef",
+	"mapedit",
+	"nodexform",
+	"nodemask",
+	"widget",
+	"vg",
+	"view",
+	"netbuf",
+	"ttf",
+	"xcf",
+	"den",
+	"text",
+	"typesw",
+	"input"
+};
 
 static void
-select_tool(int argc, union evarg *argv)
+poll_mements(int argc, union evarg *argv)
 {
-	struct tlist_item *it = argv[1].p;
-	struct window *(*win_func)() = it->p1;		/* XXX unsafe */
-	struct window *win;
-
-	if ((win = (win_func)()) != NULL)
-		window_show(win);
-}
-
-void
-monitor_init(struct monitor *mon, const char *name)
-{
-	const struct tool_ent {
-		char		*name;
-		struct window	*(*window_func)(void);
-	} tool_ents[] = {
-		{ N_("Refresh rate"), event_fps_window },
-#if defined(THREADS) && defined(HAVE_JPEG)
-		{ N_("Screenshot"), screenshot_window },
-#endif
-		{ N_("Widgets"), widget_debug_window },
-		{ N_("Viewport"), view_params_window },
-		{ N_("Resident graphics"), gfx_debug_window },
-		{ N_("Unicode conversion"), uniconv_window },
-		{ N_("Leak detection"), leak_window },
-	};
-	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
-	struct tlist *tl_tools;
+	struct tlist *tl = argv[0].p;
+	struct tlist_item *it;
+	struct error_mement *ment;
 	int i;
 
-	object_init(mon, "debug-monitor", name, NULL);
+	tlist_clear_items(tl);
+	for (ment = &error_mements[0], i = 0;
+	     ment < &error_mements[M_LAST];
+	     ment++, i++) {
+		char text[TLIST_LABEL_MAX];
 
-	mon->toolbar = window_new("monitor-toolbar");
-	window_set_caption(mon->toolbar, _("Debug monitor"));
-	window_set_position(mon->toolbar, WINDOW_LOWER_LEFT, 0);
-
-	tl_tools = tlist_new(mon->toolbar, 0);
-	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
-	event_new(tl_tools, "tlist-changed", select_tool, NULL);
-
-	for (i = 0; i < ntool_ents; i++) {
-		tlist_insert_item(tl_tools, NULL, _(tool_ents[i].name),
-		    tool_ents[i].window_func);
+		snprintf(text, sizeof(text),
+		    "[%s] - %u buffers (%lu / %lu)",
+		    mement_names[i],
+		    ment->nallocs - ment->nfrees,
+		    (unsigned long)ment->msize,
+		    (unsigned long)ment->rsize);
+		tlist_insert_item(tl, NULL, text, ment);
 	}
+}
+
+struct window *
+leak_window(void)
+{
+	struct window *win;
+	struct tlist *tl;
+
+	if ((win = window_new("monitor-leak")) == NULL) {
+		return (NULL);
+	}
+	window_set_caption(win, _("Leak detection"));
+	window_set_closure(win, WINDOW_DETACH);
+
+	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
+	event_new(tl, "tlist-poll", poll_mements, NULL);
+	return (win);
 }
 
 #endif	/* DEBUG */

@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.45 2004/01/23 06:24:44 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.46 2004/03/18 04:02:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -76,7 +76,7 @@ graph_new(void *parent, const char *caption, enum graph_type type, int flags,
 {
 	struct graph *graph;
 
-	graph = Malloc(sizeof(struct graph));
+	graph = Malloc(sizeof(struct graph), M_OBJECT);
 	graph_init(graph, caption, type, flags, yrange);
 	object_attach(parent, graph);
 	return (graph);
@@ -268,10 +268,10 @@ graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b,
 {
 	struct graph_item *gi;
 
- 	gi = Malloc(sizeof(struct graph_item));
+ 	gi = Malloc(sizeof(struct graph_item), M_WIDGET);
 	strlcpy(gi->name, name, sizeof(gi->name));
 	gi->color = SDL_MapRGB(vfmt, r, g, b);
-	gi->vals = Malloc(NITEMS_INIT * sizeof(graph_val_t));
+	gi->vals = Malloc(NITEMS_INIT * sizeof(graph_val_t), M_WIDGET);
 	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;
 	gi->graph = gra;
@@ -291,7 +291,8 @@ graph_plot(struct graph_item *gi, graph_val_t val)
 	} else {
 		if (gi->nvals+1 >= gi->maxvals) {
 			gi->vals = Realloc(gi->vals,
-			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t));
+			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t),
+			    M_WIDGET);
 			gi->maxvals += NITEMS_GROW;
 		}
 		gi->nvals++;
@@ -314,8 +315,8 @@ graph_free_items(struct graph *gra)
 	     git != TAILQ_END(&gra->items);
 	     git = nextgit) {
 		nextgit = TAILQ_NEXT(git, items);
-		free(git->vals);
-		free(git);
+		Free(git->vals, M_WIDGET);
+		Free(git, M_WIDGET);
 	}
 	TAILQ_INIT(&gra->items);
 }

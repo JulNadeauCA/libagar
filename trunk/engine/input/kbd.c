@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.5 2004/02/20 04:20:35 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.6 2004/02/26 10:18:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@ kbd_new(int index)
 	char name[INPUT_NAME_MAX];
 	struct kbd *kbd;
 
-	kbd = Malloc(sizeof(struct kbd));
+	kbd = Malloc(sizeof(struct kbd), M_INPUT);
 	kbd->index = index;
 	snprintf(name, sizeof(name), "kbd%d", index);
 	input_register(kbd, INPUT_KEYBOARD, name, &kbd_driver);

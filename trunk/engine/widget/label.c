@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.73 2003/11/10 22:40:17 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.74 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ label_new(void *parent, const char *fmt, ...)
 	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
-	label = Malloc(sizeof(struct label));
+	label = Malloc(sizeof(struct label), M_OBJECT);
 	label_init(label, LABEL_STATIC, buf);
 	object_attach(parent, label);
 	return (label);
@@ -135,9 +135,8 @@ label_polled_new(void *parent, pthread_mutex_t *mutex, const char *fmt, ...)
 	va_list args;
 	const char *p;
 
-	label = Malloc(sizeof(struct label));
+	label = Malloc(sizeof(struct label), M_OBJECT);
 	label_init(label, LABEL_POLLED, fmt);
-
 	label->poll.lock = mutex;
 
 	va_start(args, fmt);

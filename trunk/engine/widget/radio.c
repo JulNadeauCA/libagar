@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.40 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.41 2004/03/18 03:03:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,7 +70,7 @@ radio_new(void *parent, const char **items)
 {
 	struct radio *rad;
 
-	rad = Malloc(sizeof(struct radio));
+	rad = Malloc(sizeof(struct radio), M_OBJECT);
 	radio_init(rad, items);
 	object_attach(parent, rad);
 	return (rad);
@@ -96,7 +96,7 @@ radio_init(struct radio *rad, const char **items)
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
 		;;
-	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems);
+	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems, M_WIDGET);
 	for (i = 0; i < rad->nitems; i++) {
 		rad->labels[i] = text_render(NULL, -1,
 		    WIDGET_COLOR(rad, TEXT_COLOR), _(items[i]));
@@ -156,7 +156,7 @@ radio_destroy(void *p)
 	for (i = 0; i < rad->nitems; i++) {
 		SDL_FreeSurface(rad->labels[i]);
 	}
-	free(rad->labels);
+	Free(rad->labels, M_WIDGET);
 
 	widget_destroy(rad);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.10 2004/01/23 08:57:21 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.11 2004/02/26 10:33:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@ fspinbutton_new(void *parent, const struct unit *unit, const char *fmt, ...)
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	fsu = Malloc(sizeof(struct fspinbutton));
+	fsu = Malloc(sizeof(struct fspinbutton), M_OBJECT);
 	fspinbutton_init(fsu, unit, label);
 	object_attach(parent, fsu);
 	return (fsu);

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.22 2003/09/05 10:22:34 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.23 2003/11/17 15:07:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MONITOR_MONITOR_H_
@@ -32,6 +32,7 @@ struct window	*widget_debug_window(void);
 struct window	*view_params_window(void);
 struct window	*screenshot_window(void);
 struct window	*uniconv_window(void);
+struct window	*leak_window(void);
 __END_DECLS
 
 #include "close_code.h"

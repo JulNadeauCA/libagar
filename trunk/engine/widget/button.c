@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.78 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.79 2004/01/22 09:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@ button_new(void *parent, const char *caption)
 {
 	struct button *button;
 
-	button = Malloc(sizeof(struct button));
+	button = Malloc(sizeof(struct button), M_OBJECT);
 	button_init(button, caption);
 	object_attach(parent, button);
 	return (button);

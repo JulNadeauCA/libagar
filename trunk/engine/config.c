@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.106 2004/03/12 02:51:18 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.107 2004/03/17 12:48:42 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -73,7 +73,10 @@ const struct object_ops config_ops = {
 	NULL
 };
 
-extern int text_composition, text_rightleft, window_freescale, kbd_unitrans;
+extern int text_composition;
+extern int text_rightleft;
+extern int window_freescale;
+extern int kbd_unitrans;
 
 static void
 config_set_path(int argc, union evarg *argv)
@@ -298,6 +301,7 @@ config_window(struct config *con)
 
 	cbox = checkbox_new(vb, _("Idle time prediction"));
 	widget_bind(cbox, "state", WIDGET_INT, &event_idle);
+
 #ifdef DEBUG
 	cbox = checkbox_new(vb, _("Debugging"));
 	widget_bind(cbox, "state", WIDGET_INT, &engine_debug);

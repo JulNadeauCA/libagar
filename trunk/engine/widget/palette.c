@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.20 2003/10/13 23:49:02 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.21 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -52,14 +52,14 @@ enum {
 	CURRENT_COLOR
 };
 
-static void	palette_changed(int, union evarg *);
+static void palette_changed(int, union evarg *);
 
 struct palette *
 palette_new(void *parent, enum palette_type type)
 {
 	struct palette *pal;
 
-	pal = Malloc(sizeof(struct palette));
+	pal = Malloc(sizeof(struct palette), M_OBJECT);
 	palette_init(pal, type);
 	object_attach(parent, pal);
 	return (pal);
@@ -196,8 +196,7 @@ palette_draw(void *p)
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
 	widget_set_int(pal->bars[2], "value", (int)b);
-	if (pal->nbars > 3) {
+	if (pal->nbars > 3)
 		widget_set_int(pal->bars[3], "value", (int)a);
-	}
 }
 

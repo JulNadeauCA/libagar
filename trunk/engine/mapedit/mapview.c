@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.142 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.143 2004/03/18 03:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -113,7 +113,7 @@ mapview_new(void *parent, struct map *m, int flags)
 {
 	struct mapview *mv;
 
-	mv = Malloc(sizeof(struct mapview));
+	mv = Malloc(sizeof(struct mapview), M_OBJECT);
 	mapview_init(mv, m, flags);
 	object_attach(parent, mv);
 	return (mv);

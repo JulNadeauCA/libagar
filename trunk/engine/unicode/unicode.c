@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.7 2004/01/03 04:25:12 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.8 2004/01/23 04:02:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ unicode_import(enum unicode_conv conv, const char *s)
 	int i, j;
 
 	len = strlen(s);
-	ucs = Malloc((len + 1) * sizeof(Uint32));
+	ucs = Malloc((len + 1) * sizeof(Uint32), 0);
 
 	switch (conv) {
 	case UNICODE_FROM_US_ASCII:
@@ -203,7 +203,7 @@ ucs4_dup(const Uint32 *ucs)
 	Uint32 *ns;
 	
 	buflen = (ucs4_len(ucs)+1) * sizeof(Uint32);
-	ns = Malloc(buflen);
+	ns = Malloc(buflen, 0);
 	memcpy(ns, ucs, buflen);
 	return (ns);
 }

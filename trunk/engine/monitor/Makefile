@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.20 2003/11/17 15:07:15 vedge Exp $
+#	$Csoft: Makefile,v 1.21 2004/03/10 16:58:37 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -7,7 +7,8 @@ LIB=		monitor
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
-SRCS=	monitor.c widget_browser.c view_params.c screenshot.c uniconv.c
+SRCS=	monitor.c widget_browser.c view_params.c screenshot.c uniconv.c \
+	leak.c
 
 XCF=		toolbar.xcf monitor.xcf
 DEN=		monitor.den

@@ -1,4 +1,4 @@
-/*	$Csoft: mgraph.c,v 1.1 2004/01/03 04:15:39 vedge Exp $	*/
+/*	$Csoft: mgraph.c,v 1.2 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ mgraph_new(void *parent, enum mgraph_style style, const char *name_fmt, ...)
 	vsnprintf(name, sizeof(name), name_fmt, args);
 	va_end(args);
 
-	gra = Malloc(sizeof(struct mgraph));
+	gra = Malloc(sizeof(struct mgraph), M_OBJECT);
 	mgraph_init(gra, style, name);
 	object_attach(parent, gra);
 	return (gra);
@@ -150,8 +150,8 @@ mgraph_draw(void *p)
 static void
 mgraph_free_function(struct mgraph_function *fu)
 {
-	free(fu->points);
-	free(fu);
+	Free(fu->points, M_WIDGET);
+	Free(fu, M_WIDGET);
 }
 
 /* Register a new function. */
@@ -162,7 +162,7 @@ mgraph_add_function(struct mgraph *gra, double (*func)(double),
 	struct mgraph_function *fu;
 	va_list vargs;
 
- 	fu = Malloc(sizeof(struct mgraph_function));
+ 	fu = Malloc(sizeof(struct mgraph_function), M_WIDGET);
 	fu->color = SDL_MapRGB(vfmt, r, g, b);
 	fu->points = NULL;
 	fu->npoints = 0;

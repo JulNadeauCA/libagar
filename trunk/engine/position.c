@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.4 2004/02/29 17:34:24 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.5 2004/03/05 15:22:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ position_set(void *p, struct map *m, int x, int y, int z)
 	
 	if (ob->pos == NULL) {
 		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
-		ob->pos = Malloc(sizeof(struct position));
+		ob->pos = Malloc(sizeof(struct position), M_POSITION);
 		position_init(ob->pos);
 	} else {
 		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
@@ -123,7 +123,7 @@ position_unset(void *p)
 	if (ob->pos != NULL) {
 		dprintf("%s: destroying position\n", ob->name);
 		position_unproject(ob->pos);
-		free(ob->pos);
+		Free(ob->pos, M_POSITION);
 		ob->pos = NULL;
 	} else {
 		dprintf("%s: no position\n", ob->name);
@@ -283,7 +283,7 @@ position_load(struct object *ob, struct netbuf *buf)
 
 	if (ob->pos == NULL) {
 		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
-		ob->pos = Malloc(sizeof(struct position));
+		ob->pos = Malloc(sizeof(struct position), M_POSITION);
 		position_init(ob->pos);
 	} else {
 		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);

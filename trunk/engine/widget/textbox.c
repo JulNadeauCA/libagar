@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.75 2004/01/22 09:58:46 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.76 2004/02/25 18:09:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ textbox_new(void *parent, const char *label)
 {
 	struct textbox *textbox;
 
-	textbox = Malloc(sizeof(struct textbox));
+	textbox = Malloc(sizeof(struct textbox), M_OBJECT);
 	textbox_init(textbox, label);
 	object_attach(parent, textbox);
 	return (textbox);

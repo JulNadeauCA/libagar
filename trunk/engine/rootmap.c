@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.35 2004/02/25 18:12:18 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.36 2004/03/17 12:42:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -227,9 +227,9 @@ rootmap_alloc_maprects(int w, int h)
 	int x, y;
 
 	/* Calculate the default coordinates of visible rectangles. */
-	rects = Malloc(h * sizeof(SDL_Rect *));
+	rects = Malloc(h * sizeof(SDL_Rect *), M_VIEW);
 	for (y = 0; y < h; y++) {
-		rects[y] = Malloc(w * sizeof(SDL_Rect));
+		rects[y] = Malloc(w * sizeof(SDL_Rect), M_VIEW);
 		for (x = 0; x < w; x++) {
 			rects[y][x].x = x*TILESZ;
 			rects[y][x].y = y*TILESZ;
@@ -247,9 +247,9 @@ rootmap_free_maprects(struct viewport *v)
 
 	pthread_mutex_lock(&v->lock);
 	for (y = 0; y < v->rootmap->h; y++) {
-		free(v->rootmap->maprects[y]);
+		Free(v->rootmap->maprects[y], M_VIEW);
 	}
-	free(v->rootmap->maprects);
+	Free(v->rootmap->maprects, M_VIEW);
 	pthread_mutex_unlock(&v->lock);
 }
 

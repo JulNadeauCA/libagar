@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.4 2003/08/31 11:58:08 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.5 2004/02/26 10:35:00 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -127,7 +127,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	FT_Face face;
 	FT_Fixed scale;
 
-	font = Malloc(sizeof(ttf_font));
+	font = Malloc(sizeof(ttf_font), M_TTF);
 	memset(font, 0, sizeof(ttf_font));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
@@ -215,7 +215,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 fail2:
 	ttf_close_font(font);
 fail1:
-	free(font);
+	Free(font, M_TTF);
 	return (NULL);
 }
 
@@ -230,7 +230,7 @@ ttf_close_font(ttf_font *font)
 {
 	ttf_flush_cache(font);
 	FT_Done_Face(font->face);
-	free(font);
+	Free(font, M_TTF);
 }
 
 static void
@@ -299,12 +299,13 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct cached_glyph *cached, int want)
 			cached->yoffset = font->ascent - cached->maxy;
 			cached->advance = FT_CEIL(metrics->horiAdvance);
 		} else {
-			/* Get the bounding box for non-scalable format.
+			/*
+			 * Get the bounding box for non-scalable format.
 			 * Again, freetype2 fills in many of the font metrics
 			 * with the value of 0, so some of the values we
 			 * need must be calculated differently with certain
 			 * assumptions about non-scalable formats.
-			 * */
+			 */
 			cached->minx = FT_FLOOR(metrics->horiBearingX);
 			cached->maxx = cached->minx +
 			    FT_CEIL(metrics->horiAdvance);
@@ -373,10 +374,9 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct cached_glyph *cached, int want)
 		 * when rendered in ft_render_mode_normal.  This is probably
 		 * a freetype2 bug because it is inconsistent with the
 		 * freetype2 documentation under FT_Render_Mode section.
-		 * */
-		if ( mono || !FT_IS_SCALABLE(face) ) {
+		 */
+		if (mono || !FT_IS_SCALABLE(face))
 			dst->pitch *= 8;
-		}
 
 		/* Adjust for bold and italic text. */
 		if (font->style & TTF_STYLE_BOLD) {
@@ -394,7 +394,7 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct cached_glyph *cached, int want)
 		}
 
 		if (dst->rows != 0) {
-			dst->buffer = Malloc(dst->pitch * dst->rows);
+			dst->buffer = Malloc(dst->pitch * dst->rows, M_TTF);
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
 			for (i = 0; i < src->rows; i++) {
@@ -427,7 +427,7 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct cached_glyph *cached, int want)
 						ch <<= 1;
 						*dstp++ = (ch&0x80) >> 7;
 					}
-				} else if ( !FT_IS_SCALABLE(face) ) {
+				} else if (!FT_IS_SCALABLE(face)) {
 					/*
 					 * This special case wouldn't
 					 * be here if the FT_Render_Glyph()
@@ -445,7 +445,7 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct cached_glyph *cached, int want)
 					srcp = src->buffer + soffset;
 					dstp = dst->buffer + doffset;
 
-					for ( j = 0; j < src->width; j += 8) {
+					for (j = 0; j < src->width; j += 8) {
 						ch = *srcp++;
 						for (k = 0; k < 8; ++k) {
 							if ((ch&0x80) >> 7) {
@@ -663,21 +663,18 @@ ttf_size_unicode(ttf_font *font, const Uint32 *ucs, int *w, int *h)
 		}
 		x += glyph->advance;
 
-		if (glyph->miny < miny) {
+		if (glyph->miny < miny)
 			miny = glyph->miny;
-		}
-		if (glyph->maxy > maxy) {
+		if (glyph->maxy > maxy)
 			maxy = glyph->maxy;
-		}
 	}
 
 	/* Fill the bounds rectangle. */
-	if (w) {
+	if (w)
 		*w = (maxx - minx);
-	}
-	if (h) {
+	if (h)
 		*h = (maxy - miny);
-	}
+
 	return (status);
 }
 
@@ -746,7 +743,7 @@ ttf_render_unicode_solid(ttf_font *font, const Uint32 *ucs, SDL_Color fg)
 		glyph = font->current;
 		current = &glyph->bitmap;
 
-		/* Compensate for wrap around bug with negative minx's */
+		/* Compensate for wrap around bug with negative minx's. */
 		if ((ch == ucs) && (glyph->minx < 0))
 			xstart -= glyph->minx;
 

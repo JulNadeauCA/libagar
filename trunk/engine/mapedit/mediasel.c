@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.5 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.6 2004/03/18 03:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -483,7 +483,7 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 	hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
 	box_set_spacing(hb, 1);
 	box_set_padding(hb, 2);
-	mv->mediasel.gfx = msel = Malloc(sizeof(struct mediasel));
+	mv->mediasel.gfx = msel = Malloc(sizeof(struct mediasel), M_MAPEDIT);
 	msel->type = MEDIASEL_GFX;
 	msel->obj = ob;
 	msel->com = combo_new(hb, 0, _("Graphics: "));
@@ -496,7 +496,7 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 	hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
 	box_set_spacing(hb, 1);
 	box_set_padding(hb, 2);
-	mv->mediasel.audio = msel = Malloc(sizeof(struct mediasel));
+	mv->mediasel.audio = msel = Malloc(sizeof(struct mediasel), M_MAPEDIT);
 	msel->type = MEDIASEL_AUDIO;
 	msel->obj = ob;
 	msel->com = combo_new(hb, 0, _("Audio: "));
@@ -537,8 +537,8 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 void
 mediasel_destroy(struct mapview *mv)
 {
-	free(mv->mediasel.gfx);
-	free(mv->mediasel.audio);
+	Free(mv->mediasel.gfx, M_MAPEDIT);
+	Free(mv->mediasel.audio, M_MAPEDIT);
 }
 
 #endif	/* EDITION */

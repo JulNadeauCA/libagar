@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.37 2003/10/13 23:48:58 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.38 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ perso_new(void *parent, const char *name)
 {
 	struct perso *pers;
 
-	pers = Malloc(sizeof(struct perso));
+	pers = Malloc(sizeof(struct perso), M_OBJECT);
 	perso_init(pers, name);
 	object_attach(parent, pers);
 	return (pers);

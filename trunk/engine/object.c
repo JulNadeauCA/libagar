@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.165 2004/03/17 12:32:59 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.166 2004/03/17 17:26:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ object_new(void *parent, const char *name)
 {
 	struct object *ob;
 
-	ob = Malloc(sizeof(struct object));
+	ob = Malloc(sizeof(struct object), M_OBJECT);
 	object_init(ob, "object", name, NULL);
 
 	if (parent != NULL) {
@@ -400,7 +400,7 @@ object_free_deps(struct object *ob)
 	     dep != TAILQ_END(&ob->deps);
 	     dep = ndep) {
 		ndep = TAILQ_NEXT(dep, deps);
-		free(dep);
+		Free(dep, M_DEP);
 	}
 	TAILQ_INIT(&ob->deps);
 }
@@ -421,7 +421,7 @@ object_free_zerodeps(struct object *ob)
 		ndep = TAILQ_NEXT(dep, deps);
 		if (dep->count == 0) {
 			TAILQ_REMOVE(&ob->deps, dep, deps);
-			free(dep);
+			Free(dep, M_DEP);
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
@@ -445,7 +445,7 @@ object_free_children(struct object *pob)
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
 		object_destroy(cob);
 		if ((cob->flags & OBJECT_STATIC) == 0)
-			free(cob);
+			Free(cob, M_OBJECT);
 	}
 	TAILQ_INIT(&pob->children);
 	pthread_mutex_unlock(&pob->lock);
@@ -463,7 +463,7 @@ object_free_props(struct object *ob)
 	     prop = nextprop) {
 		nextprop = TAILQ_NEXT(prop, props);
 		prop_destroy(prop);
-		free(prop);
+		Free(prop, M_PROP);
 	}
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_unlock(&ob->lock);
@@ -480,7 +480,7 @@ object_free_events(struct object *ob)
 	     eev != TAILQ_END(&ob->events);
 	     eev = nexteev) {
 		nexteev = TAILQ_NEXT(eev, events);
-		free(eev);
+		Free(eev, M_EVENT);
 	}
 	TAILQ_INIT(&ob->events);
 	pthread_mutex_unlock(&ob->lock);
@@ -508,14 +508,14 @@ object_destroy(void *p)
 	     dep != TAILQ_END(&ob->deps);
 	     dep = ndep) {
 		ndep = TAILQ_NEXT(dep, deps);
-		free(dep);
+		Free(dep, M_DEP);
 	}
 
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 
-	Free(ob->gfx_name);
-	Free(ob->audio_name);
+	Free(ob->gfx_name, 0);
+	Free(ob->audio_name, 0);
 	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
 	}
@@ -793,7 +793,7 @@ object_resolve_deps(void *p)
 			    ob->name, dep->path);
 			return (-1);
 		}
-		free(dep->path);
+		Free(dep->path, 0);
 		dep->path = NULL;
 	}
 
@@ -914,7 +914,7 @@ object_load_generic(void *p)
 	for (i = 0; i < count; i++) {
 		struct object_dep *dep;
 
-		dep = Malloc(sizeof(struct object_dep));
+		dep = Malloc(sizeof(struct object_dep), M_DEP);
 		dep->path = read_string(buf);
 		dep->obj = NULL;
 		dep->count = 0;
@@ -931,13 +931,13 @@ object_load_generic(void *p)
 		position_load(ob, buf);
 
 	/* Decode the gfx reference and resolve if graphics are resident. */
-	Free(ob->gfx_name);
+	Free(ob->gfx_name, 0);
 	if ((ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
 		dprintf("%s: gfx=%s\n", ob->name, ob->gfx_name);
 		if (ob->gfx != NULL) {
 			gfx_unused(ob->gfx);
 			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
-				Free(ob->gfx_name);
+				Free(ob->gfx_name, 0);
 				ob->gfx_name = NULL;
 				goto fail;
 			}
@@ -950,13 +950,13 @@ object_load_generic(void *p)
 	}
 
 	/* Decode the audio reference and resolve if audio is resident. */
-	Free(ob->audio_name);
+	Free(ob->audio_name, 0);
 	if ((ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
 		dprintf("%s: audio=%s\n", ob->name, ob->audio_name);
 		if (ob->audio != NULL) {
 			audio_unused(ob->audio);
 			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
-				Free(ob->audio_name);
+				Free(ob->audio_name, 0);
 				ob->audio_name = NULL;
 				goto fail;
 			}
@@ -1021,7 +1021,7 @@ object_load_generic(void *p)
 			    cname, typesw[ti].type,
 			    (unsigned long)typesw[ti].size);
 
-			child = Malloc(typesw[ti].size);
+			child = Malloc(typesw[ti].size, M_OBJECT);
 			if (typesw[ti].ops->init != NULL) {
 				typesw[ti].ops->init(child, cname);
 			} else {
@@ -1269,7 +1269,7 @@ object_wire_gfx(void *p, const char *key)
 {
 	struct object *ob = p;
 
-	Free(ob->gfx_name);
+	Free(ob->gfx_name, 0);
 	ob->gfx_name = Strdup(key);
 	if ((ob->gfx = gfx_fetch(key)) == NULL) {
 		fatal("%s: %s", key, error_get());
@@ -1299,7 +1299,7 @@ object_add_dep(void *p, void *depobj)
 	} else {
 		debug(DEBUG_DEPS, "%s: +[%s]\n", ob->name,
 		    OBJECT(depobj)->name);
-		dep = Malloc(sizeof(struct object_dep));
+		dep = Malloc(sizeof(struct object_dep), M_DEP);
 		dep->obj = depobj;
 		dep->count = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
@@ -1368,7 +1368,7 @@ object_del_dep(void *p, const void *depobj)
 			debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
 			    OBJECT(depobj)->name);
 			TAILQ_REMOVE(&ob->deps, dep, deps);
-			free(dep);
+			Free(dep, M_DEP);
 		} else {
 			dep->count = 0;
 		}
@@ -1484,7 +1484,7 @@ object_duplicate(void *p)
 	if (t == &typesw[ntypesw])
 		fatal("unrecognized object type");
 #endif
-	dob = Malloc(t->size);
+	dob = Malloc(t->size, M_OBJECT);
 
 	pthread_mutex_lock(&ob->lock);
 
@@ -1524,7 +1524,7 @@ fail:
 	strlcpy(ob->name, oname, sizeof(ob->name));
 	pthread_mutex_unlock(&ob->lock);
 	object_destroy(dob);
-	free(dob);
+	Free(dob, M_OBJECT);
 	return (NULL);
 }
 
