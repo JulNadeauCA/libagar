@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.134 2002/12/29 03:24:44 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.135 2002/12/31 03:16:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,7 +59,9 @@ enum {
 	TITLEBAR_FOCUSED_COLOR,
 	TITLEBAR_UNFOCUSED_COLOR,
 	TITLEBAR_TEXT_UNFOCUSED_COLOR,
-	TITLEBAR_TEXT_FOCUSED_COLOR
+	TITLEBAR_TEXT_FOCUSED_COLOR,
+	TITLEBAR_BUTTONS_UNFOCUSED_COLOR,
+	TITLEBAR_BUTTONS_FOCUSED_COLOR
 };
 
 /* XXX struct */
@@ -173,28 +175,36 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 		Asprintf(&wname, "win-generic%d", curwindow++);
 	}
-	object_init(&win->wid.obj, "window", wname, NULL, 0, &window_ops);
+	object_init(&win->wid.obj, "window", wname, "window",
+	    OBJECT_ART|OBJECT_ART_CACHE, &window_ops);
 	free(wname);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
-	    "window-background",
+	    "background",
 	    0, 40, 20);
 	widget_map_color(&win->wid, BACKGROUND_FILL_COLOR,
-	    "window-background-fill",
+	    "background-fill",
 	    0, 0, 0);
+
 	widget_map_color(&win->wid, TITLEBAR_UNFOCUSED_COLOR,
-	    "window-title-bar-background-unfocused",
+	    "titlebar-background-unfocused",
 	    0, 60, 40);
 	widget_map_color(&win->wid, TITLEBAR_TEXT_UNFOCUSED_COLOR,
-	    "window-title-bar-text-unfocused",
+	    "titlebar-text-unfocused",
+	    20, 100, 100);
+	widget_map_color(&win->wid, TITLEBAR_BUTTONS_UNFOCUSED_COLOR,
+	    "titlebar-buttons-unfocused",
 	    20, 100, 100);
 
 	widget_map_color(&win->wid, TITLEBAR_FOCUSED_COLOR,
-	    "window-title-bar-background-focused",
+	    "titlebar-background-focused",
 	    0, 90, 90);
 	widget_map_color(&win->wid, TITLEBAR_TEXT_FOCUSED_COLOR,
-	    "window-title-bar-text-focused",
+	    "titlebar-text-focused",
 	    80, 200, 200);
+	widget_map_color(&win->wid, TITLEBAR_BUTTONS_FOCUSED_COLOR,
+	    "titlebar-buttons-focused",
+	    70, 150, 150);
 
 	/* XXX pref */
 	win->borderw = default_nborder;
@@ -336,6 +346,7 @@ window_draw_titlebar(struct window *win)
 	int th = win->titleh - 2;
 	SDL_Surface *caption;
 	SDL_Rect rd, rclip, rclip_save;
+	Uint32 bcolor;
 	int i;
 
 	/* XXX yuck */
@@ -359,11 +370,9 @@ window_draw_titlebar(struct window *win)
 	SDL_SetClipRect(view->v, &rclip);
 		
 	/* Caption */
-	caption = text_render(NULL, -1,
-	    WIDGET_COLOR(win, WINDOW_FOCUSED(win) ?
-	    TITLEBAR_TEXT_FOCUSED_COLOR :
-	    TITLEBAR_TEXT_UNFOCUSED_COLOR),
-	    win->caption);
+	caption = text_render(NULL, -1, WINDOW_FOCUSED(win) ?
+	    WIDGET_COLOR(win, TITLEBAR_TEXT_FOCUSED_COLOR) :
+	    WIDGET_COLOR(win, TITLEBAR_TEXT_UNFOCUSED_COLOR), win->caption);
 	rd.x = win->rd.x + (win->rd.w - caption->w - win->borderw);
 	rd.y = win->rd.y + win->borderw;
 	SDL_BlitSurface(caption, NULL, view->v, &rd);
@@ -371,51 +380,15 @@ window_draw_titlebar(struct window *win)
 		
 	SDL_SetClipRect(view->v, &rclip_save);
 
-	/* Close */
-	for (i = 2; i < 5; i++) {
-		primitives.line(win,
-		    bw + i, bw,
-		    th + i, th,
-		    win->border[i]);
-		primitives.line(win,
-		    bw + i, th,
-		    th + i, bw,
-		    win->border[i]);
-	}
-	th -= 4;
-
-	/* Hide body */
-	if (win->flags & WINDOW_HIDDEN_BODY) {
-		for (i = 2; i < 5; i++) {
-			primitives.line(win,
-			    i + bw + th,	  bw + 2,
-			    i + bw + th*2,	  bw + 2,
-			    win->border[i]);
-			primitives.line(win,
-			    i + bw + th,	  bw + 2,
-			    i + bw + th*2 - th/2, th + 2,
-			    win->border[i]);
-			primitives.line(win,
-			    i + bw + th*2 - th/2, th + 2,
-			    i + bw + th*2,	  bw + 2,
-			    win->border[i]);
-		}
-	} else {
-		for (i = 2; i < 5; i++) {
-			primitives.line(win,
-			    i + bw + th,	  th + 2,
-			    i + bw + th*2,	  th + 2,
-			    win->border[i]);
-			primitives.line(win,
-			    i + bw + th,	  th + 2,
-			    i + bw + th*2 - th/2, bw + 2,
-			    win->border[i]);
-			primitives.line(win,
-			    i + bw + th*2 - th/2, bw + 2,
-			    i + bw + th*2,	  th + 2,
-			    win->border[i]);
-		}
-	}
+	/* Buttons */
+	bcolor = WINDOW_FOCUSED(win) ?
+	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_FOCUSED_COLOR) :
+	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_UNFOCUSED_COLOR);
+	primitives.box(win, bw-1, bw-1, th-1, th-4, 1, bcolor);
+	WIDGET_DRAW(win, SPRITE(win, 0), bw, bw-1);
+	primitives.box(win, th+bw-1, bw-1, th-1, th-4, 1, bcolor);
+	WIDGET_DRAW(win, SPRITE(win, (win->flags & WINDOW_HIDDEN_BODY) ? 1 : 2),
+	    th+bw, bw-1);
 
 	/* Border */
 	primitives.line(win,
