@@ -1,11 +1,11 @@
-#	$Csoft: Makefile,v 1.1.1.1 2002/09/01 09:03:06 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2002/09/16 16:44:11 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 LIB=	monitor
-SRCS=	monitor.c sprite_browser.c object_browser.c
-OBJS=	monitor.o sprite_browser.o object_browser.o
+SRCS=	monitor.c sprite_browser.c object_browser.c map_view.c
+OBJS=	monitor.o sprite_browser.o object_browser.o map_view.o
 FOBJS=	monitor.fob
 XCF=	toolbar.xcf
 
