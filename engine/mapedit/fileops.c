@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.7 2002/09/02 05:27:19 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.8 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -55,23 +55,24 @@ fileops_new_map(int argc, union evarg *argv)
 	struct textbox *media_tbox = argv[3].p;
 	struct textbox *w_tbox = argv[4].p;
 	struct textbox *h_tbox = argv[5].p;
-	char *name = name_tbox->text;
-	char *media = media_tbox->text;
-	struct map *m;
 	struct window *win;
-	Uint32 w, h;
 	struct node *origin;
+	struct map *m;
+	char *name, *media;
+	Uint32 w, h;
+
+	name = textbox_string(name_tbox);
+	media = textbox_string(media_tbox);
 
 	if (strcmp(name, "") == 0) {
 		warning("no map name given\n");
-		return;
+		goto out;
 	}
-	w = (Uint32)atoi(w_tbox->text);
-	h = (Uint32)atoi(h_tbox->text);
+	w = (Uint32)textbox_int(w_tbox);
+	h = (Uint32)textbox_int(h_tbox);
 
 	m = emalloc(sizeof(struct map));
 	map_init(m, name, strcmp(media, "") == 0 ? NULL : media, MAP_2D);
-
 	map_allocnodes(m, w, h);
 
 	m->defx = w / 2;
@@ -88,6 +89,9 @@ fileops_new_map(int argc, union evarg *argv)
 	textbox_printf(media_tbox, "");
 
 	window_hide_locked(wid->win);
+out:
+	free(name);
+	free(media);
 }
 
 void
@@ -104,13 +108,15 @@ fileops_load_map(int argc, union evarg *argv)
 	struct widget *wid = argv[0].p;
 	struct mapedit *med = argv[1].p;
 	struct textbox *name_tbox = argv[2].p;
-	char *name = name_tbox->text;
 	struct window *win;
 	struct map *m;
+	char *name;
+
+	name = textbox_string(name_tbox);
 
 	if (strcmp(name, "") == 0) {
 		warning("no map name given\n");
-		return;
+		goto out;
 	}
 
 	m = emalloc(sizeof(struct map));
@@ -125,7 +131,8 @@ fileops_load_map(int argc, union evarg *argv)
 	textbox_printf(name_tbox, "");
 
 	window_hide_locked(wid->win);
-	
+out:
+	free(name);
 }
 
 void

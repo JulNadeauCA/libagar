@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.34 2002/09/05 03:24:10 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.35 2002/09/06 01:22:52 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -88,6 +88,7 @@ enum {
 static struct config_prop	*config_get_prop(const char *);
 static void			 config_apply_string(int, union evarg *);
 static void			 config_apply_int(int, union evarg *);
+static void			 config_apply(int, union evarg *);
 
 struct config *
 config_new(void)
@@ -277,23 +278,23 @@ config_init_wins(struct config *con)
 	con->windows.algorithm_sw = win;
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
-		rad = radio_new(reg, primitive_box_sw, 0, 0);
+		rad = radio_new(reg, primitive_box_sw, 0);
 		event_new(rad, "radio-changed", 0, config_apply,
 		    "%i", AL_BOX_RADIO);
 		
-		rad = radio_new(reg, primitive_frame_sw, 0, 0);
+		rad = radio_new(reg, primitive_frame_sw, 0);
 		event_new(rad, "radio-changed", 0, config_apply,
 		    "%i", AL_FRAME_RADIO);
 		
-		rad = radio_new(reg, primitive_circle_sw, 0, 0);
+		rad = radio_new(reg, primitive_circle_sw, 0);
 		event_new(rad, "radio-changed", 0, config_apply,
 		    "%i", AL_CIRCLE_RADIO);
 		
-		rad = radio_new(reg, primitive_line_sw, 0, 0);
+		rad = radio_new(reg, primitive_line_sw, 0);
 		event_new(rad, "radio-changed", 0, config_apply,
 		    "%i", AL_LINE_RADIO);
 		
-		rad = radio_new(reg, primitive_square_sw, 0, 0);
+		rad = radio_new(reg, primitive_square_sw, 0);
 		event_new(rad, "radio-changed", 0, config_apply,
 		    "%i", AL_SQUARE_RADIO);
 	}
@@ -314,8 +315,11 @@ config_apply_string(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 	char *varname = argv[1].s;
+	char *s;
 
-	prop_set_string(config, varname, "%s", tbox->text);
+	s = textbox_string(tbox);
+	prop_set_string(config, varname, "%s", s);
+	free(s);
 }
 
 static void
@@ -323,20 +327,18 @@ config_apply_int(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 	char *varname = argv[1].s;
+	int i;
 
-	prop_set_int(config, varname, atoi(tbox->text));
+	i = textbox_int(tbox);
+	prop_set_int(config, varname, i);
 }
 
 static void
-config_apply_bool(int argc, union evarg *argv)
-{
-}
-
-void
 config_apply(int argc, union evarg *argv)
 {
 	struct widget *wid = argv[0].p;
 	struct textbox *tbox = argv[0].p;
+	int i;
 
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
@@ -357,10 +359,12 @@ config_apply(int argc, union evarg *argv)
 		prop_set_string(config, "path.data_path", "%s", tbox->text);
 		break;
 	case W_TBOX:
-		prop_set_int(config, "view.w", atoi(tbox->text));
+		i = textbox_int(tbox);
+		prop_set_int(config, "view.w", i);
 		break;
 	case H_TBOX:
-		prop_set_int(config, "view.h", atoi(tbox->text));
+		i = textbox_int(tbox);
+		prop_set_int(config, "view.h", i);
 		break;
 	case FONTCACHE_CBOX:
 		CONFIG_SET_FLAG(config, "flags", CONFIG_FONT_CACHE, argv[2].i);
