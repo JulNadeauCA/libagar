@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.12 2003/02/28 15:13:22 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.13 2003/03/02 04:07:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,12 +63,16 @@ int	xcf_debug = 0;
 #define	engine_debug xcf_debug
 #endif
 
+enum {
+	LEVEL_OFFSETS_INIT =	2,
+	TILE_OFFSETS_INIT =	16
+};
+
 int 
 xcf_check(int fd, off_t xcf_offs)
 {
 	char magic[XCF_MAGIC_LEN];
 	ssize_t rv;
-	off_t oldoffs;
 
 	if ((Pread(fd, magic, XCF_MAGIC_LEN, xcf_offs) == XCF_MAGIC_LEN)) {
 		if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) == 0) {
@@ -199,8 +203,8 @@ xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
 static __inline__ Uint8 *
 xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 {
-	int i, size, count, j, length;
-	Uint8 *tilep, *tile, *data, *d, val;
+	int i, size, count, j;
+	Uint8 *tilep, *tile, *data;
 	ssize_t rv;
 
 	tilep = tile = emalloc(len);
@@ -218,14 +222,15 @@ xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 
 	data = emalloc(x * y * bpp);
 	for (i = 0; i < bpp; i++) {
-		d = data + i;
+		Uint8 *d = &data[i];
+	
 		size = x * y;
 		count = 0;
 
 		while (size > 0) {
-			val = *tile++;
+			Uint8 val = *tile++;
+			int length = val;
 
-			length = val;
 			if (length >= 128) {
 				length = 255 - (length - 1);
 				if (length == 128) {
@@ -276,22 +281,140 @@ xcf_read_tile(struct xcf_header *head, int fd, Uint32 len, int bpp,
 	return (NULL);
 }
 
+/* 32-bit RGBA */
+static __inline__ void
+xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p)
+{
+	int x;
+	
+	for (x = tx; x < tx + ox; x++) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		**row =
+		    (**p & 0x000000ff) |
+		    (**p & 0x0000ff00) |
+		    (**p & 0x00ff0000) |
+		    (**p & 0xff000000);
+#else
+		**row =
+		    (**p & 0xff000000) |
+		    (**p & 0x00ff0000) |
+		    (**p & 0x0000ff00) |
+		    (**p & 0x000000ff);
+#endif
+		(*row)++;
+		(*p)++;
+	}
+}
+
+/* 32-bit RGB */
+static __inline__ void
+xcf_convert_tile24(int tx, int ox, Uint32 **row, Uint8 **p8)
+{
+	int x;
+
+	/* XXX */
+	for (x = tx; x < tx + ox; x++) {
+		**row = 0xff000000 |
+		    (((Uint32)*((*p8)++)) << 16) |
+		    (((Uint32)*((*p8)++)) << 8) |
+		    (((Uint32)*((*p8)++)) << 0);
+		(*row)++;
+	}
+}
+
+/* Indexed or greyscale with alpha. */
+static __inline__ void
+xcf_convert_tile16(int tx, int ox, Uint32 **row, Uint8 **p8,
+    struct xcf_header *head)
+{
+	int x;
+
+	switch (head->base_type) {
+	case XCF_IMAGE_INDEXED:
+		for (x = tx; x < tx + ox; x++) {
+			**row =  ((Uint32)
+			    (head->colormap.data[(**p8)*3]) << 16);
+			**row |= ((Uint32)
+			    (head->colormap.data[(**p8)*3 + 1]) << 8);
+			**row |= ((Uint32)
+			    (head->colormap.data[(*((*p8)++))*3 + 2]) << 0);
+			**row |= ((Uint32)(*((*p8)++)) << 24);
+			(*row)++;
+		}
+		break;
+	case XCF_IMAGE_GREYSCALE:
+		for (x = tx; x < tx + ox; x++) {
+			**row =  ((Uint32)**p8 << 16);
+			**row |= ((Uint32)**p8 << 8);
+			**row |= ((Uint32)(*((*p8)++)) << 0);
+			**row |= ((Uint32)(*((*p8)++)) << 24);
+			(*row)++;
+		}
+		break;
+	default:
+		fatal("bad 16bpp type\n");
+	}
+}
+
+/* Indexed or greyscale. */
+static __inline__ void
+xcf_convert_tile8(int tx, int ox, Uint32 **row, Uint8 **p8,
+    struct xcf_header *head)
+{
+	int x;
+
+	switch (head->base_type) {
+	case XCF_IMAGE_INDEXED:
+		for (x = tx; x < tx + ox; x++) {
+			**row = 0xFF000000 |
+			  ((Uint32)(head->colormap.data[**p8 * 3])   << 16) |
+			  ((Uint32)(head->colormap.data[**p8 * 3+1]) <<  8) |
+			  ((Uint32)(head->colormap.data[**p8 * 3+2]) <<  0);
+			(*row)++;
+			(*p8)++;
+		}
+		break;
+	case XCF_IMAGE_GREYSCALE:
+		for (x = tx; x < tx + ox; x++) {
+			**row = 0xFF000000 |
+			    (((Uint32)(**p8)) << 16) |
+			    (((Uint32)(**p8)) <<  8) |
+			    (((Uint32)(**p8)) <<  0);
+			(*row)++;
+			(*p8)++;
+		}
+		break;
+	default:
+		fatal("bad 8bpp type\n");
+	}
+}
+
 static SDL_Surface *
 xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
 {
 	struct xcf_hierarchy *hier;
-	struct xcf_level *level;
-	int x, y, tx, ty, ox, oy, i, j;
-	Uint32 *p, *row;
-	Uint16 *p16;
+	int x, y, tx, ty, ox, oy, i;
+	Uint32 *p;
 	Uint8 *p8, *tile;
 	SDL_Surface *su;
-	
-	/* XXX */
-	su = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+
+	su = SDL_CreateRGBSurface(
+	    SDL_SWSURFACE,
 	    head->w, head->h, 32,
-	    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
+#else
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0xff000000
+#endif
+	    );
+
 	if (su == NULL) {
 		error_set("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
@@ -305,43 +428,59 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	hier->bpp = read_uint32(fd);
 
 	/* Read the level offsets. */
-	hier->level_offsets = NULL;
+	hier->level_offsets = emalloc(LEVEL_OFFSETS_INIT * sizeof(Uint32));
+	hier->maxlevel_offsets = LEVEL_OFFSETS_INIT;
+	hier->nlevel_offsets = 0;
 	i = 0;
-	do {
-		/* XXX inefficient */
-		hier->level_offsets = erealloc(hier->level_offsets,
-		    sizeof(Uint32) * (i + 1));
-		hier->level_offsets[i] = read_uint32(fd);
-	} while (hier->level_offsets[i++]);
+	for (;;) {
+		if (hier->nlevel_offsets+1 >= hier->maxlevel_offsets) {
+			hier->maxlevel_offsets *= 2;
+			hier->level_offsets = erealloc(hier->level_offsets,
+			    hier->maxlevel_offsets * sizeof(Uint32));
+		}
+		if ((hier->level_offsets[hier->nlevel_offsets] =
+		    read_uint32(fd)) == 0) {
+			break;
+		}
+		hier->nlevel_offsets++;
+	}
 
 	/* Read the levels. */
-	level = NULL;
-	for (i = 0; hier->level_offsets[i]; i++) {
-		struct xcf_level *l;
+	for (i = 0; i < hier->nlevel_offsets; i++) {
+		struct xcf_level *level;
+		int j;
 
 		Lseek(fd, xcfoffs + hier->level_offsets[i], SEEK_SET);
 		level = emalloc(sizeof(struct xcf_level));
 		level->w = read_uint32(fd);
 		level->h = read_uint32(fd);
-		level->tile_offsets = NULL;
-		j = 0;
-		do {
-			/* XXX inefficient */
-			level->tile_offsets =
-			    erealloc(level->tile_offsets,
-			    sizeof(Uint32) * (j + 1));
-			level->tile_offsets[j] = read_uint32(fd);
-		} while (level->tile_offsets[j++] != 0);
+		level->tile_offsets = emalloc(TILE_OFFSETS_INIT *
+		    sizeof(Uint32));
+		level->maxtile_offsets = TILE_OFFSETS_INIT;
+		level->ntile_offsets = 0;
+
+		for (;;) {
+			if (level->ntile_offsets+1 >= level->maxtile_offsets) {
+				level->maxtile_offsets *= 2;
+				level->tile_offsets = erealloc(
+				    level->tile_offsets,
+				    level->maxtile_offsets * sizeof(Uint32));
+			}
+			if ((level->tile_offsets[level->ntile_offsets] =
+			    read_uint32(fd)) == 0) {
+				break;
+			}
+			level->ntile_offsets++;
+		}
 
 		ty = 0;
 		tx = 0;
-		for (j = 0; level->tile_offsets[j] != 0; j++) {
-			Lseek(fd, xcfoffs + level->tile_offsets[j],
-			    SEEK_SET);
+		for (j = 0; j < level->ntile_offsets; j++) {
+			Lseek(fd, xcfoffs + level->tile_offsets[j], SEEK_SET);
 			ox = (tx + 64 > level->w) ? (level->w % 64) : 64;
 			oy = (ty + 64 > level->h) ? (level->h % 64) : 64;
 
-			if (level->tile_offsets[j + 1]) {
+			if (level->tile_offsets[j + 1] != 0) {
 				tile = xcf_read_tile(head, fd,
 				    level->tile_offsets[j + 1] -
 				    level->tile_offsets[j],
@@ -358,106 +497,25 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 			}
 
 			p8 = tile;
-			p16 = (Uint16 *) p8;
-			p = (Uint32 *) p8;
+			p = (Uint32 *)p8;
 			for (y = ty; y < ty + oy; y++) {
-				row = (Uint32 *)((Uint8 *)su->pixels +
-				    y*su->pitch + (tx << 2));
+				Uint32 *row = (Uint32 *)((Uint8 *)su->pixels +
+				    y*su->pitch + tx*4);
+
 				switch (hier->bpp) {
 				case 4:
-					for (x = tx; x < tx + ox; x++) {
-						*row++ =
-						       ((*p & 0x000000FF) << 16)
-						     | ((*p & 0x0000FF00))
-						     | ((*p & 0x00FF0000) >> 16)
-						     | ((*p & 0xFF000000));
-						p++;
-					}
+					xcf_convert_tile32(tx, ox, &row, &p);
 					break;
 				case 3:
-					for (x = tx; x < tx + ox; x++) {
-						*row = 0xFF000000;
-						*row |= ((Uint32)* (p8++)<<16);
-						*row |= ((Uint32)* (p8++)<<8);
-						*row |= ((Uint32)* (p8++)<<0);
-						row++;
-					}
+					xcf_convert_tile24(tx, ox, &row, &p8);
 					break;
 				case 2:
-					/*
-					 * Indexed/Greyscale + Alpha.
-					 */
-					switch (head->base_type) {
-					case XCF_IMAGE_INDEXED:
-						for (x = tx; x < tx + ox; x++) {
-							*row = ((Uint32)
-							   (head->colormap.data[
-							     *p8 * 3])<<16);
-							*row |= ((Uint32)
-							   (head->colormap.data[
-							     *p8 * 3 + 1])<<8);
-							*row |= ((Uint32)
-							   (head->colormap.data[
-							     *p8++ * 3+2])<<0);
-							*row |= ((Uint32)
-							     *p8++<<24);
-							row++;
-						}
-						break;
-					case XCF_IMAGE_GREYSCALE:
-						for (x = tx; x < tx + ox; x++) {
-							*row = ((Uint32)
-							    *p8 << 16);
-							*row |= ((Uint32)
-							    *p8 << 8);
-							*row |= ((Uint32)
-							    *p8++ << 0);
-							*row |= ((Uint32)
-							    *p8++ << 24);
-							row++;
-						}
-						break;
-					default:
-						error_set("bad 2Bpp type");
-						return (NULL);
-					}
+					xcf_convert_tile16(tx, ox, &row, &p8,
+					    head);
 					break;
-				/*
-				 * Indexed/Greyscale.
-				 */
 				case 1:
-					switch (head->base_type) {
-					case XCF_IMAGE_INDEXED:
-						for (x = tx; x < tx + ox; x++) {
-							*row++ = 0xFF000000 |
-							  ((Uint32)
-							   (head->colormap.data[
-							      *p8 * 3])<<16) |
-							  ((Uint32)
-							   (head->colormap.data[
-							      *p8 * 3+1])<<8) |
-							      ((Uint32)
-							   (head->colormap.data[
-							     *p8 * 3+2])<<0);
-							p8++;
-						}
-						break;
-					case XCF_IMAGE_GREYSCALE:
-						for (x = tx; x < tx + ox; x++) {
-							*row++ = 0xFF000000
-							    | (((Uint32)
-							       (*p8)) << 16)
-							    | (((Uint32)
-							       (*p8)) << 8)
-							    | (((Uint32)
-							       (*p8)) << 0);
-							p8++;
-						}
-						break;
-					default:
-						error_set("bad 1Bpp type\n");
-						return (NULL);
-					}
+					xcf_convert_tile8(tx, ox, &row, &p8,
+					    head);
 					break;
 				}
 			}

@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.h,v 1.7 2003/02/28 14:36:27 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.8 2003/03/02 04:07:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -98,14 +98,18 @@ struct xcf_layer {
 };
 
 struct xcf_hierarchy {
-	Uint32	 w, h;
-	Uint32	 bpp;
-	Uint32	*level_offsets;
+	Uint32	   w, h;
+	Uint32	   bpp;
+	Uint32	  *level_offsets;
+	int	  nlevel_offsets;
+	int	maxlevel_offsets;
 };
 
 struct xcf_level {
-	Uint32	 w, h;
-	Uint32	*tile_offsets;
+	Uint32	   w, h;
+	Uint32	  *tile_offsets;
+	int	  ntile_offsets;
+	int	maxtile_offsets;
 };
 
 /* XCF property */
