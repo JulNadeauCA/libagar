@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: magnifier.c,v 1.1 2002/07/09 09:23:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -172,9 +172,11 @@ magnifier_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	switch (mag->mode) {
 	case MAGNIFIER_ZOOM_IN:
 		mapview_zoom(mv, mv->zoom + 10);
+		mapview_center(mv, x, y);
 		break;
 	case MAGNIFIER_ZOOM_OUT:
 		mapview_zoom(mv, mv->zoom - 10);
+		mapview_center(mv, x, y);
 		break;
 	case MAGNIFIER_CENTER:
 		mapview_center(mv, x, y);
