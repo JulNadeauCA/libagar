@@ -119,7 +119,7 @@ fi
 MACHINE=`uname -m 2>/dev/null` || MACHINE=unknown
 RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
 SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
-HOST="$MACHINE-$SYSTEM$RELEASE"
+HOST="$MACHINE-$SYSTEM-$RELEASE"
 
 echo "Host: $HOST" > config.log
 echo "configuring for $HOST"
