@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.34 2002/02/16 09:13:53 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.35 2002/02/17 08:01:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -156,12 +156,7 @@ map_focus(struct map *m)
 	m->flags |= MAP_FOCUSED;
 	world->curmap = m;
 
-	if (curmapedit != NULL) {
-		char s[128];
-		
-		sprintf(s, "%s (edition)", m->obj.name);
-		SDL_WM_SetCaption(s, "mapedit");
-	} else {
+	if (curmapedit == NULL) {
 		SDL_WM_SetCaption(m->obj.name, "mapedit");
 	}
 
