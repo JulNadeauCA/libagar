@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.11 2003/03/24 12:08:44 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.12 2003/05/18 00:17:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,8 +32,8 @@
 
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
@@ -46,17 +46,17 @@ struct window *
 view_params_window(void)
 {
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
 
-	if ((win = window_generic_new(233, 133, "monitor-view-params"))
-	    == NULL) {
-		return (NULL);	/* Exists */
+	if ((win = window_new("monitor-view-params")) == NULL) {
+		return (NULL);
 	}
 	window_set_caption(win, "View parameters");
+	window_set_closure(win, WINDOW_DETACH);
 	
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	vb = vbox_new(win, 0);
 	{
-		char *engine = "???";
+		char *engine = "";
 
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_GUI:
@@ -66,34 +66,25 @@ view_params_window(void)
 			engine = "Tile-based";
 			break;
 		}
-		label_new(reg, 100, -1, "Graphic engine: %s %s", engine,
-		    view->opengl ? "(OpenGL)" : "");
-		label_polled_new(reg, 100, -1, &view->lock, "Depth: %dbpp",
-		    &view->depth);
-		label_polled_new(reg, 100, -1, &view->lock, "Geometry: %dx%d",
-		    &view->w, &view->h);
-		label_polled_new(reg, 100, -1, &view->lock,
-		    "Window op: %d (%p)", &view->winop, &view->wop_win);
-		label_polled_new(reg, 100, -1, NULL,
-		    "Clipping: [%[u16]x%[u16] at %[s16],%[s16]]",
-		    &view->v->clip_rect.w,
-		    &view->v->clip_rect.h,
-		    &view->v->clip_rect.x,
-		    &view->v->clip_rect.y);
+		label_new(vb, "Graphic engine: %s %s", engine, view->opengl ?
+		    "(OpenGL)" : "");
+		label_polled_new(vb, &view->lock, "%dx%dx%d", &view->w,
+		    &view->h, &view->depth);
+		label_polled_new(vb, &view->lock, "Window op: %d (%p)",
+		    &view->winop, &view->wop_win);
 
 		if (view->rootmap != NULL) {
 			struct viewmap *rm = view->rootmap;
 		
-			label_polled_new(reg, 100, -1, &view->lock,
-			    "Root map: %p", &rm->map);
-			label_new(reg, 100, -1,
-			    "Root map geometry: %dx%d", rm->w, rm->h);
-			label_polled_new(reg, 100, -1, &view->lock,
+			label_polled_new(vb, &view->lock, "Root map: %p",
+			    &rm->map);
+			label_new(vb, "Root map geometry: %dx%d",
+			    rm->w, rm->h);
+			label_polled_new(vb, &view->lock,
 			    "Root map offset: %d,%d (soft %d,%d)",
 			    &rm->x, &rm->y, &rm->sx, &rm->sy);
 		}
 	}
-	
 	return (win);
 }
 

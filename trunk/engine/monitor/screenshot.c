@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.4 2003/05/18 00:17:04 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.5 2003/05/24 15:53:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,12 +44,12 @@
 
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
-#include <engine/widget/text.h>
 
 #include "monitor.h"
 
@@ -247,29 +247,34 @@ struct window *
 screenshot_window(void)
 {
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct hbox *hb;
 
-	if ((win = window_generic_new(283, 121, "monitor-screenshot")) == NULL)
-		return (NULL);	/* Exists */
+	if ((win = window_new("monitor-screenshot")) == NULL)
+		return (NULL);
+
 	window_set_caption(win, "Screenshot");
+	window_set_closure(win, WINDOW_DETACH);
 
-	reg = region_new(win, REGION_VALIGN|REGION_CLIPPING, 0, 0, 100, -1);
+	vb = vbox_new(win, 0);
+	WIDGET(vb)->flags |= WIDGET_CLIPPING;
 	{
-		statusl = label_new(reg, 100, -1, "Status: Not connected");
-		hosttb = textbox_new(reg, "Host: ");
-		porttb = textbox_new(reg, "Port: ");
+		statusl = label_new(vb, "Status: Not connected");
+		hosttb = textbox_new(vb, "Host: ");
+		porttb = textbox_new(vb, "Port: ");
 		textbox_printf(porttb, "%i", default_port);
 	}
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+
+	hb = hbox_new(win, 01);
 	{
 		struct event *ev;
 
-		connectbu = button_new(reg, "Connect", NULL, 0, 50, -1);
-		ev = event_new(connectbu, "button-pushed",
-		    screenshot_connect, NULL);
+		connectbu = button_new(hb, "Connect");
+		ev = event_new(connectbu, "button-pushed", screenshot_connect,
+		    NULL);
 		ev->flags |= EVENT_ASYNC;
 		
-		disconnectbu = button_new(reg, "Disconnect", NULL, 0, 50, -1);
+		disconnectbu = button_new(hb, "Disconnect");
 		ev = event_new(disconnectbu, "button-pushed",
 		    screenshot_disconnect, NULL);
 		ev->flags |= EVENT_ASYNC;

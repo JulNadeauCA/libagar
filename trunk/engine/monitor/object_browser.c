@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.29 2003/05/18 00:17:04 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.30 2003/05/24 15:50:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -36,14 +36,14 @@
 
 #include <string.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
 #include <engine/widget/bitmap.h>
 #include <engine/widget/textbox.h>
-#include <engine/widget/text.h>
 
 #include <engine/mapedit/mapview.h>
 
@@ -79,23 +79,23 @@ events_show(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
 	
-	if ((win = window_generic_new(277, 142, "monitor-ob-%s-evh", ob->name))
-	    == NULL) {
+	if ((win = window_new("monitor-ob-%s-evh", ob->name)) == NULL) {
 		return;
 	}
 	window_set_caption(win, "%s: event handlers", ob->name);
+	window_set_closure(win, WINDOW_DETACH);
 
-	/* Display the event handlers. */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	vb = vbox_new(win, 0);
 	{
 		struct tlist *tl;
 
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		tl = tlist_new(vb, TLIST_POLL);
 		event_new(tl, "tlist-poll", events_poll, "%p", ob);
 		event_new(tl, "tlist-changed", events_show, "%p", ob);
 	}
+
 	window_show(win);
 }
 
@@ -127,45 +127,48 @@ props_show(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	struct window *win;
-	struct region *reg;
-	
-	if ((win = window_generic_new(277, 142, "monitor-ob-%s-props",
-	    ob->name)) == NULL) {
+	struct hbox *hb;
+
+	if ((win = window_new("monitor-ob-%s-props", ob->name)) == NULL) {
 		return;
 	}
 	window_set_caption(win, "%s: props", ob->name);
+	window_set_closure(win, WINDOW_DETACH);
 
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	hb = hbox_new(win, 0);
 	{
 		struct tlist *tl;
+		struct vbox *vb;
 
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		tl = tlist_new(hb, TLIST_POLL);
 		event_new(tl, "tlist-poll", props_poll, "%p", ob);
 
-		reg = region_new(win, REGION_VALIGN, 50, 35, 50, 20);
+		vb = vbox_new(hb, 0);
 		{
 			struct label *lab_name;
 			struct textbox *tb_set;
 			struct button *bu;
+			struct hbox *hb;
 
-			lab_name = label_new(reg, 100, 30, "");
-			tb_set = textbox_new(reg, "Value: ");
+			lab_name = label_new(vb, "");
+			tb_set = textbox_new(vb, "Value: ");
 
-			event_new(tl, "tlist-changed",
-			    props_update, "%p, %p", lab_name, tb_set);
+			event_new(tl, "tlist-changed", props_update, "%p, %p",
+			    lab_name, tb_set);
 		
-			reg = region_new(win, REGION_HALIGN, 50, 60, 50, 10);
+			hb = hbox_new(vb, 1);
 			{
-				bu = button_new(reg, "Apply", NULL, 0, 50, -1);
-				event_new(bu, "button-pushed",
-				    props_change, "%p, %p, %p", tl, tb_set, ob);
+				bu = button_new(hb, "Apply");
+				event_new(bu, "button-pushed", props_change,
+				    "%p, %p, %p", tl, tb_set, ob);
 			
-				bu = button_new(reg, "Remove", NULL, 0, 50, -1);
-				event_new(bu, "button-pushed",
-				    props_remove, "%p, %p, %p", tl, tb_set, ob);
+				bu = button_new(hb, "Remove");
+				event_new(bu, "button-pushed", props_remove,
+				    "%p, %p, %p", tl, tb_set, ob);
 			}
 		}
 	}
+
 	window_show(win);
 }
 
@@ -175,27 +178,23 @@ childs_show(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	struct window *win;
-	struct region *reg;
-	struct button *showbu;
+	struct vbox *vb;
 	
-	if ((win = window_generic_new(277, 142, "monitor-ob-%s-childs",
-	    ob->name)) == NULL) {
+	if ((win = window_new("monitor-ob-%s-childs", ob->name)) == NULL) {
 		return;
 	}
 	window_set_caption(win, "%s: descendants", ob->name);
+	window_set_closure(win, WINDOW_DETACH);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	vb = vbox_new(win, 0);
 	{
-		showbu = button_new(reg, "Show", NULL, 0, 100, -1);
-	}
-
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	{
+		struct button *bu;
 		struct tlist *tl;
 
-		tl = tlist_new(reg, 100, 0, TLIST_POLL);
+		bu = button_new(vb, "Show");
+		tl = tlist_new(vb, TLIST_POLL);
 		event_new(tl, "tlist-poll", objs_poll, "%p", ob);
-		event_new(showbu, "button-pushed", objs_show, "%p", tl);
+		event_new(bu, "button-pushed", objs_show, "%p", tl);
 	}
 	window_show(win);
 
@@ -240,7 +239,8 @@ objs_show(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct object *ob;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct hbox *hb;
 
 	if ((it = tlist_item_selected(tl)) == NULL) {
 		text_msg("Error", "No object is selected.");
@@ -248,33 +248,30 @@ objs_show(int argc, union evarg *argv)
 	}
 	ob = it->p1;
 
-	if ((win = window_generic_new(316, 154, "monitor-ob-%s", ob->name))
-	    == NULL) {
+	if ((win = window_new("monitor-ob-%s", ob->name)) == NULL) {
 		return;
 	}
 	window_set_caption(win, "%s object", ob->name);
+	window_set_closure(win, WINDOW_DETACH);
 	
-	reg = region_new(win, REGION_VALIGN, 0, -1, 80, -1);
+	vb = vbox_new(win, 0);
 	{
-		label_new(reg, 100, -1, "Name: %s", ob->name);
-		label_new(reg, 100, -1, "Type: %s", ob->type);
-		label_polled_new(reg, 100, -1, &ob->lock, "Flags: 0x%x",
-		    &ob->flags);
-		label_polled_new(reg, 100, -1, &ob->lock, "Gfx: %p", &ob->art);
-		label_polled_new(reg, 100, -1, &ob->lock, "Pos: %p", &ob->pos);
+		label_new(vb, "Name: %s", ob->name);
+		label_new(vb, "Type: %s", ob->type);
+		label_polled_new(vb, &ob->lock, "Flags: 0x%x", &ob->flags);
+		label_polled_new(vb, &ob->lock, "Gfx: %p", &ob->art);
+		label_polled_new(vb, &ob->lock, "Pos: %p", &ob->pos);
 	}
 
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
+	hb = hbox_new(win, 1);
 	{
 		struct button *bu;
 
-		bu = button_new(reg, "Properties", NULL, 0, 33, 0);
+		bu = button_new(hb, "Properties");
 		event_new(bu, "button-pushed", props_show, "%p", ob);
-		
-		bu = button_new(reg, "Child objects", NULL, 0, 33, 0);
+		bu = button_new(hb, "Child objects");
 		event_new(bu, "button-pushed", childs_show, "%p", ob);
-		
-		bu = button_new(reg, "Event handlers", NULL, 0, 33, 0);
+		bu = button_new(hb, "Event handlers");
 		event_new(bu, "button-pushed", events_show, "%p", ob);
 	}
 	
@@ -390,7 +387,7 @@ props_change(int argc, union evarg *argv)
 	}
 	prop = it->p1;
 
-	pthread_mutex_lock(&tb_set->text.lock);
+	pthread_mutex_lock(&tb_set->lock);
 	stringb = widget_binding_get_locked(tb_set, "string", &s);
 
 	switch (prop->type) {
@@ -441,27 +438,24 @@ props_change(int argc, union evarg *argv)
 	}
 
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tb_set->text.lock);
+	pthread_mutex_unlock(&tb_set->lock);
 }
 
 struct window *
 object_browser_window(void)
 {
 	struct window *win;
-	struct region *reg;
+	struct tlist *tl;
 
-	if ((win = window_generic_new(251, 259, "monitor")) == NULL)
+	if ((win = window_new("monitor-objects")) == NULL) {
 		return (NULL);
-	window_set_caption(win, "Objects");
-
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-	{
-		struct tlist *tl;
-
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-changed", objs_show, "%p", tl);
-		event_new(tl, "tlist-poll", objs_poll, "%p", world);
 	}
+	window_set_caption(win, "Objects");
+	window_set_closure(win, WINDOW_HIDE);
+
+	tl = tlist_new(win, TLIST_POLL);
+	event_new(tl, "tlist-changed", objs_show, "%p", tl);
+	event_new(tl, "tlist-poll", objs_poll, "%p", world);
 	return (win);
 }
 
