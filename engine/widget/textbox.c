@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.13 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.14 2002/06/20 16:34:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -106,8 +106,8 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
 
-	event_new(tbox, "shown", 0, textbox_shown, NULL);
-	event_new(tbox, "hidden", 0, textbox_hidden, NULL);
+	event_new(tbox, "widget-shown", 0, textbox_shown, NULL);
+	event_new(tbox, "widget-hidden", 0, textbox_hidden, NULL);
 
 	event_new(tbox, "window-mousebuttonup", 0,
 	    textbox_event, "%i", WINDOW_MOUSEBUTTONUP);
@@ -150,7 +150,6 @@ textbox_draw(void *p)
 	struct textbox *tbox = p;
 	int i, j, x, y, tw;
 	Uint32 curscol;
-	SDL_Surface *box_s;
 	SDL_Surface *label_s = tbox->label_s;
 
 	curscol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 0, 0, 0);
@@ -158,13 +157,18 @@ textbox_draw(void *p)
 	x = label_s->w;
 	y = tbox->ymargin;
 
+	/* Label */
 	WIDGET_DRAW(tbox, label_s, 0, y/2);
 
-	box_s = primitive_box(tbox,
+	/* Frame */
+	primitives.box(tbox, x, 0,
 	    WIDGET(tbox)->w - (tbox->xmargin * 2) - label_s->w,
 	    label_s->h + (tbox->ymargin * 2),
 	    WIDGET_FOCUSED(tbox) ? -1 : 1);
-	WIDGET_DRAW(tbox, box_s, x, 0);
+	
+	/*
+	 * Text
+	 */
 	x += tbox->xmargin;
 
 	tw = strlen(tbox->text);
@@ -177,7 +181,7 @@ textbox_draw(void *p)
 			if (tbox->textpos >= tw-4) {
 				tbox->textoffs++;	/* Scroll */
 			}
-			goto done;
+			return;
 		}
 		if (i == tbox->textpos && tbox->flags & TEXTBOX_CURSOR &&
 		    WIDGET_FOCUSED(tbox) &&
@@ -219,8 +223,6 @@ textbox_draw(void *p)
 			}
 		}
 	}
-done:
-	SDL_FreeSurface(box_s);
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.1 2002/07/07 00:25:13 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.2 2002/07/08 05:22:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -123,40 +123,31 @@ radio_draw(void *p)
 {
 	struct radio *rad = p;
 	SDL_Surface *su;
-	int x = 0, y = 0, i;
+	int x = 0, y, i;
 	
-	su = primitive_frame(rad, WIDGET(rad)->w, WIDGET(rad)->h,
+	primitives.frame(rad, 0, 0, WIDGET(rad)->w, WIDGET(rad)->h,
 	    WIDGET_FOCUSED(rad) ? 1 : 0);
-	WIDGET_DRAW(rad, su, 0, 0);
-	SDL_FreeSurface(su);
 
-	for (i = 0; i < rad->nitems; i++) {
+	for (i = 0, y = 0; i < rad->nitems;
+	     i++, y += rad->radio.h+rad->yspacing/2) {
 		const char *s;
 		SDL_Surface *ls;
-
+	
 		s = rad->items[i];
-		/* Radio button */
-		su = primitive_circle(rad, rad->radio.w, rad->radio.h, 6, 1);
-		WIDGET_DRAW(rad, su, 0, (i * rad->radio.h) + rad->yspacing);
-		SDL_FreeSurface(su);
 
+		/* Radio button */
+		primitives.circle(rad, 0, y,
+		    rad->radio.w, rad->radio.h, 6, 1);
 		if (rad->selitem == i) {
-			su = primitive_circle(rad, rad->radio.w, rad->radio.h,
-			    3, 1);
-			WIDGET_DRAW(rad, su, 0, (i * rad->radio.h) +
-			    rad->yspacing);
-			SDL_FreeSurface(su);
-			
-			su = primitive_circle(rad, rad->radio.w, rad->radio.h,
-			    2, 1);
-			WIDGET_DRAW(rad, su, 0, (i * rad->radio.h) +
-			    rad->yspacing);
-			SDL_FreeSurface(su);
+			primitives.circle(rad, 0, y,
+			    rad->radio.w, rad->radio.h, 3, 1);
+			primitives.circle(rad, 0, y,
+			    rad->radio.w, rad->radio.h, 2, 1);
 		}
 
+		/* XXX cache */
 		ls = TTF_RenderText_Solid(font, s, white);
-		WIDGET_DRAW(rad, ls, rad->radio.w,
-		    (i * rad->radio.h) + rad->yspacing);
+		WIDGET_DRAW(rad, ls, rad->radio.w, y);
 		SDL_FreeSurface(ls);
 	}
 }
