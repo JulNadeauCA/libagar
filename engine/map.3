@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.10 2002/09/07 04:30:26 vedge Exp $
+.\"	$Csoft: map.3,v 1.11 2002/09/16 16:04:36 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -36,14 +36,12 @@
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
 An agar map is an array of node structures.
-Each node may contain a stack of node reference structures,
-which point to arbitrary structures and an offset within them.
-Flags may alter the meaning of the offset.
+Each node may contain a stack of noderef structures.
 .Pp
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct map *"
-.Fn map_init "struct map *m" "char *name" "char *media" "Uint32 flags"
+.Fn map_init "struct map *m" "char *name" "char *archive" "Uint32 flags"
 .Pp
 .Ft void
 .Fn map_destroy "struct map *map"
@@ -69,10 +67,9 @@ The
 .Fn map_init
 function initializes a map identified by the string
 .Fa name .
-The
-.Fa media
-argument, if non-null, specifies an archive from which to load audio and
-video data.
+Data is loaded from the
+.Fa archive
+argument if it is not NULL.
 The
 .Fa flags
 argument is currently ignored.
