@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.48 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.49 2005/03/03 10:59:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -94,10 +94,11 @@ magnifier_init(struct tool *t)
 	widget_bind(sbu, "value", WIDGET_INT, &magnifier_zoom_inc);
 	spinbutton_set_min(sbu, 1);
 	
-	tool_push_status(t, "[`0' = zoom 100%], [`+' = zoom++], "
-	                    "[`-' = zoom--]");
+	tool_push_status(t, "[<0> = 1:1], [<+> = zoom++], "
+	                    "[<-> = zoom--]");
 
 	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_100pct, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_100pct, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
 }
