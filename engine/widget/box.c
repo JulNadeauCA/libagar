@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.11 2005/02/18 11:17:41 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.12 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -83,8 +83,8 @@ box_init(struct box *bo, enum box_type type, int flags)
 	if (flags & BOX_WFILL)	WIDGET(bo)->flags |= WIDGET_WFILL;
 	if (flags & BOX_HFILL)	WIDGET(bo)->flags |= WIDGET_HFILL;
 
-	bo->padding = 4;
-	bo->spacing = 2;
+	bo->padding = 2;
+	bo->spacing = 1;
 	bo->homogenous = (flags & BOX_HOMOGENOUS);
 	pthread_mutex_init(&bo->lock, &recursive_mutexattr);
 }
@@ -113,7 +113,7 @@ box_scale(void *p, int w, int h)
 	struct box *bo = p;
 	struct widget *wid;
 	int x = bo->padding, y = bo->padding;
-	int nwidgets = 0, nfill = 0, nfixed = 0;
+	int nwidgets = 0;
 	int totfixed = 0;
 
 	pthread_mutex_lock(&bo->lock);
@@ -121,29 +121,25 @@ box_scale(void *p, int w, int h)
 	/* Count the child widgets. */
 	OBJECT_FOREACH_CHILD(wid, bo, widget) {
 		WIDGET_OPS(wid)->scale(wid, -1, -1);
+
 		switch (bo->type) {
 		case BOX_HORIZ:
-			if (wid->flags & WIDGET_WFILL) {
-				nfill++;
-			} else {
-				totfixed += wid->w;
-				nfixed++;
-			}
+			if ((wid->flags & WIDGET_WFILL) == 0)
+				totfixed += wid->w + bo->spacing;
 			break;
 		case BOX_VERT:
-			if (wid->flags & WIDGET_HFILL) {
-				nfill++;
-			} else {
-				totfixed += wid->h;
-				nfixed++;
-			}
+			if ((wid->flags & WIDGET_HFILL) == 0)
+				totfixed += wid->h + bo->spacing;
 			break;
 		}
 		nwidgets++;
 	}
+	if (nwidgets > 0)
+		totfixed -= bo->spacing;
 
 	if (w == -1 && h == -1) {				/* Size hint */
 		int maxw = 0, maxh = 0;
+		int dw, dh;
 
 		WIDGET(bo)->w = bo->padding*2;
 		WIDGET(bo)->h = bo->padding*2;
@@ -151,22 +147,21 @@ box_scale(void *p, int w, int h)
 		/* Reserve enough space to hold widgets and spacing/padding. */
 		OBJECT_FOREACH_CHILD(wid, bo, widget) {
 			WIDGET_OPS(wid)->scale(wid, -1, -1);
-
-			if (wid->w > maxw)
-				maxw = wid->w;
-			if (wid->h > maxh)
-				maxh = wid->h;
+			if (wid->w > maxw) maxw = wid->w;
+			if (wid->h > maxh) maxh = wid->h;
 
 			switch (bo->type) {
 			case BOX_HORIZ:
-				if ((maxh + bo->padding*2) > WIDGET(bo)->h) {
-					WIDGET(bo)->h = maxh + bo->padding*2;
+				if ((dh = maxh + bo->padding*2) >
+				    WIDGET(bo)->h) {
+					WIDGET(bo)->h = dh;
 				}
 				WIDGET(bo)->w += wid->w + bo->spacing;
 				break;
 			case BOX_VERT:
-				if ((maxw + bo->padding*2) > WIDGET(bo)->w) {
-					WIDGET(bo)->w = maxw + bo->padding*2;
+				if ((dw = maxw + bo->padding*2) >
+				    WIDGET(bo)->w) {
+					WIDGET(bo)->w = dw;
 				}
 				WIDGET(bo)->h += wid->h + bo->spacing;
 				break;
@@ -175,20 +170,10 @@ box_scale(void *p, int w, int h)
 		if (nwidgets > 0) {
 			switch (bo->type) {
 			case BOX_HORIZ:
-				if (bo->homogenous) {
-					WIDGET(bo)->w +=
-					    bo->spacing*(nwidgets+1);
-				} else {
-					WIDGET(bo)->w -= bo->spacing;
-				}
+				WIDGET(bo)->w -= bo->spacing;
 				break;
 			case BOX_VERT:
-				if (bo->homogenous) {
-					WIDGET(bo)->h +=
-					    bo->spacing*(nwidgets+1);
-				} else {
-					WIDGET(bo)->h -= bo->spacing;
-				}
+				WIDGET(bo)->h -= bo->spacing;
 				break;
 			}
 		}
@@ -226,31 +211,35 @@ box_scale(void *p, int w, int h)
 			switch (bo->type) {
 			case BOX_HORIZ:
 				WIDGET_OPS(wid)->scale(wid, -1, -1);
+#if 0
 				if (wid->w > max) {
 					wid->flags |= WIDGET_EXCEDENT;
 					excedent += wid->w - max;
 					nexcedent++;
 				} else {
+#endif
 					wid->w = max;
-				}
+//				}
 				wid->h = h - bo->padding*2;
 				WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 				x += wid->w + bo->spacing;
 				break;
 			case BOX_VERT:
+#if 0
 				if (wid->h > max) {
 					wid->flags |= WIDGET_EXCEDENT;
 					excedent += wid->h - max;
 					nexcedent++;
 				} else {
+#endif
 					wid->h = max;
-				}
+//				}
 				wid->w = w - bo->padding*2;
 				y += wid->h + bo->spacing;
 				break;
 			}
 		}
-
+#if 0
 		/* Adjust for widgets that are too big. */
 		x = bo->padding;
 		y = bo->padding;
@@ -274,6 +263,7 @@ box_scale(void *p, int w, int h)
 				break;
 			}
 		}
+#endif
 		goto out;
 	}
 
@@ -288,8 +278,7 @@ box_scale(void *p, int w, int h)
 		switch (bo->type) {
 		case BOX_HORIZ:
 			if (wid->flags & WIDGET_WFILL) {
-				wid->w = w - totfixed -
-				    (nfixed-1)*bo->spacing*2;
+				wid->w = w - totfixed - bo->padding*2;
 			}
 			if (wid->flags & WIDGET_HFILL) {
 				wid->h = h - bo->padding*2;
@@ -301,8 +290,7 @@ box_scale(void *p, int w, int h)
 				wid->w = w - bo->padding*2; 
 			}
 			if (wid->flags & WIDGET_HFILL) {
-				wid->h = h - totfixed -
-				    (nfixed-1)*bo->spacing*2;
+				wid->h = h - totfixed - bo->padding*2;
 			}
 			y += wid->h + bo->spacing;
 			break;

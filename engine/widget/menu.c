@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.15 2005/03/05 12:15:10 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.16 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@ menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 
 	panel = window_new(WINDOW_NO_TITLEBAR|WINDOW_NO_DECORATIONS, NULL);
 	window_set_caption(panel, "win-popup");
-	window_set_padding(panel, 0, 0);
+	window_set_padding(panel, 0, 0, 0);
 
 	WIDGET(panel)->x = x;
 	WIDGET(panel)->y = y;
@@ -206,6 +206,19 @@ mousemotion(int argc, union evarg *argv)
 #endif
 }
 
+static void
+attached(int argc, union evarg *argv)
+{
+	struct AGMenu *m = argv[0].p;
+	struct widget *pwid = argv[argc].p;
+	struct window *pwin;
+
+	/* Adjust the top padding of the parent window if any. */
+	if ((pwin = widget_parent_window(pwid)) != NULL)
+		window_set_padding(pwin, pwin->xpadding, 0,
+		    pwin->ypadding_bot);
+}
+
 void
 menu_init(struct AGMenu *m)
 {
@@ -226,6 +239,7 @@ menu_init(struct AGMenu *m)
 	event_new(m, "window-mousebuttonup", mousebuttonup, NULL);
 #endif
 	event_new(m, "window-mousemotion", mousemotion, NULL);
+	event_new(m, "attached", attached, NULL);
 }
 
 struct AGMenuItem *

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.245 2005/03/05 12:15:10 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.246 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -168,10 +168,12 @@ window_init(void *p, const char *name, int flags)
 	win->visible = 0;
 	win->alignment = WINDOW_CENTER;
 	win->spacing = 2;
-	win->xpadding = colors_border_size+4;
-	win->ypadding = colors_border_size+4;
-	win->minw = win->xpadding*2;
-	win->minh = win->ypadding*2 + text_font_height;
+	win->xpadding = colors_border_size;
+	win->ypadding_top = 1;
+	win->ypadding_bot = colors_border_size + 1;
+	win->minw = win->xpadding*2 + 16;
+	win->minh = win->ypadding_top + win->ypadding_bot +
+	            text_font_height + 16;
 	TAILQ_INIT(&win->subwins);
 	pthread_mutex_init(&win->lock, &recursive_mutexattr);
 	
@@ -733,7 +735,7 @@ window_event(SDL_Event *ev)
 				continue;
 			}
 			if ((ev->button.y - WIDGET(win)->y) >
-			    (WIDGET(win)->h - win->ypadding)) {
+			    (WIDGET(win)->h - win->ypadding_bot)) {
 				/* Initiate a resize operation. */
 				/* XXX don't hardcode notch position */
 			    	if ((ev->button.x - WIDGET(win)->x) < 17) {
@@ -1066,9 +1068,10 @@ window_scale(void *p, int w, int h)
 {
 	struct window *win = p;
 	struct widget *wid;
-	int nfixed = 0, nhfill = 0, totfixed = 0;
-	int x = win->xpadding;
-	int y = win->ypadding;
+	int totfixed = 0;
+	int x = win->xpadding, dx;
+	int y = 0, dy;
+	int nwidgets = 0;
 
 	pthread_mutex_lock(&win->lock);
 
@@ -1076,74 +1079,66 @@ window_scale(void *p, int w, int h)
 		int maxw = 0;
 
 		WIDGET(win)->w = win->xpadding*2;
-		WIDGET(win)->h = win->ypadding*2;
+		WIDGET(win)->h = win->ypadding_top + win->ypadding_bot;
 
 		OBJECT_FOREACH_CHILD(wid, win, widget) {
 			wid->x = x;
 			wid->y = y;
-
-			WIDGET_OPS(wid)->scale(wid, -1, -1);	/* Hint */
-
-			if (maxw < wid->w) {
+			WIDGET_OPS(wid)->scale(wid, -1, -1);
+			if (maxw < wid->w)
 				maxw = wid->w;
-			}
-			if ((maxw + win->xpadding*2) > WIDGET(win)->w) {
-				WIDGET(win)->w = maxw + win->xpadding*2;
-			}
-			WIDGET(win)->h += wid->h + win->spacing;
-			y += wid->h + win->spacing;
+
+			dx = maxw + win->xpadding*2;
+			if (WIDGET(win)->w < dx)
+				WIDGET(win)->w = dx;
+
+			dy = wid->h + (!strcmp(wid->type,"titlebar") ?
+			               win->ypadding_top : win->spacing);
+			y += dy;
+			WIDGET(win)->h += dy;
 		}
-#if 1
-		/* Prevent further scaling of widgets to unaesthetic sizes. */
+		WIDGET(win)->h -= win->spacing;
+
 		win->minw = WIDGET(win)->w;
 		win->minh = WIDGET(win)->h;
-#endif
 		goto out;
 	}
 
-	/*
-	 * Calculate the total height requested by fixed-size widgets
-	 * and allow one widget to use the remaining space.
-	 */
+	/* Sum the space requested by fixed widgets. */
 	OBJECT_FOREACH_CHILD(wid, win, widget) {
-		WIDGET_OPS(wid)->scale(wid, -1, -1);		/* Hint */
-
-		if (wid->flags & WIDGET_HFILL) {
-			nhfill++;
-		} else {
-			totfixed += wid->h;
-			nfixed++;
-		}
+		WIDGET_OPS(wid)->scale(wid, -1, -1);
+		if ((wid->flags & WIDGET_HFILL) == 0)
+			totfixed += wid->h + win->spacing;
 	}
+	if (totfixed > win->spacing)
+		totfixed -= win->spacing;
 
-#ifdef DEBUG
-	/* XXX divide instead */
-	if (nhfill > 1)
-		fatal(">1 WIDGET_HFILL widget is nonsense in a window");
-#endif
-
-	/* Mix fixed-size and possibly hfill widgets. */
 	OBJECT_FOREACH_CHILD(wid, win, widget) {
 		wid->x = x;
 		wid->y = y;
 
 		if (wid->flags & WIDGET_WFILL) {
-			wid->w = w - win->xpadding*2; 
+			if (strcmp(wid->type, "titlebar") == 0) {
+				wid->w = w;
+			} else {
+				wid->w = w - win->xpadding*2;
+			}
 		}
 		if (wid->flags & WIDGET_HFILL) {
-			wid->h = h - totfixed -
-			    (nfixed*win->spacing + win->ypadding*2) -
-			    win->spacing*2;
+			wid->h = h - totfixed - win->ypadding_bot -
+			                        win->ypadding_top;
 		}
 		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
-
-		y += wid->h + win->spacing;
+		y += wid->h;
+		y += !strcmp(wid->type,"titlebar") ? win->ypadding_top :
+		                                     win->spacing;
+		nwidgets++;
 	}
 
 	if (win->tbar != NULL) {
-		WIDGET(win->tbar)->x = 1;
-		WIDGET(win->tbar)->y = 1;
-		WIDGET(win->tbar)->w = WIDGET(win)->w - 1;
+		WIDGET(win->tbar)->x = 0;
+		WIDGET(win->tbar)->y = 0;
+		WIDGET(win->tbar)->w = w;
 	}
 out:
 	window_clamp(win);
@@ -1161,15 +1156,13 @@ window_set_spacing(struct window *win, int spacing)
 
 /* Change the padding around child widgets. */
 void
-window_set_padding(struct window *win, int xpadding, int ypadding)
+window_set_padding(struct window *win, int xpadding, int ypadding_top,
+    int ypadding_bot)
 {
 	pthread_mutex_lock(&win->lock);
-	if (xpadding >= 0) {
-		win->xpadding = xpadding;
-	}
-	if (ypadding >= 0) {
-		win->ypadding = ypadding;
-	}
+	if (xpadding >= 0)	{ win->xpadding = xpadding; }
+	if (ypadding_top >= 0)	{ win->ypadding_top = ypadding_top; }
+	if (ypadding_bot >= 0)	{ win->ypadding_bot = ypadding_bot; }
 	pthread_mutex_unlock(&win->lock);
 }
 

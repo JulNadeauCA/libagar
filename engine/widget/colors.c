@@ -1,4 +1,4 @@
-/*	$Csoft: colors.c,v 1.1 2005/03/09 06:39:20 vedge Exp $	*/
+/*	$Csoft: colors.c,v 1.2 2005/03/10 05:37:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -32,8 +32,8 @@
 #include "colors.h"
 
 Uint32 colors[LAST_COLOR];
-Uint32 colors_border[6];
-int colors_border_size = 6;
+Uint32 colors_border[7];
+int colors_border_size = 7;
 
 const char *colors_names[] = {
 	N_("Background"),
@@ -164,12 +164,13 @@ colors_init(void)
 	colors[TILEVIEW_TEXTBG_COLOR] = SDL_MapRGB(vfmt, 0, 0, 0);
 	colors[TILEVIEW_TEXT_COLOR] = SDL_MapRGB(vfmt, 240, 240, 240);
 
-	colors_border[0] = SDL_MapRGB(vfmt, 70, 70, 65);
+	colors_border[0] = SDL_MapRGB(vfmt, 255, 0, 0);
 	colors_border[1] = SDL_MapRGB(vfmt, 70, 70, 65);
 	colors_border[2] = SDL_MapRGB(vfmt, 75, 75, 70);
 	colors_border[3] = SDL_MapRGB(vfmt, 90, 90, 85);
 	colors_border[4] = SDL_MapRGB(vfmt, 75, 75, 70);
 	colors_border[5] = SDL_MapRGB(vfmt, 70, 70, 65);
+	colors_border[6] = SDL_MapRGB(vfmt, 0, 255, 0);
 }
 
 void
