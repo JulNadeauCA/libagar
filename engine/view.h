@@ -1,5 +1,10 @@
-/*	$Csoft: view.h,v 1.57 2002/12/17 00:20:19 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.58 2002/12/20 08:55:15 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <config/view_8bpp.h>
+#include <config/view_16bpp.h>
+#include <config/view_24bpp.h>
+#include <config/view_32bpp.h>
 
 typedef enum {
 	GFX_ENGINE_GUI,		/* Solid background */
@@ -50,9 +55,13 @@ struct viewport {
 	enum {
 		VIEW_WINOP_NONE,
 		VIEW_WINOP_MOVE,
-		VIEW_WINOP_LRESIZE,	/* Left resize */
-		VIEW_WINOP_RRESIZE,	/* Right resize */
-		VIEW_WINOP_HRESIZE,	/* Height resize */
+		VIEW_WINOP_LRESIZE,		/* Left resize */
+		VIEW_WINOP_RRESIZE,		/* Right resize */
+		VIEW_WINOP_HRESIZE,		/* Height resize */
+		VIEW_WINOP_REGRESIZE_LEFT,
+		VIEW_WINOP_REGRESIZE_RIGHT,
+		VIEW_WINOP_REGRESIZE_UP,
+		VIEW_WINOP_REGRESIZE_DOWN
 	} winop;
 
 	pthread_mutex_t		lock;	/* Lock on regions. */
