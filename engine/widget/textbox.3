@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.19 2003/08/31 11:58:10 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.20 2003/09/17 03:01:22 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -149,8 +149,10 @@ widget generates the following events:
 .Bl -tag -width 2n
 .It Fn textbox-return "void"
 Return was pressed.
-.It Fn textbox-changed "void"
-The string was modified.
+.It Fn textbox-prechg "void"
+The string is about to be modified.
+.It Fn textbox-postchg "void"
+The string was just modified.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
