@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.87 2005/03/10 09:43:34 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.88 2005/03/11 05:13:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -44,9 +44,7 @@ struct window {
 #define WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
 #define WINDOW_MODAL		0x2000	/* Modal window behavior */
 
-#ifdef DEBUG
 	char caption[128];
-#endif
 	int visible;				/* Window is visible */
 
 	pthread_mutex_t lock;
