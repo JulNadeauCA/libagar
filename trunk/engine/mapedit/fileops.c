@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.17 2002/12/01 14:41:03 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.18 2002/12/13 07:47:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -171,7 +171,8 @@ fileops_clear_map(int argc, union evarg *argv)
 			struct node *node = &m->map[y][x];
 
 			node_destroy(node, x, y);
-			node_init(node, x, y, med->node.flags & ~(NODE_ORIGIN));
+			node_init(node, x, y);
+			node->flags = med->node.flags & ~(NODE_ORIGIN);
 
 			switch (med->ref.type) {
 			case NODEREF_SPRITE:
