@@ -1,12 +1,12 @@
-/*	$Csoft: merge.h,v 1.4 2003/02/12 01:09:32 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.5 2003/02/12 02:01:46 vedge Exp $	*/
 /*	Public domain	*/
 
 enum merge_mode {
-	MERGE_REPLACE,
-	MERGE_INSERT_HIGHEST,
-	MERGE_INSERT_EMPTY,
-	MERGE_ERASE_ALL,
-	MERGE_ERASE_HIGHEST
+	MERGE_FILL,		/* Replace and skip empty source nodes */
+	MERGE_REPLACE,		/* Replace, including empty source nodes */
+	MERGE_INSERT_HIGHEST,	/* Insert new noderefs */
+	MERGE_INSERT_EMPTY,	/* Insert new noderefs on empty dst nodes */
+	MERGE_ERASE		/* Erase mask  */
 };
 
 SLIST_HEAD(brushq, object);

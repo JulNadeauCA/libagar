@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.8 2003/02/12 02:01:46 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.9 2003/02/12 02:03:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -200,11 +200,11 @@ merge_window(void *p)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 30);
 	{
 		static const char *mode_items[] = {
+			"Fill",
 			"Replace",
-			"Insert head",
+			"Insert highest",
 			"Insert empty",
-			"Erase all",
-			"Erase head",
+			"Erase",
 			NULL
 		};
 		struct radio *rad;
@@ -283,9 +283,15 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 			struct node *dstnode = &dm->map[dy][dx];
 
 			switch (mer->mode) {
-			case MERGE_REPLACE:
+			case MERGE_FILL:
 				if (TAILQ_EMPTY(&srcnode->nrefs))
 					continue;
+				node_destroy(dstnode);
+				node_init(dstnode, dx, dy);
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
+					node_copy_ref(nref, dstnode);
+				break;
+			case MERGE_REPLACE:
 				node_destroy(dstnode);
 				node_init(dstnode, dx, dy);
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
@@ -301,17 +307,11 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
 					node_copy_ref(nref, dstnode);
 				break;
-			case MERGE_ERASE_ALL:
+			case MERGE_ERASE:
 				if (!TAILQ_EMPTY(&srcnode->nrefs))
 					continue;
 				node_destroy(dstnode);
 				node_init(dstnode, dx, dy);
-				break;
-			case MERGE_ERASE_HIGHEST:
-				if (!TAILQ_EMPTY(&srcnode->nrefs))
-					continue;
-				node_remove_ref(dstnode,
-				    TAILQ_FIRST(&srcnode->nrefs));
 				break;
 			}
 		}
