@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.3 2002/06/12 20:40:08 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.1 2002/06/22 20:43:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -74,8 +74,10 @@ fileops_new_map(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&m->lock);
 	map_allocnodes(m, w, h);
+
 	m->defx = w / 2;
-	m->defy = h - 2;
+	m->defy = h - 2;	/* XXX pref */
+
 	origin = &m->map[m->defy][m->defx];
 	origin->flags |= NODE_ORIGIN;
 	pthread_mutex_unlock(&m->lock);
@@ -83,6 +85,9 @@ fileops_new_map(int argc, union evarg *argv)
 	win = mapwin_new(med, m);
 	view_attach(win);
 	window_show(win);
+
+	textbox_printf(name_tbox, "");
+	textbox_printf(media_tbox, "");
 
 	window_hide_locked(wid->win);
 }
