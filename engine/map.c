@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.65 2002/03/17 12:02:55 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.66 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -597,17 +597,13 @@ node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
 	return (NULL);
 }
 
-/*
- * Load a map from file.
- * Must be called on a locked map.
- */
 int
 map_load(void *ob, int fd)
 {
 	struct map *m = (struct map *)ob;
 	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
-	
+
 	/* The viewport (and the map mask), might change sizes. */
 	text_destroyall();
 	
@@ -622,7 +618,7 @@ map_load(void *ob, int fd)
 	m->defy  = fobj_read_uint32(fd);
 	m->tilew = fobj_read_uint32(fd);
 	m->tileh = fobj_read_uint32(fd);
-
+	
 	nobjs = fobj_read_uint32(fd);
 	pobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
 	for (i = 0; i < nobjs; i++) {
@@ -642,6 +638,8 @@ map_load(void *ob, int fd)
 		
 		free(s);
 	}
+	
+	pthread_mutex_lock(&m->lock);
 	
 	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
 
@@ -682,6 +680,8 @@ map_load(void *ob, int fd)
 			}
 		}
 	}
+	
+	pthread_mutex_unlock(&m->lock);
 
 	free(pobjs);
 	return (0);
@@ -732,6 +732,8 @@ map_save(void *ob, int fd)
 	pthread_mutex_unlock(&world->lock);
 
 	fobj_bpwrite_uint32(buf, nobjs, soffs);
+	
+	pthread_mutex_lock(&m->lock);
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -768,6 +770,8 @@ map_save(void *ob, int fd)
 			totrefs += nrefs;
 		}
 	}
+	
+	pthread_mutex_unlock(&m->lock);
 
 	fobj_flush_buf(buf, fd);
 	dprintf("%s: %dx%d, %d refs\n", m->obj.name, m->mapw, m->maph, totrefs);
