@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.3 2002/05/25 08:47:51 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.4 2002/05/25 09:03:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -225,17 +225,17 @@ textbox_event(void *p, SDL_Event *ev, int flags)
 	case SDL_KEYDOWN:
 		textlen = strlen(tbox->text);
 	
-		for (i = 0; textbox_keycodes[i].key != SDLK_LAST; i++) {
+		for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
 			const struct keycode *kcode;
 
-			kcode = &textbox_keycodes[i];
+			kcode = &keycodes[i];
 			if (kcode->key != ev->key.keysym.sym ||
 			    kcode->callback == NULL) {
 				continue;
 			}
 			if (kcode->modmask == 0 ||
 			    (int)ev->key.keysym.mod & kcode->modmask) {
-				textbox_keycodes[i].callback(tbox, ev);
+				keycodes[i].callback(tbox, ev, keycodes[i].arg);
 				textbox_draw(tbox);
 				SDL_UpdateRect(WIDGET_SURFACE(tbox),
 				    WIDGET(tbox)->x + WIDGET(tbox)->win->x,

@@ -40,109 +40,23 @@
 #include "textbox.h"
 #include "keycodes.h"
 
-static void	 textbox_insert_alpha(struct textbox *, SDL_Event *);
-static void	 textbox_insert_digit(struct textbox *, SDL_Event *);
-static void	 textbox_insert_ascii(struct textbox *, SDL_Event *);
-static char	*textbox_insert_char(struct textbox *, char);
+static char	*insert_char(struct textbox *, char);
 
-static void	 textbox_key_backspace(struct textbox *, SDL_Event *);
-static void	 textbox_key_home(struct textbox *, SDL_Event *);
-static void	 textbox_key_end(struct textbox *, SDL_Event *);
-static void	 textbox_key_kill(struct textbox *, SDL_Event *);
-static void	 textbox_key_left(struct textbox *, SDL_Event *);
-static void	 textbox_key_right(struct textbox *, SDL_Event *);
+static void	 insert_alpha(struct textbox *, SDL_Event *, char *);
+static void	 insert_ascii(struct textbox *, SDL_Event *, char *);
 
-const struct keycode textbox_keycodes[] = {
-	/* Ascii characters */
-	{ "i-exclaim",	SDLK_1,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-amper",	SDLK_2,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-hash",	SDLK_3,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-dollar",	SDLK_4,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-percent",	SDLK_5,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-caret",	SDLK_6,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-amper",	SDLK_7,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-asterisk",	SDLK_8,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-lparent",	SDLK_9,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-rparen",	SDLK_0,		KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-tilde",	SDLK_BACKQUOTE,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-bckquote",	SDLK_BACKQUOTE,	0,		textbox_insert_ascii },
-	{ "i-uscore",	SDLK_MINUS,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-minus",	SDLK_MINUS,	0,		textbox_insert_ascii },
-	{ "i-plus",	SDLK_EQUALS,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-equal",	SDLK_EQUALS,	0,		textbox_insert_ascii },
-	{ "i-lbraces",	SDLK_LEFTBRACKET, KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-lbrack",	SDLK_LEFTBRACKET, 0,		textbox_insert_ascii },
-	{ "i-rbraces",	SDLK_RIGHTBRACKET, KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-rbrack",	SDLK_RIGHTBRACKET, 0,		textbox_insert_ascii },
-	{ "i-pipe",	SDLK_BACKSLASH,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-bslash",	SDLK_BACKSLASH,	0,		textbox_insert_ascii },
-	{ "i-colon",	SDLK_SEMICOLON,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-scolon",	SDLK_SEMICOLON,	0,		textbox_insert_ascii },
-	{ "i-dquote",	SDLK_QUOTE,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-squote",	SDLK_QUOTE,	0,		textbox_insert_ascii },
-	{ "i-slash",	SDLK_SLASH,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-slash",	SDLK_SLASH,	0,		textbox_insert_ascii },
-	{ "i-less",	SDLK_COMMA,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-comma",	SDLK_COMMA,	0,		textbox_insert_ascii },
-	{ "i-greater",	SDLK_PERIOD,	KMOD_SHIFT,	textbox_insert_ascii },
-	{ "i-period",	SDLK_PERIOD,	0,		textbox_insert_ascii },
-	{ "i-space",	SDLK_SPACE,	0,		textbox_insert_ascii },
-	
-	/* Control characters */
-	{ "c-bspace",	SDLK_BACKSPACE, 0,		textbox_key_backspace },
-	{ "c-home",	SDLK_HOME,	0,		textbox_key_home },
-	{ "c-end",	SDLK_END,	0,		textbox_key_end },
-	{ "c-home",	SDLK_a,		KMOD_CTRL,	textbox_key_home },
-	{ "c-end",	SDLK_e,		KMOD_CTRL,	textbox_key_end },
-	{ "c-kill",	SDLK_k,		KMOD_CTRL,	textbox_key_kill },
-	{ "c-left",	SDLK_LEFT,	0,		textbox_key_left },
-	{ "c-right",	SDLK_RIGHT,	0,		textbox_key_right },
+static void	 key_bspace(struct textbox *, SDL_Event *, char *);
+static void	 key_delete(struct textbox *, SDL_Event *, char *);
+static void	 key_home(struct textbox *, SDL_Event *, char *);
+static void	 key_end(struct textbox *, SDL_Event *, char *);
+static void	 key_kill(struct textbox *, SDL_Event *, char *);
+static void	 key_left(struct textbox *, SDL_Event *, char *);
+static void	 key_right(struct textbox *, SDL_Event *, char *);
 
-	/* Alphabetic characters */
-	{ "a",		SDLK_a,		0,		textbox_insert_alpha },
-	{ "b",		SDLK_b,		0,		textbox_insert_alpha },
-	{ "c",		SDLK_c,		0,		textbox_insert_alpha },
-	{ "d",		SDLK_d,		0,		textbox_insert_alpha },
-	{ "e",		SDLK_e,		0,		textbox_insert_alpha },
-	{ "f",		SDLK_f,		0,		textbox_insert_alpha },
-	{ "g",		SDLK_g,		0,		textbox_insert_alpha },
-	{ "h",		SDLK_h,		0,		textbox_insert_alpha },
-	{ "i",		SDLK_i,		0,		textbox_insert_alpha },
-	{ "j",		SDLK_j,		0,		textbox_insert_alpha },
-	{ "k",		SDLK_k,		0,		textbox_insert_alpha },
-	{ "l",		SDLK_l,		0,		textbox_insert_alpha },
-	{ "m",		SDLK_m,		0,		textbox_insert_alpha },
-	{ "n",		SDLK_n,		0,		textbox_insert_alpha },
-	{ "o",		SDLK_o,		0,		textbox_insert_alpha },
-	{ "p",		SDLK_p,		0,		textbox_insert_alpha },
-	{ "q",		SDLK_q,		0,		textbox_insert_alpha },
-	{ "r",		SDLK_r,		0,		textbox_insert_alpha },
-	{ "s",		SDLK_s,		0,		textbox_insert_alpha },
-	{ "t",		SDLK_t,		0,		textbox_insert_alpha },
-	{ "u",		SDLK_u,		0,		textbox_insert_alpha },
-	{ "v",		SDLK_v,		0,		textbox_insert_alpha },
-	{ "w",		SDLK_w,		0,		textbox_insert_alpha },
-	{ "x",		SDLK_x,		0,		textbox_insert_alpha },
-	{ "y",		SDLK_y,		0,		textbox_insert_alpha },
-	{ "z",		SDLK_z,		0,		textbox_insert_alpha },
-
-	/* Digits */
-	{ "one",	SDLK_1,		0,		textbox_insert_digit },
-	{ "two",	SDLK_2,		0,		textbox_insert_digit },
-	{ "three",	SDLK_3,		0,		textbox_insert_digit },
-	{ "four",	SDLK_4,		0,		textbox_insert_digit },
-	{ "five",	SDLK_5,		0,		textbox_insert_digit },
-	{ "six",	SDLK_6,		0,		textbox_insert_digit },
-	{ "seven",	SDLK_7,		0,		textbox_insert_digit },
-	{ "eight",	SDLK_8,		0,		textbox_insert_digit },
-	{ "nine",	SDLK_9,		0,		textbox_insert_digit },
-	{ "ten",	SDLK_0,		0,		textbox_insert_digit },
-
-	{ NULL,		SDLK_LAST,	0,		NULL }
-};
+#include "keymaps/us.h"
 
 static char *
-textbox_insert_char(struct textbox *tbox, char c)
+insert_char(struct textbox *tbox, char c)
 {
 	int end;
 	char *s;
@@ -165,109 +79,29 @@ textbox_insert_char(struct textbox *tbox, char c)
 }
 
 static void
-textbox_insert_alpha(struct textbox *tbox, SDL_Event *ev)
+insert_alpha(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	char *c;
 
-	c = textbox_insert_char(tbox, (char)ev->key.keysym.sym);
+	c = insert_char(tbox, (char)ev->key.keysym.sym);
 	if ((ev->key.keysym.mod & KMOD_SHIFT) && isalpha((int)*c)) {
 		(int)*c = toupper((int)*c);
 	}
 }
 
 static void
-textbox_insert_digit(struct textbox *tbox, SDL_Event *ev)
+insert_ascii(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
-	textbox_insert_char(tbox, ev->key.keysym.sym);
-}
+	int i, il;
 
-static void
-textbox_insert_ascii(struct textbox *tbox, SDL_Event *ev)
-{
-	if (ev->key.keysym.mod & KMOD_SHIFT) {
-		switch (ev->key.keysym.sym) {
-		case SDLK_SPACE:
-			textbox_insert_char(tbox, ' ');
-			break;
-		case SDLK_COMMA:
-			textbox_insert_char(tbox, '<');
-			break;
-		case SDLK_PERIOD:
-			textbox_insert_char(tbox, '>');
-			break;
-		case SDLK_BACKQUOTE:
-			textbox_insert_char(tbox, '~');
-			break;
-		case SDLK_MINUS:
-			textbox_insert_char(tbox, '_');
-			break;
-		case SDLK_EQUALS:
-			textbox_insert_char(tbox, '+');
-			break;
-		case SDLK_LEFTBRACKET:
-			textbox_insert_char(tbox, '{');
-			break;
-		case SDLK_RIGHTBRACKET:
-			textbox_insert_char(tbox, '}');
-			break;
-		case SDLK_BACKSLASH:
-			textbox_insert_char(tbox, '|');
-			break;
-		case SDLK_SEMICOLON:
-			textbox_insert_char(tbox, ':');
-			break;
-		case SDLK_QUOTE:
-			textbox_insert_char(tbox, '"');
-			break;
-		case SDLK_COLON:
-			textbox_insert_char(tbox, '<');
-			break;
-		case SDLK_SLASH:
-			textbox_insert_char(tbox, '?');
-			break;
-		case SDLK_GREATER:
-			textbox_insert_char(tbox, '>');
-			break;
-		case SDLK_1:
-			textbox_insert_char(tbox, '!');
-			break;
-		case SDLK_2:
-			textbox_insert_char(tbox, '@');
-			break;
-		case SDLK_3:
-			textbox_insert_char(tbox, '#');
-			break;
-		case SDLK_4:
-			textbox_insert_char(tbox, '$');
-			break;
-		case SDLK_5:
-			textbox_insert_char(tbox, '%');
-			break;
-		case SDLK_6:
-			textbox_insert_char(tbox, '^');
-			break;
-		case SDLK_7:
-			textbox_insert_char(tbox, '&');
-			break;
-		case SDLK_8:
-			textbox_insert_char(tbox, '*');
-			break;
-		case SDLK_9:
-			textbox_insert_char(tbox, '(');
-			break;
-		case SDLK_0:
-			textbox_insert_char(tbox, ')');
-			break;
-		default:
-			break;
-		}
-	} else {
-		textbox_insert_char(tbox, (char)ev->key.keysym.sym);
+	for (il = strlen(arg), i = 0; i < il; i++) {
+		insert_char(tbox, arg[i]);
 	}
+
 }
 
 static void
-textbox_key_backspace(struct textbox *tbox, SDL_Event *ev)
+key_bspace(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	int textlen;
 
@@ -287,25 +121,45 @@ textbox_key_backspace(struct textbox *tbox, SDL_Event *ev)
 }
 
 static void
-textbox_key_home(struct textbox *tbox, SDL_Event *ev)
+key_delete(struct textbox *tbox, SDL_Event *ev, char *arg)
+{
+	int textlen;
+
+	textlen = strlen(tbox->text);
+
+	if (tbox->textpos == textlen) {
+		tbox->text[--tbox->textpos] = '\0';
+	} else if (tbox->textpos > 0) {
+		int i;
+
+		for (i = tbox->textpos-1; i < textlen; i++) {
+			tbox->text[i] =
+			tbox->text[i+1];
+		}
+		tbox->textpos--;
+	}
+}
+
+static void
+key_home(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	tbox->textpos = 0;
 }
 
 static void
-textbox_key_end(struct textbox *tbox, SDL_Event *ev)
+key_end(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	tbox->textpos = strlen(tbox->text);
 }
 
 static void
-textbox_key_kill(struct textbox *tbox, SDL_Event *ev)
+key_kill(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	tbox->text[tbox->textpos] = '\0';
 }
 
 static void
-textbox_key_left(struct textbox *tbox, SDL_Event *ev)
+key_left(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	if (--tbox->textpos < 1) {
 		tbox->textpos = 0;
@@ -313,7 +167,7 @@ textbox_key_left(struct textbox *tbox, SDL_Event *ev)
 }
 
 static void
-textbox_key_right(struct textbox *tbox, SDL_Event *ev)
+key_right(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	if (tbox->textpos < strlen(tbox->text)) {
 		tbox->textpos++;

@@ -29,8 +29,9 @@ struct keycode {
 	char	*name;
 	SDLKey	 key;
 	int	 modmask;	/* Checked if non-zero */
-	void	(*callback)(struct textbox *, SDL_Event *);
+	void	(*callback)(struct textbox *, SDL_Event *, char *);
+	char	*arg;
 };
 
-extern const struct keycode textbox_keycodes[];
+extern const struct keycode keycodes[];
 
