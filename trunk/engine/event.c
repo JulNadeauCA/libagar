@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.178 2004/05/06 06:20:08 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.179 2004/05/08 02:36:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -136,12 +136,13 @@ event_fps_window(void)
 	return (fps_win);
 }
 
+/* XXX remove this once the graph widget implements polling. */
 static __inline__ void
 update_fps_counter(void)
 {
 	static int einc = 0;
 
-	graph_plot(fps_refresh, view->refresh.current);
+	graph_plot(fps_refresh, view->refresh.r);
 	graph_plot(fps_events, event_count * 30 / 10);
 	graph_plot(fps_idle, event_idletime);
 	graph_scroll(fps_graph, 1);
@@ -161,12 +162,13 @@ init_fps_counter(void)
 	window_set_closure(fps_win, WINDOW_HIDE);
 
 	fps_label = label_new(fps_win, LABEL_POLLED,
-	    "%dms/%dms, %d events, %dms idle",
-	    &view->refresh.current, &view->refresh.delay, &event_count,
+	    "%dms (%dms nom.), %d events, %dms idle",
+	    &view->refresh.r, &view->refresh.rnom, &event_count,
 	    &event_idletime);
 
 	fps_graph = graph_new(fps_win, "Refresh rate", GRAPH_LINES,
 	    GRAPH_ORIGIN, 100);
+	/* XXX use polling */
 
 	fps_refresh = graph_add_item(fps_graph, "refresh", 0, 160, 0, 140);
 	fps_events = graph_add_item(fps_graph, "event", 0, 0, 180, 140);
@@ -174,64 +176,45 @@ init_fps_counter(void)
 }
 #endif /* DEBUG */
 
-/* Adjust the refresh rate. */
-static __inline__ void
-adjust_refresh_rate(Uint32 ntick)
-{
-	view->refresh.current = view->refresh.delay - (SDL_GetTicks() - ntick);
-#ifdef DEBUG
-	if (fps_win->visible)
-		update_fps_counter();
-#endif
-	if (view->refresh.current < 1)
-		view->refresh.current = 1;
-}
-
-/* Process SDL events, perform video updates and idle. */
+/*
+ * Loop executing timing-related tasks and processing events.
+ * Video updates have priority, followed by timers and events.
+ * If the effective refresh rate allows it, idle as well.
+ */
 void
 event_loop(void)
 {
+	extern struct objectq timeout_objq;
 	SDL_Event ev;
-	Uint32 ltick, t = 0;
 	struct window *win;
 	struct gfx *gfx;
+	Uint32 Tr1, Tr2 = 0;
 
 #ifdef DEBUG
 	init_fps_counter();
 #endif
-
-	ltick = SDL_GetTicks();
+	Tr1 = SDL_GetTicks();
 	for (;;) {
-		t = SDL_GetTicks();			/* Rendering begins */
-
-		if ((t - ltick) > view->refresh.delay) {
+		Tr2 = SDL_GetTicks();
+		if (Tr2-Tr1 >= view->refresh.rnom) {
 			pthread_mutex_lock(&view->lock);
 			view->ndirty = 0;
 
-			/*
-			 * In tile-based mode, draw tiles containing
-			 * animations separate from entirely static
-			 * tiles.
-			 */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-				struct map *m = view->rootmap->map;
-				
-				if (m == NULL) {
+				if (view->rootmap->map == NULL) {
 					dprintf("NULL map, exiting\n");
 					pthread_mutex_unlock(&view->lock);
 					break;
 				}
-				pthread_mutex_lock(&m->lock);
+				pthread_mutex_lock(&view->rootmap->map->lock);
 				rootmap_animate();
-				if (m->redraw != 0) {
-					m->redraw = 0;
+				if (view->rootmap->map->redraw != 0) {
+					view->rootmap->map->redraw = 0;
 					rootmap_draw();
 				}
-				pthread_mutex_unlock(&m->lock);
+				pthread_mutex_unlock(&view->rootmap->map->lock);
 				view_update(0, 0, 0, 0);
 			}
-
-			/* Render the visible windows. */
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->visible) {
@@ -243,7 +226,6 @@ event_loop(void)
 				pthread_mutex_unlock(&win->lock);
 			}
 
-			/* Update the display and calibrate the refresh rate. */
 			if (view->ndirty > 0) {
 #ifdef HAVE_OPENGL
 				if (view->opengl) {
@@ -255,11 +237,11 @@ event_loop(void)
 					    view->dirty);
 				}
 				view->ndirty = 0;
-				adjust_refresh_rate(t);
 			}
 			pthread_mutex_unlock(&view->lock);
 
 			/* Update the shared animation frame numbers. */
+			/* XXX use a flag to avoid overhead with 0 anims  */
 			pthread_mutex_lock(&gfxq_lock);
 			TAILQ_FOREACH(gfx, &gfxq, gfxs) {
 				Uint32 i;
@@ -282,22 +264,27 @@ event_loop(void)
 			}
 			pthread_mutex_unlock(&gfxq_lock);
 
-			ltick = SDL_GetTicks();		/* Rendering ends */
+			/* Recalibrate the effective refresh rate. */
+			Tr1 = SDL_GetTicks();
+			view->refresh.r = view->refresh.rnom - (Tr1-Tr2);
+#ifdef DEBUG
+			if (fps_win->visible)
+				update_fps_counter();
+#endif
+			if (view->refresh.r < 1)
+				view->refresh.r = 1;
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
 #ifdef DEBUG
 			event_count++;
 #endif
-		} else if (event_idle &&
-		           view->refresh.current > event_idlemin) {
-			/*
-			 * Relinquish the CPU if there is sufficient expected
-			 * delay until the next rendering operation.
-			 */
-			if (t-ltick < view->refresh.delay-event_idletime) {
+		} else if (TAILQ_FIRST(&timeout_objq) != NULL) {      /* Safe */
+			timeout_process(Tr2);
+		} else if (event_idle && event_idlemin < view->refresh.r) {
+			if (Tr2-Tr1 < view->refresh.rnom-event_idletime) {
 				SDL_Delay(1);
 			}
-			event_idletime = SDL_GetTicks() - t;
+			event_idletime = SDL_GetTicks() - Tr2;
 		} else {
 			event_idletime = 0;
 		}

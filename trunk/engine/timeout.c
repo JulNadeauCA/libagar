@@ -1,0 +1,152 @@
+/*	$Csoft$	*/
+
+/*
+ * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * <http://www.csoft.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <engine/engine.h>
+
+#include "timeout.h"
+
+struct objectq timeout_objq = TAILQ_HEAD_INITIALIZER(timeout_objq);
+pthread_mutex_t timeout_lock;
+
+/* Initialize a timeout structure. */
+void
+timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg)
+{
+	to->fn = fn;
+	to->arg = arg;
+	to->ticks = 0;
+}
+
+/* Schedule the timeout to occur in dt ticks. */
+void
+timeout_add(void *p, struct timeout *to, Uint32 dt)
+{
+	struct object *ob = p;
+	struct timeout *to2;
+	Uint32 t = SDL_GetTicks()+dt;
+
+	pthread_mutex_lock(&ob->lock);
+	dprintf("%s (%u)\n", ob->name, dt);
+
+	CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
+		if (dt < to2->ticks) {
+			CIRCLEQ_INSERT_BEFORE(&ob->timeouts, to2, to, timeouts);
+			break;
+		}
+	}
+	if (to2 == CIRCLEQ_END(&ob->timeouts)) {
+		CIRCLEQ_INSERT_HEAD(&ob->timeouts, to, timeouts);
+	}
+	to->ticks = t;
+	to->ival = dt;
+
+	pthread_mutex_lock(&timeout_lock);
+	TAILQ_INSERT_TAIL(&timeout_objq, ob, tobjs);
+	pthread_mutex_unlock(&timeout_lock);
+
+	pthread_mutex_unlock(&ob->lock);
+}
+
+/*
+ * Return 1 if the given timeout is running.
+ * The object and timeout queue must be locked.
+ */
+int
+timeout_running(void *p, struct timeout *to)
+{
+	struct object *ob = p;
+	struct object *tob;
+	struct timeout *oto;
+
+	TAILQ_FOREACH(tob, &timeout_objq, tobjs) {
+		CIRCLEQ_FOREACH(oto, &tob->timeouts, timeouts) {
+			if (oto == to)
+				return (1);
+		}
+	}
+	return (0);
+}
+
+/* Cancel the given timeout, assuming that it is running. */
+void
+timeout_del(void *p, struct timeout *to)
+{
+	struct object *ob = p;
+	
+	object_lock(ob);
+	CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+
+	pthread_mutex_lock(&timeout_lock);
+	TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+	pthread_mutex_unlock(&timeout_lock);
+	object_unlock(ob);
+}
+
+void
+lock_timeout(void *p)
+{
+	struct object *ob = p;
+
+	object_lock(ob);
+	pthread_mutex_lock(&timeout_lock);
+}
+
+void
+unlock_timeout(void *p)
+{
+	struct object *ob = p;
+
+	pthread_mutex_unlock(&timeout_lock);
+	object_unlock(ob);
+}
+
+void
+timeout_process(Uint32 t)
+{
+	struct timeout *to;
+	struct object *ob;
+	Uint32 rv;
+
+	pthread_mutex_lock(&timeout_lock);
+	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
+		object_lock(ob);
+		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
+			if ((int)(to->ticks - t) <= 0) {
+				rv = to->fn(ob, to->ival, to->arg);
+				timeout_del(ob, to);
+				if (rv >= 0) {
+					to->ival = rv;
+					timeout_add(ob, to, to->ival);
+				}
+				break;
+			}
+		}
+		object_unlock(ob);
+	}
+	pthread_mutex_unlock(&timeout_lock);
+}
