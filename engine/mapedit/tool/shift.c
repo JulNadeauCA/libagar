@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.7 2003/03/02 07:29:55 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.8 2003/03/07 03:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -75,11 +75,11 @@ shift_window(void *p)
 
 	win = window_new("mapedit-tool-shift", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    112, 111,
-	    112, 111);
+	    115, 126,
+	    115, 126);
 	window_set_caption(win, "Shift");
 
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
 		static const char *modes[] = {
 			"Highest",
