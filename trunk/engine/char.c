@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.16 2002/02/15 05:38:02 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.17 2002/02/17 07:57:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 
 #include <engine/engine.h>
+#include <engine/version.h>
 
 static struct obvec char_vec = {
 	char_destroy,
@@ -88,20 +89,8 @@ int
 char_load(void *p, int fd)
 {
 	struct character *ch = (struct character *)p;
-	char magic[11];
-	int vermin, vermaj;
 
-	if ((read(fd, magic, 11) != 11) ||
-	     strcmp(magic, "agar char ") != 0) {
-		goto badmagic;
-	}
-
-	vermin = fobj_read_uint32(fd);
-	vermaj = fobj_read_uint32(fd);
-	if (vermaj > CHAR_VERMAJ ||
-	   (vermaj == CHAR_VERMAJ && vermin > CHAR_VERMIN)) {
-		fatal("%s: version %d.%d > %d.%d\n", ch->obj.name,
-		    vermaj, vermin, CHAR_VERMAJ, CHAR_VERMIN);
+	if (version_read(fd, "agar char", 1, 0) != 0) {
 		return (-1);
 	}
 
@@ -157,9 +146,6 @@ char_load(void *p, int fd)
 	}
 
 	return (0);
-badmagic:
-	fatal("%s: mad magic\n", ch->obj.name);
-	return (-1);
 }
 
 int
@@ -173,9 +159,7 @@ char_save(void *p, int fd)
 		return (-1);
 	}
 
-	fobj_bwrite(buf, "agar char ", 11);
-	fobj_bwrite_uint32(buf, CHAR_VERMAJ);
-	fobj_bwrite_uint32(buf, CHAR_VERMIN);
+	version_write(fd, "agar char", 1, 0);
 
 	/* Write character properties. */
 	fobj_bwrite_string(buf, ch->obj.name);
