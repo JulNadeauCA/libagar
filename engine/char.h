@@ -1,9 +1,4 @@
-/*	$Csoft: char.h,v 1.8 2002/02/14 05:23:52 vedge Exp $	*/
-
-enum {
-	CHAR_VERMAJ =	1,
-	CHAR_VERMIN =	0
-};
+/*	$Csoft: char.h,v 1.9 2002/02/17 07:57:36 vedge Exp $	*/
 
 struct character {
 	struct	object obj;	/* Generic object */
