@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.1 2002/08/24 04:05:23 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.2 2002/08/24 23:56:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -35,18 +35,17 @@
 #include "physics.h"
 
 #ifdef DEBUG
-#define CHECK_RECTS(view, ri) do {					\
-		int ei;							\
-		for (ei = 0; ei < (ri); ei++) {				\
-			if ((view)->rootmap->rects[ei].x > (view)->w ||	\
-			    (view)->rootmap->rects[ei].y > (view)->h ) { \
-				dprintrect("bogus",			\
-				    &(view)->rootmap->rects[ei]);	\
-				dprintf("bogus rectangle %d/%d\n", ei,	\
-				    ri);				\
-			}						\
+#define CHECK_RECTS(view, ri) {						\
+	int _i;								\
+	for (_i = 0; _i < (ri); _i++) {					\
+		if ((view)->rootmap->rects[_i].x > (view)->w ||		\
+		    (view)->rootmap->rects[_i].y > (view)->h ) {	\
+			dprintrect("bogus",				\
+			    &(view)->rootmap->rects[_i]);		\
+			dprintf("bogus rectangle %d/%d\n", _i, (ri));	\
 		}							\
-	} while (/*CONSTCOND*/0)
+	}								\
+}
 #define CHECK_MASK(x, y) {						\
 	int _i;								\
 									\
@@ -71,7 +70,7 @@
  * Inline since this is called from draw functions with many variables.
  * Must be called on a locked map.
  */
-static __inline__ void
+static void
 rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
 	SDL_Rect rd;
@@ -83,6 +82,12 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
+#ifdef DEBUG
+			if (nref->offs > nref->pobj->art->nsprites) {
+				fatal("bad sprite offs: %d > %d\n", nref->offs,
+				    nref->pobj->art->nsprites);
+			}
+#endif
 			src = SPRITE(nref->pobj, nref->offs);
 			rd.w = src->w;
 			rd.h = src->h;
@@ -90,9 +95,21 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 			rd.y = ry + nref->yoffs;
 			SDL_BlitSurface(src, NULL, view->v, &rd);
 		} else if (nref->flags & MAPREF_ANIM) {
+#ifdef DEBUG
+			if (nref->offs > nref->pobj->art->nanims) {
+				fatal("bad anim offs: %d > %d\n", nref->offs,
+				    nref->pobj->art->nanims);
+			}
+#endif
 			anim = ANIM(nref->pobj, nref->offs);
 			frame = anim->frame;
-		
+#ifdef DEBUG
+			if (frame > anim->nframes) {
+				fatal("bad anim frame: %d > %d\n", frame,
+				    anim->nframes);
+			}
+#endif
+
 			if (nref->flags & MAPREF_ANIM_DELTA &&
 			   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
 				t = SDL_GetTicks();
@@ -160,13 +177,14 @@ rootmap_animate(void)
 	int ri = 0;
 
 	for (y = rm->y, vy = 0;				/* Downward */
-	     vy <= rm->h && y <= m->maph;
+	     y < m->maph && vy <= rm->h;
 	     y++, vy++) {
 
 		ry = vy << m->shtiley;
 
-		for (x = rm->x + rm->w, vx = rm->w;	/* Reverse */
-		     x < m->mapw && vx >= 0; x--, vx--) {
+		for (x = rm->x, vx = 0;			/* Forward */
+		     x < m->mapw && vx <= rm->w;
+		     x++, vx++) {
 			struct node *node;
 
 			/* Skip this node if it is masked. */
@@ -181,6 +199,7 @@ rootmap_animate(void)
 			rx = vx << m->shtilex;
 
 			if (node->flags & NODE_ANIM) {
+#if 1
 				/*
 				 * ooo
 				 * ooo
@@ -212,6 +231,7 @@ rootmap_animate(void)
 				/* Draw the node itself. */
 				rootmap_draw_node(m, node, rx, ry);
 				rm->rects[ri++] = rm->maprects[vy][vx];
+#endif
 			} else if (node->nanims > 0) {
 				rootmap_draw_node(m, node, rx, ry);
 				rm->rects[ri++] = rm->maprects[vy][vx];
@@ -225,7 +245,7 @@ rootmap_animate(void)
 }
 
 /*
- * Draw all sprites in the map view.
+ * Draw static tiles.
  * Map and view must be locked.
  */
 void
@@ -239,15 +259,17 @@ rootmap_draw(void)
 	Uint32 nsprites;
 	int ri = 0;
 
+	dprintf("offset %d,%d\n", rm->x, rm->y);
+
 	for (y = rm->y, vy = 0;				/* Downward */
-	     vy <= rm->h && y <= m->maph;
+	     y < m->maph && vy <= rm->h;
 	     y++, vy++) {
 
-		ry = vy << m->shtilex;
+		ry = vy << m->shtiley;
 
-		for (x = rm->x + rm->w, vx = rm->w;	/* Reverse */
-		     x < m->mapw && vx >= 0;
-		     x--, vx--) {
+		for (x = rm->x, vx = 0;			/* Forward */
+		     x < m->mapw && vx <= rm->w;
+		     x++, vx++) {
 
 			/* Skip this node if it is masked. */
 			CHECK_MASK(vx, vy);
@@ -271,6 +293,14 @@ rootmap_draw(void)
 					rd.y = ry + nref->yoffs;
 					rd.w = TILEW;
 					rd.h = TILEH;
+#ifdef DEBUG
+					if (nref->offs >
+					    nref->pobj->art->nsprites) {
+						fatal("bad offs: %d > %d\n",
+						    nref->offs,
+						    nref->pobj->art->nsprites);
+					}
+#endif
 					SDL_BlitSurface(
 					    SPRITE(nref->pobj, nref->offs),
 					    NULL, view->v, &rd);
