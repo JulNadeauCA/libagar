@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.16 2002/06/03 02:30:30 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.17 2002/06/03 18:34:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,8 +48,6 @@ static const struct object_ops text_ops = {
 	text_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
-	text_onattach,
-	text_ondetach,
 	NULL,		/* attach */
 	NULL		/* detach */
 };
@@ -192,11 +190,9 @@ text_destroyall(void)
 	text_tick(0, te);
 }
 
-void
-text_onattach(void *parent, void *child)
+static void
+text_attached(struct text *te)
 {
-	struct text *te = child;
-
 	pthread_mutex_lock(&textslock);
 	TAILQ_INSERT_TAIL(&textsh, te, texts);
 	pthread_mutex_unlock(&textslock);
@@ -206,11 +202,9 @@ text_onattach(void *parent, void *child)
 	view_maskfill(te->view, &te->mvmask, 1);
 }
 
-void
-text_ondetach(void *parent, void *child)
+static void
+text_detached(struct text *te)
 {
-	struct text *te = child;
-	
 	ntexts--;
 
 	pthread_mutex_lock(&textslock);
@@ -337,7 +331,7 @@ text_tick(Uint32 ival, void *p)
 
 	for (i = 0; i < ntextgc; i++) {
 		te = textgc[i];
-		text_ondetach(NULL, te);
+		text_detached(te);
 	}
 
 	return (ival);
@@ -454,7 +448,7 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 	te = emalloc(sizeof(struct text));
 	text_init(te, gx, gy, w, h, flags, delay);
 	if (te != NULL) {
-		text_onattach(NULL, te);
+		text_attached(te);
 
 		text_clear(te);
 		text_render(te, buf);

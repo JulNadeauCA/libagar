@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.35 2002/06/01 09:27:09 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.36 2002/06/03 18:35:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,8 +48,6 @@ static const struct object_ops window_ops = {
 	window_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
-	NULL,
-	NULL,
 	window_attach,
 	window_detach
 };

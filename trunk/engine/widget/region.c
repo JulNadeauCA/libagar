@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.7 2002/05/28 12:46:41 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.8 2002/06/01 09:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -48,8 +48,6 @@ static const struct object_ops region_ops = {
 	region_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
-	NULL,		/* onattach */
-	NULL,		/* ondetach */
 	region_attach,
 	region_detach
 };
@@ -131,9 +129,7 @@ region_attach(void *parent, void *child)
 	
 	wid->win = reg->win;
 
-	if (OBJECT_OPS(wid)->onattach != NULL) {
-		OBJECT_OPS(wid)->onattach(reg->win, wid);
-	}
+	event_post(child, "attached", "%p", parent);
 
 	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);
 	
@@ -155,9 +151,7 @@ region_detach(void *parent, void *child)
 	OBJECT_ASSERT(parent, "window-region");
 	OBJECT_ASSERT(child, "widget");
 
-	if (OBJECT_OPS(wid)->ondetach != NULL) {
-		OBJECT_OPS(wid)->ondetach(wid->win, wid);
-	}
+	event_post(child, "detached", parent);
 
 	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);
 	wid->win->redraw++;

@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.17 2002/05/28 12:45:49 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.18 2002/06/01 09:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -54,8 +54,6 @@ static const struct widget_ops label_ops = {
 		label_destroy,
 		NULL,	/* load */
 		NULL,	/* save */
-		NULL,	/* on attach */
-		NULL,	/* on detach */
 		NULL,	/* attach */
 		NULL	/* detach */
 	},
