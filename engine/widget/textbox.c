@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.52 2003/05/18 00:17:05 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.53 2003/05/24 00:29:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -149,7 +149,7 @@ textbox_draw(void *p)
 		y++;
 	}
 	primitives.box(tbox, x, 0,
-	    WIDGET(tbox)->w - tbox->label->w - 1,
+	    WIDGET(tbox)->w - x,
 	    WIDGET(tbox)->h,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
 	    tbox->flags & TEXTBOX_READONLY ?
