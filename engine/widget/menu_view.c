@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.6 2004/11/30 11:36:10 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.7 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -68,9 +68,7 @@ select_subitem(struct AGMenuItem *pitem, struct AGMenuItem *subitem)
 	pitem->sel_subitem = subitem;
 
 	lock_timeout(m);
-	if (timeout_scheduled(m, &mview->submenu_to)) {
-		timeout_del(mview, &mview->submenu_to);
-	}
+	timeout_del(mview, &mview->submenu_to);
 	if (subitem != NULL &&
 	    subitem->nsubitems > 0) {
 		timeout_add(mview, &mview->submenu_to, 200);
