@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.151 2004/04/27 11:41:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.152 2004/05/02 09:04:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -183,6 +183,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 		event_new(ntool->trigger, "button-mouseoverlap",
 		    update_tooltips, "%p, %p", mv, ntool);
 	}
+
 	TAILQ_INSERT_TAIL(&mv->tools, ntool, tools);
 }
 
@@ -292,29 +293,14 @@ void
 mapview_destroy(void *p)
 {
 	struct mapview *mv = p;
-	struct tool *tool, *ntool;
 	struct mapview_draw_cb *dcb, *ndcb;
 
-	for (tool = TAILQ_FIRST(&mv->tools);
-	     tool != TAILQ_END(&mv->tools);
-	     tool = ntool) {
-		ntool = TAILQ_NEXT(tool, tools);
-		tool_destroy(tool);
-		Free(tool, M_MAPEDIT);
-	}
 	for (dcb = SLIST_FIRST(&mv->draw_cbs);
 	     dcb != SLIST_END(&mv->draw_cbs);
 	     dcb = ndcb) {
 		ndcb = SLIST_NEXT(dcb, draw_cbs);
 		Free(dcb, M_WIDGET);
 	}
-#ifdef EDITION
-	if (mapedition) {
-		nodeedit_destroy(mv);
-		layedit_destroy(mv);
-		mediasel_destroy(mv);
-	}
-#endif
 	widget_destroy(mv);
 }
 
@@ -331,6 +317,30 @@ mapview_attached(int argc, union evarg *argv)
 		mediasel_init(mv, win);
 	}
 #endif
+}
+
+static void
+mapview_detached(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+	struct tool *tool, *ntool;
+
+#ifdef EDITION
+	if (mapedition) {
+		nodeedit_destroy(mv);
+		layedit_destroy(mv);
+		mediasel_destroy(mv);
+	}
+#endif
+	for (tool = TAILQ_FIRST(&mv->tools);
+	     tool != TAILQ_END(&mv->tools);
+	     tool = ntool) {
+		ntool = TAILQ_NEXT(tool, tools);
+		tool_destroy(tool);
+		Free(tool, M_MAPEDIT);
+	}
+	TAILQ_INIT(&mv->tools);
+	mv->curtool = NULL;
 }
 
 void
@@ -418,6 +428,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "attached", mapview_attached, NULL);
+	event_new(mv, "detached", mapview_detached, NULL);
 }
 
 /* Register standard map-level edition tools. */
