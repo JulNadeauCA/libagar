@@ -4,46 +4,56 @@
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
 
+void	_dprintf(const char *fmt, ...);
+void	_debug(int, const char *fmt, ...);
+void	_debug_n(int, const char *fmt, ...);
+
 #ifdef DEBUG
 extern int engine_debug;
 # ifdef __GNUC__
 #  define dprintf(fmt, args...)						\
 	do {								\
 		if (engine_debug)					\
-			printf("%s: " fmt, __FUNCTION__ , ##args);	\
-	} while (/*CONSTCOND*/0)
+			printf("%s: " fmt, __FUNCTION__, ##args);	\
+	} while (0)
 #  define deprintf(fmt, args...)					\
 	do {								\
 		if (engine_debug)					\
-			fprintf(stderr, fmt , ##args);			\
-	} while (/*CONSTCOND*/0)
+			fprintf(stderr, fmt, ##args);			\
+	} while (0)
+#  define debug(mask, fmt, args...)					\
+	do {								\
+		if (engine_debug & (mask))				\
+			printf("%s: " fmt, __FUNCTION__, ##args);	\
+	} while (0)
+#  define debug_n(mask, fmt, args...)					\
+	do {								\
+		if (engine_debug & (mask))				\
+			fprintf(stderr, fmt, ##args);			\
+	} while (0)
 # else	/* !__GNUC__ */
-#  define dprintf	printf
-#  define deprintf	printf
+#  define dprintf	_dprintf
+#  define deprintf	_dprintf
+#  define debug		_debug
+#  define debug_n	_debug_n
 # endif	/* __GNUC__ */
-# define dprintrect(name, rect)						\
-	dprintf("%s: %dx%d at [%d,%d]\n", (name),			\
-	    (rect)->w, (rect)->h, (rect)->x, (rect)->y)
-# define dprintnode(m, x, y, str)					\
-	printf("%s:[%d,%d]: %s\n", OBJECT((m))->name, (x), (y), (str))
 #else	/* !DEBUG */
 # if defined(__GNUC__)
-#  define dprintf(arg...) ((void)0)
-#  define deprintf(arg...) ((void)0)
+#  define dprintf(arg...)		((void)0)
+#  define deprintf(arg...)		((void)0)
+#  define debug(level, arg...)		((void)0)
+#  define debug_n(level, arg...)	((void)0)
 # else
-#  define dprintf	  printf
-#  define deprintf	  printf
+#  define dprintf	_dprintf_noop
+#  define deprintf	_dprintf_noop
+#  define debug		_debug_noop
+#  define debug_n	_debug_n_noop
 # endif
-# define dprintrect(name, rect)
-# define dprintnode(m, x, y, str)
 #endif	/* DEBUG */
 
 #if defined(LOCKDEBUG) && defined(SERIALIZATION)
 #include <stdlib.h>
 #include <string.h>
-#if 0
-#include <semaphore.h>
-#endif
 
 #define pthread_mutex_lock(mutex) do {					\
 	int _rv;							\
@@ -70,33 +80,6 @@ extern int engine_debug;
 	}								\
 } while (/*CONSTCOND*/0)
 
-#if 0
-#define Sem_init(wsem, pshared, value) do {				\
-	int _rv;							\
-	if ((_rv = sem_init((wsem), (pshared), (value))) != 0) {	\
-		fatal("sem_init(%p): %s\n", strerror(_rv));		\
-	}								\
-} while (/*CONSTCOND*/0)
-#define Sem_destroy(wsem) do {						\
-	int _rv;							\
-	if ((_rv = sem_destroy((wsem))) != 0) {				\
-		fatal("sem_destroy(%p): %s\n", (wsem), strerror(_rv));	\
-	}								\
-} while (/*CONSTCOND*/0)
-#define Sem_wait(wsem) do {						\
-	int _rv;							\
-	if ((_rv = sem_wait((wsem))) != 0) {				\
-		fatal("sem_wait(%p): %s\n", (wsem), strerror(_rv));	\
-	}								\
-} while (/*CONSTCOND*/0)
-#define Sem_post(wsem) do {						\
-	int _rv;							\
-	if ((_rv = sem_post((wsem))) != 0) {				\
-		fatal("sem_post(%p): %s\n", (wsem), strerror(_rv));	\
-	}								\
-} while (/*CONSTCOND*/0)
-#endif
-
 #endif	/* LOCKDEBUG and SERIALIZATION */
 
 #ifdef SERIALIZATION
@@ -115,4 +98,4 @@ extern int engine_debug;
 } while (/*CONSTCOND*/0)
 #endif
 
-#endif	/* _AGAR_ENGINE_DEBUG_H_ */
+#endif	/* !_AGAR_ENGINE_DEBUG_H_ */
