@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.97 2005/02/12 08:17:28 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.98 2005/03/08 03:18:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -46,36 +46,11 @@ inherit_style(int argc, union evarg *argv)
 	struct widget *pwid = argv[0].p;
 	struct widget *wid = argv[argc].p;
 	const struct style *style = pwid->style;
-	const struct style_texmod *texmods;
 
 	if (style == NULL)
 		return;
 
 	wid->style = style;
-
-	if (style->wid.colormods != NULL) {
-		const struct style_colormod *mod;
-		int i;
-
-		for (mod = &style->wid.colormods[0];
-		     mod->type != NULL;
-		     mod++) {
-			if (strcmp(OBJECT(wid)->name, mod->type) != 0) {
-				continue;
-			}
-			for (i = 0; i < wid->ncolors; i++) {
-				if (strcmp(wid->color_names[i],
-				    mod->color_id) == 0) {
-					wid->colors[i] =
-					    SDL_MapRGB(vfmt,
-					        mod->color.r,
-						mod->color.g,
-						mod->color.b);
-					break;
-				}
-			}
-		}
-	}
 }
 
 void
@@ -94,7 +69,6 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->y = -1;
 	wid->w = -1;
 	wid->h = -1;
-	wid->ncolors = 0;
 	wid->style = NULL;
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, &recursive_mutexattr);
@@ -743,48 +717,6 @@ widget_binding_modified(struct widget_binding *bind)
 	}
 }
 
-/* Add a named entry to a widget's color stack. */
-void
-widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b,
-    Uint8 a)
-{
-	struct widget *wid = p;
-
-#ifdef DEBUG
-	if (ind >= WIDGET_COLORS_MAX)
-		fatal("color stack overflow");
-#endif
-	wid->colors[ind] = SDL_MapRGBA(vfmt, r, g, b, a);
-	strlcpy(wid->color_names[ind], name, sizeof(wid->color_names[ind]));
-
-	if (ind >= wid->ncolors)
-		wid->ncolors = ind+1;
-}
-
-void
-widget_inherit_color(void *dp, int di, const char *name, void *sp)
-{
-	struct widget *sw = sp;
-	struct widget *dw = dp;
-	int si;
-
-#ifdef DEBUG
-	if (di >= WIDGET_COLORS_MAX)
-		fatal("color stack overflow");
-#endif
-	for (si = 0; si < sw->ncolors; si++) {
-		if (strcmp(sw->color_names[si], name) == 0) {
-			dw->colors[di] = sw->colors[si];
-			strlcpy(dw->color_names[di], sw->color_names[si],
-			    sizeof(dw->color_names[di]));
-			if (di >= dw->ncolors) {
-				dw->ncolors = di+1;
-			}
-			break;
-		}
-	}
-}
-
 /*
  * Register a surface with the given widget. In OpenGL mode, generate
  * a texture as well. Mapped surfaces are automatically freed when the
@@ -1307,30 +1239,6 @@ widget_set_type(void *p, const char *name)
 
 	strlcpy(wid->type, name, sizeof(wid->type));
 	strlcpy(OBJECT(wid)->name, name, sizeof(OBJECT(wid)->name));
-}
-
-/* Push an unnamed entry onto a widget's color stack. */
-int	
-widget_push_color(void *p, Uint32 color)
-{
-	struct widget *wid = p;
-	int ncolor;
-
-#ifdef DEBUG
-	if (wid->ncolors+1 >= WIDGET_COLORS_MAX)
-		fatal("color stack overflow");
-#endif
-	ncolor = wid->ncolors++;
-	wid->colors[ncolor] = color;
-	wid->color_names[ncolor][0] = '\0';
-	return (ncolor);
-}
-
-/* Pop the highest color off a widget's color stack. */
-void
-widget_pop_color(void *p)
-{
-	((struct widget *)p)->ncolors--;
 }
 
 /*

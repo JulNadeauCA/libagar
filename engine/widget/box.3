@@ -1,4 +1,4 @@
-.\"	$Csoft: box.3,v 1.6 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: box.3,v 1.7 2005/01/08 03:35:55 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -64,9 +64,6 @@ widget packs its children horizontally or vertically.
 .Fn box_set_spacing "struct box *box" "int spacing"
 .Pp
 .Ft void
-.Fn box_set_color "struct box *box" "Uint8 r" "Uint8 g" "Uint8 b"
-.Pp
-.Ft void
 .Fn box_set_depth "struct box *box" "int depth"
 .nr nS 0
 .Pp
@@ -117,10 +114,8 @@ pixels.
 Assuming that the
 .Dv BOX_FRAME
 flag was given,
-.Fn box_set_color
-and
 .Fn box_set_depth
-control the color and the depth of the frame.
+sets the depth of the frame.
 .Sh EVENTS
 The
 .Nm

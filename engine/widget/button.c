@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.88 2005/02/22 04:18:44 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.89 2005/03/08 10:43:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -50,17 +50,11 @@ const struct widget_ops button_ops = {
 	button_scale
 };
 
-enum {
-	FRAME_COLOR,
-	TEXT_COLOR,
-	DISABLED_COLOR
-};
-
-static void	button_mousemotion(int, union evarg *);
-static void	button_mousebuttonup(int, union evarg *);
-static void	button_mousebuttondown(int, union evarg *);
-static void	button_keyup(int, union evarg *);
-static void	button_keydown(int, union evarg *);
+static void button_mousemotion(int, union evarg *);
+static void button_mousebuttonup(int, union evarg *);
+static void button_mousebuttondown(int, union evarg *);
+static void button_keyup(int, union evarg *);
+static void button_keydown(int, union evarg *);
 
 struct button *
 button_new(void *parent, const char *caption)
@@ -98,12 +92,8 @@ button_init(struct button *bu, const char *caption)
 	    WIDGET_UNFOCUSED_MOTION);
 	widget_bind(bu, "state", WIDGET_BOOL, &bu->state);
 	
-	widget_map_color(bu, FRAME_COLOR, "frame", 100, 100, 100, 255);
-	widget_map_color(bu, TEXT_COLOR, "text", 240, 240, 240, 255);
-	widget_map_color(bu, DISABLED_COLOR, "disabled", 110, 110, 110, 255);
-
 	label = (caption == NULL) ? NULL :
-	    text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR), caption);
+	    text_render(NULL, -1, COLOR(BUTTON_TXT_COLOR), caption);
 	widget_map_surface(bu, label);
 
 	bu->flags = 0;
@@ -156,13 +146,13 @@ button_draw(void *p)
 		    0, 0,
 		    WIDGET(bu)->w, WIDGET(bu)->h,
 		    -1,
-		    DISABLED_COLOR);
+		    COLOR(BUTTON_DIS_COLOR));
 	} else {
 		primitives.box(bu,
 		    0, 0,
 		    WIDGET(bu)->w, WIDGET(bu)->h,
 		    pressed ? -1 : 1,
-		    FRAME_COLOR);
+		    COLOR(BUTTON_COLOR));
 	}
 
 	if (label != NULL) {
@@ -396,6 +386,6 @@ button_printf(struct button *bu, const char *fmt, ...)
 	va_end(args);
 
 	widget_replace_surface(bu, 0,
-	    text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR), buf));
+	    text_render(NULL, -1, COLOR(BUTTON_TXT_COLOR), buf));
 }
 

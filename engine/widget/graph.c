@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.50 2004/09/19 03:48:59 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.51 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -55,12 +55,6 @@ const struct widget_ops graph_ops = {
 };
 
 enum {
-	FRAME_COLOR,
-	ORIGIN_COLOR1,
-	ORIGIN_COLOR2
-};
-
-enum {
 	NITEMS_INIT =	32,
 	NITEMS_GROW =	16
 };
@@ -89,10 +83,6 @@ graph_init(struct graph *graph, const char *caption, enum graph_type type,
 	widget_init(graph, "graph", &graph_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_HFILL);
 
-	widget_map_color(graph, FRAME_COLOR, "frame", 50, 50, 50, 255);
-	widget_map_color(graph, ORIGIN_COLOR1, "origin1", 50, 50, 50, 255);
-	widget_map_color(graph, ORIGIN_COLOR2, "origin2", 150, 150, 150, 255);
-	
 	strlcpy(graph->caption, caption, sizeof(graph->caption));
 	graph->type = type;
 	graph->flags = flags;
@@ -195,21 +185,15 @@ graph_draw(void *p)
 	    0, 0,
 	    WIDGET(gra)->w, WIDGET(gra)->h,
 	    0,
-	    FRAME_COLOR);
+	    COLOR(GRAPH_BG_COLOR));
 
 	if (gra->flags & GRAPH_ORIGIN) {
 		primitives.line(gra,
 		    0,
-		    origin_y,
-		    WIDGET(gra)->w,
-		    origin_y,
-		    widget_holds_focus(gra) ? ORIGIN_COLOR1 : ORIGIN_COLOR2);
-		primitives.line(gra,
-		    0,
 		    origin_y + 1,
 		    WIDGET(gra)->w,
 		    origin_y + 1,
-		    widget_holds_focus(gra) ? ORIGIN_COLOR2 : ORIGIN_COLOR1);
+		    COLOR(GRAPH_XAXIS_COLOR));
 	}
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
@@ -245,17 +229,12 @@ graph_draw(void *p)
 				break;
 			case GRAPH_LINES:
 				{
-					int ncolor;
-
-					ncolor = widget_push_color(WIDGET(gra),
-					    gi->color);
 					primitives.line(gra,
 					    ox,
 					    oy,
 					    x,
 					    y,
-					    ncolor);
-					widget_pop_color(WIDGET(gra));
+					    gi->color);
 				}
 				break;
 			}

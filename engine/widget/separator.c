@@ -1,4 +1,4 @@
-/*	$Csoft: separator.c,v 1.1 2005/02/19 09:28:29 vedge Exp $	*/
+/*	$Csoft: separator.c,v 1.2 2005/02/22 04:19:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -50,11 +50,6 @@ const struct widget_ops separator_ops = {
 	separator_scale
 };
 
-enum {
-	LINE1_COLOR,
-	LINE2_COLOR
-};
-
 struct separator *
 separator_new(void *parent, enum separator_type type)
 {
@@ -71,8 +66,6 @@ separator_init(struct separator *sep, enum separator_type type)
 {
 	widget_init(sep, "separator", &separator_ops,
 	    (type == SEPARATOR_HORIZ) ? WIDGET_WFILL : WIDGET_HFILL);
-	widget_map_color(sep, LINE1_COLOR, "line1", 100, 100, 100, 255);
-	widget_map_color(sep, LINE2_COLOR, "line1", 20, 20, 20, 255);
 	sep->type = type;
 }
 
@@ -94,12 +87,16 @@ separator_draw(void *p)
 
 	switch (sep->type) {
 	case SEPARATOR_HORIZ:
-		primitives.line(sep, 0, 0, WIDGET(sep)->w, 0, LINE1_COLOR);
-		primitives.line(sep, 0, 1, WIDGET(sep)->w, 1, LINE2_COLOR);
+		primitives.line(sep, 0, 0, WIDGET(sep)->w, 0,
+		    COLOR(SEPARATOR_LINE1_COLOR));
+		primitives.line(sep, 0, 1, WIDGET(sep)->w, 1,
+		    COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	case SEPARATOR_VERT:
-		primitives.line(sep, 0, 0, 0, WIDGET(sep)->h, LINE1_COLOR);
-		primitives.line(sep, 1, 0, 0, WIDGET(sep)->h, LINE2_COLOR);
+		primitives.line(sep, 0, 0, 0, WIDGET(sep)->h,
+		    COLOR(SEPARATOR_LINE1_COLOR));
+		primitives.line(sep, 1, 0, 0, WIDGET(sep)->h,
+		    COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.136 2005/02/08 15:46:06 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.137 2005/03/08 08:40:10 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -54,6 +54,7 @@
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/notebook.h>
+#include <engine/widget/hsvpal.h>
 
 #ifdef EDITION
 #include <engine/mapedit/mapedit.h>
@@ -73,7 +74,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 5
+	6, 6
 };
 
 const struct object_ops config_ops = {
@@ -274,6 +275,9 @@ config_load(void *p, struct netbuf *buf)
 		view_screenshot_quality = (int)read_uint8(buf);
 	if (rv.minor >= 5)
 		text_tab_width = (int)read_uint16(buf);
+	if (vfmt != NULL &&
+	    rv.minor >= 6)
+		colors_load(buf);
 
 	return (0);
 }
@@ -308,7 +312,19 @@ config_save(void *p, struct netbuf *buf)
 	write_uint8(buf, server_mode);
 	write_uint8(buf, (Uint8)view_screenshot_quality);
 	write_uint16(buf, (Uint16)text_tab_width);
+	colors_save(buf);
 	return (0);
+}
+
+static void
+selected_color(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct hsvpal *hsv = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	Uint32 *c = it->p1;
+
+	widget_bind(hsv, "pixel", WIDGET_UINT32, c);
 }
 
 void
@@ -325,7 +341,7 @@ config_window(struct config *con)
 	struct mspinbutton *msb;
 	struct spinbutton *sbu;
 
-	win = window_new(WINDOW_NO_VRESIZE, "config-engine-settings");
+	win = window_new(0, "config-engine-settings");
 	window_set_caption(win, _("Engine settings"));
 
 	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
@@ -426,6 +442,26 @@ config_window(struct config *con)
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "den-path");
+	}
+	
+	tab = notebook_add_tab(nb, _("Colors"), BOX_HORIZ);
+	{
+		struct hsvpal *hsv;
+		struct tlist *tl;
+		struct tlist_item *it;
+		int i;
+
+		tl = tlist_new(tab, 0);
+		WIDGET(tl)->flags &= ~WIDGET_WFILL;
+		for (i = 0; i < LAST_COLOR; i++) {
+			it = tlist_insert(tl, NULL, _(colors_names[i]));
+			it->p1 = &colors[i];
+		}
+
+		hsv = hsvpal_new(tab, vfmt);
+		WIDGET(hsv)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		
+		event_new(tl, "tlist-selected", selected_color, "%p", hsv);
 	}
 
 #ifdef DEBUG

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.84 2005/02/19 10:20:06 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.85 2005/03/05 12:15:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -26,7 +26,7 @@ struct widget;
 struct window {
 	struct widget wid;
 
-	int	 flags;
+	int flags;
 #define WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
 				 	   (for named windows only) */
 #define WINDOW_CASCADE		0x0002	/* Increment position slightly */
@@ -45,22 +45,16 @@ struct window {
 #define WINDOW_MODAL		0x2000	/* Modal window behavior */
 
 #ifdef DEBUG
-	char	 caption[128];
+	char caption[128];
 #endif
-	int	 visible;		/* Window is visible */
+	int visible;				/* Window is visible */
 
-	pthread_mutex_t		 lock;
-	struct titlebar		*tbar;		/* Titlebar (or NULL) */
-	enum window_alignment	 alignment;	/* Initial position */
-
-	Uint32	*h_border;		/* Horizontal border colors */
-	int	 h_border_w;
-	Uint32	*v_border;		/* Vertical border colors */
-	int	 v_border_w;
-
-	int spacing;			/* Default spacing */
-	int xpadding, ypadding;		/* Window padding */
-	int minw, minh;			/* Minimum geometry */
+	pthread_mutex_t lock;
+	struct titlebar	*tbar;			/* Titlebar (if any) */
+	enum window_alignment alignment;	/* Initial position */
+	int spacing;				/* Default spacing (px) */
+	int xpadding, ypadding;			/* Window padding (px) */
+	int minw, minh;				/* Minimum geometry (px) */
 	
 	TAILQ_HEAD(,window) subwins;		/* Sub-windows */
 	TAILQ_ENTRY(window) windows;		/* Active window list */

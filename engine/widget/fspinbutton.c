@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.27 2005/01/30 05:39:11 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.28 2005/02/18 11:16:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -208,7 +208,6 @@ fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 {
 	widget_init(fsu, "fspinbutton", &fspinbutton_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_map_color(fsu, 0, "frame", 100, 100, 100, 255);
 
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &fsu->value);
 	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.87 2005/02/05 02:52:05 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.88 2005/02/08 08:28:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -7,11 +7,10 @@
 #include <config/have_opengl.h>
 
 #include <engine/widget/style.h>
+#include <engine/widget/colors.h>
 
 #include "begin_code.h"
 
-#define WIDGET_COLORS_MAX	16
-#define WIDGET_COLOR_NAME_MAX	16
 #define WIDGET_TYPE_MAX		32
 #define WIDGET_BINDING_NAME_MAX	16
 
@@ -75,22 +74,17 @@ struct widget {
 	const struct style *style;	/* Style properties (inherited from
 					   parent by default) */
 
-	char	 color_names[WIDGET_COLORS_MAX][WIDGET_COLOR_NAME_MAX];
-	Uint32	 colors[WIDGET_COLORS_MAX];
-	int	ncolors;
-
 	SDL_Surface	**surfaces;	/* Registered surfaces */
 	unsigned int	 nsurfaces;
 #ifdef HAVE_OPENGL
-	GLuint		*textures;	/* Matching OpenGL textures */
-	GLfloat		*texcoords;	/* Texture coordinates */
+	GLuint		*textures;	/* Cached OpenGL textures */
+	GLfloat		*texcoords;	/* Cached texture coordinates */
 #endif
 	pthread_mutex_t			 bindings_lock;
 	SLIST_HEAD(, widget_binding)	 bindings;
 };
 
 #define WIDGET(wi)		((struct widget *)(wi))
-#define WIDGET_COLOR(wi, ind)	WIDGET(wi)->colors[ind]
 #define WIDGET_OPS(ob)		((struct widget_ops *)OBJECT(ob)->ops)
 #define WIDGET_SCALE(wi, w, h)	WIDGET_OPS(wi)->scale((wi), (w), (h))
 #define WIDGET_SURFACE(wi, ind)	WIDGET(wi)->surfaces[ind]
@@ -109,6 +103,8 @@ void	 widget_destroy(void *);
 void	 widget_draw(void *);
 void	 widget_scale(void *, int, int);
 
+#define widget_focused(w) ((w)->flags & WIDGET_FOCUSED)
+
 void		 widget_set_type(void *, const char *);
 void		 widget_focus(void *);
 void		 widget_unset_focus(void *);
@@ -118,12 +114,6 @@ __inline__ int	 widget_relative_area(void *, int, int);
 __inline__ int	 widget_area(void *, int, int);
 void		 widget_update_coords(void *, int, int);
 struct window	*widget_parent_window(void *);
-
-void		 widget_map_color(void *, int, const char *, Uint8, Uint8,
-		                  Uint8, Uint8);
-__inline__ int   widget_push_color(void *, Uint32);
-__inline__ void  widget_pop_color(void *);
-void		 widget_inherit_color(void *, int, const char *, void *);
 
 int		 widget_map_surface(void *, SDL_Surface *);
 __inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);

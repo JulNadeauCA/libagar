@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.19 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.20 2005/02/19 09:31:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -49,16 +49,10 @@ const struct widget_ops titlebar_ops = {
 	box_scale
 };
 
-enum {
-	UNFOCUSED_COLOR,
-	FOCUSED_COLOR,
-	CAPTION_COLOR
-};
-
-static void	titlebar_mousebuttondown(int, union evarg *);
-static void	titlebar_mousebuttonup(int, union evarg *);
-static void	titlebar_hide_win(int, union evarg *);
-static void	titlebar_close_win(int, union evarg *);
+static void titlebar_mousebuttondown(int, union evarg *);
+static void titlebar_mousebuttonup(int, union evarg *);
+static void titlebar_hide_win(int, union evarg *);
+static void titlebar_close_win(int, union evarg *);
 
 struct titlebar *
 titlebar_new(void *parent, int flags)
@@ -75,8 +69,6 @@ titlebar_new(void *parent, int flags)
 void
 titlebar_init(struct titlebar *tbar, int flags)
 {
-	extern const struct widget_ops button_ops_titlebar;
-
 	box_init(&tbar->hb, BOX_HORIZ, BOX_WFILL);
 	object_set_ops(tbar, &titlebar_ops);
 	object_wire_gfx(tbar, "/engine/widget/pixmaps");
@@ -85,9 +77,6 @@ titlebar_init(struct titlebar *tbar, int flags)
 	box_set_spacing(&tbar->hb, 0);
 
 	widget_set_type(tbar, "titlebar");
-	widget_map_color(tbar, UNFOCUSED_COLOR, "unfocused", 35, 35, 35, 255);
-	widget_map_color(tbar, FOCUSED_COLOR, "focused", 40, 60, 73, 255);
-	widget_map_color(tbar, CAPTION_COLOR, "caption", 245, 245, 245, 255);
 	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 
 	tbar->flags = flags;
@@ -104,10 +93,6 @@ titlebar_init(struct titlebar *tbar, int flags)
 		button_set_padding(tbar->hide_bu, 1);
 		event_new(tbar->hide_bu, "button-pushed", titlebar_hide_win,
 		    "%p", tbar);
-	
-		/* XXX */
-		OBJECT(tbar->hide_bu)->ops =
-		    (const void *)&button_ops_titlebar;
 	} else {
 		tbar->hide_bu = NULL;
 	}
@@ -119,10 +104,6 @@ titlebar_init(struct titlebar *tbar, int flags)
 		button_set_padding(tbar->close_bu, 1);
 		event_new(tbar->close_bu, "button-pushed", titlebar_close_win,
 		    "%p", tbar);
-	
-		/* XXX */
-		OBJECT(tbar->close_bu)->ops =
-		    (const void *)&button_ops_titlebar;
 	} else {
 		tbar->close_bu = NULL;
 	}
@@ -143,7 +124,8 @@ titlebar_draw(void *p)
 	    WIDGET(tbar)->w,
 	    WIDGET(tbar)->h,
 	    tbar->pressed ? -1 : 1,
-	    WINDOW_FOCUSED(tbar->win) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
+	    WINDOW_FOCUSED(tbar->win) ? COLOR(TITLEBAR_FOCUSED_COLOR) :
+	                                COLOR(TITLEBAR_UNFOCUSED_COLOR));
 }
 
 static void
@@ -192,6 +174,6 @@ titlebar_close_win(int argc, union evarg *argv)
 void
 titlebar_set_caption(struct titlebar *tbar, const char *caption)
 {
-	label_set_surface(tbar->label, (caption==NULL) ? NULL :
-	    text_render(NULL, -1, WIDGET_COLOR(tbar, CAPTION_COLOR), caption));
+	label_set_surface(tbar->label, (caption == NULL) ? NULL :
+	    text_render(NULL, -1, COLOR(TITLEBAR_CAPTION_COLOR), caption));
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.15 2005/02/26 06:44:03 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.16 2005/03/03 10:59:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -45,14 +45,6 @@ static struct widget_ops menu_view_ops = {
 	},
 	menu_view_draw,
 	menu_view_scale
-};
-
-enum {
-	UNZEL_COLOR,
-	SEL_COLOR,
-	SEL_OPTION_COLOR,
-	SEPARATOR1_COLOR,
-	SEPARATOR2_COLOR
 };
 
 static void
@@ -293,12 +285,6 @@ menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	/* XXX */
 	widget_map_surface(mview, view_copy_surface(SPRITE(mview,3)));
 	
-	widget_inherit_color(mview, UNZEL_COLOR, "unzelected", pmenu);
-	widget_inherit_color(mview, SEL_COLOR, "selected", pmenu);
-	widget_inherit_color(mview, SEL_OPTION_COLOR, "sel-option", pmenu);
-	widget_inherit_color(mview, SEPARATOR1_COLOR, "separator1", pmenu);
-	widget_inherit_color(mview, SEPARATOR2_COLOR, "separator2", pmenu);
-
 	event_new(mview, "window-mousemotion", mousemotion, NULL);
 	event_new(mview, "window-mousebuttonup", mousebuttonup, NULL);
 
@@ -316,7 +302,7 @@ menu_view_draw(void *p)
 	int i, y = mview->vpadding;
 	
 	primitives.box(mview, 0, 0, WIDGET(mview)->w, WIDGET(mview)->h, 1,
-	    UNZEL_COLOR);
+	    COLOR(MENU_UNSEL_COLOR));
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		struct AGMenuItem *subitem = &pitem->subitems[i];
@@ -327,17 +313,17 @@ menu_view_draw(void *p)
 			    1, 1+y,
 			    WIDGET(mview)->w - 2,
 			    m->itemh,
-			    SEL_COLOR);
+			    COLOR(MENU_SEL_COLOR));
 		}
 
 		if (subitem->icon != -1) {
-			SDL_Surface *iconsu= WIDGET_SURFACE(m,subitem->icon);
+			SDL_Surface *iconsu = WIDGET_SURFACE(m,subitem->icon);
 			int dy = MIDDLE_ALIGNED(m, iconsu->h);
 
 			if (get_option(subitem)) {
 				primitives.frame(mview, x-1, y+dy-1,
 				    iconsu->w+3, iconsu->h+3,
-				    SEL_OPTION_COLOR);
+				    COLOR(MENU_OPTION_COLOR));
 			}
 			widget_blit_from(mview, m, subitem->icon, NULL,
 			    x, y+dy);
@@ -360,13 +346,13 @@ menu_view_draw(void *p)
 			    y+dy,
 			    dx,
 			    y+dy,
-			    SEPARATOR1_COLOR);
+			    COLOR(MENU_SEP1_COLOR));
 			primitives.line(mview,
 			    mview->hspace,
 			    y+dy+1,
 			    dx,
 			    y+dy+1,
-			    SEPARATOR2_COLOR);
+			    COLOR(MENU_SEP2_COLOR));
 		}
 
 		if (subitem->nsubitems > 0) {

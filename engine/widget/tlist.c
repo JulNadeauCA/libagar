@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.109 2005/03/03 10:59:26 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.110 2005/03/07 04:08:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -48,13 +48,6 @@ static struct widget_ops tlist_ops = {
 	},
 	tlist_draw,
 	tlist_scale
-};
-
-enum {
-	TEXT_COLOR,
-	BG_COLOR,
-	LINE_COLOR,
-	SELECTION_COLOR
 };
 
 enum {
@@ -178,11 +171,6 @@ tlist_init(struct tlist *tl, int flags)
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
 	widget_bind(tl, "selected", WIDGET_POINTER, &tl->selected);
 
-	widget_map_color(tl, BG_COLOR, "background", 120, 120, 120, 255);
-	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240, 255);
-	widget_map_color(tl, LINE_COLOR, "line", 50, 50, 50, 255);
-	widget_map_color(tl, SELECTION_COLOR, "selection", 50, 50, 120, 255);
-
 	tl->flags = flags;
 	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
 	tl->selected = NULL;
@@ -277,7 +265,8 @@ tlist_draw(void *p)
 	if (WIDGET(tl)->w < 26 || WIDGET(tl)->h < 5)	/* XXX */
 		return;
 
-	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1, BG_COLOR);
+	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
+	    COLOR(TLIST_BG_COLOR));
 
 	pthread_mutex_lock(&tl->lock);
 	if (tl->flags & TLIST_POLL) {
@@ -299,7 +288,7 @@ tlist_draw(void *p)
 			    x, y,
 			    WIDGET(tl)->w - WIDGET(tl->sbar)->w,
 			    tl->item_h,
-			    SELECTION_COLOR);
+			    COLOR(TLIST_SEL_COLOR));
 		}
 
 		if (tl->flags & TLIST_TREE) {
@@ -312,13 +301,13 @@ tlist_draw(void *p)
 			    ty + ts/2,
 			    tx - ts,
 			    ty - tl->item_h,
-			    LINE_COLOR);
+			    COLOR(TLIST_LINE_COLOR));
 			primitives.line2(tl,
 			    tx - ts,
 			    ty + ts/2,
 			    tx,
 			    ty + ts/2,
-			    LINE_COLOR);
+			    COLOR(TLIST_LINE_COLOR));
 
 			for (j = 0; j < it->depth; j++) {
 				int lx = j*ts + 7;
@@ -328,12 +317,12 @@ tlist_draw(void *p)
 				    ty + ts/2,
 				    lx,
 				    ty - tl->item_h,
-				    LINE_COLOR);
+				    COLOR(TLIST_LINE_COLOR));
 			}
 
 			if (it->flags & TLIST_HAS_CHILDREN) {
 				primitives.frame(tl, tx, ty, ts, ts,
-				    LINE_COLOR);
+				    COLOR(TLIST_LINE_COLOR));
 
 				if (it->flags & TLIST_VISIBLE_CHILDREN) {
 					primitives.minus(tl,
@@ -341,14 +330,14 @@ tlist_draw(void *p)
 					    ty + 1,
 					    ts - 2,
 					    ts - 2,
-					    LINE_COLOR);
+					    COLOR(TLIST_LINE_COLOR));
 				} else {
 					primitives.plus(tl,
 					    tx + 1,
 					    ty + 1,
 					    ts - 2,
 					    ts - 2,
-					    LINE_COLOR);
+					    COLOR(TLIST_LINE_COLOR));
 				}
 				goto drawtext;		/* Skip the icon */
 			}
@@ -369,7 +358,7 @@ drawtext:
 
 		if (it->label == -1) {
 			it->label = widget_map_surface(tl,
-			    text_render(NULL, -1, WIDGET_COLOR(tl, TEXT_COLOR),
+			    text_render(NULL, -1, COLOR(TLIST_TXT_COLOR),
 			        it->text));
 		}
 		widget_blit_surface(tl, it->label,
@@ -377,7 +366,10 @@ drawtext:
 		    y + tl->item_h/2 - WIDGET_SURFACE(tl,it->label)->h/2 + 1);
 
 		y += tl->item_h;
-		primitives.line(tl, 0, y, WIDGET(tl)->w, y, LINE_COLOR);
+		primitives.line(tl,
+		    0, y,
+		    WIDGET(tl)->w, y,
+		    COLOR(TLIST_LINE_COLOR));
 		visitems++;
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.66 2005/02/19 06:50:19 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.67 2005/03/08 08:39:24 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -77,31 +77,26 @@ alter_color(Uint32 pixel, Sint8 r, Sint8 g, Sint8 b)
 
 /* Draw a 3D-style box. */
 static void
-box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
+box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int lcol, rcol, bcol;
+	Uint32 lcol, rcol, bcol;
 
-#ifdef DEBUG
-	if (ncolor >= WIDGET_COLORS_MAX)
-		fatal("color stack oflow");
-#endif
-	lcol = widget_push_color(wid, (z < 0) ?
+	lcol = (z < 0) ?
 	    alter_color(color, -60, -60, -60) :
-	    alter_color(color, 60, 60, 60));
-	rcol = widget_push_color(wid, (z < 0) ?
+	    alter_color(color, 60, 60, 60);
+	rcol = (z < 0) ?
 	    alter_color(color, 60, 60, 60) :
-	    alter_color(color, -60, -60, -60));
+	    alter_color(color, -60, -60, -60);
 
 	if (widget_holds_focus(wid)) {
-		bcol = widget_push_color(wid, (z < 0) ?
-		    alter_color(color, -14, -13, -4) :
-		    alter_color(color, 20, 20, 20));
+		bcol = (z < 0) ?
+		    alter_color(color, -10, -10, -10) :
+		    alter_color(color, 20, 20, 20);
 	} else {
-		bcol = widget_push_color(wid, (z < 0) ?
+		bcol = (z < 0) ?
 		    alter_color(color, -20, -20, -20) :
-		    alter_color(color, 10, 10, 10));
+		    alter_color(color, 10, 10, 10);
 	}
 
 	primitives.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, bcol);
@@ -109,32 +104,23 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, lcol);
 	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, rcol);
 	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, rcol);
-
-	widget_pop_color(wid);
-	widget_pop_color(wid);
-	widget_pop_color(wid);
 }
 
 /* Draw a 3D-style box with chamfered top edges. */
 static void
-box_chamfered(void *p, SDL_Rect *r, int z, int rad, int ncolor)
+box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 bcol)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int lcol, rcol;
+	Uint32 lcol, rcol;
 	int v, e, u;
 	int x, y;
 
-#ifdef DEBUG
-	if (ncolor >= WIDGET_COLORS_MAX)
-		fatal("color stack oflow");
-#endif
-	lcol = widget_push_color(wid, (z < 0) ?
-	    alter_color(color, -60, -60, -60) :
-	    alter_color(color, 60, 60, 60));
-	rcol = widget_push_color(wid, (z < 0) ?
-	    alter_color(color, 60, 60, 60) :
-	    alter_color(color, -60, -60, -60));
+	lcol = (z < 0) ?
+	    alter_color(bcol, -60, -60, -60) :
+	    alter_color(bcol, 60, 60, 60);
+	rcol = (z < 0) ?
+	    alter_color(bcol, 60, 60, 60) :
+	    alter_color(bcol, -60, -60, -60);
 
 	/* Fill the background except the corners. */
 	primitives.rect_filled(wid,			/* Body */
@@ -142,25 +128,25 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, int ncolor)
 	    r->y + rad,
 	    r->w - rad*2,
 	    r->h - rad,
-	    ncolor);
+	    bcol);
 	primitives.rect_filled(wid,			/* Top */
 	    r->x + rad,
 	    r->y,
 	    r->w - rad*2,
 	    r->h,
-	    ncolor);
+	    bcol);
 	primitives.rect_filled(wid,			/* Left */
 	    r->x,
 	    r->y + rad,
 	    rad,
 	    r->h - rad,
-	    ncolor);
+	    bcol);
 	primitives.rect_filled(wid,			/* Right */
 	    r->x + r->w - rad,
 	    r->y + rad,
 	    rad,
 	    r->h - rad,
-	    ncolor);
+	    bcol);
 
 	/* Draw the three straight lines. */
 	primitives.line(wid,				/* Top line */
@@ -168,7 +154,7 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, int ncolor)
 	    r->y,
 	    r->x + r->w - rad,
 	    r->y,
-	    ncolor);
+	    bcol);
 	primitives.line(wid,				/* Left line */
 	    r->x,
 	    r->y + rad,
@@ -195,40 +181,40 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, int ncolor)
 		widget_put_pixel(wid,
 		    r->x + rad - x,
 		    r->y + rad - y,
-		    WIDGET_COLOR(wid,lcol));
+		    lcol);
 		widget_put_pixel(wid,
 		    r->x + rad - y,
 		    r->y + rad - x,
-		    WIDGET_COLOR(wid,lcol));
+		    lcol);
 
 		widget_put_pixel(wid,
 		    r->x - rad + (r->w - 1) + x,
 		    r->y + rad - y,
-		    WIDGET_COLOR(wid,rcol));
+		    rcol);
 		widget_put_pixel(wid,
 		    r->x - rad + (r->w - 1) + y,
 		    r->y + rad - x,
-		    WIDGET_COLOR(wid,rcol));
+		    rcol);
 		
 		for (i = 0; i < x; i++) {
 			widget_put_pixel(wid,
 			    r->x + rad - i,
 			    r->y + rad - y,
-			    WIDGET_COLOR(wid,ncolor));
+			    bcol);
 			widget_put_pixel(wid,
 			    r->x - rad + (r->w - 1) + i,
 			    r->y + rad - y,
-			    WIDGET_COLOR(wid,ncolor));
+			    bcol);
 		}
 		for (i = 0; i < y; i++) {
 			widget_put_pixel(wid,
 			    r->x + rad - i,
 			    r->y + rad - x,
-			    WIDGET_COLOR(wid,ncolor));
+			    bcol);
 			widget_put_pixel(wid,
 			    r->x - rad + (r->w - 1) + i,
 			    r->y + rad - x,
-			    WIDGET_COLOR(wid,ncolor));
+			    bcol);
 		}
 
 		e += u;
@@ -241,37 +227,26 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, int ncolor)
 		x++;
 	}
 	SDL_UnlockSurface(view->v);
-
-
-	widget_pop_color(wid);
-	widget_pop_color(wid);
 }
 
 /* Draw a 3D-style frame. */
 static void
-frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
+frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int shade;
+	Uint32 shade = alter_color(color, -40, -40, -40);
 
-	shade = widget_push_color(wid, alter_color(WIDGET_COLOR(wid,ncolor),
-				                  -40, -40, -40));
-
-	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, ncolor);
-	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, ncolor);
+	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, color);
+	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, color);
 	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, shade);
 	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, shade);
-
-	widget_pop_color(wid);
 }
 
 /* Render a circle using a modified Bresenham line algorithm. */
 static void
-circle_bresenham(void *p, int wx, int wy, int radius, int ncolor)
+circle_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
 	int x = 0, y = radius;
@@ -303,10 +278,9 @@ circle_bresenham(void *p, int wx, int wy, int radius, int ncolor)
 }
 
 static void
-circle2_bresenham(void *p, int wx, int wy, int radius, int ncolor)
+circle2_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
 	int x = 0, y = radius;
@@ -348,16 +322,12 @@ circle2_bresenham(void *p, int wx, int wy, int radius, int ncolor)
 
 /* Render two lines with +50,50,50 RGB difference. */
 static void
-line2(void *wid, int x1, int y1, int x2, int y2, int ncolor)
+line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color1)
 {
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int ncolor2;
+	Uint32 color2 = alter_color(color1, 50, 50, 50);
 
-	primitives.line(wid, x1, y1, x2, y2, ncolor);
-	
-	ncolor2 = widget_push_color(wid, alter_color(color, 50, 50, 50));
-	primitives.line(wid, x1+1, y1+1, x2+1, y2+1, ncolor2);
-	widget_pop_color(wid);
+	primitives.line(wid, x1, y1, x2, y2, color1);
+	primitives.line(wid, x1+1, y1+1, x2+1, y2+1, color2);
 }
 
 /*
@@ -365,10 +335,9 @@ line2(void *wid, int x1, int y1, int x2, int y2, int ncolor)
  * presented by Foley & Van Dam [1990].
  */
 static void
-line_bresenham(void *widget, int x1, int y1, int x2, int y2, int ncolor)
+line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	struct widget *wid = widget;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int dx, dy;
 	int inc1, inc2;
 	int d, x, y;
@@ -467,22 +436,21 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, int ncolor)
 
 /* Render an outlined rectangle. */
 static void
-rect_outlined(void *p, int x, int y, int w, int h, int ncolor)
+rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
-	primitives.line(wid, x, y, x+w-1, y, ncolor);
-	primitives.line(wid, x, y+h-1, x+w-1, y+h-1, ncolor);
-	primitives.line(wid, x, y, x, y+h-1, ncolor);
-	primitives.line(wid, x+w-1, y, x+w-1, y+h-1, ncolor);
+	primitives.line(wid, x, y, x+w-1, y, color);
+	primitives.line(wid, x, y+h-1, x+w-1, y+h-1, color);
+	primitives.line(wid, x, y, x, y+h-1, color);
+	primitives.line(wid, x+w-1, y, x+w-1, y+h-1, color);
 }
 
 /* Render a filled rectangle. */
 static void
-rect_filled(void *p, int x, int y, int w, int h, int ncolor)
+rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	SDL_Rect rd;
 
 	rd.x = wid->cx+x;
@@ -494,12 +462,13 @@ rect_filled(void *p, int x, int y, int w, int h, int ncolor)
 
 /* Draw a gimp-style background tiling. */
 static void
-tiling(void *p, SDL_Rect rd, int tsz, int offs, int c1, int c2)
+tiling(void *p, SDL_Rect rd, int tsz, int offs, Uint32 c1, Uint32 c2)
 {
 	struct widget *wid = p;
 	int alt1 = 0, alt2 = 0;
 	int x, y;
 
+	/* XXX inelegant */
 	for (y = rd.y-tsz+offs;
 	     y < rd.y+rd.h;
 	     y += tsz) {
@@ -524,31 +493,30 @@ tiling(void *p, SDL_Rect rd, int tsz, int offs, int c1, int c2)
 
 /* Draw a [+] sign. */
 static void
-plus(void *p, int x, int y, int w, int h, int ncolor)
+plus(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	int xcen = x + w/2;
 	int ycen = y + h/2;
 
-	primitives.line2(p, xcen, y, xcen, y+h, ncolor);
-	primitives.line2(p, x, ycen, x+w, ycen, ncolor);
+	primitives.line2(p, xcen, y, xcen, y+h, color);
+	primitives.line2(p, x, ycen, x+w, ycen, color);
 }
 
 /* Draw a [-] sign. */
 static void
-minus(void *p, int x, int y, int w, int h, int ncolor)
+minus(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 	int ycen = y+h/2;
 
-	primitives.line2(wid, x, ycen, x+w, ycen, ncolor);
+	primitives.line2(wid, x, ycen, x+w, ycen, color);
 }
 
 #ifdef HAVE_OPENGL
 static void
-line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
+line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int x1 = wid->cx + px1;
 	int y1 = wid->cy + py1;
 	int x2 = wid->cx + px2;
@@ -575,14 +543,14 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 }
 
 static void
-circle_opengl(void *p, int x, int y, int radius, int ncolor)
+circle_opengl(void *p, int x, int y, int radius, Uint32 color)
 {
 	struct widget *wid = p;
 	int nedges = radius*2;
 	int i;
 	Uint8 r, g, b;
 	
-	SDL_GetRGB(WIDGET_COLOR(p, ncolor), vfmt, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
@@ -594,14 +562,14 @@ circle_opengl(void *p, int x, int y, int radius, int ncolor)
 }
 
 static void
-circle2_opengl(void *p, int x, int y, int radius, int ncolor)
+circle2_opengl(void *p, int x, int y, int radius, Uint32 color)
 {
 	struct widget *wid = p;
 	int nedges = radius*2;
 	int i;
 	Uint8 r, g, b;
 	
-	SDL_GetRGB(WIDGET_COLOR(p, ncolor), vfmt, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
@@ -615,10 +583,9 @@ circle2_opengl(void *p, int x, int y, int radius, int ncolor)
 }
 
 static void
-rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
+rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	Uint8 r, g, b;
 	int x1 = wid->cx+x;
 	int y1 = wid->cy+y;

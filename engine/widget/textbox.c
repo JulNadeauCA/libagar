@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.85 2005/02/08 15:45:38 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.86 2005/03/08 08:37:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,13 +60,6 @@ const struct widget_ops textbox_ops = {
 	},
 	textbox_draw,
 	textbox_scale
-};
-
-enum {
-	READWRITE_COLOR,
-	READONLY_COLOR,
-	TEXT_COLOR,
-	CURSOR_COLOR
 };
 
 static void mousebuttondown(int, union evarg *);
@@ -175,11 +168,6 @@ textbox_init(struct textbox *tbox, const char *label)
 	widget_bind(tbox, "string", WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));
 
-	widget_map_color(tbox, READWRITE_COLOR, "edition", 100, 100, 100, 255);
-	widget_map_color(tbox, READONLY_COLOR, "read-only", 40, 40, 40, 255);
-	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250, 255);
-	widget_map_color(tbox, CURSOR_COLOR, "cursor", 40, 40, 40, 255);
-
 	tbox->string[0] = '\0';
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
@@ -195,8 +183,8 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->sel_edit = 0;
 
 	if (label != NULL) {
-		tbox->label = text_render(NULL, -1,
-		    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
+		tbox->label = text_render(NULL, -1, COLOR(TEXTBOX_TXT_COLOR),
+		    (char *)label);
 		tbox->prew += tbox->label->w;
 		tbox->preh += tbox->label->h;
 	} else {
@@ -259,7 +247,8 @@ textbox_draw(void *p)
 	    WIDGET(tbox)->w - x - 1,
 	    WIDGET(tbox)->h,
 	    (WIDGET(tbox)->flags & WIDGET_FOCUSED) ? -1 : 1,
-	    tbox->writeable ? READWRITE_COLOR : READONLY_COLOR);
+	    tbox->writeable ? COLOR(TEXTBOX_RW_COLOR) :
+	                      COLOR(TEXTBOX_RO_COLOR));
 
 	x += tbox->xpadding;
 	if (WIDGET(tbox)->flags & WIDGET_FOCUSED) {
@@ -277,7 +266,7 @@ textbox_draw(void *p)
 				    y + 1,
 				    x,
 				    y + text_font_height - 2,
-				    CURSOR_COLOR);
+				    COLOR(TEXTBOX_CURSOR_COLOR));
 			}
 		}
 		if (i == len)
@@ -290,6 +279,7 @@ textbox_draw(void *p)
 			x += text_tab_width;
 			continue;
 		}
+
 		{
 			FT_Bitmap *ftbmp;
 			Uint32 ch = (Uint32)s[i];
@@ -327,7 +317,7 @@ textbox_draw(void *p)
 					widget_put_pixel(tbox,
 					    x + glyph->minx + xglyph,
 					    y + glyph->yoffset + yglyph,
-					    WIDGET_COLOR(tbox, TEXT_COLOR));
+					    COLOR(TEXTBOX_TXT_COLOR));
 				}
 				src += ftbmp->pitch;
 			}
@@ -441,6 +431,7 @@ cursor_position(struct textbox *tbox, int mx, int my, int *pos)
 			x += text_tab_width;
 			continue;
 		}
+
 		{
 			Uint32 ch = (Uint32)s[i];
 			struct ttf_font *ttf = font->p;

@@ -1,4 +1,4 @@
-/*	$Csoft: box.h,v 1.3 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: box.h,v 1.4 2005/01/08 03:35:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BOX_H_
@@ -40,7 +40,6 @@ void	 box_scale(void *, int, int);
 void	 box_set_homogenous(struct box *, int);
 void	 box_set_padding(struct box *, int);
 void	 box_set_spacing(struct box *, int);
-void	 box_set_color(struct box *, Uint8, Uint8, Uint8);
 void	 box_set_depth(struct box *, int);
 __END_DECLS
 

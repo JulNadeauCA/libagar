@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.145 2005/02/27 05:57:06 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.146 2005/03/03 10:51:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -218,6 +218,8 @@ engine_init(void)
 
 	primitives_init();
 	cursors_init();
+	colors_init();
+	object_load(config);
 
 	object_init(&engine_icons, "object", "icons", NULL);
 	object_wire_gfx(&engine_icons, "/engine/icons/icons");
@@ -262,6 +264,7 @@ engine_destroy(void)
 	text_destroy();
 	input_destroy();
 	
+	colors_destroy();
 	cursors_destroy();
 
 	object_destroy(config);

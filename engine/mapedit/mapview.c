@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.174 2005/02/08 15:52:19 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.175 2005/03/03 10:59:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -62,15 +62,6 @@ enum {
 	ZOOM_MAX =	 500,	/* Max zoom factor (%) */
 	ZOOM_PROPS_MIN = 60,	/* Min zoom factor for showing properties (%) */
 	ZOOM_GRID_MIN =	 20	/* Min zoom factor for showing the grid (%) */
-};
-
-enum {
-	GRID_COLOR,
-	CURSOR_COLOR,
-	BG1_COLOR,
-	BG2_COLOR,
-	MSEL_COLOR,
-	ESEL_COLOR
 };
 
 int	mapview_bg = 1;			/* Background tiles enable */
@@ -343,13 +334,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->my = m->origin.y;
 	pthread_mutex_unlock(&m->lock);
 
-	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100, 255);
-	widget_map_color(mv, CURSOR_COLOR, "cursor", 100, 100, 100, 255);
-	widget_map_color(mv, BG1_COLOR, "bg1", 55, 60, 55, 255);
-	widget_map_color(mv, BG2_COLOR, "bg2", 40, 45, 40, 255);
-	widget_map_color(mv, MSEL_COLOR, "mouse-sel", 150, 150, 150, 255);
-	widget_map_color(mv, ESEL_COLOR, "effective-sel", 180, 180, 180, 255);
-
 	event_new(mv, "widget-lostfocus", lost_focus, NULL);
 	event_new(mv, "widget-hidden", lost_focus, NULL);
 	event_new(mv, "window-keyup", key_up, NULL);
@@ -487,13 +471,13 @@ defcurs:
 	    rd.y + 1,
 	    mv->tilesz - 1,
 	    mv->tilesz - 1,
-	    CURSOR_COLOR);
+	    COLOR(MAPVIEW_CURSOR_COLOR));
 	primitives.rect_outlined(mv,
 	    rd.x + 2,
 	    rd.y + 2,
 	    mv->tilesz - 3,
 	    mv->tilesz - 3,
-	    CURSOR_COLOR);
+	    COLOR(MAPVIEW_CURSOR_COLOR));
 }
 
 void
@@ -523,7 +507,8 @@ mapview_draw(void *p)
 		rtiling.w = WIDGET(mv)->w;
 		rtiling.h = WIDGET(mv)->h;
 		primitives.tiling(mv, rtiling, mapview_bg_sqsize, 0,
-		    BG1_COLOR, BG2_COLOR);
+		    COLOR(MAPVIEW_TILE1_COLOR),
+		    COLOR(MAPVIEW_TILE2_COLOR));
 	}
 	
 	pthread_mutex_lock(&m->lock);
@@ -564,7 +549,7 @@ draw_layer:
 				    rx, ry,
 				    mv->tilesz + 1,
 				    mv->tilesz + 1,
-				    GRID_COLOR);
+				    COLOR(MAPVIEW_GRID_COLOR));
 			}
 #ifdef EDITION
 			if (!mapedition)
@@ -599,13 +584,13 @@ next_layer:
 		primitives.rect_outlined(mv,
 		    esel_x, esel_y,
 		    esel_w, esel_h,
-		    ESEL_COLOR);
+		    COLOR(MAPVIEW_ESEL_COLOR));
 	}
 	if (msel_x != -1) {
 		primitives.rect_outlined(mv,
 		    msel_x, msel_y,
 		    msel_w, msel_h,
-		    MSEL_COLOR);
+		    COLOR(MAPVIEW_MSEL_COLOR));
 	}
 
 	/* Draw the cursor for the current tool. */
@@ -1104,5 +1089,5 @@ mapview_status(struct mapview *mv, const char *fmt, ...)
 	va_end(ap);
 
 	widget_replace_surface(mv->status, mv->status->surface,
-	    text_render(NULL, -1, WIDGET_COLOR(mv->status, 0), status));
+	    text_render(NULL, -1, COLOR(TEXT_COLOR), status));
 }

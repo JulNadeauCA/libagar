@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.h,v 1.4 2005/01/08 03:35:55 vedge Exp $	*/
+/*	$Csoft: notebook.h,v 1.1 2005/03/08 08:39:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_NOTEBOOK_H_
@@ -42,7 +42,6 @@ void notebook_init(struct notebook *, int);
 void notebook_destroy(void *);
 void notebook_draw(void *);
 void notebook_scale(void *, int, int);
-void notebook_set_color(struct notebook *, Uint8, Uint8, Uint8);
 void notebook_set_tab_alignment(struct notebook *, enum notebook_tab_alignment);
 
 struct notebook_tab *notebook_add_tab(struct notebook *, const char *,

@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.14 2005/03/03 10:59:26 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.15 2005/03/05 12:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -48,14 +48,6 @@ static struct widget_ops menu_ops = {
 	},
 	menu_draw,
 	menu_scale
-};
-
-enum {
-	UNZEL_COLOR,
-	SEL_COLOR,
-	SEL_OPTION_COLOR,
-	SEPARATOR1_COLOR,
-	SEPARATOR2_COLOR
 };
 
 struct AGMenu *
@@ -220,11 +212,6 @@ menu_init(struct AGMenu *m)
 	widget_init(m, "AGMenu", &menu_ops, WIDGET_WFILL|
 					       WIDGET_UNFOCUSED_MOTION|
 	                                       WIDGET_UNFOCUSED_BUTTONUP);
-	widget_map_color(m, UNZEL_COLOR, "unzelected", 100, 100, 100, 255);
-	widget_map_color(m, SEL_COLOR, "selected", 50, 50, 120, 255);
-	widget_map_color(m, SEL_OPTION_COLOR, "sel-option", 70, 70, 70, 255);
-	widget_map_color(m, SEPARATOR1_COLOR, "separator1", 66, 85, 82, 255);
-	widget_map_color(m, SEPARATOR2_COLOR, "separator2", 148, 150, 148, 255);
 
 	m->items = Malloc(sizeof(struct AGMenuItem), M_WIDGET);
 	m->nitems = 0;
@@ -250,8 +237,8 @@ menu_add_item(struct AGMenu *m, const char *text)
 	mitem = &m->items[m->nitems++];
 	mitem->text = text;
 	mitem->label = (text != NULL) ?
-	               widget_map_surface(m, text_render(NULL, -1, 0, text)) :
-		       -1;
+	               widget_map_surface(m, text_render(NULL, -1,
+		           COLOR(MENU_TXT_COLOR), text)) : -1;
 	mitem->icon = -1;
 	mitem->key_equiv = 0;
 	mitem->key_mod = 0;
@@ -302,7 +289,8 @@ add_subitem(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->icon = (icon != NULL) ?
 	    widget_map_surface(m, view_copy_surface(icon)) : -1;
 	mi->label = (text != NULL) ?
-	    widget_map_surface(m, text_render(NULL, -1, 0, text)) : -1;
+	    widget_map_surface(m, text_render(NULL, -1, COLOR(MENU_TXT_COLOR),
+	    text)) : -1;
 	return (mi);
 }
 
@@ -500,7 +488,8 @@ menu_draw(void *p)
 	    WIDGET(m)->h < m->vspace*2)
 		return;
 
-	primitives.box(m, 0, 0, WIDGET(m)->w, WIDGET(m)->h, 1, UNZEL_COLOR);
+	primitives.box(m, 0, 0, WIDGET(m)->w, WIDGET(m)->h, 1,
+	    COLOR(MENU_UNSEL_COLOR));
 	
 	for (i = 0; i < m->nitems; i++) {
 		struct AGMenuItem *mitem = &m->items[i];
@@ -512,7 +501,7 @@ menu_draw(void *p)
 			    mitem->y - m->vspace/2,
 			    label->w + m->hspace,
 			    m->itemh - 1,
-			    SEL_COLOR);
+			    COLOR(MENU_SEL_COLOR));
 		}
 		widget_blit_surface(m, mitem->label,
 		    mitem->x + m->hspace/2,

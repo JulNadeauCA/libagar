@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.38 2005/02/22 04:20:33 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.39 2005/03/03 10:59:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -112,33 +112,6 @@ hide_window(int argc, union evarg *argv)
 	window_hide(win);
 }
 
-/* Update the list of colors for a widget. */
-static void
-poll_colors(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	struct widget *wid = argv[1].p;
-	int i;
-
-	tlist_clear_items(tl);
-	for (i = 0; i < wid->ncolors; i++) {
-		tlist_insert_item(tl, NULL, wid->color_names[i],
-		    &wid->colors[i]);
-	}
-	tlist_restore_selections(tl);
-}
-
-/* Select a color to edit in a widget's color scheme. */
-static void
-select_color(int argc, union evarg *argv)
-{
-	struct palette *pal = argv[2].p;
-	struct tlist_item *it = argv[3].p;
-	Uint32 *col = it->p1;
-
-	widget_bind(pal, "color", WIDGET_UINT32, col);
-}
-
 /* Display widget information. */
 static void
 examine_widget(int argc, union evarg *argv)
@@ -169,23 +142,11 @@ examine_widget(int argc, union evarg *argv)
 		    &wid->flags);
 
 		lab = label_new(vb, LABEL_POLLED_MT,
-		    _("Geo: %dx%d at %d,%d (view %d,%d)"), &pwin->lock,
+		    _("Geometry: %dx%d at %d,%d (view %d,%d)"), &pwin->lock,
 		    &wid->w, &wid->h, &wid->x, &wid->y,
 		    &wid->cx, &wid->cy);
 		label_prescale(lab,
-		    _("Geo: 0000x0000 at 0000x0000 (view 0000,0000)"));
-	}
-
-	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
-	{
-		struct tlist *tl_colors;
-		struct palette *pal;
-
-		pal = palette_new(vb, PALETTE_RGB, vfmt);
-		tl_colors = tlist_new(vb, TLIST_POLL);
-		event_new(tl_colors, "tlist-poll", poll_colors, "%p", wid);
-		event_new(tl_colors, "tlist-changed", select_color, "%p, %p",
-		    wid, pal);
+		    _("Geometry: 0000x0000 at 0000x0000 (view 0000,0000)"));
 	}
 	window_show(win);
 }

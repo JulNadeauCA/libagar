@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.9 2004/11/30 11:36:54 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.10 2005/02/07 05:37:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -55,15 +55,6 @@ static struct widget_ops tableview_ops = {
 	tableview_scale
 };
 
-enum {
-	TEXT_COLOR,
-	BG_COLOR,
-	LINE_COLOR,
-	SELECTION_COLOR,
-	HEAD_COLOR,
-	HEADTEXT_COLOR
-};
-
 /*
  * Worker function for foreach_visible_column()
  * arguments: tableview, visible_start, visible_end,
@@ -118,13 +109,6 @@ tableview_init(struct tableview * tv, int flags, datafunc data_callback,
 	widget_init(tv, "tableview", &tableview_ops,
 	  WIDGET_FOCUSABLE | WIDGET_CLIPPING | WIDGET_WFILL | WIDGET_HFILL);
 	pthread_mutex_init(&tv->lock, &recursive_mutexattr);
-
-	widget_map_color(tv, BG_COLOR, "background", 120, 120, 120, 255);
-	widget_map_color(tv, HEAD_COLOR, "header", 180, 180, 180, 255);
-	widget_map_color(tv, HEADTEXT_COLOR, "headertext", 0, 0, 0, 255);
-	widget_map_color(tv, TEXT_COLOR, "text", 240, 240, 240, 255);
-	widget_map_color(tv, LINE_COLOR, "line", 50, 50, 50, 255);
-	widget_map_color(tv, SELECTION_COLOR, "selection", 50, 50, 120, 255);
 
 	tv->data_callback = data_callback;
 	tv->sort_callback = sort_callback;
@@ -272,8 +256,8 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
 		label = "";
 	}
 	strncpy(col->label, label, TABLEVIEW_LABEL_MAX);
-	col->label_img = text_render(NULL, -1, WIDGET_COLOR(tv, HEADTEXT_COLOR),
-	    label);
+	col->label_img = text_render(NULL, -1,
+	    COLOR(TABLEVIEW_HTXT_COLOR), label);
 	label_w = col->label_img->w;
 
 	/* column's width is the wider of user width string and label string */
@@ -344,7 +328,7 @@ tableview_row_addfn(struct tableview * tv, int flags,
 				}
 				row->cell[i].text = Strdup((char *) data);
 				row->cell[i].image = text_render(NULL, -1,
-				    WIDGET_COLOR(tv, TEXT_COLOR),
+				    COLOR(TABLEVIEW_CTXT_COLOR),
 				    row->cell[i].text);
 				break;
 			}
@@ -685,7 +669,8 @@ tableview_draw(void *p)
 		update = 1;
 
 	/* Draw the background box */
-	primitives.box(tv, 0, 0, view_width, WIDGET(tv)->h, -1, BG_COLOR);
+	primitives.box(tv, 0, 0, view_width, WIDGET(tv)->h, -1,
+	    COLOR(TABLEVIEW_COLOR));
 
 	/* draw row selection hilites */
 	y = tv->head_height;
@@ -694,8 +679,11 @@ tableview_draw(void *p)
 			break;
 		}
 		if (tv->visible.items[i].row->selected) {
-			primitives.box(tv, 1, y, view_width - 2,
-			    tv->row_height, 1, SELECTION_COLOR);
+			primitives.box(tv,
+			    1, y,
+			    view_width - 2,
+			    tv->row_height,
+			    1, COLOR(TABLEVIEW_SEL_COLOR));
 		}
 		y += tv->row_height;
 	}
@@ -969,7 +957,7 @@ render_dyncolumn(struct tableview * tv, unsigned int idx)
 		    tv->visible.items[i].row->rid);
 
 		row->cell[cidx].image =
-		    text_render(NULL, -1, WIDGET_COLOR(tv, TEXT_COLOR),
+		    text_render(NULL, -1, COLOR(TABLEVIEW_CTXT_COLOR),
 		    celltext);
 	}
 }
@@ -1137,7 +1125,7 @@ draw_column(struct tableview * tv, int visible_start, int visible_end,
 		    tv->head_height,
 		    (tv->column[idx].mousedown ||
 		     tv->column[idx].cid == tv->sortColumn) ? -1 : 1,
-		    HEAD_COLOR);
+		    COLOR(TABLEVIEW_HEAD_COLOR));
 		widget_blit(tv, tv->column[idx].label_img,
 		    visible_start + label_x,
 		    0);
@@ -1162,17 +1150,17 @@ draw_column(struct tableview * tv, int visible_start, int visible_end,
 
 			if (!TAILQ_EMPTY(&tv->visible.items[j].row->children)) {
 				primitives.frame(tv, offset, ty, tw, tw,
-				    LINE_COLOR);
+				    COLOR(TABLEVIEW_LINE_COLOR));
 				if (tv->visible.items[j].row->expanded) {
 					primitives.minus(tv, offset, ty,
 					    tw - 2,
 					    tw - 2,
-					    LINE_COLOR);
+					    COLOR(TABLEVIEW_LINE_COLOR));
 				} else {
 					primitives.plus(tv, offset, ty,
 					    tw - 2,
 					    tw - 2,
-					    LINE_COLOR);
+					    COLOR(TABLEVIEW_LINE_COLOR));
 				}
 			}
 			offset += tw + 4;
@@ -1195,7 +1183,7 @@ draw_column(struct tableview * tv, int visible_start, int visible_end,
 		    view_width - visible_end,
 		    tv->head_height,
 		    1,
-		    HEAD_COLOR);
+		    COLOR(TABLEVIEW_HEAD_COLOR));
 	}
 	return (1);
 }
