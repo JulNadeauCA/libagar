@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.70 2003/06/08 00:21:04 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.71 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,146 +70,121 @@ button_new(void *parent, const char *caption)
 }
 
 void
-button_init(struct button *b, const char *caption)
+button_init(struct button *bu, const char *caption)
 {
-	widget_init(b, "button", &button_ops,
-	    WIDGET_FOCUSABLE|WIDGET_UNFOCUSED_MOTION);
-	widget_bind(b, "state", WIDGET_BOOL, NULL, &b->state);
+	widget_init(bu, "button", &button_ops, WIDGET_FOCUSABLE |
+	    WIDGET_UNFOCUSED_MOTION);
+	widget_bind(bu, "state", WIDGET_BOOL, NULL, &bu->state);
 
-	widget_map_color(b, FRAME_COLOR, "frame", 100, 100, 100, 255);
-	widget_map_color(b, TEXT_COLOR, "text", 240, 240, 240, 255);
-	widget_map_color(b, DISABLED_COLOR, "disabled", 110, 110, 110, 255);
+	widget_map_color(bu, FRAME_COLOR, "frame", 100, 100, 100, 255);
+	widget_map_color(bu, TEXT_COLOR, "text", 240, 240, 240, 255);
+	widget_map_color(bu, DISABLED_COLOR, "disabled", 110, 110, 110, 255);
 
-	b->state = 0;
-	b->sensitive = 1;
-	b->sticky = 0;
-	b->justify = BUTTON_CENTER;
-	b->padding = 2;
+	bu->state = 0;
+	bu->sensitive = 1;
+	bu->sticky = 0;
+	bu->justify = BUTTON_CENTER;
+	bu->padding = 4;
 
-	b->label_s = (caption != NULL) ?
-	    text_render(NULL, -1, WIDGET_COLOR(b, TEXT_COLOR), caption) :
-	    NULL;
-	b->slabel_s = NULL;
+	if (caption != NULL) {
+		bu->label = text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR),
+		    caption);
+	} else {
+		bu->label = NULL;
+	}
 
-	event_new(b, "window-mousebuttonup", button_mousebuttonup, NULL);
-	event_new(b, "window-mousebuttondown", button_mousebuttondown, NULL);
-	event_new(b, "window-mousemotion", button_mousemotion, NULL);
-	event_new(b, "window-keyup", button_keyup, NULL);
-	event_new(b, "window-keydown", button_keydown, NULL);
+	event_new(bu, "window-mousebuttonup", button_mousebuttonup, NULL);
+	event_new(bu, "window-mousebuttondown", button_mousebuttondown, NULL);
+	event_new(bu, "window-mousemotion", button_mousemotion, NULL);
+	event_new(bu, "window-keyup", button_keyup, NULL);
+	event_new(bu, "window-keydown", button_keydown, NULL);
 }
 
 void
 button_destroy(void *p)
 {
-	struct button *b = p;
+	struct button *bu = p;
 
-	if (b->slabel_s != NULL) {
-		SDL_FreeSurface(b->label_s);
-	}
-	widget_destroy(b);
+	if (bu->label != NULL)
+		SDL_FreeSurface(bu->label);
+
+	widget_destroy(bu);
 }
 
 void
 button_scale(void *p, int w, int h)
 {
-	struct button *b = p;
-	int nw, nh;
+	struct button *bu = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(b)->w = b->label_s->w + b->padding*2;
-		WIDGET(b)->h = b->label_s->h + b->padding*2;
-	}
-
-	if (b->padding == 0) {
-		nw = WIDGET(b)->w;
-		nh = WIDGET(b)->h;
-	} else {
-		/* Scale the label to a reasonable size. */
-		nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
-		if (nw > WIDGET(b)->w - 1)
-			nw = WIDGET(b)->w - 1;
-		nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
-		if (nh > WIDGET(b)->h - 1)
-			nh = WIDGET(b)->h - 1;
-		if (nw > b->label_s->w*2)
-			nw = b->label_s->w*2;
-		if (nh > b->label_s->h*2)
-			nh = b->label_s->h*2;
-	}
-
-	if (b->slabel_s != NULL) {
-		SDL_FreeSurface(b->slabel_s);
-	}
-	if (nw < 6 || nh < 6) {
-		b->slabel_s = view_surface(SDL_SWSURFACE, 0, 0);
-	} else {
-		b->slabel_s = view_scale_surface(b->label_s, nw, nh);
+		WIDGET(bu)->w = bu->label->w + bu->padding*2;
+		WIDGET(bu)->h = bu->label->h + bu->padding;
 	}
 }
 
 void
 button_draw(void *p)
 {
-	const int xspace = 2;
-	struct button *b = p;
-	SDL_Surface *label = b->slabel_s;
+	struct button *bu = p;
 	int x = 0, y = 0;
 	int pressed;
 	
-	if (WIDGET(b)->w < b->padding*2 ||
-	    WIDGET(b)->h < b->padding*2)
+	if (WIDGET(bu)->w < bu->padding*2 ||
+	    WIDGET(bu)->h < bu->padding)
 		return;
 
-	pressed = widget_get_bool(b, "state");
-	if (!b->sensitive) {
-		primitives.box(b,
+	pressed = widget_get_bool(bu, "state");
+	if (!bu->sensitive) {
+		primitives.box(bu,
 		    0, 0,
-		    WIDGET(b)->w, WIDGET(b)->h,
+		    WIDGET(bu)->w, WIDGET(bu)->h,
 		    -1,
 		    DISABLED_COLOR);
 	} else {
-		primitives.box(b,
+		primitives.box(bu,
 		    0, 0,
-		    WIDGET(b)->w, WIDGET(b)->h,
+		    WIDGET(bu)->w, WIDGET(bu)->h,
 		    pressed ? -1 : 1,
 		    FRAME_COLOR);
 	}
 
-	switch (b->justify) {
-	case BUTTON_LEFT:
-		x = xspace;
-		break;
-	case BUTTON_CENTER:
-		x = (WIDGET(b)->w - label->w) / 2;
-		break;
-	case BUTTON_RIGHT:
-		x = WIDGET(b)->w - label->w - xspace;
-		break;
-	}
-	y = ((WIDGET(b)->h - label->h) / 2) - 1;
+	if (bu->label != NULL) {
+		switch (bu->justify) {
+		case BUTTON_LEFT:
+			x = bu->padding;
+			break;
+		case BUTTON_CENTER:
+			x = WIDGET(bu)->w/2 - bu->label->w/2;
+			break;
+		case BUTTON_RIGHT:
+			x = WIDGET(bu)->w - bu->label->w - bu->padding;
+			break;
+		}
+		y = ((WIDGET(bu)->h - bu->label->h) / 2) - 1;
 
-	if (pressed) {
-		x++;
-		y++;
+		if (pressed) {
+			x++;
+			y++;
+		}
+		widget_blit(bu, bu->label, x, y);
 	}
-	widget_blit(b, label, x, y);
 }
 
 static void
 button_mousemotion(int argc, union evarg *argv)
 {
-	struct button *b = argv[0].p;
+	struct button *bu = argv[0].p;
 	struct widget_binding *stateb;
 	int x = argv[1].i;
 	int y = argv[2].i;
 	int *pressed;
 
-	if (!b->sensitive)
+	if (!bu->sensitive)
 		return;
 
-	stateb = widget_binding_get_locked(b, "state", &pressed);
-	if (!widget_relative_area(b, x, y) &&
-	    !b->sticky && *pressed == 1) {
+	stateb = widget_binding_get_locked(bu, "state", &pressed);
+	if (!widget_relative_area(bu, x, y) &&
+	    !bu->sticky && *pressed == 1) {
 		*pressed = 0;
 		widget_binding_modified(stateb);
 	}
@@ -219,25 +194,25 @@ button_mousemotion(int argc, union evarg *argv)
 static void
 button_mousebuttondown(int argc, union evarg *argv)
 {
-	struct button *b = argv[0].p;
+	struct button *bu = argv[0].p;
 	int button = argv[1].i;
 	struct widget_binding *stateb;
 	int *pushed;
 	
-	if (!b->sensitive)
+	if (!bu->sensitive)
 		return;
 
-	widget_focus(b);
+	widget_focus(bu);
 
 	if (button != 1)
 		return;
 	
-	stateb = widget_binding_get_locked(b, "state", &pushed);
-	if (!b->sticky) {
+	stateb = widget_binding_get_locked(bu, "state", &pushed);
+	if (!bu->sticky) {
 		*pushed = 1;
 	} else {
 		*pushed = !(*pushed);
-		event_post(b, "button-pushed", "%i", *pushed);
+		event_post(bu, "button-pushed", "%i", *pushed);
 	}
 	widget_binding_modified(stateb);
 	widget_binding_unlock(stateb);
@@ -246,21 +221,22 @@ button_mousebuttondown(int argc, union evarg *argv)
 static void
 button_mousebuttonup(int argc, union evarg *argv)
 {
-	struct button *b = argv[0].p;
+	struct button *bu = argv[0].p;
 	int button = argv[1].i;
 	struct widget_binding *stateb;
 	int *pushed;
 	int x = argv[2].i;
 	int y = argv[3].i;
 	
-	if (!b->sensitive ||
-	    x < 0 || y < 0 || x > WIDGET(b)->w || y > WIDGET(b)->h)
+	if (!bu->sensitive ||
+	    x < 0 || y < 0 ||
+	    x > WIDGET(bu)->w || y > WIDGET(bu)->h)
 		return;
 	
-	stateb = widget_binding_get_locked(b, "state", &pushed);
-	if (*pushed && button == 1 && !b->sticky) {
+	stateb = widget_binding_get_locked(bu, "state", &pushed);
+	if (*pushed && button == 1 && !bu->sticky) {
 	    	*pushed = 0;
-		event_post(b, "button-pushed", "%i", *pushed);
+		event_post(bu, "button-pushed", "%i", *pushed);
 		widget_binding_modified(stateb);
 	}
 	widget_binding_unlock(stateb);
@@ -269,30 +245,30 @@ button_mousebuttonup(int argc, union evarg *argv)
 static void
 button_keydown(int argc, union evarg *argv)
 {
-	struct button *b = argv[0].p;
+	struct button *bu = argv[0].p;
 	int keysym = argv[1].i;
 	
-	if (!b->sensitive)
+	if (!bu->sensitive)
 		return;
 	
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		widget_set_bool(b, "state", 1);
-		event_post(b, "button-pushed", "%i", 1);
+		widget_set_bool(bu, "state", 1);
+		event_post(bu, "button-pushed", "%i", 1);
 	}
 }
 
 static void
 button_keyup(int argc, union evarg *argv)
 {
-	struct button *b = argv[0].p;
+	struct button *bu = argv[0].p;
 	int keysym = argv[1].i;
 	
-	if (!b->sensitive)
+	if (!bu->sensitive)
 		return;
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-		widget_set_bool(b, "state", 0);
-		event_post(b, "button-pushed", "%i", 0);
+		widget_set_bool(bu, "state", 0);
+		event_post(bu, "button-pushed", "%i", 0);
 	}
 }
 
@@ -341,9 +317,9 @@ button_set_justify(struct button *bu, enum button_justify jus)
 void
 button_set_label(struct button *bu, SDL_Surface *su)
 {
-	if (bu->label_s != NULL) {
-		SDL_FreeSurface(bu->label_s);
+	if (bu->label != NULL) {
+		SDL_FreeSurface(bu->label);
 	}
-	bu->label_s = view_copy_surface(su);
+	bu->label = view_copy_surface(su);
 }
 
