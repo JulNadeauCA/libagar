@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: rwlock.c,v 1.1 2002/09/16 09:36:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -30,22 +30,91 @@
 
 #include "rwlock.h"
 
+static rwlockattr_t default_rwlockattr = {
+	0, RWLOCKATTR_MAGIC
+};
+
+int
+rwlockattr_init(rwlockattr_t *attr)
+{
+	attr->type = 0;
+	attr->magic = RWLOCKATTR_MAGIC;
+	return (0);
+}
+
+int
+rwlockattr_destroy(rwlockattr_t *attr)
+{
+	if (attr->magic != RWLOCKATTR_MAGIC) {
+		return (EINVAL);
+	}
+
+	attr->type = 0;
+	attr->magic = 0;
+	return (0);
+}
+
+int
+rwlockattr_settype(rwlockattr_t *attr, int type)
+{
+	if (attr->magic != RWLOCKATTR_MAGIC) {
+		return (EINVAL);
+	}
+	attr->type = type;
+	return (0);
+}
+
+int
+rwlockattr_gettype(rwlockattr_t *attr, int *type)
+{
+	if (attr->magic != RWLOCKATTR_MAGIC) {
+		return (EINVAL);
+	}
+	*type = attr->type;
+	return (0);
+}
+
 int
 rwlock_init(rwlock_t *rw, rwlockattr_t *attr)
 {
 	int res;
 
-	rw->attr = attr;
+	rw->attr = (attr == NULL) ? &default_rwlockattr : attr;
 
-	res = pthread_mutex_init(&rw->mutex, NULL);
-	if (res != 0)
-		goto err1;
+	res = pthread_mutexattr_init(&rw->mutexattr);
+	if (res != 0) {
+		return (res);
+	}
+
+	if (rw->attr->type == RWLOCK_RECURSIVE) {
+		res = pthread_mutexattr_settype(&rw->mutexattr,
+		    PTHREAD_MUTEX_RECURSIVE);
+		if (res != 0) {
+			pthread_mutexattr_destroy(&rw->mutexattr);
+			return (res);
+		}
+	}
+
+	res = pthread_mutex_init(&rw->mutex, &rw->mutexattr);
+	if (res != 0) {
+		pthread_mutexattr_destroy(&rw->mutexattr);
+		return (res);
+	}
+
 	res = pthread_cond_init(&rw->condreaders, NULL);
-	if (res != 0)
-		goto err2;
+	if (res != 0) {
+		pthread_mutexattr_destroy(&rw->mutexattr);
+		pthread_mutex_destroy(&rw->mutex);
+		return (res);
+	}
+
 	res = pthread_cond_init(&rw->condwriters, NULL);
-	if (res != 0)
-		goto err3;
+	if (res != 0) {
+		pthread_mutexattr_destroy(&rw->mutexattr);
+		pthread_mutex_destroy(&rw->mutex);
+		pthread_cond_destroy(&rw->condreaders);
+		return (res);
+	}
 
 	rw->nwaitreaders = 0;
 	rw->nwaitwriters = 0;
@@ -53,12 +122,6 @@ rwlock_init(rwlock_t *rw, rwlockattr_t *attr)
 	rw->magic = RWLOCK_MAGIC;
 
 	return (0);
-err3:
-	pthread_cond_destroy(&rw->condreaders);
-err2:
-	pthread_mutex_destroy(&rw->mutex);
-err1:
-	return (res);
 }
 
 int
@@ -80,6 +143,24 @@ rwlock_destroy(rwlock_t *rw)
 	return (0);
 }
 
+static void
+rwlock_cancel_rdwait(void *p)
+{
+	rwlock_t *rw = p;
+
+	rw->nwaitreaders--;
+	pthread_mutex_unlock(&rw->mutex);
+}
+
+static void
+rwlock_cancel_wrwait(void *p)
+{
+	rwlock_t *rw = p;
+
+	rw->nwaitwriters--;
+	pthread_mutex_unlock(&rw->mutex);
+}
+
 int
 rwlock_rdlock(rwlock_t *rw)
 {
@@ -97,7 +178,9 @@ rwlock_rdlock(rwlock_t *rw)
 	/* Give preference to waiting writers. */
 	while (rw->ref_count < 0 || rw->nwaitwriters > 0) {
 		rw->nwaitreaders++;
+		pthread_cleanup_push(rwlock_cancel_rdwait, (void *)rw);
 		res = pthread_cond_wait(&rw->condreaders, &rw->mutex);
+		pthread_cleanup_pop(0);
 		rw->nwaitreaders--;
 		if (res != 0) {
 			break;
@@ -155,7 +238,9 @@ rwlock_wrlock(rwlock_t *rw)
 
 	while (rw->ref_count != 0) {
 		rw->nwaitwriters++;
+		pthread_cleanup_push(rwlock_cancel_wrwait, (void *)rw);
 		res = pthread_cond_wait(&rw->condwriters, &rw->mutex);
+		pthread_cleanup_pop(0);
 		rw->nwaitwriters--;
 		if (res != 0) {
 			break;
