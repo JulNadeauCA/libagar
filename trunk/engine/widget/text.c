@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.14 2002/05/28 06:01:40 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.15 2002/06/01 09:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -29,10 +29,6 @@
  */
 
 /* XXX obsolete interface, move to widgets. */
-
-#ifdef __linux__
-#define _GNU_SOURCE	/* for vasprintf() */
-#endif
 
 #include <stdio.h>
 #include <stdarg.h>
