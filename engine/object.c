@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.69 2002/08/12 05:00:19 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.70 2002/08/12 05:01:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -47,8 +47,7 @@ enum {
 	NANIMS_INIT =	4,
 	NSPRITES_INIT =	4,
 	NANIMS_GROW =	2,
-	NSPRITES_GROW = 2,
-	TILEMAP_MINW =	2
+	NSPRITES_GROW = 2
 };
 
 static LIST_HEAD(, object_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
@@ -98,17 +97,18 @@ object_break_sprite(struct object_art *art, SDL_Surface *sprite)
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, s, &rd);
-			object_add_sprite(art, s, MAPREF_SPRITE, 0);
+			object_add_sprite(art, s, MAPREF_SAVE|MAPREF_SPRITE, 0);
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
 
 			if (mapediting) {
-				if (art->mx > m->mapw) {
+				if (art->mx > m->mapw) {	/* XXX pref */
 					art->mx = 0;
 				}
 				map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
 				node_addref(&m->map[art->my][art->mx],
-				    art->pobj, art->cursprite++, MAPREF_SPRITE);
+				    art->pobj, art->cursprite++,
+				    MAPREF_SAVE|MAPREF_SPRITE);
 			}
 		}
 	}
@@ -134,7 +134,7 @@ object_add_sprite(struct object_art *art, SDL_Surface *sprite, Uint32 mflags,
 	art->sprites[art->nsprites++] = sprite;
 
 	if (map_tiles && mapediting) { 
-		if (++art->mx > TILEMAP_MINW) {
+		if (++art->mx > 2) {	/* XXX pref */
 			art->mx = 0;
 			art->my++;
 		}
@@ -202,7 +202,7 @@ object_get_art(char *media, struct object *ob)
 
 		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
-			xcf_load(fob, i, art, ob);
+			xcf_load(fob, i, art);
 
 		}
 		fobj_free(fob);
@@ -670,7 +670,7 @@ object_delpos(void *obp)	/* XXX will change */
  * Map must be locked, ob->pos must not.
  */
 struct mappos *
-object_movepos(void *obp, struct map *m, int x, int y)
+object_movepos(void *obp, struct map *m, Uint32 x, Uint32 y)
 {
 	struct mappos oldpos, *pos, *newpos;
 	struct noderef *oldnref;

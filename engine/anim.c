@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.12 2002/06/10 04:25:04 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.13 2002/08/12 05:00:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -122,7 +122,7 @@ anim_insert(struct object_art *art, struct anim *anim, int mflags)
 	art->anims[art->nanims++] = anim;
 
 	if (mapediting) {
-		if (art->mx++ > art->map->mapw) {
+		if (++art->mx > 2) {	/* XXX pref */
 			art->mx = 0;
 			art->my++;
 		}
