@@ -1,5 +1,5 @@
 
 - double check that map locks are not held long.
 - document the engine.
-- dynamic map nodes.
+- rewrite xcf loader.
 
