@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.23 2004/04/22 01:52:24 vedge Exp $
+#	$Csoft: Makefile,v 1.24 2004/04/22 01:53:22 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -9,8 +9,8 @@ LIB=		monitor
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
-SRCS=	monitor.c widget_browser.c view_params.c screenshot.c uniconv.c \
-	leak.c
+SRCS=	leak.c monitor.c screenshot.c timeouts.c uniconv.c view_params.c \
+	widget_browser.c
 
 CFLAGS+=${SDL_CFLAGS} ${JPEG_CFLAGS}
 
