@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.14 2002/02/15 10:50:24 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.15 2002/02/17 08:02:05 vedge Exp $	*/
 
 struct obvec {
 	int	(*destroy)(void *);
@@ -37,6 +37,7 @@ void	 object_lategc(void);
 int	 object_link(void *);
 int	 object_unlink(void *);
 int	 object_load(void *);
+int	 object_loadfrom(void *, char *);
 int	 object_save(void *);
 void	 increase(int *, int, int);
 void	 decrease(int *, int, int);
