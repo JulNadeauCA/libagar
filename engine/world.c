@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.22 2002/04/09 03:38:58 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.23 2002/04/23 07:19:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@
 
 #include <engine/mapedit/mapedit.h>
 
-static struct obvec world_vec = {
+static const struct obvec world_vec = {
 	world_destroy,
 	world_load,
 	world_save,
@@ -75,8 +75,8 @@ savepath(char *obname, const char *suffix)
 	return (NULL);
 }
 
-struct world *
-world_create(char *name)
+void
+world_init(struct world *wo, char *name)
 {
 	struct passwd *pwd;
 	struct stat sta;
@@ -84,81 +84,68 @@ world_create(char *name)
 	
 	pwd = getpwuid(getuid());
 
-	world = (struct world *)emalloc(sizeof(struct world));
-	object_init(&world->obj, name, OBJ_DEFERGC, &world_vec);
+	object_init(&wo->obj, name, NULL, 0, &world_vec);
 
-	world->udatadir = (char *)
-	    emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
-	world->sysdatadir = (char *)
-	    emalloc(strlen(SHAREDIR) + strlen(name) + 4);
-
-	sprintf(world->udatadir, "%s/.%s", pwd->pw_dir, name);
-	sprintf(world->sysdatadir, SHAREDIR);
+	wo->udatadir = (char *)emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
+	wo->sysdatadir = (char *)emalloc(strlen(SHAREDIR) + strlen(name) + 4);
+	sprintf(wo->udatadir, "%s/.%s", pwd->pw_dir, name);
+	sprintf(wo->sysdatadir, SHAREDIR);
 
 	pathenv = getenv("AGAR_STATE_PATH");
 	if (pathenv != NULL) {
-		world->datapath = strdup(pathenv);
+		wo->datapath = strdup(pathenv);
 	} else {
-		world->datapath = (char *)
-		    emalloc(strlen(world->udatadir) +
-		    strlen(world->sysdatadir) + 4);
-		sprintf(world->datapath, "%s:%s", world->udatadir,
-		    world->sysdatadir);
+		wo->datapath = (char *)
+		    emalloc(strlen(wo->udatadir) + strlen(wo->sysdatadir) + 4);
+		sprintf(wo->datapath, "%s:%s", wo->udatadir, wo->sysdatadir);
 	}
 
-	if (stat(world->sysdatadir, &sta) != 0) {
-		warning("%s: %s\n", world->sysdatadir, strerror(errno));
+	if (stat(wo->sysdatadir, &sta) != 0) {
+		warning("%s: %s\n", wo->sysdatadir, strerror(errno));
 	}
-	if (stat(world->udatadir, &sta) != 0 &&
-	    mkdir(world->udatadir, 00700) != 0) {
-		fatal("%s: %s\n", world->udatadir, strerror(errno));
+	if (stat(wo->udatadir, &sta) != 0 &&
+	    mkdir(wo->udatadir, 00700) != 0) {
+		fatal("%s: %s\n", wo->udatadir, strerror(errno));
 	}
 
-	world->curmap = NULL;
+	wo->curmap = NULL;
+	wo->nobjs = 0;
+	wo->nchars = 0;
 
-	SLIST_INIT(&world->wobjsh);
-	SLIST_INIT(&world->wcharsh);
-	if (pthread_mutex_init(&world->lock, NULL) != 0) {
-		dperror("world");
-		return (NULL);
-	}
-	
-	return (world);
+	SLIST_INIT(&wo->wobjsh);
+	SLIST_INIT(&wo->wcharsh);
+	pthread_mutex_init(&wo->lock, NULL);
 }
 
 int
 world_load(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob, **lobjs;
-	Uint32 i = 0, nobjs = 0;
+	struct object *ob, **objs;
+	Uint32 i = 0, nobjs;
 
 	/* XXX load the state map */
 
+	/* XXX dangerous */
 	pthread_mutex_lock(&wo->lock);
-	SLIST_COUNT(ob, &wo->wobjsh, wobjs, nobjs);
-	lobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
-		lobjs[i++] = ob;
-	}
+	nobjs = wo->nobjs;
+	SLIST_DUP(objs, nobjs, &wo->wobjsh, object, wobjs);
 	pthread_mutex_unlock(&wo->lock);
-	
-	dprintf("loading state\n");
 
 	for (i = 0; i < nobjs; i++) {
-		ob = lobjs[i];
+		ob = objs[i];
 	
-		dprintf("loading %s\n", ob->name);
-	
+		printf("loading %s (%d)\n", ob->name, i);
+
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
 			continue;
 		}
 		object_load(ob);
 	}
+	dprintf("%s: loaded %d objects\n", OBJECT(wo)->name, wo->nobjs);
 
-	free(lobjs);
-	
+	free(objs);
 	return (0);
 }
 
@@ -166,22 +153,20 @@ int
 world_save(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob, **sobjs;
-	Uint32 i = 0, nobjs = 0;
+	struct object *ob, **objs;
+	Uint32 i, nobjs;
 
 	pthread_mutex_lock(&wo->lock);
-	SLIST_COUNT(ob, &wo->wobjsh, wobjs, nobjs);
+	nobjs = wo->nobjs;
 	fobj_write_uint32(fd, nobjs);
-	sobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
-		sobjs[i++] = ob;
-	}
+	SLIST_DUP(objs, nobjs, &wo->wobjsh, object, wobjs);
 	pthread_mutex_unlock(&wo->lock);
 
-	dprintf("%s: %d objects\n", wo->obj.name, nobjs);
-
+	pthread_mutex_lock(&wo->lock);
 	for (i = 0; i < nobjs; i++) {
-		ob = sobjs[i];
+		ob = objs[i];
+
+		printf("saving %s (%d)\n", ob->name, i);
 
 		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
 			/* XXX map editor hack */
@@ -190,52 +175,59 @@ world_save(void *p, int fd)
 		fobj_write_uint32(fd, ob->id);
 		fobj_write_string(fd, ob->name);
 		fobj_write_string(fd, (ob->desc != NULL) ? ob->desc : "");
+		pthread_mutex_unlock(&wo->lock);
 		object_save(ob);
+		pthread_mutex_lock(&wo->lock);
 	}
-
-	free(sobjs);
+	pthread_mutex_unlock(&wo->lock);
 	
+	dprintf("%s: saved %d objects\n", OBJECT(wo)->name, wo->nobjs);
+
+	free(objs);
 	return (0);
 }
 
-int
+void
 world_destroy(void *p)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob;
+	struct object *ob, **objs;
+	Uint32 i;
 
 	if (world->curmap != NULL) {
 		map_unfocus(world->curmap);
 	}
 
 	pthread_mutex_lock(&wo->lock);
-
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
-		if (ob->vec->unlink != NULL) {
-			ob->vec->unlink(ob);
-		}
-	}
+	SLIST_DUP(objs, wo->nobjs, &wo->wobjsh, object, wobjs);
+	pthread_mutex_unlock(&wo->lock);
 
 	printf("freed:");
 	fflush(stdout);
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+	for (i = 0; i < wo->nobjs-1; i++) {	/* XXX ridiculous race */
+		ob = objs[i];
+		if (ob->vec->unlink != NULL) {
+			ob->vec->unlink(ob);
+		}
 		printf(" %s", ob->name);
 		fflush(stdout);
-		object_destroy(ob);
+		object_destroy(ob);	/* XXX deps */
 	}
+	printf(".\n");
+
 	object_lategc();
+
+	pthread_mutex_lock(&wo->lock);
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 	}
-	printf(".\n");
-	
 	pthread_mutex_unlock(&wo->lock);
+	pthread_mutex_destroy(&wo->lock);
 
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
-	pthread_mutex_destroy(&wo->lock);
 
-	return (0);
+	free(objs);
 }
 
