@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.34 2003/01/16 04:07:46 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.35 2003/01/23 03:57:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -57,8 +57,8 @@ input_new(int type, int index)
 	}
 
 	input = emalloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, NULL, OBJECT_SYSTEM,
-	    NULL);
+	object_init(&input->obj, "input-device", name, NULL,
+	    OBJECT_STATIC, NULL);
 	free(name);
 
 	input->type = type;
