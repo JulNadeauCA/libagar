@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.125 2004/09/11 06:13:45 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.126 2004/09/12 05:57:23 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -204,23 +204,32 @@ config_init(struct config *con)
 
 	prop_set_string(con, "den-path", "%s", SHAREDIR);
 	prop_set_string(con, "load-path", "%s:%s", udatadir, SHAREDIR);
+
+#if defined(__APPLE__)
+	prop_set_string(con, "font-path", "%s/fonts:%s:%s/Library/Fonts:"
+	                                  "/Library/Fonts:"
+					  "/System/Library/Fonts",
+					  udatadir, TTFDIR, pwd->pw_dir);
+#elif defined(WIN32)
+	prop_set_string(con, "font-path", "fonts:%s", TTFDIR);
+#else
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
+#endif
 
 #ifdef HAVE_FREETYPE
-# ifdef WIN32
 	prop_set_bool(con, "font-engine", 1);
-	prop_set_string(con, "font-engine.default-font", "verdana");
+# ifdef __APPLE__
+	prop_set_string(con, "font-engine.default-font", "Geneva.dfont");
 	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 # else
-	prop_set_bool(con, "font-engine", 1);
-	prop_set_string(con, "font-engine.default-font", "zekton");
+	prop_set_string(con, "font-engine.default-font", "zekton.ttf");
 	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 # endif
 #else
 	prop_set_bool(con, "font-engine", 1);
-	prop_set_string(con, "font-engine.default-font", "bitmap");
+	prop_set_string(con, "font-engine.default-font", "bitmap.xcf");
 	prop_set_int(con, "font-engine.default-size", -1);
 	prop_set_int(con, "font-engine.default-style", -1);
 #endif /* HAVE_FREETYPE */
@@ -439,8 +448,10 @@ config_search_file(const char *path_key, const char *name, const char *ext,
 			strlcat(file, "/", sizeof(file));
 		}
 		strlcat(file, name, sizeof(file));
-		strlcat(file, ".", sizeof(file));
-		strlcat(file, ext, sizeof(file));
+		if (ext != NULL) {
+			strlcat(file, ".", sizeof(file));
+			strlcat(file, ext, sizeof(file));
+		}
 		if (stat(file, &sta) == 0) {
 			if (strlcpy(path, file, path_len) >= path_len) {
 				error_set(_("The search path is too big."));
@@ -450,8 +461,8 @@ config_search_file(const char *path_key, const char *name, const char *ext,
 		}
 	}
 	prop_copy_string(config, path_key, path, path_len);
-	error_set(_("Cannot find `%s.%s' in %s (%s)."), name, ext, path_key,
-	    path);
+	error_set(_("Cannot find %s.%s (in <%s>:%s)."), name,
+	    ext != NULL ? ext : "", path_key, path);
 	return (-1);
 }
 
