@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.21 2002/06/04 22:42:20 darkroot Exp $
+#	$Csoft: Makefile,v 1.22 2002/06/04 22:47:49 darkroot Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
@@ -10,7 +10,6 @@ install: install-subdir
 deinstall: deinstall-subdir
 depend: prereq depend-subdir
 regress: regress-subdir
-
 
 prereq:
 	(cd libfobj && ${MAKE})
