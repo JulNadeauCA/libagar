@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.27 2002/12/04 04:23:12 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.28 2002/12/13 07:39:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -111,147 +111,86 @@ mapedit_init_toolbar(struct mapedit *med)
 {
 	struct window *win;
 	struct region *reg;
-	struct textbox *name_tbox, *media_tbox, *w_tbox, *h_tbox;
 	struct button *button;
 	const int xdiv = 100, ydiv = 25;
 
-	/* Create the tool objects. */
+	/* Initialize the map edition tools. */
 	init_tools(med);
 
-	/*
-	 * Create the toolbar.
-	 */
+	/* Create the toolbar. */
 	win = window_new("mapedit-toolbar", 0,
-	    0, 0, 70, 147, 70, 147);
+	    0, 0, 94, 150, 94, 150);
 	window_set_caption(win, "Tools");
-
-	/*
-	 * Left side of toolbar.
-	 */
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
-
-	/* New map */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, xdiv, ydiv);
-	win->focus = WIDGET(button);
-	event_new(button, "button-pushed", push, "%p %i", med,
-	    MAPEDIT_TOOL_NEW_MAP);
+	{
+		/* New map */
+		button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, xdiv, ydiv);
+		win->focus = WIDGET(button);
+		event_new(button, "button-pushed", push, "%p %i", med,
+		    MAPEDIT_TOOL_NEW_MAP);
 	
-	/* Object list */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, xdiv, ydiv);
-	event_new(button, "button-pushed", push, "%p, %i", med,
-	    MAPEDIT_TOOL_OBJLIST);
+		/* Object list */
+		button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, xdiv, ydiv);
+		event_new(button, "button-pushed", push, "%p, %i", med,
+		    MAPEDIT_TOOL_OBJLIST);
 	
-	/* Stamp */
-	med->tools.stamp->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_STAMP), BUTTON_STICKY, xdiv, ydiv);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
-	event_new(button, "button-pushed", push, "%p, %i", med,
-	    MAPEDIT_TOOL_STAMP);
+		/* Stamp */
+		med->tools.stamp->button = button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_STAMP), BUTTON_STICKY, xdiv, ydiv);
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", push, "%p, %i", med,
+		    MAPEDIT_TOOL_STAMP);
 	
-	/* Magnifier */
-	med->tools.magnifier->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), BUTTON_STICKY, xdiv, ydiv);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
-	event_new(button, "button-pushed", push, "%p, %i", med,
-	    MAPEDIT_TOOL_MAGNIFIER);
-	
-	/*
-	 * Right side of toolbar.
-	 */
+		/* Magnifier */
+		med->tools.magnifier->button = button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), BUTTON_STICKY,
+		    xdiv, ydiv);
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", push, "%p, %i", med,
+		    MAPEDIT_TOOL_MAGNIFIER);
+	}
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	reg->spacing = 1;
-	
-	/* Load map */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, ydiv);
-	win->focus = WIDGET(button);
-	event_new(button, "button-pushed", push, "%p %i", med,
-	    MAPEDIT_TOOL_LOAD_MAP);
+	{
+		/* Load map */
+		button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, ydiv);
+		win->focus = WIDGET(button);
+		event_new(button, "button-pushed", push, "%p %i", med,
+		    MAPEDIT_TOOL_LOAD_MAP);
 
-	/* Eraser */
-	med->tools.eraser->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY, xdiv, ydiv);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
-	event_new(button, "button-pushed", push, "%p, %i", med,
-	    MAPEDIT_TOOL_ERASER);
+		/* Eraser */
+		med->tools.eraser->button = button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY,
+		    xdiv, ydiv);
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", push, "%p, %i", med,
+		    MAPEDIT_TOOL_ERASER);
 	
-	/* Resize tool */
-	med->tools.resize->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_RESIZE), BUTTON_STICKY, xdiv, ydiv);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
-	event_new(button, "button-pushed", push, "%p, %i", med,
-	    MAPEDIT_TOOL_RESIZE);
+		/* Resize tool */
+		med->tools.resize->button = button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_RESIZE), BUTTON_STICKY,
+		    xdiv, ydiv);
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", push, "%p, %i", med,
+		    MAPEDIT_TOOL_RESIZE);
 	
-	/* Property edition tool */
-	med->tools.propedit->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_PROPEDIT), BUTTON_STICKY, xdiv, ydiv);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
-	event_new(button, "button-pushed", push, "%p, %i", med,
-	    MAPEDIT_TOOL_PROPEDIT);
-	
+		/* Property edition tool */
+		med->tools.propedit->button = button = button_new(reg, NULL,
+		    SPRITE(med, MAPEDIT_TOOL_PROPEDIT), BUTTON_STICKY,
+		    xdiv, ydiv);
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", push, "%p, %i", med,
+		    MAPEDIT_TOOL_PROPEDIT);
+	}
 	med->toolbar_win = win;
 
-	/*
-	 * Related dialog windows.
-	 */
-
-	/* Object list window */
+	/* Create the related dialog windows. */
 	med->objlist_win = objq_window(med);
-
-	/*
-	 * Create the `New map' dialog.
-	 */
-	win = window_new("mapedit-new-map-dialog", 0,
-	     0, 0, 320, 200, 258, 198);
-	window_set_caption(win, "New map");
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
-	name_tbox = textbox_new(reg, "Name: ", 0, 100, 50);
-	media_tbox = textbox_new(reg, "Media: ", 0, 100, 50);
-	win->focus = WIDGET(name_tbox);
-
-	reg = region_new(win, REGION_HALIGN, 25, 40, 50, 30);
-	w_tbox = textbox_new(reg, "W: ", 0, 50, 100);
-	textbox_printf(w_tbox, "64");
-	h_tbox = textbox_new(reg, "H: ", 0, 50, 100);
-	textbox_printf(h_tbox, "64");
-
-	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 25);
-	button = button_new(reg, "Create map", NULL, 0, 100, 100);
-	event_new(button, "button-pushed", fileops_new_map,
-	    "%p, %p, %p, %p, %p",
-	    med, name_tbox, media_tbox, w_tbox, h_tbox);
-	event_new(name_tbox, "textbox-return", fileops_new_map,
-	    "%p, %p, %p, %p, %p",
-	    med, name_tbox, media_tbox, w_tbox, h_tbox);
-
-	med->new_map_win = win;
-	
-	/*
-	 * Create the `Load map' dialog.
-	 */
-	win = window_new("mapedit-load-map-dialog", WINDOW_CENTER, -1, -1,
-	    320, 120, 100, 105);
-	window_set_caption(win, "Load map");
-
-	/* Map name */
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
-	name_tbox = textbox_new(reg, "Name: ", 0, 100, 100);
-	win->focus = WIDGET(name_tbox);
-	
-	/* Button */
-	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
-	button = button_new(reg, "Load map", NULL, 0, 100, 100);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
-	event_new(button, "button-pushed", fileops_load_map,
-	    "%p, %p", med, name_tbox);
-	event_new(name_tbox, "textbox-return", fileops_load_map,
-	    "%p, %p", med, name_tbox);
-	win->focus = WIDGET(name_tbox);
-
-	med->load_map_win = win;
+	med->new_map_win = fileops_new_map_window(med);
+	med->load_map_win = fileops_load_map_window(med);
 }
 
