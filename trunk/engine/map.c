@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.9 2002/02/02 14:50:19 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.10 2002/02/03 11:27:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -36,26 +36,19 @@
 #include <string.h>
 #include <fcntl.h>
 
-#include <pthread.h>
-#include <glib.h>
-#include <SDL.h>
-
 #include <libfobj/fobj.h>
 
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
 struct	map *curmap;
-struct	mapedit	*curmapedit;
-int	mapedit;
 
 static int	 map_link(void *);
 static int	 map_load(void *, char *);
 static int	 map_save(void *, char *);
 static void	 map_destroy(struct object *);
 static void	 node_destroy(struct node *);
-static int	 node_init(struct node *, struct object *,
-		     int, int, int);
+static int	 node_init(struct node *, struct object *, int, int, int);
 static void	 mapedit_drawflags(struct map *, int, int, int);
 static Uint32	 map_draw(Uint32, void *);
 static Uint32	 map_animate(Uint32, void *);
@@ -63,7 +56,6 @@ static Uint32	 map_animate(Uint32, void *);
 struct map *
 map_create(char *name, char *desc, int flags, int width, int height, char *path)
 {
-	size_t mapsize = 0;
 	struct map *m;
 	int x = 0, y = 0;
 
@@ -94,26 +86,21 @@ map_create(char *name, char *desc, int flags, int width, int height, char *path)
 		goto maperr;
 	}
 
-	if (path != NULL) {
-		/* Load this map from a file. */
-		map_load(m, path);
-		mapsize = (m->mapw * m->maph) * sizeof(struct node);
-	} else {
-		/* Initialize an empty map. */
-		for (y = 0; y < height; y++) {
-			for (x = 0; x < width; x++) {
-				if (node_init(&m->map[x][y], NULL, 0, 0, 0)
-				    < 0) {
-					return (NULL);
-				}
-				mapsize += sizeof(struct node);
+	/* Initialize an empty map. */
+	for (y = 0; y < height; y++) {
+		for (x = 0; x < width; x++) {
+			if (node_init(&m->map[x][y], NULL, 0, 0, 0) < 0) {
+				return (NULL);
 			}
 		}
 	}
 	
-	dprintf("%s: geo %dx%d flags 0x%x base %dKb\n", m->obj.name,
-	    m->mapw, m->mapw,
-	    m->flags, (int)mapsize / 1024);
+	if (path != NULL) {
+		map_load(m, path);
+	}
+	
+	dprintf("%s: geo %dx%d flags 0x%x\n", m->obj.name,
+	    m->mapw, m->mapw, m->flags);
 	dprintf("%s: tilegeo %dx%d origin %dx%d\n", m->obj.name,
 	    m->view->tilew, m->view->tileh,
 	    m->defx, m->defy);
@@ -162,7 +149,7 @@ map_focus(struct map *m)
 
 	dprintf("focusing on %s\n", m->obj.name);
 
-	if (mapedit) {
+	if (curmapedit != NULL) {
 		char s[128];
 		
 		sprintf(s, "%s (edition)", m->obj.name);
@@ -180,7 +167,7 @@ map_unfocus(struct map *m)
 {
 	dprintf("unfocusing %s\n", m->obj.name);
 	
-	if (mapedit) {
+	if (curmapedit != NULL) {
 		curmapedit->flags = 0;
 	}
 	pthread_mutex_lock(&m->lock);
@@ -213,7 +200,7 @@ node_init(struct node *me, struct object *ob, int offs, int meflags, int rflags)
 {
 	memset(me, 0, sizeof(struct node));
 
-	SLIST_INIT(&me->arefsh);
+	TAILQ_INIT(&me->arefsh);
 
 	/* Used by the map editor to fill new maps. */
 	if (ob != NULL) {
@@ -249,10 +236,8 @@ node_addref(struct node *me, struct object *ob, int offs, int rflags)
 	aref->xoffs = 0;
 	aref->yoffs = 0;
 
-	SLIST_INSERT_HEAD(&me->arefsh, aref, marefs);
+	TAILQ_INSERT_TAIL(&me->arefsh, aref, marefs);
 	me->narefs++;
-
-	dprintf("added ref to %s:%d\n", ob->name, offs);
 
 	return (aref);
 }
@@ -266,13 +251,12 @@ node_popref(struct node *me)
 {
 	struct map_aref *aref;
 
-	if (!SLIST_EMPTY(&me->arefsh)) {
-		aref = SLIST_FIRST(&me->arefsh);
-	} else {
+	if (TAILQ_EMPTY(&me->arefsh)) {
 		return (NULL);
 	}
-
-	SLIST_REMOVE(&me->arefsh, aref, map_aref, marefs);
+		
+	aref = TAILQ_FIRST(&me->arefsh);
+	TAILQ_REMOVE(&me->arefsh, aref, marefs);
 	me->narefs--;
 
 	if (aref->flags & MAPREF_ANIM) {
@@ -289,8 +273,12 @@ node_popref(struct node *me)
 int
 node_pushref(struct node *me, struct map_aref *aref)
 {
-	SLIST_INSERT_HEAD(&me->arefsh, aref, marefs);
+	TAILQ_INSERT_HEAD(&me->arefsh, aref, marefs);
 	me->narefs++;
+	
+	if (aref->flags & MAPREF_ANIM) {
+		me->nanims++;
+	}
 
 	return (0);
 }
@@ -306,9 +294,7 @@ node_delref(struct node *me, struct map_aref *aref)
 		me->nanims--;
 	}
 	
-	dprintf("removed ref to %s:%d\n", aref->pobj->name, aref->offs);
-
-	SLIST_REMOVE(&me->arefsh, aref, map_aref, marefs);
+	TAILQ_REMOVE(&me->arefsh, aref, marefs);
 	me->narefs--;
 	free(aref);
 
@@ -322,29 +308,19 @@ node_delref(struct node *me, struct map_aref *aref)
 void
 map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 {
-	size_t mapsize = 0;
 	int x = 0, y;
 
-	/* XXX redundant */
-	for (y = 0; y < m->maph; y++) {
-		for (x = 0; x < m->mapw ; x++) {
-			node_destroy(&m->map[x][y]);
-		}
-	}
-	
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
+			node_destroy(&m->map[x][y]);
 			if (node_init(&m->map[x][y], ob, offs, flags,
 			    rflags) < 0) {
 				return;
 			}
-			mapsize += sizeof(struct node);
 		}
 	}
 
-	dprintf("initialized %dx%d map origin at %dx%d\n", x, y,
-	    m->defx, m->defy);
 	m->map[m->defx][m->defy].flags |= MAPENTRY_ORIGIN;
 }
 
@@ -365,10 +341,9 @@ map_destroy(struct object *ob)
 		pthread_mutex_unlock(&world->lock);
 	}
 
-	/* XXX redundant */
 	if (pthread_mutex_lock(&m->lock) == 0) {
 		for (y = 0; y < m->maph; y++) {
-			for (x = 0; x < m->mapw ; x++) {
+			for (x = 0; x < m->mapw; x++) {
 				node_destroy(&m->map[x][y]);
 			}
 		}
@@ -379,15 +354,19 @@ map_destroy(struct object *ob)
 	}
 }
 
-/* Must be called on a lock map. */
+/* Must be called on a locked map. */
 static void
 node_destroy(struct node *me)
 {
-	struct map_aref *aref;
+	struct map_aref *aref1, *aref2;
 
-	SLIST_FOREACH(aref, &me->arefsh, marefs) {
-		free(aref);
+	aref1 = TAILQ_FIRST(&me->arefsh);
+	while (aref1 != NULL) {
+		aref2 = TAILQ_NEXT(aref1, marefs);
+		free(aref1);
+		aref1 = aref2;
 	}
+	TAILQ_INIT(&me->arefsh);
 }
 
 /* Draw a sprite at any given location. */
@@ -395,13 +374,6 @@ static __inline__ void
 map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 {
 	static SDL_Rect rs, rd;
-
-#ifdef DEBUG
-	if (s == NULL) {
-		fatal("NULL surface\n");
-		abort();
-	}
-#endif
 
 	rs.w = s->w;
 	rs.h = s->h;
@@ -438,20 +410,7 @@ map_plot_anim(struct map *m, struct anim *anim, int frame, int x, int y)
 	static SDL_Rect rs, rd;
 	static SDL_Surface *s;
 
-#ifdef DEBUG
-	if (anim == NULL) {
-		dprintf("NULL anim\n");
-		abort();
-	}
-#endif
-
 	s = g_slist_nth_data(anim->frames, frame);
-
-#ifdef DEBUG
-	if (s == NULL) {
-		fatal("NULL surface (frame %d)\n", frame);
-	}
-#endif
 
 	rs.w = s->w;
 	rs.h = s->h;
@@ -487,7 +446,7 @@ map_animate(Uint32 ival, void *p)
 	     y++, vy++) {
 
 		/* XXX */
-		if (mapedit &&
+		if (curmapedit != NULL &&
 		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
 			continue;
 		}
@@ -499,7 +458,7 @@ map_animate(Uint32 ival, void *p)
 			struct map_aref *aref;
 
 			/* XXX */
-			if (mapedit) {
+			if (curmapedit != NULL) {
 				if (vx == m->view->mapw &&
 				    curmapedit->flags & MAPEDIT_TILELIST) {
 					continue;
@@ -517,7 +476,7 @@ map_animate(Uint32 ival, void *p)
 				continue;
 			}
 
-			SLIST_FOREACH(aref, &me->arefsh, marefs) {
+			TAILQ_FOREACH(aref, &me->arefsh, marefs) {
 				if (pthread_mutex_lock(&aref->pobj->lock)
 				    != 0) {
 					perror(aref->pobj->name);
@@ -565,7 +524,7 @@ map_animate(Uint32 ival, void *p)
 				}
 				pthread_mutex_unlock(&aref->pobj->lock);
 			}
-			if (mapedit) {
+			if (curmapedit != NULL) {
 				mapedit_drawflags(m, me->flags, vx, vy);
 				if (curmapedit->flags & MAPEDIT_TILELIST)
 					mapedit_tilelist(curmapedit);
@@ -584,7 +543,13 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 	vx <<= TILESHIFT;
 	vy <<= TILESHIFT;
 
-	if (flags == 0)	{
+	if (curmapedit->flags & MAPEDIT_DRAWGRID)
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
+		    MAPEDIT_GRID), vx, vy);
+	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0)
+		return;
+
+	if (flags == 0) {
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_BLOCKED), vx, vy);
 		return;
@@ -592,9 +557,11 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 	if (flags & MAPENTRY_ORIGIN)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_ORIGIN), vx, vy);
+#if 0
 	if (flags & MAPENTRY_WALK)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_WALK), vx, vy);
+#endif
 	if (flags & MAPENTRY_CLIMB)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_CLIMB), vx, vy);
@@ -638,7 +605,7 @@ map_draw(Uint32 ival, void *p)
 	     y++, vy++) {
 
 	     	/* XXX */
-		if (mapedit &&
+		if (curmapedit != NULL &&
 		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
 			continue;
 		}
@@ -650,7 +617,7 @@ map_draw(Uint32 ival, void *p)
 			static struct map_aref *aref;
 
 			/* XXX */
-			if (mapedit) {
+			if (curmapedit != NULL) {
 				if (vx == 0 &&
 				    curmapedit->flags & MAPEDIT_TILESTACK) {
 					continue;
@@ -668,7 +635,7 @@ map_draw(Uint32 ival, void *p)
 				continue;
 			}
 	
-			if (mapedit) {
+			if (curmapedit != NULL) {
 				static SDL_Rect erd;
 
 				/* XXX draw a background on view area. */
@@ -679,7 +646,7 @@ map_draw(Uint32 ival, void *p)
 				SDL_FillRect(m->view->v, &erd, 25);
 			}
 
-			SLIST_FOREACH(aref, &me->arefsh, marefs) {
+			TAILQ_FOREACH(aref, &me->arefsh, marefs) {
 				if (aref->flags & MAPREF_SPRITE) {
 					map_plot_sprite(m,
 					    g_slist_nth_data(
@@ -689,13 +656,13 @@ map_draw(Uint32 ival, void *p)
 				}
 			}
 
-			if (mapedit) {
+			if (curmapedit != NULL) {
 				mapedit_drawflags(m, me->flags, vx, vy);
 			}
 		}
 	}
 
-	if (mapedit) {
+	if (curmapedit != NULL) {
 		if (curmapedit->flags & MAPEDIT_OBJLIST)
 			mapedit_objlist(curmapedit);
 		if (curmapedit->flags & MAPEDIT_TILESTACK)
@@ -719,7 +686,7 @@ node_arefindex(struct node *me, int index)
 
 	/* XXX bsearch */
 	i = 0;
-	SLIST_FOREACH(aref, &me->arefsh, marefs) {
+	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
 		if (i++ == index) {
 			return (aref);
 		}
@@ -741,13 +708,13 @@ node_arefobj(struct node *me, struct object *ob, int offs)
 	struct map_aref *aref;
 
 	/* XXX bsearch */
-	SLIST_FOREACH(aref, &me->arefsh, marefs) {
+	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
 		if (aref->pobj == ob && (aref->offs == offs || offs < 0)) {
 			return (aref);
 		}
 	}
 
-#ifdef DEBUG
+#if 0
 	dprintf("no reference to %s:%d\n", ob->name, offs);
 #endif
 	return (NULL);
