@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.37 2003/01/19 11:25:24 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.38 2003/02/03 02:48:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -674,7 +674,7 @@ tlist_item_text(struct tlist *tl, char *text)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (strncmp(it->text, text, it->text_len) == 0) {
+		if (strcmp(it->text, text) == 0) {
 			pthread_mutex_unlock(&tl->items_lock);
 			return (it);
 		}
