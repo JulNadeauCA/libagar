@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.100 2002/12/30 03:00:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.101 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -246,13 +246,13 @@ object_save(void *p)
 	if (stat(datadir, &sta) != 0 && mkdir(datadir, 0700) != 0) {
 		fatal("creating %s: %s\n", datadir, strerror(errno));
 	}
-	asprintf(&typedir, "%s/%s", datadir, ob->type);
+	Asprintf(&typedir, "%s/%s", datadir, ob->type);
 	free(datadir);
 
 	if (stat(typedir, &sta) != 0 && mkdir(typedir, 0700) != 0) {
 		fatal("creating %s: %s\n", typedir, strerror(errno));
 	}
-	asprintf(&path, "%s/%s.%s", typedir, ob->name, ob->type);
+	Asprintf(&path, "%s/%s.%s", typedir, ob->name, ob->type);
 	free(typedir);
 	
 	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, path);

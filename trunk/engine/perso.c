@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.11 2002/12/15 15:57:14 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.12 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -386,9 +386,7 @@ perso_say(struct perso *pers, const char *fmt, ...)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	
 	va_start(args, fmt);
-	if (vasprintf(&msg, fmt, args) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
+	Vasprintf(&msg, fmt, args);
 	va_end(args);
 
 	lab = label_new(reg, 100, 60, msg);

@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.31 2002/12/24 10:27:05 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.32 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -46,13 +46,13 @@ input_new(int type, int index)
 	
 	switch (type) {
 	case INPUT_KEYBOARD:
-		asprintf(&name, "keyboard%d", index);
+		Asprintf(&name, "keyboard%d", index);
 		break;
 	case INPUT_JOY:
-		asprintf(&name, "joy%d(%s)", index, SDL_JoystickName(index));
+		Asprintf(&name, "joy%d", index);
 		break;
 	case INPUT_MOUSE:
-		asprintf(&name, "mouse%d", index);
+		Asprintf(&name, "mouse%d", index);
 		break;
 	}
 
@@ -60,6 +60,7 @@ input_new(int type, int index)
 	object_init(&input->obj, "input-device", name, NULL, OBJECT_SYSTEM,
 	    NULL);
 	free(name);
+
 	input->type = type;
 	input->index = index;
 	input->p = NULL;
