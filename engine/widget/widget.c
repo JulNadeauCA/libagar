@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.4 2002/04/22 04:39:59 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.5 2002/04/24 14:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -85,26 +85,27 @@ widget_link(void *ob)
 	pthread_mutex_unlock(&w->win->widgetslock);
 
 	w->win->redraw++;
-
 	return (0);
 }
 
+/* The window's widget lock must be held. */
 int
 widget_unlink(void *ob)
 {
 	struct widget *w = (struct widget *)ob;
 	struct window *win = w->win;
 
-	pthread_mutex_lock(&w->win->widgetslock);
 	TAILQ_REMOVE(&w->win->widgetsh, w, widgets);
 	w->win->nwidgets--;
-	pthread_mutex_unlock(&w->win->widgetslock);
 
 	win->redraw++;
-
 	return (0);
 }
 
+/*
+ * Render a widget.
+ * Parent window's widget list must be locked.
+ */
 void
 widget_draw(void *p)
 {
@@ -117,7 +118,7 @@ widget_draw(void *p)
 
 /*
  * Dispatch an event to a widget.
- * Parent window and widget must be locked.
+ * Parent window's widget list must be locked.
  */
 void
 widget_event(void *p, SDL_Event *ev, Uint32 flags)
@@ -129,4 +130,5 @@ widget_event(void *p, SDL_Event *ev, Uint32 flags)
 		WIDGET_VEC(w)->event(w, ev, flags);
 	}
 }
+
 

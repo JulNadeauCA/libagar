@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.1 2002/04/18 03:57:28 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.2 2002/04/24 14:08:54 vedge Exp $	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
 #define _AGAR_TEXT_TEXT_H_
@@ -25,8 +25,8 @@ struct text {
 	SDL_Color *fgcolor;
 	Uint32	 bgcolor;
 
-	SDL_Surface *surface;
-	SDL_Surface *v;
+	SDL_Surface *surface;		/* TTF surface */
+	SDL_Surface *v;			/* XXX destination view */
 
 	TAILQ_ENTRY(text) texts;	/* Texts to display */
 };

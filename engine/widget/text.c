@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.4 2002/04/24 06:38:55 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.5 2002/04/24 14:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -153,8 +153,6 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 	te->mvmask.y = (te->y / te->view->map->tileh) - te->view->mapyoffs;
 	te->mvmask.w = (te->w / te->view->map->tilew);
 	te->mvmask.h = (te->h / te->view->map->tileh);
-
-	view_maskfill(te->view, &te->mvmask, 1);
 }
 
 void
@@ -166,14 +164,6 @@ text_destroy(void *p)
 		SDL_FreeSurface(te->surface);
 	}
 	
-	/*
-	 * Decrease the map view mask values under this rectangle,
-	 * and redraw the map.
-	 */
-	view_maskfill(te->view, &te->mvmask, -1);
-	if (te->view->map != NULL) {
-		te->view->map->redraw++;
-	}
 }
 
 void
@@ -202,6 +192,8 @@ text_link(void *p)
 	
 	ntexts++;
 
+	view_maskfill(te->view, &te->mvmask, 1);
+
 	return (0);
 }
 
@@ -215,6 +207,11 @@ text_unlink(void *p)
 	pthread_mutex_lock(&textslock);
 	TAILQ_REMOVE(&textsh, te, texts);
 	pthread_mutex_unlock(&textslock);
+	
+	view_maskfill(te->view, &te->mvmask, -1);
+	if (te->view->map != NULL) {
+		te->view->map->redraw++;
+	}
 
 	return (0);
 }
@@ -334,7 +331,6 @@ text_tick(Uint32 ival, void *p)
 	for (i = 0; i < ntextgc; i++) {
 		te = textgc[i];
 		object_unlink(te);
-		object_destroy(te);
 	}
 
 	return (ival);

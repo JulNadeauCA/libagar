@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.10 2002/04/23 07:19:19 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.11 2002/04/24 13:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -66,7 +66,7 @@ input_init(struct input *input, int type, int index)
 		break;
 	}
 
-	object_init(&input->obj, name, NULL, OBJ_DEFERGC, &input_vec);
+	object_init(&input->obj, name, NULL, 0, &input_vec);
 	input->type = type;
 	input->index = index;
 	input->p = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.40 2002/04/25 12:48:08 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.41 2002/04/26 00:42:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,22 +48,17 @@ enum {
 };
 
 static SLIST_HEAD(, object_art) artsh =	SLIST_HEAD_INITIALIZER(&artsh);
-static pthread_mutex_t arts_lock = PTHREAD_MUTEX_INITIALIZER;
-
 static SLIST_HEAD(, object_audio) audiosh = SLIST_HEAD_INITIALIZER(&audiosh);
-static pthread_mutex_t audios_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static SDL_TimerID gctimer;
 
-struct gcref {
+struct gc {
 	struct	object *ob;
-	int	order;
-
-	SLIST_ENTRY(gcref) gcrefs;
+	SLIST_ENTRY(gc) gcs;
 };
 
-static SLIST_HEAD(lategc_head, gcref) lategch =
-    SLIST_HEAD_INITIALIZER(&lategch);
+static SLIST_HEAD(, gc) gcsh = SLIST_HEAD_INITIALIZER(&gcsh);
+static pthread_mutex_t gc_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static const struct obvec null_obvec = {
 	NULL,	/* destroy */
@@ -73,7 +68,6 @@ static const struct obvec null_obvec = {
 	NULL	/* unlink */
 };
 
-static Uint32			 object_mediapool_gc(Uint32 , void *);
 static struct object_art	*object_get_art(char *);
 static struct object_audio	*object_get_audio(char *);
 
@@ -130,8 +124,7 @@ object_get_art(char *media)
 {
 	struct object_art *art = NULL, *eart;
 
-	pthread_mutex_lock(&arts_lock);
-
+	pthread_mutex_lock(&gc_lock);
 	SLIST_FOREACH(eart, &artsh, arts) {
 		if (strcmp(eart->name, media) == 0) {
 			art = eart;	/* Already in pool */
@@ -160,8 +153,8 @@ object_get_art(char *media)
 		
 		SLIST_INSERT_HEAD(&artsh, art, arts);
 	}
+	pthread_mutex_unlock(&gc_lock);
 
-	pthread_mutex_unlock(&arts_lock);
 	return (art);
 }
 
@@ -170,7 +163,7 @@ object_get_audio(char *media)
 {
 	struct object_audio *audio = NULL, *eaudio;
 
-	pthread_mutex_lock(&audios_lock);
+	pthread_mutex_lock(&gc_lock);
 
 	SLIST_FOREACH(eaudio, &audiosh, audios) {
 		if (strcmp(eaudio->name, media) == 0) {
@@ -199,47 +192,8 @@ object_get_audio(char *media)
 		SLIST_INSERT_HEAD(&audiosh, audio, audios);
 	}
 
-	pthread_mutex_unlock(&audios_lock);
+	pthread_mutex_unlock(&gc_lock);
 	return (audio);
-}
-
-void
-object_mediapool_init(void)
-{
-	gctimer = SDL_AddTimer(1000, object_mediapool_gc, NULL);
-}
-
-void
-object_mediapool_quit(void)
-{
-	SDL_RemoveTimer(gctimer);
-}
-
-static Uint32
-object_mediapool_gc(Uint32 ival, void *p)
-{
-	struct object_audio *audio;
-	struct object_art *art;
-	
-	pthread_mutex_lock(&arts_lock);
-	SLIST_FOREACH(art, &artsh, arts) {
-		if (art->used < 1) {
-			/* gc */
-			dprintf("gc art\n");
-		}
-	}
-	pthread_mutex_unlock(&arts_lock);
-
-	pthread_mutex_lock(&audios_lock);
-	SLIST_FOREACH(audio, &audiosh, audios) {
-		if (audio->used < 1) {
-			/* gc */
-			dprintf("gc audio\n");
-		}
-	}
-	pthread_mutex_unlock(&audios_lock);
-
-	return (ival);
 }
 
 void
@@ -273,62 +227,70 @@ object_init(struct object *ob, char *name, char *media, int flags,
 	}
 }
 
-void
-object_destroy(void *arg)
+/* Perform deferred garbage collection. */
+Uint32
+object_start_gc(Uint32 ival, void *p)
 {
-	struct object *ob = (struct object *)arg;
-
-	if (ob->flags & OBJ_DEFERGC) {
-		struct gcref *or;
-		
-		or = emalloc(sizeof(struct gcref));
-		or->ob = ob;
-		SLIST_INSERT_HEAD(&lategch, or, gcrefs);
-		ob->flags &= ~(OBJ_DEFERGC);
-		return;
-	}
-
-	if (ob->vec->destroy != NULL) {
-		ob->vec->destroy(ob);
-	}
-
-	/* Decrement usage counts for the media pool. */
-	if (ob->art != NULL) {
-		ob->art->used--;
-	}
-	if (ob->audio != NULL) {
-		ob->art->audio--;
-	}
-
-	/* XXX gc */
-#if 0
-	for(i = 0; i < ob->art->nsprites; i++)
-		SDL_FreeSurface(SPRITE(ob, i));
-	if (ob->art->sprites != NULL)
-		free(ob->art->sprites);
-	for (i = 0; i < ob->nanims; i++)
-		anim_destroy(ANIM(ob, i));
-	if (ob->anims != NULL)
-		free(ob->anims);
-#endif
+	struct gc *gc, *nextgc;
+	struct object_audio *audio;
+	struct object_art *art;
 	
-	if (ob->name != NULL)
-		free(ob->name);
-	if (ob->desc != NULL)
-		free(ob->desc);
-	free(ob);
+	pthread_mutex_lock(&gc_lock);
+
+	/* Object pool */
+	for (gc = SLIST_FIRST(&gcsh);
+	     gc != SLIST_END(&gcsh);
+	     gc = nextgc) {
+	     	struct object *ob = gc->ob;
+	
+		nextgc = SLIST_NEXT(gc, gcs);
+
+		dprintf("free %s", ob->name);
+		if (ob->vec->destroy != NULL) {
+			ob->vec->destroy(ob);
+		}
+		if (ob->name != NULL)
+			free(ob->name);
+		if (ob->desc != NULL)
+			free(ob->desc);
+		free(ob);
+		free(gc);
+	}
+	SLIST_INIT(&gcsh);
+
+	/* Art pool */
+	SLIST_FOREACH(art, &artsh, arts) {
+		if (art->used < 1) {
+			/* gc */
+			dprintf("gc art\n");
+		}
+	}
+
+	/* Audio pool */
+	SLIST_FOREACH(audio, &audiosh, audios) {
+		if (audio->used < 1) {
+			/* gc */
+			dprintf("gc audio\n");
+		}
+	}
+
+	pthread_mutex_unlock(&gc_lock);
+	return (ival);
 }
 
-/* Perform deferred garbage collection. */
+/* Initialize the garbage collector. */
 void
-object_lategc(void)
+object_init_gc(void)
 {
-	struct gcref *gcr;
+	gctimer = SDL_AddTimer(1000, object_start_gc, NULL);
+	dprintf("started garbage collection\n");
+}
 
-	SLIST_FOREACH(gcr, &lategch, gcrefs) {
-		object_destroy(gcr->ob);
-		free(gcr);
-	}
+void
+object_destroy_gc(void)
+{
+	SDL_RemoveTimer(gctimer);
+	dprintf("stopped garbage collection\n");
 }
 
 /* Must be called on a locked world. */
@@ -418,10 +380,9 @@ int
 object_link(void *p)
 {
 	struct object *ob = (struct object *)p;
-	
-	if (ob->vec->link != NULL &&
-	    ob->vec->link(ob) != 0) {
-		return (-1);
+
+	if (ob->vec->link != NULL) {
+		ob->vec->link(ob);
 	}
 
 	SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
@@ -429,22 +390,43 @@ object_link(void *p)
 	return (0);
 }
 
+/* Queue an unlinked object for garbage collection. */
+void
+object_queue_gc(struct object *ob)
+{
+	struct gc *ngc;
+
+	if (ob->vec->unlink != NULL) {
+		ob->vec->unlink(ob);
+	}
+	
+	/* Decrement usage counts for the media pool. */
+	if (ob->art != NULL)
+		ob->art->used--;
+	if (ob->audio != NULL)
+		ob->audio->used--;
+
+	/* Queue for garbage collection. */
+	ngc = emalloc(sizeof(struct gc));
+	ngc->ob = ob;
+	pthread_mutex_lock(&gc_lock);
+	SLIST_INSERT_HEAD(&gcsh, ngc, gcs);
+	pthread_mutex_unlock(&gc_lock);
+}
+
 /*
- * Unlink an object from the world and all maps.
+ * Unlink an object from the world.
  * The world's object list must be locked.
  */
 int
 object_unlink(void *p)
 {
-	struct object *ob = p;
+	struct object *ob = (struct object *)p;
 
 	world->nobjs--;
 	SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 
-	if (ob->vec->unlink != NULL &&
-	    ob->vec->unlink(ob) != 0) {
-		return (-1);
-	}
+	object_queue_gc(ob);
 
 	return (0);
 }

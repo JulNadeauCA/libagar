@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.25 2002/04/25 12:48:08 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.26 2002/04/26 00:42:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 #include <engine/mapedit/mapedit.h>
 
 static const struct obvec world_vec = {
-	world_destroy,
+	NULL,
 	world_load,
 	world_save,
 	NULL,		/* link */
@@ -119,7 +119,7 @@ world_init(struct world *wo, char *name)
 
 /*
  * Load state of active objects.
- * Must be called on a locked world.
+ * The world's object list must be locked.
  */
 int
 world_load(void *p, int fd)
@@ -177,7 +177,7 @@ void
 world_destroy(void *p)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob;
+	struct object *ob, *nextob;
 
 	if (world->curmap != NULL) {
 		map_unfocus(world->curmap);
@@ -185,26 +185,22 @@ world_destroy(void *p)
 
 	printf("freed:");
 	fflush(stdout);
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
-		if (ob->vec->unlink != NULL) {
-			ob->vec->unlink(ob);
-		}
+	pthread_mutex_lock(&wo->lock);
+	for (ob = SLIST_FIRST(&wo->wobjsh);
+	     ob != SLIST_END(&wo->wobjsh);
+	     ob = nextob) {
+		nextob = SLIST_NEXT(ob, wobjs);
 		printf(" %s", ob->name);
 		fflush(stdout);
-		object_destroy(ob);	/* XXX deps */
+		object_queue_gc(ob);
+		free(ob);
 	}
+	pthread_mutex_unlock(&wo->lock);
 	printf(".\n");
 
-	object_lategc();
-
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
-		
-		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
-	}
-
-	pthread_mutex_destroy(&wo->lock);
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
+	pthread_mutex_destroy(&wo->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.27 2002/04/24 13:14:44 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.28 2002/04/25 12:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,7 +44,7 @@
 #include <engine/widget/text.h>
 
 extern struct gameinfo *gameinfo;
-extern Uint32 nwindows;			/* window.c */
+extern TAILQ_HEAD(, window) windowsh;	/* window.c */
 
 static void	event_hotkey(SDL_Event *);
 
@@ -107,8 +107,6 @@ event_hotkey(SDL_Event *ev)
 void
 event_loop(void)
 {
-	extern TAILQ_HEAD(, window) windowsh;
-	extern pthread_mutex_t windowslock;
 	Uint32 ltick, ntick;
 	Sint32 delta;
 	SDL_Event ev;
@@ -121,7 +119,7 @@ event_loop(void)
 	}
 	
 	/* Start the garbage collection process. */
-	object_mediapool_init();
+	object_init_gc();
 
 	ltick = SDL_GetTicks();
 
@@ -144,14 +142,15 @@ event_loop(void)
 			}
 			pthread_mutex_unlock(&m->lock);
 
-			if (nwindows > 0) {
-				pthread_mutex_lock(&windowslock);
+			if (!TAILQ_EMPTY(&windowsh)) {
+				/* Shares world->lock */
+				pthread_mutex_lock(&world->lock);
 				TAILQ_FOREACH(win, &windowsh, windows) {
 					if (win->redraw) {
 						window_draw(win);
 					}
 				}
-				pthread_mutex_unlock(&windowslock);
+				pthread_mutex_unlock(&world->lock);
 			}
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
@@ -170,7 +169,7 @@ event_loop(void)
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				if (nwindows > 0) {
+				if (!TAILQ_EMPTY(&windowsh)) {
 					window_mouse_motion(&ev);
 				}
 				break;
@@ -179,7 +178,7 @@ event_loop(void)
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				if (nwindows > 0) {
+				if (!TAILQ_EMPTY(&windowsh)) {
 					window_mouse_button(&ev);
 				}
 				break;
@@ -201,7 +200,7 @@ event_loop(void)
 				} else {
 					input_event(keyboard, &ev);
 				}
-				if (nwindows > 0) {
+				if (!TAILQ_EMPTY(&windowsh)) {
 					window_key(&ev);
 				}
 				break;

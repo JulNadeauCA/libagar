@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.79 2002/04/24 14:04:37 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.80 2002/04/25 12:48:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@
 #include "joy.h"
 
 static const struct obvec mapedit_vec = {
-	mapedit_destroy,
+	NULL,
 	mapedit_load,
 	mapedit_save,
 	mapedit_link,
@@ -201,31 +201,11 @@ mapedit_shadow(struct mapedit *med)
 	return (0);
 }
 
-void
-mapedit_setcaption(struct mapedit *med, char *path)
-{
-	static char caption[FILENAME_MAX];
-	struct map *m = med->map;
-	struct object *fmap;
-
-	pthread_mutex_lock(&world->lock);
-	fmap = object_strfind(med->margs.name);
-	pthread_mutex_unlock(&world->lock);
-
-	if (fmap == NULL) {
-		sprintf(caption, "%s [unknown] (%s)", OBJECT(m)->name, path);
-		object_link(m);
-	} else {
-		sprintf(caption, "%s [%d] (%s)", OBJECT(m)->name,
-		    OBJECT(m)->id, path);
-	}
-	SDL_WM_SetCaption(caption, "agar");
-}
-
 int
 mapedit_link(void *p)
 {
 	char path[FILENAME_MAX];
+	static char caption[FILENAME_MAX];
 	struct mapedit *med = (struct mapedit *)p;
 	struct map *m = med->map;
 	struct node *node;
@@ -244,7 +224,9 @@ mapedit_link(void *p)
 
 		m = emalloc(sizeof(struct map));
 		map_init(m, med->margs.name, NULL, MAP_2D);
+		pthread_mutex_lock(&world->lock);
 		object_loadfrom(m, path);
+		pthread_mutex_unlock(&world->lock);
 	} else {
 		struct node *origin;
 		
@@ -285,7 +267,18 @@ mapedit_link(void *p)
 
 	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
 	view_center(m->view, m->defx, m->defy);
-	mapedit_setcaption(med, new ? "new" : path);
+
+	/* Set the window caption. */
+	pthread_mutex_lock(&world->lock);
+	if (object_strfind(med->margs.name) == NULL) {
+		sprintf(caption, "%s [unknown] (%s)", OBJECT(m)->name, path);
+		object_link(m);
+	} else {
+		sprintf(caption, "%s [%d] (%s)", OBJECT(m)->name,
+		    OBJECT(m)->id, path);
+	}
+	pthread_mutex_unlock(&world->lock);
+	SDL_WM_SetCaption(caption, "agar");
 
 	text_msg(1, TEXT_SLEEP,
 	    "Editing \"%s\" (%s)\n", OBJECT(m)->name, new ? "new" : path);
@@ -336,11 +329,13 @@ mapedit_unlink(void *p)
 	struct map *m = med->map;
 	struct node *node;
 	struct noderef *nref;
+	struct editobj *eob, *nexteob;
 
 	SDL_RemoveTimer(med->timer);
 	SDL_Delay(100);	/* XXX */
 	curmapedit = NULL;
 
+	/* Remove the map editor from the map. */
 	pthread_mutex_lock(&m->lock);
 	node = &m->map[med->y][med->x];
 	nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
@@ -349,22 +344,15 @@ mapedit_unlink(void *p)
 		node->flags &= ~(NODE_ANIM);
 	}
 	pthread_mutex_unlock(&m->lock);
-
 	m->redraw++;
-	return (0);
-}
-
-void
-mapedit_destroy(void *p)
-{
-	struct mapedit *med = (struct mapedit *)p;
-	struct editobj *eob;
-
-	mapedit_unlink(p);
-
+	
 	pthread_mutex_lock(&med->eobjslock);
-	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
+	for (eob = TAILQ_FIRST(&med->eobjsh);
+	     eob != TAILQ_END(&med->eobjsh);
+	     eob = nexteob) {
 		struct editref *eref;
+
+		nexteob = TAILQ_NEXT(eob, eobjs);
 
 		pthread_mutex_lock(&eob->lock);
 		SIMPLEQ_FOREACH(eref, &eob->erefsh, erefs) {
@@ -375,6 +363,7 @@ mapedit_destroy(void *p)
 		free(eob);
 	}
 	pthread_mutex_unlock(&med->eobjslock);
+	return (0);
 }
 
 static void
@@ -779,9 +768,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			}
 			break;
 		case SDLK_l:
-			pthread_mutex_unlock(&med->map->lock);
 			mapedit_loadmap(med);
-			pthread_mutex_lock(&med->map->lock);
 			break;
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
@@ -1087,14 +1074,19 @@ mapedit_show_coords(struct mapedit *med)
 
 		coords_label = emalloc(sizeof(struct label));
 		label_init(coords_label, nw, "coords-label", "...", 0, 7, 7);
-		object_link(coords_label);
 
+		pthread_mutex_lock(&world->lock);
+		object_link(coords_label);
 		object_link(nw);
+		pthread_mutex_unlock(&world->lock);
+
 		coords_win = nw;
 	} else {
 		nw = coords_win;
 		coords_win = NULL;
+
+		pthread_mutex_lock(&world->lock);
 		object_unlink(nw);
-		object_destroy(nw);
+		pthread_mutex_unlock(&world->lock);
 	}
 }

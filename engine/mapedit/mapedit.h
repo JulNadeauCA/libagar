@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.28 2002/03/17 09:15:09 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.29 2002/04/24 14:04:37 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -131,7 +131,6 @@ enum {
 void	mapedit_init(struct mapedit *, char *);
 int	mapedit_link(void *);
 int	mapedit_unlink(void *);
-void	mapedit_destroy(void *);
 int	mapedit_load(void *, int);
 int	mapedit_save(void *, int);
 void	mapedit_event(void *, SDL_Event *);
@@ -142,7 +141,6 @@ void	mapedit_move(struct mapedit *, Uint32, Uint32);
 void	mapedit_predraw(struct map *, Uint32, Uint32, Uint32);
 void	mapedit_postdraw(struct map *, Uint32, Uint32, Uint32);
 
-void	mapedit_setcaption(struct mapedit *, char *);
 void	mapedit_sticky(struct mapedit *);
 
 extern struct mapedit *curmapedit;	/* Controlled map editor */
