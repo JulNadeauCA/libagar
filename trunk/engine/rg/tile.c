@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.4 2005/01/26 14:04:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -317,13 +317,16 @@ poll_features(int argc, union evarg *argv)
 static void
 edit_feature(int argc, union evarg *argv)
 {
-	struct button *fbu = argv[0].p;
+	struct widget *sndr = argv[0].p;
 	struct tileview *tv = argv[1].p;
 	struct tlist *tl = argv[2].p;
 	struct window *pwin = argv[3].p;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
 	struct tlist_item *it;
+
+	if (strcmp(sndr->type, "tlist") == 0)
+		tv->edit_mode = !tv->edit_mode;
 
 	if (tv->edit_mode == 0) {
 		feature_close(tv, pwin);
@@ -430,10 +433,13 @@ tile_edit(struct tileset *ts, struct tile *t)
 			object_attach(fbox, feat_tl);
 	
 			fbu = button_new(fbox, _("Edit"));
+			WIDGET(fbu)->flags |= WIDGET_WFILL;
 			button_set_sticky(fbu, 1);
 			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
-			WIDGET(fbu)->flags |= WIDGET_WFILL;
+
 			event_new(fbu, "button-pushed", edit_feature,
+			    "%p,%p,%p", tv, feat_tl, win);
+			event_new(feat_tl, "tlist-dblclick", edit_feature,
 			    "%p,%p,%p", tv, feat_tl, win);
 			
 			fbu = button_new(fbox, _("Delete"));
@@ -457,7 +463,7 @@ tile_put_pixel(struct tile *t, int x, int y, Uint32 color)
 	    x*t->su->format->BytesPerPixel;
 
 	if (x < 0 || y < 0 ||
-	    x > t->su->w || y > t->su->h)
+	    x >= t->su->w || y >= t->su->h)
 		return;
 
 	*(Uint32 *)dst = color;
