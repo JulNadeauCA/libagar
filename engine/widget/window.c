@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.30 2002/05/26 00:52:55 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.31 2002/05/26 00:54:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -110,14 +110,21 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->redraw = 0;
 	win->focus = NULL;
 
-	for (win->x = 0; win->x < (rx * view->w / 100);
-	     win->x += view->map->tilew) ;;
-	for (win->y = 0; win->y < (ry * view->h / 100);
-	     win->y += view->map->tileh) ;;
-	for (win->w = 0; win->w < (rw * view->w / 100);
-	     win->w += view->map->tilew) ;;
-	for (win->h = 0; win->h < (rh * view->h / 100);
-	     win->h += view->map->tileh) ;;
+	if (flags & WINDOW_ABSOLUTE) {
+		for (win->x = 0; win->x < rx; win->x += view->map->tilew) ;;
+		for (win->y = 0; win->y < ry; win->y += view->map->tileh) ;;
+		for (win->w = 0; win->w < rw; win->w += view->map->tilew) ;;
+		for (win->h = 0; win->h < rh; win->h += view->map->tileh) ;;
+	} else {
+		for (win->x = 0; win->x < (rx * view->w / 100);
+		     win->x += view->map->tilew) ;;
+		for (win->y = 0; win->y < (ry * view->h / 100);
+		     win->y += view->map->tileh) ;;
+		for (win->w = 0; win->w < (rw * view->w / 100);
+		     win->w += view->map->tilew) ;;
+		for (win->h = 0; win->h < (rh * view->h / 100);
+		     win->h += view->map->tileh) ;;
+	}
 
 	win->body.x = win->x + win->borderw;
 	win->body.y = win->y + win->borderw*2 + win->titleh;
