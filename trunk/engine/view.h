@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.34 2002/07/18 12:04:37 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.35 2002/07/27 06:59:26 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -108,18 +108,19 @@ case 4:					\
 # define _VIEW_PUTPIXEL_32(dst, c)
 #endif
 
+#define _VIEW_PIXEL(s, x, y)	((Uint8 *)(s)->pixels + \
+				(y)*(s)->pitch + (x)*(s)->format->BytesPerPixel)
+
 /* XXX inefficient */
 #define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) do {		\
-	Uint32 _view_col = (Uint32)(c);				\
+	Uint32 _view_col;					\
 	Uint8 _view_alpha_rs, _view_alpha_gs, _view_alpha_bs;	\
 	Uint8 _view_alpha_rd, _view_alpha_gd, _view_alpha_bd;	\
 	Uint8 *_putpixel_dst;					\
 								\
-	_putpixel_dst = (Uint8 *)(s)->pixels +			\
-	    (avy)*(s)->pitch +					\
-	    (avx)*(s)->format->BytesPerPixel;			\
+	_putpixel_dst = _VIEW_PIXEL((s), (avx), (avy));		\
 								\
-	SDL_GetRGB(_view_col, (s)->format, &_view_alpha_rs,	\
+	SDL_GetRGB((c), (s)->format, &_view_alpha_rs,		\
 	    &_view_alpha_gs, &_view_alpha_bs);			\
 	SDL_GetRGB(*_putpixel_dst, (s)->format, &_view_alpha_rd,\
 	    &_view_alpha_gd, &_view_alpha_bd);			\
@@ -146,19 +147,13 @@ case 4:					\
  * Set the pixel at x,y to c inside surface s.
  * Surface must be locked.
  */
-#define VIEW_PUT_PIXEL(s, vx, vy, c) do {			\
-	Uint8 *_putpixel_dst;					\
-								\
-	_putpixel_dst = (Uint8 *)(s)->pixels +			\
-	    (vy)*(s)->pitch +					\
-	    (vx)*(s)->format->BytesPerPixel;			\
-								\
-	switch ((s)->format->BytesPerPixel) {			\
-		_VIEW_PUTPIXEL_8(*_putpixel_dst,  (c))		\
-		_VIEW_PUTPIXEL_16(*_putpixel_dst, (c))		\
-		_VIEW_PUTPIXEL_24(*_putpixel_dst, (c))		\
-		_VIEW_PUTPIXEL_32(*_putpixel_dst, (c))		\
-	}							\
+#define VIEW_PUT_PIXEL(s, vx, vy, c) do {				\
+	switch ((s)->format->BytesPerPixel) {				\
+		_VIEW_PUTPIXEL_8(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
+		_VIEW_PUTPIXEL_16(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
+		_VIEW_PUTPIXEL_24(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
+		_VIEW_PUTPIXEL_32(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
+	}								\
 } while (/*CONSTCOND*/0)
 
 #define VIEW_REDRAW() do {				\
