@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.14 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: map.3,v 1.15 2003/01/09 00:47:27 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -184,24 +184,25 @@ functions respectively initialize, free, load and save a single map node.
 .Fn node_draw "struct map *map" "struct node *node" "Uint32 x" "Uint32 y"
 .Pp
 .Ft void
-.Fn node_move_ref "struct noderef *nref" "struct node *node" "Uint32 nx" \
-                  "Uint32 ny"
+.Fn node_move_ref "struct noderef *src_nref" "struct node *dst_node" \
+                  "Uint32 nx" "Uint32 ny"
 .Pp
 .Ft void
-.Fn node_copy_ref "struct noderef *nref" "struct node *node"
+.Fn node_copy_ref "struct noderef *src_nref" "struct node *dst_node"
 .Pp
 .Ft void
 .Fn node_remove_ref "struct noderef *nref" "struct node *node"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_sprite "struct node *node" "void *obj" "Uint32 index"
+.Fn node_add_sprite "struct node *dst_node" "void *obj" "Uint32 index"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_anim "struct node *node" "void *obj" "Uint32 index" "Uint32 flags"
+.Fn node_add_anim "struct node *dst_node" "void *obj" "Uint32 index" \
+                  "Uint32 flags"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_warp "struct node *node" "char *new_map" "Uint32 x" "Uint32 y" \
-                  "Uint8 dir"
+.Fn node_add_warp "struct node *dst_node" "char *new_map" \
+                  "Uint32 x" "Uint32 y" "Uint8 dir"
 .nr nS 0
 .Pp
 The
@@ -224,7 +225,7 @@ The
 .Fn node_add_anim
 and
 .Fn node_add_warp
-respectively insert sprite references, animation references and map warp
-information.
+functions respectively insert sprite references, animation references and
+map warp information.
 .Sh SEE ALSO
 .Xr agar 3
