@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.36 2002/06/03 18:35:56 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.37 2002/06/06 10:18:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -675,7 +675,8 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 
 				/* XXX incomplete */
 				win->redraw++;
-				
+				mainview->map->redraw++;	/* XXX */
+			
 				view->wop_mapx = MAP_COORD(ev->motion.x, view);
 				view->wop_mapy = MAP_COORD(ev->motion.y, view);
 	
@@ -706,7 +707,7 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 					    (ev->type == SDL_MOUSEBUTTONUP) ?
 					    "window-mousebuttonup" :
 					    "window-mousebuttondown",
-					    "%d, %d, %d",
+					    "%i, %i, %i",
 					    ev->button.button,
 					    ev->button.x -
 					    (wid->x - wid->win->x),
@@ -746,7 +747,7 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 					    (ev->type == SDL_KEYUP) ?
 					    "window-keyup" :
 					    "window-keydown",
-					    "%d, %d",
+					    "%i, %i",
 					    (int)ev->key.keysym.sym,
 					    (int)ev->key.keysym.mod);
 					goto posted;
