@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.26 2003/01/01 05:18:40 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.27 2003/01/19 11:32:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ monitor_init(struct monitor *mon, char *name)
 	    OBJECT_SYSTEM|OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
 
 	mon->toolbar = window_new("monitor-toolbar", 0, 0, view->h - 124,
-	    222, 124, 222, 105);
+	    177, 124, 177, 124);
 	window_set_caption(mon->toolbar, "Debug monitor");
 
 	reg = region_new(mon->toolbar, 0, 0,  0, 100, 100);
@@ -92,10 +92,10 @@ monitor_init(struct monitor *mon, char *name)
 	    level_browser_window);
 #endif
 	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_WIDGET_BROWSER), "Widget browser",
+	    SPRITE(mon, MONITOR_WIDGET_BROWSER), "Window stack",
 	    widget_browser_window);
 	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_VIEW_PARAMS), "Viewport parameters",
+	    SPRITE(mon, MONITOR_VIEW_PARAMS), "View params",
 	    view_params_window);
 	tlist_insert_item(tl_tools,
 	    SPRITE(mon, MONITOR_MEDIA_BROWSER), "Art browser",
