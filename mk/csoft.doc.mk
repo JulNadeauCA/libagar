@@ -24,10 +24,26 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-NROFF?=	nroff
-DOCS?=
+DOC?=		untitled.ps
+DOCSRC?=
 
-all: all-subdir ${DOCS}
+ROFF?=		nroff
+EQN?=		eqn
+PIC?=		pic
+TBL?=		tbl
+ROFFFLAGS?=
+MACROS?=
+EQNFLAGS?=
+PICFLAGS?=
+TBLFLAGS?=
+
+REFER?=		refer
+SOELIM?=	soelim
+GRIND?=		vgrind -f
+BIB?=		bib
+INDXBIB?=	indxbib
+
+all: all-subdir ${DOC}
 install: install-doc-dirs install-doc install-subdir
 deinstall: deinstall-subdir
 clean: clean-doc clean-subdir
@@ -35,20 +51,15 @@ cleandir: clean-doc clean-subdir cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
-.SUFFIXES: .doc .ps
-
-.doc.ps:
-	@echo "${NROFF} -Tps $< > $@"
-	@(cat $< | \
-	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
-	  sed 's,\$$PREFIX,${PREFIX},' | \
-	  sed 's,\$$SHAREDIR,${SHAREDIR},' | \
-	  ${NROFF} -Tps > $@) || (rm -f $@; false)
+${DOC}: ${DOCSRC}
+	cat ${DOCSRC} | ${PIC} ${PICFLAGS}| ${EQN} ${EQNFLAGS}|\
+	    ${TBL} ${TBLFLAGS}| ${ROFF} ${ROFFFLAGS} -Tps ${MACROS} > $@
 
 clean-doc:
-	rm -f ${DOCS}
+	rm -f ${DOC}
 
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: clean-doc
 
+include ${TOP}/mk/csoft.subdir.mk
 include ${TOP}/mk/csoft.common.mk
