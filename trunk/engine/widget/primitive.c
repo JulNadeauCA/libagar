@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.41 2003/04/12 01:45:49 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.42 2003/05/20 12:05:20 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,143 +49,84 @@ enum {
 	LINE
 };
 
+/* Add to the rgb components of a pixel. */
 static __inline__ Uint32
-alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
+alter_color(Uint32 pixel, Sint8 r, Sint8 g, Sint8 b)
 {
-	Uint8 nr, ng, nb;
+	Uint32 rv = 0;
+	int v1, v2;
 
-	SDL_GetRGB(col, view->v->format, &nr, &ng, &nb);
+	v1 = ((pixel & vfmt->Rmask) >> vfmt->Rshift);
+	v2 = ((v1 << vfmt->Rloss) + (v1 >> (8 - vfmt->Rloss))) + r;
+	if (v2 < 0) {
+		v2 = 0;
+	} else if (v2 > 255) {
+		v2 = 255;
+	}
+	rv |= (v2 >> vfmt->Rloss) << vfmt->Rshift;
 
-	if (nr+r > 255) {
-		nr = 255;
-	} else if (nr+r < 0) {
-		nr = 0;
-	} else {
-		nr += r;
+	v1 = ((pixel & vfmt->Gmask) >> vfmt->Gshift);
+	v2 = ((v1 << vfmt->Gloss) + (v1 >> (8 - vfmt->Gloss))) + g;
+	if (v2 < 0) {
+		v2 = 0;
+	} else if (v2 > 255) {
+		v2 = 255;
 	}
-	if (ng+g > 255) {
-		ng = 255;
-	} else if (ng+g < 0) {
-		ng = 0;
-	} else {
-		ng += g;
+	rv |= (v2 >> vfmt->Gloss) << vfmt->Gshift;
+
+	v1 = ((pixel & vfmt->Bmask) >> vfmt->Bshift);
+	v2 = ((v1 << vfmt->Bloss) + (v1 >> (8 - vfmt->Bloss))) + b;
+	if (v2 < 0) {
+		v2 = 0;
+	} else if (v2 > 255) {
+		v2 = 255;
 	}
-	if (nb+b > 255) {
-		nb = 255;
-	} else if (nb+b < 0) {
-		nb = 0;
-	} else {
-		nb += b;
-	}
-	return (SDL_MapRGB(view->v->format, nr, ng, nb));
+	rv |= (v2 >> vfmt->Bloss) << vfmt->Bshift;
+
+	rv |= vfmt->Amask;
+	return (rv);
 }
 
-/* Surface must be locked. */
+/*
+ * Write to a pixel in video memory, if it is inside the clipping rect.
+ * The display surface must be locked.
+ */
 static __inline__ void
 put_pixel1(Uint8 *dst, Uint32 color, int x, int y)
 {
-	if (VIEW_INSIDE_CLIP_RECT(view->v, x, y)) {
-		switch (view->v->format->BytesPerPixel) {
-#ifdef VIEW_8BPP
-		case 1:
-			*dst = color;
-			break;
-#endif
-#ifdef VIEW_16BPP
-		case 2:
-			*(Uint16 *)dst = color;
-			break;
-#endif
-#ifdef VIEW_24BPP
-		case 3:
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			dst[0] = (color >> 16)	& 0xff;
-			dst[1] = (color >> 8)	& 0xff;
-			dst[2] = color		& 0xff;
-# else
-			dst[0] = color		& 0xff;
-			dst[1] = (color >> 8)	& 0xff;
-			dst[2] = (color >> 16)	& 0xff;
-# endif
-			break;
-#endif
-#ifdef VIEW_32BPP
-		case 4:
-			*(Uint32 *)dst = color;
-			break;
-#endif
-		}
+	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y))
+		return;
+	switch (view->v->format->BytesPerPixel) {
+		_VIEW_PUTPIXEL_32(dst, color);
+		_VIEW_PUTPIXEL_24(dst, color);
+		_VIEW_PUTPIXEL_16(dst, color);
+		_VIEW_PUTPIXEL_8(dst, color);
 	}
 }
 
-/* Surface must be locked. */
+/*
+ * Write to two pixels in video memory, if they are inside the clipping rect.
+ * The display surface must be locked.
+ */
 static __inline__ void
 put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
     Uint32 color)
 {
 	if (VIEW_INSIDE_CLIP_RECT(view->v, x1, y1)) {
 		switch (view->v->format->BytesPerPixel) {
-#ifdef VIEW_8BPP
-		case 1:
-			*dst1 = color;
-			break;
-#endif
-#ifdef VIEW_16BPP
-		case 2:
-			*(Uint16 *)dst1 = color;
-			break;
-#endif
-#ifdef VIEW_24BPP
-		case 3:
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			dst1[0] = (color >> 16)	& 0xff;
-			dst1[1] = (color >> 8)	& 0xff;
-			dst1[2] = color		& 0xff;
-# else
-			dst1[0] = color		& 0xff;
-			dst1[1] = (color >> 8)	& 0xff;
-			dst1[2] = (color >> 16)	& 0xff;
-# endif
-			break;
-#endif
-#ifdef VIEW_32BPP
-		case 4:
-			*(Uint32 *)dst1 = color;
-			break;
-#endif
+			_VIEW_PUTPIXEL_32(dst1, color);
+			_VIEW_PUTPIXEL_24(dst1, color);
+			_VIEW_PUTPIXEL_16(dst1, color);
+			_VIEW_PUTPIXEL_8(dst1, color);
 		}
 	}
 
 	if (VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
 		switch (view->v->format->BytesPerPixel) {
-#ifdef VIEW_8BPP
-		case 1:
-			*dst2 = color;
-			break;
-#endif
-#ifdef VIEW_16BPP
-		case 2:
-			*(Uint16 *)dst2 = color;
-			break;
-#endif
-#ifdef VIEW_24BPP
-		case 3:
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			dst2[0] = (color >> 16)	& 0xff;
-			dst2[1] = (color >> 8)	& 0xff;
-			dst2[2] = color		& 0xff;
-# else
-			dst2[0] = color		& 0xff;
-			dst2[1] = (color >> 8)	& 0xff;
-			dst2[2] = (color >> 16)	& 0xff;
-# endif
-			break;
-#endif
-#ifdef VIEW_32BPP
-		case 4:
-			*(Uint32 *)dst2 = color;
-			break;
-#endif
+			_VIEW_PUTPIXEL_32(dst2, color);
+			_VIEW_PUTPIXEL_24(dst2, color);
+			_VIEW_PUTPIXEL_16(dst2, color);
+			_VIEW_PUTPIXEL_8(dst2, color);
 		}
 	}
 }
