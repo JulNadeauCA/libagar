@@ -1,4 +1,4 @@
-/*	$Csoft: media_browser.c,v 1.2 2002/09/06 01:29:17 vedge Exp $	*/
+/*	$Csoft: media_browser.c,v 1.3 2002/09/06 01:30:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -84,10 +84,30 @@ media_browser_init(struct media_browser *media_browser, struct monitor *mon,
 	media_browser->flags = flags;
 }
 
+/*
+ * The tlist's item list and the world structure must not be locked
+ * by the caller thread.
+ */
 static void
 update_objlist(struct tlist *tl)
 {
-	dprintf("update objlist\n");
+	struct tlist_item *it;
+	struct object *ob;
+
+	tlist_clear_items(tl);
+
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+		SDL_Surface *icon = NULL;
+
+		if (ob->flags & OBJECT_ART && ob->art != NULL &&
+		    ob->art->nsprites > 0) {
+			icon = SPRITE(ob, 0);
+		}
+
+		tlist_insert_item(tl, icon, ob->name, ob);
+	}
+	pthread_mutex_unlock(&world->lock);
 }
 
 struct window *
@@ -103,7 +123,7 @@ media_browser_window(void *p)
 
 	win = window_new("monitor-media-browser", "Media browser",
 	    WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 184, 228, 184, 228);
+	    0, 0, 184, 100, 184, 100);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	objlist = tlist_new(reg, 100, 100, 0);
