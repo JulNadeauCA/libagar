@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.14 2003/09/04 03:15:47 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.15 2003/09/14 02:26:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,10 +35,12 @@
 
 static void	transform_hflip(SDL_Surface **, int, Uint32 *);
 static void	transform_vflip(SDL_Surface **, int, Uint32 *);
+static void	transform_invert(SDL_Surface **, int, Uint32 *);
 
 const struct transform_ent transforms[] = {
 	{ "h-flip",	TRANSFORM_HFLIP,	transform_hflip },
-	{ "v-flip",	TRANSFORM_VFLIP,	transform_vflip }
+	{ "v-flip",	TRANSFORM_VFLIP,	transform_vflip },
+	{ "invert",	TRANSFORM_INVERT,	transform_invert }
 };
 const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
 
@@ -77,16 +79,11 @@ transform_init(struct transform *trans, enum transform_type type,
 		trans->args = NULL;
 	}
 
-	/* Look for a matching algorithm. */
 	for (i = 0; i < ntransforms; i++) {
 		if (transforms[i].type == type) {
 			trans->func = transforms[i].func;
 			break;
 		}
-	}
-	if (trans->func == NULL) {
-		error_set(_("Unknown transform algorithm."));
-		return (-1);
 	}
 	return (0);
 }
@@ -238,3 +235,47 @@ transform_print(const struct transformq *transq, char *buf, size_t buf_size)
 }
 #endif
 
+/* Invert the colors of a surface. */
+static void
+transform_invert(SDL_Surface **sup, int argc, Uint32 *argv)
+{
+	SDL_Surface *su = *sup;
+	size_t size = su->w*su->h;
+	Uint8 *pixel = su->pixels;
+	Uint8 r, g, b, a;
+	int i;
+
+	for (i = 0; i < size; i++, pixel += su->format->BytesPerPixel) {
+		switch (su->format->BytesPerPixel) {
+		case 4:
+			SDL_GetRGBA(*(Uint32 *)pixel, su->format, &r, &g, &b,
+			    &a);
+			break;
+		case 3:
+		case 2:
+			SDL_GetRGBA(*(Uint16 *)pixel, su->format, &r, &g, &b,
+			    &a);
+			break;
+		case 1:
+			SDL_GetRGBA(*pixel, su->format, &r, &g, &b, &a);
+			break;
+		}
+
+		r = 255 - r;
+		g = 255 - g;
+		b = 255 - b;
+
+		switch (su->format->BytesPerPixel) {
+		case 4:
+			*(Uint32 *)pixel = SDL_MapRGBA(su->format, r, g, b, a);
+			break;
+		case 3:
+		case 2:
+			*(Uint16 *)pixel = SDL_MapRGBA(su->format, r, g, b, a);
+			break;
+		case 1:
+			*pixel = SDL_MapRGBA(su->format, r, g, b, a);
+			break;
+		}
+	}
+}

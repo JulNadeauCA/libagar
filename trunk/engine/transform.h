@@ -1,4 +1,4 @@
-/*	$Csoft: transform.h,v 1.11 2003/09/04 03:15:47 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.12 2003/10/09 22:39:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TRANSFORM_H_
@@ -9,7 +9,8 @@
 
 enum transform_type {
 	TRANSFORM_HFLIP,
-	TRANSFORM_VFLIP
+	TRANSFORM_VFLIP,
+	TRANSFORM_INVERT
 };
 
 TAILQ_HEAD(transformq, transform);
