@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: char.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 /*
  * These functions maintain character structures, they are called by
@@ -147,55 +147,60 @@ char_event(struct object *ob, SDL_Event *ev)
 		return;
 	}
 
-	switch (ev->key.keysym.sym) {
-		case SDLK_d:
-			if (ev->type == SDL_KEYDOWN) {
-				fc->flags |= CHAR_DASH;
-				char_setspeed(fc, 40);
-			} else if (ev->type == SDL_KEYUP) {
-				fc->flags &= ~(CHAR_DASH);
-				char_setspeed(fc, 1);
-			}
-			break;
-		case SDLK_UP:
-			if (ev->type == SDL_KEYDOWN) {
-				fc->direction &= ~(CHAR_DOWN);
-				fc->direction |= CHAR_UP;
-			} else if (ev->type == SDL_KEYUP) {
-				object_wait((struct object *)fc, CHAR_UP);
-				fc->direction &= ~(CHAR_UP);
-			}
-
-			break;
-		case SDLK_DOWN:
-			if (ev->type == SDL_KEYDOWN) {
-				fc->direction &= ~(CHAR_UP);
-				fc->direction |= CHAR_DOWN;
-			} else if (ev->type == SDL_KEYUP) {
-				object_wait((struct object *)fc, CHAR_DOWN);
-				fc->direction &= ~(CHAR_DOWN);
-			}
-			break;
-		case SDLK_LEFT:
-			if (ev->type == SDL_KEYDOWN) {
-				fc->direction &= ~(CHAR_RIGHT);
-				fc->direction |= CHAR_LEFT;
-			} else if (ev->type == SDL_KEYUP) {
-				object_wait((struct object *)fc, CHAR_LEFT);
-				fc->direction &= ~(CHAR_LEFT);
-			}
-			break;
-		case SDLK_RIGHT:
-			if (ev->type == SDL_KEYDOWN) {
-				fc->direction &= ~(CHAR_LEFT);
-				fc->direction |= CHAR_RIGHT;
-			} else if (ev->type == SDL_KEYUP) {
-				object_wait((struct object *)fc, CHAR_RIGHT);
-				fc->direction &= ~(CHAR_RIGHT);
-			}
-			break;
-		default:
-			break;
+	/*
+	 * Keyboard motion.
+	 */
+	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
+		switch (ev->key.keysym.sym) {
+			case SDLK_d:
+				if (ev->type == SDL_KEYDOWN) {
+					fc->flags |= CHAR_DASH;
+					char_setspeed(fc, 40);
+				} else if (ev->type == SDL_KEYUP) {
+					fc->flags &= ~(CHAR_DASH);
+					char_setspeed(fc, 1);
+				}
+				break;
+			case SDLK_UP:
+				if (ev->type == SDL_KEYDOWN) {
+					fc->direction &= ~(CHAR_DOWN);
+					fc->direction |= CHAR_UP;
+				} else if (ev->type == SDL_KEYUP) {
+					object_wait(fc, CHAR_UP);
+					fc->direction &= ~(CHAR_UP);
+				}
+	
+				break;
+			case SDLK_DOWN:
+				if (ev->type == SDL_KEYDOWN) {
+					fc->direction &= ~(CHAR_UP);
+					fc->direction |= CHAR_DOWN;
+				} else if (ev->type == SDL_KEYUP) {
+					object_wait(fc, CHAR_DOWN);
+					fc->direction &= ~(CHAR_DOWN);
+				}
+				break;
+			case SDLK_LEFT:
+				if (ev->type == SDL_KEYDOWN) {
+					fc->direction &= ~(CHAR_RIGHT);
+					fc->direction |= CHAR_LEFT;
+				} else if (ev->type == SDL_KEYUP) {
+					object_wait(fc, CHAR_LEFT);
+					fc->direction &= ~(CHAR_LEFT);
+				}
+				break;
+			case SDLK_RIGHT:
+				if (ev->type == SDL_KEYDOWN) {
+					fc->direction &= ~(CHAR_LEFT);
+					fc->direction |= CHAR_RIGHT;
+				} else if (ev->type == SDL_KEYUP) {
+					object_wait(fc, CHAR_RIGHT);
+					fc->direction &= ~(CHAR_RIGHT);
+				}
+				break;
+			default:
+				break;
+		}
 	}
 }
 
