@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.15 2002/02/14 06:29:50 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.16 2002/02/16 05:00:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <engine/engine.h>
 
@@ -81,11 +82,7 @@ object_addsprite(struct object *ob, SDL_Surface *sprite)
 {
 	if (ob->sprites == NULL) {			/* Initialize */
 		ob->sprites = (SDL_Surface **)
-		    malloc(NSPRITES_INIT * sizeof(SDL_Surface *));
-		if (ob->sprites == NULL) {
-			perror("malloc");
-			return (-1);
-		}
+		    emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
 		ob->maxsprites = NSPRITES_INIT;
 		ob->nsprites = 0;
 	} else if (ob->nsprites >= ob->maxsprites) {	/* Grow */
@@ -105,21 +102,22 @@ object_addsprite(struct object *ob, SDL_Surface *sprite)
 }
 
 int
-object_create(struct object *ob, char *name, char *desc, int flags)
+object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 {
 	static int curid = 0;	/* The world has id 0 */
 
-	ob->name = (name != NULL) ? strdup(name) : NULL;
-	ob->desc = (desc != NULL) ? strdup(desc) : NULL;
+	ob->name = name;
+	ob->desc = NULL;
 	ob->id = curid++;
 	ob->flags = flags;
+	ob->vec = vec;
+
 	ob->sprites = NULL;
 	ob->nsprites = 0;
 	ob->maxsprites = 0;
 	ob->anims = NULL;
 	ob->nanims = 0;
 	ob->maxanims = 0;
-	ob->destroy_hook = NULL;
 
 	return (0);
 }
@@ -140,28 +138,29 @@ object_destroy(void *arg)
 		ob->flags &= ~(OBJ_DEFERGC);
 		return (-1);
 	}
-	
-	if (ob->flags & DESTROY_HOOK) {
-		ob->destroy_hook(ob);
+
+	if (ob->vec->destroy != NULL &&
+	    ob->vec->destroy(ob) != 0) {
+		return (-1);
 	}
-	
+
 	for(i = 0; i < ob->nsprites; i++)
 		SDL_FreeSurface(ob->sprites[i]);
+	if (ob->sprites != NULL)
+		free(ob->sprites);
+
 	for(i = 0; i < ob->nanims; i++)
 		anim_destroy(ob->anims[i]);
-	free(ob->sprites);
-	free(ob->anims);
+	if (ob->anims != NULL)
+		free(ob->anims);
 	
 	dprintf("freed %s\n", ob->name);
 
-	if (ob->name != NULL) {
+	if (ob->name != NULL)
 		free(ob->name);
-	}
-	if (ob->desc != NULL) {
+	if (ob->desc != NULL)
 		free(ob->desc);
-	}
 	free(ob);
-
 	return (0);
 }
 
@@ -177,29 +176,93 @@ object_lategc(void)
 	}
 }
 
+int
+object_load(void *p)
+{
+	struct object *ob = (struct object *)p;
+
+	if (ob->vec->load != NULL) {
+		char path[FILENAME_MAX];
+		int fd;
+
+		sprintf(path, "%s/%s.o", world->udatadir, ob->name);
+		fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+		if (fd < 0) {
+			sprintf(path, "%s/%s.o", world->sysdatadir, ob->name);
+			fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+			if (fd < 0) {
+				perror(path);
+				return (-1);
+			}
+		}
+		if (ob->vec->load(ob, fd) != 0) {
+			close(fd);
+			return (-1);
+		}
+		close(fd);
+	}
+	return (0);
+}
+
+int
+object_save(void *p)
+{
+	struct object *ob = (struct object *)p;
+
+	if (ob->vec->save != NULL) {
+		char path[FILENAME_MAX];
+		int fd;
+
+		sprintf(path, "%s/%s.o", world->udatadir, ob->name);
+		fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
+		if (fd < 0) {
+			perror(path);
+			return (-1);
+		}
+		if (ob->vec->save(ob, fd) != 0) {
+			close(fd);
+			return (-1);
+		}
+		close(fd);
+	}
+	return (0);
+}
+
 /* Add an object to the object list, and mark it consistent. */
 int
-object_link(void *ob)
+object_link(void *p)
 {
+	struct object *ob = p;
+
+	if (ob->vec->link != NULL &&
+	    ob->vec->link(ob) != 0) {
+		return (-1);
+	}
+
 	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_INSERT_HEAD(&world->wobjsh, (struct object *)ob, wobjs);
+		SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		perror("world");
 		return (-1);
 	}
-
 	return (0);
 }
 
 int
-object_unlink(void *ob)
+object_unlink(void *p)
 {
+	struct object *ob = p;
+
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		perror("world");
+		return (-1);
+	}
+	if (ob->vec->unlink != NULL &&
+	    ob->vec->unlink(ob) != 0) {
 		return (-1);
 	}
 
@@ -243,14 +306,25 @@ object_strfind(char *s)
 void
 object_dump(struct object *ob)
 {
+	static const char *vecnames[] = {
+		"destroy",
+		"event",
+		"load",
+		"save",
+		"link",
+		"unlink"
+	};
+	void *vecp;
+	int i;
+
 	printf("%3d. %10s (", ob->id, ob->name);
-	if (ob->flags & DESTROY_HOOK)
-		printf(" destroy");
-	if (ob->flags & LOAD_FUNC)
-		printf(" load");
-	if (ob->flags & SAVE_FUNC)
-		printf(" save");
-	printf(" )\n");
+	for (i = 0, vecp = ob->vec;
+	     i < sizeof(*vecnames) / sizeof(char *);
+	     i++, vecp += sizeof(void *)) {
+		if (vecp != NULL) {
+			printf(" %s", vecnames[i]);
+		}
+	}
 	if (ob->desc != NULL) {
 		printf("                ( %s )\n", ob->desc);
 	}
