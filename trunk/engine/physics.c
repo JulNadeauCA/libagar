@@ -81,7 +81,7 @@ gendir_postmove(struct gendir *dir, int moved)
 
 int
 mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
-    int flags, int hiwat, int speed)
+    int flags, int speed)
 {
 	dir->set = 0;
 	dir->current = 0;
@@ -89,8 +89,6 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
 	dir->moved = 0;
 	dir->flags = flags;
 
-	dir->tick = 0;
-	dir->hiwat = hiwat;
 	dir->speed = speed;
 	dir->ob = ob;
 	dir->map = map;
@@ -176,9 +174,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 	if (aref->yoffs == 0 && aref->xoffs == 0) {
 		/* See if movement is requested. */
 		mapdir_change(dir, aref);
-	} else if (dir->moved == 0 || 1) {	/* ... wait */
-		dir->tick = 0;
-
+	} else {
 		/* Up */
 		if (aref->yoffs < 0) {
 			if (aref->yoffs == -1) {	/* Once */

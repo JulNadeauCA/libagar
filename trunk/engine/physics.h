@@ -18,8 +18,6 @@ struct gendir {
 
 /* 2D movement of map references between adjacent map nodes. */
 struct mapdir {
-	int	tick;		/* Move tick */
-	int	hiwat;		/* Move tick high watermark */
 	int	speed;		/* Soft-scroll increments */
 
 	struct	object *ob;	/* Object back pointer */
@@ -41,7 +39,7 @@ int	gendir_move(struct gendir *);
 void	gendir_postmove(struct gendir *, int);
 
 int	mapdir_init(struct mapdir *, struct object *, struct map *,
-	    int, int, int);
+	    int, int);
 void	mapdir_set(struct mapdir *, int, int);
 int	mapdir_move(struct mapdir *, int *, int *);
 void	mapdir_postmove(struct mapdir *, int *, int *, int);
