@@ -1,0 +1,189 @@
+.\"	$Csoft: button.3,v 1.19 2003/11/10 22:40:47 vedge Exp $
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 20, 2003
+.Dt FSPINBUTTON 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm fspinbutton
+.Nd agar floating-point spinbutton widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/fspinbutton.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget edits the value of a
+.Ft float
+or
+.Ft double
+variable.
+It is composed of a
+.Xr textbox 3
+for manually entering the value,
+an
+.Xr ucombo 3
+for selecting the unit system to use, and two
+.Xr button 3
+widgets to increment and decrement the value.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct fspinbutton *"
+.Fn fspinbutton_new "void *parent" "const struct unit *unit" \
+                    "const char *label_fmt" "..."
+.Pp
+.Ft void
+.Fn fspinbutton_init "struct fspinbutton *fsu" "const struct unit *unit" \
+                     "const char *label"
+.Pp
+.Ft void
+.Fn fspinbutton_set_value "struct fspinbutton *fsu" "double value"
+.Pp
+.Ft void
+.Fn fspinbutton_set_min "struct fspinbutton *fsu" "double min_value"
+.Pp
+.Ft void
+.Fn fspinbutton_set_max "struct fspinbutton *fsu" "double max_value"
+.Pp
+.Ft void
+.Fn fspinbutton_set_range "struct fspinbutton *fsu" "double min" "double max"
+.Pp
+.Ft void
+.Fn fspinbutton_set_increment "struct fspinbutton *fsu" "float increment"
+.Pp
+.Ft void
+.Fn fspinbutton_set_units "struct fspinbutton *fsu" "const struct unit[]"
+.Pp
+.Ft void
+.Fn fspinbutton_select_unit "struct fspinbutton *fsu" "const char *unit_abbr"
+.Pp
+.Ft void
+.Fn fspinbutton_set_precision "struct fspinbutton *fsu" "const char *fmt" \
+                              "int precision"
+.Pp
+.Ft void
+.Fn fspinbutton_set_writeable "struct fspinbutton *fsu" "int writeable"
+.Pp
+.nr nS 0
+The
+.Fn fspinbutton_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn fspinbutton_init
+function initializes a
+.Nm
+widget.
+The
+.Fa unit
+argument defines the unit system to use (if NULL, no conversion is done).
+.Pp
+The
+.Fn fspinbutton_set_value
+modifies the bound value (converting to
+.Ft float
+for
+.Dv WIDGET_FLOAT
+bindings).
+The
+.Fn fspinbutton_set_min ,
+.Fn fspinbutton_set_max
+and
+.Fn fspinbutton_set_range
+functions define the range of acceptable values.
+Associating a variable to the
+.Sq value
+binding has the effect of setting limits defined by the data type.
+.Pp
+The
+.Fn fspinbutton_set_increment
+function defines the increment for "+" and "-" buttons.
+.Pp
+The
+.Fn fspinbutton_set_units
+function defines the unit system to use.
+.Fn fspinbutton_select_unit
+selects the default conversion by prefix.
+.Pp
+The
+.Fn fspinbutton_set_precision
+function sets the floating-point precision.
+.Pp
+.Fn fspinbutton_set_writeable
+defines whether the value is modifiable or not.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n
+.It widget-bound
+Adjust the range of acceptable values depending on the data type of the binding.
+.It window-keydown
+Increment or decrement the value if
+.Dv SDLK_UP
+or
+.Dv SDLK_DOWN
+is pressed.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn fspinbutton-changed "void"
+The value has been modified by the textbox or the +/- buttons.
+.It Fn fspinbutton-return "void"
+The value has been modified by the textbox and return was pressed.
+.El
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "double *value"
+.It Va double *value
+The value to display/edit (WIDGET_DOUBLE).
+.It Va float *value
+The value to display/edit (WIDGET_FLOAT).
+.El
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr button 3 ,
+.Xr textbox 3 ,
+.Xr ucombo 3 ,
+.Xr widget 3 ,
+.Xr window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
