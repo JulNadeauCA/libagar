@@ -159,13 +159,12 @@ saves the state of
 .Fa ob
 to the user's data directory.
 .Pp
-The
+The config structure must not be locked by the caller thread when
 .Fn object_load ,
 .Fn object_loadfrom
 and
 .Fn object_save
-functions must be called when the world is locked.
-.Pp
+are called.
 The thread-safe
 .Fn object_path
 function searches the data directories for a file matching the
