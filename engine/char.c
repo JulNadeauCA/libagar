@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.38 2002/04/25 09:32:57 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.39 2002/04/25 09:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -104,13 +104,8 @@ char_load(void *p, int fd)
 
 	ch->nzuars = fobj_read_uint32(fd);
 
-	text_msg(4, TEXT_SLEEP|TEXT_DEBUG,
-	    "%s (0x%x)\n"
-	    "Level %d\n"
-	    "Exp %d\n"
-	    "Age %d\n"
-	    "%d/%d hp, %d/%d mp\n",
-	    ob->name, ch->flags, ch->level, ch->exp, ch->age,
+	dprintf("%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d\n",
+	    OBJECT(ch)->name, ch->flags, ch->level, ch->exp, ch->age,
 	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
 
 	if (fobj_read_uint32(fd) > 0) {
@@ -134,8 +129,7 @@ char_load(void *p, int fd)
 			input = mouse;
 		}
 		
-		text_msg(20, TEXT_SLEEP|TEXT_DEBUG,
-		    "%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
+		dprintf("%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
 		    ob->name, mname, x, y, offs, flags, speed);
 
 		m = (struct map *)object_strfind(mname);
@@ -160,8 +154,7 @@ char_load(void *p, int fd)
 		free(mname);
 		free(minput);
 	} else {
-		text_msg(2, TEXT_SLEEP|TEXT_DEBUG, "%s is nowhere.\n",
-		    ob->name);
+		dprintf("%s is nowhere.\n", ob->name);
 	}
 	
 	return (0);
