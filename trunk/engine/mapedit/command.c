@@ -322,8 +322,10 @@ mapedit_examine(struct map *em, int x, int y)
 			obs = strcat(obs, "sprite ");
 		if (nref->flags & MAPREF_ANIM)
 			obs = strcat(obs, "animation ");
-		if (nref->flags & MAPREF_WARP)
-			obs = strcat(obs, "warp ");
+		if (nref->flags & MAPREF_MAP_WARP)
+			obs = strcat(obs, "map-warp ");
+		if (nref->flags & MAPREF_MAP_NODE)
+			obs = strcat(obs, "map-node ");
 		obs = strcat(obs, "\n");
 		s = strcat(s, obs);
 		free(obs);

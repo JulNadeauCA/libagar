@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.48 2002/06/01 02:37:32 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.49 2002/06/01 14:20:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -71,7 +71,6 @@ struct input *mouse = NULL;
 
 static char *mapdesc = NULL, *mapstr = NULL;
 static int mapw = 64, maph = 64;	/* Default map geometry */
-static int tilew = 32, tileh = 32;	/* XXX pref */
 
 static void	printusage(char *);
 #ifdef XDEBUG
@@ -192,11 +191,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	config = config_new();
 	object_load(config);
 	
-	if (config->flags & CONFIG_FONT_CACHE) {
-		/* Cache common glyphs */
-		keycodes_loadglyphs();
-	}
-
 	/* Initialize input devices. */
 	keyboard = input_new(INPUT_KEYBOARD, 0);
 	joy = input_new(INPUT_JOY, njoy);
@@ -266,6 +260,9 @@ int
 engine_start(void)
 {
 	struct mapedit *medit;
+	
+	/* Create the configuration settings window. */
+	config_window(config);
 
 	if (!mapediting) {
 		return (0);
@@ -279,16 +276,11 @@ engine_start(void)
 	medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
 	medit->margs.mapw = mapw;
 	medit->margs.maph = maph;
-	medit->margs.tilew = tilew;
-	medit->margs.tileh = tileh;
 
 	/* Start map edition. */
 	pthread_mutex_lock(&world->lock);
 	world_attach(world, medit);
 	pthread_mutex_unlock(&world->lock);
-
-	/* Create the configuration settings window. */
-	config_window(config);
 
 	return (1);
 }

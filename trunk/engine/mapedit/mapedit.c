@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.94 2002/05/28 06:04:24 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.95 2002/06/01 14:20:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -59,8 +59,8 @@ static const struct object_ops mapedit_ops = {
 	NULL,
 	mapedit_load,
 	mapedit_save,
-	mapedit_onattach,
-	mapedit_ondetach,
+	NULL,
+	NULL,
 	NULL,		 /* attach */
 	NULL		 /* detach */
 };
@@ -85,6 +85,8 @@ static const int stickykeys[] = {	/* Keys applied after each move. */
 static struct window *coords_win = NULL;	/* XXX thread unsafe */
 static struct label *coords_label;
 
+static void	 mapedit_onattach(int, union evarg *);
+static void	 mapedit_ondetach(int, union evarg *);
 static void	 mapedit_shadow(struct mapedit *, void *);
 static void	 mapedit_tilelist(struct mapedit *);
 static void	 mapedit_tilestack(struct mapedit *);
@@ -120,6 +122,9 @@ mapedit_init(struct mapedit *med, char *name)
 	mapdir_init(&med->cursor_dir, OBJECT(med), NULL, -1, -1);
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
+
+	event_new(med, "attach", 0, mapedit_onattach, NULL);
+	event_new(med, "detach", 0, mapedit_ondetach, NULL);
 }
 
 /*
@@ -204,13 +209,13 @@ mapedit_shadow(struct mapedit *med, void *parent)
 	}
 }
 
-void
-mapedit_onattach(void *parent, void *child)
+static void
+mapedit_onattach(int argc, union evarg *argv)
 {
 	static char caption[FILENAME_MAX];
 	char path[FILENAME_MAX];
-	struct world *wo = parent;
-	struct mapedit *med = child;
+	struct mapedit *med = argv[0].p;
+	struct world *wo = argv[1].p;
 	struct map *m;
 	struct node *node;
 	int fd, new = 0;
@@ -245,8 +250,7 @@ mapedit_onattach(void *parent, void *child)
 		map_init(m, med->margs.name, NULL, MAP_2D);
 
 		pthread_mutex_lock(&m->lock);
-		map_allocnodes(m, med->margs.mapw, med->margs.maph,
-		    med->margs.tilew, med->margs.tileh);
+		map_allocnodes(m, med->margs.mapw, med->margs.maph);
 		m->defx = med->margs.mapw / 2;
 		m->defy = med->margs.maph - 2;
 		origin = &m->map[m->defy][m->defx];
@@ -264,19 +268,19 @@ mapedit_onattach(void *parent, void *child)
 	med->y = m->defy;
 	mapdir_init(&med->cursor_dir, OBJECT(med), m,
 	    DIR_SCROLLVIEW|DIR_SOFTSCROLL|DIR_STATIC|DIR_PASSTHROUGH, 8);
-	med->tilelist.x = m->view->w - m->tilew;
-	med->tilelist.y = m->tileh;
-	med->tilelist.w = m->tilew;
-	med->tilelist.h = m->view->h - m->tilew;
+	med->tilelist.x = m->view->w - TILEW;
+	med->tilelist.y = TILEH;
+	med->tilelist.w = TILEW;
+	med->tilelist.h = m->view->h - TILEW;
 	med->tilelist_offs = 0;
 	med->tilestack.x = 0;
-	med->tilestack.y = m->tileh;
-	med->tilestack.w = m->tilew;
-	med->tilestack.h = m->view->h - m->tilew;
+	med->tilestack.y = TILEH;
+	med->tilestack.w = TILEW;
+	med->tilestack.h = m->view->h - TILEW;
 	med->objlist.x = 0;
 	med->objlist.y = 0;
-	med->objlist.w = m->view->w - m->tilew;
-	med->objlist.h = m->tileh;
+	med->objlist.w = m->view->w - TILEW;
+	med->objlist.h = TILEH;
 	med->objlist_offs = 0;
 
 	/* Set the video mode. */
@@ -319,10 +323,10 @@ mapedit_onattach(void *parent, void *child)
 	pthread_create(&update_th, NULL, mapedit_update, med);
 }
 
-void
-mapedit_ondetach(void *parent, void *child)
+static void
+mapedit_ondetach(int argc, union evarg *argv)
 {
-	struct mapedit *med = child;
+	struct mapedit *med = argv[0].p;
 	struct map *m;
 	struct node *node;
 	struct noderef *nref;
@@ -482,8 +486,8 @@ mapedit_tilelist(struct mapedit *med)
 
 	rd = med->tilelist;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, 0);
-	rd.h = m->tilew;
-	rd.y = m->tileh;
+	rd.h = TILEW;
+	rd.y = TILEH;
 	
 	pthread_mutex_lock(&med->curobj->lock);
 
@@ -494,7 +498,7 @@ mapedit_tilelist(struct mapedit *med)
 	 */
 	for (i = 0, sn = med->tilelist_offs;
 	     i < (med->tilelist.h / rd.h) - 1;
-	     i++, rd.y += m->tileh) {
+	     i++, rd.y += TILEH) {
 		struct editref *ref;
 		struct anim *anim;
 
@@ -544,15 +548,15 @@ nextref:
 	pthread_mutex_unlock(&med->curobj->lock);
 
 	rd.x = med->tilelist.x;
-	rd.y = med->tilelist.y - m->tileh;
-	rd.w = m->tilew;
-	rd.h = m->tileh;
+	rd.y = med->tilelist.y - TILEH;
+	rd.w = TILEW;
+	rd.h = TILEH;
 
 	mapedit_state(med, &rd);
 	
 	SDL_UpdateRect(m->view->v,
-	    med->tilelist.x - m->tilew, med->tilelist.y - m->tileh,
-	    med->tilelist.w + m->tilew, med->tilelist.h + m->tileh);
+	    med->tilelist.x - TILEW, med->tilelist.y - TILEH,
+	    med->tilelist.w + TILEW, med->tilelist.h + TILEH);
 }
 
 /*
@@ -571,7 +575,7 @@ mapedit_tilestack(struct mapedit *med)
 
 	rd = med->tilestack;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, 0);
-	rd.h = m->tileh;
+	rd.h = TILEH;
 
 	i = 0;
 	TAILQ_FOREACH(nref, &(&m->map[med->y][med->x])->nrefsh, nrefs) {
@@ -602,7 +606,7 @@ mapedit_tilestack(struct mapedit *med)
 
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_GRID),
 		    NULL, m->view->v, &rd);
-		rd.y += m->tileh;
+		rd.y += TILEH;
 	}
 	SDL_UpdateRect(m->view->v,
 	    med->tilestack.x, med->tilestack.y,
@@ -625,12 +629,12 @@ mapedit_objlist(struct mapedit *med)
 
 	rd = med->objlist;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, 0);
-	rd.w = m->tilew;
-	rd.x = m->tilew;
+	rd.w = TILEW;
+	rd.x = TILEW;
 
 	for (i = 0, sn = med->objlist_offs;
-	     i < (med->objlist.w / m->tilew) - 1;
-	     i++, rd.x += m->tilew) {
+	     i < (med->objlist.w / TILEW) - 1;
+	     i++, rd.x += TILEW) {
 
 		if (sn > -1) {
 			/* Absolute */
@@ -815,7 +819,7 @@ mapedit_event(void *ob, SDL_Event *ev)
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
 		if (coords_win != NULL) {
-			if (ev->motion.y <= med->map->tileh ||
+			if (ev->motion.y <= TILEH ||
 			    med->mmapx >= med->map->view->mapw-1) {
 				label_printf(coords_label, "%s:%d (0x%x)",
 				    OBJECT(med->curobj->pobj)->name,
@@ -1010,8 +1014,8 @@ mapedit_predraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 
 	rd.x = vx << m->shtilex;
 	rd.y = vy << m->shtiley;
-	rd.w = m->tilew;
-	rd.h = m->tileh;
+	rd.w = TILEW;
+	rd.h = TILEH;
 
 	SDL_FillRect(m->view->v, &rd, SDL_MapRGB(m->view->v->format,
 	    rd.y >> 3, 0, rd.x >> 3));

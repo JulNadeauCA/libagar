@@ -196,6 +196,11 @@ config_settings_win(struct config *con)
 	udatadir_tbox = textbox_new(body_reg,   "  User datadir: ", 0, 100);
 	sysdatadir_tbox = textbox_new(body_reg, "System datadir: ", 0, 100);
 
+	pthread_mutex_lock(&win->lock);
+	textbox_printf(udatadir_tbox, "%s", world->udatadir);
+	textbox_printf(sysdatadir_tbox, "%s", world->sysdatadir);
+	pthread_mutex_unlock(&win->lock);
+
 	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
 	event_new(close_button, "button-pushed", 0, apply,
 	    "%d", CLOSE_BUTTON);

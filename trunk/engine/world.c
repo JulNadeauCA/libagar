@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.33 2002/05/28 06:03:47 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.34 2002/05/31 10:49:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -184,14 +184,10 @@ world_attach(void *parent, void *child)
 	struct world *wo = parent;
 	struct object *ob = child;
 
-	dprintf("attach %s to %s\n", ob->name, OBJECT(wo)->name);
-
-	if (OBJECT_OPS(ob)->onattach != NULL) {
-		OBJECT_OPS(ob)->onattach(wo, ob);
-	}
-
 	SLIST_INSERT_HEAD(&wo->wobjsh, ob, wobjs);
 	wo->nobjs++;
+	
+	event_post(ob, "attach", "%p", wo);
 }
 
 /* Detach an object from the world, and free it. */
@@ -201,14 +197,11 @@ world_detach(void *parent, void *child)
 	struct world *wo = parent;
 	struct object *ob = child;
 	
-	dprintf("detach %s from %s\n", ob->name, OBJECT(wo)->name);
-
+	event_post(ob, "detach", "%p", wo);
+	
 	SLIST_REMOVE(&wo->wobjsh, ob, object, wobjs);
 	wo->nobjs--;
-	
-	if (OBJECT_OPS(ob)->ondetach != NULL) {
-		OBJECT_OPS(ob)->ondetach(wo, ob);
-	}
+
 	object_destroy(ob);
 }
 
