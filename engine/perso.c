@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.12 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.13 2003/01/12 04:07:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ perso_new(char *name, char *media, Uint32 hp, Uint32 mp)
 	pers = emalloc(sizeof(struct perso));
 	perso_init(pers, name, media, hp, mp);
 
-	world_attach(world, pers);
+	world_attach(pers);
 	return (pers);
 }
 

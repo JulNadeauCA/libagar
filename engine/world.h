@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.22 2002/09/16 16:03:19 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.23 2002/11/27 05:05:30 vedge Exp $	*/
 /*	Public domain	*/
 
 struct world {
@@ -19,8 +19,8 @@ void	 world_init(struct world *, char *);
 void	 world_destroy(void *);
 int	 world_load(void *, int);
 int	 world_save(void *, int);
-void	 world_attach(void *, void *);
-void	 world_detach(void *, void *);
+void	 world_attach(void *);
+void	 world_detach(void *);
 
 int	 world_attached(void *);
 void	*world_find(char *);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.101 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.102 2003/01/12 04:07:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ object_new(char *type, char *name, char *media, int flags, const void *opsp)
 	object_init(ob, type, name, media, flags, opsp);
 
 	pthread_mutex_lock(&world->lock);
-	world_attach(world, ob);
+	world_attach(ob);
 	pthread_mutex_unlock(&world->lock);
 
 	return (ob);
