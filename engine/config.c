@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.39 2002/11/14 05:58:59 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.40 2002/11/15 04:18:30 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -164,8 +164,7 @@ config_init_wins(struct config *con)
 	/*
 	 * Engine settings window
 	 */
-	win = window_new("config-engine-settings", WINDOW_CENTER, -1, -1,
-	    267, 319, 267, 319);
+	win = window_generic_new(267, 319, "config-engine-settings");
 	window_set_caption(win, "Engine settings");
 	con->windows.settings = win;
 
