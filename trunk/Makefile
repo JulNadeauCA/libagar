@@ -14,7 +14,6 @@ regress: regress-subdir
 
 prereq:
 	(cd libfobj && ${MAKE})
-	(cd compat && ${MAKE})
 	(cd fobjcomp && ${MAKE})
 
 configure: .PHONY
