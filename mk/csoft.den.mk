@@ -1,4 +1,4 @@
-# $Csoft: csoft.den.mk,v 1.4 2004/03/17 03:46:42 vedge Exp $
+# $Csoft: csoft.den.mk,v 1.2 2004/03/17 03:49:16 vedge Exp $
 # ex:syn=make
 
 # Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -87,8 +87,6 @@ deinstall-den:
 	if [ "${DEN}" != "" ]; then \
 		echo "${DEINSTALL_DATA} ${SHAREDIR}/${DEN_DIR}/${DEN}"; \
 		${DEINSTALL_DATA} ${SHAREDIR}/${DEN_DIR}/${DEN}; \
-		echo "${DEINSTALL_DATA_DIR} ${SHAREDIR}/${DEN_DIR}"; \
-		${DEINSTALL_DATA_DIR} ${SHAREDIR}/${DEN_DIR}; \
 	fi
 
 .PHONY: install deinstall clean cleandir regress depend
