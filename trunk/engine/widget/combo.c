@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.6 2003/06/25 10:31:45 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.7 2003/06/25 10:51:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -145,6 +145,21 @@ combo_return(int argc, union evarg *argv)
 	free(s);
 }
 
+#if 0
+static void
+combo_mousebuttonup(int argc, union evarg *argv)
+{
+	struct combo *com = argv[0].p;
+/*	int button = argv[1].i; */
+	int x = WIDGET(com)->cx + argv[2].i;
+	int y = WIDGET(com)->cy + argv[3].i;
+
+	if (com->win != NULL && !widget_area(com->win, x, y)) {
+		combo_collapse(com);
+	}
+}
+#endif
+
 void
 combo_init(struct combo *com, const char *label)
 {
@@ -162,6 +177,7 @@ combo_init(struct combo *com, const char *label)
 	event_new(com->button, "button-pushed", combo_expand, "%p", com);
 	event_new(com->list, "tlist-changed", combo_select, "%p", com);
 	event_new(com->tbox, "textbox-return", combo_return, "%p", com);
+//	event_new(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
 }
 
 void
@@ -170,7 +186,9 @@ combo_destroy(void *p)
 	struct combo *com = p;
 
 	if (com->win != NULL) {
-		object_destroy(com->win);
+		window_hide(com->win);
+		object_detach(com->win, com->list);
+		view_detach(com->win);
 	}
 	widget_destroy(com);
 }
