@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.19 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.20 2002/06/12 20:40:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -145,18 +145,18 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 	te->tx = XMARGIN;
 	te->ty = YMARGIN;
 	te->nlines = te->h / maxfonth;
-	te->bgcolor = SDL_MapRGB(mainview->v->format, 30, 90, 180);
+	te->bgcolor = SDL_MapRGB(view->v->format, 30, 90, 180);
 	te->fgcolor = &white;
-	te->v = mainview->v;	/* XXX */
+	te->v = view->v;	/* XXX */
 	te->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
 	    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 	if (te->surface == NULL) {
 		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 	}
 
-	/* Prevent overlapping blits. */
-	te->mvmask.x = (te->x / TILEW) - mainview->mapxoffs;
-	te->mvmask.y = (te->y / TILEH) - mainview->mapyoffs;
+	/* Only applicable to tile-based mode. */
+	te->mvmask.x = (te->x / TILEW);
+	te->mvmask.y = (te->y / TILEH);
 	te->mvmask.w = (te->w / TILEW);
 	te->mvmask.h = (te->h / TILEH);
 }
@@ -196,9 +196,11 @@ text_attached(struct text *te)
 	
 	ntexts++;
 
-	pthread_mutex_lock(&mainview->lock);
-	view_maskfill(&te->mvmask, 1);
-	pthread_mutex_unlock(&mainview->lock);
+	pthread_mutex_lock(&view->lock);
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		view_maskfill(&te->mvmask, 1);
+	}
+	pthread_mutex_unlock(&view->lock);
 }
 
 static void
@@ -206,16 +208,17 @@ text_detached(struct text *te)
 {
 	ntexts--;
 
+	pthread_mutex_lock(&view->lock);
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		view_maskfill(&te->mvmask, 1);
+	}
+	pthread_mutex_unlock(&view->lock);
+
 	pthread_mutex_lock(&textslock);
 	TAILQ_REMOVE(&textsh, te, texts);
 	pthread_mutex_unlock(&textslock);
 
-	pthread_mutex_lock(&mainview->lock);
-	view_maskfill(&te->mvmask, -1);
-	if (mainview->map != NULL) {
-		mainview->map->redraw++;
-	}
-	pthread_mutex_unlock(&mainview->lock);
+	VIEW_REDRAW();
 }
 
 static void
@@ -441,9 +444,9 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 		gx += TILEW;
 		gy += TILEH;
 	}
-	if ((gy + h) >= mainview->h)
+	if ((gy + h) >= view->h)
 		gy = TILEH;
-	if ((gx + w) >= mainview->w)
+	if ((gx + w) >= view->w)
 		gx = TILEW;
 
 	te = emalloc(sizeof(struct text));
