@@ -3,8 +3,13 @@
 struct direction {
 	int	tick;		/* Move tick */
 	int	hiwat;		/* Move tick high watermark */
+	int	speed;		/* Soft-scroll increments */
 
-	int	current;	/* Current direction mask (move) */
+	void	*ob;		/* Object back pointer */
+	struct	map *map;	/* Map back pointer */
+
+	int	set;		/* Set direction (move) */
+	int	current;	/* Current direction mask */
 	int	clear;		/* Clear direction mask (stop move) */
 	int	moved;		/* Moved direction mask */
 #define DIR_UP		0x01
@@ -15,10 +20,10 @@ struct direction {
 
 	int	flags;
 #define DIR_SCROLL	0x01
-#define DIR_ONMAP	0x02
 };
 
-int	direction_init(struct direction *, int, int);
+int	direction_init(struct direction *, void *, struct map *, int, int, int);
 void	direction_set(struct direction *, int, int);
-int	direction_update(struct direction *, struct map *, int *, int *);
+int	direction_update(struct direction *, int *, int *);
+void	direction_moved(struct direction *, int *, int *, int);
 
