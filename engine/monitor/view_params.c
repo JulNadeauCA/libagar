@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.21 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.22 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -77,9 +77,8 @@ view_params_window(void)
 		label_new(vb, LABEL_STATIC, _("Depth: %dbpp"),
 		    vinfo->vfmt->BitsPerPixel);
 		label_new(vb, LABEL_STATIC,
-		    _("Video masks: %08x,%08x,%08x,%08x"),
-		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask, vinfo->vfmt->Bmask,
-		    vinfo->vfmt->Amask);
+		    _("Video masks: %08x,%08x,%08x"),
+		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask, vinfo->vfmt->Bmask);
 		label_new(vb, LABEL_STATIC, _("Color key: %d"),
 		    vinfo->vfmt->colorkey);
 		label_new(vb, LABEL_STATIC, _("Alpha: %d"), vinfo->vfmt->alpha);

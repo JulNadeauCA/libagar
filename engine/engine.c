@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.144 2005/02/08 15:46:53 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.145 2005/02/27 05:57:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -136,9 +136,9 @@ engine_preinit(const char *name)
 		         "(ckey=%d, alpha=%d)\n"),
 		    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
 		    vinfo->vfmt->alpha);
-		printf(_("Video mask is 0x%08x,0x%08x,0x%08x,0x%08x\n"),
+		printf(_("Video mask is 0x%08x,0x%08x,0x%08x\n"),
 		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
-		    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
+		    vinfo->vfmt->Bmask);
 
 		if (vinfo->wm_available) {
 			printf(_("Window manager is available.\n"));
