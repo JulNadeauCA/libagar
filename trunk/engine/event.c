@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.5 2002/02/05 06:00:38 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.6 2002/02/05 06:15:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -50,14 +50,18 @@ event_hotkey(SDL_Event *ev)
 	/* Print active object list. */
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
-	case SDLK_t:
-		world_dump(world);
-		return (0);
+	case SDLK_w:
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			world_dump(world);
+			return (0);
+		}
 #endif /* DEBUG */
 	case SDLK_f:
-		view_fullscreen(mainview,
-		    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-		return (0);
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			view_fullscreen(mainview,
+			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
+			return (0);
+		}
 	case SDLK_q:
 		if (mainview->flags & SDL_FULLSCREEN) {
 			mainview->flags &= ~(SDL_FULLSCREEN);
