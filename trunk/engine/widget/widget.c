@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.94 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.95 2005/02/05 02:52:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1024,10 +1024,9 @@ widget_holds_focus(void *p)
 	return (WIDGET(p)->flags & WIDGET_FOCUSED);
 }
 
-
 /* Clear the WIDGET_FOCUSED bit from a widget and its descendents. */
-static void
-widget_clear_focus(void *p)
+void
+widget_unset_focus(void *p)
 {
 	struct widget *wid = p, *cwid;
 
@@ -1037,7 +1036,7 @@ widget_clear_focus(void *p)
 	}
 
 	OBJECT_FOREACH_CHILD(cwid, wid, widget)
-		widget_clear_focus(cwid);
+		widget_unset_focus(cwid);
 }
 
 /* Find the parent window of a widget. */
@@ -1067,7 +1066,7 @@ widget_focus(void *p)
 	/* Remove focus from other widgets inside this window. */
 	pwin = widget_parent_window(wid);
 	if (pwin != NULL) {
-		widget_clear_focus(pwin);
+		widget_unset_focus(pwin);
 	} else {
 		dprintf("%s: no parent window\n", OBJECT(wid)->name);
 	}
