@@ -1,10 +1,11 @@
-# $Csoft: configure.in,v 1.68 2003/06/23 00:05:01 vedge Exp $
+# $Csoft: configure.in,v 1.69 2003/06/23 14:14:08 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"OpenGL rendering support [default: check]");
 register("--with-jpeg",		"JPEG screenshot support [default: check]");
+register("--with-gettext",	"M17N with gettext library [default: check]");
 register("--enable-edition",	"Graphical edition [default: yes]");
 register("--enable-debug",	"Engine debugging [default: yes]");
 register("--enable-threads",	"Thread safety [default: no]");
@@ -83,6 +84,13 @@ if [ "${with_smpeg}" != "no" ]; then
 	check(smpeg, 0.4.4);
 else
 	hundef(HAVE_SMPEG);
+fi
+
+# Look for a gettext library.
+if [ "${with_gettext}" != "no" ]; then
+	check(gettext);
+else
+	hundef(HAVE_GETTEXT);
 fi
 
 # Compile a static binary?
