@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.33 2003/09/01 10:34:03 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.34 2003/09/02 02:04:30 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -232,6 +232,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	}
 
 	/* Ensure the new character(s) fit inside the buffer. */
+	/* XXX use utf8 size for space efficiency */
 	if (len+nins >= stringb->size/sizeof(Uint32))
 		goto skip;
 
