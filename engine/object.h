@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.92 2003/09/07 00:24:07 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.93 2003/09/07 07:59:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -50,7 +50,8 @@ struct object_position {
  * before the object is destroyed (object_del_dep() becomes a no-op).
  */
 struct object_dep {
-	struct object	*obj;		/* Object */
+	char		*path;		/* Unresolved object path */
+	struct object	*obj;		/* Resolved object */
 	Uint32		 count;		/* Reference count */
 #define OBJECT_DEP_MAX	(0xffffffff-2)	/* Remain resident if reached */
 	TAILQ_ENTRY(object_dep) deps;
@@ -78,6 +79,7 @@ struct object {
 					   reference count reaches 0. */
 #define OBJECT_STATIC		0x20	/* Don't free() after detach. */
 #define OBJECT_READONLY		0x40	/* Don't allow edition (advisory) */
+#define OBJECT_WAS_RESIDENT	0x80	/* Used internally by object_load() */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 
 	pthread_mutex_t	 lock;
@@ -122,53 +124,51 @@ struct object {
 __BEGIN_DECLS
 struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
-void		 object_reinit(void *, int);
-int		 object_load(void *);
-int		 object_load_data(void *);
+void		 object_free_data(void *);
+int		 object_copy_name(const void *, char *, size_t);
+int		 object_copy_filename(const void *, char *, size_t);
+void		*object_find(const char *);
+__inline__ void	*object_root(void *);
+__inline__ int	 object_used(void *);
+void		 object_set_type(void *, const char *);
+void		 object_set_name(void *, const char *);
+void		 object_set_ops(void *, const void *);
 void		 object_wire_gfx(void *, const char *);
-int		 object_save(void *);
-int		 object_destroy(void *);
-#ifdef EDITION
-struct window	*object_edit(void *);
-#endif
+
+int	 object_destroy(void *);
+int	 object_free_childs(struct object *);
+void	 object_free_props(struct object *);
+void 	 object_free_events(struct object *);
+void	 object_free_deps(struct object *);
 
 int	 object_page_in(void *, enum object_page_item);
 int	 object_page_out(void *, enum object_page_item);
-
-void	 object_set_type(void *, const char *);
-void	 object_set_name(void *, const char *);
-void	 object_set_ops(void *, const void *);
+int	 object_save(void *);
+int	 object_load(void *);
+int	 object_load_generic(void *);
+int	 object_reload_data(void *);
+int	 object_resolve_deps(void *);
+int	 object_load_data(void *);
 
 void	 object_attach(void *, void *);
 void	 object_detach(void *, void *);
 void	 object_move(void *, void *, void *);
 
-int	 object_copy_name(const void *, char *, size_t);
-int	 object_copy_filename(const void *, char *, size_t);
-
-void		*object_find(const char *);
-__inline__ void	*object_root(void *);
-__inline__ int	 object_used(void *);
-
-int	 object_free_childs(struct object *);
-void	 object_free_props(struct object *);
-void 	 object_free_events(struct object *);
-int	 object_path(const char *, const char *, char *, size_t);
-
 int	 object_control(void *, const char *);
 void	 object_center(void *);
-void	 object_load_submap(void *, const char *);
 int	 object_set_submap(void *, const char *);
 
 void	 object_set_position(void *, struct map *, int, int, int);
 void	 object_unset_position(void *);
-void	 object_save_position(const void *, struct netbuf *);
-int	 object_load_position(void *, struct netbuf *);
 
 struct object_dep	 *object_add_dep(void *, void *);
 __inline__ struct object *object_find_dep(const void *, Uint32);
 Uint32			  object_dep_index(const void *, const void *);
 void			  object_del_dep(void *, const void *);
+
+#ifdef EDITION
+struct window	*object_edit(void *);
+#endif
 __END_DECLS
 
 #include "close_code.h"
