@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.35 2002/04/10 09:24:57 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.36 2002/04/14 01:35:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -376,6 +376,9 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 		free(pos);
 		return (NULL);
 	}
+
+	node->flags |= NODE_ANIM;	/* For soft-scrolling */
+
 	/* XXX */
 	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, 3);
 	pos->input = in;
@@ -383,7 +386,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 		in->pos = pos;
 	}
 	ob->pos = pos;
-
+	
 	return (pos);
 }
 
@@ -403,7 +406,10 @@ object_delpos(void *obp)
 	}
 
 	if (pos->map != NULL) {
-		node_delref(&pos->map->map[pos->y][pos->x], pos->nref);
+		struct node *node = &pos->map->map[pos->y][pos->x];
+
+		node_delref(node, pos->nref);
+		node->flags &= ~(NODE_ANIM);
 	}
 
 	free(pos);
