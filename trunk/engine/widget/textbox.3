@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.16 2003/06/15 08:54:19 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.17 2003/06/15 08:57:49 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -53,7 +53,10 @@ contents.
 .Ft void
 .Fn textbox_set_writeable "struct textbox *textbox" "int writeable"
 .Pp
+.Ft void
+.Fn textbox_prescale "struct textbox *textbox" "const char *text"
 .nr nS 0
+.Pp
 The
 .Fn textbox_new
 function allocates, initializes, and attaches a
@@ -73,6 +76,11 @@ If
 .Fa writeable
 is 0, the string is read-only; if it is 1, the string may be edited (this is the
 default).
+.Pp
+.Fn textbox_prescale
+arranges for
+.Fa textbox
+to be large enough to display the given string.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
@@ -155,7 +163,6 @@ widget generates the following events:
 .Bl -tag -width 2n
 .It Fn textbox-return "void"
 Return was pressed.
-is currently entered.
 .It Fn textbox-changed "void"
 The string was modified.
 .El
