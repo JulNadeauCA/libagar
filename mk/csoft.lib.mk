@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.30 2003/09/28 17:34:24 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.31 2003/10/05 01:41:41 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -44,6 +44,8 @@ SHARED?=	No
 SOVERSION?=	1:0:0
 CFLAGS+=    ${COPTS}
 SHARE?=
+LFLAGS?=
+YFLAGS?=
 
 all: all-subdir lib${LIB}.a lib${LIB}.la
 install: install-lib install-subdir
