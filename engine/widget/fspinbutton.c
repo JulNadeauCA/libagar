@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.22 2004/08/22 12:08:15 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.23 2004/08/24 02:43:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -212,11 +212,11 @@ fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);
 	widget_bind(fsu, "max", WIDGET_DOUBLE, &fsu->max);
 	
-	fsu->value = 0.0;
 	fsu->inc = 1.0;
+	fsu->value = 0.0;
 	fsu->input = textbox_new(fsu, label);
 	fsu->writeable = 1;
-	strlcpy(fsu->format, "%.2f", sizeof(fsu->format));
+	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	pthread_mutex_init(&fsu->lock, NULL);
 	
 	if (unit != NULL) {
@@ -336,25 +336,35 @@ fspinbutton_add_value(struct fspinbutton *fsu, double inc)
 {
 	struct widget_binding *valueb, *minb, *maxb;
 	void *value;
+	double n;
 	double *min, *max;
-	double binc;
 
-	binc = unit2base(inc, fsu->unit);
 	valueb = widget_get_binding(fsu, "value", &value);
 	minb = widget_get_binding(fsu, "min", &min);
 	maxb = widget_get_binding(fsu, "max", &max);
 
 	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
-		*(double *)value = *(double *)value+binc < *min ? *min :
-		                   *(double *)value+binc > *max ? *max :
-				   *(double *)value+binc;
-		
+		n = base2unit(*(double *)value, fsu->unit);
+		if ((n+inc) < *min) {
+			n = *min;
+		} else if ((n+inc) > *max) {
+			n = *max;
+		} else {
+			n += inc;
+		}
+		*(double *)value = unit2base(n, fsu->unit);
 		break;
 	case WIDGET_FLOAT:
-		*(float *)value = *(float *)value+binc < *min ? *min :
-		                  *(float *)value+binc > *max ? *max :
-				  *(float *)value+binc;
+		n = base2unit(*(float *)value, fsu->unit);
+		if ((n+inc) < *min) {
+			n = *min;
+		} else if ((n+inc) > *max) {
+			n = *max;
+		} else {
+			n += inc;
+		}
+		*(float *)value = unit2base(n, fsu->unit);
 		break;
 	default:
 		break;
