@@ -1,5 +1,7 @@
-/*	$Csoft: gfx.h,v 1.12 2003/06/06 01:55:54 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.3 2003/06/21 06:39:44 vedge Exp $	*/
 /*	Public domain	*/
+
+#include "begin_code.h"
 
 struct object;
 struct noderef;
@@ -67,6 +69,7 @@ struct gfx {
 #define ANIM(ob, i)	((struct object *)(ob))->gfx->anims[(i)]
 #endif
 
+__BEGIN_DECLS
 struct gfx	*gfx_fetch(void *, const char *);
 void		 gfx_unused(struct gfx *);
 void		 gfx_wire(struct gfx *);
@@ -84,4 +87,6 @@ void		 gfx_anim_tick(struct gfx_anim *, struct noderef *);
 __inline__ SDL_Surface		*gfx_get_sprite(struct object *, Uint32);
 __inline__ struct gfx_anim	*gfx_get_anim(struct object *, Uint32);
 #endif
+__END_DECLS
 
+#include "close_code.h"
