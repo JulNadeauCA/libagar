@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -80,8 +80,10 @@ version_read(struct netbuf *buf, const struct version *ver,
 
 	copy_string(user, buf, sizeof(user));
 	copy_string(host, buf, sizeof(host));
+#if 0
 	fprintf(stderr, "%s: v%d.%d (%s@%s)\n", ver->name, major, minor, user,
 	    host);
+#endif
 	return (0);
 }
 
