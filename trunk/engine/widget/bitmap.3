@@ -1,4 +1,4 @@
-.\"	$Csoft: bitmap.3,v 1.1 2002/09/01 08:55:43 vedge Exp $
+.\"	$Csoft: bitmap.3,v 1.2 2002/09/07 04:30:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -42,12 +42,10 @@ widget displays a bitmap scaled to the widget's geometry.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct bitmap *
-.Fn bitmap_new "struct region *reg" "SDL_Surface *surface" "int flags" \
-               "int w" "int h"
+.Fn bitmap_new "struct region *reg" "SDL_Surface *surface" "int w" "int h"
 .Pp
 .Ft void
-.Fn bitmap_init "struct bitmap *bmp" "SDL_Surface *surface" "int flags" \
-               "int w" "int h"
+.Fn bitmap_init "struct bitmap *bmp" "SDL_Surface *surface" "int w" "int h"
 .nr nS 0
 .Pp
 The
@@ -65,9 +63,6 @@ The
 argument is a pointer to an
 .Xr SDL_Surface 3
 structure.
-The
-.Fa flags
-argument is currently ignored.
 .Sh EVENTS
 The
 .Nm
