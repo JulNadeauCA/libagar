@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.74 2003/06/29 11:33:43 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.75 2003/06/30 06:39:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -135,6 +135,7 @@ import_gfx(int argc, union evarg *argv)
 		case NODEREF_SPRITE:
 			node = &m->map[con->y][con->x];
 			if (con->replace) {
+				node_destroy(m, node);
 				node_init(node);
 			}
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
@@ -143,6 +144,7 @@ import_gfx(int argc, union evarg *argv)
 		case NODEREF_ANIM:
 			node = &m->map[con->y][con->x];
 			if (con->replace) {
+				node_destroy(m, node);
 				node_init(node);
 			}
 			dprintf("+anim: %s:%d\n", pobj->name, ind);
@@ -160,6 +162,7 @@ import_gfx(int argc, union evarg *argv)
 					struct node *dn = &m->map[dy][dx];
 
 					if (con->replace) {
+						node_destroy(m, dn);
 						node_init(dn);
 					}
 					node_copy(submap, sn, -1, m, dn, -1);
