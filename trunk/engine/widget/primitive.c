@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.11 2002/07/27 07:01:14 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.12 2002/07/27 08:49:59 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -383,8 +383,17 @@ done:
 }
 
 static void
-composite_square(void *wid, int x, int y, int w, int h, Uint32 color)
+composite_square(void *p, int x, int y, int w, int h, Uint32 color)
 {
+	struct widget *wid = p;
+
+	if (x > wid->w || y > wid->h)
+		return;
+	if (x+w > wid->w)
+		w = wid->w-x;
+	if (y+h > wid->h)
+		h = wid->h-y;
+
 	primitives.line(wid,		/* Top */
 	    x, y,
 	    x + w - 1, y, color);
