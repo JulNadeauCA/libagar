@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.90 2002/11/12 05:15:46 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.91 2002/11/13 00:22:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -220,22 +220,16 @@ event_loop(void)
 
 			/* Update the display. */
 			if (view->ndirty > 0) {
-#if 1
+#if 0
 				int i;
 
-#if 0
 				dprintf("%d dirty rects\n", view->ndirty);
-#endif
 				for (i = 0; i < view->ndirty; i++) {
-#if 1
-#if 0
 					dprintf("dirty rect: %dx%d at %d,%d\n",
 					    view->dirty[i].w,
 					    view->dirty[i].h,
 					    view->dirty[i].x,
 					    view->dirty[i].y);
-#endif
-#endif
 					SDL_UpdateRect(view->v,
 					    view->dirty[i].x,
 					    view->dirty[i].y,
