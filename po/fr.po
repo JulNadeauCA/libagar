@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.27 2004/02/24 13:32:42 vedge Exp $
+# $Csoft: fr.po,v 1.28 2004/03/02 08:56:13 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -733,7 +733,7 @@ msgid ": "
 msgstr ": "
 
 msgid "Input device: "
-msgstr "Pilotes d'entrée: "
+msgstr "Pilote d'entrée: "
 
 msgid "Direction: "
 msgstr "Direction: "
