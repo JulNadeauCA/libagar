@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.205 2003/07/01 05:08:11 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.206 2003/07/03 07:24:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@ const struct version window_ver = {
 
 const struct widget_ops window_ops = {
 	{
-		window_init,
+		NULL,
 		window_destroy,
 		window_load,
 		window_save,
@@ -291,7 +291,7 @@ window_destroy(void *p)
 	struct window *win = p;
 
 	free(win->border);
-//	pthread_mutex_destroy(&win->lock);
+	pthread_mutex_destroy(&win->lock);
 }
 
 static void
