@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.20 2004/03/17 12:42:05 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.21 2004/03/18 03:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -44,30 +44,40 @@
 
 #include "mapedit.h"
 #include "mapview.h"
+#include "layedit.h"
 
-static void
-close_window(int argc, union evarg *argv)
-{
-	struct window *win = argv[0].p;
-	struct mapview *mv = argv[1].p;
+static void layedit_init(struct tool *);
 
-	widget_set_int(mv->layed.trigger, "state", 0);
-	window_hide(win);
-}
+const struct tool layedit_tool = {
+	N_("Layer editor"),
+	N_("Edit the layer information."),
+	LAYER_EDITOR_ICON,
+	-1,
+	layedit_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 
 /* Update the list of layers. */
 void
 layedit_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct mapview *mv = argv[1].p;
-	struct map *m = mv->map;
+	struct map *m = argv[1].p;
 	int i;
 	
 	tlist_clear_items(tl);
 	for (i = 0; i < m->nlayers; i++) {
-		struct map_layer *layer = &m->layers[i];
 		char label[TLIST_LABEL_MAX];
+		struct map_layer *layer = &m->layers[i];
 
 		if (layer->visible) {
 			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
@@ -84,65 +94,59 @@ layedit_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 
 	/* XXX load/save hack */
-	if (m->cur_layer >= m->nlayers) {
+	if (m->cur_layer >= m->nlayers)
 		m->cur_layer--;
-	}
 }
 
 static void
 push_layer(int argc, union evarg *argv)
 {
 	char name[MAP_LAYER_NAME_MAX];
-	struct mapview *mv = argv[1].p;
-	struct textbox *name_tbox = argv[2].p;
+	struct map *m = argv[1].p;
+	struct textbox *tb = argv[2].p;
 	
-	textbox_copy_string(name_tbox, name, sizeof(name));
+	textbox_copy_string(tb, name, sizeof(name));
 
-	if (map_push_layer(mv->map, name) != 0) {
+	if (map_push_layer(m, name) != 0) {
 		text_msg(MSG_ERROR, "%s", error_get());
 	} else {
-		textbox_printf(name_tbox, " ");
+		textbox_printf(tb, NULL);
 	}
 }
 
 static void
-select_layer(int argc, union evarg *argv)
+selected_layer(int argc, union evarg *argv)
 {
-	struct textbox *rename_tb = argv[2].p;
-	struct tlist_item *it = argv[3].p;
-	int selected = argv[4].i;
-	struct map_layer *lay;
+	struct textbox *rename_tb = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	struct map_layer *layer = it->p1;
 
-	if (!selected) {
-		return;
-	}
-	lay = it->p1;
-	textbox_printf(rename_tb, "%s", lay->name);
+	textbox_printf(rename_tb, "%s", layer->name);
 }
 
 static void
 rename_layer(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
-	struct textbox *name_tbox = argv[2].p;
+	struct map *m = argv[1].p;
+	struct textbox *tb = argv[2].p;
+	struct tlist *tl = argv[3].p;
 	struct tlist_item *it;
-	struct map_layer *lay;
+	struct map_layer *layer;
 
-	if ((it = tlist_item_selected(mv->layed.layers_tl)) == NULL) {
+	if ((it = tlist_item_selected(tl)) == NULL) {
 		return;
 	}
-	lay = it->p1;
+	layer = it->p1;
 
-	textbox_copy_string(name_tbox, lay->name, sizeof(lay->name));
-	textbox_printf(name_tbox, " ");
+	textbox_copy_string(tb, layer->name, sizeof(layer->name));
+	textbox_printf(tb, NULL);
 }
 
 static void
 pop_layer(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
+	struct map *m = argv[1].p;
 	int destructive = argv[2].i;
-	struct map *m = mv->map;
 	int x, y;
 
 	if (m->cur_layer == m->nlayers-1 &&
@@ -176,14 +180,14 @@ pop_layer(int argc, union evarg *argv)
 static void
 edit_layer(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
-	struct tlist *tl = mv->layed.layers_tl;
+	struct map *m = argv[1].p;
+	struct tlist *tl = argv[2].p;
 	struct tlist_item *it;
 	int i = 0;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
-			mv->map->cur_layer = i;
+			m->cur_layer = i;
 			return;
 		}
 		i++;
@@ -195,8 +199,8 @@ edit_layer(int argc, union evarg *argv)
 static void
 mask_layer(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
-	struct tlist *tl = mv->layed.layers_tl;
+	struct map *m = argv[1].p;
+	struct tlist *tl = argv[2].p;
 	struct tlist_item *it;
 	int i = 0;
 
@@ -213,18 +217,27 @@ mask_layer(int argc, union evarg *argv)
 }
 
 void
-layedit_init(struct mapview *mv, struct window *pwin)
+layedit_init(struct tool *t)
 {
-	struct map *m = mv->map;
+	struct map *m = t->p;
 	struct window *win;
 	struct hbox *hb;
 	struct textbox *rename_tb;
 	struct tlist *tl;
+#ifdef DEBUG
+	if (!OBJECT_TYPE(m, "map"))
+		fatal("type");
+#endif
 
-	win = window_new(NULL);
+	win = tool_window(t, "mapedit-layedit");
 	window_set_caption(win, _("%s layers"), OBJECT(m)->name);
 	window_set_spacing(win, 2);
-	event_new(win, "window-close", close_window, "%p", mv);
+	
+	tl = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(tl, TLIST_POLL|TLIST_DBLCLICK);
+	tlist_prescale(tl, _("Layer NN (visible, editing)    "), 5);
+	event_new(tl, "tlist-poll", layedit_poll, "%p", m);
+	event_new(tl, "tlist-dblclick", edit_layer, "%p, %p", m, tl);
 	
 	hb = hbox_new(win, HBOX_WFILL);
 	hbox_set_padding(hb, 0);
@@ -233,11 +246,11 @@ layedit_init(struct mapview *mv, struct window *pwin)
 		struct button *bu;
 
 		tb = textbox_new(hb, _("New layer: "));
-		event_new(tb, "textbox-return", push_layer, "%p, %p", mv, tb);
+		event_new(tb, "textbox-return", push_layer, "%p, %p", m, tb);
 
 		bu = button_new(hb, _("Push"));
 		button_set_padding(bu, 6);
-		event_new(bu, "button-pushed", push_layer, "%p, %p", mv, tb);
+		event_new(bu, "button-pushed", push_layer, "%p, %p", m, tb);
 	}
 
 	hb = hbox_new(win, HBOX_WFILL);
@@ -246,12 +259,14 @@ layedit_init(struct mapview *mv, struct window *pwin)
 		struct button *bu;
 
 		rename_tb = textbox_new(hb, "-> ");
-		event_new(rename_tb, "textbox-return", rename_layer, "%p, %p",
-		    mv, rename_tb);
+		event_new(rename_tb, "textbox-return", rename_layer,
+		    "%p, %p, %p", m, rename_tb, tl);
 
 		bu = button_new(hb, _("Rename"));
 		button_set_padding(bu, 6);
-		event_new(bu, "button-pushed", rename_layer, "%p, %p", mv,
+		event_new(bu, "button-pushed", rename_layer,
+		    "%p, %p, %p", m, rename_tb, tl);
+		event_new(tl, "tlist-selected", selected_layer, "%p",
 		    rename_tb);
 	}
 
@@ -261,29 +276,16 @@ layedit_init(struct mapview *mv, struct window *pwin)
 		struct button *bu;
 
 		bu = button_new(hb, _("Pop"));
-		event_new(bu, "button-pushed", pop_layer, "%p, %i", mv, 0);
+		event_new(bu, "button-pushed", pop_layer, "%p, %i", m, 0);
 		bu = button_new(hb, _("Destructive Pop"));
-		event_new(bu, "button-pushed", pop_layer, "%p, %i", mv, 1);
+		event_new(bu, "button-pushed", pop_layer, "%p, %i", m, 1);
 		bu = button_new(hb, _("Edit"));
-		event_new(bu, "button-pushed", edit_layer, "%p", mv);
+		event_new(bu, "button-pushed", edit_layer, "%p, %p", m, tl);
 		bu = button_new(hb, _("Show/hide"));
-		event_new(bu, "button-pushed", mask_layer, "%p", mv);
+		event_new(bu, "button-pushed", mask_layer, "%p, %p", m, tl);
 	}
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_DBLCLICK);
-	tlist_prescale(tl, _("Layer NN (visible, editing)    "), 5);
-	event_new(tl, "tlist-poll", layedit_poll, "%p", mv);
-	event_new(tl, "tlist-changed", select_layer, "%p, %p", mv, rename_tb);
-	event_new(tl, "tlist-dblclick", edit_layer, "%p", mv);
-
-	mv->layed.layers_tl = tl;
-	mv->layed.win = win;
-	window_attach(pwin, win);
-}
-
-void
-layedit_destroy(struct mapview *mv)
-{
+	object_attach(win, tl);
 }
 
 #endif	/* EDITION */

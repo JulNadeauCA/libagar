@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.56 2004/05/02 09:04:48 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.57 2004/05/11 01:59:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -15,9 +15,6 @@
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/tool.h>
-#include <engine/mapedit/nodeedit.h>
-#include <engine/mapedit/layedit.h>
-#include <engine/mapedit/mediasel.h>
 
 #include "begin_code.h"
 
@@ -77,16 +74,6 @@ struct mapview {
 	unsigned int	 mw, mh;	/* Display size (nodes) */
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
-
-	/* XXX toolify these */
-	struct nodeedit	nodeed;		/* Node editor */
-	struct layedit	layed;		/* Layer editor */
-	struct {
-		struct window *win;
-		struct button *trigger;
-		struct mediasel *gfx;
-		struct mediasel *audio;
-	} mediasel;
 
 	struct toolbar *toolbar;	/* Optional toolbar */
 	struct statusbar *statusbar;	/* Optional status bar */
@@ -155,9 +142,6 @@ void	 mapview_reg_tool(struct mapview *, const struct tool *, void *);
 void	 mapview_reg_stdtools(struct mapview *);
 void	 mapview_select_tool(int, union evarg *);
 void	 mapview_toggle_rw(int, union evarg *);
-void	 mapview_toggle_nodeedit(int, union evarg *);
-void	 mapview_toggle_layedit(int, union evarg *);
-void	 mapview_toggle_mediasel(int, union evarg *);
 void	 mapview_selected_layer(int, union evarg *);
 #endif
 void	 mapview_toggle_grid(int, union evarg *);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.152 2004/05/02 09:04:48 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.153 2004/05/11 01:59:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -38,8 +38,6 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/textbox.h>
-
-#include <engine/mapedit/mediasel.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -219,30 +217,6 @@ mapview_toggle_rw(int argc, union evarg *argv)
 }
 
 void
-mapview_toggle_nodeedit(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	window_toggle_visibility(mv->nodeed.win);
-}
-
-void
-mapview_toggle_layedit(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-	
-	window_toggle_visibility(mv->layed.win);
-}
-
-void
-mapview_toggle_mediasel(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	window_toggle_visibility(mv->mediasel.win);
-}
-
-void
 mapview_selected_layer(int argc, union evarg *argv)
 {
 	struct combo *com = argv[0].p;
@@ -305,33 +279,11 @@ mapview_destroy(void *p)
 }
 
 static void
-mapview_attached(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[0].p;
-	struct window *win = argv[argc].p;
-
-#ifdef EDITION
-	if (mapedition) {
-		nodeedit_init(mv, win);
-		layedit_init(mv, win);
-		mediasel_init(mv, win);
-	}
-#endif
-}
-
-static void
 mapview_detached(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	struct tool *tool, *ntool;
 
-#ifdef EDITION
-	if (mapedition) {
-		nodeedit_destroy(mv);
-		layedit_destroy(mv);
-		mediasel_destroy(mv);
-	}
-#endif
 	for (tool = TAILQ_FIRST(&mv->tools);
 	     tool != TAILQ_END(&mv->tools);
 	     tool = ntool) {
@@ -361,9 +313,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->mouse.centering = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
-	mv->nodeed.win = NULL;
-	mv->layed.win = NULL;
-	mv->mediasel.win = NULL;
 	mv->zoom_inc = MAPVIEW_ZOOM_INC;
 	mv->zoom_ival = MAPVIEW_ZOOM_IVAL;
 	mv->zoom_tm = NULL;
@@ -373,9 +322,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->status = (statbar != NULL) ?
 	             statusbar_add_label(statbar, LABEL_STATIC, "...") : NULL;
 	mv->curtool = NULL;
-	mv->nodeed.trigger = NULL;
-	mv->layed.trigger = NULL;
-	mv->mediasel.trigger = NULL;
 	TAILQ_INIT(&mv->tools);
 	SLIST_INIT(&mv->draw_cbs);
 
@@ -427,7 +373,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
-	event_new(mv, "attached", mapview_attached, NULL);
 	event_new(mv, "detached", mapview_detached, NULL);
 }
 
@@ -444,17 +389,6 @@ mapview_reg_stdtools(struct mapview *mv)
 	toolbar_add_button(mv->toolbar, 0, ICON(EDIT_ICON), 1,
 	    (mv->flags & MAPVIEW_EDIT),
 	    mapview_toggle_rw, "%p", mv);
-#ifdef EDITION
-	mv->nodeed.trigger = toolbar_add_button(mv->toolbar, 0,
-	    ICON(NODE_EDITOR_ICON), 1, 0,
-	    mapview_toggle_nodeedit, "%p", mv);
-	mv->layed.trigger = toolbar_add_button(mv->toolbar, 0,
-	    ICON(LAYER_EDITOR_ICON), 1, 0,
-	    mapview_toggle_layedit, "%p", mv);
-	mv->mediasel.trigger = toolbar_add_button(mv->toolbar, 0,
-	    ICON(MEDIASEL_ICON), 1, 0,
-	    mapview_toggle_mediasel, "%p", mv);
-#endif
 }
 
 /*

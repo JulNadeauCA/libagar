@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.12 2004/04/22 12:36:47 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.13 2004/04/23 12:47:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -34,9 +34,13 @@
 #include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
+
 #include <engine/mapedit/mapedit.h>
-#include <engine/loader/den.h>
+
 #include <engine/widget/tlist.h>
+#include <engine/widget/combo.h>
+
+#include <engine/loader/den.h>
 
 #include <sys/stat.h>
 #include <ctype.h>
@@ -46,85 +50,108 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "mediasel.h"
+static void mediasel_scan_dens(struct combo *, const char *, const char *);
+static void mediasel_refresh(struct map *, int, struct combo *);
+static void mediasel_init(struct tool *);
 
-static void mediasel_scan_dens(struct mediasel *, const char *, const char *);
-static void mediasel_refresh(struct mediasel *);
+const struct tool mediasel_tool = {
+	N_("Media selector"),
+	N_("Import graphics or audio into the map."),
+	MEDIASEL_ICON,
+	-1,
+	mediasel_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
+
+enum {
+	MEDIASEL_GFX,
+	MEDIASEL_AUDIO
+};
 
 static void
 refresh_media(int argc, union evarg *argv)
 {
-	struct mediasel *msel = argv[1].p;
+	struct map *m = argv[1].p;
+	struct combo *com = argv[2].p;
+	int type = argv[3].i;
 
-	mediasel_refresh(msel);
+	mediasel_refresh(m, type, com);
 }
 
 /* Select a new graphics package to associate with the object. */
 static void
 media_selected(int argc, union evarg *argv)
 {
-	struct mediasel *msel = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	struct map *m = argv[1].p;
+	int type = argv[2].i;
+	struct tlist_item *it = argv[3].p;
 
-	switch (msel->type) {
+	switch (type) {
 	case MEDIASEL_GFX:
-		if (msel->obj->gfx != NULL) {
-			object_page_out(msel->obj, OBJECT_GFX);
+		if (OBJECT(m)->gfx != NULL) {
+			object_page_out(m, OBJECT_GFX);
 		}
 		if (it->text[0] == '\0') {
 			return;
 		}
-		msel->obj->gfx_name = Strdup(it->text);
-		if (object_page_in(msel->obj, OBJECT_GFX) == -1) {
-			text_msg(MSG_ERROR, "%s: %s", msel->obj->gfx_name,
+		OBJECT(m)->gfx_name = Strdup(it->text);
+		if (object_page_in(m, OBJECT_GFX) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", OBJECT(m)->gfx_name,
 			    error_get());
-			free(msel->obj->gfx_name);
-			msel->obj->gfx_name = NULL;
+			Free(OBJECT(m)->gfx_name, 0);
+			OBJECT(m)->gfx_name = NULL;
 		}
 		break;
 	case MEDIASEL_AUDIO:
-		if (msel->obj->gfx != NULL) {
-			object_page_out(msel->obj, OBJECT_AUDIO);
+		if (OBJECT(m)->audio != NULL) {
+			object_page_out(m, OBJECT_AUDIO);
 		}
 		if (it->text[0] == '\0') {
 			return;
 		}
-		msel->obj->audio_name = Strdup(it->text);
-		if (object_page_in(msel->obj, OBJECT_AUDIO) == -1) {
-			text_msg(MSG_ERROR, "%s: %s", msel->obj->audio_name,
+		OBJECT(m)->audio_name = Strdup(it->text);
+		if (object_page_in(m, OBJECT_AUDIO) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", OBJECT(m)->audio_name,
 			    error_get());
-			free(msel->obj->audio_name);
-			msel->obj->audio_name = NULL;
+			Free(OBJECT(m)->audio_name, 0);
+			OBJECT(m)->audio_name = NULL;
 		}
 		break;
 	}
 }
 
 static void
-mediasel_refresh(struct mediasel *msel)
+mediasel_refresh(struct map *m, int type, struct combo *com)
 {
 	char den_path[MAXPATHLEN], *denp = &den_path[0];
 	char *dir;
 	const char *hint = NULL;
 	
-	switch (msel->type) {
+	switch (type) {
 	case MEDIASEL_GFX:
-		if (msel->obj->gfx_name != NULL) {
-			textbox_printf(msel->com->tbox, "%s",
-			    msel->obj->gfx_name);
+		if (OBJECT(m)->gfx_name != NULL) {
+			textbox_printf(com->tbox, "%s", OBJECT(m)->gfx_name);
 		}
 		hint = "gfx";
 		break;
 	case MEDIASEL_AUDIO:
-		if (msel->obj->audio_name != NULL) {
-			textbox_printf(msel->com->tbox, "%s",
-			    msel->obj->audio_name);
+		if (OBJECT(m)->audio_name != NULL) {
+			textbox_printf(com->tbox, "%s", OBJECT(m)->audio_name);
 		}
 		hint = "audio";
 		break;
 	}
 
-	tlist_clear_items(msel->com->list);
+	tlist_clear_items(com->list);
 
 	prop_copy_string(config, "den-path", den_path, sizeof(den_path));
 
@@ -139,7 +166,7 @@ mediasel_refresh(struct mediasel *msel)
 		}
 
 		if (chdir(dir) == 0) {
-			mediasel_scan_dens(msel, hint, "");
+			mediasel_scan_dens(com, hint, "");
 			if (chdir(cwd) == -1) {
 				text_msg(MSG_ERROR, "chdir %s: %s", cwd,
 				    strerror(errno));
@@ -151,7 +178,7 @@ mediasel_refresh(struct mediasel *msel)
 
 /* Search subdirectories for .den files containing a given hint. */
 static void
-mediasel_scan_dens(struct mediasel *msel, const char *hint, const char *spath)
+mediasel_scan_dens(struct combo *com, const char *hint, const char *spath)
 {
 	DIR *di;
 	struct dirent *dent;
@@ -187,14 +214,14 @@ mediasel_scan_dens(struct mediasel *msel, const char *hint, const char *spath)
 				if (strcmp(den->hint, hint) == 0 &&
 				    (ext = strrchr(path, '.')) != NULL) {
 					*ext = '\0';
-					tlist_insert_item(msel->com->list, NULL,
-					    path, NULL);
+					tlist_insert_item(com->list, NULL, path,
+					    NULL);
 				}
 				den_close(den);
 			}
 		} else if (sta.st_mode & S_IFDIR) {
 			if (chdir(dent->d_name) == 0) {
-				mediasel_scan_dens(msel, hint, path);
+				mediasel_scan_dens(com, hint, path);
 				if (chdir("..") == -1) {
 					text_msg(MSG_ERROR, "..: %s",
 					    strerror(errno));
@@ -389,29 +416,29 @@ static void
 shown_window(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
-	struct mapview *mv = argv[1].p;
+	struct map *m = argv[1].p;
 
-	if (OBJECT(mv->map)->gfx_name != NULL)
-		object_page_in(mv->map, OBJECT_GFX);
-	if (OBJECT(mv->map)->audio_name != NULL)
-		object_page_in(mv->map, OBJECT_AUDIO);
+	if (OBJECT(m)->gfx_name != NULL)
+		object_page_in(m, OBJECT_GFX);
+	if (OBJECT(m)->audio_name != NULL)
+		object_page_in(m, OBJECT_AUDIO);
 }
 
 static void
 hidden_window(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
-	struct mapview *mv = argv[1].p;
+	struct map *m = argv[1].p;
 
-	if (OBJECT(mv->map)->gfx_name != NULL)
-		object_page_out(mv->map, OBJECT_GFX);
-	if (OBJECT(mv->map)->audio_name != NULL)
-		object_page_out(mv->map, OBJECT_AUDIO);
+	if (OBJECT(m)->gfx_name != NULL)
+		object_page_out(m, OBJECT_GFX);
+	if (OBJECT(m)->audio_name != NULL)
+		object_page_out(m, OBJECT_AUDIO);
 }
 
 /* Update the graphic import list. */
 static void
-poll_media(int argc, union evarg *argv)
+poll_gfxmedia(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
@@ -419,9 +446,8 @@ poll_media(int argc, union evarg *argv)
 	Uint32 i;
 	
 	tlist_clear_items(tl);
-
 	if (ob->gfx == NULL)
-		return;
+		goto out;
 	
 	for (i = 0; i < ob->gfx->nsubmaps; i++) {
 		struct map *sm = ob->gfx->submaps[i];
@@ -447,100 +473,87 @@ poll_media(int argc, union evarg *argv)
 		tlist_insert_item(tl, (an->nframes > 0) ?
 		    an->frames[0] : NULL, label, an);
 	}
-
+out:
 	tlist_restore_selections(tl);
 }
 
 static void
-close_window(int argc, union evarg *argv)
+mediasel_init(struct tool *t)
 {
-	struct window *win = argv[0].p;
-	struct mapview *mv = argv[1].p;
-
-	widget_set_int(mv->mediasel.trigger, "state", 0);
-	window_hide(win);
-}
-
-void
-mediasel_init(struct mapview *mv, struct window *pwin)
-{
-	struct object *ob = OBJECT(mv->map);
+	struct map *m = t->p;
+	struct mapview *mv = t->mv;
 	struct window *win;
 	struct box *vb, *hb;
-	struct combo *gfx_com, *aud_com;
+	struct combo *com;
 	struct tlist *tl;
-	struct mediasel *msel;
+	struct button *bu;
+#ifdef DEBUG
+	if (!OBJECT_TYPE(m, "map"))
+		fatal("type");
+#endif
 
-	win = window_new(NULL);
-	window_set_caption(win, _("Load media into `%s'"), ob->name);
-	event_new(win, "window-shown", shown_window, "%p", mv);
-	event_new(win, "window-hidden", hidden_window, "%p", mv);
-	event_new(win, "window-close", close_window, "%p", mv);
+	win = tool_window(t, "mapedit-mediasel");
+	window_set_caption(win, _("Load media into `%s'"), OBJECT(m)->name);
+	event_new(win, "window-shown", shown_window, "%p", m);
+	event_new(win, "window-hidden", hidden_window, "%p", m);
 
 	vb = box_new(win, BOX_VERT, BOX_WFILL);
 	box_set_spacing(vb, 0);
 	box_set_padding(vb, 2);
-
-	hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
-	box_set_spacing(hb, 1);
-	box_set_padding(hb, 2);
-	mv->mediasel.gfx = msel = Malloc(sizeof(struct mediasel), M_MAPEDIT);
-	msel->type = MEDIASEL_GFX;
-	msel->obj = ob;
-	msel->com = combo_new(hb, 0, _("Graphics: "));
-	textbox_prescale(msel->com->tbox, "XXXXXXXXXXXXXXXXX");
-	event_new(msel->com, "combo-selected", media_selected, "%p", msel);
-	msel->rfbu = button_new(hb, _("Refresh"));
-	event_new(msel->rfbu, "button-pushed", refresh_media, "%p", msel);
-	mediasel_refresh(msel);
-	
-	hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
-	box_set_spacing(hb, 1);
-	box_set_padding(hb, 2);
-	mv->mediasel.audio = msel = Malloc(sizeof(struct mediasel), M_MAPEDIT);
-	msel->type = MEDIASEL_AUDIO;
-	msel->obj = ob;
-	msel->com = combo_new(hb, 0, _("Audio: "));
-	textbox_prescale(msel->com->tbox, "XXXXXXXXXXXXXXXXX");
-	event_new(msel->com, "combo-selected", media_selected, "%p", msel);
-	msel->rfbu = button_new(hb, _("Refresh"));
-	event_new(msel->rfbu, "button-pushed", refresh_media, "%p", msel);
-	mediasel_refresh(msel);
-
-	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
-	tlist_set_item_height(tl, text_font_height(NULL)*2);
-	event_new(tl, "tlist-poll", poll_media, "%p", ob);
-
-	hb = box_new(vb, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
-	box_set_spacing(hb, 1);
-	box_set_padding(hb, 1);
 	{
-		int i;
-		int icons[] = {
-			LEFT_ARROW_ICON,
-			RIGHT_ARROW_ICON,
-			UP_ARROW_ICON,
-			DOWN_ARROW_ICON
-		};
-		struct button *bu;
+		hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
+		box_set_spacing(hb, 1);
+		box_set_padding(hb, 2);
+		{
+			com = combo_new(hb, 0, _("Graphics: "));
+			textbox_prescale(com->tbox, "XXXXXXXXXXXXXXXXX");
+			event_new(com, "combo-selected", media_selected,
+			    "%p, %i", m, MEDIASEL_GFX);
+			bu = button_new(hb, _("Refresh"));
+			event_new(bu, "button-pushed", refresh_media,
+			    "%p, %p, %i", m, com, MEDIASEL_GFX);
+			mediasel_refresh(m, MEDIASEL_GFX, com);
+		}
+	
+		hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
+		box_set_spacing(hb, 1);
+		box_set_padding(hb, 2);
+		{
+			com = combo_new(hb, 0, _("Audio: "));
+			textbox_prescale(com->tbox, "XXXXXXXXXXXXXXXXX");
+			event_new(com, "combo-selected", media_selected,
+			    "%p, %i", m, MEDIASEL_AUDIO);
+			bu = button_new(hb, _("Refresh"));
+			event_new(bu, "button-pushed", refresh_media,
+			    "%p, %p, %i", m, com, MEDIASEL_AUDIO);
+			mediasel_refresh(m, MEDIASEL_AUDIO, com);
+		}
 
-		/* XXX use toolbar */
-		for (i = 0; i < 4; i++) {
-			bu = button_new(hb, NULL);
-			button_set_label(bu, ICON(icons[i]));
-			event_new(bu, "button-pushed", import_media,
-			    "%p, %p, %i, %p", tl, mv, i, ob);
+		tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
+		tlist_set_item_height(tl, text_font_height(NULL)*2);
+		event_new(tl, "tlist-poll", poll_gfxmedia, "%p", OBJECT(m));
+
+		hb = box_new(vb, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+		box_set_spacing(hb, 1);
+		box_set_padding(hb, 1);
+		{
+			int icons[] = {
+				LEFT_ARROW_ICON,
+				RIGHT_ARROW_ICON,
+				UP_ARROW_ICON,
+				DOWN_ARROW_ICON
+			};
+			int i;
+
+			/* XXX use toolbar */
+			for (i = 0; i < 4; i++) {
+				bu = button_new(hb, NULL);
+				button_set_label(bu, ICON(icons[i]));
+				event_new(bu, "button-pushed", import_media,
+				    "%p, %p, %i, %p", tl, mv, i, OBJECT(m));
+			}
 		}
 	}
-	mv->mediasel.win = win;
-	window_attach(pwin, win);
-}
-
-void
-mediasel_destroy(struct mapview *mv)
-{
-	Free(mv->mediasel.gfx, M_MAPEDIT);
-	Free(mv->mediasel.audio, M_MAPEDIT);
 }
 
 #endif	/* EDITION */
