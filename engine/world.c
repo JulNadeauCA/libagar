@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.34 2002/05/31 10:49:52 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.35 2002/06/03 18:36:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,8 +46,6 @@ static const struct object_ops world_ops = {
 	NULL,
 	world_load,
 	world_save,
-	NULL,		/* onattach */
-	NULL,		/* ondetach */
 	world_attach,
 	world_detach
 };

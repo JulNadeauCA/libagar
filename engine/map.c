@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.92 2002/06/01 14:21:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.93 2002/06/03 18:36:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,8 +55,6 @@ static const struct object_ops map_ops = {
 	map_destroy,
 	map_load,
 	map_save,
-	NULL,		/* onattach */
-	NULL,		/* ondetach */
 	NULL,		/* attach */
 	NULL		/* detach */
 };

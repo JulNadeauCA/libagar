@@ -1,4 +1,4 @@
-/*	$Csoft	    */
+/*	$Csoft$	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.

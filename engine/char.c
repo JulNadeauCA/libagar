@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.48 2002/05/19 14:32:53 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.49 2002/06/03 18:33:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,8 +58,6 @@ static const struct object_ops char_ops = {
 	NULL,		/* destroy */
 	char_load,
 	char_save,
-	NULL,		/* onattach */
-	NULL,		/* ondetach */
 	NULL,		/* attach */
 	NULL		/* detach */
 };
