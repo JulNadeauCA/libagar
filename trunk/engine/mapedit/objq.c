@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.26 2002/11/22 08:56:52 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.27 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -35,71 +35,36 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 #include <engine/widget/button.h>
+#include <engine/widget/tlist.h>
 
 #include "mapedit.h"
 #include "mapview.h"
 #include "objq.h"
 #include "fileops.h"
 
-static const struct widget_ops objq_ops = {
-	{
-		objq_destroy,	/* destroy */
-		NULL,		/* load */
-		NULL		/* save */
-	},
-	objq_draw,
-	NULL		/* update */
-};
-
-static void	 objq_scaled(int, union evarg *);
-static void	 objq_event(int, union evarg *);
 static void	 tilemap_option(int, union evarg *);
 
-enum {
-	SELECTION_COLOR,
-	GRID_COLOR
-};
-
-enum {
-	SELECT_BUTTON =		1,
-	SCROLL_BUTTON_MASK =	(SDL_BUTTON_MMASK|SDL_BUTTON_RMASK),
-	SCROLL_LEFT_KEY =	SDLK_LEFT,
-	SCROLL_RIGHT_KEY =	SDLK_RIGHT
-};
-
-struct objq *
-objq_new(struct region *reg, struct mapedit *med, int flags, int rw, int rh)
+static void
+tl_objs_poll(int argc, union evarg *argv)
 {
-	struct objq *objq;
+	struct tlist *tl = argv[0].p;
+	struct mapedit *med = argv[1].p;
+	struct editobj *eob;
 
-	objq = emalloc(sizeof(struct objq));
-	objq_init(objq, med, flags, rw, rh);
+	tlist_clear_items(tl);
 
-	region_attach(reg, objq);
+	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
+		struct object *ob = eob->pobj;
+		struct art *art = ob->art;
+		SDL_Surface *icon = NULL;
 
-	return (objq);
-}
+		if (ob->art != NULL && ob->art->nsprites > 0) {
+			icon = ob->art->sprites[0];
+		}
+		tlist_insert_item(tl, icon, ob->name, ob);
+	}
 
-void
-objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
-{
-	widget_init(&oq->wid, "objq", "widget", &objq_ops, rw, rh);
-	widget_map_color(oq, SELECTION_COLOR, "objq-selection", 0, 200, 0);
-	widget_map_color(oq, GRID_COLOR, "objq-grid", 208, 208, 208);
-	
-	oq->med = med;
-	oq->offs = 0;
-	oq->flags = (flags != 0) ? flags : OBJQ_HORIZ;
-	SLIST_INIT(&oq->tmaps);
-	
-	event_new(oq, "widget-scaled",
-	    objq_scaled, NULL);
-	event_new(oq, "window-mousemotion",
-	    objq_event, "%i", WINDOW_MOUSEMOTION);
-	event_new(oq, "window-mousebuttonup",
-	    objq_event, "%i", WINDOW_MOUSEBUTTONUP);
-	event_new(oq, "window-mousebuttondown",
-	    objq_event, "%i", WINDOW_MOUSEBUTTONDOWN);
+	tlist_restore_selections(tl);
 }
 
 static void
@@ -141,41 +106,32 @@ tilemap_option(int argc, union evarg *argv)
 }
 
 static void
-objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
+tl_objs_selected(int argc, union evarg *argv)
 {
-	static int cury = 85;
-	struct object *ob = eob->pobj;
-	struct objq_tmap *tm;
+	struct tlist *tl = argv[0].p;
+	struct mapedit *med = argv[1].p;
+	struct tlist_item *eob_item = argv[2].p;
+	struct object *ob = eob_item->p1;
 	struct window *win;
 	struct region *reg;
 	struct mapview *mv;
 	struct button *bu;
+	static int cury = 85;
 	char *wname;
 
-	if (eob == NULL) {
-		fatal("NULL editobj\n");		/* XXX */
-	}
-	ob = eob->pobj;
-
-	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
-		if (tm->ob == eob->pobj) {
-			window_show(tm->win);
-			view_focus(tm->win);
-			return;
-		}
-	}
-
-	win = emalloc(sizeof(struct window));
+	/* XXX use generic windows for this */
+	/* Create a new window for the tile map. */
+	win = window_generic_new(88, 264, "mapedit-tmap-%s", ob->name);
+	win->rd.x = view->w - 170;
+	win->rd.y = cury;
+	win->minw = 56;
+	win->minh = 117;
 	if ((cury += 32) + 264 > view->h) {
 		cury = 85;
 	}
-
-	asprintf(&wname, "t-win-%s", OBJECT(ob->art->map)->name);
-	window_init(win, wname, 0, view->w - 170, cury, 88, 264, 56, 117);
 	window_set_caption(win, "%s", ob->name);
-	free(wname);
 
-	/* Map view */
+	/* Create the tile map. */
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, ob->art->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
@@ -230,107 +186,30 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
 	region_attach(reg, mv);
 
-	tm = emalloc(sizeof(struct objq_tmap));
-	tm->win = win;
-	tm->ob = ob;
-	SLIST_INSERT_HEAD(&oq->tmaps, tm, tmaps);
-
-	view_attach(win);
 	window_show(win);
 }
 
-static void
-objq_event(int argc, union evarg *argv)
+struct window *
+objq_window(struct mapedit *med)
 {
-	struct objq *oq = argv[0].p;
-	struct mapedit *med = oq->med;
-	struct editobj *eob;
-	int button, x, ox, ms;
-	int curoffs;
+	struct window *win;
+	struct region *reg;
 
-	switch (argv[1].i) {
-	case WINDOW_MOUSEBUTTONUP:
-	case WINDOW_MOUSEBUTTONDOWN:
-		button = argv[2].i;
-		x = argv[3].i;
-
-		if (button != SELECT_BUTTON) {
-			break;
-		}
-		if (med->neobjs == 0) {
-			break;
-		}	
-		curoffs = x/TILEW;
-		if (curoffs >= med->neobjs) {
-			curoffs = med->neobjs - 1;
-		}
-		TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
-		if (eob == NULL) {
-			dprintf("no editable object at offset 0x%x\n", curoffs);
-			break;
-		}
-		objq_select(oq, med, eob);
-		break;
+	win = window_generic_new(215, 140, "mapedit-objq");
+	if (win == NULL) {
+		return (NULL);		/* Exists */
 	}
-}
+	window_set_caption(win, "Objects");
 
-static void
-objq_scaled(int argc, union evarg *argv)
-{
-	struct objq *oq = argv[0].p;
-	int maxw = argv[1].i, maxh = argv[2].i;
-	int w, h;
+	reg = region_new(win, 0, 0, 0, 100, 100);
+	{
+		struct tlist *tl;
 
-	for (w = 0; w < WIDGET(oq)->w-1 && w < maxw; w += TILEW) ;;
-	for (h = 0; h < WIDGET(oq)->h-1 && h < maxh; h += TILEH) ;;
-	
-	WIDGET(oq)->w = w;
-	WIDGET(oq)->h = h;
-}
-
-void
-objq_destroy(void *p)
-{
-	struct objq *oq = p;
-	struct objq_tmap *tm, *ntm;
-
-	for (tm = SLIST_FIRST(&oq->tmaps);
-	     tm != SLIST_END(&oq->tmaps);
-	     tm = ntm) {
-		ntm = SLIST_NEXT(tm, tmaps);
-		free(tm);
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl, "tlist-poll", tl_objs_poll, "%p", med);
+		event_new(tl, "tlist-changed", tl_objs_selected, "%p", med);
 	}
 
-	widget_destroy(p);
-}
-
-void
-objq_draw(void *p)
-{
-	struct objq *oq = p;
-	struct mapedit *med = oq->med;
-	struct editobj *eob;
-	int x = 0, i;
-	
-	for (i = 0;
-	    i < (WIDGET(oq)->w / TILEW) && i < med->neobjs;
-	    i++, x += TILEW) {
-		TAILQ_INDEX(eob, &med->eobjsh, eobjs, i);
-		if (eob == NULL) {
-			fatal("no editable object at 0x%x\n", i);
-		}
-		
-		WIDGET_DRAW(oq, SPRITE(eob->pobj, 0), x, 0);
-
-		if (med->curobj == eob) {
-			primitives.square(oq, x, 0, TILEW, TILEH,
-			    WIDGET_COLOR(oq, SELECTION_COLOR));
-			primitives.square(oq, x+1, 1, TILEW-1, TILEH-1,
-			    WIDGET_COLOR(oq, SELECTION_COLOR));
-		} else {
-			primitives.square(oq, x, 0, TILEW, TILEH,
-			    WIDGET_COLOR(oq, GRID_COLOR));
-		}
-	}
+	return (win);
 }
 
