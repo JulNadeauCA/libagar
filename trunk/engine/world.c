@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.38 2002/06/12 20:40:06 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.39 2002/06/25 17:59:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ world_init(struct world *wo, char *name)
 		fatal("%s: %s\n", wo->udatadir, strerror(errno));
 	}
 	
-	object_init(&wo->obj, "world", name, name, OBJ_ART, &world_ops);
+	object_init(&wo->obj, "world", name, NULL, 0, &world_ops);
 	wo->nobjs = 0;
 	SLIST_INIT(&wo->wobjsh);
 	pthread_mutex_init(&wo->lock, NULL);
