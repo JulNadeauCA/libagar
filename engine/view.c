@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.64 2002/09/05 03:53:55 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.65 2002/09/06 01:25:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -53,7 +53,7 @@ struct cached_surface {
 	SDL_Surface	*source_s;	/* Original surface */
 	SDL_Surface	*scaled_s;	/* Scaled surface */
 	size_t		 size;		/* Size of scaled surface in bytes */
-	int		 nhits;		/* Cache hits */
+	int		 nrefs;		/* Reference count */
 
 	SLIST_ENTRY(cached_surface) surfaces;
 };
@@ -259,7 +259,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	SLIST_FOREACH(cs, &cached_surfaces, surfaces) {
 		if (cs->source_s == ss &&
 		    cs->scaled_s->w == w && cs->scaled_s->h == h) {
-			cs->nhits++;
+			cs->nrefs++;
 			pthread_mutex_unlock(&cached_surfaces_lock);
 			return (cs->scaled_s);
 		}
@@ -325,12 +325,26 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	cs->source_s = ss;
 	cs->scaled_s = ds;
 	cs->size = (ds->w * ds->h) * ds->format->BytesPerPixel;
-	cs->nhits = 0;
+	cs->nrefs = 0;
 	SLIST_INSERT_HEAD(&cached_surfaces, cs, surfaces);
 	
 	pthread_mutex_unlock(&cached_surfaces_lock);
 
 	return (ds);
+}
+
+void
+view_unused_surface(SDL_Surface *scaled)
+{
+	struct cached_surface *cs;
+
+	pthread_mutex_lock(&cached_surfaces_lock);
+	SLIST_FOREACH(cs, &cached_surfaces, surfaces) {
+		if (cs->scaled_s == scaled) {
+			cs->nrefs--;
+		}
+	}
+	pthread_mutex_unlock(&cached_surfaces_lock);
 }
 
 /*
