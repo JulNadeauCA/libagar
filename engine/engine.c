@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.26 2002/04/09 00:58:21 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.27 2002/04/18 04:03:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,6 +41,9 @@
 
 #include <engine/mapedit/mapedit.h>
 
+#include <engine/widget/window.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/label.h>
 #include <engine/widget/text.h>
 
 #ifdef DEBUG
@@ -177,6 +180,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		return (-1);
 	}
 	
+	/* Initialize the window subsystem. */
+	if (window_init() != 0) {
+		return (-1);
+	}
+
 	/* Initialize input devices. */
 	keyboard = input_create(INPUT_KEYBOARD, 0);
 	joy = input_create(INPUT_JOY, njoy);
@@ -223,6 +231,9 @@ engine_destroy(void)
 	
 	/* Destroy the font engine. */
 	text_quit();
+	
+	/* Destroy the window subsystem. */
+	window_quit();
 
 	SDL_Quit();
 #endif
@@ -240,5 +251,33 @@ emalloc(size_t len)
 		engine_destroy();
 	}
 	return (p);
+}
+
+void
+engine_config(void)
+{
+	SDL_Rect rd;
+	static Uint32 bg, fg;
+	struct window *w;
+	struct label *fullscreen_label, *audio_label;
+	
+	bg = SDL_MapRGBA(mainview->v->format, 0, 50, 30, 250);
+	fg = SDL_MapRGBA(mainview->v->format, 200, 200, 200, 100);
+	rd.x = 64;
+	rd.y = 64;
+	rd.w = 512;
+	rd.h = 256;
+
+	w = window_create(mainview, "engine-config",
+	    "Engine configuration", 0 , WINDOW_CUBIC, rd, &bg, &fg);
+	object_link(w);
+
+	fullscreen_label = label_create(w, "fullscreen-label", 
+	    "Full-screen mode", 0, 10, 10);
+	object_link(fullscreen_label);
+
+	audio_label = label_create(w, "audio-label", 
+	    "Audio enabled", 0, 10, 40);
+	object_link(audio_label);
 }
 
