@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.18 2004/08/23 06:44:14 vedge Exp $
+.\"	$Csoft: text.3,v 1.19 2004/09/14 10:55:30 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -108,26 +108,26 @@ function frees all resources allocated by the font engine.
 .Sh FONT INFORMATION
 .nr nS 1
 .Ft int
-.Fn text_font_height "ttf_font *font"
+.Fn text_get_font_height "ttf_font *font"
 .Pp
 .Ft int
-.Fn text_font_ascent "ttf_font *font"
+.Fn text_get_font_ascent "ttf_font *font"
 .Pp
 .Ft int
-.Fn text_font_descent "ttf_font *font"
+.Fn text_get_font_descent "ttf_font *font"
 .Pp
 .Ft int
-.Fn text_font_line_skip "ttf_font *font"
+.Fn text_get_font_line_skip "ttf_font *font"
 .Pp
 .nr nS 0
 These functions return information specific to a given font.
-.Fn text_font_height
+.Fn text_get_font_height
 returns the total height of the font in pixels.
-.Fn text_font_ascent
+.Fn text_get_font_ascent
 returns the offset from the baseline to the top of the font.
-.Fn text_font_descent
+.Fn text_get_font_descent
 returns the offset from the baseline to the bottom of the font.
-.Fn text_font_line_skip
+.Fn text_get_font_line_skip
 returns the recommended spacing in pixels between lines of text.
 .Sh RENDERING
 .nr nS 1

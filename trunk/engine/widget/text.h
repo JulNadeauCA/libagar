@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.35 2004/08/23 06:42:57 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.36 2004/09/14 10:55:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -41,13 +41,12 @@ struct text_font {
 };
 
 __BEGIN_DECLS
+extern int text_font_height, text_font_ascent, text_font_descent,
+	   text_font_line_skip;
+
 int	 text_init(enum text_engine);
 void	 text_parse_fontspec(char *);
 void	 text_destroy(void);
-int	 text_font_height(struct text_font *);
-int	 text_font_ascent(struct text_font *);
-int	 text_font_descent(struct text_font *);
-int	 text_font_line_skip(struct text_font *);
 
 __inline__ SDL_Surface	*text_render(const char *, int, Uint32, const char *);
 SDL_Surface		*text_render_unicode(const char *, int, Uint32,

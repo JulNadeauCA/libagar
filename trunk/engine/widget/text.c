@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.93 2004/09/25 01:58:26 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.94 2004/10/01 03:09:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -43,8 +43,12 @@
 #include <stdarg.h>
 #include <errno.h>
 
-int text_composition = 1;			/* Built-in input composition */
-int text_rightleft = 0;				/* Right-to-left text display */
+int text_composition = 1;		/* Built-in input composition */
+int text_rightleft = 0;			/* Right-to-left text display */
+int text_font_height = 0;		/* Default font height (px) */
+int text_font_ascent = 0;		/* Default font ascent (px) */
+int text_font_descent = 0;		/* Default font descent (px) */
+int text_font_line_skip = 0;		/* Default font line skip (px) */
 
 #define TEXT_NBUCKETS 1024
 
@@ -128,6 +132,10 @@ text_init(enum text_engine te)
 		    prop_get_string(config, "font-engine.default-font"),
 		    prop_get_int(config, "font-engine.default-size"),
 		    prop_get_int(config, "font-engine.default-style"));
+		text_font_height = ttf_font_height(default_font->p);
+		text_font_ascent = ttf_font_ascent(default_font->p);
+		text_font_descent = ttf_font_descent(default_font->p);
+		text_font_line_skip = ttf_font_line_skip(default_font->p);
 		break;
 	default:
 		break;
@@ -173,30 +181,6 @@ text_destroy(void)
 		Free(fon, M_TEXT);
 	}
 	ttf_destroy();
-}
-
-int
-text_font_height(struct text_font *font)
-{
-	return (ttf_font_height((font != NULL) ? font->p : default_font->p));
-}
-
-int
-text_font_ascent(struct text_font *font)
-{
-	return (ttf_font_ascent((font != NULL) ? font->p : default_font->p));
-}
-
-int
-text_font_descent(struct text_font *font)
-{
-	return (ttf_font_descent((font != NULL) ? font->p : default_font->p));
-}
-
-int
-text_font_line_skip(struct text_font *font)
-{
-	return (ttf_font_line_skip((font != NULL) ? font->p : default_font->p));
 }
 
 static __inline__ int
@@ -296,7 +280,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	    prop_get_string(config, "font-engine.default-font"),
 	    fontsize >= 0 ? fontsize :
 	    prop_get_int(config, "font-engine.default-size"), 0);
-	font_h = text_font_height(font);
+	font_h = ttf_font_height(font->p);
 
 	/* Decompose the color. */
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
@@ -414,7 +398,7 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	va_end(args);
 
 	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|
-	                 WINDOW_NO_MAXIMIZE|WINDOW_NO_DECORATIONS, NULL);
+	                 WINDOW_NO_DECORATIONS, NULL);
 	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
@@ -443,7 +427,7 @@ text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
 	va_end(args);
 
 	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|
-	                 WINDOW_NO_MAXIMIZE|WINDOW_NO_DECORATIONS, NULL);
+	                 WINDOW_NO_DECORATIONS, NULL);
 	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
