@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.48 2002/12/13 03:43:18 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.49 2002/12/24 10:27:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -43,7 +43,13 @@
 #include <engine/object.h> 	 /* Most structures are derived from this */
 #include <engine/event.h>	 /* For event handler prototypes */
 
-#ifndef SERIALIZATION
+#ifdef SERIALIZATION
+# ifdef _SGI_SOURCE
+/* Irix <pthread.h> defines PTHREAD_MUTEX_INITIALIZER as { 0 }. */
+#  undef PTHREAD_MUTEX_INITIALIZER
+#  define PTHREAD_MUTEX_INITIALIZER { { 0 } }
+# endif
+#else
 # define pthread_mutex_destroy(mu)
 # define pthread_mutex_init(mu, attr)
 # define pthread_mutex_lock(mu)
