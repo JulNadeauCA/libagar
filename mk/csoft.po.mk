@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.5 2003/07/27 22:14:18 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.6 2003/07/28 13:34:19 vedge Exp $
 
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -41,8 +41,8 @@ all: ${DOMAIN}.pot ${MOS}
 	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "${MAKE} ${DOMAIN}.pot"; \
 		${MAKE} ${DOMAIN}.pot; \
-		echo "${MSGMERGE} $< ${DOMAIN}.pot -o $@.pox"; \
-		${MSGMERGE} $< ${DOMAIN}.pot -o $@.pox; \
+		echo "${MSGMERGE} $< ${DOMAIN}.pot -o $@"; \
+		${MSGMERGE} $< ${DOMAIN}.pot -o $@; \
 	fi
 
 .po.mo:
