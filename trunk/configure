@@ -79,6 +79,9 @@ for arg; do
 	--help)
 	    help=yes
 	    ;;
+	--srcdir)
+	    srcdir=$optarg
+	    ;;
 	*)
 	    echo "invalid argument: $arg"
 	    echo "try ./configure --help"
@@ -93,6 +96,7 @@ else
 fi
 
 if [ "${srcdir}" != "" ]; then
+	echo "Concurrent build (source in ${srcdir})"
 	if [ ! -e "${srcdir}" ]; then
 		echo "Cannot find source directory: ${srcdir}"
 		exit 1
