@@ -1,4 +1,4 @@
-/*	$Csoft	    */
+/*	$Csoft$	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -49,7 +49,7 @@
 
 static const struct version config_ver = {
 	"agar config",
-	1, 0
+	1, 1
 };
 
 static const struct object_ops config_ops = {
@@ -61,11 +61,15 @@ static const struct object_ops config_ops = {
 static const enum {
 	CLOSE_BUTTON,
 	SAVE_BUTTON,
-	FULLSCRN_CBOX,
 	FONTCACHE_CBOX,
 	DEBUG_CBOX,
 	DEBUG_BUTTON
 } widgets;
+
+#define CONFIG_DEFAULT_WIDTH 	640
+#define CONFIG_DEFAULT_HEIGHT 	480
+#define CONFIG_DEFAULT_BPP 	32
+#define CONFIG_DEFAULT_FLAGS	(CONFIG_FONT_CACHE)
 
 static struct window	*config_settings_win(struct config *);
 static void		 apply(int, union evarg *);
@@ -86,6 +90,9 @@ config_init(struct config *con)
 {
 	object_init(&con->obj, "engine-config", "config", NULL, 0, &config_ops);
 	con->flags = CONFIG_FONT_CACHE;
+	con->view.w = CONFIG_DEFAULT_WIDTH;
+	con->view.h = CONFIG_DEFAULT_HEIGHT;
+	con->view.bpp = CONFIG_DEFAULT_BPP;
 	pthread_mutex_init(&con->lock, NULL);
 }
 
@@ -112,6 +119,9 @@ config_load(void *p, int fd)
 
 	version_read(fd, &config_ver);
 	config->flags = fobj_read_uint32(fd);
+	config->view.w = fobj_read_uint32(fd);
+	config->view.h = fobj_read_uint32(fd);
+	config->view.bpp = fobj_read_uint32(fd);
 	config_apply(config);
 
 	pthread_mutex_unlock(&con->lock);
@@ -129,6 +139,9 @@ config_save(void *p, int fd)
 
 	version_write(fd, &config_ver);
 	fobj_write_uint32(fd, con->flags);
+	fobj_write_uint32(fd, con->view.w);
+	fobj_write_uint32(fd, con->view.h);
+	fobj_write_uint32(fd, con->view.bpp);
 	
 	pthread_mutex_unlock(&con->lock);
 	
@@ -142,7 +155,6 @@ config_settings_win(struct config *con)
 	struct window *win;
 	struct region *lbody_reg, *rbody_reg, *text_reg, *buttons_reg;
 	struct button *close_button, *save_button, *debug_button;
-	struct checkbox *fullscr_cbox;
 	struct checkbox *fontcache_cbox;
 #ifdef DEBUG
 	struct checkbox *debug_cbox;
@@ -150,17 +162,13 @@ config_settings_win(struct config *con)
 	struct textbox *udatadir_tbox, *sysdatadir_tbox;
 
 	/* Settings window */
-	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
-	    20, 20,  60, 60);
+	win = window_new("Engine settings", 0,      20,  20,  60, 60);
+
 	lbody_reg = region_new(win, REGION_VALIGN,   0,   0,  50, 30);
 	rbody_reg = region_new(win, REGION_VALIGN,  50,   0,  50, 30);
 	text_reg = region_new(win, REGION_VALIGN,    0,  30, 100, 30);
 	buttons_reg = region_new(win, REGION_HALIGN, 0,  80, 100, 20);
 
-	fullscr_cbox = checkbox_new(lbody_reg, "Full-screen mode", 33, 0);
-	event_new(fullscr_cbox, "checkbox-changed", 0, apply,
-	    "%i", FULLSCRN_CBOX);
-	
 	fontcache_cbox = checkbox_new(lbody_reg, "Font cache", 33,
 	    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
 	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
@@ -181,16 +189,17 @@ config_settings_win(struct config *con)
 	textbox_printf(sysdatadir_tbox, "%s", world->sysdatadir);
 	pthread_mutex_unlock(&win->lock);
 	
-	debug_button = button_new(rbody_reg, "Debug settings", 0, 100, 50);
+	debug_button = button_new(rbody_reg, "Debug settings", NULL, 0,
+	    100, 50);
 	debug_button->justify = BUTTON_LEFT;
 	event_new(debug_button, "button-pushed", 0, apply,
 	    "%i", DEBUG_BUTTON);
 
-	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
+	close_button = button_new(buttons_reg, "Close", NULL, 0, 50, 97);
 	event_new(close_button, "button-pushed", 0, apply,
 	    "%i", CLOSE_BUTTON);
 
-	save_button = button_new(buttons_reg, "Save", 0, 50, 100);
+	save_button = button_new(buttons_reg, "Save", NULL, 0, 49, 97);
 	event_new(save_button, "button-pushed", 0, apply,
 	    "%i", SAVE_BUTTON);
 	
@@ -203,13 +212,10 @@ apply(int argc, union evarg *argv)
 {
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
-		window_hide(WIDGET(argv[0].p)->win);
+		window_hide_locked(WIDGET(argv[0].p)->win);
 		break;
 	case SAVE_BUTTON:
 		object_save(config);
-		break;
-	case FULLSCRN_CBOX:
-		view_fullscreen(argv[2].i);
 		break;
 	case FONTCACHE_CBOX:
 		pthread_mutex_lock(&config->lock);
