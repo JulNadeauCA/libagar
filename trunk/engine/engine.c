@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.69 2002/11/07 02:35:52 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.70 2002/11/07 04:15:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -87,9 +87,10 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	int c, fullscreen = 0;
 	int w = -1, h = -1;
 
+	/* Create a thread-specific key for errno style error messages. */
 	pthread_key_create(&engine_errorkey, NULL);
 
-	mapediting = 0;
+	mapediting = 0;			/* Map edition mode? */
 	gameinfo = gi;
 	
 	printf("AGAR engine v%s\n", ENGINE_VERSION);
