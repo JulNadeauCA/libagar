@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.24 2004/05/25 07:25:23 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.25 2004/05/29 05:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -1383,6 +1383,7 @@ zoom_in_tick(void *p, Uint32 ival, void *arg)
 	struct vg *vg = t->p;
 
 	vg->scale += 0.125;
+	vg_scale(vg, vg->w, vg->h, vg->scale);
 	zoom_status(t, vg);
 	return (ival);
 }
@@ -1397,6 +1398,7 @@ zoom_out_tick(void *p, Uint32 ival, void *arg)
 	if (vg->scale < 0.125) {
 		vg->scale = 0.125;
 	}
+	vg_scale(vg, vg->w, vg->h, vg->scale);
 	zoom_status(t, vg);
 	return (ival);
 }
@@ -1448,8 +1450,17 @@ zoom_ident(struct tool *t, int state)
 {
 	struct vg *vg = t->p;
 
-	vg->scale = 1.0;
 	zoom_status(t, vg);
+	vg_scale(vg, vg->w, vg->h, 1.0);
+}
+
+static void
+zoom_2(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	zoom_status(t, vg);
+	vg_scale(vg, vg->w, vg->h, 2.0);
 }
 
 static void
@@ -1512,6 +1523,7 @@ init_scale_tool(struct tool *t)
 	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_2, zoom_2, 0);
 
 	timeout_set(&zoom_in_to, zoom_in_tick, t, 0);
 	timeout_set(&zoom_out_to, zoom_out_tick, t, 0);
