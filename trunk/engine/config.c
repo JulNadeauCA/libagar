@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.26 2002/07/22 05:50:38 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.27 2002/07/27 07:03:10 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -162,7 +162,7 @@ config_settings_win(struct config *con)
 {
 	struct window *win;
 	struct region *reg;
-	struct button *close_button, *save_button, *debug_button;
+	struct button *close_button, *save_button;
 	struct textbox *udatadir_tbox, *sysdatadir_tbox, *w_tbox, *h_tbox;
 	struct checkbox *fontcache_cbox, *visregions_cbox, *fullscreen_cbox,
 	    *showres_cbox;
