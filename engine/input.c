@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.44 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.45 2003/05/24 15:53:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -25,8 +25,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include <engine/compat/snprintf.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
@@ -245,7 +243,7 @@ input_destroy(void *p)
 
 /* Look for an input device of the given name. */
 struct input *
-input_find(char *name)
+input_find(const char *name)
 {
 	struct input *in;
 
