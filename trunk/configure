@@ -230,8 +230,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -266,8 +266,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -300,8 +300,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -334,8 +334,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -368,8 +368,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -408,8 +408,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -459,8 +459,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "${CC} -o conftest conftest.c" >> config.log
-${CC} -o conftest conftest.c 2>>config.log
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
