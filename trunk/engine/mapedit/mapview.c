@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.128 2003/07/08 04:51:57 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.129 2003/07/09 01:59:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -916,23 +916,6 @@ mapview_keydown(int argc, union evarg *argv)
 					binding->func(tool, mv);
 				}
 			}
-		}
-	}
-
-	if (mv->flags & MAPVIEW_SAVEABLE) {
-		switch (keysym) {
-		case SDLK_s:
-			if (object_save(mv->map) == -1) {
-				text_msg(MSG_ERROR, "%s: %s",
-				    OBJECT(mv->map)->name, error_get());
-			}
-			break;
-		case SDLK_l:
-			if (object_load(mv->map) == -1) {
-				text_msg(MSG_ERROR, "%s: %s",
-				    OBJECT(mv->map)->name, error_get());
-			}
-			break;
 		}
 	}
 
