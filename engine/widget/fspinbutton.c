@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.12 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.13 2004/03/24 06:23:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -108,10 +108,10 @@ fspinbutton_keydown(int argc, union evarg *argv)
 	pthread_mutex_lock(&fsu->lock);
 	switch (keysym) {
 	case SDLK_UP:
-		fspinbutton_add(fsu, fsu->incr);
+		fspinbutton_add_value(fsu, fsu->incr);
 		break;
 	case SDLK_DOWN:
-		fspinbutton_add(fsu, -fsu->incr);
+		fspinbutton_add_value(fsu, -fsu->incr);
 		break;
 	}
 	pthread_mutex_unlock(&fsu->lock);
@@ -140,7 +140,7 @@ fspinbutton_up(int argc, union evarg *argv)
 	struct fspinbutton *fsu = argv[1].p;
 
 	pthread_mutex_lock(&fsu->lock);
-	fspinbutton_add(fsu, fsu->incr);
+	fspinbutton_add_value(fsu, fsu->incr);
 	pthread_mutex_unlock(&fsu->lock);
 	
 	event_post(NULL, fsu, "fspinbutton-changed", NULL);
@@ -152,7 +152,7 @@ fspinbutton_down(int argc, union evarg *argv)
 	struct fspinbutton *fsu = argv[1].p;
 	
 	pthread_mutex_lock(&fsu->lock);
-	fspinbutton_add(fsu, -fsu->incr);
+	fspinbutton_add_value(fsu, -fsu->incr);
 	pthread_mutex_unlock(&fsu->lock);
 	
 	event_post(NULL, fsu, "fspinbutton-changed", NULL);
@@ -284,7 +284,7 @@ fspinbutton_draw(void *p)
 
 /* Add to the value; the fspinbutton must be locked. */
 void
-fspinbutton_add(struct fspinbutton *fsu, double inc)
+fspinbutton_add_value(struct fspinbutton *fsu, double inc)
 {
 	struct widget_binding *valueb;
 	void *value;
