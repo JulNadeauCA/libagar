@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.37 2003/05/20 11:30:34 vedge Exp $
+.\"	$Csoft: object.3,v 1.38 2003/05/24 15:53:39 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -66,10 +66,12 @@ Generic events and properties
 .Sh INITIALIZATION/LINKAGE
 .nr nS 1
 .Ft "struct object *"
-.Fn object_new "void *parent" "const char *type" "char *name" "const void *ops"
+.Fn object_new "void *parent" "const char *type" "const char *name" \
+               "const void *ops"
 .Pp
 .Ft "void"
-.Fn object_init "void *obj" "const char *type" "char *name" "const void *ops"
+.Fn object_init "void *obj" "const char *type" "const char *name" \
+                "const void *ops"
 .Pp
 .Ft int
 .Fn object_load_art "void *obj" "const char *key" "int wired"
@@ -100,27 +102,22 @@ function allocates, initializes and attaches a new, generic object to a parent
 .Fa parent
 is not NULL).
 .Fn object_init
-initializes
-.Fa obj
-as an object of type
-.Fa type .
-The
+initializes an object.
 .Fa name
-string must not exceed
-.Fa OBJECT_NAME_MAX
+must not exceed
+.Dv OBJECT_NAME_MAX
 - 1 in length and
 .Fa type
 must not exceed
-.Fa OBJECT_TYPE_MAX
+.Dv OBJECT_TYPE_MAX
 - 1 in length.
 .Pp
-The
+If
 .Fa ops
-argument, if not NULL, is a pointer to the following structure (or a derivate
-of it):
+is not NULL, it should point to the following structure:
 .Bd -literal
 struct object_ops {
-	void (*init)(void *obj, char *name);		/* Initialize */
+	void (*init)(void *obj, const char *name);	/* Initialize */
 	void (*destroy)(void *obj);			/* Release */
 	int  (*load)(void *obj, struct netbuf *buf);	/* Load from buf */
 	int  (*save)(void *obj, struct netbuf *buf);	/* Save to buf */
@@ -173,11 +170,13 @@ events in order.
 .Pp
 The
 .Fn object_name
-function returns a copy of an object's absolute name by doing an inverse
+function returns a copy of an object's absolute pathname by doing an inverse
 traversal of the object tree, until the root is reached.
 .Fn object_name
 returns a pointer to a newly allocated, NUL-terminated string containing the
 resulting pathname.
+Absolute object pathnames cannot be copied to fixed-size buffers, since object
+trees may have an arbitrary depth.
 .Pp
 Since
 .Fn object_name
@@ -187,7 +186,6 @@ required in order to protect linkage.
 and
 .Fn unlock_linkage
 acquire and release the linkage lock, respectively.
-If thread safety was not enabled at compile-time, these functions are no-ops.
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"
@@ -224,77 +222,27 @@ and
 but these functions may be called directly in order to clear the event handler
 list, the property table and the attached objects, respectively.
 .Sh PERSISTENCE
-One of the design goals of the agar
-.Nm 
-system is
-.Em persistence .
-This is achieved by invoking object-specific
-.Va load
-and
-.Va save
-operations to write/read the state of objects (and their children) in machine
-independent (network) format.
-Since child objects must be allocatable and fully initializable from scratch,
-an array stores the possible object types along with their structure size and
-a pointer to their operation vector.
 .nr nS 1
 .Ft "int"
-.Fn object_load "void *obj" "char *path"
+.Fn object_load "void *obj"
 .Pp
 .Ft "int"
-.Fn object_save "void *obj" "char *path"
-.Pp
-.Ft "int"
-.Fn object_path "const char *name" "const char *suffix" "char *dst" \
-                "size_t dst_size"
-.Pp
+.Fn object_save "void *obj"
 .nr nS 0
+.Pp
 The
 .Fn object_load
-function loads the state of
-.Fa obj
-from network format.
-The data is loaded from a file at the given location if
-.Fa path
-is not NULL.
-Otherwise, the data is loaded from the first file found in data directories
-(the
-.Sq path.data_path
-.Xr config 3
-setting).
-.Pp
-The
+function loads the state of an object and its descendents from the first file
+found in the search path (the colon-separated
+.Sq load-path
+config setting).
 .Fn object_save
-function saves the state of
-.Fa obj
-in network format.
-The data is saved to a specific file if
-.Fa path
-is not NULL, otherwise it is saved in the user's data directory (the
-.Sq path.user_data_dir
-.Xr config 3
-setting).
+saves the state of an object and its descendents to files/directories in the
+save directory (the
+.Sq save-path
+config setting).
 .Pp
-Both
-.Fn object_load
-and
-.Fn object_save
-return 0 on success or -1 if an error occured.
-.Pp
-The
-.Fn object_path
-function searches the data directories for a file matching the
-.Fa name
-and
-.Fa suffix
-arguments.
-If a file is found, up to
-.Fa dst_size
-- 1 bytes of its path name are copied to
-.Fa dst ,
-and the result is NUL-terminated.
-.Fn object_path
-returns 0 on success or -1 if an error occured.
+These functions return 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
 The illusion of objects (such as characters) moving inside a
 .Xr map 3
@@ -312,10 +260,10 @@ layer is responsible for keeping the submap copy in sync, and adjusting the
 motion offsets of its noderefs in response to movement.
 .nr nS 1
 .Ft "int"
-.Fn object_set_submap "void *obj" "char *map_name"
+.Fn object_set_submap "void *obj" "const char *map_name"
 .Pp
 .Ft "void"
-.Fn object_load_submap "void *obj" "char *map_name"
+.Fn object_load_submap "void *obj" "const char *map_name"
 .Pp
 .Ft "void"
 .Fn object_set_position "void *obj" "struct map *map" "int x" "int y" \
@@ -325,14 +273,14 @@ motion offsets of its noderefs in response to movement.
 .Fn object_unset_position "void *obj"
 .Pp
 .Ft "void"
-.Fn object_control "void *obj" "struct input *in" "int center"
+.Fn object_control "void *obj" "const char *input_dev"
 .Pp
 .nr nS 0
 The
 .Fn object_set_submap
-function searches an object's children list for a map called
+function searches an object's descendents for a map named
 .Fa map_name
-and selects it.
+and selects it as the current submap.
 .Fn object_set_submap
 returns 0 on success or -1 on failure.
 .Fn object_load_submap
@@ -348,13 +296,10 @@ causes an object to vanish from its current position, if there is any.
 .Pp
 The
 .Fn object_control
-function assigns the input device
-.Fa in
+function assigns the input device named
+.Fa input_dev
 to the position associated with
-.Fa obj ,
-centering the view and enabling soft-scrolling if
-.Fa center
-is non-zero .
+.Fa obj .
 .Sh DEPENDENCY TABLES
 These functions load/save arrays of structures containing each:
 .Bl -bullet -compact -enum
@@ -384,7 +329,7 @@ as well as to encode object references using indexes.
 .Pp
 .Ft "int"
 .Fn object_table_load "struct object_table *table" "struct netbuf *buf" \
-                      "char *objname"
+                      "const char *objname"
 .Pp
 .nr nS 0
 The
