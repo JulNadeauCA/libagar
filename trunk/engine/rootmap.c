@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.30 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.31 2003/07/04 12:30:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -270,7 +270,7 @@ rootmap_free_maprects(struct viewport *v)
 	pthread_mutex_unlock(&v->lock);
 }
 
-__inline__ void
+void
 rootmap_redraw(void)
 {
 	if (view->rootmap != NULL) {

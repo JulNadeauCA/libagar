@@ -1,5 +1,7 @@
-/*	$Csoft: gfx.h,v 1.8 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.9 2003/08/26 13:48:19 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/transform.h>
 
 #include "begin_code.h"
 
@@ -16,16 +18,16 @@ struct gfx_anim {
 };
 
 struct gfx_cached_sprite {
-	SDL_Surface	*su;			/* Modified sprite */
-	Uint32		 last_drawn;		/* Time last draw occured */
-	TAILQ_HEAD(,transform)	transforms;	/* Applied transforms */
+	SDL_Surface	 *su;			/* Modified sprite */
+	Uint32		  last_drawn;		/* Time last draw occured */
+	struct transformq transforms;		/* Applied transforms */
 	SLIST_ENTRY(gfx_cached_sprite) sprites;
 };
 
 struct gfx_cached_anim {
-	struct gfx_anim	*anim;			/* Modified anim */
-	Uint32		 last_drawn;		/* Time last draw occured */
-	TAILQ_HEAD(,transform)	transforms;	/* Applied transforms */
+	struct gfx_anim	  *anim;		/* Modified anim */
+	Uint32		   last_drawn;		/* Time last draw occured */
+	struct transformq  transforms;		/* Applied transforms */
 	SLIST_ENTRY(gfx_cached_anim) anims;
 };
 

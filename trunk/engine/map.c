@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.190 2003/08/26 07:55:00 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.191 2003/08/26 13:48:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1075,7 +1075,7 @@ noderef_draw_sprite(struct noderef *r)
 		     tr2 != TAILQ_END(&csprite->transforms);
 		     tr1 = TAILQ_NEXT(tr1, transforms),
 		     tr2 = TAILQ_NEXT(tr2, transforms)) {
-			if (transform_compare(tr1, tr2) != 0)
+			if (!transform_compare(tr1, tr2))
 				break;
 		}
 		if (tr1 == TAILQ_END(&r->transforms) &&
@@ -1157,7 +1157,7 @@ noderef_draw_anim(struct noderef *r)
  * Render a graphical noderef to absolute view coordinates rx,ry.
  * The map must be locked.
  */
-__inline__ void
+void
 noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 {
 	SDL_Surface *su;
