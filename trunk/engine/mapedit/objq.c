@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.35 2003/01/01 05:18:37 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.55 2003/03/12 07:48:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,10 +101,10 @@ tilemap_option(int argc, union evarg *argv)
 	case MAPEDIT_TOOL_EDIT:
 		if (mv->flags & MAPVIEW_EDIT) {
 			mv->flags &= ~(MAPVIEW_EDIT);
-			window_hide(mv->tmap_win);
+			window_hide(mv->constr.win);
 		} else {
 			mv->flags |= MAPVIEW_EDIT;
-			window_show(mv->tmap_win);
+			window_show(mv->constr.win);
 		}
 		break;
 	case MAPEDIT_TOOL_NODEEDIT:
@@ -122,6 +122,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct mapview *mv = argv[2].p;
+	struct mapview_constr *con = &mv->constr;
 	int mode = argv[3].i;
 	struct tlist_item *it;
 	struct map *m = mv->map;
@@ -132,9 +133,8 @@ objq_insert_tiles(int argc, union evarg *argv)
 		return;
 	}
 
-	mv->constr.mode = mode;
-	mv->constr.x = mv->esel.x;
-	mv->constr.y = mv->esel.y;
+	con->x = mv->esel.x;
+	con->y = mv->esel.y;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		struct node *node;
@@ -179,26 +179,26 @@ objq_insert_tiles(int argc, union evarg *argv)
 		}
 
 		if (map_adjust(m,
-		    mv->constr.x + xinc + 1,
-		    mv->constr.y + yinc + 1) == -1) {
+		    con->x + xinc + 1,
+		    con->y + yinc + 1) == -1) {
 			text_msg("Error growing map", "%s");
 			continue;
 		}
 
 		switch (t) {
 		case NODEREF_SPRITE:
-			node = &m->map[mv->constr.y][mv->constr.x];
-			if (mv->tmap_insert == 0) {		/* Replace */
-				node_init(node, mv->constr.x, mv->constr.y);
+			node = &m->map[con->y][con->x];
+			if (con->replace) {
+				node_init(node);
 			}
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
 			nref = node_add_sprite(node, pobj, ind);
 			nref->flags |= NODEREF_SAVEABLE;
 			break;
 		case NODEREF_ANIM:
-			node = &m->map[mv->constr.y][mv->constr.x];
-			if (mv->tmap_insert == 0) {		/* Replace */
-				node_init(node, mv->constr.x, mv->constr.y);
+			node = &m->map[con->y][con->x];
+			if (con->replace) {
+				node_init(node);
 			}
 			dprintf("+anim: %s:%d\n", pobj->name, ind);
 			nref = node_add_anim(node, pobj, ind,
@@ -207,19 +207,18 @@ objq_insert_tiles(int argc, union evarg *argv)
 			break;
 		case -1:					/* Submap */
 			dprintf("+submap %u,%u\n", submap->mapw, submap->maph);
-			for (sy = 0, dy = mv->constr.y;
+			for (sy = 0, dy = con->y;
 			     sy < submap->maph && dy < m->maph;
 			     sy++, dy++) {
-				for (sx = 0, dx = mv->constr.x;
+				for (sx = 0, dx = con->x;
 				     sx < submap->mapw && dx < m->mapw;
 				     sx++, dx++) {
 					struct node *srcnode =
 					    &submap->map[sy][sx];
 					struct node *dstnode = &m->map[dy][dx];
 
-					if (mv->tmap_insert == 0) {
-						/* Replace */
-						node_init(dstnode, dx, dy);
+					if (con->replace) {
+						node_init(dstnode);
 					}
 					TAILQ_FOREACH(nref, &srcnode->nrefs,
 					    nrefs) {
@@ -238,18 +237,18 @@ objq_insert_tiles(int argc, union evarg *argv)
 
 		switch (mode) {
 		case OBJQ_INSERT_LEFT:
-			if ((mv->constr.x -= xinc) < 0)
-				mv->constr.x = 0;
+			if ((con->x -= xinc) < 0)
+				con->x = 0;
 			break;
 		case OBJQ_INSERT_RIGHT:
-			mv->constr.x += xinc;
+			con->x += xinc;
 			break;
 		case OBJQ_INSERT_UP:
-			if ((mv->constr.y -= yinc) < 0)
-				mv->constr.y = 0;
+			if ((con->y -= yinc) < 0)
+				con->y = 0;
 			break;
 		case OBJQ_INSERT_DOWN:
-			mv->constr.y += yinc;
+			con->y += yinc;
 			break;
 		}
 	}
@@ -262,8 +261,8 @@ tilemap_close(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 	struct button *nodeedit_button = argv[2].p;
 
-	if (mv->tmap_win != NULL) {
-		window_hide(mv->tmap_win);
+	if (mv->constr.win != NULL) {
+		window_hide(mv->constr.win);
 	}
 	window_hide(mv->nodeed.win);
 	window_hide(win);
@@ -272,13 +271,21 @@ tilemap_close(int argc, union evarg *argv)
 }
 
 static void
-tl_objs_selected_insert(int argc, union evarg *argv)
+tl_objs_toggle_replace(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int state = argv[2].i;
 
-	dprintf("state %d\n", state);
-	mv->tmap_insert = state;
+	mv->constr.replace = state;
+}
+
+static void
+tl_objs_toggle_big(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	int big = argv[2].i;
+
+	tlist_set_item_height(tl, big ? TILEH : text_font_height(font));
 }
 
 static void
@@ -312,7 +319,8 @@ tl_objs_selected(int argc, union evarg *argv)
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, ob->art->tile_map, MAPVIEW_TILEMAP|MAPVIEW_PROPS,
 	    100, 100);
-	
+	mapview_set_selection(mv, 0, 0, 1, 1);
+
 	object_load(ob->art->tile_map);
 
 	/* Map operation buttons */
@@ -374,36 +382,33 @@ tl_objs_selected(int argc, union evarg *argv)
 
 	window_show(win);
 
-	/* Create the tile selection window. */
+	/* Create the source tile selection window. */
 	win = window_generic_new(152, 287, "mapedit-tmap-%s-tiles", ob->name);
-	if (win == NULL) {
+	if (win == NULL)
 		return;					/* Exists */
-	}
+	mv->constr.win = win;
 	event_new(win, "window-close", window_generic_hide, "%p", win);
-	mv->tmap_win = win;
 	window_set_caption(win, "%s", ob->name);
 	{
 		struct button *button;
 		struct label *lab;
 		struct tlist *tl;
-		struct region *reg_buttons;
+		struct region *reg_buttons1, *reg_buttons2;
 		Uint32 i;
 		
-		reg_buttons = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+		reg_buttons1 = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+		reg_buttons2 = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
 
 		reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 		{
 			char *s;
 
 			tl = tlist_new(reg, 100, 0, TLIST_MULTI);
-			tlist_set_item_height(tl,
-			    prop_get_int(&mapedit, "tilemap-item-size"));
-			
+
 			for (i = 0; i < ob->art->nsubmaps; i++) {
-				struct map *submap = ob->art->submaps[i];
-			
 				Asprintf(&s, "m%d", i);
-				tlist_insert_item(tl, NULL, s, submap);
+				tlist_insert_item(tl, NULL, s,
+				    ob->art->submaps[i]);
 				free(s);
 			}
 
@@ -423,7 +428,7 @@ tl_objs_selected(int argc, union evarg *argv)
 				free(s);
 			}
 		}
-
+		
 		{
 			int i;
 			int icons[] = {
@@ -434,20 +439,21 @@ tl_objs_selected(int argc, union evarg *argv)
 			};
 			struct button *bu;
 
-			bu = button_new(reg_buttons, "Insert", NULL,
-			    BUTTON_STICKY, 20, -1);
-			event_new(bu, "button-pushed",
-			    tl_objs_selected_insert, "%p", mv);
-
 			for (i = 0; i < 4; i++) {
-				button = button_new(reg_buttons, NULL,
-				    SPRITE(&mapedit, icons[i]), 0, 80/4, -1);
-				event_new(button, "button-pushed",
+				bu = button_new(reg_buttons1, NULL,
+				    SPRITE(&mapedit, icons[i]), 0, 26, -1);
+				event_new(bu, "button-pushed",
 				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
 			}
+			bu = button_new(reg_buttons2, "Replace", NULL,
+			    BUTTON_STICKY, 50, -1);
+			event_new(bu, "button-pushed",
+			    tl_objs_toggle_replace, "%p", mv);
+			bu = button_new(reg_buttons2, "Big", NULL,
+			    BUTTON_STICKY, 50, -1);
+			event_new(bu, "button-pushed",
+			    tl_objs_toggle_big, "%p", tl);
 		}
-	
-		
 	}
 }
 
