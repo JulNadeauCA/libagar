@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.8 2002/09/13 11:08:31 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.9 2002/09/16 16:44:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -49,6 +49,7 @@
 #include "monitor.h"
 #include "sprite_browser.h"
 #include "object_browser.h"
+#include "map_view.h"
 
 const struct object_ops monitor_ops = {
 	monitor_destroy,
@@ -65,16 +66,12 @@ static void
 show_tool(int argc, union evarg *argv)
 {
 	struct widget *wid = argv[0].p;
-	struct monitor *mon = argv[1].p;
-	
-	switch (argv[2].i) {
-	case MONITOR_OBJECT_BROWSER:
-		window_show(mon->wins.object_browser);
-		break;
-	case MONITOR_SPRITE_BROWSER:
-		window_show(mon->wins.sprite_browser);
-		break;
-	}
+	struct window *win = argv[1].p;
+
+	OBJECT_ASSERT(wid, "widget");
+	OBJECT_ASSERT(win, "window");
+
+	window_show(win);
 }
 
 static struct window *
@@ -90,26 +87,30 @@ toolbar_window(struct monitor *mon)
 	    130, 104,
 	    130, 104);
 	
-	reg = region_new(win, REGION_VALIGN, 0,  0, 100, 50);
+	reg = region_new(win, REGION_HALIGN, 0,  0, 100, 50);
 	reg->spacing = 1;
 	
 	/* Object browser */
-	button = button_new(reg, NULL,
-	    SPRITE(mon, MONITOR_OBJECT_BROWSER), 0, xdiv, ydiv);
+	button = button_new(reg, NULL, SPRITE(mon, MONITOR_OBJECT_BROWSER), 0,
+	    xdiv, ydiv);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0,
-	    show_tool, "%p, %i", mon, MONITOR_OBJECT_BROWSER);
+	    show_tool, "%p", mon->wins.object_browser);
 
 	/* Sprite browser */
-	button = button_new(reg, NULL,
-	    SPRITE(mon, MONITOR_SPRITE_BROWSER), 0, xdiv, ydiv);
-	win->focus = WIDGET(button);
+	button = button_new(reg, NULL, SPRITE(mon, MONITOR_SPRITE_BROWSER), 0,
+	    xdiv, ydiv);
 	event_new(button, "button-pushed", 0,
-	    show_tool, "%p, %i", mon, MONITOR_SPRITE_BROWSER);
+	    show_tool, "%p", mon->wins.sprite_browser);
 	
-	reg = region_new(win, REGION_VALIGN, -1, 50, 100, 50);
+	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
 	reg->spacing = 1;
 	
+	/* Map view */
+	button = button_new(reg, NULL, SPRITE(mon, MONITOR_MAP_VIEW), 0,
+	    xdiv, ydiv);
+	event_new(button, "button-pushed", 0, map_view_show, "%p", mon);
+
 	return (win);
 }
 
@@ -118,14 +119,19 @@ monitor_init(struct monitor *mon, char *name)
 {
 	object_init(&mon->obj, "debug-monitor", name, "monitor",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
-	mon->wins.toolbar = toolbar_window(mon);
 	mon->wins.object_browser = object_browser_window(mon);
 	mon->wins.sprite_browser = sprite_browser_window(mon);
+	mon->wins.toolbar = toolbar_window(mon);
 }
 
 void
 monitor_destroy(void *ob)
 {
+	struct monitor *mon = ob;
+
+	object_destroy(mon->wins.toolbar);
+	object_destroy(mon->wins.object_browser);
+	object_destroy(mon->wins.sprite_browser);
 }
 
 void
@@ -156,7 +162,9 @@ monitor_tool_mapview(void)
 	struct region *reg;
 	struct widget *wid;
 
+	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+		pthread_mutex_lock(&win->lock);
 		if ((win->flags & WINDOW_SHOWN) == 0) {
 			continue;
 		}
@@ -166,13 +174,16 @@ monitor_tool_mapview(void)
 					continue;
 				}
 				if (strcmp(wid->type, "mapview") == 0) {
+					pthread_mutex_unlock(&win->lock);
+					pthread_mutex_unlock(&view->lock);
 					return ((struct mapview *)wid);
 				}
 			}
 		}
+		pthread_mutex_unlock(&win->lock);
 	}
+	pthread_mutex_unlock(&view->lock);
 	return (NULL);
 }
 
-
-#endif
+#endif	/* DEBUG */
