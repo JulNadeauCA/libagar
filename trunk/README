@@ -27,6 +27,11 @@ the initialization in main(), of course). Agar provides some built-in object
 implementations, such as "map" for tile-based 2D levels, "vgobj" for vector
 drawings and "perso" for simple game characters.
 
+Availability
+------------
+You can download the most recent Agar version from the Agar home page
+at http://agar.csoft.org/, or the SourceForge project page.
+
 Portability
 -----------
 Thanks to SDL, Agar is portable to many different platforms, including
