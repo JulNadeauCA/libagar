@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.40 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.41 2003/08/31 11:58:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -255,13 +255,13 @@ prop_set_bool(void *ob, const char *key, int i)
 	return (prop_set(ob, key, PROP_BOOL, i));
 }
 
-__inline__ void
+void
 prop_lock(void *p)
 {
 	pthread_mutex_lock(&OBJECT(p)->props_lock);
 }
 
-__inline__ void
+void
 prop_unlock(void *p)
 {
 	pthread_mutex_unlock(&OBJECT(p)->props_lock);

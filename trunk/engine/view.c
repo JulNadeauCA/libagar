@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.130 2003/07/08 00:16:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.131 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -547,7 +547,7 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
  * Alpha-blend two pixels in software.
  * Clipping is done; the surface must be locked.
  */
-__inline__ void
+void
 view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
     Uint8 b, Uint8 a)
 {
@@ -702,7 +702,7 @@ toobig:
 }
 
 /* Queue a video update. */
-__inline__ void
+void
 view_update(int x, int y, int w, int h)
 {
 #ifdef HAVE_OPENGL
