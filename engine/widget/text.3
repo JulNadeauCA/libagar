@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.7 2003/06/14 11:28:05 vedge Exp $
+.\"	$Csoft: text.3,v 1.8 2003/06/30 02:58:58 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -143,6 +143,16 @@ The
 and
 .Fn text_prescale_utf8
 functions return the expected surface dimensions for the given text.
+.Sh TROUBLETONS
+Something more sophisticated is needed to deal with unpredictable text surface
+dimensions.
+Currently,
+.Fn text_prescale
+is used prior to allocating fixed-size surfaces, but this is troublesome to
+maintain and maintain translations in sync.
+.Pp
+.Fn text_render_glyph
+does not work.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr button 3 ,
