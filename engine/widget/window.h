@@ -1,12 +1,13 @@
-/*	$Csoft: window.h,v 1.8 2002/04/28 11:05:54 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.9 2002/04/30 00:57:36 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
 	
 	Uint32	 flags;
-#define WINDOW_PLAIN	0x01		/* Solid, no borders */
-#define WINDOW_FOCUS	0x02
-#define WINDOW_ANIMATE	0x04		/* Redraw each tick */
+#define WINDOW_PLAIN	0x01	/* Solid, no borders */
+#define WINDOW_FOCUS	0x02	/* Receive keyboard events */
+#define WINDOW_ANIMATE	0x04	/* Redraw each tick */
+#define WINDOW_TITLEBAR	0x08	/* Draw title bar */
 
 	Uint32	bgtype;
 #define WINDOW_SOLID	0x04
