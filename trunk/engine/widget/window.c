@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.26 2002/05/22 02:03:01 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.27 2002/05/24 09:16:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -577,8 +577,8 @@ window_resize(struct window *win)
 
 		reg->x += reg->spacing;
 		reg->y += reg->spacing;
-		reg->w -= reg->spacing * nwidgets;
-		reg->h -= reg->spacing * nwidgets;
+		reg->w -= reg->spacing * 2;
+		reg->h -= reg->spacing * 2;
 
 		x = reg->x;
 		y = reg->y;
@@ -588,12 +588,10 @@ window_resize(struct window *win)
 			wid->x = x;
 			wid->y = y;
 			if (wid->rw > 0) {
-				wid->w = wid->rw *
-				    reg->w / 100 - reg->spacing/2;
+				wid->w = wid->rw * reg->w / 100;
 			}
 			if (wid->rh > 0) {
-				wid->h = wid->rh *
-				    reg->h / 100 - reg->spacing/2;
+				wid->h = wid->rh * reg->h / 100;
 			}
 
 			if (wid->w >= reg->w)
