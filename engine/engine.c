@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.7 2002/02/07 08:12:13 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.8 2002/02/08 01:38:20 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -171,5 +171,18 @@ engine_destroy(void)
 
 	SDL_Quit();
 	exit(0);
+}
+
+void *
+emalloc(size_t len)
+{
+	void *p;
+
+	p = malloc(len);
+	if (p == NULL) {
+		perror("malloc");
+		engine_destroy();
+	}
+	return (p);
 }
 
