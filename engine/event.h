@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.16 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.17 2003/04/26 04:42:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -16,29 +16,30 @@ typedef union evarg {
 #endif
 } *evargs;
 
-#define EVENT_MAX_ARGS	16
+#define EVENT_ARGS_MAX	16
 
 struct event {
 	char		*name;
 	int		 flags;
-#define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
-	union evarg	 argv[EVENT_MAX_ARGS];
+#define	EVENT_ASYNC		0x01	/* Event handler runs in own thread */
+#define EVENT_FORWARD_CHILDREN	0x02	/* Forward to all descendents */
+	union evarg	 argv[EVENT_ARGS_MAX];
 	int		 argc;
 	void		(*handler)(int, union evarg *);
 	TAILQ_ENTRY(event) events;
 };
 
-extern int	 event_idle;			/* Enable idling? */
+extern int event_idle;		/* Enable idling? */
 
 __BEGIN_DECLS
-extern DECLSPEC void		 event_loop(void);
 extern DECLSPEC struct event	*event_new(void *, const char *,
 				     void (*)(int, union evarg *),
 				     const char *, ...);
-extern DECLSPEC void		 event_post(void *, const char *, const char *,
-				            ...);
-extern DECLSPEC void		 event_forward(void *, const char *, int,
-				     union evarg *);
+
+extern DECLSPEC void	event_loop(void);
+extern DECLSPEC int	event_post(void *, const char *, const char *, ...);
+extern DECLSPEC void	event_forward(void *, const char *, int, union evarg *);
+
 #ifdef DEBUG
 extern DECLSPEC struct window	*event_show_fps_counter(void);
 #endif
