@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.43 2002/11/24 03:10:56 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.44 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -55,7 +55,7 @@ struct text_font {
 };
 
 static SLIST_HEAD(text_fontq, text_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
-static pthread_mutex_t fonts_lock = { PTHREAD_MUTEX_INITIALIZER };
+static pthread_mutex_t fonts_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static TTF_Font *
 get_font(char *name, int size, int style)
