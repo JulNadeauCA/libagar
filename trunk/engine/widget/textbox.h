@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.3 2002/05/28 06:01:18 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.4 2002/05/28 12:50:14 vedge Exp $	*/
 
 struct textbox {
 	struct	 widget wid;
@@ -14,8 +14,6 @@ struct textbox {
 	int	 xmargin, ymargin;
 	
 	SDL_Surface	*label_s;
-
-	void	(*typed)(struct textbox *, char);
 };
 
 struct textbox	*textbox_new(struct region *, const char *, int, int);
@@ -25,5 +23,4 @@ void		 textbox_onattach(void *, void *);
 void		 textbox_ondetach(void *, void *);
 
 void	 textbox_draw(void *);
-void	 textbox_event(void *, SDL_Event *, int);
 

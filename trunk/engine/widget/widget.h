@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.19 2002/05/24 10:23:52 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.20 2002/05/28 12:46:53 vedge Exp $	*/
 
 struct window;
 
@@ -7,8 +7,6 @@ struct widget_ops {
 
 	/* Render widget. */
 	void	 (*widget_draw)(void *);
-	/* Dispatch an event to this widget. */
-	void	 (*widget_event)(void *, SDL_Event *, int);
 };
 
 struct widget {

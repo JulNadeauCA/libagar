@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.8 2002/05/28 06:01:18 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.9 2002/05/28 12:50:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -59,9 +59,10 @@ static const struct widget_ops textbox_ops = {
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
-	textbox_draw,
-	textbox_event
+	textbox_draw
 };
+
+static void	textbox_event(int, union evarg *);
 
 struct textbox *
 textbox_new(struct region *reg, const char *label, int flags, int rw)
@@ -106,7 +107,14 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
 
-	tbox->typed = NULL;
+	event_new(tbox, "window-mousebuttonup", 0,
+	    textbox_event, "%d", WINDOW_MOUSEBUTTONUP);
+	event_new(tbox, "window-mousebuttondown", 0,
+	    textbox_event, "%d", WINDOW_MOUSEBUTTONDOWN);
+	event_new(tbox, "window-keyup", 0,
+	    textbox_event, "%d", WINDOW_KEYUP);
+	event_new(tbox, "window-keydown", 0,
+	    textbox_event, "%d", WINDOW_KEYDOWN);
 }
 
 void
@@ -218,32 +226,49 @@ after:
 	}
 }
 
-void
-textbox_event(void *p, SDL_Event *ev, int flags)
+static void
+textbox_event(int argc, union evarg *argv)
 {
-	struct textbox *tbox = p;
+	struct textbox *tbox = argv[0].p;
+	int keysym, keymod;
 	int textlen, i;
 
-	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:
+	OBJECT_ASSERT(argv[0].p, "widget");
+
+	for (i = 1; i < argc; i++) {
+		dprintf("argv[%d] = %d\n", i, argv[i].i);
+	}
+
+	switch (argv[1].i) {
+	case WINDOW_MOUSEBUTTONDOWN:
 		WIDGET(tbox)->win->focus = WIDGET(tbox);
 		WIDGET(tbox)->win->redraw++;
 		/* XXX position cursor.. */
 		break;
-	case SDL_KEYDOWN:
-		textlen = strlen(tbox->text);
+	case WINDOW_KEYDOWN:
+		keysym = argv[2].i;
+		keymod = argv[3].i;
 	
+		textlen = strlen(tbox->text);
+
+		dprintf("handle '%c' keysym (mod=%d)\n", keysym, keymod);
+
+		if (keysym == SDLK_RETURN) {
+			event_post(tbox, "textbox-return", "%s", tbox->text);
+			return;
+		}
+
 		for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
 			const struct keycode *kcode;
 
 			kcode = &keycodes[i];
-			if (kcode->key != ev->key.keysym.sym ||
+			if (kcode->key != (SDLKey)keysym ||
 			    kcode->callback == NULL) {
 				continue;
 			}
-			if (kcode->modmask == 0 ||
-			    (int)ev->key.keysym.mod & kcode->modmask) {
-				keycodes[i].callback(tbox, ev, keycodes[i].arg);
+			if (kcode->modmask == 0 || keymod & kcode->modmask) {
+				keycodes[i].callback(tbox, (SDLKey)keysym,
+				    keymod, keycodes[i].arg);
 				textbox_draw(tbox);
 				SDL_UpdateRect(WIDGET_SURFACE(tbox),
 				    WIDGET(tbox)->x + WIDGET(tbox)->win->x,

@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.6 2002/05/25 08:48:20 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.7 2002/05/28 12:46:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -129,9 +129,6 @@ region_attach(void *parent, void *child)
 	OBJECT_ASSERT(parent, "window-region");
 	OBJECT_ASSERT(child, "widget");
 	
-	dprintf("attach %s to %s\n", OBJECT(child)->name,
-	    OBJECT(parent)->name);
-	
 	wid->win = reg->win;
 
 	if (OBJECT_OPS(wid)->onattach != NULL) {
@@ -157,9 +154,6 @@ region_detach(void *parent, void *child)
 
 	OBJECT_ASSERT(parent, "window-region");
 	OBJECT_ASSERT(child, "widget");
-
-	dprintf("detach %s from %s\n", OBJECT(child)->name,
-	    OBJECT(parent)->name);
 
 	if (OBJECT_OPS(wid)->ondetach != NULL) {
 		OBJECT_OPS(wid)->ondetach(wid->win, wid);

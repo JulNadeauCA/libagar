@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.13 2002/05/24 09:15:31 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.14 2002/05/28 06:01:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -90,10 +90,12 @@ text_engine_init(void)
 		fatal("TTF_Init: %s\n", SDL_GetError());
 		return (-1);
 	}
-	path = savepath(FONTNAME, "ttf");
+
+	path = object_path(FONTNAME, "ttf");
 	if (path == NULL) {
-		return (-1);
+		fatal("%s.ttf: %s\n", FONTNAME, AGAR_GetError());
 	}
+
 	font = TTF_OpenFont(path, FONTSIZE);	/* XXX pref */
 	if (font == NULL) {
 		fatal("%s: %s\n", path, TTF_GetError());
