@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.90 2002/11/28 01:05:33 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.91 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -114,9 +114,9 @@ object_destroy(void *p)
 
 	if ((ob->flags & OBJECT_KEEP_MEDIA) == 0) {
 		if (ob->art != NULL)
-			OBJECT_UNUSED(ob, art);
+			MEDIA_UNUSED(ob, art);
 		if (ob->audio != NULL)
-			OBJECT_UNUSED(ob, audio);
+			MEDIA_UNUSED(ob, audio);
 	}
 
 	for (eev = TAILQ_FIRST(&ob->events);

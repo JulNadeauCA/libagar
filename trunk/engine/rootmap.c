@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.14 2002/11/28 07:19:24 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.15 2002/11/29 23:59:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -142,14 +142,11 @@ rootmap_animate(void)
 	struct map *m = view->rootmap->map;
 	struct viewmap *rm = view->rootmap;
 	struct node *nnode;
-	int x, y, vx, vy, rx, ry, ox, oy;
+	int x, y, vx, vy, ox, oy;
 
 	for (y = rm->y, vy = 0;				/* Downward */
 	     y < m->maph && vy <= rm->h + 2;
 	     y++, vy++) {
-
-		ry = vy << m->shtiley;
-
 		for (x = rm->x, vx = 0;			/* Forward */
 		     x < m->mapw && vx <= rm->w + 2;
 		     x++, vx++) {
@@ -169,6 +166,8 @@ rootmap_animate(void)
 
 			rx = vx << m->shtilex;
 
+			/* XXX */
+#if 1
 			if (node->flags & NODE_ANIM) {
 				/*
 				 * ooo
@@ -191,8 +190,12 @@ rootmap_animate(void)
 							/* Render the node. */
 							rootmap_draw_node(m,
 							    nnode,
-							    rx + (TILEW*ox),
-							    ry + (TILEH*oy));
+							    rm->maprects
+							    [vy+oy][vx+ox]->x +
+							    TILEW*ox,
+							    rm->maprects
+							    [vy+oy][vx+ox]->y +
+							    TILEH*oy);
 #ifdef UPDATE_NODES
 							/* Queue video update */
 							VIEW_UPDATE(
@@ -258,8 +261,6 @@ rootmap_draw(void)
 		for (x = rm->x, vx = 0;			/* Forward */
 		     x < m->mapw && vx <= rm->w + 2;
 		     x++, vx++) {
-			rx = vx << m->shtilex;
-
 			node = &m->map[y][x];
 #ifdef DEBUG
 			if (node->x != x || node->y != y) {
@@ -279,10 +280,10 @@ rootmap_draw(void)
 				if (nref->flags & MAPREF_SPRITE) {
 					SDL_Rect rd;
 
-					rd.x = rx + nref->xoffs -
-					    rm->sx - TILEW;
-					rd.y = ry + nref->yoffs -
-					    rm->sy - TILEH;
+					rd.x = rm->maprects[vy][vx] +
+					    nref->xoffs - rm->sx - TILEW;
+					rd.y = rm->maprects[vy][vx] +
+					    nref->yoffs - rm->sy - TILEH;
 					rd.w = TILEW;
 					rd.h = TILEH;
 					SDL_BlitSurface(

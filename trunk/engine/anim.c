@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.22 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.23 2002/11/28 07:35:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,7 +32,7 @@
 #include "anim.h"
 
 static const struct object_ops anim_ops = {
-	NULL,	/* destroy */
+	anim_destroy,
 	NULL,	/* load */
 	NULL	/* save */
 };
@@ -162,17 +162,16 @@ anim_init(struct anim *anim, int delay)
 }
 
 void
-anim_destroy(struct anim *anim)
+anim_destroy(void *p)
 {
+	struct anim *anim = p;
 	int i, j;
 
 	for (j = 0; j < anim->nframes; j++) {
 		for (i = 0; i < anim->nparts; i++) {
 			SDL_FreeSurface(anim->frames[i][j]);
 		}
-#if 0
 		free(*(anim->frames + j));
-#endif
 	}
 	free(anim->frames);
 	free(anim);

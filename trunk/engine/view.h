@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.50 2002/11/13 00:22:30 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.51 2002/11/26 01:38:28 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -170,7 +170,7 @@ case 4:					\
 	}								\
 	view->dirty[view->ndirty++] = (rect);				\
 } while (/*CONSTCOND*/0)
-	
+
 extern struct viewport *view;	/* view.c */
 
 int	 view_init(gfx_engine_t);

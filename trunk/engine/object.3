@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.14 2002/09/07 04:30:26 vedge Exp $
+.\"	$Csoft: object.3,v 1.15 2002/09/17 02:41:40 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -279,16 +279,8 @@ function frees resources used by the garbage collector.
 .Sh LOOKUP
 .nr nS 1
 .Ft "void"
-.Fn OBJECT_UNUSED "struct object *ob" "TYPE type"
-.Pp
-.Ft "void"
 .Fn OBJECT_ASSERT "struct object *ob" "char *obtype"
 .nr nS 0
-.Pp
-The
-.Fn OBJECT_UNUSED
-macro atomically decrements the reference count of an object structure
-member.
 .Pp
 The
 .Fn OBJECT_ASSERT
