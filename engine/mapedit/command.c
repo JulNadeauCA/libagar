@@ -283,6 +283,8 @@ mapedit_nodeflags(struct mapedit *med, struct node *node, int flag)
 {
 	if (flag == 0) {
 		node->flags = 0;
+	} else if (flag == NODE_WALK) {
+		node->flags |= flag;
 	} else {
 		if (node->flags & flag) {
 			node->flags &= ~(flag);
