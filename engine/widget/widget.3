@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.14 2002/11/07 04:39:54 vedge Exp $
+.\"	$Csoft: widget.3,v 1.15 2002/11/12 03:45:23 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -47,28 +47,29 @@ structures, and their coordinates and geometry are variable.
 Widget initialization and free routines do not need to be concerned about
 locking.
 .Pp
-In widget event context, the widget can assume its parent window is locked,
-so widgets can manipulate the internal properties of other widgets inside
-the same window (for widgets inside other windows, explicit locking is
-required).
-The visibility of any window may be altered, and new windows may be attached,
-but windows may not be detached.
+In event context, the widgets can assume that their parent window is locked,
+so internal properties of other widgets inside the same window can be
+manipulated (for widgets inside other windows, explicit locking is required).
+.Pp
+The visibility of any window may be altered, and new windows may be attached
+immediately.
+Detach operations on existing windows are deferred until the current event is
+processed.
 .Pp
 Widget structure members that can be manipulated from code outside of
 the event loop (such as the
 .Xr scrollbar 3
 range or the
 .Xr textbox 3
-text) must provide a thread-safe interface, and move the read-write
-structure members as well as their mutex to a substructure, for clarity.
+text) must provide a thread-safe interface.
 .Sh POSITIONMENT
-The position of widgets inside video memory is managed by the widget
+The effective position and geometry of widgets is managed by the widget
 container (ie.
 .Xr region 3
 or another widget), and is hidden from the widget layer by macros.
-In
+Rendering macros perform clipping as well as additional boundary checking in
 .Dv DEBUG
-mode, rendering macros perform boundary checks.
+mode.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
@@ -122,9 +123,13 @@ The
 can be changed at runtime, and may include:
 .Pp
 .Bd -literal
-#define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
-#define WIDGET_UNFOCUSED_MOTION	0x02	/* Receive mouse motion events
-					   when the widget isn't focused */
+#define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus. */
+#define WIDGET_UNFOCUSED_MOTION	  0x02	/* Catch window-mousemotion
+					   when widget isn't focused. */
+#define WIDGET_UNFOCUSED_BUTTONUP 0x04	/* Catch window-mousebuttonup
+					   when widget isn't focused, */
+#define WIDGET_CLIPPING		  0x08	/* Set the clipping rectangle to
+					   the widget area before draw. */
 .Ed
 .Pp
 The
@@ -164,6 +169,18 @@ macro returns the color at index
 .Fa index .
 .Sh COORDINATES
 .nr nS 1
+.Ft void
+.Fn widget_get_position "struct widget *wid" "Sint16 *x" "Sint16 *y"
+.Pp
+.Ft void
+.Fn widget_set_geometry "struct widget *wid" "Uint16 *w" "Uint16 *h"
+.Pp
+.Ft void
+.Fn widget_set_position "struct widget *wid" "Sint16 x" "Sint16 y"
+.Pp
+.Ft void
+.Fn widget_set_geometry "struct widget *wid" "Uint16 w" "Uint16 h"
+.Pp
 .Ft Uint32
 .Fn WIDGET_ABSX "struct widget *wid"
 .Pp
@@ -175,7 +192,20 @@ macro returns the color at index
 .Pp
 .Ft bool
 .Fn WIDGET_INSIDE_RELATIVE "struct widget *wid" "Sint16 x" "Sint16 y"
+.Pp
 .nr nS 0
+The
+.Fn widget_set_position
+and
+.Fn widget_get_position
+change and return the widget's effective position inside the window,
+respectively.
+.Pp
+The
+.Fn widget_set_geometry
+and
+.Fn widget_get_geometry
+change and return the widget's effective geometry, respectively.
 .Pp
 The
 .Fn WIDGET_ABSX

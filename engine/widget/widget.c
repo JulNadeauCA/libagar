@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.31 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.32 2002/12/17 06:47:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -63,6 +63,10 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 	SLIST_INIT(&wid->colors);
 }
 
+/*
+ * Add a color scheme entry with a default value.
+ * The widget's parent window must be locked, if the widget is attached.
+ */
 void
 widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 {
@@ -104,5 +108,59 @@ widget_destroy(void *p)
 		free(color->name);
 	}
 	SLIST_INIT(&wid->colors);
+}
+
+/*
+ * Alter the widget's effective position.
+ * The widget's parent window must be locked, if the widget is attached.
+ * Changes are not visible until a window_resize() operation is performed.
+ */
+void
+widget_set_position(void *p, Sint16 x, Sint16 y)
+{
+	struct widget *wid = p;
+
+	wid->x = x;
+	wid->y = y;
+}
+
+/*
+ * Obtain the widget's effective position.
+ * The widget's parent window must be locked, if the widget is attached.
+ */
+void
+widget_get_position(void *p, Sint16 *x, Sint16 *y)
+{
+	struct widget *wid = p;
+
+	*x = wid->x;
+	*y = wid->y;
+}
+
+/*
+ * Alter the widget's effective geometry.
+ * The widget's parent window must be locked, if the widget is attached.
+ * Changes are not visible until a window_resize() operation is performed.
+ */
+void
+widget_set_geometry(void *p, Uint16 w, Uint16 h)
+{
+	struct widget *wid = p;
+
+	wid->w = w;
+	wid->h = h;
+}
+
+/*
+ * Obtain the widget's effective geometry.
+ * The widget's parent window must be locked, if the widget is attached.
+ */
+void
+widget_get_geometry(void *p, Uint16 *w, Uint16 *h)
+{
+	struct widget *wid = p;
+
+	*w = wid->h;
+	*h = wid->h;
 }
 
