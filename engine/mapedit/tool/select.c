@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.8 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.9 2003/03/26 10:04:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -87,6 +87,7 @@ select_init(void *p)
 	struct select *sel = p;
 
 	tool_init(&sel->tool, "select", &select_ops);
+	TOOL(sel)->cursor = SPRITE(sel, TOOL_SELECT_CURSOR);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_c, select_copy, 0);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_v, select_paste, 1);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_x, select_cut, 1);
