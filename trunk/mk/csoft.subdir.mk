@@ -29,38 +29,50 @@
 MAKE?=	    make
 
 all-subdir:
-	@for DIR in ${SUBDIR}; do \
-	    echo "==> ${REL}$$DIR"; \
-	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/); \
-	done
+	@if [ "${SUBDIR}" != "" ]; then \
+		for DIR in ${SUBDIR}; do \
+		    echo "==> ${REL}$$DIR"; \
+		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/); \
+		done; \
+	fi
 
 clean-subdir:
-	@for DIR in ${SUBDIR}; do \
-	    echo "==> ${REL}$$DIR"; \
-	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ clean); \
-	done
+	@if [ "${SUBDIR}" != "" ]; then \
+		for DIR in ${SUBDIR}; do \
+		    echo "==> ${REL}$$DIR"; \
+		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ clean); \
+		done; \
+	fi
 
 depend-subdir:
-	@for DIR in ${SUBDIR}; do \
-	    echo "==> ${REL}$$DIR"; \
-	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ depend); \
-	done
+	@if [ "${SUBDIR}" != "" ]; then \
+		for DIR in ${SUBDIR}; do \
+		    echo "==> ${REL}$$DIR"; \
+		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ depend); \
+		done; \
+	fi
 
 install-subdir:
-	@for DIR in ${SUBDIR}; do \
-	    echo "==> ${REL}$$DIR"; \
-	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ install); \
-	done
+	@if [ "${SUBDIR}" != "" ]; then \
+		for DIR in ${SUBDIR}; do \
+		    echo "==> ${REL}$$DIR"; \
+		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ install); \
+		done; \
+	fi
 
 deinstall-subdir:
-	@for DIR in ${SUBDIR}; do \
-	    echo "==> ${REL}$$DIR"; \
-	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ deinstall); \
-	done
+	@if [ "${SUBDIR}" != "" ]; then \
+		for DIR in ${SUBDIR}; do \
+		    echo "==> ${REL}$$DIR"; \
+		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ deinstall); \
+		done; \
+	fi
 
 regress-subdir:
-	@for DIR in ${SUBDIR}; do \
-	    echo "==> ${REL}$$DIR"; \
-	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ regress); \
-	done
+	@if [ "${SUBDIR}" != "" ]; then \
+		for DIR in ${SUBDIR}; do \
+		    echo "==> ${REL}$$DIR"; \
+		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ regress); \
+		done; \
+	fi
 
