@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.52 2004/03/30 00:16:42 vedge Exp $
+.\"	$Csoft: widget.3,v 1.53 2004/05/10 05:15:02 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,9 +38,9 @@
 #include <engine/widget/widget.h>
 .Ed
 .Sh DESCRIPTION
-Agar widgets are derived from the
-.Nm
-object and organized in a tree structure.
+Agar widgets are subclasses of
+.Nm ,
+organized in a tree structure.
 Widgets fall under one of three categories:
 .Bl -tag -width "Composite widgets "
 .It Container widgets
@@ -50,7 +50,7 @@ order.
 .Xr vbox 3
 and
 .Xr window 3
-are the most commonly used container widgets.
+examples of container widgets.
 .It Composite widgets
 Composite widgets create pre-defined child widgets and arrange them in a
 specific manner.
@@ -100,21 +100,19 @@ include:
 .Pp
 Only widgets with the
 .Dv WIDGET_FOCUSABLE
-flag are able to gain focus.
+flag are able to gain keyboard and mousemotion focus.
+If the flags
 .Dv WIDGET_UNFOCUSED_MOTION
 and
 .Dv WIDGET_UNFOCUSED_BUTTONUP
-enable reception of
+are set, the widget will always receive
 .Sq window-mousemotion
 and
 .Sq window-mousebuttonup
-events, respectively - these events are otherwise only posted to widgets with
-the
-.Dv WIDGET_FOCUSED
-flag.
+events, even if it's not holding focus.
 .Pp
 .Dv WIDGET_CLIPPING
-causes a clipping rectangle (as set by
+arranges for a clipping rectangle (as set by
 .Xr SDL_SetClipRect 3 )
 to surround the widget area for the duration of the draw operation.
 .Pp
@@ -178,26 +176,26 @@ parent container.
 .Pp
 The
 .Fn widget_holds_focus
-function returns 1 if a widget has the
-.Dv WIDGET_FOCUSED
-flag set.
-Note that this flag is not effective (although it may affect widget layout)
-unless all parent widgets have the flag set as well.
+function returns 1 if a widget (as well as its parents) holds the keyboard
+and mousemotion focus.
 .Pp
+The
 .Fn widget_focus
-sets the
-.Dv WIDGET_FOCUSED
-flag on a widget and all of its parent widgets, until the parent window is
-reached.
+function moves the keyboard/mousemotion focus over the given widget
+(and its parents).
 .Pp
-The effect of the focus state is determined by the widget implementation.
-Usually it enables reception of keyboard and mouse motion events and affects
-the widget appearance.
+A widget holding the keyboard/mousemotion focus receives keyboard and
+mousemotion events.
+The widget may also change its appearance depending on its focus state.
+Some primitive routines such as
+.Fn primitive.box
+alter their appearance slightly depending on the focus state.
 .Pp
-Window focus is independent from widget focus; the highest window on the
-stack always holds focus; the
+Internally, the window focus is independent from the widget focus (the
+highest window on the stack always holds focus).
+The
 .Fn WINDOW_FOCUSED
-macro may be used to test this.
+macro may be used to determine the focus state of a given window.
 .Sh COLOR SCHEME
 .nr nS 1
 .Ft void
@@ -234,7 +232,8 @@ pops the highest color off a widget's color stack.
 The
 .Fn WIDGET_COLOR
 macro returns the color at index
-.Fa index .
+.Fa index ,
+in a format suitable to the display.
 .Sh COORDINATES
 .nr nS 1
 .Ft int
@@ -257,11 +256,37 @@ evaluates to 1 if widget-relative view coordinates
 and
 .Fa y
 are inside the widget area.
-.Sh RENDERING
+.Sh RENDERING AND PRIMITIVES
 The
 .Va draw
-operation, if not NULL, is expected to render the widget to the video display.
-Note that this operation is automatically invoked on children.
+operation, if not NULL, is expected to render the given widget and its
+children to the video display.
+.Pp
+The
+.Fn primitives.*
+functions are 2D primitives (and some higher-level drawing routines)
+specially designed for widgets.
+For a more general vector graphics API, look into OpenGL or
+Agar's
+.Xr vg 3
+library.
+.Pp
+The coordinates for the
+.Fn primitives.*
+functions are given in pixels and are
+relative to the parent (container) widget, and the
+.Fa ncolor
+argument is an index into the widget's color array (which is constructed
+from
+.Fn widget_map_color
+and
+.Fn widget_push_color ) .
+.Pp
+Primitive functions are members of the
+.Va primitives
+structure since the underlying functions may be selected at run-time.
+For instance, appropriate OpenGL routines are substituted for the
+direct video primitives in OpenGL mode.
 .Pp
 .nr nS 1
 .Ft void
@@ -295,61 +320,48 @@ Note that this operation is automatically invoked on children.
                              "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.rect_filled "void *widget" "SDL_Rect *rd" "int ncolor"
+.Fn primitives.rect_filled "void *widget, int x, int y, int w, int h" \
+                           "int ncolor"
 .Pp
+.Ft void
+.Fn primitives.rect_textured "void *widget, int x, int y, int w, int h" \
+                             "int tex_x, int tex_y"
+                              
 .nr nS 0
 The
 .Fn widget_blit
 function performs a surface blit from
 .Fa src
-to the video display at widget-relative coordinates
-.Fa x
-and
-.Fa y .
+to the video display at the given widget coordinates.
 .Pp
 The
 .Fn widget_put_pixel
 function writes a pixel of value
 .Fa color
-at widget-relative coordinates
-.Fa x ,
-.Fa y
-relative to
-.Fa widget ,
-assuming the pixel is inside the current clipping rectangle as set by
-.Xr SDL_SetClipRect 3 .
-.Pp
-Primitive functions are part of the
-.Va primitives
-structure, since the underlying functions may change at runtime (ie. for
-OpenGL mode and GUI emulation).
-The
-.Fa ncolor
-argument is an index into the widget's color array.
+at the given widget coordinates, without checking the clipping rectangle.
 .Pp
 .Fn primitives.box
 draws a 3D-style box of size
 .Fa w ,
-.Fa h
-at
-.Fa x ,
-.Fa y .
-The
+.Fa h ,
+with a depth of
 .Fa z
-argument indicates the apparent depth.
+pixels.
+The background color is varied slightly depending on the focus state of
+the widget.
 .Pp
 .Fn primitives.frame
 draws a 3D-style frame of size
 .Fa w ,
-.Fa h
-at
-.Fa x ,
-.Fa y .
+.Fa h .
 .Pp
 .Fn primitives.circle
-draws a circle around the point at
+draws a circle with the origin at
 .Fa x ,
-.Fa y .
+.Fa y
+and a radius of
+.Fa radius
+pixels.
 .Pp
 .Fn primitives.line
 draws a line from
@@ -359,28 +371,36 @@ to
 .Fa x2 ,
 .Fa y2 .
 .Fn primitives.line2
-is a variant which draws two lines with a RGB difference of +50,+50,+50.
+is a variant which draws two lines with a slight color difference
+(for simple 3D-style effects).
 .Pp
 .Fn primitives.rect_outlined
-draws a border of size
+draws a rectangle outline of
 .Fa w ,
-.Fa h
-at
-.Fa x ,
-.Fa y .
+.Fa h .
 .Pp
 .Fn primitives.rect_filled
 draws a filled rectangle of size
-.Fa rd->w ,
-.Fa rd->h
-at
-.Fa rd->x ,
-.Fa rd->y .
+.Fa w ,
+.Fa h .
+.Pp
+.Fn primitives.rect_textured
+draws a textured rectangle of
+.Fa w ,
+.Fa h ,
+with the texture fragment obtained from coordinates
+.Fa tex_x ,
+.Fa tex_y
+of the texture named
+.Fa tex_name .
+This operation is very efficient in OpenGL mode, but in SDL mode some
+memory must be sacrified to avoid expensive blitting (in particular with
+small textures).
 .Sh BINDINGS
 The
 .Nm widget
-structure contains a list of pointers to values that the widgets are able
-to read and manipulate directly.
+structure contains a list of pointers to variables which the widget will
+access directly.
 Widget bindings eliminate the need for event handlers for widgets manipulating
 variables of primitive data types.
 For example, the
@@ -395,6 +415,9 @@ as bindings to integral or floating point values and
 edits a
 .Dv WIDGET_STRING
 binding.
+Whenever the variable changes, the value displayed by the widget is
+updated automatically.
+The widget also writes directly to the variable.
 .Pp
 All widgets provide default bindings, which point to data allocated and
 initialized by the widget itself.
