@@ -127,13 +127,6 @@ HOST="$SYSTEM-$RELEASE-$MACHINE"
 
 echo "Host: $HOST" > config.log
 echo "configuring for $HOST"
-echo >Makefile.config
-if [ ! -e "config" ]; then
-	mkdir config
-	if [ $? != 0 ]; then
-		exit 1
-	fi
-fi
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
@@ -150,6 +143,13 @@ echo "    --enable-24bpp                 Support 24 bpp display [default: yes]"
 echo "    --enable-32bpp                 Support 32 bpp display [default: yes]"
 echo "    --help                         Show this message"
 exit 1
+fi
+echo >Makefile.config
+if [ ! -e "config" ]; then
+	mkdir config
+	if [ $? != 0 ]; then
+		exit 1
+	fi
 fi
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
