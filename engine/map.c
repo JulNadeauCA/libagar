@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.197 2004/01/23 06:24:41 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.198 2004/02/20 04:18:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -43,6 +43,7 @@
 #endif
 
 #include <string.h>
+#include <math.h>
 
 const struct version map_ver = {
 	"agar map",
@@ -663,6 +664,21 @@ map_destroy(void *p)
 #endif
 }
 
+/* Convert cartesian to polar coordinates. */
+void
+map_c2pol(struct map *m, int cx, int cy, float *angle, float *vlen)
+{
+	
+}
+
+/* Convert polar to cartesian coordinates. */
+void
+map_pol2c(struct map *m, float angle, float vlen, int *cx, int *cy)
+{
+	*cx = (int)(vlen * cosf(angle));
+	*cy = (int)(vlen * sinf(angle));
+}
+
 /*
  * Load a node reference.
  * The map must be locked.
@@ -675,6 +691,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	Uint32 ntrans = 0;
 	Uint8 flags;
 	Uint8 layer;
+	Sint8 friction;
 	int i;
 
 	/* Read the type of reference, flags and the layer#. */
