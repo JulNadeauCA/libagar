@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.h,v 1.8 2003/02/12 01:09:47 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.9 2003/03/07 03:24:49 vedge Exp $	*/
 /*	Public domain	*/
 
 enum eraser_mode {
@@ -9,7 +9,6 @@ enum eraser_mode {
 struct eraser {
 	struct tool	tool;
 	int		mode;			/* Eraser mode */
-	int		all_layers;		/* Apply to every layer */
 	struct {
 		struct object	*pobj;
 		int		 offs;		/* -1 = any */
