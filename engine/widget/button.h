@@ -1,5 +1,8 @@
-/*	$Csoft: button.h,v 1.15 2002/08/21 04:24:54 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.16 2002/08/29 07:15:43 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_BUTTON_H_
+#define _AGAR_WIDGET_BUTTON_H_
 
 struct button {
 	struct	 widget wid;
@@ -30,3 +33,4 @@ void		 button_destroy(void *);
 
 void	 button_draw(void *);
 
+#endif /* _AGAR_WIDGET_BUTTON_H_ */

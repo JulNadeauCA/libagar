@@ -1,5 +1,8 @@
-/*	$Csoft: graph.h,v 1.5 2002/09/08 03:45:01 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.6 2002/12/17 01:05:00 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_GRAPH_H_
+#define _AGAR_WIDGET_GRAPH_H_
 
 struct graph;
 
@@ -51,3 +54,4 @@ int		 graph_load(void *, int);
 int		 graph_save(void *, int);
 void		 graph_scroll(struct graph *, int);
 
+#endif /* _AGAR_WIDGET_GRAPH_H_ */

@@ -1,5 +1,8 @@
-/*	$Csoft: label.h,v 1.14 2002/11/14 07:18:33 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.15 2002/11/19 05:06:32 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_LABEL_H_
+#define _AGAR_WIDGET_LABEL_H_
 
 #define LABEL_MAX_LENGTH	2048
 #define LABEL_MAX_POLLITEMS	32
@@ -39,3 +42,4 @@ void	 	 label_destroy(void *);
 void		 label_draw(void *);
 void		 label_printf(struct label *, const char *, ...);
 
+#endif /* _AGAR_WIDGET_LABEL_H_ */
