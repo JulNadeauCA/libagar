@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.102 2003/05/24 15:53:39 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.103 2003/06/06 02:41:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -193,23 +193,6 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	object_load(world);
 	inited++;
 	return (0);
-}
-
-/* Request a shutdown. */
-void
-engine_stop(void)
-{
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		/* Stop the event loop synchronously. */
-		pthread_mutex_lock(&view->lock);
-		view->rootmap->map = NULL;
-		pthread_mutex_unlock(&view->lock);
-		break;
-	default:
-		/* Shut down immediately. */
-		engine_destroy();
-	}
 }
 
 /*
