@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.148 2003/04/26 04:42:44 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.149 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -35,8 +35,6 @@
 #include <engine/rootmap.h>
 #include <engine/view.h>
 
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
 #ifdef DEBUG
 #include <engine/monitor/monitor.h>
 #endif
@@ -106,10 +104,6 @@ event_hotkey(SDL_Event *ev)
 #endif /* DEBUG */
 	case SDLK_F1:
 		window_show(config->settings);
-		break;
-	case SDLK_t:
-		if (mapedition)
-			window_show(mapedit.win.toolbar);
 		break;
 	case SDLK_F8:
 		view_capture(view->v);
