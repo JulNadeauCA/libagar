@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.45 2002/07/08 03:17:11 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.46 2002/07/08 05:24:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -237,8 +237,10 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 		*col = win->border[xo+1];
 		return (1);
 	} else if (yo > (win->h - win->borderw)) {	/* Bottom */
-		if (xo == (win->w - 16)) {
+		if (xo == (win->w - 16) || xo == 16) {
 			*col = SDL_MapRGB(view->v->format, 0, 0, 0);
+		} else if (xo == (win->w - 17) || xo == 17) {
+			*col = SDL_MapRGB(view->v->format, 250, 250, 250);
 		} else {
 			*col = win->border[win->h - yo];
 		}
@@ -781,8 +783,56 @@ window_event_all(SDL_Event *ev)
 				}
 				window_move(win, ev->motion.x, ev->motion.y);
 				goto posted;
-			case VIEW_WINOP_RESIZE:
-				dprintf("resize\n");
+			case VIEW_WINOP_LRESIZE:
+			case VIEW_WINOP_RRESIZE:
+			case VIEW_WINOP_HRESIZE:
+				do {
+					SDL_Rect rd;
+					rd.x = win->x;
+					rd.y = win->y;
+					rd.w = win->w;
+					rd.h = win->h;
+					SDL_FillRect(view->v, &rd, 0);
+				} while (/*CONSTCOND*/ 0);
+				if (view->wop_win != win) {
+					goto nextwin;
+				}
+				switch (view->winop) {
+				case VIEW_WINOP_LRESIZE:
+					if (ev->motion.xrel < 0) {
+						win->w -= ev->motion.xrel;
+						win->x += ev->motion.xrel;
+					} else if (ev->motion.xrel > 0) {
+						win->w -= ev->motion.xrel;
+						win->x += ev->motion.xrel;
+					}
+					if (ev->motion.yrel < 0) {
+						win->h += ev->motion.yrel;
+					} else if (ev->motion.yrel > 0) {
+						win->h += ev->motion.yrel;
+					}
+					break;
+				case VIEW_WINOP_RRESIZE:
+					if (ev->motion.xrel < 0) {
+						win->w += ev->motion.xrel;
+					} else if (ev->motion.xrel > 0) {
+						win->w += ev->motion.xrel;
+					}
+					if (ev->motion.yrel < 0) {
+						win->h += ev->motion.yrel;
+					} else if (ev->motion.yrel > 0) {
+						win->h += ev->motion.yrel;
+					}
+					break;
+				case VIEW_WINOP_HRESIZE:
+					if (ev->motion.yrel < 0) {
+						win->h += ev->motion.yrel;
+					} else if (ev->motion.yrel > 0) {
+						win->h += ev->motion.yrel;
+					}
+				default:
+				}
+				window_resize(win);
 				break;
 			case VIEW_WINOP_NONE:
 				break;
@@ -846,7 +896,17 @@ window_event_all(SDL_Event *ev)
 					view->wop_win = win;
 				} else if (ev->button.y - win->y >
 				    win->h - win->borderw) {
-					view->winop = VIEW_WINOP_RESIZE;
+				    	if (ev->button.x - win->x < 17) {
+						view->winop =
+						    VIEW_WINOP_LRESIZE;
+					} else if (ev->button.x - win->x >
+					    win->h - 17) {
+						view->winop =
+						    VIEW_WINOP_RRESIZE;
+					} else {
+						view->winop = 
+						    VIEW_WINOP_HRESIZE;
+					}
 					view->wop_win = win;
 				}	
 			}
@@ -934,10 +994,13 @@ posted:
 	return (1);
 }
 
+/* Window must be locked. */
 void
 window_resize(struct window *win)
 {
 	struct region *reg;
+
+	dprintf("resize\n");
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
