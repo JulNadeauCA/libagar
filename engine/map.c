@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.172 2003/04/24 04:48:50 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.173 2003/04/24 06:58:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -252,10 +252,7 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 
 	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
 
-	if (w < MAP_MIN_WIDTH || h < MAP_MIN_HEIGHT) {
-		error_set("too small");
-		return (-1);
-	} else if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
+	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
 		error_set("too big");
 		return (-1);
 	}
