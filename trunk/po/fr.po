@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.16 2003/08/31 10:58:04 vedge Exp $
+# $Csoft: fr.po,v 1.17 2003/09/02 01:53:42 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -326,14 +326,14 @@ msgid "%ux%u nodes exceed %ux%u."
 msgstr "%ux%u noeuds dépassent la limite de %ux%u."
 
 msgid "Layer 0"
-msgstr "Couche 0"
+msgstr "Calque 0"
 
 #, c-format
 msgid "Layer %u"
-msgstr "Couche %u"
+msgstr "Calque %u"
 
 msgid "Too many layers."
-msgstr "Trop de couches."
+msgstr "Trop de calques."
 
 #, c-format
 msgid "Cannot resolve sprite: %u."
@@ -362,7 +362,7 @@ msgid "Invalid map geometry."
 msgstr "Géométrie de carte invalide."
 
 msgid "Too many map layers."
-msgstr "La carte comporte trop de couches."
+msgstr "La carte comporte trop de calques."
 
 #, c-format
 msgid "%s map view"
@@ -401,7 +401,7 @@ msgstr "Édition de «%s»"
 #. XXX combo
 #, c-format
 msgid "  Layer #%d"
-msgstr "  Couche #%d"
+msgstr "  Calque #%d"
 
 msgid "Out of memory for string."
 msgstr "Mémoire insuffisante pour la chaîne de caractères."
@@ -536,11 +536,11 @@ msgid "%s (invisible %s)\n"
 msgstr "%s (invisible %s)\n"
 
 msgid "No layer is selected."
-msgstr "Aucune couche n'est sélectionnée."
+msgstr "Aucun calque n'est sélectionné."
 
 #, c-format
 msgid "%s layers"
-msgstr "Couches de «%s»"
+msgstr "Calques de «%s»"
 
 msgid "New layer: "
 msgstr "Nom: "
@@ -561,7 +561,7 @@ msgid "Show/hide"
 msgstr "Montrer/cacher"
 
 msgid "Layer NN (visible, editing)    "
-msgstr "Couche NN (visible, édition)    "
+msgstr "Calque NN (visible, édition)    "
 
 msgid "No node is selected."
 msgstr "Aucun noeud n'est sélectionné."
