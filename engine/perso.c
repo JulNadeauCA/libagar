@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.3 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.4 2002/11/24 03:10:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -65,6 +65,14 @@ static const struct object_ops perso_ops = {
 
 static Uint32	perso_time(Uint32, void *);
 
+#ifdef DEBUG
+#define	DEBUG_STATE	0x01
+#define DEBUG_POSITION	0x02
+
+int	perso_debug = DEBUG_STATE|DEBUG_POSITION;
+#define engine_debug	perso_debug
+#endif
+
 struct perso *
 perso_new(char *name, char *media, Uint32 hp, Uint32 mp)
 {
@@ -113,7 +121,7 @@ perso_load(void *p, int fd)
 
 	pthread_mutex_lock(&pers->lock);
 
-	/* Read perso properties. */
+	/* Read personage properties. */
 	free(read_string(fd));		/* Ignore name */
 	pers->flags = read_uint32(fd);
 	pers->level = read_uint32(fd);
@@ -129,7 +137,7 @@ perso_load(void *p, int fd)
 
 	pers->nzuars = read_uint32(fd);
 
-	dprintf("%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d\n",
+	debug(DEBUG_STATE, "%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d\n",
 	    OBJECT(pers)->name, pers->flags, pers->level, pers->exp, pers->age,
 	    pers->hp, pers->maxhp, pers->mp, pers->maxhp);
 
@@ -147,10 +155,11 @@ perso_load(void *p, int fd)
 
 		input = input_find_str(minput);
 		if (input != NULL) {
-			dprintf("%s is controlled by %s\n",
+			debug(DEBUG_STATE, "%s is controlled by %s\n",
 			    OBJECT(pers)->name, OBJECT(input)->name);
 		}
-		dprintf("%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
+		debug(DEBUG_STATE,
+		    "%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
 		    OBJECT(pers)->name, mname, x, y, offs, flags, speed);
 
 		m = (struct map *)world_find(mname);
@@ -166,7 +175,8 @@ perso_load(void *p, int fd)
 			}
 			pthread_mutex_unlock(&m->lock);
 
-			dprintf("at %s:%d,%d\n", OBJECT(m)->name, x, y);
+			debug(DEBUG_STATE, "%s is at %s:%d,%d\n",
+			    OBJECT(pers)->name, OBJECT(m)->name, x, y);
 			m->redraw++;
 		} else {
 			fatal("no such map: \"%s\"\n", mname);
@@ -174,7 +184,7 @@ perso_load(void *p, int fd)
 		free(mname);
 		free(minput);
 	} else {
-		dprintf("%s is nowhere.\n", OBJECT(pers)->name);
+		debug(DEBUG_STATE, "%s is nowhere.\n", OBJECT(pers)->name);
 	}
 	
 	pthread_mutex_unlock(&pers->lock);
@@ -224,7 +234,7 @@ perso_save(void *p, int fd)
 		buf_write_uint32(buf, pos->speed);
 		buf_write_string(buf,
 		    (pos->input != NULL) ? OBJECT(pos->input)->name : "");
-		dprintf("%s: reference %s:%d,%d offs=%d flags=0x%x\n",
+		debug(DEBUG_STATE, "%s: at %s:%d,%d offs=%d flags=0x%x\n",
 		    OBJECT(pers)->name, OBJECT(pos->map)->name, pos->x, pos->y,
 		    pos->nref->offs, pos->nref->flags);
 	} else {
@@ -264,10 +274,12 @@ perso_time(Uint32 ival, void *p)
 	struct mappos *pos;
 	Uint32 x, y, moved = 0;
 
+	/* XXX thread unsafe */
+	
 	pos = object_get_pos(ob);
-
 	if (pos == NULL) {
 		/* Character is nowhere. */
+		debug(DEBUG_POSITION, "%s is nowhere\n", ob->name);
 		return (ival);
 	}
 
