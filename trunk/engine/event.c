@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.10 2002/02/08 01:38:01 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.11 2002/02/10 04:51:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -32,10 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <pthread.h>
-#include <glib.h>
-#include <SDL.h>
 
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
