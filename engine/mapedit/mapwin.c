@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.34 2003/01/23 02:13:19 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.35 2003/01/23 03:17:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -169,6 +169,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		mv->node_button = bu;
 	}
 
 	/* Map view */
