@@ -1,11 +1,11 @@
-#	$Csoft: Makefile,v 1.11 2002/03/17 09:06:40 vedge Exp $
+#	$Csoft: Makefile,v 1.12 2002/04/18 03:58:57 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 LIB=	mapedit
-SRCS=	mapedit.c command.c mouse.c joy.c
-OBJS=	mapedit.o command.o mouse.o joy.o
+SRCS=	mapedit.c command.c mouse.c joy.c config.c
+OBJS=	mapedit.o command.o mouse.o joy.o config.o
 FOBJS=	mapedit.fob
 SHARE=	README.mapedit
 
