@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: mapedit.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 /*
  * The map edition code references sprites and animations in a
@@ -78,7 +78,7 @@ struct mapedit {
 #define MAPEDIT_HASTE	11
 #define MAPEDIT_ANIM	12
 
-struct mapedit *mapedit_create(struct map *, struct object *);
+struct mapedit *mapedit_create(struct map *, int, int);
 void		mapedit_tilelist(struct mapedit *);
 void		mapedit_tilestack(struct mapedit *);
 void		mapedit_objlist(struct mapedit *);
