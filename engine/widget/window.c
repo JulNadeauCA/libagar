@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.204 2003/06/21 06:50:27 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.205 2003/07/01 05:08:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -150,7 +150,7 @@ window_init(void *p, const char *name)
 	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
 	strlcpy(OBJECT(win)->type, "window", sizeof(OBJECT(win)->type));
 
-	win->flags = 0;
+	win->flags = (name != NULL) ? WINDOW_PERSISTENT : 0;
 	win->visible = 0;
 
 	win->borderw = default_nborder;
@@ -176,8 +176,6 @@ window_init(void *p, const char *name)
 	win->padding = win->borderw + 2;
 	win->minw = 0;
 	win->minh = 0;
-	win->saved_w = 0;
-	win->saved_h = 0;
 	win->tbar = titlebar_new(win, 0);
 
 	/* Automatically notify children of visibility changes. */
@@ -293,7 +291,7 @@ window_destroy(void *p)
 	struct window *win = p;
 
 	free(win->border);
-	pthread_mutex_destroy(&win->lock);
+//	pthread_mutex_destroy(&win->lock);
 }
 
 static void
@@ -301,10 +299,6 @@ window_shown(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	int init = (WIDGET(win)->x == -1 && WIDGET(win)->y == -1);
-
-	if (win->flags & WINDOW_PERSISTENT) {
-		object_load(win);
-	}
 
 	view->focus_win = win;
 	window_focus(win);
@@ -320,6 +314,9 @@ window_shown(int argc, union evarg *argv)
 		window_apply_alignment(win);
 		window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
 	}
+
+	if (win->flags & WINDOW_PERSISTENT)
+		object_load(win);
 }
 
 static void
@@ -349,9 +346,8 @@ window_hidden(int argc, union evarg *argv)
 		break;
 	}
 
-	if (win->flags & WINDOW_PERSISTENT) {
+	if (win->flags & WINDOW_PERSISTENT)
 		object_save(win);
-	}
 }
 
 /* Toggle the visibility of a window. */
@@ -964,11 +960,16 @@ window_load(void *p, struct netbuf *buf)
 	WIDGET(win)->y = (int)read_sint16(buf) * view->v->h / view_h;
 	WIDGET(win)->w = (int)read_uint16(buf) * view->v->w / view_w;
 	WIDGET(win)->h = (int)read_uint16(buf) * view->v->h / view_h;
-	win->saved_w = (int)read_uint16(buf) * view->v->w / view_w;
-	win->saved_h = (int)read_uint16(buf) * view->v->h / view_h;
+
+	/* Adjust to the minimum cosmetic size. */
+	if (WIDGET(win)->w < win->minw)
+		WIDGET(win)->w = win->minw;
+	if (WIDGET(win)->h < win->minh)
+		WIDGET(win)->w = win->minh;
 
 	/* Effect the possible changes in geometry. */
 	WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
+	window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
 	return (0);
 }
 
@@ -985,8 +986,6 @@ window_save(void *p, struct netbuf *buf)
 	write_sint16(buf, (Sint16)WIDGET(win)->y);
 	write_uint16(buf, (Uint16)WIDGET(win)->w);
 	write_uint16(buf, (Uint16)WIDGET(win)->h);
-	write_uint16(buf, (Uint16)win->saved_w);
-	write_uint16(buf, (Uint16)win->saved_h);
 	return (0);
 }
 
