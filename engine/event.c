@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.52 2002/06/25 17:38:01 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.53 2002/06/27 00:15:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,6 +49,12 @@
 
 extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
+
+static int delta;	/* Event/motion interpolation delta */
+#ifdef DEBUG
+static struct region *fps_reg;
+static struct label *fps_label;
+#endif
 
 #ifdef DEBUG
 
@@ -181,27 +187,38 @@ event_hotkey(SDL_Event *ev)
 	}							\
 } while (/*CONSTCOND*/0)
 
+static Uint32
+event_update(Uint32 ival, void *arg)
+{
+	Uint32 *ntick = arg;
+
+	COMPUTE_DELTA(delta, *ntick);
+
+	return (ival);
+}
 
 void *
 event_loop(void *arg)
 {
 	SDL_Event ev;
 	Uint32 ltick, ntick;
-	int delta;
 	struct window *win;
-#ifdef DEBUG
-	struct region *fps_reg;
-	struct label *fps_label;
-#endif
 	int rv;
 
 #ifdef DEBUG
 	fps_win = window_new("Frames/second", WINDOW_SOLID|WINDOW_ABSOLUTE,
-	    64, 96, 160, 64);
+	    view->w - 141, view->h - 65, 140, 64);
 	fps_reg = region_new(fps_win, REGION_HALIGN,
 	    0, 0, 100, 100);
 	fps_label = label_new(fps_reg, "...", 0);
 #endif
+
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_GUI:
+		SDL_AddTimer(1000, event_update, &ntick);
+		break;
+	default:
+	}
 
 	/* Start the garbage collection process. */
 	object_init_gc();
@@ -237,12 +254,9 @@ event_loop(void *arg)
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
 					window_animate(win);
-					if (win->redraw != 0) {
-				    		/* XXX ignore redraw flag,
-						   that will require a fancy
-						   microtile algorithm */
-						COMPUTE_DELTA(delta, ntick);
-					}
+				    	/* XXX ignore redraw flag,
+					   that will require a fancy
+					   microtile algorithm */
 					window_draw(win);
 				}
 				pthread_mutex_unlock(&win->lock);
