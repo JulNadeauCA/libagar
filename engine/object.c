@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.127 2003/06/06 02:39:56 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.128 2003/06/11 03:53:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,12 @@
 #include <engine/typesw.h>
 #include <engine/mkpath.h>
 
+#include <engine/widget/window.h>
+#include <engine/widget/box.h>
+#include <engine/widget/label.h>
+#include <engine/widget/button.h>
+#include <engine/widget/tlist.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -69,7 +75,7 @@ const struct object_ops object_ops = {
 #define DEBUG_GC	0x040
 
 int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
-	               DEBUG_LINKAGE|DEBUG_GC|DEBUG_DEPS;
+	               DEBUG_GC|DEBUG_DEPS;
 #define engine_debug object_debug
 #endif
 
@@ -368,7 +374,7 @@ object_file(struct object *ob)
 		}
 		free(file);
 	}
-	error_set("%s.%s not in %s", ob->name, ob->type, path);
+	error_set("%s.%s not in <load-path>", ob->name, ob->type);
 	free(path);
 	free(objname);
 	return (NULL);
@@ -486,6 +492,7 @@ fail:
 }
 
 /* Recursively save the state of an object and its descendents. */
+/* XXX remove previous dir contents */
 int
 object_save(void *p)
 {
@@ -957,4 +964,119 @@ void
 object_set_ops(void *p, const void *ops)
 {
 	OBJECT(p)->ops = ops;
+}
+
+enum {
+	LOAD_OP,
+	SAVE_OP,
+	EDIT_OP
+};
+
+static void
+object_invoke_op(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	int op = argv[2].i;
+
+	switch (op) {
+	case LOAD_OP:
+		if (object_load(ob) == -1) {
+			text_msg("Error loading", "%s: %s", ob->name,
+			    error_get());
+		}
+		break;
+	case SAVE_OP:
+		if (object_save(ob) == -1) {
+			text_msg("Error saving", "%s: %s", ob->name,
+			    error_get());
+		}
+		break;
+	case EDIT_OP:
+		if (ob->ops->edit != NULL) {
+			ob->ops->edit(ob);
+		} else {
+			text_msg("Error", "%s has no edit op", ob->name);
+		}
+		break;
+	}
+}
+
+static void
+poll_props(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct prop *prop;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&ob->props_lock);
+	TAILQ_FOREACH(prop, &ob->props, props) {
+		char val[TLIST_LABEL_MAX];
+		char label[TLIST_LABEL_MAX];
+
+		prop_print_value(val, sizeof(val), prop);
+		snprintf(label, sizeof(label), "%s = %s", prop->key, val);
+		tlist_insert_item(tl, NULL, label, prop);
+	}
+	pthread_mutex_unlock(&ob->props_lock);
+	tlist_restore_selections(tl);
+}
+
+void
+object_edit(void *p)
+{
+	struct object *ob = p;
+	struct window *win;
+	struct box *bo;
+	struct button *bu;
+	char *obname;
+
+	obname = object_name(ob);
+	if ((win = window_new("object-edit-%s", obname)) == NULL)
+		goto out;
+
+	window_set_caption(win, "%s object", ob->name);
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	window_set_closure(win, WINDOW_DETACH);
+
+	label_new(win, "Name: \"%s\"", ob->name);
+	label_new(win, "Type: \"%s\"", ob->type);
+	label_new(win, "Flags : 0x%02x", ob->flags);
+
+	label_polled_new(win, NULL, "Parent: %p", &ob->parent);
+	label_polled_new(win, NULL, "Gfx: %p", &ob->art);
+	label_polled_new(win, &ob->lock, "Pos: %p", &ob->pos);
+
+	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	box_set_padding(bo, 0);
+	{
+		bu = button_new(bo, "Load");
+		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
+		    LOAD_OP);
+		bu = button_new(bo, "Save");
+		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
+		    SAVE_OP);
+		bu = button_new(bo, "Edit");
+		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
+		    EDIT_OP);
+	}
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
+	box_set_padding(bo, 0);
+	{
+		struct tlist *tl;
+
+		tl = tlist_new(bo, TLIST_POLL);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 4);
+		event_new(tl, "tlist-poll", poll_props, "%p", ob);
+	}
+
+	window_show(win);
+
+	if (ob->ops->edit != NULL) {
+		ob->ops->edit(ob);
+	}
+out:
+	free(obname);
+	return;
 }
