@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.86 2002/11/07 18:58:31 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.87 2002/11/08 06:02:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -794,12 +794,12 @@ window_event(SDL_Event *ev)
 			/*
 			 * Widget mouse button up event
 			 */
-			if (!WINDOW_FOCUSED(win)) {
-				goto nextwin;
-			}
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if (WIDGET_FOCUSED(wid)) {
+					if ((WINDOW_FOCUSED(win) &&
+					     WIDGET_FOCUSED(wid)) ||
+					    (wid->flags &
+					     WIDGET_UNFOCUSED_BUTTONUP)) {
 						event_post(wid,
 						    "window-mousebuttonup",
 						    "%i, %i, %i",

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.37 2002/09/11 23:53:44 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.38 2002/11/07 04:38:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -28,9 +28,13 @@ struct region;
 struct widget {
 	struct	 object obj;
 	int	 flags;
-#define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
-#define WIDGET_UNFOCUSED_MOTION	0x02	/* Receive window-mousemotion events
-					   even when the widget isn't focused */
+#define WIDGET_NO_FOCUS			0x01	/* Cannot gain focus. */
+#define WIDGET_UNFOCUSED_MOTION		0x02	/* Receive window-mousemotion
+						   events even when the widget
+						   isn't focused. */
+#define WIDGET_UNFOCUSED_BUTTONUP	0x04	/* Receive window-mousebuttonup
+						   events even when the widget
+						   isn't focused. */
 	struct {
 		SDL_Surface	*source;	/* Source surface */
 		int		 redraw;	/* Update the source surface */

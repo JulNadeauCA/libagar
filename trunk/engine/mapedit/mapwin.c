@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.18 2002/09/23 00:47:07 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.19 2002/11/06 15:25:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -142,19 +142,19 @@ mapwin_new(struct mapedit *med, struct map *m)
 	/* Load map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0,
 	    xdiv, ydiv);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
 
 	/* Save map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0,
 	    xdiv, ydiv);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
 
 	/* Clear map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0,
 	    xdiv, ydiv);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 	event_new(bu, "button-pushed", 0, fileops_clear_map, "%p", mv);
 
 	/* New map view */
