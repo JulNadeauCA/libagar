@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.39 2002/02/17 01:03:07 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.40 2002/02/17 08:25:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -47,8 +47,8 @@ static struct obvec mapedit_vec = {
 	mapedit_event,
 	mapedit_load,
 	mapedit_save,
-	NULL,
-	NULL
+	mapedit_link,
+	mapedit_unlink
 };
 
 struct mapedit *curmapedit;		/* Map editor currently controlled. */
