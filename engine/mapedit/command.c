@@ -1,4 +1,4 @@
-/*	$Csoft	    */
+/*	$Csoft$	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -237,7 +237,7 @@ mapedit_do_loadmap(void *arg)
 
 	text_msg(2, TEXT_SLEEP, "Loaded %s.\n", OBJECT(m)->name);
 
-	view_redraw();
+	VIEW_REDRAW();
 	return (NULL);
 }
 
