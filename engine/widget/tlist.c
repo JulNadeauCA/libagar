@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.60 2003/05/22 09:51:15 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.61 2003/05/24 15:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -183,7 +183,8 @@ tlist_draw(void *p)
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		SDL_Surface *textsu = NULL;
-		int x = 2;
+		int ts = tl->item_h/2+1;
+		int x = 2 + it->depth*ts;
 
 		if (i++ < offset)
 			continue;
@@ -202,32 +203,56 @@ tlist_draw(void *p)
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
 
-		if (it->text != NULL) {
+		if (it->text != NULL)
 			textsu = text_render(NULL, -1,
 			    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
-		}
 
-		if (it->icon != NULL) {
-			widget_blit(tl, it->icon, x, y);
-		}
-		
-		if (it->haschilds) {
-			int ts = tl->item_h/2+1;
+		if (tl->flags & TLIST_TREE) {
+			int tx = x + 5;
 			int ty = y + ts/2;
+			int j;
 
-			primitives.rect_outlined(tl,
-			    x+5, ty,
-			    ts, ts,
+			primitives.wline(tl, 2,
+			    tx-ts,	ty + ts/2,
+			    tx-ts,	ty - tl->item_h,
 			    WIDGET_COLOR(tl, LINE_COLOR));
-			
-			primitives.plus(tl,
-			    !it->vischilds,
-			    x+6, ty+1,
-			    ts-2, ts-2,
+			primitives.wline(tl, 2,
+			    tx-ts,	ty + ts/2,
+			    tx,		ty + ts/2,
 			    WIDGET_COLOR(tl, LINE_COLOR));
+
+			for (j = 0; j < it->depth; j++) {
+				int lx = j*ts + 7;
+
+				primitives.wline(tl, 2,
+				    lx,	ty + ts/2,
+				    lx,	ty - tl->item_h,
+				    WIDGET_COLOR(tl, LINE_COLOR));
+			}
+
+			if (it->haschilds) {
+				primitives.rect_outlined(tl,
+				    tx, ty,
+				    ts, ts,
+				    WIDGET_COLOR(tl, LINE_COLOR));
+				if (it->vischilds) {
+					primitives.minus(tl,
+					    tx+1, ty+1,
+					    ts-2, ts-2,
+					    WIDGET_COLOR(tl, LINE_COLOR));
+				} else {
+					primitives.plus(tl,
+					    tx+1, ty+1,
+					    ts-2, ts-2,
+					    WIDGET_COLOR(tl, LINE_COLOR));
+				}
+			}
 		}
 
-		x += tl->item_h + 4;
+		if (it->icon != NULL)
+			widget_blit(tl, it->icon, x, y);
+
+		x += tl->item_h + 5;
 		if (textsu != NULL) {
 			widget_blit(tl, textsu,
 			    x,
@@ -413,6 +438,7 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	it->selected = 0;
 	it->vischilds = 0;
 	it->haschilds = 0;
+	it->depth = 0;
 
 	strlcpy(it->text, text, sizeof(it->text));
 	it->text_len = strlen(text);
@@ -566,10 +592,15 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	if ((ti = tlist_item_index(tl, tind)) == NULL)
 		goto out;
 
-	if (ti->haschilds &&
-	    x >= 5 && x <= 5+tl->item_h/2) {		/* Tree visible flag */
-		ti->vischilds = !ti->vischilds;
-		goto out;
+	if (ti->haschilds) {
+		int th = tl->item_h/2;
+
+		x -= 7;
+		if (x >= ti->depth*th &&
+		    x <= (ti->depth+1)*th) {
+			ti->vischilds = !ti->vischilds;
+			goto out;
+		}
 	}
 
 	if (tl->flags & TLIST_MULTI) {			/* Multi selections */
@@ -811,6 +842,7 @@ tlist_set_item_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *icon)
 	if (icon != NULL) {
 		it->icon = view_scale_surface(icon,
 		    tl->item_h, tl->item_h);			/* Square */
+		view_set_trans(it->icon, 128);
 	} else {
 		it->icon = NULL;
 	}
