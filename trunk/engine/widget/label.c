@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.51 2003/01/23 03:20:31 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.52 2003/03/02 04:13:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -91,7 +91,7 @@ label_scaled(int argc, union evarg *argv)
 		break;
 	case LABEL_POLLED:
 		if (WIDGET(lab)->rh == -1)
-			WIDGET(lab)->h = ttf_font_height(font);
+			WIDGET(lab)->h = text_font_height(font);
 		break;
 	}
 }
