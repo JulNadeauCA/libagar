@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.34 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.35 2004/01/23 03:53:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -234,9 +234,11 @@ scrollbar_draw(void *p)
 	max = widget_get_int(sb, "max");
 
 #ifdef DEBUG
-	if (min < 0 || max < min || value < min || value > max)
-		fatal("bad value/range: min=%d, max=%d, value=%d",
-		    min, max, value);
+	if (min < 0 || max < min || value < min || value > max) {
+		dprintf("out of range: min=%d, max=%d, value=%d\n", min, max,
+		    value);
+		return;
+	}
 #endif
 
 	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1, BG_COLOR);
