@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.154 2003/03/07 00:40:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.155 2003/03/07 03:25:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -65,7 +65,7 @@ static void	*map_check(void *);
 static void	 map_layer_init(struct map_layer *lay, char *);
 static void	 map_layer_destroy(struct map_layer *);
 
-__inline__ void
+void
 node_init(struct node *node, int x, int y)
 {
 #ifdef DEBUG
@@ -1098,6 +1098,8 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
 
 	/* XXX cache the scaled surfaces. */
 	/* XXX inefficient */
+	/* XXX no support for SDL_RLEACCEL! */
+
 	if (SDL_MUSTLOCK(view->v))
 		SDL_LockSurface(view->v);
 	for (y = 0; y < dh; y++) {
