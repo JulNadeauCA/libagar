@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.53 2002/03/03 07:54:22 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.54 2002/03/04 02:35:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -79,6 +79,7 @@ static int	mapedit_shadow(struct mapedit *);
 static Uint32	mapedit_cursor_tick(Uint32, void *);
 static Uint32	mapedit_lists_tick(Uint32, void *);
 static void	mapedit_bg(SDL_Surface *, SDL_Rect *, Uint32);
+static void	mapedit_state(struct mapedit *, SDL_Rect *);
 
 struct mapedit *
 mapedit_create(char *name)
@@ -409,6 +410,62 @@ mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 	}
 }
 
+/*
+ * Draw the map edition status indicator.
+ */
+static void
+mapedit_state(struct mapedit *med, SDL_Rect *rd)
+{
+	if (med->flags & MAPEDIT_INSERT) {
+		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_INSERT_TXT],
+		    NULL, med->map->view->v, rd);
+	} else {
+		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_REPLACE_TXT],
+		    NULL, med->map->view->v, rd);
+	}
+	if (med->flags & MAPEDIT_DRAWPROPS)
+		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_PROPS_TXT],
+		    NULL, med->map->view->v, rd);
+	if (med->flags & MAPEDIT_DRAWGRID)
+		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_GRID_TXT],
+		    NULL, med->map->view->v, rd);
+	if (med->curflags == 0) {
+		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_BLOCKED],
+		    NULL, med->map->view->v, rd);
+	} else {
+		if (med->curflags & NODE_WALK) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_WALK],
+			    NULL, med->map->view->v, rd);
+		}
+		if (med->curflags & NODE_CLIMB) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_CLIMB],
+			    NULL, med->map->view->v, rd);
+		}
+		if (med->curflags & NODE_SLIP) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_SLIP],
+			    NULL, med->map->view->v, rd);
+		}
+		if (med->curflags & NODE_BIO) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_BIO],
+			    NULL, med->map->view->v, rd);
+		} else if (med->curflags & NODE_REGEN) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_REGEN],
+			    NULL, med->map->view->v, rd);
+		}
+		if (med->curflags & NODE_SLOW) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_SLOW],
+			    NULL, med->map->view->v, rd);
+		} else if (med->curflags & NODE_HASTE) {
+			SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_HASTE],
+			    NULL, med->map->view->v, rd);
+		}
+	}
+}
+
+/*
+ * Draw the tile selection.
+ * Must be called on a locked map.
+ */
 void
 mapedit_tilelist(struct mapedit *med)
 {
@@ -483,9 +540,16 @@ nextref:
 			sn = 0;
 		}
 	}
+
+	rd.x = med->tilelist.x;
+	rd.y = med->tilelist.y - m->tileh;
+	rd.w = m->tilew;
+	rd.h = m->tileh;
+	mapedit_state(med, &rd);
+	
 	SDL_UpdateRect(m->view->v,
-	    med->tilelist.x, med->tilelist.y,
-	    med->tilelist.w, med->tilelist.h);
+	    med->tilelist.x - m->tilew, med->tilelist.y - m->tileh,
+	    med->tilelist.w + m->tilew, med->tilelist.h + m->tileh);
 }
 
 /*

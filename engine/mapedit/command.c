@@ -313,7 +313,8 @@ mapedit_editflags(struct mapedit *med, int mask)
 	}
 
 	med->map->redraw++;
-	
+
+	mapedit_tilelist(med);	/* Update the states display */
 }
 
 void
@@ -332,5 +333,7 @@ mapedit_nodeflags(struct mapedit *med, struct node *node, int flag)
 	}
 	/* XXX pref */
 	med->curflags = node->flags;
+
+	mapedit_tilelist(med);	/* Update the states display */
 }
 

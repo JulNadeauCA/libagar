@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.21 2002/03/01 06:02:32 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.22 2002/03/03 06:26:54 vedge Exp $	*/
 
 #include <engine/physics.h>
 
@@ -73,25 +73,35 @@ struct mapedit {
 };
 
 /* Editor anims */
-#define MAPEDIT_SELECT	0
+enum {
+	MAPEDIT_SELECT
+};
 
 /* Editor sprites */
-#define MAPEDIT_ORIGIN	1
-#define MAPEDIT_CIRQSEL	2
-#define MAPEDIT_GRID	3
-#define MAPEDIT_BLOCKED	4
-#define MAPEDIT_WALK	5
-#define MAPEDIT_CLIMB	6
-#define MAPEDIT_SLIP	7
-#define MAPEDIT_BIO	8
-#define MAPEDIT_REGEN	9
-#define MAPEDIT_SLOW	10
-#define MAPEDIT_HASTE	11
-#define MAPEDIT_ANIM	12
-#define MAPEDIT_NVEL	13
-#define MAPEDIT_SVEL	14
-#define MAPEDIT_WVEL	15
-#define MAPEDIT_EVEL	16
+enum {
+	MAPEDIT_ICON,
+	MAPEDIT_ORIGIN,
+	MAPEDIT_CIRQSEL,
+	MAPEDIT_GRID,
+	MAPEDIT_BLOCKED,
+	MAPEDIT_WALK,
+	MAPEDIT_CLIMB,
+	MAPEDIT_SLIP,
+	MAPEDIT_BIO,
+	MAPEDIT_REGEN,
+	MAPEDIT_SLOW,
+	MAPEDIT_HASTE,
+	MAPEDIT_ANIM,
+	MAPEDIT_NVEL,
+	MAPEDIT_SVEL,
+	MAPEDIT_WVEL,
+	MAPEDIT_EVEL,
+	MAPEDIT_STATE,
+	MAPEDIT_INSERT_TXT,
+	MAPEDIT_REPLACE_TXT,
+	MAPEDIT_PROPS_TXT,
+	MAPEDIT_GRID_TXT
+};
 
 struct mapedit *mapedit_create(char *);
 int		mapedit_link(void *);
