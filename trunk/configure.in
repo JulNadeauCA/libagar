@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.51 2003/01/01 01:43:06 vedge Exp $
+# $Csoft: configure.in,v 1.52 2003/01/21 10:13:34 vedge Exp $
 # Public domain
 
 makeout(Makefile.config);
@@ -8,7 +8,7 @@ register("--with-smpeg",	"Play videos through smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"Support OpenGL operations [default: check]");
 register("--enable-debug",	"Engine debugging [default: yes]");
-register("--enable-serialization", "Thread-safe engine [default: yes]");
+register("--enable-threads",	"Thread safety [default: yes]");
 register("--enable-8bpp",	"Support 8 bpp display [default: yes]");
 register("--enable-16bpp",	"Support 16 bpp display [default: yes]");
 register("--enable-24bpp",	"Support 24 bpp display [default: yes]");
@@ -71,10 +71,10 @@ else
 fi
 
 # Thread safety?
-if [ "${enable_serialization}" != "no" ]; then
-	hdefine(SERIALIZATION, 1);
+if [ "${enable_threads}" != "no" ]; then
+	hdefine(THREADS, 1);
 else
-	hundef(SERIALIZATION);
+	hundef(THREADS);
 fi
 
 # Reduce code size and gain some cycles by disabling unused modes.

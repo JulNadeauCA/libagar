@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.19 2003/01/12 04:07:16 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.20 2003/02/17 11:51:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,7 +31,7 @@
 #include "compat/vasprintf.h"
 #include "engine.h"
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 extern pthread_key_t engine_errorkey;	/* engine.c */
 #else
 extern char *engine_errorkey;		/* engine.c */
@@ -73,7 +73,7 @@ error_set(const char *fmt, ...)
 	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 	ekey = (char *)pthread_getspecific(engine_errorkey);
 	if (ekey != NULL) {
 		free(ekey);
@@ -88,7 +88,7 @@ error_set(const char *fmt, ...)
 const char *
 error_get(void)
 {
-#ifdef SERIALIZATION
+#ifdef THREADS
 	return ((const char *)pthread_getspecific(engine_errorkey));
 #else
 	return ((const char *)engine_errorkey);

@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.25 2002/12/24 14:22:17 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.26 2003/01/16 04:05:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -55,7 +55,7 @@ extern int engine_debug;
 # endif
 #endif	/* DEBUG */
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 # ifdef LOCKDEBUG
 #  include <stdlib.h>
 #  include <string.h>
@@ -99,6 +99,6 @@ extern int engine_debug;
 		fatal("pthread_join: %s\n", strerror(_rv));		\
 	}								\
 } while (0)
-#endif /* SERIALIZATION */
+#endif /* THREADS */
 
 #endif /* !_AGAR_ENGINE_DEBUG_H_ */
