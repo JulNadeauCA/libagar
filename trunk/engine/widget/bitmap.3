@@ -1,0 +1,84 @@
+.\"	$Csoft: label.3,v 1.4 2002/08/26 07:19:12 vedge Exp $
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 1, 2002
+.Dt BITMAP 3
+.Os
+.Sh NAME
+.Nm bitmap
+.Nd agar bitmap widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/bitmap.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays a bitmap scaled to the widget's geometry.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft struct bitmap *
+.Fn bitmap_new "struct region *reg" "SDL_Surface *surface" "int flags" \
+               "int w" "int h"
+.Pp
+.Ft void
+.Fn bitmap_init "struct bitmap *bmp" "SDL_Surface *surface" "int flags" \
+               "int w" "int h"
+.nr nS 0
+.Pp
+The
+.Fn bitmap_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn bitmap_init
+function initializes a
+.Nm
+widget.
+The
+.Fa surface
+argument is a pointer to an
+.Xr SDL_Surface 3
+structure.
+The
+.Fa flags
+argument is currently ignored.
+.Sh EVENTS
+The
+.Nm
+widget neither reacts to nor generates any event.
+.Pp
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3 ,
+.Xr window 3 ,
+.Xr region 3 ,
+.Xr label 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
