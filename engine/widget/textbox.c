@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.16 2002/07/21 10:58:18 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.17 2002/07/27 07:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -108,7 +108,7 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	tbox->text = strdup("");
 	tbox->label = label != NULL ? strdup(label) : NULL;
 	tbox->label_s = text_render(NULL, -1,
-	    WIDGET(tbox)->color[TEXT_COLOR], (char *)label);
+	    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
 
@@ -168,7 +168,7 @@ textbox_draw(void *p)
 	    WIDGET(tbox)->w - (tbox->xmargin * 2) - label_s->w,
 	    label_s->h + (tbox->ymargin * 2),
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
-	    WIDGET(tbox)->color[FRAME_COLOR]);
+	    WIDGET_COLOR(tbox, FRAME_COLOR));
 	
 	/*
 	 * Text
@@ -193,9 +193,9 @@ textbox_draw(void *p)
 			SDL_LockSurface(WIDGET_SURFACE(tbox));
 			for (j = 1; j < label_s->h; j++) {
 				WIDGET_PUT_PIXEL(tbox, x, y+j,
-				    WIDGET(tbox)->color[CURSOR_COLOR1]);
+				    WIDGET_COLOR(tbox, CURSOR_COLOR1));
 				WIDGET_PUT_PIXEL(tbox, x+1, y+j,
-				    WIDGET(tbox)->color[CURSOR_COLOR2]);
+				    WIDGET_COLOR(tbox, CURSOR_COLOR2));
 			}
 			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
 		}
@@ -218,7 +218,7 @@ textbox_draw(void *p)
 				str[0] = (char)c;
 				str[1] = '\0';
 				text_s = text_render(NULL, -1,
-				    WIDGET(tbox)->color[TEXT_COLOR], str);
+				    WIDGET_COLOR(tbox, TEXT_COLOR), str);
 				WIDGET_DRAW(tbox, text_s, x, y);
 				x += text_s->w;
 				SDL_FreeSurface(text_s);

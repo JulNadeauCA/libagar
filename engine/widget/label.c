@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.22 2002/06/25 17:32:47 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.23 2002/07/27 07:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -94,8 +94,8 @@ label_printf(struct label *label, const char *fmt, ...)
 	free(buf);
 
 	SDL_FreeSurface(label->label_s);
-	label->label_s = text_render(NULL, -1, WIDGET(label)->color[LABEL_TEXT],
-	    label->caption);
+	label->label_s = text_render(NULL, -1,
+	    WIDGET_COLOR(label, LABEL_TEXT), label->caption);
 
 	WIDGET(label)->w = label->label_s->w;
 	WIDGET(label)->h = label->label_s->h;
@@ -109,8 +109,8 @@ label_init(struct label *label, const char *caption, int flags)
 
 	label->flags = flags;
 	label->caption = strdup(caption);
-	label->label_s = text_render(NULL, -1, WIDGET(label)->color[LABEL_TEXT],
-	    label->caption);
+	label->label_s = text_render(NULL, -1,
+	    WIDGET_COLOR(label, LABEL_TEXT), label->caption);
 
 	WIDGET(label)->w = label->label_s->w;
 	WIDGET(label)->h = label->label_s->h;

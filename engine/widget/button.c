@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.27 2002/07/27 07:02:55 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.28 2002/07/29 02:16:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,8 +57,8 @@ static const struct widget_ops button_ops = {
 };
 
 enum {
-	BUTTON_FRAME	= 0,
-	BUTTON_TEXT	= 1
+	FRAME_COLOR	= 0,
+	TEXT_COLOR	= 1
 };
 
 static void	button_event(int, union evarg *);
@@ -86,8 +86,8 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
 	WIDGET(b)->flags |= WIDGET_MOUSEOUT;
 
-	widget_map_color(b, BUTTON_FRAME, "button-frame", 100, 100, 100);
-	widget_map_color(b, BUTTON_TEXT, "button-text", 240, 240, 240);
+	widget_map_color(b, FRAME_COLOR, "button-frame", 100, 100, 100);
+	widget_map_color(b, TEXT_COLOR, "button-text", 240, 240, 240);
 
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
@@ -98,7 +98,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 		b->caption = strdup(caption);
 		/* XXX recolor */
 		b->label_s = text_render(NULL, -1,
-		    WIDGET(b)->color[BUTTON_TEXT], caption);
+		    WIDGET_COLOR(b, TEXT_COLOR), caption);
 	} else if (image != NULL) {
 		b->caption = NULL;
 		b->label_s = image;
@@ -143,7 +143,7 @@ button_draw(void *p)
 	/* Button */
 	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
 	    (b->flags & BUTTON_PRESSED) ? -1 : 1,
-	    WIDGET(b)->color[BUTTON_FRAME]);
+	    WIDGET_COLOR(b, FRAME_COLOR));
 
 	/* Label */
 	switch (b->justify) {

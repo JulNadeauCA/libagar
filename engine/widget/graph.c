@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.5 2002/07/27 08:58:57 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.6 2002/07/27 09:02:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -281,7 +281,7 @@ graph_draw(void *p)
 	Sint32 *val, oval;
 
 	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0,
-	    WIDGET(gra)->color[FRAME_COLOR]);
+	    WIDGET_COLOR(gra, FRAME_COLOR));
 
 	if (gra->flags & GRAPH_ORIGIN) {
 		primitives.line(gra, 0, gra->origin_y,

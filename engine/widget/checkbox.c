@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.17 2002/07/20 18:56:31 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.18 2002/07/27 07:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 	widget_map_color(cbox, FRAME_COLOR, "checkbox-frame", 100, 100, 100);
 	widget_map_color(cbox, TEXT_COLOR, "checkbox-text", 250, 250, 250);
 	
-	s = text_render(NULL, -1, WIDGET(cbox)->color[TEXT_COLOR], caption);
+	s = text_render(NULL, -1, WIDGET_COLOR(cbox, TEXT_COLOR), caption);
 	if (rh < 0) {
 		WIDGET(cbox)->h = s->h;
 	}
@@ -127,7 +127,7 @@ checkbox_draw(void *p)
 	/* Checkbox */
 	primitives.box(cbox, 0, 0, cbox->cbox_w, cbox->label_s->h,
 	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1,
-	    WIDGET(cbox)->color[FRAME_COLOR]);
+	    WIDGET_COLOR(cbox, FRAME_COLOR));
 
 	/* Label (cached) */
 	switch (cbox->justify) {
