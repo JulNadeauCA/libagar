@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.31 2002/08/25 09:11:39 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.33 2002/09/03 09:30:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -37,12 +37,8 @@
 
 #include <libfobj/fobj.h>
 
-#include <engine/compat/strlcpy.h>
-
 #include "engine.h"
 #include "map.h"
-#include "physics.h"
-#include "input.h"
 #include "version.h"
 #include "config.h"
 
@@ -59,7 +55,7 @@
 
 static const struct version config_ver = {
 	"agar config",
-	2, 0
+	3, 0
 };
 
 static const struct object_ops config_ops = {
@@ -111,7 +107,6 @@ config_init(struct config *con)
 	extern const struct gameinfo *gameinfo;		/* engine.c */
 	struct passwd *pwd;
 	struct stat sta;
-	size_t len, plen = 0;
 	char *spath;
 
 	pwd = getpwuid(getuid());
@@ -124,21 +119,14 @@ config_init(struct config *con)
 	con->widget_flags = 0;
 
 	/* User data directory */
-	len = strlen(pwd->pw_dir) + strlen(gameinfo->prog) + 4;
-	plen += len + 1;
-	con->path.user_data_dir = emalloc(len);
-	snprintf(con->path.user_data_dir, len, "%s/.%s", pwd->pw_dir,
+	asprintf(&con->path.user_data_dir, "%s/.%s", pwd->pw_dir,
 	    gameinfo->prog);
 
 	/* System data directory */
-	len = strlen(SHAREDIR) + strlen(gameinfo->prog) + 4;
-	plen += len + 1;
-	con->path.sys_data_dir = emalloc(len);
-	strlcpy(con->path.sys_data_dir, SHAREDIR, len);
+	asprintf(&con->path.sys_data_dir, "%s", SHAREDIR);
 
 	/* Datafile path */
-	con->path.data_path = emalloc(plen);
-	snprintf(con->path.data_path, plen, "%s:%s",
+	asprintf(&con->path.data_path, "%s:%s",
 	    con->path.user_data_dir,
 	    con->path.sys_data_dir);
 	
@@ -180,6 +168,9 @@ config_load(void *p, int fd)
 	config->view.h = read_uint32(fd);
 	config->view.bpp = read_uint32(fd);
 	config->widget_flags = read_uint32(fd);
+	config->path.data_path = read_string(fd);
+	config->path.user_data_dir = read_string(fd);
+	config->path.sys_data_dir = read_string(fd);
 
 	pthread_mutex_unlock(&con->lock);
 
@@ -200,6 +191,9 @@ config_save(void *p, int fd)
 	write_uint32(fd, con->view.h);
 	write_uint32(fd, con->view.bpp);
 	write_uint32(fd, con->widget_flags);
+	write_string(fd, con->path.data_path);
+	write_string(fd, con->path.user_data_dir);
+	write_string(fd, con->path.sys_data_dir);
 	pthread_mutex_unlock(&con->lock);
 	
 	dprintf("saved settings (flags=0x%x)\n", config->flags);
@@ -225,8 +219,8 @@ config_init_wins(struct config *con)
 	/*
 	 * Engine settings window
 	 */
-	win = window_new("Engine settings", WINDOW_CENTER,
-	    0, 0,
+	win = window_new("config-engine-settings", "Engine settings",
+	    WINDOW_CENTER, 0, 0,
 	    480, 467,
 	    273, 467);
 	con->windows.settings = win;
@@ -319,7 +313,8 @@ config_init_wins(struct config *con)
 	}
 
 	/* Primitive drawing algorithm switch */
-	win = window_new("Primitive algorithm switch", WINDOW_CENTER,
+	win = window_new("config-primitive-algorithm-sw",
+	    "Primitive algorithm switch", WINDOW_CENTER,
 	    0, 0,
 	    247, 180,
 	    247, 180);
@@ -348,7 +343,7 @@ config_init_wins(struct config *con)
 	}
 }
 
-#define CONFIG_SETFLAG(con, _field, flag, val) do {	\
+#define CONFIG_SET_FLAG(con, _field, flag, val) do {	\
 	pthread_mutex_lock(&(con)->lock);		\
 	if ((val)) {					\
 		(con)->_field |= (flag);		\
@@ -358,38 +353,52 @@ config_init_wins(struct config *con)
 	pthread_mutex_unlock(&(con)->lock);		\
 } while (/*CONSTCOND*/ 0)
 
+#define CONFIG_SET_STRING(con, _field, text) do {	\
+	pthread_mutex_lock(&(con)->lock);		\
+	free((con)->_field);				\
+	(con)->_field = strdup((text));			\
+	pthread_mutex_unlock(&(con)->lock);		\
+} while (/*CONSTCOND*/ 0)
+			
+#define CONFIG_SET_INT(con, _field, i) do {		\
+	pthread_mutex_lock(&(con)->lock);		\
+	(con)->_field = (i);				\
+	pthread_mutex_unlock(&(con)->lock);		\
+} while (/*CONSTCOND*/ 0)
+
 void
 config_apply(int argc, union evarg *argv)
 {
-	struct textbox *tbox;
 	struct widget *wid = argv[0].p;
+	struct textbox *tbox = argv[0].p;
 
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
 		window_hide_locked(wid->win);
-		break;
+		return;
 	case SAVE_BUTTON:
 		object_save(config);
-		break;
+		return;
+	}
+
+	switch (argv[1].i) {
 	case UDATADIR_TBOX:
-	case DATAPATH_TBOX:
+		CONFIG_SET_STRING(config, path.user_data_dir, tbox->text);
+		break;
 	case SYSDATADIR_TBOX:
-		/* XXX */
+		CONFIG_SET_STRING(config, path.sys_data_dir, tbox->text);
+		break;
+	case DATAPATH_TBOX:
+		CONFIG_SET_STRING(config, path.data_path, tbox->text);
 		break;
 	case W_TBOX:
-		tbox = (struct textbox *)wid;
-		pthread_mutex_lock(&config->lock);
-		config->view.w = atoi(tbox->text);
-		pthread_mutex_unlock(&config->lock);
+		CONFIG_SET_INT(config, view.w, atoi(tbox->text));
 		break;
 	case H_TBOX:
-		tbox = (struct textbox *)wid;
-		pthread_mutex_lock(&config->lock);
-		config->view.h = atoi(tbox->text);
-		pthread_mutex_unlock(&config->lock);
+		CONFIG_SET_INT(config, view.h, atoi(tbox->text));
 		break;
 	case FONTCACHE_CBOX:
-		CONFIG_SETFLAG(config, flags, CONFIG_FONT_CACHE, argv[2].i);
+		CONFIG_SET_FLAG(config, flags, CONFIG_FONT_CACHE, argv[2].i);
 		if (argv[2].i) {
 			keycodes_loadglyphs();
 		} else {
@@ -397,23 +406,23 @@ config_apply(int argc, union evarg *argv)
 		}
 		break;
 	case FULLSCREEN_CBOX:
-		CONFIG_SETFLAG(config, flags, CONFIG_FULLSCREEN, argv[2].i);
+		CONFIG_SET_FLAG(config, flags, CONFIG_FULLSCREEN, argv[2].i);
 		SDL_WM_ToggleFullScreen(view->v);
 		VIEW_REDRAW();
 		break;
 	case ASYNCBLIT_CBOX:
-		CONFIG_SETFLAG(config, flags, CONFIG_ASYNCBLIT, argv[2].i);
+		CONFIG_SET_FLAG(config, flags, CONFIG_ASYNCBLIT, argv[2].i);
 		break;
 #ifdef DEBUG
 	case DEBUG_CBOX:
 		engine_debug = argv[2].i;	/* XXX unsafe */
 		break;
 	case VISREGIONS_CBOX:
-		CONFIG_SETFLAG(config, widget_flags, CONFIG_REGION_BORDERS,
+		CONFIG_SET_FLAG(config, widget_flags, CONFIG_REGION_BORDERS,
 		    argv[2].i);
 		break;
 	case ANYSIZE_CBOX:
-		CONFIG_SETFLAG(config, widget_flags, CONFIG_WINDOW_ANYSIZE,
+		CONFIG_SET_FLAG(config, widget_flags, CONFIG_WINDOW_ANYSIZE,
 		    argv[2].i);
 		break;
 #endif
@@ -422,6 +431,7 @@ config_apply(int argc, union evarg *argv)
 	case AL_CIRCLE_RADIO:
 	case AL_LINE_RADIO:
 	case AL_SQUARE_RADIO:
+		/* TODO */
 		break;
 	}
 }
