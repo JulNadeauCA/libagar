@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.79 2002/11/26 01:38:28 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.80 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -361,10 +361,6 @@ engine_destroy(void)
 {
 	/* Destroy game objects. */
 	world_destroy(world);
-	
-	/* Force garbage collection of media. */
-	media_start_gc(0, NULL);
-	media_destroy_gc();
 
 	/* Destroy the font engine. */
 	text_engine_destroy();
