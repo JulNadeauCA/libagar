@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.2 2002/02/07 08:12:53 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.3 2002/02/10 01:38:40 vedge Exp $	*/
 
 struct viewport {
 	int	fps;			/* Refresh rate in FPS */
@@ -10,8 +10,6 @@ struct viewport {
 	int	redraw;			/* Need redrawing */
 	struct	map *map;		/* Currently visible map */
 	SLIST_HEAD(, window) winsh;	/* Viewport sub-surfaces */
-	SDL_TimerID mapdrawt;		/* Map redraw timer */
-	SDL_TimerID mapanimt;		/* Map animation timer */
 	SDL_Surface *v;
 };
 
