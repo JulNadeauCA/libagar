@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.81 2002/09/19 21:13:12 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.82 2002/09/20 02:41:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -183,10 +183,10 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		break;
 	case GFX_ENGINE_GUI:
 		if (win->flags & WINDOW_SCALE) {
-			win->x = (rx * view->w / 100);
-			win->y = (ry * view->h / 100);
-			win->w = (rw * view->w / 100);
-			win->h = (rh * view->h / 100);
+			win->x = rx * view->w / 100;
+			win->y = ry * view->h / 100;
+			win->w = rw * view->w / 100;
+			win->h = rh * view->h / 100;
 		} else {
 			win->x = rx;
 			win->y = ry;
@@ -400,16 +400,15 @@ window_show(struct window *win)
 	pthread_mutex_lock(&view->lock);
 	pthread_mutex_lock(&win->lock);
 
-	/* See if it's already visible. */
-	if (win->flags & WINDOW_SHOWN) {
+	if (win->flags & WINDOW_SHOWN) {		/* Already visible? */
 		pthread_mutex_unlock(&win->lock);
 		pthread_mutex_unlock(&view->lock);
 		return (1);
 	}
 	win->flags |= WINDOW_SHOWN;
 
-	/* Try to load previously saved window geometry/coordinates. */
 	if (win->flags & WINDOW_SAVE_POSITION) {
+		/* Try to load previously saved window geometry/coordinates. */
 		object_load(win);
 	}
 
@@ -417,8 +416,7 @@ window_show(struct window *win)
 		window_update_mask(win);
 	}
 
-	/* Focus on the window. */
-	view->focus_win = win;
+	view->focus_win = win;		/* Focus */
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
@@ -426,8 +424,7 @@ window_show(struct window *win)
 		}
 	}
 
-	/* Size the window, in case it's new. */
-	window_resize(win);
+	window_resize(win);		/* In case the window is new. */
 
 	pthread_mutex_unlock(&win->lock);
 	pthread_mutex_unlock(&view->lock);
@@ -443,8 +440,7 @@ window_hide(struct window *win)
 	pthread_mutex_lock(&view->lock);
 	pthread_mutex_lock(&win->lock);
 
-	/* See if it's already hidden. */
-	if ((win->flags & WINDOW_SHOWN) == 0) {
+	if ((win->flags & WINDOW_SHOWN) == 0) {		/* Already hidden? */
 		pthread_mutex_unlock(&win->lock);
 		pthread_mutex_unlock(&view->lock);
 		return (0);
@@ -466,7 +462,7 @@ window_hide(struct window *win)
 		rootmap_maskfill(&win->vmask, -1);
 		break;
 	case GFX_ENGINE_GUI:
-		{ 
+		{
 			SDL_Rect rd;
 
 			rd.x = win->x;
@@ -480,8 +476,8 @@ window_hide(struct window *win)
 		break;
 	}
 
-	/* Save the window state. */
 	if (win->flags & WINDOW_SAVE_POSITION) {
+		/* Save the window state. */
 		object_save(win);
 	}
 
@@ -670,8 +666,7 @@ window_focus(struct window *win)
 	struct widget *wid;
 
 	lastwin = TAILQ_LAST(&view->windows, windowq);
-	if (win != NULL && lastwin == win) {
-		/* The window already holds focus. */
+	if (win != NULL && lastwin == win) {		/* Already focused? */
 		return;
 	}
 
@@ -683,7 +678,6 @@ window_focus(struct window *win)
 			lastwin->focus = NULL;
 		}
 #endif
-		
 		/* Notify the previous window of the focus change. */
 		event_post(lastwin, "window-lostfocus", NULL);
 	}
@@ -813,8 +807,8 @@ window_event(SDL_Event *ev)
 				if (ev->button.y - win->y <= win->titleh) {
 				    	if (ev->button.x - win->x < 20) {
 						window_hide(win);
-						event_post(win,
-						    "window-close", NULL);
+						event_post(win, "window-close",
+						    NULL);
 					}
 					view->winop = VIEW_WINOP_MOVE;
 					view->wop_win = win;
@@ -981,7 +975,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		if (motion->yrel < 0 || motion->yrel > 0) {
 			win->h += motion->yrel;
 		}
-		default:
+	default:
 	}
 
 	/* Clamp to minimum window geometry. */
