@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.83 2002/09/16 16:05:17 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.84 2002/11/09 06:01:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -84,7 +84,6 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	ob->type = strdup(type);
 	ob->name = strdup(name);
 	ob->desc = NULL;
-	sprintf(ob->saveext, "ag");
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
@@ -193,7 +192,7 @@ object_load(void *p)
 	char *path;
 	int fd, rv = 0;
 
-	path = object_path(ob->name, ob->saveext);
+	path = object_path(ob->name, ob->type);
 	if (path == NULL) {
 		return (-1);
 	}
@@ -231,38 +230,38 @@ int
 object_save(void *p)
 {
 	struct object *ob = p;
-	char *path, *s;
+	char *path, *datadir, *typedir;
+	struct stat sta;
 	int fd;
 
-	/* Save maps inside the maps subdirectory. XXX */
-	s = prop_string(config, "path.user_data_dir");
-	if (strcmp(ob->saveext, "m") == 0) {
-		asprintf(&path, "%s/maps/%s.m", s, ob->name);
-	} else {
-		asprintf(&path, "%s/%s.%s", s, ob->name, ob->saveext);
+	datadir = prop_string(config, "path.user_data_dir");
+	if (stat(datadir, &sta) != 0 && mkdir(datadir, 0700) != 0) {
+		fatal("creating %s: %s\n", datadir, strerror(errno));
 	}
-	free(s);
+	asprintf(&typedir, "%s/%s", datadir, ob->type);
+	free(datadir);
 
-	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
+	if (stat(typedir, &sta) != 0 && mkdir(typedir, 0700) != 0) {
+		fatal("creating %s: %s\n", typedir, strerror(errno));
+	}
+	asprintf(&path, "%s/%s.%s", typedir, ob->name, ob->type);
+	free(typedir);
+
+	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	if (fd == -1) {
-		free(path);
 		fatal("%s: %s\n", path, strerror(errno));
 	}
 
 	/* Save generic properties. */
 	if (prop_save(ob, fd) != 0) {
-		free(path);
 		close(fd);
 		fatal("%s\n", error_get());
 	}
 
-	if (OBJECT_OPS(ob)->save != NULL) {
-		/* Save object specific data. */
-		if (OBJECT_OPS(ob)->save(ob, fd) != 0) {
-			free(path);
-			close(fd);
-			fatal("%s\n", error_get());
-		}
+	/* Save object specific data. */
+	if (OBJECT_OPS(ob)->save != NULL && OBJECT_OPS(ob)->save(ob, fd) != 0) {
+		close(fd);
+		fatal("%s\n", error_get());
 	}
 
 	free(path);
@@ -281,14 +280,10 @@ object_path(char *obname, const char *suffix)
 	path = emalloc((size_t)FILENAME_MAX);
 	datapathp = datapath = strdup(prop_string(config, "path.data_path"));
 
-	for (p = strtok_r(datapath, ":;", &last);
+	for (p = strtok_r(datapath, ":", &last);
 	     p != NULL;
-	     p = strtok_r(NULL, ":;", &last)) {
-	     	if (strcmp(suffix, "m") == 0) {
-			sprintf(path, "%s/maps/%s.m", p, obname);
-		} else {
-			sprintf(path, "%s/%s.%s", p, obname, suffix);
-		}
+	     p = strtok_r(NULL, ":", &last)) {
+		sprintf(path, "%s/%s/%s.%s", p, suffix, obname, suffix);
 		if (stat(path, &sta) == 0) {
 			free(datapathp);
 			return (path);

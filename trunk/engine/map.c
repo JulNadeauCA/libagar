@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.116 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.117 2002/09/16 16:03:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -229,7 +229,6 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	/* XXX audio */
 	object_init(&m->obj, "map", name, media,
 	    (media != NULL) ? OBJECT_ART|OBJECT_MEDIA_CAN_FAIL : 0, &map_ops);
-	sprintf(m->obj.saveext, "m");
 	m->flags = (flags != 0) ? flags : MAP_2D;
 	m->redraw = 0;
 	m->fps = 100;		/* XXX pref */
