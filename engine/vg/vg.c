@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.33 2004/09/18 06:19:55 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.34 2004/10/06 04:37:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -1614,11 +1614,14 @@ vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
 	extern struct tool vg_line_tool;
 	extern struct tool vg_circle_tool;
 	extern struct tool vg_text_tool;
-	struct AGMenuItem *subitem;
+	struct AGMenuItem *sitem;
 	
-	subitem = ag_menu_add_subitem(pitem, _("Show blocks"),
-	    ICON(VGBLOCK_ICON), 0, 0, show_blocks, "%p", vg);
+	sitem = ag_menu_add_subitem(pitem, _("Snapping mode"),
+	    ICON(SNAP_FREE_ICON), 0, 0, NULL, NULL);
+	vg_reg_snap_menu(m, sitem, vg);
 
+	ag_menu_add_subitem(pitem, _("Show blocks"), ICON(VGBLOCK_ICON),
+	    0, 0, show_blocks, "%p", vg);
 	ag_menu_add_subitem(pitem, _("Move origin"), ICON(vg_origin_tool.icon),
 	    0, 0, select_tool, "%p,%p,%p", vg, &vg_origin_tool, mv);
 	ag_menu_add_subitem(pitem, _("Line strip"), ICON(vg_line_tool.icon),

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.4 2004/04/30 06:28:35 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.5 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -30,6 +30,9 @@
 
 #include <engine/widget/toolbar.h>
 #include <engine/widget/button.h>
+#ifdef EDITION
+#include <engine/widget/menu.h>
+#endif
 
 #include "vg.h"
 #include "vg_math.h"
@@ -153,6 +156,15 @@ snap_to(int argc, union evarg *argv)
 	vg_snap_mode(vg, snap_mode);
 }
 
+static void
+snap_to_m(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+	int snap_mode = argv[2].i;
+
+	vg_snap_mode(vg, snap_mode);
+}
+
 struct toolbar *
 vg_snap_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
 {
@@ -185,4 +197,40 @@ vg_snap_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
 	    1, 0, snap_to, "%p,%p,%i", snbar, vg,
 	    VG_INTERSECTIONS_MANUAL);
 	return (snbar);
+}
+
+void
+vg_reg_snap_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg)
+{
+	ag_menu_add_subitem(pitem, _("Free positioning"),
+	    ICON(SNAP_FREE_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_FREE_POSITIONING);
+	ag_menu_add_subitem(pitem, _("Nearest integer"),
+	    ICON(SNAP_RINT_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_NEAREST_INTEGER);
+	ag_menu_add_subitem(pitem, _("Grid"),
+	    ICON(SNAP_GRID_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_GRID);
+	ag_menu_add_subitem(pitem, _("Endpoint"),
+	    ICON(SNAP_ENDPOINT_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_ENDPOINT);
+	ag_menu_add_subitem(pitem, _("Distance from endpoint"),
+	    ICON(SNAP_ENDPOINT_D_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_ENDPOINT_DISTANCE);
+
+	ag_menu_add_subitem(pitem, _("Closest point"),
+	    ICON(SNAP_CLOSEST_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_CLOSEST_POINT);
+	ag_menu_add_subitem(pitem, _("Center point"),
+	    ICON(SNAP_CENTERPT_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_CENTER_POINT);
+	ag_menu_add_subitem(pitem, _("Middle point"),
+	    ICON(SNAP_MIDDLEPT_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_MIDDLE_POINT);
+	ag_menu_add_subitem(pitem, _("Intersections (auto)"),
+	    ICON(SNAP_INTSECT_AUTO_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_AUTO);
+	ag_menu_add_subitem(pitem, _("Intersections (manual)"),
+	    ICON(SNAP_INTSECT_MANUAL_ICON), 0, 0,
+	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_MANUAL);
 }
