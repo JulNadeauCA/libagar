@@ -153,7 +153,6 @@ if [ ! -e "config" ]; then
 	fi
 fi
 echo > config.log
-fi
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
