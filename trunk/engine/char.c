@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.39 2002/04/25 09:33:20 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.40 2002/04/25 12:47:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -216,9 +216,8 @@ char_link(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
-	pthread_mutex_lock(&world->lock);
+	/* Assume world->lock is held */
 	SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
-	pthread_mutex_unlock(&world->lock);
 
 	return (0);
 }
@@ -228,9 +227,8 @@ char_unlink(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
-	pthread_mutex_lock(&world->lock);
+	/* Assume world->lock is held */
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
-	pthread_mutex_unlock(&world->lock);
 
 	return (0);
 }

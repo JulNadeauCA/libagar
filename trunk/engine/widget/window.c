@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.7 2002/04/23 07:24:47 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.8 2002/04/24 14:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,11 +51,8 @@ static const struct obvec window_vec = {
 	window_unlink
 };
 
-/* The event loop accesses this list frequently. */
+/* This list shares world->lock. */
 TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
-pthread_mutex_t windowslock = PTHREAD_MUTEX_INITIALIZER;
-
-Uint32 nwindows = 0;
 
 static Uint32 delta = 0, delta2 = 256;
 
@@ -93,8 +90,6 @@ window_init(struct window *win, struct viewport *view, char *name,
 	win->vmask.w = (w / view->map->tilew);
 	win->vmask.h = (h / view->map->tilew);
 
-	view_maskfill(view, &win->vmask, 1);
-
 	/* XXX pref */
 	win->border[0] = SDL_MapRGB(view->v->format, 50, 50, 50);
 	win->border[1] = SDL_MapRGB(view->v->format, 100, 100, 160);
@@ -121,41 +116,28 @@ window_key(SDL_Event *ev)
 void
 window_mouse_button(SDL_Event *ev)
 {
-	struct window *win, **winds;
-	struct widget *w = NULL, **wids;
-	Uint32 i, j;
-	
-	pthread_mutex_lock(&windowslock);
-	TAILQ_DUP(winds, nwindows, &windowsh, window, windows);
-	pthread_mutex_unlock(&windowslock);
+	struct window *win;
+	struct widget *w = NULL;
 
-	for (i = 0; i < nwindows; i++) {
-		win = winds[i];
-
+	pthread_mutex_lock(&world->lock);
+	TAILQ_FOREACH(win, &windowsh, windows) {
 		if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 			continue;
 		}
 
 		dprintf("event to %s\n", OBJECT(win)->name);
-		
+
 		pthread_mutex_lock(&win->widgetslock);
-		TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
-		pthread_mutex_unlock(&win->widgetslock);
-
-		for (j = 0; j < win->nwidgets; j++) {
-			w = wids[j];
-
+		TAILQ_FOREACH(w, &win->widgetsh, widgets) {
 			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y)) {
 				widget_event(w, ev, 0);
 			}
 		}
+		pthread_mutex_unlock(&win->widgetslock);
 
-		free(wids);
-		
 		break;
 	}
-
-	free(winds);
+	pthread_mutex_unlock(&world->lock);
 }
 
 void
@@ -311,68 +293,47 @@ window_save(void *p, int fd)
 int
 window_link(void *ob)
 {
-	struct window *w = (struct window *)ob;
+	struct window *win = (struct window *)ob;
 
-	pthread_mutex_lock(&windowslock);
-	TAILQ_INSERT_HEAD(&windowsh, w, windows);
-	pthread_mutex_unlock(&windowslock);
+	/* Increment the view mask for this area. */
+	view_maskfill(win->view, &win->vmask, 1);
 
-	nwindows++;
+	/* Shares world->lock, which we assume is held. */
+	TAILQ_INSERT_HEAD(&windowsh, win, windows);
 
-	w->redraw++;
-
+	win->redraw++;
+	
 	return (0);
 }
 
-/* Implies unlink of child widgets. */
 int
 window_unlink(void *ob)
 {
 	struct window *win = (struct window *)ob;
-	struct widget *wid, **wids;
-	Uint32 i;
+	struct widget *wid;
 
+	/* Unlink all widgets implicitely. */
 	pthread_mutex_lock(&win->widgetslock);
-	TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
-	pthread_mutex_unlock(&win->widgetslock);
-
-	for (i = 0; i < win->nwidgets; i++) {
-		wid = (struct widget *)wids[i];
+	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
 		object_unlink(wid);
 	}
-	pthread_mutex_lock(&windowslock);
-	TAILQ_REMOVE(&windowsh, win, windows);
-	pthread_mutex_unlock(&windowslock);
-	free(wids);
-	
-	nwindows--;
-	return (0);
-}
-
-void
-window_destroy(void *ob)
-{
-	struct window *win = (struct window *)ob;
-	struct widget *wid, **wids;
-	Uint32 i;
-
-	pthread_mutex_lock(&win->widgetslock);
-	TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
 	pthread_mutex_unlock(&win->widgetslock);
 
-	/* Implicitely free child widgets. */
-	for (i = 0; i < win->nwidgets; i++) {
-		wid = (struct widget *)wids[i];
-		object_destroy(wid);
-	}
-
-	free(win->caption);
+	/* Decrement the view mask for this area. */
 	view_maskfill(win->view, &win->vmask, -1);
 	if (win->view->map != NULL) {
 		win->view->map->redraw++;
 	}
 	
+	return (0);
+}
+
+void
+window_destroy(void *p)
+{
+	struct window *win = (struct window *)p;
+
+	free(win->caption);
 	pthread_mutex_destroy(&win->widgetslock);
-	free(wids);
 }
 

@@ -214,6 +214,8 @@ mapedit_loadmap(struct mapedit *med)
 	/* XXX redundant */
 	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
 
+	pthread_mutex_lock(&world->lock);
+	pthread_mutex_unlock(&med->map->lock);		/* XXX */
 	if (object_loadfrom(med->map, path) == 0) {
 		x = map->defx;
 		y = map->defy;
@@ -221,12 +223,14 @@ mapedit_loadmap(struct mapedit *med)
 		med->x = x;
 		med->y = y;
 		view_center(map->view, x, y);
-		mapedit_setcaption(med, path);
 	} else {
 		/* Reallocate nodes we just freed. */
 		map_allocnodes(map, map->mapw, map->maph,
 		    map->tilew, map->tileh);
 	}
+	pthread_mutex_lock(&med->map->lock);		/* XXX */
+	pthread_mutex_unlock(&world->lock);
+
 	mapedit_setpointer(med, 1);
 	map->redraw++;
 
@@ -239,7 +243,10 @@ mapedit_savemap(struct mapedit *med)
 {
 	struct map *m = med->map;
 
+	pthread_mutex_lock(&world->lock);
 	object_save(m);
+	pthread_mutex_unlock(&world->lock);
+
 	text_msg(2, TEXT_SLEEP, "Saved %s.\n", OBJECT(m)->name);
 }
 

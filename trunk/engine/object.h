@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.25 2002/04/20 09:15:55 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.26 2002/04/24 13:15:41 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -55,7 +55,6 @@ struct object {
 	int	 flags;
 #define OBJ_ART		0x01		/* Load graphics */
 #define OBJ_AUDIO	0x02		/* Load audio */
-#define OBJ_DEFERGC	0x10		/* XXX Defer garbage collection */
 
 	struct	 object_art *art;	/* Static sprites */
 	struct	 object_audio *audio;	/* Static samples */
@@ -73,8 +72,6 @@ struct object {
 void	 object_init(struct object *, char *, char *, int, const void *);
 int	 object_addanim(struct object_art *, struct anim *);
 int	 object_addsprite(struct object_art *, SDL_Surface *);
-void	 object_destroy(void *);
-void	 object_lategc(void);
 int	 object_link(void *);
 int	 object_unlink(void *);
 int	 object_load(void *);
@@ -84,8 +81,10 @@ void	 increase_uint32(Uint32 *, Uint32, Uint32);
 void	 decrease_uint32(Uint32 *, Uint32, Uint32);
 void	 object_dump(void *);
 
-void	 object_mediapool_init(void);
-void	 object_mediapool_quit(void);
+void	 object_init_gc(void);
+void	 object_queue_gc(struct object *);
+Uint32	 object_start_gc(Uint32 ival, void *);
+void	 object_destroy_gc(void);
 
 struct object	*object_strfind(char *);
 struct mappos	*object_addpos(void *, Uint32, Uint32, struct input *,

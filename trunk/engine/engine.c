@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.31 2002/04/23 13:36:11 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.32 2002/04/24 13:14:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -215,18 +215,17 @@ engine_editmap(void)
 void
 engine_destroy(void)
 {
-	/* Free the whole media pool. */
-	object_mediapool_quit();
+	/* Unlink all objects and add them to the free list. */
+	world_destroy(world);
 
-	/* Free all objects. */
-	object_destroy(world);
+	/* Force garbage collection. */
+	object_start_gc(0, NULL);
+	object_destroy_gc();
 	
 	/* Destroy the font engine. */
 	text_engine_destroy();
 
-	/* Shut down SDL. */
 	SDL_Quit();
-
 	exit(0);
 }
 
@@ -270,6 +269,5 @@ static void
 close_button_push(struct button *b)
 {
 	object_unlink(WIDGET(b)->win);
-	object_destroy(WIDGET(b)->win);
 }
 
