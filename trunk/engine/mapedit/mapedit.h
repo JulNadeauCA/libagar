@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.95 2004/03/24 08:43:31 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.96 2004/03/30 15:56:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -62,10 +62,6 @@ void		 mapedit_destroy(void *);
 int		 mapedit_load(void *, struct netbuf *);
 int		 mapedit_save(void *, struct netbuf *);
 struct window	*mapedit_settings(void *);
-
-struct window	*objedit_window(void);
-void		 objedit_init(void);
-void		 objedit_destroy(void);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.32 2004/03/20 07:24:46 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.33 2004/03/25 09:08:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 #include <string.h>
 
 #include "mapedit.h"
+#include "objedit.h"
 
 struct objent {
 	struct object *obj;			/* Object being edited */
