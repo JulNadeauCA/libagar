@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.18 2003/01/05 08:42:58 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.19 2003/01/19 11:31:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -251,6 +251,28 @@ tl_props_selected(int argc, union evarg *argv)
 }
 
 static void
+tl_props_remove(int argc, union evarg *argv)
+{
+	struct tlist *tl_props = argv[1].p;
+	struct textbox *tb_set = argv[2].p;
+	struct object *ob = argv[3].p;
+	struct tlist_item *it;
+	struct prop *prop;
+
+	it = tlist_item_selected(tl_props);
+	if (it == NULL) {
+		text_msg("Error", "No property is selected.");
+		return;
+	}
+	prop = it->p1;
+
+	pthread_mutex_lock(&ob->props_lock);
+	TAILQ_REMOVE(&ob->props, prop, props);
+	prop_destroy(prop);
+	pthread_mutex_unlock(&ob->props_lock);
+}
+
+static void
 tl_props_apply(int argc, union evarg *argv)
 {
 	struct tlist *tl_props = argv[1].p;
@@ -326,8 +348,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	struct region *reg;
 	struct event *evh;
 
-	win = window_generic_new(432, 362,
-	    "monitor-object-browser-obj-%s", ob->name);
+	win = window_generic_new(432, 362, "monitor-object-%s", ob->name);
 	if (win == NULL) {
 		return;		/* Exists */
 	}
@@ -352,7 +373,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 
 	/* Display the generic properties. */
-	reg = region_new(win, REGION_HALIGN, 0, 40, 50, 30);
+	reg = region_new(win, REGION_HALIGN, 0, 40, 50, 40);
 	{
 		struct tlist *tl_props;
 
@@ -370,15 +391,22 @@ tl_objs_selected(int argc, union evarg *argv)
 
 			event_new(tl_props, "tlist-changed", tl_props_selected,
 			    "%p, %p", lab_name, tb_set);
-
-			bu = button_new(reg, "Apply", NULL, 0, 100, 30);
-			event_new(bu, "button-pushed", tl_props_apply,
-			    "%p, %p, %p", tl_props, tb_set, ob);
+		
+			reg = region_new(win, REGION_HALIGN, 50, 70, 50, 10);
+			{
+				bu = button_new(reg, "Apply", NULL, 0, 50, 100);
+				event_new(bu, "button-pushed", tl_props_apply,
+				    "%p, %p, %p", tl_props, tb_set, ob);
+			
+				bu = button_new(reg, "Remove", NULL, 0, 50, 100);
+				event_new(bu, "button-pushed", tl_props_remove,
+				    "%p, %p, %p", tl_props, tb_set, ob);
+			}
 		}
 	}
 
 	/* Display the event handlers. */
-	reg = region_new(win, 0, 0, 70, 100, 30);
+	reg = region_new(win, 0, 0, 80, 100, 20);
 	{
 		struct tlist *tl;
 
