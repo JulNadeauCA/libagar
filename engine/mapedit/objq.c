@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.3 2002/07/07 00:24:02 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.4 2002/07/08 08:39:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -43,13 +43,14 @@
 #include <engine/widget/window.h>
 
 #include "mapedit.h"
+#include "mapview.h"
 #include "objq.h"
 
 static const struct widget_ops objq_ops = {
 	{
-		NULL,	/* destroy */
-		NULL,	/* load */
-		NULL	/* save */
+		objq_destroy,	/* destroy */
+		NULL,		/* load */
+		NULL		/* save */
 	},
 	objq_draw,
 	NULL		/* animate */
@@ -87,6 +88,7 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 	oq->med = med;
 	oq->offs = 0;
 	oq->flags = (flags != 0) ? flags : OBJQ_HORIZ;
+	SLIST_INIT(&oq->tmaps);
 	
 	event_new(oq, "window-widget-scaled", 0,
 	    objq_scaled, NULL);
@@ -100,6 +102,47 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 	    objq_event, "%i", WINDOW_KEYUP);
 	event_new(oq, "window-keydown", 0,
 	    objq_event, "%i", WINDOW_KEYDOWN);
+}
+
+static void
+objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
+{
+	char caption[4096];
+	struct object *ob = eob->pobj;
+	struct objq_tmap *tm;
+	struct window *win;
+	struct region *reg;
+	struct mapview *mv;
+
+	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
+		if (tm->ob == eob->pobj) {
+			window_show(tm->win);
+			pthread_mutex_lock(&tm->win->lock);
+			view_focus(tm->win);
+			pthread_mutex_unlock(&tm->win->lock);
+			return;
+		}
+	}
+
+	sprintf(caption, "%s", ob->name);
+	win = emalloc(sizeof(struct window));
+	window_init(win, caption, WINDOW_SOLID|WINDOW_CENTER,
+	    0, 0, 19 + TILEW*3, 318, 19+TILEW, 45+TILEH);
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	/* Map view */
+	mv = mapview_new(reg, med, ob->art->map,
+	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP, 100, 100);
+	win->focus = WIDGET(mv);
+
+	tm = emalloc(sizeof(struct objq_tmap));
+	tm->win = win;
+	tm->ob = ob;
+	SLIST_INSERT_HEAD(&oq->tmaps, tm, tmaps);
+
+	pthread_mutex_lock(&win->lock);
+	view_attach(win);
+	window_show_locked(win);
+	pthread_mutex_unlock(&win->lock);
 }
 
 static void
@@ -147,10 +190,7 @@ objq_event(int argc, union evarg *argv)
 			curoffs -= med->neobjs;
 		}
 		TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
-		med->curobj = eob;
-		med->curoffs = 0;
-
-		dprintf("obj: %p\n", med->curobj);
+		objq_select(oq, med, eob);
 		break;
 	case WINDOW_KEYDOWN:
 		break;
@@ -169,6 +209,20 @@ objq_scaled(int argc, union evarg *argv)
 	
 	WIDGET(oq)->w = w;
 	WIDGET(oq)->h = h;
+}
+
+void
+objq_destroy(void *p)
+{
+	struct objq *oq = p;
+	struct objq_tmap *tm, *ntm;
+
+	for (tm = SLIST_FIRST(&oq->tmaps);
+	     tm != SLIST_END(&oq->tmaps);
+	     tm = ntm) {
+		ntm = SLIST_NEXT(tm, tmaps);
+		free(tm);
+	}
 }
 
 void
