@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.17 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.18 2003/05/22 05:42:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -13,11 +13,13 @@ struct primitive_ops {
 	void	(*circle)(void *p, int xoffs, int yoffs, int w, int h,
 		         int radius, Uint32 color);
 	void	(*line)(void *p, int x1, int y1, int x2, int y2, Uint32 color);
+	void	(*wline)(void *p, int width, int x1, int y1, int x2, int y2,
+		         Uint32 color);
 	void	(*rect_outlined)(void *p, int x, int y, int w, int h,
 		                 Uint32 color);
 	void	(*rect_filled)(void *p, SDL_Rect *rd, Uint32 color);
-	void	(*plus)(void *p, int plus, int x, int y, int w, int h,
-			Uint32 color);
+	void	(*plus)(void *p, int x, int y, int w, int h, Uint32 color);
+	void	(*minus)(void *p, int x, int y, int w, int h, Uint32 color);
 };
 
 extern struct primitive_ops primitives;

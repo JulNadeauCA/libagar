@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.44 2003/05/22 05:42:04 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.45 2003/05/22 05:45:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -221,6 +221,17 @@ circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
 	SDL_UnlockSurface(view->v);
 }
 
+static void
+wline(void *wid, int width, int px1, int py1, int px2, int py2, Uint32 color)
+{
+	int i;
+
+	for (i = 0; i < width; i++) {
+		primitives.line(wid, px1+i, py1+i, px2+i, py2+i,
+		    alter_color(color, i*90, i*90, i*90));
+	}
+}
+
 /* Render a segment from px1,py1 to px2,py2. */
 static void
 line_bresenham(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
@@ -357,16 +368,16 @@ rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
-	primitives.line(wid,		/* Top */
+	primitives.wline(wid, 2,		/* Top */
 	    x, y,
 	    x + w - 1, y, color);
-	primitives.line(wid,		/* Bottom */
+	primitives.wline(wid, 2,		/* Bottom */
 	    x, y + h - 1,
 	    x + w - 1, y + h - 1, color);
-	primitives.line(wid,		/* Left */
+	primitives.wline(wid, 2,		/* Left */
 	    x, y,
 	    x, y + h - 1, color);
-	primitives.line(wid,		/* Right */
+	primitives.wline(wid, 2,		/* Right */
 	    x+w - 1, y,
 	    x+w - 1, y + h - 1, color);
 }
@@ -384,20 +395,29 @@ rect_filled(void *p, SDL_Rect *rd, Uint32 color)
 }
 
 static void
-plus(void *p, int more, int x, int y, int w, int h, Uint32 color)
+plus(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 	int xcenter = x+w/2;
 	int ycenter = y+h/2;
 
-	if (more) {
-		primitives.line(wid,
-		    xcenter,	y,
-		    xcenter,	y + h,
-		    color);
-	}
+	primitives.wline(wid, 2,
+	    xcenter,	y,
+	    xcenter,	y + h,
+	    color);
+	primitives.wline(wid, 2,
+	    x,		ycenter,
+	    x + w,	ycenter,
+	    color);
+}
 
-	primitives.line(wid,
+static void
+minus(void *p, int x, int y, int w, int h, Uint32 color)
+{
+	struct widget *wid = p;
+	int ycenter = y+h/2;
+
+	primitives.wline(wid, 2,
 	    x,		ycenter,
 	    x + w,	ycenter,
 	    color);
@@ -452,6 +472,8 @@ primitives_init(void)
 	primitives.circle = circle_bresenham;
 	primitives.rect_outlined = rect_outlined;
 	primitives.plus = plus;
+	primitives.minus = minus;
+	primitives.wline = wline;
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {

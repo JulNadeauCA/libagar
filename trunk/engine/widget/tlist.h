@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.23 2003/05/20 12:05:20 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.24 2003/05/22 05:43:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -17,6 +17,7 @@ struct tlist_item {
 	void		*p1;			/* User data */
 	int		 selected;		/* Item selection */
 	int		 vischilds, haschilds;	/* Hack for displaying trees */
+	int		 depth;			/* Depth in tree */
 
 	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
 	TAILQ_ENTRY(tlist_item) selitems;	/* Hack */
