@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.18 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.19 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ nodeedit_close_win(int argc, union evarg *argv)
 }
 
 static void
-nodeedit_poll(int argc, union evarg *argv)
+nodeedit_poll_refs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -71,16 +71,20 @@ nodeedit_poll(int argc, union evarg *argv)
 		SDL_Surface *icon = NULL;
 		struct gfx_anim *anim;
 		char label[TLIST_LABEL_MAX];
+		struct transform *tr;
+		int trfound = 0;
 
 		switch (r->type) {
 		case NODEREF_SPRITE:
-			snprintf(label, sizeof(label), "%u. [%u] s(%s:%u)",
+			snprintf(label, sizeof(label),
+			    "%u. [%u] s(%s:%u)\n",
 			    i, r->layer, r->r_sprite.obj->name,
 			    r->r_sprite.offs);
 			icon = r->r_sprite.obj->gfx->sprites[r->r_sprite.offs];
 			break;
 		case NODEREF_ANIM:
-			snprintf(label, sizeof(label), "%u. [%u] a(%s:%u)",
+			snprintf(label, sizeof(label),
+			    "%u. [%u] a(%s:%u)\n",
 			    i, r->layer, r->r_anim.obj->name, r->r_anim.offs);
 			anim = r->r_anim.obj->gfx->anims[r->r_anim.offs];
 			if (anim->nframes > 0) {
@@ -88,11 +92,31 @@ nodeedit_poll(int argc, union evarg *argv)
 			}
 			break;
 		case NODEREF_WARP:
-			snprintf(label, sizeof(label), "%u. [%u]. w(%s:%d,%d)",
+			snprintf(label, sizeof(label),
+			    "%u. [%u]. w(%s:%d,%d)\n",
 			    i, r->layer, r->r_warp.map, r->r_warp.x,
 			    r->r_warp.y);
 			break;
 		}
+
+		TAILQ_FOREACH(tr, &r->transforms, transforms) {
+			extern const struct transform_ent transforms[];
+			extern const int ntransforms;
+			int tri;
+
+			for (tri = 0; tri < ntransforms; tri++) {
+				if (transforms[tri].type == tr->type) {
+					strlcat(label, "+", sizeof(label));
+					strlcat(label, transforms[tri].name,
+					    sizeof(label));
+					break;
+				}
+			}
+			trfound++;
+		}
+		if (trfound)
+			strlcat(label, "\n", sizeof(label));
+
 		tlist_insert_item(tl, icon, label, r);
 		i++;
 	}
@@ -199,7 +223,7 @@ nodeedit_init(struct mapview *mv)
 	
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 	tlist_set_item_height(tl, TILEH);
-	event_new(tl, "tlist-poll", nodeedit_poll, "%p", mv);
+	event_new(tl, "tlist-poll", nodeedit_poll_refs, "%p", mv);
 
 	mv->nodeed.refs_tl = tl;
 	mv->nodeed.win = win;
