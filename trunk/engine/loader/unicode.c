@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -35,22 +35,38 @@
 #include <string.h>
 
 enum {
-	UNICODE_MAX = 32767
+	UNICODE_UTF16BE			/* Length-encoded, UTF-16BE */
 };
 
 Uint16 *
 read_unicode(struct netbuf *buf)
 {
-	size_t len;
+	Uint32 encoding;
 	Uint16 *ucs;
+	size_t len;
+	int i;
 
-	if ((len = (size_t)read_uint32(buf)) > UNICODE_MAX) {
-		fatal("string is too big");
-	} else if (len == 0) {
-		fatal("null string");
+	encoding = read_uint32(buf);
+	switch (encoding) {
+	case UNICODE_UTF16BE:
+		len = (size_t)read_uint32(buf);
+		if (len > UNICODE_STRING_MAX) {
+			fatal("too big");
+		} else if (len == 0) {
+			fatal("null");
+		}
+		ucs = Malloc(len * sizeof(Uint16));	     /* Includes NUL */
+		for (i = 0; i < len; i++) {
+			ucs[i] = read_uint16(buf);
+		}
+		if (ucs[len-1] != '\0') {
+			free(ucs);
+			fatal("no terminating NUL");
+		}
+		break;
+	default:
+		fatal("bad encoding");
 	}
-	ucs = Malloc(len);
-	netbuf_read(ucs, len, 1, buf);
 	return (ucs);
 }
 
@@ -58,48 +74,49 @@ void
 write_unicode(struct netbuf *buf, const Uint16 *ucs)
 {
 	size_t len;
-
-	if ((len = (ucslen(ucs)+1) * sizeof(Uint16)) > UNICODE_MAX) {
-		fatal("string is too big");
-	}
+	int i;
+	
+	len = ucslen(ucs)+1;				 /* Include the NUL */
+	write_uint32(buf, UNICODE_UTF16BE);
 	write_uint32(buf, (Uint32)len);
-	netbuf_write(ucs, len, 1, buf);
+	for (i = 0; i < len; i++) {
+		write_uint16(buf, ucs[i]);
+	}
 }
 
 /*
- * Copy at most dst_size bytes from a NUL-terminated, length-encoded UTF-16
- * string to a fixed-size buffer, returning the number of bytes that would
- * have been copied were dst_size unlimited. 
+ * Copy at most dst_size bytes from an encoded Unicode string to a fixed-size
+ * UTF-16 buffer, returning the number of bytes (not characters) that would have
+ * been copied were dst_size unlimited. 
  */
 size_t
 copy_unicode(Uint16 *dst, struct netbuf *buf, size_t dst_size)
 {
+	Uint32 encoding;
 	size_t len;
-	size_t rv = dst_size;
-	ssize_t rrv;
+	int i;
 
-	/* The terminating NUL is included in the encoding. */
-	if ((len = read_uint32(buf)) > dst_size) {
-		fprintf(stderr, "%lu byte UTF-16 string truncated to fit %lu\n",
-		    (unsigned long)len, (unsigned long)dst_size);
-		rv = len;				/* Save */
-		len = dst_size;				/* Truncate */
-	}
-
-	if ((rrv = fread(dst, 1, len, buf->file)) < len) {
-		if (ferror(buf->file) || feof(buf->file)) {
-			fprintf(stderr,
-			    "error reading UTF-16 string (truncated)\n");
-			if (dst_size > 0) {
-				dst[0] = '\0';
-				rv = 1;
-			}
-		} else {
-			fprintf(stderr, "short read: %lu/%lu (truncated)\n",
-			    (unsigned long)rrv, (unsigned long)len);
-			rv = rrv;
-			dst[rrv] = '\0';		/* NUL-terminate */
+	encoding = read_uint32(buf);
+	switch (encoding) {
+	case UNICODE_UTF16BE:
+		len = (size_t)read_uint32(buf);
+		for (i = 0;
+		     i < len && i*sizeof(Uint16) < dst_size-1;
+		     i++) {
+			dst[i] = read_uint16(buf);
 		}
+		if (i < len) {
+			dst[i] = 0;
+			fprintf(stderr,
+			   "%u-char UTF-16 string truncated to fit %u\n",
+			   (unsigned)len, (unsigned)dst_size/sizeof(Uint16));
+		} else if (dst[len-1] != '\0') {
+			fatal("no terminating NUL");
+		}
+		break;
+	default:
+		fatal("bad encoding");
+		break;
 	}
-	return (rv - 1);			/* Count does not include NUL */
+	return ((len-1) * sizeof(Uint16));	/* Count does not include NUL */
 }
