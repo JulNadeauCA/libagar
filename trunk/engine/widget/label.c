@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.57 2003/03/16 23:24:21 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.58 2003/03/22 05:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -102,7 +102,6 @@ label_init(struct label *label, enum label_type type, const char *s,
     int rw, int rh)
 {
 	widget_init(&label->wid, "label", &label_ops, rw, rh);
-	label->wid.flags |= WIDGET_CLIPPING;
 	
 	widget_map_color(label, TEXT_COLOR, "text", 250, 250, 250);
 
