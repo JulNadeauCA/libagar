@@ -1,4 +1,4 @@
-# $Csoft: csoft.subdir.mk,v 1.16 2002/09/06 00:58:47 vedge Exp $
+# $Csoft: csoft.subdir.mk,v 1.17 2002/11/28 07:14:28 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
