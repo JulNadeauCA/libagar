@@ -69,18 +69,16 @@ insert_char(struct textbox *tbox, char c)
 	char *s;
 	
 	end = strlen(tbox->text);
-	tbox->text = erealloc(tbox->text, end+1);
+	tbox->text = erealloc(tbox->text, end + 2);
 	if (tbox->textpos == end) {
 		tbox->text[end] = c;
 	} else {
 		s = tbox->text + tbox->textpos;
-		memcpy(s+1, s, end - tbox->textpos);
+		memcpy(s + 1, s, end - tbox->textpos);
 		tbox->text[tbox->textpos] = c;
 	}
-	tbox->text[end+1] = '\0';
+	tbox->text[end + 1] = '\0';
 	tbox->textpos++;
-
-	WIDGET(tbox)->win->redraw++;
 
 	return (&tbox->text[end]);
 }
