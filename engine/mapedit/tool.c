@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.6 2004/05/06 06:24:48 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.7 2004/05/17 05:06:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -99,7 +99,7 @@ tool_window(void *p, const char *name)
 
 void
 tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
-    void (*func)(struct mapview *), int edit)
+    void (*func)(struct tool *, int), int edit)
 {
 	struct tool *tool = p;
 	struct tool_kbinding *kb;

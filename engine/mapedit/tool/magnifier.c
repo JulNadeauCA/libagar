@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.43 2004/04/10 21:24:10 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.44 2004/05/24 03:26:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -66,23 +66,27 @@ zoom_specific(int argc, union evarg *argv)
 }
 
 static void
-zoom_100(struct mapview *mv)
+zoom_100(struct tool *t, int state)
 {
-	mapview_zoom(mv, 100);
+	mapview_zoom(t->mv, 100);
 	zoom_spec = 100;
 }
 
 static void
-zoom_in(struct mapview *mv)
+zoom_in(struct tool *t, int state)
 {
+	struct mapview *mv = t->mv;
+
 	mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
 	mv->flags &= ~(MAPVIEW_ZOOMING_OUT);
 	mv->flags |= MAPVIEW_ZOOMING_IN;
 }
 
 static void
-zoom_out(struct mapview *mv)
+zoom_out(struct tool *t, int state)
 {
+	struct mapview *mv = t->mv;
+
 	mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
 	mv->flags &= ~(MAPVIEW_ZOOMING_IN);
 	mv->flags |= MAPVIEW_ZOOMING_OUT;
