@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.168 2004/11/23 03:42:12 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.169 2004/11/30 11:49:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -319,9 +319,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	TAILQ_INIT(&mv->tools);
 	SLIST_INIT(&mv->draw_cbs);
 
-	pthread_mutex_lock(&m->lock);
-	mv->mx = m->origin.x;
-	mv->my = m->origin.y;
 	mv->cx = -1;
 	mv->cy = -1;
 	mv->cxrel = 0;
@@ -336,21 +333,16 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->esel.y = 0;
 	mv->esel.w = 0;
 	mv->esel.h = 0;
-	if (mv->flags & MAPVIEW_INDEPENDENT) {
-		mv->izoom.zoom = 100;
-		mv->izoom.tilesz = TILESZ;
-		mv->izoom.ssx = TILESZ;
-		mv->izoom.ssy = TILESZ;
-		mv->zoom = &mv->izoom.zoom;
-		mv->tilesz = &mv->izoom.tilesz;
-		mv->ssx = &mv->izoom.ssx;
-		mv->ssy = &mv->izoom.ssy;
-	} else {
-		mv->zoom = &m->zoom;
-		mv->tilesz = &m->tilesz;
-		mv->ssx = &m->ssx;
-		mv->ssy = &m->ssy;
-	}
+	mv->zoom = 100;
+	mv->tilesz = TILESZ;
+	mv->ssx = 0;
+	mv->ssy = 0;
+	mv->xoffs = 0;
+	mv->yoffs = 0;
+	
+	pthread_mutex_lock(&m->lock);
+	mv->mx = m->origin.x;
+	mv->my = m->origin.y;
 	pthread_mutex_unlock(&m->lock);
 
 	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100, 255);
@@ -372,20 +364,20 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 }
 
 /*
- * Translate widget coordinates to map coordinates.
+ * Translate widget coordinates to node coordinates.
  * The map must be locked.
  */
 void
-mapview_map_coords(struct mapview *mv, int *x, int *y, int *xoff, int *yoff)
+mapview_ncoords(struct mapview *mv, int *x, int *y, int *xoff, int *yoff)
 {
-	*x -= *mv->ssx - *mv->tilesz*TILEOUT;
-	*y -= *mv->ssy - *mv->tilesz*TILEOUT;
+	*x -= mv->ssx - mv->tilesz*TILEOUT;
+	*y -= mv->ssy - mv->tilesz*TILEOUT;
 
-	*xoff = *x % *mv->tilesz;
-	*yoff = *y % *mv->tilesz;
+	*xoff = *x % mv->tilesz;
+	*yoff = *y % mv->tilesz;
 
-	*x /= *mv->tilesz;
-	*y /= *mv->tilesz;
+	*x /= mv->tilesz;
+	*y /= mv->tilesz;
 	
 	mv->cx = mv->mx + *x;
 	mv->cy = mv->my + *y;
@@ -437,9 +429,9 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 	}
 
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-		if (r->layer != mv->map->cur_layer)
+		if (r->layer != mv->map->cur_layer) {
 			continue;
-
+		}
 		for (i = 0; i < nflags; i++) {
 			if ((r->flags & flags[i].flag) == 0) {
 				continue;
@@ -463,8 +455,8 @@ draw_cursor(struct mapview *mv)
 	SDL_Rect rd;
 	int msx, msy;
 
-	rd.w = mv->map->tilesz;
-	rd.h = mv->map->tilesz;
+	rd.w = mv->tilesz;
+	rd.h = mv->tilesz;
 
 	if (mv->msel.set) {
 		SDL_GetMouseState(&msx, &msy);
@@ -474,8 +466,8 @@ draw_cursor(struct mapview *mv)
 		return;
 	}
 	
-	rd.x = mv->mouse.x*mv->map->tilesz - mv->map->tilesz*TILEOUT + *mv->ssx;
-	rd.y = mv->mouse.y*mv->map->tilesz - mv->map->tilesz*TILEOUT + *mv->ssy;
+	rd.x = mv->mouse.x*mv->tilesz - mv->tilesz*TILEOUT + mv->ssx;
+	rd.y = mv->mouse.y*mv->tilesz - mv->tilesz*TILEOUT + mv->ssy;
 
 	if (mv->curtool == NULL)
 		return;
@@ -495,14 +487,14 @@ defcurs:
 	primitives.rect_outlined(mv,
 	    rd.x + 1,
 	    rd.y + 1,
-	    mv->map->tilesz - 1,
-	    mv->map->tilesz - 1,
+	    mv->tilesz - 1,
+	    mv->tilesz - 1,
 	    CURSOR_COLOR);
 	primitives.rect_outlined(mv,
 	    rd.x + 2,
 	    rd.y + 2,
-	    mv->map->tilesz - 3,
-	    mv->map->tilesz - 3,
+	    mv->tilesz - 3,
+	    mv->tilesz - 3,
 	    CURSOR_COLOR);
 }
 
@@ -553,9 +545,6 @@ mapview_draw(void *p)
 	struct node *node;
 	struct noderef *nref;
 	int mx, my, rx, ry;
-	int old_zoom = m->zoom;
-	int old_tilesz = m->tilesz;
-	int tilesz;
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
@@ -570,32 +559,26 @@ mapview_draw(void *p)
 	if (m->map == NULL)
 		goto out;
 
-	/* XXX kludge */
-	if (mv->flags & MAPVIEW_INDEPENDENT) {
-		m->zoom = *mv->zoom;
-		m->tilesz = *mv->tilesz;
-	}
-	tilesz = m->tilesz;
-
 draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = mv->my, ry = -TILEOUT*tilesz + *mv->ssy;
+	for (my = mv->my, ry = mv->yoffs + mv->ssy;
 //	     ((my - mv->my - TILEOUT) < mv->mh) &&
 	     (my < m->maph);
-	     my++, ry += tilesz) {
+	     my++, ry += mv->tilesz) {
 
-		for (mx = mv->mx, rx = -TILEOUT*tilesz + *mv->ssx;
+		for (mx = mv->mx, rx = mv->xoffs + mv->ssx;
 //	     	     ((mx - mv->mx - TILEOUT) < mv->mw) &&
 		     (mx < m->mapw);
-		     mx++, rx += tilesz) {
+		     mx++, rx += mv->tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->layer == layer) {
 					noderef_draw(m, nref,
 					    WIDGET(mv)->cx + rx,
-					    WIDGET(mv)->cy + ry);
+					    WIDGET(mv)->cy + ry,
+					    mv->tilesz);
 				}
 			}
 
@@ -608,8 +591,8 @@ draw_layer:
 				/* XXX overdraw */
 				primitives.rect_outlined(mv,
 				    rx, ry,
-				    tilesz + 1,
-				    tilesz + 1,
+				    mv->tilesz + 1,
+				    mv->tilesz + 1,
 				    GRID_COLOR);
 			}
 #ifdef EDITION
@@ -621,16 +604,16 @@ draw_layer:
 			    mv->msel.x == mx && mv->msel.y == my) {
 				msel_x = rx + 1;
 				msel_y = ry + 1;
-				msel_w = mv->msel.xoffs*tilesz - 2;
-				msel_h = mv->msel.yoffs*tilesz - 2;
+				msel_w = mv->msel.xoffs*mv->tilesz - 2;
+				msel_h = mv->msel.yoffs*mv->tilesz - 2;
 			}
 			
 			if (mv->esel.set &&
 			    mv->esel.x == mx && mv->esel.y == my) {
 				esel_x = rx;
 				esel_y = ry;
-				esel_w = tilesz*mv->esel.w;
-				esel_h = tilesz*mv->esel.h;
+				esel_w = mv->tilesz*mv->esel.w;
+				esel_h = mv->tilesz*mv->esel.h;
 			}
 #endif /* EDITION */
 		}
@@ -662,10 +645,6 @@ next_layer:
 	}
 #endif /* EDITION */
 
-	if (mv->flags & MAPVIEW_INDEPENDENT) {
-		m->zoom = old_zoom;			/* Restore zoom */
-		m->tilesz = old_tilesz;
-	}
 out:
 	pthread_mutex_unlock(&m->lock);
 }
@@ -680,20 +659,21 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	if (zoom > ZOOM_MAX)
 		zoom = ZOOM_MAX;
 
-	*mv->zoom = zoom;
-	*mv->tilesz = zoom*TILESZ/100;
-	if (*mv->tilesz > MAP_MAX_TILESZ) {
-		*mv->tilesz = MAP_MAX_TILESZ;
+	mv->zoom = zoom;
+	mv->tilesz = zoom*TILESZ/100;
+	if (mv->tilesz > MAP_MAX_TILESZ) {
+		mv->tilesz = MAP_MAX_TILESZ;
 	}
-	*mv->ssx = *mv->tilesz * TILEOUT;
-	*mv->ssy = *mv->tilesz * TILEOUT;
-
-	mv->mw = WIDGET(mv)->w/(*mv->tilesz) + 1;
-	mv->mh = WIDGET(mv)->h/(*mv->tilesz) + 1;
-	mv->wmod = mv->mw - WIDGET(mv)->w % *mv->tilesz;
-	mv->hmod = mv->mh - WIDGET(mv)->h % *mv->tilesz;
-	mv->wfit = (mv->map->mapw*(*mv->tilesz) <= WIDGET(mv)->w);
-	mv->hfit = (mv->map->maph*(*mv->tilesz) <= WIDGET(mv)->h);
+	mv->ssx = 0;
+	mv->ssy = 0;
+	mv->xoffs = 0;
+	mv->yoffs = 0;
+	mv->mw = WIDGET(mv)->w/mv->tilesz + 1;
+	mv->mh = WIDGET(mv)->h/mv->tilesz + 1;
+	mv->wmod = mv->mw - WIDGET(mv)->w % mv->tilesz;
+	mv->hmod = mv->mh - WIDGET(mv)->h % mv->tilesz;
+	mv->wfit = (mv->map->mapw*mv->tilesz <= WIDGET(mv)->w);
+	mv->hfit = (mv->map->maph*mv->tilesz <= WIDGET(mv)->h);
 
 	magnifier_zoom_toval = zoom;
 }
@@ -702,73 +682,9 @@ static void
 mapview_scroll(struct mapview *mv, int xrel, int yrel)
 {
 	struct map *m = mv->map;
-	int tilesz = *mv->tilesz;
-	int max;
 
-	*mv->ssx += xrel;
-	*mv->ssy += yrel;
-
-	if (!mv->wfit) {
-		if (xrel < 0 && *mv->ssx < 0) {
-			if (++mv->mx > m->mapw - mv->mw) {
-				mv->mx = m->mapw - mv->mw;
-#if 0
-				*mv->ssx = 0;
-#endif
-			} else {
-				*mv->ssx = tilesz;
-			}
-		} else if (xrel > 0 && *mv->ssx > tilesz) {
-			if (--mv->mx < 0) {
-				mv->mx = 0;
-#if 0
-				if (*mv->ssx > tilesz*2)
-					*mv->ssx = tilesz*2;
-#endif
-			} else {
-				*mv->ssx = 0;
-			}
-		}
-	} else {
-		int mdiff = WIDGET(mv)->w - m->mapw*tilesz + TILEOUT*tilesz - 1;
-
-		if (*mv->ssx < TILEOUT*tilesz) {
-			*mv->ssx = TILEOUT*tilesz;
-		} else if (*mv->ssx > mdiff) {
-			*mv->ssx = mdiff;
-		}
-	}
-	
-	if (!mv->hfit) {
-		if (yrel < 0 && *mv->ssy < 0) {
-			if (++mv->my > m->maph - mv->mh) {
-				mv->my = m->maph - mv->mh;
-#if 0
-				*mv->ssy = 0;
-#endif
-			} else {
-				*mv->ssy = tilesz;
-			}
-		} else if (yrel > 0 && *mv->ssy > tilesz) {
-			if (--mv->my < 0) {
-				mv->my = 0;
-#if 0
-				if (*mv->ssy > tilesz*2)
-					*mv->ssy = tilesz*2;
-#endif
-			} else {
-				*mv->ssy = 0;
-			}
-		}
-	} else {
-		int mdiff = WIDGET(mv)->h - m->maph*tilesz + TILEOUT*tilesz - 1;
-
-		if (*mv->ssy < TILEOUT*tilesz) {
-			*mv->ssy = TILEOUT*tilesz;
-		} else if (*mv->ssy > mdiff) {
-			*mv->ssy = mdiff;
-		}
-	}
+	mv->xoffs += xrel;
+	mv->yoffs += yrel;
 }
 
 static void
@@ -784,7 +700,7 @@ mouse_motion(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&mv->map->lock);
 
-	mapview_map_coords(mv, &x, &y, &xoff, &yoff);
+	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
 
@@ -829,7 +745,7 @@ mouse_buttondown(int argc, union evarg *argv)
 	widget_focus(mv);
 
 	pthread_mutex_lock(&mv->map->lock);
-	mapview_map_coords(mv, &x, &y, &xoff, &yoff);
+	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
 	if (mv->cx < 0 || mv->cy < 0)
 		goto out;
 
@@ -847,12 +763,12 @@ mouse_buttondown(int argc, union evarg *argv)
 		mv->mouse.scrolling++;
 		break;
 	case SDL_BUTTON_WHEELUP:
-		mapview_set_scale(mv, (*mv->zoom)-magnifier_zoom_inc);
-		mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+		mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
+		mapview_status(mv, _("%d%% magnification"), mv->zoom);
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		mapview_set_scale(mv, (*mv->zoom)+magnifier_zoom_inc);
-		mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+		mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
+		mapview_status(mv, _("%d%% magnification"), mv->zoom);
 		break;
 	}
 
@@ -892,7 +808,7 @@ mouse_buttonup(int argc, union evarg *argv)
 	int xoff, yoff;
 	
 	pthread_mutex_lock(&mv->map->lock);
-	mapview_map_coords(mv, &x, &y, &xoff, &yoff);
+	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
 	if (mv->cx < 0 || mv->cy < 0) {
 		mv->mouse.scrolling = 0;
 		goto out;
@@ -1084,8 +1000,7 @@ mapview_scale(void *p, int rw, int rh)
 	}
 
 	pthread_mutex_lock(&mv->map->lock);
-	mapview_set_scale(mv, *mv->zoom);
-
+	mapview_set_scale(mv, mv->zoom);
 	if (mv->flags & MAPVIEW_CENTER) {
 		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
 		mv->flags &= ~(MAPVIEW_CENTER);
@@ -1118,8 +1033,10 @@ mapview_center(struct mapview *mv, int x, int y)
 	if (mv->my >= mv->map->maph - mv->mh)
 		mv->my = mv->map->maph - mv->mh;
 
-	*mv->ssx = *mv->tilesz * TILEOUT;
-	*mv->ssy = *mv->tilesz * TILEOUT;
+	mv->ssx = 0;
+	mv->ssy = 0;
+	mv->xoffs = 0;
+	mv->yoffs = 0;
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
