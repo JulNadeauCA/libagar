@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.1 2002/04/28 15:04:58 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.2 2002/04/30 00:57:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -42,8 +42,6 @@
 #include "widget.h"
 #include "window.h"
 #include "checkbox.h"
-
-extern TTF_Font *font;		/* text */
 
 static struct widget_ops checkbox_ops = {
 	{
