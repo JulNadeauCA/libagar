@@ -25,6 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+SDL_Surface *keycodes_cache[(KEYCODES_CACHE_END - KEYCODES_CACHE_START) + 1];
+
 const struct keycode keycodes[] = {
 	/* Non-alphanumeric characters */
 	{ "i-exclaim",	SDLK_1,		KMOD_SHIFT,	insert_ascii,	"!" },
@@ -53,8 +55,8 @@ const struct keycode keycodes[] = {
 	{ "i-scolon",	SDLK_SEMICOLON,	0,		insert_ascii,	";" },
 	{ "i-dquote",	SDLK_QUOTE,	KMOD_SHIFT,	insert_ascii,	"\"" },
 	{ "i-squote",	SDLK_QUOTE,	0,		insert_ascii,	"'" },
-	{ "i-slash",	SDLK_SLASH,	KMOD_SHIFT,	insert_ascii,	"/" },
-	{ "i-question",	SDLK_SLASH,	0,		insert_ascii,	"?" },
+	{ "i-question",	SDLK_SLASH,	KMOD_SHIFT,	insert_ascii,	"?" },
+	{ "i-slash",	SDLK_SLASH,	0,		insert_ascii,	"/" },
 	{ "i-less",	SDLK_COMMA,	KMOD_SHIFT,	insert_ascii,	"<" },
 	{ "i-comma",	SDLK_COMMA,	0,		insert_ascii,	"," },
 	{ "i-greater",	SDLK_PERIOD,	KMOD_SHIFT,	insert_ascii,	">" },
