@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: pread.c,v 1.1 2003/03/13 22:43:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <sys/types.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
