@@ -29,4 +29,12 @@ INSTALLATION
    $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Spécifier le chemin d'accès
    						# vers les fichiers de données.
 
-$Csoft: INSTALL.fr,v 1.1 2003/06/17 21:38:44 vedge Exp $
+6) Faites nous savoir si le programme se compile et s'exécute correctement.
+   Vous pouvez ajouter des commentaires à l'objet, mais assurez vous que
+   votre adresse de retour est valide, afin que nos développeurs aient la
+   possibilité de vous répondre.
+   $ cat config.log | \
+     mail -s "VAXstation 3100: s'exécute, mais les polices ne s'affichent pas" \
+     report@agar.csoft.org
+
+$Csoft: INSTALL.fr,v 1.2 2003/07/08 01:17:24 vedge Exp $
