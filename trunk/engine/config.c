@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.123 2004/07/24 02:02:10 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.124 2004/08/27 06:50:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -393,8 +393,8 @@ config_window(struct config *con)
 		struct mspinbutton *msb;
 
 		msb = mspinbutton_new(hb, "x", _("Default resolution: "));
-		widget_bind(msb, "xvalue", WIDGET_PROP, config, "view.w");
-		widget_bind(msb, "yvalue", WIDGET_PROP, config, "view.h");
+		widget_bind(msb, "xvalue", WIDGET_UINT16, &view->w);
+		widget_bind(msb, "yvalue", WIDGET_UINT16, &view->h);
 		mspinbutton_set_range(msb, 320, 4096);
 	}
 
