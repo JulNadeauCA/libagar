@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.85 2004/03/18 03:03:23 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.86 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -259,10 +259,20 @@ tlist_draw(void *p)
 			}
 		}
 
-		if (it->icon != NULL)
+		if (it->iconsrc != NULL) {
+			if (it->icon == NULL) {
+				it->icon = view_scale_surface(it->iconsrc,
+				    tl->item_h, tl->item_h);
+			}
 			widget_blit(tl, it->icon, x, y);
+		}
 drawtext:
 		x += tl->item_h + 5;
+
+		if (it->label == NULL) {
+			it->label = text_render(NULL, -1,
+			    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
+		}
 		widget_blit(tl, it->label,
 		    x,
 		    y + tl->item_h/2 - it->label->h/2);
@@ -318,8 +328,8 @@ tlist_adjust_scrollbar(struct tlist *tl)
 static void
 tlist_free_item(struct tlist_item *it)
 {
-	SDL_FreeSurface(it->label);
-
+	if (it->label != NULL)
+		SDL_FreeSurface(it->label);
 	if (it->icon != NULL)
 		SDL_FreeSurface(it->icon);
 
@@ -433,32 +443,32 @@ tlist_visible_children(struct tlist *tl, struct tlist_item *cit)
 }
 
 static struct tlist_item *
-tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, const char *text,
+tlist_alloc_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
     const void *p1)
 {
 	struct tlist_item *it;
 
 	it = Malloc(sizeof(struct tlist_item), M_WIDGET);
 	it->selected = 0;
-	it->label = text_render(NULL, -1, WIDGET_COLOR(tl, TEXT_COLOR), text);
+	it->label = NULL;
+	it->iconsrc = NULL;
 	it->icon = NULL;
 	it->p1 = (void *)p1;
-	strlcpy(it->text, text, sizeof(it->text));
 	it->depth = 0;
 	it->flags = 0;
-
-	tlist_set_item_icon(tl, it, icon);
+	strlcpy(it->text, text, sizeof(it->text));
+	tlist_set_icon(tl, it, iconsrc);
 	return (it);
 }
 
 /* Add an item to the list. */
 struct tlist_item *
-tlist_insert_item(struct tlist *tl, SDL_Surface *icon, const char *text,
+tlist_insert_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
     const void *p1)
 {
 	struct tlist_item *it;
 
-	it = tlist_alloc_item(tl, icon, text, p1);
+	it = tlist_alloc_item(tl, iconsrc, text, p1);
 
 	pthread_mutex_lock(&tl->lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
@@ -845,29 +855,32 @@ tlist_set_item_height(struct tlist *tl, int ih)
 	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != NULL) {
-			SDL_Surface *nicon;
-
-			nicon = view_scale_surface(it->icon,
-			    tl->item_h, tl->item_h);		/* Square */
 			SDL_FreeSurface(it->icon);
-			it->icon = nicon;
+			it->icon = view_scale_surface(it->iconsrc, tl->item_h,
+			    tl->item_h);
 		}
 	}
 	pthread_mutex_unlock(&tl->lock);
 }
 
-/* Update an item's icon. */
+/* Update the icon associated with an item. */
 void
-tlist_set_item_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *icon)
+tlist_set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
 {
-	if (it->icon != NULL)
-		SDL_FreeSurface(it->icon);
+	it->iconsrc = iconsrc;
 
-	if (icon != NULL) {
-		it->icon = view_scale_surface(icon,
-		    tl->item_h, tl->item_h);			/* Square */
-	} else {
+	if (it->icon != NULL) {
+		SDL_FreeSurface(it->icon);
 		it->icon = NULL;
+	}
+
+	if ((tl->flags & TLIST_STATIC_ICONS) == 0) {
+		if (iconsrc != NULL) {
+			it->icon = view_scale_surface(iconsrc, tl->item_h,
+			    tl->item_h);
+		} else {
+			it->icon = NULL;
+		}
 	}
 }
 
