@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.63 2004/05/15 06:07:11 vedge Exp $
+.\"	$Csoft: object.3,v 1.64 2004/05/24 00:37:07 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,72 +38,25 @@
 #include <engine/object.h>
 .Ed
 .Sh DESCRIPTION
-The Agar game logic is built upon a tree of
+Agar's
 .Nm
-structures.
-The
-.Nm
-layer is responsible for:
+layer is responsible for handling:
 .Pp
 .Bl -bullet -compact -offset indent
 .It
-Persistence
+Memory management
 .It
-Paging and garbage collection of object data
+Data persistence
 .It
-Object dependencies and linkage
+Interdependencies between objects
 .It
-Shared media
+Object linkage
 .It
-Generic events
+Shared media (eg. graphics, audio)
 .It
-Generic properties
+Event processing and scheduling
 .El
 .Pp
-The
-.Va flags
-member of the
-.Nm
-structure can take:
-.Bd -literal
-#define OBJECT_RELOAD_PROPS   0x01 /* Don't free props before load */
-#define OBJECT_NON_PERSISTENT 0x02 /* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE 0x04 /* Not destructible (advisory) */
-#define OBJECT_DATA_RESIDENT  0x08 /* Object data is resident (RO) */
-#define OBJECT_PRESERVE_DEPS  0x10 /* Don't remove dep if count=0 */
-#define OBJECT_STATIC         0x20 /* Don't free() after detach */
-#define OBJECT_READONLY       0x40 /* Disallow edition (advisory) */
-.Ed
-.Pp
-The
-.Dv OBJECT_RELOAD_PROPS
-flag prevents the
-.Xr prop 3
-table from being cleared as part of a load operation.
-.Dv OBJECT_NON_PERSISTENT
-prevents the object and its descendents from being saved as part of a save
-operation.
-If this flag is set,
-.Fn object_page_in
-and
-.Fn object_page_out
-with an argument of
-.Dv OBJECT_DATA
-become no-ops (but still increment the reference count).
-.Pp
-The
-.Dv OBJECT_INDESTRUCTIBLE
-flag advises the object editor not to destroy this object.
-.Dv OBJECT_READONLY
-advises the object-specific
-.Va edit
-operation that this object should not be edited.
-.Pp
-The
-.Dv OBJECT_DATA_RESIDENT
-flag is set by the
-.Nm
-system to indicate that the object's data currently resides in memory.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "struct object *"
@@ -140,16 +93,13 @@ system to indicate that the object's data currently resides in memory.
 .Pp
 The
 .Fn object_new
-function allocates and initializes a new, generic object (object derivates
-usually provide their own constructor functions).
-If
+function allocates and initializes a new, generic object and attaches it to
 .Fa parent
-is not NULL, the object is attached to a parent.
-Otherwise, the object is considered to be the root of an object tree.
+if not NULL.
 .Pp
-.Fn object_init
-initializes an object.
 The
+.Fn object_init
+function initializes an object structure.
 .Fa name
 and
 .Fa type
@@ -165,7 +115,6 @@ characters in
 are replaced by
 .Sq _ ,
 since slash is the path name separator.
-.Pp
 If
 .Fa ops
 is not NULL, it should point to the following structure:
@@ -181,12 +130,80 @@ struct object_ops {
 .Ed
 .Pp
 The
+.Fn init
+operation initializes an
+.Nm
+instance.
+.Fn reinit
+is reponsible for releasing data dynamically allocated by the object (eg.
+.Xr map 3
+nodes).
+.Fn reinit
+is invoked prior to rereading an object's data from disk, as part of an
+.Dv OBJECT_DATA
+page out operation.
+.Pp
+The
+.Fn destroy
+operation releases all data allocated by the object, including data allocated
+from
+.Fn init .
+The
+.Fn destroy
+operation is invoked from
+.Fn object_destroy .
+It must not free the object structure, and it does not need to bother about
+placing the object data back into a consistent state.
+.Pp
+The following
+.Nm
+flags are defined:
+.Bd -literal
+#define OBJECT_RELOAD_PROPS   0x01 /* Don't free props before load */
+#define OBJECT_NON_PERSISTENT 0x02 /* Never include in saves */
+#define OBJECT_INDESTRUCTIBLE 0x04 /* Not destructible (advisory) */
+#define OBJECT_DATA_RESIDENT  0x08 /* Object data is resident (RO) */
+#define OBJECT_PRESERVE_DEPS  0x10 /* Don't remove dep if count=0 */
+#define OBJECT_STATIC         0x20 /* Don't free() after detach */
+#define OBJECT_READONLY       0x40 /* Disallow edition (advisory) */
+.Ed
+.Pp
+The
+.Dv OBJECT_RELOAD_PROPS
+flag prevents the
+.Xr prop 3
+table from being cleared as part of a load operation.
+.Dv OBJECT_NON_PERSISTENT
+prevents the object and its descendents from being saved as part of a save
+operation.
+If this flag is set,
+.Fn object_page_in
+and
+.Fn object_page_out
+with an argument of
+.Dv OBJECT_DATA
+become no-ops.
+.Pp
+The
+.Dv OBJECT_INDESTRUCTIBLE
+flag advises the object editor not to destroy this object.
+.Dv OBJECT_READONLY
+advises the object-specific
+.Va edit
+operation that this object should not be edited.
+.Pp
+The
+.Dv OBJECT_DATA_RESIDENT
+flag is set by the
+.Nm
+system to indicate that the object's data currently resides in memory.
+.Pp
+The
 .Fn object_attach
 and
 .Fn object_detach
 functions respectively link and unlink a child object against a parent
 project.
-.Pp
 Prior to detaching the object,
 .Fn object_detach
 cancels scheduled
@@ -194,7 +211,6 @@ cancels scheduled
 events (that do not have the
 .Dv TIMEOUT_DETACHABLE
 flag set).
-.Pp
 These operations raise
 .Fn attached
 and
@@ -503,7 +519,7 @@ The
 function decrements the reference count on shared media or object data.
 .Pp
 These functions return 0 on success or -1 if an error occured.
-.Sh MAP OPERATIONS
+.Sh POSITIONING
 The illusion of objects (such as characters) moving inside a
 .Xr map 3
 is achieved by maintaining a copy of the object's current projection map.
