@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -61,6 +61,7 @@ tryname:
 	ft->ts = ts;
 	ft->flags = flags;
 	ft->ops = ops;
+	ft->nrefs = 0;
 	TAILQ_INIT(&ft->sketches);
 	TAILQ_INIT(&ft->pixmaps);
 }
@@ -128,7 +129,12 @@ feature_destroy(struct feature *ft)
 {
 	struct feature_sketch *fsk, *nfsk;
 	struct feature_pixmap *fpx, *nfpx;
-	
+
+#ifdef DEBUG
+	if (ft->nrefs > 0)
+		dprintf("%s is referenced\n", ft->name);
+#endif
+
 	if (ft->ops->destroy != NULL)
 		ft->ops->destroy(ft);
 

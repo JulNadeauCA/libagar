@@ -1,4 +1,4 @@
-/*	$Csoft: feature.h,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: feature.h,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_FEATURE_H_
@@ -42,6 +42,7 @@ struct feature {
 	const struct feature_ops *ops;
 	struct tileset *ts;
 	int flags;
+	u_int nrefs;
 
 	TAILQ_HEAD(,feature_sketch) sketches;
 	TAILQ_HEAD(,feature_pixmap) pixmaps;

@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.2 2005/01/26 02:46:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILESET_H_
@@ -22,6 +22,7 @@ struct feature;
 struct sketch {
 	char name[SKETCH_NAME_MAX];
 	struct vg *vg;
+	u_int nrefs;
 	TAILQ_ENTRY(sketch) sketches;
 };
 
@@ -29,6 +30,7 @@ struct pixmap {
 	char name[PIXMAP_NAME_MAX];
 	int flags;
 	SDL_Surface *su;
+	u_int nrefs;
 	TAILQ_ENTRY(pixmap) pixmaps;
 };
 
