@@ -234,7 +234,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -247,7 +246,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_IEEE754" > config/have_ieee754.h
 echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> config/have_ieee754.h
 echo "#endif /* HAVE_IEEE754 */" >> config/have_ieee754.h
@@ -272,7 +271,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -285,7 +283,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_LONG_DOUBLE" > config/have_long_double.h
 echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> config/have_long_double.h
 echo "#endif /* HAVE_LONG_DOUBLE */" >> config/have_long_double.h
@@ -310,7 +308,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -323,7 +320,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_PROGNAME" > config/have_progname.h
 echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> config/have_progname.h
 echo "#endif /* HAVE_PROGNAME */" >> config/have_progname.h
@@ -396,7 +393,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -409,7 +405,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_GETENV" > config/have_getenv.h
 echo "#define HAVE_GETENV" $HAVE_GETENV >> config/have_getenv.h
 echo "#endif /* HAVE_GETENV */" >> config/have_getenv.h
@@ -435,7 +431,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -448,7 +443,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_SETENV" > config/have_setenv.h
 echo "#define HAVE_SETENV" $HAVE_SETENV >> config/have_setenv.h
 echo "#endif /* HAVE_SETENV */" >> config/have_setenv.h
@@ -472,7 +467,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -485,7 +479,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRSEP" > config/have_strsep.h
 echo "#define HAVE_STRSEP" $HAVE_STRSEP >> config/have_strsep.h
 echo "#endif /* HAVE_STRSEP */" >> config/have_strsep.h
@@ -509,7 +503,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -522,7 +515,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRLCAT" > config/have_strlcat.h
 echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> config/have_strlcat.h
 echo "#endif /* HAVE_STRLCAT */" >> config/have_strlcat.h
@@ -546,7 +539,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -559,7 +551,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_STRLCPY" > config/have_strlcpy.h
 echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> config/have_strlcpy.h
 echo "#endif /* HAVE_STRLCPY */" >> config/have_strlcpy.h
@@ -589,7 +581,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -602,7 +593,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_ASPRINTF" > config/have_asprintf.h
 echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> config/have_asprintf.h
 echo "#endif /* HAVE_ASPRINTF */" >> config/have_asprintf.h
@@ -643,7 +634,6 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
@@ -656,7 +646,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
 echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> config/have_vasprintf.h
 echo "#endif /* HAVE_VASPRINTF */" >> config/have_vasprintf.h
