@@ -218,7 +218,7 @@ mapedit_do_loadmap(void *arg)
 
 	/* Users must copy maps to udatadir in order to edit them. */
 	/* XXX redundant */
-	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
+	sprintf(path, "%s/maps/%s.m", world->udatadir, med->margs.name);
 
 	pthread_mutex_lock(&world->lock);
 
@@ -229,7 +229,7 @@ mapedit_do_loadmap(void *arg)
 		m->map[y][x].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
-		view_center(x, y);
+		view_center(m, x, y);
 	}
 	pthread_mutex_unlock(&world->lock);
 

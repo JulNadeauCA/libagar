@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.99 2002/06/09 15:04:30 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.100 2002/06/12 20:40:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -232,7 +232,7 @@ mapedit_attached(int argc, union evarg *argv)
 	}
 	
 	/* Users must copy maps to udatadir in order to edit them. */
-	sprintf(path, "%s/%s.m", wo->udatadir, med->margs.name);
+	sprintf(path, "%s/maps/%s.m", wo->udatadir, med->margs.name);
 
 	if ((fd = open(path, O_RDONLY, 0)) > 0) {
 		close(fd);
@@ -284,7 +284,7 @@ mapedit_attached(int argc, union evarg *argv)
 	med->objlist_offs = 0;
 
 	/* Set the video mode. */
-	view_center(m->defx, m->defy);
+	view_center(m, m->defx, m->defy);
 
 	/* Set the window caption. World already locked. */
 	if (object_strfind(med->margs.name) == NULL) {
