@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.17 2003/02/02 21:16:15 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.18 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -8,7 +8,7 @@
 
 #include "begin_code.h"
 
-#define LABEL_MAX_LENGTH	2048
+#define LABEL_MAX_LENGTH	1024
 #define LABEL_MAX_POLLITEMS	32
 
 enum label_type {
