@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.4 2004/03/30 16:32:51 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.5 2004/06/02 00:40:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -225,7 +225,8 @@ select_range(int argc, union evarg *argv)
 			snprintf(s, sizeof(s), " %x", (unsigned char)*c);
 			strlcat(bytetext, s, sizeof(bytetext));
 		}
-		snprintf(text, sizeof(text), "%s (%s )", utf8text, bytetext);
+		snprintf(text, sizeof(text), "%s ( %04x, %s )", utf8text, i, 
+		    bytetext);
 		tlist_insert_item(tl, NULL, text, NULL);
 	}
 }
