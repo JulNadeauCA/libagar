@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.13 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.14 2005/03/24 03:58:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <engine/engine.h>
 #include <engine/typesw.h>
 #include <engine/view.h>
+#include <engine/config.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -43,6 +44,7 @@
 #include <engine/widget/bitmap.h>
 #include <engine/widget/label.h>
 #include <engine/widget/separator.h>
+#include <engine/widget/file_dlg.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -117,6 +119,7 @@ enum {
 	OBJEDIT_EDIT_GENERIC,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
+	OBJEDIT_EXPORT,
 	OBJEDIT_REINIT,
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
@@ -150,6 +153,7 @@ objmgr_open_generic(struct object *ob)
 	}
 	if (oent != NULL) {
 		window_show(oent->win);
+		view->focus_win = oent->win;
 		return;
 	}
 	
@@ -196,6 +200,7 @@ objmgr_open_data(struct object *ob)
 	}
 	if (oent != NULL) {
 		window_show(oent->win);
+		view->focus_win = oent->win;
 		return;
 	}
 
@@ -217,6 +222,44 @@ objmgr_open_data(struct object *ob)
 
 	/* TODO */
 	world_changed = 1;
+}
+
+static void
+export_object(int argc, union evarg *argv)
+{
+	char save_path[MAXPATHLEN];
+	struct object *ob = argv[1].p;
+	struct window *win = argv[2].p;
+	char *path = argv[3].s;
+	char *pfx_save = ob->save_pfx;
+	int paged_in = 0;
+
+	if ((ob->flags & OBJECT_DATA_RESIDENT) == 0) {
+		if (object_load_data(ob) == -1) {
+			/* XXX hack */
+			ob->flags |= OBJECT_DATA_RESIDENT;
+		}
+		paged_in = 1;
+	}
+
+	prop_copy_string(config, "save-path", save_path, sizeof(save_path));
+	prop_set_string(config, "save-path", "%s", path);
+	ob->save_pfx = NULL;
+
+	if (object_save(ob) == -1) {
+		text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
+	} else {
+		text_tmsg(MSG_INFO, 1000,
+		    _("Object `%s' was exported successfully."), ob->name);
+		world_changed = (ob != OBJECT(world));
+	}
+
+	prop_set_string(config, "save-path", "%s", save_path);
+	ob->save_pfx = pfx_save;
+	view_detach(win);
+	
+	if (paged_in)
+		object_free_data(ob);
 }
 
 static void
@@ -254,6 +297,12 @@ obj_op(int argc, union evarg *argv)
 			}
 			break;
 		case OBJEDIT_SAVE:
+			if (ob->flags & OBJECT_NON_PERSISTENT) {
+				error_set(
+				    _("The `%s' object is non-persistent."),
+				    ob->name);
+				break;
+			}
 			if (object_save(ob) == -1) {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
@@ -262,6 +311,33 @@ obj_op(int argc, union evarg *argv)
 				    _("Object `%s' was saved successfully."),
 				    ob->name);
 				world_changed = (ob != OBJECT(world));
+			}
+			break;
+		case OBJEDIT_EXPORT:
+			if (ob->flags & OBJECT_NON_PERSISTENT) {
+				error_set(
+				    _("The `%s' object is non-persistent."),
+				    ob->name);
+			} else {
+				char path[FILENAME_MAX];
+				struct window *win;
+				struct AGFileDlg *fdg;
+
+				strlcpy(path, ob->name, sizeof(path));
+				strlcat(path, ".", sizeof(path));
+				strlcat(path, ob->type, sizeof(path));
+
+				win = window_new(0, NULL);
+				window_set_caption(win, _("Export %s to..."),
+				    ob->name);
+				fdg = file_dlg_new(win, 0,
+				    prop_get_string(config, "save-path"), path);
+				event_new(fdg, "file-validated",
+				    export_object, "%p,%p", ob, win);
+				event_new(fdg, "file-cancelled",
+				    window_generic_detach, "%p", win);
+
+				window_show(win);
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -534,6 +610,8 @@ objmgr_window(void)
 			    "%p, %i", objs_tl, OBJEDIT_LOAD);
 			menu_action(mi, _("Save"), OBJSAVE_ICON, obj_op,
 			    "%p, %i", objs_tl, OBJEDIT_SAVE);
+			menu_action(mi, _("Export to..."), OBJSAVE_ICON, obj_op,
+			    "%p, %i", objs_tl, OBJEDIT_EXPORT);
 			
 			menu_separator(mi);
 			
