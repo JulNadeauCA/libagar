@@ -115,6 +115,16 @@ done:
 	mapedit_setpointer(med, 1);
 }
 
+/* Reinitialize the map. */
+void
+mapedit_clearmap(struct mapedit *med)
+{
+	mapedit_setpointer(med, 0);
+	map_clean(med->map, NULL, 0, 0, 0);
+	mapedit_setpointer(med, 1);
+	med->map->redraw++;
+}
+
 /* Fill the map with the current reference. */
 void
 mapedit_fillmap(struct mapedit *med)
