@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.117 2003/07/28 04:37:00 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.118 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 #ifdef HAVE_SETLOCALE
 	setlocale(LC_ALL, "");
 #endif
-#ifdef HAVE_GETTEXT
+#ifdef ENABLE_NLS
 	bindtextdomain("agar", LOCALEDIR);
 	textdomain("agar");
 #endif
