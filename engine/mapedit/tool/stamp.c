@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.43 2003/05/26 03:03:31 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.44 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -78,7 +78,7 @@ stamp_window(void *p)
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
-	widget_set_focus(rad);
+	widget_focus(rad);
 		
 	cb = checkbox_new(win, "Inherit flags");
 	widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);

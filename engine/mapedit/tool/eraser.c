@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.32 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.33 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ eraser_window(void *p)
 
 		rad = radio_new(vb, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
-		widget_set_focus(rad);
+		widget_focus(rad);
 	}
 	return (win);
 }

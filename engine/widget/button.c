@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.67 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.68 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -219,7 +219,7 @@ button_mousebuttondown(int argc, union evarg *argv)
 	if (!b->sensitive)
 		return;
 
-	widget_set_focus(b);
+	widget_focus(b);
 
 	if (button != 1)
 		return;

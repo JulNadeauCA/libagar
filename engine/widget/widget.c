@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.57 2003/05/24 15:46:17 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.58 2003/06/06 03:18:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -736,31 +736,74 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 	}
 }
 
-/* Evaluate to true if a widget is holding focus. */
+/* Evaluate to true if a widget is holding focus (inside its parent). */
 __inline__ int
 widget_holds_focus(void *p)
 {
 	return (WIDGET(p)->flags & WIDGET_FOCUSED);
 }
 
-/*
- * Set the WIDGET_FOCUSED flag on a widget and its ancestors, until a window
- * is reached.
- */
-void
-widget_set_focus(void *p)
+
+/* Clear the WIDGET_FOCUSED bit from a widget and its descendents. */
+static void
+widget_clear_focus(void *p)
 {
-	struct widget *wid = p;
+	struct widget *wid = p, *cwid;
 
-	if (OBJECT_TYPE(wid, "window") ||
-	   (wid->flags & WIDGET_NO_FOCUS))
-		return;
+	if (wid->flags & WIDGET_FOCUSED) {
+		dprintf("%s lost focus\n", OBJECT(wid)->name);
+		wid->flags &= ~(WIDGET_FOCUSED);
+		event_post(wid, "widget-lostfocus", NULL);
+	}
 
-	wid->flags |= WIDGET_FOCUSED;
-	event_post(wid, "widget-gainfocus", NULL);
+	OBJECT_FOREACH_CHILD(cwid, wid, widget)
+		widget_clear_focus(cwid);
+}
 
-	if (OBJECT(wid)->parent != NULL)
-		widget_set_focus(OBJECT(wid)->parent);
+/* Find the parent window of a widget. */
+static struct window *
+widget_parent_window(struct widget *wid)
+{
+	struct widget *pwid = wid;
+
+	if (OBJECT_TYPE(wid, "window"))
+		return ((struct window *)wid);
+
+	while ((pwid = OBJECT(pwid)->parent) != NULL) {
+		if (OBJECT_TYPE(pwid, "window"))
+			break;
+	}
+	return ((struct window *)pwid);
+}
+
+/* Move the focus over a widget (and its parents). */
+void
+widget_focus(void *p)
+{
+	struct widget *wid = p, *pwid = wid;
+	struct window *pwin;
+
+	/* Remove focus from other widgets inside this window. */
+	pwin = widget_parent_window(wid);
+	if (pwin != NULL) {
+		widget_clear_focus(pwin);
+	} else {
+		dprintf("%s: no parent window\n", OBJECT(wid)->name);
+	}
+
+	/* Set the focus flag on the widget and its parents. */
+	do {
+		if (OBJECT_TYPE(pwid, "window"))
+			break;
+		if (pwid->flags & WIDGET_NO_FOCUS) {
+			dprintf("parent (%s) is not focusable\n",
+			    OBJECT(pwid)->name);
+			break;
+		}
+		dprintf("%s gained focus\n", OBJECT(pwid)->name);
+		pwid->flags |= WIDGET_FOCUSED;
+		event_post(pwid, "widget-gainfocus", NULL);
+	} while ((pwid = OBJECT(pwid)->parent) != NULL);
 }
 
 /* Render a widget and its descendents, recursively. */
@@ -867,12 +910,6 @@ widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
 
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_MOTION)) {
-#if 0
-		dprintf("post to %s: %d,%d; %d,%d rel\n", OBJECT(wid)->name,
-		    x - wid->cx,
-		    y - wid->cy,
-		    xrel, yrel);
-#endif
 		event_post(wid,  "window-mousemotion", "%i, %i, %i, %i",
 		    x - wid->cx,
 		    y - wid->cy,
@@ -897,12 +934,6 @@ widget_mousebuttonup(struct window *win, struct widget *wid, int button,
 
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_BUTTONUP)) {
-#if 0
-		dprintf("post to %s: %d at %d,%d\n", OBJECT(wid)->name,
-		    button,
-		    x - wid->cx,
-		    y - wid->cy);
-#endif
 		event_post(wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button,
 		    x - wid->cx,
@@ -930,39 +961,28 @@ widget_mousebuttondown(struct window *win, struct widget *wid, int button,
 			return (1);
 	}
 
-	dprintf("post to %s: %d at %d,%d\n", OBJECT(wid)->name,
-	    button,
-	    x - wid->cx,
-	    y - wid->cy);
-
 	return (event_post(wid, "window-mousebuttondown", "%i, %i, %i", button,
 	    x - wid->cx,
 	    y - wid->cy));
 }
 
-/* Search for a focused widget; usually called on a window. */
+/* Search for a focused widget inside a window. */
 struct widget *
 widget_find_focus(void *p)
 {
 	struct widget *wid = p;
 	struct widget *cwid, *fwid;
 
-	/*
-	 * The focus flag is only meaningful to widgets; the last window
-	 * on the queue always holds focus.
-	 */
-	if (OBJECT_TYPE(wid, "window") &&
-	    !WINDOW_FOCUSED((struct window *)wid)) {
+	if (!OBJECT_TYPE(wid, "window") &&
+	    (wid->flags & WIDGET_FOCUSED) == 0)
 		return (NULL);
-	} else if ((wid->flags & WIDGET_FOCUSED) == 0) {
-		return (NULL);
-	}
 
 	/* Search for a better match. */
 	OBJECT_FOREACH_CHILD(cwid, wid, widget) {
 		if ((fwid = widget_find_focus(cwid)) != NULL)
 			return (fwid);
 	}
+
 	return (wid);
 }
 

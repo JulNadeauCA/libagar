@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.29 2003/05/24 15:46:17 vedge Exp $
+.\"	$Csoft: widget.3,v 1.30 2003/06/06 03:18:15 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -165,7 +165,7 @@ parent container.
 .Fn widget_holds_focus "void *widget"
 .Pp
 .Ft "void"
-.Fn widget_set_focus "void *widget"
+.Fn widget_focus "void *widget"
 .nr nS 0
 .Pp
 The
@@ -176,11 +176,12 @@ flag set.
 Note that this flag is not effective (although it may affect widget layout)
 unless all parent widgets have the flag set as well.
 .Pp
-.Fn widget_set_focus
+.Fn widget_focus
 sets the
 .Dv WIDGET_FOCUSED
 flag on a widget and all of its parent widgets, until the parent window is
 reached.
+.Pp
 The effect of the focus state is determined by the widget implementation.
 Usually it enables reception of keyboard and mouse motion events and affects
 the widget appearance.

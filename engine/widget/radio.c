@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.29 2003/05/26 03:03:33 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.30 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -181,7 +181,7 @@ radio_event(int argc, union evarg *argv)
 		button = argv[2].i;
 		y = argv[4].i;
 		*sel = (y/(rad->radius + YSPACING/2));
-		widget_set_focus(rad);
+		widget_focus(rad);
 		break;
 	case KEYDOWN_EVENT:
 		keysym = argv[2].i;

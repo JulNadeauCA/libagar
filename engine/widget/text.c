@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.62 2003/05/22 05:45:46 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.63 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -313,7 +313,7 @@ text_msg(const char *caption, const char *format, ...)
 	button = button_new(vb, "Ok");
 	event_new(button, "button-pushed", window_generic_detach, "%p", win);
 
-	widget_set_focus(button);
+	widget_focus(button);
 	window_show(win);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.169 2003/05/25 02:53:44 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.170 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -366,7 +366,7 @@ mapedit_window(struct map *m)
 
 	hb = hbox_new(win, 0);
 	object_attach(hb, mv);
-	widget_set_focus(mv);
+	widget_focus(mv);
 	return (win);
 }
 

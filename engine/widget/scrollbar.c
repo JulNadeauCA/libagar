@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.24 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.25 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -150,7 +150,7 @@ scrollbar_mousebuttondown(int argc, union evarg *argv)
 	int maxcoord = (sb->type == SCROLLBAR_HORIZ) ?
 	    WIDGET(sb)->w : WIDGET(sb)->h;
 
-	widget_set_focus(sb);
+	widget_focus(sb);
 
 	if (coord < sb->button_size) {
 		sb->curbutton = BUTTON_UP;
