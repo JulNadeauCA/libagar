@@ -1,4 +1,4 @@
-.\"	$OpenBSD$
+.\"	$Csoft$
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\"
@@ -53,7 +53,16 @@ structures.
                 "int defh" "int minwidth" "int minheight"
 .Pp
 .Ft void
+.Fn window_destroy "struct window *win"
+.Pp
+.Ft void
 .Fn window_titlebar_printf "struct window *win" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn window_attach "struct window *parent" "struct region *child"
+.Pp
+.Ft void
+.Fn window_detach "struct window *parent" "struct region *child"
 .nr nS 0
 .Pp
 The
@@ -62,10 +71,19 @@ function allocates, initializes, and attaches a
 .Nm
 structure.
 The
+.Fn window_new
+function must not be called when the view is locked by the caller thread.
+The
 .Fn window_init
 function initializes a
 .Nm
 structure.
+.Pp
+The
+.Fn window_destroy
+function frees resources allocated by a window, assuming it is no longer
+attached to a view.
+.Pp
 The
 .Fa caption
 argument is a pointer to a null-terminated string that will be
@@ -102,6 +120,31 @@ can be changed at runtime, and may include:
 #define WINDOW_SHOWN		0x40	/* Visible */
 #define WINDOW_CENTER		0x80	/* Center window */
 .Ed
+.Pp
+The
+.Fn window_attach
+function attaches the region
+.Fa region
+to the window
+.Fa parent .
+The
+.Fn window_detach
+function detaches the region
+.Fa region
+from the window
+.Fa parent .
+The parent window must be locked when
+.Fn window_attach
+or
+.Fn window_detach
+is called.
+.Pp
+The
+.Fn window_titlebar_printf
+function sets the text shown inside the window titlebar.
+The window structure must be locked when
+.Fn window_titlebar_printf
+is called.
 .Sh VISIBILITY
 .nr nS 1
 .Ft int
@@ -122,17 +165,25 @@ can be changed at runtime, and may include:
 .Pp
 The
 .Fn window_show
-function displays an unlocked window.
-The
+and
 .Fn window_show_locked
-function displays a window assuming it is locked.
-.Pp
+functions display a window.
 The
 .Fn window_hide
-function hides an unlocked window.
-The
+and
 .Fn window_hide_locked
-function hides a window assuming it is locked.
+functions hide a window.
+.Pp
+The window structure must not be locked by the caller thread when
+.Fn window_show
+or
+.Fn window_hide
+is called.
+The window structure must be locked when
+.Fn window_show_locked
+or
+.Fn window_hide_locked
+is called.
 .Pp
 Those functions return non-zero if the window was previously visible.
 .Pp
@@ -141,6 +192,11 @@ The
 function effects a change in window geometry by updating the regions
 and widgets inside the window
 .Fa win .
+The window structure
+.Fa win
+must be locked when
+.Fn window_resize
+is called.
 .Sh RENDERING
 .nr nS 1
 .Ft void
@@ -158,6 +214,13 @@ The
 .Fn window_animate
 function renders the animations inside the window
 .Fa win .
+The window structure
+.Fa win
+must be locked when
+.Fn window_draw
+or
+.Fn window_animate
+is called.
 .Sh EVENT DISPATCHING
 .nr nS 1
 .Ft int
@@ -171,6 +234,10 @@ function translates the
 pointed to by the
 .Fa ev
 argument and dispatches appropriate events to relevant widgets.
+The view structure must be locked, and the window list must not be
+empty when
+.Fn window_event_all
+is called.
 .Sh EVENTS
 The
 .Nm
