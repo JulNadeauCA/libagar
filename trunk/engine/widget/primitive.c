@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.26 2002/11/22 08:56:55 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.27 2002/12/21 10:25:34 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -26,6 +26,11 @@
  */
 
 #include <engine/engine.h>
+
+#include <config/view_8bpp.h>
+#include <config/view_16bpp.h>
+#include <config/view_24bpp.h>
+#include <config/view_32bpp.h>
 
 #include <engine/view.h>
 
@@ -382,12 +387,12 @@ line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p;
 	Uint8 *fb1, *fb2;
-	
+
 	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
 	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
 	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
 	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
-
+	
 	fb1 = (Uint8 *)view->v->pixels +
 	    y1*view->v->pitch +
 	    x1*view->v->format->BytesPerPixel;
@@ -697,22 +702,6 @@ square_composite(void *p, int x, int y, int w, int h, Uint32 color)
 	    x+w - 1, y + h - 1, color);
 }
 
-static void
-triangle_composite(void *p, int p1[2], int p2[2], int p3[2], Uint32 color)
-{
-	struct widget *wid = p;
-
-	primitives.line(wid,
-	    p1[0], p1[1],
-	    p2[0], p2[1], color);
-	primitives.line(wid,
-	    p2[0], p2[1],
-	    p3[0], p3[1], color);
-	primitives.line(wid,
-	    p3[0], p3[1],
-	    p1[0], p1[1], color);
-}
-
 /* Default primitives ops */
 struct primitive_ops primitives = {
 	box_3d,			/* box */
@@ -721,8 +710,7 @@ struct primitive_ops primitives = {
 	frame_rect,		/* frame (SDL_Rect) */
 	circle_bresenham,	/* circle */
 	line_bresenham,		/* line */
-	square_composite,	/* square */
-	triangle_composite	/* triangle */
+	square_composite	/* square */
 };
 
 struct window *
@@ -789,18 +777,6 @@ primitive_config_window(void)
 	    "Bresenham dashed #5", line_bresenham_dashed5);
 	event_new(tl, "tlist-changed", apply, "%i", LINE);
 		
-	lab = label_new(reg, 100, 5, "Square:");
-	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item_selected(tl, NULL,
-	    "Composite", square_composite);
-	event_new(tl, "tlist-changed", apply, "%i", SQUARE);
-		
-	lab = label_new(reg, 100, 5, "Triangle:");
-	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item_selected(tl, NULL,
-	    "Composite", triangle_composite);
-	event_new(tl, "tlist-changed", apply, "%i", TRIANGLE);
-
 	return (win);
 }
 
@@ -826,9 +802,6 @@ apply(int argc, union evarg *argv)
 		break;
 	case SQUARE:
 		primitives.square = sel->p1;
-		break;
-	case TRIANGLE:
-		primitives.triangle = sel->p1;
 		break;
 	}
 }
