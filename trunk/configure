@@ -105,6 +105,10 @@ if [ "${srcdir}" != "" ]; then
 		echo "Invalid source directory: ${srcdir}"
 		exit 1
 	fi
+	if [ -e "${srcdir}/config" ]; then
+		echo "Source directory is already configured: ${srcdir}"
+		exit 1
+	fi
 	SRC=${srcdir}
 
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
