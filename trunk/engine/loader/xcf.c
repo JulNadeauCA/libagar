@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.13 2004/04/20 09:14:31 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.14 2004/06/18 03:11:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -383,6 +383,7 @@ xcf_convert_level(struct netbuf *buf, Uint32 xcfoffs,
 			ty += 64;
 		}
 		if (ty >= level->h) {
+			Free(tile, M_XCF);
 			break;
 		}
 		Free(tile, M_XCF);
