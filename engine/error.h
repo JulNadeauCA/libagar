@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: error.h,v 1.1 2002/05/31 10:39:13 vedge Exp $	*/
 
 #define AGAR_GetError()    ((char *)pthread_getspecific(engine_errorkey))
 #define AGAR_SetError(msg) pthread_setspecific(engine_errorkey, (char *)(msg))
@@ -18,7 +18,7 @@ extern pthread_key_t engine_errorkey;	/* engine.c */
 #  define fatal(fmt, args...)					\
 	do {							\
 		printf("%s: " fmt, __FUNCTION__ , ##args);	\
-		engine_destroy();				\
+		engine_stop();					\
 	} while (/*CONSTCOND*/0)
 # endif
 #else

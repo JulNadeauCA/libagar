@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: error.c,v 1.1 2002/05/31 10:39:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -39,7 +39,7 @@ emalloc(size_t len)
 	p = malloc(len);
 	if (p == NULL) {
 		perror("malloc");
-		engine_destroy();
+		engine_stop();
 	}
 	return (p);
 }
@@ -52,7 +52,7 @@ erealloc(void *ptr, size_t len)
 	p = realloc(ptr, len);
 	if (p == NULL) {
 		perror("realloc");
-		engine_destroy();
+		engine_stop();
 	}
 	return (p);
 }
