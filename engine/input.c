@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.37 2003/03/24 12:08:39 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.38 2003/03/25 13:41:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,15 +27,15 @@
  */
 
 #include <engine/compat/snprintf.h>
-#include <engine/engine.h>
 
+#include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
 #include <engine/world.h>
 
 static TAILQ_HEAD(, input) inputs;
-static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t		   input_lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct input *
 input_new(int type, int index)
@@ -97,9 +97,9 @@ input_new(int type, int index)
 		break;
 	}
 
-	pthread_mutex_lock(&inputs_lock);
+	pthread_mutex_lock(&input_lock);
 	TAILQ_INSERT_HEAD(&inputs, input, inputs);
-	pthread_mutex_unlock(&inputs_lock);
+	pthread_mutex_unlock(&input_lock);
 
 	world_attach(input);
 	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
@@ -202,15 +202,16 @@ input_destroy_all(void)
 {
 	struct input *in, *nin;
 
-	pthread_mutex_lock(&inputs_lock);
+	pthread_mutex_lock(&input_lock);
 	for (in = TAILQ_FIRST(&inputs);
 	     in != TAILQ_END(&inputs);
 	     in = nin) {
 		nin = TAILQ_NEXT(in, inputs);
 		object_destroy(in);
+		free(in);
 	}
 	TAILQ_INIT(&inputs);
-	pthread_mutex_unlock(&inputs_lock);
+	pthread_mutex_unlock(&input_lock);
 }
 
 void
@@ -235,14 +236,15 @@ input_find(char *name)
 {
 	struct input *in;
 
-	pthread_mutex_lock(&inputs_lock);
+	pthread_mutex_lock(&input_lock);
 	TAILQ_FOREACH(in, &inputs, inputs) {
 		if (strcmp(OBJECT(in)->name, name) == 0) {
-			pthread_mutex_unlock(&inputs_lock);
+			pthread_mutex_unlock(&input_lock);
 			return (in);
 		}
 	}
-	pthread_mutex_unlock(&inputs_lock);
+	pthread_mutex_unlock(&input_lock);
+	error_set("no such input device: %s", name);
 	return (NULL);
 }
 
@@ -256,56 +258,49 @@ input_find_ev(enum input_type type, SDL_Event *ev)
 	struct input *in;
 
 	TAILQ_FOREACH(in, &inputs, inputs) {
-		if (in->type != type) {
+		if (in->type != type)
 			continue;
-		}
+
 		switch (type) {
 		case INPUT_KEYBOARD:
 			switch (ev->type) {
 			case SDL_KEYUP:
 			case SDL_KEYDOWN:
-				if (ev->key.which == in->index) {
+				if (ev->key.which == in->index)
 					return (in);
-				}
 			}
 			break;
 		case INPUT_MOUSE:
 			switch (ev->type) {
 			case SDL_MOUSEMOTION:
-				if (ev->motion.which == in->index) {
+				if (ev->motion.which == in->index)
 					return (in);
-				}
 				break;
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEBUTTONDOWN:
-				if (ev->button.which == in->index) {
+				if (ev->button.which == in->index)
 					return (in);
-				}
 				break;
 			}
 			break;
 		case INPUT_JOY:
 			switch (ev->type) {
 			case SDL_JOYAXISMOTION:
-				if (ev->jaxis.which == in->index) {
+				if (ev->jaxis.which == in->index)
 					return (in);
-				}
 				break;
 			case SDL_JOYBALLMOTION:
-				if (ev->jball.which == in->index) {
+				if (ev->jball.which == in->index)
 					return (in);
-				}
 				break;
 			case SDL_JOYHATMOTION:
-				if (ev->jhat.which == in->index) {
+				if (ev->jhat.which == in->index)
 					return (in);
-				}
 				break;
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
-				if (ev->jbutton.which == in->index) {
+				if (ev->jbutton.which == in->index)
 					return (in);
-				}
 				break;
 			}
 			break;
@@ -320,31 +315,19 @@ void
 input_event(enum input_type type, SDL_Event *ev)
 {
 	struct input *in;
-	struct prop *nevents_pr;
-	int *nevents;
 
-	pthread_mutex_lock(&inputs_lock);
+	pthread_mutex_lock(&input_lock);
 
 	/* See which input device should handle this event. */
 	in = input_find_ev(type, ev);
 	if (in == NULL) {
-		pthread_mutex_unlock(&inputs_lock);
-		dprintf("unrecognized event %d\n", ev->type);
-		return;
+		dprintf("unmatched event %d\n", ev->type);
+		goto out2;
 	}
-
-#ifdef DEBUG
-	/* Increment the event counter. */
-	nevents_pr = prop_get(in, "events", PROP_INT, &nevents);
-	nevents++;
-#endif
 
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
-#if 0
-		dprintf("%s: unbound input event\n", OBJECT(in)->name);
-#endif
-		goto done;
+		goto out1;
 	}
 	switch (type) {
 	case INPUT_KEYBOARD:
@@ -357,8 +340,9 @@ input_event(enum input_type type, SDL_Event *ev)
 		input_mouse(in, ev);
 		break;
 	}
-done:
+out1:
 	pthread_mutex_unlock(&in->lock);
-	pthread_mutex_unlock(&inputs_lock);
+out2:
+	pthread_mutex_unlock(&input_lock);
 }
 

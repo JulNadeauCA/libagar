@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.27 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.28 2003/03/28 00:23:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -71,18 +71,21 @@ void
 error_set(const char *fmt, ...)
 {
 	va_list args;
-	char *ekey, *buf;
+	char *buf;
 	
 	va_start(args, fmt);
 	Vasprintf(&buf, fmt, args);
 	va_end(args);
-
 #ifdef THREADS
-	ekey = (char *)pthread_getspecific(engine_errorkey);
-	if (ekey != NULL) {
-		free(ekey);
+	{
+		char *ekey;
+
+		ekey = (char *)pthread_getspecific(engine_errorkey);
+		if (ekey != NULL) {
+			free(ekey);
+		}
+		pthread_setspecific(engine_errorkey, buf);
 	}
-	pthread_setspecific(engine_errorkey, buf);
 #else
 	Free(engine_errorkey);
 	engine_errorkey = buf;
@@ -231,7 +234,7 @@ Write(int fd, const void *buf, size_t size)
 		    strerror(errno));
 	} else if (rv != size) {
 		fatal("short write: %lu/%lu", (unsigned long)rv,
-		    (long)size);
+		    (unsigned long)size);
 	}
 	return (rv);
 }
