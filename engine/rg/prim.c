@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.1 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.2 2005/02/15 04:05:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -182,6 +182,10 @@ prim_put_pixel(SDL_Surface *su, int x, int y, Uint32 pc)
 	    x >= su->w || y >= su->h)
 		return;
 
+#ifdef DEBUG
+	if (su->format->BitsPerPixel != 32)
+		fatal("surface != 32bpp");
+#endif
 	*(Uint32 *)dst = pc;
 }
 

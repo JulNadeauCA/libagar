@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.12 2005/02/16 14:48:11 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.13 2005/02/17 04:47:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -116,8 +116,21 @@ tileview_keydown(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int keysym = argv[1].i;
+	int keymod = argv[2].i;
 
 	switch (keysym) {
+	case SDLK_z:
+		if ((keymod & KMOD_CTRL) &&
+		    (tv->state == TILEVIEW_PIXMAP_EDIT)) {
+			pixmap_undo(tv, tv->tv_pixmap.tel);
+		}
+		break;
+	case SDLK_r:
+		if ((keymod & KMOD_CTRL) &&
+		    (tv->state == TILEVIEW_PIXMAP_EDIT)) {
+			pixmap_redo(tv, tv->tv_pixmap.tel);
+		}
+		break;
 	case SDLK_EQUALS:
 		timeout_set(&tv->zoom_to, zoomin_tick, NULL, 0);
 		timeout_del(tv, &tv->zoom_to);

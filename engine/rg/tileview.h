@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.9 2005/02/16 03:30:31 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.10 2005/02/17 04:47:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -133,7 +133,7 @@ void tileview_rect2(struct tileview *, int, int, int, int);
 void tileview_rect2o(struct tileview *, int, int, int, int);
 void tileview_circle2o(struct tileview *, int, int, int);
 
-void tileview_scaled_pixel(struct tileview *, int, int, Uint32);
+__inline__ void tileview_scaled_pixel(struct tileview *, int, int, Uint32);
 
 struct tileview_ctrl *tileview_insert_ctrl(struct tileview *,
 			                   enum tileview_ctrl_type,
