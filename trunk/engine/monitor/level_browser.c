@@ -1,4 +1,4 @@
-/*	$Csoft: level_browser.c,v 1.2 2002/11/15 04:18:33 vedge Exp $	*/
+/*	$Csoft: level_browser.c,v 1.1 2002/11/16 00:57:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -57,7 +57,7 @@ level_browser_window(void)
 	}
 	window_set_caption(win, "%s view", OBJECT(view->rootmap->map)->name);
 
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	reg = region_new(win, 0, 0, 0, 100, 100);
 	mv = mapview_new(reg, NULL, view->rootmap->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
