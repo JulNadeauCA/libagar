@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.4 2002/11/24 03:10:40 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.5 2002/11/27 05:11:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -48,7 +48,7 @@
 enum {
 	DEFAULT_HP	= 10,
 	DEFAULT_MP	= 10,
-	DEFAULT_SPEED	= 5,
+	DEFAULT_SPEED	= 16,
 	DEFAULT_ZUARS	= 0
 };
 
@@ -167,7 +167,8 @@ perso_load(void *p, int fd)
 			struct mappos *npos;
 
 			pthread_mutex_lock(&m->lock);
-			npos = object_addpos(pers, offs, flags, input, m, x, y);
+			npos = object_addpos(pers, offs, flags, input, m, x, y,
+			    speed);
 			npos->speed = speed;
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
 			    pers->flags & PERSO_FOCUSED) {
@@ -252,7 +253,7 @@ perso_attached(int argc, union evarg *argv)
 	struct perso *pers = argv[0].p;
 
 	pthread_mutex_lock(&pers->lock);
-	pers->timer = SDL_AddTimer(pers->maxspeed, perso_time, pers);
+	pers->timer = SDL_AddTimer(30, perso_time, pers);
 	pthread_mutex_unlock(&pers->lock);
 }
 
