@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.26 2002/04/14 04:52:46 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.27 2002/05/02 06:28:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -301,8 +301,8 @@ view_center(struct viewport *view, int mapx, int mapy)
 
 	if (nx <= 0)
 		nx = 0;
-	if (nx <= 0)
-		nx = 0;
+	if (ny <= 0)
+		ny = 0;
 	if (nx > (view->map->mapw - view->mapw))
 		nx = (view->map->mapw - view->mapw);
 	if (ny > (view->map->maph - view->maph))
