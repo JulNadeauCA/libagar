@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.22 2002/06/20 16:35:47 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.23 2002/06/25 17:32:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -81,6 +81,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
 	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
+	WIDGET(b)->flags |= WIDGET_MOUSEOUT;
 
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
@@ -111,6 +112,8 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	    button_event, "%i", WINDOW_KEYUP);
 	event_new(b, "window-keydown", 0,
 	    button_event, "%i", WINDOW_KEYDOWN);
+	event_new(b, "window-mouseout", 0,
+	    button_event, "%i", WINDOW_MOUSEOUT);
 }
 
 void
@@ -170,12 +173,14 @@ button_event(int argc, union evarg *argv)
 	OBJECT_ASSERT(b, "widget");
 
 	switch (type) {
+	case WINDOW_MOUSEOUT:
+		b->flags &= ~(BUTTON_PRESSED);
+		break;
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
+		WIDGET_FOCUS(b);
 		if (button == 1) {
 			b->flags |= BUTTON_PRESSED;
-		} else {
-			WIDGET_FOCUS(b);
 		}
 		break;
 	case WINDOW_MOUSEBUTTONUP:
@@ -201,8 +206,6 @@ button_event(int argc, union evarg *argv)
 	}
 	
 	if (pushed) {
-		WIDGET(b)->win->redraw++;	/* XXX? */
-
 		event_post(b, "button-pushed", NULL);
 	}
 }
