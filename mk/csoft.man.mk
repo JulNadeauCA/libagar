@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.36 2004/03/22 01:13:17 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.37 2004/04/24 04:42:49 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -68,99 +68,90 @@ preformat-man:
 	    if [ "${CATMAN1}" = "" ]; then \
 	        for F in ${MAN1}; do \
 	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
-	            PS=`echo $$F | sed 's/.1$$/.ps1/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN1} ${PSMAN1}; \
+	        ${MAKE} ${CATMAN1}; \
 	    fi; \
 	fi
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN2}" = "" ]; then \
 	        for F in ${MAN2}; do \
 	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
-	            PS=`echo $$F | sed 's/.2$$/.ps2/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN2} ${PSMAN2}; \
+	        ${MAKE} ${CATMAN2}; \
 	    fi; \
 	fi
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN3}" = "" ]; then \
 	        for F in ${MAN3}; do \
 	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
-	            PS=`echo $$F | sed 's/.3$$/.ps3/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN3} ${PSMAN3}; \
+	        ${MAKE} ${CATMAN3}; \
 	    fi; \
 	fi
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN4}" = "" ]; then \
 	        for F in ${MAN4}; do \
 	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
-	            PS=`echo $$F | sed 's/.4$$/.ps4/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN4} ${PSMAN4}; \
+	        ${MAKE} ${CATMAN4}; \
 	    fi; \
 	fi
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN5}" = "" ]; then \
 	        for F in ${MAN5}; do \
 	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
-	            PS=`echo $$F | sed 's/.5$$/.ps5/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN5} ${PSMAN5}; \
+	        ${MAKE} ${CATMAN5}; \
 	    fi; \
 	fi
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN6}" = "" ]; then \
 	        for F in ${MAN6}; do \
 	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
-	            PS=`echo $$F | sed 's/.6$$/.ps6/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN6} ${PSMAN6}; \
+	        ${MAKE} ${CATMAN6}; \
 	    fi; \
 	fi
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN7}" = "" ]; then \
 	        for F in ${MAN7}; do \
 	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
-	            PS=`echo $$F | sed 's/.7$$/.ps7/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN7} ${PSMAN7}; \
+	        ${MAKE} ${CATMAN7}; \
 	    fi; \
 	fi
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN8}" = "" ]; then \
 	        for F in ${MAN8}; do \
 	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
-	            PS=`echo $$F | sed 's/.8$$/.ps8/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN8} ${PSMAN8}; \
+	        ${MAKE} ${CATMAN8}; \
 	    fi; \
 	fi
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN9}" = "" ]; then \
 	        for F in ${MAN9}; do \
 	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
-	            PS=`echo $$F | sed 's/.9$$/.ps9/'`; \
-	            ${MAKE} $$CAT $$PS; \
+	            ${MAKE} $$CAT; \
 	        done; \
 	    else \
-	        ${MAKE} ${CATMAN9} ${PSMAN9}; \
+	        ${MAKE} ${CATMAN9}; \
 	    fi; \
 	fi
 
@@ -169,99 +160,90 @@ clean-man:
 	    if [ "${CATMAN1}" = "" ]; then \
 	        for F in ${MAN1}; do \
 	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
-	            PS=`echo $$F | sed 's/.1$$/.ps1/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN1} ${PSMAN1}; \
+	         rm -f ${CATMAN1}; \
 	     fi; \
 	fi
 	@if [ "${MAN2}" != "" ]; then \
 	    if [ "${CATMAN2}" = "" ]; then \
 	        for F in ${MAN2}; do \
 	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
-	            PS=`echo $$F | sed 's/.2$$/.ps2/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN2} ${PSMAN2}; \
+	         rm -f ${CATMAN2}; \
 	     fi; \
 	fi
 	@if [ "${MAN3}" != "" ]; then \
 	    if [ "${CATMAN3}" = "" ]; then \
 	        for F in ${MAN3}; do \
 	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
-	            PS=`echo $$F | sed 's/.3$$/.ps3/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN3} ${PSMAN3}; \
+	         rm -f ${CATMAN3}; \
 	     fi; \
 	fi
 	@if [ "${MAN4}" != "" ]; then \
 	    if [ "${CATMAN4}" = "" ]; then \
 	        for F in ${MAN4}; do \
 	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
-	            PS=`echo $$F | sed 's/.4$$/.ps4/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN4} ${PSMAN4}; \
+	         rm -f ${CATMAN4}; \
 	     fi; \
 	fi
 	@if [ "${MAN5}" != "" ]; then \
 	    if [ "${CATMAN5}" = "" ]; then \
 	        for F in ${MAN5}; do \
 	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
-	            PS=`echo $$F | sed 's/.5$$/.ps5/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN5} ${PSMAN5}; \
+	         rm -f ${CATMAN5}; \
 	     fi; \
 	fi
 	@if [ "${MAN6}" != "" ]; then \
 	    if [ "${CATMAN6}" = "" ]; then \
 	        for F in ${MAN6}; do \
 	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
-	            PS=`echo $$F | sed 's/.6$$/.ps6/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN6} ${PSMAN6}; \
+	         rm -f ${CATMAN6}; \
 	     fi; \
 	fi
 	@if [ "${MAN7}" != "" ]; then \
 	    if [ "${CATMAN7}" = "" ]; then \
 	        for F in ${MAN7}; do \
 	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
-	            PS=`echo $$F | sed 's/.7$$/.ps7/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN7} ${PSMAN7}; \
+	         rm -f ${CATMAN7}; \
 	     fi; \
 	fi
 	@if [ "${MAN8}" != "" ]; then \
 	    if [ "${CATMAN8}" = "" ]; then \
 	        for F in ${MAN8}; do \
 	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
-	            PS=`echo $$F | sed 's/.8$$/.ps8/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN8} ${PSMAN8}; \
+	         rm -f ${CATMAN8}; \
 	     fi; \
 	fi
 	@if [ "${MAN9}" != "" ]; then \
 	    if [ "${CATMAN9}" = "" ]; then \
 	        for F in ${MAN9}; do \
 	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
-	            PS=`echo $$F | sed 's/.9$$/.ps9/'`; \
-	            rm -f $$CAT $$PS; \
+	            rm -f $$CAT; \
 	        done; \
 	     else \
-	         rm -f ${CATMAN9} ${PSMAN9}; \
+	         rm -f ${CATMAN9}; \
 	     fi; \
 	fi
 
@@ -343,46 +325,6 @@ install-man-dirs:
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat9"; \
 	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat9; \
 	    fi; \
-	    if [ ! -d "${PSDIR}" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps1" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps1"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps1; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps2" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps2"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps2; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps3" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps3"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps3; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps4" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps4"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps4; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps5" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps5"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps5; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps6" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps6"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps6; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps7" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps7"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps7; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps8" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps8"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps8; \
-	    fi; \
-	    if [ ! -d "${PSDIR}/ps9" ]; then \
-	        echo "${INSTALL_PS_DIR} ${PSDIR}/ps9"; \
-	        ${SUDO} ${INSTALL_PS_DIR} ${PSDIR}/ps9; \
-	    fi; \
 	fi
 
 install-man:
@@ -390,13 +332,10 @@ install-man:
 	    if [ "${CATMAN1}" = "" ]; then \
 	        for F in ${MAN1}; do \
 	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
-	            PS=`echo $$F | sed 's/.1$$/.ps1/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man1"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man1; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat1"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat1; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps1"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps1; \
 	        done; \
 	    else \
 	        for F in ${MAN1}; do \
@@ -407,23 +346,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat1"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat1; \
 		done; \
-	        for F in ${PSMAN1}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps1"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps1; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN2}" = "" ]; then \
 	        for F in ${MAN2}; do \
 	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
-	            PS=`echo $$F | sed 's/.2$$/.ps2/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man2"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man2; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat2"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat2; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps2"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps2; \
 	        done; \
 	    else \
 	        for F in ${MAN2}; do \
@@ -434,23 +366,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat2"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat2; \
 		done; \
-	        for F in ${PSMAN2}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps2"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps2; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN3}" = "" ]; then \
 	        for F in ${MAN3}; do \
 	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
-	            PS=`echo $$F | sed 's/.3$$/.ps3/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man3"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man3; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat3"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat3; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps3"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps3; \
 	        done; \
 	    else \
 	        for F in ${MAN3}; do \
@@ -461,23 +386,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat3"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat3; \
 		done; \
-	        for F in ${PSMAN3}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps3"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps3; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN4}" = "" ]; then \
 	        for F in ${MAN4}; do \
 	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
-	            PS=`echo $$F | sed 's/.4$$/.ps4/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man4"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man4; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat4"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat4; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps4"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps4; \
 	        done; \
 	    else \
 	        for F in ${MAN4}; do \
@@ -488,23 +406,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat4"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat4; \
 		done; \
-	        for F in ${PSMAN4}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps4"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps4; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN5}" = "" ]; then \
 	        for F in ${MAN5}; do \
 	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
-	            PS=`echo $$F | sed 's/.5$$/.ps5/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man5"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man5; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat5"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat5; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps5"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps5; \
 	        done; \
 	    else \
 	        for F in ${MAN5}; do \
@@ -515,23 +426,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat5"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat5; \
 		done; \
-	        for F in ${PSMAN5}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps5"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps5; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN6}" = "" ]; then \
 	        for F in ${MAN6}; do \
 	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
-	            PS=`echo $$F | sed 's/.6$$/.ps6/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man6"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man6; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat6"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat6; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps6"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps6; \
 	        done; \
 	    else \
 	        for F in ${MAN6}; do \
@@ -542,23 +446,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat6"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat6; \
 		done; \
-	        for F in ${PSMAN6}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps6"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps6; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN7}" = "" ]; then \
 	        for F in ${MAN7}; do \
 	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
-	            PS=`echo $$F | sed 's/.7$$/.ps7/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man7"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man7; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat7"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat7; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps7"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps7; \
 	        done; \
 	    else \
 	        for F in ${MAN7}; do \
@@ -569,23 +466,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat7"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat7; \
 		done; \
-	        for F in ${PSMAN7}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps7"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps7; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN8}" = "" ]; then \
 	        for F in ${MAN8}; do \
 	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
-	            PS=`echo $$F | sed 's/.8$$/.ps8/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man8"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man8; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat8"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat8; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps8"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps8; \
 	        done; \
 	    else \
 	        for F in ${MAN8}; do \
@@ -596,23 +486,16 @@ install-man:
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat8"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat8; \
 		done; \
-	        for F in ${PSMAN8}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps8"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps8; \
-		done; \
 	    fi; \
 	fi
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN9}" = "" ]; then \
 	        for F in ${MAN9}; do \
 	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
-	            PS=`echo $$F | sed 's/.9$$/.ps9/'`; \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/man9"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man9; \
 	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat9"; \
 	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat9; \
-	            echo "${INSTALL_DATA} $$PS ${PSDIR}/ps9"; \
-	            ${SUDO} ${INSTALL_DATA} $$PS ${PSDIR}/ps9; \
 	        done; \
 	    else \
 	        for F in ${MAN9}; do \
@@ -622,10 +505,6 @@ install-man:
 	        for F in ${CATMAN9}; do \
 	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat9"; \
 	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat9; \
-		done; \
-	        for F in ${PSMAN9}; do \
-	            echo "${INSTALL_DATA} $$F ${PSDIR}/ps9"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${PSDIR}/ps9; \
 		done; \
 	    fi; \
 	fi
