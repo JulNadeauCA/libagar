@@ -1,6 +1,8 @@
-/*	$Csoft$	*/
+/*	$Csoft: netbuf.h,v 1.1 2003/06/21 06:50:20 vedge Exp $	*/
 /*	Public domain	*/
 
+#ifndef _AGAR_LOADER_NETBUF_H_
+#define _AGAR_LOADER_NETBUF_H_
 #include "begin_code.h"
 
 enum netbuf_endian {
@@ -30,3 +32,4 @@ __inline__ void		netbuf_flush(struct netbuf *);
 __END_DECLS
 
 #include "close_code.h"
+#endif /* _AGAR_LOADER_NETBUF_H_ */

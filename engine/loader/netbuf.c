@@ -1,4 +1,4 @@
-/*	$Csoft: netbuf.c,v 1.2 2004/01/03 04:25:08 vedge Exp $	*/
+/*	$Csoft: netbuf.c,v 1.3 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <engine/error/error.h>
+#include <engine/error/malloc.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +41,7 @@ netbuf_open(const char *path, const char *mode, enum netbuf_endian byte_order)
 {
 	struct netbuf *buf;
 
-	buf = Malloc(sizeof(struct netbuf), M_NETBUF);
+	buf = Malloc(sizeof(struct netbuf), 0);
 	buf->byte_order = byte_order;
 	if ((buf->file = fopen(path, mode)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
@@ -48,7 +49,7 @@ netbuf_open(const char *path, const char *mode, enum netbuf_endian byte_order)
 	}
 	return (buf);
 fail:
-	Free(buf, M_NETBUF);
+	Free(buf, 0);
 	return (NULL);
 }
 
@@ -56,7 +57,7 @@ void
 netbuf_close(struct netbuf *buf)
 {
 	fclose(buf->file);
-	Free(buf, M_NETBUF);
+	Free(buf, 0);
 }
 
 void
