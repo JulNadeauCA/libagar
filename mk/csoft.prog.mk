@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.14 2002/02/01 03:37:05 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.15 2002/02/03 00:10:24 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -36,7 +36,7 @@ CPPFLAGS?=
 CC_PICFLAGS?=	-fPIC -DPIC
 GMONOUT?=	gmon.out
 
-ASM?=		nasm
+ASSEMBLER?=	nasm
 ASMFLAGS?=	-g -w-orphan-labels
 ASM_PICFLAGS?=	-DPIC
 
@@ -81,11 +81,11 @@ PROG_SHARE?=
 	@echo "IS ELF" >> .elftest
 	@echo "#endif" >> .elftest
 	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
-	    echo "${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	    echo "${ASSEMBLER} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASSEMBLER} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
 	else \
-	    echo "${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	    echo "${ASSEMBLER} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASSEMBLER} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
 	fi
 	@rm -f .elftest
 
@@ -94,11 +94,11 @@ PROG_SHARE?=
 	@echo "IS ELF" >> .elftest
 	@echo "#endif" >> .elftest
 	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
-	    echo "${ASM} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASM} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
+	    echo "${ASSEMBLER} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASSEMBLER} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
 	else \
-	    echo "${ASM} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASM} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
+	    echo "${ASSEMBLER} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASSEMBLER} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
 	fi
 	@rm -f .elftest
 
@@ -141,7 +141,7 @@ PROG_SHARE?=
 all:	all-subdir ${PROG}
 
 ${PROG}: ${OBJS}
-	${CC} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}
+	${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}
 
 ${GMONOUT}: ${OBJS}
 	${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} ${OBJS} ${LIBS}
