@@ -1,4 +1,4 @@
-/*	$Csoft: config.h,v 1.3 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.4 2002/06/22 16:05:37 vedge Exp $	*/
 /*	Public domain	*/
 
 struct config {
@@ -16,6 +16,10 @@ struct config {
 	struct {
 		int	w, h, bpp;
 	} view;
+
+	/* Read-write, thread-safe */
+	Uint32	 widget_flags;
+#define CONFIG_REGION_BORDERS	0x01	/* Region borders always visible */
 
 	pthread_mutex_t lock;
 };
