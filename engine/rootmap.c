@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.19 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.20 2003/01/24 08:26:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -66,48 +66,48 @@ rootmap_animate(void)
 	struct map *m = view->rootmap->map;
 	struct viewmap *rm = view->rootmap;
 	struct node *node;
-	int x, y, vx, vy, rx, ry;
-	
+	struct noderef *nref;
+	int mx, my, rx, ry;
+
+#ifdef DEBUG
 	/* XXX */
-	if (rm->y > m->maph - rm->h || rm->x > m->mapw - rm->w) {
-		debug(DEBUG_DIAG, "offset exceeds map boundaries\n");
+	if (rm->x < 0 || rm->y < 0 ||
+	    rm->y > m->maph - rm->h || rm->x > m->mapw - rm->w) {
+		fatal("offset exceeds map boundaries\n");
 		return;
 	}
-
-	for (y = rm->y, vy = 0;				/* Downward */
-	     y < m->maph && vy <= rm->h + 2;
-	     y++, vy++) {
-
-		ry = vy << TILEH_SHIFT;
-
-		for (x = rm->x, vx = 0;			/* Forward */
-		     x < m->mapw && vx <= rm->w + 2;
-		     x++, vx++) {
-			node = &m->map[y][x];
-#ifdef DEBUG
-			if (node->x != x || node->y != y) {
-				fatal("node at %d,%d says [%d,%d]\n",
-				    x, y, node->x, node->y);
-			}
 #endif
 
-			rx = vx << TILEW_SHIFT;
+	for (my = rm->y, ry = rm->sy - m->tileh;	/* Downward */
+	     (my - rm->y) < m->maph && my < m->maph;
+	     my++, ry += m->tileh) {
 
-			if (node->nanims <= 0) {
+		for (mx = rm->x, rx = rm->sx - m->tilew; /* Forward */
+		     (mx - rm->x) < m->mapw && mx < m->mapw;
+		     mx++, rx += m->tilew) {
+			node = &m->map[my][mx];
+#ifdef DEBUG
+			if (map_nodesigs &&
+			    (strcmp(NODE_MAGIC, node->magic) != 0 ||
+			    node->x != mx || node->y != my)) {
+				fatal("bad node\n");
+			}
+#endif
+			if ((node->flags & NODE_HAS_ANIM) == 0) {
 				/* rootmap_draw() shall handle this. */
 				continue;
 			}
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 #ifdef DEBUG
-			if (node->x != vx+rm->x || node->y != vy+rm->y) {
-				fatal("node at %d,%d says [%d,%d]\n",
-				    vy+rm->x, vy+rm->y,
-				    node->x, node->y);
-			}
+				if (map_nodesigs &&
+				    (strcmp(NODEREF_MAGIC, node->magic) != 0 ||
+				     node->x != mx || node->y != my)) {
+					fatal("bad noderef\n");
+				}
 #endif
-			/* Render the node. */
-			node_draw(m, node,
-			    rx - rm->sx - TILEW,
-			    ry - rm->sy - TILEH);
+				noderef_draw(m, nref, rx, ry);
+			}
 		}
 	}
 }
@@ -119,45 +119,50 @@ rootmap_animate(void)
 void
 rootmap_draw(void)
 {
-	int x, y, vx, vy, rx, ry;
 	struct map *m = view->rootmap->map;
 	struct viewmap *rm = view->rootmap;
 	struct node *node;
 	struct noderef *nref;
+	int mx, my, rx, ry;
 
+#ifdef DEBUG
 	/* XXX */
 	if (rm->y > m->maph - rm->h || rm->x > m->mapw - rm->w) {
 		debug(DEBUG_DIAG, "offset exceeds map boundaries\n");
 		return;
 	}
+#endif
 
-	for (y = rm->y, vy = 0;				/* Downward */
-	     y < m->maph && vy <= rm->h + 2;
-	     y++, vy++) {
+	for (my = rm->y, ry = rm->sy - m->tileh;	/* Downward */
+	     (my - rm->y) < m->maph && my < m->maph;
+	     my++, ry += m->tileh) {
 
-		ry = vy << TILEH_SHIFT;	
-
-		for (x = rm->x, vx = 0;			/* Forward */
-		     x < m->mapw && vx <= rm->w + 2;
-		     x++, vx++) {
-			node = &m->map[y][x];
+		for (mx = rm->x, rx = rm->sx - m->tilew; /* Forward */
+		     (mx - rm->x) < m->mapw && mx < m->mapw;
+		     mx++, rx += m->tilew) {
+			node = &m->map[my][mx];
 #ifdef DEBUG
-			if (node->x != x || node->y != y) {
-				fatal("node at %d,%d should be at %d,%d\n",
-				    x, y, node->x, node->y);
+			if (map_nodesigs &&
+			    (strcmp(NODE_MAGIC, node->magic) != 0 ||
+			    node->x != mx || node->y != my)) {
+				fatal("bad node\n");
 			}
 #endif
-			if (node->nanims > 0) {
+			if (node->flags & NODE_HAS_ANIM) {
 				/* rootmap_animate() shall handle this. */
 				continue;
 			}
 
-			rx = vx << TILEW_SHIFT;
-
-			/* Render the node. */
-			node_draw(m, node,
-			    rx - rm->sx - TILEW,
-			    ry - rm->sy - TILEH);
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+#ifdef DEBUG
+				if (map_nodesigs &&
+				    (strcmp(NODEREF_MAGIC, node->magic) != 0 ||
+				     node->x != mx || node->y != my)) {
+					fatal("bad noderef\n");
+				}
+#endif
+				noderef_draw(m, nref, rx, ry);
+			}
 		}
 	}
 }
