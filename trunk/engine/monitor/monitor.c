@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.17 2002/11/22 08:56:54 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.18 2002/11/26 11:01:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -82,9 +82,6 @@ monitor_init(struct monitor *mon, char *name)
 	tlist_insert_item(tl_tools,
 	    SPRITE(mon, MONITOR_OBJECT_BROWSER), "Object browser",
 	    object_browser_window);
-	tlist_insert_item(tl_tools,
-	    SPRITE(mon, MONITOR_SPRITE_BROWSER), "Sprite browser",
-	    sprite_browser_window);
 	tlist_insert_item(tl_tools,
 	    SPRITE(mon, MONITOR_LEVEL_BROWSER), "Level browser",
 	    level_browser_window);
