@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.42 2002/11/22 23:12:45 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.43 2002/11/24 03:10:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,9 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strsep.h>
+#include <engine/engine.h>
 
 #include <engine/view.h>
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.89 2002/11/27 05:11:24 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.90 2002/11/28 01:05:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
 #include "compat/asprintf.h"
+#include "engine.h"
 
 #include <sys/stat.h>
 

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.113 2002/11/26 06:00:01 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.114 2002/11/26 10:45:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,10 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
 #include <engine/compat/asprintf.h>
 #include <engine/compat/vasprintf.h>
-
+#include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/config.h>

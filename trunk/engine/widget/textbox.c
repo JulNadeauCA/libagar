@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.32 2002/11/22 05:41:45 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.33 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
 #include <engine/compat/vasprintf.h>
+#include <engine/engine.h>
 
 #include <engine/view.h>
 

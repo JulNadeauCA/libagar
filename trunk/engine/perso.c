@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.5 2002/11/27 05:11:04 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.6 2002/11/28 01:05:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
 #include "compat/vasprintf.h"
+#include "engine.h"
 
 #include <libfobj/fobj.h>
 #include <libfobj/buf.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.7 2002/11/26 01:38:50 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.8 2002/11/28 06:28:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
 #include "compat/vasprintf.h"
+#include "engine.h"
 
 #include <fcntl.h>
 

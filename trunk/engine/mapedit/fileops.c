@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.14 2002/11/08 21:37:26 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.15 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -25,8 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
 #include <engine/compat/asprintf.h>
+#include <engine/engine.h>
 
 #include <engine/map.h>
 #include <engine/config.h>
