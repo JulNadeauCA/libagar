@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.11 2004/02/20 04:18:11 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.12 2004/02/26 10:25:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -158,7 +158,7 @@ position_tool_init(void)
 		struct spinbutton *sb;
 		struct combo *com;
 
-		com = combo_new(bo, COMBO_POLL, _(": "));
+		com = combo_new(bo, COMBO_POLL, _("Projection map: "));
 		event_new(com->list, "tlist-poll", poll_projmaps, NULL);
 		widget_bind(com->list, "selected", WIDGET_POINTER, &projmap);
 
