@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.149 2004/05/06 06:22:17 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.150 2004/05/06 08:27:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -527,9 +527,8 @@ view_set_refresh(int ms)
 		return (-1);
 	}
 	pthread_mutex_lock(&view->lock);
-	view->refresh.current = 0;
-	view->refresh.delay = fps;
-	view->refresh.max_delay = fps;
+	view->refresh.r = 0;
+	view->refresh.rnom = fps;
 	pthread_mutex_unlock(&view->lock);
 	return (0);
 }
