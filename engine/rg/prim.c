@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.2 2005/02/15 04:05:23 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.3 2005/02/18 03:31:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -39,15 +39,15 @@ prim_rgb2hsv(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 	float vMin, vMax, deltaMax;
 	float deltaR, deltaG, deltaB;
 
-	vR = r/255;
-	vG = g/255;
-	vB = b/255;
+	vR = (float)r/255.0;
+	vG = (float)g/255.0;
+	vB = (float)b/255.0;
 
 	vMin = MIN3(vR, vG, vB);
-	vMax = MIN3(vR, vG, vB);
+	vMax = MAX3(vR, vG, vB);
 	deltaMax = vMax - vMin;
 	*v = vMax;
-
+	
 	if (deltaMax == 0.0) {
 		/* This is a gray color (zero hue, no saturation). */
 		*h = 0.0;
