@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.14 2003/03/03 05:15:19 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.15 2003/03/08 03:36:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -573,14 +573,17 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 		
 		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT)) {
 			debug(DEBUG_ALPHA, "alpha: %s\n", layer->name);
-			SDL_SetAlpha(su, SDL_SRCALPHA|SDL_RLEACCEL,
-			    oldalpha);
+			SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
+			/*
+			 * XXX noderef_draw_scaled does not understand
+			 * RLE acceleration!
+			 */
 #if 0
+		/* XXX causes some images to be rendered incorrectly */
 		} else if (aflags & XCF_ALPHA_TRANSPARENT) {
 			debug(DEBUG_ALPHA, "colorkey (%u): %s\n", oldckey,
 			    layer->name);
-			SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL,
-			    0);
+			SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
 #endif
 		} else {
 			debug(DEBUG_ALPHA, "opaque: %s\n", layer->name);
