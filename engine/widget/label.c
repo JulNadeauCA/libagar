@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.76 2004/03/30 00:45:20 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.77 2004/03/30 15:55:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -46,10 +46,6 @@ const struct widget_ops label_ops = {
 	},
 	label_draw,
 	label_scale
-};
-
-enum {
-	TEXT_COLOR
 };
 
 struct label *
@@ -132,14 +128,14 @@ void
 label_init(struct label *label, enum label_type type, const char *s)
 {
 	widget_init(label, "label", &label_ops, 0);
-	widget_map_color(label, TEXT_COLOR, "text", 250, 250, 250, 255);
+	widget_map_color(label, 0, "text", 250, 250, 250, 255);
 	label->type = type;
 
 	switch (type) {
 	case LABEL_STATIC:
 		if (s != NULL) {
 			label->surface = text_render(NULL, -1,
-			    WIDGET_COLOR(label, TEXT_COLOR), s);
+			    WIDGET_COLOR(label, 0), s);
 		} else {
 			label->surface = NULL;
 		}
@@ -198,8 +194,8 @@ label_printf(struct label *label, const char *fmt, ...)
 		if (label->surface != NULL) {
 			SDL_FreeSurface(label->surface);
 		}
-		label->surface = text_render(NULL, -1,
-		    WIDGET_COLOR(label, TEXT_COLOR), s);
+		label->surface = text_render(NULL, -1, WIDGET_COLOR(label, 0),
+		    s);
 	} else {
 		label_set_surface(label, NULL);
 	}
@@ -410,7 +406,7 @@ label_draw_polled(struct label *label)
 		}
 	}
 
-	ts = text_render(NULL, -1, WIDGET_COLOR(label, TEXT_COLOR), s);
+	ts = text_render(NULL, -1, WIDGET_COLOR(label, 0), s);
 	widget_blit(label, ts, 0, 0);
 	SDL_FreeSurface(ts);
 }
