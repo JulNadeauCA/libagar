@@ -659,7 +659,7 @@ CFLAGS="$CFLAGS -I$SRC"
 echo CFLAGS=$CFLAGS >> Makefile.config
 if [ "${cc_is_gcc}" = "yes" ]
  then
-CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused"
+CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused -Wno-system-headers"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
