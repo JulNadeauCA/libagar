@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.34 2003/04/12 01:45:48 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.35 2003/04/24 07:04:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,9 +44,9 @@
 #include "monitor.h"
 
 const struct object_ops monitor_ops = {
-	monitor_destroy,
-	NULL,			/* load */
-	NULL			/* save */
+	NULL,		/* destroy */
+	NULL,		/* load */
+	NULL		/* save */
 };
 
 struct monitor monitor;		/* Debug monitor */
@@ -84,8 +84,7 @@ monitor_init(struct monitor *mon, char *name)
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct region *reg;
 
-	object_init(&mon->obj, "debug-monitor", name, OBJECT_STATIC,
-	    &monitor_ops);
+	object_init(&mon->obj, "debug-monitor", name, 0, &monitor_ops);
 	if (object_load_art(mon, "monitor", 0) == -1)
 		fatal("monitor: %s", error_get());
 
@@ -109,14 +108,6 @@ monitor_init(struct monitor *mon, char *name)
 			    tool_ents[i].window_func);
 		}
 	}
-}
-
-void
-monitor_destroy(void *ob)
-{
-	struct monitor *mon = ob;
-
-	view_detach(mon->toolbar);
 }
 
 #endif	/* DEBUG */
