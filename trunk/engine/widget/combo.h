@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.3 2003/10/09 22:39:34 vedge Exp $	*/
+/*	$Csoft: combo.h,v 1.4 2003/10/13 23:47:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
@@ -22,7 +22,8 @@ struct combo {
 #define COMBO_MULTI_STICKY	0x02
 #define COMBO_POLL		0x04
 #define COMBO_TREE		0x08
-
+	int	 saved_h;
+	
 	struct textbox	*tbox;
 	struct button	*button;
 	struct window	*win;
