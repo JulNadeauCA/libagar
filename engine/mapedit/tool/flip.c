@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.21 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.22 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 #include <engine/widget/checkbox.h>
 
 static void flip_init(struct tool *);
+static int stamp_cursor(struct tool *, SDL_Rect *);
 static void flip_effect(struct tool *, struct node *);
 
 const struct tool flip_tool = {
@@ -61,6 +62,24 @@ static enum flip_mode {
 static int multi = 0;			/* Flip/mirror whole selection */
 static int multi_ind = 0;		/* Apply to tiles individually */
 
+
+static void
+mode_changed(int argc, union evarg *argv)
+{
+	struct tool *t = argv[1].p;
+
+	switch (mode) {
+	case FLIP_HORIZ:
+		tool_push_status(t,
+		    _("Specify the tile to flip horizontally."));
+		break;
+	case FLIP_VERT:
+		tool_push_status(t,
+		    _("Specify the tile to flip vertically."));
+		break;
+	}
+}
+
 static void
 flip_init(struct tool *t)
 {
@@ -77,7 +96,9 @@ flip_init(struct tool *t)
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
-	
+	event_new(rad, "radio-changed", mode_changed, "%p", t);
+	event_post(NULL, rad, "radio-changed", NULL);
+
 	cb = checkbox_new(win, _("Multi"));
 	widget_bind(cb, "state", WIDGET_INT, &multi);
 

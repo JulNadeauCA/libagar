@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.56 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.57 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -73,6 +73,8 @@ stamp_init(struct tool *t)
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
+
+	tool_push_status(t, _("Specify the destination node."));
 }
 
 static void

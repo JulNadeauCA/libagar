@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.44 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.45 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
+static void eraser_init(struct tool *);
 static void eraser_effect(struct tool *, struct node *);
 
 const struct tool eraser_tool = {
@@ -36,7 +37,7 @@ const struct tool eraser_tool = {
 	N_("Remove the highest node reference."),
 	ERASER_TOOL_ICON,
 	ERASER_CURSOR,
-	NULL,			/* init */
+	eraser_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
@@ -48,6 +49,12 @@ const struct tool eraser_tool = {
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };
+
+static void
+eraser_init(struct tool *t)
+{
+	tool_push_status(t, _("Specify the tile to delete."));
+}
 
 static void
 eraser_effect(struct tool *t, struct node *n)
