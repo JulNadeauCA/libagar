@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.3 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.4 2003/06/13 02:50:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 static struct widget_ops box_ops = {
 	{
 		NULL,		/* init */
+		NULL,		/* reinit */
 		box_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
@@ -83,7 +84,10 @@ box_init(struct box *bo, enum box_type type, int flags)
 void
 box_destroy(void *p)
 {
-	pthread_mutex_destroy(&((struct box *)p)->lock);
+	struct box *box = p;
+
+	pthread_mutex_destroy(&box->lock);
+	widget_destroy(box);
 }
 
 #if 0
