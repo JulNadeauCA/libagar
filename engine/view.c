@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.58 2002/08/19 05:29:10 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.59 2002/08/19 07:33:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -199,12 +199,14 @@ view_init(gfx_engine_t ge)
 		break;
 	}
 
+#if 0
 	switch (v->gfx_engine) {
 	case GFX_ENGINE_GUI:
 		screenflags |= SDL_RESIZABLE;
 		break;
 	default:
 	}
+#endif
 
 	v->v = SDL_SetVideoMode(v->w, v->h, v->bpp, screenflags);
 	if (v->v == NULL) {
