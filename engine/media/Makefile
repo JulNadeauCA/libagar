@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.3 2002/12/22 09:44:51 vedge Exp $
+#	$Csoft: Makefile,v 1.4 2003/03/02 00:45:24 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -9,6 +9,7 @@ OBJS=	art.o xcf.o ttf.o
 
 MAN5=	xcf.5
 CATMAN5=xcf.cat5
+PSMAN5=	xcf.ps5
 
 CFLAGS+=	${SDL_CFLAGS} ${FREETYPE_CFLAGS}
 
