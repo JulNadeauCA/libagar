@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.5 2004/02/26 10:10:15 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.6 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -77,7 +77,7 @@ error_destroy(void)
 #ifdef THREADS
 	pthread_key_delete(error_key);
 #else
-	Free(error_key);
+	Free(error_key, 0);
 #endif
 }
 
@@ -101,7 +101,7 @@ error_set(const char *fmt, ...)
 		pthread_setspecific(error_key, buf);
 	}
 #else
-	Free(error_key);
+	Free(error_key, 0);
 	error_key = buf;
 #endif
 }

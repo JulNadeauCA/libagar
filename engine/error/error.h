@@ -1,8 +1,8 @@
-/*	$Csoft: error.h,v 1.7 2004/02/26 10:10:15 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.8 2004/03/18 21:27:47 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_ENGINE_ERROR_ERROR_H_
-#define _AGAR_ENGINE_ERROR_ERROR_H_
+#ifndef _AGAR_ERROR_ERROR_H_
+#define _AGAR_ERROR_ERROR_H_
 
 #include <compat/queue.h>
 
@@ -31,11 +31,13 @@
 #else
 #define BOUNDED_ATTRIBUTE(t, a, b)
 #endif
+
 #ifdef HAVE_FORMAT_ATTRIBUTE
 #define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
 #else
 #define FORMAT_ATTRIBUTE(t, a, b)
 #endif
+
 #ifdef HAVE_NONNULL_ATTRIBUTE
 #define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
 #else
@@ -60,8 +62,7 @@
 #else
 #define Free(p, t)		if ((p) != NULL) free((p))
 #endif
-
-#define Strdup(s)	error_strdup(s)
+#define Strdup(s)		error_strdup(s)
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
 	if (vasprintf((msg), (fmt), (args)) == -1) 		\
@@ -171,4 +172,4 @@ __END_DECLS
 		abort()
 #endif /* THREADS */
 
-#endif /* _AGAR_ENGINE_ERROR_ERROR_H_ */
+#endif /* _AGAR_ERROR_ERROR_H_ */
