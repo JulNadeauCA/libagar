@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.24 2003/02/02 23:05:59 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.25 2003/02/04 02:35:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
+#include <engine/version.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -37,18 +38,25 @@
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
 
+#include <libfobj/fobj.h>
+
 #include "tool.h"
 #include "stamp.h"
 
 static const struct tool_ops stamp_ops = {
 	{
 		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL		/* save */
+		stamp_load,
+		stamp_save
 	},
 	stamp_window,
 	stamp_cursor,
 	stamp_effect
+};
+
+static const struct version stamp_ver = {
+	"agar stamp tool",
+	0, 0
 };
 
 void
@@ -140,3 +148,30 @@ stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	return (0);
 }
 
+int
+stamp_load(void *p, int fd)
+{
+	struct stamp *stamp = p;
+
+	if (version_read(fd, &stamp_ver) == -1) {
+		return (-1);
+	}
+	
+	stamp->mode = (int)read_uint32(fd);
+
+	dprintf("mode 0x%x\n", stamp->mode);
+
+	return (0);
+}
+
+int
+stamp_save(void *p, int fd)
+{
+	struct stamp *stamp = p;
+
+	version_write(fd, &stamp_ver);
+
+	write_uint32(fd, (Uint32)stamp->mode);
+	
+	return (0);
+}

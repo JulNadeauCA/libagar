@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.20 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.21 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,8 +27,8 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/map.h>
+#include <engine/version.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -37,14 +37,21 @@
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
 
+#include <libfobj/fobj.h>
+
 #include "tool.h"
 #include "eraser.h"
+
+static const struct version eraser_ver = {
+	"agar eraser tool",
+	0, 0
+};
 
 static const struct tool_ops eraser_ops = {
 	{
 		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL		/* save */
+		eraser_load,
+		eraser_save
 	},
 	eraser_window,
 	NULL,			/* cursor */
@@ -130,5 +137,28 @@ eraser_effect(void *p, struct mapview *mv, struct node *node)
 		}
 		break;
 	}
+}
+
+int
+eraser_load(void *p, int fd)
+{
+	struct eraser *eraser = p;
+
+	if (version_read(fd, &eraser_ver) == -1)
+		return (-1);
+
+	eraser->mode = (int)read_uint32(fd);
+	return (0);
+}
+
+int
+eraser_save(void *p, int fd)
+{
+	struct eraser *eraser = p;
+
+	version_write(fd, &eraser_ver);
+
+	write_uint32(fd, (Uint32)eraser->mode);
+	return (0);
 }
 
