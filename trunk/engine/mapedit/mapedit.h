@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.22 2002/03/03 06:26:54 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.23 2002/03/05 06:34:31 vedge Exp $	*/
 
 #include <engine/physics.h>
 
@@ -92,6 +92,7 @@ enum {
 	MAPEDIT_SLOW,
 	MAPEDIT_HASTE,
 	MAPEDIT_ANIM,
+	MAPEDIT_OVERLAP,
 	MAPEDIT_NVEL,
 	MAPEDIT_SVEL,
 	MAPEDIT_WVEL,
@@ -102,6 +103,18 @@ enum {
 	MAPEDIT_PROPS_TXT,
 	MAPEDIT_GRID_TXT
 };
+
+#define MAPEDIT_PREDRAW(m, node, vx, vy) do {				\
+	    if (curmapedit != NULL) {					\
+		mapedit_predraw((m), (node)->flags, (vx), (vy));	\
+	    }								\
+	} while (0)
+
+#define MAPEDIT_POSTDRAW(m, node, vx, vy) do {				\
+	    if (curmapedit != NULL) {					\
+		mapedit_postdraw((m), (node)->flags, (vx), (vy));	\
+	    }								\
+	} while (0)
 
 struct mapedit *mapedit_create(char *);
 int		mapedit_link(void *);
