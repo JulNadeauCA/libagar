@@ -1,9 +1,10 @@
-# $Csoft$
+# $Csoft: configure.in,v 1.9 2002/02/21 02:16:09 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
 
 mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused -g -I$S");
+mdefine(SHAREDIR, "$PREFIX/share/geggy");
 hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
 hdefine(DEBUG, 1);
 
