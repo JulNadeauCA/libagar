@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.24 2003/01/12 04:08:47 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.25 2003/01/18 08:08:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -45,7 +45,6 @@
 #include "mapwin.h"
 #include "mapview.h"
 
-/* Create the `new map' dialog. */
 struct window *
 fileops_new_map_window(struct mapedit *med)
 {
@@ -57,22 +56,23 @@ fileops_new_map_window(struct mapedit *med)
 	win = window_new("mapedit-new-map-dialog", WINDOW_CENTER,
 	     0, 0, 380, 162, 187, 162);
 	window_set_caption(win, "Create a map");
+	window_set_spacing(win, 0, 10);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 30);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		name_tbox = textbox_new(reg, "Name: ", 0, 100, 100);
+		name_tbox = textbox_new(reg, "Name: ", 0, 100, -1);
 		win->focus = WIDGET(name_tbox);
 	}
 
-	reg = region_new(win, REGION_HALIGN, 0, 30, 100, 40);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
-		w_tbox = textbox_new(reg, "W: ", 0, 50, 100);
+		w_tbox = textbox_new(reg, "W: ", 0, 50, -1);
 		textbox_printf(w_tbox, "64");
-		h_tbox = textbox_new(reg, "H: ", 0, 50, 100);
+		h_tbox = textbox_new(reg, "H: ", 0, 50, -1);
 		textbox_printf(h_tbox, "64");
 	}
 
-	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 30);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
 		button = button_new(reg, "OK", NULL, 0, 50, 100);
 		event_new(button, "button-pushed", fileops_new_map,
@@ -90,7 +90,6 @@ fileops_new_map_window(struct mapedit *med)
 	return (win);
 }
 
-/* Create the `load map' dialog. */
 struct window *
 fileops_load_map_window(struct mapedit *med)
 {
@@ -103,13 +102,13 @@ fileops_load_map_window(struct mapedit *med)
 	    356, 105, 100, 105);
 	window_set_caption(win, "Load a map");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		name_tbox = textbox_new(reg, "Name: ", 0, 100, 100);
+		name_tbox = textbox_new(reg, "Name: ", 0, 100, -1);
 		win->focus = WIDGET(name_tbox);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
 		button = button_new(reg, "OK", NULL, 0, 50, 100);
 		WIDGET(button)->flags |=
