@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.102 2002/06/13 10:48:57 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.103 2002/06/22 20:42:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,8 +48,6 @@
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
-#include "mouse.h"
-#include "joy.h"
 #include "config.h"
 #include "toolbar.h"
 #include "fileops.h"
