@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.6 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.7 2004/03/28 06:09:32 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -29,15 +29,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_freetype.h>
+
+#ifdef HAVE_FREETYPE
+
 #include <engine/engine.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
 #include <SDL_endian.h>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
 
 #include <engine/loader/ttf.h>
 
@@ -856,3 +861,4 @@ ttf_get_font_style(ttf_font *font)
 	return (font->style);
 }
 
+#endif /* HAVE_FREETYPE */
