@@ -50,6 +50,8 @@ struct mapdir {
 	Uint32	flags;
 #define DIR_SCROLLVIEW	0x01	/* Scroll the view if we reach boundaries. */
 #define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
+#define DIR_STATIC	0x04	/* Don't change sprites with directions. */
+#define DIR_PASSTHROUGH	0x08	/* Pass through map nodes. */
 };
 
 struct mappos {
