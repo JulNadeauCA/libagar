@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.28 2002/02/15 12:56:22 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.29 2002/02/16 04:54:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@ struct	map *curmap;
 struct draw {
 	SDL_Surface *s;		/* Source surface */
 	int	x, y;		/* View coordinates */
+	int	flags;		/* Node flags (for map editor) */
 
 	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
 };
@@ -467,6 +468,7 @@ map_animate(struct map *m)
 					ndraw->s = src;
 					ndraw->x = rx;
 					ndraw->y = ry;
+					ndraw->flags = node->flags;
 
 					TAILQ_INSERT_TAIL(&deferdraws, ndraw,
 					    pdraws);
@@ -496,6 +498,8 @@ map_animate(struct map *m)
 			if (curmapedit != NULL) {
 				mapedit_postdraw(m, node->flags, vx, vy);
 			}
+			SDL_UpdateRect(m->view->v, rx, ry,
+			    m->tilew, m->tileh);
 		}
 	}
 
@@ -503,14 +507,20 @@ map_animate(struct map *m)
 		struct draw *draw;
 	
 		TAILQ_FOREACH(draw, &deferdraws, pdraws) {
+			if (curmapedit != NULL) {
+				mapedit_predraw(m, draw->flags, vx, vy);
+			}
 			map_plot_sprite(m, draw->s, draw->x, draw->y);
+			if (curmapedit != NULL) {
+				mapedit_postdraw(m, draw->flags, vx, vy);
+			}
 			free(draw);
+			SDL_UpdateRect(m->view->v, draw->x, draw->y,
+			    m->tilew, m->tileh);
 		}
 	}
 	
 	pthread_mutex_unlock(&m->lock);
-
-	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 }
 
 /* Draw all sprites in the map view. */
