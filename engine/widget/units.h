@@ -1,4 +1,4 @@
-/*	$Csoft: units.h,v 1.11 2004/08/23 06:41:59 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.12 2004/08/26 06:02:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/historical_units.h>
@@ -53,6 +53,8 @@ extern const struct unit light_units[];
 extern const struct unit power_units[];
 extern const struct unit emf_units[];
 extern const struct unit resistance_units[];
+extern const struct unit resistance_Tcoeff1_units[];
+extern const struct unit resistance_Tcoeff2_units[];
 extern const struct unit capacitance_units[];
 extern const struct unit inductance_units[];
 extern const struct unit frequency_units[];

@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.24 2004/08/23 06:41:59 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.25 2004/08/26 06:02:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -48,6 +48,8 @@ const struct unit *unit_groups[] = {
 	power_units,
 	emf_units,
 	resistance_units,
+	resistance_Tcoeff1_units,
+	resistance_Tcoeff2_units,
 	capacitance_units,
 	inductance_units,
 	frequency_units,
@@ -368,6 +370,19 @@ const struct unit resistance_units[] = {
 	{ "kohms", "k\xce\xa9",	"Kilohms",		1e3, NULL },
 	{ "megaohms", "M\xce\xa9", N_("Megaohms"),	1e6, NULL },
 	{ NULL, NULL, NULL,				0, NULL }
+};
+
+/* Units of first order temperature coefficients of resistance. */
+const struct unit resistance_Tcoeff1_units[] = {
+	{ "ohms/degC", "\xce\xa9/\xc2\xb0\x43", "Ohms/\xc2\xb0\x43", 1.0, NULL},
+	{ NULL, NULL, NULL,					0, NULL }
+};
+
+/* Units of second order temperature coefficients of resistance. */
+const struct unit resistance_Tcoeff2_units[] = {
+	{ "ohms/degC^2", "\xce\xa9/\xc2\xb0\x43\xc2\xb2",
+	                 "Ohms/\xc2\xb0\x43\xc2\xb2", 1.0, NULL},
+	{ NULL, NULL, NULL, 0, NULL }
 };
 
 /* Units of electrical capacitance */
