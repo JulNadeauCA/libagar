@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.18 2003/02/08 00:34:35 vedge Exp $
+.\"	$Csoft: map.3,v 1.19 2003/02/22 01:10:32 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -184,7 +184,7 @@ functions respectively initialize, free, load and save a single map node.
 .Fn node_move_ref "struct noderef *src_nref" "struct node *src_node" \
                   "struct node *dst_node"
 .Pp
-.Ft void
+.Ft "struct noderef *"
 .Fn node_copy_ref "struct noderef *src_nref" "struct node *dst_node"
 .Pp
 .Ft void
