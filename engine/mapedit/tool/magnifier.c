@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.42 2004/04/10 04:55:16 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.43 2004/04/10 21:24:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -66,12 +66,26 @@ zoom_specific(int argc, union evarg *argv)
 }
 
 static void
-zoom_100(int argc, union evarg *argv)
+zoom_100(struct mapview *mv)
 {
-	struct mapview *mv = argv[1].p;
-	
 	mapview_zoom(mv, 100);
 	zoom_spec = 100;
+}
+
+static void
+zoom_in(struct mapview *mv)
+{
+	mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
+	mv->flags &= ~(MAPVIEW_ZOOMING_OUT);
+	mv->flags |= MAPVIEW_ZOOMING_IN;
+}
+
+static void
+zoom_out(struct mapview *mv)
+{
+	mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
+	mv->flags &= ~(MAPVIEW_ZOOMING_IN);
+	mv->flags |= MAPVIEW_ZOOMING_OUT;
 }
 
 static void
@@ -81,12 +95,8 @@ magnifier_init(struct tool *t)
 	struct button *bu;
 	struct spinbutton *sbu;
 	struct checkbox *cb;
-
+	
 	win = tool_window(t, "mapedit-tool-magnifier");
-
-	bu = button_new(win, _("1:1 zoom"));
-	WIDGET(bu)->flags |= WIDGET_WFILL;
-	event_new(bu, "button-pushed", zoom_100, "%p", t->mv);
 
 	sbu = spinbutton_new(win, _("Zoom %%: "));
 	widget_bind(sbu, "value", WIDGET_INT, &zoom_spec);
@@ -94,7 +104,10 @@ magnifier_init(struct tool *t)
 	spinbutton_set_max(sbu, 600);
 	event_new(sbu, "spinbutton-changed", zoom_specific, "%p", t->mv);
 
-	tool_push_status(t, _("Click to [zoom-in/center/zoom-out]."));
+	tool_push_status(t, _("Click to [zoom-in/center/zoom-out]"));
+	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_100, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
 }
 
 static void

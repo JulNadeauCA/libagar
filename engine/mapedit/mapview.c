@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.153 2004/05/11 01:59:44 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.154 2004/05/13 02:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -696,10 +696,7 @@ mapview_zoom(struct mapview *mv, int zoom)
 		zoom = MAPVIEW_ZOOM_MIN;
 	if (zoom > MAPVIEW_ZOOM_MAX)
 		zoom = MAPVIEW_ZOOM_MAX;
-#if 0
-	/* XXX */
-	pthread_mutex_lock(&mv->map->lock);
-#endif
+
 	*mv->zoom = zoom;
 	*mv->tilesz = zoom*TILESZ/100;
 	if (*mv->tilesz > MAP_MAX_TILESZ) {
@@ -707,33 +704,8 @@ mapview_zoom(struct mapview *mv, int zoom)
 	}
 	mv->mw = WIDGET(mv)->w/(*mv->tilesz) + 1;
 	mv->mh = WIDGET(mv)->h/(*mv->tilesz) + 1;
-#if 0
-	/* XXX */
-	pthread_mutex_unlock(&mv->map->lock);
-#endif
+
 	mapview_status(mv, _("%d%% magnification"), zoom);
-}
-
-static Uint32
-mapview_zoom_tick(Uint32 ival, void *p)
-{
-	struct mapview *mv = p;
-
-#if 0
-	/* XXX */
-	pthread_mutex_lock(&mv->map->lock);
-#endif
-
-	if (mv->flags & MAPVIEW_ZOOMING_IN) {
-		mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
-	} else if (mv->flags & MAPVIEW_ZOOMING_OUT) {
-		mapview_zoom(mv, *mv->zoom - mv->zoom_inc);
-	}
-#if 0
-	/* XXX */
-	pthread_mutex_unlock(&mv->map->lock);
-#endif
-	return (ival);
 }
 
 static __inline__ void
@@ -982,21 +954,10 @@ mapview_keyup(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
 
-	/* XXX configurable */
-	switch (keysym) {
-	case SDLK_EQUALS:
-		mv->flags &= ~MAPVIEW_ZOOMING_IN;
-		break;
-	case SDLK_MINUS:
-		mv->flags &= ~MAPVIEW_ZOOMING_OUT;
-		break;
-	}
-	
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
-	    mv->curtool->keyup != NULL) {
+	    mv->curtool->keyup != NULL)
 		mv->curtool->keyup(mv->curtool, keysym, keymod);
-	}
 }
 
 static void
@@ -1006,60 +967,6 @@ mapview_keydown(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
 	struct tool *tool;
-
-	/* XXX configurable */
-	switch (keysym) {
-	case SDLK_EQUALS:
-		if (mv->zoom_tm == NULL) {
-			mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
-			mv->zoom_tm = SDL_AddTimer(mv->zoom_ival,
-			    mapview_zoom_tick, mv);
-		}
-		mv->flags &= ~(MAPVIEW_ZOOMING_OUT);
-		mv->flags |= MAPVIEW_ZOOMING_IN;
-		break;
-	case SDLK_MINUS:
-		if (mv->zoom_tm == NULL) {
-			mapview_zoom(mv, *mv->zoom - mv->zoom_inc);
-			mv->zoom_tm = SDL_AddTimer(mv->zoom_ival,
-			    mapview_zoom_tick, mv);
-		}
-		mv->flags &= ~(MAPVIEW_ZOOMING_OUT);
-		mv->flags |= MAPVIEW_ZOOMING_OUT;
-		break;
-	case SDLK_0:
-	case SDLK_1:
-		mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
-		mapview_zoom(mv, 100);
-		break;
-	case SDLK_2:
-		mapview_zoom(mv, 20);
-		break;
-	case SDLK_3:
-		mapview_zoom(mv, 30);
-		break;
-	case SDLK_4:
-		mapview_zoom(mv, 40);
-		break;
-	case SDLK_5:
-		mapview_zoom(mv, 50);
-		break;
-	case SDLK_6:
-		mapview_zoom(mv, 120);
-		break;
-	case SDLK_7:
-		mapview_zoom(mv, 130);
-		break;
-	case SDLK_8:
-		mapview_zoom(mv, 140);
-		break;
-	case SDLK_9:
-		mapview_zoom(mv, 150);
-		break;
-	case SDLK_o:
-		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
-		break;
-	}
 
 	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		struct tool_kbinding *kbinding;
@@ -1081,6 +988,9 @@ mapview_keydown(int argc, union evarg *argv)
 
 	/* XXX configurable */
 	switch (keysym) {
+	case SDLK_o:
+		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
+		break;
 	case SDLK_g:
 		if (mv->flags & MAPVIEW_GRID) {
 			mv->flags &= ~(MAPVIEW_GRID);
@@ -1106,9 +1016,8 @@ mapview_keydown(int argc, union evarg *argv)
 	
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
-	    mv->curtool->keydown != NULL) {
+	    mv->curtool->keydown != NULL)
 		mv->curtool->keydown(mv->curtool, keysym, keymod);
-	}
 }
 
 void
@@ -1139,10 +1048,6 @@ mapview_lostfocus(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 
 	mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
-	if (mv->zoom_tm != NULL) {
-		SDL_RemoveTimer(mv->zoom_tm);
-		mv->zoom_tm = NULL;
-	}
 }
 
 void
@@ -1157,18 +1062,15 @@ mapview_center(struct mapview *mv, int x, int y)
 		mv->mx = 0;
 	if (mv->my < 0)
 		mv->my = 0;
-#if 0
-	/* XXX */
+
 	pthread_mutex_lock(&mv->map->lock);
-#endif
+
 	if (mv->mx >= mv->map->mapw - mv->mw)
 		mv->mx = mv->map->mapw - mv->mw;
 	if (mv->my >= mv->map->maph - mv->mh)
 		mv->my = mv->map->maph - mv->mh;
-#if 0
-	/* XXX */
+
 	pthread_mutex_unlock(&mv->map->lock);
-#endif
 }
 
 /* Set the coordinates and geometry of the selection rectangle. */
