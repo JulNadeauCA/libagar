@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.69 2003/06/19 01:43:40 vedge Exp $
+#	$Csoft: Makefile,v 1.70 2003/06/21 06:50:18 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -28,18 +28,12 @@ PSMAN3=	agar.ps3 map.ps3 object.ps3 \
 
 LIB=	engine
 
-SRCS=	engine.c event.c view.c physics.c \
-	input.c object.c map.c rootmap.c perso.c \
-	config.c prop.c transform.c \
-	typesw.c mkpath.c gfx.c
-
-OBJS=	engine.o event.o view.o physics.o \
-	input.o object.o map.o rootmap.o perso.o \
-	config.o prop.o transform.o \
-	typesw.o mkpath.o gfx.o
-
-OBJS+=	mapedit/mapedit.o \
-	monitor/monitor.o
+SRCS=	audio.c config.c engine.c event.c gfx.c input.c map.c \
+	mkpath.c object.c perso.c physics.c prop.c rootmap.c \
+	transform.c typesw.c view.c
+OBJS=	audio.o config.o engine.o event.o gfx.o input.o map.o \
+	mkpath.o object.o perso.o physics.o prop.o rootmap.o \
+	transform.o typesw.o view.o
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
