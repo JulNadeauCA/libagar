@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.127 2004/03/12 02:51:18 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.128 2004/03/18 21:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -71,6 +71,7 @@ struct engine_proginfo *proginfo;	/* Game name, copyright, version */
 struct config *config;			/* Global configuration settings */
 struct object *world;			/* The Old Roots of Evil */
 pthread_mutex_t linkage_lock;		/* Protects object linkage */
+struct object engine_icons;		/* engine.c */
 
 /* Initialize the Agar engine. */
 int
@@ -210,7 +211,9 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		}
 	}
 
-	/* Create the world. */
+	object_init(&engine_icons, "object", "icons", NULL);
+	object_wire_gfx(&engine_icons, "/engine/icons/icons");
+
 	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;

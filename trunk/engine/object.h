@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.107 2004/03/19 14:50:28 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.108 2004/03/23 02:26:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -84,10 +84,7 @@ enum object_page_item {
 	OBJECT_DATA		/* Object data */
 };
 
-#define OBJECT(ob)	((struct object *)(ob))
-#define OBJECT_ICON(ob)	(((ob)->gfx != NULL && (ob)->gfx->nsprites > 0) ? \
-			 SPRITE(ob, 0) : NULL)
-
+#define OBJECT(ob)		((struct object *)(ob))
 #define OBJECT_TYPE(ob, t)	(strcmp(OBJECT(ob)->type, (t)) == 0)
 
 #define OBJECT_FOREACH_CHILD(var, ob, type)				\
@@ -120,6 +117,8 @@ void		 object_set_type(void *, const char *);
 void		 object_set_name(void *, const char *);
 void		 object_set_ops(void *, const void *);
 void		 object_wire_gfx(void *, const char *);
+
+__inline__ SDL_Surface	*object_icon(void *);
 
 void	 object_move_up(void *);
 void	 object_move_down(void *);

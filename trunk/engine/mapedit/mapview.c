@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.146 2004/04/10 02:43:43 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.147 2004/04/10 04:55:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -175,8 +175,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 	ntool->p = p;
 
 	if (mv->toolbar != NULL) {
-		SDL_Surface *icon = ntool->icon >= 0 ?
-		    SPRITE(&mapedit, ntool->icon) : NULL;
+		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
 
 		ntool->trigger = toolbar_add_button(mv->toolbar,
 		    mv->toolbar->nrows-1, icon, 1, 0, mapview_sel_tool,
@@ -402,27 +401,24 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "attached", mapview_attached, NULL);
 
 	if (mv->toolbar != NULL) {
-		toolbar_add_button(toolbar, 0,
-		    SPRITE(&mapedit,GRID_ICON),
-		    1, (flags & MAPVIEW_GRID),
+		toolbar_add_button(toolbar, 0, ICON(GRID_ICON), 1,
+		    (flags & MAPVIEW_GRID),
 		    mapview_toggle_grid, "%p", mv);
-		toolbar_add_button(toolbar, 0,
-		    SPRITE(&mapedit,PROPS_ICON),
-		    1, (flags & MAPVIEW_PROPS),
+		toolbar_add_button(toolbar, 0, ICON(PROPS_ICON), 1,
+		    (flags & MAPVIEW_PROPS),
 		    mapview_toggle_props, "%p", mv);
-		toolbar_add_button(toolbar, 0,
-		    SPRITE(&mapedit, EDIT_ICON),
-		    1, (flags & MAPVIEW_EDIT),
+		toolbar_add_button(toolbar, 0, ICON(EDIT_ICON), 1,
+		    (flags & MAPVIEW_EDIT),
 		    mapview_toggle_rw, "%p", mv);
 #ifdef EDITION
 		mv->nodeed.trigger = toolbar_add_button(toolbar, 0,
-		    SPRITE(&mapedit, NODE_EDITOR_ICON), 1, 0,
+		    ICON(NODE_EDITOR_ICON), 1, 0,
 		    mapview_toggle_nodeedit, "%p", mv);
 		mv->layed.trigger = toolbar_add_button(toolbar, 0,
-		    SPRITE(&mapedit, LAYER_EDITOR_ICON), 1, 0,
+		    ICON(LAYER_EDITOR_ICON), 1, 0,
 		    mapview_toggle_layedit, "%p", mv);
 		mv->mediasel.trigger = toolbar_add_button(toolbar, 0,
-		    SPRITE(&mapedit, MEDIASEL_ICON), 1, 0,
+		    ICON(MEDIASEL_ICON), 1, 0,
 		    mapview_toggle_mediasel, "%p", mv);
 #endif
 	} else {
@@ -490,10 +486,10 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 	int i;
 
 	if (mv->prop_style > 0)
-		widget_blit(mv, SPRITE(&mapedit, mv->prop_style), x, y);
+		widget_blit(mv, ICON(mv->prop_style), x, y);
 
 	if (mx == mv->map->origin.x && my == mv->map->origin.y) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_ORIGIN), x, y);
+		widget_blit(mv, SPRITE(mv,MAPVIEW_ORIGIN), x, y);
 		x += SPRITE(mv,MAPVIEW_ORIGIN)->w;
 	}
 
@@ -505,7 +501,7 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 			if ((r->flags & flags[i].flag) == 0) {
 				continue;
 			}
-			widget_blit(mv, SPRITE(mv, flags[i].sprite), x, y);
+			widget_blit(mv, SPRITE(mv,flags[i].sprite), x, y);
 			x += SPRITE(mv,flags[i].sprite)->w;
 		}
 		for (i = 0; i < nedges; i++) {
@@ -531,8 +527,7 @@ draw_cursor(struct mapview *mv)
 		SDL_GetMouseState(&msx, &msy);
 		rd.x = msx;
 		rd.y = msy;
-		SDL_BlitSurface(SPRITE(&mapedit, SELECT_CURSOR),
-		    NULL, view->v, &rd);
+		SDL_BlitSurface(ICON(SELECT_CURSOR), NULL, view->v, &rd);
 		return;
 	}
 	

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.79 2004/03/10 16:58:31 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.80 2004/03/25 05:36:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -68,6 +68,7 @@
 
 #include <engine/object.h>
 #include <engine/event.h>
+#include <engine/icons.h>
 
 #include <engine/unicode/unicode.h>
 #include <engine/widget/text.h>
@@ -123,11 +124,6 @@ struct engine_proginfo {
 };
 
 extern struct engine_proginfo *proginfo;	/* engine.c */
-
-enum {
-	ICON_GAME,
-	ICON_MAPEDITION
-};
 
 #define ENGINE_INIT_GFX		0x01		/* Graphic engine */
 #define ENGINE_INIT_INPUT	0x02		/* Input devices */

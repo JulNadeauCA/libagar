@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.171 2004/03/24 08:46:35 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.172 2004/03/30 16:32:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1537,6 +1537,20 @@ fail:
 	return (NULL);
 }
 
+SDL_Surface *
+object_icon(void *p)
+{
+	struct object *obj = p;
+	int i;
+		 
+	for (i = 0; i < ntypesw; i++) {
+		if (strcmp(typesw[i].type, obj->type) == 0)
+			return (typesw[i].icon >= 0 ? ICON(typesw[i].icon) :
+			    NULL);
+	}
+	return (NULL);
+}
+
 #ifdef EDITION
 
 /* Update the dependencies display. */
@@ -1559,7 +1573,7 @@ object_poll_deps(int argc, union evarg *argv)
 			snprintf(label, sizeof(label), "%s (%u)",
 			    dep->obj->name, dep->count);
 		}
-		tlist_insert_item(tl, OBJECT_ICON(dep->obj), label, dep);
+		tlist_insert_item(tl, object_icon(dep->obj), label, dep);
 	}
 	unlock_linkage();
 	tlist_restore_selections(tl);
