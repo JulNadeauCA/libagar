@@ -46,22 +46,6 @@ S=""
 fi
 echo >Makefile.config
 echo >engine/config.h
-DEBUG=1
-echo "#ifndef DEBUG" >> engine/config.h
-echo "#define DEBUG $DEBUG" >> engine/config.h
-echo "#endif /* DEBUG */" >> engine/config.h
-LOCKDEBUG=1
-echo "#ifndef LOCKDEBUG" >> engine/config.h
-echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
-echo "#endif /* LOCKDEBUG */" >> engine/config.h
-for OPT in $@; do
-if [ "$OPT" = "--with-smpeg" ]; then
-WITH_SMPEG=1
-echo WITH_SMPEG=$WITH_SMPEG >> Makefile.config
-else
-NONE=1
-fi
-done
 for OPT in $@; do
 if [ "$OPT" = "--without-smpeg" ]; then
 WITHOUT_SMPEG=1
@@ -70,11 +54,28 @@ else
 NONE=1
 fi
 done
+for OPT in $@; do
+if [ "$OPT" = "--with-debug" ]; then
+WITH_DEBUG=1
+echo WITH_DEBUG=$WITH_DEBUG >> Makefile.config
+else
+NONE=1
+fi
+done
+for OPT in $@; do
+if [ "$OPT" = "--with-lockdebug" ]; then
+WITH_LOCKDEBUG=1
+echo WITH_LOCKDEBUG=$WITH_LOCKDEBUG >> Makefile.config
+else
+NONE=1
+fi
+done
 if [ "$1" = "--help" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
-echo "    --with-smpeg         Play videos through the smpeg library [yes]"
-echo "    --without-smpeg      "
+echo "    --without-smpeg      Don't play videos with the smpeg library"
+echo "    --with-debug         Build with debugging information"
+echo "    --with-lockdebug     Build with threads debugging information"
 exit 1
 fi
 echo -n "checking for gcc..."
@@ -256,6 +257,18 @@ echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
 NONE=1
 fi
+fi
+if [ "$WITH_DEBUG" != "" ]; then
+DEBUG=1
+echo "#ifndef DEBUG" >> engine/config.h
+echo "#define DEBUG $DEBUG" >> engine/config.h
+echo "#endif /* DEBUG */" >> engine/config.h
+fi
+if [ "$WITH_LOCKDEBUG" != "" ]; then
+LOCKDEBUG=1
+echo "#ifndef LOCKDEBUG" >> engine/config.h
+echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
+echo "#endif /* LOCKDEBUG */" >> engine/config.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/config.h
