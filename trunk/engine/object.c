@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.179 2004/05/15 06:07:12 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.180 2004/05/16 05:05:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -835,19 +835,19 @@ object_resolve_deps(void *p)
 	struct object_dep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-		debug(DEBUG_DEPRESV, "%s: depends on %s...", ob->name,
+		debug_n(DEBUG_DEPRESV, "%s: depends on %s...", ob->name,
 		    dep->path);
 		if (dep->obj != NULL) {
-			debug(DEBUG_DEPRESV, "already resolved\n");
+			debug_n(DEBUG_DEPRESV, "already resolved\n");
 			continue;
 		}
 		if ((dep->obj = object_find(dep->path)) == NULL) {
-			debug(DEBUG_DEPRESV, "unexisting\n");
+			debug_n(DEBUG_DEPRESV, "unexisting\n");
 			error_set(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
 			return (-1);
 		}
-		debug(DEBUG_DEPRESV, "%p (%s)\n", dep->obj, dep->obj->name);
+		debug_n(DEBUG_DEPRESV, "%p (%s)\n", dep->obj, dep->obj->name);
 		Free(dep->path, 0);
 		dep->path = NULL;
 	}

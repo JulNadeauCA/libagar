@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.62 2004/05/10 05:14:52 vedge Exp $
+.\"	$Csoft: object.3,v 1.63 2004/05/15 06:07:11 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -189,11 +189,11 @@ project.
 .Pp
 Prior to detaching the object,
 .Fn object_detach
-cancels any
+cancels scheduled
 .Xr timeout 3
-event scheduled for execution that does not have the
+events (that do not have the
 .Dv TIMEOUT_DETACHABLE
-flag set.
+flag set).
 .Pp
 These operations raise
 .Fn attached
@@ -340,12 +340,12 @@ the event handler list, the property table and the child objects, respectively.
 .Pp
 In addition to reinitializing the event handler table,
 .Fn object_free_events
-also cancels any scheduled event.
+also cancels scheduled events.
 .Pp
-.Dv object_free_children
+.Fn object_free_children
 invokes
 .Xr free 3
-on the given object's children (except those with the
+on the object's children (except those with the
 .Dv OBJECT_STATIC
 flag set), assuming that none of them are in use.
 .Pp
@@ -441,11 +441,11 @@ config setting) is used.
 performs the following operations, in order:
 .Bl -enum
 .It
-Cancel any scheduled
+Cancel scheduled
 .Xr timeout 3
-event that does not have the
+events (that don't have the
 .Dv TIMEOUT_LOADABLE
-flag set.
+flag set).
 .It
 Load the generic part of
 .Fa obj
