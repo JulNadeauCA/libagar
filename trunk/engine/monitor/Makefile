@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.12 2003/05/14 03:43:31 vedge Exp $
+#	$Csoft: Makefile,v 1.13 2003/05/19 09:38:28 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -8,6 +8,7 @@ SRCS=	monitor.c object_browser.c widget_browser.c view_params.c screenshot.c
 OBJS=	monitor.o object_browser.o widget_browser.o view_params.o screenshot.o
 
 FOBJ=	monitor.fob
+FOBDIR=	/engine/monitor
 FOFFS=	monitor_offs.h
 XCF=	toolbar.xcf monitor.xcf
 

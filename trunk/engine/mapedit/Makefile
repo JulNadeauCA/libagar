@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.41 2003/05/07 13:06:24 vedge Exp $
+#	$Csoft: Makefile,v 1.42 2003/05/20 11:26:01 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -12,6 +12,7 @@ OBJS=	mapedit.o fileops.o mapview.o objq.o nodeedit.o layedit.o selops.o \
 	objedit.o
 
 FOBJ=	mapedit.fob
+FOBDIR=	/engine/mapedit
 FOFFS=	mapedit_offs.h
 XCF=	mapedit.xcf toolbar.xcf
 

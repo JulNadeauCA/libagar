@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.9 2003/03/13 06:19:31 vedge Exp $
+#	$Csoft: Makefile,v 1.10 2003/05/07 13:06:25 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
@@ -11,6 +11,7 @@ OBJS=	tool.o stamp.o eraser.o magnifier.o resize.o propedit.o select.o \
 
 XCF=	fill.xcf magnifier.xcf resize.xcf select.xcf
 FOBJ=	tool.fob
+FOBDIR=	/engine/mapedit/tool
 FOFFS=	tool_offs.h
 
 CFLAGS+=${SDL_CFLAGS}
