@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.111 2003/03/18 02:54:29 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.112 2003/03/18 02:55:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,25 +26,27 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "compat/asprintf.h"
-#include "compat/strlcat.h"
-#include "engine.h"
+#include <engine/compat/asprintf.h>
+#include <engine/compat/strlcat.h>
+#include <engine/compat/strlcpy.h>
 
-#include "version.h"
+#include <engine/engine.h>
+#include <engine/version.h>
 
+#include <sys/types.h>
 #include <sys/stat.h>
 
 #include <fcntl.h>
 
 #include <libfobj/fobj.h>
 
-#include "config.h"
-#include "map.h"
-#include "physics.h"
-#include "input.h"
-#include "view.h"
-#include "rootmap.h"
-#include "world.h"
+#include <engine/config.h>
+#include <engine/map.h>
+#include <engine/physics.h>
+#include <engine/input.h>
+#include <engine/view.h>
+#include <engine/rootmap.h>
+#include <engine/world.h>
 
 static const struct object_ops null_ops = {
 	NULL,	/* destroy */
@@ -80,8 +82,13 @@ void
 object_init(struct object *ob, char *type, char *name, char *media, int flags,
     const void *opsp)
 {
+	if (strlen(type) > OBJECT_TYPE_MAX ||
+	    strlen(name) > OBJECT_NAME_MAX) {
+		fatal("name/type too big");
+	}
 	ob->type = Strdup(type);
 	ob->name = Strdup(name);
+	
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
@@ -99,9 +106,6 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	pthread_mutex_init(&ob->events_lock, &ob->events_lockattr);
 
 	ob->art = (ob->flags & OBJECT_ART) ? art_fetch(media, ob) : NULL;
-#if 0
-	ob->audio = (ob->flags & OBJECT_AUDIO) ? audio_fetch(media, ob) : NULL;
-#endif
 }
 
 void
@@ -111,21 +115,11 @@ object_destroy(void *p)
 	struct event *eev, *nexteev;
 	struct prop *prop, *nextprop;
 	
-	if (OBJECT_OPS(ob)->destroy != NULL) {
-		/* Destroy object specific data. */
+	if (OBJECT_OPS(ob)->destroy != NULL)
 		OBJECT_OPS(ob)->destroy(ob);
-	}
 
-	if (((ob->flags & OBJECT_ART_CACHE) == 0) &&
-	    (ob->art != NULL)) {
+	if ((ob->flags & OBJECT_ART_CACHE) == 0 && ob->art != NULL)
 		art_unused(ob->art);
-	}
-#if 0
-	if (((ob->flags & OBJECT_AUDIO_CACHE) == 0) &&
-	    (ob->audio != NULL)) {
-		audio_unused(ob->audio);
-	}
-#endif
 
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
@@ -140,7 +134,7 @@ object_destroy(void *p)
 		nextprop = TAILQ_NEXT(prop, props);
 		prop_destroy(prop);
 	}
-	
+
 	pthread_mutex_destroy(&ob->pos_lock);
 	pthread_mutex_destroy(&ob->events_lock);
 	pthread_mutex_destroy(&ob->props_lock);
@@ -182,12 +176,12 @@ int
 object_load(void *p)
 {
 	struct object *ob = p;
-	char *path;
+	char path[FILENAME_MAX];
 	int fd;
 	
 	debug(DEBUG_STATE, "loading %s\n", ob->name);
 
-	if ((path = object_path(ob->name, ob->type)) == NULL)
+	if (object_path(ob->name, ob->type, path, sizeof(path)) == -1)
 		return (-1);
 
 	if ((fd = open(path, O_RDONLY, 00600)) == -1) {
@@ -202,11 +196,9 @@ object_load(void *p)
 	    OBJECT_OPS(ob)->load(ob, fd) != 0)
 		goto fail;
 
-	free(path);
 	close(fd);
 	return (0);
 fail:
-	free(path);
 	close(fd);
 	return (-1);
 }
@@ -221,8 +213,7 @@ object_save(void *p)
 
 	if (prop_copy_string(config, "path.user_data_dir",
 	    path, sizeof(path)) > sizeof(path)) {
-		error_set("path1 too big");
-		return (-1);
+		goto toobig;
 	}
 	if (stat(path, &sta) != 0 &&
 	    mkdir(path, 0700) != 0) {
@@ -231,8 +222,7 @@ object_save(void *p)
 	}
 	if (strlcat(path, "/", sizeof(path)) > sizeof(path) ||
 	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
-		error_set("path2 too big: %s/%s", path, ob->type);
-		return (-1);
+		goto toobig;
 	}
 	if (stat(path, &sta) != 0 &&
 	    mkdir(path, 0700) != 0) {
@@ -243,8 +233,7 @@ object_save(void *p)
 	    strlcat(path, ob->name, sizeof(path)) > sizeof(path) ||
 	    strlcat(path, ".", sizeof(path))      > sizeof(path) ||
 	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
-		error_set("path3 too big");
-		return (-1);
+		goto toobig;
 	}
 
 	if ((fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600)) == -1) {
@@ -266,34 +255,34 @@ object_save(void *p)
 
 	close(fd);
 	return (0);
+toobig:
+	error_set("path too big");
+	return (-1);
 }
 
 /* Search the data file directories. */
-char *
-object_path(char *obname, const char *suffix)
+int
+object_path(char *obname, const char *suffix, char *dst, size_t dst_size)
 {
 	struct stat sta;
 	char *p, *last;
-	char *datapath, *datapathp, *path;
+	char datapath[FILENAME_MAX];
 
-	path = emalloc(FILENAME_MAX);
-	datapathp = datapath = prop_get_string(config, "path.data_path");
+	prop_copy_string(config, "path.data_path", datapath, sizeof(datapath));
 
 	for (p = strtok_r(datapath, ":", &last);
 	     p != NULL;
 	     p = strtok_r(NULL, ":", &last)) {
-		snprintf(path, FILENAME_MAX, "%s/%s/%s.%s", p, suffix,
-		    obname, suffix);
-		if (stat(path, &sta) == 0) {
-			free(datapathp);
-			return (path);
+		if (snprintf(dst, dst_size, "%s/%s/%s.%s", p, suffix, obname,
+		    suffix) > dst_size) {
+			error_set("path too big");
+			return (-1);
 		}
+		if (stat(dst, &sta) == 0)
+			return (0);
 	}
-	free(datapathp);
-	free(path);
-
-	error_set("cannot find %s.%s", obname, suffix);
-	return (NULL);
+	error_set("cannot find %s.%s in %s", obname, suffix, datapath);
+	return (-1);
 }
 
 /* Control an object's position with an input device. */
@@ -340,6 +329,7 @@ object_vanish(void *p)
 	debug(DEBUG_POSITION, "%s vanishing from %s:%d,%d\n", ob->name,
 	    OBJECT(m)->name, ob->pos->x, ob->pos->y);
 
+	/* XXX multiple noderefs! */
 	node_remove_ref(&m->map[ob->pos->y][ob->pos->x], ob->pos->nref);
 
 	free(ob->pos);
@@ -358,6 +348,8 @@ object_vanish(void *p)
  * If there is a current noderef, it is removed. No noderef is added,
  * the code should use the node_add_* functions to create new noderefs
  * since there are various types of noderefs with different arguments.
+ *
+ * XXX multiple noderefs!
  */
 void
 object_set_position(void *p, struct noderef *nref, struct map *m,
@@ -396,6 +388,8 @@ object_set_position(void *p, struct noderef *nref, struct map *m,
 /*
  * Move the object from its current position to dst_map:dst_x,dst_y.
  * The current noderef is moved from the current node to the new position.
+ * XXX multiple noderefs!
+ * XXX allow failure?
  */
 void
 object_move(void *p, struct map *dst_map, int dst_x, int dst_y)

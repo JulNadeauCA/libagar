@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.68 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.69 2003/03/13 08:43:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -26,15 +26,15 @@ struct object_table {
 	int		 *used;
 };
 
-struct object {
-	/*
-	 * Read-only once attached
-	 */
-	char	*type;			/* Type of object. */
-	char	*name;			/* Key */
-	const struct object_ops	*ops;	/* Generic operations */
+#define OBJECT_TYPE_MAX	128
+#define OBJECT_NAME_MAX	256
 
-	int	 flags;
+struct object {
+	/* Read-only once attached */
+	char			*type;	/* Type of object. */
+	char			*name;	/* Key */
+	const struct object_ops	*ops;	/* Generic operations */
+	int			 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
 #define OBJECT_ART_CACHE	0x02	/* Keep graphics cached */
 #define OBJECT_ART_CAN_FAIL	0x04	/* Graphic load can fail */
@@ -42,22 +42,16 @@ struct object {
 #define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
 #define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
 #define OBJECT_CANNOT_MAP	0x40	/* Don't insert in object tables */
-#define OBJECT_SYSTEM		0x80
-
+#define OBJECT_STATIC		0x80	/* Don't destroy (if attached) */
 	enum {
 		OBJECT_EMBRYONIC,	/* Inconsistent/Unattached */
 		OBJECT_CONSISTENT,	/* Attached */
 		OBJECT_DETACHING,	/* Detach in progress */
 		OBJECT_DETACHED		/* Inconsistent/Detached */
 	} state;
+	struct art		*art;	/* Graphical data (independent) */
 
-	struct art	*art;		/* Static sprites */
-#if 0
-	struct audio	*audio;		/* Samples */
-#endif
-	/*
-	 * Read-write
-	 */
+	/* Read-write */
 	struct mappos		*pos;		/* Unique position on a map */
 	pthread_mutex_t		 pos_lock;
 	TAILQ_HEAD(, event)	 events;	/* Event handlers */
@@ -90,7 +84,7 @@ int		 object_load(void *);
 int		 object_load_from(void *, char *);
 int		 object_save(void *);
 void		 object_destroy(void *);
-char		*object_path(char *, const char *);
+int		 object_path(char *, const char *, char *, size_t);
 void		 object_control(void *, struct input *, int);
 void		 object_set_position(void *, struct noderef *, struct map *,
 		     int, int);
@@ -105,4 +99,4 @@ void			 object_table_save(struct fobj_buf *,
 			     struct object_table *);
 struct object_table	*object_table_load(int, char *);
 
-#endif	/* !_AGAR_OBJECT_H */
+#endif	/* _AGAR_OBJECT_H */
