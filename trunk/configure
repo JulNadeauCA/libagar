@@ -539,11 +539,63 @@ fi
 if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
 else
-echo "Missing SDL"
+echo "Could not find the SDL library. Make sure sdl-config is in $PATH."
 exit 1
 fi
-echo -n "checking for FreeType2 (http://www.freetype.org)..."
-echo "checking for FreeType2 (http://www.freetype.org)..." >> config.log
+echo -n "checking whether SDL works..."
+cat << EOT > conftest.c
+
+#include <stdio.h>
+
+#include <SDL.h>
+
+int
+main(int argc, char *argv[])
+{
+	SDL_Surface su;
+	SDL_TimerID tid;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		fprintf("SDL_Init: %s\n", SDL_GetError());
+		return (1);
+	}
+	return (0);
+}
+
+
+EOT
+compile="ok"
+echo cc ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> config.log
+cc ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef sdl_works" >> engine/mcconfig.h
+echo "#define sdl_works" $sdl_works >> engine/mcconfig.h
+echo "#endif /* sdl_works */" >> engine/mcconfig.h
+
+	sdl_works=yes
+
+	echo "yes"
+else
+	echo "no"
+fi
+if [ "${sdl_works}" = "yes" ]; then
+NONE=1
+else
+echo "The SDL test would not compile."
+exit 1
+fi
+echo -n "checking for FreeType (http://www.freetype.org)..."
+echo "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
 which="`which freetype-config`"
 if [ -n "$which" -a -x "$which" ]; then
@@ -569,10 +621,10 @@ fi
 if [ "${freetype_found}" = "yes" ]; then
 echo "yes"
 else
-echo "Could not find the FreeType2 library"
+echo "Could not find the FreeType library"
 exit 1
 fi
-echo -n "checking whether FreeType2 works..."
+echo -n "checking whether FreeType works..."
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -610,20 +662,20 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_FREETYPE" >> engine/mcconfig.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/mcconfig.h
-echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
+	echo "#ifndef freetype_works" >> engine/mcconfig.h
+echo "#define freetype_works" $freetype_works >> engine/mcconfig.h
+echo "#endif /* freetype_works */" >> engine/mcconfig.h
 
-	HAVE_FREETYPE=yes
+	freetype_works=yes
 
 	echo "yes"
 else
 	echo "no"
 fi
-if [ "${HAVE_FREETYPE}" = "yes" ]; then
+if [ "${freetype_works}" = "yes" ]; then
 NONE=1
 else
-echo "The FreeType2 test would not compile."
+echo "The FreeType test would not compile."
 exit 1
 fi
 if [ "${with_x11}" != "no" ]
