@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.19 2003/03/07 03:24:49 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.20 2003/03/10 02:13:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -113,7 +113,7 @@ merge_create_brush(int argc, union evarg *argv)
 	}
 
 	m = emalloc(sizeof(struct map));
-	map_init(m, MAP_2D, m_name, NULL);
+	map_init(m, m_name, NULL);
 
 	if (object_load(m) == -1) {
 		if (map_alloc_nodes(m,
@@ -629,7 +629,7 @@ merge_load(void *p, int fd)
 		m_name = read_string(fd, NULL);
 
 		nbrush = emalloc(sizeof(struct map));
-		map_init(nbrush, MAP_2D, m_name, NULL);
+		map_init(nbrush, m_name, NULL);
 		map_load(nbrush, fd);
 
 		free(m_name);

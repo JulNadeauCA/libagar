@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.82 2003/03/10 05:49:10 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.83 2003/03/10 06:02:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -157,7 +157,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 
 	/* The map editor is required for tile maps/edition. */
 	if (!mapedition && (mv->flags & (MAPVIEW_TILEMAP|MAPVIEW_EDIT))) {
-		fatal("no map editor\n");
+		fatal("no map editor");
 	}
 
 	widget_map_color(mv, BORDER_COLOR, "border", 200, 200, 200);
