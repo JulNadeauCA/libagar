@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.7 2002/02/21 02:20:14 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.8 2002/02/25 11:07:24 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -8,13 +8,13 @@ enum {
 
 struct viewport {
 	int	mode;			/* Display mode */
-	int	flags;
 	int	fps;			/* Refresh rate in FPS */
-	int	width, height, depth;	/* Viewport geometry */
+	Uint32	flags;
+	Uint32	width, height, depth;	/* Viewport geometry */
 	struct	map *map;		/* Currently visible map */
-	int	mapw, maph;		/* Map coordinates */
-	int	mapx, mapy;		/* Map coordinates */
-	int	mapxoffs, mapyoffs;	/* Map display offset */
+	Uint32	mapw, maph;		/* Map coordinates */
+	Uint32	mapx, mapy;		/* Map coordinates */
+	Uint32	mapxoffs, mapyoffs;	/* Map display offset */
 
 	SDL_Surface	*v;		/* Surface */
 };
