@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.62 2004/12/17 03:19:40 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.63 2005/02/08 15:52:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -71,9 +71,13 @@ struct mapview {
 	struct toolbar *toolbar;	/* Optional toolbar */
 	struct statusbar *statusbar;	/* Optional status bar */
 	struct label *status;		/* Optional status label */
-	struct tool *curtool;
-	TAILQ_HEAD(, tool) tools;
-	SLIST_HEAD(, mapview_draw_cb) draw_cbs;
+	struct tlist *art_tl;		/* Optional artwork list */
+	struct tlist *objs_tl;		/* Optional object list */
+	struct tlist *layers_tl;	/* Optional layer list */
+
+	struct tool *curtool;			/* Selected tool */
+	TAILQ_HEAD(, tool) tools;		/* Map edition tools */
+	SLIST_HEAD(, mapview_draw_cb) draw_cbs;	/* Post-draw callbacks */
 };
 
 enum mapview_prop_labels {

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.240 2005/03/05 12:14:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.241 2005/04/02 04:08:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1861,6 +1861,7 @@ map_edit(void *p)
 
 	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
 	toolbar_init(toolbar, TOOLBAR_HORIZ, 1, 0);
+	WIDGET(toolbar)->flags &= ~(WIDGET_FOCUSABLE);
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
@@ -1977,23 +1978,30 @@ map_edit(void *p)
 		struct tlist *tl;
 	
 		nb = notebook_new(box_h, NOTEBOOK_HFILL);
+
 		ntab = notebook_add_tab(nb, _("Artwork"), BOX_VERT);
 		notebook_select_tab(nb, ntab);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
 			event_new(tl, "tlist-poll", poll_art, "%p", world);
+			mv->art_tl = tl;
+			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}
 
 		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
 			event_new(tl, "tlist-poll", poll_objs, "%p", world);
+			mv->objs_tl = tl;
+			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}
 		
 		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
 		{
 			tl = tlist_new(ntab, TLIST_POLL);
 			event_new(tl, "tlist-poll", poll_layers, "%p", m);
+			mv->layers_tl = tl;
+			WIDGET(tl)->flags &= ~(WIDGET_FOCUSABLE);
 		}
 		
 		box_v = box_new(box_h, BOX_VERT, BOX_WFILL|BOX_HFILL);
@@ -2005,6 +2013,8 @@ map_edit(void *p)
 			    mapview_selected_layer, "%p", mv);
 			combo_select_pointer(laysel, &m->layers[m->cur_layer]);
 			object_attach(box_v, mv);
+			WIDGET(laysel)->flags &= ~(WIDGET_FOCUSABLE);
+			WIDGET(laysel->list)->flags &= ~(WIDGET_FOCUSABLE);
 		}
 	}
 
