@@ -11,6 +11,7 @@ struct direction {
 #define DIR_DOWN	0x02
 #define DIR_LEFT	0x04
 #define DIR_RIGHT	0x08
+#define DIR_ALL		0xff
 
 	int	flags;
 #define DIR_SCROLL	0x01
