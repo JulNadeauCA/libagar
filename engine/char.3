@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: char.3,v 1.1 2002/01/30 12:11:06 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -56,12 +56,16 @@ Directional/speed information
 .nr nS 1
 .Ft "struct char *"
 .Fn char_create "char *name" "char *descr" "int maxhp" "int maxmp" "int flags"
+.Pp
 .Ft "int"
 .Fn char_link "void *obj"
+.Pp
 .Ft "void"
 .Fn char_event "struct object *, SDL_Event *"
+.Pp
 .Ft "void"
 .Fn char_destroy "void *obj"
+.Pp
 .nr nS 0
 .Pp
 .Fn char_create
@@ -93,14 +97,19 @@ SDL_KEYUP
 .nr nS 1
 .Ft "void"
 .Fn char_setspeed "struct character *ch" "Uint32 speed"
+.Pp
 .Ft "void"
 .Fn CHAR_PLOT "struct character *ch" "struct map *map" "int x" "int y" 
+.Pp
 .Ft "void"
 .Fn CHAR_MOVE "struct character *ch" "int nx" "int ny"
+.Pp
 .Ft "void"
 .Fn CHAR_SETSPRITE "struct character *ch" "int soffs"
+.Pp
 .Ft "void"
 .Fn CHAR_SETANIM "struct character *ch" "int aoffs"
+.Pp
 .nr nS 0
 .Pp
 .Fn char_setspeed
