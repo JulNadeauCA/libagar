@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.48 2003/08/26 07:55:00 vedge Exp $
+.\"	$Csoft: object.3,v 1.49 2003/09/14 02:29:52 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -527,11 +527,9 @@ Eventually, if media types other than gfx/audio is required, the
 .Nm
 layer could handle media associations in a more generic manner.
 .Pp
-The underlying
-.Fn object_load
-and
-.Fn object_save
-mechanic is complicated.
+The
+.Va save
+operations could return void.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
