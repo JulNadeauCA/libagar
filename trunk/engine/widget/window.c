@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.76 2002/09/07 06:04:38 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.77 2002/09/11 23:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -207,16 +207,6 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->wid.w = 0;
 	win->wid.h = 0;
 
-	/* Force animation for relevant backgrounds. */
-	switch (win->type) {
-	case WINDOW_CUBIC:
-	case WINDOW_CUBIC2:
-		win->flags |= WINDOW_ANIMATE;
-		break;
-	default:
-		break;
-	}
-
 	/* XXX pref */
 	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
 	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
@@ -243,11 +233,7 @@ window_draw(struct window *win)
 	rd.w = win->w;
 	rd.h = win->h;
 
-	switch (win->type) {
-	default:
-		SDL_FillRect(v, &rd, win->bgcolor);
-		break;
-	}
+	SDL_FillRect(v, &rd, win->bgcolor);
 
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
@@ -345,32 +331,6 @@ window_draw(struct window *win)
 #endif
 }
 
-#if 0
-/*
- * Update animations.
- * Window must be locked.
- */
-void
-window_animate(struct window *win)
-{
-	struct region *reg;
-	struct widget *wid;
-
-	/* Render animated widgets. */
-	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			if (WIDGET_OPS(wid)->widget_animate != NULL) {
-				WIDGET_OPS(wid)->widget_animate(wid);
-			}
-		}
-	}
-
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED) { /* XXX special */
-		SDL_UpdateRect(view->v, win->x, win->y, win->w, win->h);
-	}
-}
-#endif
-
 /*
  * Attach a region to this window.
  * Window must be locked.
@@ -424,105 +384,68 @@ window_destroy(void *p)
 	pthread_mutex_destroy(&win->lock);
 }
 
-/* View and window must not be locked. XXX bad locking */
 int
-window_show(struct window *win)
-{
-	int rv;
-
-	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
-		pthread_mutex_lock(&view->lock);
-
-	pthread_mutex_lock(&win->lock);
-	rv = window_show_locked(win);
-	pthread_mutex_unlock(&win->lock);
-
-	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
-		pthread_mutex_unlock(&view->lock);
-
-	return (rv);
-}
-
-/* View, window and world must not be locked by the caller thread.
-   XXX bad locking */
-int
-window_hide(struct window *win)
-{
-	int rv;
-
-	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
-		pthread_mutex_lock(&view->lock);
-
-	pthread_mutex_lock(&win->lock);
-	rv = window_hide_locked(win);
-	pthread_mutex_unlock(&win->lock);
-
-	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
-		pthread_mutex_unlock(&view->lock);
-
-	if (win->flags & WINDOW_SAVE_POSITION) {
-		object_save(win);
-	}
-
-	return (rv);
-}
-
-/* View and window must be locked. */
-int
-window_show_locked(struct window *win)
+window_show(struct window *win, int lock_view, int lock_win)
 {
 	struct region *reg;
 	struct widget *wid;
-	int prev;
 
-	prev = (win->flags & WINDOW_SHOWN);
-	if (prev) {
-		/* Already visible. */
-		return (prev);
+	if (lock_view)	pthread_mutex_lock(&view->lock);
+	if (lock_win)	pthread_mutex_lock(&win->lock);
+
+	/* See if it's already visible. */
+	if (win->flags & WINDOW_SHOWN) {
+		if (lock_view)	pthread_mutex_unlock(&view->lock);
+		if (lock_win)	pthread_mutex_unlock(&win->lock);
+		return (1);
 	}
+	win->flags |= WINDOW_SHOWN;
 
+	/* Try to load previously saved window geometry/coordinates. */
 	if (win->flags & WINDOW_SAVE_POSITION) {
-		/* Try to load previously saved window geometry/coordinates. */
 		object_load(win);
 	}
-
-	win->flags |= WINDOW_SHOWN;
 
 	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 		window_update_mask(win);
 	}
 
+	/* Focus on the window. */
 	view->focus_win = win;
-	
+
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			event_post(wid, "widget-shown", "%p", win);
 		}
 	}
+
+	/* Size the window, in case it's new. */
 	window_resize(win);
-	return (prev);
+
+	if (lock_win)	pthread_mutex_unlock(&win->lock);
+	if (lock_view)	pthread_mutex_unlock(&view->lock);
+	return (0);
 }
 
-/*
- * Window must be locked.
- * View must be locked in tile-based mode XXX
- */
 int
-window_hide_locked(struct window *win)
+window_hide(struct window *win, int lock_view, int lock_win)
 {
 	struct region *reg;
 	struct widget *wid;
-	int prev;
 
-	prev = (win->flags & WINDOW_SHOWN);
-	if (!prev) {
-		/* Already hidden. */
-		return (prev);
+	if (lock_view)	pthread_mutex_lock(&view->lock);
+	if (lock_win)	pthread_mutex_lock(&win->lock);
+
+	/* See if it's already hidden. */
+	if ((win->flags & WINDOW_SHOWN) == 0) {
+		if (lock_view)	pthread_mutex_unlock(&view->lock);
+		if (lock_win)	pthread_mutex_unlock(&win->lock);
+		return (0);
 	}
-	
+
+	/* XXX cycle focus */
 	view->focus_win = NULL;
 
-	/* Notify child widgets */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			event_post(wid, "widget-hidden", "%p", win);
@@ -549,12 +472,16 @@ window_hide_locked(struct window *win)
 		}
 		break;
 	}
-	
+
+	/* Save the window state. */
 	if (win->flags & WINDOW_SAVE_POSITION) {
 		object_save(win);
 	}
 
-	return (prev);
+	if (lock_win)	pthread_mutex_unlock(&win->lock);
+	if (lock_view)	pthread_mutex_unlock(&view->lock);
+
+	return (1);
 }
 
 /*
@@ -876,7 +803,7 @@ window_event_all(SDL_Event *ev)
 			if (ev->type == SDL_MOUSEBUTTONDOWN) {
 				if (ev->button.y - win->y <= win->titleh) {
 				    	if (ev->button.x - win->x < 20) {
-						window_hide_locked(win);
+						window_hide(win, 0, 0);
 					}
 					view->winop = VIEW_WINOP_MOVE;
 					view->wop_win = win;
