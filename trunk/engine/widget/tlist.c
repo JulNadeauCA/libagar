@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.9 2002/11/04 08:34:53 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.10 2002/11/07 04:30:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -60,9 +60,9 @@ enum {
 	SELECTION_MOUSE_BUTTON = 1
 };
 
-static void	tlist_mouse_button_down(int, union evarg *);
-static void	tlist_mouse_button_up(int, union evarg *);
-static void	tlist_mouse_motion(int, union evarg *);
+static void	tlist_mousebuttondown(int, union evarg *);
+static void	tlist_mousebuttonup(int, union evarg *);
+static void	tlist_mousemotion(int, union evarg *);
 static void	tlist_keydown(int, union evarg *);
 static void	tlist_scaled(int, union evarg *);
 static void	tlist_attached(int, union evarg *);
@@ -113,9 +113,9 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	scrollbar_init(tl->vbar, -1, -1, tl->item_h, SCROLLBAR_VERTICAL);
 	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
-	event_new(tl, "window-mousemotion", 0, tlist_mouse_motion, NULL);
-	event_new(tl, "window-mousebuttonup", 0, tlist_mouse_button_up, NULL);
-	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button_down,
+	event_new(tl, "window-mousemotion", 0, tlist_mousemotion, NULL);
+	event_new(tl, "window-mousebuttonup", 0, tlist_mousebuttonup, NULL);
+	event_new(tl, "window-mousebuttondown", 0, tlist_mousebuttondown,
 	    NULL);
 	event_new(tl, "window-keydown", 0, tlist_keydown, NULL);
 	event_new(tl, "attached", 0, tlist_attached, NULL);
@@ -307,7 +307,7 @@ tlist_unselect_all(struct tlist *tl)
 }
 
 static void
-tlist_mouse_motion(int argc, union evarg *argv)
+tlist_mousemotion(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct scrollbar *sb = tl->vbar;
@@ -342,7 +342,7 @@ tlist_mouse_motion(int argc, union evarg *argv)
 }
 
 static void
-tlist_mouse_button_up(int argc, union evarg *argv)
+tlist_mousebuttonup(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	
@@ -350,7 +350,7 @@ tlist_mouse_button_up(int argc, union evarg *argv)
 }
 
 static void
-tlist_mouse_button_down(int argc, union evarg *argv)
+tlist_mousebuttondown(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct scrollbar *sb = tl->vbar;
@@ -358,21 +358,24 @@ tlist_mouse_button_down(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tlist_item *ti;
+	int index;
 	
 	WIDGET_FOCUS(tl);
 
-	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {
+	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar click? */
 		event_forward(sb, "window-mousebuttondown", argc, argv);
 		return;
 	}
 
-	if (button != SELECTION_MOUSE_BUTTON) {
+	if (button != SELECTION_MOUSE_BUTTON) {		/* Selection button? */
 		return;
 	}
 	
 	pthread_mutex_lock(&tl->items_lock);
-	ti = tlist_item_index(tl,
-	    (sb->range.start + (y - sb->range.soft_start) / tl->item_h));
+	index = sb->range.start + (y - sb->range.soft_start) / tl->item_h;
+	dprintf("range.start = %d, y = %d, soft = %d, item_h = %d\n",
+	    sb->range.start, y, sb->range.soft_start, tl->item_h);
+	ti = tlist_item_index(tl, index);
 	if (ti != NULL) {
 		if (tl->flags & TLIST_MULTI_STICKY ||
 		   ((tl->flags & TLIST_MULTI) &&
@@ -387,6 +390,8 @@ tlist_mouse_button_down(int argc, union evarg *argv)
 			ti->selected++;
 		}
 		event_post(tl, "tlist-changed", "%p, %i", ti, 1);
+	} else {
+		dprintf("no item at index %d\n", index);
 	}
 	pthread_mutex_unlock(&tl->items_lock);
 }

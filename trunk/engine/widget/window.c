@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.93 2002/11/10 01:40:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.94 2002/11/10 03:14:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -179,7 +179,6 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->type = ((fl & WINDOW_TYPE) == 0) ?
 	    WINDOW_DEFAULT_TYPE : (fl & WINDOW_TYPE);
 	win->spacing = 4;
-	win->redraw = 0;
 	win->focus = NULL;
 	win->caption = NULL;
 	win->minw = minw;
@@ -374,9 +373,6 @@ window_draw(struct window *win)
 		/* The screen will be redrawn entirely. */
 		break;
 	}
-#if 0
-	win->redraw = 0;
-#endif
 }
 
 /*
@@ -431,11 +427,8 @@ window_destroy(void *p)
 		object_destroy(reg);
 	}
 
-	if (win->caption != NULL) {
-		free(win->caption);
-	}
+	free(win->caption);
 	free(win->border);
-
 	pthread_mutex_destroy(&win->lock);
 	pthread_mutexattr_destroy(&win->lockattr);
 }
@@ -970,7 +963,6 @@ scan_wins:
 			    ev->type == SDL_KEYUP) {
 				cycle_widgets(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));
-				win->redraw++;
 				goto posted;
 			}
 			/* Widget event */
