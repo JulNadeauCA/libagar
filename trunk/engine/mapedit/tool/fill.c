@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.9 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.10 2003/03/16 23:13:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -86,8 +86,8 @@ fill_window(void *p)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
 		static const char *mode_items[] = {
-			"Fill map",
-			"Clear map",
+			"Fill",
+			"Clear",
 			NULL
 		};
 		struct radio *rad;
