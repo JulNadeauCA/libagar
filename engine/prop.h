@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.15 2003/04/17 08:18:13 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.16 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -74,7 +74,8 @@ extern DECLSPEC struct prop	*prop_set_long_double(void *, char *,
 				                      long double);
 # endif
 #endif
-extern DECLSPEC struct prop	*prop_set_string(void *, char *, char *, ...);
+extern DECLSPEC struct prop	*prop_set_string(void *, char *, const char *,
+				                 ...);
 extern DECLSPEC struct prop	*prop_set_pointer(void *, char *, void *);
 
 extern DECLSPEC struct prop	*prop_get(void *, char *, enum prop_type,

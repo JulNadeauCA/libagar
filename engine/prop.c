@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.28 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.30 2003/04/17 08:18:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -215,7 +215,7 @@ prop_set_long_double(void *ob, char *key, long double ld)
 #endif /* FLOATING_POINT */
 
 struct prop *
-prop_set_string(void *ob, char *key, char *fmt, ...)
+prop_set_string(void *ob, char *key, const char *fmt, ...)
 {
 	va_list ap;
 	char *s;
