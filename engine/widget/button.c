@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.51 2003/01/20 12:05:45 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.52 2003/01/21 03:41:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -141,11 +141,14 @@ button_scaled(int argc, union evarg *argv)
 	int x, y, nw, nh;
 	Uint32 col = 0;
 	Uint8 *src, *dst, r1, g1, b1, a1;
-	
-	if (WIDGET(b)->w < 6 || WIDGET(b)->h < 6) {
-		return;
-	}
 
+	/* Auto-size the button. */
+	if (WIDGET(b)->rw == -1)
+		WIDGET(b)->w = b->label_s->w;
+	if (WIDGET(b)->rh == -1)
+		WIDGET(b)->h = b->label_s->h;
+
+	/* Scale the label. */
 	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
 	if (nw > WIDGET(b)->w - 6)
 		nw = WIDGET(b)->w - 6;
@@ -153,6 +156,7 @@ button_scaled(int argc, union evarg *argv)
 	if (nh > WIDGET(b)->h - 6)
 		nh = WIDGET(b)->h - 6;
 
+	/* Limit to a reasonable size. */
 	if (nw > b->label_s->w*2)
 		nw = b->label_s->w*2;
 	else if (nw < b->label_s->w)
