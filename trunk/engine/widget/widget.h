@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.36 2002/09/07 02:30:00 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.37 2002/09/11 23:53:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -29,7 +29,8 @@ struct widget {
 	struct	 object obj;
 	int	 flags;
 #define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
-#define WIDGET_MOUSEOUT		0x02	/* Receive window-mouseout events */
+#define WIDGET_UNFOCUSED_MOTION	0x02	/* Receive window-mousemotion events
+					   even when the widget isn't focused */
 	struct {
 		SDL_Surface	*source;	/* Source surface */
 		int		 redraw;	/* Update the source surface */
@@ -144,6 +145,12 @@ struct widget {
      (xa) < (WIDGET_ABSX((wida)) + WIDGET((wida))->w) &&	\
      (ya) < (WIDGET_ABSY((wida)) + WIDGET((wida))->h))
 
+#define WIDGET_INSIDE_RELATIVE(wida, xa, ya)	\
+    ((xa) >= 0 && 				\
+     (ya) >= 0 &&				\
+     (xa) <= WIDGET((wida))->w &&		\
+     (ya) <= WIDGET((wida))->h)
+
 #ifdef DEBUG
 # define WIDGET_ASSERT(ob, typestr) do {				\
 	if (strcmp(WIDGET((ob))->type, typestr) != 0) {			\
@@ -159,7 +166,6 @@ struct widget {
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
 void	widget_destroy(void *);
 void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
-void	widget_invalidate_surface(void *);
 
 void	widget_attach(void *, void *);
 void	widget_detach(void *, void *);
