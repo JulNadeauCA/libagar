@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.41 2002/12/23 02:22:39 vedge Exp $
+# $Csoft: configure.in,v 1.42 2002/12/24 08:47:12 vedge Exp $
 
 makeout(Makefile.config);
 inclout(config);
@@ -45,7 +45,7 @@ check(strlcpy);
 check(asprintf);
 check(vasprintf);
 
-mdefine(CFLAGS, "$CFLAGS -g -I$S");
+mdefine(CFLAGS, "$CFLAGS -g -I$SRC");
 if [ "${cc_is_gcc}" = "yes" ]; then
 	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
 fi
