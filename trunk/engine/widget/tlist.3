@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.1 2002/10/30 22:28:42 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.2 2002/11/14 02:17:10 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -190,6 +190,11 @@ was inserted into the list.
 The
 .Fa item
 was selected/unselected.
+.It Fn tlist-poll "void"
+The
+.Dv TLIST_POLL
+flag is set and the widget is about to be drawn or an event is being
+processed.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

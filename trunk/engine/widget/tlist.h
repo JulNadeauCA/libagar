@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.8 2002/11/14 02:17:10 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.9 2002/11/14 02:28:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -27,6 +27,8 @@ struct tlist {
 #define TLIST_MULTI		0x01	/* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02	/* Sticky multiple selections */
 #define TLIST_DROPDOWN		0x04	/* Drop-down menu */
+#define TLIST_POLL		0x08	/* Generate a tlist-poll event before
+					   each draw and each event. */
 
 	int	 xspacing;	/* Horiz spacing */
 	int	 yspacing;	/* Vert spacing */
