@@ -1,9 +1,11 @@
-/*	$Csoft: transform.h,v 1.8 2003/07/05 12:20:56 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.9 2003/08/26 13:48:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TRANSFORM_H_
 #define _AGAR_TRANSFORM_H_
 #include "begin_code.h"
+
+#define TRANSFORM_MAX_ARGS	64
 
 enum transform_type {
 	TRANSFORM_HFLIP,
@@ -16,6 +18,12 @@ struct transform {
 	Uint32			 *args;
 	int			  nargs;
 	TAILQ_ENTRY(transform)	  transforms;
+};
+
+struct transform_ent {
+	char			 *name;
+	enum transform_type	  type;
+	void			(*func)(SDL_Surface **, int, Uint32 *);
 };
 
 __BEGIN_DECLS
