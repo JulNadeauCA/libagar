@@ -1,13 +1,13 @@
-/*	$Csoft: event.h,v 1.3 2002/05/02 06:29:41 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.4 2002/05/31 10:48:34 vedge Exp $	*/
 
-union evarg {
+typedef union evarg {
 	void	*p;
 	char	*s;
 	char	 c;
 	int	 i;
 	long int li;
 	double	 f;
-};
+} *evargs;
 
 #define EVENT_MAXARGS	16
 
@@ -29,5 +29,5 @@ enum {
 void	*event_loop(void *);
 void	 event_new(void *, char *, int, void (*)(int, union evarg *),
 	     const char *, ...);
-void	 event_post(void *, const char *, const char *fmt, ...);
+void	 event_post(void *, char *, const char *fmt, ...);
 
