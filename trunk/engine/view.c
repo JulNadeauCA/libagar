@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.62 2002/08/28 04:50:03 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.63 2002/08/29 07:16:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -154,6 +154,11 @@ void
 view_destroy(void *p)
 {
 	struct viewport *v = p;
+	struct window *win;
+
+	TAILQ_FOREACH(win, &v->windowsh, windows) {
+		view_detach(win);
+	}
 
 	if (v->rootmap != NULL) {
 		rootmap_free_mask(v);
@@ -190,6 +195,11 @@ view_detach(void *child)
 	OBJECT_ASSERT(child, "window");
 	event_post(child, "detached", "%p", view);
 	TAILQ_REMOVE(&view->windowsh, win, windows);
+
+	if (win->flags & WINDOW_SAVE_POSITION) {
+		object_save(win);
+	}
+	object_destroy(win);
 }
 
 SDL_Surface *
