@@ -1,4 +1,5 @@
-/*	$Csoft: button.h,v 1.10 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.11 2002/06/01 02:52:09 vedge Exp $	*/
+/*	Public domain	*/
 
 struct button {
 	struct	 widget wid;

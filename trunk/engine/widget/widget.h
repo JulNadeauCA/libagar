@@ -1,4 +1,5 @@
-/*	$Csoft: widget.h,v 1.20 2002/05/28 12:46:53 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.21 2002/06/01 09:29:28 vedge Exp $	*/
+/*	Public domain	*/
 
 struct window;
 

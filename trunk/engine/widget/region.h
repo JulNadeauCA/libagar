@@ -1,4 +1,5 @@
-/*	$Csoft: region.h,v 1.4 2002/05/24 09:15:31 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.5 2002/05/28 12:46:41 vedge Exp $	*/
+/*	Public domain	*/
 
 TAILQ_HEAD(widgetsq, widget);
 

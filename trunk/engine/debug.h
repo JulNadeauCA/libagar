@@ -1,4 +1,5 @@
-/*	$Csoft: debug.h,v 1.12 2002/05/14 09:06:45 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.13 2002/05/31 10:41:48 vedge Exp $	*/
+/*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_

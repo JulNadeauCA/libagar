@@ -1,4 +1,5 @@
-/*	$Csoft: textbox.h,v 1.5 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.6 2002/06/03 02:30:59 vedge Exp $	*/
+/*	Public domain	*/
 
 struct textbox {
 	struct	 widget wid;

@@ -1,4 +1,5 @@
-/*	$Csoft: world.h,v 1.16 2002/05/31 10:49:52 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.17 2002/06/01 02:37:58 vedge Exp $	*/
+/*	Public domain	*/
 
 struct world {
 	struct	object obj;

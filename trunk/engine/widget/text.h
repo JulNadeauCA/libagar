@@ -1,4 +1,5 @@
-/*	$Csoft: text.h,v 1.5 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.6 2002/06/06 10:18:02 vedge Exp $	*/
+/*	Public domain	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
 #define _AGAR_TEXT_TEXT_H_

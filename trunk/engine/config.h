@@ -1,4 +1,5 @@
-/*	$Csoft: config.h,v 1.1 2002/05/28 06:03:47 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.2 2002/06/01 02:38:42 vedge Exp $	*/
+/*	Public domain	*/
 
 struct config {
 	struct	 object obj;
