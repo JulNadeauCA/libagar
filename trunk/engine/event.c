@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.60 2002/07/08 05:24:47 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.61 2002/07/08 08:39:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,6 +46,7 @@
 #include "widget/widget.h"
 #include "widget/label.h"
 #include "widget/text.h"
+#include "widget/graph.h"
 
 extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
@@ -59,13 +60,15 @@ static const struct event_proto {
 	/* Generic */
 	{ "attached", "%p" },				/* object */
 	{ "detached", "%p" },				/* object */
-
+	
 	/*
 	 * Widget type
 	 */
+	
 	/* Change in visibility */
-	{ "shown", "%p" },				/* window */
-	{ "hidden", "%p" },				/* window */
+	{ "widget-shown", "%p" },			/* window */
+	{ "widget-hidden", "%p" },			/* window */
+	
 	/* Button pushed */
 	{ "button-pushed", NULL },
 	/* Checkbox status changed to i */
@@ -80,15 +83,19 @@ static const struct event_proto {
 	/*
 	 * Window type
 	 */
+
 	/* Low-level events */
 	{ "window-mousebuttonup", "%i, %i, %i" },	/* button, x, y */
 	{ "window-mousebuttondown", "%i, %i, %i" },	/* button, x, y */
-	{ "window-mousemotion", "%i, %i" },		/* x, y */
+	{ "window-mousemotion", "%i, %i, %i, %i" },	/* x, y, xrel, yrel */
 	{ "window-mouseout", NULL },
 	{ "window-keyup", "%i, %i" },			/* keysym, keymod */
 	{ "window-keydown", "%i, %i" },			/* keysym, keymod */
 	/* Widget was just scaled */
-	{ "window-widget-scaled", "%i, %i" }		/* width, height */
+	{ "widget-scaled", "%i, %i" },			/* width, height */
+	/* Change in visibility */
+	{ "window-shown", NULL },
+	{ "window-hidden", NULL }
 };
 
 static struct window *fps_win;
@@ -165,7 +172,10 @@ event_hotkey(SDL_Event *ev)
 }
 
 #ifdef DEBUG
-#define UPDATE_FPS(delta)	label_printf(fps_label, "%d FPS", (delta))
+#define UPDATE_FPS(delta) do {				\
+	label_printf(fps_label, "%d FPS", (delta));	\
+	graph_plot(fps_graph_item, (delta));		\
+} while (/*CONSTCOND*/0)
 #else
 #define UPDATE_FPS(delta)
 #endif
@@ -187,14 +197,23 @@ event_loop(void *arg)
 	struct window *win;
 	int rv, delta;
 #ifdef DEBUG
-	struct region *fps_reg;
+	struct region *reg;
 	struct label *fps_label;
+	struct graph *fps_graph;
+	struct graph_item *fps_graph_item;
 	
 	fps_win = window_new("Frames/second", WINDOW_SOLID,
-	    view->w-141, view->h-65, 140, 64, 140, 64);
-	fps_reg = region_new(fps_win, REGION_HALIGN,
+	    view->w-143, view->h-114,
+	    133, 104,
+	    125, 91);
+	reg = region_new(fps_win, REGION_VALIGN,
 	    0, 0, 100, 100);
-	fps_label = label_new(fps_reg, "...", 0);
+	fps_label = label_new(reg, "...", 0);
+	WIDGET(fps_label)->rh = 20;
+	fps_graph = graph_new(reg, "Frames/sec", GRAPH_POINTS, GRAPH_SCROLL,
+	    96, 80);
+	fps_graph_item = graph_add_item(fps_graph, "fps",
+	    SDL_MapRGB(view->v->format, 255, 255, 255));
 #endif
 
 	/* Start the garbage collection process. */
