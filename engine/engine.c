@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.132 2004/04/26 03:21:17 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.133 2004/05/01 12:38:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -76,6 +76,7 @@ struct config *config;			/* Global configuration settings */
 struct object *world;			/* The Old Roots of Evil */
 pthread_mutex_t linkage_lock;		/* Protects object linkage */
 struct object engine_icons;		/* Global engine icons */
+void (*engine_atexit_func)(void) = NULL;
 
 /* Initialize the Agar engine. */
 int
@@ -231,6 +232,13 @@ engine_init(enum gfx_engine ge, enum text_engine te)
 	return (0);
 }
 
+/* Register a function to invoke in engine_destroy(). */
+void
+engine_atexit(void (*func)(void))
+{
+	engine_atexit_func = func;
+}
+
 /*
  * Release all resources allocated by the Agar engine.
  * Only one thread must be running.
@@ -238,6 +246,9 @@ engine_init(enum gfx_engine ge, enum text_engine te)
 void
 engine_destroy(void)
 {
+	if (engine_atexit_func != NULL)
+		engine_atexit_func();
+
 #ifdef EDITION
 	if (mapedition)
 		object_save(&mapedit);
