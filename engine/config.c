@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.30 2002/08/21 01:00:58 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.31 2002/08/25 09:11:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -25,10 +25,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pwd.h>
 #include <unistd.h>
 
 #include <libfobj/fobj.h>
@@ -73,6 +77,7 @@ enum {
 	DEBUG_CBOX,
 	UDATADIR_TBOX,
 	SYSDATADIR_TBOX,
+	DATAPATH_TBOX,
 	W_TBOX,
 	H_TBOX,
 	AL_BOX_RADIO,
@@ -101,12 +106,50 @@ config_new(void)
 void
 config_init(struct config *con)
 {
+	extern const struct gameinfo *gameinfo;		/* engine.c */
+	struct passwd *pwd;
+	struct stat sta;
+	size_t len, plen = 0;
+	char *spath;
+
+	pwd = getpwuid(getuid());
+
 	object_init(&con->obj, "engine-config", "config", NULL, 0, &config_ops);
 	con->flags = CONFIG_FONT_CACHE;
 	con->view.w = CONFIG_DEFAULT_WIDTH;
 	con->view.h = CONFIG_DEFAULT_HEIGHT;
 	con->view.bpp = CONFIG_DEFAULT_BPP;
 	con->widget_flags = 0;
+
+	/* User data directory */
+	len = strlen(pwd->pw_dir) + strlen(gameinfo->prog) + 4;
+	plen += len + 1;
+	con->path.user_data_dir = emalloc(len);
+	snprintf(con->path.user_data_dir, len, "%s/.%s", pwd->pw_dir,
+	    gameinfo->prog);
+
+	/* System data directory */
+	len = strlen(SHAREDIR) + strlen(gameinfo->prog) + 4;
+	plen += len + 1;
+	con->path.sys_data_dir = emalloc(len);
+	strlcpy(con->path.sys_data_dir, SHAREDIR, len);
+
+	/* Datafile path */
+	con->path.data_path = emalloc(plen);
+	snprintf(con->path.data_path, plen, "%s:%s",
+	    con->path.user_data_dir,
+	    con->path.sys_data_dir);
+	
+	if (stat(con->path.sys_data_dir, &sta) != 0) {
+		warning("%s: %s\n", con->path.sys_data_dir, strerror(errno));
+	}
+	
+	if (stat(con->path.user_data_dir, &sta) != 0 &&
+	    mkdir(con->path.user_data_dir, 00700) != 0) {
+		warning("created %s\n", con->path.user_data_dir);
+		fatal("%s: %s\n", con->path.user_data_dir, strerror(errno));
+	}
+
 	pthread_mutex_init(&con->lock, NULL);
 }
 
@@ -114,6 +157,10 @@ void
 config_destroy(void *p)
 {
 	struct config *con = p;
+
+	free(con->path.data_path);
+	free(con->path.user_data_dir);
+	free(con->path.sys_data_dir);
 
 	pthread_mutex_destroy(&con->lock);
 }
@@ -178,8 +225,8 @@ config_init_wins(struct config *con)
 	 */
 	win = window_new("Engine settings", WINDOW_CENTER,
 	    0, 0,
-	    398, 366,
-	    398, 366);
+	    480, 467,
+	    273, 467);
 	con->windows.settings = win;
 
 	/* Flags */
@@ -224,16 +271,22 @@ config_init_wins(struct config *con)
 	reg = region_new(win, REGION_VALIGN,  0, 45, 100, 18);
 	{
 		tbox = textbox_new(reg, "  User datadir: ",
-		    0, 100, 50);
-		textbox_printf(tbox, "%s", world->udatadir);
+		    0, 100, 33);
+		textbox_printf(tbox, "%s", config->path.user_data_dir);
 		event_new(tbox, "textbox-changed", 0,
 		    config_apply, "%i", UDATADIR_TBOX);
 
 		tbox = textbox_new(reg, "System datadir: ",
-		    0, 100, 50);
-		textbox_printf(tbox, "%s", world->sysdatadir);
+		    0, 100, 33);
+		textbox_printf(tbox, "%s", config->path.sys_data_dir);
 		event_new(tbox, "textbox-changed", 0,
 		    config_apply, "%i", SYSDATADIR_TBOX);
+		
+		tbox = textbox_new(reg, "Data file path: ",
+		    0, 100, 33);
+		textbox_printf(tbox, "%s", config->path.data_path);
+		event_new(tbox, "textbox-changed", 0,
+		    config_apply, "%i", DATAPATH_TBOX);
 	}
 
 	/* Resolution */
@@ -317,6 +370,7 @@ config_apply(int argc, union evarg *argv)
 		object_save(config);
 		break;
 	case UDATADIR_TBOX:
+	case DATAPATH_TBOX:
 	case SYSDATADIR_TBOX:
 		/* XXX */
 		break;
