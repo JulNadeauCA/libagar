@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.3 2004/05/13 10:32:59 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.4 2004/05/15 06:07:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -57,6 +57,9 @@ timeout_add(void *p, struct timeout *to, Uint32 dt)
 	Uint32 t = SDL_GetTicks()+dt;
 	int was_empty;
 
+	if (ob == NULL)
+		ob = world;
+
 	pthread_mutex_lock(&ob->lock);
 	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
 	CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
@@ -90,6 +93,9 @@ timeout_scheduled(void *p, struct timeout *to)
 	struct object *tob;
 	struct timeout *oto;
 
+	if (ob == NULL)
+		ob = world;
+
 	TAILQ_FOREACH(tob, &timeout_objq, tobjs) {
 		CIRCLEQ_FOREACH(oto, &tob->timeouts, timeouts) {
 			if (oto == to)
@@ -104,6 +110,9 @@ void
 timeout_del(void *p, struct timeout *to)
 {
 	struct object *ob = p;
+	
+	if (ob == NULL)
+		ob = world;
 	
 	object_lock(ob);
 	CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
@@ -120,6 +129,9 @@ lock_timeout(void *p)
 {
 	struct object *ob = p;
 
+	if (ob == NULL) {
+		ob = world;
+	}
 	object_lock(ob);
 	pthread_mutex_lock(&timeout_lock);
 }
@@ -129,6 +141,9 @@ unlock_timeout(void *p)
 {
 	struct object *ob = p;
 
+	if (ob == NULL) {
+		ob = world;
+	}
 	pthread_mutex_unlock(&timeout_lock);
 	object_unlock(ob);
 }
