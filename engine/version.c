@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.20 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.21 2002/11/30 01:23:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -66,8 +66,6 @@ version_read(int fd, const struct version *ver)
 	}
 	vermin = read_uint32(fd);
 	vermaj = read_uint32(fd);
-	user = read_string(fd);
-	host = read_string(fd);
 
 	if (vermaj != ver->vermaj) {
 		warning("%s: v%d.%d != %d.%d major differs\n", ver->name,
@@ -79,8 +77,11 @@ version_read(int fd, const struct version *ver)
 		    ver->vermaj, ver->vermin);
 	}
 
+	user = read_string(fd, NULL);
+	host = read_string(fd, NULL);
 	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, vermaj, vermin, user, host);
 	free(user);
+	free(host);
 
 	return (0);
 }

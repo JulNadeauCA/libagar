@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.9 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.10 2002/12/08 07:57:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -31,7 +31,6 @@
 #include <fcntl.h>
 
 #include <libfobj/fobj.h>
-#include <libfobj/buf.h>
 
 #include "version.h"
 
@@ -282,7 +281,7 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 				break;
 #endif
 			case PROP_STRING:
-				*(char **)p = strdup(prop->data.s);
+				*(char **)p = Strdup(prop->data.s);
 				break;
 			case PROP_POINTER:
 				*(void **)p = prop->data.p;
@@ -456,7 +455,7 @@ prop_load(void *p, int fd)
 	nprops = read_uint32(fd);
 
 	for (i = 0; i < nprops; i++) {
-		key = read_string(fd);
+		key = read_string(fd, NULL);
 		t = read_uint32(fd);
 		
 		debug(DEBUG_STATE, "prop %s (%d)\n", key, t);
@@ -500,11 +499,19 @@ prop_load(void *p, int fd)
 			break;
 #endif
 		case PROP_STRING:
-			prop_set_string(ob, key, "%s", read_string(fd));
+			{
+				char *sd;
+
+				sd = read_string(fd, NULL);
+				prop_set_string(ob, key, "%s", sd);
+				free(sd);
+			}
 			break;
 		default:
 			fatal("unknown property type: 0x%x\n", t);
+			break;
 		}
+		free(key);
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 
