@@ -1,16 +1,17 @@
-# $Csoft: csoft.lib.mk,v 1.23 2002/12/24 10:07:56 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.24 2003/03/05 16:13:09 vedge Exp $
 
-# Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+# Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+# <http://www.csoft.org>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
-# 1. Redistribution of source code must retain the above copyright
+# 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-# 2. Neither the name of CubeSoft Communications, nor the names of its
-#    contributors may be used to endorse or promote products derived from
-#    this software without specific prior written permission.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
 # 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -23,7 +24,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CFLAGS?=	-Wall -g
+CFLAGS?=	-Wall -O2 -g
 SH?=		sh
 CC?=		cc
 AR?=		ar
@@ -191,9 +192,11 @@ ${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
-depend:	depend-subdir
+depend: depend-subdir
 
-regress:	regress-subdir
+regress: regress-subdir
+
+.PHONY:	clean cleandir install deinstall depend regress
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.dep.mk
