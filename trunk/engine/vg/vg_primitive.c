@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.4 2004/05/12 04:53:13 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.5 2004/05/24 03:32:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -231,4 +231,13 @@ vg_line_primitive(struct vg *vg, int x1, int y1, int x2, int y2, Uint32 color)
 			}
 		}
 	}
+}
+
+void
+vg_rect_primitive(struct vg *vg, int x, int y, int w, int h, Uint32 color)
+{
+	vg_line_primitive(vg, x, y, x+w, y, color);
+	vg_line_primitive(vg, x, y, x, y+h, color);
+	vg_line_primitive(vg, x, y+h, x+w, y+h, color);
+	vg_line_primitive(vg, x+w, y, x+w, y+h, color);
 }
