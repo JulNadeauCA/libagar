@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.2 2002/12/26 07:02:57 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.3 2002/12/30 03:50:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -198,13 +198,13 @@ palette_scaled(int argc, union evarg *argv)
 {
 	struct palette *pal = argv[0].p;
 	int w = argv[1].i;
-	int h = argv[2].i;
+	int h = argv[2].i/2;
 	int i, sbh = h / pal->nbars;
 
 	for (i = 0; i < pal->nbars; i++) {
 		widget_set_position(pal->bars[i], WIDGET(pal)->x,
-		    WIDGET(pal)->y + i*(sbh/2));
-		widget_set_geometry(pal->bars[i], w - h - 2, sbh/2);
+		    WIDGET(pal)->y + i*sbh);
+		widget_set_geometry(pal->bars[i], w - h - 2, sbh);
 		event_forward(pal->bars[i], "widget-scaled", argc, argv);
 	}
 
@@ -219,12 +219,21 @@ palette_draw(void *p)
 {
 	struct palette *pal = p;
 	int i;
+	Uint32 color;
+	Uint8 r, g, b;
 
-	for (i = 0; i < pal->nbars; i++) {
-		scrollbar_draw(pal->bars[i]);
-	}
-	WIDGET_FILL_RECT(pal, &pal->rpreview, widget_get_uint32(pal, "color"));
+	color = widget_get_uint32(pal, "color");
+	WIDGET_FILL_RECT(pal, &pal->rpreview, color);
 	primitives.frame_rect(pal, &pal->rpreview, WIDGET_COLOR(pal, BG_COLOR));
+	
+	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	widget_set_int(pal->bars[0], "value", (int)r);
+	widget_set_int(pal->bars[1], "value", (int)g);
+	widget_set_int(pal->bars[2], "value", (int)b);
+
+	scrollbar_draw(pal->bars[0]);
+	scrollbar_draw(pal->bars[1]);
+	scrollbar_draw(pal->bars[2]);
 }
 
 void
