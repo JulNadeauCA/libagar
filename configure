@@ -121,7 +121,8 @@ RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
 SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
 HOST="$MACHINE:$RELEASE:$SYSTEM"
 
-echo > config.log
+echo "Host: $HOST" > config.log
+echo "HOst: $HOST"
 
 echo >Makefile.config
 if [ ! -e "config" ]; then
