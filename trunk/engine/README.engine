@@ -1,4 +1,4 @@
-$Csoft: README.engine,v 1.6 2002/06/07 11:07:18 vedge Exp $
+$Csoft: README.engine,v 1.7 2002/08/17 22:12:16 vedge Exp $
 
 Global keys
 -----------
@@ -14,7 +14,9 @@ F3:		Primitive drawing algorithm switch.
 F4:		Save state.
 F5:		Spawn a map verification thread.
 F6:		Show frames per second.
+F7:		Debug monitor.
 Ctrl+r:		Redraw the map.
+Ctrl+v:		Map view
 
 Environment variables
 ---------------------
