@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.1 2002/07/07 00:23:50 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.2 2002/07/09 08:24:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -38,8 +38,8 @@
 #include <engine/engine.h>
 #include <engine/queue.h>
 
-#include <engine/widget/window.h>
 #include <engine/widget/widget.h>
+#include <engine/widget/window.h>
 
 #include <engine/mapedit/mapedit.h>
 

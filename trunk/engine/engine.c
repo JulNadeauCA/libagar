@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.53 2002/07/08 03:17:08 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.54 2002/07/09 05:54:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,8 +49,8 @@
 #include "mapedit/mapedit.h"
 
 #include "widget/text.h"
-#include "widget/window.h"
 #include "widget/widget.h"
+#include "widget/window.h"
 #include "widget/textbox.h"
 #include "widget/keycodes.h"
 

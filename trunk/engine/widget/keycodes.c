@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.13 2002/07/07 00:24:32 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.14 2002/07/08 03:17:11 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -36,8 +36,8 @@
 #include <engine/queue.h>
 
 #include "text.h"
-#include "window.h"
 #include "widget.h"
+#include "window.h"
 #include "textbox.h"
 #include "keycodes.h"
 

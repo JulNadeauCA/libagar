@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.55 2002/07/09 05:55:07 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.56 2002/07/18 12:04:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include "physics.h"
 #include "config.h"
 
+#include "widget/widget.h"
 #include "widget/window.h"
 
 static const struct object_ops viewport_ops = {
