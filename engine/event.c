@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.66 2002/07/27 07:03:42 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.67 2002/07/29 06:33:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -146,7 +146,10 @@ event_hotkey(SDL_Event *ev)
 		break;
 #endif
 	case SDLK_F1:
-		window_show(config->settings_win);
+		window_show(config->windows.settings);
+		break;
+	case SDLK_F3:
+		window_show(config->windows.algorithm_sw);
 		break;
 	case SDLK_v:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
@@ -188,8 +191,8 @@ event_hotkey(SDL_Event *ev)
 	}							\
 } while (/*CONSTCOND*/0)
 
-void *
-event_loop(void *arg)
+void
+event_loop(void)
 {
 	SDL_Event ev;
 	Uint32 ltick, ntick;
@@ -200,11 +203,16 @@ event_loop(void *arg)
 	struct label *fps_label;
 	struct graph *fps_graph;
 	struct graph_item *fps_graph_item;
-	
+
+#if 0
 	fps_win = window_new("Frames/second", WINDOW_SOLID,
 	    view->w-143, view->h-114,
 	    133, 104,
 	    125, 91);
+#else
+	fps_win = window_new("Frames/second", WINDOW_CENTER,
+	    0, 0, 133, 104, 125, 91);
+#endif
 	reg = region_new(fps_win, REGION_VALIGN,
 	    0, 0, 100, 100);
 	fps_label = label_new(reg, "...", 0);
@@ -230,13 +238,13 @@ event_loop(void *arg)
 				if (m == NULL) {
 					dprintf("NULL map\n");
 					pthread_mutex_unlock(&view->lock);
-					engine_destroy();
-					return (NULL);
+					return;
 				}
 
 				pthread_mutex_lock(&m->lock);
 				rootmap_animate(m);
 				if (m->redraw != 0) {
+					dprintf("tile: redraw\n");
 					rootmap_draw(m);
 					COMPUTE_DELTA(delta, ntick);
 					m->redraw = 0;
@@ -248,19 +256,28 @@ event_loop(void *arg)
 			TAILQ_FOREACH(win, &view->windowsh, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
-					/* XXX */
+					/* XXX use indirect blit & microtiles */
 					window_draw(win);
+					if (view->gfx_engine !=
+					    GFX_ENGINE_GUI) {
+						SDL_UpdateRect(view->v,
+						    win->x, win->y, win->w,
+						    win->h);
+					}
 				}
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
 
+			/*
+			 * Always update the whole screen in GUI mode.
+			 * Indirect blits would obsolete this.
+			 */
 			if (view->gfx_engine == GFX_ENGINE_GUI) {
-				/* XXX unclear */
 				SDL_UpdateRect(view->v, 0, 0, 0, 0);
 				COMPUTE_DELTA(delta, ntick);
 			}
-			
+
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			switch (ev.type) {
@@ -339,9 +356,6 @@ event_loop(void *arg)
 			}
 		}
 	}
-
-	engine_destroy();
-	return (NULL);
 }
 
 #define EVENT_PUSHARG(ap, fmt, eev)				\
