@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.25 2002/04/23 07:19:07 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.26 2002/04/23 13:36:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -115,6 +115,9 @@ event_loop(void)
 		fatal("no map\n");
 		return;
 	}
+	
+	/* Start the garbage collection process. */
+	object_mediapool_init();
 
 	ltick = SDL_GetTicks();
 
