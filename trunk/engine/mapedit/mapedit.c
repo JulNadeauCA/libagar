@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.138 2003/02/02 21:13:59 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.139 2003/02/04 02:22:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -48,6 +48,12 @@
 #include "tool/shift.h"
 #include "tool/merge.h"
 
+static const struct object_ops mapedit_ops = {
+	NULL,		/* destroy */
+	mapedit_load,
+	mapedit_save
+};
+
 struct mapedit	mapedit;
 int		mapedition = 0;
 
@@ -56,14 +62,22 @@ static const struct tools_ent {
 	size_t		  size;
 	void		(*init)(void *);
 } tools[] = {
-	{ &mapedit.tools.stamp, sizeof(struct stamp), stamp_init },
-	{ &mapedit.tools.eraser, sizeof(struct eraser), eraser_init },
-	{ &mapedit.tools.magnifier, sizeof(struct magnifier), magnifier_init },
-	{ &mapedit.tools.resize, sizeof(struct resize), resize_init },
-	{ &mapedit.tools.propedit, sizeof(struct propedit), propedit_init },
-	{ &mapedit.tools.select, sizeof(struct select), select_init },
-	{ &mapedit.tools.shift, sizeof(struct shift), shift_init },
-	{ &mapedit.tools.merge, sizeof(struct merge), merge_init },
+	{ &mapedit.tools[MAPEDIT_STAMP], sizeof(struct stamp),
+	    stamp_init },
+	{ &mapedit.tools[MAPEDIT_ERASER], sizeof(struct eraser),
+	    eraser_init },
+	{ &mapedit.tools[MAPEDIT_MAGNIFIER], sizeof(struct magnifier),
+	    magnifier_init },
+	{ &mapedit.tools[MAPEDIT_RESIZE], sizeof(struct resize),
+	    resize_init },
+	{ &mapedit.tools[MAPEDIT_PROPEDIT], sizeof(struct propedit),
+	    propedit_init },
+	{ &mapedit.tools[MAPEDIT_SELECT], sizeof(struct select),
+	    select_init },
+	{ &mapedit.tools[MAPEDIT_SHIFT], sizeof(struct shift),
+	    shift_init },
+	{ &mapedit.tools[MAPEDIT_MERGE], sizeof(struct merge),
+	    merge_init },
 };
 static const int ntools = sizeof(tools) / sizeof(tools[0]);
 
@@ -107,7 +121,7 @@ mapedit_init(void)
 	int i;
 
 	object_init(&med->obj, "map-editor", "map-editor", "mapedit",
-	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_SYSTEM, NULL);
+	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_SYSTEM, &mapedit_ops);
 	med->curtool = NULL;
 	med->src_node = NULL;
 
@@ -118,13 +132,12 @@ mapedit_init(void)
 	prop_set_int(med, "tilemap-item-size", 16);
 	prop_set_bool(med, "tilemap-bg-moving", 1);
 	prop_set_int(med, "tilemap-bg-square-size", 16);
-	prop_set_uint32(med, "default-width", 64);
-	prop_set_uint32(med, "default-height", 32);
+	prop_set_uint32(med, "default-map-width", 64);
+	prop_set_uint32(med, "default-map-height", 32);
+	prop_set_uint32(med, "default-brush-width", 3);
+	prop_set_uint32(med, "default-brush-height", 3);
 
 	mapedition = 1;
-
-	/* Load the settings. */
-	object_load(&mapedit);
 
 	/* Initialize the map edition tools. */
 	for (i = 0; i < ntools; i++) {
@@ -136,6 +149,9 @@ mapedit_init(void)
 		toolent->init(*toolent->p);
 		world_attach(*toolent->p);
 	}
+	
+	/* Load the settings. */
+	object_load(&mapedit);
 
 	/* Create the dialogs. */
 	med->win.objlist = objq_window();
@@ -164,32 +180,32 @@ mapedit_init(void)
 		event_new(button, "button-pushed", window_generic_show,
 		    "%p", med->win.objlist);
 	
-		button = med->tools.stamp->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_STAMP),
+		button = med->tools[MAPEDIT_STAMP]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_STAMP),
 		    BUTTON_NOFOCUS|BUTTON_STICKY, xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.stamp);
+		    "%p", med->tools[MAPEDIT_STAMP]);
 
-		button = med->tools.magnifier->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER),
+		button = med->tools[MAPEDIT_MAGNIFIER]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_MAGNIFIER),
 		    BUTTON_NOFOCUS|BUTTON_STICKY,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.magnifier);
+		    "%p", med->tools[MAPEDIT_MAGNIFIER]);
 		
-		button = med->tools.select->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_SELECT),
+		button = med->tools[MAPEDIT_SELECT]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SELECT),
 		    BUTTON_NOFOCUS|BUTTON_STICKY,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.select);
+		    "%p", med->tools[MAPEDIT_SELECT]);
 		
-		button = med->tools.merge->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_MERGE),
+		button = med->tools[MAPEDIT_MERGE]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_MERGE),
 		    BUTTON_NOFOCUS|BUTTON_STICKY,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.merge);
+		    "%p", med->tools[MAPEDIT_MERGE]);
 	}
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
@@ -201,33 +217,33 @@ mapedit_init(void)
 		event_new(button, "button-pushed", window_generic_show,
 		    "%p", med->win.load_map);
 
-		button = med->tools.eraser->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_ERASER),
+		button = med->tools[MAPEDIT_ERASER]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_ERASER),
 		    BUTTON_STICKY|BUTTON_NOFOCUS,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.eraser);
+		    "%p", med->tools[MAPEDIT_ERASER]);
 
-		button = med->tools.resize->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_RESIZE),
+		button = med->tools[MAPEDIT_RESIZE]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_RESIZE),
 		    BUTTON_NOFOCUS|BUTTON_STICKY,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.resize);
+		    "%p", med->tools[MAPEDIT_RESIZE]);
 
-		button = med->tools.propedit->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_PROPEDIT),
+		button = med->tools[MAPEDIT_PROPEDIT]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPEDIT),
 		    BUTTON_NOFOCUS|BUTTON_STICKY,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.propedit);
+		    "%p", med->tools[MAPEDIT_PROPEDIT]);
 
-		button = med->tools.shift->button = button_new(reg, NULL,
-		    SPRITE(med, MAPEDIT_TOOL_SHIFT),
+		button = med->tools[MAPEDIT_SHIFT]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SHIFT),
 		    BUTTON_NOFOCUS|BUTTON_STICKY,
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
-		    "%p", med->tools.shift);
+		    "%p", med->tools[MAPEDIT_SHIFT]);
 	}
 	
 	window_show(med->win.toolbar);
@@ -236,3 +252,32 @@ mapedit_init(void)
 	world_attach(med);
 }
 
+int
+mapedit_load(void *p, int fd)
+{
+	int i;
+
+	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
+		if (OBJECT_OPS(mapedit.tools[i])->load == NULL) {
+			continue;
+		}
+		if (object_load(mapedit.tools[i]) == -1) {
+			dprintf("%s\n", error_get());
+		}
+	}
+	return (0);
+}
+
+int
+mapedit_save(void *p, int fd)
+{
+	int i;
+
+	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
+		if (OBJECT_OPS(mapedit.tools[i])->save == NULL) {
+			continue;
+		}
+		object_save(mapedit.tools[i]);
+	}
+	return (0);
+}
