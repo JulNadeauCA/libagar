@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.25 2002/12/31 02:00:56 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.26 2003/01/01 05:18:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -72,8 +72,8 @@ monitor_init(struct monitor *mon, char *name)
 	object_init(&mon->obj, "debug-monitor", name, "monitor",
 	    OBJECT_SYSTEM|OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
 
-	mon->toolbar = window_new("monitor-toolbar", 0, 0, view->h - 152,
-	    222, 105, 222, 105);
+	mon->toolbar = window_new("monitor-toolbar", 0, 0, view->h - 124,
+	    222, 124, 222, 105);
 	window_set_caption(mon->toolbar, "Debug monitor");
 
 	reg = region_new(mon->toolbar, 0, 0,  0, 100, 100);
