@@ -1,0 +1,114 @@
+.\"	$Csoft: view.3,v 1.4 2002/09/09 08:09:37 vedge Exp $
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 16, 2002
+.Dt WORLD 3
+.Os
+.Sh NAME
+.Nm world
+.Nd agar game object container
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/world.h>
+.Ed
+.Sh DESCRIPTION
+The agar
+.Nm
+layer manages the list of active objects.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "void"
+.Fn world_init "struct world *wo" "char *game_name"
+.Pp
+.Ft "void"
+.Fn world_destroy "struct world *wo"
+.Pp
+.Ft "int"
+.Fn world_load "struct world *wo" "int fd"
+.Pp
+.Ft "int"
+.Fn world_save "struct world *wo" "int fd"
+.nr nS 0
+.Pp
+The
+.Fn world_init
+function initializes the world structure.
+The
+.Fn world_destroy
+function destroys the world.
+.Pp
+The
+.Fn world_load
+function loads state of all active objects.
+The
+.Fn world_save
+function saves state of all active objects, and the object map to file
+descriptor
+.Fa fd .
+.Sh OBJECT LIST
+.nr nS 1
+.Ft void
+.Fn world_attach "struct world *parent" "struct object *child"
+.Pp
+.Ft void
+.Fn world_detach "struct world *parent" "struct object *child"
+.Pp
+.Ft int
+.Fn world_exists "struct object *obj"
+.Pp
+.Ft void *
+.Fn world_find "char *name"
+.nr nS 0
+.Pp
+The
+.Fn world_attach
+function attaches the object
+.Fa child
+to
+.Fa world .
+The
+.Fn world_detach
+function detaches the object
+.Fa child
+from 
+.Fa world .
+.Pp
+The
+.Fn world_exists
+function returns non-zero if the object
+.Fa obj
+is attached.
+The
+.Fn world_find
+function looks up the object list for an object named by the null-terminated
+string
+.Fa name .
+.Sh SEE ALSO
+.Xr agar 3 .
+.Sh HISTORY
+The
+.Nm
+layer first appeared in AGAR 1.0
