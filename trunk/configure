@@ -230,7 +230,7 @@ main(int argc, char *argv[])
 {
 	float f = 0.1;
 
-	printf("%f\n", f\n);
+	printf("%f\n", f);
 	return (0);
 }
 
@@ -264,7 +264,7 @@ main(int argc, char *argv[])
 {
 	double d = 0.1;
 	
-	printf("%f\n", d\n);
+	printf("%f\n", d);
 	return (0);
 
 EOT
@@ -297,7 +297,7 @@ main(int argc, char *argv[])
 {
 	long double ld = 0.1;
 	
-	printf("%Lf\n", ld\n);
+	printf("%Lf\n", ld);
 	return (0);
 }
 
