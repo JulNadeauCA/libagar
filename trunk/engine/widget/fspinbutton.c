@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.5 2003/11/19 11:09:26 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.6 2003/11/20 02:40:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -247,8 +247,9 @@ fspinbutton_scale(void *p, int w, int h)
 	WIDGET(input)->x = x;
 	WIDGET(input)->y = y;
 
+	/* XXX prescale */
 	if (units != NULL) {
-		widget_scale(input, w - 55, h);
+		widget_scale(input, w - 55 - 10, h);
 	} else {
 		widget_scale(input, w - 10, h);
 	}
@@ -257,7 +258,7 @@ fspinbutton_scale(void *p, int w, int h)
 	if (units != NULL) {
 		WIDGET(units)->x = x;
 		WIDGET(units)->y = y;
-		widget_scale(units, 45, h);
+		widget_scale(units, 55, h);
 		x += WIDGET(units)->w;
 	}
 
