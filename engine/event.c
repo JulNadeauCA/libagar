@@ -51,11 +51,25 @@ extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
 
 #ifdef DEBUG
-int event_debug = 0;
+#define DEBUG_UNDERRUNS		0x001
+#define DEBUG_VIDEO_UPDATES	0x002
+#define DEBUG_VIDEORESIZE_EV	0x004
+#define DEBUG_VIDEOEXPOSE_EV	0x008
+#define DEBUG_MOUSEMOTION_EV	0x010
+#define DEBUG_MOUSEBUTTON_EV	0x020
+#define DEBUG_JOY_EV		0x040
+#define DEBUG_KEY_EV		0x080
+#define DEBUG_QUIT_EV		0x100
+#define DEBUG_EVENT_NEW		0x200
+#define DEBUG_EVENT_DELIVERY	0x400
+#define DEBUG_ASYNC_EVENTS	0x800
+
+int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEO_UPDATES|
+			DEBUG_VIDEOEXPOSE_EV|DEBUG_MOUSEBUTTON_EV|
+			DEBUG_JOY_EV|DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
+#define	engine_debug event_debug
+
 static struct window *fps_win;
-#define EVENT_DEBUG if (event_debug) printf
-#else
-#define EVENT_DEBUG
 #endif
 
 static void	 event_hotkey(SDL_Event *);
@@ -125,9 +139,9 @@ event_hotkey(SDL_Event *ev)
 }
 
 #ifdef DEBUG
-#define UPDATE_FPS(delta) do {				\
-	label_printf(fps_label, "%d/100", (delta));	\
-	graph_plot(fps_item, (delta));			\
+#define UPDATE_FPS(delta) do {					\
+	label_printf(fps_label, "%d/100", (delta));		\
+	graph_plot(fps_item, (delta));				\
 } while (/*CONSTCOND*/0)
 #else
 #define UPDATE_FPS(delta)
@@ -137,7 +151,8 @@ event_hotkey(SDL_Event *ev)
 	(delta) = EVENT_MAXFPS - (SDL_GetTicks() - (ntick));	\
 	UPDATE_FPS((delta));					\
 	if ((delta) < 1) {					\
-		dprintf("%d/%d frames\n", (delta), 100);	\
+		debug(DEBUG_UNDERRUNS, "underrun: %d frames\n",	\
+		    (delta));					\
 		(delta) = 1;					\
 	}							\
 } while (/*CONSTCOND*/0)
@@ -182,24 +197,28 @@ event_loop(void)
 
 			view->ndirty = 0;
 
-			/* Render a the in the background. */
+			/* Tile-based mode */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 				struct map *m = view->rootmap->map;
-
+				
 				if (m == NULL) {
-					dprintf("NULL map\n");
+					dprintf("NULL map, exiting\n");
 					pthread_mutex_unlock(&view->lock);
 					return;
 				}
-
+				
 				pthread_mutex_lock(&world->lock);
 				pthread_mutex_lock(&m->lock);
 
 				/* Update animated nodes individually. */
+				debug(DEBUG_VIDEO_UPDATES,
+				    "updating animated nodes\n");
 				rootmap_animate();
 
 				/* Update static nodes individually. */
 				if (m->redraw != 0) {
+					debug(DEBUG_VIDEO_UPDATES,
+					    "updating static nodes\n");
 					rootmap_draw();
 					COMPUTE_DELTA(delta, ntick);
 					m->redraw = 0;
@@ -209,15 +228,17 @@ event_loop(void)
 			}
 
 			/* Update the windows. */
+			deprintf("updating windows: ");
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
-					/* XXX use indirect blit & microtiles */
+					deprintf(" %s", OBJECT(win)->name);
 					window_draw(win);
 				}
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
+			deprintf("\n");
 
 			/* Update the display. */
 			if (view->ndirty > 0) {
@@ -238,8 +259,11 @@ event_loop(void)
 					    view->dirty[i].h);
 				}
 #else
+				debug_n(DEBUG_VIDEO_UPDATES, "dirty rects: ");
 				SDL_UpdateRects(view->v, view->ndirty,
 				    view->dirty);
+				debug_n(DEBUG_VIDEO_UPDATES, "%d\n",
+				    view->ndirty);
 #endif
 				view->ndirty = 0;
 
@@ -269,13 +293,13 @@ event_dispatch(SDL_Event *ev)
 
 	switch (ev->type) {
 	case SDL_VIDEORESIZE:
-		EVENT_DEBUG("SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w,
-		     ev->resize.h);
+		debug(DEBUG_VIDEORESIZE_EV,
+		    "SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w, ev->resize.h);
 		view->w = ev->resize.w;
 		view->h = ev->resize.h;
 		break;
 	case SDL_VIDEOEXPOSE:
-		EVENT_DEBUG("SDL_VIDEOEXPOSE\n");
+		debug(DEBUG_VIDEOEXPOSE_EV, "SDL_VIDEOEXPOSE\n");
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_TILEBASED:
 			/* Redraw the map only. */
@@ -299,8 +323,8 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	case SDL_MOUSEMOTION:
-		EVENT_DEBUG("SDL_MOUSEMOTION x=%d y=%d\n", ev->motion.x,
-		    ev->motion.y);
+		debug(DEBUG_MOUSEMOTION_EV, "SDL_MOUSEMOTION x=%d y=%d\n",
+		    ev->motion.x, ev->motion.y);
 		rv = 0;
 		if (!TAILQ_EMPTY(&view->windows)) {
 			rv = window_event(ev);
@@ -308,7 +332,8 @@ event_dispatch(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		EVENT_DEBUG("SDL_MOUSEBUTTON%s b=%d x=%d y=%d\n",
+		debug(DEBUG_MOUSEBUTTON_EV,
+		    "SDL_MOUSEBUTTON%s b=%d x=%d y=%d\n",
 		    (ev->button.type == SDL_MOUSEBUTTONUP) ?
 		    "UP" : "DOWN", ev->button.button, ev->button.x,
 		    ev->button.y);
@@ -320,7 +345,7 @@ event_dispatch(SDL_Event *ev)
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
-		EVENT_DEBUG("SDL_JOY%s\n",
+		debug(DEBUG_JOY_EV, "SDL_JOY%s\n",
 		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
 		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
 		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" : "???");
@@ -330,7 +355,7 @@ event_dispatch(SDL_Event *ev)
 		event_hotkey(ev);
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
-		EVENT_DEBUG("SDL_KEY%s keysym=%d state=%s\n",
+		debug(DEBUG_KEY_EV, "SDL_KEY%s keysym=%d state=%s\n",
 		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
 		    (int)ev->key.keysym.sym,
 		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
@@ -344,8 +369,7 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	case SDL_QUIT:
-		EVENT_DEBUG("SDL_QUIT\n");
-		dprintf("shutting down (SDL_QUIT)\n");
+		debug(DEBUG_QUIT_EV, "SDL_QUIT\n");
 		if (view->rootmap == NULL) {			/* XXX */
 			pthread_mutex_unlock(&view->lock);
 		}
@@ -421,13 +445,14 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 	struct event *ev, *eev = NULL;
 	int newev = 0;
 
+	debug(DEBUG_EVENT_NEW, "%s: registered `%s' event\n", ob->name, name);
+
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, name) == 0) {
-#if 0
-			dprintf("replacing %s's existing %s handler\n",
+			debug(DEBUG_EVENT_NEW,
+			    "replacing %s's existing %s handler\n",
 			    ob->name, ev->name);
-#endif
 			eev = ev;
 			break;
 		}
@@ -467,16 +492,17 @@ event_post_async(void *p)
 #ifdef SERIALIZATION
 	struct event *eev = p;
 
-	dprintf("%p: async event start\n", (void *)pthread_self());
+	debug(DEBUG_ASYNC_EVENTS, "%p: async event start\n",
+	    (void *)pthread_self());
 	eev->handler(eev->argc, eev->argv);
-	dprintf("%p: async event end\n", (void *)pthread_self());
+	debug(DEBUG_ASYNC_EVENTS, "%p: async event end\n",
+	    (void *)pthread_self());
 
 	free(eev);
-	return (NULL);
 #else
 	fatal("thread safety not compiled in\n");
-	return (NULL);
 #endif
+	return (NULL);
 }
 
 /*
@@ -489,6 +515,9 @@ event_post(void *obp, char *name, const char *fmt, ...)
 {
 	struct object *ob = obp;
 	struct event *eev, *neev;
+
+	debug(DEBUG_EVENT_DELIVERY, "posting `%s' event to %s\n", name,
+	    ob->name);
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
@@ -527,6 +556,9 @@ event_forward(void *child, char *name, int argc, union evarg *argv)
 	union evarg nargv[EVENT_MAXARGS];
 	struct object *ob = child;
 	struct event *ev;
+
+	debug(DEBUG_EVENT_DELIVERY, "forwarding `%s' event to %s\n",
+	    name, ob->name);
 
 	pthread_mutex_lock(&ob->events_lock);
 

@@ -73,6 +73,15 @@ static void	window_focus(struct window *);
 static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
+#ifdef DEBUG
+#define DEBUG_STATE	0x01
+#define DEBUG_RESIZE	0x02
+#define DEBUG_DRAW	0x04
+
+int	window_debug = DEBUG_STATE|DEBUG_RESIZE|DEBUG_DRAW;
+#define	engine_debug window_debug
+#endif
+
 struct window *
 window_new(char *name, int flags, int x, int y, int w, int h,
     int minw, int minh)
@@ -269,6 +278,9 @@ window_draw(struct window *win)
 	struct region *reg;
 	struct widget *wid;
 	int i;
+	
+	debug_n(DEBUG_DRAW, "drawing %s (%dx%d):\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h);
 
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		SDL_FillRect(v, &win->rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
@@ -384,7 +396,11 @@ window_draw(struct window *win)
 	}
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
+		debug_n(DEBUG_DRAW, " %s(%d,%d)\n", OBJECT(reg)->name,
+		    reg->x, reg->y);
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			debug_n(DEBUG_DRAW, "  %s(%d,%d)\n", OBJECT(wid)->name,
+			    wid->x, wid->y);
 			WIDGET_OPS(wid)->widget_draw(wid);
 		}
 
@@ -1119,6 +1135,9 @@ window_resize(struct window *win)
 {
 	struct region *reg;
 
+	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h);
+
 	/* Clamp to view area, leave a margin. */
 	window_clamp(win);
 
@@ -1134,6 +1153,9 @@ window_resize(struct window *win)
 		struct widget *wid;
 		int x = win->borderw + 4, y = win->titleh + win->borderw + 4; 
 		int nwidgets = 0;
+
+		debug_n(DEBUG_RESIZE, " %s(%d,%d)\n", OBJECT(reg)->name,
+		    reg->x, reg->y);
 
 		/* XXX */
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)
@@ -1191,6 +1213,9 @@ window_resize(struct window *win)
 
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			int rw, rh;
+		
+			debug_n(DEBUG_RESIZE, "  %s(%d,%d)\n",
+			    OBJECT(wid)->name, x, y);
 
 			/* Update the widget coordinates. */
 			wid->x = x;
@@ -1258,6 +1283,7 @@ window_set_caption(struct window *win, const char *fmt, ...)
 
 	pthread_mutex_lock(&win->lock);
 
+	/* XXX */
 	Free(win->caption);
 	va_start(args, fmt);
 	if (vasprintf(&win->caption, fmt, args) == -1) {
@@ -1281,6 +1307,9 @@ window_load(void *p, int fd)
 	win->rd.y = read_uint32(fd);
 	win->rd.w = read_uint32(fd);
 	win->rd.h = read_uint32(fd);
+	
+	debug(DEBUG_STATE, "loaded %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
 
 	/* XXX scale */
 
@@ -1294,6 +1323,9 @@ int
 window_save(void *p, int fd)
 {
 	struct window *win = p;
+
+	debug(DEBUG_STATE, "saving %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
 
 	version_write(fd, &window_ver);
 	write_uint32(fd, win->rd.x);
