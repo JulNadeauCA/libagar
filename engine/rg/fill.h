@@ -1,4 +1,4 @@
-/*	$Csoft: resistor.h,v 1.5 2004/08/27 03:16:10 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.1 2005/01/17 02:19:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FILL_H_
@@ -15,6 +15,7 @@ struct fill {
 		FILL_SOLID,
 		FILL_HGRADIENT,
 		FILL_VGRADIENT,
+		FILL_CGRADIENT,
 		FILL_PATTERN
 	} type;
 	union {
@@ -37,11 +38,11 @@ struct fill {
 };
 
 __BEGIN_DECLS
-void	 fill_init(void *, const char *, int);
-int	 fill_load(void *, struct netbuf *);
-void	 fill_save(void *, struct netbuf *);
-
-struct window *fill_edit(void *);
+void		 fill_init(void *, struct tileset *, int);
+int		 fill_load(void *, struct netbuf *);
+void		 fill_save(void *, struct netbuf *);
+void		 fill_apply(void *, struct tile *, int, int);
+struct window	*fill_edit(void *, struct tileview *);
 __END_DECLS
 
 #include "close_code.h"
