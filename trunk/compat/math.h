@@ -1,4 +1,4 @@
-/*	$Csoft: math.h,v 1.1 2004/02/26 09:19:38 vedge Exp $	*/
+/*	$Csoft: math.h,v 1.2 2004/03/25 05:36:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_math.h>
@@ -22,9 +22,9 @@
 #define DBL_MAX		1.7976931348623157E+308
 #endif
 
-#ifdef min
+#ifndef min
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #endif
-#ifdef max
+#ifndef max
 #define max(a,b) ((a) <= (b) ? (a) : (b))
 #endif
