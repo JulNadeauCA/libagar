@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$Csoft: mkdep,v 1.6 2003/03/25 07:32:28 vedge Exp $
+#	$Csoft: mkdep,v 1.7 2003/08/09 01:25:48 vedge Exp $
 #	$OpenBSD: mkdep.gcc.sh,v 1.10 2000/07/23 22:22:07 millert Exp $
 #	$NetBSD: mkdep.gcc.sh,v 1.9 1994/12/23 07:34:59 jtc Exp $
 #
@@ -73,6 +73,11 @@ do
 		;;
 	esac
 done
+
+if [ "${ccargs}" = "" ]; then
+	echo 'mkdep: nothing to do'
+	exit 0
+fi
 
 if [ $# = 0 ] ; then
 	echo 'usage: mkdep [-p] [-f depend_file] [cc_flags] file ...'
