@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.11 2003/05/18 00:17:03 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.12 2003/06/14 07:15:43 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -632,6 +632,7 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 	int minx, maxx;
 	int miny, maxy;
 	struct cached_glyph *glyph;
+	int swapped = unicode_byteswapped;
 
 	status = 0;
 	minx = maxx = 0;
@@ -640,10 +641,47 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 	/* Load each character and sum it's bounding box. */
 	x = 0;
 	for (ch = unicode; *ch != '\0'; ch++) {
+		Uint16 c = *ch;
+
+		if (c == UNICODE_BOM_NATIVE) {
+			swapped = 0;
+			if (unicode == ch)
+				unicode++;
+			continue;
+		}
+		if (c == UNICODE_BOM_SWAPPED) {
+			swapped = 1;
+			if (unicode == ch)
+				unicode++;
+			continue;
+		}
+		if (swapped) {
+			c = SDL_Swap16(c);
+		}
+
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
 			return (-1);
 		}
 		glyph = font->current;
+
+		if ((ch == unicode) && (glyph->minx < 0)) {
+			/*
+			 * Fixes the texture wrapping bug when the first
+			 * letter has a negative minx value or horibearing
+			 * value.  The entire bounding box must be adjusted to
+			 * be bigger so the entire letter can fit without any
+			 * texture corruption or wrapping.
+			 *
+			 * Effects: First enlarges bounding box.
+			 * Second, xstart has to start ahead of its normal
+			 * spot in the negative direction of the negative minx
+			 * value. (pushes everything to the right).
+			 *
+			 * This will make the memory copy of the glyph bitmap
+			 * data work out correctly.
+			 */
+			z -= glyph->minx;
+		}
 
 		z = x + glyph->minx;
 		if (minx > z) {
@@ -675,13 +713,9 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 		*w = (maxx - minx);
 	}
 	if (h) {
-#if 1 /* This is correct, but breaks many applications. */
 		*h = (maxy - miny);
-#else
-		*h = font->height;
-#endif
 	}
-	return status;
+	return (status);
 }
 
 /* Render Latin-1 text. */
