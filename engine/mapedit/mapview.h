@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.22 2003/02/05 01:09:32 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.23 2003/02/12 01:17:50 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
@@ -16,15 +16,12 @@ struct mapview {
 #define MAPVIEW_CENTER		 0x100
 #define MAPVIEW_SAVEABLE	 0x200	/* Load/save keys */
 #define MAPVIEW_NO_CURSOR	 0x400	/* Hide cursor */
-
 	int	 prop_bg;	/* Background of node attributes */
 	int	 prop_style;	/* Style of node attributes */
-
 	struct {
 		int	scrolling;	/* Currently scrolling? */
 		int	x, y;		/* Current mouse position */
 	} mouse;
-
 	struct {		/* For inserting tiles dynamically */
 		enum {
 			MAPVIEW_CONSTR_HORIZ,	/* Horizontally, grow */
@@ -34,7 +31,6 @@ struct mapview {
 		int	x, y;		/* Current position */
 		int	nflags;		/* Noderef flags */
 	} constr;
-
 	struct map	*map;
 	struct node	*cur_node;
 	int		 mx, my;	/* Display offset (nodes) */
@@ -44,12 +40,10 @@ struct mapview {
 	SDL_TimerID	 zoom_tm;
 	int		*tilew, *tileh;
 	int		 cx, cy;	/* Cursor position (nodes) */
-
 	struct {		/* For MAPVIEW_INDEPENDENT_ZOOM */
 		Uint16	zoom;
 		int	tilew, tileh;
 	} izoom;
-
 	struct {		/* For node edition */
 		struct window	*win;		/* Node edition window */
 		struct button	*button;
@@ -71,11 +65,21 @@ enum mapview_prop_labels {
 	MAPVIEW_FRAME_4,
 	MAPVIEW_FRAME_5,
 	MAPVIEW_FRAME_6,
+	MAPVIEW_FRAMES_END,
 	MAPVIEW_BLOCK,
 	MAPVIEW_ORIGIN,
 	MAPVIEW_WALK,
 	MAPVIEW_CLIMB,
 	MAPVIEW_SLIPPERY,
+	MAPVIEW_EDGE,
+	MAPVIEW_EDGE_N,
+	MAPVIEW_EDGE_S,
+	MAPVIEW_EDGE_W,
+	MAPVIEW_EDGE_E,
+	MAPVIEW_EDGE_NW,
+	MAPVIEW_EDGE_NE,
+	MAPVIEW_EDGE_SW,
+	MAPVIEW_EDGE_SE,
 	MAPVIEW_BIO,
 	MAPVIEW_REGEN,
 	MAPVIEW_SLOW,

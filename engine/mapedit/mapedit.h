@@ -1,10 +1,11 @@
-/*	$Csoft: mapedit.h,v 1.68 2003/02/04 02:22:12 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.69 2003/02/10 04:46:05 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
 struct gendir;
 struct tool;
 
+/* Tools */
 enum {
 	MAPEDIT_STAMP,
 	MAPEDIT_ERASER,
@@ -30,6 +31,7 @@ struct mapedit {
 	struct node	*src_node;		/* Selected source node */
 };
 
+/* Bitmaps */
 enum {
 	/* Map editor */
 	MAPEDIT_ICON,

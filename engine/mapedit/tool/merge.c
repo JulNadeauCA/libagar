@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.10 2003/02/12 02:47:19 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.11 2003/02/12 04:41:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
 #include <engine/widget/text.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
@@ -50,7 +51,7 @@
 
 static const struct version merge_ver = {
 	"agar merge tool",
-	2, 0
+	3, 0
 };
 
 static const struct tool_ops merge_ops = {
@@ -71,6 +72,8 @@ merge_init(void *p)
 
 	tool_init(&merge->tool, "merge", &merge_ops);
 	merge->mode = MERGE_REPLACE;
+	merge->inherit_flags = 1;
+	merge->random_shift = 0;
 
 	SLIST_INIT(&merge->brushes);
 }
@@ -197,7 +200,7 @@ merge_window(void *p)
 	    151, 151);
 	window_set_caption(win, "Merge");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 30);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		static const char *mode_items[] = {
 			"Fill",
@@ -208,42 +211,47 @@ merge_window(void *p)
 			NULL
 		};
 		struct radio *rad;
+		struct checkbox *cb;
 
 		rad = radio_new(reg, mode_items);
-		WIDGET(rad)->w = 100;
-		WIDGET(rad)->h = 100;
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
+
+		cb = checkbox_new(reg, -1, "Inherit node flags");
+		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->inherit_flags);
+		
+		cb = checkbox_new(reg, -1, "Random shift");
+		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, 30, 100, 10);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
 		struct button *bu;
 		
-		name_tbox = textbox_new(reg, "Name: ", 0, 75, 100);
+		name_tbox = textbox_new(reg, "Name: ", 0, 75, -1);
 		event_new(name_tbox, "textbox-return",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 
-		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 25, 100);
+		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 25, -1);
 		event_new(bu, "button-pushed",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 	}
 	
-	reg = region_new(win, REGION_VALIGN, 0, 40, 100, 51);
-	{
-		mer->brushes_tl = tlist_new(reg, 100, 100, TLIST_MULTI);
-	}
-	
-	reg = region_new(win, REGION_HALIGN, 0, 91, 100, 6);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
 		struct button *bu;
 
-		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 50, 100);
+		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 50, -1);
 		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
 
-		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 50, 100);
+		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 50, -1);
 		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
 	}
-
+	
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
+	{
+		mer->brushes_tl = tlist_new(reg, 100, 0, TLIST_MULTI);
+	}
+	
 	return (win);
 }
 
@@ -266,6 +274,123 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 	}
 }
 
+static int
+merge_edges(struct merge *mer, struct mapview *mv,
+    struct node *srcnode, struct node *dstnode)
+{
+	Uint32 srcedge = srcnode->flags & NODE_EDGE_ANY;
+	Uint32 dstedge = dstnode->flags & NODE_EDGE_ANY;
+
+	switch (dstedge) {
+	case NODE_EDGE_SW:
+		switch (srcedge) {
+		case NODE_EDGE_N:
+			return (-1);
+		case NODE_EDGE_NE:
+			return (NODE_EDGE_E);
+		case NODE_EDGE_NW:
+			return (NODE_EDGE_W);
+		case NODE_EDGE_S:
+		case NODE_EDGE_SE:
+			return (NODE_EDGE_S);
+		}
+		break;
+	case NODE_EDGE_SE:
+		switch (srcedge) {
+		case NODE_EDGE_N:
+			return (-1);
+		case NODE_EDGE_NE:
+			return (NODE_EDGE_E);
+		case NODE_EDGE_NW:
+			return (NODE_EDGE_W);
+		case NODE_EDGE_S:
+		case NODE_EDGE_SW:
+			return (NODE_EDGE_S);
+		}
+		break;
+	case NODE_EDGE_NW:
+		switch (srcedge) {
+		case NODE_EDGE_N:
+		case NODE_EDGE_NE:
+			return (NODE_EDGE_N);
+		case NODE_EDGE_S:
+			return (-1);
+		}
+		break;
+	case NODE_EDGE_NE:
+		switch (srcedge) {
+		case NODE_EDGE_N:
+		case NODE_EDGE_NW:
+			return (NODE_EDGE_N);
+		case NODE_EDGE_S:
+			return (-1);
+		}
+		break;
+	case NODE_EDGE_S:
+		switch (srcedge) {
+		case NODE_EDGE_SW:
+		case NODE_EDGE_SE:
+			return (NODE_EDGE_S);
+		}
+		break;
+	case NODE_EDGE_N:
+		switch (srcedge) {
+		case NODE_EDGE_NW:
+		case NODE_EDGE_NE:
+			return (NODE_EDGE_N);
+		}
+		break;
+	case NODE_EDGE_W:
+		switch (srcedge) {
+		case NODE_EDGE_S:
+		case NODE_EDGE_SE:
+		case NODE_EDGE_SW:
+			return (-1);
+		}
+	case NODE_EDGE_E:
+		switch (srcedge) {
+		case NODE_EDGE_S:
+		case NODE_EDGE_SE:
+		case NODE_EDGE_SW:
+		case NODE_EDGE_N:
+		case NODE_EDGE_NE:
+		case NODE_EDGE_NW:
+			return (-1);
+		}
+	}
+	return (0);
+}
+
+static int
+merge_copy_edge(struct merge *mer, struct map *sm, int me, struct node *dstnode)
+{
+	Uint32 sx, sy;
+
+	/* Copy the first node with the requested orientation. */
+	for (sy = 0; sy < sm->maph; sy++) {
+		for (sx = 0; sx < sm->mapw; sx++) {
+			struct node *srcnode = &sm->map[sy][sx];
+			struct noderef *nref;
+
+			if ((srcnode->flags & me) == 0)
+				continue;
+
+			dprintf("copy node from %d,%d\n", sx, sy);
+
+			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+				node_copy_ref(nref, dstnode);
+			}
+			
+			dstnode->flags = srcnode->flags;
+			dstnode->flags &= ~(NODE_EDGE_ANY);
+			dstnode->flags |= me;
+
+			return (1);
+		}
+	}
+	return (0);
+}
+
 void
 merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 {
@@ -281,6 +406,18 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 		     sx++, dx++) {
 			struct node *srcnode = &sm->map[sy][sx];
 			struct node *dstnode = &dm->map[dy][dx];
+			int me;
+			
+			if ((srcnode->flags & NODE_EDGE_ANY) &&
+			    ((dstnode->flags & NODE_EDGE_ANY) == 0) &&
+			    (!TAILQ_EMPTY(&dstnode->nrefs))) {
+				continue;
+			}
+
+			me = merge_edges(mer, mv, srcnode, dstnode);
+			if (me == -1) {
+				continue;
+			}
 
 			switch (mer->mode) {
 			case MERGE_FILL:
@@ -288,12 +425,22 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 					continue;
 				node_destroy(dstnode);
 				node_init(dstnode, dx, dy);
+				if (me != 0 &&
+				   (merge_copy_edge(mer, sm, me, dstnode))
+				    > 0) {
+					continue;
+				}
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
 					node_copy_ref(nref, dstnode);
 				break;
 			case MERGE_REPLACE:
 				node_destroy(dstnode);
 				node_init(dstnode, dx, dy);
+				if (me != 0 &&
+				   (merge_copy_edge(mer, sm, me, dstnode))
+				    > 0) {
+					continue;
+				}
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
 					node_copy_ref(nref, dstnode);
 				break;
@@ -314,6 +461,10 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 				node_init(dstnode, dx, dy);
 				break;
 			}
+			
+			if (mer->inherit_flags) {
+				dstnode->flags = srcnode->flags;
+			}
 		}
 	}
 }
@@ -329,9 +480,8 @@ merge_load(void *p, int fd)
 	}
 	
 	mer->mode = (Uint32)read_uint32(fd);
-	mer->flags = (Uint32)read_uint32(fd);
-
-	dprintf("mode %d, flags 0x%x\n", mer->mode, mer->flags);
+	mer->inherit_flags = (Uint32)read_uint32(fd);
+	mer->random_shift = (Uint32)read_uint32(fd);
 
 	nbrushes = read_uint32(fd);
 	for (i = 0; i < nbrushes; i++) {
@@ -363,7 +513,8 @@ merge_save(void *p, int fd)
 	version_write(fd, &merge_ver);
 
 	write_uint32(fd, (Uint32)mer->mode);
-	write_uint32(fd, (Uint32)mer->flags);
+	write_uint32(fd, (Uint32)mer->inherit_flags);
+	write_uint32(fd, (Uint32)mer->random_shift);
 
 	count_offs = lseek(fd, 0, SEEK_CUR);
 	write_uint32(fd, 0);				/* Skip count */
@@ -389,6 +540,11 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	Uint32 sx, sy, dx, dy;
 	struct tlist_item *it;
 	int rv = -1;
+	
+	/* XXX ugly */
+	if (strncmp(OBJECT(mv->map)->name, "brush(", 6) == 0) {
+		return (-1);
+	}
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		if (!it->selected)

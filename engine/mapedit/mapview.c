@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.61 2003/02/12 04:41:47 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.62 2003/02/13 01:10:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -131,6 +131,13 @@ mapview_node_poll(int argc, union evarg *argv)
 	if (node->flags & NODE_SLOW)		strcat(flags, "slow ");
 	else if (node->flags & NODE_HASTE)	strcat(flags, "haste ");
 	if (node->flags & NODE_HAS_ANIM)	strcat(flags, "has-anim ");
+	
+	if (node->flags & (NODE_EDGE_NW))	strcat(flags, "NW-edge ");
+	else if (node->flags & (NODE_EDGE_NE))	strcat(flags, "NE-edge ");
+	else if (node->flags & (NODE_EDGE_SW))	strcat(flags, "SW-edge ");
+	else if (node->flags & (NODE_EDGE_SE))	strcat(flags, "SE-edge ");
+	else if (node->flags & NODE_EDGE_N)	strcat(flags, "N-edge ");
+	else if (node->flags & NODE_EDGE_S)	strcat(flags, "S-edge ");
 
 	label_printf(mv->node.node_flags_lab, "Node flags: %s", flags);
 
@@ -347,7 +354,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->flags |= MAPVIEW_CENTER;
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
-	mv->prop_style = -1; 
+	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
@@ -413,13 +420,21 @@ draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
 		Uint32		flag;
 		Uint32		sprite;
 	} sprites[] = {
+		{ NODE_ORIGIN,	MAPVIEW_ORIGIN },
 		{ NODE_WALK,	MAPVIEW_WALK },
 		{ NODE_CLIMB,	MAPVIEW_CLIMB },
 		{ NODE_BIO,	MAPVIEW_BIO },
 		{ NODE_REGEN,	MAPVIEW_REGEN },
 		{ NODE_SLOW,	MAPVIEW_SLOW },
 		{ NODE_HASTE,	MAPVIEW_HASTE },
-		{ NODE_ORIGIN,	MAPVIEW_ORIGIN }
+		{ NODE_EDGE_E,	MAPVIEW_EDGE_E },
+		{ NODE_EDGE_N,	MAPVIEW_EDGE_N },
+		{ NODE_EDGE_S,	MAPVIEW_EDGE_S },
+		{ NODE_EDGE_W,	MAPVIEW_EDGE_W },
+		{ NODE_EDGE_NW,	MAPVIEW_EDGE_NW },
+		{ NODE_EDGE_NE,	MAPVIEW_EDGE_NE },
+		{ NODE_EDGE_SW,	MAPVIEW_EDGE_SW },
+		{ NODE_EDGE_SE,	MAPVIEW_EDGE_SE }
 	};
 	const int nsprites = sizeof(sprites) / sizeof(sprites[0]);
 	int i;
@@ -848,6 +863,7 @@ mapview_keydown(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
+	int keymod = argv[2].i;
 
 	pthread_mutex_lock(&mv->map->lock);
 
@@ -923,10 +939,16 @@ mapview_keydown(int argc, union evarg *argv)
 		}
 		break;
 	case SDLK_p:
-		if (mv->flags & MAPVIEW_PROPS) {
-			mv->flags &= ~(MAPVIEW_PROPS);
+		if (keymod & KMOD_SHIFT) {
+			if (++mv->prop_style == MAPVIEW_FRAMES_END) {
+				mv->prop_style = 0;
+			}
 		} else {
-			mv->flags |= MAPVIEW_PROPS;
+			if (mv->flags & MAPVIEW_PROPS) {
+				mv->flags &= ~(MAPVIEW_PROPS);
+			} else {
+				mv->flags |= MAPVIEW_PROPS;
+			}
 		}
 		break;
 	}

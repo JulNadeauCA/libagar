@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.17 2003/02/10 23:05:19 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.18 2003/02/10 23:13:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -143,7 +143,15 @@ propedit_window(void *p)
 			{ NODE_BIO,	"Bio"	 },
 			{ NODE_REGEN,	"Regen"	 },
 			{ NODE_SLOW,	"Slow"	 },
-			{ NODE_HASTE,	"Haste"	 }
+			{ NODE_HASTE,	"Haste"	 },
+			{ NODE_EDGE_N,	"Edge-N" },
+			{ NODE_EDGE_S,	"Edge-S" },
+			{ NODE_EDGE_W,	"Edge-W" },
+			{ NODE_EDGE_E,	"Edge-E" },
+			{ NODE_EDGE_NW,	"Edge-NW" },
+			{ NODE_EDGE_NE,	"Edge-NE" },
+			{ NODE_EDGE_SW,	"Edge-SW" },
+			{ NODE_EDGE_SE,	"Edge-SE" }
 		};
 		const int nprops = sizeof(props) / sizeof(props[0]);
 		int i;
