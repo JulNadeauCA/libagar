@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.91 2003/06/25 10:32:03 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.92 2003/06/29 11:33:41 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -143,8 +143,9 @@ config_init(struct config *con)
 	struct passwd *pwd;
 	struct stat sta;
 
-	object_init(con, "engine-config", "config", NULL);
+	object_init(con, "object", "config", NULL);
 	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS;
+	OBJECT(con)->save_pfx = NULL;
 
 	prop_set_bool(con, "view.full-screen", 0);
 	prop_set_bool(con, "view.async-blits", 0);
@@ -229,7 +230,7 @@ config_window(struct config *con)
 	
 	vb = vbox_new(win, VBOX_WFILL);
 	{
-		char path[FILENAME_MAX];
+		char path[MAXPATHLEN];
 
 		tbox = textbox_new(vb, _("Data save dir: "));
 		prop_copy_string(config, "save-path", path, sizeof(path));
@@ -315,7 +316,7 @@ config_search_file(const char *path_key, const char *name, const char *ext)
 	free(path);
 
 	path = prop_get_string(config, path_key);
-	error_set("%s.%s is not in %s", name, ext, path_key);
+	error_set("%s.%s is not in <%s>", name, ext, path_key);
 	free(path);
 	return (NULL);
 }
