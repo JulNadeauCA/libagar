@@ -163,6 +163,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 		    mv->constr.x + srcsu->w/TILEW + 1,
 		    mv->constr.y + srcsu->h/TILEH + 1);
 		node = &m->map[mv->constr.y][mv->constr.x];
+		node_init(node, mv->constr.x, mv->constr.y);
 		switch (t) {
 		case NODEREF_SPRITE:
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
