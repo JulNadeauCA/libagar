@@ -1,4 +1,4 @@
-# $Csoft$
+# $Csoft: Makefile.inc,v 1.1 2003/06/21 06:50:16 vedge Exp $
 # ex:syn=make
 
 # Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -95,5 +95,3 @@ clean-den:
 .PHONY: install install-den deinstall deinstall-den clean clean-den regress
 
 include ${TOP}/mk/csoft.common.mk
-include ${TOP}/mk/csoft.dep.mk
-include ${TOP}/mk/csoft.subdir.mk
