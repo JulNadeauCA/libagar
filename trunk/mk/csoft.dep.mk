@@ -43,5 +43,3 @@ depend:	${DPADD} depend-subdir
 clean-depend:
 	rm -f .depend
 
-cleandir: clean-depend
-
