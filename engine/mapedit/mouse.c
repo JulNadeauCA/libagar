@@ -127,7 +127,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 			med->map->redraw++;
 		} else if (ms & SDL_BUTTON_RMASK) {
 			/* Add/move */
-			mapedit_push(med, &m->map[mx][my], med->curoffs,
+			mapedit_push(med, &m->map[my][mx], med->curoffs,
 			    med->curflags);
 			mapedit_move(med, mx, my);
 			med->map->redraw++;
@@ -203,7 +203,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 			break;
 		case 3:
 			mapedit_move(med, mx, my);
-			mapedit_push(med, &m->map[mx][my], med->curoffs,
+			mapedit_push(med, &m->map[my][mx], med->curoffs,
 			    med->curflags);
 			m->redraw++;
 			break;

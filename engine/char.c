@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.31 2002/04/10 09:22:30 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.32 2002/04/11 06:45:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -145,7 +145,7 @@ char_load(void *p, int fd)
 			struct mappos *npos;
 
 			pthread_mutex_lock(&m->lock);
-			node = &m->map[x][y];
+			node = &m->map[y][x];
 			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
 			pthread_mutex_unlock(&m->lock);

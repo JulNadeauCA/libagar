@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.34 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.35 2002/04/10 09:24:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -349,6 +349,8 @@ object_dump(void *p)
 	printf("]\n");
 }
 
+/* XXX move to map */
+
 /*
  * Add a reference to ob:offs(flags) at m:x,y, and a back
  * reference (mappos) structure.
@@ -363,7 +365,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	struct node *node;
 	struct mappos *pos;
 
-	node = &m->map[x][y];
+	node = &m->map[y][x];
 	pos = (struct mappos *)emalloc(sizeof(struct mappos));
 	pos->map = m;
 	pos->x = x;
@@ -401,7 +403,7 @@ object_delpos(void *obp)
 	}
 
 	if (pos->map != NULL) {
-		node_delref(&pos->map->map[pos->x][pos->y], pos->nref);
+		node_delref(&pos->map->map[pos->y][pos->x], pos->nref);
 	}
 
 	free(pos);
