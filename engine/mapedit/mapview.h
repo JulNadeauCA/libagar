@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.55 2004/04/23 03:27:14 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.56 2004/05/02 09:04:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -78,6 +78,7 @@ struct mapview {
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
 
+	/* XXX toolify these */
 	struct nodeedit	nodeed;		/* Node editor */
 	struct layedit	layed;		/* Layer editor */
 	struct {
