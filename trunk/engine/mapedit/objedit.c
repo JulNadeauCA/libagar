@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.22 2004/01/03 04:25:09 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.23 2004/01/23 06:24:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -178,12 +178,12 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
 	it->depth = depth;
 
-	if (!TAILQ_EMPTY(&pob->childs)) {
+	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
 	}
 	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_childs(tl, it)) {
-		TAILQ_FOREACH(cob, &pob->childs, cobjs)
+	    tlist_visible_children(tl, it)) {
+		TAILQ_FOREACH(cob, &pob->children, cobjs)
 			find_objs(tl, cob, depth+1);
 	}
 	return (it);

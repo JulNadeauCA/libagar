@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.98 2003/08/26 13:48:19 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.99 2003/09/04 03:15:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -43,14 +43,14 @@ enum noderef_edge {
 
 struct noderef {
 	enum noderef_type type;		/* Type of reference */
-	Uint16	flags;
+	Uint8	flags;
 #define NODEREF_WALK	0x01		/* Surface is walkable */
 #define NODEREF_CLIMB	0x02		/* Surface is climbable */
 #define NODEREF_SLIP	0x04		/* Surface is slippery */
 #define NODEREF_BIO	0x08		/* Contact induces Poison */
 #define NODEREF_REGEN	0x10		/* Contact induces Regen */
-#define NODEREF_SLOW	0x20		/* Increase velocity */
-#define NODEREF_HASTE	0x40		/* Decrease velocity */
+	Sint8	friction;		/* Coefficient of friction (if n>0),
+					   or acceleration (if n<0). */
 	Uint8	layer;			/* Associated layer# */
 	struct {
 		Sint16	xcenter, ycenter;	/* Centering offsets */
@@ -141,6 +141,7 @@ void		 map_init_layer(struct map_layer *, const char *);
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);
 __inline__ void	 noderef_set_motion(struct noderef *, int, int);
+__inline__ void	 noderef_set_friction(struct noderef *, int);
 void	 	 noderef_destroy(struct map *, struct noderef *);
 int		 noderef_load(struct map *, struct netbuf *, struct node *,
 			      struct noderef **);

@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.9 2004/01/22 09:58:43 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.10 2004/01/23 06:13:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -37,21 +37,21 @@
 
 #include <string.h>
 
-static void position_init(void);
-static int position_cursor(struct mapview *, SDL_Rect *);
-static void position_effect(struct mapview *, struct map *, struct node *);
+static void position_tool_init(void);
+static int position_tool_cursor(struct mapview *, SDL_Rect *);
+static void position_tool_effect(struct mapview *, struct map *, struct node *);
 
 struct tool position_tool = {
 	N_("Position"),
 	N_("Position or reposition objects on maps."),
 	MAPEDIT_TOOL_POSITION,
 	-1,
-	position_init,
+	position_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	position_effect,
-	position_cursor,
+	position_tool_effect,
+	position_tool_cursor,
 	NULL			/* mouse */
 };
 
@@ -77,12 +77,12 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
 	it->depth = depth;
 
-	if (!TAILQ_EMPTY(&pob->childs)) {
+	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
 	}
 	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_childs(tl, it)) {
-		TAILQ_FOREACH(cob, &pob->childs, cobjs)
+	    tlist_visible_children(tl, it)) {
+		TAILQ_FOREACH(cob, &pob->children, cobjs)
 			find_objs(tl, cob, depth+1);
 	}
 	return (it);
@@ -128,7 +128,7 @@ poll_submaps(int argc, union evarg *argv)
 		return;
 
 	tlist_clear_items(tl);
-	TAILQ_FOREACH(child, &ob->childs, cobjs) {
+	TAILQ_FOREACH(child, &ob->children, cobjs) {
 		if (strcmp(child->type, "map") == 0) {
 			tlist_insert_item(tl, OBJECT_ICON(child), child->name,
 			    child);
@@ -138,7 +138,7 @@ poll_submaps(int argc, union evarg *argv)
 }
 
 static void
-position_init(void)
+position_tool_init(void)
 {
 	struct window *win;
 	struct box *bo;
@@ -158,7 +158,7 @@ position_init(void)
 		struct spinbutton *sb;
 		struct combo *com;
 
-		com = combo_new(bo, COMBO_POLL, _("Submap: "));
+		com = combo_new(bo, COMBO_POLL, _(": "));
 		event_new(com->list, "tlist-poll", poll_submaps, NULL);
 		widget_bind(com->list, "selected", WIDGET_POINTER, &submap);
 
@@ -184,7 +184,7 @@ position_init(void)
 }
 
 static void
-position_effect(struct mapview *mv, struct map *m, struct node *dn)
+position_tool_effect(struct mapview *mv, struct map *m, struct node *dn)
 {
 	struct object *ob = obj;
 	int dirflags = 0;
@@ -200,7 +200,7 @@ position_effect(struct mapview *mv, struct map *m, struct node *dn)
 
 	dprintf("submap: %s\n", OBJECT(submap)->name);
 
-	if (object_set_position(ob, mv->map, mv->cx, mv->cy,
+	if (position_set(ob, mv->map, mv->cx, mv->cy,
 	    mv->map->cur_layer, submap) == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
 		return;
@@ -214,11 +214,11 @@ position_effect(struct mapview *mv, struct map *m, struct node *dn)
 	if (pass_through)
 		dirflags |= DIR_PASS_THROUGH;
 
-	object_set_direction(ob, DIR_S, dirflags, speed);
+	position_set_direction(ob, DIR_S, dirflags, speed);
 }
 
 static int
-position_cursor(struct mapview *mv, SDL_Rect *rd)
+position_tool_cursor(struct mapview *mv, SDL_Rect *rd)
 {
 	return (-1);
 }
