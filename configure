@@ -191,6 +191,7 @@ echo "    --enable-8bpp                  Support for 8 bpp display [default: yes
 echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
 echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
+echo "    --enable-warnings              Enable compiler warnings [default: no]"
 exit 1
 fi
 if [ "${enable_debug}" = "yes" ]; then
@@ -1107,6 +1108,13 @@ else
 fi
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
+if [ "${enable_warnings}" != "no" ]
+ then
+CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+CFLAGS="$CFLAGS -Wno-unused"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
