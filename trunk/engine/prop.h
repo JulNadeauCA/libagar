@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.18 2003/06/06 02:51:07 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.19 2003/06/10 08:07:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -107,6 +107,8 @@ extern DECLSPEC long double	 prop_get_long_double(void *, const char *);
 extern DECLSPEC char	*prop_get_string(void *, const char *);
 extern DECLSPEC size_t	 prop_copy_string(void *, const char *, char *, size_t);
 extern DECLSPEC void	*prop_get_pointer(void *, const char *);
+
+extern DECLSPEC void	 prop_print_value(char *, size_t, struct prop *);
 __END_DECLS
 
 #include "close_code.h"
