@@ -1,0 +1,463 @@
+/*	$Csoft: text.c,v 1.23 2002/04/14 01:15:54 vedge Exp $	*/
+
+/*
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
+ * <http://www.csoft.org>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistribution of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistribution in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of CubeSoft Communications, nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <engine/engine.h>
+#include <engine/map.h>
+
+#include "text.h"
+
+static struct obvec text_vec = {
+	text_destroy,
+	NULL,		/* load */
+	NULL,		/* save */
+	text_link,
+	text_unlink
+};
+
+static TAILQ_HEAD(, text) textsh = TAILQ_HEAD_INITIALIZER(textsh);
+static pthread_mutex_t textslock = PTHREAD_MUTEX_INITIALIZER;
+
+static int gx = 0, gy = 0;	/* Current cascading coordinates */
+static int ntexts = 0;		/* Concurrent text window count */
+static int maxfonth;		/* Maximum font height */
+
+/* XXX prefs */
+#define FONTNAME	"larabie"
+#define FONTSIZE	16
+#define XMARGIN		8
+#define YMARGIN		8
+#define LINESPACE	0
+#define TIMEGRANUL	1000
+
+static TTF_Font *font;
+static SDL_Color white = { 255, 255, 255 };
+
+static Uint32	 text_tick(Uint32, void *);
+static void	 text_renderbg(SDL_Surface *, SDL_Rect *);
+
+/* Called at engine initialization. */
+int
+text_init(void)
+{
+	char *path;
+	SDL_Surface *stext;
+
+	if (TTF_Init() < 0) {
+		fatal("TTF_Init: %s\n", SDL_GetError());
+		return (-1);
+	}
+	path = savepath(FONTNAME, "ttf");
+	if (path == NULL) {
+		return (-1);
+	}
+	font = TTF_OpenFont(path, FONTSIZE);	/* XXX pref */
+	if (font == NULL) {
+		fatal("%s: %s\n", path, TTF_GetError());
+		return (-1);
+	}
+	
+	TTF_SetFontStyle(font, 0);
+	
+	/* Stupid hack to obtain the maximum line height. */
+	stext = TTF_RenderText_Solid(font, " ", white);
+	if (stext == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+	}
+	maxfonth = stext->h;
+	SDL_FreeSurface(stext);
+
+	SDL_AddTimer(TIMEGRANUL, text_tick, NULL);
+
+	return (0);
+}
+
+/* Called at engine shutdown. */
+void
+text_quit(void)
+{
+	if (font != NULL) {
+		font = NULL;
+		TTF_CloseFont(font);
+	}
+	TTF_Quit();
+}
+
+struct text *
+text_create(Uint32 x, Uint32 y, Uint32 w, Uint32 h, Uint32 flags,
+    Uint32 sleepms)
+{
+	struct text *te;
+
+#ifdef DEBUG
+	if ((flags & TEXT_DEBUG) && !engine_debug) {
+		return (NULL);
+	}
+#endif
+
+	te = (struct text *)emalloc(sizeof(struct text));
+	object_init(&te->obj, "text", 0, &text_vec);
+	te->flags = flags;
+
+	te->sleepms = sleepms;
+	te->w = w;
+	te->h = h;
+	te->x = x > 0 ? x : gx;
+	te->y = y > 0 ? y : gy;
+	te->tx = XMARGIN;
+	te->ty = YMARGIN;
+	te->nlines = te->h / maxfonth;
+	te->bgcolor = SDL_MapRGB(mainview->v->format, 30, 90, 180);
+	te->fgcolor = &white;
+	te->view = mainview;
+	te->v = mainview->v;
+	te->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
+	    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	if (te->surface == NULL) {
+		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+	}
+
+	/* Prevent overlapping blits. */
+	te->mvmask.x = (te->x / te->view->map->tilew) - te->view->mapxoffs;
+	te->mvmask.y = (te->y / te->view->map->tileh) - te->view->mapyoffs;
+	te->mvmask.w = (te->w / te->view->map->tilew);
+	te->mvmask.h = (te->h / te->view->map->tileh);
+
+	view_maskfill(te->view, &te->mvmask, 1);
+	
+	ntexts++;
+
+	return (te);
+}
+
+int
+text_destroy(void *p)
+{
+	struct text *te = (struct text *)p;
+
+	if (te->surface != NULL) {
+		SDL_FreeSurface(te->surface);
+	}
+	
+	ntexts--;
+
+
+	/*
+	 * Decrease the map view mask values under this rectangle,
+	 * and redraw the map.
+	 */
+	view_maskfill(te->view, &te->mvmask, -1);
+	te->view->map->redraw++;
+
+	return (0);
+}
+
+void
+text_destroyall(void)
+{
+	struct text *te;
+
+	pthread_mutex_lock(&textslock);
+	TAILQ_FOREACH(te, &textsh, texts) {
+		te->sleepms = -1;
+		/* XXX what about event dialogs? */
+	}
+	pthread_mutex_unlock(&textslock);
+
+	text_tick(0, te);
+}
+
+int
+text_link(void *p)
+{
+	struct text *te = (struct text *)p;
+
+	pthread_mutex_lock(&textslock);
+	TAILQ_INSERT_TAIL(&textsh, te, texts);
+	pthread_mutex_unlock(&textslock);
+
+	return (0);
+}
+
+int
+text_unlink(void *p)
+{
+	struct text *te = (struct text *)p;
+
+	pthread_mutex_lock(&textslock);
+	TAILQ_REMOVE(&textsh, te, texts);
+	pthread_mutex_unlock(&textslock);
+
+	return (0);
+}
+
+static void
+text_renderbg(SDL_Surface *v, SDL_Rect *rd)
+{
+	static Uint32 col;
+	static Uint32 border[5];
+	Uint8 *dst = v->pixels;
+	Uint32 x, y;
+
+	/* XXX waste */
+	border[0] = SDL_MapRGB(v->format, 50, 50, 50);
+	border[1] = SDL_MapRGB(v->format, 100, 100, 160);
+	border[2] = SDL_MapRGB(v->format, 192, 192, 192);
+	border[3] = SDL_MapRGB(v->format, 100, 100, 160);
+	border[4] = SDL_MapRGB(v->format, 50, 50, 50);
+
+	SDL_LockSurface(v);
+	for (y = rd->y; y < rd->h; y++) {
+		for (x = rd->x; x < rd->w; x++) {
+			if (x > rd->w - 4) {
+				col = border[rd->w - x];
+			} else if (y < 4) {
+				col = border[y+1];
+			} else if (x < 4) {
+				col = border[x+1];
+			} else if (y > rd->h - 4) {
+				col = border[rd->h - y];
+			} else {
+				/* XXX pref */
+				col = SDL_MapRGBA(v->format, y, 0, x >> 2, 200);
+			}
+		
+			switch (v->format->BytesPerPixel) {
+			case 1:
+				dst[x] = col;
+				break;
+			case 2:
+				((Uint16 *)dst)[x] = col;
+				break;
+			case 3:
+				if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {
+					dst[x*3] = col;
+					dst[x*3 + 1] = col>>8;
+					dst[x*3 + 2] = col>>16;
+				} else {
+					dst[x*3] = col>>16;
+					dst[x*3 + 1] = col>>8;
+					dst[x*3 + 2] = col;
+				}
+				break;
+			case 4:
+				((Uint32 *)dst)[x] = col;
+				break;
+			}
+		}
+		dst += v->pitch;
+	}
+	SDL_UnlockSurface(v);
+}
+
+/* Render the window background. */
+void
+text_clear(struct text *te)
+{
+	SDL_Rect rd = { 0, 0, te->w, te->h };
+
+	if ((te->flags & TEXT_TRANSPARENT) == 0) {
+		text_renderbg(te->surface, &rd);
+	}
+}
+
+/* Draw all text windows. */
+void
+text_drawall(void)
+{
+	struct text *te;
+
+	pthread_mutex_lock(&textslock);
+	TAILQ_FOREACH(te, &textsh, texts) {
+		SDL_Rect rd;
+
+		rd.x = te->x;
+		rd.y = te->y;
+		rd.w = te->surface->w;
+		rd.h = te->surface->h;
+
+		SDL_BlitSurface(te->surface, NULL, te->v, &rd);
+		SDL_UpdateRect(te->v, rd.x, rd.y, rd.w, rd.h);
+	}
+	pthread_mutex_unlock(&textslock);
+}
+
+static Uint32
+text_tick(Uint32 ival, void *p)
+{
+	struct text *textgc[ntexts];
+	struct text *te;
+	int i, ntextgc = 0;
+
+	pthread_mutex_lock(&textslock);
+	TAILQ_FOREACH(te, &textsh, texts) {
+		if (te->flags & TEXT_SLEEP && --te->sleepms < 1) {
+			textgc[ntextgc++] = te;
+		}
+	}
+	pthread_mutex_unlock(&textslock);
+
+	for (i = 0; i < ntextgc; i++) {
+		te = textgc[i];
+		object_unlink(te);
+		object_destroy(te);
+	}
+
+	return (ival);
+}
+
+void
+text_render(struct text *te, char *text)
+{
+	SDL_Rect rd;
+	SDL_Surface *stext;
+	char *s, *sp, *textp;
+
+	s = strdup(text);
+	sp = s;
+	textp = s;
+	for (sp = s; *sp != '\0'; sp++) {
+		if (*sp == '\n') {
+			*sp = '\0';
+			stext = TTF_RenderText_Solid(font, textp, *te->fgcolor);
+			if (stext == NULL) {
+				fatal("TTF_RenderTextSolid: %s\n",
+				    SDL_GetError());
+			}
+			rd.x = te->tx;
+			rd.y = te->ty;
+			rd.w = stext->w;
+			rd.h = stext->h;
+			te->tx += rd.w;
+
+			SDL_BlitSurface(stext, NULL, te->surface, &rd);
+			SDL_FreeSurface(stext);
+
+			textp = sp + 1;
+			te->ty += maxfonth + LINESPACE;
+			te->tx = XMARGIN;
+		}
+	}
+	free(s);
+}
+
+void
+text_printf(struct text *te, char *fmt, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start(args, fmt);
+	vasprintf(&buf, fmt, args);
+	va_end(args);
+
+	text_render(te, buf);
+	free(buf);
+
+	text_drawall();
+}
+
+/*
+ * Display a single message in an auto-sized window at position
+ * given by the cascading algorithm.
+ */
+void
+text_msg(Uint32 delay, Uint32 flags, char *fmt, ...)
+{
+	va_list args;
+	char *buf, *bufc, *s, *last;
+	struct text *te;
+	int w = 0, h = 0, nlines, longlinew, cycle;
+	int wgran, hgran;
+	
+	wgran = mainview->map->tilew;
+	hgran = mainview->map->tileh;
+
+	va_start(args, fmt);
+	vasprintf(&buf, fmt, args);
+	va_end(args);
+
+	bufc = strdup(buf);
+	for (s = strtok_r(bufc, "\n", &last), nlines = 0, longlinew = 0;
+	     s != NULL;
+	     s = strtok_r(NULL, "\n", &last), nlines++) {
+		SDL_Surface *sline;
+
+		sline = TTF_RenderText_Solid(font, s, white);
+		if (sline == NULL) {
+			fatal("TTF_RenderTextSolid: %s\n", TTF_GetError());
+		}
+		if (sline->w > longlinew) {
+			longlinew = sline->w;
+		}
+		SDL_FreeSurface(sline);
+	}
+	free(bufc);
+
+	/* Adjust the geometry with the map, for optimization purposes. */
+	while (h - YMARGIN < (nlines * maxfonth))
+		h += hgran;
+	while (w - XMARGIN < longlinew + XMARGIN)
+		w += wgran;
+
+	cycle = 1;
+	TAILQ_FOREACH(te, &textsh, texts) {
+		if (te->y <= hgran << 1) {
+			cycle = 0;
+		}
+	}
+	if (cycle) {
+		gx = wgran * 2;
+		gy = mainview->map->tileh << 1;
+	} else {
+		gx += wgran;
+		gy += hgran;
+	}
+	if ((gy + h) >= mainview->height) {
+		gy = hgran;
+	}
+	if ((gx + w) >= mainview->width) {
+		gx = wgran;
+	}
+
+	te = text_create(gx, gy, w, h, flags, delay);
+	if (te != NULL) {
+		object_link(te);
+
+		text_clear(te);
+		text_render(te, buf);
+		text_drawall();
+	}
+
+	free(buf);
+}
