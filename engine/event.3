@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.14 2004/01/08 02:20:08 vedge Exp $
+.\"	$Csoft: event.3,v 1.15 2004/01/22 09:58:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -161,11 +161,6 @@ The
 function arranges for the event handler associated with
 .Fa name ,
 if any, to be invoked.
-For events of type
-.Dv EVENT_ASYNC ,
-a new thread is created in order to service the event (assuming that the
-.Dv THREADS
-compile-time option was enabled).
 .Fa fmt
 is a format string and the arguments following it are inserted
 after the arguments registered by
@@ -188,6 +183,26 @@ is usually called from an event handler, but may also be used to send
 events, as an alternative to the
 .Fn event_post
 interface.
+.Sh EVENT FLAGS
+.Pp
+Acceptable flags for the
+.Nm
+structure include:
+.Bd -literal
+#define	EVENT_ASYNC		0x01	/* Event handler runs in own thread */
+#define EVENT_FORWARD_CHILDREN	0x02	/* Forward to all descendents */
+.Ed
+.Pp
+.Dv EVENT_ASYNC
+arranges for the event handler to execute inside a separate thread.
+This flag is only available if Agar was compiled with the
+.Dv THREADS
+option.
+.Pp
+If the
+.Dv EVENT_FORWARD_CHILDREN
+flag is set, the event is automatically forwarded to each of the receiver's
+children prior to the execution of the event handler.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr object 3

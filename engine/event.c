@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.166 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.167 2004/01/22 09:58:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -487,18 +487,18 @@ event_async(void *p)
 	struct event *eev = p;
 	struct object *rcvr = eev->argv[0].p;
 
-	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
-	eev->handler(eev->argc, eev->argv);
-	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
-
 	if (eev->flags & EVENT_FORWARD_CHILDREN) {
 		debug(DEBUG_ASYNC, "%s: propagating %s\n", rcvr->name,
 		    eev->name);
 		lock_linkage();
 		event_forward_children(rcvr, eev);
 		unlock_linkage();
-		free(eev);
 	}
+
+	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
+	eev->handler(eev->argc, eev->argv);
+	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
+	free(eev);
 	return (NULL);
 }
 #endif /* THREADS */
@@ -552,8 +552,6 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			fatal("EVENT_ASYNC requires THREADS");
 #endif
 		} else {
-			neev->handler(neev->argc, neev->argv);
-
 			if (neev->flags & EVENT_FORWARD_CHILDREN) {
 				debug(DEBUG_EVENT_DELIVERY,
 				    "%s: forwarding %s to descendents\n",
@@ -563,6 +561,7 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				event_forward_children(rcvr, neev);
 				unlock_linkage();
 			}
+			neev->handler(neev->argc, neev->argv);
 			free(neev);
 		}
 		break;
@@ -588,8 +587,6 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 		if (strcmp(evname, ev->name) != 0)
 			continue;
 
-		ev->handler(argc, nargv);
-
 		if (ev->flags & EVENT_FORWARD_CHILDREN) {
 			debug(DEBUG_EVENT_DELIVERY, "%s to %s descendents\n",
 			    evname, rcvr->name);
@@ -598,6 +595,7 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 			event_forward_children(rcvr, ev);
 			unlock_linkage();
 		}
+		ev->handler(argc, nargv);
 	}
 	pthread_mutex_unlock(&rcvr->lock);
 }
