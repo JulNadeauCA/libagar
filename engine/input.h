@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.16 2003/09/07 00:24:07 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.17 2003/09/07 04:15:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_INPUT_H_
@@ -8,7 +8,7 @@
 
 #define INPUT_NAME_MAX	16
 
-struct object_position;
+struct position;
 
 enum input_type {
 	INPUT_KEYBOARD,		/* Keyboard device */
@@ -32,7 +32,7 @@ struct input {
 	enum input_type	type;			/* Type of device */
 
 	const struct input_driver *drv;		/* Input driver */
-	struct object_position	  *pos;		/* Position to control */
+	struct position		  *pos;		/* Position to control */
 
 	SLIST_ENTRY(input) inputs;
 };

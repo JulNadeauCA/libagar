@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.17 2004/01/23 04:02:50 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.18 2004/01/23 06:24:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -542,7 +542,7 @@ gfx_debug_poll(int argc, union evarg *argv)
 			it->flags |= TLIST_HAS_CHILDREN;
 
 		if ((it->flags & TLIST_HAS_CHILDREN) &&
-		    tlist_visible_childs(tl, it)) {
+		    tlist_visible_children(tl, it)) {
 			for (i = 0; i < gfx->nsprites; i++) {
 				SDL_Surface *su = gfx->sprites[i];
 				struct tlist_item *it;
@@ -562,7 +562,7 @@ gfx_debug_poll(int argc, union evarg *argv)
 					it->flags |= TLIST_HAS_CHILDREN;
 				}
 				if ((it->flags & TLIST_HAS_CHILDREN) &&
-		    		    tlist_visible_childs(tl, it)) {
+		    		    tlist_visible_children(tl, it)) {
 					SLIST_FOREACH(csp, &scl->sprites,
 					    sprites) {
 						struct tlist_item *it;

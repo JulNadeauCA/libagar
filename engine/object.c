@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.156 2004/02/02 02:54:06 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.157 2004/02/16 07:38:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -71,15 +71,13 @@ const struct object_ops object_ops = {
 
 #ifdef DEBUG
 #define DEBUG_STATE	0x001
-#define DEBUG_POSITION	0x002
 #define DEBUG_DEPS	0x004
-#define DEBUG_SUBMAPS	0x008
 #define DEBUG_CONTROL	0x010
 #define DEBUG_LINKAGE	0x020
 #define DEBUG_GC	0x040
 #define DEBUG_PAGING	0x080
 
-int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL;
+int	object_debug = DEBUG_STATE|DEBUG_CONTROL;
 #define engine_debug object_debug
 #endif
 
@@ -127,7 +125,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->data_used = 0;
 	ob->pos = NULL;
 	TAILQ_INIT(&ob->deps);
-	TAILQ_INIT(&ob->childs);
+	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
@@ -235,7 +233,7 @@ object_used_search(const void *p, const void *robj)
 		if (dep->obj == robj)
 			return (1);
 	}
-	TAILQ_FOREACH(cob, &ob->childs, cobjs) {
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_used_search(cob, robj))
 			return (1);
 	}
@@ -273,11 +271,11 @@ object_move(void *oldparentp, void *childp, void *newparentp)
 
 	lock_linkage();
 
-	TAILQ_REMOVE(&old_parent->childs, child, cobjs);
+	TAILQ_REMOVE(&old_parent->children, child, cobjs);
 	child->parent = NULL;
 	event_post(old_parent, child, "detached", NULL);
 
-	TAILQ_INSERT_TAIL(&new_parent->childs, child, cobjs);
+	TAILQ_INSERT_TAIL(&new_parent->children, child, cobjs);
 	child->parent = new_parent;
 	event_post(new_parent, child, "attached", NULL);
 	event_post(old_parent, child, "moved", "%p", new_parent);
@@ -296,7 +294,7 @@ object_attach(void *parentp, void *childp)
 	struct object *child = childp;
 
 	lock_linkage();
-	TAILQ_INSERT_TAIL(&parent->childs, child, cobjs);
+	TAILQ_INSERT_TAIL(&parent->children, child, cobjs);
 	child->parent = parent;
 	event_post(parent, child, "attached", NULL);
 	debug(DEBUG_LINKAGE, "%s: parent = %s\n", child->name, parent->name);
@@ -312,7 +310,7 @@ object_detach(void *parentp, void *childp)
 
 	lock_linkage();
 
-	TAILQ_REMOVE(&parent->childs, child, cobjs);
+	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
 	event_post(child, parent, "detached", NULL);
 
@@ -336,7 +334,7 @@ object_find_child(const struct object *parent, const char *name)
 	if ((s = strchr(node_name, '/')) != NULL) {
 		*s = '\0';
 	}
-	TAILQ_FOREACH(child, &parent->childs, cobjs) {
+	TAILQ_FOREACH(child, &parent->children, cobjs) {
 		if (strcmp(child->name, node_name) != 0)
 			continue;
 
@@ -387,17 +385,17 @@ object_free_deps(struct object *ob)
 
 /* Detach and free child objects. */
 int
-object_free_childs(struct object *pob)
+object_free_children(struct object *pob)
 {
 	struct object *cob, *ncob;
 
 	pthread_mutex_lock(&pob->lock);
-	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
+	TAILQ_FOREACH(cob, &pob->children, cobjs) {
 		if (object_used(cob))
 			goto fail;
 	}
-	for (cob = TAILQ_FIRST(&pob->childs);
-	     cob != TAILQ_END(&pob->childs);
+	for (cob = TAILQ_FIRST(&pob->children);
+	     cob != TAILQ_END(&pob->children);
 	     cob = ncob) {
 		ncob = TAILQ_NEXT(cob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
@@ -405,7 +403,7 @@ object_free_childs(struct object *pob)
 		if ((cob->flags & OBJECT_STATIC) == 0)
 			free(cob);
 	}
-	TAILQ_INIT(&pob->childs);
+	TAILQ_INIT(&pob->children);
 	pthread_mutex_unlock(&pob->lock);
 	return (0);
 fail:
@@ -449,6 +447,7 @@ object_free_events(struct object *ob)
 }
 
 /* Release the resources allocated by an object and its children. */
+/* XXX XXX first verify that none of the children are in use! */
 int
 object_destroy(void *p)
 {
@@ -458,8 +457,11 @@ object_destroy(void *p)
 	if (object_used(ob))
 		return (-1);
 
-	if (object_free_childs(ob) == -1)
+	if (object_free_children(ob) == -1)
 		return (-1);
+	
+	if (ob->pos != NULL)
+		position_unset(ob);
 
 	if (ob->ops->reinit != NULL) {
 		ob->ops->reinit(ob);
@@ -694,11 +696,6 @@ fail:
 	return (-1);
 }
 
-/*
- * 1. Load the generic part of an object and descendants, freeing their data.
- * 2. Resolve the dependency of the object and descendants.
- * 3. Reload the data of the object and descendants that were resident.
- */
 int
 object_load(void *p)
 {
@@ -712,9 +709,27 @@ object_load(void *p)
 		goto fail;
 	}
 
-	if (object_load_generic(ob) == -1 ||
-	    object_resolve_deps(ob) == -1 ||
-	    object_reload_data(ob) == -1)
+ 	/* Load the generic part of the object and its children. */
+	if (object_load_generic(ob) == -1)
+		goto fail;
+
+	/*
+	 * Resolve the dependency tables now that the generic object tree
+	 * is in a consistent state.
+	 */
+	if (object_resolve_deps(ob) == -1)
+		goto fail;
+
+	/*
+	 * Reload the data of the object and its children (if resident),
+	 * now that the dependency tables are resolved.
+	 */
+	if (object_reload_data(ob) == -1)
+		goto fail;
+
+	/* Resolve the positions now that the object tree is consistent. */
+	if (ob->pos != NULL &&
+	    object_resolve_position(ob) == -1)
 		goto fail;
 
 	pthread_mutex_unlock(&ob->lock);
@@ -727,7 +742,7 @@ fail:
 }
 
 /*
- * Resolve the encoded dependencies of an object and its descendants.
+ * Resolve the encoded dependencies of an object and its children.
  * The object linkage must be locked.
  */
 int
@@ -752,7 +767,7 @@ object_resolve_deps(void *p)
 		dep->path = NULL;
 	}
 
-	TAILQ_FOREACH(cob, &ob->childs, cobjs) {
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_resolve_deps(cob) == -1)
 			return (-1);
 	}
@@ -760,7 +775,24 @@ object_resolve_deps(void *p)
 }
 
 /*
- * Reload the data of resident object and its resident descendants.
+ * Resolve the encoded position of an object and its children.
+ * The object linkage must be locked.
+ */
+int
+object_resolve_position(void *p)
+{
+	struct object *ob = p;
+
+	if (ob->pos->map_name == NULL) {
+		error_set(_("No position to resolve."));
+		return (-1);
+	}
+
+	return (0);
+}
+
+/*
+ * Reload the data of an object and its children which are currently resident.
  * The object and linkage must be locked.
  */
 int
@@ -769,12 +801,12 @@ object_reload_data(void *p)
 	struct object *ob = p, *cob;
 
 	if (ob->flags & OBJECT_WAS_RESIDENT) {
-		dprintf("`%s' is resident; reloading\n", ob->name);
+		dprintf("`%s' is resident; reloading data\n", ob->name);
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(p) == -1)
 			return (-1);
 	}
-	TAILQ_FOREACH(cob, &ob->childs, cobjs) {
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_reload_data(cob) == -1)
 			return (-1);
 	}
@@ -782,7 +814,7 @@ object_reload_data(void *p)
 }
 
 /*
- * Load the generic part of an object and descendants.
+ * Load the generic part of an object and its children.
  * The object and linkage must be locked.
  */
 int
@@ -843,45 +875,9 @@ object_load_generic(void *p)
 	if (prop_load(ob, buf) == -1)
 		goto fail;
 
-	/* Decode and restore the position. */
-	if (read_uint32(buf) > 0) {
-		char map_id[OBJECT_PATH_MAX];
-		char submap_id[OBJECT_PATH_MAX];
-		char input_id[OBJECT_PATH_MAX];
-		struct map *map, *submap;
-		int x, y, z;
-
-		copy_string(map_id, buf, sizeof(map_id));
-		copy_string(submap_id, buf, sizeof(submap_id));
-		copy_string(input_id, buf, sizeof(input_id));
-		x = (int)read_uint32(buf);
-		y = (int)read_uint32(buf);
-		z = (int)read_uint8(buf);
-		
-		debug(DEBUG_STATE, "%s: at %s:[%d,%d,%d], as %s\n", ob->name,
-		    map_id, x, y, z, submap_id);
-
-		if ((map = object_find(map_id)) == NULL) {
-			error_set(_("No such map: `%s'"), map_id);
-			goto fail;
-		}
-		if ((submap = object_find(submap_id)) == NULL) {
-			error_set(_("No such submap: `%s'"), submap_id);
-			goto fail;
-		}
-
-		pthread_mutex_lock(&map->lock);
-		if (object_set_position(ob, map, x, y, z, submap) == NULL) {
-			pthread_mutex_unlock(&map->lock);
-			goto fail;
-		}
-		if (input_id != NULL &&
-		    object_set_input(ob, input_id) == -1) {
-			pthread_mutex_unlock(&map->lock);
-			goto fail;
-		}
-		pthread_mutex_unlock(&map->lock);
-	}
+	/* Decode and restore the position, if there is one. */
+	if (read_uint32(buf) > 0)
+		position_load(ob, ob->pos, buf);
 
 	/*
 	 * Decode the gfx/audio references. Try to resolve them immediately
@@ -987,6 +983,7 @@ fail:
  * The object must be locked.
  *
  * XXX no provision for saved data being out of sync with the generic object.
+ * XXX encode some sort of key?
  */
 int
 object_load_data(void *p)
@@ -1025,7 +1022,7 @@ fail:
 	return (-1);
 }
 
-/* Save the state of an object and its descendents. */
+/* Save the state of an object and its children. */
 int
 object_save(void *p)
 {
@@ -1111,20 +1108,11 @@ object_save(void *p)
 	if (prop_save(ob, buf) == -1)
 		goto fail;
 	
-	/* Encode the position. */
+	/* Encode the position if there is one. */
 	if (ob->pos != NULL) {
-		char map_id[OBJECT_NAME_MAX];
-		struct object_position *pos = ob->pos;
-
 		write_uint32(buf, 1);
-		object_copy_name(pos->map, map_id, sizeof(map_id));
-		write_string(buf, map_id);
-		write_string(buf, OBJECT(pos->submap)->name);
-		write_string(buf, (pos->input != NULL) ?
-		    OBJECT(pos->input)->name : "");
-		write_uint32(buf, (Uint32)pos->x);
-		write_uint32(buf, (Uint32)pos->y);
-		write_uint8(buf, (Uint8)pos->z);
+		if (position_save(ob->pos, buf) == -1)
+			goto fail;
 	} else {
 		write_uint32(buf, 0);
 	}
@@ -1137,7 +1125,7 @@ object_save(void *p)
 	count_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	count = 0;
-	TAILQ_FOREACH(child, &ob->childs, cobjs) {
+	TAILQ_FOREACH(child, &ob->children, cobjs) {
 		if (child->flags & OBJECT_NON_PERSISTENT) {
 			dprintf("skipping non persistent: %s\n", child->name);
 			continue;
@@ -1174,208 +1162,6 @@ fail_lock:
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
 	return (-1);
-}
-
-/* Control an object's position with an input device. */
-int
-object_set_input(void *p, const char *inname)
-{
-	struct object *ob = p;
-	struct input *in;
-
-	if ((in = input_find(inname)) == NULL) {
-		error_set(_("There is no input device named `%s'."), inname);
-		return (-1);
-	}
-
-	pthread_mutex_lock(&ob->lock);
-
-	if (ob->pos == NULL) {
-		error_set(_("There is no position to control."));
-		goto fail;
-	}
-	debug(DEBUG_CONTROL, "%s: <%s>\n", ob->name, OBJECT(in)->name);
-	ob->pos->input = in;
-
-	pthread_mutex_unlock(&ob->lock);
-	return (0);
-fail:
-	pthread_mutex_unlock(&ob->lock);
-	return (-1);
-}
-
-/* Project the object onto a level map. */
-static void
-object_project_submap(struct object_position *pos)
-{
-	struct map *sm = pos->submap;
-	struct map *dm = pos->map;
-	int sx, sy, dx, dy;
-
-	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->z, sm->mapw,
-	    sm->maph);
-	
-	object_add_dep(dm, sm);
-	object_page_in(sm, OBJECT_DATA);
-	object_page_in(dm, OBJECT_DATA);
-
-	for (sy = 0, dy = pos->y;
-	     sy < sm->maph && dy < pos->y+dm->maph;
-	     sy++, dy++) {
-		for (sx = 0, dx = pos->x;
-		     sx < sm->mapw && dx < pos->x+dm->mapw;
-		     sx++, dx++)
-			node_copy(sm, &sm->map[sy][sx], -1, dm,
-			    &dm->map[dy][dx], pos->z);
-	}
-	
-	object_del_dep(dm, sm);
-	object_page_out(sm, OBJECT_DATA);
-	object_page_out(dm, OBJECT_DATA);
-}
-
-/* Disappear from the level map. */
-static void
-object_unproject_submap(struct object_position *pos)
-{
-	int x, y;
-	
-	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->z,
-	    pos->submap->mapw, pos->submap->maph);
-	
-	object_page_in(pos->map, OBJECT_DATA);
-	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
-		for (x = pos->x; x < pos->x+pos->submap->mapw; x++)
-			node_clear(pos->map, &pos->map->map[y][x], pos->z);
-	}
-	object_page_out(pos->map, OBJECT_DATA);
-}
-
-/* Set the submap of an object and update its on-map copy. */
-int
-object_set_submap(void *p, const char *name)
-{
-	struct object *ob = p;
-	struct object *submap;
-
-	pthread_mutex_lock(&ob->lock);
-	
-	debug(DEBUG_SUBMAPS, "%s: %s -> %s\n", ob->name,
-	    ob->pos != NULL ? OBJECT(ob->pos->submap)->name : "none", name);
-
-	TAILQ_FOREACH(submap, &ob->childs, cobjs) {
-		if (strcmp(submap->name, name) == 0)
-			break;
-	}
-	if (submap == NULL) {
-		error_set(_("There is no submap named `%s'."), name);
-		goto fail;
-	}
-	if (ob->pos != NULL) {
-		object_unproject_submap(ob->pos);
-	}
-	ob->pos->submap = (struct map *)submap;
-
-	pthread_mutex_unlock(&ob->lock);
-	return (0);
-fail:
-	pthread_mutex_unlock(&ob->lock);
-	return (-1);
-}
-
-/*
- * Set the direction of an object inside a map.
- * A position must exist.
- */
-void
-object_set_direction(void *p, int dir, int dirflags, int speed)
-{
-	struct object *ob = p;
-
-	pthread_mutex_lock(&ob->lock);
-	debug(DEBUG_POSITION, "%s: direction -> %d/%d\n", ob->name, dir, speed);
-	mapdir_init(&ob->pos->dir, ob, dirflags, speed);
-	pthread_mutex_unlock(&ob->lock);
-}
-
-/* Set the position of an object inside a map. */
-int
-object_set_position(void *p, struct map *dstmap, int x, int y, int z,
-    struct map *submap)
-{
-	struct object *ob = p;
-
-	pthread_mutex_lock(&ob->lock);
-	
-	debug(DEBUG_POSITION, "%s: position -> %s:[%d,%d,%d]\n",
-	    ob->name, OBJECT(dstmap)->name, x, y, z);
-
-	if (ob->pos != NULL) {
-		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
-		object_unproject_submap(ob->pos);
-#if 0
-		object_detach(ob->pos->map, ob);
-#endif
-	} else {
-		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
-		ob->pos = Malloc(sizeof(struct object_position));
-		ob->pos->map = NULL;
-		ob->pos->x = 0;
-		ob->pos->y = 0;
-		ob->pos->z = 0;
-		ob->pos->submap = submap;
-		ob->pos->input = NULL;
-		mapdir_init(&ob->pos->dir, ob, DIR_SOFT_MOTION, 1);
-	}
-
-	pthread_mutex_lock(&dstmap->lock);
-	if (ob->pos->x >= 0 && ob->pos->x < dstmap->mapw &&
-	    ob->pos->y >= 0 && ob->pos->y < dstmap->maph &&
-	    z >= 0 && z < dstmap->nlayers) {
-		ob->pos->map = dstmap;
-		ob->pos->x = x;
-		ob->pos->y = y;
-		ob->pos->z = z;
-#if 0
-		object_attach(ob->pos->map, ob);
-#endif
-		object_project_submap(ob->pos);
-	} else {
-#if 0
-		object_attach(world, ob);
-#endif
-		error_set(_("Illegal coordinates: %s[%d,%d,%d]"),
-		    OBJECT(dstmap)->name, x, y, z);
-		goto fail;
-	}
-	pthread_mutex_unlock(&dstmap->lock);
-	pthread_mutex_unlock(&ob->lock);
-	return (0);
-fail:
-	free(ob->pos);
-	ob->pos = NULL;
-	pthread_mutex_unlock(&dstmap->lock);
-	pthread_mutex_unlock(&ob->lock);
-	return (-1);
-}
-
-/* Unset an object's position. */
-void
-object_unset_position(void *p)
-{
-	struct object *ob = p;
-
-	pthread_mutex_lock(&ob->lock);
-	debug(DEBUG_POSITION, "%s: unset %p\n", ob->name, ob->pos);
-	if (ob->pos != NULL) {
-#if 0
-		object_detach(ob->pos->map, ob);
-#endif
-		object_unproject_submap(ob->pos);
-		free(ob->pos);
-		ob->pos = NULL;
-	}
-	pthread_mutex_unlock(&ob->lock);
 }
 
 /* Override an object's type; thread unsafe. */
@@ -1534,11 +1320,11 @@ object_move_up(void *p)
 	struct object *ob = p, *prev;
 	struct object *parent = ob->parent;
 
-	if (parent == NULL || ob == TAILQ_FIRST(&parent->childs))
+	if (parent == NULL || ob == TAILQ_FIRST(&parent->children))
 		return;
 
 	prev = TAILQ_PREV(ob, objectq, cobjs);
-	TAILQ_REMOVE(&parent->childs, ob, cobjs);
+	TAILQ_REMOVE(&parent->children, ob, cobjs);
 	TAILQ_INSERT_BEFORE(prev, ob, cobjs);
 }
 
@@ -1553,12 +1339,12 @@ object_move_down(void *p)
 	if (parent == NULL || next == NULL)
 		return;
 
-	TAILQ_REMOVE(&parent->childs, ob, cobjs);
-	TAILQ_INSERT_AFTER(&parent->childs, next, ob, cobjs);
+	TAILQ_REMOVE(&parent->children, ob, cobjs);
+	TAILQ_INSERT_AFTER(&parent->children, next, ob, cobjs);
 }
 
 /*
- * Remove the data files of an object and its descendants.
+ * Remove the data files of an object and its children.
  * The linkage must be locked.
  */
 static void
@@ -1570,7 +1356,7 @@ object_unlink_datafiles(void *p)
 	if (object_copy_filename(ob, path, sizeof(path)) == 0)
 		unlink(path);
 
-	TAILQ_FOREACH(cob, &ob->childs, cobjs)
+	TAILQ_FOREACH(cob, &ob->children, cobjs)
 		object_unlink_datafiles(cob);
 
 	if (object_copy_dirname(ob, path, sizeof(path)) == 0)
