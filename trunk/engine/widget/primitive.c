@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.56 2004/04/10 02:34:05 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.57 2004/09/12 05:56:55 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -348,7 +348,7 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 	int x2 = wid->cx + px2;
 	int y2 = wid->cy + py2;
 	Uint8 r, g, b;
-	
+
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
@@ -358,8 +358,22 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 }
 
 static void
-circle_opengl(void *p, int wx, int wy, int radius, int ncolor)
+circle_opengl(void *p, int x, int y, int radius, int ncolor)
 {
+	struct widget *wid = p;
+	int nedges = 16;
+	int i;
+	Uint8 r, g, b;
+	
+	SDL_GetRGB(WIDGET_COLOR(p, ncolor), vfmt, &r, &g, &b);
+
+	glBegin(GL_LINE_LOOP);
+	glColor3ub(r, g, b);
+	for (i = 0; i < nedges; i++) {
+		glVertex2f(wid->cx + x + radius*cos((2*M_PI*i)/nedges),
+		           wid->cy + y + radius*sin((2*M_PI*i)/nedges));
+	}
+	glEnd();
 }
 
 static void
@@ -377,10 +391,10 @@ rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 
 	glBegin(GL_POLYGON);
 	glColor3ub(r, g, b);
-	glVertex2s(x1, y2);
-	glVertex2s(x2, y2);
-	glVertex2s(x2, y1);
-	glVertex2s(x1, y1);
+	glVertex2i(x1, y1);
+	glVertex2i(x2, y1);
+	glVertex2i(x2, y2);
+	glVertex2i(x1, y2);
 	glEnd();
 }
 #endif /* HAVE_OPENGL */
