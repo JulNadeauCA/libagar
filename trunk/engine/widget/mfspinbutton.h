@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.h,v 1.9 2004/03/25 04:35:45 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.h,v 1.1 2004/03/26 04:57:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MFSPINBUTTON_H_
@@ -8,7 +8,6 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/ucombo.h>
-#include <engine/widget/units.h>
 
 #include "begin_code.h"
 
@@ -21,7 +20,7 @@ struct mfspinbutton {
 	double inc;			/* Increment for buttons */
 	char format[32];		/* Printing format */
 	const char *sep;		/* x/y field separator */
-	const struct unit *unit;	/* Conversion unit */
+	const struct unit *unit;		/* Conversion unit */
 	int writeable;			/* 0 = read-only */
 
 	struct textbox *input;
@@ -31,12 +30,12 @@ struct mfspinbutton {
 };
 
 __BEGIN_DECLS
-struct mfspinbutton	*mfspinbutton_new(void *, const struct unit *,
+struct mfspinbutton	*mfspinbutton_new(void *, const char *,
 			                  const char *, const char *, ...)
 		 	     FORMAT_ATTRIBUTE(printf, 4, 5)
 			     NONNULL_ATTRIBUTE(4);
 
-void	mfspinbutton_init(struct mfspinbutton *, const struct unit *,
+void	mfspinbutton_init(struct mfspinbutton *, const char *,
 	                  const char *, const char *);
 void	mfspinbutton_destroy(void *);
 void	mfspinbutton_scale(void *, int, int);
@@ -48,7 +47,6 @@ void	mfspinbutton_set_min(struct mfspinbutton *, double);
 void	mfspinbutton_set_max(struct mfspinbutton *, double);
 void	mfspinbutton_set_range(struct mfspinbutton *, double, double);
 void	mfspinbutton_set_increment(struct mfspinbutton *, double);
-void	mfspinbutton_set_units(struct mfspinbutton *, const struct unit[]);
 void	mfspinbutton_select_unit(struct mfspinbutton *, const char *);
 void	mfspinbutton_set_precision(struct mfspinbutton *, const char *, int);
 void	mfspinbutton_set_writeable(struct mfspinbutton *, int);
