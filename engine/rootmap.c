@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.24 2003/03/10 05:50:54 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.25 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -90,7 +90,7 @@ draw_layer:
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
 		     mx++, rx += m->tilew) {
 			node = &m->map[my][mx];
-			MAP_CHECK_NODE(node, mx, my);
+			MAP_CHECK_NODE(node);
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
@@ -141,7 +141,7 @@ draw_layer:
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
 		     mx++, rx += m->tilew) {
 			node = &m->map[my][mx];
-			MAP_CHECK_NODE(node, mx, my);
+			MAP_CHECK_NODE(node);
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
