@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.16 2002/05/21 03:21:32 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.17 2002/05/25 08:21:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -56,6 +56,7 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 	    OBJ_ART|OBJ_KEEPMEDIA, wops);
 	free(widname);
 
+	wid->type = strdup(name);
 	wid->flags = 0;
 	wid->win = NULL;
 	wid->x = 0;

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.23 2002/06/25 17:32:47 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.24 2002/07/07 06:34:25 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -11,11 +11,11 @@ struct widget_ops {
 
 struct widget {
 	struct	 object obj;
-
 	int	 flags;
 #define WIDGET_HIDE		0x01	/* Don't draw widget */
 #define WIDGET_MOUSEOUT		0x02	/* Receive window-mouseout events */
-
+	
+	char	*type;			/* Widget type identifier */
 	struct	window *win;		/* Parent window */
 	int	rw, rh;			/* Requested geometry (%) */
 	int	x, y;			/* Allocated coordinates in window */
@@ -91,6 +91,18 @@ struct widget {
      (ya) > WIDGET_ABSY((wida)) &&				\
      (xa) < (WIDGET_ABSX((wida)) + WIDGET((wida))->w) &&	\
      (ya) < (WIDGET_ABSY((wida)) + WIDGET((wida))->h))
+
+#ifdef DEBUG
+# define WIDGET_ASSERT(ob, typestr) do {				\
+	if (strcmp(WIDGET((ob))->type, typestr) != 0) {			\
+		fprintf(stderr, "%s:%d: %s is not a %s\n", __FILE__,	\
+		    __LINE__, WIDGET((ob))->type, typestr);		\
+		abort();						\
+	}								\
+} while (/*CONSTCOND*/0)
+#else
+#define WIDGET_ASSERT(wid, name)
+#endif
 
 /* Sprites. All widgets share the same art. */
 enum {
