@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.9 2004/03/17 12:42:04 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.10 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -495,7 +495,7 @@ static int
 xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
     struct gfx_anim **anim)
 {
-	if (strstr(name, "ms)") != NULL) {		/* XXX ugly */
+	if (strstr(name, "(anim)") != NULL) {
 		*anim = gfx_insert_anim(gfx);
 	} else {
 		if (*anim != NULL && name[0] == '+') {
@@ -503,11 +503,11 @@ xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
 		} else {
 			*anim = NULL;
 			if ((su->h > TILESZ || su->w > TILESZ) &&
-			    strstr(name, "(break)") != NULL) {
+			    strstr(name, "(frag)") != NULL) {
 				if (gfx_insert_fragments(gfx, su) == -1)
 					return (-1);
 			} else {
-		   		gfx_insert_sprite(gfx, su, 0);
+		   		gfx_insert_sprite(gfx, su);
 			}
 		}
 	}
