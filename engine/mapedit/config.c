@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: config.c,v 1.1 2002/06/06 10:15:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -49,11 +49,11 @@
 static void
 button_push(int argc, union evarg *argv)
 {
-	struct mapedit *med = argv[0].p;
+	struct mapedit *med = argv[1].p;
 
-	OBJECT_ASSERT(argv[0].p, "map-editor");
+	OBJECT_ASSERT(argv[1].p, "map-editor");
 
-	switch (argv[1].c) {
+	switch (argv[2].c) {
 	case 'c':
 		dprintf("close\n");
 		window_hide(med->settings_win);
@@ -101,10 +101,12 @@ mapedit_config_win(struct mapedit *med)
 	     0,  80, 100,  20);
 	
 	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
-	event_new(close_button, "button-pushed", 0, button_push, "%c", 'c');
+	event_new(close_button, "button-pushed", 0, button_push, "%p %c",
+	    med, 'c');
 	
 	save_button = button_new(buttons_reg, "Save", 0, 50, 100);
-	event_new(save_button, "button-pushed", 0, button_push, "%c", 's');
+	event_new(save_button, "button-pushed", 0, button_push, "%p %c",
+	    med, 's');
 
 	props_cbox = checkbox_new(body_reg, "Show node properties",
 	    (med->flags & MAPEDIT_DRAWPROPS) ? CHECKBOX_PRESSED : 0);
