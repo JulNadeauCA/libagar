@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.4 2002/02/03 11:21:15 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.5 2002/02/05 05:54:16 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -101,7 +101,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 
 	/* Initialize SDL. */
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|
-	    SDL_INIT_NOPARACHUTE) != 0) {
+	    SDL_INIT_EVENTTHREAD|SDL_INIT_NOPARACHUTE) != 0) {
 		fatal("SDL_Init: %s\n", SDL_GetError());
 		return (-1);
 	}
