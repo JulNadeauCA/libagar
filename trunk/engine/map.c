@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.171 2003/04/24 01:03:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.172 2003/04/24 04:48:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -321,10 +321,9 @@ map_set_zoom(struct map *m, Uint16 zoom)
 }
 
 void
-map_init(struct map *m, char *name, char *media)
+map_init(struct map *m, char *name)
 {
-	object_init(&m->obj, "map", name, media,
-	    (media != NULL) ? OBJECT_ART|OBJECT_ART_CAN_FAIL: 0, &map_ops);
+	object_init(&m->obj, "map", name, 0, &map_ops);
 	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
@@ -1041,7 +1040,6 @@ int
 map_save(void *p, struct netbuf *buf)
 {
 	struct map *m = p;
-	struct object *pob;
 	struct object_table deps;
 	int x, y;
 	
@@ -1078,14 +1076,19 @@ map_save(void *p, struct netbuf *buf)
 		write_uint8(buf, m->origin.layer);
 
 	/* Write the dependencies. */
-	object_table_init(&deps);
 	pthread_mutex_lock(&world->lock);
-	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
-		if ((pob->flags & OBJECT_ART) == 0 ||		/* XXX */
-		     pob->flags & OBJECT_CANNOT_MAP) {
-			continue;
-		} 
-		object_table_insert(&deps, pob);
+	object_table_init(&deps);
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *nref;
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+				if (nref->pobj == NULL)
+					continue;
+				object_table_insert(&deps, nref->pobj);
+			}
+		}
 	}
 	pthread_mutex_unlock(&world->lock);
 	object_table_save(&deps, buf);
