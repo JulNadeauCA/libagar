@@ -116,7 +116,8 @@ echo >Makefile.config
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
-echo "    --srcdir                       Source directory for concurrent build [.]"
+echo "    --prefix                       Installation prefix [/usr/local]"
+echo "    --srcdir                       Source tree for concurrent builds [.]"
 echo "    --with-smpeg                   Play videos through smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      Support OpenGL operations [default: no]"
