@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.85 2002/10/30 17:18:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.86 2002/11/09 07:43:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -343,42 +343,42 @@ event_dispatch(SDL_Event *ev)
 	pthread_mutex_unlock(&view->lock);
 }
 
-#define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
-	if ((eev)->argc == EVENT_MAXARGS) {				\
-		fatal("too many args\n");				\
-	}								\
-	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);		\
+#define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
+	if ((eev)->argc == EVENT_MAXARGS) {			\
+		fatal("too many args\n");			\
+	}							\
+	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
 } while (/*CONSTCOND*/ 0)
 
-#define EVENT_PUSHARG(ap, fmt, eev)				\
+#define EVENT_PUSH_ARG(ap, fmt, eev)				\
 	switch ((fmt)) {					\
 	case 'i':						\
 	case 'o':						\
 	case 'u':						\
 	case 'x':						\
 	case 'X':						\
-		PUSH_EVENT_ARG((eev), (ap), i, int);		\
+		EVENT_INSERT_ARG((eev), (ap), i, int);		\
 		break;						\
 	case 'D':						\
 	case 'O':						\
 	case 'U':						\
-		PUSH_EVENT_ARG((eev), (ap), li, long int);	\
+		EVENT_INSERT_ARG((eev), (ap), li, long int);	\
 		break;						\
 	case 'e':						\
 	case 'E':						\
 	case 'f':						\
 	case 'g':						\
 	case 'G':						\
-		PUSH_EVENT_ARG((eev), (ap), f, double);		\
+		EVENT_INSERT_ARG((eev), (ap), f, double);	\
 		break;						\
 	case 'c':						\
-		PUSH_EVENT_ARG((eev), (ap), c, char);		\
+		EVENT_INSERT_ARG((eev), (ap), c, char);		\
 		break;						\
 	case 's':						\
-		PUSH_EVENT_ARG((eev), (ap), s, char *);		\
+		EVENT_INSERT_ARG((eev), (ap), s, char *);	\
 		break;						\
 	case 'p':						\
-		PUSH_EVENT_ARG((eev), (ap), p, void *);		\
+		EVENT_INSERT_ARG((eev), (ap), p, void *);	\
 		break;						\
 	case ' ':						\
 	case ',':						\
@@ -416,7 +416,7 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 		va_list ap;
 
 		for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
-			EVENT_PUSHARG(ap, *fmt, eev);
+			EVENT_PUSH_ARG(ap, *fmt, eev);
 		}
 		va_end(ap);
 	}
@@ -461,7 +461,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 			va_list ap;
 
 			for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
-				EVENT_PUSHARG(ap, *fmt, neev);
+				EVENT_PUSH_ARG(ap, *fmt, neev);
 			}
 			va_end(ap);
 		}
