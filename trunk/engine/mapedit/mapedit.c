@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.7 2002/01/30 17:57:15 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.8 2002/01/30 18:35:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -45,19 +45,22 @@
 
 static void	mapedit_destroy(struct object *);
 static Uint32	mapedit_time(Uint32, void *);
-static void	mapedit_event(struct object *, SDL_Event *);
-static void	mapedit_toggle(struct mapedit *, struct map_entry *, int);
+static void	mapedit_event(struct mapedit *, SDL_Event *);
+static void	mapedit_setflag(struct mapedit *, struct node *, int);
 static void	mapedit_examine(struct map *, int, int);
 static void	mapedit_pointer(struct mapedit *, int);
+
+struct mapedit *curmapedit;
 
 struct mapedit *
 mapedit_create(char *name, char *desc)
 {
+	char path[FILENAME_MAX];
 	struct mapedit *med;
 	struct map *em;
 	struct fobj *fob;
-	int i, fd;
-	char path[FILENAME_MAX];
+	struct object *ob;
+	int fd;
 
 	strcpy(path, name);
 	strcat(path, ".map");
@@ -80,10 +83,9 @@ mapedit_create(char *name, char *desc)
 		return (NULL);
 	}
 
-	object_create(&med->obj, "mapedit", "Map editor",
-	    EVENT_HOOK|DESTROY_HOOK);
-	med->obj.event_hook = mapedit_event;
+	object_create(&med->obj, "mapedit", "Map editor", DESTROY_HOOK);
 	med->obj.destroy_hook = mapedit_destroy;
+	med->event_hook = mapedit_event;
 	med->map = em;
 	med->x = em->defx;
 	med->y = em->defy;
@@ -93,7 +95,8 @@ mapedit_create(char *name, char *desc)
 	med->listwdir = 0;
 	med->listodir = 0;
 	med->cursdir = 0;
-	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST;
+	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST|
+	    MAPEDIT_DRAWPROPS;
 
 	med->tilelist = window_create(em->view,
 	    (em->view->width - em->view->tilew), em->view->tileh,
@@ -115,15 +118,13 @@ mapedit_create(char *name, char *desc)
 	 * This is used for distinguishing anim structures from
 	 * sprites, for instance.
 	 */
-	med->eobjs = NULL;
+	SLIST_INIT(&med->eobjsh);
 	med->neobjs = 0;
 
-	for (i = 0; i < world->nobjs; i++) {
-		struct object *ob;
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		struct editobj *eob;
 		
-		ob = g_slist_nth_data(world->objs, i);
-
 		if ((ob->flags & OBJ_EDITABLE) == 0) {
 			continue;
 		}
@@ -131,20 +132,25 @@ mapedit_create(char *name, char *desc)
 		eob = malloc(sizeof(struct editobj));
 		if (eob == NULL) {
 			perror("editobj");
+			pthread_mutex_unlock(&world->lock);
 			return (NULL);
 		}
 
+		SIMPLEQ_INIT(&eob->erefsh);
 		eob->pobj = ob;
-		eob->refs = NULL;
+		eob->nrefs = 0;
 		eob->nsprites = ob->nsprites;
 		eob->nanims = ob->nanims;
-		eob->nrefs = ob->nsprites + ob->nanims;
 
-		if (i == 0) {
+		dprintf("%s has %d sprites, %d anims\n", ob->name,
+		    eob->nsprites, eob->nanims);
+		
+		/* XXX for now */
+		if (eob->nsprites > 0) {
 			med->curobj = eob;
 			med->curoffs = 1;
 		}
-
+		
 		if (ob->nsprites > 0) {
 			int y;
 
@@ -154,47 +160,47 @@ mapedit_create(char *name, char *desc)
 				eref = malloc(sizeof(struct editref));
 				if (eref == NULL) {
 					perror("editref");
+					pthread_mutex_unlock(&world->lock);
 					return (NULL);
 				}
-				eref->animi = -1;
+				eref->animi = -2;
 				eref->spritei = y;
 				eref->p = g_slist_nth_data(ob->sprites, y);
 				eref->type = EDITREF_SPRITE;
 
-				eob->refs = g_slist_append(eob->refs, eref);
-			}
-		
-			if (ob->nanims > 0) {
-				int z;
-
-				for (z = 0; z < ob->nanims; z++) {
-					struct editref *eref;
-
-					eref = malloc(sizeof(struct editref));
-					if (eref == NULL) {
-						perror("editref");
-						return (NULL);
-					}
-				
-					eref->animi = z;
-					eref->spritei = -1;
-					eref->p =
-					    g_slist_nth_data(ob->anims, z);
-					eref->type = EDITREF_ANIM;
-
-					eob->refs = g_slist_append(eob->refs,
-					    eref);
-				}
+				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
+				eob->nrefs++;
 			}
 		}
-		med->eobjs = g_slist_append(med->eobjs, eob);
+	
+		if (ob->nanims > 0) {
+			int z;
+
+			for (z = 0; z < ob->nanims; z++) {
+				struct editref *eref;
+
+				eref = malloc(sizeof(struct editref));
+				if (eref == NULL) {
+					perror("editref");
+					pthread_mutex_unlock(&world->lock);
+					return (NULL);
+				}
+				
+				eref->animi = z;
+				eref->spritei = -1;
+				eref->p = g_slist_nth_data(ob->anims, z);
+				eref->type = EDITREF_ANIM;
+
+				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
+				eob->nrefs++;
+			}
+		}
+		SLIST_INSERT_HEAD(&med->eobjsh, eob, eobjs);
 		med->neobjs++;
 	}
+	pthread_mutex_unlock(&world->lock);
 
 	object_link(med);
-
-	/* For tile property sprites. */
-	curmapedit = med;
 
 	if (pthread_mutex_lock(&em->lock) == 0) {
 		/* Position mapedit on the map. */
@@ -205,11 +211,14 @@ mapedit_create(char *name, char *desc)
 	view_center(em->view, em->defx, em->defy);
 	em->redraw++;
 	
+	curmapedit = med;
+	
 	/* XXX tune */
 	med->timer = SDL_AddTimer(em->view->fps + 120, mapedit_time, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		object_destroy(med, NULL);
+		object_destroy(med);
+		object_unlink(med);
 		return (NULL);
 	}
 
@@ -222,18 +231,17 @@ static void
 mapedit_destroy(struct object *obp)
 {
 	struct mapedit *med = (struct mapedit *)obp;
-	int i;
+	struct editobj *eob;
 
 	SDL_RemoveTimer(med->timer);
 
-	for (i = 0; i < med->neobjs; i++) {
-		struct editobj *eob;
-		int z;
+	SLIST_FOREACH(eob, &med->eobjsh, eobjs) {
+		struct editref *eref;
 
-		eob = g_slist_nth_data(med->eobjs, i);
-		for (z = 0; z < eob->nrefs; z++) {
-			free(g_slist_nth_data(eob->refs, z));
+		SIMPLEQ_FOREACH(eref, &eob->erefsh, erefs) {
+			free(eref);
 		}
+		free(eob);
 	}
 }
 
@@ -259,11 +267,11 @@ mapedit_examine(struct map *em, int x, int y)
 {
 	int i;
 	struct map_aref *aref;
-	struct map_entry *me;
+	struct node *me;
 
 	me = &em->map[x][y];
 
-	printf("%dx%d: %d objects. < ", x, y, me->nobjs);
+	printf("%dx%d < ", x, y);
 
 	/* Keep in sync with map.h */
 	if (me->flags == MAPENTRY_BLOCK) {
@@ -288,30 +296,26 @@ mapedit_examine(struct map *em, int x, int y)
 		if (me->flags & MAPENTRY_HASTE)
 			printf("haste ");
 	}
-
 	printf(">\n");
-	for (i = 0; i < me->nobjs; i++) {
-		aref = map_entry_aref(me, i);
-		printf("\t[%2d] ", i);
-		if (aref != NULL) {
-			printf("%s:%d ", aref->pobj->name, aref->offs);
-			if (aref->flags & MAPREF_SAVE)
-				printf("saveable ");
-			if (aref->flags & MAPREF_SPRITE)
-				printf("sprite ");
-			if (aref->flags & MAPREF_ANIM)
-				printf("anim ");
-		} else {
-			printf("NULL");
-		}
+
+	i = 0;
+	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+		printf("\t[%2d] ", i++);
+		printf("%s:%d ", aref->pobj->name, aref->offs);
+		if (aref->flags & MAPREF_SAVE)
+			printf("saveable ");
+		if (aref->flags & MAPREF_SPRITE)
+			printf("sprite ");
+		if (aref->flags & MAPREF_ANIM)
+			printf("anim ");
 		printf("\n");
 	}
 }
 
 static void
-mapedit_toggle(struct mapedit *med, struct map_entry *me, int flag)
+mapedit_setflag(struct mapedit *med, struct node *me, int flag)
 {
-	if (me->nobjs < 2) {
+	if (me->narefs < 2) {
 		dprintf("empty tile\n");
 		return;
 	}
@@ -340,7 +344,9 @@ mapedit_bg(SDL_Surface *v, int ax, int ay, int w, int h)
 
 	for (y = ay; y < h; y++) {
 		for (x = ax; x < w; x++) {
-			Uint32 c = col[((x ^ y) >> 3) & 1];
+			static Uint32 c;
+			
+			c = col[((x ^ y) >> 3) & 1];
 
 			SDL_LockSurface(v);
 			switch (v->format->BytesPerPixel) {
@@ -374,12 +380,11 @@ mapedit_bg(SDL_Surface *v, int ax, int ay, int w, int h)
 void
 mapedit_tilelist(struct mapedit *med)
 {
-	static struct window *win;
+	struct window *win = med->tilelist;
 	static int tilew, tileh;
 	static SDL_Rect rs, rd;
 	int i, sn;
 
-	win = med->tilelist;
 	tilew = med->map->view->tilew;
 	tileh = med->map->view->tileh;
 	
@@ -409,13 +414,13 @@ mapedit_tilelist(struct mapedit *med)
 
 		/*
 		 * Obtain the mapedit reference at this offset. If the
-		 * index is negative, wrap. We always exclude the first
-		 * reference (the map edition icon).
+		 * index is negative, wrap.
 		 */
+		/* XXX array */
 		if (sn > -1) {
-			ref = g_slist_nth_data(med->curobj->refs, sn);
+			SIMPLEQ_INDEX(ref, &med->curobj->erefsh, erefs, sn);
 		} else {
-			ref = g_slist_nth_data(med->curobj->refs,
+			SIMPLEQ_INDEX(ref, &med->curobj->erefsh, erefs,
 			    sn + med->curobj->nrefs);
 		}
 
@@ -427,12 +432,23 @@ mapedit_tilelist(struct mapedit *med)
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
 			if (anim->nframes > 0) {
-				SDL_BlitSurface(g_slist_nth_data(anim->frames,
-				    0), &rs, win->view->v, &rd);
+				SDL_BlitSurface(g_slist_nth_data(
+				    anim->frames, anim->gframe),
+				    &rs, win->view->v, &rd);
+				if (anim->delay > 0 &&
+				    anim->gframedc++ > anim->delay) {
+					if (anim->gframe++ >=
+					    (anim->nframes - 1)) {
+						anim->gframe = 0;
+					}
+					anim->gframedc = 0;
+					/*
+					 * XXX wait the number of
+					 * ticks a blit usually
+					 * takes.
+					 */
+				}
 			}
-			SDL_BlitSurface(g_slist_nth_data(
-			    curmapedit->obj.sprites, MAPEDIT_ANIM),
-			    &rs, win->view->v, &rd);
 			break;
 		}
 
@@ -454,16 +470,17 @@ mapedit_tilelist(struct mapedit *med)
 
 /*
  * Draw the tile stack for the map entry under the cursor.
- * This must be called when the map is locked.
+ * Must be called on a locked map.
  */
 void
 mapedit_tilestack(struct mapedit *med)
 {
-	SDL_Rect rs, rd;
+	static SDL_Rect rs, rd;
 	struct window *win = med->tilestack;
-	struct map_entry *me;
+	struct node *me;
+	struct map_aref *aref;
 	static int tilew, tileh;
-	int i, sn;
+	int i;
 
 	me = &med->map->map[med->x][med->y];
 	tilew = med->map->view->tilew;
@@ -481,19 +498,15 @@ mapedit_tilestack(struct mapedit *med)
 	mapedit_bg(win->view->v, rd.x, rd.y, rd.w, rd.h);
 	rd.h = tileh;
 
-	/* Draw the tile stack. */
-	for (i = 0, sn = me->nobjs;
-	    sn >= 0 && (i < (win->height / tileh) - 1);
-	    i++, sn--) {
-		static struct map_aref *aref;
-		
-		aref = map_entry_aref(me, sn);
-		if (aref == NULL) {
-			continue;
+	i = 0;
+	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+		if (++i > (win->height / tileh) - 1) {
+			return;
 		}
 		if (aref->flags & MAPREF_ANIM) {
-			struct anim *anim;
-			/* Draw the first frame. */
+			static struct anim *anim;
+
+			/* Only draw the first frame. */
 			anim = g_slist_nth_data(aref->pobj->anims, aref->offs);
 			SDL_BlitSurface(g_slist_nth_data(anim->frames,
 			    0), &rs, win->view->v, &rd);
@@ -521,7 +534,7 @@ mapedit_objlist(struct mapedit *med)
 	SDL_Rect rs, rd;
 	struct window *win = med->objlist;
 	static int tilew, tileh;
-	int i, sn;
+	struct editobj *eob;
 
 	tilew = med->map->view->tilew;
 	tileh = med->map->view->tileh;
@@ -538,20 +551,9 @@ mapedit_objlist(struct mapedit *med)
 	mapedit_bg(win->view->v, rd.x, rd.y, rd.w, rd.h);
 	rd.x = tilew;
 
-	sn = g_slist_index(med->eobjs, med->curobj);
-
-	/* Draw the circular object ring. */
-	for (i = 0; rd.x <= win->width - tilew; i++) {
-		struct editobj *eob;
-
-		if (i >= med->neobjs) {
-			i = 0;
-		}
-
-		eob = g_slist_nth_data(med->eobjs, i);
-
-		SDL_BlitSurface(g_slist_nth_data(eob->pobj->sprites, 0), &rs,
-		    win->view->v, &rd);
+	SLIST_FOREACH(eob, &med->eobjsh, eobjs) {
+		SDL_BlitSurface(g_slist_nth_data(eob->pobj->sprites, 0),
+		    &rs, win->view->v, &rd);
 		if (med->curobj == eob) {
 			SDL_BlitSurface(g_slist_nth_data(
 			    curmapedit->obj.sprites, MAPEDIT_CIRQSEL),
@@ -566,12 +568,11 @@ mapedit_objlist(struct mapedit *med)
 }
 
 static void
-mapedit_event(struct object *ob, SDL_Event *ev)
+mapedit_event(struct mapedit *med, SDL_Event *ev)
 {
-	struct mapedit *med = (struct mapedit *)ob;
 	struct map *em = med->map;
 	int mapx, mapy;
-	char *path;
+	char path[FILENAME_MAX];
 
 	/*
 	 * Mouse scrolling.
@@ -714,7 +715,6 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 		return;
 	}
 
-	med = (struct mapedit *)ob;
 	mapx = med->x;
 	mapy = med->y;
 
@@ -722,10 +722,10 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 	 * Editor hotkeys.
 	 */
 	if (ev->type == SDL_KEYDOWN) {
-		struct map_entry *me;
+		struct node *me;
 		struct map_aref *aref = NULL;
-		struct editref *edref;
-		int redraw = 0;
+		struct editref *eref;
+		int moved = 0;
 
 		if (pthread_mutex_lock(&em->lock) != 0) {
 			perror(em->obj.name);
@@ -740,97 +740,106 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			 * cursor must be out of the way.
 			 */
 			mapedit_pointer(med, 0);
-			edref = g_slist_nth_data(med->curobj->refs,
+			SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs,
 			    med->curoffs);
+#ifdef DEBUG
+			/* XXX should not happen */
+			if (eref == NULL) {
+				fatal("no editor ref at %d\n", med->curoffs);
+			}
+#endif
 
-			switch (edref->type) {
+			switch (eref->type) {
 			case EDITREF_SPRITE:
-				map_entry_addref(me, med->curobj->pobj,
-				    edref->spritei, MAPREF_SPRITE|MAPREF_SAVE);
+				node_addref(me, med->curobj->pobj,
+				    eref->spritei, MAPREF_SPRITE|MAPREF_SAVE);
 				break;
 			case EDITREF_ANIM:
-				map_entry_addref(me, med->curobj->pobj,
-				    edref->spritei, MAPREF_ANIM|MAPREF_SAVE);
+				node_addref(me, med->curobj->pobj,
+				    eref->animi, MAPREF_ANIM|MAPREF_SAVE);
 				break;
 			}
 			me->flags = med->curflags;
 			mapedit_pointer(med, 1);
-			redraw++;
+			em->redraw++;
 			break;
 		case SDLK_d:
 			/* Pop a reference off the stack. */
-			if (me->nobjs < 2) {
+			if (me->narefs < 2) {
 				dprintf("%dx%d: empty\n", mapx, mapy);
 				break;
 			}
-			aref = map_entry_aref(me, me->nobjs - 2);
-			map_entry_delref(me, aref);
-			redraw++;
+			aref = node_arefindex(me, me->narefs - 2);
+			node_delref(me, aref);
+			em->redraw++;
 			break;
 		case SDLK_b:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_toggle(med, me, MAPENTRY_BIO);
+				mapedit_setflag(med, me, MAPENTRY_BIO);
 			} else {
-				mapedit_toggle(med, me, MAPENTRY_BLOCK);
+				mapedit_setflag(med, me, MAPENTRY_BLOCK);
 			}
-			redraw++;
+			em->redraw++;
 			break;
 		case SDLK_w:
-			mapedit_toggle(med, me, MAPENTRY_WALK);
-			redraw++;
+			mapedit_setflag(med, me, MAPENTRY_WALK);
+			em->redraw++;
 			break;
 		case SDLK_c:
-			mapedit_toggle(med, me, MAPENTRY_CLIMB);
-			redraw++;
+			mapedit_setflag(med, me, MAPENTRY_CLIMB);
+			em->redraw++;
 			break;
 		case SDLK_p:
-			mapedit_toggle(med, me, MAPENTRY_SLIP);
-			redraw++;
+			if (ev->key.keysym.mod & KMOD_CTRL) {
+				/* Toggle the map grid. */
+				if (med->flags & MAPEDIT_DRAWPROPS) {
+					med->flags &= ~(MAPEDIT_DRAWPROPS);
+				} else {
+					med->flags |= MAPEDIT_DRAWPROPS;
+				}
+				em->redraw++;
+			} else {
+				mapedit_setflag(med, me, MAPENTRY_SLIP);
+				em->redraw++;
+			}
 			break;
 		case SDLK_h:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_toggle(med, me, MAPENTRY_HASTE);
-				redraw++;
+				mapedit_setflag(med, me, MAPENTRY_HASTE);
+				em->redraw++;
 			}
 			break;
 		case SDLK_r:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_toggle(med, me, MAPENTRY_REGEN);
-				redraw++;
+				mapedit_setflag(med, me, MAPENTRY_REGEN);
+				em->redraw++;
 			}
 			break;
 		case SDLK_i:
 			mapedit_pointer(med, 0);
 			if (ev->key.keysym.mod & KMOD_CTRL) {
-				struct editref *edref;
+				struct editref *eref;
 
-				edref = g_slist_nth_data(med->curobj->refs,
+				SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs,
 				    med->curoffs);
-#ifdef DEBUG
-				if (edref == NULL) {
-					dprintf("no %d in %s\n", med->curoffs,
-					    med->curobj->pobj->name);
-				}
-#endif
 
-				switch (edref->type) {
+				switch (eref->type) {
 				case EDITREF_SPRITE:
 					map_clean(em, med->curobj->pobj,
-					    edref->spritei, med->curflags,
+					    eref->spritei, med->curflags,
 					    MAPREF_SAVE|MAPREF_SPRITE);
 					break;
 				case EDITREF_ANIM:
 					map_clean(em, med->curobj->pobj,
-					    edref->animi, med->curflags,
+					    eref->animi, med->curflags,
 					    MAPREF_SAVE|MAPREF_ANIM);
 					break;
 				}
-
 			} else {
 				map_clean(med->map, NULL, 0, 0, 0);
 			}
 			mapedit_pointer(med, 1);
-			redraw++;
+			em->redraw++;
 			break;
 		case SDLK_o:
 			/* Toggle the object list window. */
@@ -858,13 +867,13 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			mapx = em->defx;
 			mapy = em->defy;
 			view_center(em->view, mapx, mapy);
-			redraw++;
+			moved++;
 			break;
 		case SDLK_l:
 			/* Load this map from file. */
 			mapedit_pointer(med, 0);
 			map_clean(em, NULL, 0, 0, 0);
-			path = g_strdup_printf("%s.map", em->obj.name);
+			sprintf(path, "%s.map", em->obj.name);
 			if (em->obj.load(med->map, path) == 0) {
 				mapx = em->defx;
 				mapy = em->defy;
@@ -873,7 +882,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			}
 			free(path);
 			mapedit_pointer(med, 1);
-			redraw++;
+			em->redraw++;
 			break;
 		case SDLK_t:
 			if (ev->key.keysym.mod & KMOD_CTRL) {
@@ -889,8 +898,8 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				/* Toggle the 'slow' attribute. */
-				mapedit_toggle(med, me, MAPENTRY_SLOW);
-				redraw++;
+				mapedit_setflag(med, me, MAPENTRY_SLOW);
+				em->redraw++;
 			} else if (ev->key.keysym.mod & KMOD_CTRL) {
 				/* Toggle tile stack window. */
 				if (med->flags & MAPEDIT_TILESTACK) {
@@ -901,12 +910,21 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 				em->redraw++;
 			} else {
 				/* Save this map to file. */
-				path = g_strdup_printf("%s.map", em->obj.name);
+				sprintf(path, "%s.map", em->obj.name);
 				dprintf("saving %s...\n", path);
 				em->obj.save((struct object *)em, path);
 				dprintf("done\n");
 				free(path);
 			}
+			break;
+		case SDLK_g:
+			/* Toggle the map grid. */
+			if (med->flags & MAPEDIT_DRAWGRID) {
+				med->flags &= ~(MAPEDIT_DRAWGRID);
+			} else {
+				med->flags |= MAPEDIT_DRAWGRID;
+			}
+			em->redraw++;
 			break;
 		case SDLK_x:
 			mapedit_examine(em, mapx, mapy);
@@ -915,7 +933,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			break;
 		}
 	
-		if (redraw) {
+		if (moved) {
 			MAPEDIT_MOVE(med, mapx, mapy);
 			em->redraw++;
 		}
@@ -1094,15 +1112,21 @@ mapedit_time(Uint32 ival, void *obp)
 		struct viewport *view;
 
 		if (med->listodir & MAPEDIT_CTRLLEFT) {
-			static int pobjnum;
+			static int i;
+			struct editobj *eobj;
 
-			pobjnum = g_slist_index(med->eobjs, med->curobj);
-			dprintf("pobjnum %d..\n", pobjnum);
-			if (--pobjnum < 0) {
-				pobjnum = med->neobjs - 1;
+			SLIST_FOREACH(eobj, &med->eobjsh, eobjs) {
+				if (eobj == med->curobj)
+					break;
+				i++;
 			}
-			dprintf("-> %d\n", pobjnum);
-			med->curobj = g_slist_nth_data(med->eobjs, pobjnum);
+
+			dprintf("i = %d..\n", i);
+			if (--i < 0) {
+				i = med->neobjs - 1;
+				dprintf("wrap to %d\n", i);
+			}
+			SLIST_INDEX(med->curobj, &med->eobjsh, eobjs, i);
 			dprintf("curobj is now %s\n", med->curobj->pobj->name);
 			med->curoffs = 1;
 
