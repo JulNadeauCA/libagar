@@ -101,12 +101,7 @@ void
 mapedit_pop(struct mapedit *med, struct node *node)
 {
 	struct noderef *nref;
-	int i;
-
-	if (node->nnrefs < 2) {
-		dprintf("empty node\n");
-		return;
-	}
+	int i = 0;
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (i++ == (node->nnrefs - 2)) {
@@ -115,6 +110,7 @@ mapedit_pop(struct mapedit *med, struct node *node)
 			return;
 		}
 	}
+	dprintf("empty node\n");
 }
 
 /* Fill the map with the current reference. */
