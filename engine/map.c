@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.55 2002/03/06 13:32:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.56 2002/03/12 14:00:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -651,16 +651,20 @@ map_load(void *ob, int fd)
 				flags = fobj_read_uint32(fd);
 				pobj = object_strfind(pobjstr);
 
-				if (pobj == NULL) {
-					fatal("no match for \"%s\"\n", pobjstr);
-					return (-1);
+				if (pobj != NULL) {
+					nref = node_addref(node, pobj, offs,
+					    flags);
+					nref->frame = frame;
+
+					refs++;
+				} else {
+					dprintf("at %dx%d:[%d]\n", x, y, i,
+					    nnrefs);
+					fatal("no match for \"%s\"\n",
+					    pobjstr);
 				}
 				free(pobjstr);
 
-				nref = node_addref(node, pobj, offs, flags);
-				nref->frame = frame;
-
-				refs++;
 			}
 		}
 	}
