@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.208 2003/07/04 12:29:11 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.209 2003/07/05 01:55:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -102,11 +102,17 @@ window_new(const char *fmt, ...)
 		char name[OBJECT_NAME_MAX];
 		struct window *owin;
 		va_list ap;
+		char *c;
 
 		va_start(ap, fmt);
 		vsnprintf(name, sizeof(name), fmt, ap);
 		va_end(ap);
-		
+
+		for (c = &name[0]; *c != '\0'; c++) {
+			if (*c == '/')
+				*c = '_';
+		}
+
 		TAILQ_FOREACH(owin, &view->windows, windows) {
 			if (strlen(OBJECT(owin)->name) < 4 ||
 			    strcmp(OBJECT(owin)->name+4, name) != 0) {
