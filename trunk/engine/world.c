@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.3 2002/01/30 12:47:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -51,13 +51,11 @@ world_create(char *name)
 	/* Initialize the world structure. */
 	object_create(&world->obj, name, NULL, DESTROY_HOOK);
 	world->obj.destroy_hook = world_destroy;
-	
-	world->objs = NULL;
-	world->chars = NULL;
-	world->maps = NULL;
-	world->nobjs = 0;
-	world->nchars = 0;
-	world->nmaps = 0;
+
+	SLIST_INIT(&world->wobjsh);
+	SLIST_INIT(&world->wcharsh);
+	SLIST_INIT(&world->wmapsh);
+
 	world->agef = 0.01;
 	pthread_mutex_init(&world->lock, NULL);
 
@@ -67,27 +65,16 @@ world_create(char *name)
 void
 world_destroy(struct object *obj)
 {
-	struct world *wo = (struct world *) obj;
-	GSList *woc = NULL;
-
-	/*
-	 * Destroy all objects. Destroy handlers might happen
-	 * to modify the object list, so we make a copy of it.
-	 */
-	if (pthread_mutex_lock(&wo->lock) == 0) {
-		woc = g_slist_copy(wo->objs);
-		pthread_mutex_unlock(&wo->lock);
-	} else {
-		perror("world");
-	}
-
-	/* Destroy all registered objects. */
-	g_slist_foreach(woc, (GFunc)object_destroy, NULL);
-
-	/* Perform deferred garbage collection (ie. for maps). */
-	object_lategc();
+	struct object *nob;
 	
-	pthread_mutex_destroy(&wo->lock);
+	map_unfocus(curmap);
+
+	SLIST_FOREACH(nob, &world->wobjsh, wobjs) {
+		object_destroy(nob);
+		object_unlink(nob);
+	}
+	
+	object_lategc();
 }
 
 #ifdef DEBUG
@@ -95,17 +82,19 @@ world_destroy(struct object *obj)
 void
 world_dump(struct world *wo)
 {
-	printf("[%d objs]\n", wo->nobjs);
-	g_slist_foreach(wo->objs, (GFunc)object_dump_obj, NULL);
-	printf("\n");
-	
-	printf("[%d maps]\n", wo->nmaps);
-	g_slist_foreach(wo->maps, (GFunc)map_dump_map, NULL);
-	printf("\n");
+	struct object *ob;
+	struct map *m;
+	struct character *ch;
 
-	printf("[%d characters]\n", wo->nchars);
-	g_slist_foreach(wo->chars, (GFunc)char_dump_char, NULL);
-	printf("\n");
+	printf("objs\n");
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs)
+		object_dump(ob);
+	printf("maps\n");
+	SLIST_FOREACH(m, &wo->wmapsh, wmaps)
+		map_dump(m);
+	printf("characters\n");
+	SLIST_FOREACH(ch, &wo->wcharsh, wchars)
+		char_dump(ch);
 }
 
 #endif /* DEBUG */

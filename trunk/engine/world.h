@@ -1,17 +1,19 @@
-/*	$Csoft$	*/
+/*	$Csoft: world.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 #include <glib.h>
 
+SLIST_HEAD(objs_head, object);
+SLIST_HEAD(maps_head, map);
+SLIST_HEAD(chars_head, character);
+
 struct world {
 	struct	object obj;
-	int	laws;			/* Laws governing this world */
 	float	agef;			/* Global ageing factor */
-	int	nobjs;			/* Object count */
-	int	nchars;			/* Inhabitant count */
-	int	nmaps;			/* Map count */
-	GSList *objs;			/* Objects (struct object) */
-	GSList *chars;			/* Characters (struct character) */
-	GSList *maps;			/* Mapped areas (struct map) */
+
+	struct	objs_head wobjsh;	/* Active objects */
+	struct	maps_head wmapsh;	/* Active maps */
+	struct	chars_head wcharsh;	/* Active characters */
+	
 	pthread_mutex_t lock;		/* R/W lock on object lists */
 };
 
