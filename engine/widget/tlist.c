@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.102 2004/11/30 11:32:25 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.103 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/widget/primitive.h>
 
 #include <string.h>
+#include <stdarg.h>
 
 static struct widget_ops tlist_ops = {
 	{
@@ -65,8 +66,8 @@ static void tlist_keydown(int, union evarg *);
 static void tlist_keyup(int, union evarg *);
 static void tlist_scrolled(int, union evarg *);
 static void free_item(struct tlist *, struct tlist_item *);
-static void tlist_select_item(struct tlist *, struct tlist_item *);
-static void tlist_unselect_item(struct tlist *, struct tlist_item *);
+static void select_item(struct tlist *, struct tlist_item *);
+static void unselect_item(struct tlist *, struct tlist_item *);
 
 struct tlist *
 tlist_new(void *parent, int flags)
@@ -97,8 +98,8 @@ key_tick(int argc, union evarg *argv)
 			if (it->selected &&
 			    (pit = TAILQ_PREV(it, tlist_itemq, items))
 			     != NULL) {
-				tlist_unselect_item(tl, it);
-				tlist_select_item(tl, pit);
+				unselect_item(tl, it);
+				select_item(tl, pit);
 #if 1
 				if (--(*offset) < 0) {
 					*offset = 0;
@@ -113,8 +114,8 @@ key_tick(int argc, union evarg *argv)
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected &&
 			    (pit = TAILQ_NEXT(it, items)) != NULL) {
-				tlist_unselect_item(tl, it);
-				tlist_select_item(tl, pit);
+				unselect_item(tl, it);
+				select_item(tl, pit);
 #if 1
 				if (++(*offset) >
 				    tl->nitems - tl->nvisitems) {
@@ -343,9 +344,11 @@ tlist_draw(void *p)
 
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
-				it->icon = widget_map_surface(tl,
-				    view_scale_surface(it->iconsrc,
-				    tl->item_h, tl->item_h));
+				SDL_Surface *scaled = NULL;
+
+				view_scale_surface(it->iconsrc,
+				    tl->item_h, tl->item_h, &scaled);
+				it->icon = widget_map_surface(tl, scaled);
 			}
 			widget_blit_surface(tl, it->icon, x, y);
 		}
@@ -524,53 +527,78 @@ tlist_visible_children(struct tlist *tl, struct tlist_item *cit)
  * Allocate a new tlist item.
  * XXX allocate from a pool, especially for polled items.
  */
-static struct tlist_item *
-tlist_alloc_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
-    const void *p1)
+static __inline__ struct tlist_item *
+allocate_item(struct tlist *tl, SDL_Surface *iconsrc)
 {
 	struct tlist_item *it;
 
 	it = Malloc(sizeof(struct tlist_item), M_WIDGET);
 	it->selected = 0;
-	it->p1 = (void *)p1;
+	it->class = "";
 	it->depth = 0;
 	it->flags = 0;
-	strlcpy(it->text, text, sizeof(it->text));
-
 	it->icon = -1;
 	it->label = -1;
 	tlist_set_icon(tl, it, iconsrc);
 	return (it);
 }
 
+static __inline__ void
+insert_item(struct tlist *tl, struct tlist_item *it, int ins_head)
+{
+	pthread_mutex_lock(&tl->lock);
+	if (ins_head) {
+		TAILQ_INSERT_HEAD(&tl->items, it, items);
+	} else {
+		TAILQ_INSERT_TAIL(&tl->items, it, items);
+	}
+	widget_set_int(tl->sbar, "max", ++tl->nitems);
+	pthread_mutex_unlock(&tl->lock);
+}
+
 /* Add an item to the list. */
 struct tlist_item *
 tlist_insert_item(struct tlist *tl, SDL_Surface *iconsrc, const char *text,
-    const void *p1)
+    void *p1)
 {
 	struct tlist_item *it;
 
-	it = tlist_alloc_item(tl, iconsrc, text, p1);
+	it = allocate_item(tl, iconsrc);
+	it->p1 = p1;
+	strlcpy(it->text, text, sizeof(it->text));
 
-	pthread_mutex_lock(&tl->lock);
-	TAILQ_INSERT_TAIL(&tl->items, it, items);
-	widget_set_int(tl->sbar, "max", ++tl->nitems);
-	pthread_mutex_unlock(&tl->lock);
+	insert_item(tl, it, 0);
+	return (it);
+}
+
+struct tlist_item *
+tlist_insert(struct tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
+{
+	struct tlist_item *it;
+	va_list args;
+	
+	it = allocate_item(tl, iconsrc);
+	it->p1 = NULL;
+
+	va_start(args, fmt);
+	vsnprintf(it->text, sizeof(it->text), fmt, args);
+	va_end(args);
+
+	insert_item(tl, it, 0);
 	return (it);
 }
 
 struct tlist_item *
 tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
-    const void *p1)
+    void *p1)
 {
 	struct tlist_item *it;
 
-	it = tlist_alloc_item(tl, icon, text, p1);
+	it = allocate_item(tl, icon);
+	it->p1 = p1;
+	strlcpy(it->text, text, sizeof(it->text));
 
-	pthread_mutex_lock(&tl->lock);
-	TAILQ_INSERT_HEAD(&tl->items, it, items);
-	widget_set_int(tl->sbar, "max", ++tl->nitems);
-	pthread_mutex_unlock(&tl->lock);
+	insert_item(tl, it, 1);
 	return (it);
 }
 
@@ -622,7 +650,7 @@ tlist_unselect_all(struct tlist *tl)
 }
 
 static void
-tlist_select_item(struct tlist *tl, struct tlist_item *it)
+select_item(struct tlist *tl, struct tlist_item *it)
 {
 	struct widget_binding *selectedb;
 	void **selected;
@@ -637,7 +665,7 @@ tlist_select_item(struct tlist *tl, struct tlist_item *it)
 }
 
 static void
-tlist_unselect_item(struct tlist *tl, struct tlist_item *it)
+unselect_item(struct tlist *tl, struct tlist_item *it)
 {
 	struct widget_binding *selectedb;
 	void **selected;
@@ -734,7 +762,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		ti->selected++;
 	}
 	
-	tlist_select_item(tl, ti);
+	select_item(tl, ti);
 
 	if (tl->dblclicked) {
 		event_cancel(tl, "dblclick-expire");
@@ -896,9 +924,11 @@ tlist_set_item_height(struct tlist *tl, int ih)
 	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != -1) {
-			widget_replace_surface(tl, it->icon,
-			    view_scale_surface(it->iconsrc, tl->item_h,
-			    tl->item_h));
+			SDL_Surface *scaled = NULL;
+
+			view_scale_surface(it->iconsrc,
+			    tl->item_h-1, tl->item_h-1, &scaled);
+			widget_replace_surface(tl, it->icon, scaled);
 		}
 	}
 	pthread_mutex_unlock(&tl->lock);
