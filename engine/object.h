@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.18 2002/02/21 02:19:25 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.19 2002/02/25 09:05:12 vedge Exp $	*/
 
 #include <engine/physics.h>
 
@@ -62,8 +62,8 @@ int	 object_unlink(void *);
 int	 object_load(void *);
 int	 object_loadfrom(void *, char *);
 int	 object_save(void *);
-void	 increase(int *, int, int);
-void	 decrease(int *, int, int);
+void	 increase_uint32(Uint32 *, Uint32, Uint32);
+void	 decrease_uint32(Uint32 *, Uint32, Uint32);
 void	 object_dump(void *);
 
 struct object	*object_strfind(char *);

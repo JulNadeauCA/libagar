@@ -187,7 +187,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_UP;
 				moved |= DIR_UP;
-				decrease(mapy, 1, 1);
+				decrease_uint32(mapy, 1, 1);
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapy - *mapy) >= 0) {
 				    	scroll(map, DIR_UP);
@@ -210,7 +210,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_DOWN;
 				moved |= DIR_DOWN;
-				increase(mapy, 1, map->maph - 1);
+				increase_uint32(mapy, 1, map->maph - 1);
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapy - *mapy) <=
 				     -map->view->maph) {
@@ -235,7 +235,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_LEFT;
 				moved |= DIR_LEFT;
-				decrease(mapx, 1, 1);
+				decrease_uint32(mapx, 1, 1);
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapx - *mapx) >= 0) {
 					scroll(map, DIR_LEFT);
@@ -258,7 +258,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_RIGHT;
 				moved |= DIR_RIGHT;
-				increase(mapx, 1, map->mapw - 1);
+				increase_uint32(mapx, 1, map->mapw - 1);
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapx - *mapx) <=
 				     -map->view->mapw) {

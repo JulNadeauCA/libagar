@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.12 2002/02/18 07:46:50 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.13 2002/02/21 02:20:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -165,16 +165,16 @@ scroll(struct map *m, int dir)
 {
 	switch (dir) {
 	case DIR_UP:
-		decrease(&m->view->mapy, 1, 0);
+		decrease_uint32(&m->view->mapy, 1, 0);
 		break;
 	case DIR_DOWN:
-		increase(&m->view->mapy, 1, m->maph - m->view->maph);
+		increase_uint32(&m->view->mapy, 1, m->maph - m->view->maph);
 		break;
 	case DIR_LEFT:
-		decrease(&m->view->mapx, 1, 0);
+		decrease_uint32(&m->view->mapx, 1, 0);
 		break;
 	case DIR_RIGHT:
-		increase(&m->view->mapx, 1, m->mapw - m->view->mapw);
+		increase_uint32(&m->view->mapx, 1, m->mapw - m->view->mapw);
 		break;
 	}
 	m->redraw++;
