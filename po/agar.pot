@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2003-09-05 07:23-0300\n"
+"POT-Creation-Date: 2003-09-06 21:45-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,91 +86,95 @@ msgstr ""
 msgid "font-path"
 msgstr ""
 
-#: engine/config.c:121
+#: engine/config.c:122
 #, c-format
 msgid "Save the configuration and restart %s for OpenGL mode to take effect"
 msgstr ""
 
-#: engine/config.c:127
+#: engine/config.c:128
 #, c-format
 msgid "Save the configuration and restart %s for async blits to take effect"
 msgstr ""
 
-#: engine/config.c:195
+#: engine/config.c:214
 msgid "Engine settings"
 msgstr ""
 
-#: engine/config.c:206
+#: engine/config.c:225
 msgid "Full screen"
 msgstr ""
 
-#: engine/config.c:207
+#: engine/config.c:226
 msgid "Asynchronous blits"
 msgstr ""
 
-#: engine/config.c:209
+#: engine/config.c:228
 msgid "OpenGL rendering context"
 msgstr ""
 
-#: engine/config.c:211
+#: engine/config.c:230
 msgid "Unicode keyboard translation"
 msgstr ""
 
-#: engine/config.c:223
+#: engine/config.c:242
 msgid "Input composition"
 msgstr ""
 
-#: engine/config.c:226
+#: engine/config.c:246
 msgid "Right->left (Arabic, Hebrew, ...)"
 msgstr ""
 
 #. Thread unsafe, but not very dangerous.
-#: engine/config.c:230
+#: engine/config.c:250
 msgid "Debugging"
 msgstr ""
 
-#: engine/config.c:233
+#: engine/config.c:253
 msgid "Idle time prediction"
 msgstr ""
 
-#: engine/config.c:241
+#: engine/config.c:261
+msgid "Input devices:"
+msgstr ""
+
+#: engine/config.c:270
 msgid "Data save dir: "
 msgstr ""
 
-#: engine/config.c:247
+#: engine/config.c:276
 msgid "Data load path: "
 msgstr ""
 
-#: engine/config.c:253
+#: engine/config.c:282
 msgid "Font path: "
 msgstr ""
 
-#: engine/config.c:259
+#: engine/config.c:288
 msgid "Den path: "
 msgstr ""
 
 #. XXX propose some default resolutions.
-#: engine/config.c:270
+#: engine/config.c:299
 msgid "Width: "
 msgstr ""
 
-#: engine/config.c:276
+#: engine/config.c:305
 msgid "Height: "
 msgstr ""
 
-#: engine/config.c:287
+#: engine/config.c:316
 msgid "Close"
 msgstr ""
 
-#: engine/config.c:292 engine/mapedit/objedit.c:234
+#: engine/config.c:321 engine/mapedit/objedit.c:234
 msgid "Save"
 msgstr ""
 
-#: engine/config.c:323
+#: engine/config.c:352
 msgid "The search path is too big."
 msgstr ""
 
-#: engine/config.c:329
+#: engine/config.c:358
 #, c-format
 msgid "Cannot find `%s.%s' in <%s>."
 msgstr ""
@@ -357,12 +361,8 @@ msgstr ""
 msgid "Resident graphics"
 msgstr ""
 
-#: engine/event.c:160 engine/monitor/monitor.c:65
+#: engine/event.c:159 engine/monitor/monitor.c:65
 msgid "Refresh rate"
-msgstr ""
-
-#: engine/input.c:65
-msgid "Bad joystick index"
 msgstr ""
 
 #: engine/map.c:157 engine/map.c:213
@@ -1116,6 +1116,18 @@ msgstr ""
 
 #: engine/typesw.c:44
 msgid "Character"
+msgstr ""
+
+#: engine/input/mouse.c:38
+msgid "Mouse"
+msgstr ""
+
+#: engine/input/kbd.c:38
+msgid "Keyboard"
+msgstr ""
+
+#: engine/input/joy.c:39
+msgid "Joystick"
 msgstr ""
 
 #: sumo/session.c:74

@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.18 2003/09/02 03:43:24 vedge Exp $
+# $Csoft: fr.po,v 1.19 2003/09/05 10:24:54 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,10 +27,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-09-05 07:23-0300\n"
+"POT-Creation-Date: 2003-09-06 21:45-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
-"Language-Team: French <french@csoft.org>\n"
+"Language-Team: French <fr@csoft.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -129,6 +129,9 @@ msgstr "Déboguage"
 
 msgid "Idle time prediction"
 msgstr "Prédiction de temps d'attente"
+
+msgid "Input devices:"
+msgstr ""
 
 msgid "Data save dir: "
 msgstr "Répertoire de sauvegarde: "
@@ -311,9 +314,6 @@ msgstr "Graphiques en mémoire"
 
 msgid "Refresh rate"
 msgstr "Fréquence de rafraîchissement"
-
-msgid "Bad joystick index"
-msgstr "Mauvais index de joystick"
 
 #, c-format
 msgid "%ux%u nodes exceed %ux%u."
@@ -886,6 +886,15 @@ msgstr "Carte"
 msgid "Character"
 msgstr "Personnage"
 
+msgid "Mouse"
+msgstr "Souris"
+
+msgid "Keyboard"
+msgstr "Clavier"
+
+msgid "Joystick"
+msgstr "Joystick"
+
 #, c-format
 msgid "%lu MB"
 msgstr "%lu MO"
@@ -1003,14 +1012,11 @@ msgstr "%s: %s à échoué"
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
 
-#~ msgid "keyboard%d"
-#~ msgstr "clavier%d"
+#~ msgid "Bad joystick index"
+#~ msgstr "Mauvais index de joystick"
 
 #~ msgid "joy%d"
 #~ msgstr "joy%d"
-
-#~ msgid "mouse%d"
-#~ msgstr "souris%d"
 
 #~ msgid "Unicode string too big."
 #~ msgstr "La chaîne de caractères Unicode est trop grande."
