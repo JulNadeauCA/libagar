@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.18 2003/01/18 06:37:57 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.19 2003/01/23 03:58:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -524,7 +524,7 @@ prop_load(void *p, int fd)
 	Uint8 c;
 	Sint8 sc;
 
-	if (version_read(fd, &prop_ver) == -1) {
+	if (version_read(fd, &prop_ver, NULL) == -1) {
 		return (-1);
 	}
 

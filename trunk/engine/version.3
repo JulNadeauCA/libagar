@@ -1,4 +1,4 @@
-.\"	$Csoft: version.3,v 1.3 2002/12/28 10:08:22 vedge Exp $
+.\"	$Csoft: version.3,v 1.4 2003/01/01 05:18:34 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -59,7 +59,7 @@ compatibility is preserved.
 .Sh VERSIONING
 .nr nS 1
 .Ft "int"
-.Fn version_read "int fd" "const struct version *ver"
+.Fn version_read "int fd" "const struct version *ver" "struct version *rver"
 .Pp
 .Ft "int"
 .Fn version_write "int fd" "const struct version *ver"
@@ -73,6 +73,10 @@ and returns 0 if the following data is binary compatible against the version
 represented by
 .Fa ver ,
 or -1 if the data is not compatible.
+If
+.Fa rver
+is not NULL, its version members are set to the version read from
+.Fa fd .
 .Pp
 The
 .Fn version_write
