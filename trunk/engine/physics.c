@@ -231,7 +231,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			if (nref->yoffs == -1) {	/* Once */
 				if (*mapy - 1 > 1) {
 					map->map[*mapx][*mapy - 1].flags
-					    |= NODE_ANIM;
+					    |= NODE_OVERLAP;
 				} else {
 					nref->yoffs = 0;
 				}
@@ -245,6 +245,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				    (map->view->mapy - *mapy) <= 0) {
 				    	scroll(map, DIR_UP);
 				}
+				map->map[*mapx][*mapy].flags &=
+				    ~(NODE_OVERLAP);
 			} else {
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->yoffs -= dir->speed;
@@ -258,7 +260,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			if (nref->yoffs == 1) {		/* Once */
 				if (*mapy + 1 < map->maph - 1) {
 					map->map[*mapx][*mapy + 1].flags
-					    |= NODE_ANIM;
+					    |= NODE_OVERLAP;
 				} else {
 					nref->yoffs = 0;
 				}
@@ -274,6 +276,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				     -map->view->maph) {
 					scroll(map, DIR_DOWN);
 				}
+				map->map[*mapx][*mapy].flags &=
+				    ~(NODE_OVERLAP);
 			} else {
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->yoffs += dir->speed;
@@ -288,7 +292,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			if (nref->xoffs == -1) {	/* Once */
 				if (*mapx - 1 > 1) {
 					map->map[*mapx - 1][*mapy].flags
-					    |= NODE_ANIM;
+					    |= NODE_OVERLAP;
 				} else {
 					nref->xoffs = 0;
 				}
@@ -303,6 +307,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				    (map->view->mapx - *mapx) <= 0) {
 					scroll(map, DIR_LEFT);
 				}
+				map->map[*mapx][*mapy].flags &=
+				    ~(NODE_OVERLAP);
 			} else {
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->xoffs -= dir->speed;
@@ -316,7 +322,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			if (nref->xoffs == 1) {		/* Once */
 				if (*mapx + 1 < map->mapw - 1) {
 					map->map[*mapx + 1][*mapy].flags
-					    |= NODE_ANIM;
+					    |= NODE_OVERLAP;
 				} else {
 					nref->xoffs = 0;
 				}
@@ -332,6 +338,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				     -map->view->mapw) {
 					scroll(map, DIR_RIGHT);
 				}
+				map->map[*mapx][*mapy].flags &=
+				    ~(NODE_OVERLAP);
 			} else {
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->xoffs += dir->speed;
