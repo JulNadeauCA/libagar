@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.40 2002/02/17 08:25:07 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.41 2002/02/17 08:33:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -73,25 +73,25 @@ struct mapedit *
 mapedit_create(char *name, char *desc, int mapw, int maph, int tilew, int tileh)
 {
 	char path[FILENAME_MAX];
+	char caption[FILENAME_MAX];
 	struct mapedit *med;
 	struct map *map;
 	struct fobj *fob;
-	int fd;
+	int fd, new = 0;
 
 	/* Users must copy maps to udatadir in order to edit them. */
-	sprintf(path, "%s/%s.m", world->udatadir, name);
+	sprintf(path, "%s/%s.o", world->udatadir, name);
 
 	/* XXX specify a view in arguments? */
 	if ((fd = open(path, O_RDONLY, 0)) > 0) {
 		close(fd);
-		dprintf("editing %s from %s\n", name, path);
+	
 		map = map_create(name, NULL, 0);
 		object_loadfrom(map, path);
 	} else {
 		struct node *origin;
-
+		
 		/* Create a new map of the specified geometry. */
-		dprintf("creating %s anew\n", name);
 		map = map_create(name, desc, MAP_2D);
 		map_allocnodes(map, mapw, maph, tilew, tileh);
 		map->defx = mapw / 2;
@@ -99,6 +99,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph, int tilew, int tileh)
 
 		origin = &map->map[map->defx][map->defy];
 		origin->flags |= NODE_ORIGIN;
+		new++;
 	}
 	if (object_strfind(name) == NULL) {
 		dprintf("%s is not in core\n", name);
@@ -106,6 +107,15 @@ mapedit_create(char *name, char *desc, int mapw, int maph, int tilew, int tileh)
 	} else {
 		dprintf("%s is in core\n", name);
 	}
+
+	if (new) {
+		sprintf(caption, "%s (new)", name);
+		SDL_WM_SetCaption(caption, "agar");
+	} else {
+		sprintf(caption, "%s (%s)", name, path);
+		SDL_WM_SetCaption(caption, "agar");
+	}
+
 
 	/* Set a good video mode and center the view. */
 	view_setmap(map->view, map);
