@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.3 2004/03/30 16:05:11 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.4 2004/04/10 03:01:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -91,8 +91,15 @@ vg_destroy(struct vg *vg)
 		Free(vge->vtx, M_VG);
 		Free(vge, M_VG);
 	}
-
 	pthread_mutex_destroy(&vg->lock);
+}
+
+void
+vg_undo_element(struct vg *vg, struct vg_element *vge)
+{
+	TAILQ_REMOVE(&vg->vges, vge, vges);
+	Free(vge->vtx, M_VG);
+	Free(vge, M_VG);
 }
 
 /* Regenerate fragments of the raster surface. */
@@ -225,6 +232,8 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	return (vge);
 }
 
+
+
 /* Clear the surface with the filling color. */
 void
 vg_clear(struct vg *vg)
@@ -311,6 +320,18 @@ vg_alloc_vertex(struct vg_element *vge)
 		    (vge->nvtx+1)*sizeof(struct vg_vertex), M_VG);
 	}
 	return (&vge->vtx[vge->nvtx++]);
+}
+
+void
+vg_undo_vertex(struct vg *vg)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+
+	if (vge->vtx == NULL)
+		return;
+
+	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex),
+	    M_VG);
 }
 
 struct vg_vertex *
