@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.57 2003/02/02 21:16:15 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.58 2003/03/11 00:13:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -57,45 +57,13 @@ struct window {
 
 #define WINDOW(w)	((struct window *)(w))
 
-#define WINDOW_CYCLE(w)	 do {					\
-	TAILQ_REMOVE(&view->windows, (w), windows);		\
-	TAILQ_INSERT_HEAD(&view->windows, (w), windows);	\
-} while (/*CONSTCOND*/0)
+#define WINDOW_PUT_PIXEL(win, wrx, wry, c)			\
+	VIEW_PUT_PIXEL(view->v, (win)->rd.x+(wrx),		\
+	    (win)->rd.y+(wry), (c))
 
-#ifdef DEBUG
-
-# define WINDOW_PUT_PIXEL(win, wrx, wry, c) do {			\
-	if ((wrx) > (win)->rd.w || (wry) > (win)->rd.h ||		\
-	    (wrx) < 0 || (wry) < 0) {					\
-		fatal("%s: %d,%d > %dx%d", OBJECT(win)->name,		\
-		    (wrx), (wry), (win)->rd.w, (win)->rd.h);		\
-	}								\
-	VIEW_PUT_PIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry), (c)); \
-} while (/*CONSTCOND*/0)
-
-# define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) do {		\
-	if ((wrx) > (win)->rd.w || (wry) > (win)->rd.h ||		\
-	    (wrx) < 0 || (wry) < 0) {					\
-		fatal("%s: %d,%d > %dx%d", OBJECT(win)->name,		\
-		    (wrx), (wry), (win)->rd.w, (win)->rd.h);		\
-	}								\
-	VIEW_PUT_ALPHAPIXEL(view->v, (win)->rd.x+(wrx),			\
-	    (win)->rd.y+(wry), (c), (wa));				\
-} while (/*CONSTCOND*/0)
-
-#else	/* !DEBUG */
-
-# define WINDOW_PUT_PIXEL(win, wrx, wry, c)				\
- 	 VIEW_PUT_PIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry),	\
-	    (c))
-
-# define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) \
-	VIEW_PUT_ALPHAPIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry), \
-	    (c), (wa))
-
-#endif	/* DEBUG */
-
-#define WINDOW_SURFACE(win)	(view->v)
+#define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa)		\
+	VIEW_PUT_ALPHAPIXEL(view->v, (win)->rd.x+(wrx),		\
+	    (win)->rd.y+(wry), (c), (wa))
 
 #define WINDOW_INSIDE(win, xa, ya)				\
 	((xa) > (win)->rd.x && (ya) > (win)->rd.y &&		\
