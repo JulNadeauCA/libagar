@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.98 2002/06/09 15:04:29 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.99 2002/06/10 04:27:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,14 +55,6 @@ static const struct object_ops map_ops = {
 	map_destroy,
 	map_load,
 	map_save
-};
-
-struct draw {
-	SDL_Surface *s;		/* Source surface */
-	Uint32	x, y;		/* View coordinates */
-	Uint32	flags;		/* Node flags (for map editor) */
-
-	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
 };
 
 /*
@@ -150,7 +142,6 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	m->defx = 0;
 	m->defy = 0;
 	m->map = NULL;
-	m->view = mainview;
 	pthread_mutex_init(&m->lock, NULL);
 }
 
@@ -173,28 +164,21 @@ map_focus(struct map *m)
 	world->curmap = m;
 
 	pthread_mutex_lock(&m->lock);
-	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
 	pthread_mutex_unlock(&m->lock);
+	
+	mainview->map = m;		/* XXX */
 }
 
 /*
- * Display a particular map.
+ * Stop displaying a particular map.
  * Map and world must be locked.
  */
 void
 map_unfocus(struct map *m)
 {
-	m->view->map = NULL;
+	mainview->map = NULL;
 	m->flags &= ~(MAP_FOCUSED);	/* Will stop the rendering thread */
-
-#if 0
-	/* XXX bleah */
-	world->curmap = NULL;
-	if (curmapedit != NULL) {
-		world_detach(world, curmapedit);
-	}
-#endif
 }
 
 /*
@@ -365,7 +349,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 			rd.h = src->h;
 			rd.x = rx + nref->xoffs;
 			rd.y = ry + nref->yoffs;
-			SDL_BlitSurface(src, NULL, m->view->v, &rd);
+			SDL_BlitSurface(src, NULL, mainview->v, &rd);
 		} else if (nref->flags & MAPREF_ANIM) {
 			anim = ANIM(nref->pobj, nref->offs);
 			frame = anim->frame;
@@ -396,7 +380,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 					}
 				}
 			}
-			
+
 			for (i = 0, j = anim->nparts - 1;
 			     i < anim->nparts;
 			     i++, j--) {
@@ -412,7 +396,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 				rd.h = src->h;
 				rd.x = rx + nref->xoffs;
 				rd.y = ry + nref->yoffs - (i * TILEH);
-				SDL_BlitSurface(src, NULL, m->view->v, &rd);
+				SDL_BlitSurface(src, NULL, mainview->v, &rd);
 			}
 		}
 	}
@@ -446,7 +430,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 void
 map_animate(struct map *m)
 {
-	struct viewport *view = m->view;
+	struct viewport *view = mainview;
 	struct node *nnode;
 	int x, y, vx, vy, rx, ry, ox, oy;
 	int ri = 0;
@@ -456,21 +440,21 @@ map_animate(struct map *m)
 	     y++, vy++) {
 
 		ry = vy << m->shtiley;
-	
+
 		for (x = (view->mapx + view->vmapw) - 1,
 		     vx = (view->vmapw + view->mapxoffs) - 1;
-		     vx > 0; x--, vx--) {
-			static struct node *node;
+		     vx >= view->mapxoffs; x--, vx--) {
+			struct node *node;
 #ifdef DEBUG
 			int i;
 
-			i = VIEW_MAPMASK(view, vx, vy);
+			i = VIEW_MAPMASK(vx, vy);
 			if (i < 0 || i > 32) {
 				dprintf("funny mask: %d at %d,%d\n", i, vx, vy);
 				return;
 			}
 #endif
-			if (VIEW_MAPMASK(view, vx, vy) > 0) {
+			if (VIEW_MAPMASK(vx, vy) > 0) {
 				continue;
 			}
 
@@ -522,14 +506,12 @@ map_animate(struct map *m)
 				MAPEDIT_PREDRAW(m, node, vx, vy);
 				map_rendernode(m, node, rx, ry);
 				MAPEDIT_POSTDRAW(m, node, vx, vy);
-				view->rects[ri++] =
-				    view->maprects[vy][vx];
+				view->rects[ri++] = view->maprects[vy][vx];
 			} else if (node->nanims > 0) {
 				MAPEDIT_PREDRAW(m, node, vx, vy);
 				map_rendernode(m, node, rx, ry);
 				MAPEDIT_POSTDRAW(m, node, vx, vy);
-				view->rects[ri++] =
-				    view->maprects[vy][vx];
+				view->rects[ri++] = view->maprects[vy][vx];
 			}
 		}
 	}
@@ -547,12 +529,12 @@ void
 map_draw(struct map *m)
 {
 	static int x, y, vx, vy, rx, ry;
-	struct viewport *view = m->view;
+	struct viewport *view = mainview;
 	int ri = 0;
 	struct node *node;
 	struct noderef *nref;
 	Uint32 nsprites;
-		
+
 	for (y = view->mapy, vy = view->mapyoffs;
 	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
 	     y++, vy++) {
@@ -561,17 +543,17 @@ map_draw(struct map *m)
 
 		for (x = (view->mapx + view->vmapw) - 1,
 		     vx = (view->vmapw + view->mapxoffs) - 1;
-		     vx > 0; x--, vx--) {
+		     vx >= view->mapxoffs; x--, vx--) {
 #ifdef DEBUG
 			int i;
 
-			i = VIEW_MAPMASK(view, vx, vy);
+			i = VIEW_MAPMASK(vx, vy);
 			if (i < 0 || i > 32) {
 				dprintf("funny mask: %d at %d,%d\n", i, vx, vy);
 				return;
 			}
 #endif
-			if (VIEW_MAPMASK(view, vx, vy) > 0) {
+			if (VIEW_MAPMASK(vx, vy) > 0) {
 				continue;
 			}
 
@@ -590,7 +572,7 @@ map_draw(struct map *m)
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref->flags & MAPREF_SPRITE) {
-					static SDL_Rect rd;
+					SDL_Rect rd;
 
 					rd.x = rx + nref->xoffs;
 					rd.y = ry + nref->yoffs;
@@ -604,11 +586,11 @@ map_draw(struct map *m)
 					nsprites++;
 				}
 			}
+
 			if (nsprites > 0) {
 				MAPEDIT_POSTDRAW(m, node, vx, vy);
 			} else {
-				view->rects[ri++] =
-				    view->maprects[vy][vx];
+				view->rects[ri++] = view->maprects[vy][vx];
 			}
 		}
 	}
@@ -618,7 +600,6 @@ map_draw(struct map *m)
 		SDL_UpdateRects(view->v, ri, view->rects);
 	}
 
-	/* XXX thread unsafe */
 	if (curmapedit != NULL) {
 		curmapedit->redraw++;
 	}
@@ -653,9 +634,6 @@ map_load(void *ob, int fd)
 	struct map *m = (struct map *)ob;
 	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
-
-	/* The viewport (and the map mask), might change sizes. */
-	text_destroyall();
 
 	if (version_read(fd, &map_ver) != 0) {
 		return (-1);
@@ -700,9 +678,6 @@ map_load(void *ob, int fd)
 	}
 	map_allocnodes(m, m->mapw, m->maph);
 
-	/* Adjust the view. */
-	view_setmode(m->view, m, -1, NULL);
-
 	/* Read the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -731,9 +706,11 @@ map_load(void *ob, int fd)
 				frame = fobj_read_uint32(fd);
 				flags = fobj_read_uint32(fd);
 
+#ifdef DEBUG
 				if (offs > 256) {
-					dprintf("bad offs\n");
+					fatal("bad offs\n");
 				}
+#endif
 
 				if (pobj != NULL) {
 					nref = node_addref(node, pobj, offs,
@@ -895,4 +872,5 @@ map_verify(struct map *m)
 	pthread_create(&verify_th, NULL, map_verify_loop, m);
 }
 
-#endif
+#endif	/* DEBUG */
+

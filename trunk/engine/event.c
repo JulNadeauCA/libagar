@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.49 2002/06/06 10:14:28 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.50 2002/06/07 11:07:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -100,7 +100,7 @@ event_hotkey(SDL_Event *ev)
 #ifdef DEBUG
 	case SDLK_m:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
-			view_dumpmask(mainview);
+			view_dumpmask();
 		}
 		break;
 	case SDLK_r:
@@ -120,14 +120,14 @@ event_hotkey(SDL_Event *ev)
 		map_verify(world->curmap);
 		break;
 	case SDLK_F6:
+		pthread_mutex_lock(&mainview->lock);
 		window_show(fps_win);
+		pthread_mutex_unlock(&mainview->lock);
 		break;
 #endif
 	case SDLK_F1:
 		pthread_mutex_lock(&mainview->lock);
-		pthread_mutex_lock(&config->settings_win->lock);
 		window_show(config->settings_win);
-		pthread_mutex_unlock(&config->settings_win->lock);
 		pthread_mutex_unlock(&mainview->lock);
 		break;
 	case SDLK_v:
@@ -207,7 +207,17 @@ event_loop(void *arg)
 			/* XXX inefficient, should share locks */
 			pthread_mutex_lock(&mainview->lock);
 			if (!TAILQ_EMPTY(&mainview->windowsh)) {
-				window_draw_all();
+				struct window *win;
+
+				TAILQ_FOREACH(win, &mainview->windowsh,
+				    windows) {
+				    	/* XXX redraw all */
+					pthread_mutex_lock(&win->lock);
+					if (win->flags & WINDOW_SHOW) {
+						window_draw(win);
+					}
+					pthread_mutex_unlock(&win->lock);
+				}
 			}
 			pthread_mutex_unlock(&mainview->lock);
 
@@ -216,7 +226,7 @@ event_loop(void *arg)
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
 				dprintf("expose\n");
-				view_redraw(mainview);
+				view_redraw();
 				break;
 			case SDL_MOUSEMOTION:
 				rv = 0;

@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.6 2002/06/06 10:18:02 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.7 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
@@ -22,7 +22,6 @@ struct text {
 	Uint32	 nlines;	/* Lines in text window */
 	SDL_Rect mvmask;	/* Map view mask */
 
-	struct viewport *view;
 	SDL_Color *fgcolor;
 	Uint32	 bgcolor;
 

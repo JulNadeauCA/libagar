@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.35 2002/06/06 10:15:51 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.36 2002/06/09 10:08:07 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -143,6 +143,5 @@ void	mapedit_postdraw(struct map *, Uint32, Uint32, Uint32);
 
 void	mapedit_sticky(struct mapedit *);
 
-/* XXX thread unsafe, but this does not change during execution. */
 extern struct mapedit *curmapedit;	/* Controlled map editor */
 

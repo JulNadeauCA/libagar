@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.17 2002/06/01 02:37:58 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.18 2002/06/09 10:08:04 vedge Exp $	*/
 /*	Public domain	*/
 
 struct world {
@@ -12,7 +12,6 @@ struct world {
 	/* Read-write, thread-safe */
 	struct	map *curmap;		/* Map being displayed. If this
 					   becomes NULL, stop the game. */
-	struct	view *curview;		/* Main viewport */
 	SLIST_HEAD(, object) wobjsh;	/* Game objects */
 	int	nobjs;
 	pthread_mutex_t lock;

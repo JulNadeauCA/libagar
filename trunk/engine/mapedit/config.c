@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.1 2002/06/06 10:15:51 vedge Exp $	*/
+/*	$Csoft: config.c,v 1.2 2002/06/09 10:04:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -69,9 +69,6 @@ static void
 cbox_change(int argc, evargs argv)
 {
 	struct mapedit *med = argv[0].p;
-	int yes = argv[2].i;
-
-	dprintf("to %d\n", yes);
 
 	switch (argv[1].c) {
 	case 'p':		/* Props */

@@ -229,7 +229,7 @@ mapedit_do_loadmap(void *arg)
 		m->map[y][x].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
-		view_center(m->view, x, y);
+		view_center(x, y);
 	}
 	pthread_mutex_unlock(&world->lock);
 
@@ -237,7 +237,7 @@ mapedit_do_loadmap(void *arg)
 
 	text_msg(2, TEXT_SLEEP, "Loaded %s.\n", OBJECT(m)->name);
 
-	view_redraw(m->view);
+	view_redraw();
 	return (NULL);
 }
 

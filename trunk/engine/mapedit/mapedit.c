@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.98 2002/06/09 10:27:27 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.99 2002/06/09 15:04:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/* XXX use widgets */
 
 #include <stdlib.h>
 #include <string.h>
@@ -68,8 +70,7 @@ enum {
 	DEFAULT_LISTW_SPEED = 16	/* List scrolling timer */
 };
 
-struct mapedit *curmapedit;		/* Map editor currently controlled.
-					   XXX unsafe */
+struct mapedit *curmapedit;		/* Map editor */
 
 static const int stickykeys[] = {	/* Keys applied after each move. */
 	SDLK_a,	/* Add */
@@ -267,24 +268,23 @@ mapedit_attached(int argc, union evarg *argv)
 	med->y = m->defy;
 	mapdir_init(&med->cursor_dir, OBJECT(med), m,
 	    DIR_SCROLLVIEW|DIR_SOFTSCROLL|DIR_STATIC|DIR_PASSTHROUGH, 8);
-	med->tilelist.x = m->view->w - TILEW;
+	med->tilelist.x = mainview->w - TILEW;
 	med->tilelist.y = TILEH;
 	med->tilelist.w = TILEW;
-	med->tilelist.h = m->view->h - TILEW;
+	med->tilelist.h = mainview->h - TILEW;
 	med->tilelist_offs = 0;
 	med->tilestack.x = 0;
 	med->tilestack.y = TILEH;
 	med->tilestack.w = TILEW;
-	med->tilestack.h = m->view->h - TILEW;
+	med->tilestack.h = mainview->h - TILEW;
 	med->objlist.x = 0;
 	med->objlist.y = 0;
-	med->objlist.w = m->view->w - TILEW;
+	med->objlist.w = mainview->w - TILEW;
 	med->objlist.h = TILEH;
 	med->objlist_offs = 0;
 
 	/* Set the video mode. */
-	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
-	view_center(m->view, m->defx, m->defy);
+	view_center(m->defx, m->defy);
 
 	/* Set the window caption. World already locked. */
 	if (object_strfind(med->margs.name) == NULL) {
@@ -421,7 +421,7 @@ mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 static void
 mapedit_state(struct mapedit *med, SDL_Rect *rd)
 {
-	SDL_Surface *v = med->map->view->v;
+	SDL_Surface *v = mainview->v;
 	SDL_FillRect(v, rd, SDL_MapRGB(v->format, 10, 10, 10));
 
 	if (med->flags & MAPEDIT_INSERT) {
@@ -484,7 +484,7 @@ mapedit_tilelist(struct mapedit *med)
 	m = med->map;
 
 	rd = med->tilelist;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd, 0);
+	mapedit_bg(mainview->v, &rd, 0);
 	rd.h = TILEW;
 	rd.y = TILEH;
 	
@@ -521,11 +521,11 @@ mapedit_tilelist(struct mapedit *med)
 
 		switch (ref->type) {
 		case EDITREF_SPRITE:
-			SDL_BlitSurface(ref->p, NULL, m->view->v, &rd);
+			SDL_BlitSurface(ref->p, NULL, mainview->v, &rd);
 			break;
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
-			SDL_BlitSurface(anim->frames[0][0], NULL, m->view->v,
+			SDL_BlitSurface(anim->frames[0][0], NULL, mainview->v,
 			    &rd);
 			break;
 		}
@@ -533,11 +533,11 @@ mapedit_tilelist(struct mapedit *med)
 		if (med->curoffs == sn) {
 			SDL_BlitSurface(
 			    SPRITE(curmapedit, MAPEDIT_CIRQSEL), NULL,
-			    m->view->v, &rd);
+			    mainview->v, &rd);
 		} else {
 			SDL_BlitSurface(
 			    SPRITE(curmapedit, MAPEDIT_GRID), NULL,
-			    m->view->v, &rd);
+			    mainview->v, &rd);
 		}
 nextref:
 		if (++sn >= med->curobj->nrefs) {
@@ -554,7 +554,7 @@ nextref:
 
 	mapedit_state(med, &rd);
 	
-	SDL_UpdateRect(m->view->v,
+	SDL_UpdateRect(mainview->v,
 	    med->tilelist.x - TILEW, med->tilelist.y - TILEH,
 	    med->tilelist.w + TILEW, med->tilelist.h + TILEH);
 }
@@ -574,7 +574,7 @@ mapedit_tilestack(struct mapedit *med)
 	m = med->map;
 
 	rd = med->tilestack;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd, 0);
+	mapedit_bg(mainview->v, &rd, 0);
 	rd.h = TILEH;
 
 	i = 0;
@@ -587,28 +587,28 @@ mapedit_tilestack(struct mapedit *med)
 
 			anim = ANIM(nref->pobj, nref->offs);
 			SDL_BlitSurface(anim->frames[0][0],
-			    NULL, m->view->v, &rd);
+			    NULL, mainview->v, &rd);
 			if (nref->flags & MAPREF_ANIM_DELTA) {
 				SDL_BlitSurface(
 				    SPRITE(med, MAPEDIT_ANIM_DELTA_TXT), NULL,
-				    m->view->v, &rd);
+				    mainview->v, &rd);
 			} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
 				SDL_BlitSurface(
 				    SPRITE(med, MAPEDIT_ANIM_INDEPENDENT_TXT),
-				    NULL, m->view->v, &rd);
+				    NULL, mainview->v, &rd);
 			}
 			SDL_BlitSurface(SPRITE(med, MAPEDIT_ANIM_TXT), NULL,
-			    m->view->v, &rd);
+			    mainview->v, &rd);
 		} else if (nref->flags & MAPREF_SPRITE) {
 			SDL_BlitSurface(SPRITE(nref->pobj, nref->offs),
-			    NULL, m->view->v, &rd);
+			    NULL, mainview->v, &rd);
 		}
 
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_GRID),
-		    NULL, m->view->v, &rd);
+		    NULL, mainview->v, &rd);
 		rd.y += TILEH;
 	}
-	SDL_UpdateRect(m->view->v,
+	SDL_UpdateRect(mainview->v,
 	    med->tilestack.x, med->tilestack.y,
 	    med->tilestack.w, med->tilestack.h);
 }
@@ -628,7 +628,7 @@ mapedit_objlist(struct mapedit *med)
 	m = med->map;
 
 	rd = med->objlist;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd, 0);
+	mapedit_bg(mainview->v, &rd, 0);
 	rd.w = TILEW;
 	rd.x = TILEW;
 
@@ -648,23 +648,23 @@ mapedit_objlist(struct mapedit *med)
 			}
 		}
 	
-		SDL_BlitSurface(SPRITE(eob->pobj, 0), NULL, m->view->v, &rd);
+		SDL_BlitSurface(SPRITE(eob->pobj, 0), NULL, mainview->v, &rd);
 
 		if (med->curobj == eob) {
 			SDL_BlitSurface(
 			    SPRITE(med, MAPEDIT_CIRQSEL),
-			    NULL, m->view->v, &rd);
+			    NULL, mainview->v, &rd);
 		} else {
 			SDL_BlitSurface(
 			    SPRITE(med, MAPEDIT_GRID),
-			    NULL, m->view->v, &rd);
+			    NULL, mainview->v, &rd);
 		}
 nextref:
 		if (++sn >= med->neobjs) {
 			sn = 0;
 		}
 	}
-	SDL_UpdateRect(m->view->v,
+	SDL_UpdateRect(mainview->v,
 	    med->objlist.x, med->objlist.y,
 	    med->objlist.w, med->objlist.h);
 }
@@ -782,7 +782,9 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 				mapedit_setorigin(med, &mapx, &mapy);
 				mapedit_move(med, mapx, mapy);
 			} else {
+				pthread_mutex_lock(&mainview->lock);
 				window_show(med->settings_win);
+				pthread_mutex_unlock(&mainview->lock);
 			}
 			break;
 		case SDLK_l:
@@ -822,7 +824,7 @@ mapedit_event(void *ob, SDL_Event *ev)
 	case SDL_MOUSEMOTION:
 		if (coords_win != NULL) {
 			if (ev->motion.y <= TILEH ||
-			    med->mmapx >= med->map->view->mapw-1) {
+			    med->mmapx >= (mainview->mapw - 1)) {
 				label_printf(coords_label, "%s:%d (0x%x)",
 				    OBJECT(med->curobj->pobj)->name,
 				    med->curoffs, med->curflags);
@@ -830,8 +832,8 @@ mapedit_event(void *ob, SDL_Event *ev)
 				label_printf(coords_label, "%d,%d [%s:%d,%d]",
 				    ev->motion.x, ev->motion.y,
 				    OBJECT(med->map)->name,
-				    med->map->view->mapx + med->mmapx - 1,
-				    med->map->view->mapy + med->mmapy - 1);
+				    mainview->mapx + med->mmapx - 1,
+				    mainview->mapy + med->mmapy - 1);
 			}
 			coords_win->redraw++;
 		}
@@ -993,9 +995,11 @@ mapedit_update(void *p)
 		/* Redraw the map and lists. */
 		if (med->redraw != 0) {
 			med->redraw = 0;
+			//if (0) {
 			mapedit_tilestack(med);
 			mapedit_tilelist(med);
 			mapedit_objlist(med);
+			//}
 			med->map->redraw++;
 		}
 
@@ -1019,7 +1023,7 @@ mapedit_predraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 	rd.w = TILEW;
 	rd.h = TILEH;
 
-	SDL_FillRect(m->view->v, &rd, SDL_MapRGB(m->view->v->format,
+	SDL_FillRect(mainview->v, &rd, SDL_MapRGB(mainview->v->format,
 	    rd.y >> 3, 0, rd.x >> 3));
 }
 
@@ -1030,16 +1034,16 @@ mapedit_predraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 void
 mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 {
-	SDL_Rect *rd = &m->view->maprects[vy][vx];
+	SDL_Rect *rd = &mainview->maprects[vy][vx];
 
 	pthread_mutex_lock(&curmapedit->lock);
 
 	if (curmapedit->flags & MAPEDIT_DRAWGRID) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_GRID), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	}
 	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0) {
-		goto done;
+		pthread_mutex_unlock(&curmapedit->lock);
 	}
 	
 	/* XXX prefs */
@@ -1047,54 +1051,42 @@ mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 	/* Origin node. */
 	if (flags & NODE_ORIGIN) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_ORIGIN), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	}
 
 	/* Physical attributes. */
 	if (flags & NODE_BLOCK) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_BLOCKED), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	} else {
 #if 0
 		if (flags & NODE_WALK)
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_WALK), NULL,
-			    m->view->v, rd);
+			    mainview->v, rd);
 #endif
 		if (flags & NODE_CLIMB)
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_CLIMB), NULL,
-			    m->view->v, rd);
+			    mainview->v, rd);
 		if (flags & NODE_SLIP)
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_SLIP), NULL,
-			    m->view->v, rd);
+			    mainview->v, rd);
 	}
 
 	/* State attributes. */
 	if (flags & NODE_BIO) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_BIO), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	} else if (flags & NODE_REGEN) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_REGEN), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	}
 	if (flags & NODE_SLOW) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_SLOW), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	} else if (flags & NODE_HASTE) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_HASTE), NULL,
-		    m->view->v, rd);
+		    mainview->v, rd);
 	}
-
-#if 0
-	/* Debugging */
-	if (flags & NODE_ANIM)
-		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_ANIM), NULL,
-		    m->view->v, rd);
-	if (flags & NODE_OVERLAP)
-		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_OVERLAP), NULL,
-		    m->view->v, rd);
-#endif
-
-done:
 	pthread_mutex_unlock(&curmapedit->lock);
 }
 
@@ -1123,7 +1115,7 @@ mapedit_show_coords(struct mapedit *med)
 		coords_win = NULL;
 
 		/* Destroy the coordinates window. */
-		view_detach(mainview, nw);
+		view_detach(nw);
 	}
 }
 
