@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.82 2003/03/25 13:42:03 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.83 2003/03/26 10:04:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -30,17 +30,16 @@ struct noderef {
 	int	magic;
 #define NODEREF_MAGIC 0x1ad
 #endif
-	enum noderef_type	 type;		/* Type of reference */
-
-	Uint32			 flags;
+	enum noderef_type type;			/* Type of reference */
+	Uint8		  flags;
 #define NODEREF_SAVEABLE	0x01		/* Saveable reference */
 #define NODEREF_BLOCK		0x04		/* Similar to NODE_BLOCK */
 
 	Uint8		 layer;			/* Layer# */
 	struct object	*pobj;			/* Object pointer */
 	Uint32		 offs;			/* Sprite/anim array offset */
-	Sint16		 xcenter, ycenter;	/* Centering offsets */
-	Sint16		 xmotion, ymotion;	/* Motion offsets */
+	Sint16		 xcenter, ycenter;	/* Gfx centering displacement */
+	Sint16		 xmotion, ymotion;	/* Gfx motion displacement */
 	union {
 		struct {
 			Uint8	flags;
@@ -97,30 +96,31 @@ struct map_layer {
 struct map {
 	struct object	  obj;
 
-	pthread_mutex_t		lock;
-	pthread_mutexattr_t	lockattr;
-
+	pthread_mutex_t	  lock;
 	unsigned int	  mapw, maph;	/* Map geometry */
 	Uint16		  zoom;		/* Zoom (%) */
 	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
 	unsigned int	  tilew, tileh;	/* Tile geometry */
-	int		  defx, defy;	/* Map origin */
 	int		  cur_layer;	/* Layer being edited */
+	
+	struct {
+		int	  x, y;		/* Origin coordinates */
+		int	  layer;	/* Default sprite layer */
+	} origin;
 
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
 
 	struct map_layer *layers;	/* Layer descriptions */
 	Uint32		 nlayers;
-
 #if defined(DEBUG) && defined(THREADS)
 	pthread_t	  check_th;	/* Verify map integrity */
 #endif
 };
 
 void		 map_init(struct map *, char *, char *);
-int		 map_load(void *, int);
-int		 map_save(void *, int);
+int		 map_load(void *, struct netbuf *);
+int		 map_save(void *, struct netbuf *);
 void		 map_destroy(void *);
 int		 map_alloc_nodes(struct map *, unsigned int, unsigned int);
 void		 map_free_nodes(struct map *);
@@ -131,15 +131,16 @@ void		 map_pop_layer(struct map *);
 
 void		 noderef_init(struct noderef *);
 void		 noderef_destroy(struct noderef *);
-int		 noderef_load(int, struct object_table *, struct node *,
-		     struct noderef **);
-void		 noderef_save(struct fobj_buf *, struct object_table *,
+int		 noderef_load(struct netbuf *, struct object_table *,
+		     struct node *, struct noderef **);
+void		 noderef_save(struct netbuf *, struct object_table *,
 		     struct noderef *);
 __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
 
 void		 node_init(struct node *);
-int		 node_load(int, struct object_table *, struct node *);
-void		 node_save(struct fobj_buf *, struct object_table *,
+int		 node_load(struct netbuf *, struct object_table *,
+		     struct node *);
+void		 node_save(struct netbuf *, struct object_table *,
 		     struct node *);
 void		 node_destroy(struct node *);
 void		 node_clear_layer(struct node *, Uint8);
