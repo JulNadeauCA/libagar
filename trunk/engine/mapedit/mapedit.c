@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.55 2002/03/05 06:34:31 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.56 2002/03/05 13:26:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -682,6 +682,8 @@ mapedit_load(void *p, int fd)
 	med->flags = fobj_read_uint32(fd);
 	med->cursor_speed = fobj_read_uint32(fd);
 	med->listw_speed = fobj_read_uint32(fd);
+
+	mapedit_tilelist(med);
 
 	return (0);
 }
