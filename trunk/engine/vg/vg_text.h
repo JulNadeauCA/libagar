@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
+/*	$Csoft: vg_text.h,v 1.1 2004/03/30 16:04:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_TEXT_H_
@@ -8,6 +8,7 @@
 #define VG_TEXT_MAX	256
 
 __BEGIN_DECLS
+void	vg_text_init(struct vg *, struct vg_element *);
 void	vg_text_align(struct vg *, double, double, enum vg_alignment, double);
 void	vg_text_printf(struct vg *, const char *, ...);
 __END_DECLS

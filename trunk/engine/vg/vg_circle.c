@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.4 2004/04/19 02:07:37 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.5 2004/04/22 01:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,12 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
+
+void
+vg_circle_init(struct vg *vg, struct vg_element *vge)
+{
+	vge->vg_circle.radius = 0.025;
+}
 
 void
 vg_circle_radius(struct vg *vg, double radius)

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.2 2004/04/20 01:05:43 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.3 2004/04/22 01:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,15 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
+
+void
+vg_ellipse_init(struct vg *vg, struct vg_element *vge)
+{
+	vge->vg_arc.w = 1;
+	vge->vg_arc.h = 1;
+	vge->vg_arc.s = 0;
+	vge->vg_arc.e = 360;
+}
 
 void
 vg_ellipse_diameter2(struct vg *vg, double w, double h)
