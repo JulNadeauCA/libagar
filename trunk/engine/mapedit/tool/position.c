@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.10 2004/01/23 06:13:01 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.11 2004/02/20 04:18:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@ static void position_tool_effect(struct mapview *, struct map *, struct node *);
 
 struct tool position_tool = {
 	N_("Position"),
-	N_("Position or reposition objects on maps."),
+	N_("Assign unique object positions."),
 	MAPEDIT_TOOL_POSITION,
 	-1,
 	position_tool_init,
@@ -55,13 +55,13 @@ struct tool position_tool = {
 	NULL			/* mouse */
 };
 
-static int speed = 1;			/* Movement/scrolling increment */
 static int center_view = 0;		/* Center view around? */
-static int soft_motion = 1;		/* Soft-scrolling */
 static int pass_through = 0;		/* Ignore node movement restrictions */
 static void *obj = NULL;		/* Object to position */
-static void *submap = NULL;		/* Object submap to display */
+static void *projmap = NULL;		/* Projection map to display */
 static void *input_dev = NULL;		/* Input device to control object */
+static int direction = 0;		/* Angle of velocity vector */
+static int velocity = 0;		/* Length of velocity vector */
 
 static struct tlist_item *
 find_objs(struct tlist *tl, struct object *pob, int depth)
@@ -119,7 +119,7 @@ poll_input_devs(int argc, union evarg *argv)
 }
 
 static void
-poll_submaps(int argc, union evarg *argv)
+poll_projmaps(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = obj, *child;
@@ -159,24 +159,27 @@ position_tool_init(void)
 		struct combo *com;
 
 		com = combo_new(bo, COMBO_POLL, _(": "));
-		event_new(com->list, "tlist-poll", poll_submaps, NULL);
-		widget_bind(com->list, "selected", WIDGET_POINTER, &submap);
+		event_new(com->list, "tlist-poll", poll_projmaps, NULL);
+		widget_bind(com->list, "selected", WIDGET_POINTER, &projmap);
 
 		com = combo_new(bo, COMBO_POLL, _("Input device: "));
 		event_new(com->list, "tlist-poll", poll_input_devs, NULL);
 		widget_bind(com->list, "selected", WIDGET_POINTER, &input_dev);
 	
-		sb = spinbutton_new(bo, _("Speed: "));
-		widget_bind(sb, "value", WIDGET_INT, &speed);
-		spinbutton_set_min(sb, 1);
-		spinbutton_set_max(sb, 16);
-		spinbutton_set_increment(sb, 1);
+		sb = spinbutton_new(bo, _("Direction: "));
+		widget_bind(sb, "value", WIDGET_INT, &direction);
+		spinbutton_set_min(sb, 0);
+		spinbutton_set_max(sb, 255);
+		spinbutton_set_increment(sb, 16);
 		
-		cb = checkbox_new(bo, _("Center view around"));
+		sb = spinbutton_new(bo, _("Velocity: "));
+		widget_bind(sb, "value", WIDGET_INT, &velocity);
+		spinbutton_set_min(sb, 0);
+		spinbutton_set_max(sb, 255);
+		spinbutton_set_increment(sb, 2);
+		
+		cb = checkbox_new(bo, _("Center view"));
 		widget_bind(cb, "state", WIDGET_BOOL, &center_view);
-		
-		cb = checkbox_new(bo, _("Soft motion"));
-		widget_bind(cb, "state", WIDGET_BOOL, &soft_motion);
 		
 		cb = checkbox_new(bo, _("Pass through"));
 		widget_bind(cb, "state", WIDGET_BOOL, &pass_through);
@@ -187,34 +190,31 @@ static void
 position_tool_effect(struct mapview *mv, struct map *m, struct node *dn)
 {
 	struct object *ob = obj;
-	int dirflags = 0;
+	int posflags = 0;
 
 	if (ob == NULL) {
 		text_msg(MSG_ERROR, _("No object selected."));
 		return;
 	}
-	if (submap == NULL) {
-		text_msg(MSG_ERROR, _("No submap selected."));
+	if (projmap == NULL) {
+		text_msg(MSG_ERROR, _("No projection map was selected."));
 		return;
 	}
 
-	dprintf("submap: %s\n", OBJECT(submap)->name);
-
-	if (position_set(ob, mv->map, mv->cx, mv->cy,
-	    mv->map->cur_layer, submap) == -1) {
+	if (position_set(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer,
+	    projmap) == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
 	ob->pos->input = input_dev;
+	ob->pos->flags = 0;
 
 	if (center_view)
-		dirflags |= DIR_CENTER_VIEW;
-	if (soft_motion)
-		dirflags |= DIR_SOFT_MOTION;
+		ob->pos->flags |= POSITION_CENTER_VIEW;
 	if (pass_through)
-		dirflags |= DIR_PASS_THROUGH;
+		ob->pos->flags |= POSITION_PASS_THROUGH;
 
-	position_set_direction(ob, DIR_S, dirflags, speed);
+	position_set_velvec(ob, direction, velocity);
 }
 
 static int
