@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.56 2003/03/13 23:34:50 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.57 2003/03/16 23:24:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -193,14 +193,14 @@ label_printf(struct label *label, const char *fmt, ...)
 
 	/* Update the string. */
 	label->text.caption = erealloc(label->text.caption, sl);
-	strlcpy(label->text.caption, buf, sl);
+	strlcpy(label->text.caption, buf, sl+1);
 	free(buf);
 
 	/* Update the static surface. */
 	if (label->text.surface != NULL) {
 		SDL_FreeSurface(label->text.surface);
 	}
-	if (strcmp(label->text.caption, "") != 0) {
+	if (label->text.caption[0] != '\0') {
 		label->text.surface = text_render(NULL, -1,
 		    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
 		WIDGET(label)->w = label->text.surface->w;
