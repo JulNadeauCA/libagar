@@ -121,8 +121,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_fillmap(med);
 			} else {
-				map_clean(med->map, NULL, 0, 0, 0);
-				med->map->redraw++;
+				mapedit_clearmap(med);
 			}
 			break;
 		case SDLK_o:
