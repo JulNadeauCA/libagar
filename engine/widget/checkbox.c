@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.9 2002/05/26 05:57:26 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.10 2002/05/28 05:59:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -111,7 +111,7 @@ checkbox_draw(void *p)
 	int x = 0, y = 0;
 
 	/* Checkbox */
-	box_s = primitive_box(cbox->cbox_w, cbox->label_s->h,
+	box_s = primitive_box(cbox, cbox->cbox_w, cbox->label_s->h,
 	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1);
 
 	/* Label (cached) */
@@ -132,15 +132,27 @@ void
 checkbox_event(void *p, SDL_Event *ev, int flags)
 {
 	struct checkbox *cbox = p;
-
-	dprintf("%s\n", OBJECT(cbox)->name);
-
-	if (ev->button.button != 1) {
-		return;
-	}
+	int pushed = 0;
 
 	switch (ev->type) {
-	case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEBUTTONDOWN:
+		if (ev->button.button == 1) {
+			pushed++;
+		} else {
+			WIDGET_FOCUS(cbox);
+		}
+		break;
+	case SDL_KEYDOWN:
+		if (ev->key.keysym.sym == SDLK_RETURN ||
+		    ev->key.keysym.sym == SDLK_SPACE) {
+			pushed++;
+		}
+		break;
+	}
+
+	if (pushed) {
+		WIDGET(cbox)->win->redraw++;
+
 		if (cbox->flags & CHECKBOX_PRESSED) {
 			cbox->flags &= ~(CHECKBOX_PRESSED);
 		} else {
@@ -149,8 +161,6 @@ checkbox_event(void *p, SDL_Event *ev, int flags)
 		if (cbox->push != NULL) {
 			cbox->push(cbox);
 		}
-		WIDGET(cbox)->win->redraw++;
-		break;
 	}
 }
 
