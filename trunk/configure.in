@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.30 2002/07/31 00:28:30 vedge Exp $
+# $Csoft: configure.in,v 1.32 2002/08/20 09:13:19 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -28,6 +28,9 @@ mdefine(MAPDIR, "$PREFIX/share/cave/maps");
 
 check(make);
 check(cc);
+
+check(setenv);
+check(vasprintf);
 
 mdefine(CFLAGS, "$CFLAGS -g -I$S");
 if [ "${cc_is_gcc}" = "yes" ]; then
