@@ -202,7 +202,6 @@ keycodes_loadglyphs(void)
 	
 		s = keycodes_cache[i-KEYCODES_CACHE_START];
 		if (s != NULL) {
-			dprintf("freed existing\n");
 			SDL_FreeSurface(s);
 		}
 
@@ -225,7 +224,7 @@ keycodes_freeglyphs(void)
 	int i;
 	SDL_Surface *s;
 
-	for (i = KEYCODES_CACHE_START; i < KEYCODES_CACHE_END; i++) {
+	for (i = KEYCODES_CACHE_START; i <= KEYCODES_CACHE_END; i++) {
 		s = keycodes_cache[i-KEYCODES_CACHE_START];
 		if (s != NULL) {
 			SDL_FreeSurface(s);
