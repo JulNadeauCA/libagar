@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.12 2002/12/20 00:33:22 vedge Exp $
+.\"	$Csoft: agar.3,v 1.13 2003/01/01 05:18:34 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -36,41 +36,6 @@
 .Sh DESCRIPTION
 .Nm
 is a thread-safe, object-oriented graphical game engine.
-Many of the structures it defines are derived from the
-.Xr object 3
-structure, which provides pointers to generic data, such as audio, graphics,
-properties and an
-.Xr event 3
-handler list.
-The
-.Xr event 3
-framework implements the passing of events between objects.
-.Pp
-.Bl -tag -width "version(3)" -compact
-.It Xr map 3
-Game levels.
-.It Xr perso 3
-Game characters.
-.It Xr physics 3
-Simple movement.
-.It Xr version 3
-Signatures and versioning of data in network format.
-.It Xr view 3
-Graphic engine.
-.It Xr rootmap 3
-Map display used in
-.Sq game
-mode.
-.It Xr world 3
-Generic container for objects used in the game.
-.El
-.Pp
-.Nm
-implements its own
-.Xr window 3
-system and
-.Xr widget 3
-framework.
 .Sh THREAD SAFETY
 The
 .Nm
@@ -92,9 +57,15 @@ interfaces must hide locking from the calling code, as long as there is
 no relative impact on performance.
 .Sh SEE ALSO
 .Xr event 3 ,
-.Xr fobj 3 ,
-.Xr object 3 ,
 .Xr map 3 ,
+.Xr mapedit 3 ,
+.Xr object 3 ,
 .Xr perso 3 ,
+.Xr physics 3 ,
+.Xr prop 3 ,
+.Xr rootmap 3 ,
+.Xr version 3 ,
+.Xr view 3 ,
+.Xr world 3 ,
 .Xr widget 3 ,
 .Xr window 3
