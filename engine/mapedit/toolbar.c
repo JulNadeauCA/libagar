@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.28 2002/12/13 07:39:37 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.29 2002/12/14 11:28:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -119,7 +119,7 @@ mapedit_init_toolbar(struct mapedit *med)
 
 	/* Create the toolbar. */
 	win = window_new("mapedit-toolbar", 0,
-	    0, 0, 94, 150, 94, 150);
+	    0, 0, 94, 153, 73, 134);
 	window_set_caption(win, "Tools");
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
