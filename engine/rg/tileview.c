@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.18 2005/02/22 04:34:13 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.19 2005/02/22 08:44:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -117,6 +117,9 @@ tileview_keydown(int argc, union evarg *argv)
 	struct tileview *tv = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
+	
+	if (tv->state == TILEVIEW_PIXMAP_EDIT)
+		pixmap_keydown(tv, tv->tv_pixmap.tel, keysym, keymod);
 
 	switch (keysym) {
 	case SDLK_z:
@@ -157,6 +160,10 @@ tileview_keyup(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int keysym = argv[1].i;
+	int keymod = argv[2].i;
+	
+	if (tv->state == TILEVIEW_PIXMAP_EDIT)
+		pixmap_keyup(tv, tv->tv_pixmap.tel, keysym, keymod);
 
 	switch (keysym) {
 	case SDLK_EQUALS:
@@ -1186,6 +1193,14 @@ tileview_draw(void *p)
 		case TILEVIEW_PIXMAP_EDIT:
 			strlcpy(status, _("Editing pixmap: "), sizeof(status));
 			strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
+			switch (tv->tv_pixmap.state) {
+			case TILEVIEW_PIXMAP_IDLE:
+				break;
+			case TILEVIEW_PIXMAP_FREEHAND:
+				strlcat(status, _(" (free hand)"),
+				    sizeof(status));
+				break;
+			}
 			draw_status_text(tv, status);
 			break;
 		default:

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.22 2005/02/26 06:24:10 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.23 2005/02/27 03:13:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -448,6 +448,7 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			tv->tv_pixmap.ctrl->buttonup =
 			    event_new(tv, NULL, pixmap_buttonup, "%p,%p",
 			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
+			tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
 
 			win = pixmap_edit(tv, tel);
 			window_attach(pwin, win);

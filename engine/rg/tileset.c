@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.14 2005/02/26 06:24:10 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.15 2005/02/27 03:13:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -715,7 +715,7 @@ tileset_edit(void *p)
 	event_new(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
 	
 	tl_pixmaps = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl_pixmaps, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+	tlist_init(tl_pixmaps, TLIST_POLL);
 	event_new(tl_pixmaps, "tlist-poll", poll_pixmaps, "%p", ts);
 
 	mi = tlist_set_popup(tl_tiles, "tile");

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.11 2005/02/18 03:31:04 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.12 2005/02/22 08:44:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -102,6 +102,10 @@ struct tileview {
 			struct pixmap *px;
 			struct window *win;
 			struct tileview_ctrl *ctrl;
+			enum {
+				TILEVIEW_PIXMAP_IDLE,
+				TILEVIEW_PIXMAP_FREEHAND
+			} state;
 		} pixmap;
 	} sargs;
 #define tv_feature sargs.feature
