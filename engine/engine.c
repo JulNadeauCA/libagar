@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.17 2002/02/23 02:53:10 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.18 2002/02/25 08:55:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
+#include <engine/text/text.h>
 
 #ifdef DEBUG
 int	engine_debug = 1;
@@ -142,6 +143,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 		njoy = -1;
 	}
 
+	/* Initialize the font engine. */
+	if (text_init() != 0) {
+		return (-1);
+	}
+
 	if (flags & SDL_FULLSCREEN) {
 		/* Give the new mode some time to take effect. */
 		SDL_Delay(1000);
@@ -173,7 +179,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 }
 
 void
-engine_start(void)
+engine_editmap(void)
 {
 	if (mapediting) {
 		struct mapedit *medit;
@@ -192,14 +198,17 @@ engine_start(void)
 
 		/* Start map edition. */
 		object_link(medit);
+		event_loop();
 	}
-	event_loop();
 }
 
 void
 engine_destroy(void)
 {
 	object_destroy(world);
+	
+	/* Destroy the font engine. */
+	text_quit();
 
 	SDL_Quit();
 	exit(0);
