@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.13 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.14 2004/03/30 16:32:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 {
 	box_init(&tbar->hb, BOX_HORIZ, BOX_WFILL);
 	object_set_ops(tbar, &titlebar_ops);
-	object_wire_gfx(tbar, "/engine/widget/window");
+	object_wire_gfx(tbar, "/engine/widget/pixmaps");
 
 	box_set_padding(&tbar->hb, 5);
 	box_set_spacing(&tbar->hb, 0);

@@ -1,14 +1,14 @@
-#	$Csoft: Makefile,v 1.5 2004/02/26 10:18:58 vedge Exp $
+#	$Csoft: Makefile,v 1.6 2004/02/29 17:37:40 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
 
 XCF=		props.xcf
-DEN=		mapview.den
+DEN=		pixmaps.den
 DEN_DIR=	engine/mapedit/mapview
-DEN_NAME=	"Mapview property indicators"
+DEN_NAME=	"Agar level editor pixmaps"
 DEN_AUTHOR=	"vedge@"
-DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
+DEN_COPYRIGHT=	"2002, 2003, 2004 CubeSoft Communications, Inc."
 
-include ${TOP}/mk/csoft.prog.mk
-include ${TOP}/dencomp/Makefile.inc
+DENCOMP=${TOP}/dencomp/dencomp
+include ${TOP}/mk/csoft.den.mk

@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.21 2004/03/10 16:58:37 vedge Exp $
+#	$Csoft: Makefile,v 1.22 2004/03/18 21:27:48 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -10,14 +10,6 @@ LIB_STATIC=	No
 SRCS=	monitor.c widget_browser.c view_params.c screenshot.c uniconv.c \
 	leak.c
 
-XCF=		toolbar.xcf monitor.xcf
-DEN=		monitor.den
-DEN_DIR=	engine/monitor
-DEN_NAME=	"Debug monitor icons"
-DEN_AUTHOR=	"vedge@"
-DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
-
 CFLAGS+=${SDL_CFLAGS} ${JPEG_CFLAGS}
 
 include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/dencomp/Makefile.inc
