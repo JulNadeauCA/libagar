@@ -1,6 +1,13 @@
-/*	$Csoft: gethostname.h,v 1.2 2002/12/24 14:24:15 vedge Exp $	*/
+/*	$Csoft: gethostname.h,v 1.3 2003/03/02 07:29:13 vedge Exp $	*/
 /*	Public domain	*/
 
+#include <config/have_gethostname.h>
+
 #include <sys/types.h>
-#include <unistd.h>
+
+#ifdef HAVE_GETHOSTNAME
+# include <unistd.h>
+#else
+int	gethostname(char *name, size_t namelen);
+#endif
 
