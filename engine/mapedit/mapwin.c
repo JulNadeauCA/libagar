@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.20 2002/11/08 07:35:45 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.21 2002/11/10 03:13:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -38,6 +38,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/button.h>
+#include <engine/widget/text.h>
 
 #include "mapedit.h"
 #include "command.h"
@@ -186,7 +187,6 @@ mapwin_new(struct mapedit *med, struct map *m)
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_SHOW_CURSOR);
-
 
 	/* Tile stack */
 	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 90);
