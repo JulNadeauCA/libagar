@@ -682,17 +682,17 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef sdl_works" >> engine/mcconfig.h
-echo "#define sdl_works" $sdl_works >> engine/mcconfig.h
-echo "#endif /* sdl_works */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_SDL" >> engine/mcconfig.h
+echo "#define HAVE_SDL" $HAVE_SDL >> engine/mcconfig.h
+echo "#endif /* HAVE_SDL */" >> engine/mcconfig.h
 
-	sdl_works=yes
+	HAVE_SDL=yes
 
 	echo "yes"
 else
 	echo "no"
 fi
-if [ "${sdl_works}" = "yes" ]; then
+if [ "${HAVE_SDL}" = "yes" ]; then
 NONE=1
 else
 echo "The SDL test would not compile."
@@ -769,17 +769,17 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef freetype_works" >> engine/mcconfig.h
-echo "#define freetype_works" $freetype_works >> engine/mcconfig.h
-echo "#endif /* freetype_works */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_FREETYPE" >> engine/mcconfig.h
+echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/mcconfig.h
+echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
 
-	freetype_works=yes
+	HAVE_FREETYPE=yes
 
 	echo "yes"
 else
 	echo "no"
 fi
-if [ "${freetype_works}" = "yes" ]; then
+if [ "${HAVE_FREETYPE}" = "yes" ]; then
 NONE=1
 else
 echo "The FreeType test would not compile."
