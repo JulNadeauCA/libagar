@@ -31,4 +31,31 @@ Installation
    $ cat config.log | \
      mail -s "compiles and runs ok" report@agar.csoft.org
 
-$Csoft: INSTALL,v 1.15 2004/04/24 05:59:07 vedge Exp $
+Concurrent building
+-------------------
+It is possible to build Agar outside of the source directory. Developers
+will generally prefer this method, since it results in a faster build,
+does not clutter the source directories with object files and facilitates
+testing on multiple machines using network filesystems. The inconvenient
+of concurrent building is that configure needs to be rerun whenever a
+Makefile is modified.
+
+The speed difference between regular and concurrent building is notable
+when most of the object files are already built.
+
+For example, on a 1.44GHz Apple PowerBook G4, a concurrent build takes
+about 2m26s, while a regular build takes 2m90s (building from scratch).
+However, "make && make install" with concurrent building takes 18s
+versus 33s for the regular method.
+
+1) Create the build directory.
+   $ mkdir w-agar; cd w-agar
+
+2) Run configure from the source directory with --srcdir.
+   $ ~/agar-sources/configure --srcdir=$HOME/agar-sources [...]
+
+3) Build Agar as with the standard method.
+   $ make depend && make
+   # make install
+
+$Csoft: INSTALL,v 1.16 2004/04/24 05:59:52 vedge Exp $
