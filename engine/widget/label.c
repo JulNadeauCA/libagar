@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.2 2002/04/20 06:21:19 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.3 2002/04/21 08:02:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -110,7 +110,7 @@ label_draw(void *p)
 	if (s == NULL) {
 		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
 	}
-	WIDGET_DRAW(l, s);
+	WIDGET_DRAW(l, s, 0, 0);
 	SDL_FreeSurface(s);
 }
 
