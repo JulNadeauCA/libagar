@@ -1,7 +1,17 @@
-/*	$Csoft: strlcat.h,v 1.4 2003/04/02 04:06:27 vedge Exp $	*/
+/*	$Csoft: strlcat.h,v 1.5 2003/10/09 22:39:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_strlcat.h>
+#include <config/have_bounded_attribute.h>
+
+#ifndef BOUNDED_ATTRIBUTE
+# ifdef HAVE_BOUNDED_ATTRIBUTE
+#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+# else
+#  define BOUNDED_ATTRIBUTE(t, a, b)
+# endif
+#endif
+
 
 #ifndef HAVE_STRLCAT
 #include <sys/types.h>
