@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.27 2003/03/13 06:21:48 vedge Exp $
+.\"	$Csoft: map.3,v 1.28 2003/03/14 07:10:04 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -51,11 +51,18 @@ Pointer to an animation of arbitrary size.
 Pointer to a node residing another map.
 .El
 .Pp
-Node references of type
-.Dv NODEREF_SPRITE
-and
-.Dv NODEREF_ANIM
-contain centering/motion offsets, a list of transforms, and a layer number.
+Graphical noderefs provide the map renderer with two individual displacements
+in pixels of the image from the tile origin, one for centering and the other
+for sprite motion.
+.Pp
+The centering offset is usually set by the level editor.
+The motion offset defines the position of the image relative to the node.
+If the tile is scaled to another size, the centering offset is scaled to the
+tile size, but the motion offset is not.
+.Pp
+Graphical node references also provide the renderer with a list of graphical
+transforms that should be applied before the tile is drawn, and a layer number
+defining the order of rendering.
 .Pp
 .Sh INITIALIZATION
 .nr nS 1
@@ -134,7 +141,7 @@ returns 0 on sucess or -1 on failure.
 The
 .Fn map_set_zoom
 function sets the zoom factor for a map.
-Unless the factor is 100%, bitmap scaling is performed.
+Unless the factor is 100%, bitmap scaling is performed for graphical noderefs.
 .Pp
 .Sh NODE INITIALIZATION
 .nr nS 1
