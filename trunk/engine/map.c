@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.212 2004/03/17 12:42:02 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.213 2004/03/17 17:30:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -672,11 +672,12 @@ map_reinit(void *p)
 void
 map_destroy(void *p)
 {
-#ifdef THREADS
 	struct map *m = p;
 
+#ifdef THREADS
 	pthread_mutex_destroy(&m->lock);
 #endif
+	free(m->layers);
 }
 
 /* Convert cartesian to polar coordinates. */
