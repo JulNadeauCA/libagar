@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.36 2003/06/10 07:59:29 vedge Exp $
+.\"	$Csoft: widget.3,v 1.37 2003/06/11 23:21:04 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -239,6 +239,9 @@ macro returns the color at index
 .nr nS 1
 .Ft int
 .Fn widget_area "void *widget" "int x" "int y"
+.Pp
+.Ft int
+.Fn widget_relative_area "void *widget" "int x" "int y"
 .nr nS 0
 .Pp
 The
@@ -248,6 +251,13 @@ function returns 1 if absolute view coordinates
 and
 .Fa y
 are inside the area allocated by the widget.
+.Fn widget_relative_area
+evaluates to 1 if widget-relative view coordinates
+.Fa x
+and
+.Fa y
+are inside the widget area.
+
 .Sh RENDERING
 The
 .Va draw
@@ -270,7 +280,7 @@ Note that this operation is automatically invoked on children.
                      "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.circle "void *widget "int x" "int y" "int radius" \
+.Fn primitives.circle "void *widget" "int x" "int y" "int radius" \
                       "int ncolor"
 .Pp
 .Ft void
