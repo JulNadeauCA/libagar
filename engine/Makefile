@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.64 2003/05/19 13:07:24 vedge Exp $
+#	$Csoft: Makefile,v 1.65 2003/06/06 02:18:04 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -7,7 +7,8 @@ SUBDIR=	compat \
 	mapedit \
 	widget \
 	monitor \
-	media
+	media \
+	unicode
 
 CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS}
 
