@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.187 2004/08/31 00:51:36 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.188 2004/09/12 05:53:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -673,11 +673,11 @@ event_schedule(void *sp, void *rp, Uint32 ticks, const char *evname,
 
 	pthread_mutex_unlock(&timeout_lock);
 	pthread_mutex_unlock(&rcvr->lock);
-	return (1);
+	return (0);
 fail:
 	pthread_mutex_unlock(&timeout_lock);
 	pthread_mutex_unlock(&rcvr->lock);
-	return (0);
+	return (-1);
 }
 
 int
