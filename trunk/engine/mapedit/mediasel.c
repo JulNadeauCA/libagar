@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.2 2004/03/12 03:03:58 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.3 2004/03/12 03:07:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -31,11 +31,13 @@
 #ifdef EDITION
 
 #include <engine/engine.h>
+#include <engine/map.h>
 #include <engine/config.h>
+#include <engine/mapedit/mapedit.h>
 #include <engine/loader/den.h>
+#include <engine/widget/tlist.h>
 
 #include <sys/stat.h>
-
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -59,48 +61,37 @@ media_selected(int argc, union evarg *argv)
 {
 	struct mediasel *msel = argv[1].p;
 	struct tlist_item *it = argv[2].p;
-	int was_used = 0;
 
 	switch (msel->type) {
 	case MEDIASEL_GFX:
 		if (msel->obj->gfx != NULL) {
-			gfx_unused(msel->obj->gfx);
-			msel->obj->gfx = NULL;
-			was_used++;
+			object_page_out(msel->obj, OBJECT_GFX);
 		}
 		if (it->text[0] == '\0') {
 			return;
-		}
-		if ((msel->obj->gfx = gfx_fetch(it->text)) == NULL) {
-			text_msg(MSG_ERROR, "%s: %s", msel->obj->gfx_name,
-			    error_get());
-			return;
-		}
-		if (was_used) {
-			gfx_unused(msel->obj->gfx);
-			msel->obj->gfx = NULL;
 		}
 		msel->obj->gfx_name = Strdup(it->text);
+		if (object_page_in(msel->obj, OBJECT_GFX) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", msel->obj->gfx_name,
+			    error_get());
+			free(msel->obj->gfx_name);
+			msel->obj->gfx_name = NULL;
+		}
 		break;
 	case MEDIASEL_AUDIO:
-		if (msel->obj->audio_name != NULL) {
-			free(msel->obj->audio_name);
-			msel->obj->audio_name = NULL;
-			was_used++;
+		if (msel->obj->gfx != NULL) {
+			object_page_out(msel->obj, OBJECT_AUDIO);
 		}
 		if (it->text[0] == '\0') {
 			return;
 		}
-		if ((msel->obj->audio = audio_fetch(it->text)) == NULL) {
+		msel->obj->audio_name = Strdup(it->text);
+		if (object_page_in(msel->obj, OBJECT_AUDIO) == -1) {
 			text_msg(MSG_ERROR, "%s: %s", msel->obj->audio_name,
 			    error_get());
-			return;
+			free(msel->obj->audio_name);
+			msel->obj->audio_name = NULL;
 		}
-		if (was_used) {
-			audio_unused(msel->obj->audio);
-			msel->obj->audio = NULL;
-		}
-		msel->obj->audio_name = Strdup(it->text);
 		break;
 	}
 }
@@ -246,6 +237,294 @@ mediasel_scan_dens(struct mediasel *msel, const char *hint, const char *spath)
 		}
 	}
 	closedir(di);
+}
+
+enum {
+	INSERT_LEFT,
+	INSERT_RIGHT,
+	INSERT_UP,
+	INSERT_DOWN
+};
+
+/*
+ * Generate node references from media into a map.
+ * The map is resized as necessary.
+ */
+static void
+import_media(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct mapview *mv = argv[2].p;
+	int mode = argv[3].i;
+	struct object *ob = argv[4].p;
+	struct tlist_item *it;
+	struct map *m = mv->map;
+	int sx, sy, dx, dy;
+	struct noderef *r;
+
+	if (!mv->esel.set) {
+		text_msg(MSG_ERROR, _("There is no active selection."));
+		return;
+	}
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		char ind_str[32];
+		struct node *node;
+		int t, xinc, yinc;
+		Uint32 ind;
+		unsigned int nw, nh;
+		struct map *submap = it->p1;
+		SDL_Surface *srcsu = it->p1;
+		struct gfx_anim *anim = it->p1;
+
+		if (!it->selected)
+			continue;
+
+		strlcpy(ind_str, it->text+1, sizeof(ind_str));
+		*(strchr(ind_str, ' ')) = '\0';
+		ind = (Uint32)atoi(ind_str);
+
+		switch (it->text[0]) {
+		case 's':
+			t = NODEREF_SPRITE;
+			xinc = srcsu->w / TILEW;
+			yinc = srcsu->h / TILEW;
+			break;
+		case 'a':
+			{
+				SDL_Surface *frame = anim->frames[0];
+
+				t = NODEREF_ANIM;
+				/* XXX */
+				xinc = frame->w / TILEW;
+				yinc = frame->h / TILEW;
+			}
+			break;
+		case 'm':
+			t = -1;
+			xinc = submap->mapw;
+			yinc = submap->maph;
+			break;
+		default:
+			fatal("bad ref");
+		}
+
+		nw = mv->esel.x + xinc + 1;
+		nh = mv->esel.y + yinc + 1;
+		dprintf("inc %d,%d, ngeo=%ux%u\n", xinc, yinc, nw, nh);
+
+		if (map_resize(m,
+		    nw > m->mapw ? nw : m->mapw,
+		    nh > m->maph ? nh : m->maph) == -1) {
+			text_msg(MSG_ERROR, "%s", error_get());
+			continue;
+		}
+		
+		switch (t) {
+		case NODEREF_SPRITE:
+			node = &m->map[mv->esel.y][mv->esel.x];
+			node_clear(m, node, m->cur_layer);
+			r = node_add_sprite(m, node, ob, ind);
+			r->layer = m->cur_layer;
+			break;
+		case NODEREF_ANIM:
+			node = &m->map[mv->esel.y][mv->esel.x];
+			node_clear(m, node, m->cur_layer);
+			r = node_add_anim(m, node, ob, ind, NODEREF_ANIM_AUTO);
+			r->layer = m->cur_layer;
+			break;
+		case -1:					/* Submap */
+			/*
+			 * Copy the elements of a fragment submap. The NULL
+			 * references are translated to the object itself,
+			 * to avoid complications with dependencies.
+			 */
+			for (sy = 0, dy = mv->esel.y;
+			     sy < submap->maph && dy < m->maph;
+			     sy++, dy++) {
+				for (sx = 0, dx = mv->esel.x;
+				     sx < submap->mapw && dx < m->mapw;
+				     sx++, dx++) {
+					struct node *sn = &submap->map[sy][sx];
+					struct node *dn = &m->map[dy][dx];
+					struct noderef *r;
+
+					node_clear(m, dn, m->cur_layer);
+					node_copy(submap, sn, -1, m, dn,
+					    m->cur_layer);
+
+					TAILQ_FOREACH(r, &dn->nrefs, nrefs) {
+						if (r->layer != m->cur_layer) {
+							continue;
+						}
+						switch (r->type) {
+						case NODEREF_SPRITE:
+							if (r->r_sprite.obj
+							    != NULL) {
+								break;
+							}
+							r->r_sprite.obj =
+							    OBJECT(m);
+							object_add_dep(m, m);
+							if (object_page_in(m,
+							    OBJECT_GFX) == -1) {
+								fatal("page");
+							}
+							break;
+						case NODEREF_ANIM:
+							if (r->r_anim.obj
+							    != NULL) {
+								break;
+							}
+							r->r_anim.obj =
+							    OBJECT(m);
+							object_add_dep(m, m);
+							if (object_page_in(m,
+							    OBJECT_GFX) == -1) {
+								fatal("page");
+							}
+							break;
+						default:
+							break;
+						}
+						r->layer = m->cur_layer;
+					}
+				}
+			}
+			break;
+		default:
+			fatal("bad nref");
+		}
+
+		switch (mode) {
+		case INSERT_LEFT:
+			if ((mv->esel.x -= xinc) < 0)
+				mv->esel.x = 0;
+			break;
+		case INSERT_RIGHT:
+			mv->esel.x += xinc;
+			break;
+		case INSERT_UP:
+			if ((mv->esel.y -= yinc) < 0)
+				mv->esel.y = 0;
+			break;
+		case INSERT_DOWN:
+			mv->esel.y += yinc;
+			break;
+		}
+		mv->esel.w = 1;
+		mv->esel.h = 1;
+	}
+}
+
+static void
+close_mediasel_window(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct mapview *mv = argv[1].p;
+
+	widget_set_int(mv->mimport.trigger, "state", 0);
+	window_hide(win);
+}
+
+static void
+hide_mediasel_window(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct mapview *mv = argv[1].p;
+
+	if (OBJECT(mv->map)->gfx_name != NULL)
+		object_page_out(mv->map, OBJECT_GFX);
+	if (OBJECT(mv->map)->audio_name != NULL)
+		object_page_out(mv->map, OBJECT_AUDIO);
+}
+
+/* Update the graphic import list. */
+static void
+poll_media(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	char label[TLIST_LABEL_MAX];
+	Uint32 i;
+	
+	tlist_clear_items(tl);
+
+	if (ob->gfx == NULL)
+		return;
+	
+	for (i = 0; i < ob->gfx->nsubmaps; i++) {
+		struct map *sm = ob->gfx->submaps[i];
+
+		snprintf(label, sizeof(label),
+		    _("m%u (%ux%u nodes)\n"), i, sm->mapw, sm->maph);
+		tlist_insert_item(tl, NULL, label, sm);
+	}
+	for (i = 0; i < ob->gfx->nsprites; i++) {
+		SDL_Surface *sp = ob->gfx->sprites[i];
+	
+		snprintf(label, sizeof(label),
+		    _("s%u (%ux%u pixels, %ubpp)\n"), i, sp->w, sp->h,
+		    sp->format->BitsPerPixel);
+		tlist_insert_item(tl, sp, label, sp);
+	}
+	for (i = 0; i < ob->gfx->nanims; i++) {
+		struct gfx_anim *an = ob->gfx->anims[i];
+
+		snprintf(label, sizeof(label),
+		    _("a%u (%u frames)\n"), i, an->nframes);
+		tlist_insert_item(tl, (an->nframes > 0) ?
+		    an->frames[0] : NULL, label, an);
+	}
+
+	tlist_restore_selections(tl);
+}
+
+struct window *
+mediasel_window(struct mapview *mv)
+{
+	struct object *ob = OBJECT(mv->map);
+	struct window *win;
+	struct box *bo;
+	struct combo *gfx_com, *aud_com;
+	struct tlist *tl;
+
+	win = window_new(NULL);
+	window_set_caption(win, _("Load media into `%s'"), ob->name);
+	window_set_closure(win, WINDOW_HIDE);
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	box_set_spacing(bo, 0);
+	box_set_padding(bo, 5);
+	mediasel_new(bo, MEDIASEL_GFX, ob);
+	mediasel_new(bo, MEDIASEL_AUDIO, ob);
+
+	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
+	tlist_set_item_height(tl, ttf_font_height(font)*2);
+	event_new(tl, "tlist-poll", poll_media, "%p", ob);
+
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	{
+		int i;
+		int icons[] = {
+			MAPEDIT_TOOL_LEFT,
+			MAPEDIT_TOOL_RIGHT,
+			MAPEDIT_TOOL_UP,
+			MAPEDIT_TOOL_DOWN
+		};
+		struct button *bu;
+
+		for (i = 0; i < 4; i++) {
+			bu = button_new(bo, NULL);
+			button_set_label(bu, SPRITE(&mapedit, icons[i]));
+			event_new(bu, "button-pushed", import_media,
+			    "%p, %p, %i, %p", tl, mv, i, ob);
+		}
+	}
+
+	event_new(win, "window-close", close_mediasel_window, "%p", mv);
+	event_new(win, "window-hidden", hide_mediasel_window, "%p", mv);
+	return (win);
 }
 
 #endif	/* EDITION */
