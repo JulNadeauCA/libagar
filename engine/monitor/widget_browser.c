@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.15 2003/03/24 12:08:44 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.16 2003/04/12 01:41:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -335,13 +335,14 @@ tl_windows_examine(int argc, union evarg *argv)
 		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Effective geometry: %[wxh] at %[x,y]",
 		    &pwin->rd, &pwin->rd);
-
+#if 0
 		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Body: %[rect]", &pwin->body);
 
 		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Focus: %p",
 		    &pwin->focus);
+#endif
 	}
 
 	/* Region list */
