@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.64 2003/06/06 02:41:37 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.65 2003/06/06 09:04:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -48,13 +48,13 @@
 #include <engine/compat/strsep.h>
 
 #include <libfobj/fobj.h>
-#include <libfobj/vector.h>
 
 #include <engine/error.h>
 #include <engine/debug.h>
 #include <engine/object.h>
 #include <engine/event.h>
 
+#include <engine/unicode/unicode.h>
 #include <engine/widget/text.h>
 
 #ifdef THREADS
