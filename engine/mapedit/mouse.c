@@ -31,6 +31,7 @@
 #include <engine/engine.h>
 
 #include "mapedit.h"
+#include "command.h"
 #include "mouse.h"
 
 void
@@ -72,23 +73,16 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	int mx, my;
 
 	pthread_mutex_lock(&m->lock);
-	mx = m->view->mapx + ev->button.x / m->tilew;
-	my = m->view->mapy + ev->button.y / m->tileh;
-	if (med->flags & MAPEDIT_TILESTACK)	/* XXX hack */
-		mx--;
-	if (med->flags & MAPEDIT_OBJLIST)	/* XXX hack */
-		my--;
+	/* XXX map edition lists */
+	mx = (m->view->mapx + ev->button.x / m->tilew) - 1;
+	my = (m->view->mapy + ev->button.y / m->tileh) - 1;
 	mapedit_move(med, mx, my);
-	pthread_mutex_unlock(&m->lock);
-	m->redraw++;
 
 	if (ev->button.button == 3) {
-		SDL_Event fev;
-
-		/* Fake the add command. */
-		fev.type = SDL_KEYDOWN;
-		fev.key.keysym.sym = SDLK_a;
-		SDL_PushEvent(&fev);
+		mapedit_push(med, &m->map[mx][my], med->curoffs, med->curflags);
 	}
+	
+	pthread_mutex_unlock(&m->lock);
+	m->redraw++;
 }
 
