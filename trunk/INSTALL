@@ -1,4 +1,15 @@
 
+DEPENDENCIES
+------------
+
+Agar requires the Software DirectMedia Layer (http://www.libsdl.org) as
+well as the FreeType library (http://www.freetype.org).
+
+Optionally, Agar may be compiled with OpenGL support (--with-gl).
+
+INSTALLATION
+------------
+
 1) Execute the configure script (see ./configure --help for options).
    $ ./configure
 
@@ -28,4 +39,4 @@
    The level editor (if compiled in), is invoked with the -e flag.
    $ cave -e
 
-$Csoft: INSTALL,v 1.7 2002/11/15 00:10:34 vedge Exp $
+$Csoft: INSTALL,v 1.8 2002/12/28 06:20:21 vedge Exp $
