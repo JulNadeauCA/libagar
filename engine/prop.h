@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.1 2002/09/05 12:16:04 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.2 2002/09/06 01:25:24 vedge Exp $	*/
 /*	Public domain	*/
 
 struct prop {
@@ -25,8 +25,10 @@ struct prop {
 		Sint16	 s16;
 		Uint32	 u32;
 		Sint32	 s32;
+#ifdef SDL_HAS_64BIT_TYPE
 		Uint64	 u64;
 		Sint64	 s64;
+#endif
 		char	*s;
 		void	*p;
 	} data;
