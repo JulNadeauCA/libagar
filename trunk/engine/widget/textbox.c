@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.43 2003/01/16 04:04:40 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.44 2003/01/23 01:53:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -68,9 +68,7 @@ textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
 
 	textbox = emalloc(sizeof(struct textbox));
 	textbox_init(textbox, label, flags, rw, rh);
-
 	region_attach(reg, textbox);
-
 	return (textbox);
 }
 
@@ -81,7 +79,6 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	tbox->ymargin = 3;
 
 	widget_init(&tbox->wid, "textbox", &textbox_ops, rw, rh);
-	WIDGET(tbox)->h = (font_h * 2) + (tbox->ymargin * 2);
 
 	widget_map_color(tbox, FRAME_COLOR, "frame", 100, 100, 100);
 	widget_map_color(tbox, FRAME_READONLY_COLOR, "frame-readonly",
@@ -128,7 +125,7 @@ textbox_draw(void *p)
 	y = tbox->ymargin;
 
 	/* Label */
-	widget_blit(tbox, tbox->label, 0, y/2);
+	widget_blit(tbox, tbox->label, 0, WIDGET(tbox)->h/2 - tbox->label->h/2);
 
 	/* Frame */
 	if (WIDGET_FOCUSED(tbox)) {
@@ -137,7 +134,7 @@ textbox_draw(void *p)
 	}
 	primitives.box(tbox, x, 0,
 	    WIDGET(tbox)->w - tbox->xmargin*2 - tbox->label->w,
-	    tbox->label->h + tbox->ymargin*2,
+	    WIDGET(tbox)->h,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
 	    tbox->flags & TEXTBOX_READONLY ?
 	        WIDGET_COLOR(tbox, FRAME_READONLY_COLOR) :
@@ -225,7 +222,7 @@ static void
 textbox_scaled(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
-
+	
 	if (WIDGET(tbox)->rh == -1)
 		WIDGET(tbox)->h = tbox->label->h + tbox->ymargin*2;
 }
