@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.105 2002/06/23 02:41:59 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.106 2002/06/25 17:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -139,8 +139,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		dprintf("%s: %d sprites, %d anims\n", ob->name,
 		    eob->nsprites, eob->nanims);
 
-		/* XXX default */
-		if (eob->nsprites > 0 && strcmp(ob->name, "worldmap") == 0) {
+		if (med->curobj == NULL && eob->nsprites > 0) {
 			med->curobj = eob;
 			med->curoffs = 0;
 			med->curflags = 0;
@@ -186,11 +185,6 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		TAILQ_INSERT_HEAD(&med->eobjsh, eob, eobjs);
 		med->neobjs++;
 	}
-#if 0
-	if (med->curobj == NULL) {
-		fatal("%s: nothing to edit!\n", med->obj.name);
-	}
-#endif
 }
 
 static void
