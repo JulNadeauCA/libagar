@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.12 2005/02/03 05:14:41 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.13 2005/02/03 08:53:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -342,7 +342,8 @@ ag_menu_view_draw(void *p)
 				    iconsu->w+3, iconsu->h+3,
 				    SEL_OPTION_COLOR);
 			}
-			widget_blit_from(mview, m, subitem->icon, x, y+dy);
+			widget_blit_from(mview, m, subitem->icon, NULL,
+			    x, y+dy);
 		}
 		
 		x = m->itemh + mview->hspace*2;
@@ -350,8 +351,8 @@ ag_menu_view_draw(void *p)
 		if (subitem->label != -1) {
 			SDL_Surface *lbl = WIDGET_SURFACE(m,subitem->label);
 
-			widget_blit_from(mview, m, subitem->label, x,
-			    y+MIDDLE_ALIGNED(m, lbl->h));
+			widget_blit_from(mview, m, subitem->label, NULL,
+			    x, y+MIDDLE_ALIGNED(m, lbl->h));
 			x += lbl->w + mview->hspace*2;
 		} else {
 			int dy = m->itemh/2 - 1;
