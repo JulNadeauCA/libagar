@@ -1,6 +1,7 @@
-.\"	$Csoft$
+.\"	$Csoft: textbox.3,v 1.4 2002/08/26 07:19:12 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -75,6 +76,12 @@ can be changed at runtime, and may include:
 .nr nS 1
 .Ft void
 .Fn textbox_printf "struct textbox *textbox" "const char *fmt" "..."
+.Pp
+.Ft "char *"
+.Fn textbox_string "struct textbox *textbox"
+.Pp
+.Ft int
+.Fn textbox_int "struct textbox *textbox"
 .nr nS 0
 .Pp
 The
@@ -84,6 +91,16 @@ function changes the text inside
 and understands
 .Xr printf 3
 format strings.
+.Pp
+The
+.Fn textbox_string
+function returns a copy of the text inside
+.Fa textbox .
+The
+.Fn textbox_int
+function attempts to convert the text inside
+.Fa textbox
+to an integer value and returns it.
 .Sh EVENTS
 The
 .Nm
