@@ -113,6 +113,12 @@ fi
 echo > config.log
 
 echo >Makefile.config
+if [ ! -e "engine/config" ]; then
+	mkdir engine/config
+	if [ 0 != 0 ]; then
+		exit 1
+	fi
+fi
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
