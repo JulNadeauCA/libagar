@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.15 2002/05/21 03:07:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -126,6 +126,7 @@ label_draw(void *p)
 {
 	struct label *l = p;
 
+	/* XXX justify, etc */
 	WIDGET_DRAW(l, l->label_s, 0, 0);
 }
 

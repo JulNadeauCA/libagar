@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.h,v 1.3 2002/05/02 06:28:30 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.4 2002/05/19 14:30:24 vedge Exp $	*/
 
 struct checkbox {
 	struct	 widget wid;
@@ -9,7 +9,8 @@ struct checkbox {
 	char		*caption;
 	SDL_Surface	*label_s;
 
-	Uint8	 xspacing;	/* Horiz spacing */
+	int	 xspacing;	/* Horiz spacing */
+	int	 cbox_w;	/* Checkbox width */
 
 	enum {
 		CHECKBOX_LEFT,	/* Left of label */

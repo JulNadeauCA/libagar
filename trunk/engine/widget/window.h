@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.15 2002/05/19 15:37:41 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.16 2002/05/21 03:24:19 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -15,7 +15,6 @@ struct window {
 	/* Read-only once attached */
 	int	 flags;
 #define WINDOW_PLAIN		0x01	/* Solid, no borders */
-#define WINDOW_FOCUS		0x02	/* Receive events, draw on top */
 #define WINDOW_ANIMATE		0x04	/* Redraw each tick */
 #define WINDOW_TITLEBAR		0x08	/* Draw title bar */
 #define WINDOW_ROUNDEDGES	0x10	/* Round edges */

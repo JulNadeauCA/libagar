@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.6 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.7 2002/05/19 14:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -73,30 +73,25 @@ checkbox_new(struct region *reg, char *caption, int flags)
 }
 
 void
-checkbox_init(struct checkbox *b, char *caption, int flags)
+checkbox_init(struct checkbox *cbox, char *caption, int flags)
 {
 	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-	int w, h;
 
-	widget_init(&b->wid, "checkbox", "widget", &checkbox_ops, 0, 0);
-	b->caption = strdup(caption);
-	b->flags = flags;
-	b->justify = CHECKBOX_LEFT;
-	b->xspacing = 6;
-	
-	w = SPRITE(b, CHECKBOX_DOWN)->w + b->xspacing;
-	h = SPRITE(b, CHECKBOX_DOWN)->h;
+	widget_init(&cbox->wid, "checkbox", "widget", &checkbox_ops, -1, -1);
+	cbox->caption = strdup(caption);
+	cbox->flags = flags;
+	cbox->justify = CHECKBOX_LEFT;
+	cbox->xspacing = 6;
+	cbox->cbox_w = 16;
 	
 	/* Label */
-	b->label_s = TTF_RenderText_Solid(font, b->caption, white);
-	if (b->label_s == NULL) {
+	cbox->label_s = TTF_RenderText_Solid(font, cbox->caption, white);
+	if (cbox->label_s == NULL) {
 		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
 	}
-	w += b->label_s->w;
-	h += (b->label_s->h - h);	/* XXX center */
 
-	WIDGET(b)->w = w;
-	WIDGET(b)->h = h;
+	WIDGET(cbox)->w = cbox->cbox_w + cbox->xspacing + cbox->label_s->w;
+	WIDGET(cbox)->h = cbox->label_s->h;
 }
 
 void
@@ -111,44 +106,69 @@ checkbox_destroy(void *p)
 void
 checkbox_draw(void *p)
 {
-	struct checkbox *b = p;
-	SDL_Surface *cbox;
-	Sint16 x = 0, y = 0;
+	struct checkbox *cbox = p;
+	SDL_Rect rd;
+	SDL_Surface *box_s;
+	int x = 0, y = 0;
 
 	/* Checkbox */
-	cbox = SPRITE(b, (b->flags & CHECKBOX_PRESSED) ?
-	    CHECKBOX_DOWN : CHECKBOX_UP);
+	/* Checkbox */
+	box_s = view_surface(SDL_SWSURFACE, cbox->cbox_w, cbox->label_s->h);
+	SDL_FillRect(box_s, NULL, SDL_MapRGBA(box_s->format,
+	    255, 255, 255, 255));
+	if (cbox->flags & CHECKBOX_PRESSED) {
+		rd.x = 2;
+		rd.y = 2;
+		rd.w = box_s->w - 2;
+		rd.h = box_s->h - 2;
+		SDL_FillRect(box_s, NULL,
+		    SDL_MapRGBA(box_s->format, 50, 50, 50, 120));
+		SDL_FillRect(box_s, &rd,
+		    SDL_MapRGBA(box_s->format, 96, 96, 128, 120));
+	} else {
+		rd.x = 1;
+		rd.y = 1;
+		rd.w = box_s->w - 1;
+		rd.h = box_s->h - 1;
+		SDL_FillRect(box_s, NULL,
+		    SDL_MapRGBA(box_s->format, 180, 180, 180, 120));
+		SDL_FillRect(box_s, &rd,
+		    SDL_MapRGBA(box_s->format, 96, 96, 128, 120));
+	}
 
-	switch (b->justify) {
+	switch (cbox->justify) {
 	case CHECKBOX_LEFT:
 	case CHECKBOX_RIGHT:
-		WIDGET_DRAW(b, cbox, 0, 0);
-		x = cbox->w + b->xspacing;
+		WIDGET_DRAW(cbox, box_s, 0, 0);
+		x = box_s->w + cbox->xspacing;
 		y = 0;
 		break;
 	}
-	WIDGET_DRAW(b, b->label_s, x, y);
+	WIDGET_DRAW(cbox, cbox->label_s, x, y);
 }
 
 void
 checkbox_event(void *p, SDL_Event *ev, int flags)
 {
-	struct checkbox *b = (struct checkbox *)p;
-	
+	struct checkbox *cbox = p;
+
+	dprintf("%s\n", OBJECT(cbox)->name);
+
 	if (ev->button.button != 1) {
 		return;
 	}
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
-		b->flags |= CHECKBOX_PRESSED;
-		WIDGET(b)->win->redraw++;
+		cbox->flags |= CHECKBOX_PRESSED;
+		WIDGET(cbox)->win->redraw++;
+		if (cbox->push != NULL) {
+			cbox->push(cbox);
+		}
 		break;
 	case SDL_MOUSEBUTTONUP:
-		b->flags &= ~(CHECKBOX_PRESSED);
-		WIDGET(b)->win->redraw++;
-		if (b->push != NULL)
-			b->push(b);
+		cbox->flags &= ~(CHECKBOX_PRESSED);
+		WIDGET(cbox)->win->redraw++;
 		break;
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.24 2002/05/19 15:37:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.25 2002/05/21 03:26:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -171,6 +171,11 @@ post_widget_ev(void *parent, void *child, void *arg)
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
 		if (WIDGET_INSIDE(wid, ev->button.x, ev->button.y)) {
+#ifdef WIDGET_DEBUG
+			dprintf("event 0x%x to %s\n", ev->type,
+			    OBJECT(wid)->name);
+#endif
+
 			wev = emalloc(sizeof(struct window_event));
 			wev->w = wid;
 			wev->flags = 0;
@@ -408,9 +413,6 @@ window_onattach(void *parent, void *child)
 	struct viewport *view = parent;
 	struct window *win = child;
 
-	dprintf("%s is being attached to %s\n", OBJECT(win)->name,
-	    OBJECT(view)->name);
-
 	/* Increment the view mask for this area. */
 	view_maskfill(view, &win->vmask, 1);
 	win->redraw++;
@@ -524,25 +526,19 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		TAILQ_FOREACH(win, &view->windowsh, windows) {
+		TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows,
+		    windows_head) {
 			pthread_mutex_lock(&win->lock);
-			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
-				goto nextwin;
-			}
-			if (win->flags & WINDOW_FOCUS) {
+			if (WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				SLIST_FOREACH(reg, &win->regionsh, regions) {
 					TAILQ_FOREACH(wid, &reg->widgetsh,
-					     widgets) {
-						if (wid->flags & WIDGET_HIDE) {
-							goto nextwin;
-						}
+					    widgets) {
 						post_widget_ev(reg, wid, ev);
 					}
 				}
-			} else {
-				view_focus(view, win);
+				pthread_mutex_unlock(&win->lock);
+				return;
 			}
-nextwin:
 			pthread_mutex_unlock(&win->lock);
 		}
 		break;
@@ -584,13 +580,24 @@ window_resize(struct window *win)
 			/* Scale/position the widget. */
 			wid->x = x;
 			wid->y = y;
-			wid->w = wid->rw * reg->w / 100 - reg->spacing/2;
-			wid->h = wid->rh * reg->h / 100 - reg->spacing/2;
+			if (wid->rw > 0) {
+				wid->w = wid->rw *
+				    reg->w / 100 - reg->spacing/2;
+			}
+			if (wid->rh > 0) {
+				wid->h = wid->rh *
+				    reg->h / 100 - reg->spacing/2;
+			}
 
 			if (wid->w >= reg->w)
 				wid->w = reg->w;
 			if (wid->h >= reg->h)
 				wid->h = reg->h;
+
+#ifdef WIDGET_DEBUG
+			dprintf("%s: %dx%d at %d,%d\n", OBJECT(wid)->name,
+			    wid->w, wid->h, wid->x, wid->y);
+#endif
 
 			if (reg->flags & REGION_VALIGN) {
 				y += wid->h + reg->spacing;
