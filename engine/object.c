@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.16 2002/02/16 05:00:17 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.17 2002/02/17 08:03:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 
 #include <engine/engine.h>
@@ -177,31 +178,52 @@ object_lategc(void)
 }
 
 int
+object_loadfrom(void *p, char *path)
+{
+	struct object *ob = (struct object *)p;
+	int fd;
+
+	if (ob->vec->load == NULL) {
+		return (-1);
+	}
+
+	fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+	if (fd < 0) {
+		warning("%s: %s\n", path, strerror(errno));
+		return (-1);
+	}
+	if (ob->vec->load(ob, fd) != 0) {
+		close(fd);
+		return (-1);
+	}
+	close(fd);
+	return (0);
+}
+
+int
 object_load(void *p)
 {
 	struct object *ob = (struct object *)p;
+	char path[FILENAME_MAX];
+	int fd, rv;
 
-	if (ob->vec->load != NULL) {
-		char path[FILENAME_MAX];
-		int fd;
+	if (ob->vec->load == NULL) {
+		return (-1);
+	}
 
-		sprintf(path, "%s/%s.o", world->udatadir, ob->name);
+	sprintf(path, "%s/%s.o", world->udatadir, ob->name);
+	fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+	if (fd < 0) {
+		sprintf(path, "%s/%s.o", world->sysdatadir, ob->name);
 		fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
 		if (fd < 0) {
-			sprintf(path, "%s/%s.o", world->sysdatadir, ob->name);
-			fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
-			if (fd < 0) {
-				perror(path);
-				return (-1);
-			}
-		}
-		if (ob->vec->load(ob, fd) != 0) {
-			close(fd);
+			perror(path);
 			return (-1);
 		}
-		close(fd);
 	}
-	return (0);
+	rv = ob->vec->load(ob, fd);
+	close(fd);
+	return (rv);
 }
 
 int
