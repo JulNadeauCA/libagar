@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.135 2005/02/06 05:40:35 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.136 2005/02/08 15:46:06 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -53,6 +53,7 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/spinbutton.h>
+#include <engine/widget/notebook.h>
 
 #ifdef EDITION
 #include <engine/mapedit/mapedit.h>
@@ -310,23 +311,6 @@ config_save(void *p, struct netbuf *buf)
 	return (0);
 }
 
-static void
-poll_input_devs(int argc, union evarg *argv)
-{
-	extern struct input_devq input_devs;
-	extern pthread_mutex_t input_lock;
-	struct tlist *tl = argv[0].p;
-	struct input *in;
-
-	pthread_mutex_lock(&input_lock);
-	tlist_clear_items(tl);
-	SLIST_FOREACH(in, &input_devs, inputs) {
-		tlist_insert_item(tl, NULL, in->name, in);
-	}
-	tlist_restore_selections(tl);
-	pthread_mutex_unlock(&input_lock);
-}
-
 void
 config_window(struct config *con)
 {
@@ -336,139 +320,135 @@ config_window(struct config *con)
 	struct button *button;
 	struct textbox *tbox;
 	struct checkbox *cbox;
+	struct notebook *nb;
+	struct notebook_tab *tab;
+	struct mspinbutton *msb;
+	struct spinbutton *sbu;
 
 	win = window_new(WINDOW_NO_VRESIZE, "config-engine-settings");
 	window_set_caption(win, _("Engine settings"));
-	hb = hbox_new(win, 0);
-	vb = vbox_new(hb, 0);
-	vbox_set_spacing(vb, 2);
 
-	cbox = checkbox_new(vb, _("Full screen"));
-	widget_bind(cbox, "state", WIDGET_PROP, config, "view.full-screen");
-	event_new(cbox, "checkbox-changed", config_set_full_screen, NULL);
-
-	cbox = checkbox_new(vb, _("Asynchronous blits"));
-	widget_bind(cbox, "state", WIDGET_PROP, config, "view.async-blits");
-	event_new(cbox, "checkbox-changed", config_set_async_blits, NULL);
-
-	cbox = checkbox_new(vb, _("OpenGL rendering context"));
-	widget_bind(cbox, "state", WIDGET_PROP, config, "view.opengl");
-	event_new(cbox, "checkbox-changed", config_set_opengl, NULL);
-
-	cbox = checkbox_new(vb, _("Unicode keyboard translation"));
-	widget_bind(cbox, "state", WIDGET_INT, &kbd_unitrans);
-	event_new(cbox, "checkbox-changed", config_set_unitrans, NULL);
-
-	cbox = checkbox_new(vb, _("Input composition"));
-	widget_bind(cbox, "state", WIDGET_INT, &text_composition);
-
-	cbox = checkbox_new(vb, _("Unrestricted window resize"));
-	widget_bind(cbox, "state", WIDGET_INT, &window_freescale);
-
-	cbox = checkbox_new(vb, _("Right->left (Arabic, Hebrew, ...)"));
-	widget_bind(cbox, "state", WIDGET_INT, &text_rightleft);
-
-	cbox = checkbox_new(vb, _("Idle time prediction"));
-	widget_bind(cbox, "state", WIDGET_INT, &event_idle);
-
-#ifdef DEBUG
-	cbox = checkbox_new(vb, _("Debugging"));
-	widget_bind(cbox, "state", WIDGET_INT, &engine_debug);
-
-	cbox = checkbox_new(vb, _("Server mode"));
-	widget_bind(cbox, "state", WIDGET_INT, &server_mode);
-#endif
-
-	vb = vbox_new(hb, 0);
-	vbox_set_spacing(vb, 2);
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	tab = notebook_add_tab(nb, _("Video"), BOX_VERT);
+	notebook_select_tab(nb, tab);
 	{
-		struct tlist *tl;
+		cbox = checkbox_new(tab, _("Full screen"));
+		widget_bind(cbox, "state", WIDGET_PROP, config,
+		    "view.full-screen");
+		event_new(cbox, "checkbox-changed", config_set_full_screen,
+		    NULL);
 
-		label_new(vb, LABEL_STATIC, _("Input devices:"));
-		tl = tlist_new(vb, TLIST_POLL);
-		tlist_prescale(tl, "keyboard0", 6);
-		event_new(tl, "tlist-poll", poll_input_devs, NULL);
+		cbox = checkbox_new(tab, _("Asynchronous blits"));
+		widget_bind(cbox, "state", WIDGET_PROP, config,
+		    "view.async-blits");
+		event_new(cbox, "checkbox-changed", config_set_async_blits,
+		    NULL);
+
+		cbox = checkbox_new(tab, _("OpenGL mode"));
+		widget_bind(cbox, "state", WIDGET_PROP, config, "view.opengl");
+		event_new(cbox, "checkbox-changed", config_set_opengl, NULL);
+	
+		msb = mspinbutton_new(tab, "x", _("Default resolution: "));
+		widget_bind(msb, "xvalue", WIDGET_UINT16, &view->w);
+		widget_bind(msb, "yvalue", WIDGET_UINT16, &view->h);
+		mspinbutton_set_range(msb, 320, 4096);
+		
+		sbu = spinbutton_new(tab, _("Screenshot quality (%%): "));
+		widget_bind(sbu, "value", WIDGET_INT, &view_screenshot_quality);
+		spinbutton_set_min(sbu, 1);
+		spinbutton_set_max(sbu, 100);
+	
+		cbox = checkbox_new(tab, _("Idle when possible"));
+		widget_bind(cbox, "state", WIDGET_INT, &event_idle);
+	
+		cbox = checkbox_new(tab, _("Unrestricted window resize"));
+		widget_bind(cbox, "state", WIDGET_INT, &window_freescale);
 	}
 
-	vb = vbox_new(win, VBOX_WFILL);
+	tab = notebook_add_tab(nb, _("Input devices"), BOX_VERT);
+	{
+		cbox = checkbox_new(tab, _("Unicode keyboard translation"));
+		widget_bind(cbox, "state", WIDGET_INT, &kbd_unitrans);
+		event_new(cbox, "checkbox-changed", config_set_unitrans, NULL);
+
+		cbox = checkbox_new(tab, _("Input composition"));
+		widget_bind(cbox, "state", WIDGET_INT, &text_composition);
+
+		cbox = checkbox_new(tab,
+		    _("Right->left (Arabic, Hebrew, ...)"));
+		widget_bind(cbox, "state", WIDGET_INT, &text_rightleft);
+		
+		sbu = spinbutton_new(tab, _("Mouse double click delay (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &mouse_dblclick_delay);
+		spinbutton_set_min(sbu, 1);
+		
+		sbu = spinbutton_new(tab, _("Mouse spin delay (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_delay);
+		spinbutton_set_min(sbu, 1);
+
+		sbu = spinbutton_new(tab, _("Mouse spin interval (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_ival);
+		spinbutton_set_min(sbu, 1);
+
+		sbu = spinbutton_new(tab, _("Keyboard repeat delay (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &kbd_delay);
+		spinbutton_set_min(sbu, 1);
+		
+		sbu = spinbutton_new(tab, _("Keyboard repeat interval (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
+		spinbutton_set_min(sbu, 1);
+	}
+
+	tab = notebook_add_tab(nb, _("Directories"), BOX_VERT);
 	{
 		char path[MAXPATHLEN];
 
-		tbox = textbox_new(vb, _("Data save dir: "));
+		tbox = textbox_new(tab, _("Data save dir: "));
 		prop_copy_string(config, "save-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "save-path");
 	
-		tbox = textbox_new(vb, _("Data load path: "));
+		tbox = textbox_new(tab, _("Data load path: "));
 		prop_copy_string(config, "load-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "load-path");
 	
-		tbox = textbox_new(vb, _("Font path: "));
+		tbox = textbox_new(tab, _("Font path: "));
 		prop_copy_string(config, "font-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "font-path");
 		
-		tbox = textbox_new(vb, _("Den path: "));
+		tbox = textbox_new(tab, _("Den path: "));
 		prop_copy_string(config, "den-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "den-path");
 	}
 
-	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
+#ifdef DEBUG
+	tab = notebook_add_tab(nb, _("Debug"), BOX_VERT);
 	{
-		struct mspinbutton *msb;
-		struct spinbutton *sbu;
+		cbox = checkbox_new(tab, _("Debugging"));
+		widget_bind(cbox, "state", WIDGET_INT, &engine_debug);
 
-		msb = mspinbutton_new(hb, "x", _("Default resolution: "));
-		widget_bind(msb, "xvalue", WIDGET_UINT16, &view->w);
-		widget_bind(msb, "yvalue", WIDGET_UINT16, &view->h);
-		mspinbutton_set_range(msb, 320, 4096);
-		
-		sbu = spinbutton_new(vb, _("Screenshot quality (%%): "));
-		widget_bind(sbu, "value", WIDGET_INT, &view_screenshot_quality);
-		spinbutton_set_min(sbu, 1);
-		spinbutton_set_max(sbu, 100);
+		cbox = checkbox_new(tab, _("Server mode"));
+		widget_bind(cbox, "state", WIDGET_INT, &server_mode);
 	}
+#endif
 
-	vb = vbox_new(win, VBOX_WFILL);
+
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
 	{
-		struct spinbutton *sbu;
-		
-		sbu = spinbutton_new(vb, _("Mouse double click delay (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &mouse_dblclick_delay);
-		spinbutton_set_min(sbu, 1);
-		
-		sbu = spinbutton_new(vb, _("Mouse spin delay (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_delay);
-		spinbutton_set_min(sbu, 1);
+		button = button_new(hb, _("Close"));
+		event_new(button, "button-pushed", window_generic_hide, "%p",
+		    win);
 
-		sbu = spinbutton_new(vb, _("Mouse spin interval (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_ival);
-		spinbutton_set_min(sbu, 1);
-
-		sbu = spinbutton_new(vb, _("Keyboard repeat delay (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &kbd_delay);
-		spinbutton_set_min(sbu, 1);
-		
-		sbu = spinbutton_new(vb, _("Keyboard repeat interval (ms): "));
-		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
-		spinbutton_set_min(sbu, 1);
-		
-		sbu = spinbutton_new(vb, _("Text tab width (pixels): "));
-		widget_bind(sbu, "value", WIDGET_INT, &text_tab_width);
-		spinbutton_set_min(sbu, 0);
+		button = button_new(hb, _("Save"));
+		event_new(button, "button-pushed", save_config, NULL);
 	}
-
-	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
-	button = button_new(hb, _("Close"));
-	event_new(button, "button-pushed", window_generic_hide, "%p", win);
-	button = button_new(hb, _("Save"));
-	event_new(button, "button-pushed", save_config, NULL);
 	config->settings = win;
 }
 
