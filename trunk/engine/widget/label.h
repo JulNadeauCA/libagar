@@ -1,9 +1,9 @@
-/*	$Csoft: label.h,v 1.1 2002/04/20 05:47:10 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.2 2002/04/21 08:02:56 vedge Exp $	*/
 
 struct label {
 	struct	 widget wid;
 
-	char	*caption;
+	char	 caption[1024];
 
 	Uint32	 flags;
 #define LABEL_BOLD	0x01
