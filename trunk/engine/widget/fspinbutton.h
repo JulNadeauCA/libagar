@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.4 2003/10/09 22:39:34 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.1 2003/11/09 13:14:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -7,40 +7,46 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
+#include <engine/widget/ucombo.h>
+#include <engine/widget/units.h>
 
 #include "begin_code.h"
 
 struct fspinbutton {
 	struct widget wid;
 
-	double	value;			/* Value binding */
-
 	pthread_mutex_t	lock;
-	double	min, max;		/* Value bounds */
-	char	format[8];		/* Format for printf */
-	double	incr;			/* Default increment */
+	double value;			/* Value binding */
+	double min, max;		/* Value boundaries */
+	char format[8];			/* Format for printf (for precision) */
+	float incr;			/* Increment for [+]/[-] buttons */
+	const struct unit *unit;	/* Chosen conversion unit */
 
-	struct textbox	*tbox;
-	struct button	*incbu;
-	struct button	*decbu;
+	struct textbox *input;		/* Text input */
+	struct ucombo *units;		/* Unit selection */
+	struct button *incbu;		/* [+] button */
+	struct button *decbu;		/* [-] button */
 };
 
 __BEGIN_DECLS
-struct fspinbutton	*fspinbutton_new(void *, const char *, ...)
-		 	     FORMAT_ATTRIBUTE(printf, 2, 3)
-			     NONNULL_ATTRIBUTE(2);
+struct fspinbutton	*fspinbutton_new(void *, double, double, float,
+			                 const char *, ...)
+		 	     FORMAT_ATTRIBUTE(printf, 5, 6)
+			     NONNULL_ATTRIBUTE(5);
 
-void	fspinbutton_init(struct fspinbutton *, const char *);
+void	fspinbutton_init(struct fspinbutton *, double, double, float,
+	                 const char *);
 void	fspinbutton_destroy(void *);
 void	fspinbutton_scale(void *, int, int);
 void	fspinbutton_draw(void *);
-
 void	fspinbutton_add(struct fspinbutton *, double);
 void	fspinbutton_set_value(struct fspinbutton *, double);
 void	fspinbutton_set_min(struct fspinbutton *, double);
 void	fspinbutton_set_max(struct fspinbutton *, double);
-void	fspinbutton_set_increment(struct fspinbutton *, double);
+void	fspinbutton_set_increment(struct fspinbutton *, float);
 void	fspinbutton_set_precision(struct fspinbutton *, int);
+void	fspinbutton_set_units(struct fspinbutton *, const struct unit[],
+	    const char *, double, double);
 __END_DECLS
 
 #include "close_code.h"
