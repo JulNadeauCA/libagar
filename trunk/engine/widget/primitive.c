@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.48 2003/06/06 03:18:14 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.49 2003/06/08 00:21:05 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -233,25 +233,79 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 }
 
 /* Render a circle using a modification Jack E. Bresenham's line algorithm. */
+/* XXX clipping */
 static void
-circle_bresenham(void *p, int xoffs, int yoffs, int w, int h, int radius,
-    int ncolor)
+circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 {
 	struct widget *wid = p;
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int x = 0;
-	int y = radius;
-	int cx = w/2 + xoffs + wid->cx;
-	int cy = h/2 + yoffs + wid->cy;
+	int cx = wid->cx + xoffs;
+	int cy = wid->cy + yoffs;
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
+	int x = 0, y = radius;
+	Uint8 *pixel1, *pixel2, *pixel3, *pixel4;
 
 	SDL_LockSurface(view->v);
 	while (x < y) {
-		widget_put_pixel(p, cx + x, cy + y, color);	/* SE */
-		widget_put_pixel(p, cx + x, cy - y, color);	/* NE */
-		widget_put_pixel(p, cx - x, cy + y, color);	/* SW */
-		widget_put_pixel(p, cx - x, cy - y, color);	/* NW */
+		pixel1 = (Uint8 *)view->v->pixels + (cy + y) * view->v->pitch +
+		    (cx + x) * vfmt->BytesPerPixel;
+		pixel2 = (Uint8 *)view->v->pixels + (cy - y) * view->v->pitch +
+		    (cx + x) * vfmt->BytesPerPixel;
+		pixel3 = (Uint8 *)view->v->pixels + (cy + y) * view->v->pitch +
+		    (cx - x) * vfmt->BytesPerPixel;
+		pixel4 = (Uint8 *)view->v->pixels + (cy - y) * view->v->pitch +
+		    (cx - x) * vfmt->BytesPerPixel;
+	
+		switch (vfmt->BytesPerPixel) {
+		case 4:
+			*(Uint32 *)pixel1 = color;
+			*(Uint32 *)pixel2 = color;
+			*(Uint32 *)pixel3 = color;
+			*(Uint32 *)pixel4 = color;
+			break;
+		case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			pixel1[0] = (color >> 16) & 0xff;
+			pixel1[1] = (color >> 8) & 0xff;
+			pixel1[2] = color & 0xff;
+			pixel2[0] = (color >> 16) & 0xff;
+			pixel2[1] = (color >> 8) & 0xff;
+			pixel2[2] = color & 0xff;
+			pixel3[0] = (color >> 16) & 0xff;
+			pixel3[1] = (color >> 8) & 0xff;
+			pixel3[2] = color & 0xff;
+			pixel4[0] = (color >> 16) & 0xff;
+			pixel4[1] = (color >> 8) & 0xff;
+			pixel4[2] = color & 0xff;
+#else
+			pixel1[0] = color & 0xff;
+			pixel1[1] = (color >> 8) & 0xff;
+			pixel1[2] = (color >> 16) & 0xff;
+			pixel2[0] = color & 0xff;
+			pixel2[1] = (color >> 8) & 0xff;
+			pixel2[2] = (color >> 16) & 0xff;
+			pixel3[0] = color & 0xff;
+			pixel3[1] = (color >> 8) & 0xff;
+			pixel3[2] = (color >> 16) & 0xff;
+			pixel4[0] = color & 0xff;
+			pixel4[1] = (color >> 8) & 0xff;
+			pixel4[2] = (color >> 16) & 0xff;
+#endif /* SDL_BYTEORDER */
+			break;
+		case 2:
+			*(Uint16 *)pixel1 = color;
+			*(Uint16 *)pixel2 = color;
+			*(Uint16 *)pixel3 = color;
+			*(Uint16 *)pixel4 = color;
+			break;
+		case 1:
+			*pixel1 = color;
+			*pixel2 = color;
+			*pixel3 = color;
+			*pixel4 = color;
+			break;
+		}
 
 		e += u;
 		u += 2;
@@ -260,13 +314,102 @@ circle_bresenham(void *p, int xoffs, int yoffs, int w, int h, int radius,
 			e -= v;
 			v -= 2;
 		}
-		if (++x > y)
-			break;
+		x++;
 
-		widget_put_pixel(p, cx + y, cy + x, color);	/* SE */
-		widget_put_pixel(p, cx + y, cy - x, color);	/* NE */
-		widget_put_pixel(p, cx - y, cy + x, color);	/* SW */
-		widget_put_pixel(p, cx - y, cy - x, color);	/* NW */
+		pixel1 = (Uint8 *)view->v->pixels + (cy + x) * view->v->pitch +
+		    (cx + y) * vfmt->BytesPerPixel;
+		pixel2 = (Uint8 *)view->v->pixels + (cy - x) * view->v->pitch +
+		    (cx + y) * vfmt->BytesPerPixel;
+		pixel3 = (Uint8 *)view->v->pixels + (cy + x) * view->v->pitch +
+		    (cx - y) * vfmt->BytesPerPixel;
+		pixel4 = (Uint8 *)view->v->pixels + (cy - x) * view->v->pitch +
+		    (cx - y) * vfmt->BytesPerPixel;
+
+		switch (vfmt->BytesPerPixel) {
+		case 4:
+			*(Uint32 *)pixel1 = color;
+			*(Uint32 *)pixel2 = color;
+			*(Uint32 *)pixel3 = color;
+			*(Uint32 *)pixel4 = color;
+			break;
+		case 3:
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			pixel1[0] = (color >> 16) & 0xff;
+			pixel1[1] = (color >> 8) & 0xff;
+			pixel1[2] = color & 0xff;
+			pixel2[0] = (color >> 16) & 0xff;
+			pixel2[1] = (color >> 8) & 0xff;
+			pixel2[2] = color & 0xff;
+			pixel3[0] = (color >> 16) & 0xff;
+			pixel3[1] = (color >> 8) & 0xff;
+			pixel3[2] = color & 0xff;
+			pixel4[0] = (color >> 16) & 0xff;
+			pixel4[1] = (color >> 8) & 0xff;
+			pixel4[2] = color & 0xff;
+# else
+			pixel1[0] = color & 0xff;
+			pixel1[1] = (color >> 8) & 0xff;
+			pixel1[2] = (color >> 16) & 0xff;
+			pixel2[0] = color & 0xff;
+			pixel2[1] = (color >> 8) & 0xff;
+			pixel2[2] = (color >> 16) & 0xff;
+			pixel3[0] = color & 0xff;
+			pixel3[1] = (color >> 8) & 0xff;
+			pixel3[2] = (color >> 16) & 0xff;
+			pixel4[0] = color & 0xff;
+			pixel4[1] = (color >> 8) & 0xff;
+			pixel4[2] = (color >> 16) & 0xff;
+# endif /* SDL_BYTEORDER */
+			break;
+		case 2:
+			*(Uint16 *)pixel1 = color;
+			*(Uint16 *)pixel2 = color;
+			*(Uint16 *)pixel3 = color;
+			*(Uint16 *)pixel4 = color;
+			break;
+		case 1:
+			*pixel1 = color;
+			*pixel2 = color;
+			*pixel3 = color;
+			*pixel4 = color;
+			break;
+		}
+	}
+	pixel1 = (Uint8 *)view->v->pixels + cy * view->v->pitch +
+	    (cx - radius) * vfmt->BytesPerPixel;
+	pixel2 = (Uint8 *)view->v->pixels + cy * view->v->pitch +
+	    (cx + radius) * vfmt->BytesPerPixel;
+	
+	switch (vfmt->BytesPerPixel) {
+	case 4:
+		*(Uint32 *)pixel1 = color;
+		*(Uint32 *)pixel2 = color;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		pixel1[0] = color & 0xff;
+		pixel1[1] = (color >> 8) & 0xff;
+		pixel1[2] = (color >> 16) & 0xff;
+		pixel2[0] = color & 0xff;
+		pixel2[1] = (color >> 8) & 0xff;
+		pixel2[2] = (color >> 16) & 0xff;
+#else
+		pixel1[0] = color & 0xff;
+		pixel1[1] = (color >> 8) & 0xff;
+		pixel1[2] = (color >> 16) & 0xff;
+		pixel2[0] = color & 0xff;
+		pixel2[1] = (color >> 8) & 0xff;
+		pixel2[2] = (color >> 16) & 0xff;
+#endif
+		break;
+	case 2:
+		*(Uint16 *)pixel1 = color;
+		*(Uint16 *)pixel2 = color;
+		break;
+	case 1:
+		*pixel1 = color;
+		*pixel2 = color;
+		break;
 	}
 	SDL_UnlockSurface(view->v);
 }

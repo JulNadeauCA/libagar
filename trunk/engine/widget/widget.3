@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.32 2003/06/08 00:21:05 vedge Exp $
+.\"	$Csoft: widget.3,v 1.33 2003/06/08 23:53:17 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -266,7 +266,7 @@ Note that this operation is automatically invoked on children.
                      "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.circle "void *widget "int x" "int y" "int w" "int h" \
+.Fn primitives.circle "void *widget "int x" "int y" "int radius" \
                       "int ncolor"
 .Pp
 .Ft void
@@ -334,10 +334,7 @@ at
 .Fa y .
 .Pp
 .Fn primitives.circle
-draws a circle of size
-.Fa w ,
-.Fa h
-at
+draws a circle around the point at
 .Fa x ,
 .Fa y .
 .Pp

@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.32 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.33 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -90,7 +90,7 @@ radio_init(struct radio *rad, const char **items)
 	widget_map_color(rad, FRAME_COLOR, "frame", 120, 120, 120, 255);
 
 	rad->value = -1;
-	rad->radius = text_font_height(font);
+	rad->radius = text_font_height(font) / 2;
 	rad->max_w = 0;
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
@@ -112,7 +112,9 @@ void
 radio_draw(void *p)
 {
 	struct radio *rad = p;
-	int y, i;
+	int i, val;
+	int x = XPADDING + rad->radius*2 + XSPACING;
+	int y = YPADDING;
 
 	primitives.frame(rad,
 	    0,
@@ -121,36 +123,26 @@ radio_draw(void *p)
 	    WIDGET(rad)->h,
 	    FRAME_COLOR);
 
-	for (i = 0, y = YPADDING;
+	val = widget_get_int(rad, "value");
+
+	for (i = 0;
 	     i < rad->nitems;
-	     i++, y += (rad->radius + YSPACING)) {
+	     i++, y += (rad->radius*2 + YSPACING)) {
 		primitives.circle(rad,
-		    XPADDING,
-		    y,
+		    XPADDING + rad->radius,
+		    y + rad->radius,
 		    rad->radius,
-		    rad->radius,
-		    rad->radius/2,
 		    OUTSIDE_COLOR);
 
-		if (widget_get_int(rad, "value") == i) {
+		if (i == val) {
 			primitives.circle(rad,
-			    XPADDING,
-			    y,
-			    rad->radius,
-			    rad->radius,
-			    rad->radius/3,
+			    XPADDING + rad->radius,
+			    y + rad->radius,
+			    rad->radius/2,
 			    INSIDE_COLOR);
-			primitives.circle(rad,
-			    XPADDING,
-			    y,
-			    rad->radius,
-			    rad->radius,
-			    rad->radius/4,
-			    OUTSIDE_COLOR);
 		}
 
-		widget_blit(rad, rad->labels[i],
-		   XPADDING + rad->radius + XSPACING, y);
+		widget_blit(rad, rad->labels[i], x, y);
 	}
 }
 
@@ -172,11 +164,12 @@ radio_scale(void *p, int rw, int rh)
 	struct radio *rad = p;
 
 	if (rw == -1)
-		WIDGET(rad)->w = XPADDING*2 + XSPACING + rad->radius +
+		WIDGET(rad)->w = XPADDING*2 + XSPACING + rad->radius*2 +
 		    rad->max_w;
 
 	if (rh == -1)
-		WIDGET(rad)->h = rad->nitems*(YSPACING+rad->radius)+YPADDING*2;
+		WIDGET(rad)->h = rad->nitems * (YSPACING + rad->radius*2) + 
+		    YPADDING*2;
 }
 
 static void
@@ -195,7 +188,7 @@ radio_event(int argc, union evarg *argv)
 	case MOUSEBUTTONDOWN_EVENT:
 		button = argv[2].i;
 		y = argv[4].i;
-		*sel = (y/(rad->radius + YSPACING/2));
+		*sel = (y/(rad->radius*2 + YSPACING/2));
 		widget_focus(rad);
 		break;
 	case KEYDOWN_EVENT:
