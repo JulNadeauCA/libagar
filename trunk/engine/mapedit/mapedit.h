@@ -1,5 +1,10 @@
-/*	$Csoft: mapedit.h,v 1.73 2003/02/24 06:43:31 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.74 2003/03/05 02:16:32 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_MAPEDIT_H_
+#define _AGAR_MAPEDIT_H_
+
+#include <engine/map.h>
 
 struct mapdir;
 struct gendir;
@@ -30,6 +35,7 @@ struct mapedit {
 	struct tool	*tools[MAPEDIT_NTOOLS];	/* Map edition tools */
 	struct tool	*curtool;		/* Selected tool */
 	struct node	*src_node;		/* Selected source node */
+	struct map	 copybuf;		/* Copy/paste buffer */
 };
 
 /* Bitmaps */
@@ -94,3 +100,4 @@ struct window	*mapedit_win_new(struct map *);
 extern struct mapedit	mapedit;
 extern int		mapedition;
 
+#endif /* _AGAR_MAPEDIT_H_ */
