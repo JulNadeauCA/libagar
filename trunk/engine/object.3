@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.17 2002/12/13 12:27:05 vedge Exp $
+.\"	$Csoft: object.3,v 1.18 2002/12/14 04:27:47 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -264,37 +264,52 @@ as well as removing the associated noderef.
 .Fn object_vanish
 returns 0 on success, -1 on error.
 .Sh OBJECT TABLES
-These functions load and save arrays of object names, which allow load/save
-routines to keep dependency lists, as well as using indexes instead of strings
-when referencing particular objects.
+These functions load and save arrays of object names with reference counts.
+This allows load/save routines to keep dependency lists and reference objects
+with indexes instead of strings.
 .Pp
 .nr nS 1
-.Ft "void"
-.Fn object_table_load "int fd" "struct object *obj" "struct object ***pobjs" \
-                      "Uint32 *nobjs"
+.Ft "struct object_table *"
+.Fn object_table_new "void"
 .Pp
-.Ft "struct object **"
-.Fn object_table_save "struct fobj_buf *buf" "struct object *obj" \
-                      "Uint32 *nobjs"
+.Ft "void"
+.Fn object_table_destroy "struct object_table *table"
+.Pp
+.Ft "void"
+.Fn object_table_insert "struct object_table *table" "struct object *obj"
+.Pp
+.Ft "void"
+.Fn object_table_save "struct fobj_buf *buf" "struct object_table *table"
+.Pp
+.Ft "struct object_table *"
+.Fn object_table_load "int fd" "char *objname"
 .nr nS 0
 .Pp
 The
-.Fn object_table_load
-function allocates and reads an object table from
-.Fa fd
-into
-.Fa pobjs ,
-which the caller should free, writes the table size into
-.Fa nobjs
-and translates the object identifiers.
+.Fn object_table_new
+function allocates, initializes and return a new object table with 0 elements.
+The
+.Fn object_table_destroy
+frees
+.Fa table .
+.Pp
+The
+.Fn object_table_insert
+function inserts
+.Fa obj
+in
+.Fa table .
 .Pp
 The
 .Fn object_table_save
-function saves a table containing the list of attached objects.
-The table is also written to
-.Fa pobjs ,
-which the caller should free, and the size is written to
-.Fa nobjs .
+function write
+.Fa table
+to
+.Fa buf .
+The
+.Fn object_table_load
+function allocates and reads the object table from
+.Fa fd .
 .Sh SEE ALSO
 .Xr agar 3
 .Sh HISTORY
