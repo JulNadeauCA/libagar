@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.53 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.54 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -108,12 +108,12 @@ stamp_cursor(struct mapview *mv, SDL_Rect *rd)
 	if (mv->map == copybuf)
 		return (-1);
 
-	for (sy = 0, dy = rd->y - (copybuf->maph * mv->map->tileh)/2;
+	for (sy = 0, dy = rd->y - (copybuf->maph * mv->map->scale)/2;
 	     sy < copybuf->maph;
-	     sy++, dy += mv->map->tileh) {
-		for (sx = 0, dx = rd->x - (copybuf->mapw * mv->map->tilew)/2;
+	     sy++, dy += mv->map->scale) {
+		for (sx = 0, dx = rd->x - (copybuf->mapw * mv->map->scale)/2;
 		     sx < copybuf->mapw;
-		     sx++, dx += mv->map->tilew) {
+		     sx++, dx += mv->map->scale) {
 			struct node *sn = &copybuf->map[sy][sx];
 
 			TAILQ_FOREACH(r, &sn->nrefs, nrefs) {

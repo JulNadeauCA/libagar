@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.134 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.135 2004/03/12 02:51:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -106,10 +106,10 @@ view_init(enum gfx_engine ge)
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		dprintf("direct video / tile-based\n");
-		view->w -= view->w % TILEW;
-		view->h -= view->h % TILEH;
+		view->w -= view->w % TILESZ;
+		view->h -= view->h % TILESZ;
 		view->rootmap = Malloc(sizeof(struct viewmap));
-		rootmap_init(view->rootmap, view->w / TILEW, view->h / TILEH);
+		rootmap_init(view->rootmap, view->w/TILESZ, view->h/TILESZ);
 		break;
 	case GFX_ENGINE_GUI:
 		dprintf("direct video / gui\n");

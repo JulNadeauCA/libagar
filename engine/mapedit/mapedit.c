@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.192 2004/01/23 06:24:43 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.193 2004/03/10 16:58:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -84,15 +84,6 @@ const struct object_ops mapedit_ops = {
 	NULL				/* edit */
 };
 
-struct mapedit_obj {
-	struct object *obj;			/* Object being edited */
-	struct window *win;			/* Generic edition window */
-	TAILQ_ENTRY(mapedit_obj) objs;
-};
-
-static TAILQ_HEAD(,mapedit_obj) dobjs;		/* Data edited objects */
-static TAILQ_HEAD(,mapedit_obj) gobjs;		/* Generic edited objects */
-
 struct mapedit mapedit;
 int mapedition = 0;			/* Start up in edition mode */
 
@@ -133,8 +124,6 @@ mapedit_init(void)
 	OBJECT(&mapedit)->flags |= (OBJECT_RELOAD_PROPS|OBJECT_STATIC);
 	OBJECT(&mapedit)->save_pfx = "/map-editor";
 	mapedit.curtool = NULL;
-	TAILQ_INIT(&dobjs);
-	TAILQ_INIT(&gobjs);
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
 	object_init(&mapedit.pseudo, "object", "map-editor", NULL);
@@ -178,7 +167,8 @@ mapedit_init(void)
 	/* Try to restore the persistent tool states. */
 	object_load(&mapedit);
 
-	/* Create the `object editor' window. */
+	/* Create the object editor window. */
+	objedit_init();
 	objedit_win = objedit_window();
 	window_show(objedit_win);
 
@@ -223,7 +213,6 @@ mapedit_init(void)
 void
 mapedit_destroy(void *p)
 {
-	struct mapedit_obj *mobj, *nmobj;
 	int i;
 
 	for (i = 0; i < mapedit_ntools; i++) {
@@ -241,19 +230,7 @@ mapedit_destroy(void *p)
 	}
 
 	map_destroy(&mapedit.copybuf);
-
-	for (mobj = TAILQ_FIRST(&dobjs);
-	     mobj != TAILQ_END(&dobjs);
-	     mobj = nmobj) {
-		nmobj = TAILQ_NEXT(mobj, objs);
-		free(mobj);
-	}
-	for (mobj = TAILQ_FIRST(&gobjs);
-	     mobj != TAILQ_END(&gobjs);
-	     mobj = nmobj) {
-		nmobj = TAILQ_NEXT(mobj, objs);
-		free(mobj);
-	}
+	objedit_destroy();
 }
 
 int
@@ -289,90 +266,6 @@ mapedit_save(void *p, struct netbuf *buf)
 			text_msg(MSG_ERROR, "%s", error_get());
 	}
 	return (0);
-}
-
-/* Close an object derivate data edition window. */
-static void
-objdata_close(int argc, union evarg *argv)
-{
-	struct window *win = argv[0].p;
-	struct mapedit_obj *mobj = argv[1].p;
-	
-	event_post(NULL, win, "window-destroy", NULL);
-
-	TAILQ_REMOVE(&dobjs, mobj, objs);
-	object_page_out(mobj->obj, OBJECT_DATA);
-	object_del_dep(&mapedit.pseudo, mobj->obj);
-	free(mobj);
-}
-
-/* Edit the data part of an object. */
-void
-mapedit_edit_objdata(struct object *ob)
-{
-	struct mapedit_obj *mobj;
-	
-	TAILQ_FOREACH(mobj, &dobjs, objs) {
-		if (mobj->obj == ob)
-			break;
-	}
-	if (mobj != NULL) {
-		window_show(mobj->win);
-		return;
-	}
-
-	if (object_page_in(ob, OBJECT_DATA) == -1) {
-		printf("%s: %s\n", ob->name, error_get());
-		return;
-	}
-	object_add_dep(&mapedit.pseudo, ob);
-	
-	mobj = Malloc(sizeof(struct mapedit_obj));
-	mobj->obj = ob;
-	mobj->win = ob->ops->edit(ob);
-	TAILQ_INSERT_HEAD(&dobjs, mobj, objs);
-	window_show(mobj->win);
-
-	event_new(mobj->win, "window-close", objdata_close, "%p", mobj);
-}
-
-static void
-genobj_close(int argc, union evarg *argv)
-{
-	struct window *win = argv[0].p;
-	struct mapedit_obj *mobj = argv[1].p;
-
-	event_post(NULL, win, "window-destroy", NULL);
-
-	TAILQ_REMOVE(&gobjs, mobj, objs);
-	object_del_dep(&mapedit.pseudo, mobj->obj);
-	free(mobj);
-}
-
-/* Edit the generic part of an object. */
-void
-mapedit_edit_genobj(struct object *ob)
-{
-	struct mapedit_obj *mobj;
-	
-	TAILQ_FOREACH(mobj, &gobjs, objs) {
-		if (mobj->obj == ob)
-			break;
-	}
-	if (mobj != NULL) {
-		window_show(mobj->win);
-		return;
-	}
-	
-	object_add_dep(&mapedit.pseudo, ob);
-	
-	mobj = Malloc(sizeof(struct mapedit_obj));
-	mobj->obj = ob;
-	mobj->win = object_edit(ob);
-	TAILQ_INSERT_HEAD(&gobjs, mobj, objs);
-	window_show(mobj->win);
-
-	event_new(mobj->win, "window-close", genobj_close, "%p", mobj);
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.h,v 1.1 2004/03/10 04:30:03 vedge Exp $	*/
+/*	$Csoft: mediasel.h,v 1.2 2004/03/12 04:06:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MEDIASEL_H_
@@ -7,6 +7,7 @@
 #include <engine/object.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/button.h>
+#include <engine/mapedit/mapview.h>
 
 #include "begin_code.h"
 
@@ -23,11 +24,8 @@ struct mediasel {
 };
 
 __BEGIN_DECLS
-struct mediasel *mediasel_new(void *, enum mediasel_type, struct object *);
-struct window	*mediasel_window(struct mapview *);
-void		 mediasel_refresh(struct mediasel *);
-void		 mediasel_scan_dens(struct mediasel *, const char *,
-		                    const char *);
+void		 mediasel_init(struct mapview *);
+void		 mediasel_destroy(struct mapview *);
 __END_DECLS
 
 #include "close_code.h"

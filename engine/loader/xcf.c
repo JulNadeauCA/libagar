@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.7 2004/01/03 04:25:08 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.8 2004/03/13 02:35:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,7 +29,7 @@
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>
-#include <engine/map.h>			/* For TILEW/TILEH */
+#include <engine/map.h>			/* For TILESZ */
 #include <engine/loader/xcf.h>
 
 #include <string.h>
@@ -499,7 +499,7 @@ xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
 			gfx_insert_anim_frame(*anim, su);
 		} else {
 			*anim = NULL;
-			if ((su->h > TILEH || su->w > TILEW) &&
+			if ((su->h > TILESZ || su->w > TILESZ) &&
 			    strstr(name, "(break)") != NULL) {
 				if (gfx_insert_fragments(gfx, su) == -1)
 					return (-1);
@@ -627,15 +627,13 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 		layer->mask_offset = read_uint32(buf);
 
 		/* Convert this layer to a SDL surface. */
-		su = xcf_convert_layer(buf, xcf_offs, head, layer);
-		if (su == NULL) {
+		if ((su = xcf_convert_layer(buf, xcf_offs, head, layer))
+		    == NULL) {
 			free(layer->name);
 			free(layer);
 			free(head);
 			return (-1);
 		}
-
-		/* Register this image. */
 		if (xcf_insert_surface(gfx, su, layer->name, &curanim) == -1) {
 			free(layer->name);
 			free(layer);
