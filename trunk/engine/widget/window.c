@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.226 2004/05/22 03:18:18 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.227 2004/07/31 04:19:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -89,47 +89,65 @@ int		window_xoffs = 0;
 int		window_yoffs = 0;
 int		window_freescale = 0;
 
-struct window *
-window_new(const char *fmt, ...)
+static __inline__ void
+convert_name(char *name)
 {
-	struct window *win = NULL;
+	char *c;
+
+	for (c = &name[0]; *c != '\0'; c++)
+		if (*c == '/')
+			*c = '_';
+}
+
+static __inline__ int
+focus_existing(const char *name)
+{
+	struct window *owin;
+
+	TAILQ_FOREACH(owin, &view->windows, windows) {
+		if (strlen(OBJECT(owin)->name) >= 4 &&
+		    strcmp(OBJECT(owin)->name+4, name) == 0) {
+			window_show(owin);
+			window_focus(owin);
+		    	return (1);
+		}
+	}
+	return (0);
+}
+
+struct window *
+window_new(int flags, const char *fmt, ...)
+{
+	char name[OBJECT_NAME_MAX];
+	va_list ap;
+	struct window *win;
 
 	pthread_mutex_lock(&view->lock);
-	if (fmt != NULL) {				/* Unique instance */
-		struct event *ev;
-		char name[OBJECT_NAME_MAX];
-		struct window *owin;
-		va_list ap;
-		char *c;
-
+	if (fmt != NULL) {
 		va_start(ap, fmt);
 		vsnprintf(name, sizeof(name), fmt, ap);
 		va_end(ap);
 
-		for (c = &name[0]; *c != '\0'; c++) {
-			if (*c == '/')
-				*c = '_';
-		}
-
-		TAILQ_FOREACH(owin, &view->windows, windows) {
-			if (strlen(OBJECT(owin)->name) < 4 ||
-			    strcmp(OBJECT(owin)->name+4, name) != 0) {
-				continue;
-			}
-			window_show(owin);
-			window_focus(owin);
+		convert_name(name);
+		if (focus_existing(name))
 			goto out;
-		}
 
 		win = Malloc(sizeof(struct window), M_OBJECT);
-		window_init(win, name);
+		window_init(win, name, flags);
 		event_new(win, "window-close", window_generic_hide, "%p", win);
-	} else {						/* Generic */
+	} else {
 		win = Malloc(sizeof(struct window), M_OBJECT);
-		window_init(win, NULL);
+		window_init(win, NULL, flags);
 		event_new(win, "window-close", window_generic_detach, "%p",
 		    win);
 	}
+	if (flags & WINDOW_HIDE) {
+		event_new(win, "window-close", window_generic_hide, "%p", win);
+	} else if (flags & WINDOW_DETACH) {
+		event_new(win, "window-close", window_generic_detach, "%p",
+		    win);
+	}
+
 	view_attach(win);
 out:
 	pthread_mutex_unlock(&view->lock);
@@ -137,7 +155,7 @@ out:
 }
 
 void
-window_init(void *p, const char *name)
+window_init(void *p, const char *name, int flags)
 {
 	char wname[OBJECT_NAME_MAX];
 	struct window *win = p;
@@ -154,38 +172,34 @@ window_init(void *p, const char *name)
 	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
 	widget_map_color(win, BG_COLOR, "background", 0, 0, 0, 255);
 	widget_map_color(win, CAPTION_COLOR, "caption", 245, 245, 245, 255);
-#if 0
-	/* XXX issues */
-	win->flags = (name != NULL) ? WINDOW_PERSISTENT : 0;
-#else
-	win->flags = 0;
-#endif
+	
+	win->flags = flags;
 	win->visible = 0;
 
-	win->borderw = default_nborder;
-	win->border = Malloc(win->borderw * sizeof(Uint32), M_WIDGET);
+	if ((flags & WINDOW_NO_DECORATIONS) == 0) {
+		win->borderw = default_nborder;
+		win->border = Malloc(win->borderw * sizeof(Uint32), M_WIDGET);
+	} else {
+		win->borderw = 0;
+		win->border = NULL;
+	}
 	for (i = 0; i < win->borderw; i++) {
-		win->border[i] = SDL_MapRGB(vfmt,
-		    default_border[i].r,
-		    default_border[i].g,
-		    default_border[i].b);
+		win->border[i] = SDL_MapRGB(vfmt, default_border[i].r,
+		    default_border[i].g, default_border[i].b);
 
-		if (i == win->borderw/2) {
+		if (i == win->borderw-1)
 			widget_map_color(win, HIGHLIGHT_COLOR, "highlight",
-			    default_border[i].r,
-			    default_border[i].g,
-			    default_border[i].b,
-			    255);
-		}
+			    default_border[i].r, default_border[i].g,
+			    default_border[i].b, 255);
 	}
 
 	pthread_mutex_init(&win->lock, &recursive_mutexattr);
 	win->alignment = WINDOW_CENTER;
 	win->spacing = 2;
-	win->padding = win->borderw + 2;
-	win->minh = win->borderw*2 + text_font_height(NULL);
-	win->minw = win->minh*2;
-	win->tbar = titlebar_new(win, 0);
+	win->padding = win->borderw + 4;
+	win->minh = win->padding*2 + text_font_height(NULL);
+	win->minw = win->padding*2;
+	win->tbar = (flags & WINDOW_NO_TITLEBAR) ? NULL : titlebar_new(win, 0);
 	TAILQ_INIT(&win->subwins);
 
 	/* Automatically notify children of visibility changes. */
@@ -226,15 +240,14 @@ window_draw(void *p)
 	struct window *win = p;
 	int i, ncol;
 
-	primitives.rect_filled(win,
-	    0,
-	    0,
-	    WIDGET(win)->w,
-	    WIDGET(win)->h,
+	primitives.rect_filled(win, 0, 0, WIDGET(win)->w, WIDGET(win)->h,
 	    BG_COLOR);
 
+	if (win->flags & WINDOW_NO_DECORATIONS)
+		return;
+
 	/* Draw the window frame (expected to fit inside padding). */
-	for (i = 1; i < win->borderw; i++) {
+	for (i = 0; i < win->borderw-1; i++) {
 		ncol = widget_push_color(WIDGET(win), win->border[i]);
 
 		primitives.line(win,
@@ -264,60 +277,63 @@ window_draw(void *p)
 	
 		widget_pop_color(WIDGET(win));
 	}
-	
-	/* Draw the resize decorations. */
-	ncol = widget_push_color(WIDGET(win), win->border[0]);
-	primitives.line(win,				/* Lower left */
-	    18,
-	    WIDGET(win)->h - win->borderw,
-	    18,
-	    WIDGET(win)->h - 2,
-	    ncol);
-	primitives.line(win,
-	    19,
-	    WIDGET(win)->h - win->borderw,
-	    19,
-	    WIDGET(win)->h - 2,
-	    HIGHLIGHT_COLOR);
-	primitives.line(win,
-	    2,
-	    WIDGET(win)->h - 20,
-	    win->borderw,
-	    WIDGET(win)->h - 20,
-	    ncol);
-	primitives.line(win,
-	    2,
-	    WIDGET(win)->h - 19,
-	    win->borderw,
-	    WIDGET(win)->h - 19,
-	    HIGHLIGHT_COLOR);
-	
-	primitives.line(win,			       /* Lower right */
-	    WIDGET(win)->w - 19,
-	    WIDGET(win)->h - win->borderw,
-	    WIDGET(win)->w - 19,
-	    WIDGET(win)->h - 2,
-	    ncol);
-	primitives.line(win,
-	    WIDGET(win)->w - 18,
-	    WIDGET(win)->h - win->borderw,
-	    WIDGET(win)->w - 18,
-	    WIDGET(win)->h - 2,
-	    HIGHLIGHT_COLOR);
-	primitives.line(win,
-	    WIDGET(win)->w - win->borderw,
-	    WIDGET(win)->h - 20,
-	    WIDGET(win)->w - 2,
-	    WIDGET(win)->h - 20,
-	    ncol);
-	primitives.line(win,
-	    WIDGET(win)->w - win->borderw,
-	    WIDGET(win)->h - 19,
-	    WIDGET(win)->w - 2,
-	    WIDGET(win)->h - 19,
-	    HIGHLIGHT_COLOR);
 
-	widget_pop_color(WIDGET(win));
+	/* Draw the resize notches. */
+	if (win->borderw > 0 && (win->flags & WINDOW_NO_RESIZE) == 0) {
+		ncol = widget_push_color(WIDGET(win), win->border[0]);
+
+		primitives.line(win,			/* Lower left */
+		    18,
+		    WIDGET(win)->h - win->borderw,
+		    18,
+		    WIDGET(win)->h - 2,
+		    ncol);
+		primitives.line(win,
+		    19,
+		    WIDGET(win)->h - win->borderw,
+		    19,
+		    WIDGET(win)->h - 2,
+		    HIGHLIGHT_COLOR);
+		primitives.line(win,
+		    2,
+		    WIDGET(win)->h - 20,
+		    win->borderw,
+		    WIDGET(win)->h - 20,
+		    ncol);
+		primitives.line(win,
+		    2,
+		    WIDGET(win)->h - 19,
+		    win->borderw,
+		    WIDGET(win)->h - 19,
+		    HIGHLIGHT_COLOR);
+	
+		primitives.line(win,		       /* Lower right */
+		    WIDGET(win)->w - 19,
+		    WIDGET(win)->h - win->borderw,
+		    WIDGET(win)->w - 19,
+		    WIDGET(win)->h - 2,
+		    ncol);
+		primitives.line(win,
+		    WIDGET(win)->w - 18,
+		    WIDGET(win)->h - win->borderw,
+		    WIDGET(win)->w - 18,
+		    WIDGET(win)->h - 2,
+		    HIGHLIGHT_COLOR);
+		primitives.line(win,
+		    WIDGET(win)->w - win->borderw,
+		    WIDGET(win)->h - 20,
+		    WIDGET(win)->w - 2,
+		    WIDGET(win)->h - 20,
+		    ncol);
+		primitives.line(win,
+		    WIDGET(win)->w - win->borderw,
+		    WIDGET(win)->h - 19,
+		    WIDGET(win)->w - 2,
+		    WIDGET(win)->h - 19,
+		    HIGHLIGHT_COLOR);
+
+		widget_pop_color(WIDGET(win));
+	}
 }
 
 void
@@ -556,30 +572,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			rfill2.w = oldpos.w;
 			rfill2.h = oldpos.y - newpos.y;
 		}
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			Uint8 r, g, b;
-
-			SDL_GetRGB(fillcolor, vfmt, &r, &g, &b);
-			glColor3ub(r, g, b);
-
-			if (rfill1.w > 0) {
-				glRecti(
-				    rfill1.x,
-				    rfill1.y,
-				    rfill1.x + rfill1.w,
-				    rfill1.y + rfill1.h);
-			}
-			if (rfill2.w > 0) {
-				glRecti(
-				    rfill2.x,
-				    rfill2.y,
-				    rfill2.x + rfill2.w,
-				    rfill2.y + rfill2.h);
-			}
-		} else
-#endif /* HAVE_OPENGL */
-		{
+		if (!view->opengl) {
 			if (rfill1.w > 0) {
 				SDL_FillRect(view->v, &rfill1, fillcolor);
 				SDL_UpdateRects(view->v, 1, &rfill1);
@@ -637,6 +630,7 @@ window_event(SDL_Event *ev)
 	case SDL_MOUSEBUTTONDOWN:
 		/* Focus on the highest overlapping window. */
 		view->focus_win = NULL;
+		dprintf("click: %d,%d\n", ev->button.x, ev->button.y);
 		TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 			pthread_mutex_lock(&win->lock);
 			if (!win->visible ||
@@ -714,7 +708,7 @@ window_event(SDL_Event *ev)
 			}
 			if ((ev->button.y - WIDGET(win)->y) >
 			    (WIDGET(win)->h - win->borderw)) {
-				/* Start a resize operation. */
+				/* Initiate a resize operation. */
 			    	if ((ev->button.x - WIDGET(win)->x) < 17) {
 					view->winop = VIEW_WINOP_LRESIZE;
 				} else if ((ev->button.x - WIDGET(win)->x) >
@@ -923,30 +917,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			rfill2.w = ow;
 			rfill2.h = oh - WIDGET(win)->h;
 		}
-#ifdef HAVE_OPENGL
-		if (view->opengl) {
-			Uint8 r, g, b;
-
-			SDL_GetRGB(fillcolor, vfmt, &r, &g, &b);
-			glColor3ub(r, g, b);
-
-			if (rfill1.w > 0) {
-				glRecti(
-				    rfill1.x,
-				    rfill1.y,
-				    rfill1.x + rfill1.w,
-				    rfill1.y + rfill1.h);
-			}
-			if (rfill2.w > 0) {
-				glRecti(
-				    rfill2.x,
-				    rfill2.y,
-				    rfill2.x + rfill2.w,
-				    rfill2.y + rfill2.h);
-			}
-		} else
-#endif /* HAVE_OPENGL */
-		{
+		if (!view->opengl) {
 			if (rfill1.w > 0) {
 				SDL_FillRect(view->v, &rfill1, fillcolor);
 				SDL_UpdateRects(view->v, 1, &rfill1);
@@ -1109,9 +1080,11 @@ window_scale(void *p, int w, int h)
 	}
 
 	/* Don't effect padding on the titlebar. */
-	WIDGET(win->tbar)->x = 2;
-	WIDGET(win->tbar)->y = 1;
-	WIDGET(win->tbar)->w = WIDGET(win)->w - 2;
+	if (win->tbar != NULL) {
+		WIDGET(win->tbar)->x = 2;
+		WIDGET(win->tbar)->y = 1;
+		WIDGET(win->tbar)->w = WIDGET(win)->w - 2;
+	}
 out:
 	pthread_mutex_unlock(&win->lock);
 }
@@ -1151,7 +1124,7 @@ window_set_position(struct window *win, enum window_alignment alignment,
 
 /* Set a default window-close handler. */
 void
-window_set_closure(struct window *win, enum window_close_mode mode)
+window_set_closure(struct window *win, int mode)
 {
 	switch (mode) {
 	case WINDOW_HIDE:
@@ -1161,7 +1134,7 @@ window_set_closure(struct window *win, enum window_close_mode mode)
 		event_new(win, "window-close", window_generic_detach, "%p",
 		    win);
 		break;
-	case WINDOW_IGNORE:
+	default:
 		event_remove(win, "window-close");
 		break;
 	}
