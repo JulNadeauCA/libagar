@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.77 2004/04/10 02:34:05 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.78 2004/05/13 11:00:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -81,6 +81,7 @@ struct widget {
 __BEGIN_DECLS
 extern int kbd_delay;
 extern int kbd_repeat;
+extern int mouse_dblclick_delay;
 
 void	 widget_init(void *, const char *, const void *, int);
 void	 widget_destroy(void *);
