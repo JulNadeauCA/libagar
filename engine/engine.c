@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.128 2004/03/18 21:27:46 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.129 2004/04/11 03:29:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -78,7 +78,6 @@ int
 engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 {
 	static int inited = 0;
-	const SDL_VideoInfo *vinfo;
 	
 	if (inited) {
 		error_set("The engine is already initialized.");
@@ -139,10 +138,10 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 			size_t size = 2048;
 
 			printf(_("Video device is %dbpp "
-			         "(ckey=0x%x, alpha=0x%04x)\n"),
+			         "(ckey=%d, alpha=%d)\n"),
 			    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
 			    vinfo->vfmt->alpha);
-			printf(_("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n"),
+			printf(_("Video mask is 0x%08x,0x%08x,0x%08x,0x%08x\n"),
 			    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
 			    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
 
