@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.195 2003/06/08 23:51:24 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.196 2003/06/09 23:14:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -62,7 +62,6 @@ enum {
 	BGFILL_COLOR,
 	BG_COLOR,
 	CAPTION_COLOR,
-	CURRENT_COLOR,
 	HIGHLIGHT_COLOR
 };
 
@@ -147,7 +146,6 @@ window_init(void *p, const char *name)
 	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
 	widget_map_color(win, BG_COLOR, "background", 0, 0, 0, 255);
 	widget_map_color(win, CAPTION_COLOR, "caption", 250, 245, 250, 255);
-	widget_map_color(win, CURRENT_COLOR, "_current", 0, 0, 0, 255);
 
 	/* XXX special case */
 	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
