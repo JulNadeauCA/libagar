@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.1 2002/09/12 09:42:33 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.2 2002/09/13 10:58:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -51,10 +51,6 @@ static const struct widget_ops scrollbar_ops = {
 };
 
 enum {
-	MIN_SB_HEIGHT =	10
-};
-
-enum {
 	BACKGROUND_COLOR,
 	SCROLL_BUTTON_COLOR,
 	SCROLL_TRIANGLE_COLOR1,
@@ -98,7 +94,8 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int item_size, int flags)
 	sb->item_size = item_size;
 	sb->range.soft_start = 0;
 	sb->range.start = 0;
-	sb->range.max = 100;
+	sb->range.max = 0;
+	sb->min_size = 10;
 	pthread_mutex_init(&sb->range.max_lock, NULL);
 
 	event_new(sb, "window-mousebuttondown", 0,
@@ -244,8 +241,8 @@ scrollbar_draw(void *p)
 		} else {
 			h = WIDGET(sb)->h - h - 40;	/* XXX */
 		}
-		if (h < MIN_SB_HEIGHT) {
-			h = MIN_SB_HEIGHT;
+		if (h < sb->min_size) {
+			h = sb->min_size;
 		}
 
 		/* Calculate position */

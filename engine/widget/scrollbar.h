@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.h,v 1.1 2002/09/12 09:42:33 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.2 2002/09/13 10:58:14 vedge Exp $	*/
 /*	Public domain	*/
 
 struct scrollbar {
@@ -9,6 +9,7 @@ struct scrollbar {
 #define SCROLLBAR_VERTICAL	0x02	/* Vertical scroll bar */
 
 	int	 item_size;		/* Item width/height in pixels */
+	int	 min_size;
 
 	struct {
 		int	soft_start;	/* Soft scroll offset */
