@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.96 2002/12/14 11:06:35 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.97 2002/12/15 15:56:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -99,11 +99,13 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->pos_lock, NULL);
-	pthread_mutex_init(&ob->props_lock, NULL);
+	
+	pthread_mutexattr_init(&ob->props_lockattr);
+	pthread_mutexattr_settype(&ob->props_lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&ob->props_lock, &ob->props_lockattr);
 
 	pthread_mutexattr_init(&ob->events_lockattr);
-	pthread_mutexattr_settype(&ob->events_lockattr,
-	    PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutexattr_settype(&ob->events_lockattr,PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&ob->events_lock, &ob->events_lockattr);
 
 	ob->art = (ob->flags & OBJECT_ART) ? art_fetch(media, ob) : NULL;
@@ -241,7 +243,7 @@ object_save(void *p)
 	struct stat sta;
 	int fd;
 
-	datadir = prop_string(config, "path.user_data_dir");
+	datadir = prop_get_string(config, "path.user_data_dir");
 	if (stat(datadir, &sta) != 0 && mkdir(datadir, 0700) != 0) {
 		fatal("creating %s: %s\n", datadir, strerror(errno));
 	}
@@ -287,7 +289,7 @@ object_path(char *obname, const char *suffix)
 	char *datapath, *datapathp, *path;
 
 	path = emalloc((size_t)FILENAME_MAX);
-	datapathp = datapath = Strdup(prop_string(config, "path.data_path"));
+	datapathp = datapath = prop_get_string(config, "path.data_path");
 
 	for (p = strtok_r(datapath, ":", &last);
 	     p != NULL;
