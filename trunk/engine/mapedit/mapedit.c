@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.189 2003/12/05 01:21:23 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.190 2004/01/03 04:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -66,7 +66,7 @@ struct tool *mapedit_tools[] = {
 	&flip_tool,
 	&invert_tool
 };
-int mapedit_ntools = sizeof(mapedit_tools) / sizeof(mapedit_tools[0]);
+const int mapedit_ntools = sizeof(mapedit_tools) / sizeof(mapedit_tools[0]);
 
 const struct version mapedit_ver = {
 	"agar map editor",
