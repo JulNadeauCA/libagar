@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.49 2002/09/05 12:16:04 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.50 2002/09/13 11:08:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -69,7 +69,11 @@ struct object {
 #define OBJECT_BLOCK		0x10	/* Map: cannot walk through. XXX */
 #define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
 #define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
-
+	enum {
+		OBJECT_EMBRYONIC,	/* Unattached */
+		OBJECT_CONSISTENT,	/* Attached */
+		OBJECT_ZOMBIE		/* Detached */
+	} state;
 	struct	 media_art *art;	/* Static sprites */
 	struct	 media_audio *audio;	/* Static samples */
 
@@ -118,11 +122,10 @@ struct object {
 struct	object *object_new(char *, char *, char *, int, const void *);
 void	object_init(struct object *, char *, char *, char *, int, const void *);
 int	object_load(void *);
-int	object_loadfrom(void *, char *);
+int	object_load_from(void *, char *);
 int	object_save(void *);
 void	object_destroy(void *);
 
-struct object	*object_strfind(char *);
 char		*object_name(const char *, int);
 char		*object_path(char *, const char *);
 
