@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.30 2002/12/15 15:57:29 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.31 2002/12/16 13:36:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -186,6 +186,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
 	{
+		/* Tile map */
 		region_attach(reg, mv);
 	}
 	window_show(win);
@@ -213,7 +214,6 @@ objq_window(struct mapedit *med)
 		event_new(tl, "tlist-poll", tl_objs_poll, "%p", med);
 		event_new(tl, "tlist-changed", tl_objs_selected, "%p", med);
 	}
-
 	return (win);
 }
 

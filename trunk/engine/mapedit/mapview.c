@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.36 2002/12/06 01:32:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.37 2002/12/13 07:47:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -91,6 +91,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
 {
 	widget_init(&mv->wid, "mapview", "widget", &mapview_ops, rw, rh);
+	mv->wid.flags |= WIDGET_CLIPPING;
 
 	mv->flags = flags;
 	mv->med = med;
@@ -172,13 +173,6 @@ mapview_draw(void *p)
 	struct noderef *nref;
 	struct mapedit *med = mv->med;
 	int mx, my, rx, ry;
-	SDL_Rect clip;
-
-	clip.x = WIDGET_ABSX(mv);
-	clip.y = WIDGET_ABSY(mv);
-	clip.w = WIDGET(mv)->w;
-	clip.h = WIDGET(mv)->h;
-	SDL_SetClipRect(view->v, &clip);
 
 	/* XXX soft scroll */
 
@@ -271,7 +265,6 @@ mapview_draw(void *p)
 			   WIDGET_COLOR(mv, GRID_COLOR));
 		}
 	}
-	SDL_SetClipRect(view->v, NULL);
 
 	/* Highlight if the widget is focused. */
 	if (WIDGET_FOCUSED(mv) && VIEW_FOCUSED(WIDGET(mv)->win)) {
