@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.17 2003/07/01 04:56:07 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.18 2003/07/08 00:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -118,7 +118,7 @@ mapview_node_op(int argc, union evarg *argv)
 	int sx, sy;
 
 	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
-		text_msg(MSG_ERROR, _("No node is selected"));
+		text_msg(MSG_ERROR, _("No node is selected."));
 		return;
 	}
 	node = &mv->map->map[sy][sx];

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.38 2003/06/21 06:50:18 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.39 2003/07/04 12:31:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ prop_copy(const struct prop *prop)
 		nprop->data.s = strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
 			free(nprop);
-			error_set("out of memory");
+			error_set(_("Out of memory for string."));
 			return (NULL);
 		}
 		break;
@@ -71,7 +71,7 @@ prop_copy(const struct prop *prop)
 		nprop->data.ucs = ucsdup(prop->data.ucs);
 		if (nprop->data.ucs == NULL) {
 			free(nprop);
-			error_set("out of memory");
+			error_set(_("Out of memory for string."));
 			return (NULL);
 		}
 		break;
@@ -344,7 +344,8 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 				*(void **)p = prop->data.p;
 				break;
 			default:
-				error_set("unsupported property type: %d\n", t);
+				error_set(_("Unsupported property type: %d."),
+				    t);
 				goto fail;
 			}
 		}
@@ -352,7 +353,7 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 		return (prop);
 	}
 
-	error_set("%s has no `%s' property (type %d)\n", ob->name, key, t);
+	error_set(_("%s has no `%s' property (type %d)."), ob->name, key, t);
 fail:
 	pthread_mutex_unlock(&ob->props_lock);
 	return (NULL);
@@ -566,7 +567,7 @@ prop_load(void *p, struct netbuf *buf)
 		Uint32 t;
 
 		if (copy_string(key, buf, sizeof(key)) >= sizeof(key)) {
-			error_set("key too big");
+			error_set(_("The prop key too big."));
 			goto fail;
 		}
 		t = read_uint32(buf);
@@ -615,7 +616,7 @@ prop_load(void *p, struct netbuf *buf)
 
 				s = read_string(buf);
 				if (strlen(s) >= PROP_STRING_MAX) {
-					error_set("string too big");
+					error_set(_("String too big."));
 					free(s);
 					goto fail;
 				}
@@ -629,7 +630,7 @@ prop_load(void *p, struct netbuf *buf)
 
 				ucs = read_unicode(buf);
 				if (ucslen(ucs) >= PROP_UNICODE_MAX) {
-					error_set("unicode string too big");
+					error_set(_("Unicode string too big."));
 					free(ucs);
 					goto fail;
 				}
@@ -638,7 +639,7 @@ prop_load(void *p, struct netbuf *buf)
 			}
 			break;
 		default:
-			error_set("cannot load prop of type 0x%x", t);
+			error_set(_("Cannot load prop of type 0x%x."), t);
 			goto fail;
 		}
 	}
@@ -718,7 +719,8 @@ prop_save(void *p, struct netbuf *buf)
 			    prop->key);
 			break;
 		default:
-			error_set("cannot save prop of type 0x%x", prop->type);
+			error_set(_("Cannot save prop of type 0x%x."),
+			    prop->type);
 			goto fail;
 		}
 		nprops++;

@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.8 2003/06/17 23:47:43 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.9 2003/07/05 12:20:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ static struct jpeg_compress_struct	 jcomp;
 static void
 screenshot_error_exit(j_common_ptr jcomp)
 {
-	text_msg(MSG_ERROR, "JPEG error occured");
+	text_msg(MSG_ERROR, _("A JPEG error has occured."));
 }
 
 static void
@@ -111,7 +111,7 @@ screenshot_xmit(int fd)
 		JSAMPROW row[1];
 		int x;
 	
-		label_printf(statusl, _("Status: xmit frame %d"), nframe);
+		label_printf(statusl, _("Status: xmit frame %d."), nframe);
 
 		jpeg_start_compress(&jcomp, TRUE);
 
@@ -168,7 +168,7 @@ screenshot_connect(int argc, union evarg *argv)
 	button_disable(disconnectbu);
 
 	if (sock != -1) {
-		text_msg(MSG_ERROR, _("Already connected to a server"));
+		text_msg(MSG_ERROR, _("Already connected to a server."));
 		goto out1;
 	}
 
@@ -177,7 +177,7 @@ screenshot_connect(int argc, union evarg *argv)
 
 	if (strcmp(host, "") == 0 ||
 	    strcmp(port, "") == 0) {
-		text_msg(MSG_ERROR, _("Missing server hostname/port"));
+		text_msg(MSG_ERROR, _("Missing server hostname/port."));
 		goto out2;
 	}
 
@@ -189,7 +189,7 @@ screenshot_connect(int argc, union evarg *argv)
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
 		text_msg(MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
-		label_printf(statusl, _("Status: %s"), gai_strerror(rv));
+		label_printf(statusl, _("Status: %s."), gai_strerror(rv));
 		goto out2;
 	}
 
@@ -210,11 +210,11 @@ screenshot_connect(int argc, union evarg *argv)
 	}
 	if (sock == -1) {
 		text_msg(MSG_ERROR, "%s: %s", host, cause);
-		label_printf(statusl, _("Status: %s: %s"), host, cause);
+		label_printf(statusl, _("Status: %s: %s."), host, cause);
 		goto out3;
 	}
 
-	label_printf(statusl, _("Status: connected to %s"), host);
+	label_printf(statusl, _("Status: connected to %s."), host);
 	screenshot_xmit(sock);
 out3:
 	freeaddrinfo(res0);
@@ -235,9 +235,9 @@ screenshot_disconnect(int argc, union evarg *argv)
 	button_disable(disconnectbu);
 	if (sock != -1) {
 		close(sock);
-		label_printf(statusl, _("Status: disconnected"));
+		label_printf(statusl, _("Status: disconnected."));
 	} else {
-		text_msg(MSG_ERROR, _("Not connected"));
+		text_msg(MSG_ERROR, _("Not connected."));
 	}
 	button_enable(connectbu);
 	button_enable(disconnectbu);
@@ -260,7 +260,7 @@ screenshot_window(void)
 	vb = vbox_new(win, 0);
 	WIDGET(vb)->flags |= WIDGET_CLIPPING;
 	{
-		statusl = label_new(vb, _("Status: Not connected"));
+		statusl = label_new(vb, _("Status: Not connected."));
 		hosttb = textbox_new(vb, _("Host: "));
 		porttb = textbox_new(vb, _("Port: "));
 		textbox_printf(porttb, "%i", default_port);

@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.32 2003/06/17 23:30:45 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.33 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -58,7 +58,7 @@ magnifier_zoomN(int argc, union evarg *argv)
 	struct mapview *mv;
 
 	if ((mv = tool_mapview()) == NULL) {
-		text_msg(MSG_ERROR, _("No map is visible"));
+		text_msg(MSG_ERROR, _("No map is visible."));
 		return;
 	}
 	mapview_zoom(mv, textbox_int(tb));

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.13 2003/06/29 11:33:43 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.14 2003/07/08 00:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -170,7 +170,7 @@ layedit_edit(int argc, union evarg *argv)
 		}
 		i++;
 	}
-	text_msg(MSG_ERROR, _("No layer is selected"));
+	text_msg(MSG_ERROR, _("No layer is selected."));
 }
 
 /* Toggle visibility of a layer. */
@@ -191,7 +191,7 @@ layedit_visible(int argc, union evarg *argv)
 		}
 		i++;
 	}
-	text_msg(MSG_ERROR, _("No layer is selected"));
+	text_msg(MSG_ERROR, _("No layer is selected."));
 }
 
 void

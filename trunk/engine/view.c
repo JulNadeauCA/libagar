@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.129 2003/07/08 00:05:04 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.130 2003/07/08 00:16:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ view_init(enum gfx_engine ge)
 	int depth;
 
 	if (view != NULL) {
-		error_set("viewport is already initialized");
+		error_set(_("The viewport is already initialized."));
 		return (-1);
 	}
 
@@ -119,7 +119,7 @@ view_init(enum gfx_engine ge)
 		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
 		break;
 	default:
-		error_set("unsupported graphic mode");
+		error_set(_("Unsupported graphic mode."));
 		goto fail;
 	}
 
@@ -138,14 +138,14 @@ view_init(enum gfx_engine ge)
 
 	if (view->w < prop_get_uint16(config, "view.min-w") ||
 	    view->h < prop_get_uint16(config, "view.min-h")) {
-		error_set("resolution is too small");
+		error_set(_("The resolution is too small."));
 		goto fail;
 	}
 
 	/* Set the video mode. */
 	view->v = SDL_SetVideoMode(view->w, view->h, 0, screenflags);
 	if (view->v == NULL) {
-		error_set("setting %dx%dx%d mode: %s", view->w, view->h,
+		error_set(_("Setting %dx%dx%d mode: %s"), view->w, view->h,
 		    view->depth, SDL_GetError());
 		goto fail;
 	}
@@ -462,7 +462,7 @@ view_set_refresh(int min_delay, int max_delay)
 {
 	if (min_delay < 0 || min_delay > 300 ||
 	    max_delay < 0 || max_delay > 300) {
-		error_set(_("The refresh rate is out of range"));
+		error_set(_("The refresh rate is out of range."));
 		return (-1);
 	}
 	dprintf("%d fps (%dms)\n", 1000/max_delay, max_delay);

@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.25 2003/06/30 06:39:44 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.26 2003/07/08 00:34:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ show_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected"));
+		text_msg(MSG_ERROR, _("No window is selected."));
 		return;
 	}
 
@@ -91,7 +91,7 @@ hide_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected"));
+		text_msg(MSG_ERROR, _("No window is selected."));
 		return;
 	}
 
@@ -109,7 +109,7 @@ detach_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected"));
+		text_msg(MSG_ERROR, _("No window is selected."));
 		return;
 	}
 
@@ -156,28 +156,29 @@ examine_widget(int argc, union evarg *argv)
 	struct vbox *vb;
 
 	if ((it = tlist_item_selected(tl)) == NULL) {
-		text_msg(MSG_ERROR, _("No widget is selected"));
+		text_msg(MSG_ERROR, _("No widget is selected."));
 		return;
 	}
 	wid = it->p1;
 
 	win = window_new(NULL);
-	window_set_caption(win, "%s widget", OBJECT(wid)->name);
+	window_set_caption(win, _("%s widget"), OBJECT(wid)->name);
 	
 	vb = vbox_new(win, VBOX_WFILL);
 	{
 		struct label *lab;
 
-		label_new(vb, "Name: \"%s\"", OBJECT(wid)->name);
-		label_new(vb, "Type: %s", wid->type);
-		label_polled_new(vb, &pwin->lock, "Flags: 0x%x", &wid->flags);
+		label_new(vb, _("Name: \"%s\""), OBJECT(wid)->name);
+		label_new(vb, _("Type: %s"), wid->type);
+		label_polled_new(vb, &pwin->lock, _("Flags: 0x%x"),
+		    &wid->flags);
 
 		lab = label_polled_new(vb, &pwin->lock,
-		    "Geo: %dx%d at %d,%d (view %d,%d)",
+		    _("Geo: %dx%d at %d,%d (view %d,%d)"),
 		    &wid->w, &wid->h, &wid->x, &wid->y,
 		    &wid->cx, &wid->cy);
 		label_prescale(lab,
-		    "Geo: 0000x0000 at 0000x0000 (view 0000,0000)");
+		    _("Geo: 0000x0000 at 0000x0000 (view 0000,0000)"));
 	}
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
@@ -257,7 +258,7 @@ examine_window(int argc, union evarg *argv)
 	window_set_closure(win, WINDOW_DETACH);
 
 	label_new(win, _("Name: \"%s\""), OBJECT(pwin)->name);
-	label_polled_new(win, &pwin->lock, "Flags: 0x%x", &pwin->flags);
+	label_polled_new(win, &pwin->lock, _("Flags: 0x%x"), &pwin->flags);
 
 	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);

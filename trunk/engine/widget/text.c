@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.71 2003/06/30 04:55:43 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.72 2003/07/14 03:35:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -359,14 +359,14 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	va_end(args);
 
 	win = window_new(NULL);
-	window_set_caption(win, "%s", text_msg_titles[title]);
+	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
 	vb = vbox_new(win, 0);
 	label_new(vb, msg);
 
 	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
-	button = button_new(vb, "Ok");
+	button = button_new(vb, _("Ok"));
 	event_new(button, "button-pushed", window_generic_detach, "%p", win);
 
 	widget_focus(button);

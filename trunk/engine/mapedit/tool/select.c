@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.14 2003/07/04 05:30:11 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.15 2003/07/06 02:43:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -54,7 +54,7 @@ select_copy(void *p, struct mapview *mv)
 	int sx, sy, dx, dy;
 
 	if (!mv->esel.set) {
-		text_msg(MSG_ERROR, _("There is no selection to copy"));
+		text_msg(MSG_ERROR, _("There is no selection to copy."));
 		return;
 	}
 
@@ -88,7 +88,7 @@ select_paste(void *p, struct mapview *mv)
 	int sx, sy, dx, dy;
 	
 	if (copybuf->map == NULL) {
-		text_msg(MSG_ERROR, _("The copy buffer is empty"));
+		text_msg(MSG_ERROR, _("The copy buffer is empty!"));
 		return;
 	}
 
@@ -126,7 +126,7 @@ select_kill(void *p, struct mapview *mv)
 	int x, y;
 
 	if (!mv->esel.set) {
-		text_msg(MSG_ERROR, _("There is no selection to kill"));
+		text_msg(MSG_ERROR, _("There is no selection to kill."));
 		return;
 	}
 	
@@ -144,7 +144,7 @@ static void
 select_cut(void *p, struct mapview *mv)
 {
 	if (!mv->esel.set) {
-		text_msg(MSG_ERROR, _("There is no selection to cut"));
+		text_msg(MSG_ERROR, _("There is no selection to cut."));
 		return;
 	}
 	select_copy(p, mv);

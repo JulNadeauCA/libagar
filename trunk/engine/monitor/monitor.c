@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.43 2003/06/21 06:50:25 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.44 2003/06/25 06:15:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -91,7 +91,7 @@ monitor_init(struct monitor *mon, const char *name)
 	event_new(tl_tools, "tlist-changed", select_tool, NULL);
 	for (i = 0; i < ntool_ents; i++) {
 		tlist_insert_item(tl_tools,
-		    SPRITE(mon, tool_ents[i].ind), tool_ents[i].name,
+		    SPRITE(mon, tool_ents[i].ind), _(tool_ents[i].name),
 		    tool_ents[i].window_func);
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.5 2003/07/05 12:17:23 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.6 2003/07/05 21:08:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -59,10 +59,10 @@ read_unicode(struct netbuf *buf)
 	case UNICODE_UTF16BE:
 		len = (size_t)read_uint32(buf);
 		if (len > UNICODE_STRING_MAX) {
-			error_set("unicode string is too big");
+			error_set("Unicode string is too big.");
 			return (NULL);
 		} else if (len == 0) {
-			error_set("zero-length unicode string");
+			error_set("Zero-length unicode string.");
 			return (NULL);
 		}
 		ucs = Malloc(len * sizeof(Uint16));	     /* Includes NUL */
@@ -71,12 +71,12 @@ read_unicode(struct netbuf *buf)
 		}
 		if (ucs[len-1] != '\0') {
 			free(ucs);
-			error_set("unicode string lacks NUL termination");
+			error_set("Unicode string lacks NUL termination.");
 			return (NULL);
 		}
 		break;
 	default:
-		error_set("unrecognized Unicode encoding");
+		error_set("Unrecognized Unicode encoding.");
 		return (NULL);
 	}
 	return (ucs);
