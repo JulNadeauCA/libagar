@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.4 2003/05/24 15:48:35 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.5 2003/05/25 02:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -121,42 +121,20 @@ destroy_objs(int argc, union evarg *argv)
 }
 
 /* Recursive function to display the object tree. */
-static void
+static struct tlist_item *
 find_objs(struct tlist *tl, struct object *pob, int depth)
 {
-	char label[TLIST_LABEL_MAX];
-	char dind[TLIST_LABEL_MAX];
 	struct object *cob;
-	size_t dsize = depth*4;
 	struct tlist_item *it;
-	int i;
 
-	if (dsize >= sizeof(dind))
-		dsize = sizeof(dind)-1;
-	memset(dind, ' ', dsize);
-	dind[dsize] = '\0';
-
-	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
-		for (i = 0; i < ntypesw; i++) {
-			if (strcmp(typesw[i].type, cob->type) == 0)
-				break;
-		}
-#if 0
-		snprintf(label, sizeof(label), "%s %s\n%s %s\n", dind,
-		    cob->name,
-		    dind, i == ntypesw ? cob->type : typesw[i].desc);
-#else
-		snprintf(label, sizeof(label), "%s %s\n", dind, cob->name);
-#endif
-		it = tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
-
-		if (!TAILQ_EMPTY(&cob->childs)) {
-			it->haschilds++;
-			if (tlist_visible_childs(tl, it)) {
-				find_objs(tl, cob, depth+1);
-			}
-		}
+	it = tlist_insert_item(tl, OBJECT_ICON(pob), pob->name, pob);
+	it->depth = depth;
+	it->haschilds = !TAILQ_EMPTY(&pob->childs);
+	if (it->haschilds && tlist_visible_childs(tl, it)) {
+		TAILQ_FOREACH(cob, &pob->childs, cobjs)
+			find_objs(tl, cob, depth+1);
 	}
+	return (it);
 }
 
 /* Update the object tree display. */
