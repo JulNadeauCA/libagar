@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.146 2003/01/20 03:40:40 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.147 2003/01/20 14:21:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ enum {
 };
 
 /* XXX struct */
-#include "borders/green1.h"
+#include "borders/green2.h"
 
 static void	window_clamp(struct window *);
 static void	window_focus(struct window *);
