@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.32 2002/05/03 20:18:46 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.33 2002/05/06 02:17:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -77,6 +77,9 @@ event_hotkey(SDL_Event *ev)
 		pthread_mutex_lock(&world->lock);
 		object_load(world);
 		pthread_mutex_unlock(&world->lock);
+		break;
+	case SDLK_F5:
+		map_verify(world->curmap);
 		break;
 	case SDLK_t:
 		text_msg(5, TEXT_SLEEP, "%d ticks\n", SDL_GetTicks());
