@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.55 2004/04/09 08:14:54 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.56 2004/04/10 02:34:05 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -358,19 +358,30 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 }
 
 static void
+circle_opengl(void *p, int wx, int wy, int radius, int ncolor)
+{
+}
+
+static void
 rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	Uint8 r, g, b;
+	int x1 = wid->cx+x;
+	int y1 = wid->cy+y;
+	int x2 = x1+w;
+	int y2 = y1+h;
 
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
+
+	glBegin(GL_POLYGON);
 	glColor3ub(r, g, b);
-	glRecti(
-	    wid->cx + x,
-	    wid->cy + y,
-	    wid->cx + x + w,
-	    wid->cy + y + h);
+	glVertex2s(x1, y2);
+	glVertex2s(x2, y2);
+	glVertex2s(x2, y1);
+	glVertex2s(x1, y1);
+	glEnd();
 }
 #endif /* HAVE_OPENGL */
 
@@ -379,7 +390,6 @@ primitives_init(void)
 {
 	primitives.box = box;
 	primitives.frame = frame;
-	primitives.circle = circle_bresenham;
 	primitives.rect_outlined = rect_outlined;
 	primitives.plus = plus;
 	primitives.minus = minus;
@@ -389,11 +399,13 @@ primitives_init(void)
 	if (view->opengl) {
 		primitives.line = line_opengl;
 		primitives.rect_filled = rect_opengl;
+		primitives.circle = circle_opengl;
 	} else
 #endif
 	{
 		primitives.line = line_bresenham;
 		primitives.rect_filled = rect_filled;
+		primitives.circle = circle_bresenham;
 	}
 }
 
