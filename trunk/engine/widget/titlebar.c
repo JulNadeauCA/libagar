@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.2 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.3 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 	box_set_spacing(&tbar->hb, 0);
 
 	widget_set_type(tbar, "titlebar");
-	widget_map_color(tbar, UNFOCUSED_COLOR, "unfocused", 50, 50, 60, 255);
+	widget_map_color(tbar, UNFOCUSED_COLOR, "unfocused", 35, 35, 35, 255);
 	widget_map_color(tbar, FOCUSED_COLOR, "focused", 40, 60, 73, 255);
 	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 
