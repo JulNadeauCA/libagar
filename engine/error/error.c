@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.1 2003/06/21 02:45:05 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.2 2003/06/21 02:52:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,6 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/vasprintf.h>
 #include <config/threads.h>
 
 #include <stdarg.h>
