@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.h,v 1.5 2003/02/02 21:16:15 vedge Exp $	*/
+/*	$Csoft: bitmap.h,v 1.6 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BITMAP_H_
@@ -15,10 +15,8 @@ struct bitmap {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct bitmap	*bitmap_new(struct region *, SDL_Surface *,
-				            int, int);
-extern DECLSPEC void		 bitmap_init(struct bitmap *, SDL_Surface *,
-				             int, int);
+extern DECLSPEC struct bitmap	*bitmap_new(struct region *, int, int);
+extern DECLSPEC void		 bitmap_init(struct bitmap *, int, int);
 extern DECLSPEC void	 	 bitmap_destroy(void *);
 extern DECLSPEC void		 bitmap_draw(void *);
 extern DECLSPEC void		 bitmap_scaled(int, union evarg *);
