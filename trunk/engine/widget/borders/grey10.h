@@ -1,4 +1,4 @@
-/*	$Csoft: grey10.h,v 1.2 2002/09/06 01:03:11 vedge Exp $	*/
+/*	$Csoft: grey10.h,v 1.3 2002/11/24 03:11:11 vedge Exp $	*/
 /*	Public domain	*/
 
 static const SDL_Color default_border[] = {
@@ -15,5 +15,5 @@ static const SDL_Color default_border[] = {
 	{ 200, 200, 200, 0 }
 };
 
-static const int default_nborder = 10;
-
+static const int default_nborder = sizeof(default_border) /
+    sizeof(default_border[0]) - 1;

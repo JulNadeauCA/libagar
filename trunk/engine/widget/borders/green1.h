@@ -1,4 +1,4 @@
-/*	$Csoft: green1.h,v 1.3 2002/11/24 03:11:10 vedge Exp $	    */
+/*	$Csoft: green1.h,v 1.4 2003/01/20 12:08:16 vedge Exp $	    */
 /*	Public domain	*/
 
 static const SDL_Color default_border[] = {
@@ -14,5 +14,5 @@ static const SDL_Color default_border[] = {
 	{ 200, 200, 200, 0 },
 };
 
-static const int default_nborder = 6;
-
+static const int default_nborder = sizeof(default_border) /
+    sizeof(default_border[0]) - 1;
