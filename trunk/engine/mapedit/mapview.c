@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.96 2003/03/24 12:08:40 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.97 2003/03/25 13:48:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -130,6 +130,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 
 	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
+	mv->mouse.centering = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
 
@@ -139,7 +140,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->constr.replace = 1;
 	mv->constr.trigger = NULL;
 
-	mv->cur_layer = 0;
 	mv->nodeed.trigger = NULL;
 	mv->layed.trigger = NULL;
 
@@ -646,8 +646,10 @@ mapview_mousemotion(int argc, union evarg *argv)
 	}
 	pthread_mutex_unlock(&mv->map->lock);
 
-	mv->mouse.x = x;
-	mv->mouse.y = y;
+	if (!mv->mouse.centering) {
+		mv->mouse.x = x;
+		mv->mouse.y = y;
+	}
 }
 
 static void
@@ -677,6 +679,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 		break;
 	case 2:						/* Adjust centering */
 		mv->flags |= MAPVIEW_NO_CURSOR;
+		mv->mouse.centering++;
 		goto out;
 	case 3:						/* Scroll */
 		mv->mouse.scrolling++;
@@ -780,6 +783,7 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 		break;
 	case 2:
 		mv->flags &= ~(MAPVIEW_NO_CURSOR);
+		mv->mouse.centering = 0;
 		break;
 	case 3:
 		mv->mouse.scrolling = 0;
