@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.43 2003/05/22 03:41:50 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.44 2003/05/22 05:42:04 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ put_pixel1(Uint8 *dst, Uint32 color, int x, int y)
 	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y))
 		return;
 
-	switch (view->v->format->BytesPerPixel) {
+	switch (vfmt->BytesPerPixel) {
 		_VIEW_PUTPIXEL_32(dst, color);
 		_VIEW_PUTPIXEL_24(dst, color);
 		_VIEW_PUTPIXEL_16(dst, color);
@@ -102,7 +102,7 @@ put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
     Uint32 color)
 {
 	if (VIEW_INSIDE_CLIP_RECT(view->v, x1, y1)) {
-		switch (view->v->format->BytesPerPixel) {
+		switch (vfmt->BytesPerPixel) {
 			_VIEW_PUTPIXEL_32(dst1, color);
 			_VIEW_PUTPIXEL_24(dst1, color);
 			_VIEW_PUTPIXEL_16(dst1, color);
@@ -111,7 +111,7 @@ put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
 	}
 
 	if (VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
-		switch (view->v->format->BytesPerPixel) {
+		switch (vfmt->BytesPerPixel) {
 			_VIEW_PUTPIXEL_32(dst2, color);
 			_VIEW_PUTPIXEL_24(dst2, color);
 			_VIEW_PUTPIXEL_16(dst2, color);
@@ -227,9 +227,8 @@ line_bresenham(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
 {
 	int dx, dy, dpr, dpru, p;
 	int x1, x2, y1, y2;
-	int xinc = view->v->format->BytesPerPixel;
 	int yinc = view->v->pitch;
-	int xyinc = xinc + yinc;
+	int xyinc = vfmt->BytesPerPixel + yinc;
 	Uint8 *fb1, *fb2;
 
 	x1 = px1 + WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
@@ -279,8 +278,8 @@ xloop:
 /* up: */
 	x1++;
 	x2--;
-	fb1 += xinc;
-	fb2 -= xinc;
+	fb1 += vfmt->BytesPerPixel;
+	fb2 -= vfmt->BytesPerPixel;
 	if ((dy = dy - 1) >= 0) {
 		goto xloop;
 	}
@@ -412,7 +411,7 @@ line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	Uint8 r, g, b;
 	
-	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 
 	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
 	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
@@ -438,7 +437,7 @@ rect_opengl(void *p, SDL_Rect *rd, Uint32 color)
 	nrd.x += WIDGET(p)->win->rd.x + WIDGET(p)->x;
 	nrd.y += WIDGET(p)->win->rd.y + WIDGET(p)->y;
 
-	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	glColor3ub(r, g, b);
 	glRecti(nrd.x, nrd.y, nrd.x+nrd.w, nrd.y+nrd.h);
 }

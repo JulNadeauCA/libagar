@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.175 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.176 2003/05/20 11:30:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1209,7 +1209,7 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 					break;
 				}
 				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
-				    SDL_MapRGB(view->v->format, r1, g1, b1));
+				    SDL_MapRGB(vfmt, r1, g1, b1));
 			}
 		}
 	}

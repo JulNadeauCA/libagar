@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.11 2003/05/18 00:17:05 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.12 2003/05/22 05:42:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -110,7 +110,7 @@ palette_changed(int argc, union evarg *argv)
 	if ((colorb = widget_binding_get_locked(pal, "color", &color)) == NULL)
 		fatal("%s", error_get());
 	
-	SDL_GetRGB(*color, view->v->format, &r, &g, &b);
+	SDL_GetRGB(*color, vfmt, &r, &g, &b);
 	switch (nbar) {
 	case PALETTE_RED:
 		r = widget_get_int(pal->bars[nbar], "value");
@@ -122,7 +122,7 @@ palette_changed(int argc, union evarg *argv)
 		b = widget_get_int(pal->bars[nbar], "value");
 		break;
 	}
-	*color = SDL_MapRGB(view->v->format, r, g, b);
+	*color = SDL_MapRGB(vfmt, r, g, b);
 	widget_binding_unlock(colorb);
 }
 
@@ -226,7 +226,7 @@ palette_draw(void *p)
 	    pal->rpreview.w, pal->rpreview.h,
 	    WIDGET_COLOR(pal, BG_COLOR));
 	
-	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
 	widget_set_int(pal->bars[2], "value", (int)b);

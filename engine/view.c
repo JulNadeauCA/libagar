@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.121 2003/05/08 12:13:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.122 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -70,6 +70,7 @@ const struct object_ops viewport_ops = {
 
 /* Read-only as long as the engine is running. */
 struct viewport *view = NULL;
+SDL_PixelFormat *vfmt = NULL;
 
 #ifdef DEBUG
 int	view_debug = 1;
@@ -197,6 +198,7 @@ view_init(enum gfx_engine ge)
 	prop_set_uint16(config, "view.w", v->w);
 	prop_set_uint16(config, "view.h", v->h);
 	view = v;
+	vfmt = view->v->format;
 
 	primitives_init();
 	return (0);

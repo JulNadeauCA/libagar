@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.149 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.150 2003/05/19 01:16:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -173,13 +173,13 @@ event_init_fps_counter(void)
 		    GRAPH_SCROLL|GRAPH_ORIGIN, 200, 100, 100);
 		fps_refresh_current = graph_add_item(fps_graph,
 		    "refresh-current",
-		    SDL_MapRGB(view->v->format, 0, 160, 0));
+		    SDL_MapRGB(vfmt, 0, 160, 0));
 		fps_event_count = graph_add_item(fps_graph,
 		    "event-rate",
-		    SDL_MapRGB(view->v->format, 0, 0, 180));
+		    SDL_MapRGB(vfmt, 0, 0, 180));
 		fps_event_idletime = graph_add_item(fps_graph,
 		    "event-idle",
-		    SDL_MapRGB(view->v->format, 200, 200, 200));
+		    SDL_MapRGB(vfmt, 200, 200, 200));
 	}
 	
 	if (engine_debug > 0)
