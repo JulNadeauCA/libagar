@@ -1,4 +1,4 @@
-/*	$Csoft: rwlock.c,v 1.4 2002/11/08 03:51:34 vedge Exp $	*/
+/*	$Csoft: rwlock.c,v 1.5 2003/01/01 05:18:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -25,6 +25,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/threads.h>
+
+#ifdef THREADS
 
 #if !defined(__OpenBSD__)
 #define _XOPEN_SOURCE 500		/* XXX recursive mutexes */
@@ -320,3 +324,5 @@ rwlock_unlock(rwlock_t *rw)
 	pthread_mutex_unlock(&rw->mutex);
 	return (res);
 }
+
+#endif	/* THREADS */
