@@ -1,5 +1,7 @@
-/*	$Csoft$	*/
+/*	$Csoft: keysyms.c,v 1.1 2005/02/02 09:28:23 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/engine.h>
 
 const char *keysyms[] = {
 	NULL,	
