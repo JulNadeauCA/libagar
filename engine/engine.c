@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.39 2002/05/03 20:13:02 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.40 2002/05/11 03:24:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 {
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
-
+	
 	curmapedit = NULL;
 	gameinfo = gi;
 
@@ -177,12 +177,9 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	}
 	
 	/* Initialize input devices. */
-	keyboard = emalloc(sizeof(struct input));
-	joy = emalloc(sizeof(struct input));
-	mouse = emalloc(sizeof(struct input));
-	input_init(keyboard, INPUT_KEYBOARD, 0);
-	input_init(joy, INPUT_JOY, njoy);
-	input_init(mouse, INPUT_MOUSE, 0);
+	keyboard = input_new(INPUT_KEYBOARD, 0);
+	joy = input_new(INPUT_JOY, njoy);
+	mouse = input_new(INPUT_MOUSE, 0);
 
 #ifdef XDEBUG
 	if (engine_debug > 0) {
@@ -279,6 +276,11 @@ engine_destroy(void)
 	
 	/* Destroy the font engine. */
 	text_engine_destroy();
+
+	/* Shut down the input devices. XXX link */
+	input_destroy(keyboard);
+	input_destroy(mouse);
+	input_destroy(joy);
 
 	SDL_Quit();
 	exit(0);
