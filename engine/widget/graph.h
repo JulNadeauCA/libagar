@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.3 2002/07/22 05:22:08 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.4 2002/07/27 09:02:43 vedge Exp $	*/
 /*	Public domain	*/
 
 struct graph;
@@ -28,14 +28,14 @@ struct graph {
 #define GRAPH_SCROLL	0x01	/* Scroll when a point is past visible area */
 #define GRAPH_ORIGIN	0x02	/* Visible zero line */
 
-	Uint32	 origin_y;		/* Current origin position */
-	Uint32	 origin_color[2];	/* Color for origin line */
-
-	Uint32	 xinc;		/* X increment */
 	Sint32	 yrange;	/* Max. value */
 
 	Uint32	 xoffs;		/* Display offset */
+	Uint8	 xinc;		/* X increment */
+	Uint8	 origin_y;	/* Current origin position (%) */
+
 	char	 *caption;	/* Graph description */
+
 	struct	 itemq items;	/* Lists of values */
 };
 
