@@ -1,4 +1,4 @@
-/*	$Csoft: csoftadm-config.c,v 1.3 2003/12/31 00:56:46 vedge Exp $	*/
+/*	$Csoft: agar-config.c,v 1.1 2004/03/10 13:25:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,20 @@
 #include <config/ttfdir.h>
 #include <config/localedir.h>
 
+#include <config/sdl_libs.h>
+#include <config/sdl_cflags.h>
+#include <config/smpeg_libs.h>
+#include <config/smpeg_cflags.h>
+#include <config/x11_libs.h>
+#include <config/x11_cflags.h>
+#include <config/freetype_libs.h>
+#include <config/freetype_cflags.h>
+#include <config/opengl_libs.h>
+#include <config/opengl_cflags.h>
+#include <config/math_libs.h>
+#include <config/jpeg_libs.h>
+#include <config/jpeg_cflags.h>
+
 #include <stdio.h>
 
 int
@@ -61,14 +75,57 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--localedir") == 0) {
 			printf("%s\n", LOCALEDIR);
 		} else if (strcmp(argv[i], "--cflags") == 0) {
-			printf("-I%s\n", INCLDIR);
+			printf("-I%s ", INCLDIR);
+#ifdef SDL_CFLAGS
+			printf("%s ", SDL_CFLAGS);
+#endif
+#ifdef SMPEG_CFLAGS
+			printf("%s ", SMPEG_CFLAGS);
+#endif
+#ifdef X11_CFLAGS
+			printf("%s ", X11_CFLAGS);
+#endif
+#ifdef FREETYPE_CFLAGS
+			printf("%s ", FREETYPE_CFLAGS);
+#endif
+#ifdef OPENGL_CFLAGS
+			printf("%s ", OPENGL_CFLAGS);
+#endif
+#ifdef MATH_CFLAGS
+			printf("%s ", MATH_CFLAGS);
+#endif
+#ifdef JPEG_CFLAGS
+			printf("%s ", JPEG_CFLAGS);
+#endif
+			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
 			printf("-lengine -linput -lerror -lmonitor -lmapedit "
-			       "-llibtool -lwidget -lcompat -lloader "
+			       "-ltool -lwidget -lcompat -lloader "
 			       "-lunicode ");
 #if defined(ENABLE_NLS) && !defined(__linux__) /* XXX */
-			printf("-lintl");
+			printf("-lintl ");
+#endif
+#ifdef SDL_LIBS
+			printf("%s ", SDL_LIBS);
+#endif
+#ifdef SMPEG_LIBS
+			printf("%s ", SMPEG_LIBS);
+#endif
+#ifdef X11_LIBS
+			printf("%s ", X11_LIBS);
+#endif
+#ifdef FREETYPE_LIBS
+			printf("%s ", FREETYPE_LIBS);
+#endif
+#ifdef OPENGL_LIBS
+			printf("%s ", OPENGL_LIBS);
+#endif
+#ifdef MATH_LIBS
+			printf("%s ", MATH_LIBS);
+#endif
+#ifdef JPEG_LIBS
+			printf("%s ", JPEG_LIBS);
 #endif
 			printf("\n");
 		}
