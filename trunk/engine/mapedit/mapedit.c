@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.23 2002/02/10 04:47:47 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.24 2002/02/10 05:03:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -110,9 +110,9 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	med->curobj = NULL;
 	med->curflags = 0;
 
-	direction_init(&med->cursor_dir, DIR_SCROLL|DIR_ONMAP, 2);
-	direction_init(&med->listw_dir, 0, 2);
-	direction_init(&med->olistw_dir, 0, 2);
+	direction_init(&med->cursor_dir, med, DIR_SCROLL, 2, 10);
+	direction_init(&med->listw_dir, med, DIR_SCROLL, 2, 10);
+	direction_init(&med->olistw_dir, med, 0, 2, 10);
 
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST|
 	    MAPEDIT_DRAWPROPS;
@@ -521,9 +521,10 @@ mapedit_objlist(struct mapedit *med)
 static void
 mapedit_event(struct mapedit *med, SDL_Event *ev)
 {
-	struct map *em = med->map;
+	struct map *map = med->map;
+	struct node *node;
 	int mapx, mapy;
-
+	
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
 		if (ev->motion.state == SDL_PRESSED) {
@@ -547,53 +548,49 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	mapx = med->x;
 	mapy = med->y;
 
+	pthread_mutex_lock(&map->lock);
+
+	node = &map->map[mapx][mapy];
+
 	/*
 	 * Editor hotkeys.
 	 */
 	if (ev->type == SDL_KEYDOWN) {
-		struct node *me;
-
-		if (pthread_mutex_lock(&em->lock) != 0) {
-			perror(em->obj.name);
-			return;
-		}
-		me = &em->map[mapx][mapy];
-
 		switch (ev->key.keysym.sym) {
 		case SDLK_a:
-			mapedit_push(med, me);
+			mapedit_push(med, node);
 			break;
 		case SDLK_d:
-			mapedit_pop(med, me);
+			mapedit_pop(med, node);
 			break;
 		case SDLK_b:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, NODE_BIO);
+				mapedit_nodeflags(med, node, NODE_BIO);
 			} else {
-				mapedit_nodeflags(med, me, NODE_BLOCK);
+				mapedit_nodeflags(med, node, NODE_BLOCK);
 			}
 			break;
 		case SDLK_w:
-			mapedit_nodeflags(med, me, NODE_WALK);
+			mapedit_nodeflags(med, node, NODE_WALK);
 			break;
 		case SDLK_c:
-			mapedit_nodeflags(med, me, NODE_CLIMB);
+			mapedit_nodeflags(med, node, NODE_CLIMB);
 			break;
 		case SDLK_p:
 			if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_editflags(med, MAPEDIT_DRAWPROPS);
 			} else {
-				mapedit_nodeflags(med, me, NODE_SLIP);
+				mapedit_nodeflags(med, node, NODE_SLIP);
 			}
 			break;
 		case SDLK_h:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, NODE_HASTE);
+				mapedit_nodeflags(med, node, NODE_HASTE);
 			}
 			break;
 		case SDLK_r:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, NODE_REGEN);
+				mapedit_nodeflags(med, node, NODE_REGEN);
 			}
 			break;
 		case SDLK_i:
@@ -622,7 +619,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			break;
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, NODE_SLOW);
+				mapedit_nodeflags(med, node, NODE_SLOW);
 			} else if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_editflags(med, MAPEDIT_TILESTACK);
 			} else {
@@ -633,49 +630,51 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			mapedit_editflags(med, MAPEDIT_DRAWGRID);
 			break;
 		case SDLK_x:
-			mapedit_examine(em, mapx, mapy);
+			mapedit_examine(map, mapx, mapy);
 			break;
 		default:
 			break;
 		}
-	
-		pthread_mutex_unlock(&em->lock);
 	}
 
 	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
 		int set;
+		struct map_aref *aref;
 
 		set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
+		aref = node_arefobj(&map->map[mapx][mapy],
+		    (struct object *)med, -1);
 
 		switch (ev->key.keysym.sym) {
 		case SDLK_UP:
-			direction_set(&med->cursor_dir, DIR_UP, set);
+			direction_set(&med->cursor_dir, aref, DIR_UP, set);
 			break;
 		case SDLK_DOWN:
-			direction_set(&med->cursor_dir, DIR_DOWN, set);
+			direction_set(&med->cursor_dir, aref, DIR_DOWN, set);
 			break;
 		case SDLK_LEFT:
-			direction_set(&med->cursor_dir, DIR_LEFT, set);
+			direction_set(&med->cursor_dir, aref, DIR_LEFT, set);
 			break;
 		case SDLK_RIGHT:
-			direction_set(&med->cursor_dir, DIR_RIGHT, set);
+			direction_set(&med->cursor_dir, aref, DIR_RIGHT, set);
 			break;
 		case SDLK_PAGEUP:
-			direction_set(&med->listw_dir, DIR_UP, set);
+			direction_set(&med->listw_dir, aref, DIR_UP, set);
 			break;
 		case SDLK_PAGEDOWN:
-			direction_set(&med->listw_dir, DIR_DOWN, set);
+			direction_set(&med->listw_dir, aref, DIR_DOWN, set);
 			break;
 		case SDLK_DELETE:
-			direction_set(&med->olistw_dir, DIR_LEFT, set);
+			direction_set(&med->olistw_dir, aref, DIR_LEFT, set);
 			break;
 		case SDLK_END:
-			direction_set(&med->olistw_dir, DIR_RIGHT, set);
+			direction_set(&med->olistw_dir, aref, DIR_RIGHT, set);
 			break;
 		default:
 			break;
 		}
 	}
+	pthread_mutex_unlock(&map->lock);
 }
 
 static Uint32
@@ -683,14 +682,17 @@ mapedit_time(Uint32 ival, void *p)
 {
 	struct mapedit *med = (struct mapedit *)p;
 	struct map *map = med->map;
+	struct map_aref *aref;
 	int mapx, mapy, moved;
-
-	pthread_mutex_lock(&map->lock);
-
+	
 	mapx = med->x;
 	mapy = med->y;
 
-	moved = direction_update(&med->cursor_dir, map, &mapx, &mapy);
+	aref = node_arefobj(&map->map[mapx][mapy], (struct object *)med, -1);
+
+	pthread_mutex_lock(&map->lock);
+
+	moved = direction_update(&med->cursor_dir, map, &mapx, &mapy, aref);
 	if (moved != 0) {
 		static int i, nkeys;
 		static SDL_Event nev;
@@ -707,7 +709,8 @@ mapedit_time(Uint32 ival, void *p)
 		}
 	}
 
-	moved = direction_update(&med->listw_dir, NULL, NULL, NULL);
+#if 0
+	moved = direction_update(&med->listw_dir, NULL, NULL, NULL, NULL);
 	if (moved & DIR_UP) {
 		if (med->curoffs-- < 0) {
 			med->curoffs = med->curobj->nrefs - 1;
@@ -721,7 +724,7 @@ mapedit_time(Uint32 ival, void *p)
 		mapedit_tilelist(med);
 	}
 
-	moved = direction_update(&med->olistw_dir, NULL, NULL, NULL);
+	moved = direction_update(&med->olistw_dir, NULL, NULL, NULL, NULL);
 	if (moved & DIR_LEFT) {
 		if (!TAILQ_EMPTY(&med->eobjsh)) {
 			med->curobj = TAILQ_PREV(med->curobj, eobjs_head,
@@ -742,6 +745,7 @@ mapedit_time(Uint32 ival, void *p)
 		}
 		mapedit_objlist(med);
 	}
+#endif
 	pthread_mutex_unlock(&map->lock);
 
 	return (ival);

@@ -38,32 +38,36 @@ void
 joy_axismotion(struct mapedit *med, SDL_Event *ev)
 {
 	static int lastdir = 0;
+	struct map_aref *aref;
+
+	aref = node_arefobj(&med->map->map[med->x][med->y],
+	    (struct object *)med, -1);
 
 	switch (ev->jaxis.axis) {
 	case 0:	/* X */
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_LEFT;
 			lastdir &= ~(DIR_RIGHT);
-			direction_set(&med->cursor_dir, DIR_LEFT, 1);
+			direction_set(&med->cursor_dir, aref, DIR_LEFT, 1);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_RIGHT;
 			lastdir &= ~(DIR_LEFT);
-			direction_set(&med->cursor_dir, DIR_RIGHT, 1);
+			direction_set(&med->cursor_dir, aref, DIR_RIGHT, 1);
 		} else {
-			direction_set(&med->cursor_dir, DIR_ALL, 0);
+			direction_set(&med->cursor_dir, aref, DIR_ALL, 0);
 		}
 		break;
 	case 1:	/* Y */
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_UP;
 			lastdir &= ~(DIR_DOWN);
-			direction_set(&med->cursor_dir, DIR_UP, 1);
+			direction_set(&med->cursor_dir, aref, DIR_UP, 1);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_DOWN;
 			lastdir &= ~(DIR_UP);
-			direction_set(&med->cursor_dir, DIR_DOWN, 1);
+			direction_set(&med->cursor_dir, aref, DIR_DOWN, 1);
 		} else {
-			direction_set(&med->cursor_dir, DIR_ALL, 0);
+			direction_set(&med->cursor_dir, aref, DIR_ALL, 0);
 		}
 		break;
 	}
@@ -86,10 +90,10 @@ joy_button(struct mapedit *med, SDL_Event *ev)
 		mapedit_pop(med, node);
 		break;
 	case 4: /* Tile list up */
-		direction_set(&med->listw_dir, DIR_UP, 1);
+		direction_set(&med->listw_dir, NULL, DIR_UP, 1);
 		break;
 	case 5: /* Tile list down */
-		direction_set(&med->listw_dir, DIR_DOWN, 1);
+		direction_set(&med->listw_dir, NULL, DIR_DOWN, 1);
 		break;
 	/* XXX ... */
 	}
