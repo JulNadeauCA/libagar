@@ -1,14 +1,16 @@
-/*	$Csoft: bitmap.h,v 1.3 2002/12/03 04:09:00 vedge Exp $	*/
+/*	$Csoft: bitmap.h,v 1.4 2002/12/21 10:26:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BITMAP_H_
 #define _AGAR_WIDGET_BITMAP_H_
 
-struct bitmap {
-	struct	 widget wid;
+#include <engine/widget/widget.h>
 
-	SDL_Surface *surface;		/* Original */
-	SDL_Surface *surface_s;		/* Scaled */
+struct bitmap {
+	struct widget	wid;
+
+	SDL_Surface	*surface;		/* Original */
+	SDL_Surface	*surface_s;		/* Scaled */
 };
 
 struct bitmap	*bitmap_new(struct region *, SDL_Surface *, int, int);

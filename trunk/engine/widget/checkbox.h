@@ -1,8 +1,10 @@
-/*	$Csoft: checkbox.h,v 1.10 2002/12/26 07:06:06 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.11 2003/01/25 06:24:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CHECKBOX_H_
 #define _AGAR_WIDGET_CHECKBOX_H_
+
+#include <engine/widget/widget.h>
 
 struct checkbox {
 	struct widget	wid;

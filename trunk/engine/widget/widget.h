@@ -1,7 +1,10 @@
-/*	$Csoft: widget.h,v 1.49 2002/12/30 03:51:36 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.50 2003/01/01 03:31:15 vedge Exp $	*/
 /*	Public domain	*/
 
-#define WIDGET_MAXCOLORS	16
+#ifndef _AGAR_WIDGET_H_
+#define _AGAR_WIDGET_H_
+
+#define WIDGET_MAX_COLORS	16
 
 struct widget_ops {
 	const struct object_ops	obops;
@@ -70,9 +73,9 @@ struct widget {
 	int	 x, y;			/* Allocated coordinates in window */
 	int	 w, h;			/* Allocated geometry */
 
-	SLIST_HEAD(, widget_color) colors;		    /* Color scheme */
-	Uint32			   color[WIDGET_MAXCOLORS]; /* Color array */
-	int			  ncolors;		    /* Color count */
+	SLIST_HEAD(, widget_color) colors;		     /* Color scheme */
+	Uint32			   color[WIDGET_MAX_COLORS]; /* Color array */
+	int			  ncolors;		     /* Color count */
 
 	SLIST_HEAD(, widget_binding)	 bindings;	/* Variable bindings */
 	pthread_mutex_t			 bindings_lock;
@@ -194,3 +197,4 @@ void	 widget_set_pointer(void *, const char *, void *);
 
 void	 widget_blit(void *, SDL_Surface *, int, int);
 
+#endif /* _AGAR_WIDGET_H_ */

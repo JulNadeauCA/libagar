@@ -1,8 +1,10 @@
-/*	$Csoft: graph.h,v 1.6 2002/12/17 01:05:00 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.7 2002/12/21 10:26:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
 #define _AGAR_WIDGET_GRAPH_H_
+
+#include <engine/widget/widget.h>
 
 struct graph;
 
@@ -20,7 +22,7 @@ struct graph_item {
 TAILQ_HEAD(itemq, graph_item);
 
 struct graph {
-	struct	 widget wid;
+	struct widget	wid;
 
 	enum graph_type {
 		GRAPH_POINTS,
@@ -39,7 +41,7 @@ struct graph {
 
 	char	 *caption;	/* Graph description */
 
-	struct	 itemq items;	/* Lists of values */
+	struct itemq	items;	/* Lists of values */
 };
 
 struct graph	*graph_new(struct region *, const char *, enum graph_type,

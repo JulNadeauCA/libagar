@@ -1,8 +1,10 @@
-/*	$Csoft: radio.h,v 1.5 2002/12/21 10:26:33 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.6 2003/01/25 06:24:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
 #define _AGAR_WIDGET_RADIO_H_
+
+#include <engine/widget/widget.h>
 
 struct radio {
 	struct widget	wid;

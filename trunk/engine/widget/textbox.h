@@ -1,8 +1,10 @@
-/*	$Csoft: textbox.h,v 1.12 2002/12/21 10:26:33 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.13 2003/01/23 01:53:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
 #define _AGAR_WIDGET_TEXTBOX_H_
+
+#include <engine/widget/widget.h>
 
 struct textbox {
 	struct widget	wid;
