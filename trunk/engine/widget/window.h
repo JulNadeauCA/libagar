@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.31 2002/07/21 10:57:54 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.32 2002/07/24 09:29:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -105,8 +105,8 @@ struct window {
  	 VIEW_PUT_PIXEL(view->v, (win)->x+(wrx), (win)->y+(wry),	\
 	    (c))
 
-# define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c) \
-	VIEW_PUT_ALPHAPIXEL(view->v, (win)->x+(wrx), (win)->y+(wry), (c))
+# define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) \
+	VIEW_PUT_ALPHAPIXEL(view->v, (win)->x+(wrx), (win)->y+(wry), (c), (wa))
 
 #endif
 
