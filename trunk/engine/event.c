@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.24 2002/04/21 13:31:25 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.25 2002/04/23 07:19:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -158,7 +158,7 @@ event_loop(void)
 					mapedit_tilelist(curmapedit);
 					mapedit_objlist(curmapedit);
 				}
-				continue;
+				break;
 			case SDL_MOUSEMOTION:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
