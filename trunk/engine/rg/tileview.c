@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.10 2005/02/14 07:26:32 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.11 2005/02/16 03:30:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -189,9 +189,9 @@ tileview_buttondown(int argc, union evarg *argv)
 			struct pixmap *px = tel->tel_pixmap.px;
 
 			if (sx >= tel->tel_pixmap.x &&
-			    sx <= tel->tel_pixmap.x+px->su->w &&
+			    sx < tel->tel_pixmap.x+px->su->w &&
 			    sy >= tel->tel_pixmap.y &&
-			    sy <= tel->tel_pixmap.y+px->su->h) {
+			    sy < tel->tel_pixmap.y+px->su->h) {
 				pixmap_mousebuttondown(tv, tel,
 				    sx - tel->tel_pixmap.x,
 				    sy - tel->tel_pixmap.y,
@@ -467,9 +467,9 @@ tileview_mousemotion(int argc, union evarg *argv)
 		struct pixmap *px = tel->tel_pixmap.px;
 
 		if (sx >= tel->tel_pixmap.x &&
-		    sx <= tel->tel_pixmap.x+px->su->w &&
+		    sx < tel->tel_pixmap.x+px->su->w &&
 		    sy >= tel->tel_pixmap.y &&
-		    sy <= tel->tel_pixmap.y+px->su->h) {
+		    sy < tel->tel_pixmap.y+px->su->h) {
 			pixmap_mousemotion(tv, tel,
 			    sx - tel->tel_pixmap.x,
 			    sy - tel->tel_pixmap.y,
