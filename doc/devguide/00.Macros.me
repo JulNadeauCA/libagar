@@ -1,0 +1,135 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" Initialization
+.ds Bt
+.nr BM 1
+.nr Bm 0
+.ds BN
+.wh 1i hl
+.wh -5 hl
+.ef '\s-1\fIAgar Application Development\fP\s+1''%'
+.of '\s-1\fIAgar Application Development\fP\s+1''%'
+.\" Chapter
+.de c1
+.+c "\\$1"
+.sh 1 "\\$1"
+.nr BM \\n($1
+.hl
+.(x t
+\\n($1.\t\\$1
+.)x
+.(x c
+\\n($1.\t\\$1
+.)x
+.(x f
+\\n($1.\t\\$1
+.)x
+..
+.\" Subsection L2
+.de c2
+.sh 2 "\\$1"
+.(x t
+\t\\n($1.\\n($2.\t\\$1
+.)x
+..
+.\" Subsection L3
+.de c3
+.sh 3 "\\$1"
+.(x t
+\t\t\\n($1.\\n($2.\\n($3.\t\\$1
+.)x
+..
+.\" Begin preformatted text
+.de Bd
+.ds Bt \\$1
+.br
+.if "\\$1"-code" \{\
+.	ds BN \\$2
+.	nr Bm \\n(Bm+1
+.	hl
+.(x c
+\\n(BM.\\n(Bm.\t\t\\*(BN
+.)x
+.\}
+.if "\\$1"-lines" \{\
+.	hl
+.\}
+.ie "\\$1"-fig" \{\
+.	ds BN \\$2
+.	nr Bm \\n(Bm+1
+.(x f
+\\n(BM.\\n(Bm.\t\t\\*(BN
+.)x
+.ce
+.\}
+.el \{\
+.	nf
+.	ps 8
+' \f(CR
+.\}
+..
+.\" End preformatted text
+.de Ed
+.if "\\*(Bt"-lines" \{\
+.	hl
+.\}
+.if "\\*(Bt"-code" \{\
+.	hl
+.	ce
+.	ps 8
+Sample code \\n(BM.\\n(Bm: \\*(BN
+.	ps
+.\}
+.ie "\\*(Bt"-fig" \{\
+.	ce
+.	ps 8
+Figure \\n(BM.\\n(Bm: \\*(BN
+.	ps
+.\}
+.el \{\
+' \fP
+.	f
+.	ps
+.\}
+..
+.\" Function name
+.de Fn
+\f(CR\\$1\fP()\\$2\\$3
+..
+.\" Pathname
+.de Pa
+\f(CR\\$1\fP\\$2\\$3
+..
+.\" URL
+.de Ur
+\f(CR\\$1\fP\\$2\\$3
+..
+.\" Manual page reference
+.de Xr
+\f(CR\\$1\fP(\\$2)\\$3
+..
