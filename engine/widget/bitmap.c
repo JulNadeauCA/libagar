@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.19 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.20 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -76,10 +76,14 @@ bitmap_scale(void *p, int rw, int rh)
 
 	if (bmp->surface_s != NULL) {
 		SDL_FreeSurface(bmp->surface_s);
+		bmp->surface_s = NULL;
 	}
-	bmp->surface_s = (bmp->surface != NULL) ?
-	    view_scale_surface(bmp->surface, WIDGET(bmp)->w, WIDGET(bmp)->h) :
-	    NULL;
+	if (bmp->surface != NULL) {
+		view_scale_surface(bmp->surface, WIDGET(bmp)->w, WIDGET(bmp)->h,
+		   &bmp->surface_s);
+	} else {
+		bmp->surface_s = NULL;
+	}
 }
 
 void
