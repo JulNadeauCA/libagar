@@ -37,6 +37,8 @@ PSDIR?=		${PREFIX}/man
 SUDO?=
 SH?=		sh
 FIND?=		find
+AWK?=		awk
+
 INSTALL_PROG=	install -c -m 555
 INSTALL_LIB=	install -c -m 444
 INSTALL_DATA=	install -c -m 444
