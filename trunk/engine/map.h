@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.7 2002/02/03 11:27:12 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.8 2002/02/05 06:01:21 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -56,8 +56,9 @@ struct map {
 	struct	object obj;
 	struct	viewport *view;
 	int 	flags;
-#define MAP_VARTILEGEO	0x0001		/* Variable tile geometry */
-#define MAP_2D		0x0002		/* Two-dimensional */
+#define MAP_FOCUSED	0x0001		/* Being displayed */
+#define MAP_VARTILEGEO	0x0010		/* Variable tile geometry */
+#define MAP_2D		0x0020		/* Two-dimensional */
 	int	mapw, maph;
 	int	defx, defy;
 	struct	node map[MAP_WIDTH][MAP_HEIGHT];
@@ -96,7 +97,22 @@ extern struct map *curmap;	/* Currently focused map */
 		}						\
 	} while (/*CONSTCOND*/ 0)
 
-struct map	*map_create(char *, char *, int, int, int, char *);
+struct map *map_create(char *, char *, int, int, int);
+
+void	map_destroy(void *);
+int	map_link(void *);
+int	map_unlink(void *);
+int	map_load(void *, char *);
+int	map_save(void *, char *);
+int	map_focus(struct map *);
+int	map_unfocus(struct map *);
+void	map_clean(struct map *, struct object *, int, int, int);
+int	map_animnode(struct map *, int x, int y);
+int	map_unanimnode(struct map *, int x, int y);
+#ifdef DEBUG
+void	map_dump(struct map *);
+#endif
+
 struct map_aref *node_addref(struct node *, struct object *, int, int);
 struct map_aref	*node_arefindex(struct node *, int);
 struct map_aref	*node_arefobj(struct node *, struct object *, int);
@@ -104,14 +120,4 @@ int		 node_delref(struct node *, struct map_aref *);
 
 struct map_aref *node_popref(struct node *);
 int		 node_pushref(struct node *, struct map_aref *);
-
-int	map_focus(struct map *);
-int	map_unfocus(struct map *);
-void	map_clean(struct map *, struct object *, int, int, int);
-int	map_animnode(struct map *, int x, int y);
-int	map_unanimnode(struct map *, int x, int y);
-int	map_animset(struct map *, int);
-#ifdef DEBUG
-void	map_dump(struct map *);
-#endif
 
