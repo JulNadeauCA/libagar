@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -105,7 +105,7 @@ ttf_init(void)
 	FT_Int maj, min, patch;
 #endif
 	if (FT_Init_FreeType(&library) != 0) {
-		error_set("font engine init failed");
+		error_set(_("Font engine initialization failed."));
 		return (-1);
 	}
 #if 0
@@ -132,7 +132,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	memset(font, 0, sizeof(ttf_font));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
-		error_set("error loading face `%s'", file);
+		error_set(_("Cannot font face: `%s'."), file);
 		goto fail1;
 	}
 	if (index != 0) {
@@ -140,11 +140,11 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 		  	FT_Done_Face(font->face);
 			if (FT_New_Face(library, file, index, &font->face)
 			    != 0) {
-				error_set("error getting font face");
+				error_set(_("Error getting TTF font face."));
 				goto fail1;
 			}
 		} else {
-			error_set("bad font face");
+			error_set(_("Bad TTF font face."));
 			goto fail1;
 		}
 	}
@@ -154,7 +154,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	if (FT_IS_SCALABLE(face)) {
 	  	/* Set the character size and use default DPI (72). */
 	  	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0)) {
-			error_set("could not set font size");
+			error_set(_("Failed to set font size."));
 			goto fail2;
 		}
 		/* Get the scalable font metrics for this font */
@@ -281,7 +281,7 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 	}
 
 	if (FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT) != 0) {
-		error_set("error loading glyph");
+		error_set(_("Failed to load the TTF glyph."));
 		return (-1);
 	}
 
@@ -349,13 +349,13 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 		/* Render the glyph. */
 		if (mono) {
 			if (FT_Render_Glyph(glyph, ft_render_mode_mono) != 0) {
-				error_set("error drawing mono glyph");
+				error_set(_("Cannot render mono glyph."));
 				return (-1);
 			}
 		} else {
 			if (FT_Render_Glyph(glyph, ft_render_mode_normal)
 			    != 0) {
-				error_set("error rendering normal glyph");
+				error_set(_("Cannot render normal glyph."));
 				return (-1);
 			}
 		}
@@ -737,7 +737,7 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *ucs, SDL_Color fg)
 	/* Get the dimensions of the text surface. */
 	if ((ttf_size_unicode(font, ucs, &width, NULL) < 0) ||
 	    width == 0) {
-		error_set("text has zero width");
+		error_set(_("The text has zero width."));
 		return (NULL);
 	}
 	height = font->height;

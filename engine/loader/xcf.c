@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -265,7 +265,7 @@ xcf_read_tile(struct xcf_header *head, struct netbuf *buf, Uint32 len, int bpp,
 	case XCF_COMPRESSION_RLE:
 		return (xcf_read_tile_rle(buf, len, bpp, x, y));
 	}
-	error_set("unknown compression: %d", head->compression);
+	error_set(_("Unknown XCF compression: %d"), head->compression);
 	return (NULL);
 }
 
@@ -545,11 +545,11 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	netbuf_seek(buf, xcf_offs, SEEK_SET);
 
 	if (netbuf_eread(magic, sizeof(magic), 1, buf) < 1) {
-		error_set("error reading magic");
+		error_set(_("Cannot read XCF magic."));
 		return (-1);
 	}
 	if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) != 0) {
-		error_set("bad magic");
+		error_set(_("Bad XCF magic."));
 		return (-1);
 	}
 
@@ -558,7 +558,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	head->w = read_uint32(buf);
 	head->h = read_uint32(buf);
 	if (head->w > XCF_WIDTH_MAX || head->h > XCF_HEIGHT_MAX) {
-		error_set("nonsense geometry: %ux%u", head->w, head->h);
+		error_set(_("Nonsense XCF geometry: %ux%u"), head->w, head->h);
 		free(head);
 		return (-1);
 	}
@@ -570,7 +570,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	case XCF_IMAGE_INDEXED:
 		break;
 	default:
-		error_set("unknown base image type: %u", head->base_type);
+		error_set(_("Unknown base image type: %u"), head->base_type);
 		free(head);
 		return (-1);
 	}
