@@ -270,6 +270,7 @@ main(int argc, char *argv[])
 	
 	printf("%f\n", d);
 	return (0);
+}
 
 EOT
 compile="ok"
