@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.34 2003/07/08 00:34:52 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.35 2003/08/31 11:58:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -81,16 +81,6 @@ perso_init(void *obj, const char *name)
 	struct perso *pers = obj;
 
 	object_init(pers, "perso", name, &perso_ops);
-#if 0
-	object_load_submap(pers, "n-idle");
-	object_load_submap(pers, "s-idle");
-	object_load_submap(pers, "w-idle");
-	object_load_submap(pers, "e-idle");
-	object_load_submap(pers, "n-move");
-	object_load_submap(pers, "s-move");
-	object_load_submap(pers, "w-move");
-	object_load_submap(pers, "e-move");
-#endif
 	pthread_mutex_init(&pers->lock, NULL);
 	pers->name[0] = '\0';
 	pers->flags = 0;
