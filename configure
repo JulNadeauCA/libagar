@@ -504,7 +504,7 @@ done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
-		SDL_LIBS=`${path}/sdl-config --libs`
+		SDL_LIBS=`${path}/sdl-config --static-libs`
 	fi
 done
 sdl11_version=""
@@ -522,7 +522,7 @@ done
 sdl11_libs=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
-		sdl11_libs=`${path}/sdl11-config --libs`
+		sdl11_libs=`${path}/sdl11-config --static-libs`
 	fi
 done
 if [ "${sdl_version}" != "" ]; then
