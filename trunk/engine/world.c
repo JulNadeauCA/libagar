@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.6 2002/02/14 06:30:51 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.7 2002/02/15 02:31:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -28,47 +28,97 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
+#include <pwd.h>
+#include <errno.h>
 
 #include <engine/engine.h>
 
-static void	world_destroy(void *);
+static struct obvec world_vec = {
+	world_destroy,
+	NULL,
+	world_load,
+	world_save,
+	NULL,
+	NULL
+};
 
 struct world *
 world_create(char *name)
 {
+	struct passwd *pwd;
+	struct stat sta;
+	
+	pwd = getpwuid(getuid());
+
 	world = (struct world *)emalloc(sizeof(struct world));
-	object_create(&world->obj, name, NULL, DESTROY_HOOK);
-	world->obj.destroy_hook = world_destroy;
+	object_init(&world->obj, name, 0, &world_vec);
+	world->udatadir = (char *)emalloc(strlen(pwd->pw_dir) + strlen(name)+2);
+	world->sysdatadir = (char *)emalloc(strlen(DATADIR) + strlen(name)+1);
+	sprintf(world->udatadir, "%s/.%s", pwd->pw_dir, name);
+	sprintf(world->sysdatadir, "%s/%s", DATADIR, name);
+	
+	if (stat(world->sysdatadir, &sta) != 0) {
+		warning("%s: %s\n", world->sysdatadir, strerror(errno));
+	}
+	if (stat(world->udatadir, &sta) != 0 &&
+	    mkdir(world->udatadir, 00700) != 0) {
+		fatal("%s: %s\n", world->udatadir, strerror(errno));
+	}
+
+	world->curmap = NULL;
 
 	SLIST_INIT(&world->wobjsh);
 	SLIST_INIT(&world->wcharsh);
-
-	world->agef = 0.01;
 	pthread_mutex_init(&world->lock, NULL);
-
+	
 	return (world);
 }
 
-void
+int
+world_load(void *p, int fd)
+{
+	struct world *wo = (struct world *)p;
+	struct object *ob;
+
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		object_load(ob);
+	}
+	return (0);
+}
+
+int
+world_save(void *p, int fd)
+{
+	struct world *wo = (struct world *)p;
+	struct object *ob;
+
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		object_save(ob);
+	}
+	return (0);
+}
+
+int
 world_destroy(void *p)
 {
 	struct world *wo = (struct world *)p;
 	struct object *nob;
 
-	if (curmap != NULL && (curmap->flags & MAP_FOCUSED)) {
-		map_unfocus(curmap);
+	if (world->curmap != NULL) {
+		map_unfocus(world->curmap);
 	}
 
 	SLIST_FOREACH(nob, &wo->wobjsh, wobjs) {
-		object_destroy(nob);
 		object_unlink(nob);
+		object_destroy(nob);
 	}
 	
 	object_lategc();
+	return (0);
 }
 
 #ifdef DEBUG
