@@ -1,4 +1,4 @@
-/*	$Csoft: queue.h,v 1.5 2002/04/24 13:18:33 vedge Exp $	*/
+/*	$Csoft: queue.h,v 1.1 2002/09/09 09:20:50 vedge Exp $	*/
 /*	$OpenBSD: queue.h,v 1.22 2001/06/23 04:39:35 angelos Exp $	*/
 /*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
 
@@ -285,18 +285,6 @@ struct {								\
 		(head)->sqh_last = &(head)->sqh_first;			\
 } while (0)
 
-#define SIMPLEQ_INDEX(var, head, field, index) do {			\
-	static int cindex;						\
-	var = NULL;							\
-	cindex = 0;							\
-	SIMPLEQ_FOREACH(var, head, field) {				\
-		if (cindex++ == (index)) {				\
-			break;						\
-		}							\
-	}								\
-} while (0)
-
-
 /*
  * Tail queue definitions.
  */
@@ -398,17 +386,6 @@ struct {								\
 		(head)->tqh_last = &(elm2)->field.tqe_next;		\
 	(elm2)->field.tqe_prev = (elm)->field.tqe_prev;			\
 	*(elm2)->field.tqe_prev = (elm2);				\
-} while (0)
-
-#define TAILQ_INDEX(var, head, field, index) do {			\
-	static int cindex;						\
-	var = NULL;							\
-	cindex = 0;							\
-	TAILQ_FOREACH(var, head, field) {				\
-		if (cindex++ == (index)) {				\
-			break;						\
-		}							\
-	}								\
 } while (0)
 
 /*
