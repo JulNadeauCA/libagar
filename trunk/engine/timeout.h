@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.h,v 1.1 2004/05/10 02:41:03 vedge Exp $	*/
+/*	$Csoft: timeout.h,v 1.2 2004/05/10 23:49:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TIMEOUT_H_
@@ -14,8 +14,6 @@ struct timeout {
 	Uint32 ticks;				/* Expiry time in SDL ticks */
 	Uint32 ival;				/* Interval in ticks */
 	CIRCLEQ_ENTRY(timeout) timeouts;	/* Priority queue */
-	SLIST_ENTRY(timeout) insq;		/* Insertion queue */
-	SLIST_ENTRY(timeout) remq;		/* Removal queue */
 };
 
 __BEGIN_DECLS
