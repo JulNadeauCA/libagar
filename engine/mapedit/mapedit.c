@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.90 2002/05/17 06:32:29 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.91 2002/05/19 14:31:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ enum {
 	BG_VERTICAL
 };
 
-static struct window *coords_win = NULL;
+static struct window *coords_win = NULL;	/* XXX thread unsafe */
 static struct label *coords_label;
 
 static void	 mapedit_shadow(struct mapedit *, void *);
@@ -821,13 +821,11 @@ mapedit_event(void *ob, SDL_Event *ev)
 		if (coords_win != NULL) {
 			if (ev->motion.y <= med->map->tileh ||
 			    med->mmapx >= med->map->view->mapw-1) {
-				sprintf(coords_label->caption,
-				    "%s:%d (0x%x)",
+				label_printf(coords_label, "%s:%d (0x%x)",
 				    OBJECT(med->curobj->pobj)->name,
 				    med->curoffs, med->curflags);
 			} else {
-				sprintf(coords_label->caption,
-				    "%d,%d [%s:%d,%d]",
+				label_printf(coords_label, "%d,%d [%s:%d,%d]",
 				    ev->motion.x, ev->motion.y,
 				    OBJECT(med->map)->name,
 				    med->map->view->mapx + med->mmapx - 1,
@@ -1102,8 +1100,10 @@ mapedit_show_coords(struct mapedit *med)
 		/* Coordinates window/label. */
 		nw = window_new("Coordinates", WINDOW_SOLID, 0,
 		    64, 64, 224, 32);
-		coords_reg = region_new(nw, WIDGET_HALIGN, 0, 0, 100, 100, 0);
+		coords_reg = region_new(nw, REGION_HALIGN|REGION_CENTER,
+		    0, 0, 100, 100);
 		coords_label = label_new(coords_reg, "...", 0);
+
 		coords_win = nw;
 	} else {
 		nw = coords_win;
