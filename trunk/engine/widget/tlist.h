@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.22 2003/05/04 02:09:43 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.23 2003/05/20 12:05:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -16,6 +16,7 @@ struct tlist_item {
 	size_t		 text_len;		/* Label size (optimization) */
 	void		*p1;			/* User data */
 	int		 selected;		/* Item selection */
+	int		 vischilds, haschilds;	/* Hack for displaying trees */
 
 	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
 	TAILQ_ENTRY(tlist_item) selitems;	/* Hack */
@@ -32,6 +33,7 @@ struct tlist {
 #define TLIST_DROPDOWN		0x04	/* Drop-down menu */
 #define TLIST_POLL		0x08	/* Generate tlist-poll events */
 #define TLIST_DBLCLICK		0x10	/* Generate tlist-dblclick events */
+#define TLIST_TREE		0x20	/* Hack to display trees */
 
 	int	 		 item_h;	/* Item height */
 	struct scrollbar	 sbar;		/* Scrollbar */
@@ -56,6 +58,8 @@ extern DECLSPEC void		 tlist_set_item_icon(struct tlist *,
 						     SDL_Surface *);
 extern DECLSPEC void		 tlist_save_selections(struct tlist *);
 extern DECLSPEC void		 tlist_restore_selections(struct tlist *);
+extern DECLSPEC int		 tlist_visible_childs(struct tlist *,
+				                      struct tlist_item *);
 extern DECLSPEC void		 tlist_scroll(struct tlist *, int);
 
 extern DECLSPEC void			 tlist_remove_item(struct tlist *,
