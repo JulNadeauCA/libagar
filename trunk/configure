@@ -113,7 +113,7 @@ else
 		echo "Missing --srcdir argument"
 		exit 1
 	fi
-	SRC=.
+	SRC=`pwd`
 fi
 
 echo > config.log
