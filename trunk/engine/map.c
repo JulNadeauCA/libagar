@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.218 2004/03/21 07:04:25 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.219 2004/03/25 07:17:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/toolbar.h>
+#include <engine/widget/statusbar.h>
 #include <engine/widget/button.h>
 
 #include <engine/mapedit/mapedit.h>
@@ -1351,7 +1352,7 @@ create_view(int argc, union evarg *argv)
 
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
-	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT);
+	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT, NULL);
 	window_attach(pwin, win);
 	window_show(win);
 }
@@ -1359,48 +1360,57 @@ create_view(int argc, union evarg *argv)
 struct window *
 map_edit(void *p)
 {
+	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
+	    resize_tool, position_tool, propedit_tool, select_tool,
+	    shift_tool, merge_tool, fill_tool, flip_tool, invert_tool;
 	struct map *m = p;
 	struct window *win;
 	struct toolbar *toolbar;
+	struct statusbar *sbar;
 	struct combo *laysel;
 	struct mapview *mv;
 	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
-	int editable = ((OBJECT(m)->flags & OBJECT_READONLY) == 0);
 
-	if (editable)
+	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
 	
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
 	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
-	mapview_init(mv, m, flags);
-
-	toolbar = toolbar_new(win, TOOLBAR_HORIZ);
-	toolbar_add_button(toolbar, SPRITE(&mapedit, 3), 0, 0,
-	    create_view, "%p, %p", mv, win);
-	toolbar_add_button(toolbar, SPRITE(&mapedit, 6), 1, 1,
-	    mapview_toggle_grid, "%p", mv);
-	toolbar_add_button(toolbar, SPRITE(&mapedit, 7), 1, 1,
-	    mapview_toggle_props, "%p", mv);
-	toolbar_add_button(toolbar, SPRITE(&mapedit, 9), 1, editable,
-	    mapview_toggle_rw, "%p", mv);
-	
-	mv->nodeed.trigger = toolbar_add_button(toolbar, SPRITE(&mapedit, 14),
-	    1, 0, mapview_toggle_nodeedit, "%p", mv);
-	mv->layed.trigger = toolbar_add_button(toolbar, SPRITE(&mapedit, 15),
-	    1, 0, mapview_toggle_layedit, "%p", mv);
-	mv->mediasel.trigger = toolbar_add_button(toolbar, SPRITE(&mapedit, 21),
-	    1, 0, mapview_toggle_mediasel, "%p", mv);
+	toolbar = toolbar_new(win, TOOLBAR_HORIZ, 2);
+	toolbar_add_button(toolbar, 0, SPRITE(&mapedit, 3), 0, 0, create_view,
+	    "%p, %p", mv, win);
+	mapview_init(mv, m, flags, toolbar);
+	mapview_reg_tool(mv, &stamp_tool);
+	mapview_reg_tool(mv, &eraser_tool);
+	mapview_reg_tool(mv, &magnifier_tool);
+	mapview_reg_tool(mv, &resize_tool);
+	mapview_reg_tool(mv, &position_tool);
+	mapview_reg_tool(mv, &propedit_tool);
+	mapview_reg_tool(mv, &select_tool);
+	mapview_reg_tool(mv, &shift_tool);
+	mapview_reg_tool(mv, &merge_tool);
+	mapview_reg_tool(mv, &fill_tool);
+	mapview_reg_tool(mv, &flip_tool);
+	mapview_reg_tool(mv, &invert_tool);
 
 	laysel = combo_new(win, COMBO_POLL, _("Layer:"));
 	textbox_printf(laysel->tbox, "%d. %s", m->cur_layer,
 	    m->layers[m->cur_layer].name);
 	event_new(laysel->list, "tlist-poll", layedit_poll, "%p", mv);
 	event_new(laysel, "combo-selected", mapview_selected_layer, "%p", mv);
-
+	
 	object_attach(win, mv);
 	widget_focus(mv);
+
+	sbar = statusbar_new(win);
+	statusbar_add_label(sbar, LABEL_POLLED, "%d,%d [%d%D,%d%D]",
+	    &mv->cx, &mv->cy, &mv->msel.x, &mv->msel.xoffs,
+	    &mv->msel.y, &mv->msel.yoffs);
+	statusbar_add_label(sbar, LABEL_POLLED, "[%d%D,%d%D]", 
+	    &mv->esel.x, &mv->esel.w,
+	    &mv->esel.y, &mv->esel.h);
 	return (win);
 }
 #endif /* EDITION */
