@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.3 2002/01/30 12:47:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include <pthread.h>
 
 #include <engine/engine.h>
+#include <engine/mapedit/mapedit.h>
 
 struct viewport *mainview;
 
@@ -49,8 +50,8 @@ view_setmode(struct viewport *v)
 	v->mapy = 0;
 
 	/* XXX make room for edition windows */
-	v->mapw = (v->width / v->tilew) - (mapedit ? 1 : 0);
-	v->maph = (v->height / v->tileh) - (mapedit ? 1 : 0);
+	v->mapw = (v->width / v->tilew) - ((curmapedit == NULL) ? 1 : 0);
+	v->maph = (v->height / v->tileh) - ((curmapedit == NULL) ? 1 : 0);
 
 	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {
