@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.22 2002/08/19 05:33:03 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.23 2002/09/06 01:28:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,9 +33,6 @@
 #include <errno.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
-#include <engine/map.h>
-#include <engine/version.h>
 
 #include "widget.h"
 #include "window.h"
@@ -45,12 +42,17 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
     int rw, int rh)
 {
 	static Uint32 widid = 0;
+	static pthread_mutex_t widid_lock = PTHREAD_MUTEX_INITIALIZER;
 	char *widname;
 
-	/* Prepend parent window's name. */
-	widname = object_name(name, widid++);
+	pthread_mutex_lock(&widid_lock);
+	widid++;
+	pthread_mutex_unlock(&widid_lock);
+
+	widname = object_name(name, widid);
 	object_init(&wid->obj, "widget", widname, style,
 	    OBJECT_ART|OBJECT_KEEP_MEDIA, wops);
+
 	free(widname);
 
 	wid->type = strdup(name);
