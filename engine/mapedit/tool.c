@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.7 2004/05/17 05:06:02 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.8 2004/05/25 07:27:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include "tool.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 void
 tool_init(struct tool *tool, struct mapview *mv)
