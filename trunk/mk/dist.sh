@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.13 2004/03/02 11:08:53 vedge Exp $
+#	$Csoft: dist.sh,v 1.14 2004/03/02 11:10:30 vedge Exp $
 
 VER=`date +%m%d%Y`
 DISTFILE=agar-${VER}
@@ -54,10 +54,10 @@ A new Agar release has been uploaded to beta.csoft.org. This is a beta
 release so please help by testing it thoroughly and letting me know of
 any problems you might run into.
 
-	http://beta.csoft.org/agar/agar-$1.tar.gz
-	http://beta.csoft.org/agar/agar-$1.tar.gz.asc
-	http://beta.csoft.org/agar/agar-$1.tar.gz.md5
-	http://beta.csoft.org/agar/agar-$1.ChangeLog
+	http://beta.csoft.org/agar/agar-$VER.tar.gz
+	http://beta.csoft.org/agar/agar-$VER.tar.gz.asc
+	http://beta.csoft.org/agar/agar-$VER.tar.gz.md5
+	http://beta.csoft.org/agar/agar-$VER.ChangeLog
 
 Below is the summary of changes since the last release. If you wish to
 receive individual e-mails whenever commits are made, send an empty
