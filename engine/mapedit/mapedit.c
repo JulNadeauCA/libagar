@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.56 2002/03/05 13:26:10 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.57 2002/03/05 15:12:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -559,15 +559,10 @@ nextref:
 void
 mapedit_tilestack(struct mapedit *med)
 {
-	static SDL_Rect rs, rd;
+	static SDL_Rect rd;
 	struct map *m = med->map;
 	struct noderef *nref;
 	Uint32 i;
-
-	rs.w = m->tilew;
-	rs.h = m->tileh;
-	rs.x = 0;
-	rs.y = 0;
 
 	rd = med->tilestack;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
@@ -583,14 +578,14 @@ mapedit_tilestack(struct mapedit *med)
 
 			anim = nref->pobj->anims[nref->offs];
 			SDL_BlitSurface(anim->frames[0],
-			    &rs, m->view->v, &rd);
+			    NULL, m->view->v, &rd);
 		} else if (nref->flags & MAPREF_SPRITE) {
 			SDL_BlitSurface(nref->pobj->sprites[nref->offs],
-			    &rs, m->view->v, &rd);
+			    NULL, m->view->v, &rd);
 		}
 
 		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_GRID],
-		    &rs, m->view->v, &rd);
+		    NULL, m->view->v, &rd);
 		rd.y += m->tileh;
 	}
 	SDL_UpdateRect(m->view->v,
@@ -605,14 +600,9 @@ mapedit_tilestack(struct mapedit *med)
 void
 mapedit_objlist(struct mapedit *med)
 {
-	static SDL_Rect rs, rd;
+	static SDL_Rect rd;
 	struct map *m = med->map;
 	struct editobj *eob;
-
-	rs.x = 0;
-	rs.y = 0;
-	rs.w = m->tilew;
-	rs.h = m->tileh;
 
 	rd = med->objlist;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, BG_HORIZONTAL);
@@ -620,15 +610,15 @@ mapedit_objlist(struct mapedit *med)
 
 	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
 		SDL_BlitSurface(eob->pobj->sprites[0],
-		    &rs, m->view->v, &rd);
+		    NULL, m->view->v, &rd);
 		if (med->curobj == eob) {
 			SDL_BlitSurface(
 			    med->obj.sprites[MAPEDIT_CIRQSEL],
-			    &rs, m->view->v, &rd);
+			    NULL, m->view->v, &rd);
 		} else {
 			SDL_BlitSurface(
 			    med->obj.sprites[MAPEDIT_GRID],
-			    &rs, m->view->v, &rd);
+			    NULL, m->view->v, &rd);
 		}
 		rd.x += m->tilew;
 	}
@@ -840,54 +830,48 @@ mapedit_predraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 void
 mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 {
-	vx <<= m->shtilex;
-	vy <<= m->shtiley;
+	static SDL_Rect rd;
+
+	rd.w = m->tilew;
+	rd.h = m->tileh;
+	rd.x = vx << m->shtilex;
+	rd.y = vy << m->shtiley;
 
 	if (curmapedit->flags & MAPEDIT_DRAWGRID) {
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_GRID],
-		    vx, vy);
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_GRID), NULL,
+		    m->view->v, &rd);
 	}
-	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0)
+	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0) {
 		return;
+	}
 
 	if (flags == 0) {
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BLOCKED],
-		    vx, vy);
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_BLOCKED), NULL,
+		    m->view->v, &rd);
 		return;
 	}
 	if (flags & NODE_ORIGIN)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ORIGIN],
-		    vx, vy);
-#if 0
-	/* XXX pref */
-	if (flags & NODE_WALK)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_WALK],
-		    vx, vy);
-#endif
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_ORIGIN), NULL,
+		    m->view->v, &rd);
 	if (flags & NODE_CLIMB)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_CLIMB],
-		    vx, vy);
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_CLIMB), NULL,
+		    m->view->v, &rd);
 	if (flags & NODE_SLIP)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLIP],
-		    vx, vy);
-	if (flags & NODE_BIO)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BIO],
-		    vx, vy);
-	if (flags & NODE_REGEN)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_REGEN],
-		    vx, vy);
-	if (flags & NODE_SLOW)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLOW],
-		    vx, vy);
-	if (flags & NODE_HASTE)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
-		    vx, vy);
-#if 0
-	if (flags & NODE_ANIM)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
-		    vx, vy);
-	if (flags & NODE_OVERLAP)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_OVERLAP],
-		    vx, vy);
-#endif
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_SLIP), NULL,
+		    m->view->v, &rd);
+
+	if (flags & NODE_BIO) {
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_BIO), NULL,
+		    m->view->v, &rd);
+	} else if (flags & NODE_REGEN) {
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_REGEN), NULL,
+		    m->view->v, &rd);
+	}
+	if (flags & NODE_SLOW) {
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_SLOW), NULL,
+		    m->view->v, &rd);
+	} else if (flags & NODE_HASTE) {
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_HASTE), NULL,
+		    m->view->v, &rd);
+	}
 }
