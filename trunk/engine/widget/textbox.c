@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.7 2002/05/26 06:07:23 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.8 2002/05/28 06:01:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -64,7 +64,7 @@ static const struct widget_ops textbox_ops = {
 };
 
 struct textbox *
-textbox_new(struct region *reg, char *label, int flags, int rw)
+textbox_new(struct region *reg, const char *label, int flags, int rw)
 {
 	struct textbox *textbox;
 
@@ -79,7 +79,7 @@ textbox_new(struct region *reg, char *label, int flags, int rw)
 }
 
 void
-textbox_init(struct textbox *tbox, char *label, int flags, int rw)
+textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
 {
 	SDL_Surface *s;
 
@@ -99,6 +99,10 @@ textbox_init(struct textbox *tbox, char *label, int flags, int rw)
 	tbox->flags |= TEXTBOX_CURSOR;
 	tbox->text = strdup("");
 	tbox->label = label != NULL ? strdup(label) : NULL;
+	tbox->label_s = TTF_RenderText_Solid(font, label, white);
+	if (tbox->label_s == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", TTF_GetError());
+	}
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
 
@@ -137,12 +141,20 @@ textbox_draw(void *p)
 	int i, cursdrawn, j, x, y, tw;
 	Uint32 curscol;
 	SDL_Surface *box_s;
+	SDL_Surface *label_s = tbox->label_s;
 
 	curscol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 0, 0, 0);
+	
+	x = label_s->w;
+	y = tbox->ymargin;
 
-	box_s = primitive_box(WIDGET(tbox)->w, WIDGET(tbox)->h,
+	WIDGET_DRAW(tbox, label_s, 0, y/2);
+	
+	box_s = primitive_box(tbox,
+	    WIDGET(tbox)->w - (tbox->xmargin*2) - label_s->w, WIDGET(tbox)->h,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1);
-	WIDGET_DRAW(tbox, box_s, 0, 0);
+	WIDGET_DRAW(tbox, box_s, x, 0);
+	x += tbox->xmargin;
 
 	tw = strlen(tbox->text);
 	if (tbox->textpos < 0) {
@@ -151,8 +163,7 @@ textbox_draw(void *p)
 
 	cursdrawn = 0;
 
-	for (i = tbox->textoffs, x = tbox->xmargin, y = tbox->ymargin;
-	    (i < tw+1); i++) {
+	for (i = tbox->textoffs; i < (tw + 1); i++) {
 		if (x >= WIDGET(tbox)->w) {
 			if (tbox->textpos >= tw-4) {
 				tbox->textoffs++;	/* Scroll */
@@ -161,7 +172,8 @@ textbox_draw(void *p)
 			goto after;
 		}
 		if (i == tbox->textpos && tbox->flags & TEXTBOX_CURSOR &&
-		    WIDGET_FOCUSED(tbox)) {
+		    WIDGET_FOCUSED(tbox) &&
+		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
 			SDL_LockSurface(WIDGET_SURFACE(tbox));
 			for (j = 2; j < WIDGET(tbox)->h - 4; j++) {
 				WIDGET_PUT_PIXEL(tbox, x, y+j, curscol);
@@ -170,7 +182,8 @@ textbox_draw(void *p)
 			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
 			cursdrawn++;
 		}
-		if (i < tw && tbox->text[i] != '\0') {
+		if (i < tw && tbox->text[i] != '\0' &&
+		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
 			SDL_Surface *text_s;
 			char c, str[2];
 
