@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.15 2003/03/08 03:36:02 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.16 2003/03/08 23:04:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -66,7 +66,9 @@ int	xcf_debug = DEBUG_ALPHA;
 
 enum {
 	LEVEL_OFFSETS_INIT =	2,
-	TILE_OFFSETS_INIT =	16
+	LEVEL_OFFSETS_GROW =	4,
+	TILE_OFFSETS_INIT =	16,
+	TILE_OFFSETS_GROW =	8
 };
 
 int 
@@ -127,7 +129,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		break;
 	case PROP_COLOR:			       /* Color of a channel */
 		Read(fd, &prop->data.color, 3);
-		debug(DEBUG_CHANNELS, "color %d,%d,%d\n",
+		debug(DEBUG_CHANNELS, "color %u,%u,%u\n",
 		    prop->data.color[0],
 		    prop->data.color[1],
 		    prop->data.color[2]);
@@ -137,7 +139,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 			prop->data.guide.position = read_sint32(fd);
 			prop->data.guide.orientation = read_sint8(fd);
 			debug(DEBUG_GUIDES,
-			    "guide: position %d, orientation %d\n",
+			    "guide: position %u, orientation %u\n",
 			    prop->data.guide.position,
 			    prop->data.guide.orientation);
 		}
@@ -326,91 +328,6 @@ xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p, int *aflags)
 	}
 }
 
-#if 0
-/* 32-bit RGB */
-static void
-xcf_convert_tile24(int tx, int ox, Uint32 **row, Uint8 **p8)
-{
-	int x;
-
-	/* XXX */
-	for (x = tx; x < tx + ox; x++) {
-		**row = 0xff000000 |
-		    (((Uint32)*((*p8)++)) << 16) |
-		    (((Uint32)*((*p8)++)) << 8) |
-		    (((Uint32)*((*p8)++)) << 0);
-		(*row)++;
-	}
-}
-
-/* Indexed or greyscale with alpha. */
-static void
-xcf_convert_tile16(int tx, int ox, Uint32 **row, Uint8 **p8,
-    struct xcf_header *head)
-{
-	int x;
-
-	switch (head->base_type) {
-	case XCF_IMAGE_INDEXED:
-		for (x = tx; x < tx + ox; x++) {
-			**row =  ((Uint32)
-			    (head->colormap.data[(**p8)*3]) << 16);
-			**row |= ((Uint32)
-			    (head->colormap.data[(**p8)*3 + 1]) << 8);
-			**row |= ((Uint32)
-			    (head->colormap.data[(*((*p8)++))*3 + 2]) << 0);
-			**row |= ((Uint32)(*((*p8)++)) << 24);
-			(*row)++;
-		}
-		break;
-	case XCF_IMAGE_GREYSCALE:
-		for (x = tx; x < tx + ox; x++) {
-			**row =  ((Uint32)**p8 << 16);
-			**row |= ((Uint32)**p8 << 8);
-			**row |= ((Uint32)(*((*p8)++)) << 0);
-			**row |= ((Uint32)(*((*p8)++)) << 24);
-			(*row)++;
-		}
-		break;
-	default:
-		fatal("bad 16bpp type\n");
-	}
-}
-
-/* Indexed or greyscale. */
-static void
-xcf_convert_tile8(int tx, int ox, Uint32 **row, Uint8 **p8,
-    struct xcf_header *head)
-{
-	int x;
-
-	switch (head->base_type) {
-	case XCF_IMAGE_INDEXED:
-		for (x = tx; x < tx + ox; x++) {
-			**row = 0xFF000000 |
-			  ((Uint32)(head->colormap.data[**p8 * 3])   << 16) |
-			  ((Uint32)(head->colormap.data[**p8 * 3+1]) <<  8) |
-			  ((Uint32)(head->colormap.data[**p8 * 3+2]) <<  0);
-			(*row)++;
-			(*p8)++;
-		}
-		break;
-	case XCF_IMAGE_GREYSCALE:
-		for (x = tx; x < tx + ox; x++) {
-			**row = 0xFF000000 |
-			    (((Uint32)(**p8)) << 16) |
-			    (((Uint32)(**p8)) <<  8) |
-			    (((Uint32)(**p8)) <<  0);
-			(*row)++;
-			(*p8)++;
-		}
-		break;
-	default:
-		fatal("bad 8bpp type\n");
-	}
-}
-#endif
-
 static SDL_Surface *
 xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
@@ -457,7 +374,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	i = 0;
 	for (;;) {
 		if (hier->nlevel_offsets+1 >= hier->maxlevel_offsets) {
-			hier->maxlevel_offsets *= 2;
+			hier->maxlevel_offsets += LEVEL_OFFSETS_GROW;
 			hier->level_offsets = erealloc(hier->level_offsets,
 			    hier->maxlevel_offsets * sizeof(Uint32));
 		}
@@ -484,7 +401,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 
 		for (;;) {
 			if (level->ntile_offsets+1 >= level->maxtile_offsets) {
-				level->maxtile_offsets *= 2;
+				level->maxtile_offsets += TILE_OFFSETS_GROW;
 				level->tile_offsets = erealloc(
 				    level->tile_offsets,
 				    level->maxtile_offsets * sizeof(Uint32));
@@ -530,19 +447,10 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 					xcf_convert_tile32(tx, ox, &row, &p,
 					    &aflags);
 					break;
-#if 0
 				case 3:
-					xcf_convert_tile24(tx, ox, &row, &p8);
-					break;
 				case 2:
-					xcf_convert_tile16(tx, ox, &row, &p8,
-					    head);
-					break;
 				case 1:
-					xcf_convert_tile8(tx, ox, &row, &p8,
-					    head);
-					break;
-#endif
+					fatal("unsupported depth");
 				}
 			}
 			tx += 64;
@@ -629,7 +537,7 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
 			if ((su->h > TILEH || su->w > TILEW) &&
 			    strstr(name, "(break)") != NULL) {
 				/* Break down into tiles. */
-				art_insert_sprite_tiles(art, su);
+				art_insert_sprite_tiles(art, su, name);
 			} else {
 				/* Original size */
 		   		art_insert_sprite(art, su, 0);
