@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.30 2002/06/13 09:07:42 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.31 2002/06/27 00:17:39 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -161,9 +161,6 @@ void		 view_destroy(void *);
 void		 view_maskfill(SDL_Rect *, int);
 SDL_Surface	*view_surface(int, int, int);
 void		 view_focus(struct window *);
-#ifdef DEBUG
-void		 view_dumpmask(void);
-#endif
 
 void		 view_center(struct map *, int, int);
 void		 view_scroll(struct map *, int);

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.51 2002/06/27 00:17:39 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.52 2002/07/06 23:49:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -318,23 +318,6 @@ view_scroll(struct map *m, int dir)
 	}
 	m->redraw++;
 }
-
-#ifdef DEBUG
-/* View must be locked. */
-void
-view_dumpmask(void)
-{
-	struct viewmap *vm = view->rootmap;
-	int x, y;
-
-	for (y = 0; y < vm->h; y++) {
-		for (x = 0; x < vm->w; x++) {
-			printf("(%d)", vm->mask[y][x]);
-		}
-		printf("\n");
-	}
-}
-#endif
 
 /*
  * Attach a window to a view.
