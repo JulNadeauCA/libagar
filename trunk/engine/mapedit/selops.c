@@ -1,4 +1,4 @@
-/*	$Csoft: selops.c,v 1.3 2003/03/16 04:08:41 vedge Exp $	*/
+/*	$Csoft: selops.c,v 1.4 2003/03/25 13:48:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@ selops_kill(struct mapview *mv)
 {
 	int x, y;
 	
-	dprintf("[%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y,
+	dprintf("[%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y,
 	    mv->esel.w, mv->esel.h);
 
 	for (y = mv->esel.y;
@@ -56,7 +56,8 @@ selops_kill(struct mapview *mv)
 		for (x = mv->esel.x;
 		     x < mv->esel.x + mv->esel.w;
 		     x++) {
-			node_clear_layer(&mv->map->map[y][x], mv->cur_layer);
+			node_clear_layer(&mv->map->map[y][x],
+			    mv->map->cur_layer);
 		}
 	}
 }
@@ -88,7 +89,7 @@ selops_copy(struct mapview *mv)
 			struct node *dstnode = &copybuf->map[dy][dx];
 
 			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-				if (nref->layer != mv->cur_layer)
+				if (nref->layer != mv->map->cur_layer)
 					continue;
 				nnref = node_copy_ref(nref, dstnode);
 				nnref->layer = 0;
@@ -99,14 +100,13 @@ selops_copy(struct mapview *mv)
 }
 
 void
-selops_paste(struct mapview *mv)
+selops_paste(struct mapview *mv, int x, int y)
 {
 	struct map *copybuf = &mapedit.copybuf;
 	struct noderef *nref, *nnref;
 	int sx, sy, dx, dy;
 
-	dprintf("paste [%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y,
-	    mv->esel.w, mv->esel.h);
+	dprintf("paste [%d,%d]\n", mv->esel.x, mv->esel.y);
 
 	if (copybuf->map == NULL) {
 		return;
@@ -123,7 +123,7 @@ selops_paste(struct mapview *mv)
 		
 			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 				nnref = node_copy_ref(nref, dstnode);
-				nnref->layer = mv->cur_layer;
+				nnref->layer = mv->map->cur_layer;
 			}
 
 			dstnode->flags = srcnode->flags;

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.158 2003/03/24 12:08:40 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.159 2003/03/25 13:48:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -443,8 +443,8 @@ mapedit_win_new(struct map *m)
 		mv->layed.trigger = bu;
 
 		lab = label_polled_new(reg, 60, -1, NULL,
-		    " Layer: %[u8], [%ux%u] at [%d,%d]",
-		    &mv->cur_layer,
+		    " Layer: %d, [%ux%u] at [%d,%d]",
+		    &mv->map->cur_layer,
 		    &mv->esel.w, &mv->esel.h,
 		    &mv->esel.x, &mv->esel.y);
 	}
