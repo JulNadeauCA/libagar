@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.10 2002/11/13 00:22:30 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.12 2002/11/26 05:21:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -51,10 +51,10 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
 			src = SPRITE(nref->pobj, nref->offs);
+			rd.x = rx + nref->xoffs - view->rootmap->sx;
+			rd.y = ry + nref->yoffs - view->rootmap->sy;
 			rd.w = src->w;
 			rd.h = src->h;
-			rd.x = rx + nref->xoffs;
-			rd.y = ry + nref->yoffs;
 			SDL_BlitSurface(src, NULL, view->v, &rd);
 		} else if (nref->flags & MAPREF_ANIM) {
 			anim = ANIM(nref->pobj, nref->offs);
@@ -104,10 +104,11 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 					     j, i, frame);
 				}
 #endif
+				rd.x = rx + nref->xoffs - view->rootmap->sx;
+				rd.y = ry + nref->yoffs - (i * TILEH) -
+				    view->rootmap->sy;
 				rd.w = src->w;
 				rd.h = src->h;
-				rd.x = rx + nref->xoffs;
-				rd.y = ry + nref->yoffs - (i * TILEH);
 				SDL_BlitSurface(src, NULL, view->v, &rd);
 			}
 		}
@@ -263,8 +264,8 @@ rootmap_draw(void)
 				if (nref->flags & MAPREF_SPRITE) {
 					SDL_Rect rd;
 
-					rd.x = rx + nref->xoffs;
-					rd.y = ry + nref->yoffs;
+					rd.x = rx + nref->xoffs - rm->sx;
+					rd.y = ry + nref->yoffs - rm->sy;
 					rd.w = TILEW;
 					rd.h = TILEH;
 					SDL_BlitSurface(
@@ -332,29 +333,41 @@ rootmap_center(struct map *m, int mapx, int mapy)
  * View must be locked.
  */
 void
-rootmap_scroll(struct map *m, int dir)
+rootmap_scroll(struct map *m, int dir, int inc)
 {
 	struct viewmap *rm = view->rootmap;
 
 	switch (dir) {
 	case DIR_UP:
-		if (--rm->y < 0) {
-			rm->y = 0;
-		}
-		break;
-	case DIR_LEFT:
-		if (--rm->x < 0) {
-			rm->x = 0;
+		if ((rm->sy -= inc) <= -TILEH) {
+			if (--rm->y < 0) {
+				rm->y = 0;
+			}
+			rm->sy = 0;
 		}
 		break;
 	case DIR_DOWN:
-		if (++rm->y > (m->maph - rm->h)) {
-			rm->y = (m->maph - rm->h);
+		if ((rm->sy += inc) >= TILEH) {
+			if (++rm->y > (m->maph - rm->h)) {
+				rm->y = m->maph - rm->h;
+			}
+			rm->sy = 0;
+		}
+		break;
+	case DIR_LEFT:
+		if ((rm->sx -= inc) <= -TILEW) {
+			if (--rm->x < 0) {
+				rm->x = 0;
+			}
+			rm->sx = 0;
 		}
 		break;
 	case DIR_RIGHT:
-		if (++rm->x > (m->mapw - rm->w)) {
-			rm->x = (m->mapw - rm->w);
+		if ((rm->sx += inc) >= TILEH) {
+			if (++rm->x > (m->mapw - rm->w)) {
+				rm->x = m->mapw - rm->w;
+			}
+			rm->sx = 0;
 		}
 		break;
 	}

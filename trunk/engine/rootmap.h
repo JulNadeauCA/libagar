@@ -1,11 +1,11 @@
-/*	$Csoft: rootmap.h,v 1.4 2002/11/13 00:22:30 vedge Exp $	*/
+/*	$Csoft: rootmap.h,v 1.5 2002/11/22 08:56:49 vedge Exp $	*/
 /*	Public domain	*/
 
 void	 rootmap_animate(void);
 void	 rootmap_draw(void);
 void	 rootmap_focus(struct map *);
 void	 rootmap_center(struct map *, int, int);
-void	 rootmap_scroll(struct map *, int);
+void	 rootmap_scroll(struct map *, int, int);
 
 struct viewport;
 

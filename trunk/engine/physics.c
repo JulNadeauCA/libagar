@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.44 2002/11/23 22:40:46 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.45 2002/11/27 05:14:15 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -50,7 +50,7 @@ static int	mapdir_canmove(struct mapdir *, struct map *, Uint32, Uint32);
 #define DEBUG_MOVE	0x01
 #define DEBUG_BLOCKED	0x02
 
-int	physics_debug = DEBUG_MOVE|DEBUG_BLOCKED;
+int	physics_debug = DEBUG_BLOCKED;
 #define engine_debug physics_debug
 #endif
 
@@ -285,7 +285,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 	node = &m->map[*mapy][*mapx];
 	nref = node_findref(m, node, dir->ob, -1, MAPREF_ANY);
 	if (nref == NULL) {
-		debug(DEBUG_MOVE, "%s not at %s:%dx%d\n", dir->ob->name,
+		fatal("%s not at %s:%dx%d\n", dir->ob->name,
 		    OBJECT(m)->name, *mapx, *mapy);
 		return (0);
 	}
@@ -316,7 +316,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			}
 		}
 		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
-		    	rootmap_scroll(m, DIR_UP);
+		    	rootmap_scroll(m, DIR_UP, dir->speed);
 		}
 		if (nref->yoffs <= (-TILEW + dir->speed)) {
 			node->flags &= ~(NODE_ANIM);
@@ -354,6 +354,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				mapdir_unset(dir, DIR_DOWN);
 			}
 		}
+		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
+		    	rootmap_scroll(m, DIR_DOWN, dir->speed);
+		}
 		if (nref->yoffs >= TILEW - dir->speed) {
 			nref->yoffs = 1;
 			node->flags &= ~(NODE_ANIM);
@@ -361,11 +364,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			moved |= DIR_DOWN;
 			if (++(*mapy) > m->maph - 1) {
 				*mapy = m->maph - 1;
-			}
-			if ((dir->flags & DIR_SCROLLVIEW) &&
-			    (view->rootmap != NULL) &&
-			    (view->rootmap->y - *mapy) <= -view->rootmap->h+2) {
-				rootmap_scroll(m, DIR_DOWN);
 			}
 			m->map[*mapy][*mapx].overlap--;
 		} else {
@@ -395,6 +393,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				mapdir_unset(dir, DIR_LEFT);
 			}
 		}
+		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
+		    	rootmap_scroll(m, DIR_LEFT, dir->speed);
+		}
 		if (nref->xoffs <= (-TILEW + dir->speed)) {
 			nref->xoffs = -1;
 			node->flags &= ~(NODE_ANIM);
@@ -402,12 +403,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			moved |= DIR_LEFT;
 			if ((*mapx)-- < 1) {
 				*mapx = 1;
-			}
-			if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
-			    (dir->flags & DIR_SCROLLVIEW) &&
-			    (view->rootmap != NULL) &&
-			    (view->rootmap->x - *mapx) <= 0) {
-				rootmap_scroll(m, DIR_LEFT);
 			}
 			m->map[*mapy][*mapx].overlap--;
 			m->map[(*mapy)-1][*mapx].overlap--;
@@ -438,6 +433,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				mapdir_unset(dir, DIR_RIGHT);
 			}
 		}
+		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
+		    	rootmap_scroll(m, DIR_RIGHT, dir->speed);
+		}
 		if (nref->xoffs >= (TILEW - dir->speed)) {
 			nref->xoffs = 1;
 			node->flags &= ~(NODE_ANIM);
@@ -445,12 +443,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			moved |= DIR_RIGHT;
 			if (++(*mapx) > m->mapw-1) {
 				*mapx = m->mapw-1;
-			}
-			if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
-			    (dir->flags & DIR_SCROLLVIEW) &&
-			    (view->rootmap != NULL) &&
-			    (view->rootmap->x - *mapx) <= -view->rootmap->w+2) {
-				rootmap_scroll(m, DIR_RIGHT);
 			}
 			m->map[*mapy][*mapx].overlap--;
 			m->map[(*mapy)-1][*mapx].overlap--;
@@ -479,6 +471,11 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 
 	node = &dir->map->map[*mapy][*mapx];
 	nref = node_findref(dir->map, node, dir->ob, -1, MAPREF_ANY);
+
+#if 0
+	view->rootmap->sx = 0;
+	view->rootmap->sy = 0;
+#endif
 
 	/* Clear any direction first (ie. key release). */
 	if (dir->clear != 0) {
