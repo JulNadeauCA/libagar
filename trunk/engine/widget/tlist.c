@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.7 2002/09/13 10:58:49 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.8 2002/10/30 22:24:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -110,6 +110,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 
 	tl->vbar = emalloc(sizeof(struct scrollbar));
 	scrollbar_init(tl->vbar, -1, -1, tl->item_h, SCROLLBAR_VERTICAL);
+	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
 	event_new(tl, "window-mousemotion", 0, tlist_mouse_motion, NULL);
 	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button, NULL);
@@ -130,7 +131,6 @@ tlist_destroy(void *p)
 	pthread_mutex_destroy(&tl->items_lock);
 	
 	object_destroy(tl->vbar);
-
 	widget_destroy(tl);
 }
 
@@ -153,7 +153,7 @@ tlist_scaled(int argc, union evarg *argv)
 	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - 20;
 	WIDGET(sb)->y = WIDGET(tl)->y;
 	WIDGET(sb)->w = 20;
-	WIDGET(sb)->h = WIDGET(tl)->h;
+	WIDGET(sb)->h = WIDGET(tl)->h - 7;
 }
 
 void
@@ -184,7 +184,7 @@ tlist_draw(void *p)
 			continue;
 		}
 
-		if (y > WIDGET(tl)->h - it->icon_w) {
+		if (y > WIDGET(tl)->h - it->icon_h) {
 			goto out;
 		}
 
@@ -313,20 +313,20 @@ tlist_mouse_motion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	Uint8 ms;
+	
+	event_forward(sb, "window-mousemotion", argc, argv);
 
-	if (x > WIDGET(tl)->w - WIDGET(tl->vbar)->w) {
-		event_forward(tl->vbar, "window-mousemotion", argc, argv);
-		return;
-	}
-
+#if 0
 	ms = SDL_GetMouseState(NULL, NULL);
 	if (ms & SDL_BUTTON_RMASK) {
+		/* Scroll down */
 		if (yrel < 0 && (sb->range.soft_start += yrel) < 0) {
 			sb->range.soft_start = tl->item_h;
 			if (++sb->range.start > tl->nitems) {
 				sb->range.start = tl->nitems;
 			}
 		}
+		/* Scroll up */
 		if (yrel > 0 && sb->range.start > 0 &&
 		    (sb->range.soft_start += yrel) > tl->item_h) {
 			sb->range.soft_start = 0;
@@ -335,6 +335,7 @@ tlist_mouse_motion(int argc, union evarg *argv)
 			}
 		}
 	}
+#endif
 }
 
 static void
@@ -346,13 +347,14 @@ tlist_mouse_button(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tlist_item *ti;
+	
+	WIDGET_FOCUS(tl);
 
 	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {
 		event_forward(sb, "window-mousebuttondown", argc, argv);
 		return;
 	}
 
-	WIDGET_FOCUS(tl);
 	if (button != SELECTION_MOUSE_BUTTON) {
 		return;
 	}
