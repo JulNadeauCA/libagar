@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.104 2002/07/06 23:49:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.105 2002/07/08 03:16:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -838,7 +838,9 @@ map_save(void *p, int fd)
 		count = 1;
 rle_scan:
 		if (++x == m->mapw) {
+#if 0
 			dprintf("at %d,%d wrap\n", x, y);
+#endif
 			if (++y == m->maph) {
 				goto done;
 			}
