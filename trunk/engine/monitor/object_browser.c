@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.26 2003/03/22 05:19:31 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.27 2003/03/24 12:08:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,139 +50,257 @@
 
 #include "monitor.h"
 
-static void
-tl_events_trigger(int argc, union evarg *argv)
-{
-	struct object *ob = argv[1].p;
-	struct event *evh = argv[2].p;
+static void	events_poll(int, union evarg *);
+static void	events_show(int, union evarg *);
+static void	props_poll(int, union evarg *);
+static void	props_show(int, union evarg *);
+static void	childs_poll(int, union evarg *);
+static void	childs_show(int, union evarg *);
+static void	objs_poll(int, union evarg *);
+static void	objs_show(int, union evarg *);
 
-	/* Fake this event with no arguments. */
-	event_post(ob, evh->name, NULL);
-}
-
-static void
-tl_events_unregister(int argc, union evarg *argv)
-{
-	struct button *bu = argv[0].p;
-	struct object *ob = argv[2].p;
-	struct event *evh = argv[3].p;
-
-	/* Unregister the event handler. */
-	pthread_mutex_lock(&ob->events_lock);
-	TAILQ_REMOVE(&ob->events, evh, events);
-	pthread_mutex_unlock(&ob->events_lock);
-
-	/* Destroy the event handler window. */
-	view_detach(WIDGET(bu)->win);
-}
-
-static void
-tl_events_selected(int argc, union evarg *argv)
-{
-	struct tlist *tl_events = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	struct event *evh = it->p1;
-	struct window *win;
-	struct region *reg;
-	struct label *lab;
-	struct button *bu;
-
-	win = window_generic_new(299, 173,
-	    "monitor-object-browser-%s-evh-%s", ob->name, evh->name);
-	if (win == NULL) {
-		return;		/* Exists */
-	}
-	window_set_caption(win, "%s handler", evh->name);
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		lab = label_new(reg, 100, -1, "Identifier: \"%s\"", evh->name);
-		lab = label_polled_new(reg, 100, -1, &ob->events_lock,
-		    "Flags: 0x%x", &evh->flags);
-		lab = label_polled_new(reg, 100, -1, &ob->events_lock,
-		    "Handler: %p", &evh->handler);
-	}
-
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	{
-		bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
-		event_new(bu, "button-pushed", tl_events_trigger,
-		    "%p, %p", ob, evh);
-		bu = button_new(reg, "Unregister", NULL, 0, 50, 100);
-		event_new(bu, "button-pushed", tl_events_unregister,
-		    "%p, %p, %p", tl_events, ob, evh);
-	}
-
-	window_show(win);
-}
+static void	props_update(int, union evarg *);
+static void	props_remove(int, union evarg *);
+static void	props_change(int, union evarg *);
 
 /* Update the event handler list. */
 static void
-tl_events_poll(int argc, union evarg *argv)
+events_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct event *evh;
 
 	tlist_clear_items(tl);
-
 	pthread_mutex_lock(&ob->events_lock);
-	TAILQ_FOREACH(evh, &ob->events, events) {
-		tlist_insert_item(tl, NULL, evh->name, evh);
-	}
-	pthread_mutex_unlock(&ob->events_lock);
 
+	TAILQ_FOREACH(evh, &ob->events, events)
+		tlist_insert_item(tl, NULL, evh->name, evh);
+
+	pthread_mutex_unlock(&ob->events_lock);
 	tlist_restore_selections(tl);
 }
 
-/* Update the property list. */
 static void
-tl_props_poll(int argc, union evarg *argv)
+events_show(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	struct window *win;
+	struct region *reg;
+	
+	if ((win = window_generic_new(277, 142, "monitor-ob-%s-evh", ob->name))
+	    == NULL) {
+		return;
+	}
+	window_set_caption(win, "%s: event handlers", ob->name);
+
+	/* Display the event handlers. */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	{
+		struct tlist *tl;
+
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl, "tlist-poll", events_poll, "%p", ob);
+		event_new(tl, "tlist-changed", events_show, "%p", ob);
+	}
+	window_show(win);
+}
+
+static void
+props_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct prop *prop;
 
 	tlist_clear_items(tl);
-
 	pthread_mutex_lock(&ob->props_lock);
+
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		SDL_Surface *su;
 
 		su = SPRITE(&monitor, MONITOR_PROPS_BASE+1+prop->type);
 		tlist_insert_item(tl, su, prop->key, prop);
 	}
-	pthread_mutex_unlock(&ob->props_lock);
 
+	pthread_mutex_unlock(&ob->props_lock);
 	tlist_restore_selections(tl);
 }
 
-/* Update the object list. */
 static void
-tl_objs_poll(int argc, union evarg *argv)
+props_show(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	struct window *win;
+	struct region *reg;
+	
+	if ((win = window_generic_new(277, 142, "monitor-ob-%s-props",
+	    ob->name)) == NULL) {
+		return;
+	}
+	window_set_caption(win, "%s: props", ob->name);
+
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	{
+		struct tlist *tl;
+
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl, "tlist-poll", props_poll, "%p", ob);
+
+		reg = region_new(win, REGION_VALIGN, 50, 35, 50, 20);
+		{
+			struct label *lab_name;
+			struct textbox *tb_set;
+			struct button *bu;
+
+			lab_name = label_new(reg, 100, 30, "");
+			tb_set = textbox_new(reg, "Value: ", 0, 100, -1);
+
+			event_new(tl, "tlist-changed",
+			    props_update, "%p, %p", lab_name, tb_set);
+		
+			reg = region_new(win, REGION_HALIGN, 50, 60, 50, 10);
+			{
+				bu = button_new(reg, "Apply", NULL, 0, 50, -1);
+				event_new(bu, "button-pushed",
+				    props_change, "%p, %p, %p", tl, tb_set, ob);
+			
+				bu = button_new(reg, "Remove", NULL, 0, 50, -1);
+				event_new(bu, "button-pushed",
+				    props_remove, "%p, %p, %p", tl, tb_set, ob);
+			}
+		}
+	}
+	window_show(win);
+}
+
+static void
+childs_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct object *child;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&ob->lock);
+
+	SLIST_FOREACH(child, &ob->childs, wobjs) {
+		SDL_Surface *icon = NULL;
+
+		if (ob->art != NULL && ob->art->nsprites > 0)
+			icon = SPRITE(ob, 0);
+		tlist_insert_item(tl, icon, child->name, child);
+	}
+
+	pthread_mutex_unlock(&ob->lock);
+	tlist_restore_selections(tl);
+}
+
+static void
+childs_show(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	struct window *win;
+	struct region *reg;
+	struct button *showbu;
+	
+	if ((win = window_generic_new(277, 142, "monitor-ob-%s-childs",
+	    ob->name)) == NULL) {
+		return;
+	}
+	window_set_caption(win, "%s: childs", ob->name);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	{
+		showbu = button_new(reg, "Show", NULL, 0, 100, -1);
+	}
+
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
+	{
+		struct tlist *tl;
+
+		tl = tlist_new(reg, 100, 0, TLIST_POLL);
+		event_new(tl, "tlist-poll", childs_poll, "%p", ob);
+		event_new(showbu, "button-pushed", objs_show, "%p", tl);
+	}
+	window_show(win);
+}
+
+static void
+objs_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob;
 	
 	tlist_clear_items(tl);
-
 	pthread_mutex_lock(&world->lock);
+
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		SDL_Surface *icon = NULL;
 
-		if (ob->art != NULL && ob->art->nsprites > 0) {
+		if (ob->art != NULL && ob->art->nsprites > 0)
 			icon = SPRITE(ob, 0);
-		}
 		tlist_insert_item(tl, icon, ob->name, ob);
 	}
-	pthread_mutex_unlock(&world->lock);
 
+	pthread_mutex_unlock(&world->lock);
 	tlist_restore_selections(tl);
 }
 
 static void
-tl_props_selected(int argc, union evarg *argv)
+objs_show(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+	struct object *ob;
+	struct window *win;
+	struct region *reg;
+
+	if ((it = tlist_item_selected(tl)) == NULL) {
+		text_msg("Error", "No object is selected.");
+		return;
+	}
+	ob = it->p1;
+
+	if ((win = window_generic_new(316, 154, "monitor-ob-%s", ob->name))
+	    == NULL) {
+		return;
+	}
+	window_set_caption(win, "%s object", ob->name);
+	
+	if (ob->art != NULL && ob->art->nsprites > 0) {
+		reg = region_new(win, REGION_VALIGN, 0, 0, 15, -32);
+		bitmap_new(reg, SPRITE(ob, 0), -1, -1);
+	}
+	reg = region_new(win, REGION_VALIGN, 15, 0, 80, -1);
+	{
+		label_new(reg, 100, -1, "Name: %s", ob->name);
+		label_new(reg, 100, -1, "Type: %s", ob->type);
+		label_new(reg, 100, -1, "Flags: 0x%x", ob->flags);
+		label_polled_new(reg, 100, -1, NULL, "State: %d", &ob->state);
+		label_polled_new(reg, 100, -1, &ob->lock, "Pos: %p", &ob->pos);
+	}
+
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
+	{
+		struct button *bu;
+
+		bu = button_new(reg, "Properties", NULL, 0, 33, 0);
+		event_new(bu, "button-pushed", props_show, "%p", ob);
+		
+		bu = button_new(reg, "Child objects", NULL, 0, 33, 0);
+		event_new(bu, "button-pushed", childs_show, "%p", ob);
+		
+		bu = button_new(reg, "Event handlers", NULL, 0, 33, 0);
+		event_new(bu, "button-pushed", events_show, "%p", ob);
+	}
+	
+	window_show(win);
+}
+
+/* Update a property display. */
+static void
+props_update(int argc, union evarg *argv)
 {
 	struct label *lab_name = argv[1].p;
 	struct textbox *tb_set = argv[2].p;
@@ -244,15 +362,16 @@ tl_props_selected(int argc, union evarg *argv)
 	}
 }
 
+/* Detach a property. */
 static void
-tl_props_remove(int argc, union evarg *argv)
+props_remove(int argc, union evarg *argv)
 {
-	struct tlist *tl_props = argv[1].p;
+	struct tlist *propstl = argv[1].p;
 	struct object *ob = argv[3].p;
 	struct tlist_item *it;
 	struct prop *prop;
 
-	it = tlist_item_selected(tl_props);
+	it = tlist_item_selected(propstl);
 	if (it == NULL) {
 		text_msg("Error", "No property is selected.");
 		return;
@@ -262,19 +381,21 @@ tl_props_remove(int argc, union evarg *argv)
 	pthread_mutex_lock(&ob->props_lock);
 	TAILQ_REMOVE(&ob->props, prop, props);
 	prop_destroy(prop);
+	free(prop);
 	pthread_mutex_unlock(&ob->props_lock);
 }
 
+/* Alter the value of a property. */
 static void
-tl_props_apply(int argc, union evarg *argv)
+props_change(int argc, union evarg *argv)
 {
-	struct tlist *tl_props = argv[1].p;
+	struct tlist *propstl = argv[1].p;
 	struct textbox *tb_set = argv[2].p;
 	struct object *ob = argv[3].p;
 	struct tlist_item *it;
 	struct prop *prop;
 
-	it = tlist_item_selected(tl_props);
+	it = tlist_item_selected(propstl);
 	if (it == NULL) {
 		text_msg("Error", "No property is selected.");
 		return;
@@ -333,102 +454,24 @@ tl_props_apply(int argc, union evarg *argv)
 	pthread_mutex_unlock(&tb_set->text.lock);
 }
 
-static void
-tl_objs_selected(int argc, union evarg *argv)
-{
-	struct tlist_item *it = argv[1].p;
-	struct object *ob = it->p1;
-	struct window *win;
-	struct region *reg;
-
-	win = window_generic_new(432, 362, "monitor-object-%s", ob->name);
-	if (win == NULL) {
-		return;		/* Exists */
-	}
-	window_set_caption(win, "%s object (%s)", ob->name, ob->type);
-
-	/* Show the object's generic properties. */
-	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 35);
-	{
-		label_new(reg, 100, -1, "Name: %s", ob->name);
-		label_new(reg, 100, -1, "Type: %s", ob->type);
-		label_new(reg, 100, -1, "Flags: 0x%x", ob->flags);
-		label_polled_new(reg, 100, -1, NULL,
-		    "State: %d", &ob->state);
-		label_polled_new(reg, 100, -1, &ob->pos_lock,
-		    "Position: %p", &ob->pos);
-	}
-
-	/* Display the first sprite, if any. */
-	if (ob->art != NULL && ob->art->nsprites > 0) {
-		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 35);
-		bitmap_new(reg, SPRITE(ob, 0), 100, 100);
-	}
-
-	/* Display the generic properties. */
-	reg = region_new(win, REGION_HALIGN, 0, 35, 50, 40);
-	{
-		struct tlist *tl_props;
-
-		tl_props = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_props, "tlist-poll", tl_props_poll, "%p", ob);
-
-		reg = region_new(win, REGION_VALIGN, 50, 35, 50, 20);
-		{
-			struct label *lab_name;
-			struct textbox *tb_set;
-			struct button *bu;
-
-			lab_name = label_new(reg, 100, 30, " ");
-			tb_set = textbox_new(reg, "Value: ", 0, 100, -1);
-
-			event_new(tl_props, "tlist-changed", tl_props_selected,
-			    "%p, %p", lab_name, tb_set);
-		
-			reg = region_new(win, REGION_HALIGN, 50, 60, 50, 10);
-			{
-				bu = button_new(reg, "Apply", NULL, 0, 50, -1);
-				event_new(bu, "button-pushed", tl_props_apply,
-				    "%p, %p, %p", tl_props, tb_set, ob);
-			
-				bu = button_new(reg, "Remove", NULL, 0, 50, -1);
-				event_new(bu, "button-pushed", tl_props_remove,
-				    "%p, %p, %p", tl_props, tb_set, ob);
-			}
-		}
-	}
-
-	/* Display the event handlers. */
-	reg = region_new(win, 0, 0, 80, 100, 16);
-	{
-		struct tlist *tl;
-
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", tl_events_poll, "%p", ob);
-		event_new(tl, "tlist-changed", tl_events_selected, "%p", ob);
-	}
-
-	window_show(win);
-}
-
 struct window *
 object_browser_window(void)
 {
 	struct window *win;
 	struct region *reg;
-	struct tlist *tl_objs;
 
-	if ((win = window_generic_new(251, 259, "monitor-object-browser"))
-	    == NULL) {
-		return (NULL);	/* Exists */
+	if ((win = window_generic_new(251, 259, "monitor")) == NULL) {
+		return (NULL);
 	}
-	window_set_caption(win, "Object browser");
+	window_set_caption(win, "Objects");
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	{
+		struct tlist *tl;
 
-	reg = region_new(win, 0, 0, 0, 100, 100);
-	tl_objs = tlist_new(reg, 100, 100, TLIST_POLL);
-	event_new(tl_objs, "tlist-changed", tl_objs_selected, NULL);
-	event_new(tl_objs, "tlist-poll", tl_objs_poll, NULL);
-
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl, "tlist-changed", objs_show, "%p", tl);
+		event_new(tl, "tlist-poll", objs_poll, NULL);
+	}
 	return (win);
 }
 
