@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.2 2002/08/12 06:56:26 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.3 2002/08/19 07:33:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -208,6 +208,17 @@ propedit_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	struct map *m = mv->map;
 	struct node *n = &m->map[y][x];
 
+	if (pe->nodeflags & NODE_ORIGIN) {
+		struct node *on;
+
+		on = &m->map[m->defy][m->defx];
+		on->flags &= ~(NODE_ORIGIN);
+		n->flags |= NODE_ORIGIN;
+		m->defx = x;
+		m->defy = y;
+		return;
+	}
+
 	switch (pe->mode) {
 	case PROPEDIT_CLEAR:
 		n->flags = pe->nodeflags;
@@ -217,6 +228,7 @@ propedit_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		break;
 	case PROPEDIT_UNSET:
 		n->flags &= ~(pe->nodeflags);
+		break;
 	}
 }
 
