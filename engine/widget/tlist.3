@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.37 2004/05/07 04:26:54 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.38 2004/05/10 05:15:01 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,7 +41,8 @@
 The
 .Nm
 widget implements a dynamic, scrollable list of items.
-Single or multiple selections of items are allowed.
+Individual items are typically associated with user-supplied pointers.
+Single or multiple selections of items are possible.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct tlist *"
@@ -83,8 +84,8 @@ may include:
 #define TLIST_POLL		0x04  /* Generate tlist-poll events */
 #define TLIST_DBLCLICK		0x08  /* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10  /* Hack to display trees */
-#define TLIST_STATIC_ICONS	0x20  /* Optimize on the assumption that
-					 surfaces are always accessible */
+#define TLIST_STATIC_ICONS	0x20  /* Icon surfaces may be accessed
+				         at any time (avoids scale/copy) */
 .Ed
 .Pp
 The
@@ -313,8 +314,12 @@ with the
 flag).
 .El
 .Sh TROUBLETONS
-Polled mode handling is inefficient and increases the complexity of the code,
-since selections must be saved/restored according to their user pointer.
+A horizontal scrollbar should display when there are labels exceeding the
+.Nm
+width.
+.Pp
+Polled mode handling is inefficient since selections must be saved and restored
+each polling cycle.
 .Pp
 .Dv TLIST_TREE
 is a cheap and bletcherous hack.
@@ -326,6 +331,18 @@ function should probably be renamed
 and take a
 .Xr printf 3
 format string.
+.Sh EFFICIENCY
+Item insertion and removal are O(1) operations.
+For n items, lookup and mouse selection handling is O(n), which becomes
+significant when viewing the bottom of lists with large n.
+.Pp
+For polled lists where the item list is rebuilt very frequently, it would
+be much more efficient to store the items in an array, at the cost of O(n)
+removal.
+This would also allow O(1) handling of mouse selections since all items have
+the same height.
+.Pp
+The allocation of items also incur significant overhead with polled lists.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.34 2004/03/21 07:00:45 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.35 2004/05/02 09:38:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -11,12 +11,14 @@
 #define TLIST_LABEL_MAX	64
 
 struct tlist_item {
-	int		 selected;		/* Selection flag */
+	int	selected;		/* Effective selection */
+	int	overlap;		/* Temporary selection */
+
 	SDL_Surface	*iconsrc;		/* Source icon (or NULL) */
 	SDL_Surface	*icon;			/* Scaled icon (or NULL) */
-	void		*p1;			/* User data */
+	void		*p1;			/* User-supplied pointer */
 	char		 text[TLIST_LABEL_MAX];	/* Label text */
-	SDL_Surface	*label;			/* Rendered text */
+	SDL_Surface	*label;			/* Rasterized text */
 
 	Uint8	 depth;				/* Depth in tree */
 	Uint8	 flags;
@@ -33,27 +35,35 @@ struct tlist {
 	struct widget wid;
 	
 	int	 flags;
-#define TLIST_MULTI		0x01	/* Ctrl/shift multiple selections */
-#define TLIST_MULTI_STICKY	0x02	/* Sticky multiple selections */
+#define TLIST_MULTI		0x01	/* Multiple selections (ctrl/shift) */
+#define TLIST_MULTI_STICKY	0x02	/* Multiple sticky selections */
 #define TLIST_POLL		0x04	/* Generate tlist-poll events */
 #define TLIST_DBLCLICK		0x08	/* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10	/* Hack to display trees */
-#define TLIST_STATIC_ICONS	0x20	/* Access/scale icon surfaces as items
-					   are being drawn for the first time */
+#define TLIST_STATIC_ICONS	0x20	/* Icon surfaces may be accessed
+					   at any time (avoids scale/copy) */
 
 	void	*selected;		/* Default `selected' binding */
 	int	 prew, preh;		/* Prescale hint */
+	int	 moved;			/* Used for key repeat */
 
 	pthread_mutex_t		 lock;
 	int	 		 item_h;	/* Item height */
-	struct tlist_item	*dblclicked;	/* Last clicked on this item */
-	SDL_TimerID		 dbltimer;	/* Double click timer */
+	int			 dblclicked;	/* Last clicked on this item */
 	struct tlist_itemq	 items;		/* Current Items */
 	struct tlist_itemq	 selitems;	/* Saved items */
 	int			 nitems;	/* Current item count */
 	int			 nvisitems;	/* Visible item count */
 	struct scrollbar	*sbar;		/* Vertical scrollbar */
 };
+
+/* Traverse the user pointer of tlist items assumed to be of the same type. */
+#define TLIST_FOREACH_ITEM(p, tl, it, type)				\
+	for((it) = TAILQ_FIRST(&(tl)->items),				\
+	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL;		\
+	    (it) != TAILQ_END(&(tl)->children) && (it)->p1 != NULL;	\
+	    (it) = TAILQ_NEXT((it), cobjs),				\
+	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL)
 
 __BEGIN_DECLS
 struct tlist *tlist_new(void *, int);
@@ -76,8 +86,8 @@ struct tlist_item	*tlist_insert_item(struct tlist *, SDL_Surface *,
 			                   const char *, const void *);
 struct tlist_item	*tlist_insert_item_head(struct tlist *, SDL_Surface *,
 			                        const char *, const void *);
-int			 tlist_select(struct tlist *, struct tlist_item *);
-int			 tlist_unselect(struct tlist *, struct tlist_item *);
+void			 tlist_select(struct tlist *, struct tlist_item *);
+void			 tlist_unselect(struct tlist *, struct tlist_item *);
 void			 tlist_select_all(struct tlist *);
 void			 tlist_unselect_all(struct tlist *);
 struct tlist_item	*tlist_item_index(struct tlist *, int);
