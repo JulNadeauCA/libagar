@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.17 2003/09/02 01:53:42 vedge Exp $
+# $Csoft: fr.po,v 1.18 2003/09/02 03:43:24 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-09-01 22:29-0300\n"
+"POT-Creation-Date: 2003-09-05 07:23-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <french@csoft.org>\n"
@@ -306,20 +306,14 @@ msgstr "Son: "
 msgid "Dependencies:"
 msgstr "Dépendances:"
 
+msgid "Resident graphics"
+msgstr "Graphiques en mémoire"
+
 msgid "Refresh rate"
 msgstr "Fréquence de rafraîchissement"
 
-#, c-format
-msgid "keyboard%d"
-msgstr "clavier%d"
-
-#, c-format
-msgid "joy%d"
-msgstr "joy%d"
-
-#, c-format
-msgid "mouse%d"
-msgstr "souris%d"
+msgid "Bad joystick index"
+msgstr "Mauvais index de joystick"
 
 #, c-format
 msgid "%ux%u nodes exceed %ux%u."
@@ -1008,6 +1002,15 @@ msgstr "%s: %s à échoué"
 
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
+
+#~ msgid "keyboard%d"
+#~ msgstr "clavier%d"
+
+#~ msgid "joy%d"
+#~ msgstr "joy%d"
+
+#~ msgid "mouse%d"
+#~ msgstr "souris%d"
 
 #~ msgid "Unicode string too big."
 #~ msgstr "La chaîne de caractères Unicode est trop grande."

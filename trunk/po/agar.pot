@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2003-09-04 20:47-0300\n"
+"POT-Creation-Date: 2003-09-05 07:23-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -361,19 +361,8 @@ msgstr ""
 msgid "Refresh rate"
 msgstr ""
 
-#: engine/input.c:46
-#, c-format
-msgid "keyboard%d"
-msgstr ""
-
-#: engine/input.c:49
-#, c-format
-msgid "joy%d"
-msgstr ""
-
-#: engine/input.c:52
-#, c-format
-msgid "mouse%d"
+#: engine/input.c:65
+msgid "Bad joystick index"
 msgstr ""
 
 #: engine/map.c:157 engine/map.c:213
@@ -693,28 +682,28 @@ msgstr ""
 msgid "Layer NN (visible, editing)    "
 msgstr ""
 
-#: engine/mapedit/nodeedit.c:126
+#: engine/mapedit/nodeedit.c:127
 msgid "No node is selected."
 msgstr ""
 
-#: engine/mapedit/nodeedit.c:184
+#: engine/mapedit/nodeedit.c:185
 #, c-format
 msgid "%s node"
 msgstr ""
 
-#: engine/mapedit/nodeedit.c:191 engine/mapedit/tool/merge.c:287
+#: engine/mapedit/nodeedit.c:192 engine/mapedit/tool/merge.c:287
 msgid "Remove"
 msgstr ""
 
-#: engine/mapedit/nodeedit.c:194
+#: engine/mapedit/nodeedit.c:195
 msgid "Dup"
 msgstr ""
 
-#: engine/mapedit/nodeedit.c:197
+#: engine/mapedit/nodeedit.c:198
 msgid "Up"
 msgstr ""
 
-#: engine/mapedit/nodeedit.c:200
+#: engine/mapedit/nodeedit.c:201
 msgid "Down"
 msgstr ""
 
