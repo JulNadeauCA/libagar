@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.22 2002/03/05 16:57:33 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.23 2002/03/17 09:15:00 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -57,9 +57,8 @@ void	 decrease_uint32(Uint32 *, Uint32, Uint32);
 void	 object_dump(void *);
 
 struct object	*object_strfind(char *);
-struct mappos	*object_madd(void *, Uint32, Uint32, struct input *,
+struct mappos	*object_addpos(void *, Uint32, Uint32, struct input *,
 		    struct map *, Uint32, Uint32);
-void		 object_mdel(void *, Uint32, Uint32, struct map *, Uint32,
-		     Uint32);
+void		 object_delpos(void *);
 
 #endif	/* _AGAR_OBJECT_H_ */
