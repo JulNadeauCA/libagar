@@ -39,6 +39,11 @@ done
 if [ "$PREFIX" = "" ]; then
 PREFIX=/usr/local
 fi
+if [ -x "`which pwd`" ]; then
+S=`pwd `
+else
+S=""
+fi
 echo >Makefile.config
 echo >engine/config.h
 CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused -g -I$S"
