@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.78 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.79 2004/03/30 16:32:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -253,10 +253,12 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		SDL_Surface **lines;
 		int lineskip, i;
 		const Uint32 sep[2] = { '\n', '\0' };
+		Uint32 colorkey;
 
 		/*
 		 * Render the text to an array of surfaces, since we cannot
 		 * predict the width of the final surface.
+		 * XXX move to ttf_render_unicode_solid().
 		 */
 		lineskip = ttf_font_line_skip(fon);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines, M_TEXT);
@@ -277,16 +279,27 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		rd.w = 0;
 		rd.h = fon_h;
 
-		/* Render the final surface. */
-		su = view_surface(SDL_SWSURFACE, maxw, lineskip*nlines);
+		/* Generate the final surface. */
+		su = SDL_CreateRGBSurface(SDL_SWSURFACE, maxw, lineskip*nlines,
+		    vfmt->BitsPerPixel,
+		    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, 0);
+		if (su == NULL)
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	
+		colorkey = SDL_MapRGB(su->format, 15, 15, 15);
+		SDL_FillRect(su, NULL, colorkey);
+
 		for (i = 0;
 		     i < nlines;
 		     i++, rd.y += lineskip) {
 			rd.w = lines[i]->w;
+			SDL_SetColorKey(lines[i], 0, 0);
 			SDL_BlitSurface(lines[i], NULL, su, &rd);
 			SDL_FreeSurface(lines[i]);
 		}
 		Free(lines, M_TEXT);
+
+		SDL_SetColorKey(su, SDL_SRCCOLORKEY, colorkey);
 	}
 
 	free(ucsd);
