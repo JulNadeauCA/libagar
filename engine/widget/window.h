@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.45 2002/11/14 02:17:45 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.46 2002/11/15 00:49:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -111,10 +111,10 @@ struct window {
 	 (xa) < ((win)->rd.x+(win)->rd.w) && 			\
 	 (ya) < ((win)->rd.y+(win)->rd.h))
 
-struct window	*window_new(char *, char *, int, int, int, int, int, int, int);
+struct window	*window_new(char *, int, int, int, int, int, int, int);
 struct window	*window_generic_new(int, int, const char *, ...);
-void	 	 window_init(struct window *, char *, char *, int, int, int,
-		     int, int, int, int);
+void	 	 window_init(struct window *, char *, int, int, int, int, int,
+		     int, int);
 int		 window_load(void *, int);
 int		 window_save(void *, int);
 void		 window_destroy(void *);

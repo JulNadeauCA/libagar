@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.13 2002/11/08 06:02:47 vedge Exp $
+.\"	$Csoft: window.3,v 1.14 2002/11/15 00:51:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -38,21 +38,17 @@
 .Sh DESCRIPTION
 The
 .Nm
-structure implements a mobile, resizable windows containing
-.Xr region 3
-structures, which in turn contain
-.Xr widget 3
-structures.
+structure implements a mobile, resizable window.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct window *"
-.Fn window_new "char *name" "char *caption" "int flags" "int x" "int y" "int w" "int h" "int minwidth, int minheight"
+.Fn window_new "char *name" "int flags" "int x" "int y" "int w" "int h" "int minwidth, int minheight"
 .Pp
 .Ft "struct window *"
-.Fn window_generic_new "int w" "int h" "const char *caption_fmt" "..."
+.Fn window_generic_new "int w" "int h" "const char *name" "..."
 .Pp
 .Ft void
-.Fn window_init "struct window *win" "char *name" "char *caption" "int flags" "int x" "int y" "int w" "int h, int minwidth, int minheight"
+.Fn window_init "struct window *win" "char *name" "int flags" "int x" "int y" "int w" "int h, int minwidth, int minheight"
 .Pp
 .Ft void
 .Fn window_destroy "struct window *win"
@@ -72,32 +68,33 @@ The
 function allocates, initializes, and attaches a
 .Nm
 structure.
+.Pp
+The
 .Fn window_generic_new
-allocates, initializes and attaches a centered
+function allocates, initializes and attaches a centered
 .Nm
 with a minimum and default geometry of
 .Fa w
 by
 .Fa h
 pixels.
+If
+.Fa name
+is non-NULL, it specifies the name of the window (implying the
+.Dv WINDOW_SAVE_POSITION
+flag) and causes the function to return NULL if such a window exists.
+.Pp
 The
 .Fn window_init
 function initializes a
 .Nm
 structure.
-.Pp
 The
 .Fa name
 argument points to a null-terminated string to identify the window, if it is
 unique (so the window coordinates and geometry can be saved to disk), or
 .Dv NULL
 if more than one instance of this window will be created.
-The
-.Fa caption
-argument points to a null-terminated string that will be displayed in the
-title bar (which can be changed at runtime using the
-.Fn window_set_caption
-function).
 The
 .Fa x
 and
@@ -149,7 +146,9 @@ from the window
 .Pp
 The
 .Fn window_set_caption
-function sets the text shown inside the window titlebar.
+function sets the text shown inside the window titlebar, which is initially
+set to
+.Sq Untitled .
 .Sh VISIBILITY
 .nr nS 1
 .Ft int
