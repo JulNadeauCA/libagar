@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.13 2004/05/31 05:15:08 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.14 2004/10/06 04:37:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -37,7 +37,6 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
-#include "vgobj.h"
 
 const struct vg_element_ops vg_lines_ops = {
 	N_("Line segments"),
