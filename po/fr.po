@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.31 2004/03/12 02:18:01 vedge Exp $
+# $Csoft: fr.po,v 1.32 2004/03/20 08:25:13 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -570,19 +570,19 @@ msgid "Eraser"
 msgstr "Gomme à effacer"
 
 msgid "Remove the highest node reference."
-msgstr "Supprimer la dernière référence de noeud."
+msgstr "Supprimer le dernier élément."
 
 msgid "Color Inversion"
 msgstr "Inversion de couleur"
 
 msgid "Invert the color of a tile."
-msgstr "Inverser la couleur d'une tuile."
+msgstr "Inverser les couleurs d'une tuile."
 
 msgid "Clear/Fill"
 msgstr "Effacement/Remplissage"
 
 msgid "Clear or fill the whole layer/selection."
-msgstr "Effacer ou remplir la sélection ou le calque entier."
+msgstr "Remplir ou effacer la séléction ou le calque entier."
 
 msgid "Pattern fill"
 msgstr "Motif"
@@ -594,10 +594,10 @@ msgid "The copy/paste buffer is empty."
 msgstr "Le tampon est vide!"
 
 msgid "Flip Tile"
-msgstr "Mirror"
+msgstr "Symétrie"
 
 msgid "Apply a flip/mirror transformation on a tile."
-msgstr "Appliquer un effet mirroir."
+msgstr "Effectuer une symétrie."
 
 msgid "Horizontal"
 msgstr "Horizontal"
@@ -615,7 +615,7 @@ msgid "Merge tool"
 msgstr "Fusion"
 
 msgid "Apply patterns, interpolating edge tiles."
-msgstr "Appliquer des motifs avec rebords."
+msgstr "Application de motifs et de terrain."
 
 msgid "Load set"
 msgstr "Charger"
@@ -634,7 +634,7 @@ msgid "Magnifier"
 msgstr "Loupe"
 
 msgid "Zoom in and out specific areas of the map."
-msgstr "Zoom avant et arrière sur une carte."
+msgstr "Zoom avant et arrière sur la carte."
 
 msgid "There is no visible map."
 msgstr "Aucune carte n'est présentement visible."
@@ -662,7 +662,7 @@ msgid "Shift tool"
 msgstr "Déplacement"
 
 msgid "Displace a tile with the mouse."
-msgstr "Déplacer une tuile à l'aide de la souris."
+msgstr "Déplacement fin d'une tuile à l'aide de la souris."
 
 msgid "Highest"
 msgstr "Plus haut"
@@ -704,7 +704,7 @@ msgid "Property editor"
 msgstr "Éditeur de propriétés"
 
 msgid "Alter the properties of node references."
-msgstr "Changer les propriétés des références de noeuds."
+msgstr "Changer les propriétés des références nodales."
 
 msgid "Block"
 msgstr "Bloquer"
