@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.63 2002/08/24 04:07:17 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.64 2002/09/01 08:58:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -154,14 +154,14 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	world = emalloc(sizeof(struct world));
 	world_init(world, gameinfo->prog);
 
+	/* Initialize/load engine settings. */
+	config = config_new();
+	object_load(config);
+	
 	/* Initialize the font engine. */
 	if (text_engine_init() != 0) {
 		return (-1);
 	}
-
-	/* Initialize/load engine settings. */
-	config = config_new();
-	object_load(config);
 
 	/* Overrides */
 	if (fullscreen)
@@ -313,9 +313,9 @@ engine_destroy(void)
 	/* Unlink all objects and add them to the free list. */
 	world_destroy(world);
 	
-	/* Force garbage collection. */
-	object_start_gc(0, NULL);
-	object_destroy_gc();
+	/* Force garbage collection of media. */
+	media_start_gc(0, NULL);
+	media_destroy_gc();
 
 	/* Destroy the font engine. */
 	text_engine_destroy();
