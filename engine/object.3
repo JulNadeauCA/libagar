@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.41 2003/06/25 06:14:03 vedge Exp $
+.\"	$Csoft: object.3,v 1.42 2003/07/08 00:34:52 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,28 +41,43 @@
 The Agar game logic is built upon a tree of
 .Nm
 structures.
-Similar to a filesystem, objects may be referenced either by absolute or
-relative path names.
-However, objects may also reference each other using pointers, and dependency
-tables are used to keep track of these references.
-An object cannot depend on another object which does not share the same
-root, and objects have an implicit dependency upon their parent.
-.Pp
 The
 .Nm
-layer implements:
-.Bl -bullet -compact
-.It
-Memory management (paging, garbage collection)
-.It
-Persistence (saving/loading from network format)
-.It
-Linkage and dependencies
-.It
-Shared graphics/audio management
-.It
-Generic events and properties
+layer is responsible for:
+.Pp
+.Bl -tag -width "Generic events/props"
+.It Memory management
+Paging and garbage collection of object data.
+.It Persistence
+Saving/loading of object data in network format.
+.It Linkage/dependencies
+Similar to a filesystem, objects may be referenced either by absolute or
+relative path names.
+Dependency tables keep track of object references to other objects
+(sharing the same root).
+.It Shared audio/gfx
+Objects may reference shared data, such as graphics and audio.
+For instance, if the
+.Xr map 3
+renderer wants to draw a sprite representing a character, the reference is
+made using the object's
+.Va gfx
+pointer.
+This
+.Va gfx
+pointer usually references shared data, but it is possible to use a copy on
+write style algorithm to deal with modifications local to object instances.
+.It Generic events/props
+The
+.Nm
+object includes a list of event handlers managed by the
+.Xr event 3
+interface, and a list
+of generic properties which are accessed by the
+.Xr prop 3
+interface.
 .El
+.Pp
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "struct object *"
@@ -128,10 +143,10 @@ is not NULL, it should point to the following structure:
 .Bd -literal
 struct object_ops {
 	void (*init)(void *obj, const char *name);	/* Initialize */
-	void (*reinit)(void *obj);			/* Reinitialize */
+	void (*reinit)(void *obj);			/* Free data */
 	void (*destroy)(void *obj);			/* Release */
-	int  (*load)(void *obj, struct netbuf *buf);	/* Load from buf */
-	int  (*save)(void *obj, struct netbuf *buf);	/* Save to buf */
+	int  (*load)(void *obj, struct netbuf *buf);	/* Load data */
+	int  (*save)(void *obj, struct netbuf *buf);	/* Save data */
 	struct window *(*edit)(void *obj);		/* Edit object */
 };
 .Ed
@@ -178,22 +193,52 @@ too small to hold the full pathname and the terminating NUL.
 .Pp
 Since
 .Fn object_copy_name
-must traverse the tree backwards and the parents may change, a big lock is
-required in order to protect linkage.
+must traverse the tree backwards, and an object may move from one parent
+to another, the root object provides a lock to protect its linkage.
 .Fn lock_linkage
 and
 .Fn unlock_linkage
-acquire and release the linkage lock, respectively.
+acquire and release the world's linkage lock, respectively.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
 .Fn object_used "const void *obj"
+.Pp
+.Ft "struct object_dep *"
+.Fn object_add_dep "void *obj" "void *depobj"
+.Pp
+.Ft "void"
+.Fn object_del_dep "void *obj" "void *depobj"
+.Pp
+.Ft "struct object *"
+.Fn object_find_dep "const void *obj" "Uint32 ind"
+.Pp
+.Ft "Uint32"
+.Fn object_dep_index "const void *obj" "const void *depobj"
 .nr nS 0
 .Pp
 The
 .Fn object_used
 function returns 1 if a given object is referenced from another object
 sharing the same root.
+.Pp
+The
+.Fn object_add_dep
+function either creates a new dependency upon
+.Fa depobj ,
+or increment the reference count if one exists.
+.Fn object_del_dep
+decrements the reference count upon
+.Fa depobj ,
+removing it if it reaches 0.
+.Pp
+The
+.Fn object_find_dep
+function returns the object of the dependency at the given index, for purposes
+of decoding object references in network format.
+.Fn object_dep_index
+returns the index of a dependency, for purposes of encoding object references
+in network format.
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "int"
@@ -237,38 +282,84 @@ list, the property table and the attached objects, respectively.
 .Pp
 .Ft "int"
 .Fn object_save "const void *obj"
+.Pp
+.Ft "int"
+.Fn object_page_in "void *obj" "enum object_page_item item"
+.Pp
+.Ft "int"
+.Fn object_page_out "void *obj" "enum object_page_item item"
 .nr nS 0
 .Pp
 The
 .Fn object_load
-function loads the state of an object and its descendents from the first file
-found in the search path (the colon-separated
+function invokes the
+.Va reinit
+op of an object and loads its generic part from the first file found in the
+search path (the colon-separated
 .Sq load-path
 config setting).
-.Pp
 .Fn object_load
-invokes the
-.Va reinit
-operation on the object, prior to
-.Va load .
+invokes itself on the child objects in a recursive manner.
+Note that
+.Fn object_load
+does not invoke the
+.Va load
+op unless there is currently data resident, as a result of a previous
+.Fn object_page_in
+operation.
+.Pp
 Saved child objects found in the data file are each compared against the
 currently attached objects.
-If a match is found,
+If a match is found, the
 .Va reinit
-and
+op is called.
+The
 .Va load
-is used.
+is invoked only if there is currently resident data.
 If there is no currently attached object matching a saved object, one is
-dynamically allocated and initialized using the type switch (the typesw[]
+dynamically allocated and initialized using the type switch (the
+.Va typesw[]
 array).
 If a currently attached object has no matching saved object, it is destroyed
 (as long as it is not currently in use).
 .Pp
+The
 .Fn object_save
-saves the state of an object and its descendents to files/directories in the
-save directory (the
+function writes the state of an object and its descendents to
+files/directories in the save directory (the
 .Sq save-path
-config setting).
+config setting),
+in network format.
+.Pp
+The
+.Fn object_page_in
+function fetches data associated with an object.
+If the data is already resident, its reference count is incremented.
+The
+.Fa item
+argument may be one of:
+.Bd -literal
+enum object_page_item {
+	OBJECT_GFX,		/* Graphics */
+	OBJECT_AUDIO,		/* Audio data */
+	OBJECT_DATA		/* Object derivate data */
+};
+.Ed
+.Pp
+The
+.Fn object_page_out
+function decrements the reference count on data.
+For
+.Dv OBJECT_GFX
+and
+.Dv OBJECT_AUDIO ,
+the reference count is decremented on the shared media.
+For
+.Dv OBJECT_DATA ,
+.Fn object_save
+and
+.Fn object_reinit
+are used.
 .Pp
 These functions return 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
