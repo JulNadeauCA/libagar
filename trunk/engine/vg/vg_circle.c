@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.3 2004/04/17 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -89,7 +89,9 @@ circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	if (cur_radius != NULL) {
 		cur_radius->x = x;
 		cur_radius->y = y;
-		cur_circle->vg_circle.radius = fabs(x-vg->origin[1].x);
+		cur_circle->vg_circle.radius =
+		    sqrt(pow(x-vg->origin[1].x,2) +
+		         pow(y-vg->origin[1].y,2));
 	} else {
 		vg->origin[1].x = x;
 		vg->origin[1].y = y;
