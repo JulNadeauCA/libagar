@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.112 2004/04/23 10:50:54 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.113 2004/04/23 10:55:33 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -371,13 +371,13 @@ config_search_file(const char *path_key, const char *name, const char *ext,
 {
 	char file[MAXPATHLEN];
 	struct stat sta;
-	char *dir, *last;
+	char *dir, *pathp = path;
 
 	prop_copy_string(config, path_key, path, path_len);
 
-	for (dir = strtok_r(path, ":", &last);
+	for (dir = strsep(&pathp, ":");
 	     dir != NULL;
-	     dir = strtok_r(NULL, ":", &last)) {
+	     dir = strsep(&pathp, ":")) {
 		strlcpy(file, dir, sizeof(file));
 
 		if (name[0] != '/') {

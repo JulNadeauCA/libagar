@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.173 2004/04/11 03:29:15 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.174 2004/04/23 10:55:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -532,18 +532,18 @@ object_destroy(void *p)
 int
 object_copy_filename(const void *p, char *path, size_t path_len)
 {
-	char load_path[MAXPATHLEN];
+	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
 	char obj_name[OBJECT_PATH_MAX];
 	const struct object *ob = p;
 	struct stat sta;
-	char *dir, *last;
+	char *dir;
 
 	prop_copy_string(config, "load-path", load_path, sizeof(load_path));
 	object_copy_name(ob, obj_name, sizeof(obj_name));
 
-	for (dir = strtok_r(load_path, ":", &last);
+	for (dir = strsep(&loadpathp, ":");
 	     dir != NULL;
-	     dir = strtok_r(NULL, ":", &last)) {
+	     dir = strsep(&loadpathp, ":")) {
 	     	strlcpy(path, dir, path_len);
 		if (ob->save_pfx != NULL) {
 			strlcat(path, ob->save_pfx, path_len);
@@ -567,18 +567,18 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 int
 object_copy_dirname(const void *p, char *path, size_t path_len)
 {
-	char load_path[MAXPATHLEN];
+	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
 	char obj_name[OBJECT_PATH_MAX];
 	const struct object *ob = p;
 	struct stat sta;
-	char *dir, *last;
+	char *dir;
 
 	prop_copy_string(config, "load-path", load_path, sizeof(load_path));
 	object_copy_name(ob, obj_name, sizeof(obj_name));
 
-	for (dir = strtok_r(load_path, ":", &last);
+	for (dir = strsep(&loadpathp, ":");
 	     dir != NULL;
-	     dir = strtok_r(NULL, ":", &last)) {
+	     dir = strsep(&loadpathp, ":")) {
 		char tmp_path[MAXPATHLEN];
 
 	     	strlcpy(tmp_path, dir, sizeof(tmp_path));
