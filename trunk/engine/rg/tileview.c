@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.17 2005/02/21 09:43:00 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.18 2005/02/22 04:34:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -209,6 +209,8 @@ tileview_buttondown(int argc, union evarg *argv)
 					th->enable = 1;
 					tv->xorig = sx;
 					tv->yorig = sy;
+					ctrl->xoffs = 0;
+					ctrl->yoffs = 0;
 					if (ctrl->buttondown != NULL) {
 						event_post(NULL, tv,
 						    ctrl->buttondown->name,
@@ -448,6 +450,9 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 		break;
 	}
 
+	ctrl->xoffs += xoffs;
+	ctrl->yoffs += yoffs;
+
 	if (ctrl->motion != NULL)
 		event_post(NULL, tv, ctrl->motion->name, "%i,%i", xoffs, yoffs);
 }
@@ -593,6 +598,8 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 	ctrl->motion = NULL;
 	ctrl->buttondown = NULL;
 	ctrl->buttonup = NULL;
+	ctrl->xoffs = 0;
+	ctrl->yoffs = 0;
 	TAILQ_INSERT_TAIL(&tv->ctrls, ctrl, ctrls);
 
 	if (fmt == NULL)

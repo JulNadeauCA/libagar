@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.11 2005/02/14 07:26:32 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.12 2005/02/21 09:43:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -684,6 +684,8 @@ tileset_edit(void *p)
 	hbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL|BOX_HOMOGENOUS);
 
 	box = box_new(hbox, BOX_VERT, BOX_HFILL);
+	box_set_spacing(box, 0);
+	box_set_padding(box, 2);
 	box_set_depth(box, -1);
 	{
 		object_attach(box, tl_tiles);
@@ -707,6 +709,7 @@ tileset_edit(void *p)
 	}
 	
 	box = box_new(hbox, BOX_VERT, BOX_HFILL);
+	box_set_spacing(box, 0);
 	box_set_depth(box, -1);
 	{
 		object_attach(box, tl_pixmaps);
