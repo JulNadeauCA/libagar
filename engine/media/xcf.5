@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.12 2002/12/20 00:33:22 vedge Exp $
+.\"	$Csoft: xcf.5,v 1.1 2002/12/22 09:44:46 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -37,7 +37,11 @@ The
 .Nm
 file format has been designed to store tiled and layered images in
 .Xr gimp 1 .
+.Pp
 Integers are stored in network format, strings are length-encoded.
+Single-precision floating point numbers are stored in
+.St -ieee754
+format.
 An
 .Nm
 file start by a 14-byte magic starting with the
@@ -51,11 +55,11 @@ struct xcf_image {
 #define XCF_IMAGE_RGB		0
 #define XCF_IMAGE_GREYSCALE	1
 #define XCF_IMAGE_INDEXED	2
-	{
+	Props {
 		PROP_COLORMAP, PROP_COMPRESSION, PROP_GUIDES,
 		PROP_RESOLUTION, PROP_TATTOO, PROP_PARASITES,
 		PROP_UNIT, PROP_PATHS, PROP_USER_UNIT
-	};
+	} ...
 	Uint32	layer_file_offsets[];	/* Offsets for xcf_layer items */
 	Uint32	channel_file_offsets[]; /* Offsets for xcf_channel items */
 };
@@ -85,7 +89,7 @@ struct xcf_layer {
 		PROP_LINKED, PROP_PRESERVE_TRANSPARENCY,
 		PROP_APPLY_MASK, PROP_EDIT_MASK, PROP_SHOW_MASK,
 		PROP_OFFSETS
-	}
+	} ...
 	Uint32	 hierarchy_file_offset;	/* Offset of layer hier */
 	Uint32	 layer_mask_offset;	/* Offset of mask hier */
 };
@@ -95,7 +99,7 @@ struct xcf_channel {
 	Props {
 		PROP_ACTIVE_CHANNEL, PROP_SELECTION, PROP_OPACITY,
 		PROP_VISIBLE, PROP_SHOW_MASKED, PROP_COLOR
-	};
+	} ...
 	Uint32	 hierarchy_file_offset;	/* Offset of hier */
 };
 struct xcf_hier {
