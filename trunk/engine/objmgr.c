@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.4 2005/02/03 09:19:05 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.5 2005/02/03 11:28:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -248,6 +248,13 @@ obj_op(int argc, union evarg *argv)
 			{
 				struct object *dob;
 
+				if (ob == world ||
+				    ob->flags & OBJECT_NON_PERSISTENT) {
+					text_msg(MSG_ERROR,
+					    _("%s: cannot duplicate."),
+					    ob->name);
+					break;
+				}
 				if ((dob = object_duplicate(ob)) == NULL)
 					text_msg(MSG_ERROR, "%s: %s", ob->name,
 					    error_get());
