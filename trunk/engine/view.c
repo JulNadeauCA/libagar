@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.47 2002/06/06 10:15:10 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.48 2002/06/09 10:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,96 +48,14 @@ static const struct object_ops viewport_ops = {
 	NULL		/* save */
 };
 
+/* Read-only as long as the engine is running. */
+struct viewport *mainview;
+
 static int	**view_allocmask(int, int);
 static SDL_Rect	**view_allocmaprects(int, int);
 static SDL_Rect	 *view_allocrects(int, int);
 static void	  view_freemask(struct viewport *);
 static void	  view_freemaprects(struct viewport *);
-
-/* Read-only as long as the engine is running. */
-struct viewport *mainview;
-
-/*
- * Start displaying the given map inside the given view.
- * Map/view must be locked.
- */
-int
-view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
-{
-	if (mode > -1) {
-		v->mode = mode;
-	}
-
-	v->fps = 30;	/* XXX pref */
-
-	switch (v->mode) {
-	case VIEW_MAPNAV:
-		dprintf("map navigation mode\n");
-		v->map = m;
-		v->mapw = (v->w / TILEW);
-		v->maph = (v->h / TILEH);
-		v->mapxoffs = 0;
-		v->mapyoffs = 0;
-		v->vmapw = v->mapw - v->mapxoffs;
-		v->vmaph = v->maph - v->mapyoffs;
-		break;
-	case VIEW_MAPEDIT:
-		dprintf("map edition mode\n");
-		v->map = m;
-		v->mapw = (v->w / TILEW);
-		v->maph = (v->h / TILEH);
-		v->mapxoffs = 1;
-		v->mapyoffs = 1;
-		if (v->map->mapw < v->mapw)
-			v->mapxoffs += (v->mapw - v->map->mapw) / 2;
-		if (v->map->maph < v->maph)
-			v->mapyoffs += (v->maph - v->map->maph) / 2;
-		v->vmapw = v->mapw - v->mapxoffs - 1;	/* Tile list */
-		v->vmaph = v->maph - v->mapyoffs;
-		break;
-	default:
-		fatal("bad mode\n");
-	}
-
-	dprintf("view %dx%d, map view %dx%d at %d,%d\n", v->w, v->h,
-	    v->mapxoffs, v->mapyoffs, v->mapw, v->maph);
-
-	switch (v->depth) {
-	case 8:
-		v->flags |= SDL_HWPALETTE;
-		break;
-	}
-
-	if (caption != NULL) {
-		SDL_WM_SetCaption(caption, "AGAR");
-	}
-
-	v->v = SDL_SetVideoMode(v->w + 64, v->h + 64, v->depth, v->flags);
-	if (v->v == NULL) {
-		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->depth,
-		    SDL_GetError());
-		return (-1);
-	}
-
-	/*
-	 * Allocate view masks, precalculate node rectangles, and
-	 * preallocate an array able to hold all possible rectangles
-	 * in a view, for optimization purposes.
-	 */
-	if (v->mapmask == NULL) {
-		v->mapmask = view_allocmask(v->mapw, v->maph);
-	}
-	if (v->maprects == NULL) {
-		v->maprects = view_allocmaprects(v->mapw, v->maph);
-	}
-	if (v->rects == NULL) {
-		v->rects = view_allocrects(v->mapw, v->maph);
-	}
-
-	SDL_ShowCursor(SDL_ENABLE);
-	SDL_Delay(100);
-	return (0);
-}
 
 /* Allocate a mask of the given size. */
 static int **
@@ -154,7 +72,6 @@ view_allocmask(int w, int h)
 			mask[y][x] = 0;
 		}
 	}
-
 	return (mask);
 }
 
@@ -175,7 +92,6 @@ view_allocmaprects(int w, int h)
 			rects[y][x].h = TILEH;
 		}
 	}
-	
 	return (rects);
 }
 
@@ -192,7 +108,6 @@ view_allocrects(int w, int h)
 	len = (w * h) * sizeof(SDL_Rect *);
 	rects = emalloc(len);
 	memset(rects, (int)NULL, len);
-	
 	return (rects);
 }
 
@@ -201,13 +116,13 @@ view_allocrects(int w, int h)
  * Map/view must be locked.
  */
 void
-view_maskfill(struct viewport *v, SDL_Rect *rd, int n)
+view_maskfill(SDL_Rect *rd, int n)
 {
 	int x, y;
 
 	for (y = rd->y; y < rd->y + rd->h; y++) {
 		for (x = rd->x; x < rd->x + rd->w; x++) {
-			v->mapmask[y][x] += n;
+			mainview->mapmask[y][x] += n;
 		}
 	}
 }
@@ -244,37 +159,82 @@ view_freemaprects(struct viewport *v)
 	v->maprects = NULL;
 }
 
-struct viewport *
-view_new(int w, int h, int depth, int flags)
+void
+view_init(int mode, int w, int h, int depth, int flags)
 {
 	struct viewport *v;
 
 	v = emalloc(sizeof(struct viewport));
 	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
-	v->fps = -1;
+	v->mode = mode;
 	v->w = w;
 	v->h = h;
-	v->flags = flags;
 	v->depth = SDL_VideoModeOK(v->w, v->h, depth, flags);
 	v->map = NULL;
-	v->mapw = 0;
-	v->maph = 0;
 	v->mapx = 0;
 	v->mapy = 0;
-	v->mapxoffs = 0;
-	v->mapyoffs = 0;
-	v->vmapw = 0;
-	v->vmaph = 0;
-	v->mapmask = NULL;
-	v->maprects = NULL;
-	v->rects = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	v->wop_mapx = 0;
 	v->wop_mapy = 0;
 	TAILQ_INIT(&v->windowsh);
 	pthread_mutex_init(&v->lock, NULL);
+	
+	switch (v->depth) {
+	case 8:
+		flags |= SDL_HWPALETTE;
+		break;
+	}
 
-	return (v);
+	v->v = SDL_SetVideoMode(w, h, v->depth, flags);
+	if (v->v == NULL) {
+		fatal("SDL: %dx%dx%d: %s\n", w, h, v->depth, SDL_GetError());
+	}
+
+	/* XXX should go away */
+	switch (mode) {
+	case VIEW_MAPNAV:
+		dprintf("map navigation mode\n");
+		v->mapw = (w / TILEW) - 1;
+		v->maph = (h / TILEH);
+		v->mapxoffs = 1;		/* XXX */
+		v->mapyoffs = 1;
+		v->vmapw = v->mapw - 1;
+		v->vmaph = v->maph - 1;
+		break;
+	case VIEW_MAPEDIT:
+		dprintf("map edition mode\n");
+		v->mapw = (w / TILEW);
+		v->maph = (h / TILEH);
+		v->mapxoffs = 1;
+		v->mapyoffs = 1;
+		v->vmapw = v->mapw - v->mapxoffs - 1;	/* Tile list */
+		v->vmaph = v->maph - v->mapyoffs;
+#if 0
+		if (v->map->mapw < v->mapw)
+			v->mapxoffs += (v->mapw - v->map->mapw) / 2;
+		if (v->map->maph < v->maph)
+			v->mapyoffs += (v->maph - v->map->maph) / 2;
+#endif
+		break;
+	default:
+		fatal("bad mode\n");
+	}
+	
+	/*
+	 * Allocate view masks, precalculate node rectangles, and
+	 * preallocate an array able to hold all possible rectangles
+	 * in a view, for optimization purposes.
+	 */
+	dprintf("%dx%d map mask\n", v->mapw, v->maph);
+	v->mapmask = view_allocmask(v->vmapw, v->vmaph);
+	v->maprects = view_allocmaprects(v->mapw, v->maph);
+	v->rects = view_allocrects(v->mapw, v->maph);
+
+	SDL_WM_SetCaption("AGAR", "AGAR");
+	SDL_ShowCursor(SDL_ENABLE);
+	SDL_Delay(100);
+
+	mainview = v;
 }
 
 void
@@ -282,43 +242,36 @@ view_destroy(void *p)
 {
 	struct viewport *v = p;
 
-	if (v->mapmask != NULL) {
-		view_freemask(v);
-	}
-	if (v->maprects != NULL) {
-		view_freemaprects(v);
-	}
-	if (v->rects != NULL) {
-		free(v->rects);
-		v->rects = NULL;
-	}
+	view_freemask(v);
+	view_freemaprects(v);
+	free(v->rects);
 }
 
 /*
- * Switch to/from full screen mode.
- * Map must not be locked inside the calling thread.
+ * Toggle full screen mode.
+ *
  * View must be locked.
  */
 void
-view_fullscreen(struct viewport *v, int full)
+view_fullscreen(int full)
 {
 	SDL_Event nev;
-
-	pthread_mutex_lock(&v->map->lock);
+	struct viewport *v = mainview;
 
 	if (full) {
-		v->flags |= SDL_FULLSCREEN;
+		v->v->flags |= SDL_FULLSCREEN;
 	} else {
-		v->flags &= ~(SDL_FULLSCREEN);
+		v->v->flags &= ~(SDL_FULLSCREEN);
 	}
 
-	/* Reset the mode. */
-	view_setmode(v, v->map, -1, NULL);
-	v->map->redraw++;
+	/* XXX atomic: the v pointer is unprotected */
+	v->v = SDL_SetVideoMode(v->w, v->h, v->depth, v->v->flags);
+	if (v->v == NULL) {
+		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->depth,
+		    SDL_GetError());
+	}
 
-	pthread_mutex_unlock(&v->map->lock);
-
-	/* Redraw everything. */
+	/* Redraw everything. XXX */
 	nev.type = SDL_VIDEOEXPOSE;
 	SDL_PushEvent(&nev);
 }
@@ -328,24 +281,25 @@ view_fullscreen(struct viewport *v, int full)
  * Map/view must be locked.
  */
 void
-view_center(struct viewport *view, int mapx, int mapy)
+view_center(int mapx, int mapy)
 {
+	struct viewport *v = mainview;
 	int nx, ny;
 
-	nx = mapx - (view->mapw / 2);
-	ny = mapy - (view->maph / 2);
+	nx = mapx - (v->mapw / 2);
+	ny = mapy - (v->maph / 2);
 
 	if (nx <= 0)
 		nx = 0;
 	if (ny <= 0)
 		ny = 0;
-	if (nx > (view->map->mapw - view->mapw))
-		nx = (view->map->mapw - view->mapw);
-	if (ny > (view->map->maph - view->maph))
-		ny = (view->map->maph - view->maph);
+	if (nx > (v->map->mapw - v->mapw))
+		nx = (v->map->mapw - v->mapw);
+	if (ny > (v->map->maph - v->maph))
+		ny = (v->map->maph - v->maph);
 
-	view->mapx = nx;
-	view->mapy = ny;
+	v->mapx = nx;
+	v->mapy = ny;
 }
 
 /* XXX later */
@@ -354,23 +308,23 @@ scroll(struct map *m, int dir)
 {
 	switch (dir) {
 	case DIR_UP:
-		if (--m->view->mapy < 0) {
-			m->view->mapy = 0;
+		if (--mainview->mapy < 0) {
+			mainview->mapy = 0;
 		}
 		break;
 	case DIR_DOWN:
-		if (++m->view->mapy > (m->maph - m->view->maph)) {
-			m->view->mapy = (m->maph - m->view->maph);
+		if (++mainview->mapy > (m->maph - mainview->maph)) {
+			mainview->mapy = (m->maph - mainview->maph);
 		}
 		break;
 	case DIR_LEFT:
-		if (--m->view->mapx < 0) {
-			m->view->mapx = 0;
+		if (--mainview->mapx < 0) {
+			mainview->mapx = 0;
 		}
 		break;
 	case DIR_RIGHT:
-		if (++m->view->mapx > (m->mapw - m->view->mapw)) {
-			m->view->mapx = (m->mapw - m->view->mapw);
+		if (++mainview->mapx > (m->mapw - mainview->mapw)) {
+			mainview->mapx = (m->mapw - mainview->mapw);
 		}
 		break;
 	}
@@ -382,31 +336,33 @@ scroll(struct map *m, int dir)
  * The window list must not be locked by the caller thread.
  */
 void
-view_redraw(struct viewport *view)
+view_redraw(void)
 {
 	struct window *win;
+	struct viewport *v = mainview;
 
-	if (view->map != NULL) {		/* Async */
-		view->map->redraw++;
+	if (v->map != NULL) {		/* Async */
+		v->map->redraw++;
 	}
-	if (curmapedit != NULL) {		/* Async */
+	if (curmapedit != NULL) {	/* Async */
 		curmapedit->redraw++;
 	}
-	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH(win, &mainview->windowsh, windows) {
+	pthread_mutex_lock(&v->lock);
+	TAILQ_FOREACH(win, &v->windowsh, windows) {
 		pthread_mutex_lock(&win->lock);
 		if (win->flags & WINDOW_SHOW) {
 			window_draw(win);
 		}
 		pthread_mutex_unlock(&win->lock);
 	}
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_unlock(&v->lock);
 }
 
 #ifdef DEBUG
 void
-view_dumpmask(struct viewport *v)
+view_dumpmask(void)
 {
+	struct viewport *v = mainview;
 	int x, y;
 
 	for (y = 0; y < v->maph; y++) {
@@ -423,21 +379,19 @@ view_dumpmask(struct viewport *v)
  * Will lock view.
  */
 void
-view_attach(void *parent, void *child)
+view_attach(void *child)
 {
-	struct viewport *view = parent;
 	struct window *win = child;
 
-	OBJECT_ASSERT(parent, "viewport");
 	OBJECT_ASSERT(child, "window");
 
 	/* Notify the child being attached. */
-	event_post(child, "attached", "%p", parent);
+	event_post(child, "attached", "%p", mainview);
 
 	/* Attach and focus this window. */
-	pthread_mutex_lock(&view->lock);
-	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&mainview->lock);
+	TAILQ_INSERT_TAIL(&mainview->windowsh, win, windows);
+	pthread_mutex_unlock(&mainview->lock);
 }
 
 /*
@@ -445,22 +399,21 @@ view_attach(void *parent, void *child)
  * Window must be locked.
  */
 void
-view_detach(void *parent, void *child)
+view_detach(void *child)
 {
-	struct viewport *view = parent;
 	struct window *win = child;
 
-	OBJECT_ASSERT(parent, "viewport");
 	OBJECT_ASSERT(child, "window");
 
 	/* Notify the child being detached. */
-	event_post(child, "detached", "%p", parent);
+	event_post(child, "detached", "%p", mainview);
 
-	pthread_mutex_lock(&view->lock);
-	TAILQ_REMOVE(&view->windowsh, win, windows);
-	pthread_mutex_unlock(&view->lock);
+	pthread_mutex_lock(&mainview->lock);
+	TAILQ_REMOVE(&mainview->windowsh, win, windows);
+	pthread_mutex_unlock(&mainview->lock);
 }
 
+/* Create a surface with native-endian masks. */
 SDL_Surface *
 view_surface(int flags, int w, int h)
 {
@@ -491,12 +444,12 @@ view_surface(int flags, int w, int h)
  * View and window must be locked.
  */
 void
-view_focus(struct viewport *view, struct window *win)
+view_focus(struct window *win)
 {
 	dprintf("on %s\n", OBJECT(win)->name);
 
-	TAILQ_REMOVE(&view->windowsh, win, windows);
-	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+	TAILQ_REMOVE(&mainview->windowsh, win, windows);
+	TAILQ_INSERT_TAIL(&mainview->windowsh, win, windows);
 	
 	win->redraw++;
 }

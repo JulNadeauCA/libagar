@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.27 2002/06/03 18:33:52 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.28 2002/06/09 10:08:04 vedge Exp $	*/
 /*	Public domain	*/
 
 enum {
@@ -12,37 +12,39 @@ TAILQ_HEAD(windowq, window);
 struct viewport {
 	struct	object obj;
 
-	/* Read-only once a mode is set, shares map lock */
-	int	mode;			/* Display mode */
-	int	fps;			/* Refresh rate in FPS */
-	Uint32	flags;
-	int	w, h, depth;		/* Viewport geometry */
-	struct	map *map;		/* Currently visible map */
-	Uint32	mapw, maph;		/* Map view geometry */
-	Uint32	mapx, mapy;		/* Map view coordinates */
-	int	mapxoffs, mapyoffs;	/* Map view offsets */
-	int	vmapw, vmaph;
+	/* Read-only */
 
+	int	mode;			/* Display mode */
+	int	**mapmask;		/* Mask covering the map view */
+	int	w, h, depth;		/* Viewport geometry */
+
+	SDL_Surface	*v;		/* Screen. XXX unprotected */
+	SDL_Rect	**maprects;	/* Rectangles (optimization) */
+	SDL_Rect	*rects;		/* List big enough to hold all
+					   possible rectangles in a view. */
+	int	mapw, maph;		/* Map view geometry */
+	int	vmapw, vmaph;		/* Map view geometry in tiles */
+	int	mapx, mapy;		/* Map view coordinates */
+	int	mapxoffs, mapyoffs;	/* Map view offsets. XXX */
+
+	/* Read-write, thread-safe */
+
+#if 1
+	struct	map *map;		/* Currently visible map. XXX atomic */
+#endif
+	struct	windowq windowsh;	/* Hidden/shown windows */
+	struct	window *wop_win;	/* Window operations */
 	int	wop_mapx, wop_mapy;
 	enum {
 		VIEW_WINOP_NONE,
 		VIEW_WINOP_MOVE,
 		VIEW_WINOP_RESIZE
 	} winop;
-
-	int	 **mapmask;		/* Mask covering the map view */
-	SDL_Rect **maprects;		/* Rectangles (optimization) */
-	SDL_Rect *rects;		/* List big enough to hold all
-					   possible rectangles in a view. */
-	SDL_Surface	*v;		/* Surface */
-
-	/* Read-write, thread-safe */
-	struct	 windowq windowsh;
 	pthread_mutex_t lock;
 };
 
-#define VIEW_MAPMASK(view, vx, vy)	\
-    ((view)->mapmask[(vy) - (view)->mapyoffs][(vx) - (view)->mapxoffs])
+#define VIEW_MAPMASK(vx, vy)	\
+    (mainview->mapmask[(vy) - mainview->mapyoffs][(vx) - mainview->mapxoffs])
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 # define _PUT_PIXEL_24(dst, c)		\
@@ -56,10 +58,7 @@ struct viewport {
 	(dst)[2] = ((c)>>16) & 0xff
 #endif
 
-/*
- * VIEW_ALPHA_BLEND(SDL_Surface *s, Uint32 src, Uint32 dst).
- * XXX inefficient
- */
+/* XXX inefficient */
 #define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) do {		\
 	Uint32 _view_col = (Uint32)(c);				\
 	Uint8 _view_alpha_rs, _view_alpha_gs, _view_alpha_bs;	\
@@ -104,8 +103,6 @@ struct viewport {
 /*
  * Set the pixel at x,y to c inside surface s.
  * Surface must be locked.
- *
- * VIEW_PUT_PIXEL(SDL_Surface *s, int vx, int vy, Uint32 c);
  */
 #define VIEW_PUT_PIXEL(s, vx, vy, c) do {			\
 	Uint8 *_putpixel_dst;					\
@@ -130,24 +127,21 @@ struct viewport {
 	}							\
 } while (/*CONSTCOND*/0)
 
-
 extern struct viewport *mainview;	/* view.c */
 
-struct viewport *view_new(int, int, int, int);
-void		 view_attach(void *, void *);
-void		 view_detach(void *, void *);
+void		 view_init(int, int, int, int, int);
+void		 view_attach(void *);
+void		 view_detach(void *);
 void		 view_destroy(void *);
 
-int		 view_setmode(struct viewport *, struct map *, int, char *);
-void		 view_fullscreen(struct viewport *, int);
-void		 view_center(struct viewport *, int, int);
-void		 view_maskfill(struct viewport *, SDL_Rect *, int);
-void		 view_redraw(struct viewport *);
+void		 view_fullscreen(int);
+void		 view_center(int, int);
+void		 view_maskfill(SDL_Rect *, int);
+void		 view_redraw(void);
 SDL_Surface	*view_surface(int, int, int);
-void		 view_focus(struct viewport *, struct window *);
+void		 view_focus(struct window *);
 #ifdef DEBUG
-void		 view_dumpmask(struct viewport *);
+void		 view_dumpmask(void);
 #endif
-
 void		 scroll(struct map *, int);
 
