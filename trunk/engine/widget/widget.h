@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.27 2002/07/20 18:56:49 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.28 2002/07/24 09:30:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -67,7 +67,6 @@ struct widget {
 	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, col);		\
 } while (/*CONSTCOND*/0)
 
-/* XXX inconsistent, should be region-relative */
 #ifdef DEBUG
 
 # define WIDGET_PUT_PIXEL(wid, wdrx, wdry, c) do {			\
@@ -138,5 +137,5 @@ enum {
 
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
 void	widget_event(void *, SDL_Event *, int);
-void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8, Uint8);
+void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
 
