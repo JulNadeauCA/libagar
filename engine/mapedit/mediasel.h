@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.104 2004/03/05 15:22:17 vedge Exp $	*/
+/*	$Csoft: mediasel.h,v 1.1 2004/03/09 06:16:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MEDIASEL_H_
