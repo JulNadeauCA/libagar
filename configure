@@ -119,11 +119,10 @@ fi
 MACHINE=`uname -m 2>/dev/null` || MACHINE=unknown
 RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
 SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
-HOST="$MACHINE-$SYSTEM-$RELEASE"
+HOST="$SYSTEM-$RELEASE-$MACHINE"
 
 echo "Host: $HOST" > config.log
 echo "configuring for $HOST"
-
 echo >Makefile.config
 if [ ! -e "config" ]; then
 	mkdir config
@@ -888,15 +887,93 @@ if [ "${with_x11}" != "no" ]
 echo -n "checking for X11 (http://www.xfree86.org/)..."
 echo -n "checking for X11 (http://www.xfree86.org/)..." >> config.log
 echo "checking for X11 (http://www.xfree86.org/)..." >> config.log
-if [ "${X11BASE}" != "" ]; then
+if [ -d /usr/X11R6/include/X11 ]; then
+X11_CFLAGS=-I/usr/X11R6/include
+else
+NONE=1
+fi
+if [ -d /usr/X11/include/X11 ]; then
+X11_CFLAGS=-I/usr/X11/include
+else
+NONE=1
+fi
+if [ -d /usr/include/X11R6/X11 ]; then
+X11_CFLAGS=-I/usr/include/X11R6
+else
+NONE=1
+fi
+if [ -d /usr/include/X11/X11 ]; then
+X11_CFLAGS=-I/usr/include/X11
+else
+NONE=1
+fi
+if [ -d /usr/local/X11R6/include/X11 ]; then
+X11_CFLAGS=-I/usr/local/X11R6/include
+else
+NONE=1
+fi
+if [ -d /usr/local/X11/include/X11 ]; then
+X11_CFLAGS=-I/usr/local/X11/include
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11R6/X11 ]; then
+X11_CFLAGS=-I/usr/local/include/X11R6
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11/X11 ]; then
+X11_CFLAGS=-I/usr/local/include/X11
+else
+NONE=1
+fi
+if [ -d /usr/include/X11 ]; then
+X11_CFLAGS=-I/usr/include
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11 ]; then
+X11_CFLAGS=-I/usr/local/include
+else
+NONE=1
+fi
+if [ -d /usr/X386/include/X11 ]; then
+X11_CFLAGS=-I/usr/X386/include
+else
+NONE=1
+fi
+if [ -d /usr/x386/include/X11 ]; then
+X11_CFLAGS=-I/usr/x386/include
+else
+NONE=1
+fi
+if [ -d /usr/XFree86/include/X11/X11 ]; then
+X11_CFLAGS=-I/usr/XFree86/include/X11
+else
+NONE=1
+fi
+if [ -d /usr/athena/include/X11 ]; then
+X11_CFLAGS=-I/usr/athena/include
+else
+NONE=1
+fi
+if [ -d /usr/openwin/include/X11 ]; then
+X11_CFLAGS=-I/usr/openwin/include
+else
+NONE=1
+fi
+if [ -d /usr/openwin/share/include/X11 ]; then
+X11_CFLAGS=-I/usr/openwin/share/include
+else
+NONE=1
+fi
+if [ "${X11_CFLAGS}" != "" ]; then
 echo -n "ok"
 echo -n "ok" >> config.log
-echo ", $X11BASE"
-echo ", $X11BASE" >> config.log
+echo ", $X11_CFLAGS"
+echo ", $X11_CFLAGS" >> config.log
 x11_found=yes
-echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
-echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
 echo "missing"
 exit 1
