@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.200 2004/02/26 10:34:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.201 2004/02/26 10:37:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1253,6 +1253,7 @@ map_new_view(int argc, union evarg *argv)
 	window_show(win);
 }
 
+/* Toggle the map grid display. */
 static void
 map_toggle_grid(int argc, union evarg *argv)
 {
@@ -1265,6 +1266,7 @@ map_toggle_grid(int argc, union evarg *argv)
 	}
 }
 
+/* Toggle the node property display. */
 static void
 map_toggle_props(int argc, union evarg *argv)
 {
@@ -1277,6 +1279,7 @@ map_toggle_props(int argc, union evarg *argv)
 	}
 }
 
+/* Toggle the node edition dialog. */
 static void
 map_toggle_nodeed(int argc, union evarg *argv)
 {
@@ -1285,6 +1288,7 @@ map_toggle_nodeed(int argc, union evarg *argv)
 	window_toggle_visibility(mv->nodeed.win);
 }
 
+/* Toggle the layer edition dialog. */
 static void
 map_toggle_layed(int argc, union evarg *argv)
 {
@@ -1293,6 +1297,7 @@ map_toggle_layed(int argc, union evarg *argv)
 	window_toggle_visibility(mv->layed.win);
 }
 
+/* Toggle the media import dialog. */
 static void
 map_toggle_mimport(int argc, union evarg *argv)
 {
@@ -1301,6 +1306,7 @@ map_toggle_mimport(int argc, union evarg *argv)
 	window_toggle_visibility(mv->mimport.win);
 }
 
+/* Toggle map read-write mode. */
 static void
 map_toggle_edition(int argc, union evarg *argv)
 {
@@ -1328,11 +1334,11 @@ enum {
 };
 
 /*
- * Generate graphical noderefs from media associated with a map object.
+ * Generate node references from media into a map.
  * The map is resized as necessary.
  */
 static void
-map_import_gfx(int argc, union evarg *argv)
+media_import(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct mapview *mv = argv[2].p;
@@ -1509,7 +1515,7 @@ map_close_import_window(int argc, union evarg *argv)
 
 /* Update the graphic import list. */
 static void
-map_import_poll(int argc, union evarg *argv)
+media_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
@@ -1550,7 +1556,7 @@ map_import_poll(int argc, union evarg *argv)
 
 /* Create the graphic import selection window. */
 static struct window *
-map_import_window(struct mapview *mv)
+media_window(struct mapview *mv)
 {
 	struct object *ob = OBJECT(mv->map);
 	struct window *win;
@@ -1558,12 +1564,12 @@ map_import_window(struct mapview *mv)
 	struct tlist *tl;
 
 	win = window_new(NULL);
-	window_set_caption(win, _("%s graphics"), ob->name);
+	window_set_caption(win, _("Import media"));
 	window_set_closure(win, WINDOW_HIDE);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 	tlist_set_item_height(tl, ttf_font_height(font)*2);
-	event_new(tl, "tlist-poll", map_import_poll, "%p", ob);
+	event_new(tl, "tlist-poll", media_poll, "%p", ob);
 
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
 	{
@@ -1579,7 +1585,7 @@ map_import_window(struct mapview *mv)
 		for (i = 0; i < 4; i++) {
 			bu = button_new(bo, NULL);
 			button_set_label(bu, SPRITE(&mapedit, icons[i]));
-			event_new(bu, "button-pushed", map_import_gfx,
+			event_new(bu, "button-pushed", media_import,
 			    "%p, %p, %i, %p", tl, mv, i, ob);
 		}
 #if 0
@@ -1615,7 +1621,7 @@ map_edit(void *p)
 	window_attach(win, mv->layed.win);
 
 	/* Create the media import window. */
-	mv->mimport.win = map_import_window(mv);
+	mv->mimport.win = media_window(mv);
 	window_attach(win, mv->mimport.win);
 
 	/* Create the map edition toolbar. */
