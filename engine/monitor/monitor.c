@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.7 2002/09/12 09:43:57 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.8 2002/09/13 11:08:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -44,12 +44,11 @@
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
+#include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
-
-#include "tool/monitor_tool.h"
-#include "tool/sprite_browser.h"
-#include "tool/object_browser.h"
+#include "sprite_browser.h"
+#include "object_browser.h"
 
 const struct object_ops monitor_ops = {
 	monitor_destroy,
@@ -128,5 +127,52 @@ void
 monitor_destroy(void *ob)
 {
 }
+
+void
+monitor_tool_init(struct monitor_tool *tool, char *name, struct monitor *mon,
+    const void *toolops)
+{
+	static pthread_mutex_t toolid_lock = PTHREAD_MUTEX_INITIALIZER;
+	static int toolid = 0;
+	char *toolname;
+
+	pthread_mutex_lock(&toolid_lock);
+	toolname = object_name(name, toolid++);
+	pthread_mutex_unlock(&toolid_lock);
+	object_init(&tool->obj, "monitor-tool", toolname, NULL, 0, toolops);
+	free(toolname);
+
+	tool->flags = 0;
+	tool->mon = mon;
+	tool->win = (MONITOR_TOOL_OPS(tool)->tool_window != NULL) ? 
+	    MONITOR_TOOL_OPS(tool)->tool_window(tool) : NULL;
+	tool->type = strdup(name);
+}
+
+struct mapview *
+monitor_tool_mapview(void)
+{
+	struct window *win;
+	struct region *reg;
+	struct widget *wid;
+
+	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+		if ((win->flags & WINDOW_SHOWN) == 0) {
+			continue;
+		}
+		TAILQ_FOREACH(reg, &win->regionsh, regions) {
+			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				if (!WIDGET_FOCUSED(wid)) {
+					continue;
+				}
+				if (strcmp(wid->type, "mapview") == 0) {
+					return ((struct mapview *)wid);
+				}
+			}
+		}
+	}
+	return (NULL);
+}
+
 
 #endif
