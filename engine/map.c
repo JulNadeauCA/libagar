@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.69 2002/04/14 01:35:12 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.70 2002/04/14 04:52:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -395,13 +395,13 @@ map_animate(struct map *m)
 	Uint32 ri = 0;
 
 	for (y = view->mapy, vy = view->mapyoffs;
-	     vy < view->vmaph && y < m->maph;
+	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
 	     y++, vy++) {
 
 		ry = vy << m->shtiley;
 	
 		for (x = view->mapx, vx = view->mapxoffs;
-		     vx < view->vmapw && x < m->mapw;
+		     vx < (view->vmapw + view->mapxoffs) && x < m->mapw;
 		     x++, vx++) {
 			static struct node *node;
 		
@@ -511,13 +511,13 @@ map_draw(struct map *m)
 	struct viewport *view = m->view;
 
 	for (y = view->mapy, vy = view->mapyoffs;
-	     vy < view->vmaph && y < m->maph;
+	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
 	     y++, vy++) {
 
 		ry = vy << m->shtilex;
 
 		for (x = view->mapx, vx = view->mapxoffs;
-		     vx < view->vmapw && x < m->mapw;
+		     vx < (view->vmapw + view->mapxoffs) && x < m->mapw;
 		     x++, vx++) {
 			static struct node *node;
 			static struct noderef *nref;
