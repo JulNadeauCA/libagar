@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.186 2003/07/28 04:36:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.187 2003/08/06 04:09:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -638,9 +638,11 @@ map_reinit(void *p)
 void
 map_destroy(void *p)
 {
+#ifdef THREADS
 	struct map *m = p;
 
 	pthread_mutex_destroy(&m->lock);
+#endif
 }
 
 /*
