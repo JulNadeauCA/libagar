@@ -13,10 +13,10 @@
 
    Alternatively, to use/modify the data files of the source tree, use
    the `links' target, symlinks will be made into ~/.cave:
-   $ make links
+   $ cd ./cave && make links
 
-5) Register the manual page directory path. Under BSD, /etc/man.conf should
-   include (prefix)/share/agar/man.
+5) Register (prefix)/share/agar/man with your manual page reader
+   (ie. /etc/man.conf).
 
 6) Execute the game by running `cave':
    $ cave
