@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.10 2002/02/10 03:48:42 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.11 2002/02/11 23:32:27 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -101,8 +101,6 @@ extern struct map *curmap;	/* Currently focused map */
 struct map *map_create(char *, char *, int, int, int);
 
 void	map_destroy(void *);
-int	map_link(void *);
-int	map_unlink(void *);
 int	map_load(void *, char *);
 int	map_save(void *, char *);
 int	map_focus(struct map *);
