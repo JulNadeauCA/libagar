@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.12 2002/02/15 12:56:46 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.13 2002/02/16 04:59:13 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -29,17 +29,7 @@ TAILQ_HEAD(eobjs_head, editobj);
 
 struct mapedit {
 	struct	object obj;
-
-	struct	window *tilelist;	/* Tile list (right) */
-	struct	window *tilestack;	/* Tile stack (left) */
-	struct	window *objlist;	/* Object list (top) */
-
-	struct	eobjs_head eobjsh;	/* Editor object references */
-	int	neobjs;
-
-	int	curoffs;		/* Default reference index */
-	int	curflags;		/* Default map entry flags */
-	struct	editobj *curobj;	/* Default object */
+	
 	int	flags;	
 #define MAPEDIT_TILELIST	0x01	/* Display tile list window */
 #define MAPEDIT_TILESTACK	0x02	/* Display tile stack window */
@@ -51,13 +41,25 @@ struct mapedit {
 	int	x, y;			/* Cursor position */
 	int	mmapx, mmapy;		/* Mouse coordinates */
 
+	int	cursor_speed;		/* Cursor speed in ms */
+	int	listw_speed;		/* List scrolling speed in ms */
+
+	struct	eobjs_head eobjsh;	/* Editor object references */
+	int	neobjs;
+
+	struct	editobj *curobj;	/* Default object */
+	int	curoffs;		/* Default reference index */
+	int	curflags;		/* Default map entry flags */
+
 	struct	mapdir cursor_dir;	/* Cursor direction */
 	struct	gendir listw_dir;	/* Tile list window direction */
 	struct	gendir olistw_dir;	/* Obj list window direction */
+	
+	struct	window *tilelist;	/* Tile list (right) */
+	struct	window *tilestack;	/* Tile stack (left) */
+	struct	window *objlist;	/* Object list (top) */
 
 	SDL_TimerID timer;
-
-	void	 (*event_hook)(struct mapedit *, SDL_Event *);
 };
 
 /* Editor anims */
@@ -82,6 +84,12 @@ struct mapedit {
 #define MAPEDIT_EVEL	16
 
 struct mapedit *mapedit_create(char *, char *, int, int, int, int);
+int		mapedit_link(void *);
+int		mapedit_unlink(void *);
+int		mapedit_destroy(void *);
+int		mapedit_load(void *, int);
+int		mapedit_save(void *, int);
+void		mapedit_event(void *, SDL_Event *);
 void		mapedit_tilelist(struct mapedit *);
 void		mapedit_tilestack(struct mapedit *);
 void		mapedit_objlist(struct mapedit *);
