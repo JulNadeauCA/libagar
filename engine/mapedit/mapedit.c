@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.42 2002/02/17 10:39:36 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.43 2002/02/18 01:28:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -36,7 +36,6 @@
 #include <engine/engine.h>
 #include <engine/version.h>
 
-#include "pathnames.h"
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
@@ -102,8 +101,11 @@ mapedit_create(char *name)
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
 
-	sprintf(fobpath, MAPEDIT_FOB_PATH, PREFIX);
-	fob = fobj_load(fobpath);
+	sprintf(fobpath, "%s/mapedit.fob", SHAREDIR);
+	fob = fobj_load(savepath(name, "fob"));
+	if (fob == NULL) {
+		return (NULL);
+	}
 	xcf_load(fob, MAPEDIT_XCF, (struct object *)med);
 	fobj_free(fob);
 
