@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.3 2002/01/30 12:43:58 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.4 2002/02/01 05:53:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -38,26 +38,13 @@
 #include <SDL.h>
 
 #include <engine/engine.h>
+#include <engine/mapedit/mapedit.h>
 
 extern void quit(void);
 
-static void	 event_dispatch(void *, void *);
-static void	 event_hotkey(SDL_Event *);
+static int	event_hotkey(SDL_Event *);
 
-/* XXX inefficient */
-static void
-event_dispatch(void *arg, void *p)
-{
-	struct object *ob = (struct object *)arg;
-	SDL_Event *ev = (SDL_Event *)p;
-
-	if (ob->flags & EVENT_HOOK) {
-		ob->event_hook(ob, ev);
-	}
-}
-
-/* Global hotkeys. */
-static __inline__ void
+static int
 event_hotkey(SDL_Event *ev)
 {
 	/* Print active object list. */
@@ -65,12 +52,12 @@ event_hotkey(SDL_Event *ev)
 #ifdef DEBUG
 	case SDLK_t:
 		world_dump(world);
-		break;
+		return (0);
 #endif /* DEBUG */
 	case SDLK_f:
 		view_fullscreen(mainview,
 		    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-		break;
+		return (0);
 	case SDLK_q:
 		if (mainview->flags & SDL_FULLSCREEN) {
 			mainview->flags &= ~(SDL_FULLSCREEN);
@@ -81,6 +68,7 @@ event_hotkey(SDL_Event *ev)
 	default:
 		break;
 	}
+	return (-1);
 }
 
 void
@@ -90,25 +78,28 @@ event_loop(void)
 
 	while (SDL_WaitEvent(&ev)) {
 		switch (ev.type) {
-#if 0
 		case SDL_VIDEOEXPOSE:
-			map_draw(curmap);
+			curmap->redraw++;
 			continue;
-#endif
 		case SDL_QUIT:
-			quit();
-			/* NOTREACHED */
-		default:
-			if (ev.type == SDL_KEYDOWN) {
-				event_hotkey(&ev);
+			return;
+		case SDL_MOUSEMOTION:
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_JOYAXISMOTION:
+		case SDL_JOYBUTTONDOWN:
+		case SDL_JOYBUTTONUP:
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			if (event_hotkey(&ev) == 0) {
+				continue;
 			}
-			/* XXX optimize */
-			if (pthread_mutex_lock(&world->lock) == 0) {
-				g_slist_foreach(world->objs,
-				    (GFunc) event_dispatch, &ev);
-				pthread_mutex_unlock(&world->lock);
+			if (curchar != NULL) {
+				curchar->event_hook(curchar, &ev);
+			} else if (curmapedit != NULL) {
+				curmapedit->event_hook(curmapedit, &ev);
 			}
-			continue;
+			break;
 		}
 	}
 }
