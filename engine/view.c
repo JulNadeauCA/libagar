@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.42 2002/05/25 08:56:48 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.43 2002/05/31 10:49:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -33,13 +33,14 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/physics.h>
+#include "engine.h"
+#include "map.h"
+#include "physics.h"
+#include "config.h"
 
-#include <engine/mapedit/mapedit.h>
+#include "mapedit/mapedit.h"
 
-#include <engine/widget/window.h>
+#include "widget/window.h"
 
 static const struct object_ops viewport_ops = {
 	view_destroy,
@@ -301,7 +302,8 @@ view_destroy(void *p)
 
 /*
  * Switch to/from full screen mode.
- * Map/view must not be locked inside the calling thread.
+ * Map must not be locked inside the calling thread.
+ * View must be locked.
  */
 void
 view_fullscreen(struct viewport *v, int full)

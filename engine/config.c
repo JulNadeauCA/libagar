@@ -69,7 +69,8 @@ static const enum {
 	FONTCACHE_CBOX
 } widgets;
 
-static void	apply(int, union evarg *);
+static struct window	*config_settings_win(struct config *);
+static void		 apply(int, union evarg *);
 
 static void
 apply(int argc, union evarg *argv)
@@ -79,9 +80,7 @@ apply(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
-		pthread_mutex_lock(&mainview->lock);
-		view_detach(mainview, WIDGET(b)->win);
-		pthread_mutex_unlock(&mainview->lock);
+		window_hide(WIDGET(b)->win);
 		break;
 	case SAVE_BUTTON:
 		object_save(config);
@@ -120,6 +119,12 @@ config_init(struct config *con)
 	object_init(&con->obj, "engine-config", "config", NULL, 0, &config_ops);
 	con->flags = CONFIG_FONT_CACHE;
 	pthread_mutex_init(&con->lock, NULL);
+}
+
+void
+config_window(struct config *con)
+{
+	con->settings_win = config_settings_win(con);
 }
 
 void
@@ -163,9 +168,8 @@ config_save(void *p, int fd)
 	return (0);
 }
 
-/* World must be locked */
-void
-config_dialog(void)
+static struct window *
+config_settings_win(struct config *con)
 {
 	struct window *win;
 	struct region *body_reg, *buttons_reg;
@@ -182,14 +186,12 @@ config_dialog(void)
 	buttons_reg = region_new(win, REGION_HALIGN|REGION_CENTER,
 	    0,  80, 100, 20);
 
-	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode",
-	    (world->curmap->view->flags & SDL_FULLSCREEN) ?
-	    CHECKBOX_PRESSED : 0);
+	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode", 0);
 	event_new(fullscr_cbox, "checkbox-changed", 0, apply,
 	    "%d", FULLSCRN_CBOX);
 	
 	fontcache_cbox = checkbox_new(body_reg, "Font cache",
-	    (config->flags & CONFIG_FONT_CACHE) ?
+	    (con->flags & CONFIG_FONT_CACHE) ?
 	    CHECKBOX_PRESSED : 0);
 	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
 	    "%d", FONTCACHE_CBOX);
@@ -198,7 +200,7 @@ config_dialog(void)
 	sysdatadir_tbox = textbox_new(body_reg, "System datadir: ", 0, 100);
 
 	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
-	event_new(close_button, "button-pushed", EVENT_ASYNC, apply,
+	event_new(close_button, "button-pushed", 0, apply,
 	    "%d", CLOSE_BUTTON);
 
 	save_button = button_new(buttons_reg, "Save", 0, 50, 100);
@@ -206,6 +208,7 @@ config_dialog(void)
 	    "%d", SAVE_BUTTON);
 	
 	win->focus = WIDGET(udatadir_tbox);
+	return (win);
 }
 
 /*
