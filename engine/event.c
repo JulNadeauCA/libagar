@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.182 2004/05/15 02:56:35 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.183 2004/05/15 06:07:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@
 #define DEBUG_SCHED		0x200
 
 int	event_debug = DEBUG_UNDERRUNS|DEBUG_VIDEORESIZE|DEBUG_VIDEOEXPOSE|\
-	              DEBUG_ASYNC|DEBUG_PROPAGATION|DEBUG_SCHED;
+	              DEBUG_ASYNC;
 #define	engine_debug event_debug
 int	event_count = 0;
 
@@ -680,7 +680,7 @@ event_schedule(void *sp, void *rp, Uint32 ticks, const char *evname,
 		goto fail;
 	}
 	if (ev->flags & EVENT_SCHEDULED) {
-		dprintf("%s: resched `%s'\n", rcvr->name, evname);
+		debug(DEBUG_SCHED, "%s: resched `%s'\n", rcvr->name, evname);
 		timeout_del(rcvr, &ev->timeout);
 	}
 
@@ -759,8 +759,8 @@ event_cancel(void *p, const char *evname)
 		goto fail;
 	}
 	if (ev->flags & EVENT_SCHEDULED) {
-		dprintf("%s: cancelled timeout %s (cancel)\n", ob->name,
-		    evname);
+		debug(DEBUG_SCHED, "%s: cancelled timeout %s (cancel)\n",
+		    ob->name, evname);
 		timeout_del(ob, &ev->timeout);
 		rv++;
 		ev->flags &= ~(EVENT_SCHEDULED);
