@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.5 2002/01/30 12:46:34 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.6 2002/01/30 18:35:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,7 +39,15 @@
 
 #include <engine/engine.h>
 
-static GSList	*lategc;
+static SLIST_HEAD(lategc_head, gcref) lategch =
+    SLIST_HEAD_INITIALIZER(&lategch);
+
+struct gcref {
+	struct	object *ob;
+	int	order;
+
+	SLIST_ENTRY(gcref) gcrefs;
+};
 
 int
 object_create(struct object *ob, char *name, char *desc, int flags)
@@ -65,40 +73,24 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 	return (0);
 }
 
-void
-object_destroy(void *arg, void *p)
+int
+object_destroy(void *arg)
 {
 	struct object *ob = (struct object *)arg;
 	int i;
 
-	if (ob->flags & OBJ_USED) {
-		lategc = g_slist_append(lategc, arg);
+	if (ob->flags & OBJ_DEFERGC) {
+		struct gcref *or = malloc(sizeof(struct gcref));
+
+		or->ob = ob;
+		SLIST_INSERT_HEAD(&lategch, or, gcrefs);
 		dprintf("%s: deferred\n", ob->name);
-		ob->flags &= ~(OBJ_USED);
-		return;
+		ob->flags &= ~(OBJ_DEFERGC);
+		return (-1);
 	}
-
-#ifdef DEBUG
-	/* This should not happen. */
-	if (arg == NULL) {
-		dprintf("NULL arg\n");
-		return;
-	}
-#endif
-
-	/*
-	 * Remove this object from the world while it is still in a
-	 * consistent state, unless it is the world.
-	 */
-	if ((void *)arg != (void *)world) {
-		if (pthread_mutex_lock(&world->lock) == 0) {
-			world->objs = g_slist_remove(world->objs, (void *)ob);
-			world->nobjs--;
-			pthread_mutex_unlock(&world->lock);
-		} else {
-			perror("world");
-			return;
-		}
+	
+	if (ob->flags & DESTROY_HOOK) {
+		ob->destroy_hook(ob);
 	}
 	
 	if (pthread_mutex_lock(&ob->lock) == 0) {
@@ -110,42 +102,60 @@ object_destroy(void *arg, void *p)
 	} else {
 		perror("object");
 	}
-	pthread_mutex_destroy(&ob->lock);
 
-	if (ob->flags & DESTROY_HOOK) {
-		ob->destroy_hook(ob);
-	}
+	pthread_mutex_destroy(&ob->lock);
 	
 	dprintf("freed %s\n", ob->name);
 
-	/* Free what's left. */
-	if (ob->name != NULL)
+	if (ob->name != NULL) {
 		free(ob->name);
-	if (ob->desc != NULL)
+	}
+	if (ob->desc != NULL) {
 		free(ob->desc);
+	}
 	free(ob);
+
+	return (0);
 }
 
 /* Perform deferred garbage collection. */
 void
 object_lategc(void)
 {
-	g_slist_foreach(lategc, (GFunc)object_destroy, NULL);
+	struct gcref *gcr;
+
+	SLIST_FOREACH(gcr, &lategch, gcrefs) {
+		dprintf("%s\n", gcr->ob->name);
+		object_destroy(gcr->ob);
+		free(gcr);
+	}
 }
 
 /* Add an object to the object list, and mark it consistent. */
 int
-object_link(void *objp)
+object_link(void *ob)
 {
 	if (pthread_mutex_lock(&world->lock) == 0) {
-		world->objs = g_slist_append(world->objs, objp);
+		SLIST_INSERT_HEAD(&world->wobjsh, (struct object *)ob, wobjs);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		perror("world");
 		return (-1);
 	}
-	
-	world->nobjs++;
+
+	return (0);
+}
+
+int
+object_unlink(void *ob)
+{
+	if (pthread_mutex_lock(&world->lock) == 0) {
+		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
+		pthread_mutex_unlock(&world->lock);
+	} else {
+		perror("world");
+		return (-1);
+	}
 
 	return (0);
 }
@@ -168,27 +178,18 @@ decrease(int *variable, int val, int bounds)
 	}
 }
 
-static gint
-object_strcompare(void *arg, void *p)
-{
-	struct object *ob = (struct object *)arg;
-	char *id = (char *)p;
-
-	if (strcmp(ob->name, id) == 0) {
-		return (0);
-	}
-	return (-1);
-}
-
 struct object *
 object_strfind(char *s)
 {
-	GSList *li;
+	struct object *ob;
 
-	li = g_slist_find_custom(world->objs, s,
-	    (GCompareFunc)object_strcompare);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+		if (strcmp(ob->name, s) == 0) {
+			return (ob);
+		}
+	}
 
-	return ((li != NULL) ? li->data : NULL);
+	return (NULL);
 }
 
 int
@@ -214,10 +215,8 @@ object_wait(void *obp, int mask)
 #ifdef DEBUG
 
 void
-object_dump_obj(void *obp, void *p)
+object_dump(struct object *ob)
 {
-	struct object *ob = (struct object *)obp;
-
 	printf("%3d. %10s (", ob->id, ob->name);
 	if (ob->flags & EVENT_HOOK)
 		printf(" event");
