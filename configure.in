@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.25 2002/06/15 01:53:37 vedge Exp $
+# $Csoft: configure.in,v 1.26 2002/06/17 22:24:55 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -23,7 +23,7 @@ check(cc);
 
 mdefine(CFLAGS, "$CFLAGS -g -I$S");
 if [ "${cc_is_gcc}" = "yes" ]; then
-	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused");
+	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
 fi
 
 require(sdl, 1.2.0);
