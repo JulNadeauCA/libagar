@@ -1,18 +1,15 @@
-/*	$Csoft: view.c,v 1.63 2002/08/29 07:16:17 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.64 2002/09/05 03:53:55 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -51,20 +48,36 @@ static const struct object_ops viewport_ops = {
 /* Read-only as long as the engine is running. */
 struct viewport *view;
 
+/* Scaled surface cache. */
+struct cached_surface {
+	SDL_Surface	*source_s;	/* Original surface */
+	SDL_Surface	*scaled_s;	/* Scaled surface */
+	size_t		 size;		/* Size of scaled surface in bytes */
+	int		 nhits;		/* Cache hits */
+
+	SLIST_ENTRY(cached_surface) surfaces;
+};
+static SLIST_HEAD(, cached_surface) cached_surfaces;
+static pthread_mutex_t cached_surfaces_lock = PTHREAD_MUTEX_INITIALIZER;
+
 /* Initialize the graphic engine. */
 void
 view_init(gfx_engine_t ge)
 {
 	struct viewport *v;
 	int screenflags = SDL_HWSURFACE;
-	int bpp = config->view.bpp;
-	int w = config->view.w, mw = w/TILEW;
-	int h = config->view.h, mh = h/TILEH;
+	int bpp, w, h, mw, mh;
 
-	if (config->flags & CONFIG_FULLSCREEN) {
+	bpp = prop_uint32(config, "view.bpp");
+	w = prop_uint32(config, "view.w");
+	h = prop_uint32(config, "view.h");
+	mw = w / TILEW;
+	mh = h / TILEH;
+
+	if (prop_uint32(config, "flags") & CONFIG_FULLSCREEN) {
 		screenflags |= SDL_FULLSCREEN;
 	}
-	if (config->flags & CONFIG_ASYNCBLIT) {
+	if (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT) {
 		screenflags |= SDL_ASYNCBLIT;
 	}
 
@@ -72,8 +85,8 @@ view_init(gfx_engine_t ge)
 	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
 	v->gfx_engine = ge;
 	v->bpp = SDL_VideoModeOK(w, h, bpp, screenflags);
-	v->w = config->view.w;
-	v->h = config->view.h;
+	v->w = prop_uint32(config, "view.w");
+	v->h = prop_uint32(config, "view.h");
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	TAILQ_INIT(&v->windowsh);
@@ -237,7 +250,20 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	SDL_Surface *ds;
 	Uint32 col =0;
 	Uint8 *src, *dst, r1, g1, b1, a1;
+	struct cached_surface *cs;
 	int x, y;
+
+	pthread_mutex_lock(&cached_surfaces_lock);
+
+	/* Cache lookup */
+	SLIST_FOREACH(cs, &cached_surfaces, surfaces) {
+		if (cs->source_s == ss &&
+		    cs->scaled_s->w == w && cs->scaled_s->h == h) {
+			cs->nhits++;
+			pthread_mutex_unlock(&cached_surfaces_lock);
+			return (cs->scaled_s);
+		}
+	}
 
 	ds = view_surface(SDL_HWSURFACE, w, h);
 
@@ -293,6 +319,16 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 		SDL_UnlockSurface(ds);
 	if (SDL_MUSTLOCK(ss))
 		SDL_UnlockSurface(ss);
+
+	/* Read-allocate */
+	cs = emalloc(sizeof(struct cached_surface));
+	cs->source_s = ss;
+	cs->scaled_s = ds;
+	cs->size = (ds->w * ds->h) * ds->format->BytesPerPixel;
+	cs->nhits = 0;
+	SLIST_INSERT_HEAD(&cached_surfaces, cs, surfaces);
+	
+	pthread_mutex_unlock(&cached_surfaces_lock);
 
 	return (ds);
 }
