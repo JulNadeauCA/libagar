@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.10 2002/04/30 08:19:42 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.11 2002/05/02 06:26:29 vedge Exp $	*/
 
 typedef enum {
 	WINDOW_SOLID,		/* Plain, no decorations. */
@@ -13,8 +13,8 @@ typedef enum {
 } window_seg_t;
 
 struct winseg {
+	struct	window *win;
 	struct	winseg *pseg;
-	struct	window *pwin;
 	int	req;			/* Requested % of parent */
 	window_seg_t	type;		/* Segment style */
 	int	x, y;			/* Allocated coordinates */
@@ -49,8 +49,16 @@ struct window {
 	SLIST_HEAD(, winseg) winsegsh;	/* Widgets within this window */
 	pthread_mutex_t lock;		/* Lock on lists */
 	
+	struct	winseg *rootseg;	/* Root segment */
+	
 	struct viewport *view;		/* Parent view */
 	TAILQ_ENTRY(window) windows;	/* Windows within this view */
+};
+
+struct window_event {
+	struct	widget *w;
+	int	flags;
+	SDL_Event ev;
 };
 
 #define WINDOW(w)		((struct window *)(w))
@@ -68,11 +76,12 @@ struct winseg	*winseg_new(struct window *, struct winseg *, window_seg_t,
 void		 winseg_destroy(struct winseg *);
 
 void	 window_destroy(void *);
-int	 window_link(void *);
-int	 window_unlink(void *);
+void	 window_link(struct window *);
+void	 window_unlink(struct window *);
 
 void	 window_draw(struct window *);
 void	 window_mouse_motion(SDL_Event *);
 void	 window_mouse_button(SDL_Event *);
 void	 window_key(SDL_Event *);
+void	 window_draw_all(void);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.16 2002/04/30 08:19:42 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.17 2002/05/02 06:26:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,16 +44,10 @@
 #include "widget.h"
 #include "window.h"
 
-static const struct obvec window_ops = {
-	window_destroy,
-	NULL,
-	NULL,
-	window_link,
-	window_unlink
-};
-
 /* This list shares world->lock. */
 TAILQ_HEAD(windows_head, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
+pthread_mutex_t windows_lock = PTHREAD_MUTEX_INITIALIZER;
+static int nwindows = 0;
 
 /* Specific garbage collector for widgets. Used by widget.c. */
 TAILQ_HEAD(, widget) uwidgetsh = TAILQ_HEAD_INITIALIZER(uwidgetsh);
@@ -61,7 +55,7 @@ pthread_mutex_t uwidgets_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static Uint32 delta = 0, delta2 = 256;
 
-static void	 window_unlink_queued(void);
+static void	 window_unlink_widgets(void);
 
 /* XXX fucking insane */
 struct window *
@@ -72,9 +66,7 @@ window_new(struct viewport *view, char *caption, Uint32 flags,
 	win = emalloc(sizeof(struct window));
 	window_init(win, view, caption, flags, type, x, y, w, h);
 
-	pthread_mutex_lock(&world->lock);
-	object_link(win);
-	pthread_mutex_unlock(&world->lock);
+	window_link(win);
 	return (win);
 }
 
@@ -84,11 +76,10 @@ window_init(struct window *win, struct viewport *view, char *caption,
     Uint32 flags, window_type_t type, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
 	static int nwindow = 0;
-	struct winseg *nseg;
 	char *name;
 
 	name = object_name("window", nwindow++);
-	object_init(&win->obj, name, NULL, 0, &window_ops);
+	object_init(&win->obj, name, NULL, 0, NULL);
 	free(name);
 
 	win->caption = strdup(caption);
@@ -133,9 +124,7 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	pthread_mutex_init(&win->lock, NULL);
 
 	/* Allocate a segment covering the whole window. */
-	pthread_mutex_lock(&win->lock);
-	nseg = winseg_new(win, NULL, WINSEG_HORIZ, 0);
-	pthread_mutex_unlock(&win->lock);
+	win->rootseg = winseg_new(win, NULL, WINSEG_HORIZ, 0);
 }
 
 void
@@ -153,49 +142,73 @@ window_key(SDL_Event *ev)
  * complete and widgets can be freed.
  */
 static void
-window_unlink_queued(void)
+window_unlink_widgets(void)
 {
 	struct widget *w, *nextw;
 
 	/* Perform deferred unlink operations. */
 	pthread_mutex_lock(&uwidgets_lock);
-	for (w = TAILQ_FIRST(&uwidgetsh);
-	     w != TAILQ_END(&uwidgetsh);
+	for (w = TAILQ_FIRST(&uwidgetsh); w != TAILQ_END(&uwidgetsh);
 	     w = nextw) {
 		nextw = TAILQ_NEXT(w, uwidgets);
-		TAILQ_REMOVE(&uwidgetsh, w, widgets);
 		free(w);
 	}
 	TAILQ_INIT(&uwidgetsh);
 	pthread_mutex_unlock(&uwidgets_lock);
 }
 
-/* Must be called when win->lock is held. */
+static void *
+window_dispatch_event(void *arg)
+{
+	struct window_event *wev = arg;
+
+	dprintf("thread %p dispatching event for %s\n", pthread_self(),
+	    OBJECT(wev->w)->name);
+	if (WIDGET_VEC(wev->w)->widget_event != NULL) {
+		WIDGET_VEC(wev->w)->widget_event(wev->w, &wev->ev, wev->flags);
+	}
+
+	free(wev);
+	return (NULL);
+}
+
+/* Called in event context. */
 void
 window_mouse_button(SDL_Event *ev)
 {
 	struct window *win;
 	struct widget *w = NULL;
 
-	pthread_mutex_lock(&world->lock);
+	pthread_mutex_lock(&windows_lock);
 	TAILQ_FOREACH_REVERSE(win, &windowsh, windows, windows_head) {
 		if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 			continue;
 		}
-
 		TAILQ_FOREACH(w, &win->widgetsh, widgets) {
 			pthread_mutex_lock(&win->lock);
-			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y)) {
-				widget_event(w, ev, 0);
+			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y) &&
+			    WIDGET_VEC(w)->widget_event != NULL) {
+			    	struct window_event *wev;
+				pthread_t cbthread;
+
+				wev = emalloc(sizeof(struct window_event));
+				wev->w = w;
+				wev->flags = 0;
+				wev->ev = *ev;
+
+				pthread_create(&cbthread, NULL,
+				    window_dispatch_event, wev);
 			}
 			pthread_mutex_unlock(&win->lock);
 		}
 		break;
 	}
-	pthread_mutex_unlock(&world->lock);
+	pthread_mutex_unlock(&windows_lock);
 
 	/* Garbage collect any unlinked widget. */
-	window_unlink_queued();
+	if (0) {
+		window_unlink_widgets();
+	}
 }
 
 #define WINDOW_CORNER(xo, yo) do {			\
@@ -399,52 +412,50 @@ window_draw(struct window *win)
 	}
 }
 
-/* Must be called when win->lock is held. */
-int
-window_link(void *ob)
+void
+window_link(struct window *win)
 {
-	struct window *win = (struct window *)ob;
-
 	/* Increment the view mask for this area. */
 	view_maskfill(win->view, &win->vmask, 1);
 
-	/* Shares world->lock, which we assume is held. */
+	pthread_mutex_lock(&windows_lock);
 	TAILQ_INSERT_HEAD(&windowsh, win, windows);
+	nwindows++;
+	pthread_mutex_unlock(&windows_lock);
 
 	win->redraw++;
-	
-	return (0);
 }
 
 /*
- * Must be called when win->lock is held.
  * Assuming we are called in event context, queued unlink
  * operations will be performed later.
  */
-int
-window_unlink(void *ob)
+void
+window_unlink(struct window *win)
 {
-	struct window *win = (struct window *)ob;
 	struct widget *wid;
-
+	
 	/*
 	 * Unlink widgets, they are not freed until the event loop is
 	 * done traversing the window list.
 	 */
+	pthread_mutex_lock(&win->lock);
 	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
 		widget_unlink(wid);
 	}
+	pthread_mutex_unlock(&win->lock);
 
 	/* Remove from the window list. */
+	pthread_mutex_lock(&windows_lock);
+	nwindows--;
 	TAILQ_REMOVE(&windowsh, win, windows);
+	pthread_mutex_unlock(&windows_lock);
 	
 	/* Decrement the view mask for this area. */
 	view_maskfill(win->view, &win->vmask, -1);
 	if (win->view->map != NULL) {
 		win->view->map->redraw++;
 	}
-	
-	return (0);
 }
 
 void
@@ -469,34 +480,44 @@ window_destroy(void *p)
 }
 
 struct winseg *
-winseg_new(struct window *pwin, struct winseg *pseg, window_seg_t type, int req)
+winseg_new(struct window *win, struct winseg *pseg, window_seg_t type, int req)
 {
 	struct winseg *seg;
 
 	seg = emalloc(sizeof(struct winseg));
-	seg->pwin = pwin != NULL ? pwin : pseg->pwin;
+	seg->win = win;
 	seg->pseg = pseg;
 	seg->req = req;
 	seg->type = type;
-	seg->x = -1;
-	seg->y = -1;
-	seg->w = -1;
-	seg->h = -1;
 
-	dprintf("parent %s\n", OBJECT(pwin)->name);
-
-#if 0
-	if (req == 0) {		/* Root segment */
-		dprintf("root seg\n");
+	if (pseg == NULL) {	/* Root segment */
+		dprintf("root segment for %s: %dx%d\n", OBJECT(win)->name,
+		    win->w, win->h);
 		seg->x = 0;
 		seg->y = 0;
-		seg->w = pwin->w;
-		seg->h = pwin->h;
+		seg->w = win->w;
+		seg->h = win->h;
 	} else {
 		seg->x = pseg->x;
 		seg->y = pseg->y;
+		switch (type) {
+		case WINSEG_HORIZ:
+			seg->w = pseg->w;
+			seg->h = pseg->h / 2;
+			break;
+		case WINSEG_VERT:
+			seg->w = pseg->w / 2;
+			seg->h = pseg->h;
+			break;
+		}
+		dprintf("child segment for %s: ", OBJECT(win)->name);
+		dprintf("%d,%d size %dx%d\n", seg->x, seg->y, seg->w,
+		    seg->h);
 	}
-#endif
+
+	pthread_mutex_lock(&win->lock);
+	SLIST_INSERT_HEAD(&win->winsegsh, seg, winsegs);
+	pthread_mutex_unlock(&win->lock);
 
 	return (seg);
 }
@@ -506,3 +527,18 @@ winseg_destroy(struct winseg *seg)
 {
 	free(seg);
 }
+
+void
+window_draw_all(void)
+{
+	struct window *win;
+
+	pthread_mutex_lock(&windows_lock);
+	TAILQ_FOREACH_REVERSE(win, &windowsh, windows, windows_head) {
+		if (win->redraw) {
+			window_draw(win);
+		}
+	}
+	pthread_mutex_unlock(&windows_lock);
+}
+
