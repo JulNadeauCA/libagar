@@ -23,8 +23,6 @@ TAILQ_HEAD(tlist_itemq, tlist_item);
 struct tlist {
 	struct widget	wid;
 	
-	struct scrollbar *vbar;	/* Vertical scrollbar */
-
 	int	 flags;
 #define TLIST_MULTI		0x01	/* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02	/* Sticky multiple selections */
@@ -32,8 +30,8 @@ struct tlist {
 #define TLIST_POLL		0x08	/* Generate a tlist-poll event before
 					   each draw and each event. */
 
-	int	 item_h;	/* Item height */
-
+	int	 		 item_h;	/* Item height */
+	struct scrollbar	 sbar;		/* Scrollbar */
 	struct tlist_itemq	 items;		/* Current Items */
 	struct tlist_itemq	 selitems;	/* Saved items */
 	int			 nitems;	/* Current item count */

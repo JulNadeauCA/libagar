@@ -244,5 +244,6 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 .Sh BUGS
-The polled mode save/restore selections hack does not work for multiple
-items with the same text.
+Polled mode handling increases the complexity of the code, since selections
+must be saved/restored and items compared according to their text (so multiple
+items in a polled list cannot have the same text).
