@@ -425,11 +425,31 @@ node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
  * The map(s) containing the source/destination nodes must be locked.
  */
 void
-node_move_ref(struct noderef *nref, struct node *src_node,
+node_move_ref_direct(struct noderef *nref, struct node *src_node,
     struct node *dst_node)
 {
 	TAILQ_REMOVE(&src_node->nrefs, nref, nrefs);
 	TAILQ_INSERT_TAIL(&dst_node->nrefs, nref, nrefs);
+}
+
+/*
+ * Move a node reference from one node to dmap:dx,dy, at the tail of the queue.
+ * The map(s) containing the source/destination nodes must be locked.
+ */
+int
+node_move_ref(struct noderef *nref, struct node *src_node,
+    struct map *dmap, int dx, int dy)
+{
+	struct node *dst_node;
+
+	if (dx < 0 || dy < 0 ||
+	    dx >= dmap->mapw || dy >= dmap->maph)
+		return (-1);
+
+	dst_node = &dmap->map[dy][dx];
+	TAILQ_REMOVE(&src_node->nrefs, nref, nrefs);
+	TAILQ_INSERT_TAIL(&dst_node->nrefs, nref, nrefs);
+	return (0);
 }
 
 /*

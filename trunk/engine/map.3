@@ -212,9 +212,13 @@ encoding object references using
 .Fa deps .
 .Sh NODE MANIPULATIONS
 .nr nS 1
-.Ft void
+.Ft int
 .Fn node_move_ref "struct noderef *src_nref" "struct node *src_node" \
-                  "struct node *dst_node"
+                  "struct map *dmap" "int dx" "int dy"
+.Pp
+.Ft void
+.Fn node_move_ref_direct "struct noderef *src_nref" "struct node *src_node" \
+                         "struct node *dst_node"
 .Pp
 .Ft "struct noderef *"
 .Fn node_copy_ref "struct noderef *src_nref" "struct node *dst_node"
@@ -232,16 +236,20 @@ encoding object references using
 .Ft "struct noderef *"
 .Fn node_add_warp "struct node *dst_node" "char *new_map" \
                   "int x" "int y" "Uint8 dir"
-.nr nS 0
 .Pp
+.nr nS 0
 The
 .Fn node_move_ref
 function moves
 .Fa src_nref
 from
 .Fa src_node
-to
-.Fa dst_node .
+to the node at specific map coordinates and returns 0, or -1 if
+the coordinates are outside of
+.Fa dmap .
+The
+.Fn node_move_ref_direct
+variant moves a reference across two known nodes.
 .Pp
 The
 .Fn node_copy_ref
