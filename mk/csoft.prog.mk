@@ -47,7 +47,7 @@ LFLAGS?=
 YACC?=		yacc
 YFLAGS?=	-d
 
-PROG_SHARE?=
+SHARE?=
 
 .SUFFIXES: .o .po .so .c .cc .C .cxx .y .s .S .asm .l
 
@@ -156,28 +156,28 @@ install: install-subdir ${PROG}
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_PROG} ${PROG} ${INST_BINDIR}"; \
 	    ${INSTALL_PROG} ${PROG} ${INST_BINDIR}; \
-	    if [ "${PROG_SHARE}" != "" -a \
-	        ! -d "${INST_SHAREDIR}/${PROG}" ]; then \
-	        echo "${INSTALL_DATA} ${INST_SHAREDIR}/${PROG}"; \
-	        ${INSTALL_DATA_DIR} ${INST_SHAREDIR}/${PROG}; \
+	    if [ "${SHARE}" != "" -a \
+	        ! -d "${PROG_SHAREDIR}" ]; then \
+	        echo "${INSTALL_DATA} ${PROG_SHAREDIR}"; \
+	        ${INSTALL_DATA_DIR} ${PROG_SHAREDIR}; \
 	    fi; \
-	    for F in ${PROG_SHARE}; do \
-	        echo "${INSTALL_DATA} $$F ${INST_SHAREDIR}/${PROG}"; \
-	        ${INSTALL_DATA} $$F ${INST_SHAREDIR}/${PROG}; \
+	    for F in ${SHARE}; do \
+	        echo "${INSTALL_DATA} $$F ${PROG_SHAREDIR}"; \
+	        ${INSTALL_DATA} $$F ${PROG_SHAREDIR}; \
 	    done; \
 	fi
 	
 deinstall: deinstall-subdir
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
-	    echo "${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}"; \
-	    ${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}; \
-	    for F in ${PROG_SHARE}; do \
-	        echo "${DEINSTALL_DATA} ${INST_SHAREDIR}/${PROG}/$$F"; \
-	        ${DEINSTALL_DATA} ${INST_SHAREDIR}/${PROG}/$$F; \
+	    echo "${DEINSTALL_PROG} ${INST_BINDIR}"; \
+	    ${DEINSTALL_PROG} ${INST_BINDIR}; \
+	    for F in ${SHARE}; do \
+	        echo "${DEINSTALL_DATA} ${PROG_SHAREDIR}/$$F"; \
+	        ${DEINSTALL_DATA} ${PROG_SHAREDIR}/$$F; \
 	    done; \
-	    if [ -d "${INST_SHAREDIR}/${PROG}" ]; then \
-	        echo "rmdir ${INST_SHAREDIR}/${PROG}"; \
-	        rmdir ${INST_SHAREDIR}/${PROG}; \
+	    if [ -d "${PROG_SHAREDIR}" ]; then \
+	        echo "rmdir ${PROG_SHAREDIR}"; \
+	        rmdir ${PROG_SHAREDIR}; \
 	    fi; \
 	fi
 

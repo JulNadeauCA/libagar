@@ -161,6 +161,15 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
 	        ${LIBTOOL} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
 	    fi; \
+	    if [ "${SHARE}" != "" -a \
+	        ! -d "${LIB_SHAREDIR}" ]; then \
+	        echo "${INSTALL_DATA} ${LIB_SHAREDIR}"; \
+	        ${INSTALL_DATA_DIR} ${LIB_SHAREDIR}; \
+	    fi; \
+	    for F in ${SHARE}; do \
+	        echo "${INSTALL_DATA} $$F ${LIB_SHAREDIR}"; \
+	        ${INSTALL_DATA} $$F ${LIB_SHAREDIR}; \
+	    done; \
 	fi
 	
 deinstall:	deinstall-subdir
@@ -172,6 +181,14 @@ deinstall:	deinstall-subdir
 		    rm -f ${PREFIX}/lib/lib${LIB}.la"; \
 	        ${LIBTOOL} --mode=uninstall \
 		    rm -f ${PREFIX}/lib/lib${LIB}.la; \
+	    fi; \
+	    for F in ${SHARE}; do \
+	        echo "${DEINSTALL_DATA} ${LIB_SHAREDIR}/$$F"; \
+	        ${DEINSTALL_DATA} ${LIB_SHAREDIR}/$$F; \
+	    done; \
+	    if [ -d "${LIB_SHAREDIR}" ]; then \
+	        echo "rmdir ${LIB_SHAREDIR}"; \
+	        rmdir ${LIB_SHAREDIR}; \
 	    fi; \
 	fi
 
