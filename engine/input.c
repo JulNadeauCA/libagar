@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: input.c,v 1.1 2002/02/25 08:57:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -31,6 +31,8 @@
 #include <stdlib.h>
 
 #include <engine/engine.h>
+#include <engine/physics.h>
+#include <engine/input.h>
 
 static struct obvec input_vec = {
 	input_destroy,
@@ -69,7 +71,7 @@ input_create(int type, int index)
 	input->type = type;
 	input->index = index;
 	input->p = NULL;
-	input->bref = NULL;
+	input->pos = NULL;
 
 	switch (type) {
 	case INPUT_KEYBOARD:
@@ -99,16 +101,16 @@ input_key(struct input *in, SDL_Event *ev)
 
 	switch (ev->key.keysym.sym) {
 	case SDLK_UP:
-		mapdir_set(&in->bref->dir, DIR_UP, set);
+		mapdir_set(&in->pos->dir, DIR_UP, set);
 		break;
 	case SDLK_DOWN:
-		mapdir_set(&in->bref->dir, DIR_DOWN, set);
+		mapdir_set(&in->pos->dir, DIR_DOWN, set);
 		break;
 	case SDLK_LEFT:
-		mapdir_set(&in->bref->dir, DIR_LEFT, set);
+		mapdir_set(&in->pos->dir, DIR_LEFT, set);
 		break;
 	case SDLK_RIGHT:
-		mapdir_set(&in->bref->dir, DIR_RIGHT, set);
+		mapdir_set(&in->pos->dir, DIR_RIGHT, set);
 		break;
 	default:
 		/* XXX ... */
@@ -126,26 +128,26 @@ input_joy(struct input *in, SDL_Event *ev)
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_LEFT;
 			lastdir &= ~(DIR_RIGHT);
-			mapdir_set(&in->bref->dir, DIR_LEFT, 1);
+			mapdir_set(&in->pos->dir, DIR_LEFT, 1);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_RIGHT;
 			lastdir &= ~(DIR_LEFT);
-			mapdir_set(&in->bref->dir, DIR_RIGHT, 1);
+			mapdir_set(&in->pos->dir, DIR_RIGHT, 1);
 		} else {
-			mapdir_set(&in->bref->dir, DIR_ALL, 0);
+			mapdir_set(&in->pos->dir, DIR_ALL, 0);
 		}
 		break;
 	case 1:	/* Y */
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_UP;
 			lastdir &= ~(DIR_DOWN);
-			mapdir_set(&in->bref->dir, DIR_UP, 1);
+			mapdir_set(&in->pos->dir, DIR_UP, 1);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_DOWN;
 			lastdir &= ~(DIR_UP);
-			mapdir_set(&in->bref->dir, DIR_DOWN, 1);
+			mapdir_set(&in->pos->dir, DIR_DOWN, 1);
 		} else {
-			mapdir_set(&in->bref->dir, DIR_ALL, 0);
+			mapdir_set(&in->pos->dir, DIR_ALL, 0);
 		}
 		break;
 	}
@@ -179,7 +181,7 @@ input_event(void *p, SDL_Event *ev)
 {
 	struct input *in = (struct input *)p;
 
-	if (in->bref == NULL) {
+	if (in->pos == NULL) {
 		dprintf("%s: not controlling anything\n", in->obj.name);
 		return;
 	}
@@ -263,6 +265,6 @@ input_dump(void *p)
 		break;
 	}
 	printf("#%d: position=%s:%d,%d[offs %d]\n", in->index,
-	    in->bref->map->obj.name, in->bref->x, in->bref->y,
-	    in->bref->nref->offs);
+	    in->pos->map->obj.name, in->pos->x, in->pos->y,
+	    in->pos->nref->offs);
 }
