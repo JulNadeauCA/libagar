@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.21 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.22 2002/11/28 06:32:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -155,7 +155,7 @@ tlist_scaled(int argc, union evarg *argv)
 void
 tlist_draw(void *p)
 {
-	SDL_Rect rd;
+	SDL_Rect rclip;
 	struct tlist *tl = p;
 	struct tlist_item *it;
 	struct scrollbar *sb = tl->vbar;
@@ -170,7 +170,13 @@ tlist_draw(void *p)
 		event_post(tl, "tlist-poll", NULL);
 	}
 
+	rclip.x = WIDGET_ABSX(tl);
+	rclip.y = WIDGET_ABSY(tl);
+	rclip.w = WIDGET(tl)->w;
+	rclip.h = WIDGET(tl)->h;
+
 	y = sb->range.soft_start;
+	SDL_SetClipRect(view->v, &rclip);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		SDL_Surface *su;
 		int x = 2;
@@ -203,6 +209,7 @@ tlist_draw(void *p)
 		SDL_FreeSurface(su);
 	}
 out:
+	SDL_SetClipRect(view->v, NULL);
 	scrollbar_draw(sb);
 	pthread_mutex_unlock(&tl->items_lock);
 }
