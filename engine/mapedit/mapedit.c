@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.201 2004/04/10 02:43:43 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.202 2004/04/11 03:29:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -94,8 +94,8 @@ mapedit_init(void)
 	mapedition = 1;
 
 	/* Initialize the default tunables. */
-	prop_set_uint32(&mapedit, "default-map-width", 64);
-	prop_set_uint32(&mapedit, "default-map-height", 32);
+	prop_set_uint32(&mapedit, "default-map-width", 16);
+	prop_set_uint32(&mapedit, "default-map-height", 16);
 	prop_set_uint32(&mapedit, "default-brush-width", 5);
 	prop_set_uint32(&mapedit, "default-brush-height", 5);
 	prop_set_bool(&mapedit, "sel-bounded-edition", 0);
