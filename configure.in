@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.79 2004/02/02 01:52:32 vedge Exp $
+# $Csoft: configure.in,v 1.80 2004/03/10 16:58:29 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -13,6 +13,7 @@ REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
+REGISTER("--enable-warnings",	"Enable compiler warnings [default: no]")
 
 # Agar version
 HDEFINE(VERSION, "\"1.0-beta\"")
@@ -49,8 +50,10 @@ CHECK(setlocale)
 CHECK(arc4random)
 
 MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
-#MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused")
-#MDEFINE(CFLAGS, "$CFLAGS -Wno-missing-headers")
+if [ "${enable_warnings}" != "no" ]; then
+	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
+	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
+fi
 
 # Require SDL and FreeType.
 REQUIRE(sdl, 1.2.0)
