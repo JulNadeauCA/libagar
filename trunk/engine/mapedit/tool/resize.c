@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.19 2003/03/10 02:13:44 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.20 2003/03/13 08:27:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,16 +70,17 @@ resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 	struct resize *res = p;
 	struct map *m = mv->map;
 
-	dprintf("nxrel = %d, nyrel = %d\n", mv->cxrel, mv->cyrel);
+	if (mv->cxrel != 0 && mv->cyrel != 0)
+		dprintf("cxrel = %d, cyrel = %d\n", mv->cxrel, mv->cyrel);
 
 	if (mv->cxrel < 0 && m->mapw > 1) {
-		map_shrink(m, m->mapw - 1, m->maph);
+		map_resize(m, m->mapw - 1, m->maph);
 	} else if (mv->cxrel > 0) {
-		map_grow(m,   m->mapw + 1, m->maph);
+		map_resize(m, m->mapw + 1, m->maph);
 	}
 	if (mv->cyrel < 0 && m->maph > 1) {
-		map_shrink(m, m->mapw, m->maph - 1);
+		map_resize(m, m->mapw, m->maph - 1);
 	} else if (mv->cyrel > 0) {
-		map_grow(m,   m->mapw, m->maph + 1);
+		map_resize(m, m->mapw, m->maph + 1);
 	}
 }

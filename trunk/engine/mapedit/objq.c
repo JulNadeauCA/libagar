@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.55 2003/03/12 07:48:51 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.56 2003/03/13 08:37:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -143,6 +143,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 		struct map *submap = it->p1;
 		int t, xinc, yinc;
 		Uint32 ind;
+		unsigned int nw, nh;
  
 		if (!it->selected || it->text_len < 2)
 			continue;
@@ -178,9 +179,12 @@ objq_insert_tiles(int argc, union evarg *argv)
 			fatal("bad ref");
 		}
 
-		if (map_adjust(m,
-		    con->x + xinc + 1,
-		    con->y + yinc + 1) == -1) {
+		nw = con->x + xinc + 1;
+		nh = con->y + yinc + 1;
+
+		if (map_resize(m,
+		    nw > m->mapw ? nw : m->mapw,
+		    nh > m->maph ? nh : m->maph) == -1) {
 			text_msg("Error growing map", "%s");
 			continue;
 		}
