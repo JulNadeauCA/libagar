@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.20 2003/01/24 08:26:13 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.21 2003/01/27 08:02:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -86,26 +86,14 @@ rootmap_animate(void)
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
 		     mx++, rx += m->tilew) {
 			node = &m->map[my][mx];
-#ifdef DEBUG
-			if (map_nodesigs &&
-			    (strcmp(NODE_MAGIC, node->magic) != 0 ||
-			    node->x != mx || node->y != my)) {
-				fatal("bad node\n");
-			}
-#endif
+			MAP_CHECK_NODE(node, mx, my);
+
 			if ((node->flags & NODE_HAS_ANIM) == 0) {
 				/* rootmap_draw() shall handle this. */
 				continue;
 			}
-
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-#ifdef DEBUG
-				if (map_nodesigs &&
-				    (strcmp(NODEREF_MAGIC, node->magic) != 0 ||
-				     node->x != mx || node->y != my)) {
-					fatal("bad noderef\n");
-				}
-#endif
+				MAP_CHECK_NODEREF(nref);
 				noderef_draw(m, nref, rx, ry);
 			}
 		}
@@ -141,26 +129,14 @@ rootmap_draw(void)
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
 		     mx++, rx += m->tilew) {
 			node = &m->map[my][mx];
-#ifdef DEBUG
-			if (map_nodesigs &&
-			    (strcmp(NODE_MAGIC, node->magic) != 0 ||
-			    node->x != mx || node->y != my)) {
-				fatal("bad node\n");
-			}
-#endif
+			MAP_CHECK_NODE(node, mx, my);
+
 			if (node->flags & NODE_HAS_ANIM) {
 				/* rootmap_animate() shall handle this. */
 				continue;
 			}
-
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-#ifdef DEBUG
-				if (map_nodesigs &&
-				    (strcmp(NODEREF_MAGIC, node->magic) != 0 ||
-				     node->x != mx || node->y != my)) {
-					fatal("bad noderef\n");
-				}
-#endif
+				MAP_CHECK_NODEREF(nref);
 				noderef_draw(m, nref, rx, ry);
 			}
 		}
@@ -262,9 +238,9 @@ rootmap_alloc_maprects(int w, int h)
 	int x, y;
 
 	/* Calculate the default coordinates of visible rectangles. */
-	rects = emalloc((w * h) * sizeof(SDL_Rect *));
+	rects = emalloc(h * sizeof(SDL_Rect *));
 	for (y = 0; y < h; y++) {
-		*(rects + y) = emalloc(w * sizeof(SDL_Rect));
+		rects[y] = emalloc(w * sizeof(SDL_Rect));
 		for (x = 0; x < w; x++) {
 			rects[y][x].x = x * TILEW;
 			rects[y][x].y = y * TILEH;
@@ -282,8 +258,9 @@ rootmap_free_maprects(struct viewport *v)
 
 	pthread_mutex_lock(&v->lock);
 	for (y = 0; y < v->rootmap->h; y++) {
-		free(*(v->rootmap->maprects + y));
+		free(v->rootmap->maprects[y]);
 	}
+	free(v->rootmap->maprects);
 	pthread_mutex_unlock(&v->lock);
 }
 
