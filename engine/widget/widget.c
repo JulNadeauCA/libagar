@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.15 2002/05/19 15:27:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 
 void
 widget_init(struct widget *wid, char *name, char *style, const void *wops,
-    int w, int h)
+    int rw, int rh)
 {
 	static Uint32 widid = 0;
 	char *widname;
@@ -59,7 +59,9 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 	wid->win = NULL;
 	wid->x = 0;
 	wid->y = 0;
-	wid->w = w;
-	wid->h = h;
+	wid->rw = rw;
+	wid->rh = rh;
+	wid->w = 0;
+	wid->h = 0;
 }
 
