@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.33 2003/11/15 03:55:59 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.34 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -182,7 +182,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 	rm = view->rootmap;
 
 	switch (dir) {
-	case DIR_N:
+	case ROOTMAP_N:
 		if ((rm->sy -= inc) <= -TILEH) {
 			if (--rm->y < 0) {
 				rm->y = 0;
@@ -190,7 +190,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 			rm->sy = 0;
 		}
 		break;
-	case DIR_S:
+	case ROOTMAP_S:
 		if ((rm->sy += inc) >= TILEH) {
 			if (++rm->y > (m->maph - rm->h)) {
 				rm->y = m->maph - rm->h;
@@ -198,7 +198,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 			rm->sy = 0;
 		}
 		break;
-	case DIR_W:
+	case ROOTMAP_W:
 		if ((rm->sx -= inc) <= -TILEW) {
 			if (--rm->x < 0) {
 				rm->x = 0;
@@ -206,7 +206,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 			rm->sx = 0;
 		}
 		break;
-	case DIR_E:
+	case ROOTMAP_E:
 		if ((rm->sx += inc) >= TILEH) {
 			if (++rm->x > (m->mapw - rm->w)) {
 				rm->x = m->mapw - rm->w;
