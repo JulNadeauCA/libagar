@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.99 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.101 2002/11/26 05:21:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -64,7 +64,7 @@ extern struct window *game_menu_win;
 #define DEBUG_EVENT_DELIVERY	0x400
 #define DEBUG_ASYNC_EVENTS	0x800
 
-int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEO_UPDATES|
+int	event_debug =	DEBUG_UNDERRUNS|
 			DEBUG_VIDEOEXPOSE_EV|DEBUG_MOUSEBUTTON_EV|
 			DEBUG_JOY_EV|DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
@@ -228,17 +228,18 @@ event_loop(void)
 			}
 
 			/* Update the windows. */
-			deprintf("updating windows: ");
+			debug_n(DEBUG_VIDEO_UPDATES, "updating windows: ");
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
-					deprintf(" %s", OBJECT(win)->name);
+					debug_n(DEBUG_VIDEO_UPDATES, " %s",
+					    OBJECT(win)->name);
 					window_draw(win);
 				}
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
-			deprintf("\n");
+			debug_n(DEBUG_VIDEO_UPDATES, ".\n");
 
 			/* Update the display. */
 			if (view->ndirty > 0) {

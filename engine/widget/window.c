@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.110 2002/11/22 23:11:03 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.112 2002/11/26 05:21:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -78,7 +78,7 @@ static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 #define DEBUG_RESIZE	0x02
 #define DEBUG_DRAW	0x04
 
-int	window_debug = DEBUG_STATE|DEBUG_RESIZE|DEBUG_DRAW;
+int	window_debug = 0;
 #define	engine_debug window_debug
 #endif
 
