@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.36 2002/02/17 10:39:16 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.37 2002/02/18 07:49:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -122,6 +122,7 @@ map_create(char *name, char *desc, int flags)
 	m = (struct map *)emalloc(sizeof(struct map));
 	object_init(&m->obj, name, OBJ_DEFERGC|OBJ_EDITABLE, &map_vec);
 	m->obj.desc = (desc != NULL) ? strdup(desc) : NULL;
+	sprintf(m->obj.saveext, "m");
 
 	m->flags = flags;
 	m->view = mainview;
