@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.92 2003/03/15 04:21:37 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.93 2003/03/16 04:08:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,6 +101,13 @@ mapview_selbounded(struct mapview *mv, int x, int y)
 	     y >= mv->esel.y &&
 	     x <  mv->esel.x + mv->esel.w &&
 	     y <  mv->esel.y + mv->esel.h));
+}
+
+static __inline__ int
+mapview_selecting(void)
+{
+	return (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] ||
+	    (SDL_GetModState() & KMOD_CTRL));
 }
 
 struct mapview *
@@ -666,10 +673,8 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 
 	switch (button) {
 	case 1:						/* Select/edit */
-		if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] ||
-		    (SDL_GetModState() & KMOD_CTRL)) {
+		if (mapview_selecting())
 			mapview_begin_selection(mv);
-		}
 		break;
 	case 2:						/* Adjust centering */
 		mv->flags |= MAPVIEW_NO_CURSOR;
@@ -762,7 +767,7 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case 1:
-		if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] &&
+		if (mapview_selecting() &&
 		    mv->msel.set &&
 		    (mv->msel.xoffs == 0 || mv->msel.yoffs == 0)) {
 			mv->esel.set = 0;
@@ -867,14 +872,15 @@ mapview_keydown(int argc, union evarg *argv)
 			struct tool *tool = mapedit.tools[i];
 
 			SLIST_FOREACH(binding, &tool->bindings, bindings) {
-				if (binding->key != keysym) {
-					continue;
+				if (binding->key == keysym &&
+				    (binding->mod == KMOD_NONE ||
+				     keymod & binding->mod)) {
+					if (binding->edit &&
+					   (mv->flags & MAPVIEW_EDIT) == 0) {
+						continue;
+					}
+					binding->func(tool, mv);
 				}
-				if (binding->edit &&
-				   (mv->flags & MAPVIEW_EDIT) == 0) {
-					continue;
-				}
-				binding->func(tool, mv);
 			}
 		}
 	}
@@ -1000,10 +1006,13 @@ mapview_set_selection(struct mapview *mv, int x, int y, int w, int h)
 int
 mapview_get_selection(struct mapview *mv, int *x, int *y, int *w, int *h)
 {
-	if (x != NULL)	*x = mv->esel.x;
-	if (y != NULL)	*y = mv->esel.y;
-	if (w != NULL)	*w = mv->esel.w;
-	if (h != NULL)	*h = mv->esel.h;
-
-	return (mv->esel.set);
+	if (mv->esel.set) {
+		if (x != NULL)	*x = mv->esel.x;
+		if (y != NULL)	*y = mv->esel.y;
+		if (w != NULL)	*w = mv->esel.w;
+		if (h != NULL)	*h = mv->esel.h;
+		return (1);
+	} else {
+		return (0);
+	}
 }
