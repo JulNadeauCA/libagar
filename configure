@@ -114,6 +114,10 @@ echo "    --enable-debug       Engine debugging [default: no]"
 echo "    --enable-xdebug      Synchronous X11 events [default: no]"
 echo "    --enable-map-editor  Level edition [default: yes]"
 echo "    --enable-serializati Thread-safe engine [default: yes]"
+echo "    --enable-8bpp        Support 8 bpp display [default: yes]"
+echo "    --enable-16bpp       Support 16 bpp display [default: yes]"
+echo "    --enable-24bpp       Support 24 bpp display [default: yes]"
+echo "    --enable-32bpp       Support 32 bpp display [default: yes]"
 echo "    --help               Show this message"
 exit 1
 fi
@@ -346,6 +350,34 @@ SERIALIZATION=1
 echo "#ifndef SERIALIZATION" >> engine/mcconfig.h
 echo "#define SERIALIZATION $SERIALIZATION" >> engine/mcconfig.h
 echo "#endif /* SERIALIZATION */" >> engine/mcconfig.h
+fi
+if [ "${enable_8bpp}" != "no" ]
+ then
+VIEW_8BPP=1
+echo "#ifndef VIEW_8BPP" >> engine/mcconfig.h
+echo "#define VIEW_8BPP $VIEW_8BPP" >> engine/mcconfig.h
+echo "#endif /* VIEW_8BPP */" >> engine/mcconfig.h
+fi
+if [ "${enable_16bpp}" != "no" ]
+ then
+VIEW_16BPP=1
+echo "#ifndef VIEW_16BPP" >> engine/mcconfig.h
+echo "#define VIEW_16BPP $VIEW_16BPP" >> engine/mcconfig.h
+echo "#endif /* VIEW_16BPP */" >> engine/mcconfig.h
+fi
+if [ "${enable_24bpp}" != "no" ]
+ then
+VIEW_24BPP=1
+echo "#ifndef VIEW_24BPP" >> engine/mcconfig.h
+echo "#define VIEW_24BPP $VIEW_24BPP" >> engine/mcconfig.h
+echo "#endif /* VIEW_24BPP */" >> engine/mcconfig.h
+fi
+if [ "${enable_32bpp}" != "no" ]
+ then
+VIEW_32BPP=1
+echo "#ifndef VIEW_32BPP" >> engine/mcconfig.h
+echo "#define VIEW_32BPP $VIEW_32BPP" >> engine/mcconfig.h
+echo "#endif /* VIEW_32BPP */" >> engine/mcconfig.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/mcconfig.h
