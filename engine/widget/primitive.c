@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.65 2005/01/31 03:45:46 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.66 2005/02/19 06:50:19 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -111,6 +111,138 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, rcol);
 
 	widget_pop_color(wid);
+	widget_pop_color(wid);
+	widget_pop_color(wid);
+}
+
+/* Draw a 3D-style box with chamfered top edges. */
+static void
+box_chamfered(void *p, SDL_Rect *r, int z, int rad, int ncolor)
+{
+	struct widget *wid = p;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
+	int lcol, rcol;
+	int v, e, u;
+	int x, y;
+
+#ifdef DEBUG
+	if (ncolor >= WIDGET_COLORS_MAX)
+		fatal("color stack oflow");
+#endif
+	lcol = widget_push_color(wid, (z < 0) ?
+	    alter_color(color, -60, -60, -60) :
+	    alter_color(color, 60, 60, 60));
+	rcol = widget_push_color(wid, (z < 0) ?
+	    alter_color(color, 60, 60, 60) :
+	    alter_color(color, -60, -60, -60));
+
+	/* Fill the background except the corners. */
+	primitives.rect_filled(wid,			/* Body */
+	    r->x + rad,
+	    r->y + rad,
+	    r->w - rad*2,
+	    r->h - rad,
+	    ncolor);
+	primitives.rect_filled(wid,			/* Top */
+	    r->x + rad,
+	    r->y,
+	    r->w - rad*2,
+	    r->h,
+	    ncolor);
+	primitives.rect_filled(wid,			/* Left */
+	    r->x,
+	    r->y + rad,
+	    rad,
+	    r->h - rad,
+	    ncolor);
+	primitives.rect_filled(wid,			/* Right */
+	    r->x + r->w - rad,
+	    r->y + rad,
+	    rad,
+	    r->h - rad,
+	    ncolor);
+
+	/* Draw the three straight lines. */
+	primitives.line(wid,				/* Top line */
+	    r->x + rad,
+	    r->y,
+	    r->x + r->w - rad,
+	    r->y,
+	    ncolor);
+	primitives.line(wid,				/* Left line */
+	    r->x,
+	    r->y + rad,
+	    r->x,
+	    r->y + r->h,
+	    lcol);
+	primitives.line(wid,				/* Right line */
+	    r->x + r->w - 1,
+	    r->y + rad,
+	    r->x + r->w - 1,
+	    r->y + r->h,
+	    rcol);
+
+	/* Draw the two chamfered edges using a Bresenham generalization. */
+	v = 2*rad - 1;
+	e = 0;
+	u = 0;
+	x = 0;
+	y = rad;
+	SDL_LockSurface(view->v);
+	while (x <= y) {
+		int i;
+
+		widget_put_pixel(wid,
+		    r->x + rad - x,
+		    r->y + rad - y,
+		    WIDGET_COLOR(wid,lcol));
+		widget_put_pixel(wid,
+		    r->x + rad - y,
+		    r->y + rad - x,
+		    WIDGET_COLOR(wid,lcol));
+
+		widget_put_pixel(wid,
+		    r->x - rad + (r->w - 1) + x,
+		    r->y + rad - y,
+		    WIDGET_COLOR(wid,rcol));
+		widget_put_pixel(wid,
+		    r->x - rad + (r->w - 1) + y,
+		    r->y + rad - x,
+		    WIDGET_COLOR(wid,rcol));
+		
+		for (i = 0; i < x; i++) {
+			widget_put_pixel(wid,
+			    r->x + rad - i,
+			    r->y + rad - y,
+			    WIDGET_COLOR(wid,ncolor));
+			widget_put_pixel(wid,
+			    r->x - rad + (r->w - 1) + i,
+			    r->y + rad - y,
+			    WIDGET_COLOR(wid,ncolor));
+		}
+		for (i = 0; i < y; i++) {
+			widget_put_pixel(wid,
+			    r->x + rad - i,
+			    r->y + rad - x,
+			    WIDGET_COLOR(wid,ncolor));
+			widget_put_pixel(wid,
+			    r->x - rad + (r->w - 1) + i,
+			    r->y + rad - x,
+			    WIDGET_COLOR(wid,ncolor));
+		}
+
+		e += u;
+		u += 2;
+		if (v < 2*e) {
+			y--;
+			e -= v;
+			v -= 2;
+		}
+		x++;
+	}
+	SDL_UnlockSurface(view->v);
+
+
 	widget_pop_color(wid);
 	widget_pop_color(wid);
 }
@@ -524,6 +656,7 @@ void
 primitives_init(void)
 {
 	primitives.box = box;
+	primitives.box_chamfered = box_chamfered;
 	primitives.frame = frame;
 	primitives.rect_outlined = rect_outlined;
 	primitives.plus = plus;

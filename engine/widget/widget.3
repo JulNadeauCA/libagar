@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.56 2005/01/05 04:44:06 vedge Exp $
+.\"	$Csoft: widget.3,v 1.57 2005/01/29 02:49:15 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -304,6 +304,10 @@ direct video primitives in OpenGL mode.
                    "int ncolor"
 .Pp
 .Ft void
+.Fn primitives.box_chamfered "void *widget" "SDL_Rect *r" "int z" "int radius" \
+                   "int ncolor"
+.Pp
+.Ft void
 .Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" \
                      "int ncolor"
 .Pp
@@ -355,8 +359,14 @@ draws a 3D-style box of size
 with a depth of
 .Fa z
 pixels.
-The background color is varied slightly depending on the focus state of
-the widget.
+The
+.Fn primitive.box_chamfered
+variant draws a 3D-style box with the two top edges chamfered to the
+given
+.Fa radius .
+.Pp
+For both these routines, the background color is varied slightly depending
+on the focus state of the widget.
 .Pp
 .Fn primitives.frame
 draws a 3D-style frame of size

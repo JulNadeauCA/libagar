@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.25 2005/01/25 01:18:33 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.26 2005/01/29 02:49:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -7,6 +7,7 @@
 
 struct primitive_ops {
 	void	(*box)(void *, int, int, int, int, int, int);
+	void	(*box_chamfered)(void *, SDL_Rect *, int, int, int);
 	void	(*frame)(void *, int, int, int, int, int);
 	void	(*circle)(void *, int, int, int, int);
 	void	(*circle2)(void *, int, int, int, int);
