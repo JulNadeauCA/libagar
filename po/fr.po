@@ -1,6 +1,6 @@
-# $Csoft: fr.po,v 1.25 2003/12/09 23:20:46 vedge Exp $
+# $Csoft: fr.po,v 1.26 2004/02/15 03:33:48 vedge Exp $
 #
-# Copyright (c) 2003 CubeSoft Communications, Inc.
+# Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-12-09 19:05-0400\n"
+"POT-Creation-Date: 2004-02-24 09:11-0400\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
@@ -38,8 +38,8 @@ msgstr ""
 msgid "Trek to the Cave"
 msgstr "Trek to the Cave"
 
-msgid "Copyright (c) 2002, 2003 CubeSoft Communications, Inc.\n"
-msgstr "Copyright (c) 2002, 2003 Communications CubeSoft, Inc.\n"
+msgid "Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.\n"
+msgstr "Copyright (c) 2002, 2003, 2004 Communications CubeSoft, Inc.\n"
 
 msgid "New Game"
 msgstr "Nouvelle partie"
@@ -267,13 +267,12 @@ msgstr "L'objet «%s» n'est pas persistant."
 msgid "%s: Cannot resolve dependency `%s'"
 msgstr "%s: Impossible de résoudre la dépendance: «%s»"
 
+msgid "No position to resolve."
+msgstr "Aucune position à résoudre."
+
 #, c-format
 msgid "The `%s' save has inconsistent flags."
 msgstr "La sauvegarde de «%s» contient des flags inconsistents."
-
-#, c-format
-msgid "Bad coordinates: %d,%d,%d"
-msgstr "Mauvaises coordonnées: %d,%d,%d"
 
 #, c-format
 msgid "Unknown object type: `%s'"
@@ -282,17 +281,6 @@ msgstr "Type d'objet inconnu: «%s»"
 #, c-format
 msgid "The data of `%s' is already resident."
 msgstr "Les données de «%s» sont déjà en mémoire."
-
-#, c-format
-msgid "There is no input device named `%s'."
-msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
-
-msgid "There is no position to control."
-msgstr "Il n'y pas de position a contrôler."
-
-#, c-format
-msgid "There is no submap named `%s'."
-msgstr "Aucune sous-carte n'est nommée «%s»."
 
 #, c-format
 msgid "%s object"
@@ -558,7 +546,7 @@ msgid "Pop"
 msgstr "Supprimer"
 
 msgid "Destructive Pop"
-msgstr ""
+msgstr "Pop Destructif"
 
 msgid "Edit"
 msgstr "Éditer"
@@ -638,7 +626,7 @@ msgid "Eraser"
 msgstr "Gomme à effacer"
 
 msgid "Remove the highest node reference."
-msgstr ""
+msgstr "Supprimer la dernière référence de noeud."
 
 msgid "Color Inversion"
 msgstr "Inversion de couleur"
@@ -738,26 +726,32 @@ msgstr "Tout"
 msgid "Position"
 msgstr "Position"
 
-msgid "Position or reposition objects on maps."
-msgstr "Positionnement et repositionnement d'objets sur carte."
+msgid "Assign unique object positions."
+msgstr "Attribuer des positions uniques aux objets."
 
-msgid "Submap: "
-msgstr "Sous-map: "
+msgid ": "
+msgstr ": "
 
 msgid "Input device: "
 msgstr "Pilotes d'entrée: "
 
-msgid "Speed: "
-msgstr "Vitesse: "
+msgid "Direction: "
+msgstr "Direction: "
 
-msgid "Center view around"
+msgid "Velocity: "
+msgstr "Vélocité: "
+
+msgid "Center view"
 msgstr "Centrer la vue"
-
-msgid "Soft motion"
-msgstr "Déplacement incrémental"
 
 msgid "Pass through"
 msgstr "Passage au travers"
+
+msgid "No object selected."
+msgstr "Aucun object n'est sélectionné."
+
+msgid "No projection map was selected."
+msgstr "Aucune carte de projection n'est sélectionnée."
 
 msgid "Property editor"
 msgstr "Éditeur de propriétés"
@@ -779,12 +773,6 @@ msgstr "Bio"
 
 msgid "Regen"
 msgstr "Régénérer"
-
-msgid "Slow"
-msgstr "Lent"
-
-msgid "Haste"
-msgstr "Rapide"
 
 msgid "Origin"
 msgstr "Origine"
@@ -970,14 +958,8 @@ msgstr "Information"
 msgid "Ok"
 msgstr "Ack-é!"
 
-msgid "+"
-msgstr "+"
-
-msgid "-"
-msgstr "-"
-
 msgid "Ångstroms"
-msgstr ""
+msgstr "Ångstroms"
 
 msgid "Microns"
 msgstr "Microns"
@@ -1477,11 +1459,92 @@ msgstr "Pouces de mercure"
 msgid "Meters of water"
 msgstr "Mètres d'eau"
 
-msgid "Atmospheres"
-msgstr "Atmosphères"
-
 msgid "Kips per square inch"
 msgstr "Kips par pouces carrés"
+
+msgid "Pluto Atmospheres"
+msgstr "Atmosphères plutoniques"
+
+msgid "Earth Atmospheres"
+msgstr "Atmosphères terrestres"
+
+msgid "Mars Atmospheres"
+msgstr "Atmosphères marsiennes"
+
+msgid "Metabolic equivalent"
+msgstr "Équivalent métabolique"
+
+msgid "Kilokalories per minute"
+msgstr "Kilocalories par minute"
+
+msgid "Ml O/kg/minute"
+msgstr "Ml O/kg/minute"
+
+msgid "Attending church"
+msgstr "Aller à la messe"
+
+msgid "Very slow walking (<2.0mph)"
+msgstr "Marche très lente (<2.0mph)"
+
+msgid "Slow walking (2.0mph)"
+msgstr "Marche lente (2.0mph)"
+
+msgid "Walking (2.5mph)"
+msgstr "Marche (2.5mph)"
+
+msgid "Moderate walking (3.0mph)"
+msgstr "Marche modérée (3.0mph)"
+
+msgid "Walking - brisk (3.5mph)"
+msgstr "Marche rapide (3.5mph)"
+
+msgid "Walking - very brisk (4.5mph)"
+msgstr "Marche très rapide (4.5mph)"
+
+msgid "Walking (3-5mph, mountains)"
+msgstr "Marche (3-5mph, buttes)"
+
+msgid "Uphill walking (3.5mph)"
+msgstr "Marche en haut (3.5mph)"
+
+msgid "Light biking (10-11.9mph)"
+msgstr "Bicycle léger (10-11.9mph)"
+
+msgid "Moderate biking (12-13.9mph)"
+msgstr "Bicycle modéré (12-13.9mph)"
+
+msgid "Vigorous biking (14-15.9mph)"
+msgstr "Bicycle vigoureux (14-15.9mph)"
+
+msgid "Race biking (16-19mph)"
+msgstr "Bicycle de course (16-19mph)"
+
+msgid "Race biking (>20mph)"
+msgstr "Bicycle de course (16-19mph)"
+
+msgid "Mountain and rock climbing"
+msgstr "Escalade"
+
+msgid "Stretching, yoga"
+msgstr "Étirements, yoga"
+
+msgid "Jogging"
+msgstr "Jogging"
+
+msgid "General/cross-country skiing"
+msgstr "Ski de fond"
+
+msgid "Cross-country/moderate skiing"
+msgstr "Ski de fond modéré"
+
+msgid "Cross-country/vigorous skiing"
+msgstr "Ski de fond vigoureux"
+
+msgid "+"
+msgstr "+"
+
+msgid "-"
+msgstr "-"
 
 msgid "Object"
 msgstr "Objet"
@@ -1500,6 +1563,30 @@ msgstr "Clavier"
 
 msgid "Joystick"
 msgstr "Joystick"
+
+#, c-format
+msgid "Illegal coordinates: %s[%d,%d,%d]"
+msgstr "Coordonées illégales: %s[%d,%d,%d]"
+
+#, c-format
+msgid "There is no input device named `%s'."
+msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
+
+#, c-format
+msgid "Object `%s' has no position."
+msgstr "L'objet «%s» n'occupe aucune position."
+
+#, c-format
+msgid "There is no projmap named `%s'."
+msgstr "La carte de projection «%s» n'existe pas."
+
+#, c-format
+msgid "No such level map: `%s'"
+msgstr "Carte inexistante: «%s»"
+
+#, c-format
+msgid "No such projection map: `%s'"
+msgstr "Carte de projection inexistante: «%s»"
 
 #, c-format
 msgid "%lu MB"
@@ -1544,8 +1631,8 @@ msgstr "fermeture"
 msgid "SUMO Client"
 msgstr "Client SUMO"
 
-msgid "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
-msgstr "Copyright (c) 2003 Communications CubeSoft, Inc.\n"
+msgid "Copyright (c) 2003, 2004 CubeSoft Communications, Inc.\n"
+msgstr "Copyright (c) 2003, 2004 Communications CubeSoft, Inc.\n"
 
 #, c-format
 msgid "%2d. (locked session)"
@@ -1630,11 +1717,20 @@ msgstr "Tension: "
 msgid "Current: "
 msgstr "Courant: "
 
-msgid "Winds Tritron"
-msgstr "Vents Tritron"
+msgid "Resistivity of Conductor Materials"
+msgstr "Résistivité de Matériaux Conducteurs"
 
-msgid "Winds Tritron tools"
-msgstr "Outils Vents Tritron"
+msgid "Material: "
+msgstr "Matériel: "
+
+msgid "Resistivity: "
+msgstr "Résistivité: "
+
+msgid "Copyright (c) 2003, 2004 Winds Triton Engineering, Inc.\n"
+msgstr "Copyright (c) 2003, 2004 Ingénierie Winds Triton, Inc.\n"
+
+msgid "Winds Triton EDA Tools"
+msgstr "Outils Winds Triton EDA"
 
 msgid "Unreasonable refresh rate"
 msgstr "Fréquence de rafraîchissement déraisonnable"
@@ -1718,7 +1814,7 @@ msgid "Water"
 msgstr "Eau"
 
 msgid "Glycerin"
-msgstr "Glycécine"
+msgstr "Glycérine"
 
 msgid "Benzene"
 msgstr "Benzène"
@@ -1792,11 +1888,94 @@ msgstr "Capacitance: "
 msgid "Inductance: "
 msgstr "Inductance: "
 
+msgid "Time Equivalence"
+msgstr "Équivalence de Temps"
+
+msgid "Time: "
+msgstr "Temps: "
+
+msgid "Adjustable Voltage Regulator Tool"
+msgstr ""
+
+msgid "Model: "
+msgstr ""
+
+msgid "Inductance Calculation"
+msgstr "Calcul d'Inductance"
+
 msgid "Pressure Equivalence"
 msgstr "Équivalence de Pression"
 
 msgid "Pressure: "
 msgstr "Pression: "
+
+msgid "Resistor"
+msgstr "Résistance"
+
+msgid "Discrete, ohmic resistance"
+msgstr "Résistance ohmique discrète"
+
+msgid "Resistor %s"
+msgstr "Résistance %s"
+
+msgid "Power rating: "
+msgstr "Puissance maximale: "
+
+msgid "Tolerance (%): "
+msgstr "Tolérance (%): "
+
+#, c-format
+msgid "Voltage source %s"
+msgstr "Tension d'alimentation %s"
+
+msgid "Current limit: "
+msgstr "Limite de courant: "
+
+msgid "Internal resistance: "
+msgstr "Résistance interne: "
+
+msgid "Constant voltage source"
+msgstr "Source de voltage constante"
+
+msgid "Circuit Simulation"
+msgstr "Simulation de Circuit"
+
+#, c-format
+msgid "A `%s' circuit exists."
+msgstr "Un circuit nommé «%s» existe déjà."
+
+msgid "No circuit is selected."
+msgstr "Aucun circuit n'est sélectionné"
+
+msgid "Circuits"
+msgstr "Circuits"
+
+msgid "LM555 Timer Adjustement Tool"
+msgstr ""
+
+#~ msgid "Position or reposition objects on maps."
+#~ msgstr "Positionnement et repositionnement d'objets sur carte."
+
+#~ msgid "Submap: "
+#~ msgstr "Sous-map: "
+
+#~ msgid "Speed: "
+#~ msgstr "Vitesse: "
+
+#~ msgid "Soft motion"
+#~ msgstr "Déplacement incrémental"
+
+#~ msgid "Slow"
+#~ msgstr "Lent"
+
+#~ msgid "Haste"
+#~ msgstr "Rapide"
+
+#~ msgid "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
+#~ msgstr "Copyright (c) 2003 Communications CubeSoft, Inc.\n"
+
+#~ msgid "Winds Tritron"
+#~ msgstr "Vents Tritron"
 
 #~ msgid "Fill"
 #~ msgstr "Remplissage"
