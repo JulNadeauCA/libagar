@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.82 2002/09/20 02:41:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.83 2002/11/05 04:23:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -765,25 +765,12 @@ window_event(SDL_Event *ev)
 			/* Widget mouse motion event */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					int widx, widy;
-
-					if (!WIDGET_FOCUSED(wid)) {
+					if (!WIDGET_FOCUSED(wid) &&
+					    (wid->flags &
+					    WIDGET_UNFOCUSED_MOTION) == 0) {
 						continue;
 					}
-					widx = wid->x + wid->win->x;
-					widy = wid->y + wid->win->y;
 
-					/* XXX inefficient */
-					if (wid->flags & WIDGET_MOUSEOUT &&
-					    ((int)ev->motion.x < widx ||
-					    (int)ev->motion.y < widy ||
-					    (int)ev->motion.x > widx+wid->w ||
-					    (int)ev->motion.y > widy+wid->h)) {
-						event_post(wid,
-						    "window-mouseout", NULL);
-						goto posted;
-					}
-					
 					event_post(wid, "window-mousemotion",
 					    "%i, %i, %i, %i",
 					    (int)ev->motion.x -
@@ -792,7 +779,6 @@ window_event(SDL_Event *ev)
 					     (wid->y + wid->win->y),
 					    (int)ev->motion.xrel,
 					    (int)ev->motion.yrel);
-					goto posted;
 				}
 			}
 			break;
