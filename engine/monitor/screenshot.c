@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.7 2003/06/17 23:30:47 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.8 2003/06/17 23:47:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,8 +26,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
+#include <config/debug.h>
+#include <config/threads.h>
 #include <config/have_jpeg.h>
 
 #if defined(DEBUG) && defined(THREADS) && defined(HAVE_JPEG)
@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <stdio.h>
 #include <errno.h>
 #include <netdb.h>
 #include <string.h>
@@ -42,6 +43,7 @@
 
 #include <jpeglib.h>
 
+#include <engine/engine.h>
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
