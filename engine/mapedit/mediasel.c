@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.14 2004/05/13 02:48:00 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.15 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -484,7 +484,7 @@ mediasel_init(struct tool *t)
 	struct mapview *mv = t->mv;
 	struct window *win;
 	struct box *vb, *hb;
-	struct combo *com;
+	struct combo *gfx_com, *aud_com;
 	struct tlist *tl;
 	struct button *bu;
 #ifdef DEBUG
@@ -501,36 +501,37 @@ mediasel_init(struct tool *t)
 	box_set_spacing(vb, 0);
 	box_set_padding(vb, 2);
 	{
-		hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
+		hb = box_new(vb, BOX_VERT, BOX_WFILL);
 		box_set_spacing(hb, 1);
 		box_set_padding(hb, 2);
 		{
-			com = combo_new(hb, 0, _("Graphics: "));
-			textbox_prescale(com->tbox, "XXXXXXXXXXXXXXXXX");
-			event_new(com, "combo-selected", media_selected,
+			gfx_com = combo_new(hb, 0, "Gfx: ");
+			event_new(gfx_com, "combo-selected", media_selected,
 			    "%p, %i", m, MEDIASEL_GFX);
-			bu = button_new(hb, _("Refresh"));
-			event_new(bu, "button-pushed", refresh_media,
-			    "%p, %p, %i", m, com, MEDIASEL_GFX);
-			mediasel_refresh(m, MEDIASEL_GFX, com);
+			mediasel_refresh(m, MEDIASEL_GFX, gfx_com);
+			
+			aud_com = combo_new(hb, 0, "Audio: ");
+			event_new(aud_com, "combo-selected", media_selected,
+			    "%p, %i", m, MEDIASEL_AUDIO);
+			mediasel_refresh(m, MEDIASEL_AUDIO, aud_com);
 		}
-	
-		hb = box_new(vb, BOX_HORIZ, BOX_WFILL);
+		
+		hb = box_new(vb, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
 		box_set_spacing(hb, 1);
 		box_set_padding(hb, 2);
 		{
-			com = combo_new(hb, 0, _("Audio: "));
-			textbox_prescale(com->tbox, "XXXXXXXXXXXXXXXXX");
-			event_new(com, "combo-selected", media_selected,
-			    "%p, %i", m, MEDIASEL_AUDIO);
-			bu = button_new(hb, _("Refresh"));
+			bu = button_new(hb, _("Refresh graphics"));
 			event_new(bu, "button-pushed", refresh_media,
-			    "%p, %p, %i", m, com, MEDIASEL_AUDIO);
-			mediasel_refresh(m, MEDIASEL_AUDIO, com);
+			    "%p, %p, %i", m, gfx_com, MEDIASEL_GFX);
+			
+			bu = button_new(hb, _("Refresh audio"));
+			event_new(bu, "button-pushed", refresh_media,
+			    "%p, %p, %i", m, aud_com, MEDIASEL_AUDIO);
 		}
 
 		tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
-		tlist_set_item_height(tl, text_font_height(NULL)*2);
+		tlist_set_item_height(tl, text_font_height*2);
+		tlist_prescale(tl, "XXXXXXXXXXXXXXX", 8);
 		event_new(tl, "tlist-poll", poll_gfxmedia, "%p", OBJECT(m));
 
 		hb = box_new(vb, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
