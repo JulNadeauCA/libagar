@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.109 2002/12/13 10:40:50 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.110 2002/12/13 23:36:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -71,6 +71,8 @@ int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
 static struct window *fps_win;
 #endif
 
+#define EVENT_DELTA	80
+
 static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
 static void	*event_post_async(void *);
@@ -137,16 +139,16 @@ event_hotkey(SDL_Event *ev)
 }
 
 #ifdef DEBUG
-#define UPDATE_FPS(delta) do {					\
-	label_printf(fps_label, "%d/60", (delta));		\
-	graph_plot(fps_item, (delta));				\
+#define UPDATE_FPS(delta) do {						\
+	label_printf(fps_label, "%d/%d", (delta), EVENT_DELTA);		\
+	graph_plot(fps_item, (delta));					\
 } while (/*CONSTCOND*/0)
 #else
 #define UPDATE_FPS(delta)
 #endif
 
 #define COMPUTE_DELTA(delta, ntick) do {			\
-	(delta) = 60 - (SDL_GetTicks() - (ntick));		\
+	(delta) = EVENT_DELTA - (SDL_GetTicks() - (ntick));	\
 	UPDATE_FPS((delta));					\
 	if ((delta) < 1) {					\
 		debug(DEBUG_UNDERRUNS, "underrun: %d frames\n",	\
@@ -184,7 +186,7 @@ event_loop(void)
 	}
 #endif
 
-	for (ntick = 0, ltick = SDL_GetTicks(), delta = 60;;) {
+	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_DELTA;;) {
 		ntick = SDL_GetTicks();			/* Rendering starts */
 
 		if ((ntick - ltick) >= delta) {
