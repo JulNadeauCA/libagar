@@ -1,4 +1,4 @@
-.\"	$Csoft: scrollbar.3,v 1.2 2002/09/12 09:54:49 vedge Exp $
+.\"	$Csoft: scrollbar.3,v 1.3 2002/09/13 10:58:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 .\" All rights reserved.
@@ -42,13 +42,10 @@ widget represents a single value inside a arbitrary range.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct scrollbar *"
-.Fn scrollbar_new "struct region *reg" "int w" "int h" "int item_h" "int flags"
+.Fn scrollbar_new "struct region *reg" "int w" "int h" "int flags"
 .Pp
 .Ft void
-.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" "int item_h" "int flags"
-.Pp
-.Ft void
-.Fn scrollbar_set_range "struct scrollbar *scrollbar" "int max"
+.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" "int flags"
 .nr nS 0
 .Pp
 The
@@ -75,11 +72,32 @@ can be changed at runtime, and may include:
 #define SCROLLBAR_HORIZONTAL	0x01	/* Horizontal scroll bar */
 #define SCROLLBAR_VERTICAL	0x02	/* Vertical scroll bar */
 .Ed
+.Sh SCROLLBAR VALUE
+.nr nS 1
+.Ft void
+.Fn scrollbar_set_range "struct scrollbar *sb" "int min" "int max"
+.Pp
+.Ft void
+.Fn scrollbar_get_range "struct scrollbar *sb" "int *min" "int *max"
+.Pp
+.Ft void
+.Fn scrollbar_set_value "struct scrollbar *sb" "int value"
+.Pp
+.Ft void
+.Fn scrollbar_get_value "struct scrollbar *sb" "int *value"
+.nr nS 0
 .Pp
 The
 .Fn scrollbar_set_range
-function changes the high range value to
-.Fa max .
+function sets the value range,
+.Fn scrollbar_get_range
+returns the current value range.
+.Pp
+The
+.Fn scrollbar_set_value
+function sets the value,
+.Fn scrollbar_get_value
+returns the current value.
 .Sh EVENTS
 The
 .Nm
@@ -87,9 +105,9 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Jump to an arbitrary position.
+Jump to an arbitrary position, or start scrolling.
 .It window-mousemotion
-Scroll.
+Scroll if the left mouse button is held.
 .El
 .Pp
 The
@@ -97,9 +115,9 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
-.It Fn scrollbar-changed "int pos"
-Scrollbar position has changed, the display offset is now
-.Fa pos .
+.It Fn scrollbar-changed "int new_value"
+The scrollbar's value has changed to
+.Fa new_value .
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
