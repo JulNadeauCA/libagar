@@ -1,18 +1,15 @@
-/*	$Csoft: window.c,v 1.72 2002/09/01 08:51:18 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.73 2002/09/05 03:52:54 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -228,7 +225,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 
 /*
  * Render a window.
- * Window must be locked.
+ * Window must be locked, config must not be locked by the caller thread.
  */
 void
 window_draw(struct window *win)
@@ -301,7 +298,8 @@ window_draw(struct window *win)
 			WIDGET_OPS(wid)->widget_draw(wid);
 		}
 		
-		if (config->widget_flags & CONFIG_REGION_BORDERS) {
+		if (prop_uint32(config, "widgets.flags") &
+		    CONFIG_REGION_BORDERS) {
 			primitives.square(win,
 			    reg->x, reg->y,
 			    reg->w, reg->h,
@@ -997,7 +995,7 @@ window_clamp(struct window *win)
 static void
 winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect ro;
+	SDL_Rect ro, rn;
 	int nx, ny;
 	int tw = 16, th = 16;
 
@@ -1040,20 +1038,20 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	}
 
 	/* Clamp to minimum window geometry. */
-	pthread_mutex_lock(&config->lock);
 	if (win->w < win->minw &&
-	   (config->widget_flags & CONFIG_WINDOW_ANYSIZE) == 0) {
+	   (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
+	    == 0) {
 		win->w = win->minw;
 	} else {
 		win->x = nx;
 	}
 	if (win->h < win->minh &&
-	   (config->widget_flags & CONFIG_WINDOW_ANYSIZE) == 0) {
+	   (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
+	    == 0) {
 		win->h = win->minh;
 	} else {
 		win->y = ny;
 	}
-	pthread_mutex_unlock(&config->lock);
 	
 	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 		tw = TILEW;
@@ -1221,7 +1219,7 @@ window_resize(struct window *win)
 	}
 
 #ifdef DEBUG
-	if (config->widget_flags & CONFIG_WINDOW_ANYSIZE) {
+	if (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE) {
 		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->w, win->h);
 	}
 #endif
