@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.2 2002/04/21 13:35:20 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.3 2002/04/22 04:37:38 vedge Exp $	*/
 
 struct button {
 	struct	 widget wid;
@@ -16,7 +16,7 @@ struct button {
 
 	Uint8	xmargin, ymargin;
 
-	void	(*push)(struct button *);
+	void	(*push)(struct button *, Uint8);
 };
 
 /* Sprites */
