@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.10 2004/05/18 02:48:54 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.11 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -93,6 +93,7 @@ point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	vg_begin_element(vg, VG_POINTS);
 	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 	vg_vertex2(vg, vx, vy);
+	vg_end_element(vg);
 }
 
 const struct tool vg_point_tool = {

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.17 2004/05/18 02:47:42 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.18 2004/05/24 03:32:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -208,6 +208,7 @@ struct vg {
 	Uint32		nlayers;
 	int		 cur_layer;	/* Layer selected for edition */
 	struct vg_block	*cur_block;	/* Block selected for edition */
+	struct vg_element *cur_vge;	/* Element selected for edition */
 
 	enum vg_snap_mode  snap_mode;		/* Positional restriction */
 	enum vg_ortho_mode ortho_mode;		/* Orthogonal restriction */
@@ -251,10 +252,14 @@ struct vg_layer *vg_push_layer(struct vg *, const char *);
 __inline__ void	 vg_pop_layer(struct vg *);
 
 struct vg_element *vg_begin_element(struct vg *, enum vg_element_type);
+__inline__ void	   vg_end_element(struct vg *);
 __inline__ void	   vg_select_element(struct vg *, struct vg_element *);
 void		   vg_destroy_element(struct vg *, struct vg_element *);
+void		   vg_free_element(struct vg *, struct vg_element *);
 int	   	   vg_rcollision(struct vg *, struct vg_rect *,
 		                 struct vg_rect *, struct vg_rect *);
+
+__inline__ struct vg_element *vg_current_element(struct vg *);
 
 struct vg_style	*vg_create_style(struct vg *, enum vg_style_type, const char *);
 int		 vg_style(struct vg *, const char *);

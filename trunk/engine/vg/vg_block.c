@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.4 2004/05/12 04:53:13 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.5 2004/05/24 03:32:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -62,7 +62,6 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 void
 vg_select_block(struct vg *vg, struct vg_block *vgb)
 {
-	dprintf("block = %s\n", vgb != NULL ? vgb->name : "null");
 	vg->cur_block = vgb;
 }
 
@@ -70,7 +69,6 @@ vg_select_block(struct vg *vg, struct vg_block *vgb)
 void
 vg_end_block(struct vg *vg)
 {
-	dprintf("block -> null\n");
 	vg->cur_block = NULL;
 }
 
@@ -103,12 +101,12 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 		if (layer != -1) {
 			vge->layer = layer;
 		}
-		vge->redraw++;
+		vge->redraw = 1;
 	}
 	
 	vgb->pos.x = x;
 	vgb->pos.y = y;
-	vg->redraw++;
+	vg->redraw = 1;
 }
 
 /* Rotate a block around its vertex. */
@@ -133,11 +131,11 @@ vg_rotate_block(struct vg *vg, struct vg_block *vgb, double delta)
 			vg_pol2car(vg, r, theta, &x, &y);
 			vg_rel2abs(vg, x, y, &vge->vtx[i]);
 		}
-		vge->redraw++;
+		vge->redraw = 1;
 	}
 
 	vg_select_block(vg, block_save);
-	vg->redraw++;
+	vg->redraw = 1;
 }
 
 /* Convert absolute coordinates to block relative coordinates. */
@@ -176,10 +174,29 @@ vg_destroy_block(struct vg *vg, struct vg_block *vgb)
 	     vge != TAILQ_END(&vgb->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vgbmbs);
-		vg_destroy_element(vg, vge);
+		TAILQ_REMOVE(&vg->vges, vge, vges);
+		vg_free_element(vg, vge);
 	}
 	TAILQ_REMOVE(&vg->blocks, vgb, vgbs);
 	Free(vgb, M_VG);
+	vg->redraw = 1;
+}
+
+/* Destroy all elements associated with a block. */
+void
+vg_clear_block(struct vg *vg, struct vg_block *vgb)
+{
+	struct vg_element *vge, *nvge;
+
+	for (vge = TAILQ_FIRST(&vgb->vges);
+	     vge != TAILQ_END(&vgb->vges);
+	     vge = nvge) {
+		nvge = TAILQ_NEXT(vge, vgbmbs);
+		TAILQ_REMOVE(&vg->vges, vge, vges);
+		vg_free_element(vg, vge);
+	}
+	TAILQ_INIT(&vgb->vges);
+	vg->redraw = 1;
 }
 
 /* Generate absolute vg coordinates for a vertex that's part of a block. */
@@ -237,6 +254,11 @@ poll_blocks(int argc, union evarg *argv)
 			    _(vge->ops->name), vge);
 			it->depth = 1;
 		}
+	}
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		it = tlist_insert_item(tl, ICON(VGOBJ_ICON), _(vge->ops->name),
+		    vge);
+		it->depth = 1;
 	}
 
 	pthread_mutex_unlock(&vg->lock);

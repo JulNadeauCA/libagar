@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.8 2004/05/25 07:25:23 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.9 2004/05/28 22:31:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -71,25 +71,21 @@ vg_text_destroy(struct vg *vg, struct vg_element *vge)
 void
 vg_text_align(struct vg *vg, enum vg_alignment align)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_text.align = align;
+	vg->cur_vge->vg_text.align = align;
 }
 
 /* Specify the angle relative to the central vertex. */
 void
 vg_text_angle(struct vg *vg, double angle)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_text.angle = angle;
+	vg->cur_vge->vg_text.angle = angle;
 }
 
 /* Specify text with polled values. */
 void
 vg_pprintf(struct vg *vg, const char *fmt, ...)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_element *vge = vg->cur_vge;
 	const char *p;
 	va_list ap;
 	
@@ -131,7 +127,7 @@ vg_pprintf(struct vg *vg, const char *fmt, ...)
 void
 vg_printf(struct vg *vg, const char *fmt, ...)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_element *vge = vg->cur_vge;
 	va_list args;
 
 	if (fmt != NULL) {
@@ -492,6 +488,8 @@ text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 		cur_vtx = vg_vertex2(vg, vx, vy);
 		vg_text_align(vg, cur_align);
+		vg_end_element(vg);
+
 		cur_text->redraw++;
 		break;
 	default:

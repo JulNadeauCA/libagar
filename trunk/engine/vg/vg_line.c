@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.10 2004/05/18 02:48:54 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.11 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -204,6 +204,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 				vg_vertex2(vg, vx, vy);
 				cur_vtx = vg_vertex2(vg, vx, vy);
+
 				tool_push_status(t, _("Specify second point "
 				                      "or [undo line]."));
 			} else {
@@ -220,6 +221,10 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	case MODE_LOOP:
 		if (b == 1) {
 			if (seq++ == 0) {
+#ifdef DEBUG
+				if (vg->cur_block != NULL)
+					fatal("block");
+#endif
 				cur_line = vg_begin_element(vg,
 				    mode == MODE_STRIP ? VG_LINE_STRIP :
 							 VG_LINE_LOOP);
