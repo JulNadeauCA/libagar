@@ -181,15 +181,10 @@ deinstall: deinstall-subdir
 	    fi; \
 	fi
 
-depend:	depend-subdir
-	rm -f .depend
-	@files="${SRCS}"; \
-	 if [ "$$files" != "" ]; then \
-	  echo ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
-	  ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
-	 fi
-
 regress: regress-subdir
 
+depend: depend-subdir
+
 include ${TOP}/mk/csoft.common.mk
+include ${TOP}/mk/csoft.dep.mk
 include ${TOP}/mk/csoft.subdir.mk
