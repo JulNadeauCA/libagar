@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.16 2002/05/22 02:03:01 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.17 2002/05/28 12:44:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,8 +57,10 @@ static const struct widget_ops button_ops = {
 		NULL		/* detach */
 	},
 	button_draw,
-	button_event
+	NULL
 };
+
+static void	button_event(int, union evarg *);
 
 struct button *
 button_new(struct region *reg, char *caption, int flags, int rw, int rh)
@@ -85,6 +87,15 @@ button_init(struct button *b, char *caption, int flags, int rw, int rh)
 	b->justify = BUTTON_CENTER;
 	b->xmargin = 6;
 	b->ymargin = 6;
+
+	event_new(b, "window-mousebuttonup", 0,
+	    button_event, "%d", WINDOW_MOUSEBUTTONUP);
+	event_new(b, "window-mousebuttondown", 0,
+	    button_event, "%d", WINDOW_MOUSEBUTTONDOWN);
+	event_new(b, "window-keyup", 0,
+	    button_event, "%d", WINDOW_KEYUP);
+	event_new(b, "window-keydown", 0,
+	    button_event, "%d", WINDOW_KEYDOWN);
 }
 
 void
@@ -141,37 +152,41 @@ button_draw(void *p)
 	SDL_FreeSurface(s);
 }
 
-void
-button_event(void *p, SDL_Event *ev, int flags)
+static void
+button_event(int argc, union evarg *argv)
 {
-	struct button *b = p;
+	struct button *b = argv[0].p;
+	int type = argv[1].i;
+	int button, keysym;
 	int pushed = 0;
 	
-	OBJECT_ASSERT(p, "widget");
+	OBJECT_ASSERT(b, "widget");
 
-	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:
-		if (ev->button.button == 1) {
+	switch (type) {
+	case WINDOW_MOUSEBUTTONDOWN:
+		button = argv[2].i;
+		if (button == 1) {
 			b->flags |= BUTTON_PRESSED;
 		} else {
 			WIDGET_FOCUS(b);
 		}
 		break;
-	case SDL_MOUSEBUTTONUP:
-		if (ev->button.button == 1) {
+	case WINDOW_MOUSEBUTTONUP:
+		button = argv[2].i;
+		if (button == 1) {
 			b->flags &= ~(BUTTON_PRESSED);
 			pushed++;
 		}
 		break;
-	case SDL_KEYDOWN:
-		if (ev->key.keysym.sym == SDLK_RETURN ||
-		    ev->key.keysym.sym == SDLK_SPACE) {
+	case WINDOW_KEYDOWN:
+		keysym = argv[2].i;
+		if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 			b->flags |= BUTTON_PRESSED;
 		}
 		break;
-	case SDL_KEYUP:
-		if (ev->key.keysym.sym == SDLK_RETURN ||
-		    ev->key.keysym.sym == SDLK_SPACE) {
+	case WINDOW_KEYUP:
+		keysym = argv[2].i;
+		if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 			b->flags &= ~(BUTTON_PRESSED);
 			pushed++;
 		}
@@ -179,11 +194,9 @@ button_event(void *p, SDL_Event *ev, int flags)
 	}
 	
 	if (pushed) {
-		WIDGET(b)->win->redraw++;
+		WIDGET(b)->win->redraw++;	/* XXX? */
 
-		if (b->push != NULL) {
-			b->push(b);
-		}
+		event_post(b, "button-pushed", NULL);
 	}
 }
 
