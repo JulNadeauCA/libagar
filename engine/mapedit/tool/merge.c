@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.6 2003/02/10 22:51:13 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.7 2003/02/12 01:09:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ static const struct tool_ops merge_ops = {
 		merge_save	/* save */
 	},
 	merge_window,
-	NULL,			/* cursor */
+	merge_cursor,
 	merge_effect
 };
 
@@ -197,7 +197,7 @@ merge_window(void *p)
 	    151, 151);
 	window_set_caption(win, "Merge");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 20);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 30);
 	{
 		static const char *mode_items[] = {
 			"Replace",
@@ -215,7 +215,7 @@ merge_window(void *p)
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, 20, 100, 14);
+	reg = region_new(win, REGION_HALIGN, 0, 30, 100, 10);
 	{
 		struct button *bu;
 		
@@ -228,12 +228,12 @@ merge_window(void *p)
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 	}
 	
-	reg = region_new(win, REGION_VALIGN, 0, 35, 100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, 40, 100, 51);
 	{
 		mer->brushes_tl = tlist_new(reg, 100, 100, TLIST_MULTI);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, 85, 100, 13);
+	reg = region_new(win, REGION_HALIGN, 0, 91, 100, 6);
 	{
 		struct button *bu;
 
@@ -284,6 +284,8 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 
 			switch (mer->mode) {
 			case MERGE_REPLACE:
+				if (TAILQ_EMPTY(&srcnode->nrefs))
+					continue;
 				node_destroy(dstnode);
 				node_init(dstnode, dx, dy);
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
@@ -373,5 +375,37 @@ merge_save(void *p, int fd)
 		nbrushes++;
 	}
 	pwrite_uint32(fd, nbrushes, count_offs);	/* Write count */
+	return (0);
+}
+
+int
+merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+{
+	struct merge *mer = p;
+	SDL_Surface *srcsu;
+	struct noderef *nref;
+	struct map *dm = mv->map;
+	struct map *sm;
+	Uint32 sx, sy, dx, dy;
+	struct tlist_item *it;
+
+	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
+		if (!it->selected)
+			continue;
+		sm = it->p1;
+		for (sy = 0, dy = rd->y - (sm->maph*mv->map->tileh)/2;
+		     sy < sm->maph;
+		     sy++, dy += mv->map->tileh) {
+			for (sx = 0, dx = rd->x - (sm->mapw*mv->map->tilew)/2;
+			     sx < sm->mapw;
+			     sx++, dx += mv->map->tilew) {
+				struct node *srcnode = &sm->map[sy][sx];
+
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+					noderef_draw(mv->map, nref, dx, dy);
+				}
+			}
+		}
+	}
 	return (0);
 }
