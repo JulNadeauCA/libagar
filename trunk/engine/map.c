@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.155 2003/03/07 03:25:49 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.156 2003/03/08 23:05:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -533,6 +533,7 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
 		break;
 	}
 	dst->flags = src->flags;
+	dst->layer = src->layer;
 
 	/* Inherit the transformations. */
 	SLIST_FOREACH(src_trans, &src->transforms, transforms) {

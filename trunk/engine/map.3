@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.20 2003/03/05 02:15:43 vedge Exp $
+.\"	$Csoft: map.3,v 1.21 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -34,14 +34,28 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm map
-.Nd agar map
+.Nd agar level structure
 .Sh SYNOPSIS
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
 Agar levels are described by arrays of nodes.
-Each node contains a stack of references and other data specific to the tile.
-The node references also contain centering/motion offsets and a list of
-transforms to apply.
+Nodes contain stacks of references and a set of flags.
+Three types of references are currently defined:
+.Pp
+.Bl -tag -width "NODEREF_SPRITE" -compact
+.It NODEREF_SPRITE
+Pointer to a static image of arbitrary size.
+.It NODEREF_ANIM
+Pointer to an animation of arbitrary size.
+.It NODEREF_WARP
+Pointer to a node residing another map.
+.El
+.Pp
+Node references of type
+.Dv NODEREF_SPRITE
+and
+.Dv NODEREF_ANIM
+contain centering/motion offsets, a list of transforms, and a layer number.
 .Pp
 .Sh INITIALIZATION
 .nr nS 1
@@ -74,33 +88,6 @@ transforms to apply.
 .Pp
 .Ft void
 .Fn map_set_zoom "struct map *map" "Uint16 factor"
-.Pp
-.Ft void
-.Fn noderef_init "struct noderef *nref"
-.Pp
-.Ft void
-.Fn noderef_destroy "struct noderef *nref"
-.Pp
-.Ft void
-.Fn noderef_load "int fd" "struct object_table *table" "struct node *node" \
-                 "struct noderef **nref"
-.Pp
-.Ft void
-.Fn noderef_save "struct fobj_buf *savebuf" "struct object_table *table" \
-                 "struct noderef *nref"
-.Pp
-.Ft void
-.Fn node_init "struct node *node" "int x" "int y"
-.Pp
-.Ft void
-.Fn node_load "int fd" "struct object_table *table" "struct node *node"
-.Pp
-.Ft void
-.Fn node_save "struct fobj_buf *savebuf" "struct object_table *table" \
-              "struct node *node"
-.Pp
-.Ft void
-.Fn node_destroy "struct node *node"
 .nr nS 0
 .Pp
 The
@@ -122,15 +109,17 @@ enum map_type {
 .Pp
 The
 .Fn map_destroy
-function frees all resources allocated by a map.
+function frees resources allocated by a map (such as the nodes arrays and
+the stack of layers).
 .Pp
 The
 .Fn map_load
-function loads a map from file descriptor
-.Fa fd .
+function reads a map in machine-independent format from
+.Fa fd ,
+after freeing the existing nodes/layers.
 The
 .Fn map_save
-function saves a map to file descriptor
+function saves a map in machine-independent format to
 .Fa fd .
 .Pp
 The
@@ -139,23 +128,24 @@ function allocates
 .Fa w
 x
 .Fa h
-nodes.
+nodes, assuming that no node is currently allocated.
 The
 .Fn map_free_nodes
-function releases nodes allocated for map
+function releases the nodes allocated by
 .Fa map .
+.Pp
 The
 .Fn map_grow
 and
 .Fn map_shrink
-functions reallocate
+functions respectively increase and decrease a map's size by
 .Fa w
 x
 .Fa h
 nodes.
 The
 .Fn map_adjust
-function grows the map so the node at
+function grows the map so that the node at
 .Fa x ,
 .Fa y
 is initialized.
@@ -163,24 +153,70 @@ is initialized.
 The
 .Fn map_set_zoom
 function sets the zoom factor for a map.
-Unless the factor is 100%, bitmap scaling is done as the map is drawn.
+Unless the factor is 100%, bitmap scaling is performed.
+.Pp
+.Sh NODE INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn node_init "struct node *node" "int x" "int y"
+.Pp
+.Ft void
+.Fn node_load "int fd" "struct object_table *deps" "struct node *node"
+.Pp
+.Ft void
+.Fn node_save "struct fobj_buf *savebuf" "struct object_table *deps" \
+              "struct node *node"
+.Pp
+.Ft void
+.Fn node_destroy "struct node *node"
+.nr nS 0
 .Pp
 The
-.Fn noderef_init ,
-.Fn noderef_destroy ,
-.Fn noderef_load
-and
-.Fn noderef_save
-functions respectively initialize, free, load and save a single node reference.
+.Fn node_init
+function initializes a node.
+The
+.Fn node_destroy
+function frees resources allocated by a node (such as the reference stack).
 .Pp
 The
-.Fn node_init ,
-.Fn node_destroy ,
 .Fn node_load
 and
 .Fn node_save
-functions respectively initialize, free, load and save a single map node.
-.Sh NODE OPERATIONS
+functions respectively load and save a single node in machine-independent
+format.
+.Sh NODE REFERENCES
+.nr nS 1
+.Ft void
+.Fn noderef_init "struct noderef *nref"
+.Pp
+.Ft void
+.Fn noderef_destroy "struct noderef *nref"
+.Pp
+.Ft void
+.Fn noderef_load "int fd" "struct object_table *deps" "struct node *node" \
+                 "struct noderef **nref"
+.Pp
+.Ft void
+.Fn noderef_save "struct fobj_buf *savebuf" "struct object_table *deps" \
+                 "struct noderef *nref"
+.Pp
+.nr nS 0
+The
+.Fn noderef_init
+function initializes a node reference structure.
+The
+.Fn noderef_destroy
+function frees resources used by a node references (such as the transforms).
+.Pp
+The
+.Fn noderef_load
+and
+.Fn noderef_save
+functions respectively load and save a node reference in machine-independent
+format.
+Pointers to objects are encoded using the dependency table
+.Fa deps .
+.Sh NODE MANIPULATIONS
 .nr nS 1
 .Ft void
 .Fn node_move_ref "struct noderef *src_nref" "struct node *src_node" \
@@ -205,11 +241,28 @@ functions respectively initialize, free, load and save a single map node.
 .nr nS 0
 .Pp
 The
-.Fn node_move_ref ,
+.Fn node_move_ref
+function moves
+.Fa src_nref
+from
+.Fa src_node
+to
+.Fa dst_node .
+.Pp
+The
 .Fn node_copy_ref
-and
+function inserts a copy of
+.Fa src_nref
+on top of
+.Fa dst_node .
+.Pp
+The
 .Fn node_remove_ref
-functions respectively move, copy and remove specific references on a node.
+function detaches
+.Fa nref
+from
+.Fa node
+and frees it.
 .Pp
 The
 .Fn node_add_sprite ,
@@ -219,7 +272,9 @@ and
 functions respectively insert sprite references, animation references and
 warp points.
 .Sh SEE ALSO
-.Xr agar 3
+.Xr agar 3 ,
+.Xr mapedit 3 ,
+.Xr object 3
 .Sh HISTORY
 The
 .Nm
