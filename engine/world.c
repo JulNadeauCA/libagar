@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.8 2002/02/17 08:11:21 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.9 2002/02/18 07:50:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
 #include <errno.h>
@@ -51,7 +52,7 @@ char *
 savepath(char *obname, const char *suffix)
 {
 	static char path[FILENAME_MAX];
-	struct stat sta;
+	static struct stat sta;
 
 	sprintf(path, "%s/%s.%s", world->udatadir, obname, suffix);
 	if (stat(path, &sta) == 0) {
@@ -71,16 +72,33 @@ world_create(char *name)
 {
 	struct passwd *pwd;
 	struct stat sta;
+	char *pathenv;
 	
 	pwd = getpwuid(getuid());
 
 	world = (struct world *)emalloc(sizeof(struct world));
 	object_init(&world->obj, name, 0, &world_vec);
-	world->udatadir = (char *)emalloc(strlen(pwd->pw_dir) + strlen(name)+2);
-	world->sysdatadir = (char *)emalloc(strlen(SHAREDIR) + strlen(name)+1);
+
+	world->udatadir = (char *)
+	    emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
+	world->sysdatadir = (char *)
+	    emalloc(strlen(SHAREDIR) + strlen(name) + 4);
+
 	sprintf(world->udatadir, "%s/.%s", pwd->pw_dir, name);
 	sprintf(world->sysdatadir, SHAREDIR);
-	
+
+	pathenv = getenv("AGAR_STATE_PATH");
+	if (pathenv != NULL) {
+		world->datapath = strdup(pathenv);
+	} else {
+		world->datapath = (char *)
+		    emalloc(strlen(world->udatadir) +
+		    strlen(world->sysdatadir) + 4);
+		sprintf(world->datapath, "%s:%s", world->udatadir,
+		    world->sysdatadir);
+	}
+	dprintf("path: %s\n", world->datapath);
+
 	if (stat(world->sysdatadir, &sta) != 0) {
 		warning("%s: %s\n", world->sysdatadir, strerror(errno));
 	}
@@ -104,6 +122,9 @@ world_load(void *p, int fd)
 	struct world *wo = (struct world *)p;
 	struct object *ob;
 
+	/* XXX load the state map */
+
+	dprintf("loading state\n");
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		object_load(ob);
 	}
@@ -119,6 +140,8 @@ world_save(void *p, int fd)
 	int nobjs = 0;
 
 	dprintf("saving state\n");
+
+	/* Write the state map. */
 	soffs = lseek(fd, 0, SEEK_SET);
 	fobj_write_uint32(fd, 0);
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
@@ -149,6 +172,12 @@ world_destroy(void *p)
 	}
 	
 	object_lategc();
+
+	free(wo->datapath);
+	free(wo->udatadir);
+	free(wo->sysdatadir);
+	free(wo);
+	
 	return (0);
 }
 
@@ -159,9 +188,10 @@ world_dump(struct world *wo)
 {
 	struct object *ob;
 
-	object_dump((struct object *)wo);
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs)
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		object_dump(ob);
+	}
+	object_dump((struct object *)wo);
 #if 0
 	struct character *ch;
 	printf("characters\n");
