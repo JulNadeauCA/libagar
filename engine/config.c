@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.78 2003/05/25 08:00:13 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.79 2003/05/26 03:03:29 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,6 +28,8 @@
 
 #include <config/sharedir.h>
 
+#include <engine/compat/asprintf.h>
+
 #include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/config.h>
@@ -35,9 +37,9 @@
 #include <engine/map.h>
 #include <engine/prop.h>
 
-#include <engine/widget/text.h>
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
 #include <engine/widget/radio.h>
@@ -59,20 +61,6 @@ const struct version config_ver = {
 	3, 0
 };
 
-enum {
-	CLOSE_BUTTON,
-	SAVE_BUTTON,
-	UDATADIR_TBOX,
-	SYSDATADIR_TBOX,
-	DATAPATH_TBOX,
-	W_TBOX,
-	H_TBOX
-};
-
-static void	config_apply_string(int, union evarg *);
-static void	config_apply_int(int, union evarg *);
-static void	config_apply(int, union evarg *);
-
 struct config *
 config_new(void)
 {
@@ -82,6 +70,37 @@ config_new(void)
 	config_init(con);
 	return (con);
 }
+
+static void
+config_change_path(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	char *varname = argv[1].s;
+	char *s;
+
+	s = textbox_string(tbox);
+	prop_set_string(config, varname, "%s", s);
+	free(s);
+}
+
+static void
+config_change_res(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	char *varname = argv[1].s;
+	int i;
+
+	i = textbox_int(tbox);
+	prop_set_int(config, varname, i);
+}
+
+static void
+config_save(int argc, union evarg *argv)
+{
+	if (object_save(config) == -1)
+		text_msg("Error saving", "%s", error_get());
+}
+
 
 static void
 config_prop_modified(int argc, union evarg *argv)
@@ -101,231 +120,181 @@ config_prop_modified(int argc, union evarg *argv)
 				SDL_PushEvent(&vexp);
 			}
 		}
+#if 0
+	} else if (strcmp(prop->key, "view.opengl") == 0) {
+		text_msg("Warning", "Restart %s for OpenGL mode to take effect",
+		    proginfo->progname);
+	} else if (strcmp(prop->key, "view.async-blits") == 0) {
+		text_msg("Warning", "Restart %s for async blits to take effect",
+		    proginfo->progname);
+#endif
 	}
 }
 
 void
 config_init(struct config *con)
 {
-	char udatadir[FILENAME_MAX], sysdatadir[FILENAME_MAX];
+	char *savepath;
 	struct passwd *pwd;
 	struct stat sta;
 
 	object_init(con, "engine-config", "config", NULL);
 	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS;
 
-	/* Object settings */
-	prop_set_bool(con, "object.art.map-tiles", 0);
-
-	/* Visual settings */
 	prop_set_bool(con, "view.full-screen", 0);
 	prop_set_bool(con, "view.async-blits", 0);
-#ifdef HAVE_OPENGL
 	prop_set_bool(con, "view.opengl", 0);
-#endif
 	prop_set_uint16(con, "view.w", 800);
 	prop_set_uint16(con, "view.h", 600);
 	prop_set_uint16(con, "view.min-w", 320);
 	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
+	
+	prop_set_bool(con, "widget.noinitscale", 0);
 
-	/* Font engine settings */
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
-	prop_set_int(con, "font-engine.default-size", 11);
+	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 
-	/* Widget settings */
-	prop_set_bool(con, "widget.reg-borders", 0);
-	prop_set_bool(con, "widget.any-size", 0);
-	
-	/* Input device settings */
 	prop_set_bool(con, "input.joysticks", 1);
 
-	/* Data directories. */
 	pwd = getpwuid(getuid());
-	prop_set_string(con, "path.user_data_dir", "%s/.%s",
-	    pwd->pw_dir, proginfo->progname);
-	prop_set_string(con, "path.sys_data_dir", "%s", SHAREDIR);
+	Asprintf(&savepath, "%s/.%s", pwd->pw_dir, proginfo->progname);
 
-	prop_copy_string(con, "path.user_data_dir", udatadir, sizeof(udatadir));
-	prop_copy_string(con, "path.sys_data_dir", sysdatadir,
-	    sizeof(sysdatadir));
-	if (stat(udatadir, &sta) != 0 &&
-	    mkdir(udatadir, 00700) != 0) {
-		fatal("%s: %s", udatadir, strerror(errno));
+	prop_set_string(con, "save-path", "%s", savepath);
+	prop_set_string(con, "load-path", "%s:%s", savepath, SHAREDIR);
+
+	if (stat(savepath, &sta) != 0 &&
+	    mkdir(savepath, 0700) != 0) {
+		fatal("%s: %s", savepath, strerror(errno));
 	}
-	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
 
 	event_new(con, "prop-modified", config_prop_modified, NULL);
+	free(savepath);
 }
 
 void
 config_window(struct config *con)
 {
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct hbox *hb;
 	struct button *button;
 	struct textbox *tbox;
 	struct checkbox *cbox;
 
-	win = window_generic_new(388, 362, "config-engine-settings");
-	event_new(win, "window-close", window_generic_hide, "%p", win);
+	win = window_new("config-engine-settings");
 	window_set_caption(win, "Engine settings");
+	window_set_closure(win, WINDOW_HIDE);
 
-	/* Flags */
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	vb = vbox_new(win, 0);
+	vbox_set_spacing(vb, 2);
+	vbox_set_padding(vb, 20);
 	{
 		const struct {
 			char *name;
 			char *descr;
 		} settings[] = {
 			{ "view.full-screen", "Full screen" },
-			{ "view.async-blits", "Asynchronous blits (restart)" },
-#ifdef DEBUG
-			{ "widget.reg-borders",	"Region borders" },
-			{ "widget.any-size", "Arbitrary window sizes" },
-#endif
+			{ "view.async-blits", "Asynchronous blits" },
 #ifdef HAVE_OPENGL
-			{ "view.opengl", "OpenGL rendering context (restart)" },
+			{ "view.opengl", "OpenGL rendering context" },
 #endif
+			{ "widget.noinitscale", "Skip initial widget scaling" },
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
 		int i;
 
 		for (i = 0; i < nsettings; i++) {
-			cbox = checkbox_new(reg, "%s", settings[i].descr);
-			widget_bind(cbox, "state", WIDGET_PROP,
-			    config, settings[i].name);
+			cbox = checkbox_new(vb, "%s", settings[i].descr);
+			widget_bind(cbox, "state", WIDGET_PROP, config,
+			    settings[i].name);
 		}
 
 #ifdef DEBUG
-		/* XXX thread unsafe */
-		cbox = checkbox_new(reg, "Debugging");
-		widget_bind(cbox, "state", WIDGET_BOOL, NULL, &engine_debug);
+		/* Thread unsafe, but not very dangerous. */
+		cbox = checkbox_new(vb, "Debugging");
+		widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
 		
-		cbox = checkbox_new(reg, "Node signature checking");
+		cbox = checkbox_new(vb, "Node signature checking");
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &map_nodesigs);
 #endif
-		cbox = checkbox_new(reg, "Idle time prediction");
+		cbox = checkbox_new(vb, "Idle time prediction");
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
 	}
 	
-	/* Directories */
-	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
+	vb = vbox_new(win, VBOX_WFILL);
 	{
-		char *s;
+		char path[FILENAME_MAX];
 
-		tbox = textbox_new(reg, "User datadir: ");
-		s = prop_get_string(config, "path.user_data_dir");
-		textbox_printf(tbox, "%s", s);
-		free(s);
-		event_new(tbox, "textbox-changed",
-		    config_apply_string, "%s", "path.user_data_dir");
+		tbox = textbox_new(vb, "Data save dir: ");
+		prop_copy_string(config, "save-path", path, sizeof(path));
+		textbox_printf(tbox, "%s", path);
+		event_new(tbox, "textbox-return", config_change_path, "%s",
+		    "save-path");
 	
-		tbox = textbox_new(reg, "System datadir: ");
-		s = prop_get_string(config, "path.sys_data_dir");
-		textbox_printf(tbox, "%s", s);
-		free(s);
-		event_new(tbox, "textbox-changed",
-		    config_apply_string, "%s", "path.sys_data_dir");
-		
-		tbox = textbox_new(reg, "Data file path: ");
-		s = prop_get_string(config, "path.data_path");
-		textbox_printf(tbox, "%s", s);
-		free(s);
-		event_new(tbox, "textbox-changed",
-		    config_apply_string, "%s", "path.data_path");
+		tbox = textbox_new(vb, "Data load path: ");
+		prop_copy_string(config, "load-path", path, sizeof(path));
+		textbox_printf(tbox, "%s", path);
+		event_new(tbox, "textbox-return", config_change_path, "%s",
+		    "load-path");
 	}
 
-	/* Resolution */
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
 	{
-		tbox = textbox_new(reg, "Width : ");
-		WIDGET(tbox)->rw = 50;
+		/* XXX propose some default resolutions. */
+
+		tbox = textbox_new(hb, "Width: ");
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
-		event_new(tbox, "textbox-changed",
-		    config_apply_int, "%s", "view.w");
+		event_new(tbox, "textbox-return", config_change_res, "%s",
+		    "view.w");
+		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
 
-		tbox = textbox_new(reg, "Height: ");
-		WIDGET(tbox)->rw = 50;
+		tbox = textbox_new(hb, "Height: ");
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
-		event_new(tbox, "textbox-changed",
-		    config_apply_int, "%s", "view.h");
+		event_new(tbox, "textbox-return", config_change_res, "%s",
+		    "view.h");
+		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
 	}
 
-	/* Buttons */
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
+	hbox_set_spacing(hb, 0);
+	hbox_set_padding(hb, 0);
 	{
-		button = button_new(reg, "Close", NULL, 0, 50, 100);
-		event_new(button, "button-pushed",
-		    config_apply, "%i", CLOSE_BUTTON);
-		win->focus = WIDGET(button);
+		button = button_new(hb, "Close");
+		event_new(button, "button-pushed", window_generic_hide, 
+		    "%p", win);
+		widget_set_focus(button);
 
-		button = button_new(reg, "Save", NULL, 0, 50, 100);
-		event_new(button, "button-pushed",
-		    config_apply, "%i", SAVE_BUTTON);
+		button = button_new(hb, "Save");
+		event_new(button, "button-pushed", config_save, NULL);
 	}
 	config->settings = win;
 }
 
-static void
-config_apply_string(int argc, union evarg *argv)
+/* Return the full pathname to a data file. */
+char *
+config_search_file(const char *path_key, const char *name, const char *ext)
 {
-	struct textbox *tbox = argv[0].p;
-	char *varname = argv[1].s;
-	char *s;
+	struct stat sta;
+	char *path, *dir, *last;
 
-	s = textbox_string(tbox);
-	prop_set_string(config, varname, "%s", s);
-	free(s);
-}
+	path = prop_get_string(config, path_key);
+	for (dir = strtok_r(path, ":", &last);
+	     dir != NULL;
+	     dir = strtok_r(NULL, ":", &last)) {
+		char *file;
 
-static void
-config_apply_int(int argc, union evarg *argv)
-{
-	struct textbox *tbox = argv[0].p;
-	char *varname = argv[1].s;
-	int i;
-
-	i = textbox_int(tbox);
-	prop_set_int(config, varname, i);
-}
-
-static void
-config_apply(int argc, union evarg *argv)
-{
-	struct widget *wid = argv[0].p;
-	struct textbox *tbox = argv[0].p;
-	int i;
-
-	switch (argv[1].i) {
-	case CLOSE_BUTTON:
-		window_hide(wid->win);
-		return;
-	case SAVE_BUTTON:
-		if (object_save(config, NULL) == -1)
-			text_msg("Error saving", "%s", error_get());
-		return;
+		Asprintf(&file, "%s%s.%s", dir, name, ext);
+		if (stat(file, &sta) == 0) {
+			return (file);
+		}
+		free(file);
 	}
+	free(path);
 
-	switch (argv[1].i) {
-	case UDATADIR_TBOX:
-		break;
-	case SYSDATADIR_TBOX:
-		prop_set_string(config, "path.sys_data_dir", "%s", tbox->text);
-		break;
-	case DATAPATH_TBOX:
-		prop_set_string(config, "path.data_path", "%s", tbox->text);
-		break;
-	case W_TBOX:
-		i = textbox_int(tbox);
-		prop_set_int(config, "view.w", i);
-		break;
-	case H_TBOX:
-		i = textbox_int(tbox);
-		prop_set_int(config, "view.h", i);
-		break;
-	}
+	error_set("`%s.%s' not in <%s>", name, ext, path_key);
+	return (NULL);
 }
 
