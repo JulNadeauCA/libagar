@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.5 2005/02/19 07:06:58 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.6 2005/03/06 03:49:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -318,6 +318,32 @@ hsvpal_draw(void *p)
 		    pal->rpreview.x, pal->rpreview.y,
 		    pal->rpreview.w, pal->rpreview.h,
 		    CUR_COLOR);
+	}
+
+	{
+		char text[LABEL_MAX];
+		Uint8 lr, lg, lb;
+		Uint32 cText;
+		SDL_Surface *sText;
+
+		if (cur_v < 0.50 ||
+		   (cur_s > 0.6 && cur_h > 3.665)) {
+			lr = 255;
+			lg = 255;
+			lb = 255;
+		} else {
+			lr = 0;
+			lg = 0;
+			lb = 0;
+		}
+
+		cText = SDL_MapRGB(vfmt, lr, lg, lb);
+		snprintf(text, sizeof(text), "%u,%u,%u,%u", r, g, b, a);
+		sText = text_render(NULL, -1, cText, text);
+		widget_blit(pal, sText,
+		    WIDGET(pal)->w/2 - sText->w/2,
+		    pal->rpreview.y + pal->rpreview.h/2 - sText->h/2);
+		SDL_FreeSurface(sText);
 	}
 
 	/* Update the pixel binding (hack). */
