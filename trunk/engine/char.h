@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.3 2002/01/30 14:29:32 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.4 2002/01/30 17:49:42 vedge Exp $	*/
 
 /*
  * Data shared by all character types.
@@ -37,52 +37,19 @@ struct character {
 	SDL_TimerID timer;
 };
 
-/* Set the active sprite. */
-#define CHAR_SETSPRITE(chp, soffs)			\
-	do {						\
-		(chp)->flags &= ~(CHAR_ANIM);		\
-		(chp)->curoffs = (soffs);		\
-	} while (0)
-
-/* Set the active anim. */
-#define CHAR_SETANIM(chp, aoffs)			\
-	do {						\
-		(chp)->flags |= CHAR_ANIM;		\
-		(chp)->curoffs = (aoffs);		\
-	} while (0)
-
-/* Position character obp at m:x,y. */
-#define CHAR_PLOT(chp, pma, mx, my)				\
-	do {							\
-		(chp)->map = (pma);				\
-		(chp)->x = (mx);				\
-		(chp)->y = (my);				\
-		MAP_ADDSPRITE((pma), (mx), (my),		\
-		    (struct object *)(chp), (chp)->curoffs);	\
-	} while (0)
-
-/* Move character to a new position. */
-#define CHAR_MOVE(chp, nx, ny)						\
-	do {				    				\
-		MAP_DELREF((chp)->map, (chp)->x, (chp)->y,(chp), -1);	\
-		if ((chp)->flags & CHAR_ANIM) {				\
-			MAP_ADDANIM((chp)->map, nx, ny,			\
-			    (struct object *)(chp), (chp)->curoffs);	\
-		} else {						\
-			MAP_ADDSPRITE((chp)->map, nx, ny,		\
-			    (struct object *)(chp), (chp)->curoffs); 	\
-		}							\
-		(chp)->x = nx;						\
-		(chp)->y = ny;						\
-	} while (0)
-
 struct character *char_create(char *, char *, int, int, int);
 
-void	 char_destroy(struct object *);
-int	 char_link(void *);
-void	 char_event(struct object *, SDL_Event *);
-void	 char_setspeed(struct character *, Uint32);
+int	char_setanim(struct character *, int);
+int	char_setsprite(struct character *, int);
+int	char_add(struct character *, struct map *, int, int);
+int	char_move(struct character *, int, int);
+int	char_del(struct character *, struct map *, int, int);
+
+void	char_destroy(struct object *);
+int	char_link(void *);
+void	char_event(struct object *, SDL_Event *);
+void	char_setspeed(struct character *, Uint32);
 #ifdef DEBUG
-void	 char_dump_char(void *, void *);
+void	char_dump_char(void *, void *);
 #endif
 

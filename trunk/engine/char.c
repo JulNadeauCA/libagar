@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.6 2002/01/30 14:08:09 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.7 2002/01/30 17:48:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 	ch->effect = 0;
 	ch->direction = 0;
 
-	CHAR_SETSPRITE(ch, 2);	 /* XXX */
+	char_setsprite(ch, 2);	 /* XXX */
 
 	dprintf("%s: hp %d/%d mp %d/%d seed 0x%lx\n",
 	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp, ch->seed);
@@ -268,6 +268,67 @@ char_event(struct object *ob, SDL_Event *ev)
 	}
 }
 
+/* Change current animation. */
+int
+char_setsprite(struct character *ch, int soffs)
+{
+	ch->flags &= ~(CHAR_ANIM);
+	ch->curoffs = soffs;
+
+	return (0);
+}
+
+/* Change current sprite. */
+int
+char_setanim(struct character *ch, int aoffs)
+{
+	ch->flags |= CHAR_ANIM;
+	ch->curoffs = aoffs;
+
+	return (0);
+}
+
+/* Position the character on m:x,y. */
+int
+char_add(struct character *ch, struct map *m, int x, int y)
+{
+	if (ch->flags & CHAR_ANIM) {
+		MAP_ADDANIM(m, x, y, (struct object *)ch, ch->curoffs);
+	} else {
+		MAP_ADDSPRITE(m, x, y, (struct object *)ch, ch->curoffs);
+	}
+	
+	ch->map = m;
+	ch->x = x;
+	ch->y = y;
+
+	return (0);
+}
+
+/* Delete any reference to the character on m:x,y. */
+int
+char_del(struct character *ch, struct map *m, int x, int y)
+{
+	MAP_DELREF(m, x, y, (struct object *)ch, -1);
+
+	/* Map reference (m:x,y) is now undefined. */
+
+	return (0);
+}
+
+/* Move the character from its current position to nx,ny. */
+int
+char_move(struct character *ch, int nx, int ny)
+{
+	char_del(ch, ch->map, ch->x, ch->y);
+	char_add(ch, ch->map, nx, ny);
+
+	ch->x = nx;
+	ch->y = ny;
+
+	return (0);
+}
+
 void
 char_setspeed(struct character *ch, Uint32 speed)
 {
@@ -310,14 +371,14 @@ char_time(Uint32 ival, void *obp)
 	}
 
 	if (ch->direction & CHAR_UP) {
-		CHAR_SETSPRITE(ch, 2);
+		char_setsprite(ch, 2);
 		decrease(&mapy, 1, 1);
 		if(ch->map->view->mapy - mapy >= 0) {
 			SCROLL_UP(&ch->map);
 		}
 		ob->wmask |= CHAR_UP;
 	} else if (ch->direction & CHAR_DOWN) {
-		CHAR_SETSPRITE(ch, 1);
+		char_setsprite(ch, 1);
 		increase(&mapy, 1, ch->map->mapw - 1);
 		if (ch->map->view->mapy - mapy <=
 		    -ch->map->view->maph + 1) {
@@ -327,14 +388,14 @@ char_time(Uint32 ival, void *obp)
 	}
 		
 	if (ch->direction & CHAR_LEFT) {
-		CHAR_SETSPRITE(ch, 3);
+		char_setsprite(ch, 3);
 		decrease(&mapx, 1, 1);
 		if(ch->map->view->mapx - mapx >= 0) {
 			SCROLL_LEFT(&ch->map);
 		}
 		ob->wmask |= CHAR_LEFT;
 	} else if (ch->direction & CHAR_RIGHT) {
-		CHAR_SETSPRITE(ch, 4);
+		char_setsprite(ch, 4);
 		increase(&mapx, 1, ch->map->mapw - 1);
 		if (ch->map->view->mapx - mapx <=
 		    -ch->map->view->mapw + 1) {
@@ -348,7 +409,7 @@ char_time(Uint32 ival, void *obp)
 			
 		/* Walk on the destination tile, if possible. */
 		if (nme->flags & MAPENTRY_WALK) {
-			CHAR_MOVE(ch, mapx, mapy);
+			char_move(ch, mapx, mapy);
 			ch->map->redraw++;
 		}
 
