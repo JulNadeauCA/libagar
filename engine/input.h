@@ -1,4 +1,5 @@
-/*	$Csoft: input.h,v 1.5 2002/05/02 06:25:09 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.6 2002/05/11 03:58:19 vedge Exp $	*/
+/*	Public domain	*/
 
 struct object;
 struct mappos;

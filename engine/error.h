@@ -1,4 +1,5 @@
-/*	$Csoft: error.h,v 1.1 2002/05/31 10:39:13 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.2 2002/06/01 02:39:25 vedge Exp $	*/
+/*	Public domain	*/
 
 #define AGAR_GetError()    ((char *)pthread_getspecific(engine_errorkey))
 #define AGAR_SetError(msg) pthread_setspecific(engine_errorkey, (char *)(msg))

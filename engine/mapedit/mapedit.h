@@ -1,4 +1,5 @@
-/*	$Csoft: mapedit.h,v 1.34 2002/06/03 18:36:56 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.35 2002/06/06 10:15:51 vedge Exp $	*/
+/*	Public domain	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */

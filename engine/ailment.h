@@ -1,4 +1,5 @@
-/*	$Csoft: ailment.h,v 1.1 2002/06/09 08:34:32 vedge Exp $	*/
+/*	$Csoft: ailment.h,v 1.2 2002/06/09 09:06:09 vedge Exp $	*/
+/*	Public domain	*/
 
 TAILQ_HEAD(ailmentq, ailment);
 

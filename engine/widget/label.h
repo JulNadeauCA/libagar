@@ -1,4 +1,5 @@
-/*	$Csoft: label.h,v 1.9 2002/05/21 03:21:32 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.10 2002/05/28 12:45:49 vedge Exp $	*/
+/*	Public domain	*/
 
 struct label {
 	struct	 widget wid;

@@ -1,4 +1,5 @@
-/*	$Csoft: window.h,v 1.21 2002/05/29 21:43:43 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.22 2002/06/01 09:27:09 vedge Exp $	*/
+/*	Public domain	*/
 
 #include <engine/widget/region.h>
 

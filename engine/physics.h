@@ -1,4 +1,5 @@
-/*	$Csoft$	    */
+/*	$Csoft: physics.h,v 1.14 2002/05/11 04:06:06 vedge Exp $	    */
+/*	Public domain	*/
 
 struct noderef;
 struct input;

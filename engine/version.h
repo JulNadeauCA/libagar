@@ -1,4 +1,5 @@
-/*	$Csoft: version.h,v 1.1 2002/02/18 00:54:37 vedge Exp $	*/
+/*	$Csoft: version.h,v 1.2 2002/04/28 11:04:09 vedge Exp $	*/
+/*	Public domain	*/
 
 struct version {
 	char	*name;

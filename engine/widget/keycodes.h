@@ -1,4 +1,5 @@
-/*	$Csoft	    */
+/*	$Csoft$	*/
+/*	Public domain	*/
 
 struct keycode {
 	char	*name;

@@ -1,4 +1,5 @@
-/*	$Csoft: video.h,v 1.5 2002/04/24 13:18:38 vedge Exp $	*/
+/*	$Csoft: video.h,v 1.6 2002/05/03 20:16:26 vedge Exp $	*/
+/*	Public domain	*/
 
 #ifdef CONF_SMPEG
 #include <smpeg.h>

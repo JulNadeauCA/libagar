@@ -1,4 +1,5 @@
-/*	$Csoft: engine.h,v 1.25 2002/06/01 14:20:55 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.26 2002/06/06 10:13:43 vedge Exp $	*/
+/*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_

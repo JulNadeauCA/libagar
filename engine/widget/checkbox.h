@@ -1,4 +1,5 @@
-/*	$Csoft: checkbox.h,v 1.5 2002/05/22 02:03:01 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.6 2002/06/01 09:29:28 vedge Exp $	*/
+/*	Public domain	*/
 
 struct checkbox {
 	struct	 widget wid;

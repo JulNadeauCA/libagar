@@ -1,4 +1,5 @@
-/*	$Csoft: view.h,v 1.26 2002/05/31 10:50:03 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.27 2002/06/03 18:33:52 vedge Exp $	*/
+/*	Public domain	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */

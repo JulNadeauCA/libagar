@@ -1,4 +1,5 @@
-/*	$Csoft: char.h,v 1.21 2002/06/03 18:33:04 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.22 2002/06/09 08:34:32 vedge Exp $	*/
+/*	Public domain	*/
 
 #include <engine/ailment.h>
 
@@ -40,6 +41,7 @@ enum {
 
 struct character *char_new(char *, char *);
 void		  char_init(struct character *, char *, char *);
+void		  char_destroy(void *);
 int		  char_load(void *, int);
 int		  char_save(void *, int);
 void		  char_onattach(int, union evarg *);
