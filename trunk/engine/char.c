@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.8 2002/02/01 02:03:34 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.9 2002/02/01 06:04:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -45,6 +45,9 @@
 #define JOY_RIGHT	0x08
 
 static Uint32	char_time(Uint32, void *);
+static void	char_cntrl_event(struct character *, SDL_Event *);
+
+struct character *curchar;
 
 struct character *
 char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
@@ -56,8 +59,8 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 		return (NULL);
 	}
 
-	object_create(&ch->obj, name, desc, EVENT_HOOK|flags);
-	ch->obj.event_hook = char_event;
+	object_create(&ch->obj, name, desc, flags);
+	ch->event_hook = char_cntrl_event;
 	ch->map = NULL;
 	ch->x = -1;
 	ch->y = -1;
@@ -75,7 +78,7 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 	ch->seed = lrand48();
 	ch->effect = 0;
 
-	char_setsprite(ch, 2);	 /* XXX */
+	char_setanim(ch, 0);	 /* XXX */
 
 	dprintf("%s: hp %d/%d mp %d/%d seed 0x%lx\n",
 	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp, ch->seed);
@@ -84,20 +87,19 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 }
 
 int
-char_link(void *objp)
+char_link(void *ob)
 {
-	struct character *ch = (struct character *)objp;
+	struct character *ch = (struct character *)ob;
 	
 	if (pthread_mutex_lock(&world->lock) == 0) {
-		world->chars = g_slist_append(world->chars, objp);
-		world->nchars++;
+		SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		perror("world");
 		return (-1);
 	}
 
-	if (object_link(objp) < 0) {
+	if (object_link(ob) < 0) {
 		return (-1);
 	}
 	
@@ -117,8 +119,10 @@ char_destroy(struct object *ob)
 	struct character *ch = (struct character *)ob;
 
 	SDL_RemoveTimer(ch->timer);
-	
-	ch->flags &= ~CHAR_FOCUS;
+
+	if (ch->flags & CHAR_FOCUS) {
+		char_unfocus(ch);
+	}
 
 	if (pthread_mutex_lock(&ch->map->lock) == 0) {
 		if (ch->map != NULL) {
@@ -130,41 +134,34 @@ char_destroy(struct object *ob)
 	}
 
 	if (pthread_mutex_lock(&world->lock) == 0) {
-		world->chars = g_slist_remove(world->chars, (void *)ob);
-		world->nchars--;
+		SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		perror(world->obj.name);
 	}
 }
 
+/* See if ch can move to nx:ny in its map. */
 int
 char_canmove(struct character *ch, int nx, int ny)
 {
-	struct map_entry *me;
+	struct node *me;
 
 	me = &ch->map->map[nx][ny];
+
+	/* TODO check `levels'? */
+	
 	return ((me->flags & MAPENTRY_WALK) ? 0 : -1);
 }
 
-void
-char_event(struct object *ob, SDL_Event *ev)
+static void
+char_cntrl_event(struct character *ch, SDL_Event *ev)
 {
-	struct character *ch = (struct character *)ob;
 	struct map_aref *aref;
 
 	/* XXX limit one sprite/anim. */
-	aref = map_entry_arefobj(&ch->map->map[ch->x][ch->y], ob, -1);
-#ifdef DEBUG
-	if (aref == NULL) {
-		dprintf("%s is not at %dx%d\n", ob->name, ch->x, ch->y);
-	}
-#endif
-
-	if ((ch->flags & CHAR_FOCUS) == 0) {
-		/* We are not being controlled. */
-		return;
-	}
+	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, -1);
 
 	/*
 	 * Joystick control.
@@ -289,6 +286,25 @@ char_setsprite(struct character *ch, int soffs)
 	return (0);
 }
 
+/* Let the player control this character. */
+int
+char_focus(struct character *ch)
+{
+	ch->flags |= CHAR_FOCUS;
+	curchar = ch;
+
+	return (0);
+}
+
+int
+char_unfocus(struct character *ch)
+{
+	ch->flags &= CHAR_FOCUS;
+	curchar = NULL;
+	
+	return (0);
+}
+
 /* Change current sprite. */
 int
 char_setanim(struct character *ch, int aoffs)
@@ -365,7 +381,7 @@ char_time(Uint32 ival, void *obp)
 	struct map_aref *aref;
 
 	/* XXX limit one sprite/anim. */
-	aref = map_entry_arefobj(&ch->map->map[ch->x][ch->y], ob, -1);
+	aref = node_arefobj(&ch->map->map[ch->x][ch->y], ob, -1);
 #ifdef DEBUG
 	if (aref == NULL) {
 		dprintf("%s is not at %dx%d\n", ob->name, ch->x, ch->y);
@@ -373,68 +389,78 @@ char_time(Uint32 ival, void *obp)
 #endif
 
 	/*
-	 * Soft scroll, and move when the sequence is over.
+	 * Vertical soft scroll.
 	 */
 	if (aref->yoffs < 0) {
+		ch->map->redraw++;
+		dprintf("up move\n");
 		if (aref->yoffs == -1) {
-			/* See if this move is possible. */
 			if (char_canmove(ch, ch->x, ch->y - 1) < 0) {
 				dprintf("blocked!\n");
 				aref->yoffs = 0;
 				goto xoffsck;
 			}
-			char_setsprite(ch, 2);
+			char_setanim(ch, 1);
 		}
-		if (--aref->yoffs < -ch->map->view->tileh) {
-			aref->yoffs = 0;
+		aref->yoffs--;
+		dprintf("yoffs is now %d\n", aref->yoffs);
+		if (aref->yoffs <= -ch->map->view->tileh) {
 			char_move(ch, ch->x, ch->y - 1);
+			aref->yoffs = 0;
 			ob->wmask |= WMASK_UP;
 		}
 	} else if (aref->yoffs > 0) {
+		dprintf("down move\n");
 		if (aref->yoffs == 1) {
-			/* See if this move is possible. */
 			if (char_canmove(ch, ch->x, ch->y + 1) < 0) {
 				dprintf("blocked!\n");
 				aref->yoffs = 0;
 				goto xoffsck;
 			}
-			char_setsprite(ch, 1);
+			char_setanim(ch, 2);
 		}
-		if (++aref->yoffs > ch->map->view->tileh) {
-			aref->yoffs = 0;
+		aref->yoffs++;
+		if (aref->yoffs >= ch->map->view->tileh) {
 			char_move(ch, ch->x, ch->y + 1);
+			aref->yoffs = 0;
 			ob->wmask |= WMASK_DOWN;
 		}
 	}
+
 xoffsck:
+	/*
+	 * Horizontal soft scroll.
+	 */
 	if (aref->xoffs < 0) {
+		dprintf("left move\n");
 		if (aref->xoffs == -1) {
-			/* See if this move is possible. */
 			if (char_canmove(ch, ch->x - 1, ch->y) < 0) {
 				dprintf("blocked!\n");
 				aref->xoffs = 0;
 				goto xoffsck;
 			}
-			char_setsprite(ch, 3);
+			char_setanim(ch, 3);
 		}
-		if (--aref->xoffs < -ch->map->view->tilew) {
-			aref->xoffs = 0;
+		aref->xoffs--;
+		if (aref->xoffs <= -ch->map->view->tilew) {
 			char_move(ch, ch->x - 1, ch->y);
+			aref->xoffs = 0;
 			ob->wmask |= WMASK_LEFT;
 		}
 	} else if (aref->xoffs > 0) {
+		dprintf("right move\n");
 		if (aref->xoffs == 1) {
-			/* See if this move is possible. */
 			if (char_canmove(ch, ch->x + 1, ch->y) < 0) {
 				dprintf("blocked!\n");
 				aref->xoffs = 0;
 				goto ailmentck;
 			}
-			char_setsprite(ch, 4);
+			char_setanim(ch, 4);
 		}
-		if (++aref->xoffs > ch->map->view->tilew) {
-			aref->xoffs = 0;
+		aref->xoffs++;
+		if (aref->xoffs >= ch->map->view->tilew) {
 			char_move(ch, ch->x + 1, ch->y);
+			aref->xoffs = 0;
 			ob->wmask |= WMASK_RIGHT;
 		}
 	}
@@ -470,10 +496,8 @@ ailmentck:
 #ifdef DEBUG
 
 void
-char_dump_char(void *ob, void *p)
+char_dump(struct character *ch)
 {
-	struct character *ch= (struct character *)ob;
-
 	printf("%3d. %10s lvl %d (ex %.2f) hp %d/%d mp %d/%d at %s:%dx%d\n",
 	    ch->obj.id, ch->obj.name, ch->level, ch->exp, ch->hp, ch->maxhp,
 	    ch->mp, ch->maxmp, ch->map->obj.name, ch->x, ch->y);
