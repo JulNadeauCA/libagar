@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.31 2003/02/06 02:08:11 vedge Exp $
+#	$Csoft: Makefile,v 1.32 2003/02/08 00:38:18 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp engine
 SUBDIR+= cave
@@ -12,6 +12,7 @@ depend: prereq depend-subdir
 regress: regress-subdir
 
 prereq:
+	(cd engine/compat && ${MAKE})
 	(cd libfobj && ${MAKE})
 	(cd fobjcomp && ${MAKE})
 
