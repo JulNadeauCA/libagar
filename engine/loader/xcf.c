@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.3 2003/07/05 12:17:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,8 +38,8 @@
 
 static SDL_Surface	*xcf_convert_layer(struct netbuf *, Uint32,
 			     struct xcf_header *, struct xcf_layer *);
-static void		 xcf_insert_surface(struct gfx *, SDL_Surface *,
-			     char *, struct gfx_anim **);
+static int		 xcf_insert_surface(struct gfx *, SDL_Surface *,
+			     const char *, struct gfx_anim **);
 static Uint8		*xcf_read_tile(struct xcf_header *, struct netbuf *,
 			    Uint32, int, int, int);
 static void		 xcf_read_property(struct netbuf *, struct xcf_prop *);
@@ -489,8 +489,8 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	return (su);
 }
 
-static void
-xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, char *name,
+static int
+xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
     struct gfx_anim **anim)
 {
 	if (strstr(name, "ms)") != NULL) {		/* XXX ugly */
@@ -519,17 +519,18 @@ xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, char *name,
 			gfx_insert_anim_frame(*anim, su);
 		} else {
 			*anim = NULL;
-				
 			if ((su->h > TILEH || su->w > TILEW) &&
 			    strstr(name, "(break)") != NULL) {
 				/* Break down into tiles. */
-				gfx_insert_fragments(gfx, su);
+				if (gfx_insert_fragments(gfx, su) == -1)
+					return (-1);
 			} else {
 				/* Original size */
 		   		gfx_insert_sprite(gfx, su, 0);
 			}
 		}
 	}
+	return (0);
 }
 
 int
@@ -657,8 +658,11 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 		}
 
 		/* Register this image. */
-		xcf_insert_surface(gfx, su, layer->name, &curanim);
-
+		if (xcf_insert_surface(gfx, su, layer->name, &curanim) == -1) {
+			free(layer->name);
+			free(layer);
+			goto fail;
+		}
 		free(layer->name);
 		free(layer);
 	}
@@ -667,5 +671,10 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	free(head->layer_offstable);
 	free(head);
 	return (0);
+fail:
+	Free(head->colormap.data);
+	free(head->layer_offstable);
+	free(head);
+	return (-1);
 }
 
