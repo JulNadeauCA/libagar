@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.14 2003/03/16 02:46:56 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.15 2003/03/24 12:08:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -153,7 +153,6 @@ static void
 tl_widgets_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct window *pwin = argv[1].p;
 	struct tlist *tl_regions = argv[2].p;
 	struct tlist_item *ti;
 	struct region *reg;
@@ -167,12 +166,9 @@ tl_widgets_poll(int argc, union evarg *argv)
 	}
 	reg = ti->p1;
 
-	pthread_mutex_lock(&pwin->lock);
 	TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 		tlist_insert_item(tl, NULL, OBJECT(wid)->name, wid);
 	}
-	pthread_mutex_unlock(&pwin->lock);
-
 	tlist_restore_selections(tl);
 }
 
