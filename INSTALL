@@ -15,7 +15,6 @@ Options
 
 Installation
 ------------
-
 1) Execute the configure script (use `./configure --help' for options).
    $ ./configure
 
@@ -32,4 +31,4 @@ Installation
    $ cat config.log | \
      mail -s "compiles and runs ok" report@agar.csoft.org
 
-$Csoft: INSTALL,v 1.14 2004/03/10 14:30:41 vedge Exp $
+$Csoft: INSTALL,v 1.15 2004/04/24 05:59:07 vedge Exp $
