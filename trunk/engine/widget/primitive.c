@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.9 2002/07/21 10:56:44 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.10 2002/07/24 04:54:28 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -33,7 +33,7 @@
 #include "window.h"
 #include "primitive.h"
 
-static void	box_3d(void *, int, int, int, int, int);
+static void	box_3d(void *, int, int, int, int, int, Uint32);
 static void	frame_3d(void *, int, int, int, int, Uint32);
 static void	bresenham_circle(void *, int, int, int, int, int, Uint32);
 static void	bresenham_line(void *, int, int, int, int, Uint32);
@@ -50,30 +50,62 @@ struct primitive_ops primitives = {
 	composite_square	/* square */
 };
 
+static __inline__ Uint32
+alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
+{
+	Uint8 nr, ng, nb;
+
+	SDL_GetRGB(col, view->v->format, &nr, &ng, &nb);
+
+	if (nr+r > 255) {
+		nr = 255;
+	} else if (nr+r < 0) {
+		nr = 0;
+	} else {
+		nr += r;
+	}
+	
+	if (ng+g > 255) {
+		ng = 255;
+	} else if (ng+g < 0) {
+		ng = 0;
+	} else {
+		ng += g;
+	}
+	
+	if (nb+b > 255) {
+		nb = 255;
+	} else if (nb+b < 0) {
+		nb = 0;
+	} else {
+		nb += b;
+	}
+
+	return (SDL_MapRGB(view->v->format, nr, ng, nb));
+}
+
 static void
-box_3d(void *p, int xoffs, int yoffs, int w, int h, int z)
+box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
+    Uint32 color)
 {
 	struct widget *wid = p;
 	Uint32 lcol, rcol, bcol;
 	int x, y;
 
-	if (z < 0) {
-		z = abs(z);
-		lcol = SDL_MapRGB(view->v->format, 20, 20, 20);
-		rcol = SDL_MapRGB(view->v->format, 140, 140, 140);
-		if (WIDGET_FOCUSED(wid)) {
-			bcol = SDL_MapRGB(view->v->format, 100, 100, 100);
-		} else {
-			bcol = SDL_MapRGB(view->v->format, 60, 60, 60);
-		}
-	} else {
-		lcol = SDL_MapRGB(view->v->format, 140, 140, 140);
-		rcol = SDL_MapRGB(view->v->format, 50, 50, 50);
-		if (WIDGET_FOCUSED(wid)) {
-			bcol = SDL_MapRGB(view->v->format, 110, 110, 110);
-		} else {
-			bcol = SDL_MapRGB(view->v->format, 90, 90, 90);
-		}
+	lcol = (z < 0) ?
+	    alter_color(color, -60, -60, -60) :
+	    alter_color(color, 60, 60, 60);
+	
+	rcol = (z < 0) ?
+	    alter_color(color, 60, 60, 60) :
+	    alter_color(color, -60, -60, -60);
+
+	bcol = (z < 0) ?
+	    alter_color(color, -20, -20, -20) :
+	    color;
+
+	if (WIDGET_FOCUSED(wid)) {
+		bcol = alter_color(bcol, 6, 6, 15);
 	}
 
 	/* Background */

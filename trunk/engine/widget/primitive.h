@@ -1,8 +1,9 @@
-/*	$Csoft: primitive.h,v 1.7 2002/07/21 10:56:44 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.8 2002/07/24 04:54:53 vedge Exp $	*/
 /*	Public domain	*/
 
 struct primitive_ops {
-	void	(*box)(void *p, int xoffs, int yoffs, int w, int h, int z);
+	void	(*box)(void *p, int xoffs, int yoffs, int w, int h, int z,
+		       Uint32 color);
 	void	(*frame)(void *p, int xoffs, int yoffs, int w, int h,
 		         Uint32 color);
 	void	(*circle)(void *p, int xoffs, int yoffs, int w, int h,
