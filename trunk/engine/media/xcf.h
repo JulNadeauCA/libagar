@@ -1,5 +1,8 @@
-/*	$Csoft: xcf.h,v 1.6 2003/01/01 05:18:39 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.7 2003/02/28 14:36:27 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <config/floating_point.h>
+#include <config/have_ieee754.h>
 
 #define XCF_SIGNATURE	"gimp xcf "
 #define XCF_MAGIC_LEN	14
@@ -63,7 +66,7 @@ struct xcf_prop {
 		 * Channel properties
 		 */
 		Uint8	 color[3];		/* RGB triplet for color */
-#ifdef HAVE_IEEE754
+#if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 		struct {
 			float	x, y;		/* Resolution */
 		} resolution;
