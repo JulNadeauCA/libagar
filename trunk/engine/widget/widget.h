@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.34 2002/08/28 05:08:20 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.35 2002/09/06 08:31:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -20,6 +20,7 @@ SLIST_HEAD(widget_colorq, widget_color);
 struct window;
 struct region;
 
+/* Structure shares the parent window's lock. */
 struct widget {
 	struct	 object obj;
 	int	 flags;
@@ -33,6 +34,7 @@ struct widget {
 	int	x, y;			/* Allocated coordinates in window */
 	int	w, h;			/* Allocated geometry */
 
+	/* Color scheme */
 	Uint32	color[WIDGET_MAXCOLORS];
 	int	ncolors;
 	struct	widget_colorq colors;
@@ -59,14 +61,14 @@ struct widget {
 	SDL_BlitSurface((s), NULL, WIDGET_SURFACE((wi)), &_wdrd);	\
 } while (/*CONSTCOND*/0)
 
-#define WIDGET_FILL(wi, xo, yo, wdrw, wdrh, col) do {				\
-	static SDL_Rect _wdrd;						\
-									\
-	_wdrd.x = WIDGET_ABSX((wi)) + (xo);				\
-	_wdrd.y = WIDGET_ABSY((wi)) + (yo);				\
-	_wdrd.w = (wdrw);						\
-	_wdrd.h = (wdrh);						\
-	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, (col));		\
+#define WIDGET_FILL(wi, xo, yo, wdrw, wdrh, col) do {		\
+	static SDL_Rect _wdrd;					\
+								\
+	_wdrd.x = WIDGET_ABSX((wi)) + (xo);			\
+	_wdrd.y = WIDGET_ABSY((wi)) + (yo);			\
+	_wdrd.w = (wdrw);					\
+	_wdrd.h = (wdrh);					\
+	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, (col));	\
 } while (/*CONSTCOND*/0)
 
 #ifdef DEBUG
@@ -75,7 +77,8 @@ struct widget {
 	if ((wdrx) > WIDGET((wid))->w || (wdry) > WIDGET((wid))->h ||	\
 	    (wdrx) < 0 || (wdry) < 0) {					\
 		fatal("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,		\
-		    (wdrx), (wdry), WIDGET((wid))->w, WIDGET((wid))->h);\
+		    (wdrx), (wdry), WIDGET((wid))->w,			\
+		    WIDGET((wid))->h);					\
 	}								\
 	WINDOW_PUT_PIXEL(WIDGET((wid))->win,				\
 	    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c));	\
@@ -85,10 +88,12 @@ struct widget {
 	if ((wdrx) > WIDGET((wid))->w || (wdry) > WIDGET((wid))->h ||	\
 	    (wdrx) < 0 || (wdry) < 0) {					\
 		fatal("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,		\
-		    (wdrx), (wdry), WIDGET((wid))->w, WIDGET((wid))->h);\
+		    (wdrx), (wdry), WIDGET((wid))->w,			\
+		    WIDGET((wid))->h);					\
 	}								\
 	WINDOW_PUT_ALPHAPIXEL(WIDGET((wid))->win,			\
-	    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c), (wa)); \
+	    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c),	\
+	    (wa));							\
 } while (/*CONSTCOND*/0)
 
 #else
