@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.180 2004/05/10 02:41:03 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.181 2004/05/10 11:25:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
+#include <engine/timeout.h>
 
 #include <engine/widget/window.h>
 #ifdef DEBUG
@@ -53,9 +54,10 @@
 #define DEBUG_EVENTS		0x040
 #define DEBUG_ASYNC		0x080
 #define DEBUG_PROPAGATION	0x100
+#define DEBUG_SCHED		0x200
 
 int	event_debug = DEBUG_UNDERRUNS|DEBUG_VIDEORESIZE|DEBUG_VIDEOEXPOSE|\
-	              DEBUG_ASYNC|DEBUG_PROPAGATION;
+	              DEBUG_ASYNC|DEBUG_PROPAGATION|DEBUG_SCHED;
 #define	engine_debug event_debug
 int	event_count = 0;
 
@@ -69,11 +71,14 @@ int	event_idle = 1;		/* Delay at full frame rate */
 int	event_idletime = -1;	/* Approximate SDL_Delay() granularity */
 int	event_idlemin = 15;	/* Minimum refresh rate to begin idling */
 
-static void	 event_hotkey(SDL_Event *);
-static void	 event_dispatch(SDL_Event *);
+static void event_propagate(void *, struct event *);
+static void event_hotkey(SDL_Event *);
+static void event_dispatch(SDL_Event *);
 #ifdef THREADS
-static void	*event_async(void *);
+static void *event_async(void *);
 #endif
+
+extern pthread_mutex_t timeout_lock;
 
 static void
 event_hotkey(SDL_Event *ev)
@@ -407,6 +412,38 @@ event_dispatch(SDL_Event *ev)
 }
 
 /*
+ * Execute a scheduled event invocation.
+ * The object and timeouteq are assumed to be locked.
+ */
+static Uint32
+event_timeout(void *p, Uint32 ival, void *arg)
+{
+	struct object *ob = p;
+	struct event *ev = arg;
+	va_list ap;
+
+	/* Propagate event to children. */
+	if (ev->flags & EVENT_PROPAGATE) {
+		struct object *cobj;
+			
+		debug(DEBUG_PROPAGATION, "%s: propagate %s (timeout)\n",
+		    ob->name, ev->name);
+		lock_linkage();
+		OBJECT_FOREACH_CHILD(cobj, ob, object) {
+			event_propagate(cobj, ev);
+		}
+		unlock_linkage();
+	}
+	ev->flags &= ~(EVENT_SCHEDULED);
+
+	/* Invoke the event handler function. */
+	if (ev->handler != NULL) {
+		ev->handler(ev->argc, ev->argv);
+	}
+	return (0);
+}
+
+/*
  * Register an event handler function for events of the given type.
  * If another event handler is registered for events of the same type,
  * replace it.
@@ -432,21 +469,25 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	ev->flags = 0;
 	ev->argv[0].p = ob;
 	ev->argc = 1;
+	ev->argc_base = 1;
 	ev->handler = handler;
+	timeout_set(&ev->timeout, event_timeout, ev);
 
 	if (fmt != NULL) {
 		va_list ap;
 
 		for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
 			EVENT_PUSH_ARG(ap, *fmt, ev);
+			ev->argc_base++;
 		}
 		va_end(ap);
 	}
+
 	pthread_mutex_unlock(&ob->lock);
 	return (ev);
 }
 
-/* Remove the named event handler. */
+/* Remove the named event handler and cancel any scheduled execution. */
 void
 event_remove(void *p, const char *name)
 {
@@ -458,10 +499,20 @@ event_remove(void *p, const char *name)
 		if (strcmp(name, ev->name) == 0)
 			break;
 	}
-	if (ev != NULL) {
-		TAILQ_REMOVE(&ob->events, ev, events);
-		Free(ev, M_EVENT);
+	if (ev == NULL) {
+		goto out;
 	}
+	if (ev->flags & EVENT_SCHEDULED) {
+		pthread_mutex_lock(&timeout_lock);
+		if (timeout_scheduled(ob, &ev->timeout)) {
+			timeout_del(ob, &ev->timeout);
+		}
+		pthread_mutex_unlock(&timeout_lock);
+		/* XXX concurrent */
+	}
+	TAILQ_REMOVE(&ob->events, ev, events);
+	Free(ev, M_EVENT);
+out:
 	pthread_mutex_unlock(&ob->lock);
 }
 
@@ -511,16 +562,12 @@ event_async(void *p)
 #endif /* THREADS */
 
 /*
- * Invoke an event handler routine.
+ * Execute the event handler routine for the given event, with the given
+ * arguments inserted at the end of the argument vector, argument #0 pointing
+ * to the receiver object and argument #argc pointing to the sender.
  *
  * Event handler invocations may be nested. However, the event handler table
- * of the object should not be modified in event handler context.
- *
- * Arrangement of the argument vector:
- *	[ptr to receiver obj]
- *	[argument 1]
- *	[argument n]
- *	[ptr to sender obj]
+ * of the object should not be modified while in event context (XXX)
  */
 int
 event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
@@ -547,6 +594,7 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		struct event *nev;
 
 		/* Construct the argument vector. */
+		/* TODO allocate from a pool */
 		nev = Malloc(sizeof(struct event), M_EVENT);
 		memcpy(nev, ev, sizeof(struct event));
 		if (fmt != NULL) {
@@ -600,6 +648,148 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 fail:
 	pthread_mutex_unlock(&rcvr->lock);
 	return (0);
+}
+ 
+/*
+ * Schedule the execution of the given event in the given number of
+ * ticks, with the given arguments inserted at the end of the
+ * argument vector. Argument #0 always points to the receiver object,
+ * and argument #argc points to the sender.
+ *
+ * Since the timeout resides in the event handler structure,
+ * multiple executions of the same event handler are not possible.
+ */
+int
+event_schedule(void *sp, void *rp, Uint32 ticks, const char *evname,
+    const char *fmt, ...)
+{
+	struct object *sndr = sp;
+	struct object *rcvr = rp;
+	struct event *ev;
+	va_list ap;
+	
+	debug(DEBUG_SCHED, "%s: sched `%s' (in %u ticks)\n", rcvr->name,
+	    evname, ticks);
+
+	pthread_mutex_lock(&timeout_lock);
+	pthread_mutex_lock(&rcvr->lock);
+	TAILQ_FOREACH(ev, &rcvr->events, events) {
+		if (strcmp(evname, ev->name) == 0)
+			break;
+	}
+	if (ev == NULL) {
+		goto fail;
+	}
+	if (ev->flags & EVENT_SCHEDULED) {
+		dprintf("%s: resched `%s'\n", rcvr->name, evname);
+		timeout_del(rcvr, &ev->timeout);
+	}
+
+	/* Construct the argument vector. */
+	ev->argc = ev->argc_base;
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		for (; *fmt != '\0'; fmt++) {
+			EVENT_PUSH_ARG(ap, *fmt, ev);
+		}
+		va_end(ap);
+	}
+	ev->argv[ev->argc].p = sndr;
+	ev->flags |= EVENT_SCHEDULED;
+
+	timeout_add(rcvr, &ev->timeout, ticks);
+
+	pthread_mutex_unlock(&timeout_lock);
+	pthread_mutex_unlock(&rcvr->lock);
+	return (1);
+fail:
+	pthread_mutex_unlock(&timeout_lock);
+	pthread_mutex_unlock(&rcvr->lock);
+	return (0);
+}
+
+int
+event_resched(void *p, const char *evname, Uint32 ticks)
+{
+	struct object *ob = p;
+	struct event *ev;
+
+	debug(DEBUG_SCHED, "%s: resched `%s' (%u ticks)\n", ob->name, evname,
+	    ticks);
+
+	pthread_mutex_lock(&timeout_lock);
+	pthread_mutex_lock(&ob->lock);
+
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(evname, ev->name) == 0)
+			break;
+	}
+	if (ev == NULL) {
+		goto fail;
+	}
+	if (ev->flags & EVENT_SCHEDULED) {
+		timeout_del(ob, &ev->timeout);
+	}
+	ev->flags |= EVENT_SCHEDULED;
+	timeout_add(ob, &ev->timeout, ticks);
+
+	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&timeout_lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&timeout_lock);
+	return (-1);
+}
+
+/* Cancel any future execution of the given event. */
+int
+event_cancel(void *p, const char *evname)
+{
+	struct object *ob = p;
+	struct event *ev;
+	int rv = 0;
+
+	pthread_mutex_lock(&timeout_lock);
+	pthread_mutex_lock(&ob->lock);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(ev->name, evname) == 0)
+			break;
+	}
+	if (ev == NULL) {
+		goto fail;
+	}
+	if (ev->flags & EVENT_SCHEDULED) {
+		dprintf("%s: cancelled timeout %s (cancel)\n", ob->name,
+		    evname);
+		timeout_del(ob, &ev->timeout);
+		rv++;
+		ev->flags &= ~(EVENT_SCHEDULED);
+	}
+	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&timeout_lock);
+	return (rv);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&timeout_lock);
+	return (-1);
+}
+
+/* Immediately execute the given event handler. */
+void
+event_execute(void *p, const char *evname)
+{
+	struct object *ob = p;
+	struct event *ev;
+
+	pthread_mutex_lock(&ob->lock);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(ev->name, evname) == 0)
+			break;
+	}
+	if (ev != NULL &&
+	    ev->handler != NULL)
+		ev->handler(ev->argc, ev->argv);
 }
 
 /*
