@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.50 2002/11/16 00:57:39 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.51 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -39,6 +39,14 @@ static const struct object_ops world_ops = {
 	world_save
 };
 
+#ifdef DEBUG
+#define DEBUG_STATE	0x02
+#define DEBUG_GC	0x04
+
+int	world_debug = DEBUG_STATE|DEBUG_GC;
+#define engine_debug world_debug
+#endif
+
 void
 world_init(struct world *wo, char *name)
 {
@@ -61,15 +69,15 @@ world_load(void *p, int fd)
 	pthread_mutex_lock(&world->lock);
 
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
-		dprintf("loading %s\n", ob->name);
-
+		debug(DEBUG_STATE, "loading %s\n", ob->name);
 		if (curmapedit != NULL && OBJECT_ISTYPE(ob, "map")) {
 			/* XXX map editor hack */
 			continue;
 		}
 		object_load(ob);
 	}
-	printf("%s: loaded %d objects\n", OBJECT(wo)->name, wo->nobjs);
+	debug(DEBUG_STATE, "%s: loaded %d objects\n", OBJECT(wo)->name,
+	    wo->nobjs);
 	
 	pthread_mutex_unlock(&world->lock);
 	return (0);
@@ -84,17 +92,17 @@ world_save(void *p, int fd)
 	pthread_mutex_lock(&world->lock);
 
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
-		dprintf("saving %s\n", ob->name);
+		debug(DEBUG_STATE, "saving %s\n", ob->name);
 
 		if (curmapedit != NULL && OBJECT_ISTYPE(ob, "map")) {
 			/* XXX map editor hack */
 			continue;
 		}
 		write_string(fd, ob->name);
-		write_string(fd, (ob->desc != NULL) ? ob->desc : "");
+		write_string(fd, "");
 		object_save(ob);
 	}
-	dprintf("saved %d objects\n", wo->nobjs);
+	debug(DEBUG_STATE, "saved %d objects\n", wo->nobjs);
 
 	pthread_mutex_unlock(&world->lock);
 	return (0);
@@ -108,17 +116,15 @@ world_destroy(void *p)
 	struct object *ob, *nextob;
 	
 	pthread_mutex_lock(&wo->lock);
-	deprintf("freed:");
-	fflush(stdout);
+	debug_n(DEBUG_GC, "freed:");
 	for (ob = SLIST_FIRST(&wo->wobjs);
 	     ob != SLIST_END(&wo->wobjs);
 	     ob = nextob) {
 		nextob = SLIST_NEXT(ob, wobjs);
-		deprintf(" %s", ob->name);
-		fflush(stdout);
+		debug_n(DEBUG_GC, " %s", ob->name);
 		object_destroy(ob);
 	}
-	deprintf(".\n");
+	debug_n(DEBUG_GC, ".\n");
 	pthread_mutex_unlock(&wo->lock);
 	pthread_mutex_destroy(&wo->lock);
 	pthread_mutexattr_destroy(&wo->lockattr);
@@ -147,32 +153,25 @@ world_detach(void *parent, void *child)
 	struct world *wo = parent;
 	struct object *ob = child;
 	
+	debug(DEBUG_GC, "freeing %s\n", ob->name);
+
 	pthread_mutex_lock(&wo->lock);
-	
 	if (ob->state != OBJECT_CONSISTENT) {
 		fatal("inconsistent: %s\n", ob->name);
 	}
-
+	
 	event_post(ob, "detached", "%p", wo);
-
 	SLIST_REMOVE(&wo->wobjs, ob, object, wobjs);
 	wo->nobjs--;
 	ob->state = OBJECT_ZOMBIE;
 
 	pthread_mutex_unlock(&wo->lock);
 
-	/* TODO defer */
 	object_destroy(ob);
 }
 
-/*
- * See if an object exists; called from async event handlers to avoid
- * a race between entry and acquisition of world->lock.
- *
- * World must be locked.
- */
 int
-world_exists(void *p)
+world_attached(void *p)
 {
 	struct object *ob = p;
 
