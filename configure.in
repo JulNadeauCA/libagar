@@ -1,4 +1,5 @@
-# $Csoft: configure.in,v 1.46 2002/12/31 03:47:00 vedge Exp $
+# $Csoft: configure.in,v 1.47 2002/12/31 04:58:09 vedge Exp $
+# Public domain
 
 makeout(Makefile.config);
 inclout(config);
@@ -7,7 +8,7 @@ register("--with-smpeg",	"Play videos through smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"Support OpenGL operations [default: no]");
 register("--enable-debug",	"Engine debugging [default: no]");
-register("--enable-serialization",	"Thread-safe engine [default: yes]");
+register("--enable-serialization", "Thread-safe engine [default: yes]");
 register("--enable-8bpp",	"Support 8 bpp display [default: yes]");
 register("--enable-16bpp",	"Support 16 bpp display [default: yes]");
 register("--enable-24bpp",	"Support 24 bpp display [default: yes]");
@@ -18,23 +19,17 @@ if [ "${help}" = "yes" ]; then
 	help();
 fi
 
-# System-wide data directory.
+# Define the data directories.
 mdefine(SHAREDIR, "$PREFIX/share/cave");
 hdefine(SHAREDIR, "\"$PREFIX/share/cave\"");
-
-# System-wide data file directories.
 mdefine(MAPDIR, "$PREFIX/share/cave/map");
 mdefine(TTFDIR, "$PREFIX/share/cave/ttf");
 mdefine(FOBJDIR, "$PREFIX/share/cave/fob");
-
-# Man page directory.
 mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
 
-# Build tools.
 check(make);
 check(cc);
 
-# Functions
 check(progname);
 check(getenv);
 check(setenv);
@@ -44,7 +39,7 @@ check(strlcpy);
 check(asprintf);
 check(vasprintf);
 
-mdefine(CFLAGS, "$CFLAGS -g -I$SRC");
+mdefine(CFLAGS, "$CFLAGS -I$SRC");
 if [ "${cc_is_gcc}" = "yes" ]; then
 	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
 fi
@@ -52,31 +47,17 @@ fi
 require(sdl, 1.2.0);
 require(freetype, 7.0.1);
 
-# Enable x11-specific code (only useful for debugging).
+# Include X11-specific code?
 if [ "${with_x11}" != "no" ]; then
 	check(x11);
-	if [ "${x11_found}" = "yes" ]; then
-		hdefine(USE_X11, 1);
-	else
-		hundef(USE_X11);
-	fi
 fi
 
-# X11-specific debugging code.
-if [ "${enable_debug}" = "yes" -a "${x11_found}" = "yes" ]; then
-	hdefine(XDEBUG, 1);
-else
-	hundef(XDEBUG);
+# OpenGL support?
+if [ "${with_gl}" != "no" ]; then
+	check(opengl);
 fi
 
-# OpenGL support.
-if [ "${with_gl}" = "yes" ]; then
-	hdefine(HAVE_OPENGL, 1);
-else
-	hundef(HAVE_OPENGL);
-fi
-
-# Debug code. Debug level can change at runtime.
+# Debugging?
 if [ "${enable_debug}" = "yes" ]; then
 	hdefine(DEBUG, 1);
 	hdefine(LOCKDEBUG, 1);
@@ -85,14 +66,7 @@ else
 	hundef(LOCKDEBUG);
 fi
 
-# Drop in edition mode with -e.
-if [ "${enable_map_editor}" != "no" ]; then
-	hdefine(MAP_EDITOR, 1);
-else
-	hundef(MAP_EDITOR);
-fi
-
-# Enable thread safety.
+# Thread safety?
 if [ "${enable_serialization}" != "no" ]; then
 	hdefine(SERIALIZATION, 1);
 else
@@ -105,19 +79,16 @@ if [ "${enable_8bpp}" != "no" ]; then
 else
 	hundef(VIEW_8BPP);
 fi
-
 if [ "${enable_16bpp}" != "no" ]; then
 	hdefine(VIEW_16BPP, 1);
 else
 	hundef(VIEW_16BPP);
 fi
-
 if [ "${enable_24bpp}" != "no" ]; then
 	hdefine(VIEW_24BPP, 1);
 else
 	hundef(VIEW_24BPP);
 fi
-
 if [ "${enable_32bpp}" != "no" ]; then
 	hdefine(VIEW_32BPP, 1);
 else
