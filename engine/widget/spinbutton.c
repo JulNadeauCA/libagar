@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.10 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.11 2004/03/24 01:18:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -112,7 +112,7 @@ spinbutton_bound(int argc, union evarg *argv)
 			sbu->max =  0x7fffffff-1;
 			break;
 		}
-		textbox_printf(sbu->tbox, "%d", *(int *)binding->p1);
+		textbox_printf(sbu->input, "%d", *(int *)binding->p1);
 		pthread_mutex_unlock(&sbu->lock);
 	}
 }
@@ -142,11 +142,11 @@ spinbutton_return(int argc, union evarg *argv)
 	struct widget_binding *stringb;
 	char *s;
 
-	stringb = widget_get_binding(sbu->tbox, "string", &s);
+	stringb = widget_get_binding(sbu->input, "string", &s);
 	spinbutton_set_value(sbu, atoi(s));
 	widget_binding_unlock(stringb);
 
-	WIDGET(sbu->tbox)->flags &= ~(WIDGET_FOCUSED);
+	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
 
 	event_post(NULL, sbu, "spinbutton-return", NULL);
 	event_post(NULL, sbu, "spinbutton-changed", NULL);
@@ -184,10 +184,11 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	
 	sbu->value = 0;
 	sbu->incr = 1;
+	sbu->writeable = 0;
 	sbu->min = 0;
 	sbu->max = 0;
 	pthread_mutex_init(&sbu->lock, NULL);
-	sbu->tbox = textbox_new(sbu, label);
+	sbu->input = textbox_new(sbu, label);
 
 	event_new(sbu, "widget-bound", spinbutton_bound, NULL);
 	event_new(sbu, "window-keydown", spinbutton_keydown, NULL);
@@ -201,7 +202,7 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	button_set_padding(sbu->incbu, 0);
 	button_set_padding(sbu->decbu, 0);
 	
-	event_new(sbu->tbox, "textbox-return", spinbutton_return, "%p", sbu);
+	event_new(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
 	event_new(sbu->incbu, "button-pushed", spinbutton_up, "%p", sbu);
 	event_new(sbu->decbu, "button-pushed", spinbutton_down, "%p", sbu);
 }
@@ -219,15 +220,15 @@ void
 spinbutton_scale(void *p, int w, int h)
 {
 	struct spinbutton *sbu = p;
-	struct textbox *tbox = sbu->tbox;
+	struct textbox *input = sbu->input;
 	struct button *incbu = sbu->incbu;
 	struct button *decbu = sbu->decbu;
 	int x = 0, y = 0;
 
 	if (w == -1 && h == -1) {
-		WIDGET_SCALE(sbu->tbox, -1, -1);
-		WIDGET(sbu)->w = WIDGET(tbox)->w;
-		WIDGET(sbu)->h = WIDGET(tbox)->h;
+		WIDGET_SCALE(sbu->input, -1, -1);
+		WIDGET(sbu)->w = WIDGET(input)->w;
+		WIDGET(sbu)->h = WIDGET(input)->h;
 		x += WIDGET(sbu)->w;
 
 		WIDGET_SCALE(incbu, -1, -1);
@@ -236,10 +237,10 @@ spinbutton_scale(void *p, int w, int h)
 		return;
 	}
 
-	WIDGET(tbox)->x = x;
-	WIDGET(tbox)->y = y;
-	widget_scale(tbox, w - 10, h);
-	x += WIDGET(tbox)->w;
+	WIDGET(input)->x = x;
+	WIDGET(input)->y = y;
+	widget_scale(input, w - 10, h);
+	x += WIDGET(input)->w;
 
 	WIDGET(incbu)->x = x;
 	WIDGET(incbu)->y = y;
@@ -258,11 +259,11 @@ spinbutton_draw(void *p)
 	struct widget_binding *valueb;
 	int *value;
 
-	if (WIDGET(sbu->tbox)->flags & WIDGET_FOCUSED)
+	if (WIDGET(sbu->input)->flags & WIDGET_FOCUSED)
 		return;
 
 	valueb = widget_get_binding(sbu, "value", &value);
-	textbox_printf(sbu->tbox, "%d", *value);
+	textbox_printf(sbu->input, "%d", *value);
 	widget_binding_unlock(valueb);
 }
 
@@ -374,3 +375,19 @@ spinbutton_set_increment(struct spinbutton *sbu, int incr)
 	pthread_mutex_unlock(&sbu->lock);
 }
 
+void
+spinbutton_set_writeable(struct spinbutton *sbu, int writeable)
+{
+	pthread_mutex_lock(&sbu->lock);
+
+	sbu->writeable = writeable;
+	textbox_set_writeable(sbu->input, writeable);
+	if (writeable) {
+		button_enable(sbu->incbu);
+		button_enable(sbu->decbu);
+	} else {
+		button_disable(sbu->incbu);
+		button_disable(sbu->decbu);
+	}
+	pthread_mutex_unlock(&sbu->lock);
+}
