@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.6 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.7 2003/03/02 07:29:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/widget/text.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -60,6 +61,8 @@ shift_init(void *p)
 	struct shift *sh = p;
 
 	tool_init(&sh->tool, "shift", &shift_ops);
+	sh->mode = 0;
+	sh->all_layers = 0;
 }
 
 struct window *
@@ -78,7 +81,6 @@ shift_window(void *p)
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	{
-		struct radio *rad;
 		static const char *modes[] = {
 			"Highest",
 			"Lowest",
@@ -86,11 +88,26 @@ shift_window(void *p)
 			"All",
 			NULL
 		};
-		
+		struct radio *rad;
+		struct checkbox *cb;
+
 		rad = radio_new(reg, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
+
+		cb = checkbox_new(reg, -1, "All layers");
+		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->all_layers);
 	}
 	return (win);
+}
+
+static void
+shift_apply(struct noderef *nref, Sint16 relx, Sint16 rely)
+{
+	if (nref->xcenter + relx < 65535 &&
+	    nref->ycenter + rely < 65535) {
+		nref->xcenter += relx;
+		nref->ycenter += rely;
+	}
 }
 
 void
@@ -100,46 +117,39 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 	struct tlist_item *it;
 	struct node *node = mv->cur_node;
 	struct noderef *nref;
+	
+	if (TAILQ_EMPTY(&node->nrefs)) {
+		return;
+	}
 
 	switch (sh->mode) {
 	case SHIFT_HIGHEST:
-		if (!TAILQ_EMPTY(&node->nrefs)) {
-			nref = TAILQ_LAST(&node->nrefs, noderefq);
-			if (nref->xcenter + relx < 65535 &&
-			    nref->ycenter + rely < 65535) {
-				nref->xcenter += relx;
-				nref->ycenter += rely;
-			}
+		nref = TAILQ_LAST(&node->nrefs, noderefq);
+		if ((nref->layer == mv->cur_layer || sh->all_layers)) {
+			shift_apply(nref, relx, rely);
 		}
 		break;
 	case SHIFT_LOWEST:
-		if (!TAILQ_EMPTY(&node->nrefs)) {
-			nref = TAILQ_FIRST(&node->nrefs);
-			if (nref->xcenter + relx < 65535 &&
-			    nref->ycenter + rely < 65535) {
-				nref->xcenter += relx;
-				nref->ycenter += rely;
-			}
+		nref = TAILQ_FIRST(&node->nrefs);
+		if ((nref->layer == mv->cur_layer || sh->all_layers)) {
+			shift_apply(nref, relx, rely);
 		}
 		break;
 	case SHIFT_SELECTIVE:
 		TAILQ_FOREACH(it, &mv->nodeed.refs_tl->items, items) {
 			if (it->selected) {
 				nref = it->p1;
-				if (nref->xcenter + relx < 65535 &&
-				    nref->ycenter + rely < 65535) {
-					nref->xcenter += relx;
-					nref->ycenter += rely;
+				if ((nref->layer == mv->cur_layer ||
+				    sh->all_layers)) {
+					shift_apply(nref, relx, rely);
 				}
 			}
 		}
 		break;
 	case SHIFT_ALL:
 		TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-			if (nref->xcenter + relx < 65535 &&
-			    nref->ycenter + rely < 65535) {
-				nref->xcenter += relx;
-				nref->ycenter += rely;
+			if ((nref->layer == mv->cur_layer || sh->all_layers)) {
+				shift_apply(nref, relx, rely);
 			}
 		}
 		break;

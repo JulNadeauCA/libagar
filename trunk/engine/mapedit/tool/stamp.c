@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.31 2003/02/26 02:03:48 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.32 2003/03/05 02:16:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,7 +101,6 @@ stamp_window(void *p)
 		
 		cb = checkbox_new(reg, -1, "Inherit flags");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
-
 	}
 	return (win);
 }
@@ -112,7 +111,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct stamp *st = p;
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
-	struct noderef *nref;
+	struct noderef *nref, *nnref;
 
 	if (srcnode == NULL) {
 		text_msg("Error", "No source node");
@@ -122,14 +121,22 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 		text_msg("Error", "Circular reference");
 		return;
 	}
-
+	
+	/* Remove existing refs on this layer. */
 	if (st->mode == STAMP_REPLACE) {
-		TAILQ_FOREACH(nref, &dstnode->nrefs, nrefs) {
+		for (nref = TAILQ_FIRST(&dstnode->nrefs);
+		     nref != TAILQ_END(&dstnode->nrefs);
+		     nref = nnref) {
+			nnref = TAILQ_NEXT(nref, nrefs);
 			if (nref->layer == mv->cur_layer) {
 				TAILQ_REMOVE(&dstnode->nrefs, nref, nrefs);
+				noderef_destroy(nref);
+				free(nref);
 			}
 		}
 	}
+
+	/* Copy the refs from the source node. */
 	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 		nref = node_copy_ref(nref, dstnode);
 		nref->layer = mv->cur_layer;

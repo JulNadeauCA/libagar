@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.4 2003/02/26 02:03:48 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.5 2003/03/05 02:16:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -46,8 +46,8 @@
 static const struct tool_ops fill_ops = {
 	{
 		NULL,		/* destroy */
-		fill_load,
-		fill_save
+		NULL,		/* load */
+		NULL		/* save */
 	},
 	fill_window,
 	NULL,			/* cursor */
@@ -67,7 +67,7 @@ fill_init(void *p)
 
 	tool_init(&fill->tool, "fill", &fill_ops);
 
-	fill->mode = FILL_MAP;
+	fill->mode = FILL_FILL_MAP;
 }
 
 struct window *
@@ -85,12 +85,12 @@ fill_window(void *p)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
-		struct radio *rad;
 		static const char *mode_items[] = {
 			"Fill map",
 			"Clear map",
 			NULL
 		};
+		struct radio *rad;
 
 		rad = radio_new(reg, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
@@ -105,10 +105,9 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct fill *fi = p;
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
-	struct noderef *nref, *nnref;
 	Uint32 x, y;
 
-	if (srcnode == NULL && fi->mode == FILL_MAP) {
+	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
 		text_msg("Error", "No source node");
 		return;
 	}
@@ -116,23 +115,29 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *dstnode = &m->map[y][x];
-			struct noderef *nref;
+			struct noderef *nref, *nnref;
 
 			MAP_CHECK_NODE(dstnode, x, y);
 
-			if (srcnode == dstnode) {
+			if (fi->mode == FILL_FILL_MAP &&
+			    srcnode == dstnode) {
 				/* Avoid circular reference */
 				continue;
 			}
 
-			node_destroy(dstnode);
-			node_init(dstnode, x, y);
+			/* Remove all refs on this layer. */
+			node_clear_layer(dstnode, mv->cur_layer);
 
 			switch (fi->mode) {
-			case FILL_MAP:
+			case FILL_FILL_MAP:
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-					node_copy_ref(nref, dstnode);
+					struct noderef *nnref;
+
+					nnref = node_copy_ref(nref, dstnode);
+					nnref->layer = mv->cur_layer;
 				}
+				break;
+			case FILL_CLEAR_MAP:
 				break;
 			}
 
@@ -141,24 +146,3 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	}
 }
 
-int
-fill_load(void *p, int fd)
-{
-	struct fill *fill = p;
-
-	if (version_read(fd, &fill_ver, NULL) == -1)
-		return (-1);
-	fill->mode = (int)read_uint32(fd);
-	dprintf("mode 0x%x\n", fill->mode);
-	return (0);
-}
-
-int
-fill_save(void *p, int fd)
-{
-	struct fill *fill = p;
-
-	version_write(fd, &fill_ver);
-	write_uint32(fd, (Uint32)fill->mode);
-	return (0);
-}

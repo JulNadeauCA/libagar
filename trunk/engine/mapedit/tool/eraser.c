@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.22 2003/02/12 01:09:47 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.23 2003/02/22 11:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -44,14 +45,14 @@
 
 static const struct version eraser_ver = {
 	"agar eraser tool",
-	0, 0
+	1, 0
 };
 
 static const struct tool_ops eraser_ops = {
 	{
 		NULL,		/* destroy */
-		eraser_load,
-		eraser_save
+		NULL,		/* load */
+		NULL		/* save */
 	},
 	eraser_window,
 	NULL,			/* cursor */
@@ -69,6 +70,7 @@ eraser_init(void *p)
 	eraser->mode = ERASER_ALL;
 	eraser->selection.pobj = NULL;
 	eraser->selection.offs = -1;
+	eraser->all_layers = 1;
 }
 
 struct window *
@@ -80,24 +82,26 @@ eraser_window(void *p)
 
 	win = window_new("mapedit-tool-eraser", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    113, 111,
-	    113, 111);
+	    113, 126,
+	    113, 126);
 	window_set_caption(win, "Eraser");
 
-	reg = region_new(win, 0, 0, 0, 100, 100);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
-		struct radio *rad;
 		static const char *mode_items[] = {
 			"All",
 			"Highest",
-			"Lowest",
-			"Selective",
 			NULL
 		};
+		struct radio *rad;
+		struct checkbox *cb;
 
 		rad = radio_new(reg, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
 		win->focus = WIDGET(rad);
+
+		cb = checkbox_new(reg, -1, "All layers");
+		widget_bind(cb, "value", WIDGET_INT, NULL, &er->all_layers);
 	}
 	return (win);
 }
@@ -111,55 +115,21 @@ eraser_effect(void *p, struct mapview *mv, struct node *node)
 	if (TAILQ_EMPTY(&node->nrefs)) {
 		return;
 	}
-
-	switch (er->mode) {
-	case ERASER_ALL:
-		for (nref = TAILQ_FIRST(&node->nrefs);
-		     nref != TAILQ_END(&node->nrefs);
-		     nref = nnref) {
-			nnref = TAILQ_NEXT(nref, nrefs);
+	
+	for (nref = TAILQ_FIRST(&node->nrefs);
+	     nref != TAILQ_END(&node->nrefs);
+	     nref = nnref) {
+		nnref = TAILQ_NEXT(nref, nrefs);
+		if (nref->layer == mv->cur_layer || er->all_layers) {
+			TAILQ_REMOVE(&node->nrefs, nref, nrefs);
 			noderef_destroy(nref);
 			free(nref);
-		}
-		TAILQ_INIT(&node->nrefs);
-		break;
-	case ERASER_HIGHEST:
-		node_remove_ref(node, TAILQ_LAST(&node->nrefs, noderefq));
-		break;
-	case ERASER_LOWEST:
-		node_remove_ref(node, TAILQ_FIRST(&node->nrefs));
-		break;
-	case ERASER_SELECTIVE:
-		TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-			if (nref->pobj == er->selection.pobj &&
-			    nref->offs == er->selection.offs) {
-				node_remove_ref(node, nref);
+
+			if (er->mode == ERASER_HIGHEST) {
+				break;
 			}
 		}
-		break;
 	}
-}
-
-int
-eraser_load(void *p, int fd)
-{
-	struct eraser *eraser = p;
-
-	if (version_read(fd, &eraser_ver, NULL) == -1)
-		return (-1);
-
-	eraser->mode = (int)read_uint32(fd);
-	return (0);
-}
-
-int
-eraser_save(void *p, int fd)
-{
-	struct eraser *eraser = p;
-
-	version_write(fd, &eraser_ver);
-
-	write_uint32(fd, (Uint32)eraser->mode);
-	return (0);
+	node->flags = 0;
 }
 

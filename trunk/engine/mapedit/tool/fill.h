@@ -1,9 +1,9 @@
-/*	$Csoft: fill.h,v 1.9 2003/02/12 01:09:47 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.1 2003/02/20 04:57:28 vedge Exp $	*/
 /*	Public domain	*/
 
 enum fill_mode {
-	FILL_MAP,
-	FILL_CLEAR
+	FILL_FILL_MAP,
+	FILL_CLEAR_MAP
 };
 
 struct fill {

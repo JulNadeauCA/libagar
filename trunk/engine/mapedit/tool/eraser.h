@@ -1,17 +1,15 @@
-/*	$Csoft: eraser.h,v 1.7 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.8 2003/02/12 01:09:47 vedge Exp $	*/
 /*	Public domain	*/
 
 enum eraser_mode {
-	ERASER_ALL,		/* Erase all refs */
-	ERASER_HIGHEST,		/* Erase last ref */
-	ERASER_LOWEST,		/* Erase first ref */
-	ERASER_SELECTIVE	/* Erase specified refs */
+	ERASER_ALL,
+	ERASER_HIGHEST
 };
 
 struct eraser {
 	struct tool	tool;
-
-	int	mode;				/* Eraser mode */
+	int		mode;			/* Eraser mode */
+	int		all_layers;		/* Apply to every layer */
 	struct {
 		struct object	*pobj;
 		int		 offs;		/* -1 = any */
