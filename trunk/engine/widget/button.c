@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.21 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.22 2002/06/20 16:35:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -103,7 +103,6 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	if (rh == 0)
 		WIDGET(b)->h = b->label_s->h + b->ymargin;
 
-
 	event_new(b, "window-mousebuttonup", 0,
 	    button_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(b, "window-mousebuttondown", 0,
@@ -143,7 +142,7 @@ button_draw(void *p)
 		x = b->xmargin;
 		break;
 	case BUTTON_CENTER:
-		x = ((bg->w - label->w) >> 1) + (b->xmargin>>2);
+		x = ((bg->w - label->w) >> 1) + (b->xmargin>>2) - 1;
 		break;
 	case BUTTON_RIGHT:
 		x = bg->w - label->w - b->xmargin;
