@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.178 2003/04/24 07:43:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.179 2003/04/26 06:02:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -216,7 +216,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	pthread_mutex_lock(&window_lock);
 	if (!icons_inited) {
 		window_init_icons(win);
-		icons_inited = 0;
+		icons_inited = 1;
 	}
 	pthread_mutex_unlock(&window_lock);
 	
