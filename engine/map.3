@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.49 2004/05/10 05:14:52 vedge Exp $
+.\"	$Csoft: map.3,v 1.50 2004/09/17 03:21:45 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -34,17 +34,22 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm map
-.Nd agar tile-based levels
+.Nd agar layered 2D space
 .Sh SYNOPSIS
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
-Agar levels are described by a two-dimensional array of nodes; each node holds
-a stack of node
-.Sq elements .
+The
+.Nm
+class describes a fixed-size, Euclidean
+.Xr space 3
+suitable to 2D overhead, isometric and platform graphics.
+The structure is composed of a two-dimensional array of nodes, each containing
+a stack of references (or
+.Sq elements ) .
 .Pp
 In a game scenario, for instance, the rendering of a scene might be achieved by
-blitting the graphical elements in the vicinity in a specific order, while
-the audio system mixes samples from nearby audio elements.
+blitting the graphical references in the vicinity, while the audio system is
+playing samples from nearby audio elements.
 .Pp
 Three types of references are currently defined:
 .Pp
@@ -61,8 +66,8 @@ Visible elements of this type are redrawn every
 milliseconds (possibly by another thread on a multiprocessor system).
 .It NODEREF_WARP
 Pointer to a node residing another map.
-Objects coming in contact with this type of element are transported to
-coordinates
+Geometrical objects coming in contact with this type of element are
+transported to coordinates
 .Va x ,
 .Va y ,
 .Va z
@@ -71,20 +76,24 @@ of map
 .El
 .Pp
 Graphical elements define two displacements in pixels of the image from
-the tile's origin, one for centering and the other for motion.
+the tile's origin, the
+.Em centering offset
+and the
+.Em motion offset.
 .Pp
 The centering offset is typically assigned by a level designer, and the
-motion offset is controlled by the animation/positioning system.
+motion offset is for animation purposes.
 If the map is drawn scaled, the centering offset is scaled to the
 tile size, but the motion offset is not.
 .Pp
-Graphical elements provide the renderer with a list of graphical transforms
-that should be applied before the tile is drawn (the resulting tile is cached),
-and a layer index which defines the order of blitting.
+Graphical elements provide the renderer with a list of graphical transformations
+that should be applied before the tile is drawn (the resulting tile is cached).
+A per-element layer attribute also defines the attributed layer.
 .Pp
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr object 3 ->
+.Xr space 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
