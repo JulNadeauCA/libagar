@@ -185,8 +185,8 @@ depend:	depend-subdir
 	rm -f .depend
 	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \
-	  echo mkdep -a ${MKDEP} ${CFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
-	  mkdep -a ${MKDEP} ${CFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
+	  echo ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
+	  ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
 	 fi
 
 regress: regress-subdir
