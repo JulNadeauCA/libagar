@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.24 2002/10/01 08:37:44 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.25 2002/12/24 07:18:11 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -33,7 +33,7 @@ CPPFLAGS?=
 CC_PICFLAGS?=	-fPIC -DPIC
 GMONOUT?=	gmon.out
 
-ASSEMBLER?=	nasm
+ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
 ASM_PICFLAGS?=	-DPIC
 
@@ -48,9 +48,7 @@ SHARE?=
 
 .SUFFIXES: .o .po .so .c .cc .C .cxx .y .s .S .asm .l
 
-#
 # C
-#
 .c.o:
 	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
 .cc.o:
@@ -70,38 +68,14 @@ SHARE?=
 .s.po .S.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
-#
 # Assembly
-#
 .asm.o:
-	@echo "#ifdef __ELF__" > .elftest
-	@echo "IS ELF" >> .elftest
-	@echo "#endif" >> .elftest
-	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
-	    echo "${ASSEMBLER} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASSEMBLER} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
-	else \
-	    echo "${ASSEMBLER} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASSEMBLER} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
-	fi
-	@rm -f .elftest
+	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $<
 
 .asm.so:
-	@echo "#ifdef __ELF__" > .elftest
-	@echo "IS ELF" >> .elftest
-	@echo "#endif" >> .elftest
-	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
-	    echo "${ASSEMBLER} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASSEMBLER} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
-	else \
-	    echo "${ASSEMBLER} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASSEMBLER} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
-	fi
-	@rm -f .elftest
+	${ASM} ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<
 
-#
 # Lex
-#
 .l:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
@@ -117,9 +91,7 @@ SHARE?=
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
-#
 # Yacc
-#
 .y:
 	${YACC} ${YFLAGS} -b $@ $<
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
