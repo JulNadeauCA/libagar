@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.15 2002/05/19 15:37:41 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -14,17 +14,21 @@ struct window {
 
 	/* Read-only once attached */
 	int	 flags;
-#define WINDOW_PLAIN	0x01	/* Solid, no borders */
-#define WINDOW_FOCUS	0x02	/* Receive keyboard events */
-#define WINDOW_ANIMATE	0x04	/* Redraw each tick */
-#define WINDOW_TITLEBAR	0x08	/* Draw title bar */
+#define WINDOW_PLAIN		0x01	/* Solid, no borders */
+#define WINDOW_FOCUS		0x02	/* Receive events, draw on top */
+#define WINDOW_ANIMATE		0x04	/* Redraw each tick */
+#define WINDOW_TITLEBAR		0x08	/* Draw title bar */
+#define WINDOW_ROUNDEDGES	0x10	/* Round edges */
 	enum	 window_type type;
 	char	*caption;		/* Titlebar text */
 	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
-	Uint32	 border[5];		/* Border colors */
+	Uint32	*border;		/* Border colors */
+	int	 borderw;		/* Border width */
+	int	 titleh;		/* Titlebar height */
 	int	 x, y;			/* Absolute coordinates */
 	int	 w, h;			/* Geometry */
-	int	 xmargin, ymargin;
+	int	 spacing;		/* Spacing between regions */
+	SDL_Rect body;			/* Area reserved for regions */
 	struct	 viewport *view;	/* Parent view */
 	SDL_Rect vmask;			/* View mask (units) */
 
@@ -44,6 +48,20 @@ struct window_event {
 
 #define WINDOW(w)	((struct window *)(w))
 
+#ifdef DEBUG
+# define WINDOW_PUT_PIXEL(win, wrx, wry, c) do {			\
+	if ((wrx) > (win)->w || (wry) > (win)->h ||			\
+	    (wrx) < 0 || (wry) < 0) {					\
+		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
+		    (wrx), (wry), (win)->w, (win)->h);			\
+	}								\
+	VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry), (c)); \
+} while (/*CONSTCOND*/0)
+#else
+# define WINDOW_PUT_PIXEL(win, wrx, wry, c) \
+	VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry), (c))
+#endif
+
 #define WINDOW_INSIDE(wina, xa, ya)					\
 	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
 	 (xa) < ((wina)->x+(wina)->w)	&& (ya) < ((wina)->y+(wina)->h))
@@ -60,6 +78,6 @@ void	 window_detach(void *, void *);
 
 void	 window_draw(struct window *);
 void	 window_draw_all(void);
-void	 window_widget_event(void *, void *, void *);
+void	 window_event_all(struct viewport *, SDL_Event *);
 void	 window_resize(struct window *);
 
