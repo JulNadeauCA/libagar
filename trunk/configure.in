@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.81 2004/05/02 04:03:28 vedge Exp $
+# $Csoft: configure.in,v 1.82 2004/08/23 01:20:17 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -52,7 +52,7 @@ CHECK(setlocale)
 CHECK(arc4random)
 
 MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
-if [ "${enable_warnings}" != "no" ]; then
+if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
 	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
 fi
