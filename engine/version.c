@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.19 2002/11/22 23:24:58 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.20 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -35,6 +35,11 @@
 
 #include "version.h"
 
+#ifdef DEBUG
+int	version_debug = 0;
+#define	engine_debug version_debug
+#endif
+
 /*
  * The version minor of a structure is incremented when the changes
  * do not affect reading of a previous version (ie. additions).
@@ -65,7 +70,7 @@ version_read(int fd, const struct version *ver)
 	host = read_string(fd);
 
 	if (vermaj != ver->vermaj) {
-		warning("%s: : v%d.%d != %d.%d major differs\n", ver->name,
+		warning("%s: v%d.%d != %d.%d major differs\n", ver->name,
 		    vermaj, vermin, ver->vermaj, ver->vermin);
 		return (-1);
 	}
@@ -74,9 +79,7 @@ version_read(int fd, const struct version *ver)
 		    ver->vermaj, ver->vermin);
 	}
 
-#if 0
 	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, vermaj, vermin, user, host);
-#endif
 	free(user);
 
 	return (0);
