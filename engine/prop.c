@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.24 2003/03/02 00:35:36 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.25 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 #include <config/have_ieee754.h>
 
 #include "compat/vasprintf.h"
+#include "compat/strlcpy.h"
 #include "engine.h"
 
 #include <fcntl.h>
@@ -250,12 +251,11 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 
 	pthread_mutex_lock(&ob->props_lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		if (strcmp(key, prop->key) != 0) {
+		if (strcmp(key, prop->key) != 0)
 			continue;
-		}
-		if (t != PROP_ANY && t != prop->type) {
+		if (t != PROP_ANY && t != prop->type)
 			continue;
-		}
+
 		if (p != NULL) {
 			switch (prop->type) {
 			case PROP_INT:
@@ -320,9 +320,8 @@ prop_get_int(void *p, char *key)
 {
 	int i;
 
-	if (prop_get(p, key, PROP_INT, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_INT, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -331,9 +330,8 @@ prop_get_bool(void *p, char *key)
 {
 	int i;
 
-	if (prop_get(p, key, PROP_BOOL, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_BOOL, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -342,9 +340,8 @@ prop_get_uint8(void *p, char *key)
 {
 	Uint8 i;
 
-	if (prop_get(p, key, PROP_UINT8, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_UINT8, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -353,9 +350,8 @@ prop_get_sint8(void *p, char *key)
 {
 	Sint8 i;
 
-	if (prop_get(p, key, PROP_SINT8, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_SINT8, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -364,9 +360,8 @@ prop_get_uint16(void *p, char *key)
 {
 	Uint16 i;
 
-	if (prop_get(p, key, PROP_UINT16, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_UINT16, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -375,9 +370,8 @@ prop_get_sint16(void *p, char *key)
 {
 	Sint16 i;
 
-	if (prop_get(p, key, PROP_SINT16, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_SINT16, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -386,9 +380,8 @@ prop_get_uint32(void *p, char *key)
 {
 	Uint32 i;
 
-	if (prop_get(p, key, PROP_UINT32, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_UINT32, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -397,9 +390,8 @@ prop_get_sint32(void *p, char *key)
 {
 	Sint32 i;
 
-	if (prop_get(p, key, PROP_SINT32, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_SINT32, &i) == NULL)
+		fatal("%s", error_get());
 	return (i);
 }
 
@@ -409,9 +401,8 @@ prop_get_float(void *p, char *key)
 {
 	float f;
 
-	if (prop_get(p, key, PROP_FLOAT, &f) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_FLOAT, &f) == NULL)
+		fatal("%s", error_get());
 	return (f);
 }
 
@@ -420,9 +411,8 @@ prop_get_double(void *p, char *key)
 {
 	double d;
 
-	if (prop_get(p, key, PROP_DOUBLE, &d) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_DOUBLE, &d) == NULL)
+		fatal("%s", error_get());
 	return (d);
 }
 
@@ -432,9 +422,8 @@ prop_get_long_double(void *p, char *key)
 {
 	long double ld;
 
-	if (prop_get(p, key, PROP_LONG_DOUBLE, &ld) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_LONG_DOUBLE, &ld) == NULL)
+		fatal("%s", error_get());
 	return (ld);
 }
 # endif
@@ -445,10 +434,22 @@ prop_get_string(void *p, char *key)
 {
 	char *s;
 
-	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_STRING, &s) == NULL)
+		fatal("%s", error_get());
 	return (s);
+}
+
+size_t
+prop_copy_string(void *p, char *key, char *buf, size_t bufsize)
+{
+	size_t sl;
+	char *s;
+
+	if (prop_get(p, key, PROP_STRING, &s) == NULL)
+		fatal("%s", error_get());
+	sl = strlcpy(buf, s, bufsize);
+	free(s);
+	return (sl);
 }
 
 void *
@@ -456,9 +457,8 @@ prop_get_pointer(void *p, char *key)
 {
 	void *np;
 
-	if (prop_get(p, key, PROP_POINTER, &np) == NULL) {
-		fatal("%s\n", error_get());
-	}
+	if (prop_get(p, key, PROP_POINTER, &np) == NULL)
+		fatal("%s", error_get());
 	return (np);
 }
 
@@ -537,7 +537,7 @@ prop_load(void *p, int fd)
 			}
 			break;
 		default:
-			fatal("cannot load property of type %d\n", t);
+			fatal("cannot load prop of type %d", t);
 			break;
 		}
 		free(key);
@@ -619,7 +619,7 @@ prop_save(void *p, int fd)
 			    prop->key);
 			break;
 		default:
-			fatal("unknown property type: %d\n", prop->type);
+			fatal("unknown prop type: %d", prop->type);
 		}
 		nprops++;
 	}

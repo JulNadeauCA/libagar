@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.53 2003/03/03 05:18:04 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.54 2003/03/11 00:13:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <engine/compat/asprintf.h>
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strlcat.h>
+#include <engine/compat/strlcpy.h>
 #include <engine/engine.h>
 
 #include <engine/view.h>
@@ -177,9 +178,8 @@ label_printf(struct label *label, const char *fmt, ...)
 	char *buf;
 
 #ifdef DEBUG
-	if (label->type != LABEL_STATIC) {
+	if (label->type != LABEL_STATIC)
 		fatal("not a static label");
-	}
 #endif
 
 	va_start(args, fmt);
@@ -190,7 +190,7 @@ label_printf(struct label *label, const char *fmt, ...)
 
 	/* Update the string. */
 	label->text.caption = erealloc(label->text.caption, strlen(buf));
-	sprintf(label->text.caption, buf);
+	strlcpy(label->text.caption, buf, sizeof(label->text.caption));
 	free(buf);
 
 	/* Update the static surface. */
@@ -303,7 +303,7 @@ label_draw(void *p)
 							    [ri++];
 
 							Asprintf(&s2,
-							    "%dx%d",
+							    "%ux%u",
 							    rd->w, rd->h);
 							fmtp += 4;
 						} else if (strncmp("x,y",
@@ -323,7 +323,7 @@ label_draw(void *p)
 							    [ri++];
 
 							Asprintf(&s2,
-							    "%dx%d at [%d,%d]",
+							    "%ux%u at [%d,%d]",
 							    rd->w, rd->h,
 							    rd->x, rd->y);
 							fmtp += 5;

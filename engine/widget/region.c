@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.27 2003/01/23 02:00:57 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.28 2003/02/04 02:39:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,13 +57,14 @@ void
 region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 {
 	static pthread_mutex_t curreg_lock = PTHREAD_MUTEX_INITIALIZER;
-	static int curreg = 0;
+	static unsigned int curreg = 0;
 	char *name;
 
 	pthread_mutex_lock(&curreg_lock);
-	name = object_name("window-region", curreg++);
+	curreg++;
 	pthread_mutex_unlock(&curreg_lock);
 
+	Asprintf(&name, "region%u", curreg);
 	object_init(&reg->obj, "window-region", name, NULL, 0, &region_ops);
 	free(name);
 

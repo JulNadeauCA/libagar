@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.10 2003/02/25 03:58:07 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.11 2003/03/02 00:35:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -86,5 +86,6 @@ double		 prop_get_double(void *, char *);
 long double	 prop_get_long_double(void *, char *);
 #endif
 char		*prop_get_string(void *, char *);
+size_t		 prop_copy_string(void *, char *, char *, size_t);
 void		*prop_get_pointer(void *, char *);
 
