@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.161 2004/03/05 15:22:17 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.162 2004/03/09 06:16:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/rootmap.h>
 #include <engine/typesw.h>
 #include <engine/mkpath.h>
+
 #ifdef EDITION
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -41,9 +42,9 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/textbox.h>
-#endif
 
-#include "mediasel.h"
+#include <engine/mapedit/mediasel.h>
+#endif
 
 #include <sys/stat.h>
 
