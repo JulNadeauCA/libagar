@@ -165,6 +165,8 @@ tlist_draw(void *p)
 	}
 
 	val = widget_get_int(tl->vbar, "value");
+	if (val < 0)
+		fatal("bad value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		SDL_Surface *textsu = NULL;
@@ -200,8 +202,8 @@ tlist_draw(void *p)
 			widget_blit(tl, textsu,
 			    x,
 			    y + tl->item_h/2 - textsu->h/2);
+			SDL_FreeSurface(textsu);
 		}
-		SDL_FreeSurface(textsu);
 
 		y += tl->item_h;
 		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
@@ -237,11 +239,23 @@ void
 tlist_remove_item(struct tlist_item *it)
 {
 	struct tlist *tl = it->tl_bp;
+	struct widget_binding *valueb;
+	int *value;
 
 	pthread_mutex_lock(&tl->items_lock);
+
 	TAILQ_REMOVE(&tl->items, it, items);
+
 	widget_set_int(tl->vbar, "min", 0);
 	widget_set_int(tl->vbar, "max", --tl->nitems);
+	valueb = widget_binding_get_locked(tl->vbar, "value", &value);
+	if (*value > tl->nitems)
+		*value = tl->nitems;
+	else if (tl->nitems > 0 && *value < tl->nitems)
+		*value = 0;
+	dprintf("max=%d, value=%d\n", (int)tl->nitems, (int)*value);
+	widget_binding_unlock(valueb);
+
 	pthread_mutex_unlock(&tl->items_lock);
 
 	tlist_free_item(it);
@@ -280,6 +294,7 @@ tlist_clear_items(struct tlist *tl)
 	
 	widget_set_int(tl->vbar, "min", 0);
 	widget_set_int(tl->vbar, "max", 0);
+	widget_set_int(tl->vbar, "value", 0);
 	
 	pthread_mutex_unlock(&tl->items_lock);
 }
@@ -344,6 +359,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
 	widget_set_int(tl->vbar, "min", 0);
 	widget_set_int(tl->vbar, "max", ++tl->nitems);
+	dprintf("max=%d, value=%d\n", (int)tl->nitems, widget_get_int(tl->vbar, "value"));
 	pthread_mutex_unlock(&tl->items_lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
@@ -438,6 +454,8 @@ tlist_mousemotion(int argc, union evarg *argv)
 	if (*value >= *max) {
 		/* Don't scroll past the end. */
 		*value = *max - tl->nvisitems;
+		if (*value < 0)
+			*value = 0;
 	}
 
 	widget_binding_unlock(valueb);
@@ -475,6 +493,8 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		if (*value >= *max) {
 			/* Don't scroll past the end. */
 			*value = *max - tl->nvisitems - 1;
+			if (*value < 0)
+				*value = 0;
 		}
 		widget_binding_unlock(valueb);
 		widget_binding_unlock(maxb);
@@ -624,7 +644,6 @@ tlist_keydown(int argc, union evarg *argv)
 	default:
 		break;
 	}
-
 	widget_binding_unlock(valueb);
 	pthread_mutex_unlock(&tl->items_lock);
 }
