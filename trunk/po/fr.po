@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.21 2003/09/07 00:47:59 vedge Exp $
+# $Csoft: fr.po,v 1.22 2003/09/17 05:37:06 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-09-17 02:32-0300\n"
+"POT-Creation-Date: 2003-11-19 23:53-0400\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
@@ -102,6 +102,9 @@ msgstr ""
 "Veuillez sauvegarder la configuration et redémarrer %s afin que les blits "
 "asynchrones prennent effet"
 
+msgid "The configuration settings have been saved."
+msgstr ""
+
 msgid "Engine settings"
 msgstr "Configuration du moteur"
 
@@ -120,15 +123,17 @@ msgstr "Saisie de clavier Unicode"
 msgid "Input composition"
 msgstr "Composition d'entrée"
 
+msgid "Unrestricted window resize"
+msgstr "Redimensionnement de fenêtre libre"
+
 msgid "Right->left (Arabic, Hebrew, ...)"
 msgstr "Droit->gauche (Arabe, Hébreu, ...)"
 
-#. Thread unsafe, but not very dangerous.
-msgid "Debugging"
-msgstr "Déboguage"
-
 msgid "Idle time prediction"
 msgstr "Prédiction de temps d'attente"
+
+msgid "Debugging"
+msgstr "Déboguage"
 
 msgid "Input devices:"
 msgstr "Pilotes d'entrée"
@@ -458,7 +463,7 @@ msgid "Unsupported graphic mode."
 msgstr "Mode graphique non supporté."
 
 msgid "The resolution is too small."
-msgstr "La résolution est trop petite."
+msgstr "La résolution est insuffisante."
 
 #, c-format
 msgid "Setting %dx%dx%d mode: %s"
@@ -736,7 +741,25 @@ msgid "Stamp"
 msgstr "Étampe"
 
 msgid "Position"
-msgstr ""
+msgstr "Position"
+
+msgid "Submap: "
+msgstr "Sous-map: "
+
+msgid "Input device: "
+msgstr "Pilotes d'entrée: "
+
+msgid "Speed: "
+msgstr "Vitesse: "
+
+msgid "Center view around"
+msgstr "Centrer la vue"
+
+msgid "Soft motion"
+msgstr "Déplacement incrémental"
+
+msgid "Pass through"
+msgstr "Passage au travers"
 
 msgid "A JPEG error has occured."
 msgstr "Une erreur JPEG s'est produite."
@@ -779,7 +802,7 @@ msgid "Status: %s."
 msgstr "État: %s."
 
 msgid "Transmitting frame XXXXXXXXXXX"
-msgstr ""
+msgstr "Transmission image XXXXXXXXXXX"
 
 msgid "Host: "
 msgstr "Hôte: "
@@ -801,6 +824,9 @@ msgstr "Widgets"
 
 msgid "Viewport"
 msgstr "Vue"
+
+msgid "Unicode conversion"
+msgstr "Conversion Unicode"
 
 msgid "Debug monitor"
 msgstr "Moniteur de déboguage"
@@ -853,7 +879,7 @@ msgid "GUI"
 msgstr "GUI"
 
 msgid "Tile-based"
-msgstr "Orienté-tile"
+msgstr "Tuile-orienté"
 
 #, c-format
 msgid "Graphic engine: %s %s"
@@ -877,6 +903,9 @@ msgstr "Géométrie de carte: %dx%d"
 msgid "Map offset: %d,%d (soft %d,%d)"
 msgstr "Position carte: %d,%d (soft %d,%d)"
 
+msgid "Unicode Conversion"
+msgstr "Conversion Unicode"
+
 msgid "Error"
 msgstr "Erreur"
 
@@ -888,6 +917,444 @@ msgstr "Information"
 
 msgid "Ok"
 msgstr "Ack-é!"
+
+msgid "+"
+msgstr "+"
+
+msgid "-"
+msgstr "-"
+
+msgid "Microns"
+msgstr "Microns"
+
+msgid "Micrometers"
+msgstr "Micromètres"
+
+msgid "Mils"
+msgstr "Mils"
+
+msgid "Millimeters"
+msgstr "Millimètres"
+
+msgid "Inches"
+msgstr "Pouces"
+
+msgid "Centimeters"
+msgstr "Centimètres"
+
+msgid "Decimeters"
+msgstr "Décimètres"
+
+msgid "Links"
+msgstr "Maillons"
+
+msgid "Spans"
+msgstr ""
+
+msgid "Cubits"
+msgstr "Coudées"
+
+msgid "Feet"
+msgstr "Pieds"
+
+msgid "Varas"
+msgstr "Varas"
+
+msgid "Yards"
+msgstr "Verges"
+
+msgid "Meters"
+msgstr "Mètres"
+
+msgid "Fathoms"
+msgstr "Toises"
+
+msgid "Rods"
+msgstr "Perches"
+
+msgid "Chains"
+msgstr "Chaînes"
+
+msgid "Furlongs"
+msgstr "Stades"
+
+msgid "Cable lengths"
+msgstr "Longueurs cable"
+
+msgid "Kilometers"
+msgstr "Kilomètres"
+
+msgid "Miles"
+msgstr "Milles"
+
+msgid "Nautical miles"
+msgstr "Milles marins"
+
+msgid "Leagues"
+msgstr "Lieues"
+
+msgid "Nautical leagues"
+msgstr "Lieues marines"
+
+msgid "Astronomical units"
+msgstr "Unités astronomiques"
+
+msgid "Light years"
+msgstr "Années-lumière"
+
+msgid "Parsecs"
+msgstr "Parsecs"
+
+msgid "Square micrometers"
+msgstr "Micromètres carrés"
+
+msgid "Square millimeters"
+msgstr "Millimètres carrés"
+
+msgid "Square centimeters"
+msgstr "Centimètres carrés"
+
+msgid "Square inches"
+msgstr "Pouces carrés"
+
+msgid "Square feet"
+msgstr "Pieds carrés"
+
+msgid "Square yards"
+msgstr "Verges carrées"
+
+msgid "Square meters"
+msgstr "Mètres carrés"
+
+msgid "Square kilometers"
+msgstr "Kilomètres carrés"
+
+msgid "Square miles"
+msgstr "Milles carrés"
+
+msgid "Cubic micrometers"
+msgstr "Micromètres cubes"
+
+msgid "Cubic millimeters"
+msgstr "Millimètres cubes"
+
+msgid "Cubic centimeters"
+msgstr "Centimètres cubes"
+
+msgid "Cubic inches"
+msgstr "Pouces cubes"
+
+msgid "Cubic feet"
+msgstr "Pieds cubes"
+
+msgid "Cubic yards"
+msgstr "Verges cubes"
+
+msgid "Cubic meters"
+msgstr "Mètres cubes"
+
+msgid "Cubic kilometers"
+msgstr "Kilomètres cubes"
+
+msgid "Cubic miles"
+msgstr "Milles cubes"
+
+msgid "Micrometers per second"
+msgstr "Micromètres par seconde"
+
+msgid "Millimeters per second"
+msgstr "Millimètres par seconde"
+
+msgid "Centimeters per second"
+msgstr "Centimètres par seconde"
+
+msgid "Inches per second"
+msgstr "Pouces par seconde"
+
+msgid "Feet per second"
+msgstr "Pieds par seconde"
+
+msgid "Yards per second"
+msgstr "Verges par seconde"
+
+msgid "Meters per second"
+msgstr "Mètres par seconde"
+
+msgid "Kilometers per second"
+msgstr "Kilomètres par seconde"
+
+msgid "Miles per second"
+msgstr "Milles par seconde"
+
+msgid "Micrograms"
+msgstr "Microgrammes"
+
+msgid "Milligrams"
+msgstr "Milligrammes"
+
+msgid "Grains"
+msgstr "Grains"
+
+msgid "Centigrams"
+msgstr "Centigrammes"
+
+msgid "Decigrams"
+msgstr "Décigrammes"
+
+msgid "Carats [troy]"
+msgstr "Carats [troy]"
+
+msgid "Grams"
+msgstr "Grammes"
+
+msgid "Scruples [apot]"
+msgstr "Scruples [apot]"
+
+msgid "Pennyweight"
+msgstr "Pennyweight"
+
+msgid "Drams"
+msgstr "Drachmes"
+
+msgid "Drams [apot]"
+msgstr "Drachmes [apot]"
+
+msgid "Poundals"
+msgstr "Poundals"
+
+msgid "Ounces [comm]"
+msgstr "Onces [comm]"
+
+msgid "Ounces [troy]"
+msgstr "Onces [troy]"
+
+msgid "Pounds [comm]"
+msgstr "Livres [comm]"
+
+msgid "Pounds [troy]"
+msgstr "Livres [troy]"
+
+msgid "Kilograms"
+msgstr "Kilogrammes"
+
+msgid "Stones"
+msgstr "Stones"
+
+msgid "Quarters"
+msgstr "Quarts"
+
+msgid "Slugs"
+msgstr "Slugs"
+
+msgid "100 weights"
+msgstr "100 weights"
+
+msgid "Tons [short]"
+msgstr "Tonnes [courtes]"
+
+msgid "Megagrams"
+msgstr "Mégagrammes"
+
+msgid "Tons [metric]"
+msgstr "Tonnes [métriques]"
+
+msgid "Tons [long]"
+msgstr "Tonnes [longues]"
+
+msgid "Microseconds"
+msgstr "Microsecondes"
+
+msgid "Milliseconds"
+msgstr "Millisecondes"
+
+msgid "Seconds"
+msgstr "Secondes"
+
+msgid "Minutes"
+msgstr "Minutes"
+
+msgid "Hours"
+msgstr "Heures"
+
+msgid "Days"
+msgstr "Jours"
+
+msgid "Weeks [Erisian]"
+msgstr "Semaines [Érisiennes]"
+
+msgid "Weeks"
+msgstr "Semaines"
+
+msgid "Months [Erisian]"
+msgstr "Mois [Érisiens]"
+
+msgid "Years"
+msgstr "Jours"
+
+msgid "Picoamperes"
+msgstr "Picoampères"
+
+msgid "Nanoamperes"
+msgstr "Nanoampères"
+
+msgid "Microamperes"
+msgstr "Microampères"
+
+msgid "Milliamperes"
+msgstr "Milliampères"
+
+msgid "Amperes"
+msgstr "Ampères"
+
+msgid "Kiloamperes"
+msgstr "Kiloampères"
+
+msgid "Megaamperes"
+msgstr "Méga-ampères"
+
+msgid "Microkelvins"
+msgstr "Microkelvins"
+
+msgid "Millikelvins"
+msgstr "Millikelvins"
+
+msgid "Degrees Rankine"
+msgstr "Degrés Rankine"
+
+msgid "Kelvins"
+msgstr "Kelvins"
+
+msgid "Degrees Farenheit"
+msgstr "Degrés Farenheit"
+
+msgid "Degrees Celsius"
+msgstr "Degrés Celsius"
+
+msgid "Degrees Reaumur"
+msgstr "Degrés Reaumur"
+
+msgid "Kilokelvins"
+msgstr "Kilokelvins"
+
+msgid "Megakelvins"
+msgstr "Mégakelvins"
+
+msgid "Picomoles"
+msgstr "Picomoles"
+
+msgid "Micromoles"
+msgstr "Micromoles"
+
+msgid "Millimoles"
+msgstr "Millimoles"
+
+msgid "Moles"
+msgstr "Moles"
+
+msgid "Kilomoles"
+msgstr "Kilomoles"
+
+msgid "Megamoles"
+msgstr "Mégamoles"
+
+msgid "Microcandelas"
+msgstr "Microcandelas"
+
+msgid "Millicandelas"
+msgstr "Millicandelas"
+
+msgid "Candelas"
+msgstr "Candelas"
+
+msgid "Kilocandelas"
+msgstr "Kilocandelas"
+
+msgid "Megacandelas"
+msgstr "Mégacandelas"
+
+msgid "Microwatts"
+msgstr "Microwatts"
+
+msgid "Milliwatts"
+msgstr "Milliwatts"
+
+msgid "BTU/hour"
+msgstr "BTU/heure"
+
+msgid "Foot-lbs/sec"
+msgstr "Pieds-livres/sec"
+
+msgid "Watts"
+msgstr "Watts"
+
+msgid "Kilocalories/min"
+msgstr "Kilocalories/min"
+
+msgid "Horsepower"
+msgstr "Chevaux vapeur"
+
+msgid "Kilowatts"
+msgstr "Kilowatts"
+
+msgid "Kilocalories/sec"
+msgstr "Kilocalories/sec"
+
+msgid "Megawatts"
+msgstr "Mégawatts"
+
+msgid "Gigawatts"
+msgstr "Gigawatts"
+
+msgid "Microvolts"
+msgstr "Microvolts"
+
+msgid "Millivolts"
+msgstr "Millivolts"
+
+msgid "Volts"
+msgstr "Volts"
+
+msgid "Kilovolts"
+msgstr "Kilovolts"
+
+msgid "Megavolts"
+msgstr "Mégavolts"
+
+msgid "Microohms"
+msgstr "Micro-ohms"
+
+msgid "Milliohms"
+msgstr "Milliohms"
+
+msgid "Ohms"
+msgstr "Ohms"
+
+msgid "Kilohms"
+msgstr "Kilo-ohms"
+
+msgid "Megohms"
+msgstr "Méga-ohms"
+
+msgid "Picofarads"
+msgstr "Picofarads"
+
+msgid "Nanofarads"
+msgstr "Nanofarads"
+
+msgid "Microfarads"
+msgstr "Microfarads"
+
+msgid "Millifarads"
+msgstr "Millifarads"
+
+msgid "Farads"
+msgstr "Farads"
+
+msgid "Kilofarads"
+msgstr "Kilofarads"
+
+msgid "Megafarads"
+msgstr "Mégafarads"
 
 msgid "Object"
 msgstr "Objet"
@@ -1023,6 +1490,138 @@ msgstr "%s: %s à échoué"
 
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
+
+msgid "Power Calculation"
+msgstr "Calcul de Puissance"
+
+msgid "Power: "
+msgstr "Puissance: "
+
+msgid "Voltage: "
+msgstr "Tension: "
+
+msgid "Current: "
+msgstr "Courant: "
+
+msgid "Winds Tritron"
+msgstr "Vents Tritron"
+
+msgid "Winds Tritron tools"
+msgstr "Outils Vents Tritron"
+
+msgid "Unreasonable refresh rate"
+msgstr "Fréquence de rafraîchissement déraisonnable\n"
+
+msgid "Resistance Calculation"
+msgstr "Calcul de Résistance"
+
+msgid "Resistance: "
+msgstr "Résistance"
+
+msgid "Current Calculation"
+msgstr "Calcul de Courant"
+
+msgid "Voltage Calculation"
+msgstr "Calcul de Tension"
+
+msgid "RMS Voltage"
+msgstr "Voltage RMS"
+
+msgid "RMS: "
+msgstr "RMS: "
+
+msgid "Peak: "
+msgstr "Sommet: "
+
+msgid "Average: "
+msgstr "Moyenne: "
+
+msgid "Capacitance Approximation"
+msgstr "Approximation de Capacitance"
+
+msgid "Vacuum"
+msgstr "Vide"
+
+msgid "Air (1 atm)"
+msgstr "Air (1 atm)"
+
+msgid "Air (100 atm)"
+msgstr "Air (100 atm)"
+
+msgid "Glass"
+msgstr "Verre"
+
+msgid "Mica"
+msgstr "Mica"
+
+msgid "Mylar"
+msgstr "Mylar"
+
+msgid "Neoprene"
+msgstr "Néoprene"
+
+msgid "Plexiglas"
+msgstr "Plexiglas"
+
+msgid "Polyethylene"
+msgstr "Polyéthylène"
+
+msgid "Polyvinyl chloride"
+msgstr "Chlorure de polyvinyl"
+
+msgid "Teflon"
+msgstr "Teflon"
+
+msgid "Germanium"
+msgstr "Germanium"
+
+msgid "Strontium titanate"
+msgstr "Titanate de strontium"
+
+msgid "Water"
+msgstr "Eau"
+
+msgid "Glycerin"
+msgstr "Glycécine"
+
+msgid "Benzene"
+msgstr "Benzène"
+
+msgid "Silicium"
+msgstr "Silicium"
+
+msgid "InSb"
+msgstr "InSb"
+
+msgid "InAs"
+msgstr "InAs"
+
+msgid "InP"
+msgstr "InP"
+
+msgid "GaSb"
+msgstr "GaSb"
+
+msgid "GaAs"
+msgstr "GaAs"
+
+msgid "Min: "
+msgstr "Minimum: "
+
+msgid "Max: "
+msgstr "Maximum: "
+
+msgid "Dielectric: "
+msgstr "Diélectrique: "
+
+msgid "Area: "
+msgstr "Zone: "
+
+msgid "Thickness: "
+msgstr "Épaisseur: "
+
+msgid "Temperature: "
+msgstr "Température: "
 
 #~ msgid "Name: %s (%s)"
 #~ msgstr "Nom: «%s» (%s)"
