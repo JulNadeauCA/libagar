@@ -573,56 +573,6 @@ echo "Could not find the FreeType2 library"
 exit 1
 fi
 cat << EOT > conftest.c
-${FREETYPE_CFLAGS}
-EOT
-compile="ok"
-echo "cc -o conftest conftest.c" >> config.log
-cc -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
-	echo "#ifndef HAVE_FREETYPE" >> engine/mcconfig.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/mcconfig.h
-echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
-
-	echo "yes"
-else
-	echo "no"
-fi
-cat << EOT > conftest.c
-${FREETYPE_LIBS}
-EOT
-compile="ok"
-echo "cc -o conftest conftest.c" >> config.log
-cc -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
-	echo "#ifndef HAVE_FREETYPE" >> engine/mcconfig.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/mcconfig.h
-echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
-
-	echo "yes"
-else
-	echo "no"
-fi
-cat << EOT > conftest.c
 #include <stdio.h>
 
 #include <freetype2/freetype/freetype.h>
@@ -646,8 +596,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "cc -o conftest conftest.c" >> config.log
-cc -o conftest conftest.c 2>>config.log
+echo cc ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> config.log
+cc ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
