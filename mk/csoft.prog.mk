@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.25 2002/12/24 07:18:11 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.26 2002/12/24 10:07:56 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -50,23 +50,23 @@ SHARE?=
 
 # C
 .c.o:
-	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
+	${CC} ${CFLAGS} -I`pwd` ${CPPFLAGS} -c $<
 .cc.o:
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c $<
+	${CXX} ${CXXFLAGS} -I`pwd` ${CPPFLAGS} -c $<
 .s.o .S.o:
-	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
+	${CC} ${CFLAGS} -I`pwd` ${CPPFLAGS} -c $<
 .c.so:
-	${CC} ${CC_PICFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} ${CC_PICFLAGS} -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.so:
-	${CXX} ${CC_PICFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CXX} ${CC_PICFLAGS} -I`pwd` ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .s.so .S.so:
-	${CC} ${CC_PICFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} ${CC_PICFLAGS} -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
-	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} -pg -DPROF -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
-	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CXX} -pg -DPROF -I`pwd` ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .s.po .S.po:
-	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} -pg -DPROF -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Assembly
 .asm.o:

@@ -25,44 +25,60 @@ sub ConvertMakefile
 	foreach $_ (<SRCMAKEFILE>) {
 		chop;
 
-		if (/(.+)\\$/) {	# Expansion
+		if (/^(.+)\\$/) {			# Expansion
 			$line .= $1;
-		} else {		# New line
+		} else {				# New line
 			if ($line) {
-				push @lines, $line;
+				push @lines, $line . $_;
 				$line = '';
+			} else {
+				push @lines, $_;
 			}
-			push @lines, $_;
 		}
 	}
-	my @srcs = ();
+
 	my @deps = ();
-	my @objs = ();
+
 	foreach $_ (@lines) {
-		if (/^\s*OBJS\s*=\s*(.+)$/) {
-			foreach my $obj (split(/\s/, $1)) {
+		my @srcs = ();
+		my @objs = ();
+
+		s/%SRC%/$SRC/g;
+		s/%BUILD%/$BUILD/g;
+		s/%SEPARATE_BUILD%/concurrent/g;
+		
+		if (/^\s*(OBJS|CATMAN\d)\s*=\s*(.+)$/) {
+			my $type = $1;
+			foreach my $obj (split(/\s/, $2)) {
 				next unless $obj;
 				my $objsrc = $obj;
-				$objsrc =~ s/\.o$/\.c/g;
-				push @deps, "$obj: $objsrc";
+
+				if ($type eq 'OBJS') {			# C
+					$objsrc =~ s/\.o$/\.c/g;
+				} elsif ($type =~ /CATMAN\d/) {		# Nroff
+					$objsrc =~ s/\.cat(\d)$/.\1/;
+				}
+				push @deps, "$obj: $SRC/$ndir/$objsrc";
 			}
 		}
-		if (/^\s*SRCS\s*=\s*(.+)$/) {
-			foreach my $src (split(/\s/, $1)) {
+		if (/^\s*(SRCS|MAN\d|XCF)\s*=\s*(.+)$/) {
+			my $type = $1;
+			my $srcs = $2;
+			foreach my $src (split(/\s/, $srcs)) {
 				next unless $src;
 				push @srcs, $src;
 			}
 			my $i = 0;
 			foreach my $src (@srcs) {
-				$srcs[$i] = "$SRC/$srcs[$i]";
+				$srcs[$i] = "$SRC/$ndir/$srcs[$i]";
 				$i++;
 			}
-			print DSTMAKEFILE 'SRCS=' . join(' ', @srcs), "\n";
+			print DSTMAKEFILE "${type}=" . join(' ', @srcs), "\n";
 		} else {
 			print DSTMAKEFILE $_, "\n";
 		}
 	}
-	print DSTMAKEFILE "\n", join("\n", @deps);
+	print DSTMAKEFILE "\n", join("\n", @deps), "\n";
 	
 	close(DSTMAKEFILE);
 	close(SRCMAKEFILE);
@@ -91,7 +107,7 @@ sub Scan
 		} else {
 			if ($ent eq 'Makefile') {
 				ConvertMakefile($dir, $ndir, $ent);
-			} elsif ($ent =~ /\.mk$/ or $ent eq 'mkdep') {
+			} elsif ($ent =~ /\.(mk|inc)$/ or $ent eq 'mkdep') {
 				open(OLDMK, "$dir/$ent") or
 				    die "$dir/$ent: $!";
 				open(NEWMK, ">$BUILD/$ndir/$ent") or

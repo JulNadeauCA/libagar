@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.17 2002/12/24 07:18:11 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.18 2002/12/24 09:00:55 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -32,7 +32,8 @@ CATMANS=${CATMAN1} ${CATMAN2} ${CATMAN3} ${CATMAN4} ${CATMAN5} ${CATMAN6} ${CATM
 .SUFFIXES: .1 .2 .3 .4 .5 .6 .7 .8 .9 .cat1 .cat2 .cat3 .cat4 .cat5 .cat6 .cat7 .cat8 .cat9
 
 .1.cat1 .2.cat2 .3.cat3 .4.cat4 .5.cat5 .6.cat6 .7.cat7 .8.cat8 .9.cat9:
-	${NROFF} ${NROFF_FLAGS} $< > $@ || exit 0
+	@echo "${NROFF} ${NROFF_FLAGS} $< > $@"
+	@${NROFF} ${NROFF_FLAGS} $< > $@ || exit 0
 
 all: ${MANS} ${CATMANS}
 
