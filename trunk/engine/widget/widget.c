@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.2 2002/04/20 05:48:48 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.3 2002/04/20 06:20:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 
 #include <sys/types.h>
 
+#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -41,6 +42,7 @@
 #include "window.h"
 #include "widget.h"
 
+#if 0
 static struct obvec widget_vec = {
 	widget_destroy,
 	widget_load,
@@ -48,55 +50,31 @@ static struct obvec widget_vec = {
 	widget_link,
 	widget_unlink
 };
+#endif
 
-struct widget *
-widget_create(struct window *win, char *name, Uint32 flags, SDL_Rect rect,
-    Uint32 *fgcolor)
+/* XXX vec */
+void
+widget_init(struct widget *wid, char *name, Uint32 flags, void *vecp,
+    struct window *win, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
-	struct widget *w;
-	struct viewport *view;
+	char *widname;
 
-	w = (struct widget *)emalloc(sizeof(struct widget));
-	object_init(&w->obj, name, 0, &widget_vec);
+	/* Prepend parent window's name */
+	widname = emalloc(strlen(name) + strlen(OBJECT(win)->name) + 2);
+	strcpy(widname, OBJECT(win)->name);
+	strcat(widname, ".");
+	strcat(widname, name);
 
-	w->win = win;
-	w->flags = flags;
-	w->rect = rect;
-	w->fgcolor = fgcolor;
+	object_init(&wid->obj, widname, 0, vecp);
 
-	view = w->win->view;
+	wid->flags = flags;
+	wid->win = win;
+	wid->x = x;
+	wid->y = y;
 
-	return (w);
-}
-
-int
-widget_load(void *p, int fd)
-{
-	struct widget *w = (struct widget *)p;
-
-	if (version_read(fd, "agar widget", 1, 0) != 0) {
-		return (-1);
-	}
-	
-	w->flags = fobj_read_uint32(fd);
-	*w->fgcolor = fobj_read_uint32(fd);
-	w->rect = fobj_read_rect(fd);
-
-	return (0);
-}
-
-int
-widget_save(void *p, int fd)
-{
-	struct widget *w = (struct widget *)p;
-
-	version_write(fd, "agar widget", 1, 0);
-
-	fobj_write_uint32(fd, w->flags);
-	fobj_write_uint32(fd, *w->fgcolor);
-	fobj_write_rect(fd, w->rect);
-
-	return (0);
+	/* Geometry may be undefined at this point. */
+	wid->w = w;
+	wid->h = h;
 }
 
 int
@@ -104,11 +82,12 @@ widget_link(void *ob)
 {
 	struct widget *w = (struct widget *)ob;
 
-	dprintf("link to %s\n", OBJECT(w->win)->name);
-
 	pthread_mutex_lock(&w->win->widgetslock);
 	TAILQ_INSERT_HEAD(&w->win->widgetsh, w, widgets);
+	w->win->nwidgets++;
 	pthread_mutex_unlock(&w->win->widgetslock);
+
+	w->win->redraw++;
 
 	return (0);
 }
@@ -117,39 +96,40 @@ int
 widget_unlink(void *ob)
 {
 	struct widget *w = (struct widget *)ob;
-	
+	struct window *win = w->win;
+
 	pthread_mutex_lock(&w->win->widgetslock);
 	TAILQ_REMOVE(&w->win->widgetsh, w, widgets);
+	w->win->nwidgets--;
 	pthread_mutex_unlock(&w->win->widgetslock);
 
-	return (0);
-}
-
-int
-widget_destroy(void *p)
-{
-	/* ... */
+	win->redraw++;
 
 	return (0);
-}
-
-void
-widget_init(struct widget *w, char *name, Uint32 flags, void *vecp,
-    struct window *win, SDL_Rect rd)
-{
-	object_init(&w->obj, name, 0, vecp);
-
-	w->flags = flags;
-	w->rect = rd;
-	w->win = win;
 }
 
 void
 widget_draw(void *p)
 {
-	struct widget *w = (struct widget*)p;
+	struct widget *w = (struct widget *)p;
 	
-	if (WIDVEC(w)->draw != NULL && !(w->flags & WIDGET_HIDE)) {
-		WIDVEC(w)->draw(w);
+	if (WIDGET_VEC(w)->draw != NULL && !(w->flags & WIDGET_HIDE)) {
+		WIDGET_VEC(w)->draw(w);
 	}
 }
+
+/*
+ * Dispatch an event to a widget.
+ * Parent window and widget must be locked.
+ */
+void
+widget_event(void *p, SDL_Event *ev, Uint32 flags)
+{
+	struct widget *w = (struct widget *)p;
+
+	if (WIDGET_VEC(w)->event != NULL) {
+		dprintf("event to %s\n", OBJECT(w)->name);
+		WIDGET_VEC(w)->event(w, ev, flags);
+	}
+}
+
