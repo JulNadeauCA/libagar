@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.15 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: spinbutton.h,v 1.1 2003/06/08 23:49:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
@@ -34,8 +34,7 @@ extern DECLSPEC void spinbutton_destroy(void *);
 extern DECLSPEC void spinbutton_scale(void *, int, int);
 extern DECLSPEC void spinbutton_draw(void *);
 
-extern DECLSPEC void spinbutton_increment(struct spinbutton *, int);
-extern DECLSPEC void spinbutton_decrement(struct spinbutton *, int);
+extern DECLSPEC void spinbutton_add(struct spinbutton *, int);
 extern DECLSPEC void spinbutton_set_value(struct spinbutton *, int);
 extern DECLSPEC void spinbutton_set_min(struct spinbutton *, int);
 extern DECLSPEC void spinbutton_set_max(struct spinbutton *, int);
