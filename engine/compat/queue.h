@@ -1,4 +1,6 @@
-/*	$Csoft: queue.h,v 1.4 2002/04/22 02:57:55 vedge Exp $	*/
+/*	$Csoft: queue.h,v 1.5 2002/04/24 13:18:33 vedge Exp $	*/
+/*	$OpenBSD: queue.h,v 1.22 2001/06/23 04:39:35 angelos Exp $	*/
+/*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993
@@ -148,35 +150,6 @@ struct {								\
 	}								\
 } while (0)
 
-#define	SLIST_COUNT(var, head, field, ip) do {				\
-	(ip) = 0;							\
-	SLIST_FOREACH(var, head, field)					\
-		(ip)++;							\
-} while (0)
-
-#define SLIST_INDEX(var, head, field, index) do {			\
-	static int cindex;						\
-	var = NULL;							\
-	cindex = 0;							\
-	SLIST_FOREACH(var, head, field) {				\
-		if (cindex++ == (index)) {				\
-			break;						\
-		}							\
-	}								\
-} while (0)
-
-#define SLIST_DUP(avar, acount, ahead, atype, afield) do {	\
-		struct atype *sl_dup_e;				\
-		Uint32 sl_dup_i = 0;				\
-								\
-		avar = (struct atype **)emalloc((acount) *	\
-		    sizeof(struct atype *)); 			\
-		SLIST_FOREACH(sl_dup_e, ahead, afield) {	\
-			(avar)[sl_dup_i++] = sl_dup_e;		\
-		}						\
-	} while (/*CONSTCOND*/0)
-
-
 /*
  * List definitions.
  */
@@ -251,24 +224,6 @@ struct {								\
 	*(elm2)->field.le_prev = (elm2);				\
 } while (0)
 
-#define	LIST_COUNT(var, head, field, ip) do {				\
-	(ip) = 0;							\
-	LIST_FOREACH(var, head, field)					\
-		(ip)++;							\
-} while (0)
-
-#define LIST_INDEX(var, head, field, index) do {			\
-	static int cindex;						\
-	var = NULL;							\
-	cindex = 0;							\
-	LIST_FOREACH(var, head, field) {				\
-		if (cindex++ == (index)) {				\
-			break;						\
-		}							\
-	}								\
-} while (0)
-
-
 /*
  * Simple queue definitions.
  */
@@ -328,12 +283,6 @@ struct {								\
 #define SIMPLEQ_REMOVE_HEAD(head, elm, field) do {			\
 	if (((head)->sqh_first = (elm)->field.sqe_next) == NULL)	\
 		(head)->sqh_last = &(head)->sqh_first;			\
-} while (0)
-
-#define SIMPLEQ_COUNT(var, head, field, ip) do {			\
-	(ip) = 0;							\
-	SIMPLEQ_FOREACH(var, head, field)				\
-		(ip)++;							\
 } while (0)
 
 #define SIMPLEQ_INDEX(var, head, field, index) do {			\
@@ -451,12 +400,6 @@ struct {								\
 	*(elm2)->field.tqe_prev = (elm2);				\
 } while (0)
 
-#define TAILQ_COUNT(var, head, field, ip) do {				\
-	(ip) = 0;							\
-	TAILQ_FOREACH(var, head, field)					\
-		(ip)++;							\
-} while (0)
-
 #define TAILQ_INDEX(var, head, field, index) do {			\
 	static int cindex;						\
 	var = NULL;							\
@@ -467,18 +410,6 @@ struct {								\
 		}							\
 	}								\
 } while (0)
-
-#define TAILQ_DUP(avar, acount, ahead, atype, afield) do {	\
-		struct atype *tq_dup_e;				\
-		Uint32 tq_dup_i = 0;				\
-								\
-		avar = (struct atype **)emalloc((acount) *	\
-		    sizeof(struct atype *)); 			\
-		TAILQ_FOREACH(tq_dup_e, ahead, afield) {	\
-			(avar)[tq_dup_i++] = tq_dup_e;		\
-		}						\
-	} while (/*CONSTCOND*/0)
-
 
 /*
  * Circular queue definitions.
@@ -592,23 +523,5 @@ struct {								\
 	else								\
 		(elm2)->field.cqe_prev->field.cqe_next = (elm2);	\
 } while (0)
-
-#define CIRCLEQ_COUNT(var, head, field, ip) do {			\
-	(ip) = 0;							\
-	CIRCLEQ_FOREACH(var, head, field)				\
-		(ip)++;							\
-} while (0)
-
-#define CIRCLEQ_INDEX(var, head, field, index) do {			\
-	static int cindex;						\
-	var = NULL;							\
-	cindex = 0;							\
-	CIRCLEQ_FOREACH(var, head, field) {				\
-		if (cindex++ == (index)) {				\
-			break;						\
-		}							\
-	}								\
-} while (0)
-
 
 #endif	/* !_SYS_QUEUE_H_ */
