@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.15 2002/04/30 01:11:34 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.16 2002/04/30 08:19:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,7 +53,7 @@ static const struct obvec window_ops = {
 };
 
 /* This list shares world->lock. */
-TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
+TAILQ_HEAD(windows_head, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
 
 /* Specific garbage collector for widgets. Used by widget.c. */
 TAILQ_HEAD(, widget) uwidgetsh = TAILQ_HEAD_INITIALIZER(uwidgetsh);
@@ -65,12 +65,12 @@ static void	 window_unlink_queued(void);
 
 /* XXX fucking insane */
 struct window *
-window_new(struct viewport *view, char *caption, Uint32 flags, Uint32 bgtype,
-    Sint16 x, Sint16 y, Uint16 w, Uint16 h) {
+window_new(struct viewport *view, char *caption, Uint32 flags,
+    window_type_t type, Sint16 x, Sint16 y, Uint16 w, Uint16 h) {
 	struct window *win;
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, view, caption, flags, bgtype, x, y, w, h);
+	window_init(win, view, caption, flags, type, x, y, w, h);
 
 	pthread_mutex_lock(&world->lock);
 	object_link(win);
@@ -81,9 +81,10 @@ window_new(struct viewport *view, char *caption, Uint32 flags, Uint32 bgtype,
 /* XXX fucking insane */
 void
 window_init(struct window *win, struct viewport *view, char *caption,
-    Uint32 flags, Uint32 bgtype, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
+    Uint32 flags, window_type_t type, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
 	static int nwindow = 0;
+	struct winseg *nseg;
 	char *name;
 
 	name = object_name("window", nwindow++);
@@ -93,12 +94,14 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->caption = strdup(caption);
 	win->view = view;
 	win->flags = flags;
-	win->bgtype = bgtype;
+	win->type = type;
 
-	switch (win->bgtype) {
+	switch (win->type) {
 	case WINDOW_CUBIC:
 	case WINDOW_CUBIC2:
 		win->flags |= WINDOW_ANIMATE;
+		break;
+	default:
 		break;
 	}
 
@@ -115,6 +118,7 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->vmask.y = (y / view->map->tileh) - view->mapyoffs;
 	win->vmask.w = (w / view->map->tilew);
 	win->vmask.h = (h / view->map->tilew);
+	dprintrect("vmask", &win->vmask);
 
 	/* XXX pref */
 	win->border[0] = SDL_MapRGB(view->v->format, 50, 50, 50);
@@ -124,8 +128,14 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
 	
 	TAILQ_INIT(&win->widgetsh);
+	SLIST_INIT(&win->winsegsh);
 
 	pthread_mutex_init(&win->lock, NULL);
+
+	/* Allocate a segment covering the whole window. */
+	pthread_mutex_lock(&win->lock);
+	nseg = winseg_new(win, NULL, WINSEG_HORIZ, 0);
+	pthread_mutex_unlock(&win->lock);
 }
 
 void
@@ -168,7 +178,7 @@ window_mouse_button(SDL_Event *ev)
 	struct widget *w = NULL;
 
 	pthread_mutex_lock(&world->lock);
-	TAILQ_FOREACH(win, &windowsh, windows) {
+	TAILQ_FOREACH_REVERSE(win, &windowsh, windows, windows_head) {
 		if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 			continue;
 		}
@@ -191,7 +201,7 @@ window_mouse_button(SDL_Event *ev)
 #define WINDOW_CORNER(xo, yo) do {			\
 	int z;						\
 	z = ((xo) * (yo))/2;				\
-	if (z < 1) {					\
+	if (z < 2) {					\
 		return (-1);				\
 	} else {					\
 		*col = win->border[((xo) * (yo))/2];	\
@@ -223,14 +233,17 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 			} else if (yo > 20) {
 				*col = win->border[yo-20];
 			} else {
-				switch (win->bgtype) {
+				switch (win->type) {
 				case WINDOW_CUBIC:
+				case WINDOW_CUBIC2:
 					*col = SDL_MapRGB(win->view->v->format,
 					    0, xo>>3, 0);
 					break;
 				case WINDOW_GRADIENT:
 					*col = SDL_MapRGB(win->view->v->format,
 					    xo>>5, 0, xo>>2);
+					break;
+				case WINDOW_SOLID:
 					break;
 				}
 			}
@@ -285,7 +298,7 @@ window_draw(struct window *win)
 				if (rv < 0) {
 					continue;
 				} else if (rv == 0) {
-					switch (win->bgtype) {
+					switch (win->type) {
 					case WINDOW_SOLID:
 						col = win->bgcolor;
 						break;
@@ -438,8 +451,58 @@ void
 window_destroy(void *p)
 {
 	struct window *win = (struct window *)p;
+	struct winseg *seg, *nextseg = NULL;
 
-	free(win->caption);
+	/* Free segments. */
+	pthread_mutex_lock(&win->lock);
+	for (seg = SLIST_FIRST(&win->winsegsh);
+	     seg != SLIST_END(&win->winsegsh);
+	     seg = nextseg) {
+		nextseg = SLIST_NEXT(seg, winsegs);
+		dprintf("free seg\n");
+		free(seg);
+	}
+	pthread_mutex_unlock(&win->lock);
 	pthread_mutex_destroy(&win->lock);
+	
+	free(win->caption);
 }
 
+struct winseg *
+winseg_new(struct window *pwin, struct winseg *pseg, window_seg_t type, int req)
+{
+	struct winseg *seg;
+
+	seg = emalloc(sizeof(struct winseg));
+	seg->pwin = pwin != NULL ? pwin : pseg->pwin;
+	seg->pseg = pseg;
+	seg->req = req;
+	seg->type = type;
+	seg->x = -1;
+	seg->y = -1;
+	seg->w = -1;
+	seg->h = -1;
+
+	dprintf("parent %s\n", OBJECT(pwin)->name);
+
+#if 0
+	if (req == 0) {		/* Root segment */
+		dprintf("root seg\n");
+		seg->x = 0;
+		seg->y = 0;
+		seg->w = pwin->w;
+		seg->h = pwin->h;
+	} else {
+		seg->x = pseg->x;
+		seg->y = pseg->y;
+	}
+#endif
+
+	return (seg);
+}
+
+void
+winseg_destroy(struct winseg *seg)
+{
+	free(seg);
+}
