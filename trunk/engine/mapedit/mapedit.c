@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.27 2002/02/14 06:32:49 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.28 2002/02/15 02:31:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -43,7 +43,8 @@
 
 static void	mapedit_destroy(void *);
 static int	mapedit_shadow(struct mapedit *);
-static Uint32	mapedit_time(Uint32, void *);
+static Uint32	mapedit_cursor_tick(Uint32, void *);
+static Uint32	mapedit_listw_tick(Uint32, void *);
 static void	mapedit_event(struct mapedit *, SDL_Event *);
 static void	mapedit_bg(SDL_Surface *, int, int, int, int);
 
@@ -101,7 +102,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	med->curflags = 0;
 
 	mapdir_init(&med->cursor_dir, (struct object *)med, med->map,
-	    DIR_SCROLLVIEW, 2, 10);
+	    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
 
@@ -133,16 +134,25 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 
 	object_link(med);
 
-	if (pthread_mutex_lock(&map->lock) == 0) {
-		/* Position mapedit on the map. */
-		MAPEDIT_PLOT(med, map, map->defx, map->defy);
-		pthread_mutex_unlock(&map->lock);
-	}
+	pthread_mutex_lock(&map->lock);
+	med->map = map;
+	med->x = map->defx;
+	med->y = map->defy;
+	MAP_ADDANIM(map, med->x, med->y,
+	    (struct object *)med, MAPEDIT_SELECT);
+	(&med->map->map[med->x][med->y])->flags |= NODE_ANIM;
+	pthread_mutex_unlock(&map->lock);
 
 	curmapedit = med;
 	
 	/* XXX pref */
-	med->timer = SDL_AddTimer(60, mapedit_time, med);
+	med->timer = SDL_AddTimer(60, mapedit_cursor_tick, med);
+	if (med->timer == NULL) {
+		fatal("SDL_AddTimer: %s\n", SDL_GetError());
+		return (NULL);
+	}
+	
+	med->timer = SDL_AddTimer(100, mapedit_listw_tick, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		return (NULL);
@@ -585,7 +595,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				mapedit_editflags(med, MAPEDIT_OBJLIST);
 			} else if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_setorigin(med, &mapx, &mapy);
-				MAPEDIT_MOVE(med, mapx, mapy);
+				mapedit_move(med, mapx, mapy);
 			}
 			break;
 		case SDLK_t:
@@ -653,30 +663,48 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	pthread_mutex_unlock(&map->lock);
 }
 
+/*
+ * Move the map edition cursor.
+ * Must be called on a locked map.
+ */
+void
+mapedit_move(struct mapedit *med, int x, int y)
+{
+	struct node *node;
+	
+	node = &med->map->map[med->x][med->y];
+	node->flags &= ~(NODE_ANIM);
+
+	MAP_DELREF(med->map, med->x, med->y,
+	    (struct object *)med, MAPEDIT_SELECT);
+	MAP_ADDANIM(med->map, x, y,
+	    (struct object *)med, MAPEDIT_SELECT);
+	med->x = x;
+	med->y = y;
+	
+	node = &med->map->map[x][y];
+	node->flags |= NODE_ANIM;
+}
+
 static Uint32
-mapedit_time(Uint32 ival, void *p)
+mapedit_cursor_tick(Uint32 ival, void *p)
 {
 	struct mapedit *med = (struct mapedit *)p;
-	struct map *map = med->map;
-	struct map_aref *aref;
-	int mapx, mapy, moved;
+	int x, y, moved;
 	
-	mapx = med->x;
-	mapy = med->y;
+	x = med->x;
+	y = med->y;
 	
-	pthread_mutex_lock(&map->lock);
+	pthread_mutex_lock(&med->map->lock);
 
-	aref = node_arefobj(&map->map[mapx][mapy], (struct object *)med, -1);
-
-	/* Move the map edition cursor. */
-	moved = mapdir_move(&med->cursor_dir, &mapx, &mapy);
+	moved = mapdir_move(&med->cursor_dir, &x, &y);
 	if (moved != 0) {
 		SDL_Event nev;
 		int i, nkeys;
 
-		MAPEDIT_MOVE(med, mapx, mapy);
-		mapdir_postmove(&med->cursor_dir, &mapx, &mapy, moved);
-		map->redraw++;
+		mapedit_move(med, x, y);
+		mapdir_postmove(&med->cursor_dir, &x, &y, moved);
+		med->map->redraw++;
 
 		for (i = 0; i < sizeof(stickykeys) / sizeof(int); i++) {
 			if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
@@ -686,6 +714,19 @@ mapedit_time(Uint32 ival, void *p)
 			}
 		}
 	}
+
+	pthread_mutex_unlock(&med->map->lock);
+
+	return (ival);
+}
+
+static Uint32
+mapedit_listw_tick(Uint32 ival, void *p)
+{
+	struct mapedit *med = (struct mapedit *)p;
+	int moved;
+	
+	pthread_mutex_lock(&med->map->lock);
 
 	moved = gendir_move(&med->listw_dir);
 	if (moved != 0) {
@@ -723,7 +764,7 @@ mapedit_time(Uint32 ival, void *p)
 		mapedit_objlist(med);
 		gendir_postmove(&med->olistw_dir, moved);
 	}
-	pthread_mutex_unlock(&map->lock);
+	pthread_mutex_unlock(&med->map->lock);
 
 	return (ival);
 }
