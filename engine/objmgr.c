@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.54 2005/01/17 02:20:20 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.55 2005/02/01 03:15:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -35,13 +35,18 @@
 #include <engine/widget/hbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/checkbox.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
+#include <engine/widget/menu.h>
+#include <engine/widget/bitmap.h>
 
 #include <string.h>
+#include <ctype.h>
 
-#include "mapedit.h"
-#include "objedit.h"
+#include <engine/mapedit/mapedit.h>
+
+#include "objmgr.h"
 
 struct objent {
 	struct object *obj;
@@ -50,45 +55,35 @@ struct objent {
 };
 static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
+static int edit_on_create = 1;
+
+static void open_obj_data(struct object *);
+static void open_obj_generic(struct object *);
 
 static void
 create_obj(int argc, union evarg *argv)
 {
 	char name[OBJECT_NAME_MAX];
-	char type[OBJECT_TYPE_MAX];
-	struct tlist *objs_tl = argv[1].p;
+	struct object_type *t = argv[1].p;
 	struct textbox *name_tb = argv[2].p;
-	struct textbox *type_tb = argv[3].p;
+	struct tlist *objs_tl = argv[3].p;
+	struct window *dlg_win = argv[4].p;
 	struct tlist_item *parent_it;
 	struct object *pobj;
 	void *nobj;
-	int i;
 
 	if ((parent_it = tlist_item_selected(objs_tl)) == NULL) {
 		parent_it = tlist_item_first(objs_tl);
 	}
 	pobj = parent_it->p1;
-
-	textbox_copy_string(type_tb, type, sizeof(type));
-	if (type[0] == '\0') {
-		text_msg(MSG_ERROR, _("No object type was specified."));
-		return;
-	}
-	for (i = 0; i < ntypesw; i++) {
-		if (strcmp(typesw[i].type, type) == 0)
-			break;
-	}
-	if (i == ntypesw) {
-		text_msg(MSG_ERROR, _("No such object type."));
-		return;
-	}
-
 	textbox_copy_string(name_tb, name, sizeof(name));
+	view_detach(dlg_win);
+
 	if (name[0] == '\0') {
 		unsigned int nameno = 0;
 		struct object *ch;
 tryname:
-		snprintf(name, sizeof(name), "%s #%d", type, nameno);
+		snprintf(name, sizeof(name), "%s #%d", t->type, nameno);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
 			if (strcmp(ch->name, name) == 0)
 				break;
@@ -99,14 +94,18 @@ tryname:
 		}
 	}
 
-	nobj = Malloc(typesw[i].size, M_OBJECT);
-	if (typesw[i].ops->init != NULL) {
-		typesw[i].ops->init(nobj, name);
+	nobj = Malloc(t->size, M_OBJECT);
+	if (t->ops->init != NULL) {
+		t->ops->init(nobj, name);
 	} else {
-		object_init(nobj, typesw[i].type, name, NULL);
+		object_init(nobj, t->type, name, NULL);
 	}
 	object_attach(pobj, nobj);
 	object_unlink_datafiles(nobj);
+	
+	if (edit_on_create &&
+	    t->ops->edit != NULL)
+		open_obj_data(nobj);
 }
 
 enum {
@@ -173,8 +172,8 @@ close_obj_data(int argc, union evarg *argv)
 	Free(oent, M_MAPEDIT);
 }
 
-void
-objedit_open_data(struct object *ob)
+static void
+open_obj_data(struct object *ob)
 {
 	struct objent *oent;
 	
@@ -220,7 +219,11 @@ obj_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				objedit_open_data(ob);
+				open_obj_data(ob);
+			} else {
+				text_tmsg(MSG_ERROR, 750,
+				    _("Object `%s' has no edit operation."),
+				    ob->name);
 			}
 			break;
 		case OBJEDIT_EDIT_GENERIC:
@@ -335,9 +338,80 @@ poll_objs(int argc, union evarg *argv)
 	unlock_linkage();
 }
 
+static void
+load_object(int argc, union evarg *argv)
+{
+	struct object *o = argv[1].p;
+
+	if (object_load(o) == -1) {
+		text_msg(MSG_ERROR, "%s: %s", OBJECT(o)->name, error_get());
+	}
+}
+
+static void
+save_object(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+
+	if (object_save(ob) == -1) {
+		text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
+	} else {
+		text_tmsg(MSG_INFO, 1000, _("Object `%s' saved successfully."),
+		    ob->name);
+	}
+}
+
+static void
+create_obj_dlg(int argc, union evarg *argv)
+{
+	struct window *win;
+	struct object_type *t = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *objs_tl = argv[3].p;
+	struct box *bo;
+	struct textbox *tb;
+	struct checkbox *cb;
+
+	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|
+	                 WINDOW_NO_MINIMIZE, NULL);
+	window_set_caption(win, _("New %s object"), t->type);
+	window_set_position(win, WINDOW_CENTER, 1);
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		label_new(bo, LABEL_STATIC, _("Type: %s"), t->type);
+		label_new(bo, LABEL_STATIC, _("Size: %lu bytes"),
+		    (u_long)t->size);
+
+		tb = textbox_new(bo, _("Name: "));
+		widget_focus(tb);
+
+		cb = checkbox_new(bo, _("Open edition window"));
+		widget_bind(cb, "state", WIDGET_INT, &edit_on_create);
+	}
+
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	{
+		struct button *btn;
+	
+		btn = button_new(bo, _("OK"));
+		event_new(tb, "textbox-return", create_obj, "%p,%p,%p,%p", t,
+		    tb, objs_tl, win);
+		event_new(btn, "button-pushed", create_obj, "%p,%p,%p,%p", t,
+		    tb, objs_tl, win);
+		
+		btn = button_new(bo, _("Cancel"));
+		event_new(btn, "button-pushed", window_generic_detach, "%p",
+		    win);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
+}
+
 /* Create the object editor window. */
 struct window *
-objedit_window(void)
+objmgr_window(void)
 {
 	struct window *win;
 	struct vbox *vb;
@@ -345,36 +419,53 @@ objedit_window(void)
 	struct combo *types_com;
 	struct tlist *objs_tl;
 	struct toolbar *tbar;
+	struct AGMenu *m;
+	struct AGMenuItem *mi, *mj;
 
-	win = window_new(0, "mapedit-objedit");
-	window_set_caption(win, _("Object editor"));
+	win = window_new(0, "objmgr");
+	window_set_caption(win, _("Object manager"));
 	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
+	
+	objs_tl = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(objs_tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+	tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
+	event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
+	event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
+	    OBJEDIT_EDIT_DATA);
+
+	m = ag_menu_new(win);
+	mi = ag_menu_add_item(m, _("World"));
+	{
+		mj = ag_menu_action(mi, _("New object"), ICON(OBJCREATE_ICON),
+		    0, 0, NULL, NULL);
+		{
+			int i;
+
+			for (i = ntypesw-1; i >= 0; i--) {
+				struct object_type *t = &typesw[i];
+				char label[32];
+
+				strlcpy(label, t->type, sizeof(label));
+				label[0] = (char)toupper((int)label[0]);
+				ag_menu_action(mj, label, ICON(t->icon), 0, 0,
+				    create_obj_dlg, "%p,%p,%p", t, win,
+				    objs_tl);
+			}
+		}
+		ag_menu_separator(mi);
+		ag_menu_action(mi, _("Load state"), ICON(OBJLOAD_ICON), 0, 0,
+		    load_object, "%p", world);
+		ag_menu_action(mi, _("Save state"), ICON(OBJSAVE_ICON), 0, 0,
+		    save_object, "%p", world);
+	}
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{
 		struct AGMenuItem *mi;
-		int i;
 
-		name_tb = textbox_new(vb, _("Name: "));
-		types_com = combo_new(vb, 0, _("Type: "));
-		textbox_printf(types_com->tbox, "object");
-		for (i = ntypesw-1; i >= 0; i--) {
-			char label[TLIST_LABEL_MAX];
-
-			strlcpy(label, typesw[i].type, sizeof(label));
-			tlist_insert_item(types_com->list,
-			    typesw[i].icon >= 0 ? ICON(typesw[i].icon) : NULL,
-			    label, &typesw[i]);
-		}
-	
 		tbar = toolbar_new(vb, TOOLBAR_HORIZ, 1);
 
-		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
-		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
-		event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
-		    OBJEDIT_EDIT_DATA);
-
+		object_attach(vb, objs_tl);
 
 		mi = tlist_set_popup(objs_tl, "object");
 		{
@@ -420,10 +511,6 @@ objedit_window(void)
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 		}
 
-		toolbar_add_button(tbar, 0, ICON(OBJCREATE_ICON), 0, 0,
-		    create_obj, "%p, %p, %p", objs_tl, name_tb,
-		    types_com->tbox);
-
 		toolbar_add_button(tbar, 0, ICON(OBJEDIT_ICON), 0, 0,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
 		toolbar_add_button(tbar, 0, ICON(OBJGENEDIT_ICON), 0, 0,
@@ -445,25 +532,20 @@ objedit_window(void)
 		toolbar_add_button(tbar, 0, ICON(TRASH_ICON), 0, 0,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 	}
-
-	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p", objs_tl,
-	    name_tb, types_com->tbox);
-	event_new(types_com->tbox, "textbox-return", create_obj, "%p, %p, %p",
-	    objs_tl, name_tb, types_com->tbox);
-
+	
 	window_show(win);
 	return (win);
 }
 
 void
-objedit_init(void)
+objmgr_init(void)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
 }
 
 void
-objedit_destroy(void)
+objmgr_destroy(void)
 {
 	struct objent *oent, *noent;
 
