@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.2 2004/04/17 00:31:15 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2004/04/22 01:52:18 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -8,7 +8,8 @@ XCF=	map-edition.xcf \
 	object-editor.xcf \
 	objects.xcf \
 	vg.xcf \
-	vg-snap.xcf
+	vg-snap.xcf \
+	eda.xcf
 
 DEN=		icons.den
 DEN_DIR=	engine/icons
