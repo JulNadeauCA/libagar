@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.34 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.35 2002/05/13 07:43:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ view_allocrects(struct map *m, int w, int h)
 	
 	len = (w * h) * sizeof(SDL_Rect *);
 	rects = emalloc(len);
-	memset(rects, NULL, len);
+	memset(rects, (int)NULL, len);
 	
 	return (rects);
 }
