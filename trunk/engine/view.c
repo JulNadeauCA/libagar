@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.11 2002/02/16 05:32:45 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.12 2002/02/18 07:46:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -89,7 +89,10 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		    SDL_GetError());
 		return (-1);
 	}
-	SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
+
+	if (curmapedit != NULL) {
+		SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
+	}
 	return (0);
 }
 
@@ -111,56 +114,13 @@ view_create(int w, int h, int depth, int flags)
 	v->mapy = 0;
 	v->mapxoffs = 0;
 	v->mapyoffs = 0;
-	SLIST_INIT(&v->winsh);
 
 	return (v);
-}
-
-struct window *
-window_create(struct viewport *view, int x, int y, int w, int h, char *caption)
-{
-	struct window *win;
-
-	win = emalloc(sizeof(struct window));
-	win->v = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, view->depth,
-	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-	if (win->v == NULL) {
-		fatal("CreateRGBSurface: %s\n", SDL_GetError());
-		free(win);
-		return (NULL);
-	}
-
-	win->caption = strdup(caption);
-	win->width = w;
-	win->height = h;
-	win->view = view;
-	win->x = x;
-	win->y = y;
-	SLIST_INSERT_HEAD(&view->winsh, win, wins);
-	/* XXX lock? */
-
-	return (win);
-}
-
-void
-window_destroy(void *p)
-{
-	struct window *win = (struct window *)p;
-
-	free(win->caption);
-	SDL_FreeSurface(win->v);
-	SLIST_REMOVE(&win->view->winsh, win, window, wins);
-	free(win);
 }
 
 void
 view_destroy(struct viewport *v)
 {
-	struct window *win;
-
-	SLIST_FOREACH(win, &v->winsh, wins) {
-		window_destroy(win);
-	}
 	free(v);
 }
 
