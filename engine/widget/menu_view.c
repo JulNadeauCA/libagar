@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.4 2004/10/11 01:54:19 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.5 2004/10/13 14:41:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -49,7 +49,10 @@ static struct widget_ops ag_menu_view_ops = {
 
 enum {
 	UNZEL_COLOR,
-	SEL_COLOR
+	SEL_COLOR,
+	SEL_OPTION_COLOR,
+	SEPARATOR1_COLOR,
+	SEPARATOR2_COLOR
 };
 
 static void
@@ -102,7 +105,7 @@ mousemotion(int argc, union evarg *argv)
 	struct AGMenu *m = mview->pmenu;
 	int mx = argv[1].i;
 	int my = argv[2].i;
-	int y = 0, i;
+	int y = mview->vpadding, i;
 
 	if (my < 0)
 		return;
@@ -130,6 +133,103 @@ selnone:
 		select_subitem(pitem, NULL);
 }
 
+static int
+get_option(struct AGMenuItem *mi)
+{
+	int val = 0;
+
+	switch (mi->bind_type) {
+	case MENU_INT_BOOL:
+		val = *(int *)mi->bind_p;
+		break;
+	case MENU_INT8_BOOL:
+		val = *(Uint8 *)mi->bind_p;
+		break;
+	case MENU_INT_FLAGS:
+		val = *(int *)mi->bind_p & mi->bind_flags;
+		break;
+	case MENU_INT8_FLAGS:
+		val = *(Uint8 *)mi->bind_p & mi->bind_flags;
+		break;
+	case MENU_INT16_FLAGS:
+		val = *(Uint16 *)mi->bind_p & mi->bind_flags;
+		break;
+	case MENU_INT32_FLAGS:
+		val = *(Uint32 *)mi->bind_p & mi->bind_flags;
+		break;
+	default:
+		break;
+	}
+	return (mi->bind_invert ? !val : val);
+}
+
+static void
+toggle_option(struct AGMenuItem *mi)
+{
+	switch (mi->bind_type) {
+	case MENU_NO_BINDING:
+		break;
+	case MENU_INT_BOOL:
+		{
+			int *boolp = (int *)mi->bind_p;
+
+			*boolp = !(*boolp);
+		}
+		break;
+	case MENU_INT8_BOOL:
+		{
+			Uint8 *boolp = (Uint8 *) mi->bind_p;
+
+			*boolp = !(*boolp);
+		}
+		break;
+	case MENU_INT_FLAGS:
+		{
+			int *flags = (int *)mi->bind_p;
+
+			if (*flags & mi->bind_flags) {
+				*flags &= ~(mi->bind_flags);
+			} else {
+				*flags |= mi->bind_flags;
+			}
+		}
+		break;
+	case MENU_INT8_FLAGS:
+		{
+			Uint8 *flags = (Uint8 *)mi->bind_p;
+
+			if (*flags & mi->bind_flags) {
+				*flags &= ~(mi->bind_flags);
+			} else {
+				*flags |= mi->bind_flags;
+			}
+		}
+		break;
+	case MENU_INT16_FLAGS:
+		{
+			Uint16 *flags = (Uint16 *)mi->bind_p;
+
+			if (*flags & mi->bind_flags) {
+				*flags &= ~(mi->bind_flags);
+			} else {
+				*flags |= mi->bind_flags;
+			}
+		}
+		break;
+	case MENU_INT32_FLAGS:
+		{
+			Uint32 *flags = (Uint32 *)mi->bind_p;
+
+			if (*flags & mi->bind_flags) {
+				*flags &= ~(mi->bind_flags);
+			} else {
+				*flags |= mi->bind_flags;
+			}
+		}
+		break;
+	}
+}
+
 static void
 mousebuttonup(int argc, union evarg *argv)
 {
@@ -138,20 +238,28 @@ mousebuttonup(int argc, union evarg *argv)
 	struct AGMenu *m = mview->pmenu;
 	int mx = argv[2].i;
 	int my = argv[3].i;
-	int y = 0;
+	int y = mview->vpadding;
 	int i;
 
 	if (my < 0 || mx < 0) {
 		goto collapse;
 	}
 	for (i = 0; i < pitem->nsubitems; i++) {
-		struct AGMenuItem *subitem = &pitem->subitems[i];
-		SDL_Surface *label = WIDGET_SURFACE(m, subitem->label);
+		struct AGMenuItem *mi = &pitem->subitems[i];
 
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDGET(mview)->w) {
-			if (subitem->event != NULL) {
-				event_post(NULL, m, subitem->event->name, NULL);
+			if (mi->onclick != NULL) {
+				event_post(NULL, m, mi->onclick->name, NULL);
+			}
+			if (mi->bind_type != MENU_NO_BINDING) {
+				if (mi->bind_lock != NULL)
+					pthread_mutex_lock(mi->bind_lock);
+
+				toggle_option(mi);
+
+				if (mi->bind_lock != NULL)
+					pthread_mutex_unlock(mi->bind_lock);
 			}
 			goto collapse;
 		}
@@ -180,13 +288,16 @@ ag_menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	mview->panel = panel;
 	mview->pmenu = pmenu;
 	mview->pitem = pitem;
-	mview->hspace = 4;
-	mview->vspace = 2;
+	mview->hspace = 5;
+	mview->vpadding = 4;
 	
 	widget_map_surface(mview, view_copy_surface(SPRITE(mview,3)));
 	
 	widget_inherit_color(mview, UNZEL_COLOR, "unzelected", pmenu);
 	widget_inherit_color(mview, SEL_COLOR, "selected", pmenu);
+	widget_inherit_color(mview, SEL_OPTION_COLOR, "sel-option", pmenu);
+	widget_inherit_color(mview, SEPARATOR1_COLOR, "separator1", pmenu);
+	widget_inherit_color(mview, SEPARATOR2_COLOR, "separator2", pmenu);
 
 	event_new(mview, "window-mousemotion", mousemotion, NULL);
 	event_new(mview, "window-mousebuttonup", mousebuttonup, NULL);
@@ -194,41 +305,68 @@ ag_menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	timeout_set(&mview->submenu_to, submenu_timeout, NULL, 0);
 }
 
+#define MIDDLE_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 - 1)
+
 void
 ag_menu_view_draw(void *p)
 {
 	struct AGMenuView *mview = p;
 	struct AGMenuItem *pitem = mview->pitem;
 	struct AGMenu *m = mview->pmenu;
-	int i, y = 0;
+	int i, y = mview->vpadding;
 	
 	primitives.box(mview, 0, 0, WIDGET(mview)->w, WIDGET(mview)->h, 1,
 	    UNZEL_COLOR);
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		struct AGMenuItem *subitem = &pitem->subitems[i];
-		SDL_Surface *label = WIDGET_SURFACE(m,subitem->label);
 		int x = mview->hspace;
 		
 		if (subitem == pitem->sel_subitem) {
 			primitives.rect_filled(mview,
 			    1, 1+y,
 			    WIDGET(mview)->w - 2,
-			    label->h + m->vspace/2 - 2,
+			    m->itemh,
 			    SEL_COLOR);
 		}
 
 		if (subitem->icon != -1) {
-			SDL_Surface *icon = WIDGET_SURFACE(m,subitem->icon);
+			SDL_Surface *iconsu= WIDGET_SURFACE(m,subitem->icon);
+			int dy = MIDDLE_ALIGNED(m, iconsu->h);
 
-			widget_blit_from(mview, m, subitem->icon, x,
-			    y + m->itemh/2 - icon->h/2 - 1);
-			x += icon->w + mview->hspace;
+			if (get_option(subitem)) {
+				primitives.frame(mview, x-1, y+dy-1,
+				    iconsu->w+3, iconsu->h+3,
+				    SEL_OPTION_COLOR);
+			}
+			widget_blit_from(mview, m, subitem->icon, x, y+dy);
 		}
+		
+		x = m->itemh + mview->hspace*2;
 
-		widget_blit_from(mview, m, subitem->label,
-		    x, y + mview->vspace);
-		x += label->w + mview->hspace*2;
+		if (subitem->label != -1) {
+			SDL_Surface *lbl = WIDGET_SURFACE(m,subitem->label);
+
+			widget_blit_from(mview, m, subitem->label, x,
+			    y+MIDDLE_ALIGNED(m, lbl->h));
+			x += lbl->w + mview->hspace*2;
+		} else {
+			int dy = m->itemh/2 - 1;
+			int dx = WIDGET(mview)->w - mview->hspace - 1;
+
+			primitives.line(mview,
+			    mview->hspace,
+			    y+dy,
+			    dx,
+			    y+dy,
+			    SEPARATOR1_COLOR);
+			primitives.line(mview,
+			    mview->hspace,
+			    y+dy+1,
+			    dx,
+			    y+dy+1,
+			    SEPARATOR2_COLOR);
+		}
 
 		if (subitem->nsubitems > 0) {
 			widget_blit_surface(mview, 0,
@@ -249,16 +387,18 @@ ag_menu_view_scale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		WIDGET(mview)->w = 0;
-		WIDGET(mview)->h = 0;
+		WIDGET(mview)->h = mview->vpadding*2;
 		
 		for (i = 0; i < pitem->nsubitems; i++) {
 			struct AGMenuItem *subitem = &pitem->subitems[i];
-			SDL_Surface *label = WIDGET_SURFACE(m,subitem->label);
-			int req_w = mview->hspace*2 + label->w;
-			
+			int req_w = mview->hspace*3 + m->itemh;
+
 			if (subitem->icon != -1) {
 				req_w += WIDGET_SURFACE(m,subitem->icon)->w +
 				    mview->hspace;
+			}
+			if (subitem->label != -1) {
+				req_w += WIDGET_SURFACE(m,subitem->label)->w;
 			}
 			if (subitem->nsubitems > 0) {
 				req_w += WIDGET_SURFACE(mview,0)->w +
