@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.16 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.17 2005/03/06 10:40:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -176,10 +176,14 @@ struct tileview {
 			struct AGMenuItem *menu_item;
 			struct window *menu_win;
 		} pixmap;
+		struct {
+			struct tileview_ctrl *ctrl;
+		} tile;
 	} sargs;
 #define tv_feature sargs.feature
 #define tv_sketch  sargs.sketch
 #define tv_pixmap  sargs.pixmap
+#define tv_tile	   sargs.tile
 
 	struct {
 		Uint8 r, g, b, a;		/* Current color */
