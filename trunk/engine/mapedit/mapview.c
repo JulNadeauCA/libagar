@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.2 2002/06/23 02:38:21 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.3 2002/07/06 23:55:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -273,7 +273,6 @@ mapview_event(int argc, union evarg *argv)
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    SDL_GetMouseState(NULL, NULL) &
 			    SDL_BUTTON_LMASK) {
-				pthread_mutex_lock(&med->lock);
 				if (TOOL_OPS(med->curtool)->tool_effect
 				    != NULL) {
 				    	edcursor_set(mv->cursor, 0);
@@ -282,7 +281,6 @@ mapview_event(int argc, union evarg *argv)
 					    mv->mx+x, mv->my+y);
 				    	edcursor_set(mv->cursor, 1);
 				}
-				pthread_mutex_unlock(&med->lock);
 			}
 		}
 	
@@ -297,7 +295,6 @@ mapview_event(int argc, union evarg *argv)
 		if (button > 1) {
 			mv->mouse.move++;
 		} else {
-			pthread_mutex_lock(&med->lock);
 			if (med->curtool != NULL &&
 			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
 				edcursor_set(mv->cursor, 0);
@@ -305,7 +302,6 @@ mapview_event(int argc, union evarg *argv)
 				    med->curtool, m, mv->mx + x, mv->my + y);
 				edcursor_set(mv->cursor, 1);
 			}
-			pthread_mutex_unlock(&med->lock);
 		}
 		break;
 	case WINDOW_MOUSEBUTTONUP:

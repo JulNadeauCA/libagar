@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.106 2002/06/25 17:28:47 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.107 2002/07/06 23:53:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -91,7 +91,6 @@ mapedit_init(struct mapedit *med, char *name)
 	med->curobj = NULL;
 	med->curoffs = 0;
 	med->curflags = 0;
-	pthread_mutex_init(&med->lock, NULL);
 
 	/* XXX messy */
 	mapedit_init_toolbar(med);
@@ -134,7 +133,6 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		eob->nrefs = 0;
 		eob->nsprites = ob->art->nsprites;
 		eob->nanims = ob->art->nanims;
-		pthread_mutex_init(&eob->lock, NULL);
 
 		dprintf("%s: %d sprites, %d anims\n", ob->name,
 		    eob->nsprites, eob->nanims);
@@ -146,7 +144,6 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		}
 
 		/* Create shadow references for sprites. */
-		pthread_mutex_lock(&eob->lock);
 		if (eob->nsprites > 0) {
 			int y;
 
@@ -179,7 +176,6 @@ mapedit_shadow(struct mapedit *med, void *parent)
 				eob->nrefs++;
 			}
 		}
-		pthread_mutex_unlock(&eob->lock);
 
 		/* Insert into the list of shadow objects. */
 		TAILQ_INSERT_HEAD(&med->eobjsh, eob, eobjs);
@@ -192,8 +188,6 @@ mapedit_attached(int argc, union evarg *argv)
 {
 	struct mapedit *med = argv[0].p;
 
-	pthread_mutex_lock(&med->lock);
-
 	/* Create the shadow object structures. */
 	mapedit_shadow(med, world);
 
@@ -203,8 +197,6 @@ mapedit_attached(int argc, union evarg *argv)
 	window_show(med->tileq_win);
 
 	dprintf("editing %d object(s)\n", med->neobjs);
-
-	pthread_mutex_unlock(&med->lock);
 	
 	curmapedit = med;	/* XXX obsolete */
 }
@@ -215,8 +207,6 @@ mapedit_detached(int argc, union evarg *argv)
 	struct mapedit *med = argv[0].p;
 	struct editobj *eob, *nexteob;
 
-	pthread_mutex_lock(&med->lock);
-
 	/* Deallocate the shadow structures. */
 	for (eob = TAILQ_FIRST(&med->eobjsh);
 	     eob != TAILQ_END(&med->eobjsh);
@@ -224,18 +214,14 @@ mapedit_detached(int argc, union evarg *argv)
 		struct editref *eref, *nexteref;
 
 		nexteob = TAILQ_NEXT(eob, eobjs);
-		pthread_mutex_lock(&eob->lock);
 		for (eref = SIMPLEQ_FIRST(&eob->erefsh);
 		     eref != SIMPLEQ_END(&eob->erefsh);
 		     eref = nexteref) {
 			nexteref = SIMPLEQ_NEXT(eref, erefs);
 			free(eref);
 		}
-		pthread_mutex_unlock(&eob->lock);
-		pthread_mutex_destroy(&eob->lock);
 		free(eob);
 	}
-	pthread_mutex_unlock(&med->lock);
 	
 	curmapedit = NULL;	/* XXX unsafe */
 }

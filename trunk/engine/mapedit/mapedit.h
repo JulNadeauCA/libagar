@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.41 2002/06/25 17:28:59 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.42 2002/07/06 23:54:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -23,7 +23,6 @@ struct editobj {
 	int	nanims;
 
 	TAILQ_ENTRY(editobj) eobjs;	/* Editable object list */
-	pthread_mutex_t	lock;		/* Lock on object list */
 };
 
 TAILQ_HEAD(eobjs_head, editobj);
@@ -58,8 +57,6 @@ struct mapedit {
 	struct	 editobj *curobj;
 	int	 curoffs;
 	int	 curflags;
-
-	pthread_mutex_t	lock;		/* Lock on whole structure */
 };
 
 /* Editor sprites */
