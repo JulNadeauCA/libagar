@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.9 2002/04/26 11:40:48 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.10 2002/04/30 00:57:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ static struct widget_ops button_ops = {
 };
 
 struct button *
-button_new(struct window *win, char *caption, Uint32 flags, Sint16 x, Sint16 y)
+button_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 {
 	struct button *bu;
 
@@ -75,7 +75,7 @@ button_new(struct window *win, char *caption, Uint32 flags, Sint16 x, Sint16 y)
 }
 
 void
-button_init(struct button *b, char *caption, Uint32 flags, Sint16 x, Sint16 y)
+button_init(struct button *b, char *caption, int flags, Sint16 x, Sint16 y)
 {
 	widget_init(&b->wid, "button", &button_ops, x, y, 0, 0);
 
@@ -140,10 +140,10 @@ button_draw(void *p)
 }
 
 void
-button_event(void *p, SDL_Event *ev, Uint32 flags)
+button_event(void *p, SDL_Event *ev, int flags)
 {
 	struct button *b = (struct button *)p;
-	
+
 	if (ev->button.button != 1) {
 		return;
 	}

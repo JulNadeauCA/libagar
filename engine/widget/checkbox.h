@@ -1,9 +1,9 @@
-/*	$Csoft: checkbox.h,v 1.1 2002/04/28 15:04:58 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.2 2002/04/30 00:57:36 vedge Exp $	*/
 
 struct checkbox {
 	struct	 widget wid;
 
-	Uint32	 flags;
+	int	 flags;
 #define CHECKBOX_PRESSED	0x01
 
 	char	*caption;
@@ -17,11 +17,10 @@ struct checkbox {
 	void	(*push)(struct checkbox *);
 };
 
-struct checkbox	*checkbox_new(struct window *, char *, Uint32, Sint16, Sint16);
-void		 checkbox_init(struct checkbox *, char *, Uint32, Sint16,
-		     Sint16);
+struct checkbox	*checkbox_new(struct window *, char *, int, Sint16, Sint16);
+void		 checkbox_init(struct checkbox *, char *, int, Sint16, Sint16);
 void		 checkbox_destroy(void *);
 
 void	 checkbox_draw(void *);
-void	 checkbox_event(void *, SDL_Event *, Uint32);
+void	 checkbox_event(void *, SDL_Event *, int);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.2 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.3 2002/04/30 08:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,8 +58,7 @@ static struct widget_ops checkbox_ops = {
 };
 
 struct checkbox *
-checkbox_new(struct window *win, char *caption, Uint32 flags, Sint16 x,
-    Sint16 y)
+checkbox_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 {
 	struct checkbox *cb;
 
@@ -74,7 +73,7 @@ checkbox_new(struct window *win, char *caption, Uint32 flags, Sint16 x,
 }
 
 void
-checkbox_init(struct checkbox *b, char *caption, Uint32 flags, Sint16 x,
+checkbox_init(struct checkbox *b, char *caption, int flags, Sint16 x,
     Sint16 y)
 {
 	widget_init(&b->wid, "checkbox", &checkbox_ops, x, y, 0, 0);
@@ -128,7 +127,7 @@ checkbox_draw(void *p)
 }
 
 void
-checkbox_event(void *p, SDL_Event *ev, Uint32 flags)
+checkbox_event(void *p, SDL_Event *ev, int flags)
 {
 	struct checkbox *b = (struct checkbox *)p;
 	
