@@ -103,11 +103,12 @@ if [ "${mc_prefix}" != "" ]; then
 else
     PREFIX=/usr/local
 fi
-if [ -x "`which pwd`" ]; then
-S=`pwd `
-else
 S=""
-fi
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/pwd" ]; then
+		S=`${i}/pwd `
+	fi
+done
 echo >Makefile.config
 echo >engine/config.h
 if [ "${version}" = "yes" ]
@@ -135,11 +136,13 @@ echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
 echo "#endif /* SHAREDIR */" >> engine/config.h
 echo -n "checking for a usable C compiler..."
 if [ "$CC" = "" ]; then
-    if [ -x "`which cc`" ]; then
-        CC=cc
-    elif [ -x "`which gcc`" ]; then
-        CC=gcc
-    fi
+	for i in `echo $PATH |sed 's/:/ /g'`; do
+		if [ -x "${i}/cc" ]; then
+			CC="${i}/cc"
+		elif [ -x "${i}/gcc" ]; then
+			CC="${i}/gcc"
+		fi
+	done
 fi
 
 cat << 'EOT' > .cctest.c
@@ -179,36 +182,42 @@ CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
-if [ -x "`which sdl-config`" ]; then
-sdl_version=`sdl-config --version`
-else
 sdl_version=""
-fi
-if [ -x "`which sdl-config`" ]; then
-SDL_CFLAGS=`sdl-config --cflags`
-else
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/sdl-config" ]; then
+		sdl_version=`${i}/sdl-config --version`
+	fi
+done
 SDL_CFLAGS=""
-fi
-if [ -x "`which sdl-config`" ]; then
-SDL_LIBS=`sdl-config --libs`
-else
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/sdl-config" ]; then
+		SDL_CFLAGS=`${i}/sdl-config --cflags`
+	fi
+done
 SDL_LIBS=""
-fi
-if [ -x "`which sdl11-config`" ]; then
-sdl11_version=`sdl11-config --version`
-else
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/sdl-config" ]; then
+		SDL_LIBS=`${i}/sdl-config --libs`
+	fi
+done
 sdl11_version=""
-fi
-if [ -x "`which sdl11-config`" ]; then
-sdl11_cflags=`sdl11-config --cflags`
-else
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/sdl11-config" ]; then
+		sdl11_version=`${i}/sdl11-config --version`
+	fi
+done
 sdl11_cflags=""
-fi
-if [ -x "`which sdl11-config`" ]; then
-sdl11_libs=`sdl11-config --libs`
-else
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/sdl11-config" ]; then
+		sdl11_cflags=`${i}/sdl11-config --cflags`
+	fi
+done
 sdl11_libs=""
-fi
+for i in `echo $PATH |sed 's/:/ /g'`; do
+	if [ -x "${i}/sdl11-config" ]; then
+		sdl11_libs=`${i}/sdl11-config --libs`
+	fi
+done
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
