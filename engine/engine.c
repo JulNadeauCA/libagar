@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.81 2002/12/01 14:28:03 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.82 2002/12/04 03:27:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -271,8 +271,8 @@ engine_xdebug(void)
 
 	vinfo = SDL_GetVideoInfo();
 	if (!vinfo->wm_available) {
-		warning("no window manager availablen");
-		return (0);
+		warning("no window manager available\n");
+		return;
 	}
 
 	SDL_VERSION(&wm.version);
