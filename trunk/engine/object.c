@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.103 2003/01/16 04:07:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.104 2003/01/24 08:26:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -535,7 +535,7 @@ object_table_load(int fd, char *objname)
 		type = read_string(fd, NULL);
 		pob = world_find(name);
 
-		debug_n(DEBUG_DEPS, "%s: depends on %s...", objname, name);
+		debug_n(DEBUG_DEPS, "\t%s: depends on %s...", objname, name);
 		if (pob != NULL) {
 			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
 			if (strcmp(pob->type, type) != 0) {
