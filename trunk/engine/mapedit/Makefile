@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.61 2004/03/30 15:56:51 vedge Exp $
+#	$Csoft: Makefile,v 1.62 2004/03/31 00:24:09 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -15,7 +15,8 @@ MAN3=	mapview.3
 
 XCF=		toolbar.xcf \
 		cursors.xcf \
-		objedit.xcf
+		objedit.xcf \
+		vg.xcf
 
 DEN=		mapedit.den
 DEN_DIR=	engine/mapedit
