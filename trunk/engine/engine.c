@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.74 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.76 2002/11/25 02:37:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -100,42 +100,13 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	
 	printf("AGAR engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", gameinfo->name, gameinfo->version);
-	printf("%s\n", gameinfo->copyright);
-	
-	vinfo = SDL_GetVideoInfo();
-	if (vinfo != NULL) {
-#ifdef USE_X11
-		if (vinfo->wm_available) {
-			/* Try to set the window manager class name. */
-			setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
-		}
-#endif
-		printf("Hardware surfaces: %s\n", vinfo->hw_available ? "available" : "unavailable");
-		printf("Window manager: %s\n", vinfo->wm_available ? "available" : "unavailable");
-		printf("\n");
-		printf("Hardware blits are %saccelerated\n", vinfo->blit_hw ? "" : "un");
-		printf("Hardware->hardware colorkey blits are %saccelerated\n",
-		    vinfo->blit_hw_CC ? "" : "un");
-		printf("Hardware->hardware alpha blits are %saccelerated\n", vinfo->blit_hw_A ? "" : "un");
-		printf("\n");
-		printf("Software->hardware blits are %saccelerated\n",
-		    vinfo->blit_sw ? "" : "un");
-		printf("Software->hardware colorkey blits are %saccelerated\n",
-		    vinfo->blit_sw_CC ? "" : "un");
-		printf("Software->hardware colorkey blits are %saccelerated\n",
-		    vinfo->blit_sw_A ? "" : "un");
-		printf("\n");
-		printf("Color fills are %saccelerated\n", vinfo->blit_fill ? "" : "un");
-		printf("Video memory: %d Kb\n", vinfo->video_mem);
-		printf("Video device: %d bytes per pixel (%dbpp), colorkey is 0x%x, overall alpha is 0x%x",
-		    vinfo->vfmt->BytesPerPixel, vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
-		    vinfo->vfmt->alpha);
-		printf("Video mask: r=0x%x g=0x%x, b=0x%x, a=0x%x\n",
-		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask, vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
-		printf("Precision loss: r=0x%x g=0x%x, b=0x%x, a=0x%x\n",
-		    vinfo->vfmt->Rloss, vinfo->vfmt->Gloss, vinfo->vfmt->Bloss, vinfo->vfmt->Aloss);
-	}
+	printf("%s\n\n", gameinfo->copyright);
 
+#ifdef USE_X11
+	/* Try to set the window manager class name. */
+	setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
+#endif
+	
 	while ((c = getopt(argc, argv, "vfegl:n:j:w:h:")) != -1) {
 		switch (c) {
 		case 'v':
@@ -171,6 +142,50 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	    SDL_INIT_NOPARACHUTE) != 0) {
 		fatal("SDL_Init: %s\n", SDL_GetError());
 	}
+
+	/* Print video device information. */
+	vinfo = SDL_GetVideoInfo();
+	if (vinfo != NULL) {
+		char accel[4096];
+		char unaccel[4096];
+
+		printf("Video device is %dbpp (colorkey=0x%x, alpha=0x%04x)\n",
+		    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
+		    vinfo->vfmt->alpha);
+		printf("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n",
+		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
+		    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
+		printf("Window manager is %savailable.\n",
+		    vinfo->wm_available ? "" : "un");
+		printf("Hardware surfaces are %savailable.\n",
+		    vinfo->hw_available ? "" : "un");
+		
+		accel[0] = '\0';
+		unaccel[0] = '\0';
+
+		strlcat(vinfo->blit_hw ? accel : unaccel,
+		    "\tHardware blits\n", 4096);
+		strlcat(vinfo->blit_hw_CC ? accel : unaccel,
+		    "\tHardware->hardware colorkey blits\n", 4096);
+		strlcat(vinfo->blit_hw_A ? accel : unaccel,
+		    "\tHardware->hardware alpha blits\n", 4096);
+		
+		strlcat(vinfo->blit_sw ? accel : unaccel,
+		    "\tSoftware->hardware blits\n", 4096);
+		strlcat(vinfo->blit_sw_CC ? accel : unaccel,
+		    "\tSoftware->hardware colorkey blits\n", 4096);
+		strlcat(vinfo->blit_sw_A ? accel : unaccel,
+		    "\tSoftware->hardware alpha blits\n", 4096);
+		strlcat(vinfo->blit_fill ? accel : unaccel,
+		    "\tColor fills\n", 4096);
+
+		if (accel[0] != '\0')
+			printf("Accelerated operations:\n%s", accel);
+		if (unaccel[0] != '\0')
+			printf("Unaccelerated operations:\n%s", unaccel);
+
+	}
+	printf("\n");
 	
 	/* Initialize/load engine settings. */
 	config = config_new();
