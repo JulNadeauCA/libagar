@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.20 2003/03/05 17:01:12 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.2 2003/06/21 07:26:19 vedge Exp $
 
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,27 +27,30 @@
 XGETTEXT?=	xgettext
 MSGMERGE?=	msgmerge
 MSGFMT?=	msgfmt
-PROJECT?=	untitled
+DOMAIN?=	untitled
 POTFILES?=	POTFILES
 SRC?=		..
+POS?=
+MOS?=
 
 .SUFFIXES: .c .po .pox .mo
 
-all: ${PROJECT}.pot
+all: ${DOMAIN}.pot ${MOS}
 
 .po.pox:
-	${MAKE} ${PROJECT}.pot
-	${MSGMERGE} $< ${PROJECT}.pot -o $*.pox
+	${MAKE} ${DOMAIN}.pot
+	${MSGMERGE} $< ${DOMAIN}.pot -o $*.pox
 
 .po.mo:
 	${MSGFMT} -o $@ $<
 
 ${POTFILES}:
-	(cwd=`pwd`; cd ${SRC} && find . -name \*.c > $$cwd/POTFILES)
+	(cwd=`pwd`; cd ${SRC} && find . -name \*.c > $$cwd/${POTFILES})
 
-${PROJECT}.pot: ${POTFILES}
-	${XGETTEXT} --default-domain=${PROJECT} --directory=${SRC} \
-	    --add-comments --keyword=_ --keyword=N_ --files-from=POTFILES -o $@
+${DOMAIN}.pot: ${POTFILES}
+	${XGETTEXT} --default-domain=${DOMAIN} --directory=${SRC} \
+	    --add-comments --keyword=_ --keyword=N_ \
+	    --files-from=${POTFILES} -o $@
 
 depend:
 	# nothing
@@ -56,16 +59,31 @@ regress:
 	# nothing
 
 clean:
-	# nothing
+	rm -f ${POTFILES}
 
 cleandir:
 	# nothing
 
-install:
-	# nothing
+install: ${MOS}
+	@export _mos="${MOS}"; \
+        if [ "$$_mos" != "" ]; then \
+            if [ ! -d "${LOCALEDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
+                ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
+            fi; \
+            for F in $$_mos; do \
+                echo "${INSTALL_DATA} $$F ${LOCALEDIR}"; \
+                ${INSTALL_DATA} $$F ${LOCALEDIR}; \
+            done; \
+	fi
 
 deinstall:
-	# nothing
+	@if [ "${MOS}" != "" ]; then \
+	    for F in ${MOS}; do \
+	        echo "${DEINSTALL_DATA} ${LOCALEDIR}/$$F"; \
+	        ${DEINSTALL_DATA} ${LOCALEDIR}/$$F; \
+	    done; \
+	fi
 
 .PHONY: ${POTFILES}
 

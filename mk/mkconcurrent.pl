@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Csoft$
+# $Csoft: mkconcurrent.pl,v 1.13 2003/06/21 07:30:03 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -43,10 +43,11 @@ sub ConvertMakefile
 {
 	my ($dir, $ndir, $ent) = @_;
 
-	open(SRCMAKEFILE, "$dir/$ent") or
+	open(SRCMAKEFILE, "$dir/$ent") ||
 	    die "src: $dir/$ent: $!";
-	open(DSTMAKEFILE, ">$BUILD/$ndir/$ent") or
+	open(DSTMAKEFILE, ">$BUILD/$ndir/$ent") ||
 	    die "dest: $BUILD/$ndir/$ent: $!";
+
 	my @lines = ();
 	my $line = '';
 	foreach $_ (<SRCMAKEFILE>) {
@@ -74,10 +75,13 @@ sub ConvertMakefile
 		my @srcs = ();
 		my @objs = ();
 
-		if (/^\s*(OBJS|CATMAN\d|PSMAN\d)\s*=\s*(.+)$/) {
+		if (/^\s*(OBJS|CATMAN\d|PSMAN\d|MOS)\s*=\s*(.+)$/) {
 			my $type = $1;
+
 			foreach my $obj (split(/\s/, $2)) {
-				next unless $obj;
+				unless ($obj) {
+					next;
+				}
 				my $objsrc = $obj;
 
 				if ($type eq 'OBJS') {
@@ -89,6 +93,9 @@ sub ConvertMakefile
 				} elsif ($type =~ /PSMAN\d/) {
 					# Nroff->postscript
 					$objsrc =~ s/\.ps(\d)$/.\1/;
+				} elsif ($type =~ /MOS/) {
+					# Po->mo
+					$objsrc =~ s/\.mo$/\.po/g;
 				}
 				push @deps, "$obj: $SRC/$ndir/$objsrc";
 				if ($type eq 'OBJS') {
@@ -109,10 +116,16 @@ EOF
 	@echo "${NROFF} -Tps -mandoc $< > $@"
 	@${NROFF} -Tps -mandoc $< > $@ || exit 0
 EOF
+				} elsif ($type =~ /MOS/) {
+					# Po->mo
+					push @deps, << 'EOF';
+	@echo "${MSGFMT} -o $@ $<"
+	@${MSGFMT} -o $@ $<
+EOF
 				}
 			}
 		}
-		if (/^\s*(SRCS|MAN\d|XCF|TTF|MAP)\s*=\s*(.+)$/) {
+		if (/^\s*(SRCS|MAN\d|XCF|TTF|POS)\s*=\s*(.+)$/) {
 			my $type = $1;
 			my $srcs = $2;
 			foreach my $src (split(/\s/, $srcs)) {
@@ -148,25 +161,25 @@ sub Scan
 {
 	my $dir = shift;
 
-	opendir(DIR, $dir) or die "$dir: $!";
+	opendir(DIR, $dir) || die "$dir: $!";
 	ENTRY: foreach my $ent (readdir(DIR)) {
-		if ($ent eq '.' or $ent eq '..' or $ent eq 'CVS') {
+		if ($ent eq '.' || $ent eq '..' || $ent eq 'CVS') {
 			next ENTRY;
 		}
 
 		my $ndir = $dir;
 		$ndir =~ s/^\.\///;
 
-		if (-d "$dir/$ent" and ! -e "$dir/$ent/$COOKIE") {
+		if (-d "$dir/$ent" && ! -e "$dir/$ent/$COOKIE") {
 			mkdir("$BUILD/$ndir/$ent", 0755);
 			Scan("$dir/$ent");
 		} else {
 			if ($ent eq 'Makefile') {
 				ConvertMakefile($dir, $ndir, $ent);
-			} elsif ($ent =~ /\.(mk|inc)$/ or $ent eq 'mkdep') {
-				open(OLDMK, "$dir/$ent") or
+			} elsif ($ent =~ /\.(mk|inc)$/ || $ent eq 'mkdep') {
+				open(OLDMK, "$dir/$ent") ||
 				    die "$dir/$ent: $!";
-				open(NEWMK, ">$BUILD/$ndir/$ent") or
+				open(NEWMK, ">$BUILD/$ndir/$ent") ||
 				    die "$BUILD/$ndir/$ent: $!";
 				print NEWMK <OLDMK>;
 				close(NEWMK);
@@ -194,9 +207,9 @@ if (-e 'configure.in') {
 }
 
 $BUILD = getcwd();
-chdir($SRC) or die "$SRC: $!";
+chdir($SRC) || die "$SRC: $!";
 
-open(COOKIE, ">$BUILD/$COOKIE") or die "$BUILD/COOKIE: $!";
+open(COOKIE, ">$BUILD/$COOKIE") || die "$BUILD/COOKIE: $!";
 Scan('.');
 close(COOKIE);
 
