@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.5 2002/02/16 04:55:21 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.6 2002/02/18 07:48:47 vedge Exp $	*/
 
 struct viewport {
 	enum {
@@ -13,17 +13,8 @@ struct viewport {
 	int	mapw, maph;		/* Map coordinates */
 	int	mapx, mapy;		/* Map coordinates */
 	int	mapxoffs, mapyoffs;	/* Map display offset */
-	SLIST_HEAD(, window) winsh;	/* Viewport sub-surfaces */
-	SDL_Surface *v;
-};
 
-struct window {
-	char	*caption;
-	int	 width, height;
-	int	 x, y;
-	struct	 viewport *view;	/* Back pointer to viewport */
-	SDL_Surface *v;
-	SLIST_ENTRY(window) wins;
+	SDL_Surface	*v;		/* Surface */
 };
 
 extern struct viewport *mainview;	/* view.c */
@@ -33,9 +24,6 @@ int		 view_setmode(struct viewport *, struct map *, int, char *);
 void		 view_destroy(struct viewport *);
 int		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
-struct window	*window_create(struct viewport *, int, int, int, int, char *);
-void		 window_destroy(void *);
-void		 window_draw(struct window *);
 
 void		 scroll(struct map *, int);
 
