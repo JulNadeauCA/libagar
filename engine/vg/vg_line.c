@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.11 2004/05/25 07:25:23 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.12 2004/05/29 05:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -242,8 +242,13 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			                      "[close/undo vertex]."), seq+1);
 		} else {
 			if (cur_vtx != NULL) {
-				vg_pop_vertex(vg);
-				cur_line->redraw++;
+				if (cur_line->nvtx <= 2) {
+					vg_destroy_element(vg, cur_line);
+					cur_line = NULL;
+				} else {
+					vg_pop_vertex(vg);
+					cur_line->redraw++;
+				}
 				vg->redraw++;
 			}
 			goto finish;
