@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.16 2004/03/26 04:57:43 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.17 2004/03/30 00:22:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -260,13 +260,22 @@ fspinbutton_draw(void *p)
 {
 	struct fspinbutton *fsu = p;
 	struct widget_binding *valueb;
-	double *value;
+	void *value;
 
 	if (WIDGET(fsu->input)->flags & WIDGET_FOCUSED)
 		return;
 
 	valueb = widget_get_binding(fsu, "value", &value);
-	textbox_printf(fsu->input, fsu->format, *value/fsu->unit->divider);
+	switch (valueb->vtype) {
+	case WIDGET_DOUBLE:
+		textbox_printf(fsu->input, fsu->format,
+		    *(double *)value/fsu->unit->divider);
+		break;
+	case WIDGET_FLOAT:
+		textbox_printf(fsu->input, fsu->format,
+		    *(float *)value/fsu->unit->divider);
+		break;
+	}
 	widget_binding_unlock(valueb);
 }
 
