@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.233 2004/11/19 09:43:56 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.234 2004/11/21 11:15:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -41,6 +41,9 @@
 #include <engine/widget/toolbar.h>
 #include <engine/widget/statusbar.h>
 #include <engine/widget/button.h>
+#include <engine/widget/menu.h>
+#include <engine/widget/spinbutton.h>
+#include <engine/widget/mspinbutton.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -175,7 +178,7 @@ noderef_destroy(struct map *m, struct noderef *r)
 
 /* Allocate and initialize the node arrays. */
 int
-map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
+map_alloc_nodes(struct map *m, u_int w, u_int h)
 {
 	int x, y;
 	
@@ -232,7 +235,7 @@ map_free_layers(struct map *m)
 
 /* Resize a map, initializing new nodes and destroying excess ones. */
 int
-map_resize(struct map *m, unsigned int w, unsigned int h)
+map_resize(struct map *m, u_int w, u_int h)
 {
 	struct map tm;
 	int x, y;
@@ -292,7 +295,7 @@ fail:
 
 /* Set the zoom factor. */
 void
-map_set_zoom(struct map *m, Uint16 zoom)
+map_set_zoom(struct map *m, u_int zoom)
 {
 	pthread_mutex_lock(&m->lock);
 	m->zoom = zoom;
@@ -883,14 +886,14 @@ map_load(void *ob, struct netbuf *buf)
 		error_set(_("Invalid map geometry."));
 		goto fail;
 	}
-	m->mapw = (unsigned int)w;
-	m->maph = (unsigned int)h;
-	m->tilesz = (unsigned int)tilesz;
+	m->mapw = (u_int)w;
+	m->maph = (u_int)h;
+	m->tilesz = (u_int)tilesz;
 	m->origin.x = (int)origin_x;
 	m->origin.y = (int)origin_y;
-	m->zoom = read_uint16(buf);
-	m->ssx = read_sint16(buf);
-	m->ssy = read_sint16(buf);
+	m->zoom = (u_int)read_uint16(buf);
+	m->ssx = (int)read_sint16(buf);
+	m->ssy = (int)read_sint16(buf);
 	
 	/* Read the layer information. */
 	if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
@@ -1032,9 +1035,9 @@ map_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)m->origin.y);
 	write_uint32(buf, (Uint32)m->tilesz);
 	write_uint32(buf, (Uint32)m->tilesz);
-	write_uint16(buf, m->zoom);
-	write_sint16(buf, m->ssx);
-	write_sint16(buf, m->ssy);
+	write_uint16(buf, (Uint16)m->zoom);
+	write_sint16(buf, (Sint16)m->ssx);
+	write_sint16(buf, (Sint16)m->ssy);
 
 	/* Write the layer information. */
 	write_uint32(buf, m->nlayers);
@@ -1377,19 +1380,171 @@ create_view(int argc, union evarg *argv)
 	window_show(win);
 }
 
+static void
+revert_map(int argc, union evarg *argv)
+{
+	struct map *m = argv[1].p;
+
+	if (object_load(m) == 0) {
+		text_tmsg(MSG_INFO, 1000,
+		    _("Map `%s' reverted successfully."),
+		    OBJECT(m)->name);
+	} else {
+		text_msg(MSG_ERROR, "%s: %s", OBJECT(m)->name,
+		    error_get());
+	}
+}
+
+static void
+save_map(int argc, union evarg *argv)
+{
+	struct map *m = argv[1].p;
+
+	if (object_save(m) == 0) {
+		text_tmsg(MSG_INFO, 1250, _("Map `%s' saved successfully."),
+		    OBJECT(m)->name);
+	} else {
+		text_msg(MSG_ERROR, "%s: %s", OBJECT(m)->name,
+		    error_get());
+	}
+}
+
+static void
+close_map(int argc, union evarg *argv)
+{
+	struct map *m = argv[1].p;
+	struct window *win = argv[2].p;
+
+	event_post(NULL, win, "window-close", NULL);
+}
+
+static void
+switch_tool(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct tool *ntool = argv[2].p;
+
+	mapview_select_tool(mv, ntool, mv->map);
+	widget_focus(mv);
+}
+
+static void
+resize_map(int argc, union evarg *argv)
+{
+	struct mspinbutton *msb = argv[0].p;
+	struct map *m = argv[1].p;
+
+	map_resize(m, msb->xvalue, msb->yvalue);
+}
+
+static void
+edit_properties(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct map *m = mv->map;
+	struct window *pwin = argv[2].p;
+	struct window *win;
+	struct mspinbutton *msb;
+	struct spinbutton *sb;
+	struct box *bo;
+
+	win = window_new(WINDOW_NO_RESIZE, NULL);
+	window_set_caption(win, _("Properties of \"%s\""), OBJECT(m)->name);
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+
+	bo = box_new(win, BOX_VERT, 0);
+	{
+		msb = mspinbutton_new(bo, "x", _("Map size: "));
+		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
+		msb->xvalue = m->mapw;
+		msb->yvalue = m->maph;
+		event_new(msb, "mspinbutton-changed", resize_map, "%p", m);
+	
+		msb = mspinbutton_new(bo, "x", _("Node offset: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mx);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->my);
+		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
+	
+		msb = mspinbutton_new(bo, "x", _("Scrolling offset: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, mv->ssx);
+		widget_bind(msb, "yvalue", WIDGET_INT, mv->ssy);
+		mspinbutton_set_range(msb, 1, MAP_MAX_TILESZ);
+	
+		msb = mspinbutton_new(bo, "x", _("Display area: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->mw);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->mh);
+		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
+		
+		label_new(bo, LABEL_POLLED,
+		    _("Fit width=%[ibool] height=%[ibool]"),
+		    &mv->wfit, &mv->hfit);
+		
+		label_new(bo, LABEL_POLLED,
+		    _("Modulo width=%i height=%i"),
+		    &mv->wmod, &mv->hmod);
+	}
+
+	bo = box_new(win, BOX_VERT, 0);
+	{
+		label_new(bo, LABEL_POLLED_MT,
+		    _("Zoom factor: %i%% (map=%i%%)"), &m->lock,
+		    mv->zoom, &m->zoom);
+		label_new(bo, LABEL_POLLED_MT,
+		    _("Tile size : %ux%u (map=%ux%u)"), &m->lock,
+		    mv->tilesz, mv->tilesz, &m->tilesz, &m->tilesz);
+		label_new(bo, LABEL_POLLED_MT, _("Edited layer: %i"), &m->lock,
+		    &m->cur_layer);
+	}
+
+	bo = box_new(win, BOX_VERT, 0);
+	{
+		label_new(win, LABEL_POLLED, _("Cursor position: %ix%i"),
+		    &mv->cx, &mv->cy);
+		label_new(win, LABEL_POLLED, _("Cursor delta: %ix%i"),
+		    &mv->cxrel, &mv->cyrel);
+		label_new(win, LABEL_POLLED, _("Mouse scrolling: %[ibool]"),
+		    &mv->mouse.scrolling);
+		label_new(win, LABEL_POLLED, _("Mouse centering: %[ibool]"),
+		    &mv->mouse.centering);
+		label_new(win, LABEL_POLLED,
+		    _("Mouse selection: %[ibool] (%i+%i,%i+%i)"), &mv->msel.set,
+		    &mv->msel.x, &mv->msel.xoffs, &mv->msel.y, &mv->msel.yoffs);
+		label_new(win, LABEL_POLLED,
+		    _("Effective selection: %[ibool] (%ix%i at %i,%i)"),
+		    &mv->esel.set,
+		    &mv->esel.w, &mv->esel.h, &mv->esel.x, &mv->esel.y);
+	}
+
+	bo = box_new(win, BOX_VERT, 0);
+	{
+		msb = mspinbutton_new(win, "x", _("Origin position: "));
+		widget_bind(msb, "xvalue", WIDGET_INT, &m->origin.x);
+		widget_bind(msb, "yvalue", WIDGET_INT, &m->origin.y);
+		mspinbutton_set_range(msb, 0, MAP_MAX_WIDTH);
+
+		sb = spinbutton_new(win, _("Origin layer: "));
+		widget_bind(sb, "value", WIDGET_INT, &m->origin.layer);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
+}
+
 struct window *
 map_edit(void *p)
 {
 	extern const struct tool mediasel_tool, layedit_tool;
 	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
-	    resize_tool, propedit_tool, select_tool,
-	    shift_tool, merge_tool, fill_tool, flip_tool, invert_tool;
+	    resize_tool, propedit_tool, select_tool, shift_tool, merge_tool,
+	    fill_tool, flip_tool, invert_tool;
 	struct map *m = p;
 	struct window *win;
 	struct toolbar *toolbar;
 	struct statusbar *statbar;
 	struct combo *laysel;
 	struct mapview *mv;
+	struct AGMenu *menu;
+	struct AGMenuItem *pitem;
 	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
@@ -1397,36 +1552,138 @@ map_edit(void *p)
 	
 	win = window_new(0, NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
-	
+
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 
-	toolbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
-	toolbar_add_button(toolbar, 0, ICON(NEW_VIEW_ICON), 0, 0,
-	    create_view, "%p, %p", mv, win);
+	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
+	toolbar_init(toolbar, TOOLBAR_HORIZ, 1);
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
-	statusbar_add_label(statbar, LABEL_STATIC, ".");
 
 	mapview_init(mv, m, flags, toolbar, statbar);
-	mapview_prescale(mv, 15, 9);
-	mapview_reg_stdtools(mv);
-	mapview_reg_tool(mv, &mediasel_tool, m);
-	mapview_reg_tool(mv, &layedit_tool, m);
-	mapview_reg_tool(mv, &stamp_tool, m);
-	mapview_reg_tool(mv, &eraser_tool, m);
-	mapview_reg_tool(mv, &magnifier_tool, m);
-	mapview_reg_tool(mv, &resize_tool, m);
-#if 0
-	mapview_reg_tool(mv, &position_tool, m);
-#endif
-	mapview_reg_tool(mv, &propedit_tool, m);
-	mapview_reg_tool(mv, &select_tool, m);
-	mapview_reg_tool(mv, &shift_tool, m);
-	mapview_reg_tool(mv, &merge_tool, m);
-	mapview_reg_tool(mv, &fill_tool, m);
-	mapview_reg_tool(mv, &flip_tool, m);
-	mapview_reg_tool(mv, &invert_tool, m);
+	mapview_prescale(mv, 12, 8);
+
+	menu = ag_menu_new(win);
+	pitem = ag_menu_add_item(menu, _("Map"));
+	{
+		ag_menu_action(pitem, _("Save"), ICON(OBJSAVE_ICON),
+		    SDLK_s, KMOD_CTRL, save_map, "%p", m);
+		ag_menu_action(pitem, _("Revert"), ICON(OBJLOAD_ICON),
+		    SDLK_r, KMOD_CTRL, revert_map, "%p", m);
+
+		ag_menu_separator(pitem);
+
+		ag_menu_action(pitem, _("Properties..."), ICON(SETTINGS_ICON),
+		    0, 0, edit_properties, "%p, %p", mv, win);
+		
+		ag_menu_action(pitem, _("Import media..."),
+		    ICON(MEDIASEL_ICON), SDLK_m, KMOD_CTRL,
+		    switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &mediasel_tool, m, 1));
+		
+		ag_menu_separator(pitem);
+
+		ag_menu_int_flags(pitem, _("Editable"), ICON(EDIT_ICON),
+		    0, 0, &OBJECT(m)->flags, OBJECT_READONLY,
+		    &OBJECT(m)->lock, 1);
+		ag_menu_int_flags(pitem, _("Indestructible"), ICON(TRASH_ICON),
+		    0, 0, &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE,
+		    &OBJECT(m)->lock, 0);
+		
+		ag_menu_separator(pitem);
+
+		ag_menu_action(pitem, _("Close"), ICON(CLOSE_ICON),
+		    SDLK_q, KMOD_CTRL, close_map, "%p, %p", m, win);
+	}
+
+	pitem = ag_menu_add_item(menu, _("View"));
+	{
+		extern int mapview_bg, mapview_bg_moving;
+
+		ag_menu_action(pitem, _("New view"),
+		    ICON(NEW_VIEW_ICON), 0, 0,
+		    create_view, "%p, %p", mv, win);
+
+		ag_menu_separator(pitem);
+
+		ag_menu_int_flags(pitem, _("Grid"), ICON(GRID_ICON),
+		    0, 0, &mv->flags, MAPVIEW_GRID, NULL, 0);
+
+		ag_menu_int_flags(pitem, _("Node properties"),
+		    ICON(PROPS_ICON), 0, 0, &mv->flags, MAPVIEW_PROPS, NULL, 0);
+
+		ag_menu_int_flags(pitem, _("Cursor"), ICON(SELECT_TOOL_ICON),
+		    0, 0, &mv->flags, MAPVIEW_NO_CURSOR, NULL, 1);
+		
+		ag_menu_int_bool(pitem, _("Tiled background"), ICON(GRID_ICON),
+		    0, 0, &mapview_bg, NULL, 0);
+		
+		ag_menu_int_bool(pitem, _("Moving background"), ICON(GRID_ICON),
+		    0, 0, &mapview_bg_moving, NULL, 0);
+#ifdef DEBUG
+		ag_menu_int_flags(pitem, _("Clipped edges"), ICON(GRID_ICON),
+		    0, 0, &WIDGET(mv)->flags, WIDGET_CLIPPING, NULL, 1);
+#endif		
+		ag_menu_separator(pitem);
+
+		ag_menu_action(pitem, _("Zoom settings..."),
+		    ICON(MAGNIFIER_CURSOR), 0, 0,
+		    switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &magnifier_tool, m, 0));
+	}
+	
+	pitem = ag_menu_add_item(menu, _("Layers"));
+	{
+		ag_menu_action(pitem, _("Edit layers"),
+		    ICON(MAGNIFIER_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &layedit_tool, m, 1));
+	}
+
+	pitem = ag_menu_add_item(menu, _("Tools"));
+	{
+		ag_menu_action(pitem, _("Select"), ICON(SELECT_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &select_tool, m, 1));
+		ag_menu_action(pitem, _("Stamp"), ICON(STAMP_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &stamp_tool, m, 0));
+		ag_menu_action(pitem, _("Eraser"), ICON(ERASER_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &eraser_tool, m, 0));
+		ag_menu_action(pitem, _("Resize"), ICON(RESIZE_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &resize_tool, m, 1));
+
+		ag_menu_action(pitem, _("Fill region"),
+		    ICON(FILL_TOOL_ICON),
+		    KMOD_CTRL, SDLK_f, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &fill_tool, m, 1));
+		ag_menu_action(pitem, _("Apply texture"),
+		    ICON(MERGE_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &merge_tool, m, 1));
+		
+		ag_menu_action(pitem, _("Entity properties"),
+		    ICON(PROPEDIT_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &propedit_tool, m, 0));
+		ag_menu_action(pitem, _("Displace sprite"),
+		    ICON(SHIFT_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &shift_tool, m, 0));
+		ag_menu_action(pitem, _("Flip/mirror sprite"),
+		    ICON(FLIP_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &flip_tool, m, 0));
+		ag_menu_action(pitem, _("Invert sprite"),
+		    ICON(INVERT_TOOL_ICON),
+		    0, 0, switch_tool, "%p, %p", mv,
+		    mapview_reg_tool(mv, &invert_tool, m, 0));
+	}
+	
+	object_attach(win, toolbar);
 
 	laysel = combo_new(win, COMBO_POLL, _("Layer:"));
 	textbox_printf(laysel->tbox, "%d. %s", m->cur_layer,
@@ -1436,6 +1693,7 @@ map_edit(void *p)
 	
 	object_attach(win, mv);
 	object_attach(win, statbar);
+
 	widget_focus(mv);
 	return (win);
 }
