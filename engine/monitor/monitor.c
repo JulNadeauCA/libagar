@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.37 2003/05/14 03:43:31 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.38 2003/05/24 15:53:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,17 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_jpeg.h>
+
 #include <engine/engine.h>
 
 #ifdef DEBUG
-
-#include <config/have_jpeg.h>
 
 #include <engine/version.h>
 #include <engine/map.h>
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #include <engine/mapedit/mapview.h>
@@ -46,19 +45,18 @@
 struct monitor monitor;		/* Debug monitor */
 
 static void
-toolbar_selected_tool(int argc, union evarg *argv)
+select_tool(int argc, union evarg *argv)
 {
 	struct tlist_item *it = argv[1].p;
 	struct window *(*win_func)() = it->p1;		/* XXX unsafe */
 	struct window *win;
 
-	if ((win = (win_func)()) != NULL) {
+	if ((win = (win_func)()) != NULL)
 		window_show(win);
-	}
 }
 
 void
-monitor_init(struct monitor *mon, char *name)
+monitor_init(struct monitor *mon, const char *name)
 {
 	const struct tool_ent {
 		int		 ind;
@@ -71,35 +69,26 @@ monitor_init(struct monitor *mon, char *name)
 #endif
 		{ MONITOR_OBJECT_BROWSER, "Objects", object_browser_window },
 		{ MONITOR_WIDGET_BROWSER, "Widgets", widget_browser_window },
-		{ MONITOR_VIEW_PARAMS, "View params", view_params_window },
-		{ MONITOR_MEDIA_BROWSER, "Graphics", art_browser_window },
+		{ MONITOR_VIEW_PARAMS, "View params", view_params_window }
 	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
-	struct region *reg;
+	struct tlist *tl_tools;
+	int i;
 
 	object_init(mon, "debug-monitor", name, NULL);
-	if (object_load_art(mon, "monitor", 0) == -1)
+	if (object_load_art(mon, "/engine/monitor/monitor", 0) == -1)
 		fatal("monitor: %s", error_get());
 
-	mon->toolbar = window_new("monitor-toolbar", 0,
-	    0, view->h - 124,
-	    177, 124,
-	    177, 124);
+	mon->toolbar = window_new("monitor-toolbar");
 	window_set_caption(mon->toolbar, "Debug monitor");
+	window_set_position(mon->toolbar, WINDOW_LOWER_LEFT, 0);
 
-	reg = region_new(mon->toolbar, 0, 0,  0, 100, 100);
-	{
-		struct tlist *tl_tools;
-		int i;
-
-		tl_tools = tlist_new(reg, 100, 100, 0);
-		event_new(tl_tools, "tlist-changed",
-		    toolbar_selected_tool, NULL);
-		for (i = 0; i < ntool_ents; i++) {
-			tlist_insert_item(tl_tools,
-			    SPRITE(mon, tool_ents[i].ind), tool_ents[i].name,
-			    tool_ents[i].window_func);
-		}
+	tl_tools = tlist_new(mon->toolbar, 0);
+	event_new(tl_tools, "tlist-changed", select_tool, NULL);
+	for (i = 0; i < ntool_ents; i++) {
+		tlist_insert_item(tl_tools,
+		    SPRITE(mon, tool_ents[i].ind), tool_ents[i].name,
+		    tool_ents[i].window_func);
 	}
 }
 
