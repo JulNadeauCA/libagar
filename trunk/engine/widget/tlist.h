@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.19 2003/04/17 08:21:30 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.20 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -29,16 +29,19 @@ struct tlist {
 #define TLIST_MULTI		0x01	/* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02	/* Sticky multiple selections */
 #define TLIST_DROPDOWN		0x04	/* Drop-down menu */
-#define TLIST_POLL		0x08	/* Generate a tlist-poll event before
-					   each draw and each event. */
+#define TLIST_POLL		0x08	/* Generate tlist-poll events */
+#define TLIST_DBLCLICK		0x10	/* Generate tlist-dblclick events */
 
 	int	 		 item_h;	/* Item height */
 	struct scrollbar	 sbar;		/* Scrollbar */
+
+	pthread_mutex_t		 lock;
+	struct tlist_item	*dblclicked;	/* Last clicked on this item */
+	SDL_TimerID		 dbltimer;	/* Double click timer */
 	struct tlist_itemq	 items;		/* Current Items */
 	struct tlist_itemq	 selitems;	/* Saved items */
 	int			 nitems;	/* Current item count */
 	int			 nvisitems;	/* Visible item count */
-	pthread_mutex_t		 items_lock;
 };
 
 __BEGIN_DECLS

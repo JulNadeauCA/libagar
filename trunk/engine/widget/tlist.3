@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.14 2003/03/13 03:28:56 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.16 2003/04/17 08:21:30 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -80,8 +80,8 @@ can be changed at runtime, and may include:
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
 #define TLIST_DROPDOWN		0x04  /* Drop-down menu */
-#define TLIST_POLL		0x08  /* Generate a tlist-poll event before
-					 each draw and each event. */
+#define TLIST_POLL		0x08  /* Generate tlist-poll events */
+#define TLIST_DBLCLICK		0x10  /* Generate tlist-dblclick events */
 .Ed
 .Pp
 The
@@ -228,6 +228,11 @@ was inserted into the list.
 The
 .Fa item
 was selected/unselected.
+.It Fn tlist-dblclick "struct tlist_item *item"
+The
+.Dv TLIST_DBLCLICK
+flag is set and the user double-clicked on
+.Fa item .
 .It Fn tlist-poll "void"
 The
 .Dv TLIST_POLL
