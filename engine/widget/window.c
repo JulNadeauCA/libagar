@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.236 2005/01/31 08:20:14 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.237 2005/02/01 03:14:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -740,6 +740,8 @@ window_event(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 		view->winop = VIEW_WINOP_NONE;
+		dprintf("SDL_MOUSEBUTTONUP(%d,%d,%d)\n",
+		    ev->button.button, ev->button.x, ev->button.y);
 		break;
 	}
 
