@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.35 2004/08/31 03:03:37 vedge Exp $
+.\"	$Csoft: window.3,v 1.36 2004/08/31 03:40:54 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,13 +52,12 @@ SDL implements multiple displays.
 The container behavior of a
 .Nm
 is much like a
-.Xr vbox 3
-(without the
-.Dv VBOX_HOMOGENOUS
-flag).
-By default, a
+.Xr vbox 3 .
+Unless the
+.Dv WINDOW_NO_TITLEBAR
+flag is set, a
 .Xr titlebar 3
-widget is first attached and borders surround the window.
+widget is attached to the window at creation time.
 .Pp
 Initially, the window's widgets are queried for a default, minimum size, and
 the window is sized accordingly.
@@ -66,16 +65,16 @@ After this initial sizing, widget containers may scale widgets to any size.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct window *"
-.Fn window_new "const char *name" "..."
+.Fn window_new "int flags", "const char *name" "..."
 .Pp
 .Ft "void"
-.Fn window_init "struct window *win" "const char *name"
+.Fn window_init "struct window *win" "const char *name" "int flags"
 .Pp
 .Ft "void"
 .Fn window_set_caption "struct window *win" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn window_set_closure "struct window *win" "enum window_close_mode mode"
+.Fn window_set_closure "struct window *win" "int mode"
 .Pp
 .Ft "void"
 .Fn window_set_padding "struct window *win" "int padding"
@@ -101,14 +100,35 @@ function allocates, initializes, and attaches a new window.
 initializes a
 .Nm
 structure.
-If
+.Pp
+If the
 .Fa name
-is not NULL, it specifies that the window should be unique (position and
-geometry are persistent, only one instance is allowed and the default close
-behavior is
-.Dv WINDOW_HIDE
-instead of
-.Dv WINDOW_DETACH ) .
+argument is NULL, an unnamed window is created;
+otherwise, a named window is created.
+.Pp
+If the name passed to
+.Fn window_new
+matches an existing window, the focus is placed on the existing
+window, no new window is created and the function returns NULL.
+.Pp
+Acceptable flags include:
+.Bd -literal
+#define WINDOW_PERSISTENT	0x0001	/* Persistent position/geometry
+				 	   (for named windows only) */
+#define WINDOW_CASCADE		0x0002	/* Increment position slightly */
+#define WINDOW_NO_TITLEBAR	0x0004	/* Disable the titlebar */
+#define WINDOW_NO_DECORATIONS	0x0008	/* Disable the window borders */
+#define WINDOW_HIDE		0x0010	/* Hide on window-close */
+#define WINDOW_DETACH		0x0020	/* Detach on window-close */
+#define WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
+#define WINDOW_MINIMIZED	0x0080	/* Window is minimized */
+#define WINDOW_NO_HRESIZE	0x0100	/* Don't resize horizontally */
+#define WINDOW_NO_VRESIZE	0x0200	/* Don't resize vertically */
+#define WINDOW_NO_RESIZE	(WINDOW_NO_HRESIZE|WINDOW_NO_VRESIZE)
+#define WINDOW_NO_CLOSE_BTN	0x0400	/* Disable close button */
+#define WINDOW_NO_MINIMIZE_BTN	0x0800	/* Disable minimize button */
+#define WINDOW_NO_MAXIMIZE_BTN	0x1000	/* Disable maximize button */
+.Ed
 .Pp
 The
 .Fn window_set_caption
@@ -119,15 +139,12 @@ The string is truncated if its length exceeds
 .Pp
 The
 .Fn window_set_closure
-function installs a default
+function changes the current
 .Sq window-close
-event handler:
+event handler to one of the predefined handlers:
 .Bd -literal
-enum window_close_mode {
-	WINDOW_HIDE,		/* Hide window on close */
-	WINDOW_DETACH,		/* Detach window on close */
-	WINDOW_IGNORE		/* Ignore titlebar close button */
-};
+#define WINDOW_HIDE	0x0010	/* Hide on window-close */
+#define WINDOW_DETACH	0x0020	/* Detach on window-close */
 .Ed
 .Pp
 The
