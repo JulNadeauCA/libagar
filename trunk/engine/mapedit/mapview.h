@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.23 2003/02/12 01:17:50 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.24 2003/02/13 11:30:12 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
@@ -95,3 +95,5 @@ void		 mapview_draw(void *);
 void		 mapview_center(struct mapview *, int, int);
 void		 mapview_zoom(struct mapview *, int);
 
+extern __inline__ void	mapview_draw_props(struct mapview *, struct node *,
+			    int, int);
