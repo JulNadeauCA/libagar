@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.105 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.106 2004/03/20 08:21:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -52,6 +52,7 @@ struct noderef {
 #define NODEREF_BIO	0x08		/* Contact induces Poison */
 #define NODEREF_REGEN	0x10		/* Contact induces Regen */
 #define NODEREF_NOSAVE	0x20		/* Non persistent */
+#define NODEREF_NOSCALE	0x40		/* Don't scale bitmaps (ie. vg) */
 
 	Sint8	friction;		/* Coefficient of friction (if n>0),
 					   or acceleration (if n<0) */
