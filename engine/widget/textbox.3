@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.11 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.12 2003/03/22 04:22:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,12 +44,15 @@ widget implements a user-editable text area.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct textbox *"
-.Fn textbox_new "struct region *reg" "const char *label" "int flags" "int rw" "int rh"
+.Fn textbox_new "struct region *reg" "const char *label"
 .Pp
 .Ft void
-.Fn textbox_init "struct textbox *textbox" "const char *label" "int flags" "int rw" "int rh"
-.nr nS 0
+.Fn textbox_init "struct textbox *textbox" "const char *label"
 .Pp
+.Ft void
+.Fn textbox_set_writeable "struct textbox *textbox" "int writeable"
+.Pp
+.nr nS 0
 The
 .Fn textbox_new
 function allocates, initializes, and attaches a
@@ -59,20 +62,16 @@ The
 .Fn textbox_init
 function initializes a
 .Nm
-widget of size
-.Fa rw
-x
-.Fa rh
-with a label of
-.Fa caption ,
-and initially containing no text.
-The
-.Fa flags
-can be changed at runtime, and may include:
+widget with the label text set to
+.Fa label .
 .Pp
-.Bd -literal
-#define TEXTBOX_READONLY	0x01	/* Read-only */
-.Ed
+The
+.Fn textbox_set_writeable
+function enables/disables user edition of the string.
+If
+.Fa writeable
+is 0, the string is read-only; if it is 1, the string may be edited (this is the
+default).
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
@@ -90,21 +89,16 @@ can be changed at runtime, and may include:
 .Pp
 The
 .Fn textbox_printf
-function changes the text inside
-.Fa textbox ,
-and understands
-.Xr printf 3
-format strings.
+function overwrites the string.
 .Pp
 The
 .Fn textbox_string
-function returns a copy of the text inside
-.Fa textbox .
+function returns a copy of the string.
 .Fn textbox_copy_string
 copies up to
 .Fa dst_size
--1 bytes of the text inside
-.Fa textbox ,
+-1 bytes from the string to
+.Fa dst ,
 NUL-terminating the result.
 .Fn textbox_copy_string
 returns the number of characters that would have been copied if
@@ -112,9 +106,19 @@ returns the number of characters that would have been copied if
 was unlimited.
 .Pp
 .Fn textbox_int
-tries to convert the text inside
-.Fa textbox
-to an integer value.
+tries to convert the string  to an integer value.
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "char *string"
+.It Va char *string
+A static, NUL-terminated string to edit.
+As an exceptional case, the full size of the buffer is passed to
+.Fn widget_bind
+along with this pointer.
+.El
 .Sh EVENTS
 The
 .Nm
