@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.38 2003/06/11 23:35:44 vedge Exp $
+.\"	$Csoft: widget.3,v 1.39 2003/06/15 05:08:43 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -407,7 +407,7 @@ is called to override those default bindings.
                 "enum widget_binding_type type" "..."
 .Pp
 .Ft "struct widget_binding *"
-.Fn widget_get_binding "void *widget" "const char *binding" "..."
+.Fn widget_get_binding "void *widget" "const char *binding" "void *res"
 .Pp
 .Ft void
 .Fn widget_binding_lock "struct widget_binding *binding"
@@ -547,7 +547,7 @@ Fixed-size Latin-1 text buffer.
 .Bl -tag -width "pthread_mutex_t *lock " -compact
 .It "pthread_mutex_t *lock"
 Lock to acquire, or NULL.
-.It "const char *text"
+.It "char *text"
 Fixed-size Latin-1 text buffer.
 .It "size_t bufsize"
 Total buffer size in bytes.
@@ -558,7 +558,7 @@ Fixed-size Unicode text buffer.
 .Bl -tag -width "pthread_mutex_t *lock " -compact
 .It "pthread_mutex_t *lock"
 Lock to acquire, or NULL.
-.It "const Uint16 *text"
+.It "Uint16 *text"
 Fixed-size Unicode text buffer.
 .It "size_t bufsize"
 Total buffer size in bytes.
@@ -577,13 +577,11 @@ Pointer to the data.
 The
 .Fn widget_get_binding
 function returns a matching binding (locked), or NULL if none was found.
-If a binding was found, one or more pointers to it are written to arguments
-(for most types, there is a single
-.Ft "void *"
-argument).
-The
+If a binding was found, a pointer to it is written in the
+.Fa res
+argument.
 .Fn widget_binding_unlock
-function should be called when done manipulating the data.
+should be called when done manipulating the data.
 .Pp
 The
 .Fn widget_get_TYPE

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.63 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.64 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -131,8 +131,10 @@ textbox_draw(void *p)
 	struct widget_binding *stringb;
 	int i, lx, cursdrawn = 0;
 	int x = 0, y;
-	size_t tlen;
+	size_t textlen = 0;
+	void *text;
 	char *s;
+	Uint16 *ucs;
 
 	if (tbox->label != NULL) {
 		widget_blit(tbox, tbox->label, 0,
@@ -140,12 +142,22 @@ textbox_draw(void *p)
 		x = tbox->label->w;
 	}
 
-	stringb = widget_get_binding(tbox, "string", &s);
-	tlen = strlen(s);
+	stringb = widget_get_binding(tbox, "string", &text);
+	switch (stringb->type) {
+	case WIDGET_STRING:
+		textlen = strlen((char *)text);
+		break;
+	case WIDGET_UNICODE:
+		textlen = ucslen((Uint16 *)text);
+		break;
+	}
 
 	/* Default to the end of the string. */
-	if (tbox->pos < 0)
-		tbox->pos = tlen;
+	if (tbox->pos < 0) {
+		tbox->pos = textlen;
+	} else if (tbox->pos > textlen) {
+		fatal("bad position! %d > %d", tbox->pos, textlen);
+	}
 
 	/* Move to the beginning of the string? */
 	if (tbox->newx >= 0 && tbox->newx <= tbox->label->w) {
@@ -174,10 +186,21 @@ drawtext:
 		y++;
 	}
 	for (i = tbox->offs, lx = -1;
-	     i <= tlen;
+	     i <= textlen;
 	     i++) {
 		SDL_Surface *glyph;
-		char ch = s[i];
+		Uint16 uch = 0;
+
+		switch (stringb->type) {
+		case WIDGET_STRING:
+			s = text;
+			uch = (unsigned char)s[i];
+			break;
+		case WIDGET_UNICODE:
+			ucs = text;
+			uch = ucs[i];
+			break;
+		}
 
 		/* Move to a position inside the string? */
 		if (tbox->newx >= 0 &&
@@ -188,51 +211,33 @@ drawtext:
 		lx = x;
 
 		if (i == tbox->pos && widget_holds_focus(tbox)) {
-#if 1
-			primitives.line(tbox,
-			    x,
-			    y,
-			    x,
-			    y + tbox->label->h - 2,
+			primitives.line2(tbox, x, y, x, y+tbox->label->h-2,
 			    CURSOR_COLOR1);
-			primitives.line(tbox,
-			    x + 1,
-			    y,
-			    x + 1,
-			    y + tbox->label->h - 2,
-			    CURSOR_COLOR2);
-#else
-			primitives.line2(tbox,
-			    x,
-			    y,
-			    x,
-			    y + tbox->label->h - 2,
-			    CURSOR_COLOR1);
-#endif
 			cursdrawn++;
 		}
 		
 		if (x > WIDGET(tbox)->w - tbox->xpadding*4)
 			break;
 
-		if (ch == '\n') {
+		if (uch == '\n') {
 			y += tbox->label->h + 2;
 		} else {
-			char cs[2];
+			Uint16 tcs[2];
 
 			/* XXX use text_render_glyph when it is fixed */
-			cs[0] = ch;
-			cs[1] = '\0';
-			glyph = text_render(NULL, -1,
-			    WIDGET_COLOR(tbox, TEXT_COLOR), cs);
+			tcs[0] = uch;
+			tcs[1] = '\0';
+			glyph = text_render_unicode(NULL, -1,
+			    WIDGET_COLOR(tbox, TEXT_COLOR), tcs);
 			widget_blit(tbox, glyph, x, y);
 			x += glyph->w;
 			SDL_FreeSurface(glyph);
 		}
 	}
 	if (widget_holds_focus(tbox) && !cursdrawn) {
-		if (tbox->pos > i)
+		if (tbox->pos > i) {
 			tbox->offs += KBD_SCROLL_INCR;
+		}
 		goto drawtext;
 	}
 
@@ -240,7 +245,7 @@ drawtext:
 	if (tbox->newx >= 0) {
 		tbox->newx = -1;
 		tbox->pos = i-1;
-		if (i < tlen) {
+		if (i < textlen) {
 			tbox->offs += MOUSE_SCROLL_INCR;
 			tbox->pos++;
 		}
@@ -264,26 +269,33 @@ static void
 textbox_key(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
-	int keysym = argv[1].i;
+	SDLKey keysym = (SDLKey)argv[1].i;
 	int keymod = argv[2].i;
+	Uint16 unicode = (Uint16)argv[3].i;
 	int i;
 
 	if (!tbox->writeable)
 		return;
 
+	if (keysym == SDLK_TAB) {
+		return;
+	}
 	if (keysym == SDLK_RETURN) {
 		event_post(tbox, "textbox-return", NULL);
+		WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 		return;
 	}
 
-	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
+	for (i = 0;; i++) {
 		const struct keycode *kcode = &keycodes[i];
 
-		if (kcode->key != (SDLKey)keysym || kcode->func == NULL)
+		if (kcode->key != SDLK_LAST &&
+		   (kcode->key != keysym || kcode->func == NULL))
 			continue;
 
-		if (kcode->modmask == 0 || keymod & kcode->modmask) {
-			kcode->func(tbox, (SDLKey)keysym, keymod, kcode->arg);
+		if (kcode->key == SDLK_LAST ||
+		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
+			kcode->func(tbox, keysym, keymod, kcode->arg, unicode);
 			event_post(tbox, "textbox-changed", NULL);
 			break;
 		}
@@ -317,22 +329,41 @@ textbox_mousebuttondown(int argc, union evarg *argv)
 	tbox->newx = x;
 }
 
+/* Format Latin-1 text. */
 void
 textbox_printf(struct textbox *tbox, const char *fmt, ...)
 {
 	struct widget_binding *stringb;
 	va_list args;
-	char *s;
+	void *text;
 
-	stringb = widget_get_binding(tbox, "string", &s);
-	va_start(args, fmt);
-	vsnprintf(s, stringb->size, fmt, args);
-	va_end(args);
+	stringb = widget_get_binding(tbox, "string", &text);
+	switch (stringb->type) {
+	case WIDGET_STRING:
+		va_start(args, fmt);
+		vsnprintf((char *)text, stringb->size, fmt, args);
+		va_end(args);
+		break;
+	case WIDGET_UNICODE:
+		{
+			char *latin1;
+
+			latin1 = Malloc(stringb->size / sizeof(Uint16));
+			va_start(args, fmt);
+			vsnprintf(latin1, stringb->size, fmt, args);
+			va_end(args);
+			unicode_convert(UNICODE_FROM_LATIN1, (Uint16 *)text,
+			    latin1, stringb->size);
+			free(latin1);
+		}
+		break;
+	}
 	tbox->pos = 0;
 	tbox->offs = 0;
 	widget_binding_unlock(stringb);
 }
 
+/* Return a copy of Latin-1 text. */
 char *
 textbox_string(struct textbox *tbox)
 {
@@ -345,34 +376,99 @@ textbox_string(struct textbox *tbox)
 		sd = Strdup(s);
 		break;
 	default:
-		fatal("not a string binding");
+		fatal("not Latin-1");
+		break;
 	}
 	widget_binding_unlock(stringb);
 	return (sd);
 }
 
+/* Return a copy of Unicode/Latin-1 text. */
+Uint16 *
+textbox_unicode(struct textbox *tbox)
+{
+	struct widget_binding *stringb;
+	void *text;
+	Uint16 *ucs = NULL;
+
+	stringb = widget_get_binding(tbox, "string", &text);
+	switch (stringb->type) {
+	case WIDGET_UNICODE:
+		ucs = ucsdup((Uint16 *)text);
+		break;
+	case WIDGET_STRING:
+		ucs = unicode_import(UNICODE_FROM_LATIN1, (char *)text);
+		break;
+	}
+	widget_binding_unlock(stringb);
+	return (ucs);
+}
+
+/* Copy Latin-1 text to a fixed-size buffer and NUL-terminate. */
 size_t
 textbox_copy_string(struct textbox *tbox, char *dst, size_t dst_size)
 {
 	struct widget_binding *stringb;
 	size_t rv;
-	char *s;
+	void *text;
 
-	stringb = widget_get_binding(tbox, "string", &s);
-	rv = strlcpy(dst, s, dst_size);
+	stringb = widget_get_binding(tbox, "string", &text);
+	switch (stringb->type) {
+	case WIDGET_STRING:
+		rv = strlcpy(dst, (char *)text, dst_size);
+		break;
+	default:
+		fatal("not Latin-1");
+		break;
+	}
 	widget_binding_unlock(stringb);
 	return (rv);
 }
 
+/* Copy Latin-1/Unicode text to a fixed-size buffer and NUL-terminate. */
+size_t
+textbox_copy_unicode(struct textbox *tbox, Uint16 *dst, size_t dst_size)
+{
+	struct widget_binding *stringb;
+	size_t rv = 0;
+	void *text;
+
+	stringb = widget_get_binding(tbox, "string", &text);
+	switch (stringb->type) {
+	case WIDGET_UNICODE:
+		rv = ucslcpy(dst, (Uint16 *)text, dst_size);
+		break;
+	case WIDGET_STRING:
+		{
+			Uint16 *ucs;
+
+			ucs = unicode_import(UNICODE_FROM_LATIN1, (char *)text);
+			rv = ucslcpy(dst, ucs, dst_size);
+			free(ucs);
+		}
+		break;
+	}
+	widget_binding_unlock(stringb);
+	return (rv);
+}
+
+/* Perform trivial conversion from Latin-1 text to int. */
 int
 textbox_int(struct textbox *tbox)
 {
 	struct widget_binding *stringb;
-	char *s;
+	void *text;
 	int i;
 
-	stringb = widget_get_binding(tbox, "string", &s);
-	i = atoi(s);
+	stringb = widget_get_binding(tbox, "string", &text);
+	switch (stringb->type) {
+	case WIDGET_STRING:
+		i = atoi((char *)text);
+		break;
+	default:
+		fatal("not Latin-1");
+		break;
+	}
 	widget_binding_unlock(stringb);
 	return (i);
 }

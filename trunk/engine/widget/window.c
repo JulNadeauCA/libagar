@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.199 2003/06/12 22:42:11 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.200 2003/06/13 02:44:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -759,9 +759,10 @@ window_event(SDL_Event *ev)
 					event_post(fwid,
 					    (ev->type == SDL_KEYUP) ?
 					    "window-keyup" : "window-keydown",
-					    "%i, %i",
+					    "%i, %i, %i",
 					    (int)ev->key.keysym.sym,
-					    (int)ev->key.keysym.mod);
+					    (int)ev->key.keysym.mod,
+					    (int)ev->key.keysym.unicode);
 					/*
 					 * Ensure the keyup event is posted to
 					 * this window when the key is released,

@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.14 2003/06/06 03:18:14 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.15 2003/06/11 23:21:04 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,8 +40,8 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget binds to a fixed-size string buffer and allows the user to edit
-its contents.
+widget binds to a Latin-1 or UTF-16 text buffer and allows the user to edit its
+contents.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct textbox *"
@@ -81,8 +81,15 @@ default).
 .Ft "char *"
 .Fn textbox_string "struct textbox *textbox"
 .Pp
+.Ft "Uint16 *"
+.Fn textbox_unicode "struct textbox *textbox"
+.Pp
 .Ft "size_t"
 .Fn textbox_copy_string "struct textbox *textbox" "char *dst" "size_t dst_size"
+.Pp
+.Ft "size_t"
+.Fn textbox_copy_unicode "struct textbox *textbox" "Uint16 *dst" \
+                         "size_t dst_size"
 .Pp
 .Ft int
 .Fn textbox_int "struct textbox *textbox"
@@ -92,17 +99,23 @@ The
 .Fn textbox_printf
 function uses
 .Xr vsnprintf 3
-to overwrite the string.
+to overwrite the string with Latin-1 text.
 .Pp
 The
 .Fn textbox_string
-function returns a copy of the string.
+and
+.Fn textbox_unicode
+functions return a copy of Latin-1/Unicode text.
+.Pp
+The
 .Fn textbox_copy_string
-copies up to
+and
+.Fn textbox_copy_unicode
+functions copy up to
 .Fa dst_size
--1 bytes from the string to
+- 1 bytes from Latin-1/Unicode text to
 .Fa dst ,
-NUL-terminating the result and returning the number of characters that would
+NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
@@ -116,10 +129,9 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string"
 .It Va char *string
-A fixed-size buffer containing a NUL-terminated string to edit.
-The full size of the buffer is passed to
-.Fn widget_bind
-along with this pointer.
+A fixed-size buffer containing NUL-terminated Latin-1 text to edit.
+.It Va Uint16 *string
+A fixed-size buffer containing NUL-terminated Unicode text to edit.
 .El
 .Sh EVENTS
 The
@@ -155,3 +167,6 @@ The string was modified.
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Sh BUGS
+.Fn textbox_int
+should be replaced by integral bindings.
