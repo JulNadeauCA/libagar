@@ -112,7 +112,6 @@ echo "    --with-smpeg         Play videos through smpeg [default: check]"
 echo "    --with-x11           X11-specific code [default: check]"
 echo "    --enable-debug       Engine debugging [default: no]"
 echo "    --enable-xdebug      Synchronous X11 events [default: no]"
-echo "    --enable-wdebug      Widget set debugging [default: no]"
 echo "    --help               Show this message"
 exit 1
 fi
@@ -329,13 +328,6 @@ LOCKDEBUG=1
 echo "#ifndef LOCKDEBUG" >> engine/mcconfig.h
 echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/mcconfig.h
 echo "#endif /* LOCKDEBUG */" >> engine/mcconfig.h
-fi
-if [ "${enable_wdebug}" = "yes" ]
- then
-WIDGET_DEBUG=1
-echo "#ifndef WIDGET_DEBUG" >> engine/mcconfig.h
-echo "#define WIDGET_DEBUG $WIDGET_DEBUG" >> engine/mcconfig.h
-echo "#endif /* WIDGET_DEBUG */" >> engine/mcconfig.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/mcconfig.h
