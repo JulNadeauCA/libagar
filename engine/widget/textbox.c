@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.26 2002/09/07 05:11:40 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.27 2002/09/12 09:33:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -108,8 +108,10 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	pthread_mutex_init(&tbox->text.lock, NULL);
 	tbox->newx = -1;
 
+#if 0
 	event_new(tbox, "widget-shown", 0, textbox_shown, NULL);
 	event_new(tbox, "widget-hidden", 0, textbox_hidden, NULL);
+#endif
 	event_new(tbox, "window-keydown", 0, textbox_key, NULL);
 	event_new(tbox, "window-mousebuttondown", 0,
 	    textbox_mouse, "%i", WINDOW_MOUSEBUTTONDOWN);
@@ -117,6 +119,7 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	    textbox_mouse, "%i", WINDOW_MOUSEMOTION);
 }
 
+#if 0
 void
 textbox_shown(int argc, union evarg *argv)
 {
@@ -132,6 +135,7 @@ textbox_hidden(int argc, union evarg *argv)
 		fatal("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
 	}
 }
+#endif
 
 void
 textbox_destroy(void *ob)
