@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.12 2002/07/29 01:11:36 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.13 2002/07/29 06:32:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,6 +58,13 @@ static const struct widget_ops mapview_ops = {
 	NULL		/* animate */
 };
 
+enum {
+	BORDER_COLOR,
+	GRID_COLOR,
+	CURSOR_COLOR,
+	TILE_SELECTION_COLOR
+};
+
 static SDL_TimerID zoomin_timer, zoomout_timer;
 
 static void	mapview_event(int, union evarg *);
@@ -104,8 +111,15 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->tileh = TILEH;
 	mv->cursor = (flags & MAPVIEW_EDIT) ? edcursor_new(0, mv, m) : NULL;
 	mv->zoom = 100;
-	mv->border_color = SDL_MapRGB(view->v->format, 200, 200, 200);
-	mv->grid_color = SDL_MapRGB(view->v->format, 100, 100, 100);
+
+	widget_map_color(mv, BORDER_COLOR, "mapview-border",
+	    200, 200, 200);
+	widget_map_color(mv, GRID_COLOR, "mapview-grid",
+	    100, 100, 100);
+	widget_map_color(mv, CURSOR_COLOR, "mapview-cursor",
+	    100, 100, 100);
+	widget_map_color(mv, TILE_SELECTION_COLOR, "mapview-tile-selection",
+	    0, 200, 0);
 
 	event_new(mv, "widget-scaled", 0,
 	    mapview_scaled, NULL);
@@ -206,6 +220,7 @@ mapview_draw(void *p)
 			node = &m->map[my][mx];
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+				/* XXX style */
 				if (nref->flags & MAPREF_SPRITE) {
 					nsprites++;
 
@@ -297,17 +312,62 @@ mapview_draw(void *p)
 			    mv->zoom > 30) {
 				draw_node_props(mv, node, rx, ry);
 			}
-		
+
 			if (mv->flags & MAPVIEW_GRID) {
 				primitives.line(mv,
 				    rx, 0,
 				    rx, WIDGET(mv)->h-1,
-				    mv->grid_color);
+				    WIDGET_COLOR(mv, GRID_COLOR));
+			}
+			if (mx-mv->mx == mv->mouse.x &&
+			    my-mv->my == mv->mouse.y &&
+			    mv->mouse.x < mv->mw-1 &&
+			    mv->mouse.y < mv->mh-1) {
+				struct tool *curtool = mv->med->curtool;
+
+				if (curtool != NULL &&
+				    TOOL_OPS(curtool)->tool_cursor != NULL) {
+					TOOL_OPS(curtool)->tool_cursor(curtool,
+					    mv, mx, my);
+				} else if (mv->tilew > 4 && mv->tileh > 4) {
+					/* XXX cosmetic */
+					primitives.square(mv,
+					    rx+1, ry+1,
+					    mv->tilew-1, mv->tileh-1,
+					    WIDGET_COLOR(mv, CURSOR_COLOR));
+					primitives.square(mv,
+					    rx+2, ry+2,
+					    mv->tilew-3, mv->tileh-3,
+					    WIDGET_COLOR(mv, CURSOR_COLOR));
+				}
+
+			}
+				
+			if ((mv->flags & MAPVIEW_TILEMAP) &&
+			    !TAILQ_EMPTY(&node->nrefsh)) {
+				struct noderef *nref;
+
+				nref = TAILQ_FIRST(&node->nrefsh);
+				if ((nref->pobj ==
+				    mv->med->curobj->pobj) &&
+				    nref->offs == mv->med->curoffs) {
+					/* XXX cosmetic */
+					primitives.square(mv,
+					    rx+1, ry+1,
+					    mv->tilew-1, mv->tileh-1,
+					    WIDGET_COLOR(mv,
+					        TILE_SELECTION_COLOR));
+					primitives.square(mv,
+					    rx+2, ry+2,
+					    mv->tilew-3, mv->tileh-3,
+					    WIDGET_COLOR(mv,
+					        TILE_SELECTION_COLOR));
+				}
 			}
 		}
 		if (mv->flags & MAPVIEW_GRID) {
 			primitives.line(mv, 0, ry, WIDGET(mv)->w-1, ry,
-			   mv->grid_color);
+			   WIDGET_COLOR(mv, GRID_COLOR));
 		}
 	}
 	SDL_SetClipRect(view->v, NULL);
@@ -316,7 +376,7 @@ mapview_draw(void *p)
 		primitives.square(mv,
 		    0, 0,
 		    WIDGET(mv)->w, WIDGET(mv)->h,
-		    mv->border_color);
+		    WIDGET_COLOR(mv, BORDER_COLOR));
 	}
 }
 
@@ -406,16 +466,23 @@ mapview_event(int argc, union evarg *argv)
 	struct map *m = mv->map;
 	struct mapedit *med = mv->med;
 	int type = argv[1].i;
-	int button, x, y;
+	int button, x, y, xrel, yrel;
 
 	switch (type) {
 	case WINDOW_MOUSEOUT:
 		mv->mouse.move = 0;
+		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
+			SDL_ShowCursor(SDL_ENABLE);
+		}
 		break;
 	case WINDOW_MOUSEMOTION:
 		x = argv[2].i / mv->tilew;
 		y = argv[3].i / mv->tileh;
-	
+		
+		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
+			SDL_ShowCursor(SDL_DISABLE);
+		}
+
 		/* Scroll */
 		if (mv->mouse.move) {
 			mapview_scroll(mv,
