@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.57 2003/01/23 02:02:31 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.58 2003/01/24 08:25:38 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -144,6 +144,9 @@ config_init(struct config *con)
 	/* Window system settings */
 	prop_set_bool(con, "widget.reg-borders", 0);
 	prop_set_bool(con, "widget.any-size", 0);
+	
+	/* Input device settings */
+	prop_set_bool(con, "input.joysticks", 1);
 
 	/* Data directories. */
 	pwd = getpwuid(getuid());
