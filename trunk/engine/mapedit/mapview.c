@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.154 2004/05/13 02:48:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.155 2004/05/24 03:26:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -376,7 +376,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "detached", mapview_detached, NULL);
 }
 
-/* Register standard map-level edition tools. */
+/* Register standard map-level edition tools. XXX */
 void
 mapview_reg_stdtools(struct mapview *mv)
 {
@@ -953,6 +953,25 @@ mapview_keyup(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
+	struct tool *tool;
+
+	TAILQ_FOREACH(tool, &mv->tools, tools) {
+		struct tool_kbinding *kbinding;
+
+		SLIST_FOREACH(kbinding, &tool->kbindings, kbindings) {
+			if (kbinding->key == keysym &&
+			    (kbinding->mod == KMOD_NONE ||
+			     keymod & kbinding->mod)) {
+				if (kbinding->edit &&
+				   (((mv->flags & MAPVIEW_EDIT) == 0) ||
+				    ((OBJECT(mv->map)->flags &
+				     OBJECT_READONLY)))) {
+					continue;
+				}
+				kbinding->func(tool, 0);
+			}
+		}
+	}
 
 	if (mv->flags & MAPVIEW_EDIT &&
 	    mv->curtool != NULL &&
@@ -981,7 +1000,7 @@ mapview_keydown(int argc, union evarg *argv)
 				     OBJECT_READONLY)))) {
 					continue;
 				}
-				kbinding->func(mv);
+				kbinding->func(tool, 1);
 			}
 		}
 	}
@@ -991,15 +1010,7 @@ mapview_keydown(int argc, union evarg *argv)
 	case SDLK_o:
 		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
 		break;
-	case SDLK_g:
-		if (mv->flags & MAPVIEW_GRID) {
-			mv->flags &= ~(MAPVIEW_GRID);
-		} else {
-			mv->flags |= MAPVIEW_GRID;
-		}
-		break;
 	case SDLK_p:
-		/* XXX replace by config settings */
 		if (keymod & KMOD_SHIFT) {
 			if (++mv->prop_style == MAPVIEW_FRAMES_END) {
 				mv->prop_style = 0;

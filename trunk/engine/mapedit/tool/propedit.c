@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.48 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.49 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -118,69 +118,69 @@ propedit_clear_flag(struct mapview *mv, Uint32 flag)
 }
 
 static void
-propedit_edge_nw(struct mapview *mv)
+propedit_edge_nw(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_NW);
+	propedit_set_edge(t->mv, NODEREF_EDGE_NW);
 }
 
 static void
-propedit_edge_n(struct mapview *mv)
+propedit_edge_n(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_N);
+	propedit_set_edge(t->mv, NODEREF_EDGE_N);
 }
 
 static void
-propedit_edge_ne(struct mapview *mv)
+propedit_edge_ne(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_NE);
+	propedit_set_edge(t->mv, NODEREF_EDGE_NE);
 }
 
 static void
-propedit_edge_w(struct mapview *mv)
+propedit_edge_w(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_W);
+	propedit_set_edge(t->mv, NODEREF_EDGE_W);
 }
 
 static void
-propedit_no_edge(struct mapview *mv)
+propedit_no_edge(struct tool *t, int state)
 {
-	propedit_set_edge(mv, 0);
+	propedit_set_edge(t->mv, 0);
 }
 
 static void
-propedit_edge_e(struct mapview *mv)
+propedit_edge_e(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_E);
+	propedit_set_edge(t->mv, NODEREF_EDGE_E);
 }
 
 static void
-propedit_edge_sw(struct mapview *mv)
+propedit_edge_sw(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_SW);
+	propedit_set_edge(t->mv, NODEREF_EDGE_SW);
 }
 
 static void
-propedit_edge_s(struct mapview *mv)
+propedit_edge_s(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_S);
+	propedit_set_edge(t->mv, NODEREF_EDGE_S);
 }
 
 static void
-propedit_edge_se(struct mapview *mv)
+propedit_edge_se(struct tool *t, int state)
 {
-	propedit_set_edge(mv, NODEREF_EDGE_SE);
+	propedit_set_edge(t->mv, NODEREF_EDGE_SE);
 }
 
 static void
-propedit_flag_walk(struct mapview *mv)
+propedit_flag_walk(struct tool *t, int state)
 {
-	propedit_set_flag(mv, NODEREF_WALK);
+	propedit_set_flag(t->mv, NODEREF_WALK);
 }
 
 static void
-propedit_flag_blk(struct mapview *mv)
+propedit_flag_blk(struct tool *t, int state)
 {
-	propedit_clear_flag(mv, NODEREF_WALK);
+	propedit_clear_flag(t->mv, NODEREF_WALK);
 }
 
 static void

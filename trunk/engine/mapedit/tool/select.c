@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.21 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.22 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -51,8 +51,9 @@ const struct tool select_tool = {
 
 /* Copy the selection to the copy buffer. */
 static void
-select_copy(struct mapview *mv)
+select_copy(struct tool *t, int state)
 {
+	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
 	struct map *m = mv->map;
 	int sx, sy, dx, dy;
@@ -85,8 +86,9 @@ select_copy(struct mapview *mv)
 }
 
 static void
-select_paste(struct mapview *mv)
+select_paste(struct tool *t, int state)
 {
+	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
 	struct map *m = mv->map;
 	int sx, sy, dx, dy;
@@ -124,8 +126,9 @@ select_paste(struct mapview *mv)
 }
 
 static void
-select_kill(struct mapview *mv)
+select_kill(struct tool *t, int state)
 {
+	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
 	int x, y;
 
@@ -145,14 +148,16 @@ select_kill(struct mapview *mv)
 }
 
 static void
-select_cut(struct mapview *mv)
+select_cut(struct tool *t, int state)
 {
+	struct mapview *mv = t->mv;
+
 	if (!mv->esel.set) {
 		text_msg(MSG_ERROR, _("There is no selection to cut."));
 		return;
 	}
-	select_copy(mv);
-	select_kill(mv);
+	select_copy(t, 1);
+	select_kill(t, 1);
 }
 
 static void
