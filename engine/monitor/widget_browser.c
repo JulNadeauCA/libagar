@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.19 2003/05/26 03:03:32 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.20 2003/06/06 02:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -169,9 +169,8 @@ examine_widget(int argc, union evarg *argv)
 		label_new(vb, "Name: \"%s\"", OBJECT(wid)->name);
 		label_new(vb, "Type: %s", wid->type);
 		label_polled_new(vb, &pwin->lock, "Flags: 0x%x", &wid->flags);
-		label_polled_new(vb, &pwin->lock, "Type: %s", &wid->type);
 		label_polled_new(vb, &pwin->lock,
-		    "%dx%d at %d,%d (view %d,%d)",
+		    "Geo: %dx%d at %d,%d (view %d,%d)",
 		    &wid->w, &wid->h, &wid->x, &wid->y,
 		    &wid->cx, &wid->cy);
 	}
@@ -201,9 +200,8 @@ find_widgets(struct widget *wid, struct tlist *widtl, int depth)
 	if (it->haschilds && tlist_visible_childs(widtl, it)) {
 		struct widget *cwid;
 
-		OBJECT_FOREACH_CHILD(cwid, wid, widget) {
+		OBJECT_FOREACH_CHILD(cwid, wid, widget)
 			find_widgets(cwid, widtl, depth+1);
-		}
 	}
 }
 
@@ -233,6 +231,7 @@ examine_window(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct window *pwin, *win;
 	struct tlist *tl;
+	struct hbox *hb;
 
 	it = tlist_item_selected(wintl);
 	if (it == NULL) {
@@ -252,7 +251,15 @@ examine_window(int argc, union evarg *argv)
 
 	tl = tlist_new(win, TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);
-	event_new(tl, "tlist-changed", examine_widget, "%p, %p", tl, pwin);
+
+	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
+	{
+		struct button *bu;
+
+		bu = button_new(hb, "Examine");
+		event_new(bu, "button-pushed", examine_widget, "%p, %p",
+		    tl, pwin);
+	}
 
 	window_show(win);
 }
