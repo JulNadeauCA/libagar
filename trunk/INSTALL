@@ -1,0 +1,23 @@
+
+1) Execute the configure script (see ./configure --help for options):
+   $ ./configure
+
+2) Build dependencies with the depend target:
+   $ make depend
+
+3) Compile the library, binaries, data files and preformat manual pages:
+   $ make
+
+4) Install the library, binaries, data files and manual pages:
+   # make install
+
+   Alternatively, to use/modify the data files of the source tree, use
+   the `links' target, symlinks will be made into ~/.cave:
+   $ make links
+
+5) Execute the game by running `cave':
+   $ cave
+
+   The level editor (if compiled in), is invoked with -e:
+   $ cave -e
+
