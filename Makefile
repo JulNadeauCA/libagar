@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.9 2002/01/29 19:24:01 vedge Exp $
+#	$Csoft: Makefile,v 1.10 2002/02/01 03:42:24 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
@@ -8,8 +8,12 @@ clean: clean-subdir
 cleandir: clean-config clean-subdir
 install: install-subdir
 deinstall: deinstall-subdir
-depend: depend-subdir
+depend: prereq depend-subdir
 regress: regress-subdir
+
+prereq:
+	(cd libfobj && ${MAKE})
+	(cd fobjcomp && ${MAKE})
 
 configure: .PHONY
 	cat configure.in | manuconf > configure
