@@ -1,4 +1,7 @@
-/*	$Csoft$	*/
+/*	$Csoft: input.h,v 1.1 2002/02/25 08:58:11 vedge Exp $	*/
+
+struct object;
+struct mappos;
 
 /* Input device associated with a map position. */
 struct input {
@@ -11,7 +14,7 @@ struct input {
 	int	index;			/* Device index */
 	void	*p;			/* User data */
 
-	struct	map_bref *bref;		/* Controlled map position */
+	struct	mappos *pos;		/* Controlled map position */
 };
 
 extern struct input *keyboard, *joy, *mouse;
