@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.108 2005/02/11 04:45:01 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.109 2005/03/03 10:59:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -157,7 +157,7 @@ dblclick_expire(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 
 	pthread_mutex_lock(&tl->lock);
-	tl->dblclicked = 0;
+	tl->dblclicked = NULL;
 	pthread_mutex_unlock(&tl->lock);
 }
 
@@ -188,7 +188,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->selected = NULL;
 	tl->keymoved = 0;
 	tl->item_h = text_font_height+2;
-	tl->dblclicked = 0;
+	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
@@ -778,14 +778,14 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		select_item(tl, ti);
 
 		/* Handle double clicks. */
-		if (tl->dblclicked) {
+		if (tl->dblclicked != NULL && tl->dblclicked == ti->p1) {
 			event_cancel(tl, "dblclick-expire");
-			event_post(NULL, tl, "tlist-dblclick", "%p", ti);
-			tl->dblclicked = 0;
+			event_post(NULL, tl, "tlist-dblclick", "%p", ti->p1);
+			tl->dblclicked = NULL;
 		} else {
-			tl->dblclicked++;
+			tl->dblclicked = ti->p1;
 			event_schedule(NULL, tl, mouse_dblclick_delay,
-			    "dblclick-expire", NULL);
+			    "dblclick-expire", "%p", ti);
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
