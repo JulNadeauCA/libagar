@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.114 2003/03/24 12:08:39 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.115 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -151,7 +151,7 @@ object_load_from(void *p, char *path)
 
 	debug(DEBUG_STATE, "loading %s from %s\n", ob->name, path);
 
-	if ((fd = open(path, O_RDONLY, 00600)) == -1) {
+	if ((fd = open(path, O_RDONLY)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
 		return (-1);
 	}
@@ -182,7 +182,7 @@ object_load(void *p)
 	if (object_path(ob->name, ob->type, path, sizeof(path)) == -1)
 		return (-1);
 
-	if ((fd = open(path, O_RDONLY, 00600)) == -1) {
+	if ((fd = open(path, O_RDONLY)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
 		goto fail;
 	}
