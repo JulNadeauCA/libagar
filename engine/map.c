@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.243 2005/04/04 10:28:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.244 2005/04/06 04:10:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -165,8 +165,11 @@ noderef_destroy(struct map *m, struct noderef *r)
 	switch (r->type) {
 	case NODEREF_SPRITE:
 		if (r->r_sprite.obj != NULL) {
+			extern int objmgr_exiting;
+
 			if (r->r_sprite.obj->gfx != NULL &&
-			    r->r_sprite.obj->gfx->type == GFX_PRIVATE) {
+			    r->r_sprite.obj->gfx->type == GFX_PRIVATE &&
+			    !objmgr_exiting) {
 				object_page_out(r->r_sprite.obj, OBJECT_DATA);
 			}
 			object_del_dep(m, r->r_sprite.obj);
