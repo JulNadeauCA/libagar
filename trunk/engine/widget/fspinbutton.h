@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.1 2003/11/09 13:14:25 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.2 2003/11/15 03:52:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -46,7 +46,7 @@ void	fspinbutton_set_max(struct fspinbutton *, double);
 void	fspinbutton_set_increment(struct fspinbutton *, float);
 void	fspinbutton_set_precision(struct fspinbutton *, int);
 void	fspinbutton_set_units(struct fspinbutton *, const struct unit[],
-	    const char *, double, double);
+	                      double, double);
 __END_DECLS
 
 #include "close_code.h"
