@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.15 2004/05/10 05:15:01 vedge Exp $
+.\"	$Csoft: text.3,v 1.16 2004/05/12 01:02:26 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,8 +40,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface uses an underlying font engine (such as FreeType) to render UTF-8
-text.
+interface uses an underlying font engine (such as FreeType) to render text.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
@@ -169,6 +168,47 @@ The
 and
 .Fn text_prescale_unicode
 functions return the expected surface dimensions for the given text.
+.Sh MESSAGES AND USER INPUT
+.nr nS 1
+.Ft "void"
+.Fn text_msg "enum text_msg_title title" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn text_edit_float "enum text_float_type type" "double *fp" "double min" \
+                    "double max" "const struct unit *unit" \
+		    "const char *format" "..."
+.nr nS 0
+.Pp
+The
+.Fn text_msg
+function displays a text message window containing the given
+.Xr printf 3
+formatted string.
+.Fa title
+is one of the following:
+.Bd -literal
+enum text_msg_title {
+	MSG_ERROR,
+	MSG_WARNING,
+	MSG_INFO
+};
+.Ed
+.Pp
+The
+.Fn text_edit_float
+function displays a window prompting the user to enter a floating-point
+value.
+The
+.Fa fp
+argument is a pointer to the variable, while
+.Fa min
+and
+.Fa max
+define the acceptable range.
+Unless
+.Fa unit
+is NULL, the argument indicates the unit system to use (as in
+.Xr units 3 ) .
 .Sh TROUBLETONS
 Something more sophisticated is needed to deal with unpredictable text surface
 dimensions.

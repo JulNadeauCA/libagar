@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.85 2004/05/21 03:31:02 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.86 2004/05/24 00:36:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/bitmap.h>
 #include <engine/widget/button.h>
+#include <engine/widget/fspinbutton.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
 
@@ -396,8 +397,8 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	char msg[LABEL_MAX];
 	struct window *win;
 	struct vbox *vb;
+	struct button *bu;
 	va_list args;
-	struct button *button;
 
 	va_start(args, format);
 	vsnprintf(msg, sizeof(msg), format, args);
@@ -411,12 +412,53 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	label_new(vb, LABEL_STATIC, msg);
 
 	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
+	bu = button_new(vb, _("Ok"));
+	event_new(bu, "button-pushed", window_generic_detach, "%p", win);
+
+	widget_focus(bu);
+	window_show(win);
+}
+
+/* Prompt the user for a floating-point value. */
+void
+text_edit_float(double *fp, double min, double max, const struct unit *unit,
+    const char *format, ...)
+{
+	char msg[LABEL_MAX];
+	struct window *win;
+	struct vbox *vb;
+	va_list args;
+	struct button *button;
+	struct fspinbutton *fsb;
+
+	va_start(args, format);
+	vsnprintf(msg, sizeof(msg), format, args);
+	va_end(args);
+
+	win = window_new(NULL);
+	window_set_caption(win, "%s", _(text_float_titles[type]));
+	window_set_position(win, WINDOW_CENTER, 1);
+
+	vb = vbox_new(win, VBOX_WFILL);
+	label_new(vb, LABEL_STATIC, msg);
+	
+	vb = vbox_new(win, VBOX_WFILL);
+	fsb = fspinbutton_new(vb, unit, _("Number: "));
+	WIDGET(fsb)->flags |= WIDGET_WFILL;
+	widget_bind(fsb, "value", WIDGET_DOUBLE, fp);
+	fspinbutton_set_range(fsb, min, max);
+	event_new(fsb, "fspinbutton-return", window_generic_detach, "%p", win);
+	
+	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
 	button = button_new(vb, _("Ok"));
 	event_new(button, "button-pushed", window_generic_detach, "%p", win);
 
-	widget_focus(button);
+	/* TODO test type */
+
 	window_show(win);
+	widget_focus(fsb->input);
 }
+
 
 /*
  * Parse a command-line font specification and set the default font.
