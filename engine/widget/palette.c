@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.10 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.11 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -221,7 +221,10 @@ palette_draw(void *p)
 
 	color = widget_get_uint32(pal, "color");
 	primitives.rect_filled(pal, &pal->rpreview, color);
-	primitives.frame_rect(pal, &pal->rpreview, WIDGET_COLOR(pal, BG_COLOR));
+	primitives.frame(pal,
+	    pal->rpreview.x, pal->rpreview.y,
+	    pal->rpreview.w, pal->rpreview.h,
+	    WIDGET_COLOR(pal, BG_COLOR));
 	
 	SDL_GetRGB(color, view->v->format, &r, &g, &b);
 	widget_set_int(pal->bars[0], "value", (int)r);
