@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.4 2003/11/19 00:47:58 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.5 2003/11/19 11:09:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -145,9 +145,9 @@ const struct unit time_units[] = {
 	{ "m",		N_("Minutes"),		60,			NULL },
 	{ "h", 		N_("Hours"),		3600,			NULL },
 	{ "d",		N_("Days"),		86400,			NULL },
-	{ "Ed",		N_("Weeks [Erisian]"),	432000,			NULL },
+	{ "\xce\x9a\x64", N_("Weeks [Erisian]"), 432000,		NULL },
 	{ "w",		N_("Weeks"),		604800,			NULL },
-	{ "Em",		N_("Months [Erisian]"),	6307200,		NULL },
+	{ "\xce\x9am",	N_("Months [Erisian]"),	6307200,		NULL },
 	{ "y",		N_("Years"),		31104000,		NULL },
 	{ NULL,		NULL,			0,			NULL }
 };
