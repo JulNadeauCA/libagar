@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.12 2002/11/14 05:59:02 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.13 2002/11/15 00:56:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -82,11 +82,10 @@ toolbar_window(struct monitor *mon)
 	struct region *reg;
 	struct button *button;
 
-	win = window_new("monitor-toolbar", "Monitor", WINDOW_SOLID,
-	    view->w - 86, 16,
-	    130, 104,
-	    130, 104);
-	
+	win = window_new("monitor-toolbar", 0, view->w - 86, 16,
+	    130, 104, 130, 104);
+	window_set_caption(win, "Debug monitor");
+
 	reg = region_new(win, REGION_HALIGN, 0,  0, 100, 50);
 	reg->spacing = 1;
 	
@@ -158,37 +157,6 @@ monitor_tool_init(struct monitor_tool *tool, char *name, struct monitor *mon,
 	tool->win = (MONITOR_TOOL_OPS(tool)->tool_window != NULL) ? 
 	    MONITOR_TOOL_OPS(tool)->tool_window(tool) : NULL;
 	tool->type = strdup(name);
-}
-
-struct mapview *
-monitor_tool_mapview(void)
-{
-	struct window *win;
-	struct region *reg;
-	struct widget *wid;
-
-	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		pthread_mutex_lock(&win->lock);
-		if ((win->flags & WINDOW_SHOWN) == 0) {
-			continue;
-		}
-		TAILQ_FOREACH(reg, &win->regionsh, regions) {
-			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-				if (!WIDGET_FOCUSED(wid)) {
-					continue;
-				}
-				if (strcmp(wid->type, "mapview") == 0) {
-					pthread_mutex_unlock(&win->lock);
-					pthread_mutex_unlock(&view->lock);
-					return ((struct mapview *)wid);
-				}
-			}
-		}
-		pthread_mutex_unlock(&win->lock);
-	}
-	pthread_mutex_unlock(&view->lock);
-	return (NULL);
 }
 
 #endif	/* DEBUG */

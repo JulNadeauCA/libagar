@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.10 2002/09/07 04:32:39 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.11 2002/11/14 05:59:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -95,8 +95,9 @@ eraser_window(void *p)
 		NULL
 	};
 
-	win = window_new("mapedit-tool-eraser", "Eraser", WINDOW_SOLID,
+	win = window_new("mapedit-tool-eraser", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120, 120, 120);
+	window_set_caption(win, "Eraser");
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0);
 	event_new(rad, "radio-changed", eraser_event, "%p, %c", er, 'm');

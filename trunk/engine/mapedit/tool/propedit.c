@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.6 2002/09/07 04:32:39 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.7 2002/11/14 05:59:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -89,8 +89,9 @@ propedit_window(void *p)
 	struct radio *rad;
 	struct checkbox *cbox;
 
-	win = window_new("mapedit-tool-propedit", "Node props", WINDOW_SOLID,
+	win = window_new("mapedit-tool-propedit", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 149, 198, 149, 198);
+	window_set_caption(win, "Node props");
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
 

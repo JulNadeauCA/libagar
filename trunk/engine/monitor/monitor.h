@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.5 2002/09/19 21:00:23 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.6 2002/11/14 05:59:02 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -43,5 +43,4 @@ void		 monitor_init(struct monitor *, char *name);
 void		 monitor_destroy(void *);
 void		 monitor_tool_init(struct monitor_tool *, char *,
 		     struct monitor *, const void *);
-struct mapview	*monitor_tool_mapview(void);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.23 2002/11/14 05:59:03 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.24 2002/11/14 07:52:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -721,11 +721,9 @@ primitive_config_window(void)
 	const int ydiv = 25;
 
 	/* Primitive drawing algorithm switch */
-	win = window_new("config-primitive-algorithm-sw",
-	    "Primitive algorithm switch", WINDOW_CENTER,
-	    0, 0,
-	    503, 440,
-	    424, 267);
+	win = window_new("config-primitive-algorithm-sw", WINDOW_CENTER, -1, -1,
+	    503, 440, 424, 267);
+	window_set_caption(win, "Primitive algorithm switch");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 93);
 	

@@ -1,4 +1,4 @@
-/*	$Csoft: map_view.c,v 1.1 2002/09/16 16:44:12 vedge Exp $	*/
+/*	$Csoft: map_view.c,v 1.1 2002/09/19 20:59:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -110,8 +110,9 @@ map_view_window(void *p)
 		fatal("no root map");
 	}
 	
-	win = window_new(NULL, "Map view", WINDOW_TITLEBAR,
-	    -1, -1, 320, 200, 320, 200);
+	win = window_generic_new(320, 200, NULL);
+	window_set_caption(win, "%s view", OBJECT(view->rootmap->map)->name);
+
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	mv = mapview_new(reg, NULL, view->rootmap->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,

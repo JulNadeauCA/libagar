@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.22 2002/11/08 21:37:26 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.23 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -128,10 +128,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the toolbar.
 	 */
-	win = window_new("mapedit-toolbar", "Tool", WINDOW_SOLID,
-	    16, 16,
-	    70, 147,
-	    70, 147);
+	win = window_new("mapedit-toolbar", 0,
+	    0, 0, 70, 147, 70, 147);
+	window_set_caption(win, "Tools");
 
 	/*
 	 * Left side of toolbar.
@@ -207,8 +206,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	 */
 
 	/* Object list window */
-	win = window_new("mapedit-object-list", "Object", WINDOW_SOLID,
-	    83, 16, view->w-96, TILEH+51, TILEW+42, TILEH+51);
+	win = window_new("mapedit-object-list", 0,
+	    83, 0, view->w-96, TILEH+51, TILEW+42, TILEH+51);
+	window_set_caption(win, "Objects");
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
 	oqueue = objq_new(reg, med, 0, 100, 100);
@@ -218,8 +218,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the `New map' dialog.
 	 */
-	win = window_new("mapedit-new-map-dialog", "New map", WINDOW_CENTER,
+	win = window_new("mapedit-new-map-dialog", 0,
 	     0, 0, 320, 200, 258, 198);
+	window_set_caption(win, "New map");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
 	name_tbox = textbox_new(reg, "Name: ", 0, 100, 50);
@@ -246,10 +247,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the `Load map' dialog.
 	 */
-	win = window_new("mapedit-load-map-dialog", "Load map", WINDOW_CENTER,
-	    0, 0,
-	    320, 120,
-	    100, 105);
+	win = window_new("mapedit-load-map-dialog", WINDOW_CENTER, -1, -1,
+	    320, 120, 100, 105);
+	window_set_caption(win, "Load map");
 
 	/* Map name */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);

@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.8 2002/09/07 04:32:39 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.9 2002/11/14 05:59:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -88,11 +88,12 @@ resize_window(void *p)
 	struct button *button;
 	struct textbox *tbox_w, *tbox_h;
 
-	win = window_new("window-tool-resize", "Resize map", WINDOW_SOLID,
+	win = window_new("window-tool-resize", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
 	    174, 110,
 	    174, 110);
-	
+	window_set_caption(win, "Resize map");
+
 	/* Scale textboxes */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
 	tbox_w = textbox_new(reg, "W: ", 0, 50, 100);	/* XXX int */

@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.9 2002/09/07 04:32:39 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.10 2002/11/14 05:59:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -96,11 +96,12 @@ magnifier_window(void *p)
 		NULL
 	};
 
-	win = window_new("mapedit-tool-magnifier", "Magnifier", WINDOW_SOLID,
+	win = window_new("mapedit-tool-magnifier", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
 	    109, 171,
 	    109, 171);
-	
+	window_set_caption(win, "Magnifier");
+
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
 	rad = radio_new(reg, mode_items, 0);

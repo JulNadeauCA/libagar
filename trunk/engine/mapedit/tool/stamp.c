@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.11 2002/09/07 04:32:39 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.12 2002/11/14 05:59:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -94,9 +94,10 @@ stamp_window(void *p)
 		NULL
 	};
 
-	win = window_new("mapedit-tool-stamp", "Stamp", WINDOW_SOLID,
+	win = window_new("mapedit-tool-stamp", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 156, 101, 156, 101);
-	
+	window_set_caption(win, "Stamp");
+
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0);
