@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.90 2003/08/21 04:26:41 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.91 2003/08/26 07:55:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -37,8 +37,7 @@ struct object_ops {
  */
 struct object_position {
 	struct map	*map;		/* Map (or NULL) */
-	int		 x, y;		/* Map coordinates */
-	int		 layer;		/* Current layer */
+	int		 x, y, z;	/* Map coordinates */
 	int		 center;	/* Center the view around this? */
 	struct map	*submap;	/* Current submap */
 	struct input	*input;		/* Controller (or NULL) */

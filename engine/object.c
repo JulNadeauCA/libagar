@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.143 2003/08/21 04:26:40 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.144 2003/08/26 07:55:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1120,7 +1120,7 @@ object_project_submap(struct object_position *pos)
 	struct map *dm = pos->map;
 	int sx, sy, dx, dy;
 
-	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer, sm->mapw,
+	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->z, sm->mapw,
 	    sm->maph);
 
 	for (sy = 0, dy = pos->y;
@@ -1130,7 +1130,7 @@ object_project_submap(struct object_position *pos)
 		     sx < sm->mapw && dx < pos->x+dm->mapw;
 		     sx++, dx++) {
 			node_copy(sm, &sm->map[sy][sx], -1,
-			    dm, &dm->map[dy][dx], pos->layer);
+			    dm, &dm->map[dy][dx], pos->z);
 		}
 	}
 }
@@ -1141,12 +1141,12 @@ object_unproject_submap(struct object_position *pos)
 {
 	int x, y;
 	
-	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer,
+	dprintf("[%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->z,
 	    pos->submap->mapw, pos->submap->maph);
 
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
-			node_clear(pos->map, &pos->map->map[y][x], pos->layer);
+			node_clear(pos->map, &pos->map->map[y][x], pos->z);
 		}
 	}
 }
@@ -1201,21 +1201,21 @@ fail:
 
 /* Set the position of an object inside a map. */
 void
-object_set_position(void *p, struct map *dstmap, int x, int y, int layer)
+object_set_position(void *p, struct map *dstmap, int x, int y, int z)
 {
 	struct object *ob = p;
 
 	pthread_mutex_lock(&ob->lock);
 	
 	debug(DEBUG_POSITION, "%s: position -> %s:[%d,%d,%d]\n",
-	    ob->name, OBJECT(dstmap)->name, x, y, layer);
+	    ob->name, OBJECT(dstmap)->name, x, y, z);
 
 	if (ob->pos == NULL) {
 		ob->pos = Malloc(sizeof(struct object_position));
 		ob->pos->map = NULL;
 		ob->pos->x = 0;
 		ob->pos->y = 0;
-		ob->pos->layer = 0;
+		ob->pos->z = 0;
 		ob->pos->center = 0;
 		ob->pos->submap = NULL;
 		ob->pos->input = NULL;
@@ -1228,16 +1228,16 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int layer)
 	pthread_mutex_lock(&dstmap->lock);
 	if (ob->pos->x >= 0 && ob->pos->x < dstmap->mapw &&
 	    ob->pos->y >= 0 && ob->pos->y < dstmap->maph &&
-	    layer >= 0 && layer < dstmap->nlayers) {
+	    z >= 0 && z < dstmap->nlayers) {
 		ob->pos->map = dstmap;
 		ob->pos->x = x;
 		ob->pos->y = y;
-		ob->pos->layer = layer;
+		ob->pos->z = z;
 		object_attach(ob->pos->map, ob);
 		object_project_submap(ob->pos);
 	} else {
 		debug(DEBUG_POSITION, "%s: bad coords %s:[%d,%d,%d]\n",
-		    ob->name, OBJECT(dstmap)->name, x, y, layer);
+		    ob->name, OBJECT(dstmap)->name, x, y, z);
 		free(ob->pos);
 		ob->pos = NULL;
 	}
@@ -1275,7 +1275,7 @@ object_save_position(const void *p, struct netbuf *buf)
 
 	write_uint32(buf, (Uint32)pos->x);
 	write_uint32(buf, (Uint32)pos->y);
-	write_uint8(buf, (Uint8)pos->layer);
+	write_uint8(buf, (Uint8)pos->z);
 	write_uint8(buf, (Uint8)pos->center);
 	write_string(buf, (pos->submap != NULL) ?
 	    OBJECT(pos->submap)->name : NULL);
@@ -1292,7 +1292,7 @@ object_load_position(void *p, struct netbuf *buf)
 {
 	char submap_id[OBJECT_PATH_MAX];
 	char input_id[OBJECT_PATH_MAX];
-	int x, y, layer, center;
+	int x, y, z, center;
 	struct object *ob = p;
 	struct map *m = ob->parent;
 
@@ -1301,26 +1301,26 @@ object_load_position(void *p, struct netbuf *buf)
 
 	x = (int)read_uint32(buf);
 	y = (int)read_uint32(buf);
-	layer = (int)read_uint8(buf);
+	z = (int)read_uint8(buf);
 	center = (int)read_uint8(buf);
 
 	copy_string(submap_id, buf, sizeof(submap_id));
 	copy_string(input_id, buf, sizeof(input_id));
 
-	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, layer,
+	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, z,
 	    center ? ", centered" : "");
 
 	if (x < 0 || x >= m->mapw ||
 	    y < 0 || y >= m->maph ||
-	    layer < 0 || layer >= m->nlayers) {
-		error_set(_("Bad coordinates: %d,%d,%d"), x, y, layer);
+	    z < 0 || z >= m->nlayers) {
+		error_set(_("Bad coordinates: %d,%d,%d"), x, y, z);
 		goto fail;
 	}
 	if (submap_id != NULL &&
 	    object_set_submap(ob, submap_id) == -1) {
 		goto fail;
 	}
-	object_set_position(ob, m, x, y, layer);
+	object_set_position(ob, m, x, y, z);
 
 	if (input_id != NULL) {
 		if (object_control(ob, input_id) == -1)

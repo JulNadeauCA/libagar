@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.56 2003/04/18 04:07:19 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.57 2003/06/29 11:33:41 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -170,7 +170,7 @@ mapdir_set_motion(struct mapdir *dir, int xmotion, int ymotion)
 			struct noderef *r;
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if (r->layer != pos->layer) {
+				if (r->layer != pos->z) {
 					continue;
 				}
 				r->r_gfx.xmotion = xmotion;
@@ -192,7 +192,7 @@ mapdir_add_motion(struct mapdir *dir, int xmotion, int ymotion)
 			struct noderef *r;
 
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if (r->layer != pos->layer) {
+				if (r->layer != pos->z) {
 					continue;
 				}
 				r->r_gfx.xmotion += xmotion;
@@ -257,7 +257,7 @@ mapdir_can_move(struct mapdir *dir, struct map *dstmap, int x, int y)
 	}
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 		/* Give block precedence over walk. */
-		if (ob->pos->layer == r->layer &&
+		if (ob->pos->z == r->layer &&
 		   ((r->flags & NODEREF_WALK)) == 0) {
 			error_set("nref block");
 			return (0);
@@ -368,7 +368,7 @@ mapdir_move(struct mapdir *dir)
 	if (pos->x < 0 || pos->y < 0 ||
 	    pos->x+pos->submap->mapw >= pos->map->mapw ||
 	    pos->y+pos->submap->maph >= pos->map->maph ||
-	    pos->layer >= pos->map->nlayers) {
+	    pos->z >= pos->map->nlayers) {
 		error_set("bad coords");
 		goto fail;
 	}
@@ -379,7 +379,7 @@ mapdir_move(struct mapdir *dir)
 			struct noderef *r;
 			
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				if (r->layer != pos->layer)
+				if (r->layer != pos->z)
 					continue;
 
 				if (r->r_gfx.ymotion == 0 &&

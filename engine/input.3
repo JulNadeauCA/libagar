@@ -1,4 +1,4 @@
-.\"	$Csoft: world.3,v 1.6 2003/04/12 00:35:06 vedge Exp $
+.\"	$Csoft: input.3,v 1.1 2003/05/09 01:58:54 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm input
-.Nd agar generic input devices
+.Nd agar input device interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/input.h>
@@ -44,73 +44,50 @@ structure is used internally by the
 .Xr event 3
 and
 .Xr object 3
-subsystems to represent input devices.
-.Pp
-Usually, an input device is bound to the position of an
-.Xr object 3 .
-This allows players to control characters, for instance.
+subsystems to represent input devices bound to
+.Xr object 3
+positions, allowing players to control characters, for instance.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn input_new "enum input_type type" "int index"
+.Fn input_register "void *p" "enum input_type type" "const char *name" \
+                   "const struct input_driver *drv"
+.Pp
+.Ft "void"
+.Fn input_deregister "void *p"
 .Pp
 .Ft "struct input *"
-.Fn input_find "char *name"
+.Fn input_find "const char *name"
 .Pp
-.Ft "int"
-.Fn input_destroy_all "void"
+.Ft "void"
+.Fn input_destroy "void"
 .Pp
 .nr nS 0
 The
-.Fn input_new
+.Fn input_register
 function initializes and a attaches a new input device of the given type.
-The name of the new device is set to the type of device followed by the index#,
-such as
-.Sq keyboard0 .
-Acceptable values for
-.Fa type
-are:
-.Bd -literal
-enum input_type {
-	INPUT_KEYBOARD,		/* Keyboard device */
-	INPUT_JOY,		/* Joystick device */
-	INPUT_MOUSE		/* Mouse device */
-};
-.Ed
+.Fa name
+is used to reference the input device in
+.Xr object 3
+saves.
 .Pp
-For devices of type
-.Dv INPUT_JOY ,
-the
-.Fa index
-argument is the joystick index, as returned by
-.Xr SDL_JoystickIndex 3 .
-For other devices, the index is set to 0.
+The
+.Fn input_deregister
+function destroys the given input device.
 .Pp
 The
 .Fn input_find
-function looks for an input device of the given
-.Fa name
-and returns a pointer to it, or NULL if there is no such device attached.
+function looks for the named input device and returns a pointer to it,
+or NULL if there is no such device attached.
 .Pp
 The
-.Fn input_destroy_all
+.Fn input_destroy
 function frees all currently attached input devices.
-.Sh EVENT HANDLING
-.nr nS 1
-.Ft void
-.Fn input_event "enum input_type type" "SDL_Event *ev"
-.Pp
-.nr nS 0
-The
-.Fn input_event
-function is called from the
-.Xr event 3
-loop to process input device events.
 .Sh SEE ALSO
-.Xr agar 3
-.Xr event 3
+.Xr agar 3 ,
+.Xr event 3 ,
 .Xr object 3
 .Sh HISTORY
 The
 .Nm
-layer first appeared in Agar 1.0
+interface first appeared in Agar 1.0
