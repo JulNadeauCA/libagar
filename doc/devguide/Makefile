@@ -1,10 +1,11 @@
-# $Csoft: Makefile,v 1.2 2004/01/25 04:15:09 vedge Exp $
+# $Csoft: Makefile,v 1.3 2004/01/25 05:11:02 vedge Exp $
 
 TOP=	../..
 
-DOC=		agar-devguide.ps
-OUTPUT=		ps
+DOCPS=		agar-devguide.ps
+DOCPDF=		agar-devguide.pdf
 MACROS=		-me
+
 DOCSRC=		00.Macros.me \
 		00.Intro.me \
 		00.Chapters.me \
