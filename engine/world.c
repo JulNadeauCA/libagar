@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.18 2002/03/15 07:35:33 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.19 2002/03/17 09:15:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -194,7 +194,6 @@ world_destroy(void *p)
 			ob->vec->unlink(ob);
 		}
 	}
-	SDL_Delay(100);	/* XXX */
 
 	printf("freed:");
 	fflush(stdout);
