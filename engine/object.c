@@ -52,7 +52,7 @@ enum {
 
 static LIST_HEAD(, object_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
 static LIST_HEAD(, object_audio) audiosh = LIST_HEAD_INITIALIZER(&audiosh);
-static pthread_mutex_t media_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t media_lock = { PTHREAD_MUTEX_INITIALIZER };
 static SDL_TimerID gctimer;
 
 extern int mapediting;
