@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.77 2003/05/25 03:59:07 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.78 2003/05/25 08:00:13 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -194,21 +194,20 @@ config_window(struct config *con)
 		int i;
 
 		for (i = 0; i < nsettings; i++) {
-			cbox = checkbox_new(reg, -1, "%s", settings[i].descr);
+			cbox = checkbox_new(reg, "%s", settings[i].descr);
 			widget_bind(cbox, "state", WIDGET_PROP,
 			    config, settings[i].name);
 		}
 
 #ifdef DEBUG
 		/* XXX thread unsafe */
-		cbox = checkbox_new(reg, -1, "Debugging");
+		cbox = checkbox_new(reg, "Debugging");
 		widget_bind(cbox, "state", WIDGET_BOOL, NULL, &engine_debug);
 		
-		cbox = checkbox_new(reg, -1, "Node signature checking");
+		cbox = checkbox_new(reg, "Node signature checking");
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &map_nodesigs);
 #endif
-
-		cbox = checkbox_new(reg, -1, "Idle time prediction");
+		cbox = checkbox_new(reg, "Idle time prediction");
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
 	}
 	

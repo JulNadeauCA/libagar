@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.19 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.20 2003/05/24 13:44:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ shift_window(void *p)
 		rad = radio_new(reg, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
 
-		cb = checkbox_new(reg, -1, "Multi");
+		cb = checkbox_new(reg, "Multi");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->multi);
 	}
 	return (win);

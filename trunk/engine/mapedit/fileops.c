@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.47 2003/05/18 02:10:27 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.48 2003/05/24 15:49:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -38,7 +38,6 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/button.h>
-#include <engine/widget/checkbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/text.h>
 

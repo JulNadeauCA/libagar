@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.45 2003/05/22 05:45:46 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.46 2003/05/25 08:27:42 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -167,19 +167,27 @@ static void
 frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
+	Uint32 lcol, rcol;
+
+	lcol = alter_color(color, 80, 80, 80);
+	rcol = alter_color(color, -80, -80, -80);
 
 	primitives.line(wid,			/* Top */
-	    xoffs, yoffs,
-	    xoffs+w-1, yoffs, color);
+	    xoffs,	yoffs,
+	    xoffs+w-1,	yoffs,
+	    lcol);
 	primitives.line(wid,			/* Left */
-	    xoffs, yoffs,
-	    xoffs, yoffs+h-1, color);
+	    xoffs,	yoffs,
+	    xoffs,	yoffs+h-1,
+	    lcol);
 	primitives.line(wid,			/* Bottom */
-	    xoffs, yoffs+h-1,
-	    xoffs+w-1, yoffs+h-1, color);
+	    xoffs,	yoffs+h-1,
+	    xoffs+w-1,	yoffs+h-1,
+	    rcol);
 	primitives.line(wid,			/* Right */
-	    xoffs+w-1, yoffs,
-	    xoffs+w-1, yoffs+h-1, color);
+	    xoffs+w-1,	yoffs,
+	    xoffs+w-1,	yoffs+h-1,
+	    rcol);
 }
 
 /* Render a circle. */
@@ -187,49 +195,44 @@ static void
 circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
     Uint32 color)
 {
-	int x = 0, y, cx, cy, e = 0, u = 1, v;
-
-	y = radius;
-	cx = w/2 + xoffs;
-	cy = h/2 + yoffs;
-	v = 2*radius - 1;
+	int x = 0;
+	int y = radius;
+	int cx = w/2 + xoffs;
+	int cy = h/2 + yoffs;
+	int v = 2*radius - 1;
+	int e = 0, u = 1;
 
 	SDL_LockSurface(view->v);
-	while (x <= y) {
+	while (x < y) {
 		WIDGET_PUT_PIXEL(wid, cx + x, cy + y, color);	/* SE */
 		WIDGET_PUT_PIXEL(wid, cx + x, cy - y, color);	/* NE */
 		WIDGET_PUT_PIXEL(wid, cx - x, cy + y, color);	/* SW */
 		WIDGET_PUT_PIXEL(wid, cx - x, cy - y, color);	/* NW */
-		x++;
+
 		e += u;
 		u += 2;
-		if (v < 2 * e) {
+		if (v < 2*e) {
 			y--;
 			e -= v;
 			v -= 2;
 		}
-		if (x > y) {
+		if (++x > y)
 			break;
-		}
+
 		WIDGET_PUT_PIXEL(wid, cx + y, cy + x, color);	/* SE */
 		WIDGET_PUT_PIXEL(wid, cx + y, cy - x, color);	/* NE */
 		WIDGET_PUT_PIXEL(wid, cx - y, cy + x, color);	/* SW */
 		WIDGET_PUT_PIXEL(wid, cx - y, cy - x, color);	/* NW */
 	}
-	WIDGET_PUT_PIXEL(wid, 2, cy, color);
-	WIDGET_PUT_PIXEL(wid, w-2, cy, color);
 	SDL_UnlockSurface(view->v);
 }
 
 static void
-wline(void *wid, int width, int px1, int py1, int px2, int py2, Uint32 color)
+line2(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
 {
-	int i;
-
-	for (i = 0; i < width; i++) {
-		primitives.line(wid, px1+i, py1+i, px2+i, py2+i,
-		    alter_color(color, i*90, i*90, i*90));
-	}
+	primitives.line(wid, px1, py1, px2, py2, color);
+	primitives.line(wid, px1+1, py1+1, px2+1, py2+1,
+	    alter_color(color, 50, 50, 50));
 }
 
 /* Render a segment from px1,py1 to px2,py2. */
@@ -368,16 +371,16 @@ rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
-	primitives.wline(wid, 2,		/* Top */
+	primitives.line(wid, 		/* Top */
 	    x, y,
 	    x + w - 1, y, color);
-	primitives.wline(wid, 2,		/* Bottom */
+	primitives.line(wid, 		/* Bottom */
 	    x, y + h - 1,
 	    x + w - 1, y + h - 1, color);
-	primitives.wline(wid, 2,		/* Left */
+	primitives.line(wid, 		/* Left */
 	    x, y,
 	    x, y + h - 1, color);
-	primitives.wline(wid, 2,		/* Right */
+	primitives.line(wid, 		/* Right */
 	    x+w - 1, y,
 	    x+w - 1, y + h - 1, color);
 }
@@ -401,11 +404,11 @@ plus(void *p, int x, int y, int w, int h, Uint32 color)
 	int xcenter = x+w/2;
 	int ycenter = y+h/2;
 
-	primitives.wline(wid, 2,
+	primitives.line2(wid,
 	    xcenter,	y,
 	    xcenter,	y + h,
 	    color);
-	primitives.wline(wid, 2,
+	primitives.line2(wid,
 	    x,		ycenter,
 	    x + w,	ycenter,
 	    color);
@@ -417,7 +420,7 @@ minus(void *p, int x, int y, int w, int h, Uint32 color)
 	struct widget *wid = p;
 	int ycenter = y+h/2;
 
-	primitives.wline(wid, 2,
+	primitives.line2(wid,
 	    x,		ycenter,
 	    x + w,	ycenter,
 	    color);
@@ -473,7 +476,7 @@ primitives_init(void)
 	primitives.rect_outlined = rect_outlined;
 	primitives.plus = plus;
 	primitives.minus = minus;
-	primitives.wline = wline;
+	primitives.line2 = line2;
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {

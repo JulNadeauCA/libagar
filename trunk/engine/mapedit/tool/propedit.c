@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.34 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.35 2003/05/24 15:53:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include "propedit.h"
 
 #include <engine/view.h>
+
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
@@ -246,11 +247,11 @@ propedit_window(void *p)
 		rad = radio_new(reg, node_modes);
 		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
 
-		cbox = checkbox_new(reg, -1, "Origin");
+		cbox = checkbox_new(reg, "Origin");
 		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
 
 		for (i = 0; i < nprops; i++) {
-			cbox = checkbox_new(reg, -1, props[i].name);
+			cbox = checkbox_new(reg, "%s", props[i].name);
 			event_new(cbox, "checkbox-changed", toggle_node_flag,
 			    "%p, %i", pe, props[i].flag);
 		}
