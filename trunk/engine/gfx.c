@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.23 2004/03/13 02:35:21 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.24 2004/03/17 04:03:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -32,13 +32,18 @@
 #include <engine/mapedit/mapedit.h>
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
-
 #ifdef DEBUG
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #endif
 
 #include <string.h>
+
+#ifdef DEBUG
+#define DEBUG_GC	0x01
+int	gfx_debug = DEBUG_GC;
+#define engine_debug gfx_debug
+#endif
 
 enum {
 	NANIMS_INIT =	1,
@@ -154,7 +159,10 @@ gfx_scan_alpha(SDL_Surface *su)
 	}
 }
 
-/* Break a surface into tile-sized fragments and map them as NULL refs. */
+/*
+ * Break a surface into newly-allocated tile-sized fragments, generating
+ * a map of the fragments.
+ */
 int
 gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 {
@@ -388,7 +396,7 @@ gfx_destroy(struct gfx *gfx)
 	}
 	Free(gfx->submaps);
 
-	dprintf("freed %s (%d sprites, %d anims, %d maps)\n", gfx->name,
+	debug(DEBUG_GC, "freed %s (%d sprites, %d anims, %d maps)\n", gfx->name,
 	    gfx->nsprites, gfx->nanims, gfx->nsubmaps);
 
 	pthread_mutex_destroy(&gfx->used_lock);
