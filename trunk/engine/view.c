@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.126 2003/06/06 02:54:57 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.127 2003/06/17 23:30:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -54,14 +54,6 @@
 #include <jpeglib.h>
 #endif
 
-const struct object_ops viewport_ops = {
-	NULL,		/* init */
-	view_destroy,
-	NULL,		/* load */
-	NULL,		/* save */
-	NULL		/* edit */
-};
-
 /* Read-only as long as the engine is running. */
 struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
@@ -75,7 +67,6 @@ int	view_debug = 1;
 int
 view_init(enum gfx_engine ge)
 {
-	struct viewport *v;
 	int screenflags = SDL_SWSURFACE;
 	int depth;
 
@@ -84,45 +75,44 @@ view_init(enum gfx_engine ge)
 		return (-1);
 	}
 
-	v = Malloc(sizeof(struct viewport));
-	object_init(v, "view-port", "view", &viewport_ops);
-	v->gfx_engine = ge;
-	v->rootmap = NULL;
-	v->winop = VIEW_WINOP_NONE;
-	v->ndirty = 0;
-	v->maxdirty = 4;
-	v->dirty = Malloc(v->maxdirty * sizeof(SDL_Rect));
-	v->opengl = 0;
-	TAILQ_INIT(&v->windows);
-	TAILQ_INIT(&v->detach);
-	pthread_mutex_init(&v->lock, &recursive_mutexattr);
+	view = Malloc(sizeof(struct viewport));
+	view->gfx_engine = ge;
+	view->rootmap = NULL;
+	view->winop = VIEW_WINOP_NONE;
+	view->ndirty = 0;
+	view->maxdirty = 4;
+	view->dirty = Malloc(view->maxdirty * sizeof(SDL_Rect));
+	view->opengl = 0;
+	TAILQ_INIT(&view->windows);
+	TAILQ_INIT(&view->detach);
+	pthread_mutex_init(&view->lock, &recursive_mutexattr);
 
 	/* Obtain the display preferences. */
 	depth = prop_get_uint8(config, "view.depth");
-	v->w = prop_get_uint16(config, "view.w");
-	v->h = prop_get_uint16(config, "view.h");
+	view->w = prop_get_uint16(config, "view.w");
+	view->h = prop_get_uint16(config, "view.h");
 	if (prop_get_bool(config, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
 	if (prop_get_bool(config, "view.async-blits"))
 		screenflags |= SDL_HWSURFACE|SDL_ASYNCBLIT;
 
 	/* Negotiate the depth. */
-	v->depth = SDL_VideoModeOK(v->w, v->h, depth, screenflags);
-	if (v->depth == 8)
+	view->depth = SDL_VideoModeOK(view->w, view->h, depth, screenflags);
+	if (view->depth == 8)
 		screenflags |= SDL_HWPALETTE;
 
-	switch (v->gfx_engine) {
+	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		dprintf("direct video / tile-based\n");
 	
 		/* Adapt resolution to tile geometry. */
-		v->w -= v->w % TILEW;
-		v->h -= v->h % TILEH;
-		dprintf("rounded resolution to %dx%d\n", v->w, v->h);
+		view->w -= view->w % TILEW;
+		view->h -= view->h % TILEH;
+		dprintf("rounded resolution to %dx%d\n", view->w, view->h);
 
 		/* Initialize the map display. */
-		v->rootmap = Malloc(sizeof(struct viewmap));
-		rootmap_init(v->rootmap, v->w / TILEW, v->h / TILEH);
+		view->rootmap = Malloc(sizeof(struct viewmap));
+		rootmap_init(view->rootmap, view->w / TILEW, view->h / TILEH);
 		break;
 	case GFX_ENGINE_GUI:
 		dprintf("direct video / gui\n");
@@ -142,26 +132,26 @@ view_init(enum gfx_engine ge)
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		
-		v->opengl = 1;
+		view->opengl = 1;
 	}
 #endif
 
-	if (v->w < prop_get_uint16(config, "view.min-w") ||
-	    v->h < prop_get_uint16(config, "view.min-h")) {
-		error_set(_("resolution is too small"));
+	if (view->w < prop_get_uint16(config, "view.min-w") ||
+	    view->h < prop_get_uint16(config, "view.min-h")) {
+		error_set("resolution is too small");
 		goto fail;
 	}
 
 	/* Set the video mode. */
-	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
-	if (v->v == NULL) {
-		error_set(_("setting %dx%dx%d mode: %s"), v->w, v->h, v->depth,
-		    SDL_GetError());
+	view->v = SDL_SetVideoMode(view->w, view->h, 0, screenflags);
+	if (view->v == NULL) {
+		error_set("setting %dx%dx%d mode: %s", view->w, view->h,
+		    view->depth, SDL_GetError());
 		goto fail;
 	}
 
 #ifdef HAVE_OPENGL
-	if (v->opengl) {
+	if (view->opengl) {
 		int red, blue, green, alpha, depth, bsize;
 
 		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
@@ -178,8 +168,8 @@ view_init(enum gfx_engine ge)
 		prop_set_int(config, "view.gl.alpha_size", alpha);
 		prop_set_int(config, "view.gl.buffer_size", bsize);
 
-		glViewport(0, 0, v->w, v->h);
-		glOrtho(0, v->w, v->h, 0, -1.0, 1.0);
+		glViewport(0, 0, view->w, view->h);
+		glOrtho(0, view->w, view->h, 0, -1.0, 1.0);
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -191,71 +181,56 @@ view_init(enum gfx_engine ge)
 	}
 #endif /* HAVE_OPENGL */
 
-	prop_set_uint16(config, "view.w", v->w);
-	prop_set_uint16(config, "view.h", v->h);
-	view = v;
+	prop_set_uint16(config, "view.w", view->w);
+	prop_set_uint16(config, "view.h", view->h);
 	vfmt = view->v->format;
 
 	primitives_init();
 	return (0);
 fail:
-	pthread_mutex_destroy(&v->lock);
-	free(v);
+	pthread_mutex_destroy(&view->lock);
+	free(view);
+	view = NULL;
 	return (-1);
 }
 
-/*
- * Process all windows on the detach queue. This is executed after
- * window list traversal by the event loop.
- *
- * The view must be locked, the detach queue must not be empty.
- */
+/* Release the resources allocated by the graphic engine. */
 void
-view_detach_queued(void)
+view_destroy(void)
 {
 	struct window *win, *nwin;
 
-	for (win = TAILQ_FIRST(&view->detach);
-	     win != TAILQ_END(&view->detach);
+	for (win = TAILQ_FIRST(&view->windows);
+	     win != TAILQ_END(&view->windows);
 	     win = nwin) {
-		nwin = TAILQ_NEXT(win, detach);
-
-		TAILQ_REMOVE(&view->windows, win, windows);
+		nwin = TAILQ_NEXT(win, windows);
+		dprintf("freeing: %s (attached)\n", OBJECT(win)->name);
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
+#if 0
+		/* XXX lock */
 		object_destroy(win);
+#endif
 		free(win);
 	}
-	TAILQ_INIT(&view->detach);
+	TAILQ_INIT(&view->windows);
+
+	if (view->rootmap != NULL) {
+		rootmap_free_maprects(view);
+		free(view->rootmap);
+	}
+	free(view->dirty);
+	pthread_mutex_destroy(&view->lock);
+
+	free(view);
+	view = NULL;
 }
 
-void
-view_destroy(void *p)
-{
-	struct viewport *v = p;
-	struct window *win;
-
-	pthread_mutex_lock(&v->lock);
-	if (v->rootmap != NULL) {
-		rootmap_free_maprects(v);
-		free(v->rootmap);
-		v->rootmap = NULL;
-	}
-	TAILQ_FOREACH(win, &v->windows, windows) {
-		view_detach(win);
-	}
-#if 0
-	view_detach_queued();
-#endif
-	free(v->dirty);
-	pthread_mutex_unlock(&v->lock);
-	pthread_mutex_destroy(&v->lock);
-}
-
+/* Return the named window or NULL if there is no such window. */
 struct window *
-view_window_exists(char *name)
+view_window_exists(const char *name)
 {
-	struct window *win = NULL;
+	struct window *win;
 
 	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH(win, &view->windows, windows) {
@@ -275,10 +250,9 @@ view_attach(void *child)
 	pthread_mutex_lock(&view->lock);
 
 	view->focus_win = NULL;
-
 	event_post(child, "attached", "%p", view);
 	TAILQ_INSERT_TAIL(&view->windows, win, windows);
-	
+
 	pthread_mutex_unlock(&view->lock);
 }
 
@@ -297,6 +271,7 @@ view_detach(void *child)
 	pthread_mutex_unlock(&view->lock);
 }
 
+/* Allocate a 32bpp surface with native masks. */
 SDL_Surface *
 view_surface(Uint32 flags, int w, int h)
 {
@@ -464,10 +439,9 @@ view_set_refresh(int min_delay, int max_delay)
 {
 	if (min_delay < 0 || min_delay > 300 ||
 	    max_delay < 0 || max_delay > 300) {
-		error_set(_("Refresh rate is out of range"));
+		error_set(_("The refresh rate is out of range"));
 		return (-1);
 	}
-	
 	dprintf("%d fps (%dms)\n", 1000/max_delay, max_delay);
 	pthread_mutex_lock(&view->lock);
 	view->refresh.current = 0;
@@ -604,7 +578,7 @@ void
 view_capture(SDL_Surface *su)
 {
 #ifdef HAVE_JPEG
-	char path[FILENAME_MAX];
+	char path[MAXPATHLEN];
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
 	Uint8 *jcopybuf;
@@ -625,7 +599,7 @@ view_capture(SDL_Surface *su)
 	}
 
 	for (;;) {
-		char file[FILENAME_MAX];
+		char file[MAXPATHLEN];
 
 		snprintf(file, sizeof(file), "%s/%s%u.jpg", path,
 		    proginfo->progname, seq++);
