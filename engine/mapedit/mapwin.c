@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.12 2002/07/30 22:21:44 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.13 2002/08/18 00:36:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -127,7 +127,8 @@ mapwin_new(struct mapedit *med, struct map *m)
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, m,
-	    MAPVIEW_CENTER|MAPVIEW_EDIT|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
+	    MAPVIEW_CENTER|MAPVIEW_EDIT|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR|
+	    MAPVIEW_PROPS,
 	    100, 100);
 
 	/*
@@ -169,7 +170,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 
 	/* Props */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
-	    BUTTON_STICKY, -1, -1);
+	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
