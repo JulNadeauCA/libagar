@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.17 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.18 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,7 +50,8 @@ static const struct tool_ops magnifier_ops = {
 	},
 	magnifier_window,
 	NULL,			/* cursor */
-	magnifier_effect
+	NULL,
+	magnifier_mouse
 };
 
 static void	magnifier_event(int, union evarg *);
@@ -63,7 +64,7 @@ magnifier_init(void *p)
 	tool_init(&mag->tool, "magnifier", &magnifier_ops);
 	mag->tool.flags |= TOOL_NO_EDIT;
 	mag->mode = MAGNIFIER_ZOOM_IN;
-	mag->increment = prop_get_int(&mapedit, "zoom-increment");
+	mag->increment = 30;
 }
 
 struct window *
@@ -85,7 +86,6 @@ magnifier_window(void *p)
 		static const char *mode_items[] = {
 			"Zoom in",
 			"Zoom out",
-			"Center",
 			NULL
 		};
 
@@ -149,17 +149,34 @@ magnifier_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct magnifier *mag = p;
 
+}
+
+void
+magnifier_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel,
+    Uint8 state)
+{
+	struct magnifier *mag = p;
+
+	if ((state & SDL_BUTTON(1)) == 0) {
+		return;
+	}
+
 	switch (mag->mode) {
 	case MAGNIFIER_ZOOM_IN:
-		mapview_zoom(mv, mv->map->zoom + mag->increment);
-		mapview_center(mv, mv->cx, mv->cy);
+		if (xrel != 0) {
+			mapview_zoom(mv, mv->map->zoom + xrel);
+#if 0
+			mapview_center(mv, mv->cx, mv->cy);
+#endif
+		}
 		break;
 	case MAGNIFIER_ZOOM_OUT:
-		mapview_zoom(mv, mv->map->zoom - mag->increment);
-		mapview_center(mv, mv->cx, mv->cy);
-		break;
-	case MAGNIFIER_CENTER:
-		mapview_center(mv, mv->cx, mv->cy);
+		if (xrel != 0) {
+			mapview_zoom(mv, mv->map->zoom - xrel);
+#if 0
+			mapview_center(mv, mv->cx, mv->cy);
+#endif
+		}
 		break;
 	}
 }
