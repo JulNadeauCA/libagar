@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.1 2002/02/25 08:57:29 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.2 2002/03/03 06:23:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -101,16 +101,24 @@ input_key(struct input *in, SDL_Event *ev)
 
 	switch (ev->key.keysym.sym) {
 	case SDLK_UP:
-		mapdir_set(&in->pos->dir, DIR_UP, set);
+		if (in->pos->y > 1) {
+			mapdir_set(&in->pos->dir, DIR_UP, set);
+		}
 		break;
 	case SDLK_DOWN:
-		mapdir_set(&in->pos->dir, DIR_DOWN, set);
+		if (in->pos->y < in->pos->map->maph - 1) {
+			mapdir_set(&in->pos->dir, DIR_DOWN, set);
+		}
 		break;
 	case SDLK_LEFT:
-		mapdir_set(&in->pos->dir, DIR_LEFT, set);
+		if (in->pos->x > 1) {
+			mapdir_set(&in->pos->dir, DIR_LEFT, set);
+		}
 		break;
 	case SDLK_RIGHT:
-		mapdir_set(&in->pos->dir, DIR_RIGHT, set);
+		if (in->pos->x < in->pos->map->mapw - 1) {
+			mapdir_set(&in->pos->dir, DIR_RIGHT, set);
+		}
 		break;
 	default:
 		/* XXX ... */

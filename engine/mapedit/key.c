@@ -45,16 +45,24 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 
 	switch (ev->key.keysym.sym) {
 	case SDLK_UP:
-		mapdir_set(&med->cursor_dir, DIR_UP, set);
+		if (med->y > 1) {
+			mapdir_set(&med->cursor_dir, DIR_UP, set);
+		}
 		break;
 	case SDLK_DOWN:
-		mapdir_set(&med->cursor_dir, DIR_DOWN, set);
+		if (med->y < med->map->maph - 1) {
+			mapdir_set(&med->cursor_dir, DIR_DOWN, set);
+		}
 		break;
 	case SDLK_LEFT:
-		mapdir_set(&med->cursor_dir, DIR_LEFT, set);
+		if (med->x > 1) {
+			mapdir_set(&med->cursor_dir, DIR_LEFT, set);
+		}
 		break;
 	case SDLK_RIGHT:
-		mapdir_set(&med->cursor_dir, DIR_RIGHT, set);
+		if (med->x < med->map->mapw - 1) {
+			mapdir_set(&med->cursor_dir, DIR_RIGHT, set);
+		}
 		break;
 	case SDLK_PAGEUP:
 		gendir_set(&med->listw_dir, DIR_UP, set);
