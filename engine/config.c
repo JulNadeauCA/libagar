@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.37 2002/09/12 09:44:20 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.38 2002/09/13 11:08:29 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -176,39 +176,39 @@ config_init_wins(struct config *con)
 		cbox = checkbox_new(reg, "Asynchronous blits (restart)", 0,
 		    (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT) ?
 		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", 0, config_apply,
+		event_new(cbox, "checkbox-changed", config_apply,
 		    "%i", ASYNCBLIT_CBOX);
 
 		cbox = checkbox_new(reg, "Full screen", 0,
 		    (prop_uint32(config, "flags") & CONFIG_FULLSCREEN) ?
 		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", 0, config_apply,
+		event_new(cbox, "checkbox-changed", config_apply,
 		    "%i", FULLSCREEN_CBOX);
 		
 		cbox = checkbox_new(reg, "Font cache", 0,
 		    (prop_uint32(config, "flags") & CONFIG_FONT_CACHE) ?
 		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", 0, config_apply,
+		event_new(cbox, "checkbox-changed", config_apply,
 		    "%i", FONTCACHE_CBOX);
 
 #ifdef DEBUG
 		cbox = checkbox_new(reg, "Debugging enabled", 0,
 		    engine_debug ? CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", 0, config_apply,
+		event_new(cbox, "checkbox-changed", config_apply,
 		    "%i", DEBUG_CBOX);
 
 		cbox = checkbox_new(reg, "Visible regions", 0,
 		    (prop_uint32(config, "widgets.flags") &
 		     CONFIG_REGION_BORDERS) ?
 		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", 0, config_apply,
+		event_new(cbox, "checkbox-changed", config_apply,
 		    "%i", VISREGIONS_CBOX);
 
 		cbox = checkbox_new(reg, "Arbitrary window sizes", 0,
 		    (prop_uint32(config, "widgets.flags") &
 		     CONFIG_WINDOW_ANYSIZE) ?
 		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", 0, config_apply,
+		event_new(cbox, "checkbox-changed", config_apply,
 		    "%i", ANYSIZE_CBOX);
 #endif
 	}
@@ -222,21 +222,21 @@ config_init_wins(struct config *con)
 		s = prop_string(config, "path.user_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
-		event_new(tbox, "textbox-changed", 0,
+		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.user_data_dir");
 	
 		tbox = textbox_new(reg, "System datadir: ", 0, 100, 33);
 		s = prop_string(config, "path.sys_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
-		event_new(tbox, "textbox-changed", 0,
+		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.sys_data_dir");
 		
 		tbox = textbox_new(reg, "Data file path: ", 0, 100, 33);
 		s = prop_string(config, "path.data_path");
 		textbox_printf(tbox, "%s", s);
 		free(s);
-		event_new(tbox, "textbox-changed", 0,
+		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.data_path");
 	}
 
@@ -245,12 +245,12 @@ config_init_wins(struct config *con)
 	{
 		tbox = textbox_new(reg, "Width : ", 0, 50, 100);
 		textbox_printf(tbox, "%d", prop_uint32(config, "view.w"));
-		event_new(tbox, "textbox-changed", 0,
+		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.w");
 
 		tbox = textbox_new(reg, "Height: ", 0, 50, 100);
 		textbox_printf(tbox, "%d", prop_uint32(config, "view.h"));
-		event_new(tbox, "textbox-changed", 0,
+		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.h");
 	}
 
@@ -258,12 +258,12 @@ config_init_wins(struct config *con)
 	reg = region_new(win, REGION_HALIGN, 0,  87, 100, 13);
 	{
 		button = button_new(reg, "Close", NULL, 0, 50, 90);
-		event_new(button, "button-pushed", 0,
+		event_new(button, "button-pushed",
 		    config_apply, "%i", CLOSE_BUTTON);
 		win->focus = WIDGET(button);
 
 		button = button_new(reg, "Save", NULL, 0, 50, 90);
-		event_new(button, "button-pushed", 0,
+		event_new(button, "button-pushed",
 		    config_apply, "%i", SAVE_BUTTON);
 	}
 

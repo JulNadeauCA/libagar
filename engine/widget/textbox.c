@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.28 2002/11/10 01:38:26 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.29 2002/11/12 02:45:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -109,13 +109,13 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	tbox->newx = -1;
 
 #if 0
-	event_new(tbox, "widget-shown", 0, textbox_shown, NULL);
-	event_new(tbox, "widget-hidden", 0, textbox_hidden, NULL);
+	event_new(tbox, "widget-shown", textbox_shown, NULL);
+	event_new(tbox, "widget-hidden", textbox_hidden, NULL);
 #endif
-	event_new(tbox, "window-keydown", 0, textbox_key, NULL);
-	event_new(tbox, "window-mousebuttondown", 0,
+	event_new(tbox, "window-keydown", textbox_key, NULL);
+	event_new(tbox, "window-mousebuttondown",
 	    textbox_mouse, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(tbox, "window-mousemotion", 0,
+	event_new(tbox, "window-mousemotion",
 	    textbox_mouse, "%i", WINDOW_MOUSEMOTION);
 }
 

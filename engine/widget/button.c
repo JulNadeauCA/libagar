@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.39 2002/11/08 06:02:47 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.40 2002/11/09 06:01:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -117,13 +117,13 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	if (rh == -1)
 		WIDGET(b)->h = b->label_s->h + b->ymargin;
 
-	event_new(b, "window-mousebuttonup", 0, button_mousebuttonup, NULL);
-	event_new(b, "window-mousebuttondown", 0, button_mousebuttondown, NULL);
-	event_new(b, "window-mousemotion", 0, button_mousemotion, NULL);
-	event_new(b, "window-keyup", 0,	button_keyup, NULL);
-	event_new(b, "window-keydown", 0, button_keydown, NULL);
+	event_new(b, "window-mousebuttonup", button_mousebuttonup, NULL);
+	event_new(b, "window-mousebuttondown", button_mousebuttondown, NULL);
+	event_new(b, "window-mousemotion", button_mousemotion, NULL);
+	event_new(b, "window-keyup", button_keyup, NULL);
+	event_new(b, "window-keydown", button_keydown, NULL);
 
-	event_new(b, "widget-scaled", 0, button_scaled, NULL);
+	event_new(b, "widget-scaled", button_scaled, NULL);
 }
 
 void

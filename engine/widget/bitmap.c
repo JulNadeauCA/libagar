@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.3 2002/09/07 04:36:59 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.4 2002/09/12 09:33:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,7 +77,7 @@ bitmap_init(struct bitmap *bitmap, SDL_Surface *surface, int w, int h)
 		WIDGET(bitmap)->h = surface->h;
 	}
 
-	event_new(bitmap, "widget-scaled", 0, bitmap_scaled, NULL);
+	event_new(bitmap, "widget-scaled", bitmap_scaled, NULL);
 }
 
 void

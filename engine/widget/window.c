@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.99 2002/11/13 01:23:21 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.100 2002/11/14 02:17:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -346,7 +346,7 @@ window_detach(void *parent, void *child)
 
 	OBJECT_ASSERT(parent, "window");
 	OBJECT_ASSERT(child, "window-region");
-
+	
 	TAILQ_REMOVE(&win->regionsh, reg, regions);
 }
 
@@ -355,8 +355,6 @@ window_destroy(void *p)
 {
 	struct window *win = p;
 	struct region *reg, *nextreg = NULL;
-
-	dprintf("destroy %s (\"%s\")\n", OBJECT(win)->name, win->caption);
 
 	OBJECT_ASSERT(win, "window");
 

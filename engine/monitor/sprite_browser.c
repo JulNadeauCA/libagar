@@ -1,4 +1,4 @@
-/*	$Csoft: sprite_browser.c,v 1.2 2002/09/12 09:43:58 vedge Exp $	*/
+/*	$Csoft: sprite_browser.c,v 1.1 2002/09/16 16:44:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -106,7 +106,7 @@ sprite_browser_window(void *p)
 	reg = region_new(win, REGION_VALIGN, 0, 30, 80, 70);
 	bmp = bitmap_new(reg, NULL, 100, 100);
 	
-	event_new(button, "button-pushed", 0,
+	event_new(button, "button-pushed",
 	    lookup_object, "%p, %p, %p", obj_tbox, offs_tbox, bmp);
 
 	return (win);

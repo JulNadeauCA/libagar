@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.21 2002/11/07 18:57:40 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.22 2002/11/10 03:43:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -100,13 +100,13 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 	oq->flags = (flags != 0) ? flags : OBJQ_HORIZ;
 	SLIST_INIT(&oq->tmaps);
 	
-	event_new(oq, "widget-scaled", 0,
+	event_new(oq, "widget-scaled",
 	    objq_scaled, NULL);
-	event_new(oq, "window-mousemotion", 0,
+	event_new(oq, "window-mousemotion",
 	    objq_event, "%i", WINDOW_MOUSEMOTION);
-	event_new(oq, "window-mousebuttonup", 0,
+	event_new(oq, "window-mousebuttonup",
 	    objq_event, "%i", WINDOW_MOUSEBUTTONUP);
-	event_new(oq, "window-mousebuttondown", 0,
+	event_new(oq, "window-mousebuttondown",
 	    objq_event, "%i", WINDOW_MOUSEBUTTONDOWN);
 }
 
@@ -201,21 +201,21 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	    0,
 	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
+	event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
 	/* Save map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
 	    0,
 	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
+	event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 
 	/* Grid */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
 	    BUTTON_STICKY|BUTTON_PRESSED,
 	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0,
+	event_new(bu, "button-pushed",
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 	/* Props */
@@ -223,7 +223,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	    BUTTON_STICKY|BUTTON_PRESSED,
 	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0,
+	event_new(bu, "button-pushed",
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 	/* Edition */
@@ -231,7 +231,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	    BUTTON_STICKY,
 	    20, 100);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0,
+	event_new(bu, "button-pushed",
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 
 	/* Map view */

@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.60 2002/09/16 16:04:55 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.61 2002/10/30 17:15:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -107,8 +107,8 @@ char_init(struct character *ch, char *name, char *media)
 
 	pthread_mutex_init(&ch->lock, NULL);
 
-	event_new(ch, "attached", 0, char_attached, NULL);
-	event_new(ch, "detached", 0, char_detached, NULL);
+	event_new(ch, "attached", char_attached, NULL);
+	event_new(ch, "detached", char_detached, NULL);
 }
 
 void

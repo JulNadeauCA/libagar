@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.21 2002/11/14 02:17:45 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.22 2002/11/14 02:23:06 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -745,20 +745,20 @@ primitive_config_window(void)
 	    "Dark 3d-style #4", box_3d_dark4);
 	tlist_insert_item(tl, NULL,
 	    "Dark 3d-style #5", box_3d_dark5);
-	event_new(tl, "tlist-changed", 0, apply, "%i", BOX);
+	event_new(tl, "tlist-changed", apply, "%i", BOX);
 
 	lab = label_new(reg, "Frame:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "3d-style", frame_3d);
-	event_new(tl, "tlist-changed", 0, apply, "%i", FRAME);
+	event_new(tl, "tlist-changed", apply, "%i", FRAME);
 
 	lab = label_new(reg, "Circle:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Bresenham #1", circle_bresenham);
-	event_new(tl, "tlist-changed", 0, apply, "%i", CIRCLE);
-	
+	event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
+
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 93);
 		
 	lab = label_new(reg, "Line:", 100, 5);
@@ -775,19 +775,19 @@ primitive_config_window(void)
 	    "Bresenham dashed #4", line_bresenham_dashed4);
 	tlist_insert_item(tl, NULL,
 	    "Bresenham dashed #5", line_bresenham_dashed5);
-	event_new(tl, "tlist-changed", 0, apply, "%i", LINE);
+	event_new(tl, "tlist-changed", apply, "%i", LINE);
 		
 	lab = label_new(reg, "Square:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Composite", square_composite);
-	event_new(tl, "tlist-changed", 0, apply, "%i", SQUARE);
+	event_new(tl, "tlist-changed", apply, "%i", SQUARE);
 		
 	lab = label_new(reg, "Triangle:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Composite", triangle_composite);
-	event_new(tl, "tlist-changed", 0, apply, "%i", TRIANGLE);
+	event_new(tl, "tlist-changed", apply, "%i", TRIANGLE);
 
 	return (win);
 }
