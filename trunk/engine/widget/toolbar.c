@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.16 2004/02/29 17:34:40 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.1 2004/03/17 04:00:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -90,6 +90,7 @@ toolbar_add_button(struct toolbar *tbar, SDL_Surface *icon, int sticky, int def,
 	bu = button_new(&tbar->box, NULL);
 	button_set_label(bu, icon);
 	button_set_focusable(bu, 0);
+	button_set_sticky(bu, sticky);
 	widget_set_bool(bu, "state", def);
 	
 	ev = event_new(bu, "button-pushed", handler, NULL);
