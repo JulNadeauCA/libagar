@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.45 2004/05/29 05:58:01 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.46 2004/06/08 00:59:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -235,6 +235,10 @@ obj_op(int argc, union evarg *argv)
 			if (object_save(ob) == -1) {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
+			} else {
+				text_tmsg(MSG_INFO, 1000,
+				    _("Object `%s' was saved successfully."),
+				    ob->name);
 			}
 			break;
 		case OBJEDIT_DUP:
