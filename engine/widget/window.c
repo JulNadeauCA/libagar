@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.151 2003/01/23 02:41:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.152 2003/01/23 02:45:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1574,12 +1574,19 @@ window_resize(struct window *win)
 					reg->w = wid->w;
 			}
 		} else if (reg->rw > 0) {		/* % of window width */
-			reg->w = reg->rw * (win->body.w - win->xspacing) / 100;
+			if (reg->nwidgets > 1 && reg->flags & REGION_HALIGN) {
+				reg->w = reg->rw *
+				    (win->body.w -
+				     win->xspacing*(reg->nwidgets-1)) / 100;
+			} else {
+				reg->w = reg->rw *
+				    (win->body.w - win->xspacing) / 100;
+			}
 			reg->w -= win->xspacing;
 		} else if (reg->rw == 0) {		/* remaining space */
 			reg->w = win->body.w - (regx - xmar) - win->xspacing;
 		}
-
+			
 		/* Set the region's effective height. */
 		if (reg->rh < 0) {			/* auto size height */
 			reg->h = 0;
@@ -1598,8 +1605,15 @@ window_resize(struct window *win)
 					reg->h = wid->h;
 			}
 		} else if (reg->rh > 0) {		/* % of window height */
-			reg->h = reg->rh * (win->body.h - win->yspacing) / 100;
-			reg->h -= win->yspacing;
+			if (reg->nwidgets > 1 && reg->flags & REGION_VALIGN) {
+				reg->h = reg->rh *
+				    (win->body.h -
+				     win->yspacing*(reg->nwidgets-1)) / 100;
+				reg->h -= win->yspacing;
+			} else {
+				reg->h = reg->rh *
+				    (win->body.h - win->yspacing*2) / 100;
+			}
 		} else if (reg->rh == 0) {		/* remaining space */
 			reg->h = win->body.h - (regy - ymar) - win->yspacing;
 		}
