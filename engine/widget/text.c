@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.10 2002/05/13 08:01:05 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.11 2002/05/15 07:28:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -136,7 +136,7 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 #endif
 
 	sprintf(textname, "text%d\n", textid++);
-	object_init(&te->obj, textname, NULL, 0, &text_ops);
+	object_init(&te->obj, "text-dialog", textname, NULL, 0, &text_ops);
 	te->flags = flags;
 
 	te->sleepms = sleepms;
