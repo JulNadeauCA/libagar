@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.164 2005/01/31 08:20:13 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.165 2005/02/03 09:09:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -208,6 +208,21 @@ view_resize(int w, int h)
 	struct window *win;
 	SDL_Surface *su;
 	int ow, oh;
+
+	/*
+	 * Set initial coordinates of windows that might have not been
+	 * scaled yet.
+	 */
+	TAILQ_FOREACH(win, &view->windows, windows) {
+		pthread_mutex_lock(&win->lock);
+		if (!win->visible) {
+			WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
+			    WIDGET(win)->h);
+			widget_update_coords(win, WIDGET(win)->x,
+			    WIDGET(win)->y);
+		}
+		pthread_mutex_unlock(&win->lock);
+	}
 
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
