@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.50 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.51 2004/10/06 00:46:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -105,8 +105,8 @@ tryname:
 	} else {
 		object_init(nobj, typesw[i].type, name, NULL);
 	}
-	object_unlink_datafiles(nobj);
 	object_attach(pobj, nobj);
+	object_unlink_datafiles(nobj);
 }
 
 enum {
