@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.10 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.11 2005/02/11 04:50:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -409,11 +409,16 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 	case TILE_PIXMAP:
 		{
 			struct window *win;
-			struct pixmap *px = tel->tel_pixmap.px;
 			
 			tv->state = TILEVIEW_PIXMAP_EDIT;
-			tv->tv_pixmap.px = px;
+			tv->tv_pixmap.px = tel->tel_pixmap.px;
 			tv->tv_pixmap.tel = tel;
+			tv->tv_pixmap.ctrl = tileview_insert_ctrl(tv,
+			    TILEVIEW_RECTANGLE, "%*i,%*i,%u,%u",
+			    &tel->tel_pixmap.x,
+			    &tel->tel_pixmap.y,
+			    (u_int)tel->tel_pixmap.px->su->w,
+			    (u_int)tel->tel_pixmap.px->su->h);
 	
 			win = pixmap_edit(tv, tel);
 			window_attach(pwin, win);
@@ -442,8 +447,10 @@ tile_close_element(struct tileview *tv)
 		break;
 	case TILEVIEW_PIXMAP_EDIT:
 		if (tv->tv_pixmap.win != NULL) {
+			tileview_remove_ctrl(tv, tv->tv_pixmap.ctrl);
 			view_detach(tv->tv_pixmap.win);
 			tv->tv_pixmap.win = NULL;
+			tv->tv_pixmap.ctrl = NULL;
 		}
 		break;
 	default:
