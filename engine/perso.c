@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.7 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.8 2002/12/13 12:33:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -53,7 +53,7 @@ enum {
 
 static const struct version perso_ver = {
 	"agar personage",
-	1, 0
+	2, 0
 };
 
 static const struct object_ops perso_ops = {
