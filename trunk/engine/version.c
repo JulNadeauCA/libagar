@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.13 2002/08/23 05:19:10 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.14 2002/09/06 01:29:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,7 +59,7 @@ version_read(int fd, const struct version *ver)
 
 	if (read(fd, sig, siglen) != siglen ||
 	    strncmp(sig, ver->name, siglen) != 0) {
-		warning("%s: bad magic\n", ver->name);
+		error_set("%s: bad magic", ver->name);
 		return (-1);
 	}
 	vermin = read_uint32(fd);
@@ -97,7 +97,10 @@ version_write(int fd, const struct version *ver)
 	
 	pw = getpwuid(getuid());
 	write_string(fd, pw->pw_name);
-	gethostname(host, sizeof(host));
+	if (gethostname(host, sizeof(host)) != 0) {
+		error_set("gethostname: %s\n", strerror(errno));
+		return (-1);
+	}
 	write_string(fd, host);
 
 	return (0);
