@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.23 2004/01/03 04:25:09 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.24 2004/02/20 04:18:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -26,6 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/edition.h>
+#ifdef EDITION
+
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/view.h>
@@ -41,7 +44,7 @@
 #include "mapview.h"
 
 static void
-nodeedit_close_win(int argc, union evarg *argv)
+close_window(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -51,7 +54,7 @@ nodeedit_close_win(int argc, union evarg *argv)
 }
 
 static void
-nodeedit_poll_refs(int argc, union evarg *argv)
+poll_refs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -74,15 +77,16 @@ nodeedit_poll_refs(int argc, union evarg *argv)
 		switch (r->type) {
 		case NODEREF_SPRITE:
 			snprintf(label, sizeof(label),
-			    "%u. [%u] s(%s:%u)\n",
+			    "%u. [%u] s(%s:%u) f=%d\n",
 			    i, r->layer, r->r_sprite.obj->name,
-			    r->r_sprite.offs);
+			    r->r_sprite.offs, r->friction);
 			icon = r->r_sprite.obj->gfx->sprites[r->r_sprite.offs];
 			break;
 		case NODEREF_ANIM:
 			snprintf(label, sizeof(label),
-			    "%u. [%u] a(%s:%u)\n",
-			    i, r->layer, r->r_anim.obj->name, r->r_anim.offs);
+			    "%u. [%u] a(%s:%u) f=%d\n",
+			    i, r->layer, r->r_anim.obj->name, r->r_anim.offs,
+			    r->friction);
 			anim = r->r_anim.obj->gfx->anims[r->r_anim.offs];
 			if (anim->nframes > 0) {
 				icon = anim->frames[0];
@@ -90,9 +94,9 @@ nodeedit_poll_refs(int argc, union evarg *argv)
 			break;
 		case NODEREF_WARP:
 			snprintf(label, sizeof(label),
-			    "%u. [%u]. w(%s:%d,%d)\n",
+			    "%u. [%u]. w(%s:%d,%d) f=%d\n",
 			    i, r->layer, r->r_warp.map, r->r_warp.x,
-			    r->r_warp.y);
+			    r->r_warp.y, r->friction);
 			break;
 		}
 #if 0
@@ -112,11 +116,11 @@ enum {
 };
 
 static void
-mapview_node_op(int argc, union evarg *argv)
+node_operation(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int op = argv[2].i;
-	struct tlist *tl = mv->nodeed.refs_tl;
+	struct tlist *tl = mv->nodeed.refs;
 	struct tlist_item *it;
 	struct node *node;
 	struct noderef *r;
@@ -182,30 +186,38 @@ nodeedit_init(struct mapview *mv)
 
 	win = window_new(NULL);
 	window_set_caption(win, _("%s node"), OBJECT(m)->name);
-	event_new(win, "window-close", nodeedit_close_win, "%p", mv);
+	event_new(win, "window-close", close_window, "%p", mv);
 	
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
 	{
 		struct button *bu;
 
 		bu = button_new(bo, _("Remove"));
-		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		event_new(bu, "button-pushed", node_operation, "%p, %i", mv,
 		    MAPVIEW_NODE_REMOVE);
 		bu = button_new(bo, _("Dup"));
-		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		event_new(bu, "button-pushed", node_operation, "%p, %i", mv,
 		    MAPVIEW_NODE_DUP);
 		bu = button_new(bo, _("Up"));
-		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		event_new(bu, "button-pushed", node_operation, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_UP);
 		bu = button_new(bo, _("Down"));
-		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		event_new(bu, "button-pushed", node_operation, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_DOWN);
 	}
 	
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
-	tlist_set_item_height(tl, TILEH);
-	event_new(tl, "tlist-poll", nodeedit_poll_refs, "%p", mv);
+	tlist_set_item_height(tl, TILESZ);
+	event_new(tl, "tlist-poll", poll_refs, "%p", mv);
 
-	mv->nodeed.refs_tl = tl;
+	mv->nodeed.refs = tl;
 	mv->nodeed.win = win;
 }
+
+void
+nodeedit_destroy(struct mapview *mv)
+{
+	view_detach(mv->nodeed.win);
+}
+
+#endif	/* EDITION */

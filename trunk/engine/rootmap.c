@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.34 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.35 2004/02/25 18:12:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -73,13 +73,13 @@ draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = rm->y, ry = rm->sy - m->tileh;	/* Downward */
+	for (my = rm->y, ry = rm->sy - m->scale;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
-	     my++, ry += m->tileh) {
+	     my++, ry += m->scale) {
 
-		for (mx = rm->x, rx = rm->sx - m->tilew; /* Forward */
+		for (mx = rm->x, rx = rm->sx - m->scale; 	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
-		     mx++, rx += m->tilew) {
+		     mx++, rx += m->scale) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type == NODEREF_ANIM &&
@@ -112,13 +112,13 @@ draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = rm->y, ry = rm->sy - m->tileh;		/* Downward */
+	for (my = rm->y, ry = rm->sy - m->scale;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
-	     my++, ry += m->tileh) {
+	     my++, ry += m->scale) {
 
-		for (mx = rm->x, rx = rm->sx - m->tilew;	/* Forward */
+		for (mx = rm->x, rx = rm->sx - m->scale;	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
-		     mx++, rx += m->tilew) {
+		     mx++, rx += m->scale) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type == NODEREF_SPRITE &&
@@ -183,7 +183,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 
 	switch (dir) {
 	case ROOTMAP_N:
-		if ((rm->sy -= inc) <= -TILEH) {
+		if ((rm->sy -= inc) <= -TILESZ) {
 			if (--rm->y < 0) {
 				rm->y = 0;
 			}
@@ -191,7 +191,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 		}
 		break;
 	case ROOTMAP_S:
-		if ((rm->sy += inc) >= TILEH) {
+		if ((rm->sy += inc) >= TILESZ) {
 			if (++rm->y > (m->maph - rm->h)) {
 				rm->y = m->maph - rm->h;
 			}
@@ -199,7 +199,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 		}
 		break;
 	case ROOTMAP_W:
-		if ((rm->sx -= inc) <= -TILEW) {
+		if ((rm->sx -= inc) <= -TILESZ) {
 			if (--rm->x < 0) {
 				rm->x = 0;
 			}
@@ -207,7 +207,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 		}
 		break;
 	case ROOTMAP_E:
-		if ((rm->sx += inc) >= TILEH) {
+		if ((rm->sx += inc) >= TILESZ) {
 			if (++rm->x > (m->mapw - rm->w)) {
 				rm->x = m->mapw - rm->w;
 			}
@@ -231,10 +231,10 @@ rootmap_alloc_maprects(int w, int h)
 	for (y = 0; y < h; y++) {
 		rects[y] = Malloc(w * sizeof(SDL_Rect));
 		for (x = 0; x < w; x++) {
-			rects[y][x].x = x * TILEW;
-			rects[y][x].y = y * TILEH;
-			rects[y][x].w = TILEW;
-			rects[y][x].h = TILEH;
+			rects[y][x].x = x*TILESZ;
+			rects[y][x].y = y*TILESZ;
+			rects[y][x].w = TILESZ;
+			rects[y][x].h = TILESZ;
 		}
 	}
 	return (rects);

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.210 2004/03/12 04:06:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.211 2004/03/13 02:35:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -38,10 +38,11 @@
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
+#include <engine/widget/toolbar.h>
+#include <engine/widget/button.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
-#include <engine/mapedit/mediasel.h>
 #endif
 
 #include <compat/math.h>
@@ -278,21 +279,15 @@ fail:
 	return (-1);
 }
 
-/* Modify the zoom factor. */
+/* Set the zoom factor. */
 void
 map_set_zoom(struct map *m, Uint16 zoom)
 {
 	pthread_mutex_lock(&m->lock);
-
 	m->zoom = zoom;
-	m->tilew = m->zoom * TILEW / 100;
-	m->tileh = m->zoom * TILEH / 100;
-
-	if (m->tilew > 16384)			/* For soft scrolling */
-		m->tilew = 16384;
-	if (m->tileh > 16384)
-		m->tileh = 16384;
-
+	if ((m->scale = m->zoom*TILESZ/100) > MAP_MAX_SCALE) {
+		m->scale = MAP_MAX_SCALE;
+	}
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -333,11 +328,10 @@ map_init(void *obj, const char *name)
 	m->origin.y = 0;
 	m->origin.layer = 0;
 	m->map = NULL;
-	m->tilew = TILEW;
-	m->tileh = TILEH;
+	m->scale = TILESZ;
 	m->zoom = 100;
-	m->ssx = TILEW;
-	m->ssy = TILEH;
+	m->ssx = TILESZ;
+	m->ssy = TILESZ;
 	m->cur_layer = 0;
 
 	m->layers = Malloc(1 * sizeof(struct map_layer));
@@ -832,38 +826,33 @@ int
 map_load(void *ob, struct netbuf *buf)
 {
 	struct map *m = ob;
-	struct version ver;
-	Uint32 w, h, origin_x, origin_y, tilew, tileh;
+	Uint32 w, h, origin_x, origin_y, scale;
 	int i, x, y;
 
-	if (version_read(buf, &map_ver, &ver) != 0)
+	if (version_read(buf, &map_ver, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&m->lock);
-
-	/* Read the map header. */
 	w = read_uint32(buf);
 	h = read_uint32(buf);
 	origin_x = read_uint32(buf);
 	origin_y = read_uint32(buf);
-	tilew = read_uint32(buf);
-	tileh = read_uint32(buf);
-	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
-	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT ||
-	    tilew > MAP_MAX_WIDTH || tileh > MAP_MAX_HEIGHT) {
+	scale = read_uint32(buf);
+	read_uint32(buf);
+	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT || scale > MAP_MAX_SCALE ||
+	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT) {
 		error_set(_("Invalid map geometry."));
 		goto fail;
 	}
 	m->mapw = (unsigned int)w;
 	m->maph = (unsigned int)h;
-	m->tilew = (unsigned int)tilew;
-	m->tileh = (unsigned int)tileh;
+	m->scale = (unsigned int)scale;
 	m->origin.x = (int)origin_x;
 	m->origin.y = (int)origin_y;
 	m->zoom = read_uint16(buf);
 	m->ssx = read_sint16(buf);
 	m->ssy = read_sint16(buf);
-
+	
 	/* Read the layer information. */
 	if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
 		error_set(_("Too many map layers."));
@@ -988,8 +977,8 @@ map_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)m->maph);
 	write_uint32(buf, (Uint32)m->origin.x);
 	write_uint32(buf, (Uint32)m->origin.y);
-	write_uint32(buf, (Uint32)m->tilew);
-	write_uint32(buf, (Uint32)m->tileh);
+	write_uint32(buf, (Uint32)m->scale);
+	write_uint32(buf, (Uint32)m->scale);
 	write_uint16(buf, m->zoom);
 	write_sint16(buf, m->ssx);
 	write_sint16(buf, m->ssy);
@@ -1032,10 +1021,10 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 	if (SDL_MUSTLOCK(view->v))
 		SDL_LockSurface(view->v);
 	for (y = 0; y < dh; y++) {
-		if ((sy = y * TILEH / m->tileh) >= s->h)
+		if ((sy = y*TILESZ/m->scale) >= s->h)
 			break;
 		for (x = 0; x < dw; x++) {
-			if ((sx = x * TILEW / m->tilew) >= s->w)
+			if ((sx = x*TILESZ/m->scale) >= s->w)
 				break;
 			src = (Uint8 *)s->pixels +
 			    sy*s->pitch +
@@ -1238,9 +1227,8 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 
 #ifdef EDITION
 
-/* Create a new map view window. */
 static void
-create_new_view(int argc, union evarg *argv)
+create_view(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct window *pwin = argv[2].p;
@@ -1249,117 +1237,8 @@ create_new_view(int argc, union evarg *argv)
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
 	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT);
-
 	window_attach(pwin, win);
 	window_show(win);
-}
-
-/* Toggle the map grid display. */
-static void
-toggle_grid(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	if (mv->flags & MAPVIEW_GRID) {
-		mv->flags &= ~(MAPVIEW_GRID);
-	} else {
-		mv->flags |= MAPVIEW_GRID;
-	}
-}
-
-/* Toggle the node property display. */
-static void
-toggle_props(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	if (mv->flags & MAPVIEW_PROPS) {
-		mv->flags &= ~(MAPVIEW_PROPS);
-	} else {
-		mv->flags |= MAPVIEW_PROPS;
-	}
-}
-
-/* Toggle the node edition dialog. */
-static void
-toggle_nodeed(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-	
-	window_toggle_visibility(mv->nodeed.win);
-}
-
-/* Toggle the layer edition dialog. */
-static void
-toggle_layed(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-	
-	window_toggle_visibility(mv->layed.win);
-}
-
-/* Toggle the media import dialog. */
-static void
-toggle_media(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-	struct window *win = mv->mimport.win;
-	
-	pthread_mutex_lock(&win->lock);
-	if (win->visible) {
-		window_hide(win);
-	} else {
-		if (OBJECT(mv->map)->gfx_name != NULL) {
-			object_page_in(mv->map, OBJECT_GFX);
-		}
-		if (OBJECT(mv->map)->audio_name != NULL) {
-			object_page_in(mv->map, OBJECT_AUDIO);
-		}
-		window_show(win);
-	}
-	pthread_mutex_unlock(&win->lock);
-}
-
-/* Toggle map read-write mode. */
-static void
-toggle_edition(int argc, union evarg *argv)
-{
-	struct button *bu = argv[0].p;
-	struct mapview *mv = argv[1].p;
-
-	if (mv->flags & MAPVIEW_EDIT) {
-		mv->flags &= ~(MAPVIEW_EDIT);
-	} else {
-		if (OBJECT(mv->map)->flags & OBJECT_READONLY) {
-			text_msg(MSG_ERROR, _("The `%s' map is read-only."),
-			    OBJECT(mv->map)->name);
-			widget_set_bool(bu, "state", 0);
-		} else {
-			mv->flags |= MAPVIEW_EDIT;
-		}
-	}
-}
-
-static void
-selected_layer(int argc, union evarg *argv)
-{
-	struct combo *com = argv[0].p;
-	struct mapview *mv = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	struct tlist *tl = com->list;
-	int i = 0;
-
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected) {
-			struct map_layer *lay = it->p1;
-
-			mv->map->cur_layer = i;
-			textbox_printf(com->tbox, "%d. %s", i, lay->name);
-			return;
-		}
-		i++;
-	}
-	text_msg(MSG_ERROR, _("No layer is selected."));
 }
 
 struct window *
@@ -1367,85 +1246,43 @@ map_edit(void *p)
 {
 	struct map *m = p;
 	struct window *win;
-	struct box *bo;
-	struct combo *com;
+	struct toolbar *toolbar;
+	struct combo *laysel;
 	struct mapview *mv;
-	int ro = OBJECT(m)->flags & OBJECT_READONLY;
 	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
+	int editable = ((OBJECT(m)->flags & OBJECT_READONLY) == 0);
 
-	if (!ro)
+	if (editable)
 		flags |= MAPVIEW_EDIT;
-
+	
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
-
+	
 	mv = Malloc(sizeof(struct mapview));
 	mapview_init(mv, m, flags);
-	window_attach(win, mv->nodeed.win);
-	window_attach(win, mv->layed.win);
 
-	/* Create the media import window. */
-	mv->mimport.win = mediasel_window(mv);
-	window_attach(win, mv->mimport.win);
+	toolbar = toolbar_new(win, TOOLBAR_HORIZ);
+	toolbar_add_button(toolbar, SPRITE(&mapedit, 3), 0, 0,
+	    create_view, "%p, %p", mv, win);
+	toolbar_add_button(toolbar, SPRITE(&mapedit, 6), 1, 1,
+	    mapview_toggle_grid, "%p", mv);
+	toolbar_add_button(toolbar, SPRITE(&mapedit, 7), 1, 1,
+	    mapview_toggle_props, "%p", mv);
+	toolbar_add_button(toolbar, SPRITE(&mapedit, 9), 1, editable,
+	    mapview_toggle_rw, "%p", mv);
+	
+	mv->nodeed.trigger = toolbar_add_button(toolbar, SPRITE(&mapedit, 14),
+	    1, 0, mapview_toggle_nodeedit, "%p", mv);
+	mv->layed.trigger = toolbar_add_button(toolbar, SPRITE(&mapedit, 15),
+	    1, 0, mapview_toggle_layedit, "%p", mv);
+	mv->mediasel.trigger = toolbar_add_button(toolbar, SPRITE(&mapedit, 21),
+	    1, 0, mapview_toggle_mediasel, "%p", mv);
 
-	/* Create the map edition toolbar. */
-	/* XXX toolbar widget */
-	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
-	box_set_spacing(bo, 0);
-	box_set_padding(bo, 0);
-	{
-		struct button *bu;
-
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NEW_VIEW));
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", create_new_view, "%p, %p", mv,
-		    win);
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
-		button_set_focusable(bu, 0);
-		button_set_sticky(bu, 1);
-		widget_set_bool(bu, "state", 1);
-		event_new(bu, "button-pushed", toggle_grid, "%p", mv);
-		
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_PROPS));
-		button_set_focusable(bu, 0);
-		button_set_sticky(bu, 1);
-		widget_set_bool(bu, "state", 1);
-		event_new(bu, "button-pushed", toggle_props, "%p", mv);
-
-		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
-		button_set_focusable(bu, 0);
-		button_set_sticky(bu, 1);
-		widget_set_bool(bu, "state", !ro);
-		event_new(bu, "button-pushed", toggle_edition, "%p", mv);
-
-		mv->nodeed.trigger = bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", toggle_nodeed, "%p", mv);
-		
-		mv->layed.trigger = bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", toggle_layed, "%p", mv);
-		
-		mv->mimport.trigger = bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_MIMPORT));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", toggle_media, "%p", mv);
-	}
-
-	com = combo_new(win, COMBO_POLL, _("Layer:"));
-	textbox_printf(com->tbox, "%d. %s", m->cur_layer,
+	laysel = combo_new(win, COMBO_POLL, _("Layer:"));
+	textbox_printf(laysel->tbox, "%d. %s", m->cur_layer,
 	    m->layers[m->cur_layer].name);
-	event_new(com->list, "tlist-poll", layedit_poll, "%p", mv);
-	event_new(com, "combo-selected", selected_layer, "%p", mv);
+	event_new(laysel->list, "tlist-poll", layedit_poll, "%p", mv);
+	event_new(laysel, "combo-selected", mapview_selected_layer, "%p", mv);
 
 	object_attach(win, mv);
 	widget_focus(mv);

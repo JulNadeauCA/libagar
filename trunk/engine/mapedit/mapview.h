@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.49 2003/08/06 04:10:36 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.50 2003/08/26 07:55:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -9,33 +9,32 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/button.h>
+#include <engine/widget/combo.h>
+
+struct mapview;
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
+#include <engine/mapedit/mediasel.h>
 
 #include "begin_code.h"
-
-struct mimport {
-	struct window	*win;
-	struct button	*trigger;
-};
 
 struct mapview {
 	struct widget wid;
 
 	int	flags;
-#define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
-#define MAPVIEW_INDEPENDENT	 0x002	/* Zoom/ss independent from map's */
-#define MAPVIEW_GRID		 0x004	/* Display a grid */
-#define MAPVIEW_PROPS		 0x008	/* Display node properties */
-#define MAPVIEW_ZOOMING_IN	 0x010
-#define MAPVIEW_ZOOMING_OUT	 0x020
-#define MAPVIEW_CENTER		 0x040
-#define MAPVIEW_NO_CURSOR	 0x080	/* Hide cursor */
+#define MAPVIEW_EDIT		0x0001	/* Mouse/keyboard edition */
+#define MAPVIEW_INDEPENDENT	0x0002	/* Independent zoom/scroll */
+#define MAPVIEW_GRID		0x0004	/* Display the grid */
+#define MAPVIEW_PROPS		0x0008	/* Display node properties */
+#define MAPVIEW_ZOOMING_IN	0x0010	/* Zoomin in progression */
+#define MAPVIEW_ZOOMING_OUT	0x0020	/* Zoomout in progression */
+#define MAPVIEW_CENTER		0x0040	/* Request initial centering */
+#define MAPVIEW_NO_CURSOR	0x0080	/* Disable the cursor */
 
-	int	 prop_bg;		/* Background of node attributes */
-	int	 prop_style;		/* Style of node attributes */
-	int	 prew, preh;		/* Prescale */
+	int	 prop_bg;		/* Background attributes style */
+	int	 prop_style;		/* Foreground attributes style */
+	int	 prew, preh;		/* Prescale in nodes */
 
 	struct {			/* Mouse scrolling state */
 		int	scrolling;
@@ -58,11 +57,11 @@ struct mapview {
 	int		 zoom_ival;	/* Zoom interval (ms) */
 	SDL_TimerID	 zoom_tm;	/* Zoom timer */
 	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
-	int		*tilew, *tileh;	/* Current tile geometry */
+	int		*scale;		/* Current scale factor */
 	struct {			/* For MAPVIEW_INDEPENDENT zoom */
 		Uint16	 zoom;
 		Sint16	 ssx, ssy;
-		int	 tilew, tileh;
+		int	 scale;
 	} izoom;
 
 	struct map	*map;		/* Map to display/edit */
@@ -71,9 +70,14 @@ struct mapview {
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
 
-	struct nodeedit		nodeed;		/* Node editor */
-	struct layedit		layed;		/* Layer editor */
-	struct mimport		mimport;	/* Media import */
+	struct nodeedit	nodeed;		/* Node editor */
+	struct layedit	layed;		/* Layer editor */
+	struct {
+		struct window *win;
+		struct button *trigger;
+		struct mediasel *gfx;
+		struct mediasel *audio;
+	} mediasel;
 };
 
 enum mapview_prop_labels {
@@ -116,16 +120,23 @@ void	 mapview_destroy(void *);
 void	 mapview_draw(void *);
 void	 mapview_scale(void *, int, int);
 void	 mapview_prescale(struct mapview *, int, int);
-
-void		 mapview_node_edit_win(struct mapview *);
-__inline__ void	 mapview_draw_props(struct mapview *, struct node *,
-		                    int, int, int, int);
-
+void	 mapview_draw_props(struct mapview *, struct node *, int, int, int,
+	                    int);
 void	 mapview_center(struct mapview *, int, int);
 int	 mapview_zoom(struct mapview *, int);
 void	 mapview_map_coords(struct mapview *, int *, int *);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
+
+#ifdef EDITION
+void	 mapview_toggle_rw(int, union evarg *);
+void	 mapview_toggle_nodeedit(int, union evarg *);
+void	 mapview_toggle_layedit(int, union evarg *);
+void	 mapview_toggle_mediasel(int, union evarg *);
+void	 mapview_selected_layer(int, union evarg *);
+#endif
+void	 mapview_toggle_grid(int, union evarg *);
+void	 mapview_toggle_props(int, union evarg *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.26 2004/03/09 06:00:06 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.27 2004/03/10 16:58:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -40,6 +40,15 @@
 #include <string.h>
 
 #include "mapedit.h"
+
+struct objent {
+	struct object *obj;			/* Object being edited */
+	struct window *win;			/* Generic edition window */
+	TAILQ_ENTRY(objent) objs;
+};
+
+static TAILQ_HEAD(,objent) dobjs;		/* Data edited objects */
+static TAILQ_HEAD(,objent) gobjs;		/* Generic edited objects */
 
 /* Create a new object. */
 static void
@@ -97,6 +106,90 @@ enum {
 	OBJEDIT_DUP
 };
 
+static void
+close_generic_obj(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct objent *oent = argv[1].p;
+
+	event_post(NULL, win, "window-destroy", NULL);
+
+	TAILQ_REMOVE(&gobjs, oent, objs);
+	object_del_dep(&mapedit.pseudo, oent->obj);
+	free(oent);
+}
+
+/* Edit the generic part of an object. */
+static void
+open_generic_obj(struct object *ob)
+{
+	struct objent *oent;
+	
+	TAILQ_FOREACH(oent, &gobjs, objs) {
+		if (oent->obj == ob)
+			break;
+	}
+	if (oent != NULL) {
+		window_show(oent->win);
+		return;
+	}
+	
+	object_add_dep(&mapedit.pseudo, ob);
+	
+	oent = Malloc(sizeof(struct objent));
+	oent->obj = ob;
+	oent->win = object_edit(ob);
+	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
+	window_show(oent->win);
+
+	event_new(oent->win, "window-close", close_generic_obj, "%p", oent);
+}
+
+/* Close an object derivate data edition window. */
+static void
+close_obj_data(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct objent *oent = argv[1].p;
+	
+	event_post(NULL, win, "window-destroy", NULL);
+
+	TAILQ_REMOVE(&dobjs, oent, objs);
+	object_page_out(oent->obj, OBJECT_DATA);
+	object_del_dep(&mapedit.pseudo, oent->obj);
+	free(oent);
+}
+
+/* Edit the data part of an object. */
+static void
+open_obj_data(struct object *ob)
+{
+	struct objent *oent;
+	
+	TAILQ_FOREACH(oent, &dobjs, objs) {
+		if (oent->obj == ob)
+			break;
+	}
+	if (oent != NULL) {
+		window_show(oent->win);
+		return;
+	}
+
+	if (object_page_in(ob, OBJECT_DATA) == -1) {
+		printf("%s: %s\n", ob->name, error_get());
+		return;
+	}
+	object_add_dep(&mapedit.pseudo, ob);
+	
+	oent = Malloc(sizeof(struct objent));
+	oent->obj = ob;
+	oent->win = ob->ops->edit(ob);
+	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
+	window_show(oent->win);
+
+	event_new(oent->win, "window-close", close_obj_data, "%p", oent);
+}
+
 /* Execute a generic operation on the selected objects. */
 static void
 invoke_op(int argc, union evarg *argv)
@@ -114,11 +207,11 @@ invoke_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT:
 			if (ob->ops->edit != NULL) {
-				mapedit_edit_objdata(ob);
+				open_obj_data(ob);
 			}
 			break;
 		case OBJEDIT_EDIT_OBJ:
-			mapedit_edit_genobj(ob);
+			open_generic_obj(ob);
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {
@@ -136,10 +229,9 @@ invoke_op(int argc, union evarg *argv)
 			{
 				struct object *dob;
 
-				if ((dob = object_duplicate(ob)) == NULL) {
+				if ((dob = object_duplicate(ob)) == NULL)
 					text_msg(MSG_ERROR, "%s: %s", ob->name,
 					    error_get());
-				}
 			}
 			break;
 		case OBJEDIT_MOVE_UP:
@@ -152,7 +244,7 @@ invoke_op(int argc, union evarg *argv)
 			if (it->p1 == world) {
 				continue;
 			}
-			if (object_used(ob)) {
+			if (object_in_use(ob)) {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 				continue;
@@ -164,14 +256,9 @@ invoke_op(int argc, union evarg *argv)
 				continue;
 			}
 			object_detach(ob);
-			if (object_destroy(ob) == -1) {
-				text_msg(MSG_ERROR, "%s: %s", ob->name,
-				    error_get());
-				continue;
-			}
-			if ((ob->flags & OBJECT_STATIC) == 0) {
+			object_destroy(ob);
+			if ((ob->flags & OBJECT_STATIC) == 0)
 				free(ob);
-			}
 			break;
 		}
 	}
@@ -231,8 +318,8 @@ objedit_window(void)
 
 	win = window_new("mapedit-objedit");
 	window_set_caption(win, _("Object editor"));
-	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
 	window_set_closure(win, WINDOW_HIDE);
+	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{
@@ -302,5 +389,31 @@ objedit_window(void)
 
 	window_show(win);
 	return (win);
+}
+
+void
+objedit_init(void)
+{
+	TAILQ_INIT(&dobjs);
+	TAILQ_INIT(&gobjs);
+}
+
+void
+objedit_destroy(void)
+{
+	struct objent *oent, *noent;
+
+	for (oent = TAILQ_FIRST(&dobjs);
+	     oent != TAILQ_END(&dobjs);
+	     oent = noent) {
+		noent = TAILQ_NEXT(oent, objs);
+		free(oent);
+	}
+	for (oent = TAILQ_FIRST(&gobjs);
+	     oent != TAILQ_END(&gobjs);
+	     oent = noent) {
+		noent = TAILQ_NEXT(oent, objs);
+		free(oent);
+	}
 }
 
