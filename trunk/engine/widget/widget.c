@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.83 2004/03/25 06:48:14 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.84 2004/03/28 06:08:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -132,12 +132,10 @@ widget_vtype(struct widget_binding *binding)
 			return (WIDGET_UINT32);
 		case PROP_SINT32:
 			return (WIDGET_SINT32);
-#ifdef FLOATING_POINT
 		case PROP_FLOAT:
 			return (WIDGET_FLOAT);
 		case PROP_DOUBLE:
 			return (WIDGET_DOUBLE);
-#endif
 		case PROP_STRING:
 			return (WIDGET_STRING);
 		case PROP_POINTER:
@@ -270,14 +268,12 @@ widget_get_binding(void *widp, const char *name, ...)
 		case WIDGET_SINT32:
 			*(Sint32 **)res = (Sint32 *)binding->p1;
 			break;
-#ifdef FLOATING_POINT
 		case WIDGET_FLOAT:
 			*(float **)res = (float *)binding->p1;
 			break;
 		case WIDGET_DOUBLE:
 			*(double **)res = (double *)binding->p1;
 			break;
-#endif
 		case WIDGET_STRING:
 			*(char ***)res = (char **)binding->p1;
 			break;
@@ -312,14 +308,12 @@ widget_get_binding(void *widp, const char *name, ...)
 			case PROP_SINT32:
 				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
 				break;
-#ifdef FLOATING_POINT
 			case PROP_FLOAT:
 				*(float **)res = (float *)&prop->data.f;
 				break;
 			case PROP_DOUBLE:
 				*(double **)res = (double *)&prop->data.d;
 				break;
-#endif
 			case PROP_STRING:
 				*(char ***)res = (char **)&prop->data.s;
 				break;
@@ -459,7 +453,6 @@ widget_get_sint32(void *wid, const char *name)
 	return (rv);
 }
 
-#ifdef FLOATING_POINT
 float
 widget_get_float(void *wid, const char *name)
 {
@@ -487,7 +480,6 @@ widget_get_double(void *wid, const char *name)
 	widget_binding_unlock(b);
 	return (rv);
 }
-#endif /* FLOATING_POINT */
 
 char *
 widget_get_string(void *wid, const char *name)
@@ -636,7 +628,6 @@ widget_set_sint32(void *wid, const char *name, Sint32 ni)
 	widget_binding_unlock(binding);
 }
 
-#ifdef FLOATING_POINT
 void
 widget_set_float(void *wid, const char *name, float nf)
 {
@@ -662,7 +653,6 @@ widget_set_double(void *wid, const char *name, double nd)
 	*d = nd;
 	widget_binding_unlock(binding);
 }
-#endif /* FLOATING_POINT */
 
 void
 widget_set_string(void *wid, const char *name, const char *ns)

@@ -1,10 +1,8 @@
-/*	$Csoft: widget.h,v 1.74 2004/03/25 06:48:14 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.75 2004/03/28 06:08:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
-
-#include <config/floating_point.h>
 
 #include "begin_code.h"
 
@@ -125,10 +123,9 @@ __inline__ Uint16	 widget_get_uint16(void *, const char *);
 __inline__ Sint16	 widget_get_sint16(void *, const char *);
 __inline__ Uint32	 widget_get_uint32(void *, const char *);
 __inline__ Sint32	 widget_get_sint32(void *, const char *);
-#ifdef FLOATING_POINT
 __inline__ float	 widget_get_float(void *, const char *);
 __inline__ double	 widget_get_double(void *, const char *);
-#endif
+
 __inline__ void	  *widget_get_pointer(void *, const char *);
 __inline__ char	  *widget_get_string(void *, const char *);
 __inline__ size_t  widget_copy_string(void *, const char *, char *, size_t)
@@ -143,10 +140,8 @@ __inline__ void	 widget_set_uint16(void *, const char *, Uint16);
 __inline__ void	 widget_set_sint16(void *, const char *, Sint16);
 __inline__ void	 widget_set_uint32(void *, const char *, Uint32);
 __inline__ void	 widget_set_sint32(void *, const char *, Sint32);
-#ifdef FLOATING_POINT
 __inline__ void	 widget_set_float(void *, const char *, float);
 __inline__ void	 widget_set_double(void *, const char *, double);
-#endif
 __inline__ void	 widget_set_string(void *, const char *, const char *);
 __inline__ void	 widget_set_pointer(void *, const char *, void *);
 __END_DECLS
