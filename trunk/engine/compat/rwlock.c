@@ -1,4 +1,4 @@
-/*	$Csoft: rwlock.c,v 1.5 2003/01/01 05:18:35 vedge Exp $	*/
+/*	$Csoft: rwlock.c,v 1.6 2003/03/25 13:43:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,14 +27,15 @@
  */
 
 #include <config/threads.h>
+#include <config/debug.h>
 
 #ifdef THREADS
 
-#if !defined(__OpenBSD__)
-#define _XOPEN_SOURCE 500		/* XXX recursive mutexes */
-#endif
-
+#define _XOPEN_SOURCE 500	/* Require recursive mutexes */
 #include <pthread.h>
+#include <signal.h>
+#undef _XOPEN_SOURCE
+
 #include <errno.h>
 
 #include "rwlock.h"
@@ -54,10 +55,10 @@ rwlockattr_init(rwlockattr_t *attr)
 int
 rwlockattr_destroy(rwlockattr_t *attr)
 {
-	if (attr->magic != RWLOCKATTR_MAGIC) {
+#ifdef DEBUG
+	if (attr->magic != RWLOCKATTR_MAGIC)
 		return (EINVAL);
-	}
-
+#endif
 	attr->type = 0;
 	attr->magic = 0;
 	return (0);
@@ -66,9 +67,10 @@ rwlockattr_destroy(rwlockattr_t *attr)
 int
 rwlockattr_settype(rwlockattr_t *attr, int type)
 {
-	if (attr->magic != RWLOCKATTR_MAGIC) {
+#ifdef DEBUG
+	if (attr->magic != RWLOCKATTR_MAGIC)
 		return (EINVAL);
-	}
+#endif
 	attr->type = type;
 	return (0);
 }
@@ -76,9 +78,10 @@ rwlockattr_settype(rwlockattr_t *attr, int type)
 int
 rwlockattr_gettype(rwlockattr_t *attr, int *type)
 {
-	if (attr->magic != RWLOCKATTR_MAGIC) {
+#ifdef DEBUG
+	if (attr->magic != RWLOCKATTR_MAGIC)
 		return (EINVAL);
-	}
+#endif
 	*type = attr->type;
 	return (0);
 }
@@ -136,9 +139,10 @@ rwlock_init(rwlock_t *rw, rwlockattr_t *attr)
 int
 rwlock_destroy(rwlock_t *rw)
 {
-	if (rw->magic != RWLOCK_MAGIC) {
+#ifdef DEBUG
+	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
-	}
+#endif
 	if (rw->ref_count != 0 ||
 	    rw->nwaitreaders != 0 || rw->nwaitwriters != 0) {
 		return (EBUSY);
@@ -175,14 +179,13 @@ rwlock_rdlock(rwlock_t *rw)
 {
 	int res;
 
-	if (rw->magic != RWLOCK_MAGIC) {
+#ifdef DEBUG
+	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
-	}
+#endif
 
-	res = pthread_mutex_lock(&rw->mutex);
-	if (res != 0) {
+	if ((res = pthread_mutex_lock(&rw->mutex)) != 0)
 		return (res);
-	}
 
 	/* Give preference to waiting writers. */
 	while (rw->ref_count < 0 || rw->nwaitwriters > 0) {
@@ -191,9 +194,8 @@ rwlock_rdlock(rwlock_t *rw)
 		res = pthread_cond_wait(&rw->condreaders, &rw->mutex);
 		pthread_cleanup_pop(0);
 		rw->nwaitreaders--;
-		if (res != 0) {
+		if (res != 0)
 			break;
-		}
 	}
 	
 	if (res == 0) {
@@ -210,14 +212,13 @@ rwlock_tryrdlock(rwlock_t *rw)
 {
 	int res;
 
-	if (rw->magic != RWLOCK_MAGIC) {
+#ifdef DEBUG
+	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
-	}
+#endif
 
-	res = pthread_mutex_lock(&rw->mutex);
-	if (res != 0) {
+	if ((res = pthread_mutex_lock(&rw->mutex)) != 0)
 		return (res);
-	}
 
 	if (rw->ref_count < 0 || rw->nwaitwriters > 0) {
 		/* Held by a writer or waiting writers */
@@ -236,14 +237,12 @@ rwlock_wrlock(rwlock_t *rw)
 {
 	int res;
 
-	if (rw->magic != RWLOCK_MAGIC) {
+#ifdef DEBUG
+	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
-	}
-
-	res = pthread_mutex_lock(&rw->mutex);
-	if (res != 0) {
+#endif
+	if ((res = pthread_mutex_lock(&rw->mutex)) != 0)
 		return (res);
-	}
 
 	while (rw->ref_count != 0) {
 		rw->nwaitwriters++;
@@ -251,14 +250,12 @@ rwlock_wrlock(rwlock_t *rw)
 		res = pthread_cond_wait(&rw->condwriters, &rw->mutex);
 		pthread_cleanup_pop(0);
 		rw->nwaitwriters--;
-		if (res != 0) {
+		if (res != 0)
 			break;
-		}
 	}
 
-	if (res == 0) {
+	if (res == 0)
 		rw->ref_count = -1;
-	}
 
 	pthread_mutex_unlock(&rw->mutex);
 	return (res);
@@ -269,14 +266,13 @@ rwlock_trywrlock(rwlock_t *rw)
 {
 	int res;
 
-	if (rw->magic != RWLOCK_MAGIC) {
+#ifdef DEBUG
+	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
-	}
+#endif
 
-	res = pthread_mutex_lock(&rw->mutex);
-	if (res != 0) {
+	if ((res = pthread_mutex_lock(&rw->mutex)) != 0)
 		return (res);
-	}
 
 	if (rw->ref_count != 0) {
 		/* Held by either writer or reader(s) */
@@ -293,14 +289,13 @@ rwlock_unlock(rwlock_t *rw)
 {
 	int res;
 
-	if (rw->magic != RWLOCK_MAGIC) {
+#ifdef DEBUG
+	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
-	}
+#endif
 
-	res = pthread_mutex_lock(&rw->mutex);
-	if (res != 0) {
+	if ((res = pthread_mutex_lock(&rw->mutex)) != 0)
 		return (res);
-	}
 
 	if (rw->ref_count > 0) {
 		/* Releasing a reader */
