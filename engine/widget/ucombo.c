@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.7 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.8 2004/05/16 04:41:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -106,9 +106,13 @@ ucombo_expand(int argc, union evarg *argv)
 			win->w = view->w - win->x;
 		if (win->y+win->h > view->h)
 			win->h = view->h - win->y;
-
+		
+		tlist_prescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
+		WIDGET_SCALE(com->list, -1, -1);
+		WIDGET_SCALE(win, -1, -1);
 		WIDGET_SCALE(win, win->w, win->h);
 		widget_update_coords(com->win, win->x, win->y);
+
 		window_show(com->win);
 	} else {
 		ucombo_collapse(com);

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.97 2004/05/15 02:27:17 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.98 2004/05/15 02:34:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -193,7 +193,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->nvisitems = 0;
 	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
 
-	tlist_prescale(tl, "XXXXXXXXXXXXXXX", 4);
+	tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXXXXXX", 4);
 
 	event_new(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
 	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);

@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.18 2004/04/13 01:21:18 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.19 2004/05/06 06:23:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -215,8 +215,15 @@ fspinbutton_scale(void *p, int w, int h)
 	struct button *incbu = fsu->incbu;
 	struct button *decbu = fsu->decbu;
 	const int bw = 10;
-	int uw = units != NULL ? 25 : 0;
 	int x = 0, y = 0;
+	int uw, uh;
+
+	if (units != NULL) {
+		text_prescale("XXXXX", &uw, &uh);
+	} else {
+		uw = 0;
+		uh = 0;
+	}
 
 	if (w == -1 && h == -1) {
 		WIDGET_SCALE(input, -1, -1);
