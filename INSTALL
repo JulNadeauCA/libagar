@@ -5,38 +5,25 @@ DEPENDENCIES
 Agar requires the Software DirectMedia Layer (http://www.libsdl.org) as
 well as the FreeType library (http://www.freetype.org).
 
-Optionally, Agar may be compiled with OpenGL support (--with-gl).
-
 INSTALLATION
 ------------
 
-1) Execute the configure script (see ./configure --help for options).
+1) Execute the configure script (use `./configure --help' for options).
    $ ./configure
 
-   To perform a concurrent build, use the --srcdir option. A concurrent build
-   in a memory filesystem mounted directory can speed up the build drastically.
-   $ cd /path/to/builddir
-   $ /path/to/sourcedir/configure --srcdir=/path/to/sourcedir [...]
-
-2) Build dependencies with the depend target.
+2) Build the dependencies with the `depend' target.
    $ make depend
 
 3) Compile the library, binaries, archives and man pages (if nroff(1) is there).
    $ make
 
-4) Install the library, binaries, data files and manual pages. People hacking
-   the Agar source tree may skip this step and use -l (see below).
+4) Install the library, binaries, data files and manual pages.
    # make install
 
-6) Execute the game by running `cave'.
-   $ cave
-   
-   The level editor (if compiled in), is invoked with the -e flag.
-   $ cave -e
+6) Execute the game.
+   $ cave						# Game mode
+   $ cave -e						# Edition mode
+   $ cave -e -T $HOME/fonts -t myfont,18		# Override default font
+   $ cave -e -l /tmp/w-agar:/tmp/src-agar:$HOME/.cave	# Override load path
 
-   Developers who wish to load data files directly from the source tree may
-   use -l to override the load path (the setting is saved to ~/.cave and thus
-   only needs to be specified once):
-   $ ./cave -e -l /path/to/builddir:/path/to/srcdir
-
-$Csoft: INSTALL,v 1.9 2003/01/02 20:34:45 vedge Exp $
+$Csoft: INSTALL,v 1.10 2003/06/06 09:42:07 vedge Exp $
