@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.66 2003/02/15 09:58:17 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.67 2003/02/17 02:46:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -938,7 +938,10 @@ mapview_keydown(int argc, union evarg *argv)
 			object_save(mv->map);
 			break;
 		case SDLK_l:
-			object_load(mv->map);
+			if (object_load(mv->map) == -1) {
+				text_msg("Error loading map", "%s: %s",
+				    OBJECT(mv->map)->name, error_get());
+			}
 			break;
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.141 2003/02/13 11:30:12 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.142 2003/02/20 03:25:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,6 +47,7 @@
 #include "tool/select.h"
 #include "tool/shift.h"
 #include "tool/merge.h"
+#include "tool/fill.h"
 
 static const struct object_ops mapedit_ops = {
 	NULL,		/* destroy */
@@ -78,6 +79,8 @@ static const struct tools_ent {
 	    shift_init },
 	{ &mapedit.tools[MAPEDIT_MERGE], sizeof(struct merge),
 	    merge_init },
+	{ &mapedit.tools[MAPEDIT_FILL], sizeof(struct fill),
+	    fill_init },
 };
 static const int ntools = sizeof(tools) / sizeof(tools[0]);
 
@@ -242,6 +245,13 @@ mapedit_init(void)
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p", med->tools[MAPEDIT_SHIFT]);
+		
+		button = med->tools[MAPEDIT_FILL]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_FILL),
+		    BUTTON_NOFOCUS|BUTTON_STICKY,
+		    xdiv, ydiv);
+		event_new(button, "button-pushed", mapedit_select_tool,
+		    "%p", med->tools[MAPEDIT_FILL]);
 	}
 	
 	window_show(med->win.toolbar);
