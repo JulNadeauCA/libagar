@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.61 2002/12/29 03:24:30 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.62 2002/12/31 00:55:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -8,10 +8,7 @@
 
 typedef enum {
 	GFX_ENGINE_GUI,		/* Direct rendering, solid background */
-	GFX_ENGINE_TILEBASED,	/* Direct rendering, map background */
-#ifdef HAVE_OPENGL
-	GFX_ENGINE_GL,		/* OpenGL rendering */
-#endif
+	GFX_ENGINE_TILEBASED	/* Direct rendering, map background */
 } gfx_engine_t;
 
 /* Map display */
@@ -39,6 +36,7 @@ struct viewport {
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	int		 w, h;		/* Display geometry */
 	int		 depth;		/* Depth in bpp */
+	int		 opengl;	/* OpenGL rendering? (if available) */
 	struct {
 		int	 current;	/* Estimated refresh rate in ms */
 		int	 delay;		/* Current refresh delay in ms */
@@ -118,9 +116,9 @@ case 4:					\
 # define _VIEW_PUTPIXEL_32(dst, c)
 #endif
 
-/* XXX inefficient */
-
-#define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) do {		\
+/* The surface must be locked. */
+#define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) 			\
+if (VIEW_INSIDE_CLIP_RECT((s), (avx), (avy))) {			\
 	Uint32 _view_col;					\
 	Uint8 _view_alpha_rs, _view_alpha_gs, _view_alpha_bs;	\
 	Uint8 _view_alpha_rd, _view_alpha_gd, _view_alpha_bd;	\
@@ -151,30 +149,18 @@ case 4:					\
 		_VIEW_PUTPIXEL_24(_putpixel_dst, _view_col)	\
 		_VIEW_PUTPIXEL_32(_putpixel_dst, _view_col)	\
 	}							\
-} while (0)
+}
 
-/*
- * Set the pixel at x,y to c inside surface s.
- * Surface must be locked.
- */
+#define VIEW_INSIDE_CLIP_RECT(s, ax, ay)		\
+	((ax) >= (s)->clip_rect.x &&			\
+	 (ax) <= (s)->clip_rect.x+(s)->clip_rect.w &&	\
+	 (ay) >= (s)->clip_rect.y &&			\
+	 (ay) <= (s)->clip_rect.y+(s)->clip_rect.h)
+
+/* The surface must be locked. */
 #define VIEW_PUT_PIXEL(s, vx, vy, c) do {				\
-	Uint8 *_view_dst = (Uint8 *)(s)->pixels +			\
-	    (vy)*(s)->pitch + (vx)*(s)->format->BytesPerPixel;		\
-									\
-	switch ((s)->format->BytesPerPixel) {				\
-		_VIEW_PUTPIXEL_8(_view_dst,  (c))			\
-		_VIEW_PUTPIXEL_16(_view_dst, (c))			\
-		_VIEW_PUTPIXEL_24(_view_dst, (c))			\
-		_VIEW_PUTPIXEL_32(_view_dst, (c))			\
-	}								\
-} while (0)
-
-#define VIEW_PUT_PIXEL_CLIPPED(s, vx, vy, c) do {			\
-	if ((vx) >= view->v->clip_rect.x &&				\
-	    (vx) <= view->v->clip_rect.x+view->v->clip_rect.w &&	\
-	    (vy) >= view->v->clip_rect.y &&				\
-	    (vy) <= view->v->clip_rect.y+view->v->clip_rect.h) {	\
-		Uint8 *_view_dst =_view_dst = (Uint8 *)(s)->pixels +	\
+	if (VIEW_INSIDE_CLIP_RECT((s), (vx), (vy))) {			\
+		Uint8 *_view_dst = (Uint8 *)(s)->pixels +		\
 		    (vy)*(s)->pitch + (vx)*(s)->format->BytesPerPixel;	\
 		switch ((s)->format->BytesPerPixel) {			\
 			_VIEW_PUTPIXEL_8(_view_dst,  (c))		\
@@ -184,15 +170,6 @@ case 4:					\
 		}							\
 	}								\
 } while (0)
-
-#define VIEW_REDRAW() do {		\
-	SDL_Event rdev;			\
-					\
-	rdev.type = SDL_VIDEOEXPOSE;	\
-	SDL_PushEvent(&rdev);		\
-} while (0)
-
-#define VIEW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
 
 #define VIEW_UPDATE(rect) do {				\
 	if (view->ndirty + 1 > view->maxdirty) {	\
