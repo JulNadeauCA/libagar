@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.82 2003/06/13 02:47:23 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.83 2003/06/18 00:46:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -6,7 +6,7 @@
 
 #include <engine/prop.h>
 #include <engine/physics.h>
-#include <engine/media/art.h>
+#include <engine/gfx.h>
 
 #include "begin_code.h"
 
@@ -54,7 +54,7 @@ struct object {
 #define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
 #define OBJECT_STATIC		0x04	/* Parent should not call free(3) */
 
-	struct art		*art;	/* Associated set of graphics */
+	struct gfx		*gfx;	/* Associated graphics package */
 	TAILQ_ENTRY(object)	 cobjs;	/* Child objects */
 
 	pthread_mutex_t		 lock;
@@ -67,7 +67,7 @@ struct object {
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
-#define OBJECT_ICON(ob)	(((ob)->art != NULL && (ob)->art->nsprites > 0) ? \
+#define OBJECT_ICON(ob)	(((ob)->gfx != NULL && (ob)->gfx->nsprites > 0) ? \
 			 SPRITE(ob, 0) : NULL)
 
 #define OBJECT_NAME(ob, n)	(strcmp(OBJECT(ob)->name, (n)) == 0)
@@ -88,7 +88,6 @@ struct object	*object_new(void *, const char *, const char *, const void *);
 void		 object_init(void *, const char *, const char *, const void *);
 void		 object_set_ops(void *, const void *);
 
-int	 object_load_art(void *, const char *, int);
 void	 object_attach(void *, void *);
 void	 object_detach(void *, void *);
 void	 object_move(void *, void *, void *);
