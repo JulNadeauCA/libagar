@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.159 2003/03/10 05:50:54 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.160 2003/03/11 00:11:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -66,12 +66,10 @@ static void	 map_layer_init(struct map_layer *lay, char *);
 static void	 map_layer_destroy(struct map_layer *);
 
 void
-node_init(struct node *node, int x, int y)
+node_init(struct node *node)
 {
 #ifdef DEBUG
-	strncpy(node->magic, NODE_MAGIC, 5);
-	node->x = x;
-	node->y = y;
+	node->magic = NODE_MAGIC;
 #endif
 	TAILQ_INIT(&node->nrefs);
 	node->flags = 0;
@@ -83,9 +81,9 @@ node_destroy(struct node *node)
 	struct noderef *nref, *nextnref;
 
 #ifdef DEBUG
-	if (strcmp(NODE_MAGIC, node->magic) != 0)
+	if (node->magic != NODE_MAGIC)
 		fatal("bad node");
-	strncpy(node->magic, "free", 5);
+	node->magic = 0;
 #endif
 	for (nref = TAILQ_FIRST(&node->nrefs);
 	     nref != TAILQ_END(&node->nrefs);
@@ -100,7 +98,7 @@ void
 noderef_init(struct noderef *nref)
 {
 #ifdef DEBUG
-	strncpy(nref->magic, NODEREF_MAGIC, 5);
+	nref->magic = NODEREF_MAGIC;
 #endif
 	nref->type = 0;
 	nref->flags = 0;
@@ -120,9 +118,9 @@ noderef_destroy(struct noderef *nref)
 	struct transform *trans, *ntrans;
 
 #ifdef DEBUG
-	if (strcmp(NODEREF_MAGIC, nref->magic) != 0)
+	if (nref->magic != NODEREF_MAGIC)
 		fatal("bad nref");
-	strncpy(nref->magic, "free", 5);
+	nref->magic = 0;
 #endif
 
 	for (trans = SLIST_FIRST(&nref->transforms);
@@ -163,7 +161,7 @@ map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
 		m->map[y] = emalloc(w * sizeof(struct node));
 
 		for (x = 0; x < w; x++) {
-			node_init(&m->map[y][x], x, y);
+			node_init(&m->map[y][x]);
 		}
 	}
 
@@ -182,7 +180,7 @@ map_free_nodes(struct map *m)
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			node = &m->map[y][x];
-			MAP_CHECK_NODE(node, x, y);
+			MAP_CHECK_NODE(node);
 			node_destroy(node);
 		}
 		free(m->map[y]);
@@ -259,14 +257,14 @@ map_grow(struct map *m, unsigned int w, unsigned int h)
 		if (y > m->maph-1) {			/* New row */
 			m->map[y] = emalloc(w * sizeof(struct node));
 			for (x = 0; x < w; x++) {
-				node_init(&m->map[y][x], x, y);
+				node_init(&m->map[y][x]);
 			}
 		} else {				/* Existing row */
 			if (w > m->mapw) {
 				m->map[y] = erealloc(m->map[y],
 				    w * sizeof(struct node));
 				for (x = m->mapw-1; x < w; x++) {
-					node_init(&m->map[y][x], x, y);
+					node_init(&m->map[y][x]);
 				}
 			}
 		}
@@ -1023,7 +1021,7 @@ map_save(void *p, int fd)
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			MAP_CHECK_NODE(&m->map[y][x], x, y);
+			MAP_CHECK_NODE(&m->map[y][x]);
 			node_save(buf, deps, &m->map[y][x]);
 		}
 	}
@@ -1052,8 +1050,7 @@ map_check(void *arg)
 		for (y = 0; y < m->maph; y++) {
 			for (x = 0; x < m->mapw; x++) {
 				node = &m->map[y][x];
-
-				MAP_CHECK_NODE(node, x, y);
+				MAP_CHECK_NODE(node);
 				TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 					MAP_CHECK_NODEREF(nref);
 				}
