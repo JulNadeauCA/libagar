@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.80 2004/03/10 16:58:29 vedge Exp $
+# $Csoft: configure.in,v 1.81 2004/05/02 04:03:28 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -7,6 +7,8 @@ REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--enable-edition",	"Graphical edition [default: yes]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
+REGISTER("--enable-astro-units", "Include astronomical units [default: no]")
+REGISTER("--enable-histo-units", "Include historical units [default: no]")
 REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
 REGISTER("--enable-static",	"Produce a static binary [default: no]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
@@ -100,6 +102,18 @@ if [ "${enable_threads}" = "yes" ]; then
 	HDEFINE(THREADS, 1)
 else
 	HUNDEF(THREADS)
+fi
+
+if [ "${enable_astro_units}" = "yes" ]; then
+	HDEFINE(ASTRONOMICAL_UNITS, 1)
+else
+	HUNDEF(ASTRONOMICAL_UNITS)
+fi
+
+if [ "${enable_histo_units}" = "yes" ]; then
+	HDEFINE(HISTORICAL_UNITS, 1)
+else
+	HUNDEF(HISTORICAL_UNITS)
 fi
 
 # Enable floating point operations by default.
