@@ -73,7 +73,7 @@ UNAME=`uname `
 else
 UNAME=""
 fi
-if [ "$UNAME" == "IRIX64" ]; then
+if [ "$UNAME" = "IRIX64" ]; then
 ARCH64=yes
 else
 NONE=1
@@ -83,7 +83,7 @@ UNAME=`uname -m`
 else
 UNAME=""
 fi
-if [ "$UNAME" == "sparc64" ]; then
+if [ "$UNAME" = "sparc64" ]; then
 ARCH64=yes
 else
 NONE=1
