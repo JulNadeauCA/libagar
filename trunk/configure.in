@@ -1,4 +1,4 @@
-#	$Csoft: configure.in,v 1.6 2002/02/19 22:09:41 vedge Exp $
+#	$Csoft: configure.in,v 1.7 2002/02/19 22:10:58 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
@@ -20,7 +20,7 @@ check(64bit);
 require(SDL, 1.2.0);
 
 if ("$WITHOUT_SMPEG" = "") {
-	require(x11, /usr/X11R6, /usr/X386);
+	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
 	check(smpeg, 0.4.3);
 }
 
