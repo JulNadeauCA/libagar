@@ -1011,7 +1011,47 @@ x11_found_libs=yes
 else
 NONE=1
 fi
-if [ "${x11_found_includes}" != "" -a ${x11_found_libs} != "" ]; then
+cat << EOT > conftest.c
+#include <X11/Xlib.h>
+
+int
+main(int argc, char *argv[])
+{
+	Display *disp;
+
+	disp = XOpenDisplay(NULL);
+	XCloseDisplay(disp);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo $CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} >> config.log
+$CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_X11" > config/have_x11.h
+echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
+echo "#endif /* HAVE_X11 */" >> config/have_x11.h
+
+	HAVE_X11=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_X11" > config/have_x11.h
+
+	echo "no"
+fi
+if [ "${HAVE_X11}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
 x11_found=yes
