@@ -1,3 +1,5 @@
+/*	Public domain	*/
+
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
 #define _AGAR_WIDGET_TABLEVIEW_H_
 
