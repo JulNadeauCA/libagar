@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.191 2003/08/26 13:48:19 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.192 2003/09/04 03:15:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1091,8 +1091,6 @@ noderef_draw_sprite(struct noderef *r)
 		Uint32 scolorkey = origsu->format->colorkey;
 		struct gfx_cached_sprite *ncsprite;
 
-		dprintf("transform cache miss\n");
-
 		/* Allocate the new sprite surface. */
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE |
 		    (origsu->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
@@ -1168,6 +1166,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 		if (r->r_sprite.obj->gfx == NULL ||
 		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
 			dprintf("bad sprite offs %d\n", (int)r->r_sprite.offs);
+			/* XXX render a number */
 			return;
 		}
 #endif
@@ -1178,6 +1177,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 		if (r->r_anim.obj->gfx == NULL ||
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
 			dprintf("bad anim offs %d\n", (int)r->r_anim.offs);
+			/* XXX render a number */
 			return;
 		}
 #endif
@@ -1331,8 +1331,6 @@ map_import_gfx(int argc, union evarg *argv)
 		strlcpy(ind_str, it->text+1, sizeof(ind_str));
 		*(strchr(ind_str, ' ')) = '\0';
 		ind = (Uint32)atoi(ind_str);
-
-		dprintf("ind=%u (str=%s)\n", ind, ind_str);
 
 		switch (it->text[0]) {
 		case 's':
