@@ -1,6 +1,6 @@
-# $Csoft: csoft.dep.mk,v 1.4 2002/02/18 02:28:24 vedge Exp $
+# $Csoft: csoft.dep.mk,v 1.7 2002/05/13 08:04:11 vedge Exp $
 
-# Copyright (c) 2001 CubeSoft Communications, Inc.
+# Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,11 @@
 MKDEP=	${TOP}/mk/mkdep
 
 depend:	${DPADD} depend-subdir
-	rm -f .depend
+	@rm -f .depend
 	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \
-	  echo ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
-	  if ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; then \
-	   echo `cat .depend | awk '{i++} END {print i}'` dependencies; \
-	  else \
+	  ${MKDEP} -a ${MKDEP} ${CFLAGS} $$files; \
+	  if [ $$? != 0 ]; then \
 	   exit 1; \
 	  fi \
 	 fi
