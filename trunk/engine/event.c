@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.159 2003/07/04 11:50:40 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.160 2003/07/08 00:05:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -129,7 +129,7 @@ event_hotkey(SDL_Event *ev)
 
 #ifdef DEBUG
 struct window *
-event_show_fps_counter(void)
+fps_window(void)
 {
 	window_show(fps_win);
 	return (fps_win);
