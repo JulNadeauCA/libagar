@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.37 2003/05/26 03:03:31 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.38 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -245,7 +245,7 @@ merge_window(void *p)
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
 	}
 	
-	hb = hbox_new(win, 0);
+	hb = hbox_new(win, HBOX_WFILL);
 	{
 		struct button *bu;
 		
@@ -260,7 +260,7 @@ merge_window(void *p)
 		    mer, name_tbox);
 	}
 	
-	hb = hbox_new(win, 1);
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
 	{
 		struct button *bu;
 		
@@ -277,8 +277,7 @@ merge_window(void *p)
 		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
 	}
 	
-	vb = vbox_new(win, 0);
-	mer->brushes_tl = tlist_new(vb, TLIST_MULTI);
+	mer->brushes_tl = tlist_new(win, TLIST_MULTI);
 	
 	return (win);
 }
