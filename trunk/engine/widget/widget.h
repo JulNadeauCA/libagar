@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.32 2002/07/30 22:23:48 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.33 2002/08/21 04:25:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -105,11 +105,12 @@ struct widget {
 
 #define WIDGET_SURFACE(wid)	(WINDOW_SURFACE(WIDGET((wid))->win))
 
-#define WIDGET_FOCUSED(wid)	(WIDGET(wid)->win->focus == WIDGET(wid))
+#define WIDGET_FOCUSED(wid)	(WIDGET((wid))->win->focus == WIDGET((wid)))
 
 #define WIDGET_FOCUS(wid) do {					\
-	if ((WIDGET(wid)->flags & WIDGET_NO_FOCUS) == 0) {	\
-		WIDGET(wid)->win->focus = WIDGET(wid);		\
+	if ((WIDGET((wid))->flags & WIDGET_NO_FOCUS) == 0) {	\
+		WIDGET((wid))->win->focus = WIDGET((wid));	\
+		event_post((wid), "widget-gainfocus", NULL);	\
 	}							\
 } while (/*CONSTCOND*/0)
 
