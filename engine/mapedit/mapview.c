@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.64 2003/02/15 07:34:07 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.65 2003/02/15 07:42:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -560,7 +560,7 @@ mapview_draw(void *p)
 			if (!mapedition ||
 			    mv->map->tilew < 6 || mv->map->tileh < 6)
 				continue;
-
+			
 			/* Draw the position cursor. */
 			if (mv->cur_node == node) {
 				primitives.rect_outlined(mv,
@@ -597,6 +597,8 @@ mapview_draw(void *p)
 		if (mv->cx != -1 && mv->cy != -1) {
 			SDL_Rect rd;
 
+			/* XXX insanity */
+
 			rd.x = WIDGET_ABSX(mv) + mv->mouse.x*mv->map->tilew +
 			    mv->ssx - mv->map->tilew/2;
 			rd.y = WIDGET_ABSY(mv) + mv->mouse.y*mv->map->tileh +
@@ -608,8 +610,10 @@ mapview_draw(void *p)
 			    TOOL_OPS(curtool)->cursor == NULL ||
 			    TOOL_OPS(curtool)->cursor(curtool, mv, &rd)
 			    == -1)) {
-				rd.x -= WIDGET_ABSX(mv);
-				rd.y -= WIDGET_ABSY(mv);
+				rd.x -= WIDGET_ABSX(mv) - mv->map->tilew/2 +
+				    mv->map->tilew;
+				rd.y -= WIDGET_ABSY(mv) - mv->map->tileh/2 +
+				    mv->map->tileh;
 				primitives.rect_outlined(mv,
 				    rd.x+1, rd.y+1,
 				    mv->map->tilew-1, mv->map->tileh-1,
