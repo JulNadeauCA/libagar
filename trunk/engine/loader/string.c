@@ -1,4 +1,4 @@
-/*	$Csoft: string.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: string.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -51,16 +51,23 @@ read_string(struct netbuf *buf)
 	char *s;
 
 	if ((len = (size_t)read_uint32(buf)) > STRING_MAX) {
-		fatal("string is too big");
+		error_set("string is too big");
+		return (NULL);
 	} else if (len == 0) {
-		fatal("null string");
+		error_set("null string");
+		return (NULL);
 	}
 
-	s = Malloc(len);
+	if ((s = malloc(len)) == NULL) {
+		error_set("out of memory for string");
+		return (NULL);
+	}
 	netbuf_read(s, len, 1, buf);
 
 	if (s[len-1] != '\0') {
-		fatal("string is not NUL-terminated");
+		error_set("string is not NUL-terminated");
+		free(s);
+		return (NULL);
 	}
 	return (s);
 }
@@ -71,11 +78,15 @@ write_string(struct netbuf *buf, const char *s)
 {
 	size_t len;
 
-	if ((len = strlen(s)+1) > STRING_MAX) {
-		fatal("string too big");
+	if (s == NULL) {
+		write_uint32(buf, 0);
+	} else {
+		if ((len = strlen(s)+1) > STRING_MAX) {
+			fatal("string too big");
+		}
+		write_uint32(buf, (Uint32)len);
+		netbuf_write(s, len, 1, buf);
 	}
-	write_uint32(buf, (Uint32)len);
-	netbuf_write(s, len, 1, buf);
 }
 
 /*
@@ -97,7 +108,6 @@ copy_string(char *dst, struct netbuf *buf, size_t dst_size)
 		    (unsigned long)len, (unsigned long)dst_size);
 		rv = len;				/* Save */
 		len = dst_size;				/* Truncate */
-		abort();
 	}
 
 	if ((rrv = fread(dst, 1, len, buf->file)) < len) {
