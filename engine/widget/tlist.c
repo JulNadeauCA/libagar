@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.29 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.30 2003/01/01 05:18:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -303,6 +303,7 @@ tlist_item_compare(struct tlist_item *it1, struct tlist_item *it2)
 	if (it1->text_len == it2->text_len &&		/* Optimization */
 	    strcmp(it1->text, it2->text) == 0) {	/* Same text? */
 #if 0
+	    /* XXX */
 	    strcmp(it1->text, it2->text) == 0 &&	/* Same text? */
 	    it1->icon == it2->icon &&			/* Same icon? */
 	    it1->p1 == it2->p1) {			/* Same user pointer? */
@@ -519,6 +520,7 @@ tlist_keydown(int argc, union evarg *argv)
 	pthread_mutex_lock(&tl->items_lock);
 	switch (keysym) {
 	case SDLK_UP:
+		sel = 0;
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected) {
 				pit = TAILQ_PREV(it, tlist_itemq, items);
@@ -532,9 +534,15 @@ tlist_keydown(int argc, union evarg *argv)
 					pit->selected++;
 					event_post(tl, "tlist-changed",
 					    "%p, %i", pit, 1);
+				
+					/* Scroll */
+					if (--(*sb_value) < 0) {
+						*sb_value = 0;
+					}
 					break;
 				}
 			}
+			sel++;
 		}
 		break;
 	case SDLK_DOWN:
@@ -551,22 +559,17 @@ tlist_keydown(int argc, union evarg *argv)
 					pit->selected++;
 					event_post(tl, "tlist-changed",
 					    "%p, %i", pit, 1);
+					
+					/* Scroll */
+					if (++(*sb_value) >
+					    tl->nitems - tl->nvisitems) {
+						*sb_value = tl->nitems -
+						    tl->nvisitems;
+					}
 					break;
 				}
 			}
 		}
-		break;
-	case SDLK_LEFT:
-		if (*sb_value < 0) {
-			*sb_value = 0;
-		}
-		widget_binding_modified(valueb);
-		break;
-	case SDLK_RIGHT:
-		if (++(*sb_value) > tl->nitems) {		/* XXX */
-			*sb_value = tl->nitems;
-		}
-		widget_binding_modified(valueb);
 		break;
 	case SDLK_PAGEUP:
 		if ((*sb_value -= 4) < 0) {
@@ -585,7 +588,6 @@ tlist_keydown(int argc, union evarg *argv)
 	}
 
 	widget_binding_unlock(valueb);
-	
 	pthread_mutex_unlock(&tl->items_lock);
 }
 
