@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.5 2003/11/19 11:09:26 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.6 2003/11/20 02:40:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -40,16 +40,18 @@ void	fspinbutton_init(struct fspinbutton *, const struct unit *,
 void	fspinbutton_destroy(void *);
 void	fspinbutton_scale(void *, int, int);
 void	fspinbutton_draw(void *);
-void	fspinbutton_add(struct fspinbutton *, double);
+
 void	fspinbutton_set_value(struct fspinbutton *, double);
 void	fspinbutton_set_min(struct fspinbutton *, double);
 void	fspinbutton_set_max(struct fspinbutton *, double);
-void	fspinbutton_set_increment(struct fspinbutton *, float);
-void	fspinbutton_set_precision(struct fspinbutton *, const char *, int);
-void	fspinbutton_set_units(struct fspinbutton *, const struct unit[]);
-void	fspinbutton_set_writeable(struct fspinbutton *, int);
 void	fspinbutton_set_range(struct fspinbutton *, double, double);
+void	fspinbutton_set_increment(struct fspinbutton *, float);
+void	fspinbutton_set_units(struct fspinbutton *, const struct unit[]);
 void	fspinbutton_select_unit(struct fspinbutton *, const char *);
+void	fspinbutton_set_precision(struct fspinbutton *, const char *, int);
+void	fspinbutton_set_writeable(struct fspinbutton *, int);
+
+void	fspinbutton_add(struct fspinbutton *, double);
 __END_DECLS
 
 #include "close_code.h"
