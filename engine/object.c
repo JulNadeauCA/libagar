@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.102 2003/01/12 04:07:16 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.103 2003/01/16 04:07:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -536,18 +536,16 @@ object_table_load(int fd, char *objname)
 		pob = world_find(name);
 
 		debug_n(DEBUG_DEPS, "%s: depends on %s...", objname, name);
-		if (pob == NULL) {
-			fatal("%s: missing dependency on `%s' (type `%s')\n",
-			    objname, name, type);
+		if (pob != NULL) {
+			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
+			if (strcmp(pob->type, type) != 0) {
+				fatal("%s: expected `%s' to be of type `%s'\n",
+				    objname, name, type);
+			}
+		} else {
+			debug_n(DEBUG_DEPS, "missing\n");
 		}
-		if (strcmp(pob->type, type) != 0) {
-			fatal("%s: expected `%s' to be of type `%s'\n",
-			    objname, name, type);
-		}
-		debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
-
 		object_table_insert(obt, pob);
-
 		free(name);
 		free(type);
 	}
