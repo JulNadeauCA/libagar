@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.18 2003/01/01 05:18:38 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.19 2003/01/18 08:14:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,12 +27,12 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/map.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/radio.h>
+#include <engine/widget/text.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -51,26 +51,31 @@ static const struct tool_ops stamp_ops = {
 	NULL			/* cursor */
 };
 
-static void	stamp_mode_changed(int, union evarg *);
-
 struct stamp *
-stamp_new(struct mapedit *med, int flags)
+stamp_new(void)
 {
 	struct stamp *stamp;
 
 	stamp = emalloc(sizeof(struct stamp));
-	stamp_init(stamp, med, flags);
-
+	stamp_init(stamp);
 	return (stamp);
 }
 
 void
-stamp_init(struct stamp *stamp, struct mapedit *med, int flags)
+stamp_init(struct stamp *stamp)
 {
-	tool_init(&stamp->tool, "stamp", med, &stamp_ops);
+	tool_init(&stamp->tool, "stamp", &stamp_ops);
 
-	stamp->flags = flags;
-	stamp->mode = 0;
+	stamp->mode = STAMP_REPLACE;
+}
+
+static void
+stamp_mode_changed(int argc, union evarg *argv)
+{
+	struct stamp *stamp = argv[1].p;
+	int mode = argv[3].i;
+
+	stamp->mode = mode;
 }
 
 struct window *
@@ -83,7 +88,6 @@ stamp_window(void *p)
 	static char *mode_items[] = {
 		"Replace",
 		"Insert highest",
-		"Insert lowest",
 		NULL
 	};
 
@@ -94,19 +98,10 @@ stamp_window(void *p)
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0);
-	event_new(rad, "radio-changed",
-	    stamp_mode_changed, "%p, %c", st, 'm');
+	event_new(rad, "radio-changed", stamp_mode_changed, "%p", st);
 	win->focus = WIDGET(rad);
 
 	return (win);
-}
-
-static void
-stamp_mode_changed(int argc, union evarg *argv)
-{
-	struct stamp *st = argv[1].p;
-
-	st->mode = argv[4].i;
 }
 
 void
@@ -114,45 +109,28 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 {
 	struct stamp *st = p;
 	struct map *m = mv->map;
-	struct mapedit *med = TOOL(st)->med;
-	struct node *n = &m->map[y][x];
+	struct node *dstnode = &m->map[y][x];
+	struct node *srcnode = mapedit->src_node;
 	struct noderef *nref, *nnref;
 
-	switch (st->mode) {
-	case STAMP_REPLACE:
-		for (nref = TAILQ_FIRST(&n->nrefs);
-		     nref != TAILQ_END(&n->nrefs);
+	if (srcnode == NULL) {
+		text_msg("Error", "No source node");
+		return;
+	}
+
+	if (st->mode == STAMP_REPLACE) {
+		for (nref = TAILQ_FIRST(&dstnode->nrefs);
+		     nref != TAILQ_END(&dstnode->nrefs);
 		     nref = nnref) {
 			nnref = TAILQ_NEXT(nref, nrefs);
 			free(nref);
 		}
-		TAILQ_INIT(&n->nrefs);
-		break;
-	default:
-		break;
+		TAILQ_INIT(&dstnode->nrefs);
 	}
 
-	switch (st->mode) {
-	case STAMP_INSERT_LOWEST:
-		break;
-	case STAMP_INSERT_HIGHEST:
-	case STAMP_REPLACE:
-		switch (med->ref.type) {
-		case NODEREF_SPRITE:
-			nref = node_add_sprite(n, med->ref.obj, med->ref.offs);
-			break;
-		case NODEREF_ANIM:
-			nref = node_add_anim(n, med->ref.obj, med->ref.offs,
-			    med->ref.flags);
-			break;
-		default:
-			fatal("bad noderef type\n");
-			break;
-		}
-		nref->flags |= NODEREF_SAVEABLE;
-		break;
+	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+		node_copy_ref(nref, dstnode);
 	}
-
-	n->flags = med->node.flags &= ~NODE_ORIGIN;
+	dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
 }
 

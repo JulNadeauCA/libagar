@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.12 2002/12/31 00:56:40 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.13 2003/01/01 05:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -56,23 +56,21 @@ static const struct tool_ops resize_ops = {
 static void	resize_do(int, union evarg *);
 
 struct resize *
-resize_new(struct mapedit *med, int flags)
+resize_new(void)
 {
 	struct resize *resize;
 
 	resize = emalloc(sizeof(struct resize));
-	resize_init(resize, med, flags);
-
+	resize_init(resize);
 	return (resize);
 }
 
 void
-resize_init(struct resize *res, struct mapedit *med, int flags)
+resize_init(struct resize *res)
 {
-	tool_init(&res->tool, "resize", med, &resize_ops);
+	tool_init(&res->tool, "resize", &resize_ops);
 
-	res->flags = flags;
-	res->mode = 0;
+	res->mode = RESIZE_GROW;
 }
 
 struct window *

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.13 2002/12/31 01:46:35 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.14 2003/01/18 08:24:44 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapedit;
@@ -38,6 +38,7 @@ struct mapview {
 
 	struct mapedit	*med;		/* Back pointer to map editor */
 	struct window	*tmap_win;	/* Tile map window */
+	struct window	*node_win;	/* Node selection window */
 };
 
 struct mapview	*mapview_new(struct region *, struct mapedit *, struct map *,

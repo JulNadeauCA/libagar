@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.43 2003/01/01 05:18:37 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.44 2003/01/18 08:24:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,8 @@ enum {
 	BORDER_COLOR,
 	GRID_COLOR,
 	CURSOR_COLOR,
-	SELTILE_COLOR,
+	CONSTR_ORIGIN_COLOR,
+	SRC_NODE_COLOR,
 	BACKGROUND1_COLOR,
 	BACKGROUND2_COLOR
 };
@@ -111,17 +112,20 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->constr.x = 0;
 	mv->constr.y = 0;
 	mv->constr.nflags = NODEREF_SAVEABLE;
+	mv->tmap_win = NULL;
+	mv->node_win = NULL;
 
 	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
 		fatal("no map editor\n");
 	}
 
-	widget_map_color(mv, BORDER_COLOR, "mapview-border", 200, 200, 200);
-	widget_map_color(mv, GRID_COLOR, "mapview-grid", 100, 100, 100);
-	widget_map_color(mv, CURSOR_COLOR, "mapview-cursor", 100, 100, 100);
-	widget_map_color(mv, SELTILE_COLOR, "mapview-seltile", 200, 200, 200);
-	widget_map_color(mv, BACKGROUND2_COLOR, "mapview-bg2", 175, 175, 175);
-	widget_map_color(mv, BACKGROUND1_COLOR, "mapview-bg1", 114, 114, 114);
+	widget_map_color(mv, BORDER_COLOR, "border", 200, 200, 200);
+	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100);
+	widget_map_color(mv, CURSOR_COLOR, "cursor", 100, 100, 100);
+	widget_map_color(mv, CONSTR_ORIGIN_COLOR, "constr-orig", 100, 100, 130);
+	widget_map_color(mv, SRC_NODE_COLOR, "src-node", 0, 190, 0);
+	widget_map_color(mv, BACKGROUND2_COLOR, "background-2", 175, 175, 175);
+	widget_map_color(mv, BACKGROUND1_COLOR, "background-1", 114, 114, 114);
 
 	event_new(mv, "widget-scaled", mapview_scaled, NULL);
 	event_new(mv, "widget-lostfocus", mapview_lostfocus, NULL);
@@ -184,30 +188,38 @@ mapview_draw(void *p)
 	SDL_Rect rd;
 	Uint32 col;
 	int alt1 = 0, alt2 = 0;
-	static int softbg = 0;
 
-	if (++softbg > TILEW-1)
-		softbg = 0;
+	/* Draw a moving gimpish background. */
+	if (prop_get_bool(med, "tilemap-bg-moving")) {
+		static int softbg = 0;
+		int ss;
 
-	rd.w = TILEW;
-	rd.h = TILEH;
-	for (my = -TILEH + softbg; my < WIDGET(mv)->h; my += TILEH) {
-		rd.y = my;
-		for (mx = -TILEW + softbg; mx < WIDGET(mv)->w; mx += TILEW) {
-			rd.x = mx;
-			if (alt1++ == 1) {
-				primitives.rect_filled(mv, &rd,
-				    WIDGET_COLOR(mv, BACKGROUND1_COLOR));
-				alt1 = 0;
-			} else {
-				primitives.rect_filled(mv, &rd,
-				    WIDGET_COLOR(mv, BACKGROUND2_COLOR));
+		ss = prop_get_int(med, "tilemap-bg-square-size");
+		if (++softbg > ss-1) {
+			softbg = 0;
+		}
+		rd.w = ss;
+		rd.h = ss;
+		for (my = -ss + softbg; my < WIDGET(mv)->h; my += ss) {
+			rd.y = my;
+			for (mx = -ss + softbg; mx < WIDGET(mv)->w; mx += ss) {
+				rd.x = mx;
+				if (alt1++ == 1) {
+					primitives.rect_filled(mv, &rd,
+					    WIDGET_COLOR(mv,
+					    BACKGROUND1_COLOR));
+					alt1 = 0;
+				} else {
+					primitives.rect_filled(mv, &rd,
+					    WIDGET_COLOR(mv,
+					    BACKGROUND2_COLOR));
+				}
 			}
+			if (alt2++ == 1) {
+				alt2 = 0;
+			}
+			alt1 = alt2;
 		}
-		if (alt2++ == 1) {
-			alt2 = 0;
-		}
-		alt1 = alt2;
 	}
 
 	/* XXX soft scroll */
@@ -272,33 +284,22 @@ mapview_draw(void *p)
 			}
 
 			/* Draw the tile map selection cursor. */
-			if ((mv->flags & MAPVIEW_TILEMAP) &&
-			    !TAILQ_EMPTY(&node->nrefs) &&
+			if (node == med->src_node &&
 			    mv->map->tilew > 6 && mv->map->tileh > 6) {
 				struct noderef *nref;
 
-				nref = TAILQ_FIRST(&node->nrefs);
-				if (nref->type == med->ref.type &&
-				    nref->pobj == med->ref.obj &&
-				    nref->offs == med->ref.offs) {
-					/* XXX cosmetic */
-					primitives.rect_outlined(mv,
-					    rx+1, ry+1,
-					    mv->map->tilew-1, mv->map->tileh-1,
-					    WIDGET_COLOR(mv, SELTILE_COLOR));
-					primitives.rect_outlined(mv,
-					    rx+2, ry+2,
-					    mv->map->tilew-3, mv->map->tileh-3,
-					    WIDGET_COLOR(mv, SELTILE_COLOR));
-				}
+				primitives.rect_outlined(mv,
+				    rx+1, ry+1,
+				    mv->map->tilew-1, mv->map->tileh-1,
+				    WIDGET_COLOR(mv, SRC_NODE_COLOR));
 			}
-
+			/* Draw the tile map construction cursor. */
 			if ((mv->flags & MAPVIEW_TILEMAP) &&
 			    mv->constr.x == mx && mv->constr.y == my) {
 				primitives.frame(mv,
-				    rx+1, ry+1,
-				    mv->map->tilew-1, mv->map->tileh-1,
-				    WIDGET_COLOR(mv, SELTILE_COLOR));
+				    rx+2, ry+2,
+				    mv->map->tilew-3, mv->map->tileh-3,
+				    WIDGET_COLOR(mv, CONSTR_ORIGIN_COLOR));
 			}
 		}
 	}
@@ -449,33 +450,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
 		    (mv->mx+x < mv->map->mapw) &&
 		    (mv->my+y < mv->map->maph)) {
-			struct node *n;
-			struct editobj *eo = NULL;
-
-			n = &mv->map->map[mv->my+y][mv->mx+x];
-			if (!TAILQ_EMPTY(&n->nrefs)) {
-				struct noderef *nref;
-					
-				nref = TAILQ_FIRST(&n->nrefs);
-				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
-					if (eo->pobj == nref->pobj) {
-						break;
-					}
-				}
-				if (eo != NULL) {
-					med->curobj = eo;
-					med->node.flags = n->flags;
-					med->ref.obj = eo->pobj;
-					med->ref.offs = nref->offs;
-					med->ref.flags = nref->flags;
-					dprintf("%s:%d[0x%x]\n",
-					    med->ref.obj->name,
-					    med->ref.offs,
-					    med->ref.flags);
-				} else {
-					warning("unusable reference\n");
-				}
-			}
+			med->src_node = &mv->map->map[mv->my+y][mv->mx+x];
 		}
 	}
 	
@@ -509,37 +484,12 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 		if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
 		    (mv->mx+x < mv->map->mapw) &&
 		    (mv->my+y < mv->map->maph)) {
-			struct node *n;
-			struct editobj *eo = NULL;
-
 			if (SDL_GetModState() & KMOD_CTRL) {
 				mv->constr.x = mv->mx+x;
 				mv->constr.y = mv->my+y;
 				return;
 			}
-
-			n = &mv->map->map[mv->my+y][mv->mx+x];
-
-			if (!TAILQ_EMPTY(&n->nrefs)) {
-				struct noderef *nref;
-					
-				nref = TAILQ_FIRST(&n->nrefs);
-				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
-					if (eo->pobj == nref->pobj)
-						break;
-				}
-				if (eo != NULL) {
-					med->curobj = eo;
-					med->node.flags = n->flags;
-					med->ref.obj = eo->pobj;
-					med->ref.offs = nref->offs;
-					med->ref.flags = nref->flags;
-					dprintf("%s:%d[0x%x]\n",
-					    med->ref.obj->name,
-					    med->ref.offs,
-					    med->ref.flags);
-				}
-			}
+			med->src_node = &mv->map->map[mv->my+y][mv->mx+x];
 		}
 	}
 }

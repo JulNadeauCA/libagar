@@ -1,10 +1,8 @@
-/*	$Csoft: magnifier.h,v 1.1 2002/07/09 09:23:58 vedge Exp $	*/
+/*	$Csoft: magnifier.h,v 1.2 2002/07/18 12:02:55 vedge Exp $	*/
 /*	Public domain	*/
 
 struct magnifier {
-	struct	 tool tool;
-	int	 flags;
-#define MAGNIFIER_CAN_RESIZE_WIN	0x01	/* Allow window resize */
+	struct tool	tool;
 	enum {
 		MAGNIFIER_ZOOM_IN,
 		MAGNIFIER_ZOOM_OUT,
@@ -12,9 +10,8 @@ struct magnifier {
 	} mode;
 };
 
-struct magnifier	*magnifier_new(struct mapedit *, int);
-void			 magnifier_init(struct magnifier *, struct mapedit *,
-			     int);
+struct magnifier	*magnifier_new(void);
+void			 magnifier_init(struct magnifier *);
 struct window		*magnifier_window(void *);
 void			 magnifier_effect(void *, struct mapview *,
 			     Uint32, Uint32);

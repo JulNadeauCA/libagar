@@ -26,12 +26,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-
 #include <engine/engine.h>
-
 #include <engine/map.h>
 #include <engine/view.h>
+#include <engine/world.h>
+
+#include <stdio.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -60,20 +60,24 @@ tl_objs_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct mapedit *med = argv[1].p;
-	struct editobj *eob;
+	struct object *ob;
 
 	tlist_clear_items(tl);
 
-	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
-		struct object *ob = eob->pobj;
-		struct art *art = ob->art;
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		SDL_Surface *icon = NULL;
+
+		if ((ob->flags & OBJECT_ART) == 0 ||
+		    ob->flags & OBJECT_CANNOT_MAP)
+			continue;
 
 		if (ob->art != NULL && ob->art->nsprites > 0) {
 			icon = ob->art->sprites[0];
 		}
 		tlist_insert_item(tl, icon, ob->name, ob);
 	}
+	pthread_mutex_unlock(&world->lock);
 
 	tlist_restore_selections(tl);
 }
@@ -203,6 +207,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	static int cury = 140;
 	char *wname;
 
+	/* Create the tile map window. */
 	win = window_generic_new(202, 365, "mapedit-tmap-%s", ob->name);
 	if (win == NULL) {
 		return;		/* Exists */
@@ -226,7 +231,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		dprintf("loading tile map: %s\n", error_get());
 	}
 
-	/* Map operations */
+	/* Map operation buttons */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 10);
 	reg->spacing = 1;
 	{
@@ -274,7 +279,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 	window_show(win);
 
-	/* Tile selection window */
+	/* Create the tile selection window. */
 	win = window_generic_new(152, 287, "mapedit-tmap-%s-tiles", ob->name);
 	if (win == NULL) {
 		return;					/* Exists */
@@ -293,7 +298,8 @@ tl_objs_selected(int argc, union evarg *argv)
 			char s[8];
 
 			tl = tlist_new(reg, 100, 100, TLIST_MULTI);
-			tlist_set_item_height(tl, TILEH);
+			tlist_set_item_height(tl,
+			    prop_get_int(med, "tilemap-item-size"));
 
 			for (i = 0; i < ob->art->nsprites; i++) {
 				snprintf(s, 8, "s%d", i);

@@ -1,30 +1,5 @@
-/*	$Csoft: mapedit.h,v 1.59 2002/12/13 07:47:33 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.60 2003/01/18 08:24:44 vedge Exp $	*/
 /*	Public domain	*/
-
-struct editref {
-	int	animi;		/* Index into the object's real anim list. */
-	int	spritei;	/* Index into the object's real sprite list */
-	void	*p;
-
-	int	 type;
-	
-	SIMPLEQ_ENTRY(editref) erefs;	/* Reference list */
-};
-
-SIMPLEQ_HEAD(erefq, editref);
-
-struct editobj {
-	struct object	*pobj;		/* Original object structure */
-	struct erefq	 erefs;		/* Reference list */
-
-	int	nrefs;
-	int	nsprites;
-	int	nanims;
-
-	TAILQ_ENTRY(editobj) eobjs;	/* Editable object list */
-};
-
-TAILQ_HEAD(eobjq, editobj);
 
 struct mapdir;
 struct gendir;
@@ -32,12 +7,11 @@ struct tool;
 
 struct mapedit {
 	struct object	obj;
-	
+
 	struct window	*toolbar_win;
 	struct window	*objlist_win;
 	struct window	*new_map_win;
 	struct window	*load_map_win;
-	struct tool	*curtool;
 	struct {
 		struct tool	*stamp;
 		struct tool	*eraser;
@@ -45,22 +19,10 @@ struct mapedit {
 		struct tool	*resize;
 		struct tool	*propedit;
 	} tools;
-
-	struct eobjq	 eobjsh;	/* Shadow object tree */
-	int		 neobjs;
-	struct editobj	*curobj;
-	struct {
-		struct object	*obj;
-		Uint32		 offs;
-		Uint32		 flags;
-		int		 type;
-	} ref;
-	struct {
-		Uint32	flags;
-	} node;
+	struct tool	*curtool;		/* Selected tool */
+	struct node	*src_node;		/* Selected source node */
 };
 
-/* Editor sprites */
 enum {
 	/* Map editor */
 	MAPEDIT_ICON,
@@ -120,5 +82,5 @@ void	 mapedit_init(struct mapedit *, char *);
 void	 mapedit_attached(int, union evarg *);
 void	 mapedit_detached(int, union evarg *);
 
-extern struct mapedit *curmapedit;	/* Controlled map editor */
+extern struct mapedit *mapedit;
 

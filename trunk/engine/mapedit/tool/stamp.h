@@ -1,18 +1,16 @@
-/*	$Csoft: stamp.h,v 1.1 2002/07/07 00:23:46 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.2 2002/07/09 08:25:21 vedge Exp $	*/
 /*	Public domain	*/
 
 struct stamp {
-	struct	 tool tool;
-	int	 flags;
+	struct tool	tool;
 	enum {
-		STAMP_REPLACE = 0,
-		STAMP_INSERT_HIGHEST = 1,
-		STAMP_INSERT_LOWEST = 2
+		STAMP_REPLACE,
+		STAMP_INSERT_HIGHEST,
 	} mode;
 };
 
-struct stamp	*stamp_new(struct mapedit *, int);
-void		 stamp_init(struct stamp *, struct mapedit *, int);
+struct stamp	*stamp_new(void);
+void		 stamp_init(struct stamp *);
 struct window	*stamp_window(void *);
 void		 stamp_effect(void *, struct mapview *, Uint32, Uint32);
 
