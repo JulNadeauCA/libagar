@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.11 2005/02/01 08:24:30 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.12 2005/02/03 04:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -79,6 +79,7 @@ ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 		return (NULL);
 
 	panel = window_new(WINDOW_NO_TITLEBAR|WINDOW_NO_DECORATIONS, NULL);
+	window_set_caption(panel, "win-popup");
 	window_set_padding(panel, 0, 0);
 
 	WIDGET(panel)->x = x;
