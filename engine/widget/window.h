@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.44 2002/11/13 00:22:31 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.45 2002/11/14 02:17:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -112,6 +112,7 @@ struct window {
 	 (ya) < ((win)->rd.y+(win)->rd.h))
 
 struct window	*window_new(char *, char *, int, int, int, int, int, int, int);
+struct window	*window_generic_new(int, int, const char *, ...);
 void	 	 window_init(struct window *, char *, char *, int, int, int,
 		     int, int, int, int);
 int		 window_load(void *, int);
@@ -125,6 +126,7 @@ int	 window_hide(struct window *);
 void	 window_draw(struct window *);
 int	 window_event(SDL_Event *);
 void	 window_resize(struct window *);
-void	 window_titlebar_printf(struct window *, const char *, ...);
-void	 window_detach_generic(int, union evarg *);
+void	 window_set_caption(struct window *, const char *, ...);
+
+void	 window_generic_detached(int, union evarg *);
 

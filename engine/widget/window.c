@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.101 2002/11/14 05:59:03 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.102 2002/11/14 07:51:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -98,6 +98,31 @@ window_new(char *name, char *caption, int flags, int x, int y, int w, int h,
 	return (win);
 }
 
+struct window *
+window_generic_new(int w, int h, const char *caption_fmt, ...)
+{
+	struct window *win;
+	va_list args;
+	char *caption;
+	
+	va_start(args, caption_fmt);
+	vasprintf(&caption, caption_fmt, args);
+	va_end(args);
+
+	win = emalloc(sizeof(struct window));
+	window_init(win, NULL, caption, WINDOW_CENTER, -1, -1, w, h, w, h);
+
+	/* Destroy the window instead of hiding it on close. */
+	event_new(win, "window-close", window_generic_detached, "%p", win);
+
+	/* Attach window to main view, make it visible. */
+	pthread_mutex_lock(&view->lock);
+	view_attach(win);
+	pthread_mutex_unlock(&view->lock);
+
+	return (win);
+}
+
 /*
  * Adjust window to tile granularity.
  * Window must be locked.
@@ -182,7 +207,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->minw = minw;
 	win->minh = minh;
 
-	window_titlebar_printf(win, "%s", caption);
+	window_set_caption(win, "%s", caption);
 
 	/* Set the initial window position/geometry. */
 	if (win->flags & WINDOW_SCALE) {
@@ -316,10 +341,7 @@ window_draw(struct window *win)
 	VIEW_UPDATE(win->rd);
 }
 
-/*
- * Attach a region to this window.
- * Window must be locked.
- */
+/* Attach a region to this window. */
 void
 window_attach(void *parent, void *child)
 {
@@ -328,16 +350,15 @@ window_attach(void *parent, void *child)
 
 	OBJECT_ASSERT(parent, "window");
 	OBJECT_ASSERT(child, "window-region");
-	
+
 	reg->win = win;
 
+	pthread_mutex_lock(&win->lock);
 	TAILQ_INSERT_HEAD(&win->regionsh, reg, regions);
+	pthread_mutex_unlock(&win->lock);
 }
 
-/*
- * Detach a region from this window.
- * Window must be locked.
- */
+/* Detach a region from this window. */
 void
 window_detach(void *parent, void *child)
 {
@@ -346,8 +367,10 @@ window_detach(void *parent, void *child)
 
 	OBJECT_ASSERT(parent, "window");
 	OBJECT_ASSERT(child, "window-region");
-	
+
+	pthread_mutex_lock(&win->lock);
 	TAILQ_REMOVE(&win->regionsh, reg, regions);
+	pthread_mutex_unlock(&win->lock);
 }
 
 void
@@ -1125,11 +1148,12 @@ window_resize(struct window *win)
 #endif
 }
 
-/* Window must be locked. */
 void
-window_titlebar_printf(struct window *win, const char *fmt, ...)
+window_set_caption(struct window *win, const char *fmt, ...)
 {
 	va_list args;
+
+	pthread_mutex_lock(&win->lock);
 
 	/* XXX */
 	if (win->caption != NULL) {
@@ -1139,6 +1163,8 @@ window_titlebar_printf(struct window *win, const char *fmt, ...)
 	va_start(args, fmt);
 	vasprintf(&win->caption, fmt, args);
 	va_end(args);
+	
+	pthread_mutex_unlock(&win->lock);
 }
 
 int
@@ -1178,10 +1204,11 @@ window_save(void *p, int fd)
 }
 
 void
-window_detach_generic(int argc, union evarg *argv)
+window_generic_detached(int argc, union evarg *argv)
 {
 	struct window *win = argv[1].p;
 
 	OBJECT_ASSERT(win, "window");
+
 	view_detach(win);
 }
