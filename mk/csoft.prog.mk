@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.8 2002/01/26 00:20:35 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.11 2002/01/26 01:31:28 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -26,11 +26,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-PREFIX?=	/usr/local
 CFLAGS?=	-Wall -g
-INSTALL?=	install
 
-BINMODE=	755
+PROG_INSTALL?=	Yes
 
 CC?=		cc
 CFLAGS?=	-O2
@@ -39,8 +37,7 @@ CC_PICFLAGS?=	-fPIC -DPIC
 GMONOUT?=	gmon.out
 
 ASM?=		nasm
-ASMOUT?=	aoutb
-ASMFLAGS?=	-f ${ASMOUT} -g -w-orphan-labels
+ASMFLAGS?=	-g -w-orphan-labels
 ASM_PICFLAGS?=	-DPIC
 
 LEX?=		lex
@@ -78,9 +75,30 @@ YFLAGS?=	-d
 # Assembly
 #
 .asm.o:
-	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $< 
+	@echo "#ifdef __ELF__" > .elftest
+	@echo "IS ELF" >> .elftest
+	@echo "#endif" >> .elftest
+	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
+	    echo "${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	else \
+	    echo "${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	fi
+	@rm -f .elftest
+
 .asm.so:
-	${ASM} ${ASM_PICFLAGS} ${ASMFLAGS} ${CPPFLAGS} -o $@ $< 
+	@echo "#ifdef __ELF__" > .elftest
+	@echo "IS ELF" >> .elftest
+	@echo "#endif" >> .elftest
+	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
+	    echo "${ASM} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASM} -f elf ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
+	else \
+	    echo "${ASM} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASM} -f aoutb ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<; \
+	fi
+	@rm -f .elftest
 
 #
 # Lex
@@ -127,20 +145,21 @@ ${GMONOUT}: ${OBJS}
 	${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} ${OBJS} ${LIBS}
 
 clean: clean-subdir
-	rm -f ${PROG} ${GMONOUT} ${OBJS}
+	@if [ "${PROG}" != "" ]; then \
+	    echo "rm -f ${PROG} ${GMONOUT} ${OBJS}"; \
+	    rm -f ${PROG} ${GMONOUT} ${OBJS}; \
+	fi
 
 install: install-subdir ${PROG}
-	@if [ "${PROG}" != "" ]; then \
-	    echo "${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
-	    -m ${BINMODE} ${PROG} ${PREFIX}/bin"; \
-	    ${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
-	    -m ${BINMODE} ${PROG} ${PREFIX}/bin; \
+	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
+	    echo "${INSTALL_PROG} ${PROG} ${INST_BINDIR}"; \
+	    ${INSTALL_PROG} ${PROG} ${INST_BINDIR}; \
 	fi
 	
-uninstall: uninstall-subdir
-	@if [ "${PROG}" != "" ]; then \
-	    echo "rm -f ${PROG} ${PREFIX}/bin"; \
-	    rm -f ${PROG} ${PREFIX}/bin; \
+deinstall: deinstall-subdir
+	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
+	    echo "${DEINSTALL_PROG} ${INST_BINDIR}${PROG}"; \
+	    ${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}; \
 	fi
 
 regress: regress-subdir
