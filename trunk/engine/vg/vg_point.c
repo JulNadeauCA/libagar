@@ -1,4 +1,4 @@
-/*	$Csoft: vg_points.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.1 2004/03/30 16:04:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -28,6 +28,11 @@
 
 #include <engine/engine.h>
 
+#ifdef EDITION
+#include <engine/mapedit/mapview.h>
+#include <engine/mapedit/tool.h>
+#endif
+
 #include "vg.h"
 #include "vg_primitive.h"
 
@@ -50,15 +55,60 @@ vg_point_diameter(struct vg *vg, double diameter)
 void
 vg_draw_points(struct vg *vg, struct vg_element *vge)
 {
-	int radpx = VG_PX(vg, vge->vg_point.radius);
-	int i;
+	struct vg_vertex *vtx;
+	int rx, ry;
 
-	for (i = 0; i < vge->nvertices-1; i += 2) {
-		int x = VG_X(vg, vge->vertices[i]);
-		int y = VG_Y(vg, vge->vertices[i+1]);
-		int j;
-
-		vg_putpixel(vg, x, y, vge->color);
+	for (vtx = &vge->vtx[0]; vtx < &vge->vtx[vge->nvtx]; vtx++) {
+		vg_rcoords(vg, vtx->x, vtx->y, &rx, &ry);
+		vg_put_pixel(vg, rx, ry, vge->color);
 	}
 }
 
+#ifdef EDITION
+static void
+point_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
+    int txoff, int tyoff, int txoffrel, int tyoffrel, int b)
+{
+	struct vg *vg = t->p;
+	double vx, vy;
+	
+	vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+	mapview_status(t->mv, "%d+%d,%d+%d -> %.2f,%.2f", tx, txoff, ty, tyoff,
+	    vx, vy);
+}
+
+static void
+point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
+    int b)
+{
+	struct vg *vg = t->p;
+	double vx, vy;
+
+	vg_begin(vg, VG_POINTS);
+	vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+	vg_vertex2(vg, vx, vy);
+	vg_end(vg);
+	vg_rasterize(vg);
+	
+	mapview_status(t->mv, "%d+%d,%d+%d -> %.2f,%.2f", tx, ty, txoff, tyoff,
+	    vx, vy);
+}
+
+const struct tool point_tool = {
+	N_("Points"),
+	N_("Trace individual points."),
+	VGPOINTS_ICON,
+	-1,
+	NULL,			/* init */
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	point_mousemotion,
+	point_mousebuttondown,
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
+#endif /* EDITION */

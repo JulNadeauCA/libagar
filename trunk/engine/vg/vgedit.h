@@ -1,4 +1,4 @@
-/*	$Csoft: vgedit.h,v 1.16 2003/09/02 02:07:48 vedge Exp $	*/
+/*	$Csoft: vgedit.h,v 1.1 2004/03/30 16:05:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VGEDIT_H_
