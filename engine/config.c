@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.44 2002/12/24 10:28:10 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.45 2002/12/25 16:48:45 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -90,7 +90,7 @@ config_new(void)
 }
 
 static void
-config_prop_changed(int argc, union evarg *argv)
+config_prop_modified(int argc, union evarg *argv)
 {
 	struct config *con = argv[0].p;
 	struct prop *prop = argv[1].p;
@@ -101,11 +101,9 @@ config_prop_changed(int argc, union evarg *argv)
 		} else {
 			keycodes_freeglyphs();
 		}
-	} else if (strcmp(prop->key, "view.full-screen")) {
-		if (prop_get_bool(con, "view.full-screen")) {
-			SDL_WM_ToggleFullScreen(view->v);
-			VIEW_REDRAW();
-		}
+	} else if (strcmp(prop->key, "view.full-screen") == 0) {
+		SDL_WM_ToggleFullScreen(view->v);
+		VIEW_REDRAW();
 	}
 }
 
@@ -153,7 +151,7 @@ config_init(struct config *con)
 	free(udatadir);
 	free(sysdatadir);
 
-	event_new(con, "prop-changed", config_prop_changed, NULL);
+	event_new(con, "prop-modified", config_prop_modified, NULL);
 }
 
 void
@@ -193,13 +191,15 @@ config_window(struct config *con)
 
 		for (i = 0; i < nsettings; i++) {
 			cbox = checkbox_new(reg, 0, "%s", settings[i].descr);
-			widget_bind_prop(cbox, "state",
+			widget_bind(cbox, "state", WIDGET_PROP,
 			    config, settings[i].name);
 		}
 
+#ifdef DEBUG
 		/* XXX thread unsafe */
 		cbox = checkbox_new(reg, 0, "Debugging");
-		widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
+		widget_bind(cbox, "state", WIDGET_BOOL, NULL, &engine_debug);
+#endif
 	}
 
 	/* Directories */
