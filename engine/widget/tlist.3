@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.13 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.14 2003/03/13 03:28:56 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -105,9 +105,8 @@ pixels.
 .Fn tlist_insert_item "struct tlist *tlist" "SDL_Surface *icon" "char *text" \
                       "void *p1"
 .Pp
-.Ft "struct tlist_item *"
-.Fn tlist_insert_item_selected "struct tlist *tlist" "SDL_Surface *icon" \
-                               "char *text" "void *p1"
+.Fn tlist_insert_item_head "struct tlist *tlist" "SDL_Surface *icon" \
+                           "char *text" "void *p1"
 .Pp
 .Ft "void"
 .Fn tlist_remove_item "struct tlist_item *item"
@@ -140,20 +139,18 @@ pixels.
 The
 .Fn tlist_insert_item
 function inserts a new item into
-.Fa tlist
+.Fa tlist ,
 displaying
 .Fa icon
-(if non-NULL)
-and the string pointed to by
-.Fa text .
+(if non-NULL) and the
+.Fa text
+string.
 The
 .Fa p1
 argument is a user-defined pointer.
-The
-.Fn tlist_insert_item_selected
-function calls
-.Fn tlist_insert_item
-and sets the selected flag on the new item.
+.Fn tlist_insert_item_head
+inserts the item at the head of the list.
+.Pp
 The
 .Fn tlist_remove_item
 function detaches and frees
@@ -166,24 +163,24 @@ The
 function removes all items attached to
 .Fa tlist ,
 but remembers the selected items.
-The
 .Fn tlist_restore_selections
-function compares each item against the previous selections and restores
+compares each item against the previous selections and restores
 the
 .Va selected
 flag accordingly.
 .Pp
 The
 .Fn tlist_select
-function sets the selected flag on
-.Fa item .
-The
+and
 .Fn tlist_unselect
-function clears the selected flag on
+functions manipulate the selected flag on
 .Fa item .
+.Pp
 The
+.Fn tlist_select_all
+and
 .Fn tlist_unselect_all
-function clears the selected flag on all items attached to
+functions manipulate the selected flag on all items attached to
 .Fa tlist .
 .Pp
 The

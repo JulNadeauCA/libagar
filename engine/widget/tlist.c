@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.45 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.46 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -318,20 +318,30 @@ tlist_restore_selections(struct tlist *tl)
 	}
 }
 
-/* Add an item to the list. */
-struct tlist_item *
-tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
+static struct tlist_item *
+tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 {
 	struct tlist_item *it;
 
 	it = Malloc(sizeof(struct tlist_item));
 	it->icon = NULL;
 	it->selected = 0;
+	
 	it->text = Strdup(text);
 	it->text_len = strlen(text);
 	it->p1 = p1;
 	it->tl_bp = tl;
 	tlist_set_item_icon(tl, it, icon);			/* Square */
+	return (it);
+}
+
+/* Add an item to the list. */
+struct tlist_item *
+tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
+{
+	struct tlist_item *it;
+
+	it = tlist_alloc_item(tl, icon, text, p1);
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
@@ -340,21 +350,24 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	pthread_mutex_unlock(&tl->items_lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
-
 	return (it);
 }
 
-/* Add an item to the list, and set the selected flag. */
 struct tlist_item *
-tlist_insert_item_selected(struct tlist *tl, SDL_Surface *icon, char *text,
+tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, char *text,
     void *p1)
 {
 	struct tlist_item *it;
 
+	it = tlist_alloc_item(tl, icon, text, p1);
+
 	pthread_mutex_lock(&tl->items_lock);
-	it = tlist_insert_item(tl, icon, text, p1);
-	tlist_select(it);
+	TAILQ_INSERT_HEAD(&tl->items, it, items);
+	widget_set_int(tl->vbar, "min", 0);
+	widget_set_int(tl->vbar, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
+
+	event_post(tl, "tlist-inserted-item", "%p", it);
 	return (it);
 }
 
@@ -385,6 +398,20 @@ tlist_unselect(struct tlist_item *it)
 
 	return (old);
 }
+
+/* Set the selection flag on all items. */
+void
+tlist_select_all(struct tlist *tl)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->items_lock);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		it->selected = 1;
+	}
+	pthread_mutex_unlock(&tl->items_lock);
+}
+
 
 /* Unset the selection flag on all items. */
 void
