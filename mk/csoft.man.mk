@@ -36,7 +36,7 @@ PSMANS=	${PSMAN1} ${PSMAN2} ${PSMAN3} ${PSMAN4} ${PSMAN5} ${PSMAN6} ${PSMAN7} ${
 	@echo "${NROFF} -Tascii -mandoc $< > $@"
 	@${NROFF} -Tascii -mandoc $< > $@ || (rm -f $@; false)
 
-.9.ps9 .8.ps8 .7.ps7 .6.ps6 .5.ps5 .4.ps4 .3p.ps3p .3.ps3 .2.ps2 .1.ps1:
+.1.ps1 .2.ps2 .3.ps3 .4.ps4 .5.ps5 .6.ps6 .7.ps7 .8.ps8 .9.ps9:
 	@echo "nroff -Tps -mandoc $< > $@"
 	@${NROFF} -Tps -mandoc $< > $@ || (rm -f $@; false)
 
