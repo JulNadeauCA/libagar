@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.192 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.193 2005/02/06 07:05:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@
 #define DEBUG_PROPAGATION	0x100
 #define DEBUG_SCHED		0x200
 
-int	event_debug = DEBUG_UNDERRUNS|DEBUG_ASYNC;
+int	event_debug = DEBUG_UNDERRUNS|DEBUG_ASYNC|DEBUG_SCHED;
 #define	engine_debug event_debug
 int	event_count = 0;
 
@@ -405,6 +405,10 @@ event_timeout(void *p, Uint32 ival, void *arg)
 	struct object *ob = p;
 	struct event *ev = arg;
 	va_list ap;
+	
+	debug(DEBUG_SCHED, "%s: timeout `%s' (ival=%u)\n", ob->name,
+	    ev->name, ival);
+	ev->flags &= ~(EVENT_SCHEDULED);
 
 	/* Propagate event to children. */
 	if (ev->flags & EVENT_PROPAGATE) {
@@ -418,7 +422,6 @@ event_timeout(void *p, Uint32 ival, void *arg)
 		}
 		unlock_linkage();
 	}
-	ev->flags &= ~(EVENT_SCHEDULED);
 
 	/* Invoke the event handler function. */
 	if (ev->handler != NULL) {
@@ -498,12 +501,8 @@ event_remove(void *p, const char *name)
 		goto out;
 	}
 	if (ev->flags & EVENT_SCHEDULED) {
-		pthread_mutex_lock(&timeout_lock);
-		if (timeout_scheduled(ob, &ev->timeout)) {
-			timeout_del(ob, &ev->timeout);
-		}
-		pthread_mutex_unlock(&timeout_lock);
 		/* XXX concurrent */
+		timeout_del(ob, &ev->timeout);
 	}
 	TAILQ_REMOVE(&ob->events, ev, events);
 	Free(ev, M_EVENT);
