@@ -2,6 +2,7 @@
 This game requires:
 
     o SDL 1.2 		http://www.libsdl.org/
+    o Freetype >= 2.0	http://www.freetype.org/
     o SMPEG >= 0.4.4 	http://www.lokigames.com/
 
 1) Run the configure script, see ./configure --help for options.
