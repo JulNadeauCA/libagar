@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.3 2003/06/21 06:39:44 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.6 2003/06/25 00:31:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -91,9 +91,10 @@ audio_unused(struct audio *audio)
 }
 
 /* Load the named audio package. */
-struct audio *
+int
 audio_fetch(void *p, const char *key)
 {
+	struct object *ob = p;
 	char *path = NULL;
 	struct audio *audio = NULL;
 	struct den *den;
@@ -104,15 +105,15 @@ audio_fetch(void *p, const char *key)
 		if (strcmp(audio->name, key) == 0)
 			break;
 	}
-	if (audio != NULL) {				/* Cached? */
+	if (audio != NULL) {
 		if (++audio->used > AUDIO_MAX_USED) {
-			audio->used = AUDIO_MAX_USED; 	/* Remain resident */
+			audio->used = AUDIO_MAX_USED;
 		}
 		goto out;
 	}
 
 	if ((path = config_search_file("load-path", key, "den")) == NULL)
-		fatal("searching %s: %s", key, error_get());
+		goto fail;
 
 	audio = Malloc(sizeof(struct audio));
 	audio->name = Strdup(key);
@@ -123,7 +124,7 @@ audio_fetch(void *p, const char *key)
 	pthread_mutex_init(&audio->used_lock, NULL);
 
 	if ((den = den_open(path, DEN_READ)) == NULL) {
-		fatal("loading %s: %s", path, error_get());
+		goto fail;
 	}
 #if 0
 	for (i = 0; i < den->nmembers; i++) {
@@ -136,8 +137,21 @@ audio_fetch(void *p, const char *key)
 	TAILQ_INSERT_HEAD(&audioq, audio, audios);		/* Cache */
 out:
 	pthread_mutex_unlock(&audioq_lock);
+	if (ob->audio != NULL) {
+		audio_unused(ob->audio);
+	}
+	ob->audio = audio;
 	Free(path);
-	return (audio);
+	return (0);
+fail:
+	pthread_mutex_unlock(&audioq_lock);
+	if (audio != NULL) {
+		pthread_mutex_destroy(&audio->used_lock);
+		free(audio->name);
+		free(audio);
+	}
+	Free(path);
+	return (-1);
 }
 
 /* Release a group of audio samples. */
