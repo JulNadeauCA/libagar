@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.15 2003/07/14 03:39:28 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.16 2003/09/07 00:21:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
@@ -45,7 +45,6 @@ struct graph {
 
 	graph_val_t	 yrange;	/* Max. value */
 	graph_val_t	 xoffs;		/* Display offset */
-	int		 xinc;		/* X increment */
 	int		 origin_y;	/* Origin position (%) */
 	struct itemq	 items;		/* Lists of values */
 };
