@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.44 2002/12/20 01:01:13 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.45 2002/12/21 10:26:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -19,7 +19,33 @@ struct widget_color {
 	SLIST_ENTRY(widget_color) colors;
 };
 
-SLIST_HEAD(widget_colorq, widget_color);
+enum widget_binding_type {
+	WIDGET_NONE,
+	WIDGET_BOOL,
+	WIDGET_INT,
+	WIDGET_UINT8,
+	WIDGET_SINT8,
+	WIDGET_UINT16,
+	WIDGET_SINT16,
+	WIDGET_UINT32,
+	WIDGET_SINT32,
+	WIDGET_UINT64,
+	WIDGET_SINT64,
+	WIDGET_FLOAT,
+	WIDGET_DOUBLE,
+	WIDGET_LONG_DOUBLE,
+	WIDGET_STRING,
+	WIDGET_POINTER,
+	WIDGET_PROP
+};
+
+struct widget_binding {
+	enum widget_binding_type	 type;		/* Type of value */
+	char				*name;		/* Identifier */
+	pthread_mutex_t			*mutex;		/* Optional lock */
+	void				*p1, *p2;	/* Pointers to values */
+	SLIST_ENTRY(widget_binding)	 bindings;
+};
 
 struct window;
 struct region;
@@ -41,16 +67,18 @@ struct widget {
 	struct window	*win;		/* Parent window */
 	struct region	*reg;		/* Parent region */
 
-	int	 rw, rh;	/* Requested geometry (%) */
-	int	 x, y;		/* Allocated coordinates in window */
-	int	 w, h;		/* Allocated geometry */
+	int	 rw, rh;		/* Requested geometry (%) */
+	int	 x, y;			/* Allocated coordinates in window */
+	int	 w, h;			/* Allocated geometry */
 
-	/* Color scheme */
-	Uint32			 color[WIDGET_MAXCOLORS];
-	int			ncolors;
-	struct widget_colorq	 colors;
+	SLIST_HEAD(, widget_color) colors;		    /* Color scheme */
+	Uint32			   color[WIDGET_MAXCOLORS]; /* Color array */
+	int			  ncolors;		    /* Color count */
 
-	TAILQ_ENTRY(widget)	 widgets;	/* Region */
+	SLIST_HEAD(, widget_binding)	 bindings;	/* Variable bindings */
+	pthread_mutex_t			 bindings_lock;
+	
+	TAILQ_ENTRY(widget)		widgets;	/* Region */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
@@ -61,12 +89,6 @@ struct widget {
 /* Expand to absolute widget coordinates. */
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->rd.x) + WIDGET((wi))->x)
 #define WIDGET_ABSY(wi)	((WIDGET((wi))->win->rd.y) + WIDGET((wi))->y)
-
-#define WIDGET_REDRAW(wi) do {					\
-	pthread_mutex_lock(&WIDGET((wi))->surface.lock);	\
-	WIDGET((wi))->surface.redraw++;				\
-	pthread_mutex_unlock(&WIDGET((wi))->surface.lock);	\
-} while (/*CONSTCOND*/0)
 
 /* XXX optimize - move rect to wid structure */
 #define WIDGET_DRAW(wi, s, xo, yo) do {					\
@@ -156,10 +178,25 @@ struct widget {
     ((xa) >= 0 && (ya) >= 0 &&					\
      (xa) <= WIDGET((wida))->w && (ya) <= WIDGET((wida))->h)
 
-void	widget_init(struct widget *, char *, char *, const void *, int, int);
+void	widget_init(struct widget *, char *, const void *, int, int);
 void	widget_destroy(void *);
 
 void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
+
+struct widget_binding	*widget_bind(void *, const char *,
+			     enum widget_binding_type, pthread_mutex_t *, ...);
+#define			 widget_bind_prop(ob, binding, propobj, propname)    \
+			     widget_bind((ob), (binding), WIDGET_PROP, NULL, \
+			     (propobj), (propname))
+
+struct widget_binding	*widget_get_binding(void *, const char *, void *, int);
+void			 widget_unlock_binding(void *, const char *);
+
+int	widget_get_int(void *, const char *);
+#define	widget_get_bool	widget_get_int
+
+void	widget_set_int(void *, const char *, int);
+#define	widget_set_bool	widget_set_int
 
 void	widget_set_position(void *, Sint16, Sint16);
 void	widget_set_geometry(void *, Uint16, Uint16);
