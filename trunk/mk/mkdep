@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$Csoft$
+#	$Csoft: mkdep,v 1.1 2002/02/01 03:37:05 vedge Exp $
 #	$OpenBSD: mkdep.gcc.sh,v 1.10 2000/07/23 22:22:07 millert Exp $
 #	$NetBSD: mkdep.gcc.sh,v 1.9 1994/12/23 07:34:59 jtc Exp $
 #
