@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.50 2002/06/07 11:07:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.51 2002/06/12 20:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -57,20 +57,35 @@ static const struct event_proto {
 	char *fmt;
 } protos[] = {
 	/* Generic */
-	{ "attached", "%p" },		/* Being attached to object %p */
-	{ "detached", "%p" },		/* Being detached from object %p */
-	/* Widget type */
-	{ "shown", "%p" },
-	{ "hidden", "%p" },
+	{ "attached", "%p" },				/* object */
+	{ "detached", "%p" },				/* object */
+
+	/*
+	 * Widget type
+	 */
+	/* Change in visibility */
+	{ "shown", "%p" },				/* window */
+	{ "hidden", "%p" },				/* window */
+	/* Button pushed */
 	{ "button-pushed", NULL },
-	{ "checkbox-changed", "%i" },    /* Changed to state %i */
-	{ "textbox-return", "%s" },	 /* Text %s entered */
-	{ "textbox-changed", "%s, %c" }, /* Character %c inserted in %s */
-	/* Window type */
-	{ "window-mousebuttonup", "%i, %i, %i" },
-	{ "window-mousebuttondown", "%i, %i, %i" },
-	{ "window-keyup", "%i, %i" },
-	{ "window-keydown", "%i, %i" },
+	/* Checkbox status changed to i */
+	{ "checkbox-changed", "%i" },    		/* state */
+	/* Text s was entered in textbox */
+	{ "textbox-return", "%s" },			/* text */
+	/* Character c was inserted in string s */
+	{ "textbox-changed", "%s, %c" },		/* string, char */
+
+	/*
+	 * Window type
+	 */
+	/* Low-level events */
+	{ "window-mousebuttonup", "%i, %i, %i" },	/* button, x, y */
+	{ "window-mousebuttondown", "%i, %i, %i" },	/* button, x, y */
+	{ "window-mousemotion", "%i, %i" },		/* x, y */
+	{ "window-keyup", "%i, %i" },			/* keysym, keymod */
+	{ "window-keydown", "%i, %i" },			/* keysym, keymod */
+	/* Widget was just scaled */
+	{ "window-widget-scaled", "%i, %i" }		/* width, height */
 };
 
 static struct window *fps_win;
@@ -104,9 +119,7 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_r:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			world->curmap->redraw++;
-		}
+		VIEW_REDRAW();
 		break;
 	case SDLK_F2:
 		object_save(world);
@@ -115,20 +128,20 @@ event_hotkey(SDL_Event *ev)
 		object_load(world);
 		break;
 	case SDLK_F5:
-		text_msg(2, TEXT_SLEEP, "Checking %s\n",
-		    OBJECT(world->curmap)->name);
-		map_verify(world->curmap);
+		pthread_mutex_lock(&view->lock);
+		if (view->rootmap != NULL) {
+			text_msg(2, TEXT_SLEEP, "Checking %s\n",
+			    OBJECT(view->rootmap->map)->name);
+			map_verify(view->rootmap->map);
+		}
+		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDLK_F6:
-		pthread_mutex_lock(&mainview->lock);
 		window_show(fps_win);
-		pthread_mutex_unlock(&mainview->lock);
 		break;
 #endif
 	case SDLK_F1:
-		pthread_mutex_lock(&mainview->lock);
 		window_show(config->settings_win);
-		pthread_mutex_unlock(&mainview->lock);
 		break;
 	case SDLK_v:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
@@ -136,6 +149,11 @@ event_hotkey(SDL_Event *ev)
 			    "AGAR engine v%s\n%s v%d.%d\n%s\n",
 			    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
 			    gameinfo->ver[1], gameinfo->copyright);
+		}
+		break;
+	case SDLK_t:	/* XXX move */
+		if (curmapedit != NULL) {
+			window_show(curmapedit->toolbar_win);
 		}
 		break;
 	case SDLK_ESCAPE:
@@ -151,10 +169,10 @@ event_hotkey(SDL_Event *ev)
 void *
 event_loop(void *arg)
 {
-	Uint32 ltick, ntick;
-	Sint32 delta;
 	SDL_Event ev;
-	struct map *m = NULL;
+	Uint32 ltick, ntick;
+	int delta;
+	struct window *win;
 #ifdef DEBUG
 	struct region *fps_reg;
 	struct label *fps_label;
@@ -162,9 +180,8 @@ event_loop(void *arg)
 	int rv;
 
 #ifdef DEBUG
-	fps_win = window_new("Frames/second",
-	    WINDOW_SOLID|WINDOW_TITLEBAR|WINDOW_ABSOLUTE, 0,
-	    64, 96, 128, 64);
+	fps_win = window_new("Frames/second", WINDOW_SOLID|WINDOW_ABSOLUTE,
+	    64, 96, 160, 64);
 	fps_reg = region_new(fps_win, REGION_HALIGN,
 	    0, 0, 100, 100);
 	fps_label = label_new(fps_reg, "...", 0);
@@ -177,110 +194,128 @@ event_loop(void *arg)
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = 100;;) {
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
-			/* XXX inefficient locking */
-			pthread_mutex_lock(&world->lock);
-			if (world->curmap == NULL) {
-				dprintf("map vanished\n");
-				pthread_mutex_unlock(&world->lock);
-				engine_destroy();
-				return (NULL);
-			}
-			m = world->curmap;
-			pthread_mutex_lock(&m->lock);	
-			map_animate(m);
-			if (m->redraw != 0) {
-				m->redraw = 0;
-				map_draw(m);
-				delta = m->fps - (SDL_GetTicks() - ntick);
+			pthread_mutex_lock(&view->lock);
+
+			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+				struct map *m = view->rootmap->map;
+
+				if (m == NULL) {
+					dprintf("NULL map\n");
+					pthread_mutex_unlock(&view->lock);
+					engine_destroy();
+					return (NULL);
+				}
+
+				pthread_mutex_lock(&m->lock);
+				rootmap_animate(m);
+				if (m->redraw != 0) {
+					rootmap_draw(m);
+					delta = m->fps - (SDL_GetTicks() -
+					    ntick);
 #ifdef DEBUG
-				label_printf(fps_label, "%d FPS", delta);
+					label_printf(fps_label, "%d FPS",
+					    delta);
 #endif
-				if (delta < 1) {
-					dprintf("overrun (delta=%d)\n", delta);
-					delta = 1;
-				}
-				text_drawall();		/* XXX window */
-			}
-			pthread_mutex_unlock(&m->lock);
-			pthread_mutex_unlock(&world->lock);
-
-			/* XXX inefficient, should share locks */
-			pthread_mutex_lock(&mainview->lock);
-			if (!TAILQ_EMPTY(&mainview->windowsh)) {
-				struct window *win;
-
-				TAILQ_FOREACH(win, &mainview->windowsh,
-				    windows) {
-				    	/* XXX redraw all */
-					pthread_mutex_lock(&win->lock);
-					if (win->flags & WINDOW_SHOW) {
-						window_draw(win);
+					if (delta < 1) {
+						dprintf("%d FPS\n", delta);
+						delta = 1;
 					}
-					pthread_mutex_unlock(&win->lock);
+					m->redraw = 0;
 				}
+				pthread_mutex_unlock(&m->lock);
+				pthread_mutex_unlock(&world->lock); /* XXX */
 			}
-			pthread_mutex_unlock(&mainview->lock);
 
+			/* Update the windows. */
+			TAILQ_FOREACH(win, &view->windowsh, windows) {
+				pthread_mutex_lock(&win->lock);
+				if (win->flags & WINDOW_SHOWN) {
+					window_animate(win);
+				    	/* XXX ignore redraw flag,
+					   that will require a fancy
+					   microtile algorithm */
+					window_draw(win);
+				}
+				pthread_mutex_unlock(&win->lock);
+			}
+			pthread_mutex_unlock(&view->lock);
+			
+			if (view->gfx_engine == GFX_ENGINE_GUI) {
+				/* XXX unclear */
+				SDL_UpdateRect(view->v, 0, 0, 0, 0);
+			}
+			
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
 				dprintf("expose\n");
-				view_redraw();
+				pthread_mutex_lock(&view->lock);
+				switch (view->gfx_engine) {
+				case GFX_ENGINE_TILEBASED:
+					/* Redraw the map only. */
+					pthread_mutex_lock(
+					    &view->rootmap->map->lock);
+					view->rootmap->map->redraw++;
+					pthread_mutex_unlock(
+					    &view->rootmap->map->lock);
+					break;
+				case GFX_ENGINE_GUI:
+					/* Redraw the whole screen. */
+					SDL_FillRect(view->v, NULL,
+					    SDL_MapRGB(view->v->format,
+					    0, 0, 0));
+					SDL_UpdateRect(view->v, 0, 0, 0 ,0);
+					break;
+				}
+				TAILQ_FOREACH(win, &view->windowsh,
+				    windows) {
+					pthread_mutex_lock(&win->lock);
+					if (win->flags & WINDOW_SHOWN) {
+						window_draw(win);
+					}
+					pthread_mutex_unlock(&win->lock);
+				}
+				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_MOUSEMOTION:
 				rv = 0;
-				pthread_mutex_lock(&mainview->lock);
-				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					rv = window_event_all(mainview, &ev);
+				pthread_mutex_lock(&view->lock);
+				if (!TAILQ_EMPTY(&view->windowsh)) {
+					rv = window_event_all(&ev);
 				}
-				pthread_mutex_unlock(&mainview->lock);
-				if (rv == 0) {
-					if (curmapedit != NULL) { /* XXX */
-						mapedit_event(curmapedit, &ev);
-					}
-				}
+				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEBUTTONDOWN:
 				rv = 0;
-				pthread_mutex_lock(&mainview->lock);
-				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					rv = window_event_all(mainview, &ev);
+				pthread_mutex_lock(&view->lock);
+				if (!TAILQ_EMPTY(&view->windowsh)) {
+					rv = window_event_all(&ev);
 				}
-				pthread_mutex_unlock(&mainview->lock);
-				if (rv == 0) {
-					if (curmapedit != NULL) { /* XXX */
-						mapedit_event(curmapedit, &ev);
-					}
-				}
+				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_JOYAXISMOTION:
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
-				if (curmapedit != NULL) {	/* XXX */
-					mapedit_event(curmapedit, &ev);
-				} else {
-					input_event(joy, &ev);
-				}
+				pthread_mutex_lock(&view->lock);
+				input_event(joy, &ev);
+				/* XXX widgets ... */
+				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_KEYDOWN:
 				event_hotkey(&ev);
 				/* FALLTHROUGH */
 			case SDL_KEYUP:
 				rv = 0;
-				pthread_mutex_lock(&mainview->lock);
-				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					rv = window_event_all(mainview, &ev);
+				pthread_mutex_lock(&view->lock);
+				if (!TAILQ_EMPTY(&view->windowsh)) {
+					rv = window_event_all(&ev);
 				}
-				pthread_mutex_unlock(&mainview->lock);
 				if (rv == 0) {
-					if (curmapedit != NULL) { /* XXX */
-						mapedit_event(curmapedit, &ev);
-					} else {
-						input_event(keyboard, &ev);
-					}
+					input_event(keyboard, &ev);
 				}
+				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_QUIT:
 				engine_stop();
