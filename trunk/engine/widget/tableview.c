@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.5 2004/11/22 04:41:15 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.6 2004/11/22 05:26:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -289,7 +289,7 @@ tableview_set_update(struct tableview * tv, unsigned int ms)
 
 struct tableview_row *
 tableview_row_addfn(struct tableview * tv, int flags,
-		    struct tableview_row * parent, rowID rid,...)
+    struct tableview_row * parent, rowID rid,...)
 {
 	struct tableview_row *row;
 	unsigned int i;
@@ -1052,7 +1052,7 @@ clicked_row(struct tableview * tv, int visible_start, int visible_end,
 	if (NULL == row) {
 		deselect_all(&tv->children);
 		//event_post(NULL, tv, "tableview-selectclear", "");
-		return (1);	/* XXX? */
+		return (0);
 	}
 
 	/* check for a click on the +/- button, if applicable */
@@ -1075,8 +1075,9 @@ clicked_row(struct tableview * tv, int visible_start, int visible_end,
 			    &row->children, 0);
 		}
 		tv->visible.dirty = 1;
-		return (1);	/* XXX? */
+		return (0);
 	}
+	
 	/* handle a command/control click... */
 	if ((modifiers & KMOD_META || modifiers & KMOD_CTRL)) {
 		/* ...which always disselects a selected row */
