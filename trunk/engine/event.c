@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.115 2002/12/17 01:11:35 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.116 2002/12/20 08:55:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -280,6 +280,9 @@ event_loop(void)
 			if (view->ndirty > 0) {
 				SDL_UpdateRects(view->v, view->ndirty,
 				    view->dirty);
+#ifdef HAVE_OPENGL
+				SDL_GL_SwapBuffers();
+#endif
 				view->ndirty = 0;
 
 				if (view->gfx_engine == GFX_ENGINE_GUI) {
@@ -301,6 +304,8 @@ event_loop(void)
 			event_count++;
 			event_overhead = SDL_GetTicks() - eltick;
 #endif
+		} else if (SDL_GetTicks() - ltick < view->max_fps_ticks - 15) {
+			SDL_Delay(1);
 		}
 	}
 }
@@ -358,6 +363,9 @@ event_dispatch(SDL_Event *ev)
 			SDL_FillRect(view->v, NULL,
 			    SDL_MapRGB(view->v->format, 0, 0, 0));
 			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
+#ifdef HAVE_OPENGL
+			SDL_GL_SwapBuffers();
+#endif
 			break;
 		}
 		TAILQ_FOREACH(win, &view->windows, windows) {
