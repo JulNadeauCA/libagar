@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.133 2002/12/26 05:07:13 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.134 2002/12/29 03:24:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -346,7 +346,7 @@ window_draw_titlebar(struct window *win)
 
 	/* Titlebar background */
 	SDL_FillRect(view->v, &rd,
-	    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
+	    WIDGET_COLOR(win, WINDOW_FOCUSED(win) ?
 	    TITLEBAR_FOCUSED_COLOR : TITLEBAR_UNFOCUSED_COLOR));
 		
 	rd.w = win->rd.w;
@@ -360,7 +360,7 @@ window_draw_titlebar(struct window *win)
 		
 	/* Caption */
 	caption = text_render(NULL, -1,
-	    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
+	    WIDGET_COLOR(win, WINDOW_FOCUSED(win) ?
 	    TITLEBAR_TEXT_FOCUSED_COLOR :
 	    TITLEBAR_TEXT_UNFOCUSED_COLOR),
 	    win->caption);
@@ -962,7 +962,7 @@ scan_wins:
 				}
 #endif
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if ((VIEW_FOCUSED(win) &&
+					if ((WINDOW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
 					     WIDGET_UNFOCUSED_MOTION)) {
@@ -994,7 +994,7 @@ scan_wins:
 
 				/* Send the mousebuttonup event to widgets. */
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if ((VIEW_FOCUSED(win) &&
+					if ((WINDOW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
 					     WIDGET_UNFOCUSED_BUTTONUP)) {
@@ -1127,7 +1127,7 @@ scan_wins:
 				goto posted;
 			}
 			/* Widget event */
-			if (VIEW_FOCUSED(win) && win->focus != NULL) {
+			if (WINDOW_FOCUSED(win) && win->focus != NULL) {
 				event_post(win->focus,
 				    (ev->type == SDL_KEYUP) ?
 				    "window-keyup" :
@@ -1428,7 +1428,6 @@ window_resize(struct window *win)
 			win->rd.h = win->minh;
 	}
 
-	/* Clamp to view area, leave a margin. */
 	window_clamp(win);
 
 	win->body.x = win->rd.x + win->borderw;

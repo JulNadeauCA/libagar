@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.49 2002/11/24 03:11:48 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.50 2002/12/16 02:14:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -103,6 +103,9 @@ struct window {
 	((xa) > (win)->rd.x && (ya) > (win)->rd.y &&		\
 	 (xa) < ((win)->rd.x+(win)->rd.w) && 			\
 	 (ya) < ((win)->rd.y+(win)->rd.h))
+
+#define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
+
 
 struct window	*window_new(char *, int, int, int, int, int, int, int);
 struct window	*window_generic_new(int, int, const char *, ...);
