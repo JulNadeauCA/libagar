@@ -1,10 +1,10 @@
-/*	$Csoft: text.h,v 1.9 2002/07/05 01:13:09 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.10 2002/07/24 09:26:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
 #define _AGAR_TEXT_TEXT_H_
 
-#include <SDL_ttf.h>
+#include <engine/ttf.h>
 
 extern TTF_Font *font;
 extern int font_h;
