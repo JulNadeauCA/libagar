@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.45 2002/11/28 07:26:46 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.46 2002/11/28 07:35:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -25,10 +25,6 @@
 
 #ifdef SERIALIZATION
 # include <pthread.h>		/* For pthread types */
-
-# if !defined(__linux__)
-#  define PTHREAD_MUTEX_INITIALIZER	{ PTHREAD_MUTEX_INITIALIZER }
-# endif
 #else
 # define pthread_mutex_t	int
 # define pthread_mutexattr_t	int
