@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.8 2002/06/20 16:34:44 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.9 2002/08/21 23:52:03 vedge Exp $	*/
 /*	Public domain	*/
 
 struct textbox {
@@ -6,14 +6,14 @@ struct textbox {
 
 	int	 flags;
 #define TEXTBOX_READONLY	0x01	/* Read-only */
-#define TEXTBOX_CURSOR		0x02	/* Cursor visible */
 
 	char	*label;
 	char	*text;
 	int	 textpos;
 	int	 textoffs;
 	int	 xmargin, ymargin;
-	
+	int	 newx;
+
 	SDL_Surface	*label_s;
 };
 
