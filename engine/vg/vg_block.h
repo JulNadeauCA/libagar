@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.h,v 1.4 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg_block.h,v 1.5 2004/05/31 04:54:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_BLOCK_H_
@@ -16,6 +16,7 @@ struct vg_block {
 #define VG_BLOCK_NOSAVE	0x01		/* Don't save with drawing */
 	struct vg_vertex pos;		/* Position in vg */
 	struct vg_vertex origin;	/* Internal block origin */
+	struct vg_rect extent;		/* Bounding box */
 	double theta;			/* Angle of rotation */
 	TAILQ_HEAD(,vg_element) vges;
 	TAILQ_ENTRY(vg_block) vgbs;
@@ -34,6 +35,8 @@ void		   vg_clear_block(struct vg *, struct vg_block *);
 void		   vg_destroy_block(struct vg *, struct vg_block *);
 void		   vg_block_offset(struct vg *, struct vg_vertex *);
 struct window	  *vg_block_editor(struct vg *);
+void		   vg_block_extent(struct vg *, struct vg_block *,
+	                           struct vg_rect *);
 __inline__ void	   vg_abs2rel(struct vg *, const struct vg_vertex *, double *,
 			      double *);
 __inline__ void	   vg_rel2abs(struct vg *, double, double, struct vg_vertex *);

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.26 2004/05/30 01:29:09 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.27 2004/05/31 04:54:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -417,7 +417,6 @@ struct vg_element *
 vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 {
 	struct vg_element *vge;
-	struct vg_element_ops *vgops;
 	int i;
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
@@ -500,7 +499,7 @@ vg_draw_bboxes(struct vg *vg)
 {
 	struct vg_rect bbox;
 	struct vg_element *vge;
-	const struct vg_element_ops *vgops;
+	struct vg_block *vgb;
 	int x, y, w, h;
 	int i;
 
@@ -513,10 +512,17 @@ vg_draw_bboxes(struct vg *vg)
 		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
 		vg_rlength(vg, bbox.w, &w);
 		vg_rlength(vg, bbox.h, &h);
-		vg_line_primitive(vg, x, y, x+w, y, vg->grid_color);
-		vg_line_primitive(vg, x, y, x, y+h, vg->grid_color);
-		vg_line_primitive(vg, x, y+h, x+w, y+h, vg->grid_color);
-		vg_line_primitive(vg, x+w, y, x+w, y+h, vg->grid_color);
+		vg_rect_primitive(vg, x, y, w, h, vg->grid_color);
+	}
+	
+	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
+		Uint32 ext_color = SDL_MapRGB(vfmt, 0, 250, 0);
+
+		vg_block_extent(vg, vgb, &bbox);
+		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
+		vg_rlength(vg, bbox.w, &w);
+		vg_rlength(vg, bbox.h, &h);
+		vg_rect_primitive(vg, x, y, w, h, ext_color);
 	}
 }
 #endif /* DEBUG */
