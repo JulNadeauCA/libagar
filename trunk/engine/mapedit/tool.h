@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tool.h,v 1.1 2004/03/30 15:56:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -12,19 +12,27 @@ struct tool {
 	const char *name;			/* Name of the tool */
 	const char *desc;			/* Short description */
 	int icon;				/* Icon (-1 = none) */
-	int cursor_index;			/* Cursor (-1 = none) */
+	int cursor_index;			/* Static cursor (-1 = none) */
 
-	void (*init)(void *);
-	void (*destroy)(void *);
-	int  (*load)(void *, struct netbuf *);
-	int  (*save)(void *, struct netbuf *);
-	void (*effect)(void *, struct mapview *, struct map *, struct node *);
-	int  (*cursor)(void *, struct mapview *, SDL_Rect *);
-	void (*mouse)(void *, struct mapview *, Sint16, Sint16, Uint8);
+	void (*init)(struct tool *t);
+	void (*destroy)(struct tool *t);
+	int  (*load)(struct tool *t, struct netbuf *b);
+	int  (*save)(struct tool *t, struct netbuf *b);
+	int  (*cursor)(struct tool *t, SDL_Rect *r);
+	void (*effect)(struct tool *t, struct node *n);
+	void (*mousemotion)(struct tool *t, int x, int y, int xrel, int yrel,
+	                    int xo, int yo, int xorel, int yorel, int b);
+	void (*mousebuttondown)(struct tool *t, int x, int y, int xoff,
+	                        int yoff, int b);
+	void (*mousebuttonup)(struct tool *t, int x, int y, int xoff, int yoff,
+	                      int b);
+	void (*keydown)(struct tool *t, int ksym, int kmod);
+	void (*keyup)(struct tool *t, int ksym, int kmod);
 
-	struct mapview *mv;
-	struct window *win;
-	struct button *trigger;
+	struct mapview *mv;			/* Associated mapview */
+	void *p;				/* User pointer */
+	struct window *win;			/* Settings window */
+	struct button *trigger;			/* Trigger button */
 	SDL_Surface *cursor_su;			/* Static cursor surface */
 	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
 	TAILQ_ENTRY(tool) tools;
@@ -38,8 +46,6 @@ struct tool_kbinding {
 	void (*func)(struct mapview *);		/* Callback function */
 	SLIST_ENTRY(tool_kbinding) kbindings;
 };
-
-#define	TOOL(t)	((struct tool *)(t))
 
 __BEGIN_DECLS
 void		 tool_init(struct tool *, struct mapview *);

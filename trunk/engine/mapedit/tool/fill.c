@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.31 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.32 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -31,21 +31,25 @@
 
 #include <engine/widget/radio.h>
 
-static void fill_init(void *);
-static void fill_effect(void *, struct mapview *, struct map *, struct node *);
+static void fill_init(struct tool *);
+static void fill_effect(struct tool *, struct node *);
 
 const struct tool fill_tool = {
 	N_("Clear/Fill"),
 	N_("Clear or fill the whole layer/selection."),
-	MAPEDIT_TOOL_FILL,
-	MAPEDIT_FILL_CURSOR,
+	FILL_TOOL_ICON,
+	FILL_CURSOR,
 	fill_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	fill_effect,
 	NULL,			/* cursor */
-	NULL			/* mouse */
+	fill_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static enum fill_mode {
@@ -54,7 +58,7 @@ static enum fill_mode {
 } mode = FILL_PATTERN;
 
 static void
-fill_init(void *p)
+fill_init(struct tool *t)
 {
 	static const char *mode_items[] = {
 		N_("Pattern fill"),
@@ -64,14 +68,16 @@ fill_init(void *p)
 	struct window *win;
 	struct radio *rad;
 
-	win = tool_window(p, "mapedit-tool-fill");
+	win = tool_window(t, "mapedit-tool-fill");
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
 }
 
 static void
-fill_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+fill_effect(struct tool *t, struct node *n)
 {
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
 	struct map *copybuf = &mapedit.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
 	int dw = m->mapw, dh = m->maph;

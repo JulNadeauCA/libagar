@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.30 2004/01/08 02:20:09 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.31 2004/03/30 15:56:51 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -59,7 +59,7 @@ structures.
 .Ft void
 .Fn mapview_center "struct mapview *mv" "int x" "int y"
 .Pp
-.Ft int
+.Ft void
 .Fn mapview_zoom "struct mapview *mv" "int zoom"
 .nr nS 0
 .Pp
@@ -125,8 +125,6 @@ The
 function sets the scaling factor to
 .Fa zoom ,
 in % of the default tile geometry.
-.Fn mapview_zoom
-returns 0 on success and -1 on error.
 .Sh SELECTIONS
 .nr nS 1
 .Ft void

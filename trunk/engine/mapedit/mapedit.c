@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.199 2004/03/30 15:56:51 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.200 2004/03/30 23:44:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -118,7 +118,7 @@ mapedit_init(void)
 		struct button *bu;
 	
 		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_OBJEDITOR));
+		button_set_label(bu, SPRITE(&mapedit,OBJECT_EDITOR_ICON));
 		event_new(bu, "button-pushed", window_generic_show, "%p",
 		    objedit_win);
 	}

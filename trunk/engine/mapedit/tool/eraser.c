@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.43 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.44 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,33 +29,37 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-static void eraser_effect(void *, struct mapview *, struct map *,
-                          struct node *);
+static void eraser_effect(struct tool *, struct node *);
 
 const struct tool eraser_tool = {
 	N_("Eraser"),
 	N_("Remove the highest node reference."),
-	MAPEDIT_TOOL_ERASER,
-	MAPEDIT_ERASER_CURSOR,
+	ERASER_TOOL_ICON,
+	ERASER_CURSOR,
 	NULL,			/* init */
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	eraser_effect,
 	NULL,			/* cursor */
-	NULL			/* mouse */
+	eraser_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static void
-eraser_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
+eraser_effect(struct tool *t, struct node *n)
 {
+	struct map *m = t->mv->map;
 	struct noderef *nref;
 	
-	TAILQ_FOREACH(nref, &dn->nrefs, nrefs) {
+	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 		if (nref->layer != m->cur_layer)
 			continue;
 
-		TAILQ_REMOVE(&dn->nrefs, nref, nrefs);
+		TAILQ_REMOVE(&n->nrefs, nref, nrefs);
 		noderef_destroy(m, nref);
 		break;
 	}

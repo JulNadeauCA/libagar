@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.51 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.52 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -45,12 +45,13 @@ const struct version merge_ver = {
 	6, 0
 };
 
-static void merge_init(void *);
-static void merge_destroy(void *);
-static int merge_load(void *, struct netbuf *);
-static int merge_save(void *, struct netbuf *);
-static int merge_cursor(void *, struct mapview *, SDL_Rect *);
-static void merge_effect(void *, struct mapview *, struct map *, struct node *);
+static void merge_init(struct tool *);
+static void merge_destroy(struct tool *);
+static int merge_load(struct tool *, struct netbuf *);
+static int merge_save(struct tool *, struct netbuf *);
+static int merge_cursor(struct tool *, SDL_Rect *);
+static void merge_effect(struct tool *, struct node *);
+
 static void merge_create_brush(int, union evarg *);
 static void merge_edit_brush(int, union evarg *);
 static void merge_remove_brush(int, union evarg *);
@@ -61,19 +62,19 @@ static void merge_interpolate(struct map *, struct node *,
 const struct tool merge_tool = {
 	N_("Merge tool"),
 	N_("Apply patterns, interpolating edge tiles."),
-	MAPEDIT_TOOL_MERGE,
+	MERGE_TOOL_ICON,
 	-1,
 	merge_init,
-#if 0
 	merge_destroy,
-#else
-	NULL,
-#endif
 	merge_load,
 	merge_save,
-	merge_effect,
 	merge_cursor,
-	NULL			/* mouse */
+	merge_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static TAILQ_HEAD(, object) brushes = TAILQ_HEAD_INITIALIZER(brushes);
@@ -101,14 +102,14 @@ merge_table[9][9] = {
 };
 
 static void
-merge_init(void *p)
+merge_init(struct tool *t)
 {
 	struct window *win;
 	struct hbox *hb;
 	struct button *bu;
 	struct textbox *tb;
 
-	win = tool_window(p, "mapedit-tool-merge");
+	win = tool_window(t, "mapedit-tool-merge");
 
 	hb = hbox_new(win, HBOX_WFILL);
 	{
@@ -154,7 +155,7 @@ merge_free_brushes(void)
 }
 
 static void
-merge_destroy(void *p)
+merge_destroy(struct tool *t)
 {
 	merge_free_brushes();
 }
@@ -314,8 +315,10 @@ merge_interpolate(struct map *sm, struct node *sn, struct noderef *sr,
 }
 
 static void
-merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+merge_effect(struct tool *t, struct node *n)
 {
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
 	struct tlist_item *it;
 	
 	/* Avoid circular references. XXX ugly */
@@ -352,7 +355,7 @@ merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 }
 
 static int
-merge_load(void *p, struct netbuf *buf)
+merge_load(struct tool *t, struct netbuf *buf)
 {
 	Uint32 i, nbrushes;
 	
@@ -378,7 +381,7 @@ merge_load(void *p, struct netbuf *buf)
 }
 
 static int
-merge_save(void *p, struct netbuf *buf)
+merge_save(struct tool *t, struct netbuf *buf)
 {
 	struct object *ob;
 	Uint32 nbrushes = 0;
@@ -400,8 +403,9 @@ merge_save(void *p, struct netbuf *buf)
 }
 
 static int
-merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+merge_cursor(struct tool *t, SDL_Rect *rd)
 {
+	struct mapview *mv = t->mv;
 	struct noderef *r;
 	struct map *sm;
 	int sx, sy, dx, dy;
@@ -416,12 +420,12 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 		if (!it->selected)
 			continue;
 		sm = it->p1;
-		for (sy = 0, dy = rd->y - (sm->maph * mv->map->scale)/2;
+		for (sy = 0, dy = rd->y-(sm->maph * mv->map->tilesz)/2;
 		     sy < sm->maph;
-		     sy++, dy += mv->map->scale) {
-			for (sx = 0, dx = rd->x - (sm->mapw * mv->map->scale)/2;
+		     sy++, dy += mv->map->tilesz) {
+			for (sx = 0, dx = rd->x-(sm->mapw * mv->map->tilesz)/2;
 			     sx < sm->mapw;
-			     sx++, dx += mv->map->scale) {
+			     sx++, dx += mv->map->tilesz) {
 				struct node *sn = &sm->map[sy][sx];
 
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {

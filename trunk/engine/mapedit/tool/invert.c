@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.2 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.3 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -31,30 +31,34 @@
 
 #include <engine/widget/radio.h>
 
-static void invert_effect(void *, struct mapview *, struct map *,
-                          struct node *);
+static void invert_effect(struct tool *, struct node *);
 
 const struct tool invert_tool = {
 	N_("Color Inversion"),
 	N_("Invert the color of a tile."),
-	MAPEDIT_TOOL_INVERT,
-	MAPEDIT_TOOL_INVERT,
+	INVERT_TOOL_ICON,
+	INVERT_TOOL_ICON,
 	NULL,			/* init */
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	invert_effect,
 	NULL,			/* cursor */
-	NULL			/* mouse */
+	invert_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static void
-invert_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+invert_effect(struct tool *t, struct node *n)
 {
+	struct map *m = t->mv->map;
 	struct noderef *nref;
 	struct transform *trans;
 	
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 		if (nref->layer != m->cur_layer)
 			continue;
 

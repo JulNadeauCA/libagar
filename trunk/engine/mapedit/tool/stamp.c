@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.55 2004/03/17 12:42:08 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.56 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -31,22 +31,26 @@
 
 #include <engine/widget/radio.h>
 
-static void stamp_init(void *);
-static int stamp_cursor(void *, struct mapview *, SDL_Rect *);
-static void stamp_effect(void *, struct mapview *, struct map *, struct node *);
+static void stamp_init(struct tool *);
+static int stamp_cursor(struct tool *, SDL_Rect *);
+static void stamp_effect(struct tool *, struct node *);
 
 const struct tool stamp_tool = {
 	N_("Stamp"),
 	N_("Insert the contents of the copy/paste buffer."),
-	MAPEDIT_TOOL_STAMP,
+	STAMP_TOOL_ICON,
 	-1,
 	stamp_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	stamp_effect,
 	stamp_cursor,
-	NULL			/* mouse */
+	stamp_effect,
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static enum {
@@ -55,7 +59,7 @@ static enum {
 } mode = STAMP_REPLACE;
 
 static void
-stamp_init(void *p)
+stamp_init(struct tool *t)
 {
 	static const char *mode_items[] = {
 		N_("Replace"),
@@ -65,15 +69,17 @@ stamp_init(void *p)
 	struct window *win;
 	struct radio *rad;
 
-	win = tool_window(p, "mapedit-tool-stamp");
+	win = tool_window(t, "mapedit-tool-stamp");
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
 }
 
 static void
-stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+stamp_effect(struct tool *t, struct node *n)
 {
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
 	struct map *copybuf = &mapedit.copybuf;
 	int sx, sy, dx, dy;
 	
@@ -97,8 +103,9 @@ stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 }
 
 static int
-stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+stamp_cursor(struct tool *t, SDL_Rect *rd)
 {
+	struct mapview *mv = t->mv;
 	struct map *copybuf = &mapedit.copybuf;
 	struct noderef *r;
 	int sx, sy, dx, dy;
@@ -108,12 +115,12 @@ stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	if (mv->map == copybuf)
 		return (-1);
 
-	for (sy = 0, dy = rd->y - (copybuf->maph * mv->map->scale)/2;
+	for (sy = 0, dy = rd->y - (copybuf->maph*mv->map->tilesz)/2;
 	     sy < copybuf->maph;
-	     sy++, dy += mv->map->scale) {
-		for (sx = 0, dx = rd->x - (copybuf->mapw * mv->map->scale)/2;
+	     sy++, dy += mv->map->tilesz) {
+		for (sx = 0, dx = rd->x - (copybuf->mapw*mv->map->tilesz)/2;
 		     sx < copybuf->mapw;
-		     sx++, dx += mv->map->scale) {
+		     sx++, dx += mv->map->tilesz) {
 			struct node *sn = &copybuf->map[sy][sx];
 
 			TAILQ_FOREACH(r, &sn->nrefs, nrefs) {

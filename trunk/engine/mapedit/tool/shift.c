@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.30 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.31 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -33,21 +33,26 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static void shift_init(void *);
-void shift_mouse(void *, struct mapview *, Sint16, Sint16);
+static void shift_init(struct tool *);
+static void shift_mousemotion(struct tool *, int, int, int, int, int, int,
+                              int, int, int);
 
 const struct tool shift_tool = {
 	N_("Shift tool"),
 	N_("Displace a tile with the mouse."),
-	MAPEDIT_TOOL_SHIFT,
+	SHIFT_TOOL_ICON,
 	-1,
 	shift_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	NULL,			/* effect */
 	NULL,			/* cursor */
-	NULL			/* mouse */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static enum shift_mode {
@@ -58,12 +63,12 @@ static enum shift_mode {
 static int multi = 0;			/* Apply to whole selection? */
 
 static void
-shift_init(void *p)
+shift_init(struct tool *t)
 {
 	struct window *win;
 	struct vbox *vb;
 
-	win = tool_window(p, "mapedit-tool-shift");
+	win = tool_window(t, "mapedit-tool-shift");
 
 	vb = vbox_new(win, 0);
 	{
@@ -84,8 +89,10 @@ shift_init(void *p)
 }
 
 void
-shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
+shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
+    int yo, int xorel, int yorel, int b)
 {
+	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
 	int selx = mv->mx + mv->mouse.x;
 	int sely = mv->my + mv->mouse.y;
@@ -110,8 +117,8 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 					continue;
 
 				noderef_set_center(nref,
-				    nref->r_gfx.xcenter+relx,
-				    nref->r_gfx.ycenter+rely);
+				    nref->r_gfx.xcenter+xorel,
+				    nref->r_gfx.ycenter+yorel);
 
 				if (mode == SHIFT_HIGHEST)
 					break;

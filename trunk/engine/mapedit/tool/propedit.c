@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.47 2004/02/20 04:18:11 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.48 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,9 +34,9 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static void propedit_init(void *p);
-static void propedit_effect(void *p, struct mapview *, struct map *,
-                            struct node *);
+static void propedit_init(struct tool *);
+static void propedit_effect(struct tool *, struct node *);
+
 static void set_node_mode(int, union evarg *);
 static void toggle_node_flag(int, union evarg *);
 static void toggle_origin(int, union evarg *);
@@ -44,15 +44,19 @@ static void toggle_origin(int, union evarg *);
 const struct tool propedit_tool = {
 	N_("Property editor"),
 	N_("Alter the properties of node references."),
-	MAPEDIT_TOOL_PROPEDIT,
+	PROPEDIT_ICON,
 	-1,	
 	propedit_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
+	NULL,			/* cursor */
 	propedit_effect,
-	NULL,
-	NULL			/* mouse */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static Uint32 node_mode = 0;
@@ -180,24 +184,24 @@ propedit_flag_blk(struct mapview *mv)
 }
 
 static void
-propedit_init(void *p)
+propedit_init(struct tool *t)
 {
 	struct window *win;
 	struct vbox *vb;
 
-	tool_bind_key(p, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP5, propedit_no_edge, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
-	tool_bind_key(p, KMOD_NONE, SDLK_b, propedit_flag_blk, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP5, propedit_no_edge, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
+	tool_bind_key(t, KMOD_NONE, SDLK_b, propedit_flag_blk, 1);
 
-	win = tool_window(p, "mapedit-tool-propedit");
+	win = tool_window(t, "mapedit-tool-propedit");
 
 	vb = vbox_new(win, 0);
 	{
@@ -281,8 +285,10 @@ set_edge(struct map *m, struct node *node, Uint32 edge)
 }
 
 static void
-propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+propedit_effect(struct tool *t, struct node *n)
 {
+	struct mapview *mv = t->mv;
+	struct map *m = mv->map;
 	struct noderef *r;
 	Uint8 *ks;
 
@@ -291,7 +297,7 @@ propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 		m->origin.y = mv->cy;
 	}
 
-	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+	TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 		if (r->layer != m->cur_layer)
 			continue;
 
@@ -307,18 +313,18 @@ propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 	}
 
 	ks = SDL_GetKeyState(NULL);
-	if (ks[SDLK_KP7]) set_edge(m, node, NODEREF_EDGE_NW);
-	if (ks[SDLK_KP8]) set_edge(m, node, NODEREF_EDGE_N);
-	if (ks[SDLK_KP9]) set_edge(m, node, NODEREF_EDGE_NE);
-	if (ks[SDLK_KP4]) set_edge(m, node, NODEREF_EDGE_W);
-	if (ks[SDLK_KP5]) set_edge(m, node, NODEREF_EDGE_FILL);
-	if (ks[SDLK_KP6]) set_edge(m, node, NODEREF_EDGE_E);
-	if (ks[SDLK_KP1]) set_edge(m, node, NODEREF_EDGE_SW);
-	if (ks[SDLK_KP2]) set_edge(m, node, NODEREF_EDGE_S);
-	if (ks[SDLK_KP3]) set_edge(m, node, NODEREF_EDGE_SE);
+	if (ks[SDLK_KP7]) set_edge(m, n, NODEREF_EDGE_NW);
+	if (ks[SDLK_KP8]) set_edge(m, n, NODEREF_EDGE_N);
+	if (ks[SDLK_KP9]) set_edge(m, n, NODEREF_EDGE_NE);
+	if (ks[SDLK_KP4]) set_edge(m, n, NODEREF_EDGE_W);
+	if (ks[SDLK_KP5]) set_edge(m, n, NODEREF_EDGE_FILL);
+	if (ks[SDLK_KP6]) set_edge(m, n, NODEREF_EDGE_E);
+	if (ks[SDLK_KP1]) set_edge(m, n, NODEREF_EDGE_SW);
+	if (ks[SDLK_KP2]) set_edge(m, n, NODEREF_EDGE_S);
+	if (ks[SDLK_KP3]) set_edge(m, n, NODEREF_EDGE_SE);
 
 	if (ks[SDLK_w])	{
-		TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 			if (r->layer != m->cur_layer) {
 				continue;
 			}
@@ -326,7 +332,7 @@ propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 		}
 	}
 	if (ks[SDLK_b]) {
-		TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 			if (r->layer != m->cur_layer) {
 				continue;
 			}
