@@ -57,11 +57,13 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	/* XXX prefs */
 	if (SDL_GetMouseState(NULL, NULL) &
 	   (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
-		pthread_mutex_lock(&m->lock);
-		mapedit_move(med, mx, my);
-		mapedit_sticky(med);
-		pthread_mutex_unlock(&m->lock);
-		m->redraw++;
+	   	if (med->cursor_dir.current == 0) {
+			pthread_mutex_lock(&m->lock);
+			mapedit_move(med, mx, my);
+			mapedit_sticky(med);
+			pthread_mutex_unlock(&m->lock);
+			m->redraw++;
+		}
 	}
 	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_RMASK) {
 		pthread_mutex_lock(&m->lock);
@@ -100,7 +102,9 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	pthread_mutex_lock(&m->lock);
 	mx = (m->view->mapx + ev->button.x / m->tilew) - 1;
 	my = (m->view->mapy + ev->button.y / m->tileh) - 1;
-	mapedit_move(med, mx, my);
+	if (med->cursor_dir.current == 0) {
+		mapedit_move(med, mx, my);
+	}
 
 	if (ev->button.button == 3) {
 		mapedit_push(med, &m->map[mx][my], med->curoffs, med->curflags);
