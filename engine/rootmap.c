@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.13 2002/11/28 01:06:50 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.14 2002/11/28 07:19:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,6 +32,9 @@
 #include "physics.h"
 #include "view.h"
 #include "anim.h"
+
+/* Update nodes individually. */
+/* #define UPDATE_NODES */
 
 #ifdef DEBUG
 #define DEBUG_FOCUS	0x01
@@ -142,13 +145,13 @@ rootmap_animate(void)
 	int x, y, vx, vy, rx, ry, ox, oy;
 
 	for (y = rm->y, vy = 0;				/* Downward */
-	     y < m->maph && vy <= rm->h;
+	     y < m->maph && vy <= rm->h + 2;
 	     y++, vy++) {
 
 		ry = vy << m->shtiley;
 
 		for (x = rm->x, vx = 0;			/* Forward */
-		     x < m->mapw && vx <= rm->w;
+		     x < m->mapw && vx <= rm->w + 2;
 		     x++, vx++) {
 			struct node *node;
 
@@ -167,7 +170,6 @@ rootmap_animate(void)
 			rx = vx << m->shtilex;
 
 			if (node->flags & NODE_ANIM) {
-#if 1
 				/*
 				 * ooo
 				 * ooo
@@ -191,11 +193,12 @@ rootmap_animate(void)
 							    nnode,
 							    rx + (TILEW*ox),
 							    ry + (TILEH*oy));
-
+#ifdef UPDATE_NODES
 							/* Queue video update */
 							VIEW_UPDATE(
 							    rm->maprects
 							    [vy+oy][vx+ox]);
+#endif
 						}
 					}
 				}
@@ -203,6 +206,7 @@ rootmap_animate(void)
 				/* Render the node. */
 				rootmap_draw_node(m, node, rx, ry);
 
+#ifdef UPDATE_NODES
 				/* Queue the video update. */
 				VIEW_UPDATE(rm->maprects[vy][vx]);
 #endif
@@ -216,8 +220,10 @@ rootmap_animate(void)
 				/* Render the node. */
 				rootmap_draw_node(m, node, rx, ry);
 
+#ifdef UPDATE_NODES
 				/* Queue the video update. */
 				VIEW_UPDATE(rm->maprects[vy][vx]);
+#endif
 			}
 		}
 	}
@@ -244,13 +250,13 @@ rootmap_draw(void)
 	}
 
 	for (y = rm->y, vy = 0;				/* Downward */
-	     y < m->maph && vy <= rm->h;
+	     y < m->maph && vy <= rm->h + 2;
 	     y++, vy++) {
 
 		ry = vy << m->shtiley;
 
 		for (x = rm->x, vx = 0;			/* Forward */
-		     x < m->mapw && vx <= rm->w;
+		     x < m->mapw && vx <= rm->w + 2;
 		     x++, vx++) {
 			rx = vx << m->shtilex;
 
@@ -285,8 +291,10 @@ rootmap_draw(void)
 					nsprites++;
 				}
 			}
+#ifdef UPDATE_NODES
 			/* Queue the video update. */
 			VIEW_UPDATE(rm->maprects[vy][vx]);
+#endif
 		}
 	}
 }

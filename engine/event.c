@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.103 2002/11/28 02:47:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.104 2002/11/28 06:23:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -209,12 +209,12 @@ event_loop(void)
 				pthread_mutex_lock(&world->lock);
 				pthread_mutex_lock(&m->lock);
 
-				/* Update animated nodes individually. */
+				/* Draw animated nodes. */
 				debug(DEBUG_VIDEO_UPDATES,
 				    "updating animated nodes\n");
 				rootmap_animate();
 
-				/* Update static nodes individually. */
+				/* Draw static nodes. */
 				if (m->redraw != 0) {
 					debug(DEBUG_VIDEO_UPDATES,
 					    "updating static nodes\n");
@@ -224,6 +224,9 @@ event_loop(void)
 				}
 				pthread_mutex_unlock(&m->lock);
 				pthread_mutex_unlock(&world->lock);
+
+				/* Queue the video update. */
+				VIEW_UPDATE(view->v->clip_rect);
 			}
 
 			/* Update the windows. */
@@ -242,29 +245,8 @@ event_loop(void)
 
 			/* Update the display. */
 			if (view->ndirty > 0) {
-#if 0
-				int i;
-
-				dprintf("%d dirty rects\n", view->ndirty);
-				for (i = 0; i < view->ndirty; i++) {
-					dprintf("dirty rect: %dx%d at %d,%d\n",
-					    view->dirty[i].w,
-					    view->dirty[i].h,
-					    view->dirty[i].x,
-					    view->dirty[i].y);
-					SDL_UpdateRect(view->v,
-					    view->dirty[i].x,
-					    view->dirty[i].y,
-					    view->dirty[i].w,
-					    view->dirty[i].h);
-				}
-#else
-				debug_n(DEBUG_VIDEO_UPDATES, "dirty rects: ");
 				SDL_UpdateRects(view->v, view->ndirty,
 				    view->dirty);
-				debug_n(DEBUG_VIDEO_UPDATES, "%d\n",
-				    view->ndirty);
-#endif
 				view->ndirty = 0;
 
 				if (view->gfx_engine == GFX_ENGINE_GUI) {
