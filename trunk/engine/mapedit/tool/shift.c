@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.3 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.4 2003/01/27 02:19:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,8 +49,8 @@ static const struct tool_ops shift_ops = {
 		NULL		/* save */
 	},
 	shift_window,
-	NULL,			/* effect */
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	NULL			/* effect */
 };
 
 void
@@ -71,8 +71,8 @@ shift_window(void *p)
 
 	win = window_new("mapedit-tool-shift", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    141, 158,
-	    165, 177);
+	    112, 111,
+	    112, 111);
 	window_set_caption(win, "Shift");
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);

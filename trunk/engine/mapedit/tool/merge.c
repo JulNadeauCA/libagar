@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.16 2003/01/27 02:19:10 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.22 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,70 +27,90 @@
  */
 
 #include <engine/engine.h>
-#include <engine/view.h>
+#include <engine/map.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/radio.h>
 #include <engine/widget/text.h>
 
 #include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
 
 #include "tool.h"
+#include "merge.h"
 
-static void
-tool_window_close(int argc, union evarg *argv)
+static const struct tool_ops merge_ops = {
+	{
+		merge_destroy,	/* destroy */
+		NULL,		/* load */
+		NULL		/* save */
+	},
+	merge_window,
+	NULL,			/* cursor */
+	merge_effect
+};
+
+void
+merge_init(void *p)
 {
-	struct window *win = argv[0].p;
-	struct tool *tool = argv[1].p;
+	struct merge *merge = p;
 
-	widget_set_int(tool->button, "state", 0);
+	tool_init(&merge->tool, "merge", &merge_ops);
+	merge->mode = MERGE_REPLACE;
 
-	mapedit.curtool = NULL;
+	map_init(&merge->brush, MAP_2D, "brush", NULL);
+	map_alloc_nodes(&merge->brush, 4, 4);
 }
 
 void
-tool_init(struct tool *tool, char *name, const void *ops)
+merge_destroy(void *p)
 {
-	char *toolname;
+	struct merge *m = p;
 
-	Asprintf(&toolname, "tool-%s", name);
-	object_init(&tool->obj, "tool", toolname, NULL, 0, ops);
-	free(toolname);
-
-	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
-	    TOOL_OPS(tool)->window(tool) : NULL;
-	if (tool->win != NULL) {
-		event_new(tool->win, "window-close",
-		    tool_window_close, "%p", tool);
-	}
-	tool->type = Strdup(name);
-	tool->button = NULL;
+	map_destroy(&m->brush);
 }
 
-/* Return the first visible mapview widget. */
-struct mapview *
-tool_mapview(void)
+struct window *
+merge_window(void *p)
 {
+	struct merge *mer = p;
 	struct window *win;
 	struct region *reg;
-	struct widget *wid;
 
-	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		if ((win->flags & (WINDOW_SHOWN|WINDOW_HIDDEN_BODY)) == 0) {
-			continue;
-		}
-		TAILQ_FOREACH(reg, &win->regionsh, regions) {
-			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
-				if (!WIDGET_FOCUSED(wid)) {
-					continue;
-				}
-				if (strcmp(wid->type, "mapview") == 0) {
-					return ((struct mapview *)wid);
-				}
-			}
-		}
+	win = window_new("mapedit-tool-merge", 0,
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
+	    456, 301, 456, 301);
+	window_set_caption(win, "Merge");
+		
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
+	{
+		static const char *mode_items[] = {
+			"Replace",
+			"Insert highest",
+			NULL
+		};
+		struct radio *rad;
+
+		rad = radio_new(reg, mode_items);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
 	}
-	text_msg("Error", "No map is visible");
-	return (NULL);
+
+	reg = region_new(win, REGION_VALIGN, 0, 50, 100, 50);
+	{
+		struct mapview *mv;
+
+//		mv = mapview_new(reg, &mer->brush,
+//		    MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_ZOOM,
+//		    100, 50);
+//		win->focus = WIDGET(mv);
+	}
+	return (win);
+}
+
+void
+merge_effect(void *p, struct mapview *mv, struct node *node)
+{
+	struct merge *mer = p;
 }
 

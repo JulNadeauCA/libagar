@@ -1,4 +1,4 @@
-/*	$Csoft: select.h,v 1.1 2003/01/24 08:27:05 vedge Exp $	*/
+/*	$Csoft: select.h,v 1.2 2003/01/26 06:15:21 vedge Exp $	*/
 /*	Public domain	*/
 
 struct select {
@@ -7,5 +7,5 @@ struct select {
 
 void		 select_init(void *);
 struct window	*select_window(void *);
-void		 select_effect(void *, struct mapview *, Uint32, Uint32);
+void		 select_effect(void *, struct mapview *, struct node *);
 

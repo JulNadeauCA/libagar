@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.1 2003/01/24 08:27:05 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.2 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -44,8 +44,8 @@ static const struct tool_ops select_ops = {
 		NULL		/* save */
 	},
 	NULL,			/* window */
-	select_effect,
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	select_effect
 };
 
 static void	select_event(int, union evarg *);
@@ -59,10 +59,8 @@ select_init(void *p)
 }
 
 void
-select_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
+select_effect(void *p, struct mapview *mv, struct node *node)
 {
-	struct map *m = mv->map;
-
-	mapedit.src_node = &m->map[y][x];
+	mapedit.src_node = node;
 }
 

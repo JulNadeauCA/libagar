@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.21 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.22 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,8 +47,8 @@ static const struct tool_ops stamp_ops = {
 		NULL		/* save */
 	},
 	stamp_window,
-	stamp_effect,
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	stamp_effect
 };
 
 void
@@ -69,7 +69,9 @@ stamp_window(void *p)
 	struct region *reg;
 
 	win = window_new("mapedit-tool-stamp", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 156, 101, 156, 101);
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
+	    157, 76,
+	    157, 76);
 	window_set_caption(win, "Stamp");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
@@ -89,11 +91,10 @@ stamp_window(void *p)
 }
 
 void
-stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
+stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 {
 	struct stamp *st = p;
 	struct map *m = mv->map;
-	struct node *dstnode = &m->map[y][x];
 	struct node *srcnode = mapedit.src_node;
 	struct noderef *nref, *nnref;
 

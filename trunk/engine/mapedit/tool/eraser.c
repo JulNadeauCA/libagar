@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.19 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.20 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,8 +47,8 @@ static const struct tool_ops eraser_ops = {
 		NULL		/* save */
 	},
 	eraser_window,
-	eraser_effect,
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	eraser_effect
 };
 
 void
@@ -72,8 +72,8 @@ eraser_window(void *p)
 
 	win = window_new("mapedit-tool-eraser", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    120, 120,
-	    120, 120);
+	    113, 111,
+	    113, 111);
 	window_set_caption(win, "Eraser");
 
 	reg = region_new(win, 0, 0, 0, 100, 100);
@@ -95,43 +95,39 @@ eraser_window(void *p)
 }
 
 void
-eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
+eraser_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct eraser *er = p;
-	struct map *m = mv->map;
-	struct node *n = &m->map[y][x];
 	struct noderef *nref, *nnref;
+	
+	if (TAILQ_EMPTY(&node->nrefs)) {
+		return;
+	}
 
 	switch (er->mode) {
 	case ERASER_ALL:
-		for (nref = TAILQ_FIRST(&n->nrefs);
-		     nref != TAILQ_END(&n->nrefs);
+		for (nref = TAILQ_FIRST(&node->nrefs);
+		     nref != TAILQ_END(&node->nrefs);
 		     nref = nnref) {
 			nnref = TAILQ_NEXT(nref, nrefs);
 			noderef_destroy(nref);
 			free(nref);
 		}
-		TAILQ_INIT(&n->nrefs);
+		TAILQ_INIT(&node->nrefs);
 		break;
 	case ERASER_HIGHEST:
-		if (!TAILQ_EMPTY(&n->nrefs)) {
-			node_remove_ref(n, TAILQ_LAST(&n->nrefs, noderefq));
-		}
+		node_remove_ref(node, TAILQ_LAST(&node->nrefs, noderefq));
 		break;
 	case ERASER_LOWEST:
-		if (!TAILQ_EMPTY(&n->nrefs)) {
-			node_remove_ref(n, TAILQ_FIRST(&n->nrefs));
-		}
+		node_remove_ref(node, TAILQ_FIRST(&node->nrefs));
 		break;
 	case ERASER_SELECTIVE:
-		TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
+		TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 			if (nref->pobj == er->selection.pobj &&
 			    nref->offs == er->selection.offs) {
-				node_remove_ref(n, nref);
+				node_remove_ref(node, nref);
 			}
 		}
-		break;
-	default:
 		break;
 	}
 }

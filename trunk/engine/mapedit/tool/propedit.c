@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.14 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.15 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,8 +47,8 @@ static const struct tool_ops propedit_ops = {
 		NULL		/* save */
 	},
 	propedit_window,
-	propedit_effect,
-	NULL			/* cursor */
+	NULL,			/* cursor */
+	propedit_effect
 };
 
 static void	propedit_event(int, union evarg *);
@@ -104,10 +104,12 @@ propedit_window(void *p)
 	struct checkbox *cbox;
 
 	win = window_new("mapedit-tool-propedit", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 149, 198, 149, 198);
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
+	    140, 196,
+	    140, 196);
 	window_set_caption(win, "Node props");
 
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
 	{
 		static const char *modes[] = {
 			"Clear",
@@ -130,7 +132,7 @@ propedit_window(void *p)
 		    propedit_set_node_mode, "%p", pe);
 	}
 
-	reg = region_new(win, REGION_VALIGN, 0, 40, 100, 60);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		const struct {
 			int	 flag;
@@ -158,32 +160,32 @@ propedit_window(void *p)
 }
 
 void
-propedit_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
+propedit_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct propedit *pe = p;
 	struct map *m = mv->map;
-	struct node *n = &m->map[y][x];
 
 	if (pe->node_mask & NODE_ORIGIN) {
-		struct node *on;
+		struct node *oldnode;
 
-		on = &m->map[m->defy][m->defx];
-		on->flags &= ~(NODE_ORIGIN);
-		n->flags |= NODE_ORIGIN;
-		m->defx = x;
-		m->defy = y;
+		oldnode = &m->map[m->defy][m->defx];
+		oldnode->flags &= ~(NODE_ORIGIN);
+
+		m->defx = mv->cx;
+		m->defy = mv->cy;
+		node->flags |= NODE_ORIGIN;
 		return;
 	}
 
 	switch (pe->mode) {
 	case PROPEDIT_CLEAR:
-		n->flags = pe->node_mask;
+		node->flags = pe->node_mask;
 		break;
 	case PROPEDIT_SET:
-		n->flags |= pe->node_mask;
+		node->flags |= pe->node_mask;
 		break;
 	case PROPEDIT_UNSET:
-		n->flags &= ~(pe->node_mask);
+		node->flags &= ~(pe->node_mask);
 		break;
 	}
 }

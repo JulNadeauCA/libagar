@@ -1,4 +1,4 @@
-/*	$Csoft: shift.h,v 1.1 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: shift.h,v 1.2 2003/01/26 06:15:21 vedge Exp $	*/
 /*	Public domain	*/
 
 enum shift_mode {
@@ -15,6 +15,6 @@ struct shift {
 
 void		 shift_init(void *);
 struct window	*shift_window(void *);
-void		 shift_effect(void *, struct mapview *, Uint32, Uint32);
+void		 shift_effect(void *, struct mapview *, struct node *);
 void		 shift_mouse(void *, struct mapview *, Sint16, Sint16);
 

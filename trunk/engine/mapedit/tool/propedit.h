@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.h,v 1.3 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.4 2003/01/26 06:15:21 vedge Exp $	*/
 /*	Public domain	*/
 
 enum propedit_mode {
@@ -15,5 +15,5 @@ struct propedit {
 
 void		 propedit_init(void *);
 struct window	*propedit_window(void *);
-void		 propedit_effect(void *, struct mapview *, Uint32, Uint32);
+void		 propedit_effect(void *, struct mapview *, struct node *);
 

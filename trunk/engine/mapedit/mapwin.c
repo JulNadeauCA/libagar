@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.38 2003/01/27 02:19:09 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.39 2003/01/27 08:00:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,7 +57,8 @@ mapwin_new_view(int argc, union evarg *argv)
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-	mv = mapview_new(reg, m, MAPVIEW_CENTER|MAPVIEW_ZOOM, 100, 100);
+	mv = mapview_new(reg, m, MAPVIEW_ZOOM|MAPVIEW_INDEPENDENT_ZOOM,
+	    100, 100);
 
 	win->focus = WIDGET(mv);
 
@@ -113,7 +114,7 @@ mapwin_new(struct map *m)
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, m,
-	    MAPVIEW_CENTER|MAPVIEW_EDIT|MAPVIEW_ZOOM|MAPVIEW_PROPS,
+	    MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_ZOOM|MAPVIEW_INDEPENDENT_ZOOM,
 	    100, 100);
 
 	/* Tools */
