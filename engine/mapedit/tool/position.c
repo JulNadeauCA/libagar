@@ -1,0 +1,80 @@
+/*	$Csoft: eraser.c,v 1.39 2003/08/29 04:55:43 vedge Exp $	*/
+
+/*
+ * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * <http://www.csoft.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <engine/engine.h>
+
+#include "position.h"
+
+#include <engine/widget/tlist.h>
+
+static int	position_cursor(void *, struct mapview *, SDL_Rect *);
+static void	position_effect(void *, struct mapview *, struct map *,
+		                struct node *);
+
+const struct tool_ops position_ops = {
+	{
+		NULL,		/* init */
+		NULL,		/* reinit */
+		tool_destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	position_cursor,
+	position_effect,
+	NULL			/* mouse */
+};
+
+void
+position_init(void *p)
+{
+	struct position *po = p;
+	struct window *win;
+
+	tool_init(&po->tool, "position", &position_ops, MAPEDIT_TOOL_POSITION);
+
+	win = TOOL(po)->win = window_new("mapedit-tool-position");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	window_set_caption(win, _("Position"));
+	event_new(win, "window-close", tool_window_close, "%p", po);
+
+}
+
+static void
+position_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
+{
+//	struct position *po = p;
+}
+
+static int
+position_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+{
+	/* XXX */
+	return (-1);
+}
+
