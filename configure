@@ -107,6 +107,7 @@ echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --with-smpeg                   Play videos through smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
+echo "    --with-gl                      Support OpenGL operations [default: no]"
 echo "    --enable-debug                 Engine debugging [default: no]"
 echo "    --enable-xdebug                Synchronous X11 events [default: no]"
 echo "    --enable-map-editor            Level edition [default: yes]"
@@ -837,6 +838,13 @@ XDEBUG=1
 echo "#ifndef XDEBUG" >> engine/mcconfig.h
 echo "#define XDEBUG" $XDEBUG >> engine/mcconfig.h
 echo "#endif /* XDEBUG */" >> engine/mcconfig.h
+fi
+if [ "${with_gl}" = "yes" ]
+ then
+HAVE_OPENGL=1
+echo "#ifndef HAVE_OPENGL" >> engine/mcconfig.h
+echo "#define HAVE_OPENGL" $HAVE_OPENGL >> engine/mcconfig.h
+echo "#endif /* HAVE_OPENGL */" >> engine/mcconfig.h
 fi
 if [ "${enable_debug}" = "yes" ]
  then
