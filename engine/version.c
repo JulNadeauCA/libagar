@@ -54,7 +54,7 @@ version_read(struct netbuf *buf, const struct version *ver,
 
 	siglen = strlen(ver->name);
 
-	if (netbuf_read_chunk(buf, sig, siglen) != siglen ||
+	if (netbuf_read(buf, sig, siglen) != siglen ||
 	    strncmp(sig, ver->name, siglen) != 0) {
 		error_set("%s: bad magic", ver->name);
 		return (-1);

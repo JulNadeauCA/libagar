@@ -36,7 +36,6 @@ void		 error_fatal(const char *, ...);
 
 ssize_t	Write(int, const void *, size_t);
 ssize_t	Read(int, void *, size_t);
-off_t	Lseek(int, off_t, int);
 
 void	Asprintf(char **, const char *, ...);
 #define Vasprintf(msg, fmt, args) do {				\
