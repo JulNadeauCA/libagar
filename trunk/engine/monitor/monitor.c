@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.44 2003/06/25 06:15:39 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.45 2003/07/28 15:29:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -86,7 +86,7 @@ monitor_init(struct monitor *mon, const char *name)
 	window_set_position(mon->toolbar, WINDOW_LOWER_LEFT, 0);
 
 	tl_tools = tlist_new(mon->toolbar, 0);
-	tlist_prescale(tl_tools, "XXXXXXXXXXXXXX", ntool_ents);
+	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
 
 	event_new(tl_tools, "tlist-changed", select_tool, NULL);
 	for (i = 0; i < ntool_ents; i++) {
