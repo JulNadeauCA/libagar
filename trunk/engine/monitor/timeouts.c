@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.4 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.5 2005/01/30 05:09:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -44,10 +44,8 @@ static struct timeout refresher;
 static Uint32 
 timeouts_refresh(void *obj, Uint32 ival, void *arg)
 {
-	char text[128];
 	extern struct objectq timeout_objq;
 	extern pthread_mutex_t timeout_lock;
-	struct tableview_row *row1;
 	struct object *ob;
 	struct timeout *to;
 	int id;
@@ -57,26 +55,40 @@ timeouts_refresh(void *obj, Uint32 ival, void *arg)
 
 	id = 0;
 	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
+		char text[128];
+		struct tableview_row *row1;
+		
 		row1 = tableview_row_add(tv, 0, NULL, id++, 0, ob->name);
 		tableview_row_expand(tv, row1);
 
+		pthread_mutex_lock(&ob->lock);
 		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
 			snprintf(text, sizeof(text), "%p: %u ticks", to,
 			    to->ticks);
 			tableview_row_add(tv, 0, row1, id++, 0, text);
 		}
+		pthread_mutex_unlock(&ob->lock);
 	}
 	pthread_mutex_unlock(&timeout_lock);
 	return (ival);
 }
 
+static void
+close_timeouts(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct tileview *tv = argv[1].p;
+
+	timeout_del(tv, &refresher);
+	view_detach(win);
+}
 
 struct window *
 timeouts_window(void)
 {
 	struct window *win;
 
-	if ((win = window_new(WINDOW_DETACH, "monitor-timeouts")) == NULL) {
+	if ((win = window_new(0, "monitor-timeouts")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Running timers"));
@@ -87,6 +99,8 @@ timeouts_window(void)
 	
 	timeout_set(&refresher, timeouts_refresh, tv, 0);
 	timeout_add(tv, &refresher, 50);
+	
+	event_new(win, "window-close", close_timeouts, "%p", tv);
 	return (win);
 }
 
