@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.31 2002/05/26 00:54:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.32 2002/05/26 06:08:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,6 +58,7 @@ static const struct object_ops window_ops = {
 #include "borders/grey8.h"
 
 static Uint32 delta = 0, delta2 = 256;
+static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
 static void	post_widget_ev(void *, void *, void *);
 
@@ -84,6 +85,7 @@ window_init(struct window *win, struct viewport *view, char *caption,
     int flags, enum window_type type, int rx, int ry, int rw, int rh)
 {
 	static int nwindow = 0;
+	SDL_Surface *s;
 	char *name;
 	int i;
 
@@ -99,8 +101,10 @@ window_init(struct window *win, struct viewport *view, char *caption,
 		    default_border[i].r, default_border[i].g,
 		    default_border[i].b);
 	}
-	
-	win->titleh = 18 + win->borderw;	/* XXX font */
+
+	s = TTF_RenderText_Solid(font, "ABC1234", white);
+	win->titleh = s->h + win->borderw;	/* XXX ridiculous */
+	SDL_FreeSurface(s);
 
 	win->caption = strdup(caption);
 	win->view = view;
@@ -340,7 +344,6 @@ window_draw(struct window *win)
 	/* Render the title bar. */
 	/* XXX ridiculously inefficient with animated windows. */
 	if (win->flags & WINDOW_TITLEBAR) {
-		static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 		SDL_Surface *s;
 		SDL_Rect rd;
 
@@ -567,41 +570,41 @@ window_resize(struct window *win)
 
 	SLIST_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
-		int x, y, nwidgets;
-		
+		int x, y;
+		int nwidgets = 0;
+
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)
+			nwidgets++;
+
 		/* Scale/position the region. */
-		reg->x = (reg->rx * win->body.w / 100) + (win->body.x - win->x);
-		reg->y = (reg->ry * win->body.h / 100) + (win->body.y - win->y);
+		reg->x = (reg->rx * win->body.w / 100) +
+		    (win->body.x - win->x);
+		reg->y = (reg->ry * win->body.h / 100) +
+		    (win->body.y - win->y);
 		reg->w = (reg->rw * win->body.w / 100);
 		reg->h = (reg->rh * win->body.h / 100);
-		
-		nwidgets = 0;
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			nwidgets++;
-		}
-
-		reg->x += reg->spacing;
-		reg->y += reg->spacing;
-		reg->w -= reg->spacing * 2;
-		reg->h -= reg->spacing * 2;
+	
+		reg->x += reg->spacing / 2;
+		reg->y += reg->spacing / 2;
+		reg->w -= reg->spacing;
+		reg->h -= reg->spacing;
 
 		x = reg->x;
 		y = reg->y;
 	
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			/* Scale/position the widget. */
 			wid->x = x;
 			wid->y = y;
+
 			if (wid->rw > 0) {
 				wid->w = wid->rw * reg->w / 100;
 			}
-			if (wid->rh > 0) {
+			if (wid->rh > 0)
 				wid->h = wid->rh * reg->h / 100;
-			}
 
-			if (wid->w >= reg->w)
+			if (wid->w > reg->w)
 				wid->w = reg->w;
-			if (wid->h >= reg->h)
+			if (wid->h > reg->h)
 				wid->h = reg->h;
 
 #ifdef WIDGET_DEBUG
@@ -609,10 +612,13 @@ window_resize(struct window *win)
 			    wid->w, wid->h, wid->x, wid->y);
 #endif
 
+			/* Space widgets */
 			if (reg->flags & REGION_VALIGN) {
-				y += wid->h + reg->spacing;
+				y += wid->h + (reg->spacing / nwidgets) / 2;
+				wid->h -= reg->spacing/nwidgets;
 			} else if (reg->flags & REGION_HALIGN) {
-				x += wid->w + reg->spacing;
+				x += wid->w + (reg->spacing / nwidgets) / 2;
+				wid->w -= reg->spacing / nwidgets;
 			}
 		}
 	}
