@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.60 2002/12/29 02:13:54 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.61 2002/12/29 03:24:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -37,9 +37,8 @@ struct viewport {
 	gfx_engine_t	 gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
-	
-	int	w, h, bpp;		/* Viewport geometry */
-	
+	int		 w, h;		/* Display geometry */
+	int		 depth;		/* Depth in bpp */
 	struct {
 		int	 current;	/* Estimated refresh rate in ms */
 		int	 delay;		/* Current refresh delay in ms */
@@ -52,9 +51,10 @@ struct viewport {
 	int		 maxdirty;	/* Size of dirty rectangle array */
 
 	/* Read-write, thread-safe */
-	struct windowq	windows;	/* Windows in view */
-	struct windowq	detach;		/* Windows to free */
-
+	pthread_mutex_t		lock;
+	pthread_mutexattr_t	lockattr;
+	struct windowq	 windows;	/* Windows in view */
+	struct windowq	 detach;	/* Windows to free */
 	struct window	*focus_win;	/* Give focus to this window,
 					   when event processing is done. */
 	struct window	*wop_win;	/* Window being moved/resized/etc. */
@@ -69,9 +69,6 @@ struct viewport {
 		VIEW_WINOP_REGRESIZE_UP,
 		VIEW_WINOP_REGRESIZE_DOWN
 	} winop;
-
-	pthread_mutex_t		lock;	/* Lock on regions. */
-	pthread_mutexattr_t	lockattr;
 };
 
 #ifdef VIEW_8BPP
