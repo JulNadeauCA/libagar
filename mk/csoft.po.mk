@@ -38,28 +38,34 @@ MOS?=
 all: ${DOMAIN}.pot ${MOS}
 
 .po.pox:
-	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "${MAKE} ${DOMAIN}.pot"; \
 		${MAKE} ${DOMAIN}.pot; \
 		echo "${MSGMERGE} $< ${DOMAIN}.pot -o $@"; \
 		${MSGMERGE} $< ${DOMAIN}.pot -o $@; \
+	else \
+		echo "skipping $@ (no gettext)"; \
 	fi
 
 .po.mo:
-	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "${MSGFMT} -o $@ $<"; \
 		${MSGFMT} -o $@ $<; \
+	else \
+		echo "skipping $@ (no gettext)"; \
 	fi
 
 ${POTFILES}:
-	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "(cd ${SRC} && find . -name \*.c > ${POTFILES})"; \
 		(cwd=`pwd`; cd ${SRC} && find . -name \*.c > \
 		    $$cwd/${POTFILES}); \
+	else \
+		echo "skipping $@ (no gettext)"; \
 	fi
 
 ${DOMAIN}.pot: ${POTFILES}
-	@if [ "${HAVE_GETTEXT}" = "yes" ]; then \
+	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
@@ -68,6 +74,8 @@ ${DOMAIN}.pot: ${POTFILES}
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
 		    --files-from=${POTFILES} -o $@; \
+	else \
+		echo "skipping $@ (no gettext)"; \
 	fi
 
 depend:
@@ -87,7 +95,8 @@ cleandir:
 
 install: ${MOS}
 	@export _mos="${MOS}"; \
-	if [ "${HAVE_GETTEXT}" = "yes" -a "$$_mos" != "" ]; then \
+	if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" \
+	     -a "$$_mos" != "" ]; then \
             if [ ! -d "${LOCALEDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
                 ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
@@ -105,6 +114,8 @@ install: ${MOS}
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
 		rm -f ${DOMAIN}.mo; \
             done; \
+	else \
+		echo "skipping $@ (no gettext)"; \
 	fi
 
 deinstall:
