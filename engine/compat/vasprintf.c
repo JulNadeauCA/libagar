@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: vasprintf.c,v 1.1 2002/08/20 09:16:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -30,13 +30,14 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include <engine/error.h>
 
 #include "vasprintf.h"
 
 int
-compat_vasprintf(char **ret, const char *fmt, va_list ap)
+vasprintf(char **ret, const char *fmt, va_list ap)
 {
 	char *buf;
 	int size;
