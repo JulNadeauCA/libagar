@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.11 2002/12/17 06:45:39 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.12 2002/12/21 10:21:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -80,24 +80,27 @@ scrollbar_new(struct region *reg, int w, int h, int flags)
 void
 scrollbar_init(struct scrollbar *sb, int w, int h, int flags)
 {
-	widget_init(&sb->wid, "scrollbar", "widget", &scrollbar_ops, w, h);
-	widget_map_color(sb, BACKGROUND_COLOR, "scrollbar-background",
-	    120, 120, 120);
-	widget_map_color(sb, SCROLL_BUTTON_COLOR, "scrollbar-button",
-	    140, 140, 140);
-	widget_map_color(sb, SCROLL_TRIANGLE_COLOR1, "scrollbar-triangle1",
-	    160, 160, 160);
-	widget_map_color(sb, SCROLL_TRIANGLE_COLOR2, "scrollbar-triangle2",
-	    80, 80, 80);
+	widget_init(&sb->wid, "scrollbar", &scrollbar_ops, w, h);
+	widget_map_color(sb, BACKGROUND_COLOR, "background", 120, 120, 120);
+	widget_map_color(sb, SCROLL_BUTTON_COLOR, "button", 140, 140, 140);
+	widget_map_color(sb, SCROLL_TRIANGLE_COLOR1, "triangle", 160, 160, 160);
+	widget_map_color(sb, SCROLL_TRIANGLE_COLOR2, "triangle2", 80, 80, 80);
+
+	widget_bind(sb, "value", WIDGET_INT, &sb->def.lock, &sb->def.value);
+	widget_bind(sb, "min", WIDGET_INT, &sb->def.lock, &sb->def.min);
+	widget_bind(sb, "max", WIDGET_INT, &sb->def.lock, &sb->def.max);
 
 	sb->flags = flags;
-	sb->min = 0;
-	sb->max = 0;
-	sb->value = 0;
 	sb->curbutton = BUTTON_NONE;
 	sb->bar_size = 30;
 	sb->button_size = 25;
-	pthread_mutex_init(&sb->lock, NULL);
+	
+	sb->def.value = 0;
+	sb->def.min = 0;
+	sb->def.max = 0;
+	pthread_mutexattr_init(&sb->def.lockattr);
+	pthread_mutexattr_settype(&sb->def.lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&sb->def.lock, &sb->def.lockattr);
 
 	event_new(sb, "window-mousebuttondown",
 	    scrollbar_mouse_buttondown, NULL);
@@ -107,40 +110,6 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int flags)
 	    scrollbar_mouse_motion, NULL);
 	event_new(sb, "widget-scaled",
 	    scrollbar_scaled, NULL);
-}
-
-void
-scrollbar_set_range(struct scrollbar *sb, int min, int max)
-{
-	pthread_mutex_lock(&sb->lock);
-	sb->min = min;
-	sb->max = max;
-	pthread_mutex_unlock(&sb->lock);
-}
-
-void
-scrollbar_get_range(struct scrollbar *sb, int *min, int *max)
-{
-	pthread_mutex_lock(&sb->lock);
-	*min = sb->min;
-	*max = sb->max;
-	pthread_mutex_unlock(&sb->lock);
-}
-
-void
-scrollbar_set_value(struct scrollbar *sb, int value)
-{
-	pthread_mutex_lock(&sb->lock);
-	sb->value = value;
-	pthread_mutex_unlock(&sb->lock);
-}
-
-void
-scrollbar_get_value(struct scrollbar *sb, int *value)
-{
-	pthread_mutex_lock(&sb->lock);
-	*value = sb->value;
-	pthread_mutex_unlock(&sb->lock);
 }
 
 static void
@@ -155,6 +124,7 @@ static void
 scrollbar_mouse_select(struct scrollbar *sb, int y)
 {
 	int ny = y - sb->bar_size/2;
+	int max;
 
 	if (sb->curbutton != BUTTON_SCROLL) {		/* Not scrolling? */
 		return;
@@ -163,21 +133,21 @@ scrollbar_mouse_select(struct scrollbar *sb, int y)
 		return;
 	}
 	if (ny < sb->button_size) {			/* Up button? */
-		scrollbar_set_value(sb, 0);
-		return;
-	}
-	if (ny > WIDGET(sb)->h - sb->bar_size -		/* Down button? */
-	    sb->button_size) {
-		scrollbar_set_value(sb, sb->max);
+		widget_set_int(sb, "value", 0);
 		return;
 	}
 
-	pthread_mutex_lock(&sb->lock);
+	max = widget_get_int(sb, "max");
+
+	if (ny > WIDGET(sb)->h - sb->bar_size - sb->button_size) { /* Down */
+		widget_set_int(sb, "value", max);
+		return;
+	}
+
 	ny -= sb->button_size;
-	sb->value = ny * sb->max / WIDGET(sb)->h;
-	pthread_mutex_unlock(&sb->lock);
+	widget_set_int(sb, "value", ny * max / WIDGET(sb)->h);
 	
-	event_post(sb, "scrollbar-changed", "%i", sb->value);
+	event_post(sb, "changed", "%i", widget_get_int(sb, "value"));
 }
 
 static void
@@ -267,11 +237,16 @@ void
 scrollbar_draw(void *p)
 {
 	struct scrollbar *sb = p;
+	int value, min, max;
 	int h, y;
 
 	if (WIDGET(sb)->h < sb->button_size*2) {
 		return;
 	}
+
+	value = widget_get_int(sb, "value");
+	min =	widget_get_int(sb, "min");
+	max =	widget_get_int(sb, "max");
 
 	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
 	    WIDGET_COLOR(sb, BACKGROUND_COLOR));
@@ -297,15 +272,14 @@ scrollbar_draw(void *p)
 		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
 
 		/* Scrolling bar */
-		pthread_mutex_lock(&sb->lock);
-		if (sb->max > 0) {
+		if (max > 0) {
 			if (sb->bar_size < 0) {
 				h = WIDGET(sb)->h - sb->button_size*2;
 			} else {
 				h = sb->bar_size;
 			}
-			y = sb->value * (WIDGET(sb)->h - sb->button_size) /
-			    sb->max;
+			y = value * (WIDGET(sb)->h - sb->button_size) /
+			    max;
 		} else {
 			h = WIDGET(sb)->h - sb->button_size*2;
 			y = 0;
@@ -314,7 +288,6 @@ scrollbar_draw(void *p)
 		if (h < sb->button_size) {
 			h = sb->button_size;
 		}
-		pthread_mutex_unlock(&sb->lock);
 
 		if (sb->button_size + h + y > WIDGET(sb)->h - sb->button_size) {
 			y = WIDGET(sb)->h - sb->button_size*2 - h;

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.30 2002/12/24 10:35:59 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.31 2002/12/24 14:21:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -48,7 +48,7 @@ static struct widget_ops checkbox_ops = {
 };
 
 enum {
-	FRAME_COLOR,
+	BOX_COLOR,
 	TEXT_COLOR
 };
 
@@ -77,15 +77,17 @@ void
 checkbox_init(struct checkbox *cbox, int rh, char *caption)
 {
 	widget_init(&cbox->wid, "checkbox", &checkbox_ops, -1, rh);
-	widget_map_color(cbox, FRAME_COLOR, "frame", 100, 100, 100);
 	widget_map_color(cbox, TEXT_COLOR, "text", 250, 250, 250);
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &cbox->value);
+	widget_map_color(cbox, BOX_COLOR, "box", 100, 100, 100);
 
-	cbox->value = 0;					/* Released */
-	cbox->caption = Strdup(caption);
+	widget_bind(cbox, "state", WIDGET_BOOL, NULL, &cbox->def.state);
+	cbox->def.state = 0;
 	
+	cbox->caption = Strdup(caption);
 	cbox->label_s = text_render(NULL, -1, WIDGET_COLOR(cbox, TEXT_COLOR),
 	    caption);
+	
+	/* Adjust size. */
 	if (rh < 0) {
 		WIDGET(cbox)->h = cbox->label_s->h;
 	}
@@ -121,8 +123,8 @@ checkbox_draw(void *p)
 
 	/* Draw the checkbox. */
 	primitives.box(cbox, 0, 0, cbox->cbox_w, cbox->label_s->h,
-	    widget_get_int(cbox, "state") ? -1 : 1,
-	    WIDGET_COLOR(cbox, FRAME_COLOR));
+	    widget_get_bool(cbox, "state") ? -1 : 1,
+	    WIDGET_COLOR(cbox, BOX_COLOR));
 
 	/* Draw the label. */
 	WIDGET_DRAW(cbox, cbox->label_s, cbox->cbox_w + 6 + x, y);
@@ -156,12 +158,16 @@ checkbox_event(int argc, union evarg *argv)
 	}
 
 	if (pushed) {
+		struct widget_binding *stateb;
 		int *state;
 
-		widget_get_binding(cbox, "state", &state, 1);
+		stateb = widget_binding_get_locked(cbox, "state", &state);
 		*state = !(*state);
-		event_post(cbox, "checkbox-changed", "%i", !state);
-		widget_unlock_binding(cbox, "state");
+		
+		event_post(cbox, "checkbox-changed", "%i", *state);
+
+		widget_binding_modified(stateb);
+		widget_binding_unlock(stateb);
 	}
 }
 
