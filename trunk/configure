@@ -215,6 +215,40 @@ else
 fi
 
 rm -f .cctest .cctest.c
+echo -n "checking for a getenv() function..."
+echo "checking for a getenv() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdlib.h>
+int
+main(int argc, char *argv[])
+{
+	(void)getenv("PATH");
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_GETENV" >> engine/mcconfig.h
+echo "#define HAVE_GETENV" $HAVE_GETENV >> engine/mcconfig.h
+echo "#endif /* HAVE_GETENV */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
 echo -n "checking for setenv() and unsetenv() functions..."
 echo "checking for setenv() and unsetenv() functions..." >> config.log
 cat << EOT > conftest.c
@@ -246,6 +280,108 @@ if [ "${compile}" = "ok" ]; then
 	echo "#ifndef HAVE_SETENV" >> engine/mcconfig.h
 echo "#define HAVE_SETENV" $HAVE_SETENV >> engine/mcconfig.h
 echo "#endif /* HAVE_SETENV */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
+echo -n "checking for a strsep() function..."
+echo "checking for a strsep() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strsep(NULL, NULL);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_STRSEP" >> engine/mcconfig.h
+echo "#define HAVE_STRSEP" $HAVE_STRSEP >> engine/mcconfig.h
+echo "#endif /* HAVE_STRSEP */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
+echo -n "checking for a strlcat() function..."
+echo "checking for a strlcat() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strlcat(NULL, NULL, 0);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_STRLCAT" >> engine/mcconfig.h
+echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> engine/mcconfig.h
+echo "#endif /* HAVE_STRLCAT */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
+echo -n "checking for a strlcpy() function..."
+echo "checking for a strlcpy() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strlcpy(NULL, NULL, 0);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_STRLCPY" >> engine/mcconfig.h
+echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> engine/mcconfig.h
+echo "#endif /* HAVE_STRLCPY */" >> engine/mcconfig.h
 
 	echo "yes"
 else
