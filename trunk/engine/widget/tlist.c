@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.1 2002/09/06 01:27:34 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.2 2002/09/06 08:27:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -108,6 +108,8 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	event_new(tl, "window-mousemotion", 0, tlist_mouse_motion, NULL);
 	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button, NULL);
 	event_new(tl, "window-keydown", 0, tlist_keydown, NULL);
+	
+	scrollbar_init(&tl->vbar, -1, -1, SCROLLBAR_VERTICAL);
 }
 
 void

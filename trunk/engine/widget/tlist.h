@@ -1,5 +1,7 @@
-/*	$Csoft: tlist.h,v 1.1 2002/09/06 01:27:34 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.2 2002/09/06 08:27:33 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/widget/scrollbar.h>
 
 struct tlist_item {
 	SDL_Surface	*icon;		/* Icon */
@@ -15,6 +17,8 @@ struct tlist_item {
 
 struct tlist {
 	struct widget wid;
+	
+	struct scrollbar vbar;	/* Vertical scrollbar */
 
 	int	 flags;
 #define TLIST_DROPDOWN	0x01	/* Drop-down menu */
@@ -29,9 +33,10 @@ struct tlist {
 		int	sel;
 	} offs;
 
-	struct {
+	struct {	/* XXX */
 		void	(*update)(struct tlist *);	/* Before redraw */
 	} ops;
+
 
 	TAILQ_HEAD(, tlist_item) items;
 	int			 nitems;
