@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.16 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.17 2004/01/23 04:02:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,9 +29,7 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/config.h>
-
 #include <engine/mapedit/mapedit.h>
-
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
 
@@ -39,6 +37,8 @@
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #endif
+
+#include <string.h>
 
 enum {
 	NANIMS_INIT =	1,

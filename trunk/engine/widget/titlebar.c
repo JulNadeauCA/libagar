@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.9 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.10 2004/01/22 09:58:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -32,6 +32,8 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
+#include <string.h>
+
 #include "titlebar.h"
 
 const struct widget_ops titlebar_ops = {
@@ -63,7 +65,7 @@ titlebar_new(void *parent, int flags)
 	struct titlebar *tbar;
 
 #ifdef DEBUG
-	if (!OBJECT_TYPE(parent, "window"))
+	if (strcmp(OBJECT(parent)->type, "window") != 0)
 		fatal("titlebars only attach to windows");
 #endif
 
