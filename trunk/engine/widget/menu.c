@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.7 2004/11/30 11:36:10 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.8 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -260,9 +260,15 @@ init_menuitem(struct AGMenuItem *mi, const char *text, SDL_Surface *icon,
 	mi->text = text;
 	mi->label = (text != NULL) ?
 	    widget_map_surface(m, text_render(NULL, -1, 0, text)) : -1;
-	mi->icon = (icon != NULL) ?
-	    widget_map_surface(m,
-	    view_scale_surface(icon, m->itemh-1, m->itemh-1)) : -1;
+
+	if (icon != NULL) {
+		SDL_Surface *sicon = NULL;
+
+		view_scale_surface(icon, m->itemh-1, m->itemh-1, &sicon);
+		mi->icon = widget_map_surface(m, sicon);
+	} else {
+		mi->icon = -1;
+	}
 	mi->key_equiv = key_equiv;
 	mi->key_mod = key_mod;
 	mi->subitems = NULL;

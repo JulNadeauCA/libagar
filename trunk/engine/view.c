@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.159 2004/10/27 11:06:29 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.160 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -450,21 +450,25 @@ grow_surface(SDL_Surface *ss, SDL_Surface *ds)
  * Allocate a new surface containing a pixmap of ss scaled to wxh.
  * The source surface must not be locked by the calling thread.
  */
-SDL_Surface *
-view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
+void
+view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 {
-	SDL_Surface *ds;
 	Uint8 r1, g1, b1, a1;
 	int x, y;
 
-	ds = SDL_CreateRGBSurface(ss->flags, w, h, ss->format->BitsPerPixel,
-	    ss->format->Rmask, ss->format->Gmask, ss->format->Bmask,
-	    ss->format->Amask);
-	if (ds == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	if (*ds == NULL) {
+		*ds = SDL_CreateRGBSurface(ss->flags, w, h,
+		    ss->format->BitsPerPixel,
+		    ss->format->Rmask,
+		    ss->format->Gmask,
+		    ss->format->Bmask,
+		    ss->format->Amask);
+		if (*ds == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
+		(*ds)->format->alpha = ss->format->alpha;
+		(*ds)->format->colorkey = ss->format->colorkey;
 	}
-	ds->format->alpha = ss->format->alpha;
-	ds->format->colorkey = ss->format->colorkey;
 
 	if (ss->w == w && ss->h == h) {
 		Uint32 saflags = ss->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
@@ -474,31 +478,32 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 
 		SDL_SetAlpha(ss, 0, 0);
 		SDL_SetColorKey(ss, 0, 0);
-		SDL_BlitSurface(ss, NULL, ds, NULL);
+		SDL_BlitSurface(ss, NULL, *ds, NULL);
 		SDL_SetAlpha(ss, saflags, salpha);
 		SDL_SetColorKey(ss, sckflags, sckey);
-		return (ds);
+		return;
 	}
 
 	if (SDL_MUSTLOCK(ss))
 		SDL_LockSurface(ss);
-	if (SDL_MUSTLOCK(ds))
-		SDL_LockSurface(ds);
+	if (SDL_MUSTLOCK((*ds)))
+		SDL_LockSurface(*ds);
 
+#if 0
 	/* Use an incremental algorithm if ds > ss in size. */
-	if (ds->h > ss->h && ds->w > ss->w) {
-		grow_surface(ss, ds);
+	if ((*ds)->h > ss->h && (*ds)->w > ss->w) {
+		grow_surface(ss, *ds);
 		goto out;
 	}
-	
+#endif	
 	/* Otherwise revert to the brute-force algorithm. */
-	for (y = 0; y < ds->h; y++) {
-		for (x = 0; x < ds->w; x++) {
+	for (y = 0; y < (*ds)->h; y++) {
+		for (x = 0; x < (*ds)->w; x++) {
 			Uint8 *src = (Uint8 *)ss->pixels +
-			    (y*ss->h/ds->h)*ss->pitch +
-			    (x*ss->w/ds->w)*ss->format->BytesPerPixel;
-			Uint8 *dst = (Uint8 *)ds->pixels +
-			    y*ds->pitch + x*ds->format->BytesPerPixel;
+			    (y*ss->h/(*ds)->h)*ss->pitch +
+			    (x*ss->w/(*ds)->w)*ss->format->BytesPerPixel;
+			Uint8 *dst = (Uint8 *)(*ds)->pixels +
+			    y*(*ds)->pitch + x*(*ds)->format->BytesPerPixel;
 			Uint32 color;
 
 			switch (ss->format->BytesPerPixel) {
@@ -517,8 +522,8 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 				break;
 			}
 
-			color = SDL_MapRGBA(ds->format, r1, g1, b1, a1);
-			switch (ds->format->BytesPerPixel) {
+			color = SDL_MapRGBA((*ds)->format, r1, g1, b1, a1);
+			switch ((*ds)->format->BytesPerPixel) {
 			case 4:
 				*(Uint32 *)dst = color;
 				break;
@@ -543,11 +548,10 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 		}
 	}
 out:
-	if (SDL_MUSTLOCK(ds))
-		SDL_UnlockSurface(ds);
+	if (SDL_MUSTLOCK((*ds)))
+		SDL_UnlockSurface(*ds);
 	if (SDL_MUSTLOCK(ss))
 		SDL_UnlockSurface(ss);
-	return (ds);
 }
 
 /* Set the alpha value of all pixels in a surface where a != 0. */
