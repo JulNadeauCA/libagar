@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Csoft: mkconcurrent.pl,v 1.14 2003/07/27 16:33:56 vedge Exp $
+# $Csoft: mkconcurrent.pl,v 1.15 2003/08/12 23:19:21 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -75,7 +75,7 @@ sub ConvertMakefile
 		my @srcs = ();
 		my @objs = ();
 
-		if (/^\s*(SRCS|CATMAN\d|PSMAN\d|MOS)\s*=\s*(.+)$/) {
+		if (/^\s*(SRCS|MAN\d|MOS)\s*=\s*(.+)$/) {
 			my $type = $1;
 
 			foreach my $src (split(/\s/, $2)) {
@@ -86,10 +86,9 @@ sub ConvertMakefile
 
 				if ($type eq 'SRCS') {
 					$obj =~ s/\.c$/\.o/;
-				} elsif ($type =~ /CATMAN\d/) {
-					$src =~ s/\.cat(\d)$/.\1/;
-				} elsif ($type =~ /PSMAN\d/) {
-					$src =~ s/\.ps(\d)$/.\1/;
+				} elsif ($type =~ /MAN(\d)/) {
+					my $section = $1;
+					$obj =~ s/\.cat(\d)$/.\1/;
 				} elsif ($type =~ /MOS/) {
 					$src =~ s/\.mo$/\.po/g;
 				}
