@@ -34,6 +34,8 @@
 #include "command.h"
 #include "mouse.h"
 
+static void	mouse_tlsel(struct mapedit *, Uint32);
+
 /*
  * Map editor mouse motion handler.
  * Must be called on a locked map.
@@ -44,6 +46,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	static Uint32 ommapx, ommapy, omtmapy;
 	struct map *m = med->map;
 	Uint32 mx, my;
+	Uint8 ms;
 
 	ommapx = med->mmapx;
 	ommapy = med->mmapy;
@@ -60,26 +63,30 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 		return;
 	}
 
-	/* Tile stack. No functionality. */
+	ms = SDL_GetMouseState(NULL, NULL);
+
+	/*
+	 * Tile stack. No functionality.
+	 */
 	if (med->mmapx == 0) {
 		return;
 	}
-	/* Object list. Allow selection/scrolling. */
+
+	/*
+	 * Object list. Allow selection/scrolling.
+	 */
 	if (med->mmapy == 0) {
-		if (SDL_GetMouseState(NULL, NULL) &
-		   (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
+		if (ms & (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
 			/* XXX */
 		}
 		return;
 	}
 
-	/* Tile list. Allow selection/scrolling. */
-	if (med->mmapx > m->view->mapw) {
-		static Uint8 ms;
-
-		ms = SDL_GetMouseState(NULL, NULL);
-		
-		if (ms & (SDL_BUTTON_LMASK)) {
+	/*
+	 * Tile list. Allow selection/scrolling.
+	 */
+	if (med->mmapx > m->view->mapw && med->mtmapy < m->view->maph + 1) {
+		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
 			/* Scroll */
 			if (med->mtmapy > omtmapy &&	/* Down */
 			    --med->tilelist_offs < 0) {
@@ -92,53 +99,44 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 			mapedit_tilelist(med);
 		} else if (ms & (SDL_BUTTON_RMASK)) {
 			/* Select */
-			if (med->mtmapy < m->view->maph + 1) {
-				med->curoffs = med->tilelist_offs +
-				    (med->mtmapy-1);
-				if (med->curoffs < 0) {
-					/* Wrap */
-					med->curoffs += med->curobj->nrefs;
-				}
-				mapedit_tilelist(med);
-			}
+			mouse_tlsel(med, med->mtmapy);
 		}
-		return;
-	}
-	/* Don't exceed view boundaries. */
-	if (med->mmapy > m->view->maph) {
 		return;
 	}
 
-	/* XXX prefs */
-	if (SDL_GetMouseState(NULL, NULL) &
-	   (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
-	   	if (med->cursor_dir.current == 0) {
+	/*
+	 * Map view. Node operations.
+	 */
+	if (med->mmapy < m->view->maph && med->mmapy < m->view->mapy) {
+		if (ms & SDL_BUTTON_MMASK) {
+			/* Move */
 			mapedit_move(med, mx, my);
-			mapedit_sticky(med);
-			m->redraw++;
-		}
-	}
-	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_RMASK) {
-		mapedit_push(med, &m->map[mx][my], med->curoffs, med->curflags);
-		m->redraw++;
-	}
-	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
-		if (ommapx < med->mmapx) {
-			if (m->view->mapx > 0) {
-				scroll(m, DIR_LEFT);
+			med->map->redraw++;
+		} else if (ms & SDL_BUTTON_RMASK) {
+			/* Add/move */
+			mapedit_push(med, &m->map[mx][my], med->curoffs,
+			    med->curflags);
+			mapedit_move(med, mx, my);
+			med->map->redraw++;
+		} else if (ms & SDL_BUTTON_LMASK) {
+			/* Move cursor */
+			if (ommapx < med->mmapx) {
+				if (m->view->mapx > 0) {
+					scroll(m, DIR_LEFT);
+				}
+			} else if (med->mmapx < ommapx) {
+				if (m->view->mapx + m->view->mapw < m->mapw) {
+					scroll(m, DIR_RIGHT);
+				}
 			}
-		} else if (med->mmapx < ommapx) {
-			if (m->view->mapx + m->view->mapw < m->mapw) {
-				scroll(m, DIR_RIGHT);
-			}
-		}
-		if (ommapy < med->mmapy) {
-			if (m->view->mapy > 0) {
-				scroll(m, DIR_UP);
-			}
-		} else if (med->mmapy < ommapy) {
-			if (m->view->mapy + m->view->maph < m->maph) {
-				scroll(m, DIR_DOWN);
+			if (ommapy < med->mmapy) {
+				if (m->view->mapy > 0) {
+					scroll(m, DIR_UP);
+				}
+			} else if (med->mmapy < ommapy) {
+				if (m->view->mapy + m->view->maph < m->maph) {
+					scroll(m, DIR_DOWN);
+				}
 			}
 		}
 	}
@@ -162,25 +160,22 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	vy = (ev->button.y / m->tileh);
 	mx = (m->view->mapx + vx) - 1;
 	my = (m->view->mapy + vy) - 1;
-	
-	if (vx > m->view->mapw && vy < m->view->maph - 1) {
-		/* XXX pref */
+
+	if (vx > m->view->mapw && vy <= m->view->maph) {
+		/*
+		 * Tile list
+		 */
 		switch (ev->button.button) {
 		case 2:
 		case 3:
-			med->curoffs = med->tilelist_offs + vy - 1;
-			if (med->curoffs < 0) {
-				/* Wrap */
-				med->curoffs += med->curobj->nrefs;
-			}
+			mouse_tlsel(med, vy);
 			mapedit_tilelist(med);
 			break;
 		}
-	}
-
-	if ((mx > 1 && my > 1) &&
-	    (mx < m->mapw && my < m->maph)) {
-	    	/* XXX prefs */
+	} else if ((mx > 1 && my > 1) && (mx < m->mapw && my < m->maph)) {
+		/*
+		 * Map view
+		 */
 	    	switch (ev->button.button) {
 		case 2:
 			mapedit_move(med, mx, my);
@@ -188,11 +183,25 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 			m->redraw++;
 			break;
 		case 3:
+			mapedit_move(med, mx, my);
 			mapedit_push(med, &m->map[mx][my], med->curoffs,
 			    med->curflags);
 			m->redraw++;
 			break;
 		}
+	}
+}
+
+/* Select a node on the tile list. */
+static void
+mouse_tlsel(struct mapedit *med, Uint32 vy)
+{
+	med->curoffs = med->tilelist_offs + (vy - 1);
+	if (med->curoffs < 0) {
+		/* Wrap */
+		med->curoffs += med->tilelist_offs + med->curobj->nrefs;
+	} else if (med->curoffs >= med->curobj->nrefs) {
+		med->curoffs -= med->curobj->nrefs;
 	}
 }
 
