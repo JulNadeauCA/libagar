@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.84 2002/11/26 01:38:28 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.85 2002/11/26 01:39:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -154,8 +154,8 @@ view_init(gfx_engine_t ge)
 		 */
 		v->rootmap->maprects = rootmap_alloc_maprects(mw, mh);
 
-		dprintf("tile-based mode: %dx%d rectangles (%d Kb)\n",
-		    mw, mh, (mw*mh * sizeof(SDL_Rect)) / 1024);
+		dprintf("tile-based mode: %dx%d rectangles (%ld Kb)\n",
+		    mw, mh, (long)(mw*mh * sizeof(SDL_Rect)) / 1024);
 		break;
 	case GFX_ENGINE_GUI:
 		dprintf("gui mode\n");
