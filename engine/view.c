@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.68 2002/09/13 11:08:29 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.69 2002/09/17 16:56:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -168,11 +168,38 @@ view_init(gfx_engine_t ge)
 	view = v;
 }
 
+/*
+ * Process all windows on the detach queue. This is executed after
+ * window list traversal by the event loop.
+ *
+ * View must be locked. The detach queue must not be empty.
+ */
+void
+view_detach_queued(void)
+{
+	struct window *win, *nwin;
+
+	for (win = TAILQ_FIRST(&view->detach);
+	     win != TAILQ_END(&view->detach);
+	     win = nwin) {
+		nwin = TAILQ_NEXT(win, detach);
+
+		dprintf("detaching %s\n", OBJECT(win)->name);
+
+		window_hide(win);
+		event_post(win, "detached", "%p", view);
+		window_destroy(win);
+	}
+	TAILQ_INIT(&view->detach);
+}
+
 void
 view_destroy(void *p)
 {
 	struct viewport *v = p;
 	struct window *win;
+	
+	pthread_mutex_lock(&v->lock);
 
 	TAILQ_FOREACH(win, &v->windowsh, windows) {
 		view_detach(win);
@@ -184,43 +211,45 @@ view_destroy(void *p)
 		free(v->rootmap->rects);
 	}
 
+	pthread_mutex_unlock(&v->lock);
 	pthread_mutexattr_destroy(&v->lockattr);
 	pthread_mutex_destroy(&v->lock);
 }
 
-/*
- * Attach a window to a view.
- * View must be locked.
- */
+/* Attach a window to a view. */
 void
 view_attach(void *child)
 {
 	struct window *win = child;
+	
+	pthread_mutex_lock(&view->lock);
 
 	view->focus_win = NULL;
 
 	OBJECT_ASSERT(child, "window");
 	event_post(child, "attached", "%p", view);
 	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+	
+	pthread_mutex_unlock(&view->lock);
 }
 
-/*
- * Detach a window from a view.
- * View must be locked.
- */
+/* Detach a window from a view. */
 void
 view_detach(void *child)
 {
 	struct window *win = child;
-
+	
 	OBJECT_ASSERT(child, "window");
-	event_post(child, "detached", "%p", view);
-	TAILQ_REMOVE(&view->windowsh, win, windows);
 
-	if (win->flags & WINDOW_SAVE_POSITION) {
-		object_save(win);
-	}
-	object_destroy(win);
+	/*
+	 * Detach later. This allows windows detach themselves once
+	 * event loop traversal is complete.
+	 * TODO fancier gc
+	 */
+	pthread_mutex_lock(&view->lock);
+	TAILQ_INSERT_HEAD(&view->detach, win, detach);
+	pthread_mutex_unlock(&view->lock);
+
 }
 
 SDL_Surface *

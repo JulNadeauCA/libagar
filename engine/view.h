@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.43 2002/09/09 08:09:38 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.44 2002/09/13 11:08:29 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -35,6 +35,7 @@ struct viewmap {
 };
 
 TAILQ_HEAD(windowq, window);
+TAILQ_HEAD(windowdetachq, window);
 
 struct viewport {
 	struct	object obj;
@@ -49,7 +50,9 @@ struct viewport {
 	} margin;
 
 	/* Read-write, thread-safe */
-	struct	windowq windowsh;	/* Hidden/shown windows */
+	struct	windowq windowsh;	/* Windows in view */
+	struct	windowdetachq detach;	/* Windows to free */
+
 	struct	window *focus_win;	/* Give focus to this window */
 	struct	window *wop_win;	/* Window operations */
 	enum {
@@ -173,6 +176,7 @@ extern struct viewport *view;	/* view.c */
 void	 view_init(gfx_engine_t);
 void	 view_attach(void *);
 void	 view_detach(void *);
+void	 view_detach_queued(void);
 void	 view_destroy(void *);
 
 SDL_Surface	*view_surface(int, int, int);
