@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.32 2004/08/06 04:50:58 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.33 2004/09/18 06:19:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/menu.h>
 #include <engine/mapedit/mapview.h>
 #include <engine/mapedit/tool.h>
 #endif
@@ -1546,7 +1547,7 @@ init_grid_tool(struct tool *t)
 	tool_bind_key(t, KMOD_CTRL, SDLK_MINUS, contract_grid, 0);
 }
 
-const struct tool vg_scale_tool = {
+struct tool vg_scale_tool = {
 	N_("Scale drawing"),
 	N_("Zoom in and out on the drawing."),
 	MAGNIFIER_TOOL_ICON,
@@ -1564,7 +1565,7 @@ const struct tool vg_scale_tool = {
 	NULL			/* keyup */
 };
 
-const struct tool vg_grid_tool = {
+struct tool vg_grid_tool = {
 	N_("Grid"),
 	N_("Toggle the grid."),
 	SNAP_GRID_ICON,
@@ -1581,4 +1582,50 @@ const struct tool vg_grid_tool = {
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };
+#endif /* EDITION */
+
+#ifdef EDITION
+static void
+select_tool(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+	struct tool *tool = argv[2].p;
+	struct mapview *mv = argv[3].p;
+
+	mapview_select_tool(mv, tool, vg);
+	widget_focus(mv);
+}
+
+static void
+show_blocks(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+	struct window *win;
+
+	win = vg_block_editor(vg);
+	window_show(win);
+}
+
+void
+vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
+    struct mapview *mv)
+{
+	extern struct tool vg_origin_tool;
+	extern struct tool vg_line_tool;
+	extern struct tool vg_circle_tool;
+	extern struct tool vg_text_tool;
+	struct AGMenuItem *subitem;
+	
+	subitem = ag_menu_add_subitem(pitem, _("Show blocks"),
+	    ICON(VGBLOCK_ICON), 0, 0, show_blocks, "%p", vg);
+
+	ag_menu_add_subitem(pitem, _("Move origin"), ICON(vg_origin_tool.icon),
+	    0, 0, select_tool, "%p,%p,%p", vg, &vg_origin_tool, mv);
+	ag_menu_add_subitem(pitem, _("Line strip"), ICON(vg_line_tool.icon),
+	    0, 0, select_tool, "%p,%p,%p", vg, &vg_line_tool, mv);
+	ag_menu_add_subitem(pitem, _("Circle"), ICON(vg_circle_tool.icon),
+	    0, 0, select_tool, "%p,%p,%p", vg, &vg_circle_tool, mv);
+	ag_menu_add_subitem(pitem, _("Text"), ICON(vg_text_tool.icon),
+	    0, 0, select_tool, "%p,%p,%p", vg, &vg_text_tool, mv);
+}
 #endif /* EDITION */

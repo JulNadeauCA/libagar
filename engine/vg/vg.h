@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.19 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.20 2004/06/22 05:34:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -272,11 +272,16 @@ struct vg_vertex  *vg_vertex3(struct vg *, double, double, double);
 struct vg_vertex  *vg_vertex4(struct vg *, double, double, double, double);
 void		   vg_vertex_array(struct vg *, const struct vg_vertex *,
 		                   unsigned int);
-
 #ifdef EDITION
+struct AGMenu;
+struct AGMenuItem;
+struct mapview;
+
 void		   vg_geo_changed(int, union evarg *);
 void		   vg_changed(int, union evarg *);
 struct combo	  *vg_layer_selector(void *, struct vg *);
+void		   vg_reg_menu(struct AGMenu *, struct AGMenuItem *,
+		               struct vg *, struct mapview *);
 #endif
 __END_DECLS
 

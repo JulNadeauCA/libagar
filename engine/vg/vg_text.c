@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.9 2004/05/28 22:31:58 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.10 2004/05/29 05:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -505,7 +505,7 @@ finish:
 	tool_pop_status(t);
 }
 
-const struct tool vg_text_tool = {
+struct tool vg_text_tool = {
 	N_("Text"),
 	N_("Insert text labels."),
 	VGTEXT_ICON,
