@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.179 2003/04/26 06:02:19 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.180 2003/04/29 01:31:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -178,10 +178,14 @@ window_init_icons(struct window *win)
 {
 	int i;
 
-	i = text_font_height(font) + win->borderw;
+	dprintf("initing icons\n");
+
+	i = win->titleh - win->borderw;
 	close_icon = view_scale_surface(SPRITE(win, 0), i, i);
 	hidden_body_icon = view_scale_surface(SPRITE(win, 1), i, i);
 	hide_body_icon = view_scale_surface(SPRITE(win, 2), i, i);
+	
+	icons_inited = 1;
 }
 
 void
@@ -211,14 +215,6 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	object_init(OBJECT(win), "window", wname, 0, &window_ops);
 	if (object_load_art(win, "window", 1) == -1)
 		fatal("window: %s", error_get());
-	
-	/* Prescale the titlebar icons. */
-	pthread_mutex_lock(&window_lock);
-	if (!icons_inited) {
-		window_init_icons(win);
-		icons_inited = 1;
-	}
-	pthread_mutex_unlock(&window_lock);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
 	    "background",
@@ -296,6 +292,12 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 	TAILQ_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, &recursive_mutexattr);
+	
+	/* Prescale the titlebar icons. */
+	pthread_mutex_lock(&window_lock);
+	if (!icons_inited)
+		window_init_icons(win);
+	pthread_mutex_unlock(&window_lock);
 }
 
 /*
