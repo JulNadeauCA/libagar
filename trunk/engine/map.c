@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.58 2002/03/15 07:33:22 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.59 2002/03/15 07:37:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -599,21 +599,13 @@ node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
 int
 map_load(void *ob, int fd)
 {
-	char magic[9];
 	struct map *m = (struct map *)ob;
-	Uint32 vermin, vermaj;
+	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
-
-	/* Verify the signature and version major. */
-	if (read(fd, magic, 10) != 10)
-		goto badmagic;
-	if (strncmp(magic, MAP_MAGIC, 10) != 0)
-		goto badmagic;
-	vermaj = fobj_read_uint32(fd);
-	vermin = fobj_read_uint32(fd);
-	if (vermaj > MAP_VERMAJ ||
-	    (vermaj == MAP_VERMAJ && vermin > MAP_VERMIN))
-		goto badver;
+	
+	if (version_read(fd, "agar map", 1, 10) != 0) {
+		return (-1);
+	}
 
 	m->flags = fobj_read_uint32(fd);
 	m->mapw  = fobj_read_uint32(fd);
@@ -624,7 +616,7 @@ map_load(void *ob, int fd)
 	m->tileh = fobj_read_uint32(fd);
 
 	nobjs = fobj_read_uint32(fd);
-	dprintf("%d objects on map\n", nobjs);
+	pobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
 	for (i = 0; i < nobjs; i++) {
 		char *s;
 		struct object *pob;
@@ -633,6 +625,7 @@ map_load(void *ob, int fd)
 		fobj_read_uint32(fd);		/* Unused */
 		pob = object_strfind(s);
 
+		pobjs[i] = pob;
 		if (pob != NULL) {
 			dprintf("%s uses: %s\n", OBJECT(m)->name, pob->name);
 		} else {
@@ -660,14 +653,13 @@ map_load(void *ob, int fd)
 			for (i = 0; i < nnrefs; i++) {
 				struct object *pobj;
 				struct noderef *nref;
-				char *pobjstr;
-				Uint32 offs, frame, flags;
+				Uint32 obji, offs, frame, flags;
 
-				pobjstr = fobj_read_string(fd);
+				obji = fobj_read_uint32(fd);
+				pobj = pobjs[obji];
 				offs = fobj_read_uint32(fd);
 				frame = fobj_read_uint32(fd);
 				flags = fobj_read_uint32(fd);
-				pobj = object_strfind(pobjstr);
 
 				if (pobj != NULL) {
 					nref = node_addref(node, pobj, offs,
@@ -677,23 +669,14 @@ map_load(void *ob, int fd)
 					refs++;
 				} else {
 					dprintf("at %dx%d:[%d]\n", x, y, i);
-					fatal("no match for \"%s\"\n",
-					    pobjstr);
+					fatal("nothing at index %d\n", obji);
 				}
-				free(pobjstr);
-
 			}
 		}
 	}
-	
+
+	free(pobjs);
 	return (0);
-badver:
-	fatal("map version %d.%d > %d.%d\n", vermaj, vermin,
-	    MAP_VERMAJ, MAP_VERMIN);
-	return (-1);
-badmagic:
-	fatal("bad magic\n");
-	return (-1);
 }
 
 /*
@@ -712,9 +695,7 @@ map_save(void *ob, int fd)
 
 	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
 
-	fobj_bwrite(buf, MAP_MAGIC, 10);
-	fobj_bwrite_uint32(buf, MAP_VERMAJ);
-	fobj_bwrite_uint32(buf, MAP_VERMIN);
+	version_write(fd, "agar map", 1, 10);
 
 	fobj_bwrite_uint32(buf, m->flags);
 	fobj_bwrite_uint32(buf, m->mapw);
@@ -728,13 +709,14 @@ map_save(void *ob, int fd)
 	fobj_bwrite_uint32(buf, 0);
 
 	pthread_mutex_lock(&world->lock);
+	/* XXX ugly */
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
 		solen += sizeof(struct object *);
 	}
-
 	pobjs = (struct object **)emalloc(solen);
-	
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+		if ((pob->flags & OBJ_EDITABLE) == 0)
+			continue;
 		fobj_bwrite_string(buf, pob->name);
 		fobj_bwrite_uint32(buf, 0);
 		pobjs[nobjs++] = pob;
@@ -757,8 +739,14 @@ map_save(void *ob, int fd)
 
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref != NULL && nref->flags & MAPREF_SAVE) {
-					fobj_bwrite_string(buf,
-					    nref->pobj->name);
+					Uint32 i, fi = 0;
+
+					for (i = 0; i < nobjs; i++) {
+						if (pobjs[i] == nref->pobj) {
+							fi = i;
+						}
+					}
+					fobj_bwrite_uint32(buf, fi);
 					fobj_bwrite_uint32(buf, nref->offs);
 					fobj_bwrite_uint32(buf, nref->frame);
 					fobj_bwrite_uint32(buf, nref->flags);
@@ -775,6 +763,8 @@ map_save(void *ob, int fd)
 
 	fobj_flush_buf(buf, fd);
 	dprintf("%s: %dx%d, %d refs\n", m->obj.name, m->mapw, m->maph, totrefs);
+
+	free(pobjs);
 
 	return (0);
 }
