@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.89 2003/01/16 04:06:32 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.90 2003/02/04 02:22:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -183,7 +183,9 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	if (flags & ENGINE_INIT_INPUT) {
 		input_new(INPUT_KEYBOARD, 0);
 		input_new(INPUT_MOUSE, 0);
-		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+
+		if (prop_get_bool(config, "input.joysticks") &&
+		    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
 			int i, njoys;
 
 			njoys = SDL_NumJoysticks();
