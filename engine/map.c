@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.84 2002/05/11 05:55:00 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.85 2002/05/13 06:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -868,9 +868,8 @@ map_verify_loop(void *arg)
 {
 	struct map *m = arg;
 	int x = 0, y;
-	
-	dprintf("%p: testing %s\n", pthread_self(),
-	    OBJECT(m)->name);
+
+	dprintf("checking %s\n", OBJECT(m)->name);
 
 	for (;;) {
 		pthread_mutex_lock(&m->lock);
