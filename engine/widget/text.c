@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.96 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.97 2005/01/17 02:20:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -462,7 +462,7 @@ text_prompt_float(double *fp, double min, double max, const char *unit,
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(WINDOW_NO_VRESIZE, NULL);
+	win = window_new(WINDOW_MODAL|WINDOW_NO_VRESIZE, NULL);
 	window_set_caption(win, "%s", _("Enter real number"));
 	window_set_position(win, WINDOW_CENTER, 1);
 
@@ -501,7 +501,7 @@ text_prompt_string(char **sp, size_t len, const char *msgfmt, ...)
 	vsnprintf(msg, sizeof(msg), msgfmt, args);
 	va_end(args);
 
-	win = window_new(WINDOW_NO_VRESIZE, NULL);
+	win = window_new(WINDOW_MODAL|WINDOW_NO_VRESIZE, NULL);
 	window_set_caption(win, "%s", _("Enter string"));
 	window_set_position(win, WINDOW_CENTER, 1);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.7 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.8 2005/01/23 11:51:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -107,8 +107,9 @@ mousemotion(int argc, union evarg *argv)
 
 	if (my < 0)
 		return;
-	if (mx < 0)
+	if (mx < 0) {
 		goto selnone;
+	}
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		struct AGMenuItem *subitem = &pitem->subitems[i];
@@ -127,8 +128,9 @@ mousemotion(int argc, union evarg *argv)
 	}
 selnone:
 	if (pitem->sel_subitem != NULL &&
-	    pitem->sel_subitem->nsubitems == 0)
+	    pitem->sel_subitem->nsubitems == 0) {
 		select_subitem(pitem, NULL);
+	}
 }
 
 static int
@@ -288,7 +290,8 @@ ag_menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 	mview->pitem = pitem;
 	mview->hspace = 5;
 	mview->vpadding = 4;
-	
+
+	/* XXX */
 	widget_map_surface(mview, view_copy_surface(SPRITE(mview,3)));
 	
 	widget_inherit_color(mview, UNZEL_COLOR, "unzelected", pmenu);

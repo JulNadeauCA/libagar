@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.2 2004/09/29 05:49:33 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.3 2004/11/30 11:36:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -72,9 +72,9 @@ void	 	   ag_menu_destroy(void *);
 struct AGMenuItem *ag_menu_add_item(struct AGMenu *, const char *);
 void		   ag_menu_free_items(struct AGMenu *);
 void		   ag_menu_free_subitems(struct AGMenuItem *);
-void   		   ag_menu_collapse(struct AGMenu *, struct AGMenuItem *);
-void		   ag_menu_expand(struct AGMenu *, struct AGMenuItem *, int,
-		                  int);
+
+struct window *ag_menu_expand(struct AGMenu *, struct AGMenuItem *, int, int);
+void   	       ag_menu_collapse(struct AGMenu *, struct AGMenuItem *);
 
 struct AGMenuItem *ag_menu_action(struct AGMenuItem *,
 		                  const char *, SDL_Surface *, SDLKey,
