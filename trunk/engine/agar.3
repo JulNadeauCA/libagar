@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.14 2003/01/20 12:07:13 vedge Exp $
+.\"	$Csoft: agar.3,v 1.15 2003/02/15 06:28:27 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,6 +44,8 @@ engine implements the following interfaces:
 .Bl -tag -width "transform(3)" -compact
 .It config
 Generic engine/game configuration settings.
+.It Xr event 3
+Event processing.
 .It input
 Processing of events from input devices such as keyboards, mice, joysticks
 and network sessions.
@@ -53,6 +55,8 @@ N-layer tile-based levels.
 Level edition.
 .It Xr object 3
 Generic object structure.
+.It perso
+Game characters.
 .It Xr physics 3
 Movement of objects in levels.
 .It Xr prop 3
@@ -71,7 +75,7 @@ Signatures and versioning of data.
 Video display interface.
 .It Xr widget 3
 Widget set framework.
-.It Xr xcf 3
+.It xcf
 Loader for
 .Xr xcf 5
 type image files.
