@@ -1,0 +1,135 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistribution in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 23, 2002
+.Dt VIEW 3
+.Os
+.Sh NAME
+.Nm view
+.Nd agar graphic engine
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/view.h>
+.Ed
+.Sh DESCRIPTION
+The agar
+.Nm
+layer currently implement two graphic engines:
+.Bl -tag -width "GFX_ENGINE_TILEBASED "
+.It GFX_ENGINE_GUI
+The root window is empty.
+Windows are drawn directly to video memory, and can move independently of
+tile granularity.
+.It GFX_ENGINE_TILEBASED
+A single map is shown inside the root window.
+Windows are allowed using a masking scheme, and must move according to
+tile granularity.
+.El
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "void"
+.Fn view_init "gfx_engine_t engine"
+.Pp
+.Ft "void"
+.Fn view_destroy "struct viewport *view"
+.nr nS 0
+.Pp
+The
+.Fn view_init
+function initializes the graphic engine, and accepts the following argument:
+.Bd -literal
+typedef enum {
+	GFX_ENGINE_GUI,
+	GFX_ENGINE_TILEBASED
+} gfx_engine_t;
+.Ed
+.Pp
+The
+.Fn view_init
+function calls
+.Xr SDL_SetVideoMode 3 ,
+.Xr SDL_WM_SetCaption 3
+and
+.Xr SDL_ShowCursor 3 ,
+and allocates a
+.Xr rootmap 3
+structure if
+.Dv GFX_ENGINE_TILEBASED
+is used.
+.Sh WINDOW SYSTEM
+.nr nS 1
+.Ft "void"
+.Fn view_attach "struct window *child"
+.Pp
+.Ft "void"
+.Fn view_detach "struct window *child"
+.Pp
+.Ft "void"
+.Fn view_focus "struct window *window"
+.nr nS 0
+.Pp
+The
+.Fn view_attach
+function attaches the window pointed to by
+.Fa child
+to the view.
+The
+.Fn view_detach
+function detaches the window pointed to by
+.Fa child
+from the view.
+.Pp
+The
+.Fn view_focus
+function places the given
+.Fa window
+at the tail of the window list (so it is drawn last, at the top of
+other windows).
+.Sh VIDEO SURFACES
+.nr nS 1
+.Ft "SDL_Surface *"
+.Fn view_surface "int flags" "int width" "int height"
+.nr nS 0
+.Pp
+The
+.Fn view_surface
+function returns a newly allocated
+.Xr SDL_Surface 3
+structure of the given size, with masks in host byte order.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr rootmap 3 ,
+.Xr window 3 ,
+.Xr SDL_SetVideoMode 3 ,
+.Xr SDL_WM_SetCaption 3 ,
+.Xr SDL_SetCursor 3 ,
+.Xr SDL_CreateRGBSurface 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in AGAR 1.0
