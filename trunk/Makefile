@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.5 2002/01/28 04:21:50 vedge Exp $
+#	$Csoft: Makefile,v 1.6 2002/01/28 05:07:40 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
@@ -15,7 +15,7 @@ Makefile.config config.h: configure
 clean-config: Makefile.config
 	rm -f Makefile.config config.h
 
-configure: configure.in /home/vedge/src/csoft-mk/manuconf.pl
+configure: configure.in
 	cat configure.in |perl /home/vedge/src/csoft-mk/manuconf.pl > configure
 	chmod 755 configure
 
