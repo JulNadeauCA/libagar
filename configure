@@ -46,14 +46,6 @@ S=""
 fi
 echo >Makefile.config
 echo >engine/config.h
-CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused -g -I$S"
-echo CFLAGS=$CFLAGS >> Makefile.config
-SHAREDIR="$PREFIX/share/geggy"
-echo SHAREDIR=$SHAREDIR >> Makefile.config
-SHAREDIR="\"$PREFIX/share/geggy\""
-echo "#ifndef SHAREDIR" >> engine/config.h
-echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
-echo "#endif /* SHAREDIR */" >> engine/config.h
 DEBUG=1
 echo "#ifndef DEBUG" >> engine/config.h
 echo "#define DEBUG $DEBUG" >> engine/config.h
@@ -80,6 +72,16 @@ echo "    --prefix             Installation prefix [/usr/local]"
 echo "    --with-smpeg         Play videos through the smpeg library [yes]"
 echo "    --without-smpeg      "
 exit 1
+fi
+if [ -x "`which which`" ]; then
+GCC=`which gcc`
+else
+GCC=""
+fi
+if [ $GCC != "" ]; then
+GCC=1
+else
+NONE=1
 fi
 if [ -x "`which uname`" ]; then
 UNAME=`uname `
@@ -162,6 +164,18 @@ echo "*** Get it from http://www.libsdl.org/"
 echo "ERROR: SDL >= 1.2.0 is missing"
 exit 1
 fi
+CFLAGS="$CFLAGS -g -I$S"
+echo CFLAGS=$CFLAGS >> Makefile.config
+if [ "$GCC" != "" ]; then
+CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused"
+echo CFLAGS=$CFLAGS >> Makefile.config
+fi
+SHAREDIR="$PREFIX/share/geggy"
+echo SHAREDIR=$SHAREDIR >> Makefile.config
+SHAREDIR="\"$PREFIX/share/geggy\""
+echo "#ifndef SHAREDIR" >> engine/config.h
+echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
+echo "#endif /* SHAREDIR */" >> engine/config.h
 if [ "$WITHOUT_SMPEG" = "" ]; then
 echo -n "checking for x11..."
 if [ -d /usr/X11R6 ]; then
