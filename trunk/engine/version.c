@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.14 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.15 2002/09/16 16:06:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,12 +26,14 @@
  */
 
 #include <sys/types.h>
-#include <pwd.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <libfobj/fobj.h>
 

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.2 2002/09/06 01:25:24 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.3 2002/09/07 04:17:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <unistd.h>
 
 #include <libfobj/fobj.h>
