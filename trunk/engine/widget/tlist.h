@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.29 2003/06/13 02:48:42 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.30 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -11,16 +11,19 @@
 #define TLIST_LABEL_MAX	64
 
 struct tlist_item {
-	SDL_Surface	*icon;			/* Original icon */
-	char		 text[TLIST_LABEL_MAX];	/* Label */
-	size_t		 text_len;		/* Label size (optimization) */
+	int		 selected;		/* Selection flag */
+	SDL_Surface	*label;			/* Label to display */
+	SDL_Surface	*icon;			/* Icon to display */
 	void		*p1;			/* User data */
-	int		 selected;		/* Item selection */
-	int		 vischilds, haschilds;	/* Hack for displaying trees */
-	int		 depth;			/* Depth in tree */
+	char		 text[TLIST_LABEL_MAX];	/* Label text (XXX remove?) */
+
+	Uint8	 depth;				/* Depth in tree */
+	Uint8	 flags;
+#define TLIST_VISIBLE_CHILDREN	0x01		/* Child items visible (tree) */
+#define TLIST_HAS_CHILDREN	0x02		/* Child items exist (tree) */
 
 	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
-	TAILQ_ENTRY(tlist_item) selitems;	/* Hack */
+	TAILQ_ENTRY(tlist_item) selitems;	/* Saved selection hack */
 };
 
 TAILQ_HEAD(tlist_itemq, tlist_item);
@@ -60,10 +63,9 @@ void	 tlist_prescale(struct tlist *, const char *, int);
 void	 tlist_set_item_height(struct tlist *, int);
 void	 tlist_set_item_icon(struct tlist *, struct tlist_item *,
 	                     SDL_Surface *);
-void	 tlist_save_selections(struct tlist *);
 void	 tlist_restore_selections(struct tlist *);
-int	 tlist_visible_childs(struct tlist *, struct tlist_item *);
-void	 tlist_scroll(struct tlist *, int);
+
+__inline__ int	 tlist_visible_childs(struct tlist *, struct tlist_item *);
 
 void			 tlist_remove_item(struct tlist *, struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
