@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.104 2003/04/24 04:53:41 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.105 2003/04/25 23:51:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -77,7 +77,7 @@ enum {
 };
 
 int	mapview_bg = 1;
-int	mapview_bg_moving = 0;
+int	mapview_bg_moving = 1;
 int	mapview_bg_squaresize = 16;
 
 static void	mapview_scaled(int, union evarg *);
@@ -267,7 +267,7 @@ mapview_draw_props(struct mapview *mv, struct node *node,
 	int y = ry - WIDGET_ABSY(mv);
 
 	if (mv->prop_style > 0) {
-		widget_blit(mv, SPRITE(mv, mv->prop_style), x, y);
+		widget_blit(mv, SPRITE(&mapedit, mv->prop_style), x, y);
 	}
 	for (i = 0; i < nsprites; i++) {
 		if ((node->flags & sprites[i].flag) ||
@@ -284,10 +284,6 @@ static __inline__ void
 mapview_draw_tool_cursor(struct mapview *mv)
 {
 	struct tool *curtool = mapedit.curtool;
-	int x = mv->mouse.x;
-	int y = mv->mouse.y;
-
-	mapview_map_coords(mv, &x, &y);
 
 	if (mv->cx != -1 && mv->cy != -1) {
 		SDL_Rect rd;
@@ -547,7 +543,7 @@ mapview_zoom_tick(Uint32 ival, void *p)
 	return (ival);
 }
 
-static void
+static __inline__ void
 mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
 {
 	int max;
@@ -584,6 +580,10 @@ mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
 			}
 		}
 	}
+#if 0
+	if (*mv->ssx > *mv->tilew)	*mv->ssx = *mv->tilew;
+	if (*mv->ssy > *mv->tileh)	*mv->ssy = *mv->tileh;
+#endif
 }
 
 static void
