@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.18 2003/03/11 01:54:03 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.19 2003/03/11 01:55:19 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -99,6 +99,31 @@ flag enables the use of zoom factors and soft-scroll offsets that are
 independent from the map's, but are not saved with
 .Xr map
 states.
+.Sh SELECTIONS
+.nr nS 1
+.Ft void
+.Fn mapview_set_selection "struct mapview *mv" "int x" "int y" \
+                          "unsigned int w" "unsigned int h"
+.Pp
+.Ft int
+.Fn mapview_get_selection "struct mapview *mv" "int *x" "int *y" \
+                          "unsigned int *w" "unsigned int *h"
+.nr nS 0
+The
+.Fn mapview_set_selection
+function sets the active selection to
+.Fa w
+by
+.Fa h
+nodes at map position
+.Fa x ,
+.Fa y .
+.Fn mapview_set_selection
+also disables any mouse selection in progress.
+.Pp
+The
+.Fn mapview_get_selection
+function returns 1 if there is an active selection.
 .Sh EVENTS
 The
 .Nm
