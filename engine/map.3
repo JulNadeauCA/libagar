@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.9 2002/09/01 08:56:53 vedge Exp $
+.\"	$Csoft: map.3,v 1.10 2002/09/07 04:30:26 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -89,12 +89,6 @@ The
 .Fn map_save
 function saves a map to file descriptor
 .Fa fd .
-The world must be locked, and the map must not be locked by the caller thread
-when
-.Fn map_load
-and
-.Fn map_save
-are called.
 .Pp
 The
 .Fn map_clean
@@ -108,10 +102,6 @@ with the node flags set to
 .Fa nflags
 and the node reference flags set to
 .Fa rflags .
-.Fn map_clean
-must be called when the map
-.Fa m
-is locked.
 .Pp
 The
 .Fn map_allocnodes
@@ -124,10 +114,5 @@ The
 .Fn map_freenodes
 function releases nodes allocated for map
 .Fa map .
-The map must be locked when
-.Fn map_allocnodes
-or
-.Fn map_freenodes
-is called.
 .Sh SEE ALSO
 .Xr agar 3
