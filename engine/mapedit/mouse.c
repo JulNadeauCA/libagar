@@ -39,29 +39,54 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 {
 	static int ommapx, ommapy;
 	struct map *m = med->map;
+	int mx, my;
 
 	ommapx = med->mmapx;
 	ommapy = med->mmapy;
 
-	med->mmapx = ev->motion.x / m->tilew;
-	med->mmapy = ev->motion.y / m->tileh;
-	
-	if (ommapx < med->mmapx) {
-		if (m->view->mapx > 0) {
-			scroll(m, DIR_LEFT);
-		}
-	} else if (med->mmapx < ommapx) {
-		if (m->view->mapx + m->view->mapw < m->mapw) {
-			scroll(m, DIR_RIGHT);
-		}
+	med->mmapx = (ev->motion.x / m->tilew);
+	med->mmapy = (ev->motion.y / m->tileh);
+	mx = (m->view->mapx + med->mmapx) - 1;
+	my = (m->view->mapy + med->mmapy) - 1;
+
+	if (med->x == mx && med->y == my) {
+		/* Nothing to do. */
+		return;
 	}
-	if (ommapy < med->mmapy) {
-		if (m->view->mapy > 0) {
-			scroll(m, DIR_UP);
+
+	/* XXX prefs */
+	if (SDL_GetMouseState(NULL, NULL) &
+	   (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
+		pthread_mutex_lock(&m->lock);
+		mapedit_move(med, mx, my);
+		mapedit_sticky(med);
+		pthread_mutex_unlock(&m->lock);
+		m->redraw++;
+	}
+	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_RMASK) {
+		pthread_mutex_lock(&m->lock);
+		mapedit_push(med, &m->map[mx][my], med->curoffs, med->curflags);
+		pthread_mutex_unlock(&m->lock);
+		m->redraw++;
+	}
+	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
+		if (ommapx < med->mmapx) {
+			if (m->view->mapx > 0) {
+				scroll(m, DIR_LEFT);
+			}
+		} else if (med->mmapx < ommapx) {
+			if (m->view->mapx + m->view->mapw < m->mapw) {
+				scroll(m, DIR_RIGHT);
+			}
 		}
-	} else if (med->mmapy < ommapy) {
-		if (m->view->mapy + m->view->maph < m->maph) {
-			scroll(m, DIR_DOWN);
+		if (ommapy < med->mmapy) {
+			if (m->view->mapy > 0) {
+				scroll(m, DIR_UP);
+			}
+		} else if (med->mmapy < ommapy) {
+			if (m->view->mapy + m->view->maph < m->maph) {
+				scroll(m, DIR_DOWN);
+			}
 		}
 	}
 }
@@ -73,7 +98,6 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	int mx, my;
 
 	pthread_mutex_lock(&m->lock);
-	/* XXX map edition lists */
 	mx = (m->view->mapx + ev->button.x / m->tilew) - 1;
 	my = (m->view->mapy + ev->button.y / m->tileh) - 1;
 	mapedit_move(med, mx, my);

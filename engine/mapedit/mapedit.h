@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.14 2002/02/17 08:16:27 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.15 2002/02/18 01:29:40 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -40,11 +40,8 @@ struct mapedit {
 	struct	object obj;
 	
 	int	flags;	
-#define MAPEDIT_TILELIST	0x01	/* Display tile list window */
-#define MAPEDIT_TILESTACK	0x02	/* Display tile stack window */
-#define MAPEDIT_OBJLIST		0x04	/* Display object list window */
-#define MAPEDIT_DRAWGRID	0x08	/* Draw a grid on the map */
-#define MAPEDIT_DRAWPROPS	0x10	/* Draw a grid on the map */
+#define MAPEDIT_DRAWGRID	0x01	/* Draw a grid on the map */
+#define MAPEDIT_DRAWPROPS	0x02	/* Draw tile properties (slow) */
 
 	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
@@ -106,6 +103,7 @@ void		mapedit_objlist(struct mapedit *);
 void		mapedit_move(struct mapedit *, int, int);
 void		mapedit_predraw(struct map *, int, int, int);
 void		mapedit_postdraw(struct map *, int, int, int);
+void		mapedit_sticky(struct mapedit *);
 
 extern struct mapedit *curmapedit;	/* Controlled map editor */
 
