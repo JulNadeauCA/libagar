@@ -1,23 +1,28 @@
-/*	$Csoft$	*/
+/*	$Csoft: timeout.h,v 1.1 2004/05/10 02:41:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TIMEOUT_H_
 #define _AGAR_TIMEOUT_H_
 #include "begin_code.h"
 
+SLIST_HEAD(timeoutq, timeout);
+
 struct timeout {
 	Uint32 (*fn)(void *p, Uint32 ival, void *arg);
 	void *arg;
+	int running;				/* Callback is executing */
 	Uint32 ticks;				/* Expiry time in SDL ticks */
 	Uint32 ival;				/* Interval in ticks */
 	CIRCLEQ_ENTRY(timeout) timeouts;	/* Priority queue */
+	SLIST_ENTRY(timeout) insq;		/* Insertion queue */
+	SLIST_ENTRY(timeout) remq;		/* Removal queue */
 };
 
 __BEGIN_DECLS
 void		timeout_set(struct timeout *,
 	                    Uint32 (*)(void *, Uint32, void *), void *);
 void		timeout_add(void *, struct timeout *, Uint32);
-int		timeout_running(void *, struct timeout *);
+int		timeout_scheduled(void *, struct timeout *);
 void		timeout_del(void *, struct timeout *);
 __inline__ void timeout_process(Uint32);
 __inline__ void lock_timeout(void *);

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: timeout.c,v 1.1 2004/05/10 02:41:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -31,6 +31,8 @@
 #include "timeout.h"
 
 struct objectq timeout_objq = TAILQ_HEAD_INITIALIZER(timeout_objq);
+struct timeoutq insq = SLIST_HEAD_INITIALIZER(insq);
+struct timeoutq remq = SLIST_HEAD_INITIALIZER(remq);
 pthread_mutex_t timeout_lock;
 
 /* Initialize a timeout structure. */
@@ -40,19 +42,21 @@ timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg)
 	to->fn = fn;
 	to->arg = arg;
 	to->ticks = 0;
+	to->running = 0;
 }
 
 /* Schedule the timeout to occur in dt ticks. */
+/* XXX O(n), use a timing wheel instead */
 void
 timeout_add(void *p, struct timeout *to, Uint32 dt)
 {
 	struct object *ob = p;
 	struct timeout *to2;
 	Uint32 t = SDL_GetTicks()+dt;
+	int was_empty;
 
 	pthread_mutex_lock(&ob->lock);
-	dprintf("%s (%u)\n", ob->name, dt);
-
+	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
 	CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
 		if (dt < to2->ticks) {
 			CIRCLEQ_INSERT_BEFORE(&ob->timeouts, to2, to, timeouts);
@@ -64,20 +68,20 @@ timeout_add(void *p, struct timeout *to, Uint32 dt)
 	}
 	to->ticks = t;
 	to->ival = dt;
-
-	pthread_mutex_lock(&timeout_lock);
-	TAILQ_INSERT_TAIL(&timeout_objq, ob, tobjs);
-	pthread_mutex_unlock(&timeout_lock);
-
+	if (was_empty) {
+		pthread_mutex_lock(&timeout_lock);
+		TAILQ_INSERT_TAIL(&timeout_objq, ob, tobjs);
+		pthread_mutex_unlock(&timeout_lock);
+	}
 	pthread_mutex_unlock(&ob->lock);
 }
 
 /*
- * Return 1 if the given timeout is running.
+ * Return 1 if the given timeout is scheduled.
  * The object and timeout queue must be locked.
  */
 int
-timeout_running(void *p, struct timeout *to)
+timeout_scheduled(void *p, struct timeout *to)
 {
 	struct object *ob = p;
 	struct object *tob;
@@ -92,7 +96,7 @@ timeout_running(void *p, struct timeout *to)
 	return (0);
 }
 
-/* Cancel the given timeout, assuming that it is running. */
+/* Cancel the given timeout, assuming that it exists. */
 void
 timeout_del(void *p, struct timeout *to)
 {
@@ -100,10 +104,11 @@ timeout_del(void *p, struct timeout *to)
 	
 	object_lock(ob);
 	CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-
-	pthread_mutex_lock(&timeout_lock);
-	TAILQ_REMOVE(&timeout_objq, ob, tobjs);
-	pthread_mutex_unlock(&timeout_lock);
+	if (CIRCLEQ_EMPTY(&ob->timeouts)) {
+		pthread_mutex_lock(&timeout_lock);
+		TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+		pthread_mutex_unlock(&timeout_lock);
+	}
 	object_unlock(ob);
 }
 
@@ -135,15 +140,24 @@ timeout_process(Uint32 t)
 	pthread_mutex_lock(&timeout_lock);
 	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
 		object_lock(ob);
-		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
+		/*
+		 * Loop checking whether the first element of the queue has
+		 * expired, until we find an element that has not expired.
+		 */
+pop:
+		if (!CIRCLEQ_EMPTY(&ob->timeouts)) {
+			to = CIRCLEQ_FIRST(&ob->timeouts);
 			if ((int)(to->ticks - t) <= 0) {
+				to->running++;
 				rv = to->fn(ob, to->ival, to->arg);
-				timeout_del(ob, to);
+				to->running = 0;
+				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+				TAILQ_REMOVE(&timeout_objq, ob, tobjs);
 				if (rv >= 0) {
 					to->ival = rv;
-					timeout_add(ob, to, to->ival);
+					timeout_add(ob, to, rv);
 				}
-				break;
+				goto pop;
 			}
 		}
 		object_unlock(ob);
