@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.3 2002/03/05 13:53:51 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.4 2002/03/17 09:14:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -124,9 +124,8 @@ input_time(Uint32 ival, void *p)
 		    opos.input, m, x, y);
 		npos->dir = opos.dir;
 
-		mapdir_postmove(&npos->dir, &x, &y, moved);
-
 		m->redraw++;
+		mapdir_postmove(&npos->dir, &x, &y, moved);
 	}
 	pthread_mutex_unlock(&m->lock);
 
