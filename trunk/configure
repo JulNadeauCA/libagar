@@ -590,7 +590,7 @@ main(int argc, char *argv[])
 
 	error = FT_Init_FreeType(&library);
 	if (error) {
-		return (1);a
+		return (1);
 	}
 	return (0);
 }
@@ -623,7 +623,6 @@ fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 NONE=1
 else
-echo "no"
 echo "The FreeType2 test would not compile."
 exit 1
 fi
