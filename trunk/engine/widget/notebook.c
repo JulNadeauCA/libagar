@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.11 2005/02/18 11:17:41 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.1 2005/03/08 08:39:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -47,12 +47,6 @@ static struct widget_ops notebook_ops = {
 	notebook_scale
 };
 
-enum {
-	BG_COLOR,
-	SEL_COLOR,
-	TEXT_COLOR
-};
-
 #define SPACING 8
 
 struct notebook *
@@ -94,9 +88,6 @@ void
 notebook_init(struct notebook *nb, int flags)
 {
 	widget_init(nb, "notebook", &notebook_ops, 0);
-	widget_map_color(nb, BG_COLOR, "bg", 60, 60, 60, 255);
-	widget_map_color(nb, SEL_COLOR, "sel", 80, 80, 80, 255);
-	widget_map_color(nb, TEXT_COLOR, "text", 250, 250, 250, 255);
 
 	nb->flags = flags;
 	nb->tab_align = NOTEBOOK_TABS_TOP;
@@ -135,7 +126,8 @@ notebook_draw(void *p)
 	primitives.rect_filled(nb,
 	    0, nb->bar_h,
 	    WIDGET(nb)->w,
-	    WIDGET(nb)->h - nb->bar_h, SEL_COLOR);
+	    WIDGET(nb)->h - nb->bar_h,
+	    COLOR(NOTEBOOK_SEL_COLOR));
 
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		box.x = x;
@@ -144,7 +136,9 @@ notebook_draw(void *p)
 		box.h = nb->bar_h - SPACING;
 		primitives.box_chamfered(nb, &box,
 		    nb->sel_tab==tab ? -1 : 1, nb->tab_rad,
-		    nb->sel_tab==tab ? SEL_COLOR : BG_COLOR);
+		    nb->sel_tab==tab ?
+		    COLOR(NOTEBOOK_SEL_COLOR) :
+		    COLOR(NOTEBOOK_BG_COLOR));
 		
 		widget_blit_from(nb, nb, tab->label, NULL, x+SPACING, y+2);
 		x += box.w;
@@ -186,12 +180,6 @@ notebook_scale(void *p, int w, int h)
 }
 
 void
-notebook_set_color(struct notebook *nb, Uint8 r, Uint8 g, Uint8 b)
-{
-	WIDGET(nb)->colors[BG_COLOR] = SDL_MapRGB(vfmt, r, g, b);
-}
-
-void
 notebook_set_tab_alignment(struct notebook *nb, enum notebook_tab_alignment ta)
 {
 	pthread_mutex_lock(&nb->lock);
@@ -207,7 +195,7 @@ notebook_add_tab(struct notebook *nb, const char *label, enum box_type btype)
 	tab = Malloc(sizeof(struct notebook_tab), M_OBJECT);
 	box_init((struct box *)tab, btype, BOX_WFILL|BOX_HFILL);
 	tab->label = widget_map_surface(nb,
-	    text_render(NULL, -1, WIDGET_COLOR(nb,TEXT_COLOR), label));
+	    text_render(NULL, -1, COLOR(NOTEBOOK_TXT_COLOR), label));
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	return (tab);
 }

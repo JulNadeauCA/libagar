@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.10 2005/01/08 03:35:55 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.11 2005/02/18 11:17:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -60,11 +60,6 @@ static struct widget_ops box_ops_visframe = {
 	box_scale
 };
 
-
-enum {
-	FRAME_COLOR
-};
-
 struct box *
 box_new(void *parent, enum box_type type, int flags)
 {
@@ -79,12 +74,8 @@ box_new(void *parent, enum box_type type, int flags)
 void
 box_init(struct box *bo, enum box_type type, int flags)
 {
-	if (flags & BOX_FRAME) {
-		widget_init(bo, "box", &box_ops_visframe, 0);
-		widget_map_color(bo, FRAME_COLOR, "frame", 105, 105, 90, 255);
-	} else {
-		widget_init(bo, "box", &box_ops, 0);
-	}
+	widget_init(bo, "box", (flags & BOX_FRAME) ?
+	    &box_ops_visframe : &box_ops, 0);
 
 	bo->type = type;
 	bo->depth = -1;
@@ -113,7 +104,7 @@ box_draw(void *p)
 	struct box *bo = p;
 
 	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, bo->depth,
-	    FRAME_COLOR);
+	    COLOR(FRAME_COLOR));
 }
 
 void
@@ -344,12 +335,6 @@ box_set_spacing(struct box *bo, int spacing)
 	pthread_mutex_lock(&bo->lock);
 	bo->spacing = spacing;
 	pthread_mutex_unlock(&bo->lock);
-}
-
-void
-box_set_color(struct box *bo, Uint8 r, Uint8 g, Uint8 b)
-{
-	WIDGET(bo)->colors[FRAME_COLOR] = SDL_MapRGB(vfmt, r, g, b);
 }
 
 void

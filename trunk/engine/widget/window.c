@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.244 2005/02/26 06:24:09 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.245 2005/03/05 12:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,52 +58,22 @@ const struct widget_ops window_ops = {
 	window_scale
 };
 
-enum {
-	BGFILL_COLOR,
-	BG_COLOR,
-	HIGHLIGHT_COLOR,
-	BORDER_BASE_COLOR
-};
-
-static const SDL_Color default_border[] = {
-	{ 70, 70, 65, 255 },
-	{ 70, 70, 65, 255 },
-	{ 75, 75, 70, 255 },
-	{ 90, 90, 85, 255 },
-	{ 75, 75, 70, 255 },
-	{ 70, 70, 65, 255 }
-};
-
-static const struct style_colormod default_colormods[] = {
-	{ "button",	"frame",	{ 90, 90, 90, 255 } },
-	{ "button",	"disabled",	{ 106, 106, 106, 255 } },
-	{ "button",	"text",		{ 0, 0, 0, 255 } },
-	{ NULL,		NULL,		{ 0, 0, 0, 0 } }
-};
-
 const struct style default_style = {
 	"default",
 	{
-		default_border, 6,
-		default_border, 6,
-		{ 90, 90, 85, 255 },			/* highlight */
-		{ 236, 236, 236, 255 },			/* bgcolor */
-		NULL,					/* bggradient */
-		NULL,					/* bgtexture */
+		NULL,			/* bggradient */
+		NULL,			/* bgtexture */
 		NOTCH_RESIZE_STYLE
 	},
-	{
-		default_colormods,
-		NULL					/* texmods */
-	},
-	NULL
+	NULL,				/* texmods */
+	NULL				/* misc fn */
 };
 
-static void	window_shown(int, union evarg *);
-static void	window_hidden(int, union evarg *);
-static void	apply_alignment(struct window *);
-static void	move_window(struct window *, SDL_MouseMotionEvent *);
-static void	resize_window(int, struct window *, SDL_MouseMotionEvent *);
+static void shown(int, union evarg *);
+static void hidden(int, union evarg *);
+static void apply_alignment(struct window *);
+static void move_window(struct window *, SDL_MouseMotionEvent *);
+static void resize_window(int, struct window *, SDL_MouseMotionEvent *);
 
 #ifdef DEBUG
 #define DEBUG_STATE		0x01
@@ -190,29 +160,20 @@ window_init(void *p, const char *name, int flags)
 
 	strlcpy(wname, "win-", sizeof(wname));
 	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
-
 	widget_init(win, "window", &window_ops, 0);
 	object_set_type(win, "window");
 	object_set_name(win, wname);
 
-	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
-	widget_map_color(win, BG_COLOR, "background", 0, 0, 0, 255);
-	
 	win->flags = flags;
 	win->visible = 0;
-
-	pthread_mutex_init(&win->lock, &recursive_mutexattr);
 	win->alignment = WINDOW_CENTER;
 	win->spacing = 2;
+	win->xpadding = colors_border_size+4;
+	win->ypadding = colors_border_size+4;
+	win->minw = win->xpadding*2;
+	win->minh = win->ypadding*2 + text_font_height;
 	TAILQ_INIT(&win->subwins);
-	win->h_border = NULL;
-	win->v_border = NULL;
-	win->h_border_w = 0;
-	win->v_border_w = 0;
-	win->xpadding = 0;
-	win->ypadding = 0;
-	win->minw = 0;
-	win->minh = 0;
+	pthread_mutex_init(&win->lock, &recursive_mutexattr);
 	
 	/* Select the default window style. */
 	window_set_style(win, &default_style);
@@ -229,9 +190,9 @@ window_init(void *p, const char *name, int flags)
 	    titlebar_new(win, titlebar_flags);
 
 	/* Automatically notify children of visibility changes. */
-	ev = event_new(win, "widget-shown", window_shown, NULL);
+	ev = event_new(win, "widget-shown", shown, NULL);
 	ev->flags |= EVENT_PROPAGATE;
-	ev = event_new(win, "widget-hidden", window_hidden, NULL);
+	ev = event_new(win, "widget-hidden", hidden, NULL);
 	ev->flags |= EVENT_PROPAGATE;
 	ev = event_new(win, "widget-lostfocus", NULL, NULL);
 	ev->flags |= EVENT_PROPAGATE;
@@ -245,43 +206,7 @@ window_init(void *p, const char *name, int flags)
 void
 window_set_style(struct window *win, const struct style *style)
 {
-	int i;
-
 	WIDGET(win)->style = style;
-	
-	widget_map_color(win, HIGHLIGHT_COLOR, "highlight",
-	    style->win.highlight.r,
-	    style->win.highlight.g,
-	    style->win.highlight.b, 255);
-
-	if ((win->flags & WINDOW_NO_DECORATIONS) == 0) {
-		for (i = 0; i < win->h_border_w+win->v_border_w; i++) {
-			widget_pop_color(win);
-		}
-		win->h_border_w = style->win.h_border_w;
-		win->v_border_w = style->win.v_border_w;
-	} else {
-		win->h_border_w = 0;
-		win->v_border_w = 0;
-	}
-
-	for (i = 0; i < win->h_border_w; i++) {
-		widget_push_color(win, SDL_MapRGB(vfmt,
-		    style->win.h_border[i].r,
-		    style->win.h_border[i].g,
-		    style->win.h_border[i].b));
-	}
-	for (i = 0; i < win->v_border_w; i++) {
-		widget_push_color(win, SDL_MapRGB(vfmt,
-		    style->win.v_border[i].r,
-		    style->win.v_border[i].g,
-		    style->win.v_border[i].b));
-	}
-	
-	win->xpadding = win->h_border_w+4;
-	win->ypadding = win->v_border_w+4;
-	win->minh = win->ypadding*2 + text_font_height;
-	win->minw = win->xpadding*2;
 }
 
 /* Attach a sub-window. */
@@ -306,98 +231,98 @@ void
 window_draw(void *p)
 {
 	struct window *win = p;
-	int i, ncolor = BORDER_BASE_COLOR;
+	int i;
 
 	primitives.rect_filled(win, 0, 0, WIDGET(win)->w, WIDGET(win)->h,
-	    BG_COLOR);
+	    COLOR(WINDOW_BG_COLOR));
 
 	if (win->flags & WINDOW_NO_DECORATIONS)
 		return;
 
 	/* Draw the window frame (expected to fit inside padding). */
-	for (i = 1; i < win->h_border_w-1; i++, ncolor++) {
+	for (i = 1; i < colors_border_size-1; i++) {
 		primitives.line(win,
 		    i,
 		    i,
 		    WIDGET(win)->w - i,
 		    i,
-		    ncolor);
+		    colors_border[i-1]);
 		primitives.line(win,
 		    i, 
 		    WIDGET(win)->h - i,
 		    WIDGET(win)->w - i,
 		    WIDGET(win)->h - i,
-		    ncolor);
+		    colors_border[i-1]);
 	}
-	for (i = 1; i < win->v_border_w-1; i++, ncolor++) {
+	for (i = 1; i < colors_border_size-1; i++) {
 		primitives.line(win,
 		    i,
 		    i,
 		    i,
 		    WIDGET(win)->h - i,
-		    ncolor);
+		    colors_border[i-1]);
 		primitives.line(win,
 		    WIDGET(win)->w - i,
 		    i,
 		    WIDGET(win)->w - i,
 		    WIDGET(win)->h - i,
-		    ncolor);
+		    colors_border[i-1]);
 	}
 
 	if ((win->flags & WINDOW_NO_HRESIZE) == 0) {
 		primitives.line(win,
 		    18,
-		    WIDGET(win)->h - win->h_border_w,
+		    WIDGET(win)->h - colors_border_size,
 		    18,
 		    WIDGET(win)->h - 2,
-		    ncolor-1);
+		    COLOR(WINDOW_LO_COLOR));
 		primitives.line(win,
 		    19,
-		    WIDGET(win)->h - win->h_border_w,
+		    WIDGET(win)->h - colors_border_size,
 		    19,
 		    WIDGET(win)->h - 2,
-		    HIGHLIGHT_COLOR);
+		    COLOR(WINDOW_HI_COLOR));
 		
 		primitives.line(win,
 		    WIDGET(win)->w - 19,
-		    WIDGET(win)->h - win->h_border_w,
+		    WIDGET(win)->h - colors_border_size,
 		    WIDGET(win)->w - 19,
 		    WIDGET(win)->h - 2,
-		    ncolor-1);
+		    COLOR(WINDOW_LO_COLOR));
 		primitives.line(win,
 		    WIDGET(win)->w - 18,
-		    WIDGET(win)->h - win->h_border_w,
+		    WIDGET(win)->h - colors_border_size,
 		    WIDGET(win)->w - 18,
 		    WIDGET(win)->h - 2,
-		    HIGHLIGHT_COLOR);
+		    COLOR(WINDOW_HI_COLOR));
 	}
 	
 	if ((win->flags & WINDOW_NO_VRESIZE) == 0) {
 		primitives.line(win,
 		    2,
 		    WIDGET(win)->h - 20,
-		    win->v_border_w,
+		    colors_border_size,
 		    WIDGET(win)->h - 20,
-		    ncolor-1);
+		    COLOR(WINDOW_LO_COLOR));
 		primitives.line(win,
 		    2,
 		    WIDGET(win)->h - 19,
-		    win->v_border_w,
+		    colors_border_size,
 		    WIDGET(win)->h - 19,
-		    HIGHLIGHT_COLOR);
+		    COLOR(WINDOW_HI_COLOR));
 		
 		primitives.line(win,
-		    WIDGET(win)->w - win->v_border_w,
+		    WIDGET(win)->w - colors_border_size,
 		    WIDGET(win)->h - 20,
 		    WIDGET(win)->w - 2,
 		    WIDGET(win)->h - 20,
-		    ncolor-1);
+		    COLOR(WINDOW_LO_COLOR));
 		primitives.line(win,
-		    WIDGET(win)->w - win->v_border_w,
+		    WIDGET(win)->w - colors_border_size,
 		    WIDGET(win)->h - 19,
 		    WIDGET(win)->w - 2,
 		    WIDGET(win)->h - 19,
-		    HIGHLIGHT_COLOR);
+		    COLOR(WINDOW_HI_COLOR));
 	}
 }
 
@@ -412,7 +337,7 @@ window_destroy(void *p)
 }
 
 static void
-window_shown(int argc, union evarg *argv)
+shown(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	int init = (WIDGET(win)->x == -1 && WIDGET(win)->y == -1);
@@ -442,7 +367,7 @@ window_shown(int argc, union evarg *argv)
 }
 
 static void
-window_hidden(int argc, union evarg *argv)
+hidden(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	
@@ -459,7 +384,7 @@ window_hidden(int argc, union evarg *argv)
 			primitives.rect_filled(win, 0, 0,
 			    WIDGET(win)->w,
 			    WIDGET(win)->h,
-			    BGFILL_COLOR);
+			    COLOR(BG_COLOR));
 			if (!view->opengl) {
 				SDL_UpdateRect(view->v,
 				    WIDGET(win)->x, WIDGET(win)->y,
@@ -617,7 +542,6 @@ static void
 move_window(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos, newpos, rfill1, rfill2;
-	Uint32 fillcolor = WIDGET_COLOR(win, BGFILL_COLOR);
 
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
 		oldpos.x = WIDGET(win)->x;
@@ -668,11 +592,11 @@ move_window(struct window *win, SDL_MouseMotionEvent *motion)
 		}
 		if (!view->opengl) {
 			if (rfill1.w > 0) {
-				SDL_FillRect(view->v, &rfill1, fillcolor);
+				SDL_FillRect(view->v, &rfill1, COLOR(BG_COLOR));
 				SDL_UpdateRects(view->v, 1, &rfill1);
 			}
 			if (rfill2.w > 0) {
-				SDL_FillRect(view->v, &rfill2, fillcolor);
+				SDL_FillRect(view->v, &rfill2, COLOR(BG_COLOR));
 				SDL_UpdateRects(view->v, 1, &rfill2);
 			}
 		}
@@ -995,14 +919,12 @@ window_set_geometry(struct window *win, int x, int y, int w, int h)
 			rfill2.h = oh - WIDGET(win)->h;
 		}
 		if (!view->opengl) {
-			Uint32 fc = WIDGET_COLOR(win, BGFILL_COLOR);
-
 			if (rfill1.w > 0) {
-				SDL_FillRect(view->v, &rfill1, fc);
+				SDL_FillRect(view->v, &rfill1, COLOR(BG_COLOR));
 				SDL_UpdateRects(view->v, 1, &rfill1);
 			}
 			if (rfill2.w > 0) {
-				SDL_FillRect(view->v, &rfill2, fc);
+				SDL_FillRect(view->v, &rfill2, COLOR(BG_COLOR));
 				SDL_UpdateRects(view->v, 1, &rfill2);
 			}
 		}
@@ -1335,7 +1257,7 @@ apply_alignment(struct window *win)
 		    view->w/2) {
 			window_xoffs = 0;
 		}
-		if ((window_yoffs += win->v_border_w+4)+WIDGET(win)->h >
+		if ((window_yoffs += colors_border_size+4) + WIDGET(win)->h >
 		    view->h/2) {
 			window_yoffs = 0;
 		}

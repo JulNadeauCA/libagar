@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.42 2004/11/30 11:36:54 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.43 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -47,11 +47,6 @@ const struct widget_ops scrollbar_ops = {
 	scrollbar_scale
 };
 
-enum {
-	BG_COLOR,
-	BUTTON_COLOR
-};
-
 enum button_which {
 	BUTTON_NONE,
 	BUTTON_UP,
@@ -82,9 +77,6 @@ scrollbar_init(struct scrollbar *sb, enum scrollbar_type type)
 	widget_bind(sb, "value", WIDGET_INT, &sb->value);
 	widget_bind(sb, "min", WIDGET_INT, &sb->min);
 	widget_bind(sb, "max", WIDGET_INT, &sb->max);
-
-	widget_map_color(sb, BG_COLOR, "background", 120, 120, 120, 255);
-	widget_map_color(sb, BUTTON_COLOR, "button", 140, 140, 140, 255);
 
 	sb->value = 0;
 	sb->min = 0;
@@ -134,7 +126,8 @@ scrollbar_mouse_select(struct scrollbar *sb, int coord, int totalsize)
 	/* mouse between */
 	else {
 		int ncoord = coord - sb->button_size;
-		widget_set_int(sb, "value", ncoord * (max-min+1) / scrolling_area);
+
+		widget_set_int(sb, "value", ncoord*(max-min+1)/scrolling_area);
 	}
 	
 	/* generate an event */
@@ -161,14 +154,14 @@ scrollbar_mousebuttondown(int argc, union evarg *argv)
 	/* click on the up button */
 	if (coord <= sb->button_size) {
 		sb->curbutton = BUTTON_UP;
-		if(value > min) 
-		    widget_set_int(sb, "value", value - 1);
+		if (value > min) 
+			widget_set_int(sb, "value", value - 1);
 	}
 	/* click on the down button */
 	else if (coord >= totalsize - sb->button_size) {
 		sb->curbutton = BUTTON_DOWN;
-		if(value < max)
-		    widget_set_int(sb, "value", value + 1);
+		if (value < max)
+			widget_set_int(sb, "value", value + 1);
 	}
 	/* click in between */
 	else {
@@ -177,7 +170,7 @@ scrollbar_mousebuttondown(int argc, union evarg *argv)
 	}
 	
 	/* generate an event if value changed */
-	if(value != (nvalue = widget_get_int(sb, "value")) )
+	if (value != (nvalue = widget_get_int(sb, "value")))
 		event_post(NULL, sb, "scrollbar-changed", "%i", nvalue);
 }
 
@@ -216,8 +209,9 @@ scrollbar_scale(void *p, int rw, int rh)
 		} else {
 			sb->button_size = WIDGET(sb)->w;	/* Square */
 		}
-		if (rh == -1)
+		if (rh == -1) {
 			WIDGET(sb)->h = sb->button_size*4;
+		}
 		break;
 	}
 }
@@ -236,104 +230,100 @@ scrollbar_draw(void *p)
 
 #ifdef DEBUG
 	if (max < min) {
-        dprintf("invalid range: min=%d, max=%d\n", min, max);
+        	dprintf("invalid range: min=%d, max=%d\n", min, max);
 		return;
 	}
-	if (value < min || value > max)
-	{
-	    dprintf("invalid value: min=%d, value=%d, max=%d\n", min, value, max);
+	if (value < min || value > max) {
+		dprintf("invalid value: min=%d, value=%d, max=%d\n", min,
+		    value, max);
 		return;
 	}
 #endif
 
-	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1, BG_COLOR);
+	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
+	    COLOR(SCROLLBAR_COLOR));
 
 	switch (sb->type) {
 	case SCROLLBAR_VERT:
-	    if (WIDGET(sb)->h < sb->button_size*2 + 6) return;
-	    
+		if (WIDGET(sb)->h < sb->button_size*2 + 6) {
+			return;
+		}
 		maxcoord = WIDGET(sb)->h - sb->button_size * 2 - sb->bar_size;
-	
-	    /* draw the up and down buttons */
-		primitives.box(sb,
-			0,
-            0,
-			sb->button_size,
-            sb->button_size,
-			(sb->curbutton == BUTTON_UP) ? -1 : 1,
-			BUTTON_COLOR);
-		primitives.box(sb,
-			0,
-            WIDGET(sb)->h - sb->button_size,
-			sb->button_size,
-            sb->button_size,
-			(sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-			BUTTON_COLOR);
 		
-		/* calculate disabled bar */
+		/* Draw the up and down buttons. */
+		primitives.box(sb,
+		    0, 0,
+		    sb->button_size, sb->button_size,
+		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
+		    COLOR(SCROLLBAR_BTN_COLOR));
+		primitives.box(sb,
+		    0, WIDGET(sb)->h - sb->button_size,
+		    sb->button_size,
+		    sb->button_size,
+		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
+		    COLOR(SCROLLBAR_BTN_COLOR));
+		
+		/* Calculate disabled bar */
 		if (sb->bar_size == -1) {
 			y = 0;
 			h = WIDGET(sb)->h - sb->button_size*2;
 		}
-		/* calculate active bar */
+		/* Calculate active bar */
 		else {
 			y = value * maxcoord / (max-min);
 			h = sb->bar_size;
-			if (sb->button_size + y + h > WIDGET(sb)->h - sb->button_size)
+			if (sb->button_size + y + h >
+			    WIDGET(sb)->h - sb->button_size)
 				y = WIDGET(sb)->h - sb->button_size*2 - h;
 		}
-		
-		/* draw bar */
+		/* Draw bar */
 		primitives.box(sb,
-			0,
-            sb->button_size + y,
-			sb->button_size,
-            h,
-			(sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-			BUTTON_COLOR);
+		    0, sb->button_size + y,
+		    sb->button_size,
+		    h,
+		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
+		    COLOR(SCROLLBAR_BTN_COLOR));
 		break;
 	case SCROLLBAR_HORIZ:
-	    if (WIDGET(sb)->w < sb->button_size*2 + 6) return;
-	    
-		maxcoord = WIDGET(sb)->w - sb->button_size * 2 - sb->bar_size;
-		
-	    /* draw the up and down buttons */
+		if (WIDGET(sb)->w < sb->button_size*2 + 6) {
+			return;
+		}
+		maxcoord = WIDGET(sb)->w - sb->button_size*2 - sb->bar_size;
+
+		/* Draw the up and down buttons */
 		primitives.box(sb,
-			0,
-            0,
-			sb->button_size,
-            sb->button_size,
-			(sb->curbutton == BUTTON_UP) ? -1 : 1,
-			BUTTON_COLOR);
+		    0, 0,
+		    sb->button_size, sb->button_size,
+		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
+		    COLOR(SCROLLBAR_BTN_COLOR));
 		primitives.box(sb,
-			WIDGET(sb)->w - sb->button_size,
-            0,
-			sb->button_size,
-			sb->button_size,
-			(sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-			BUTTON_COLOR);
+		    WIDGET(sb)->w - sb->button_size, 0,
+		    sb->button_size, sb->button_size,
+		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
+		    COLOR(SCROLLBAR_BTN_COLOR));
 		
-		/* calculate disabled bar */
+		/* Calculate disabled bar */
 		if (sb->bar_size == -1) {
 			x = 0;
 			w = WIDGET(sb)->w - sb->button_size*2;
 		}
-		/* calculate active bar */
+		/* Calculate active bar */
 		else {
 			x = value * maxcoord / (max-min);
 			w = sb->bar_size;
-			if (sb->button_size + x + w > WIDGET(sb)->w - sb->button_size)
+			if (sb->button_size + x + w >
+			    WIDGET(sb)->w - sb->button_size)
 				x = WIDGET(sb)->w - sb->button_size*2 - w;
 		}
 		
-		/* draw bar */
+		/* Draw bar */
 		primitives.box(sb,
-			sb->button_size + x,
-			0,
-			w,
-			sb->button_size,
-			(sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-			BUTTON_COLOR);
+		    sb->button_size + x,
+		    0,
+		    w,
+		    sb->button_size,
+		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
+		    COLOR(SCROLLBAR_BTN_COLOR));
 		break;
 	}
 }

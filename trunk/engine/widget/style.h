@@ -1,15 +1,9 @@
-/*	$Csoft: window.h,v 1.77 2004/09/12 05:48:58 vedge Exp $	*/
+/*	$Csoft: style.h,v 1.1 2004/09/16 04:06:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_STYLE_H_
 #define _AGAR_WIDGET_STYLE_H_
 #include "begin_code.h"
-
-struct style_colormod {
-	const char *type;		/* Apply to widgets of this type */
-	const char *color_id;		/* Name of color to edit */
-	SDL_Color   color;		/* Color value */
-};
 
 struct style_texmod {
 	const char *type;		/* Apply to widgets of this type */
@@ -27,29 +21,15 @@ struct style {
 
 	/* Window-related cosmetic settings */
 	struct {
-		const SDL_Color *h_border;	/* Horizontal border */
-		unsigned int	 h_border_w;
-		const SDL_Color	*v_border;	/* Vertical border */
-		unsigned int	 v_border_w;
-
-		SDL_Color	 highlight;	/* Highlight color */
-		SDL_Color	 bgcolor;	/* Solid bg color */
-		SDL_Color	*bggradient;	/* Gradient bg colors */
-		const char	*bgtexture;	/* Texture (or NULL) */
-
+		SDL_Color *bggradient;		/* Gradient bg colors */
+		const char *bgtexture;		/* Texture (or NULL) */
 		enum {
 			NOTCH_RESIZE_STYLE,	/* Notches in border */
 			DIAGONAL_RESIZE_STYLE,	/* Icon in lower-right */
 		} resize_ctrl_type;
 	} win;
-
-	/* Widget-related cosmetic overrides */
-	struct {
-		const struct style_colormod *colormods;
-		const struct style_texmod   *texmods;
-	} wid;
-
-	void	(*fn)(void *);		/* Apply misc. customizations */
+	const struct style_texmod *texmods;
+	void (*fn)(void *);			/* Apply misc. customizations */
 };
 
 #include "close_code.h"

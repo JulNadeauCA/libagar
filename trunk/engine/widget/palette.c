@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.26 2005/01/23 11:49:13 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.27 2005/01/25 01:18:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -48,13 +48,6 @@ const struct widget_ops palette_ops = {
 	palette_scale
 };
 
-enum {
-	BG_COLOR,
-	TILE1_COLOR,
-	TILE2_COLOR,
-	CURRENT_COLOR
-};
-
 static void palette_changed(int, union evarg *);
 
 struct palette *
@@ -76,11 +69,6 @@ palette_init(struct palette *pal, enum palette_type type, SDL_PixelFormat *fmt)
 	widget_init(pal, "palette", &palette_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_CLIPPING);
 	widget_bind(pal, "color", WIDGET_UINT32, &pal->color);
-
-	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196, 255);
-	widget_map_color(pal, TILE1_COLOR, "tile1", 10, 10, 10, 255);
-	widget_map_color(pal, TILE2_COLOR, "tile2", 200, 200, 200, 255);
-	widget_map_color(pal, CURRENT_COLOR, "_current", 0, 0, 0, 255);
 
 	pal->color = 0;
 	pal->type = type; 
@@ -189,8 +177,7 @@ palette_draw(void *p)
 	Uint8 r, g, b, a;
 	SDL_Surface *label;
 
-	color = WIDGET_COLOR(pal, CURRENT_COLOR) =
-	    widget_get_uint32(pal, "color");
+	color = widget_get_uint32(pal, "color");
 	SDL_GetRGBA(color, pal->format, &r, &g, &b, &a);
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
@@ -201,8 +188,9 @@ palette_draw(void *p)
 	if (pal->type == PALETTE_RGBA)  {
 		int x, y;
 
-		primitives.tiling(pal, pal->rpreview, 16, 0, TILE1_COLOR,
-		    TILE2_COLOR);
+		primitives.tiling(pal, pal->rpreview, 16, 0,
+		    COLOR(HSVPAL_TILE1_COLOR),
+		    COLOR(HSVPAL_TILE2_COLOR));
 		for (y = 0; y < WIDGET(pal)->h; y++) {
 			for (x = 0; x < WIDGET(pal)->w; x++) {
 				view_alpha_blend(view->v,
@@ -215,7 +203,7 @@ palette_draw(void *p)
 		primitives.rect_filled(pal,
 		    pal->rpreview.x, pal->rpreview.y,
 		    pal->rpreview.w, pal->rpreview.h,
-		    CURRENT_COLOR);
+		    color);
 	}
 	
 	label_color = SDL_MapRGB(pal->format, 0, 0, 0);

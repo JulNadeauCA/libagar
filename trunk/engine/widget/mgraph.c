@@ -1,4 +1,4 @@
-/*	$Csoft: mgraph.c,v 1.3 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: mgraph.c,v 1.4 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -56,12 +56,6 @@ const struct widget_ops mgraph_ops = {
 	mgraph_scale
 };
 
-enum {
-	FRAME_COLOR,
-	ORIGIN_COLOR1,
-	ORIGIN_COLOR2
-};
-
 static void	mgraph_focus(int, union evarg *);
 
 struct mgraph *
@@ -86,10 +80,6 @@ mgraph_init(struct mgraph *gra, enum mgraph_style style, const char *name)
 {
 	widget_init(gra, "mgraph", &mgraph_ops, WIDGET_FOCUSABLE|
 	    WIDGET_WFILL|WIDGET_HFILL);
-
-	widget_map_color(gra, FRAME_COLOR, "frame", 50, 50, 50, 255);
-	widget_map_color(gra, ORIGIN_COLOR1, "origin1", 50, 50, 50, 255);
-	widget_map_color(gra, ORIGIN_COLOR2, "origin2", 150, 150, 150, 255);
 
 	strlcpy(gra->name, name, sizeof(gra->name));
 	gra->style = style;
@@ -124,27 +114,19 @@ mgraph_draw(void *p)
 	struct mgraph *gra = p;
 	struct mgraph_item *gi;
 	int x, y, oy;
-	Uint32 i, origin_y;
-	double oval;
+	Uint32 i;
 
 	primitives.box(gra,
 	    0, 0,
 	    WIDGET(gra)->w, WIDGET(gra)->h,
 	    0,
-	    FRAME_COLOR);
-
+	    COLOR(GRAPH_BG_COLOR));
 	primitives.line(gra,
 	    0,
 	    WIDGET(gra)->h/2,
 	    WIDGET(gra)->w,
 	    WIDGET(gra)->h/2,
-	    widget_holds_focus(gra) ? ORIGIN_COLOR1 : ORIGIN_COLOR2);
-	primitives.line(gra,
-	    0,
-	    WIDGET(gra)->h/2 + 1,
-	    WIDGET(gra)->w,
-	    WIDGET(gra)->h/2 + 1,
-	    widget_holds_focus(gra) ? ORIGIN_COLOR2 : ORIGIN_COLOR1);
+	    COLOR(GRAPH_XAXIS_COLOR));
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.50 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.51 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -51,17 +51,10 @@ static struct widget_ops checkbox_ops = {
 	checkbox_scale
 };
 
-enum {
-	XSPACING =	6
-};
+#define XSPACING 6
 
-enum {
-	BOX_COLOR,
-	TEXT_COLOR
-};
-
-static void	checkbox_mousebutton(int , union evarg *);
-static void	checkbox_keydown(int , union evarg *);
+static void checkbox_mousebutton(int , union evarg *);
+static void checkbox_keydown(int , union evarg *);
 
 struct checkbox *
 checkbox_new(void *parent, const char *fmt, ...)
@@ -86,11 +79,8 @@ checkbox_init(struct checkbox *cbox, char *caption)
 	widget_init(cbox, "checkbox", &checkbox_ops, WIDGET_FOCUSABLE);
 	widget_bind(cbox, "state", WIDGET_BOOL, &cbox->state);
 
-	widget_map_color(cbox, TEXT_COLOR, "text", 250, 250, 250, 255);
-	widget_map_color(cbox, BOX_COLOR, "box", 100, 100, 100, 255);
-
 	cbox->state = 0;
-	cbox->label_s = text_render(NULL, -1, WIDGET_COLOR(cbox, TEXT_COLOR),
+	cbox->label_s = text_render(NULL, -1, COLOR(CHECKBOX_TXT_COLOR),
 	    caption);
 	
 	event_new(cbox, "window-mousebuttondown", checkbox_mousebutton, NULL);
@@ -115,7 +105,7 @@ checkbox_draw(void *p)
 	    0, 0,
 	    WIDGET(cbox)->h, WIDGET(cbox)->h,
 	    widget_get_bool(cbox, "state") ? -1 : 1,
-	    BOX_COLOR);
+	    COLOR(CHECKBOX_COLOR));
 
 	widget_blit(cbox, cbox->label_s, WIDGET(cbox)->h + XSPACING, 0);
 }

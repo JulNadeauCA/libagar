@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.81 2004/11/30 11:32:47 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.82 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -128,13 +128,12 @@ void
 label_init(struct label *label, enum label_type type, const char *s)
 {
 	widget_init(label, "label", &label_ops, 0);
-	widget_map_color(label, 0, "text", 250, 250, 250, 255);
 	label->type = type;
 
 	switch (type) {
 	case LABEL_STATIC:
 		label->surface = (s==NULL) ? -1 : widget_map_surface(label,
-		    text_render(NULL, -1, WIDGET_COLOR(label, 0), s));
+		    text_render(NULL, -1, COLOR(TEXT_COLOR), s));
 		pthread_mutex_init(&label->lock, NULL);
 		break;
 	case LABEL_POLLED:
@@ -182,7 +181,7 @@ label_printf(struct label *label, const char *fmt, ...)
 	va_end(args);
 	
 	label_set_surface(label, (s[0]=='\0') ? NULL :
-	    text_render(NULL, -1, WIDGET_COLOR(label, 0), s));
+	    text_render(NULL, -1, COLOR(TEXT_COLOR), s));
 }
 
 #define LABEL_ARG(_type)	(*(_type *)label->poll.ptrs[ri])
@@ -399,7 +398,7 @@ label_draw_polled(struct label *label)
 		}
 	}
 
-	ts = text_render(NULL, -1, WIDGET_COLOR(label, 0), s);
+	ts = text_render(NULL, -1, COLOR(TEXT_COLOR), s);
 	widget_blit(label, ts, 0, 0);
 	SDL_FreeSurface(ts);
 }

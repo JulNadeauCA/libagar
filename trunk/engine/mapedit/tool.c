@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.14 2004/12/28 01:47:16 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.15 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -162,7 +162,7 @@ tool_update_status(struct tool *t)
 {
 	if (t->nstatus > 0 && t->mv->status != NULL) {
 		widget_replace_surface(t->mv->status, t->mv->status->surface,
-		    text_render(NULL, -1, WIDGET_COLOR(t->mv->status, 0),
+		    text_render(NULL, -1, COLOR(TEXT_COLOR),
 		    t->status[t->nstatus-1]));
 	}
 }

@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.57 2005/01/29 02:49:15 vedge Exp $
+.\"	$Csoft: widget.3,v 1.58 2005/03/08 08:39:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -200,44 +200,6 @@ highest window on the stack always holds focus).
 The
 .Fn WINDOW_FOCUSED
 macro may be used to determine the focus state of a given window.
-.Sh COLOR SCHEME
-.nr nS 1
-.Ft void
-.Fn widget_map_color "struct widget *wid" "int index" "const char *name" \
-                     "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
-.Pp
-.Ft int
-.Fn widget_push_color "struct widget *wid" "Uint32 color"
-.Pp
-.Ft void
-.Fn widget_pop_color "struct widget *wid"
-.Pp
-.Ft Uint32
-.Fn WIDGET_COLOR "struct widget *wid" "int index"
-.Pp
-.nr nS 0
-.Pp
-The
-.Fn widget_map_color
-function adds a new entry to a widget's color scheme, with a default color
-composed from the given RGBA component values.
-The rendering routines obtain the colors using
-.Fa index ,
-but the colors may also be referenced by their
-.Fa name
-string.
-.Pp
-The
-.Fn widget_push_color
-function pushes a color in display format onto a widget's color stack.
-.Fn widget_pop_color
-pops the highest color off a widget's color stack.
-.Pp
-The
-.Fn WIDGET_COLOR
-macro returns the color at index
-.Fa index ,
-in a format suitable to the display.
 .Sh COORDINATES
 .nr nS 1
 .Ft int

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.23 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.24 2005/03/06 10:40:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -46,14 +46,6 @@ const struct widget_ops tileview_ops = {
 	},
 	tileview_draw,
 	tileview_scale
-};
-
-enum {
-	FRAME_COLOR,
-	TILE1_COLOR,
-	TILE2_COLOR,
-	TEXTFG_COLOR,
-	TEXTBG_COLOR
 };
 
 struct tileview *
@@ -704,12 +696,6 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	widget_init(tv, "tileview", &tileview_ops, WIDGET_WFILL|WIDGET_HFILL|
 	                                           WIDGET_FOCUSABLE|
 						   WIDGET_CLIPPING);
-	widget_map_color(tv, FRAME_COLOR, "frame", 40, 40, 60, 255);
-	widget_map_color(tv, TILE1_COLOR, "tile1", 140, 140, 140, 255);
-	widget_map_color(tv, TILE2_COLOR, "tile2", 80, 80, 80, 255);
-	widget_map_color(tv, TEXTBG_COLOR, "text-bg", 0, 0, 50, 255);
-	widget_map_color(tv, TEXTFG_COLOR, "text-fg", 250, 250, 250, 255);
-
 	tv->ts = ts;
 	tv->tile = tile;
 	tv->scaled = NULL;
@@ -993,13 +979,13 @@ draw_status_text(struct tileview *tv, const char *label)
 	SDL_Surface *su;
 
 	/* XXX pointless colorkey blit */
-	su = text_render(NULL, -1, WIDGET_COLOR(tv, TEXTFG_COLOR), label);
+	su = text_render(NULL, -1, COLOR(TILEVIEW_TEXT_COLOR), label);
 	primitives.rect_filled(tv,
 	    (su->w >= WIDGET(tv)->w) ? 0 : (WIDGET(tv)->w - su->w - 2),
 	    WIDGET(tv)->h - su->h - 2,
 	    WIDGET(tv)->w,
 	    WIDGET(tv)->h,
-	    TEXTBG_COLOR);
+	    COLOR(TILEVIEW_TEXTBG_COLOR));
 	widget_blit(tv, su,
 	    WIDGET(tv)->w - su->w - 1,
 	    WIDGET(tv)->h - su->h - 1);
@@ -1348,7 +1334,9 @@ tileview_draw(void *p)
 		rtiling.y = 0;
 		rtiling.w = WIDGET(tv)->w;
 		rtiling.h = WIDGET(tv)->h;
-		primitives.tiling(tv, rtiling, 9, 0, TILE1_COLOR, TILE2_COLOR);
+		primitives.tiling(tv, rtiling, 9, 0,
+		    COLOR(TILEVIEW_TILE1_COLOR),
+		    COLOR(TILEVIEW_TILE2_COLOR));
 	}
 
 	widget_blit_from(tv, tv, 0, &rsrc, rdst.x, rdst.y);

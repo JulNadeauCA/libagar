@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.46 2005/02/19 06:52:10 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.47 2005/02/19 07:05:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -57,15 +57,6 @@ enum {
 };
 
 enum {
-	SEL_COLOR,
-	OVERSEL_COLOR,
-	HIGH_COLOR,
-	LOW_COLOR,
-	TEXT_COLOR,
-	FRAME_COLOR
-};
-
-enum {
 	MOUSEBUTTONDOWN_EVENT,
 	KEYDOWN_EVENT
 };
@@ -93,13 +84,6 @@ radio_init(struct radio *rad, const char **items)
 	widget_init(rad, "radio", &radio_ops, WIDGET_FOCUSABLE|WIDGET_WFILL);
 	widget_bind(rad, "value", WIDGET_INT, &rad->value);
 
-	widget_map_color(rad, SEL_COLOR, "sel", 210, 210, 210, 255);
-	widget_map_color(rad, OVERSEL_COLOR, "oversel", 90, 90, 80, 255);
-	widget_map_color(rad, HIGH_COLOR, "high", 180, 180, 180, 255);
-	widget_map_color(rad, LOW_COLOR, "low", 80, 80, 70, 255);
-	widget_map_color(rad, TEXT_COLOR, "text", 240, 240, 240, 255);
-	widget_map_color(rad, FRAME_COLOR, "frame", 100, 100, 100, 255);
-
 	rad->value = -1;
 	rad->max_w = 0;
 	rad->oversel = -1;
@@ -108,8 +92,8 @@ radio_init(struct radio *rad, const char **items)
 		;;
 	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems, M_WIDGET);
 	for (i = 0; i < rad->nitems; i++) {
-		rad->labels[i] = text_render(NULL, -1,
-		    WIDGET_COLOR(rad, TEXT_COLOR), _(items[i]));
+		rad->labels[i] = text_render(NULL, -1, COLOR(RADIO_TXT_COLOR),
+		    _(items[i]));
 		if (rad->labels[i]->w > rad->max_w)
 			rad->max_w = rad->labels[i]->w;
 	}
@@ -145,7 +129,7 @@ radio_draw(void *p)
 	    0,
 	    WIDGET(rad)->w,
 	    WIDGET(rad)->h,
-	    FRAME_COLOR);
+	    COLOR(FRAME_COLOR));
 
 	val = widget_get_int(rad, "value");
 
@@ -159,11 +143,11 @@ radio_draw(void *p)
 			widget_put_pixel(rad,
 			    xc + highlight[j],
 			    yc + highlight[j+1],
-			    WIDGET_COLOR(rad,HIGH_COLOR));
+			    COLOR(RADIO_HI_COLOR));
 			widget_put_pixel(rad,
 			    xc - highlight[j],
 			    yc - highlight[j+1],
-			    WIDGET_COLOR(rad,LOW_COLOR));
+			    COLOR(RADIO_LO_COLOR));
 		}
 
 		if (i == val) {
@@ -171,13 +155,13 @@ radio_draw(void *p)
 			    XPADDING + RADIUS,
 			    y + RADIUS,
 			    SEL_RADIUS,
-			    SEL_COLOR);
+			    COLOR(RADIO_SEL_COLOR));
 		} else if (i == rad->oversel) {
 			primitives.circle(rad,
 			    XPADDING + RADIUS,
 			    y + RADIUS,
 			    SEL_RADIUS,
-			    OVERSEL_COLOR);
+			    COLOR(RADIO_OVER_COLOR));
 		}
 		widget_blit(rad, rad->labels[i], x, y);
 	}
