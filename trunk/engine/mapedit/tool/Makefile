@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.14 2003/07/28 04:37:01 vedge Exp $
+#	$Csoft: Makefile,v 1.15 2003/08/06 04:11:29 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
@@ -6,15 +6,13 @@ include ${TOP}/Makefile.config
 LIB=	tool
 SRCS=	eraser.c fill.c flip.c magnifier.c merge.c propedit.c \
 	resize.c select.c shift.c stamp.c tool.c
-OBJS=	eraser.o fill.o flip.o magnifier.o merge.o propedit.o \
-	resize.o select.o shift.o stamp.o tool.o
 
+XCF=		fill.xcf magnifier.xcf resize.xcf select.xcf
 DEN=		tool.den
 DEN_DIR=	engine/mapedit/tool
 DEN_NAME=	"Map editor tool icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
-XCF=		fill.xcf magnifier.xcf resize.xcf select.xcf
 
 CFLAGS+=${SDL_CFLAGS}
 

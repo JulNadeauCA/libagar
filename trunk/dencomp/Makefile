@@ -1,15 +1,11 @@
-#	$Csoft: Makefile,v 1.2 2003/06/21 07:14:17 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2003/06/22 06:36:03 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
 PROG=	dencomp
 SRCS=	dencomp.c
-OBJS=	dencomp.o
-
 MAN1=	dencomp.1
-CATMAN1=dencomp.cat1
-PSMAN1=	dencomp.ps1
 
 CFLAGS+=${SDL_CFLAGS}
 LIBS+=	${TOP}/engine/loader/libloader.a \

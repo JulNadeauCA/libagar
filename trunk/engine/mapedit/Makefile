@@ -1,20 +1,20 @@
-#	$Csoft: Makefile,v 1.52 2003/07/28 04:37:01 vedge Exp $
+#	$Csoft: Makefile,v 1.53 2003/08/06 04:11:28 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
-SUBDIR=	tool mapview
+SUBDIR=	tool \
+	mapview
 
 LIB=	mapedit
 SRCS=	layedit.c mapedit.c mapview.c nodeedit.c objedit.c
-OBJS=	layedit.o mapedit.o mapview.o nodeedit.o objedit.o
 
+XCF=		mapedit.xcf toolbar.xcf
 DEN=		mapedit.den
 DEN_DIR=	engine/mapedit
 DEN_NAME=	"Map editor icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2001, 2002, 2003 CubeSoft Communications, Inc"
-XCF=		mapedit.xcf toolbar.xcf
 
 CFLAGS+=${SDL_CFLAGS}
 
