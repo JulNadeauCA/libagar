@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.12 2003/06/14 07:15:43 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.13 2003/06/14 10:41:41 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -632,7 +632,6 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 	int minx, maxx;
 	int miny, maxy;
 	struct cached_glyph *glyph;
-	int swapped = unicode_byteswapped;
 
 	status = 0;
 	minx = maxx = 0;
@@ -642,22 +641,6 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 	x = 0;
 	for (ch = unicode; *ch != '\0'; ch++) {
 		Uint16 c = *ch;
-
-		if (c == UNICODE_BOM_NATIVE) {
-			swapped = 0;
-			if (unicode == ch)
-				unicode++;
-			continue;
-		}
-		if (c == UNICODE_BOM_SWAPPED) {
-			swapped = 1;
-			if (unicode == ch)
-				unicode++;
-			continue;
-		}
-		if (swapped) {
-			c = SDL_Swap16(c);
-		}
 
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
 			return (-1);
@@ -756,7 +739,6 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 	Uint8 *src, *dst;
 	int row, col;
 	struct cached_glyph *glyph;
-	int swapped = unicode_byteswapped;
 
 	/* Get the dimensions of the text surface. */
 	if ((ttf_size_unicode(font, unicode, &width, NULL) < 0) ||
@@ -790,22 +772,6 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 	for (ch = unicode; *ch; ch++) {
 		Uint16 c = *ch;
 		FT_Bitmap *current = NULL;
-
-		if (c == UNICODE_BOM_NATIVE) {
-			swapped = 0;
-			if (unicode == ch)
-				unicode++;
-			continue;
-		}
-		if (c == UNICODE_BOM_SWAPPED) {
-			swapped = 1;
-			if (unicode == ch)
-				unicode++;
-			continue;
-		}
-		if (swapped) {
-			c = SDL_Swap16(c);
-		}
 
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP)
 		    != 0) {
