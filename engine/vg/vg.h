@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.73 2003/11/15 03:53:47 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -7,8 +7,28 @@
 #include <engine/map.h>
 
 #include "begin_code.h"
+struct vg;
+struct vg_element;
+enum vg_alignment {
+	VG_ALIGN_TL,
+	VG_ALIGN_TC,
+	VG_ALIGN_TR,
+	VG_ALIGN_ML,
+	VG_ALIGN_MC,
+	VG_ALIGN_MR,
+	VG_ALIGN_BL,
+	VG_ALIGN_BC,
+	VG_ALIGN_BR
+};
+#include "close_code.h"
 
-#define VG_TEXT_MAX	256
+#include <engine/vg/vg_vertex.h>
+#include <engine/vg/vg_point.h>
+#include <engine/vg/vg_line.h>
+#include <engine/vg/vg_circle.h>
+#include <engine/vg/vg_text.h>
+
+#include "begin_code.h"
 
 enum vg_element_type {
 	VG_POINTS,		/* Individual points */
@@ -28,77 +48,95 @@ enum vg_element_type {
 	VG_TEXT			/* Text string */
 };
 
-enum vg_alignment {
-	VG_ALIGN_TL,
-	VG_ALIGN_TC,
-	VG_ALIGN_TR,
-	VG_ALIGN_ML,
-	VG_ALIGN_MC,
-	VG_ALIGN_MR,
-	VG_ALIGN_BL,
-	VG_ALIGN_BC,
-	VG_ALIGN_BR
+struct vg_line_style {
+	enum {
+		VG_CONTINUOUS,
+		VG_STIPPLED
+	} style;
+	Uint16 stipple;		/* OpenGL-style */
+	Uint8 thickness;	/* Pixels */
+};
+
+struct vg_fill_style {
+	enum {
+		VG_NOFILL,
+		VG_SOLID,
+		VG_PATTERN
+	} style;
+	struct {
+		struct object *sobj;
+		Uint32 soffs;
+	} pat;
+	Uint32 color;
 };
 
 struct vg_element {
-	enum vg_element_type type;	/* Type of element being drawn */
-	float *vertices;
-	int nvertices;
+	enum vg_element_type type;
+	double *vertices;
+	int    nvertices;
 	Uint32 color;
-	struct {
-		enum {
-			VG_CONTINUOUS,
-			VG_STIPPLED
-		};
-		Uint16 stipple_pat;
-		Uint8 thickness;
-	} line;
+	struct vg_line_style line;
+	struct vg_fill_style fill;
 	union {
 		struct {
-			float radius;			/* Inches */
+			double radius;
+		} vg_point;
+		struct {
+			double radius;
 		} vg_circle;
 		struct {
 			char text[VG_TEXT_MAX];
-			float angle;			/* Degrees */
-			enum vg_alignment align;	/* Text alignment */
+			double angle;
+			enum vg_alignment align;
 		} vg_text;
 	} vg_args;
-#define vg_text vg_args.vg_text
-	TAILQ_ENTRY(vg_element) rasq;
+#define vg_point   vg_args.vg_point
+#define vg_circle  vg_args.vg_circle
+#define vg_text	   vg_args.vg_text
+	TAILQ_ENTRY(vg_element) vges;
 };
 
 struct vg {
-	float w, h, scale;		/* Requested geometry */
 	int flags;
 #define VG_ANTIALIAS	0x01
 #define VG_HWSURFACE	0x02
 
 	pthread_mutex_t lock;
-	struct object *obj;		/* Object driving rendering */
-	SDL_Surface *su;		/* Single rendered surface */
+	double w, h, scale;		/* Geometry in tiles */
+	double ox, oy;			/* Origin offset */
 	Uint32 fill_color;		/* Background filling color */
-	struct map *map;		/* Map of surface fragments */
-	TAILQ_HEAD(,vg_element) rasq;	/* Elements queued for rasterization */
+	struct object *pobj;		/* Parent object */
+	SDL_Surface *su;		/* Surface for rasterization */
+	struct map *submap;		/* Pointer to the fragment submap */
+	struct map *map;		/* Raster map */
+	TAILQ_HEAD(,vg_element) vges;	/* Graphic elements */
 };
 
+#define VG_X(vg,v) ((int)((v)*(vg)->scale*TILESZ) + \
+                     (int)((vg)->ox*(vg)->scale*TILESZ))
+#define VG_Y(vg,v) ((int)((v)*(vg)->scale*TILESZ) + \
+                     (int)((vg)->oy*(vg)->scale*TILESZ))
+#define VG_PX(vg,v) ((int)((v)*(vg)->scale*TILESZ))
+
 __BEGIN_DECLS
-struct vg	*vg_new(void *, int, float, float, float, const char *);
+struct vg	*vg_new(void *, int);
 void		 vg_destroy(struct vg *);
-void		 vg_scale(struct vg *, float);
+void		 vg_scale(struct vg *, double, double, double);
+__inline__ void	 vg_mvtail(struct vg *, struct vg_element *);
+__inline__ void	 vg_mvhead(struct vg *, struct vg_element *);
+__inline__ void	 vg_regen_fragments(struct vg *);
+__inline__ void	 vg_destroy_fragments(struct vg *);
+#ifdef DEBUG
+__inline__ int	 vg_x(struct vg *, double);
+__inline__ int	 vg_y(struct vg *, double);
+#endif
 
-struct vg_element	*vg_begin(struct vg *, enum vg_element_type);
-__inline__ void		 vg_vertex(struct vg *, float, float);
-__inline__ void		 vg_vertices(struct vg *, float *, int);
-__inline__ void		 vg_end(struct vg *);
-__inline__ void		 vg_clear(struct vg *);
-__inline__ void		 vg_render(struct vg *);
+__inline__ void	   vg_origin(struct vg *, double, double);
+struct vg_element *vg_begin(struct vg *, enum vg_element_type);
+#define		   vg_end(vg) /* nothing */
 
-__inline__ double	 rad2deg(double);
-__inline__ double	 deg2rad(double);
-
-void	vg_draw_points(struct vg *, struct vg_element *);
-void	vg_align(struct vg *, float, float, enum vg_alignment, float);
-void	vg_printf(struct vg *, const char *, ...);
+__inline__ void	vg_clear(struct vg *);
+__inline__ void	vg_rasterize(struct vg *);
 __END_DECLS
 
 #include "close_code.h"
