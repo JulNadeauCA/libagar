@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.16 2005/01/05 10:51:24 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.17 2005/01/13 02:30:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -43,8 +43,8 @@ int ntypesw = 0;
 void
 typesw_init(void)
 {
-	extern const struct object_ops object_ops, map_ops, perso_ops,
-	    drawing_ops, tileset_ops;
+	extern const struct object_ops object_ops, map_ops,
+	    perso_ops, drawing_ops, tileset_ops;
 
 	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
 

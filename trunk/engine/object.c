@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.191 2005/02/03 09:19:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.192 2005/02/05 02:50:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -524,7 +524,8 @@ object_cancel_timeouts(struct object *ob, int flags)
 		}
 	}
 	CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
-		dprintf("%s: cancelling scheduled timeout\n", ob->name);
+		dprintf("%s: cancelling scheduled timeout (%d tick, ival %d)\n",
+		    ob->name, to->ticks, to->ival);
 		TAILQ_REMOVE(&timeout_objq, ob, tobjs);
 	}
 	CIRCLEQ_INIT(&ob->timeouts);
