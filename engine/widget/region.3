@@ -1,4 +1,4 @@
-.\"	$Csoft: region.3,v 1.8 2003/02/02 21:16:15 vedge Exp $
+.\"	$Csoft: region.3,v 1.9 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,15 +40,8 @@
 .Sh DESCRIPTION
 The
 .Nm
-structure is a simple container for widgets.
-.Xr window 3
-objects may contain a list of
-.Nm
-structures, and
-.Nm
-structures may contain a list of
-.Xr widget 3
-structures.
+structure is a simple widget container.
+It is responsible for positioning and sizing a list of child widgets.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct region *
@@ -81,7 +74,7 @@ The
 .Fa rx
 and
 .Fa ry
-arguments define the position of the region inside the window, and have the
+arguments define the position of the region inside the window, and may have the
 following meanings:
 .Pp
 .Bl -tag -compact -width ">= 0"
@@ -100,7 +93,7 @@ The
 .Fa rw
 and
 .Fa rh
-arguments define the size of the region, and have the following meanings:
+arguments define the size of the region, and may have the following meanings:
 .Pp
 .Bl -tag -compact -width ">= 0"
 .It > 0
@@ -125,10 +118,15 @@ may include:
 			 	   area before drawing */
 .Ed
 .Pp
+The
+.Fn region_attach
+function attaches a widget to the region.
+.Fn region_detach
+detaches a widget from the region, without freeing it.
 .Sh EVENTS
 The
 .Nm
-structure generates the following events:
+object sends its widgets the following events:
 .Pp
 .Bl -tag -width 2n
 .It Fn attached "struct region *parent"
