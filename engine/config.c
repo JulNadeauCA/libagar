@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.60 2003/02/22 01:11:03 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.61 2003/03/02 01:00:13 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -140,7 +140,11 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.w", 800);
 	prop_set_uint16(con, "view.h", 600);
 	prop_set_uint8(con,  "view.depth", 32);
-	prop_set_bool(con, "view.font-engine", 1);
+
+	prop_set_bool(con,	"font-engine", 1);
+	prop_set_string(con,	"font-engine.default-font", "larabie");
+	prop_set_int(con,	"font-engine.default-size", 14);
+	prop_set_int(con,	"font-engine.default-style", 0);
 
 	/* Window system settings */
 	prop_set_bool(con, "widget.reg-borders", 0);
