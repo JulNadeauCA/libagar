@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.14 2004/02/24 12:24:50 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.15 2004/02/24 13:07:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -30,7 +30,50 @@
 
 #include "units.h"
 
-/* Default unit */
+/*
+ * Return the unit in the given group with a matching abbreviation.
+ * If abbr=NULL, return the base unit.
+ */
+const struct unit *
+unit(const struct unit group[], const char *abbr)
+{
+	const struct unit *unit;
+
+	for (unit = &group[0]; unit->abbr != NULL; unit++) {
+		if (abbr == NULL) {
+			/* Assume the first identity to be the base unit. */
+			if (unit->divider == 1)
+				return (unit);
+		} else {
+			if (strcmp(unit->abbr, abbr) == 0)
+				return (unit);
+		}
+	}
+	return (NULL);
+}
+
+/* Convert from n in given unit to base unit. */
+double
+unit2base(double n, const struct unit *unit)
+{
+	return (unit->func != NULL ? unit->func(n) : n*unit->divider);
+}
+
+/* Convert from n in base unit to given unit. */
+double
+base2unit(double n, const struct unit *unit)
+{
+	if (unit->func != NULL) {
+		double rv;
+
+		rv = unit->func(n);
+		return (rv != 0 ? 1/rv : 0);
+	} else {
+		return (n/unit->divider);
+	}
+}
+
+/* Default unit (identity) */
 const struct unit identity_unit = { "", "", 1, NULL };
 
 /* Units of length/distance */
@@ -140,6 +183,7 @@ const struct unit mass_units[] = {
 
 /* Units of time */
 const struct unit time_units[] = {
+	{ "ns",		N_("Nanoseconds"),	0.000000001,		NULL },
 	{ "\xc2\xb5s",	N_("Microseconds"),	0.000001,		NULL },
 	{ "ms",		N_("Milliseconds"),	0.001,			NULL },
 	{ "s", 		N_("Seconds"),		1,			NULL },
@@ -291,7 +335,7 @@ const struct unit pressure_units[] = {
 };
 
 /* Units of metabolic cost of physical activity */
-const struct unit metabolic_cost_units[] = {
+const struct unit metabolic_expenditure_units[] = {
 	{ "MET",	N_("Metabolic equivalent"),		1,	NULL },
 	{ "Kcal/min",	N_("Kilokalories per minute"),		1,	NULL },
 	{ "O\xc2/kg",	N_("Ml O\xc2/kg/minute"),		3.5,	NULL },
