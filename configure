@@ -129,6 +129,8 @@ MAPDIR="$PREFIX/share/cave/map"
 echo MAPDIR=$MAPDIR >> Makefile.config
 TTFDIR="$PREFIX/share/cave/ttf"
 echo TTFDIR=$TTFDIR >> Makefile.config
+FOBJDIR="$PREFIX/share/cave/fob"
+echo FOBJDIR=$FOBJDIR >> Makefile.config
 INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config
 echo -n "checking for a usable make(1)..."
