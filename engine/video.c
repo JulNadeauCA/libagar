@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.14 2002/02/25 09:06:26 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.15 2002/03/31 04:40:57 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,6 +49,14 @@
 #include <engine/engine.h>
 #include <engine/video.h>
 
+static const struct obvec char_vec = {
+	NULL,		/* destroy */
+	NULL,		/* load */
+	NULL,		/* save */
+	NULL,		/* link */
+	NULL		/* unlink */
+};
+
 #ifdef CONF_SMPEG
 
 static void     *video_tick(void *);
@@ -88,24 +96,18 @@ videodone:
 	SDL_mutexV(v->lock);
 	return (NULL);
 }
-
 #endif /* CONF_SMPEG */
 
-/*
- * Play an audiovisual mpeg stream. The surface should be 
- */
-struct video *
-video_create(char *path, SDL_Surface *s)
+void
+video_init(struct video *v, char *path, SDL_Surface *s)
 {
 #ifdef CONF_SMPEG
 	SDL_SysWMinfo wm;
 	SMPEG_Info info;
 	struct stat sta;
 	char *errmsg, **exts;
-	struct video *v = NULL;
 	int i, xvideo = 0, nexts = 0;
 
-	dprintf("enter: %s\n", path);
 	/*
 	 * Work around smpeg not returning an error code when the
 	 * XVideo extension is missing. We must obtain a pointer to
@@ -114,7 +116,7 @@ video_create(char *path, SDL_Surface *s)
 	SDL_VERSION(&wm.version);
 	if (SDL_GetWMInfo(&wm) != 1) {
 		warning("SDL_GetWMInfo: %s\n", SDL_GetError());
-		return (NULL);
+		return;
 	}
 	wm.info.x11.lock_func();
 	exts = XListExtensions(wm.info.x11.display, &nexts);
@@ -128,10 +130,11 @@ video_create(char *path, SDL_Surface *s)
 	wm.info.x11.unlock_func();
 	if (!xvideo) {
 		warning("XVideo extension missing.\n");
-		return (NULL);
+		return;
 	}
 
-	v = emalloc(sizeof(struct video));
+	object_init(&v->obj, "video", NULL, 0, &video_vec);
+
 	v->fd = 0;
 	v->mpeg = NULL;
 	v->lock = SDL_CreateMutex();
@@ -174,8 +177,8 @@ video_create(char *path, SDL_Surface *s)
 		perror("playback");
 		goto videoerr;
 	}
-	return (v);
 
+	return;
 videoerr:
 	if (v != NULL) {
 		if (v->mpeg != NULL) {
@@ -184,13 +187,14 @@ videoerr:
 		free(v);
 	}
 #endif /* CONF_SMPEG */
-	return (NULL);
 }
 
 void
-video_destroy(struct video *v)
+video_destroy(void *p)
 {
 #ifdef CONF_SMPEG
+	struct video *v = (struct video *)p;
+
 	SDL_mutexP(v->lock);
 	pthread_kill(v->thread, SIGTERM);
 	SMPEG_stop(v->mpeg);
