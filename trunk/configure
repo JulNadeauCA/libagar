@@ -1,0 +1,88 @@
+#!/bin/sh
+# Do not edit: File generated from configure.in
+echo >Makefile.config
+echo -n "checking for SDL >= 1.2.0...";
+SDL_VERSION=`sdl-config --version 2>/dev/null`
+SDL_CFLAGS=`sdl-config --cflags 2>/dev/null`
+SDL_LIBS=`sdl-config --libs 2>/dev/null`
+
+if [ "$SDL_VERSION" != "" ]; then
+ echo "ok";echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+
+ echo SDL_LIBS=$SDL_LIBS >> Makefile.config
+
+else
+ echo "missing";
+ echo "*** This package requires SDL >= 1.2.0";
+ echo "*** Get it from http://www.libsdl.org/";
+ echo "ERROR: Missing SDL";
+ exit 1
+fi
+echo -n "checking for glib >= 1.2.0...";
+GLIB_VERSION=`glib-config --version 2>/dev/null`
+GLIB_CFLAGS=`glib-config --cflags 2>/dev/null`
+GLIB_LIBS=`glib-config --libs 2>/dev/null`
+
+if [ "$GLIB_VERSION" != "" ]; then
+ echo "ok";
+ echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
+
+ echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
+
+else
+ echo "missing";
+ echo "*** This package requires glib >= 1.2.0";
+ echo "*** Get it from http://www.gtk.org/";
+ echo "ERROR: Missing glib";
+ exit 1
+fi
+echo -n "checking for smpeg >= 0.4.3...";
+SMPEG_VERSION=`smpeg-config --version 2>/dev/null`
+SMPEG_CFLAGS=`smpeg-config --cflags 2>/dev/null`
+SMPEG_LIBS=`smpeg-config --libs 2>/dev/null`
+
+if [ "$SMPEG_VERSION" != "" ]; then
+ echo "ok";echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
+
+ echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
+
+else
+ echo "missing";
+ echo "*** This package requires smpeg >= 0.4.3";
+ echo "*** Get it from http://www.icculus.org/";
+ echo "ERROR: Missing smpeg";
+ exit 1
+fi
+echo -n "checking for x11...";
+
+if [ -d /usr/X11R6 ]; then
+ XFOUND=/usr/X11R6
+ X11_CFLAGS=-I/usr/X11R6/include
+ X11_LIBS=-L/usr/X11R6/lib
+
+else
+ XNOTFOUND=/usr/X11R6
+
+fi
+
+if [ -d /usr/X386 ]; then
+ XFOUND=/usr/X386
+ X11_CFLAGS=-I/usr/X386/include
+ X11_LIBS=-L/usr/X386/lib
+
+else
+ XNOTFOUND=/usr/X386
+
+fi
+
+if [ "$XFOUND" != "" ]; then
+ echo "$XFOUND";
+ echo X11BASE=$X11BASE >> Makefile.config
+ echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
+ echo X11_LIBS=$X11_LIBS >> Makefile.config
+
+else
+ echo "missing";echo "*** This package requires X11";
+ echo "ERROR: Cannot find X11";
+ exit 1
+fi
