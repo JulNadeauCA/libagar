@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.15 2002/08/12 06:55:07 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.16 2002/08/13 02:32:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -70,6 +70,7 @@ static void	mapview_event(int, union evarg *);
 static void	mapview_scaled(int, union evarg *);
 static void	mapview_lostfocus(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
+static void	mapview_stop_zoom(struct mapview *);
 
 static __inline__ void	draw_node_scaled(struct mapview *, SDL_Surface *,
 			    int, int);
@@ -199,6 +200,7 @@ mapview_draw(void *p)
 	struct map *m = mv->map;
 	struct node *node;
 	struct noderef *nref;
+	struct mapedit *med = mv->med;
 	int mx, my, rx, ry;
 	int nsprites;
 	SDL_Rect clip;
@@ -323,7 +325,7 @@ mapview_draw(void *p)
 			    my-mv->my == mv->mouse.y &&
 			    mv->mouse.x < mv->mw &&
 			    mv->mouse.y < mv->mh) {
-				struct tool *curtool = mv->med->curtool;
+				struct tool *curtool = med->curtool;
 
 				if (curtool != NULL &&
 				    TOOL_OPS(curtool)->tool_cursor != NULL) {
@@ -349,9 +351,9 @@ mapview_draw(void *p)
 				struct noderef *nref;
 
 				nref = TAILQ_FIRST(&node->nrefsh);
-				if ((nref->pobj ==
-				    mv->med->curobj->pobj) &&
-				    nref->offs == mv->med->curoffs) {
+				if ((nref->pobj == med->ref.obj) &&
+				    nref->offs == med->ref.offs &&
+				    nref->flags == med->ref.flags) {
 					/* XXX cosmetic */
 					primitives.square(mv,
 					    rx+1, ry+1,
@@ -523,8 +525,14 @@ mapview_event(int argc, union evarg *argv)
 					}
 					if (eo != NULL) {
 						med->curobj = eo;
-						med->curoffs = nref->offs;
-						med->curflags = nref->flags;
+						med->node.flags = n->flags;
+						med->ref.obj = eo->pobj;
+						med->ref.offs = nref->offs;
+						med->ref.flags = nref->flags;
+						dprintf("%s:%d[0x%x]\n",
+						    med->ref.obj->name,
+						    med->ref.offs,
+						    med->ref.flags);
 					} else {
 						warning("unusable reference\n");
 					}
@@ -571,8 +579,14 @@ mapview_event(int argc, union evarg *argv)
 					}
 					if (eo != NULL) {
 						med->curobj = eo;
-						med->curoffs = nref->offs;
-						med->curflags = nref->flags;
+						med->node.flags = n->flags;
+						med->ref.obj = eo->pobj;
+						med->ref.offs = nref->offs;
+						med->ref.flags = nref->flags;
+						dprintf("%s:%d[0x%x]\n",
+						    med->ref.obj->name,
+						    med->ref.offs,
+						    med->ref.flags);
 					} else {
 						warning("unusable reference\n");
 					}
@@ -590,7 +604,7 @@ mapview_event(int argc, union evarg *argv)
 		if (mv->flags & MAPVIEW_ZOOM) {
 			switch (argv[2].i) {
 			case SDLK_EQUALS:
-				/* XXX pref */
+				/* XXX logarithmic curve */
 				zoomin_timer =
 				    SDL_AddTimer(60, mapview_zoomin, mv);
 				if (zoomin_timer == NULL) {
@@ -607,13 +621,8 @@ mapview_event(int argc, union evarg *argv)
 				}
 				break;
 			case SDLK_0:
-				if (zoomin_timer != NULL) {
-					SDL_RemoveTimer(zoomin_timer);
-				}
-				if (zoomout_timer != NULL) {
-					SDL_RemoveTimer(zoomout_timer);
-				}
 				mapview_zoom(mv, 100);
+				mapview_stop_zoom(mv);
 				break;
 			}
 		}
@@ -622,14 +631,8 @@ mapview_event(int argc, union evarg *argv)
 		if (mv->flags & MAPVIEW_ZOOM) {
 			switch (argv[2].i) {
 			case SDLK_EQUALS:
-				if (zoomin_timer != NULL) {
-					SDL_RemoveTimer(zoomin_timer);
-				}
-				break;
 			case SDLK_MINUS:
-				if (zoomout_timer != NULL) {
-					SDL_RemoveTimer(zoomout_timer);
-				}
+				mapview_stop_zoom(mv);
 				break;
 			}
 		}
@@ -679,5 +682,18 @@ mapview_center(struct mapview *mv, int x, int y)
 
 	mv->mx = nx;
 	mv->my = ny;
+}
+
+static void
+mapview_stop_zoom(struct mapview *mv)
+{
+	if (zoomin_timer != NULL) {
+		SDL_RemoveTimer(zoomin_timer);
+		zoomin_timer = NULL;
+	}
+	if (zoomout_timer != NULL) {
+		SDL_RemoveTimer(zoomout_timer);
+		zoomout_timer = NULL;
+	}
 }
 
