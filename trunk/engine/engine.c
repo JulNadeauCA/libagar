@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.135 2004/05/10 02:41:45 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.136 2004/08/27 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -77,6 +77,9 @@ pthread_mutex_t linkage_lock;
 struct object engine_icons;
 void (*engine_atexit_func)(void) = NULL;
 extern pthread_mutex_t timeout_lock;
+
+enum gfx_engine gfx_mode = GFX_ENGINE_GUI;
+enum text_engine text_mode = TEXT_ENGINE_TTF;
 
 /* Initialize the Agar engine. */
 int
@@ -186,13 +189,25 @@ engine_preinit(const char *name)
 	return (0);
 }
 
+void
+engine_set_gfxmode(enum gfx_engine mode)
+{
+	gfx_mode  = mode;
+}
+
+void
+engine_set_textmode(enum text_engine mode)
+{
+	text_mode = mode;
+}
+
 int
-engine_init(enum gfx_engine ge, enum text_engine te)
+engine_init(void)
 {
 	int i, njoys;
 	
-	if (view_init(ge) == -1 ||
-	    text_init(te) == -1)
+	if (view_init(gfx_mode) == -1 ||
+	    text_init(text_mode) == -1)
 		return (-1);
 	
 	kbd_new(0);
