@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.29 2002/04/02 19:51:42 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.30 2002/04/07 02:23:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
  */
 
 #include <sys/types.h>
+
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -71,9 +72,6 @@ char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
 	ch->maxspeed = 30;
 	ch->nzuars = 0;
 
-	dprintf("%s: new: hp %d/%d mp %d/%d\n",
-	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp);
-	
 	return (ch);
 }
 
@@ -105,7 +103,6 @@ char_load(void *p, int fd)
 
 	ch->nzuars = fobj_read_uint32(fd);
 
-#if 0
 	text_msg(4, TEXT_SLEEP|TEXT_DEBUG,
 	    "%s (0x%x)\n"
 	    "Level %d\n"
@@ -114,7 +111,6 @@ char_load(void *p, int fd)
 	    "%d/%d hp, %d/%d mp\n",
 	    ob->name, ch->flags, ch->level, ch->exp, ch->age,
 	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
-#endif
 
 	if (fobj_read_uint32(fd) > 0) {
 		char *mname, *minput;
@@ -127,13 +123,19 @@ char_load(void *p, int fd)
 		flags = fobj_read_uint32(fd);
 		speed = fobj_read_uint32(fd);
 		minput = fobj_read_string(fd);
-		if (strcmp(minput, "") != 0) {
-			input = (struct input *)object_strfind(minput);
-			if (input == NULL) {
-				fatal("no such input: \"%s\"\n", minput);
-				return (-1);
-			}
+		if (strcmp(minput, "keyboard0") == 0) {
+			input = keyboard;
+		} else if (strcmp(minput, "joy0") == 0) {
+			input = joy;
+		} else if (strcmp(minput, "mouse0") == 0) {
+			input = mouse;
+		} else {
+			fatal("no such input: \"%s\"\n", minput);
 		}
+		
+		text_msg(2, TEXT_SLEEP|TEXT_DEBUG,
+		    "%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
+		    ob->name, mname, x, y, offs, flags, speed);
 
 		m = (struct map *)object_strfind(mname);
 		if (m != NULL) {
@@ -142,17 +144,19 @@ char_load(void *p, int fd)
 
 			pthread_mutex_lock(&m->lock);
 			node = &m->map[x][y];
-			npos = object_madd(ch, offs, flags, input, m, x, y);
+			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
 			pthread_mutex_unlock(&m->lock);
 
 			dprintf("at %s:%d,%d\n", m->obj.name, x, y);
 		} else {
 			fatal("no such map: \"%s\"\n", mname);
-			return (-1);
 		}
 		free(mname);
 		free(minput);
+	} else {
+		text_msg(2, TEXT_SLEEP|TEXT_DEBUG, "%s is nowhere.\n",
+		    ob->name);
 	}
 	
 	return (0);
@@ -163,7 +167,7 @@ char_save(void *p, int fd)
 {
 	struct character *ch = (struct character *)p;
 	struct fobj_buf *buf;
-	struct mappos *pos = ch->obj.pos;
+	struct mappos *pos = OBJECT(ch)->pos;
 
 	buf = fobj_create_buf(128, 4);
 	if (buf == NULL) {
