@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.93 2002/11/14 05:57:34 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.94 2002/11/14 07:11:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -450,6 +450,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 static void *
 event_post_async(void *p)
 {
+#ifdef SERIALIZATION
 	struct event *eev = p;
 
 	dprintf("%p: async event start\n", (void *)pthread_self());
@@ -458,6 +459,9 @@ event_post_async(void *p)
 
 	free(eev);
 	return (NULL);
+#else
+	fatal("thread safety not compiled in\n");
+#endif
 }
 
 /*

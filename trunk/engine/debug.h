@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.19 2002/11/12 02:30:51 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.20 2002/11/13 01:13:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -38,10 +38,9 @@ extern int engine_debug;
 # define dprintnode(m, x, y, str)
 #endif	/* DEBUG */
 
-#ifdef LOCKDEBUG
+#if defined(LOCKDEBUG) && defined(SERIALIZATION)
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #if 0
 #include <semaphore.h>
 #endif
@@ -98,8 +97,9 @@ extern int engine_debug;
 } while (/*CONSTCOND*/0)
 #endif
 
-#endif	/* LOCKDEBUG */
+#endif	/* LOCKDEBUG and SERIALIZATION */
 
+#ifdef SERIALIZATION
 #define Pthread_create(thread, attr, func, arg) do {			\
 	int _rv;							\
 	if ((_rv = pthread_create((thread), (attr), (func), (arg)))	\
@@ -113,5 +113,6 @@ extern int engine_debug;
 		fatal("pthread_join: %s\n", strerror(_rv));		\
 	}								\
 } while (/*CONSTCOND*/0)
+#endif
 
 #endif	/* _AGAR_ENGINE_DEBUG_H_ */

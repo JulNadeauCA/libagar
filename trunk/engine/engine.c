@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.71 2002/11/12 01:58:21 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.72 2002/11/12 05:17:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,7 +59,11 @@
 int	engine_debug = 1;	/* Enable debugging */
 #endif
 
+#ifdef SERIALIZATION
 pthread_key_t engine_errorkey;	/* Used by AGAR_{Get,Set}Error() */
+#else
+char *engine_errorkey;
+#endif
 
 const struct gameinfo *gameinfo;	/* Game name, copyright, version */
 struct world *world;			/* Describes game elements */
@@ -87,8 +91,12 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	int c, fullscreen = 0;
 	int w = -1, h = -1;
 
+#ifdef SERIALIZATION
 	/* Create a thread-specific key for errno style error messages. */
 	pthread_key_create(&engine_errorkey, NULL);
+#else
+	engine_errorkey = NULL;
+#endif
 
 	mapediting = 0;			/* Map edition mode? */
 	gameinfo = gi;
@@ -317,7 +325,11 @@ engine_destroy(void)
 	/* Free the config structure. */
 	object_destroy(config);
 
+#ifdef SERIALIZATION
 	pthread_key_delete(engine_errorkey);
+#else
+	Free(engine_errorkey);
+#endif
 
 	SDL_Quit();
 	exit(0);

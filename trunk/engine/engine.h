@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.40 2002/11/07 18:52:38 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.41 2002/11/08 03:51:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -7,10 +7,19 @@
 #define ENGINE_VERSION	"1.0-beta"
 
 #include <engine/mcconfig.h>
+
 #if !defined(__OpenBSD__) && !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 500	/* XXX recursive mutexes */
 #endif
+
+#ifdef SERIALIZATION
 #include <pthread.h>		/* For pthread types */
+#else
+#define pthread_mutex_t int
+#define pthread_mutexattr_t int
+#define pthread_t int
+#endif
+
 #include <SDL.h>		/* For SDL types */
 #include <engine/compat/queue.h> /* For queue(3) definitions */
 #include <engine/error.h>	/* Wrappers and error messages */
@@ -21,12 +30,18 @@
 #include <engine/world.h>	/* XXX */
 #include <engine/view.h>	/* XXX */
 
-#if !defined(SERIALIZATION)
-#define pthread_mutex_init(mu, attr)
+#ifndef SERIALIZATION
 #define pthread_mutex_destroy(mu)
+#define pthread_mutex_init(mu, attr)
 #define pthread_mutex_lock(mu)
 #define pthread_mutex_trylock(mu)
 #define pthread_mutex_unlock(mu)
+#define pthread_mutexattr_init(mu)
+#define pthread_mutexattr_destroy(mu)
+#define pthread_mutexattr_settype(mu, type)
+#define Pthread_create(th, attr, func, arg)
+#define Pthread_join(th, ptr)
+#define PTHREAD_MUTEX_INITIALIZER 0
 #endif
 
 struct gameinfo {
