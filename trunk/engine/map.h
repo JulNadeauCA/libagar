@@ -1,11 +1,11 @@
-/*	$Csoft: map.h,v 1.20 2002/02/25 11:12:00 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.21 2002/02/25 11:31:42 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
 #define MAP_VERMIN	9
 
 struct noderef {
-	void	*pobj;		/* Object pointer */
+	struct	object *pobj;	/* Object pointer */
 	Uint32	offs;		/* Sprite/anim within this object */
 	Uint32	flags;
 #define MAPREF_SAVE	0x0001	/* Map dumps must record this reference */
