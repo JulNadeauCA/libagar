@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.31 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.32 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@ const struct tool shift_tool = {
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	NULL,			/* mousemotion */
+	shift_mousemotion,
 	NULL,			/* mousebuttondown */
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
@@ -106,6 +106,9 @@ shift_mousemotion(struct tool *t, int nx, int ny, int nxrel, int nyrel, int xo,
 		    sely < 0 || sely >= m->maph)
 			return;
 	}
+
+	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) == 0)
+		return;
 
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
