@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.7 2002/11/26 10:58:50 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.8 2002/12/21 10:27:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -261,6 +261,8 @@ tl_widgets_examine(int argc, union evarg *argv)
 	if (win == NULL) {
 		return;		/* Exists */
 	}
+	win->minw = 176;
+	win->minh = 147;
 	window_set_caption(win, "%s widget", OBJECT(wid)->name);
 	
 	pthread_mutex_lock(&pwin->lock);
