@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.5 2005/03/03 10:51:01 vedge Exp $
+#	$Csoft: Makefile,v 1.6 2005/03/05 12:08:08 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -8,7 +8,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	No
 
 SRCS=	tileset.c tileview.c tile.c feature.c fill.c pixmap.c prim.c sketch.c \
-	sketch_line.c sketch_circle.c
+	sketch_line.c sketch_circle.c animation.c
 #MAN3=	tileset.3 tileview.3
 
 CFLAGS+=${SDL_CFLAGS}
