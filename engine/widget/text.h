@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.26 2003/10/09 22:39:34 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.27 2004/03/12 02:50:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -18,6 +18,7 @@ enum text_msg_title {
 
 #define TEXT_TTF	0x01	/* Use FreeType */
 #define TEXT_BITMAP	0x02	/* Use fixed-size bitmap fonts */
+#define TEXT_PIXMAP	0x04	/* Use fixed-size >1bpp fonts */
 
 __BEGIN_DECLS
 int	 text_init(int);
