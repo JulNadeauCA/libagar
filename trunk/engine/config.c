@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.54 2003/01/04 14:10:31 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.55 2003/01/16 04:06:40 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,10 +101,14 @@ config_prop_modified(int argc, union evarg *argv)
 		if (view != NULL) {
 			SDL_Event vexp;
 
-			SDL_WM_ToggleFullScreen(view->v);
-
-			vexp.type = SDL_VIDEOEXPOSE;
-			SDL_PushEvent(&vexp);
+			if ((prop->data.i &&
+			    (!(view->v->flags & SDL_FULLSCREEN))) ||
+			   (!prop->data.i &&
+			    ((view->v->flags & SDL_FULLSCREEN)))) {
+				SDL_WM_ToggleFullScreen(view->v);
+				vexp.type = SDL_VIDEOEXPOSE;
+				SDL_PushEvent(&vexp);
+			}
 		}
 	}
 }
