@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.177 2005/03/27 03:11:05 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.178 2005/04/04 01:06:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -125,6 +125,10 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 			window_hide(mv->curtool->win);
 		}
 		mv->curtool->mv = NULL;
+
+		widget_replace_surface(mv->status, mv->status->surface,
+		    text_render(NULL, -1, COLOR(TEXT_COLOR),
+		    _("Select a tool.")));
 	}
 	mv->curtool = ntool;
 
