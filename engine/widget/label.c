@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.35 2002/11/19 05:10:43 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.36 2002/11/22 05:41:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,19 +25,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/vasprintf.h>
-#include <engine/compat/strlcat.h>
-
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-
 #include <engine/engine.h>
+#include <engine/compat/strlcat.h>
+#include <engine/compat/vasprintf.h>
+
+#include <engine/view.h>
 
 #include "text.h"
 #include "widget.h"

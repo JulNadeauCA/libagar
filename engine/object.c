@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.85 2002/11/10 01:43:26 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.86 2002/11/13 23:13:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,22 +25,17 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include "engine.h"
+
 #include <sys/stat.h>
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
 #include <fcntl.h>
 
-#include "engine.h"
 #include "config.h"
 #include "map.h"
 #include "physics.h"
 #include "input.h"
+#include "world.h"
 
 extern int mapediting;
 

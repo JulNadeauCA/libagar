@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.107 2002/11/17 23:02:09 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.108 2002/11/22 05:41:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,26 +25,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/engine.h>
 #include <engine/compat/asprintf.h>
 #include <engine/compat/vasprintf.h>
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#include <libfobj/fobj.h>
-
-#include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/config.h>
 #include <engine/version.h>
-
+#include <engine/view.h>
 #include <engine/mapedit/mapedit.h>
+
+#include <libfobj/fobj.h>
 
 #include "text.h"
 #include "widget.h"

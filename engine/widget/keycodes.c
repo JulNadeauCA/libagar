@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.17 2002/09/07 04:34:14 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.18 2002/09/07 05:11:40 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -25,14 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
 #include <engine/engine.h>
+
+#include <ctype.h>
 
 #include "text.h"
 #include "widget.h"
@@ -109,7 +104,6 @@ insert_ascii(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	for (il = strlen(arg), i = 0; i < il; i++) {
 		insert_char(tbox, arg[i]);
 	}
-
 }
 
 static void
@@ -141,15 +135,13 @@ key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 static void
 key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	int textlen;
+	int textlen, i;
 
 	textlen = strlen(tbox->text.s);
 
 	if (tbox->text.pos == textlen) {
 		tbox->text.s[--tbox->text.pos] = '\0';
 	} else if (tbox->text.pos > 0) {
-		int i;
-
 		for (i = tbox->text.pos; i < textlen; i++) {
 			tbox->text.s[i] = tbox->text.s[i + 1];
 		}

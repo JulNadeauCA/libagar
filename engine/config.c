@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.40 2002/11/15 04:18:30 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.41 2002/11/17 23:12:01 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,22 +25,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include "engine.h"
+
 #include <sys/stat.h>
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <pwd.h>
-#include <unistd.h>
 
-#include <libfobj/fobj.h>
-
-#include "engine.h"
-#include "map.h"
 #include "version.h"
 #include "config.h"
+#include "view.h"
 
 #include "widget/text.h"
 #include "widget/widget.h"

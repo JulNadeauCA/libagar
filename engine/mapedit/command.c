@@ -1,4 +1,4 @@
-/*	$Csoft: command.c,v 1.44 2002/08/12 02:35:19 vedge Exp $	*/
+/*	$Csoft: command.c,v 1.45 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,10 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-
 #include <engine/engine.h>
+
 #include <engine/map.h>
 #include <engine/physics.h>
 
@@ -38,7 +36,6 @@
 #include "command.h"
 
 static void	 mapedit_setcursor(struct mapedit *, int);
-
 
 /*
  * All the following operations must be performed

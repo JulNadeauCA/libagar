@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.6 2002/09/12 09:35:24 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.7 2002/10/30 17:18:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,14 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-
 #include <engine/engine.h>
+
+#include <engine/view.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -81,7 +76,6 @@ tool_mapview(void)
 			}
 		}
 	}
-
 	return (NULL);
 }
 

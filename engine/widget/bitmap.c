@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.5 2002/11/14 05:59:03 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.6 2002/11/17 23:13:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,15 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include <engine/engine.h>
+
+#include <engine/view.h>
 
 #include "widget.h"
 #include "window.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: edcursor.c,v 1.5 2002/09/16 15:47:30 vedge Exp $	*/
+/*	$Csoft: edcursor.c,v 1.6 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -25,13 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-
 #include <engine/engine.h>
+
 #include <engine/map.h>
 #include <engine/physics.h>
 

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.41 2002/11/08 03:51:33 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.42 2002/11/14 08:02:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -8,47 +8,55 @@
 
 #include <engine/mcconfig.h>
 
-#if !defined(__OpenBSD__) && !defined(_XOPEN_SOURCE)
-#define _XOPEN_SOURCE 500	/* XXX recursive mutexes */
+#if !defined(__OpenBSD__)
+# define _XOPEN_SOURCE 500	/* For recursive mutexes and pread()/pwrite() */
 #endif
+
+#include <sys/types.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
 #ifdef SERIALIZATION
-#include <pthread.h>		/* For pthread types */
+# include <pthread.h>		/* For pthread types */
 #else
-#define pthread_mutex_t int
-#define pthread_mutexattr_t int
-#define pthread_t int
+# define pthread_mutex_t	int
+# define pthread_mutexattr_t	int
+# define pthread_t		int
 #endif
 
-#include <SDL.h>		/* For SDL types */
+#include <SDL.h>		 /* For SDL types */
+
 #include <engine/compat/queue.h> /* For queue(3) definitions */
-#include <engine/error.h>	/* Wrappers and error messages */
-#include <engine/debug.h>	/* Debugging macros */
-#include <engine/object.h>	/* Most structures are derived from this */
-#include <engine/event.h>	/* For event handler prototypes */
-#include <engine/anim.h>	/* XXX */
-#include <engine/world.h>	/* XXX */
-#include <engine/view.h>	/* XXX */
+
+#include <engine/error.h>	 /* Wrappers and error messages */
+#include <engine/debug.h>	 /* Debugging macros */
+#include <engine/object.h> 	 /* Most structures are derived from this */
+#include <engine/event.h>	 /* For event handler prototypes */
 
 #ifndef SERIALIZATION
-#define pthread_mutex_destroy(mu)
-#define pthread_mutex_init(mu, attr)
-#define pthread_mutex_lock(mu)
-#define pthread_mutex_trylock(mu)
-#define pthread_mutex_unlock(mu)
-#define pthread_mutexattr_init(mu)
-#define pthread_mutexattr_destroy(mu)
-#define pthread_mutexattr_settype(mu, type)
-#define Pthread_create(th, attr, func, arg)
-#define Pthread_join(th, ptr)
-#define PTHREAD_MUTEX_INITIALIZER 0
+# define pthread_mutex_destroy(mu)
+# define pthread_mutex_init(mu, attr)
+# define pthread_mutex_lock(mu)
+# define pthread_mutex_trylock(mu)
+# define pthread_mutex_unlock(mu)
+# define pthread_mutexattr_init(mu)
+# define pthread_mutexattr_destroy(mu)
+# define pthread_mutexattr_settype(mu, type)
+# define Pthread_create(th, attr, func, arg)
+# define Pthread_join(th, ptr)
+# define PTHREAD_MUTEX_INITIALIZER 0
 #endif
 
 struct gameinfo {
-	char	*prog;
-	char	*name;
-	char	*copyright;
-	char	*version;
+	char	*prog;		/* Name of the executable */
+	char	*name;		/* Name of the game */
+	char	*copyright;	/* Copyright notice */
+	char	*version;	/* Version of the game */
 };
 
 enum {
@@ -71,4 +79,4 @@ int	 engine_start(void);
 void	 engine_stop(void);
 void	 engine_destroy(void);
 
-#endif /* !_AGAR_ENGINE_H_ */
+#endif	/* !_AGAR_ENGINE_H_ */

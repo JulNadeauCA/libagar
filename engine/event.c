@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.97 2002/11/15 21:56:16 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.98 2002/11/16 00:57:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,18 +25,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "engine.h"
 #include "map.h"
-#include "physics.h"
 #include "input.h"
 #include "config.h"
 #include "rootmap.h"
+#include "view.h"
+#include "world.h"
 
 #include "mapedit/mapedit.h"
 

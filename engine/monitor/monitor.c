@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.15 2002/11/16 00:57:40 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.16 2002/11/17 23:13:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,19 +25,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <engine/engine.h>
 
 #ifdef DEBUG
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-#include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/map.h>
 #include <engine/physics.h>
+#include <engine/view.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

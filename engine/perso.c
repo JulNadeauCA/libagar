@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.1 2002/11/21 22:55:34 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.2 2002/11/22 04:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,25 +25,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/vasprintf.h>
-
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <errno.h>
+#include "engine.h"
+#include "compat/vasprintf.h"
 
 #include <libfobj/fobj.h>
 #include <libfobj/buf.h>
 
-#include "engine.h"
 #include "map.h"
 #include "rootmap.h"
 #include "perso.h"
 #include "physics.h"
 #include "input.h"
 #include "version.h"
+#include "view.h"
+#include "world.h"
 
 #include "widget/widget.h"
 #include "widget/window.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.32 2002/11/15 00:51:49 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.33 2002/11/17 23:13:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,15 +25,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <engine/engine.h>
+
 #include <engine/physics.h>
 #include <engine/map.h>
+#include <engine/view.h>
+#include <engine/anim.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

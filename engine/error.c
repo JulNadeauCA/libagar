@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.8 2002/11/07 17:54:07 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.9 2002/11/14 08:02:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,17 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "compat/vasprintf.h"
-
-#include <sys/types.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-
 #include "engine.h"
-#include "error.h"
+#include "compat/vasprintf.h"
 
 #ifdef SERIALIZATION
 extern pthread_key_t engine_errorkey;	/* engine.c */

@@ -1,4 +1,4 @@
-/*	$Csoft: media.c,v 1.3 2002/09/16 01:50:16 vedge Exp $	*/
+/*	$Csoft: media.c,v 1.4 2002/11/06 05:05:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,19 +25,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "engine.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <sys/stat.h>
 
 #include <libfobj/fobj.h>
 
-#include "engine.h"
 #include "map.h"
 #include "oldxcf.h"
+#include "anim.h"
 
 enum {
 	NANIMS_INIT =	4,

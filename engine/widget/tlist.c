@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.19 2002/11/17 23:11:38 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.20 2002/11/19 06:08:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,13 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <engine/engine.h>
+
+#include <engine/view.h>
 
 #include "primitive.h"
 #include "text.h"
