@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.68 2003/07/08 00:34:59 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.69 2003/08/31 11:58:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -110,6 +110,7 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->pos = -1;
 	tbox->offs = 0;
 	tbox->newx = -1;
+	tbox->compose = 0;
 
 	event_new(tbox, "window-keydown", textbox_key, NULL);
 	event_new(tbox, "window-mousebuttondown", textbox_mousebuttondown,
@@ -295,6 +296,9 @@ textbox_key(int argc, union evarg *argv)
 
 		if (kcode->key == SDLK_LAST ||
 		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
+		    	if (kcode->clr_compo) {
+				tbox->compose = 0;
+			}
 			kcode->func(tbox, keysym, keymod, kcode->arg, unicode);
 			event_post(tbox, "textbox-changed", NULL);
 			break;
