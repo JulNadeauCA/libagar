@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.34 2002/04/26 11:40:44 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.35 2002/04/28 15:07:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -248,32 +248,18 @@ void
 engine_config(void)
 {
 	struct window *win;
-	struct checkbox *fullscrn_cbox;
+	struct checkbox *fullscr_cbox;
 	struct button *close_button;
 
 	/* Settings window */
-	win = emalloc(sizeof(struct window));
-	window_init(win, mainview, "engine-config", "Engine settings", 0,
-	    WINDOW_CUBIC, 64, 64, 512, 256);
-	pthread_mutex_lock(&world->lock);
-	object_link(win);
-	pthread_mutex_unlock(&world->lock);
+	win = window_new(mainview, "Engine settings", 0, WINDOW_CUBIC,
+	    64, 64, 512, 256);
 
-	fullscrn_cbox = emalloc(sizeof(struct checkbox));
-	checkbox_init(fullscrn_cbox, "fullscr-label", "Full-screen mode", 0,
-	    10, 10);
-	pthread_mutex_lock(&win->lock);
-	fullscrn_cbox->push = fullscrn_cbox_push;
-	widget_link(fullscrn_cbox, win);
-	pthread_mutex_unlock(&win->lock);
+	fullscr_cbox = checkbox_new(win, "Full-screen mode", 0, 10, 10);
+	fullscr_cbox->push = fullscrn_cbox_push;
 
-	close_button = emalloc(sizeof(struct button));
-	button_init(close_button, "close-button", "Close", 0,
-	    (win->w/2)-64, win->h-64);
+	close_button = button_new(win, "Close", 0, (win->w)/2-64, win->h-64);
 	close_button->push = close_button_push;
-	pthread_mutex_lock(&win->lock);
-	widget_link(close_button, win);
-	pthread_mutex_unlock(&win->lock);
 }
 
 static void
