@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.14 2003/01/01 05:18:39 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.15 2003/01/18 08:24:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -204,7 +204,7 @@ art_fetch(char *archive, struct object *ob)
 		map_init(art->tiles.map, MAP_2D, mapname, NULL);
 		free(mapname);
 
-		map_alloc_nodes(art->tiles.map, 1, 1);
+		map_alloc_nodes(art->tiles.map, 2, 2);
 	}
 
 	/* Load images in XCF format. */
