@@ -1,4 +1,4 @@
-/*	$Csoft: config.h,v 1.8 2002/09/02 08:12:14 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.9 2002/09/06 01:22:52 vedge Exp $	*/
 /*	Public domain	*/
 
 /* flags */
@@ -27,7 +27,6 @@ int		 config_save(void *, int);
 void		 config_destroy(void *);
 
 void		 config_init_wins(struct config *);
-void		 config_apply(int, union evarg *);
 
 int		 config_int(const char *);
 char		*config_string(const char *);
