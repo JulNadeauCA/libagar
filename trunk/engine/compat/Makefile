@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.7 2003/03/13 22:43:54 vedge Exp $
+#	$Csoft: Makefile,v 1.8 2003/03/25 13:37:01 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -13,4 +13,3 @@ OBJS=	setenv.o strlcat.o strlcpy.o strsep.o asprintf.o vasprintf.o rwlock.o \
 	pread.o pwrite.o gethostname.o snprintf.o
 
 include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/libfobj/Makefile.inc
