@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.28 2004/03/02 08:56:13 vedge Exp $
+# $Csoft: fr.po,v 1.29 2004/03/09 06:22:11 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,68 +27,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2004-02-24 09:11-0400\n"
+"POT-Creation-Date: 2004-03-10 12:59-0400\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Trek to the Cave"
-msgstr "Trek to the Cave"
-
-msgid "Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.\n"
-msgstr "Copyright (c) 2002, 2003, 2004 Communications CubeSoft, Inc.\n"
-
-msgid "New Game"
-msgstr "Nouvelle partie"
-
-msgid "Load Game"
-msgstr "Continuer une partie"
-
-msgid "Quit Game"
-msgstr "Quitter le jeu"
-
-#, c-format
-msgid "%s %s\n"
-msgstr ""
-
-#, c-format
-msgid ""
-"%s\n"
-"\n"
-msgstr ""
-
-msgid "Unreasonable refresh rate\n"
-msgstr "Fréquence de rafraîchissement déraisonnable\n"
-
-msgid "width"
-msgstr "largeur"
-
-msgid "height"
-msgstr "hauteur"
-
-msgid "frames/sec"
-msgstr "frames/seconde"
-
-msgid "font"
-msgstr "police"
-
-msgid "size"
-msgstr "taille"
-
-msgid "load-path"
-msgstr "chemin-chargement"
-
-msgid "den-path"
-msgstr "chemin-den"
-
-msgid "save-path"
-msgstr "chemin-sauvegarde"
-
-msgid "font-path"
-msgstr "chemin-polices"
 
 #, c-format
 msgid "Save the configuration and restart %s for OpenGL mode to take effect"
@@ -103,7 +48,7 @@ msgstr ""
 "asynchrones prennent effet"
 
 msgid "The configuration settings have been saved."
-msgstr ""
+msgstr "La sauvegarde des paramètres de configuration est complète."
 
 msgid "Engine settings"
 msgstr "Configuration du moteur"
@@ -169,10 +114,6 @@ msgstr "Le chemin d'accès est trop grand."
 #, c-format
 msgid "Cannot find `%s.%s' in <%s>."
 msgstr "Impossible de trouver «%s.%s» dans <%s>."
-
-#, c-format
-msgid "Agar engine v%s\n"
-msgstr "Moteur Agar v%s\n"
 
 #, c-format
 msgid "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n"
@@ -244,20 +185,12 @@ msgid "The object `%s' does not exist."
 msgstr "L'objet «%s» n'existe pas."
 
 #, c-format
-msgid "The %s/%s.%s file is not in load-path."
-msgstr "Le fichier «%s/%s.%s» est introuvable dans chemin de chargement."
+msgid "The %s%s/%s.%s file is not in load-path."
+msgstr "Fichier %s/%s.%s non-existant dans le chemin de chargement."
 
 #, c-format
 msgid "The %s directory is not in load-path."
-msgstr "Le répertoire «%s» est introuvable dans le chemin de chargement."
-
-#, c-format
-msgid "The `%s' object contains no graphics."
-msgstr "L'objet «%s» ne contient aucun graphique."
-
-#, c-format
-msgid "The `%s' object contains no audio."
-msgstr "L'objet «%s» ne contient aucun son."
+msgstr "Répertoire %s non-existant dans le chemin de chargement."
 
 #, c-format
 msgid "The `%s' object is non-persistent."
@@ -267,8 +200,13 @@ msgstr "L'objet «%s» n'est pas persistant."
 msgid "%s: Cannot resolve dependency `%s'"
 msgstr "%s: Impossible de résoudre la dépendance: «%s»"
 
-msgid "No position to resolve."
-msgstr "Aucune position à résoudre."
+#, c-format
+msgid "No such level map: `%s'"
+msgstr "Carte inexistante: «%s»"
+
+#, c-format
+msgid "No such projection map: `%s'"
+msgstr "Carte de projection inexistante: «%s»"
 
 #, c-format
 msgid "The `%s' save has inconsistent flags."
@@ -288,12 +226,6 @@ msgstr "Objet «%s»"
 
 msgid "Name: "
 msgstr "Nom: "
-
-msgid "Graphics: "
-msgstr "Graphiques: "
-
-msgid "Audio: "
-msgstr "Son: "
 
 #, c-format
 msgid "Type: %s"
@@ -382,20 +314,18 @@ msgid "a%u (%u frames)\n"
 msgstr "a%u (%u frames)\n"
 
 #, c-format
-msgid "%s graphics"
-msgstr "Graphiques de «%s»"
+msgid "Load media into `%s'"
+msgstr "Importation de média vers «%s»"
 
-msgid "Replace"
-msgstr "Remplacer"
+msgid "No layer is selected."
+msgstr "Aucun calque n'est sélectionné."
 
 #, c-format
 msgid "%s map edition"
 msgstr "Édition de «%s»"
 
-#. XXX combo
-#, c-format
-msgid "  Layer #%d"
-msgstr "  Calque #%d"
+msgid "Layer:"
+msgstr "Calque:"
 
 msgid "Out of memory for string."
 msgstr "Mémoire insuffisante pour la chaîne de caractères."
@@ -526,9 +456,6 @@ msgstr ", édition"
 msgid "%s (invisible %s)\n"
 msgstr "%s (invisible %s)\n"
 
-msgid "No layer is selected."
-msgstr "Aucun calque n'est sélectionné."
-
 #, c-format
 msgid "%s layers"
 msgstr "Calques de «%s»"
@@ -610,6 +537,9 @@ msgstr "Éditer obj"
 msgid "Load"
 msgstr "Charger"
 
+msgid "Duplicate"
+msgstr "Dupliquer"
+
 msgid "Move up"
 msgstr "Déplacer haut"
 
@@ -621,6 +551,15 @@ msgstr "Détruire"
 
 msgid "The zoom is out of range."
 msgstr "La fréquence de rafraîchissement est hors limite."
+
+msgid "Graphics: "
+msgstr "Graphiques: "
+
+msgid "Audio: "
+msgstr "Son: "
+
+msgid "Refresh"
+msgstr "Rafraîchir"
 
 msgid "Eraser"
 msgstr "Gomme à effacer"
@@ -708,6 +647,9 @@ msgstr "Étampe"
 msgid "Insert the contents of the copy/paste buffer."
 msgstr "Insérer le contenu du tampon."
 
+msgid "Replace"
+msgstr "Remplacer"
+
 msgid "Insert"
 msgstr "Insérer"
 
@@ -729,8 +671,8 @@ msgstr "Position"
 msgid "Assign unique object positions."
 msgstr "Attribuer des positions uniques aux objets."
 
-msgid ": "
-msgstr ": "
+msgid "Projection map: "
+msgstr "Carte de projection: "
 
 msgid "Input device: "
 msgstr "Pilote d'entrée: "
@@ -1546,15 +1488,6 @@ msgstr "+"
 msgid "-"
 msgstr "-"
 
-msgid "Object"
-msgstr "Objet"
-
-msgid "Map"
-msgstr "Carte"
-
-msgid "Character"
-msgstr "Personnage"
-
 msgid "Mouse"
 msgstr "Souris"
 
@@ -1568,390 +1501,434 @@ msgstr "Joystick"
 msgid "Illegal coordinates: %s[%d,%d,%d]"
 msgstr "Coordonées illégales: %s[%d,%d,%d]"
 
-#, c-format
-msgid "There is no input device named `%s'."
-msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
+#~ msgid "Trek to the Cave"
+#~ msgstr "Trek to the Cave"
 
-#, c-format
-msgid "Object `%s' has no position."
-msgstr "L'objet «%s» n'occupe aucune position."
+#~ msgid "Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.\n"
+#~ msgstr "Copyright (c) 2002, 2003, 2004 Communications CubeSoft, Inc.\n"
 
-#, c-format
-msgid "There is no projmap named `%s'."
-msgstr "La carte de projection «%s» n'existe pas."
+#~ msgid "New Game"
+#~ msgstr "Nouvelle partie"
 
-#, c-format
-msgid "No such level map: `%s'"
-msgstr "Carte inexistante: «%s»"
+#~ msgid "Load Game"
+#~ msgstr "Continuer une partie"
 
-#, c-format
-msgid "No such projection map: `%s'"
-msgstr "Carte de projection inexistante: «%s»"
+#~ msgid "Quit Game"
+#~ msgstr "Quitter le jeu"
 
-#, c-format
-msgid "%lu MB"
-msgstr "%lu MO"
+#~ msgid "Unreasonable refresh rate\n"
+#~ msgstr "Fréquence de rafraîchissement déraisonnable\n"
 
-#, c-format
-msgid "%lu KB"
-msgstr "%lu KO"
+#~ msgid "width"
+#~ msgstr "largeur"
 
-#, c-format
-msgid "%lu B"
-msgstr "%lu O"
+#~ msgid "height"
+#~ msgstr "hauteur"
 
-msgid "No directory is selected"
-msgstr "Aucun répertoire n'est sélectionné"
+#~ msgid "frames/sec"
+#~ msgstr "frames/seconde"
 
-msgid "new"
-msgstr "nouveau"
+#~ msgid "font"
+#~ msgstr "police"
 
-msgid "Queue"
-msgstr "Attente"
+#~ msgid "size"
+#~ msgstr "taille"
 
-msgid "Start download"
-msgstr "Télécharger"
+#~ msgid "load-path"
+#~ msgstr "chemin-chargement"
 
-#, c-format
-msgid "I/O error: %s"
-msgstr "Erreur entrée/sortie: %s"
+#~ msgid "den-path"
+#~ msgstr "chemin-den"
 
-msgid "EOF from server"
-msgstr "EOF en provenance du serveur"
+#~ msgid "save-path"
+#~ msgstr "chemin-sauvegarde"
 
-msgid "idle"
-msgstr "inactif"
+#~ msgid "font-path"
+#~ msgstr "chemin-polices"
 
-msgid "busy"
-msgstr "occupé"
+#~ msgid "Agar engine v%s\n"
+#~ msgstr "Moteur Agar v%s\n"
 
-msgid "exiting"
-msgstr "fermeture"
+#~ msgid "The `%s' object contains no graphics."
+#~ msgstr "L'objet «%s» ne contient aucun graphique."
 
-msgid "SUMO Client"
-msgstr "Client SUMO"
+#~ msgid "The `%s' object contains no audio."
+#~ msgstr "L'objet «%s» ne contient aucun son."
 
-msgid "Copyright (c) 2003, 2004 CubeSoft Communications, Inc.\n"
-msgstr "Copyright (c) 2003, 2004 Communications CubeSoft, Inc.\n"
+#~ msgid "No position to resolve."
+#~ msgstr "Aucune position à résoudre."
 
-#, c-format
-msgid "%2d. (locked session)"
-msgstr "%2d. (session verouillée)"
+#~ msgid "%s graphics"
+#~ msgstr "Graphiques de «%s»"
 
-msgid "Missing SUMO host/port."
-msgstr "Nom d'hôte ou port du serveur SUMO non spécifiés"
+#~ msgid "  Layer #%d"
+#~ msgstr "  Calque #%d"
 
-msgid "Missing FTP host/port."
-msgstr "Nom d'hôte ou port du serveur FTP non spécifiés"
+#~ msgid ": "
+#~ msgstr ": "
 
-msgid "Missing FTP user/pass."
-msgstr "Nom d'utilisateur ou mot de passe FTP manquant"
+#~ msgid "Object"
+#~ msgstr "Objet"
 
-#, c-format
-msgid "%s failed"
-msgstr "%s a échoué"
+#~ msgid "Map"
+#~ msgstr "Carte"
 
-msgid "SUMO sessions"
-msgstr "Sessions SUMO"
+#~ msgid "Character"
+#~ msgstr "Personnage"
 
-msgid "SUMO host: "
-msgstr "Hôte SUMO: "
+#~ msgid "There is no input device named `%s'."
+#~ msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
 
-msgid "SUMO port: "
-msgstr "Port SUMO: "
+#~ msgid "Object `%s' has no position."
+#~ msgstr "L'objet «%s» n'occupe aucune position."
 
-msgid "FTP host: "
-msgstr "Hôte FTP: "
+#~ msgid "There is no projmap named `%s'."
+#~ msgstr "La carte de projection «%s» n'existe pas."
 
-msgid "FTP port: "
-msgstr "Port FTP: "
+#~ msgid "%lu MB"
+#~ msgstr "%lu MO"
 
-msgid "FTP user: "
-msgstr "Compte FTP: "
+#~ msgid "%lu KB"
+#~ msgstr "%lu KO"
 
-msgid "FTP pass: "
-msgstr "Mot de passe FTP: "
+#~ msgid "%lu B"
+#~ msgstr "%lu O"
 
-msgid "Passive mode"
-msgstr "Mode passif"
+#~ msgid "No directory is selected"
+#~ msgstr "Aucun répertoire n'est sélectionné"
 
-#, c-format
-msgid "Usage: %s [-vfFe] [-w width] [-h height]"
-msgstr "Usage: %s [-vfFe] [-w largeur] [-h hauteur]"
+#~ msgid "new"
+#~ msgstr "nouveau"
 
-msgid " [-r fps] [-t font,size,style]"
-msgstr " [-r fps] [-t police,taille,style]"
+#~ msgid "Queue"
+#~ msgstr "Attente"
 
-msgid "Agar screenshot daemon"
-msgstr "Démon de capture d'écran Agar"
+#~ msgid "Start download"
+#~ msgstr "Télécharger"
 
-#, c-format
-msgid " %s [-vfF] [-w width] [-h height]"
-msgstr " %s [-vfF] [-w largeur] [-h hauteur]"
+#~ msgid "I/O error: %s"
+#~ msgstr "Erreur entrée/sortie: %s"
 
-msgid " [-H host] [-P port]"
-msgstr " [-H hôte] [-P port]"
+#~ msgid "EOF from server"
+#~ msgstr "EOF en provenance du serveur"
 
-msgid " [-d level] [-T]"
-msgstr " [-d niveau] [-T]"
+#~ msgid "idle"
+#~ msgstr "inactif"
 
-msgid "Too many clients."
-msgstr "Trop de clients."
+#~ msgid "busy"
+#~ msgstr "occupé"
 
-#, c-format
-msgid "%s: %s failed"
-msgstr "%s: %s à échoué"
+#~ msgid "exiting"
+#~ msgstr "fermeture"
 
-msgid "Bad JPEG magic."
-msgstr "Mauvaise signature JPEG."
+#~ msgid "SUMO Client"
+#~ msgstr "Client SUMO"
 
-msgid "Power Calculation"
-msgstr "Calcul de Puissance"
+#~ msgid "Copyright (c) 2003, 2004 CubeSoft Communications, Inc.\n"
+#~ msgstr "Copyright (c) 2003, 2004 Communications CubeSoft, Inc.\n"
 
-msgid "Power: "
-msgstr "Puissance: "
+#~ msgid "%2d. (locked session)"
+#~ msgstr "%2d. (session verouillée)"
 
-msgid "Voltage: "
-msgstr "Tension: "
+#~ msgid "Missing SUMO host/port."
+#~ msgstr "Nom d'hôte ou port du serveur SUMO non spécifiés"
 
-msgid "Current: "
-msgstr "Courant: "
+#~ msgid "Missing FTP host/port."
+#~ msgstr "Nom d'hôte ou port du serveur FTP non spécifiés"
 
-msgid "Resistivity of Conductor Materials"
-msgstr "Résistivité de Matériaux Conducteurs"
+#~ msgid "Missing FTP user/pass."
+#~ msgstr "Nom d'utilisateur ou mot de passe FTP manquant"
 
-msgid "Material: "
-msgstr "Matériel: "
+#~ msgid "%s failed"
+#~ msgstr "%s a échoué"
 
-msgid "Resistivity: "
-msgstr "Résistivité: "
+#~ msgid "SUMO sessions"
+#~ msgstr "Sessions SUMO"
 
-msgid "Copyright (c) 2003, 2004 Winds Triton Engineering, Inc.\n"
-msgstr "Copyright (c) 2003, 2004 Ingénierie Winds Triton, Inc.\n"
+#~ msgid "SUMO host: "
+#~ msgstr "Hôte SUMO: "
 
-msgid "Winds Triton EDA Tools"
-msgstr "Outils Winds Triton EDA"
+#~ msgid "SUMO port: "
+#~ msgstr "Port SUMO: "
 
-msgid "Unreasonable refresh rate"
-msgstr "Fréquence de rafraîchissement déraisonnable"
+#~ msgid "FTP host: "
+#~ msgstr "Hôte FTP: "
 
-msgid "Resistance Calculation"
-msgstr "Calcul de Résistance"
+#~ msgid "FTP port: "
+#~ msgstr "Port FTP: "
 
-msgid "Resistance: "
-msgstr "Résistance: "
+#~ msgid "FTP user: "
+#~ msgstr "Compte FTP: "
 
-msgid "Current Calculation"
-msgstr "Calcul de Courant"
+#~ msgid "FTP pass: "
+#~ msgstr "Mot de passe FTP: "
 
-msgid "Voltage Calculation"
-msgstr "Calcul de Tension"
+#~ msgid "Passive mode"
+#~ msgstr "Mode passif"
 
-msgid "RMS Voltage"
-msgstr "Voltage RMS"
+#~ msgid "Usage: %s [-vfFe] [-w width] [-h height]"
+#~ msgstr "Usage: %s [-vfFe] [-w largeur] [-h hauteur]"
 
-msgid "RMS: "
-msgstr "RMS: "
+#~ msgid " [-r fps] [-t font,size,style]"
+#~ msgstr " [-r fps] [-t police,taille,style]"
 
-msgid "Peak: "
-msgstr "Sommet: "
+#~ msgid "Agar screenshot daemon"
+#~ msgstr "Démon de capture d'écran Agar"
 
-msgid "Average: "
-msgstr "Moyenne: "
+#~ msgid " %s [-vfF] [-w width] [-h height]"
+#~ msgstr " %s [-vfF] [-w largeur] [-h hauteur]"
 
-msgid "Waveform Combination"
-msgstr "Combinaison de formes d'onde"
+#~ msgid " [-H host] [-P port]"
+#~ msgstr " [-H hôte] [-P port]"
 
-msgid "Waveform 1"
-msgstr "Forme d'onde 1"
+#~ msgid " [-d level] [-T]"
+#~ msgstr " [-d niveau] [-T]"
 
-msgid "Amplitude"
-msgstr "Amplitude"
+#~ msgid "Too many clients."
+#~ msgstr "Trop de clients."
 
-msgid "Capacitance Approximation"
-msgstr "Approximation de Capacitance"
+#~ msgid "%s: %s failed"
+#~ msgstr "%s: %s à échoué"
 
-msgid "Vacuum"
-msgstr "Vide"
+#~ msgid "Bad JPEG magic."
+#~ msgstr "Mauvaise signature JPEG."
 
-msgid "Air (1 atm)"
-msgstr "Air (1 atm)"
+#~ msgid "Power Calculation"
+#~ msgstr "Calcul de Puissance"
 
-msgid "Air (100 atm)"
-msgstr "Air (100 atm)"
+#~ msgid "Power: "
+#~ msgstr "Puissance: "
 
-msgid "Glass"
-msgstr "Verre"
+#~ msgid "Voltage: "
+#~ msgstr "Tension: "
 
-msgid "Mica"
-msgstr "Mica"
+#~ msgid "Current: "
+#~ msgstr "Courant: "
 
-msgid "Mylar"
-msgstr "Mylar"
+#~ msgid "Resistivity of Conductor Materials"
+#~ msgstr "Résistivité de Matériaux Conducteurs"
 
-msgid "Neoprene"
-msgstr "Néoprene"
+#~ msgid "Material: "
+#~ msgstr "Matériel: "
 
-msgid "Plexiglas"
-msgstr "Plexiglas"
+#~ msgid "Resistivity: "
+#~ msgstr "Résistivité: "
 
-msgid "Polyethylene"
-msgstr "Polyéthylène"
+#~ msgid "Copyright (c) 2003, 2004 Winds Triton Engineering, Inc.\n"
+#~ msgstr "Copyright (c) 2003, 2004 Ingénierie Winds Triton, Inc.\n"
 
-msgid "Polyvinyl chloride"
-msgstr "Chlorure de polyvinyl"
+#~ msgid "Winds Triton EDA Tools"
+#~ msgstr "Outils Winds Triton EDA"
 
-msgid "Teflon"
-msgstr "Teflon"
+#~ msgid "Unreasonable refresh rate"
+#~ msgstr "Fréquence de rafraîchissement déraisonnable"
 
-msgid "Germanium"
-msgstr "Germanium"
+#~ msgid "Resistance Calculation"
+#~ msgstr "Calcul de Résistance"
 
-msgid "Strontium titanate"
-msgstr "Titanate de strontium"
+#~ msgid "Resistance: "
+#~ msgstr "Résistance: "
 
-msgid "Water"
-msgstr "Eau"
+#~ msgid "Current Calculation"
+#~ msgstr "Calcul de Courant"
 
-msgid "Glycerin"
-msgstr "Glycérine"
+#~ msgid "Voltage Calculation"
+#~ msgstr "Calcul de Tension"
 
-msgid "Benzene"
-msgstr "Benzène"
+#~ msgid "RMS Voltage"
+#~ msgstr "Voltage RMS"
 
-msgid "Silicium"
-msgstr "Silicium"
+#~ msgid "RMS: "
+#~ msgstr "RMS: "
 
-msgid "InSb"
-msgstr "InSb"
+#~ msgid "Peak: "
+#~ msgstr "Sommet: "
 
-msgid "InAs"
-msgstr "InAs"
+#~ msgid "Average: "
+#~ msgstr "Moyenne: "
 
-msgid "InP"
-msgstr "InP"
+#~ msgid "Waveform Combination"
+#~ msgstr "Combinaison de formes d'onde"
 
-msgid "GaSb"
-msgstr "GaSb"
+#~ msgid "Waveform 1"
+#~ msgstr "Forme d'onde 1"
 
-msgid "GaAs"
-msgstr "GaAs"
+#~ msgid "Amplitude"
+#~ msgstr "Amplitude"
 
-msgid "Min: "
-msgstr "Minimum: "
+#~ msgid "Capacitance Approximation"
+#~ msgstr "Approximation de Capacitance"
 
-msgid "Max: "
-msgstr "Maximum: "
+#~ msgid "Vacuum"
+#~ msgstr "Vide"
 
-msgid "Dielectric: "
-msgstr "Diélectrique: "
+#~ msgid "Air (1 atm)"
+#~ msgstr "Air (1 atm)"
 
-msgid "Area: "
-msgstr "Zone: "
+#~ msgid "Air (100 atm)"
+#~ msgstr "Air (100 atm)"
 
-msgid "Thickness: "
-msgstr "Épaisseur: "
+#~ msgid "Glass"
+#~ msgstr "Verre"
 
-msgid "Temperature: "
-msgstr "Température: "
+#~ msgid "Mica"
+#~ msgstr "Mica"
 
-msgid "Length Equivalence"
-msgstr "Équivalence de Longueur"
+#~ msgid "Mylar"
+#~ msgstr "Mylar"
 
-msgid "Length: "
-msgstr "Longueur: "
+#~ msgid "Neoprene"
+#~ msgstr "Néoprene"
 
-msgid "Weight Equivalence"
-msgstr "Équivalence de Poids"
+#~ msgid "Plexiglas"
+#~ msgstr "Plexiglas"
 
-msgid "Weight: "
-msgstr "Poids: "
+#~ msgid "Polyethylene"
+#~ msgstr "Polyéthylène"
 
-msgid "Impedance"
-msgstr "Impédance"
+#~ msgid "Polyvinyl chloride"
+#~ msgstr "Chlorure de polyvinyl"
 
-msgid "Capacitive reactance: "
-msgstr "Réactance capacitive: "
+#~ msgid "Teflon"
+#~ msgstr "Teflon"
 
-msgid "Inductive reactance: "
-msgstr "Réactance inductive: "
+#~ msgid "Germanium"
+#~ msgstr "Germanium"
 
-msgid "Impedance: "
-msgstr "Impédance: "
+#~ msgid "Strontium titanate"
+#~ msgstr "Titanate de strontium"
 
-msgid "Frequency: "
-msgstr "Fréquence: "
+#~ msgid "Water"
+#~ msgstr "Eau"
 
-msgid "Capacitance: "
-msgstr "Capacitance: "
+#~ msgid "Glycerin"
+#~ msgstr "Glycérine"
 
-msgid "Inductance: "
-msgstr "Inductance: "
+#~ msgid "Benzene"
+#~ msgstr "Benzène"
 
-msgid "Time Equivalence"
-msgstr "Équivalence de Temps"
+#~ msgid "Silicium"
+#~ msgstr "Silicium"
 
-msgid "Time: "
-msgstr "Temps: "
+#~ msgid "InSb"
+#~ msgstr "InSb"
 
-msgid "Adjustable Voltage Regulator Tool"
-msgstr ""
+#~ msgid "InAs"
+#~ msgstr "InAs"
 
-msgid "Model: "
-msgstr ""
+#~ msgid "InP"
+#~ msgstr "InP"
 
-msgid "Inductance Calculation"
-msgstr "Calcul d'Inductance"
+#~ msgid "GaSb"
+#~ msgstr "GaSb"
 
-msgid "Pressure Equivalence"
-msgstr "Équivalence de Pression"
+#~ msgid "GaAs"
+#~ msgstr "GaAs"
 
-msgid "Pressure: "
-msgstr "Pression: "
+#~ msgid "Min: "
+#~ msgstr "Minimum: "
 
-msgid "Resistor"
-msgstr "Résistance"
+#~ msgid "Max: "
+#~ msgstr "Maximum: "
 
-msgid "Discrete, ohmic resistance"
-msgstr "Résistance ohmique discrète"
+#~ msgid "Dielectric: "
+#~ msgstr "Diélectrique: "
 
-msgid "Resistor %s"
-msgstr "Résistance %s"
+#~ msgid "Area: "
+#~ msgstr "Zone: "
 
-msgid "Power rating: "
-msgstr "Puissance maximale: "
+#~ msgid "Thickness: "
+#~ msgstr "Épaisseur: "
 
-msgid "Tolerance (%): "
-msgstr "Tolérance (%): "
+#~ msgid "Temperature: "
+#~ msgstr "Température: "
 
-#, c-format
-msgid "Voltage source %s"
-msgstr "Tension d'alimentation %s"
+#~ msgid "Length Equivalence"
+#~ msgstr "Équivalence de Longueur"
 
-msgid "Current limit: "
-msgstr "Limite de courant: "
+#~ msgid "Length: "
+#~ msgstr "Longueur: "
 
-msgid "Internal resistance: "
-msgstr "Résistance interne: "
+#~ msgid "Weight Equivalence"
+#~ msgstr "Équivalence de Poids"
 
-msgid "Constant voltage source"
-msgstr "Source de voltage constante"
+#~ msgid "Weight: "
+#~ msgstr "Poids: "
 
-msgid "Circuit Simulation"
-msgstr "Simulation de Circuit"
+#~ msgid "Impedance"
+#~ msgstr "Impédance"
 
-#, c-format
-msgid "A `%s' circuit exists."
-msgstr "Un circuit nommé «%s» existe déjà."
+#~ msgid "Capacitive reactance: "
+#~ msgstr "Réactance capacitive: "
 
-msgid "No circuit is selected."
-msgstr "Aucun circuit n'est sélectionné"
+#~ msgid "Inductive reactance: "
+#~ msgstr "Réactance inductive: "
 
-msgid "Circuits"
-msgstr "Circuits"
+#~ msgid "Impedance: "
+#~ msgstr "Impédance: "
 
-msgid "LM555 Timer Adjustement Tool"
-msgstr ""
+#~ msgid "Frequency: "
+#~ msgstr "Fréquence: "
+
+#~ msgid "Capacitance: "
+#~ msgstr "Capacitance: "
+
+#~ msgid "Inductance: "
+#~ msgstr "Inductance: "
+
+#~ msgid "Time Equivalence"
+#~ msgstr "Équivalence de Temps"
+
+#~ msgid "Time: "
+#~ msgstr "Temps: "
+
+#~ msgid "Inductance Calculation"
+#~ msgstr "Calcul d'Inductance"
+
+#~ msgid "Pressure Equivalence"
+#~ msgstr "Équivalence de Pression"
+
+#~ msgid "Pressure: "
+#~ msgstr "Pression: "
+
+#~ msgid "Resistor"
+#~ msgstr "Résistance"
+
+#~ msgid "Discrete, ohmic resistance"
+#~ msgstr "Résistance ohmique discrète"
+
+#~ msgid "Resistor %s"
+#~ msgstr "Résistance %s"
+
+#~ msgid "Power rating: "
+#~ msgstr "Puissance maximale: "
+
+#~ msgid "Tolerance (%): "
+#~ msgstr "Tolérance (%): "
+
+#~ msgid "Voltage source %s"
+#~ msgstr "Tension d'alimentation %s"
+
+#~ msgid "Current limit: "
+#~ msgstr "Limite de courant: "
+
+#~ msgid "Internal resistance: "
+#~ msgstr "Résistance interne: "
+
+#~ msgid "Constant voltage source"
+#~ msgstr "Source de voltage constante"
+
+#~ msgid "Circuit Simulation"
+#~ msgstr "Simulation de Circuit"
+
+#~ msgid "A `%s' circuit exists."
+#~ msgstr "Un circuit nommé «%s» existe déjà."
+
+#~ msgid "No circuit is selected."
+#~ msgstr "Aucun circuit n'est sélectionné"
+
+#~ msgid "Circuits"
+#~ msgstr "Circuits"
 
 #~ msgid "Position or reposition objects on maps."
 #~ msgstr "Positionnement et repositionnement d'objets sur carte."
