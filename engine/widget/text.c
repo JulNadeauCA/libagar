@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.95 2004/11/30 11:36:37 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.96 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -448,7 +448,7 @@ text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
 
 /* Prompt the user for a floating-point value. */
 void
-text_edit_float(double *fp, double min, double max, const char *unit,
+text_prompt_float(double *fp, double min, double max, const char *unit,
     const char *format, ...)
 {
 	char msg[LABEL_MAX];
@@ -474,7 +474,7 @@ text_edit_float(double *fp, double min, double max, const char *unit,
 	WIDGET(fsb)->flags |= WIDGET_WFILL;
 	widget_bind(fsb, "value", WIDGET_DOUBLE, fp);
 	fspinbutton_set_range(fsb, min, max);
-//	event_new(fsb, "fspinbutton-return", window_generic_detach, "%p", win);
+	event_new(fsb, "fspinbutton-return", window_generic_detach, "%p", win);
 	
 	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
 	button = button_new(vb, _("Ok"));
@@ -486,6 +486,42 @@ text_edit_float(double *fp, double min, double max, const char *unit,
 	widget_focus(fsb->input);
 }
 
+/* Prompt the user for a string. */
+void
+text_prompt_string(char **sp, size_t len, const char *msgfmt, ...)
+{
+	char msg[LABEL_MAX];
+	struct window *win;
+	struct vbox *vb;
+	va_list args;
+	struct button *button;
+	struct textbox *tb;
+
+	va_start(args, msgfmt);
+	vsnprintf(msg, sizeof(msg), msgfmt, args);
+	va_end(args);
+
+	win = window_new(WINDOW_NO_VRESIZE, NULL);
+	window_set_caption(win, "%s", _("Enter string"));
+	window_set_position(win, WINDOW_CENTER, 1);
+
+	vb = vbox_new(win, VBOX_WFILL);
+	label_new(vb, LABEL_STATIC, msg);
+	
+	vb = vbox_new(win, VBOX_WFILL);
+
+	tb = textbox_new(vb, _("String: "));
+	WIDGET(tb)->flags |= WIDGET_WFILL;
+	widget_bind(tb, "string", WIDGET_STRING, sp, len);
+	event_new(tb, "textbox-return", window_generic_detach, "%p", win);
+	
+	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
+	button = button_new(vb, _("Ok"));
+	event_new(button, "button-pushed", window_generic_detach, "%p", win);
+
+	window_show(win);
+	widget_focus(tb);
+}
 
 /*
  * Parse a command-line font specification and set the default font.

@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.36 2004/09/14 10:55:30 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.37 2004/11/30 11:36:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -61,9 +61,13 @@ void text_tmsg(enum text_msg_title, Uint32, const char *, ...)
 	          FORMAT_ATTRIBUTE(printf, 3, 4)
 	          NONNULL_ATTRIBUTE(3);
 
-void text_edit_float(double *, double, double, const char *, const char *, ...)
+void text_prompt_float(double *, double, double, const char *,
+		       const char *, ...)
 		         FORMAT_ATTRIBUTE(printf, 5, 6)
 		         NONNULL_ATTRIBUTE(5);
+void text_prompt_string(char **, size_t, const char *, ...)
+		         FORMAT_ATTRIBUTE(printf, 3, 4)
+		         NONNULL_ATTRIBUTE(3);
 
 struct text	*text_render2(const char *, int, Uint32, const char *);
 void		 text_unused2(struct text *);

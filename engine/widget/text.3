@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.20 2004/11/30 11:36:37 vedge Exp $
+.\"	$Csoft: text.3,v 1.21 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -178,7 +178,7 @@ functions return the expected surface dimensions for the given text.
               "..."
 .Pp
 .Ft "void"
-.Fn text_edit_float "enum text_float_type type" "double *fp" "double min" \
+.Fn text_prompt_float "enum text_float_type type" "double *fp" "double min" \
                     "double max" "const struct unit *unit" \
 		    "const char *format" "..."
 .nr nS 0
@@ -204,7 +204,7 @@ enum text_msg_title {
 .Ed
 .Pp
 The
-.Fn text_edit_float
+.Fn text_promt_float
 function displays a window prompting the user to enter a floating-point
 value.
 The
