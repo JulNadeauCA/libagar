@@ -1,10 +1,10 @@
-/*	$Csoft$	*/
+/*	$Csoft: magnifier.h,v 1.1 2002/07/09 09:23:58 vedge Exp $	*/
 /*	Public domain	*/
 
 struct magnifier {
 	struct	 tool tool;
 	int	 flags;
-#define MAGNIFIER_RESIZE_WINDOW		0x01	/* Allow window resize */
+#define MAGNIFIER_CAN_RESIZE_WIN	0x01	/* Allow window resize */
 	enum {
 		MAGNIFIER_ZOOM_IN,
 		MAGNIFIER_ZOOM_OUT,
