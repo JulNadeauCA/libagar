@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.113 2002/12/17 00:20:19 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.114 2002/12/17 01:04:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -170,10 +170,10 @@ event_init_fps_counter(void)
 	    133, 104, 125, 91);
 	window_set_caption(fps_win, "Frames/second");
 	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, 100);
-	fps_label = label_new(reg, 100, 20, "...");
+	fps_label = label_new(reg, 100, 15, "...");
 	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
-	    100, 80);
+	    100, 85);
 	fps_cur_fps = graph_add_item(fps_graph, "cur-fps",
 	    SDL_MapRGB(view->v->format, 0, 160, 0));
 	fps_event_count = graph_add_item(fps_graph, "event-rate",
