@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.160 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.161 2005/01/23 11:53:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -679,7 +679,9 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 #endif /* HAVE_OPENGL */
 
 /*
- * Alpha-blend two pixels in software.
+ * Blend the specified components with the pixel at s:[x,y], using the
+ * given source alpha value.
+ *
  * Clipping is done; the surface must be locked.
  */
 void
@@ -721,7 +723,7 @@ view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
 	dr = (((r - dr) * a) >> 8) + dr;
 	dg = (((g - dg) * a) >> 8) + dg;
 	db = (((b - db) * a) >> 8) + db;
-	color = SDL_MapRGB((s)->format, dr, dg, db);
+	color = SDL_MapRGB(s->format, dr, dg, db);
 
 	switch (s->format->BytesPerPixel) {
 		_VIEW_PUTPIXEL_8(dst,  color)
