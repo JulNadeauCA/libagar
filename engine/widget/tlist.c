@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.67 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.68 2003/06/09 18:37:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -129,7 +129,7 @@ tlist_scale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		WIDGET(tl)->w = 200;		/* XXX more sensible default */
-		WIDGET(tl)->h = 100;
+		WIDGET(tl)->h = 80;
 	}
 
 	WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->button_size;
@@ -578,7 +578,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	
 	widget_focus(tl);
 
-	if (button != SELECTION_MOUSE_BUTTON) 		/* Selection button? */
+	if (button != SELECTION_MOUSE_BUTTON)
 		return;
 	
 	pthread_mutex_lock(&tl->lock);
