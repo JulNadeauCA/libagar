@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.30 2002/07/30 22:23:57 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.31 2002/08/29 07:15:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -141,6 +141,7 @@ button_scaled(int argc, union evarg *argv)
 	struct button *b = argv[0].p;
 	int x, y;
 	Uint32 col = 0;
+	Uint16 nw;
 	Uint8 *src, *dst, r1, g1, b1, a1;
 	
 	if (WIDGET(b)->w < 6 || WIDGET(b)->h < 6) {
@@ -151,8 +152,11 @@ button_scaled(int argc, union evarg *argv)
 		SDL_FreeSurface(b->slabel_s);
 	}
 
-	b->slabel_s = view_scale_surface(b->label_s,
-	    WIDGET(b)->w - 6, WIDGET(b)->h - 6);
+	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
+	if (nw > WIDGET(b)->w) {
+		nw = WIDGET(b)->w;
+	}
+	b->slabel_s = view_scale_surface(b->label_s, nw - 6, WIDGET(b)->h - 6);
 }
 
 void
