@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: grey18.h,v 1.2 2002/09/06 01:03:11 vedge Exp $	*/
 /*	Public domain	*/
 
 static const SDL_Color default_border[] = {
@@ -19,7 +19,8 @@ static const SDL_Color default_border[] = {
 	{  90,  90, 100, 0 },
 	{  80,  80,  80, 0 },
 	{  50,  50,  50, 0 },
-	{  40,  40,  40, 0 }
+	{  40,  40,  40, 0 },
+	{ 200, 200, 200, 0 }
 };
 
 static const int default_nborder = 18;
