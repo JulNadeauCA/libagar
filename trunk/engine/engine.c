@@ -1,14 +1,10 @@
-/*	$Csoft: engine.c,v 1.8 2002/02/08 01:38:20 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.9 2002/02/11 23:26:57 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <pthread.h>
-#include <glib.h>
-#include <SDL.h>
 
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
@@ -30,15 +26,19 @@ static void
 printusage(char *progname)
 {
 	fprintf(stderr,
-	    "Usage: %s [-vxf] [-w width] [-h height] [-d depth] [-j joy#]\n",
+	    "Usage: %s [-vxf] [-l game] [-n newgame]\n",
 	    progname);
 	fprintf(stderr,
-	    "Usage: %s [-vxf] [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n",
+	    "Usage: %s        [-w width] [-h height] [-d depth] [-j joy#]\n",
+	    progname);
+	fprintf(stderr,
+	    "Usage: %s        [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n",
 	    progname);
 }
 
 int
-engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
+engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
+    char *path)
 {
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
@@ -46,6 +46,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 	curmapedit = NULL;
 	curchar = NULL;
 
+	*scriptflags = 0;
 	njoy = 0;
 	mapediting = 0;
 	w = 640;
@@ -54,7 +55,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 	flags = SDL_SWSURFACE;
 	curmap = NULL;
 	
-	while ((c = getopt(argc, argv, "xvfw:h:d:j:e:D:W:H:")) != -1) {
+	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:")) != -1) {
 		switch (c) {
 		case 'x':
 			xcf_debug++;
@@ -65,6 +66,14 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 			    gameinfo->ver[0], gameinfo->ver[1]);
 			printf("%s\n", gameinfo->copyright);
 			exit (255);
+		case 'l':
+			*scriptflags |= LOAD_GAME;
+			strcpy(path, optarg);
+			break;
+		case 'n':
+			*scriptflags |= NEW_GAME;
+			strcpy(path, optarg);
+			break;
 		case 'f':
 			flags |= SDL_FULLSCREEN;
 			break;
@@ -97,6 +106,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 			printusage(argv[0]);
 			exit(255);
 		}
+	}
+
+	if (*scriptflags == 0 && !mapediting) {
+		printusage(argv[0]);
+		exit(255);
 	}
 
 	/* Initialize SDL. */

@@ -1,9 +1,8 @@
-/*	$Csoft: engine.h,v 1.4 2002/02/10 01:37:43 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.5 2002/02/11 23:27:08 vedge Exp $	*/
 
 #include <pthread.h>
 
 #include <SDL.h>
-#include <glib.h> /* XXX temporary */
 
 #include <libfobj/fobj.h>
 
@@ -30,7 +29,12 @@ struct gameinfo {
 	int	 ver[2];
 };
 
-int	engine_init(int, char **, struct gameinfo *);
+enum {
+	NEW_GAME =	0x01,
+	LOAD_GAME =	0x02
+};
+
+int	engine_init(int, char **, struct gameinfo *, int *, char *);
 int	engine_mapedit(void);
 void	engine_destroy(void);
 void	engine_join(void);
