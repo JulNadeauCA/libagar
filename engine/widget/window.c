@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.100 2002/11/14 02:17:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.101 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -770,11 +770,13 @@ scan_wins:
 				}
 				view->winop = VIEW_WINOP_MOVE;
 				view->wop_win = win;
-			} else if (ev->button.y-win->rd.y > win->rd.h-win->borderw) {
+			} else if (ev->button.y-win->rd.y >
+			    win->rd.h-win->borderw) {
 				/* Resize the window. */
 			    	if (ev->button.x-win->rd.x < 17) {
 					view->winop = VIEW_WINOP_LRESIZE;
-				} else if (ev->button.x-win->rd.x > win->rd.w-17) {
+				} else if (ev->button.x-win->rd.x >
+				    win->rd.w-17) {
 					view->winop = VIEW_WINOP_RRESIZE;
 				} else {
 					view->winop = VIEW_WINOP_HRESIZE;

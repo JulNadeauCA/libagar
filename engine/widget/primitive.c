@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.22 2002/11/14 02:23:06 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.23 2002/11/14 05:59:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -729,7 +729,7 @@ primitive_config_window(void)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 93);
 	
-	lab = label_new(reg, "Box:", 100, 5);
+	lab = label_new(reg, 100, 5, "Box:");
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item(tl, NULL,
 	    "2d-style", box_2d);
@@ -747,13 +747,13 @@ primitive_config_window(void)
 	    "Dark 3d-style #5", box_3d_dark5);
 	event_new(tl, "tlist-changed", apply, "%i", BOX);
 
-	lab = label_new(reg, "Frame:", 100, 5);
+	lab = label_new(reg, 100, 5, "Frame:");
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "3d-style", frame_3d);
 	event_new(tl, "tlist-changed", apply, "%i", FRAME);
 
-	lab = label_new(reg, "Circle:", 100, 5);
+	lab = label_new(reg, 100, 5, "Circle:");
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Bresenham #1", circle_bresenham);
@@ -761,7 +761,7 @@ primitive_config_window(void)
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 93);
 		
-	lab = label_new(reg, "Line:", 100, 5);
+	lab = label_new(reg, 100, 5, "Line:");
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Bresenham plain #1", line_bresenham);
@@ -777,13 +777,13 @@ primitive_config_window(void)
 	    "Bresenham dashed #5", line_bresenham_dashed5);
 	event_new(tl, "tlist-changed", apply, "%i", LINE);
 		
-	lab = label_new(reg, "Square:", 100, 5);
+	lab = label_new(reg, 100, 5, "Square:");
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Composite", square_composite);
 	event_new(tl, "tlist-changed", apply, "%i", SQUARE);
 		
-	lab = label_new(reg, "Triangle:", 100, 5);
+	lab = label_new(reg, 100, 5, "Triangle:");
 	tl = tlist_new(reg, 100, 28, 0);
 	tlist_insert_item_selected(tl, NULL,
 	    "Composite", triangle_composite);
@@ -839,19 +839,19 @@ primitive_sequence(struct window *win, enum primitive_seq seq)
 		old_line = primitives.line;
 		primitives.line = line_bresenham_dashed5;
 		REDRAW();
-		SDL_Delay(50);
+		SDL_Delay(20);
 		primitives.line = line_bresenham_dashed4;
 		REDRAW();
-		SDL_Delay(40);
+		SDL_Delay(17);
 		primitives.line = line_bresenham_dashed3;
 		REDRAW();
-		SDL_Delay(30);
+		SDL_Delay(15);
 		primitives.line = line_bresenham_dashed2;
 		REDRAW();
-		SDL_Delay(20);
+		SDL_Delay(13);
 		primitives.line = line_bresenham_dashed1;
 		REDRAW();
-		SDL_Delay(15);
+		SDL_Delay(10);
 		primitives.line = old_line;
 		break;
 	case PRIMITIVE_SEQ_DEMATERIALIZE:
@@ -864,19 +864,19 @@ primitive_sequence(struct window *win, enum primitive_seq seq)
 		primitives.line = line_bresenham_dashed2;
 		primitives.box = box_3d_dark2;
 		REDRAW();
-		SDL_Delay(10);
+		SDL_Delay(8);
 		primitives.line = line_bresenham_dashed3;
 		primitives.box = box_3d_dark3;
 		REDRAW();
-		SDL_Delay(15);
+		SDL_Delay(14);
 		primitives.line = line_bresenham_dashed4;
 		primitives.box = box_3d_dark4;
 		REDRAW();
-		SDL_Delay(20);
+		SDL_Delay(16);
 		primitives.line = line_bresenham_dashed5;
 		primitives.box = box_3d_dark5;
 		REDRAW();
-		SDL_Delay(25);
+		SDL_Delay(18);
 		primitives.line = old_line;
 		primitives.box = old_box;
 		break;
