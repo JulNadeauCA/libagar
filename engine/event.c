@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.56 2002/07/06 23:49:19 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.57 2002/07/07 06:27:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -116,11 +116,6 @@ event_hotkey(SDL_Event *ev)
 
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
-	case SDLK_m:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			view_dumpmask();
-		}
-		break;
 	case SDLK_r:
 		VIEW_REDRAW();
 		break;
