@@ -122,13 +122,6 @@ else
     LOCALEDIR=${SHAREDIR}/locale
 fi
 
-if [ "${with_manpages}" = "no" ]; then
-    NOMAN=yes
-fi
-if [ "${with_docs}" = "no" ]; then
-    NODOC=yes
-fi
-
 if [ "${srcdir}" != "" ]; then
 	echo "concurrent build (source in ${srcdir})"
 #	if [ ! -e "${srcdir}" ]; then
@@ -166,6 +159,13 @@ echo "Host: $HOST"
 echo > Makefile.config
 echo "Host: $HOST" > config.log
 mkdir config 1>/dev/null 2>&1
+
+if [ "${with_manpages}" = "no" ]; then
+    echo "NOMAN=yes" >> Makefile.config
+fi
+if [ "${with_docs}" = "no" ]; then
+    echo "NODOC=yes" >> Makefile.config
+fi
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
