@@ -1,10 +1,11 @@
-# $Csoft: configure.in,v 1.66 2003/06/06 03:21:03 vedge Exp $
+# $Csoft: configure.in,v 1.67 2003/06/13 03:59:48 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"OpenGL rendering support [default: check]");
 register("--with-jpeg",		"JPEG screenshot support [default: check]");
+register("--enable-edition",	"Graphical edition [default: yes]");
 register("--enable-debug",	"Engine debugging [default: yes]");
 register("--enable-threads",	"Thread safety [default: no]");
 register("--enable-floating-point", "Floating point operations [default: yes]");
@@ -109,6 +110,13 @@ if [ "${enable_floating_point}" != "no" ]; then
 	hdefine(FLOATING_POINT, 1);
 else
 	hundef(FLOATING_POINT);
+fi
+
+# Graphical edition
+if [ "${enable_edition}" != "no" ]; then
+	hdefine(EDITION, 1);
+else
+	hundef(EDITION);
 fi
 
 # Reduce code size and gain some cycles by disabling unused modes.
