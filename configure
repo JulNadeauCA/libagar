@@ -1275,6 +1275,7 @@ fi
 if [ "${HAVE_GETTEXT}" != "" ]; then
 echo GETTEXT_CFLAGS=$GETTEXT_CFLAGS >> Makefile.config
 echo GETTEXT_LIBS=$GETTEXT_LIBS >> Makefile.config
+echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
 else
 NONE=1
 fi
