@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.81 2004/03/18 04:02:58 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.82 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -103,6 +103,54 @@ widget_bind_protected(void *widp, const char *name, pthread_mutex_t *mutex,
 	return (b);
 }
 
+/* Translate property types to widget types. */
+static int
+widget_vtype(struct widget_binding *binding)
+{
+	struct prop *prop;
+
+	switch (binding->type) {
+	case WIDGET_PROP:
+		if ((prop = prop_get(binding->p1, (char *)binding->p2, PROP_ANY,
+		    NULL)) == NULL) {
+			fatal("%s", error_get());
+		}
+		switch (prop->type) {
+		case PROP_BOOL:
+			return (WIDGET_BOOL);
+		case PROP_INT:
+			return (WIDGET_INT);
+		case PROP_UINT8:
+			return (WIDGET_UINT8);
+		case PROP_SINT8:
+			return (WIDGET_SINT8);
+		case PROP_UINT16:
+			return (WIDGET_UINT16);
+		case PROP_SINT16:
+			return (WIDGET_SINT16);
+		case PROP_UINT32:
+			return (WIDGET_UINT32);
+		case PROP_SINT32:
+			return (WIDGET_SINT32);
+#ifdef FLOATING_POINT
+		case PROP_FLOAT:
+			return (WIDGET_FLOAT);
+		case PROP_DOUBLE:
+			return (WIDGET_DOUBLE);
+#endif
+		case PROP_STRING:
+			return (WIDGET_STRING);
+		case PROP_POINTER:
+			return (WIDGET_POINTER);
+		default:
+			return (-1);
+		}
+	default:
+		return (binding->type);
+	}
+	return (-1);
+}
+
 /* Bind a variable to a widget. */
 struct widget_binding *
 widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
@@ -141,6 +189,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 			binding->p1 = p1;
 			binding->p2 = p2;
 			binding->size = size;
+			binding->vtype = widget_vtype(binding);
 
 			debug_n(DEBUG_BINDINGS, " -> %d(%p,%p)\n",
 			    binding->type, binding->p1, binding->p2);
@@ -158,6 +207,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	binding->p2 = p2;
 	binding->size = size;
 	binding->mutex = NULL;
+	binding->vtype = widget_vtype(binding);
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
 	debug_n(DEBUG_BINDINGS, "%s: bound `%s' to %p (type=%d)\n",
@@ -293,7 +343,7 @@ out:
 	}
 	pthread_mutex_unlock(&wid->bindings_lock);
 
-	error_set("No such widget binding: `%s'", name);
+	error_set("No such widget binding: `%s'.", name);
 	return (NULL);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.72 2003/10/15 03:43:24 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.73 2003/11/15 03:53:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -40,6 +40,7 @@ enum widget_binding_type {
 struct widget_binding {
 	char	name[WIDGET_BINDING_NAME_MAX];
 	int	type;
+	int	vtype;
 
 	pthread_mutex_t	*mutex;	
 	void		*p1, *p2;
