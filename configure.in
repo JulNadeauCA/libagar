@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.28 2002/06/27 03:04:24 vedge Exp $
+# $Csoft: configure.in,v 1.29 2002/07/27 06:36:34 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -35,6 +35,7 @@ if [ "${cc_is_gcc}" = "yes" ]; then
 fi
 
 require(sdl, 1.2.0);
+require(sdl_ttf, 2.0.5);
 
 # Enable x11-specific code (only useful for debugging).
 if [ "${with_x11}" != "no" ]; then
