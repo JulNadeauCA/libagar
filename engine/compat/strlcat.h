@@ -1,4 +1,4 @@
-/*	$Csoft: strlcat.h,v 1.5 2003/10/09 22:39:29 vedge Exp $	*/
+/*	$Csoft: strlcat.h,v 1.6 2004/01/23 06:12:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_strlcat.h>
@@ -11,7 +11,6 @@
 #  define BOUNDED_ATTRIBUTE(t, a, b)
 # endif
 #endif
-
 
 #ifndef HAVE_STRLCAT
 #include <sys/types.h>
