@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.15 2002/05/21 03:21:32 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.16 2002/05/22 02:03:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include <engine/queue.h>
 #include <engine/version.h>
 
+#include "primitive.h"
 #include "text.h"
 #include "widget.h"
 #include "window.h"
@@ -87,9 +88,11 @@ button_init(struct button *b, char *caption, int flags, int rw, int rh)
 }
 
 void
-button_destroy(void *ob)
+button_destroy(void *p)
 {
-	struct button *b = ob;
+	struct button *b = p;
+
+	OBJECT_ASSERT(p, "widget");
 
 	free(b->caption);
 }
@@ -98,33 +101,15 @@ void
 button_draw(void *p)
 {
 	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-	SDL_Rect rd;
 	struct button *b = p;
 	SDL_Surface *s, *bg;
 	int x = 0, y = 0;
 
-	/* Button */
-	bg = view_surface(SDL_SWSURFACE, WIDGET(b)->w, WIDGET(b)->h);
-	if (b->flags & BUTTON_PRESSED) {
-		rd.x = 2;
-		rd.y = 2;
-		rd.w = bg->w - 2;
-		rd.h = bg->h - 2;
-		SDL_FillRect(bg, NULL,
-		    SDL_MapRGBA(bg->format, 50, 50, 50, 120));
-		SDL_FillRect(bg, &rd,
-		    SDL_MapRGBA(bg->format, 96, 96, 128, 120));
-	} else {
-		rd.x = 1;
-		rd.y = 1;
-		rd.w = bg->w - 1;
-		rd.h = bg->h - 1;
-		SDL_FillRect(bg, NULL,
-		    SDL_MapRGBA(bg->format, 180, 180, 180, 120));
-		SDL_FillRect(bg, &rd,
-		    SDL_MapRGBA(bg->format, 96, 96, 128, 120));
-	}
+	OBJECT_ASSERT(p, "widget");
 
+	/* Button */
+	bg = primitive_box(b, WIDGET(b)->w, WIDGET(b)->h,
+	    (b->flags & BUTTON_PRESSED) ? -1 : 1);
 	WIDGET_DRAW(b, bg, 0, 0);
 
 	/* Label */
@@ -160,24 +145,45 @@ void
 button_event(void *p, SDL_Event *ev, int flags)
 {
 	struct button *b = p;
-
-	if (ev->button.button != 1) {
-		return;
-	}
+	int pushed = 0;
+	
+	OBJECT_ASSERT(p, "widget");
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
-		b->flags |= BUTTON_PRESSED;
-		WIDGET(b)->win->redraw++;
-		break;
-	case SDL_MOUSEBUTTONUP:
-		b->flags &= ~(BUTTON_PRESSED);
-		WIDGET(b)->win->redraw++;
-		if (b->push != NULL) {
-			dprintf("calling push handler\n");
-			b->push(b);
+		if (ev->button.button == 1) {
+			b->flags |= BUTTON_PRESSED;
+		} else {
+			WIDGET_FOCUS(b);
 		}
 		break;
+	case SDL_MOUSEBUTTONUP:
+		if (ev->button.button == 1) {
+			b->flags &= ~(BUTTON_PRESSED);
+			pushed++;
+		}
+		break;
+	case SDL_KEYDOWN:
+		if (ev->key.keysym.sym == SDLK_RETURN ||
+		    ev->key.keysym.sym == SDLK_SPACE) {
+			b->flags |= BUTTON_PRESSED;
+		}
+		break;
+	case SDL_KEYUP:
+		if (ev->key.keysym.sym == SDLK_RETURN ||
+		    ev->key.keysym.sym == SDLK_SPACE) {
+			b->flags &= ~(BUTTON_PRESSED);
+			pushed++;
+		}
+		break;
+	}
+	
+	if (pushed) {
+		WIDGET(b)->win->redraw++;
+
+		if (b->push != NULL) {
+			b->push(b);
+		}
 	}
 }
 
