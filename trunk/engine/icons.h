@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.12 2004/06/04 19:58:53 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.13 2004/08/21 10:55:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -50,10 +50,11 @@ enum {
 	OBJMOVEDOWN_ICON,
 	TRASH_ICON,
 	OBJREINIT_ICON,
+	CLOSE_ICON,
 
 	OBJ_ICON,
 	MAP_ICON,
-	VGOBJ_ICON,
+	DRAWING_ICON,
 	PERSO_ICON,
 
 	VGORIGIN_ICON,
