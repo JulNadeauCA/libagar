@@ -152,6 +152,9 @@ clean: clean-subdir
 	    rm -f ${PROG} ${GMONOUT} ${OBJS}; \
 	fi
 
+cleandir:	cleandir-subdir clean-depend
+	rm -f *.core *~
+
 install: install-subdir ${PROG}
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_PROG} ${PROG} ${INST_BINDIR}"; \

@@ -103,7 +103,7 @@ cleandir-subdir:
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
-		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ cleandir); \
 		done; \
 	fi)
 

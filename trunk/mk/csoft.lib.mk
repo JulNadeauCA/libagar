@@ -153,6 +153,9 @@ clean:		clean-subdir
 	    fi; \
 	fi
 
+cleandir:	cleandir-subdir clean-depend
+	rm -fR .libs
+
 install:	install-subdir lib${LIB}.a lib${LIB}.la
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}"; \
