@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.54 2002/11/10 01:43:26 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.55 2002/11/15 00:23:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -20,47 +20,14 @@ struct object_ops {
 	int	(*save)(void *, int);		/* Save to fd */
 };
 
-struct obnoderef {
-	struct	 object *pobj;
-	Uint32	 flags;
-#define OBNODEREF_SPRITE	0x0002
-#define OBNODEREF_ANIM		0x0010
-#define OBNODEREF_ANY		0x00ff
-#define OBNODEREF_SAVE		0x0100
-	Uint32	 offs;
-
-	TAILQ_ENTRY(obnoderef) nrefs;
-};
-
-struct obnode {
-	TAILQ_HEAD(, obnoderef) nrefs;	/* Node references */
-	Uint32	 nnrefs;
-
-	Uint32	 flags;
-#define OBNODE_ORIGIN		0x01	/* Origin of this map */
-#define OBNODE_WALKTHROUGH	0x02	/* Can walk through */
-#define OBNODE_WALKBEHIND	0x04	/* Can walk behind */
-
-	Uint32	 v1, v2;		/* Extra properties */
-};
-
-struct obmap {
-	Uint32	 flags;
-#define OBMAP_2D		0x0020	/* Two-dimensional */
-	Uint32	 mapw, maph;		/* Map geometry */
-	Uint32	 defx, defy;		/* Map origin */
-	struct	 obnode **map;		/* Array of nodes */
-};
-
 struct object {
 	/*
 	 * Read-only once attached
 	 */
-	char	*type;			/* Type of immediate descendent
-					   (also extension for state files) */
-	char	*name;			/* Name string (key) */
-	char	*desc;			/* Optional description */
+	char	*type;			/* Type of object. */
+	char	*name;			/* Key */
 	const struct object_ops	*ops;	/* Generic operations */
+
 	int	 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
 #define OBJECT_AUDIO		0x02	/* Load audio */
@@ -68,31 +35,28 @@ struct object {
 #define OBJECT_BLOCK		0x10	/* Map: cannot walk through. XXX */
 #define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
 #define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
+
 	enum {
 		OBJECT_EMBRYONIC,	/* Unattached */
 		OBJECT_CONSISTENT,	/* Attached */
 		OBJECT_ZOMBIE		/* Detached */
 	} state;
-	struct	 media_art *art;	/* Static sprites */
-	struct	 media_audio *audio;	/* Static samples */
+
+	struct media_art	*art;	/* Static sprites */
+	struct media_audio	*audio;	/* Static samples */
 
 	/*
 	 * Read-write
 	 */
 	struct mappos		*pos;		/* Unique position on a map */
 	pthread_mutex_t		 pos_lock;
-
 	TAILQ_HEAD(, event)	 events;	/* Event handlers */
 	pthread_mutex_t		 events_lock;
 	pthread_mutexattr_t	 events_lockattr;
-
-	TAILQ_HEAD(, prop)	 props;		/* Properties */
+	TAILQ_HEAD(, prop)	 props;		/* Generic properties */
 	pthread_mutex_t		 props_lock;
 
-	/*
-	 * Locking policy defined by the parent
-	 */
-	SLIST_ENTRY(object) wobjs;	/* Attached objects */
+	SLIST_ENTRY(object) wobjs;		/* Parent's list */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
