@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.78 2003/07/04 05:32:24 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.79 2003/07/08 00:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -264,7 +264,6 @@ load_tileset(int argc, union evarg *argv)
 	if (object_load(mv->map) == -1) {
 		text_msg(MSG_ERROR, "%s: %s", OBJECT(mv->map)->name,
 		    error_get());
-		return;
 	}
 }
 
