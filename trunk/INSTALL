@@ -15,7 +15,10 @@
    the `links' target, symlinks will be made into ~/.cave:
    $ make links
 
-5) Execute the game by running `cave':
+5) Register the manual page directory path. Under BSD, /etc/man.conf should
+   include (prefix)/share/agar/man.
+
+6) Execute the game by running `cave':
    $ cave
 
    The level editor (if compiled in), is invoked with -e:
