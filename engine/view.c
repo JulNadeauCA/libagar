@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.136 2004/03/17 12:42:02 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.137 2004/03/18 03:06:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -210,7 +210,8 @@ view_destroy(void)
 	     win != TAILQ_END(&view->windows);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
-		destroy_window(win);
+		object_destroy(win);
+		free(win);
 	}
 
 	/* Free the rectangle caches. */
