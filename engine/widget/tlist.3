@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.17 2003/05/04 01:48:38 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.18 2003/05/04 02:09:43 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -117,7 +117,7 @@ function sets the position of the scrollbar to
                            "char *text" "void *p1"
 .Pp
 .Ft "void"
-.Fn tlist_remove_item "struct tlist_item *item"
+.Fn tlist_remove_item "struct tlist *tlist" "struct tlist_item *item"
 .Pp
 .Ft "void"
 .Fn tlist_clear_items "struct tlist *tlist"
@@ -126,10 +126,10 @@ function sets the position of the scrollbar to
 .Fn tlist_restore_selections "struct tlist *tlist"
 .Pp
 .Ft "void"
-.Fn tlist_select "struct tlist_item *item"
+.Fn tlist_select "struct tlist *tlist" "struct tlist_item *item"
 .Pp
 .Ft "void"
-.Fn tlist_unselect "struct tlist_item *item"
+.Fn tlist_unselect "struct tlist *tlist" "struct tlist_item *item"
 .Pp
 .Ft "void"
 .Fn tlist_unselect_all "struct tlist *tlist"
@@ -257,6 +257,5 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 .Sh BUGS
-Polled mode handling increases the complexity of the code, since selections
-must be saved/restored and items compared according to their text (so multiple
-items in a polled list cannot have the same text).
+Polled mode handling is inefficient and increases the complexity of the code,
+since selections must be saved/restored according to their user pointer.

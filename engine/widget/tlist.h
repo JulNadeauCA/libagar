@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.21 2003/05/04 01:48:38 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.22 2003/05/04 02:09:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -8,13 +8,14 @@
 
 #include "begin_code.h"
 
+#define TLIST_LABEL_MAX	64
+
 struct tlist_item {
-	SDL_Surface	*icon;		/* Original icon */
-	char		*text;		/* Label */
-	size_t		 text_len;
-	void		*p1;		/* User data */
-	struct tlist	*tl_bp;		/* Back pointer to widget */
-	int		 selected;	/* Item selection */
+	SDL_Surface	*icon;			/* Original icon */
+	char		 text[TLIST_LABEL_MAX];	/* Label */
+	size_t		 text_len;		/* Label size (optimization) */
+	void		*p1;			/* User data */
+	int		 selected;		/* Item selection */
 
 	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
 	TAILQ_ENTRY(tlist_item) selitems;	/* Hack */
@@ -57,7 +58,8 @@ extern DECLSPEC void		 tlist_save_selections(struct tlist *);
 extern DECLSPEC void		 tlist_restore_selections(struct tlist *);
 extern DECLSPEC void		 tlist_scroll(struct tlist *, int);
 
-extern DECLSPEC void			 tlist_remove_item(struct tlist_item *);
+extern DECLSPEC void			 tlist_remove_item(struct tlist *,
+					                   struct tlist_item *);
 extern DECLSPEC void			 tlist_clear_items(struct tlist *);
 extern DECLSPEC struct tlist_item	*tlist_insert_item(struct tlist *,
 					                   SDL_Surface *,
@@ -66,8 +68,10 @@ extern DECLSPEC struct tlist_item	*tlist_insert_item_head(struct tlist *,
 					                        SDL_Surface *,
 								char *, void *);
 
-extern DECLSPEC int			 tlist_select(struct tlist_item *);
-extern DECLSPEC int			 tlist_unselect(struct tlist_item *);
+extern DECLSPEC int			 tlist_select(struct tlist *,
+					              struct tlist_item *);
+extern DECLSPEC int			 tlist_unselect(struct tlist *,
+					                struct tlist_item *);
 extern DECLSPEC void			 tlist_select_all(struct tlist *);
 extern DECLSPEC void			 tlist_unselect_all(struct tlist *);
 extern DECLSPEC struct tlist_item	*tlist_item_index(struct tlist *, int);

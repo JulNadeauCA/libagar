@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.9 2003/03/28 00:23:22 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.10 2003/03/28 01:57:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -114,16 +114,16 @@ nodeedit_poll(int argc, union evarg *argv)
 	TAILQ_FOREACH_REVERSE(nref, &node->nrefs, nrefs, noderefq) {
 		SDL_Surface *icon = NULL;
 		struct art_anim *anim;
-		char text[8 + MAP_LAYER_NAME_MAX + 10 + 2];
+		char label[TLIST_LABEL_MAX];
 
 		switch (nref->type) {
 		case NODEREF_SPRITE:
-			snprintf(text, sizeof(text), "%u. [%u] s(%s:%u)",
+			snprintf(label, sizeof(label), "%u. [%u] s(%s:%u)",
 			    i, nref->layer, nref->pobj->name, nref->offs);
 			icon = nref->pobj->art->sprites[nref->offs];
 			break;
 		case NODEREF_ANIM:
-			snprintf(text, sizeof(text), "%u. [%u] a(%s:%u)",
+			snprintf(label, sizeof(label), "%u. [%u] a(%s:%u)",
 			    i, nref->layer, nref->pobj->name, nref->offs);
 			anim = nref->pobj->art->anims[nref->offs];
 			if (anim->nframes > 0) {
@@ -131,12 +131,12 @@ nodeedit_poll(int argc, union evarg *argv)
 			}
 			break;
 		case NODEREF_WARP:
-			snprintf(text, sizeof(text), "%u. [%u]. w(%s:%d,%d)",
+			snprintf(label, sizeof(label), "%u. [%u]. w(%s:%d,%d)",
 			    i, nref->layer, nref->data.warp.map,
 			    nref->data.warp.x, nref->data.warp.y);
 			break;
 		}
-		tlist_insert_item(tl, icon, text, nref);
+		tlist_insert_item(tl, icon, label, nref);
 		i++;
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.5 2003/03/26 10:04:15 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.6 2003/05/07 00:47:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -63,12 +63,12 @@ layedit_poll(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	for (i = 0; i < m->nlayers; i++) {
 		struct map_layer *layer = &m->layers[i];
-		char text[MAP_LAYER_NAME_MAX + 32];
+		char label[TLIST_LABEL_MAX];
 
-		snprintf(text, sizeof(text), "%s (%svisible%s)\n",
+		snprintf(label, sizeof(label), "%s (%svisible%s)\n",
 		    layer->name, !layer->visible ? "in" : "",
 		    (i == m->cur_layer) ? ", editing" : "");
-		tlist_insert_item(tl, NULL, text, layer);
+		tlist_insert_item(tl, NULL, label, layer);
 	}
 	tlist_restore_selections(tl);
 
