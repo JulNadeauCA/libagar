@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.35 2003/06/13 02:47:47 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.36 2003/06/15 05:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -332,8 +332,9 @@ prop_get_uint(void *p, const char *key)
 {
 	unsigned int i;
 
-	if (prop_get(p, key, PROP_UINT, &i) == NULL)
+	if (prop_get(p, key, PROP_UINT, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -342,8 +343,9 @@ prop_get_int(void *p, const char *key)
 {
 	int i;
 
-	if (prop_get(p, key, PROP_INT, &i) == NULL)
+	if (prop_get(p, key, PROP_INT, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -352,8 +354,9 @@ prop_get_bool(void *p, const char *key)
 {
 	int i;
 
-	if (prop_get(p, key, PROP_BOOL, &i) == NULL)
+	if (prop_get(p, key, PROP_BOOL, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -362,8 +365,9 @@ prop_get_uint8(void *p, const char *key)
 {
 	Uint8 i;
 
-	if (prop_get(p, key, PROP_UINT8, &i) == NULL)
+	if (prop_get(p, key, PROP_UINT8, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -372,8 +376,9 @@ prop_get_sint8(void *p, const char *key)
 {
 	Sint8 i;
 
-	if (prop_get(p, key, PROP_SINT8, &i) == NULL)
+	if (prop_get(p, key, PROP_SINT8, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -382,8 +387,9 @@ prop_get_uint16(void *p, const char *key)
 {
 	Uint16 i;
 
-	if (prop_get(p, key, PROP_UINT16, &i) == NULL)
+	if (prop_get(p, key, PROP_UINT16, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -392,8 +398,9 @@ prop_get_sint16(void *p, const char *key)
 {
 	Sint16 i;
 
-	if (prop_get(p, key, PROP_SINT16, &i) == NULL)
+	if (prop_get(p, key, PROP_SINT16, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -402,8 +409,9 @@ prop_get_uint32(void *p, const char *key)
 {
 	Uint32 i;
 
-	if (prop_get(p, key, PROP_UINT32, &i) == NULL)
+	if (prop_get(p, key, PROP_UINT32, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -412,8 +420,9 @@ prop_get_sint32(void *p, const char *key)
 {
 	Sint32 i;
 
-	if (prop_get(p, key, PROP_SINT32, &i) == NULL)
+	if (prop_get(p, key, PROP_SINT32, &i) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (i);
 }
 
@@ -423,8 +432,9 @@ prop_get_float(void *p, const char *key)
 {
 	float f;
 
-	if (prop_get(p, key, PROP_FLOAT, &f) == NULL)
+	if (prop_get(p, key, PROP_FLOAT, &f) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (f);
 }
 
@@ -433,8 +443,9 @@ prop_get_double(void *p, const char *key)
 {
 	double d;
 
-	if (prop_get(p, key, PROP_DOUBLE, &d) == NULL)
+	if (prop_get(p, key, PROP_DOUBLE, &d) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (d);
 }
 #endif /* FLOATING_POINT */
@@ -445,8 +456,9 @@ prop_get_string(void *p, const char *key)
 	char *s, *sd;
 
 	prop_lock(p);
-	if (prop_get(p, key, PROP_STRING, &s) == NULL)
+	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
 		fatal("%s", error_get());
+	}
 	sd = Strdup(s);
 	prop_unlock(p);
 	return (sd);
@@ -458,8 +470,9 @@ prop_get_unicode(void *p, const char *key)
 	Uint16 *ucs, *ucsd;
 
 	prop_lock(p);
-	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL)
+	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL) {
 		fatal("%s", error_get());
+	}
 	ucsd = ucsdup(ucs);
 	prop_unlock(p);
 	return (ucsd);
@@ -472,8 +485,9 @@ prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
 	char *s;
 
 	prop_lock(p);
-	if (prop_get(p, key, PROP_STRING, &s) == NULL)
+	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
 		fatal("%s", error_get());
+	}
 	sl = strlcpy(buf, s, bufsize);
 	prop_unlock(p);
 	return (sl);
@@ -486,8 +500,9 @@ prop_copy_unicode(void *p, const char *key, Uint16 *buf, size_t bufsize)
 	size_t sl;
 
 	prop_lock(p);
-	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL)
+	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL) {
 		fatal("%s", error_get());
+	}
 	sl = ucslcpy(buf, ucs, bufsize);
 	prop_unlock(p);
 	return (sl);
@@ -498,8 +513,9 @@ prop_get_pointer(void *p, const char *key)
 {
 	void *np;
 
-	if (prop_get(p, key, PROP_POINTER, &np) == NULL)
+	if (prop_get(p, key, PROP_POINTER, &np) == NULL) {
 		fatal("%s", error_get());
+	}
 	return (np);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.64 2003/06/12 22:27:33 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.65 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -146,7 +146,12 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		break;
 	case WIDGET_STRING:
 		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
-		p1 = va_arg(ap, void *);		/* Buffer */
+		p1 = va_arg(ap, char *);		/* Text buffer */
+		size = va_arg(ap, size_t);		/* Size of buffer */
+		break;
+	case WIDGET_UNICODE:
+		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
+		p1 = va_arg(ap, Uint16 *);		/* Text buffer */
 		size = va_arg(ap, size_t);		/* Size of buffer */
 		break;
 	default:
@@ -209,15 +214,17 @@ widget_get_binding(void *widp, const char *name, ...)
 	struct widget *wid = widp;
 	struct widget_binding *binding;
 	struct prop *prop;
+	void **res;
 	va_list ap;
-	void *r1;
+
+	va_start(ap, name);
+	res = va_arg(ap, void **);
+	va_end(ap);
 
 	pthread_mutex_lock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) != 0)
 			continue;
-
-		va_start(ap, name);
 
 		if (binding->mutex != NULL) {
 			pthread_mutex_lock(binding->mutex);
@@ -225,54 +232,42 @@ widget_get_binding(void *widp, const char *name, ...)
 		switch (binding->type) {
 		case WIDGET_BOOL:
 		case WIDGET_INT:
-			r1 = va_arg(ap, int *);
-			*(int **)r1 = (int *)binding->p1;
+			*(int **)res = (int *)binding->p1;
 			break;
 		case WIDGET_UINT:
-			r1 = va_arg(ap, unsigned int *);
-			*(unsigned int **)r1 = (unsigned int *)binding->p1;
+			*(unsigned int **)res = (unsigned int *)binding->p1;
 			break;
 		case WIDGET_UINT8:
-			r1 = va_arg(ap, Uint8 *);
-			*(Uint8 **)r1 = (Uint8 *)binding->p1;
+			*(Uint8 **)res = (Uint8 *)binding->p1;
 			break;
 		case WIDGET_SINT8:
-			r1 = va_arg(ap, Sint8 *);
-			*(Sint8 **)r1 = (Sint8 *)binding->p1;
+			*(Sint8 **)res = (Sint8 *)binding->p1;
 			break;
 		case WIDGET_UINT16:
-			r1 = va_arg(ap, Uint16 *);
-			*(Uint16 **)r1 = (Uint16 *)binding->p1;
+			*(Uint16 **)res = (Uint16 *)binding->p1;
 			break;
 		case WIDGET_SINT16:
-			r1 = va_arg(ap, Sint16 *);
-			*(Sint16 **)r1 = (Sint16 *)binding->p1;
+			*(Sint16 **)res = (Sint16 *)binding->p1;
 			break;
 		case WIDGET_UINT32:
-			r1 = va_arg(ap, Uint32 *);
-			*(Uint32 **)r1 = (Uint32 *)binding->p1;
+			*(Uint32 **)res = (Uint32 *)binding->p1;
 			break;
 		case WIDGET_SINT32:
-			r1 = va_arg(ap, Sint32 *);
-			*(Sint32 **)r1 = (Sint32 *)binding->p1;
+			*(Sint32 **)res = (Sint32 *)binding->p1;
 			break;
 #ifdef FLOATING_POINT
 		case WIDGET_FLOAT:
-			r1 = va_arg(ap, float *);
-			*(float **)r1 = (float *)binding->p1;
+			*(float **)res = (float *)binding->p1;
 			break;
 		case WIDGET_DOUBLE:
-			r1 = va_arg(ap, double *);
-			*(double **)r1 = (double *)binding->p1;
+			*(double **)res = (double *)binding->p1;
 			break;
 #endif
 		case WIDGET_STRING:
-			r1 = va_arg(ap, char **);
-			*(char ***)r1 = (char **)binding->p1;
+			*(char ***)res = (char **)binding->p1;
 			break;
 		case WIDGET_UNICODE:
-			r1 = va_arg(ap, Uint16 **);
-			*(Uint16 ***)r1 = (Uint16 **)binding->p1;
+			*(Uint16 ***)res = (Uint16 **)binding->p1;
 			break;
 		case WIDGET_PROP:			/* Convert */
 			if ((prop = prop_get(binding->p1, (char *)binding->p2,
@@ -282,50 +277,39 @@ widget_get_binding(void *widp, const char *name, ...)
 			switch (prop->type) {
 			case PROP_BOOL:
 			case PROP_INT:
-				r1 = va_arg(ap, int *);
-				*(int **)r1 = (int *)&prop->data.i;
+				*(int **)res = (int *)&prop->data.i;
 				break;
 			case PROP_UINT8:
-				r1 = va_arg(ap, Uint8 *);
-				*(Uint8 **)r1 = (Uint8 *)&prop->data.u8;
+				*(Uint8 **)res = (Uint8 *)&prop->data.u8;
 				break;
 			case PROP_SINT8:
-				r1 = va_arg(ap, Sint8 *);
-				*(Sint8 **)r1 = (Sint8 *)&prop->data.s8;
+				*(Sint8 **)res = (Sint8 *)&prop->data.s8;
 				break;
 			case PROP_UINT16:
-				r1 = va_arg(ap, Uint16 *);
-				*(Uint16 **)r1 = (Uint16 *)&prop->data.u16;
+				*(Uint16 **)res = (Uint16 *)&prop->data.u16;
 				break;
 			case PROP_SINT16:
-				r1 = va_arg(ap, Sint16 *);
-				*(Sint16 **)r1 = (Sint16 *)&prop->data.s16;
+				*(Sint16 **)res = (Sint16 *)&prop->data.s16;
 				break;
 			case PROP_UINT32:
-				r1 = va_arg(ap, Uint32 *);
-				*(Uint32 **)r1 = (Uint32 *)&prop->data.u32;
+				*(Uint32 **)res = (Uint32 *)&prop->data.u32;
 				break;
 			case PROP_SINT32:
-				r1 = va_arg(ap, Sint32 *);
-				*(Sint32 **)r1 = (Sint32 *)&prop->data.s32;
+				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
 				break;
 #ifdef FLOATING_POINT
 			case PROP_FLOAT:
-				r1 = va_arg(ap, float *);
-				*(float **)r1 = (float *)&prop->data.f;
+				*(float **)res = (float *)&prop->data.f;
 				break;
 			case PROP_DOUBLE:
-				r1 = va_arg(ap, double *);
-				*(double **)r1 = (double *)&prop->data.d;
+				*(double **)res = (double *)&prop->data.d;
 				break;
 #endif
 			case PROP_STRING:
-				r1 = va_arg(ap, char **);
-				*(char ***)r1 = (char **)&prop->data.s;
+				*(char ***)res = (char **)&prop->data.s;
 				break;
 			case PROP_UNICODE:
-				r1 = va_arg(ap, Uint16 **);
-				*(Uint16 ***)r1 = (Uint16 **)&prop->data.ucs;
+				*(Uint16 ***)res = (Uint16 **)&prop->data.ucs;
 				break;
 			default:
 				error_set("prop translation failed");
@@ -340,7 +324,6 @@ widget_get_binding(void *widp, const char *name, ...)
 		}
 out:
 		pthread_mutex_unlock(&wid->bindings_lock);
-		va_end(ap);
 		return (binding);			/* Return locked */
 	}
 	pthread_mutex_unlock(&wid->bindings_lock);

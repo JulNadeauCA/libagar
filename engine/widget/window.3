@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.25 2003/06/06 03:18:15 vedge Exp $
+.\"	$Csoft: window.3,v 1.26 2003/06/06 04:34:52 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -243,7 +243,7 @@ coordinates, which must be inside the widget area.
 The key identified by
 .Fa keysym
 was released, and the widget holds the focus.
-.It Fn window-keydown "int keysym" "int keymod"
+.It Fn window-keydown "int keysym" "int keymod" "int unicode"
 The key identified by
 .Fa keysym
 was pressed, and the widget holds the focus.

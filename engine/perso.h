@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.11 2003/06/08 22:48:38 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.12 2003/06/10 07:53:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -11,7 +11,7 @@ struct perso {
 	struct object obj;
 
 	pthread_mutex_t	 lock;
-	char		 name[PERSO_NAME_MAX];	/* Name set by user */
+	Uint16		 name[PERSO_NAME_MAX];	/* Name set by user */
 	Uint32		 flags;
 	Uint32		 seed;			/* Random seed */
 	Sint32		 level;			/* Current level */
@@ -25,12 +25,12 @@ struct perso {
 #define PERSO(ob)	((struct perso *)(ob))
 
 __BEGIN_DECLS
-extern DECLSPEC struct perso	*perso_new(void *, const char *);
-extern DECLSPEC void		 perso_init(void *, const char *);
-extern DECLSPEC void		 perso_destroy(void *);
-extern DECLSPEC void		 perso_edit(void *);
-extern DECLSPEC int		 perso_load(void *, struct netbuf *);
-extern DECLSPEC int		 perso_save(void *, struct netbuf *);
+struct perso	*perso_new(void *, const char *);
+void		 perso_init(void *, const char *);
+void		 perso_destroy(void *);
+void		 perso_edit(void *);
+int		 perso_load(void *, struct netbuf *);
+int		 perso_save(void *, struct netbuf *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.20 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.21 2003/06/15 05:08:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -36,7 +36,10 @@ extern DECLSPEC void	 textbox_shown(int, union evarg *);
 extern DECLSPEC void	 textbox_hidden(int, union evarg *);
 extern DECLSPEC void	 textbox_printf(struct textbox *, const char *, ...);
 extern DECLSPEC char	*textbox_string(struct textbox *);
+extern DECLSPEC Uint16	*textbox_unicode(struct textbox *);
 extern DECLSPEC size_t	 textbox_copy_string(struct textbox *, char *, size_t);
+extern DECLSPEC size_t	 textbox_copy_unicode(struct textbox *, Uint16 *,
+			                      size_t);
 extern DECLSPEC int	 textbox_int(struct textbox *);
 extern DECLSPEC void	 textbox_set_writeable(struct textbox *, int);
 __END_DECLS

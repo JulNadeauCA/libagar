@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.154 2003/06/06 09:04:25 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.155 2003/06/09 23:14:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -350,9 +350,9 @@ event_dispatch(SDL_Event *ev)
 		event_hotkey(ev);
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
-		debug(DEBUG_KEY_EV, "SDL_KEY%s keysym=%d state=%s\n",
+		debug(DEBUG_KEY_EV, "SDL_KEY%s keysym=%d u=%04x state=%s\n",
 		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
-		    (int)ev->key.keysym.sym,
+		    (int)ev->key.keysym.sym, ev->key.keysym.unicode,
 		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
 		{
 			int rv = 0;

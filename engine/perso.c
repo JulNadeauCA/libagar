@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.29 2003/06/10 07:47:55 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.30 2003/06/10 07:53:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -97,7 +97,7 @@ perso_init(void *obj, const char *name)
 #endif
 
 	pthread_mutex_init(&pers->lock, NULL);
-	strlcpy(pers->name, name, sizeof(pers->name));
+	pers->name[0] = '\0';
 	pers->flags = 0;
 	pers->level = 1;
 	pers->exp = 0;
@@ -123,7 +123,7 @@ perso_load(void *obj, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&perso->lock);
-	copy_string(perso->name, buf, sizeof(perso->name));
+	copy_unicode(perso->name, buf, sizeof(perso->name));
 	perso->flags = read_uint32(buf);
 	perso->level = read_sint32(buf);
 	perso->exp = read_uint32(buf);
@@ -146,7 +146,7 @@ perso_save(void *obj, struct netbuf *buf)
 	version_write(buf, &perso_ver);
 
 	pthread_mutex_lock(&perso->lock);
-	write_string(buf, perso->name);
+	write_unicode(buf, perso->name);
 	write_uint32(buf, perso->flags);
 	write_sint32(buf, perso->level);
 	write_uint32(buf, perso->exp);
@@ -180,7 +180,7 @@ perso_edit(void *obj)
 		struct hbox *hb;
 
 		tb = textbox_new(vb, "Name: ");
-		widget_bind(tb, "string", WIDGET_STRING, &pers->lock,
+		widget_bind(tb, "string", WIDGET_UNICODE, &pers->lock,
 		    pers->name, sizeof(pers->name));
 
 		sbu = spinbutton_new(vb, "Level: ");

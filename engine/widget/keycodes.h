@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.h,v 1.9 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: keycodes.h,v 1.10 2003/05/24 15:43:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_KEYCODES_H_
@@ -6,10 +6,9 @@
 #include "begin_code.h"
 
 struct keycode {
-	char	*name;
 	SDLKey	 key;
 	int	 modmask;
-	void	(*func)(struct textbox *, SDLKey, int, char *);
+	void	(*func)(struct textbox *, SDLKey, int, const char *, Uint16);
 	char	*arg;
 };
 
