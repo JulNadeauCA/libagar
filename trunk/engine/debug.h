@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.3 2002/02/03 11:08:08 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.4 2002/02/25 09:20:06 vedge Exp $	*/
 
 #ifdef DEBUG
 extern int engine_debug;
@@ -19,6 +19,12 @@ extern int engine_debug;
 #  define fatal 	printf
 # endif /* __GNUC__ */
 
+# define dperror(s)		\
+	do {			\
+		perror(s);	\
+		abort();	\
+	} while (0)
+
 #else /* !DEBUG */
 
 # ifdef __GNUC__
@@ -28,6 +34,8 @@ extern int engine_debug;
 #  define dprintf		((void)0)
 #  define fatal			printf
 # endif /* __GNUC__ */
+
+# define dperror(s)	perror(s)
 
 #endif /* DEBUG */
 

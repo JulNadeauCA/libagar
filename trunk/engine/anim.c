@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.3 2002/02/08 00:37:40 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.4 2002/02/15 02:31:32 vedge Exp $	*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,7 +25,7 @@ anim_addframe(struct anim *anim, SDL_Surface *surface)
 		newframes = (SDL_Surface **)realloc(anim->frames,
 		    (NFGROW * anim->maxframes) * sizeof(SDL_Surface *));
 		if (newframes == NULL) {
-			perror("realloc");
+			dperror("realloc");
 			return (-1);
 		}
 		anim->maxframes *= NFGROW;
