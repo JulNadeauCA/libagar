@@ -760,10 +760,10 @@ echo "#endif /* LOCKDEBUG */" >> engine/mcconfig.h
 fi
 if [ "${enable_map_editor}" != "no" ]
  then
-MAPEDIT=1
-echo "#ifndef MAPEDIT" >> engine/mcconfig.h
-echo "#define MAPEDIT" $MAPEDIT >> engine/mcconfig.h
-echo "#endif /* MAPEDIT */" >> engine/mcconfig.h
+MAP_EDITOR=1
+echo "#ifndef MAP_EDITOR" >> engine/mcconfig.h
+echo "#define MAP_EDITOR" $MAP_EDITOR >> engine/mcconfig.h
+echo "#endif /* MAP_EDITOR */" >> engine/mcconfig.h
 fi
 if [ "${enable_serialization}" != "no" ]
  then
