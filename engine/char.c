@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.15 2002/02/15 03:52:34 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.16 2002/02/15 05:38:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -28,20 +28,22 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <engine/engine.h>
 
-#define JOY_UP		0x01
-#define JOY_DOWN	0x02
-#define JOY_LEFT	0x04
-#define JOY_RIGHT	0x08
+static struct obvec char_vec = {
+	char_destroy,
+	char_event,
+	char_load,
+	char_save,
+	char_link,
+	char_unlink
+};
 
 static Uint32	char_time(Uint32, void *);
-static void	char_event(struct character *, SDL_Event *);
 static void	char_joybutton(struct character *, SDL_Event *);
 static void	char_key(struct character *, SDL_Event *);
 
@@ -53,38 +55,161 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 	struct character *ch;
 	
 	ch = (struct character *)emalloc(sizeof(struct character));
-	object_create(&ch->obj, name, desc, flags);
-	ch->event_hook = char_event;
-	ch->map = NULL;
-	ch->x = -1;
-	ch->y = -1;
+	object_init(&ch->obj, name, flags, &char_vec);
+	sprintf(ch->obj.desc, desc);
 
 	ch->flags = 0;
-	ch->curspeed = 1;
-	ch->maxspeed = 50;
 	ch->level = 0;
 	ch->exp = 0;
 	ch->age = 0;
+	ch->seed = lrand48();
+
 	ch->maxhp = maxhp;
 	ch->maxmp = maxmp;
 	ch->hp = maxhp;
 	ch->mp = maxmp;
-	ch->seed = lrand48();
-	ch->effect = 0;
+
+	ch->map = NULL;
+	mapdir_init(&ch->dir, (struct object *)ch, NULL, 0, -1);
+	ch->x = -1;
+	ch->y = -1;
 
 	ch->curoffs = CHAR_UP;
+	ch->curspeed = -1;
+	ch->maxspeed = -1;
 
-	dprintf("%s: hp %d/%d mp %d/%d seed 0x%lx\n",
-	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp, ch->seed);
+	dprintf("%s: new: hp %d/%d mp %d/%d\n",
+	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp);
 	
 	return (ch);
+}
+
+int
+char_load(void *p, int fd)
+{
+	struct character *ch = (struct character *)p;
+	char magic[11];
+	int vermin, vermaj;
+
+	if ((read(fd, magic, 11) != 11) ||
+	     strcmp(magic, "agar char ") != 0) {
+		goto badmagic;
+	}
+
+	vermin = fobj_read_uint32(fd);
+	vermaj = fobj_read_uint32(fd);
+	if (vermaj > CHAR_VERMAJ ||
+	   (vermaj == CHAR_VERMAJ && vermin > CHAR_VERMIN)) {
+		fatal("%s: version %d.%d > %d.%d\n", ch->obj.name,
+		    vermaj, vermin, CHAR_VERMAJ, CHAR_VERMIN);
+		return (-1);
+	}
+
+	/* Read character properties. */
+	free(fobj_read_string(fd));		/* Ignore name */
+	ch->flags = fobj_read_uint32(fd);
+	ch->level = fobj_read_uint32(fd);
+	ch->exp = fobj_read_uint32(fd);
+	ch->age = fobj_read_uint32(fd);
+	ch->seed = fobj_read_uint64(fd);
+
+	ch->maxhp = fobj_read_uint32(fd);
+	ch->hp = fobj_read_uint32(fd);
+	ch->maxmp = fobj_read_uint32(fd);
+	ch->mp = fobj_read_uint32(fd);
+
+	dprintf("flags 0x%x level %d exp %d age %d hp %d/%d mp %d/%d",
+	    ch->flags, ch->level, ch->exp, ch->age,
+	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
+
+	if (ch->flags & CHAR_ONMAP) {
+		char *mname;
+		int i, ncoords;
+
+		/* Read single map coordinates. */
+		ncoords = fobj_read_uint32(fd);
+		for (i = 0; i < ncoords; i++) {
+			struct map *m;
+			int x, y;
+		
+			mname = fobj_read_string(fd);
+			x = fobj_read_uint32(fd);
+			y = fobj_read_uint32(fd);
+			ch->curoffs = fobj_read_uint32(fd);
+			ch->curspeed = fobj_read_uint32(fd);
+			ch->maxspeed = fobj_read_uint32(fd);
+
+			m = (struct map *)object_strfind(mname);
+			if (m != NULL) {
+				struct node *node;
+
+				node = &m->map[x][y];
+				pthread_mutex_lock(&m->lock);
+				char_add(ch, m, x, y);
+				pthread_mutex_unlock(&m->lock);
+				dprintf("at %s:%d,%d\n", m->obj.name, x, y);
+			} else {
+				fatal("no such map: \"%s\"\n", mname);
+			}
+			free(mname);
+		}
+		dprintf("%d coordinates\n", ncoords);
+	}
+
+	return (0);
+badmagic:
+	fatal("%s: mad magic\n", ch->obj.name);
+	return (-1);
+}
+
+int
+char_save(void *p, int fd)
+{
+	struct character *ch = (struct character *)p;
+	struct fobj_buf *buf;
+
+	buf = fobj_create_buf(128, 4);
+	if (buf == NULL) {
+		return (-1);
+	}
+
+	fobj_bwrite(buf, "agar char ", 11);
+	fobj_bwrite_uint32(buf, CHAR_VERMAJ);
+	fobj_bwrite_uint32(buf, CHAR_VERMIN);
+
+	/* Write character properties. */
+	fobj_bwrite_string(buf, ch->obj.name);
+	fobj_bwrite_uint32(buf, ch->flags &= ~(CHAR_DONTSAVE));
+	fobj_bwrite_uint32(buf, ch->level);
+	fobj_bwrite_uint32(buf, ch->exp);
+	fobj_bwrite_uint32(buf, ch->age);
+	fobj_bwrite_uint64(buf, ch->seed);
+
+	fobj_bwrite_uint32(buf, ch->maxhp);
+	fobj_bwrite_uint32(buf, ch->hp);
+	fobj_bwrite_uint32(buf, ch->maxmp);
+	fobj_bwrite_uint32(buf, ch->mp);
+	
+	fobj_bwrite_uint32(buf, 1);
+	if (ch->flags & CHAR_ONMAP) {
+		/* Write single map coordinates. */
+		fobj_bwrite_string(buf, ch->map->obj.name);
+		fobj_bwrite_uint32(buf, ch->x);
+		fobj_bwrite_uint32(buf, ch->y);
+		fobj_bwrite_uint32(buf, ch->curoffs);
+		fobj_bwrite_uint32(buf, ch->curspeed);
+		fobj_bwrite_uint32(buf, ch->maxspeed);
+	}
+
+	fobj_flush_buf(buf, fd);
+	return (0);
 }
 
 int
 char_link(void *ob)
 {
 	struct character *ch = (struct character *)ob;
-	
+
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
 		pthread_mutex_unlock(&world->lock);
@@ -93,10 +218,6 @@ char_link(void *ob)
 		return (-1);
 	}
 
-	if (object_link(ob) < 0) {
-		return (-1);
-	}
-	
 	ch->timer = SDL_AddTimer(ch->maxspeed - ch->curspeed, char_time, ch);
 	if (ch->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
@@ -106,10 +227,31 @@ char_link(void *ob)
 	return (0);
 }
 
-void
-char_destroy(struct object *ob)
+int
+char_unlink(void *ob)
 {
 	struct character *ch = (struct character *)ob;
+
+	if (pthread_mutex_lock(&world->lock) == 0) {
+		SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
+		pthread_mutex_unlock(&world->lock);
+	} else {
+		perror("world");
+		return (-1);
+	}
+
+	if (ch->timer != NULL) {
+		SDL_RemoveTimer(ch->timer);
+		ch->timer = NULL;
+	}
+
+	return (0);
+}
+
+int
+char_destroy(void *p)
+{
+	struct character *ch = (struct character *)p;
 
 	SDL_RemoveTimer(ch->timer);
 
@@ -131,6 +273,8 @@ char_destroy(struct object *ob)
 	pthread_mutex_lock(&world->lock);
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 	pthread_mutex_unlock(&world->lock);
+
+	return (0);
 }
 
 /* See if ch can move to nx:ny in its map. */
@@ -144,9 +288,11 @@ char_canmove(struct character *ch, int nx, int ny)
 	return ((me->flags & NODE_WALK) ? 0 : -1);
 }
 
-static void
-char_event(struct character *ch, SDL_Event *ev)
+void
+char_event(void *p, SDL_Event *ev)
 {
+	struct character *ch = (struct character *)p;
+
 	switch (ev->type) {
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
@@ -303,7 +449,7 @@ char_time(Uint32 ival, void *obp)
 
 	x = ch->x;
 	y = ch->y;
-
+	
 	/* Move the character. */
 	moved = mapdir_move(&ch->dir, &x, &y);
 	if (moved != 0) {
@@ -311,8 +457,6 @@ char_time(Uint32 ival, void *obp)
 		SDL_Event nev;
 		int i, nkeys;
 #endif
-
-		pthread_mutex_lock(&ch->map->lock);
 		if (moved & DIR_UP)
 			char_setanim(ch, CHAR_WALKUP);
 		if (moved & DIR_DOWN)
@@ -321,10 +465,13 @@ char_time(Uint32 ival, void *obp)
 			char_setanim(ch, CHAR_WALKLEFT);
 		if (moved & DIR_RIGHT)
 			char_setanim(ch, CHAR_WALKRIGHT);
+
+		pthread_mutex_lock(&ch->map->lock);
 		char_move(ch, x, y);
 		mapdir_postmove(&ch->dir, &x, &y, moved);
 		pthread_mutex_unlock(&ch->map->lock);
 		ch->map->redraw++;
+	
 		
 
 #if 0
@@ -361,7 +508,7 @@ char_time(Uint32 ival, void *obp)
 		}
 #endif
 	}
-
+	
 	return (ival);
 }
 
@@ -429,7 +576,7 @@ char_key(struct character *ch, SDL_Event *ev)
 void
 char_dump(struct character *ch)
 {
-	printf("%3d. %10s lvl %d (ex %.2f) hp %d/%d mp %d/%d at %s:%dx%d\n",
+	printf("%3d. %10s lvl %d (exp %d) hp %d/%d mp %d/%d at %s:%dx%d\n",
 	    ch->obj.id, ch->obj.name, ch->level, ch->exp, ch->hp, ch->maxhp,
 	    ch->mp, ch->maxmp, ch->map->obj.name, ch->x, ch->y);
 	printf("\t\t< ");
