@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.15 2002/08/18 00:42:57 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.16 2002/09/07 04:36:59 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -31,13 +31,19 @@
 
 #include "widget.h"
 #include "window.h"
+#include "label.h"
+#include "tlist.h"
 #include "primitive.h"
 
+static void	apply(int, union evarg *);
+
 static void	box_3d(void *, int, int, int, int, int, Uint32);
+static void	box_2d(void *, int, int, int, int, int, Uint32);
 static void	frame_3d(void *, int, int, int, int, Uint32);
-static void	bresenham_circle(void *, int, int, int, int, int, Uint32);
-static void	bresenham_line(void *, int, int, int, int, Uint32);
-static void	composite_square(void *, int, int, int, int, Uint32);
+static void	circle_bresenham(void *, int, int, int, int, int, Uint32);
+static void	line_bresenham(void *, int, int, int, int, Uint32);
+static void	square_composite(void *, int, int, int, int, Uint32);
+static void	triangle_composite(void *, int[2], int[2], int[2], Uint32);
 
 static __inline__ void	put_pixel1(Uint8, Uint8 *, Uint32);
 static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
@@ -45,30 +51,19 @@ static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
 struct primitive_ops primitives = {
 	box_3d,			/* box */
 	frame_3d,		/* frame */
-	bresenham_circle,	/* circle */
-	bresenham_line,		/* line */
-	composite_square	/* square */
+	circle_bresenham,	/* circle */
+	line_bresenham,		/* line */
+	square_composite,	/* square */
+	triangle_composite	/* triangle */
 };
 
-char *primitive_box_sw [] = {
-	"box_3d",
-	NULL
-};
-char *primitive_frame_sw[] = {
-	"frame_3d",
-	NULL
-};
-char *primitive_circle_sw[] = {
-	"bresenham_circle",
-	NULL
-};
-char *primitive_line_sw[] = {
-	"bresenham_line",
-	NULL
-};
-char *primitive_square_sw[] = {
-	"composite_square",
-	NULL
+enum {
+	BOX,
+	FRAME,
+	CIRCLE,
+	LINE,
+	SQUARE,
+	TRIANGLE
 };
 
 static __inline__ Uint32
@@ -104,6 +99,38 @@ alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
 
 	return (SDL_MapRGB(view->v->format, nr, ng, nb));
 }
+
+static void
+box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
+    Uint32 color)
+{
+	struct widget *wid = p;
+	Uint32 bgcolor;
+
+	bgcolor = (z < 0) ?
+	    alter_color(color, -20, -20, -20) :
+	    color;
+	if (WIDGET_FOCUSED(wid)) {
+		bgcolor = alter_color(bgcolor, 6, 6, 15);
+	}
+
+	/* Background */
+	WIDGET_FILL(wid, xoffs, yoffs, w, h, bgcolor);
+
+	primitives.line(wid,			/* Top */
+	    xoffs, yoffs,
+	    xoffs+w-1, yoffs, color);
+	primitives.line(wid,			/* Left */
+	    xoffs, yoffs,
+	    xoffs, yoffs+h-1, color);
+	primitives.line(wid,			/* Bottom */
+	    xoffs, yoffs+h-1,
+	    xoffs+w-1, yoffs+h-1, color);
+	primitives.line(wid,			/* Right */
+	    xoffs+w-1, yoffs,
+	    xoffs+w-1, yoffs+h-1, color);
+}
+
 
 static void
 box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
@@ -165,8 +192,8 @@ frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 }
 
 static void
-bresenham_circle(void *wid, int xoffs, int yoffs, int w, int h,
-    int radius, Uint32 color)
+circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
+    Uint32 color)
 {
 	int x = 0, y, cx, cy, e = 0, u = 1, v;
 
@@ -284,7 +311,7 @@ put_pixel2(Uint8 bpp, Uint8 *dst1, Uint8 *dst2, Uint32 color)
 }
 
 static void
-bresenham_line(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p;
 	Uint8 *fb1, *fb2;
@@ -402,7 +429,7 @@ done:
 }
 
 static void
-composite_square(void *p, int x, int y, int w, int h, Uint32 color)
+square_composite(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
@@ -425,5 +452,104 @@ composite_square(void *p, int x, int y, int w, int h, Uint32 color)
 	primitives.line(wid,		/* Right */
 	    x+w - 1, y,
 	    x+w - 1, y + h - 1, color);
+}
+
+static void
+triangle_composite(void *p, int p1[2], int p2[2], int p3[2], Uint32 color)
+{
+	struct widget *wid = p;
+
+	primitives.line(wid,
+	    p1[0], p1[1],
+	    p2[0], p2[1], color);
+	primitives.line(wid,
+	    p2[0], p2[1],
+	    p3[0], p3[1], color);
+	primitives.line(wid,
+	    p3[0], p3[1],
+	    p1[0], p1[1], color);
+}
+
+struct window *
+primitive_config_window(void)
+{
+	struct window *win;
+	struct region *reg;
+	struct label *lab;
+	struct tlist *tl;
+	const int ydiv = 25;
+
+	/* Primitive drawing algorithm switch */
+	win = window_new("config-primitive-algorithm-sw",
+	    "Primitive algorithm switch", WINDOW_CENTER,
+	    0, 0,
+	    640, 480,
+	    320, 240);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 93);
+	
+	lab = label_new(reg, "Box:", 100, 5);
+	tl = tlist_new(reg, 100, 28, 0);
+	tlist_insert_item(tl, NULL, "3d-style", box_3d);
+	tlist_insert_item(tl, NULL, "2d-style", box_2d);
+	event_new(tl, "tlist-changed", 0, apply, "%i", BOX);
+
+	lab = label_new(reg, "Frame:", 100, 5);
+	tl = tlist_new(reg, 100, 28, 0);
+	tlist_insert_item(tl, NULL, "3d-style", frame_3d);
+	event_new(tl, "tlist-changed", 0, apply, "%i", FRAME);
+
+	lab = label_new(reg, "Circle:", 100, 5);
+	tl = tlist_new(reg, 100, 28, 0);
+	tlist_insert_item(tl, NULL, "Bresenham #1", circle_bresenham);
+	event_new(tl, "tlist-changed", 0, apply, "%i", CIRCLE);
+	
+	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 93);
+		
+	lab = label_new(reg, "Line:", 100, 5);
+	tl = tlist_new(reg, 100, 28, 0);
+	tlist_insert_item(tl, NULL, "Bresenham #1", line_bresenham);
+	event_new(tl, "tlist-changed", 0, apply, "%i", LINE);
+		
+	lab = label_new(reg, "Square:", 100, 5);
+	tl = tlist_new(reg, 100, 28, 0);
+	tlist_insert_item(tl, NULL, "Composite", square_composite);
+	event_new(tl, "tlist-changed", 0, apply, "%i", SQUARE);
+		
+	lab = label_new(reg, "Triangle:", 100, 5);
+	tl = tlist_new(reg, 100, 28, 0);
+	tlist_insert_item(tl, NULL, "Composite", triangle_composite);
+	event_new(tl, "tlist-changed", 0, apply, "%i", TRIANGLE);
+
+	return (win);
+}
+
+static void
+apply(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	int prim = argv[1].i;
+	struct tlist_item *sel = argv[2].p;
+
+	switch (prim) {
+	case BOX:
+		primitives.box = sel->p1;
+		break;
+	case FRAME:
+		primitives.frame = sel->p1;
+		break;
+	case CIRCLE:
+		primitives.circle = sel->p1;
+		break;
+	case LINE:
+		primitives.line = sel->p1;
+		break;
+	case SQUARE:
+		primitives.square = sel->p1;
+		break;
+	case TRIANGLE:
+		primitives.triangle = sel->p1;
+		break;
+	}
 }
 
