@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.1 2003/03/02 04:08:54 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.2 2003/03/02 07:29:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -71,8 +71,7 @@ nodeedit_poll(int argc, union evarg *argv)
 	}
 	
 	flags[0] = '\0';
-	if (node->flags & NODE_ORIGIN)		strcat(flags, "origin ");
-	else if (node->flags & NODE_WALK)	strcat(flags, "walk ");
+	if (node->flags & NODE_WALK)		strcat(flags, "walk ");
 	else if (node->flags & NODE_CLIMB)	strcat(flags, "climb ");
 	if (node->flags & NODE_SLIP)		strcat(flags, "slip ");
 	if (node->flags & NODE_BIO)		strcat(flags, "bio ");

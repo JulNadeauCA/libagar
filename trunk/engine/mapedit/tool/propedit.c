@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.20 2003/02/16 23:52:31 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.21 2003/02/22 11:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -178,12 +178,8 @@ propedit_effect(void *p, struct mapview *mv, struct node *node)
 	if (pe->node_mask & NODE_ORIGIN) {
 		struct node *oldnode;
 
-		oldnode = &m->map[m->defy][m->defx];
-		oldnode->flags &= ~(NODE_ORIGIN);
-
 		m->defx = mv->cx;
 		m->defy = mv->cy;
-		node->flags |= NODE_ORIGIN;
 		return;
 	}
 

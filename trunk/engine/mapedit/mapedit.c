@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.147 2003/02/24 06:43:31 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.148 2003/03/02 07:29:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -347,6 +347,13 @@ mapedit_win_option(int argc, union evarg *argv)
 			window_show(mv->nodeed.win);
 		}
 		break;
+	case MAPEDIT_TOOL_LAYEDIT:
+		if (mv->layed.win->flags & WINDOW_SHOWN) {
+			window_hide(mv->layed.win);
+		} else {
+			window_show(mv->layed.win);
+		}
+		break;
 	}
 }
 
@@ -411,6 +418,14 @@ mapedit_win_new(struct map *m)
 		event_new(bu, "button-pushed",
 		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
+		
+		bu = button_new(reg, NULL,	      /* Toggle layer edition */
+		    SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT),
+		    BUTTON_STICKY, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_LAYEDIT);
+		mv->layed.trigger = bu;
 
 		lab = label_polled_new(reg, 30, -1, NULL, " Layer: %[u8]",
 		    &mv->cur_layer);

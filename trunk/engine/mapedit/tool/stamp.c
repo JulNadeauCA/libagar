@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.30 2003/02/25 01:23:58 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.31 2003/02/26 02:03:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/text.h>
+#include <engine/widget/checkbox.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -57,7 +58,7 @@ static const struct tool_ops stamp_ops = {
 
 static const struct version stamp_ver = {
 	"agar stamp tool",
-	0, 0
+	1, 0
 };
 
 void
@@ -68,6 +69,7 @@ stamp_init(void *p)
 	tool_init(&stamp->tool, "stamp", &stamp_ops);
 
 	stamp->mode = STAMP_REPLACE;
+	stamp->inherit_flags = 1;
 }
 
 struct window *
@@ -85,16 +87,21 @@ stamp_window(void *p)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
-		struct radio *rad;
 		static const char *mode_items[] = {
 			"Replace",
 			"Insert",
 			NULL
 		};
+		struct radio *rad;
+		struct checkbox *cb;
 
 		rad = radio_new(reg, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
 		win->focus = WIDGET(rad);
+		
+		cb = checkbox_new(reg, -1, "Inherit flags");
+		widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
+
 	}
 	return (win);
 }
@@ -106,31 +113,30 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
 	struct noderef *nref;
-	int origin = 0;
 
 	if (srcnode == NULL) {
 		text_msg("Error", "No source node");
 		return;
 	}
 	if (srcnode == dstnode) {
-		text_msg("Error", "Source node == destination node");
+		text_msg("Error", "Circular reference");
 		return;
 	}
 
 	if (st->mode == STAMP_REPLACE) {
-		origin = dstnode->flags & NODE_ORIGIN;
-		node_destroy(dstnode);
-		node_init(dstnode, mv->cx, mv->cy);
+		TAILQ_FOREACH(nref, &dstnode->nrefs, nrefs) {
+			if (nref->layer == mv->cur_layer) {
+				TAILQ_REMOVE(&dstnode->nrefs, nref, nrefs);
+			}
+		}
 	}
-
 	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		node_copy_ref(nref, dstnode);
+		nref = node_copy_ref(nref, dstnode);
+		nref->layer = mv->cur_layer;
 	}
 
-	dstnode->flags = srcnode->flags;
-	if (origin) {
-		dstnode->flags |= NODE_ORIGIN;
-	}
+	if (st->inherit_flags)
+		dstnode->flags = srcnode->flags;
 }
 
 int
@@ -162,9 +168,7 @@ stamp_load(void *p, int fd)
 	}
 	
 	stamp->mode = (int)read_uint32(fd);
-
-	dprintf("mode 0x%x\n", stamp->mode);
-
+	stamp->inherit_flags = (int)read_uint32(fd);
 	return (0);
 }
 
@@ -176,6 +180,6 @@ stamp_save(void *p, int fd)
 	version_write(fd, &stamp_ver);
 
 	write_uint32(fd, (Uint32)stamp->mode);
-	
+	write_uint32(fd, (Uint32)stamp->inherit_flags);
 	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.72 2003/02/24 04:06:37 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.73 2003/02/24 06:43:31 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
@@ -70,6 +70,7 @@ enum {
 	MAPEDIT_TOOL_UP,
 	MAPEDIT_TOOL_DOWN,
 	MAPEDIT_TOOL_NODEEDIT,
+	MAPEDIT_TOOL_LAYEDIT,
 	MAPEDIT_TOOL_SELECT,
 	MAPEDIT_TOOL_SHIFT,
 	MAPEDIT_TOOL_MERGE,

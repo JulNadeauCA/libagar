@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.76 2003/03/02 04:08:54 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.77 2003/03/02 07:29:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -112,6 +112,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->cur_node = NULL;
 	mv->cur_layer = 0;
 	mv->nodeed.trigger = NULL;
+	mv->layed.trigger = NULL;
 	mv->zoom_tm = NULL;
 	
 	mv->map = m;
@@ -170,6 +171,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 
 	nodeedit_init(mv);
+	layedit_init(mv);
 }
 
 /*
@@ -195,7 +197,7 @@ mapview_map_coords(struct mapview *mv, int *x, int *y)
 
 __inline__ void
 mapview_draw_props(struct mapview *mv, struct node *node,
-    int rx, int ry)
+    int rx, int ry, int mx, int my)
 {
 	const struct {
 		Uint32		flag;
@@ -226,7 +228,10 @@ mapview_draw_props(struct mapview *mv, struct node *node,
 		widget_blit(mv, SPRITE(mv, mv->prop_style), x, y);
 	}
 	for (i = 0; i < nsprites; i++) {
-		if (node->flags & sprites[i].flag) {
+		if ((node->flags & sprites[i].flag) ||
+		    (sprites[i].flag == NODE_ORIGIN &&
+		     mx != -1 && mx == mv->map->defx &&
+		     my != -1 && my == mv->map->defy)) {
 			widget_blit(mv, SPRITE(mv, sprites[i].sprite), x, y);
 			x += SPRITE(mv, sprites[i].sprite)->w;
 		}
@@ -347,7 +352,8 @@ mapview_draw(void *p)
 			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
 				mapview_draw_props(mv, node,
 				    WIDGET_ABSX(mv) + rx,
-				    WIDGET_ABSY(mv) + ry);
+				    WIDGET_ABSY(mv) + ry,
+				    mx, my);
 			}
 			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
 				/* XXX overdraw */

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.33 2003/02/20 04:57:25 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.34 2003/02/24 04:06:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -142,7 +142,6 @@ fileops_new_map(int argc, union evarg *argv)
 	struct textbox *w_tbox = argv[2].p;
 	struct textbox *h_tbox = argv[3].p;
 	struct window *win;
-	struct node *origin;
 	struct map *m;
 	char *name, *path;
 	Uint32 w, h;
@@ -168,9 +167,6 @@ fileops_new_map(int argc, union evarg *argv)
 
 	m->defx = w / 2;
 	m->defy = h - 2;	/* XXX pref */
-
-	origin = &m->map[m->defy][m->defx];
-	origin->flags |= NODE_ORIGIN;
 
 	win = mapedit_win_new(m);
 	view_attach(win);
@@ -265,22 +261,14 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct map *m = mv->map;
 	struct editref *eref;
 	Uint32 x, y, orx = 0, ory = 0;
-	struct node *origin = NULL;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
 			
-			if (node->flags & NODE_ORIGIN) {	/* Save */
-				origin = node;
-			}
 			node_destroy(node);
 			node_init(node, x, y);
 		}
-	}
-
-	if (origin != NULL) {
-		origin->flags |= NODE_ORIGIN;			/* Restore */
 	}
 }
 

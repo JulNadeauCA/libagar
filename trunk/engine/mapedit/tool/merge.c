@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.16 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.17 2003/02/26 02:03:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -304,7 +304,7 @@ merge_copy_node(struct merge *mer, struct node *srcnode, struct node *dstnode,
 	}
 
 	if (mer->inherit_flags) {
-		dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
+		dstnode->flags = srcnode->flags;
 	}
 }
 
@@ -687,7 +687,7 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 					noderef_draw(mv->map, nref, dx, dy);
 					if (mv->flags & MAPVIEW_PROPS) {
 						mapview_draw_props(mv,
-						    srcnode, dx, dy);
+						    srcnode, dx, dy, -1, -1);
 					}
 					rv = 0;
 				}
