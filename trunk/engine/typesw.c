@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.7 2003/07/26 21:05:03 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.8 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -33,15 +33,38 @@
 #include <engine/map.h>
 #include <engine/perso.h>
 
-extern const struct object_ops
-	object_ops,
-	map_ops,
-	perso_ops;
+struct object_type *typesw = NULL;
+int ntypesw = 0;
 
-const struct object_type typesw[] = {
-	{ "object",	N_("Object"),	sizeof(struct object),	&object_ops },
-	{ "map",	N_("Map"),	sizeof(struct map),	&map_ops },
-	{ "perso",	N_("Character"), sizeof(struct perso),	&perso_ops },
-};
-const int ntypesw = sizeof(typesw) / sizeof(typesw[0]);
+/* Initialize the type switch and register the built-in types. */
+void
+typesw_init(void)
+{
+	extern const struct object_ops object_ops, map_ops, perso_ops;
+
+	typesw = Malloc(sizeof(struct object_type));
+
+	typesw_register("object", sizeof(struct object), &object_ops);
+	typesw_register("map", sizeof(struct map), &map_ops);
+	typesw_register("perso", sizeof(struct perso), &perso_ops);
+}
+
+void
+typesw_destroy(void)
+{
+	free(typesw);
+}
+
+/* Register an object type. */
+void
+typesw_register(const char *type, size_t size, const struct object_ops *ops)
+{
+	struct object_type *ntype;
+
+	typesw = Realloc(typesw, (ntypesw+1) * sizeof(struct object_type));
+	ntype = &typesw[ntypesw++];
+	strlcpy(ntype->type, type, sizeof(ntype->type));
+	ntype->size = size;
+	ntype->ops = ops;
+}
 

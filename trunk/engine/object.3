@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.55 2004/02/20 04:20:33 vedge Exp $
+.\"	$Csoft: object.3,v 1.56 2004/02/25 18:12:01 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -111,13 +111,13 @@ system to indicate that the object's data currently resides in memory.
                 "const void *ops"
 .Pp
 .Ft "void"
-.Fn object_attach "void *parent" "void *child"
+.Fn object_attach "void *new_parent" "void *obj"
 .Pp
 .Ft "void"
-.Fn object_detach "void *parent" "void *child"
+.Fn object_detach "void *obj"
 .Pp
 .Ft "void"
-.Fn object_move "void *oldparent" "void *child" "void *newparent"
+.Fn object_move "void *obj" "void *new_parent"
 .Pp
 .Ft "void *"
 .Fn object_root "const void *obj"
@@ -178,11 +178,9 @@ The
 .Fn object_attach
 and
 .Fn object_detach
-functions respectively link and unlink a
-.Fa child
-object against a
-.Fa parent ,
-and raises
+functions respectively link and unlink a child object against a parent
+project.
+These operations raise
 .Fn attached
 and
 .Fn detached

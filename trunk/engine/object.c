@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.157 2004/02/16 07:38:50 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.158 2004/02/20 04:20:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -49,6 +49,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -261,27 +262,27 @@ object_used(void *obj)
 	return (used);
 }
 
-/* Move an object from one parent object to another. */
+/* Move an object to a different parent. */
 void
-object_move(void *oldparentp, void *childp, void *newparentp)
+object_move(void *childp, void *newparentp)
 {
-	struct object *old_parent = oldparentp;
-	struct object *new_parent = newparentp;
 	struct object *child = childp;
+	struct object *oparent = child->parent;
+	struct object *nparent = newparentp;
 
 	lock_linkage();
 
-	TAILQ_REMOVE(&old_parent->children, child, cobjs);
+	TAILQ_REMOVE(&oparent->children, child, cobjs);
 	child->parent = NULL;
-	event_post(old_parent, child, "detached", NULL);
+	event_post(oparent, child, "detached", NULL);
 
-	TAILQ_INSERT_TAIL(&new_parent->children, child, cobjs);
-	child->parent = new_parent;
-	event_post(new_parent, child, "attached", NULL);
-	event_post(old_parent, child, "moved", "%p", new_parent);
+	TAILQ_INSERT_TAIL(&nparent->children, child, cobjs);
+	child->parent = nparent;
+	event_post(nparent, child, "attached", NULL);
+	event_post(oparent, child, "moved", "%p", nparent);
 
-	debug(DEBUG_LINKAGE, "%s: parent %s => %s\n", child->name,
-	    old_parent->name, new_parent->name);
+	debug(DEBUG_LINKAGE, "%s: %s -> %s\n", child->name, oparent->name,
+	    nparent->name);
 
 	unlock_linkage();
 }
@@ -303,20 +304,17 @@ object_attach(void *parentp, void *childp)
 
 /* Detach a child object from its parent. */
 void
-object_detach(void *parentp, void *childp)
+object_detach(void *childp)
 {
-	struct object *parent = parentp;
 	struct object *child = childp;
+	struct object *parent = child->parent;
 
 	lock_linkage();
-
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
 	event_post(child, parent, "detached", NULL);
-
 	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
 	    parent->name);
-
 	unlock_linkage();
 }
 
@@ -522,8 +520,9 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 		if (stat(path, &sta) == 0)
 			return (0);
 	}
-	error_set(_("The %s/%s.%s file is not in load-path."), obj_name,
-	    ob->name, ob->type);
+	error_set(_("The %s%s/%s.%s file is not in load-path."),
+	    ob->save_pfx != NULL ? ob->save_pfx : "",
+	    obj_name, ob->name, ob->type);
 	return (-1);
 }
 
@@ -950,7 +949,7 @@ object_load_generic(void *p)
 				goto fail;
 			}
 			dprintf("%s: child `%s' (%s, %lu bytes)\n", ob->name,
-			    cname, typesw[ti].desc,
+			    cname, typesw[ti].type,
 			    (unsigned long)typesw[ti].size);
 
 			child = Malloc(typesw[ti].size);
@@ -1343,6 +1342,40 @@ object_move_down(void *p)
 	TAILQ_INSERT_AFTER(&parent->children, next, ob, cobjs);
 }
 
+/* Make sure that an object's name is unique. */
+static void
+object_rename_unique(struct object *obj)
+{
+	struct object *oob, *oparent = obj->parent;
+	char basename[OBJECT_NAME_MAX];
+	char newname[OBJECT_NAME_MAX];
+	size_t len, i;
+	char *c, *num;
+	unsigned int n = 0;
+
+rename:
+	num = NULL;
+	len = strlen(obj->name);
+	for (i = len-1; i > 0; i--) {
+		if (!isdigit(obj->name[i])) {
+			num = &obj->name[i+1];
+			break;
+		}
+	}
+	*num = '\0';
+	strlcpy(basename, obj->name, sizeof(basename));
+	snprintf(newname, sizeof(newname), "%s%u", basename, n++);
+
+	TAILQ_FOREACH(oob, &oparent->children, cobjs) {
+		if (strcmp(oob->name, newname) == 0)
+			break;
+	}
+	if (oob != NULL) {
+		goto rename;
+	}
+	strlcpy(obj->name, newname, sizeof(obj->name));
+}
+
 /*
  * Remove the data files of an object and its children.
  * The linkage must be locked.
@@ -1361,6 +1394,69 @@ object_unlink_datafiles(void *p)
 
 	if (object_copy_dirname(ob, path, sizeof(path)) == 0)
 		rmdir(path);
+}
+
+/*
+ * Duplicate an object and its children.
+ * The position is not duplicated.
+ */
+void *
+object_duplicate(void *p)
+{
+	char oname[OBJECT_NAME_MAX];
+	struct object *ob = p;
+	struct object *dob;
+	struct object_type *t;
+
+	for (t = &typesw[0]; t < &typesw[ntypesw]; t++)
+		if (strcmp(ob->type, t->type) == 0)
+			break;
+#ifdef DEBUG
+	if (t == &typesw[ntypesw])
+		fatal("unrecognized object type");
+#endif
+	dob = Malloc(t->size);
+
+	pthread_mutex_lock(&ob->lock);
+
+	/* Create the duplicate object. */
+	if (t->ops->init != NULL) {
+		t->ops->init(dob, ob->name);
+	} else {
+		object_init(dob, ob->type, ob->name, t->ops);
+	}
+
+	if (object_page_in(ob, OBJECT_DATA) == -1)
+		goto fail;
+
+	/* Change the name and attach to the same parent as the original. */
+	object_attach(ob->parent, dob);
+	object_rename_unique(dob);
+	dob->flags = (ob->flags & OBJECT_DUPED_FLAGS);
+
+	/* Save the state of the original object using the new name. */
+	strlcpy(oname, ob->name, sizeof(oname));
+	strlcpy(ob->name, dob->name, sizeof(ob->name));
+	if (object_save(ob) == -1) {
+		object_page_out(ob, OBJECT_DATA);
+		goto fail;
+	}
+
+	if (object_page_out(ob, OBJECT_DATA) == -1)
+		goto fail;
+
+	if (object_load(dob) == -1)
+		goto fail;
+
+	strlcpy(ob->name, oname, sizeof(ob->name));
+	pthread_mutex_unlock(&ob->lock);
+	return (dob);
+fail:
+	strlcpy(ob->name, oname, sizeof(ob->name));
+	pthread_mutex_unlock(&ob->lock);
+	object_destroy(dob);
+	free(dob);
+	return (NULL);
 }
 
 #ifdef EDITION
@@ -1466,6 +1562,7 @@ select_gfx(int argc, union evarg *argv)
 		ob->gfx_name = NULL;
 	} else {
 		ob->gfx_name = Strdup(it->text);
+		/* XXX don't fetch immediately */
 		if (gfx_fetch(ob) == -1) {
 			text_msg(MSG_ERROR, "%s: %s", ob->gfx_name,
 			    error_get());

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.23 2004/01/23 06:24:43 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.24 2004/02/20 04:18:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -93,10 +93,11 @@ enum {
 	OBJEDIT_SAVE,
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
-	OBJEDIT_MOVE_DOWN
+	OBJEDIT_MOVE_DOWN,
+	OBJEDIT_DUP
 };
 
-/* Invoke a generic operation on the selected objects. */
+/* Execute a generic operation on the selected objects. */
 static void
 invoke_op(int argc, union evarg *argv)
 {
@@ -131,6 +132,16 @@ invoke_op(int argc, union evarg *argv)
 				    error_get());
 			}
 			break;
+		case OBJEDIT_DUP:
+			{
+				struct object *dob;
+
+				if ((dob = object_duplicate(ob)) == NULL) {
+					text_msg(MSG_ERROR, "%s: %s", ob->name,
+					    error_get());
+				}
+			}
+			break;
 		case OBJEDIT_MOVE_UP:
 			object_move_up(ob);
 			break;
@@ -152,11 +163,14 @@ invoke_op(int argc, union evarg *argv)
 				    ob->name);
 				continue;
 			}
-			object_detach(ob->parent, ob);
+			object_detach(ob);
 			if (object_destroy(ob) == -1) {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 				continue;
+			}
+			if ((ob->flags & OBJECT_STATIC) == 0) {
+				free(ob);
 			}
 			break;
 		}
@@ -211,7 +225,7 @@ objedit_window(void)
 	struct vbox *vb;
 	struct textbox *name_tb;
 	struct button *create_bu, *edit_bu, *oedit_bu, *load_bu, *save_bu,
-	    *destroy_bu, *mvup_bu, *mvdown_bu;
+	    *destroy_bu, *dup_bu, *mvup_bu, *mvdown_bu;
 	struct combo *types_com;
 	struct tlist *objs_tl;
 
@@ -249,6 +263,7 @@ objedit_window(void)
 		hb = hbox_new(vb, BOX_HOMOGENOUS|HBOX_WFILL);
 		hbox_set_padding(hb, 1);
 		{
+			dup_bu = button_new(hb, _("Duplicate"));
 			mvup_bu = button_new(hb, _("Move up"));
 			mvdown_bu = button_new(hb, _("Move down"));
 			destroy_bu = button_new(hb, _("Destroy"));
@@ -276,6 +291,8 @@ objedit_window(void)
 	event_new(save_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
 	    OBJEDIT_SAVE);
 
+	event_new(dup_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_DUP);
 	event_new(mvup_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
 	    OBJEDIT_MOVE_UP);
 	event_new(mvdown_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
