@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.8 2002/09/06 01:26:41 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.9 2002/09/12 09:35:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -45,7 +45,7 @@
 
 static const struct widget_ops tilestack_ops = {
 	{
-		widget_destroy
+		widget_destroy,
 		NULL,	/* load */
 		NULL	/* save */
 	},
