@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.9 2002/02/01 06:04:57 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.10 2002/02/05 05:49:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -45,7 +45,9 @@
 #define JOY_RIGHT	0x08
 
 static Uint32	char_time(Uint32, void *);
-static void	char_cntrl_event(struct character *, SDL_Event *);
+static void	char_event(struct character *, SDL_Event *);
+static void	char_joybutton(struct character *, SDL_Event *);
+static void	char_key(struct character *, SDL_Event *);
 
 struct character *curchar;
 
@@ -60,7 +62,7 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 	}
 
 	object_create(&ch->obj, name, desc, flags);
-	ch->event_hook = char_cntrl_event;
+	ch->event_hook = char_event;
 	ch->map = NULL;
 	ch->x = -1;
 	ch->y = -1;
@@ -149,130 +151,21 @@ char_canmove(struct character *ch, int nx, int ny)
 
 	me = &ch->map->map[nx][ny];
 
-	/* TODO check `levels'? */
-	
-	return ((me->flags & MAPENTRY_WALK) ? 0 : -1);
+	return ((me->flags & NODE_WALK) ? 0 : -1);
 }
 
 static void
-char_cntrl_event(struct character *ch, SDL_Event *ev)
+char_event(struct character *ch, SDL_Event *ev)
 {
-	struct map_aref *aref;
-
-	/* XXX limit one sprite/anim. */
-	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, -1);
-
-	/*
-	 * Joystick control.
-	 */
-	if (ev->type == SDL_JOYAXISMOTION) {
-		static SDL_Event nev;
-		static int lastdir = 0;
-
-		switch (ev->jaxis.axis) {
-		case 0:	/* X */
-			if (ev->jaxis.value < 0) {
-				lastdir |= JOY_LEFT;
-				lastdir &= ~(JOY_RIGHT);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_LEFT;
-				SDL_PushEvent(&nev);
-			} else if (ev->jaxis.value > 0) {
-				lastdir |= JOY_RIGHT;
-				lastdir &= ~(JOY_LEFT);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_RIGHT;
-				SDL_PushEvent(&nev);
-			} else {
-				/* Axis is 0, stop moving. */
-				object_wait(ch, lastdir);
-				aref->xoffs = 0;
-			}
-			break;
-		case 1:	/* Y */
-			if (ev->jaxis.value < 0) {
-				lastdir |= JOY_UP;
-				lastdir &= ~(JOY_DOWN);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_UP;
-				SDL_PushEvent(&nev);
-			} else if (ev->jaxis.value > 0) {
-				lastdir |= JOY_DOWN;
-				lastdir &= ~(JOY_UP);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_DOWN;
-				SDL_PushEvent(&nev);
-			} else {
-				object_wait(ch, lastdir);
-				aref->yoffs = 0;
-			}
-			break;
-		}
-		return;
-	}
-	if (ev->type == SDL_JOYBUTTONDOWN || ev->type == SDL_JOYBUTTONUP) {
-		static SDL_Event nev;
-
-		dprintf("key %d\n", ev->jbutton.button);
-
-		nev.type = (ev->type == SDL_JOYBUTTONUP) ?
-		    SDL_KEYUP : SDL_KEYDOWN;
-		nev.key.keysym.sym = SDLK_x;
-		SDL_PushEvent(&nev);
-		return;
-	}
-
-	/*
-	 * Keyboard motion.
-	 */
-	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
-		switch (ev->key.keysym.sym) {
-			case SDLK_d:
-				if (ev->type == SDL_KEYDOWN) {
-					ch->flags |= CHAR_DASH;
-					char_setspeed(ch, 40);
-				} else if (ev->type == SDL_KEYUP) {
-					ch->flags &= ~(CHAR_DASH);
-					char_setspeed(ch, 1);
-				}
-				break;
-			case SDLK_UP:
-				if (ev->type == SDL_KEYDOWN) {
-					aref->yoffs = -1;
-				} else if (ev->type == SDL_KEYUP) {
-					object_wait(ch, WMASK_UP);
-					aref->yoffs = 0;
-				}
-	
-				break;
-			case SDLK_DOWN:
-				if (ev->type == SDL_KEYDOWN) {
-					aref->yoffs = 1;
-				} else if (ev->type == SDL_KEYUP) {
-					object_wait(ch, WMASK_DOWN);
-					aref->yoffs = 0;
-				}
-				break;
-			case SDLK_LEFT:
-				if (ev->type == SDL_KEYDOWN) {
-					aref->xoffs = -1;
-				} else if (ev->type == SDL_KEYUP) {
-					object_wait(ch, WMASK_LEFT);
-					aref->xoffs = 0;
-				}
-				break;
-			case SDLK_RIGHT:
-				if (ev->type == SDL_KEYDOWN) {
-					aref->xoffs = 1;
-				} else if (ev->type == SDL_KEYUP) {
-					object_wait(ch, WMASK_RIGHT);
-					aref->xoffs = 0;
-				}
-				break;
-			default:
-				break;
-		}
+	switch (ev->type) {
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		char_joybutton(ch, ev);
+		break;
+	case SDL_KEYDOWN:
+	case SDL_KEYUP:
+		char_key(ch, ev);
+		break;
 	}
 }
 
@@ -394,20 +287,19 @@ char_time(Uint32 ival, void *obp)
 	if (aref->yoffs < 0) {
 		ch->map->redraw++;
 		dprintf("up move\n");
-		if (aref->yoffs == -1) {
+		if (aref->yoffs == -1) {	/* Once */
+			char_setanim(ch, 1);
 			if (char_canmove(ch, ch->x, ch->y - 1) < 0) {
 				dprintf("blocked!\n");
 				aref->yoffs = 0;
 				goto xoffsck;
 			}
-			char_setanim(ch, 1);
 		}
-		aref->yoffs--;
+		aref->yoffs -= 5;
 		dprintf("yoffs is now %d\n", aref->yoffs);
 		if (aref->yoffs <= -ch->map->view->tileh) {
 			char_move(ch, ch->x, ch->y - 1);
 			aref->yoffs = 0;
-			ob->wmask |= WMASK_UP;
 		}
 	} else if (aref->yoffs > 0) {
 		dprintf("down move\n");
@@ -423,7 +315,6 @@ char_time(Uint32 ival, void *obp)
 		if (aref->yoffs >= ch->map->view->tileh) {
 			char_move(ch, ch->x, ch->y + 1);
 			aref->yoffs = 0;
-			ob->wmask |= WMASK_DOWN;
 		}
 	}
 
@@ -445,7 +336,6 @@ xoffsck:
 		if (aref->xoffs <= -ch->map->view->tilew) {
 			char_move(ch, ch->x - 1, ch->y);
 			aref->xoffs = 0;
-			ob->wmask |= WMASK_LEFT;
 		}
 	} else if (aref->xoffs > 0) {
 		dprintf("right move\n");
@@ -461,7 +351,6 @@ xoffsck:
 		if (aref->xoffs >= ch->map->view->tilew) {
 			char_move(ch, ch->x + 1, ch->y);
 			aref->xoffs = 0;
-			ob->wmask |= WMASK_RIGHT;
 		}
 	}
 
@@ -469,20 +358,20 @@ ailmentck:
 	/* Assume various status ailments. */
 
 #if 0
-	if (nme->flags & MAPENTRY_BIO) {
+	if (nme->flags & NODE_BIO) {
 		decrease(&ch->hp, 1, 1);
 		dprintf("bio. hp = %d/%d\n", ch->hp, ch->maxhp);
-	} else if (nme->flags & MAPENTRY_REGEN) {
+	} else if (nme->flags & NODE_REGEN) {
 		increase(&ch->hp, 1, ch->maxhp);
 		dprintf("regen. hp = %d/%d\n", ch->hp, ch->maxhp);
 	}
 
-	if (nme->flags & MAPENTRY_SLOW) {
+	if (nme->flags & NODE_SLOW) {
 		/* XXX rate */
 		nme->v1 = -10;
 		char_setspeed(ch, ch->curspeed + nme->v1);
 		dprintf("slow. speed = %d\n", ch->curspeed);
-	} else if (nme->flags & MAPENTRY_HASTE) {
+	} else if (nme->flags & NODE_HASTE) {
 		/* XXX rate */
 		nme->v1 = 10;
 		char_setspeed(ch, ch->curspeed + nme->v1);
@@ -491,6 +380,64 @@ ailmentck:
 #endif
 
 	return (ival);
+}
+
+static void
+char_joybutton(struct character *ch, SDL_Event *ev)
+{
+	static SDL_Event nev;
+	
+	dprintf("key %d\n", ev->jbutton.button);
+	
+	nev.type = (ev->type == SDL_JOYBUTTONUP) ?
+	    SDL_KEYUP : SDL_KEYDOWN;
+	
+	/* XXX remap */
+	switch (ev->jbutton.button) {
+	case 2:
+		nev.key.keysym.sym = SDLK_d;	/* Dash */
+		break;
+	/* ... */
+	}
+	SDL_PushEvent(&nev);
+}
+
+static void
+char_key(struct character *ch, SDL_Event *ev)
+{
+	int set;
+	struct map_aref *aref;
+
+	set = (ev->type == SDL_KEYDOWN);
+	/* XXX limit one sprite/anim. */
+	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, -1);
+
+	switch (ev->key.keysym.sym) {
+	case SDLK_d:	/* Dash */
+		if (ev->type == SDL_KEYDOWN) {
+			ch->flags |= CHAR_DASH;
+			char_setspeed(ch, 40);	/* XXX increment */
+		} else if (ev->type == SDL_KEYUP) {
+			ch->flags &= ~(CHAR_DASH);
+			char_setspeed(ch, 1);	/* XXX restore speed */
+		}
+		break;
+	case SDLK_UP:
+		aref->yoffs = set ? -1 : 0;
+		break;
+	case SDLK_DOWN:
+		aref->yoffs = set ? 1 : 0;
+		break;
+	case SDLK_LEFT:
+		aref->xoffs = set ? -1 : 0;
+		break;
+	case SDLK_RIGHT:
+		aref->xoffs = set ? 1 : 0;
+		break;
+	default:
+		break;
+	}
 }
 
 #ifdef DEBUG
