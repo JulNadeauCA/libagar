@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.110 2005/03/07 04:08:29 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.111 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -285,9 +285,9 @@ tlist_draw(void *p)
 
 		if (it->selected) {
 			primitives.rect_filled(tl,
-			    x, y,
+			    x, y+1,
 			    WIDGET(tl)->w - WIDGET(tl->sbar)->w,
-			    tl->item_h,
+			    tl->item_h-1,
 			    COLOR(TLIST_SEL_COLOR));
 		}
 
