@@ -1,12 +1,12 @@
-#	$Csoft: Makefile,v 1.6 2002/01/28 05:08:00 vedge Exp $
+#	$Csoft: Makefile,v 1.7 2002/01/30 12:11:38 vedge Exp $
 
 TOP=	..
 SUBDIR=	mapedit
 
 CFLAGS+=	${GLIB_CFLAGS} ${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
 
-MAN3=	char.3 agar.3
-CATMAN3=char.cat3 agar.cat3
+MAN3=	char.3 agar.3 map.3
+CATMAN3=char.cat3 agar.cat3 map.cat3
 
 LIB=	engine
 SRCS=	engine.c event.c object.c char.c world.c map.c xcf.c view.c \
