@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.23 2003/06/09 01:31:13 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.24 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -15,6 +15,7 @@ struct primitive_ops {
 	void	(*rect_filled)(void *, int, int, int, int, int);
 	void	(*plus)(void *, int, int, int, int, int);
 	void	(*minus)(void *, int, int, int, int, int);
+	void	(*tiling)(void *, SDL_Rect, int, int, int, int);
 };
 
 extern struct primitive_ops primitives;

@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.60 2004/09/19 10:31:28 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.61 2005/01/05 04:44:05 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -317,6 +317,36 @@ rect_filled(void *p, int x, int y, int w, int h, int ncolor)
 	SDL_FillRect(view->v, &rd, color);
 }
 
+/* Draw a gimp-style background tiling. */
+static void
+tiling(void *p, SDL_Rect rd, int tsz, int offs, int c1, int c2)
+{
+	struct widget *wid = p;
+	int alt1 = 0, alt2 = 0;
+	int x, y;
+
+	for (y = rd.y-tsz+offs;
+	     y < rd.y+rd.h;
+	     y += tsz) {
+		for (x = rd.x-tsz+offs;
+		     x < rd.x+rd.w;
+		     x += tsz) {
+			if (alt1++ == 1) {
+				primitives.rect_filled(wid, x, y, tsz, tsz,
+				    c1);
+				alt1 = 0;
+			} else {
+				primitives.rect_filled(wid, x, y, tsz, tsz,
+				    c2);
+			}
+		}
+		if (alt2++ == 1) {
+			alt2 = 0;
+		}
+		alt1 = alt2;
+	}
+}
+
 /* Draw a [+] sign. */
 static void
 plus(void *p, int x, int y, int w, int h, int ncolor)
@@ -435,6 +465,7 @@ primitives_init(void)
 	primitives.plus = plus;
 	primitives.minus = minus;
 	primitives.line2 = line2;
+	primitives.tiling = tiling;
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
