@@ -1,0 +1,148 @@
+.\"	$Csoft: char.3,v 1.2 2002/01/30 12:13:51 vedge Exp $
+.\"
+.\" Copyright (c) 2001 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistribution in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
+.\"
+.Dd JANUARY 30, 2002
+.Dt MAP 3
+.Os
+.Sh NAME
+.Nm map
+.Nd AGAR map implementation
+.Sh SYNOPSIS
+.Fd #include <engine/map.h>
+.Sh DESCRIPTION
+The map structure maintains a set of tiles, each containing various
+flags and a linked list of references. Those references contain:
+.Pp
+.Bl -bullet -compact
+.It
+A pointer to an object.
+.It
+An offset within this object.
+.It
+Flags (saveable, sprite, anim, warp).
+.It
+Extra animation data (frame#, delay).
+.El
+.Sh ENGINE
+.nr nS 1
+.Ft "struct map *"
+.Fn map_create "char *name" "char *descr" "int flags" "int width" "int height" \
+"char *path"
+.Pp
+.Ft "int"
+.Fn map_animset "struct map *map" "int toggle"
+.Pp
+.Ft "int"
+.Fn map_focus "struct map *map"
+.Pp
+.Ft "int"
+.Fn map_clean "struct map *map" "struct object *obj" "int offs" "int flags" \
+"int rflags"
+.Pp
+.nr nS 0
+.Pp
+.Fn map_create
+allocates, and optionally initializes a map with contents from a file.
+If
+.Fa path
+is non-NULL, the description, flags and geometry arguments can be NULL
+or -1.
+.Fn map_animset
+toggles rendering of animations.
+.Fn map_focus
+mark a map as being currently visualized.
+.Fn map_clean
+initializes the entire map with an arbitrary reference.
+.Sh MANIPULATING REFERENCES
+.nr nS 1
+.Ft "void"
+.Fn MAP_ADDSPRITE "struct map *map" "int x" "int y" "struct object *obj" \
+"int offs"
+.Pp
+.Ft "void"
+.Fn MAP_ADDANIM "struct map *map" "int x" "int y" "struct object *obj" \
+"int offs"
+.Pp
+.Ft "void"
+.Fn MAP_DELREF "struct map *map" "int x" "int y" "struct object *obj" \
+"int offs"
+.Pp
+.Ft "struct map_aref *"
+.Fn map_entry_addref "struct map_entry *me" "struct object *obj" \
+"int offs" "int rflags"
+.Pp
+.Ft "int"
+.Fn map_entry_delref "struct map_entry *me" "struct object *obj" "int offs"
+.Pp
+.Ft "struct map_aref *"
+.Fn map_entry_aref "struct map_entry *me" "struct object *obj" "int offs"
+.Pp
+.Ft "struct map_aref *"
+.Fn map_entry_arefobj "struct map_entry *me" "struct object *obj" "int offs"
+.Pp
+.nr nS 0
+.Pp
+The
+.Fn MAP_ADDSPRITE
+and
+.Fn MAP_ADDANIM
+macros add an animation reference for
+.Fa offs
+in
+.Fa obj
+to the map entry at the given
+.Fa x
+and
+.Fa y
+coordinates within the
+.Fa map .
+.Fn MAP_DELREF
+removes any reference to
+.Fa offs
+in
+.Fa obj
+within the
+.Fa map ,
+or any reference to
+.Fa obj
+if
+.Fa offs
+is negative.
+.Pp
+.Fn map_entry_addref
+and
+.Fn map_entry_delref
+manipulate the reference stack on a given map entry.
+.Fn map_entry_aref
+returns the referece at a given layer, and
+.Fn map_entry_arefobj
+returns the reference matching an object:offset pair.
+.Sh SEE ALSO
+.Xr agar 3
