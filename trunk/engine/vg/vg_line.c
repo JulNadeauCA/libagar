@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.5 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.6 2004/04/20 01:00:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include "vgobj.h"
 
 void
-vg_draw_lines(struct vg *vg, struct vg_element *vge)
+vg_draw_line_segments(struct vg *vg, struct vg_element *vge)
 {
 	int x1, y1, x2, y2;
 	int i;
@@ -85,6 +85,31 @@ vg_draw_line_loop(struct vg *vg, struct vg_element *vge)
 		y1 = y2;
 	}
 	vg_line_primitive(vg, x0, y0, x1, y1, vge->color);
+}
+
+void
+vg_line_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+{
+	double xmin = 0, xmax = 0;
+	double ymin = 0, ymax = 0;
+	int i;
+
+	xmin = vge->vtx[0].x;
+	ymin = vge->vtx[0].y;
+	for (i = 0; i < vge->nvtx; i++) {
+		if (vge->vtx[i].x < xmin)
+			xmin = vge->vtx[i].x;
+		if (vge->vtx[i].y < ymin)
+			ymin = vge->vtx[i].y;
+		if (vge->vtx[i].x > xmax)
+			xmax = vge->vtx[i].x;
+		if (vge->vtx[i].y > ymax)
+			ymax = vge->vtx[i].y;
+	}
+	r->x = xmin;
+	r->y = ymin;
+	r->w = xmax-xmin;
+	r->h = ymax-ymin;
 }
 
 #ifdef EDITION
@@ -135,7 +160,10 @@ line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 		cur_vtx->x = x;
 		cur_vtx->y = y;
 	}
-	vg_rasterize(vg);
+	if (cur_line != NULL) {
+		cur_line->redraw++;
+		vg_rasterize(vg);
+	}
 }
 
 static void
@@ -153,6 +181,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 				vg_vertex2(vg, vx, vy);
 				cur_vtx = vg_vertex2(vg, vx, vy);
+				cur_line->redraw++;
 				vg_rasterize(vg);
 				tool_push_status(t, _("Specify second point "
 				                      "or [undo line].\n"));
@@ -162,6 +191,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		} else {
 			if (cur_line != NULL) {
 				vg_undo_element(vg, cur_line);
+				cur_line->redraw++;
 				vg_rasterize(vg);
 			}
 			goto finish;
@@ -181,6 +211,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			}
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			cur_vtx = vg_vertex2(vg, vx, vy);
+			cur_line->redraw++;
 			vg_rasterize(vg);
 
 			tool_push_status(t, _("Specify point %d or "
@@ -189,6 +220,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		} else {
 			if (cur_vtx != NULL) {
 				vg_pop_vertex(vg);
+				cur_line->redraw++;
 				vg_rasterize(vg);
 			}
 			goto finish;
@@ -206,7 +238,7 @@ finish:
 }
 
 const struct tool line_tool = {
-	N_("Line segments"),
+	N_("Lines and polylines"),
 	N_("Draw line segments, strips and loops."),
 	VGLINES_ICON,
 	-1,

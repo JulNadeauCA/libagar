@@ -1,16 +1,16 @@
-/*	$Csoft: vg.h,v 1.6 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.7 2004/04/20 01:05:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
-#define VG_LAYER_NAME_MAX 128
-
 #include <engine/map.h>
+#define VG_LAYER_NAME_MAX 128
 
 #include "begin_code.h"
 struct vg;
 struct vg_element;
+
 enum vg_alignment {
 	VG_ALIGN_TL,
 	VG_ALIGN_TC,
@@ -21,6 +21,13 @@ enum vg_alignment {
 	VG_ALIGN_BL,
 	VG_ALIGN_BC,
 	VG_ALIGN_BR
+};
+struct vg_vertex {
+	double x, y, z, w;
+};
+struct vg_rect {
+	double x, y;
+	double w, h;
 };
 #include "close_code.h"
 
@@ -53,6 +60,12 @@ enum vg_element_type {
 	VG_TEXT			/* Text string */
 };
 
+struct vg_element_ops {
+	enum vg_element_type type;
+	void (*draw)(struct vg *, struct vg_element *);
+	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
+};
+
 struct vg_line_style {
 	enum {
 		VG_CONTINUOUS,
@@ -82,15 +95,6 @@ struct vg_fill_style {
 	Uint32 color;
 };
 
-struct vg_vertex {
-	double x, y, z, w;
-};
-
-struct vg_rect {
-	double x, y;
-	double w, h;
-};
-
 struct vg_layer {
 	char name[VG_LAYER_NAME_MAX];
 	int visible;
@@ -101,6 +105,7 @@ struct vg_layer {
 struct vg_element {
 	enum vg_element_type type;
 	int layer;
+	int redraw;
 	Uint32 color;
 
 	struct vg_rect	  bbox;
@@ -139,6 +144,7 @@ struct vg {
 #define VG_HWSURFACE	0x02		/* Prefer video memory for fragments */
 #define VG_VISORIGIN	0x04		/* Display the origin points */
 #define VG_VISGRID	0x08		/* Display the grid */
+#define VG_VISBBOXES	0x10		/* Display bounding boxes */
 
 	pthread_mutex_t lock;
 	double w, h;			/* Bounding box */

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.6 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.7 2004/04/20 01:05:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -32,16 +32,13 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
-static const struct {
-	enum vg_element_type type;
-	void (*draw_func)(struct vg *, struct vg_element *vge);
-} vge_types[] = {
-	{ VG_LINES,		vg_draw_lines },
-	{ VG_LINE_STRIP,	vg_draw_line_strip },
-	{ VG_LINE_LOOP,		vg_draw_line_loop },
-	{ VG_POINTS,		vg_draw_points },
-	{ VG_CIRCLE,		vg_draw_circle },
-	{ VG_ELLIPSE,		vg_draw_ellipse }
+static const struct vg_element_ops vge_types[] = {
+	{ VG_LINES,		vg_draw_line_segments,	vg_line_bbox },
+	{ VG_LINE_STRIP,	vg_draw_line_strip,	vg_line_bbox },
+	{ VG_LINE_LOOP,		vg_draw_line_loop,	vg_line_bbox },
+	{ VG_POINTS,		vg_draw_points,		vg_points_bbox },
+	{ VG_CIRCLE,		vg_draw_circle,		vg_circle_bbox },
+	{ VG_ELLIPSE,		vg_draw_ellipse,	vg_ellipse_bbox }
 };
 const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
@@ -55,9 +52,10 @@ vg_new(void *p, int flags)
 	vg = Malloc(sizeof(struct vg), M_VG);
 	vg_init(vg, flags);
 	vg->pobj = ob;
-	gfx_new_pvt(ob);
+	gfx_new_pvt(ob, "vg");
 	vg->map = map_new(ob, "raster");
 	OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|OBJECT_INDESTRUCTIBLE;
+
 	return (vg);
 }
 
@@ -80,8 +78,10 @@ vg_init(struct vg *vg, int flags)
 	vg->pobj = NULL;
 	vg->map = NULL;
 	vg->layers = Malloc(sizeof(struct vg_layer), M_VG);
-	vg->nlayers = 1;
+	vg->nlayers = 0;
 	vg->cur_layer = 0;
+	vg_push_layer(vg, _("Layer 0"));
+	vg->snap_mode = VG_GRID;
 	TAILQ_INIT(&vg->vges);
 	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
 
@@ -137,47 +137,79 @@ vg_undo_element(struct vg *vg, struct vg_element *vge)
 	Free(vge, M_VG);
 }
 
-/* Regenerate fragments of the raster surface. */
+/* Regenerate fragments of the raster surface that must be redrawn. */
 void
 vg_regen_fragments(struct vg *vg)
 {
-	struct map *m = vg->map;
-	struct map *fmap;
+	struct map *rmap = vg->map;
+	struct object *pobj = vg->pobj;
 	struct noderef *r;
 	int x, y;
+	int mx, my;
+	SDL_Rect sd, rd;
 
-	vg_destroy_fragments(vg);
-	fmap = gfx_insert_fragments(vg->pobj->gfx, vg->su);
+	rd.x = 0;
+	rd.y = 0;
+	sd.w = TILESZ;
+	sd.h = TILESZ;
+	
+	for (y = 0, my = 0;
+	     y < vg->su->h;
+	     y += TILESZ, my++) {
+		for (x = 0, mx = 0;
+		     x < vg->su->w;
+		     x += TILESZ, mx++) {
+			struct node *n = &rmap->map[my][mx];
+			SDL_Surface *fragsu = NULL;
+			Uint32 saflags, scflags, scolorkey;
+			Uint8 salpha;
+			int fw, fh;
 
-	map_free_nodes(m);
-	if (map_alloc_nodes(m, fmap->mapw, fmap->maph) == -1)
-		fatal("%s", error_get());
-
-	for (y = 0; y < fmap->maph; y++) {
-		for (x = 0; x < fmap->mapw; x++) {
-			struct node *n = &m->map[y][x];
-			struct noderef *r;
+			/* TODO if masked, skip */
 			
-			node_clear(m, n, m->cur_layer);
-			node_copy(fmap, &fmap->map[y][x], -1, m, n,
-			    m->cur_layer);
-			
+			saflags = vg->su->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
+			scflags = vg->su->flags&(SDL_SRCCOLORKEY|SDL_RLEACCEL);
+			salpha = vg->su->format->alpha;
+			scolorkey = vg->su->format->colorkey;
+			fw = vg->su->w-x < TILESZ ? vg->su->w-x : TILESZ;
+			fh = vg->su->h-y < TILESZ ? vg->su->h-y : TILESZ;
+
+			if (fw <= 0 || fh <= 0)
+				fatal("fragment too small");
+
 			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
-				if (r->layer != m->cur_layer) {
-					continue;
-				}
-				switch (r->type) {
-				case NODEREF_SPRITE:
-					if (r->r_sprite.obj != NULL) {
-						break;
-					}
-					r->r_sprite.obj = vg->pobj;
-					object_add_dep(m, vg->pobj);
-					object_page_in(vg->pobj, OBJECT_GFX);
-					break;
-				default:
+				if (r->type == NODEREF_SPRITE &&
+				    r->layer == rmap->cur_layer &&
+				    r->r_sprite.obj == pobj) {
+					fragsu = SPRITE(pobj, r->r_sprite.offs);
 					break;
 				}
+			}
+			if (r == NULL) {
+				fragsu = SDL_CreateRGBSurface(SDL_SWSURFACE|
+				    saflags|scflags, fw, fh,
+				    vg->su->format->BitsPerPixel,
+				    vg->su->format->Rmask,
+				    vg->su->format->Gmask,
+				    vg->su->format->Bmask,
+				    vg->su->format->Amask);
+				if (fragsu == NULL)
+					fatal("SDL_CreateRGBSurface: %s",
+					    SDL_GetError());
+			}
+			
+			sd.x = x;
+			sd.y = y;
+
+			SDL_SetAlpha(vg->su, 0, 0);
+			SDL_SetColorKey(vg->su, 0, 0);
+			SDL_BlitSurface(vg->su, &sd, fragsu, &rd);
+			SDL_SetAlpha(vg->su, saflags, salpha);
+			SDL_SetColorKey(vg->su, scflags, scolorkey);
+
+			if (r == NULL) {
+				node_add_sprite(rmap, n, vg->pobj,
+				    gfx_insert_sprite(vg->pobj->gfx, fragsu));
 			}
 		}
 	}
@@ -200,13 +232,14 @@ vg_destroy_fragments(struct vg *vg)
 	gfx->nsubmaps = 0;
 }
 
-/* Scale the vg to the given geometry (where 1.0 == 1 tile). */
+/* Adjust the vg bounding box and scaling factor. */
 void
 vg_scale(struct vg *vg, double w, double h, double scale)
 {
 	int pw = (int)(w*scale*TILESZ);
 	int ph = (int)(h*scale*TILESZ);
 	Uint32 suflags;
+	struct vg_element *vge;
 
 #ifdef DEBUG
 	if (scale < 0)
@@ -223,10 +256,19 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	}
 	suflags = SDL_SWSURFACE;
 	suflags |= (vg->flags & VG_ANTIALIAS) ? SDL_SRCALPHA : SDL_SRCCOLORKEY;
-	if ((vg->su = SDL_CreateRGBSurface(suflags, pw, ph, 32,
-	     vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, vfmt->Amask)) == NULL) {
+	if ((vg->su = SDL_CreateRGBSurface(suflags, pw, ph, vfmt->BitsPerPixel,
+	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, vfmt->Amask)) == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+
+	vg_destroy_fragments(vg);
+	map_free_nodes(vg->map);
+
+	if (map_alloc_nodes(vg->map, vg->su->w/TILESZ+1, vg->su->h/TILESZ+1)
+	    == -1) {
+		fatal("%s", error_get());
 	}
+	TAILQ_FOREACH(vge, &vg->vges, vges)
+		vge->redraw++;
 }
 
 /* Allocate the given type of element and begin its parametrization. */
@@ -238,6 +280,7 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->type = eltype;
 	vge->layer = 0;
+	vge->redraw = 1;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
 	vge->line.style = VG_CONTINUOUS;
@@ -286,6 +329,23 @@ vg_clear(struct vg *vg)
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
 }
 
+static void
+vg_draw_bboxes(struct vg *vg)
+{
+	struct vg_element *vge;
+	int x, y, w, h;
+
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		vg_rcoords2(vg, vge->bbox.x, vge->bbox.y, &x, &y);
+		vg_rlength(vg, vge->bbox.w, &w);
+		vg_rlength(vg, vge->bbox.h, &h);
+		vg_line_primitive(vg, x, y, x+w, y, vg->grid_color);
+		vg_line_primitive(vg, x, y, x, y+h, vg->grid_color);
+		vg_line_primitive(vg, x, y+h, x+w, y+h, vg->grid_color);
+		vg_line_primitive(vg, x+w, y, x+w, y+h, vg->grid_color);
+	}
+}
+
 void
 vg_rasterize(struct vg *vg)
 {
@@ -296,14 +356,20 @@ vg_rasterize(struct vg *vg)
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < nvge_types; i++) {
-			if (vge_types[i].type == vge->type)
-				vge_types[i].draw_func(vg, vge);
+			if (vge_types[i].type == vge->type) {
+#if 0
+				vge_types[i].bbox(vg, vge, &vge->bbox);
+#endif
+				vge_types[i].draw(vg, vge);
+			}
 		}
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
 	if (vg->flags & VG_VISGRID)
 		vg_draw_grid(vg);
+	if (vg->flags & VG_VISBBOXES)
+		vg_draw_bboxes(vg);
 
 	vg_regen_fragments(vg);
 }

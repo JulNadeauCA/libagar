@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.3 2004/04/10 04:55:17 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.4 2004/04/17 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -62,6 +62,15 @@ vg_draw_points(struct vg *vg, struct vg_element *vge)
 		vg_rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
 		vg_put_pixel(vg, rx, ry, vge->color);
 	}
+}
+
+void
+vg_points_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+{
+	r->x = 0;
+	r->y = 0;
+	r->w = 0;
+	r->h = 0;
 }
 
 #ifdef EDITION
