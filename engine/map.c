@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.85 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.86 2002/05/13 08:01:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -770,6 +770,7 @@ map_load(void *ob, int fd)
 	return (0);
 }
 
+/* World must be locked, map must not. */
 int
 map_save(void *ob, int fd)
 {
@@ -796,7 +797,6 @@ map_save(void *ob, int fd)
 	fobj_bwrite_uint32(buf, 0);
 
 	/* Write the object map. */
-	pthread_mutex_assert(&world->lock);
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
 		solen += sizeof(struct object *);
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.28 2002/05/03 20:13:19 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.29 2002/05/08 09:44:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -119,16 +119,15 @@ world_init(struct world *wo, char *name)
 
 /*
  * Load state of active objects.
+ * World must be locked.
  */
 int
 world_load(void *p, int fd)
 {
-	struct world *wo = (struct world *)p;
+	struct world *wo = p;
 	struct object *ob;
 
 	/* XXX load the state map */
-
-	pthread_mutex_assert(&wo->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		dprintf("loading %s\n", ob->name);
 
@@ -144,6 +143,7 @@ world_load(void *p, int fd)
 
 /*
  * Save the world!
+ * World must be locked.
  */
 int
 world_save(void *p, int fd)
@@ -151,7 +151,6 @@ world_save(void *p, int fd)
 	struct world *wo = (struct world *)p;
 	struct object *ob;
 
-	pthread_mutex_assert(&wo->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		dprintf("saving %s\n", ob->name);
 
@@ -175,16 +174,17 @@ world_save(void *p, int fd)
 void
 world_destroy(void *p)
 {
-	struct world *wo = (struct world *)p;
+	struct world *wo = p;
 	struct object *ob, *nextob;
+	
+	pthread_mutex_lock(&wo->lock);
 
-	if (world->curmap != NULL) {
-		map_unfocus(world->curmap);
+	if (wo->curmap != NULL) {
+		map_unfocus(wo->curmap);
 	}
 
 	printf("freed:");
 	fflush(stdout);
-	pthread_mutex_lock(&wo->lock);
 	for (ob = SLIST_FIRST(&wo->wobjsh);
 	     ob != SLIST_END(&wo->wobjsh);
 	     ob = nextob) {
@@ -194,12 +194,12 @@ world_destroy(void *p)
 		object_queue_gc(ob);
 		free(ob);
 	}
-	pthread_mutex_unlock(&wo->lock);
 	printf(".\n");
 
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
+	pthread_mutex_unlock(&wo->lock);
 	pthread_mutex_destroy(&wo->lock);
 }
 
