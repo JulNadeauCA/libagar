@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.19 2003/03/11 01:55:19 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.20 2003/03/13 08:37:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,6 +52,13 @@ structures.
 .Ft void
 .Fn mapview_init "struct mapview *mv" "struct map *m" "int flags" \
                  "int rw" "int rh"
+.Pp
+.Pp
+.Ft void
+.Fn mapview_center "struct mapview *mv" "int x" "int y"
+.Pp
+.Ft int
+.Fn mapview_zoom "struct mapview *mv" "int zoom"
 .nr nS 0
 .Pp
 The
@@ -99,6 +106,20 @@ flag enables the use of zoom factors and soft-scroll offsets that are
 independent from the map's, but are not saved with
 .Xr map
 states.
+.Pp
+The
+.Fn mapview_center
+function centers the view around the node at
+.Fa x ,
+.Fa y .
+.Pp
+The
+.Fn mapview_zoom
+function sets the scaling factor to
+.Fa zoom ,
+in % of the default tile geometry.
+.Fn mapview_zoom
+returns 0 on success and -1 on error.
 .Sh SELECTIONS
 .nr nS 1
 .Ft void
@@ -123,7 +144,7 @@ also disables any mouse selection in progress.
 .Pp
 The
 .Fn mapview_get_selection
-function returns 1 if there is an active selection.
+function returns 1 if there is an active selection or 0 if there is none.
 .Sh EVENTS
 The
 .Nm

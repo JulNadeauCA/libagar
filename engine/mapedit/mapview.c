@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.90 2003/03/13 08:37:16 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.91 2003/03/14 07:13:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -482,13 +482,14 @@ next_layer:
 	pthread_mutex_unlock(&m->lock);
 }
 
-void
+int
 mapview_zoom(struct mapview *mv, int zoom)
 {
 	if (mapedition &&
 	    (zoom < prop_get_int(&mapedit, "zoom-minimum") ||
 	     zoom > prop_get_int(&mapedit, "zoom-maximum"))) {
-		return;
+		error("zoom out of range");
+		return (-1);
 	}
 #if 0
 	/* XXX */
@@ -511,6 +512,7 @@ mapview_zoom(struct mapview *mv, int zoom)
 	/* XXX */
 	pthread_mutex_unlock(&mv->map->lock);
 #endif
+	return (0);
 }
 
 static Uint32
@@ -669,7 +671,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 		mv->cur_node = curnode;
 		if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] ||
 		    (SDL_GetModState() & KMOD_CTRL) ||
-		    mv->flags & MAPVIEW_TILEMAP) {
+		    (mv->flags & MAPVIEW_TILEMAP)) {
 			mapview_begin_selection(mv);
 		}
 		break;
@@ -838,9 +840,33 @@ mapview_keydown(int argc, union evarg *argv)
 		mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
 		mapview_zoom(mv, 100);
 		break;
+	case SDLK_2:
+		mapview_zoom(mv, 20);
+		break;
+	case SDLK_3:
+		mapview_zoom(mv, 30);
+		break;
+	case SDLK_4:
+		mapview_zoom(mv, 40);
+		break;
+	case SDLK_5:
+		mapview_zoom(mv, 50);
+		break;
+	case SDLK_6:
+		mapview_zoom(mv, 120);
+		break;
+	case SDLK_7:
+		mapview_zoom(mv, 130);
+		break;
+	case SDLK_8:
+		mapview_zoom(mv, 140);
+		break;
+	case SDLK_9:
+		mapview_zoom(mv, 150);
+		break;
 	}
 
-	/* Edition keys */
+	/* Edition keys. XXX move, mousemotion */
 	if (mv->flags & MAPVIEW_EDIT) {
 		switch (keysym) {
 		case SDLK_INSERT:
@@ -857,21 +883,26 @@ mapview_keydown(int argc, union evarg *argv)
 			break;
 		}
 
-		if (keymod & KMOD_CTRL && mv->esel.set) {
-			switch (keysym) {
-			case SDLK_c:
-				selops_copy(mv);
-				break;
-			case SDLK_v:
+	}
+
+	/* Selection operation keys */
+	if (mv->esel.set && (keymod & KMOD_CTRL)) {
+		switch (keysym) {
+		case SDLK_c:
+			selops_copy(mv);
+			break;
+		case SDLK_v:
+			if (mv->flags & MAPVIEW_EDIT)
 				selops_paste(mv);
-				break;
-			case SDLK_x:
+			break;
+		case SDLK_x:
+			if (mv->flags & MAPVIEW_EDIT)
 				selops_cut(mv);
-				break;
-			case SDLK_k:
+			break;
+		case SDLK_k:
+			if (mv->flags & MAPVIEW_EDIT)
 				selops_clear(mv);
-				break;
-			}
+			break;
 		}
 	}
 
@@ -893,7 +924,7 @@ mapview_keydown(int argc, union evarg *argv)
 		}
 	}
 
-	/* Grid, props keys */
+	/* Visualisation options */
 	switch (keysym) {
 	case SDLK_g:
 		if (mv->flags & MAPVIEW_GRID) {
