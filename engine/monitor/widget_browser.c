@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.8 2002/12/21 10:27:42 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.9 2002/12/29 21:12:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -228,13 +228,9 @@ tl_colors_selected(int argc, union evarg *argv)
 	struct palette *pal = argv[2].p;
 	struct tlist_item *it = argv[3].p;
 	struct widget_color *color = it->p1;
-	Uint32 color32;
-	Uint8 r, g, b, a;
 
-	SDL_GetRGBA(WIDGET_COLOR(wid, color->ind), view->v->format,
-	    &r, &g, &b, &a);
-
-	palette_set_color(pal, r, g, b, a);
+	widget_bind(pal, "color", WIDGET_UINT32,
+	    NULL, &WIDGET_COLOR(wid, color->ind));
 }
 
 static void
@@ -296,7 +292,7 @@ tl_widgets_examine(int argc, union evarg *argv)
 		event_new(tl_colors, "tlist-poll",
 		    tl_colors_poll, "%p", wid);
 	
-		pal = palette_new(reg, 0, 100, 50);
+		pal = palette_new(reg, 100, 50, 3);
 		
 		event_new(tl_colors, "tlist-changed",
 		    tl_colors_selected, "%p, %p", wid, pal);
