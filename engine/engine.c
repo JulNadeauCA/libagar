@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.114 2003/07/08 00:34:52 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.115 2003/07/14 03:42:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -137,10 +137,20 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 			printf(_("Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n"),
 			    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
 			    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
-			printf(_("Window manager is %savailable.\n"),
-			    vinfo->wm_available ? "" : "un");
-			printf(_("Hardware surfaces are %savailable.\n"),
-			    vinfo->hw_available ? "" : "un");
+
+			if (vinfo->wm_available) {
+				printf(_("Window manager is available.\n"));
+			} else {
+				printf(_("Window manager is unavailable.\n"));
+			}
+			
+			if (vinfo->hw_available) {
+				printf(
+				    _("Hardware surfaces are available.\n"));
+			} else {
+				printf(
+				    _("Hardware surfaces are unavailable.\n"));
+			}
 		
 			accel[0] = '\0';
 			unaccel[0] = '\0';
