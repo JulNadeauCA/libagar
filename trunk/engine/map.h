@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.85 2003/04/18 04:02:49 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.86 2003/04/24 01:03:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -9,6 +9,8 @@
 #define TILEW_SHIFT	5
 #define TILEH_SHIFT	5
 
+#define MAP_MIN_WIDTH		4
+#define MAP_MIN_HEIGHT		4
 #define MAP_MAX_WIDTH		32767
 #define MAP_MAX_HEIGHT		32767
 #define MAP_MAX_LAYERS		256
