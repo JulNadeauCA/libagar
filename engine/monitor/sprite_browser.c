@@ -1,4 +1,4 @@
-/*	$Csoft: sprite_browser.c,v 1.1 2002/09/16 16:44:12 vedge Exp $	*/
+/*	$Csoft: sprite_browser.c,v 1.2 2002/11/14 05:59:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -90,9 +90,9 @@ sprite_browser_window(void *p)
 	struct button *button;
 	struct bitmap *bmp;
 
-	win = window_new("monitor-object-browser", "Sprite browser",
-	    WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 184, 228, 184, 228);
+	win = window_new("monitor-sprite-browser", WINDOW_CENTER, -1, -1,
+	    184, 228, 184, 228);
+	window_set_caption(win, "Sprite browser");
 
 	/* Input */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 80, 30);

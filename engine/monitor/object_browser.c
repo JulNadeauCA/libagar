@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.3 2002/11/14 07:59:28 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.4 2002/11/15 01:14:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -122,7 +122,12 @@ event_list_selected(int argc, union evarg *argv)
 	struct button *bu;
 	int i;
 
-	win = window_generic_new(215, 140, "%s handler", evh->name);
+	win = window_generic_new(215, 140,
+	    "monitor-object-browser-%s-evh-%s", ob->name, evh->name);
+	if (win == NULL)
+		return;
+	window_set_caption(win, "%s handler", evh->name);
+
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
 	lab = label_new(reg, 100, 0, "Identifier: \"%s\"", evh->name);
 	lab = label_new(reg, 100, 0, "Flags: 0x%x", evh->flags);
@@ -169,9 +174,11 @@ objlist_selected(int argc, union evarg *argv)
 	struct tlist *etl;
 	struct event *evh;
 
-	win = window_new(NULL, "Object structure", WINDOW_CENTER, -1, -1,
-	    394, 307, 251, 240);
-	
+	win = window_generic_new(394, 307,
+	    "monitor-object-browser-obj-%s", ob->name);
+	if (win == NULL)
+		return;
+
 	/* Show the object's generic properties. */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 40);
 	lab = label_new(reg, 100, 0, "Name: %s", ob->name);
@@ -207,9 +214,8 @@ object_browser_window(void *p)
 	struct button *button;
 	struct bitmap *bmp;
 
-	win = window_new("monitor-media-browser", "Object browser",
-	    WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 184, 100, 184, 100);
+	win = window_generic_new(184, 100, "monitor-object-browser");
+	window_set_caption(win, "Object browser");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	obr->objlist = tlist_new(reg, 100, 100, 0);

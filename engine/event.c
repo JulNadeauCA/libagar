@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.94 2002/11/14 07:11:40 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.95 2002/11/14 08:02:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -160,10 +160,10 @@ event_loop(void)
 	struct graph *fps_graph;
 	struct graph_item *fps_item;
 
-	fps_win = window_new("fps-counter", "Frames/second", WINDOW_CENTER,
-	    0, 0, 133, 104, 125, 91);
-	reg = region_new(fps_win, REGION_VALIGN,
-	    0, 0, 100, 100);
+	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
+	    133, 104, 125, 91);
+	window_set_caption(fps_win, "Frames/second");
+	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, 100);
 	fps_label = label_new(reg, 100, 20, "...");
 	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,

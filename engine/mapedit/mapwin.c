@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.22 2002/11/10 21:45:53 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.23 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -53,18 +53,17 @@ static void	mapwin_option(int, union evarg *);
 static void
 mapwin_new_view(int argc, union evarg *argv)
 {
-	char caption[4096];
 	struct mapview *mv, *parent = argv[1].p;
 	struct mapedit *med = parent->med;
 	struct map *m = parent->map;
 	struct window *win;
 	struct region *reg;
 
-	sprintf(caption, "%s view (%dx%d)",
-	    OBJECT(m)->name, m->mapw, m->maph);
 	win = emalloc(sizeof(struct window));
-	window_init(win, NULL, caption, WINDOW_SOLID,
-	    96, 96, 375, 293, 114, 136);
+	window_init(win, NULL, WINDOW_CENTER, -1, -1,
+	    375, 293, 114, 136);
+	window_set_caption(win, "%s view (%dx%d map)",
+	    OBJECT(m)->name, m->mapw, m->maph);
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
@@ -111,7 +110,6 @@ mapwin_option(int argc, union evarg *argv)
 struct window *
 mapwin_new(struct mapedit *med, struct map *m)
 {
-	char caption[4096];
 	struct window *win;
 	struct region *reg;
 	struct mapview *mv;
@@ -120,12 +118,11 @@ mapwin_new(struct mapedit *med, struct map *m)
 	const int xdiv = 100 / 7;
 	const int ydiv = 100;
 
-	sprintf(caption, "%s edition (%dx%d)",
-	    OBJECT(m)->name, m->mapw, m->maph);
-
 	win = emalloc(sizeof(struct window));
-	window_init(win, NULL, caption, WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 420, 300, 114, 136);
+	window_init(win, NULL, WINDOW_CENTER, -1, -1,
+	    420, 300, 114, 136);
+	window_set_caption(win, "%s edition (%dx%d map)",
+	    OBJECT(m)->name, m->mapw, m->maph);
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));

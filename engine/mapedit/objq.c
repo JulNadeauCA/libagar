@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.22 2002/11/10 03:43:53 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.23 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -179,8 +179,8 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	}
 
 	asprintf(&wname, "t-win-%s", OBJECT(ob->art->map)->name);
-	window_init(win, wname, ob->name, WINDOW_SOLID,
-	    view->w - 170, cury, 88, 264, 56, 117);
+	window_init(win, wname, 0, view->w - 170, cury, 88, 264, 56, 117);
+	window_set_caption(win, "%s", ob->name);
 	free(wname);
 
 	/* Map view */
