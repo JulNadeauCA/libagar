@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.12 2004/04/30 05:24:02 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.13 2004/05/01 00:53:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -45,6 +45,7 @@ struct vg_element;
 #include <engine/vg/vg_circle.h>
 #include <engine/vg/vg_ellipse.h>
 #include <engine/vg/vg_text.h>
+#include <engine/vg/vg_mask.h>
 
 #include "begin_code.h"
 
@@ -64,7 +65,8 @@ enum vg_element_type {
 	VG_ELLIPSE,		/* Single ellipse */
 	VG_BEZIER_CURVE,	/* Bezier curve */
 	VG_BEZIGON,		/* Bezigon */
-	VG_TEXT			/* Text string */
+	VG_TEXT,		/* Text string */
+	VG_MASK			/* Polygonal mask */
 };
 
 struct vg_element_ops {
@@ -116,7 +118,8 @@ struct vg_element {
 	enum vg_element_type type;		/* Class of element */
 	struct vg_element_ops ops;		/* Generic element operations */
 	struct vg_block *block;			/* Back pointer to block */
-
+	int flags;
+#define VG_ELEMENT_NOSAVE 0x01		/* Don't save with drawing */
 	int layer;			/* Associated layer */
 	int redraw;			/* Element redraw */
 	int drawn;			/* Avoid overdraw */
@@ -136,14 +139,26 @@ struct vg_element {
 			double s, e;		/* Start/end angles (degrees) */
 		} vg_arc;
 		struct {
-			char text[VG_TEXT_MAX];		/* Text to display */
+			char text[VG_TEXT_MAX];		/* Text buffer */
 			double angle;			/* Angle of label */
 			enum vg_alignment align;	/* Alignment of text */
+			char face[VG_FONT_FACE_MAX];	/* Font face name */
+			int size;			/* Points */
+			int style;
+#define VG_FONT_BOLD	0x01				/* Bold style */
+#define VG_FONT_ITALIC	0x02				/* Italic style */
 		} vg_text;
+		struct {
+			float scale;			/* Scaling factor */
+			int visible;			/* Display indicator */
+			void *p;
+			void (*mousebutton)(void *p, Uint8 b);
+		} vg_mask;
 	} vg_args;
-#define vg_circle  vg_args.vg_circle
-#define vg_arc	   vg_args.vg_arc
-#define vg_text	   vg_args.vg_text
+#define vg_circle   vg_args.vg_circle
+#define vg_arc	    vg_args.vg_arc
+#define vg_text	    vg_args.vg_text
+#define vg_mask	    vg_args.vg_mask
 	TAILQ_ENTRY(vg_element) vgbmbs;
 	TAILQ_ENTRY(vg_element) vges;
 };
