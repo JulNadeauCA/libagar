@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.90 2004/08/31 00:51:36 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.91 2005/01/23 11:54:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -44,6 +44,8 @@ struct viewport {
 	struct window	*focus_win;	/* Give focus to this window,
 					   when event processing is done. */
 	struct window	*wop_win;	/* Window being moved/resized/etc. */
+	struct window	*modal_win;	/* Modal window (or NULL). */
+
 	enum {
 		VIEW_WINOP_NONE,
 		VIEW_WINOP_MOVE,		/* Window movement */
