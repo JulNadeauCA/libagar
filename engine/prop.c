@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.5 2002/11/08 07:36:29 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.6 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -39,6 +39,11 @@ static const struct version prop_ver = {
 	"agar property map",
 	1, 0
 };
+
+#ifdef DEBUG
+int	prop_debug = 0;
+#define engine_debug prop_debug
+#endif
 
 /*
  * Modify a property, or create a new one if it does not exist.
