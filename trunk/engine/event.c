@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.139 2003/03/02 03:54:10 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.140 2003/03/02 07:28:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -340,7 +340,7 @@ event_dispatch(SDL_Event *ev)
 
 		SDL_SetVideoMode(ev->resize.w, ev->resize.h, 0, view->v->flags);
 		if (view->v == NULL) {
-			fatal("setting %dx%d mode: %s\n",
+			fatal("setting %dx%d mode: %s",
 			    ev->resize.w, ev->resize.h, SDL_GetError());
 		}
 
@@ -452,10 +452,10 @@ event_dispatch(SDL_Event *ev)
 
 #define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
 	if ((eev)->argc == EVENT_MAXARGS) {			\
-		fatal("too many args\n");			\
+		fatal("too many args");				\
 	}							\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
-} while (/*CONSTCOND*/ 0)
+} while (0)
 
 #define EVENT_PUSH_ARG(ap, fmt, eev)				\
 	switch ((fmt)) {					\
@@ -493,7 +493,7 @@ event_dispatch(SDL_Event *ev)
 	case '%':						\
 		break;						\
 	default:						\
-		fatal("unknown argument type\n");		\
+		fatal("unknown argument type");			\
 	}
 
 /*
@@ -565,7 +565,7 @@ event_post_async(void *p)
 
 	free(eev);
 #else
-	fatal("no thread support compiled in\n");
+	fatal("requires THREADS");
 #endif
 	return (NULL);
 }
@@ -609,7 +609,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 			Pthread_create(&async_event_th, NULL,
 			    event_post_async, neev);
 #else
-			fatal("no thread support compiled in\n");
+			fatal("requires THREADS");
 #endif
 		} else {
 			neev->handler(neev->argc, neev->argv);

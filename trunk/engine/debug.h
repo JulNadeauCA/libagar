@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.27 2003/02/26 02:04:53 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.28 2003/02/26 03:10:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -62,25 +62,25 @@ extern int engine_debug;
 #  define pthread_mutex_lock(mutex) do {				\
 	int _rv;							\
 	if ((_rv = pthread_mutex_lock((mutex))) != 0) {			\
-		fatal("mutex_lock(%p): %s\n", (mutex), strerror(_rv));	\
+		fatal("mutex_lock(%p): %s", (mutex), strerror(_rv));	\
 	}								\
 } while (0)
 #  define pthread_mutex_unlock(mutex) do {				\
 	int _rv;							\
 	if ((_rv = pthread_mutex_unlock((mutex))) != 0) {		\
-		fatal("mutex_unlock(%p): %s\n", (mutex), strerror(_rv));\
+		fatal("mutex_unlock(%p): %s", (mutex), strerror(_rv));\
 	}								\
 } while (0)
 #  define pthread_mutex_init(mutex, attr)	do {			\
 	int _rv;							\
 	if ((_rv = pthread_mutex_init((mutex), (attr))) != 0) {		\
-		fatal("pthread_mutex_init: %s\n", strerror(_rv));	\
+		fatal("pthread_mutex_init: %s", strerror(_rv));	\
 	}								\
 } while (0)
 #  define pthread_mutex_destroy(mutex) do {				\
 	int _rv;							\
 	if ((_rv = pthread_mutex_destroy((mutex))) != 0) {		\
-		fatal("pthread_mutex_destroy: %s\n", strerror(_rv));	\
+		fatal("pthread_mutex_destroy: %s", strerror(_rv));	\
 	}								\
 } while (0)
 
@@ -90,13 +90,13 @@ extern int engine_debug;
 	int _rv;							\
 	if ((_rv = pthread_create((thread), (attr), (func), (arg)))	\
 	    != 0) {							\
-		fatal("pthread_create: %s\n", strerror(_rv));		\
+		fatal("pthread_create: %s", strerror(_rv));		\
 	}								\
 } while (0)
 # define Pthread_join(thread, valptr) do {				\
 	int _rv;							\
 	if ((_rv = pthread_join((thread), (valptr))) != 0) {		\
-		fatal("pthread_join: %s\n", strerror(_rv));		\
+		fatal("pthread_join: %s", strerror(_rv));		\
 	}								\
 } while (0)
 #endif /* THREADS */
