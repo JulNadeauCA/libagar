@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.6 2002/11/28 01:05:44 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.7 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -29,7 +29,6 @@
 #include "engine.h"
 
 #include <libfobj/fobj.h>
-#include <libfobj/buf.h>
 
 #include "map.h"
 #include "rootmap.h"
@@ -58,7 +57,7 @@ static const struct version perso_ver = {
 };
 
 static const struct object_ops perso_ops = {
-	NULL,		/* destroy */
+	perso_destroy,
 	perso_load,
 	perso_save
 };
@@ -88,9 +87,9 @@ perso_new(char *name, char *media, Uint32 hp, Uint32 mp)
 void
 perso_init(struct perso *pers, char *name, char *media, Uint32 hp, Uint32 mp)
 {
-	object_init(&pers->obj, "perso", name, media, OBJECT_ART|OBJECT_BLOCK,
-	    &perso_ops);
+	object_init(&pers->obj, "perso", name, media, OBJECT_ART, &perso_ops);
 
+	pers->name = Strdup(name);
 	pers->flags = 0;
 	pers->level = 0;
 	pers->exp = 0;
@@ -99,7 +98,6 @@ perso_init(struct perso *pers, char *name, char *media, Uint32 hp, Uint32 mp)
 
 	pers->hp = pers->maxhp = hp;
 	pers->mp = pers->maxmp = mp;
-	pers->maxspeed = DEFAULT_SPEED;
 	pers->nzuars = DEFAULT_ZUARS;
 
 	pthread_mutex_init(&pers->lock, NULL);
@@ -108,97 +106,134 @@ perso_init(struct perso *pers, char *name, char *media, Uint32 hp, Uint32 mp)
 	event_new(pers, "detached", perso_detached, NULL);
 }
 
+void
+perso_destroy(void *p)
+{
+	struct perso *perso = p;
+
+	free(perso->name);
+}
+
 int
 perso_load(void *p, int fd)
 {
-	struct perso *pers = p;
+	struct perso *perso = p;
 	struct input *input = NULL;
-	struct map *m;
 
 	if (version_read(fd, &perso_ver) != 0) {
 		return (-1);
 	}
 
-	pthread_mutex_lock(&pers->lock);
+	pthread_mutex_lock(&perso->lock);
 
-	/* Read personage properties. */
-	free(read_string(fd));		/* Ignore name */
-	pers->flags = read_uint32(fd);
-	pers->level = read_uint32(fd);
-	pers->exp = read_uint32(fd);
-	pers->age = read_uint32(fd);
-	pers->seed = read_uint32(fd);
-	pers->maxspeed = read_uint32(fd);
-
-	pers->maxhp = read_uint32(fd);
-	pers->hp = read_uint32(fd);
-	pers->maxmp = read_uint32(fd);
-	pers->mp = read_uint32(fd);
-
-	pers->nzuars = read_uint32(fd);
+	/* Read the character status. */
+	/* XXX use generic properties? */
+	perso->name = read_string(fd, perso->name);
+	perso->flags = read_uint32(fd);
+	perso->level = read_uint32(fd);
+	perso->exp = read_uint32(fd);
+	perso->age = read_uint32(fd);
+	perso->seed = read_uint32(fd);
+	perso->maxhp = read_uint32(fd);
+	perso->hp = read_uint32(fd);
+	perso->maxmp = read_uint32(fd);
+	perso->mp = read_uint32(fd);
+	perso->nzuars = read_uint32(fd);
 
 	debug(DEBUG_STATE, "%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d\n",
-	    OBJECT(pers)->name, pers->flags, pers->level, pers->exp, pers->age,
-	    pers->hp, pers->maxhp, pers->mp, pers->maxhp);
+	    OBJECT(perso)->name, perso->flags, perso->level, perso->exp,
+	    perso->age, perso->hp, perso->maxhp, perso->mp, perso->maxhp);
 
-	if (read_uint32(fd) > 0) {
-		char *mname, *minput;
-		Uint32 x, y, offs, flags, speed;
+	/* Save positions. */
+	if (read_uint32(fd) == 0) {			/* No position */
+		debug(DEBUG_STATE, "%s is nowhere.\n",
+		    OBJECT(perso)->name);
+	} else {					/* One position */
+		char *map_id, *input_id;
+		Uint32 dst_x, dst_y;
+		struct mappos *npos;
+		struct node *dst_node;
+		struct noderef *old_nref;
+		struct map *dst_map;
+		struct object **pobjs;
+		Uint32 nobjs;
 
-		mname = read_string(fd);
-		x = read_uint32(fd);
-		y = read_uint32(fd);
-		offs = read_uint32(fd);
-		flags = read_uint32(fd);
-		speed = read_uint32(fd);
-		minput = read_string(fd);
+		/*
+		 * Read the dependency table. This is used by noderef_load()
+		 * to resolve object identifiers and allows the character to
+		 * use sprite/animations from other objects.
+		 */
+		object_table_load(fd, OBJECT(perso), &pobjs, &nobjs);
 
-		input = input_find_str(minput);
-		if (input != NULL) {
-			debug(DEBUG_STATE, "%s is controlled by %s\n",
-			    OBJECT(pers)->name, OBJECT(input)->name);
+		/* Read the map id, node coordinates and input device id. */
+		map_id = read_string(fd, NULL);
+		dst_x = read_uint32(fd);
+		dst_y = read_uint32(fd);
+		input_id = read_string(fd, NULL);
+		debug(DEBUG_STATE, "%s is at %s:%d,%d, controlled by %s\n",
+		    OBJECT(perso)->name, map_id, dst_x, dst_y, input_id);
+		dst_map = world_find(map_id);
+		if (dst_map == NULL) {
+			fatal("no such map: `%s'\n", map_id);
 		}
-		debug(DEBUG_STATE,
-		    "%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
-		    OBJECT(pers)->name, mname, x, y, offs, flags, speed);
 
-		m = (struct map *)world_find(mname);
-		if (m != NULL) {
-			struct mappos *npos;
+		pthread_mutex_lock(&dst_map->lock);
 
-			pthread_mutex_lock(&m->lock);
-			npos = object_addpos(pers, offs, flags, input, m, x, y,
-			    speed);
-			npos->speed = speed;
-			if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
-			    pers->flags & PERSO_FOCUSED) {
-				rootmap_center(m, x, y);
+		if (dst_x > dst_map->mapw || dst_y > dst_map->maph) {
+			fatal("%d,%d exceeds map boundaries\n", dst_x, dst_y);
+		}
+
+		/*
+		 * Load the previously saved noderef directly on the new node,
+		 * and set the old_nref pointer.
+		 */
+		noderef_load(fd, pobjs, nobjs, &dst_map->map[dst_y][dst_x],
+		    &old_nref);
+
+		/*
+		 * Update the character's position (back reference).
+		 * This removes the current noderef, if there is any.
+		 */
+		object_set_position(perso, old_nref, dst_map, dst_x, dst_y);
+
+		dst_map->redraw++;			/* Noderefs changed */
+
+		pthread_mutex_unlock(&dst_map->lock);
+		
+		/*
+		 * Resolve the input device id and control the object.
+		 * Center the view if the character is focused.
+		 */
+		if (strcmp(input_id, "") != 0) {
+			input = input_find(input_id);
+			if (input == NULL) {
+				/* XXX assign a default input device or none. */
+				fatal("no such input device: `%s'\n", input_id);
 			}
-			pthread_mutex_unlock(&m->lock);
+			debug(DEBUG_STATE, "%s: controlling with %s\n",
+			    OBJECT(perso)->name, OBJECT(input)->name);
 
-			debug(DEBUG_STATE, "%s is at %s:%d,%d\n",
-			    OBJECT(pers)->name, OBJECT(m)->name, x, y);
-			m->redraw++;
+			object_control(perso, input,
+			    perso->flags & PERSO_FOCUSED);
 		} else {
-			fatal("no such map: \"%s\"\n", mname);
+			debug(DEBUG_STATE, "%s: not controlled\n",
+			    OBJECT(perso)->name);
 		}
-		free(mname);
-		free(minput);
-	} else {
-		debug(DEBUG_STATE, "%s is nowhere.\n", OBJECT(pers)->name);
+		
+		free(map_id);
+		free(input_id);
 	}
-	
-	pthread_mutex_unlock(&pers->lock);
-	
+
+	pthread_mutex_unlock(&perso->lock);
 	return (0);
 }
 
 int
 perso_save(void *p, int fd)
 {
-	struct perso *pers = p;
+	struct perso *perso = p;
 	struct fobj_buf *buf;
-	struct mappos *pos = OBJECT(pers)->pos;
+	struct mappos *pos;
 
 	buf = fobj_create_buf(128, 4);
 	if (buf == NULL) {
@@ -207,41 +242,59 @@ perso_save(void *p, int fd)
 
 	version_write(fd, &perso_ver);
 	
-	pthread_mutex_lock(&pers->lock);
+	pthread_mutex_lock(&perso->lock);
 
-	/* Write perso properties. */
-	buf_write_string(buf, pers->obj.name);
-	buf_write_uint32(buf, pers->flags & ~(PERSO_DONTSAVE));
-	buf_write_uint32(buf, pers->level);
-	buf_write_uint32(buf, pers->exp);
-	buf_write_uint32(buf, pers->age);
-	buf_write_uint32(buf, pers->seed);
-	buf_write_uint32(buf, pers->maxspeed);
-
-	buf_write_uint32(buf, pers->maxhp);
-	buf_write_uint32(buf, pers->hp);
-	buf_write_uint32(buf, pers->maxmp);
-	buf_write_uint32(buf, pers->mp);
+	/* Save the character status. */
+	/* XXX use generic properties? */
+	buf_write_string(buf, perso->name);
+	buf_write_uint32(buf, perso->flags & ~(PERSO_EPHEMERAL));
+	buf_write_uint32(buf, perso->level);
+	buf_write_uint32(buf, perso->exp);
+	buf_write_uint32(buf, perso->age);
+	buf_write_uint32(buf, perso->seed);
+	buf_write_uint32(buf, perso->maxhp);
+	buf_write_uint32(buf, perso->hp);
+	buf_write_uint32(buf, perso->maxmp);
+	buf_write_uint32(buf, perso->mp);
+	buf_write_uint32(buf, perso->nzuars);
 	
-	buf_write_uint32(buf, pers->nzuars);
+	pthread_mutex_lock(&OBJECT(perso)->pos_lock);
+	pos = OBJECT(perso)->pos;
 
-	if (pos != NULL) {
-		buf_write_uint32(buf, 1);
+	/* Save positions. */
+	if (pos == NULL) {
+		debug(DEBUG_STATE, "%s: no position\n", OBJECT(perso)->name);
+		buf_write_uint32(buf, 0);		/* No position */
+	} else {
+		struct object **pobjs;
+		Uint32 nobjs;
+		
+		buf_write_uint32(buf, 1);		/* One position */
+
+		/*
+		 * Save the dependency table. This is used by noderef_save()
+		 * to encode object identifiers and allows the character to
+		 * use sprite/animations from other objects.
+		 */
+		object_table_save(buf, OBJECT(perso), &pobjs, &nobjs);
+
+		/* Save the map id, node coordinates and input device id. */
 		buf_write_string(buf, OBJECT(pos->map)->name);
 		buf_write_uint32(buf, pos->x);
 		buf_write_uint32(buf, pos->y);
-		buf_write_uint32(buf, pos->nref->offs);
-		buf_write_uint32(buf, pos->nref->flags);
-		buf_write_uint32(buf, pos->speed);
-		buf_write_string(buf,
-		    (pos->input != NULL) ? OBJECT(pos->input)->name : "");
-		debug(DEBUG_STATE, "%s: at %s:%d,%d offs=%d flags=0x%x\n",
-		    OBJECT(pers)->name, OBJECT(pos->map)->name, pos->x, pos->y,
-		    pos->nref->offs, pos->nref->flags);
-	} else {
-		buf_write_uint32(buf, 0);
+		/* XXX the same input device may not be available later. */
+		buf_write_string(buf, (pos->input != NULL) ?
+		    OBJECT(pos->input)->name : "");
+
+		/* Save the current noderef in its native format. */
+		pthread_mutex_lock(&pos->map->lock);
+		noderef_save(buf, pobjs, nobjs, pos->nref);
+		pthread_mutex_unlock(&pos->map->lock);
 	}
-	pthread_mutex_unlock(&pers->lock);
+	pthread_mutex_unlock(&OBJECT(perso)->pos_lock);
+
+	pthread_mutex_unlock(&perso->lock);
+
 	fobj_flush_buf(buf, fd);
 	fobj_destroy_buf(buf);
 	return (0);
@@ -276,28 +329,24 @@ perso_time(Uint32 ival, void *p)
 	Uint32 x, y, moved = 0;
 
 	/* XXX thread unsafe */
-	
-	pos = object_get_pos(ob);
+
+	pthread_mutex_lock(&ob->pos_lock);
+
+	pos = ob->pos;
 	if (pos == NULL) {
-		/* Character is nowhere. */
-		debug(DEBUG_POSITION, "%s is nowhere\n", ob->name);
+		pthread_mutex_unlock(&ob->pos_lock);
+		debug(DEBUG_POSITION, "%s is nowhere!\n", ob->name);
 		return (ival);
 	}
-
-	m = pos->map;
-	x = pos->x;
-	y = pos->y;
-	
-	pthread_mutex_lock(&m->lock);
-	moved = mapdir_move(&pos->dir, &x, &y);
+	pthread_mutex_lock(&pos->map->lock);
+	moved = mapdir_move(&pos->dir, &pos->x, &pos->y);
 	if (moved != 0) {
-		struct mappos *newpos;
-
-		newpos = object_movepos(ob, m, x, y);
-		mapdir_postmove(&newpos->dir, &x, &y, moved);
+		object_move(ob, pos->map, pos->x, pos->y);
+		mapdir_postmove(&ob->pos->dir, &pos->x, &pos->y, moved);
 	}
-	pthread_mutex_unlock(&m->lock);
+	pthread_mutex_unlock(&pos->map->lock);
 
+	pthread_mutex_unlock(&ob->pos_lock);
 	return (ival);
 }
 
