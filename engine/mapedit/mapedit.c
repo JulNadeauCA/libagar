@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.162 2003/04/17 08:18:30 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.163 2003/04/24 07:04:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -132,8 +132,7 @@ mapedit_init(void)
 	struct mapedit *med = &mapedit;
 	int i;
 
-	object_init(&med->obj, "map-editor", "map-editor",
-	    OBJECT_STATIC|OBJECT_RELOAD_PROPS,
+	object_init(&med->obj, "map-editor", "map-editor", OBJECT_RELOAD_PROPS,
 	    &mapedit_ops);
 	if (object_load_art(med, "mapedit", 1) == -1)
 		fatal("mapedit: %s", error_get());
@@ -156,7 +155,6 @@ mapedit_init(void)
 
 		*toolent->p = Malloc(toolent->size);
 		toolent->init(*toolent->p);
-		world_attach(*toolent->p);
 	}
 	
 	/* Load the settings. */
@@ -271,8 +269,6 @@ mapedit_init(void)
 	
 	window_show(med->win.toolbar);
 	window_show(med->win.objlist);
-	
-	world_attach(med);
 }
 
 void
