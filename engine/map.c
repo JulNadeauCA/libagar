@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.148 2003/02/24 06:42:05 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.149 2003/02/26 02:04:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -56,9 +56,14 @@ static const struct object_ops map_ops = {
 int	map_debug = DEBUG_STATE|DEBUG_RESIZE;
 int	map_nodesigs = 1;
 #define engine_debug map_debug
-#endif
 
+# ifdef THREADS
 static void	*map_check(void *);
+# endif
+#endif /* DEBUG */
+
+static void	 map_layer_init(struct map_layer *lay, char *);
+static void	 map_layer_destroy(struct map_layer *);
 
 __inline__ void
 node_init(struct node *node, int x, int y)
@@ -289,6 +294,8 @@ map_set_zoom(struct map *m, Uint16 zoom)
 void
 map_init(struct map *m, enum map_type type, char *name, char *media)
 {
+	int i;
+
 	object_init(&m->obj, "map", name, media,
 	    (media != NULL) ? OBJECT_ART|OBJECT_ART_CAN_FAIL: 0, &map_ops);
 	m->type = type;
@@ -303,6 +310,11 @@ map_init(struct map *m, enum map_type type, char *name, char *media)
 	m->zoom = 100;
 	m->ssx = TILEW;
 	m->ssy = TILEH;
+
+	m->layers = emalloc(sizeof(struct map_layer));
+	m->nlayers = 1;
+	map_layer_init(&m->layers[0], "Layer 0");
+
 	pthread_mutexattr_init(&m->lockattr);
 	pthread_mutexattr_settype(&m->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&m->lock, &m->lockattr);
@@ -314,6 +326,48 @@ map_init(struct map *m, enum map_type type, char *name, char *media)
 		Pthread_create(&m->check_th, NULL, map_check, m);
 	}
 #endif
+}
+
+static void
+map_layer_init(struct map_layer *lay, char *name)
+{
+	dprintf("name `%s'\n", name);
+
+	lay->name = Strdup(name);
+	lay->visible = 1;
+	lay->xinc = 1;
+	lay->yinc = 1;
+	lay->alpha = SDL_ALPHA_OPAQUE;
+}
+
+static void
+map_layer_destroy(struct map_layer *lay)
+{
+	free(lay->name);
+}
+
+int
+map_add_layer(struct map *m, char *name)
+{
+	if (m->nlayers+1 > 256) {
+		error_set("too many layers");
+		return (-1);
+	}
+	m->layers = erealloc(m->layers,
+	    (m->nlayers+1) * sizeof(struct map_layer));
+	if (name == NULL) {
+		char *s;
+
+		Asprintf(&s, "Layer %d", m->nlayers);
+		dprintf("adding layer `%s' at %d\n", s, m->nlayers);
+		map_layer_init(&m->layers[m->nlayers], s);
+		free(s);
+	} else {
+		dprintf("adding layer `%s' at %d\n", name, m->nlayers);
+		map_layer_init(&m->layers[m->nlayers], name);
+	}
+	m->nlayers++;
+	return (0);
 }
 
 /*
@@ -552,8 +606,8 @@ void
 map_destroy(void *p)
 {
 	struct map *m = p;
+	int i = 0;
 
-	pthread_mutex_lock(&m->lock);
 #if defined(DEBUG) && defined(THREADS)
 	if (map_debug & DEBUG_SCAN) {
 		pthread_kill(m->check_th, SIGKILL);
@@ -562,8 +616,11 @@ map_destroy(void *p)
 	if (m->map != NULL) {
 		map_free_nodes(m);
 	}
-	OBJECT(m)->flags |= OBJECT_DETACHED;
-	pthread_mutex_unlock(&m->lock);
+
+	for (i = 0; i < m->nlayers; i++) {
+		map_layer_destroy(&m->layers[i]);
+	}
+	free(m->layers);
 
 	pthread_mutex_destroy(&m->lock);
 	pthread_mutexattr_destroy(&m->lockattr);
