@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.144 2004/04/23 10:55:33 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.145 2004/04/24 04:33:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -190,7 +190,9 @@ view_init(enum gfx_engine ge)
 		fprintf(stderr, "%s\n", error_get());
 		goto fail;
 	}
+
 	primitives_init();
+
 	config_window(config);
 #ifdef DEBUG
 	if (engine_debug > 0) {
@@ -198,6 +200,9 @@ view_init(enum gfx_engine ge)
 		window_show(monitor.toolbar);
 	}
 #endif
+	object_init(&engine_icons, "object", "icons", NULL);
+	object_wire_gfx(&engine_icons, "/engine/icons/icons");
+
 	return (0);
 fail:
 	pthread_mutex_destroy(&view->lock);
