@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.120 2002/12/14 03:31:26 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.121 2002/12/14 04:46:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -272,6 +272,7 @@ window_draw_frame(struct window *win)
 {
 	int i;
 
+	/* Draw the border. */
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
 		    i, i,
@@ -299,7 +300,45 @@ window_draw_frame(struct window *win)
 			    win->rd.w - i, i,
 			    win->rd.w - i, win->titleh + win->borderw/2,
 			    win->border[i]);
+		
 		}
+	}
+	
+	/* Draw the resize decorations. */
+	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
+		primitives.line(win,				/* Lower left */
+		    18, win->rd.h - win->borderw,
+		    18, win->rd.h - 2,
+		    win->border[0]);
+		primitives.line(win,
+		    19, win->rd.h - win->borderw,
+		    19, win->rd.h - 2,
+		    win->border[win->borderw/2]);
+		primitives.line(win,
+		    2,		  win->rd.h - 20,
+		    win->borderw, win->rd.h - 20,
+		    win->border[0]);
+		primitives.line(win,
+		    2,			win->rd.h - 19,
+		    win->borderw,	win->rd.h - 19,
+		    win->border[win->borderw/2]);
+	
+		primitives.line(win,			       /* Lower right */
+		    win->rd.w - 19,	win->rd.h - win->borderw,
+		    win->rd.w - 19,	win->rd.h - 2,
+		    win->border[0]);
+		primitives.line(win,
+		    win->rd.w - 18,	win->rd.h - win->borderw,
+		    win->rd.w - 18,	win->rd.h - 2,
+		    win->border[win->borderw/2]);
+		primitives.line(win,
+		    win->rd.w - win->borderw,	win->rd.h - 20,
+		    win->rd.w - 2,		win->rd.h - 20,
+		    win->border[0]);
+		primitives.line(win,
+		    win->rd.w - win->borderw,	win->rd.h - 19,
+		    win->rd.w - 2,		win->rd.h - 19,
+		    win->border[win->borderw/2]);
 	}
 }
 
@@ -344,7 +383,7 @@ window_draw_titlebar(struct window *win)
 	SDL_SetClipRect(view->v, NULL);
 
 	/* Close */
-	for (i = 2; i < win->borderw - 1; i++) {
+	for (i = 2; i < 5; i++) {
 		primitives.line(win,
 		    bw + i, bw,
 		    th + i, th,
@@ -357,7 +396,7 @@ window_draw_titlebar(struct window *win)
 	th -= 4;
 
 	/* Minimize */
-	for (i = 2; i < win->borderw - 1; i++) {
+	for (i = 2; i < 5; i++) {
 		primitives.line(win,
 		    i + bw + th, bw + 2,
 		    i + bw + th*2, bw + 2,
