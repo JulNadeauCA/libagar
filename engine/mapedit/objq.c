@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.73 2003/06/26 02:34:52 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.74 2003/06/29 11:33:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ import_gfx(int argc, union evarg *argv)
 		Uint32 ind;
 		unsigned int nw, nh;
  
-		if (!it->selected || it->text_len < 2)
+		if (!it->selected)
 			continue;
 
 		ind = (Uint32)atoi(it->text + 1);
@@ -340,12 +340,12 @@ find_gfx(struct tlist *tl, struct object *pob)
 	struct object *cob;
 
 	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
-		if (cob->gfx == NULL)
-			continue;
-		snprintf(label, sizeof(label), "%s\n%ua/%us/%um\n",
-		    cob->name, cob->gfx->nanims, cob->gfx->nsprites,
-		    cob->gfx->nsubmaps);
-		tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
+		if (cob->gfx != NULL) {
+			snprintf(label, sizeof(label), "%s\n%ua/%us/%um\n",
+			    cob->name, cob->gfx->nanims, cob->gfx->nsprites,
+			    cob->gfx->nsubmaps);
+			tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
+		}
 		find_gfx(tl, cob);
 	}
 }
@@ -356,11 +356,11 @@ poll_tilesets(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 
 	tlist_clear_items(tl);
-
+	
 	lock_linkage();
 	find_gfx(tl, world);
 	unlock_linkage();
-	
+
 	tlist_restore_selections(tl);
 }
 
