@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.79 2002/05/02 06:28:59 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.80 2002/05/02 10:08:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -68,14 +68,13 @@ struct draw {
 
 static void	 node_reinit(struct node *);
 
-/*
- * Allocate nodes for the given map geometry.
- * Must be called on a locked map.
- */
+/* Allocate nodes for the given map geometry. */
 void
 map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 {
 	Uint32 i, x, y;
+	
+	pthread_mutex_assert(&m->lock);
 
 	m->mapw = w;
 	m->maph = h;
@@ -105,14 +104,13 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	}
 }
 
-/*
- * Free map nodes.
- * Must be called on a locked map.
- */
+/* Free map nodes. */
 void
 map_freenodes(struct map *m)
 {
 	Uint32 x, y;
+
+	pthread_mutex_assert(&m->lock);
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -271,6 +269,8 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 {
 	Uint32 x = 0, y;
 
+	pthread_mutex_assert(&m->lock);
+
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -294,13 +294,10 @@ map_destroy(void *p)
 	struct map *m = (struct map *)p;
 
 	pthread_mutex_lock(&m->lock);
-
 	if (m->flags & MAP_FOCUSED) {
 		map_unfocus(m);
 	}
-
 	map_freenodes(m);
-
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -398,6 +395,8 @@ map_animate(struct map *m)
 	static Uint32 x, y, vx, vy, rx, ry;
 	Uint32 ri = 0;
 
+	pthread_mutex_assert(&m->lock);
+
 	for (y = view->mapy, vy = view->mapyoffs;
 	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
 	     y++, vy++) {
@@ -408,7 +407,15 @@ map_animate(struct map *m)
 		     vx < (view->vmapw + view->mapxoffs) && x < m->mapw;
 		     x++, vx++) {
 			static struct node *node;
+#ifdef DEBUG
+			int i;
 
+			i = VIEW_MAPMASK(view, vx, vy);
+			if (i < 0 || i > 32) {
+				dprintf("funny mask: %d at %d,%d\n", i, vx, vy);
+				return;
+			}
+#endif
 			if (VIEW_MAPMASK(view, vx, vy) > 0) {
 				continue;
 			}
@@ -512,6 +519,8 @@ map_draw(struct map *m)
 	Uint32 x, y, vx, vy, rx, ry;
 	Uint32 ri = 0;
 	struct viewport *view = m->view;
+	
+	pthread_mutex_assert(&m->lock);
 
 	for (y = view->mapy, vy = view->mapyoffs;
 	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
@@ -525,7 +534,15 @@ map_draw(struct map *m)
 			static struct node *node;
 			static struct noderef *nref;
 			static Uint32 nsprites;
+#ifdef DEBUG
+			int i;
 
+			i = VIEW_MAPMASK(view, vx, vy);
+			if (i < 0 || i > 32) {
+				dprintf("funny mask: %d at %d,%d\n", i, vx, vy);
+				return;
+			}
+#endif
 			if (VIEW_MAPMASK(view, vx, vy) > 0) {
 				continue;
 			}
