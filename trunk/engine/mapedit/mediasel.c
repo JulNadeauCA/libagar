@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: mediasel.c,v 1.1 2004/03/09 06:16:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -111,6 +111,8 @@ mediasel_new(void *parent, enum mediasel_type type, struct object *obj)
 	}
 
 	bo = box_new(parent, BOX_HORIZ, BOX_WFILL);
+	box_set_spacing(bo, 0);
+	box_set_padding(bo, 0);
 
 	msel = Malloc(sizeof(struct mediasel));
 	msel->type = type;
