@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.28 2002/04/25 12:48:08 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.29 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,7 +44,7 @@
 #include <engine/widget/text.h>
 
 extern struct gameinfo *gameinfo;
-extern TAILQ_HEAD(, window) windowsh;	/* window.c */
+extern TAILQ_HEAD(windows_head, window) windowsh;	/* window.c */
 
 static void	event_hotkey(SDL_Event *);
 
@@ -104,8 +104,8 @@ event_hotkey(SDL_Event *ev)
 	}
 }
 
-void
-event_loop(void)
+void *
+event_loop(void *arg)
 {
 	Uint32 ltick, ntick;
 	Sint32 delta;
@@ -115,7 +115,7 @@ event_loop(void)
 
 	if (m == NULL) {
 		fatal("no map\n");
-		return;
+		return (NULL);
 	}
 	
 	/* Start the garbage collection process. */
@@ -131,6 +131,7 @@ event_loop(void)
 			map_animate(m);
 
 			if (m->redraw) {
+				dprintf("redraw\n");
 				m->redraw = 0;
 				map_draw(m);
 				delta = m->fps - (SDL_GetTicks() - ntick);
@@ -145,7 +146,8 @@ event_loop(void)
 			if (!TAILQ_EMPTY(&windowsh)) {
 				/* Shares world->lock */
 				pthread_mutex_lock(&world->lock);
-				TAILQ_FOREACH(win, &windowsh, windows) {
+				TAILQ_FOREACH_REVERSE(win, &windowsh, windows,
+				    windows_head) {
 					if (win->redraw) {
 						window_draw(win);
 					}
@@ -205,9 +207,12 @@ event_loop(void)
 				}
 				break;
 			case SDL_QUIT:
-				return;
+				return (NULL);
 			}
 		}
 	}
+
+	engine_destroy();
+	return (NULL);
 }
 
