@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.24 2002/04/24 13:18:20 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.25 2002/04/25 12:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -144,7 +144,7 @@ world_load(void *p, int fd)
 
 /*
  * Save the world!
- * Must be called on a locked world.
+ * The world's object list must be locked.
  */
 int
 world_save(void *p, int fd)
@@ -169,25 +169,23 @@ world_save(void *p, int fd)
 	return (0);
 }
 
+/*
+ * Destroy the world!
+ * The world's object list must be locked.
+ */
 void
 world_destroy(void *p)
 {
 	struct world *wo = (struct world *)p;
-	struct object *ob, **objs;
-	Uint32 i;
+	struct object *ob;
 
 	if (world->curmap != NULL) {
 		map_unfocus(world->curmap);
 	}
 
-	pthread_mutex_lock(&wo->lock);
-	SLIST_DUP(objs, wo->nobjs, &wo->wobjsh, object, wobjs);
-	pthread_mutex_unlock(&wo->lock);
-
 	printf("freed:");
 	fflush(stdout);
-	for (i = 0; i < wo->nobjs-1; i++) {	/* XXX ridiculous race */
-		ob = objs[i];
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		if (ob->vec->unlink != NULL) {
 			ob->vec->unlink(ob);
 		}
@@ -199,17 +197,14 @@ world_destroy(void *p)
 
 	object_lategc();
 
-	pthread_mutex_lock(&wo->lock);
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+		
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 	}
-	pthread_mutex_unlock(&wo->lock);
-	pthread_mutex_destroy(&wo->lock);
 
+	pthread_mutex_destroy(&wo->lock);
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
-
-	free(objs);
 }
 

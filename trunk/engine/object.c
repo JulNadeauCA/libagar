@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.39 2002/04/24 13:15:41 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.40 2002/04/25 12:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -292,9 +292,12 @@ object_destroy(void *arg)
 		ob->vec->destroy(ob);
 	}
 
-	/* Decrement the usage count. */
+	/* Decrement usage counts for the media pool. */
 	if (ob->art != NULL) {
 		ob->art->used--;
+	}
+	if (ob->audio != NULL) {
+		ob->art->audio--;
 	}
 
 	/* XXX gc */
@@ -407,7 +410,10 @@ object_save(void *p)
 	return (0);
 }
 
-/* Add an object to the object list, and mark it consistent. */
+/*
+ * Add an object to the object list, and mark it consistent.
+ * The world's object list must be locked.
+ */
 int
 object_link(void *p)
 {
@@ -418,23 +424,22 @@ object_link(void *p)
 		return (-1);
 	}
 
-	pthread_mutex_lock(&world->lock);
 	SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
-	pthread_mutex_unlock(&world->lock);
 	world->nobjs++;
 	return (0);
 }
 
-/* Unlink an object from the world and all maps. */
+/*
+ * Unlink an object from the world and all maps.
+ * The world's object list must be locked.
+ */
 int
 object_unlink(void *p)
 {
 	struct object *ob = p;
 
 	world->nobjs--;
-	pthread_mutex_lock(&world->lock);
 	SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
-	pthread_mutex_unlock(&world->lock);
 
 	if (ob->vec->unlink != NULL &&
 	    ob->vec->unlink(ob) != 0) {
@@ -464,7 +469,7 @@ decrease_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
 
 /*
  * Search for an object matching the given string.
- * Must be called on a locked world.
+ * The world's object list must be locked.
  * XXX hash
  */
 struct object *
