@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.15 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.16 2004/02/29 17:34:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -204,6 +204,8 @@ combo_destroy(void *p)
 	if (com->win != NULL) {
 		window_hide(com->win);
 		object_detach(com->list);
+		object_destroy(com->list);
+		free(com->list);
 		view_detach(com->win);
 	}
 	widget_destroy(com);
