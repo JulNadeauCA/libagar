@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.58 2003/02/10 23:08:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.59 2003/02/12 01:17:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -537,6 +537,7 @@ mapview_draw(void *p)
 				rd.h = mv->map->tileh;
 
 				if (((mv->flags & MAPVIEW_NO_CURSOR) == 0) &&
+				    (mv->flags & MAPVIEW_EDIT) &&
 				    (curtool == NULL ||
 				     TOOL_OPS(curtool)->cursor == NULL ||
 				     TOOL_OPS(curtool)->cursor(curtool, mv, &rd)
