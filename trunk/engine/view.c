@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.67 2002/09/09 08:09:37 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.68 2002/09/13 11:08:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -130,7 +130,7 @@ view_init(gfx_engine_t ge)
 	}
 #endif
 
-	v->v = SDL_SetVideoMode(v->w, v->h, v->bpp, screenflags);
+	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
 		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->bpp,
 		    SDL_GetError());
