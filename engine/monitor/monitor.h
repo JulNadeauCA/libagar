@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.19 2003/06/15 05:20:42 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.20 2003/06/18 00:47:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MONITOR_MONITOR_H_
@@ -15,9 +15,7 @@ struct monitor {
 
 /* Icons */
 enum {
-	MONITOR_OBJECT_BROWSER,
-	MONITOR_MEDIA_BROWSER,
-	MONITOR_LEVEL_BROWSER,		/* Unused */
+	MONITOR_GFX_DEBUG,
 	MONITOR_WIDGET_BROWSER,
 	MONITOR_VIEW_PARAMS,
 	MONITOR_FPS_COUNTER,
@@ -31,9 +29,10 @@ __BEGIN_DECLS
 void		 monitor_init(struct monitor *, const char *);
 void		 monitor_destroy(void *);
 
-struct window	*widget_browser_window(void);
-struct window	*view_params_window(void);
-struct window	*screenshot_window(void);
+struct window	*widget_debug_window(void);	/* monitor/widget_browser.c */
+struct window	*view_params_window(void);	/* monitor/view_params.c */
+struct window	*screenshot_window(void);	/* monitor/screenshot.c */
+struct window	*gfx_debug_window(void);	/* gfx.c */
 __END_DECLS
 
 #include "close_code.h"

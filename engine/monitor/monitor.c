@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.46 2003/08/12 01:05:33 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.47 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,16 +62,13 @@ monitor_init(struct monitor *mon, const char *name)
 		char		*name;
 		struct window	*(*window_func)(void);
 	} tool_ents[] = {
-		{ MONITOR_FPS_COUNTER, N_("Refresh rate"),
-		  event_show_fps_counter },
-#if defined(DEBUG) && defined(THREADS) && defined(HAVE_JPEG)
-		{ MONITOR_SCREENSHOT, N_("Screenshot"),
-		  screenshot_window },
+		{ MONITOR_FPS_COUNTER, N_("Refresh rate"), fps_window },
+#if defined(THREADS) && defined(HAVE_JPEG)
+		{ MONITOR_SCREENSHOT, N_("Screenshot"), screenshot_window },
 #endif
-		{ MONITOR_WIDGET_BROWSER, N_("Widgets"),
-		  widget_browser_window },
-		{ MONITOR_VIEW_PARAMS, N_("Viewport"),
-		  view_params_window }
+		{ MONITOR_WIDGET_BROWSER, N_("Widgets"), widget_debug_window },
+		{ MONITOR_VIEW_PARAMS, N_("Viewport"), view_params_window },
+		{ MONITOR_GFX_DEBUG, N_("Resident graphics"), gfx_debug_window }
 	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct tlist *tl_tools;
