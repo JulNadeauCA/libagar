@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.15 2003/02/25 03:57:14 vedge Exp $
+.\"	$Csoft: button.3,v 1.16 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -49,8 +49,14 @@ an image.
 .Pp
 .Ft void
 .Fn button_init "struct button *button" "char *caption" "SDL_Surface *image" "int flags" "int rw" "int rh"
-.nr nS 0
 .Pp
+.Ft void
+.Fn button_enable "struct button *button"
+.Pp
+.Ft void
+.Fn button_disable "struct button *button"
+.Pp
+.nr nS 0
 The
 .Fn button_new
 function allocates, initializes, and attaches a
@@ -77,6 +83,14 @@ can be changed at runtime, and may include:
 #define BUTTON_STICKY	0x01		/* Sticky state */
 #define BUTTON_NOFOCUS	0x02		/* Don't gain focus */
 .Ed
+.Pp
+The
+.Fn button_enable
+function allows
+.Fa button
+to receive events.
+.Fn button_disable
+disables reception of events.
 .Sh EVENTS
 The
 .Nm

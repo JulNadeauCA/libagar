@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.57 2003/03/08 00:58:55 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.58 2003/03/11 00:13:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -183,7 +183,7 @@ button_draw(void *p)
 	int x = 0, y = 0;
 	int pressed;
 
-	pressed = widget_get_bool(b, "state");
+	pressed = widget_get_bool(b, "state") || (b->flags & BUTTON_DISABLED);
 
 	/* Button */
 	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h, pressed ? -1 : 1,
@@ -222,6 +222,9 @@ button_mousemotion(int argc, union evarg *argv)
 	int y = argv[2].i;
 	int *pressed;
 
+	if (b->flags & BUTTON_DISABLED)
+		return;
+
 	stateb = widget_binding_get_locked(b, "state", &pressed);
 	if (!WIDGET_INSIDE_RELATIVE(b, x, y) &&
 	    !(b->flags & BUTTON_STICKY) &&
@@ -239,6 +242,9 @@ button_mousebuttondown(int argc, union evarg *argv)
 	int button = argv[1].i;
 	struct widget_binding *stateb;
 	int *pushed;
+	
+	if (b->flags & BUTTON_DISABLED)
+		return;
 
 	WIDGET_FOCUS(b);
 
@@ -266,6 +272,9 @@ button_mousebuttonup(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	
+	if (b->flags & BUTTON_DISABLED)
+		return;
+	
 	if (!WIDGET_INSIDE_RELATIVE(b, x, y))
 		return;
 	
@@ -287,6 +296,9 @@ button_keydown(int argc, union evarg *argv)
 	struct button *b = argv[0].p;
 	int keysym = argv[1].i;
 	
+	if (b->flags & BUTTON_DISABLED)
+		return;
+	
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 		widget_set_bool(b, "state", 1);
 		event_post(b, "button-pushed", "%i", 1);
@@ -298,6 +310,9 @@ button_keyup(int argc, union evarg *argv)
 {
 	struct button *b = argv[0].p;
 	int keysym = argv[1].i;
+	
+	if (b->flags & BUTTON_DISABLED)
+		return;
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 		widget_set_bool(b, "state", 0);
@@ -305,3 +320,14 @@ button_keyup(int argc, union evarg *argv)
 	}
 }
 
+void
+button_enable(struct button *bu)
+{
+	bu->flags &= ~(BUTTON_DISABLED);
+}
+
+void
+button_disable(struct button *bu)
+{
+	bu->flags |= BUTTON_DISABLED;
+}
