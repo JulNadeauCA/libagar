@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.23 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.24 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,8 +63,8 @@ struct window *
 fill_window(void *p)
 {
 	static const char *mode_items[] = {
-		"Fill",
-		"Clear",
+		N_("Fill"),
+		N_("Clear"),
 		NULL
 	};
 	struct fill *fi = p;
@@ -91,7 +91,7 @@ fill_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 	int w, h;
 
 	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
-		text_msg(MSG_ERROR, _("No source node"));
+		text_msg(MSG_ERROR, _("No source node."));
 		return;
 	}
 
@@ -116,9 +116,8 @@ fill_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 			if (fi->mode == FILL_FILL_MAP) {
 				struct noderef *r;
 
-				TAILQ_FOREACH(r, &srcnode->nrefs, nrefs) {
+				TAILQ_FOREACH(r, &srcnode->nrefs, nrefs)
 					node_copy_ref(r, m, dn, m->cur_layer);
-				}
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.116 2003/07/26 17:48:20 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.117 2003/07/28 04:37:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -78,7 +78,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	const SDL_VideoInfo *vinfo;
 	
 	if (inited) {
-		error_set("engine already initialized");
+		error_set("The engine is already initialized.");
 		return (-1);
 	}
 
@@ -111,8 +111,6 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 #endif
 
 	printf(_("Agar engine v%s\n"), ENGINE_VERSION);
-	printf("%s %s\n", prog->name, prog->version);
-	printf(_("%s\n\n"), prog->copyright);
 	proginfo = prog;
 
 	/* Initialize the SDL library. */
@@ -133,9 +131,9 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		/* Print video device information. */
 		vinfo = SDL_GetVideoInfo();
 		if (vinfo != NULL) {
-			char accel[4096];
-			char unaccel[4096];
-			size_t size = 4096;
+			char accel[2048];
+			char unaccel[2048];
+			size_t size = 2048;
 
 			printf(_("Video device is %dbpp "
 			         "(ckey=0x%x, alpha=0x%04x)\n"),

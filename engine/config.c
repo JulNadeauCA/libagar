@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.93 2003/07/04 12:35:17 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.94 2003/07/25 22:01:33 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -214,7 +214,7 @@ config_window(struct config *con)
 		int i;
 
 		for (i = 0; i < nsettings; i++) {
-			cbox = checkbox_new(vb, "%s", settings[i].descr);
+			cbox = checkbox_new(vb, "%s", _(settings[i].descr));
 			widget_bind(cbox, "state", WIDGET_PROP, config,
 			    settings[i].name);
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.35 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.36 2003/07/08 00:34:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -99,7 +99,7 @@ radio_init(struct radio *rad, const char **items)
 	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems);
 	for (i = 0; i < rad->nitems; i++) {
 		rad->labels[i] = text_render(NULL, -1,
-		    WIDGET_COLOR(rad, TEXT_COLOR), items[i]);
+		    WIDGET_COLOR(rad, TEXT_COLOR), _(items[i]));
 		if (rad->labels[i]->w > rad->max_w)
 			rad->max_w = rad->labels[i]->w;
 	}

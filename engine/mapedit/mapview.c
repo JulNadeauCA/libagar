@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.130 2003/07/14 03:40:41 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.131 2003/07/26 12:35:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -539,7 +539,7 @@ int
 mapview_zoom(struct mapview *mv, int zoom)
 {
 	if (zoom < MAPVIEW_ZOOM_MIN || zoom > MAPVIEW_ZOOM_MAX) {
-		error_set("zoom out of range");
+		error_set(_("The zoom is out of range."));
 		return (-1);
 	}
 #if 0

@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.9 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.10 2003/07/05 12:20:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ transform_init(struct transform *trans, enum transform_type type,
 	int i;
 
 	if (nargs > TRANSFORM_MAX_ARGS) {
-		error_set("too many args");
+		error_set(_("Too many transform args."));
 		return (-1);
 	}
 
@@ -94,7 +94,7 @@ transform_init(struct transform *trans, enum transform_type type,
 		}
 	}
 	if (trans->func == NULL) {
-		error_set("bad transform");
+		error_set(_("Unknown transform algorithm."));
 		return (-1);
 	}
 	return (0);
@@ -124,7 +124,7 @@ transform_load(struct netbuf *buf, struct transform *trans)
 	trans->func = NULL;
 	trans->nargs = (int)read_uint8(buf);
 	if (trans->nargs > TRANSFORM_MAX_ARGS) {
-		error_set("too many args");
+		error_set(_("Too many transform args."));
 		return (-1);
 	}
 
@@ -141,7 +141,7 @@ transform_load(struct netbuf *buf, struct transform *trans)
 		}
 	}
 	if (trans->func == NULL) {
-		error_set("bad transform");
+		error_set(_("Unknown transform algorithm."));
 		return (-1);
 	}
 	return (0);

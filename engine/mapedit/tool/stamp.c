@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.47 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.48 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,8 +63,8 @@ struct window *
 stamp_window(void *p)
 {
 	static const char *mode_items[] = {
-		"Replace",
-		"Insert",
+		N_("Replace"),
+		N_("Insert"),
 		NULL
 	};
 	struct stamp *st = p;
@@ -88,7 +88,7 @@ stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 	struct noderef *r;
 
 	if (sn == NULL) {
-		text_msg(MSG_ERROR, _("No source node is selected"));
+		text_msg(MSG_ERROR, _("No source node is selected."));
 		return;
 	}
 	if (sn == node)					/* Circular reference */

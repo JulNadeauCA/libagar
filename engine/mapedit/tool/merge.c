@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.42 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.43 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -132,13 +132,13 @@ merge_create_brush(int argc, union evarg *argv)
 	textbox_copy_string(name_tbox, brush_name,
 	    sizeof(brush_name) - sizeof("brush()"));
 	if (brush_name[0] == '\0') {
-		text_msg(MSG_ERROR, _("No brush name was given"));
+		text_msg(MSG_ERROR, _("No brush name was given."));
 		return;
 	}
 	
 	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
 	if (tlist_item_text(mer->brushes_tl, m_name) != NULL) {
-		text_msg(MSG_ERROR, _("A `%s' brush exists"), m_name);
+		text_msg(MSG_ERROR, _("A `%s' brush exists."), m_name);
 		return;
 	}
 
@@ -195,9 +195,9 @@ merge_remove_brush(int argc, union evarg *argv)
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		if (it->selected) {
+			char wname[OBJECT_NAME_MAX];
 			struct object *brush = it->p1;
 			struct window *win;
-			char wname[OBJECT_NAME_MAX];
 
 			snprintf(wname, sizeof(wname),
 			    "win-mapedit-tool-merge-%s", OBJECT(brush)->name);
@@ -411,8 +411,8 @@ merge_load(void *p, struct netbuf *buf)
 
 	nbrushes = read_uint32(buf);
 	for (i = 0; i < nbrushes; i++) {
-		struct map *nbrush;
 		char m_name[OBJECT_NAME_MAX];
+		struct map *nbrush;
 
 		copy_string(m_name, buf, sizeof(m_name));
 		nbrush = Malloc(sizeof(struct map));

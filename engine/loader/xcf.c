@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.3 2003/07/05 12:17:24 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.4 2003/07/26 12:32:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -265,7 +265,7 @@ xcf_read_tile(struct xcf_header *head, struct netbuf *buf, Uint32 len, int bpp,
 	case XCF_COMPRESSION_RLE:
 		return (xcf_read_tile_rle(buf, len, bpp, x, y));
 	}
-	error_set(_("Unknown XCF compression: %d"), head->compression);
+	error_set(_("Unknown XCF compression: %d."), head->compression);
 	return (NULL);
 }
 
@@ -559,7 +559,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	head->w = read_uint32(buf);
 	head->h = read_uint32(buf);
 	if (head->w > XCF_WIDTH_MAX || head->h > XCF_HEIGHT_MAX) {
-		error_set(_("Nonsense XCF geometry: %ux%u"), head->w, head->h);
+		error_set(_("Nonsense XCF geometry: %ux%u."), head->w, head->h);
 		free(head);
 		return (-1);
 	}
@@ -571,7 +571,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	case XCF_IMAGE_INDEXED:
 		break;
 	default:
-		error_set(_("Unknown base image type: %u"), head->base_type);
+		error_set(_("Unknown base image type: %u."), head->base_type);
 		free(head);
 		return (-1);
 	}
