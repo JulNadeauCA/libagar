@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.1 2003/11/09 13:14:25 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.2 2003/11/15 03:52:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -184,7 +184,7 @@ fspinbutton_init(struct fspinbutton *fsu, double min, double max,
 	fsu->input = textbox_new(fsu, label);
 	fsu->unit = &identity_unit;
 	fsu->units = NULL;
-	strlcpy(fsu->format, "%.2f", sizeof(fsu->format));
+	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
 	pthread_mutex_init(&fsu->lock, NULL);
 
 	/*
@@ -372,14 +372,14 @@ fspinbutton_set_precision(struct fspinbutton *fsu, int precision)
 	fsu->format[0] = '%';
 	fsu->format[1] = '.';
 	snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
-	strlcat(fsu->format, "f", sizeof(fsu->format));
+	strlcat(fsu->format, "g", sizeof(fsu->format));
 	pthread_mutex_unlock(&fsu->lock);
 }
 
 /* Select which unit system to use. */
 void
 fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[],
-    const char *defunit, double mindiv, double maxdiv)
+    double mindiv, double maxdiv)
 {
 	const struct unit *unit;
 
@@ -401,7 +401,7 @@ fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[],
 		}
 		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
 		    unit);
-		if (strcmp(unit->abbr, defunit) == 0) {
+		if (unit->divider == 1) {
 			it->selected++;
 			fsu->unit = unit;
 			button_printf(fsu->units->button, _(unit->abbr));
