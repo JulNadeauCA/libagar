@@ -91,7 +91,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 		    MAPREF_ANIM|MAPREF_SAVE);
 		break;
 	}
-	node->flags = nflags;
+	node->flags = nflags &= ~(NODE_ORIGIN|NODE_ANIM);
 	mapedit_setpointer(med, 1);
 	med->map->redraw++;
 }
@@ -260,10 +260,6 @@ mapedit_editflags(struct mapedit *med, int mask)
 		med->flags &= ~mask;
 	} else {
 		med->flags |= mask;
-	}
-
-	if (mask & MAPEDIT_TILELIST) {
-		view_setmap(med->map->view, med->map);	/* XXX hack */
 	}
 
 	med->map->redraw++;
