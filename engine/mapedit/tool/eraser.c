@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.23 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.24 2003/03/07 03:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,7 +70,6 @@ eraser_init(void *p)
 	eraser->mode = ERASER_ALL;
 	eraser->selection.pobj = NULL;
 	eraser->selection.offs = -1;
-	eraser->all_layers = 1;
 }
 
 struct window *
@@ -94,14 +93,10 @@ eraser_window(void *p)
 			NULL
 		};
 		struct radio *rad;
-		struct checkbox *cb;
 
 		rad = radio_new(reg, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
 		win->focus = WIDGET(rad);
-
-		cb = checkbox_new(reg, -1, "All layers");
-		widget_bind(cb, "value", WIDGET_INT, NULL, &er->all_layers);
 	}
 	return (win);
 }
@@ -120,7 +115,7 @@ eraser_effect(void *p, struct mapview *mv, struct node *node)
 	     nref != TAILQ_END(&node->nrefs);
 	     nref = nnref) {
 		nnref = TAILQ_NEXT(nref, nrefs);
-		if (nref->layer == mv->cur_layer || er->all_layers) {
+		if (nref->layer == mv->cur_layer) {
 			TAILQ_REMOVE(&node->nrefs, nref, nrefs);
 			noderef_destroy(nref);
 			free(nref);
