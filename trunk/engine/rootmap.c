@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.18 2002/12/23 03:05:04 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.19 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -190,9 +190,9 @@ rootmap_center(struct map *m, int mapx, int mapy)
 		nx = 0;
 	if (ny < 0)
 		ny = 0;
-	if (nx >= (m->mapw - rm->w))
+	if (nx >= m->mapw - rm->w)
 		nx = m->mapw - rm->w;
-	if (ny >= (m->maph - rm->h))
+	if (ny >= m->maph - rm->h)
 		ny = m->maph - rm->h;
 
 	rm->x = nx;
