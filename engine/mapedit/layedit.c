@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.21 2004/03/18 03:07:53 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.22 2004/05/13 02:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -80,11 +80,11 @@ layedit_poll(int argc, union evarg *argv)
 		struct map_layer *layer = &m->layers[i];
 
 		if (layer->visible) {
-			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
+			snprintf(label, sizeof(label), _("%s (visible%s)\n"),
 			    layer->name,
 			    (i == m->cur_layer) ? _(", editing") : "");
 		} else {
-			snprintf(label, sizeof(label), _("%s (invisible %s)\n"),
+			snprintf(label, sizeof(label), _("%s (invisible%s)\n"),
 			    layer->name,
 			    (i == m->cur_layer) ? _(", editing") : "");
 		}
