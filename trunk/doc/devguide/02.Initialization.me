@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: 02.Initialization.me,v 1.1 2004/01/23 06:27:00 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -26,28 +26,28 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .c1 "Engine Initialization"
-.pp
+.lp
 To get the show on the road, you must first invoke the
 .Fn engine_init
 function.
 Before the application exits, you must also call
 .Fn engine_destroy ,
 to free all resources allocated by the engine.
+.pp
+The
 .Fn engine_init
-does the following:
-.(l
-\(bu Enable internationalization
-\(bu Perform internal engine initialization
-\(bu Initialize the SDL library
-\(bu Initialize the graphic engine (with ENGINE_INIT_GFX)
-\(bu Load user configuration settings
-\(bu Initialize the font engine (eg. \fIFreeType\fP)
-\(bu Attach the input devices (with ENGINE_INIT_INPUT)
-.l)
-.lp
+function performs internal engine initialization, initializes the SDL library
+and sets up the graphic engine (if the
+.Dv ENGINE_INIT_GFX
+flag was given).
+Saved user settings are restored, the input devices are attached (assuming the
+.Dv ENGINE_INIT_INPUT
+flag was given) and the font engine is initialized.
+Sample code 2.1 illustrates a minimal Agar application.
 .Bd -code "A minimal Agar application"
 static struct engine_proginfo info = {
-	"cctwoods", "Through Chasm, Caves and Titan Woods",
+	"cctwoods",
+	"Through Chasm, Caves and Titan Woods",
 	"Copyright (c) 2004 Les Entreprises Incorporées.",
 	"1.0-beta"
 };
