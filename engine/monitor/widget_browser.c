@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.11 2003/01/01 05:18:40 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.12 2003/01/20 14:22:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -168,7 +168,7 @@ tl_widgets_poll(int argc, union evarg *argv)
 	reg = ti->p1;
 
 	pthread_mutex_lock(&pwin->lock);
-	TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+	TAILQ_FOREACH(wid, &reg->widgets, widgets) {
 		tlist_insert_item(tl, NULL, OBJECT(wid)->name, wid);
 	}
 	pthread_mutex_unlock(&pwin->lock);
@@ -266,19 +266,19 @@ tl_widgets_examine(int argc, union evarg *argv)
 
 	reg = region_new(win, REGION_VALIGN,	0, 0,		100, 50);
 	{
-		label_new(reg, 100, 0, "Identifier: \"%s\"",
+		label_new(reg, 100, -1, "Identifier: \"%s\"",
 		    OBJECT(wid)->name);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Flags: 0x%x", &wid->flags);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Type: %s", &wid->type);
 		
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Parent: region %p in window %p", &wid->reg, &wid->win);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Geometry: requested %dx%d, allocated %dx%d at [%d,%d]",
 		    &wid->rw, &wid->rh, &wid->w, &wid->h, &wid->x, &wid->y);
 	}
@@ -329,42 +329,42 @@ tl_windows_examine(int argc, union evarg *argv)
 	
 	pthread_mutex_lock(&pwin->lock);
 
-	reg = region_new(win, REGION_VALIGN,	0, 0,		100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 45);
 	{
-		label_new(reg, 100, 0, "Identifier: \"%s\"",
+		label_new(reg, 100, -1, "Identifier: \"%s\"",
 		    OBJECT(pwin)->name);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Flags: 0x%x", &pwin->flags);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Caption: \"%s\"", &pwin->caption);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Titlebar height: %d pixels", &pwin->titleh);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Effective geometry: %[wxh] (min %dx%d) at %[x,y]",
 		    &pwin->rd,
 		    &pwin->minw, &pwin->minh,
 		    &pwin->rd);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Body: %[rect]", &pwin->body);
 
-		label_polled_new(reg, 100, 0, &pwin->lock,
+		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Focus: %p",
 		    &pwin->focus);
 	}
 
 	/* Region list */
-	reg = region_new(win, 0,		0,  50,		80, 25);
+	reg = region_new(win, REGION_HALIGN, 0,  45, 80, 25);
 	{
 		tl_regions = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_regions, "tlist-poll",
 		    tl_regions_poll, "%p", pwin);
 	}
-	reg = region_new(win, REGION_VALIGN,	81, 50,		19, 25);
+	reg = region_new(win, REGION_VALIGN, 81, 45, 19, 25);
 	{
 		struct button *bu;
 
@@ -374,13 +374,13 @@ tl_windows_examine(int argc, union evarg *argv)
 	}
 
 	/* Widget list */
-	reg = region_new(win, 0,		0,  75,		80, 25);
+	reg = region_new(win, REGION_HALIGN, 0,  70, 80, 27);
 	{
 		tl_widgets = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_widgets, "tlist-poll",
 		    tl_widgets_poll, "%p, %p", pwin, tl_regions);
 	}
-	reg = region_new(win, REGION_VALIGN,	81, 75,		19, 25);
+	reg = region_new(win, REGION_VALIGN, 81, 70, 19, 27);
 	{
 		struct button *bu;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.27 2003/01/19 11:32:01 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.28 2003/01/21 03:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -77,7 +77,6 @@ monitor_init(struct monitor *mon, char *name)
 	window_set_caption(mon->toolbar, "Debug monitor");
 
 	reg = region_new(mon->toolbar, 0, 0,  0, 100, 100);
-	reg->spacing = 1;
 
 	tl_tools = tlist_new(reg, 100, 100, 0);
 	tlist_insert_item(tl_tools,
