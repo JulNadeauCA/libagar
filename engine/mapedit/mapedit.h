@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.3 2002/01/30 12:51:11 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.4 2002/01/30 17:51:19 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -8,15 +8,23 @@ struct editref {
 		EDITREF_SPRITE,	/* SDL_Surface */
 		EDITREF_ANIM	/* struct anim */
 	} type;
+	
+	SIMPLEQ_ENTRY(editref) erefs;	/* Reference list */
 };
+
+SIMPLEQ_HEAD(erefs_head, editref);
 
 struct editobj {
 	struct	object *pobj;		/* Original object structure */
-	GSList	*refs;			/* Sprite/anim references */
+	struct	erefs_head erefsh;	/* Reference list */
 	int	nrefs;
 	int	nsprites;
 	int	nanims;
+
+	SLIST_ENTRY(editobj) eobjs;	/* Editable object list */
 };
+
+SLIST_HEAD(eobjs_head, editobj);
 
 struct mapedit {
 	struct	object obj;
@@ -25,8 +33,9 @@ struct mapedit {
 	struct	window *tilestack;	/* Tile stack (left) */
 	struct	window *objlist;	/* Object list (top) */
 
-	GSList	*eobjs;			/* Object references */
+	struct	eobjs_head eobjsh;	/* Editor object references */
 	int	neobjs;
+
 	int	curoffs;		/* Default reference index */
 	int	curflags;		/* Default map entry flags */
 	struct	editobj *curobj;	/* Default object */
@@ -34,6 +43,8 @@ struct mapedit {
 #define MAPEDIT_TILELIST	0x01	/* Display tile list window */
 #define MAPEDIT_TILESTACK	0x02	/* Display tile stack window */
 #define MAPEDIT_OBJLIST		0x04	/* Display object list window */
+#define MAPEDIT_DRAWGRID	0x08	/* Draw a grid on the map */
+#define MAPEDIT_DRAWPROPS	0x10	/* Draw a grid on the map */
 
 	struct	map *map;		/* Map being edited */
 	int	x, y;			/* Cursor position */
@@ -54,6 +65,8 @@ struct mapedit {
 #define MAPEDIT_CTRLRIGHT	0x80
 
 	SDL_TimerID timer;
+
+	void	 (*event_hook)(struct mapedit *, SDL_Event *);
 };
 
 /* Move mapedit to a new position. */
@@ -92,12 +105,11 @@ struct mapedit {
 #define MAPEDIT_REGEN	9
 #define MAPEDIT_SLOW	10
 #define MAPEDIT_HASTE	11
-#define MAPEDIT_ANIM	12
 
 struct mapedit *mapedit_create(char *, char *);
 void		mapedit_tilelist(struct mapedit *);
 void		mapedit_tilestack(struct mapedit *);
 void		mapedit_objlist(struct mapedit *);
 
-extern struct mapedit *curmapedit;
+extern struct mapedit *curmapedit;	/* Controlled map editor */
 
