@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.20 2002/11/19 06:08:38 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.21 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -563,6 +563,7 @@ tlist_keydown(int argc, union evarg *argv)
 		}
 		break;
 	default:
+		break;
 	}
 	pthread_mutex_unlock(&tl->items_lock);
 }
