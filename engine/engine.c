@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.57 2002/07/27 21:29:59 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.58 2002/07/29 01:18:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ struct input *keyboard = NULL;
 struct input *joy = NULL;
 struct input *mouse = NULL;
 
-static void	printusage(char *);
+static void	printusage(char *, int);
 #ifdef XDEBUG
 static int	engine_xerror(Display *, XErrorEvent *);
 static int	engine_xioerror(Display *);
@@ -77,7 +77,7 @@ static void	engine_xdebug(void);
 #endif
 
 static void
-printusage(char *progname)
+printusage(char *progname, int flags)
 {
 	fprintf(stderr,
 	    "Usage: %s [-efv] [-j joy#]\n",
@@ -85,7 +85,7 @@ printusage(char *progname)
 }
 
 int
-engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
+engine_init(int argc, char *argv[], struct gameinfo *gi, char *path, int flags)
 {
 	int c, njoy = -1, fullscreen = 0;
 
@@ -94,7 +94,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	mapediting = 0;
 	gameinfo = gi;
 	
-	while ((c = getopt(argc, argv, "vfel:n:j:W:H:")) != -1) {
+	while ((c = getopt(argc, argv, "vfegl:n:j:W:H:")) != -1) {
 		switch (c) {
 		case 'v':
 			printf("AGAR engine v%s\n", ENGINE_VERSION);
@@ -112,7 +112,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 			mapediting++;
 			break;
 		default:
-			printusage(argv[0]);
+			printusage(argv[0], flags);
 			exit(255);
 		}
 	}
@@ -158,7 +158,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	 * Set the video mode.
 	 * Initialize the masks and rectangles in game mode.
 	 */
-	view_init(mapediting ? GFX_ENGINE_GUI : GFX_ENGINE_TILEBASED);
+	if (mapediting || (flags & ENGINE_INIT_GUI)) {
+		view_init(GFX_ENGINE_GUI);
+	} else {
+		view_init(GFX_ENGINE_TILEBASED);
+	}
 
 
 #ifdef XDEBUG
@@ -245,13 +249,15 @@ engine_start(void)
 		break;
 	}
 
-	medit = emalloc(sizeof(struct mapedit));
-	mapedit_init(medit, "mapedit0");
+	if (mapediting) {
+		medit = emalloc(sizeof(struct mapedit));
+		mapedit_init(medit, "mapedit0");
 
-	/* Start map edition. */
-	pthread_mutex_lock(&world->lock);
-	world_attach(world, medit);
-	pthread_mutex_unlock(&world->lock);
+		/* Start map edition. */
+		pthread_mutex_lock(&world->lock);
+		world_attach(world, medit);
+		pthread_mutex_unlock(&world->lock);
+	}
 
 	return (1);
 }
