@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.6 2003/09/05 20:57:43 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.7 2004/01/03 04:25:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -79,34 +79,34 @@ unicode_import(enum unicode_conv conv, const char *s)
 				ucs[j] = (Uint32)s[i];
 				break;
 			case 2:
-				ucs[j] = ((Uint32)(s[i]   & 0x3f) << 6) |
-				          (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (Uint32)(s[i]   & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
 				break;
 			case 3:
-				ucs[j] = ((Uint32)(s[i]   & 0x3f) << 12) |
-				         ((Uint32)(s[++i] & 0x3f) << 6) |
-				          (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (Uint32)(s[i]   & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
 				break;
 			case 4:
-				ucs[j] = ((Uint32)(s[i]   & 0x07) << 18) |
-				         ((Uint32)(s[++i] & 0x3f) << 12) |
-				         ((Uint32)(s[++i] & 0x3f) << 6) |
-				          (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (Uint32)(s[i]   & 0x07) << 18;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
 				break;
 			case 5:
-				ucs[j] = ((Uint32)(s[i]   & 0x03) << 24) |
-				         ((Uint32)(s[++i] & 0x3f) << 18) |
-				         ((Uint32)(s[++i] & 0x3f) << 12) |
-				         ((Uint32)(s[++i] & 0x3f) << 6) |
-				          (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (Uint32)(s[i]   & 0x03) << 24;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
 				break;
 			case 6:
-				ucs[j] = ((Uint32)(s[i]   & 0x01) << 30) |
-				         ((Uint32)(s[++i] & 0x3f) << 24) |
-				         ((Uint32)(s[++i] & 0x3f) << 18) |
-				         ((Uint32)(s[++i] & 0x3f) << 12) |
-				         ((Uint32)(s[++i] & 0x3f) << 6) |
-				         (Uint32)(s[++i] & 0x3f);
+				ucs[j]  = (Uint32)(s[i]   & 0x01) << 30;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 24;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 18;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 12;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f) << 6;
+				ucs[j] |= (Uint32)(s[++i] & 0x3f);
 				break;
 			case -1:
 				ucs[j] = '?';
