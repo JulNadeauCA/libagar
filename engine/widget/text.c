@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.53 2003/03/02 04:13:15 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.54 2003/03/03 05:17:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -46,8 +46,8 @@ ttf_font *font = NULL;		/* Default font */
 /* Cached fonts */
 struct text_font {
 	char	 *name;
-	int	 size;
-	int	 style;
+	int	  size;
+	int	  style;
 	ttf_font *font;
 	SLIST_ENTRY(text_font) fonts;
 };
