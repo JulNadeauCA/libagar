@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.22 2003/01/25 06:24:24 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.23 2003/03/02 04:13:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ radio_init(struct radio *rad, const char **items)
 	rad->xspacing = 2;
 	rad->yspacing = 2;
 
-	fh = ttf_font_height(font);
+	fh = text_font_height(font);
 	rad->radius = (fh > 0 && fh < 256) ? fh : 10;
 	rad->max_w = 0;
 	
