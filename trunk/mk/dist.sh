@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.1 2002/08/23 07:15:54 vedge Exp $
+#	$Csoft: dist.sh,v 1.2 2002/11/07 05:17:58 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
@@ -14,8 +14,6 @@ rm -fR `find agar-${DATE} \( -name CVS \
     -or -name \*.o \
     -or -name \*.a \
     -or -name \*.core \
-    -or -name ttf.c \
-    -or -name ttf.h \
     -or -name oldxcf.c \
     -or -name oldxcf.h \
     -or -name \*.ttf \
