@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.8 2002/11/15 04:18:32 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.9 2002/11/22 08:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,7 +26,6 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/map.h>
 
 #include <engine/widget/widget.h>
@@ -56,12 +55,12 @@ static void	propedit_event(int, union evarg *);
 struct propedit *
 propedit_new(struct mapedit *med, int flags)
 {
-	struct propedit *er;
+	struct propedit *pe;
 
-	er= emalloc(sizeof(struct propedit));
-	propedit_init(er, med, flags);
+	pe = emalloc(sizeof(struct propedit));
+	propedit_init(pe, med, flags);
 
-	return (er);
+	return (pe);
 }
 
 void
@@ -121,21 +120,24 @@ propedit_window(void *p)
 	
 	/* Node flags */
 	{
-		cbox = checkbox_new(reg, "Origin", 15, 0);
-		event_new(cbox, "checkbox-changed",
-		    propedit_event, "%p, %i", pe, NODE_ORIGIN);
-		cbox = checkbox_new(reg, "Bio", 15, 0);
-		event_new(cbox, "checkbox-changed",
-		    propedit_event, "%p, %i", pe, NODE_BIO);
-		cbox = checkbox_new(reg, "Regen", 15, 0);
-		event_new(cbox, "checkbox-changed",
-		    propedit_event, "%p, %i", pe, NODE_REGEN);
-		cbox = checkbox_new(reg, "Slow", 15, 0);
-		event_new(cbox, "checkbox-changed",
-		    propedit_event, "%p, %i", pe, NODE_SLOW);
-		cbox = checkbox_new(reg, "Haste", 15, 0);
-		event_new(cbox, "checkbox-changed",
-		    propedit_event, "%p, %i", pe, NODE_HASTE);
+		const struct {
+			int	 flag;
+			char	*name;
+		} props[] = {
+			{ NODE_ORIGIN,	"Origin" },
+			{ NODE_BIO,	"Bio"	 },
+			{ NODE_REGEN,	"Regen"	 },
+			{ NODE_SLOW,	"Slow"	 },
+			{ NODE_HASTE,	"Haste"	 }
+		};
+		const int nprops = sizeof(props) / sizeof(props[0]);
+		int i;
+
+		for (i = 0; i < nprops; i++) {
+			cbox = checkbox_new(reg, 15, props[i].name);
+			event_new(cbox, "checkbox-changed",
+			    propedit_event, "%p, %i", pe, props[i].flag);
+		}
 	}
 
 	win->focus = WIDGET(rad);
@@ -148,46 +150,55 @@ propedit_event(int argc, union evarg *argv)
 {
 	struct propedit *pe = argv[1].p;
 	struct radio *rad;
-	struct checkbox *cbox;
 	int value = argv[2].i;
 
 	switch (value) {
 	case -1:					/* Mode */
-		rad = argv[0].p;
-		switch (rad->selitem) {
-		case 0:
-			pe->mode = PROPEDIT_CLEAR;
-			break;
-		case 1:
-			pe->mode = PROPEDIT_SET;
-			break;
-		case 2:
-			pe->mode = PROPEDIT_UNSET;
-			break;
+		{
+			struct radio *rad = argv[0].p;
+
+			switch (rad->selitem) {
+			case 0:
+				pe->mode = PROPEDIT_CLEAR;
+				break;
+			case 1:
+				pe->mode = PROPEDIT_SET;
+				break;
+			case 2:
+				pe->mode = PROPEDIT_UNSET;
+				break;
+			}
 		}
 		break;
 	case 0:						/* Block */
-		rad = argv[0].p;
+		{
+			struct radio *rad = argv[0].p;
 		
-		pe->nodeflags &= ~(NODE_BLOCK|NODE_WALK|NODE_CLIMB);
+			pe->nodeflags &= ~(NODE_BLOCK|NODE_WALK|NODE_CLIMB);
 
-		switch (rad->selitem) {
-		case 0:
-			pe->nodeflags |= NODE_BLOCK;
-			break;
-		case 1:
-			pe->nodeflags |= NODE_WALK;
-			break;
-		case 2:
-			pe->nodeflags |= NODE_CLIMB;
-			break;
+			switch (rad->selitem) {
+			case 0:
+				pe->nodeflags |= NODE_BLOCK;
+				break;
+			case 1:
+				pe->nodeflags |= NODE_WALK;
+				break;
+			case 2:
+				pe->nodeflags |= NODE_CLIMB;
+				break;
+			}
 		}
+		break;
 	default:					/* Flag */
-		cbox = argv[0].p;
-		if (cbox->flags & CHECKBOX_PRESSED) {
-			pe->nodeflags |= value;
-		} else {
-			pe->nodeflags &= ~(value);
+		{
+			struct checkbox *cbox = argv[0].p;
+			int state = argv[1].i;
+			
+			if (state) {
+				pe->nodeflags |= value;
+			} else {
+				pe->nodeflags &= ~(value);
+			}
 		}
 		break;
 	}
