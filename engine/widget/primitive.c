@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.33 2003/01/01 03:31:15 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.34 2003/01/01 05:18:41 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -543,21 +543,21 @@ primitive_config_window(void)
 	struct tlist *tl;
 
 	win = window_new("widget-primitive-sw", WINDOW_CENTER, -1, -1,
-	    503, 440, 424, 267);
+	    303, 190, 303, 190);
 	window_set_caption(win, "Widget primitives");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 100);
 	{
-		lab = label_new(reg, 100, 5, "Box:");
-		tl = tlist_new(reg, 100, 40, 0);
+		lab = label_new(reg, 100, 10, "Box:");
+		tl = tlist_new(reg, 100, 35, 0);
 		tlist_insert_item(tl, NULL,
 		    "2d-style", box_2d);
 		tlist_insert_item_selected(tl, NULL,
 		    "3d-style", box_3d);
 		event_new(tl, "tlist-changed", apply, "%i", BOX);
 
-		lab = label_new(reg, 100, 5, "Frame:");
-		tl = tlist_new(reg, 100, 40, 0);
+		lab = label_new(reg, 100, 10, "Frame:");
+		tl = tlist_new(reg, 100, 35, 0);
 		tlist_insert_item_selected(tl, NULL,
 		    "3d-style", frame_3d);
 		event_new(tl, "tlist-changed", apply, "%i", FRAME);
@@ -565,18 +565,24 @@ primitive_config_window(void)
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	{	
-		lab = label_new(reg, 100, 5, "Line:");
-		tl = tlist_new(reg, 100, 40, 0);
-		tlist_insert_item_selected(tl, NULL,
+		struct tlist_item *it_bres, *it;
+	
+		lab = label_new(reg, 100, 10, "Line:");
+		tl = tlist_new(reg, 100, 35, 0);
+		it_bres = tlist_insert_item_selected(tl, NULL,
 		    "Bresenham", line_bresenham);
 #ifdef HAVE_OPENGL
-		tlist_insert_item_selected(tl, NULL,
+		it = tlist_insert_item(tl, NULL,
 		    "OpenGL", line_opengl);
+		if (view->opengl) {
+			tlist_select(it);
+			tlist_unselect(it_bres);
+		}
 #endif
 		event_new(tl, "tlist-changed", apply, "%i", LINE);
 		
-		lab = label_new(reg, 100, 5, "Circle:");
-		tl = tlist_new(reg, 100, 40, 0);
+		lab = label_new(reg, 100, 10, "Circle:");
+		tl = tlist_new(reg, 100, 35, 0);
 		tlist_insert_item_selected(tl, NULL,
 		    "Bresenham", circle_bresenham);
 		event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
