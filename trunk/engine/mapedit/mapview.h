@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.50 2003/08/26 07:55:01 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.51 2004/03/17 12:42:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -9,10 +9,9 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/button.h>
-#include <engine/widget/combo.h>
+#include <engine/widget/toolbar.h>
 
-struct mapview;
-
+#include <engine/mapedit/tool.h>
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
 #include <engine/mapedit/mediasel.h>
@@ -22,7 +21,7 @@ struct mapview;
 struct mapview {
 	struct widget wid;
 
-	int	flags;
+	int flags;
 #define MAPVIEW_EDIT		0x0001	/* Mouse/keyboard edition */
 #define MAPVIEW_INDEPENDENT	0x0002	/* Independent zoom/scroll */
 #define MAPVIEW_GRID		0x0004	/* Display the grid */
@@ -32,24 +31,24 @@ struct mapview {
 #define MAPVIEW_CENTER		0x0040	/* Request initial centering */
 #define MAPVIEW_NO_CURSOR	0x0080	/* Disable the cursor */
 
-	int	 prop_bg;		/* Background attributes style */
-	int	 prop_style;		/* Foreground attributes style */
-	int	 prew, preh;		/* Prescale in nodes */
+	int prop_bg;			/* Background attributes style */
+	int prop_style;			/* Foreground attributes style */
+	int prew, preh;			/* Prescaling (nodes) */
 
 	struct {			/* Mouse scrolling state */
-		int	scrolling;
-		int	centering;
-		int	x, y;
+		int scrolling;
+		int centering;
+		int x, y;
 	} mouse;
 	struct {			/* Temporary mouse selection */
-		int	set;
-		int	x, y;
-		int	xoffs, yoffs;
+		int set;
+		int x, y;
+		int xoffs, yoffs;
 	} msel;
 	struct {			/* Effective map selection */
-		int	set;
-		int	x, y;
-		int	w, h;
+		int set;
+		int x, y;
+		int w, h;
 	} esel;
 
 	Uint16		*zoom;		/* Zoom factor (%) */
@@ -78,6 +77,10 @@ struct mapview {
 		struct mediasel *gfx;
 		struct mediasel *audio;
 	} mediasel;
+
+	struct toolbar *toolbar;	/* Pointer to toolbar (or NULL) */
+	struct tool *curtool;		/* Selected tool */
+	TAILQ_HEAD(, tool) tools;	/* Map edition tools */
 };
 
 enum mapview_prop_labels {
@@ -113,9 +116,9 @@ enum mapview_prop_labels {
 struct node;
 
 __BEGIN_DECLS
-struct mapview	*mapview_new(void *, struct map *, int);
+struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *);
 
-void	 mapview_init(struct mapview *, struct map *, int);
+void	 mapview_init(struct mapview *, struct map *, int, struct toolbar *);
 void	 mapview_destroy(void *);
 void	 mapview_draw(void *);
 void	 mapview_scale(void *, int, int);
@@ -124,11 +127,14 @@ void	 mapview_draw_props(struct mapview *, struct node *, int, int, int,
 	                    int);
 void	 mapview_center(struct mapview *, int, int);
 int	 mapview_zoom(struct mapview *, int);
-void	 mapview_map_coords(struct mapview *, int *, int *);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 
+__inline__ void	 mapview_map_coords(struct mapview *, int *, int *);
+
 #ifdef EDITION
+void	 mapview_reg_tool(struct mapview *, const struct tool *);
+void	 mapview_select_tool(int, union evarg *);
 void	 mapview_toggle_rw(int, union evarg *);
 void	 mapview_toggle_nodeedit(int, union evarg *);
 void	 mapview_toggle_layedit(int, union evarg *);

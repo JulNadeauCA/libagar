@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.29 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.30 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -33,10 +33,10 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-void shift_mouse(struct mapview *, Sint16, Sint16);
-static void shift_init(void);
+static void shift_init(void *);
+void shift_mouse(void *, struct mapview *, Sint16, Sint16);
 
-struct tool shift_tool = {
+const struct tool shift_tool = {
 	N_("Shift tool"),
 	N_("Displace a tile with the mouse."),
 	MAPEDIT_TOOL_SHIFT,
@@ -58,12 +58,12 @@ static enum shift_mode {
 static int multi = 0;			/* Apply to whole selection? */
 
 static void
-shift_init(void)
+shift_init(void *p)
 {
 	struct window *win;
 	struct vbox *vb;
 
-	win = tool_window_new(&shift_tool, "mapedit-tool-shift");
+	win = tool_window(p, "mapedit-tool-shift");
 
 	vb = vbox_new(win, 0);
 	{
@@ -84,7 +84,7 @@ shift_init(void)
 }
 
 void
-shift_mouse(struct mapview *mv, Sint16 relx, Sint16 rely)
+shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 {
 	struct map *m = mv->map;
 	int selx = mv->mx + mv->mouse.x;

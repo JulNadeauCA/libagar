@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.19 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.20 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -29,9 +29,9 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-static void select_init(void);
+static void select_init(void *);
 
-struct tool select_tool = {
+const struct tool select_tool = {
 	N_("Selection"),
 	N_("Select a rectangle of nodes."),
 	MAPEDIT_TOOL_SELECT,
@@ -152,11 +152,11 @@ select_cut(struct mapview *mv)
 }
 
 static void
-select_init(void)
+select_init(void *p)
 {
-	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_c, select_copy, 0);
-	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_v, select_paste, 1);
-	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_x, select_cut, 1);
-	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_k, select_kill, 1);
+	tool_bind_key(p, KMOD_CTRL, SDLK_c, select_copy, 0);
+	tool_bind_key(p, KMOD_CTRL, SDLK_v, select_paste, 1);
+	tool_bind_key(p, KMOD_CTRL, SDLK_x, select_cut, 1);
+	tool_bind_key(p, KMOD_CTRL, SDLK_k, select_kill, 1);
 }
 

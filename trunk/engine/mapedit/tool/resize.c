@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.35 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.36 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,9 +29,9 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-static void resize_mouse(struct mapview *, Sint16, Sint16, Uint8);
+static void resize_mouse(void *, struct mapview *, Sint16, Sint16, Uint8);
 
-struct tool resize_tool = {
+const struct tool resize_tool = {
 	N_("Resize tool"),
 	N_("Resize a map's node array."),
 	MAPEDIT_TOOL_RESIZE,
@@ -46,7 +46,7 @@ struct tool resize_tool = {
 };
 
 static void
-resize_mouse(struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
+resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 {
 	struct map *m = mv->map;
 	int w = m->mapw;

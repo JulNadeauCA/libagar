@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.29 2003/08/26 07:55:01 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.30 2004/01/08 02:20:09 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -46,10 +46,12 @@ structures.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct mapview *
-.Fn mapview_new "void *parent" "struct map *map" "int flags"
+.Fn mapview_new "void *parent" "struct map *map" "int flags" \
+                "struct toolbar *toolbar"
 .Pp
 .Ft void
-.Fn mapview_init "struct mapview *mv" "struct map *map" "int flags"
+.Fn mapview_init "struct mapview *mv" "struct map *map" "int flags" \
+                 "struct toolbar *toolbar"
 .Pp
 .Ft void
 .Fn mapview_prescale "struct mapview *mv" "int w" "int h"
@@ -70,17 +72,24 @@ The
 .Fn mapview_init
 function initializes a
 .Nm
-widget to display
+widget displaying the given
 .Fa map .
 The
 .Fa flags
 may include:
 .Bd -literal
-#define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
-#define MAPVIEW_INDEPENDENT	 0x002	/* Zoom/ss independent from map's */
-#define MAPVIEW_GRID		 0x004	/* Display a grid */
-#define MAPVIEW_PROPS		 0x008	/* Display node properties */
+#define MAPVIEW_EDIT		 0x01	/* Mouse/keyboard edition */
+#define MAPVIEW_INDEPENDENT	 0x02	/* Zoom/ss independent from map's */
+#define MAPVIEW_GRID		 0x04	/* Display a grid */
+#define MAPVIEW_PROPS		 0x08	/* Display node properties */
 .Ed
+.Pp
+If
+.Fa toolbar
+is not NULL, the
+.Nm
+will automatically create buttons in it for each tool registered with
+.Fn mapview_reg_tool .
 .Pp
 The
 .Dv MAPVIEW_EDIT
@@ -150,6 +159,18 @@ If there is no selection, no value is written to
 .Fa w
 and
 .Fa h .
+.Sh TOOL INTERFACE
+.nr nS 1
+.Ft void
+.Fn mapview_reg_tool "struct mapview *mv" "const struct tool *toolspec"
+.nr nS 0
+.Pp
+The
+.Nm
+widget provides a generic interface for tools that must accomplish diverse
+map operations.
+.Fn mapview_reg_tool
+registers a new tool.
 .Sh EVENTS
 The
 .Nm

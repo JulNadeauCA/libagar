@@ -1,7 +1,9 @@
-/*	$Csoft: nodeedit.h,v 1.7 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: nodeedit.h,v 1.8 2004/03/18 03:07:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
+
+struct mapview;
 
 struct nodeedit {
 	struct window	*win;

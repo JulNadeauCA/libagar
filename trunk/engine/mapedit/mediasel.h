@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.h,v 1.3 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: mediasel.h,v 1.4 2004/03/18 03:07:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MEDIASEL_H_
@@ -10,6 +10,8 @@
 #include <engine/mapedit/mapview.h>
 
 #include "begin_code.h"
+
+struct mapview;
 
 enum mediasel_type {
 	MEDIASEL_GFX,

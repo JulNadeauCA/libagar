@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.143 2004/03/18 03:07:53 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.144 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ static void mapview_begin_selection(struct mapview *);
 static void mapview_effect_selection(struct mapview *);
 
 extern struct tool select_tool;
-extern void shift_mouse(struct mapview *, Sint16, Sint16);
+extern void shift_mouse(void *, struct mapview *, Sint16, Sint16);
 
 static __inline__ int
 selbounded(struct mapview *mv, int x, int y)
@@ -102,24 +102,69 @@ selbounded(struct mapview *mv, int x, int y)
 }
 
 static __inline__ int
-selecting(void)
+selecting(struct mapview *mv)
 {
-	return (mapedit.curtool == &select_tool ||
+	return (mv->curtool == &select_tool ||
 	    (SDL_GetModState() & KMOD_CTRL));
 }
 
 struct mapview *
-mapview_new(void *parent, struct map *m, int flags)
+mapview_new(void *parent, struct map *m, int flags, struct toolbar *toolbar)
 {
 	struct mapview *mv;
 
 	mv = Malloc(sizeof(struct mapview), M_OBJECT);
-	mapview_init(mv, m, flags);
+	mapview_init(mv, m, flags, toolbar);
 	object_attach(parent, mv);
 	return (mv);
 }
 
 #ifdef EDITION
+
+static void
+mapview_sel_tool(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct tool *ntool = argv[2].p;
+
+	if (mv->curtool == ntool) {
+		if (ntool->win != NULL) {
+			window_hide(ntool->win);
+		}
+		mv->curtool = NULL;
+		return;
+	}
+	if (mv->curtool != NULL) {
+		widget_set_bool(mv->curtool->trigger, "state", 0);
+		if (mv->curtool->win != NULL)
+			window_hide(mv->curtool->win);
+	}
+	mv->curtool = ntool;
+
+	if (ntool->win != NULL)
+		window_show(ntool->win);
+}
+
+void
+mapview_reg_tool(struct mapview *mv, const struct tool *tool)
+{
+	struct tool *ntool;
+
+	ntool = Malloc(sizeof(struct tool), M_MAPEDIT);
+	memcpy(ntool, tool, sizeof(struct tool));
+	tool_init(ntool, mv);
+
+	if (mv->toolbar != NULL) {
+		SDL_Surface *icon = ntool->icon >= 0 ?
+		    SPRITE(&mapedit, ntool->icon) : NULL;
+
+		ntool->trigger = toolbar_add_button(mv->toolbar,
+		    mv->toolbar->nrows-1, icon, 1, 0, mapview_sel_tool,
+		    "%p, %p", mv, ntool);
+	}
+	TAILQ_INSERT_HEAD(&mv->tools, ntool, tools);
+}
+
 void
 mapview_toggle_rw(int argc, union evarg *argv)
 {
@@ -214,6 +259,14 @@ void
 mapview_destroy(void *p)
 {
 	struct mapview *mv = p;
+	struct tool *tool, *ntool;
+
+	for (tool = TAILQ_FIRST(&mv->tools);
+	     tool != TAILQ_END(&mv->tools);
+	     tool = ntool) {
+		ntool = TAILQ_NEXT(tool, tools);
+		Free(tool, M_MAPEDIT);
+	}
 
 #ifdef EDITION
 	if (mapedition) {
@@ -241,7 +294,8 @@ mapview_attached(int argc, union evarg *argv)
 }
 
 void
-mapview_init(struct mapview *mv, struct map *m, int flags)
+mapview_init(struct mapview *mv, struct map *m, int flags,
+    struct toolbar *toolbar)
 {
 	widget_init(mv, "mapview", &mapview_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
@@ -257,9 +311,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	mv->mouse.centering = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
-	mv->nodeed.trigger = NULL;
-	mv->layed.trigger = NULL;
-	mv->mediasel.trigger = NULL;
 	mv->nodeed.win = NULL;
 	mv->layed.win = NULL;
 	mv->mediasel.win = NULL;
@@ -267,6 +318,9 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	mv->zoom_ival = MAPVIEW_ZOOM_IVAL;
 	mv->zoom_tm = NULL;
 	mv->map = m;
+	mv->toolbar = toolbar;
+	mv->curtool = NULL;
+	TAILQ_INIT(&mv->tools);
 
 	pthread_mutex_lock(&m->lock);
 	mv->mx = m->origin.x;
@@ -285,7 +339,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	mv->esel.y = 0;
 	mv->esel.w = 0;
 	mv->esel.h = 0;
-
 	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		mv->izoom.zoom = 100;
 		mv->izoom.scale = TILESZ;
@@ -303,11 +356,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	}
 	pthread_mutex_unlock(&m->lock);
 
-	/* The map editor is required for edit operations. */
-	/* XXX obsolete with the generic interface */
-	if (!mapedition && (mv->flags & MAPVIEW_EDIT))
-		fatal("no map editor");
-
 	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100, 255);
 	widget_map_color(mv, CURSOR_COLOR, "cursor", 100, 100, 100, 255);
 	widget_map_color(mv, BG1_COLOR, "background-1", 24, 24, 24, 255);
@@ -323,6 +371,33 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 	event_new(mv, "attached", mapview_attached, NULL);
+
+	if (mv->toolbar != NULL) {
+		toolbar_add_button(toolbar, 0, SPRITE(&mapedit, 6), 1,
+		    (flags & MAPVIEW_GRID),
+		    mapview_toggle_grid, "%p", mv);
+		toolbar_add_button(toolbar, 0, SPRITE(&mapedit, 7), 1,
+		    (flags & MAPVIEW_PROPS),
+		    mapview_toggle_props, "%p", mv);
+		toolbar_add_button(toolbar, 0, SPRITE(&mapedit, 9), 1,
+		    (flags & MAPVIEW_EDIT),
+		    mapview_toggle_rw, "%p", mv);
+#ifdef EDITION
+		mv->nodeed.trigger = toolbar_add_button(toolbar, 0,
+		    SPRITE(&mapedit, 14), 1, 0,
+		    mapview_toggle_nodeedit, "%p", mv);
+		mv->layed.trigger = toolbar_add_button(toolbar, 0,
+		    SPRITE(&mapedit, 15), 1, 0,
+		    mapview_toggle_layedit, "%p", mv);
+		mv->mediasel.trigger = toolbar_add_button(toolbar, 0,
+		    SPRITE(&mapedit, 21), 1, 0,
+		    mapview_toggle_mediasel, "%p", mv);
+#endif
+	} else {
+		mv->nodeed.trigger = NULL;
+		mv->layed.trigger = NULL;
+		mv->mediasel.trigger = NULL;
+	}
 }
 
 /*
@@ -411,7 +486,6 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 static void
 draw_curtool_cursor(struct mapview *mv)
 {
-	struct tool *curtool = mapedit.curtool;
 	SDL_Rect rd;
 	int msx, msy;
 
@@ -431,16 +505,16 @@ draw_curtool_cursor(struct mapview *mv)
 	rd.x = mv->mouse.x*mv->map->scale - mv->map->scale + *mv->ssx;
 	rd.y = mv->mouse.y*mv->map->scale - mv->map->scale + *mv->ssy;
 
-	if (curtool == NULL)
+	if (mv->curtool == NULL)
 		goto defcurs;
 
-	if (curtool->cursor_su != NULL) {
+	if (mv->curtool->cursor_su != NULL) {
 		rd.x += WIDGET(mv)->cx;
 		rd.y += WIDGET(mv)->cy;
-		SDL_BlitSurface(curtool->cursor_su, NULL, view->v, &rd);
+		SDL_BlitSurface(mv->curtool->cursor_su, NULL, view->v, &rd);
 	} else {
-		if (curtool->cursor == NULL ||
-		    curtool->cursor(mv, &rd) == -1)
+		if (mv->curtool->cursor == NULL ||
+		    mv->curtool->cursor(mv->curtool, mv, &rd) == -1)
 			goto defcurs;
 	}
 	return;
@@ -478,16 +552,14 @@ draw_background(struct mapview *mv)
 		     x += mapview_bg_squaresize) {
 			if (alt1++ == 1) {
 				primitives.rect_filled(mv,
-				    x,
-				    y,
+				    x, y,
 				    mapview_bg_squaresize,
 				    mapview_bg_squaresize,
 				    BG1_COLOR);
 				alt1 = 0;
 			} else {
 				primitives.rect_filled(mv,
-				    x,
-				    y,
+				    x, y,
 				    mapview_bg_squaresize,
 				    mapview_bg_squaresize,
 				    BG2_COLOR);
@@ -555,8 +627,7 @@ draw_layer:
 			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
 				/* XXX overdraw */
 				primitives.rect_outlined(mv,
-				    rx,
-				    ry,
+				    rx, ry,
 				    mv->map->scale + 1,
 				    mv->map->scale + 1,
 				    GRID_COLOR);
@@ -723,9 +794,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 	int y = argv[2].i;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
-	Uint8 state;
-	
-	state = SDL_GetMouseState(NULL, NULL);
+	int state = argv[5].i;
 
 	pthread_mutex_lock(&mv->map->lock);
 
@@ -741,19 +810,18 @@ mapview_mousemotion(int argc, union evarg *argv)
 		mv->msel.yoffs += y - mv->mouse.y;
 	} else if (mv->flags & MAPVIEW_EDIT) {			/* Edition */
 		if (state & SDL_BUTTON(2)) {			/* Shift */
-			shift_mouse(mv, xrel, yrel);
-		} else if (mapedit.curtool != NULL && (state & SDL_BUTTON(1))) {
-			struct tool *tool = mapedit.curtool;
-
-			if (TOOL(tool)->effect != NULL &&
+			shift_mouse(NULL, mv, xrel, yrel);
+		} else if (mv->curtool != NULL && (state & SDL_BUTTON(1))) {
+			if (TOOL(mv->curtool)->effect != NULL &&
 			    mv->cx != -1 && mv->cy != -1 &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    (selbounded(mv, mv->cx, mv->cy))) {
-				TOOL(tool)->effect(mv, mv->map,
-				    &mv->map->map[mv->cy][mv->cx]);
+				TOOL(mv->curtool)->effect(mv->curtool, mv,
+				    mv->map, &mv->map->map[mv->cy][mv->cx]);
 			}
-			if (TOOL(tool)->mouse != NULL)
-				TOOL(tool)->mouse(mv, xrel, yrel, state);
+			if (TOOL(mv->curtool)->mouse != NULL)
+				TOOL(mv->curtool)->mouse(mv->curtool, mv,
+				    xrel, yrel, state);
 		}
 	}
 	pthread_mutex_unlock(&mv->map->lock);
@@ -786,7 +854,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	/* XXX configurable */
 	switch (button) {
 	case 1:						/* Select/edit */
-		if (selecting()) {
+		if (selecting(mv)) {
 			mapview_begin_selection(mv);
 			goto out;
 		}
@@ -801,10 +869,10 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	}
 
 	if (mv->flags & MAPVIEW_EDIT) {
-		if (mapedit.curtool != NULL &&
-		    mapedit.curtool->effect != NULL &&
+		if (mv->curtool != NULL &&
+		    mv->curtool->effect != NULL &&
 		    selbounded(mv, mv->cx, mv->cy)) {
-			mapedit.curtool->effect(mv, mv->map, curnode);
+			mv->curtool->effect(mv->curtool, mv, mv->map, curnode);
 		}
 	}
 out:
@@ -871,7 +939,7 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 	/* XXX configurable */
 	switch (argv[1].i) {
 	case 1:
-		if (selecting() &&
+		if (selecting(mv) &&
 		    mv->msel.set &&
 		    (mv->msel.xoffs == 0 || mv->msel.yoffs == 0)) {
 			mv->esel.set = 0;
@@ -915,6 +983,7 @@ mapview_keydown(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
+	struct tool *tool;
 
 	pthread_mutex_lock(&mv->map->lock);
 
@@ -972,25 +1041,21 @@ mapview_keydown(int argc, union evarg *argv)
 		break;
 	}
 
-	if (mapedition) {
+
+	TAILQ_FOREACH(tool, &mv->tools, tools) {
 		struct tool_kbinding *kbinding;
-		int i;
 
-		for (i = 0; i < mapedit_ntools; i++) {
-			struct tool *tool = mapedit_tools[i];
-
-			SLIST_FOREACH(kbinding, &tool->kbindings, kbindings) {
-				if (kbinding->key == keysym &&
-				    (kbinding->mod == KMOD_NONE ||
-				     keymod & kbinding->mod)) {
-					if (kbinding->edit &&
-					   (((mv->flags & MAPVIEW_EDIT) == 0) ||
-					    ((OBJECT(mv->map)->flags &
-					      OBJECT_READONLY)))) {
-						continue;
-					}
-					kbinding->func(mv);
+		SLIST_FOREACH(kbinding, &tool->kbindings, kbindings) {
+			if (kbinding->key == keysym &&
+			    (kbinding->mod == KMOD_NONE ||
+			     keymod & kbinding->mod)) {
+				if (kbinding->edit &&
+				   (((mv->flags & MAPVIEW_EDIT) == 0) ||
+				    ((OBJECT(mv->map)->flags &
+				     OBJECT_READONLY)))) {
+					continue;
 				}
+				kbinding->func(mv);
 			}
 		}
 	}

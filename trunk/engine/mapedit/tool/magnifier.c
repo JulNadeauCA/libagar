@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.38 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.39 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -33,10 +33,10 @@
 #include <engine/widget/button.h>
 #include <engine/widget/spinbutton.h>
 
-static void magnifier_init(void);
-static void magnifier_mouse(struct mapview *, Sint16, Sint16, Uint8);
+static void magnifier_init(void *);
+static void magnifier_mouse(void *, struct mapview *, Sint16, Sint16, Uint8);
 
-struct tool magnifier_tool = {
+const struct tool magnifier_tool = {
 	N_("Magnifier"),
 	N_("Zoom in and out specific areas of the map."),
 	MAPEDIT_TOOL_MAGNIFIER,
@@ -52,6 +52,7 @@ struct tool magnifier_tool = {
 
 static int zoom_spec = 100;			/* Specific zoom in % */
 
+#if 0
 /* Set the zoom to a specific value in %. */
 static void
 zoom_specific(int argc, union evarg *argv)
@@ -75,16 +76,18 @@ zoom_100(int argc, union evarg *argv)
 	mapview_zoom(mv, 100);
 	zoom_spec = 100;
 }
+#endif
 
 static void
-magnifier_init(void)
+magnifier_init(void *p)
 {
 	struct window *win;
 	struct button *bu;
 	struct spinbutton *sbu;
 
-	win = tool_window_new(&magnifier_tool, "mapedit-tool-magnifier");
+	win = tool_window(p, "mapedit-tool-magnifier");
 
+#if 0
 	bu = button_new(win, _("1:1 zoom"));
 	WIDGET(bu)->flags |= WIDGET_WFILL;
 	event_new(bu, "button-pushed", zoom_100, NULL);
@@ -94,10 +97,12 @@ magnifier_init(void)
 	spinbutton_set_min(sbu, 4);
 	spinbutton_set_max(sbu, 600);
 	event_new(sbu, "spinbutton-changed", zoom_specific, NULL);
+#endif
 }
 
 static void
-magnifier_mouse(struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
+magnifier_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel,
+    Uint8 state)
 {
 	mapview_zoom(mv, *mv->zoom + xrel);
 }

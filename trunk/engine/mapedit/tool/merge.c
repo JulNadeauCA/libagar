@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.50 2004/03/17 12:42:08 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.51 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/toolbar.h>
 
 #include <string.h>
 
@@ -44,26 +45,30 @@ const struct version merge_ver = {
 	6, 0
 };
 
-static void	merge_init(void);
-static void	merge_destroy(void);
-static int	merge_load(struct netbuf *);
-static int	merge_save( struct netbuf *);
-static int	merge_cursor(struct mapview *, SDL_Rect *);
-static void	merge_effect(struct mapview *, struct map *, struct node *);
-static void	merge_create_brush(int, union evarg *);
-static void	merge_edit_brush(int, union evarg *);
-static void	merge_remove_brush(int, union evarg *);
-static void	merge_interpolate(struct map *, struct node *,
-		                  struct noderef *, struct map *, struct node *,
-				  struct noderef *);
+static void merge_init(void *);
+static void merge_destroy(void *);
+static int merge_load(void *, struct netbuf *);
+static int merge_save(void *, struct netbuf *);
+static int merge_cursor(void *, struct mapview *, SDL_Rect *);
+static void merge_effect(void *, struct mapview *, struct map *, struct node *);
+static void merge_create_brush(int, union evarg *);
+static void merge_edit_brush(int, union evarg *);
+static void merge_remove_brush(int, union evarg *);
+static void merge_interpolate(struct map *, struct node *,
+	                      struct noderef *, struct map *, struct node *,
+			      struct noderef *);
 
-struct tool merge_tool = {
+const struct tool merge_tool = {
 	N_("Merge tool"),
 	N_("Apply patterns, interpolating edge tiles."),
 	MAPEDIT_TOOL_MERGE,
 	-1,
 	merge_init,
+#if 0
 	merge_destroy,
+#else
+	NULL,
+#endif
 	merge_load,
 	merge_save,
 	merge_effect,
@@ -96,14 +101,14 @@ merge_table[9][9] = {
 };
 
 static void
-merge_init(void)
+merge_init(void *p)
 {
 	struct window *win;
 	struct hbox *hb;
 	struct button *bu;
 	struct textbox *tb;
 
-	win = tool_window_new(&merge_tool, "mapedit-tool-merge");
+	win = tool_window(p, "mapedit-tool-merge");
 
 	hb = hbox_new(win, HBOX_WFILL);
 	{
@@ -149,7 +154,7 @@ merge_free_brushes(void)
 }
 
 static void
-merge_destroy(void)
+merge_destroy(void *p)
 {
 	merge_free_brushes();
 }
@@ -204,17 +209,18 @@ merge_edit_brush(int argc, union evarg *argv)
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
 		struct map *brush = it->p1;
 		struct window *win;
+		struct toolbar *tbar;
 
 		if (!it->selected)
 			continue;
 
-		win = window_new("mapedit-tool-merge-%s", OBJECT(brush)->name);
-		if (win == NULL)
+		if ((win = window_new("mapedit-tool-merge-%s",
+		    OBJECT(brush)->name)) == NULL)
 			continue;
-		/* XXX close dialog */
 
-		mapview_new(win, brush,
-		    MAPVIEW_EDIT|MAPVIEW_GRID|MAPVIEW_PROPS);
+		tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
+		mapview_new(win, brush, MAPVIEW_EDIT|MAPVIEW_GRID|
+		                        MAPVIEW_PROPS, tbar);
 		window_show(win);
 	}
 }
@@ -308,7 +314,7 @@ merge_interpolate(struct map *sm, struct node *sn, struct noderef *sr,
 }
 
 static void
-merge_effect(struct mapview *mv, struct map *m, struct node *node)
+merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct tlist_item *it;
 	
@@ -346,13 +352,12 @@ merge_effect(struct mapview *mv, struct map *m, struct node *node)
 }
 
 static int
-merge_load(struct netbuf *buf)
+merge_load(void *p, struct netbuf *buf)
 {
 	Uint32 i, nbrushes;
 	
 	if (version_read(buf, &merge_ver, NULL) != 0)
 		return (-1);
-
 	merge_free_brushes();
 	tlist_clear_items(brushes_tl);
 
@@ -373,7 +378,7 @@ merge_load(struct netbuf *buf)
 }
 
 static int
-merge_save(struct netbuf *buf)
+merge_save(void *p, struct netbuf *buf)
 {
 	struct object *ob;
 	Uint32 nbrushes = 0;
@@ -395,7 +400,7 @@ merge_save(struct netbuf *buf)
 }
 
 static int
-merge_cursor(struct mapview *mv, SDL_Rect *rd)
+merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct noderef *r;
 	struct map *sm;

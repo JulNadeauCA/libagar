@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.54 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.55 2004/03/17 12:42:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -31,11 +31,11 @@
 
 #include <engine/widget/radio.h>
 
-static void stamp_init(void);
-static int stamp_cursor(struct mapview *, SDL_Rect *);
-static void stamp_effect(struct mapview *, struct map *, struct node *);
+static void stamp_init(void *);
+static int stamp_cursor(void *, struct mapview *, SDL_Rect *);
+static void stamp_effect(void *, struct mapview *, struct map *, struct node *);
 
-struct tool stamp_tool = {
+const struct tool stamp_tool = {
 	N_("Stamp"),
 	N_("Insert the contents of the copy/paste buffer."),
 	MAPEDIT_TOOL_STAMP,
@@ -55,7 +55,7 @@ static enum {
 } mode = STAMP_REPLACE;
 
 static void
-stamp_init(void)
+stamp_init(void *p)
 {
 	static const char *mode_items[] = {
 		N_("Replace"),
@@ -65,14 +65,14 @@ stamp_init(void)
 	struct window *win;
 	struct radio *rad;
 
-	win = tool_window_new(&stamp_tool, "mapedit-tool-stamp");
+	win = tool_window(p, "mapedit-tool-stamp");
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
 }
 
 static void
-stamp_effect(struct mapview *mv, struct map *m, struct node *node)
+stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct map *copybuf = &mapedit.copybuf;
 	int sx, sy, dx, dy;
@@ -97,7 +97,7 @@ stamp_effect(struct mapview *mv, struct map *m, struct node *node)
 }
 
 static int
-stamp_cursor(struct mapview *mv, SDL_Rect *rd)
+stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct map *copybuf = &mapedit.copybuf;
 	struct noderef *r;
