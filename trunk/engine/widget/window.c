@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.89 2002/11/08 21:38:00 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.90 2002/11/09 06:01:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -689,10 +689,46 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 			view->rootmap->map->redraw++;
 			break;
 		case GFX_ENGINE_GUI:
-			SDL_FillRect(view->v, &oldpos, bg_color);
-			window_draw(win);
-			SDL_UpdateRect(view->v, oldpos.x, oldpos.y,
-			    oldpos.w, oldpos.h);
+			{
+				SDL_Rect nrd;
+
+				if (win->x > oldpos.x) {	/* Right */
+					nrd.x = oldpos.x;
+					nrd.y = oldpos.y;
+					nrd.w = win->x - oldpos.x;
+					nrd.h = win->h;
+					SDL_FillRect(view->v, &nrd, bg_color);
+					SDL_UpdateRect(view->v, nrd.x,
+					    nrd.y, nrd.w, nrd.h);
+				}
+				if (win->y > oldpos.y) {	/* Down */
+					nrd.x = oldpos.x;
+					nrd.y = oldpos.y;
+					nrd.w = win->w;
+					nrd.h = win->y - oldpos.y;
+					SDL_FillRect(view->v, &nrd, bg_color);
+					SDL_UpdateRect(view->v, nrd.x,
+					    nrd.y, nrd.w, nrd.h);
+				}
+				if (win->x < oldpos.x) {	/* Left */
+					nrd.x = win->x + win->w;
+					nrd.y = win->y;
+					nrd.w = oldpos.x - win->x;
+					nrd.h = oldpos.h;
+					SDL_FillRect(view->v, &nrd, bg_color);
+					SDL_UpdateRect(view->v, nrd.x,
+					    nrd.y, nrd.w, nrd.h);
+				}
+				if (win->y < oldpos.y) {	/* Up */
+					nrd.x = oldpos.x;
+					nrd.y = win->y + win->h;
+					nrd.w = oldpos.w;
+					nrd.h = oldpos.y - win->y;
+					SDL_FillRect(view->v, &nrd, bg_color);
+					SDL_UpdateRect(view->v, nrd.x,
+					    nrd.y, nrd.w, nrd.h);
+				}
+			}
 			break;
 		}
 	}
