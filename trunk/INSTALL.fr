@@ -14,7 +14,7 @@ INSTALLATION
 2) Générer les dépendances avec la cible `depend'.
    $ make depend
 
-3) Compiler la librarie, les exécutables ansi que les pages de manuel
+3) Compiler la librarie, les exécutables ainsi que les pages de manuel
    (si nroff(1) est disponible).
    $ make
 
@@ -22,11 +22,11 @@ INSTALLATION
    documentation.
    # make install
 
-5) Exécuter le jeux ou l'éditeur.
+5) Exécuter le jeu ou l'éditeur.
    $ cave					# Lancer en mode jeux
    $ cave -e					# Lancer en mode édition
-   $ cave -e -T $HOME/fonts -t myfont,18	# Specifier la police
-   $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Specifier le chemin d'accès
-   						# aux fichiers de données.
+   $ cave -e -T $HOME/fonts -t myfont,18	# Spécifier la police
+   $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Spécifier le chemin d'accès
+   						# vers les fichiers de données.
 
-$Csoft$
+$Csoft: INSTALL.fr,v 1.1 2003/06/17 21:38:44 vedge Exp $
