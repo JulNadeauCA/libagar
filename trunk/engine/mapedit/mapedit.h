@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.42 2002/07/06 23:54:08 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.43 2002/07/07 00:24:02 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -39,8 +39,8 @@ struct mapedit {
 	struct	 window *toolbar_win;
 	struct	 window *objlist_win;
 	struct	 window *tileq_win;
-	struct	 window *tilestack_win;
 	struct	 window *new_map_win;
+	struct	 window *mapops_win;
 	struct	 window *settings_win;
 	struct	 window *coords_win;
 	struct	 label *coords_label;
@@ -99,6 +99,8 @@ enum {
 	MAPEDIT_TOOL_OBJLIST,
 	MAPEDIT_TOOL_STAMP,
 	MAPEDIT_TOOL_ERASER,
+	MAPEDIT_TOOL_MAPOPS,
+	MAPEDIT_TOOL_CLEAR_MAP
 };
 
 void	mapedit_init(struct mapedit *, char *);
