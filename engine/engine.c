@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.111 2003/06/23 14:14:11 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.112 2003/06/26 02:34:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -196,7 +196,8 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	}
 
 	/* Create the world. */
-	world = object_new(NULL, "world", "world", NULL);
+	world = object_new(NULL, "object", "world", NULL);
+	world->save_pfx = NULL;
 	inited++;
 	return (0);
 }
@@ -208,26 +209,33 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 void
 engine_destroy(void)
 {
+	/* Preserve map editor settings. */
+	if (mapedition)
+		object_save(&mapedit);
+
+	/* Detach the windows, free the viewport. */
+	view_destroy();
+
+	/* Destroy the world. */
 	object_destroy(world);
 
-	if (mapedition) {
-		object_save(&mapedit);
-	}
-
+	/* Destroy the text and input subsystems. */
 	text_destroy();
 	input_destroy_all();
 	unicode_destroy();
 
-	object_destroy(view);
-	free(view);
-
+	/* Release the engine configuration object. */
 	object_destroy(config);
 	free(config);
 
 #if 0
 	pthread_mutex_destroy(&linkage_lock);	/* XXX */
 #endif
+
+	/* Release the resources allocated by the error handling subsystem. */
 	error_destroy();
+
+	/* Shut down SDL and exit. */
 	SDL_Quit();
 	exit(0);
 }
