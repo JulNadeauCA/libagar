@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.3 2002/02/05 05:54:16 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.4 2002/02/10 01:37:43 vedge Exp $	*/
 
 #include <pthread.h>
 
@@ -17,8 +17,8 @@
 #include <engine/view.h>
 #include <engine/xcf.h>
 
-#include <engine/physics.h>
 #include <engine/map.h>
+#include <engine/physics.h>
 #include <engine/char.h>
 
 #define ENGINE_VERSION	"0.1"
@@ -34,4 +34,6 @@ int	engine_init(int, char **, struct gameinfo *);
 int	engine_mapedit(void);
 void	engine_destroy(void);
 void	engine_join(void);
+
+void	*emalloc(size_t);
 
