@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.183 2004/05/15 06:07:12 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.184 2004/05/24 00:37:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -322,6 +322,8 @@ event_dispatch(SDL_Event *ev)
 			oh = view->h;
 			view->w = ev->resize.w;
 			view->h = ev->resize.h;
+			prop_set_uint16(config, "view.w", view->w);
+			prop_set_uint16(config, "view.h", view->h);
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				WIDGET(win)->x = WIDGET(win)->x*ev->resize.w/ow;
