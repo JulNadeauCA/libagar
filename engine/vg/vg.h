@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.18 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.19 2004/05/29 05:33:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -215,7 +215,6 @@ struct vg {
 
 	struct object *pobj;		/* Object managing the vg */
 	SDL_Surface *su;		/* Raster surface */
-	struct map *submap;		/* Fragment map */
 	struct map *map;		/* Raster map */
 
 	TAILQ_HEAD(,vg_element) vges;		/* Elements in drawing */

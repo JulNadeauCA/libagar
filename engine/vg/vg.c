@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.29 2004/06/18 03:11:28 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.30 2004/06/22 04:24:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -203,10 +203,6 @@ vg_reinit(struct vg *vg)
 	vg_destroy_blocks(vg);
 	vg_destroy_elements(vg);
 	vg_destroy_styles(vg);
-
-	vg_destroy_fragments(vg);
-	if (map_alloc_nodes(vg->map, 1, 1) == -1)
-		fatal("%s", error_get());
 }
 
 void
@@ -345,8 +341,11 @@ vg_destroy_fragments(struct vg *vg)
 	}
 	gfx->nsprites = 0;
 	gfx->nsubmaps = 0;
-	
-	map_free_nodes(vg->map);
+	gfx->sprites = NULL;
+	gfx->submaps = NULL;
+
+	if (vg->map != NULL)
+		map_free_nodes(vg->map);
 }
 
 /* Mark every element as dirty. */
@@ -623,7 +622,6 @@ vg_rasterize(struct vg *vg)
 		vg_draw_origin(vg);
 
 	vg_update_fragments(vg);
-
 	pthread_mutex_unlock(&vg->lock);
 }
 
