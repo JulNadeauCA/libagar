@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.68 2003/02/20 04:57:25 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.69 2003/02/20 05:37:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -564,11 +564,11 @@ mapview_draw(void *p)
 	}
 	
 	for (my = mv->my, ry = mv->ssy - mv->map->tileh;
-	     (my - mv->my) <= mv->mh && my < m->maph;
+	     (my - mv->my) < mv->mh+2 && my < m->maph;
 	     my++, ry += mv->map->tileh) {
 
 		for (mx = mv->mx, rx = mv->ssx - mv->map->tilew;
-	     	     (mx - mv->mx) <= mv->mw && mx < m->mapw;
+	     	     (mx - mv->mx) < mv->mw+2 && mx < m->mapw;
 		     mx++, rx += mv->map->tilew) {
 			node = &m->map[my][mx];
 
