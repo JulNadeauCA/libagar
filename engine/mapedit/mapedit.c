@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.71 2002/04/07 02:23:12 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.72 2002/04/09 03:37:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -265,7 +265,7 @@ mapedit_link(void *p)
 	med->x = m->defx;
 	med->y = m->defy;
 	mapdir_init(&med->cursor_dir, (struct object *)med, m,
-	    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
+	    DIR_SCROLLVIEW|DIR_SOFTSCROLL|DIR_STATIC|DIR_PASSTHROUGH, 8);
 	med->tilelist.x = m->view->width - m->tilew;
 	med->tilelist.y = m->tileh;
 	med->tilelist.w = m->tilew;
