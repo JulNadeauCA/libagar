@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.4 2004/01/03 04:25:07 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.5 2004/02/20 04:20:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -75,6 +75,7 @@ kbd_match(const void *p, const SDL_Event *ev)
 void
 kbd_event(void *p, const SDL_Event *ev)
 {
+#if 0
 	struct input *in = p;
 	int set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
 
@@ -119,5 +120,6 @@ kbd_event(void *p, const SDL_Event *ev)
 	default:
 		break;
 	}
+#endif
 }
 
