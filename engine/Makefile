@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.71 2003/06/25 00:20:16 vedge Exp $
+#	$Csoft: Makefile,v 1.72 2003/08/13 01:47:34 vedge Exp $
 
 TOP=..
 include ${TOP}/Makefile.config
@@ -9,7 +9,8 @@ SUBDIR=	compat \
 	widget \
 	monitor \
 	unicode \
-	loader
+	loader \
+	input
 
 LIB=	engine
 
