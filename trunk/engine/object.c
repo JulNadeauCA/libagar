@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.108 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.109 2003/03/13 08:43:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -221,7 +221,7 @@ object_save(void *p)
 
 	if (prop_copy_string(config, "path.user_data_dir",
 	    path, sizeof(path)) > sizeof(path)) {
-		error_set("path too big");
+		error_set("path1 too big");
 		return (-1);
 	}
 	if (stat(path, &sta) != 0 &&
@@ -230,8 +230,8 @@ object_save(void *p)
 		return (-1);
 	}
 	if (strlcat(path, "/", sizeof(path)) > sizeof(path) ||
-	    strlcat(path, ob->type, sizeof(path) > sizeof(path))) {
-		error_set("path too big");
+	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
+		error_set("path2 too big: %s/%s", path, ob->type);
 		return (-1);
 	}
 	if (stat(path, &sta) != 0 &&
@@ -243,7 +243,7 @@ object_save(void *p)
 	    strlcat(path, ob->name, sizeof(path)) > sizeof(path) ||
 	    strlcat(path, ".", sizeof(path))      > sizeof(path) ||
 	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
-		error_set("path too big");
+		error_set("path3 too big");
 		return (-1);
 	}
 
