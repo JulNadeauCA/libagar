@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.19 2002/02/21 02:22:52 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.20 2002/02/25 09:08:37 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -46,11 +46,11 @@ struct mapedit {
 
 	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
-	int	x, y;			/* Cursor position */
-	int	mmapx, mmapy;		/* Mouse coordinates */
+	Uint32	x, y;			/* Cursor position */
+	Uint32	mmapx, mmapy;		/* Mouse coordinates */
 
-	int	cursor_speed;		/* Cursor speed in ms */
-	int	listw_speed;		/* List scrolling speed in ms */
+	Uint32	cursor_speed;		/* Cursor speed in ms */
+	Uint32	listw_speed;		/* List scrolling speed in ms */
 
 	struct	eobjs_head eobjsh;	/* Editor object references */
 	int	neobjs;
