@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.17 2002/03/03 06:25:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.18 2002/03/03 06:44:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -120,7 +120,7 @@ view_allocmask(Uint32 w, Uint32 h)
 	}
 	
 	for (y = 0; y < h; y++) {
-		for (x = 0; x < w-1; x++) {
+		for (x = 0; x < w; x++) {
 			mask[y][x] = 0;
 		}
 	}
@@ -149,6 +149,7 @@ view_freemask(struct viewport *v)
 		free(*(v->mapmask + y));
 	}
 	free(v->mapmask);
+	v->mapmask = NULL;
 }
 
 struct viewport *
