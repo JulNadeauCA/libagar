@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: vg_math.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -27,8 +27,8 @@
  */
 
 #include <engine/engine.h>
-#include <engine/vg/vg.h>
-#include <math.h>
+
+#include "vg_math.h"
 
 double
 rad2deg(double d)
@@ -41,3 +41,4 @@ deg2rad(double d)
 {
     return ((d/360.0)*(2.0*M_PI));
 }
+
