@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.16 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.17 2003/05/07 13:07:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -90,20 +90,23 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct fill *fi = p;
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
-	int dx = 0, dy = 0;
-	int w = m->mapw, h = m->maph;
-	int x, y;
+	int sx, sy, dx, dy;
+	int w, h;
 
 	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
 		text_msg("Error", "No source node");
 		return;
 	}
 
+	dx = 0;
+	dy = 0;
+	w = m->mapw;
+	h = m->maph;
 	mapview_get_selection(mv, &dx, &dy, &w, &h);
 
-	for (y = dy; y < dy+h; y++) {
-		for (x = dx; x < dx+w; x++) {
-			struct node *dstnode = &m->map[y][x];
+	for (sy = dy; sy < dy+h; sy++) {
+		for (sx = dx; sx < dx+w; sx++) {
+			struct node *dstnode = &m->map[sy][sx];
 			struct noderef *nref;
 
 			if (fi->mode == FILL_FILL_MAP &&
@@ -111,8 +114,6 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 				/* Avoid circular reference */
 				continue;
 			}
-
-			/* Remove all refs on this layer. */
 			node_clear_layer(dstnode, mv->map->cur_layer);
 
 			switch (fi->mode) {
@@ -123,12 +124,12 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 					nnref = node_copy_ref(nref, dstnode);
 					nnref->layer = mv->map->cur_layer;
 				}
+				dstnode->flags = srcnode->flags;
 				break;
 			case FILL_CLEAR_MAP:
+				dstnode->flags = 0;
 				break;
 			}
-
-			dstnode->flags = srcnode->flags;
 		}
 	}
 }
