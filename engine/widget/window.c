@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.217 2004/03/10 16:58:39 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.218 2004/03/12 02:49:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,13 +70,9 @@ enum {
 
 static void	window_shown(int, union evarg *);
 static void	window_hidden(int, union evarg *);
-static void	window_destroy_ev(int, union evarg *);
-
 static void	window_clamp(struct window *);
 static void	window_focus(struct window *);
-
 static void	window_apply_alignment(struct window *);
-
 static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
@@ -197,8 +193,6 @@ window_init(void *p, const char *name)
 	ev = event_new(win, "widget-shown", window_shown, NULL);
 	ev->flags |= EVENT_FORWARD_CHILDREN;
 	ev = event_new(win, "widget-hidden", window_hidden, NULL);
-	ev->flags |= EVENT_FORWARD_CHILDREN;
-	ev = event_new(win, "window-destroy", window_destroy_ev, NULL);
 	ev->flags |= EVENT_FORWARD_CHILDREN;
 }
 
@@ -389,14 +383,6 @@ window_hidden(int argc, union evarg *argv)
 		object_save(win);
 
 	event_post(NULL, win, "window-hidden", NULL);
-}
-
-static void
-window_destroy_ev(int argc, union evarg *argv)
-{
-	struct window *win = argv[0].p;
-
-	view_detach(win);
 }
 
 /* Toggle the visibility of a window. */
