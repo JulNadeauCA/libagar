@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.23 2002/03/01 14:45:13 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.24 2002/03/05 11:57:12 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
@@ -30,17 +30,17 @@ struct node {
 	struct	noderefs_head nrefsh;
 	Uint32	nnrefs;
 	Uint32	flags;
-#define NODE_BLOCK	0x0000		/* Cannot walk through */
-#define NODE_ORIGIN	0x0001		/* Origin of this map */
-#define NODE_WALK	0x0002		/* Can walk through */
-#define NODE_CLIMB	0x0004		/* Can climb (eg. ladder) */
-#define NODE_SLIP	0x0008		/* Slippery */
-#define NODE_BIO	0x0010		/* Cause Poison */
-#define NODE_REGEN	0x0020		/* Cause HP Regeneration */
-#define NODE_SLOW	0x0040		/* Decrease speed by v1 */
-#define NODE_HASTE	0x0080		/* Increase speed by v1 */
-#define NODE_ANIM	0x0100		/* Always animate node */
-#define NODE_OVERLAP	0x0200		/* Moving sprite covers node */
+#define NODE_BLOCK	0x0001		/* Cannot walk through */
+#define NODE_ORIGIN	0x0002		/* Origin of this map */
+#define NODE_WALK	0x0004		/* Can walk through */
+#define NODE_CLIMB	0x0008		/* Can climb (eg. ladder) */
+#define NODE_SLIP	0x0010		/* Slippery */
+#define NODE_BIO	0x0100		/* Cause Poison */
+#define NODE_REGEN	0x0200		/* Cause HP Regeneration */
+#define NODE_SLOW	0x0400		/* Decrease speed by v1 */
+#define NODE_HASTE	0x0800		/* Increase speed by v1 */
+#define NODE_ANIM	0x1000		/* Always animate node */
+#define NODE_OVERLAP	0x2000		/* Moving sprite covers node */
 #define NODE_DONTSAVE	(NODE_ANIM|NODE_OVERLAP)
 	Uint32	v1, v2;			/* Extra properties */
 	Uint32	nanims;			/* Animation count */
