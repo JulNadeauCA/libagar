@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.30 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.31 2003/04/24 07:10:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 
 #include "propedit.h"
 
+#include <engine/view.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
@@ -40,25 +41,43 @@ static const struct tool_ops propedit_ops = {
 		NULL		/* save */
 	},
 	propedit_window,
-	NULL,			/* cursor */
+	propedit_cursor,
 	propedit_effect,
 	NULL			/* mouse */
 };
 
-static __inline__ void
+static void
 propedit_set_edge(struct mapview *mv, Uint32 edge)
 {
 	struct node *node;
 
-	if (mv->cx == -1 || mv->cy == -1) {
-		dprintf("nowhere\n");
+	if (mv->cx == -1 || mv->cy == -1)
 		return;
-	}
-
-	dprintf("set edge 0x%x\n", edge);
 	node = &mv->map->map[mv->cy][mv->cx];
 	node->flags &= ~(NODE_EDGE_ANY);
 	node->flags |= edge;
+}
+
+static void
+propedit_set_flag(struct mapview *mv, Uint32 flag)
+{
+	struct node *node;
+
+	if (mv->cx == -1 || mv->cy == -1)
+		return;
+	node = &mv->map->map[mv->cy][mv->cx];
+	node->flags |= flag;
+}
+
+static void
+propedit_clear_flag(struct mapview *mv, Uint32 flag)
+{
+	struct node *node;
+
+	if (mv->cx == -1 || mv->cy == -1)
+		return;
+	node = &mv->map->map[mv->cy][mv->cx];
+	node->flags &= ~flag;
 }
 
 static void
@@ -115,6 +134,18 @@ propedit_edge_se(void *p, struct mapview *mv)
 	propedit_set_edge(mv, NODE_EDGE_SE);
 }
 
+static void
+propedit_flag_walk(void *p, struct mapview *mv)
+{
+	propedit_set_flag(mv, NODE_WALK);
+}
+
+static void
+propedit_flag_block(void *p, struct mapview *mv)
+{
+	propedit_clear_flag(mv, NODE_WALK);
+}
+
 void
 propedit_init(void *p)
 {
@@ -130,14 +161,15 @@ propedit_init(void *p)
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_b, propedit_flag_block, 1);
 
-	pe->mode = PROPEDIT_CLEAR;
-	pe->node_mask = 0;
+	pe->node_flags = 0;
 	pe->node_mode = 0;
 }
 
 static void
-propedit_set_node_mode(int argc, union evarg *argv)
+set_node_mode(int argc, union evarg *argv)
 {
 	struct propedit *pe = argv[1].p;
 	int index = argv[2].i;
@@ -151,16 +183,16 @@ propedit_set_node_mode(int argc, union evarg *argv)
 }
 
 static void
-propedit_set_node_flags(int argc, union evarg *argv)
+toggle_node_flag(int argc, union evarg *argv)
 {
 	struct propedit *pe = argv[1].p;
 	int flag = argv[2].i;
 	int state = argv[3].i;
 
 	if (state) {
-		pe->node_mask |= flag;
+		pe->node_flags |= flag;
 	} else {
-		pe->node_mask &= ~(flag);
+		pe->node_flags &= ~(flag);
 	}
 }
 
@@ -179,32 +211,15 @@ propedit_window(void *p)
 	    221, 339);
 	window_set_caption(win, "Node props");
 
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		static const char *modes[] = {
-			"Clear",
-			"Set",
-			"Unset",
-			NULL
-		};
 		static const char *node_modes[] = {
 			"Block",
 			"Walk",
 			"Climb",
 			NULL
 		};
-
-		rad = radio_new(reg, modes);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &pe->mode);
-
-		rad = radio_new(reg, node_modes);
-		event_new(rad, "radio-changed",
-		    propedit_set_node_mode, "%p", pe);
-	}
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		const struct {
+		static const struct {
 			Uint32	flag;
 			char	*name;
 		} props[] = {
@@ -213,25 +228,17 @@ propedit_window(void *p)
 			{ NODE_REGEN,	"Regen"	 },
 			{ NODE_SLOW,	"Slow"	 },
 			{ NODE_HASTE,	"Haste"	 },
-#if 0
-			{ NODE_EDGE_N,	"Edge-N" },
-			{ NODE_EDGE_S,	"Edge-S" },
-			{ NODE_EDGE_W,	"Edge-W" },
-			{ NODE_EDGE_E,	"Edge-E" },
-			{ NODE_EDGE_NW,	"Edge-NW" },
-			{ NODE_EDGE_NE,	"Edge-NE" },
-			{ NODE_EDGE_SW,	"Edge-SW" },
-			{ NODE_EDGE_SE,	"Edge-SE" }
-#endif
 		};
 		const int nprops = sizeof(props) / sizeof(props[0]);
 		int i;
 
+		rad = radio_new(reg, node_modes);
+		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
+
 		for (i = 0; i < nprops; i++) {
 			cbox = checkbox_new(reg, -1, props[i].name);
-			event_new(cbox, "checkbox-changed",
-			    propedit_set_node_flags, "%p, %i",
-			    pe, props[i].flag);
+			event_new(cbox, "checkbox-changed", toggle_node_flag,
+			    "%p, %i", pe, props[i].flag);
 		}
 	}
 
@@ -239,35 +246,55 @@ propedit_window(void *p)
 	return (win);
 }
 
+int
+propedit_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+{
+	/* TODO */
+	return (-1);
+}
+
+static void
+set_edge(struct node *node, Uint32 edge)
+{
+	node->flags &= ~NODE_EDGE_ANY;
+	node->flags |= edge;
+}
+
 void
 propedit_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct propedit *pe = p;
 	struct map *m = mv->map;
+	Uint8 *ks;
 
-	if (pe->node_mask & NODE_ORIGIN) {
+	if (pe->node_flags & NODE_ORIGIN) {
 		m->origin.x = mv->cx;
 		m->origin.y = mv->cy;
-		return;
 	}
 
-	switch (pe->mode) {
-	case PROPEDIT_CLEAR:
-		node->flags = pe->node_mask;
-		break;
-	case PROPEDIT_SET:
-		node->flags |= pe->node_mask;
-		break;
-	case PROPEDIT_UNSET:
-		node->flags &= ~(pe->node_mask);
-		break;
-	}
-	
+	/* Set the bio/regen and slow/haste flags. */
+	node->flags &= ~(NODE_BIO|NODE_REGEN|NODE_SLOW|NODE_HASTE);
+	node->flags |= (pe->node_flags & ~NODE_ORIGIN);
+
 	node->flags &= ~(NODE_WALK|NODE_CLIMB);
 	if (pe->node_mode == 0) {
 		node->flags &= ~(NODE_WALK);
 	} else {
 		node->flags |= pe->node_mode;
 	}
+	
+	ks = SDL_GetKeyState(NULL);
+	if (ks[SDLK_KP7]) set_edge(node, NODE_EDGE_NW);
+	if (ks[SDLK_KP8]) set_edge(node, NODE_EDGE_N);
+	if (ks[SDLK_KP9]) set_edge(node, NODE_EDGE_NE);
+	if (ks[SDLK_KP4]) set_edge(node, NODE_EDGE_W);
+	if (ks[SDLK_KP5]) set_edge(node, 0);
+	if (ks[SDLK_KP6]) set_edge(node, NODE_EDGE_E);
+	if (ks[SDLK_KP1]) set_edge(node, NODE_EDGE_SW);
+	if (ks[SDLK_KP2]) set_edge(node, NODE_EDGE_S);
+	if (ks[SDLK_KP3]) set_edge(node, NODE_EDGE_SE);
+
+	if (ks[SDLK_w])	node->flags |= NODE_WALK;
+	if (ks[SDLK_b]) node->flags &= ~NODE_WALK;
 }
 
