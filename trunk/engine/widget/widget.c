@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.73 2003/09/17 02:20:35 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.74 2003/10/13 23:49:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -231,6 +231,9 @@ widget_get_binding(void *widp, const char *name, ...)
 		case WIDGET_STRING:
 			*(char ***)res = (char **)binding->p1;
 			break;
+		case WIDGET_POINTER:
+			*(void ***)res = (void **)binding->p1;
+			break;
 		case WIDGET_PROP:			/* Convert */
 			if ((prop = prop_get(binding->p1, (char *)binding->p2,
 			    PROP_ANY, NULL)) == NULL) {
@@ -270,6 +273,9 @@ widget_get_binding(void *widp, const char *name, ...)
 			case PROP_STRING:
 				*(char ***)res = (char **)&prop->data.s;
 				break;
+			case PROP_POINTER:
+				*(void ***)res = (void **)&prop->data.p;
+				break;
 			default:
 				error_set("Failed to translate property.");
 				binding = NULL;
@@ -287,7 +293,7 @@ out:
 	}
 	pthread_mutex_unlock(&wid->bindings_lock);
 
-	error_set("no such binding `%s'", name);
+	error_set("No such widget binding: `%s'", name);
 	return (NULL);
 }
 
@@ -462,6 +468,20 @@ widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
 	return (rv);
 }
 
+void *
+widget_get_pointer(void *wid, const char *name)
+{
+	struct widget_binding *b;
+	void **p, *rv;
+
+	if ((b = widget_get_binding(wid, name, &p)) == NULL) {
+		fatal("%s", error_get());
+	}
+	rv = *p;
+	widget_binding_unlock(b);
+	return (p);
+}
+
 void
 widget_set_int(void *wid, const char *name, int ni)
 {
@@ -604,6 +624,19 @@ widget_set_string(void *wid, const char *name, const char *ns)
 		fatal("%s", error_get());
 	}
 	strlcpy(s, ns, binding->size);
+	widget_binding_unlock(binding);
+}
+
+void
+widget_set_pointer(void *wid, const char *name, void *np)
+{
+	struct widget_binding *binding;
+	void **p;
+
+	if ((binding = widget_get_binding(wid, name, &p)) == NULL) {
+		fatal("%s", error_get());
+	}
+	*p = np;
 	widget_binding_unlock(binding);
 }
 
