@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.91 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.92 2004/09/28 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -63,8 +63,6 @@ inherit_style(int argc, union evarg *argv)
 			if (strcmp(OBJECT(wid)->name, mod->type) != 0) {
 				continue;
 			}
-			dprintf("wid=%s, mod=%s\n", OBJECT(wid)->name,
-			    mod->type);
 			for (i = 0; i < wid->ncolors; i++) {
 				if (strcmp(wid->color_names[i],
 				    mod->color_id) == 0) {
