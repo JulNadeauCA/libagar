@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.125 2003/05/25 08:00:48 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.126 2003/06/06 02:54:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -148,14 +148,14 @@ view_init(enum gfx_engine ge)
 
 	if (v->w < prop_get_uint16(config, "view.min-w") ||
 	    v->h < prop_get_uint16(config, "view.min-h")) {
-		error_set("resolution less than minimum");
+		error_set(_("resolution is too small"));
 		goto fail;
 	}
 
 	/* Set the video mode. */
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
-		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->depth,
+		error_set(_("setting %dx%dx%d mode: %s"), v->w, v->h, v->depth,
 		    SDL_GetError());
 		goto fail;
 	}
@@ -464,7 +464,7 @@ view_set_refresh(int min_delay, int max_delay)
 {
 	if (min_delay < 0 || min_delay > 300 ||
 	    max_delay < 0 || max_delay > 300) {
-		error_set("out of range");
+		error_set(_("Refresh rate is out of range"));
 		return (-1);
 	}
 	
@@ -620,7 +620,7 @@ view_capture(SDL_Surface *su)
 	if (strlcat(path, "/screenshot", sizeof(path)) >= sizeof(path))
 		goto toobig;
 	if (mkdir(path, 0755) == -1 && errno != EEXIST) {
-		text_msg("Error", "mkdir %s: %s", path, strerror(errno));
+		text_msg(MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
 		return;
 	}
 
@@ -633,7 +633,7 @@ view_capture(SDL_Surface *su)
 			if (errno == EEXIST) {
 				continue;
 			} else {
-				text_msg("Error", "open %s: %s", file,
+				text_msg(MSG_ERROR, "open %s: %s", file,
 				    strerror(errno));
 				return;
 			}
@@ -642,7 +642,7 @@ view_capture(SDL_Surface *su)
 	}
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
-		text_msg("Error", "fdopen: %s", strerror(errno));
+		text_msg(MSG_ERROR, "fdopen: %s", strerror(errno));
 		return;
 	}
 
@@ -698,9 +698,9 @@ view_capture(SDL_Surface *su)
 	close(fd);
 	return;
 toobig:
-	text_msg("Error", "String overflow");
+	text_msg(MSG_ERROR, "Screenshot path is too big");
 #else
-	text_msg("Error", "Screenshot feature requires libjpeg");
+	text_msg(MSG_ERROR, _("Screenshot feature requires libjpeg"));
 #endif
 }
 

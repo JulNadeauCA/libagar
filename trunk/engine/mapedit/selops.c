@@ -1,4 +1,4 @@
-/*	$Csoft: selops.c,v 1.5 2003/03/26 10:04:15 vedge Exp $	*/
+/*	$Csoft: selops.c,v 1.6 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -73,7 +73,7 @@ selops_copy(struct mapview *mv)
 	if (copybuf->map != NULL)
 		map_free_nodes(copybuf);
 	if (map_alloc_nodes(copybuf, mv->esel.w, mv->esel.h) == -1) {
-		text_msg("Error allocating nodes", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
 

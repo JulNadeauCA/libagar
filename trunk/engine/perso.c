@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.30 2003/06/10 07:53:49 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.31 2003/06/15 08:54:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -170,7 +170,7 @@ perso_edit(void *obj)
 
 	if ((win = window_new("perso-edit-%s", OBJECT(pers)->name)) == NULL)
 		return;
-	window_set_caption(win, "%s personage", OBJECT(pers)->name);
+	window_set_caption(win, _("%s personage"), OBJECT(pers)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
@@ -179,28 +179,28 @@ perso_edit(void *obj)
 		struct spinbutton *sbu;
 		struct hbox *hb;
 
-		tb = textbox_new(vb, "Name: ");
+		tb = textbox_new(vb, _("Name: "));
 		widget_bind(tb, "string", WIDGET_UNICODE, &pers->lock,
 		    pers->name, sizeof(pers->name));
 
-		sbu = spinbutton_new(vb, "Level: ");
+		sbu = spinbutton_new(vb, _("Level: "));
 		widget_bind(sbu, "value", WIDGET_SINT32, &pers->lock,
 		    &pers->level);
 
-		sbu = spinbutton_new(vb, "Experience: ");
+		sbu = spinbutton_new(vb, _("Experience: "));
 		widget_bind(sbu, "value", WIDGET_UINT32, &pers->lock,
 		    &pers->exp);
 
-		sbu = spinbutton_new(vb, "Age: ");
+		sbu = spinbutton_new(vb, _("Age: "));
 		widget_bind(sbu, "value", WIDGET_INT, &pers->lock, &pers->age);
 
-		sbu = spinbutton_new(vb, "Zuars: ");
+		sbu = spinbutton_new(vb, _("Zuars: "));
 		widget_bind(sbu, "value", WIDGET_UINT32, &pers->lock,
 		    &pers->nzuars);
 
 		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
-			sbu = spinbutton_new(hb, "HP: ");
+			sbu = spinbutton_new(hb, _("HP: "));
 			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
 			    &pers->hp);
 			
@@ -211,7 +211,7 @@ perso_edit(void *obj)
 		
 		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
-			sbu = spinbutton_new(hb, "MP: ");
+			sbu = spinbutton_new(hb, _("MP: "));
 			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
 			    &pers->mp);
 			
@@ -220,6 +220,5 @@ perso_edit(void *obj)
 			    &pers->maxmp);
 		}
 	}
-
 	window_show(win);
 }

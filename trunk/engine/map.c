@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.179 2003/06/06 02:37:43 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.180 2003/06/15 05:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -255,7 +255,7 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
 
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set("too big");
+		error_set(_("map geometry is too big"));
 		return (-1);
 	}
 
@@ -355,7 +355,7 @@ map_init(void *obj, const char *name)
 
 	m->layers = Malloc(sizeof(struct map_layer));
 	m->nlayers = 1;
-	map_layer_init(&m->layers[0], "Layer 0");
+	map_layer_init(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
 
 #if defined(DEBUG) && defined(THREADS)
@@ -390,7 +390,7 @@ map_push_layer(struct map *m, const char *name)
 	if (name != NULL) {
 		strlcpy(layname, name, sizeof(layname));
 	} else {
-		snprintf(layname, sizeof(layname), "Layer %u", m->nlayers);
+		snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
 	}
 
 	if (m->nlayers+1 > MAP_MAX_LAYERS) {

@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.19 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.20 2003/04/26 06:21:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <sys/types.h>
@@ -17,8 +17,6 @@
 #include <stdlib.h>
 
 #ifdef __GNUC__
-# define warning(fmt, args...) \
-	printf("%s: " fmt, __FUNCTION__ , ##args)
 # define fatal(fmt, args...)						\
 	do {								\
 		fprintf(stderr, "%s: " fmt, __FUNCTION__ , ##args);	\
@@ -26,7 +24,6 @@
 		abort();						\
 	} while (0)
 #else
-# define warning	printf
 # define fatal		error_fatal
 #endif
 

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.10 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.11 2003/06/13 04:32:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -64,9 +64,16 @@ layedit_poll(int argc, union evarg *argv)
 		struct map_layer *layer = &m->layers[i];
 		char label[TLIST_LABEL_MAX];
 
-		snprintf(label, sizeof(label), "%s (%svisible%s)\n",
-		    layer->name, !layer->visible ? "in" : "",
-		    (i == m->cur_layer) ? ", editing" : "");
+		if (layer->visible) {
+			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
+			    layer->name,
+			    (i == m->cur_layer) ? _(", editing") : "");
+		} else {
+			snprintf(label, sizeof(label), _("%s (invisible %s)\n"),
+			    layer->name,
+			    (i == m->cur_layer) ? _(", editing") : "");
+		}
+
 		tlist_insert_item(tl, NULL, label, layer);
 	}
 	tlist_restore_selections(tl);
@@ -91,7 +98,7 @@ layedit_push(int argc, union evarg *argv)
 		name = NULL;					/* Default */
 	}
 	if (map_push_layer(mv->map, name) != 0) {
-		text_msg("Error", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 	} else {
 		textbox_printf(name_tbox, "");			/* Clear */
 	}
@@ -162,7 +169,7 @@ layedit_edit(int argc, union evarg *argv)
 		}
 		i++;
 	}
-	text_msg("Error", "No layer is selected");
+	text_msg(MSG_ERROR, _("No layer is selected"));
 }
 
 /* Toggle visibility of a layer. */
@@ -183,7 +190,7 @@ layedit_visible(int argc, union evarg *argv)
 		}
 		i++;
 	}
-	text_msg("Error", "No layer is selected");
+	text_msg(MSG_ERROR, _("No layer is selected"));
 }
 
 void
@@ -199,7 +206,7 @@ layedit_init(struct mapview *mv)
 	    OBJECT(m)->name);
 	if (win == NULL)
 		return;
-	window_set_caption(win, "%s layers", OBJECT(m)->name);
+	window_set_caption(win, _("%s layers"), OBJECT(m)->name);
 	window_set_spacing(win, 2);
 	event_new(win, "window-close", layedit_close_win, "%p", mv);
 	
@@ -209,10 +216,10 @@ layedit_init(struct mapview *mv)
 		struct textbox *tb;
 		struct button *bu;
 
-		tb = textbox_new(hb, "New layer: ");
+		tb = textbox_new(hb, _("New layer: "));
 		event_new(tb, "textbox-return", layedit_push, "%p, %p", mv, tb);
 
-		bu = button_new(hb, "Push");
+		bu = button_new(hb, _("Push"));
 		button_set_padding(bu, 6);
 		event_new(bu, "button-pushed", layedit_push, "%p, %p", mv, tb);
 	}
@@ -226,7 +233,7 @@ layedit_init(struct mapview *mv)
 		event_new(rename_tb, "textbox-return", layedit_rename, "%p, %p",
 		    mv, rename_tb);
 
-		bu = button_new(hb, "Rename");
+		bu = button_new(hb, _("Rename"));
 		button_set_padding(bu, 6);
 		event_new(bu, "button-pushed", layedit_rename, "%p, %p", mv,
 		    rename_tb);
@@ -237,16 +244,16 @@ layedit_init(struct mapview *mv)
 	{
 		struct button *bu;
 
-		bu = button_new(hb, "Pop");
+		bu = button_new(hb, _("Pop"));
 		event_new(bu, "button-pushed", layedit_pop, "%p", mv);
-		bu = button_new(hb, "Edit");
+		bu = button_new(hb, _("Edit"));
 		event_new(bu, "button-pushed", layedit_edit, "%p", mv);
-		bu = button_new(hb, "Show/hide");
+		bu = button_new(hb, _("Show/hide"));
 		event_new(bu, "button-pushed", layedit_visible, "%p", mv);
 	}
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_DBLCLICK);
-	tlist_prescale(tl, "Layer NN (visible, editing)    ", 5);
+	tlist_prescale(tl, _("Layer NN (visible, editing)    "), 5);
 	event_new(tl, "tlist-poll", layedit_poll, "%p", mv);
 	event_new(tl, "tlist-changed", layedit_select, "%p, %p", mv, rename_tb);
 	event_new(tl, "tlist-dblclick", layedit_edit, "%p", mv);

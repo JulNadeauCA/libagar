@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.201 2003/06/15 08:54:19 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.202 2003/06/15 20:58:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -315,10 +315,7 @@ window_shown(int argc, union evarg *argv)
 		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
 
 		/* Second pass: [wh]fill and homogenous box divisions. */
-		if (!prop_get_bool(config, "widget.noinitscale")) {
-			WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
-			    WIDGET(win)->h);
-		}
+		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
 	
 		/* Position the window and cache the absolute widget coords. */
 		window_apply_alignment(win);

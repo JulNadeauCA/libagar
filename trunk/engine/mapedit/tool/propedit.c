@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.37 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.38 2003/06/06 09:03:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -220,25 +220,25 @@ propedit_window(void *p)
 	struct checkbox *cbox;
 
 	win = window_new("mapedit-tool-propedit");
-	window_set_caption(win, "Node props");
+	window_set_caption(win, _("Node props"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	vb = vbox_new(win, 0);
 	{
 		static const char *node_modes[] = {
-			"Block",
-			"Walk",
-			"Climb",
+			N_("Block"),
+			N_("Walk"),
+			N_("Climb"),
 			NULL
 		};
 		static const struct {
 			Uint32	flag;
 			char	*name;
 		} props[] = {
-			{ NODE_BIO,	"Bio"	 },
-			{ NODE_REGEN,	"Regen"	 },
-			{ NODE_SLOW,	"Slow"	 },
-			{ NODE_HASTE,	"Haste"	 },
+			{ NODE_BIO,	N_("Bio")	 },
+			{ NODE_REGEN,	N_("Regen")	 },
+			{ NODE_SLOW,	N_("Slow")	 },
+			{ NODE_HASTE,	N_("Haste")	 },
 		};
 		const int nprops = sizeof(props) / sizeof(props[0]);
 		int i;
@@ -247,7 +247,7 @@ propedit_window(void *p)
 		widget_focus(rad);
 		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
 
-		cbox = checkbox_new(vb, "Origin");
+		cbox = checkbox_new(vb, _("Origin"));
 		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
 
 		for (i = 0; i < nprops; i++) {

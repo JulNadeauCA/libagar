@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.21 2003/05/26 03:03:31 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.22 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -67,14 +67,14 @@ shift_window(void *p)
 	struct vbox *vb;
 
 	win = window_new("mapedit-tool-shift");
-	window_set_caption(win, "Shift");
+	window_set_caption(win, _("Shift"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	vb = vbox_new(win, 0);
 	{
 		static const char *modes[] = {
-			"Highest",
-			"All",
+			N_("Highest"),
+			N_("All"),
 			NULL
 		};
 		struct radio *rad;
@@ -83,7 +83,7 @@ shift_window(void *p)
 		rad = radio_new(vb, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
 		
-		cb = checkbox_new(vb, "Multi");
+		cb = checkbox_new(vb, _("Multi"));
 		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->multi);
 	}
 	return (win);

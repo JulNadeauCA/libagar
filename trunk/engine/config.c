@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.85 2003/06/15 05:17:42 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.86 2003/06/15 08:58:27 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,8 +49,10 @@
 #include <engine/widget/keycodes.h>
 #include <engine/widget/tlist.h>
 
+#include <sys/types.h>
 #include <sys/stat.h>
 
+#include <dirent.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,7 +95,7 @@ static void
 config_save(int argc, union evarg *argv)
 {
 	if (object_save(config) == -1)
-		text_msg("Error saving", "%s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 }
 
 
@@ -117,15 +119,15 @@ config_prop_modified(int argc, union evarg *argv)
 		}
 	} else if (strcmp(prop->key, "view.opengl") == 0 &&
 	    prop->data.i && config_notify) {
-		text_msg("Warning",
-		    "Save the configuration and restart %s for OpenGL mode "
-		    "to take effect",
+		text_msg(MSG_WARNING,
+		    _("Save the configuration and restart %s for OpenGL mode "
+		      "to take effect"),
 		    proginfo->progname);
 	} else if (strcmp(prop->key, "view.async-blits") == 0 &&
 	    prop->data.i && config_notify) {
-		text_msg("Warning",
-		    "Save the configuration and restart %s for async blits "
-		    "to take effect",
+		text_msg(MSG_WARNING,
+		    _("Save the configuration and restart %s for async blits "
+		      "to take effect"),
 		    proginfo->progname);
 	} else if (strcmp(prop->key, "input.unicode") == 0) {
 		if (SDL_EnableUNICODE(prop->data.i)) {
@@ -155,9 +157,6 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
 	
-	prop_set_bool(con, "widget.noinitscale", 0);
-	
-
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
 	prop_set_int(con, "font-engine.default-size", 12);
@@ -193,7 +192,7 @@ config_window(struct config *con)
 	struct checkbox *cbox;
 
 	win = window_new("config-engine-settings");
-	window_set_caption(win, "Engine settings");
+	window_set_caption(win, _("Engine settings"));
 	window_set_closure(win, WINDOW_HIDE);
 
 	vb = vbox_new(win, 0);
@@ -204,13 +203,12 @@ config_window(struct config *con)
 			char *name;
 			char *descr;
 		} settings[] = {
-			{ "view.full-screen", "Full screen" },
-			{ "view.async-blits", "Asynchronous blits" },
+			{ "view.full-screen", N_("Full screen") },
+			{ "view.async-blits", N_("Asynchronous blits") },
 #ifdef HAVE_OPENGL
-			{ "view.opengl", "OpenGL rendering context" },
+			{ "view.opengl", N_("OpenGL rendering context") },
 #endif
-			{ "widget.noinitscale", "Skip initial widget scaling" },
-			{ "input.unicode", "Unicode keyboard translation" }
+			{ "input.unicode", N_("Unicode keyboard translation") }
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
 		int i;
@@ -223,13 +221,13 @@ config_window(struct config *con)
 
 #ifdef DEBUG
 		/* Thread unsafe, but not very dangerous. */
-		cbox = checkbox_new(vb, "Debugging");
+		cbox = checkbox_new(vb, _("Debugging"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
 		
-		cbox = checkbox_new(vb, "Node signature checking");
+		cbox = checkbox_new(vb, _("Node signature checking"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &map_nodesigs);
 #endif
-		cbox = checkbox_new(vb, "Idle time prediction");
+		cbox = checkbox_new(vb, _("Idle time prediction"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
 	}
 	
@@ -237,19 +235,19 @@ config_window(struct config *con)
 	{
 		char path[FILENAME_MAX];
 
-		tbox = textbox_new(vb, "Data save dir: ");
+		tbox = textbox_new(vb, _("Data save dir: "));
 		prop_copy_string(config, "save-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_change_path, "%s",
 		    "save-path");
 	
-		tbox = textbox_new(vb, "Data load path: ");
+		tbox = textbox_new(vb, _("Data load path: "));
 		prop_copy_string(config, "load-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_change_path, "%s",
 		    "load-path");
 	
-		tbox = textbox_new(vb, "Font path: ");
+		tbox = textbox_new(vb, _("Font path: "));
 		prop_copy_string(config, "font-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_change_path, "%s",
@@ -260,13 +258,13 @@ config_window(struct config *con)
 	{
 		/* XXX propose some default resolutions. */
 
-		tbox = textbox_new(hb, "Width: ");
+		tbox = textbox_new(hb, _("Width: "));
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
 		event_new(tbox, "textbox-return", config_change_res, "%s",
 		    "view.w");
 		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
 
-		tbox = textbox_new(hb, "Height: ");
+		tbox = textbox_new(hb, _("Height: "));
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
 		event_new(tbox, "textbox-return", config_change_res, "%s",
 		    "view.h");
@@ -277,12 +275,12 @@ config_window(struct config *con)
 	hbox_set_spacing(hb, 0);
 	hbox_set_padding(hb, 0);
 	{
-		button = button_new(hb, "Close");
+		button = button_new(hb, _("Close"));
 		event_new(button, "button-pushed", window_generic_hide, 
 		    "%p", win);
 		widget_focus(button);
 
-		button = button_new(hb, "Save");
+		button = button_new(hb, _("Save"));
 		event_new(button, "button-pushed", config_save, NULL);
 	}
 	config->settings = win;
@@ -318,5 +316,57 @@ config_search_file(const char *path_key, const char *name, const char *ext)
 	error_set("`%s.%s' not in <%s> (%s)", name, ext, path_key, path);
 	free(path);
 	return (NULL);
+}
+
+/* XXX thread unsafe */
+static void
+config_find_files(const char *dirname, const char *ext, char ***files,
+    int *nfiles)
+{
+	struct dirent *dent;
+	DIR *dir;
+
+	if ((dir = opendir(dirname)) == NULL) {
+		dprintf("%s: %s\n", dirname, strerror(errno));
+		return;
+	}
+	while ((dent = readdir(dir)) != NULL) {
+		char *dext;
+
+		if (strcmp(dent->d_name, ".") == 0 ||
+		    strcmp(dent->d_name, "..") == 0)
+			continue;
+		if ((dext = strrchr(dent->d_name, '.')) != NULL &&
+		    strcmp(dext, ext) == 0) {
+			char **filesp;
+
+			dprintf("add: `%s'\n", dent->d_name);
+			filesp = *files = Realloc(*files,
+			    (*nfiles+1) * FILENAME_MAX);
+			strlcpy(filesp[*nfiles], dent->d_name, FILENAME_MAX);
+			(*nfiles)++;
+		}
+	}
+	closedir(dir);
+}
+
+/* Return a NUL-terminated array of files with the given extension. */
+char **
+config_search_files(const char *path_key, const char *ext)
+{
+	char *path, *dir, *last;
+	char **files;
+	int nfiles = 0;
+
+	files = Malloc(FILENAME_MAX);
+	path = prop_get_string(config, path_key);
+	for (dir = strtok_r(path, ":", &last);
+	     dir != NULL;
+	     dir = strtok_r(NULL, ":", &last)) {
+		dprintf("search in %s\n", dir);
+		config_find_files(dir, ext, &files, &nfiles);
+	}
+	free(path);
+	return (files);
 }
 

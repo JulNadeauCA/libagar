@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.68 2003/05/20 12:05:13 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.69 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -95,7 +95,7 @@ import_gfx(int argc, union evarg *argv)
 	int sx, sy, dx, dy;
 
 	if (!mv->esel.set) {
-		text_msg("Error", "No selection");
+		text_msg(MSG_ERROR, _("No selection"));
 		return;
 	}
 
@@ -151,7 +151,7 @@ import_gfx(int argc, union evarg *argv)
 		if (map_resize(m,
 		    nw > m->mapw ? nw : m->mapw,
 		    nh > m->maph ? nh : m->maph) == -1) {
-			text_msg("Error growing map", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 			continue;
 		}
 
@@ -273,7 +273,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 	for (i = 0; i < ob->art->nsubmaps; i++) {
 		struct map *sm = ob->art->submaps[i];
 
-		snprintf(label, sizeof(label), "m%u\n%ux%u nodes\n", i,
+		snprintf(label, sizeof(label), _("m%u\n%ux%u nodes\n"), i,
 		    sm->mapw, sm->maph);
 		tlist_insert_item(tl, NULL, label, sm);
 	}
@@ -288,7 +288,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 	for (i = 0; i < ob->art->nanims; i++) {
 		struct art_anim *an = ob->art->anims[i];
 
-		snprintf(label, sizeof(label), "a%u\n%u frames\n", i,
+		snprintf(label, sizeof(label), _("a%u\n%u frames\n"), i,
 		    an->nframes);
 		tlist_insert_item(tl, (an->nframes > 0) ?
 		    an->frames[0] : NULL, label, ob);
@@ -311,7 +311,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 			event_new(bu, "button-pushed", import_gfx,
 			    "%p, %p, %i", tl, mv, i);
 		}
-		bu = button_new(hb, "Replace");
+		bu = button_new(hb, _("Replace"));
 		button_set_sticky(bu, 1);
 		event_new(bu, "button-pushed", tog_replace, "%p", mv);
 	}
@@ -444,7 +444,7 @@ tilesets_window(void)
 	if ((win = window_new("mapedit-tilesets")) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, "Tilesets");
+	window_set_caption(win, _("Tilesets"));
 	window_set_position(win, WINDOW_UPPER_RIGHT, 0);
 	window_set_closure(win, WINDOW_HIDE);
 

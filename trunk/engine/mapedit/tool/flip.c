@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.10 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.11 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -62,13 +62,13 @@ struct window *
 flip_window(void *p)
 {
 	static const char *mode_items[] = {
-		"Horizontal",
-		"Vertical",
+		N_("Horizontal"),
+		N_("Vertical"),
 		NULL
 	};
 	static const char *which_items[] = {
-		"All",
-		"Highest",
+		N_("All"),
+		N_("Highest"),
 		NULL
 	};
 	struct flip *flip = p;
@@ -77,14 +77,13 @@ flip_window(void *p)
 	struct radio *rad;
 
 	win = window_new("mapedit-tool-flip");
-	window_set_caption(win, "Flip");
+	window_set_caption(win, _("Flip"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	vb = vbox_new(win, 0);
 	{
 		rad = radio_new(vb, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &flip->mode);
-
 		rad = radio_new(vb, which_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &flip->which);
 	}
@@ -130,7 +129,7 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 		}
 
 		if ((trans = transform_new(type, 0, NULL)) == NULL) {
-			text_msg("Error initing transform", "%s", error_get());
+			text_msg(MSG_ERROR, "%s", error_get());
 			continue;
 		}
 		SLIST_INSERT_HEAD(&nref->transforms, trans, transforms);

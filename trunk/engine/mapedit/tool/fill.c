@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.20 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.21 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@ fill_window(void *p)
 	struct radio *rad;
 
 	win = window_new("mapedit-tool-fill");
-	window_set_caption(win, "Fill");
+	window_set_caption(win, _("Fill"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	vb = vbox_new(win, 0);
@@ -91,7 +91,7 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	int w, h;
 
 	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
-		text_msg("Error", "No source node");
+		text_msg(MSG_ERROR, _("No source node"));
 		return;
 	}
 

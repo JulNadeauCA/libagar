@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.65 2003/06/06 09:04:25 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.66 2003/06/15 05:04:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -56,6 +56,16 @@
 
 #include <engine/unicode/unicode.h>
 #include <engine/widget/text.h>
+
+/* Preparation for m17n. */
+#undef _
+#undef N_
+#undef textdomain
+#undef bindtextdomain
+#define _(s) (s)
+#define N_(s) (s)
+#define textdomain(d)
+#define bindtextdomain(p, d)
 
 #ifdef THREADS
 extern pthread_mutexattr_t	recursive_mutexattr;

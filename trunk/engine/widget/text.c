@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.67 2003/06/14 11:28:05 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.68 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -41,6 +41,12 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
+
+static const char *text_msg_titles[] = {
+	N_("Error"),
+	N_("Warning"),
+	N_("Information")
+};
 
 ttf_font *font = NULL;		/* Default font */
 
@@ -347,7 +353,7 @@ text_prescale(const char *text, int *w, int *h)
 
 /* Display a message. */
 void
-text_msg(const char *caption, const char *format, ...)
+text_msg(enum text_msg_title title, const char *format, ...)
 {
 	char msg[LABEL_MAX];
 	struct window *win;
@@ -360,7 +366,7 @@ text_msg(const char *caption, const char *format, ...)
 	va_end(args);
 
 	win = window_new(NULL);
-	window_set_caption(win, "%s", caption);
+	window_set_caption(win, "%s", text_msg_titles[title]);
 	window_set_position(win, WINDOW_CENTER, 1);
 
 	vb = vbox_new(win, 0);

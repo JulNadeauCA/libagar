@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.5 2003/05/24 15:53:43 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.6 2003/06/06 02:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@ static struct jpeg_compress_struct	 jcomp;
 static void
 screenshot_error_exit(j_common_ptr jcomp)
 {
-	text_msg("JPEG error", "JPEG error occured");
+	text_msg(MSG_ERROR, "JPEG error occured");
 }
 
 static void
@@ -84,8 +84,7 @@ screenshot_xmit(int fd)
 	Uint8 *jcopybuf;
 
 	if ((fp = fdopen(fd, "w")) == NULL) {
-		text_msg("Error sending screenshot",
-		    "fdopen: %s", strerror(errno));
+		text_msg(MSG_ERROR, "fdopen: %s", strerror(errno));
 		return;
 	}
 
@@ -167,7 +166,7 @@ screenshot_connect(int argc, union evarg *argv)
 	button_disable(disconnectbu);
 
 	if (sock != -1) {
-		text_msg("Error", "Already connected");
+		text_msg(MSG_ERROR, _("Already connected to a server"));
 		goto out1;
 	}
 
@@ -176,19 +175,19 @@ screenshot_connect(int argc, union evarg *argv)
 
 	if (strcmp(host, "") == 0 ||
 	    strcmp(port, "") == 0) {
-		text_msg("Error", "Missing server host/port");
+		text_msg(MSG_ERROR, _("Missing server hostname/port"));
 		goto out2;
 	}
 
-	label_printf(statusl, "Status: connecting to %s:%s...", host, port);
+	label_printf(statusl, _("Status: connecting to %s:%s..."), host, port);
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
-		text_msg("Error resolving hostname", "%s: %s", host,
+		text_msg(MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
-		label_printf(statusl, "Status: %s", gai_strerror(rv));
+		label_printf(statusl, _("Status: %s"), gai_strerror(rv));
 		goto out2;
 	}
 
@@ -196,11 +195,11 @@ screenshot_connect(int argc, union evarg *argv)
 		sock = socket(res->ai_family, res->ai_socktype,
 		    res->ai_protocol);
 		if (sock < 0) {
-			cause = "failed to create socket";
+			cause = _("failed to create socket");
 			continue;
 		}
 		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-			cause = "connection refused";
+			cause = _("connection refused");
 			close(sock);
 			sock = -1;
 			continue;
@@ -208,12 +207,12 @@ screenshot_connect(int argc, union evarg *argv)
 		break;
 	}
 	if (sock == -1) {
-		text_msg("Error connecting", "%s: %s", host, cause);
-		label_printf(statusl, "Status: %s: %s", host, cause);
+		text_msg(MSG_ERROR, "%s: %s", host, cause);
+		label_printf(statusl, _("Status: %s: %s"), host, cause);
 		goto out3;
 	}
 
-	label_printf(statusl, "Status: connected to %s", host);
+	label_printf(statusl, _("Status: connected to %s"), host);
 	screenshot_xmit(sock);
 out3:
 	freeaddrinfo(res0);
@@ -234,9 +233,9 @@ screenshot_disconnect(int argc, union evarg *argv)
 	button_disable(disconnectbu);
 	if (sock != -1) {
 		close(sock);
-		label_printf(statusl, "Status: disconnected");
+		label_printf(statusl, _("Status: disconnected"));
 	} else {
-		text_msg("Error", "Not connected");
+		text_msg(MSG_ERROR, _("Not connected"));
 	}
 	button_enable(connectbu);
 	button_enable(disconnectbu);
@@ -253,15 +252,15 @@ screenshot_window(void)
 	if ((win = window_new("monitor-screenshot")) == NULL)
 		return (NULL);
 
-	window_set_caption(win, "Screenshot");
+	window_set_caption(win, _("Screenshot"));
 	window_set_closure(win, WINDOW_DETACH);
 
 	vb = vbox_new(win, 0);
 	WIDGET(vb)->flags |= WIDGET_CLIPPING;
 	{
-		statusl = label_new(vb, "Status: Not connected");
-		hosttb = textbox_new(vb, "Host: ");
-		porttb = textbox_new(vb, "Port: ");
+		statusl = label_new(vb, _("Status: Not connected"));
+		hosttb = textbox_new(vb, _("Host: "));
+		porttb = textbox_new(vb, _("Port: "));
 		textbox_printf(porttb, "%i", default_port);
 	}
 
@@ -269,12 +268,12 @@ screenshot_window(void)
 	{
 		struct event *ev;
 
-		connectbu = button_new(hb, "Connect");
+		connectbu = button_new(hb, _("Connect"));
 		ev = event_new(connectbu, "button-pushed", screenshot_connect,
 		    NULL);
 		ev->flags |= EVENT_ASYNC;
 		
-		disconnectbu = button_new(hb, "Disconnect");
+		disconnectbu = button_new(hb, _("Disconnect"));
 		ev = event_new(disconnectbu, "button-pushed",
 		    screenshot_disconnect, NULL);
 		ev->flags |= EVENT_ASYNC;

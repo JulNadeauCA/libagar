@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.44 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.45 2003/06/06 09:03:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,14 +73,14 @@ stamp_window(void *p)
 	struct checkbox *cb;
 
 	win = window_new("mapedit-tool-stamp");
-	window_set_caption(win, "Stamp");
+	window_set_caption(win, _("Stamp"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
 	widget_focus(rad);
 		
-	cb = checkbox_new(win, "Inherit flags");
+	cb = checkbox_new(win, _("Inherit flags"));
 	widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
 	return (win);
 }
@@ -93,7 +93,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct noderef *nref, *nnref;
 
 	if (srcnode == NULL) {
-		text_msg("Error", "No source node");
+		text_msg(MSG_ERROR, _("No source node is selected"));
 		return;
 	}
 	if (srcnode == dstnode) {
