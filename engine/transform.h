@@ -1,46 +1,21 @@
-/*	$Csoft$	*/
+/*	$Csoft: transform.h,v 1.1 2002/12/13 10:40:26 vedge Exp $	*/
 /*	Public domain	*/
 
 enum transform_type {
-	TRANSFORM_SCALE,
 	TRANSFORM_HFLIP,
-	TRANSFORM_VFLIP,
-	TRANSFORM_ROTATE,
-	TRANSFORM_COLOR,
-	TRANSFORM_PIXELIZE,
-	TRANSFORM_RANDOMIZE
+	TRANSFORM_VFLIP
 };
 
 struct transform {
-	enum transform_type  type;
-
-	SDL_Surface	*(*func)(SDL_Surface *, struct transform *);
-	SDL_Surface	*cached;
-
-	union {
-		struct {
-			Uint16	w, h;
-		} scale;
-		struct {
-			Uint16	angle;
-		} rotate;
-		struct {
-			Uint8	r, g, b, a;
-		} color;
-		struct {
-			Uint16	factor;
-		} pixelize;
-		struct {
-			Uint8	nrounds;
-			Uint8	r_range, g_range, b_range, a_range;
-		} randomize;
-	} args;
-
-	SLIST_ENTRY(transform)	 transforms;
+	enum transform_type	type;
+	SDL_Surface		*(*func)(SDL_Surface *, int, Uint32 *);
+	Uint32			*args;
+	int			nargs;
+	SLIST_ENTRY(transform)	transforms;
 };
 
-void	transform_init(struct transform *, enum transform_type);
-void	transform_load(int, struct transform *);
+int	transform_init(struct transform *, enum transform_type, int, Uint32 *);
+int	transform_load(int, struct transform *);
 void	transform_save(void *, struct transform *);
 void	transform_destroy(struct transform *);
 void	transform_copy(struct transform *, struct transform *);
