@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.26 2002/04/26 00:42:08 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.27 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -138,7 +138,7 @@ world_load(void *p, int fd)
 		}
 		object_load(ob);
 	}
-	dprintf("%s: loaded %d objects\n", OBJECT(wo)->name, wo->nobjs);
+	printf("%s: loaded %d objects\n", OBJECT(wo)->name, wo->nobjs);
 	return (0);
 }
 
@@ -165,7 +165,7 @@ world_save(void *p, int fd)
 		object_save(ob);
 	}
 
-	dprintf("%s: saved %d objects\n", OBJECT(wo)->name, wo->nobjs);
+	printf("%s: saved %d objects\n", OBJECT(wo)->name, wo->nobjs);
 	return (0);
 }
 
