@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.1 2002/09/05 12:16:04 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.2 2002/09/06 01:25:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -460,11 +460,10 @@ prop_save(void *p, int fd)
 	count_offs = buf->offs;		/* Skip */
 	buf_write_uint32(buf, 0);
 
-	dprintf("saving %s properties:\n", ob->name);
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		buf_write_string(buf, (char *)prop->key);
 		buf_write_uint32(buf, prop->type);
-		dprintf("-> %s\n", prop->key);
+		dprintf("%s -> %s\n", ob->name, prop->key);
 		switch (prop->type) {
 		case PROP_BOOL:
 			c = (prop->data.i == 1) ? 1 : 0;
