@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.31 2002/05/02 09:32:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.32 2002/05/03 20:18:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -51,18 +51,19 @@ static void	event_hotkey(SDL_Event *);
 static void
 event_hotkey(SDL_Event *ev)
 {
+	struct object *ob;
+
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
+	case SDLK_m:
+		view_dumpmask(mainview);
+		break;
 	case SDLK_w:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			struct object *ob;
-
-			pthread_mutex_lock(&world->lock);
-			SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
-				object_dump(ob);
-			}
-			pthread_mutex_unlock(&world->lock);
+		pthread_mutex_lock(&world->lock);
+		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+			object_dump(ob);
 		}
+		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_r:
 		world->curmap->redraw++;
