@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.8 2004/11/21 02:15:16 phip Exp $	*/
+/*	$Csoft: uniconv.c,v 1.9 2004/11/22 03:57:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -174,7 +174,7 @@ static const int nunicode_ranges =
 static void
 select_range(int argc, union evarg *argv)
 {
-	static char text[4][128];
+	char text[4][128];
 	struct tableview *tv = argv[1].p;
 	struct tlist_item *it = argv[2].p;
 	struct unicode_range *range = it->p1;
