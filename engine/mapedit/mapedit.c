@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.112 2002/07/18 11:48:30 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.113 2002/07/29 06:32:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -182,7 +182,6 @@ mapedit_attached(int argc, union evarg *argv)
 	/* Set up the GUI. */
 	window_show(med->toolbar_win);
 	window_show(med->objlist_win);
-	window_show(med->tileq_win);
 
 	dprintf("editing %d object(s)\n", med->neobjs);
 	
