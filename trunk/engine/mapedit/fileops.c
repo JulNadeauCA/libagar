@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.32 2003/02/10 04:02:06 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.33 2003/02/20 04:57:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -172,7 +172,7 @@ fileops_new_map(int argc, union evarg *argv)
 	origin = &m->map[m->defy][m->defx];
 	origin->flags |= NODE_ORIGIN;
 
-	win = mapwin_new(m);
+	win = mapedit_win_new(m);
 	view_attach(win);
 	window_show(win);
 
@@ -225,7 +225,7 @@ fileops_load_map(int argc, union evarg *argv)
 		goto out;
 	}
 
-	win = mapwin_new(m);
+	win = mapedit_win_new(m);
 	view_attach(win);
 	window_show(win);
 

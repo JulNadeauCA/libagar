@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.144 2003/02/20 05:37:27 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.145 2003/02/22 11:39:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 #include <engine/version.h>
 #include <engine/map.h>
 #include <engine/world.h>
+#include <engine/view.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -37,6 +38,7 @@
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
+#include "mapview.h"
 
 #include "tool/tool.h"
 #include "tool/stamp.h"
@@ -290,3 +292,151 @@ mapedit_save(void *p, int fd)
 	}
 	return (0);
 }
+
+static void
+mapedit_win_new_view(int argc, union evarg *argv)
+{
+	struct mapview *mv, *parent = argv[1].p;
+	struct map *m = parent->map;
+	struct window *win;
+	struct region *reg;
+
+	win = emalloc(sizeof(struct window));
+	window_init(win, NULL, WINDOW_SCALE|WINDOW_CENTER, -1, -1,
+	    50, 60,
+	    50, 60);
+
+	/* Map view */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	mv = mapview_new(reg, m, MAPVIEW_ZOOM|MAPVIEW_INDEPENDENT_ZOOM,
+	    100, 100);
+
+	win->focus = WIDGET(mv);
+
+	event_new(win, "window-close", window_generic_detach, "%p", win);
+
+	view_attach(win);
+	window_show(win);
+}
+
+static void
+mapedit_win_option(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	int opt = argv[2].i;
+
+	switch (opt) {
+	case MAPEDIT_TOOL_GRID:
+		if (mv->flags & MAPVIEW_GRID) {
+			mv->flags &= ~(MAPVIEW_GRID);
+		} else {
+			mv->flags |= MAPVIEW_GRID;
+		}
+		break;
+	case MAPEDIT_TOOL_PROPS:
+		if (mv->flags & MAPVIEW_PROPS) {
+			mv->flags &= ~(MAPVIEW_PROPS);
+		} else {
+			mv->flags |= MAPVIEW_PROPS;
+		}
+		break;
+	case MAPEDIT_TOOL_NODEEDIT:
+		if (mv->node.win->flags & WINDOW_SHOWN) {
+			window_hide(mv->node.win);
+		} else {
+			window_show(mv->node.win);
+		}
+		break;
+	}
+}
+
+struct window *
+mapedit_win_new(struct map *m)
+{
+	struct window *win;
+	struct region *reg;
+	struct mapview *mv;
+
+	win = emalloc(sizeof(struct window));
+	window_init(win, NULL, WINDOW_SCALE|WINDOW_CENTER, -1, -1,
+	    60, 70,
+	    60, 70);
+
+	/* Map view */
+	mv = emalloc(sizeof(struct mapview));
+	mapview_init(mv, m,
+	    MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_ZOOM|MAPVIEW_INDEPENDENT_ZOOM,
+	    100, 100);
+
+	/* Tools */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+	region_set_spacing(reg, 1, 1);
+	{
+		struct button *bu;
+
+		/* Load map */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP),
+		    0, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
+
+		/* Save map */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP),
+		    0, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
+
+		/* Clear map */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_CLEAR_MAP),
+		    0, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
+
+		/* New map view */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_NEW_VIEW),
+		    0, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		event_new(bu, "button-pushed", mapedit_win_new_view, "%p", mv);
+
+		/* Toggle mapview grid */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID),
+		    BUTTON_STICKY, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+
+		/* Toggle node props */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS),
+		    BUTTON_STICKY, -1, -1);
+		widget_set_bool(bu, "state", 1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+		
+		/* Toggle node edition */
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT),
+		    BUTTON_STICKY, -1, -1);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		mv->node.button = bu;
+	}
+
+	/* Map view */
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
+	region_set_spacing(reg, 0, 0);
+	{
+		region_attach(reg, mv);
+		win->focus = WIDGET(mv);
+	}
+	return (win);
+}
+
+
