@@ -50,8 +50,14 @@ widget represents a single value inside a fixed range.
 .Ft void
 .Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" \
                    "enum scrollbar_orientation orientation"
-.nr nS 0
 .Pp
+.Ft void
+.Fn scrollbar_set_bar_size "struct scrollbar *scrollbar" "int size"
+.Pp
+.Ft void
+.Fn scrollbar_get_bar_size "struct scrollbar *scrollbar" "int *sizep"
+.Pp
+.nr nS 0
 The
 .Fn scrollbar_new
 function allocates, initializes, and attaches a
@@ -78,6 +84,18 @@ enum scrollbar_orientation {
 	SCROLLBAR_VERT
 };
 .Ed
+.Pp
+The
+.Fn scrollbar_set_bar_size
+function sets the size of the scrollbar to
+.Fa size ,
+which is usually calculated from the visible area of whatever is being
+scrolled (such as the number of visible items of a
+.Xr tlist 3
+widget).
+.Fn scrollbar_get_bar_size
+returns the current size of the scrollbar in
+.Fa sizep .
 .Sh BINDINGS
 The
 .Nm
@@ -98,9 +116,9 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Jump to an specific position, or start scrolling.
+Jump to a position or start scrolling.
 .It window-mousemotion
-Scroll.
+Continue scrolling.
 .El
 .Pp
 The

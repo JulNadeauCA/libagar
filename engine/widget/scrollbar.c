@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.19 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.21 2003/04/17 02:29:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -118,6 +118,7 @@ scrollbar_mouse_buttonup(int argc, union evarg *argv)
 	sb->curbutton = BUTTON_NONE;
 }
 
+/* Effect mouse scrolling or click on the scrollbar. */
 static void
 scrollbar_mouse_select(struct scrollbar *sb, int coord, int maxcoord)
 {
@@ -129,15 +130,19 @@ scrollbar_mouse_select(struct scrollbar *sb, int coord, int maxcoord)
 	if (sb->bar_size == -1)
 		return;
 
-	if (ncoord < sb->button_size) {
-		widget_set_int(sb, "value", 0);
+	if (ncoord < sb->button_size) {				/* Minimum */
+		struct widget_binding *valueb;
+		int *value;
+
+		valueb = widget_binding_get_locked(sb, "value", &value);
+		*value = widget_get_int(sb, "min");
+		widget_binding_unlock(valueb);
 		goto changed;
 	}
 
 	max = widget_get_int(sb, "max");
-	dprintf("max = %d\n", max);
 
-	if (ncoord > maxcoord - sb->bar_size - sb->button_size) { /* Down */
+	if (ncoord > maxcoord - sb->button_size - sb->bar_size/2) {
 		widget_set_int(sb, "value", max);
 		goto changed;
 	}
@@ -245,7 +250,7 @@ scrollbar_draw(void *p)
 
 		/* Scrolling bar */
 		if (max > 0) {
-			if (sb->bar_size < 0) {
+			if (sb->bar_size == -1) {		/* Full range */
 				h = WIDGET(sb)->h - sb->button_size*2;
 			} else {
 				h = sb->bar_size;
@@ -279,7 +284,7 @@ scrollbar_draw(void *p)
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
 
 		if (max > 0) {
-			if (sb->bar_size < 0) {
+			if (sb->bar_size == -1) {		/* Full range */
 				w = WIDGET(sb)->w - sb->button_size*2;
 			} else {
 				w = sb->bar_size;
@@ -303,3 +308,14 @@ scrollbar_draw(void *p)
 	}
 }
 
+__inline__ void
+scrollbar_set_bar_size(struct scrollbar *sb, int bsize)
+{
+	sb->bar_size = bsize;
+}
+
+__inline__ void
+scrollbar_get_bar_size(struct scrollbar *sb, int *bsize)
+{
+	*bsize = sb->bar_size;
+}
