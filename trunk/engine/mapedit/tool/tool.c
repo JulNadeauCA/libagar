@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.22 2003/03/25 13:45:48 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.23 2003/04/24 07:01:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,6 +101,7 @@ tool_mapview(void)
 			}
 		}
 	}
+	error_set("no map is visible");
 	return (NULL);
 }
 

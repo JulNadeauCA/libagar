@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.24 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.25 2003/04/24 07:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,6 +32,7 @@
 
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
+#include <engine/widget/text.h>
 
 static const struct tool_ops magnifier_ops = {
 	{
@@ -45,7 +46,32 @@ static const struct tool_ops magnifier_ops = {
 	magnifier_mouse
 };
 
-static void	magnifier_event(int, union evarg *);
+/* Set the zoom to a specific value in % of the origin size. */
+static void
+magnifier_zoomN(int argc, union evarg *argv)
+{
+	struct textbox *tb = argv[0].p;
+	struct mapview *mv;
+
+	if ((mv = tool_mapview()) == NULL) {
+		text_msg("Error", "%s", error_get());
+		return;
+	}
+	mapview_zoom(mv, textbox_int(tb));
+}
+
+/* Set the zoom to 1:1. */
+static void
+magnifier_zoom100(int argc, union evarg *argv)
+{
+	struct mapview *mv;
+	
+	if ((mv = tool_mapview()) == NULL) {
+		text_msg("Error", "%s", error_get());
+		return;
+	}
+	mapview_zoom(mv, 100);
+}
 
 void
 magnifier_init(void *p)
@@ -74,8 +100,8 @@ magnifier_window(void *p)
 		struct button *button;
 
 		button = button_new(reg, "1:1", NULL, 0, 100, -1);
-		event_new(button, "button-pushed", magnifier_event,
-		    "%p, %c", mag, 'o');
+		event_new(button, "button-pushed", magnifier_zoom100,
+		    "%p", mag);
 	}
 
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
@@ -83,29 +109,10 @@ magnifier_window(void *p)
 		struct textbox *tbox;
 
 		tbox = textbox_new(reg, "%: ", 0, 100, -1);	/* XXX int */
-		event_new(tbox, "textbox-changed", magnifier_event,
-		    "%p, %c", mag, 's');
+		event_new(tbox, "textbox-changed", magnifier_zoomN, "%p", mag);
 		textbox_printf(tbox, "100");
 	}
 	return (win);
-}
-
-static void
-magnifier_event(int argc, union evarg *argv)
-{
-	struct mapview *mv;
-	
-	if ((mv = tool_mapview()) == NULL)
-		return;
-
-	switch (argv[2].c) {
-	case 'o':
-		mapview_zoom(mv, 100);
-		break;
-	case 's':
-		mapview_zoom(mv, textbox_int(argv[0].p));
-		break;
-	}
 }
 
 void
