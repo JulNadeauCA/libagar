@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.111 2002/12/14 05:29:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.112 2002/12/17 00:06:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -188,7 +188,7 @@ event_loop(void)
 	}
 #endif
 
-	view_set_max_ticks(50);
+	view_set_speed(15);
 
 	ltick = SDL_GetTicks();
 	for (;;) {

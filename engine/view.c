@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.90 2002/12/04 04:22:44 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.91 2002/12/17 00:06:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -328,7 +328,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 }
 
 void
-view_set_max_ticks(int fps)
+view_set_speed(int fps)
 {
 	if (fps < 1 || fps > 800) {
 		fatal("bad fps\n");
@@ -336,7 +336,7 @@ view_set_max_ticks(int fps)
 
 	pthread_mutex_lock(&view->lock);
 	view->cur_fps_ticks = 0;
-	view->max_fps_ticks = fps;
+	view->max_fps_ticks = 1000 / fps;
 	pthread_mutex_unlock(&view->lock);
 }
 
