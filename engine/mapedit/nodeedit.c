@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.8 2003/03/25 13:44:43 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.9 2003/03/28 00:23:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -264,12 +264,9 @@ nodeedit_init(struct mapview *mv)
 	event_new(win, "window-close", nodeedit_close_win, "%p", mv);
 	
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	reg->flags |= REGION_CLIPPING;
 	{
 		mv->nodeed.node_flags_lab = label_new(reg, 100, -1, " ");
-	}
-	
-	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
-	{
 		mv->nodeed.noderef_type_lab = label_new(reg, 100, -1, " ");
 		mv->nodeed.noderef_flags_lab = label_new(reg, 100, -1, " ");
 		mv->nodeed.noderef_center_lab = label_new(reg, 100, -1, " ");
