@@ -139,7 +139,7 @@ ASSIGN+= bar
 
 all: write-test
 
-write-test: .PHONY
+write-test:
 	@echo > .maketest2
 
 .BEGIN:
