@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.114 2002/08/12 06:50:28 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.115 2002/08/18 00:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -73,8 +73,8 @@ mapedit_init(struct mapedit *med, char *name)
 {
 	struct region *coords_reg;
 
-	object_init(&med->obj, "map-editor", name, "mapedit", OBJ_ART,
-	    &mapedit_ops);
+	object_init(&med->obj, "map-editor", name, "mapedit",
+	    OBJECT_ART|OBJECT_CANNOT_MAP, &mapedit_ops);
 	med->flags = 0;
 	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
@@ -107,7 +107,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		struct editobj *eob;
 		
-		if ((ob->flags & OBJ_ART) == 0 ||
+		if ((ob->flags & OBJECT_ART) == 0 ||
 		   (ob->art->nsprites < 1 && ob->art->nanims < 1)) {
 			dprintf("skipping %s (no art)\n", ob->name);
 			continue;

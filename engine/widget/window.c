@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.57 2002/08/12 06:57:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.58 2002/08/18 00:42:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -90,8 +90,8 @@ window_init(struct window *win, char *caption, int flags,
 	flags |= WINDOW_TITLEBAR;
 
 	name = object_name("window", nwindow++);
-	object_init(&win->wid.obj, "window", name, "window", OBJ_ART,
-	    &window_ops);
+	object_init(&win->wid.obj, "window", name, "window",
+	    OBJECT_ART, &window_ops);
 	free(name);
 	
 	/* XXX pref */

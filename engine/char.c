@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.53 2002/06/12 20:40:06 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.54 2002/06/13 09:07:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -82,8 +82,9 @@ char_init(struct character *ch, char *name, char *media)
 {
 	struct ailment_alive *alive;
 
-	object_init(&ch->obj, "character", name, media, OBJ_ART|OBJ_BLOCK,
-	    &char_ops);
+	/* XXX audio */
+	object_init(&ch->obj, "character", name, media,
+	    OBJECT_ART|OBJECT_BLOCK, &char_ops);
 
 	ch->flags = 0;
 	ch->level = 0;
