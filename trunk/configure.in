@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.24 2002/06/01 09:30:19 vedge Exp $
+# $Csoft: configure.in,v 1.25 2002/06/15 01:53:37 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -16,6 +16,7 @@ fi
 
 mdefine(SHAREDIR, "$PREFIX/share/geggy");
 hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
+mdefine(MAPDIR, "$PREFIX/share/geggy/maps");
 
 check(make);
 check(cc);
