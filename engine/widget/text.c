@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.25 2002/08/12 06:57:54 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.27 2002/08/20 08:00:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ get_font(char *name, int size, int style)
 	}
 	nfont = TTF_OpenFont(path, size);
 	if (nfont == NULL) {
-		fatal("%s: %s\n", path, TTF_GetError());
+		fatal("%s: %s\n", path, error_get());
 	}
 	free(path);
 
@@ -174,7 +174,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	fon = get_font(fontname, fontsize, 0);
 	su = TTF_RenderText_Solid(fon, s, col);
 	if (su == NULL) {
-		fatal("TTF_RenderText_Solid: %s\n", TTF_GetError());
+		fatal("TTF_RenderText_Solid: %s\n", error_get());
 	}
 	return (su);
 }
