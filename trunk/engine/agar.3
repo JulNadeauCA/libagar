@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.20 2003/04/12 00:35:05 vedge Exp $
+.\"	$Csoft: agar.3,v 1.21 2003/04/24 04:23:10 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -47,9 +47,8 @@ engine implements the following interfaces:
 Generic engine/game configuration settings
 .It Xr event 3
 Generic event processing
-.It input
-Processing of events from input devices such as keyboards, mice, joysticks
-and network sessions
+.It Xr input
+Processing of events from input devices
 .It Xr map 3
 2D multilayered, tile-based levels
 .It Xr mapedit 3
@@ -73,7 +72,7 @@ Video display interface
 .It Xr widget 3
 Widget set framework
 .It Xr media 3
-Loading of data (ie. graphics/audio) from various formats
+Loading of data (ie. gfx/audio) from various formats
 .El
 .Sh THREAD SAFETY
 The following subsystems do not provide thread safety:
@@ -94,9 +93,7 @@ Recursive mutexes
 .It
 Read-write locks
 .El
-.Sh STYLE GUIDELINES
-.Bl -tag -width "Includes "
-.It Threads
+.Sh THREAD SAFETY
 In structure definitions for thread-safe interfaces, all members of a
 structure that follow a lock are protected it, unless mentioned otherwise.
 Members that do not follow a lock are read-only once the structure is
@@ -112,31 +109,28 @@ struct foo {
 	int		 x, y;	/* RW (pos_lock) */
 };
 .Ed
-.It Includes
-The
-.Pa Aq engine/compat/*.h
-and
-.Pa Aq config/*.h
-includes should come first, followed by
-.Pa Aq engine/engine.h .
 .Pp
 If threads support was enabled at compile time,
 .Pa Aq engine/engine.h
 defines error-checking wrappers around
 .Fn pthread_*
 calls (or no-ops with threads disabled).
-.Bl -tag -width "<engine/compat/queue.h> "
-.It Pa Aq sys/types.h
-Primitive types as defined by
-.St -p1003.1
+.Sh INCLUDE FILES
+The
+.Pa Aq engine/compat/*.h
+and
+.Pa Aq config/*.h
+includes should come first, followed by
+.Pa Aq engine/engine.h .
+which itself may includes:
+.Pp
+.Bl -tag -width "<engine/compat/queue.h> " -compact
 .It Pa Aq pthread.h
-POSIX threads library interface, included only if threads support was
-enabled at compile-time.
+POSIX threads, if enabled at compile-time.
 .It Pa Aq SDL.h
 SDL library interface.
 .It Pa Aq GL/GL.h
-OpenGL library interface, included only if OpenGL support was enabled at
-compile-time.
+OpenGL interface, if enabled at compile-time.
 .It Pa Aq engine/compat/queue.h
 4.4BSD
 .Xr queue 3
