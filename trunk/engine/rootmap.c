@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.29 2003/06/06 02:50:19 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.30 2003/06/29 11:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -171,7 +171,6 @@ rootmap_center(struct map *m, int mapx, int mapy)
 	debug(DEBUG_FOCUS, "centering on map `%s'\n", OBJECT(m)->name);
 
 	pthread_mutex_lock(&m->lock);
-	
 	nx = mapx - rm->w/2;
 	ny = mapy - rm->h/2;
 
@@ -186,8 +185,8 @@ rootmap_center(struct map *m, int mapx, int mapy)
 
 	rm->x = nx;
 	rm->y = ny;
+
 	m->redraw++;
-	
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -197,7 +196,6 @@ rootmap_scroll(struct map *m, int dir, int inc)
 	struct viewmap *rm;
 	
 	pthread_mutex_lock(&view->lock);
-
 	rm = view->rootmap;
 
 	switch (dir) {
@@ -234,8 +232,8 @@ rootmap_scroll(struct map *m, int dir, int inc)
 		}
 		break;
 	}
+
 	m->redraw++;
-	
 	pthread_mutex_unlock(&view->lock);
 }
 
