@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.43 2002/04/28 11:03:28 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.44 2002/04/30 01:11:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -204,6 +204,21 @@ object_name(char *base, int num)
 	name = emalloc(strlen(base) + 16);
 	sprintf(name, "%s%d", base, num);
 	return (name);
+}
+
+struct object *
+object_new(char *name, char *media, int flags, const void *vecp)
+{
+	struct object *ob;
+
+	ob = emalloc(sizeof(struct object));
+	object_init(ob, name, media, flags, vecp);
+
+	pthread_mutex_lock(&world->lock);
+	object_link(ob);
+	pthread_mutex_unlock(&world->lock);
+
+	return (ob);
 }
 
 void
