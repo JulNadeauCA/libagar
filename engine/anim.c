@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.13 2002/08/12 05:00:19 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.14 2002/08/18 00:39:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -122,13 +122,16 @@ anim_insert(struct object_art *art, struct anim *anim, int mflags)
 	art->anims[art->nanims++] = anim;
 
 	if (mapediting) {
+		struct node *n;
+
 		if (++art->mx > 2) {	/* XXX pref */
 			art->mx = 0;
 			art->my++;
 		}
 		map_adjust(art->map, art->mx, art->my);
-		node_addref(&art->map->map[art->my][art->mx], art->pobj,
-		    art->curanim++, mflags);
+		n = &art->map->map[art->my][art->mx];
+		node_addref(n, art->pobj, art->curanim++, mflags);
+		n->flags = NODE_BLOCK;
 	}
 }
 
