@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.18 2002/02/10 03:48:42 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.19 2002/02/10 19:29:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -43,6 +43,15 @@
 
 struct	map *curmap;
 
+struct draw {
+	SDL_Surface *s;		/* Source surface */
+	int	x, y;		/* View coordinates */
+
+	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
+};
+
+TAILQ_HEAD(, draw) deferdraws;	 /* Deferred rendering */
+
 static void	 node_destroy(struct node *);
 static int	 node_init(struct node *, struct object *, int, int, int);
 static void	 mapedit_drawflags(struct map *, int, int, int);
@@ -55,10 +64,7 @@ map_create(char *name, char *desc, int flags, int width, int height)
 	struct map *m;
 	int x = 0, y = 0;
 
-	m = (struct map *)malloc(sizeof(struct map));
-	if (m == NULL) {
-		return (NULL);
-	}
+	m = (struct map *)emalloc(sizeof(struct map));
 
 	/* Initialize the map structure. */
 	object_create(&m->obj, name, desc,
@@ -178,16 +184,17 @@ map_unlink(void *ob)
  * Must be called on a locked map.
  */
 static int
-node_init(struct node *me, struct object *ob, int offs, int meflags, int rflags)
+node_init(struct node *node, struct object *ob, int offs, int nodeflags,
+     int rflags)
 {
-	memset(me, 0, sizeof(struct node));
+	memset(node, 0, sizeof(struct node));
 
-	TAILQ_INIT(&me->arefsh);
+	TAILQ_INIT(&node->arefsh);
 
 	/* Used by the map editor to fill new maps. */
 	if (ob != NULL) {
-		node_addref(me, ob, offs, rflags);
-		me->flags |= meflags;
+		node_addref(node, ob, offs, rflags);
+		node->flags |= nodeflags;
 	}
 	return (0);
 }
@@ -197,15 +204,11 @@ node_init(struct node *me, struct object *ob, int offs, int meflags, int rflags)
  * Must be called on a locked map.
  */
 struct map_aref *
-node_addref(struct node *me, struct object *ob, int offs, int rflags)
+node_addref(struct node *node, struct object *ob, int offs, int rflags)
 {
 	struct map_aref *aref;
 
-	aref = malloc(sizeof(struct map_aref));
-	if (aref == NULL) {
-		perror("map_aref");
-		return (NULL);
-	}
+	aref = (struct map_aref *)emalloc(sizeof(struct map_aref));
 
 	aref->pobj = ob;
 	aref->offs = offs;
@@ -213,13 +216,13 @@ node_addref(struct node *me, struct object *ob, int offs, int rflags)
 	if (rflags & MAPREF_ANIM) {
 		aref->frame = 0;
 		aref->fwait = 0;
-		me->nanims++;
+		node->nanims++;
 	}
 	aref->xoffs = 0;
 	aref->yoffs = 0;
 
-	TAILQ_INSERT_TAIL(&me->arefsh, aref, marefs);
-	me->narefs++;
+	TAILQ_INSERT_TAIL(&node->arefsh, aref, marefs);
+	node->narefs++;
 
 	return (aref);
 }
@@ -229,20 +232,20 @@ node_addref(struct node *me, struct object *ob, int offs, int rflags)
  * Must be called on a locked map.
  */
 struct map_aref *
-node_popref(struct node *me)
+node_popref(struct node *node)
 {
 	struct map_aref *aref;
 
-	if (TAILQ_EMPTY(&me->arefsh)) {
+	if (TAILQ_EMPTY(&node->arefsh)) {
 		return (NULL);
 	}
 		
-	aref = TAILQ_FIRST(&me->arefsh);
-	TAILQ_REMOVE(&me->arefsh, aref, marefs);
-	me->narefs--;
+	aref = TAILQ_FIRST(&node->arefsh);
+	TAILQ_REMOVE(&node->arefsh, aref, marefs);
+	node->narefs--;
 
 	if (aref->flags & MAPREF_ANIM) {
-		me->nanims--;
+		node->nanims--;
 	}
 
 	return (aref);
@@ -253,13 +256,13 @@ node_popref(struct node *me)
  * Must be called on a locked map.
  */
 int
-node_pushref(struct node *me, struct map_aref *aref)
+node_pushref(struct node *node, struct map_aref *aref)
 {
-	TAILQ_INSERT_HEAD(&me->arefsh, aref, marefs);
-	me->narefs++;
+	TAILQ_INSERT_HEAD(&node->arefsh, aref, marefs);
+	node->narefs++;
 	
 	if (aref->flags & MAPREF_ANIM) {
-		me->nanims++;
+		node->nanims++;
 	}
 
 	return (0);
@@ -270,14 +273,14 @@ node_pushref(struct node *me, struct map_aref *aref)
  * Must be called on a locked map.
  */
 int
-node_delref(struct node *me, struct map_aref *aref)
+node_delref(struct node *node, struct map_aref *aref)
 {
 	if (aref->flags & MAPREF_ANIM) {
-		me->nanims--;
+		node->nanims--;
 	}
 	
-	TAILQ_REMOVE(&me->arefsh, aref, marefs);
-	me->narefs--;
+	TAILQ_REMOVE(&node->arefsh, aref, marefs);
+	node->narefs--;
 	free(aref);
 
 	return (0);
@@ -337,17 +340,17 @@ map_destroy(void *p)
 
 /* Must be called on a locked map. */
 static void
-node_destroy(struct node *me)
+node_destroy(struct node *node)
 {
 	struct map_aref *aref1, *aref2;
 
-	aref1 = TAILQ_FIRST(&me->arefsh);
+	aref1 = TAILQ_FIRST(&node->arefsh);
 	while (aref1 != NULL) {
 		aref2 = TAILQ_NEXT(aref1, marefs);
 		free(aref1);
 		aref1 = aref2;
 	}
-	TAILQ_INIT(&me->arefsh);
+	TAILQ_INIT(&node->arefsh);
 }
 
 /* Draw a sprite at any given location. */
@@ -372,10 +375,7 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 	rd.h = s->h;
 
 	if (m->flags & MAP_VARTILEGEO) {
-		/*
-		 * The sprite size should be a multiple of the tile size.
-		 * XXX optimize math.
-		 */
+		/* The sprite size should be a multiple of the tile size. */
 		if (rd.w > m->view->tilew) {
 			x -= (rs.w / m->view->tilew) / 2;
 		}
@@ -385,36 +385,6 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 	}
 
 	/* XXX pre-compute map/view coordinate pairs. */
-	rd.x = x;
-	rd.y = y;
-
-	SDL_BlitSurface(s, &rs, m->view->v, &rd);
-}
-
-/* Draw an animation's current frame. */
-static __inline__ void
-map_plot_anim(struct map *m, struct anim *anim, int frame, int x, int y)
-{
-	static SDL_Rect rs, rd;
-	static SDL_Surface *s;
-
-#ifdef DEBUG
-	if (anim == NULL) {
-		dprintf("null anim on %s:%d,%d\n", m->obj.name, x, y);
-		return;
-	}
-#endif
-
-	s = anim->frames[frame];
-
-	rs.w = s->w;
-	rs.h = s->h;
-	rs.x = 0;
-	rs.y = 0;
-
-	rd.w = s->w;
-	rd.h = s->h;
-
 	rd.x = x;
 	rd.y = y;
 
@@ -432,10 +402,10 @@ map_animate(Uint32 ival, void *p)
 	int x, y;
 	int vx, vy;
 
-	if (pthread_mutex_lock(&m->lock) != 0) {
-		perror(m->obj.name);
-		return (0);
-	}
+	TAILQ_INIT(&deferdraws);
+
+	pthread_mutex_lock(&m->lock);
+
 	for (y = m->view->mapy, vy = 0;
 	    (y < m->view->maph + m->view->mapy + 1);
 	     y++, vy++) {
@@ -449,8 +419,10 @@ map_animate(Uint32 ival, void *p)
 		for (x = m->view->mapx, vx = 0;
 		     x < m->view->mapw + m->view->mapx + 1;
 		     x++, vx++) {
-			struct node *me;
-			struct map_aref *aref;
+			static struct node *node;
+			static struct map_aref *aref;
+			static SDL_Surface *src;
+			static int rx, ry;
 
 			/* XXX */
 			if (curmapedit != NULL) {
@@ -464,41 +436,27 @@ map_animate(Uint32 ival, void *p)
 				}
 			}
 
-			me = &m->map[x][y];
+			node = &m->map[x][y];
 
-			if (me->nanims < 1 && (me->flags & NODE_ANIM) == 0) {
+			if (node->nanims < 1 &&
+			   (node->flags & NODE_ANIM) == 0) {
 				/* map_draw() shall handle this. */
 				continue;
 			}
 
-			TAILQ_FOREACH(aref, &me->arefsh, marefs) {
-				/*
-				 * The map rendering routine does not
-				 * bother drawing sprites on tiles
-				 * containing animations.
-				 */
+			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
+				rx = (vx << TILESHIFT) + aref->xoffs;
+				ry = (vy << TILESHIFT) + aref->yoffs;
+
 				if (aref->flags & MAPREF_SPRITE) {
-					map_plot_sprite(m,
-					    g_slist_nth_data(
-					    aref->pobj->sprites, aref->offs),
-					    (vx << TILESHIFT) + aref->xoffs,
-					    (vy << TILESHIFT) + aref->yoffs);
+					src = g_slist_nth_data(
+					    aref->pobj->sprites, aref->offs);
 				} else if (aref->flags & MAPREF_ANIM) {
-					struct anim *anim;
-			
+					static struct anim *anim;
+
 					anim = g_slist_nth_data(
 					    aref->pobj->anims, aref->offs);
-#ifdef DEBUG
-					if (anim == NULL) {
-						fatal("NULL anim!\n");
-					}
-#endif
-					map_plot_anim(m,
-					    g_slist_nth_data(
-					    aref->pobj->anims, aref->offs),
-					    aref->frame,
-					    (vx << TILESHIFT) + aref->xoffs,
-					    (vy << TILESHIFT) + aref->yoffs);
+					src = anim->frames[aref->frame];
 					
 					if (anim->delay > 0 &&
 					    aref->fwait++ > anim->delay) {
@@ -514,14 +472,41 @@ map_animate(Uint32 ival, void *p)
 						 */
 					}
 				}
+			
+				if (node->flags & NODE_ANIM &&
+				    aref->flags & MAPREF_ANIM) {
+					struct draw *ndraw;
+
+					ndraw = (struct draw *)
+					    emalloc(sizeof(struct draw));
+					ndraw->s = src;
+					ndraw->x = rx;
+					ndraw->y = ry;
+
+					TAILQ_INSERT_TAIL(&deferdraws, ndraw,
+					    pdraws);
+				} else {
+					map_plot_sprite(m, src, rx, ry);
+				}
 			}
+
 			if (curmapedit != NULL) {
-				mapedit_drawflags(m, me->flags, vx, vy);
+				mapedit_drawflags(m, node->flags, vx, vy);
 				if (curmapedit->flags & MAPEDIT_TILELIST)
 					mapedit_tilelist(curmapedit);
 			}
 		}
 	}
+
+	if (!TAILQ_EMPTY(&deferdraws)) {
+		struct draw *draw;
+	
+		TAILQ_FOREACH(draw, &deferdraws, pdraws) {
+			map_plot_sprite(m, draw->s, draw->x, draw->y);
+			free(draw);
+		}
+	}
+	
 	pthread_mutex_unlock(&m->lock);
 	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 
@@ -607,7 +592,7 @@ map_draw(Uint32 ival, void *p)
 		for (x = m->view->mapx, vx = 0;
 		     x < m->view->mapw + m->view->mapx + 1;
 		     x++, vx++) {
-			static struct node *me;
+			static struct node *node;
 			static struct map_aref *aref;
 
 			/* XXX */
@@ -622,9 +607,9 @@ map_draw(Uint32 ival, void *p)
 				}
 			}
 
-			me = &m->map[x][y];
+			node = &m->map[x][y];
 
-			if (me->nanims > 0 || (me->flags & NODE_ANIM)) {
+			if (node->nanims > 0 || (node->flags & NODE_ANIM)) {
 				/* map_animate() shall handle this. */
 				continue;
 			}
@@ -637,10 +622,10 @@ map_draw(Uint32 ival, void *p)
 				erd.h = m->view->tileh;
 				erd.x = vx * erd.w;
 				erd.y = vy * erd.h;
-				SDL_FillRect(m->view->v, &erd, 25);
+				SDL_FillRect(m->view->v, &erd, 0);
 			}
 
-			TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
 				if (aref->flags & MAPREF_SPRITE) {
 					map_plot_sprite(m,
 					    g_slist_nth_data(
@@ -651,7 +636,7 @@ map_draw(Uint32 ival, void *p)
 			}
 
 			if (curmapedit != NULL) {
-				mapedit_drawflags(m, me->flags, vx, vy);
+				mapedit_drawflags(m, node->flags, vx, vy);
 			}
 		}
 	}
@@ -673,14 +658,14 @@ map_draw(Uint32 ival, void *p)
  * Return the map entry reference for the given index.
  */
 struct map_aref *
-node_arefindex(struct node *me, int index)
+node_arefindex(struct node *node, int index)
 {
 	static int i;
 	struct map_aref *aref;
 
 	/* XXX bsearch */
 	i = 0;
-	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+	TAILQ_FOREACH(aref, &node->arefsh, marefs) {
 		if (i++ == index) {
 			return (aref);
 		}
@@ -697,12 +682,12 @@ node_arefindex(struct node *me, int index)
  * for ob if offs is -1.
  */
 struct map_aref *
-node_arefobj(struct node *me, struct object *ob, int offs)
+node_arefobj(struct node *node, struct object *ob, int offs)
 {
 	struct map_aref *aref;
 
 	/* XXX bsearch */
-	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+	TAILQ_FOREACH(aref, &node->arefsh, marefs) {
 		if (aref->pobj == ob && (aref->offs == offs || offs < 0)) {
 			return (aref);
 		}
@@ -760,14 +745,14 @@ map_load(void *ob, char *path)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *me = &m->map[x][y];
+			struct node *node = &m->map[x][y];
 			int i, narefs;
 			
 			/* Read the map entry flags. */
-			me->flags = fobj_read_uint32(f);
+			node->flags = fobj_read_uint32(f);
 
 			/* Read the optional integer value. */
-			me->v1 = fobj_read_uint32(f);
+			node->v1 = fobj_read_uint32(f);
 
 			/* Read the reference count. */
 			narefs = fobj_read_uint32(f);
@@ -791,7 +776,7 @@ map_load(void *ob, char *path)
 				}
 				free(pobjstr);
 
-				naref = node_addref(me, pobj, offs, rflags);
+				naref = node_addref(node, pobj, offs, rflags);
 				if (naref == NULL) {
 					return (-1);
 				}
@@ -846,21 +831,21 @@ map_save(void *ob, char *path)
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			off_t soffs;
-			struct node *me = &m->map[x][y];
+			struct node *node = &m->map[x][y];
 			struct map_aref *aref;
 			int nrefs = 0;
 			
 			/* Write the node flags. */
-			fobj_write_uint32(f, me->flags);
+			fobj_write_uint32(f, node->flags);
 			
 			/* Write the optional integer value. */
-			fobj_write_uint32(f, me->v1);
+			fobj_write_uint32(f, node->v1);
 
 			/* We do not know the reference count yet. */
 			soffs = lseek(f, 0, SEEK_CUR);
 			lseek(f, sizeof(Uint32), SEEK_CUR);
 
-			TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
 				if (aref != NULL && aref->flags & MAPREF_SAVE) {
 					fobj_write_string(f, aref->pobj->name);
 					fobj_write_uint32(f, aref->offs);
