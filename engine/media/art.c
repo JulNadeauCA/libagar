@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.9 2002/12/24 14:21:53 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.10 2002/12/29 02:13:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -242,7 +242,7 @@ art_fetch(char *media, struct object *ob)
 
 		art->map = emalloc(sizeof(struct map));
 		asprintf(&mapname, "t-%s", media);
-		map_init(art->map, mapname, NULL, 0);
+		map_init(art->map, MAP_2D, mapname, NULL);
 		free(mapname);
 		map_alloc_nodes(art->map, 1, 1);
 	}
