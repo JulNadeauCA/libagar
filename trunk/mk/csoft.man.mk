@@ -615,6 +615,15 @@ install-man: preformat-man install-man-dirs
 	    fi; \
 	fi
 
-.PHONY: clean install deinstall preformat-man clean-man install-man install-man-dirs deinstall-man
+man:
+	if [ "${MAN}" != "" ]; then \
+		echo "nroff -Tascii -mandoc ${MAN} | ${PAGER}"; \
+		nroff -Tascii -mandoc ${MAN} | ${PAGER}; \
+	else \
+		echo "Usage: ${MAKE} read MAN=(manpage)"; \
+		exit 1; \
+	fi
+
+.PHONY: clean install deinstall preformat-man clean-man install-man install-man-dirs deinstall-man man
 
 include ${TOP}/mk/csoft.common.mk
