@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.23 2002/05/21 03:27:30 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.24 2002/05/22 02:03:23 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -15,7 +15,7 @@ struct viewport {
 	int	mode;			/* Display mode */
 	int	fps;			/* Refresh rate in FPS */
 	Uint32	flags;
-	int	width, height, depth;	/* Viewport geometry */
+	int	w, h, depth;		/* Viewport geometry */
 	struct	map *map;		/* Currently visible map */
 	Uint32	mapw, maph;		/* Map view geometry */
 	Uint32	mapx, mapy;		/* Map view coordinates */
@@ -49,8 +49,55 @@ struct viewport {
 #endif
 
 /*
+ * VIEW_ALPHA_BLEND(SDL_Surface *s, Uint32 src, Uint32 dst).
+ * XXX inefficient
+ */
+#define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) do {		\
+	Uint32 _view_col = (Uint32)(c);				\
+	Uint8 _view_alpha_rs, _view_alpha_gs, _view_alpha_bs;	\
+	Uint8 _view_alpha_rd, _view_alpha_gd, _view_alpha_bd;	\
+	Uint8 *_putpixel_dst;					\
+								\
+	_putpixel_dst = (Uint8 *)(s)->pixels +			\
+	    (avy)*(s)->pitch +					\
+	    (avx)*(s)->format->BytesPerPixel;			\
+								\
+	SDL_GetRGB(_view_col, (s)->format, &_view_alpha_rs,	\
+	    &_view_alpha_gs, &_view_alpha_bs);			\
+	SDL_GetRGB(*_putpixel_dst, (s)->format, &_view_alpha_rd,\
+	    &_view_alpha_gd, &_view_alpha_bd);			\
+								\
+	_view_alpha_rd = (((_view_alpha_rs - _view_alpha_rd) *	\
+	    (a)) >> 8) + _view_alpha_rd;			\
+	_view_alpha_gd = (((_view_alpha_gs - _view_alpha_gd) *	\
+	    (a)) >> 8) + _view_alpha_gd;			\
+	_view_alpha_bd = (((_view_alpha_bs - _view_alpha_bd) *	\
+	    (a)) >> 8) + _view_alpha_bd;			\
+	    							\
+	_view_col = SDL_MapRGB((s)->format, _view_alpha_rd,	\
+	    _view_alpha_gd, _view_alpha_bd);			\
+								\
+	switch ((s)->format->BytesPerPixel) {			\
+	case 1:							\
+		*_putpixel_dst = _view_col;			\
+		break;						\
+	case 2:							\
+		*(Uint16 *)_putpixel_dst = _view_col;		\
+		break;						\
+	case 3:							\
+		_PUT_PIXEL_24(_putpixel_dst, _view_col);	\
+		break;						\
+	case 4:							\
+		*(Uint32 *)_putpixel_dst = _view_col;		\
+		break;						\
+	}							\
+} while (/*CONSTCOND*/0)
+
+/*
  * Set the pixel at x,y to c inside surface s.
  * Surface must be locked.
+ *
+ * VIEW_PUT_PIXEL(SDL_Surface *s, int vx, int vy, Uint32 c);
  */
 #define VIEW_PUT_PIXEL(s, vx, vy, c) do {			\
 	Uint8 *_putpixel_dst;					\
@@ -88,9 +135,8 @@ void		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
 void		 view_maskfill(struct viewport *, SDL_Rect *, int);
 void		 view_redraw(struct viewport *);
-SDL_Surface	 *view_surface(int, int, int);
+SDL_Surface	*view_surface(int, int, int);
 void		 view_focus(struct viewport *, struct window *);
-
 #ifdef DEBUG
 void		 view_dumpmask(struct viewport *);
 #endif
