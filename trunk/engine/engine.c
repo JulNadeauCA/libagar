@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.99 2003/05/08 12:11:39 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.100 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -70,6 +70,7 @@ char *engine_errorkey;				/* Unithreaded error code */
 struct engine_proginfo *proginfo;	/* Game name, copyright, version */
 struct config *config;			/* Global configuration settings */
 struct object *world;			/* The Old Roots of Evil */
+pthread_mutex_t linkage_lock;		/* Protects object linkage */
 
 /* Initialize the Agar engine. */
 int
@@ -92,6 +93,8 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 #else
 	engine_errorkey = NULL;
 #endif
+
+	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
 
 #ifdef HAVE_PROGNAME
 	{
@@ -240,7 +243,20 @@ engine_destroy(void)
 #else
 	Free(engine_errorkey);
 #endif
+	pthread_mutex_destroy(&linkage_lock);
 	SDL_Quit();
 	exit(0);
+}
+
+__inline__ void
+lock_linkage(void)
+{
+	pthread_mutex_lock(&linkage_lock);
+}
+
+__inline__ void
+unlock_linkage(void)
+{
+	pthread_mutex_unlock(&linkage_lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.76 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.77 2003/05/19 01:15:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -49,7 +49,7 @@ struct object {
 	char	 type[OBJECT_TYPE_MAX];	/* Type of object */
 	char	 name[OBJECT_NAME_MAX];	/* Identifier */
 	const struct object_ops	*ops;	/* Generic operations */
-	void	*parent;		/* Parent object (or NULL) */
+	void	*parent;		/* Parent object (linkage_lock) */
 
 	Uint32	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't remove props before load */
@@ -61,7 +61,7 @@ struct object {
 
 	pthread_mutex_t		 lock;
 	struct object_position	*pos;		/* Position on a map */
-	TAILQ_HEAD(,object)	 childs;	/* Descendants */
+	TAILQ_HEAD(,object)	 childs;	/* Descendants (linkage_lock) */
 	pthread_mutex_t		 events_lock;	/* XXX use lock? */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
 	pthread_mutex_t		 props_lock;	/* XXX use lock? */

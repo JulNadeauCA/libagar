@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.123 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.124 2003/05/19 01:15:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -148,8 +148,11 @@ object_name(void *obj)
 	s[0] = '/';
 	memcpy(s+1, ob->name, namelen);
 
-	if (ob->parent != NULL)
+	lock_linkage();
+	if (ob->parent != NULL) {
 		object_name_search(ob->parent, &s, &sl);
+	}
+	unlock_linkage();
 
 	s[sl-1] = '\0';
 	return (s);
@@ -163,8 +166,7 @@ object_move(void *oldparentp, void *childp, void *newparentp)
 	struct object *child = childp;
 	struct object *newparent = newparentp;
 
-	pthread_mutex_lock(&oldparent->lock);
-	pthread_mutex_lock(&newparent->lock);
+	lock_linkage();
 
 	TAILQ_REMOVE(&oldparent->childs, child, cobjs);
 	child->parent = NULL;
@@ -174,12 +176,10 @@ object_move(void *oldparentp, void *childp, void *newparentp)
 	child->parent = newparent;
 	event_post(child, "attached", "%p", newparent);
 	event_post(child, "moved", "%p, %p", oldparent, newparent);
-
 	debug(DEBUG_LINKAGE, "%s: moved %s to %s\n", oldparent->name,
 	    child->name, newparent->name);
 
-	pthread_mutex_unlock(&newparent->lock);
-	pthread_mutex_unlock(&oldparent->lock);
+	unlock_linkage();
 }
 
 /* Attach a child object to a parent. */
@@ -189,14 +189,12 @@ object_attach(void *parentp, void *childp)
 	struct object *parent = parentp;
 	struct object *child = childp;
 
-	pthread_mutex_lock(&parent->lock);
-
+	lock_linkage();
 	TAILQ_INSERT_TAIL(&parent->childs, child, cobjs);
 	child->parent = parent;
 	event_post(child, "attached", "%p", parent);
-
 	debug(DEBUG_LINKAGE, "%s: attached %s\n", parent->name, child->name);
-	pthread_mutex_unlock(&parent->lock);
+	unlock_linkage();
 }
 
 /* Detach a child object from its parent. */
@@ -206,14 +204,12 @@ object_detach(void *parentp, void *childp)
 	struct object *parent = parentp;
 	struct object *child = childp;
 
-	pthread_mutex_lock(&parent->lock);
-
+	lock_linkage();
 	TAILQ_REMOVE(&parent->childs, child, cobjs);
 	child->parent = NULL;
 	event_post(child, "detached", "%p", parent);
-
 	debug(DEBUG_LINKAGE, "%s: detached %s\n", parent->name, child->name);
-	pthread_mutex_unlock(&parent->lock);
+	unlock_linkage();
 }
 
 /* Search for the named object. The name is relative to the parent. */
@@ -227,12 +223,12 @@ object_find(void *parentp, char *name)
 		parent = world;
 
 	/* XXX TODO recurse! */
-	pthread_mutex_lock(&parent->lock);
+	lock_linkage();
 	TAILQ_FOREACH(child, &parent->childs, cobjs) {
 		if (strcmp(child->name, name) == 0)
 			break;
 	}
-	pthread_mutex_unlock(&parent->lock);
+	unlock_linkage();
 	return (child);
 }
 
@@ -400,6 +396,8 @@ object_load_data(struct object *ob, struct netbuf *buf, int load)
 
 			if (object_load_data(child, buf, 0) == -1)
 				goto fail;
+
+			object_attach(ob, child);
 		}
 	}
 
@@ -470,15 +468,20 @@ object_save_data(struct object *ob, struct netbuf *buf)
 
 	nchilds_offs = buf->offs;
 	write_uint32(buf, 0);				/* Skip count */
+
+	lock_linkage();
 	TAILQ_FOREACH(child, &ob->childs, cobjs) {
 		write_string(buf, child->name);
 		write_string(buf, child->type);
 		write_uint32(buf, child->flags);
 
-		if (object_save_data(child, buf) == -1)
+		if (object_save_data(child, buf) == -1) {
+			unlock_linkage();
 			goto fail;
+		}
 		nchilds++;
 	}
+	unlock_linkage();
 	pwrite_uint32(buf, nchilds, nchilds_offs);	/* Write count */
 
 	if (ob->ops->save != NULL &&			/* Save custom data */
@@ -922,7 +925,7 @@ object_table_load(struct object_table *obt, struct netbuf *buf, char *objname)
 
 	nobjs = read_uint32(buf);
 
-	pthread_mutex_lock(&world->lock);
+	lock_linkage();
 	for (i = 0; i < nobjs; i++) {
 		if (copy_string(name, buf, sizeof(name)) >= sizeof(name)) {
 			error_set("object name too big");
@@ -945,10 +948,10 @@ object_table_load(struct object_table *obt, struct netbuf *buf, char *objname)
 		}
 		object_table_insert(obt, pob);
 	}
-	pthread_mutex_unlock(&world->lock);
+	unlock_linkage();
 	return (0);
 fail:
-	pthread_mutex_unlock(&world->lock);
+	unlock_linkage();
 	return (-1);
 }
 
