@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.171 2003/06/06 09:03:55 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.172 2003/06/08 00:21:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -306,7 +306,8 @@ mapedit_window(struct map *m)
 	event_new(win, "window-close", mapedit_close, NULL);
 
 	mv = Malloc(sizeof(struct mapview));
-	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT);
+	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|
+	    MAPVIEW_GRID);
 
 	/* Create the map edition toolbar. */
 	hb = hbox_new(win, HBOX_WFILL);
@@ -320,7 +321,7 @@ mapedit_window(struct map *m)
 			{ fileops_save_map,	MAPEDIT_TOOL_SAVE_MAP,	0, 0 },
 			{ fileops_clear_map,	MAPEDIT_TOOL_CLEAR_MAP,	0, 0 },
 			{ new_view,		MAPEDIT_TOOL_NEW_VIEW,	0, 0 },
-			{ tog_mvoption,		MAPEDIT_TOOL_GRID,	1, 0 },
+			{ tog_mvoption,		MAPEDIT_TOOL_GRID,	1, 1 },
 			{ tog_mvoption,		MAPEDIT_TOOL_PROPS,	1, 1 }
 		};
 		const int nfileops = sizeof(fileops) / sizeof(fileops[0]);
