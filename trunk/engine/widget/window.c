@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.106 2002/11/15 21:53:34 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.107 2002/11/17 23:02:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -748,6 +748,7 @@ scan_wins:
 				winop_resize(view->winop, win, &ev->motion);
 				goto posted;
 			case VIEW_WINOP_NONE:
+				break;
 			}
 			/*
 			 * Post the mouse motion event to the widget that
@@ -979,6 +980,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			win->rd.h += motion->yrel;
 		}
 	default:
+		break;
 	}
 
 	/* Clamp to minimum window geometry. */

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.12 2002/11/14 05:59:01 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.13 2002/11/15 04:18:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -137,6 +137,7 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		TAILQ_INIT(&n->nrefsh);
 		break;
 	default:
+		break;
 	}
 
 	switch (st->mode) {
