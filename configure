@@ -1084,6 +1084,8 @@ fi
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
+else
+echo "#undef HAVE_OPENGL" > config/have_opengl.h
 fi
 if [ "${enable_static}" = "yes" ]
  then
