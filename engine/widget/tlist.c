@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.111 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.112 2005/03/14 03:59:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -603,6 +603,28 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
 	strlcpy(it->text, text, sizeof(it->text));
 
 	insert_item(tl, it, 1);
+	return (it);
+}
+
+struct tlist_item *
+tlist_select_pointer(struct tlist *tl, void *p)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->lock);
+	if (tl->flags & TLIST_POLL) {
+		event_post(NULL, tl, "tlist-poll", NULL);
+	}
+	if ((tl->flags & TLIST_MULTI) == 0) {
+		tlist_unselect_all(tl);
+	}
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->p1 == p) {
+			it->selected++;
+			break;
+		}
+	}
+	pthread_mutex_unlock(&tl->lock);
 	return (it);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.22 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.23 2005/03/05 12:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -120,6 +120,19 @@ combo_expand(int argc, union evarg *argv)
 	} else {
 		combo_collapse(com);
 	}
+}
+
+struct tlist_item *
+combo_select_pointer(struct combo *com, void *p)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&com->list->lock);
+	if ((it = tlist_select_pointer(com->list, p)) != NULL) {
+		textbox_printf(com->tbox, "%s", it->text);
+	}
+	pthread_mutex_unlock(&com->list->lock);
+	return (it);
 }
 
 void
