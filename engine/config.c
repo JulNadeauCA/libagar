@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.48 2002/12/29 02:13:53 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.49 2002/12/29 03:24:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -134,7 +134,7 @@ config_init(struct config *con)
 #endif
 	prop_set_uint16(con, "view.w", 800);
 	prop_set_uint16(con, "view.h", 600);
-	prop_set_uint8(con,  "view.bpp", 32);
+	prop_set_uint8(con,  "view.depth", 32);
 
 	/* Window system settings */
 	prop_set_bool(con, "widget.reg-borders", 0);
