@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.h,v 1.2 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: titlebar.h,v 1.3 2004/09/16 04:07:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TITLEBAR_H_
@@ -14,6 +14,9 @@ struct titlebar {
 	struct box hb;
 
 	int	flags;
+#define TITLEBAR_NO_CLOSE	0x01
+#define TITLEBAR_NO_MINIMIZE	0x02
+#define TITLEBAR_NO_MAXIMIZE	0x04
 	int	pressed;
 
 	struct window	*win;		/* Back pointer to window */

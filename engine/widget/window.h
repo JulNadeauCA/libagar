@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.77 2004/09/12 05:48:58 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.78 2004/09/16 04:06:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -36,12 +36,12 @@ struct window {
 #define WINDOW_DETACH		0x0020	/* Detach on window-close */
 #define WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
 #define WINDOW_MINIMIZED	0x0080	/* Window is minimized */
-#define WINDOW_NO_HRESIZE	0x0100	/* Don't resize horizontally */
-#define WINDOW_NO_VRESIZE	0x0200	/* Don't resize vertically */
+#define WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
+#define WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
 #define WINDOW_NO_RESIZE	(WINDOW_NO_HRESIZE|WINDOW_NO_VRESIZE)
-#define WINDOW_NO_CLOSE_BTN	0x0400	/* Disable close button */
-#define WINDOW_NO_MINIMIZE_BTN	0x0800	/* Disable minimize button */
-#define WINDOW_NO_MAXIMIZE_BTN	0x1000	/* Disable maximize button */
+#define WINDOW_NO_CLOSE		0x0400	/* Disable close button */
+#define WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
+#define WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
 
 #ifdef DEBUG
 	char	 caption[128];

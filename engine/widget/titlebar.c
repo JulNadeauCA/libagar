@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.16 2004/09/16 04:07:09 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.17 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 	object_set_ops(tbar, &titlebar_ops);
 	object_wire_gfx(tbar, "/engine/widget/pixmaps");
 
-	box_set_padding(&tbar->hb, 3);
+	box_set_padding(&tbar->hb, 5);
 	box_set_spacing(&tbar->hb, 0);
 
 	widget_set_type(tbar, "titlebar");
@@ -100,20 +100,24 @@ titlebar_init(struct titlebar *tbar, int flags)
 	tbar->label = label_new(tbar, LABEL_STATIC, _("Untitled"));
 	WIDGET(tbar->label)->flags |= WIDGET_WFILL;
 
-	tbar->hide_bu = button_new(tbar, NULL);
-	button_set_focusable(tbar->hide_bu, 0);
-	event_new(tbar->hide_bu, "button-pushed", titlebar_hide_win, "%p",
-	    tbar);
-
-	tbar->close_bu = button_new(tbar, NULL);
-	button_set_focusable(tbar->close_bu, 0);
-	event_new(tbar->close_bu, "button-pushed", titlebar_close_win, "%p",
-	    tbar);
-
-	button_set_label(tbar->close_bu, SPRITE(tbar, TITLEBAR_CLOSE_ICON));
-	button_set_label(tbar->hide_bu, SPRITE(tbar, TITLEBAR_HIDE_ICON));
-	button_set_padding(tbar->close_bu, 2);
-	button_set_padding(tbar->hide_bu, 2);
+	if ((flags & TITLEBAR_NO_MINIMIZE) == 0) {
+		tbar->hide_bu = button_new(tbar, NULL);
+		button_set_focusable(tbar->hide_bu, 0);
+		button_set_label(tbar->hide_bu,
+		    SPRITE(tbar, TITLEBAR_HIDE_ICON));
+		button_set_padding(tbar->hide_bu, 1);
+		event_new(tbar->hide_bu, "button-pushed", titlebar_hide_win,
+		    "%p", tbar);
+	}
+	if ((flags & TITLEBAR_NO_CLOSE) == 0) {
+		tbar->close_bu = button_new(tbar, NULL);
+		button_set_focusable(tbar->close_bu, 0);
+		button_set_label(tbar->close_bu,
+		    SPRITE(tbar, TITLEBAR_CLOSE_ICON));
+		button_set_padding(tbar->close_bu, 1);
+		event_new(tbar->close_bu, "button-pushed", titlebar_close_win,
+		    "%p", tbar);
+	}
 
 	event_new(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
 	    NULL);
