@@ -1,0 +1,14 @@
+$Csoft$
+
+          +-[char]
+          |
+          +-[world]
+          | 
+[object]--+-[map]
+          |
+	  +-[input]
+	  |
+	  +-[widget]----+--[button]
+	  |             |
+	  +-[window]    +--[label]
+
