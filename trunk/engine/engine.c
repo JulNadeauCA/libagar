@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.131 2004/04/25 08:18:09 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.132 2004/04/26 03:21:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ struct object engine_icons;		/* Global engine icons */
 
 /* Initialize the Agar engine. */
 int
-engine_preinit(int argc, char *argv[], struct engine_proginfo *prog, int flags)
+engine_preinit(struct engine_proginfo *prog, int flags)
 {
 	static int inited = 0;
 	
@@ -192,6 +192,7 @@ engine_preinit(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;
+	printf("\n");
 	return (0);
 }
 
