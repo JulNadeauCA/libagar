@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.72 2002/08/24 04:10:12 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.73 2002/08/24 23:56:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,6 +48,8 @@
 #include "widget/label.h"
 #include "widget/text.h"
 #include "widget/graph.h"
+
+#include "mapedit/mapview.h"
 
 extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
@@ -150,11 +152,18 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_F3:
 		window_show(config->windows.algorithm_sw);
 		break;
-	case SDLK_v:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			text_msg("AGAR engine v%s\n%s v%d.%d\n%s\n",
-			    ENGINE_VERSION, gameinfo->name, gameinfo->version,
-			    gameinfo->copyright);
+	case SDLK_v: {
+			struct window *win;
+			struct region *reg;
+			struct mapview *mv;
+
+			win = window_new("Console", WINDOW_TITLEBAR,
+			    -1, -1, 320, 200, 320, 200);
+			reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+			mv = mapview_new(reg, curmapedit, view->rootmap->map,
+			    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
+			    100, 100);
+			window_show(win);
 		}
 		break;
 	case SDLK_t:	/* XXX move */
@@ -197,6 +206,8 @@ event_loop(void)
 	Uint32 ltick, ntick;
 	struct window *win;
 	int rv, delta;
+	SDL_Rect wrects[64];
+	int nwrects = 0;
 #ifdef DEBUG
 	struct region *reg;
 	struct label *fps_label;
@@ -245,29 +256,33 @@ event_loop(void)
 			}
 
 			/* Update the windows. */
+			nwrects = 0;
 			TAILQ_FOREACH(win, &view->windowsh, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
 					/* XXX use indirect blit & microtiles */
 					window_draw(win);
-					if (view->gfx_engine !=
-					    GFX_ENGINE_GUI) {
-						SDL_UpdateRect(view->v,
-						    win->x, win->y, win->w,
-						    win->h);
-					}
+					wrects[nwrects].x = win->x;
+					wrects[nwrects].y = win->y;
+					wrects[nwrects].w = win->w;
+					wrects[nwrects].h = win->h;
+					nwrects++;
 				}
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
 
-			/*
-			 * Always update the whole screen in GUI mode.
-			 * Indirect blits would obsolete this.
-			 */
-			if (view->gfx_engine == GFX_ENGINE_GUI) {
-				SDL_UpdateRect(view->v, 0, 0, 0, 0);
+			if (nwrects > 0) {
+				SDL_UpdateRects(view->v, nwrects, wrects);
+				nwrects = 0;
+				if (view->gfx_engine == GFX_ENGINE_GUI) {
+					/* Event/motion interpolation. */
+					COMPUTE_DELTA(delta, ntick);
+				}
+#ifdef DEBUG
+				/* Update the fps counter. */
 				COMPUTE_DELTA(delta, ntick);
+#endif
 			}
 
 			ltick = SDL_GetTicks();
