@@ -1,7 +1,7 @@
-# $Csoft: configure.in,v 1.20 2002/05/24 04:42:51 vedge Exp $
+# $Csoft: configure.in,v 1.21 2002/05/26 02:59:44 vedge Exp $
 
 makeout(Makefile.config);
-inclout(engine/config.h);
+inclout(engine/mcconfig.h);
 
 register("--with-smpeg",	"Play videos through smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
