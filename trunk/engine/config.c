@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.70 2003/04/17 08:18:32 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.71 2003/04/24 06:58:44 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -124,8 +124,8 @@ config_init(struct config *con)
 	struct stat sta;
 	char *udatadir, *sysdatadir;
 
-	object_init(&con->obj, "engine-config", "config",
-	    OBJECT_STATIC|OBJECT_RELOAD_PROPS, &config_ops);
+	object_init(&con->obj, "engine-config", "config", OBJECT_RELOAD_PROPS,
+	    &config_ops);
 
 	/* Object settings */
 	prop_set_bool(con, "object.art.map-tiles", 0);
