@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.15 2003/02/20 03:25:37 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.16 2003/02/22 11:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -299,10 +299,13 @@ merge_copy_node(struct merge *mer, struct node *srcnode, struct node *dstnode,
 {
 	struct noderef *nref;
 
-	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
+	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 		node_copy_ref(nref, dstnode);
-	if (mer->inherit_flags)
-		dstnode->flags = srcnode->flags;
+	}
+
+	if (mer->inherit_flags) {
+		dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
+	}
 }
 
 static void
