@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.44 2002/04/30 01:11:33 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.45 2002/05/02 06:23:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -82,12 +82,8 @@ object_addanim(struct object_art *art, struct anim *anim)
 	} else if (art->nanims >= art->maxanims) {	/* Grow */
 		struct anim **newanims;
 
-		newanims = (struct anim **)realloc(art->anims,
+		newanims = (struct anim **)erealloc(art->anims,
 		    (NANIMS_GROW * art->maxanims) * sizeof(struct anim *));
-		if (newanims == NULL) {
-			dperror("realloc");
-			return (-1);
-		}
 		art->maxanims *= NANIMS_GROW;
 		art->anims = newanims;
 	}
@@ -106,12 +102,8 @@ object_addsprite(struct object_art *art, SDL_Surface *sprite)
 	} else if (art->nsprites >= art->maxsprites) {	/* Grow */
 		SDL_Surface **newsprites;
 
-		newsprites = (SDL_Surface **)realloc(art->sprites,
+		newsprites = (SDL_Surface **)erealloc(art->sprites,
 		    (NSPRITES_GROW * art->maxsprites) * sizeof(SDL_Surface *));
-		if (newsprites == NULL) {
-			dperror("realloc");
-			return (-1);
-		}
 		art->maxsprites *= NSPRITES_GROW;
 		art->sprites = newsprites;
 	}
@@ -323,7 +315,6 @@ object_destroy_gc(void)
 	dprintf("stopped garbage collection\n");
 }
 
-/* Must be called on a locked world. */
 int
 object_loadfrom(void *p, char *path)
 {
@@ -340,6 +331,8 @@ object_loadfrom(void *p, char *path)
 		warning("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
+
+	pthread_mutex_assert(&world->lock);
 	if (ob->vec->load(ob, fd) != 0) {
 		close(fd);
 		return (-1);
@@ -348,7 +341,6 @@ object_loadfrom(void *p, char *path)
 	return (0);
 }
 
-/* Must be called on a locked world. */
 int
 object_load(void *p)
 {
@@ -360,6 +352,7 @@ object_load(void *p)
 		return (0);
 	}
 
+	pthread_mutex_assert(&world->lock);
 	path = savepath(ob->name, ob->saveext);
 	if (path == NULL) {
 		return (-1);
@@ -376,7 +369,6 @@ object_load(void *p)
 	return (rv);
 }
 
-/* Must be called on a locked world. */
 int
 object_save(void *p)
 {
@@ -394,6 +386,7 @@ object_save(void *p)
 		dperror(path);
 		return (-1);
 	}
+	pthread_mutex_assert(&world->lock);
 	if (ob->vec->save(ob, fd) != 0) {
 		close(fd);
 		return (-1);
@@ -402,19 +395,16 @@ object_save(void *p)
 	return (0);
 }
 
-/*
- * Add an object to the object list, and mark it consistent.
- * The world's object list must be locked.
- */
 int
 object_link(void *p)
 {
 	struct object *ob = (struct object *)p;
-
+	
 	if (ob->vec->link != NULL) {
 		ob->vec->link(ob);
 	}
 
+	pthread_mutex_assert(&world->lock);
 	SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
 	world->nobjs++;
 	return (0);
@@ -444,16 +434,19 @@ object_queue_gc(struct object *ob)
 	pthread_mutex_unlock(&gc_lock);
 }
 
-/*
- * Unlink an object from the world.
- * The world's object list must be locked.
- */
 int
 object_unlink(void *p)
 {
 	struct object *ob = (struct object *)p;
 
+#ifdef DEBUG
+	if (object_strfind(ob->name) == NULL) {
+		fatal("%s not linked to %p\n", ob->name, world);
+	}
+#endif
+
 	world->nobjs--;
+	pthread_mutex_assert(&world->lock);
 	SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 
 	object_queue_gc(ob);
@@ -481,7 +474,6 @@ decrease_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
 
 /*
  * Search for an object matching the given string.
- * The world's object list must be locked.
  * XXX hash
  */
 struct object *
@@ -489,6 +481,7 @@ object_strfind(char *s)
 {
 	struct object *ob;
 
+	pthread_mutex_assert(&world->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		if (strcmp(ob->name, s) == 0) {
 			return (ob);
@@ -525,8 +518,6 @@ object_dump(void *p)
 /*
  * Add a reference to ob:offs(flags) at m:x,y, and a back
  * reference (mappos) structure.
- *
- * Must be called on a locked map.
  */
 struct mappos *
 object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
@@ -536,12 +527,15 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	struct node *node;
 	struct mappos *pos;
 
+	pthread_mutex_assert(&m->lock);
+
 	node = &m->map[y][x];
 	pos = (struct mappos *)emalloc(sizeof(struct mappos));
 	pos->map = m;
 	pos->x = x;
 	pos->y = y;
 	pos->speed = 1;
+	
 	pos->nref = node_addref(node, ob, offs, flags);
 	if (pos->nref == NULL) {
 		free(pos);
@@ -561,24 +555,22 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	return (pos);
 }
 
-/*
- * Destroy the mappos structure associated with an object.
- * Must be called on a locked map.
- */
 void
 object_delpos(void *obp)
 {
 	struct object *ob = (struct object *)obp;
 	struct mappos *pos = ob->pos;
-
+	
 	if (pos == NULL) {
 		dprintf("%s has no position\n", ob->name);
 		return;
 	}
 
 	if (pos->map != NULL) {
-		struct node *node = &pos->map->map[pos->y][pos->x];
-
+		struct node *node;
+	
+		pthread_mutex_assert(&pos->map->lock);
+		node = &pos->map->map[pos->y][pos->x];
 		node_delref(node, pos->nref);
 		node->flags &= ~(NODE_ANIM);
 	}
