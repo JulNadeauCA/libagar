@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.237 2005/02/01 03:14:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.238 2005/02/01 03:31:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -723,6 +723,8 @@ window_event(SDL_Event *ev)
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
+		dprintf("SDL_MOUSEBUTTONDOWN(%d,%d,%d)\n",
+		    ev->button.button, ev->button.x, ev->button.y);
 		/* Focus on the highest overlapping window. */
 		view->focus_win = NULL;
 		TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
@@ -739,9 +741,9 @@ window_event(SDL_Event *ev)
 		focus_changed++;
 		break;
 	case SDL_MOUSEBUTTONUP:
-		view->winop = VIEW_WINOP_NONE;
 		dprintf("SDL_MOUSEBUTTONUP(%d,%d,%d)\n",
 		    ev->button.button, ev->button.x, ev->button.y);
+		view->winop = VIEW_WINOP_NONE;
 		break;
 	}
 

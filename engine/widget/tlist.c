@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.104 2005/01/23 11:47:38 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.105 2005/01/31 08:19:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -701,8 +701,6 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	int y = argv[3].i;
 	struct tlist_item *ti;
 	int tind;
-	
-	widget_focus(tl);
 
 	pthread_mutex_lock(&tl->lock);
 
@@ -728,21 +726,24 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		}
 	}
 
-	/* Handle range selections. */
-	/* XXX atrocious */
-	if (tl->flags & TLIST_MULTI) {
-		if (SDL_GetModState() & KMOD_SHIFT) {
+	switch (button) {
+	case SDL_BUTTON_LEFT:
+		/* Handle range selections. */
+		if ((tl->flags & TLIST_MULTI) &&
+		    (SDL_GetModState() & KMOD_SHIFT)) {
 			struct tlist_item *oitem;
 			int oind = -1, i = 0, nitems = 0;
 
 			TAILQ_FOREACH(oitem, &tl->items, items) {
-				if (oitem->selected)
+				if (oitem->selected) {
 					oind = i;
+				}
 				i++;
 				nitems++;
 			}
-			if (oind == -1)
+			if (oind == -1) {
 				goto out;
+			}
 			if (oind < tind) {			  /* Forward */
 				i = 0;
 				TAILQ_FOREACH(oitem, &tl->items, items) {
@@ -763,52 +764,55 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 					i--;
 				}
 			}
+			break;
+		}
+
+		/* Handle single selections. */
+		if ((tl->flags & TLIST_MULTITOGGLE) ||
+		    ((tl->flags & TLIST_MULTI) &&
+		     (SDL_GetModState() & KMOD_CTRL))) {
+		    	ti->selected = !ti->selected;
+			break;
+		}
+
+		widget_focus(tl);
+		tlist_unselect_all(tl);
+		select_item(tl, ti);
+
+		/* Handle double clicks. */
+		if (tl->dblclicked) {
+			dprintf("dblclicked\n");
+			event_cancel(tl, "dblclick-expire");
+			event_post(NULL, tl, "tlist-dblclick", "%p", ti);
+			tl->dblclicked = 0;
 		} else {
-			if ((tl->flags & TLIST_MULTI_STICKY) ||
-			    (SDL_GetModState() & KMOD_CTRL)) {
-			    	ti->selected = !ti->selected;
+			dprintf("!dblclicked\n");
+			tl->dblclicked++;
+			event_schedule(NULL, tl, mouse_dblclick_delay,
+			    "dblclick-expire", NULL);
+		}
+		break;
+	case SDL_BUTTON_RIGHT:
+		if (ti->class != NULL) {
+			struct tlist_popup *tp;
+		
+			widget_focus(tl);
+			tlist_unselect_all(tl);
+			select_item(tl, ti);
+	
+			TAILQ_FOREACH(tp, &tl->popups, popups) {
+				if (strcmp(tp->iclass, ti->class) == 0)
+					break;
+			}
+			if (tp != NULL) {
+				dprintf("popup (%s)\n", ti->class);
+				show_popup(tl, tp);
+				goto out;
 			} else {
-				tlist_unselect_all(tl);
-				ti->selected++;
+				dprintf("no popup for `%s' class\n", ti->class);
 			}
 		}
-	} else {					  /* Single selection */
-		tlist_unselect_all(tl);
-		ti->selected++;
-	}
-	
-	select_item(tl, ti);
-
-	/* Display any popup menu associated with this item's class. */
-	if (button == SDL_BUTTON_RIGHT &&
-	    ti->class != NULL) {
-		struct tlist_popup *tp;
-	
-		TAILQ_FOREACH(tp, &tl->popups, popups) {
-			if (strcmp(tp->iclass, ti->class) == 0)
-				break;
-		}
-		if (tp != NULL) {
-			dprintf("popup (%s)\n", ti->class);
-			show_popup(tl, tp);
-			goto out;
-		} else {
-			dprintf("no popup for `%s' class\n", ti->class);
-		}
-		goto out;
-	} else if (button != SDL_BUTTON_LEFT) {
-		goto out;
-	}
-
-	/* Handle double clicks. */
-	if (tl->dblclicked) {
-		event_cancel(tl, "dblclick-expire");
-		event_post(NULL, tl, "tlist-dblclick", "%p", ti);
-		tl->dblclicked = 0;
-	} else {
-		tl->dblclicked++;
-		event_schedule(NULL, tl, mouse_dblclick_delay,
-		    "dblclick-expire", NULL);
+		break;
 	}
 out:
 	pthread_mutex_unlock(&tl->lock);
