@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.37 2002/09/11 23:53:44 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.38 2002/09/12 09:15:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -24,7 +24,9 @@ TAILQ_HEAD(regionsq, region);
 struct window {
 	struct	 widget wid;
 
-	/* Read-only once attached */
+	/*
+	 * Read-only once attached
+	 */
 	int	 flags;
 #define WINDOW_PLAIN		0x001	/* Solid, no borders */
 #define WINDOW_TITLEBAR		0x008	/* Draw title bar */
@@ -51,14 +53,17 @@ struct window {
 	SDL_Rect body;			/* Area reserved for regions */
 	SDL_Rect vmask;			/* View mask (in nodes)
 					   Used only in tile mode. */
-
-	/* Read-write, thread-safe */
+	/*
+	 * Read-write, thread-safe
+	 */
 	int	 redraw;		/* Redraw at next tick */
 	struct	 widget *focus;		/* Focused widget */
 
 	struct	 regionsq regionsh;
 	TAILQ_ENTRY(window) windows;	/* Windows in view */
-	pthread_mutex_t	lock;
+
+	pthread_mutex_t		lock;
+	pthread_mutexattr_t	lockattr;
 };
 
 #define WINDOW(w)	((struct window *)(w))
@@ -118,8 +123,8 @@ void		 window_destroy(void *);
 void		 window_attach(void *, void *);
 void		 window_detach(void *, void *);
 
-int	 window_show(struct window *, int, int);
-int	 window_hide(struct window *, int, int);
+int	 window_show(struct window *);
+int	 window_hide(struct window *);
 void	 window_draw(struct window *);
 int	 window_event_all(SDL_Event *);
 void	 window_resize(struct window *);

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.6 2002/09/09 00:42:54 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.7 2002/09/12 09:43:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -70,10 +70,10 @@ show_tool(int argc, union evarg *argv)
 	
 	switch (argv[2].i) {
 	case MONITOR_OBJECT_BROWSER:
-		window_show(mon->wins.object_browser, 0, 1);
+		window_show(mon->wins.object_browser);
 		break;
 	case MONITOR_SPRITE_BROWSER:
-		window_show(mon->wins.sprite_browser, 0, 1);
+		window_show(mon->wins.sprite_browser);
 		break;
 	}
 }

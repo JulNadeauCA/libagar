@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.16 2002/09/06 01:26:41 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.17 2002/09/12 09:35:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -159,7 +159,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 
 	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
 		if (tm->ob == eob->pobj) {
-			window_show(tm->win, 0, 0);
+			window_show(tm->win);
 			view_focus(tm->win);
 			return;
 		}
@@ -228,7 +228,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	SLIST_INSERT_HEAD(&oq->tmaps, tm, tmaps);
 
 	view_attach(win);
-	window_show(win, 0, 0);
+	window_show(win);
 }
 
 static void

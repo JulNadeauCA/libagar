@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.80 2002/09/11 08:50:58 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.81 2002/09/12 09:44:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -112,19 +112,19 @@ event_hotkey(SDL_Event *ev)
 		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDLK_F6:
-		window_show(fps_win, 1, 1);
+		window_show(fps_win);
 		break;
 	case SDLK_F7:
 		if (engine_debug > 0) {
-			window_show(monitor.wins.toolbar, 1, 1);
+			window_show(monitor.wins.toolbar);
 		}
 		break;
 #endif
 	case SDLK_F1:
-		window_show(config->windows.settings, 1, 1);
+		window_show(config->windows.settings);
 		break;
 	case SDLK_F3:
-		window_show(config->windows.algorithm_sw, 1, 1);
+		window_show(config->windows.algorithm_sw);
 		break;
 #ifdef DEBUG
 	case SDLK_v:
@@ -140,13 +140,13 @@ event_hotkey(SDL_Event *ev)
 			mv = mapview_new(reg, curmapedit, view->rootmap->map,
 			    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
 			    100, 100);
-			window_show(win, 1, 1);
+			window_show(win);
 		}
 		break;
 #endif
 	case SDLK_t:
 		if (curmapedit != NULL) {
-			window_show(curmapedit->toolbar_win, 1, 1);
+			window_show(curmapedit->toolbar_win);
 		}
 		break;
 	case SDLK_ESCAPE:
@@ -512,11 +512,8 @@ event_post(void *obp, char *name, const char *fmt, ...)
 			pthread_create(&async_event_th, NULL,
 			    event_post_async, neev);
 		} else {
-			/* XXX */
-			pthread_mutex_unlock(&ob->events_lock);
 			neev->handler(neev->argc, neev->argv);
 			free(neev);
-			pthread_mutex_lock(&ob->events_lock);
 		}
 		break;
 	}
@@ -527,18 +524,21 @@ event_post(void *obp, char *name, const char *fmt, ...)
 void
 event_forward(void *child, char *name, int argc, union evarg *argv)
 {
+	union evarg nargv[EVENT_MAXARGS];
 	struct object *ob = child;
 	struct event *ev;
 
 	pthread_mutex_lock(&ob->events_lock);
+
+	/* Replace argument zero. */
+	memcpy(nargv, argv, argc * sizeof(union evarg));
+	nargv[0].p = child;
+
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(name, ev->name) != 0) {
 			continue;
 		}
-		/* XXX safe, but sick */
-		pthread_mutex_unlock(&ob->events_lock);
-		ev->handler(argc, argv);
-		pthread_mutex_lock(&ob->events_lock);
+		ev->handler(argc, nargv);
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 }

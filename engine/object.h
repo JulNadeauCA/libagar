@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.48 2002/09/02 08:11:34 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.49 2002/09/05 12:16:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -76,14 +76,15 @@ struct object {
 	/*
 	 * Read-write
 	 */
-	struct	 mappos *pos;		/* Unique position on a map */
-	pthread_mutex_t	pos_lock;
+	struct mappos		*pos;		/* Unique position on a map */
+	pthread_mutex_t		 pos_lock;
 
-	TAILQ_HEAD(, event) events;	/* Event handlers */
-	pthread_mutex_t	events_lock;
+	TAILQ_HEAD(, event)	 events;	/* Event handlers */
+	pthread_mutex_t		 events_lock;
+	pthread_mutexattr_t	 events_lockattr;
 
-	TAILQ_HEAD(, prop) props;	/* Properties */
-	pthread_mutex_t props_lock;
+	TAILQ_HEAD(, prop)	 props;		/* Properties */
+	pthread_mutex_t		 props_lock;
 
 	/*
 	 * Locking policy defined by the parent

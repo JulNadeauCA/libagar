@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.66 2002/09/07 04:17:48 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.67 2002/09/09 08:09:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -92,7 +92,10 @@ view_init(gfx_engine_t ge)
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	TAILQ_INIT(&v->windowsh);
-	pthread_mutex_init(&v->lock, NULL);
+
+	pthread_mutexattr_init(&v->lockattr);
+	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&v->lock, &v->lockattr);
 
 	switch (v->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
@@ -180,6 +183,9 @@ view_destroy(void *p)
 		rootmap_free_maprects(v);
 		free(v->rootmap->rects);
 	}
+
+	pthread_mutexattr_destroy(&v->lockattr);
+	pthread_mutex_destroy(&v->lock);
 }
 
 /*

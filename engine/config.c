@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.36 2002/09/07 04:31:46 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.37 2002/09/12 09:44:20 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -312,7 +312,7 @@ config_apply(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
-		window_hide(wid->win, 0, 0);
+		window_hide(wid->win);
 		return;
 	case SAVE_BUTTON:
 		object_save(config);
