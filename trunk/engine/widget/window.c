@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.64 2002/08/24 23:57:14 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.65 2002/08/25 09:10:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -66,6 +66,7 @@ static void	window_clamp(struct window *, int, int);
 static void	window_round(struct window *, int, int, int, int);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
+/* View must not be locked. */
 struct window *
 window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
     int minh)
@@ -83,6 +84,7 @@ window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
 	return (win);
 }
 
+/* Adjust window to tile granularity. */
 static void
 window_round(struct window *win, int x, int y, int w, int h)
 {
@@ -677,6 +679,9 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 			/* Move the tile mask over to the new position. */
 			rootmap_maskfill(&win->vmask, -1);
 			window_update_mask(win);
+
+			/* Redraw the map. View is already locked. */
+			view->rootmap->map->redraw++;
 			break;
 		case GFX_ENGINE_GUI:
 			SDL_FillRect(view->v, &oldpos, bg_color);
@@ -728,7 +733,7 @@ window_focus(struct window *win)
  * Focus windows if necessary.
  * View must be locked, window list must not be empty.
  */
-static int
+static void
 window_mousefocus(Uint16 x, Uint16 y)
 {
 	struct window *win;
@@ -736,10 +741,10 @@ window_mousefocus(Uint16 x, Uint16 y)
 	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
 		if (WINDOW_INSIDE(win, x, y) && win->flags & WINDOW_SHOWN) {
 			view->focus_win = win;
-			return (1);
+			return;
 		}
 	}
-	return (0);
+	view->focus_win = NULL;
 }
 
 /*
@@ -754,10 +759,12 @@ window_event_all(SDL_Event *ev)
 	struct widget *wid;
 	static int ox = 0, oy = 0;
 	int nx, ny;
+	int focus_changed = 0;
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
 		window_mousefocus(ev->button.x, ev->button.y);
+		focus_changed++;
 		break;
 	case SDL_MOUSEBUTTONUP:
 		view->winop = VIEW_WINOP_NONE;
@@ -877,7 +884,8 @@ window_event_all(SDL_Event *ev)
 					goto posted;
 				}
 			}
-			if (view->focus_win != NULL) {
+
+			if (focus_changed) {
 				goto posted;
 			}
 			break;
@@ -929,10 +937,14 @@ nextwin:
 posted:
 	pthread_mutex_unlock(&win->lock);
 
-	/* If the focus was given to another window, update the list. */
-	if (view->focus_win != NULL) {
+	/*
+	 * The focus_changed flag is set if there was a focus change
+	 * in reaction to a window operation. The focus_win variable
+	 * may also be changed by window show/hide functions.
+	 */
+	if (focus_changed || view->focus_win != NULL) {
+		/* Reorder the window list. */
 		window_focus(view->focus_win);
-		view->focus_win = NULL;
 	}
 	return (1);
 }
