@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.111 2002/08/21 01:00:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.112 2002/08/23 05:19:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -39,7 +39,6 @@
 
 #include "engine.h"
 #include "map.h"
-#include "physics.h"
 #include "version.h"
 #include "config.h"
 
@@ -68,8 +67,6 @@ static void	map_save_flat_nodes(struct fobj_buf *, struct map *,
 		    struct object **, Uint32);
 static void	map_save_rle_nodes(struct fobj_buf *, struct map *,
 		    struct object **, Uint32);
-
-#define VIEW_MAPMASK(vx, vy)	(view->rootmap->mask[(vy)][(vx)])
 
 static __inline__ void
 node_init(struct node *node)
@@ -241,25 +238,6 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 }
 
 /*
- * Display a particular map.
- * View must not be locked.
- */
-void
-rootmap_focus(struct map *m)
-{
-	dprintf("focusing %s\n", OBJECT(m)->name);
-
-	pthread_mutex_lock(&view->lock);
-#if 0
-	dprintf("%s -> %s\n",
-	    (view->rootmap == NULL) ? "NULL" : OBJECT(view->rootmap->map)->name,
-	    OBJECT(m)->name);
-#endif
-	view->rootmap->map = m;
-	pthread_mutex_unlock(&view->lock);
-}
-
-/*
  * Allocate and link a map node.
  * Must be called on a locked map.
  */
@@ -398,270 +376,6 @@ map_destroy(void *p)
 
 	if (m->map != NULL) {
 		map_freenodes(m);
-	}
-}
-
-/*
- * Render a map node.
- * Inline since this is called from draw functions with many variables.
- * Must be called on a locked map.
- */
-static __inline__ void
-map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
-{
-	SDL_Rect rd;
-	SDL_Surface *src;
-	struct noderef *nref;
-	struct anim *anim;
-	int i, j, frame;
-	Uint32 t;
-
-	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		if (nref->flags & MAPREF_SPRITE) {
-			src = SPRITE(nref->pobj, nref->offs);
-			rd.w = src->w;
-			rd.h = src->h;
-			rd.x = rx + nref->xoffs;
-			rd.y = ry + nref->yoffs;
-			SDL_BlitSurface(src, NULL, view->v, &rd);
-		} else if (nref->flags & MAPREF_ANIM) {
-			anim = ANIM(nref->pobj, nref->offs);
-			frame = anim->frame;
-		
-			if (nref->flags & MAPREF_ANIM_DELTA &&
-			   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
-				t = SDL_GetTicks();
-				if ((t - anim->delta) >= anim->delay) {
-					anim->delta = t;
-					if (++anim->frame >
-					    anim->nframes - 1) {
-						/* Loop */
-						anim->frame = 0;
-					}
-				}
-			} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
-				frame = nref->frame;
-
-				if ((nref->flags & MAPREF_ANIM_STATIC) == 0) {
-					if ((anim->delay < 1) ||
-					    (++nref->fdelta > anim->delay+1)) {
-						nref->fdelta = 0;
-						if (++nref->frame >
-						    anim->nframes - 1) {
-							/* Loop */
-							nref->frame = 0;
-						}
-					}
-				}
-			}
-
-			for (i = 0, j = anim->nparts - 1;
-			     i < anim->nparts;
-			     i++, j--) {
-				src = anim->frames[j][frame];
-#ifdef DEBUG
-				if (src->w < 0 || src->w > 4096 ||
-				    src->h < 0 || src->h > 4096) {
-					fatal("bad frame: j=%d i=%d [%d]\n",
-					     j, i, frame);
-				}
-#endif
-				rd.w = src->w;
-				rd.h = src->h;
-				rd.x = rx + nref->xoffs;
-				rd.y = ry + nref->yoffs - (i * TILEH);
-				SDL_BlitSurface(src, NULL, view->v, &rd);
-			}
-		}
-	}
-}
-
-#ifdef XDEBUG
-#define XDEBUG_RECTS(view, ri) do {					\
-		int ei;							\
-		for (ei = 0; ei < (ri); ei++) {				\
-			if ((view)->rootmap->rects[ei].x > (view)->w ||	\
-			    (view)->rootmap->rects[ei].y > (view)->h ) { \
-				dprintrect("bogus",			\
-				    &(view)->rootmap->rects[ei]);	\
-				dprintf("bogus rectangle %d/%d\n", ei,	\
-				    ri);				\
-			}						\
-		}							\
-	} while (/*CONSTCOND*/0)
-#else
-#define XDEBUG_RECTS(view, ri)
-#endif
-
-/*
- * Render all animations in the map view.
- *
- * Nodes with the NODE_ANIM flag set are rendered by the animator, even
- * if there is no animation on the node; nearby nodes with overlap > 0
- * are redrawn first.
- *
- * Map and view must be locked.
- */
-void
-rootmap_animate(struct map *m)
-{
-	struct viewmap *rm = view->rootmap;
-	struct node *nnode;
-	int x, y, vx, vy, rx, ry, ox, oy;
-	int ri = 0;
-
-#ifdef DEBUG
-	SDL_FillRect(view->v, NULL, SDL_MapRGB(view->v->format, 200, 0, 0));
-#endif
-
-	for (y = rm->y, vy = 0;				/* Downward */
-	     vy < rm->h && y < m->maph;
-	     y++, vy++) {
-
-		ry = vy << m->shtiley;
-
-		for (x = rm->x + rm->w - 1,		/* Reverse */
-		     vx = rm->w - 1;
-		     x < m->mapw; x--, vx--) {
-			struct node *node;
-#ifdef DEBUG
-			int i;
-
-			i = VIEW_MAPMASK(vx, vy);
-			if (i < 0 || i > 32) {
-				fatal("funny mask: %d at %d,%d\n", i, vx, vy);
-				return;
-			}
-#endif
-			if (VIEW_MAPMASK(vx, vy) > 0) {
-				continue;
-			}
-
-			node = &m->map[y][x];
-			if (node->overlap > 0) {
-				/* Will later draw in a synchronized fashion. */
-				continue;
-			}
-
-			rx = vx << m->shtilex;
-
-			if (node->flags & NODE_ANIM) {
-				/*
-				 * ooo
-				 * ooo
-				 * oSo
-				 * ooo
-				 */
-				for (oy = -2; oy < 2; oy++) {
-					for (ox = -1; ox < 2; ox++) {
-						if (ox == 0 && oy == 0) {
-							/* Origin */
-							continue;
-						}
-						nnode = &m->map[y + oy][x + ox];
-						if (nnode->overlap > 0 &&
-						    (vx > 1 && vy > 1) &&
-						    (vx < rm->w) &&
-						    (vy < rm->h)) {
-							map_rendernode(m, nnode,
-							    rx + (TILEW*ox),
-							    ry + (TILEH*oy));
-							rm->rects[ri++] =
-							    rm->maprects
-							    [vy+oy][vx+ox];
-						}
-					}
-				}
-
-				/* Draw the node itself. */
-				map_rendernode(m, node, rx, ry);
-				rm->rects[ri++] = rm->maprects[vy][vx];
-			} else if (node->nanims > 0) {
-				map_rendernode(m, node, rx, ry);
-				rm->rects[ri++] = rm->maprects[vy][vx];
-			}
-		}
-	}
-	if (ri > 0) {
-		XDEBUG_RECTS(view, ri);
-		SDL_UpdateRects(view->v, ri, rm->rects);
-	}
-}
-
-/*
- * Draw all sprites in the map view.
- * Map and view must be locked.
- */
-void
-rootmap_draw(struct map *m)
-{
-	int x, y, vx, vy, rx, ry;
-	struct viewmap *rm = view->rootmap;
-	struct node *node;
-	struct noderef *nref;
-	Uint32 nsprites;
-	int ri = 0;
-
-#ifdef DEBUG
-	SDL_FillRect(view->v, NULL, SDL_MapRGB(view->v->format, 0, 200, 0));
-	SDL_UpdateRect(view->v, 0, 0, 0, 0);
-#endif
-
-	for (y = rm->y, vy = 0;				/* Downward */
-	     vy < rm->h && y < m->maph;
-	     y++, vy++) {
-
-		ry = vy << m->shtilex;
-
-		for (x = rm->x + rm->w - 1,		/* Reverse */
-		     vx = rm->w - 1;
-		     vx >= 0;
-		     x--, vx--) {
-#ifdef DEBUG
-			int i;
-
-			i = VIEW_MAPMASK(vx, vy);
-			if (i < 0 || i > 32) {
-				dprintf("funny mask: %d at %d,%d\n", i, vx, vy);
-				return;
-			}
-#endif
-			if (VIEW_MAPMASK(vx, vy) > 0) {
-				continue;
-			}
-
-			rx = vx << m->shtilex;
-
-			node = &m->map[y][x];
-
-			if (node->nanims > 0 || ((node->flags & NODE_ANIM) ||
-			    node->overlap > 0)) {
-				/* rootmap_animate() shall handle this. */
-				continue;
-			}
-		
-			nsprites = 0;
-			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-				if (nref->flags & MAPREF_SPRITE) {
-					SDL_Rect rd;
-
-					rd.x = rx + nref->xoffs;
-					rd.y = ry + nref->yoffs;
-					rd.w = TILEW;
-					rd.h = TILEH;
-					SDL_BlitSurface(
-					    SPRITE(nref->pobj, nref->offs),
-					    NULL, view->v, &rd);
-					nsprites++;
-				}
-			}
-			rm->rects[ri++] = rm->maprects[vy][vx];
-		}
-	}
-
-	if (ri > 0) {
-		XDEBUG_RECTS(view, ri);
-		SDL_UpdateRects(view->v, ri, rm->rects);
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.41 2002/08/12 05:00:19 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.42 2002/08/19 05:27:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -94,10 +94,6 @@ struct map {
 
 /* View must be locked */
 #define MAP_FOCUSED(m)	(mainview->rootmap.map == (m))
-
-void	rootmap_draw(struct map *);
-void	rootmap_animate(struct map *);
-void	rootmap_focus(struct map *);
 
 void	map_init(struct map *, char *, char *, Uint32);
 int	map_load(void *, int);
