@@ -223,8 +223,8 @@ else
 fi
 
 rm -f .cctest .cctest.c
-echo -n "checking for IEEE Std754-1985 floating point..."
-echo -n "checking for IEEE Std754-1985 floating point..." >> config.log
+echo -n "checking for IEEE 754 floating point..."
+echo -n "checking for IEEE 754 floating point..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
