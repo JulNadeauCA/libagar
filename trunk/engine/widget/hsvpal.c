@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.2 2005/02/17 02:02:38 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.3 2005/02/17 08:14:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -52,6 +52,8 @@ const struct widget_ops hsvpal_ops = {
 
 enum {
 	CIRCLE_COLOR,
+	TILE1_COLOR,
+	TILE2_COLOR,
 	CUR_COLOR
 };
 
@@ -161,14 +163,18 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	widget_bind(pal, "hue", WIDGET_FLOAT, &pal->h);
 	widget_bind(pal, "saturation", WIDGET_FLOAT, &pal->s);
 	widget_bind(pal, "value", WIDGET_FLOAT, &pal->v);
+	widget_bind(pal, "alpha", WIDGET_FLOAT, &pal->a);
 
 	widget_map_color(pal, CIRCLE_COLOR, "circle", 0, 0, 0, 255);
+	widget_map_color(pal, TILE1_COLOR, "tile1", 140, 140, 140, 255);
+	widget_map_color(pal, TILE2_COLOR, "tile2", 80, 80, 80, 255);
 	widget_map_color(pal, CUR_COLOR, "_current", 255, 255, 255, 255);
 
 	pal->format = fmt;
 	pal->h = 0.0;
 	pal->s = 0.0;
 	pal->v = 0.0;
+	pal->a = 1.0;
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = HSVPAL_SEL_NONE;
@@ -185,20 +191,21 @@ hsvpal_scale(void *p, int w, int h)
 	int i, y = 0;
 
 	if (w == -1 && h == -1) {
-		WIDGET(pal)->w = 128;
+		WIDGET(pal)->w = 128;			/* XXX */
 		WIDGET(pal)->h = 160;
 	}
 	pal->rpreview.x = 0;
-	pal->rpreview.y = WIDGET(pal)->h - 32;
-	pal->rpreview.w = WIDGET(pal)->w;
 	pal->rpreview.h = 32;
-	
+	pal->rpreview.y = WIDGET(pal)->h - pal->rpreview.h;
+	pal->rpreview.w = WIDGET(pal)->w;
+
 	pal->circle.rout = MIN(WIDGET(pal)->w,
-	    WIDGET(pal)->h - pal->rpreview.h - pal->circle.spacing)/2;
+	    WIDGET(pal)->h - pal->rpreview.h)/2;
 	pal->circle.rin = pal->circle.rout - pal->circle.width;
 	pal->circle.dh = (float)(1.0/(pal->circle.rout*M_PI));
 	pal->circle.x = WIDGET(pal)->w/2;
-	pal->circle.y = (WIDGET(pal)->h - pal->rpreview.h)/2;
+	pal->circle.y = (WIDGET(pal)->h - pal->rpreview.h)/2 -
+	    pal->circle.spacing;
 
 	pal->triangle.x = WIDGET(pal)->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
@@ -215,6 +222,7 @@ hsvpal_draw(void *p)
 	float cur_h = widget_get_float(pal, "hue")/360.0 * (2*M_PI);
 	float cur_s = widget_get_float(pal, "saturation");
 	float cur_v = widget_get_float(pal, "value");
+	float cur_a = widget_get_float(pal, "alpha");
 	float h;
 	Uint32 pc;
 	Uint8 r, g, b;
@@ -284,9 +292,30 @@ hsvpal_draw(void *p)
 	/* Draw the preview rectangle. */
 	prim_hsv2rgb(cur_h/(2*M_PI), cur_s, cur_v, &r, &g, &b);
 	WIDGET_COLOR(pal,CUR_COLOR) = SDL_MapRGB(vfmt, r, g, b);
-	primitives.rect_filled(pal,
-	    pal->rpreview.x, pal->rpreview.y,
-	    pal->rpreview.w, pal->rpreview.h - pal->circle.spacing,
-	    CUR_COLOR);
+	if (cur_a < 1.0) {
+		/* 
+		 * TODO optimize on the basis that the background is
+		 * predictable.
+		 */
+		primitives.tiling(pal, pal->rpreview, 8, 8,
+		    TILE1_COLOR, TILE2_COLOR);
+		for (y = pal->rpreview.y + 5;
+		     y < pal->rpreview.y + pal->rpreview.h - 5;
+		     y++) {
+			for (x = pal->rpreview.x + 20;
+			     x < pal->rpreview.x + pal->rpreview.w - 20;
+			     x++) {
+				view_alpha_blend(view->v,
+				    WIDGET(pal)->cx+x,
+				    WIDGET(pal)->cy+y,
+				    r, g, b, (Uint8)(cur_a*255));
+			}
+		}
+	} else {
+		primitives.rect_filled(pal,
+		    pal->rpreview.x, pal->rpreview.y,
+		    pal->rpreview.w, pal->rpreview.h,
+		    CUR_COLOR);
+	}
 }
 
