@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.4 2003/06/25 00:33:30 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.5 2003/06/25 03:53:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -281,14 +281,22 @@ gfx_fetch(void *p, const char *key)
 	gfx->nsubmaps = 0;
 	gfx->maxsubmaps = 0;
 	gfx->used = 1;
-	gfx->tile_map = NULL;
 	pthread_mutex_init(&gfx->used_lock, NULL);
 
 	if (mapedition) {
+		char map_name[OBJECT_NAME_MAX];
+
+		map_name[0] = 't';
+		map_name[1] = '\0';
+		strlcat(map_name, key, sizeof(map_name));
+
 		gfx->tile_map = Malloc(sizeof(struct map));
-		map_init(gfx->tile_map, key);
-		if (map_alloc_nodes(gfx->tile_map, 2, 2) == -1)
+		map_init(gfx->tile_map, map_name);
+		if (map_alloc_nodes(gfx->tile_map, 4, 4) == -1) {
 			goto fail;
+		}
+	} else {
+		gfx->tile_map = NULL;
 	}
 
 	if ((den = den_open(path, DEN_READ)) == NULL) {
