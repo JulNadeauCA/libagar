@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.10 2002/12/08 07:57:48 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.11 2002/12/13 11:18:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -78,23 +78,23 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		debug(DEBUG_SET, "bool %s: %d\n", nprop->key, nprop->data.i);
 		break;
 	case PROP_BOOL:
-		nprop->data.i = va_arg(ap, int);
+		nprop->data.i = va_arg(ap, int);		/* Promoted */
 		debug(DEBUG_SET, "int %s: %d\n", nprop->key, nprop->data.i);
 		break;
 	case PROP_UINT8:
-		nprop->data.u8 = (Uint8)va_arg(ap, int);
+		nprop->data.u8 = (Uint8)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "u8 %s: %d\n", nprop->key, nprop->data.u8);
 		break;
 	case PROP_SINT8:
-		nprop->data.s8 = (Sint8)va_arg(ap, int);
+		nprop->data.s8 = (Sint8)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "s8 %s: %d\n", nprop->key, nprop->data.s8);
 		break;
 	case PROP_UINT16:
-		nprop->data.u16 = (Uint16)va_arg(ap, int);
+		nprop->data.u16 = (Uint16)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "u16 %s: %d\n", nprop->key, nprop->data.u16);
 		break;
 	case PROP_SINT16:
-		nprop->data.s16 = (Sint16)va_arg(ap, int);
+		nprop->data.s16 = (Sint16)va_arg(ap, int);	/* Promoted */
 		debug(DEBUG_SET, "s16 %s: %d\n", nprop->key, nprop->data.s16);
 		break;
 	case PROP_UINT32:
@@ -116,11 +116,23 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		debug(DEBUG_SET, "s64 %s: %ld\n", nprop->key,
 		    (long)nprop->data.s64);
 		break;
-#else
-	case PROP_UINT64:
-	case PROP_SINT64:
-		fatal("SDL provides no 64-bit type\n");
+#endif
+#ifdef HAVE_IEEE754
+	case PROP_FLOAT:
+		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
+		debug(DEBUG_SET, "float %s: %f\n", nprop->key, nprop->data.f);
 		break;
+	case PROP_DOUBLE:
+		nprop->data.d = va_arg(ap, double);
+		debug(DEBUG_SET, "double %s: %f\n", nprop->key, nprop->data.d);
+		break;
+# ifdef HAVE_LONG_DOUBLE
+	case PROP_LONG_DOUBLE:
+		nprop->data.ld = va_arg(ap, long double);
+		debug(DEBUG_SET, "long double %s: %Lf\n", nprop->key,
+		    nprop->data.ld);
+		break;
+# endif
 #endif
 	case PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
@@ -130,6 +142,8 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		nprop->data.p = va_arg(ap, void *);
 		debug(DEBUG_SET, "pointer %s: %p\n", nprop->key, nprop->data.p);
 		break;
+	default:
+		fatal("unsupported type: %d\n", type);
 	}
 	va_end(ap);
 
@@ -183,27 +197,43 @@ prop_set_sint32(void *ob, char *key, Sint32 i)
 	return (prop_set(ob, key, PROP_SINT32, i));
 }
 
+#ifdef SDL_HAS_64BIT_TYPE
 struct prop *
 prop_set_uint64(void *ob, char *key, Uint64 i)
 {
-#ifdef SDL_HAS_64BIT_TYPE
 	return (prop_set(ob, key, PROP_UINT64, i));
-#else
-	fatal("SDL does not provide a 64-bit type\n");
-	return (0);
-#endif
 }
 
 struct prop *
 prop_set_sint64(void *ob, char *key, Sint64 i)
 {
-#ifdef SDL_HAS_64BIT_TYPE
 	return (prop_set(ob, key, PROP_SINT64, i));
-#else
 	fatal("SDL does not provide a 64-bit type\n");
-	return (0);
-#endif
+	return (NULL);
 }
+#endif	/* SDL_HAS_64BIT_TYPE */
+
+#ifdef HAVE_IEEE754
+struct prop *
+prop_set_float(void *ob, char *key, float f)
+{
+	return (prop_set(ob, key, PROP_FLOAT, f));
+}
+
+struct prop *
+prop_set_double(void *ob, char *key, double d)
+{
+	return (prop_set(ob, key, PROP_DOUBLE, d));
+}
+
+# ifdef HAVE_LONG_DOUBLE
+struct prop *
+prop_set_long_double(void *ob, char *key, long double ld)
+{
+	return (prop_set(ob, key, PROP_LONG_DOUBLE, ld));
+}
+# endif
+#endif /* HAVE_IEEE754 */
 
 struct prop *
 prop_set_string(void *ob, char *key, char *fmt, ...)
@@ -212,9 +242,7 @@ prop_set_string(void *ob, char *key, char *fmt, ...)
 	char *s;
 
 	va_start(ap, fmt);
-	if (vasprintf(&s, fmt, ap) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
+	Vasprintf(&s, fmt, ap);
 	va_end(ap);
 
 	return (prop_set(ob, key, PROP_STRING, s));
@@ -274,11 +302,19 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			case PROP_SINT64:
 				*(Sint64 *)p = prop->data.s64;
 				break;
-#else
-			case PROP_UINT64:
-			case PROP_SINT64:
-				fatal("SDL provides no 64-bit type\n");
+#endif
+#ifdef HAVE_IEEE754
+			case PROP_FLOAT:
+				*(float *)p = prop->data.f;
 				break;
+			case PROP_DOUBLE:
+				*(double *)p = prop->data.d;
+				break;
+# ifdef HAVE_LONG_DOUBLE
+			case PROP_LONG_DOUBLE:
+				*(long double *)p = prop->data.ld;
+				break;
+# endif
 #endif
 			case PROP_STRING:
 				*(char **)p = Strdup(prop->data.s);
@@ -286,12 +322,17 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			case PROP_POINTER:
 				*(void **)p = prop->data.p;
 				break;
+			default:
+				error_set("type not supported: %d\n", t);
+				goto fail;
 			}
 			pthread_mutex_unlock(&ob->props_lock);
 			return (0);
 		}
 	}
 	error_set("%s has no \"%s\" property (type 0x%x)\n", ob->name, key, t);
+fail:
+	pthread_mutex_unlock(&ob->props_lock);
 	return (-1);
 }
 
@@ -379,10 +420,10 @@ prop_sint32(void *p, char *key)
 	return (i);
 }
 
+#ifdef SDL_HAS_64BIT_TYPE
 Uint64
 prop_uint64(void *p, char *key)
 {
-#ifdef SDL_HAS_64BIT_TYPE
 	struct object *ob = p;
 	Uint64 i;
 
@@ -390,16 +431,11 @@ prop_uint64(void *p, char *key)
 		fatal("%s\n", error_get());
 	}
 	return (i);
-#else
-	fatal("SDL does not provide a 64-bit type\n");
-	return (0);
-#endif
 }
 
 Sint64
 prop_sint64(void *p, char *key)
 {
-#ifdef SDL_HAS_64BIT_TYPE
 	struct object *ob = p;
 	Sint64 i;
 
@@ -407,11 +443,48 @@ prop_sint64(void *p, char *key)
 		fatal("%s\n", error_get());
 	}
 	return (i);
-#else
-	fatal("SDL does not provide a 64-bit type\n");
-	return (0);
-#endif
 }
+#endif /* SDL_HAS_64BIT_TYPE */
+
+#ifdef HAVE_IEEE754
+float
+prop_float(void *p, char *key)
+{
+	struct object *ob = p;
+	float f;
+
+	if (prop_get(ob, key, PROP_FLOAT, &f) == -1) {
+		fatal("%s\n", error_get());
+	}
+	return (f);
+}
+
+double
+prop_double(void *p, char *key)
+{
+	struct object *ob = p;
+	double d;
+
+	if (prop_get(ob, key, PROP_DOUBLE, &d) == -1) {
+		fatal("%s\n", error_get());
+	}
+	return (d);
+}
+
+# ifdef HAVE_LONG_DOUBLE
+long double
+prop_long_double(void *p, char *key)
+{
+	struct object *ob = p;
+	double ld;
+
+	if (prop_get(ob, key, PROP_LONG_DOUBLE, &ld) == -1) {
+		fatal("%s\n", error_get());
+	}
+	return (ld);
+}
+# endif
+#endif /* HAVE_IEEE754 */
 
 char *
 prop_string(void *p, char *key)
@@ -492,11 +565,19 @@ prop_load(void *p, int fd)
 		case PROP_SINT64:
 			prop_set_sint64(ob, key, read_sint64(fd));
 			break;
-#else
-		case PROP_UINT64:
-		case PROP_SINT64:
-			fatal("SDL provides no 64-bit type\n");
+#endif
+#ifdef HAVE_IEEE754
+		case PROP_FLOAT:
+			prop_set_float(ob, key, read_float(fd));
 			break;
+		case PROP_DOUBLE:
+			prop_set_double(ob, key, read_double(fd));
+			break;
+# ifdef HAVE_LONG_DOUBLE
+		case PROP_LONG_DOUBLE:
+			prop_set_long_double(ob, key, read_long_double(fd));
+			break;
+# endif
 #endif
 		case PROP_STRING:
 			{
@@ -508,14 +589,16 @@ prop_load(void *p, int fd)
 			}
 			break;
 		default:
-			fatal("unknown property type: 0x%x\n", t);
+			fatal("unsupported property: %d\n", t);
 			break;
 		}
 		free(key);
 	}
 	pthread_mutex_unlock(&ob->props_lock);
-
 	return (0);
+fail:
+	pthread_mutex_unlock(&ob->props_lock);
+	return (-1);
 }
 
 int
@@ -532,7 +615,7 @@ prop_save(void *p, int fd)
 
 	buf = fobj_create_buf(64, 128);
 
-	count_offs = buf->offs;		/* Skip */
+	count_offs = buf->offs;				/* Skip count */
 	buf_write_uint32(buf, 0);
 
 	TAILQ_FOREACH(prop, &ob->props, props) {
@@ -569,11 +652,19 @@ prop_save(void *p, int fd)
 		case PROP_SINT64:
 			buf_write_sint64(buf, prop->data.s64);
 			break;
-#else
-		case PROP_UINT64:
-		case PROP_SINT64:
-			fatal("SDL provides no 64-bit type\n");
+#endif
+#ifdef HAVE_IEEE754
+		case PROP_FLOAT:
+			buf_write_float(buf, prop->data.f);
 			break;
+		case PROP_DOUBLE:
+			buf_write_double(buf, prop->data.d);
+			break;
+# ifdef HAVE_LONG_DOUBLE
+		case PROP_LONG_DOUBLE:
+			buf_write_long_double(buf, prop->data.ld);
+			break;
+# endif
 #endif
 		case PROP_STRING:
 			buf_write_string(buf, prop->data.s);
@@ -583,15 +674,18 @@ prop_save(void *p, int fd)
 			debug(DEBUG_STATE, "ignored property \"%s\"\n",
 			    prop->key);
 			break;
+		default:
+			fatal("unsupported type: %d\n", prop->type);
 		}
 		nprops++;
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 	
-	buf_pwrite_uint32(buf, nprops, count_offs);
+	buf_pwrite_uint32(buf, nprops, count_offs);	/* Write count */
 
 	version_write(fd, &prop_ver);
 	fobj_flush_buf(buf, fd);
+
 	fobj_destroy_buf(buf);
 	return (0);
 }

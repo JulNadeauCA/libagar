@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.11 2002/11/26 01:42:00 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.12 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -164,6 +164,19 @@ tl_props_poll(int argc, union evarg *argv)
 		case PROP_SINT32:
 			asprintf(&s, "%s = %d", prop->key, prop->data.s32);
 			break;
+#ifdef HAVE_IEEE754
+		case PROP_FLOAT:
+			asprintf(&s, "%s = %f", prop->key, prop->data.f);
+			break;
+		case PROP_DOUBLE:
+			asprintf(&s, "%s = %f", prop->key, prop->data.d);
+			break;
+# ifdef HAVE_LONG_DOUBLE
+		case PROP_LONG_DOUBLE:
+			asprintf(&s, "%s = %Lf", prop->key, prop->data.ld);
+			break;
+# endif
+#endif
 		case PROP_STRING:
 			asprintf(&s, "%s = \"%s\"", prop->key, prop->data.s);
 			break;
