@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.4 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.5 2004/01/22 09:58:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,7 +70,7 @@ ucombo_collapse(struct ucombo *com)
 	com->saved_w = WIDGET(com->win)->w;
 	com->saved_h = WIDGET(com->win)->h;
 	window_hide(com->win);
-	object_detach(com->win, com->list);
+	object_detach(com->list);
 	view_detach(com->win);
 	com->win = NULL;
 	
@@ -92,7 +92,7 @@ ucombo_expand(int argc, union evarg *argv)
 
 		com->win = window_new(NULL);
 		win = WIDGET(com->win);
-		object_detach(com->win, com->win->tbar);
+		object_detach(com->win->tbar);
 		object_destroy(com->win->tbar);
 		free(com->win->tbar);
 
@@ -158,7 +158,7 @@ ucombo_destroy(void *p)
 
 	if (com->win != NULL) {
 		window_hide(com->win);
-		object_detach(com->win, com->list);
+		object_detach(com->list);
 		view_detach(com->win);
 	}
 	widget_destroy(com);
