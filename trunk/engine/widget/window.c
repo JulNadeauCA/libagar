@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.174 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.175 2003/04/12 01:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -94,6 +94,7 @@ int	window_debug = 0;
 
 pthread_mutex_t window_lock = PTHREAD_MUTEX_INITIALIZER;
 Uint32 window_ngeneric = 0;
+int window_xoffs = -1, window_yoffs = -1;
 
 struct window *
 window_new(char *name, int flags, int x, int y, int w, int h,
@@ -115,7 +116,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	struct window *win;
 	va_list args;
 	char *name;
-	static int genxoffs = -1, genyoffs = -1;
+	int xoffs, yoffs;
 
 	if (name_fmt != NULL) {				/* Single instance */
 		va_start(args, name_fmt);
@@ -142,18 +143,25 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 
 	win = Malloc(sizeof(struct window));
 
-	/* Initialize the window, figure out the initial coordinates. */
 	pthread_mutex_lock(&window_lock);
-	window_init(win, name, 0,
-	    view->w/2 - w/2 + genxoffs,
-	    view->h/2 - h/2 + genyoffs,
-	    w, h, w, h);
-	if ((genxoffs += 3) + w > view->w/2)
-		genxoffs = 0;
-	if ((genyoffs += 3) + h > view->h/2)
-		genyoffs = 0;
-	window_clamp(win);
+	xoffs = window_xoffs;
+	yoffs = window_yoffs;
 	pthread_mutex_unlock(&window_lock);
+
+	/* Initialize the window, figure out the initial coordinates. */
+	window_init(win, name, 0,
+	    view->w/2 - w/2 + xoffs,
+	    view->h/2 - h/2 + yoffs,
+	    w, h, w, h);
+
+	pthread_mutex_lock(&window_lock);
+	if ((window_xoffs += 3) + w > view->w/2)
+		window_xoffs = 0;
+	if ((window_yoffs += 3) + h > view->h/2)
+		window_yoffs = 0;
+	pthread_mutex_unlock(&window_lock);
+
+	window_clamp(win);
 	
 	free(name);
 
