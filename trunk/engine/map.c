@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.135 2003/01/26 04:40:09 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.136 2003/01/26 08:01:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -875,10 +875,10 @@ node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 	/* XXX inefficient */
 	SDL_LockSurface(view->v);
 	for (y = 0; y < dh; y++) {
-		if ((sy = y * TILEH / m->tileh) > s->h)
+		if ((sy = y * TILEH / m->tileh) >= s->h)
 			break;
 		for (x = 0; x < dw; x++) {
-			if ((sx = x * TILEW / m->tilew) > s->w)
+			if ((sx = x * TILEW / m->tilew) >= s->w)
 				break;
 			src = (Uint8 *)s->pixels +
 			    sy*s->pitch +
