@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.25 2002/11/15 04:18:34 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.26 2002/11/22 08:56:55 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -116,6 +116,12 @@ box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
 }
 
 static void
+box_rect(void *p, SDL_Rect *rd, int z, Uint32 color)
+{
+	primitives.box(p, rd->x, rd->y, rd->w, rd->h, z, color);
+}
+
+static void
 box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
     Uint32 color)
 {
@@ -225,6 +231,12 @@ static void
 box_3d_dark5(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
 	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -120, -120, -120);
+}
+
+static void
+frame_rect(void *p, SDL_Rect *rd, Uint32 color)
+{
+	primitives.frame(p, rd->x, rd->y, rd->w, rd->h, color);
 }
 
 static void
@@ -704,7 +716,9 @@ triangle_composite(void *p, int p1[2], int p2[2], int p3[2], Uint32 color)
 /* Default primitives ops */
 struct primitive_ops primitives = {
 	box_3d,			/* box */
+	box_rect,		/* box (SDL_Rect) */
 	frame_3d,		/* frame */
+	frame_rect,		/* frame (SDL_Rect) */
 	circle_bresenham,	/* circle */
 	line_bresenham,		/* line */
 	square_composite,	/* square */
