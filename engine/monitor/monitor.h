@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.10 2002/11/26 11:01:00 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.11 2002/12/01 10:46:42 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -12,7 +12,7 @@ struct monitor {
 /* Icons */
 enum {
 	MONITOR_OBJECT_BROWSER,
-	MONITOR_SPRITE_BROWSER,
+	MONITOR_MEDIA_BROWSER,
 	MONITOR_LEVEL_BROWSER,
 	MONITOR_WIDGET_BROWSER,
 	MONITOR_VIEW_PARAMS
