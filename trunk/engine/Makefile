@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.72 2003/08/13 01:47:34 vedge Exp $
+#	$Csoft: Makefile,v 1.73 2003/09/06 05:26:28 vedge Exp $
 
 TOP=..
 include ${TOP}/Makefile.config
@@ -15,11 +15,10 @@ SUBDIR=	compat \
 LIB=	engine
 
 SRCS=	audio.c config.c engine.c event.c gfx.c input.c map.c mkpath.c \
-	object.c perso.c physics.c prop.c rootmap.c transform.c typesw.c \
-	view.c
+	object.c perso.c position.c prop.c rootmap.c transform.c \
+	typesw.c view.c
 
-MAN3=	agar.3 map.3 object.3 view.3 rootmap.3 event.3 physics.3 prop.3 \
-	input.3
+MAN3=	agar.3 map.3 object.3 view.3 rootmap.3 event.3 prop.3 input.3
 
 CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS}
 

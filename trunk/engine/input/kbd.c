@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.3 2003/11/15 03:56:41 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.4 2004/01/03 04:25:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -28,7 +28,6 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/physics.h>
 #include <engine/input.h>
 
 static int	kbd_match(const void *, const SDL_Event *);

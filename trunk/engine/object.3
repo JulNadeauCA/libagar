@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.53 2004/01/08 02:20:08 vedge Exp $
+.\"	$Csoft: object.3,v 1.54 2004/01/22 09:58:42 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -277,7 +277,7 @@ in network format.
 .Fn object_free_props "struct object *obj"
 .Pp
 .Ft "void"
-.Fn object_free_childs "struct object *obj"
+.Fn object_free_children "struct object *obj"
 .nr nS 0
 .Pp
 The
@@ -298,7 +298,7 @@ calls
 .Fn object_free_events ,
 .Fn object_free_props
 and
-.Fn object_free_childs ,
+.Fn object_free_children ,
 but these functions may be called directly in order to clear the event handler
 list, the property table and the attached objects, respectively.
 .Pp
@@ -412,21 +412,19 @@ These functions return 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
 The illusion of objects (such as characters) moving inside a
 .Xr map 3
-is achieved by maintaining a copy of the object's current submap (a pointer to a
-.Xr map 3
-structure associated with the object).
-Most moving game characters provide submaps called
+is achieved by maintaining a copy of the object's current projection map.
+Most moving game characters provide projection maps called
 .Sq [nswe]-idle
 and
 .Sq [nswe]-move ,
 for instance.
 The
 .Nm
-interface is responsible for keeping the submap copy in sync, and adjusting the
-motion offsets of its noderefs in response to movement.
+interface is responsible for keeping the object's projection in sync, and
+adjusting the motion offsets of its noderefs in response to movement.
 .nr nS 1
 .Ft "int"
-.Fn object_set_submap "void *obj" "const char *map_name"
+.Fn object_set_projmap "void *obj" "const char *map_name"
 .Pp
 .Ft "void"
 .Fn object_set_position "void *obj" "struct map *map" "int x" "int y" \
@@ -440,11 +438,11 @@ motion offsets of its noderefs in response to movement.
 .nr nS 0
 .Pp
 The
-.Fn object_set_submap
+.Fn object_set_projmap
 function searches an object's descendents for a map named
 .Fa map_name
-and selects it as the current submap.
-.Fn object_set_submap
+and selects it as the current projection map.
+.Fn object_set_projmap
 returns 0 on success or -1 on failure.
 .Pp
 The

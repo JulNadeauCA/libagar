@@ -1,26 +1,25 @@
-/*	$Csoft: object.h,v 1.100 2003/12/05 00:45:31 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.101 2004/01/22 09:58:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
 
 #include <engine/prop.h>
-#include <engine/physics.h>
 #include <engine/gfx.h>
 #include <engine/audio.h>
+#include <engine/position.h>
 
 #include "begin_code.h"
+
+#define OBJECT_TYPE_MAX	32
+#define OBJECT_NAME_MAX	128
+#define OBJECT_PATH_MAX	1024
 
 struct map;
 struct input;
 struct event;
 
-enum object_page_item {
-	OBJECT_GFX,		/* Shared graphics */
-	OBJECT_AUDIO,		/* Shared audio samples */
-	OBJECT_DATA		/* Object data */
-};
-
+/* Generic object operation vector */
 struct object_ops {
 	void	(*init)(void *, const char *);		/* Initialize */
 	void	(*reinit)(void *);			/* Reinitialize */
@@ -30,35 +29,14 @@ struct object_ops {
 	struct window *(*edit)(void *);			/* Edit object */
 };
 
-/*
- * If the object occupies a unique position on a map, this structure
- * describes its coordinates, which submap to display for a given
- * orientation/status, and how the position is controlled.
- */
-struct object_position {
-	struct map	*map;		/* Map (or NULL) */
-	int		 x, y, z;	/* Map coordinates */
-	struct map	*submap;	/* Current submap */
-	struct input	*input;		/* Controller (or NULL) */
-	struct mapdir	 dir;		/* Map direction (not saved) */
-};
-
-/*
- * This structure describes a dependency of an object toward another object.
- * If the count reaches OBJECT_DEP_MAX, the dependency cannot be removed
- * before the object is destroyed (object_del_dep() becomes a no-op).
- */
+/* Dependency with respect to another object. */
 struct object_dep {
 	char		*path;		/* Unresolved object path */
 	struct object	*obj;		/* Resolved object */
 	Uint32		 count;		/* Reference count */
-#define OBJECT_DEP_MAX	(0xffffffff-2)	/* Remain resident if reached */
+#define OBJECT_DEP_MAX	(0xffffffff-2)	/* If reached, stay resident */
 	TAILQ_ENTRY(object_dep) deps;
 };
-
-#define OBJECT_TYPE_MAX	32
-#define OBJECT_NAME_MAX	128
-#define OBJECT_PATH_MAX	1024
 
 TAILQ_HEAD(objectq, object);
 
@@ -88,15 +66,21 @@ struct object {
 	Uint32		 audio_used;	/* Referenced samples */
 	Uint32		 data_used;	/* Referenced object derivate data */
 
-	struct object_position	*pos;		/* Position on a map */
+	struct position		*pos;		/* Unique position (or NULL) */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 
 	/* Uses linkage_lock */
 	TAILQ_HEAD(,object_dep)	 deps;		/* Object dependencies */
-	struct objectq		 childs;	/* Descendants */
+	struct objectq		 children;	/* Child objects */
 	void			*parent;	/* Parent object */
-	TAILQ_ENTRY(object)	 cobjs;		/* Child objects */
+	TAILQ_ENTRY(object)	 cobjs;
+};
+
+enum object_page_item {
+	OBJECT_GFX,		/* Shared graphics */
+	OBJECT_AUDIO,		/* Shared audio samples */
+	OBJECT_DATA		/* Object data */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
@@ -106,13 +90,13 @@ struct object {
 #define OBJECT_TYPE(ob, t)	(strcmp(OBJECT(ob)->type, (t)) == 0)
 
 #define OBJECT_FOREACH_CHILD(var, ob, type)				\
-	for((var) = (struct type *)TAILQ_FIRST(&OBJECT(ob)->childs);	\
-	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->childs);	\
+	for((var) = (struct type *)TAILQ_FIRST(&OBJECT(ob)->children);	\
+	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->children);	\
 	    (var) = (struct type *)TAILQ_NEXT(OBJECT(var), cobjs))
 
 #define OBJECT_FOREACH_CHILD_REVERSE(var, ob, type)			\
-	for((var) = (struct type *)TAILQ_LAST(&OBJECT(ob)->childs, objectq);\
-	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->childs);	\
+	for((var) = (struct type *)TAILQ_LAST(&OBJECT(ob)->children, objectq);\
+	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->children);	\
 	    (var) = (struct type *)TAILQ_PREV(OBJECT(var), objectq, cobjs))
 
 __BEGIN_DECLS
@@ -138,7 +122,7 @@ void		 object_wire_gfx(void *, const char *);
 void	 object_move_up(void *);
 void	 object_move_down(void *);
 int	 object_destroy(void *);
-int	 object_free_childs(struct object *);
+int	 object_free_children(struct object *);
 void	 object_free_props(struct object *);
 void 	 object_free_events(struct object *);
 void	 object_free_deps(struct object *);
@@ -150,17 +134,12 @@ int	 object_load(void *);
 int	 object_load_generic(void *);
 int	 object_reload_data(void *);
 int	 object_resolve_deps(void *);
+int	 object_resolve_position(void *);
 int	 object_load_data(void *);
 
 void	 object_attach(void *, void *);
 void	 object_detach(void *, void *);
 void	 object_move(void *, void *, void *);
-
-int	 object_set_input(void *, const char *);
-int	 object_set_submap(void *, const char *);
-void	 object_set_direction(void *, int, int, int);
-int	 object_set_position(void *, struct map *, int, int, int, struct map *);
-void	 object_unset_position(void *);
 
 struct object_dep	 *object_add_dep(void *, void *);
 __inline__ struct object *object_find_dep(const void *, Uint32);
