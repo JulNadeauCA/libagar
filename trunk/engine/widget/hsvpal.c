@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.6 2005/03/06 03:49:24 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.7 2005/03/06 04:22:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -327,7 +327,7 @@ hsvpal_draw(void *p)
 		SDL_Surface *sText;
 
 		if (cur_v < 0.50 ||
-		   (cur_s > 0.6 && cur_h > 3.665)) {
+		   (cur_s > 0.6 && (cur_h > 3.665 || cur_h < 0.6453))) {
 			lr = 255;
 			lg = 255;
 			lb = 255;
