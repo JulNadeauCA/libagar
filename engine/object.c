@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.150 2003/10/13 23:48:58 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.151 2003/10/14 03:15:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -818,12 +818,7 @@ object_load_generic(void *p)
 		error_set(_("The `%s' save has inconsistent flags."), ob->name);
 		goto fail;
 	}
-	dprintf("%s: read flags: 0x%x\n", ob->name, flags);
 	ob->flags = flags | (flags_save & OBJECT_WAS_RESIDENT);
-	dprintf("%s: 0x%x\n", ob->name, ob->flags);
-	if (ob->flags & OBJECT_WAS_RESIDENT) {
-		dprintf("%s: was resident\n", ob->name);
-	}
 
 	/* Decode the saved dependencies (to be resolved later). */
 	count = read_uint32(buf);
@@ -844,22 +839,22 @@ object_load_generic(void *p)
 
 	/* Decode and restore the position. */
 	if (read_uint32(buf) > 0) {
+		char map_id[OBJECT_PATH_MAX];
 		char submap_id[OBJECT_PATH_MAX];
 		char input_id[OBJECT_PATH_MAX];
 		struct map *m = ob->parent;		/* XXX ... */
-		int x, y, z, center;
+		int x, y, z;
 
-		pthread_mutex_lock(&m->lock);
+		copy_string(map_id, buf, sizeof(map_id));
+		copy_string(submap_id, buf, sizeof(submap_id));
+		copy_string(input_id, buf, sizeof(input_id));
 		x = (int)read_uint32(buf);
 		y = (int)read_uint32(buf);
 		z = (int)read_uint8(buf);
-		center = (int)read_uint8(buf);
-		copy_string(submap_id, buf, sizeof(submap_id));
-		copy_string(input_id, buf, sizeof(input_id));
-		debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, z,
-		    center ? ", centered" : "");
-		if (x < 0 || x >= m->mapw ||
-		    y < 0 || y >= m->maph ||
+
+		debug(DEBUG_STATE, "%s: at [%d,%d,%d]\n", ob->name, x, y, z);
+		pthread_mutex_lock(&m->lock);
+		if (x < 0 || x >= m->mapw || y < 0 || y >= m->maph ||
 		    z < 0 || z >= m->nlayers) {
 			error_set(_("Bad coordinates: %d,%d,%d"), x, y, z);
 			pthread_mutex_unlock(&m->lock);
@@ -872,9 +867,7 @@ object_load_generic(void *p)
 		}
 		object_set_position(ob, m, x, y, z);
 		if (input_id != NULL) {
-			object_control(ob, input_id);
-		} else {
-			debug(DEBUG_STATE, "%s: no controller\n", ob->name);
+			object_set_input(ob, input_id);
 		}
 		pthread_mutex_unlock(&m->lock);
 	}
@@ -1109,17 +1102,18 @@ object_save(void *p)
 	
 	/* Encode the position. */
 	if (ob->pos != NULL) {
+		char map_id[OBJECT_NAME_MAX];
 		struct object_position *pos = ob->pos;
 
 		write_uint32(buf, 1);
+		object_copy_name(pos->map, map_id, sizeof(map_id));
+		write_string(buf, map_id);
+		write_string(buf, OBJECT(pos->submap)->name);
+		write_string(buf, (pos->input != NULL) ?
+		    OBJECT(pos->input)->name : "");
 		write_uint32(buf, (Uint32)pos->x);
 		write_uint32(buf, (Uint32)pos->y);
 		write_uint8(buf, (Uint8)pos->z);
-		write_uint8(buf, (Uint8)pos->center);
-		write_string(buf, (pos->submap != NULL) ?
-		    OBJECT(pos->submap)->name : NULL);
-		write_string(buf, (pos->input != NULL) ?
-		    OBJECT(pos->input)->name : "");
 	} else {
 		write_uint32(buf, 0);
 	}
@@ -1173,7 +1167,7 @@ fail_lock:
 
 /* Control an object's position with an input device. */
 int
-object_control(void *p, const char *inname)
+object_set_input(void *p, const char *inname)
 {
 	struct object *ob = p;
 	struct input *in;
@@ -1199,24 +1193,7 @@ fail:
 	return (-1);
 }
 
-void
-object_center(void *p)
-{
-	struct object *ob = p;
-
-	if (view->gfx_engine != GFX_ENGINE_TILEBASED)
-		return;
-
-	pthread_mutex_lock(&ob->lock);
-	if (ob->pos != NULL) {
-		dprintf("%s at %d,%d\n", ob->name, ob->pos->x, ob->pos->y);
-		ob->pos->dir.flags |= DIR_SCROLLVIEW;
-		rootmap_center(ob->pos->map, ob->pos->x, ob->pos->y);
-	}
-	pthread_mutex_unlock(&ob->lock);
-}
-
-/* Project the current submap onto the level map. */
+/* Project the object onto a level map. */
 static void
 object_project_submap(struct object_position *pos)
 {
@@ -1232,14 +1209,13 @@ object_project_submap(struct object_position *pos)
 	     sy++, dy++) {
 		for (sx = 0, dx = pos->x;
 		     sx < sm->mapw && dx < pos->x+dm->mapw;
-		     sx++, dx++) {
-			node_copy(sm, &sm->map[sy][sx], -1,
-			    dm, &dm->map[dy][dx], pos->z);
-		}
+		     sx++, dx++)
+			node_copy(sm, &sm->map[sy][sx], -1, dm,
+			    &dm->map[dy][dx], pos->z);
 	}
 }
 
-/* Clear the copy of the current submap from the level map. */
+/* Disappear from the level map. */
 static void
 object_unproject_submap(struct object_position *pos)
 {
@@ -1249,13 +1225,12 @@ object_unproject_submap(struct object_position *pos)
 	    pos->submap->mapw, pos->submap->maph);
 
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
-		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
+		for (x = pos->x; x < pos->x+pos->submap->mapw; x++)
 			node_clear(pos->map, &pos->map->map[y][x], pos->z);
-		}
 	}
 }
 
-/* Change the current submap of an object. */
+/* Set the submap of an object and update its on-map copy. */
 int
 object_set_submap(void *p, const char *name)
 {
@@ -1287,6 +1262,21 @@ fail:
 	return (-1);
 }
 
+/*
+ * Set the direction of an object inside a map.
+ * A position must exist.
+ */
+void
+object_set_direction(void *p, int dir, int dirflags, int speed)
+{
+	struct object *ob = p;
+
+	pthread_mutex_lock(&ob->lock);
+	debug(DEBUG_POSITION, "%s: direction -> %d/%d\n", ob->name, dir, speed);
+	mapdir_init(&ob->pos->dir, ob, dirflags, speed);
+	pthread_mutex_unlock(&ob->lock);
+}
+
 /* Set the position of an object inside a map. */
 void
 object_set_position(void *p, struct map *dstmap, int x, int y, int z)
@@ -1304,11 +1294,11 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int z)
 		ob->pos->x = 0;
 		ob->pos->y = 0;
 		ob->pos->z = 0;
-		ob->pos->center = 0;
 		ob->pos->submap = NULL;
 		ob->pos->input = NULL;
-		mapdir_init(&ob->pos->dir, ob, dstmap, DIR_SOFTSCROLL, 1);
+		mapdir_init(&ob->pos->dir, ob, DIR_SOFT_MOTION, 1);
 	} else {
+		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
 		object_unproject_submap(ob->pos);
 		object_detach(ob->pos->map, ob);
 	}
@@ -1645,25 +1635,25 @@ static void
 select_gfx(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
-	char *text = argv[2].s;
+	struct tlist_item *it = argv[2].p;
 	
 	Free(ob->gfx_name);
 
-	if (text[0] == '\0') {
+	if (it->text[0] == '\0') {
 		if (ob->gfx != NULL) {
 			gfx_unused(ob->gfx);
 		}
 		ob->gfx = NULL;
 		ob->gfx_name = NULL;
 	} else {
-		ob->gfx_name = Strdup(text);
+		ob->gfx_name = Strdup(it->text);
 		if (gfx_fetch(ob) == -1) {
 			text_msg(MSG_ERROR, "%s: %s", ob->gfx_name,
 			    error_get());
 			free(ob->gfx_name);
 			ob->gfx_name = NULL;
 		} else {
-			ob->gfx_name = Strdup(text);
+			ob->gfx_name = Strdup(it->text);
 		}
 	}
 }
@@ -1672,25 +1662,25 @@ static void
 select_audio(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
-	char *text = argv[2].s;
+	struct tlist_item *it = argv[2].p;
 	
 	Free(ob->audio_name);
 
-	if (text[0] == '\0') {
+	if (it->text[0] == '\0') {
 		if (ob->audio != NULL) {
 			audio_unused(ob->audio);
 		}
 		ob->audio = NULL;
 		ob->audio_name = NULL;
 	} else {
-		ob->audio_name = Strdup(text);
+		ob->audio_name = Strdup(it->text);
 		if (audio_fetch(ob) == -1) {
 			text_msg(MSG_ERROR, "%s: %s", ob->audio_name,
 			    error_get());
 			free(ob->audio_name);
 			ob->audio_name = NULL;
 		} else {
-			ob->audio_name = Strdup(text);
+			ob->audio_name = Strdup(it->text);
 		}
 	}
 }

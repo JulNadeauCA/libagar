@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.97 2003/10/11 04:31:34 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.98 2003/10/14 03:15:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -38,7 +38,6 @@ struct object_ops {
 struct object_position {
 	struct map	*map;		/* Map (or NULL) */
 	int		 x, y, z;	/* Map coordinates */
-	int		 center;	/* Center the view around this? */
 	struct map	*submap;	/* Current submap */
 	struct input	*input;		/* Controller (or NULL) */
 	struct mapdir	 dir;		/* Map direction (not saved) */
@@ -157,10 +156,9 @@ void	 object_attach(void *, void *);
 void	 object_detach(void *, void *);
 void	 object_move(void *, void *, void *);
 
-int	 object_control(void *, const char *);
-void	 object_center(void *);
+int	 object_set_input(void *, const char *);
 int	 object_set_submap(void *, const char *);
-
+void	 object_set_direction(void *, int, int, int);
 void	 object_set_position(void *, struct map *, int, int, int);
 void	 object_unset_position(void *);
 

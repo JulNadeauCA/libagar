@@ -1,4 +1,4 @@
-/*	$Csoft: position.h,v 1.1 2003/09/07 08:03:14 vedge Exp $	*/
+/*	$Csoft: position.h,v 1.2 2003/10/13 23:49:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -8,10 +8,14 @@
 struct position {
 	struct tool tool;
 
-	int		 center_view;
-	struct tlist	*objs_tl;
-	struct tlist	*submaps_tl;
-	struct tlist	*inputs_tl;
+	int	 speed;			/* Movement/scrolling increment */
+	int	 center_view;		/* Center view around? */
+	int	 soft_motion;		/* Soft-scrolling */
+	int	 pass_through;		/* Ignore node movement restrictions */
+
+	void	*obj;			/* Object to position */
+	void	*submap;		/* Object submap to display */
+	void	*input_dev;		/* Input device to control object */
 };
 
 __BEGIN_DECLS
