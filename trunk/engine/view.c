@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.124 2003/05/24 15:53:39 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.125 2003/05/25 08:00:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,8 +27,6 @@
  */
 
 #include <config/have_jpeg.h>
-#include <engine/compat/snprintf.h>
-#include <engine/compat/strlcat.h>
 
 #include <engine/engine.h>
 #include <engine/rootmap.h>
@@ -41,7 +39,6 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
-#include <engine/widget/text.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -56,10 +53,6 @@
 #ifdef HAVE_JPEG
 #include <jpeglib.h>
 #endif
-
-enum {
-	VIEW_NDIRTY_RECTS =	4096
-};
 
 const struct object_ops viewport_ops = {
 	NULL,		/* init */
@@ -97,8 +90,8 @@ view_init(enum gfx_engine ge)
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	v->ndirty = 0;
-	v->maxdirty = VIEW_NDIRTY_RECTS;
-	v->dirty = Malloc(v->maxdirty * sizeof(SDL_Rect *));
+	v->maxdirty = 4;
+	v->dirty = Malloc(v->maxdirty * sizeof(SDL_Rect));
 	v->opengl = 0;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
@@ -111,7 +104,7 @@ view_init(enum gfx_engine ge)
 	if (prop_get_bool(config, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
 	if (prop_get_bool(config, "view.async-blits"))
-		screenflags |= SDL_ASYNCBLIT;
+		screenflags |= SDL_HWSURFACE|SDL_ASYNCBLIT;
 
 	/* Negotiate the depth. */
 	v->depth = SDL_VideoModeOK(v->w, v->h, depth, screenflags);
@@ -188,9 +181,11 @@ view_init(enum gfx_engine ge)
 		glViewport(0, 0, v->w, v->h);
 		glOrtho(0, v->w, v->h, 0, -1.0, 1.0);
 		glClearColor(0, 0, 0, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
+		glDisable(GL_DITHER);
 		glEnable(GL_TEXTURE_2D);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
@@ -281,7 +276,6 @@ view_attach(void *child)
 
 	view->focus_win = NULL;
 
-	OBJECT_ASSERT(child, "window");
 	event_post(child, "attached", "%p", view);
 	TAILQ_INSERT_TAIL(&view->windows, win, windows);
 	
@@ -294,8 +288,6 @@ view_detach(void *child)
 {
 	struct window *win = child;
 	
-	OBJECT_ASSERT(child, "window");
-
 	/*
 	 * Allow windows to detach themselves only after event processing
 	 * is complete.
@@ -477,14 +469,12 @@ view_set_refresh(int min_delay, int max_delay)
 	}
 	
 	dprintf("%d fps (%dms)\n", 1000/max_delay, max_delay);
-
 	pthread_mutex_lock(&view->lock);
 	view->refresh.current = 0;
 	view->refresh.delay = max_delay;
 	view->refresh.max_delay = max_delay;
 	view->refresh.min_delay = min_delay;
 	pthread_mutex_unlock(&view->lock);
-
 	return (0);
 }
 
@@ -556,26 +546,25 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 
 #endif /* HAVE_OPENGL */
 
-/* Alpha-blend two pixels in software. */
+/*
+ * Alpha-blend two pixels in software.
+ * Clipping is done; the surface must be locked.
+ */
 __inline__ void
 view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
     Uint8 b, Uint8 a)
 {
-	Uint32 color, dstcolor;
+	Uint32 color, dstcolor = 0;
 	Uint8 dr, dg, db;
 	Uint8 *dst;
 
-	if (!VIEW_INSIDE_CLIP_RECT(s, x, y)) {
+	if (!VIEW_INSIDE_CLIP_RECT(s, x, y))
 		return;
-	}
 
 	dst = (Uint8 *)s->pixels + y*s->pitch + x*s->format->BytesPerPixel;
 	switch (s->format->BytesPerPixel) {
-	case 1:
-		dstcolor = *dst;
-		break;
-	case 2:
-		dstcolor = *(Uint16 *)dst;
+	case 4:
+		dstcolor = *(Uint32 *)dst;
 		break;
 	case 3:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -588,11 +577,12 @@ view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
 			   (dst[2] << 16);
 #endif
 		break;
-	case 4:
-		dstcolor = *(Uint32 *)dst;
+	case 2:
+		dstcolor = *(Uint16 *)dst;
 		break;
-	default:
-		fatal("bad bpp");
+	case 1:
+		dstcolor = *dst;
+		break;
 	}
 	SDL_GetRGB(dstcolor, s->format, &dr, &dg, &db);
 
@@ -609,6 +599,7 @@ view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
 	}
 }
 
+/* Dump a surface to a JPEG image. */
 void
 view_capture(SDL_Surface *su)
 {
@@ -623,10 +614,10 @@ view_capture(SDL_Surface *su)
 	JSAMPROW row[1];
 	int x;
 
-	if (prop_copy_string(config, "path.user_data_dir", path, sizeof(path)) >
+	if (prop_copy_string(config, "save-path", path, sizeof(path)) >=
 	    sizeof(path))
 		goto toobig;
-	if (strlcat(path, "/screenshot", sizeof(path)) > sizeof(path))
+	if (strlcat(path, "/screenshot", sizeof(path)) >= sizeof(path))
 		goto toobig;
 	if (mkdir(path, 0755) == -1 && errno != EEXIST) {
 		text_msg("Error", "mkdir %s: %s", path, strerror(errno));
@@ -712,3 +703,28 @@ toobig:
 	text_msg("Error", "Screenshot feature requires libjpeg");
 #endif
 }
+
+/* Queue a video update. */
+__inline__ void
+view_update(int x, int y, int w, int h)
+{
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		view->ndirty = 1;
+	} else
+#endif
+	{
+		if (view->ndirty+1 > view->maxdirty) {
+			view->maxdirty *= 2;
+			view->dirty = Realloc(view->dirty, view->maxdirty *
+			    sizeof(SDL_Rect));
+			dprintf("%d maxdirty\n", view->maxdirty);
+		}
+		view->dirty[view->ndirty].x = x;
+		view->dirty[view->ndirty].y = y;
+		view->dirty[view->ndirty].w = w;
+		view->dirty[view->ndirty].h = h;
+		view->ndirty++;
+	}
+}
+

@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.77 2003/05/22 05:45:45 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.78 2003/05/25 08:00:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -11,11 +11,10 @@
 #include <config/view_32bpp.h>
 
 enum gfx_engine {
-	GFX_ENGINE_GUI,		/* Direct rendering, solid background */
-	GFX_ENGINE_TILEBASED	/* Direct rendering, map background */
+	GFX_ENGINE_GUI,		/* Direct video/OpenGL, solid background */
+	GFX_ENGINE_TILEBASED	/* Direct video/OpenGL, map background */
 };
 
-/* Map display */
 struct viewmap {
 	/* Read-only */
 	int		  w, h;		/* View geometry in nodes */
@@ -60,11 +59,7 @@ struct viewport {
 		VIEW_WINOP_MOVE,		/* Window movement */
 		VIEW_WINOP_LRESIZE,		/* Window resize */
 		VIEW_WINOP_RRESIZE,
-		VIEW_WINOP_HRESIZE,
-		VIEW_WINOP_REGRESIZE_LEFT,	/* Region resize */
-		VIEW_WINOP_REGRESIZE_RIGHT,
-		VIEW_WINOP_REGRESIZE_UP,
-		VIEW_WINOP_REGRESIZE_DOWN
+		VIEW_WINOP_HRESIZE
 	} winop;
 };
 
@@ -132,17 +127,6 @@ case 4:					\
 	}								\
 } while (0)
 
-#define VIEW_UPDATE(rect) do {					\
-	if (!view->opengl) {					\
-		if (view->ndirty + 1 > view->maxdirty) {	\
-			fatal("too many rects");		\
-		}						\
-		view->dirty[view->ndirty++] = (rect);		\
-	} else {						\
-		view->ndirty = 1;				\
-	}							\
-} while (0)
-
 extern struct viewport *view;	/* view.c */
 extern SDL_PixelFormat *vfmt;	/* view.c */
 
@@ -160,8 +144,9 @@ extern DECLSPEC SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16,
 extern DECLSPEC void		 view_set_trans(SDL_Surface *, Uint8);
 extern DECLSPEC SDL_Surface	*view_copy_surface(SDL_Surface *);
 extern DECLSPEC void		 view_capture(SDL_Surface *);
-extern DECLSPEC __inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
+extern __inline__ void		 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
 				                   Uint8, Uint8, Uint8, Uint8);
+extern __inline__ void		 view_update(int, int, int, int);
 #ifdef HAVE_OPENGL
 extern DECLSPEC GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
