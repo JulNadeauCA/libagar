@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.65 2003/01/03 23:28:56 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.66 2003/01/18 06:37:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -19,7 +19,7 @@ struct viewmap {
 	/* Read-write (shares viewport->lock) */
 	struct	map *map;		/* Currently visible map */
 	int	x, y;			/* Offset in map */
-	int	sx, sy;			/* Soft scroll offset */
+	Sint16	sx, sy;			/* Soft scroll offset */
 
 	/* Optimizations */
 	SDL_Rect **maprects;		/* Rectangles needed to draw the map. */
