@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.77 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.78 2004/01/22 09:58:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -700,6 +700,7 @@ widget_destroy(void *p)
 		nbind = SLIST_NEXT(bind, bindings);
 		free(bind);
 	}
+	pthread_mutex_destroy(&wid->bindings_lock);
 }
 
 /*
