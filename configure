@@ -968,8 +968,8 @@ else
 NONE=1
 fi
 if [ "${X11_CFLAGS}" != "" ]; then
-echo -n "yes"
-echo -n "yes" >> config.log
+echo "yes"
+echo "yes" >> config.log
 x11_found=yes
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 else
