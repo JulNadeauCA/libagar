@@ -1,0 +1,96 @@
+.\"	$Csoft: version.3,v 1.7 2003/04/12 00:35:06 vedge Exp $
+.\"
+.\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 23, 2002
+.Dt VERSION 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm version
+.Nd agar data file versioning
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/version.h>
+.Ed
+.Sh DESCRIPTION
+The agar
+.Nm
+interface encodes, or verifies the following structure:
+.Bd -literal
+struct version {
+	char	*name;			/* Signature */
+	Uint32	 vermaj, vermin;	/* Version */
+};
+.Ed
+.Pp
+The
+.Dv vermaj
+member is incremented whenever a change introduces binary incompatibility
+with previous versions of the data files.
+This is usually avoided by comparing versions when loading, and using padding
+when saving.
+.Pp
+The
+.Dv vermin
+member is incremented whenever a change is made in the data file, but binary
+compatibility is preserved.
+.Sh VERSIONING
+.nr nS 1
+.Ft "int"
+.Fn version_read "struct netbuf *buf" "const struct version *ver" \
+                 "struct version *rver"
+.Pp
+.Ft "void"
+.Fn version_write "struct netbuf *buf" "const struct version *ver"
+.nr nS 0
+.Pp
+The
+.Fn version_read
+function reads version information from
+.Fa fd
+and returns 0 if the following data is binary compatible against the version
+represented by
+.Fa ver ,
+or -1 if the data is not compatible.
+If
+.Fa rver
+is not NULL, it is initialized with the version information read from
+.Fa fd .
+.Pp
+The
+.Fn version_write
+function writes version information from the structure
+.Fa ver
+to
+.Fa buf .
+.Sh SEE ALSO
+.Xr agar 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.0
