@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.14 2004/11/25 02:47:34 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.15 2005/03/03 08:46:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -111,12 +111,18 @@ enum {
 	RG_VGRADIENT_ICON,
 	RG_CGRADIENT_ICON,
 	RG_TILING_ICON,
+	RG_FILL_ICON,
 	RG_SKETCH_PROJ_ICON,
 	RG_SKETCH_ICON,
-	RG_SKETCH_ATTACH_ICON
+	RG_SKETCH_ATTACH_ICON,
+	RG_PIXMAP_ICON,
+	RG_PIXMAP_RESIZE_ICON,
+	RG_PIXMAP_ATTACH_ICON,
 	RG_POLYGON_ICON,
 	RG_EXTRUSION_ICON,
-	RG_REVOLUTION_ICON
+	RG_REVOLUTION_ICON,
+	RG_SWAP_ICON,
+	RG_INVERT_ICON
 };
 
 extern struct object engine_icons;			/* engine.c */
