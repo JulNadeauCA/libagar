@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.52 2003/05/04 02:05:34 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.53 2003/05/04 02:09:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ static void	tlist_keydown(int, union evarg *);
 static void	tlist_scaled(int, union evarg *);
 static void	tlist_attached(int, union evarg *);
 static void	tlist_free_item(struct tlist_item *);
-static void	tlist_clamp(struct tlist *);
+static void	tlist_adjust_scrollbar(struct tlist *);
 
 struct tlist *
 tlist_new(struct region *reg, int rw, int rh, int flags)
@@ -232,22 +232,27 @@ tlist_draw(void *p)
 	pthread_mutex_unlock(&tl->lock);
 }
 
-/* Ensure the scrollbar value is inside the scrollbar range. */
+/* Adjust the scrollbar offset according to the number of visible items. */
 static void
-tlist_clamp(struct tlist *tl)
+tlist_adjust_scrollbar(struct tlist *tl)
 {
 	struct widget_binding *maxb, *offsetb;
 	int *max, *offset;
+	int noffset;
 
 	maxb = widget_binding_get_locked(&tl->sbar, "max", &max);
 	offsetb = widget_binding_get_locked(&tl->sbar, "value", &offset);
+	noffset = *offset;
 
-	if (*offset < 0) 			/* Minimum is always 0 */
-		*offset = 0;
-	if (*offset > *max)
-		*offset = *max;
+	if (noffset > *max - tl->nvisitems)
+		noffset = *max - tl->nvisitems;
+	if (noffset < 0)
+		noffset = 0;
 
-	widget_binding_modified(offsetb);
+	if (*offset != noffset) {
+		*offset = noffset;
+		widget_binding_modified(offsetb);
+	}
 	widget_binding_unlock(offsetb);
 	widget_binding_unlock(maxb);
 }
@@ -361,8 +366,7 @@ tlist_restore_selections(struct tlist *tl)
 				cit->selected++;
 		}
 	}
-
-	tlist_clamp(tl);
+	tlist_adjust_scrollbar(tl);
 }
 
 static struct tlist_item *
@@ -475,23 +479,9 @@ static void
 tlist_mousemotion(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct widget_binding *offsetb, *maxb;
-	int *offset, *max;
 	
 	event_forward(&tl->sbar, "window-mousemotion", argc, argv);
-
-	maxb = widget_binding_get_locked(&tl->sbar, "max", &max);
-	offsetb = widget_binding_get_locked(&tl->sbar, "value", &offset);
-
-	if (*offset >= *max) {			/* Don't scroll past the end. */
-		*offset = *max - tl->nvisitems;
-		if (*offset < 0)
-			*offset = 0;
-		widget_binding_modified(offsetb);
-	}
-
-	widget_binding_unlock(offsetb);
-	widget_binding_unlock(maxb);
+	tlist_adjust_scrollbar(tl);
 }
 
 static void
@@ -522,29 +512,13 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tlist_item *ti;
-	int *max;
 	int tind;
 	
 	WIDGET_FOCUS(tl);
 
 	if (x > WIDGET(tl)->w - WIDGET(&tl->sbar)->w) {	/* Scrollbar click? */
-		struct widget_binding *maxb, *offsetb;
-		int *offset;
-	
 		event_forward(&tl->sbar, "window-mousebuttondown", argc, argv);
-
-		maxb = widget_binding_get_locked(&tl->sbar, "max", &max);
-		offsetb = widget_binding_get_locked(&tl->sbar, "value",
-		    &offset);
-		if (*offset >= *max) {
-			/* Don't scroll past the end. */
-			*offset = *max - tl->nvisitems - 1;
-			if (*offset < 0)
-				*offset = 0;
-			widget_binding_modified(offsetb);
-		}
-		widget_binding_unlock(offsetb);
-		widget_binding_unlock(maxb);
+		tlist_adjust_scrollbar(tl);
 		return;
 	}
 	
