@@ -1,4 +1,4 @@
-/*	$Csoft: level_browser.c,v 1.5 2003/01/01 05:18:40 vedge Exp $	*/
+/*	$Csoft: level_browser.c,v 1.6 2003/01/27 08:05:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,27 +35,46 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/tlist.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
+
+static void
+tl_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
+		if (strcmp(ob->type, "map") != 0)
+			continue;
+		tlist_insert_item(tl, NULL, ob->name, ob);
+	}
+	pthread_mutex_unlock(&world->lock);
+	tlist_restore_selections(tl);
+}
 
 struct window *
 level_browser_window(void)
 {
 	struct window *win;
 	struct region *reg;
-	struct mapview *mv;
 
-	win = window_generic_new(320, 200,
-	    "monitor-level-browser-%s", OBJECT(view->rootmap->map)->name);
-	if (win == NULL) {
+	win = window_generic_new(320, 200, "monitor-level-browser");
+	if (win == NULL)
 		return (NULL);		/* Exists */
+	window_set_caption(win, "Levels");
+	
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	{
+		struct tlist *tl;
+	
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl, "tlist-poll", tl_poll, NULL);
 	}
-	window_set_caption(win, "%s view", OBJECT(view->rootmap->map)->name);
-
-	reg = region_new(win, 0, 0, 0, 100, 100);
-	mv = mapview_new(reg, view->rootmap->map,
-	    MAPVIEW_CENTER|MAPVIEW_ZOOM, 100, 100);
 
 	return (win);
 }
