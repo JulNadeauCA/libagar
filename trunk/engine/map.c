@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.158 2003/03/10 02:13:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.159 2003/03/10 05:50:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ node_destroy(struct node *node)
 
 #ifdef DEBUG
 	if (strcmp(NODE_MAGIC, node->magic) != 0)
-		fatal("bad node\n");
+		fatal("bad node");
 	strncpy(node->magic, "free", 5);
 #endif
 	for (nref = TAILQ_FIRST(&node->nrefs);
@@ -121,7 +121,7 @@ noderef_destroy(struct noderef *nref)
 
 #ifdef DEBUG
 	if (strcmp(NODEREF_MAGIC, nref->magic) != 0)
-		fatal("bad nref\n");
+		fatal("bad nref");
 	strncpy(nref->magic, "free", 5);
 #endif
 
@@ -217,17 +217,14 @@ map_shrink(struct map *m, unsigned int w, unsigned int h)
 	
 	pthread_mutex_lock(&m->lock);
 	
-	/* Free the excess nodes. */
-	for (y = h; y < m->maph; y++) {
+	for (y = h; y < m->maph; y++) {			/* Free excess nodes */
 		for (x = w; x < m->mapw; x++) {
 			node = &m->map[y][x];
-			MAP_CHECK_NODE(node, x, y);
 			node_destroy(node);
 			free(node);
 		}
 	}
 
-	/* Reallocate the node arrays. */
 	m->map = erealloc(m->map, h * sizeof(struct node *));
 	if (w < m->mapw) {
 		for (y = 0; y < m->maph; y++) {
@@ -235,10 +232,9 @@ map_shrink(struct map *m, unsigned int w, unsigned int h)
 			    w * sizeof(struct node));
 		}
 	}
-
 	m->mapw = w;
 	m->maph = h;
-	
+
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -258,7 +254,6 @@ map_grow(struct map *m, unsigned int w, unsigned int h)
 
 	pthread_mutex_lock(&m->lock);
 
-	/* Reallocate the node arrays. */
 	m->map = erealloc(m->map, h * sizeof(struct node *));
 	for (y = 0; y < h; y++) {
 		if (y > m->maph-1) {			/* New row */
@@ -276,12 +271,10 @@ map_grow(struct map *m, unsigned int w, unsigned int h)
 			}
 		}
 	}
-		
 	m->mapw = w;
 	m->maph = h;
 
 	pthread_mutex_unlock(&m->lock);
-
 	return (0);
 }
 
@@ -301,17 +294,14 @@ map_adjust(struct map *m, int mx, int my)
 
 	pthread_mutex_lock(&m->lock);
 	if (mx > m->mapw) {
-		if (map_grow(m, mx, m->maph) == -1) {
+		if (map_grow(m, mx, m->maph) == -1)
 			rv = -1;
-		}
 	}
 	if (my > m->maph) {
-		if (map_grow(m, m->mapw, my) == -1) {
+		if (map_grow(m, m->mapw, my) == -1)
 			rv = -1;
-		}
 	}
 	pthread_mutex_unlock(&m->lock);
-
 	return (rv);
 }
 
@@ -334,13 +324,12 @@ map_set_zoom(struct map *m, Uint16 zoom)
 }
 
 void
-map_init(struct map *m, enum map_type type, char *name, char *media)
+map_init(struct map *m, char *name, char *media)
 {
 	int i;
 
 	object_init(&m->obj, "map", name, media,
 	    (media != NULL) ? OBJECT_ART|OBJECT_ART_CAN_FAIL: 0, &map_ops);
-	m->type = type;
 	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
@@ -390,7 +379,7 @@ map_layer_destroy(struct map_layer *lay)
 int
 map_push_layer(struct map *m, char *name)
 {
-	if (m->nlayers+1 > 256) {
+	if (m->nlayers+1 > MAP_MAX_LAYERS) {
 		error_set("too many layers");
 		return (-1);
 	}
@@ -432,12 +421,6 @@ node_add_sprite(struct node *node, void *pobj, Uint32 offs)
 	nref->type = NODEREF_SPRITE;
 	nref->pobj = pobj;
 	nref->offs = offs;
-
-#ifdef DEBUG
-	if (strcmp(node->magic, NODE_MAGIC) != 0) {
-		fatal("bad node\n");
-	}
-#endif
 	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
 	return (nref);
 }
@@ -458,12 +441,6 @@ node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
 	nref->offs = offs;
 	nref->data.anim.flags = flags;
 	nref->data.anim.frame = 0;
-
-#ifdef DEBUG
-	if (strcmp(node->magic, NODE_MAGIC) != 0) {
-		fatal("bad node\n");
-	}
-#endif
 	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
 	return (nref);
 }
@@ -478,7 +455,7 @@ node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
 	struct noderef *nref;
 
 	if (x > MAP_MAX_WIDTH || y > MAP_MAX_HEIGHT)
-		fatal("bad warp coords\n");
+		fatal("bad warp coords");
 
 	nref = emalloc(sizeof(struct noderef));
 	noderef_init(nref);
@@ -487,12 +464,6 @@ node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
 	nref->data.warp.x = x;
 	nref->data.warp.y = y;
 	nref->data.warp.dir = dir;
-
-#ifdef DEBUG
-	if (strcmp(node->magic, NODE_MAGIC) != 0) {
-		fatal("bad node\n");
-	}
-#endif
 	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
 	return (nref);
 }
@@ -541,7 +512,7 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
 		    src->data.warp.x, src->data.warp.y, src->data.warp.dir);
 		break;
 	default:
-		fatal("bad noderef type\n");
+		fatal("bad nref type");
 		break;
 	}
 	dst->flags = src->flags;
@@ -559,7 +530,7 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
 }
 
 /*
- * Remove a noderef from a node.
+ * Remove a noderef from a node and free it.
  * The map containing the node must be locked.
  */
 void
@@ -666,7 +637,7 @@ map_destroy(void *p)
 }
 
 /*
- * Load a noderef structure, translating the object ids using dependencies.
+ * Load a noderef structure.
  * The noderef's parent map must be locked.
  */
 void
@@ -674,10 +645,11 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
     struct noderef **nref)
 {
 	enum noderef_type type;
-	Uint32 i, ntrans = 0;
 	struct transform *trans;
+	Uint32 ntrans = 0;
 	Uint32 flags;
 	Uint8 layer;
+	int i;
 
 	/* Read the type of reference, flags and the layer#. */
 	type = read_uint32(fd);
@@ -692,16 +664,14 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			Sint16 xcenter, ycenter;
 
 			obji = read_uint32(fd);		/* Object# */
-			if (obji > deps->nobjs) {
-				fatal("bad object table index\n");
-			}
-
+			if (obji > deps->nobjs)
+				fatal("bad object#");
 			offs = read_uint32(fd);		/* Sprite# */
 			xcenter = read_sint16(fd);
 			ycenter = read_sint16(fd);
 
 			debug(DEBUG_NODEREFS,
-			    "sprite: obj[%d]:%d, center %d,%d\n",
+			    "sprite: obj[%u]:%u, center %d,%d\n",
 			    obji, offs, xcenter, ycenter);
 
 			if (deps->objs[obji] != NULL) {
@@ -712,7 +682,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->ycenter = ycenter;
 				(*nref)->layer = layer;
 			} else {
-				fatal("missing sprite dep 0x%x\n", obji);
+				fatal("missing sprite dep 0x%X", obji);
 			}
 		}
 		break;
@@ -722,9 +692,8 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			Sint16 xcenter, ycenter;
 
 			obji = read_uint32(fd);
-			if (obji > deps->nobjs) {
-				fatal("bad object table index\n");
-			}
+			if (obji > deps->nobjs)
+				fatal("bad object#");
 			offs = read_uint32(fd);
 			xcenter = read_sint16(fd);
 			ycenter = read_sint16(fd);
@@ -732,7 +701,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 
 			if (deps->objs[obji] != NULL) {
 				debug(DEBUG_NODEREFS,
-				    "anim: %s:%d, center %d,%d, aflags 0x%x\n",
+				    "anim: %s:%u, center %d,%d, aflags 0x%X\n",
 				    deps->objs[obji]->name, offs,
 				    xcenter, ycenter, animflags);
 				*nref = node_add_anim(node, deps->objs[obji],
@@ -742,7 +711,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->ycenter = ycenter;
 				(*nref)->layer = layer;
 			} else {
-				fatal("missing anim dep 0x%x\n", obji);
+				fatal("missing anim dep 0x%X", obji);
 			}
 		}
 		break;
@@ -755,10 +724,14 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			map_id = read_string(fd, NULL);
 			ox = read_uint32(fd);
 			oy = read_uint32(fd);
+			if (ox > MAP_MAX_WIDTH || oy > MAP_MAX_HEIGHT) {
+				fatal("bad warp coords");
+			}
 			dir = read_uint8(fd);
-			debug(DEBUG_NODEREFS, "warp: to %s:%d,%d, dir 0x%x\n",
+			debug(DEBUG_NODEREFS, "warp: to %s:%u,%u, dir 0x%X\n",
 			    map_id, ox, oy, dir);
-			*nref = node_add_warp(node, map_id, ox, oy, dir);
+			*nref = node_add_warp(node, map_id, (int)ox, (int)oy,
+			    dir);
 			(*nref)->flags = flags;
 			(*nref)->layer = layer;
 			
@@ -766,44 +739,39 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 		}
 		break;
 	default:
-		fatal("unknown noderef type\n");
+		fatal("unknown noderef type");
 		break;
 	}
 
 	/* Read the transforms. */
-	ntrans = read_uint32(fd);
-	if (ntrans > 0xffff) {
-		fatal("node has >64k transforms\n");
-	}
+	if ((ntrans = read_uint32(fd)) > NODEREF_MAX_TRANSFORMS)
+		fatal("too many transforms");
 	for (i = 0; i < ntrans; i++) {
 		struct transform *trans;
 
 		trans = emalloc(sizeof(struct transform));
 		transform_load(fd, trans);
+		SLIST_INSERT_HEAD(&(*nref)->transforms, trans, transforms);
 	}
 }
 
 void
 node_load(int fd, struct object_table *deps, struct node *node)
 {
-	Uint32 i, nrefs;
+	Uint32 nrefs;
 	struct noderef *nref;
+	int i;
 	
 	/* Load the node properties. */
 	node->flags = read_uint32(fd);
-	node->flags &= ~(NODE_EPHEMERAL);
 	read_uint32(fd);			/* Pad: v1 */
 	
 	/* Load the node references. */
-	nrefs = read_uint32(fd);
-#ifdef DEBUG
-	if (nrefs > 0xffff) {
-		fatal("node has >64k references\n");
-	}
-#endif
-	for (i = 0; i < nrefs; i++) {
+	if ((nrefs = read_uint32(fd)) > NODE_MAX_NODEREFS)
+		fatal("too many nrefs");
+
+	for (i = 0; i < nrefs; i++)
 		noderef_load(fd, deps, node, &nref);
-	}
 }
 
 static void
@@ -837,24 +805,24 @@ map_load(void *ob, int fd)
 			map_free_layers(m);
 	}
 
-	m->type = (enum map_type)read_uint32(fd);
+	read_uint32(fd);				/* Always 0 */
 	w = read_uint32(fd);
 	h = read_uint32(fd);
 	defx = read_uint32(fd);
 	defy = read_uint32(fd);
 	tilew = read_uint32(fd);
 	tileh = read_uint32(fd);
-	if (w > 65535 || h > 65535 ||
-	    defx > 65535 || defy > 65535 ||
-	    tilew > 65535 || tileh > 65535) {
+	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
+	    defx > MAP_MAX_WIDTH || defy > MAP_MAX_HEIGHT ||
+	    tilew > MAP_MAX_WIDTH || tileh > MAP_MAX_HEIGHT) {
 		error_set("bad geo/coords");
 	}
 	m->mapw = (unsigned int)w;
 	m->maph = (unsigned int)h;
+	m->tilew = (unsigned int)tilew;
+	m->tileh = (unsigned int)tileh;
 	m->defx = (int)defx;
 	m->defy = (int)defy;
-	m->tilew = (int)tilew;
-	m->tileh = (int)tileh;
 
 	m->zoom = read_uint16(fd);
 	if (ver.minor >= 1) {				/* Soft-scroll offs */
@@ -864,7 +832,8 @@ map_load(void *ob, int fd)
 	if (ver.minor >= 2) {				/* Multilayering */
 		int i;
 
-		m->nlayers = read_uint32(fd);
+		if ((m->nlayers = read_uint32(fd)) > MAP_MAX_LAYERS)
+			fatal("too many layers");
 		debug(DEBUG_STATE, "%d layers\n", m->nlayers);
 		m->layers = emalloc(m->nlayers * sizeof(struct map_layer));
 		for (i = 0; i < m->nlayers; i++) {
@@ -873,10 +842,8 @@ map_load(void *ob, int fd)
 	}
 
 	debug(DEBUG_STATE,
-	    "type %s, geo %ux%u, origin at %d,%d, %dx%d tiles, %d%% zoom\n",
-	    m->type == MAP_2D ? "2d" : m->type == MAP_3D ? "3d" : "???",
-	    m->mapw, m->maph, m->defx, m->defy, m->tilew, m->tileh,
-	    m->zoom);
+	    "geo %ux%u, origin at %d,%d, %u%% zoom, %ux%u tiles\n",
+	    m->mapw, m->maph, m->defx, m->defy, m->zoom, m->tilew, m->tileh);
 
 	/* Read the possible dependencies. */
 	deps = object_table_load(fd, OBJECT(m)->name);
@@ -1016,11 +983,10 @@ map_save(void *p, int fd)
 	pthread_mutex_lock(&m->lock);
 
 	debug(DEBUG_STATE,
-	    "type %s, geo %dx%d, origin at %d,%d, %dx%d tiles\n",
-	    m->type==MAP_2D ? "2d" : m->type==MAP_3D ? "3d" : "???",
-	    m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
+	    "geo %ux%u, origin at %d,%d, %u%% zoom %ux%u tiles\n",
+	    m->mapw, m->maph, m->defx, m->defy, m->zoom, m->tilew, m->tileh);
 
-	buf_write_uint32(buf, (Uint32)m->type);
+	buf_write_uint32(buf, 0);			/* Always 0 */
 	buf_write_uint32(buf, (Uint32)m->mapw);
 	buf_write_uint32(buf, (Uint32)m->maph);
 	buf_write_uint32(buf, (Uint32)m->defx);
@@ -1105,7 +1071,7 @@ map_check(void *arg)
 #endif	/* DEBUG && THREADS */
 
 static void
-noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
+noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 {
 	SDL_Rect clip;
 	int x, y, dh, dw, sx, sy;
@@ -1148,10 +1114,10 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
 
 /*
  * Render a map node.
- * Map must be locked.
+ * The node's parent map, if any, must be locked.
  */
 __inline__ void
-noderef_draw(struct map *m, struct noderef *nref, Sint16 rx, Sint16 ry)
+noderef_draw(struct map *m, struct noderef *nref, int rx, int ry)
 {
 	SDL_Rect rd;
 	SDL_Surface *su;
@@ -1183,14 +1149,11 @@ noderef_draw(struct map *m, struct noderef *nref, Sint16 rx, Sint16 ry)
 		    (nref->xmotion * m->zoom / 100);
 		rd.y = ry + (nref->ycenter * m->zoom / 100) +
 		    (nref->ymotion * m->zoom / 100);
-
 		noderef_draw_scaled(m, su, rd.x, rd.y);
 	} else {
 		rd.x = rx + nref->xcenter + nref->xmotion;
 		rd.y = ry + nref->ycenter + nref->ymotion;
-
 		SDL_BlitSurface(su, NULL, view->v, &rd);
 	}
 }
-
 

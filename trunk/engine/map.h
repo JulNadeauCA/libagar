@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.71 2003/03/10 02:13:39 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.72 2003/03/10 05:50:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -9,8 +9,11 @@
 #define TILEW_SHIFT	5
 #define TILEH_SHIFT	5
 
-#define MAP_MAX_WIDTH	32767
-#define MAP_MAX_HEIGHT	32767
+#define MAP_MAX_WIDTH		32767
+#define MAP_MAX_HEIGHT		32767
+#define MAP_MAX_LAYERS		256
+#define NODE_MAX_NODEREFS	32767
+#define NODEREF_MAX_TRANSFORMS	16384
 
 #include <engine/transform.h>
 
@@ -83,11 +86,6 @@ struct node {
 #define NODE_EPHEMERAL	(NODE_ORIGIN)
 };
 
-enum map_type {
-	MAP_2D,
-	MAP_3D
-};
-
 struct map_layer {
 	char	*name;		/* Identifier */
 	int	 visible;	/* Layer is visible? */
@@ -97,7 +95,6 @@ struct map_layer {
 
 struct map {
 	struct object	  obj;
-	enum map_type	  type;
 
 	pthread_mutex_t		lock;
 	pthread_mutexattr_t	lockattr;
@@ -105,7 +102,7 @@ struct map {
 	unsigned int	  mapw, maph;	/* Map geometry */
 	Uint16		  zoom;		/* Zoom (%) */
 	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
-	int		  tilew, tileh;	/* Tile geometry */
+	unsigned int	  tilew, tileh;	/* Tile geometry */
 	int		  defx, defy;	/* Map origin */
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
@@ -118,7 +115,7 @@ struct map {
 #endif
 };
 
-void		 map_init(struct map *, enum map_type, char *, char *);
+void		 map_init(struct map *, char *, char *);
 int		 map_load(void *, int);
 int		 map_save(void *, int);
 void		 map_destroy(void *);
@@ -137,6 +134,7 @@ void		 noderef_load(int, struct object_table *, struct node *,
 		     struct noderef **);
 void		 noderef_save(struct fobj_buf *, struct object_table *,
 		     struct noderef *);
+__inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
 
 void		 node_init(struct node *, int, int);
 void		 node_load(int, struct object_table *, struct node *);
@@ -155,9 +153,6 @@ void		 node_movehead_ref(struct node *, struct noderef *);
 struct noderef	*node_add_sprite(struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
 struct noderef	*node_add_warp(struct node *, char *, int, int, Uint8);
-
-extern __inline__ void	 noderef_draw(struct map *, struct noderef *,
-			     Sint16, Sint16);
 
 #ifdef DEBUG
 extern int	 map_nodesigs;

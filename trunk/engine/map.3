@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.24 2003/03/10 02:13:39 vedge Exp $
+.\"	$Csoft: map.3,v 1.25 2003/03/10 03:50:34 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -60,7 +60,7 @@ contain centering/motion offsets, a list of transforms, and a layer number.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn map_init "struct map *map" "enum map_type type" "char *name" "char *archive"
+.Fn map_init "struct map *map" "char *name" "char *archive"
 .Pp
 .Ft void
 .Fn map_destroy "void *map"
@@ -97,19 +97,10 @@ function initializes a map identified by the string
 Data is loaded from
 .Fa archive
 if it is not NULL.
-The
-.Fa type
-argument accepts:
-.Bd -literal
-enum map_type {
-	MAP_2D,
-	MAP_3D
-};
-.Ed
 .Pp
 The
 .Fn map_destroy
-function frees resources allocated by a map (such as the nodes arrays and
+function frees resources allocated by a map (such as the node arrays and
 the stack of layers).
 .Pp
 The
