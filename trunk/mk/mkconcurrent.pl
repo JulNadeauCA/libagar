@@ -71,7 +71,7 @@ EOF
 				}
 			}
 		}
-		if (/^\s*(SRCS|MAN\d|XCF|TTF|MAP)\s*=\s*(.+)$/) {
+		if (/^\s*(SRCS|MAN\d|XCF|XCF\d|TTF|MAP)\s*=\s*(.+)$/) {
 			my $type = $1;
 			my $srcs = $2;
 			foreach my $src (split(/\s/, $srcs)) {
