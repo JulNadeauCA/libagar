@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.241 2005/02/03 05:32:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.242 2005/02/19 10:20:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1356,15 +1356,17 @@ window_set_caption(struct window *win, const char *fmt, ...)
 	va_list ap;
 	SDL_Surface *su;
 
+#ifndef DEBUG
 	if (win->tbar == NULL)
 		return;
-
+#endif
 	va_start(ap, fmt);
 	vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
 
+	if (win->tbar != NULL)
+		titlebar_set_caption(win->tbar, s);
 #ifdef DEBUG
 	strlcpy(win->caption, s, sizeof(win->caption));
 #endif
-	titlebar_set_caption(win->tbar, s);
 }
