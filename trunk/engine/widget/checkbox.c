@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: checkbox.c,v 1.1 2002/04/28 15:04:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 
 extern TTF_Font *font;		/* text */
 
-static struct widvec checkbox_vec = {
+static struct widget_ops checkbox_ops = {
 	{
 		checkbox_destroy,
 		NULL,		/* load */
@@ -59,11 +59,27 @@ static struct widvec checkbox_vec = {
 	NULL		/* widget unlink */
 };
 
-void
-checkbox_init(struct checkbox *b, char *name, char *caption, Uint32 flags,
-    Sint16 x, Sint16 y)
+struct checkbox *
+checkbox_new(struct window *win, char *caption, Uint32 flags, Sint16 x,
+    Sint16 y)
 {
-	widget_init(&b->wid, name, &checkbox_vec, x, y, 0, 0);
+	struct checkbox *cb;
+
+	cb = emalloc(sizeof(struct checkbox));
+	checkbox_init(cb, caption, flags, x, y);
+	
+	pthread_mutex_lock(&win->lock);
+	widget_link(cb, win);
+	pthread_mutex_unlock(&win->lock);
+
+	return (cb);
+}
+
+void
+checkbox_init(struct checkbox *b, char *caption, Uint32 flags, Sint16 x,
+    Sint16 y)
+{
+	widget_init(&b->wid, "checkbox", &checkbox_ops, x, y, 0, 0);
 
 	b->caption = strdup(caption);
 	b->flags = flags;

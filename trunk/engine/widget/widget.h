@@ -1,12 +1,12 @@
-/*	$Csoft: widget.h,v 1.9 2002/04/28 14:11:23 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.10 2002/04/28 15:04:58 vedge Exp $	*/
 
 struct window;
 
-struct widvec {
+struct widget_ops {
 	struct	 obvec obvec;
 	void	 (*widget_draw)(void *);
 	void	 (*widget_event)(void *, SDL_Event *, Uint32);
-	void	 (*widget_link)(void *, struct window *w);
+	void	 (*widget_link)(void *, struct window *);
 	void	 (*widget_unlink)(void *);
 };
 
@@ -26,7 +26,7 @@ struct widget {
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
-#define WIDGET_VEC(ob)	((struct widvec *)OBJECT((ob))->vec)
+#define WIDGET_VEC(ob)	((struct widget_ops *)OBJECT((ob))->vec)
 
 /* Expand to absolute widget coordinates. */
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->x) + WIDGET((wi))->x)

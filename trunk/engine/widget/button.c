@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.8 2002/04/25 09:33:20 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.9 2002/04/26 11:40:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 
 extern TTF_Font *font;		/* text */
 
-static struct widvec button_vec = {
+static struct widget_ops button_ops = {
 	{
 		button_destroy,
 		NULL,		/* load */
@@ -59,11 +59,25 @@ static struct widvec button_vec = {
 	NULL		/* widget unlink */
 };
 
-void
-button_init(struct button *b, char *name, char *caption, Uint32 flags,
-    Sint16 x, Sint16 y)
+struct button *
+button_new(struct window *win, char *caption, Uint32 flags, Sint16 x, Sint16 y)
 {
-	widget_init(&b->wid, name, &button_vec, x, y, 0, 0);
+	struct button *bu;
+
+	bu = emalloc(sizeof(struct button));
+	button_init(bu, caption, flags, x, y);
+
+	pthread_mutex_lock(&win->lock);
+	widget_link(bu, win);
+	pthread_mutex_unlock(&win->lock);
+	
+	return (bu);
+}
+
+void
+button_init(struct button *b, char *caption, Uint32 flags, Sint16 x, Sint16 y)
+{
+	widget_init(&b->wid, "button", &button_ops, x, y, 0, 0);
 
 	b->caption = strdup(caption);
 	b->flags = flags;

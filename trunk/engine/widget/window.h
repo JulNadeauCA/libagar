@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.7 2002/04/26 11:40:48 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.8 2002/04/28 11:05:54 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -34,12 +34,16 @@ struct window {
 };
 
 #define WINDOW(w)		((struct window *)(w))
+
 #define WINDOW_INSIDE(wina, xa, ya)					\
 	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
 	 (xa) < ((wina)->x+(wina)->w)	&& (ya) < ((wina)->y+(wina)->h))
 
-void	 window_init(struct window *, struct viewport *, char *, char *, Uint32,
-	     Uint32, Sint16, Sint16, Uint16, Uint16);
+struct window	*window_new(struct viewport *, char *, Uint32,
+		     Uint32, Sint16, Sint16, Uint16, Uint16);
+void	 	 window_init(struct window *, struct viewport *, char *,
+		     Uint32, Uint32, Sint16, Sint16, Uint16, Uint16);
+
 void	 window_destroy(void *);
 int	 window_link(void *);
 int	 window_unlink(void *);

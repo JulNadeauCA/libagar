@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: checkbox.h,v 1.1 2002/04/28 15:04:58 vedge Exp $	*/
 
 struct checkbox {
 	struct	 widget wid;
@@ -17,9 +17,10 @@ struct checkbox {
 	void	(*push)(struct checkbox *);
 };
 
-void	 checkbox_init(struct checkbox *, char *, char *, Uint32, Sint16,
-	     Sint16);
-void	 checkbox_destroy(void *);
+struct checkbox	*checkbox_new(struct window *, char *, Uint32, Sint16, Sint16);
+void		 checkbox_init(struct checkbox *, char *, Uint32, Sint16,
+		     Sint16);
+void		 checkbox_destroy(void *);
 
 void	 checkbox_draw(void *);
 void	 checkbox_event(void *, SDL_Event *, Uint32);
