@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.3 2002/12/03 15:26:20 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.4 2002/12/13 12:34:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -63,7 +63,7 @@ int	art_debug = DEBUG_GC|DEBUG_LOADING;
 static void	art_destroy(struct art *);
 static void	art_destroy_anim(struct art_anim *);
 
-/* Insert a sprite of arbitrary length. */
+/* Insert a sprite of arbitrary size. */
 int
 art_insert_sprite(struct art *art, SDL_Surface *sprite)
 {
