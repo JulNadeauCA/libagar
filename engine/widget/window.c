@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.142 2003/01/04 14:10:33 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.143 2003/01/04 23:53:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1021,6 +1021,7 @@ scan_wins:
 				winop_hide_body(win);
 				break;
 			}
+			win->clicked_button = WINDOW_NO_BUTTON;
 
 			if (win->flags & WINDOW_HIDDEN_BODY) {
 				/* Don't catch events. */
