@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.20 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.21 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -29,20 +29,24 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-static void select_init(void *);
+static void select_init(struct tool *);
 
 const struct tool select_tool = {
 	N_("Selection"),
 	N_("Select a rectangle of nodes."),
-	MAPEDIT_TOOL_SELECT,
-	MAPEDIT_SELECT_CURSOR,
+	SELECT_TOOL_ICON,
+	SELECT_CURSOR,
 	select_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	NULL,			/* effect */
 	NULL,			/* cursor */
-	NULL			/* mouse */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 /* Copy the selection to the copy buffer. */
@@ -152,11 +156,11 @@ select_cut(struct mapview *mv)
 }
 
 static void
-select_init(void *p)
+select_init(struct tool *t)
 {
-	tool_bind_key(p, KMOD_CTRL, SDLK_c, select_copy, 0);
-	tool_bind_key(p, KMOD_CTRL, SDLK_v, select_paste, 1);
-	tool_bind_key(p, KMOD_CTRL, SDLK_x, select_cut, 1);
-	tool_bind_key(p, KMOD_CTRL, SDLK_k, select_kill, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_c, select_copy, 0);
+	tool_bind_key(t, KMOD_CTRL, SDLK_v, select_paste, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_x, select_cut, 1);
+	tool_bind_key(t, KMOD_CTRL, SDLK_k, select_kill, 1);
 }
 

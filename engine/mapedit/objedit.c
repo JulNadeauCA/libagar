@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.34 2004/03/30 23:44:53 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.35 2004/03/31 00:24:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -295,6 +295,8 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
+		if (object_root(pob) == pob)
+			it->flags |= TLIST_VISIBLE_CHILDREN;
 	}
 	if ((it->flags & TLIST_HAS_CHILDREN) &&
 	    tlist_visible_children(tl, it)) {
@@ -357,39 +359,39 @@ objedit_window(void)
 		{
 			create_bu = button_new(hb, NULL);
 			button_set_label(create_bu,
-			    SPRITE(&mapedit,MAPEDIT_CREATE_OBJ));
+			    SPRITE(&mapedit,OBJCREATE_ICON));
 
 			edit_bu = button_new(hb, NULL);
 			button_set_label(edit_bu,
-			    SPRITE(&mapedit,MAPEDIT_EDIT_OBJ));
+			    SPRITE(&mapedit,OBJEDIT_ICON));
 
 			oedit_bu = button_new(hb, NULL);
 			button_set_label(oedit_bu,
-			    SPRITE(&mapedit,MAPEDIT_EDITGEN_OBJ));
+			    SPRITE(&mapedit,OBJEDIT_GENERIC_ICON));
 
 			load_bu = button_new(hb, NULL);
 			button_set_label(load_bu,
-			    SPRITE(&mapedit,MAPEDIT_LOAD_OBJ));
+			    SPRITE(&mapedit,OBJLOAD_ICON));
 
 			save_bu = button_new(hb, NULL);
 			button_set_label(save_bu,
-			    SPRITE(&mapedit,MAPEDIT_SAVE_OBJ));
+			    SPRITE(&mapedit,OBJSAVE_ICON));
 
 			dup_bu = button_new(hb, NULL);
 			button_set_label(dup_bu,
-			    SPRITE(&mapedit,MAPEDIT_DUP_OBJ));
+			    SPRITE(&mapedit,OBJDUP_ICON));
 
 			mvup_bu = button_new(hb, NULL);
 			button_set_label(mvup_bu,
-			    SPRITE(&mapedit,MAPEDIT_MOVEUP_OBJ));
+			    SPRITE(&mapedit,OBJMOVEUP_ICON));
 
 			mvdown_bu = button_new(hb, NULL);
 			button_set_label(mvdown_bu,
-			    SPRITE(&mapedit,MAPEDIT_MOVEDOWN_OBJ));
+			    SPRITE(&mapedit,OBJMOVEDOWN_ICON));
 
 			destroy_bu = button_new(hb, NULL);
 			button_set_label(destroy_bu,
-			    SPRITE(&mapedit,MAPEDIT_DESTROY_OBJ));
+			    SPRITE(&mapedit,TRASH_ICON));
 		}
 
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);

@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.8 2004/03/20 08:21:57 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.9 2004/03/21 07:01:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -517,10 +517,10 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 	{
 		int i;
 		int icons[] = {
-			MAPEDIT_TOOL_LEFT,
-			MAPEDIT_TOOL_RIGHT,
-			MAPEDIT_TOOL_UP,
-			MAPEDIT_TOOL_DOWN
+			LEFT_ARROW_ICON,
+			RIGHT_ARROW_ICON,
+			UP_ARROW_ICON,
+			DOWN_ARROW_ICON
 		};
 		struct button *bu;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.36 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.37 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,38 +29,48 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-static void resize_mouse(void *, struct mapview *, Sint16, Sint16, Uint8);
+static void resize_mousemotion(struct tool *, int, int, int, int, int, int,
+                               int, int, int);
 
 const struct tool resize_tool = {
 	N_("Resize tool"),
-	N_("Resize a map's node array."),
-	MAPEDIT_TOOL_RESIZE,
+	N_("Resize the node array."),
+	RESIZE_TOOL_ICON,
 	-1,
 	NULL,			/* init */
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
-	NULL,
 	NULL,			/* cursor */
-	resize_mouse
+	NULL,			/* effect */
+	resize_mousemotion,
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static void
-resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
+resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
+    int yo, int xorel, int yorel, int b)
 {
+	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
 	int w = m->mapw;
 	int h = m->maph;
 
-	if (mv->cxrel < 0 && --w < 1) {
+	if ((b & SDL_BUTTON(1)) == 0)
+		return;
+
+	if (xrel < 0 && --w < 1) {
 		w = 1;
-	} else if (mv->cxrel > 0 && ++w > MAP_MAX_WIDTH) {
+	} else if (xrel > 0 && ++w > MAP_MAX_WIDTH) {
 		w = MAP_MAX_WIDTH;
 	}
 	
-	if (mv->cyrel < 0 && --h < 1) {
+	if (yrel < 0 && --h < 1) {
 		h = 1;
-	} else if (mv->cyrel > 0 && ++h > MAP_MAX_HEIGHT) {
+	} else if (yrel > 0 && ++h > MAP_MAX_HEIGHT) {
 		h = MAP_MAX_HEIGHT;
 	}
 

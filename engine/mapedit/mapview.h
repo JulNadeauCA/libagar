@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.51 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.52 2004/03/30 15:56:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -10,7 +10,10 @@
 #include <engine/widget/window.h>
 #include <engine/widget/button.h>
 #include <engine/widget/toolbar.h>
+#include <engine/widget/statusbar.h>
+#include <engine/widget/label.h>
 
+#include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/tool.h>
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
@@ -56,11 +59,11 @@ struct mapview {
 	int		 zoom_ival;	/* Zoom interval (ms) */
 	SDL_TimerID	 zoom_tm;	/* Zoom timer */
 	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
-	int		*scale;		/* Current scale factor */
+	int		*tilesz;	/* Current tile size */
 	struct {			/* For MAPVIEW_INDEPENDENT zoom */
 		Uint16	 zoom;
 		Sint16	 ssx, ssy;
-		int	 scale;
+		int	 tilesz;
 	} izoom;
 
 	struct map	*map;		/* Map to display/edit */
@@ -78,7 +81,9 @@ struct mapview {
 		struct mediasel *audio;
 	} mediasel;
 
-	struct toolbar *toolbar;	/* Pointer to toolbar (or NULL) */
+	struct toolbar *toolbar;	/* Optional toolbar */
+	struct statusbar *statusbar;	/* Optional status bar */
+	struct label *status;		/* Optional status label */
 	struct tool *curtool;		/* Selected tool */
 	TAILQ_HEAD(, tool) tools;	/* Map edition tools */
 };
@@ -126,14 +131,15 @@ void	 mapview_prescale(struct mapview *, int, int);
 void	 mapview_draw_props(struct mapview *, struct node *, int, int, int,
 	                    int);
 void	 mapview_center(struct mapview *, int, int);
-int	 mapview_zoom(struct mapview *, int);
+void	 mapview_zoom(struct mapview *, int);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 
-__inline__ void	 mapview_map_coords(struct mapview *, int *, int *);
+__inline__ void	 mapview_map_coords(struct mapview *, int *, int *, int *,
+		                    int *);
 
 #ifdef EDITION
-void	 mapview_reg_tool(struct mapview *, const struct tool *);
+void	 mapview_reg_tool(struct mapview *, const struct tool *, void *);
 void	 mapview_select_tool(int, union evarg *);
 void	 mapview_toggle_rw(int, union evarg *);
 void	 mapview_toggle_nodeedit(int, union evarg *);
@@ -143,6 +149,9 @@ void	 mapview_selected_layer(int, union evarg *);
 #endif
 void	 mapview_toggle_grid(int, union evarg *);
 void	 mapview_toggle_props(int, union evarg *);
+
+void	 mapview_bind_statusbar(struct mapview *, struct statusbar *);
+void	 mapview_status(struct mapview *, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.14 2004/03/05 15:22:19 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.15 2004/03/30 15:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -37,23 +37,25 @@
 
 #include <string.h>
 
-static void position_tool_init(void *);
-static int position_tool_cursor(void *, struct mapview *, SDL_Rect *);
-static void position_tool_effect(void *, struct mapview *, struct map *,
-	                         struct node *);
+static void position_tool_init(struct tool *);
+static void position_tool_effect(struct tool *, struct node *);
 
 const struct tool position_tool = {
 	N_("Position"),
 	N_("Assign unique object positions."),
-	MAPEDIT_TOOL_POSITION,
+	POSITION_TOOL_ICON,
 	-1,
 	position_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
+	NULL,			/* cursor */
 	position_tool_effect,
-	position_tool_cursor,
-	NULL			/* mouse */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
 };
 
 static int center_view = 0;		/* Center view around? */
@@ -139,13 +141,13 @@ poll_projmaps(int argc, union evarg *argv)
 }
 
 static void
-position_tool_init(void *p)
+position_tool_init(struct tool *t)
 {
 	struct window *win;
 	struct box *bo;
 	struct tlist *tl;
 
-	win = tool_window(p, "mapedit-tool-position");
+	win = tool_window(t, "mapedit-tool-position");
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl)->flags |= WIDGET_HFILL;
@@ -188,9 +190,9 @@ position_tool_init(void *p)
 }
 
 static void
-position_tool_effect(void *p, struct mapview *mv, struct map *m,
-    struct node *dn)
+position_tool_effect(struct tool *t, struct node *n)
 {
+	struct mapview *mv = t->mv;
 	struct object *ob = obj;
 	int posflags = 0;
 
@@ -216,11 +218,5 @@ position_tool_effect(void *p, struct mapview *mv, struct map *m,
 		ob->pos->flags |= POSITION_CENTER_VIEW;
 	if (pass_through)
 		ob->pos->flags |= POSITION_PASS_THROUGH;
-}
-
-static int
-position_tool_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
-{
-	return (-1);
 }
 
