@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.23 2004/03/25 06:48:29 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.24 2004/05/10 05:15:01 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,6 +45,11 @@ contents.
 The string may contain Unicode characters in UTF-8 format,
 .Nm
 operates on UCS-4 strings internally.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr object 3 ->
+.Xr widget 3 ->
+.Nm .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct textbox *"
