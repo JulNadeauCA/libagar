@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.88 2002/05/13 10:20:32 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.89 2002/05/15 07:28:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -103,7 +103,8 @@ static void	 mapedit_show_coords(struct mapedit *);
 void
 mapedit_init(struct mapedit *med, char *name)
 {
-	object_init(&med->obj, name, "mapedit", OBJ_ART, &mapedit_ops);
+	object_init(&med->obj, "map-editor", name, "mapedit", OBJ_ART,
+	    &mapedit_ops);
 	med->flags = MAPEDIT_DRAWPROPS;
 	med->map = NULL;
 	med->x = 0;
@@ -331,13 +332,14 @@ mapedit_ondetach(void *parent, void *child)
 	struct noderef *nref;
 	struct editobj *eob, *nexteob;
 
+	m = med->map;	/* XXX */
+
+	pthread_mutex_lock(&m->lock);
 	pthread_mutex_lock(&med->lock);
-	m = med->map;
 
 	curmapedit = NULL;	/* Will stop update thread. */
 
 	/* Remove the map editor from the map. */
-	pthread_mutex_lock(&m->lock);
 	node = &m->map[med->y][med->x];
 	nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
 	if (nref != NULL) {
@@ -345,7 +347,6 @@ mapedit_ondetach(void *parent, void *child)
 		node->flags &= ~(NODE_ANIM);
 	}
 	pthread_mutex_unlock(&m->lock);
-	m->redraw++;
 
 	/* Deallocate the shadow structures. */
 	for (eob = TAILQ_FIRST(&med->eobjsh);
@@ -1095,10 +1096,13 @@ mapedit_show_coords(struct mapedit *med)
 	struct window *nw;
 
 	if (coords_win == NULL) {
+		struct segment *coords_seg;
+
 		/* Coordinates window/label. */
 		nw = window_new("Coordinates", WINDOW_SOLID, 0,
 		    64, 64, 224, 32);
-		coords_label = label_new(nw, "...", 0, 7, 7);
+		coords_seg = segment_new(nw, SEGMENT_HORIZ, 100);
+		coords_label = label_new(coords_seg, "...", 0, 7, 7);
 		coords_win = nw;
 	} else {
 		nw = coords_win;
