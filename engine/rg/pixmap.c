@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.16 2005/02/27 06:52:01 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.17 2005/03/03 10:51:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -990,4 +990,39 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 		if (keystate[SDLK_c])
 			pixmap_pick(tv, tel, x, y);
 	}
+}
+
+void
+pixmap_open_menu(struct tileview *tv, int x, int y)
+{
+	struct pixmap *px = tv->tv_pixmap.px;
+	struct AGMenu *me;
+	struct AGMenuItem *mi;
+	
+	if (tv->tv_pixmap.menu != NULL)
+		pixmap_close_menu(tv);
+
+	me = tv->tv_pixmap.menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	menu_init(me);
+
+	mi = tv->tv_pixmap.menu_item = menu_add_item(me, NULL);
+	{
+	}
+	tv->tv_pixmap.menu->sel_item = mi;
+	tv->tv_pixmap.menu_win = menu_expand(me, mi, x, y);
+}
+
+void
+pixmap_close_menu(struct tileview *tv)
+{
+	struct AGMenu *me = tv->tv_pixmap.menu;
+	struct AGMenuItem *mi = tv->tv_pixmap.menu_item;
+
+	menu_collapse(me, mi);
+	object_destroy(me);
+	Free(me, M_OBJECT);
+
+	tv->tv_pixmap.menu = NULL;
+	tv->tv_pixmap.menu_item = NULL;
+	tv->tv_pixmap.menu_win = NULL;
 }
