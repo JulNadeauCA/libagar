@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.35 2002/09/09 01:23:20 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.36 2002/09/12 09:33:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -56,8 +56,12 @@ enum {
 	TEXT_COLOR
 };
 
+static void	button_mousemotion(int, union evarg *);
+static void	button_mousebuttonup(int, union evarg *);
+static void	button_mousebuttondown(int, union evarg *);
+static void	button_keyup(int, union evarg *);
+static void	button_keydown(int, union evarg *);
 static void	button_scaled(int, union evarg *);
-static void	button_event(int, union evarg *);
 
 struct button *
 button_new(struct region *reg, char *caption, SDL_Surface *image, int flags,
@@ -80,7 +84,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
     int rw, int rh)
 {
 	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
-	WIDGET(b)->flags |= WIDGET_MOUSEOUT;
+	WIDGET(b)->flags |= WIDGET_UNFOCUSED_MOTION;
 
 	widget_map_color(b, FRAME_COLOR, "button-frame", 100, 100, 100);
 	widget_map_color(b, TEXT_COLOR, "button-text", 240, 240, 240);
@@ -113,17 +117,12 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	if (rh == -1)
 		WIDGET(b)->h = b->label_s->h + b->ymargin;
 
-	event_new(b, "window-mousebuttonup", 0,
-	    button_event, "%i", WINDOW_MOUSEBUTTONUP);
-	event_new(b, "window-mousebuttondown", 0,
-	    button_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(b, "window-keyup", 0,
-	    button_event, "%i", WINDOW_KEYUP);
-	event_new(b, "window-keydown", 0,
-	    button_event, "%i", WINDOW_KEYDOWN);
-	event_new(b, "window-mouseout", 0,
-	    button_event, "%i", WINDOW_MOUSEOUT);
-	
+	event_new(b, "window-mousebuttonup", 0, button_mousebuttonup, NULL);
+	event_new(b, "window-mousebuttondown", 0, button_mousebuttondown, NULL);
+	event_new(b, "window-mousemotion", 0, button_mousemotion, NULL);
+	event_new(b, "window-keyup", 0,	button_keyup, NULL);
+	event_new(b, "window-keydown", 0, button_keydown, NULL);
+
 	event_new(b, "widget-scaled", 0, button_scaled, NULL);
 }
 
@@ -205,60 +204,80 @@ button_draw(void *p)
 }
 
 static void
-button_event(int argc, union evarg *argv)
+button_mousemotion(int argc, union evarg *argv)
 {
 	struct button *b = argv[0].p;
-	int type = argv[1].i;
-	int button, keysym;
-	int pushed = 0;
-	
-	WIDGET_ASSERT(b, "button");
+	int x = argv[1].i;
+	int y = argv[2].i;
 
-	switch (type) {
-	case WINDOW_MOUSEOUT:
-		if ((b->flags & BUTTON_STICKY) == 0) {
-			b->flags &= ~(BUTTON_PRESSED);
-		}
-		break;
-	case WINDOW_MOUSEBUTTONDOWN:
-		button = argv[2].i;
-		WIDGET_FOCUS(b);
-		if (button == 1) {
-			if ((b->flags & BUTTON_STICKY) == 0) {
-				b->flags |= BUTTON_PRESSED;
-			} else {
-				if (b->flags & BUTTON_PRESSED) {
-					b->flags &= ~(BUTTON_PRESSED);
-				} else {
-					b->flags |= BUTTON_PRESSED;
-				}
-				pushed++;
-			}
-		}
-		break;
-	case WINDOW_MOUSEBUTTONUP:
-		button = argv[2].i;
-		if (button == 1 && (b->flags & BUTTON_STICKY) == 0) {
-			b->flags &= ~(BUTTON_PRESSED);
-			pushed++;
-		}
-		break;
-	case WINDOW_KEYDOWN:
-		keysym = argv[2].i;
-		if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-			b->flags |= BUTTON_PRESSED;
-		}
-		break;
-	case WINDOW_KEYUP:
-		keysym = argv[2].i;
-		if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-			b->flags &= ~(BUTTON_PRESSED);
-			pushed++;
-		}
-		break;
+	if (b->flags & BUTTON_PRESSED) {
+		dprintf("relative: %d,%d widget at %d,%d (geo %d,%d)\n",
+		    x, y, WIDGET(b)->x, WIDGET(b)->y, WIDGET(b)->w,
+		    WIDGET(b)->h);
 	}
+
+	if ((!WIDGET_INSIDE_RELATIVE(b, x, y)) &&
+	    (b->flags & BUTTON_PRESSED)) {
+		b->flags &= ~(BUTTON_PRESSED);
+	}
+}
+
+static void
+button_mousebuttondown(int argc, union evarg *argv)
+{
+	struct button *b = argv[0].p;
+	int button = argv[1].i;
+
+	WIDGET_FOCUS(b);
+	if (button == 1) {
+		if ((b->flags & BUTTON_STICKY) == 0) {
+			b->flags |= BUTTON_PRESSED;
+		} else {
+			if (b->flags & BUTTON_PRESSED) {
+				b->flags &= ~(BUTTON_PRESSED);
+			} else {
+				b->flags |= BUTTON_PRESSED;
+			}
+			event_post(b, "button-pushed", NULL);
+		}
+	}
+}
+
+static void
+button_mousebuttonup(int argc, union evarg *argv)
+{
+	struct button *b = argv[0].p;
+	int button = argv[1].i;
+
+	if (!WIDGET_FOCUSED(b)) {
+		return;
+	}
+
+	if (button == 1 && (b->flags & BUTTON_STICKY) == 0) {
+		b->flags &= ~(BUTTON_PRESSED);
+		event_post(b, "button-pushed", NULL);
+	}
+}
+
+static void
+button_keydown(int argc, union evarg *argv)
+{
+	struct button *b = argv[0].p;
+	int keysym = argv[1].i;
 	
-	if (pushed) {
+	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
+		b->flags |= BUTTON_PRESSED;
+	}
+}
+
+static void
+button_keyup(int argc, union evarg *argv)
+{
+	struct button *b = argv[0].p;
+	int keysym = argv[1].i;
+
+	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
+		b->flags &= ~(BUTTON_PRESSED);
 		event_post(b, "button-pushed", NULL);
 	}
 }
