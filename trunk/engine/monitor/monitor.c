@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.29 2003/01/23 03:17:19 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.30 2003/02/02 21:14:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,6 +29,8 @@
 #include <engine/engine.h>
 
 #ifdef DEBUG
+
+#include <config/have_jpeg.h>
 
 #include <engine/version.h>
 #include <engine/map.h>
@@ -72,11 +74,14 @@ monitor_init(struct monitor *mon, char *name)
 		struct window	*(*window_func)(void);
 	} tool_ents[] = {
 		{ MONITOR_FPS_COUNTER, "FPS counter", event_show_fps_counter },
+#if defined(DEBUG) && defined(THREADS) && defined(HAVE_JPEG)
+		{ MONITOR_SCREENSHOT, "Screenshot", screenshot_window },
+#endif
 		{ MONITOR_OBJECT_BROWSER, "Objects", object_browser_window },
 		{ MONITOR_LEVEL_BROWSER, "Levels", level_browser_window },
 		{ MONITOR_WIDGET_BROWSER, "Widgets", widget_browser_window },
 		{ MONITOR_VIEW_PARAMS, "View params", view_params_window },
-		{ MONITOR_MEDIA_BROWSER, "Graphics", art_browser_window }
+		{ MONITOR_MEDIA_BROWSER, "Graphics", art_browser_window },
 	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct region *reg;
