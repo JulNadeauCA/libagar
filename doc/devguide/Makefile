@@ -1,8 +1,8 @@
-# $Csoft$
+# $Csoft: Makefile,v 1.1 2004/01/23 06:27:00 vedge Exp $
 
 TOP=	../..
 
-DOC=		Agar.ps
+DOC=		agar-devguide.ps
 OUTPUT=		ps
 MACROS=		-me
 DOCSRC=		00.Macros.me \
