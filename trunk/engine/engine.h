@@ -1,4 +1,7 @@
-/*	$Csoft: engine.h,v 1.9 2002/02/25 08:58:37 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.10 2002/02/28 12:51:27 vedge Exp $	*/
+
+#ifndef _AGAR_ENGINE_H_
+#define _AGAR_ENGINE_H_
 
 #include <engine/config.h>
 
@@ -14,7 +17,6 @@
 #include <engine/event.h>
 #include <engine/anim.h>
 #include <engine/object.h>
-#include <engine/input.h>
 #include <engine/world.h>
 #include <engine/xcf.h>
 
@@ -38,3 +40,4 @@ void	engine_editmap(void);
 
 void	*emalloc(size_t);
 
+#endif	/* _AGAR_ENGINE_H_ */
