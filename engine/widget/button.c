@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.5 2002/04/23 13:36:42 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.6 2002/04/24 14:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -145,4 +145,5 @@ button_event(void *p, SDL_Event *ev, Uint32 flags)
 		break;
 	}
 }
+
 
