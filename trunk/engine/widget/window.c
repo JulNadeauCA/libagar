@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.51 2002/07/18 12:09:33 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.52 2002/07/20 18:57:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -47,6 +47,7 @@
 #include "text.h"
 #include "widget.h"
 #include "window.h"
+#include "primitive.h"
 
 static const struct object_ops window_ops = {
 	window_destroy,
@@ -88,10 +89,11 @@ window_init(struct window *win, char *caption, int flags,
 	int i;
 
 	/* XXX pref */
-	flags |= WINDOW_TITLEBAR|WINDOW_ROUNDEDGES;
+	flags |= WINDOW_TITLEBAR;
 
 	name = object_name("window", nwindow++);
-	object_init(&win->obj, "window", name, "window", OBJ_ART, &window_ops);
+	object_init(&win->wid.obj, "window", name, "window", OBJ_ART,
+	    &window_ops);
 	free(name);
 	
 	/* XXX pref */
@@ -160,6 +162,13 @@ window_init(struct window *win, char *caption, int flags,
 	win->minw = minw;
 	win->minh = minh;
 
+	/* Primitive operations will need this. */
+	win->wid.win = win;
+	win->wid.x = 0;
+	win->wid.y = 0;
+	win->wid.w = 0;
+	win->wid.h = 0;
+
 	/* Force animation for relevant backgrounds. */
 	switch (win->type) {
 	case WINDOW_CUBIC:
@@ -178,79 +187,6 @@ window_init(struct window *win, char *caption, int flags,
 	pthread_mutex_init(&win->lock, NULL);
 }
 
-#define WINDOW_CORNER(win, xo, yo) do {					\
-	if (win->flags & WINDOW_ROUNDEDGES) {				\
-		int z;							\
-		z = ((xo) * (yo)) + ((win)->borderw/2);			\
-		if (z < (win)->borderw) {				\
-			return (-1);					\
-		} else {						\
-			*col = (win)->border[((xo)*(yo)) /		\
-			    ((win)->borderw)+1];			\
-			return (1);					\
-		}							\
-	} else {							\
-		*col = SDL_MapRGB(view->v->format, 180, 180, 180);	\
-		return (1);						\
-	}								\
-} while (/*CONSTCOND*/0)
-
-static __inline__ int
-window_decoration(struct window *win, int xo, int yo, Uint32 *col)
-{
-	if (xo < win->borderw && yo < win->borderw) {
-		/* Upper left */
-		WINDOW_CORNER(win, xo, yo);
-	} else if (yo < win->borderw && xo > (win->w - win->borderw)) {
-		/* Upper right */
-		WINDOW_CORNER(win, win->w - xo, yo);
-	} else if (xo > (win->w - win->borderw) &&
-	           yo > (win->h - win->borderw)) {
-		/* Lower right */
-		WINDOW_CORNER(win, win->w - xo, win->h - yo);
-	} else if (xo < win->borderw && yo > win->h - win->borderw) {
-		/* Lower left */
-		WINDOW_CORNER(win, xo, win->h - yo);
-	}
-
-	if (win->flags & WINDOW_TITLEBAR) {
-		/* XXX inefficient */
-		if (yo < (win->titleh + win->borderw) - 1 &&
-		    xo > win->borderw &&
-		    xo < win->w - win->borderw) {
-			if (yo < win->borderw - 1) {
-				*col = win->border[yo+1];
-			} else if (yo > win->titleh) {
-				*col = win->border[yo-win->titleh];
-			} else {
-				*col = SDL_MapRGB(view->v->format, 0, 0, 0);
-			}
-			return (1);
-		}
-	}
-	
-	if (xo > (win->w - win->borderw)) {		/* Right */
-		*col = win->border[win->w - xo];
-		return (1);
-	} else if (yo < win->borderw - 1) {		/* Top */
-		*col = win->border[yo+1];
-		return (1);
-	} else if (xo < win->borderw - 1) {		/* Left */
-		*col = win->border[xo+1];
-		return (1);
-	} else if (yo > (win->h - win->borderw)) {	/* Bottom */
-		if (xo == (win->w - 16) || xo == 16) {
-			*col = SDL_MapRGB(view->v->format, 0, 0, 0);
-		} else if (xo == (win->w - 17) || xo == 17) {
-			*col = SDL_MapRGB(view->v->format, 250, 250, 250);
-		} else {
-			*col = win->border[win->h - yo];
-		}
-		return (1);
-	}
-	return (0);
-}
-
 /*
  * Render a window.
  * Window must be locked.
@@ -261,65 +197,39 @@ window_draw(struct window *win)
 	SDL_Surface *v = view->v;
 	struct region *reg;
 	struct widget *wid;
-	int rv;
+	int rv, i, i2;
 	Uint32 xo, yo, col = 0;
 	Uint8 expcom;
+	SDL_Rect rd;
 
-	/* Render the background. */
-	if (win->flags & WINDOW_PLAIN) {
-		SDL_Rect rd;
+	rd.x = win->x;
+	rd.y = win->y;
+	rd.w = win->w;
+	rd.h = win->h;
 
-		rd.x = win->x;
-		rd.y = win->y;
-		rd.w = win->w;
-		rd.h = win->h;
-		
+	switch (win->type) {
+	default:
 		SDL_FillRect(v, &rd, win->bgcolor);
-	} else {
-		/* XXX inefficient */
-		SDL_LockSurface(v);
-		for (yo = 0; yo < win->h; yo++) {
-			for (xo = 0; xo < win->w; xo++) {
-				rv = window_decoration(win, xo, yo, &col);
-				if (rv < 0) {
-					continue;
-				} else if (rv == 0) {
-					switch (win->type) {
-					case WINDOW_SOLID:
-						col = win->bgcolor;
-						break;
-					case WINDOW_GRADIENT:
-						col = SDL_MapRGBA(v->format,
-						    yo >> 2, 0, xo >> 2, 200);
-						break;
-					case WINDOW_CUBIC:
-						expcom =
-						    ((yo+delta)^(xo-delta))+
-						    delta;
-						if (expcom > 150)
-							expcom -= 140;
-						col = SDL_MapRGBA(v->format,
-						    0, expcom, 0, 200);
-						break;
-					case WINDOW_CUBIC2:
-						expcom =
-						    ((yo+delta)^(xo-delta))+
-						    delta;
-						if (expcom > 150) {
-							expcom -= 140;
-						}
-						col = SDL_MapRGBA(v->format,
-						    0, 0, expcom, 0);
-						col *= (yo*xo);
-						break;
-					default:
-						break;
-					}
-				}
-				WINDOW_PUT_PIXEL(win, xo, yo, col);
-			}
-		}
-		SDL_UnlockSurface(v);
+		break;
+	}
+
+	for (i = 1; i < win->borderw; i++) {
+		primitives.line(win,		/* Top */
+		    i, i,
+		    win->w - i, i,
+		    win->border[i]);
+		primitives.line(win,		/* Bottom */
+		    i, win->h - i,
+		    win->w - i, win->h - i,
+		    win->border[i]);
+		primitives.line(win,		/* Left */
+		    i, i,
+		    i, win->h - i,
+		    win->border[i]);
+		primitives.line(win,		/* Right */
+		    win->w - i, i,
+		    win->w - i, win->h - i,
+		    win->border[i]);
 	}
 
 	/* Render the title bar. */
@@ -335,31 +245,25 @@ window_draw(struct window *win)
 		rd.x = win->x + win->borderw;
 		rd.y = win->y + win->borderw;
 		SDL_BlitSurface(SPRITE(win, 0), NULL, view->v, &rd);
+		
+		/* Border */
+		primitives.line(win,
+		    win->borderw, win->titleh+2,
+		    win->w-win->borderw, win->titleh+2,
+		    win->border[3]);
+		primitives.line(win,
+		    win->borderw, win->titleh+3,
+		    win->w-win->borderw, win->titleh+3,
+		    win->border[1]);
 	}
 
 	/* Render the widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		if (reg->flags & REGION_BORDER ||
-		    config->widget_flags & CONFIG_REGION_BORDERS) {
-			Uint32 c;
-			int x, y;
-		
-			/* XXX inefficient */
-		
-			SDL_LockSurface(view->v);
-			for (y = 0; y < reg->h; y++) {
-				for (x = 0; x < reg->w; x++) {
-					if (x < 1 || y < 1 ||
-					    x >= reg->w-1 ||
-					    y >= reg->h-1) {
-						c = SDL_MapRGB(v->format,
-						    255, 255, 255);
-
-						REGION_PUT_PIXEL(reg, x, y, c);
-					}
-				}
-			}
-			SDL_UnlockSurface(view->v);
+		if (config->widget_flags & CONFIG_REGION_BORDERS) {
+			primitives.square(win,
+			    reg->x, reg->y,
+			    reg->w, reg->h,
+			    SDL_MapRGB(view->v->format, 255, 255, 255));
 		}
 
 		/* Draw the widgets. */
@@ -378,7 +282,8 @@ window_draw(struct window *win)
 		/* The screen will be redrawn entirely. */
 		break;
 	}
-	
+
+#if 0
 	/* Always redraw if this is an animated window. */
 	/* XXX use real time */
 	if (win->flags & WINDOW_ANIMATE) {
@@ -392,6 +297,9 @@ window_draw(struct window *win)
 	} else {
 		win->redraw = 0;
 	}
+#else
+	win->redraw = 0;
+#endif
 }
 
 /*
@@ -1062,7 +970,7 @@ window_resize(struct window *win)
 	win->body.y = win->y + win->borderw*2 + win->titleh;
 	win->body.w = win->w - win->borderw*2;
 	win->body.h = win->h - win->borderw*2 - win->titleh;
-
+	
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
 		int x = win->borderw + 4, y = win->titleh + win->borderw + 4; 
