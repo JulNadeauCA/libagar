@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.156 2003/01/24 08:27:29 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.157 2003/01/25 00:38:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -558,7 +558,7 @@ window_destroy(void *p)
 	     reg != TAILQ_END(&win->regionsh);
 	     reg = nextreg) {
 		nextreg = TAILQ_NEXT(reg, regions);
-		window_detach(win, reg);
+		object_destroy(reg);
 	}
 
 	free(win->caption);
@@ -619,7 +619,6 @@ window_hide(struct window *win)
 		return (0);
 	}
 
-	/* XXX cycle focus */
 	view->focus_win = NULL;
 
 	/* Notify the widgets. */
@@ -1486,6 +1485,18 @@ window_generic_detach(int argc, union evarg *argv)
 	OBJECT_ASSERT(win, "window");
 
 	view_detach(win);
+}
+
+void
+window_generic_show(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	OBJECT_ASSERT(win, "window");
+
+	if ((win->flags & WINDOW_SHOWN) == 0) {
+		window_show(win);
+	}
 }
 
 void
