@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.118 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.119 2003/08/06 04:11:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -259,13 +259,13 @@ engine_destroy(void)
 	exit(0);
 }
 
-__inline__ void
+void
 lock_linkage(void)
 {
 	pthread_mutex_lock(&linkage_lock);
 }
 
-__inline__ void
+void
 unlock_linkage(void)
 {
 	pthread_mutex_unlock(&linkage_lock);
