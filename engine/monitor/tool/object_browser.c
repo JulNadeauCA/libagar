@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.4 2002/09/06 01:29:17 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.5 2002/09/06 01:30:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -108,7 +108,7 @@ object_browser_window(void *p)
 
 	/* Display */
 	reg = region_new(win, REGION_VALIGN, 0, 30, 80, 70);
-	bmp = bitmap_new(reg, NULL, 0, 100, 100);
+	bmp = bitmap_new(reg, NULL, 100, 100);
 	
 	event_new(button, "button-pushed", 0,
 	    lookup_object, "%p, %p, %p", obj_tbox, offs_tbox, bmp);
@@ -123,16 +123,17 @@ lookup_object(int argc, union evarg *argv)
 	struct textbox *offs_tbox = argv[2].p;
 	struct bitmap *bmp = argv[3].p;
 	struct object *ob;
-	int offs;
-	char *cause;
+	char *name, *cause;
+	Uint32 offs;
 
-	dprintf("object %s\n", obj_tbox->text);
+	name = textbox_string(obj_tbox);
+	offs = (Uint32)textbox_int(offs_tbox);
+
+	dprintf("object %s\n", name);
 
 	pthread_mutex_lock(&world->lock);
-	ob = object_strfind(obj_tbox->text);
+	ob = object_strfind(name);
 	pthread_mutex_unlock(&world->lock);
-
-	offs = atoi(offs_tbox->text);
 
 	if (ob == NULL) {
 		cause = "Unattached object";
@@ -143,18 +144,20 @@ lookup_object(int argc, union evarg *argv)
 		goto err;
 	}
 
-	if ((Uint32)offs > ob->art->nsprites) {
+	if (offs > ob->art->nsprites) {
 		cause = "Bad offset";
 		goto err;
 	}
 	bmp->surface = SPRITE(ob, offs);
 	window_resize(WIDGET(bmp)->win);
+	free(name);
 	return;
 err:
 	dprintf("%s\n", cause);
 	bmp->surface = text_render(NULL, -1,
 	    SDL_MapRGB(view->v->format, 255, 255, 255), cause);
 	window_resize(WIDGET(bmp)->win);
+	free(name);
 }
 
 #endif	/* DEBUG */
