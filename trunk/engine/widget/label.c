@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.54 2003/03/11 00:13:33 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.55 2003/03/13 08:43:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -257,7 +257,7 @@ label_draw(void *p)
 						LABEL_ARG("%u", unsigned int);
 						break;
 					case 'x':
-						LABEL_ARG("%x", int);
+						LABEL_ARG("%x", unsigned int);
 						break;
 					case 'X':
 						LABEL_ARG("%X", unsigned int);
