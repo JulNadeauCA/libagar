@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.47 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.48 2003/09/04 03:13:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -58,24 +58,23 @@ void
 monitor_init(struct monitor *mon, const char *name)
 {
 	const struct tool_ent {
-		int		 ind;
 		char		*name;
 		struct window	*(*window_func)(void);
 	} tool_ents[] = {
-		{ MONITOR_FPS_COUNTER, N_("Refresh rate"), fps_window },
+		{ N_("Refresh rate"), fps_window },
 #if defined(THREADS) && defined(HAVE_JPEG)
-		{ MONITOR_SCREENSHOT, N_("Screenshot"), screenshot_window },
+		{ N_("Screenshot"), screenshot_window },
 #endif
-		{ MONITOR_WIDGET_BROWSER, N_("Widgets"), widget_debug_window },
-		{ MONITOR_VIEW_PARAMS, N_("Viewport"), view_params_window },
-		{ MONITOR_GFX_DEBUG, N_("Resident graphics"), gfx_debug_window }
+		{ N_("Widgets"), widget_debug_window },
+		{ N_("Viewport"), view_params_window },
+		{ N_("Resident graphics"), gfx_debug_window },
+		{ N_("Unicode conversion"), uniconv_window },
 	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct tlist *tl_tools;
 	int i;
 
 	object_init(mon, "debug-monitor", name, NULL);
-	object_wire_gfx(mon, "/engine/monitor/monitor");
 
 	mon->toolbar = window_new("monitor-toolbar");
 	window_set_caption(mon->toolbar, _("Debug monitor"));
@@ -83,11 +82,10 @@ monitor_init(struct monitor *mon, const char *name)
 
 	tl_tools = tlist_new(mon->toolbar, 0);
 	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
-
 	event_new(tl_tools, "tlist-changed", select_tool, NULL);
+
 	for (i = 0; i < ntool_ents; i++) {
-		tlist_insert_item(tl_tools,
-		    SPRITE(mon, tool_ents[i].ind), _(tool_ents[i].name),
+		tlist_insert_item(tl_tools, NULL, _(tool_ents[i].name),
 		    tool_ents[i].window_func);
 	}
 }
