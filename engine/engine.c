@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.23 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.24 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -147,11 +147,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 		njoy = -1;
 	}
 
-	/* Initialize the font engine. */
-	if (text_init() != 0) {
-		return (-1);
-	}
-
 	if (flags & SDL_FULLSCREEN) {
 		/* Give the new mode some time to take effect. */
 		SDL_Delay(1000);
@@ -171,6 +166,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 	world = world_create(gameinfo->prog);
 	if (world == NULL) {
 		fatal("world_create\n");
+		return (-1);
+	}
+	
+	/* Initialize the font engine. */
+	if (text_init() != 0) {
 		return (-1);
 	}
 	
