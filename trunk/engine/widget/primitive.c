@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.57 2004/09/12 05:56:55 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.58 2004/09/18 06:34:47 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -83,9 +83,10 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int lcol, rcol, bcol;
 
+#ifdef DEBUG
 	if (ncolor >= WIDGET_COLORS_MAX)
 		fatal("color stack oflow");
-
+#endif
 	lcol = widget_push_color(wid, (z < 0) ?
 	    alter_color(color, -60, -60, -60) :
 	    alter_color(color, 60, 60, 60));
@@ -103,7 +104,7 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 		    alter_color(color, 10, 10, 10));
 	}
 
-	primitives.rect_filled(wid, xoffs, yoffs, w, h, bcol);
+	primitives.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, bcol);
 	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, lcol);
 	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, lcol);
 	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, rcol);
@@ -361,7 +362,7 @@ static void
 circle_opengl(void *p, int x, int y, int radius, int ncolor)
 {
 	struct widget *wid = p;
-	int nedges = 16;
+	int nedges = radius*2;
 	int i;
 	Uint8 r, g, b;
 	
