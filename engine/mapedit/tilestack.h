@@ -1,12 +1,12 @@
-/*	$Csoft: tilestack.h,v 1.1 2002/07/07 00:23:01 vedge Exp $	*/
+/*	$Csoft: tilestack.h,v 1.2 2002/07/07 06:28:41 vedge Exp $	*/
 /*	Public domain	*/
 
 struct tilestack {
 	struct	 widget wid;
 
 	int	 flags;
-#define TILESTACK_HORIZ	0x01
-#define TILESTACK_VERT	0x02
+#define TILESTACK_HORIZ		0x01
+#define TILESTACK_VERT		0x02
 
 	struct	 mapview *mv;
 
