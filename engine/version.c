@@ -76,8 +76,8 @@ version_read(int fd, const struct version *ver)
 		return (-1);
 	}
 	if (vermin != ver->vermin) {
-		warning("%s: v%d.%d != %d.%d\n", ver->name,
-		    vermaj, vermin, ver->vermaj, ver->vermin);
+		warning("%s: v%d.%d != %d.%d\n", ver->name, vermaj, vermin,
+		    ver->vermaj, ver->vermin);
 	}
 
 	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, vermaj, vermin, user, host);
