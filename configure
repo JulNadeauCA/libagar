@@ -633,7 +633,7 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 	fi
 done
 if [ -d /usr/freeware/include ]; then
-FREETYPE_CFLAGS=${FREETYPE_CFLAGS} -I/usr/freeware/include
+FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
 else
 NONE=1
 fi
