@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.12 2004/04/11 03:28:18 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.13 2004/06/18 03:11:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -33,7 +33,7 @@
 #include <engine/object.h>
 #include <engine/map.h>
 #include <engine/perso.h>
-#include <engine/vg/vgobj.h>
+#include <engine/vg/drawing.h>
 
 struct object_type *typesw = NULL;
 int ntypesw = 0;
@@ -43,14 +43,15 @@ void
 typesw_init(void)
 {
 	extern const struct object_ops object_ops, map_ops, perso_ops,
-	    vgobj_ops;
+	    drawing_ops;
 
 	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
 
 	typesw_register("object", sizeof(struct object), &object_ops, OBJ_ICON);
 	typesw_register("map", sizeof(struct map), &map_ops, MAP_ICON);
 	typesw_register("perso", sizeof(struct perso), &perso_ops, PERSO_ICON);
-	typesw_register("vgobj", sizeof(struct vgobj), &vgobj_ops, VGOBJ_ICON);
+	typesw_register("drawing", sizeof(struct drawing), &drawing_ops,
+	    DRAWING_ICON);
 }
 
 void
