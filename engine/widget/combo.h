@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.4 2003/10/13 23:47:17 vedge Exp $	*/
+/*	$Csoft: combo.h,v 1.5 2003/10/14 02:16:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
@@ -12,22 +12,18 @@
 
 #include "begin_code.h"
 
-#define COMBO_LABEL_MAX		32
-
 struct combo {
 	struct widget wid;
 
-	int	 flags;
-#define COMBO_MULTI		0x01
-#define COMBO_MULTI_STICKY	0x02
-#define COMBO_POLL		0x04
-#define COMBO_TREE		0x08
-	int	 saved_h;
-	
-	struct textbox	*tbox;
-	struct button	*button;
-	struct window	*win;
-	struct tlist	*list;
+	int flags;
+#define COMBO_POLL	0x01		/* Polled list */
+#define COMBO_TREE	0x02		/* Tree display */
+
+	struct textbox *tbox;		/* Text input */
+	struct button *button;		/* [...] button */
+	struct tlist *list;		/* List of items */
+	struct window *win;		/* Pop-up window */
+	int saved_h;			/* Saved pop-up window height */
 };
 
 __BEGIN_DECLS

@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.10 2003/10/13 23:47:17 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.11 2003/10/14 02:16:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/label.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -54,7 +55,7 @@ static struct widget_ops combo_ops = {
 struct combo *
 combo_new(void *parent, int flags, const char *fmt, ...)
 {
-	char label[COMBO_LABEL_MAX];
+	char label[LABEL_MAX];
 	struct combo *com;
 	va_list ap;
 
@@ -133,7 +134,7 @@ combo_select(int argc, union evarg *argv)
 	pthread_mutex_lock(&tl->lock);
 	if ((ti = tlist_item_selected(tl)) != NULL) {
 		textbox_printf(com->tbox, "%s", ti->text);
-		event_post(com, "combo-selected", "%s", ti->text);
+		event_post(com, "combo-selected", "%s", ti);
 	}
 	pthread_mutex_unlock(&tl->lock);
 	combo_collapse(com);
@@ -182,10 +183,6 @@ combo_init(struct combo *com, const char *label, int flags)
 	com->list = Malloc(sizeof(struct tlist));
 	tlist_init(com->list, 0);
 	
-	if (flags & COMBO_MULTI)
-		com->list->flags |= TLIST_MULTI;
-	if (flags & COMBO_MULTI_STICKY)
-		com->list->flags |= TLIST_MULTI_STICKY;
 	if (flags & COMBO_TREE)	
 		com->list->flags |= TLIST_TREE;
 	if (flags & COMBO_POLL)
@@ -224,9 +221,9 @@ combo_scale(void *p, int w, int h)
 
 		WIDGET_SCALE(com->button, -1, -1);
 		WIDGET(com)->w += WIDGET(com->button)->w;
-		
-		if (WIDGET(com->button)->h > WIDGET(com)->h)
+		if (WIDGET(com->button)->h > WIDGET(com)->h) {
 			WIDGET(com)->h = WIDGET(com->button)->h;
+		}
 		return;
 	}
 	
