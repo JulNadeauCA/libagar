@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.163 2005/01/28 12:50:20 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.164 2005/01/31 08:20:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,6 +58,7 @@
 struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
 const SDL_VideoInfo *vinfo;
+int view_screenshot_quality = 75;
 
 int
 view_init(enum gfx_engine ge)
@@ -795,10 +796,10 @@ view_capture(SDL_Surface *su)
 	jcomp.in_color_space = JCS_RGB;
 
 	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, 75, TRUE);
+	jpeg_set_quality(&jcomp, view_screenshot_quality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(su->w * 3, M_VIEW);
+	jcopybuf = Malloc(su->w*3, M_VIEW);
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {

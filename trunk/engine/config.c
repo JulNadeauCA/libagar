@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.131 2005/01/30 05:39:27 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.132 2005/02/03 07:28:51 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 3
+	6, 4
 };
 
 const struct object_ops config_ops = {
@@ -90,6 +90,7 @@ extern int window_freescale;
 extern int kbd_unitrans;
 extern int event_idle;
 extern int server_mode;
+extern int view_screenshot_quality;
 
 static void
 config_set_path(int argc, union evarg *argv)
@@ -263,9 +264,11 @@ config_load(void *p, struct netbuf *buf)
 	if (rv.minor >= 1 && read_uint8(buf) == 1)
 		mapedit_load(buf);
 #endif
-	if (rv.minor >= 2) {
+	if (rv.minor >= 2)
 		server_mode = read_uint8(buf);
-	}
+	if (rv.minor >= 4)
+		view_screenshot_quality = (int)read_uint8(buf);
+
 	return (0);
 }
 
@@ -297,6 +300,7 @@ config_save(void *p, struct netbuf *buf)
 	write_uint8(buf, 0);
 #endif
 	write_uint8(buf, server_mode);
+	write_uint8(buf, (Uint8)view_screenshot_quality);
 	return (0);
 }
 
@@ -412,11 +416,17 @@ config_window(struct config *con)
 	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
 	{
 		struct mspinbutton *msb;
+		struct spinbutton *sbu;
 
 		msb = mspinbutton_new(hb, "x", _("Default resolution: "));
 		widget_bind(msb, "xvalue", WIDGET_UINT16, &view->w);
 		widget_bind(msb, "yvalue", WIDGET_UINT16, &view->h);
 		mspinbutton_set_range(msb, 320, 4096);
+		
+		sbu = spinbutton_new(vb, _("Screenshot quality (%%): "));
+		widget_bind(sbu, "value", WIDGET_INT, &view_screenshot_quality);
+		spinbutton_set_min(sbu, 1);
+		spinbutton_set_max(sbu, 100);
 	}
 
 	vb = vbox_new(win, VBOX_WFILL);
