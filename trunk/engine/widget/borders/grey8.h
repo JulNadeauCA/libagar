@@ -1,4 +1,4 @@
-/*	$Csoft	    */
+/*	$Csoft$	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -32,9 +32,10 @@ static const SDL_Color default_border[] = {
 	{ 180, 180, 180, 0 },
 	{ 180, 180, 180, 0 },
 	{ 100, 100, 100, 0 },
+	{ 100, 100, 100, 0 },
 	{  50,  50,  50, 0 },
 	{  50,  50,  50, 0 },
 };
 
-static const int default_nborder = 5;
+static const int default_nborder = 6;
 
