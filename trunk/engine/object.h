@@ -1,8 +1,10 @@
-/*	$Csoft: object.h,v 1.46 2002/08/19 05:33:00 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.47 2002/08/25 11:39:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
+
+#include <engine/media.h>
 
 struct map;
 struct noderef;
@@ -16,44 +18,6 @@ struct object_ops {
 	void	(*destroy)(void *);		/* Free resources */
 	int	(*load)(void *, int);		/* Load from fd */
 	int	(*save)(void *, int);		/* Save to fd */
-};
-
-struct object_art {
-	/* Read-only when in pool */
-	SDL_Surface **sprites;		/* Static surfaces */
-	struct	anim **anims;		/* Animations */
-	int	nsprites, maxsprites;
-	int	nanims, maxanims;
-	
-	struct	 map *map;		/* Tile map (for edition purposes) */
-	int	 mx, my;		/* Current position */
-	Uint32	 cursprite, curanim,
-		 curflags;
-
-	char	*name;			/* Parent name copy */
-	struct	 object *pobj;		/* Parent (for map edition only) */
-	LIST_ENTRY(object_art) arts;	/* Art pool */
-
-	/* Read-write, thread-safe */
-	int	used;			/* Reference count */
-	pthread_mutex_t used_lock;
-};
-
-struct object_audio_sample {
-	SDL_AudioSpec spec;
-	Uint8	*data;
-	Uint32	 len;
-};
-
-struct object_audio {
-	struct	object_audio_sample **samples;
-	int	nsamples, maxsamples;
-	char	*name;				/* Parent name copy */
-	LIST_ENTRY(object_audio) audios;	/* Audio pool */
-
-	/* Read-write, thread-safe */
-	int	used;				/* Reference count */
-	pthread_mutex_t used_lock;
 };
 
 struct obnoderef {
@@ -90,14 +54,11 @@ struct obmap {
 
 struct object {
 	/* Read-only once attached */
-
 	char	*type;			/* Type of immediate descendent */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
-	int	 id;			/* Unique identifier at runtime */
 	char	 saveext[4];		/* File extension for state saves */
-	const	 struct object_ops *ops; /* Generic functions. */
-
+	const struct object_ops *ops;	/* Generic operations */
 	int	 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
 #define OBJECT_AUDIO		0x02	/* Load audio */
@@ -106,14 +67,13 @@ struct object {
 #define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
 #define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
 
-	struct	 object_art *art;	/* Static sprites */
-	struct	 object_audio *audio;	/* Static samples */
+	struct	 media_art *art;	/* Static sprites */
+	struct	 media_audio *audio;	/* Static samples */
 
 	/* Read-write */
-#if 1
-	struct	 mappos *pos;		/* Position on the map. XXX array */
+	struct	 mappos *pos;		/* Unique position on a map
+					   (ie. for characters) */
 	pthread_mutex_t	pos_lock;
-#endif
 
 	TAILQ_HEAD(,event) events;	/* Event handlers */
 	pthread_mutex_t	events_lock;
@@ -124,10 +84,6 @@ struct object {
 
 #define OBJECT(ob)	((struct object *)(ob))
 #define OBJECT_OPS(ob)	(((struct object *)(ob))->ops)
-
-#define SPRITE(ob, sp)	OBJECT((ob))->art->sprites[(sp)]
-#define ANIM(ob, sp)	OBJECT((ob))->art->anims[(sp)]
-#define SAMPLE(ob, sp)	OBJECT((ob))->audio->samples[(sp)]
 
 #define OBJECT_UNUSED(ob, type)	do {			\
 	pthread_mutex_lock(&(ob)->type->used_lock);	\
@@ -149,27 +105,20 @@ struct object {
 
 #define OBJECT_TYPE(pob, ptype)	(strcmp(OBJECT((pob))->type, (ptype)) == 0)
 
-struct object	*object_new(char *, char *, char *, int, const void *);
-int		 object_load(void *);
-int		 object_save(void *);
-
-void	 object_init(struct object *, char *, char *, char *, int,
-	     const void *);
-void	 object_destroy(void *);
-char	*object_name(const char *, int);
-int	 object_loadfrom(void *, char *);
-void	 object_add_sprite(struct object_art *, SDL_Surface *, Uint32, int);
-void	 object_break_sprite(struct object_art *, SDL_Surface *);
-char	*object_path(char *, const char *);
-
-void	 object_init_gc(void);
-Uint32	 object_start_gc(Uint32 ival, void *);
-void	 object_destroy_gc(void);
+struct	object *object_new(char *, char *, char *, int, const void *);
+void	object_init(struct object *, char *, char *, char *, int, const void *);
+int	object_load(void *);
+int	object_loadfrom(void *, char *);
+int	object_save(void *);
+void	object_destroy(void *);
 
 struct object	*object_strfind(char *);
-struct mappos	*object_addpos(void *, Uint32, Uint32, struct input *,
+char		*object_name(const char *, int);
+char		*object_path(char *, const char *);
+
+struct mappos  *object_addpos(void *, Uint32, Uint32, struct input *,
 		    struct map *, Uint32, Uint32);
-struct mappos	*object_movepos(void *, struct map *, Uint32, Uint32);
-void		 object_delpos(void *);
+struct mappos  *object_movepos(void *, struct map *, Uint32, Uint32);
+void		object_delpos(void *);
 
 #endif	/* _AGAR_OBJECT_H_ */
