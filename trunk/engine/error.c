@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.14 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.15 2002/12/13 07:51:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/serialization.h>
 
 #include "compat/vasprintf.h"
 #include "engine.h"
