@@ -46,9 +46,11 @@ int
 gendir_set(struct gendir *dir, int direction, int set)
 {
 	if (set) {
-		dir->set |= direction;
+		dir->clear &= ~direction;
+		dir->set   |=  direction;
 	} else {
-		dir->clear |= direction;
+		dir->clear |=  direction;
+		dir->set   &= ~direction;
 	}
 	return (0);
 }
@@ -71,7 +73,7 @@ gendir_postmove(struct gendir *dir, int moved)
 		dir->current &= ~(dir->clear);
 		dir->clear = 0;
 	}
-	
+
 	/* Set this direction (eg. key press). */
 	if (dir->set != 0) {
 		dir->current |= dir->set;
@@ -88,7 +90,6 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
 	dir->clear = 0;
 	dir->moved = 0;
 	dir->flags = flags;
-
 	dir->speed = speed;
 	dir->ob = ob;
 	dir->map = map;
@@ -104,9 +105,11 @@ void
 mapdir_set(struct mapdir *dir, int direction, int set)
 {
 	if (set) {
-		dir->set |= direction;
+		dir->clear &= ~direction;
+		dir->set   |=  direction;
 	} else {
-		dir->clear |= direction;
+		dir->clear |=  direction;
+		dir->set   &= ~direction;
 	}
 }
 
@@ -170,9 +173,13 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 	map = dir->map;
 	node = &map->map[*mapx][*mapy];
 	nref = node_findref(node, dir->ob, -1);
+	if (nref == NULL) {
+		dprintf("%s not at %s:%dx%d\n", dir->ob->name,
+		    dir->map->obj.name, *mapx, *mapy);
+		return (0);
+	}
 
 	if (nref->yoffs == 0 && nref->xoffs == 0) {
-		/* See if movement is requested. */
 		mapdir_change(dir, nref);
 	} else {
 		/* Up */
@@ -180,7 +187,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 			if (nref->yoffs == -1) {	/* Once */
 				map->map[*mapx][*mapy - 1].flags |= NODE_ANIM;
 			}
-			if (nref->yoffs <= (-map->view->tilew + dir->speed)) {
+			if (nref->yoffs <= (-map->tilew + dir->speed)) {
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_UP;
 				moved |= DIR_UP;
@@ -193,7 +200,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->yoffs -= dir->speed;
 				} else {
-					nref->yoffs = -map->view->tileh;
+					nref->yoffs = -map->tileh;
 				}
 			}
 		}
@@ -202,7 +209,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 			if (nref->yoffs == 1) {		/* Once */
 				map->map[*mapx][*mapy + 1].flags |= NODE_ANIM;
 			}
-			if (nref->yoffs >= map->view->tilew - dir->speed) {
+			if (nref->yoffs >= map->tilew - dir->speed) {
 				nref->yoffs = 1;
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_DOWN;
@@ -217,7 +224,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->yoffs += dir->speed;
 				} else {
-					nref->yoffs = map->view->tileh;
+					nref->yoffs = map->tileh;
 				}
 			}
 		}
@@ -227,7 +234,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 			if (nref->xoffs == -1) {	/* Once */
 				map->map[*mapx - 1][*mapy].flags |= NODE_ANIM;
 			}
-			if (nref->xoffs <= (-map->view->tilew + dir->speed)) {
+			if (nref->xoffs <= (-map->tilew + dir->speed)) {
 				nref->xoffs = -1;
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_LEFT;
@@ -241,7 +248,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->xoffs -= dir->speed;
 				} else {
-					nref->xoffs = -map->view->tilew;
+					nref->xoffs = -map->tilew;
 				}
 			}
 		}
@@ -250,7 +257,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 			if (nref->xoffs == 1) {		/* Once */
 				map->map[*mapx + 1][*mapy].flags |= NODE_ANIM;
 			}
-			if (nref->xoffs >= (map->view->tilew - dir->speed)) {
+			if (nref->xoffs >= (map->tilew - dir->speed)) {
 				nref->xoffs = 1;
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_RIGHT;
@@ -265,7 +272,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 				if (dir->flags & DIR_SOFTSCROLL) {
 					nref->xoffs += dir->speed;
 				} else {
-					nref->xoffs = map->view->tilew;
+					nref->xoffs = map->tilew;
 				}
 			}
 		}
