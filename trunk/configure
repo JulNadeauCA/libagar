@@ -590,7 +590,7 @@ main(int argc, char *argv[])
 
 	error = FT_Init_FreeType(&library);
 	if (error) {
-		return (1);
+		return (1);a
 	}
 	return (0);
 }
