@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.105 2003/01/18 06:37:39 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.106 2003/01/20 14:22:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -238,6 +238,21 @@ view_destroy(void *p)
 
 	pthread_mutex_destroy(&v->lock);
 	pthread_mutexattr_destroy(&v->lockattr);
+}
+
+struct window *
+view_window_exists(char *name)
+{
+	struct window *win = NULL;
+
+	pthread_mutex_lock(&view->lock);
+	TAILQ_FOREACH(win, &view->windows, windows) {
+		if (strcmp(OBJECT(win)->name, name) == 0)
+			break;
+	}
+out:
+	pthread_mutex_unlock(&view->lock);
+	return (win);
 }
 
 /* Attach a window to a view. */

@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.13 2003/01/03 23:30:08 vedge Exp $
+.\"	$Csoft: view.3,v 1.14 2003/01/20 12:07:30 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -168,6 +168,9 @@ to be locked.
 .Pp
 .Ft void
 .Fn view_detach_queued "void"
+.Pp
+.Ft "struct window *"
+.Fn view_window_exists "char *name"
 .nr nS 0
 .Pp
 The
@@ -182,6 +185,12 @@ function detaches the window pointed to by
 from the view by adding it to the detach queue.
 The detachment will be performed later by
 .Fa view_detach_queued .
+.Pp
+The
+.Fn view_window_exists
+functions looks for a window identified by
+.Fa name
+and return NULL if there is no such window.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr rootmap 3 ,
