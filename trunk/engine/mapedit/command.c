@@ -31,8 +31,9 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/command.h>
+
+#include "mapedit.h"
+#include "command.h"
 
 static void	mapedit_setpointer(struct mapedit *, int);
 
@@ -56,9 +57,11 @@ mapedit_push(struct mapedit *med, struct node *node)
 
 	mapedit_setpointer(med, 0);
 
+	/* XXX inefficent */
 	pthread_mutex_lock(&med->curobj->lock);
 	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, med->curoffs);
 	pthread_mutex_unlock(&med->curobj->lock);
+
 #ifdef DEBUG
 	/* XXX should not happen */
 	if (eref == NULL) {
@@ -112,11 +115,13 @@ mapedit_fillmap(struct mapedit *med)
 	switch (eref->type) {
 	case EDITREF_SPRITE:
 		map_clean(med->map, med->curobj->pobj, eref->spritei,
-		    med->curflags, MAPREF_SAVE|MAPREF_SPRITE);
+		    med->curflags & ~NODE_ORIGIN,
+		    MAPREF_SAVE|MAPREF_SPRITE);
 		break;
 	case EDITREF_ANIM:
 		map_clean(med->map, med->curobj->pobj, eref->animi,
-		    med->curflags, MAPREF_SAVE|MAPREF_ANIM);
+		    med->curflags & ~NODE_ORIGIN,
+		    MAPREF_SAVE|MAPREF_ANIM);
 		break;
 	}
 
@@ -129,15 +134,16 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 {
 	struct map *map = med->map;
 
-	map->map[map->defx][map->defy].flags &= ~(MAPENTRY_ORIGIN);
+	map->map[map->defx][map->defy].flags &= ~(NODE_ORIGIN);
 	map->defx = *x;
 	map->defy = *y;
 
-	map->map[*x][*y].flags |= MAPENTRY_ORIGIN;
+	map->map[*x][*y].flags |= NODE_ORIGIN;
 
 	*x = map->defx;
 	*y = map->defy;
 	view_center(map->view, *x, *y);
+	map->redraw++;
 }
 
 void
@@ -153,7 +159,7 @@ mapedit_load(struct mapedit *med)
 	if (map->obj.load(med->map, path) == 0) {
 		x = map->defx;
 		y = map->defy;
-		map->map[x][y].flags |= MAPENTRY_ORIGIN;
+		map->map[x][y].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
 		view_center(map->view, x, y);
@@ -185,24 +191,24 @@ mapedit_examine(struct map *em, int x, int y)
 	printf("%dx%d < ", x, y);
 
 	/* Keep in sync with map.h */
-	if (node->flags == MAPENTRY_BLOCK) {
+	if (node->flags == NODE_BLOCK) {
 		printf("block ");
 	} else {
-		if (node->flags & MAPENTRY_ORIGIN)
+		if (node->flags & NODE_ORIGIN)
 			printf("origin ");
-		if (node->flags & MAPENTRY_WALK)
+		if (node->flags & NODE_WALK)
 			printf("walk ");
-		if (node->flags & MAPENTRY_CLIMB)
+		if (node->flags & NODE_CLIMB)
 			printf("climb ");
-		if (node->flags & MAPENTRY_SLIP)
+		if (node->flags & NODE_SLIP)
 			printf("slippery ");
-		if (node->flags & MAPENTRY_BIO)
+		if (node->flags & NODE_BIO)
 			printf("bio ");
-		if (node->flags & MAPENTRY_REGEN)
+		if (node->flags & NODE_REGEN)
 			printf("regen ");
-		if (node->flags & MAPENTRY_SLOW)
+		if (node->flags & NODE_SLOW)
 			printf("slow ");
-		if (node->flags & MAPENTRY_HASTE)
+		if (node->flags & NODE_HASTE)
 			printf("haste ");
 		if (node->v1 > 0)
 			printf("(v1=%d) ", node->v1);
