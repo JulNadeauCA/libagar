@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.8 2003/01/21 03:26:41 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.9 2003/01/23 03:33:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -61,7 +61,7 @@ view_params_window(void)
 	struct window *win;
 	struct region *reg;
 
-	if ((win = window_generic_new(259, 173, "monitor-view-params"))
+	if ((win = window_generic_new(233, 133, "monitor-view-params"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
