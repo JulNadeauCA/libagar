@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.18 2002/07/27 07:02:55 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.19 2002/07/29 05:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -54,8 +54,8 @@ static struct widget_ops checkbox_ops = {
 };
 
 enum {
-	FRAME_COLOR	= 0,
-	TEXT_COLOR	= 1
+	FRAME_COLOR,
+	TEXT_COLOR
 };
 
 static void	checkbox_event(int, union evarg *);

@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.28 2002/07/29 02:16:19 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.29 2002/07/29 05:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -57,8 +57,8 @@ static const struct widget_ops button_ops = {
 };
 
 enum {
-	FRAME_COLOR	= 0,
-	TEXT_COLOR	= 1
+	FRAME_COLOR,
+	TEXT_COLOR
 };
 
 static void	button_event(int, union evarg *);

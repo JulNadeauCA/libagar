@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.6 2002/07/27 09:02:43 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.7 2002/07/29 05:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -64,8 +64,8 @@ static const struct widget_ops graph_ops = {
 };
 
 enum {
-	FRAME_COLOR	= 0,
-	TEXT_COLOR	= 1
+	FRAME_COLOR,
+	TEXT_COLOR
 };
 
 enum {

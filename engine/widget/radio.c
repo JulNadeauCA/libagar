@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.5 2002/07/27 07:02:55 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.6 2002/07/29 05:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -54,7 +54,7 @@ static struct widget_ops radio_ops = {
 };
 
 enum {
-	INSIDE_COLOR = 0,
+	INSIDE_COLOR,
 	OUTSIDE_COLOR,
 	TEXT_COLOR
 };

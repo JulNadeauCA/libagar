@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.17 2002/07/27 07:02:55 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.18 2002/07/29 05:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -61,10 +61,10 @@ static const struct widget_ops textbox_ops = {
 };
 
 enum {
-	FRAME_COLOR	= 0,
-	TEXT_COLOR	= 1,
-	CURSOR_COLOR1	= 2,
-	CURSOR_COLOR2	= 3
+	FRAME_COLOR,
+	TEXT_COLOR,
+	CURSOR_COLOR1,
+	CURSOR_COLOR2
 };
 
 static void	textbox_event(int, union evarg *);
