@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.63 2003/05/16 01:26:55 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.64 2003/05/24 15:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -361,7 +361,7 @@ label_draw_polled(struct label *label)
 				ri++;
 				break;
 			case 's':
-				strlcat(s, LABEL_ARG(char *), sizeof(s));
+				strlcat(s, &LABEL_ARG(char), sizeof(s));
 				ri++;
 				break;
 			case 'p':
