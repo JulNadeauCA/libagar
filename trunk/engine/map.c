@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.160 2003/03/11 00:11:49 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.161 2003/03/13 06:21:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -204,43 +204,12 @@ map_free_layers(struct map *m)
 	m->layers = NULL;
 }
 
-/* Shrink a map, freeing the excess nodes. */
-void
-map_shrink(struct map *m, unsigned int w, unsigned int h)
-{
-	struct node *node;
-	int x, y;
-	
-	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
-	
-	pthread_mutex_lock(&m->lock);
-	
-	for (y = h; y < m->maph; y++) {			/* Free excess nodes */
-		for (x = w; x < m->mapw; x++) {
-			node = &m->map[y][x];
-			node_destroy(node);
-			free(node);
-		}
-	}
-
-	m->map = erealloc(m->map, h * sizeof(struct node *));
-	if (w < m->mapw) {
-		for (y = 0; y < m->maph; y++) {
-			m->map[y] = erealloc(m->map[y],
-			    w * sizeof(struct node));
-		}
-	}
-	m->mapw = w;
-	m->maph = h;
-
-	pthread_mutex_unlock(&m->lock);
-}
-
-/* Grow a map and initialize the new nodes. */
 int
-map_grow(struct map *m, unsigned int w, unsigned int h)
+map_resize(struct map *m, unsigned int w, unsigned int h)
 {
-	int i, x, y;
+	int i, sx, sy, dx, dy;
+	struct noderef *nref, *nnref;
+	struct node **nmap;
 
 	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
 
@@ -252,55 +221,40 @@ map_grow(struct map *m, unsigned int w, unsigned int h)
 
 	pthread_mutex_lock(&m->lock);
 
-	m->map = erealloc(m->map, h * sizeof(struct node *));
-	for (y = 0; y < h; y++) {
-		if (y > m->maph-1) {			/* New row */
-			m->map[y] = emalloc(w * sizeof(struct node));
-			for (x = 0; x < w; x++) {
-				node_init(&m->map[y][x]);
-			}
-		} else {				/* Existing row */
-			if (w > m->mapw) {
-				m->map[y] = erealloc(m->map[y],
-				    w * sizeof(struct node));
-				for (x = m->mapw-1; x < w; x++) {
-					node_init(&m->map[y][x]);
-				}
-			}
+	/* Allocate and initialize new node arrays. */
+	nmap = emalloc(h * sizeof(struct node *));
+	for (dy = 0; dy < h; dy++) {
+		nmap[dy] = emalloc(w * sizeof(struct node));
+		for (dx = 0; dx < w; dx++) {
+			node_init(&nmap[dy][dx]);
 		}
 	}
+
+	/* Copy the nodes over. */
+	for (sy = 0, dy = 0;
+	     sy < m->maph && dy < h;
+	     sy++, dy++) {
+		for (sx = 0, dx = 0;
+		     sx < m->mapw && dx < w;
+		     sx++, dx++) {
+			struct node *srcnode = &m->map[sy][sx];
+			struct node *dstnode = &nmap[dy][dx];
+		
+			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+				nnref = node_copy_ref(nref, dstnode);
+				nnref->layer = nref->layer;
+			}
+			dstnode->flags = srcnode->flags;
+		}
+	}
+
+	map_free_nodes(m);
+	m->map = nmap;
 	m->mapw = w;
 	m->maph = h;
-
 	pthread_mutex_unlock(&m->lock);
+
 	return (0);
-}
-
-/* Grow the map to ensure that m:[mx,my] is a valid node. */
-int
-map_adjust(struct map *m, int mx, int my)
-{
-	int rv = 0;
-
-	debug(DEBUG_RESIZE, "%d,%d\n", mx, my);
-
-	if (mx > MAP_MAX_WIDTH || my > MAP_MAX_HEIGHT) {
-		error_set("%ux%u nodes > %ux%u", mx, my,
-		    MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
-		return (-1);
-	}
-
-	pthread_mutex_lock(&m->lock);
-	if (mx > m->mapw) {
-		if (map_grow(m, mx, m->maph) == -1)
-			rv = -1;
-	}
-	if (my > m->maph) {
-		if (map_grow(m, m->mapw, my) == -1)
-			rv = -1;
-	}
-	pthread_mutex_unlock(&m->lock);
-	return (rv);
 }
 
 /* Modify the zoom factor. */

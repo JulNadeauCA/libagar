@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.26 2003/03/11 00:11:49 vedge Exp $
+.\"	$Csoft: map.3,v 1.27 2003/03/13 06:21:48 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -78,12 +78,6 @@ contain centering/motion offsets, a list of transforms, and a layer number.
 .Fn map_free_nodes "struct map *map"
 .Pp
 .Ft int
-.Fn map_grow "struct map *map" "unsigned int w" "unsigned int h"
-.Pp
-.Ft void
-.Fn map_shrink "struct map *map" "unsigned int w" "unsigned int h"
-.Pp
-.Ft int
 .Fn map_adjust "struct map *map" "int x" "int y"
 .Pp
 .Ft void
@@ -131,22 +125,11 @@ function releases the nodes allocated by
 .Fa map .
 .Pp
 The
-.Fn map_grow
-and
-.Fn map_shrink
-functions respectively increase and decrease a map's size by
-.Fa w
-x
-.Fa h
-nodes.
-.Fn map_grow
-returns 0 on success and -1 on failure.
-The
-.Fn map_adjust
-function grows the map so that the node at
-.Fa x ,
-.Fa y
-is initialized, and returns 0 on sucess or -1 on failure.
+.Fn map_resize
+function reallocates the nodes arrays, initializing the new nodes and
+freeing the excess ones.
+.Fn map_resize
+returns 0 on sucess or -1 on failure.
 .Pp
 The
 .Fn map_set_zoom
