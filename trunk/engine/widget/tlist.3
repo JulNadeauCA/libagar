@@ -1,0 +1,179 @@
+.\"	$Csoft: button.3,v 1.7 2002/09/12 09:54:49 vedge Exp $
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt TLIST 3
+.Os
+.Sh NAME
+.Nm tlist
+.Nd agar list widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/tlist.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget implements a dynamic, scrollable list of items.
+Single or multiple selections of items are allowed.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct tlist *"
+.Fn tlist_new "struct region *reg" "int rw" "int rh" "int flags"
+.Pp
+.Ft void
+.Fn tlist_init "struct tlist *tlist" "int rw" "int rh" "int flags"
+.nr nS 0
+.Pp
+The
+.Fn tlist_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn tlist_init
+function initializes a
+.Nm
+widget of size
+.Fa rw
+x
+.Fa rh
+with no items initially.
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
+#define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
+#define TLIST_DROPDOWN		0x04  /* Drop-down menu */
+.Ed
+.Sh MANIPULATING ITEMS
+.nr nS 1
+.Ft "struct tlist_item *"
+.Fn tlist_insert_item "struct tlist *tlist" "SDL_Surface *icon" "char *text" \
+                      "void *p1"
+.Pp
+.Ft "void"
+.Fn tlist_remove_item "struct tlist_item *item"
+.Pp
+.Ft "void"
+.Fn tlist_clear_items "struct tlist *tlist"
+.Pp
+.Ft "void"
+.Fn tlist_unselect_all "struct tlist *tlist"
+.nr nS 0
+.Pp
+The
+.Fn tlist_insert_item
+function inserts a new item into
+.Fa tlist
+displaying
+.Fa icon
+(if non-NULL)
+and the string pointed to by
+.Fa text .
+The
+.Fa p1
+argument is a user-defined pointer.
+.Pp
+The
+.Fn tlist_remove_item
+function detaches and frees
+.Fa item
+from its parent
+.Nm tlist .
+.Pp
+The
+.Fn tlist_clear_items
+function removes all items attached to
+.Fa tlist .
+.Pp
+The
+.Fn tlist_unselect_all
+function clears the selected flag on all items attached to
+.Fa tlist .
+.Sh LOOKING UP ITEMS
+.nr nS 1
+.Ft "struct tlist_item *"
+.Fn tlist_item_index "struct tlist *tlist" "int index"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_item_text "struct tlist *tlist" "char *text"
+.nr nS 0
+.Pp
+The
+.Fn tlist_item_index
+function returns the item at
+.Fa index ,
+or NULL if there is no such item.
+The
+.Fn tlist_item_text
+function searches
+.Fa tlist
+for an item containing the
+.Fa text
+string and returns NULL if there is no such item.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n
+.It window-mousemotion
+Scroll if a mouse button is pressed.
+.It window-mousebuttondown
+Select an item.
+.It window-keydown
+Up/down changes a single selection.
+Left/right scrolls.
+Pageup/pagedown scrolls 4 items.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn tlist-inserted-item "struct tlist_item *item"
+The
+.Fa item
+was inserted into the list.
+.It Fn tlist-changed "struct tlist_item *item" "int state"
+The
+.Fa item
+was selected/unselected.
+.El
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3 ,
+.Xr window 3 ,
+.Xr region 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
