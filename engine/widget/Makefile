@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.46 2003/06/08 23:49:39 vedge Exp $
+#	$Csoft: Makefile,v 1.47 2003/06/10 06:44:54 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -22,17 +22,20 @@ MAN3=	widget.3 button.3 graph.3 \
 	checkbox.3 label.3 radio.3 \
 	textbox.3 window.3 bitmap.3 \
 	scrollbar.3 tlist.3 palette.3 \
-	text.3 box.3
+	text.3 box.3 hbox.3 \
+	vbox.3
 CATMAN3=widget.cat3 button.cat3 graph.cat3 \
 	checkbox.cat3 label.cat3 radio.cat3 \
 	textbox.cat3 window.cat3 bitmap.cat3 \
 	scrollbar.cat3 tlist.cat3 palette.cat3 \
-	text.cat3 box.cat3
+	text.cat3 box.cat3 hbox.cat3 \
+	vbox.cat3
 PSMAN3=	widget.ps3 button.ps3 graph.ps3 \
 	checkbox.ps3 label.ps3 radio.ps3 \
 	textbox.ps3 window.ps3 bitmap.ps3 \
 	scrollbar.ps3 tlist.ps3 palette.ps3 \
-	text.ps3 box.ps3
+	text.ps3 box.ps3 hbox.ps3 \
+	vbox.ps3
 
 CFLAGS+=${SDL_CFLAGS}
 

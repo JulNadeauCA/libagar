@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.14 2003/06/06 03:18:14 vedge Exp $
+.\"	$Csoft: box.3,v 1.1 2003/06/10 06:44:54 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -82,8 +82,8 @@ Acceptable
 include:
 .Bd -literal
 #define BOX_HOMOGENOUS	0x01	/* Divide space evenly */
-#define BOX_WFILL	0x02	/* Expand to fill available width */
-#define BOX_HFILL	0x04	/* Expand to fill available height */
+#define BOX_WFILL	0x02	/* Fill remaining width */
+#define BOX_HFILL	0x04	/* Fill remaining height */
 .Ed
 .Pp
 The
