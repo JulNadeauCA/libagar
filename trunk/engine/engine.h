@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.69 2003/06/21 06:50:18 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.70 2003/06/23 00:06:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -36,6 +36,7 @@
 #include <engine/compat/strlcat.h>
 #include <engine/compat/snprintf.h>
 #include <engine/compat/vsnprintf.h>
+#include <engine/compat/asprintf.h>
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strsep.h>
 
