@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.151 2003/10/14 03:15:24 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.152 2003/11/15 03:58:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -258,7 +258,6 @@ object_used(void *obj)
 	unlock_linkage();
 
 	if (used) {
-		dprintf("%s: in use\n", OBJECT(obj)->name);
 		error_set(_("The `%s' object is in use."), OBJECT(obj)->name);
 	}
 	return (used);
@@ -603,9 +602,7 @@ object_page_in(void *p, enum object_page_item item)
 				 * never been saved before.
 				 * XXX
 				 */
-				text_msg(MSG_ERROR, "New (%s)", error_get());
-				dprintf("load_data: %s; no previous save?\n",
-				    error_get());
+				printf("%s: %s\n", ob->name, error_get());
 				ob->flags |= OBJECT_DATA_RESIDENT;
 			}
 		}
@@ -732,7 +729,7 @@ object_resolve_deps(void *p)
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj != NULL) {
-			dprintf("%s: already resolved dep: %s\n", ob->name,
+			printf("%s: already resolved dep `%s'\n", ob->name,
 			    dep->obj->name);
 			continue;
 		}
@@ -754,7 +751,7 @@ object_resolve_deps(void *p)
 }
 
 /*
- * Reload the data of resident object and descendants.
+ * Reload the data of resident object and its resident descendants.
  * The object and linkage must be locked.
  */
 int
@@ -762,9 +759,8 @@ object_reload_data(void *p)
 {
 	struct object *ob = p, *cob;
 
-	dprintf("`%s'\n", ob->name);
 	if (ob->flags & OBJECT_WAS_RESIDENT) {
-		dprintf("%s: was resident\n", ob->name);
+		dprintf("`%s' is resident; reloading\n", ob->name);
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(p) == -1)
 			return (-1);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.98 2003/10/14 03:15:24 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.99 2003/11/15 03:58:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -75,18 +75,18 @@ struct object {
 #define OBJECT_PRESERVE_DEPS	0x10	/* Don't remove a dependency when its
 					   reference count reaches 0. */
 #define OBJECT_STATIC		0x20	/* Don't free() after detach. */
-#define OBJECT_READONLY		0x40	/* Don't allow edition (advisory) */
+#define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
 #define OBJECT_WAS_RESIDENT	0x80	/* Used internally by object_load() */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 
 	pthread_mutex_t	 lock;
-	struct gfx	*gfx;			/* Associated graphics */
-	char		*gfx_name;		/* Gfx to fetch */
-	Uint32		 gfx_used;		/* Gfx ref count */
-	struct audio	*audio;			/* Associated audio samples */
-	char		*audio_name;		/* Audio to fetch */
-	Uint32		 audio_used;		/* Audio ref count */
-	Uint32		 data_used;		/* Derivate data ref count */
+	struct gfx	*gfx;		/* Associated graphics set */
+	char		*gfx_name;	/* Graphics set to fetch */
+	Uint32		 gfx_used;	/* Referenced sprites/animations */
+	struct audio	*audio;		/* Associated audio samples */
+	char		*audio_name;	/* Audio sample set to fetch */
+	Uint32		 audio_used;	/* Referenced samples */
+	Uint32		 data_used;	/* Referenced object derivate data */
 
 	struct object_position	*pos;		/* Position on a map */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
