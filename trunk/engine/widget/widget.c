@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.1 2002/04/18 03:57:28 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.2 2002/04/20 05:48:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -149,7 +149,7 @@ widget_draw(void *p)
 {
 	struct widget *w = (struct widget*)p;
 	
-	if (WIDVEC(w)->draw != NULL) {
+	if (WIDVEC(w)->draw != NULL && !(w->flags & WIDGET_HIDE)) {
 		WIDVEC(w)->draw(w);
 	}
 }
