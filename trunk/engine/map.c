@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.203 2004/03/05 15:21:12 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.204 2004/03/09 06:16:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1302,18 +1302,12 @@ toggle_media(int argc, union evarg *argv)
 	struct window *win = mv->mimport.win;
 	
 	if (win->visible) {
-		if (OBJECT(mv->map)->gfx != NULL) {
-			object_page_out(mv->map, OBJECT_GFX);
-		}
-		if (OBJECT(mv->map)->audio != NULL) {
-			object_page_out(mv->map, OBJECT_AUDIO);
-		}
 		window_hide(win);
 	} else {
-		if (OBJECT(mv->map)->gfx != NULL) {
+		if (OBJECT(mv->map)->gfx_name != NULL) {
 			object_page_in(mv->map, OBJECT_GFX);
 		}
-		if (OBJECT(mv->map)->audio != NULL) {
+		if (OBJECT(mv->map)->audio_name != NULL) {
 			object_page_in(mv->map, OBJECT_AUDIO);
 		}
 		window_show(win);
@@ -1533,10 +1527,10 @@ media_window_hidden(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
-	if (OBJECT(mv->map)->gfx != NULL) {
+	if (OBJECT(mv->map)->gfx_name != NULL) {
 		object_page_out(mv->map, OBJECT_GFX);
 	}
-	if (OBJECT(mv->map)->audio != NULL) {
+	if (OBJECT(mv->map)->audio_name != NULL) {
 		object_page_out(mv->map, OBJECT_AUDIO);
 	}
 }
