@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.19 2002/05/02 09:37:02 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.20 2002/05/03 20:13:02 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -29,6 +29,9 @@ struct gameinfo {
 	char	*copyright;
 	int	 ver[2];
 };
+
+#define ICON_GAME	0
+#define ICON_MAPEDITION	1
 
 int	 engine_init(int, char **, struct gameinfo *, char *);
 int	 engine_editmap(void);
