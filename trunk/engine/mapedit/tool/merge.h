@@ -1,4 +1,4 @@
-/*	$Csoft: merge.h,v 1.3 2003/02/10 04:44:23 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.4 2003/02/12 01:09:32 vedge Exp $	*/
 /*	Public domain	*/
 
 enum merge_mode {
@@ -28,4 +28,5 @@ void		 merge_apply(struct merge *, struct mapview *, struct map *);
 void		 merge_destroy(void *);
 int		 merge_load(void *, int);
 int		 merge_save(void *, int);
+int		 merge_cursor(void *, struct mapview *, SDL_Rect *);
 
