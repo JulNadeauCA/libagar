@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.84 2005/02/07 13:17:16 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.85 2005/02/08 15:45:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -236,7 +236,7 @@ textbox_draw(void *p)
 	int i, x, y;
 	size_t len;
 	char *s;
-
+	
 	if (tbox->label != NULL) {
 		widget_blit(tbox, tbox->label, 0,
 		    WIDGET(tbox)->h/2 - tbox->label->h/2);
@@ -309,7 +309,7 @@ textbox_draw(void *p)
 			if (i == 0 && glyph->minx < 0) {
 				x -= glyph->minx;
 			}
-			if ((x + glyph->minx + ftbmp->width + 4)
+			if ((x + glyph->minx + ftbmp->width + glyph->advance)
 			    >= WIDGET(tbox)->w)
 				continue;
 
@@ -456,14 +456,16 @@ cursor_position(struct textbox *tbox, int mx, int my, int *pos)
 
 			if (i == 0 && glyph->minx < 0)
 				x -= glyph->minx;
-			if ((x + glyph->minx+ftbmp->width) >= WIDGET(tbox)->w)
+			if ((x + glyph->minx+ftbmp->width)
+			    >= WIDGET(tbox)->w)
 				continue;
 		
-			if (mx >= x && mx < x+glyph->minx+ftbmp->width) {
+			if (mx >= x &&
+			    mx < x+glyph->minx+ftbmp->width) {
 				*pos = i;
 				goto in;
 			}
-			x += glyph->minx+ftbmp->width;
+			x += glyph->advance;
 		}
 	}
 	widget_binding_unlock(stringb);
@@ -499,8 +501,10 @@ mousebuttondown(int argc, union evarg *argv)
 	int mx = argv[2].i;
 	int my = argv[3].i;
 	int rv;
-	
-	widget_focus(tbox);
+
+	if (tbox->label == NULL ||
+	    mx > tbox->label->w)
+		widget_focus(tbox);
 
 	if (btn == SDL_BUTTON_LEFT)
 		move_cursor(tbox, mx, my);
