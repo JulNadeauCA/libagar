@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.7 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.8 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -57,6 +57,7 @@ vg_text_init(struct vg *vg, struct vg_element *vge)
 	vge->vg_text.text[0] = '\0';
 	vge->vg_text.angle = 0;
 	vge->vg_text.align = VG_ALIGN_MC;
+	vge->vg_text.nptrs = 0;
 }
 
 void
@@ -84,7 +85,49 @@ vg_text_angle(struct vg *vg, double angle)
 	vge->vg_text.angle = angle;
 }
 
-/* Specify the text to display. */
+/* Specify text with polled values. */
+void
+vg_pprintf(struct vg *vg, const char *fmt, ...)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	const char *p;
+	va_list ap;
+	
+	if (fmt != NULL) {
+		strlcpy(vge->vg_text.text, fmt, sizeof(vge->vg_text.text));
+	} else {
+		vge->vg_text.text[0] = '\0';
+		return;
+	}
+
+	va_start(ap, fmt);
+	for (p = &fmt[0]; *p != '\0'; p++) {
+		if (*p == '%' && *(p+1) != '\0') {
+			switch (*(p+1)) {
+			case ' ':
+			case '(':
+			case ')':
+			case '%':
+				break;
+			default:
+				if (vge->vg_text.nptrs >= VG_TEXT_MAX_PTRS) {
+					break;
+				}
+				vge->vg_text.ptrs[vge->vg_text.nptrs++] =
+				    va_arg(ap, void *);
+				break;
+			}
+		}
+	}
+	va_end(ap);
+	
+	if (vge->vg_text.su != NULL) {
+		SDL_FreeSurface(vge->vg_text.su);
+		vge->vg_text.su = NULL;
+	}
+}
+
+/* Specify static text. */
 void
 vg_printf(struct vg *vg, const char *fmt, ...)
 {
@@ -103,7 +146,26 @@ vg_printf(struct vg *vg, const char *fmt, ...)
 		SDL_FreeSurface(vge->vg_text.su);
 		vge->vg_text.su = NULL;
 	}
+	vge->redraw++;
+	vg->redraw++;
 }
+
+#define TEXT_ARG(_type) (*(_type *)vge->vg_text.ptrs[ri])
+
+static void
+omega(char *s, size_t len, int n)
+{
+	strlcat(s, "omega", len);
+}
+
+static const struct {
+	char	 *fmt;
+	size_t	  fmt_len;
+	void	(*func)(char *, size_t, int);
+} fmts[] = {
+	{ "omega", sizeof("omega"), omega },
+};
+static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 void
 vg_draw_text(struct vg *vg, struct vg_element *vge)
@@ -112,13 +174,112 @@ vg_draw_text(struct vg *vg, struct vg_element *vge)
 	SDL_Surface *su;
 	int x, y;
 	
-	if (vge->vg_text.su == NULL) {
-		vge->vg_text.su = text_render(vge->text_st.face[0] != '\0' ?
-		    vge->text_st.face : NULL, vge->text_st.size, vge->color,
-		    vge->vg_text.text);
+	if (vge->vg_text.nptrs > 0) {
+		char s[VG_TEXT_MAX];
+		char s2[32];
+		SDL_Surface *ts;
+		char *fmtp;
+		int i, ri = 0;
+
+		s[0] = '\0';
+		s2[0] = '\0';
+
+		for (fmtp = vge->vg_text.text; *fmtp != '\0'; fmtp++) {
+			if (*fmtp == '%' && *(fmtp+1) != '\0') {
+				switch (*(fmtp+1)) {
+				case 'd':
+				case 'i':
+					snprintf(s2, sizeof(s2), "%d",
+					    TEXT_ARG(int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 'o':
+					snprintf(s2, sizeof(s2), "%o",
+					    TEXT_ARG(unsigned int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 'u':
+					snprintf(s2, sizeof(s2), "%u",
+					    TEXT_ARG(unsigned int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 'x':
+					snprintf(s2, sizeof(s2), "%x",
+					    TEXT_ARG(unsigned int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 'X':
+					snprintf(s2, sizeof(s2), "%X",
+					    TEXT_ARG(unsigned int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 'c':
+					s2[0] = TEXT_ARG(char);
+					s2[1] = '\0';
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 's':
+					strlcat(s, &TEXT_ARG(char), sizeof(s));
+					ri++;
+					break;
+				case 'p':
+					snprintf(s2, sizeof(s2), "%p",
+					    TEXT_ARG(void *));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case 'f':
+					snprintf(s2, sizeof(s2), "%.2f",
+					    TEXT_ARG(double));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+					break;
+				case '[':
+					for (i = 0; i < nfmts; i++) {
+						if (strncmp(fmts[i].fmt, fmtp+2,
+						    fmts[i].fmt_len-1) != 0) {
+							continue;
+						}
+						fmtp += fmts[i].fmt_len;
+						fmts[i].func(s2, sizeof(s2),
+						    ri);
+						strlcat(s, s2, sizeof(s));
+						ri++;
+						break;
+					}
+					break;
+				case '%':
+					s2[0] = '%';
+					s2[1] = '\0';
+					strlcat(s, s2, sizeof(s));
+					break;
+				}
+				fmtp++;
+			} else {
+				s2[0] = *fmtp;
+				s2[1] = '\0';
+				strlcat(s, s2, sizeof(s));
+			}
+		}
+		if (vge->vg_text.su != NULL) {
+			SDL_FreeSurface(vge->vg_text.su);
+		}
+		vge->vg_text.su = text_render(NULL, -1, vge->color, s);
+	} else {
+		if (vge->vg_text.su == NULL) {
+			vge->vg_text.su = text_render(
+			    vge->text_st.face[0] != '\0' ? vge->text_st.face :
+			    NULL, vge->text_st.size, vge->color,
+			    vge->vg_text.text);
+		}
 	}
 	su = vge->vg_text.su;
-	
 #ifdef DEBUG
 	if (vge->nvtx < 1)
 		fatal("nvtx < 1");
@@ -189,6 +350,7 @@ vg_text_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 static struct vg_element *cur_text;
 static struct vg_vertex *cur_vtx;
 static enum vg_alignment cur_align;
+static char cur_string[1024];
 
 static void
 select_alignment(int argc, union evarg *argv)
@@ -242,16 +404,40 @@ select_alignment(int argc, union evarg *argv)
 }
 
 static void
+string_changed(int argc, union evarg *argv)
+{
+	struct textbox *tb = argv[0].p;
+	struct tool *t = argv[1].p;
+	struct vg *vg = t->p;
+	struct widget_binding *stringb;
+	char *s;
+	
+	stringb = widget_get_binding(tb, "string", &s);
+	if (cur_text != NULL) {
+		vg_select_element(vg, cur_text);
+		vg_printf(vg, "%s", s);
+	}
+	widget_binding_unlock(stringb);
+}
+
+static void
 text_tool_init(struct tool *t)
 {
 	struct window *win;
 	struct combo *com;
 	struct textbox *tb;
 	struct tlist_item *it;
-
+	
+	cur_text = NULL;
+	cur_vtx = NULL;
+	cur_align = VG_ALIGN_TL;
+	cur_string[0] = '\0';
+	
 	win = tool_window(t, "vg-tool-text");
-
 	tb = textbox_new(win, _("Text: "));
+	widget_bind(tb, "string", WIDGET_STRING, cur_string,
+	    sizeof(cur_string));
+	event_new(tb, "textbox-postchg", string_changed, "%p", t);
 
 	com = combo_new(win, 0, _("Alignment: "));
 	it = tlist_insert_item(com->list, ICON(VGTL_ICON), _("Top/left"), "TL");
@@ -266,10 +452,6 @@ text_tool_init(struct tool *t)
 	event_new(com, "combo-selected", select_alignment, "%p", t);
 	combo_select(com, it);
 
-	cur_text = NULL;
-	cur_vtx = NULL;
-	cur_align = VG_ALIGN_TL;
-	
 	tool_push_status(t, _("Specify the position of the text."));
 }
 
@@ -306,7 +488,7 @@ text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	switch (b) {
 	case 1:
 		cur_text = vg_begin_element(vg, VG_TEXT);
-		vg_printf(vg, "Foo");
+		vg_printf(vg, "%s", cur_string);
 		vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 		cur_vtx = vg_vertex2(vg, vx, vy);
 		vg_text_align(vg, cur_align);
