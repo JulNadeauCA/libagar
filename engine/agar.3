@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.29 2003/05/24 13:42:54 vedge Exp $
+.\"	$Csoft: agar.3,v 1.30 2003/06/06 02:36:39 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -121,9 +121,10 @@ accessed using a thread-specific key.
 .Pp
 The
 .Fn error_fatal
-function prints an error message and causes the application to exit, or
+function prints an error message and terminates the application
+(using
 .Xr abort 3
-if debugging is enabled.
+if debugging is enabled).
 .Sh THREAD SAFETY
 The following subsystems do not provide thread safety:
 .Pp
