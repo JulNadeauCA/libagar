@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.42 2002/11/22 08:56:49 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.43 2002/11/24 02:11:53 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,6 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/sharedir.h>
+
 #include "engine.h"
 
 #include <sys/stat.h>
@@ -34,6 +36,7 @@
 #include "version.h"
 #include "config.h"
 #include "view.h"
+#include "world.h"
 
 #include "widget/text.h"
 #include "widget/widget.h"
@@ -58,15 +61,12 @@ static const struct object_ops config_ops = {
 	NULL	/* save */
 };
 
+static struct window *primitives_win;	/* Primitive algorithm switch */
+
 enum {
 	CLOSE_BUTTON,
 	SAVE_BUTTON,
-	FULLSCREEN_CBOX,
-	FONTCACHE_CBOX,
-	ASYNCBLIT_CBOX,
-	VISREGIONS_CBOX,
-	ANYSIZE_CBOX,
-	DEBUG_CBOX,
+	PRIMITIVES_BUTTON,
 	UDATADIR_TBOX,
 	SYSDATADIR_TBOX,
 	DATAPATH_TBOX,
@@ -74,10 +74,9 @@ enum {
 	H_TBOX
 };
 
-static struct config_prop	*config_get_prop(const char *);
-static void			 config_apply_string(int, union evarg *);
-static void			 config_apply_int(int, union evarg *);
-static void			 config_apply(int, union evarg *);
+static void	config_apply_string(int, union evarg *);
+static void	config_apply_int(int, union evarg *);
+static void	config_apply(int, union evarg *);
 
 struct config *
 config_new(void)
@@ -90,6 +89,26 @@ config_new(void)
 	return (con);
 }
 
+static void
+config_prop_changed(int argc, union evarg *argv)
+{
+	struct config *con = argv[0].p;
+	struct prop *prop = argv[1].p;
+
+	if (strcmp(prop->key, "view.font-cache") == 0) {
+		if (prop_get_bool(con, "view.font-cache")) {
+			keycodes_loadglyphs();
+		} else {
+			keycodes_freeglyphs();
+		}
+	} else if (strcmp(prop->key, "view.full-screen")) {
+		if (prop_get_bool(con, "view.full-screen")) {
+			SDL_WM_ToggleFullScreen(view->v);
+			VIEW_REDRAW();
+		}
+	}
+}
+
 void
 config_init(struct config *con)
 {
@@ -99,34 +118,30 @@ config_init(struct config *con)
 	char *spath;
 	char *udatadir, *sysdatadir;
 
-	pwd = getpwuid(getuid());
+	object_init(&con->obj, "engine-config", "config", NULL, OBJECT_SYSTEM,
+	    &config_ops);
 
-	object_init(&con->obj, "engine-config", "config", NULL, 0, &config_ops);
-
-	/* Generic engine operation flags. */
-	prop_set_uint32(con, "flags", CONFIG_FONT_CACHE);
-
-	/* Graphic settings. */
-	prop_set_uint32(con, "view.w",	 800);
-	prop_set_uint32(con, "view.h",	 600);
+	/* Visual settings */
+	prop_set_bool(con,   "view.font-cache", 1);
+	prop_set_bool(con,   "view.full-screen", 0);
+	prop_set_bool(con,   "view.async-blits", 0);
+	prop_set_bool(con,   "view.opengl", 0);
+	prop_set_uint32(con, "view.w", 800);
+	prop_set_uint32(con, "view.h", 600);
 	prop_set_uint32(con, "view.bpp", 32);
 
-	/* Widget settings */
-	prop_set_uint32(con, "widgets.flags", 0);
+	/* Window system settings */
+	prop_set_bool(con, "widget.reg-borders", 0);
+	prop_set_bool(con, "widget.any-size", 0);
 
-	/* Caching settings */
-	prop_set_uint32(con, "caching.surface_kB", 1024);
-	prop_set_uint32(con, "caching.glyph_kB", 0);
+	/* Data directories. */
+	pwd = getpwuid(getuid());
+	prop_set_string(con, "path.user_data_dir", "%s/.%s",
+	    pwd->pw_dir, gameinfo->prog);
+	prop_set_string(con, "path.sys_data_dir", "%s", SHAREDIR);
 
-	/* Pathnames */
-	prop_set_string(con, "path.user_data_dir",
-	    "%s/.%s", pwd->pw_dir, gameinfo->prog);
-	prop_set_string(con, "path.sys_data_dir",
-	    "%s", SHAREDIR);
-	udatadir = prop_string(con, "path.user_data_dir");
-	sysdatadir = prop_string(con, "path.sys_data_dir");
-	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
-
+	udatadir = prop_get_string(con, "path.user_data_dir");
+	sysdatadir = prop_get_string(con, "path.sys_data_dir");
 	if (stat(sysdatadir, &sta) != 0) {
 		warning("%s: %s\n", sysdatadir, strerror(errno));
 	}
@@ -134,16 +149,15 @@ config_init(struct config *con)
 		warning("created %s\n", udatadir);
 		fatal("%s: %s\n", udatadir, strerror(errno));
 	}
+	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
+	free(udatadir);
+	free(sysdatadir);
+
+	event_new(con, "prop-changed", config_prop_changed, NULL);
 }
 
-/*
- * The config_init() function is called too early in initialization
- * to create the configure settings windows.
- *
- * Non thread safe.
- */
 void
-config_init_wins(struct config *con)
+config_window(struct config *con)
 {
 	struct window *win;
 	struct region *reg;
@@ -154,55 +168,38 @@ config_init_wins(struct config *con)
 	struct tlist *tl;
 	struct label *lab;
 
-	/*
-	 * Engine settings window
-	 */
 	win = window_generic_new(267, 319, "config-engine-settings");
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	window_set_caption(win, "Engine settings");
-	con->windows.settings = win;
 
 	/* Flags */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
 	{
-		cbox = checkbox_new(reg, "Asynchronous blits (restart)", 0,
-		    (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT) ?
-		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", config_apply,
-		    "%i", ASYNCBLIT_CBOX);
-
-		cbox = checkbox_new(reg, "Full screen", 0,
-		    (prop_uint32(config, "flags") & CONFIG_FULLSCREEN) ?
-		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", config_apply,
-		    "%i", FULLSCREEN_CBOX);
-		
-		cbox = checkbox_new(reg, "Font cache", 0,
-		    (prop_uint32(config, "flags") & CONFIG_FONT_CACHE) ?
-		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", config_apply,
-		    "%i", FONTCACHE_CBOX);
-
+		const struct {
+			char *name;
+			char *descr;
+		} settings[] = {
+			{ "view.font-cache",	"Font cache" },
+			{ "view.full-screen",	"Full screen" },
+			{ "view.async-blits",	"Asynchronous blits" },
+			{ "view.opengl",	"OpenGL rendering context" },
 #ifdef DEBUG
-		cbox = checkbox_new(reg, "Debugging enabled", 0,
-		    engine_debug ? CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", config_apply,
-		    "%i", DEBUG_CBOX);
-
-		cbox = checkbox_new(reg, "Visible regions", 0,
-		    (prop_uint32(config, "widgets.flags") &
-		     CONFIG_REGION_BORDERS) ?
-		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", config_apply,
-		    "%i", VISREGIONS_CBOX);
-
-		cbox = checkbox_new(reg, "Arbitrary window sizes", 0,
-		    (prop_uint32(config, "widgets.flags") &
-		     CONFIG_WINDOW_ANYSIZE) ?
-		     CHECKBOX_PRESSED : 0);
-		event_new(cbox, "checkbox-changed", config_apply,
-		    "%i", ANYSIZE_CBOX);
+			{ "widget.reg-borders",	"Region borders" },
+			{ "widget.any-size",	"Arbitrary window sizes" },
 #endif
+		};
+		const int nsettings = sizeof(settings) / sizeof(settings[0]);
+		int i;
+
+		for (i = 0; i < nsettings; i++) {
+			cbox = checkbox_new(reg, 0, "%s", settings[i].descr);
+			widget_bind(cbox, "state", WIDGET_PROP, NULL,
+			    config, settings[i].name);
+		}
+
+		/* XXX thread unsafe */
+		cbox = checkbox_new(reg, 0, "Debugging");
+		widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
 	}
 
 	/* Directories */
@@ -211,21 +208,21 @@ config_init_wins(struct config *con)
 		char *s;
 
 		tbox = textbox_new(reg, "  User datadir: ", 0, 100, 33);
-		s = prop_string(config, "path.user_data_dir");
+		s = prop_get_string(config, "path.user_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.user_data_dir");
 	
 		tbox = textbox_new(reg, "System datadir: ", 0, 100, 33);
-		s = prop_string(config, "path.sys_data_dir");
+		s = prop_get_string(config, "path.sys_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.sys_data_dir");
 		
 		tbox = textbox_new(reg, "Data file path: ", 0, 100, 33);
-		s = prop_string(config, "path.data_path");
+		s = prop_get_string(config, "path.data_path");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
@@ -236,12 +233,12 @@ config_init_wins(struct config *con)
 	reg = region_new(win, REGION_HALIGN,  0, 75, 100, 12);
 	{
 		tbox = textbox_new(reg, "Width : ", 0, 50, 100);
-		textbox_printf(tbox, "%d", prop_uint32(config, "view.w"));
+		textbox_printf(tbox, "%d", prop_get_uint32(config, "view.w"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.w");
 
 		tbox = textbox_new(reg, "Height: ", 0, 50, 100);
-		textbox_printf(tbox, "%d", prop_uint32(config, "view.h"));
+		textbox_printf(tbox, "%d", prop_get_uint32(config, "view.h"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.h");
 	}
@@ -249,28 +246,24 @@ config_init_wins(struct config *con)
 	/* Buttons */
 	reg = region_new(win, REGION_HALIGN, 0,  87, 100, 13);
 	{
-		button = button_new(reg, "Close", NULL, 0, 50, 90);
+		button = button_new(reg, "Close", NULL, 0, 33, 90);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", CLOSE_BUTTON);
 		win->focus = WIDGET(button);
 
-		button = button_new(reg, "Save", NULL, 0, 50, 90);
+		button = button_new(reg, "Save", NULL, 0, 33, 90);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", SAVE_BUTTON);
+		
+		button = button_new(reg, "Primitives", NULL, 0, 33, 90);
+		event_new(button, "button-pushed",
+		    config_apply, "%i", PRIMITIVES_BUTTON);
 	}
 
-	con->windows.algorithm_sw = primitive_config_window();
+	/* Primitive algorithm switch */
+	primitives_win = primitive_config_window();
+	config->settings = win;
 }
-
-#define CONFIG_SET_FLAG(con, var, flag, val) do {		\
-	if ((val)) {						\
-		prop_set_uint32((con), (var),			\
-		    prop_uint32((con), (var)) | (flag));	\
-	} else {						\
-		prop_set_uint32((con), (var),			\
-		    prop_uint32((con), (var)) & ~(flag));	\
-	}							\
-} while (/*CONSTCOND*/ 0)
 
 static void
 config_apply_string(int argc, union evarg *argv)
@@ -309,6 +302,9 @@ config_apply(int argc, union evarg *argv)
 	case SAVE_BUTTON:
 		object_save(config);
 		return;
+	case PRIMITIVES_BUTTON:
+		window_show(primitives_win);
+		return;
 	}
 
 	switch (argv[1].i) {
@@ -328,35 +324,6 @@ config_apply(int argc, union evarg *argv)
 		i = textbox_int(tbox);
 		prop_set_int(config, "view.h", i);
 		break;
-	case FONTCACHE_CBOX:
-		CONFIG_SET_FLAG(config, "flags", CONFIG_FONT_CACHE, argv[2].i);
-		if (argv[2].i) {
-			keycodes_loadglyphs();
-		} else {
-			keycodes_freeglyphs();
-		}
-		break;
-	case FULLSCREEN_CBOX:
-		CONFIG_SET_FLAG(config, "flags", CONFIG_FULLSCREEN, argv[2].i);
-		SDL_WM_ToggleFullScreen(view->v);
-		VIEW_REDRAW();
-		break;
-	case ASYNCBLIT_CBOX:
-		CONFIG_SET_FLAG(config, "flags", CONFIG_ASYNCBLIT, argv[2].i);
-		break;
-#ifdef DEBUG
-	case DEBUG_CBOX:
-		engine_debug = argv[2].i;	/* XXX unsafe */
-		break;
-	case VISREGIONS_CBOX:
-		CONFIG_SET_FLAG(config, "widgets.flags", CONFIG_REGION_BORDERS,
-		    argv[2].i);
-		break;
-	case ANYSIZE_CBOX:
-		CONFIG_SET_FLAG(config, "widgets.flags", CONFIG_WINDOW_ANYSIZE,
-		    argv[2].i);
-		break;
-#endif
 	}
 }
 
