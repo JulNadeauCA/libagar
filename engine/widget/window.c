@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.143 2003/01/04 23:53:51 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.144 2003/01/04 23:57:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1485,7 +1485,8 @@ window_resize(struct window *win)
 	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 
-	if (!prop_get_bool(config, "widget.any-size")) {
+	if (!prop_get_bool(config, "widget.any-size") &&
+	    (win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		if (win->rd.w < win->minw)
 			win->rd.w = win->minw;
 		if (win->rd.h < win->minh)
