@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.14 2002/03/17 09:13:48 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.15 2002/04/02 19:51:42 vedge Exp $	*/
 
 struct character {
 	struct	object obj;
@@ -31,14 +31,6 @@ enum {
 	CHAR_IDLE,
 	CHAR_UP,
 	CHAR_DOWN
-};
-
-/* Animations */
-enum {
-	CHAR_WALKUP,
-	CHAR_WALKDOWN,
-	CHAR_WALKLEFT,
-	CHAR_WALKRIGHT
 };
 
 struct character *char_create(char *, char *, Uint32, Uint32, Uint32);
