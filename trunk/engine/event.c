@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.38 2002/05/19 14:32:22 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.39 2002/05/19 15:27:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -114,7 +114,6 @@ event_loop(void *arg)
 	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = NULL;
-	struct window *win;
 	
 	/* Start the garbage collection process. */
 	object_init_gc();
@@ -162,32 +161,14 @@ event_loop(void *arg)
 					mapedit_event(curmapedit, &ev);
 				}
 				break;
-			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
+			case SDL_MOUSEBUTTONDOWN:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
 				pthread_mutex_lock(&mainview->lock);
-				TAILQ_FOREACH(win, &mainview->windowsh,
-				    windows) {
-				    	struct region *reg;
-
-					pthread_mutex_lock(&win->lock);
-					SLIST_FOREACH(reg, &win->regionsh,
-					    regions) {
-						struct widget *wid;
-
-						TAILQ_FOREACH(wid,
-						    &reg->widgetsh, widgets) {
-							if (wid->flags &
-							    WIDGET_HIDE) {
-								continue;
-							}
-							window_widget_event(
-							    reg, wid, &ev);
-						}
-					}
-					pthread_mutex_unlock(&win->lock);
+				if (!TAILQ_EMPTY(&mainview->windowsh)) {
+					window_event_all(mainview, &ev);
 				}
 				pthread_mutex_unlock(&mainview->lock);
 				break;
@@ -209,6 +190,12 @@ event_loop(void *arg)
 				} else {
 					input_event(keyboard, &ev);
 				}
+
+				pthread_mutex_lock(&mainview->lock);
+				if (!TAILQ_EMPTY(&mainview->windowsh)) {
+					window_event_all(mainview, &ev);
+				}
+				pthread_mutex_unlock(&mainview->lock);
 				break;
 			case SDL_QUIT:
 				return (NULL);
