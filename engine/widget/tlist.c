@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.49 2003/04/17 02:30:31 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.50 2003/04/17 08:21:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -58,7 +58,8 @@ enum {
 enum {
 	SELECTION_MOUSE_BUTTON = 1,
 	DEFAULT_BUTTON_SIZE =	 20,
-	PAGE_INCREMENT =	 4
+	PAGE_INCREMENT =	 4,
+	DBLCLICK_DELAY =	 250
 };
 
 static void	tlist_mousebuttondown(int, union evarg *);
@@ -96,10 +97,11 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	tl->item_h = text_font_height(font) + 2;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
+	tl->dblclicked = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 
-	pthread_mutex_init(&tl->items_lock, &recursive_mutexattr);
+	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
 
 	scrollbar_init(&tl->sbar, -1, -1, SCROLLBAR_VERT);
 	WIDGET(&tl->sbar)->flags |= WIDGET_NO_FOCUS;
@@ -118,7 +120,7 @@ tlist_destroy(void *p)
 	struct tlist *tl = p;
 	
 	tlist_clear_items(tl);
-	pthread_mutex_destroy(&tl->items_lock);
+	pthread_mutex_destroy(&tl->lock);
 	object_destroy(&tl->sbar);
 	widget_destroy(tl);
 }
@@ -159,7 +161,7 @@ tlist_draw(void *p)
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 
 	if (tl->flags & TLIST_POLL) {
 		/* Update the list. */
@@ -220,7 +222,7 @@ tlist_draw(void *p)
 	}
 
 	scrollbar_draw(&tl->sbar);
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Ensure the scrollbar value is inside the scrollbar range. */
@@ -261,10 +263,10 @@ tlist_remove_item(struct tlist_item *it)
 	int nitems;
 
 	/* Destroy the item. */
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_REMOVE(&tl->items, it, items);
 	nitems = --tl->nitems;
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 	tlist_free_item(it);
 
 	/* Update the scrollbar range and offset accordingly. */
@@ -284,7 +286,7 @@ tlist_clear_items(struct tlist *tl)
 {
 	struct tlist_item *it, *nit;
 	
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	
 	/* Free the saved selection list. */
 	for (it = TAILQ_FIRST(&tl->selitems);
@@ -312,7 +314,7 @@ tlist_clear_items(struct tlist *tl)
 	/* Preserve the offset value, for polling. */
 	widget_set_int(&tl->sbar, "max", 0);
 
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 static __inline__ int
@@ -372,10 +374,10 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 	it = tlist_alloc_item(tl, icon, text, p1);
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
 	widget_set_int(&tl->sbar, "max", ++tl->nitems);
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
 	return (it);
@@ -389,10 +391,10 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, char *text,
 
 	it = tlist_alloc_item(tl, icon, text, p1);
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_INSERT_HEAD(&tl->items, it, items);
 	widget_set_int(&tl->sbar, "max", ++tl->nitems);
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
 	return (it);
@@ -404,10 +406,10 @@ tlist_select(struct tlist_item *it)
 {
 	int old;
 
-	pthread_mutex_lock(&it->tl_bp->items_lock);
+	pthread_mutex_lock(&it->tl_bp->lock);
 	old = it->selected;
 	it->selected++;
-	pthread_mutex_unlock(&it->tl_bp->items_lock);
+	pthread_mutex_unlock(&it->tl_bp->lock);
 
 	return (old);
 }
@@ -418,10 +420,10 @@ tlist_unselect(struct tlist_item *it)
 {
 	int old;
 
-	pthread_mutex_lock(&it->tl_bp->items_lock);
+	pthread_mutex_lock(&it->tl_bp->lock);
 	old = it->selected;
 	it->selected = 0;
-	pthread_mutex_unlock(&it->tl_bp->items_lock);
+	pthread_mutex_unlock(&it->tl_bp->lock);
 
 	return (old);
 }
@@ -432,11 +434,11 @@ tlist_select_all(struct tlist *tl)
 {
 	struct tlist_item *it;
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		it->selected = 1;
 	}
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 
@@ -446,11 +448,11 @@ tlist_unselect_all(struct tlist *tl)
 {
 	struct tlist_item *it;
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		it->selected = 0;
 	}
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 static void
@@ -482,6 +484,18 @@ tlist_mousebuttonup(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 	
 	event_forward(&tl->sbar, "window-mousebuttonup", argc, argv);
+}
+
+static Uint32
+tlist_dblclick_expire(Uint32 i, void *arg)
+{
+	struct tlist *tl = arg;
+
+	pthread_mutex_lock(&tl->lock);
+	dprintf("%s: double click expired\n", OBJECT(tl)->name);
+	tl->dblclicked = NULL;
+	pthread_mutex_unlock(&tl->lock);
+	return (0);
 }
 
 static void
@@ -521,13 +535,13 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	if (button != SELECTION_MOUSE_BUTTON) 		/* Selection button? */
 		return;
 	
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 
-	tind = (widget_get_int(&tl->sbar, "value") + y / tl->item_h) + 1;
+	tind = (widget_get_int(&tl->sbar, "value") + y/tl->item_h) + 1;
 	if ((ti = tlist_item_index(tl, tind)) == NULL)
 		goto out;
 
-	if (tl->flags & TLIST_MULTI) {
+	if (tl->flags & TLIST_MULTI) {			  /* Multi selections */
 		if (SDL_GetModState() & KMOD_SHIFT) {
 			struct tlist_item *oitem;
 			int oind = -1, i = 0, nitems = 0;
@@ -540,8 +554,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 			}
 			if (oind == -1)
 				goto out;
-
-			if (oind < tind) {			/* Forward */
+			if (oind < tind) {			  /* Forward */
 				i = 0;
 				TAILQ_FOREACH(oitem, &tl->items, items) {
 					if (i == tind)
@@ -550,7 +563,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 						oitem->selected = 1;
 					i++;
 				}
-			} else if (oind >= tind) {		/* Backward */
+			} else if (oind >= tind) {		  /* Backward */
 				i = nitems;
 				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
 				    items, tlist_itemq) {
@@ -570,13 +583,30 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 				ti->selected++;
 			}
 		}
-	} else {
+	} else {					  /* Single selection */
 		tlist_unselect_all(tl);
 		ti->selected++;
+
+		if (tl->flags & TLIST_DBLCLICK) {
+			if (tl->dblclicked == ti) {
+				SDL_RemoveTimer(tl->dbltimer);
+				dprintf("%s: double-click effect\n",
+				    OBJECT(tl)->name);
+				event_post(tl, "tlist-dblclick", "%p",
+				    tl->dblclicked);
+				tl->dblclicked = NULL;
+			} else {
+				dprintf("%s: double-click start\n",
+				    OBJECT(tl)->name);
+				tl->dblclicked = ti;
+				tl->dbltimer = SDL_AddTimer(DBLCLICK_DELAY,
+				    tlist_dblclick_expire, tl);
+			}
+		}
 	}
 	event_post(tl, "tlist-changed", "%p, %i", ti, 1);
 out:
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 static void
@@ -591,7 +621,7 @@ tlist_keydown(int argc, union evarg *argv)
 
 	offsetb = widget_binding_get_locked(&tl->sbar, "value", &offset);
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	switch (keysym) {
 	case SDLK_UP:
 		sel = 0;
@@ -659,7 +689,7 @@ tlist_keydown(int argc, union evarg *argv)
 		break;
 	}
 	widget_binding_unlock(offsetb);
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Return the item at the given index. */
@@ -669,14 +699,14 @@ tlist_item_index(struct tlist *tl, int index)
 	struct tlist_item *it;
 	int i = 0;
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (++i == index) {
-			pthread_mutex_unlock(&tl->items_lock);
+			pthread_mutex_unlock(&tl->lock);
 			return (it);
 		}
 	}
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
@@ -686,14 +716,14 @@ tlist_item_selected(struct tlist *tl)
 {
 	struct tlist_item *it;
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
-			pthread_mutex_unlock(&tl->items_lock);
+			pthread_mutex_unlock(&tl->lock);
 			return (it);
 		}
 	}
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
@@ -703,14 +733,14 @@ tlist_item_text(struct tlist *tl, char *text)
 {
 	struct tlist_item *it;
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (strcmp(it->text, text) == 0) {
-			pthread_mutex_unlock(&tl->items_lock);
+			pthread_mutex_unlock(&tl->lock);
 			return (it);
 		}
 	}
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
@@ -722,7 +752,7 @@ tlist_set_item_height(struct tlist *tl, int ih)
 
 	tl->item_h = ih;
 
-	pthread_mutex_lock(&tl->items_lock);
+	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != NULL) {
 			SDL_Surface *nicon;
@@ -733,7 +763,7 @@ tlist_set_item_height(struct tlist *tl, int ih)
 			it->icon = nicon;
 		}
 	}
-	pthread_mutex_unlock(&tl->items_lock);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Update an item's icon. */
