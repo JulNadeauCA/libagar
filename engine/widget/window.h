@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.82 2005/01/31 08:20:14 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.83 2005/02/01 03:14:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -89,6 +89,7 @@ void	 window_set_padding(struct window *, int, int);
 void	 window_set_position(struct window *, enum window_alignment, int);
 void	 window_set_closure(struct window *, int);
 void	 window_set_style(struct window *, const struct style *);
+void	 window_set_geometry(struct window *, int, int, int, int);
 
 void	 window_attach(struct window *, struct window *);
 void	 window_detach(struct window *, struct window *);
