@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.82 2002/05/11 03:57:40 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.83 2002/05/11 04:01:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -178,8 +178,10 @@ map_focus(struct map *m)
 	pthread_mutex_unlock(&world->lock);
 
 	pthread_mutex_lock(&m->lock);
+	pthread_mutex_lock(&m->view->lock);
 	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
+	pthread_mutex_unlock(&m->view->lock);
 	pthread_mutex_unlock(&m->lock);
 }
 
