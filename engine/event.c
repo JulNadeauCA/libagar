@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.136 2003/02/26 02:04:53 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.137 2003/02/26 03:10:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -71,14 +71,16 @@ extern struct window *game_menu_win;
 int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
 			DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
-int	event_count, event_overhead;
+int	event_count, event_idletime = -1;
 
 static struct window *fps_win;
 static struct label *fps_label;
 static struct graph *fps_graph;
 static struct graph_item *fps_refresh_current, *fps_event_count,
-    *fps_event_overhead;
-#endif
+    *fps_event_idletime;
+#endif	/* DEBUG */
+
+int	event_idle = 1;			/* Delay at full frame rate */
 
 static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
@@ -159,12 +161,11 @@ event_update_fps_counter(void)
 	    view->refresh.delay, view->refresh.current);
 	graph_plot(fps_refresh_current, view->refresh.current);
 	graph_plot(fps_event_count, event_count * 30 / 10);
-	graph_plot(fps_event_overhead, event_overhead * 2 / 15);
+	graph_plot(fps_event_idletime, event_idletime);
 	graph_scroll(fps_graph, 1);
 
-	if (++einc == 2) {
+	if (++einc == 1) {
 		event_count = 0;
-		event_overhead = 0;
 		einc = 0;
 	}
 }
@@ -188,9 +189,9 @@ event_init_fps_counter(void)
 		fps_event_count = graph_add_item(fps_graph,
 		    "event-rate",
 		    SDL_MapRGB(view->v->format, 0, 0, 180));
-		fps_event_overhead = graph_add_item(fps_graph,
-		    "event-overhead",
-		    SDL_MapRGB(view->v->format, 150, 40, 50));
+		fps_event_idletime = graph_add_item(fps_graph,
+		    "event-idle",
+		    SDL_MapRGB(view->v->format, 200, 200, 200));
 	}
 	
 	reg = region_new(fps_win, REGION_HALIGN, 80, 0, 20, 100);
@@ -216,11 +217,7 @@ event_init_fps_counter(void)
 }
 #endif /* DEBUG */
 
-/*
- * Adjust the refresh rate.
- * Called once rendering is done. ntick is the SDL_GetTicks() value, before
- * the video update is performed.
- */
+/* Adjust the refresh rate. */
 static __inline__ void
 event_adjust_refresh(Uint32 ntick)
 {
@@ -237,7 +234,7 @@ void
 event_loop(void)
 {
 	SDL_Event ev;
-	Uint32 ltick, ntick = 0;
+	Uint32 ltick, t = 0;
 	struct window *win;
 #ifdef DEBUG
 	Uint32 eltick;
@@ -250,9 +247,9 @@ event_loop(void)
 
 	ltick = SDL_GetTicks();
 	for (;;) {
-		ntick = SDL_GetTicks();			/* Rendering starts */
+		t = SDL_GetTicks();			/* Rendering starts */
 
-		if ((ntick - ltick) > view->refresh.delay) {
+		if ((t - ltick) > view->refresh.delay) {
 			pthread_mutex_lock(&view->lock);
 
 			view->ndirty = 0;
@@ -304,31 +301,37 @@ event_loop(void)
 #ifdef HAVE_OPENGL
 				if (view->opengl) {
 					SDL_GL_SwapBuffers();
-					goto updated;
+				} else {
+					SDL_UpdateRects(view->v, view->ndirty,
+					    view->dirty);
 				}
-#endif
+#else
 				SDL_UpdateRects(view->v, view->ndirty,
 				    view->dirty);
-updated:
+#endif
 				view->ndirty = 0;
-				event_adjust_refresh(ntick);
+				event_adjust_refresh(t);
 			}
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
-#ifdef DEBUG
-			eltick = SDL_GetTicks();
-#endif
 			event_dispatch(&ev);
 #ifdef DEBUG
 			event_count++;
-			event_overhead = SDL_GetTicks() - eltick;
 #endif
-		} else if (SDL_GetTicks()-ltick < view->refresh.delay-15) {
+		} else if (event_idle && view->refresh.current > 15) {
 			/*
 			 * Sleep if the display is not likely to be redrawn
 			 * within the next few milliseconds.
+			 *
+			 * XXX 
 			 */
-			SDL_Delay(1);
+			if (t - ltick < view->refresh.delay -
+			    (event_idletime > 9) ? event_idletime : 20) {
+				SDL_Delay(1);
+			}
+			event_idletime = SDL_GetTicks() - t;
+		} else {
+			event_idletime = 0;
 		}
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.12 2002/12/13 07:38:01 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.13 2002/12/31 02:20:53 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef union evarg {
@@ -36,4 +36,6 @@ void	 event_forward(void *, char *, int, union evarg *);
 #ifdef DEBUG
 struct window	*event_show_fps_counter(void);
 #endif
+
+extern int event_idle;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.59 2003/02/10 03:59:02 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.60 2003/02/22 01:11:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -140,6 +140,7 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.w", 800);
 	prop_set_uint16(con, "view.h", 600);
 	prop_set_uint8(con,  "view.depth", 32);
+	prop_set_bool(con, "view.font-engine", 1);
 
 	/* Window system settings */
 	prop_set_bool(con, "widget.reg-borders", 0);
@@ -182,7 +183,7 @@ config_window(struct config *con)
 	struct tlist *tl;
 	struct label *lab;
 
-	win = window_generic_new(349, 334, "config-engine-settings");
+	win = window_generic_new(388, 362, "config-engine-settings");
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	window_set_caption(win, "Engine settings");
 	window_set_spacing(win, 2, 8);
@@ -203,7 +204,9 @@ config_window(struct config *con)
 			{ "view.xsync",	"Synchronous X events (restart)" },
 # endif
 #endif
+#ifdef HAVE_OPENGL
 			{ "view.opengl", "OpenGL rendering context (restart)" },
+#endif
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
 		int i;
@@ -222,6 +225,9 @@ config_window(struct config *con)
 		cbox = checkbox_new(reg, -1, "Node signature checking");
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &map_nodesigs);
 #endif
+
+		cbox = checkbox_new(reg, -1, "Idle time prediction");
+		widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
 	}
 	
 	/* Directories */
