@@ -170,8 +170,8 @@ install: install-subdir ${PROG}
 
 deinstall: deinstall-subdir
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
-	    echo "${DEINSTALL_PROG} ${INST_BINDIR}"; \
-	    ${DEINSTALL_PROG} ${INST_BINDIR}; \
+	    echo "${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}"; \
+	    ${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}; \
 	fi
 	@if [ "${SHARE}" != "" ]; then \
 	    for F in ${SHARE}; do \
