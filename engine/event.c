@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.7 2002/02/07 08:12:41 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.8 2002/02/07 09:22:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -64,10 +64,8 @@ event_hotkey(SDL_Event *ev)
 			return (0);
 		}
 		break;
-	case SDLK_c:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			quit();
-		}
+	case SDLK_ESCAPE:
+		quit();
 		break;
 	default:
 		break;
