@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.28 2003/05/18 00:16:57 vedge Exp $
+.\"	$Csoft: agar.3,v 1.29 2003/05/24 13:42:54 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -34,95 +34,16 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm agar
-.Nd graphical game engine
+.Nd graphical C application framework
 .Sh DESCRIPTION
 .Nm
-is a high-level game/simulation engine.
+is a high-level, cross-platform C application framework aimed primarly at
+2D/3D games and simulations.
+.Sh OBJECT DESIGN
 .Nm
-currently implements the following subsystems:
-.Bl -tag -width "transform(3) " -compact
-.It Xr event 3
-Generic event processing
-.It Xr input 3
-Processing of events from input devices
-.It Xr map 3
-2D multilayered, tile-based levels
-.It Xr mapedit 3
-Level edition
-.It Xr object 3
-Generic object framework
-.It perso
-Game characters
-.It Xr physics 3
-Movement of objects inside levels
-.It Xr prop 3
-Generic properties
-.It Xr rootmap 3
-Level display in game mode
-.It Xr text 3
-Interface to font engine
-.It Xr version 3
-Signatures and versioning of data
-.It Xr view 3
-Video display interface
-.It Xr widget 3
-Widget set framework
-.It media
-Loading of data (ie. gfx/audio) from various formats
-.El
-.Sh INCLUDE FILES
-For maximum portability, SDL's
-.Pa Aq begin_code.h
-and
-.Pa Aq close_code.h
-must be included around possible C dynamic library function definitions,
-static inlined functions, and structure definitions.
-Function definitions must be enclosed in
-.Dv __BEGIN_DECLS
-and
-.Dv __END_DECLS ,
-to allow inclusion from C++ code.
-.Pp
-The
-.Pa Aq engine/compat/*.h
-and
-.Pa Aq config/*.h
-includes should come first, followed by
-.Pa Aq engine/engine.h .
-which itself includes:
-.Bl -tag -width "<engine/compat/queue.h> " -compact
-.It Pa Aq pthread.h
-POSIX threads, if enabled at compile-time.
-.It Pa Aq SDL.h
-Software DirectMedia Layer.
-.It Pa Aq GL/GL.h
-OpenGL interface, if enabled at compile-time.
-.It Pa Aq engine/compat/queue.h
-4.4BSD
-.Xr queue 3
-definitions.
-.It Pa Aq libfobj/fobj.h
-For the
-.Ft struct netbuf
-definition, required by generic load/save operations.
-.It Pa Aq engine/error.h
-Error wrappers,
-.Fn warning
-and
-.Fn fatal .
-.It Pa Aq engine/object.h
-Generic
-.Xr object 3
-types and operations.
-.It Pa Aq engine/event.h
-Generic
-.Xr event 3
-handling.
-.El
-.Sh OBJECT TREE
-In Agar games/simulations, the elements are logically organized as a tree of
-.Ft object
-structures, each containing a list of child objects.
+games/simulations are built around a tree of
+.Xr object
+structures.
 .Pp
 Generic
 .Xr object 3
@@ -184,8 +105,8 @@ object.
 .Pp
 .Ft void
 .Fn error_fatal "const char *fmt" "..."
-.Pp
 .nr nS 0
+.Pp
 The
 .Fn error_set
 function sets the error message string, using a
@@ -205,6 +126,7 @@ function prints an error message and causes the application to exit, or
 if debugging is enabled.
 .Sh THREAD SAFETY
 The following subsystems do not provide thread safety:
+.Pp
 .Bl -tag -width "mapedit(3) " -compact
 .It Xr mapedit 3
 Level edition
@@ -214,6 +136,7 @@ The other
 .Nm
 subsystems provide thread-safe interfaces, using the following locking
 primitives:
+.Pp
 .Bl -bullet -compact
 .It
 Simple mutexes
@@ -244,6 +167,64 @@ If multi-threading support was enabled at compile time,
 defines error-checking wrappers around
 .Fn pthread_*
 calls (or no-ops with threads disabled).
+.Sh FILES
+The
+.Pa Aq engine/compat/*.h
+and
+.Pa Aq config/*.h
+includes should come first, followed by
+.Pa Aq engine/engine.h ,
+which itself includes:
+.Pp
+.Bl -tag -width "<engine/compat/vsnprintf.h> " -compact
+.It Pa Aq pthread.h
+POSIX threads, if enabled at compile-time.
+.It Pa Aq SDL.h
+Software DirectMedia Layer.
+.It Pa Aq GL/GL.h
+OpenGL interface, if enabled at compile-time.
+.It Pa Aq engine/compat/queue.h
+4.4BSD
+.Xr queue 3
+definitions.
+.It Pa Aq engine/compat/strlcpy.h
+For
+.Xr strlcpy 3 .
+.It Pa Aq engine/compat/strlcat.h
+For
+.Xr strlcat 3 .
+.It Pa Aq engine/compat/snprintf.h
+For
+.Xr snprintf 3 .
+.It Pa Aq engine/compat/vsnprintf.h
+For
+.Xr vsnprintf 3 .
+.It Pa Aq engine/compat/vasprintf.h
+For
+.Xr vasprintf 3 .
+.It Pa Aq engine/compat/strsep.h
+For
+.Xr strsep 3 .
+.It Pa Aq libfobj/fobj.h
+For the
+.Ft struct netbuf
+definition, required by generic load/save operations.
+.It Pa Aq engine/error.h
+Error wrappers,
+.Fn warning
+and
+.Fn fatal .
+.It Pa Aq engine/object.h
+Generic
+.Xr object 3
+types and operations.
+.It Pa Aq engine/event.h
+For the
+.Ft union evarg
+definition and generic
+.Xr event 3
+handling.
+.El
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,
