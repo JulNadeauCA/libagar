@@ -670,6 +670,11 @@ if [ "${cc_is_gcc}" = "yes" ]
 CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
+if [ "${cc_is_gcc3}" = "yes" ]
+ then
+CFLAGS="$CFLAGS -Wno-missing-headers"
+echo CFLAGS=$CFLAGS >> Makefile.config
+fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
