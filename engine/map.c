@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.228 2004/06/18 03:11:24 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.229 2004/07/24 02:02:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1400,6 +1400,7 @@ map_edit(void *p)
 	statusbar_add_label(statbar, LABEL_STATIC, ".");
 
 	mapview_init(mv, m, flags, toolbar, statbar);
+	mapview_prescale(mv, 15, 9);
 	mapview_reg_stdtools(mv);
 	mapview_reg_tool(mv, &mediasel_tool, m);
 	mapview_reg_tool(mv, &layedit_tool, m);
