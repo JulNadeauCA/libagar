@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.90 2002/11/09 06:01:27 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.91 2002/11/09 07:39:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -966,10 +966,6 @@ window_event(SDL_Event *ev)
 			}
 			/* Widget event */
 			if (VIEW_FOCUSED(win) && win->focus != NULL) {
-				dprintf("post %s to %s\n",
-				    (ev->type == SDL_KEYUP) ?
-				    "keyup" : "keydown",
-				    OBJECT(win->focus)->name);
 				event_post(win->focus,
 				    (ev->type == SDL_KEYUP) ?
 				    "window-keyup" :
@@ -1332,7 +1328,5 @@ window_detach_generic(int argc, union evarg *argv)
 	struct window *win = argv[1].p;
 
 	OBJECT_ASSERT(win, "window");
-
-	dprintf("detaching %s\n", OBJECT(win)->name);
 	view_detach(win);
 }
