@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.30 2002/04/23 07:19:40 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.31 2002/04/24 13:18:38 vedge Exp $	*/
 
 enum {
 	MAP_MINWIDTH	= 10,
@@ -26,11 +26,9 @@ struct noderef {
 	TAILQ_ENTRY(noderef) nrefs;	/* Node reference list */
 };
 
-TAILQ_HEAD(noderefs_head, noderef);
-
 /* Coordinate within a map. */
 struct node {
-	struct	noderefs_head nrefsh;
+	TAILQ_HEAD(, noderef) nrefsh;
 	Uint32	nnrefs;
 	Uint32	flags;
 #define NODE_BLOCK	0x0001		/* Cannot walk through */
@@ -63,7 +61,7 @@ struct map {
 	Uint32	fps;			/* Minimum/maximum fps */
 	Uint32	mapw, maph;		/* Map geometry */
 	Uint32	tilew, tileh;		/* Tile geometry */
-	Uint32	shtilex, shtiley;	/* Tile shift (optimization) */
+	int	shtilex, shtiley;	/* Tile shift (optimization) */
 	Uint32	defx, defy;		/* Map origin */
 	struct	node **map;		/* Array of nodes */
 

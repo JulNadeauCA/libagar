@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.81 2002/04/26 04:24:51 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.82 2002/04/26 11:40:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -50,7 +50,12 @@
 #include "mouse.h"
 #include "joy.h"
 
-static const struct obvec mapedit_vec = {
+static const struct version mapedit_ver = {
+	"agar map editor",
+	1, 0
+};
+
+static const struct obvec mapedit_ops = {
 	NULL,
 	mapedit_load,
 	mapedit_save,
@@ -95,7 +100,7 @@ static void	mapedit_show_coords(struct mapedit *);
 void
 mapedit_init(struct mapedit *med, char *name)
 {
-	object_init(&med->obj, name, "mapedit", OBJ_ART, &mapedit_vec);
+	object_init(&med->obj, name, "mapedit", OBJ_ART, &mapedit_ops);
 
 	med->flags = MAPEDIT_DRAWPROPS;
 	med->map = NULL;
@@ -845,7 +850,7 @@ mapedit_load(void *p, int fd)
 {
 	struct mapedit *med = (struct mapedit *)p;
 
-	if (version_read(fd, "mapedit", 1, 0) != 0) {
+	if (version_read(fd, &mapedit_ver) != 0) {
 		return (-1);
 	}
 	med->flags = fobj_read_uint32(fd);
@@ -862,7 +867,7 @@ mapedit_save(void *p, int fd)
 {
 	struct mapedit *med = (struct mapedit *)p;
 
-	version_write(fd, "mapedit", 1, 0);
+	version_write(fd, &mapedit_ver);
 	fobj_write_uint32(fd, med->flags);
 	fobj_write_uint32(fd, med->cursor_speed);
 	fobj_write_uint32(fd, med->listw_speed);
