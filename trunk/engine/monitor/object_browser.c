@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.24 2003/02/26 13:02:17 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.25 2003/03/02 00:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,16 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <string.h>
-
+#include <config/debug.h>
 #include <config/floating_point.h>
-#include <config/have_ieee754.h>
-#include <engine/engine.h>
 
 #ifdef DEBUG
 
+#include <engine/engine.h>
 #include <engine/world.h>
 #include <engine/view.h>
+
+#include <string.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -45,6 +45,7 @@
 #include <engine/widget/bitmap.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/text.h>
+
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
