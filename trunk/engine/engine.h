@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.35 2002/09/14 01:00:50 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.36 2002/11/07 02:26:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -42,9 +42,11 @@ enum {
 	ICON_MAPEDITION
 };
 
-/* engine_start() return value */
-#define ENGINE_START_GAME		0
-#define ENGINE_START_MAP_EDITION	1
+/* engine_start() return value. XXX odd */
+enum {
+	ENGINE_START_GAME,
+	ENGINE_START_MAP_EDITION
+};
 
 /* engine_init() flags. XXX odd */
 #define ENGINE_INIT_GUI		0x01	/* Use only GUI engine */
