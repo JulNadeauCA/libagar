@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.6 2005/02/12 10:32:07 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.7 2005/02/16 03:30:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -145,6 +145,7 @@ fill_edit(void *p, struct tileview *tv)
 
 	win = window_new(0, NULL);
 
+	label_new(win, LABEL_STATIC, _("Filling/gradient type:"));
 	rad = radio_new(win, modes);
 	widget_bind(rad, "value", WIDGET_INT, &f->type);
 
