@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: unicode.h,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_
@@ -11,11 +11,12 @@ enum unicode_conv {
 	UNICODE_FROM_UTF8		/* UTF-8 text */
 };
 
-/* ZERO WIDTH NO-BREAKSPACE (Unicode byte order mark) */
+/*
+ * ZERO WIDTH NO-BREAKSPACE (Unicode byte order mark).
+ * Load routines must handle byteswapping and strip the BOM.
+ */
 #define UNICODE_BOM_NATIVE	0xfeff
 #define UNICODE_BOM_SWAPPED	0xfffe
-
-extern int unicode_byteswapped;
 
 __BEGIN_DECLS
 extern DECLSPEC void	 unicode_init(void);
@@ -30,7 +31,9 @@ extern DECLSPEC size_t	 ucslcpy(Uint16 *, const Uint16 *, size_t);
 extern DECLSPEC size_t	 ucslcat(Uint16 *, const Uint16 *, size_t);
 extern DECLSPEC Uint16	*ucsdup(const Uint16 *);
 extern DECLSPEC Uint16	*ucssep(Uint16 **, const Uint16 *);
+#ifdef DEBUG
 extern DECLSPEC void	 ucsdump(const Uint16 *);
+#endif
 __END_DECLS
 
 #include "close_code.h"
