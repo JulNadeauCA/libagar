@@ -1,4 +1,4 @@
-/*	$Csoft: gettext.c,v 1.1.1.1 2003/08/06 01:57:47 vedge Exp $	*/
+/*	$Csoft: gettext.c,v 1.2 2003/08/06 04:08:16 vedge Exp $	*/
 /*	$NetBSD: gettext.c,v 1.9 2001/02/16 07:20:35 minoura Exp $	*/
 
 /*-
@@ -249,8 +249,15 @@ lookup_mofile(buf, len, dir, lpath, category, domainname, db)
 			continue;
 #endif
 
-		snprintf(buf, len, "%s/%s/%s/%s.mo", dir, p,
-		    category, domainname);
+		strlcpy(buf, dir, len);
+		strlcat(buf, "/", len);
+		strlcat(buf, p, len);
+		strlcat(buf, "/", len);
+		strlcat(buf, category, len);
+		strlcat(buf, "/", len);
+		strlcat(buf, domainname, len);
+		strlcat(buf, ".mo", len);
+
 		if (stat(buf, &st) < 0)
 			continue;
 		if ((st.st_mode & S_IFMT) != S_IFREG)
@@ -550,8 +557,7 @@ dcngettext(domainname, msgid1, msgid2, n, category)
 		goto fail;
 	}
 
-	language = getenv("LANGUAGE");
-	if (language == NULL) {
+	if ((language = getenv("LANGUAGE")) == NULL) {
 		language = getenv("LANG");
 	}
 
@@ -561,7 +567,9 @@ dcngettext(domainname, msgid1, msgid2, n, category)
 	if (language && locale) {
 		if (strlen(language) + strlen(locale) + 2 > sizeof(lpath))
 			goto fail;
-		snprintf(lpath, sizeof(lpath), "%s:%s", language, locale);
+		strlcpy(lpath, language, sizeof(lpath));
+		strlcat(lpath, ":", sizeof(lpath));
+		strlcat(lpath, locale, sizeof(lpath));
 	} else if (language) {
 		if (strlen(language) + 1 > sizeof(lpath))
 			goto fail;
