@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.7 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.8 2004/03/20 08:21:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -428,6 +428,7 @@ poll_media(int argc, union evarg *argv)
 
 		snprintf(label, sizeof(label),
 		    _("m%u (%ux%u nodes)\n"), i, sm->mapw, sm->maph);
+		/* TODO minimap */
 		tlist_insert_item(tl, NULL, label, sm);
 	}
 	for (i = 0; i < ob->gfx->nsprites; i++) {
@@ -506,7 +507,7 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 	event_new(msel->rfbu, "button-pushed", refresh_media, "%p", msel);
 	mediasel_refresh(msel);
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
+	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
 	tlist_set_item_height(tl, ttf_font_height(font)*2);
 	event_new(tl, "tlist-poll", poll_media, "%p", ob);
 
