@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.40 2002/05/21 03:26:41 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.41 2002/05/25 08:44:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -76,7 +76,7 @@ event_hotkey(SDL_Event *ev)
 		break;
 #endif
 	case SDLK_F1:
-		engine_config();
+		config_dialog();
 		break;
 	case SDLK_f:
 		if (ev->key.keysym.mod & KMOD_CTRL) {

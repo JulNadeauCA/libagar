@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.18 2002/05/11 04:06:37 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.19 2002/05/15 07:28:06 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/config.h>
+#include <engine/mcconfig.h>
 
 #include <sys/stat.h>
 #include <sys/time.h>

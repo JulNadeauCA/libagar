@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.43 2002/05/13 08:01:04 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.44 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,7 +53,8 @@ int	engine_debug = 1;	/* Enable debugging */
 
 struct	world *world;
 struct	gameinfo *gameinfo;
-int mapediting;
+struct	config *config;
+int	mapediting;
 
 struct input *keyboard = NULL;
 struct input *joy = NULL;
@@ -170,12 +171,15 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
 	world_init(world, gameinfo->prog);
-	
+
 	/* Initialize the font engine. */
 	if (text_engine_init() != 0) {
 		return (-1);
 	}
-	
+
+	/* Initialize/load engine settings. */
+	config = config_new();
+
 	/* Initialize input devices. */
 	keyboard = input_new(INPUT_KEYBOARD, 0);
 	joy = input_new(INPUT_JOY, njoy);
@@ -287,6 +291,9 @@ engine_destroy(void)
 	/* Destroy the views. XXX */
 	view_destroy(mainview);
 	free(mainview);
+
+	/* Free the config structure. */
+	config_destroy(config);
 
 	SDL_Quit();
 	exit(0);
