@@ -11,6 +11,20 @@ enum {
 	DIR_ALL =	0xff
 };
 
+enum {
+	DIR_SPRITE_UP		= 1,
+	DIR_SPRITE_DOWN		= 2,
+	DIR_SPRITE_LEFT		= 3,
+	DIR_SPRITE_RIGHT	= 4
+};
+
+enum {
+	DIR_ANIM_MOVEUP		= 0,
+	DIR_ANIM_MOVEDOWN	= 1,
+	DIR_ANIM_MOVELEFT	= 2,
+	DIR_ANIM_MOVERIGHT	= 3
+};
+
 /* 2D movement of undefined constructs in an infinite area. */
 struct gendir {
 	Uint32	set;		/* Set direction mask (move) */
