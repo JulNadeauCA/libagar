@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.164 2003/03/24 12:05:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.165 2003/03/25 13:41:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -722,6 +722,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 		struct transform *trans;
 
 		trans = Malloc(sizeof(struct transform));
+		transform_init(trans, 0, 0, NULL);
 		if (transform_load(fd, trans) == -1) {
 			free(trans);
 			goto fail;
@@ -1194,6 +1195,7 @@ noderef_draw_sprite(struct noderef *nref)
 		ncsprite = Malloc(sizeof(struct art_cached_sprite));
 		ncsprite->su = su;
 		ncsprite->last_drawn = SDL_GetTicks();
+		SLIST_INIT(&ncsprite->transforms);
 
 		/* Copy the sprite as-is. */
 		SDL_SetAlpha(origsu, 0, 0);
@@ -1215,6 +1217,7 @@ noderef_draw_sprite(struct noderef *nref)
 			    transforms);
 		}
 
+		/* Cache the result. */
 		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
 		return (su);
 	} else {						/* Cache hit */
