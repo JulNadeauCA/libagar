@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.211 2003/07/08 00:13:12 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.212 2003/10/10 02:12:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -344,7 +344,7 @@ window_shown(int argc, union evarg *argv)
 	
 		/* Position the window and cache the absolute widget coords. */
 		window_apply_alignment(win);
-		window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
+		widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
 	}
 
 	if (win->flags & WINDOW_PERSISTENT)
@@ -510,8 +510,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 	WIDGET(win)->y += motion->yrel;
 	window_clamp(win);
 
-	/* Update the absolute widget coordinates. */
-	window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
+	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
 
 	/* Update the background. */
 	switch (view->gfx_engine) {
@@ -895,9 +894,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 
 	/* Effect the possible changes in geometry. */
 	WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
-	
-	/* Update the absolute widget coordinates. */
-	window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
+	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
 
 	/* Update the background. */
 	switch (view->gfx_engine) {
@@ -988,7 +985,7 @@ window_load(void *p, struct netbuf *buf)
 
 	/* Effect the possible changes in geometry. */
 	WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
-	window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
+	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
 	return (0);
 }
 
@@ -1220,25 +1217,6 @@ window_apply_alignment(struct window *win)
 		pthread_mutex_unlock(&window_lock);
 	}
 	window_clamp(win);
-}
-
-/*
- * Cache the absolute view coordinates of a widget and its descendents.
- * The view must be locked.
- */
-void
-window_remap_widgets(void *parent, int x, int y)
-{
-	struct widget *pwid = parent, *cwid;
-
-	pwid->cx = x;
-	pwid->cy = y;
-
-	OBJECT_FOREACH_CHILD(cwid, pwid, widget) {
-		window_remap_widgets(cwid,
-		    pwid->cx + cwid->x,
-		    pwid->cy + cwid->y);
-	}
 }
 
 /* Set the text to show inside a window's titlebar. */

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.163 2003/09/07 07:58:48 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.164 2003/10/14 03:15:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -305,7 +305,7 @@ event_dispatch(SDL_Event *ev)
 
 				WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
 				    WIDGET(win)->h);
-				window_remap_widgets(win, WIDGET(win)->x,
+				widget_update_coords(win, WIDGET(win)->x,
 				    WIDGET(win)->y);
 				pthread_mutex_unlock(&win->lock);
 			}

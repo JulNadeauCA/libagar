@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.74 2003/10/13 23:49:03 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.75 2003/10/15 03:43:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1032,5 +1032,24 @@ void
 widget_pop_color(struct widget *wid)
 {
 	wid->ncolors--;
+}
+
+/*
+ * Cache the absolute view coordinates of a widget and its descendents.
+ * The view must be locked.
+ */
+void
+widget_update_coords(void *parent, int x, int y)
+{
+	struct widget *pwid = parent, *cwid;
+
+	pwid->cx = x;
+	pwid->cy = y;
+
+	OBJECT_FOREACH_CHILD(cwid, pwid, widget) {
+		widget_update_coords(cwid,
+		    pwid->cx + cwid->x,
+		    pwid->cy + cwid->y);
+	}
 }
 

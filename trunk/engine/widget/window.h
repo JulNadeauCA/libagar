@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.72 2003/07/08 00:13:12 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.73 2003/10/09 22:39:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -83,7 +83,6 @@ void	 window_hide(struct window *);
 int	 window_toggle_visibility(struct window *);
 int	 window_event(SDL_Event *);
 void	 window_resize(struct window *);
-void	 window_remap_widgets(void *, int, int);
 
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
