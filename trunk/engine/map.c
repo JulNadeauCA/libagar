@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.130 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.131 2003/01/17 03:49:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -48,10 +48,10 @@ static const struct object_ops map_ops = {
 };
 
 #ifdef DEBUG
-#define DEBUG_DIAG	0x01
-#define DEBUG_STATE	0x02
+#define DEBUG_STATE	0x01
+#define DEBUG_NODEREFS	0x02
 
-int	map_debug = DEBUG_DIAG|DEBUG_STATE;
+int	map_debug = DEBUG_STATE;
 #define engine_debug map_debug
 #endif
 
@@ -512,6 +512,10 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			xcenter = read_sint16(fd);
 			ycenter = read_sint16(fd);
 
+			debug(DEBUG_NODEREFS,
+			    "sprite: obj[%d]:%d, center %d,%d\n",
+			    obji, offs, xcenter, ycenter);
+
 			if (deps->objs[obji] != NULL) {
 				*nref = node_add_sprite(node, deps->objs[obji],
 				    offs);
@@ -519,7 +523,8 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
 			} else {
-				debug(DEBUG_STATE, "null sprite at %d\n", obji);
+				debug(DEBUG_NODEREFS, "null sprite at %d\n",
+				    obji);
 			}
 		}
 		break;
@@ -538,13 +543,17 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			animflags = read_uint32(fd);
 
 			if (deps->objs[obji] != NULL) {
+				debug(DEBUG_NODEREFS,
+				    "anim: %s:%d, center %d,%d, aflags 0x%x\n",
+				    deps->objs[obji]->name, offs,
+				    xcenter, ycenter, animflags);
 				*nref = node_add_anim(node, deps->objs[obji],
 				    offs, animflags);
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
 			} else {
-				debug(DEBUG_STATE,
+				debug(DEBUG_NODEREFS,
 				    "null anim at %d\n", obji);
 			}
 		}
@@ -559,6 +568,8 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			ox = read_uint32(fd);
 			oy = read_uint32(fd);
 			dir = read_uint8(fd);
+			debug(DEBUG_NODEREFS, "warp: to %s:%d,%d, dir 0x%x\n",
+			    map_id, ox, oy, dir);
 			*nref = node_add_warp(node, map_id, ox, oy, dir);
 			(*nref)->flags = flags;
 			
@@ -572,8 +583,8 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 
 	/* Read the transforms. */
 	ntrans = read_uint32(fd);
-	if (ntrans > 65536) {
-		fatal("node has >64k transforms\n");
+	if (ntrans > 32768) {
+		fatal("node has >32k transforms\n");
 	}
 	for (i = 0; i < ntrans; i++) {
 		struct transform *trans;
@@ -587,21 +598,22 @@ void
 node_load(int fd, struct object_table *deps, struct node *node)
 {
 	Uint32 i, nrefs;
-
+	
 	/* Load the node properties. */
 	node->flags = read_uint32(fd);
 	node->v1 = read_uint32(fd);
-
+	
 	/* Load the node references. */
 	nrefs = read_uint32(fd);
 #ifdef DEBUG
-	if (nrefs > 65536) {
-		debug(DEBUG_DIAG, "node has >64k references\n");
+	if (nrefs > 32768) {
+		fatal("node has >32k references\n");
 	}
 #endif
+	
 	for (i = 0; i < nrefs; i++) {
 		struct noderef *nref;
-	
+
 		noderef_load(fd, deps, node, &nref);
 	}
 }
@@ -619,6 +631,11 @@ map_load(void *ob, int fd)
 
 	pthread_mutex_lock(&m->lock);
 
+	if (m->map != NULL) {
+		/* Reinitialize the map. */
+		map_free_nodes(m);
+	}
+
 	m->type = (enum map_type)read_uint32(fd);
 	m->mapw = read_uint32(fd);
 	m->maph = read_uint32(fd);
@@ -634,20 +651,16 @@ map_load(void *ob, int fd)
 	    m->mapw, m->maph, m->defx, m->defy, m->tilew, m->tileh,
 	    m->zoom);
 
-	/* Read the possible object dependencies. */
+	/* Read the possible dependencies. */
 	deps = object_table_load(fd, OBJECT(m)->name);
 
 	/* Allocate and load the nodes. */
-	if (m->map != NULL) {
-		map_free_nodes(m);	/* XXX should realloc and init */
-	}
 	map_alloc_nodes(m, m->mapw, m->maph);
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			node_load(fd, deps, &m->map[y][x]);
 		}
 	}
-
 	pthread_mutex_unlock(&m->lock);
 
 	object_table_destroy(deps);
@@ -665,15 +678,12 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 	off_t ntrans_offs;
 	Uint32 i, ntrans = 0;
 	struct transform *trans;
-
-	if ((nref->flags & NODEREF_SAVEABLE) == 0) {
-		/* Not a persistent reference, skip. */
-		return;
-	}
-		
+	
 	/* Save the type of reference and flags. */
 	buf_write_uint32(buf, nref->type);
 	buf_write_uint32(buf, nref->flags);
+
+	debug(DEBUG_NODEREFS, "type %d, flags 0x%x\n", nref->type, nref->flags);
 
 	/* Save the reference data. */
 	switch (nref->type) {
@@ -686,6 +696,8 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 		buf_write_uint32(buf, nref->offs);	/* Sprite# */
 		buf_write_sint16(buf, nref->xcenter);
 		buf_write_sint16(buf, nref->ycenter);
+		debug(DEBUG_NODEREFS, "sprite: obj[%d]:%d, center %d,%d\n",
+		    i, nref->offs, nref->xcenter, nref->ycenter);
 		break;
 	case NODEREF_ANIM:
 		for (i = 0; i < deps->nobjs; i++) {
@@ -697,24 +709,32 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 		buf_write_sint16(buf, nref->xcenter);
 		buf_write_sint16(buf, nref->ycenter);
 		buf_write_uint32(buf, nref->data.anim.flags);
+		debug(DEBUG_NODEREFS,
+		    "anim: obj[%d]:%d, center %d,%d, aflags 0x%x\n",
+		    i, nref->offs, nref->xcenter, nref->ycenter,
+		    nref->data.anim.flags);
 		break;
 	case NODEREF_WARP:
 		buf_write_string(buf, nref->data.warp.map);
 		buf_write_uint32(buf, nref->data.warp.x);
 		buf_write_uint32(buf, nref->data.warp.y);
 		buf_write_uint8(buf, nref->data.warp.dir);
+		debug(DEBUG_NODEREFS, "warp: to %s:[%d,%d], dir 0x%x",
+		    nref->data.warp.map, nref->data.warp.x, nref->data.warp.y,
+		    nref->data.warp.dir);
 	default:
-		debug(DEBUG_STATE, "not saving %d node\n", nref->type);
+		debug(DEBUG_NODEREFS, "not saving %d node\n", nref->type);
 		break;
 	}
 
 	/* Save the transforms. */
-	ntrans_offs = buf->offs;	/* Skip the transform count. */
+	ntrans_offs = buf->offs;
+	buf_write_uint32(buf, 0);				/* Skip count */
 	SLIST_FOREACH(trans, &nref->transforms, transforms) {
 		transform_save(buf, trans);
 		ntrans++;
 	}
-	buf_pwrite_uint32(buf, ntrans, ntrans_offs);
+	buf_pwrite_uint32(buf, ntrans, ntrans_offs);		/* Save count */
 }
 
 void
@@ -723,7 +743,7 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 	struct noderef *nref;
 	off_t nrefs_offs;
 	Uint32 nrefs = 0;
-
+	
 	/* Save the node properties. */
 	buf_write_uint32(buf, node->flags & ~(NODE_EPHEMERAL));
 	buf_write_uint32(buf, node->v1);
@@ -732,6 +752,8 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 	nrefs_offs = buf->offs;
 	buf_write_uint32(buf, 0);			/* Skip */
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+		if ((nref->flags & NODEREF_SAVEABLE) == 0)
+			continue;
 		noderef_save(buf, deps, nref);
 		nrefs++;
 	}
@@ -746,10 +768,11 @@ map_save(void *p, int fd)
 	struct object *pob;
 	struct object_table *deps;
 	Uint32 x, y;
+	
+	version_write(fd, &map_ver);
 
 	buf = fobj_create_buf(65536, 32767);
 
-	version_write(fd, &map_ver);
 	pthread_mutex_lock(&m->lock);
 
 	debug(DEBUG_STATE,
@@ -766,9 +789,8 @@ map_save(void *p, int fd)
 	buf_write_uint32(buf, m->tileh);
 	buf_write_uint16(buf, m->zoom);
 
-	/* Generate the dependencies. */
+	/* Write the dependencies. */
 	deps = object_table_new();
-
 	pthread_mutex_lock(&world->lock);
 	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
 		if ((pob->flags & OBJECT_ART) == 0 ||		/* XXX */
@@ -778,8 +800,6 @@ map_save(void *p, int fd)
 		object_table_insert(deps, pob);
 	}
 	pthread_mutex_unlock(&world->lock);
-
-	/* Write the dependencies. */
 	object_table_save(buf, deps);
 
 	/* Write the nodes. */
@@ -788,6 +808,7 @@ map_save(void *p, int fd)
 			node_save(buf, deps, &m->map[y][x]);
 		}
 	}
+	
 	pthread_mutex_unlock(&m->lock);
 
 	fobj_flush_buf(buf, fd);
@@ -845,29 +866,32 @@ map_verify(struct map *m)
 static __inline__ void
 node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 {
-	int x, y;
-	Uint32 col = 0;
+	int x, y, dh, dw;
 	Uint8 *src, r1, g1, b1, a1;
 	SDL_Rect clip;
+
+	dw = s->w * m->zoom / 100;
+	dh = s->h * m->zoom / 100;
 
 	/* XXX cache the scaled surfaces. */
 	/* XXX inefficient */
 	SDL_LockSurface(view->v);
-	for (y = 0; y < m->tileh; y++) {
-		for (x = 0; x < m->tilew; x++) {
+	for (y = 0; y < dh; y++) {
+		for (x = 0; x < dw; x++) {
 			src = (Uint8 *)s->pixels +
 			    (y*TILEH/m->tileh)*s->pitch +
 			    (x*TILEW/m->tilew)*s->format->BytesPerPixel;
-			SDL_GetRGBA(*(Uint32 *)src, s->format,
-			    &r1, &g1, &b1, &a1);
-			col = SDL_MapRGB(view->v->format, r1, g1, b1);
-#if 0
-			if (a1 > 200) {
-				VIEW_PUT_PIXEL(view->v, rx+x, ry+y, col);
+			if (s->flags & SDL_SRCALPHA) {
+				SDL_GetRGBA(*(Uint32 *)src, s->format,
+				    &r1, &g1, &b1, &a1);
+				view_alpha_blend(view->v, rx+x, ry+y,
+				    r1, g1, b1, a1);
+			} else {
+				SDL_GetRGB(*(Uint32 *)src, s->format,
+				    &r1, &g1, &b1);
+				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
+				    SDL_MapRGB(view->v->format, r1, g1, b1));
 			}
-#else
-			VIEW_PUT_ALPHAPIXEL(view->v, rx+x, ry+y, col, a1);
-#endif
 		}
 	}
 	SDL_UnlockSurface(view->v);
