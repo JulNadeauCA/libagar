@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.5 2002/04/23 07:24:56 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.6 2002/04/24 14:08:54 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -27,8 +27,7 @@ struct window {
 	SDL_Rect vmask;			/* View mask (units) */
 
 	TAILQ_HEAD(, widget) widgetsh;	/* Widgets within this window */
-	pthread_mutex_t widgetslock;	/* Lock on widgets list */
-	Uint32	nwidgets;		/* Widget count */
+	pthread_mutex_t lock;		/* Lock on widgets list */
 	
 	struct viewport *view;		/* Parent view */
 	TAILQ_ENTRY(window) windows;	/* Windows within this view */

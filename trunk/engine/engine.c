@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.32 2002/04/24 13:14:44 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.33 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -245,24 +245,30 @@ emalloc(size_t len)
 void
 engine_config(void)
 {
-	struct window *w;
+	struct window *win;
 	struct label *fullscreen_label;
 	struct button *close_button;
 
-	w = emalloc(sizeof(struct window));
-	window_init(w, mainview, "engine-config", "Engine settings", 0,
+	/* Settings window */
+	win = emalloc(sizeof(struct window));
+	window_init(win, mainview, "engine-config", "Engine settings", 0,
 	    WINDOW_GRADIENT, 64, 64, 512, 256);
-	object_link(w);
+	pthread_mutex_lock(&world->lock);
+	object_link(win);
+	pthread_mutex_unlock(&world->lock);
 
 	fullscreen_label = emalloc(sizeof(struct label));
-	label_init(fullscreen_label, w, "fullscreen-label", "Full-screen",
-	    0, 10, 10);
-	object_link(fullscreen_label);
+	label_init(fullscreen_label, "fullscr-label", "Full-screen", 0, 10, 10);
+	pthread_mutex_lock(&win->lock);
+	widget_link(fullscreen_label, win);
+	pthread_mutex_unlock(&win->lock);
 
 	close_button = emalloc(sizeof(struct button));
-	button_init(close_button, w, "close-button", "Close", 0, 100, 100);
+	button_init(close_button, "close-button", "Close", 0, 100, 100);
 	close_button->push = close_button_push;
-	object_link(close_button);
+	pthread_mutex_lock(&win->lock);
+	widget_link(close_button, win);
+	pthread_mutex_unlock(&win->lock);
 }
 
 static void

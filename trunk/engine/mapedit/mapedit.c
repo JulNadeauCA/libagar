@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.80 2002/04/25 12:48:15 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.81 2002/04/26 04:24:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -1068,23 +1068,27 @@ mapedit_show_coords(struct mapedit *med)
 	struct window *nw;
 
 	if (coords_win == NULL) {
+		/* Coordinates window */
 		nw = emalloc(sizeof(struct window));
 		window_init(nw, med->map->view, "coords-window", "Coordinates",
 		    WINDOW_SOLID, 0, 64, 64, 224, 32);
-
-		coords_label = emalloc(sizeof(struct label));
-		label_init(coords_label, nw, "coords-label", "...", 0, 7, 7);
-
 		pthread_mutex_lock(&world->lock);
-		object_link(coords_label);
 		object_link(nw);
 		pthread_mutex_unlock(&world->lock);
+
+		/* Coordinates label */
+		coords_label = emalloc(sizeof(struct label));
+		label_init(coords_label, "coords-label", "...", 0, 7, 7);
+		pthread_mutex_lock(&nw->lock);
+		widget_link(coords_label, nw);
+		pthread_mutex_unlock(&nw->lock);
 
 		coords_win = nw;
 	} else {
 		nw = coords_win;
 		coords_win = NULL;
 
+		/* Destroy the coordinates window. */
 		pthread_mutex_lock(&world->lock);
 		object_unlink(nw);
 		pthread_mutex_unlock(&world->lock);
