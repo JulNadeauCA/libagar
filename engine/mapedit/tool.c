@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.5 2004/05/02 09:36:51 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.6 2004/05/06 06:24:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,20 +52,6 @@ tool_init(struct tool *tool, struct mapview *mv)
 		tool->init(tool);
 }
 
-static void
-destroy_tool_window(struct window *win)
-{
-	struct window *subwin, *nsubwin;
-
-	for (subwin = TAILQ_FIRST(&win->subwins);
-	     subwin != TAILQ_END(&win->subwins);
-	     subwin = nsubwin) {
-		nsubwin = TAILQ_NEXT(subwin, swins);
-		destroy_tool_window(subwin);
-	}
-	view_detach(win);
-}
-
 void
 tool_destroy(struct tool *tool)
 {
@@ -73,7 +59,7 @@ tool_destroy(struct tool *tool)
 	int i;
 	
 	if (tool->win != NULL)
-		destroy_tool_window(tool->win);
+		view_detach(tool->win);
 
 	for (i = 0; i < tool->nstatus; i++)
 		Free(tool->status[i], 0);
