@@ -1,4 +1,4 @@
-.\"	$Csoft: scrollbar.3,v 1.3 2002/09/13 10:58:14 vedge Exp $
+.\"	$Csoft: scrollbar.3,v 1.4 2002/12/21 10:21:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 .\" All rights reserved.
@@ -38,14 +38,16 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget represents a single value inside a arbitrary range.
+widget represents a single value inside a fixed range.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct scrollbar *"
-.Fn scrollbar_new "struct region *reg" "int w" "int h" "int flags"
+.Fn scrollbar_new "struct region *reg" "int w" "int h" \
+                  "enum scrollbar_orientation orientation"
 .Pp
 .Ft void
-.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" "int flags"
+.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" \
+                   "enum scrollbar_orientation orientation"
 .nr nS 0
 .Pp
 The
@@ -64,40 +66,29 @@ x
 It is assumed that each visible item (ie. a list item, or a map node) is
 .Fa item_size
 pixels.
-The
-.Fa flags
-can be changed at runtime, and may include:
+The valid values for
+.Fa orientation
+are:
 .Pp
 .Bd -literal
-#define SCROLLBAR_HORIZONTAL	0x01	/* Horizontal scroll bar */
-#define SCROLLBAR_VERTICAL	0x02	/* Vertical scroll bar */
+enum scrollbar_orientation {
+	SCROLLBAR_HORIZ,
+	SCROLLBAR_VERT
+};
 .Ed
-.Sh SCROLLBAR VALUE
-.nr nS 1
-.Ft void
-.Fn scrollbar_set_range "struct scrollbar *sb" "int min" "int max"
-.Pp
-.Ft void
-.Fn scrollbar_get_range "struct scrollbar *sb" "int *min" "int *max"
-.Pp
-.Ft void
-.Fn scrollbar_set_value "struct scrollbar *sb" "int value"
-.Pp
-.Ft void
-.Fn scrollbar_get_value "struct scrollbar *sb" "int *value"
-.nr nS 0
-.Pp
+.Sh BINDINGS
 The
-.Fn scrollbar_set_range
-function sets the value range,
-.Fn scrollbar_get_range
-returns the current value range.
+.Nm
+widget provides the following bindings:
 .Pp
-The
-.Fn scrollbar_set_value
-function sets the value,
-.Fn scrollbar_get_value
-returns the current value.
+.Bl -tag -compact -width "int *value"
+.It Va int *value
+Current position
+.It Va int *min
+Minimum value
+.It Va int *max
+Maximum value
+.El
 .Sh EVENTS
 The
 .Nm
@@ -105,9 +96,9 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Jump to an arbitrary position, or start scrolling.
+Jump to an specific position, or start scrolling.
 .It window-mousemotion
-Scroll if the left mouse button is held.
+Scroll.
 .El
 .Pp
 The
