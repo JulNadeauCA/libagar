@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.9 2003/01/08 23:10:19 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.10 2003/01/20 12:08:31 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -104,10 +104,10 @@ pixels .
 .Fn tlist_restore_selections "struct tlist *tlist"
 .Pp
 .Ft "void"
-.Fn tlist_select "struct tlist *tlist"
+.Fn tlist_select "struct tlist_item *item"
 .Pp
 .Ft "void"
-.Fn tlist_unselect "struct tlist *tlist"
+.Fn tlist_unselect "struct tlist_item *item"
 .Pp
 .Ft "void"
 .Fn tlist_unselect_all "struct tlist *tlist"
