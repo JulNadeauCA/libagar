@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.79 2004/03/30 16:32:52 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.80 2004/04/20 08:57:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -224,8 +224,15 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	int nlines, maxw, fon_h;
 	Uint8 r, g, b;
 
-	if (text == NULL || text[0] == '\0')
-		return (view_surface(SDL_SWSURFACE, 0, 0));
+	if (text == NULL || text[0] == '\0') {
+		SDL_Surface *su;
+	
+		su = SDL_CreateRGBSurface(SDL_SWSURFACE, 0, 0, 8, 0, 0, 0, 0);
+		if (su == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
+		return (su);
+	}
 
 	fon = text_load_font(fontname, fontsize,
 	    prop_get_int(config, "font-engine.default-style"));
