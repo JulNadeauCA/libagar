@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.18 2002/06/01 02:52:09 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.19 2002/06/01 09:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -51,8 +51,6 @@ static const struct widget_ops button_ops = {
 		button_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL,		/* onattach */
-		NULL,		/* ondetach */
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
@@ -88,13 +86,13 @@ button_init(struct button *b, char *caption, int flags, int rw, int rh)
 	b->ymargin = 6;
 
 	event_new(b, "window-mousebuttonup", 0,
-	    button_event, "%d", WINDOW_MOUSEBUTTONUP);
+	    button_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(b, "window-mousebuttondown", 0,
-	    button_event, "%d", WINDOW_MOUSEBUTTONDOWN);
+	    button_event, "%i", WINDOW_MOUSEBUTTONDOWN);
 	event_new(b, "window-keyup", 0,
-	    button_event, "%d", WINDOW_KEYUP);
+	    button_event, "%i", WINDOW_KEYUP);
 	event_new(b, "window-keydown", 0,
-	    button_event, "%d", WINDOW_KEYDOWN);
+	    button_event, "%i", WINDOW_KEYDOWN);
 }
 
 void

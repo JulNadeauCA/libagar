@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.10 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.11 2002/06/03 02:30:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -56,8 +56,6 @@ static const struct widget_ops textbox_ops = {
 		textbox_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL,		/* onattach */
-		NULL,		/* ondetach */
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
@@ -113,13 +111,13 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
 	event_new(tbox, "hidden", 0, textbox_hidden, NULL);
 
 	event_new(tbox, "window-mousebuttonup", 0,
-	    textbox_event, "%d", WINDOW_MOUSEBUTTONUP);
+	    textbox_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(tbox, "window-mousebuttondown", 0,
-	    textbox_event, "%d", WINDOW_MOUSEBUTTONDOWN);
+	    textbox_event, "%i", WINDOW_MOUSEBUTTONDOWN);
 	event_new(tbox, "window-keyup", 0,
-	    textbox_event, "%d", WINDOW_KEYUP);
+	    textbox_event, "%i", WINDOW_KEYUP);
 	event_new(tbox, "window-keydown", 0,
-	    textbox_event, "%d", WINDOW_KEYDOWN);
+	    textbox_event, "%i", WINDOW_KEYDOWN);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.11 2002/05/28 12:45:07 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.12 2002/06/01 09:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -48,8 +48,6 @@ static struct widget_ops checkbox_ops = {
 		checkbox_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL,		/* on attach */
-		NULL,		/* on detach */
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
@@ -95,13 +93,13 @@ checkbox_init(struct checkbox *cbox, char *caption, int flags)
 	cbox->label_s = s;
 	
 	event_new(cbox, "window-mousebuttonup", 0,
-	    checkbox_event, "%d", WINDOW_MOUSEBUTTONUP);
+	    checkbox_event, "%i, %i, %i", WINDOW_MOUSEBUTTONUP);
 	event_new(cbox, "window-mousebuttondown", 0,
-	    checkbox_event, "%d", WINDOW_MOUSEBUTTONDOWN);
+	    checkbox_event, "%i, %i, %i", WINDOW_MOUSEBUTTONDOWN);
 	event_new(cbox, "window-keyup", 0,
-	    checkbox_event, "%d", WINDOW_KEYUP);
+	    checkbox_event, "%i, %i", WINDOW_KEYUP);
 	event_new(cbox, "window-keydown", 0,
-	    checkbox_event, "%d", WINDOW_KEYDOWN);
+	    checkbox_event, "%i, %i", WINDOW_KEYDOWN);
 }
 
 void
@@ -145,7 +143,7 @@ checkbox_event(int argc, union evarg *argv)
 	int type = argv[1].i;
 	int button, keysym;
 	int pushed = 0;
-	
+
 	switch (type) {
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;

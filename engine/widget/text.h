@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.4 2002/04/30 08:18:34 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.5 2002/05/15 07:28:13 vedge Exp $	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
 #define _AGAR_TEXT_TEXT_H_
@@ -38,8 +38,6 @@ void	 text_engine_destroy(void);
 void	 text_init(struct text *, Sint16, Sint16, Uint16, Uint16, Uint32,
 	     Uint8);
 void	 text_destroy(void *);
-void	 text_onattach(void *, void *);
-void	 text_ondetach(void *, void *);
 
 void	 text_clear(struct text *);
 void	 text_render(struct text *, char *);
