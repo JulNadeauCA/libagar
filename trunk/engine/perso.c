@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.2 2002/11/22 04:43:44 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.3 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -314,7 +314,7 @@ perso_say(struct perso *pers, const char *fmt, ...)
 	button = button_new(reg, "Ok", NULL, 0, 99, 40);
 	WIDGET_FOCUS(button);
 
-	event_new(button, "button-pushed", window_generic_detached, "%p", win);
+	event_new(button, "button-pushed", window_generic_detach, "%p", win);
 	window_show(win);
 
 	free(msg);

@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.23 2002/11/22 23:15:57 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.24 2002/11/23 22:40:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,14 +77,14 @@ input_new(int type, int index)
 		SDL_JoystickEventState(SDL_ENABLE);
 		break;
 	default:
+		break;
 	}
 
 	pthread_mutex_lock(&inputs_lock);
 	TAILQ_INSERT_HEAD(&inputs, input, inputs);
 	pthread_mutex_unlock(&inputs_lock);
 
-	dprintf("registered %s\n", OBJECT(input)->name);
-	
+	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
 	return (input);
 }
 
@@ -92,9 +92,7 @@ input_new(int type, int index)
 static void
 input_key(struct input *in, SDL_Event *ev)
 {
-	int set;
-
-	set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
+	int set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
 
 	switch (ev->key.keysym.sym) {
 	case SDLK_UP:
