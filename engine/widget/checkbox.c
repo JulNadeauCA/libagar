@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.28 2002/12/03 04:09:00 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.29 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -53,42 +53,43 @@ enum {
 static void	checkbox_event(int, union evarg *);
 
 struct checkbox *
-checkbox_new(struct region *reg, char *caption, int rh, int flags)
+checkbox_new(struct region *reg, int rh, const char *caption_fmt, ...)
 {
+	va_list ap;
 	struct checkbox *cb;
+	char *caption;
+
+	va_start(ap, caption_fmt);
+	Vasprintf(&caption, caption_fmt, ap);
+	va_end(ap);
 
 	cb = emalloc(sizeof(struct checkbox));
-	checkbox_init(cb, caption, rh, flags);
-
+	checkbox_init(cb, rh, caption);
 	region_attach(reg, cb);
 
+	free(caption);
 	return (cb);
 }
 
 void
-checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
+checkbox_init(struct checkbox *cbox, int rh, char *caption)
 {
-	SDL_Surface *s;
+	widget_init(&cbox->wid, "checkbox", &checkbox_ops, -1, rh);
+	widget_map_color(cbox, FRAME_COLOR, "frame", 100, 100, 100);
+	widget_map_color(cbox, TEXT_COLOR, "text", 250, 250, 250);
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &cbox->value);
 
-	cbox->cbox_w = 16;	/* XXX */
-	cbox->xspacing = 6;
-
-	widget_init(&cbox->wid, "checkbox", "widget", &checkbox_ops, -1, rh);
-	
-	widget_map_color(cbox, FRAME_COLOR, "checkbox-frame", 100, 100, 100);
-	widget_map_color(cbox, TEXT_COLOR, "checkbox-text", 250, 250, 250);
-	
-	s = text_render(NULL, -1, WIDGET_COLOR(cbox, TEXT_COLOR), caption);
-	if (rh < 0) {
-		WIDGET(cbox)->h = s->h;
-	}
-	WIDGET(cbox)->w = cbox->cbox_w + cbox->xspacing + s->w;
-
+	cbox->value = 0;					/* Released */
 	cbox->caption = Strdup(caption);
-	cbox->flags = flags;
-	cbox->justify = CHECKBOX_LEFT;
-	cbox->label_s = s;
 	
+	cbox->label_s = text_render(NULL, -1, WIDGET_COLOR(cbox, TEXT_COLOR),
+	    caption);
+	if (rh < 0) {
+		WIDGET(cbox)->h = cbox->label_s->h;
+	}
+	cbox->cbox_w = cbox->label_s->h;			/* Square */
+	WIDGET(cbox)->w = cbox->cbox_w + 6 + cbox->label_s->w;
+
 	event_new(cbox, "window-mousebuttonup",
 	    checkbox_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(cbox, "window-mousebuttondown",
@@ -102,12 +103,12 @@ checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 void
 checkbox_destroy(void *p)
 {
-	struct checkbox *cb = p;
+	struct checkbox *cbox = p;
 
-	SDL_FreeSurface(cb->label_s);
-	free(cb->caption);
+	SDL_FreeSurface(cbox->label_s);
+	free(cbox->caption);
 
-	widget_destroy(cb);
+	widget_destroy(cbox);
 }
 
 void
@@ -116,20 +117,13 @@ checkbox_draw(void *p)
 	struct checkbox *cbox = p;
 	int x = 0, y = 0;
 
-	/* Checkbox */
+	/* Draw the checkbox. */
 	primitives.box(cbox, 0, 0, cbox->cbox_w, cbox->label_s->h,
-	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1,
+	    widget_get_int(cbox, "state") ? -1 : 1,
 	    WIDGET_COLOR(cbox, FRAME_COLOR));
 
-	/* Label (cached) */
-	switch (cbox->justify) {
-	case CHECKBOX_LEFT:
-	case CHECKBOX_RIGHT:
-		x = cbox->cbox_w + cbox->xspacing;
-		y = 0;
-		break;
-	}
-	WIDGET_DRAW(cbox, cbox->label_s, x, y);
+	/* Draw the label. */
+	WIDGET_DRAW(cbox, cbox->label_s, cbox->cbox_w + 6 + x, y);
 }
 
 static void
@@ -160,13 +154,12 @@ checkbox_event(int argc, union evarg *argv)
 	}
 
 	if (pushed) {
-		if (cbox->flags & CHECKBOX_PRESSED) {
-			cbox->flags &= ~(CHECKBOX_PRESSED);
-		} else {
-			cbox->flags |= CHECKBOX_PRESSED;
-		}
-		event_post(cbox, "checkbox-changed", "%i",
-		    (cbox->flags & CHECKBOX_PRESSED));
+		int *state;
+
+		widget_get_binding(cbox, "state", &state, 1);
+		*state = !(*state);
+		event_post(cbox, "checkbox-changed", "%i", !state);
+		widget_unlock_binding(cbox, "state");
 	}
 }
 
