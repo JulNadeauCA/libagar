@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.163 2004/10/01 03:09:31 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.164 2004/10/02 07:55:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -131,12 +131,15 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		if (mv->curtool->win != NULL) {
 			window_hide(mv->curtool->win);
 		}
+		mv->curtool->mv = NULL;
 	}
 	mv->curtool = ntool;
 
 	if (ntool != NULL) {
 		dprintf("tool -> %s\n", ntool->name);
 		ntool->p = p;
+		ntool->mv = mv;
+
 		if (ntool->trigger != NULL) {
 			widget_set_bool(ntool->trigger, "state", 1);
 		}
