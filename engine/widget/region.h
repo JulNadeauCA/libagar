@@ -1,4 +1,4 @@
-/*	$Csoft: region.h,v 1.5 2002/05/28 12:46:41 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.6 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 TAILQ_HEAD(widgetsq, widget);
@@ -15,6 +15,7 @@ struct region {
 #define REGION_CENTER	0x08	/* Center widgets */
 #define REGION_RIGHT	0x10	/* Right/down justify widgets */
 #define REGION_BORDER	0x20	/* Draw region decorations */
+#define REGION_RESIZING	0x40	/* Region selected for resize operation */
 
 	int	rx, ry;			/* Requested coordinates (%) */
 	int	rw, rh;			/* Requested geometry (%) */
