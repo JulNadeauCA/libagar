@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.9 2002/07/08 08:39:41 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.10 2002/07/09 09:27:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -53,6 +53,7 @@
 #include "tool/stamp.h"
 #include "tool/eraser.h"
 #include "tool/magnifier.h"
+#include "tool/resize.h"
 
 static void
 push(int argc, union evarg *argv)
@@ -88,6 +89,9 @@ push(int argc, union evarg *argv)
 		break;
 	case MAPEDIT_TOOL_MAGNIFIER:
 		med->curtool = med->tools.magnifier;
+		break;
+	case MAPEDIT_TOOL_RESIZE:
+		med->curtool = med->tools.resize;
 		break;
 	}
 	
@@ -132,26 +136,26 @@ mapedit_init_toolbar(struct mapedit *med)
 
 	/* New map */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, -1, -1);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_NEW_MAP);
 	
 	/* Stamp */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_STAMP), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_STAMP), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_STAMP);
 	
 	/* Eraser */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_ERASER);
 	
 	/* Magnifier */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_MAGNIFIER);
 
@@ -160,27 +164,27 @@ mapedit_init_toolbar(struct mapedit *med)
 	
 	/* Load map */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, -1, -1);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_LOAD_MAP);
 
 	/* Object list */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_OBJLIST);
 
 	/* Tile list */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, 0, 0);
+	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_TILEQ);
 
 	med->toolbar_win = win;
 
 	/* Object list window */
-	win = window_new("Object", WINDOW_CUBIC,
+	win = window_new("Object", WINDOW_SOLID,
 	    83, 16, view->w-96, TILEH+51, TILEW+42, TILEH+51);
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
@@ -189,7 +193,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	med->objlist_win = win;
 
 	/* Tile list window */
-	win = window_new("Tile", WINDOW_CUBIC,
+	win = window_new("Tile", WINDOW_SOLID,
 	    view->w-64, 90, 49, view->h-110, TILEW+42, TILEH+51);
 	reg = region_new(win, REGION_HALIGN,
 	    -6, 0, 100, 100);
