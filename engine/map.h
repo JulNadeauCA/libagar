@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.102 2004/03/05 15:21:12 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.103 2004/03/17 12:42:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -12,13 +12,15 @@
 #define MAP_MAX_WIDTH		32767
 #define MAP_MAX_HEIGHT		32767
 #define MAP_MAX_LAYERS		256
+#define MAP_LAYER_NAME_MAX	128
 #define NODE_MAX_NODEREFS	32767
-#define NODEREF_MAX_TRANSFORMS	16384
 #define NODEREF_MAX_CENTER	32767
 #define NODEREF_MAX_MOTION	32767
-#define MAP_LAYER_NAME_MAX	128
+#define NODEREF_MAX_TRANSFORMS	16384
+#define NODEREF_MAX_MASKS	16384
 
 #include <engine/transform.h>
+#include <engine/nodemask.h>
 
 #include "begin_code.h"
 
@@ -52,7 +54,7 @@ struct noderef {
 #define NODEREF_NOSAVE	0x20		/* Non persistent */
 
 	Sint8	friction;		/* Coefficient of friction (if n>0),
-					   or acceleration (if n<0). */
+					   or acceleration (if n<0) */
 	Uint8	layer;			/* Associated layer# */
 	struct {
 		Sint16	xcenter, ycenter;	/* Centering offsets */
@@ -78,11 +80,12 @@ struct noderef {
 			Uint8	 dir;		/* Default direction */
 		} warp;
 	} nref;
+	struct transformq transforms;		/* Transformations to apply */
+	struct nodemaskq masks;			/* Collision detection masks */
+	TAILQ_ENTRY(noderef) nrefs;		/* Node's reference stack */
 #define r_sprite	nref.sprite
 #define r_anim		nref.anim
 #define r_warp		nref.warp
-	struct transformq transforms;		/* Transformations to apply */
-	TAILQ_ENTRY(noderef) nrefs;		/* Node's reference stack */
 };
 
 TAILQ_HEAD(noderefq, noderef);
