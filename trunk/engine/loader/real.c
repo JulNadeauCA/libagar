@@ -1,4 +1,4 @@
-/*	$Csoft: real.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
+/*	$Csoft: real.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/error/error.h>
 
 #include <SDL_types.h>
 #include <SDL_endian.h>

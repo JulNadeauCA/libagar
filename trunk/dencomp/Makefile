@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.11 2003/03/13 05:54:50 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2003/06/21 06:50:16 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -14,8 +14,8 @@ PSMAN1=	dencomp.ps1
 CFLAGS+=${SDL_CFLAGS}
 LIBS+=	${SDL_LIBS} \
 	${TOP}/engine/loader/libloader.a \
-	${TOP}/engine/compat/libcompat.a \
-	${TOP}/engine/error/liberror.a
+	${TOP}/engine/error/liberror.a \
+	${TOP}/engine/compat/libcompat.a
 
 include ${TOP}/mk/csoft.prog.mk
 include ${TOP}/mk/csoft.man.mk
