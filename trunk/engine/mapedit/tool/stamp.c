@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.7 2002/07/22 05:23:26 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.8 2002/07/30 22:19:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -131,7 +131,6 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	struct mapedit *med = TOOL(st)->med;
 	struct node *n = &m->map[y][x];
 	struct noderef *nref, *nnref;
-	struct editref *eref;
 
 	switch (st->mode) {
 	case STAMP_REPLACE:
@@ -147,26 +146,23 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	default:
 	}
 
-	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, med->curoffs);
-
 	switch (st->mode) {
 	case STAMP_INSERT_LOWEST:
 		break;
 	case STAMP_INSERT_HIGHEST:
 	case STAMP_REPLACE:
-		switch (eref->type) {
-		case EDITREF_SPRITE:
-			node_addref(n, med->curobj->pobj, eref->spritei,
-			    MAPREF_SPRITE|MAPREF_SAVE);
-			break;
-		case EDITREF_ANIM:
-			node_addref(n, med->curobj->pobj, eref->animi,
-			    MAPREF_ANIM|MAPREF_SAVE|MAPREF_ANIM_DELTA);
-			break;
+		if (med->ref.flags & MAPREF_SPRITE) {
+			node_addref(n, med->ref.obj, med->ref.offs,
+			    med->ref.flags);
+		} else if (med->ref.flags & MAPREF_ANIM) {
+			node_addref(n, med->ref.obj, med->ref.offs,
+			    med->ref.flags);
+		} else {
+			fatal("unknown ref type\n");
 		}
 		break;
 	}
 
-	n->flags = med->curflags &= ~(NODE_ORIGIN|NODE_ANIM);
+	n->flags = med->node.flags &= ~(NODE_ORIGIN|NODE_ANIM);
 }
 

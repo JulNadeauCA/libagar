@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.52 2002/07/29 06:32:12 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.53 2002/07/30 22:20:20 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -38,7 +38,6 @@ struct mapedit {
 
 	struct	 window *toolbar_win;
 	struct	 window *objlist_win;
-	struct	 window *tileq_win;
 	struct	 window *new_map_win;
 	struct	 window *load_map_win;
 	struct	 window *coords_win;
@@ -56,9 +55,15 @@ struct mapedit {
 	struct	 eobjs_head eobjsh;	/* Shadow object tree */
 	int	 neobjs;
 
-	struct	 editobj *curobj;	/* Current reference */
-	Uint32	 curoffs;		/* Current reference offset */
-	Uint32	 curflags;		/* Current node flags */
+	struct	 editobj *curobj;
+	struct {
+		struct	 object *obj;
+		Uint32	 offs;
+		Uint32	 flags;
+	} ref;
+	struct {
+		Uint32	 flags;
+	} node;
 };
 
 /* Editor sprites */
@@ -97,7 +102,6 @@ enum {
 	MAPEDIT_TOOL_LOAD_MAP,
 	MAPEDIT_TOOL_SAVE_MAP,
 	MAPEDIT_TOOL_SAVE_MAP_TO,
-	MAPEDIT_TOOL_TILEQ,
 	MAPEDIT_TOOL_TILESTACK,
 	MAPEDIT_TOOL_OBJLIST,
 	MAPEDIT_TOOL_STAMP,

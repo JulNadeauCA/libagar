@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.113 2002/07/29 06:32:12 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.114 2002/08/12 06:50:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -78,11 +78,11 @@ mapedit_init(struct mapedit *med, char *name)
 	med->flags = 0;
 	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
-	med->curobj = NULL;
-	med->curoffs = 0;
-	med->curflags = NODE_WALK;
+	med->ref.obj = NULL;
+	med->ref.offs = 0;
+	med->ref.flags = 0;
+	med->node.flags = NODE_WALK;
 
-	/* XXX messy */
 	mapedit_init_toolbar(med);
 	med->coords_win = window_new("Coordinates", WINDOW_SOLID,
 	    32, 32, 320, 64, 320, 64);

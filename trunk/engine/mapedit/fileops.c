@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.3 2002/07/07 06:26:46 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.4 2002/07/08 03:15:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -153,19 +153,8 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct mapedit *med = mv->med;
 	struct map *m = mv->map;
 	struct editref *eref;
-
-	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, med->curoffs);
-
-	switch (eref->type) {
-	case EDITREF_SPRITE:
-		map_clean(m, med->curobj->pobj, eref->spritei,
-		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
-		    MAPREF_SAVE|MAPREF_SPRITE);
-		break;
-	case EDITREF_ANIM:
-		map_clean(m, med->curobj->pobj, eref->animi,
-		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
-		    MAPREF_SAVE|MAPREF_ANIM|MAPREF_ANIM_DELTA);
-		break;
-	}
+	
+	map_clean(m, med->ref.obj, med->ref.offs,
+	    med->node.flags & ~(NODE_ORIGIN|NODE_ANIM),
+	    med->ref.flags);
 }
