@@ -1,0 +1,95 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt MAPEDIT 3
+.Os
+.Sh NAME
+.Nm mapedit
+.Nd agar map editor
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/mapedit/mapedit.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+library implements map edition.
+.Pp
+When the map editor is running, widgets of type
+.Xr mapview 3
+can be used to display/edit maps.
+The
+.Xr objq 3
+widget displays a list of attached objects.
+The
+.Xr tilestack 3
+widget displays a list of references present on a node.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn mapedit_init "struct mapedit *med" "char *name"
+.Pp
+.Ft int
+.Fn mapedit_load "struct mapedit *med" "int fd"
+.Pp
+.Ft int
+.Fn mapedit_save "struct mapedit *med" "int fd"
+.Pp
+.Ft void
+.Fn mapedit_attached "int argc" "union evarg *argv"
+.Pp
+.Ft void
+.Fn mapedit_detached "int argc" "union evarg *argv"
+.nr nS 0
+.Pp
+The
+.Fn mapedit_init
+function initializes a map editor structure.
+The
+.Fn mapedit_load
+function loads map editor state from file descriptor
+.Fa fd .
+The
+.Fn mapedit_save
+function saves map editor state to file descriptor
+.Fa fd .
+.Pp
+The
+.Fn mapedit_attached
+function takes a snapshot of the attached objects, initializes the
+edition structures, and starts up the user interface.
+The
+.Fn mapedit_detached
+function deallocates the edition structures.
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr mapview 3 ,
+.Xr objq 3 ,
+.Xr tilestack 3
+.Sh HISTORY
+The
+.Nm
+library first appeared in AGAR 1.0.
