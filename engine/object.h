@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.84 2003/06/21 06:39:44 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.85 2003/06/25 06:14:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -53,7 +53,6 @@ struct object {
 	Uint32	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't remove props before load */
 #define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
-#define OBJECT_STATIC		0x04	/* Parent should not call free(3) */
 
 	struct gfx		*gfx;	/* Associated graphics */
 	struct audio		*audio;	/* Associated audio samples */
@@ -62,9 +61,9 @@ struct object {
 	pthread_mutex_t		 lock;
 	struct object_position	*pos;		/* Position on a map */
 	struct objectq		 childs;	/* Descendants (linkage_lock) */
-	pthread_mutex_t		 events_lock;	/* XXX use lock? */
+	pthread_mutex_t		 events_lock;
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
-	pthread_mutex_t		 props_lock;	/* XXX use lock? */
+	pthread_mutex_t		 props_lock;
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 };
 
