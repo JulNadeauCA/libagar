@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.1 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.2 2004/05/07 01:43:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -89,6 +89,7 @@ poll_mements(int argc, union evarg *argv)
 		    (unsigned long)ment->rsize);
 		tlist_insert_item(tl, NULL, text, ment);
 	}
+	tlist_restore_selections(tl);
 }
 
 struct window *
