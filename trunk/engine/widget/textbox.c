@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.41 2003/01/05 08:40:52 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.42 2003/01/08 23:10:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -75,14 +75,11 @@ textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
 void
 textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 {
-	SDL_Surface *s;
-
-	s = text_render(NULL, -1, 0, "ABCD1234");
 	tbox->xmargin = 4;
 	tbox->ymargin = 3;
 
 	widget_init(&tbox->wid, "textbox", &textbox_ops, rw, rh);
-	WIDGET(tbox)->h = (s->h * 2) + (tbox->ymargin * 2);
+	WIDGET(tbox)->h = (font_h * 2) + (tbox->ymargin * 2);
 
 	widget_map_color(tbox, FRAME_COLOR, "frame", 100, 100, 100);
 	widget_map_color(tbox, FRAME_READONLY_COLOR, "frame-readonly",
@@ -90,8 +87,6 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250);
 	widget_map_color(tbox, CURSOR_COLOR1, "cursor1", 50, 50, 50);
 	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0);
-
-	SDL_FreeSurface(s);
 
 	tbox->flags = flags;
 	tbox->label = label != NULL ? Strdup(label) : NULL;
