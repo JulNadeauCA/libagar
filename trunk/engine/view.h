@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.67 2003/01/27 08:02:00 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.68 2003/02/10 04:45:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -139,6 +139,8 @@ case 4:					\
 			fatal("too many rects\n");		\
 		}						\
 		view->dirty[view->ndirty++] = (rect);		\
+	} else {						\
+		view->ndirty = 1;				\
 	}							\
 } while (0)
 
