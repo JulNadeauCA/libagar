@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.25 2002/09/17 21:20:38 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.26 2002/11/07 04:28:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -490,16 +490,18 @@ mapview_event(int argc, union evarg *argv)
 
 	switch (type) {
 	case WINDOW_MOUSEMOTION:
-		x = argv[2].i / mv->tilew;
-		y = argv[3].i / mv->tileh;
+		x = argv[2].i;
+		y = argv[3].i;
 
 		if (!WIDGET_INSIDE_RELATIVE(mv, x, y)) {
-			mv->mouse.move = 0;
 			if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
 				SDL_ShowCursor(SDL_ENABLE);
 			}
 			return;
 		}
+
+		x /= mv->tilew;
+		y /= mv->tileh;
 
 		if ((mv->flags & MAPVIEW_SHOW_CURSOR) == 0) {
 			SDL_ShowCursor(SDL_DISABLE);
