@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.54 2002/07/08 03:17:08 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.55 2002/07/09 05:55:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -188,8 +188,6 @@ view_init(gfx_engine_t ge)
 	v->h = config->view.h;
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
-	v->wop_mapx = 0;
-	v->wop_mapy = 0;
 	TAILQ_INIT(&v->windowsh);
 	pthread_mutex_init(&v->lock, NULL);
 	
@@ -327,6 +325,8 @@ view_attach(void *child)
 {
 	struct window *win = child;
 
+	view->focus_win = NULL;
+
 	OBJECT_ASSERT(child, "window");
 	event_post(child, "attached", "%p", view);
 	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
@@ -379,8 +379,6 @@ view_surface(int flags, int w, int h)
 void
 view_focus(struct window *win)
 {
-	dprintf("on %s\n", OBJECT(win)->name);
-
 	TAILQ_REMOVE(&view->windowsh, win, windows);
 	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
 	
