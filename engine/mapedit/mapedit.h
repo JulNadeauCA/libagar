@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.79 2003/04/25 09:47:07 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.80 2003/05/18 02:10:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -91,6 +91,7 @@ extern DECLSPEC int	 mapedit_load(void *, struct netbuf *);
 extern DECLSPEC int	 mapedit_save(void *, struct netbuf *);
 
 extern DECLSPEC struct window	*tilesets_window(void);
+extern DECLSPEC struct window	*objedit_window(void);
 extern DECLSPEC void		 fileops_new_map(int, union evarg *);
 extern DECLSPEC struct window	*fileops_new_map_window(void);
 extern DECLSPEC void		 fileops_load_map(int, union evarg *);
