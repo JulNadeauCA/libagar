@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.25 2003/03/08 00:55:41 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.26 2003/03/16 02:57:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@ static const struct version eraser_ver = {
 
 static const struct tool_ops eraser_ops = {
 	{
-		NULL,		/* destroy */
+		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
 	},

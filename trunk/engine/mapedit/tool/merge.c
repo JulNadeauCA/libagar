@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.21 2003/03/11 00:12:49 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.22 2003/03/11 01:57:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -89,6 +89,8 @@ merge_destroy(void *p)
 	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
 		object_destroy(ob);
 	}
+
+	tool_destroy(mer);
 }
 
 static void

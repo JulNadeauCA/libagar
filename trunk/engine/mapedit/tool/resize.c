@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.20 2003/03/13 08:27:01 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.21 2003/03/14 07:11:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,7 +44,7 @@
 
 static const struct tool_ops resize_ops = {
 	{
-		NULL,		/* destroy */
+		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
 	},

@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.9 2003/03/13 01:21:20 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.10 2003/03/16 02:39:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 
 static const struct tool_ops shift_ops = {
 	{
-		NULL,		/* destroy */
+		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
 	},
