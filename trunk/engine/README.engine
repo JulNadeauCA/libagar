@@ -1,10 +1,9 @@
-$Csoft: README.engine,v 1.3 2002/05/11 04:03:47 vedge Exp $
+$Csoft: README.engine,v 1.4 2002/05/25 08:44:45 vedge Exp $
 
 Global keys
 -----------
 
 F1:		Engine settings window.
-Ctrl+F:		Toggle fullscreen mode.
 Ctrl+V:		Show game/engine version.
 ESC:		Shut down the engine.
 
