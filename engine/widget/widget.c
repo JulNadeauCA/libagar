@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.66 2003/06/15 08:54:19 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.67 2003/06/21 06:50:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -331,7 +331,7 @@ out:
 	return (NULL);
 }
 
-__inline__ int
+int
 widget_get_int(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -345,7 +345,7 @@ widget_get_int(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ unsigned int
+unsigned int
 widget_get_uint(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -359,7 +359,7 @@ widget_get_uint(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ Uint8
+Uint8
 widget_get_uint8(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -373,7 +373,7 @@ widget_get_uint8(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ Sint8
+Sint8
 widget_get_sint8(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -387,7 +387,7 @@ widget_get_sint8(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ Uint16
+Uint16
 widget_get_uint16(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -401,7 +401,7 @@ widget_get_uint16(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ Sint16
+Sint16
 widget_get_sint16(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -415,7 +415,7 @@ widget_get_sint16(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ Uint32
+Uint32
 widget_get_uint32(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -429,7 +429,7 @@ widget_get_uint32(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ Sint32
+Sint32
 widget_get_sint32(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -444,7 +444,7 @@ widget_get_sint32(void *wid, const char *name)
 }
 
 #ifdef FLOATING_POINT
-__inline__ float
+float
 widget_get_float(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -458,7 +458,7 @@ widget_get_float(void *wid, const char *name)
 	return (rv);
 }
 
-__inline__ double
+double
 widget_get_double(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -473,7 +473,7 @@ widget_get_double(void *wid, const char *name)
 }
 #endif /* FLOATING_POINT */
 
-__inline__ char *
+char *
 widget_get_string(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -487,7 +487,7 @@ widget_get_string(void *wid, const char *name)
 	return (sd);
 }
 
-__inline__ Uint16 *
+Uint16 *
 widget_get_unicode(void *wid, const char *name)
 {
 	struct widget_binding *b;
@@ -501,7 +501,7 @@ widget_get_unicode(void *wid, const char *name)
 	return (ucsd);
 }
 
-__inline__ size_t
+size_t
 widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
 {
 	struct widget_binding *b;
@@ -516,7 +516,7 @@ widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
 	return (rv);
 }
 
-__inline__ size_t
+size_t
 widget_copy_unicode(void *wid, const char *name, Uint16 *dst, size_t dst_size)
 {
 	struct widget_binding *b;
@@ -531,7 +531,7 @@ widget_copy_unicode(void *wid, const char *name, Uint16 *dst, size_t dst_size)
 	return (rv);
 }
 
-__inline__ void
+void
 widget_set_int(void *wid, const char *name, int ni)
 {
 	struct widget_binding *binding;
@@ -544,7 +544,7 @@ widget_set_int(void *wid, const char *name, int ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_uint(void *wid, const char *name, unsigned int ni)
 {
 	struct widget_binding *binding;
@@ -557,7 +557,7 @@ widget_set_uint(void *wid, const char *name, unsigned int ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_uint8(void *wid, const char *name, Uint8 ni)
 {
 	struct widget_binding *binding;
@@ -570,7 +570,7 @@ widget_set_uint8(void *wid, const char *name, Uint8 ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_sint8(void *wid, const char *name, Sint8 ni)
 {
 	struct widget_binding *binding;
@@ -583,7 +583,7 @@ widget_set_sint8(void *wid, const char *name, Sint8 ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_uint16(void *wid, const char *name, Uint16 ni)
 {
 	struct widget_binding *binding;
@@ -596,7 +596,7 @@ widget_set_uint16(void *wid, const char *name, Uint16 ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_sint16(void *wid, const char *name, Sint16 ni)
 {
 	struct widget_binding *binding;
@@ -609,7 +609,7 @@ widget_set_sint16(void *wid, const char *name, Sint16 ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_uint32(void *wid, const char *name, Uint32 ni)
 {
 	struct widget_binding *binding;
@@ -622,7 +622,7 @@ widget_set_uint32(void *wid, const char *name, Uint32 ni)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_sint32(void *wid, const char *name, Sint32 ni)
 {
 	struct widget_binding *binding;
@@ -636,7 +636,7 @@ widget_set_sint32(void *wid, const char *name, Sint32 ni)
 }
 
 #ifdef FLOATING_POINT
-__inline__ void
+void
 widget_set_float(void *wid, const char *name, float nf)
 {
 	struct widget_binding *binding;
@@ -649,7 +649,7 @@ widget_set_float(void *wid, const char *name, float nf)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_double(void *wid, const char *name, double nd)
 {
 	struct widget_binding *binding;
@@ -663,7 +663,7 @@ widget_set_double(void *wid, const char *name, double nd)
 }
 #endif /* FLOATING_POINT */
 
-__inline__ void
+void
 widget_set_string(void *wid, const char *name, const char *ns)
 {
 	struct widget_binding *binding;
@@ -678,7 +678,7 @@ widget_set_string(void *wid, const char *name, const char *ns)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_set_unicode(void *wid, const char *name, const Uint16 *text)
 {
 	struct widget_binding *binding;
@@ -693,14 +693,14 @@ widget_set_unicode(void *wid, const char *name, const Uint16 *text)
 	widget_binding_unlock(binding);
 }
 
-__inline__ void
+void
 widget_binding_lock(struct widget_binding *bind)
 {
 	if (bind->mutex != NULL)
 		pthread_mutex_lock(bind->mutex);
 }
 
-__inline__ void
+void
 widget_binding_unlock(struct widget_binding *bind)
 {
 	if (bind->mutex != NULL)
@@ -711,7 +711,7 @@ widget_binding_unlock(struct widget_binding *bind)
  * Generate a prop-modified event after manipulating the property values
  * manually. The property must be locked.
  */
-__inline__ void
+void
 widget_binding_modified(struct widget_binding *bind)
 {
 	if (bind->type == WIDGET_PROP) {
@@ -761,7 +761,7 @@ widget_destroy(void *p)
  * Perform a fast blit from a source surface to the display, at coordinates
  * relative to the widget; clipping is done.
  */
-__inline__ void
+void
 widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 {
 	struct widget *wid = p;
@@ -809,7 +809,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 }
 
 /* Evaluate to true if a widget is holding focus (inside its parent). */
-__inline__ int
+int
 widget_holds_focus(void *p)
 {
 	return (WIDGET(p)->flags & WIDGET_FOCUSED);
@@ -928,7 +928,7 @@ widget_scale(void *p, int w, int h)
  * Write to the pixel at widget-relative x,y coordinates; clipping is done.
  * The display surface must be locked.
  */
-__inline__ void
+void
 widget_put_pixel(void *p, int x, int y, Uint32 color)
 {
 	struct widget *wid = p;
@@ -947,7 +947,7 @@ widget_put_pixel(void *p, int x, int y, Uint32 color)
 }
 
 /* Evaluate to true if absolute view coords x,y are inside the widget area. */
-__inline__ int
+int
 widget_area(void *p, int x, int y)
 {
 	struct widget *wid = p;
@@ -959,7 +959,7 @@ widget_area(void *p, int x, int y)
 }
 
 /* Evaluate to true if widget coords x,y are inside the widget area. */
-__inline__ int
+int
 widget_relative_area(void *p, int x, int y)
 {
 	struct widget *wid = p;
@@ -1067,7 +1067,7 @@ widget_set_type(void *p, const char *name)
 }
 
 /* Push an unnamed entry onto a widget's color stack. */
-__inline__ int	
+int	
 widget_push_color(struct widget *wid, Uint32 color)
 {
 	int ncolor;
@@ -1083,7 +1083,7 @@ widget_push_color(struct widget *wid, Uint32 color)
 }
 
 /* Pop the highest color off a widget's color stack. */
-__inline__ void
+void
 widget_pop_color(struct widget *wid)
 {
 	wid->ncolors--;

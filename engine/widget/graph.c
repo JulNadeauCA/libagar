@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.35 2003/06/17 23:30:48 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.36 2003/06/21 06:50:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -377,7 +377,7 @@ graph_plot(struct graph_item *gi, Sint32 val)
 	gi->vals[gi->nvals++] = val;
 }
 
-__inline__ void
+void
 graph_scroll(struct graph *gra, int i)
 {
 	if (gra->flags & GRAPH_SCROLL)
