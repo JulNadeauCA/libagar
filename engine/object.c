@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.49 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.50 2002/05/13 10:19:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -375,7 +375,7 @@ object_load(void *p)
 	/* XXX mmap? */
 	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
-		dperror(ob->name);
+		fatal("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
 	rv = ob->vec->load(ob, fd);
@@ -401,7 +401,7 @@ object_save(void *p)
 	sprintf(path, "%s/%s.%s", world->udatadir, ob->name, ob->saveext);
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
 	if (fd < 0) {
-		dperror(path);
+		fatal("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
 	if (ob->vec->save(ob, fd) != 0) {
