@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.15 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.16 2003/09/07 00:24:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_INPUT_H_
@@ -23,6 +23,8 @@ struct input_driver {
 	int	(*in_match)(const void *, const SDL_Event *);	/* Map event */
 	void	(*in_event)(void *, const SDL_Event *);		/* Proc event */
 };
+
+SLIST_HEAD(input_devq, input);
 
 /* Input device associated with a map position. */
 struct input {
