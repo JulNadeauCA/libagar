@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.12 2002/02/20 00:38:43 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.13 2002/02/21 02:22:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -43,11 +43,11 @@
 
 static struct obvec world_vec = {
 	world_destroy,
-	NULL,
 	world_load,
 	world_save,
-	NULL,
-	NULL
+	NULL,		/* link */
+	NULL,		/* unlink */
+	world_dump
 };
 
 char *
@@ -151,8 +151,8 @@ world_save(void *p, int fd)
 {
 	struct world *wo = (struct world *)p;
 	struct object *ob;
-	off_t soffs;
-	int nobjs = 0;
+	size_t soffs;
+	Uint32 nobjs = 0;
 
 	dprintf("saving state\n");
 
@@ -212,11 +212,10 @@ world_destroy(void *p)
 	return (0);
 }
 
-#ifdef DEBUG
-
 void
-world_dump(struct world *wo)
+world_dump(void *p)
 {
+	struct world *wo = (struct world *)p;
 	struct object *ob;
 
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
@@ -224,6 +223,4 @@ world_dump(struct world *wo)
 	}
 	object_dump((struct object *)wo);
 }
-
-#endif /* DEBUG */
 
