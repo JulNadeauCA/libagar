@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.4 2002/02/01 05:53:07 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.5 2002/02/05 06:00:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -91,13 +91,13 @@ event_loop(void)
 		case SDL_JOYBUTTONUP:
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
-			if (event_hotkey(&ev) == 0) {
-				continue;
-			}
 			if (curchar != NULL) {
 				curchar->event_hook(curchar, &ev);
 			} else if (curmapedit != NULL) {
 				curmapedit->event_hook(curmapedit, &ev);
+			}
+			if (event_hotkey(&ev) == 0) {
+				continue;
 			}
 			break;
 		}
