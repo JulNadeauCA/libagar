@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.14 2004/05/06 08:47:55 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.15 2004/05/12 04:53:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -194,6 +194,7 @@ extern int vg_sin_tbl[];
 __BEGIN_DECLS
 struct vg	*vg_new(void *, int);
 void		 vg_init(struct vg *, int);
+void		 vg_reinit(struct vg *);
 void		 vg_destroy(struct vg *);
 void		 vg_save(struct vg *, struct netbuf *);
 int		 vg_load(struct vg *, struct netbuf *);
