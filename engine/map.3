@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.35 2003/04/24 07:04:42 vedge Exp $
+.\"	$Csoft: map.3,v 1.36 2003/04/25 04:11:01 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,17 +38,39 @@
 .Sh SYNOPSIS
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
-Agar levels are described by arrays of nodes.
-Nodes contain stacks of references and a set of flags.
+Agar levels are described by a two-dimensional array of nodes; each node holds
+a stack of generic
+.Sq noderef
+structures, which are references to specific data (such as sprites or
+animations).
+.Pp
+For example, the rendering of a
+.Nm
+is achieved by drawing the visible graphical noderefs in a specific order,
+while the audio system mixes samples from audio noderefs near the visible area.
+.Pp
 Three types of references are currently defined:
 .Pp
 .Bl -tag -width "NODEREF_SPRITE " -compact
 .It NODEREF_SPRITE
 Pointer to a static image of arbitrary size.
+Visible noderefs of this type are drawn only when the
+.Va redraw
+flag of the parent map is set.
 .It NODEREF_ANIM
 Pointer to an animation of arbitrary size.
+Visible noderefs of this type are redrawn every
+.Va n
+milliseconds (possibly by another thread on a multiprocessor system).
 .It NODEREF_WARP
 Pointer to a node residing another map.
+Objects coming in contact with this type of noderef are transported to
+coordinates
+.Va x ,
+.Va y ,
+.Va z
+of map
+.Va m .
 .El
 .Pp
 Graphical noderefs provide the map renderer with two individual displacements
