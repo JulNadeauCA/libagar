@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.10 2003/03/16 23:13:36 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.11 2003/03/16 23:17:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,7 +28,6 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/version.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -55,11 +54,6 @@ static const struct tool_ops fill_ops = {
 	NULL			/* mouse */
 };
 
-static const struct version fill_ver = {
-	"agar fill tool",
-	0, 0
-};
-
 void
 fill_init(void *p)
 {
@@ -79,8 +73,8 @@ fill_window(void *p)
 
 	win = window_new("mapedit-tool-fill", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    157, 76,
-	    157, 76);
+	    75, 75,
+	    71, 71);
 	window_set_caption(win, "Fill");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
