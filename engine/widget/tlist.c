@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.6 2002/09/12 09:43:28 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.7 2002/09/13 10:58:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -292,7 +292,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 /* Unset the selection flag on all items. */
 void
-tlist_unselect_items(struct tlist *tl)
+tlist_unselect_all(struct tlist *tl)
 {
 	struct tlist_item *it;
 
@@ -370,7 +370,7 @@ tlist_mouse_button(int argc, union evarg *argv)
 				ti->selected++;
 			}
 		} else {
-			tlist_unselect_items(tl);
+			tlist_unselect_all(tl);
 			ti->selected++;
 		}
 		event_post(tl, "tlist-changed", "%p, %i", ti, 1);
