@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.45 2002/06/01 09:30:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.46 2002/06/03 18:33:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,15 +46,13 @@ static const struct object_ops viewport_ops = {
 	view_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
-	NULL,		/* onattach */
-	NULL,		/* ondetach */
 	view_attach,
 	view_detach
 };
 
 static int	**view_allocmask(int, int);
-static SDL_Rect	**view_allocmaprects(struct map *, int, int);
-static SDL_Rect	 *view_allocrects(struct map *, int, int);
+static SDL_Rect	**view_allocmaprects(int, int);
+static SDL_Rect	 *view_allocrects(int, int);
 static void	  view_freemask(struct viewport *);
 static void	  view_freemaprects(struct viewport *);
 
@@ -102,7 +100,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	default:
 		fatal("bad mode\n");
 	}
-	
+
 	dprintf("view %dx%d, map view %dx%d at %d,%d\n", v->w, v->h,
 	    v->mapxoffs, v->mapyoffs, v->mapw, v->maph);
 
@@ -115,6 +113,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	if (caption != NULL) {
 		SDL_WM_SetCaption(caption, "AGAR");
 	}
+
 	v->v = SDL_SetVideoMode(v->w + 64, v->h + 64, v->depth, v->flags);
 	if (v->v == NULL) {
 		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->depth,
@@ -131,10 +130,10 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		v->mapmask = view_allocmask(v->mapw, v->maph);
 	}
 	if (v->maprects == NULL) {
-		v->maprects = view_allocmaprects(m, v->mapw, v->maph);
+		v->maprects = view_allocmaprects(v->mapw, v->maph);
 	}
 	if (v->rects == NULL) {
-		v->rects = view_allocrects(m, v->mapw, v->maph);
+		v->rects = view_allocrects(v->mapw, v->maph);
 	}
 
 	SDL_ShowCursor(SDL_ENABLE);
@@ -161,12 +160,9 @@ view_allocmask(int w, int h)
 	return (mask);
 }
 
-/*
- * Precalculate rectangles.
- * Map/view must be locked.
- */
+/* Precalculate rectangles. */
 static SDL_Rect **
-view_allocmaprects(struct map *m, int w, int h)
+view_allocmaprects(int w, int h)
 {
 	SDL_Rect **rects;
 	int x, y;
@@ -174,12 +170,9 @@ view_allocmaprects(struct map *m, int w, int h)
 	rects = emalloc((w * h) * sizeof(SDL_Rect *));
 	for (y = 0; y < h; y++) {
 		*(rects + y) = emalloc(w * sizeof(SDL_Rect));
-	}
-	
-	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			rects[y][x].x = (x << m->shtilex);
-			rects[y][x].y = (y << m->shtiley);
+			rects[y][x].x = x * TILEW;
+			rects[y][x].y = y * TILEH;
 			rects[y][x].w = TILEW;
 			rects[y][x].h = TILEH;
 		}
@@ -193,7 +186,7 @@ view_allocmaprects(struct map *m, int w, int h)
  * for optimization purposes.
  */
 static SDL_Rect *
-view_allocrects(struct map *m, int w, int h)
+view_allocrects(int w, int h)
 {
 	SDL_Rect *rects;
 	size_t len;
@@ -441,9 +434,7 @@ view_attach(void *parent, void *child)
 	OBJECT_ASSERT(child, "window");
 
 	/* Notify the child being attached. */
-	if (OBJECT_OPS(win)->onattach != NULL) {
-		OBJECT_OPS(win)->onattach(view, win);
-	}
+	event_post(child, "attached", "%p", parent);
 
 	/* Attach and focus this window. */
 	pthread_mutex_lock(&view->lock);
@@ -465,9 +456,7 @@ view_detach(void *parent, void *child)
 	OBJECT_ASSERT(child, "window");
 
 	/* Notify the child being detached. */
-	if (OBJECT_OPS(win)->ondetach != NULL) {
-		OBJECT_OPS(win)->ondetach(view, win);
-	}
+	event_post(child, "detached", "%p", parent);
 
 	pthread_mutex_lock(&view->lock);
 	TAILQ_REMOVE(&view->windowsh, win, windows);
