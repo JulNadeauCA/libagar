@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.3 2003/03/05 02:16:32 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.4 2003/03/07 00:44:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -78,7 +78,6 @@ nodeedit_poll(int argc, union evarg *argv)
 	else if (node->flags & NODE_REGEN)	strcat(flags, "regen ");
 	if (node->flags & NODE_SLOW)		strcat(flags, "slow ");
 	else if (node->flags & NODE_HASTE)	strcat(flags, "haste ");
-	if (node->flags & NODE_HAS_ANIM)	strcat(flags, "has-anim ");
 	
 	if (node->flags & (NODE_EDGE_NW))	strcat(flags, "NW-edge ");
 	else if (node->flags & (NODE_EDGE_NE))	strcat(flags, "NE-edge ");

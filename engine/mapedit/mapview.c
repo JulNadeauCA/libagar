@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.80 2003/03/10 01:23:05 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.81 2003/03/10 03:10:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 
 #include "mapedit.h"
 #include "mapview.h"
+#include "selops.h"
 
 #include "tool/tool.h"
 #include "tool/shift.h"
@@ -117,16 +118,13 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->nodeed.trigger = NULL;
 	mv->layed.trigger = NULL;
 	mv->zoom_tm = NULL;
-	
 	mv->map = m;
 
 	pthread_mutex_lock(&m->lock);
-
 	mv->mx = m->defx;
 	mv->my = m->defy;
 	mv->cx = -1;
 	mv->cy = -1;
-
 	mv->msel.set = 0;
 	mv->msel.x = 0;
 	mv->msel.y = 0;
@@ -143,7 +141,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 		mv->izoom.tileh = TILEH;
 		mv->izoom.ssx = TILEW;
 		mv->izoom.ssy = TILEH;
-
 		mv->zoom = &mv->izoom.zoom;
 		mv->tilew = &mv->izoom.tilew;
 		mv->tileh = &mv->izoom.tileh;
@@ -192,7 +189,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
  * Translate widget coordinates to map coordinates.
  * The map must be locked.
  */
-static void
+void
 mapview_map_coords(struct mapview *mv, int *x, int *y)
 {
 	*x -= *mv->ssx - *mv->tilew;
@@ -593,9 +590,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 
 	if (mv->mouse.scrolling) {
 		mapview_mouse_scroll(mv, xrel, yrel);
-	} else if (mv->msel.set &&
-	    mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] &&
-	    state & SDL_BUTTON(1)) {
+	} else if (mv->msel.set) {
 		mv->msel.xoffs += x - mv->mouse.x;
 		mv->msel.yoffs += y - mv->mouse.y;
 	} else if (mv->flags & MAPVIEW_EDIT) {
@@ -652,7 +647,10 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	switch (button) {
 	case 1:						/* Select/edit */
 		mv->cur_node = curnode;
-		mapview_begin_selection(mv);
+		if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] ||
+		    (SDL_GetModState() & KMOD_CTRL)) {
+			mapview_begin_selection(mv);
+		}
 		break;
 	case 2:						/* Select/center */
 		mv->flags |= MAPVIEW_NO_CURSOR;
@@ -739,7 +737,6 @@ mapview_effect_selection(struct mapview *mv)
 	}
 
 	mv->esel.set = 1;
-	mv->msel.set = 0;
 }
 
 static void
@@ -749,7 +746,10 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case 1:
-		mapview_effect_selection(mv);
+		if (mv->msel.set) {
+			mapview_effect_selection(mv);
+			mv->msel.set = 0;
+		}
 		break;
 	case 2:
 		mv->flags &= ~(MAPVIEW_NO_CURSOR);
@@ -820,18 +820,37 @@ mapview_keydown(int argc, union evarg *argv)
 	}
 	
 	/* Edition keys */
-	if (mv->flags & MAPVIEW_EDIT && mv->cur_node != NULL) {
+	if (mv->flags & MAPVIEW_EDIT) {
 		switch (keysym) {
 		case SDLK_INSERT:
-			if (mapedit.src_node != NULL) {
+			if (mv->cur_node != NULL && mapedit.src_node != NULL) {
 				stamp_effect(mapedit.tools[MAPEDIT_STAMP],
 				    mv, mv->cur_node);
 			}
 			break;
 		case SDLK_DELETE:
-			eraser_effect(mapedit.tools[MAPEDIT_ERASER],
-			    mv, mv->cur_node);
+			if (mv->cur_node != NULL) {
+				eraser_effect(mapedit.tools[MAPEDIT_ERASER],
+				    mv, mv->cur_node);
+			}
 			break;
+		}
+
+		if (keymod & KMOD_CTRL && mv->esel.set) {
+			switch (keysym) {
+			case SDLK_c:
+				selops_copy(mv);
+				break;
+			case SDLK_v:
+				selops_paste(mv);
+				break;
+			case SDLK_x:
+				selops_cut(mv);
+				break;
+			case SDLK_k:
+				selops_clear(mv);
+				break;
+			}
 		}
 	}
 

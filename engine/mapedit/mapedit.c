@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.148 2003/03/02 07:29:53 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.149 2003/03/05 02:16:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -130,6 +130,7 @@ mapedit_init(void)
 	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_SYSTEM, &mapedit_ops);
 	med->curtool = NULL;
 	med->src_node = NULL;
+	map_init(&med->copybuf, MAP_2D, "mapedit-copybuf", NULL);
 
 	prop_set_int(med, "zoom-minimum", 4);
 	prop_set_int(med, "zoom-maximum", 500);

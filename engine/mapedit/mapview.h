@@ -1,8 +1,10 @@
-/*	$Csoft: mapview.h,v 1.31 2003/03/10 01:23:05 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.32 2003/03/10 02:13:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
 #define _AGAR_MAPEDIT_MAPVIEW_H_
+
+#include <engine/widget/widget.h>
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
@@ -118,6 +120,7 @@ void		 mapview_node_edit_win(struct mapview *);
 void		 mapview_draw(void *);
 void		 mapview_center(struct mapview *, int, int);
 void		 mapview_zoom(struct mapview *, int);
+void		 mapview_map_coords(struct mapview *, int *, int *);
 
 extern __inline__ void	mapview_draw_props(struct mapview *, struct node *,
 			    int, int, int, int);
