@@ -1,7 +1,5 @@
-/*	$Csoft: mapedit.h,v 1.38 2002/06/13 10:48:57 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.39 2002/06/22 20:42:33 vedge Exp $	*/
 /*	Public domain	*/
-
-#include <engine/mapedit/edcursor.h>
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -39,6 +37,7 @@ struct mapedit {
 	Uint32	 flags;
 
 	struct	 window *toolbar_win;
+	struct	 window *tile_win;
 	struct	 window *new_map_win;
 	struct	 window *settings_win;
 	struct	 window *coords_win;
@@ -46,6 +45,10 @@ struct mapedit {
 	
 	struct	 eobjs_head eobjsh;	/* Shadow objects */
 	int	 neobjs;
+
+	struct	 editobj *curobj;	/* Selected object */
+	int	 curoffs;
+	int	 curflags;
 
 	pthread_mutex_t	lock;		/* Lock on whole structure */
 };
@@ -81,10 +84,11 @@ enum {
 	MAPEDIT_ANIM_DELTA_TXT,
 	/* Toolbar */
 	MAPEDIT_TOOL_MAP,
-	MAPEDIT_FILEOP_NEW_MAP,
-	MAPEDIT_FILEOP_LOAD_MAP,
-	MAPEDIT_FILEOP_SAVE_MAP,
-	MAPEDIT_FILEOP_SAVE_MAP_AS,
+	MAPEDIT_TOOL_NEW_MAP,
+	MAPEDIT_TOOL_LOAD_MAP,
+	MAPEDIT_TOOL_SAVE_MAP,
+	MAPEDIT_TOOL_SAVE_MAP_TO,
+	MAPEDIT_TOOL_TILES
 };
 
 void	mapedit_init(struct mapedit *, char *);
