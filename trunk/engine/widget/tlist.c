@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.12 2002/11/14 00:43:39 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.13 2002/11/14 00:49:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -263,6 +263,7 @@ tlist_clear_items(struct tlist *tl)
 	pthread_mutex_unlock(&tl->items_lock);
 }
 
+/* Add an item to the list. */
 struct tlist_item *
 tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 {
@@ -291,6 +292,48 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	event_post(tl, "tlist-inserted-item", "%p", it);
 
 	return (it);
+}
+
+/* Add an item to the list, and set the selected flag. */
+struct tlist_item *
+tlist_insert_item_selected(struct tlist *tl, SDL_Surface *icon, char *text,
+    void *p1)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->items_lock);
+	it = tlist_insert_item(tl, icon, text, p1);
+	tlist_select(it);
+	pthread_mutex_unlock(&tl->items_lock);
+	return (it);
+}
+
+/* Set the selection flag on an item. */
+int
+tlist_select(struct tlist_item *it)
+{
+	int old;
+
+	pthread_mutex_lock(&it->tl_bp->items_lock);
+	old = it->selected;
+	it->selected++;
+	pthread_mutex_unlock(&it->tl_bp->items_lock);
+
+	return (old);
+}
+
+/* Clear the selection flag on an item. */
+int
+tlist_unselect(struct tlist_item *it)
+{
+	int old;
+
+	pthread_mutex_lock(&it->tl_bp->items_lock);
+	old = it->selected;
+	it->selected = 0;
+	pthread_mutex_unlock(&it->tl_bp->items_lock);
+
+	return (old);
 }
 
 /* Unset the selection flag on all items. */

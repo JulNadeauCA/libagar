@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.6 2002/09/13 10:58:49 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.7 2002/10/30 22:24:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -49,9 +49,13 @@ void	 		 tlist_destroy(void *);
 
 void			 tlist_remove_item(struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
-struct tlist_item	*tlist_insert_item(struct tlist *, SDL_Surface *,
-			     char *, void *);
+struct tlist_item	*tlist_insert_item(struct tlist *,
+			     SDL_Surface *, char *, void *);
+struct tlist_item	*tlist_insert_item_selected(struct tlist *,
+			     SDL_Surface *, char *, void *);
 
+int			 tlist_select(struct tlist_item *);
+int			 tlist_unselect(struct tlist_item *);
 void			 tlist_unselect_all(struct tlist *);
 struct tlist_item	*tlist_item_index(struct tlist *, int);
 struct tlist_item	*tlist_item_text(struct tlist *, char *);

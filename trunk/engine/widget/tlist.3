@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.7 2002/09/12 09:54:49 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.1 2002/10/30 22:28:42 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -78,11 +78,21 @@ can be changed at runtime, and may include:
 .Fn tlist_insert_item "struct tlist *tlist" "SDL_Surface *icon" "char *text" \
                       "void *p1"
 .Pp
+.Ft "struct tlist_item *"
+.Fn tlist_insert_item_selected "struct tlist *tlist" "SDL_Surface *icon" \
+                               "char *text" "void *p1"
+.Pp
 .Ft "void"
 .Fn tlist_remove_item "struct tlist_item *item"
 .Pp
 .Ft "void"
 .Fn tlist_clear_items "struct tlist *tlist"
+.Pp
+.Ft "void"
+.Fn tlist_select "struct tlist *tlist"
+.Pp
+.Ft "void"
+.Fn tlist_unselect "struct tlist *tlist"
 .Pp
 .Ft "void"
 .Fn tlist_unselect_all "struct tlist *tlist"
@@ -101,6 +111,11 @@ The
 .Fa p1
 argument is a user-defined pointer.
 .Pp
+.Fn tlist_insert_item_selected
+calls
+.Fn tlist_insert_item
+and sets the selected flag on the new item.
+.Pp
 The
 .Fn tlist_remove_item
 function detaches and frees
@@ -113,6 +128,14 @@ The
 function removes all items attached to
 .Fa tlist .
 .Pp
+The
+.Fn tlist_select
+function sets the selected flag on
+.Fa item .
+The
+.Fn tlist_unselect
+function clears the selected flag on
+.Fa item .
 The
 .Fn tlist_unselect_all
 function clears the selected flag on all items attached to
