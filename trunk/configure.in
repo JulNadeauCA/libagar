@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.65 2003/05/22 08:19:59 vedge Exp $
+# $Csoft: configure.in,v 1.66 2003/06/06 03:21:03 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -26,6 +26,8 @@ logout(config.log);
 # Define the data directories.
 mdefine(SHAREDIR, "$PREFIX/share/cave");
 hdefine(SHAREDIR, "\"$PREFIX/share/cave\"");
+mdefine(TTFDIR, "$PREFIX/share/cave/fonts");
+hdefine(TTFDIR, "\"$PREFIX/share/cave/fonts\"");
 mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
 mdefine(INST_PSDIR, "$PREFIX/share/agar/ps");
 

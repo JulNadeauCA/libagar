@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.80 2003/06/06 03:20:29 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.81 2003/06/06 09:04:14 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <config/sharedir.h>
+#include <config/ttfdir.h>
 
 #include <engine/compat/asprintf.h>
 
@@ -58,18 +59,8 @@
 
 const struct version config_ver = {
 	"agar config",
-	3, 0
+	4, 0
 };
-
-struct config *
-config_new(void)
-{
-	struct config *con;
-
-	con = Malloc(sizeof(struct config));
-	config_init(con);
-	return (con);
-}
 
 static void
 config_change_path(int argc, union evarg *argv)
@@ -81,6 +72,8 @@ config_change_path(int argc, union evarg *argv)
 	s = textbox_string(tbox);
 	prop_set_string(config, varname, "%s", s);
 	free(s);
+
+	WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -134,7 +127,7 @@ config_prop_modified(int argc, union evarg *argv)
 void
 config_init(struct config *con)
 {
-	char *savepath;
+	char *udatadir;
 	struct passwd *pwd;
 	struct stat sta;
 
@@ -160,18 +153,19 @@ config_init(struct config *con)
 	prop_set_bool(con, "input.joysticks", 1);
 
 	pwd = getpwuid(getuid());
-	Asprintf(&savepath, "%s/.%s", pwd->pw_dir, proginfo->progname);
+	Asprintf(&udatadir, "%s/.%s", pwd->pw_dir, proginfo->progname);
 
-	prop_set_string(con, "save-path", "%s", savepath);
-	prop_set_string(con, "load-path", "%s:%s", savepath, SHAREDIR);
+	prop_set_string(con, "save-path", "%s", udatadir);
+	prop_set_string(con, "load-path", "%s:%s", udatadir, SHAREDIR);
+	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 
-	if (stat(savepath, &sta) != 0 &&
-	    mkdir(savepath, 0700) != 0) {
-		fatal("%s: %s", savepath, strerror(errno));
+	if (stat(udatadir, &sta) != 0 &&
+	    mkdir(udatadir, 0700) != 0) {
+		fatal("%s: %s", udatadir, strerror(errno));
 	}
 
 	event_new(con, "prop-modified", config_prop_modified, NULL);
-	free(savepath);
+	free(udatadir);
 }
 
 void
@@ -239,6 +233,12 @@ config_window(struct config *con)
 		textbox_printf(tbox, "%s", path);
 		event_new(tbox, "textbox-return", config_change_path, "%s",
 		    "load-path");
+	
+		tbox = textbox_new(vb, "Font path: ");
+		prop_copy_string(config, "font-path", path, sizeof(path));
+		textbox_printf(tbox, "%s", path);
+		event_new(tbox, "textbox-return", config_change_path, "%s",
+		    "font-path");
 	}
 
 	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
@@ -286,7 +286,11 @@ config_search_file(const char *path_key, const char *name, const char *ext)
 	     dir = strtok_r(NULL, ":", &last)) {
 		char *file;
 
-		Asprintf(&file, "%s%s.%s", dir, name, ext);
+		if (name[0] == '/') {
+			Asprintf(&file, "%s%s.%s", dir, name, ext);
+		} else {
+			Asprintf(&file, "%s/%s.%s", dir, name, ext);
+		}
 		if (stat(file, &sta) == 0) {
 			return (file);
 		}
@@ -294,7 +298,9 @@ config_search_file(const char *path_key, const char *name, const char *ext)
 	}
 	free(path);
 
-	error_set("`%s.%s' not in <%s>", name, ext, path_key);
+	path = prop_get_string(config, path_key);
+	error_set("`%s.%s' not in <%s> (%s)", name, ext, path_key, path);
+	free(path);
 	return (NULL);
 }
 

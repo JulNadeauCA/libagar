@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.64 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.65 2003/06/13 01:45:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -61,7 +61,6 @@ pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 static ttf_font *
 text_load_font(const char *name, int size, int style)
 {
-	char fname[FILENAME_MAX];
 	char *path = NULL;
 	ttf_font *nfont;
 	struct text_font *fon;
@@ -80,10 +79,9 @@ text_load_font(const char *name, int size, int style)
 		}
 	}
 
-	snprintf(fname, sizeof(fname), "/engine/widget/fonts/%s", name);
-	if ((path = config_search_file("load-path", fname, "ttf")) == NULL)
+	if ((path = config_search_file("font-path", name, "ttf")) == NULL) {
 		fatal("%s", error_get());
-
+	}
 	if ((nfont = ttf_open_font(path, size)) == NULL) {
 		fatal("%s: %s", path, error_get());
 	}

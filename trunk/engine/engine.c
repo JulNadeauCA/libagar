@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.104 2003/06/06 09:04:25 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.105 2003/06/06 22:34:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -164,7 +164,8 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		}
 	}
 
-	config = config_new();
+	config = Malloc(sizeof(struct config));
+	config_init(config);
 	object_load(config);
 
 	if (prop_get_bool(config, "font-engine") &&
