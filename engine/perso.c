@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.9 2002/12/13 12:41:53 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.10 2002/12/14 04:28:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -155,15 +155,14 @@ perso_load(void *p, int fd)
 		struct node *dst_node;
 		struct noderef *old_nref;
 		struct map *dst_map;
-		struct object **pobjs;
-		Uint32 nobjs;
+		struct object_table *deps;
 
 		/*
 		 * Read the dependency table. This is used by noderef_load()
 		 * to resolve object identifiers and allows the character to
 		 * use sprite/animations from other objects.
 		 */
-		object_table_load(fd, OBJECT(perso), &pobjs, &nobjs);
+		deps = object_table_load(fd, OBJECT(perso)->name);
 
 		/* Read the map id, node coordinates and input device id. */
 		map_id = read_string(fd, NULL);
@@ -187,8 +186,7 @@ perso_load(void *p, int fd)
 		 * Load the previously saved noderef directly on the new node,
 		 * and set the old_nref pointer.
 		 */
-		noderef_load(fd, pobjs, nobjs, &dst_map->map[dst_y][dst_x],
-		    &old_nref);
+		noderef_load(fd, deps, &dst_map->map[dst_y][dst_x], &old_nref);
 
 		/*
 		 * Update the character's position (back reference).
@@ -219,7 +217,8 @@ perso_load(void *p, int fd)
 			debug(DEBUG_STATE, "%s: not controlled\n",
 			    OBJECT(perso)->name);
 		}
-		
+
+		object_table_destroy(deps);
 		free(map_id);
 		free(input_id);
 	}
@@ -266,17 +265,34 @@ perso_save(void *p, int fd)
 		debug(DEBUG_STATE, "%s: no position\n", OBJECT(perso)->name);
 		buf_write_uint32(buf, 0);		/* No position */
 	} else {
-		struct object **pobjs;
-		Uint32 nobjs;
+		struct object_table *deps;
+		struct object *pob;
 		
 		buf_write_uint32(buf, 1);		/* One position */
 
 		/*
-		 * Save the dependency table. This is used by noderef_save()
+		 * Generate the dependency table. This is used by noderef_save()
 		 * to encode object identifiers and allows the character to
 		 * use sprite/animations from other objects.
 		 */
-		pobjs = object_table_save(buf, OBJECT(perso), &nobjs);
+		deps = object_table_new();
+
+		pthread_mutex_lock(&world->lock);
+		SLIST_FOREACH(pob, &world->wobjs, wobjs) {
+			debug_n(DEBUG_STATE, "%s: %s dependency ",
+			    OBJECT(perso)->name, pob->name);
+			if ((pob->flags & OBJECT_ART) == 0 ||
+			     pob->flags & OBJECT_CANNOT_MAP) {
+			     	debug_n(DEBUG_STATE, "skipped\n");
+				continue;
+			} 
+			debug_n(DEBUG_STATE, "registered\n");
+			object_table_insert(deps, pob);
+		}
+		pthread_mutex_unlock(&world->lock);
+
+		/* Write the dependencies. */
+		object_table_save(buf, deps);
 
 		/* Save the map id, node coordinates and input device id. */
 		buf_write_string(buf, OBJECT(pos->map)->name);
@@ -288,8 +304,10 @@ perso_save(void *p, int fd)
 
 		/* Save the current noderef in its native format. */
 		pthread_mutex_lock(&pos->map->lock);
-		noderef_save(buf, pobjs, nobjs, pos->nref);
+		noderef_save(buf, deps, pos->nref);
 		pthread_mutex_unlock(&pos->map->lock);
+
+		object_table_destroy(deps);
 	}
 	pthread_mutex_unlock(&OBJECT(perso)->pos_lock);
 
