@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.46 2002/11/28 01:06:50 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.47 2002/12/01 14:41:02 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -43,7 +43,6 @@ enum {
 };
 
 static void	mapdir_change(struct mapdir *, struct noderef *);
-static void	mapdir_setsprite(struct mapdir *, Uint32, int);
 static int	mapdir_canmove(struct mapdir *, struct map *, Uint32, Uint32);
 
 #ifdef DEBUG
@@ -162,33 +161,6 @@ mapdir_unset(struct mapdir *dir, Uint32 direction)
 }
 
 /*
- * Set the sprite/animation for a given position.
- * Map must be locked.
- */
-static void
-mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
-{
-	struct noderef *nref;
-	struct mappos *pos;
-
-	if (dir->flags & DIR_STATIC) {
-		return;
-	}
-
-	pos = object_get_pos(dir->ob);
-	nref = pos->nref;
-	nref->offs = sprite;
-
-	if (isanim) {
-		nref->flags |= MAPREF_ANIM;
-		nref->flags &= ~(MAPREF_SPRITE);
-	} else {
-		nref->flags |= MAPREF_SPRITE;
-		nref->flags &= ~(MAPREF_ANIM);
-	}
-}
-
-/*
  * Change map direction if necessary. X/Y velocity values are
  * mutually exclusive, and so are direction flags.
  *
@@ -197,47 +169,60 @@ mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
 static void
 mapdir_change(struct mapdir *dir, struct noderef *nref)
 {
-	if (dir->set & DIR_UP) {
-		mapdir_setsprite(dir, DIR_ANIM_MOVEUP, 1);
+	Uint32 offs;
 
+	if (dir->set & DIR_UP) {
+		if (prop_get(dir->ob,
+		    "physics-up-motion-anim", PROP_UINT32, &offs) == 0) {
+			nref->offs = offs;
+		}
+		/* XXX sprite ... */
 		dir->set &= ~(DIR_UP);
-		nref->yoffs = -1;
+		nref->ymotion = -1;
 		dir->current |= DIR_UP;
 		dir->current &= ~(DIR_DOWN);
-		nref->xoffs = 0;
+		nref->xmotion = 0;
 		dir->current &= ~(DIR_LEFT);
 		dir->current &= ~(DIR_RIGHT);
 	}
 	if (dir->set & DIR_DOWN) {
-		mapdir_setsprite(dir, DIR_ANIM_MOVEDOWN, 1);
-
+		if (prop_get(dir->ob, "physics-down-motion-anim", PROP_UINT32,
+		    &offs) == 0) {
+			nref->offs = offs;
+		}
 		dir->set &= ~(DIR_DOWN);
-		nref->yoffs = 1;
+		nref->ymotion = 1;
 		dir->current |= DIR_DOWN;
 		dir->current &= ~(DIR_UP);
-		nref->xoffs = 0;
+		nref->xmotion = 0;
 		dir->current &= ~(DIR_LEFT);
 		dir->current &= ~(DIR_RIGHT);
 	}
 	if (dir->set & DIR_LEFT) {
-		mapdir_setsprite(dir, DIR_ANIM_MOVELEFT, 1);
+		if (prop_get(dir->ob, "physics-left-motion-anim", PROP_UINT32,
+		    &offs) == 0) {
+			nref->offs = offs;
+		}
 
 		dir->set &= ~(DIR_LEFT);
-		nref->xoffs = -1;
+		nref->xmotion = -1;
 		dir->current |= DIR_LEFT;
 		dir->current &= ~(DIR_RIGHT);
-		nref->yoffs = 0;
+		nref->ymotion = 0;
 		dir->current &= ~(DIR_UP);
 		dir->current &= ~(DIR_DOWN);
 	}
 	if (dir->set & DIR_RIGHT) {
-		mapdir_setsprite(dir, DIR_ANIM_MOVERIGHT, 1);
+		if (prop_get(dir->ob, "physics-right-motion-anim", PROP_UINT32,
+		    &offs) == 0) {
+			nref->offs = offs;
+		}
 
 		dir->set &= ~(DIR_RIGHT);
-		nref->xoffs = 1;
+		nref->xmotion = 1;
 		dir->current |= DIR_RIGHT;
 		dir->current &= ~(DIR_LEFT);
-		nref->yoffs = 0;
+		nref->ymotion = 0;
 		dir->current &= ~(DIR_UP);
 		dir->current &= ~(DIR_DOWN);
 	}
@@ -253,14 +238,20 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 	struct node *node = &m->map[y][x];
 	struct noderef *nref;
 
-	if (dir->flags & DIR_PASSTHROUGH) {
-		return (1);
-	}
-	if (node->flags & NODE_BLOCK) {
+	if (x < 2 || y << 2 ||
+	    x > m->mapw - 2 || y > m->maph - 2) {	/* Map boundaries */
 		return (0);
 	}
-	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		if (nref->pobj->flags & OBJECT_BLOCK) {
+
+	if (dir->flags & DIR_PASSTHROUGH) {		/* Pass through */
+		return (1);
+	}
+	if (node->flags & NODE_BLOCK) {			/* Node block */
+		return (0);
+	}
+	/* XXX could be more sophisticated */
+	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {	/* Reference block */
+		if (nref->flags & NODEREF_BLOCK) {
 			return (0);
 		}
 	}
@@ -277,46 +268,51 @@ int
 mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 {
 	struct map *m = dir->map;
-	struct noderef *nref;
+	struct noderef *onref, *nref;
 	struct node *node;
 	Uint32 moved = 0;
 
-	/* Make sure the coordinates are right. */
+	/* XXX pick the first reference to this object */
+#ifdef DEBUG
+	if (*mapy > m->maph || *mapx > m->mapw) {
+		fatal("bad coordinates\n");
+	}
+#endif
 	node = &m->map[*mapy][*mapx];
-	nref = node_findref(m, node, dir->ob, -1, MAPREF_ANY);
+	nref = NULL;
+	TAILQ_FOREACH(onref, &node->nrefs, nrefs) {	
+		if (onref->pobj == dir->ob) {
+			nref = onref;
+			break;
+		}
+	}
 	if (nref == NULL) {
-		fatal("%s not at %s:%dx%d\n", dir->ob->name,
+		fatal("no reference to %s at %s:%d,%d\n", dir->ob->name,
 		    OBJECT(m)->name, *mapx, *mapy);
-		return (0);
 	}
 
-	if (nref->yoffs == 0 && nref->xoffs == 0) {	/* Not moving? */
+	/* See if the reference is moving. */
+	if (nref->ymotion == 0 && nref->xmotion == 0) {
 		mapdir_change(dir, nref);
 		return (0);
 	}
 
-	/* XXX this is insane */
-
-	if (nref->yoffs < 0) {					/* Move up */
-		debug(DEBUG_MOVE, "%s moving up (yoffs=%d)\n", dir->ob->name,
-		    nref->yoffs);
-		if (nref->yoffs == -1) {
-			if (*mapy > 2) {
-				if (!mapdir_canmove(dir, m, *mapx, (*mapy)-1)) {
-					debug(DEBUG_BLOCKED, "%s is blocked\n",
-					    dir->ob->name);
-					nref->yoffs = 0;
-					return (0);
-				}
-			} else {
-				nref->yoffs = 0;
-				mapdir_unset(dir, DIR_UP);
-			}
+	/* Upward motion */
+	if (nref->ymotion < 0) {
+		debug(DEBUG_MOVE, "%s moving up (ymotion=%d)\n", dir->ob->name,
+		    nref->ymotion);
+		if (nref->ymotion == -1 &&
+		    !mapdir_canmove(dir, m, *mapx, (*mapy)-1)) {
+			debug(DEBUG_BLOCKED, "%s cannot move upwards\n",
+			    dir->ob->name);
+			nref->ymotion = 0;
+			mapdir_unset(dir, DIR_UP);
+			return (0);
 		}
 		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
 		    	rootmap_scroll(m, DIR_UP, dir->speed);
 		}
-		if (nref->yoffs <= (-TILEW + dir->speed)) {
+		if (nref->ymotion <= (-TILEW + dir->speed)) {
 			dir->moved |= DIR_UP;
 			moved |= DIR_UP;
 			if ((*mapy)-- < 1) {
@@ -324,35 +320,30 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			}
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
-				nref->yoffs -= dir->speed;
+				nref->ymotion -= dir->speed;
 			} else {
-				nref->yoffs = -TILEH;
+				nref->ymotion = -TILEH;
 			}
 		}
 	}
 
-	if (nref->yoffs > 0) {				/* Move down */
-		debug(DEBUG_MOVE, "%s moving down (yoffs=%d)\n", dir->ob->name,
-		    nref->yoffs);
-		if (nref->yoffs == 1) {
-			if ((*mapy)+1 < m->maph - 2) {
-				/* Make sure the object can move to the node. */
-				if (!mapdir_canmove(dir, m, *mapx, (*mapy)+1)) {
-					debug(DEBUG_BLOCKED, "%s is blocked\n",
-					    dir->ob->name);
-					nref->yoffs = 0;
-					return (0);
-				}
-			} else {
-				nref->yoffs = 0;
-				mapdir_unset(dir, DIR_DOWN);
-			}
+	/* Downward motion */
+	if (nref->ymotion > 0) {
+		debug(DEBUG_MOVE, "%s moving down (ymotion=%d)\n",
+		    dir->ob->name, nref->ymotion);
+		if (nref->ymotion == 1 &&
+		    !mapdir_canmove(dir, m, *mapx, (*mapy)+1)) {
+			debug(DEBUG_BLOCKED, "%s cannot move down\n",
+			    dir->ob->name);
+			nref->ymotion = 0;
+			mapdir_unset(dir, DIR_DOWN);
+			return (0);
 		}
 		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
 		    	rootmap_scroll(m, DIR_DOWN, dir->speed);
 		}
-		if (nref->yoffs >= TILEW - dir->speed) {
-			nref->yoffs = 1;
+		if (nref->ymotion >= TILEW - dir->speed) {
+			nref->ymotion = 1;
 			dir->moved |= DIR_DOWN;
 			moved |= DIR_DOWN;
 			if (++(*mapy) > m->maph - 1) {
@@ -360,34 +351,30 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			}
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
-				nref->yoffs += dir->speed;
+				nref->ymotion += dir->speed;
 			} else {
-				nref->yoffs = TILEH;
+				nref->ymotion = TILEH;
 			}
 		}
 	}
-		
-	if (nref->xoffs < 0) {				/* Move left */
-		debug(DEBUG_MOVE, "%s moving left (xoffs=%d)\n", dir->ob->name,
-		    nref->xoffs);
-		if (nref->xoffs == -1) {
-			if (*mapx > 1) {
-				if (!mapdir_canmove(dir, m, (*mapx)-1, *mapy)) {
-					debug(DEBUG_BLOCKED, "%s is blocked\n",
-					    dir->ob->name);
-					nref->xoffs = 0;
-					return (0);
-				}
-			} else {
-				nref->xoffs = 0;
-				mapdir_unset(dir, DIR_LEFT);
-			}
+
+	/* Left motion */
+	if (nref->xmotion < 0) {
+		debug(DEBUG_MOVE, "%s moving left (xmotion=%d)\n",
+		    dir->ob->name, nref->xmotion);
+		if (nref->xmotion == -1 &&
+		    !mapdir_canmove(dir, m, (*mapx)-1, *mapy)) {
+			debug(DEBUG_BLOCKED, "%s cannot move left)\n",
+			    dir->ob->name);
+			nref->xmotion = 0;
+			mapdir_unset(dir, DIR_LEFT);
+			return (0);
 		}
 		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
 		    	rootmap_scroll(m, DIR_LEFT, dir->speed);
 		}
-		if (nref->xoffs <= (-TILEW + dir->speed)) {
-			nref->xoffs = -1;
+		if (nref->xmotion <= (-TILEW + dir->speed)) {
+			nref->xmotion = -1;
 			dir->moved |= DIR_LEFT;
 			moved |= DIR_LEFT;
 			if ((*mapx)-- < 1) {
@@ -395,34 +382,30 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			}
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
-				nref->xoffs -= dir->speed;
+				nref->xmotion -= dir->speed;
 			} else {
-				nref->xoffs = -TILEW;
+				nref->xmotion = -TILEW;
 			}
 		}
 	}
 
-	if (nref->xoffs > 0) {				/* Move right */
-		debug(DEBUG_MOVE, "%s moving right (xoffs=%d)\n", dir->ob->name,
-		    nref->xoffs);
-		if (nref->xoffs == 1) {
-			if ((*mapx) + 1 < m->mapw - 2) {
-				if (!mapdir_canmove(dir, m, (*mapx)+1, *mapy)) {
-					debug(DEBUG_BLOCKED, "%s is blocked\n",
-					    dir->ob->name);
-					nref->xoffs = 0;
-					return (0);
-				}
-			} else {
-				nref->xoffs = 0;
-				mapdir_unset(dir, DIR_RIGHT);
-			}
+	/* Right motion */
+	if (nref->xmotion > 0) {
+		debug(DEBUG_MOVE, "%s moving right (xmotion=%d)\n",
+		    dir->ob->name, nref->xmotion);
+		if (nref->xmotion == 1 &&
+		    !mapdir_canmove(dir, m, (*mapx)+1, *mapy)) {
+			debug(DEBUG_BLOCKED, "%s cannot move right\n",
+			    dir->ob->name);
+			nref->xmotion = 0;
+			mapdir_unset(dir, DIR_RIGHT);
+			return (0);
 		}
 		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL)) {
 		    	rootmap_scroll(m, DIR_RIGHT, dir->speed);
 		}
-		if (nref->xoffs >= (TILEW - dir->speed)) {
-			nref->xoffs = 1;
+		if (nref->xmotion >= (TILEW - dir->speed)) {
+			nref->xmotion = 1;
 			dir->moved |= DIR_RIGHT;
 			moved |= DIR_RIGHT;
 			if (++(*mapx) > m->mapw-1) {
@@ -430,9 +413,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			}
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
-				nref->xoffs += dir->speed;
+				nref->xmotion += dir->speed;
 			} else {
-				nref->xoffs = TILEW;
+				nref->xmotion = TILEW;
 			}
 		}
 	}
@@ -449,11 +432,28 @@ void
 mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 {
 	struct node *node;
-	struct noderef *nref;
+	struct noderef *nref = NULL, *onref;
+	struct map *m = dir->map;
+	Uint32 offs;
 
-	node = &dir->map->map[*mapy][*mapx];
-	nref = node_findref(dir->map, node, dir->ob, -1, MAPREF_ANY);
-
+	/* XXX pick the first reference to this object */
+#ifdef DEBUG
+	if (*mapy > m->maph || *mapx > m->mapw) {
+		fatal("bad coordinates\n");
+	}
+#endif
+	node = &m->map[*mapy][*mapx];
+	nref = NULL;
+	TAILQ_FOREACH(onref, &node->nrefs, nrefs) {	
+		if (onref->pobj == dir->ob) {
+			nref = onref;
+			break;
+		}
+	}
+	if (nref == NULL) {
+		fatal("no reference to %s at %s:%d,%d\n", dir->ob->name,
+		    OBJECT(m)->name, *mapx, *mapy);
+	}
 #if 0
 	view->rootmap->sx = 0;
 	view->rootmap->sy = 0;
@@ -464,30 +464,43 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 		if (dir->clear & DIR_UP) {
 			dir->current &= ~(DIR_UP);
 			dir->clear &= ~(DIR_UP);
-			nref->yoffs = 0;
-		
-			mapdir_setsprite(dir, DIR_ANIM_IDLEUP, 1);
+			nref->ymotion = 0;
+
+			if (prop_get(dir->ob, "physics-up-idle-anim",
+			    PROP_UINT32, &offs) == 0) {
+				nref->offs = offs;
+			}
+			/* XXX sprite ... */
 		}
 		if (dir->clear & DIR_DOWN) {
 			dir->current &= ~(DIR_DOWN);
 			dir->clear &= ~(DIR_DOWN);
-			nref->yoffs = 0;
+			nref->ymotion = 0;
 			
-			mapdir_setsprite(dir, DIR_ANIM_IDLEDOWN, 1);
+			if (prop_get(dir->ob, "physics-down-idle-anim",
+			    PROP_UINT32, &offs) == 0) {
+				nref->offs = offs;
+			}
 		}
 		if (dir->clear & DIR_LEFT) {
 			dir->current &= ~(DIR_LEFT);
 			dir->clear &= ~(DIR_LEFT);
-			nref->xoffs = 0;
+			nref->xmotion = 0;
 			
-			mapdir_setsprite(dir, DIR_ANIM_IDLELEFT, 1);
+			if (prop_get(dir->ob, "physics-left-idle-anim",
+			    PROP_UINT32, &offs) == 0) {
+				nref->offs = offs;
+			}
 		}
 		if (dir->clear & DIR_RIGHT) {
 			dir->current &= ~(DIR_RIGHT);
 			dir->clear &= ~(DIR_RIGHT);
-			nref->xoffs = 0;
+			nref->xmotion= 0;
 			
-			mapdir_setsprite(dir, DIR_ANIM_IDLERIGHT, 1);
+			if (prop_get(dir->ob, "physics-right-idle-anim",
+			    PROP_UINT32, &offs) == 0) {
+				nref->offs = offs;
+			}
 		}
 	}
 
