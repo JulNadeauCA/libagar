@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.39 2002/11/07 18:35:15 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.40 2002/11/07 18:52:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -7,7 +7,7 @@
 #define ENGINE_VERSION	"1.0-beta"
 
 #include <engine/mcconfig.h>
-#if defined(__linux__) && !defined(_XOPEN_SOURCE)
+#if !defined(__OpenBSD__) && !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 500	/* XXX recursive mutexes */
 #endif
 #include <pthread.h>		/* For pthread types */
