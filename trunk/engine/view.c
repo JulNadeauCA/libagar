@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.44 2002/06/01 02:38:42 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.45 2002/06/01 09:30:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -78,8 +78,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	case VIEW_MAPNAV:
 		dprintf("map navigation mode\n");
 		v->map = m;
-		v->mapw = (v->w / m->tilew);
-		v->maph = (v->h / m->tileh);
+		v->mapw = (v->w / TILEW);
+		v->maph = (v->h / TILEH);
 		v->mapxoffs = 0;
 		v->mapyoffs = 0;
 		v->vmapw = v->mapw - v->mapxoffs;
@@ -88,8 +88,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	case VIEW_MAPEDIT:
 		dprintf("map edition mode\n");
 		v->map = m;
-		v->mapw = (v->w / m->tilew);
-		v->maph = (v->h / m->tileh);
+		v->mapw = (v->w / TILEW);
+		v->maph = (v->h / TILEH);
 		v->mapxoffs = 1;
 		v->mapyoffs = 1;
 		if (v->map->mapw < v->mapw)
@@ -115,7 +115,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	if (caption != NULL) {
 		SDL_WM_SetCaption(caption, "AGAR");
 	}
-	v->v = SDL_SetVideoMode(v->w, v->h, v->depth, v->flags);
+	v->v = SDL_SetVideoMode(v->w + 64, v->h + 64, v->depth, v->flags);
 	if (v->v == NULL) {
 		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->depth,
 		    SDL_GetError());
@@ -180,8 +180,8 @@ view_allocmaprects(struct map *m, int w, int h)
 		for (x = 0; x < w; x++) {
 			rects[y][x].x = (x << m->shtilex);
 			rects[y][x].y = (y << m->shtiley);
-			rects[y][x].w = m->tilew;
-			rects[y][x].h = m->tileh;
+			rects[y][x].w = TILEW;
+			rects[y][x].h = TILEH;
 		}
 	}
 	
@@ -277,6 +277,9 @@ view_new(int w, int h, int depth, int flags)
 	v->mapmask = NULL;
 	v->maprects = NULL;
 	v->rects = NULL;
+	v->winop = VIEW_WINOP_NONE;
+	v->wop_mapx = 0;
+	v->wop_mapy = 0;
 	TAILQ_INIT(&v->windowsh);
 	pthread_mutex_init(&v->lock, NULL);
 
