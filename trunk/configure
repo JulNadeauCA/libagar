@@ -326,6 +326,45 @@ else
 
 	echo "no"
 fi
+echo -n "checking for BSD-style __progname..."
+echo -n "checking for BSD-style __progname..." >> config.log
+echo "checking for BSD-style __progname..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	extern char *__progname;
+	printf("%s\n", __progname);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_PROGNAME" > config/have_progname.h
+echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> config/have_progname.h
+echo "#endif /* HAVE_PROGNAME */" >> config/have_progname.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_PROGNAME" > config/have_progname.h
+
+	echo "no"
+fi
 echo -n "checking for a getenv() function..."
 echo -n "checking for a getenv() function..." >> config.log
 echo "checking for a getenv() function..." >> config.log
