@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.9 2002/08/18 00:37:44 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.10 2002/09/06 01:26:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -58,7 +58,7 @@ static const struct tool_ops stamp_ops = {
 	NULL			/* cursor */
 };
 
-static void	stamp_event(int, union evarg *);
+static void	stamp_mode_changed(int, union evarg *);
 
 struct stamp *
 stamp_new(struct mapedit *med, int flags)
@@ -86,8 +86,8 @@ stamp_window(void *p)
 	struct stamp *st = p;
 	struct window *win;
 	struct region *reg;
-	struct radio *mode_rad;
-	static const char *mode_items[] = {
+	struct radio *rad;
+	static char *mode_items[] = {
 		"Replace",
 		"Insert highest",
 		"Insert lowest",
@@ -99,25 +99,20 @@ stamp_window(void *p)
 	
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-	mode_rad = radio_new(reg, mode_items, 0, 0);
-	event_new(mode_rad, "radio-changed", 0, stamp_event, "%p, %c", st, 'm');
-	win->focus = WIDGET(mode_rad);
+	rad = radio_new(reg, mode_items, 0);
+	event_new(rad, "radio-changed", 0,
+	    stamp_mode_changed, "%p, %c", st, 'm');
+	win->focus = WIDGET(rad);
 
 	return (win);
 }
 
 static void
-stamp_event(int argc, union evarg *argv)
+stamp_mode_changed(int argc, union evarg *argv)
 {
 	struct stamp *st = argv[1].p;
 
-	OBJECT_ASSERT(st, "tool");
-
-	switch (argv[2].c) {
-	case 'm':
-		st->mode = argv[4].i;
-		break;
-	}
+	st->mode = argv[4].i;
 }
 
 void
