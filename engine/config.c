@@ -62,44 +62,45 @@ static const struct object_ops config_ops = {
 	NULL		/* detach */
 };
 
-static void	close_button_push(struct button *);
-static void	save_button_push(struct button *);
-static void	fullscrn_cbox_push(struct checkbox *);
-static void	fontcache_cbox_push(struct checkbox *);
+static const enum {
+	CLOSE_BUTTON,
+	SAVE_BUTTON,
+	FULLSCRN_CBOX,
+	FONTCACHE_CBOX
+} widgets;
+
+static void	apply(int, union evarg *);
 
 static void
-close_button_push(struct button *b)
+apply(int argc, union evarg *argv)
 {
-	view_detach(mainview, WIDGET(b)->win);
-}
+	struct button *b = argv[0].p;
+	struct checkbox *cbox = argv[0].p;
 
-static void
-save_button_push(struct button *b)
-{
-	object_save(config);
-	text_msg(4, TEXT_SLEEP, "Saved settings.\n");
-}
-
-static void
-fullscrn_cbox_push(struct checkbox *b)
-{
-	pthread_mutex_lock(&world->lock);
-	view_fullscreen(world->curmap->view,
-	    (world->curmap->view->flags & SDL_FULLSCREEN) ? 0 : 1);
-	pthread_mutex_unlock(&world->lock);
-}
-
-static void
-fontcache_cbox_push(struct checkbox *b)
-{
-	pthread_mutex_lock(&config->lock);
-	if (b->flags & CHECKBOX_PRESSED) {
-		config->flags |= CONFIG_FONT_CACHE;
-	} else {
-		config->flags &= ~(CONFIG_FONT_CACHE);
+	switch (argv[1].i) {
+	case CLOSE_BUTTON:
+		pthread_mutex_lock(&mainview->lock);
+		view_detach(mainview, WIDGET(b)->win);
+		pthread_mutex_unlock(&mainview->lock);
+		break;
+	case SAVE_BUTTON:
+		object_save(config);
+		text_msg(4, TEXT_SLEEP, "Saved settings.\n");
+		break;
+	case FULLSCRN_CBOX:
+		view_fullscreen(mainview, cbox->flags & CHECKBOX_PRESSED);
+		break;
+	case FONTCACHE_CBOX:
+		pthread_mutex_lock(&config->lock);
+		if (cbox->flags & CHECKBOX_PRESSED) {
+			config->flags |= CONFIG_FONT_CACHE;
+		} else {
+			config->flags &= ~(CONFIG_FONT_CACHE);
+		}
+		config_apply(config);
+		pthread_mutex_unlock(&config->lock);
+		break;
 	}
-	config_apply(config);
-	pthread_mutex_unlock(&config->lock);
 }
 
 struct config *
@@ -176,7 +177,6 @@ config_dialog(void)
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
 	    20, 20,  60, 60);
-
 	body_reg = region_new(win, REGION_VALIGN|REGION_RIGHT,
 	    0,  0,  100, 80);
 	buttons_reg = region_new(win, REGION_HALIGN|REGION_CENTER,
@@ -185,28 +185,26 @@ config_dialog(void)
 	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode",
 	    (world->curmap->view->flags & SDL_FULLSCREEN) ?
 	    CHECKBOX_PRESSED : 0);
-	fullscr_cbox->push = fullscrn_cbox_push;
+	event_new(fullscr_cbox, "checkbox-changed", 0, apply,
+	    "%d", FULLSCRN_CBOX);
 	
 	fontcache_cbox = checkbox_new(body_reg, "Font cache",
 	    (config->flags & CONFIG_FONT_CACHE) ?
 	    CHECKBOX_PRESSED : 0);
-	fontcache_cbox->push = fontcache_cbox_push;
+	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
+	    "%d", FONTCACHE_CBOX);
 
-	udatadir_tbox = textbox_new(body_reg, "User datadir", 0, 100);
-	sysdatadir_tbox = textbox_new(body_reg, "System datadir", 0, 100);
+	udatadir_tbox = textbox_new(body_reg,   "  User datadir: ", 0, 100);
+	sysdatadir_tbox = textbox_new(body_reg, "System datadir: ", 0, 100);
 
-	close_button = button_new(buttons_reg, "Close", 0, 25, 100);
-	close_button->push = close_button_push;
+	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
+	event_new(close_button, "button-pushed", EVENT_ASYNC, apply,
+	    "%d", CLOSE_BUTTON);
 
-	save_button = button_new(buttons_reg, "Save", 0, 25, 100);
-	save_button->push = save_button_push;
+	save_button = button_new(buttons_reg, "Save", 0, 50, 100);
+	event_new(save_button, "button-pushed", 0, apply,
+	    "%d", SAVE_BUTTON);
 	
-	save_button = button_new(buttons_reg, "Save", 0, 25, 100);
-	save_button->push = save_button_push;
-	
-	save_button = button_new(buttons_reg, "Save", 0, 25, 100);
-	save_button->push = save_button_push;
-
 	win->focus = WIDGET(udatadir_tbox);
 }
 
