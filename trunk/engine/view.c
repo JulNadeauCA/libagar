@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.165 2005/02/03 09:09:57 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.166 2005/02/12 09:56:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -473,6 +473,7 @@ void
 view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 {
 	Uint8 r1, g1, b1, a1;
+	Uint8 *dst;
 	int x, y;
 
 	if (*ds == NULL) {
@@ -518,13 +519,12 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 	}
 #endif	
 	/* Otherwise revert to the brute-force algorithm. */
+	dst = (Uint8 *)((*ds)->pixels);
 	for (y = 0; y < (*ds)->h; y++) {
 		for (x = 0; x < (*ds)->w; x++) {
 			Uint8 *src = (Uint8 *)ss->pixels +
 			    (y*ss->h/(*ds)->h)*ss->pitch +
 			    (x*ss->w/(*ds)->w)*ss->format->BytesPerPixel;
-			Uint8 *dst = (Uint8 *)((*ds)->pixels) +
-			    y*(*ds)->pitch + x*(*ds)->format->BytesPerPixel;
 			Uint32 color;
 
 			switch (ss->format->BytesPerPixel) {
@@ -566,6 +566,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 				*dst = color;
 				break;
 			}
+			dst += (*ds)->format->BytesPerPixel;
 		}
 	}
 out:
