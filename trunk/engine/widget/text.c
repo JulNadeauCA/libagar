@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.46 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.47 2002/12/14 11:24:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -242,9 +242,7 @@ text_msg(char *title, char *fmt, ...)
 	Uint16 w, h;
 
 	va_start(args, fmt);
-	if (vasprintf(&msg, fmt, args) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
+	Vasprintf(&msg, fmt, args);
 	va_end(args);
 
 	/* Auto-size the window. XXX waste */
