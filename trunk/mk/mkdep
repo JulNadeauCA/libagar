@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$Csoft: mkdep,v 1.2 2002/02/18 02:23:56 vedge Exp $
+#	$Csoft: mkdep,v 1.3 2002/05/13 08:23:53 vedge Exp $
 #	$OpenBSD: mkdep.gcc.sh,v 1.10 2000/07/23 22:22:07 millert Exp $
 #	$NetBSD: mkdep.gcc.sh,v 1.9 1994/12/23 07:34:59 jtc Exp $
 #
@@ -92,7 +92,7 @@ umask $um
 trap 'rm -rf $DTMP ; trap 2 ; kill -2 $$' 1 2 3 13 15
 
 if [ x$pflag = x ]; then
-#	echo "${CC:-cc} -M ${ccargs}"
+	echo "${CC:-cc} -M ${ccargs}"
 	${CC:-cc} -M ${ccargs} > $OTMP
 	if [ $? != 0 ]; then
 		rm -rf $DTMP
@@ -100,7 +100,7 @@ if [ x$pflag = x ]; then
 	fi
 	cat $OTMP | sed -e 's; \./; ;g' > $TMP
 else
-#	echo "${CC:-cc} -M ${ccargs}"
+	echo "${CC:-cc} -M ${ccargs}"
 	${CC:-cc} -M ${ccargs} > $OTMP
 	if [ $? != 0 ]; then
 		rm -rf $DTMP

@@ -151,6 +151,10 @@ clean: clean-subdir
 	    echo "rm -f ${PROG} ${GMONOUT} ${OBJS}"; \
 	    rm -f ${PROG} ${GMONOUT} ${OBJS}; \
 	fi
+	@if [ "${CLEANFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANFILES}"; \
+	    rm -f ${CLEANFILES}; \
+	fi
 
 cleandir:	clean cleandir-subdir clean-depend
 	rm -f *.core *~
