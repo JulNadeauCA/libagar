@@ -115,11 +115,11 @@ if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
-echo "    --without-smpeg      Never play videos"
-echo "    --without-x11        Omit X11-specific code"
-echo "    --enable-debug       Engine debugging"
-echo "    --enable-xdebug      Synchronous X11 events"
-echo "    --enable-wdebug      Widget set debugging"
+echo "    --with-smpeg         Play videos through smpeg [default: check]"
+echo "    --with-x11           X11-specific code [default: check]"
+echo "    --enable-debug       Engine debugging [default: no]"
+echo "    --enable-xdebug      Synchronous X11 events [default: no]"
+echo "    --enable-wdebug      Widget set debugging [default: no]"
 echo "    --help               Show this message"
 exit 1
 fi
