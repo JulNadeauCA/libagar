@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.22 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.1 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -60,7 +60,9 @@ merge_init(void *p)
 	merge->mode = MERGE_REPLACE;
 
 	map_init(&merge->brush, MAP_2D, "brush", NULL);
-	map_alloc_nodes(&merge->brush, 4, 4);
+	if (object_load(&merge->brush) == -1) {
+		map_alloc_nodes(&merge->brush, 4, 4);
+	}
 }
 
 void
@@ -68,6 +70,7 @@ merge_destroy(void *p)
 {
 	struct merge *m = p;
 
+	object_save(&m->brush);
 	map_destroy(&m->brush);
 }
 
@@ -80,10 +83,11 @@ merge_window(void *p)
 
 	win = window_new("mapedit-tool-merge", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    456, 301, 456, 301);
+	    175, 222,
+	    151, 151);
 	window_set_caption(win, "Merge");
 		
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		static const char *mode_items[] = {
 			"Replace",
@@ -96,21 +100,56 @@ merge_window(void *p)
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
 	}
 
-	reg = region_new(win, REGION_VALIGN, 0, 50, 100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
 	{
 		struct mapview *mv;
 
-//		mv = mapview_new(reg, &mer->brush,
-//		    MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_ZOOM,
-//		    100, 50);
-//		win->focus = WIDGET(mv);
+		mv = mapview_new(reg, &mer->brush,
+		    MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_ZOOM|MAPVIEW_GRID,
+		    100, 100);
 	}
 	return (win);
 }
 
 void
-merge_effect(void *p, struct mapview *mv, struct node *node)
+merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 {
 	struct merge *mer = p;
+	struct map *sm = &mer->brush;
+	struct map *dm = mv->map;
+	Uint32 sx, sy, dx, dy;
+	struct noderef *nref;
+
+	for (sy = 0, dy = mv->cy - sm->maph/2;
+	     sy < sm->maph && dy < dm->maph;
+	     sy++, dy++) {
+		for (sx = 0, dx = mv->cx - sm->mapw/2;
+		     sx < sm->mapw && dx < dm->mapw;
+		     sx++, dx++) {
+			struct node *srcnode = &sm->map[sy][sx];
+			struct node *dstnode = &dm->map[dy][dx];
+
+			switch (mer->mode) {
+			case MERGE_REPLACE:
+				node_destroy(dstnode);
+				node_init(dstnode, dx, dy);
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
+					node_copy_ref(nref, dstnode);
+				break;
+			case MERGE_INSERT_HIGHEST:
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+					node_copy_ref(nref, dstnode);
+					node_movehead_ref(dstnode, nref);
+				}
+				break;
+			case MERGE_INSERT_EMPTY:
+				if (!TAILQ_EMPTY(&dstnode->nrefs))
+					continue;
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
+					node_copy_ref(nref, dstnode);
+				break;
+			}
+		}
+	}
 }
 

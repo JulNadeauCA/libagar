@@ -1,14 +1,17 @@
-/*	$Csoft: merge.h,v 1.5 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.1 2003/02/02 21:14:02 vedge Exp $	*/
 /*	Public domain	*/
 
 enum merge_mode {
 	MERGE_REPLACE,
-	MERGE_INSERT_HIGHEST
+	MERGE_INSERT_HIGHEST,
+	MERGE_INSERT_EMPTY
 };
 
 struct merge {
 	struct tool	 tool;
 	int		 mode;
+	int		 flags;
+#define MERGE_RANDOMIZE_SHIFT	0x01
 	struct map	 brush;
 };
 
