@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.22 2003/04/25 22:49:27 vedge Exp $
+.\"	$Csoft: window.3,v 1.23 2003/05/19 02:37:52 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -107,18 +107,18 @@ The
 function initializes a
 .Nm
 structure.
-The
+If the window is unique (only one instance is allowed and its geometry and
+coordinates are saved),
 .Fa name
-argument points to a null-terminated string to identify the window, if it is
-unique (so the window coordinates and geometry can be saved to disk), or
-.Dv NULL
-if more than one instance of this window will be created.
-The
+is a string uniquely identifying the window.
+If
+.Fa name
+is NULL, the window is considered generic.
 .Fa x
 and
 .Fa y
-arguments define the initial absolute position of the window in pixels,
-and are ignored with the
+define the initial absolute position of the window in pixels, and are ignored
+with the
 .Dv WINDOW_CENTER
 flag.
 The
@@ -165,9 +165,12 @@ from the window
 .Pp
 The
 .Fn window_set_caption
-function sets the text shown inside the window titlebar, which is initially
+function changes the text shown inside the window titlebar, which is initially
 set to
 .Sq Untitled .
+The string is truncated if its length exceeds
+.Dv WINDOW_CAPTION_MAX
+- 1.
 .Pp
 The
 .Fn window_set_spacing
