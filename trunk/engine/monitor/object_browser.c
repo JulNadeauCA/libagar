@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.2 2002/11/14 05:59:02 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.3 2002/11/14 07:59:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,19 +59,9 @@ static const struct monitor_tool_ops object_browser_ops = {
 	object_browser_window
 };
 
-struct object_browser *
-object_browser_new(struct monitor *mon, int flags)
-{
-	struct object_browser *object_browser;
-
-	object_browser = emalloc(sizeof(struct object_browser));
-	object_browser_init(object_browser, mon, flags);
-
-	return (object_browser);
-}
-
+/* An object was attached to the world. */
 void
-object_browser_attached(int argc, union evarg *argv)
+object_browser_attached_object(int argc, union evarg *argv)
 {
 	struct object_browser *obr = argv[0].p;
 	struct object *ob = argv[1].p;
@@ -84,92 +74,105 @@ object_browser_attached(int argc, union evarg *argv)
 	tlist_insert_item(obr->objlist, icon, ob->name, ob);
 }
 
+/* An object was detached from the world. */
 void
-object_browser_detached(int argc, union evarg *argv)
+object_browser_detached_object(int argc, union evarg *argv)
 {
 	fatal("remove\n");
-}
-
-void
-object_browser_init(struct object_browser *object_browser, struct monitor *mon,
-    int flags)
-{
-	monitor_tool_init(&object_browser->tool, "object_browser", mon,
-	    &object_browser_ops);
-	event_new(object_browser, "world-attached-object",
-	    object_browser_attached, NULL);
-	event_new(object_browser, "world-detached-object",
-	    object_browser_detached, NULL);
-
-	object_browser->flags = flags;
 }
 
 static void
 trigger_event(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
-	struct event *eev = argv[2].p;
+	struct event *evh = argv[2].p;
 
-	event_post(ob, eev->name, NULL);
+	/* Fake this event with no arguments. */
+	event_post(ob, evh->name, NULL);
 }
 
 static void
 unregister_event(int argc, union evarg *argv)
 {
 	struct button *bu = argv[0].p;
-	struct object *ob = argv[1].p;
-	struct event *eev = argv[2].p;
+	struct tlist *event_list = argv[1].p;
+	struct object *ob = argv[2].p;
+	struct event *evh = argv[3].p;
+	struct tlist_item *event_item;
 
+	/* Unregister the event handler. */
 	pthread_mutex_lock(&ob->events_lock);
-	TAILQ_REMOVE(&ob->events, eev, events);
+	TAILQ_REMOVE(&ob->events, evh, events);
 	pthread_mutex_unlock(&ob->events_lock);
 
+	/* Destroy the event handler window. */
 	view_detach(WIDGET(bu)->win);
 }
 
 static void
-selected_event(int argc, union evarg *argv)
+event_list_selected(int argc, union evarg *argv)
 {
+	struct tlist *event_list = argv[0].p;
 	struct object *ob = argv[1].p;
 	struct tlist_item *it = argv[2].p;
-	struct event *eev = it->p1;
+	struct event *evh = it->p1;
 	struct window *win;
 	struct region *reg;
 	struct label *lab;
 	struct button *bu;
 	int i;
 
-	win = window_new(NULL, "Event handler", WINDOW_CENTER, -1, -1,
-	    215, 140, 215, 140);
+	win = window_generic_new(215, 140, "%s handler", evh->name);
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
-	lab = label_new(reg, 100, 0, "Identifier: \"%s\"", eev->name);
-	lab = label_new(reg, 100, 0, "Flags: 0x%x", eev->flags);
-	lab = label_new(reg, 100, 0, "Handler: %p", eev->handler);
+	lab = label_new(reg, 100, 0, "Identifier: \"%s\"", evh->name);
+	lab = label_new(reg, 100, 0, "Flags: 0x%x", evh->flags);
+	lab = label_new(reg, 100, 0, "Handler: %p", evh->handler);
 
 	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 30);
 	bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
-	event_new(bu, "button-pushed", trigger_event, "%p, %p", ob, eev);
+	event_new(bu, "button-pushed", trigger_event, "%p, %p", ob, evh);
 
 	bu = button_new(reg, "Unregister", NULL, 0, 50, 100);
-	event_new(bu, "button-pushed", unregister_event, "%p, %p", ob, eev);
+	event_new(bu, "button-pushed", unregister_event, "%p, %p, %p",
+	    event_list, ob, evh);
 
 	window_show(win);
 }
 
+/* Update the event list. */
 static void
-selected_object(int argc, union evarg *argv)
+event_list_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct tlist_item *it = argv[1].p;
+	struct object *ob = argv[1].p;
+	struct event *evh;
+
+	tlist_clear_items(tl);
+
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_FOREACH(evh, &ob->events, events) {
+		tlist_insert_item(tl, NULL, evh->name, evh);
+	}
+	pthread_mutex_unlock(&ob->events_lock);
+}
+
+static void
+objlist_selected(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object_browser *obr = argv[1].p;
+	struct tlist_item *it = argv[2].p;
 	struct object *ob = it->p1;
 	struct window *win;
 	struct region *reg;
 	struct label *lab;
 	struct tlist *etl;
-	struct event *eev;
+	struct event *evh;
 
 	win = window_new(NULL, "Object structure", WINDOW_CENTER, -1, -1,
 	    394, 307, 251, 240);
+	
+	/* Show the object's generic properties. */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 40);
 	lab = label_new(reg, 100, 0, "Name: %s", ob->name);
 	lab = label_new(reg, 100, 0, "Type: %s", ob->type);
@@ -179,20 +182,18 @@ selected_object(int argc, union evarg *argv)
 	    ob->state == OBJECT_CONSISTENT ? "CONSISTENT" :
 	    ob->state == OBJECT_ZOMBIE ? "ZOMBIE" : "???");
 
+	/* Display the first sprite, if any. */
 	if (ob->art != NULL && ob->art->nsprites > 0) {
 		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 40);
 		bitmap_new(reg, SPRITE(ob, 0), 100, 100);
 	}
 
+	/* Display a polling list of event handlers. */
 	reg = region_new(win, REGION_VALIGN, 60, 40, 40, 60);
-	etl = tlist_new(reg, 100, 100, 0);
-	event_new(etl, "tlist-changed", selected_event, "%p", ob);
+	etl = tlist_new(reg, 100, 100, TLIST_POLL);
+	event_new(etl, "tlist-poll", event_list_poll, "%p", ob);
+	event_new(etl, "tlist-changed", event_list_selected, "%p", ob);
 
-	pthread_mutex_lock(&ob->events_lock);
-	TAILQ_FOREACH(eev, &ob->events, events) {
-		tlist_insert_item(etl, NULL, eev->name, eev);
-	}
-	pthread_mutex_unlock(&ob->events_lock);
 	window_show(win);
 }
 
@@ -212,9 +213,30 @@ object_browser_window(void *p)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	obr->objlist = tlist_new(reg, 100, 100, 0);
-	event_new(obr->objlist, "tlist-changed", selected_object, NULL);
+	event_new(obr->objlist, "tlist-changed", objlist_selected, "%p", obr);
 
 	return (win);
+}
+
+struct object_browser *
+object_browser_new(struct monitor *mon, int flags)
+{
+	struct object_browser *object_browser;
+
+	object_browser = emalloc(sizeof(struct object_browser));
+	object_browser_init(object_browser, mon, flags);
+
+	return (object_browser);
+}
+
+void
+object_browser_init(struct object_browser *object_browser, struct monitor *mon,
+    int flags)
+{
+	monitor_tool_init(&object_browser->tool, "object_browser", mon,
+	    &object_browser_ops);
+
+	object_browser->flags = flags;
 }
 
 #endif	/* DEBUG */
