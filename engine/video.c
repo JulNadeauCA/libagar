@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.1 2002/01/26 03:37:38 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.2 2002/01/26 06:36:17 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -61,7 +61,7 @@ video_tick(void *arg)
 
 	while (SMPEG_status(v->mpeg) == SMPEG_PLAYING) {
 		SDL_mutexV(v->lock);
-		while (SDL_WaitEvent(&ev)) {
+		while (SDL_PollEvent(&ev) == 1) {
 			switch (ev.type) {
 			case SDL_KEYDOWN:
 				switch (ev.key.keysym.sym) {
@@ -77,7 +77,9 @@ video_tick(void *arg)
 				break;
 			}
 		}
+		SDL_Delay(1000);
 	}
+
 videodone:
 	SDL_mutexV(v->lock);
 	return (NULL);
