@@ -10,51 +10,37 @@ enum {
 
 /* 2D movement of undefined constructs in an infinite area. */
 struct gendir {
-	int	set;		/* Set direction mask (move) */
-	int	current;	/* Current direction mask (moving) */
-	int	clear;		/* Clear direction mask (stop move) */
-	int	moved;		/* Post direction mask (moved) */
+	Uint32	set;		/* Set direction mask (move) */
+	Uint32	current;	/* Current direction mask (moving) */
+	Uint32	clear;		/* Clear direction mask (stop move) */
+	Uint32	moved;		/* Post direction mask (moved) */
 };
 
 /* 2D movement of map references between adjacent map nodes. */
 struct mapdir {
-	int	speed;		/* Soft-scroll increments */
+	Uint32	speed;		/* Soft-scroll increments */
 
 	struct	object *ob;	/* Object back pointer */
 	struct	map *map;	/* Map back pointer */
 
-	int	set;		/* Set direction mask (move) */
-	int	current;	/* Current direction mask (moving) */
-	int	clear;		/* Clear direction mask (stop move) */
-	int	moved;		/* Post direction mask (moved) */
+	Uint32	set;		/* Set direction mask (move) */
+	Uint32	current;	/* Current direction mask (moving) */
+	Uint32	clear;		/* Clear direction mask (stop move) */
+	Uint32	moved;		/* Post direction mask (moved) */
 
-	int	flags;
+	Uint32	flags;
 #define DIR_SCROLLVIEW	0x01	/* Scroll the view if we reach boundaries. */
 #define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
 };
 
-/* Map position back reference. */
-struct mappos {
-	Uint32	flags;
-#define POS_SPRITE	0x01	/* Offset is sprite# */
-#define POS_ANIM	0x02	/* Offset is anim# */
-
-	struct	map *m;		/* Map */
-	Uint32	x, y;		/* Coordinates */
-	Uint32	offs;		/* Offset */
-
-	Uint32	curspeed;	/* Current speed in ms */
-	struct	mapdir dir;	/* Direction */
-};
-
 void	gendir_init(struct gendir *);
-int	gendir_set(struct gendir *, int, int);
-int	gendir_move(struct gendir *);
-void	gendir_postmove(struct gendir *, int);
+Uint32	gendir_set(struct gendir *, Uint32, Uint32);
+Uint32	gendir_move(struct gendir *);
+void	gendir_postmove(struct gendir *, Uint32);
 
-void	mapdir_init(struct mapdir *, struct object *, struct map *,
-	    int, int);
-void	mapdir_set(struct mapdir *, int, int);
-int	mapdir_move(struct mapdir *, int *, int *);
-void	mapdir_postmove(struct mapdir *, int *, int *, int);
+void	mapdir_init(struct mapdir *, struct object *, struct map *, Uint32,
+	    Uint32);
+void	mapdir_set(struct mapdir *, Uint32, Uint32);
+int	mapdir_move(struct mapdir *, Uint32 *, Uint32 *);
+void	mapdir_postmove(struct mapdir *, Uint32 *, Uint32 *, Uint32);
 
