@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.26 2003/03/25 13:48:08 vedge Exp $
+.\"	$Csoft: widget.3,v 1.27 2003/05/22 06:17:02 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,9 +41,8 @@
 Agar widgets are derived from the
 .Nm
 structure.
-Widgets are attached to window
-.Xr region 3
-structures, and their coordinates and geometry are variable.
+Widgets are attached to parent container widgets, and their coordinates and
+geometry are variable.
 .Sh LOCKING POLICIES
 Widget initialization and free routines do not need to be concerned about
 locking.
@@ -57,12 +56,6 @@ immediately.
 Detach operations on existing windows are deferred until the current event is
 processed.
 .Pp
-Widget structure members that can be manipulated from code outside of
-the event loop (such as the
-.Xr scrollbar 3
-range or the
-.Xr textbox 3
-text) must provide a thread-safe interface.
 .Sh POSITIONMENT
 The effective position and geometry of widgets is managed by the widget
 container (ie.
@@ -82,15 +75,15 @@ function initializes a widget structure.
 is a pointer to the following structure:
 .Bd -literal
 struct widget_ops {
-	const struct object_ops	obops;		/* Object ops */
-
-	void	 (*widget_draw)(void *);	/* Rendering routine */
-	void	 (*widget_update)(void *);	/* Update routine */
+	const struct object_ops	obops;		/* Generic object(3) ops */
+	void	 (*draw)(void *);		/* Rendering routine */
+	void	 (*size)(void *, int *, int *);	/* Size request routine */
 };
 .Ed
 .Pp
-Since widgets don't hold persistent properties, their identification
-string is simply the widget type followed by a random number.
+Since widgets don't hold persistent properties, their
+.Xr object 3
+name is simply the widget type followed by a random number.
 .Pp
 The widget initially requests an area of size
 .Fa rw
@@ -266,8 +259,8 @@ The
 .Nm widget
 structure contains a list of pointers to values that the widgets are able
 to read and manipulate directly.
-Widget bindings eliminate the need for event handlers for widgets dealing
-with simple types of data.
+Widget bindings eliminate the need for event handlers for widgets manipulating
+variables of primitive data types.
 For example, the
 .Xr scrollbar
 widget defines
