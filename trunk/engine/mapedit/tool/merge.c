@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.56 2004/07/24 02:08:56 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.57 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -420,13 +420,14 @@ merge_cursor(struct tool *t, SDL_Rect *rd)
 		return (-1);
 
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
-		if (!it->selected)
+		if (!it->selected) {
 			continue;
+		}
 		sm = it->p1;
-		for (sy = 0, dy = rd->y-(sm->maph * mv->map->tilesz)/2;
+		for (sy = 0, dy = rd->y - (sm->maph*mv->map->tilesz)/2;
 		     sy < sm->maph;
 		     sy++, dy += mv->map->tilesz) {
-			for (sx = 0, dx = rd->x-(sm->mapw * mv->map->tilesz)/2;
+			for (sx = 0, dx = rd->x - (sm->mapw*mv->map->tilesz)/2;
 			     sx < sm->mapw;
 			     sx++, dx += mv->map->tilesz) {
 				struct node *sn = &sm->map[sy][sx];
