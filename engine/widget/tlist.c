@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.34 2003/01/16 04:03:34 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.35 2003/01/16 04:12:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -537,8 +537,8 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		tlist_unselect_all(tl);
 		ti->selected++;
 	}
-out:
 	event_post(tl, "tlist-changed", "%p, %i", ti, 1);
+out:
 	pthread_mutex_unlock(&tl->items_lock);
 }
 
