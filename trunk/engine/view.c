@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.111 2003/03/08 00:58:13 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.112 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -369,20 +369,20 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 			    x * ds->format->BytesPerPixel;
 
 			switch (ss->format->BytesPerPixel) {
-			case 1:
-				SDL_GetRGBA(*src, ss->format,
-				    &r1, &g1, &b1, &a1);
-				break;
-			case 2:
-				SDL_GetRGBA(*(Uint16 *)src, ss->format,
+			case 4:
+				SDL_GetRGBA(*(Uint32 *)src, ss->format,
 				    &r1, &g1, &b1, &a1);
 				break;
 			case 3:
 				SDL_GetRGBA(*(Uint16 *)src, ss->format,
 				    &r1, &g1, &b1, &a1);
 				break;
-			case 4:
-				SDL_GetRGBA(*(Uint32 *)src, ss->format,
+			case 2:
+				SDL_GetRGBA(*(Uint16 *)src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			case 1:
+				SDL_GetRGBA(*src, ss->format,
 				    &r1, &g1, &b1, &a1);
 				break;
 			}
