@@ -1,4 +1,4 @@
-/*	$Csoft: arc4random.c,v 1.1 2003/12/31 01:55:15 vedge Exp $	*/
+/*	$Csoft: arc4random.c,v 1.1 2004/02/26 09:19:37 vedge Exp $	*/
 /*	$OpenBSD: arc4random.c,v 1.10 2003/11/26 21:40:08 djm Exp $	*/
 
 /*
@@ -40,16 +40,16 @@
 #endif
 
 struct arc4_stream {
-	u_int8_t i;
-	u_int8_t j;
-	u_int8_t s[256];
+	Uint8 i;
+	Uint8 j;
+	Uint8 s[256];
 };
 
 static int rs_initialized;
 static struct arc4_stream rs;
 static pid_t arc4_stir_pid;
 
-static __inline__ u_int8_t arc4_getbyte(struct arc4_stream *);
+static __inline__ Uint8 arc4_getbyte(struct arc4_stream *);
 
 static __inline__ void
 arc4_init(struct arc4_stream *as)
@@ -63,10 +63,10 @@ arc4_init(struct arc4_stream *as)
 }
 
 static __inline__ void
-arc4_addrandom(struct arc4_stream *as, u_char *dat, int datlen)
+arc4_addrandom(struct arc4_stream *as, unsigned char *dat, int datlen)
 {
 	int     n;
-	u_int8_t si;
+	Uint8  si;
 
 	as->i--;
 	for (n = 0; n < 256; n++) {
@@ -85,15 +85,15 @@ arc4_stir(struct arc4_stream *as)
 	int     i;
 	struct {
 		struct timeval tv;
-		u_int rnd[(128 - sizeof(struct timeval)) / sizeof(u_int)];
+		unsigned rnd[(128 - sizeof(struct timeval)) / sizeof(unsigned)];
 	}       rdat;
 	int	fd;
 
 	fd = open("/dev/random", O_RDONLY);
 
 	gettimeofday(&rdat.tv, NULL);
-	for (i = 0; i < sizeof(rdat.rnd) / sizeof(u_int); i ++) {
-		read(fd, &rdat.rnd[i], sizeof(u_int));
+	for (i = 0; i < sizeof(rdat.rnd) / sizeof(unsigned); i ++) {
+		read(fd, &rdat.rnd[i], sizeof(unsigned));
 	}
 
 	arc4_stir_pid = getpid();
@@ -109,10 +109,10 @@ arc4_stir(struct arc4_stream *as)
 	close(fd);
 }
 
-static __inline__ u_int8_t
+static __inline__ Uint8
 arc4_getbyte(struct arc4_stream *as)
 {
-	u_int8_t si, sj;
+	Uint8 si, sj;
 
 	as->i = (as->i + 1);
 	si = as->s[as->i];
@@ -123,10 +123,10 @@ arc4_getbyte(struct arc4_stream *as)
 	return (as->s[(si + sj) & 0xff]);
 }
 
-static __inline__ u_int32_t
+static __inline__ Uint32
 arc4_getword(struct arc4_stream *as)
 {
-	u_int32_t val;
+	Uint32 val;
 	val = arc4_getbyte(as) << 24;
 	val |= arc4_getbyte(as) << 16;
 	val |= arc4_getbyte(as) << 8;
@@ -145,14 +145,14 @@ arc4random_stir(void)
 }
 
 void
-arc4random_addrandom(u_char *dat, int datlen)
+arc4random_addrandom(unsigned char *dat, int datlen)
 {
 	if (!rs_initialized)
 		arc4random_stir();
 	arc4_addrandom(&rs, dat, datlen);
 }
 
-u_int32_t
+Uint32
 arc4random(void)
 {
 	if (!rs_initialized || arc4_stir_pid != getpid())
