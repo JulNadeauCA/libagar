@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.10 2004/11/23 05:11:33 phip Exp $	*/
+/*	$Csoft: uniconv.c,v 1.11 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -243,7 +243,7 @@ uniconv_window(void)
 	com = combo_new(win, 0, _("Range: "));
 	for (i = 0; i < nunicode_ranges; i++) {
 		tlist_insert_item(com->list, NULL, unicode_ranges[i].name,
-		    &unicode_ranges[i]);
+		    (void *)&unicode_ranges[i]);
 	}
 	
 	tv = tableview_new(win, TABLEVIEW_NOSORT, NULL, NULL);
