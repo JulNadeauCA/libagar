@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.81 2004/04/09 07:30:59 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.82 2004/09/12 05:51:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -166,7 +166,7 @@ button_draw(void *p)
 			x++;
 			y++;
 		}
-		widget_blit2(bu, 0, x, y);
+		widget_blit_surface(bu, 0, x, y);
 	}
 }
 
