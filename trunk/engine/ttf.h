@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.h,v 1.1 2002/08/20 09:15:10 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.3 2002/08/20 09:33:28 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef struct _TTF_Font TTF_Font;
@@ -34,19 +34,6 @@ SDL_Surface	*TTF_RenderText_Solid(TTF_Font *, const char *, SDL_Color);
 SDL_Surface	*TTF_RenderUTF8_Solid(TTF_Font *, const char *, SDL_Color);
 SDL_Surface	*TTF_RenderUNICODE_Solid(TTF_Font *, const Uint16 *, SDL_Color);
 SDL_Surface	*TTF_RenderGlyph_Solid(TTF_Font *, Uint16, SDL_Color);
-SDL_Surface	*TTF_RenderText_Shaded(TTF_Font *, const char *, SDL_Color,
-		    SDL_Color);
-SDL_Surface	*TTF_RenderUTF8_Shaded(TTF_Font *, const char *, SDL_Color,
-		    SDL_Color);
-SDL_Surface	*TTF_RenderUNICODE_Shaded(TTF_Font *, const Uint16 *,
-		    SDL_Color, SDL_Color);
-SDL_Surface	*TTF_RenderGlyph_Shaded(TTF_Font *, Uint16, SDL_Color,
-		    SDL_Color);
-SDL_Surface	*TTF_RenderText_Blended(TTF_Font *, const char *, SDL_Color);
-SDL_Surface	*TTF_RenderUTF8_Blended(TTF_Font *, const char *, SDL_Color);
-SDL_Surface	*TTF_RenderUNICODE_Blended(TTF_Font *, const Uint16 *,
-		    SDL_Color);
-SDL_Surface	*TTF_RenderGlyph_Blended(TTF_Font *, Uint16, SDL_Color);
 
 void	 TTF_CloseFont(TTF_Font *);
 void	 TTF_Quit(void);
