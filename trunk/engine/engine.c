@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.121 2003/09/07 00:24:07 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.122 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	/* Prefer __progname on BSD systems. */
 	{
 		extern char *__progname;
-		prog->name = __progname;
+		prog->progname = __progname;
 	}
 #endif
 
