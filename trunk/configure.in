@@ -1,13 +1,11 @@
-# $Csoft: configure.in,v 1.11 2002/02/25 09:58:43 vedge Exp $
+# $Csoft: configure.in,v 1.12 2002/03/12 15:48:18 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
 
-hdefine(DEBUG, 1);
-hdefine(LOCKDEBUG, 1);
-
-register("--with-smpeg",	"Play videos through the smpeg library [yes]");
-register("--without-smpeg",	"");
+register("--without-smpeg",	"Don't play videos with the smpeg library");
+register("--with-debug",	"Build with debugging information");
+register("--with-lockdebug",	"Build with threads debugging information");
 
 if ("$1" = "--help") {
 	help();
@@ -29,5 +27,13 @@ hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
 if ("$WITHOUT_SMPEG" = "") {
 	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
 	check(smpeg, 0.4.3);
+};
+
+if ("$WITH_DEBUG" != "") {
+	hdefine(DEBUG, 1);
+};
+
+if ("$WITH_LOCKDEBUG" != "") {
+	hdefine(LOCKDEBUG, 1);
 };
 
