@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.45 2002/12/25 16:48:45 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.46 2002/12/26 07:11:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,6 +26,7 @@
  */
 
 #include <config/sharedir.h>
+#include <config/have_opengl.h>
 
 #include "engine.h"
 
@@ -102,8 +103,10 @@ config_prop_modified(int argc, union evarg *argv)
 			keycodes_freeglyphs();
 		}
 	} else if (strcmp(prop->key, "view.full-screen") == 0) {
-		SDL_WM_ToggleFullScreen(view->v);
-		VIEW_REDRAW();
+		if (view != NULL) {
+			SDL_WM_ToggleFullScreen(view->v);
+			VIEW_REDRAW();
+		}
 	}
 }
 
@@ -123,7 +126,9 @@ config_init(struct config *con)
 	prop_set_bool(con,   "view.font-cache", 1);
 	prop_set_bool(con,   "view.full-screen", 0);
 	prop_set_bool(con,   "view.async-blits", 0);
-	prop_set_bool(con,   "view.opengl", 0);
+#ifdef HAVE_OPENGL
+	prop_set_bool(con,   "view.opengl", 1);
+#endif
 	prop_set_uint32(con, "view.w", 800);
 	prop_set_uint32(con, "view.h", 600);
 	prop_set_uint32(con, "view.bpp", 32);
@@ -180,7 +185,9 @@ config_window(struct config *con)
 			{ "view.font-cache",	"Font cache" },
 			{ "view.full-screen",	"Full screen" },
 			{ "view.async-blits",	"Asynchronous blits" },
+#ifdef HAVE_OPENGL
 			{ "view.opengl",	"OpenGL rendering context" },
+#endif
 #ifdef DEBUG
 			{ "widget.reg-borders",	"Region borders" },
 			{ "widget.any-size",	"Arbitrary window sizes" },
