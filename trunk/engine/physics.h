@@ -14,6 +14,7 @@ struct direction {
 
 	int	flags;
 #define DIR_SCROLL	0x01
+#define DIR_ONMAP	0x02
 };
 
 int	direction_init(struct direction *, int, int);
