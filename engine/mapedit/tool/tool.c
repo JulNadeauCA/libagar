@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.20 2003/03/16 23:13:55 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.21 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,16 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/snprintf.h>
+
 #include <engine/engine.h>
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/text.h>
-
-#include <engine/mapedit/mapedit.h>
-
 #include "tool.h"
+
+#include <string.h>
 
 static void
 tool_window_close(int argc, union evarg *argv)
@@ -50,11 +48,10 @@ tool_window_close(int argc, union evarg *argv)
 void
 tool_init(struct tool *tool, char *name, const void *ops)
 {
-	char *toolname;
+	char toolname[OBJECT_NAME_MAX];
 
-	Asprintf(&toolname, "tool-%s", name);
+	snprintf(toolname, sizeof(toolname), "tool-%s", name);
 	object_init(&tool->obj, "tool", toolname, NULL, 0, ops);
-	free(toolname);
 
 	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
 	    TOOL_OPS(tool)->window(tool) : NULL;
@@ -104,7 +101,6 @@ tool_mapview(void)
 			}
 		}
 	}
-	text_msg("Error", "No map is visible");
 	return (NULL);
 }
 
@@ -115,7 +111,7 @@ tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
 	struct tool *tool = p;
 	struct tool_binding *binding;
 
-	binding = emalloc(sizeof(struct tool_binding));
+	binding = Malloc(sizeof(struct tool_binding));
 	binding->key = keysym;
 	binding->mod = keymod;
 	binding->func = func;
