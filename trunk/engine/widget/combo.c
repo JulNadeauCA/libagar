@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.1 2003/06/10 19:12:34 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.2 2003/06/10 20:58:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,6 +73,9 @@ combo_collapse(struct combo *com)
 	struct widget_binding *stateb;
 	int *state;
 
+	if (com->win == NULL)
+		return;
+
 	window_hide(com->win);
 	object_detach(com->win, com->list);
 	view_detach(com->win);
@@ -127,10 +130,23 @@ combo_select(int argc, union evarg *argv)
 	combo_collapse(com);
 }
 
+static void
+combo_mousebuttonup(int argc, union evarg *argv)
+{
+	struct combo *com = argv[0].p;
+/*	int button = argv[1].i; */
+	int x = argv[2].i;
+	int y = argv[3].i;
+
+	if (!widget_relative_area(com, x, y))
+		combo_collapse(com);
+}
+
 void
 combo_init(struct combo *com, const char *label)
 {
-	widget_init(com, "combo", &combo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL);
+	widget_init(com, "combo", &combo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL|
+	    WIDGET_UNFOCUSED_BUTTONUP);
 
 	com->tbox = textbox_new(com, label);
 	com->button = button_new(com, " ... ");
@@ -142,6 +158,7 @@ combo_init(struct combo *com, const char *label)
 
 	event_new(com->button, "button-pushed", combo_expand, "%p", com);
 	event_new(com->list, "tlist-changed", combo_select, "%p", com);
+	event_new(com, "window-mousebuttonup", combo_mousebuttonup, NULL);
 }
 
 void
@@ -174,12 +191,12 @@ combo_scale(void *p, int w, int h)
 	}
 	
 	widget_scale(com->button, -1, -1);
-	widget_scale(com->tbox, w - WIDGET(com->button)->w, h);
+	widget_scale(com->tbox, w - WIDGET(com->button)->w - 1, h);
 	widget_scale(com->button, WIDGET(com->button)->w, h);
 
 	WIDGET(com->tbox)->x = 0;
 	WIDGET(com->tbox)->y = 0;
-	WIDGET(com->button)->x = w - WIDGET(com->button)->w;
+	WIDGET(com->button)->x = w - WIDGET(com->button)->w - 1;
 	WIDGET(com->button)->y = 0;
 }
 
