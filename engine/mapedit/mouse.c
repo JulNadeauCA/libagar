@@ -246,5 +246,6 @@ mouse_objlsel(struct mapedit *med, Uint32 vx)
 	TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
 	med->curobj = eob;
 	med->curoffs = 0;
+	med->tilelist_offs = 0;
 }
 
