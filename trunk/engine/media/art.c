@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.18 2003/02/02 21:14:17 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.19 2003/02/04 02:39:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -209,6 +209,9 @@ art_fetch(char *archive, struct object *ob)
 
 	/* Load images in XCF format. */
 	fob = fobj_load(path);
+	if (fob == NULL) {
+		fatal("%s: %s\n", path, fobj_error);
+	}
 	for (i = 0; i < fob->head.nobjs; i++) {
 		if (xcf_check(fob->fd, fob->offs[i]) == 0) {
 			int rv;
