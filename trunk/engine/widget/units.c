@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.21 2004/08/22 11:33:19 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.22 2004/08/22 12:01:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -30,9 +30,8 @@
 
 #include "units.h"
 
-#define ASTRONOMICAL_UNITS
-/* #define HISTORICAL_UNITS */
-/* #define MET_UNITS */
+#include <config/astronomical_units.h>
+#include <config/historical_units.h>
 
 const struct unit *unit_groups[] = {
 	identity_unit,
@@ -53,9 +52,7 @@ const struct unit *unit_groups[] = {
 	inductance_units,
 	frequency_units,
 	pressure_units,
-#ifdef MET_UNITS
 	met_units,
-#endif
 };
 const int nunit_groups = sizeof(unit_groups) / sizeof(unit_groups[0]);
 
@@ -86,12 +83,12 @@ unit_find(const char *key)
 	return (NULL);
 }
 
-/* Return the unit which yields the number the most close to 0. */
+/* Return the unit which yields the number with the least figures. */
 const struct unit *
 unit_best(const struct unit ugroup[], double n)
 {
 	const struct unit *unit, *bestunit = NULL;
-	double nearest = n;
+	double smallest = n;
 	double quotient;
 
 	if (n == 0) {
@@ -99,8 +96,8 @@ unit_best(const struct unit ugroup[], double n)
 	}
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		quotient = n/unit->divider;
-		if (quotient >= 1.0 && quotient <= 1e3) {
-			nearest = quotient;
+		if (quotient >= 1.0 && quotient < smallest) {
+			smallest = quotient;
 			bestunit = unit;
 		}
 	}
@@ -249,20 +246,20 @@ const struct unit mass_units[] = {
 	{ "t", "", N_("Tons [metric]"),		1e6, NULL },
 	{ "t(l)", "", N_("Tons [long]"),	1016064, NULL },
 #ifdef HISTORICAL_UNITS
-	{ "grains", "", N_("Grains"),			0.0648,	NULL },
-	{ "carats", "", N_("Carats [troy]"),		0.2, NULL },
+	{ "grains", "", "Grains",			0.0648,	NULL },
+	{ "carats", "", "Carats [troy]",		0.2, NULL },
+	{ "drams(apot)", "", "Drams [apot]",		3.888, NULL },
 	{ "oz(troy)", "", N_("Ounces [troy]"),		31.104,	NULL },
 	{ "lb(troy)", "", N_("Pounds [troy]"),		373.248, NULL },
-	{ "scruples", "", N_("Scruples [apot]"),	1.296, NULL },
-	{ "pennywts", "", N_("Pennyweights"),		1.5552, NULL },
-	{ "drams", "", N_("Drams"),			1.771875, NULL },
-	{ "poundals", "", N_("Poundals"),		14.086956521739, NULL },
-	{ "stones", "", N_("Stones"),			6530.40, NULL },
-	{ "quarters", "", N_("Quarters"),		11340, NULL },
-	{ "slugs", "", N_("Slugs"),			14605.92, NULL },
-	{ "100wts", "", N_("100 weights"),		45360, NULL },
-	{ "drams(apot)", "", N_("Drams [apot]"),	3.888, NULL },
-	{ "batmans", "", _("Batmans"),			16e6, NULL },
+	{ "scruples", "", "Scruples [apot]",		1.296, NULL },
+	{ "pennywts", "", "Pennyweights",		1.5552, NULL },
+	{ "drams", "", "Drams",				1.771875, NULL },
+	{ "poundals", "", "Poundals",			14.086956521739, NULL },
+	{ "stones", "", "Stones",			6530.40, NULL },
+	{ "quarters", "", "Quarters",			11340, NULL },
+	{ "slugs", "", "Slugs",				14605.92, NULL },
+	{ "100wts", "", "100 weights",			45360, NULL },
+	{ "batmans", "", "Batmans",			16e6, NULL },
 #endif
 	{ NULL, NULL, NULL,				0, NULL }
 };
@@ -298,8 +295,10 @@ const struct unit current_units[] = {
 /* Units of temperature */
 static double degF2K(double degF) { return ((degF-32)/1.8 + 273.15); }
 static double degC2K(double degC) { return (degC+273.15); }
+#ifdef HISTORICAL_UNITS
 static double degRa2K(double degRa) { return ((degRa-32-459.67)/1.8 + 273.15); }
 static double degRe2K(double degR) { return (degR*1.25 + 273.15); }
+#endif
 const struct unit temperature_units[] = {
 	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),	0, degC2K },
 	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"),	0, degF2K },
@@ -425,7 +424,6 @@ const struct unit pressure_units[] = {
 	{ NULL,	NULL, NULL,					0, NULL }
 };
 
-#ifdef MET_UNITS
 /* Units of metabolic cost (ie. physical activity) */
 const struct unit met_units[] = {
 	{ "MET", "", N_("Metabolic equivalent"),		1.0, NULL },
@@ -448,4 +446,3 @@ const struct unit met_units[] = {
 	{ "Hyperskis", "", N_("Cross-country/vigorous skiing"),	14, NULL },
 	{ NULL, NULL, NULL,					0, NULL }
 };
-#endif
