@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.30 2003/03/24 12:08:43 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.31 2003/03/25 13:46:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -68,6 +68,8 @@ static void	art_destroy_anim(struct art_anim *);
 Uint32
 art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 {
+	struct art_spritecl *spritecl;
+
 	if (art->sprites == NULL) {			/* Initialize */
 		art->sprites = Malloc(NSPRITES_INIT * sizeof(SDL_Surface *));
 		art->csprites = Malloc(NSPRITES_INIT *
@@ -81,8 +83,10 @@ art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 		art->csprites = Realloc(art->csprites,
 		    art->maxsprites * sizeof(struct art_spritecl));
 	}
-	SLIST_INIT(&art->csprites[art->nsprites].sprites);
-	art->sprites[art->nsprites] = sprite;
+	art->sprites[art->nsprites] = sprite;			/* Original */
+
+	spritecl = &art->csprites[art->nsprites];		/* Cache line */
+	SLIST_INIT(&spritecl->sprites);
 	return (art->nsprites++);
 }
 
@@ -348,6 +352,8 @@ art_destroy(struct art *art)
 		struct art_spritecl *spritecl = &art->csprites[i];
 		struct art_cached_sprite *csprite, *ncsprite;
 		struct transform *trans, *ntrans;
+		
+		SDL_FreeSurface(art->sprites[i]);
 
 		/* Free the sprite transform cache. */
 		for (csprite = SLIST_FIRST(&spritecl->sprites);
@@ -364,7 +370,6 @@ art_destroy(struct art *art)
 			SDL_FreeSurface(csprite->su);
 			free(csprite);
 		}
-		SDL_FreeSurface(art->sprites[i]);
 	}
 	Free(art->sprites);
 	Free(art->csprites);
@@ -446,6 +451,7 @@ struct art_anim *
 art_insert_anim(struct art *art, int delay)
 {
 	struct art_anim *anim;
+	struct art_animcl *animcl;
 
 	anim = Malloc(sizeof(struct art_anim));
 	anim->frames = NULL;
@@ -467,8 +473,11 @@ art_insert_anim(struct art *art, int delay)
 		art->canims = Realloc(art->canims,
 		    art->maxanims * sizeof(struct art_animcl));
 	}
-	SLIST_INIT(&art->canims[art->nanims].anims);
-	art->anims[art->nanims++] = anim;
+	art->anims[art->nanims] = anim;				/* Original */
+
+	animcl = &art->canims[art->nanims];			/* Cache line */
+	SLIST_INIT(&animcl->anims);
+	art->nanims++;
 	return (anim);
 }
 
