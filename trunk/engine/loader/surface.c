@@ -1,4 +1,4 @@
-/*	$Csoft: color.c,v 1.3 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: surface.c,v 1.1 2005/01/23 11:55:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,12 @@
 #include "netbuf.h"
 #include "integral.h"
 #include "surface.h"
+#include "version.h"
+
+const struct version surface_ver = {
+	"agar surface",
+	0, 0
+};
 
 enum {
 	RAW_ENCODING,
@@ -43,8 +49,10 @@ enum {
 void
 write_surface(struct netbuf *buf, SDL_Surface *su)
 {
+	Uint8 *src;
 	int x, y;
 
+	version_write(buf, &surface_ver);
 	write_uint32(buf, RAW_ENCODING);
 
 	write_uint32(buf, su->flags &
@@ -58,7 +66,16 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 	write_uint32(buf, su->format->Bmask);
 	write_uint32(buf, su->format->Amask);
 	write_uint8(buf, su->format->alpha);
-	write_uint8(buf, su->format->colorkey);
+	write_uint32(buf, su->format->colorkey);
+	
+	dprintf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
+	    su->format->BitsPerPixel,
+	    (su->flags & SDL_SRCALPHA) ? " alpha" : "",
+	    (su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
+	dprintf("masks: %08x,%08x,%08x,%08x\n", su->format->Rmask,
+	    su->format->Gmask, su->format->Bmask, su->format->Amask);
+	dprintf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
+	    su->format->alpha);
 
 	if (su->format->BitsPerPixel == 8) {
 		int i;
@@ -74,24 +91,23 @@ write_surface(struct netbuf *buf, SDL_Surface *su)
 	if (SDL_MUSTLOCK(su))
 		SDL_LockSurface(su);
 
+	src = (Uint8 *)su->pixels;
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
-			Uint8 *src = (Uint8 *)su->pixels +
-			    y*su->pitch + x*su->format->BytesPerPixel;
-
 			switch (su->format->BytesPerPixel) {
 			case 4:
 			case 3:
-				write_uint32(buf, *src);
+				write_uint32(buf, *(Uint32 *)src);
 				break;
 			case 2:
-				write_uint16(buf, *src);
+				write_uint16(buf, *(Uint16 *)src);
 				break;
 			case 1:
 				/* XXX do one big write */
 				write_uint8(buf, *src);
 				break;
 			}
+			src += su->format->BytesPerPixel;
 		}
 	}
 	if (SDL_MUSTLOCK(su))
@@ -107,8 +123,12 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 	Uint16 w, h;
 	Uint8 depth, grayscale;
 	Uint32 Rmask, Gmask, Bmask, Amask;
+	Uint8 *dst;
 	int i;
 	int x, y;
+
+	if (version_read(buf, &surface_ver, NULL) != 0)
+		return (NULL);
 
 	encoding = read_uint32(buf);
 	if (encoding != RAW_ENCODING) {
@@ -125,13 +145,19 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 	Gmask = read_uint32(buf);
 	Bmask = read_uint32(buf);
 	Amask = read_uint32(buf);
-	dprintf("loading %dx%dx%d bpp%s surface\n", w, h, depth,
-	    grayscale ? " grayscale" : "");
 
 	su = SDL_CreateRGBSurface(flags|SDL_SWSURFACE, w, h, depth,
 	    Rmask, Gmask, Bmask, Amask);
 	su->format->alpha = read_uint8(buf);
-	su->format->colorkey = read_uint8(buf);
+	su->format->colorkey = read_uint32(buf);
+	
+	dprintf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
+	    grayscale ? " grayscale" : "",
+	    (flags & SDL_SRCALPHA) ? " alpha" : "",
+	    (flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
+	dprintf("masks: %08x,%08x,%08x,%08x\n", Rmask, Gmask, Bmask, Amask);
+	dprintf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
+	    su->format->alpha);
 
 	if (depth == 8) {
 		SDL_Color *colors;
@@ -156,27 +182,32 @@ read_surface(struct netbuf *buf, SDL_PixelFormat *pixfmt)
 		SDL_SetPalette(su, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, ncolors);
 		Free(colors, 0);
 	}
+	
+	if (SDL_MUSTLOCK(su))
+		SDL_LockSurface(su);
 
+	dst = (Uint8 *)su->pixels;
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
-			Uint8 *dst = (Uint8 *)su->pixels +
-			    y*su->pitch + x*su->format->BytesPerPixel;
-
 			switch (su->format->BytesPerPixel) {
 			case 4:
 			case 3:
-				*dst = read_uint32(buf);
+				*(Uint32 *)dst = read_uint32(buf);
 				break;
 			case 2:
-				*dst = read_uint16(buf);
+				*(Uint16 *)dst = read_uint16(buf);
 				break;
 			case 1:
 				/* XXX do one big read */
 				*dst = read_uint8(buf);
 				break;
 			}
+			dst += su->format->BytesPerPixel;
 		}
 	}
-
+	
+	if (SDL_MUSTLOCK(su)) {
+		SDL_UnlockSurface(su);
+	}
 	return (su);
 }
