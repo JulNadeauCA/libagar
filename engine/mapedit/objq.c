@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.58 2003/03/24 12:08:41 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.59 2003/03/25 13:48:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,9 +49,8 @@ enum {
 };
 
 static void
-tl_objs_poll(int argc, union evarg *argv)
+objq_update(struct tlist *tl)
 {
-	struct tlist *tl = argv[0].p;
 	struct object *ob;
 
 	tlist_clear_items(tl);
@@ -473,7 +472,7 @@ objq_window(void)
 		struct tlist *tl;
 
 		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", tl_objs_poll, NULL);
+		objq_update(tl);
 		event_new(tl, "tlist-changed", tl_objs_selected, NULL);
 	}
 	return (win);
