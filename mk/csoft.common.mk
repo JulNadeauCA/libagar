@@ -1,4 +1,4 @@
-# $Csoft: csoft.common.mk,v 1.23 2004/03/17 03:41:58 vedge Exp $
+# $Csoft: csoft.common.mk,v 1.24 2004/04/25 02:14:04 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>

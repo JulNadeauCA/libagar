@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.35 2004/04/25 05:23:00 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.15 2004/04/25 05:24:48 vedge Exp $
 
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -81,7 +81,7 @@ ${DOMAIN}.pot: ${POTFILES}
 		${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
-		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} --from-code=UTF-8 -o $@; \
+		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@; \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
