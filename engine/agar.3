@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.30 2003/06/06 02:36:39 vedge Exp $
+.\"	$Csoft: agar.3,v 1.31 2003/06/15 05:03:53 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -177,13 +177,13 @@ includes should come first, followed by
 .Pa Aq engine/engine.h ,
 which itself includes:
 .Pp
-.Bl -tag -width "<engine/compat/vsnprintf.h> " -compact
+.Bl -tag -width "<engine/loader/integral.h> " -compact
 .It Pa Aq pthread.h
-POSIX threads, if enabled at compile-time.
+POSIX threads, if available.
 .It Pa Aq SDL.h
 Software DirectMedia Layer.
 .It Pa Aq GL/GL.h
-OpenGL interface, if enabled at compile-time.
+OpenGL interface, if available.
 .It Pa Aq engine/compat/queue.h
 4.4BSD
 .Xr queue 3
@@ -206,15 +206,22 @@ For
 .It Pa Aq engine/compat/strsep.h
 For
 .Xr strsep 3 .
-.It Pa Aq libfobj/fobj.h
+.It Pa Aq engine/loader/netbuf.h
 For the
 .Ft struct netbuf
-definition, required by generic load/save operations.
-.It Pa Aq engine/error.h
-Error wrappers,
-.Fn warning
-and
-.Fn fatal .
+definition, required by load/save function prototypes.
+.It Pa Aq engine/loader/integral.h
+For integers.
+.It Pa Aq engine/loader/real.h
+For real numbers.
+.It Pa Aq engine/loader/string.h
+For Latin-1 text.
+.It Pa Aq engine/loader/unicode.h
+For Unicode text.
+.It Pa Aq engine/loader/version.h
+For versioning.
+.It Pa Aq engine/error/error.h
+Error handling.
 .It Pa Aq engine/object.h
 Generic
 .Xr object 3

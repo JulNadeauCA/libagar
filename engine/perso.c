@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.31 2003/06/15 08:54:18 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.32 2003/06/17 23:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/perso.h>
-#include <engine/version.h>
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
@@ -79,12 +78,8 @@ void
 perso_init(void *obj, const char *name)
 {
 	struct perso *pers = obj;
-	char dname[OBJECT_NAME_MAX];
 
 	object_init(pers, "perso", name, &perso_ops);
-	
-	snprintf(dname, sizeof(dname), "/%s/%s", proginfo->progname, name);
-	object_load_art(pers, dname, 0);
 #if 0
 	object_load_submap(pers, "n-idle");
 	object_load_submap(pers, "s-idle");
@@ -95,7 +90,6 @@ perso_init(void *obj, const char *name)
 	object_load_submap(pers, "w-move");
 	object_load_submap(pers, "e-move");
 #endif
-
 	pthread_mutex_init(&pers->lock, NULL);
 	pers->name[0] = '\0';
 	pers->flags = 0;

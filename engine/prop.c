@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.36 2003/06/15 05:08:39 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.37 2003/06/15 08:54:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 
 #include <fcntl.h>
 #include <stdarg.h>
@@ -634,7 +633,7 @@ prop_save(void *p, struct netbuf *buf)
 	
 	pthread_mutex_lock(&ob->props_lock);
 
-	count_offs = buf->offs;				/* Skip count */
+	count_offs = netbuf_tell(buf);				/* Skip count */
 	write_uint32(buf, 0);
 
 	TAILQ_FOREACH(prop, &ob->props, props) {

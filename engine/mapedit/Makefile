@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.42 2003/05/20 11:26:01 vedge Exp $
+#	$Csoft: Makefile,v 1.43 2003/06/06 02:18:04 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -11,10 +11,12 @@ SRCS=	mapedit.c fileops.c mapview.c objq.c nodeedit.c layedit.c selops.c \
 OBJS=	mapedit.o fileops.o mapview.o objq.o nodeedit.o layedit.o selops.o \
 	objedit.o
 
-FOBJ=	mapedit.fob
-FOBDIR=	/engine/mapedit
-FOFFS=	mapedit_offs.h
-XCF=	mapedit.xcf toolbar.xcf
+DEN=		mapedit.den
+DEN_DIR=	engine/mapedit
+DEN_NAME=	"Map editor icons"
+DEN_AUTHOR=	"vedge@"
+DEN_COPYRIGHT=	"2001, 2002, 2003 CubeSoft Communications, Inc"
+XCF=		mapedit.xcf toolbar.xcf
 
 MAN3=	mapedit.3 mapview.3
 CATMAN3=mapedit.cat3 mapview.cat3
@@ -24,4 +26,4 @@ CFLAGS+=${SDL_CFLAGS}
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
-include ${TOP}/libfobj/Makefile.inc
+include ${TOP}/dencomp/Makefile.inc

@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.h,v 1.1 2003/06/18 01:10:20 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -6,6 +6,8 @@
 
 #define XCF_SIGNATURE	"gimp xcf "
 #define XCF_MAGIC_LEN	14
+#define XCF_WIDTH_MAX	65536
+#define XCF_HEIGHT_MAX	65536
 
 #include "begin_code.h"
 

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: string.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,19 +26,24 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/media/loader/string.h>
+#include <engine/error/error.h>
+
+#include <sys/types.h>
+#include <SDL_types.h>
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 #include <string.h>
+
+#include <engine/loader/netbuf.h>
+#include <engine/loader/integral.h>
+#include <engine/loader/string.h>
 
 enum {
 	STRING_MAX = 32767
 };
 
-/* Allocate and read a NUL-terminated, length-encoded Latin-1 string. */
+/* Allocate and read a NUL-terminated, length-encoded string. */
 char *
 read_string(struct netbuf *buf)
 {
@@ -60,23 +65,23 @@ read_string(struct netbuf *buf)
 	return (s);
 }
 
-/* Write a NUL-terminated, length-encoded Latin-1 string. */
+/* Write a NUL-terminated, length-encoded string. */
 void
 write_string(struct netbuf *buf, const char *s)
 {
 	size_t len;
 
 	if ((len = strlen(s)+1) > STRING_MAX) {
-		fatal("string is too big");
+		fatal("string too big");
 	}
 	write_uint32(buf, (Uint32)len);
 	netbuf_write(s, len, 1, buf);
 }
 
 /*
- * Copy at most dst_size bytes from a NUL-terminated, length-encoded Latin-1
- * string to a fixed-size buffer, returning the number of bytes that would
- * have been copied were dst_size unlimited. 
+ * Copy at most dst_size bytes from a NUL-terminated, length-encoded string
+ * to a fixed-size buffer, returning the number of bytes that would have
+ * been copied were dst_size unlimited. 
  */
 size_t
 copy_string(char *dst, struct netbuf *buf, size_t dst_size)
@@ -87,21 +92,23 @@ copy_string(char *dst, struct netbuf *buf, size_t dst_size)
 
 	/* The terminating NUL is included in the encoding. */
 	if ((len = (size_t)read_uint32(buf)) > dst_size) {
+		fprintf(stderr, "at 0x%x:\n", (unsigned)netbuf_tell(buf));
 		fprintf(stderr, "%lu byte string truncated to fit %lu\n",
 		    (unsigned long)len, (unsigned long)dst_size);
 		rv = len;				/* Save */
 		len = dst_size;				/* Truncate */
+		abort();
 	}
 
-	if ((rrv = fread(dst, len, 1, buf->file)) < len) {
+	if ((rrv = fread(dst, 1, len, buf->file)) < len) {
 		if (ferror(buf->file) || feof(buf->file)) {
-			fprintf(stderr, "error reading string; truncated\n");
+			fprintf(stderr, "error reading string (truncated)\n");
 			if (dst_size > 0) {
 				dst[0] = '\0';
 				rv = 1;
 			}
 		} else {
-			fprintf(stderr, "short read: %lu/%lu\n",
+			fprintf(stderr, "short read: %lu/%lu (truncated)\n",
 			    (unsigned long)rrv, (unsigned long)len);
 			rv = rrv;
 			dst[rrv] = '\0';		/* NUL-terminate */

@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.31 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,20 +27,21 @@
  */
 
 #include <engine/compat/gethostname.h>
+#include <engine/error/error.h>
 
-#include <engine/engine.h>
-#include <engine/version.h>
+#include <sys/types.h>
+#include <SDL_types.h>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <unistd.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pwd.h>
 
-#ifdef DEBUG
-int	version_debug = 0;
-#define	engine_debug version_debug
-#endif
+#include <engine/loader/netbuf.h>
+#include <engine/loader/integral.h>
+#include <engine/loader/string.h>
+#include <engine/loader/version.h>
 
 int
 version_read(struct netbuf *buf, const struct version *ver,
@@ -54,9 +55,9 @@ version_read(struct netbuf *buf, const struct version *ver,
 
 	siglen = strlen(ver->name);
 
-	if (netbuf_read(buf, sig, siglen) != siglen ||
+	if (netbuf_eread(sig, siglen, 1, buf) < 1 ||
 	    strncmp(sig, ver->name, siglen) != 0) {
-		error_set(_("%s: bad magic"), ver->name);
+		error_set("bad magic");
 		return (-1);
 	}
 	minor = read_uint32(buf);
@@ -68,18 +69,19 @@ version_read(struct netbuf *buf, const struct version *ver,
 	}
 
 	if (major != ver->major) {
-		error_set(_("%s: major differs: v%d.%d != %d.%d"), ver->name,
+		error_set("%s: major differs: v%d.%d != %d.%d\n", ver->name,
 		    major, minor, ver->major, ver->minor);
 		return (-1);
 	}
 	if (minor != ver->minor) {
-		dprintf("%s: minor differs: v%d.%d != %d.%d\n", ver->name,
-		    major, minor, ver->major, ver->minor);
+		fprintf(stderr, "%s: minor differs: v%d.%d != %d.%d\n",
+		    ver->name, major, minor, ver->major, ver->minor);
 	}
 
 	copy_string(user, buf, sizeof(user));
 	copy_string(host, buf, sizeof(host));
-	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, major, minor, user, host);
+	fprintf(stderr, "%s: v%d.%d (%s@%s)\n", ver->name, major, minor, user,
+	    host);
 	return (0);
 }
 
@@ -89,7 +91,7 @@ version_write(struct netbuf *buf, const struct version *ver)
 	struct passwd *pw;
 	char host[64];
 
-	netbuf_write(buf, ver->name, strlen(ver->name));
+	netbuf_write(ver->name, strlen(ver->name), 1, buf);
 	write_uint32(buf, ver->minor);
 	write_uint32(buf, ver->major);
 	

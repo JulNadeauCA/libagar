@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.41 2003/06/15 05:20:42 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.42 2003/06/17 23:47:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,7 +32,6 @@
 
 #ifdef DEBUG
 
-#include <engine/version.h>
 #include <engine/map.h>
 #include <engine/view.h>
 
@@ -79,8 +78,7 @@ monitor_init(struct monitor *mon, const char *name)
 	int i;
 
 	object_init(mon, "debug-monitor", name, NULL);
-	if (object_load_art(mon, "/engine/monitor/monitor", 0) == -1)
-		fatal("monitor: %s", error_get());
+	OBJECT(mon)->gfx = gfx_fetch(mon, "/engine/monitor/monitor");
 
 	mon->toolbar = window_new("monitor-toolbar");
 	window_set_caption(mon->toolbar, _("Debug monitor"));

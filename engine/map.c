@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.180 2003/06/15 05:08:39 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.181 2003/06/17 23:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,7 +28,6 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/version.h>
 #include <engine/config.h>
 #include <engine/view.h>
 
@@ -1013,7 +1012,7 @@ noderef_save(struct netbuf *buf, struct object_table *deps,
 	}
 
 	/* Save the transforms. */
-	ntrans_offs = buf->offs;
+	ntrans_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);					/* Skip count */
 	SLIST_FOREACH(trans, &nref->transforms, transforms) {
 		transform_save(buf, trans);
@@ -1034,7 +1033,7 @@ node_save(struct netbuf *buf, struct object_table *deps, struct node *node)
 	write_uint32(buf, 0);				/* Pad: v1 */
 
 	/* Save the node references. */
-	nrefs_offs = buf->offs;
+	nrefs_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);				/* Skip */
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 		MAP_CHECK_NODEREF(nref);
@@ -1229,15 +1228,15 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 static __inline__ SDL_Surface *
 noderef_draw_sprite(struct noderef *nref)
 {
-	struct art_cached_sprite *csprite;
-	struct art_spritecl *spritecl;
+	struct gfx_cached_sprite *csprite;
+	struct gfx_spritecl *spritecl;
 	SDL_Surface *origsu = SPRITE(nref->pobj, nref->offs);
 
 	if (SLIST_EMPTY(&nref->transforms)) {
 		return (origsu);
 	}
 
-	spritecl = &nref->pobj->art->csprites[nref->offs];
+	spritecl = &nref->pobj->gfx->csprites[nref->offs];
 
 	/* Look for a sprite with the same transforms, in the same order. */
 	SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
@@ -1263,7 +1262,7 @@ noderef_draw_sprite(struct noderef *nref)
 		Uint8 salpha = origsu->format->alpha;
 		Uint32 scflags = origsu->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
 		Uint32 scolorkey = origsu->format->colorkey;
-		struct art_cached_sprite *ncsprite;
+		struct gfx_cached_sprite *ncsprite;
 
 		dprintf("cache miss\n");
 
@@ -1279,7 +1278,7 @@ noderef_draw_sprite(struct noderef *nref)
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		}
 		
-		ncsprite = Malloc(sizeof(struct art_cached_sprite));
+		ncsprite = Malloc(sizeof(struct gfx_cached_sprite));
 		ncsprite->su = su;
 		ncsprite->last_drawn = SDL_GetTicks();
 		SLIST_INIT(&ncsprite->transforms);
@@ -1316,10 +1315,10 @@ noderef_draw_sprite(struct noderef *nref)
 static __inline__ SDL_Surface *
 noderef_draw_anim(struct noderef *nref)
 {
-	struct art_anim *anim = ANIM(nref->pobj, nref->offs);
+	struct gfx_anim *anim = ANIM(nref->pobj, nref->offs);
 
 	/* XXX do this somewhere else! */
-	art_anim_tick(anim, nref);
+	gfx_anim_tick(anim, nref);
 
 	return (anim->frames[anim->frame]);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.67 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.68 2003/06/18 00:46:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -6,21 +6,9 @@
 
 #define ENGINE_VERSION	"1.0-beta"
 
-#include <config/debug.h>
-#include <config/threads.h>
 #include <config/have_opengl.h>
-
+#include <config/threads.h>
 #include <sys/types.h>
-
-#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
-# if defined(__cplusplus)
-#  define __BEGIN_DECLS	extern "C" {
-#  define __END_DECLS	}
-# else
-#  define __BEGIN_DECLS
-#  define __END_DECLS
-# endif
-#endif
 
 #ifdef THREADS
 # define _XOPEN_SOURCE 500	/* Require recursive mutexes */
@@ -34,10 +22,12 @@
 #endif
 
 #include <SDL.h>
-
+#include <SDL_endian.h>
 #ifdef HAVE_OPENGL
 #include <GL/gl.h>
 #endif
+
+#include <engine/error/error.h>
 
 #include <engine/compat/queue.h>
 #include <engine/compat/strlcpy.h>
@@ -47,10 +37,13 @@
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strsep.h>
 
-#include <libfobj/fobj.h>
+#include <engine/loader/netbuf.h>
+#include <engine/loader/integral.h>
+#include <engine/loader/real.h>
+#include <engine/loader/string.h>
+#include <engine/loader/unicode.h>
+#include <engine/loader/version.h>
 
-#include <engine/error.h>
-#include <engine/debug.h>
 #include <engine/object.h>
 #include <engine/event.h>
 

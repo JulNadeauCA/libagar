@@ -1,12 +1,14 @@
-#	$Csoft: Makefile,v 1.1 2003/05/07 12:17:00 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2003/06/06 02:18:04 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
 
-FOBJ=	mapview.fob
-FOBDIR=	/engine/mapedit/mapview
-FOFFS=	mapview_offs.h
-XCF=	props.xcf
+DEN=		mapview.den
+DEN_DIR=	engine/mapedit/mapview
+DEN_NAME=	"Mapview property indicators"
+DEN_AUTHOR=	"vedge@"
+DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
+XCF=		props.xcf
 
 include ${TOP}/mk/csoft.lib.mk
-include ${TOP}/libfobj/Makefile.inc
+include ${TOP}/dencomp/Makefile.inc

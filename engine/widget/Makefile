@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.47 2003/06/10 06:44:54 vedge Exp $
+#	$Csoft: Makefile,v 1.48 2003/06/10 06:58:17 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -13,10 +13,12 @@ OBJS=	widget.o window.o box.o text.o label.o button.o checkbox.o \
 	textbox.o keycodes.o primitive.o radio.o graph.o bitmap.o tlist.o \
 	scrollbar.o palette.o titlebar.o spinbutton.o combo.o
 
-FOBJ=	window.fob
-FOBDIR=	/engine/widget
-FOFFS=	window_offs.h
-XCF=	window.xcf
+DEN=		window.den
+DEN_DIR=	engine/widget
+DEN_NAME=	"Window titlebar icons"
+DEN_AUTHOR=	"vedge@"
+DEN_COPYRIGHT=	"2003 CubeSoft Communications, Inc."
+XCF=		window.xcf
 
 MAN3=	widget.3 button.3 graph.3 \
 	checkbox.3 label.3 radio.3 \
@@ -39,6 +41,6 @@ PSMAN3=	widget.ps3 button.ps3 graph.ps3 \
 
 CFLAGS+=${SDL_CFLAGS}
 
-include ${TOP}/libfobj/Makefile.inc
+include ${TOP}/dencomp/Makefile.inc
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: unicode.c,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -27,7 +27,7 @@
  */
 
 #include <engine/engine.h>
-#include <engine/media/loader/unicode.h>
+#include <engine/loader/unicode.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,8 +60,7 @@ write_unicode(struct netbuf *buf, const Uint16 *ucs)
 	size_t len;
 
 	if ((len = (ucslen(ucs)+1) * sizeof(Uint16)) > UNICODE_MAX) {
-		fprintf(stderr, "string too big\n");
-		abort();
+		fatal("string is too big");
 	}
 	write_uint32(buf, (Uint32)len);
 	netbuf_write(ucs, len, 1, buf);
@@ -81,21 +80,22 @@ copy_unicode(Uint16 *dst, struct netbuf *buf, size_t dst_size)
 
 	/* The terminating NUL is included in the encoding. */
 	if ((len = read_uint32(buf)) > dst_size) {
-		fprintf(stderr, "%lu byte string truncated to fit %lu\n",
+		fprintf(stderr, "%lu byte UTF-16 string truncated to fit %lu\n",
 		    (unsigned long)len, (unsigned long)dst_size);
 		rv = len;				/* Save */
 		len = dst_size;				/* Truncate */
 	}
 
-	if ((rrv = fread(dst, len, 1, buf->file)) < len) {
+	if ((rrv = fread(dst, 1, len, buf->file)) < len) {
 		if (ferror(buf->file) || feof(buf->file)) {
-			fprintf(stderr, "error reading string; truncated\n");
+			fprintf(stderr,
+			    "error reading UTF-16 string (truncated)\n");
 			if (dst_size > 0) {
 				dst[0] = '\0';
 				rv = 1;
 			}
 		} else {
-			fprintf(stderr, "short read: %lu/%lu\n",
+			fprintf(stderr, "short read: %lu/%lu (truncated)\n",
 			    (unsigned long)rrv, (unsigned long)len);
 			rv = rrv;
 			dst[rrv] = '\0';		/* NUL-terminate */

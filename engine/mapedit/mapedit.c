@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.176 2003/06/13 22:45:18 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.177 2003/06/17 23:30:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/map.h>
 #include <engine/view.h>
 #include <engine/prop.h>
@@ -41,7 +40,6 @@
 #include <engine/widget/label.h>
 
 #include "mapedit.h"
-#include "mapedit_offs.h"
 #include "mapview.h"
 
 #include "tool/tool.h"
@@ -158,8 +156,8 @@ mapedit_init(void)
 	
 	object_init(&mapedit, "map-editor", "map-editor", &mapedit_ops);
 	OBJECT(&mapedit)->flags |= OBJECT_RELOAD_PROPS;
-	if (object_load_art(&mapedit, "/engine/mapedit/mapedit", 1) == -1)
-		fatal("%s", error_get());
+	OBJECT(&mapedit)->gfx = gfx_fetch(&mapedit, "/engine/mapedit/mapedit");
+	gfx_wire(OBJECT(&mapedit)->gfx);
 
 	map_init(&mapedit.copybuf, "mapedit-copybuf");
 	mapedit.curtool = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.39 2003/06/09 00:03:02 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.40 2003/06/17 23:30:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/view.h>
 
 #include "merge.h"
@@ -674,7 +673,7 @@ merge_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)mer->inherit_flags);
 	write_uint32(buf, (Uint32)mer->random_shift);
 
-	count_offs = buf->offs;				/* Skip count */
+	count_offs = netbuf_tell(buf);				/* Skip count */
 	write_uint32(buf, 0);	
 	TAILQ_FOREACH(ob, &mer->brushes, cobjs) {
 		struct brush *brush = (struct brush *)ob;

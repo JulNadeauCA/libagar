@@ -1,0 +1,68 @@
+.\"	$Csoft: fobjcomp.1,v 1.8 2003/03/07 03:27:41 vedge Exp $
+.\"
+.\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd JUNE 19, 2003
+.Dt DENEX 1
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm denex
+.Nd agar den archive extractor
+.Sh SYNOPSIS
+.Nm denex
+.Op Fl qi
+.Op Fl o Ar outdir
+.Op Ar archive.den
+.Sh DESCRIPTION
+The
+.Nm
+utility extracts the data contained in an agar
+.Xr den 5
+archive.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl q
+Disable informational messages.
+.It Fl i
+Don't extract any data.
+.It Fl d
+Define the output directory.
+.El
+.Sh EXAMPLES
+.Cm denex -o /tmp foo.den
+.Pp
+Extract the contents of
+.Pa foo.den
+into
+.Pa /tmp .
+.\" .Sh ENVIRONMENT
+.\" .Sh FILES
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr den 5 ,
+.Xr dencomp 1

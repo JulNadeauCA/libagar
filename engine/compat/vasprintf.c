@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.7 2003/03/25 13:48:02 vedge Exp $	*/
+/*	$Csoft: vasprintf.c,v 1.8 2003/03/28 00:23:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include <engine/error.h>
+#include <engine/error/error.h>
 
 #include "vasprintf.h"
 
