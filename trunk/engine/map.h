@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.100 2004/02/20 04:18:07 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.101 2004/02/25 18:11:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -49,13 +49,15 @@ struct noderef {
 #define NODEREF_SLIP	0x04		/* Surface is slippery */
 #define NODEREF_BIO	0x08		/* Contact induces Poison */
 #define NODEREF_REGEN	0x10		/* Contact induces Regen */
+#define NODEREF_NOSAVE	0x20		/* Non persistent */
+
 	Sint8	friction;		/* Coefficient of friction (if n>0),
 					   or acceleration (if n<0). */
 	Uint8	layer;			/* Associated layer# */
 	struct {
 		Sint16	xcenter, ycenter;	/* Centering offsets */
 		Sint16	xmotion, ymotion;	/* Motion offsets */
-		Uint8	edge;			/* Edge (for edition) */
+		Uint8	edge;			/* Edge type (for edition) */
 	} r_gfx;
 	union {
 		struct {

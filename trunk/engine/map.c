@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.201 2004/02/26 10:37:04 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.202 2004/03/02 08:57:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -901,7 +901,7 @@ fail:
 }
 
 /*
- * Save a noderef structure, encoding the object ids using dependencies.
+ * Save a node reference.
  * The noderef's parent map must be locked.
  */
 void
@@ -962,15 +962,13 @@ node_save(struct map *m, struct netbuf *buf, struct node *node)
 	nrefs_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->flags & NODEREF_NOSAVE) {
+			continue;
+		}
 		noderef_save(m, buf, r);
 		nrefs++;
 	}
 	pwrite_uint32(buf, nrefs, nrefs_offs);
-}
-
-static void
-map_layer_save(struct netbuf *buf, const struct map_layer *lay)
-{
 }
 
 int
