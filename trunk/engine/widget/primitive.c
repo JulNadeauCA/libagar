@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.19 2002/11/14 00:41:46 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.20 2002/11/14 00:44:11 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -37,32 +37,8 @@
 
 static void	apply(int, union evarg *);
 
-static void	box_3d(void *, int, int, int, int, int, Uint32);
-static void	box_2d(void *, int, int, int, int, int, Uint32);
-static void	frame_3d(void *, int, int, int, int, Uint32);
-static void	circle_bresenham(void *, int, int, int, int, int, Uint32);
-static void	line_bresenham(void *, int, int, int, int, Uint32);
-static void	line_bresenham_dashed(void *, int, int, int, int, Uint32, int);
-static void	line_bresenham_dashed1(void *, int, int, int, int, Uint32);
-static void	line_bresenham_dashed2(void *, int, int, int, int, Uint32);
-static void	line_bresenham_dashed3(void *, int, int, int, int, Uint32);
-static void	line_bresenham_dashed4(void *, int, int, int, int, Uint32);
-static void	line_bresenham_dashed5(void *, int, int, int, int, Uint32);
-static void	square_composite(void *, int, int, int, int, Uint32);
-static void	triangle_composite(void *, int[2], int[2], int[2], Uint32);
-
 static __inline__ void	put_pixel1(Uint8, Uint8 *, Uint32);
 static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
-
-/* Default primitives ops */
-struct primitive_ops primitives = {
-	box_3d,			/* box */
-	frame_3d,		/* frame */
-	circle_bresenham,	/* circle */
-	line_bresenham,		/* line */
-	square_composite,	/* square */
-	triangle_composite	/* triangle */
-};
 
 /* Types of primitives */
 enum {
@@ -177,6 +153,78 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	primitives.line(wid,			/* Right */
 	    xoffs+w-1, yoffs,
 	    xoffs+w-1, yoffs+h-1, rcol);
+}
+
+static void
+box_3d_dark(void *p, int xoffs, int yoffs, int w, int h, int z,
+    Uint32 color, int ra, int ga, int ba)
+{
+	struct widget *wid = p;
+	Uint32 lcol, rcol, bcol;
+	
+	color = alter_color(color, ra, ga, ba);
+
+	lcol = (z < 0) ?
+	    alter_color(color, -60, -60, -60) :
+	    alter_color(color, 60, 60, 60);
+	
+	rcol = (z < 0) ?
+	    alter_color(color, 60, 60, 60) :
+	    alter_color(color, -60, -60, -60);
+
+	bcol = (z < 0) ?
+	    alter_color(color, -20, -20, -20) :
+	    color;
+
+	if (WIDGET_FOCUSED(wid)) {
+		bcol = alter_color(bcol, 6, 6, 15);
+	}
+
+	/* Background */
+	WIDGET_FILL(wid, xoffs, yoffs, w, h, bcol);
+
+	primitives.line(wid,			/* Top */
+	    xoffs, yoffs,
+	    xoffs+w-1, yoffs, lcol);
+	primitives.line(wid,			/* Left */
+	    xoffs, yoffs,
+	    xoffs, yoffs+h-1, lcol);
+	primitives.line(wid,			/* Bottom */
+	    xoffs, yoffs+h-1,
+	    xoffs+w-1, yoffs+h-1, rcol);
+	primitives.line(wid,			/* Right */
+	    xoffs+w-1, yoffs,
+	    xoffs+w-1, yoffs+h-1, rcol);
+}
+
+static void
+box_3d_dark1(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+{
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -20, -20, -20);
+}
+
+static void
+box_3d_dark2(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+{
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -40, -40, -40);
+}
+
+static void
+box_3d_dark3(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+{
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -60, -60, -60);
+}
+
+static void
+box_3d_dark4(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+{
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -100, -100, -100);
+}
+
+static void
+box_3d_dark5(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+{
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -120, -120, -120);
 }
 
 static void
@@ -436,36 +484,6 @@ done:
 }
 
 static void
-line_bresenham_dashed1(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 1);
-}
-
-static void
-line_bresenham_dashed2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 2);
-}
-
-static void
-line_bresenham_dashed3(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 3);
-}
-
-static void
-line_bresenham_dashed4(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 4);
-}
-
-static void
-line_bresenham_dashed5(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 5);
-}
-
-static void
 line_bresenham_dashed(void *wid, int x1, int y1, int x2, int y2, Uint32 color,
     int dash)
 {
@@ -612,6 +630,36 @@ done:
 }
 
 static void
+line_bresenham_dashed1(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 1);
+}
+
+static void
+line_bresenham_dashed2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 2);
+}
+
+static void
+line_bresenham_dashed3(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 3);
+}
+
+static void
+line_bresenham_dashed4(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 4);
+}
+
+static void
+line_bresenham_dashed5(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 5);
+}
+
+static void
 square_composite(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
@@ -653,6 +701,16 @@ triangle_composite(void *p, int p1[2], int p2[2], int p3[2], Uint32 color)
 	    p1[0], p1[1], color);
 }
 
+/* Default primitives ops */
+struct primitive_ops primitives = {
+	box_3d,			/* box */
+	frame_3d,		/* frame */
+	circle_bresenham,	/* circle */
+	line_bresenham,		/* line */
+	square_composite,	/* square */
+	triangle_composite	/* triangle */
+};
+
 struct window *
 primitive_config_window(void)
 {
@@ -673,26 +731,40 @@ primitive_config_window(void)
 	
 	lab = label_new(reg, "Box:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL, "3d-style", box_3d);
-	tlist_insert_item(tl, NULL, "2d-style", box_2d);
+	tlist_insert_item(tl, NULL,
+	    "2d-style", box_2d);
+	tlist_insert_item_selected(tl, NULL,
+	    "3d-style", box_3d);
+	tlist_insert_item(tl, NULL,
+	    "Dark 3d-style #1", box_3d_dark1);
+	tlist_insert_item(tl, NULL,
+	    "Dark 3d-style #2", box_3d_dark2);
+	tlist_insert_item(tl, NULL,
+	    "Dark 3d-style #3", box_3d_dark3);
+	tlist_insert_item(tl, NULL,
+	    "Dark 3d-style #4", box_3d_dark4);
+	tlist_insert_item(tl, NULL,
+	    "Dark 3d-style #5", box_3d_dark5);
 	event_new(tl, "tlist-changed", 0, apply, "%i", BOX);
 
 	lab = label_new(reg, "Frame:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL, "3d-style", frame_3d);
+	tlist_insert_item_selected(tl, NULL,
+	    "3d-style", frame_3d);
 	event_new(tl, "tlist-changed", 0, apply, "%i", FRAME);
 
 	lab = label_new(reg, "Circle:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL, "Bresenham #1", circle_bresenham);
+	tlist_insert_item_selected(tl, NULL,
+	    "Bresenham #1", circle_bresenham);
 	event_new(tl, "tlist-changed", 0, apply, "%i", CIRCLE);
 	
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 93);
 		
 	lab = label_new(reg, "Line:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL,
-	    "Bresenham #1", line_bresenham);
+	tlist_insert_item_selected(tl, NULL,
+	    "Bresenham plain #1", line_bresenham);
 	tlist_insert_item(tl, NULL,
 	    "Bresenham dashed #1", line_bresenham_dashed1);
 	tlist_insert_item(tl, NULL,
@@ -707,12 +779,14 @@ primitive_config_window(void)
 		
 	lab = label_new(reg, "Square:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL, "Composite", square_composite);
+	tlist_insert_item_selected(tl, NULL,
+	    "Composite", square_composite);
 	event_new(tl, "tlist-changed", 0, apply, "%i", SQUARE);
 		
 	lab = label_new(reg, "Triangle:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL, "Composite", triangle_composite);
+	tlist_insert_item_selected(tl, NULL,
+	    "Composite", triangle_composite);
 	event_new(tl, "tlist-changed", 0, apply, "%i", TRIANGLE);
 
 	return (win);
@@ -747,3 +821,56 @@ apply(int argc, union evarg *argv)
 	}
 }
 
+void
+primitive_sequence(struct window *win, enum primitive_seq seq)
+{
+	void (*old_line)(void *, int, int, int, int, Uint32);
+	int i;
+#define REDRAW() {						\
+	window_draw(win);					\
+	SDL_UpdateRects(view->v, view->ndirty, view->dirty);	\
+	view->ndirty = 0;					\
+}
+
+	switch (seq) {
+	case PRIMITIVE_SEQ_MATERIALIZE:
+		old_line = primitives.line;
+		primitives.line = line_bresenham_dashed5;
+		REDRAW();
+		SDL_Delay(50);
+		primitives.line = line_bresenham_dashed4;
+		REDRAW();
+		SDL_Delay(40);
+		primitives.line = line_bresenham_dashed3;
+		REDRAW();
+		SDL_Delay(30);
+		primitives.line = line_bresenham_dashed2;
+		REDRAW();
+		SDL_Delay(20);
+		primitives.line = line_bresenham_dashed1;
+		REDRAW();
+		SDL_Delay(15);
+		primitives.line = old_line;
+		break;
+	case PRIMITIVE_SEQ_DEMATERIALIZE:
+		old_line = primitives.line;
+		primitives.line = line_bresenham_dashed1;
+		REDRAW();
+		SDL_Delay(15);
+		primitives.line = line_bresenham_dashed2;
+		REDRAW();
+		SDL_Delay(20);
+		primitives.line = line_bresenham_dashed3;
+		REDRAW();
+		SDL_Delay(25);
+		primitives.line = line_bresenham_dashed4;
+		REDRAW();
+		SDL_Delay(30);
+		primitives.line = line_bresenham_dashed5;
+		REDRAW();
+		SDL_Delay(35);
+		primitives.line = old_line;
+		break;
+	}
+#undef REDRAW()
+}

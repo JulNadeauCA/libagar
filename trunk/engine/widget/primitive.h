@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.11 2002/09/07 04:36:59 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.12 2002/09/11 23:55:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct primitive_ops {
@@ -16,5 +16,11 @@ struct primitive_ops {
 
 extern struct primitive_ops primitives;
 
+enum primitive_seq {
+	PRIMITIVE_SEQ_MATERIALIZE,
+	PRIMITIVE_SEQ_DEMATERIALIZE
+};
+
 struct window	*primitive_config_window(void);
+void		 primitive_sequence(struct window *, enum primitive_seq);
 

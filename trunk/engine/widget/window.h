@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.43 2002/11/12 02:25:47 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.44 2002/11/13 00:22:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -35,6 +35,8 @@ struct window {
 #define WINDOW_SHOWN		0x040	/* Visible */
 #define WINDOW_CENTER		0x080	/* Center window */
 #define WINDOW_SAVE_POSITION	0x100	/* Save window position on hide/exit */
+#define WINDOW_MATERIALIZE	0x200	/* Materialize effect */
+#define WINDOW_DEMATERIALIZE	0x400	/* Dematerialize effect */
 
 	window_type_t	type;
 
@@ -104,10 +106,10 @@ struct window {
 
 #define WINDOW_SURFACE(win)	(view->v)
 
-#define WINDOW_INSIDE(wina, xa, ya)				\
-	((xa) > (wina)->rd.x && (ya) > (wina)->rd.y &&		\
-	 (xa) < ((wina)->rd.x+(wina)->rd.w) && 			\
-	 (ya) < ((wina)->rd.y+(wina)->rd.h))
+#define WINDOW_INSIDE(win, xa, ya)				\
+	((xa) > (win)->rd.x && (ya) > (win)->rd.y &&		\
+	 (xa) < ((win)->rd.x+(win)->rd.w) && 			\
+	 (ya) < ((win)->rd.y+(win)->rd.h))
 
 struct window	*window_new(char *, char *, int, int, int, int, int, int, int);
 void	 	 window_init(struct window *, char *, char *, int, int, int,

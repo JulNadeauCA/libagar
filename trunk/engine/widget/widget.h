@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.39 2002/11/08 07:35:46 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.40 2002/11/13 00:22:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -54,7 +54,6 @@ struct widget {
 	struct	widget_colorq colors;
 
 	TAILQ_ENTRY(widget) widgets;		/* Widgets inside region */
-	TAILQ_HEAD(, widget) subwidgets;	/* Widgets inside widget */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
