@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.38 2002/06/09 10:05:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.39 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -56,6 +56,8 @@ static const struct object_ops window_ops = {
 static Uint32 delta = 0, delta2 = 256;
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
+static void	window_move(struct window *, Uint16, Uint16);
+
 struct window *
 window_new(char *caption, int flags, enum window_type type, int x, int y,
     int w, int h) {
@@ -65,7 +67,7 @@ window_new(char *caption, int flags, enum window_type type, int x, int y,
 	window_init(win, mainview, caption, flags, type, x, y, w, h);
 
 	/* Attach window to main view, make it visible. */
-	view_attach(mainview, win);
+	view_attach(win);
 
 	return (win);
 }
@@ -423,15 +425,19 @@ window_destroy(void *p)
 	pthread_mutex_destroy(&win->lock);
 }
 
-/* Window/view must be locked. */
+/* View must be locked, window must not. */
 int
 window_show(struct window *win)
 {
 	struct viewport *view = win->view;
 	struct region *reg;
 	struct widget *wid;
+#if 0
 	struct window *owin;
+#endif
 	int prev;
+
+	pthread_mutex_lock(&win->lock);
 
 	prev = (win->flags & WINDOW_SHOW);
 	if (prev) {
@@ -446,7 +452,7 @@ window_show(struct window *win)
 	win->vmask.y = (win->y / TILEH) - view->mapyoffs;
 	win->vmask.w = (win->w / TILEW);
 	win->vmask.h = (win->h / TILEW);
-	view_maskfill(win->view, &win->vmask, 1);
+	view_maskfill(&win->vmask, 1);
 	win->redraw++;
 
 	TAILQ_REMOVE(&view->windowsh, win, windows);
@@ -457,7 +463,8 @@ window_show(struct window *win)
 			event_post(wid, "shown", "%p", win);
 		}
 	}
-	
+
+#if 0
 	/* Other windows titlebars should be redrawn. */
 	TAILQ_FOREACH(owin, &win->view->windowsh, windows) {
 		if (win == owin) {
@@ -469,6 +476,8 @@ window_show(struct window *win)
 		}
 		pthread_mutex_unlock(&owin->lock);
 	}
+#endif
+	pthread_mutex_unlock(&win->lock);
 
 	return (prev);
 }
@@ -497,7 +506,7 @@ window_hide(struct window *win)
 	}
 	
 	win->flags &= ~(WINDOW_SHOW);
-	view_maskfill(view, &win->vmask, -1);
+	view_maskfill(&win->vmask, -1);
 
 	/* Map may become visible. */
 	if (view->map != NULL) {
@@ -523,22 +532,6 @@ window_hide(struct window *win)
 	}
 	
 	return (prev);
-}
-
-/* View must be locked. */
-void
-window_draw_all(void)
-{
-	struct window *win;
-
-	TAILQ_FOREACH(win, &mainview->windowsh, windows) {
-		if (pthread_mutex_trylock(&win->lock) == 0) {
-			if (win->redraw && win->flags & WINDOW_SHOW) {
-				window_draw(win);
-			}
-			pthread_mutex_unlock(&win->lock);
-		}
-	}
 }
 
 /*
@@ -620,6 +613,47 @@ cycle_widgets(struct window *win, int reverse)
 	}
 }
 
+/* View and window must be locked. */
+static void
+window_move(struct window *win, Uint16 x, Uint16 y)
+{
+	struct viewport *view = win->view;
+
+	if (MAP_COORD(x, view) < view->wop_mapx)
+		win->x -= TILEW;
+	else if (MAP_COORD(x, view) > view->wop_mapx)
+		win->x += TILEW;
+	if (MAP_COORD(y, view) < view->wop_mapy)
+		win->y -= TILEH;
+	else if (MAP_COORD(y, view) > view->wop_mapy)
+		win->y += TILEH;
+
+	if ((win->x + win->w) > (view->w - TILEW))
+		win->x = view->w - win->w - TILEW;
+	if ((win->y + win->h) > (view->h - TILEH))
+		win->y = view->h - win->h;
+	if (win->x < TILEW)
+		win->x = TILEW;
+	if (win->y < TILEH)
+		win->y = TILEH;
+	
+	view_maskfill(&win->vmask, -1);
+	win->vmask.x = (win->x / TILEW) - view->mapxoffs;
+	win->vmask.y = (win->y / TILEH) - view->mapyoffs;
+	win->vmask.w = (win->w / TILEW);
+	win->vmask.h = (win->h / TILEW);
+	view_maskfill(&win->vmask, 1);
+
+	/* XXX incomplete */
+	win->redraw++;
+	pthread_mutex_lock(&mainview->map->lock);
+	mainview->map->redraw++;	/* XXX */
+	pthread_mutex_unlock(&mainview->map->lock);
+			
+	view->wop_mapx = MAP_COORD(x, view);
+	view->wop_mapy = MAP_COORD(y, view);
+}
+
 /*
  * Dispatch events to widgets and windows.
  * View must be locked, window list must not be empty.
@@ -631,6 +665,11 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 	struct window *win;
 	struct widget *wid;
 
+	if (ev->type == SDL_MOUSEBUTTONUP && view->winop != VIEW_WINOP_NONE) {
+		view->winop = VIEW_WINOP_NONE;
+		return (1);
+	}
+
 	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
 		pthread_mutex_lock(&win->lock);
 		if ((win->flags & WINDOW_SHOW) == 0) {
@@ -638,46 +677,12 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
+			if (view->wop_win != win) {
+				goto nextwin;
+			}
 			switch (view->winop) {
 			case VIEW_WINOP_MOVE:
-				view_maskfill(view, &win->vmask, -1);
-				if (MAP_COORD(ev->motion.x, view) <
-				    view->wop_mapx)
-					win->x -= TILEW;
-				else if (MAP_COORD(ev->motion.x, view) >
-				    view->wop_mapx)
-					win->x += TILEW;
-				if (MAP_COORD(ev->motion.y, view) <
-				    view->wop_mapy)
-					win->y -= TILEH;
-				else if (MAP_COORD(ev->motion.y, view) >
-				    view->wop_mapy)
-					win->y += TILEH;
-
-				if ((win->x + win->w) > view->w - 32)
-					win->x = view->w - win->w - 32;
-				if ((win->y + win->h) > view->h - 32)
-					win->y = view->h - win->h - 32;
-				if (win->x < 32)
-					win->x = 32;
-				if (win->y < 32)
-					win->y = 32;
-			
-				win->vmask.x = (win->x / TILEW) -
-				    view->mapxoffs;
-				win->vmask.y = (win->y / TILEH) -
-				    view->mapyoffs;
-				win->vmask.w = (win->w / TILEW);
-				win->vmask.h = (win->h / TILEW);
-				view_maskfill(view, &win->vmask, 1);
-
-				/* XXX incomplete */
-				win->redraw++;
-				mainview->map->redraw++;	/* XXX */
-			
-				view->wop_mapx = MAP_COORD(ev->motion.x, view);
-				view->wop_mapy = MAP_COORD(ev->motion.y, view);
-	
+				window_move(win, ev->motion.x, ev->motion.y);
 				goto posted;
 			case VIEW_WINOP_RESIZE:
 			case VIEW_WINOP_NONE:
@@ -685,15 +690,14 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			view->winop = VIEW_WINOP_NONE;
-			/* FALLTHROUGH */
 		case SDL_MOUSEBUTTONDOWN:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto nextwin;
 			}
-			if (ev->type && SDL_MOUSEBUTTONDOWN &&
+			if (ev->type == SDL_MOUSEBUTTONDOWN &&
 			    ev->button.y - win->y <= win->titleh) {
 				view->winop = VIEW_WINOP_MOVE;
+				view->wop_win = win;
 			}
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
@@ -755,7 +759,6 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 nextwin:
 		pthread_mutex_unlock(&win->lock);
 	}
-
 	return (0);
 posted:
 	pthread_mutex_unlock(&win->lock);
