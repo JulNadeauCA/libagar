@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.17 2002/11/08 07:36:29 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.18 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,6 +26,7 @@
  */
 
 #include "engine.h"
+#include "compat/gethostname.h"
 
 #include <pwd.h>
 #include <fcntl.h>
