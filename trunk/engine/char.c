@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.28 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.29 2002/04/02 19:51:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ char_load(void *p, int fd)
 	ch->nzuars = fobj_read_uint32(fd);
 
 #if 0
-	text_msg(4000, TEXT_SLEEP|TEXT_DEBUG,
+	text_msg(4, TEXT_SLEEP|TEXT_DEBUG,
 	    "%s (0x%x)\n"
 	    "Level %d\n"
 	    "Exp %d\n"
