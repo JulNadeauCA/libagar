@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.36 2003/01/18 06:56:29 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.37 2003/01/19 11:25:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -513,7 +513,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 						oitem->selected = 1;
 					i++;
 				}
-			} else if (oind > tind) {		/* Backward */
+			} else if (oind >= tind) {		/* Backward */
 				i = nitems;
 				TAILQ_FOREACH_REVERSE(oitem, &tl->items,
 				    items, tlist_itemq) {
