@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.141 2003/01/03 23:06:36 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.142 2003/01/04 14:10:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -296,6 +296,10 @@ window_draw_frame(struct window *win)
 			primitives.line(win,		/* Right */
 			    win->rd.w - i,	i,
 			    win->rd.w - i, 	win->titleh + win->borderw - i,
+			    win->border[i]);
+			primitives.line(win,		/* Bottom */
+			    i,			win->titleh + win->borderw - i,
+			    win->rd.w - i,	win->titleh + win->borderw - i,
 			    win->border[i]);
 		}
 	}
@@ -741,7 +745,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 	case GFX_ENGINE_GUI:
 		newpos = win->rd;
 		if (win->flags & WINDOW_HIDDEN_BODY) {
-			oldpos.h = win->titleh + win->borderw*2;
+			oldpos.h = win->titleh + win->borderw;
 			newpos.h = oldpos.h;
 		}
 		rfill1.w = 0;
@@ -823,7 +827,8 @@ winop_hide_body(struct window *win)
 		SDL_Rect rfill = win->rd;
 
 		win->flags &= ~(WINDOW_HIDDEN_BODY);
-		win->rd = win->saved_rd;
+		win->rd.w = win->saved_rd.w;
+		win->rd.h = win->saved_rd.h;
 	} else {					/* Hide */
 		int titleh = win->titleh + win->borderw;
 
