@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.6 2005/01/31 08:40:35 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.7 2005/02/02 01:49:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -74,6 +74,7 @@ tileset_init(void *obj, const char *name)
 
 	object_init(ts, "tileset", name, &tileset_ops);
 	gfx_alloc_pvt(ts, "tiles");
+	OBJECT(ts)->flags |= OBJECT_REOPEN_ONLOAD;
 
 	pthread_mutex_init(&ts->lock, NULL);
 	TAILQ_INIT(&ts->tiles);

@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.69 2004/11/30 11:31:13 vedge Exp $
+.\"	$Csoft: object.3,v 1.70 2005/01/05 04:44:03 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -178,7 +178,7 @@ If other windows are to be created as part of this object's edition process,
 they should be attached to the main edition window using
 .Xr window_attach 3 .
 .Pp
-The following
+The following public
 .Nm
 flags are defined:
 .Bd -literal
@@ -189,6 +189,7 @@ flags are defined:
 #define OBJECT_PRESERVE_DEPS  0x10 /* Don't remove dep if count=0 */
 #define OBJECT_STATIC         0x20 /* Don't free() after detach */
 #define OBJECT_READONLY       0x40 /* Disallow edition (advisory) */
+#define OBJECT_REOPEN_ONLOAD  0x200 /* Close/reopen editor on load */
 .Ed
 .Pp
 The
@@ -213,6 +214,17 @@ flag advises the object editor not to destroy this object.
 advises the object-specific
 .Va edit
 operation that this object should not be edited.
+.Pp
+The
+.Dv OBJECT_REOPEN_ONLOAD
+flag causes the object's edition window
+(as returned by the object's
+.Sq edit
+operation) and all sub-windows to be automatically destroyed and re-opened
+by
+.Fn object_load ,
+such that the editor does not need to worry about referencing dynamically
+allocated object substructures that are freed by the load routine.
 .Pp
 The
 .Dv OBJECT_DATA_RESIDENT
