@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.10 2002/07/18 12:04:20 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.11 2002/08/19 05:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -65,10 +65,10 @@ version_read(int fd, const struct version *ver)
 		warning("%s: bad magic\n", ver->name);
 		return (-1);
 	}
-	vermin = fobj_read_uint32(fd);
-	vermaj = fobj_read_uint32(fd);
-	user = fobj_read_string(fd);
-	host = fobj_read_string(fd);
+	vermin = read_uint32(fd);
+	vermaj = read_uint32(fd);
+	user = read_string(fd);
+	host = read_string(fd);
 
 	if (vermaj != ver->vermaj) {
 		warning("%s: : v%d.%d != %d.%d major differs\n", ver->name,
@@ -93,13 +93,13 @@ version_write(int fd, const struct version *ver)
 	char host[64];
 
 	ewrite(fd, ver->name, strlen(ver->name));
-	fobj_write_uint32(fd, ver->vermin);
-	fobj_write_uint32(fd, ver->vermaj);
+	write_uint32(fd, ver->vermin);
+	write_uint32(fd, ver->vermaj);
 	
 	pw = getpwuid(getuid());
-	fobj_write_string(fd, pw->pw_name);
+	write_string(fd, pw->pw_name);
 	gethostname(host, sizeof(host));
-	fobj_write_string(fd, host);
+	write_string(fd, host);
 
 	return (0);
 }

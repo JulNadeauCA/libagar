@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.28 2002/08/12 06:34:52 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.29 2002/08/17 22:17:32 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <libfobj/fobj.h>
 
 #include "engine.h"
 #include "map.h"
@@ -124,11 +126,11 @@ config_load(void *p, int fd)
 	pthread_mutex_lock(&con->lock);
 
 	version_read(fd, &config_ver);
-	config->flags = fobj_read_uint32(fd);
-	config->view.w = fobj_read_uint32(fd);
-	config->view.h = fobj_read_uint32(fd);
-	config->view.bpp = fobj_read_uint32(fd);
-	config->widget_flags = fobj_read_uint32(fd);
+	config->flags = read_uint32(fd);
+	config->view.w = read_uint32(fd);
+	config->view.h = read_uint32(fd);
+	config->view.bpp = read_uint32(fd);
+	config->widget_flags = read_uint32(fd);
 
 	pthread_mutex_unlock(&con->lock);
 
@@ -144,11 +146,11 @@ config_save(void *p, int fd)
 	pthread_mutex_lock(&con->lock);
 
 	version_write(fd, &config_ver);
-	fobj_write_uint32(fd, con->flags);
-	fobj_write_uint32(fd, con->view.w);
-	fobj_write_uint32(fd, con->view.h);
-	fobj_write_uint32(fd, con->view.bpp);
-	fobj_write_uint32(fd, con->widget_flags);
+	write_uint32(fd, con->flags);
+	write_uint32(fd, con->view.w);
+	write_uint32(fd, con->view.h);
+	write_uint32(fd, con->view.bpp);
+	write_uint32(fd, con->widget_flags);
 	pthread_mutex_unlock(&con->lock);
 	
 	dprintf("saved settings (flags=0x%x)\n", config->flags);

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.30 2002/08/15 20:50:33 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.31 2002/08/20 05:57:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -10,8 +10,6 @@
 #include <stdlib.h>
 
 #include <SDL.h>
-
-#include <libfobj/fobj.h>
 
 #include <engine/queue.h>
 #include <engine/error.h>

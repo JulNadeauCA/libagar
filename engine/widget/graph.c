@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.8 2002/07/30 22:23:57 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.9 2002/08/12 06:57:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -128,30 +128,30 @@ graph_load(void *p, int fd)
 	Uint32 nitems, i;
 
 	version_read(fd, &graph_ver);
-	gra->type = fobj_read_uint32(fd);
-	gra->flags = fobj_read_uint32(fd);
-	gra->origin_y = fobj_read_uint32(fd);
-	gra->origin_color[0] = fobj_read_uint32(fd);
-	gra->origin_color[1] = fobj_read_uint32(fd);
-	gra->xinc = fobj_read_uint32(fd);
-	gra->yrange = fobj_read_sint32(fd);
-	gra->xoffs = fobj_read_uint32(fd);
-	gra->caption = fobj_read_string(fd);
+	gra->type = read_uint32(fd);
+	gra->flags = read_uint32(fd);
+	gra->origin_y = read_uint32(fd);
+	gra->origin_color[0] = read_uint32(fd);
+	gra->origin_color[1] = read_uint32(fd);
+	gra->xinc = read_uint32(fd);
+	gra->yrange = read_sint32(fd);
+	gra->xoffs = read_uint32(fd);
+	gra->caption = read_string(fd);
 	
-	nitems = fobj_read_uint32(fd);
+	nitems = read_uint32(fd);
 	for (i = 0; i < nitems; i++) {
 		struct graph_item *nitem;
 		Uint32 vi, color, nvals;
 		char *s;
 
-		s = fobj_read_string(fd);
-		color = fobj_read_uint32(fd);
-		nvals = fobj_read_uint32(fd);
+		s = read_string(fd);
+		color = read_uint32(fd);
+		nvals = read_uint32(fd);
 
 		nitem = graph_add_item(gra, s, color);
 
 		for (vi = 0; vi < nvals; vi++) {
-			graph_plot(nitem, fobj_read_sint32(fd));
+			graph_plot(nitem, read_sint32(fd));
 		}
 	}
 
@@ -167,29 +167,29 @@ graph_save(void *p, int fd)
 	Uint32 nitems = 0;
 
 	version_write(fd, &graph_ver);
-	fobj_write_uint32(fd, gra->type);
-	fobj_write_uint32(fd, gra->flags);
-	fobj_write_uint32(fd, gra->origin_y);
-	fobj_write_uint32(fd, gra->origin_color[0]);
-	fobj_write_uint32(fd, gra->origin_color[1]);
-	fobj_write_uint32(fd, gra->xinc);
-	fobj_write_uint32(fd, gra->yrange);
-	fobj_write_uint32(fd, gra->xoffs);
-	fobj_write_string(fd, gra->caption);
+	write_uint32(fd, gra->type);
+	write_uint32(fd, gra->flags);
+	write_uint32(fd, gra->origin_y);
+	write_uint32(fd, gra->origin_color[0]);
+	write_uint32(fd, gra->origin_color[1]);
+	write_uint32(fd, gra->xinc);
+	write_uint32(fd, gra->yrange);
+	write_uint32(fd, gra->xoffs);
+	write_string(fd, gra->caption);
 	
 	TAILQ_FOREACH(gi, &gra->items, items) {
 		nitems++;
 	}
-	fobj_write_uint32(fd, nitems);
+	write_uint32(fd, nitems);
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
 		Uint32 i;
 
-		fobj_write_string(fd, gi->name);
-		fobj_write_uint32(fd, gi->color);
-		fobj_write_uint32(fd, gi->nvals);
+		write_string(fd, gi->name);
+		write_uint32(fd, gi->color);
+		write_uint32(fd, gi->nvals);
 		for (i = 0; i < gi->nvals; i++) {
-			fobj_write_sint32(fd, gi->vals[i]);
+			write_sint32(fd, gi->vals[i]);
 		}
 	}
 

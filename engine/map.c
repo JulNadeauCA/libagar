@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.109 2002/08/19 05:26:56 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.110 2002/08/20 00:06:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -33,6 +33,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+
+#include <libfobj/fobj.h>
+#include <libfobj/buf.h>
 
 #include "engine.h"
 #include "map.h"
@@ -697,10 +700,10 @@ map_load_flat_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 			struct object *pobj = NULL;
 			Uint32 i, nrefs;
 
-			node->flags = fobj_read_uint32(fd);
-			node->v1 = fobj_read_uint32(fd);
-			node->v2 = fobj_read_uint32(fd);
-			nrefs = fobj_read_uint32(fd);
+			node->flags = read_uint32(fd);
+			node->v1 = read_uint32(fd);
+			node->v2 = read_uint32(fd);
+			nrefs = read_uint32(fd);
 #ifdef DEBUG
 			if (nrefs > 256)
 				dprintnode(m, x, y, "funny node");
@@ -709,10 +712,10 @@ map_load_flat_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 				Uint32 obji, offs, frame, flags;
 				struct object *pobj;
 
-				obji = fobj_read_uint32(fd);
-				offs = fobj_read_uint32(fd);
-				frame = fobj_read_uint32(fd);
-				flags = fobj_read_uint32(fd);
+				obji = read_uint32(fd);
+				offs = read_uint32(fd);
+				frame = read_uint32(fd);
+				flags = read_uint32(fd);
 			
 				if (obji > nobjs) {
 					fatal("bogus reference to 0x%x > 0x%x "
@@ -744,10 +747,10 @@ map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 	for (x = 0, y = 0;;) {
 		memset(&node, 0, sizeof(struct node));
 		TAILQ_INIT(&node.nrefsh);
-		node.flags = fobj_read_uint32(fd);
-		node.v1 = fobj_read_uint32(fd);
-		node.v2 = fobj_read_uint32(fd);
-		nnrefs = fobj_read_uint32(fd);
+		node.flags = read_uint32(fd);
+		node.v1 = read_uint32(fd);
+		node.v2 = read_uint32(fd);
+		nnrefs = read_uint32(fd);
 #ifdef DEBUG
 		if (nnrefs > 256)
 			dprintnode(m, x, y, "funny node");
@@ -756,11 +759,11 @@ map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 			struct object *pobj;
 			Uint32 obji, offs, frame, flags;
 
-			obji = fobj_read_uint32(fd);
+			obji = read_uint32(fd);
 			pobj = pobjs[obji];
-			offs = fobj_read_uint32(fd);
-			frame = fobj_read_uint32(fd);
-			flags = fobj_read_uint32(fd);
+			offs = read_uint32(fd);
+			frame = read_uint32(fd);
+			flags = read_uint32(fd);
 #ifdef DEBUG
 			if (offs > 4096)
 				dprintnode(m, x, y, "bad offset");
@@ -776,7 +779,7 @@ map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 		}
 		totnodes++;
 		
-		count = fobj_read_uint32(fd);
+		count = read_uint32(fd);
 		if (count > 1) {
 			printf("[%d x %d,%d] ", count, x, y);
 			fflush(stdout);
@@ -832,13 +835,13 @@ map_load(void *ob, int fd)
 		return (-1);
 	}
 
-	m->flags = fobj_read_uint32(fd);
-	m->mapw  = fobj_read_uint32(fd);
-	m->maph  = fobj_read_uint32(fd);
-	m->defx  = fobj_read_uint32(fd);
-	m->defy  = fobj_read_uint32(fd);
-	tilew    = fobj_read_uint32(fd);
-	tileh    = fobj_read_uint32(fd);
+	m->flags = read_uint32(fd);
+	m->mapw  = read_uint32(fd);
+	m->maph  = read_uint32(fd);
+	m->defx  = read_uint32(fd);
+	m->defy  = read_uint32(fd);
+	tilew    = read_uint32(fd);
+	tileh    = read_uint32(fd);
 	if (tilew != TILEW || tileh != TILEH) {
 		warning("%s: %dx%d map tiles\n", OBJECT(m)->name, tilew, tileh);
 	}
@@ -846,14 +849,14 @@ map_load(void *ob, int fd)
 	    m->flags, m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
 
 	/* Load the object map. */
-	nobjs = fobj_read_uint32(fd);
+	nobjs = read_uint32(fd);
 	pobjs = emalloc(nobjs * sizeof(struct object *));
 	for (i = 0; i < nobjs; i++) {
 		struct object *pob;
 		char *s;
 
-		s = fobj_read_string(fd);
-		fobj_read_uint32(fd);		/* Unused */
+		s = read_string(fd);
+		read_uint32(fd);		/* Unused */
 		pob = object_strfind(s);
 
 		pobjs[i] = pob;
@@ -940,12 +943,12 @@ map_save_flat_nodes(struct fobj_buf *buf, struct map *m,
 
 			totnodes++;
 
-			fobj_bwrite_uint32(buf, n->flags & ~(NODE_DONTSAVE));
-			fobj_bwrite_uint32(buf, n->v1);
-			fobj_bwrite_uint32(buf, n->v2);
+			buf_write_uint32(buf, n->flags & ~(NODE_DONTSAVE));
+			buf_write_uint32(buf, n->v1);
+			buf_write_uint32(buf, n->v2);
 
 			soffs = buf->offs;		/* Skip */
-			fobj_bwrite_uint32(buf, 0);
+			buf_write_uint32(buf, 0);
 
 			TAILQ_FOREACH(ref, &n->nrefsh, nrefs) {
 				Uint32 i;
@@ -960,13 +963,13 @@ map_save_flat_nodes(struct fobj_buf *buf, struct map *m,
 						break;
 					}
 				}
-				fobj_bwrite_uint32(buf, i);
-				fobj_bwrite_uint32(buf, ref->offs);
-				fobj_bwrite_uint32(buf, ref->frame);
-				fobj_bwrite_uint32(buf, ref->flags);
+				buf_write_uint32(buf, i);
+				buf_write_uint32(buf, ref->offs);
+				buf_write_uint32(buf, ref->frame);
+				buf_write_uint32(buf, ref->flags);
 				nrefs++;
 			}
-			fobj_bpwrite_uint32(buf, nrefs, soffs);
+			buf_pwrite_uint32(buf, nrefs, soffs);
 		}
 	}
 	dprintf("%d nodes, %d saved refs (of %d total refs)\n", totnodes,
@@ -991,11 +994,11 @@ map_save_rle_nodes(struct fobj_buf *buf, struct map *m, struct object **pobjs,
 		node = &m->map[y][x];
 
 		/* Write the node data. */
-		fobj_bwrite_uint32(buf, node->flags & ~(NODE_DONTSAVE));
-		fobj_bwrite_uint32(buf, node->v1);
-		fobj_bwrite_uint32(buf, node->v2);
+		buf_write_uint32(buf, node->flags & ~(NODE_DONTSAVE));
+		buf_write_uint32(buf, node->v1);
+		buf_write_uint32(buf, node->v2);
 		soffs = buf->offs;
-		fobj_bwrite_uint32(buf, 0);	/* Skip count. */
+		buf_write_uint32(buf, 0);	/* Skip count. */
 
 		/* Write the node references. */
 		TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
@@ -1007,14 +1010,14 @@ map_save_rle_nodes(struct fobj_buf *buf, struct map *m, struct object **pobjs,
 						break;
 					}
 				}
-				fobj_bwrite_uint32(buf, i);
-				fobj_bwrite_uint32(buf, nref->offs);
-				fobj_bwrite_uint32(buf, nref->frame);
-				fobj_bwrite_uint32(buf, nref->flags);
+				buf_write_uint32(buf, i);
+				buf_write_uint32(buf, nref->offs);
+				buf_write_uint32(buf, nref->frame);
+				buf_write_uint32(buf, nref->flags);
 				nrefs++;
 			}
 		}
-		fobj_bpwrite_uint32(buf, nrefs, soffs);
+		buf_pwrite_uint32(buf, nrefs, soffs);
 
 		/* Write the repeat count. */
 		count = 1;
@@ -1030,7 +1033,7 @@ rle_scan:
 			totcomp++;
 			goto rle_scan;
 		}
-		fobj_bwrite_uint32(buf, count);
+		buf_write_uint32(buf, count);
 		totnodes += count;
 	}
 
@@ -1064,18 +1067,18 @@ map_save(void *p, int fd)
 
 	version_write(fd, &map_ver);
 
-	fobj_bwrite_uint32(buf, m->flags);
-	fobj_bwrite_uint32(buf, m->mapw);
-	fobj_bwrite_uint32(buf, m->maph);
-	fobj_bwrite_uint32(buf, m->defx);
-	fobj_bwrite_uint32(buf, m->defy);
-	fobj_bwrite_uint32(buf, TILEW);
-	fobj_bwrite_uint32(buf, TILEH);
+	buf_write_uint32(buf, m->flags);
+	buf_write_uint32(buf, m->mapw);
+	buf_write_uint32(buf, m->maph);
+	buf_write_uint32(buf, m->defx);
+	buf_write_uint32(buf, m->defy);
+	buf_write_uint32(buf, TILEW);
+	buf_write_uint32(buf, TILEH);
 	dprintf("flags 0x%x, geo %dx%d, origin at %d,%d, %dx%d tiles\n",
 	    m->flags, m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
 
 	soffs = buf->offs;			/* Skip */
-	fobj_bwrite_uint32(buf, 0);
+	buf_write_uint32(buf, 0);
 
 	/* Write the object map. */
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
@@ -1087,12 +1090,12 @@ map_save(void *p, int fd)
 		     pob->flags & OBJECT_CANNOT_MAP) {
 			continue;
 		}
-		fobj_bwrite_string(buf, pob->name);
-		fobj_bwrite_uint32(buf, 0);
+		buf_write_string(buf, pob->name);
+		buf_write_uint32(buf, 0);
 		pobjs[nobjs++] = pob;
 		dprintf("reference %s\n", pob->name);
 	}
-	fobj_bpwrite_uint32(buf, nobjs, soffs);
+	buf_pwrite_uint32(buf, nobjs, soffs);
 
 	pthread_mutex_lock(&m->lock);
 
