@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.6 2002/12/17 06:48:49 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.7 2002/12/21 10:27:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -39,12 +39,12 @@
 #include <libfobj/fobj.h>
 
 enum {
-	NANIMS_INIT =	4,
-	NSPRITES_INIT =	4,
-	NANIMS_GROW =	2,
-	NSPRITES_GROW = 2,
-	FRAMES_INIT =	16,
-	FRAMES_GROW =	2
+	NANIMS_INIT =	1,
+	NSPRITES_INIT =	1,
+	NANIMS_GROW =	4,
+	NSPRITES_GROW = 4,
+	FRAMES_INIT =	2,
+	FRAMES_GROW =	8
 };
 
 /* XXX use a hash table or a tree. */
@@ -66,8 +66,9 @@ static void	art_destroy_anim(struct art_anim *);
 
 /* Insert a sprite of arbitrary size. */
 int
-art_insert_sprite(struct art *art, SDL_Surface *sprite)
+art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 {
+	/* Insert into the sprite table. */
 	if (art->sprites == NULL) {			/* Initialize */
 		art->maxsprites = NSPRITES_INIT;
 		art->sprites = emalloc(art->maxsprites * sizeof(SDL_Surface *));
@@ -79,35 +80,34 @@ art_insert_sprite(struct art *art, SDL_Surface *sprite)
 	}
 	art->sprites[art->nsprites++] = sprite;
 
-	return (art->cursprite++);
-}
-
-/* Insert a sprite on a tile map. */
-struct noderef *
-art_map_sprite(struct art *art, int offs)
-{
-	struct node *node;
-	struct noderef *nref;
-	SDL_Surface *su;
-
-	if (!mapediting) {
-		return (NULL);
-	}
+	/* Insert into the tile map for level edition. */
+	if (mapediting && map) {
+		struct node *node;
+		struct noderef *nref;
+		int mw = TILEW, mh = TILEH;
 	
-	if (++art->mx > 2) {	/* XXX pref */
-		art->mx = 0;
-		art->my++;
+		if (++art->mx > 2) {	/* XXX pref */
+			art->mx = 0;
+			art->my++;
+		}
+
+		if (sprite->w != TILEW || sprite->h != TILEH) {
+			mw = sprite->w / TILEW;
+			mh = sprite->h / TILEH;
+		}
+		map_adjust(art->map, art->mx + 1, art->my + 1);
+		node = &art->map->map[art->my][art->mx];
+		nref = node_add_sprite(node, art->pobj, art->cursprite);
+		nref->flags |= NODEREF_SAVEABLE;
+
+		/* XXX pref */
+		node->flags = NODE_BLOCK;
+
+		art->mx += mw;
+		art->my += mh;
 	}
 
-	map_adjust(art->map, (Uint32)art->mx, (Uint32)art->my);
-	node = &art->map->map[art->my][art->mx];
-	nref = node_add_sprite(node, art->pobj, offs);
-	nref->flags |= NODEREF_SAVEABLE;
-
-	/* XXX pref */
-	node->flags = NODE_BLOCK;
-
-	return (nref);
+	return (art->cursprite++);
 }
 
 /* Break a sprite into tiles and insert/map them. */
@@ -140,16 +140,19 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 				    SDL_GetError());
 			}
 
-			/* Copy the frament as is. */
+			/* Copy the fragment as is. */
 			SDL_SetAlpha(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, s, &rd);
-			art_insert_sprite(art, s);
+			art_insert_sprite(art, s, 0);
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
 
-			/* Add a tile map reference for map edition purposes. */
+			/*
+			 * Insert the fragment into the tile map for level
+			 * edition.
+			 */
 			if (mapediting) {
 				struct node *n;
 
@@ -182,7 +185,7 @@ art_unused(struct art *art)
 	pthread_mutex_unlock(&art->used_lock);
 }
 
-/* Called when an object is initialized. */
+/* Load artwork when an object is initialized. */
 struct art *
 art_fetch(char *media, struct object *ob)
 {
@@ -193,9 +196,8 @@ art_fetch(char *media, struct object *ob)
 
 	pthread_mutex_lock(&artq_lock);
 
-	TAILQ_FOREACH(art, &artq, arts) {
+	TAILQ_FOREACH(art, &artq, arts) {			/* Cached? */
 		if (strcmp(art->name, media) == 0) {
-			/* Already loaded */
 			pthread_mutex_unlock(&artq_lock);
 			return (art);
 		}
@@ -233,7 +235,7 @@ art_fetch(char *media, struct object *ob)
 
 	pthread_mutex_init(&art->used_lock, NULL);
 
-	/* Create a tile map for map edition purposes. */
+	/* Create a tile map for level edition purposes. */
 	if (mapediting) {
 		char *mapname;
 
@@ -306,9 +308,9 @@ art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
 	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
-		anim->frames = erealloc(anim->frames,
-		    (anim->maxframes + FRAMES_GROW) * sizeof(SDL_Surface *));
 		anim->maxframes += FRAMES_GROW;
+		anim->frames = erealloc(anim->frames,
+		    anim->maxframes * sizeof(SDL_Surface *));
 	}
 	
 	anim->frames[anim->nframes++] = surface;
@@ -318,7 +320,6 @@ art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 struct art_anim *
 art_insert_anim(struct art *art, int delay)
 {
-	extern int mapediting;
 	struct art_anim *anim;
 
 	anim = emalloc(sizeof(struct art_anim));
@@ -334,12 +335,13 @@ art_insert_anim(struct art *art, int delay)
 		art->maxanims = NANIMS_INIT;
 		art->nanims = 0;
 	} else if (art->nanims >= art->maxanims) {	/* Grow */
-		art->anims = erealloc(art->anims,
-		    (art->maxanims + NANIMS_GROW) * sizeof(struct anim *));
 		art->maxanims += NANIMS_GROW;
+		art->anims = erealloc(art->anims,
+		    art->maxanims * sizeof(struct anim *));
 	}
 	art->anims[art->nanims++] = anim;
 
+	/* Insert into the tile map for level edition. */
 	if (mapediting) {
 		struct node *n;
 		struct noderef *nref;
@@ -383,7 +385,7 @@ art_anim_tick(struct art_anim *an, void *nrefp)
 	}
 	
 	ticks = SDL_GetTicks();
-	if ((ticks - an->delta) >= an->delay) {
+	if ((ticks - an->delta) >= an->delay) {		/* XXX */
 		an->delta = ticks;
 		if (++an->frame > an->nframes - 1) {
 			/* Loop */
@@ -545,7 +547,7 @@ art_browser_window(void)
 	struct tlist *tl_medias;
 	struct bitmap *bmp_sprite, *bmp_anim;
 
-	if ((win = window_generic_new(251, 259, "monitor-media-browser"))
+	if ((win = window_generic_new(512, 246, "monitor-media-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
