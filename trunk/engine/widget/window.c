@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.206 2003/07/03 07:24:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.207 2003/07/03 12:52:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,8 @@ const struct version window_ver = {
 
 const struct widget_ops window_ops = {
 	{
-		NULL,
+		NULL,			/* init */
+		NULL,			/* reinit */
 		window_destroy,
 		window_load,
 		window_save,
@@ -137,9 +138,16 @@ window_init(void *p, const char *name)
 	char wname[OBJECT_NAME_MAX];
 	struct event *ev;
 	int i;
+	char *c;
 
 	snprintf(wname, sizeof(wname), "win-%s",
 	    (name != NULL) ? name : "generic");
+
+	/* XXX special case */
+	for (c = wname; *c != '\0'; c++) {
+		if (*c == '/')			/* Pathname separator */
+			*c = '_';
+	}
 
 	widget_init(win, "window", &window_ops, 0);
 	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
@@ -292,6 +300,8 @@ window_destroy(void *p)
 
 	free(win->border);
 	pthread_mutex_destroy(&win->lock);
+
+	widget_destroy(win);
 }
 
 static void
