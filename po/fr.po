@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.13 2003/08/26 05:26:44 vedge Exp $
+# $Csoft: fr.po,v 1.14 2003/08/26 06:08:42 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -629,10 +629,10 @@ msgid "Highest"
 msgstr "Plus haut"
 
 msgid "Fill"
-msgstr "Remplir"
+msgstr "Remplissage"
 
 msgid "Clear"
-msgstr "Vider"
+msgstr "Effacer"
 
 msgid "No source node."
 msgstr "Aucun noeud source."
