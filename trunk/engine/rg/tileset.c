@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.13 2005/02/22 08:44:16 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.14 2005/02/26 06:24:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -633,6 +633,66 @@ edit_tiles(int argc, union evarg *argv)
 	pthread_mutex_unlock(&ts->lock);
 }
 
+static void
+export_pixmap(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tlist *tl_pixmaps = argv[2].p;
+	
+}
+
+static void
+delete_pixmap(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tlist *tl_pixmaps = argv[2].p;
+	struct tlist_item *it;
+
+	if ((it = tlist_item_selected(tl_pixmaps)) != NULL) {
+		struct pixmap *px = it->p1;
+	
+		if (px->nrefs > 0) {
+			text_msg(MSG_ERROR,
+			    _("The pixmap \"%s\" is currently in use."),
+			    px->name);
+			return;
+		}
+		TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
+		pixmap_destroy(px);
+		Free(px, M_RG);
+	}
+}
+
+static void
+duplicate_pixmap(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tlist *tl_pixmaps = argv[2].p;
+	struct tlist_item *it;
+
+	if ((it = tlist_item_selected(tl_pixmaps)) != NULL) {
+		struct pixmap *px1 = it->p1;
+		struct pixmap *px2;
+
+		px2 = Malloc(sizeof(struct pixmap), M_RG);
+		pixmap_init(px2, ts, 0);
+		strlcpy(px2->name, _("Copy of "), sizeof(px2->name));
+		strlcat(px2->name, px1->name, sizeof(px2->name));
+		pixmap_scale(px2, px1->su->w, px1->su->h, 0, 0);
+		TAILQ_INSERT_TAIL(&ts->pixmaps, px2, pixmaps);
+
+		SDL_LockSurface(px1->su);
+		SDL_LockSurface(px2->su);
+		memcpy(
+		    (Uint8 *)px2->su->pixels,
+		    (Uint8 *)px1->su->pixels,
+		    px1->su->h*px1->su->pitch +
+		    px1->su->w*px1->su->format->BytesPerPixel);
+		SDL_UnlockSurface(px2->su);
+		SDL_UnlockSurface(px1->su);
+	}
+}
+
 struct window *
 tileset_edit(void *p)
 {
@@ -714,6 +774,32 @@ tileset_edit(void *p)
 	box_set_depth(box, -1);
 	{
 		object_attach(box, tl_pixmaps);
+	
+		mi = tlist_set_popup(tl_pixmaps, "pixmap");
+		{
+			ag_menu_action(mi, _("Delete pixmap"),
+			    ICON(TRASH_ICON), 0, 0,
+			    delete_pixmap, "%p,%p", ts, tl_pixmaps);
+			
+			ag_menu_action(mi, _("Duplicate pixmap"),
+			    ICON(OBJDUP_ICON), 0, 0,
+			    duplicate_pixmap, "%p,%p", ts, tl_pixmaps);
+			
+			ag_menu_action(mi, _("Export to image file..."),
+			    ICON(OBJSAVE_ICON), 0, 0,
+			    export_pixmap, "%p,%p", ts, tl_pixmaps);
+		}
+		
+		mi = tlist_set_popup(tl_tiles, "pixmap");
+		{
+			ag_menu_action(mi, _("Delete pixmap"),
+			    ICON(TRASH_ICON), 0, 0,
+			    delete_pixmap, "%p,%p", ts, tl_pixmaps);
+			
+			ag_menu_action(mi, _("Export to image file..."),
+			    ICON(OBJSAVE_ICON), 0, 0,
+			    export_pixmap, "%p,%p", ts, tl_pixmaps);
+		}
 	}
 	return (win);
 }
