@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.26 2005/03/04 13:35:08 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.27 2005/03/05 12:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -502,6 +502,17 @@ close_element(struct tileview *tv)
 	}
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
+
+	if (tv->tel_tbar != NULL) {
+		struct window *pwin = widget_parent_window(tv->tel_tbar);
+	
+		object_detach(tv->tel_tbar);
+		object_destroy(tv->tel_tbar);
+		Free(tv->tel_tbar, M_OBJECT);
+		tv->tel_tbar = NULL;
+
+		WINDOW_UPDATE(pwin);
+	}
 }
 
 static void
@@ -554,14 +565,6 @@ static void
 open_element(struct tileview *tv, struct tile_element *tel,
     struct window *pwin)
 {
-	if (tv->tel_tbar != NULL) {
-		object_detach(tv->tel_tbar);
-		object_destroy(tv->tel_tbar);
-		Free(tv->tel_tbar, M_OBJECT);
-		tv->tel_tbar = NULL;
-		WINDOW_UPDATE(pwin);
-	}
-
 	switch (tel->type) {
 	case TILE_FEATURE:
 		{
