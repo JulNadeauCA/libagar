@@ -1,12 +1,10 @@
-/*	$Csoft: map.h,v 1.47 2002/11/13 00:22:30 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.48 2002/11/30 02:09:47 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef TILEW
-#define TILEW	32
-#endif
-#ifndef TILEH
-#define TILEH	32
-#endif
+#define TILEW		32
+#define TILEH		32
+#define TILEW_SHIFT	5
+#define TILEH_SHIFT	5
 
 #ifndef CHARW
 #define CHARW	32
@@ -71,10 +69,7 @@ struct node {
 #define NODE_REGEN	0x0200		/* Cause HP Regeneration */
 #define NODE_SLOW	0x0400		/* Decrease speed by v1 */
 #define NODE_HASTE	0x0800		/* Increase speed by v1 */
-#define NODE_ANIM	0x1000		/* Always animate node */
-#define NODE_DONTSAVE	(NODE_ANIM)
-
-	int	overlap;		/* Count of overlapping animations */
+#define NODE_DONTSAVE	0x0000
 
 	Uint32	v1, v2;			/* Extra properties */
 	Uint32	nanims;			/* Animation count */
@@ -82,30 +77,25 @@ struct node {
 
 /* Region within the world. */
 struct map {
-	struct object obj;
+	struct object	  obj;
 
-	Uint32	flags;
+	Uint32		  flags;
 #define MAP_RLE_COMPRESSION	0x01	/* RLE-compress the nodes */
 #define MAP_2D			0x20	/* Two-dimensional */
 
-	int	redraw;			/* Redraw at next tick
-					   (can be inconsistent) */
-	Uint32	fps;			/* Maximum fps */
-	Uint32	mapw, maph;		/* Map geometry */
-	int	shtilex, shtiley;	/* Tile shift (optimization) */
-	Uint32	defx, defy;		/* Map origin */
-	struct node **map;		/* Array of nodes */
+	int		  redraw;	/* Redraw at next tick. XXX */
+	Uint32		  fps;		/* Maximum fps */
+	Uint32		  mapw, maph;	/* Map geometry */
+	int		  tilew, tileh;	/* Tile geometry */
+	Uint32		  defx, defy;	/* Map origin */
+	struct node	**map;		/* Array of nodes */
+	int		  zoom;		/* Zoom (%) */
 
-	pthread_t	draw_th;	/* Map rendering thread */
-	pthread_mutex_t	lock;		/* Recursive lock on all nodes, and all
+	pthread_t	  draw_th;	/* Map rendering thread */
+	pthread_mutex_t	  lock;		/* Recursive lock on all nodes, and all
 					   references inside them */
 	pthread_mutexattr_t lockattr;
 };
-
-#define MAP_COORD(x)	((x) / TILEW)
-
-/* View must be locked */
-#define MAP_FOCUSED(m)	(mainview->rootmap.map == (m))
 
 void	map_init(struct map *, char *, char *, Uint32);
 int	map_load(void *, int);
@@ -121,11 +111,11 @@ void	map_adjust(struct map *, Uint32, Uint32);
 #ifdef DEBUG
 void	map_verify(struct map *);
 #endif
+void	map_set_zoom(struct map *, int);
 
 struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_findref(struct map *, struct node *, void *, Sint32,
 		     Uint32);
 int		 node_delref(struct node *, struct noderef *);
-struct noderef	*node_popref(struct node *);
-void		 node_pushref(struct node *, struct noderef *);
+void		 node_draw(struct map *, struct node *, Uint32, Uint32);
 

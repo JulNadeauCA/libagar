@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.119 2002/11/12 02:00:02 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.121 2002/11/26 05:21:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -34,6 +34,7 @@
 #include "version.h"
 #include "config.h"
 #include "world.h"
+#include "view.h"
 
 #include "widget/text.h"
 
@@ -105,14 +106,6 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h)
 
 	m->mapw = w;
 	m->maph = h;
-
-	/* This is why sprite sizes must be a power of two. */
-	for (i = 0; (1 << i) != TILEW; i++)
-	    ;;
-	m->shtilex = i;
-	for (i = 1; (1 << i) != TILEH; i++)
-	    ;;
-	m->shtiley = i;
 
 	/* Allocate the two-dimensional node array. */
 	m->map = emalloc((w * h) * sizeof(struct node *));
@@ -238,16 +231,26 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	m->flags = (flags != 0) ? flags : MAP_2D;
 	m->redraw = 0;
 	m->fps = 100;		/* XXX pref */
+	m->zoom = 100;
 	m->mapw = 0;
 	m->maph = 0;
-	m->shtilex = 0;
-	m->shtiley = 0;
 	m->defx = 0;
 	m->defy = 0;
 	m->map = NULL;
+	m->tilew = TILEW;
+	m->tileh = TILEH;
 	pthread_mutexattr_init(&m->lockattr);
 	pthread_mutexattr_settype(&m->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&m->lock, &m->lockattr);
+}
+
+void
+map_set_zoom(struct map *m, int zoom)
+{
+	m->zoom = zoom > 4 ? zoom : 4;
+
+	m->tilew = m->zoom * TILEW / 100;
+	m->tileh = m->zoom * TILEH / 100;
 }
 
 /*
@@ -284,57 +287,6 @@ node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 	node->nnrefs++;
 
 	return (nref);
-}
-
-/*
- * Pop a reference off the stack and return it.
- * Must be called on a locked map.
- */
-struct noderef *
-node_popref(struct node *node)
-{
-	struct noderef *nref;
-
-#ifdef DEBUG
-	if (strcmp(node->magic, NODE_MAGIC) != 0) {
-		fatal("inconsistent node");
-	}
-#endif
-
-	if (TAILQ_EMPTY(&node->nrefsh)) {
-		return (NULL);
-	}
-		
-	nref = TAILQ_FIRST(&node->nrefsh);
-	TAILQ_REMOVE(&node->nrefsh, nref, nrefs);
-	node->nnrefs--;
-
-	if (nref->flags & MAPREF_ANIM) {
-		node->nanims--;
-	}
-
-	return (nref);
-}
-
-/*
- * Push a reference onto the stack.
- * Must be called on a locked map.
- */
-void
-node_pushref(struct node *node, struct noderef *nref)
-{
-#ifdef DEBUG
-	if (strcmp(node->magic, NODE_MAGIC) != 0) {
-		fatal("inconsistent node");
-	}
-#endif
-
-	TAILQ_INSERT_HEAD(&node->nrefsh, nref, nrefs);
-	node->nnrefs++;
-	
-	if (nref->flags & MAPREF_ANIM) {
-		node->nanims++;
-	}
 }
 
 /*
@@ -960,4 +912,72 @@ map_verify(struct map *m)
 }
 
 #endif	/* DEBUG */
+
+static __inline__ void
+node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
+{
+	int x, y;
+	Uint32 col = 0;
+	Uint8 *src, r1, g1, b1, a1;
+	SDL_Rect clip;
+
+	/* XXX cache the scaled surfaces. */
+	SDL_LockSurface(view->v);
+	for (y = 0; y < m->tileh; y++) {
+		for (x = 0; x < m->tilew; x++) {
+			src = (Uint8 *)s->pixels +
+			    (y*TILEH/m->tileh)*s->pitch +
+			    (x*TILEW/m->tilew)*s->format->BytesPerPixel;
+			SDL_GetRGBA(*(Uint32 *)src, s->format,
+			    &r1, &g1, &b1, &a1);
+			col = SDL_MapRGB(view->v->format, r1, g1, b1);
+			if (a1 > 200) {
+				VIEW_PUT_PIXEL_CLIPPED(view->v,
+				    rx+x, ry+y, col);
+			}
+		}
+	}
+	SDL_UnlockSurface(view->v);
+}
+
+void
+node_draw(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
+{
+	struct noderef *nref;
+	SDL_Rect rd;
+	
+	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+		rd.x = rx + nref->xoffs;
+		rd.y = ry + nref->yoffs;
+
+		if (nref->flags & MAPREF_SPRITE) {		/* Static */
+			if (m->zoom != 100) {
+				node_draw_scaled(m,
+				    SPRITE(nref->pobj, nref->offs),
+				    rx, ry);
+			} else {
+				SDL_BlitSurface(SPRITE(nref->pobj, nref->offs),
+				    NULL, view->v, &rd);
+			}
+		} else if (nref->flags & MAPREF_ANIM) {		/* Animation */
+			struct art_anim *anim;
+
+			anim = ANIM(nref->pobj, nref->offs);
+			if (anim == NULL) {
+				fatal("%s:%d invalid\n", nref->pobj->name,
+				    nref->offs);
+			}
+			if (m->zoom != 100) {
+				node_draw_scaled(m, anim->frames[anim->frame],
+				    rd.x, rd.y);
+			} else {
+				SDL_BlitSurface(anim->frames[anim->frame],
+				    NULL, view->v, &rd);
+			}
+
+			/* Update the frame# if necessary. */
+			art_anim_tick(anim, nref);
+		}
+	}
+}
 
