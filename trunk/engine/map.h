@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: map.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -16,8 +16,15 @@ struct map_aref {
 #define MAPREF_SAVE	0x0001	/* Map dumps must record this reference */
 #define MAPREF_SPRITE	0x0002	/* This is a sprite */
 #define MAPREF_ANIM	0x0004	/* This is sequence of sprites */
+#define MAPREF_WARP	0x0008	/* This is another map */
 	int	frame;		/* Animation frame # */
 	int	fwait;		/* Delay counter */
+};
+
+/* Back reference to map:x,y coordinate. */
+struct map_bref {
+	struct	map *m;		/* Map structure */
+	int	x, y;		/* X:Y coordinate */
 };
 
 /* Coordinate within a map. */
@@ -56,6 +63,27 @@ struct map {
 
 extern struct map *curmap;	/* Currently focused map */
 extern int mapedit;		/* Map edition in progress */
+
+/* Add an animation reference to ob:offs at m:x,y */
+#define MAP_ADDANIM(m, x, y, ob, offs)				\
+	map_entry_addref(&(m)->map[(x)][(y)],			\
+	    (struct object *)(ob), (offs), MAPREF_ANIM);	\
+
+/* Add a sprite reference to ob:offs at m:x,y */
+#define MAP_ADDSPRITE(m, x, y, ob, offs)			\
+	map_entry_addref(&(m)->map[(x)][(y)],			\
+	    (struct object *)(ob), (offs), MAPREF_SPRITE);	\
+
+/* Drop any animation/sprite reference to ob:offs at m:x,y */
+#define MAP_DELREF(m, x, y, ob, offs)					\
+	do {								\
+		struct map_entry *me = &(m)->map[(x)][(y)];		\
+		struct map_aref *maref;					\
+									\
+		maref = map_entry_arefobj((me), (struct object *)(ob),	\
+		    (offs));						\
+		map_entry_delref((me), (maref));			\
+	} while (/*CONSTCOND*/ 0)
 
 struct map	*map_create(char *, char *, int, int, int,
 		     struct viewport *, char *);
