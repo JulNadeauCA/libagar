@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.2 2002/01/25 11:15:22 vedge Exp $	*/
 
 /*
  * These functions maintain character structures, they are called by
@@ -148,6 +148,73 @@ char_event(struct object *ob, SDL_Event *ev)
 	}
 
 	/*
+	 * Joystick control.
+	 */
+	if (ev->type == SDL_JOYAXISMOTION) {
+		static SDL_Event nev;
+		static int lastdir = 0;
+
+		switch (ev->jaxis.axis) {
+		case 0:	/* X */
+			if (ev->jaxis.value < 0) {
+				lastdir |= CHAR_LEFT;
+				lastdir &= ~(CHAR_RIGHT);
+				nev.type = SDL_KEYDOWN;
+				nev.key.keysym.sym = SDLK_LEFT;
+				SDL_PushEvent(&nev);
+			} else if (ev->jaxis.value > 0) {
+				lastdir |= CHAR_RIGHT;
+				lastdir &= ~(CHAR_LEFT);
+				nev.type = SDL_KEYDOWN;
+				nev.key.keysym.sym = SDLK_RIGHT;
+				SDL_PushEvent(&nev);
+			} else {
+				object_wait(fc, lastdir);
+				if (lastdir & CHAR_LEFT) {
+					fc->direction &= ~(CHAR_LEFT);
+				} else if (lastdir & CHAR_RIGHT) {
+					fc->direction &= ~(CHAR_RIGHT);
+				}
+			}
+			break;
+		case 1:	/* Y */
+			if (ev->jaxis.value < 0) {
+				lastdir |= CHAR_UP;
+				lastdir &= ~(CHAR_DOWN);
+				nev.type = SDL_KEYDOWN;
+				nev.key.keysym.sym = SDLK_UP;
+				SDL_PushEvent(&nev);
+			} else if (ev->jaxis.value > 0) {
+				lastdir |= CHAR_DOWN;
+				lastdir &= ~(CHAR_UP);
+				nev.type = SDL_KEYDOWN;
+				nev.key.keysym.sym = SDLK_DOWN;
+				SDL_PushEvent(&nev);
+			} else {
+				object_wait(fc, lastdir);
+				if (lastdir & CHAR_UP) {
+					fc->direction &= ~(CHAR_UP);
+				} else if (lastdir & CHAR_DOWN) {
+					fc->direction &= ~(CHAR_DOWN);
+				}
+			}
+			break;
+		}
+		return;
+	}
+	if (ev->type == SDL_JOYBUTTONDOWN || ev->type == SDL_JOYBUTTONUP) {
+		static SDL_Event nev;
+
+		dprintf("key %d\n", ev->jbutton.button);
+
+		nev.type = (ev->type == SDL_JOYBUTTONUP) ?
+		    SDL_KEYUP : SDL_KEYDOWN;
+		nev.key.keysym.sym = SDLK_x;
+		SDL_PushEvent(&nev);
+		return;
+	}
+
+	/*
 	 * Keyboard motion.
 	 */
 	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
@@ -278,7 +345,7 @@ char_time(Uint32 ival, void *obp)
 			
 		/* Verify the destination tile. */
 		if (nme->flags & MAPENTRY_WALK) {
-			map_entry_moveref(ob->map, ob, 0, mapx, mapy);
+			map_entry_moveref(ob->map, ob, 1, mapx, mapy);
 			ob->map->redraw++;
 		}
 
