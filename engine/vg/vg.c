@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.35 2004/10/06 04:56:08 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.36 2004/10/06 04:56:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -1616,19 +1616,19 @@ vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
 	extern struct tool vg_text_tool;
 	struct AGMenuItem *sitem;
 	
-	sitem = ag_menu_add_subitem(pitem, _("Snap to"),
+	sitem = ag_menu_action(pitem, _("Snap to"),
 	    ICON(SNAP_FREE_ICON), 0, 0, NULL, NULL);
 	vg_reg_snap_menu(m, sitem, vg);
 
-	ag_menu_add_subitem(pitem, _("Show blocks"), ICON(VGBLOCK_ICON),
+	ag_menu_action(pitem, _("Show blocks"), ICON(VGBLOCK_ICON),
 	    0, 0, show_blocks, "%p", vg);
-	ag_menu_add_subitem(pitem, _("Move origin"), ICON(vg_origin_tool.icon),
+	ag_menu_action(pitem, _("Move origin"), ICON(vg_origin_tool.icon),
 	    0, 0, select_tool, "%p,%p,%p", vg, &vg_origin_tool, mv);
-	ag_menu_add_subitem(pitem, _("Line strip"), ICON(vg_line_tool.icon),
+	ag_menu_action(pitem, _("Line strip"), ICON(vg_line_tool.icon),
 	    0, 0, select_tool, "%p,%p,%p", vg, &vg_line_tool, mv);
-	ag_menu_add_subitem(pitem, _("Circle"), ICON(vg_circle_tool.icon),
+	ag_menu_action(pitem, _("Circle"), ICON(vg_circle_tool.icon),
 	    0, 0, select_tool, "%p,%p,%p", vg, &vg_circle_tool, mv);
-	ag_menu_add_subitem(pitem, _("Text"), ICON(vg_text_tool.icon),
+	ag_menu_action(pitem, _("Text"), ICON(vg_text_tool.icon),
 	    0, 0, select_tool, "%p,%p,%p", vg, &vg_text_tool, mv);
 }
 #endif /* EDITION */
