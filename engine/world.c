@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.46 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.47 2002/09/16 16:03:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -65,7 +65,7 @@ world_load(void *p, int fd)
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		dprintf("loading %s\n", ob->name);
 
-		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
+		if (curmapedit != NULL && OBJECT_ISTYPE(ob, "map")) {
 			/* XXX map editor hack */
 			continue;
 		}
@@ -88,7 +88,7 @@ world_save(void *p, int fd)
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		dprintf("saving %s\n", ob->name);
 
-		if (curmapedit != NULL && !strcmp(ob->saveext, "m")) {
+		if (curmapedit != NULL && OBJECT_ISTYPE(ob, "map")) {
 			/* XXX map editor hack */
 			continue;
 		}

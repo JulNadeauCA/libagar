@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.52 2002/11/07 18:52:48 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.53 2002/11/09 06:01:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -56,10 +56,10 @@ struct object {
 	/*
 	 * Read-only once attached
 	 */
-	char	*type;			/* Type of immediate descendent */
+	char	*type;			/* Type of immediate descendent
+					   (also extension for state files) */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
-	char	 saveext[4];		/* File extension for state saves */
 	const struct object_ops	*ops;	/* Generic operations */
 	int	 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
@@ -118,7 +118,7 @@ struct object {
 # define OBJECT_ASSERT(ob, type)
 #endif
 
-#define OBJECT_TYPE(pob, ptype)	(strcmp(OBJECT((pob))->type, (ptype)) == 0)
+#define OBJECT_ISTYPE(pob, ptype) (strcmp(OBJECT((pob))->type, (ptype)) == 0)
 
 struct	object *object_new(char *, char *, char *, int, const void *);
 void	object_init(struct object *, char *, char *, char *, int, const void *);
