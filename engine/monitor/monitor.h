@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.1.1.1 2002/09/01 09:03:06 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.2 2002/09/04 03:21:00 vedge Exp $	*/
 /*	Public domain	*/
 
 struct monitor {
@@ -9,13 +9,13 @@ struct monitor {
 	struct {
 		struct	window *toolbar;
 		struct	window *object_browser;
-		struct	window *media_browser;
+		struct	window *sprite_browser;
 	} wins;
 };
 
 enum {
-	MONITOR_OBJECT_BROWSER,
-	MONITOR_MEDIA_BROWSER
+	MONITOR_SPRITE_BROWSER,
+	MONITOR_OBJECT_BROWSER
 };
 
 extern struct monitor monitor;	/* engine.c */
