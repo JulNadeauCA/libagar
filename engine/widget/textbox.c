@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.87 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.88 2005/03/27 03:49:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -389,14 +389,11 @@ keyup(int argc, union evarg *argv)
 	int keymod = argv[2].i;
 	Uint32 unicode = (Uint32)argv[3].i;
 
-	if ((keysym == tb->repeat.key && unicode == tb->repeat.unicode) ||
-	    (keysym == SDLK_RETURN)) {
-		lock_timeout(tb);
-		timeout_del(tb, &tb->repeat_to);
-		timeout_del(tb, &tb->delay_to);
-		timeout_replace(tb, &tb->cblink_to, text_blink_rate);
-		unlock_timeout(tb);
-	}
+	lock_timeout(tb);
+	timeout_del(tb, &tb->repeat_to);
+	timeout_del(tb, &tb->delay_to);
+	timeout_replace(tb, &tb->cblink_to, text_blink_rate);
+	unlock_timeout(tb);
 }
 
 /* Map mouse coordinates to a position within the string. */
