@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.9 2003/12/09 07:01:23 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.10 2003/12/09 07:06:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -268,7 +268,7 @@ const struct unit frequency_units[] = {
 	{ NULL,			NULL,			0,		NULL }
 };
 
-/* Units of pressure */
+/* Units of pressure and stress */
 const struct unit pressure_units[] = {
 	{ "Pa",			N_("Pascals"),		1,		NULL },
 	{ "hPa",		N_("Hectopascals"),	100,		NULL },
@@ -283,8 +283,10 @@ const struct unit pressure_units[] = {
 	{ "Ft H\xc2\xb2O",	N_("Feet of water"),	2989.06692,	NULL },
 	{ "In Hg",		N_("Inches of mercury"), 3386.388,	NULL },
 	{ "m H\xc2\xb2O",	N_("Meters of water"),	9806.65,	NULL },
-	{ "Atm",		N_("Atmospheres"),	101325,		NULL },
 	{ "Ki/In\xc2\xb2",	N_("Kips per square inch"), 6894760,	NULL },
+	{ "P/A",		N_("Pluto Atmospheres"), 0.5,		NULL },
+	{ "E/A",		N_("Earth Atmospheres"), 101325,	NULL },
+	{ "M/A",		N_("Mars Atmospheres"), 1000,		NULL },
 	{ NULL,			NULL,			0,		NULL }
 };
 
