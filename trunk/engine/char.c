@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.10 2002/02/05 05:49:03 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.11 2002/02/11 23:33:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -32,10 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <pthread.h>
-#include <glib.h>
-#include <SDL.h>
 
 #include <engine/engine.h>
 
@@ -80,11 +76,11 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 	ch->seed = lrand48();
 	ch->effect = 0;
 
-	char_setanim(ch, 0);	 /* XXX */
+	ch->curoffs = CHAR_UP;
 
 	dprintf("%s: hp %d/%d mp %d/%d seed 0x%lx\n",
 	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp, ch->seed);
-
+	
 	return (ch);
 }
 
@@ -105,8 +101,7 @@ char_link(void *ob)
 		return (-1);
 	}
 	
-	ch->timer = SDL_AddTimer(60 + (ch->maxspeed - ch->curspeed),
-	    char_time, ch);
+	ch->timer = SDL_AddTimer(ch->maxspeed - ch->curspeed, char_time, ch);
 	if (ch->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		return (-1);
@@ -169,12 +164,44 @@ char_event(struct character *ch, SDL_Event *ev)
 	}
 }
 
-/* Change current animation. */
+/* Change current sprite. */
 int
 char_setsprite(struct character *ch, int soffs)
 {
+	struct map_aref *aref;
+
+	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, ch->curoffs);
+
+	node_delref(&ch->map->map[ch->x][ch->y],
+	    node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, ch->curoffs));
+	node_addref(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, soffs, MAPREF_SPRITE);
+
 	ch->flags &= ~(CHAR_ANIM);
 	ch->curoffs = soffs;
+
+	return (0);
+}
+
+/* Change current animation. */
+int
+char_setanim(struct character *ch, int aoffs)
+{
+	struct map_aref *aref;
+	
+	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, ch->curoffs);
+
+	node_delref(&ch->map->map[ch->x][ch->y],
+	    node_arefobj(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, ch->curoffs));
+	node_addref(&ch->map->map[ch->x][ch->y],
+	    (struct object *)ch, aoffs, MAPREF_ANIM);
+
+	ch->flags |= CHAR_ANIM;
+	ch->curoffs = aoffs;
 
 	return (0);
 }
@@ -198,16 +225,6 @@ char_unfocus(struct character *ch)
 	return (0);
 }
 
-/* Change current sprite. */
-int
-char_setanim(struct character *ch, int aoffs)
-{
-	ch->flags |= CHAR_ANIM;
-	ch->curoffs = aoffs;
-
-	return (0);
-}
-
 /* Position the character on m:x,y. */
 int
 char_add(struct character *ch, struct map *m, int x, int y)
@@ -217,11 +234,17 @@ char_add(struct character *ch, struct map *m, int x, int y)
 	} else {
 		MAP_ADDSPRITE(m, x, y, (struct object *)ch, ch->curoffs);
 	}
-	
+
 	ch->map = m;
+	if ((ch->flags & CHAR_ONMAP) == 0) {
+		mapdir_init(&ch->dir, (struct object *)ch, m,
+		    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 2, 5);
+		ch->flags |= CHAR_ONMAP;
+	}
+
 	ch->x = x;
 	ch->y = y;
-
+	
 	return (0);
 }
 
@@ -260,8 +283,7 @@ char_setspeed(struct character *ch, Uint32 speed)
 		ch->curspeed = 1;
 	}
 	if (SDL_RemoveTimer(ch->timer)) {
-		ch->timer = SDL_AddTimer(
-		    ch->map->view->fps + (ch->maxspeed - ch->curspeed),
+		ch->timer = SDL_AddTimer(ch->maxspeed - ch->curspeed,
 		    char_time, ch);
 	}
 }
@@ -271,113 +293,73 @@ char_time(Uint32 ival, void *obp)
 {
 	struct object *ob = (struct object *)obp;
 	struct character *ch = (struct character *)ob;
-	struct map_aref *aref;
+	int moved = 0;
+	int x, y;
 
-	/* XXX limit one sprite/anim. */
-	aref = node_arefobj(&ch->map->map[ch->x][ch->y], ob, -1);
-#ifdef DEBUG
-	if (aref == NULL) {
-		dprintf("%s is not at %dx%d\n", ob->name, ch->x, ch->y);
+	if (ch->map == NULL) {
+		/* Nothing to do. age, perhaps. */
 	}
+
+	x = ch->x;
+	y = ch->y;
+
+	/* Move the character. */
+	moved = mapdir_move(&ch->dir, &x, &y);
+	if (moved != 0) {
+#if 0
+		SDL_Event nev;
+		int i, nkeys;
 #endif
 
-	/*
-	 * Vertical soft scroll.
-	 */
-	if (aref->yoffs < 0) {
+		pthread_mutex_lock(&ch->map->lock);
+		if (moved & DIR_UP)
+			char_setanim(ch, CHAR_WALKUP);
+		if (moved & DIR_DOWN)
+			char_setanim(ch, CHAR_WALKDOWN);
+		if (moved & DIR_LEFT)
+			char_setanim(ch, CHAR_WALKLEFT);
+		if (moved & DIR_RIGHT)
+			char_setanim(ch, CHAR_WALKRIGHT);
+		char_move(ch, x, y);
+		mapdir_postmove(&ch->dir, &x, &y, moved);
+		pthread_mutex_unlock(&ch->map->lock);
 		ch->map->redraw++;
-		dprintf("up move\n");
-		if (aref->yoffs == -1) {	/* Once */
-			char_setanim(ch, 1);
-			if (char_canmove(ch, ch->x, ch->y - 1) < 0) {
-				dprintf("blocked!\n");
-				aref->yoffs = 0;
-				goto xoffsck;
-			}
-		}
-		aref->yoffs -= 5;
-		dprintf("yoffs is now %d\n", aref->yoffs);
-		if (aref->yoffs <= -ch->map->view->tileh) {
-			char_move(ch, ch->x, ch->y - 1);
-			aref->yoffs = 0;
-		}
-	} else if (aref->yoffs > 0) {
-		dprintf("down move\n");
-		if (aref->yoffs == 1) {
-			if (char_canmove(ch, ch->x, ch->y + 1) < 0) {
-				dprintf("blocked!\n");
-				aref->yoffs = 0;
-				goto xoffsck;
-			}
-			char_setanim(ch, 2);
-		}
-		aref->yoffs++;
-		if (aref->yoffs >= ch->map->view->tileh) {
-			char_move(ch, ch->x, ch->y + 1);
-			aref->yoffs = 0;
-		}
-	}
-
-xoffsck:
-	/*
-	 * Horizontal soft scroll.
-	 */
-	if (aref->xoffs < 0) {
-		dprintf("left move\n");
-		if (aref->xoffs == -1) {
-			if (char_canmove(ch, ch->x - 1, ch->y) < 0) {
-				dprintf("blocked!\n");
-				aref->xoffs = 0;
-				goto xoffsck;
-			}
-			char_setanim(ch, 3);
-		}
-		aref->xoffs--;
-		if (aref->xoffs <= -ch->map->view->tilew) {
-			char_move(ch, ch->x - 1, ch->y);
-			aref->xoffs = 0;
-		}
-	} else if (aref->xoffs > 0) {
-		dprintf("right move\n");
-		if (aref->xoffs == 1) {
-			if (char_canmove(ch, ch->x + 1, ch->y) < 0) {
-				dprintf("blocked!\n");
-				aref->xoffs = 0;
-				goto ailmentck;
-			}
-			char_setanim(ch, 4);
-		}
-		aref->xoffs++;
-		if (aref->xoffs >= ch->map->view->tilew) {
-			char_move(ch, ch->x + 1, ch->y);
-			aref->xoffs = 0;
-		}
-	}
-
-ailmentck:
-	/* Assume various status ailments. */
+		
 
 #if 0
-	if (nme->flags & NODE_BIO) {
-		decrease(&ch->hp, 1, 1);
-		dprintf("bio. hp = %d/%d\n", ch->hp, ch->maxhp);
-	} else if (nme->flags & NODE_REGEN) {
-		increase(&ch->hp, 1, ch->maxhp);
-		dprintf("regen. hp = %d/%d\n", ch->hp, ch->maxhp);
-	}
-
-	if (nme->flags & NODE_SLOW) {
-		/* XXX rate */
-		nme->v1 = -10;
-		char_setspeed(ch, ch->curspeed + nme->v1);
-		dprintf("slow. speed = %d\n", ch->curspeed);
-	} else if (nme->flags & NODE_HASTE) {
-		/* XXX rate */
-		nme->v1 = 10;
-		char_setspeed(ch, ch->curspeed + nme->v1);
-		dprintf("haste. speed = %d\n", ch->curspeed);
-	}
+		for (i = 0; i < sizeof(stickykeys) / sizeof(int); i++) {
+			if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
+				nev.type = SDL_KEYDOWN;
+				nev.key.keysym.sym = stickykeys[i];
+				SDL_PushEvent(&nev);
+			}
+		}
 #endif
+
+#if 0
+		/* Assume various status ailments. */
+
+		if (nme->flags & NODE_BIO) {
+			decrease(&ch->hp, 1, 1);
+			dprintf("bio. hp = %d/%d\n", ch->hp, ch->maxhp);
+		} else if (nme->flags & NODE_REGEN) {
+			increase(&ch->hp, 1, ch->maxhp);
+			dprintf("regen. hp = %d/%d\n", ch->hp, ch->maxhp);
+		}
+
+		if (nme->flags & NODE_SLOW) {
+			/* XXX rate */
+			nme->v1 = -10;
+			char_setspeed(ch, ch->curspeed + nme->v1);
+			dprintf("slow. speed = %d\n", ch->curspeed);
+		} else if (nme->flags & NODE_HASTE) {
+			/* XXX rate */
+			nme->v1 = 10;
+			char_setspeed(ch, ch->curspeed + nme->v1);
+			dprintf("haste. speed = %d\n", ch->curspeed);
+		}
+#endif
+	}
 
 	return (ival);
 }
@@ -406,38 +388,39 @@ static void
 char_key(struct character *ch, SDL_Event *ev)
 {
 	int set;
-	struct map_aref *aref;
 
-	set = (ev->type == SDL_KEYDOWN);
-	/* XXX limit one sprite/anim. */
-	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, -1);
+	set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
+
+	pthread_mutex_lock(&ch->map->lock);
 
 	switch (ev->key.keysym.sym) {
-	case SDLK_d:	/* Dash */
+	case SDLK_d:
+		/* Dash */
 		if (ev->type == SDL_KEYDOWN) {
 			ch->flags |= CHAR_DASH;
-			char_setspeed(ch, 40);	/* XXX increment */
+			char_setspeed(ch, 40);	/* XXX use v1 */
 		} else if (ev->type == SDL_KEYUP) {
 			ch->flags &= ~(CHAR_DASH);
 			char_setspeed(ch, 1);	/* XXX restore speed */
 		}
 		break;
 	case SDLK_UP:
-		aref->yoffs = set ? -1 : 0;
+		mapdir_set(&ch->dir, DIR_UP, set);
 		break;
 	case SDLK_DOWN:
-		aref->yoffs = set ? 1 : 0;
+		mapdir_set(&ch->dir, DIR_DOWN, set);
 		break;
 	case SDLK_LEFT:
-		aref->xoffs = set ? -1 : 0;
+		mapdir_set(&ch->dir, DIR_LEFT, set);
 		break;
 	case SDLK_RIGHT:
-		aref->xoffs = set ? 1 : 0;
+		mapdir_set(&ch->dir, DIR_RIGHT, set);
 		break;
 	default:
 		break;
 	}
+	
+	pthread_mutex_unlock(&ch->map->lock);
 }
 
 #ifdef DEBUG
