@@ -1,4 +1,4 @@
-#	$Csoft: configure.in,v 1.1 2002/01/26 20:08:11 vedge Exp $
+#	$Csoft: configure.in,v 1.2 2002/01/28 04:22:23 vedge Exp $
 
 makeout(Makefile.config);
 inclout(config.h);
@@ -6,12 +6,12 @@ inclout(config.h);
 register("--with-smpeg",	"Play videos through the smpeg library [yes]");
 register("--without-smpeg",	"");
 
-if ("$1" == "--help") {
+if ("$1" = "--help") {
 	help();
 	exit(1);
 }
 
-if ("$1" == "--version") {
+if ("$1" = "--version") {
 	version();
 	exit(1);
 }
