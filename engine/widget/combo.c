@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.11 2003/10/14 02:16:29 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.12 2003/11/10 22:41:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -117,7 +117,7 @@ combo_expand(int argc, union evarg *argv)
 			win->h = view->h - win->y;
 
 		WIDGET_SCALE(win, win->w, win->h);
-		window_remap_widgets(com->win, win->x, win->y);
+		widget_update_coords(com->win, win->x, win->y);
 		window_show(com->win);
 	} else {
 		combo_collapse(com);

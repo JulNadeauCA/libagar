@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.1 2003/11/10 22:39:20 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.2 2003/11/15 02:04:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -108,7 +108,7 @@ ucombo_expand(int argc, union evarg *argv)
 			win->h = view->h - win->y;
 
 		WIDGET_SCALE(win, win->w, win->h);
-		window_remap_widgets(com->win, win->x, win->y);
+		widget_update_coords(com->win, win->x, win->y);
 		window_show(com->win);
 	} else {
 		ucombo_collapse(com);
@@ -129,6 +129,7 @@ ucombo_selected(int argc, union evarg *argv)
 		event_post(com, "ucombo-selected", "%p", it);
 	}
 	pthread_mutex_unlock(&tl->lock);
+
 	ucombo_collapse(com);
 }
 
