@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.3 2004/09/29 08:15:52 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.4 2004/10/07 02:13:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -71,6 +71,9 @@ ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 {
 	struct AGMenuView *mview;
 	struct window *panel;
+
+	if (item->nsubitems == 0)
+		return;
 
 	panel = window_new(WINDOW_NO_TITLEBAR|WINDOW_NO_DECORATIONS, NULL);
 	window_set_padding(panel, 0, 0);
@@ -387,9 +390,10 @@ ag_menu_scale(void *p, int w, int h)
 				WIDGET(m)->h += m->itemh;
 			}
 			if (x > view->w/2) {
-				x = m->hspace;			/* Wrap */
+				x = m->hspace/2;		/* Wrap */
 				y += m->itemh;
-				WIDGET(m)->h += label->h;
+				WIDGET(m)->h += label->h + m->vspace;
+				WIDGET(m)->w += m->hspace;
 			} else {
 				WIDGET(m)->w += label->w + m->hspace;
 			}
