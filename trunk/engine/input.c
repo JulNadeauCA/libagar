@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.12 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.13 2002/05/02 06:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -35,23 +35,18 @@
 #include <engine/physics.h>
 #include <engine/input.h>
 
-static const struct obvec input_vec = {
-	input_destroy,
-	input_load,
-	input_save,
-	NULL,		/* link */
-	NULL		/* unlink */
-};
-
 static int	keyboard_init(struct input *, int);
 static int	joy_init(struct input *, int);
 static int	mouse_init(struct input *, int);
 
-void
-input_init(struct input *input, int type, int index)
+struct input *
+input_new(int type, int index)
 {
-	int rv = 0;
 	char name[64];
+	struct input *input;
+	int rv = 0;
+	
+	input = emalloc(sizeof(struct input));
 	
 	switch (type) {
 	case INPUT_KEYBOARD:
@@ -65,11 +60,12 @@ input_init(struct input *input, int type, int index)
 		break;
 	}
 
-	object_init(&input->obj, name, NULL, 0, &input_vec);
+	object_init(&input->obj, name, NULL, 0, NULL);
 	input->type = type;
 	input->index = index;
 	input->p = NULL;
 	input->pos = NULL;
+	pthread_mutex_init(&input->lock, NULL);
 
 	/* XXX link */
 	switch (type) {
@@ -83,8 +79,11 @@ input_init(struct input *input, int type, int index)
 		rv = mouse_init(input, index);
 		break;
 	}
+
+	return (input);
 }
 
+/* Input structure must be locked. */
 static void
 input_key(struct input *in, SDL_Event *ev)
 {
@@ -119,6 +118,7 @@ input_key(struct input *in, SDL_Event *ev)
 	}
 }
 
+/* Input structure must be locked. */
 static void
 input_joy(struct input *in, SDL_Event *ev)
 {
@@ -163,17 +163,19 @@ input_mouse(struct input *in, SDL_Event *ev)
 void
 input_destroy(void *p)
 {
-	struct input *in = (struct input *)p;
+	struct input *in = p;
 
+	pthread_mutex_lock(&in->lock);
 	switch (in->type) {
-	case INPUT_KEYBOARD:
-	case INPUT_MOUSE:
-		break;
 	case INPUT_JOY:
 		SDL_JoystickClose(in->p);
-		in->p = NULL;
+		break;
+	default:
 		break;
 	}
+	pthread_mutex_unlock(&in->lock);
+	pthread_mutex_destroy(&in->lock);
+	free(in);
 }
 
 void
@@ -181,11 +183,11 @@ input_event(void *p, SDL_Event *ev)
 {
 	struct input *in = (struct input *)p;
 
+	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
 		dprintf("%s: not controlling anything\n", in->obj.name);
-		return;
+		goto done;
 	}
-
 	switch (in->type) {
 	case INPUT_KEYBOARD:
 		input_key(in, ev);
@@ -197,20 +199,8 @@ input_event(void *p, SDL_Event *ev)
 		input_mouse(in, ev);
 		break;
 	}
-}
-
-int
-input_load(void *p, int fd)
-{
-	dprintf("todo\n");
-	return (0);
-}
-
-int
-input_save(void *p, int fd)
-{
-	dprintf("todo\n");
-	return (0);
+done:
+	pthread_mutex_unlock(&in->lock);
 }
 
 static int

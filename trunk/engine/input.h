@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.4 2002/04/24 13:18:38 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.5 2002/05/02 06:25:09 vedge Exp $	*/
 
 struct object;
 struct mappos;
@@ -13,16 +13,13 @@ struct input {
 	} type;
 	int	index;			/* Device index */
 	void	*p;			/* User data */
-
 	struct	mappos *pos;		/* Controlled map position */
+	pthread_mutex_t lock;		/* Lock on the whole structure */
 };
 
 extern struct input *keyboard, *joy, *mouse;
 
-void	 input_init(struct input *, int, int);
-void	 input_destroy(void *);
-void	 input_event(void *, SDL_Event *);
-int	 input_load(void *, int);
-int	 input_save(void *, int);
-void	 input_dump(void *);
+struct input	*input_new(int, int);
+void		 input_destroy(void *);
+void		 input_event(void *, SDL_Event *);
 
