@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.12 2003/06/17 23:30:44 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.13 2003/06/18 01:10:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -173,7 +173,7 @@ objedit_window(void)
 	struct tlist *objs_tl;
 
 	win = window_new("mapedit-objedit");
-	window_set_caption(win, "Object editor");
+	window_set_caption(win, _("Object editor"));
 	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
 	window_set_closure(win, WINDOW_HIDE);
 
@@ -205,7 +205,7 @@ objedit_window(void)
 		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
-	
+
 	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p", objs_tl,
 	    name_tb, types_com->tbox);
 	event_new(types_com->tbox, "textbox-return", create_obj, "%p, %p, %p",
