@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.238 2005/02/08 15:57:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.239 2005/03/03 10:59:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1736,7 +1736,7 @@ map_edit(void *p)
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 
 	toolbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(toolbar, TOOLBAR_HORIZ, 1);
+	toolbar_init(toolbar, TOOLBAR_HORIZ, 1, 0);
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
