@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.58 2002/08/18 00:42:35 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.60 2002/08/20 09:17:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -1086,7 +1086,7 @@ window_resize(struct window *win)
 
 /* Window must be locked. */
 void
-window_titlebar_printf(struct window *win, char *fmt, ...)
+window_titlebar_printf(struct window *win, const char *fmt, ...)
 {
 	va_list args;
 
