@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.42 2002/06/25 17:32:24 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.43 2002/07/05 01:12:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -545,7 +545,9 @@ window_show_locked(struct window *win)
 		}
 	}
 
+#if 0
 	VIEW_REDRAW();
+#endif
 	return (prev);
 }
 
@@ -581,16 +583,25 @@ window_hide_locked(struct window *win)
 	case GFX_ENGINE_TILEBASED:
 		view_maskfill(&win->vmask, -1);
 		break;
-	default:
+	case GFX_ENGINE_GUI:
+		{ 
+			SDL_Rect rd;
+
+			rd.x = win->x;
+			rd.y = win->y;
+			rd.w = win->w;
+			rd.h = win->h;
+
+			SDL_FillRect(view->v, &rd, NULL);
+		}
 		break;
 	}
 
 #if 0
 	/* The highest window must be at the tail of the queue. */
 	WINDOW_CYCLE(win);
-#endif
-
 	VIEW_REDRAW();
+#endif
 	return (prev);
 }
 
@@ -773,9 +784,25 @@ window_event_all(SDL_Event *ev)
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+					int widx, widy;
+
 					if (!WIDGET_FOCUSED(wid)) {
 						continue;
 					}
+					widx = wid->x + wid->win->x;
+					widy = wid->y + wid->win->y;
+
+					/* XXX inefficient */
+					if (wid->flags & WIDGET_MOUSEOUT &&
+					    ((int)ev->motion.x < widx ||
+					    (int)ev->motion.y < widy ||
+					    (int)ev->motion.x > widx+wid->w ||
+					    (int)ev->motion.y > widy+wid->h)) {
+						event_post(wid,
+						    "window-mouseout", NULL);
+						goto posted;
+					}
+					
 					event_post(wid, "window-mousemotion",
 					    "%i, %i",
 					    (int)ev->motion.x -
@@ -786,15 +813,18 @@ window_event_all(SDL_Event *ev)
 				}
 			}
 			break;
-		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto nextwin;
 			}
 			if (!WINDOW_FOCUSED(win)) {
-				dprintf("give focus\n");
 				view->focus_win = win;
 				gavefocus++;
+			}
+			/* FALLTHROUGH */
+		case SDL_MOUSEBUTTONUP:
+			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
+				goto nextwin;
 			}
 			/*
 			 * Window operation.
@@ -898,20 +928,47 @@ window_resize(struct window *win)
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
-		int x, y;
+		int x = win->borderw, y = win->titleh + win->borderw; 
 		int nwidgets = 0;
 
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)
 			nwidgets++;
 
-		/* Scale/position the region. */
-		reg->x = (reg->rx * win->body.w / 100) +
-		    (win->body.x - win->x) + 1;
-		reg->y = (reg->ry * win->body.h / 100) +
-		    (win->body.y - win->y);
-		reg->w = (reg->rw * win->body.w / 100);
-		reg->h = (reg->rh * win->body.h / 100) - 4;	/* XXX */
-	
+		/* Region coordinates */
+		if (reg->rx > 0) {
+			reg->x = (reg->rx * win->body.w / 100) +
+			    (win->body.x - win->x) + 1;
+		} else if (reg->rx == 0) {
+			reg->x = x;
+		} else {
+			reg->x = abs(reg->rx);
+		}
+		if (reg->ry > 0) {
+			reg->y = (reg->ry * win->body.h / 100) +
+			    (win->body.y - win->y);
+		} else if (reg->ry == 0) {
+			reg->y = y;
+		} else {
+			reg->y = abs(reg->ry);
+		}
+
+		/* Region geometry */
+		if (reg->rw > 0) {
+			reg->w = (reg->rw * win->body.w / 100);
+		} else if (reg->rw == 0) {
+			reg->w = win->w - x;
+		} else {
+			reg->w = abs(reg->rw);
+		}
+		
+		if (reg->rh >= 0) {
+			reg->h = (reg->rh * win->body.h / 100) - 4; /* XXX */
+		} else if (reg->rh == 0) {
+			reg->h = win->h - y;
+		} else {
+			reg->h = abs(reg->rh);
+		}
+		
 		reg->x += reg->spacing / 2;
 		reg->y += reg->spacing / 2;
 		reg->w -= reg->spacing;
