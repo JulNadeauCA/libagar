@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.54 2002/03/04 02:35:40 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.55 2002/03/05 06:34:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -707,7 +707,7 @@ void
 mapedit_move(struct mapedit *med, Uint32 x, Uint32 y)
 {
 	struct node *node;
-	
+
 	node = &med->map->map[med->x][med->y];
 	node_delref(node, node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM));
 	node->flags &= ~(NODE_ANIM);
@@ -880,9 +880,12 @@ mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 	if (flags & NODE_HASTE)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
 		    vx, vy);
-#if 1
+#if 0
 	if (flags & NODE_ANIM)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
+		    vx, vy);
+	if (flags & NODE_OVERLAP)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_OVERLAP],
 		    vx, vy);
 #endif
 }
