@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.1 2002/09/16 16:44:12 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.2 2002/11/14 05:59:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -42,8 +42,9 @@
 #include <engine/widget/text.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
-#include <engine/widget/bitmap.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/label.h>
+#include <engine/widget/bitmap.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
@@ -57,8 +58,6 @@ static const struct monitor_tool_ops object_browser_ops = {
 	},
 	object_browser_window
 };
-
-static void	update_objlist(struct tlist *);
 
 struct object_browser *
 object_browser_new(struct monitor *mon, int flags)
@@ -74,14 +73,21 @@ object_browser_new(struct monitor *mon, int flags)
 void
 object_browser_attached(int argc, union evarg *argv)
 {
+	struct object_browser *obr = argv[0].p;
 	struct object *ob = argv[1].p;
-	dprintf("add %s\n", ob->name);
+	SDL_Surface *icon = NULL;
+
+	if (ob->flags & OBJECT_ART && ob->art != NULL &&
+	    ob->art->nsprites > 0) {
+		icon = SPRITE(ob, 0);
+	}
+	tlist_insert_item(obr->objlist, icon, ob->name, ob);
 }
 
 void
 object_browser_detached(int argc, union evarg *argv)
 {
-	dprintf("remove\n");
+	fatal("remove\n");
 }
 
 void
@@ -99,25 +105,95 @@ object_browser_init(struct object_browser *object_browser, struct monitor *mon,
 }
 
 static void
-update_objlist(struct tlist *tl)
+trigger_event(int argc, union evarg *argv)
 {
-	struct tlist_item *it;
-	struct object *ob;
+	struct object *ob = argv[1].p;
+	struct event *eev = argv[2].p;
 
-	tlist_clear_items(tl);
+	event_post(ob, eev->name, NULL);
+}
 
-	pthread_mutex_lock(&world->lock);
-	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
-		SDL_Surface *icon = NULL;
+static void
+unregister_event(int argc, union evarg *argv)
+{
+	struct button *bu = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct event *eev = argv[2].p;
 
-		if (ob->flags & OBJECT_ART && ob->art != NULL &&
-		    ob->art->nsprites > 0) {
-			icon = SPRITE(ob, 0);
-		}
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_REMOVE(&ob->events, eev, events);
+	pthread_mutex_unlock(&ob->events_lock);
 
-		tlist_insert_item(tl, icon, ob->name, ob);
+	view_detach(WIDGET(bu)->win);
+}
+
+static void
+selected_event(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	struct event *eev = it->p1;
+	struct window *win;
+	struct region *reg;
+	struct label *lab;
+	struct button *bu;
+	int i;
+
+	win = window_new(NULL, "Event handler", WINDOW_CENTER, -1, -1,
+	    215, 140, 215, 140);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
+	lab = label_new(reg, 100, 0, "Identifier: \"%s\"", eev->name);
+	lab = label_new(reg, 100, 0, "Flags: 0x%x", eev->flags);
+	lab = label_new(reg, 100, 0, "Handler: %p", eev->handler);
+
+	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 30);
+	bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
+	event_new(bu, "button-pushed", trigger_event, "%p, %p", ob, eev);
+
+	bu = button_new(reg, "Unregister", NULL, 0, 50, 100);
+	event_new(bu, "button-pushed", unregister_event, "%p, %p", ob, eev);
+
+	window_show(win);
+}
+
+static void
+selected_object(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct tlist_item *it = argv[1].p;
+	struct object *ob = it->p1;
+	struct window *win;
+	struct region *reg;
+	struct label *lab;
+	struct tlist *etl;
+	struct event *eev;
+
+	win = window_new(NULL, "Object structure", WINDOW_CENTER, -1, -1,
+	    394, 307, 251, 240);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 40);
+	lab = label_new(reg, 100, 0, "Name: %s", ob->name);
+	lab = label_new(reg, 100, 0, "Type: %s", ob->type);
+	lab = label_new(reg, 100, 0, "Flags: 0x%x", ob->flags);
+	lab = label_new(reg, 100, 0, "State: %s",
+	    ob->state == OBJECT_EMBRYONIC ? "EMBRYONIC" :
+	    ob->state == OBJECT_CONSISTENT ? "CONSISTENT" :
+	    ob->state == OBJECT_ZOMBIE ? "ZOMBIE" : "???");
+
+	if (ob->art != NULL && ob->art->nsprites > 0) {
+		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 40);
+		bitmap_new(reg, SPRITE(ob, 0), 100, 100);
 	}
-	pthread_mutex_unlock(&world->lock);
+
+	reg = region_new(win, REGION_VALIGN, 60, 40, 40, 60);
+	etl = tlist_new(reg, 100, 100, 0);
+	event_new(etl, "tlist-changed", selected_event, "%p", ob);
+
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_FOREACH(eev, &ob->events, events) {
+		tlist_insert_item(etl, NULL, eev->name, eev);
+	}
+	pthread_mutex_unlock(&ob->events_lock);
+	window_show(win);
 }
 
 struct window *
@@ -129,14 +205,14 @@ object_browser_window(void *p)
 	struct textbox *obj_tbox, *offs_tbox;
 	struct button *button;
 	struct bitmap *bmp;
-	struct tlist *objlist;
 
 	win = window_new("monitor-media-browser", "Object browser",
 	    WINDOW_SOLID|WINDOW_CENTER,
 	    0, 0, 184, 100, 184, 100);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-	objlist = tlist_new(reg, 100, 100, 0);
+	obr->objlist = tlist_new(reg, 100, 100, 0);
+	event_new(obr->objlist, "tlist-changed", selected_object, NULL);
 
 	return (win);
 }
