@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.18 2002/06/06 10:18:02 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.19 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -147,8 +147,7 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 	te->nlines = te->h / maxfonth;
 	te->bgcolor = SDL_MapRGB(mainview->v->format, 30, 90, 180);
 	te->fgcolor = &white;
-	te->view = mainview;
-	te->v = mainview->v;
+	te->v = mainview->v;	/* XXX */
 	te->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
 	    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 	if (te->surface == NULL) {
@@ -156,8 +155,8 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 	}
 
 	/* Prevent overlapping blits. */
-	te->mvmask.x = (te->x / TILEW) - te->view->mapxoffs;
-	te->mvmask.y = (te->y / TILEH) - te->view->mapyoffs;
+	te->mvmask.x = (te->x / TILEW) - mainview->mapxoffs;
+	te->mvmask.y = (te->y / TILEH) - mainview->mapyoffs;
 	te->mvmask.w = (te->w / TILEW);
 	te->mvmask.h = (te->h / TILEH);
 }
@@ -197,7 +196,9 @@ text_attached(struct text *te)
 	
 	ntexts++;
 
-	view_maskfill(te->view, &te->mvmask, 1);
+	pthread_mutex_lock(&mainview->lock);
+	view_maskfill(&te->mvmask, 1);
+	pthread_mutex_unlock(&mainview->lock);
 }
 
 static void
@@ -208,11 +209,13 @@ text_detached(struct text *te)
 	pthread_mutex_lock(&textslock);
 	TAILQ_REMOVE(&textsh, te, texts);
 	pthread_mutex_unlock(&textslock);
-	
-	view_maskfill(te->view, &te->mvmask, -1);
-	if (te->view->map != NULL) {
-		te->view->map->redraw++;
+
+	pthread_mutex_lock(&mainview->lock);
+	view_maskfill(&te->mvmask, -1);
+	if (mainview->map != NULL) {
+		mainview->map->redraw++;
 	}
+	pthread_mutex_unlock(&mainview->lock);
 }
 
 static void

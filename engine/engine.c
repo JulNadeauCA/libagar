@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.49 2002/06/01 14:20:55 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.50 2002/06/03 18:36:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ static void
 printusage(char *progname)
 {
 	fprintf(stderr,
-	    "Usage: %s [-vxf] [-w width] [-h height] [-d depth] [-j joy#]\n",
+	    "Usage: %s [-vf] [-w width] [-h height] [-j joy#]\n",
 	    progname);
 	fprintf(stderr,
 	    "             [-e mapname]\n");
@@ -93,7 +93,6 @@ int
 engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 {
 	int c, w, h, depth, njoy, flags;
-	extern int xcf_debug;
 
 	pthread_key_create(&engine_errorkey, NULL);
 
@@ -108,11 +107,8 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	flags = SDL_SWSURFACE;
 
 	/* XXX ridiculous */
-	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:")) != -1) {
+	while ((c = getopt(argc, argv, "vfl:n:w:h:j:e:W:H:")) != -1) {
 		switch (c) {
-		case 'x':
-			xcf_debug++;
-			break;
 		case 'v':
 			printf("AGAR engine v%s\n", ENGINE_VERSION);
 			printf("%s v%d.%d\n", gameinfo->name,
@@ -128,18 +124,12 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		case 'h':
 			h = atoi(optarg);
 			break;
-		case 'd':
-			depth = atoi(optarg);
-			break;
 		case 'j':
 			njoy = atoi(optarg);
 			break;
 		case 'e':
 			mapediting++;
 			mapstr = optarg;
-			break;
-		case 'D':
-			mapdesc = optarg;
 			break;
 		case 'W':
 			mapw = atoi(optarg);
@@ -168,15 +158,8 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		SDL_Delay(1000);
 	}
 	
-	/*
-	 * Create the main viewport. The video mode will be set
-	 * as soon as a map is loaded.
-	 */
-	mainview = view_new(w, h, depth, flags);
-	if (mainview == NULL) {
-		fatal("could not create main view\n");
-		return (-1);
-	}
+	/* Set the video mode, initialize the masks and rectangles. */
+	view_init(mapediting ? VIEW_MAPEDIT : VIEW_MAPNAV, w, h, depth, flags);
 
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
@@ -197,9 +180,8 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	mouse = input_new(INPUT_MOUSE, 0);
 
 #ifdef XDEBUG
-	if (engine_debug > 0) {
-		engine_xdebug();
-	}
+	/* Request synchronous X events, and set error handlers. */
+	engine_xdebug();
 #endif
 	
 	return (0);

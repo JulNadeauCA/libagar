@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.51 2002/06/09 09:06:09 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.52 2002/06/09 10:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -128,7 +128,6 @@ char_destroy(void *p)
 int
 char_load(void *p, int fd)
 {
-	struct object *ob = p;
 	struct character *ch = p;
 	struct input *input = NULL;
 	struct map *m;
@@ -181,7 +180,7 @@ char_load(void *p, int fd)
 		}
 		
 		dprintf("%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
-		    ob->name, mname, x, y, offs, flags, speed);
+		    OBJECT(ch)->name, mname, x, y, offs, flags, speed);
 
 		m = (struct map *)object_strfind(mname);
 		if (m != NULL) {
@@ -191,7 +190,7 @@ char_load(void *p, int fd)
 			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
 			if (ch->flags & CHAR_FOCUS) {
-				view_center(m->view, x, y);
+				view_center(x, y);
 			}
 			pthread_mutex_unlock(&m->lock);
 
@@ -203,7 +202,7 @@ char_load(void *p, int fd)
 		free(mname);
 		free(minput);
 	} else {
-		dprintf("%s is nowhere.\n", ob->name);
+		dprintf("%s is nowhere.\n", OBJECT(ch)->name);
 	}
 	
 	pthread_mutex_unlock(&ch->lock);

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.36 2002/06/09 10:02:36 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.37 2002/06/10 04:27:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -69,7 +69,6 @@ struct node {
 /* Region within the world. */
 struct map {
 	struct	object obj;
-	struct	viewport *view;
 
 	Uint32	flags;
 #define MAP_FOCUSED	0x0001		/* Being displayed */

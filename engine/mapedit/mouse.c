@@ -63,8 +63,8 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	med->mmapy = (ev->motion.y / TILEH);
 	med->mtmapx = med->mmapx;
 	med->mtmapy = med->mmapy;
-	mx = (m->view->mapx + med->mmapx) - m->view->mapxoffs;
-	my = (m->view->mapy + med->mmapy) - m->view->mapyoffs;
+	mx = (mainview->mapx + med->mmapx) - mainview->mapxoffs;
+	my = (mainview->mapy + med->mmapy) - mainview->mapyoffs;
 
 	if (med->x == mx && med->y == my) {
 		/* Nothing to do. */
@@ -96,8 +96,8 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	}
 	
 	/* Tile list. Allow selection/scrolling. */
-	if (med->mmapx == m->view->mapw - 1 &&	/* XXX */
-	    med->mtmapy <= m->view->maph) {
+	if (med->mmapx == mainview->mapw - 1 &&	/* XXX */
+	    med->mtmapy <= mainview->maph) {
 		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
 			/* Scroll */
 			if (med->mtmapy > omtmapy &&	/* Down */
@@ -114,10 +114,10 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	}
 
 	/* Map view. Node operations. */
-	if (med->mmapy + m->view->mapyoffs < m->view->maph &&
-	    med->mmapx + m->view->mapxoffs < m->view->mapw + 2 &&
-	    med->mmapx >= m->view->mapxoffs &&
-	    med->mmapy >= m->view->mapyoffs) {
+	if (med->mmapy + mainview->mapyoffs < mainview->maph &&
+	    med->mmapx + mainview->mapxoffs < mainview->mapw + 2 &&
+	    med->mmapx >= mainview->mapxoffs &&
+	    med->mmapy >= mainview->mapyoffs) {
 		if (ms & SDL_BUTTON_MMASK) {
 			/* Move */
 			mapedit_move(med, mx, my);
@@ -132,20 +132,20 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 		} else if (ms & SDL_BUTTON_LMASK) {
 			/* Move cursor */
 			if (ommapx < med->mmapx) {
-				if (m->view->mapx > 0) {
+				if (mainview->mapx > 0) {
 					scroll(m, DIR_LEFT);
 				}
 			} else if (med->mmapx < ommapx) {
-				if (m->view->mapx + m->view->mapw < m->mapw) {
+				if (mainview->mapx + mainview->mapw < m->mapw) {
 					scroll(m, DIR_RIGHT);
 				}
 			}
 			if (ommapy < med->mmapy) {
-				if (m->view->mapy > 0) {
+				if (mainview->mapy > 0) {
 					scroll(m, DIR_UP);
 				}
 			} else if (med->mmapy < ommapy) {
-				if (m->view->mapy + m->view->maph < m->maph) {
+				if (mainview->mapy + mainview->maph < m->maph) {
 					scroll(m, DIR_DOWN);
 				}
 			}
@@ -169,8 +169,8 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 
 	vx = (ev->button.x / TILEW);
 	vy = (ev->button.y / TILEH);
-	mx = (m->view->mapx + vx) - m->view->mapxoffs;
-	my = (m->view->mapy + vy) - m->view->mapyoffs;
+	mx = (mainview->mapx + vx) - mainview->mapxoffs;
+	my = (mainview->mapy + vy) - mainview->mapyoffs;
 
 	/* XXX redundant */
 	if (vy == 0) {
@@ -182,7 +182,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 			med->redraw++;
 			break;
 		}
-	} else if (vx >= m->view->mapw - 1 && vy <= m->view->maph) {  /* XXX? */
+	} else if (vx >= mainview->mapw - 1 && vy <= mainview->maph) {  /* XXX? */
 		/* Tile list. Allow selection. */
 		switch (ev->button.button) {
 		case 2:
@@ -191,10 +191,10 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 			med->redraw++;
 			break;
 		}
-	} else if (m->view->mapxoffs+vx <= m->view->mapw+1 &&
-	    m->view->mapyoffs+vy < m->view->maph &&
-	    vx >= m->view->mapxoffs &&
-	    vy >= m->view->mapyoffs) {
+	} else if (mainview->mapxoffs+vx <= mainview->mapw+1 &&
+	    mainview->mapyoffs+vy < mainview->maph &&
+	    vx >= mainview->mapxoffs &&
+	    vy >= mainview->mapyoffs) {
 		/* Map view. Node operations. */
 	    	switch (ev->button.button) {
 		case 2:

@@ -204,7 +204,7 @@ apply(int argc, union evarg *argv)
 		text_msg(5, TEXT_SLEEP, "Saved engine settings.\n");
 		break;
 	case FULLSCRN_CBOX:
-		view_fullscreen(mainview, argv[2].i);
+		view_fullscreen(argv[2].i);
 		break;
 	case FONTCACHE_CBOX:
 		pthread_mutex_lock(&config->lock);
@@ -216,9 +216,11 @@ apply(int argc, union evarg *argv)
 		config_apply(config);
 		pthread_mutex_unlock(&config->lock);
 		break;
+#ifdef DEBUG
 	case DEBUG_CBOX:
 		engine_debug = argv[2].i;	/* XXX unsafe */
 		break;
+#endif
 	}
 }
 
