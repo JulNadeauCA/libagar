@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.32 2003/04/24 07:04:42 vedge Exp $
+.\"	$Csoft: object.3,v 1.33 2003/05/07 13:07:25 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -126,9 +126,8 @@ The
 .Fa flags
 argument may contain:
 .Bd -literal
-#define OBJECT_STATIC		0x01	/* Don't destroy (if attached) */
-#define OBJECT_RELOAD_PROPS	0x02	/* Don't clear props before load */
-#define OBJECT_RELOAD_CHILDS	0x04	/* Reload existing childs, instead
+#define OBJECT_RELOAD_PROPS	0x01	/* Don't clear props before load */
+#define OBJECT_RELOAD_CHILDS	0x02	/* Reload existing childs, instead
 					   of removing them before load */
 .Ed
 .Pp

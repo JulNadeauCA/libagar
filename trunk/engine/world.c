@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.64 2003/04/12 01:45:31 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.65 2003/04/24 07:04:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -122,10 +122,8 @@ world_destroy(void *p)
 	     ob = nextob) {
 		nextob = SLIST_NEXT(ob, wobjs);
 		debug_n(DEBUG_GC, " %s", ob->name);
-		if ((ob->flags & OBJECT_STATIC) == 0) {
-			object_destroy(ob);
-			free(ob);
-		}
+		object_destroy(ob);
+		free(ob);
 	}
 	debug_n(DEBUG_GC, ".\n");
 	pthread_mutex_unlock(&wo->lock);
