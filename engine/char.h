@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.13 2002/03/03 06:21:56 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.14 2002/03/17 09:13:48 vedge Exp $	*/
 
 struct character {
 	struct	object obj;
@@ -18,6 +18,8 @@ struct character {
 	Uint32	maxhp, maxmp;	/* Maximum HP/MP */
 	Uint32	hp, mp;		/* Effective HP/MP */
 	Uint32	maxspeed;	/* Max. speed in ms (saved) */
+
+	Uint32	nzuars;		/* Zuars */
 
 	SDL_TimerID timer;
 	SLIST_ENTRY(character) wchars;	/* Active characters */
