@@ -1,4 +1,4 @@
-.\"	$Csoft: spinbutton.3,v 1.1 2004/03/25 04:20:39 vedge Exp $
+.\"	$Csoft: spinbutton.3,v 1.2 2004/05/05 00:45:48 vedge Exp $
 .\"
 .\" Copyright (c) 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -55,6 +55,11 @@ This widget is composed of a
 for manually entering the value and a set of
 .Xr button 3
 widgets to increment or decrement the value.
+.Sh INHERITANCE HIERARCHY
+.Pp
+.Xr object 3 ->
+.Xr widget 3 ->
+.Nm .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct spinbutton *"

@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.37 2004/09/12 05:49:16 vedge Exp $
+.\"	$Csoft: window.3,v 1.38 2004/09/16 04:06:10 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -62,6 +62,11 @@ widget is attached to the window at creation time.
 Initially, the window's widgets are queried for a default, minimum size, and
 the window is sized accordingly.
 After this initial sizing, widget containers may scale widgets to any size.
+.Sh INHERITANCE HIERARCHY
+.Xr object 3 ->
+.Xr widget 3 ->
+.Xr box 3 ->
+.Nm .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct window *"
