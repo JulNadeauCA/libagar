@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.78 2003/04/12 01:45:38 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.79 2003/04/25 09:47:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -29,12 +29,6 @@ enum {
 
 struct mapedit {
 	struct object	obj;
-	struct {
-		struct window	*toolbar;
-		struct window	*objlist;
-		struct window	*new_map;
-		struct window	*load_map;
-	} win;
 	struct tool	*tools[MAPEDIT_NTOOLS];	/* Map edition tools */
 	struct tool	*curtool;		/* Selected tool */
 	struct node	*src_node;		/* Selected source node */
@@ -96,7 +90,7 @@ extern DECLSPEC void	 mapedit_destroy(void *);
 extern DECLSPEC int	 mapedit_load(void *, struct netbuf *);
 extern DECLSPEC int	 mapedit_save(void *, struct netbuf *);
 
-extern DECLSPEC struct window	*objq_window(void);
+extern DECLSPEC struct window	*tilesets_window(void);
 extern DECLSPEC void		 fileops_new_map(int, union evarg *);
 extern DECLSPEC struct window	*fileops_new_map_window(void);
 extern DECLSPEC void		 fileops_load_map(int, union evarg *);
@@ -104,7 +98,7 @@ extern DECLSPEC struct window	*fileops_load_map_window(void);
 extern DECLSPEC void		 fileops_save_map(int, union evarg *);
 extern DECLSPEC void		 fileops_revert_map(int, union evarg *);
 extern DECLSPEC void		 fileops_clear_map(int, union evarg *);
-extern DECLSPEC struct window	*mapedit_win_new(struct map *);
+extern DECLSPEC struct window	*mapedit_window(struct map *);
 __END_DECLS
 
 #include "close_code.h"

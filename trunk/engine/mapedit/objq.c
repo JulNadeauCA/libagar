@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.65 2003/05/08 03:31:56 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.66 2003/05/18 00:16:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,8 +47,9 @@ enum {
 	OBJQ_INSERT_DOWN
 };
 
+/* Toggle mapview options. */
 static void
-objq_option(int argc, union evarg *argv)
+tog_mvoption(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int opt = argv[2].i;
@@ -87,8 +88,9 @@ objq_option(int argc, union evarg *argv)
 	}
 }
 
+/* Generate graphical noderefs from newly imported graphics. */
 static void
-objq_insert_tiles(int argc, union evarg *argv)
+import_gfx(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct mapview *mv = argv[2].p;
@@ -228,8 +230,9 @@ objq_insert_tiles(int argc, union evarg *argv)
 	}
 }
 
+/* Close a tileset display. */
 static void
-objq_close_tmap(int argc, union evarg *argv)
+close_tileset(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -244,6 +247,7 @@ objq_close_tmap(int argc, union evarg *argv)
 	widget_set_int(nodeedit_button, "state", 0);
 }
 
+/* Set insert/replace mode. */
 static void
 tog_replace(int argc, union evarg *argv)
 {
@@ -253,8 +257,9 @@ tog_replace(int argc, union evarg *argv)
 	mv->constr.replace = state;
 }
 
+/* Display a tileset. */
 static void
-select_tileset(int argc, union evarg *argv)
+open_tileset(int argc, union evarg *argv)
 {
 	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
@@ -264,8 +269,7 @@ select_tileset(int argc, union evarg *argv)
 	struct button *bu;
 	static int cury = 140;
 
-	/* Create the tile map window. */
-	win = window_generic_new(202, 365, "mapedit-tmap-%s", ob->name);
+	win = window_generic_new(202, 365, "mapedit-ts-%s", ob->name);
 	if (win == NULL) {
 		return;		/* Exists */
 	}
@@ -309,7 +313,7 @@ select_tileset(int argc, union evarg *argv)
 		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		bu = button_new(reg, NULL,		/* Toggle props */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS), BUTTON_STICKY,
@@ -317,24 +321,23 @@ select_tileset(int argc, union evarg *argv)
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 		bu = button_new(reg, NULL,		/* Toggle map edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 		
 		bu = button_new(reg, NULL,	       /* Toggle node edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY,
 		    -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
 
-		event_new(win, "window-close", objq_close_tmap,
-		    "%p, %p", mv, bu);
+		event_new(win, "window-close", close_tileset, "%p, %p", mv, bu);
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
@@ -347,7 +350,7 @@ select_tileset(int argc, union evarg *argv)
 	window_show(win);
 
 	/* Create the source tile selection window. */
-	win = window_generic_new(152, 287, "mapedit-tmap-%s-tiles", ob->name);
+	win = window_generic_new(152, 287, "mapedit-tss-%s", ob->name);
 	if (win == NULL)
 		return;					/* Exists */
 	mv->constr.win = win;
@@ -410,8 +413,8 @@ select_tileset(int argc, union evarg *argv)
 			for (i = 0; i < 4; i++) {
 				bu = button_new(reg_buttons1, NULL,
 				    SPRITE(&mapedit, icons[i]), 0, 26, -1);
-				event_new(bu, "button-pushed",
-				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
+				event_new(bu, "button-pushed", import_gfx,
+				    "%p, %p, %i", tl, mv, i);
 			}
 			bu = button_new(reg_buttons2, "Replace", NULL,
 			    BUTTON_STICKY, 100, -1);
@@ -420,13 +423,35 @@ select_tileset(int argc, union evarg *argv)
 	}
 }
 
+/* Recursive function to find objects linked to gfx. */
+static void
+find_gfx(struct tlist *tl, struct object *pob)
+{
+	char s[64];
+	struct object *cob;
+
+	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
+		if (cob->art == NULL)
+			continue;
+
+		snprintf(s, sizeof(s), "%s\n%ua/%us/%um\n",
+		    cob->name,
+		    cob->art->nanims,
+		    cob->art->nsprites,
+		    cob->art->nsubmaps);
+		tlist_insert_item(tl, OBJECT_ICON(cob), s, cob);
+		find_gfx(tl, cob);
+	}
+}
+
+/* Create the tilesets window . */
 struct window *
-objq_window(void)
+tilesets_window(void)
 {
 	struct window *win;
 	struct region *reg;
 
-	win = window_generic_new(221, 112, "mapedit-objq");
+	win = window_generic_new(221, 112, "mapedit-tilesets");
 	if (win == NULL)
 		return (NULL);		/* Exists */
 	event_new(win, "window-close", window_generic_hide, "%p", win);
@@ -436,34 +461,16 @@ objq_window(void)
 
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	{
-		char s[128];
 		struct tlist *tl;
-		struct object *ob;
 
 		tl = tlist_new(reg, 100, 100, 0);
 		tlist_set_item_height(tl, TILEH);
+
 		pthread_mutex_lock(&world->lock);
-		TAILQ_FOREACH(ob, &world->childs, cobjs) {
-			SDL_Surface *icon = NULL;
-
-			if (ob->art == NULL)
-				continue;
-			snprintf(s, sizeof(s), "%s\n%ua | %us | %um\n",
-			    ob->name,
-			    ob->art->nanims,
-			    ob->art->nsprites,
-			    ob->art->nsubmaps);
-
-			if (ob->art->nsprites > 0) {
-				icon = ob->art->sprites[0];
-			} else if (ob->art->nanims > 0 &&
-			    ob->art->anims[0]->nframes > 0) {
-				icon = ob->art->anims[0]->frames[0];
-			}
-			tlist_insert_item(tl, icon, s, ob);
-		}
+		find_gfx(tl, world);
 		pthread_mutex_unlock(&world->lock);
-		event_new(tl, "tlist-changed", select_tileset, NULL);
+
+		event_new(tl, "tlist-changed", open_tileset, NULL);
 	}
 	return (win);
 }
