@@ -40,8 +40,9 @@
 #include <engine/queue.h>
 #include <engine/map.h>
 #include <engine/config.h>
-
 #include <engine/physics.h>
+#include <engine/compat/vasprintf.h>
+
 #include <engine/mapedit/mapedit.h>
 
 #include "text.h"

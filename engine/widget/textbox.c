@@ -41,6 +41,8 @@
 #include <engine/queue.h>
 #include <engine/version.h>
 
+#include <engine/compat/vasprintf.h>
+
 #include "primitive.h"
 #include "text.h"
 #include "widget.h"

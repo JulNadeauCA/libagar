@@ -40,6 +40,8 @@
 #include <engine/queue.h>
 #include <engine/version.h>
 
+#include <engine/compat/vasprintf.h>
+
 #include "text.h"
 #include "widget.h"
 #include "window.h"
