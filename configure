@@ -3,7 +3,7 @@
 # Do not edit!
 # File generated from configure.in by manuconf v1.1.
 #
-# Copyright (c) 2001, CubeSoft Communications, Inc.
+# Copyright (c) 2001, 2002, CubeSoft Communications, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,16 +29,82 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-for D in $@; do
-LPREFIX="`echo $D | awk -F= '{ print $1 }'`"
-RPREFIX="`echo $D | awk -F= '{ print $2 }'`"
-if [ "$LPREFIX" = "--prefix" ]; then
-PREFIX=$RPREFIX
-fi
+
+mc_last_arg=
+mc_optarg=
+for mc_arg; do
+	if test -n "$mc_last_arg"; then
+		eval "$mc_last_arg=\$mc_arg"
+		mc_last_arg=
+		continue
+	fi
+	case "$mc_arg" in
+	-*=*)
+	    mc_optarg=`echo "$mc_arg" | sed 's/[-_a-zA-Z0-9]*=//'`
+	    ;;
+	*)
+	    mc_optarg=
+	    ;;
+	esac
+
+	case "$mc_arg" in
+	--prefix=*)
+	    mc_prefix=$mc_optarg
+	    ;;
+	--enable-*)
+	    mc_option=`echo $mc_arg | sed -e 's/--enable-//' -e 's/=.*//'`
+	    mc_option=`echo $mc_option | sed 's/-/_/g'`
+	    case "$mc_option" in
+	        *=*)
+	            eval "enable_${mc_option}='$mc_optarg'"
+		    ;;
+		*)
+	            eval "enable_${mc_option}=yes"
+		    ;;
+	    esac
+	    ;;
+	--disable-*)
+	    mc_option=`echo $mc_arg | sed -e 's/--disable-//'`;
+	    mc_option=`echo $mc_option | sed 's/-/_/g'`
+	    eval "enable_${mc_option}=no"
+	    ;;
+	--with-*)
+	    mc_option=`echo $mc_arg | sed -e 's/--with-//' -e 's/=.*//'`
+	    mc_option=`echo $mc_option | sed 's/-/_/g'`
+	    case "$mc_option" in
+	        *=*)
+	            eval "with_${mc_option}='$mc_optarg'"
+		    ;;
+		*)
+	            eval "with_${mc_option}=yes"
+		    ;;
+	    esac
+	    ;;
+	--without-*)
+	    mc_option=`echo $mc_arg | sed -e 's/--without-//'`;
+	    mc_option=`echo $mc_option | sed 's/-/_/g'`
+	    eval "with_${mc_option}=no"
+	    ;;
+	--help)
+	    help=yes
+	    ;;
+	--version)
+	    version=yes
+	    ;;
+	*)
+	    echo "invalid argument: $mc_arg"
+	    echo "try ./configure --help"
+	    exit 1
+	    ;;
+	esac
 done
-if [ "$PREFIX" = "" ]; then
-PREFIX=/usr/local
+if [ "$mc_prefix" != "" ]; then
+    PREFIX=$mc_prefix
+else
+    PREFIX=/usr/local
 fi
+trap 'if [ -e config.log ]; then ls -l config.log; fi; exit 1' 1 2 15
+exec 3>config.log
 if [ -x "`which pwd`" ]; then
 S=`pwd `
 else
@@ -46,88 +112,59 @@ S=""
 fi
 echo >Makefile.config
 echo >engine/config.h
-for OPT in $@; do
-if [ "$OPT" = "--without-smpeg" ]; then
-WITHOUT_SMPEG=1
-echo WITHOUT_SMPEG=$WITHOUT_SMPEG >> Makefile.config
-else
-NONE=1
+if [ "${version}" == "yes" ]; then
+echo "Manuconf v1.1"
+exit 1
 fi
-done
-for OPT in $@; do
-if [ "$OPT" = "--with-debug" ]; then
-WITH_DEBUG=1
-echo WITH_DEBUG=$WITH_DEBUG >> Makefile.config
-else
-NONE=1
-fi
-done
-for OPT in $@; do
-if [ "$OPT" = "--with-lockdebug" ]; then
-WITH_LOCKDEBUG=1
-echo WITH_LOCKDEBUG=$WITH_LOCKDEBUG >> Makefile.config
-else
-NONE=1
-fi
-done
-if [ "$1" = "--help" ]; then
+if [ "${help}" == "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
 echo "    --without-smpeg      Don't play videos with the smpeg library"
-echo "    --with-debug         Build with debugging information"
-echo "    --with-lockdebug     Build with threads debugging information"
+echo "    --enable-debug       Build with debugging information"
+echo "    --enable-lockdebug   Build with threads debugging information"
+echo "    --version            Show manuconf version"
+echo "    --help               Show this message"
 exit 1
 fi
-echo -n "checking for gcc..."
+echo -n "checking for a usable C compiler..."
 if [ "$CC" = "" ]; then
-    CC=cc
+    if [ -x "`which cc`" ]; then
+        CC=cc
+    elif [ -x "`which gcc`" ]; then
+        CC=gcc
+    fi
 fi
-cat << 'EOT' > .gcctest.c
+
+cat << 'EOT' > .cctest.c
 int
 main(int argc, char *argv[])
 {
-#ifdef __GNUC__
+	#ifdef __GNUC__
 	return (0);
 #else
 	return (1);
 #endif
 }
 EOT
-$CC -o .gcctest .gcctest.c
-if ./.gcctest; then
-    GCC=Yes
-    echo "yes"
-else
+
+echo "$CC -o .cctest .cctest.c" >>config.log
+$CC -o .cctest .cctest.c 2>>config.log
+if [ $? != 0 -o ! -e .cctest ]; then
     echo "no"
+    rm -f .cctest .cctest.c
+    exit 1
 fi
-rm -f .gcctest .gcctest.c
-if [ -x "`which uname`" ]; then
-UNAME=`uname `
+
+cc_is_gcc=no
+if ./.cctest; then
+    cc_is_gcc=yes
+    echo "yes, gcc"
 else
-UNAME=""
+    echo "yes"
 fi
-if [ "$UNAME" = "IRIX64" ]; then
-ARCH64=1
-echo "#ifndef ARCH64" >> engine/config.h
-echo "#define ARCH64 $ARCH64" >> engine/config.h
-echo "#endif /* ARCH64 */" >> engine/config.h
-else
-NONE=1
-fi
-if [ -x "`which uname`" ]; then
-UNAME=`uname -m`
-else
-UNAME=""
-fi
-if [ "$UNAME" = "sparc64" ]; then
-ARCH64=1
-echo "#ifndef ARCH64" >> engine/config.h
-echo "#define ARCH64 $ARCH64" >> engine/config.h
-echo "#endif /* ARCH64 */" >> engine/config.h
-else
-NONE=1
-fi
-echo -n "checking for SDL >= 1.2.0..."
+
+rm -f .cctest .cctest.c
+echo -n "checking for SDL (http://www.libsdl.org)..."
 if [ -x "`which sdl-config`" ]; then
 SDL_VERSION=`sdl-config --version`
 else
@@ -144,47 +181,44 @@ else
 SDL_LIBS=""
 fi
 if [ -x "`which sdl11-config`" ]; then
-SDL11_VERSION=`sdl11-config --version`
+sdl11_version=`sdl11-config --version`
 else
-SDL11_VERSION=""
+sdl11_version=""
 fi
 if [ -x "`which sdl11-config`" ]; then
-SDL11_CFLAGS=`sdl11-config --cflags`
+sdl11_cflags=`sdl11-config --cflags`
 else
-SDL11_CFLAGS=""
+sdl11_cflags=""
 fi
 if [ -x "`which sdl11-config`" ]; then
-SDL11_LIBS=`sdl11-config --libs`
+sdl11_libs=`sdl11-config --libs`
 else
-SDL11_LIBS=""
+sdl11_libs=""
 fi
 if [ "$SDL_VERSION" != "" ]; then
-SDL_FOUND=yes
+sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
 NONE=1
 fi
-if [ "$SDL11_VERSION" != "" ]; then
-SDL_FOUND=yes
-SDL_CFLAGS=$SDL11_CFLAGS
-SDL_LIBS=$SDL11_LIBS
+if [ "$sdl11_version" != "" ]; then
+sdl_found=yes
+SDL_CFLAGS=$sdl11_cflags
+SDL_LIBS=$sdl11_libs
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
 NONE=1
 fi
-if [ "$SDL_FOUND" = "yes" ]; then
+if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
 else
-echo "*** SDL >= 1.2.0 is required"
-echo "*** Get it from http://www.libsdl.org/"
-echo "ERROR: SDL >= 1.2.0 is missing"
-exit 1
+NONE=1
 fi
 CFLAGS="$CFLAGS -g -I$S"
 echo CFLAGS=$CFLAGS >> Makefile.config
-if [ "$GCC" != "" ]; then
+if [ $cc_is_gcc == "yes" ]; then
 CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
@@ -194,8 +228,34 @@ SHAREDIR="\"$PREFIX/share/geggy\""
 echo "#ifndef SHAREDIR" >> engine/config.h
 echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
 echo "#endif /* SHAREDIR */" >> engine/config.h
-if [ "$WITHOUT_SMPEG" = "" ]; then
-echo -n "checking for x11..."
+if [ "${with_smpeg}" != "no" ]; then
+echo -n "checking for smpeg (http://www.lokigames.com/)..."
+if [ -x "`which smpeg-config`" ]; then
+smpeg_version=`smpeg-config --version`
+else
+smpeg_version=""
+fi
+if [ -x "`which smpeg-config`" ]; then
+SMPEG_CFLAGS=`smpeg-config --cflags`
+else
+SMPEG_CFLAGS=""
+fi
+if [ -x "`which smpeg-config`" ]; then
+SMPEG_LIBS=`smpeg-config --libs`
+else
+SMPEG_LIBS=""
+fi
+if [ "$smpeg_version" != "" ]; then
+echo "ok"
+echo "#ifndef CONF_SMPEG" >> engine/config.h
+echo "#define CONF_SMPEG $CONF_SMPEG" >> engine/config.h
+echo "#endif /* CONF_SMPEG */" >> engine/config.h
+echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
+echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
+else
+NONE=1
+fi
+echo -n "checking for X11 (http://www.xfree86.org/)..."
 if [ -d /usr/X11R6 ]; then
 X11BASE=/usr/X11R6
 CONF_X11=1
@@ -220,7 +280,8 @@ X11_LIBS=-L/usr/bin/X11/lib
 else
 NONE=1
 fi
-if [ "$X11BASE" != "" ]; then
+if [ "${X11BASE}" != "" ]; then
+echo -n "ok"
 echo "$X11BASE"
 echo "#ifndef CONF_X11" >> engine/config.h
 echo "#define CONF_X11 $CONF_X11" >> engine/config.h
@@ -231,40 +292,14 @@ echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
 NONE=1
 fi
-echo -n "checking for smpeg >= 0.4.3..."
-if [ -x "`which smpeg-config`" ]; then
-SMPEG_VERSION=`smpeg-config --version`
-else
-SMPEG_VERSION=""
 fi
-if [ -x "`which smpeg-config`" ]; then
-SMPEG_CFLAGS=`smpeg-config --cflags`
-else
-SMPEG_CFLAGS=""
-fi
-if [ -x "`which smpeg-config`" ]; then
-SMPEG_LIBS=`smpeg-config --libs`
-else
-SMPEG_LIBS=""
-fi
-if [ "$SMPEG_VERSION" != "" ]; then
-echo "ok"
-echo "#ifndef CONF_SMPEG" >> engine/config.h
-echo "#define CONF_SMPEG $CONF_SMPEG" >> engine/config.h
-echo "#endif /* CONF_SMPEG */" >> engine/config.h
-echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
-echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
-else
-NONE=1
-fi
-fi
-if [ "$WITH_DEBUG" != "" ]; then
+if [ "${enable_debug}" == "yes" ]; then
 DEBUG=1
 echo "#ifndef DEBUG" >> engine/config.h
 echo "#define DEBUG $DEBUG" >> engine/config.h
 echo "#endif /* DEBUG */" >> engine/config.h
 fi
-if [ "$WITH_LOCKDEBUG" != "" ]; then
+if [ "${enable_lockdebug}" == "yes" ]; then
 LOCKDEBUG=1
 echo "#ifndef LOCKDEBUG" >> engine/config.h
 echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
