@@ -68,6 +68,19 @@ cannot be changed at runtime, and may include:
 #define TILESTACK_HORIZ		0x01	/* Display tiles horizontally */
 #define TILESTACK_VERT		0x02	/* Display tiles vertically */
 .Ed
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -width 25n -compact
+.It widget-scaled
+Adjust the tile display.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr mapview 3 ,

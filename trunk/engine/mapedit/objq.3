@@ -68,6 +68,23 @@ cannot be changed at runtime, and may include:
 #define OBJQ_HORIZ		0x01	/* Display icons horizontally */
 #define OBJQ_VERT		0x02	/* Display icons vertically */
 .Ed
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It widget-scaled
+Adjust the list display.
+.It window-mousemotion
+Right button scrolls the list.
+.It window-mousebuttonup
+Right button stops scrolling the list.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr mapview 3 ,
