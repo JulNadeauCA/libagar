@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.13 2002/05/03 08:17:42 vedge Exp $
+# $Csoft: configure.in,v 1.14 2002/05/05 22:10:54 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
@@ -6,33 +6,35 @@ inclout(engine/config.h);
 register("--without-smpeg",	"Don't play videos with the smpeg library");
 register("--enable-debug",	"Build with debugging information");
 register("--enable-lockdebug",	"Build with threads debugging information");
+register("--version",		"Show manuconf version");
+register("--help",		"Show this message");
 
-if ("$1" = "--help") {
+if ("${version}" == "yes") {
+	version();
+}
+if ("${help}" == "yes") {
 	help();
-	exit(1);
 }
 
 check(cc);
 require(sdl, 1.2.0);
 
 mdefine(CFLAGS, "$CFLAGS -g -I$S");
-if ("$GCC" != "") {
+if ($cc_is_gcc == "yes") {
 	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused");
 }
 
 mdefine(SHAREDIR, "$PREFIX/share/geggy");
 hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
 
-if ("$WITHOUT_SMPEG" = "") {
-	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
+if ("${with_smpeg}" != "no") {
 	check(smpeg, 0.4.3);
+	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
 }
-
-if ("$ENABLE_DEBUG" != "") {
+if ("${enable_debug}" == "yes") {
 	hdefine(DEBUG, 1);
 }
-
-if ("$ENABLE_LOCKDEBUG" != "") {
+if ("${enable_lockdebug}" == "yes") {
 	hdefine(LOCKDEBUG, 1);
 }
 
