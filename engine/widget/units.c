@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.22 2004/08/22 12:01:55 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.23 2004/08/23 01:20:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -88,17 +88,19 @@ const struct unit *
 unit_best(const struct unit ugroup[], double n)
 {
 	const struct unit *unit, *bestunit = NULL;
-	double smallest = n;
-	double quotient;
+	double smallest = HUGE_VAL;
+	double diff;
 
 	if (n == 0) {
 		goto defunit;
 	}
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
-		quotient = n/unit->divider;
-		if (quotient >= 1.0 && quotient < smallest) {
-			smallest = quotient;
-			bestunit = unit;
+		if (n/unit->divider >= 1.0) {
+			diff = fabs(n-unit->divider);
+			if (diff < smallest) {
+				smallest = diff;
+				bestunit = unit;
+			}
 		}
 	}
 	if (bestunit == NULL) {
@@ -111,6 +113,18 @@ defunit:
 			break;
 	}
 	return (unit);
+}
+
+/* Format a number using the unit most suited to its magnitude. */
+/* XXX thread unsafe */
+int
+unit_format(double n, const struct unit ugroup[], char *buf, size_t len)
+{
+	const struct unit *ubest;
+
+	ubest = unit_best(ugroup, n);
+	return (snprintf(buf, len, "%g%s", base2unit(n, ubest),
+	    ubest->abbr[0] != '\0' ? ubest->abbr : ubest->key));
 }
 
 /* Return the abbreviation associated with the given unit. */
