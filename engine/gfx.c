@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.40 2003/06/18 01:10:16 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.3 2003/06/21 06:39:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,11 +32,6 @@
 
 #include <engine/mapedit/mapedit.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/button.h>
-
 #include <engine/loader/den.h>
 #include <engine/loader/xcf.h>
 
@@ -53,14 +48,6 @@ enum {
 
 static TAILQ_HEAD(, gfx) gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
 pthread_mutex_t		 gfxq_lock = PTHREAD_MUTEX_INITIALIZER;
-
-#ifdef DEBUG
-#define DEBUG_GC	0x01
-#define DEBUG_LOADING	0x02
-
-int	gfx_debug = DEBUG_GC|DEBUG_LOADING;
-#define engine_debug	gfx_debug
-#endif
 
 static void	gfx_destroy(struct gfx *);
 static void	gfx_destroy_anim(struct gfx_anim *);
@@ -246,7 +233,9 @@ gfx_unused(struct gfx *gfx)
 	pthread_mutex_lock(&gfx->used_lock);
 	if (gfx->used != ART_MAX_USED &&		/* Remain resident? */
 	    --gfx->used == 0) {
+		pthread_mutex_unlock(&gfx->used_lock);
 		gfx_destroy(gfx);
+		return;
 	}
 	pthread_mutex_unlock(&gfx->used_lock);
 }
@@ -397,9 +386,10 @@ gfx_destroy(struct gfx *gfx)
 	}
 	Free(gfx->submaps);
 
-	debug(DEBUG_GC, "freed %s (%d sprites, %d anims)\n",
-	    gfx->name, gfx->nsprites, gfx->nanims);
+	dprintf("freed %s (%d sprites, %d anims)\n", gfx->name, gfx->nsprites,
+	    gfx->nanims);
 
+	pthread_mutex_destroy(&gfx->used_lock);
 	free(gfx->name);
 	free(gfx);
 }
