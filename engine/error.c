@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.2 2002/06/01 02:39:25 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.4 2002/08/20 09:17:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -28,6 +28,7 @@
 #include <sys/types.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 
 #include "engine.h"
