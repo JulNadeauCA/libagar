@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.58 2002/09/05 14:28:10 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.59 2002/09/06 01:29:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -182,7 +182,7 @@ char_load(void *p, int fd)
 		dprintf("%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
 		    OBJECT(ch)->name, mname, x, y, offs, flags, speed);
 
-		m = (struct map *)object_strfind(mname);
+		m = (struct map *)world_find(mname);
 		if (m != NULL) {
 			struct mappos *npos;
 
