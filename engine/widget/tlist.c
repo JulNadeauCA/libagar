@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.3 2002/09/07 04:34:38 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.4 2002/09/07 04:57:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -41,7 +41,7 @@
 
 static struct widget_ops tlist_ops = {
 	{
-		NULL,		/* destroy */
+		tlist_destroy,	/* destroy */
 		NULL,		/* load */
 		NULL		/* save */
 	},
@@ -63,6 +63,8 @@ enum {
 static void	tlist_mouse_button(int, union evarg *);
 static void	tlist_mouse_motion(int, union evarg *);
 static void	tlist_keydown(int, union evarg *);
+static void	tlist_scaled(int, union evarg *);
+static void	tlist_attached(int, union evarg *);
 
 struct tlist *
 tlist_new(struct region *reg, int rw, int rh, int flags)
@@ -108,8 +110,50 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	event_new(tl, "window-mousemotion", 0, tlist_mouse_motion, NULL);
 	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button, NULL);
 	event_new(tl, "window-keydown", 0, tlist_keydown, NULL);
+	event_new(tl, "attached", 0, tlist_attached, NULL);
+
+	tl->vbar = emalloc(sizeof(struct scrollbar));
+	scrollbar_init(tl->vbar, -1, -1, SCROLLBAR_VERTICAL);
+	event_new(tl, "widget-scaled", 0, tlist_scaled, NULL);
+}
+
+void
+tlist_destroy(void *p)
+{
+	struct tlist *tl = p;
+	struct tlist_item *it, *nextit;
+
+	for (it = TAILQ_FIRST(&tl->items);
+	     it != TAILQ_END(&tl->items);
+	     it = nextit) {
+		nextit = TAILQ_NEXT(it, items);
+		free(it);
+	}
+
+	object_destroy(tl->vbar);
+	pthread_mutex_destroy(&tl->items_lock);
+}
+
+static void
+tlist_attached(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
 	
-	scrollbar_init(&tl->vbar, -1, -1, SCROLLBAR_VERTICAL);
+	WIDGET(tl->vbar)->win = WIDGET(tl)->win;
+}
+
+static void
+tlist_scaled(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	int w = argv[1].i;
+	int h = argv[2].i;
+	struct scrollbar *sb = tl->vbar;
+
+	WIDGET(sb)->x = WIDGET(tl)->x + w - 19;
+	WIDGET(sb)->y = WIDGET(tl)->y;
+	WIDGET(sb)->w = 20;
+	WIDGET(sb)->h = h - 7;
 }
 
 void
@@ -143,7 +187,9 @@ tlist_draw(void *p)
 		}
 
 		if (i - 1 == tl->offs.sel) {
-			WIDGET_FILL(tl, x, y, WIDGET(tl)->w, tl->item_h,
+			WIDGET_FILL(tl, x, y,
+			    WIDGET(tl)->w - WIDGET(tl->vbar)->w,
+			    tl->item_h,
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
 
@@ -164,15 +210,19 @@ tlist_draw(void *p)
 	}
 out:
 	pthread_mutex_unlock(&tl->items_lock);
+
+	scrollbar_draw(tl->vbar);
 }
 
 void
 tlist_remove_item(struct tlist_item *it)
 {
-	pthread_mutex_lock(&it->tl_bp->items_lock);
-	TAILQ_REMOVE(&it->tl_bp->items, it, items);
-	it->tl_bp->nitems--;
-	pthread_mutex_unlock(&it->tl_bp->items_lock);
+	struct tlist *tl = it->tl_bp;
+
+	pthread_mutex_lock(&tl->items_lock);
+	TAILQ_REMOVE(&tl->items, it, items);
+	scrollbar_set_range(tl->vbar, 0, --tl->nitems);
+	pthread_mutex_unlock(&tl->items_lock);
 
 	free(it->text);
 	free(it);
@@ -193,6 +243,8 @@ tlist_clear_items(struct tlist *tl)
 	tl->nitems = 0;
 
 	pthread_mutex_unlock(&tl->items_lock);
+	
+	scrollbar_set_range(tl->vbar, 0, 0);
 }
 
 struct tlist_item *
@@ -215,7 +267,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_INSERT_HEAD(&tl->items, it, items);
-	tl->nitems++;
+	scrollbar_set_range(tl->vbar, 0, ++tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
@@ -231,11 +283,15 @@ tlist_mouse_motion(int argc, union evarg *argv)
 	int y = argv[2].i;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
-	int sy = y / tl->item_h;
 	Uint8 ms;
+	
+	if (x > WIDGET(tl)->w - WIDGET(tl->vbar)->w) {
+		event_post(tl->vbar, "window-mousemotion", "%i, %i, %i, %i",
+		    x, y, xrel, yrel);
+		return;
+	}
 
 	ms = SDL_GetMouseState(NULL, NULL);
-
 	if (ms & SDL_BUTTON_RMASK) {
 		if (yrel < 0 && (tl->offs.soft_start += yrel) < 0) {
 			tl->offs.soft_start = tl->item_h;
@@ -261,6 +317,12 @@ tlist_mouse_button(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	int sy;
+
+	if (x > WIDGET(tl)->w - WIDGET(tl->vbar)->w) {
+		event_post(tl->vbar, "window-mousebuttondown", "%p, %p, %p",
+		    button, x, y);
+		return;
+	}
 
 	y -= tl->offs.soft_start;
 

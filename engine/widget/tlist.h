@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.2 2002/09/06 08:27:33 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.3 2002/09/07 04:34:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -18,7 +18,7 @@ struct tlist_item {
 struct tlist {
 	struct widget wid;
 	
-	struct scrollbar vbar;	/* Vertical scrollbar */
+	struct scrollbar *vbar;	/* Vertical scrollbar */
 
 	int	 flags;
 #define TLIST_DROPDOWN	0x01	/* Drop-down menu */
@@ -46,6 +46,7 @@ struct tlist {
 struct tlist	*tlist_new(struct region *, int, int, int);
 void		 tlist_init(struct tlist *, int, int, int);
 void	 	 tlist_draw(void *);
+void	 	 tlist_destroy(void *);
 
 void			 tlist_remove_item(struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
