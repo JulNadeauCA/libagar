@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.79 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.80 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -89,6 +89,7 @@ button_init(struct button *bu, const char *caption)
 	bu->sticky = 0;
 	bu->justify = BUTTON_CENTER;
 	bu->padding = 4;
+	bu->moverlap = 0;
 
 	if (caption != NULL) {
 		bu->label = text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR),
@@ -192,10 +193,18 @@ button_mousemotion(int argc, union evarg *argv)
 		return;
 
 	stateb = widget_get_binding(bu, "state", &pressed);
-	if (!widget_relative_area(bu, x, y) &&
-	    !bu->sticky && *pressed == 1) {
-		*pressed = 0;
-		widget_binding_modified(stateb);
+	if (!widget_relative_area(bu, x, y)) {
+		if (!bu->sticky && *pressed == 1) {
+			*pressed = 0;
+			widget_binding_modified(stateb);
+		}
+		if (bu->moverlap) {
+			bu->moverlap = 0;
+			event_post(NULL, bu, "button-mouseoverlap", "%i", 0);
+		}
+	} else {
+		bu->moverlap = 1;
+		event_post(NULL, bu, "button-mouseoverlap", "%i", 1);
 	}
 	widget_binding_unlock(stateb);
 }
