@@ -3,7 +3,7 @@
 # Do not edit!
 # File generated from configure.in by csoft-mk 1.5.
 #
-# Copyright (c) 2001, 2002, 2003, CubeSoft Communications, Inc.
+# Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -137,6 +137,7 @@ echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      Support OpenGL operations [default: check]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: yes]"
+echo "    --enable-floating-point        Floating point [default: yes]"
 echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support 24 bpp display [default: yes]"
@@ -151,12 +152,7 @@ if [ ! -e "config" ]; then
 		exit 1
 	fi
 fi
-if [ ! -e "config.log" ]; then
-	echo > config.log
-	if [ $? != 0 ]; then
-		echo "Could not create config.log"
-		exit 1
-	fi
+echo > config.log
 fi
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
@@ -172,49 +168,6 @@ FOBJDIR="$PREFIX/share/cave/fob"
 echo FOBJDIR=$FOBJDIR >> Makefile.config
 INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config
-echo -n "checking for a usable make(1)..."
-echo -n "checking for a usable make(1)..." >> config.log
-echo "checking for a usable make(1)..." >> config.log
-if [ "$MAKE" = "" ]; then
-	for i in `echo $PATH |sed 's/:/ /g'`; do
-		if [ -x "${i}/make" ]; then
-			MAKE="${i}/make"
-		elif [ -x "${i}/make" ]; then
-			MAKE="${i}/make"
-		fi
-	done
-fi
-
-cat << 'EOT' > .maketest
-ASSIGN= foo
-ASSIGN?= foo
-ASSIGN+= bar
-
-all: write-test
-
-write-test:
-	@echo > .maketest2
-
-.BEGIN:
-	@echo -n
-
-TOP=	.
-include ${TOP}/.maketest3
-EOT
-
-echo >> .maketest3
-
-echo "$MAKE -f .maketest" >>config.log
-$MAKE -f .maketest 2>>config.log
-if [ $? != 0 -o ! -e .maketest2 ]; then
-    echo "-> failure" >> config.log
-    echo "no"
-    exit 1
-else
-    echo "yes"
-    echo "-> success" >> config.log
-fi
-rm -f .maketest .maketest2 .maketest3
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 echo "checking for a usable C compiler..." >> config.log
@@ -1154,6 +1107,15 @@ echo "#define THREADS" $THREADS >> config/threads.h
 echo "#endif /* THREADS */" >> config/threads.h
 else
 echo "#undef THREADS" > config/threads.h
+fi
+if [ "${enable_threads}" != "no" ]
+ then
+FLOATING_POINT=1
+echo "#ifndef FLOATING_POINT" > config/floating_point.h
+echo "#define FLOATING_POINT" $FLOATING_POINT >> config/floating_point.h
+echo "#endif /* FLOATING_POINT */" >> config/floating_point.h
+else
+echo "#undef FLOATING_POINT" > config/floating_point.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
