@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.15 2003/06/30 06:39:43 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.16 2003/07/08 00:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -92,12 +92,12 @@ enum {
 	OBJEDIT_DESTROY
 };
 
+/* Invoke a generic operation on the selected objects. */
 static void
 invoke_op(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
-	struct window *win;
 	int op = argv[2].i;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -109,13 +109,11 @@ invoke_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT:
 			if (ob->ops->edit != NULL) {
-				win = ob->ops->edit(ob);
-				window_show(win);
+				mapedit_edit_objdata(ob);
 			}
 			break;
 		case OBJEDIT_EDIT_OBJ:
-			win = object_edit(ob);
-			window_show(win);
+			mapedit_edit_objgen(ob);
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {
@@ -155,7 +153,7 @@ invoke_op(int argc, union evarg *argv)
 	}
 }
 
-/* Recursive function to display the object tree. */
+/* Display the object tree. */
 static struct tlist_item *
 find_objs(struct tlist *tl, struct object *pob, int depth)
 {

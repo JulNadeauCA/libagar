@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.83 2003/06/18 00:47:00 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.84 2003/07/08 00:34:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -36,10 +36,10 @@ struct mapedit_tileset {
 	TAILQ_ENTRY(mapedit_tileset) tilesets;
 };
 
-struct mapedit_win {
+struct mapedit_obj {
 	struct object	*obj;		/* Object being edited */
-	struct window	*win;		/* Edition window */
-	TAILQ_ENTRY(mapedit_win) wins;
+	struct window	*win;		/* Generic edition window */
+	TAILQ_ENTRY(mapedit_obj) objs;
 };
 
 struct mapedit {
@@ -50,7 +50,8 @@ struct mapedit {
 	struct map	 copybuf;		/* Copy/paste buffer */
 	struct object	*pseudo;		/* Pseudo object (for deps) */
 	TAILQ_HEAD(,mapedit_tileset) tilesets;	/* Tilesets in use */
-	TAILQ_HEAD(,mapedit_map) maps;		/* Maps in use */
+	TAILQ_HEAD(,mapedit_obj) dobjs;
+	TAILQ_HEAD(,mapedit_obj) gobjs;
 };
 
 /* Bitmaps */
@@ -73,7 +74,8 @@ enum {
 	MAPEDIT_TOOL_SAVE_MAP,
 	MAPEDIT_TOOL_SAVE_MAP_TO,
 	MAPEDIT_TOOL_TILESTACK,
-	MAPEDIT_TOOL_OBJLIST,
+	MAPEDIT_TOOL_OBJEDITOR,
+	MAPEDIT_TOOL_TILESETS,
 	MAPEDIT_TOOL_STAMP,
 	MAPEDIT_TOOL_ERASER,
 	MAPEDIT_TOOL_MAPOPS,
@@ -106,6 +108,8 @@ __BEGIN_DECLS
 void	 mapedit_init(void);
 int	 mapedit_load(void *, struct netbuf *);
 int	 mapedit_save(void *, struct netbuf *);
+void	 mapedit_edit_objdata(struct object *);
+void	 mapedit_edit_objgen(struct object *);
 
 struct window	*tilesets_window(void);
 struct window	*objedit_window(void);
