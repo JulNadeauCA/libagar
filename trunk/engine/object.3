@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.43 2003/07/26 12:28:45 vedge Exp $
+.\"	$Csoft: object.3,v 1.44 2003/08/13 19:45:55 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -462,6 +462,18 @@ and
 members of the
 .Nm
 structure could be replaced by a single lock.
+.Pp
+Eventually, if media types other than gfx/audio is required, the
+.Nm
+layer could handle media associations in a more generic manner.
+The names of gfx/audio references is only limited to 64k by
+.Fn read_string .
+.Pp
+The underlying
+.Fn object_load
+and
+.Fn object_save
+mechanic is complicated.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
