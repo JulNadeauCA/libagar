@@ -1,7 +1,7 @@
-/*	$Csoft: flip.h,v 1.4 2003/06/18 00:47:01 vedge Exp $	*/
+/*	$Csoft: flip.h,v 1.5 2003/06/29 11:33:45 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool/tool.h>
+#include <engine/mapedit/tool.h>
 
 #include "begin_code.h"
 
@@ -22,10 +22,7 @@ struct flip {
 };
 
 __BEGIN_DECLS
-void		 flip_init(void *);
-struct window	*flip_window(void *);
-void		 flip_effect(void *, struct mapview *, struct map *,
-		             struct node *);
+void	flip_init(void *);
 __END_DECLS
 
 #include "close_code.h"

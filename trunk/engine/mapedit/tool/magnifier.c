@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.34 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.35 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,9 +31,11 @@
 
 #include "magnifier.h"
 
-#include <engine/widget/vbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
+
+static void	magnifier_mouse(void *, struct mapview *, Sint16, Sint16,
+		                Uint8);
 
 const struct tool_ops magnifier_ops = {
 	{
@@ -44,9 +46,8 @@ const struct tool_ops magnifier_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	magnifier_window,
-	NULL,
-	NULL,
+	NULL,			/* cursor */
+	NULL,			/* effect */
 	magnifier_mouse
 };
 
@@ -71,7 +72,7 @@ magnifier_zoom100(int argc, union evarg *argv)
 	struct mapview *mv;
 	
 	if ((mv = tool_mapview()) == NULL) {
-		text_msg(MSG_ERROR, "%s", error_get());
+		text_msg(MSG_ERROR, _("There is no visible map."));
 		return;
 	}
 	mapview_zoom(mv, 100);
@@ -81,45 +82,30 @@ void
 magnifier_init(void *p)
 {
 	struct magnifier *mag = p;
+	struct window *win;
+	struct button *bu;
+	struct textbox *tbox;
 
 	tool_init(&mag->tool, "magnifier", &magnifier_ops,
 	    MAPEDIT_TOOL_MAGNIFIER);
 	TOOL(mag)->cursor = SPRITE(mag, TOOL_MAGNIFIER_CURSOR);
 	mag->increment = 30;
-}
 
-struct window *
-magnifier_window(void *p)
-{
-	struct magnifier *mag = p;
-	struct window *win;
-	struct vbox *vb;
-
-	win = window_new("mapedit-tool-magnifier");
+	win = TOOL(mag)->win = window_new("mapedit-tool-magnifier");
 	window_set_caption(win, _("Magnifier"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	event_new(win, "window-close", tool_window_close, "%p", mag);
 
-	vb = vbox_new(win, VBOX_WFILL|VBOX_HOMOGENOUS);
-	{
-		struct button *button;
+	bu = button_new(win, _("1:1 zoom"));
+	WIDGET(bu)->flags |= WIDGET_WFILL;
+	event_new(bu, "button-pushed", magnifier_zoom100, "%p", mag);
 
-		button = button_new(vb, _("1:1 zoom"));
-		event_new(button, "button-pushed", magnifier_zoom100,
-		    "%p", mag);
-	}
-
-	vb = vbox_new(win, VBOX_WFILL);
-	{
-		struct textbox *tbox;
-
-		tbox = textbox_new(vb, _("Zoom %: "));		/* XXX int */
-		event_new(tbox, "textbox-changed", magnifier_zoomN, "%p", mag);
-		textbox_printf(tbox, "100");
-	}
-	return (win);
+	tbox = textbox_new(win, _("Zoom %: "));			/* XXX int */
+	event_new(tbox, "textbox-changed", magnifier_zoomN, "%p", mag);
+	textbox_printf(tbox, "100");
 }
 
-void
+static void
 magnifier_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel,
     Uint8 state)
 {

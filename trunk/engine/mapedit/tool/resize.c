@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.32 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.33 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,6 +30,8 @@
 
 #include "resize.h"
 
+static void	resize_mouse(void *, struct mapview *, Sint16, Sint16, Uint8);
+
 const struct tool_ops resize_ops = {
 	{
 		NULL,		/* init */
@@ -39,15 +41,9 @@ const struct tool_ops resize_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* window */
-	NULL,			/* resize */
+	NULL,			/* cursor */
 	NULL,			/* effect */
 	resize_mouse
-};
-
-enum {
-	MINIMUM_MAP_WIDTH =	1,
-	MINIMUM_MAP_HEIGHT =	1
 };
 
 void
@@ -56,39 +52,38 @@ resize_init(void *p)
 	struct resize *res = p;
 
 	tool_init(&res->tool, "resize", &resize_ops, MAPEDIT_TOOL_RESIZE);
-	res->mode = RESIZE_GROW;
 }
 
-void
+static void
 resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 {
 	struct map *m = mv->map;
 	int w = m->mapw;
 	int h = m->maph;
 
-	if (mv->cxrel < 0 &&
-	    --w < 1)
+	if (mv->cxrel < 0 && --w < 1) {
 		w = 1;
-	else if (mv->cxrel > 0 &&
-	    ++w > MAP_MAX_WIDTH)
+	} else if (mv->cxrel > 0 && ++w > MAP_MAX_WIDTH) {
 		w = MAP_MAX_WIDTH;
+	}
 	
-	if (mv->cyrel < 0 &&
-	    --h < 1)
+	if (mv->cyrel < 0 && --h < 1) {
 		h = 1;
-	else if (mv->cyrel > 0 &&
-	    ++h > MAP_MAX_HEIGHT)
+	} else if (mv->cyrel > 0 && ++h > MAP_MAX_HEIGHT) {
 		h = MAP_MAX_HEIGHT;
+	}
 
-	if (w < 1)
+	if (w < 1) {
 		w = 1;
-	else if (w > MAP_MAX_WIDTH)
+	} else if (w > MAP_MAX_WIDTH) {
 		w = MAP_MAX_WIDTH;
+	}
 
-	if (h < 1)
+	if (h < 1) {
 		h = 1;
-	else if (h > MAP_MAX_HEIGHT)
+	} else if (h > MAP_MAX_HEIGHT) {
 		h = MAP_MAX_HEIGHT;
+	}
 
 	if (w != m->mapw || h != m->maph) {
 		mv->esel.set = 0;

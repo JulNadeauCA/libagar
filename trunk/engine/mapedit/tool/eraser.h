@@ -1,7 +1,7 @@
-/*	$Csoft: eraser.h,v 1.16 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.17 2003/08/29 04:56:06 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool/tool.h>
+#include <engine/mapedit/tool.h>
 
 #include "begin_code.h"
 
@@ -17,7 +17,6 @@ struct eraser {
 
 __BEGIN_DECLS
 void	 eraser_init(void *);
-void	 eraser_effect(void *, struct mapview *, struct map *, struct node *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,7 +1,7 @@
-/*	$Csoft: fill.h,v 1.7 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.8 2003/08/29 04:56:18 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool/tool.h>
+#include <engine/mapedit/tool.h>
 
 #include "begin_code.h"
 
@@ -17,7 +17,6 @@ struct fill {
 
 __BEGIN_DECLS
 void	 fill_init(void *);
-void	 fill_effect(void *, struct mapview *, struct map *, struct node *);
 __END_DECLS
 
 #include "close_code.h"
