@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.7 2004/11/30 11:50:03 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.8 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -200,37 +200,32 @@ vg_snap_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
 }
 
 void
-vg_reg_snap_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg)
+vg_reg_snap_menu(struct AGMenu *m, struct AGMenuItem *mi, struct vg *vg)
 {
-	ag_menu_action(pitem, _("Free positioning"),
-	    ICON(SNAP_FREE_ICON), 0, 0,
+	menu_action(mi, _("Free positioning"), SNAP_FREE_ICON,
 	    snap_to_m, "%p,%i", vg, VG_FREE_POSITIONING);
-	ag_menu_action(pitem, _("Nearest integer"),
-	    ICON(SNAP_RINT_ICON), 0, 0,
-	    snap_to_m, "%p,%i", vg, VG_NEAREST_INTEGER);
-	ag_menu_action(pitem, _("Grid"),
-	    ICON(SNAP_GRID_ICON), 0, 0,
+	menu_action(mi, _("Grid"), SNAP_GRID_ICON,
 	    snap_to_m, "%p,%i", vg, VG_GRID);
-	ag_menu_action(pitem, _("Endpoint"),
-	    ICON(SNAP_ENDPOINT_ICON), 0, 0,
-	    snap_to_m, "%p,%i", vg, VG_ENDPOINT);
-	ag_menu_action(pitem, _("Distance from endpoint"),
-	    ICON(SNAP_ENDPOINT_D_ICON), 0, 0,
-	    snap_to_m, "%p,%i", vg, VG_ENDPOINT_DISTANCE);
+	menu_action(mi, _("Nearest integer"), SNAP_RINT_ICON,
+	    snap_to_m, "%p,%i", vg, VG_NEAREST_INTEGER);
+	
+	menu_separator(mi);
 
-	ag_menu_action(pitem, _("Closest point"),
-	    ICON(SNAP_CLOSEST_ICON), 0, 0,
+	menu_action(mi, _("Endpoint"), SNAP_ENDPOINT_ICON,
+	    snap_to_m, "%p,%i", vg, VG_ENDPOINT);
+	menu_action(mi, _("Distance from endpoint"), SNAP_ENDPOINT_D_ICON,
+	    snap_to_m, "%p,%i", vg, VG_ENDPOINT_DISTANCE);
+	menu_action(mi, _("Closest point"), SNAP_CLOSEST_ICON,
 	    snap_to_m, "%p,%i", vg, VG_CLOSEST_POINT);
-	ag_menu_action(pitem, _("Center point"),
-	    ICON(SNAP_CENTERPT_ICON), 0, 0,
+	menu_action(mi, _("Center point"), SNAP_CENTERPT_ICON,
 	    snap_to_m, "%p,%i", vg, VG_CENTER_POINT);
-	ag_menu_action(pitem, _("Middle point"),
-	    ICON(SNAP_MIDDLEPT_ICON), 0, 0,
+	menu_action(mi, _("Middle point"), SNAP_MIDDLEPT_ICON,
 	    snap_to_m, "%p,%i", vg, VG_MIDDLE_POINT);
-	ag_menu_action(pitem, _("Intersections (auto)"),
-	    ICON(SNAP_INTSECT_AUTO_ICON), 0, 0,
+
+	menu_separator(mi);
+
+	menu_action(mi, _("Intersections (auto)"), SNAP_INTSECT_AUTO_ICON,
 	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_AUTO);
-	ag_menu_action(pitem, _("Intersections (manual)"),
-	    ICON(SNAP_INTSECT_MANUAL_ICON), 0, 0,
+	menu_action(mi, _("Intersections (manual)"),SNAP_INTSECT_MANUAL_ICON,
 	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_MANUAL);
 }

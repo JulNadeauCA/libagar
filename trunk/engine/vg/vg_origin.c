@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.9 2004/10/06 04:37:09 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.10 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -103,7 +103,7 @@ vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
 void
 vg_origin_color(struct vg *vg, int o, int r, int g, int b)
 {
-	vg->origin_color[o] = SDL_MapRGB(vfmt, r, g, b);
+	vg->origin_color[o] = SDL_MapRGB(vg->fmt, r, g, b);
 }
 
 void

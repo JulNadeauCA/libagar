@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.39 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.40 2005/01/23 11:54:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -88,10 +88,13 @@ vg_new(void *p, int flags)
 	
 	vg = Malloc(sizeof(struct vg), M_VG);
 	vg_init(vg, flags);
-	vg->pobj = ob;
-	gfx_alloc_pvt(ob, "vg");
-	vg->map = map_new(ob, "raster");
-	OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|OBJECT_INDESTRUCTIBLE;
+	if (ob != NULL) {
+		vg->pobj = ob;
+		gfx_alloc_pvt(ob, "vg");
+		vg->map = map_new(ob, "raster");
+		OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|
+					  OBJECT_INDESTRUCTIBLE;
+	}
 	return (vg);
 }
 
@@ -106,9 +109,25 @@ vg_init(struct vg *vg, int flags)
 	vg->w = 0;
 	vg->h = 0;
 	vg->scale = 1;
-	vg->su = NULL;
-	vg->fill_color = SDL_MapRGB(vfmt, 0, 0, 0);
-	vg->grid_color = SDL_MapRGB(vfmt, 128, 128, 128);
+	vg->su = SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 16, 32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
+#else
+	    0x000000ff,
+	    0x0000ff00,
+	    0x00ff0000,
+	    0xff000000
+#endif
+	);
+	if (vg->su == NULL) {
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
+	vg->fmt = vg->su->format;
+	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 255, 0);
+	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
 	vg->grid_gap = 0.25;
 	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
@@ -123,7 +142,6 @@ vg_init(struct vg *vg, int flags)
 	vg_push_layer(vg, _("Layer 0"));
 	vg->snap_mode = VG_GRID;
 	vg->ortho_mode = VG_NO_ORTHO;
-	vg->mask = NULL;
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
 	TAILQ_INIT(&vg->styles);
@@ -135,14 +153,14 @@ vg_init(struct vg *vg, int flags)
 		vg->origin[i].z = 0;
 		vg->origin[i].w = 1.0;
 		vg->origin_radius[i] = 0.0625;
-		vg->origin_color[i] = SDL_MapRGB(vfmt, 0, 0, 180);
+		vg->origin_color[i] = SDL_MapRGB(vg->fmt, 0, 0, 180);
 	}
 	vg->origin_radius[0] = 0.25;
 	vg->origin_radius[1] = 0.125;
 	vg->origin_radius[2] = 0.075;
-	vg->origin_color[0] = SDL_MapRGB(vfmt, 0, 200, 0);
-	vg->origin_color[1] = SDL_MapRGB(vfmt, 0, 150, 0);
-	vg->origin_color[2] = SDL_MapRGB(vfmt, 0, 80, 150);
+	vg->origin_color[0] = SDL_MapRGB(vg->fmt, 0, 200, 0);
+	vg->origin_color[1] = SDL_MapRGB(vg->fmt, 0, 150, 0);
+	vg->origin_color[2] = SDL_MapRGB(vg->fmt, 0, 80, 150);
 	vg->norigin = VG_NORIGINS;
 }
 
@@ -221,14 +239,7 @@ vg_destroy(struct vg *vg)
 		ob->gfx = NULL;
 	}
 	Free(vg->layers, M_VG);
-#if 0
-	if (vg->mask != NULL) {
-		for (y = 0; y < vg->map->maph; y++) {
-			Free(vg->mask[y], M_VG);
-		}
-		Free(vg->mask, M_VG);
-	}
-#endif
+
 	vg_destroy_blocks(vg);
 	vg_destroy_elements(vg);
 	vg_destroy_styles(vg);
@@ -240,6 +251,9 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
 {
 	if (vge->block != NULL)
 		TAILQ_REMOVE(&vge->block->vges, vge, vgbmbs);
+
+	if (vg->cur_vge == vge)
+		vg->cur_vge = NULL;
 
 	TAILQ_REMOVE(&vg->vges, vge, vges);
 	vg_free_element(vg, vge);
@@ -253,7 +267,6 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
 void
 vg_update_fragments(struct vg *vg)
 {
-	struct map *rmap = vg->map;
 	struct object *pobj = vg->pobj;
 	struct noderef *r;
 	int x, y;
@@ -266,21 +279,16 @@ vg_update_fragments(struct vg *vg)
 	sd.h = TILESZ;
 	
 	for (y = 0, my = 0;
-	     y < vg->su->h && my < rmap->maph;
+	     y < vg->su->h && my < vg->map->maph;
 	     y += TILESZ, my++) {
 		for (x = 0, mx = 0;
-		     x < vg->su->w && mx < rmap->mapw;
+		     x < vg->su->w && mx < vg->map->mapw;
 		     x += TILESZ, mx++) {
-			struct node *n = &rmap->map[my][mx];
+			struct node *n = &vg->map->map[my][mx];
 			SDL_Surface *fragsu = NULL;
 			Uint32 saflags, scflags, scolorkey;
 			Uint8 salpha;
 			int fw, fh;
-
-#if 0
-			if (vg->mask[my][mx])
-				continue;
-#endif
 
 			saflags = vg->su->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
 			scflags = vg->su->flags&(SDL_SRCCOLORKEY|SDL_RLEACCEL);
@@ -294,7 +302,7 @@ vg_update_fragments(struct vg *vg)
 
 			TAILQ_FOREACH(r, &n->nrefs, nrefs) {
 				if (r->type == NODEREF_SPRITE &&
-				    r->layer == rmap->cur_layer &&
+				    r->layer == vg->map->cur_layer &&
 				    r->r_sprite.obj == pobj) {
 					fragsu = SPRITE(pobj, r->r_sprite.offs);
 					break;
@@ -303,11 +311,11 @@ vg_update_fragments(struct vg *vg)
 			if (r == NULL) {
 				fragsu = SDL_CreateRGBSurface(SDL_SWSURFACE|
 				    saflags|scflags, fw, fh,
-				    vg->su->format->BitsPerPixel,
-				    vg->su->format->Rmask,
-				    vg->su->format->Gmask,
-				    vg->su->format->Bmask,
-				    vg->su->format->Amask);
+				    vg->fmt->BytesPerPixel,
+				    vg->fmt->Rmask,
+				    vg->fmt->Gmask,
+				    vg->fmt->Bmask,
+				    vg->fmt->Amask);
 				if (fragsu == NULL)
 					fatal("SDL_CreateRGBSurface: %s",
 					    SDL_GetError());
@@ -323,7 +331,7 @@ vg_update_fragments(struct vg *vg)
 			SDL_SetColorKey(vg->su, scflags, scolorkey);
 
 			if (r == NULL) {
-				node_add_sprite(rmap, n, vg->pobj,
+				node_add_sprite(vg->map, n, vg->pobj,
 				    gfx_insert_sprite(vg->pobj->gfx, fragsu));
 			}
 		}
@@ -372,9 +380,13 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 {
 	int pw = (int)(w*scale*TILESZ);
 	int ph = (int)(h*scale*TILESZ);
-	int mw, mh;
-	Uint32 suflags;
-	int y;
+	int mw, mh, y;
+	Uint32 Rmask = vg->fmt->Rmask;
+	Uint32 Gmask = vg->fmt->Gmask;
+	Uint32 Bmask = vg->fmt->Bmask;
+	Uint32 Amask = vg->fmt->Amask;
+	int depth = vg->fmt->BitsPerPixel;
+	Uint32 flags;
 
 	if (scale < 0)
 		fatal("neg scale");
@@ -384,37 +396,23 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	vg->h = h;
 	dprintf("%.02fx%.02f*%.02f, %dx%d pixels\n", w, h, scale, pw, ph);
 
-	if (vg->su != NULL) {
-		SDL_FreeSurface(vg->su);
-	}
-	suflags = SDL_SWSURFACE;
-	suflags |= (vg->flags & VG_ANTIALIAS) ? SDL_SRCALPHA : SDL_SRCCOLORKEY;
-	if ((vg->su = SDL_CreateRGBSurface(suflags, pw, ph, vfmt->BitsPerPixel,
-	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, vfmt->Amask)) == NULL)
+	SDL_FreeSurface(vg->su);
+	flags = SDL_SWSURFACE|SDL_SRCALPHA;
+//	flags |= (vg->flags & VG_ANTIALIAS) ? SDL_SRCALPHA : SDL_SRCCOLORKEY;
+	if ((vg->su = SDL_CreateRGBSurface(flags, pw, ph, depth,
+	    Rmask, Gmask, Bmask, Amask)) == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
+	vg->fmt = vg->su->format;
 
 	/* Resize the fragment map. */
 	if (vg->pobj != NULL) {
 		vg_destroy_fragments(vg);
+		mw = vg->su->w/TILESZ+1;
+		mh = vg->su->h/TILESZ+1;
+		if (map_alloc_nodes(vg->map, mw, mh) == -1)
+			fatal("%s", error_get());
 	}
-	mw = vg->su->w/TILESZ+1;
-	mh = vg->su->h/TILESZ+1;
-	if (map_alloc_nodes(vg->map, mw, mh) == -1)
-		fatal("%s", error_get());
-
-#if 0
-	if (vg->mask != NULL) {
-		for (y = 0; y < mh; y++) {
-			Free(vg->mask[y], M_VG);
-		}
-		Free(vg->mask, M_VG);
-	}
-	vg->mask = Malloc(mh*sizeof(int), M_VG);
-	for (y = 0; y < mh; y++) {
-		vg->mask[y] = Malloc(mw*sizeof(int), M_VG);
-		memset(vg->mask[y], 0, mw*sizeof(int));
-	}
-#endif
 	vg_redraw_elements(vg);
 }
 
@@ -437,7 +435,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->drawn = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
-	vge->color = SDL_MapRGB(vfmt, 250, 250, 250);
+	vge->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
 
 	vge->line_st.style = VG_CONTINUOUS;
 	vge->line_st.endpoint_style = VG_SQUARE;
@@ -525,7 +523,7 @@ vg_draw_bboxes(struct vg *vg)
 	}
 	
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		Uint32 ext_color = SDL_MapRGB(vfmt, 0, 250, 0);
+		Uint32 ext_color = SDL_MapRGB(vg->fmt, 0, 250, 0);
 
 		vg_block_extent(vg, vgb, &bbox);
 		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
@@ -581,7 +579,7 @@ vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
  * The vg must be locked.
  */
 static void
-vg_rasterize_element(struct vg *vg, struct vg_element *vge)
+rasterize_element(struct vg *vg, struct vg_element *vge)
 {
 	struct vg_element *ovge;
 	struct vg_rect r1, r2;
@@ -599,7 +597,7 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 			}
 			ovge->ops->bbox(vg, ovge, &r2);
 			if (vg_rcollision(vg, &r1, &r2, NULL))
-				vg_rasterize_element(vg, ovge);
+				rasterize_element(vg, ovge);
 		}
 	}
 }
@@ -617,6 +615,7 @@ vg_rasterize(struct vg *vg)
 		return;
 
 	pthread_mutex_lock(&vg->lock);
+	vg_clear(vg);
 
 	if (vg->flags & VG_VISGRID)
 		vg_draw_grid(vg);
@@ -629,8 +628,10 @@ vg_rasterize(struct vg *vg)
 		vge->drawn = 0;
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->redraw)
-			vg_rasterize_element(vg, vge);
+		if (vge->redraw) {
+			vge->redraw = 0;
+			rasterize_element(vg, vge);
+		}
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
@@ -638,6 +639,8 @@ vg_rasterize(struct vg *vg)
 	if (vg->pobj != NULL) {
 		vg_update_fragments(vg);
 	}
+
+	vg->redraw = 0;
 	pthread_mutex_unlock(&vg->lock);
 }
 
@@ -817,7 +820,7 @@ vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
 	vgs = Malloc(sizeof(struct vg_style), M_VG);
 	strlcpy(vgs->name, name, sizeof(vgs->name));
 	vgs->type = type;
-	vgs->color = SDL_MapRGB(vfmt, 250, 250, 250);
+	vgs->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
 	switch (vgs->type) {
 	case VG_LINE_STYLE:
 		vgs->vg_line_st.style = VG_CONTINUOUS;
@@ -888,14 +891,14 @@ vg_color(struct vg *vg, Uint32 color)
 void
 vg_color3(struct vg *vg, int r, int g, int b)
 {
-	vg->cur_vge->color = SDL_MapRGB(vfmt, r, g, b);
+	vg->cur_vge->color = SDL_MapRGB(vg->fmt, r, g, b);
 }
 
 /* Specify the color of the current element (RGB triplet + alpha). */
 void
 vg_color4(struct vg *vg, int r, int g, int b, int a)
 {
-	vg->cur_vge->color = SDL_MapRGBA(vfmt, r, g, b, a);
+	vg->cur_vge->color = SDL_MapRGBA(vg->fmt, r, g, b, a);
 }
 
 /* Push a new layer onto the layer stack. */
@@ -912,7 +915,7 @@ vg_push_layer(struct vg *vg, const char *name)
 	strlcpy(vgl->name, name, sizeof(vgl->name));
 	vgl->visible = 1;
 	vgl->alpha = 255;
-	vgl->color = SDL_MapRGB(vfmt, 255, 255, 255);
+	vgl->color = SDL_MapRGB(vg->fmt, 255, 255, 255);
 	return (vgl);
 }
 
@@ -943,8 +946,8 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	write_double(buf, vg->w);
 	write_double(buf, vg->h);
 	write_double(buf, vg->scale);
-	write_color(buf, vfmt, vg->fill_color);
-	write_color(buf, vfmt, vg->grid_color);
+	write_color(buf, vg->fmt, vg->fill_color);
+	write_color(buf, vg->fmt, vg->grid_color);
 	write_double(buf, vg->grid_gap);
 	write_uint32(buf, (Uint32)vg->cur_layer);
 
@@ -953,7 +956,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	for (i = 0; i < vg->norigin; i++) {
 		write_vertex(buf, &vg->origin[i]);
 		write_float(buf, vg->origin_radius[i]);
-		write_color(buf, vfmt, vg->origin_color[i]);
+		write_color(buf, vg->fmt, vg->origin_color[i]);
 	}
 
 	/* Save the layer information. */
@@ -963,7 +966,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 
 		write_string(buf, layer->name);
 		write_uint8(buf, (Uint8)layer->visible);
-		write_color(buf, vfmt, layer->color);
+		write_color(buf, vg->fmt, layer->color);
 		write_uint8(buf, layer->alpha);
 	}
 
@@ -989,7 +992,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	TAILQ_FOREACH(vgs, &vg->styles, styles) {
 		write_string(buf, vgs->name);
 		write_uint8(buf, (Uint8)vgs->type);
-		write_color(buf, vfmt, vgs->color);
+		write_color(buf, vg->fmt, vgs->color);
 
 		switch (vgs->type) {
 		case VG_LINE_STYLE:
@@ -1022,7 +1025,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 		write_uint32(buf, (Uint32)vge->type);
 		write_string(buf, vge->block != NULL ? vge->block->name : NULL);
 		write_uint32(buf, (Uint32)vge->layer);
-		write_color(buf, vfmt, vge->color);
+		write_color(buf, vg->fmt, vge->color);
 
 		/* Save the line style information. */
 		write_uint8(buf, (Uint8)vge->line_st.style);
@@ -1095,8 +1098,8 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->w = read_double(buf);
 	vg->h = read_double(buf);
 	vg->scale = read_double(buf);
-	vg->fill_color = read_color(buf, vfmt);
-	vg->grid_color = read_color(buf, vfmt);
+	vg->fill_color = read_color(buf, vg->fmt);
+	vg->grid_color = read_color(buf, vg->fmt);
 	vg->grid_gap = read_double(buf);
 	vg->cur_layer = (int)read_uint32(buf);
 	vg->cur_block = NULL;
@@ -1117,7 +1120,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	for (i = 0; i < vg->norigin; i++) {
 		read_vertex(buf, &vg->origin[i]);
 		vg->origin_radius[i] = read_float(buf);
-		vg->origin_color[i] = read_color(buf, vfmt);
+		vg->origin_color[i] = read_color(buf, vg->fmt);
 	}
 	dprintf("%d origin vertices\n", vg->norigin);
 
@@ -1134,7 +1137,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		    layer->visible);
 		copy_string(layer->name, buf, sizeof(layer->name));
 		layer->visible = (int)read_uint8(buf);
-		layer->color = read_color(buf, vfmt);
+		layer->color = read_color(buf, vg->fmt);
 		layer->alpha = read_uint8(buf);
 	}
 	vg->nlayers = nlayers;
@@ -1168,7 +1171,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		copy_string(sname, buf, sizeof(sname));
 		type = (enum vg_style_type)read_uint8(buf);
 		vgs = vg_create_style(vg, type, sname);
-		vgs->color = read_color(buf, vfmt);
+		vgs->color = read_color(buf, vg->fmt);
 
 		switch (type) {
 		case VG_LINE_STYLE:
@@ -1207,7 +1210,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		nlayer = (int)read_uint32(buf);
 
 		vge = vg_begin_element(vg, type);
-		vge->color = read_color(buf, vfmt);
+		vge->color = read_color(buf, vg->fmt);
 
 		/* Load the line style information. */
 		vge->line_st.style = read_uint8(buf);
@@ -1623,21 +1626,20 @@ vg_reg_menu(struct AGMenu *m, struct AGMenuItem *pitem, struct vg *vg,
 	extern struct tool vg_line_tool;
 	extern struct tool vg_circle_tool;
 	extern struct tool vg_text_tool;
-	struct AGMenuItem *sitem;
+	struct AGMenuItem *mi_snap;
 	
-	sitem = ag_menu_action(pitem, _("Snap to"),
-	    ICON(SNAP_FREE_ICON), 0, 0, NULL, NULL);
-	vg_reg_snap_menu(m, sitem, vg);
+	mi_snap = menu_action(pitem, _("Snap to"), SNAP_FREE_ICON, NULL, NULL);
+	vg_reg_snap_menu(m, mi_snap, vg);
 
-	ag_menu_action(pitem, _("Show blocks"), ICON(VGBLOCK_ICON),
-	    0, 0, show_blocks, "%p", vg);
-	ag_menu_action(pitem, _("Move origin"), ICON(vg_origin_tool.icon),
-	    0, 0, select_tool, "%p,%p,%p", vg, &vg_origin_tool, mv);
-	ag_menu_action(pitem, _("Line strip"), ICON(vg_line_tool.icon),
-	    0, 0, select_tool, "%p,%p,%p", vg, &vg_line_tool, mv);
-	ag_menu_action(pitem, _("Circle"), ICON(vg_circle_tool.icon),
-	    0, 0, select_tool, "%p,%p,%p", vg, &vg_circle_tool, mv);
-	ag_menu_action(pitem, _("Text"), ICON(vg_text_tool.icon),
-	    0, 0, select_tool, "%p,%p,%p", vg, &vg_text_tool, mv);
+	menu_action(pitem, _("Show blocks"), VGBLOCK_ICON,
+	    show_blocks, "%p", vg);
+	menu_action(pitem, _("Move origin"), vg_origin_tool.icon,
+	    select_tool, "%p,%p,%p", vg, &vg_origin_tool, mv);
+	menu_action(pitem, _("Line strip"), vg_line_tool.icon,
+	    select_tool, "%p,%p,%p", vg, &vg_line_tool, mv);
+	menu_action(pitem, _("Circle"), vg_circle_tool.icon,
+	    select_tool, "%p,%p,%p", vg, &vg_circle_tool, mv);
+	menu_action(pitem, _("Text"), vg_text_tool.icon,
+	    select_tool, "%p,%p,%p", vg, &vg_text_tool, mv);
 }
 #endif /* EDITION */
