@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.103 2003/06/06 02:41:37 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.104 2003/06/06 09:04:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -84,13 +84,11 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	pthread_mutexattr_init(&recursive_mutexattr);
 	pthread_mutexattr_settype(&recursive_mutexattr,
 	    PTHREAD_MUTEX_RECURSIVE);
-	
 	pthread_key_create(&engine_errorkey, NULL);
+	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
 #else
 	engine_errorkey = NULL;
 #endif
-
-	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
 
 #ifdef HAVE_PROGNAME
 	{
@@ -99,7 +97,6 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		prog->name = __progname;
 	}
 #endif
-
 	printf("Agar engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", prog->name, prog->version);
 	printf("%s\n\n", prog->copyright);
@@ -218,11 +215,13 @@ engine_destroy(void)
 	free(config);
 
 #ifdef THREADS
+#if 0
+	pthread_mutex_destroy(&linkage_lock);	/* XXX */
+#endif
 	pthread_key_delete(engine_errorkey);
 #else
 	Free(engine_errorkey);
 #endif
-	pthread_mutex_destroy(&linkage_lock);
 	SDL_Quit();
 	exit(0);
 }
