@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.198 2004/03/25 08:37:22 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.199 2004/03/30 15:56:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 #include <engine/widget/mspinbutton.h>
 
 #include "mapedit.h"
+#include "objedit.h"
 
 const struct object_ops mapedit_ops = {
 	NULL,				/* init */
