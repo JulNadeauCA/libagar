@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.4 2002/01/30 12:44:48 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.5 2002/01/30 17:53:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -589,6 +589,16 @@ map_draw(Uint32 ival, void *p)
 
 			if (me->nanims > 0) {
 				continue;
+			}
+	
+			if (mapedit) {
+				SDL_Rect erd;
+
+				erd.w = em->view->tilew;
+				erd.h = em->view->tileh;
+				erd.x = vx * erd.w;
+				erd.y = vy * erd.h;
+				SDL_FillRect(em->view->v, &erd, 25);
 			}
 
 			/* XXX inefficient */
