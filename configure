@@ -1137,6 +1137,15 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 		SDL_LIBS=`${path}/sdl-config --static-libs`
 	fi
 done
+SDL_LIBS_SHORT=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_LIBS_SHORT=`${path}/sdl-config --libs`
+	fi
+done
+if [ "$SYSTEM" = "Darwin" ]; then
+	SDL_LIBS=$SDL_LIBS_SHORT
+fi
 sdl11_version=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
@@ -1471,10 +1480,19 @@ if [ "${with_gl}" != "no" ]
  then
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
-OPENGL_CFLAGS="${X11_CFLAGS}"
-OPENGL_LIBS="${X11_LIBS} -lGL"
+if [ "$SYSTEM" = "Darwin" ]; then
+	OPENGL_CFLAGS=""
+	OPENGL_LIBS="-framework OpenGL"
+else
+	OPENGL_CFLAGS="${X11_CFLAGS}"
+	OPENGL_LIBS="${X11_LIBS} -lGL"
+fi
 cat << EOT > conftest.c
-#include <GL/gl.h>
+#ifdef __APPLE__
+# include <OpenGL/gl.h>
+#else
+# include <GL/gl.h>
+#endif
 
 int
 main(int argc, char *argv[])
