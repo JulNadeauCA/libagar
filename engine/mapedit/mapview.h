@@ -1,18 +1,19 @@
-/*	$Csoft: mapview.h,v 1.20 2003/02/02 21:12:39 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.21 2003/02/04 02:35:38 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
 	struct widget	wid;
 
 	int	flags;
-#define MAPVIEW_EDIT		 0x01	/* Mouse/keyboard edition */
-#define MAPVIEW_ZOOM		 0x02	/* Allow zooming */
-#define MAPVIEW_INDEPENDENT_ZOOM 0x04	/* Zoom independent from map's */
-#define MAPVIEW_TILEMAP		 0x08	/* Map of `source' nodes */
-#define MAPVIEW_GRID		 0x10	/* Display a grid */
-#define MAPVIEW_PROPS		 0x20	/* Display node properties */
-#define MAPVIEW_ZOOMING_IN	 0x40
-#define MAPVIEW_ZOOMING_OUT	 0x80
+#define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
+#define MAPVIEW_ZOOM		 0x002	/* Allow zooming */
+#define MAPVIEW_INDEPENDENT_ZOOM 0x004	/* Zoom independent from map's */
+#define MAPVIEW_TILEMAP		 0x008	/* Map of `source' nodes */
+#define MAPVIEW_GRID		 0x010	/* Display a grid */
+#define MAPVIEW_PROPS		 0x020	/* Display node properties */
+#define MAPVIEW_ZOOMING_IN	 0x040
+#define MAPVIEW_ZOOMING_OUT	 0x080
+#define MAPVIEW_CENTER		 0x100
 
 	int	 prop_bg;	/* Background of node attributes */
 	int	 prop_style;	/* Style of node attributes */

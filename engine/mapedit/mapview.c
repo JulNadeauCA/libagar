@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.53 2003/02/02 21:12:39 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.54 2003/02/04 02:35:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -137,8 +137,6 @@ mapview_node_poll(int argc, union evarg *argv)
 
 	tlist_clear_items(tl);
 
-//	pthread_mutex_lock(&mv->map->lock);
-
 	TAILQ_FOREACH_REVERSE(nref, &node->nrefs, nrefs, noderefq) {
 		SDL_Surface *icon = NULL;
 		struct art_anim *anim;
@@ -213,8 +211,6 @@ mapview_node_poll(int argc, union evarg *argv)
 			break;
 		}
 	}
-
-//	pthread_mutex_unlock(&mv->map->lock);
 }
 
 enum {
@@ -349,6 +345,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->wid.flags |= WIDGET_CLIPPING;
 
 	mv->flags = flags;
+	mv->flags |= MAPVIEW_CENTER;
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
 	mv->prop_style = -1; 
@@ -927,14 +924,17 @@ mapview_scaled(int argc, union evarg *argv)
 	WIDGET(mv)->w = argv[1].i;
 	WIDGET(mv)->h = argv[2].i;
 
-//	pthread_mutex_lock(&mv->map->lock);
-
-	mapview_center(mv, mv->map->defx, mv->map->defy);
+	pthread_mutex_lock(&mv->map->lock);
 
 	mv->mw = WIDGET(mv)->w/(*mv->tilew) + 1;
 	mv->mh = WIDGET(mv)->h/(*mv->tileh) + 1;
+
+	if (mv->flags & MAPVIEW_CENTER) {
+		mapview_center(mv, mv->map->defx, mv->map->defy);
+		mv->flags &= ~(MAPVIEW_CENTER);
+	}
 	
-//	pthread_mutex_unlock(&mv->map->lock);
+	pthread_mutex_unlock(&mv->map->lock);
 }
 
 static void
