@@ -345,6 +345,42 @@ echo MATH_LIBS=$MATH_LIBS >> Makefile.config
 else
 NONE=1
 fi
+echo -n "checking for a gethostname() function..."
+echo -n "checking for a gethostname() function..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	char hostname[64];
+	int rv;
+
+	rv = gethostname(hostname, sizeof(hostname));
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETHOSTNAME" > config/have_gethostname.h
+echo "#define HAVE_GETHOSTNAME" $HAVE_GETHOSTNAME >> config/have_gethostname.h
+echo "#endif /* HAVE_GETHOSTNAME */" >> config/have_gethostname.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_GETHOSTNAME" > config/have_gethostname.h
+
+	echo "no"
+fi
 echo -n "checking for a getenv() function..."
 echo -n "checking for a getenv() function..." >> config.log
 cat << EOT > conftest.c
