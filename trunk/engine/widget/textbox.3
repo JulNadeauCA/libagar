@@ -1,0 +1,119 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 21, 2002
+.Dt TEXTBOX 3
+.Os
+.Sh NAME
+.Nm textbox
+.Nd agar text box widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/textbox.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget implements a user-editable text area.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct textbox *"
+.Fn textbox_new "struct region *reg" "const char *label" "int flags" "int rw" "int rh"
+.Pp
+.Ft void
+.Fn textbox_init "struct textbox *textbox" "const char *label" "int flags" "int rw" "int rh"
+.nr nS 0
+.Pp
+The
+.Fn textbox_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn textbox_init
+function initializes a
+.Nm
+widget of size
+.Fa rw
+x
+.Fa rh
+with a label of
+.Fa caption ,
+and initially containing no text.
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define TEXTBOX_READONLY	0x01	/* Read-only */
+#define TEXTBOX_CURSOR		0x02	/* Cursor visible */
+.Ed
+.Sh TEXT MANIPULATION
+.nr nS 1
+.Ft void
+.Fn textbox_printf "struct textbox *textbox" "const char *fmt" "..."
+.nr nS 0
+.Pp
+The
+.Fn textbox_printf
+function changes the text inside
+.Fa textbox ,
+and understands
+.Xr printf 3
+format strings.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It widget-shown
+Enable key repeat.
+.It widget-hidden
+Disable key repeat.
+.It window-mousebuttondown
+Move focus to the widget, position cursor.
+.It window-keydown
+Insert a character according to the current keymap.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It textbox-return
+Return was pressed.
+.It textbox-changed
+The string changed.
+.El
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
