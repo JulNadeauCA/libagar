@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.132 2003/01/18 08:07:28 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.133 2003/01/24 08:26:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@ void
 node_init(struct node *node, int x, int y)
 {
 #ifdef DEBUG
-	strncpy(node->magic, NODE_MAGIC, 16);
+	strncpy(node->magic, NODE_MAGIC, 5);
 	node->x = x;
 	node->y = y;
 #endif
@@ -79,7 +79,7 @@ node_destroy(struct node *node, int x, int y)
 	    node->x != x || node->y != y) {
 		fatal("inconsistent node\n");
 	}
-	strncpy(node->magic, "freed", 16);
+	strncpy(node->magic, "free", 5);
 #endif
 	for (nref = TAILQ_FIRST(&node->nrefs);
 	     nref != TAILQ_END(&node->nrefs);
@@ -94,7 +94,7 @@ void
 noderef_init(struct noderef *nref)
 {
 #ifdef DEBUG
-	strncpy(nref->magic, NODEREF_MAGIC, 18);
+	strncpy(nref->magic, NODEREF_MAGIC, 5);
 #endif
 	nref->type = 0;
 	nref->flags = 0;
@@ -116,7 +116,7 @@ noderef_destroy(struct noderef *nref)
 	if (strcmp(NODEREF_MAGIC, nref->magic) != 0) {
 		fatal("inconsistent node reference\n");
 	}
-	strncpy(nref->magic, "freed", 18);
+	strncpy(nref->magic, "free", 5);
 #endif
 
 	for (trans = SLIST_FIRST(&nref->transforms);

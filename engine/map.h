@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.51 2002/12/15 15:06:21 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.52 2002/12/30 03:00:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -17,8 +17,8 @@ enum noderef_type {
 /* Reference within a node. */
 struct noderef {
 #ifdef DEBUG
-	char	magic[18];
-#define NODEREF_MAGIC "agar map noderef"
+	char	magic[5];
+#define NODEREF_MAGIC "nref"
 #endif
 	enum noderef_type	 type;	/* Type of reference */
 	Uint32			 flags;
@@ -54,8 +54,8 @@ TAILQ_HEAD(noderefq, noderef);
 /* Coordinate within a map. */
 struct node {
 #ifdef DEBUG
-	char	magic[16];
-#define NODE_MAGIC "agar map node"
+	char	magic[5];
+#define NODE_MAGIC "node"
 	int	x, y;
 #endif
 	struct noderefq	 nrefs;		/* Items on this node */
