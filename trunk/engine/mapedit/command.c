@@ -318,10 +318,10 @@ mapedit_editflags(struct mapedit *med, int mask)
 }
 
 void
-mapedit_nodeflags(struct mapedit *med, struct node *node, int flag)
+mapedit_nodeflags(struct mapedit *med, struct node *node, Uint32 flag)
 {
 	if (flag == 0) {
-		node->flags = 0;
+		node->flags &= NODE_DONTSAVE;
 	} else if (flag == NODE_WALK) {
 		node->flags |= flag;
 	} else {
