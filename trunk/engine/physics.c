@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.47 2002/12/01 14:41:02 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.48 2002/12/13 12:17:45 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -172,8 +172,8 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 	Uint32 offs;
 
 	if (dir->set & DIR_UP) {
-		if (prop_get(dir->ob,
-		    "physics-up-motion-anim", PROP_UINT32, &offs) == 0) {
+		if (prop_get(dir->ob, "physics-up-motion-anim", PROP_UINT32,
+		    &offs)) {
 			nref->offs = offs;
 		}
 		/* XXX sprite ... */
@@ -187,7 +187,7 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 	}
 	if (dir->set & DIR_DOWN) {
 		if (prop_get(dir->ob, "physics-down-motion-anim", PROP_UINT32,
-		    &offs) == 0) {
+		    &offs)) {
 			nref->offs = offs;
 		}
 		dir->set &= ~(DIR_DOWN);
@@ -200,7 +200,7 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 	}
 	if (dir->set & DIR_LEFT) {
 		if (prop_get(dir->ob, "physics-left-motion-anim", PROP_UINT32,
-		    &offs) == 0) {
+		    &offs)) {
 			nref->offs = offs;
 		}
 
@@ -214,7 +214,7 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 	}
 	if (dir->set & DIR_RIGHT) {
 		if (prop_get(dir->ob, "physics-right-motion-anim", PROP_UINT32,
-		    &offs) == 0) {
+		    &offs)) {
 			nref->offs = offs;
 		}
 
@@ -467,7 +467,7 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 			nref->ymotion = 0;
 
 			if (prop_get(dir->ob, "physics-up-idle-anim",
-			    PROP_UINT32, &offs) == 0) {
+			    PROP_UINT32, &offs)) {
 				nref->offs = offs;
 			}
 			/* XXX sprite ... */
@@ -478,7 +478,7 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 			nref->ymotion = 0;
 			
 			if (prop_get(dir->ob, "physics-down-idle-anim",
-			    PROP_UINT32, &offs) == 0) {
+			    PROP_UINT32, &offs)) {
 				nref->offs = offs;
 			}
 		}
@@ -488,7 +488,7 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 			nref->xmotion = 0;
 			
 			if (prop_get(dir->ob, "physics-left-idle-anim",
-			    PROP_UINT32, &offs) == 0) {
+			    PROP_UINT32, &offs)) {
 				nref->offs = offs;
 			}
 		}
@@ -498,7 +498,7 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 			nref->xmotion= 0;
 			
 			if (prop_get(dir->ob, "physics-right-idle-anim",
-			    PROP_UINT32, &offs) == 0) {
+			    PROP_UINT32, &offs)) {
 				nref->offs = offs;
 			}
 		}
