@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.36 2003/04/17 08:21:44 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.37 2003/04/24 07:04:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,18 +26,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
-
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/config.h>
 
-#include "xcf.h"
+#include <engine/mapedit/mapedit.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/button.h>
+
+#include "xcf.h"
 
 enum {
 	NANIMS_INIT =	1,
@@ -229,7 +229,7 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 	return (fragmap);
 }
 
-/* Disable garbage collection for an art structure. */
+/* Disable garbage collection for a group of graphics. */
 void
 art_wire(struct art *art)
 {
@@ -238,7 +238,7 @@ art_wire(struct art *art)
 	pthread_mutex_unlock(&art->used_lock);
 }
 
-/* Decrement the reference count of an art structure. */
+/* Decrement the reference count on a group of graphics. */
 void
 art_unused(struct art *art)
 {
@@ -254,7 +254,7 @@ art_unused(struct art *art)
 struct art *
 art_fetch(struct object *ob, const char *key)
 {
-	char path[FILENAME_MAX];
+	char *path = NULL;
 	struct art *art = NULL;
 	struct fobj *fob;
 	struct netbuf buf;
@@ -262,20 +262,21 @@ art_fetch(struct object *ob, const char *key)
 
 	pthread_mutex_lock(&artq_lock);
 
-	/* Look for a cached entry. */
 	TAILQ_FOREACH(art, &artq, arts) {
 		if (strcmp(art->name, key) == 0)
 			break;
 	}
 	if (art != NULL) {
-		if (++art->used > ART_MAX_USED)
+		if (++art->used > ART_MAX_USED) {
 			art->used = ART_MAX_USED; 	/* Remain resident */
+		}
 		goto out;
 	}
 
-	/* Load the data file. */
-	if (object_path(key, "fob", path, sizeof(path)) == -1)
+	if ((path = config_search_file("load-path", key, "fob")) == NULL) {
+		art = NULL;
 		goto out;
+	}
 
 	art = Malloc(sizeof(struct art));
 	art->name = Strdup(key);
@@ -294,7 +295,7 @@ art_fetch(struct object *ob, const char *key)
 	art->used = 1;
 	pthread_mutex_init(&art->used_lock, NULL);
 
-	if (prop_get_bool(config, "object.art.map-tiles")) {
+	if (mapedition) {				/* Map the tileset */
 		char mapname[OBJECT_NAME_MAX];
 
 		art->tile_map = Malloc(sizeof(struct map));
@@ -321,9 +322,11 @@ art_fetch(struct object *ob, const char *key)
 	TAILQ_INSERT_HEAD(&artq, art, arts);			/* Cache */
 out:
 	pthread_mutex_unlock(&artq_lock);
+	Free(path);
 	return (art);
 }
 
+/* Release a group of graphics. */
 static void
 art_destroy(struct art *art)
 {
@@ -404,6 +407,7 @@ art_destroy(struct art *art)
 	free(art);
 }
 
+/* Insert a frame into an animation. */
 Uint32
 art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 {
@@ -420,6 +424,7 @@ art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 	return (anim->nframes);
 }
 
+/* Insert a new submap. */
 Uint32
 art_insert_submap(struct art *art, struct map *m)
 {
@@ -436,6 +441,7 @@ art_insert_submap(struct art *art, struct map *m)
 	return (art->nsubmaps++);
 }
 
+/* Insert a new animation. */
 struct art_anim *
 art_insert_anim(struct art *art, int delay)
 {
@@ -470,6 +476,7 @@ art_insert_anim(struct art *art, int delay)
 	return (anim);
 }
 
+/* Release an animation. */
 static void
 art_destroy_anim(struct art_anim *anim)
 {
@@ -482,6 +489,7 @@ art_destroy_anim(struct art_anim *anim)
 	free(anim);
 }
 
+/* Update the current frame# on an animation. */
 void
 art_anim_tick(struct art_anim *an, struct noderef *nref)
 {
@@ -524,125 +532,5 @@ art_get_anim(struct object *ob, Uint32 i)
 	return (ob->art->anims[i]);
 }
 
-static void
-tl_medias_poll(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	struct art *art;
-
-	tlist_clear_items(tl);
-	pthread_mutex_lock(&artq_lock);
-	TAILQ_FOREACH(art, &artq, arts) {
-		tlist_insert_item(tl,
-		    art->nsprites > 0 ? art->sprites[0] : NULL,
-		    art->name, art);
-	}
-	pthread_mutex_unlock(&artq_lock);
-	tlist_restore_selections(tl);
-}
-
-static void
-tl_medias_selected(int argc, union evarg *argv)
-{
-	struct tlist *tl_items = argv[1].p;
-
-	widget_set_int(&tl_items->sbar, "value", 0);
-}
-
-static void
-tl_items_poll(int argc, union evarg *argv)
-{
-	char name[OBJECT_NAME_MAX + 96];
-	struct tlist *tl = argv[0].p;
-	struct tlist *tl_medias = argv[1].p;
-	struct tlist_item *it_media;
-	struct art *art;
-	Uint32 i;
-	int j;
-
-	it_media = tlist_item_selected(tl_medias);
-	if (it_media == NULL) {
-		return;		/* No selection */
-	}
-	art = it_media->p1;
-
-	tlist_clear_items(tl);
-
-	for (i = 0; i < art->nsprites; i++) {			/* Sprites */
-		SDL_Surface *su = art->sprites[i];
-		struct art_spritecl *spritecl = &art->csprites[i];
-		struct art_cached_sprite *csprite;
-
-		snprintf(name, sizeof(name),
-		    "%s:%u (%ux%u)", art->name, i, su->w, su->h);
-		tlist_insert_item(tl, su, name, su);
-
-		j = 0;
-		SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
-			snprintf(name, sizeof(name),
-			    "%s:%u[%u] (%ux%u) - %u", art->name, i, j,
-			     su->w, su->h, csprite->last_drawn);
-			tlist_insert_item(tl, csprite->su, name, csprite);
-			j++;
-		}
-	}
-
-	for (i = 0; i < art->nanims; i++) {			/* Anims */
-		struct art_anim *anim = art->anims[i];
-		SDL_Surface *su = NULL;
-
-		if (anim->nframes > 0) {
-			su = anim->frames[0];
-			snprintf(name, sizeof(name), "%s:%u (%ux%u)",
-			    art->name, i, su->w, su->h);
-		} else {
-			snprintf(name, sizeof(name), "%s:%u", art->name, i);
-		}
-		tlist_insert_item(tl, su, name, anim);
-	}
-	
-	for (i = 0; i < art->nsubmaps; i++) {			/* Submaps */
-		struct map *submap = art->submaps[i];
-
-		snprintf(name, sizeof(name), "%s:%u (%ux%u)", art->name, i,
-		    submap->mapw, submap->maph);
-		tlist_insert_item(tl, NULL, name, submap);
-	}
-	tlist_restore_selections(tl);
-}
-
-struct window *
-art_browser_window(void)
-{
-	struct window *win;
-	struct region *reg;
-	struct tlist *tl_medias;
-
-	if ((win = window_generic_new(348, 216, "monitor-art-browser"))
-	    == NULL) {
-		return (NULL);	/* Exists */
-	}
-	window_set_min_geo(win, 246, 109);
-	window_set_caption(win, "Graphics");
-
-	reg = region_new(win, REGION_HALIGN, 0, 0, 40, 100);
-	{
-		tl_medias = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_medias, "tlist-poll", tl_medias_poll, NULL);
-	}
-	reg = region_new(win, REGION_VALIGN, 40, 0, 60, 100);
-	{
-		struct tlist *tl_items;
-	
-		tl_items = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_items, "tlist-poll",
-		    tl_items_poll, "%p", tl_medias);
-
-		event_new(tl_medias, "tlist-changed", tl_medias_selected,
-		    "%p", tl_items);
-	}
-	return (win);
-}
-
-#endif	/* DEBUG */
+#endif /* DEBUG */
 
