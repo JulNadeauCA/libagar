@@ -1,9 +1,10 @@
-#	$Csoft: Makefile,v 1.65 2004/03/30 15:50:44 vedge Exp $
+#	$Csoft: Makefile,v 1.1 2004/04/22 01:52:29 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
 
-XCF=		window.xcf
+XCF=		window.xcf \
+		arrow.xcf
 
 DEN=		pixmaps.den
 DEN_DIR=	engine/widget
