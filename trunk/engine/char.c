@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.37 2002/04/24 13:18:38 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.38 2002/04/25 09:32:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -241,5 +241,4 @@ char_unlink(void *ob)
 
 	return (0);
 }
-
 
