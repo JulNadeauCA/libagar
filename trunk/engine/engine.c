@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.36 2002/04/30 01:12:00 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.37 2002/04/30 08:24:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -185,10 +185,14 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	return (0);
 }
 
-void
+int
 engine_editmap(void)
 {
 	struct mapedit *medit;
+
+	if (!mapediting) {
+		return (0);
+	}
 
 	medit = emalloc(sizeof(struct mapedit));
 	mapedit_init(medit, "mapedit0");
@@ -203,8 +207,8 @@ engine_editmap(void)
 
 	/* Start map edition. */
 	object_link(medit);
-	event_loop();
-	engine_destroy();
+
+	return (1);
 }
 
 void
