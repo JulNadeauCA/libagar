@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.59 2003/02/12 01:17:50 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.60 2003/02/12 02:05:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -507,11 +507,10 @@ mapview_draw(void *p)
 				    WIDGET_ABSY(mv) + ry);
 			}
 
-			if (mv->flags & MAPVIEW_PROPS &&
-			    mv->map->zoom >= 60)
+			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
 				draw_node_props(mv, node, rx, ry);
-
-			if (mv->flags & MAPVIEW_GRID) {
+			}
+			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
 				/* XXX overdraw */
 				primitives.frame(mv,
 				    rx, ry,
