@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.39 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.40 2002/06/12 20:38:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -183,6 +183,7 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 	}
 
 	if (win->flags & WINDOW_TITLEBAR) {
+		/* XXX inefficient */
 		if (yo < (win->titleh + win->borderw) && xo > win->borderw &&
 		    xo < win->w - win->borderw) {
 			if (yo < win->borderw) {
@@ -190,28 +191,8 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 			} else if (yo > win->titleh) {
 				*col = win->border[yo-win->titleh];
 			} else {
-				switch (win->type) {
-				case WINDOW_CUBIC:
-				case WINDOW_CUBIC2:
-					*col = SDL_MapRGB(
-					    win->view->v->format,
-					    0, xo<<3, 0);
-					break;
-				case WINDOW_GRADIENT:
-					if (win == TAILQ_LAST(
-					     &win->view->windowsh, windowq)) {
-						*col = SDL_MapRGB(
-						    win->view->v->format,
-						    0, 100 + (xo / 4), yo * 3);
-					} else {
-						*col = SDL_MapRGB(
-						    win->view->v->format,
-						    0, xo / 2, yo);
-					}
-					break;
-				case WINDOW_SOLID:
-					break;
-				}
+				*col = SDL_MapRGB(win->view->v->format,
+				    0, 0, 0);
 			}
 			return (1);
 		}
@@ -432,9 +413,6 @@ window_show(struct window *win)
 	struct viewport *view = win->view;
 	struct region *reg;
 	struct widget *wid;
-#if 0
-	struct window *owin;
-#endif
 	int prev;
 
 	pthread_mutex_lock(&win->lock);
@@ -464,19 +442,6 @@ window_show(struct window *win)
 		}
 	}
 
-#if 0
-	/* Other windows titlebars should be redrawn. */
-	TAILQ_FOREACH(owin, &win->view->windowsh, windows) {
-		if (win == owin) {
-			continue;
-		}
-		pthread_mutex_lock(&owin->lock);
-		if (owin->flags & WINDOW_SHOW) {
-			owin->redraw++;
-		}
-		pthread_mutex_unlock(&owin->lock);
-	}
-#endif
 	pthread_mutex_unlock(&win->lock);
 
 	return (prev);
