@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.220 2004/03/18 03:04:12 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.221 2004/03/18 21:27:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -690,7 +690,8 @@ window_event(SDL_Event *ev)
 			OBJECT_FOREACH_CHILD(wid, win, widget) {
 				widget_mousemotion(win, wid,
 				    ev->motion.x, ev->motion.y,
-				    ev->motion.xrel, ev->motion.yrel);
+				    ev->motion.xrel, ev->motion.yrel,
+				    ev->motion.state);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:

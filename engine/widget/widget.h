@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.73 2003/11/15 03:53:47 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.74 2004/03/25 06:48:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -101,7 +101,8 @@ void  widget_pop_color(struct widget *);
 __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
 __inline__ void	 widget_put_pixel(void *, int, int, Uint32);
 
-void  widget_mousemotion(struct window *, struct widget *, int, int, int, int);
+void  widget_mousemotion(struct window *, struct widget *, int, int, int, int,
+	                 int);
 void  widget_mousebuttonup(struct window *, struct widget *, int, int, int);
 int   widget_mousebuttondown(struct window *, struct widget *, int, int, int);
 

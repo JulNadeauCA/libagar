@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.46 2004/03/18 04:02:41 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.47 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -66,7 +66,7 @@ enum {
 };
 
 static void	graph_key(int, union evarg *);
-static void	graph_move(int, union evarg *);
+static void	graph_mousemotion(int, union evarg *);
 static void	graph_focus(int, union evarg *);
 static void	graph_resume_scroll(int, union evarg *);
 
@@ -102,7 +102,7 @@ graph_init(struct graph *graph, const char *caption, enum graph_type type,
 	graph->yrange = yrange;
 	TAILQ_INIT(&graph->items);
 
-	event_new(graph, "window-mousemotion", graph_move, NULL);
+	event_new(graph, "window-mousemotion", graph_mousemotion, NULL);
 	event_new(graph, "window-keydown", graph_key, NULL);
 	event_new(graph, "window-mousebuttonup", graph_resume_scroll, NULL);
 	event_new(graph, "window-mousebuttondown", graph_focus, NULL);
@@ -131,13 +131,14 @@ graph_key(int argc, union evarg *argv)
 }
 
 static void
-graph_move(int argc, union evarg *argv)
+graph_mousemotion(int argc, union evarg *argv)
 {
 	struct graph *gra = argv[0].p;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
+	int state = argv[5].i;
 
-	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) == 0)
+	if ((state & SDL_BUTTON_LMASK) == 0)
 		return;
 
 	if ((gra->xoffs -= xrel) < 0)

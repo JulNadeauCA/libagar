@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.36 2004/02/14 23:23:58 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.37 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -171,12 +171,12 @@ scrollbar_mousemotion(int argc, union evarg *argv)
 	struct scrollbar *sb = argv[0].p;
 	int coord = (sb->type == SCROLLBAR_HORIZ) ?
 	    argv[1].i : argv[2].i;
+	int state = argv[3].i;
 	int maxcoord = (sb->type == SCROLLBAR_HORIZ) ?
 	    WIDGET(sb)->w : WIDGET(sb)->h;
 	
-	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
+	if (state & SDL_BUTTON_LMASK)
 		scrollbar_mouse_select(sb, coord, maxcoord);
-	}
 }
 
 void
