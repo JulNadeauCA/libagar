@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.1 2002/06/23 02:38:38 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.2 2002/07/06 23:56:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -43,22 +43,59 @@
 #include "command.h"
 #include "mapwin.h"
 #include "mapview.h"
+#include "fileops.h"
+#include "tilestack.h"
 
 struct window *
 mapwin_new(struct mapedit *med, struct map *m)
 {
 	struct window *win;
-	struct region *map_reg;
-	struct mapview *mv;
+	struct region *reg;
+	struct mapview *mv, *mv_reg;
+	struct button *bu;
+	struct tilestack *ts;
 	char caption[2048];
 
 	sprintf(caption, "%s (%dx%d)", OBJECT(m)->name, m->mapw, m->maph);
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, WINDOW_SOLID, 10, 10, 65, 56);
-	map_reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	window_init(win, caption, WINDOW_SOLID, 10, 16, 75, 70);
 
-	mv = mapview_new(map_reg, med, m, MAPVIEW_CENTER, 100, 100);
+	/* Map view */
+	mv = emalloc(sizeof(struct mapview));
+	mapview_init(mv, med, m, MAPVIEW_CENTER, 100, 100);
+
+	/*
+	 * Tools
+	 */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -25);
+	reg->spacing = 1;
+	/* Load map */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
+	    0, 0, 0);
+	event_new(bu, "button-pushed", 0, fileops_load_map, "%p", mv);
+	/* Save map */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
+	    0, 0, 0);
+	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
+	/* Clear map */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP),
+	    0, 0, 0);
+	event_new(bu, "button-pushed", 0, fileops_clear_map, "%p", mv);
+
+	/* Tile stack */
+	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 0);
+	reg->spacing = 1;
+	ts = tilestack_new(reg, TILESTACK_VERT, 100, 100, mv);
+
+	/*
+	 * Map view
+	 */
+	reg = region_new(win, REGION_HALIGN, 10, 10, 90, 90);
+	pthread_mutex_lock(&reg->win->lock);
+	region_attach(reg, mv);
+	pthread_mutex_unlock(&reg->win->lock);
+
 	win->focus = WIDGET(mv);
 
 	return (win);
