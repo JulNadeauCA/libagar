@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.86 2005/01/30 05:21:49 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.87 2005/02/05 02:52:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -111,6 +111,7 @@ void	 widget_scale(void *, int, int);
 
 void		 widget_set_type(void *, const char *);
 void		 widget_focus(void *);
+void		 widget_unset_focus(void *);
 struct widget	*widget_find_focus(void *);
 __inline__ int	 widget_holds_focus(void *);
 __inline__ int	 widget_relative_area(void *, int, int);
