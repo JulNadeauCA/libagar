@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.45 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.46 2005/02/19 06:52:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -120,6 +120,18 @@ radio_init(struct radio *rad, const char **items)
 	event_new(rad, "window-mousemotion", mousemotion, NULL);
 }
 
+static const int highlight[18] = {
+	-5, +1,
+	-5,  0,
+	-5, -1,
+	-4, -2,
+	-4, -3,
+	-3, -4,
+	-2, -4,
+	 0, -5,
+	-1, -5
+};
+
 void
 radio_draw(void *p)
 {
@@ -143,28 +155,16 @@ radio_draw(void *p)
 		int xc = XPADDING + RADIUS;
 		int yc = y + RADIUS;
 
-		widget_put_pixel(rad, xc-5, yc+1, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-5, yc, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-5, yc-1, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-4, yc-2, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-4, yc-3, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-3, yc-4, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-2, yc-4, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc-1, yc-5, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc, yc-5, WIDGET_COLOR(rad,HIGH_COLOR));
-		widget_put_pixel(rad, xc+1, yc-5, WIDGET_COLOR(rad,HIGH_COLOR));
-		
-		widget_put_pixel(rad, xc+5, yc-1, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+5, yc, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+5, yc+1, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+4, yc+2, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+4, yc+3, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+3, yc+4, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+3, yc+4, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+2, yc+4, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+1, yc+5, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc, yc+5, WIDGET_COLOR(rad,LOW_COLOR));
-		widget_put_pixel(rad, xc+1, yc+5, WIDGET_COLOR(rad,LOW_COLOR));
+		for (j = 0; j < 18; j+=2) {
+			widget_put_pixel(rad,
+			    xc + highlight[j],
+			    yc + highlight[j+1],
+			    WIDGET_COLOR(rad,HIGH_COLOR));
+			widget_put_pixel(rad,
+			    xc - highlight[j],
+			    yc - highlight[j+1],
+			    WIDGET_COLOR(rad,LOW_COLOR));
+		}
 
 		if (i == val) {
 			primitives.circle(rad,
