@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.21 2004/05/13 02:50:17 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.22 2004/05/18 02:47:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ vg_init(struct vg *vg, int flags)
 	vg->su = NULL;
 	vg->fill_color = SDL_MapRGB(vfmt, 0, 0, 0);
 	vg->grid_color = SDL_MapRGB(vfmt, 128, 128, 128);
-	vg->grid_gap = 0.5;
+	vg->grid_gap = 0.25;
 	vg->origin = Malloc(sizeof(struct vg_vertex)*VG_NORIGINS, M_VG);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
 	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS, M_VG);
@@ -122,7 +122,7 @@ vg_init(struct vg *vg, int flags)
 	vg->mask = NULL;
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
-	TAILQ_INIT(&vg->txtstyles);
+	TAILQ_INIT(&vg->styles);
 	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
 
 	for (i = 0; i < VG_NORIGINS; i++) {
@@ -135,10 +135,10 @@ vg_init(struct vg *vg, int flags)
 	}
 	vg->origin_radius[0] = 0.25;
 	vg->origin_radius[1] = 0.125;
-	vg->origin_radius[2] = 0.0625;
+	vg->origin_radius[2] = 0.075;
 	vg->origin_color[0] = SDL_MapRGB(vfmt, 0, 200, 0);
 	vg->origin_color[1] = SDL_MapRGB(vfmt, 0, 150, 0);
-	vg->origin_color[2] = SDL_MapRGB(vfmt, 0, 50, 150);
+	vg->origin_color[2] = SDL_MapRGB(vfmt, 0, 80, 150);
 	vg->norigin = VG_NORIGINS;
 }
 
@@ -178,17 +178,17 @@ vg_destroy_blocks(struct vg *vg)
 }
 
 static void
-vg_destroy_txtstyles(struct vg *vg)
+vg_destroy_styles(struct vg *vg)
 {
-	struct vg_text_style *ts, *nts;
+	struct vg_style *st, *nst;
 
-	for (ts = TAILQ_FIRST(&vg->txtstyles);
-	     ts != TAILQ_END(&vg->txtstyles);
-	     ts = nts) {
-		nts = TAILQ_NEXT(ts, txtstyles);
-		Free(ts, M_VG);
+	for (st = TAILQ_FIRST(&vg->styles);
+	     st != TAILQ_END(&vg->styles);
+	     st = nst) {
+		nst = TAILQ_NEXT(st, styles);
+		Free(st, M_VG);
 	}
-	TAILQ_INIT(&vg->txtstyles);
+	TAILQ_INIT(&vg->styles);
 }
 
 void
@@ -196,7 +196,7 @@ vg_reinit(struct vg *vg)
 {
 	vg_destroy_elements(vg);
 	vg_destroy_blocks(vg);
-	vg_destroy_txtstyles(vg);
+	vg_destroy_styles(vg);
 	vg_destroy_fragments(vg);
 }
 
@@ -225,7 +225,7 @@ vg_destroy(struct vg *vg)
 #endif
 	vg_destroy_elements(vg);
 	vg_destroy_blocks(vg);
-	vg_destroy_txtstyles(vg);
+	vg_destroy_styles(vg);
 	pthread_mutex_destroy(&vg->lock);
 }
 
@@ -411,24 +411,26 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->flags = 0;
 	vge->type = eltype;
+	vge->style = NULL;
 	vge->layer = vg->cur_layer;
 	vge->redraw = 1;
 	vge->drawn = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
-	vge->line.style = VG_CONTINUOUS;
-	vge->line.stipple = 0x0;
-	vge->line.thickness = 1;
-	vge->fill.style = VG_NOFILL;
-	vge->fill.tex.gfx_obj = NULL;
-	vge->fill.tex.gfx_index = 0;
-	vge->fill.color = SDL_MapRGB(vfmt, 255, 255, 255);
-	vge->color = SDL_MapRGB(vfmt, 255, 255, 255);
+	vge->color = SDL_MapRGB(vfmt, 250, 250, 250);
+
+	vge->line_st.style = VG_CONTINUOUS;
+	vge->line_st.endpoint_style = VG_SQUARE;
+	vge->line_st.stipple = 0x0;
+	vge->line_st.thickness = 1;
+	vge->line_st.miter_len = 0;
+	vge->text_st.face[0] = '\0';
+	vge->text_st.size = 12;
+	vge->text_st.flags = 0;
+	vge->fill_st.style = VG_NOFILL;
 
 	pthread_mutex_lock(&vg->lock);
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
-
-	/* Insert into the current block if there is any. */
 	if (vg->cur_block != NULL) {
 		TAILQ_INSERT_TAIL(&vg->cur_block->vges, vge, vgbmbs);
 		vge->block = vg->cur_block;
@@ -438,15 +440,24 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 		vge->block = NULL;
 	}
 
-	/* Set up the generic operation vector. */
 	vge->ops = vge_types[eltype];
-	if (vge->ops->init != NULL)
+	if (vge->ops->init != NULL) {
 		vge->ops->init(vg, vge);
-
+	}
 	vg->redraw = 1;
 	pthread_mutex_unlock(&vg->lock);
-
 	return (vge);
+}
+
+/*
+ * Select the given element for edition.
+ * The vg must be locked.
+ */
+void
+vg_select_element(struct vg *vg, struct vg_element *vge)
+{
+	TAILQ_REMOVE(&vg->vges, vge, vges);
+	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 }
 
 /*
@@ -751,6 +762,68 @@ vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 	}
 }
 
+/* Create a new global style. */
+struct vg_style *
+vg_create_style(struct vg *vg, enum vg_style_type type, const char *name)
+{
+	struct vg_style *vgs;
+
+	vgs = Malloc(sizeof(struct vg_style), M_VG);
+	strlcpy(vgs->name, name, sizeof(vgs->name));
+	vgs->type = type;
+	vgs->color = SDL_MapRGB(vfmt, 250, 250, 250);
+	switch (vgs->type) {
+	case VG_LINE_STYLE:
+		vgs->vg_line_st.style = VG_CONTINUOUS;
+		vgs->vg_line_st.endpoint_style = VG_SQUARE;
+		vgs->vg_line_st.stipple = 0x0;
+		vgs->vg_line_st.thickness = 1;
+		vgs->vg_line_st.miter_len = 0;
+		break;
+	case VG_FILL_STYLE:
+		vgs->vg_fill_st.style = VG_NOFILL;
+		break;
+	case VG_TEXT_STYLE:
+		vgs->vg_text_st.face[0] = '\0';
+		vgs->vg_text_st.size = 12;
+		vgs->vg_text_st.flags = 0;
+		break;
+	}
+	TAILQ_INSERT_HEAD(&vg->styles, vgs, styles);
+	return (vgs);
+}
+
+/* Associate the given style with the current element. */
+int
+vg_style(struct vg *vg, const char *name)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+	struct vg_style *st;
+
+	TAILQ_FOREACH(st, &vg->styles, styles) {
+		if (strcmp(st->name, name) == 0)
+			break;
+	}
+	if (st == NULL) {
+		return (-1);
+	}
+	switch (st->type) {
+	case VG_LINE_STYLE:
+		memcpy(&vge->line_st, &st->vg_line_st,
+		    sizeof(struct vg_line_style));
+		break;
+	case VG_TEXT_STYLE:
+		memcpy(&vge->text_st, &st->vg_text_st,
+		    sizeof(struct vg_text_style));
+		break;
+	case VG_FILL_STYLE:
+		memcpy(&vge->fill_st, &st->vg_fill_st,
+		    sizeof(struct vg_fill_style));
+		break;
+	}
+	return (0);
+}
+
 /* Specify the layer# to associate with the current element. */
 void
 vg_layer(struct vg *vg, int layer)
@@ -816,9 +889,10 @@ vg_pop_layer(struct vg *vg)
 void
 vg_save(struct vg *vg, struct netbuf *buf)
 {
-	off_t nblocks_offs, nvges_offs;
-	Uint32 nblocks = 0, nvges = 0;
+	off_t nblocks_offs, nvges_offs, nstyles_offs;
+	Uint32 nblocks = 0, nvges = 0, nstyles = 0;
 	struct vg_block *vgb;
+	struct vg_style *vgs;
 	struct vg_element *vge;
 	int i;
 
@@ -870,6 +944,35 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	}
 	pwrite_uint32(buf, nblocks, nblocks_offs);
 
+	/* Save the global style information. */
+	nstyles_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(vgs, &vg->styles, styles) {
+		write_string(buf, vgs->name);
+		write_uint8(buf, (Uint8)vgs->type);
+		write_color(buf, vfmt, vgs->color);
+
+		switch (vgs->type) {
+		case VG_LINE_STYLE:
+			write_uint8(buf, (Uint8)vgs->vg_line_st.style);
+			write_uint8(buf, (Uint8)vgs->vg_line_st.endpoint_style);
+			write_uint16(buf, vgs->vg_line_st.stipple);
+			write_uint8(buf, vgs->vg_line_st.thickness);
+			write_uint8(buf, vgs->vg_line_st.miter_len);
+			break;
+		case VG_FILL_STYLE:
+			write_uint8(buf, (Uint8)vgs->vg_fill_st.style);
+			break;
+		case VG_TEXT_STYLE:
+			write_string(buf, vgs->vg_text_st.face);
+			write_uint8(buf, (Uint8)vgs->vg_text_st.size);
+			write_uint32(buf, (Uint32)vgs->vg_text_st.flags);
+			break;
+		}
+		nstyles++;
+	}
+	pwrite_uint32(buf, nstyles, nstyles_offs);
+
 	/* Save the vg elements. */
 	nvges_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -882,10 +985,27 @@ vg_save(struct vg *vg, struct netbuf *buf)
 		write_uint32(buf, (Uint32)vge->layer);
 		write_color(buf, vfmt, vge->color);
 
+		/* Save the line style information. */
+		write_uint8(buf, (Uint8)vge->line_st.style);
+		write_uint8(buf, (Uint8)vge->line_st.endpoint_style);
+		write_uint16(buf, vge->line_st.stipple);
+		write_uint8(buf, vge->line_st.thickness);
+		write_uint8(buf, vge->line_st.miter_len);
+
+		/* Save the filling style information. */
+		write_uint8(buf, (Uint8)vge->fill_st.style);
+		
+		/* Save the text style information. */
+		write_string(buf, vge->text_st.face);
+		write_uint8(buf, (Uint8)vge->text_st.size);
+		write_uint32(buf, (Uint32)vge->text_st.flags);
+
+		/* Save the vertices. */
 		write_uint32(buf, vge->nvtx);
-		for (i = 0; i < vge->nvtx; i++) {
+		for (i = 0; i < vge->nvtx; i++)
 			write_vertex(buf, &vge->vtx[i]);
-		}
+
+		/* Save element specific data. */
 		switch (vge->type) {
 		case VG_CIRCLE:
 			write_double(buf, vge->vg_circle.radius);
@@ -904,11 +1024,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 			}
 			write_string(buf, vge->vg_text.text);
 			write_double(buf, vge->vg_text.angle);
-			write_uint32(buf, (Uint32)vge->vg_text.align);
-			write_string(buf, vge->vg_text.style);
-			write_string(buf, vge->vg_text.face);
-			write_uint32(buf, (Uint32)vge->vg_text.size);
-			write_uint32(buf, (Uint32)vge->vg_text.flags);
+			write_uint8(buf, (Uint8)vge->vg_text.align);
 			break;
 		case VG_MASK:
 			write_float(buf, vge->vg_mask.scale);
@@ -928,7 +1044,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 int
 vg_load(struct vg *vg, struct netbuf *buf)
 {
-	Uint32 norigin, nlayers, nelements, nblocks;
+	Uint32 norigin, nlayers, nstyles, nelements, nblocks;
 	Uint32 i;
 
 	if (version_read(buf, &vg_ver, NULL) != 0)
@@ -947,8 +1063,6 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->cur_block = NULL;
 	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
 	    vg->scale);
-
-	/* Prepare the fragment map. */
 	vg_scale(vg, vg->w, vg->h, vg->scale);
 
 	/* Read the origin points. */
@@ -1005,7 +1119,41 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
 	}
 
-	/* Read the vg elements */
+	/* Read the global style information. */
+	vg_destroy_styles(vg);
+	nstyles = read_uint32(buf);
+	dprintf("%u styles\n", nstyles);
+	for (i = 0; i < nstyles; i++) {
+		char sname[VG_STYLE_NAME_MAX];
+		enum vg_style_type type;
+		struct vg_style *vgs;
+
+		copy_string(sname, buf, sizeof(sname));
+		type = (enum vg_style_type)read_uint8(buf);
+		vgs = vg_create_style(vg, type, sname);
+		vgs->color = read_color(buf, vfmt);
+
+		switch (type) {
+		case VG_LINE_STYLE:
+			vgs->vg_line_st.style = read_uint8(buf);
+			vgs->vg_line_st.endpoint_style = read_uint8(buf);
+			vgs->vg_line_st.stipple = read_uint16(buf);
+			vgs->vg_line_st.thickness = read_uint8(buf);
+			vgs->vg_line_st.miter_len = read_uint8(buf);
+			break;
+		case VG_FILL_STYLE:
+			vgs->vg_fill_st.style = read_uint8(buf);
+			break;
+		case VG_TEXT_STYLE:
+			copy_string(vgs->vg_text_st.face, buf,
+			    sizeof(vgs->vg_text_st.face));
+			vgs->vg_text_st.size = (int)read_uint8(buf);
+			vgs->vg_text_st.flags = (int)read_uint32(buf);
+			break;
+		}
+	}
+
+	/* Read the vg elements. */
 	vg_destroy_elements(vg);
 	nelements = read_uint32(buf);
 	dprintf("%u elements\n", nelements);
@@ -1014,40 +1162,57 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		struct vg_element *vge;
 		struct vg_block *block;
 		char *block_id;
-		Uint32 nlayer, color;
+		Uint32 nlayer;
 		int j;
 	
 		type = (enum vg_element_type)read_uint32(buf);
 		block_id = read_string_len(buf, VG_BLOCK_NAME_MAX);
 		nlayer = (int)read_uint32(buf);
-		color = read_color(buf, vfmt);
 
+		vge = vg_begin_element(vg, type);
+		vge->color = read_color(buf, vfmt);
+
+		/* Load the line style information. */
+		vge->line_st.style = read_uint8(buf);
+		vge->line_st.endpoint_style = read_uint8(buf);
+		vge->line_st.stipple = read_uint16(buf);
+		vge->line_st.thickness = read_uint8(buf);
+		vge->line_st.miter_len = read_uint8(buf);
+
+		/* Load the filling style information. */
+		vge->fill_st.style = read_uint8(buf);
+
+		/* Load the text style information. */
+		copy_string(vge->text_st.face, buf, sizeof(vge->text_st.face));
+		vge->text_st.size = (int)read_uint8(buf);
+		vge->text_st.flags = (int)read_uint32(buf);
+
+		/* Load the vertices. */
+		vge->nvtx = read_uint32(buf);
+		vge->vtx = Malloc(vge->nvtx*sizeof(struct vg_vertex), M_VG);
+		for (j = 0; j < vge->nvtx; j++)
+			read_vertex(buf, &vge->vtx[j]);
+
+		/* Associate the element with a block if necessary. */
 		if (block_id != NULL) {
 			TAILQ_FOREACH(block, &vg->blocks, vgbs) {
 				if (strcmp(block->name, block_id) == 0)
 					break;
 			}
+			Free(block_id, 0);
 			if (block == NULL) {
-				error_set("bad block id");
-				Free(block_id, 0);
+				error_set("unexisting block");
 				goto fail;
 			}
-			Free(block_id, 0);
 		} else {
 			block = NULL;
-		}
-
-		vge = vg_begin_element(vg, type);
-		vge->nvtx = read_uint32(buf);
-		vge->vtx = Malloc(vge->nvtx*sizeof(struct vg_vertex), M_VG);
-		for (j = 0; j < vge->nvtx; j++) {
-			read_vertex(buf, &vge->vtx[j]);
 		}
 		if (block != NULL) {
 			TAILQ_INSERT_TAIL(&block->vges, vge, vgbmbs);
 			vge->block = block;
 		}
 
+		/* Load element specific data. */
 		switch (vge->type) {
 		case VG_CIRCLE:
 			if (vge->nvtx < 1) {
@@ -1078,14 +1243,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 			copy_string(vge->vg_text.text, buf,
 			    sizeof(vge->vg_text.text));
 			vge->vg_text.angle = read_double(buf);
-			vge->vg_text.align = (enum vg_alignment)
-			    read_uint32(buf);
-			copy_string(vge->vg_text.style, buf,
-			    sizeof(vge->vg_text.style));
-			copy_string(vge->vg_text.face, buf,
-			    sizeof(vge->vg_text.face));
-			vge->vg_text.size = (int)read_uint32(buf);
-			vge->vg_text.flags = (int)read_uint32(buf);
+			vge->vg_text.align = read_uint8(buf);
 			break;
 		case VG_MASK:
 			vge->vg_mask.scale = read_float(buf);

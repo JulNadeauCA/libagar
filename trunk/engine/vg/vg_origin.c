@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.5 2004/04/30 05:39:34 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.6 2004/05/18 02:48:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -98,6 +98,18 @@ vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
 		vg->origin[o].y = oy - vg->origin[0].y;
 		vg->origin[o].z = oz - vg->origin[0].z;
 	}
+}
+
+void
+vg_origin_color(struct vg *vg, int o, int r, int g, int b)
+{
+	vg->origin_color[o] = SDL_MapRGB(vfmt, r, g, b);
+}
+
+void
+vg_origin_radius(struct vg *vg, int o, float r)
+{
+	vg->origin_radius[o] = r;
 }
 
 void

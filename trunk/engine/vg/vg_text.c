@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.5 2004/05/12 04:51:31 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.6 2004/05/18 02:48:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -53,14 +53,10 @@ const struct vg_element_ops vg_text_ops = {
 void
 vg_text_init(struct vg *vg, struct vg_element *vge)
 {
+	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
 	vge->vg_text.angle = 0;
 	vge->vg_text.align = VG_ALIGN_MC;
-	vge->vg_text.style[0] = '\0';
-	vge->vg_text.face[0] = '\0';
-	vge->vg_text.flags = 0;
-	vge->vg_text.su = NULL;
-
 }
 
 void
@@ -88,43 +84,6 @@ vg_text_angle(struct vg *vg, double angle)
 	vge->vg_text.angle = angle;
 }
 
-/* Specify a drawing-specific font style. */
-int
-vg_text_style(struct vg *vg, const char *name)
-{
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-	struct vg_text_style *ts;
-
-	TAILQ_FOREACH(ts, &vg->txtstyles, txtstyles) {
-		if (strcmp(ts->name, name) == 0)
-			break;
-	}
-	if (ts == NULL) {
-		return (-1);
-	}
-	strlcpy(vge->vg_text.face, ts->face, sizeof(vge->vg_text.face));
-	vge->vg_text.size = ts->size;
-	vge->vg_text.flags = ts->flags;
-	vge->color = ts->color;
-	return (0);
-}
-
-/* Specify the font face, size and style. */
-int
-vg_text_font(struct vg *vg, const char *face, int size, int flags)
-{
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	if (size < VG_FONT_SIZE_MIN || size > VG_FONT_SIZE_MAX) {
-		error_set(_("Illegal font size."));
-		return (-1);
-	}
-	strlcpy(vge->vg_text.face, face, sizeof(vge->vg_text.face));
-	vge->vg_text.size = size;
-	vge->vg_text.flags = flags;
-	return (0);
-}
-
 /* Specify the text to display. */
 void
 vg_printf(struct vg *vg, const char *fmt, ...)
@@ -140,8 +99,10 @@ vg_printf(struct vg *vg, const char *fmt, ...)
 	} else {
 		vge->vg_text.text[0] = '\0';
 	}
-	if (vge->vg_text.su != NULL)
+	if (vge->vg_text.su != NULL) {
 		SDL_FreeSurface(vge->vg_text.su);
+		vge->vg_text.su = NULL;
+	}
 }
 
 void
@@ -152,7 +113,8 @@ vg_draw_text(struct vg *vg, struct vg_element *vge)
 	int x, y;
 	
 	if (vge->vg_text.su == NULL) {
-		vge->vg_text.su = text_render(NULL, -1, vge->color,
+		vge->vg_text.su = text_render(vge->text_st.face[0] != '\0' ?
+		    vge->text_st.face : NULL, vge->text_st.size, vge->color,
 		    vge->vg_text.text);
 	}
 	su = vge->vg_text.su;
