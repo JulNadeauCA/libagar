@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.106 2003/05/07 12:16:02 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.107 2003/05/07 13:01:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -482,7 +482,7 @@ next_layer:
 	/* Draw the cursor for the current tool. */
 	if (mv->flags & MAPVIEW_EDIT &&
 	   (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
-	   !mapview_selecting()) {
+	   (SDL_GetModState() & KMOD_CTRL) == 0) {
 		mapview_draw_tool_cursor(mv);
 	}
 #if 0
