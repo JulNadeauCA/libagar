@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.21 2002/02/18 07:49:20 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.22 2002/02/19 00:49:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -107,7 +107,7 @@ object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 {
 	static int curid = 0;	/* The world has id 0 */
 
-	ob->name = name;
+	ob->name = strdup(name);
 	ob->desc = NULL;
 	ob->id = curid++;
 	sprintf(ob->saveext, "ag");
@@ -136,9 +136,8 @@ object_destroy(void *arg)
 		or = emalloc(sizeof(struct gcref));
 		or->ob = ob;
 		SLIST_INSERT_HEAD(&lategch, or, gcrefs);
-		dprintf("%s: deferred\n", ob->name);
 		ob->flags &= ~(OBJ_DEFERGC);
-		return (-1);
+		return (0);
 	}
 
 	if (ob->vec->destroy != NULL &&
@@ -156,8 +155,6 @@ object_destroy(void *arg)
 	if (ob->anims != NULL)
 		free(ob->anims);
 	
-	dprintf("freed %s\n", ob->name);
-
 	if (ob->name != NULL)
 		free(ob->name);
 	if (ob->desc != NULL)
@@ -345,7 +342,13 @@ object_dump(struct object *ob)
 		printf("link ");
 	if (ob->vec->unlink != NULL)
 		printf("unlink ");
+	if (ob->vec->dump != NULL)
+		printf("dump ");
 	printf(")\n");
+	if (ob->vec->dump != NULL) {
+		ob->vec->dump(ob);
+		printf(" --\n");
+	}
 	if (ob->desc != NULL) {
 		printf("                (%s)\n", ob->desc);
 	}
