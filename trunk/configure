@@ -221,6 +221,109 @@ else
 fi
 
 rm -f .cctest .cctest.c
+echo -n "checking for float..."
+cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	float f = 0.1;
+
+	printf("%f\n", f\n);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_FLOAT" >> engine/mcconfig.h
+echo "#define HAVE_FLOAT" $HAVE_FLOAT >> engine/mcconfig.h
+echo "#endif /* HAVE_FLOAT */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
+echo -n "checking for double..."
+cat << EOT > conftest.c
+int
+main(int argc, char *argv[])
+{
+	double d = 0.1;
+	
+	printf("%f\n", d\n);
+	return (0);
+
+EOT
+compile="ok"
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_DOUBLE" >> engine/mcconfig.h
+echo "#define HAVE_DOUBLE" $HAVE_DOUBLE >> engine/mcconfig.h
+echo "#endif /* HAVE_DOUBLE */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
+echo -n "checking for long double..."
+cat << EOT > conftest.c
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+	
+	printf("%Lf\n", ld\n);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC -o conftest conftest.c" >> config.log
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_LONG_DOUBLE" >> engine/mcconfig.h
+echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> engine/mcconfig.h
+echo "#endif /* HAVE_LONG_DOUBLE */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
 echo -n "checking for a getenv() function..."
 echo "checking for a getenv() function..." >> config.log
 cat << EOT > conftest.c
