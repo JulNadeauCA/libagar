@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.2 2002/02/01 11:58:04 vedge Exp $
+.\"	$Csoft: map.3,v 1.3 2002/02/07 05:14:31 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -116,17 +116,17 @@ initializes the entire map.
 "int offs"
 .Pp
 .Ft "struct map_aref *"
-.Fn map_entry_addref "struct map_entry *me" "struct object *obj" \
+.Fn node_addref "struct node *me" "struct object *obj" \
 "int offs" "int rflags"
 .Pp
 .Ft "int"
-.Fn map_entry_delref "struct map_entry *me" "struct object *obj" "int offs"
+.Fn node_delref "struct node *me" "struct object *obj" "int offs"
 .Pp
 .Ft "struct map_aref *"
-.Fn map_entry_aref "struct map_entry *me" "struct object *obj" "int offs"
+.Fn node_aref "struct node *me" "struct object *obj" "int offs"
 .Pp
 .Ft "struct map_aref *"
-.Fn map_entry_arefobj "struct map_entry *me" "struct object *obj" "int offs"
+.Fn node_arefobj "struct node *me" "struct object *obj" "int offs"
 .Pp
 .nr nS 0
 .Pp
@@ -157,13 +157,13 @@ if
 .Fa offs
 is negative.
 .Pp
-.Fn map_entry_addref
+.Fn node_addref
 and
-.Fn map_entry_delref
+.Fn node_delref
 manipulate the reference stack on a given map entry.
-.Fn map_entry_aref
+.Fn node_aref
 returns the referece at a given layer, and
-.Fn map_entry_arefobj
+.Fn node_arefobj
 returns the reference matching an object:offset pair.
 .Sh SEE ALSO
 .Xr agar 3
