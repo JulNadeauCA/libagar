@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.37 2002/04/30 08:24:25 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.38 2002/05/02 09:37:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,8 +44,12 @@
 #include <engine/widget/text.h>
 
 #ifdef DEBUG
-int	engine_debug = 1;
+int	engine_debug = 1;	/* Enable debugging */
 #endif
+#ifdef LOCKDEBUG
+pthread_key_t	lockassert_key;	/* Hack for pthread assertions. */
+#endif
+
 struct	world *world;
 struct	gameinfo *gameinfo;
 int mapediting;
@@ -87,6 +91,12 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	h = 480;
 	depth = 32;
 	flags = SDL_SWSURFACE;
+
+#ifdef LOCKDEBUG
+	if (pthread_key_create(&lockassert_key, NULL) != 0) {
+		fatal("pthread_key_create: %s\n", strerror(errno));
+	}
+#endif
 
 	/* XXX ridiculous */
 	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:X:Y:")) != -1) {
@@ -224,6 +234,12 @@ engine_destroy(void)
 	/* Destroy the font engine. */
 	text_engine_destroy();
 
+#ifdef LOCKDEBUG
+	if (pthread_key_delete(lockassert_key) != 0) {
+		fatal("pthread_key_delete: %s\n", strerror(errno));
+	}
+#endif
+
 	SDL_Quit();
 	exit(0);
 }
@@ -236,6 +252,19 @@ emalloc(size_t len)
 	p = malloc(len);
 	if (p == NULL) {
 		perror("malloc");
+		engine_destroy();
+	}
+	return (p);
+}
+
+void *
+erealloc(void *ptr, size_t len)
+{
+	void *p;
+
+	p = realloc(ptr, len);
+	if (p == NULL) {
+		perror("realloc");
 		engine_destroy();
 	}
 	return (p);
