@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.80 2002/09/17 21:19:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.81 2002/09/19 21:13:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -669,7 +669,7 @@ window_focus(struct window *win)
 	struct region *reg;
 	struct widget *wid;
 
-	lastwin = TAILQ_LAST(&view->windowsh, windowq);
+	lastwin = TAILQ_LAST(&view->windows, windowq);
 	if (win != NULL && lastwin == win) {
 		/* The window already holds focus. */
 		return;
@@ -693,8 +693,8 @@ window_focus(struct window *win)
 		 * Move the new window at the list tail (so the rendering
 		 * functions don't have to traverse the list backwards).
 		 */
-		TAILQ_REMOVE(&view->windowsh, win, windows);
-		TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+		TAILQ_REMOVE(&view->windows, win, windows);
+		TAILQ_INSERT_TAIL(&view->windows, win, windows);
 
 		/* Notify the new window of the focus change. */
 		event_post(win, "window-gainfocus", NULL);
@@ -710,7 +710,7 @@ window_mousefocus(Uint16 x, Uint16 y)
 {
 	struct window *win;
 
-	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		if (WINDOW_INSIDE(win, x, y) && win->flags & WINDOW_SHOWN) {
 			view->focus_win = win;
 			return;
@@ -743,7 +743,7 @@ window_event(SDL_Event *ev)
 		break;
 	}
 
-	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		pthread_mutex_lock(&win->lock);
 		if ((win->flags & WINDOW_SHOWN) == 0) {
 			goto nextwin;

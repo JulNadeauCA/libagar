@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.69 2002/09/17 16:56:03 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.70 2002/09/19 20:56:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -91,7 +91,8 @@ view_init(gfx_engine_t ge)
 	v->h = prop_uint32(config, "view.h");
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
-	TAILQ_INIT(&v->windowsh);
+	TAILQ_INIT(&v->windows);
+	TAILQ_INIT(&v->detach);
 
 	pthread_mutexattr_init(&v->lockattr);
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
@@ -201,7 +202,7 @@ view_destroy(void *p)
 	
 	pthread_mutex_lock(&v->lock);
 
-	TAILQ_FOREACH(win, &v->windowsh, windows) {
+	TAILQ_FOREACH(win, &v->windows, windows) {
 		view_detach(win);
 	}
 
@@ -228,7 +229,7 @@ view_attach(void *child)
 
 	OBJECT_ASSERT(child, "window");
 	event_post(child, "attached", "%p", view);
-	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+	TAILQ_INSERT_TAIL(&view->windows, win, windows);
 	
 	pthread_mutex_unlock(&view->lock);
 }
@@ -415,8 +416,8 @@ view_invalidate_surface(SDL_Surface *scaled)
 void
 view_focus(struct window *win)
 {
-	TAILQ_REMOVE(&view->windowsh, win, windows);
-	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+	TAILQ_REMOVE(&view->windows, win, windows);
+	TAILQ_INSERT_TAIL(&view->windows, win, windows);
 	
 	win->redraw++;
 }
