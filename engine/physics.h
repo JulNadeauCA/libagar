@@ -1,5 +1,9 @@
 /*	$Csoft	    */
 
+struct noderef;
+struct mapdir;
+struct input;
+
 enum {
 	DIR_UP =	0x01,
 	DIR_DOWN =	0x02,
@@ -32,6 +36,16 @@ struct mapdir {
 #define DIR_SCROLLVIEW	0x01	/* Scroll the view if we reach boundaries. */
 #define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
 };
+
+struct mappos {
+	struct	map *map;	/* Map (or NULL) */
+	Uint32	x, y;		/* Map coordinates */
+	Uint32	speed;		/* Speed in ms */
+	struct	noderef *nref;	/* Node reference */
+	struct	mapdir dir;	/* Map direction (not saved) */
+	struct	input *input;	/* Controller (or NULL) */
+};
+
 
 void	gendir_init(struct gendir *);
 Uint32	gendir_set(struct gendir *, Uint32, Uint32);
