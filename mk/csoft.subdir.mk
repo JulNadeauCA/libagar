@@ -1,4 +1,4 @@
-# $Csoft: csoft.subdir.mk,v 1.9 2002/01/27 11:27:12 vedge Exp $
+# $Csoft: csoft.subdir.mk,v 1.10 2002/01/27 11:52:09 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -36,7 +36,7 @@ all-subdir:
 	fi; \
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
-		    echo "==> ${REL}$$DIR"; \
+		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/); \
 		done; \
 	fi)
@@ -49,7 +49,7 @@ clean-subdir:
 	fi; \
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
-		    echo "==> ${REL}$$DIR"; \
+		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
 		done; \
 	fi)
@@ -62,7 +62,7 @@ install-subdir:
 	fi; \
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
-		    echo "==> ${REL}$$DIR"; \
+		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ install); \
 		done; \
 	fi)
@@ -76,7 +76,7 @@ deinstall-subdir:
 	fi; \
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
-		    echo "==> ${REL}$$DIR"; \
+		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
 		done; \
 	fi)
@@ -89,7 +89,7 @@ regress-subdir:
 	fi; \
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
-		    echo "==> ${REL}$$DIR"; \
+		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ regress); \
 		done; \
 	fi)
