@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.20 2002/02/10 01:36:00 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.21 2002/02/10 03:51:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 #include "mapedit_offs.h"
 #include "command.h"
 #include "mouse.h"
+#include "joy.h"
 
 static void	mapedit_destroy(void *);
 static int	mapedit_shadow(struct mapedit *);
@@ -519,96 +520,20 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 		if (ev->motion.state == SDL_PRESSED) {
 			mouse_motion(med, ev);
 		}
-		break;
+		return;
 	case SDL_MOUSEBUTTONDOWN:
 		if (ev->button.button != 1) {
 			mouse_button(med, ev);
 		}
-		break;
-	}
-
-#if 0
-	/*
-	 * Joystick edition.
-	 */
-	if (ev->type == SDL_JOYAXISMOTION) {
-		static SDL_Event nev;
-		static int lastdir = 0;
-
-		switch (ev->jaxis.axis) {
-		case 0:	/* X */
-			if (ev->jaxis.value < 0) {
-				lastdir |= MAPEDIT_LEFT;
-				lastdir &= ~(MAPEDIT_RIGHT);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_LEFT;
-				SDL_PushEvent(&nev);
-			} else if (ev->jaxis.value > 0) {
-				lastdir |= MAPEDIT_RIGHT;
-				lastdir &= ~(MAPEDIT_LEFT);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_RIGHT;
-				SDL_PushEvent(&nev);
-			} else {
-				object_wait(med, lastdir);
-				if (lastdir & MAPEDIT_LEFT) {
-					med->cursdir &= ~(MAPEDIT_LEFT);
-				} else if (lastdir & MAPEDIT_RIGHT) {
-					med->cursdir &= ~(MAPEDIT_RIGHT);
-				}
-			}
-			break;
-		case 1:	/* Y */
-			if (ev->jaxis.value < 0) {
-				lastdir |= MAPEDIT_UP;
-				lastdir &= ~(MAPEDIT_DOWN);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_UP;
-				SDL_PushEvent(&nev);
-			} else if (ev->jaxis.value > 0) {
-				lastdir |= MAPEDIT_DOWN;
-				lastdir &= ~(MAPEDIT_UP);
-				nev.type = SDL_KEYDOWN;
-				nev.key.keysym.sym = SDLK_DOWN;
-				SDL_PushEvent(&nev);
-			} else {
-				object_wait(med, lastdir);
-				if (lastdir & MAPEDIT_UP) {
-					med->cursdir &= ~(MAPEDIT_UP);
-				} else if (lastdir & MAPEDIT_DOWN) {
-					med->cursdir &= ~(MAPEDIT_DOWN);
-				}
-			}
-			break;
-		}
+		return;
+	case SDL_JOYAXISMOTION:
+		joy_axismotion(med, ev);
+		return;
+	case SDL_JOYBUTTONUP:
+	case SDL_JOYBUTTONDOWN:
+		joy_button(med, ev);
 		return;
 	}
-
-	if (ev->type == SDL_JOYBUTTONDOWN || ev->type == SDL_JOYBUTTONUP) {
-		static SDL_Event nev;
-
-		nev.type = (ev->type == SDL_JOYBUTTONUP) ?
-		    SDL_KEYUP : SDL_KEYDOWN;
-
-		/* XXX customize */
-		switch (ev->jbutton.button) {
-		case 1:	/* Add */
-			nev.key.keysym.sym = SDLK_a;
-			break;
-		case 2: /* Delete */
-			nev.key.keysym.sym = SDLK_d;
-			break;
-		case 4: /* Tile list up */
-			nev.key.keysym.sym = SDLK_PAGEUP;
-			break;
-		case 5: /* Tile list up */
-			nev.key.keysym.sym = SDLK_PAGEDOWN;
-			break;
-		}
-		SDL_PushEvent(&nev);
-		return;
-	}
-#endif
 
 	mapx = med->x;
 	mapy = med->y;
