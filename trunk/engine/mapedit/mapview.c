@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.6 2002/07/07 09:41:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.7 2002/07/07 09:42:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,6 +58,8 @@ static const struct widget_ops mapview_ops = {
 	NULL		/* animate */
 };
 
+static SDL_TimerID zoomin_timer, zoomout_timer;
+
 static void	mapview_event(int, union evarg *);
 static void	mapview_scaled(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
@@ -78,6 +80,46 @@ mapview_new(struct region *reg, struct mapedit *med, struct map *m,
 	return (mv);
 }
 
+static __inline__ void
+mapview_scale(struct mapview *mv, SDL_Surface *s, int rx, int ry)
+{
+	int x, y, xfac, yfac;
+	Uint32 col = 0;
+	Uint8 *src, r1, g1, b1;
+
+	SDL_LockSurface(view->v);
+	for (y = 0; y < mv->tileh; y++) {
+		for (x = 0; x < mv->tilew; x++) {
+			src = (Uint8 *)s->pixels +
+			    (y*TILEH/mv->tileh)*s->pitch +
+			    (x*TILEW/mv->tilew)*s->format->BytesPerPixel;
+
+			switch (s->format->BytesPerPixel) {
+			case 1:
+				col = *src;
+				break;
+			case 2:
+				col = *(Uint16 *)src;
+				break;
+			case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+				col = src[0]<<16 | src[1]<<8 | src[2];
+#else
+				col = src[0] | src[1]<<8 | src[2]<<16;
+#endif
+				break;
+			case 4:
+				col = *(Uint32 *)src;
+				break;
+			}
+			SDL_GetRGB(col, s->format, &r1, &g1, &b1);
+			col = SDL_MapRGB(view->v->format, r1, g1, b1);
+			WIDGET_PUT_PIXEL(mv, rx+x, ry+y, col);
+		}
+	}
+	SDL_UnlockSurface(view->v);
+}
+
 void
 mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
@@ -92,7 +134,10 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->my = m->defy;
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
-	mv->cursor = edcursor_new(0, mv, m);
+	mv->tilew = TILEW;
+	mv->tileh = TILEH;
+	mv->cursor = (flags & MAPVIEW_EDIT) ? edcursor_new(0, mv, m) : NULL;
+	mv->zoom = 100;
 
 	event_new(mv, "window-mousebuttonup", 0,
 	    mapview_event, "%i", WINDOW_MOUSEBUTTONUP);
@@ -117,31 +162,40 @@ mapview_draw(void *p)
 	struct map *m = mv->map;
 	struct node *node;
 	struct noderef *nref;
-	int mx, my, vx, vy, rx, ry;
-	Uint32 nsprites;
+	int mx, my, rx, ry;
+	int nsprites;
+	int maxth, maxtw;
 
-	OBJECT_ASSERT(mv, "widget");
+	if (mv->zoom > 100 || mv->zoom < 100) {	/* XXX */
+		maxth = mv->tileh*2 + 16;
+		maxtw = mv->tilew*2 + 16;
+	} else {
+		maxth = mv->tileh;
+		maxtw = mv->tilew;
+	}
 
-	for (my = mv->my, vy = 0;
-	     vy < mv->mh && my < m->maph;
-	     my++, vy++) {
+	for (my = mv->my, ry = 0;
+	     ry+maxth < WIDGET(mv)->h && my < m->maph;
+	     my++, ry += mv->tileh) {
 
-		ry = vy << m->shtiley;
-
-		for (mx = mv->mx, vx = 0;
-	     	     vx < mv->mw && mx < m->mapw;
-		     mx++, vx++) {
-
-			rx = vx << m->shtilex;
+		for (mx = mv->mx, rx = 0;
+	     	     rx+maxtw < WIDGET(mv)->w && mx < m->mapw;
+		     mx++, rx += mv->tilew) {
 
 			node = &m->map[my][mx];
-			
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref->flags & MAPREF_SPRITE) {
-					WIDGET_DRAW(mv,
-					    SPRITE(nref->pobj, nref->offs),
-					    rx, ry);
+					if (mv->tilew != TILEW ||
+					    mv->tilew != TILEH) {
+						mapview_scale(mv,
+						    SPRITE(nref->pobj,
+						    nref->offs), rx, ry);
+					} else {
+						WIDGET_DRAW(mv,
+						    SPRITE(nref->pobj,
+						    nref->offs), rx, ry);
+					}
 					nsprites++;
 				} else if (nref->flags & MAPREF_ANIM) {
 					SDL_Surface *src;
@@ -200,15 +254,24 @@ mapview_draw(void *p)
 					for (i = 0, j = anim->nparts - 1;
 					    i < anim->nparts; i++, j--) {
 						src = anim->frames[j][frame];
-						WIDGET_DRAW(mv, src,
-						    rx + nref->xoffs,
-						    ry + nref->yoffs -
-						    (i * TILEH));
+						if (mv->tilew != TILEW ||
+						    mv->tileh != TILEH) {
+							mapview_scale(mv,
+							    src,
+							    rx + nref->xoffs,
+							    ry + nref->yoffs -
+							    (i * TILEH));
+						} else {
+							WIDGET_DRAW(mv, src,
+							    rx + nref->xoffs,
+							    ry + nref->yoffs -
+							    (i * TILEH));
+						}
 					}
 				}
 			}
 			
-			if (nsprites > 0) {
+			if (nsprites > 0 && mv->flags & MAPVIEW_EDIT) {
 			/*	MAPEDIT_POSTDRAW(m, node, vx, vy); */
 			}
 		}
@@ -243,6 +306,51 @@ mapview_scroll(struct mapview *mv, int dir)
 }
 
 static void
+mapview_caption(struct mapview *mv)
+{
+	struct window *win = WIDGET(mv)->win;
+	char cap[4096];
+
+	/* XXX wouache */
+	free(win->caption);
+	sprintf(cap, "@ %s (%d%%)", OBJECT(mv->map)->name, mv->zoom);
+	win->caption = strdup(cap);
+}
+
+void
+mapview_zoom(struct mapview *mv, int fac)
+{
+	mv->zoom = fac > 4 ? fac : 4;
+	mv->tilew = mv->zoom*TILEW / 100;
+	mv->tileh = mv->zoom*TILEH / 100;
+	
+	mv->mw = WIDGET(mv)->w/mv->tilew - 1;
+	mv->mh = WIDGET(mv)->h/mv->tileh - 1;
+
+	mapview_caption(mv);
+}
+
+static Uint32
+mapview_zoomin(Uint32 ival, void *p)
+{
+	struct mapview *mv = p;
+	
+	/* XXX pref */
+	mapview_zoom(mv, mv->zoom + 2);
+	return (ival);
+}
+
+static Uint32
+mapview_zoomout(Uint32 ival, void *p)
+{
+	struct mapview *mv = p;
+
+	/* XXX pref */
+	mapview_zoom(mv, mv->zoom - 2);
+	return (ival);
+}
+
+static void
 mapview_event(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
@@ -251,15 +359,13 @@ mapview_event(int argc, union evarg *argv)
 	int type = argv[1].i;
 	int button, x, y;
 
-	OBJECT_ASSERT(mv, "widget");
-
 	switch (type) {
 	case WINDOW_MOUSEOUT:
 		mv->mouse.move = 0;
 		break;
 	case WINDOW_MOUSEMOTION:
-		x = argv[2].i / TILEW;
-		y = argv[3].i / TILEH;
+		x = argv[2].i / mv->tilew;
+		y = argv[3].i / mv->tileh;
 	
 		/* Scroll */
 		if (mv->mouse.move) {
@@ -268,20 +374,19 @@ mapview_event(int argc, union evarg *argv)
 			    (mv->mouse.x > x) ? DIR_RIGHT :
 			    (mv->mouse.y < y) ? DIR_UP :
 			    (mv->mouse.y > y) ? DIR_DOWN : 0);
-		} else {
+		} else if (mv->flags & MAPVIEW_EDIT) {
 			if (med->curtool != NULL &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    SDL_GetMouseState(NULL, NULL) &
 			    SDL_BUTTON_LMASK &&
-			    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh)) {
-				if (TOOL_OPS(med->curtool)->tool_effect
-				    != NULL) {
-				    	edcursor_set(mv->cursor, 0);
-					TOOL_OPS(med->curtool)->tool_effect(
-					    med->curtool, m,
-					    mv->mx+x, mv->my+y);
-				    	edcursor_set(mv->cursor, 1);
-				}
+			    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+			    (mv->mx+x < mv->map->mapw) &&
+			    (mv->my+y < mv->map->maph) &&
+			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+				edcursor_set(mv->cursor, 0);
+				TOOL_OPS(med->curtool)->tool_effect(
+				    med->curtool, mv, mv->mx+x, mv->my+y);
+				    edcursor_set(mv->cursor, 1);
 			}
 		}
 	
@@ -290,18 +395,21 @@ mapview_event(int argc, union evarg *argv)
 		break;
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
-		x = argv[3].i / TILEW;
-		y = argv[4].i / TILEH;
+		x = argv[3].i / mv->tilew;
+		y = argv[4].i / mv->tileh;
 		WIDGET_FOCUS(mv);
 		if (button > 1) {
 			mv->mouse.move++;
-		} else {
+		} else if (mv->flags & MAPVIEW_EDIT) {
 			if (med->curtool != NULL &&
 			   (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+			   (mv->mx+x < mv->map->mapw) &&
+			   (mv->my+y < mv->map->maph) &&
+			    TOOL_OPS(med->curtool)->tool_effect != NULL
+			    ) {
 				edcursor_set(mv->cursor, 0);
 				TOOL_OPS(med->curtool)->tool_effect(
-				    med->curtool, m, mv->mx + x, mv->my + y);
+				    med->curtool, mv, mv->mx+x, mv->my+y);
 				edcursor_set(mv->cursor, 1);
 			}
 		}
@@ -313,12 +421,60 @@ mapview_event(int argc, union evarg *argv)
 		}
 		break;
 	case WINDOW_KEYDOWN:
-		event_post(mv->cursor, "window-keydown",
-		    "%i, %i", argv[2].i, argv[3].i);
+		if (mv->flags & MAPVIEW_EDIT && mv->cursor != NULL) {
+			event_post(mv->cursor, "window-keydown",
+			    "%i, %i", argv[2].i, argv[3].i);
+		}
+		if (mv->flags & MAPVIEW_ZOOM) {
+			switch (argv[2].i) {
+			case SDLK_EQUALS:
+				/* XXX pref */
+				zoomin_timer =
+				    SDL_AddTimer(60, mapview_zoomin, mv);
+				if (zoomin_timer == NULL) {
+					warning("SDL_AddTimer: %s\n",
+					    SDL_GetError());
+				}
+				break;
+			case SDLK_MINUS:
+				zoomout_timer =
+				    SDL_AddTimer(60, mapview_zoomout, mv);
+				if (zoomout_timer == NULL) {
+					warning("SDL_AddTimer: %s\n",
+					    SDL_GetError());
+				}
+				break;
+			case SDLK_0:
+				if (zoomin_timer != NULL) {
+					SDL_RemoveTimer(zoomin_timer);
+				}
+				if (zoomout_timer != NULL) {
+					SDL_RemoveTimer(zoomout_timer);
+				}
+				mapview_zoom(mv, 100);
+				break;
+			}
+		}
 		break;
 	case WINDOW_KEYUP:
-		event_post(mv->cursor, "window-keyup",
-		    "%i, %i", argv[2].i, argv[3].i);
+		if (mv->flags & MAPVIEW_EDIT && mv->cursor != NULL) {
+			event_post(mv->cursor, "window-keyup",
+			    "%i, %i", argv[2].i, argv[3].i);
+		}
+		if (mv->flags & MAPVIEW_ZOOM) {
+			switch (argv[2].i) {
+			case SDLK_EQUALS:
+				if (zoomin_timer != NULL) {
+					SDL_RemoveTimer(zoomin_timer);
+				}
+				break;
+			case SDLK_MINUS:
+				if (zoomout_timer != NULL) {
+					SDL_RemoveTimer(zoomout_timer);
+				}
+				break;
+			}
+		}
 		break;
 	}
 }
@@ -326,22 +482,17 @@ mapview_event(int argc, union evarg *argv)
 static void
 mapview_scaled(int argc, union evarg *argv)
 {
-	struct mapview *mv= argv[0].p;
+	struct mapview *mv = argv[0].p;
 	int maxw = argv[1].i, maxh = argv[2].i;
 	int w, h;
 
-	for (w = 0; w < WIDGET(mv)->w-1 && w < maxw; w += TILEW) ;;
-	for (h = 0; h < WIDGET(mv)->h-1 && h < maxh; h += TILEH) ;;
+	for (w = 0; w < WIDGET(mv)->w-1 && w < maxw; w += mv->tilew) ;;
+	for (h = 0; h < WIDGET(mv)->h-1 && h < maxh; h += mv->tileh) ;;
 	
 	WIDGET(mv)->w = w;
 	WIDGET(mv)->h = h;
-	mv->mw = w/TILEW - 1;
-	mv->mh = h/TILEH - 1;
 
-	if (mv->flags & MAPVIEW_CENTER) {
-		mapview_center(mv, mv->cursor->x, mv->cursor->y);
-		mv->flags &= ~(MAPVIEW_CENTER);
-	}
+	mapview_zoom(mv, mv->zoom);
 }
 
 void
