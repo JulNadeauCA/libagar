@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.52 2004/01/03 04:25:13 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.53 2004/03/23 02:25:02 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -75,48 +75,87 @@ alter_color(Uint32 pixel, Sint8 r, Sint8 g, Sint8 b)
 	return (rv);
 }
 
+static __inline__ void
+clip_pixel(SDL_Surface *su, Uint8 **p)
+{
+	Uint8 *end = (Uint8 *)su->pixels + su->h*su->pitch - su->format->BytesPerPixel;
+
+	if (*p > end)
+		*p = end;
+}
+
 /*
  * Write to a pixel to absolute view coordinates x,y.
- * Clipping is done, the display surface must be locked.
+ * The display surface must be locked; clipping is done.
  */
 static __inline__ void
-put_pixel1(Uint8 *dst, Uint32 color, int x, int y)
+put_pixel1(Uint8 *dst, Uint32 color)
 {
-	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y))
-		return;
+	Uint8 *d = dst;
+
+	clip_pixel(view->v, &d);
 
 	switch (vfmt->BytesPerPixel) {
-		_VIEW_PUTPIXEL_32(dst, color);
-		_VIEW_PUTPIXEL_24(dst, color);
-		_VIEW_PUTPIXEL_16(dst, color);
-		_VIEW_PUTPIXEL_8(dst, color);
+	case 4:
+		*(Uint32 *)d = color;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		d[0] = (color>>16) & 0xff;
+		d[1] = (color>>8) & 0xff;
+		d[2] = color & 0xff;
+#else
+		d[0] = color & 0xff;
+		d[1] = (color>>8) & 0xff;
+		d[2] = (color>>16) & 0xff;
+#endif
+		break;
+	case 2:
+		*(Uint16 *)d = color;
+		break;
+	case 1:
+		*d = color;
+		break;
 	}
 }
 
 /*
  * Write two pixels to absolute view coordinates x1,y1 and x2,y2.
- * Clipping is done, the display surface must be locked.
+ * The display surface must be locked; clipping is done.
  */
 static __inline__ void
-put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
-    Uint32 color)
+put_pixel2(Uint8 *dst1, Uint8 *dst2, Uint32 color)
 {
-	if (VIEW_INSIDE_CLIP_RECT(view->v, x1, y1)) {
-		switch (vfmt->BytesPerPixel) {
-			_VIEW_PUTPIXEL_32(dst1, color);
-			_VIEW_PUTPIXEL_24(dst1, color);
-			_VIEW_PUTPIXEL_16(dst1, color);
-			_VIEW_PUTPIXEL_8(dst1, color);
-		}
-	}
+	Uint8 *d1 = dst1;
+	Uint8 *d2 = dst2;
 
-	if (VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
-		switch (vfmt->BytesPerPixel) {
-			_VIEW_PUTPIXEL_32(dst2, color);
-			_VIEW_PUTPIXEL_24(dst2, color);
-			_VIEW_PUTPIXEL_16(dst2, color);
-			_VIEW_PUTPIXEL_8(dst2, color);
-		}
+	clip_pixel(view->v, &d1);
+	clip_pixel(view->v, &d2);
+
+	switch (vfmt->BytesPerPixel) {
+	case 4:
+		*(Uint32 *)d1 = color;
+		*(Uint32 *)d2 = color;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		d2[0] = d1[0] = (color>>16) & 0xff;
+		d2[1] = d1[1] = (color>>8) & 0xff;
+		d2[2] = d1[2] = color & 0xff;
+#else
+		d2[0] = d1[0] = color & 0xff;
+		d2[1] = d1[1] = (color>>8) & 0xff;
+		d2[2] = d1[2] = (color>>16) & 0xff;
+#endif
+		break;
+	case 2:
+		*(Uint16 *)d1 = color;
+		*(Uint16 *)d2 = color;
+		break;
+	case 1:
+		*d1 = color;
+		*d2 = color;
+		break;
 	}
 }
 
@@ -233,7 +272,6 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 }
 
 /* Render a circle using a modified Bresenham line algorithm. */
-/* XXX clipping */
 static void
 circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 {
@@ -248,15 +286,19 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 
 	SDL_LockSurface(view->v);
 	while (x < y) {
-		pixel1 = (Uint8 *)view->v->pixels + (cy + y) * view->v->pitch +
-		    (cx + x) * vfmt->BytesPerPixel;
-		pixel2 = (Uint8 *)view->v->pixels + (cy - y) * view->v->pitch +
-		    (cx + x) * vfmt->BytesPerPixel;
-		pixel3 = (Uint8 *)view->v->pixels + (cy + y) * view->v->pitch +
-		    (cx - x) * vfmt->BytesPerPixel;
-		pixel4 = (Uint8 *)view->v->pixels + (cy - y) * view->v->pitch +
-		    (cx - x) * vfmt->BytesPerPixel;
-	
+		pixel1 = (Uint8 *)view->v->pixels + (cy+y)*view->v->pitch +
+		    (cx+x)*vfmt->BytesPerPixel;
+		pixel2 = (Uint8 *)view->v->pixels + (cy-y)*view->v->pitch +
+		    (cx+x)*vfmt->BytesPerPixel;
+		pixel3 = (Uint8 *)view->v->pixels + (cy+y)*view->v->pitch +
+		    (cx-x)*vfmt->BytesPerPixel;
+		pixel4 = (Uint8 *)view->v->pixels + (cy-y)*view->v->pitch +
+		    (cx-x)*vfmt->BytesPerPixel;
+		clip_pixel(view->v, &pixel1);
+		clip_pixel(view->v, &pixel2);
+		clip_pixel(view->v, &pixel3);
+		clip_pixel(view->v, &pixel4);
+
 		switch (vfmt->BytesPerPixel) {
 		case 4:
 			*(Uint32 *)pixel1 = color;
@@ -266,31 +308,13 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 			break;
 		case 3:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pixel1[0] = (color >> 16) & 0xff;
-			pixel1[1] = (color >> 8) & 0xff;
-			pixel1[2] = color & 0xff;
-			pixel2[0] = (color >> 16) & 0xff;
-			pixel2[1] = (color >> 8) & 0xff;
-			pixel2[2] = color & 0xff;
-			pixel3[0] = (color >> 16) & 0xff;
-			pixel3[1] = (color >> 8) & 0xff;
-			pixel3[2] = color & 0xff;
-			pixel4[0] = (color >> 16) & 0xff;
-			pixel4[1] = (color >> 8) & 0xff;
-			pixel4[2] = color & 0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = (color>>16)&0xff;
+			pixel4[0] = pixel3[0] = pixel2[1] = pixel1[1] = (color>>8)&0xff;
+			pixel4[0] = pixel3[0] = pixel2[2] = pixel1[2] = color&0xff;
 #else
-			pixel1[0] = color & 0xff;
-			pixel1[1] = (color >> 8) & 0xff;
-			pixel1[2] = (color >> 16) & 0xff;
-			pixel2[0] = color & 0xff;
-			pixel2[1] = (color >> 8) & 0xff;
-			pixel2[2] = (color >> 16) & 0xff;
-			pixel3[0] = color & 0xff;
-			pixel3[1] = (color >> 8) & 0xff;
-			pixel3[2] = (color >> 16) & 0xff;
-			pixel4[0] = color & 0xff;
-			pixel4[1] = (color >> 8) & 0xff;
-			pixel4[2] = (color >> 16) & 0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = color&0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[1] = (color>>8)&0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[2] = (color>>16)&0xff;
 #endif /* SDL_BYTEORDER */
 			break;
 		case 2:
@@ -316,14 +340,18 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 		}
 		x++;
 
-		pixel1 = (Uint8 *)view->v->pixels + (cy + x) * view->v->pitch +
-		    (cx + y) * vfmt->BytesPerPixel;
-		pixel2 = (Uint8 *)view->v->pixels + (cy - x) * view->v->pitch +
-		    (cx + y) * vfmt->BytesPerPixel;
-		pixel3 = (Uint8 *)view->v->pixels + (cy + x) * view->v->pitch +
-		    (cx - y) * vfmt->BytesPerPixel;
-		pixel4 = (Uint8 *)view->v->pixels + (cy - x) * view->v->pitch +
-		    (cx - y) * vfmt->BytesPerPixel;
+		pixel1 = (Uint8 *)view->v->pixels + (cy+x)*view->v->pitch +
+		    (cx+y)*vfmt->BytesPerPixel;
+		pixel2 = (Uint8 *)view->v->pixels + (cy-x)*view->v->pitch +
+		    (cx+y)*vfmt->BytesPerPixel;
+		pixel3 = (Uint8 *)view->v->pixels + (cy+x)*view->v->pitch +
+		    (cx-y)*vfmt->BytesPerPixel;
+		pixel4 = (Uint8 *)view->v->pixels + (cy-x)*view->v->pitch +
+		    (cx-y)*vfmt->BytesPerPixel;
+		clip_pixel(view->v, &pixel1);
+		clip_pixel(view->v, &pixel2);
+		clip_pixel(view->v, &pixel3);
+		clip_pixel(view->v, &pixel4);
 
 		switch (vfmt->BytesPerPixel) {
 		case 4:
@@ -334,31 +362,13 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 			break;
 		case 3:
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pixel1[0] = (color >> 16) & 0xff;
-			pixel1[1] = (color >> 8) & 0xff;
-			pixel1[2] = color & 0xff;
-			pixel2[0] = (color >> 16) & 0xff;
-			pixel2[1] = (color >> 8) & 0xff;
-			pixel2[2] = color & 0xff;
-			pixel3[0] = (color >> 16) & 0xff;
-			pixel3[1] = (color >> 8) & 0xff;
-			pixel3[2] = color & 0xff;
-			pixel4[0] = (color >> 16) & 0xff;
-			pixel4[1] = (color >> 8) & 0xff;
-			pixel4[2] = color & 0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = (color>>16)&0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[1] = (color>>8)&0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[2] = color&0xff;
 # else
-			pixel1[0] = color & 0xff;
-			pixel1[1] = (color >> 8) & 0xff;
-			pixel1[2] = (color >> 16) & 0xff;
-			pixel2[0] = color & 0xff;
-			pixel2[1] = (color >> 8) & 0xff;
-			pixel2[2] = (color >> 16) & 0xff;
-			pixel3[0] = color & 0xff;
-			pixel3[1] = (color >> 8) & 0xff;
-			pixel3[2] = (color >> 16) & 0xff;
-			pixel4[0] = color & 0xff;
-			pixel4[1] = (color >> 8) & 0xff;
-			pixel4[2] = (color >> 16) & 0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[0] = color&0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[1] = (color>>8)&0xff;
+			pixel4[0] = pixel3[0] = pixel2[0] = pixel1[2] = (color>>16)&0xff;
 # endif /* SDL_BYTEORDER */
 			break;
 		case 2:
@@ -375,10 +385,12 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 			break;
 		}
 	}
-	pixel1 = (Uint8 *)view->v->pixels + cy * view->v->pitch +
-	    (cx - radius) * vfmt->BytesPerPixel;
-	pixel2 = (Uint8 *)view->v->pixels + cy * view->v->pitch +
-	    (cx + radius) * vfmt->BytesPerPixel;
+	pixel1 = (Uint8 *)view->v->pixels + cy*view->v->pitch +
+	    (cx-radius)*vfmt->BytesPerPixel;
+	pixel2 = (Uint8 *)view->v->pixels + cy*view->v->pitch +
+	    (cx+radius)*vfmt->BytesPerPixel;
+	clip_pixel(view->v, &pixel1);
+	clip_pixel(view->v, &pixel2);
 	
 	switch (vfmt->BytesPerPixel) {
 	case 4:
@@ -387,19 +399,13 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 		break;
 	case 3:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		pixel1[0] = color & 0xff;
-		pixel1[1] = (color >> 8) & 0xff;
-		pixel1[2] = (color >> 16) & 0xff;
-		pixel2[0] = color & 0xff;
-		pixel2[1] = (color >> 8) & 0xff;
-		pixel2[2] = (color >> 16) & 0xff;
+		pixel2[0] = pixel1[0] = color&0xff;
+		pixel2[1] = pixel1[1] = (color>>8)&0xff;
+		pixel2[2] = pixel1[2] = (color>>16)&0xff;
 #else
-		pixel1[0] = color & 0xff;
-		pixel1[1] = (color >> 8) & 0xff;
-		pixel1[2] = (color >> 16) & 0xff;
-		pixel2[0] = color & 0xff;
-		pixel2[1] = (color >> 8) & 0xff;
-		pixel2[2] = (color >> 16) & 0xff;
+		pixel2[0] = pixel1[0] = color&0xff;
+		pixel2[1] = pixel1[1] = (color>>8)&0xff;
+		pixel2[2] = pixel1[2] = (color>>16)&0xff;
 #endif
 		break;
 	case 2:
@@ -477,7 +483,7 @@ line_bresenham(void *widget, int px1, int py1, int px2, int py2, int ncolor)
 	dy = dx >> 1;
 
 xloop:
-	put_pixel2(fb1, x1, y1, fb2, x2, y2, color);
+	put_pixel2(fb1, fb2, color);
 
 	if ((p += dpr) > 0) {
 		goto right_and_up;
@@ -491,11 +497,11 @@ xloop:
 	if ((dy = dy - 1) >= 0) {
 		goto xloop;
 	}
-	put_pixel1(fb1, color, x1, y1);
+	put_pixel1(fb1, color);
 	if ((dx & 1) == 0) {
 		goto done;
 	}
-	put_pixel1(fb2, color, x2, y2);
+	put_pixel1(fb2, color);
 	goto done;
 
 right_and_up:
@@ -509,11 +515,11 @@ right_and_up:
 	if (--dy >= 0) {
 		goto xloop;
 	}
-	put_pixel1(fb1, color, x1, y1);
+	put_pixel1(fb1, color);
 	if ((dx & 1) == 0) {
 		goto done;
 	}
-	put_pixel1(fb2, color, x2, y2);
+	put_pixel1(fb2, color);
 	goto done;
 
 indep_y:
@@ -523,7 +529,7 @@ indep_y:
 	dx = dy>>1;
 
 yloop:
-	put_pixel2(fb1, x1, y1, fb2, x2, y2, color);
+	put_pixel2(fb1, fb2, color);
 
 	if ((p += dpr) > 0) {
 		goto right_and_up_2;
@@ -536,7 +542,7 @@ yloop:
 	if ((dx = dx - 1) >= 0) {
 		goto yloop;
 	}
-	put_pixel1(fb2, color, x2, y2);
+	put_pixel1(fb2, color);
 	goto done;
 
 right_and_up_2:
@@ -550,11 +556,11 @@ right_and_up_2:
 	if ((dx = dx - 1) >= 0) {
 		goto yloop;
 	}
-	put_pixel1(fb1, color, x1, y1);
+	put_pixel1(fb1, color);
 	if ((dy & 1) == 0) {
 		goto done;
 	}
-	put_pixel1(fb2, color, x2, y2);
+	put_pixel1(fb2, color);
 done:
 	SDL_UnlockSurface(view->v);
 }
