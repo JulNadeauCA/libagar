@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.20 2002/11/14 00:44:11 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.21 2002/11/14 02:17:45 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -200,25 +200,25 @@ box_3d_dark(void *p, int xoffs, int yoffs, int w, int h, int z,
 static void
 box_3d_dark1(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -20, -20, -20);
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -10, -10, -15);
 }
 
 static void
 box_3d_dark2(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -40, -40, -40);
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -15, -15, -20);
 }
 
 static void
 box_3d_dark3(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -60, -60, -60);
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -20, -20, -25);
 }
 
 static void
 box_3d_dark4(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
-	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -100, -100, -100);
+	box_3d_dark(p, xoffs, yoffs, w, h, z, color, -60, -60, -70);
 }
 
 static void
@@ -821,11 +821,13 @@ apply(int argc, union evarg *argv)
 	}
 }
 
+/* XXX real time */
 void
 primitive_sequence(struct window *win, enum primitive_seq seq)
 {
-	void (*old_line)(void *, int, int, int, int, Uint32);
 	int i;
+	void (*old_line)(void *, int, int, int, int, Uint32);
+	void (*old_box)(void *, int, int, int, int, int, Uint32);
 #define REDRAW() {						\
 	window_draw(win);					\
 	SDL_UpdateRects(view->v, view->ndirty, view->dirty);	\
@@ -854,22 +856,29 @@ primitive_sequence(struct window *win, enum primitive_seq seq)
 		break;
 	case PRIMITIVE_SEQ_DEMATERIALIZE:
 		old_line = primitives.line;
+		old_box = primitives.box;
 		primitives.line = line_bresenham_dashed1;
+		primitives.box = box_3d_dark1;
+		REDRAW();
+		SDL_Delay(5);
+		primitives.line = line_bresenham_dashed2;
+		primitives.box = box_3d_dark2;
+		REDRAW();
+		SDL_Delay(10);
+		primitives.line = line_bresenham_dashed3;
+		primitives.box = box_3d_dark3;
 		REDRAW();
 		SDL_Delay(15);
-		primitives.line = line_bresenham_dashed2;
+		primitives.line = line_bresenham_dashed4;
+		primitives.box = box_3d_dark4;
 		REDRAW();
 		SDL_Delay(20);
-		primitives.line = line_bresenham_dashed3;
+		primitives.line = line_bresenham_dashed5;
+		primitives.box = box_3d_dark5;
 		REDRAW();
 		SDL_Delay(25);
-		primitives.line = line_bresenham_dashed4;
-		REDRAW();
-		SDL_Delay(30);
-		primitives.line = line_bresenham_dashed5;
-		REDRAW();
-		SDL_Delay(35);
 		primitives.line = old_line;
+		primitives.box = old_box;
 		break;
 	}
 #undef REDRAW()
