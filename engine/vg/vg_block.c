@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.9 2004/05/31 07:25:36 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.10 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -261,7 +261,7 @@ destroy_block(int argc, union evarg *argv)
 
 		if (it->iconsrc == ICON(VGBLOCK_ICON)) {
 			vg_destroy_block(vg, (struct vg_block *)it->p1);
-		} else if (it->iconsrc == ICON(VGOBJ_ICON)) {
+		} else if (it->iconsrc == ICON(DRAWING_ICON)) {
 			vg_destroy_element(vg, (struct vg_element *)it->p1);
 		}
 	}
@@ -291,14 +291,14 @@ poll_blocks(int argc, union evarg *argv)
 		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON), name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
-			it = tlist_insert_item(tl, ICON(VGOBJ_ICON),
+			it = tlist_insert_item(tl, ICON(DRAWING_ICON),
 			    _(vge->ops->name), vge);
 			it->depth = 1;
 		}
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		it = tlist_insert_item(tl, ICON(VGOBJ_ICON), _(vge->ops->name),
-		    vge);
+		it = tlist_insert_item(tl, ICON(DRAWING_ICON),
+		    _(vge->ops->name), vge);
 		it->depth = 1;
 	}
 
