@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.85 2003/03/11 01:57:31 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.86 2003/03/11 02:44:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -120,7 +120,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->constr.mode = MAPVIEW_CONSTR_VERT;
 	mv->constr.x = 0;
 	mv->constr.y = 0;
-	mv->constr.nflags = NODEREF_SAVEABLE;
 	mv->tmap_win = NULL;
 	mv->tmap_insert = 0;
 	mv->cur_node = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.16 2003/03/08 23:04:46 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.17 2003/03/11 23:02:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -450,7 +450,9 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 				case 3:
 				case 2:
 				case 1:
-					fatal("unsupported depth");
+					dprintf("unsupported depth: %dBpp\n",
+					    hier->bpp);
+					break;
 				}
 			}
 			tx += 64;
@@ -537,7 +539,7 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
 			if ((su->h > TILEH || su->w > TILEW) &&
 			    strstr(name, "(break)") != NULL) {
 				/* Break down into tiles. */
-				art_insert_sprite_tiles(art, su, name);
+				art_insert_fragments(art, su);
 			} else {
 				/* Original size */
 		   		art_insert_sprite(art, su, 0);
