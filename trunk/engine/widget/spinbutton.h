@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.2 2003/06/10 07:59:15 vedge Exp $	*/
+/*	$Csoft: spinbutton.h,v 1.3 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
@@ -27,7 +27,9 @@ struct spinbutton {
 };
 
 __BEGIN_DECLS
-struct spinbutton *spinbutton_new(void *, const char *, ...);
+struct spinbutton	*spinbutton_new(void *, const char *, ...)
+		 	     FORMAT_ATTRIBUTE(printf, 2, 3)
+			     NONNULL_ATTRIBUTE(2);
 
 void	spinbutton_init(struct spinbutton *, const char *);
 void	spinbutton_destroy(void *);

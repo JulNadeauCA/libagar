@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.14 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.15 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -102,7 +102,7 @@ layedit_push(int argc, union evarg *argv)
 	if (map_push_layer(mv->map, name) != 0) {
 		text_msg(MSG_ERROR, "%s", error_get());
 	} else {
-		textbox_printf(name_tbox, "");			/* Clear */
+		textbox_printf(name_tbox, " ");			/* Clear */
 	}
 	Free(name);
 }
@@ -138,7 +138,7 @@ layedit_rename(int argc, union evarg *argv)
 	lay = it->p1;
 
 	textbox_copy_string(name_tbox, lay->name, sizeof(lay->name));
-	textbox_printf(name_tbox, "");
+	textbox_printf(name_tbox, " ");
 }
 
 /* Remove the highest layer from a map. */

@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.h,v 1.5 2002/12/24 10:29:21 vedge Exp $	*/
+/*	$Csoft: vasprintf.h,v 1.6 2003/06/18 00:46:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_vasprintf.h>
@@ -10,6 +10,8 @@
 # include <stdio.h>
 #else
 # include <stdarg.h>
-int	vasprintf(char **, const char *, va_list);
+int	vasprintf(char **, const char *, va_list)
+	    FORMAT_ATTRIBUTE(printf, 2, 0)
+	    NONNULL_ATTRIBUTE(2);
 #endif
 

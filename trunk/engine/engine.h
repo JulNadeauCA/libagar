@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.74 2003/08/06 04:11:26 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.75 2003/08/31 11:58:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -10,6 +10,9 @@
 #include <config/enable_nls.h>
 #include <config/threads.h>
 #include <config/edition.h>
+#include <config/have_bounded_attribute.h>
+#include <config/have_format_attribute.h>
+#include <config/have_nonnull_attribute.h>
 
 #include <sys/types.h>
 
@@ -28,6 +31,22 @@
 #include <SDL_endian.h>
 #ifdef HAVE_OPENGL
 #include <GL/gl.h>
+#endif
+
+#ifdef HAVE_BOUNDED_ATTRIBUTE
+#define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+#else
+#define BOUNDED_ATTRIBUTE(t, a, b)
+#endif
+#ifdef HAVE_FORMAT_ATTRIBUTE
+#define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
+#else
+#define FORMAT_ATTRIBUTE(t, a, b)
+#endif
+#ifdef HAVE_NONNULL_ATTRIBUTE
+#define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
+#else
+#define NONNULL_ATTRIBUTE(a)
 #endif
 
 #include <engine/error/error.h>

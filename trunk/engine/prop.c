@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.42 2003/09/04 03:14:45 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.43 2003/09/14 02:29:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -680,7 +680,6 @@ prop_destroy(struct prop *prop)
 	}
 }
 
-/* XXX unicode */
 void
 prop_print_value(char *s, size_t len, struct prop *prop)
 {

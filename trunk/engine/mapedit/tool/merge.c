@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.45 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.46 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -205,7 +205,7 @@ merge_create_brush(int argc, union evarg *argv)
 	tlist_unselect_all(mer->brushes_tl);
 	tlist_select(mer->brushes_tl,
 	    tlist_insert_item_head(mer->brushes_tl, NULL, m_name, m));
-	textbox_printf(name_tbox, "");
+	textbox_printf(name_tbox, " ");
 }
 
 static void

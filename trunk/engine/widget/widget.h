@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.68 2003/07/04 12:25:44 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.69 2003/08/31 11:58:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -120,8 +120,9 @@ __inline__ float	 widget_get_float(void *, const char *);
 __inline__ double	 widget_get_double(void *, const char *);
 #endif
 __inline__ char		*widget_get_string(void *, const char *);
-
-__inline__ size_t widget_copy_string(void *, const char *, char *, size_t);
+__inline__ size_t	 widget_copy_string(void *, const char *, char *,
+			                    size_t)
+			     BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
 __inline__ void	 widget_set_uint(void *, const char *, unsigned int);
 __inline__ void	 widget_set_int(void *, const char *, int);

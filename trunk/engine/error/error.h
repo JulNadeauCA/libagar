@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.3 2003/07/08 00:21:30 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.4 2003/08/08 00:19:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_ERROR_ERROR_H_
@@ -10,6 +10,9 @@
 
 #include <config/debug.h>
 #include <config/threads.h>
+#include <config/have_bounded_attribute.h>
+#include <config/have_format_attribute.h>
+#include <config/have_nonnull_attribute.h>
 
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
 # if defined(__cplusplus)
@@ -19,6 +22,22 @@
 #  define __BEGIN_DECLS
 #  define __END_DECLS
 # endif
+#endif
+
+#ifdef HAVE_BOUNDED_ATTRIBUTE
+#define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+#else
+#define BOUNDED_ATTRIBUTE(t, a, b)
+#endif
+#ifdef HAVE_FORMAT_ATTRIBUTE
+#define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
+#else
+#define FORMAT_ATTRIBUTE(t, a, b)
+#endif
+#ifdef HAVE_NONNULL_ATTRIBUTE
+#define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
+#else
+#define NONNULL_ATTRIBUTE(a)
 #endif
 
 #ifdef __GNUC__
@@ -52,19 +71,34 @@ extern int engine_debug;
 __BEGIN_DECLS
 void		 error_init(void);
 void		 error_destroy(void);
-
 __inline__ void	*error_malloc(size_t);
 __inline__ void	*error_realloc(void *, size_t);
 __inline__ char	*error_strdup(const char *);
 const char	*error_get(void);
-void		 error_set(const char *, ...);
-void		 error_fatal(const char *, ...);
-void		 Asprintf(char **, const char *, ...);
-void		 error_dprintf(const char *, ...);
-void		 error_dprintf_nop(const char *, ...);
-void		 error_debug(int, const char *, ...);
-void		 error_debug_nop(int, const char *, ...);
-void		 error_debug_n(int, const char *, ...);
+void		 error_set(const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 1, 2)
+		     NONNULL_ATTRIBUTE(1);
+void		 error_fatal(const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 1, 2)
+		     NONNULL_ATTRIBUTE(1);
+void		 Asprintf(char **, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 2, 3)
+		     NONNULL_ATTRIBUTE(2);
+void		 error_dprintf(const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 1, 2)
+		     NONNULL_ATTRIBUTE(1);
+void		 error_dprintf_nop(const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 1, 2)
+		     NONNULL_ATTRIBUTE(1);
+void		 error_debug(int, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 2, 3)
+		     NONNULL_ATTRIBUTE(2);
+void		 error_debug_nop(int, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 2, 3)
+		     NONNULL_ATTRIBUTE(2);
+void		 error_debug_n(int, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 2, 3)
+		     NONNULL_ATTRIBUTE(2);
 __END_DECLS
 
 #include "close_code.h"
