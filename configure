@@ -162,7 +162,7 @@ if [ "${enable_nls}" != "no" ]; then
 	msgfmt=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/msgfmt" ]; then
-			msgfmt=`${path}/msgfmt`
+			msgfmt=${path}/msgfmt
 		fi
 	done
 	if [ "${msgfmt}" != "" ]; then
