@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.133 2005/02/03 09:09:57 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.134 2005/02/03 12:31:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -178,6 +178,7 @@ config_init(struct config *con)
 	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS|OBJECT_DATA_RESIDENT;
 	OBJECT(con)->save_pfx = NULL;
 
+	prop_set_bool(con, "initial-run", 1);
 	prop_set_bool(con, "view.full-screen", 0);
 	prop_set_bool(con, "view.async-blits", 0);
 	prop_set_bool(con, "view.opengl", 0);
