@@ -93,6 +93,8 @@ and loads data from
 into the static media pool, if
 .Fa arname
 is not NULL.
+.Fn object_destroy
+If frees all resources associated with this object.
 If
 .Fa flags
 contains
@@ -100,9 +102,7 @@ contains
 or
 .Dv OBJ_AUDIO ,
 graphics and samples are loaded from media.
-.Fn object_destroy
-frees all resources allocated for
-.Fa ob
+.Pp
 .Fn object_link
 appends
 .Fa ob
@@ -110,7 +110,14 @@ to the list of active objects, and
 .Fn object_unlink
 removes
 .Fa ob
-from the list of active objects.
+from the list of active objects and adds it to the garbage queue.
+The garbage collector will eventually call the
+.Em destroy
+op to request all allocated memory to be freed.
+The object list lock must be held when calls are made to
+.Fn object_link
+and
+.Fn object_link .
 .Sh SAVING STATES
 .nr nS 1
 .Ft "int"
