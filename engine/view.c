@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.104 2003/01/03 23:29:56 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.105 2003/01/18 06:37:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -226,7 +226,6 @@ view_destroy(void *p)
 	}
 
 	TAILQ_FOREACH(win, &v->windows, windows) {
-		win->flags &= ~(WINDOW_MATERIALIZE|WINDOW_DEMATERIALIZE);
 		view_detach(win);
 	}
 	if (!TAILQ_EMPTY(&view->detach)) {
