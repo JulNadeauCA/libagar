@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.7 2003/02/04 02:35:39 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.8 2003/02/22 11:47:51 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -14,13 +14,20 @@ struct tool_ops {
 			          Uint8);
 };
 
+struct tool_binding {
+	const char	 *name;
+	SDLKey		  key;
+	int		  edit;			/* Require MAPVIEW_EDIT? */
+	void		(*func)(void *, struct mapview *);
+	SLIST_ENTRY(tool_binding) bindings;
+};
+
 struct tool {
 	struct object	 obj;
-	int		 flags;
-#define TOOL_NO_EDIT	0x01		/* Effect when edition is disabled */
 	char		*type;
 	struct window	*win;		/* Tool settings window */
-	struct button	*button;	/* Back pointer to button */
+	struct button	*button;	/* Trigger */
+	SLIST_HEAD(,tool_binding) bindings;
 };
 
 #define	TOOL(t)		((struct tool *)(t))
@@ -30,5 +37,8 @@ struct tool {
 #define TOOL_DIALOG_Y	205
 
 void		tool_init(struct tool *, char *, const void *);
+void		tool_destroy(void *);
+void		tool_bind_key(void *, SDLMod, SDLKey,
+		    void (*)(void *, struct mapview *), int);
 struct mapview *tool_mapview(void);
 
