@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.33 2002/05/06 02:17:26 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.34 2002/05/11 04:03:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -123,11 +123,13 @@ event_loop(void *arg)
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = 100;;) {
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
+			/* XXX inefficient */
+			pthread_mutex_lock(&world->lock);
 			m = world->curmap;
+			pthread_mutex_unlock(&world->lock);
+
 			pthread_mutex_lock(&m->lock);
-
 			map_animate(m);
-
 			if (m->redraw) {
 				m->redraw = 0;
 				map_draw(m);
