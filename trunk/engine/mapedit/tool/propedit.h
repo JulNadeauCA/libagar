@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.h,v 1.4 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.5 2003/02/02 21:14:02 vedge Exp $	*/
 /*	Public domain	*/
 
 enum propedit_mode {
@@ -10,6 +10,7 @@ enum propedit_mode {
 struct propedit {
 	struct tool	tool;
 	int		mode;		/* Mode */
+	Uint32		node_mode;
 	Uint32		node_mask;	/* Node flags mask */
 };
 
