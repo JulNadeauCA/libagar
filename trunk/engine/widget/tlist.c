@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.75 2003/06/15 20:57:59 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.76 2003/06/18 00:47:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -104,7 +104,7 @@ tlist_init(struct tlist *tl, int flags)
 
 	tlist_prescale(tl, "XXXXXXXXXXXX", 4);
 
-	event_new(tl->sbar, "scrollbar-scrolled", tlist_scrolled, "%p", tl);
+	event_new(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
 	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
 	event_new(tl, "window-keydown", tlist_keydown, NULL);
 }
@@ -547,8 +547,6 @@ tlist_select_all(struct tlist *tl)
 	pthread_mutex_unlock(&tl->lock);
 }
 
-
-/* Unset the selection flag on all items. */
 void
 tlist_unselect_all(struct tlist *tl)
 {
