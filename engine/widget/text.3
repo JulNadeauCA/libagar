@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.10 2003/08/31 11:58:10 vedge Exp $
+.\"	$Csoft: text.3,v 1.11 2003/09/17 02:20:35 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -98,15 +98,15 @@ returns the recommended spacing in pixels between lines of text.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn text_render_unicode "const char *font_name" "int font_size" "Uint32 color" \
+.Fn text_render_unicode "const char *font_name, int font_size, Uint32 color" \
                 "const Uint32 *ucs"
 .Pp
 .Ft "SDL_Surface *"
-.Fn text_render "const char *font_name" "int font_size" "Uint32 color" \
+.Fn text_render "const char *font_name, int font_size, Uint32 color" \
                 "const char *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn text_render_glyph "const char *font_name" "int font_size" "Uint32 color" \
+.Fn text_render_glyph "const char *font_name, int font_size, Uint32 color" \
                       "Uint32 uch"
 .Pp
 .Ft "void"
@@ -155,7 +155,6 @@ does not work.
 .Xr titlebar 3 ,
 .Xr tlist 3 ,
 .Xr widget 3
-.Pp
 .Bd -literal
 The FreeType project - http://www.freetype.org/
 Unicode home page - http://www.unicode.org/

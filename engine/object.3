@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.51 2003/10/14 03:15:24 vedge Exp $
+.\"	$Csoft: object.3,v 1.52 2003/11/15 03:58:06 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm object
-.Nd agar object layer
+.Nd agar object interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/object.h>
@@ -43,57 +43,35 @@ The Agar game logic is built upon a tree of
 structures.
 The
 .Nm
-layer is responsible for:
-.Pp
-.Bl -tag -width "Generic events/props"
-.It Memory management
-Paging and garbage collection of object data.
-.It Persistence
-Saving/loading of object data in network format.
-.It Linkage/dependencies
-Similar to a filesystem, objects may be referenced either by absolute or
-relative path names.
-Dependency tables keep track of object references to other objects
-(sharing the same root).
-.It Shared audio/gfx
-Objects may reference shared data, such as graphics and audio.
-For instance, if the
-.Xr map 3
-renderer wants to draw a sprite representing a character, the reference is
-made using the object's
-.Va gfx
-pointer.
-This
-.Va gfx
-pointer usually references shared data, but it is possible to use a copy on
-write style algorithm to deal with modifications local to object instances.
-.It Generic events/props
-The
-.Nm
-object includes a list of event handlers managed by the
-.Xr event 3
-interface, and a list
-of generic properties which are accessed by the
-.Xr prop 3
-interface.
+interface is responsible for:
+.Bl -bullet -compact
+.It
+Persistence
+.It
+Paging and garbage collection of object data
+.It
+Object dependencies and linkage
+.It
+Shared data (such as audio and graphics)
+.It
+Generic events
+.It
+Generic properties
 .El
 .Pp
-.Sh OBJECT FLAGS
 The
 .Va flags
 member of the
 .Nm
-structure are defined as:
+structure can take:
 .Bd -literal
-#define OBJECT_RELOAD_PROPS	0x01	/* Don't free props before load */
-#define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible (advisory) */
-#define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
-#define OBJECT_PRESERVE_DEPS	0x10	/* Don't remove a dependency
-					   if its reference count is 0. */
-#define OBJECT_STATIC		0x20	/* Don't free() after detach. */
-#define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
-#define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
+#define OBJECT_RELOAD_PROPS   0x01 /* Don't free props before load */
+#define OBJECT_NON_PERSISTENT 0x02 /* Never include in saves */
+#define OBJECT_INDESTRUCTIBLE 0x04 /* Not destructible (advisory) */
+#define OBJECT_DATA_RESIDENT  0x08 /* Object data is resident (RO) */
+#define OBJECT_PRESERVE_DEPS  0x10 /* Don't remove dep if count=0 */
+#define OBJECT_STATIC         0x20 /* Don't free() after detach */
+#define OBJECT_READONLY       0x40 /* Disallow edition (advisory) */
 .Ed
 .Pp
 The
@@ -444,7 +422,7 @@ and
 for instance.
 The
 .Nm
-layer is responsible for keeping the submap copy in sync, and adjusting the
+interface is responsible for keeping the submap copy in sync, and adjusting the
 motion offsets of its noderefs in response to movement.
 .nr nS 1
 .Ft "int"
@@ -485,7 +463,7 @@ to the position associated with
 .Sh EVENTS
 The
 .Nm
-layer generates the following events:
+interface generates the following events:
 .Pp
 .Bl -tag -width 2n
 .It Fn attached "void *parent"
@@ -516,11 +494,7 @@ since it is possible to move objects between different parents.
 .Pp
 Eventually, if media types other than gfx/audio is required, the
 .Nm
-layer could handle media associations in a more generic manner.
-.Pp
-The
-.Va save
-operations could return void.
+interface could handle media associations in a more generic manner.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
@@ -528,4 +502,4 @@ operations could return void.
 .Sh HISTORY
 The
 .Nm
-layer appeared in Agar 1.0
+interface appeared in Agar 1.0

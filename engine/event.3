@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.12 2003/06/08 22:53:57 vedge Exp $
+.\"	$Csoft: event.3,v 1.13 2003/07/02 09:19:28 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -108,7 +108,7 @@ structures, which are sent to the relevant subsystems.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "struct event *"
-.Fn event_new "void *obj" "const char *name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
+.Fn event_new "void *obj, const char *name" "void (*handler)(int argc, union evarg *argv), const char *fmt" "..."
 .Pp
 .Ft "int"
 .Fn event_post "void *obj" "const char *name" "const char *fmt" "..."

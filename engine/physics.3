@@ -1,4 +1,4 @@
-.\"	$Csoft: physics.3,v 1.11 2003/04/12 00:35:06 vedge Exp $
+.\"	$Csoft: physics.3,v 1.12 2003/11/15 03:55:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -71,8 +71,8 @@ function is invoked periodically (from a timer callback function, for instance),
 in order to update the position.
 .nr nS 1
 .Ft "void"
-.Fn mapdir_init "struct mapdir *dir" "struct object *ob" "struct map *map" \
-                "int flags" "int speed"
+.Fn mapdir_init "struct mapdir *dir, struct object *ob, struct map *map" \
+                "int flags, int speed"
 .Pp
 .Ft "void"
 .Fn mapdir_set "struct mapdir *dir" "int direction"
@@ -84,7 +84,7 @@ in order to update the position.
 .Fn mapdir_move "struct mapdir *dir" "int *map_x" "int *map_y"
 .Pp
 .Ft "void"
-.Fn mapdir_postmove "struct mapdir *dir" "int *map_x" "int *map_y" \
+.Fn mapdir_postmove "struct mapdir *dir, int *map_x, int *map_y" \
                     "int moved"
 .nr nS 0
 .Pp
@@ -97,7 +97,6 @@ on map
 The
 .Fa flags
 may contain:
-.Pp
 .Bd -literal
 #define DIR_CENTER_VIEW  0x01	/* Center view around object and scroll. */
 #define DIR_SOFT_MOTION  0x02	/* Animate node->node displacements. */

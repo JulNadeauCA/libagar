@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.27 2003/06/15 08:54:19 vedge Exp $
+.\"	$Csoft: window.3,v 1.28 2003/07/08 00:13:11 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm window
-.Nd agar window
+.Nd agar window system
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/widget/widget.h>
@@ -84,7 +84,7 @@ After this initial sizing, widget containers may scale widgets to any size.
 .Fn window_set_padding "struct window *win" "int padding"
 .Pp
 .Ft "void"
-.Fn window_set_position "struct window *win" "enum window_alignment alignment" \
+.Fn window_set_position "struct window *win, enum window_alignment alignment" \
                         "int cascade"
 .Pp
 .Ft void
@@ -153,7 +153,9 @@ enum window_alignment {
 	WINDOW_CENTER,
 	WINDOW_LOWER_CENTER,
 	WINDOW_UPPER_CENTER
+};
 .Ed
+.Pp
 If the
 .Fa cascade
 argument is 1, the window position is slightly incremented or decremented at

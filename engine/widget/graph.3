@@ -1,4 +1,4 @@
-.\"	$Csoft: graph.3,v 1.17 2003/07/14 03:39:28 vedge Exp $
+.\"	$Csoft: graph.3,v 1.18 2003/09/07 00:21:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,12 +44,12 @@ widget implements a scrollable graph display.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct graph *"
-.Fn graph_new "void *parent" "const char *caption" "enum graph_type type" \
+.Fn graph_new "void *parent, const char *caption, enum graph_type type" \
               "int flags" "graph_val_t yrange"
 .Pp
 .Ft void
-.Fn graph_init "struct graph *graph" "const char *caption" \
-               "enum graph_type type" "int flags" "graph_val_t yrange"
+.Fn graph_init "struct graph *graph, const char *caption" \
+               "enum graph_type type, int flags, graph_val_t yrange"
 .nr nS 0
 .Pp
 The
@@ -73,24 +73,23 @@ The
 argument is one of:
 .Bd -literal
 enum graph_type {
-	GRAPH_POINTS,		/* Dots */
-	GRAPH_LINES		/* Lines */
+	GRAPH_POINTS,   /* Dots */
+	GRAPH_LINES     /* Lines */
 } type;
 .Ed
 .Pp
 The
 .Fa flags
 may include:
-.Pp
 .Bd -literal
-#define GRAPH_SCROLL	0x01	/* Scroll if the end is not visible */
-#define GRAPH_ORIGIN	0x02	/* Visible origin */
+#define GRAPH_SCROLL  0x01   /* Scroll if the end is not visible */
+#define GRAPH_ORIGIN  0x02   /* Visible origin */
 .Ed
 .Sh PLOTTING
 .nr nS 1
 .Ft "struct graph_item *"
-.Fn graph_add_item "struct graph *graph" "const char *name" \
-                   "Uint8 r" "Uint8 g" "Uint8 b" "Uint32 limit"
+.Fn graph_add_item "struct graph *graph, const char *name" \
+                   "Uint8 r, Uint8 g, Uint8 b, Uint32 limit"
 .Pp
 .Ft void
 .Fn graph_plot "struct graph_item *item" "graph_val_t val"
@@ -138,8 +137,6 @@ Start moving.
 The
 .Nm
 widget does not generate any event.
-.Sh TROUBLETONS
-Floating point values are not supported.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
