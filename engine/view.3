@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.6 2002/11/09 02:46:33 vedge Exp $
+.\"	$Csoft: view.3,v 1.7 2002/11/12 05:17:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -130,6 +130,9 @@ currently holds focus.
 .Pp
 .Ft void
 .Fn view_invalidate_surface "SDL_Surface *scaled"
+.Pp
+.Ft void
+.Fn VIEW_UPDATE "SDL_Rect rd"
 .nr nS 0
 .Pp
 The
@@ -160,6 +163,13 @@ instead of freed directly with
 The
 .Fn view_invalidate_surface
 function removes cache entries pointing to the given scaled surface.
+.Pp
+The
+.Fn VIEW_UPDATE
+macro places
+.Fa rd
+into the array that will be passed to
+.Xr SDL_UpdateRects 3 .
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr rootmap 3 ,
