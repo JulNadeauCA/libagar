@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.155 2004/01/22 09:58:42 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.156 2004/02/02 02:54:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -526,7 +526,6 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 }
 
 /* Copy the full pathname of an object's data dir to a fixed-size buffer. */
-/* XXX modifies buffer even on failure */
 int
 object_copy_dirname(const void *p, char *path, size_t path_len)
 {
@@ -542,13 +541,17 @@ object_copy_dirname(const void *p, char *path, size_t path_len)
 	for (dir = strtok_r(load_path, ":", &last);
 	     dir != NULL;
 	     dir = strtok_r(NULL, ":", &last)) {
-	     	strlcpy(path, dir, path_len);
+		char tmp_path[MAXPATHLEN];
+
+	     	strlcpy(tmp_path, dir, sizeof(tmp_path));
 		if (ob->save_pfx != NULL) {
-			strlcat(path, ob->save_pfx, path_len);
+			strlcat(tmp_path, ob->save_pfx, sizeof(tmp_path));
 		}
-		strlcat(path, obj_name, path_len);
-		if (stat(path, &sta) == 0)
+		strlcat(tmp_path, obj_name, sizeof(tmp_path));
+		if (stat(tmp_path, &sta) == 0) {
+			strlcpy(path, tmp_path, path_len);
 			return (0);
+		}
 	}
 	error_set(_("The %s directory is not in load-path."), obj_name);
 	return (-1);
@@ -815,8 +818,9 @@ object_load_generic(void *p)
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
-	if ((flags = (int)read_uint32(buf)) &
-	    (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT|OBJECT_WAS_RESIDENT)) {
+	flags = (int)read_uint32(buf);
+	if (flags & (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT|
+	    OBJECT_WAS_RESIDENT)) {
 		error_set(_("The `%s' save has inconsistent flags."), ob->name);
 		goto fail;
 	}
