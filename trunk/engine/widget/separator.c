@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: separator.c,v 1.1 2005/02/19 09:28:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -71,8 +71,8 @@ separator_init(struct separator *sep, enum separator_type type)
 {
 	widget_init(sep, "separator", &separator_ops,
 	    (type == SEPARATOR_HORIZ) ? WIDGET_WFILL : WIDGET_HFILL);
-	widget_map_color(sep, LINE1_COLOR, "line1", 200, 200, 200, 255);
-	widget_map_color(sep, LINE2_COLOR, "line1", 0, 0, 0, 255);
+	widget_map_color(sep, LINE1_COLOR, "line1", 100, 100, 100, 255);
+	widget_map_color(sep, LINE2_COLOR, "line1", 20, 20, 20, 255);
 	sep->type = type;
 }
 
