@@ -132,16 +132,17 @@ if [ "${help}" = "yes" ]
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --srcdir                       Source tree for concurrent builds [.]"
-echo "    --with-smpeg                   Play videos through smpeg [default: check]"
+echo "    --with-smpeg                   MPEG playback using smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
-echo "    --with-gl                      Support OpenGL operations [default: check]"
+echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: yes]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
-echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
-echo "    --enable-16bpp                 Support 16 bpp display [default: yes]"
-echo "    --enable-24bpp                 Support 24 bpp display [default: yes]"
-echo "    --enable-32bpp                 Support 32 bpp display [default: yes]"
+echo "    --enable-static                Produce a static binary [default: no]"
+echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
+echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
+echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
+echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
 echo "    --help                         Show this message"
 exit 1
 fi
@@ -1083,6 +1084,11 @@ fi
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
+fi
+if [ "${enable_static}" != "no" ]
+ then
+LDFLAGS="-static"
+echo LDFLAGS=$LDFLAGS >> Makefile.config
 fi
 if [ "${enable_debug}" != "no" ]
  then
