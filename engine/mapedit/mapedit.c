@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.3 2002/01/25 15:06:51 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.4 2002/01/26 03:38:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -29,20 +29,16 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <pthread.h>
 #include <glib.h>
 #include <SDL.h>
 
 #include <libfobj/fobj.h>
-
-#include <engine/debug.h>
-#include <engine/view.h>
-#include <engine/object.h>
-#include <engine/world.h>
-#include <engine/map.h>
-#include <engine/xcf.h>
+#include <engine/engine.h>
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
@@ -52,16 +48,33 @@ static Uint32	mapedit_time(Uint32, void *);
 static void	mapedit_event(struct object *, SDL_Event *);
 static void	mapedit_toggle(struct mapedit *, struct map_entry *, int);
 static void	mapedit_examine(struct map *, int, int);
-static void	mapedit_pointer(struct object *, struct map_entry *, int);
+static void	mapedit_pointer(struct mapedit *, int);
 
 struct mapedit *
-mapedit_create(struct map *em, int x, int y)
+mapedit_create(char *name, char *desc)
 {
 	struct mapedit *med;
+	struct map *em;
 	struct fobj *fob;
-	int i;
+	int i, fd;
+	char path[FILENAME_MAX];
 
-	med = (struct mapedit *) malloc(sizeof(struct mapedit));
+	strcpy(path, name);
+	strcat(path, ".map");
+
+	if ((fd = open(path, O_RDONLY, 0)) > 0) {
+		close(fd);
+		
+		dprintf("editing %s\n", path);
+		/* The description, geometry and flags will be loaded. */
+		em = map_create(name, NULL, -1, -1, -1, NULL, path);
+	} else {
+		/* Create a new map. */
+		dprintf("creating %s\n", path);
+		em = map_create(name, desc, MAP_2D, 128, 128, NULL, NULL);
+	}
+
+	med = (struct mapedit *)malloc(sizeof(struct mapedit));
 	if (med == NULL) {
 		perror("mapedit");
 		return (NULL);
@@ -71,9 +84,9 @@ mapedit_create(struct map *em, int x, int y)
 	    EVENT_HOOK|DESTROY_HOOK);
 	med->obj.event_hook = mapedit_event;
 	med->obj.destroy_hook = mapedit_destroy;
-	med->obj.map = em;
-	med->obj.mapx = em->defx;
-	med->obj.mapy = em->defy;
+	med->map = em;
+	med->x = em->defx;
+	med->y = em->defy;
 
 	med->curobj = NULL;
 	med->curflags = 0;
@@ -183,19 +196,10 @@ mapedit_create(struct map *em, int x, int y)
 	/* For tile property sprites. */
 	curmapedit = med;
 
-	/* Position mapedit within its parent map, at the origin. */
-	med->obj.mapx = x;
-	med->obj.mapy = y;
-
 	if (pthread_mutex_lock(&em->lock) == 0) {
-		struct map_entry *me;
-		
-		me = &em->map[em->defx][em->defy - 1];
-		map_entry_addref(me, (struct object *)med,
-		    MAPEDIT_SELECT, MAPREF_ANIM);
+		/* Position mapedit on the map. */
+		MAPEDIT_PLOT(med, em, em->defx, em->defy);
 		pthread_mutex_unlock(&em->lock);
-	} else {
-		perror(em->obj.name);
 	}
 
 	view_center(em->view, em->defx, em->defy);
@@ -238,22 +242,13 @@ mapedit_destroy(struct object *obp)
  * point to its actual location. Assumes map is already locked.
  */
 static void
-mapedit_pointer(struct object *med, struct map_entry *me, int enable)
+mapedit_pointer(struct mapedit *med, int enable)
 {
 	if (enable) {
-		map_entry_addref(me, med, MAPEDIT_SELECT, MAPREF_ANIM);
+		MAP_ADDANIM(med->map, med->x, med->y, med, MAPEDIT_SELECT);
 	} else {
-		struct map_aref *aref;
-
-		/* Look for a reference to mapedit:0, and remove it. */
-		aref = map_entry_arefobj(me, med, MAPEDIT_SELECT);
-#ifdef DEBUG
-		if (aref == NULL) {
-			fatal("cannot find mapedit:%d\n", MAPEDIT_SELECT);
-			exit(1);
-		}
-#endif
-		map_entry_delref(me, aref);
+		MAP_DELREF(med->map, med->x, med->y,
+		    (struct object *)med, MAPEDIT_SELECT);
 	}
 }
 
@@ -384,8 +379,8 @@ mapedit_tilelist(struct mapedit *med)
 	int i, sn;
 
 	win = med->tilelist;
-	tilew = med->obj.map->view->tilew;
-	tileh = med->obj.map->view->tileh;
+	tilew = med->map->view->tilew;
+	tileh = med->map->view->tileh;
 	
 	rs.w = tilew;
 	rs.h = tileh;
@@ -469,9 +464,9 @@ mapedit_tilestack(struct mapedit *med)
 	static int tilew, tileh;
 	int i, sn;
 
-	me = &med->obj.map->map[med->obj.mapx][med->obj.mapy];
-	tilew = med->obj.map->view->tilew;
-	tileh = med->obj.map->view->tileh;
+	me = &med->map->map[med->x][med->y];
+	tilew = med->map->view->tilew;
+	tileh = med->map->view->tileh;
 
 	rs.w = tilew;
 	rs.h = tileh;
@@ -527,8 +522,8 @@ mapedit_objlist(struct mapedit *med)
 	static int tilew, tileh;
 	int i, sn;
 
-	tilew = med->obj.map->view->tilew;
-	tileh = med->obj.map->view->tileh;
+	tilew = med->map->view->tilew;
+	tileh = med->map->view->tileh;
 	
 	rs.x = 0;
 	rs.y = 0;
@@ -573,7 +568,7 @@ static void
 mapedit_event(struct object *ob, SDL_Event *ev)
 {
 	struct mapedit *med = (struct mapedit *)ob;
-	struct map *em = ob->map;
+	struct map *em = med->map;
 	int mapx, mapy;
 	char *path;
 
@@ -591,18 +586,18 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 		med->mmapx = ev->motion.x / em->view->tilew;
 		med->mmapy = ev->motion.y / em->view->tileh;
 		if (ommapx < med->mmapx) {
-			SCROLL_LEFT(&ob->map);
-			ob->map->redraw++;
+			SCROLL_LEFT(&med->map);
+			med->map->redraw++;
 		} else if (med->mmapx < ommapx) {
-			SCROLL_RIGHT(&ob->map);
-			ob->map->redraw++;
+			SCROLL_RIGHT(&med->map);
+			med->map->redraw++;
 		}
 		if (ommapy < med->mmapy) {
-			SCROLL_UP(&ob->map);
-			ob->map->redraw++;
+			SCROLL_UP(&med->map);
+			med->map->redraw++;
 		} else if (med->mmapy < ommapy) {
-			SCROLL_DOWN(&ob->map);
-			ob->map->redraw++;
+			SCROLL_DOWN(&med->map);
+			med->map->redraw++;
 		}
 		return;
 	}
@@ -615,8 +610,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			return;
 		}
 		if (pthread_mutex_lock(&em->lock) == 0) {
-			map_entry_moveref(em, ob,
-			    MAPEDIT_SELECT,
+			MAPEDIT_MOVE(med,
 			    em->view->mapx + ev->button.x / em->view->tilew,
 			    em->view->mapy + ev->button.y / em->view->tileh);
 			pthread_mutex_unlock(&em->lock);
@@ -720,8 +714,8 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 	}
 
 	med = (struct mapedit *)ob;
-	mapx = ob->mapx;
-	mapy = ob->mapy;
+	mapx = med->x;
+	mapy = med->y;
 
 	/*
 	 * Editor hotkeys.
@@ -744,22 +738,24 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			 * Push a reference onto the stack. The mapedit
 			 * cursor must be out of the way.
 			 */
-			mapedit_pointer(ob, me, 0);
+			mapedit_pointer(med, 0);
 			edref = g_slist_nth_data(med->curobj->refs,
 			    med->curoffs);
 
 			switch (edref->type) {
 			case EDITREF_SPRITE:
-				map_entry_addref(me, med->curobj->pobj,
-				    edref->spritei, MAPREF_SPRITE|MAPREF_SAVE);
+				MAP_ADDSPRITE(em, mapx, mapy,
+				    med->curobj->pobj, edref->spritei);
+				me->flags |= MAPREF_SAVE;
 				break;
 			case EDITREF_ANIM:
-				map_entry_addref(me, med->curobj->pobj,
-				    edref->animi, MAPREF_ANIM|MAPREF_SAVE);
+				MAP_ADDANIM(em, mapx, mapy,
+				    med->curobj->pobj, edref->animi);
+				me->flags |= MAPREF_SAVE;
 				break;
 			}
-			me->flags = med->curflags;	/* XXX? */
-			mapedit_pointer(ob, me, 1);
+			me->flags = med->curflags;
+			mapedit_pointer(med, 1);
 			redraw++;
 			break;
 		case SDLK_d:
@@ -805,7 +801,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			}
 			break;
 		case SDLK_i:
-			mapedit_pointer(ob, me, 0);
+			mapedit_pointer(med, 0);
 			if (ev->key.keysym.mod & KMOD_CTRL) {
 				struct editref *edref;
 
@@ -832,9 +828,9 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 				}
 
 			} else {
-				map_clean(ob->map, NULL, 0, 0, 0);
+				map_clean(med->map, NULL, 0, 0, 0);
 			}
-			mapedit_pointer(ob, me, 1);
+			mapedit_pointer(med, 1);
 			redraw++;
 			break;
 		case SDLK_o:
@@ -867,17 +863,17 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			break;
 		case SDLK_l:
 			/* Load this map from file. */
-			mapedit_pointer(ob, me, 0);
+			mapedit_pointer(med, 0);
 			map_clean(em, NULL, 0, 0, 0);
 			path = g_strdup_printf("%s.map", em->obj.name);
-			if (em->obj.load(ob->map, path) == 0) {
+			if (em->obj.load(med->map, path) == 0) {
 				mapx = em->defx;
 				mapy = em->defy;
 				em->map[mapx][mapy].flags |= MAPENTRY_ORIGIN;
 				view_center(em->view, mapx, mapy);
 			}
 			free(path);
-			mapedit_pointer(ob, me, 1);
+			mapedit_pointer(med, 1);
 			redraw++;
 			break;
 		case SDLK_t:
@@ -919,7 +915,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 		}
 	
 		if (redraw) {
-			map_entry_moveref(em, ob, MAPEDIT_SELECT, mapx, mapy);
+			MAPEDIT_MOVE(med, mapx, mapy);
 			em->redraw++;
 		}
 
@@ -1018,17 +1014,16 @@ mapedit_time(Uint32 ival, void *obp)
 {
 	struct object *ob = (struct object *)obp;
 	struct mapedit *med = (struct mapedit *)ob;
-	struct map_entry *me;
+	struct map *em = med->map;
 	int mapx, mapy;
 
-	if (pthread_mutex_lock(&ob->map->lock) != 0) {
-		perror(ob->map->obj.name);
+	if (pthread_mutex_lock(&em->lock) != 0) {
+		perror(em->obj.name);
 		return (ival);
 	}
 
-	mapx = ob->mapx;
-	mapy = ob->mapy;
-	me = &ob->map->map[mapx][mapy];
+	mapx = med->x;
+	mapy = med->y;
 
 	/*
 	 * Cursor direction.
@@ -1036,34 +1031,34 @@ mapedit_time(Uint32 ival, void *obp)
 	if (med->cursdir != 0) {
 		if (med->cursdir & MAPEDIT_UP) {
 			decrease(&mapy, 1, 0);
-			if(ob->map->view->mapy - mapy >= 0) {
-				SCROLL_UP(&ob->map);
+			if(em->view->mapy - mapy >= 0) {
+				SCROLL_UP(&em);
 			}
 			ob->wmask |= MAPEDIT_UP;
 		} else if (med->cursdir & MAPEDIT_DOWN) {
-			increase(&mapy, 1, ob->map->maph - 1);
-			if (ob->map->view->mapy - mapy <=
-			    -ob->map->view->maph) {
-				SCROLL_DOWN(&ob->map);
+			increase(&mapy, 1, em->maph - 1);
+			if (em->view->mapy - mapy <=
+			    -em->view->maph) {
+				SCROLL_DOWN(&em);
 			}
 			ob->wmask |= MAPEDIT_DOWN;
 		}
 		if (med->cursdir & MAPEDIT_LEFT) {
 			decrease(&mapx, 1, 0);
-			if(ob->map->view->mapx - mapx >= 0) {
-				SCROLL_LEFT(&ob->map);
+			if(em->view->mapx - mapx >= 0) {
+				SCROLL_LEFT(&em);
 			}
 			ob->wmask |= MAPEDIT_LEFT;
 		} else if (med->cursdir & MAPEDIT_RIGHT) {
-			increase(&mapx, 1, ob->map->mapw - 1);
-			if (ob->map->view->mapx - mapx <=
-			    -ob->map->view->mapw) {
-				SCROLL_RIGHT(&ob->map);
+			increase(&mapx, 1, em->mapw - 1);
+			if (em->view->mapx - mapx <=
+			    -em->view->mapw) {
+				SCROLL_RIGHT(&em);
 			}
 			ob->wmask |= MAPEDIT_RIGHT;
 		}
-		map_entry_moveref(ob->map, ob, MAPEDIT_SELECT, mapx, mapy);
-		ob->map->redraw++;
+		MAPEDIT_MOVE(med, mapx, mapy);
+		em->redraw++;
 	}
 
 	/*
@@ -1086,10 +1081,10 @@ mapedit_time(Uint32 ival, void *obp)
 			ob->wmask |= MAPEDIT_PAGEDOWN;
 		}
 		mapedit_tilelist(med);
-		view = ob->map->view;
+		view = em->view;
 		SDL_UpdateRect(view->v,
-		    (view->width - ob->map->view->tileh), 0,
-		    ob->map->view->tilew, view->height);
+		    (view->width - em->view->tileh), 0,
+		    em->view->tilew, view->height);
 	}
 	
 	/*
@@ -1112,14 +1107,14 @@ mapedit_time(Uint32 ival, void *obp)
 			med->curoffs = 1;
 
 			ob->wmask |= MAPEDIT_CTRLLEFT;
-			ob->map->redraw++;
+			em->redraw++;
 		}
-		view = ob->map->view;
+		view = em->view;
 		SDL_UpdateRect(view->v,
-		    0, (view->width - ob->map->view->tilew),
-		    view->width, ob->map->view->tileh);
+		    0, (view->width - em->view->tilew),
+		    view->width, em->view->tileh);
 	}
-	pthread_mutex_unlock(&ob->map->lock);
+	pthread_mutex_unlock(&em->lock);
 
 	return (ival);
 }
