@@ -683,7 +683,7 @@ if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
 echo "ok" >> config.log
 else
-echo "Could not find the SDL library. Make sure sdl-config is in $PATH."
+echo "Could not find the SDL library. Make sure sdl-config is in your $PATH.Make sure sdl-config is in $PATH."
 exit 1
 fi
 echo -n "checking whether SDL works..."
@@ -709,7 +709,6 @@ main(int argc, char *argv[])
 	Sint32 s32;
 
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
-		fprintf("SDL_Init: %s\n", SDL_GetError());
 		return (1);
 	}
 	SDL_Quit();
@@ -783,7 +782,7 @@ echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
 echo "yes"
 echo "yes" >> config.log
 else
-echo "Could not find the FreeType library"
+echo "Cannot find FreeType. Make sure freetype-config is in your $PATH."
 exit 1
 fi
 echo -n "checking whether FreeType works..."
