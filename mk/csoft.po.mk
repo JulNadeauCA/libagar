@@ -1,6 +1,6 @@
-# $Csoft: csoft.po.mk,v 1.11 2003/09/28 17:34:24 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.13 2004/01/03 04:13:27 vedge Exp $
 
-# Copyright (c) 2003 CubeSoft Communications, Inc.
+# Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -41,7 +41,7 @@ all: all-subdir ${DOMAIN}.pot ${MOS}
 install: install-po install-subdir
 deinstall: deinstall-po deinstall-subdir
 clean: clean-po clean-subdir
-cleandir: cleandir-subdir
+cleandir: clean-po clean-subdir cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 

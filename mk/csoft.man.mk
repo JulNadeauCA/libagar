@@ -1,6 +1,6 @@
-# $Csoft: csoft.man.mk,v 1.30 2003/11/09 10:12:14 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.33 2004/01/03 04:13:27 vedge Exp $
 
-# Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+# Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
 #
@@ -25,13 +25,22 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 NROFF?=	nroff
+MAN1?=""
+MAN2?=""
+MAN3?=""
+MAN4?=""
+MAN5?=""
+MAN6?=""
+MAN7?=""
+MAN8?=""
+MAN9?=""
 MANS=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 
 all: all-subdir preformat-man
 install: install-man-dirs install-man install-subdir
 deinstall: deinstall-subdir
 clean: clean-man clean-subdir
-cleandir: cleandir-subdir
+cleandir: clean-man clean-subdir cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
