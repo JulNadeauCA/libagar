@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.119 2004/05/13 10:31:40 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.120 2004/05/14 05:03:30 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -84,6 +84,7 @@ extern int text_composition;
 extern int text_rightleft;
 extern int window_freescale;
 extern int kbd_unitrans;
+extern int event_idle;
 
 static void
 config_set_path(int argc, union evarg *argv)
@@ -231,7 +232,7 @@ config_load(void *p, struct netbuf *buf)
 	text_composition = read_uint8(buf);
 	window_freescale = read_uint8(buf);
 	text_rightleft = read_uint8(buf);
-	event_idle = read_uint8(buf);
+	event_idle = (int)read_uint8(buf);
 #ifdef DEBUG
 	engine_debug = read_uint8(buf);
 #endif

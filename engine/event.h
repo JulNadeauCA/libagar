@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.27 2004/05/10 11:25:03 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.28 2004/05/15 02:56:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -34,8 +34,6 @@ struct event {
 	struct timeout	 timeout;	/* Timeout (for scheduled events) */
 	TAILQ_ENTRY(event) events;
 };
-
-extern int event_idle;		/* Enable idling? */
 
 __BEGIN_DECLS
 struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
