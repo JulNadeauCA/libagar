@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.121 2003/06/17 23:30:44 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.122 2003/06/21 06:50:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -124,7 +124,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 {
 	widget_init(mv, "mapview", &mapview_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
-	OBJECT(mv)->gfx = gfx_fetch(mv, "/engine/mapedit/mapview/mapview");
+	if (gfx_fetch(mv, "/engine/mapedit/mapview/mapview") == -1)
+		fatal("%s", error_get());
 
 	mv->flags = (flags | MAPVIEW_CENTER);
 	mv->mw = 0;					/* Set on scale */

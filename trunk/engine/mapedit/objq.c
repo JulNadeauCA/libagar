@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.70 2003/06/17 23:30:44 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.71 2003/06/21 06:50:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -339,7 +339,7 @@ open_tileset(int argc, union evarg *argv)
 	mapview_init(mv, ob->gfx->tile_map, MAPVIEW_TILESET|MAPVIEW_PROPS);
 	mapview_set_selection(mv, 0, 0, 1, 1);
 
-	object_load(ob->gfx->tile_map);
+	object_load(&ob->gfx->tile_map);
 
 	/* Map operation buttons */
 	hb = hbox_new(win, 1);
