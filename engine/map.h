@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.73 2003/03/11 00:11:49 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.74 2003/03/12 07:59:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -172,7 +172,7 @@ extern int	 map_nodesigs;
 } while (0)
 #else
 # define MAP_CHECK_NODE(node, mx, my)
-# define MAP_CHECK_NODEREF(nref, mx, my)
+# define MAP_CHECK_NODEREF(nref)
 #endif /* DEBUG */
 
 #endif /* _AGAR_MAP_H_ */
