@@ -1,8 +1,9 @@
-/*	$Csoft: nodemask.h,v 1.2 2004/03/18 01:42:44 vedge Exp $	*/
+/*	$Csoft: nodemask.h,v 1.3 2004/04/30 05:10:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_NODEMASK_H_
 #define _AGAR_NODEMASK_H_
+#include "begin_code.h"
 
 enum nodemask_type {
 	NODEMASK_BITMAP,		/* Bitmap (pixel-perfect at 1:1) */
