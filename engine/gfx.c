@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.9 2003/07/14 03:42:52 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.10 2003/07/25 22:03:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -295,6 +295,7 @@ gfx_fetch(void *p, const char *key)
 out:
 	pthread_mutex_unlock(&gfxq_lock);
 	if (ob->gfx != NULL) {					/* Replace */
+		dprintf("replacing `%s' gfx\n", ob->gfx->name);
 		gfx_unused(ob->gfx);
 	}
 	ob->gfx = gfx;
@@ -377,8 +378,8 @@ gfx_destroy(struct gfx *gfx)
 	}
 	Free(gfx->submaps);
 
-	dprintf("freed %s (%d sprites, %d anims)\n", gfx->name, gfx->nsprites,
-	    gfx->nanims);
+	dprintf("freed %s (%d sprites, %d anims, %d maps)\n", gfx->name,
+	    gfx->nsprites, gfx->nanims, gfx->nsubmaps);
 
 	pthread_mutex_destroy(&gfx->used_lock);
 	free(gfx->name);
