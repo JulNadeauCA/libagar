@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.15 2002/02/18 01:29:40 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.16 2002/02/18 09:56:39 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -42,6 +42,7 @@ struct mapedit {
 	int	flags;	
 #define MAPEDIT_DRAWGRID	0x01	/* Draw a grid on the map */
 #define MAPEDIT_DRAWPROPS	0x02	/* Draw tile properties (slow) */
+#define MAPEDIT_INSERT		0x04	/* Insert mode (else replace) */
 
 	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
