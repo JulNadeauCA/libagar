@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.10 2003/09/04 03:15:47 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.11 2003/09/05 10:22:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -72,10 +72,10 @@ struct gfx {
 extern pthread_mutex_t	gfxq_lock;
 
 __BEGIN_DECLS
-int	 gfx_fetch(void *);
-void	 gfx_unused(struct gfx *);
-void	 gfx_wire(struct gfx *);
-void	 gfx_scan_alpha(SDL_Surface *);
+struct gfx	*gfx_fetch(const char *);
+void		 gfx_unused(struct gfx *);
+void		 gfx_wire(struct gfx *);
+void	 	 gfx_scan_alpha(SDL_Surface *);
 
 Uint32	 gfx_insert_sprite(struct gfx *, SDL_Surface *, int);
 int	 gfx_insert_fragments(struct gfx *, SDL_Surface *);

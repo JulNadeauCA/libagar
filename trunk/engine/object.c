@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.158 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.159 2004/02/29 17:34:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -570,12 +570,11 @@ object_page_in(void *p, enum object_page_item item)
 		debug(DEBUG_PAGING, "gfx of %s: %s; used = %u++\n", ob->name,
 		    ob->gfx_name, ob->gfx_used);
 		if (ob->gfx_name == NULL) {
-			error_set(_("The `%s' object contains no graphics."),
+			error_set(_("The `%s' object uses no graphics set."),
 			    ob->name);
 			goto fail;
 		}
-		if (gfx_fetch(ob) == -1) {
-			Free(ob->gfx_name);
+		if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
 			goto fail;
 		}
 		if (++ob->gfx_used > OBJECT_DEP_MAX) {
@@ -585,12 +584,12 @@ object_page_in(void *p, enum object_page_item item)
 	case OBJECT_AUDIO:
 		debug(DEBUG_PAGING, "audio of %s: %s; used = %u++\n", ob->name,
 		    ob->audio_name, ob->audio_used);
-		if (ob->gfx_name == NULL) {
-			error_set(_("The `%s' object contains no audio."),
+		if (ob->audio_name == NULL) {
+			error_set(_("The `%s' object uses no audio."),
 			    ob->name);
 			goto fail;
 		}
-		if (audio_fetch(ob) == -1) {
+		if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
 			goto fail;
 		}
 		if (++ob->audio_used > OBJECT_DEP_MAX) {
@@ -878,16 +877,16 @@ object_load_generic(void *p)
 	if (read_uint32(buf) > 0)
 		position_load(ob, ob->pos, buf);
 
-	/*
-	 * Decode the gfx/audio references. Try to resolve them immediately
-	 * only if there is currently resident media.
-	 */
+	/* Decode the gfx reference and resolve if graphics are resident. */
 	Free(ob->gfx_name);
-	Free(ob->audio_name);
 	if ((ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
 		if (ob->gfx != NULL) {
-			if (gfx_fetch(ob) == -1)
+			gfx_unused(ob->gfx);
+			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
+				Free(ob->gfx_name);
+				ob->gfx_name = NULL;
 				goto fail;
+			}
 		}
 	} else {
 		if (ob->gfx != NULL) {
@@ -896,8 +895,25 @@ object_load_generic(void *p)
 		}
 	}
 	dprintf("%s: gfx=%s\n", ob->name, ob->gfx_name);
-	ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX);
-	/* XXX ... */
+
+	/* Decode the audio reference and resolve if audio is resident. */
+	Free(ob->audio_name);
+	if ((ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
+		if (ob->audio != NULL) {
+			audio_unused(ob->audio);
+			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
+				Free(ob->audio_name);
+				ob->audio_name = NULL;
+				goto fail;
+			}
+		}
+	} else {
+		if (ob->audio != NULL) {
+			audio_unused(ob->audio);
+			ob->audio = NULL;
+		}
+	}
+	dprintf("%s: audio=%s\n", ob->name, ob->audio_name);
 
 	/*
 	 * Load the generic part of the child objects.
@@ -1202,7 +1218,7 @@ object_wire_gfx(void *p, const char *key)
 
 	Free(ob->gfx_name);
 	ob->gfx_name = Strdup(key);
-	if (gfx_fetch(ob) == -1) {
+	if ((ob->gfx = gfx_fetch(key)) == NULL) {
 		fatal("%s: %s", key, error_get());
 	}
 	gfx_wire(ob->gfx);
@@ -1547,58 +1563,60 @@ object_scan_dens(const struct object *ob, const char *hint, struct combo *com,
 }
 
 static void
+fetch_gfx(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+
+}
+
+/* Select a new graphics package to associate with the object. */
+static void
 select_gfx(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	struct tlist_item *it = argv[2].p;
-	
-	Free(ob->gfx_name);
 
-	if (it->text[0] == '\0') {
-		if (ob->gfx != NULL) {
-			gfx_unused(ob->gfx);
-		}
+	if (ob->gfx != NULL) {
+		gfx_unused(ob->gfx);
 		ob->gfx = NULL;
-		ob->gfx_name = NULL;
-	} else {
-		ob->gfx_name = Strdup(it->text);
-		/* XXX don't fetch immediately */
-		if (gfx_fetch(ob) == -1) {
-			text_msg(MSG_ERROR, "%s: %s", ob->gfx_name,
-			    error_get());
-			free(ob->gfx_name);
-			ob->gfx_name = NULL;
-		} else {
-			ob->gfx_name = Strdup(it->text);
-		}
 	}
+	if (ob->gfx_name != NULL) {
+		free(ob->gfx_name);
+		ob->gfx_name = NULL;
+	}
+	if (it->text[0] == '\0')
+		return;
+
+	if ((ob->gfx = gfx_fetch(it->text)) == NULL) {
+		text_msg(MSG_ERROR, "%s: %s", ob->gfx_name, error_get());
+		return;
+	}
+	ob->gfx_name = Strdup(it->text);
 }
 
+/* Select a new audio package to associate with the object. */
 static void
 select_audio(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	struct tlist_item *it = argv[2].p;
-	
-	Free(ob->audio_name);
 
-	if (it->text[0] == '\0') {
-		if (ob->audio != NULL) {
-			audio_unused(ob->audio);
-		}
+	if (ob->audio != NULL) {
+		audio_unused(ob->audio);
 		ob->audio = NULL;
-		ob->audio_name = NULL;
-	} else {
-		ob->audio_name = Strdup(it->text);
-		if (audio_fetch(ob) == -1) {
-			text_msg(MSG_ERROR, "%s: %s", ob->audio_name,
-			    error_get());
-			free(ob->audio_name);
-			ob->audio_name = NULL;
-		} else {
-			ob->audio_name = Strdup(it->text);
-		}
 	}
+	if (ob->audio_name != NULL) {
+		free(ob->audio_name);
+		ob->audio_name = NULL;
+	}
+	if (it->text[0] == '\0')
+		return;
+
+	if ((ob->audio = audio_fetch(it->text)) == NULL) {
+		text_msg(MSG_ERROR, "%s: %s", ob->audio_name, error_get());
+		return;
+	}
+	ob->audio_name = Strdup(it->text);
 }
 
 static void
@@ -1695,7 +1713,6 @@ object_edit(void *p)
 		    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]",
 		    &ob->gfx_used, &ob->audio_used, &ob->data_used);
 	}
-
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	box_set_padding(bo, 2);
