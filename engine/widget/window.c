@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.207 2003/07/03 12:52:23 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.208 2003/07/04 12:29:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -158,7 +158,12 @@ window_init(void *p, const char *name)
 	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
 	strlcpy(OBJECT(win)->type, "window", sizeof(OBJECT(win)->type));
 
+#if 0
+	/* XXX issues */
 	win->flags = (name != NULL) ? WINDOW_PERSISTENT : 0;
+#else
+	win->flags = 0;
+#endif
 	win->visible = 0;
 
 	win->borderw = default_nborder;
