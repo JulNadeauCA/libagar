@@ -41,6 +41,7 @@
 D=.depend			# default dependency file is .depend
 append=0
 pflag=
+lflag=
 
 while :
 	do case "$1" in
@@ -58,6 +59,11 @@ while :
 		# so .o's don't get produced
 		-p)
 			pflag=p
+			shift ;;
+		
+		# the -l flag produces dependencies for .lo's instead of .o's
+		-l)
+			lflag=p
 			shift ;;
 		*)
 			break ;;
@@ -80,7 +86,7 @@ if [ "${ccargs}" = "" ]; then
 fi
 
 if [ $# = 0 ] ; then
-	echo 'usage: mkdep [-p] [-f depend_file] [cc_flags] file ...'
+	echo 'usage: mkdep [-p] [-l] [-f depend_file] [cc_flags] file ...'
 	exit 1
 fi
 
@@ -104,7 +110,11 @@ if [ x$pflag = x ]; then
 		rm -rf $DTMP
 		exit 1
 	fi
-	cat $OTMP | sed -e 's; \./; ;g' > $TMP
+	if [ x$lflag = x ]; then
+		cat $OTMP | sed -e 's; \./; ;g' > $TMP
+	else
+		cat $OTMP | sed -e 's; \./; ;g' -e 's;\.o:;\.lo:;g' > $TMP
+	fi
 else
 	echo "${CC} -M ${ccargs}"
 	${CC} -M ${ccargs} > $OTMP
