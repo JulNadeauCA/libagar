@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.63 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.64 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -286,6 +286,20 @@ text_render(const char *fontname, int fontsize, Uint32 color, const char *s)
 
 	free(sd);
 	return (su);
+}
+
+/* Return the expected size of a text surface. */
+void
+text_prescale(const char *text, int *w, int *h)
+{
+	SDL_Surface *su;
+
+	su = text_render(NULL, -1, 0, text);
+	if (w != NULL)
+		*w = (int)su->w;
+	if (h != NULL)
+		*h = (int)su->h;
+	SDL_FreeSurface(su);
 }
 
 /* Display a message. */

@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.17 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.18 2003/06/06 03:18:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -22,6 +22,7 @@ extern DECLSPEC SDL_Surface	*text_render(const char *, int, Uint32,
 				             const char *);
 extern DECLSPEC SDL_Surface	*text_render_glyph(const char *, int, Uint32,
 				                   char);
+extern DECLSPEC void		 text_prescale(const char *, int *, int *);
 extern DECLSPEC void		 text_msg(const char *, const char *, ...);
 __END_DECLS
 

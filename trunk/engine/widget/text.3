@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.4 2003/05/16 02:16:06 vedge Exp $
+.\"	$Csoft: text.3,v 1.5 2003/06/06 03:18:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -94,18 +94,23 @@ returns the recommended spacing in pixels between lines of text.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn text_render "char *font" "int font_size" "Uint32 color" "char *s"
+.Fn text_render "const char *fontname" "int font_size" "Uint32 color" "char *s"
 .Pp
 .Ft "SDL_Surface *"
-.Fn text_render_glyph "char *font" "int font_size" "Uint32 color" "char ch"
+.Fn text_render_glyph "const char *fontname" "int font_size" "Uint32 color" \
+                      "char ch"
 .Pp
+.Ft "void"
+.Fn text_prescale "const char *text" "int *w" "int *h"
 .nr nS 0
+.Pp
 The
 .Fn text_render
 function renders the (possibly multi-line) string
 .Fa s
 to a new surface.
-.Fn text_render_glyph renders the character
+.Fn text_render_glyph
+renders the character
 .Fa ch
 to a new surface.
 For both functions, the
@@ -117,6 +122,14 @@ argument may be -1 to indicate that the defaults should be used.
 and
 .Fn text_render_glyph
 both raise a fatal condition if an error occured.
+.Pp
+The
+.Fn text_prescale
+function stores the expected size of the text surface in non-NULL
+.Fa w
+and
+.Fa h
+arguments.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
@@ -124,6 +137,10 @@ both raise a fatal condition if an error occured.
 .Xr label 3 ,
 .Xr textbox 3
 .Xr tlist 3
+.Pp
+.Bd -literal
+The FreeType project - http://www.freetype.org/
+.Ed
 .Sh HISTORY
 The
 .Nm
