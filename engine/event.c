@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.36 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.37 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 #include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/window.h>
+#include <engine/widget/widget.h>
 #include <engine/widget/text.h>
 
 extern struct gameinfo *gameinfo;
@@ -113,6 +114,7 @@ event_loop(void *arg)
 	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = NULL;
+	struct window *win;
 	
 	/* Start the garbage collection process. */
 	object_init_gc();
@@ -145,6 +147,7 @@ event_loop(void *arg)
 				window_draw_all();
 			}
 			pthread_mutex_unlock(&mainview->lock);
+
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			if (ev.type == SDL_KEYDOWN) {
@@ -158,12 +161,6 @@ event_loop(void *arg)
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				/* XXX inefficient, should share locks */
-				pthread_mutex_lock(&mainview->lock);
-				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					window_mouse_motion(mainview, &ev);
-				}
-				pthread_mutex_unlock(&mainview->lock);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
@@ -171,8 +168,26 @@ event_loop(void *arg)
 					mapedit_event(curmapedit, &ev);
 				}
 				pthread_mutex_lock(&mainview->lock);
-				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					window_mouse_button(mainview, &ev);
+				TAILQ_FOREACH(win, &mainview->windowsh,
+				    windows) {
+				    	struct region *reg;
+
+					pthread_mutex_lock(&win->lock);
+					SLIST_FOREACH(reg, &win->regionsh,
+					    regions) {
+						struct widget *wid;
+
+						SLIST_FOREACH(wid,
+						    &reg->widgetsh, widgets) {
+							if (wid->flags &
+							    WIDGET_HIDE) {
+								continue;
+							}
+							window_widget_event(
+							    reg, wid, &ev);
+						}
+					}
+					pthread_mutex_unlock(&win->lock);
 				}
 				pthread_mutex_unlock(&mainview->lock);
 				break;
@@ -194,11 +209,6 @@ event_loop(void *arg)
 				} else {
 					input_event(keyboard, &ev);
 				}
-				pthread_mutex_lock(&mainview->lock);
-				if (!TAILQ_EMPTY(&mainview->windowsh)) {
-					window_key(mainview, &ev);
-				}
-				pthread_mutex_unlock(&mainview->lock);
 				break;
 			case SDL_QUIT:
 				return (NULL);
