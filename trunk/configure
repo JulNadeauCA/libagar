@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Do not edit!
-# File generated from configure.in by csoft-mk 1.8.
+# File generated from configure.in by csoft-mk 1.9.
 #
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -161,7 +161,7 @@ echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --sysconfdir                   System-wide configuration prefix [/etc]"
 echo "    --sharedir                     Share prefix [$PREFIX/share]"
-echo "    --localedir                    Locale prefix [$PREFIX/locale]"
+echo "    --localedir                    Locale prefix [$PREFIX/share/locale]"
 echo "    --srcdir                       Source tree for concurrent build [.]"
 echo "    --help                         Display this message"
 echo "    --enable-nls                   Native Language Support [yes]"
@@ -352,6 +352,124 @@ echo "#endif /* HAVE_LONG_DOUBLE */" >> config/have_long_double.h
 	echo "yes"
 else
     echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
+
+	echo "no"
+fi
+echo -n "checking __bounded__ attribute..."
+echo -n "checking __bounded__ attribute..." >> config.log
+cat << EOT > conftest.c
+void foo(char *, int)
+	 __attribute__ ((__bounded__(__string__,1,2)));
+
+void
+foo(char *a, int c)
+{
+}
+
+int
+main(int argc, char *argv[])
+{
+	char buf[32];
+
+	foo(buf, sizeof(buf));
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+echo "#define HAVE_BOUNDED_ATTRIBUTE" $HAVE_BOUNDED_ATTRIBUTE >> config/have_bounded_attribute.h
+echo "#endif /* HAVE_BOUNDED_ATTRIBUTE */" >> config/have_bounded_attribute.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+
+	echo "no"
+fi
+echo -n "checking __format__ attribute..."
+echo -n "checking __format__ attribute..." >> config.log
+cat << EOT > conftest.c
+#include <stdarg.h>
+
+void foo(char *, ...)
+     __attribute__((__format__ (printf, 1, 2)));
+
+void
+foo(char *a, ...)
+{
+}
+
+int
+main(int argc, char *argv[])
+{
+	foo("foo %s", "bar");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+echo "#define HAVE_FORMAT_ATTRIBUTE" $HAVE_FORMAT_ATTRIBUTE >> config/have_format_attribute.h
+echo "#endif /* HAVE_FORMAT_ATTRIBUTE */" >> config/have_format_attribute.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+
+	echo "no"
+fi
+echo -n "checking __nonnull__ attribute..."
+echo -n "checking __nonnull__ attribute..." >> config.log
+cat << EOT > conftest.c
+void foo(char *)
+     __attribute__((__nonnull__ (1)));
+
+void
+foo(char *a)
+{
+}
+
+int
+main(int argc, char *argv[])
+{
+	foo("foo");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
+echo "#define HAVE_NONNULL_ATTRIBUTE" $HAVE_NONNULL_ATTRIBUTE >> config/have_nonnull_attribute.h
+echo "#endif /* HAVE_NONNULL_ATTRIBUTE */" >> config/have_nonnull_attribute.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 
 	echo "no"
 fi
