@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.197 2005/03/09 06:37:56 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.198 2005/03/11 05:30:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -419,8 +419,10 @@ event_dispatch(SDL_Event *ev)
 #ifdef EDITION
 		{
 			extern int world_changed;
+			extern int objmgr_exiting;
 
-			if (world_changed) {
+			if (!objmgr_exiting && world_changed) {
+				objmgr_exiting = 1;
 				objmgr_changed_dlg(world, 1);
 				break;
 			}
