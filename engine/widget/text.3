@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.14 2004/04/17 23:38:13 vedge Exp $
+.\"	$Csoft: text.3,v 1.15 2004/05/10 05:15:01 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -48,7 +48,7 @@ text.
 .Fn text_parse_fontspec "const char *fontspec"
 .Pp
 .Ft int
-.Fn text_init "int flags"
+.Fn text_init "enum text_engine te"
 .Pp
 .Ft void
 .Fn text_destroy "void"
@@ -67,18 +67,17 @@ to parse font specifications on the command line.
 .Pp
 The
 .Fn text_init
-function initializes the font engine.
-Acceptable
-.Fa flags
-include:
+function initializes the text subsystem using the given font engine:
 .Bd -literal
-#define TEXT_TTF	0x01	/* Use FreeType */
-#define TEXT_BITMAP	0x02	/* Use fixed-size bitmap fonts */
-#define TEXT_PIXMAP	0x04	/* Use fixed-size >1bpp fonts */
+enum text_engine {
+	TEXT_ENGINE_TTF,		/* FreeType */
+	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
+	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
+};
 .Ed
 .Pp
 .Fn text_init
-selects the default font settings by looking at the following
+selects the default font style by looking at the following
 .Xr config 3
 settings:
 .Bl -tag -width "font-engine.default-style "
@@ -176,17 +175,21 @@ dimensions.
 Currently,
 .Fn text_prescale
 is used prior to allocating fixed-size surfaces, but this is troublesome to
-maintain and maintain translations in sync.
+maintain with translations.
 .Pp
 .Fn text_render_glyph
 does not work.
 .Sh SEE ALSO
 .Xr agar 3 ,
+.Xr config 3 ,
 .Xr button 3 ,
 .Xr combo 3 ,
 .Xr label 3 ,
 .Xr radio 3 ,
 .Xr spinbutton 3 ,
+.Xr statusbar 3 ,
+.Xr fspinbutton 3 ,
+.Xr mfspinbutton 3 ,
 .Xr textbox 3 ,
 .Xr titlebar 3 ,
 .Xr tlist 3 ,
