@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.47 2003/01/21 03:41:21 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.48 2003/01/23 07:03:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -689,7 +689,6 @@ mapview_center(struct mapview *mv, int x, int y)
 		mv->mx = m->mapw - mv->mw;
 	if (mv->my >= m->maph - mv->mh)
 		mv->my = m->maph - mv->mh;
-#endif
 }
 
 static void

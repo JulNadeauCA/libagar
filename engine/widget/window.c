@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.154 2003/01/23 03:15:57 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.155 2003/01/23 04:39:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ static void	resize_reg(int, struct window *, struct region *);
 #define DEBUG_DRAW		0x04
 #define DEBUG_RESIZE_GEO	0x08
 
-int	window_debug = DEBUG_RESIZE_GEO;
+int	window_debug = 0;
 #define	engine_debug window_debug
 #endif
 
