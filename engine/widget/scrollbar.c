@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.4 2002/11/04 08:34:13 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.5 2002/11/07 04:29:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -64,8 +64,8 @@ enum button {
 	BUTTON_SCROLL
 };
 
-static void	scrollbar_mouse_button_up(int, union evarg *);
-static void	scrollbar_mouse_button_down(int, union evarg *);
+static void	scrollbar_mouse_buttonup(int, union evarg *);
+static void	scrollbar_mouse_buttondown(int, union evarg *);
 static void	scrollbar_mouse_motion(int, union evarg *);
 static void	scrollbar_triangle(struct scrollbar *, int, int, int, Uint32);
 
@@ -107,9 +107,9 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int item_size, int flags)
 	pthread_mutex_init(&sb->range.max_lock, NULL);
 
 	event_new(sb, "window-mousebuttondown", 0,
-	    scrollbar_mouse_button_down, NULL);
+	    scrollbar_mouse_buttondown, NULL);
 	event_new(sb, "window-mousebuttonup", 0,
-	    scrollbar_mouse_button_up, NULL);
+	    scrollbar_mouse_buttonup, NULL);
 	event_new(sb, "window-mousemotion", 0,
 	    scrollbar_mouse_motion, NULL);
 }
@@ -123,16 +123,15 @@ scrollbar_set_range(struct scrollbar *sb, int max)
 }
 
 static void
-scrollbar_mouse_button_up(int argc, union evarg *argv)
+scrollbar_mouse_buttonup(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
 
-	dprintf("button up\n");
 	sb->curbutton = BUTTON_NONE;
 }
 
 static void
-scrollbar_mouse_button_down(int argc, union evarg *argv)
+scrollbar_mouse_buttondown(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
 	int button = argv[1].i;
