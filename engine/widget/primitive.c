@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.58 2004/09/18 06:34:47 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.59 2004/09/19 03:49:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -350,6 +350,17 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 	int y2 = wid->cy + py2;
 	Uint8 r, g, b;
 
+	if (wid->flags & WIDGET_CLIPPING) {
+		if (x1 > wid->cx+wid->w ||
+		    y1 > wid->cy+wid->h ||
+		    x2 > wid->cx+wid->w ||
+		    y2 > wid->cy+wid->h ||
+		    x1 < wid->cx ||
+		    y1 < wid->cy) {
+			return;
+		}
+	}
+
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
@@ -387,6 +398,21 @@ rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 	int y1 = wid->cy+y;
 	int x2 = x1+w;
 	int y2 = y1+h;
+
+	if (wid->flags & WIDGET_CLIPPING) {
+		if (x1 > wid->cx+wid->w ||
+		    y1 > wid->cy+wid->h) {
+			return;
+		}
+		if (x1 < wid->cx)
+			x1 = wid->cx;
+		if (y1 < wid->cy)
+			y1 = wid->cy;
+		if (x2 > wid->cx+wid->w)
+			x2 = wid->cx+wid->w;
+		if (y2 > wid->cy+wid->h)
+			y2 = wid->cy+wid->h;
+	}
 
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
 
