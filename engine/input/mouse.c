@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.3 2004/01/03 04:25:07 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.4 2004/02/20 04:20:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -77,6 +77,7 @@ mouse_match(const void *p, const SDL_Event *ev)
 static void
 mouse_event(void *p, const SDL_Event *ev)
 {
+#if 0
 	struct input *in = p;
 	static int lastdir = 0;
 
@@ -109,5 +110,6 @@ mouse_event(void *p, const SDL_Event *ev)
 		}
 		break;
 	}
+#endif
 }
 
