@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.41 2004/03/13 09:26:31 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.42 2004/03/17 03:42:09 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -270,6 +270,8 @@ install-lib:
 	        ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
 	    ${SUDO} ${LIBTOOL} --mode=install \
 	        ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}; \
+	    echo "${SUDO} ${LIBTOOL} --finish ${LIBDIR}"; \
+	    ${SUDO} ${LIBTOOL} --finish ${LIBDIR}; \
 	fi
 	@export _share="${SHARE}"; \
         if [ "$$_share" != "" ]; then \
