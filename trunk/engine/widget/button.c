@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.10 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.11 2002/05/02 06:28:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -66,11 +66,7 @@ button_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 
 	bu = emalloc(sizeof(struct button));
 	button_init(bu, caption, flags, x, y);
-
-	pthread_mutex_lock(&win->lock);
 	widget_link(bu, win);
-	pthread_mutex_unlock(&win->lock);
-	
 	return (bu);
 }
 
@@ -143,7 +139,7 @@ void
 button_event(void *p, SDL_Event *ev, int flags)
 {
 	struct button *b = (struct button *)p;
-
+	
 	if (ev->button.button != 1) {
 		return;
 	}
@@ -156,8 +152,10 @@ button_event(void *p, SDL_Event *ev, int flags)
 	case SDL_MOUSEBUTTONUP:
 		b->flags &= ~(BUTTON_PRESSED);
 		WIDGET(b)->win->redraw++;
-		if (b->push != NULL)
+		if (b->push != NULL) {
+			dprintf("calling push handler\n");
 			b->push(b);
+		}
 		break;
 	}
 }

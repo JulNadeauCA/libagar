@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.3 2002/04/30 08:18:34 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.4 2002/05/02 06:28:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -48,8 +48,8 @@ static struct widget_ops checkbox_ops = {
 		checkbox_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		NULL,
-		NULL
+		NULL,		/* link */
+		NULL		/* unlink */
 	},
 	checkbox_draw,
 	checkbox_event,
@@ -64,11 +64,7 @@ checkbox_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 
 	cb = emalloc(sizeof(struct checkbox));
 	checkbox_init(cb, caption, flags, x, y);
-	
-	pthread_mutex_lock(&win->lock);
 	widget_link(cb, win);
-	pthread_mutex_unlock(&win->lock);
-
 	return (cb);
 }
 

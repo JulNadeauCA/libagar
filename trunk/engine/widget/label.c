@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.10 2002/04/30 08:18:34 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.11 2002/05/02 06:28:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -64,11 +64,7 @@ label_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 
 	lab = emalloc(sizeof(struct label));
 	label_init(lab, caption, flags, x, y);
-	
-	pthread_mutex_lock(&win->lock);
 	widget_link(lab, win);
-	pthread_mutex_unlock(&win->lock);
-
 	return (lab);
 }
 
