@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.20 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.21 2002/04/09 00:58:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -39,7 +39,8 @@
 #include <engine/input.h>
 
 #include <engine/mapedit/mapedit.h>
-#include <engine/text/text.h>
+
+#include <engine/widget/text.h>
 
 extern struct gameinfo *gameinfo;
 

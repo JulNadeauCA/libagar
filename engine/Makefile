@@ -1,9 +1,9 @@
-#	$Csoft: Makefile,v 1.20 2002/03/17 05:32:27 vedge Exp $
+#	$Csoft: Makefile,v 1.21 2002/04/18 03:58:29 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	mapedit text
+SUBDIR=	mapedit widget
 
 SHARE=	README.engine
 
@@ -19,7 +19,7 @@ SRCS=	engine.c event.c anim.c xcf.c view.c physics.c input.c \
 
 OBJS=	engine.o event.o anim.o xcf.o view.o physics.o input.o \
 	object.o audio.o video.o world.o map.o char.o version.o \
-	mapedit/mapedit.o text/text.o
+	mapedit/mapedit.o
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk

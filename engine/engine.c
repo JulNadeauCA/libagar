@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.25 2002/04/02 19:52:17 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.26 2002/04/09 00:58:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -40,7 +40,8 @@
 #include <engine/input.h>
 
 #include <engine/mapedit/mapedit.h>
-#include <engine/text/text.h>
+
+#include <engine/widget/text.h>
 
 #ifdef DEBUG
 int	engine_debug = 1;
