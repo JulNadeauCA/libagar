@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.12 2004/05/25 07:25:23 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.13 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -47,85 +47,87 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "vgobj.h"
+#include "drawing.h"
 
-const struct version vgobj_ver = {
-	"agar vgobj",
+const struct version drawing_ver = {
+	"agar drawing",
 	0, 0
 };
 
-const struct object_ops vgobj_ops = {
-	vgobj_init,
-	vgobj_reinit,
-	vgobj_destroy,
-	vgobj_load,
-	vgobj_save,
-	vgobj_edit
+const struct object_ops drawing_ops = {
+	drawing_init,
+	drawing_reinit,
+	drawing_destroy,
+	drawing_load,
+	drawing_save,
+	drawing_edit
 };
 
 void
-vgobj_init(void *p, const char *name)
+drawing_init(void *p, const char *name)
 {
-	struct vgobj *vgo = p;
+	struct drawing *dwg = p;
 
-	object_init(vgo, "vgobj", name, &vgobj_ops);
-	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID);
-	vg_scale(vgo->vg, 8.5, 11, 1);
+	object_init(dwg, "drawing", name, &drawing_ops);
+	dwg->vg = vg_new(dwg, VG_VISORIGIN|VG_VISGRID);
+	vg_scale(dwg->vg, 8.5, 11, 1);
 }
 
 void
-vgobj_reinit(void *p)
+drawing_reinit(void *p)
 {
-	struct vgobj *vgo = p;
+	struct drawing *dwg = p;
 
-	vg_reinit(vgo->vg);
+	vg_reinit(dwg->vg);
 }
 
 void
-vgobj_destroy(void *p)
+drawing_destroy(void *p)
 {
-	struct vgobj *vgo = p;
+	struct drawing *dwg= p;
 
-	vg_destroy(vgo->vg);
+	vg_destroy(dwg->vg);
 }
 
 int
-vgobj_load(void *p, struct netbuf *buf)
+drawing_load(void *p, struct netbuf *buf)
 {
-	struct vgobj *vgo = p;
+	struct drawing *dwg = p;
 
-	if (version_read(buf, &vgobj_ver, NULL) != 0)
+	if (version_read(buf, &drawing_ver, NULL) != 0)
 		return (-1);
 
-	return (vg_load(vgo->vg, buf));
+	return (vg_load(dwg->vg, buf));
 }
 
 int
-vgobj_save(void *p, struct netbuf *buf)
+drawing_save(void *p, struct netbuf *buf)
 {
-	struct vgobj *vgo = p;
+	struct drawing *dwg = p;
 
-	version_write(buf, &vgobj_ver);
-	vg_save(vgo->vg, buf);
+	version_write(buf, &drawing_ver);
+	vg_save(dwg->vg, buf);
 	return (0);
 }
 
 static void
-vgobj_settings(int argc, union evarg *argv)
+drawing_settings(int argc, union evarg *argv)
 {
+	extern void vg_changed(int, union evarg *);
+	extern void vg_geo_changed(int, union evarg *);
 	struct window *pwin = argv[1].p;
-	struct vgobj *vgo = argv[2].p;
-	struct vg *vg = vgo->vg;
+	struct drawing *dwg = argv[2].p;
+	struct vg *vg = dwg->vg;
 	struct window *win;
 	struct mfspinbutton *mfsu;
 	struct fspinbutton *fsu;
 	struct palette *pal;
 	
 	if ((win = window_new(WINDOW_HIDE|WINDOW_NO_VRESIZE, "%s-settings",
-	    OBJECT(vgo)->name)) == NULL)
+	    OBJECT(dwg)->name)) == NULL)
 		return;
 
-	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(vgo)->name);
+	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(dwg)->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	mfsu = mfspinbutton_new(win, NULL, "x", _("Geometry: "));
@@ -162,7 +164,7 @@ vgobj_settings(int argc, union evarg *argv)
 }
 
 static void
-rasterize_vgobj(struct mapview *mv, void *p)
+rasterize_drawing(struct mapview *mv, void *p)
 {
 	struct vg *vg = p;
 
@@ -174,7 +176,7 @@ rasterize_vgobj(struct mapview *mv, void *p)
 }
 
 struct window *
-vgobj_edit(void *obj)
+drawing_edit(void *obj)
 {
 	extern const struct tool vg_scale_tool;
 	extern const struct tool vg_grid_tool;
@@ -184,19 +186,19 @@ vgobj_edit(void *obj)
 	extern const struct tool vg_circle_tool;
 	extern const struct tool vg_ellipse_tool;
 	extern const struct tool vg_text_tool;
-	struct vgobj *vgo = obj;
-	struct vg *vg = vgo->vg;
+	struct drawing *dwg = obj;
+	struct vg *vg = dwg->vg;
 	struct window *win;
 	struct box *bo;
 	struct toolbar *tbar;
 	struct statusbar *statbar;
 
 	win = window_new(WINDOW_DETACH, NULL);
-	window_set_caption(win, _("Vector graphic: %s"), OBJECT(vgo)->name);
+	window_set_caption(win, _("Drawing: %s"), OBJECT(dwg)->name);
 
 	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
 	toolbar_add_button(tbar, 0, ICON(SETTINGS_ICON), 0, 0,
-	    vgobj_settings, "%p, %p", win, vgo);
+	    drawing_settings, "%p, %p", win, dwg);
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
@@ -221,16 +223,16 @@ vgobj_edit(void *obj)
 			mv = mapview_new(bo, vg->map, MAPVIEW_EDIT, tbar,
 			    statbar);
 			mapview_prescale(mv, 10, 8);
-			mapview_reg_draw_cb(mv, rasterize_vgobj, vg);
+			mapview_reg_draw_cb(mv, rasterize_drawing, vg);
 
-			mapview_reg_tool(mv, &vg_scale_tool, vg);
-			mapview_reg_tool(mv, &vg_grid_tool, vg);
-			mapview_reg_tool(mv, &vg_origin_tool, vg);
-			mapview_reg_tool(mv, &vg_point_tool, vg);
-			mapview_reg_tool(mv, &vg_line_tool, vg);
-			mapview_reg_tool(mv, &vg_circle_tool, vg);
-			mapview_reg_tool(mv, &vg_ellipse_tool, vg);
-			mapview_reg_tool(mv, &vg_text_tool, vg);
+			mapview_reg_tool(mv, &vg_scale_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_grid_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_origin_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_point_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_line_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_circle_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_ellipse_tool, vg, 1);
+			mapview_reg_tool(mv, &vg_text_tool, vg, 1);
 		}
 	}
 
