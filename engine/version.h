@@ -1,4 +1,4 @@
-/*	$Csoft: version.h,v 1.3 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: version.h,v 1.4 2002/09/04 03:19:02 vedge Exp $	*/
 /*	Public domain	*/
 
 struct version {
@@ -7,5 +7,6 @@ struct version {
 };
 
 int	version_read(int, const struct version *);
-int	version_write(int, const struct version *);
+void	version_write(int, const struct version *);
+void	version_buf_write(struct fobj_buf *, const struct version *);
 
