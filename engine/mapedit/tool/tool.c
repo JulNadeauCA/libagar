@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.8 2002/11/22 08:56:53 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.9 2002/12/13 07:47:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -31,6 +31,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/text.h>
 
 #include <engine/mapedit/mapedit.h>
 
@@ -62,7 +63,7 @@ tool_mapview(void)
 	struct widget *wid;
 
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		if ((win->flags & WINDOW_SHOWN) == 0) {
+		if ((win->flags & (WINDOW_SHOWN|WINDOW_HIDDEN_BODY)) == 0) {
 			continue;
 		}
 		TAILQ_FOREACH(reg, &win->regionsh, regions) {
@@ -76,6 +77,7 @@ tool_mapview(void)
 			}
 		}
 	}
+	text_msg("Error", "No map is visible");
 	return (NULL);
 }
 
