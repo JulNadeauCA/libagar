@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.29 2002/12/04 04:23:12 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.30 2002/12/15 15:57:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -140,54 +140,54 @@ tl_objs_selected(int argc, union evarg *argv)
 	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
 	
-	/*
-	 * Tools
-	 */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 93, 10);
+	/* Tools */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 10);
 	reg->spacing = 1;
+	{
+		/* Load map */
+		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
+		    0,
+		    20, 100);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
-	/* Load map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
-	    0,
-	    20, 100);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
+		/* Save map */
+		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
+		    0,
+		    20, 100);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 
-	/* Save map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
-	    0,
-	    20, 100);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
+		/* Grid */
+		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
+		    BUTTON_STICKY|BUTTON_PRESSED,
+		    20, 100);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
-	/* Grid */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
-	    BUTTON_STICKY|BUTTON_PRESSED,
-	    20, 100);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed",
-	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
-
-	/* Props */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
-	    BUTTON_STICKY|BUTTON_PRESSED,
-	    20, 100);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed",
-	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+		/* Props */
+		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
+		    BUTTON_STICKY|BUTTON_PRESSED,
+		    20, 100);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
-	/* Edition */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_EDIT),
-	    BUTTON_STICKY,
-	    20, 100);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed",
-	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+		/* Edition */
+		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_EDIT),
+		    BUTTON_STICKY,
+		    20, 100);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+	}
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
-	region_attach(reg, mv);
-
+	{
+		region_attach(reg, mv);
+	}
 	window_show(win);
 }
 
