@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.2 2003/07/28 04:26:16 vedge Exp $
+# $Csoft: fr.po,v 1.3 2003/07/28 15:25:09 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -593,7 +593,7 @@ msgstr "Aucune couche sélectionnée."
 #: engine/mapedit/layedit.c:207
 #, c-format
 msgid "%s layers"
-msgstr "%s couches"
+msgstr "Couches de %s"
 
 #: engine/mapedit/layedit.c:217
 msgid "New layer: "
@@ -771,7 +771,7 @@ msgstr "Aucun widget n'est sélectionné."
 #: engine/monitor/widget_browser.c:165
 #, c-format
 msgid "%s widget"
-msgstr "widget %s"
+msgstr "Widget %s"
 
 #: engine/monitor/widget_browser.c:171 engine/monitor/widget_browser.c:260
 #, c-format
@@ -800,7 +800,7 @@ msgstr "Géo: 0000x0000 sur 0000x0000 (vue 0000,0000)"
 #: engine/monitor/widget_browser.c:257
 #, c-format
 msgid "%s window"
-msgstr "fenêtre %s"
+msgstr "Fenêtre %s"
 
 #: engine/monitor/widget_browser.c:270 engine/monitor/widget_browser.c:298
 msgid "Examine"
@@ -929,7 +929,7 @@ msgstr "Trop de couches de carte."
 #: engine/map.c:1197
 #, c-format
 msgid "%s map view"
-msgstr "vue sur %s"
+msgstr "Vue sur %s"
 
 #: engine/map.c:1284
 msgid "There is no active selection."
@@ -961,7 +961,7 @@ msgstr "graphiques dans %s"
 #: engine/map.c:1522
 #, c-format
 msgid "%s map edition"
-msgstr "Édition de carte %s"
+msgstr "Édition de %s"
 
 #: engine/map.c:1585
 #, c-format
@@ -1071,7 +1071,7 @@ msgstr "Dépendances:"
 #: engine/perso.c:167
 #, c-format
 msgid "%s character"
-msgstr "caractère %s"
+msgstr "Caractère %s"
 
 #: engine/perso.c:180
 msgid "Level: "
