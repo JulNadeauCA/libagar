@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.3 2004/05/10 23:49:15 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.4 2004/05/13 10:32:59 vedge Exp $
 .\"
 .\" Copyright (c) 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -57,7 +57,7 @@ is the delay in ticks before the next invocation, and
 .Fa arg
 is the user-supplied pointer passed to
 .Fn timer_add .
-If the callback function returns nonzero, the timeout is automatically
+If the callback function returns a non-zero value, the timeout is automatically
 rescheduled to occur in t+n ticks.
 .Pp
 The
@@ -70,7 +70,7 @@ internally to implement timing-related events (registered using
 .nr nS 1
 .Ft "void"
 .Fn timeout_set "struct timeout *to" \
-                "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg"
+                "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
 .Pp
 .Ft "void"
 .Fn timeout_add "void *obj" "struct timeout *to" "Uint32 ival"
@@ -95,6 +95,25 @@ function initializes a pre-allocated
 structure using the specified callback function and argument.
 .Pp
 The
+.Fa flags
+may contain:
+.Pp
+.Bd -literal
+#define TIMEOUT_DETACHABLE	0x01  /* Don't cancel in object_detach() */
+#define TIMEOUT_LOADABLE	0x02  /* Don't cancel in object_load() */
+.Ed
+.Pp
+Flags
+.Dv TIMEOUT_DETACHABLE
+and
+.Dv TIMEOUT_LOADABLE
+indicate that
+.Fn object_detach
+and
+.Fn object_load ,
+respectively, should not cancel scheduled executions of this timeout.
+.Pp
+The
 .Fn timeout_add
 function schedules the previously specified callback function for execution in
 t+ival ticks.
@@ -104,11 +123,6 @@ argument specifies the
 .Xr object 3
 which is responsible for the scheduling and execution of the given callback
 function.
-Whenever an object is detached,
-.Fn object_detach
-cancels any future timeouts associated with the object being detached and
-waits for the termination of any callback function that may be executing
-(which is only possible if a multithreaded timing scheme is being used).
 .Pp
 Different types of objects may implement different timing schemes involving
 either real-time or simulated real-time.
@@ -161,6 +175,27 @@ if (timeout_scheduled(obj, &timeout)) {
 }
 unlock_timeout(obj);
 .Ed
+.Sh CANCELLATION
+Whenever an
+.Xr object 3
+controlling timeouts is about to be detached,
+.Fn object_detach
+cancels any scheduled timeout.
+This behavior can be avoided by setting the
+.Dv TIMEOUT_DETACHABLE
+flag.
+.Pp
+The
+.Fn object_load
+function also cancels scheduled timeouts, unless the
+.Dv TIMEOUT_LOADABLE
+flag is given.
+.Pp
+.Fn object_destroy
+always cancels every scheduled timeout.
+.Pp
+With a multithreaded timing scheme, cancelling a timeout might imply waiting
+for the termination of a thread (possibly sending it a signal as well).
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
