@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.9 2002/04/26 04:24:53 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.10 2002/04/26 11:40:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -317,7 +317,10 @@ window_unlink(void *ob)
 	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
 		widget_unlink(wid);
 	}
-
+	
+	/* Unlink from the window list. */
+	TAILQ_REMOVE(&windowsh, win, windows);
+	
 	/* Decrement the view mask for this area. */
 	view_maskfill(win->view, &win->vmask, -1);
 	if (win->view->map != NULL) {
