@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.9 2002/12/28 10:12:17 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.1 2003/03/02 00:45:24 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -469,16 +469,6 @@ ASCII_to_UNICODE(FT_UInt *unicode, char *text, int len)
 	int i;
 
 	for (i = 0; i < len; ++i) {
-#if defined(__OpenBSD__) && defined(__alpha__)
-		/*
-		 * XXX work around mysterious freetype crash seen on
-		 * OpenBSD/alpha as of 3.2.
-		 */
-		if (text[i] == 'N' || text[i] == 'K') {
-			unicode[i] = '_';
-			continue;
-		}
-#endif
 		unicode[i] = ((unsigned char *)text)[i];
 	}
 	unicode[i] = 0;
