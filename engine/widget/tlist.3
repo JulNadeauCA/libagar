@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.16 2003/04/17 08:21:30 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.17 2003/05/04 01:48:38 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -56,8 +56,11 @@ Single or multiple selections of items are allowed.
 .Ft void
 .Fn tlist_set_item_icon "struct tlist *tl" "struct tlist_item *item" \
                         "SDL_Surface *icon"
-.nr nS 0
 .Pp
+.Ft void
+.Fn tlist_scroll "struct tlist *tl" "int pos"
+.Pp
+.nr nS 0
 The
 .Fn tlist_new
 function allocates, initializes, and attaches a
@@ -99,6 +102,11 @@ scaled to
 by
 .Fa h
 pixels.
+.Pp
+The
+.Fn tlist_scroll
+function sets the position of the scrollbar to
+.Fa pos .
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "struct tlist_item *"

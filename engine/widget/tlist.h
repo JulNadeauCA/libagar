@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.20 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.21 2003/05/04 01:48:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -55,6 +55,7 @@ extern DECLSPEC void		 tlist_set_item_icon(struct tlist *,
 						     SDL_Surface *);
 extern DECLSPEC void		 tlist_save_selections(struct tlist *);
 extern DECLSPEC void		 tlist_restore_selections(struct tlist *);
+extern DECLSPEC void		 tlist_scroll(struct tlist *, int);
 
 extern DECLSPEC void			 tlist_remove_item(struct tlist_item *);
 extern DECLSPEC void			 tlist_clear_items(struct tlist *);
