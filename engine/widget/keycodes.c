@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.37 2004/01/03 04:25:13 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.38 2005/01/05 04:44:05 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -39,28 +39,47 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
 
-static void key_bspace(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_delete(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_home(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_end(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_kill(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_left(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_right(struct textbox *, SDLKey, int, const char *, Uint32);
-static void key_character(struct textbox *, SDLKey, int, const char *, Uint32);
+#ifdef UTF8
+static int key_del_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_end_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_kill_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_right_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_char_utf8(struct textbox *, SDLKey, int, const char *, Uint32);
+#else
+static int key_del_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_end_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_kill_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_right_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_char_ascii(struct textbox *, SDLKey, int, const char *, Uint32);
+#endif
+
+static int key_home(struct textbox *, SDLKey, int, const char *, Uint32);
+static int key_left(struct textbox *, SDLKey, int, const char *, Uint32);
 
 const struct keycode keycodes[] = {
-	{ SDLK_BACKSPACE,	0,		key_bspace,	NULL, 1 },
-	{ SDLK_DELETE,		0,		key_delete,	NULL, 1 },
 	{ SDLK_HOME,		0,		key_home,	NULL, 1 },
-	{ SDLK_END,		0,		key_end,	NULL, 1 },
 	{ SDLK_a,		KMOD_CTRL,	key_home,	NULL, 1 },
-	{ SDLK_e,		KMOD_CTRL,	key_end,	NULL, 1 },
-	{ SDLK_k,		KMOD_CTRL,	key_kill,	NULL, 1 },
 	{ SDLK_LEFT,		0,		key_left,	NULL, 1 },
-	{ SDLK_RIGHT,		0,		key_right,	NULL, 1 },
-	{ SDLK_LAST,		0,		key_character,	NULL, 0 },
+#ifdef UTF8
+	{ SDLK_BACKSPACE,	0,		key_del_utf8,	NULL, 1 },
+	{ SDLK_DELETE,		0,		key_del_utf8,	NULL, 1 },
+	{ SDLK_END,		0,		key_end_utf8,	NULL, 1 },
+	{ SDLK_e,		KMOD_CTRL,	key_end_utf8,	NULL, 1 },
+	{ SDLK_k,		KMOD_CTRL,	key_kill_utf8,	NULL, 1 },
+	{ SDLK_RIGHT,		0,		key_right_utf8,	NULL, 1 },
+	{ SDLK_LAST,		0,		key_char_utf8,	NULL, 0 },
+#else
+	{ SDLK_BACKSPACE,	0,		key_del_ascii,	NULL, 1 },
+	{ SDLK_DELETE,		0,		key_del_ascii, NULL, 1 },
+	{ SDLK_END,		0,		key_end_ascii,	NULL, 1 },
+	{ SDLK_e,		KMOD_CTRL,	key_end_ascii,	NULL, 1 },
+	{ SDLK_k,		KMOD_CTRL,	key_kill_ascii,	NULL, 1 },
+	{ SDLK_RIGHT,		0,		key_right_ascii, NULL, 1 },
+	{ SDLK_LAST,		0,		key_char_ascii,	NULL, 0 },
+#endif
 };
 
+#ifdef UTF8
 static struct {
 	Uint32 comp, key, res;
 } compose[] = {
@@ -139,6 +158,7 @@ static struct {
 	{ 0x005e, 0x0057, 0x0174 },  /* LATIN CAPITAL LETTER W */
 };
 static const int ncompose = sizeof(compose) / sizeof(compose[0]);
+#endif /* UTF8 */
 
 /* Apply modifiers (when not using Unicode keyboard translation). */
 static __inline__ Uint32
@@ -158,6 +178,8 @@ key_apply_mod(Uint32 key, int kmod)
 		}
 	}
 }
+
+#ifdef UTF8
 
 /* Perform simple input composition. */
 static int
@@ -202,10 +224,10 @@ key_compose(struct textbox *tbox, Uint32 key, Uint32 *ins)
 	}
 }
 
-/* Insert a character. */
-static void
-key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
+/* Insert an Unicode character. */
+static int
+key_char_utf8(struct textbox *tbox, SDLKey keysym, int keymod,
+    const char *arg, Uint32 uch)
 {
 	extern int kbd_unitrans;			/* input/kbd.c */
 	struct widget_binding *stringb;
@@ -234,36 +256,52 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	if (len+nins >= stringb->size/sizeof(Uint32))
 		goto skip;
 
+	dprintf("len=%d nins=%d s32=%d pos=%d\n", len, nins,
+	    stringb->size/sizeof(Uint32), tbox->pos);
+
 	if (tbox->pos == len) {
 		/* Append to the end of string */
 		if (kbd_unitrans) {
 			if (uch != 0) {
-				for (i = 0; i < nins; i++)
+				for (i = 0; i < nins; i++) {
+					dprintf("append ucs %d: %d\n", len+i, 
+					    ins[i]);
 					ucs[len+i] = ins[i];
+				}
 			} else {
 				goto out;
 			}
 		} else if (keysym != 0) {
 			for (i = 0; i < nins; i++)
+				dprintf("append ascii %d: %d\n", len+i, ins[i]);
 				ucs[len+i] = ins[i];
 		} else {
 			goto skip;
 		}
 	} else {
 		Uint32 *p = ucs + tbox->pos;
+		
+		dprintf("insert ucs at %d (%d bytes)\n", tbox->pos,
+		    (len - tbox->pos)*sizeof(Uint32));
 
 		/* Insert at the cursor position in the string. */
 		memcpy(p+nins, p, (len - tbox->pos)*sizeof(Uint32));
 		if (kbd_unitrans) {
 			if (uch != 0) {
-				for (i = 0; i < nins; i++)
+				for (i = 0; i < nins; i++) {
+					dprintf("insert ucs %d: %d\n",
+					    tbox->pos+i, ins[i]);
 					ucs[tbox->pos+i] = ins[i];
+				}
 			} else {
 				goto out;
 			}
 		} else if (keysym != 0) {
-			for (i = 0; i < nins; i++)
+			for (i = 0; i < nins; i++) {
+				dprintf("insert ascii %d: %d\n",
+				    tbox->pos+i, ins[i]);
 				ucs[len+i] = ins[i];
+			}
 		} else {
 			goto skip;
 		}
@@ -276,12 +314,62 @@ skip:
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
 	free(ucs);
+	return (1);
 }
 
-/* Destroy the character before the cursor. */
-static void
-key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
+#else /* !UTF8 */
+
+/* Insert an ASCII character. */
+static int
+key_char_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 unicode)
+{
+	struct widget_binding *stringb;
+	size_t len;
+	Uint32 *ucs;
+	char *s;
+	char c;
+	int i;
+
+	if (keysym == 0 || !isascii(keysym))
+		return (0);
+
+	stringb = widget_get_binding(tbox, "string", &s);
+	len = strlen(s);
+	c = (char)key_apply_mod((Uint32)keysym, keymod);
+
+	if ((len+1)+1 >= stringb->size)
+		goto skip;
+
+	if (tbox->pos == len) {		       			/* Append */
+		dprintf("append `%c' at %d\n", c, tbox->pos);
+		s[len] = c;
+	} else {						/* Insert */
+		char *p = &s[tbox->pos];
+		
+		dprintf("insert `%c' at %d (move %d chars)\n", c, tbox->pos,
+		    (len - tbox->pos));
+
+		memcpy(&p[1], &p[0], (len - tbox->pos));
+		*p = c;
+	}
+out:
+	s[len+1] = '\0';
+	tbox->pos++;
+	dprintf("pos -> %d\n", tbox->pos);
+skip:
+	widget_binding_modified(stringb);
+	widget_binding_unlock(stringb);
+	return (1);
+}
+
+#endif /* UTF8 */
+
+#ifdef UTF8
+
+static int
+key_del_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 unicode)
 {
 	struct widget_binding *stringb;
 	size_t len;
@@ -305,6 +393,7 @@ key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		}
 		tbox->pos--;
 	}
+
 	if (tbox->pos == tbox->offs) {
 		if ((tbox->offs -= 4) < 1)
 			tbox->offs = 0;
@@ -314,39 +403,56 @@ out:
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
 	free(ucs);
+	return (1);
 }
 
-/* Eliminate the character at the cursor position. */
-static void
-key_delete(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
+#else /* !UTF8 */
+
+/* Destroy the ASCII character before the cursor. */
+static int
+key_del_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 unicode)
 {
 	struct widget_binding *stringb;
 	size_t len;
-	Uint32 *ucs;
-	char *utf8;
+	char *s;
+	int pos = tbox->pos;
 	int i;
-	
-	stringb = widget_get_binding(tbox, "string", &utf8);
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	len = ucs4_len(ucs);
 
-	if (tbox->pos == len && len > 0) {		/* End of string */
-		ucs[--tbox->pos] = '\0';
-	} else if (tbox->pos >= 0) {			/* Middle of string */
-		/* XXX use memmove */
-		for (i = tbox->pos; i < len; i++)
-			ucs[i] = ucs[i+1];
+	stringb = widget_get_binding(tbox, "string", &s);
+	len = strlen(s);
+
+	if (len == 0)
+		goto out;
+	
+	if (keysym == SDLK_BACKSPACE) {
+		if (pos == 0) {
+			goto out;
+		}
+		pos -= 1;
+		tbox->pos--;
 	}
 
-	unicode_export(UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
+	if (pos == len) {
+		s[len-1] = '\0';
+		tbox->pos--;
+	} else if (pos >= 0) {
+		memmove(&s[pos], &s[pos+1], len+1);
+	}
+
+	if (tbox->pos == tbox->offs) {
+		if ((tbox->offs -= 4) < 1)
+			tbox->offs = 0;
+	}
+out:
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
-	free(ucs);
+	return (1);
 }
+#endif /* UTF8 */
 
 /* Move the cursor to the start of the string. */
-static void
+static int
 key_home(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
@@ -354,11 +460,13 @@ key_home(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		tbox->offs = 0;
 	}
 	tbox->pos = 0;
+	return (0);
 }
 
-/* Move the cursor to the end of the string. */
-static void
-key_end(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+#ifdef UTF8
+/* Move the cursor to the end of the UTF-8 string. */
+static int
+key_end_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	struct widget_binding *stringb;
@@ -371,12 +479,32 @@ key_end(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	tbox->offs = 0;
 	widget_binding_unlock(stringb);
 	free(ucs);
+	return (0);
 }
 
+#else /* !UTF8 */
+
+/* Move the cursor to the end of the ASCII string. */
+static int
+key_end_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	struct widget_binding *stringb;
+	char *s;
+	
+	stringb = widget_get_binding(tbox, "string", &s);
+	tbox->pos = strlen(s);
+	tbox->offs = 0;
+	widget_binding_unlock(stringb);
+	return (0);
+}
+#endif /* UTF8 */
+
+#ifdef UTF8
 /* Kill the text after the cursor. */
 /* XXX save to a kill buffer, etc */
-static void
-key_kill(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+static int
+key_kill_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	struct widget_binding *stringb;
@@ -392,10 +520,28 @@ key_kill(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
 	free(ucs);
+	return (0);
 }
+#else /* !UTF8 */
+/* Kill the text after the cursor. */
+/* XXX save to a kill buffer, etc */
+static int
+key_kill_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+    Uint32 uch)
+{
+	struct widget_binding *stringb;
+	char *s;
+
+	stringb = widget_get_binding(tbox, "string", &s);
+	s[tbox->pos] = '\0';
+	widget_binding_modified(stringb);
+	widget_binding_unlock(stringb);
+	return (0);
+}
+#endif
 
 /* Move the cursor to the left. */
-static void
+static int
 key_left(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
@@ -406,11 +552,13 @@ key_left(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		if (--tbox->offs < 0)
 			tbox->offs = 0;
 	}
+	return (1);
 }
 
+#ifdef UTF8
 /* Move the cursor to the right. */
-static void
-key_right(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
+static int
+key_right_utf8(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
 	struct widget_binding *stringb;
@@ -426,5 +574,26 @@ key_right(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 
 	widget_binding_unlock(stringb);
 	free(ucs);
+	return (1);
 }
 
+#else /* !UTF8 */
+
+/* Move the cursor to the right. */
+static int
+key_right_ascii(struct textbox *tbox, SDLKey keysym, int keymod,
+    const char *arg, Uint32 uch)
+{
+	struct widget_binding *stringb;
+	char *s;
+
+	stringb = widget_get_binding(tbox, "string", &s);
+
+	if (tbox->pos < strlen(s))
+		tbox->pos++;
+
+	widget_binding_unlock(stringb);
+	return (1);
+}
+
+#endif /* UTF8 */

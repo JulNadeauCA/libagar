@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.h,v 1.12 2003/08/31 11:58:10 vedge Exp $	*/
+/*	$Csoft: keycodes.h,v 1.13 2003/09/01 10:34:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_KEYCODES_H_
@@ -8,7 +8,7 @@
 struct keycode {
 	SDLKey	 key;
 	int	 modmask;
-	void	(*func)(struct textbox *, SDLKey, int, const char *, Uint32);
+	int	(*func)(struct textbox *, SDLKey, int, const char *, Uint32);
 	char	*arg;
 	int	 clr_compo;
 };
