@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.20 2003/01/04 23:19:42 vedge Exp $
+.\"	$Csoft: widget.3,v 1.21 2003/01/20 12:08:07 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -68,9 +68,6 @@ The effective position and geometry of widgets is managed by the widget
 container (ie.
 .Xr region 3
 or another widget), and is hidden from the widget layer by macros.
-Rendering macros perform clipping as well as additional boundary checking in
-.Dv DEBUG
-mode.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
@@ -81,10 +78,8 @@ mode.
 The
 .Fn widget_init
 function initializes a widget structure.
-.Pp
-The
 .Fa widget_ops
-argument is a pointer to the following structure:
+is a pointer to the following structure:
 .Bd -literal
 struct widget_ops {
 	const struct object_ops	obops;		/* Object ops */
@@ -112,7 +107,7 @@ If
 .Fa rw
 or
 .Fa rh
-is negative, the requested geometry is in pixels.
+is negative, the widget provides a default geometry.
 .Pp
 The
 .Fa flags
@@ -127,10 +122,6 @@ can be changed at runtime, and may include:
 #define WIDGET_CLIPPING		  0x08	/* Set the clipping rectangle to
 					   the widget area before draw. */
 .Ed
-.Pp
-The
-.Dv WIDGET_NO_FOCUS
-flag prevents the widget from gaining focus.
 .Sh COLOR SCHEME
 .nr nS 1
 .Ft void
@@ -236,9 +227,6 @@ are inside the widget area.
 .Fn WIDGET_PUT_ALPHAPIXEL "struct widget *wid" "Sint16 x" "Sint16 y" \
                           "Uint32 color" "Uint8 a"
 .Pp
-.Ft SDL_Surface *
-.Fn WIDGET_SURFACE "struct widget *wid"
-.Pp
 .Ft void
 .Fn WIDGET_FOCUS "struct widget *wid"
 .nr nS 0
@@ -269,13 +257,184 @@ of the widget, after alpha-blending the pixel using alpha value
 .Fa a .
 .Pp
 The
-.Fn WIDGET_SURFACE
-macro returns a widget surface.
-The
 .Fn WIDGET_FOCUS
 macro gives focus to a widget and posts a
 .Fn widget-gainfocus
 event.
+.Sh BINDINGS
+The
+.Nm widget
+structure contains a list of pointers to values that the widgets are able
+to read and manipulate directly.
+Widget bindings eliminate the need for event handlers for widgets dealing
+with simple types of data.
+For example, the
+.Xr scrollbar
+widget defines
+.Sq value ,
+.Sq min
+and
+.Sq max
+as
+.Ft int
+bindings.
+.Pp
+All widgets provide default bindings, which point to data allocated and
+initialized by the widget itself.
+The
+.Fn widget_bind
+function is called to override the default bindings.
+.nr nS 1
+.Ft "struct widget_binding *"
+.Fn widget_bind "void *widget" "const char *binding" \
+                "enum widget_binding_type type" "..."
+.Pp
+.Ft "struct widget_binding *"
+.Fn widget_binding_get "void *widget" "const char *binding" "void *res"
+.Pp
+.Ft "struct widget_binding *"
+.Fn widget_binding_get_locked "void *widget" "const char *binding" "void *res"
+.Pp
+.Ft void
+.Fn widget_binding_unlock "struct widget_binding *binding"
+.Pp
+.Ft int
+.Fn widget_get_bool "void *widget" "const char *binding"
+.Pp
+.Ft int
+.Fn widget_get_int "void *widget" "const char *binding"
+.Pp
+.Ft Uint8
+.Fn widget_get_uint8 "void *widget" "const char *binding"
+.Pp
+.Ft Sint8
+.Fn widget_get_sint8 "void *widget" "const char *binding"
+.Pp
+.Ft Uint16
+.Fn widget_get_uint16 "void *widget" "const char *binding"
+.Pp
+.Ft Sint16
+.Fn widget_get_sint16 "void *widget" "const char *binding"
+.Pp
+.Ft Uint32
+.Fn widget_get_uint32 "void *widget" "const char *binding"
+.Pp
+.Ft Sint32
+.Fn widget_get_sint32 "void *widget" "const char *binding"
+.Pp
+.Ft float
+.Fn widget_get_float "void *widget" "const char *binding"
+.Pp
+.Ft double
+.Fn widget_get_double "void *widget" "const char *binding"
+.Pp
+.Ft char *
+.Fn widget_get_string "void *widget" "const char *binding"
+.Pp
+.Ft void *
+.Fn widget_get_pointer "void *widget" "const char *binding"
+.Pp
+.Ft void
+.Fn widget_set_bool "void *widget" "const char *binding" "int i"
+.Pp
+.Ft void
+.Fn widget_set_int "void *widget" "const char *binding" "int i"
+.Pp
+.Ft void
+.Fn widget_set_uint8 "void *widget" "const char *binding" "Uint8 u8"
+.Pp
+.Ft void
+.Fn widget_set_sint8 "void *widget" "const char *binding" "Sint8 u8"
+.Pp
+.Ft void
+.Fn widget_set_uint16 "void *widget" "const char *binding" "Uint16 u16"
+.Pp
+.Ft void
+.Fn widget_set_sint16 "void *widget" "const char *binding" "Sint16 u16"
+.Pp
+.Ft void
+.Fn widget_set_uint32 "void *widget" "const char *binding" "Uint32 u32"
+.Pp
+.Ft void
+.Fn widget_set_sint32 "void *widget" "const char *binding" "Sint32 u32"
+.Pp
+.Ft void
+.Fn widget_set_float "void *widget" "const char *binding" "float f"
+.Pp
+.Ft void
+.Fn widget_set_double "void *widget" "const char *binding" "double d"
+.Pp
+.Ft void
+.Fn widget_set_string "void *widget" "const char *binding" "char *s"
+.Pp
+.Ft void
+.Fn widget_set_pointer "void *widget" "const char *binding" "void *p"
+.Pp
+.nr nS 0
+The
+.Fn widget_bind
+function either overrides or creates a new binding.
+.Pp
+If
+.Fa type
+is
+.Dv WIDGET_PROP ,
+the following arguments are:
+.Bl -tag -width "struct object *" -compact
+.It struct object *
+The object that holds the property.
+.It char *
+The property identifier.
+.El
+.Pp
+Otherwise, the following arguments are:
+.Bl -tag -width "pthread_mutex_t *" -compact
+.It pthread_mutex_t *
+A lock to acquire when manipulating the data.
+.It void *
+A pointer to the data.
+.El
+.Pp
+Correct values for the
+.Fa type
+argument include:
+.Bd -literal
+enum widget_binding_type {
+	WIDGET_NONE,
+	WIDGET_BOOL,
+	WIDGET_INT,
+	WIDGET_UINT8,
+	WIDGET_SINT8,
+	WIDGET_UINT16,
+	WIDGET_SINT16,
+	WIDGET_UINT32,
+	WIDGET_SINT32,
+	WIDGET_UINT64,
+	WIDGET_SINT64,
+	WIDGET_FLOAT,
+	WIDGET_DOUBLE,
+	WIDGET_STRING,
+	WIDGET_POINTER,
+	WIDGET_PROP
+}
+.Ed
+.Pp
+The
+.Fn widget_binding_get
+function returns a matching binding, or NULL if none was found.
+If a binding was found, a pointer to it is written to
+.Fa res .
+.Fn widget_binding_get_locked
+is a variant that does not unlock the binding before returning, so the
+caller must invoke
+.Fa widget_binding_unlock
+when done manipulating the data.
+.Pp
+The
+.Fa widget_get_TYPE
+and
+.Fa widget_set_TYPE
+variants manipulate the bound values atomically.
 .Sh EVENTS
 The
 .Nm
