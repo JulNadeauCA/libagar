@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.7 2002/07/08 08:39:41 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.8 2002/07/09 09:27:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -100,20 +100,20 @@ mapwin_new(struct mapedit *med, struct map *m)
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -25);
 	reg->spacing = 1;
 	/* Load map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
-	    0, 0, 0);
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0,
+	    -1, -1);
 	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
 	/* Save map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
-	    0, 0, 0);
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0,
+	    -1, -1);
 	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
 	/* Clear map */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP),
-	    0, 0, 0);
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0,
+	    -1, -1);
 	event_new(bu, "button-pushed", 0, fileops_clear_map, "%p", mv);
 	/* New map view */
-	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW),
-	    0, 0, 0);
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW), 0,
+	    -1, -1);
 	event_new(bu, "button-pushed", 0, mapwin_new_view, "%p", mv);
 
 	/* Tile stack */
