@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Csoft: mkconcurrent.pl,v 1.13 2003/06/21 07:30:03 vedge Exp $
+# $Csoft: mkconcurrent.pl,v 1.14 2003/07/27 16:33:56 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -75,49 +75,46 @@ sub ConvertMakefile
 		my @srcs = ();
 		my @objs = ();
 
-		if (/^\s*(OBJS|CATMAN\d|PSMAN\d|MOS)\s*=\s*(.+)$/) {
+		if (/^\s*(SRCS|CATMAN\d|PSMAN\d|MOS)\s*=\s*(.+)$/) {
 			my $type = $1;
 
-			foreach my $obj (split(/\s/, $2)) {
-				unless ($obj) {
+			foreach my $src (split(/\s/, $2)) {
+				unless ($src) {
 					next;
 				}
-				my $objsrc = $obj;
+				my $obj = $src;
 
-				if ($type eq 'OBJS') {
-					# C source
-					$objsrc =~ s/\.o$/\.c/g;
+				if ($type eq 'SRCS') {
+					$obj =~ s/\.c$/\.o/;
 				} elsif ($type =~ /CATMAN\d/) {
-					# Nroff->ASCII
-					$objsrc =~ s/\.cat(\d)$/.\1/;
+					$src =~ s/\.cat(\d)$/.\1/;
 				} elsif ($type =~ /PSMAN\d/) {
-					# Nroff->postscript
-					$objsrc =~ s/\.ps(\d)$/.\1/;
+					$src =~ s/\.ps(\d)$/.\1/;
 				} elsif ($type =~ /MOS/) {
-					# Po->mo
-					$objsrc =~ s/\.mo$/\.po/g;
+					$src =~ s/\.mo$/\.po/g;
 				}
-				push @deps, "$obj: $SRC/$ndir/$objsrc";
-				if ($type eq 'OBJS') {
-					# C source
+				push @deps, "$obj: $SRC/$ndir/$src";
+				if ($type eq 'SRCS') {
+					# C/C++/Asm/Lex/Yacc source -> object
+					# XXX C++/Asm/Lex/Yacc
 					push @deps, << 'EOF';
 	@echo "${CC} ${CFLAGS} ${CPPFLAGS}" -c $<
 	@${CC} ${CFLAGS} -I${BUILD} ${CPPFLAGS} -c $<
 EOF
 				} elsif ($type =~ /CATMAN\d/) {
-					# Nroff->ASCII
+					# Nroff -> ASCII
 					push @deps, << 'EOF';
 	@echo "${NROFF} -Tascii -mandoc $< > $@"
 	@${NROFF} -Tascii -mandoc $< > $@ || exit 0
 EOF
 				} elsif ($type =~ /PSMAN\d/) {
-					# Nroff->postscript
+					# Nroff -> postscript
 					push @deps, << 'EOF';
 	@echo "${NROFF} -Tps -mandoc $< > $@"
 	@${NROFF} -Tps -mandoc $< > $@ || exit 0
 EOF
 				} elsif ($type =~ /MOS/) {
-					# Po->mo
+					# Portable object -> machine object
 					push @deps, << 'EOF';
 	@echo "${MSGFMT} -o $@ $<"
 	@${MSGFMT} -o $@ $<

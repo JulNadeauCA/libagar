@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.25 2003/06/21 07:30:03 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.26 2003/06/25 00:27:38 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -48,24 +48,25 @@ STATIC?=	Yes
 SHARED?=	No
 SOVERSION?=	1:0:0
 
-.SUFFIXES:  .o .po .lo .c .cc .C .cxx .s .S .asm .y
+.SUFFIXES: .o .po .lo .c .cc .asm .l .y
 
 CFLAGS+=    ${COPTS}
 
 SHARE?=
 
+# C
 .c.o:
 	${CC} ${CFLAGS} -c $<
-
-.cc.o:
-	${CXX} ${CXXFLAGS} -c $<
-
 .c.lo:
 	${LIBTOOL} ${CC} ${CFLAGS} -c $<
-.cc.lo:
-	${LIBTOOL} ${CXX} ${CXXFLAGS} -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+
+# C++
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+.cc.lo:
+	${LIBTOOL} ${CXX} ${CXXFLAGS} -c $<
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
@@ -105,32 +106,79 @@ SHARE?=
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
+all: all-subdir lib${LIB}.a lib${LIB}.la
 
-all:	all-subdir lib${LIB}.a lib${LIB}.la
-
-lib${LIB}.a:	${OBJS}
+_lib_objs:
 	@if [ "${LIB}" != "" ]; then \
-		echo "${AR} -cru lib${LIB}.a ${OBJS}"; \
-		${AR} -cru lib${LIB}.a ${OBJS}; \
-		echo "${RANLIB} lib${LIB}.a"; \
-		(${RANLIB} lib${LIB}.a || exit 0); \
+	    for F in ${SRCS}; do \
+	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	        ${MAKE} $$F; \
+            done; \
 	fi
 
-lib${LIB}.la:	${LIBTOOL} ${SHOBJS}
+_lib_shobjs:
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
-	    echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	     -shared -version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}"; \
-	    ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		-version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}; \
+	    for F in ${SRCS}; do \
+	        F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
+	        F=`echo $$F | sed 's/.cc$$/.so/'`; \
+	        F=`echo $$F | sed 's/.asm$$/.so/'`; \
+	        ${MAKE} $$F; \
+            done; \
 	fi
 
-clean:		clean-subdir
+lib${LIB}.a: _lib_objs
 	@if [ "${LIB}" != "" ]; then \
-	    echo "rm -f lib${LIB}.a ${OBJS}"; \
-	    rm -f lib${LIB}.a ${OBJS}; \
+	    export _objs=""; \
+	    for F in ${SRCS}; do \
+	    	F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	_objs="$$_objs $$F"; \
+            done; \
+	    echo "${AR} -cru lib${LIB}.a $$_objs"; \
+	    ${AR} -cru lib${LIB}.a $$_objs; \
+	    echo "${RANLIB} lib${LIB}.a"; \
+	    (${RANLIB} lib${LIB}.a || exit 0); \
+	fi
+
+lib${LIB}.la: ${LIBTOOL} _lib_shobjs
+	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
+	    export _shobjs=""; \
+	    for F in ${SRCS}; do \
+	    	F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
+	    	F=`echo $$F | sed 's/.cc$$/.so/'`; \
+	    	F=`echo $$F | sed 's/.asm$$/.so/'`; \
+	    	_shobjs="$$_objs $$F"; \
+            done; \
+	    echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
+	     -shared -version-info ${SOVERSION} ${LDFLAGS} $$_shobjs ${LIBS}"; \
+	    ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
+		-version-info ${SOVERSION} ${LDFLAGS} $$_shobjs ${LIBS}; \
+	fi
+
+clean: clean-subdir
+	@if [ "${LIB}" != "" ]; then \
+            for F in ${SRCS}; do \
+	    	F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	echo "rm -f $$F"; \
+	    	rm -f $$F; \
+            done; \
+	    echo "rm -f lib${LIB}.a"; \
+	    rm -f lib${LIB}.a; \
 	    if [ "${SHARED}" = "Yes" ]; then \
-		echo rm -f lib${LIB}.la ${SHOBJS} ${LIBTOOL} ${LTCONFIG_LOG}; \
-		rm -f lib${LIB}.la ${SHOBJS} ${LIBTOOL} ${LTCONFIG_LOG}; \
+                for F in ${SRCS}; do \
+	    	    F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
+	    	    F=`echo $$F | sed 's/.cc$$/.so/'`; \
+	    	    F=`echo $$F | sed 's/.asm$$/.so/'`; \
+	    	    echo "rm -f $$F"; \
+	    	    rm -f $$F; \
+                done; \
+		echo "rm -f lib${LIB}.la ${LIBTOOL} ${LTCONFIG_LOG}"; \
+		rm -f lib${LIB}.la ${LIBTOOL} ${LTCONFIG_LOG}; \
 	    fi; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
@@ -138,10 +186,10 @@ clean:		clean-subdir
 	    rm -f ${CLEANFILES}; \
 	fi
 
-cleandir:	clean cleandir-subdir clean-depend
+cleandir: clean cleandir-subdir clean-depend
 	rm -fR .libs
 
-install:	install-subdir lib${LIB}.a lib${LIB}.la
+install: install-subdir lib${LIB}.a lib${LIB}.la
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}"; \
 	    ${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}; \
@@ -164,7 +212,7 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
             done; \
 	fi
 
-deinstall:	deinstall-subdir
+deinstall: deinstall-subdir
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
 	    echo "${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a"; \
 	    ${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a; \
@@ -182,7 +230,7 @@ deinstall:	deinstall-subdir
 	    done; \
 	fi
 
-${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
+${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH}"; \
 	    ${SH} ${LTCONFIG} ${LTMAIN_SH}; \
@@ -194,7 +242,7 @@ depend: depend-subdir
 
 regress: regress-subdir
 
-.PHONY:	clean cleandir install deinstall depend regress
+.PHONY:	clean cleandir install deinstall depend regress _lib_objs _lib_shobjs
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.dep.mk

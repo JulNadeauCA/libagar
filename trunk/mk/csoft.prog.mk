@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.27 2003/03/05 16:13:09 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.28 2003/06/21 07:30:03 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -31,12 +31,10 @@ PROG_INSTALL?=	Yes
 CC?=		cc
 CFLAGS?=	-O2
 CPPFLAGS?=
-CC_PICFLAGS?=	-fPIC -DPIC
 GMONOUT?=	gmon.out
 
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
-ASM_PICFLAGS?=	-DPIC
 
 LEX?=		lex
 LIBL?=		-ll
@@ -47,34 +45,23 @@ YFLAGS?=	-d
 
 SHARE?=
 
-.SUFFIXES: .o .po .so .c .cc .C .cxx .y .s .S .asm .l
+.SUFFIXES: .o .po .c .cc .asm .l .y
 
 # C
 .c.o:
 	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
-.cc.o:
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c $<
-.s.o .S.o:
-	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
-.c.so:
-	${CC} ${CC_PICFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
-.cc.so:
-	${CXX} ${CC_PICFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
-.s.so .S.so:
-	${CC} ${CC_PICFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+
+# C++
+.cc.o:
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c $<
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
-.s.po .S.po:
-	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Assembly
 .asm.o:
 	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $<
-
-.asm.so:
-	${ASM} ${ASMFLAGS} ${ASM_PICFLAGS} ${CPPFLAGS} -o $@ $<
 
 # Lex
 .l:
@@ -108,18 +95,65 @@ SHARE?=
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
-all:	all-subdir ${PROG}
+all: all-subdir ${PROG}
 
-${PROG}: ${OBJS}
-	${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} ${OBJS} ${LIBS}
+_prog_objs:
+	@if [ "${PROG}" != "" ]; then \
+	    for F in ${SRCS}; do \
+	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	        ${MAKE} $$F; \
+	    done; \
+	fi
 
-${GMONOUT}: ${OBJS}
-	${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} ${OBJS} ${LIBS}
+_prog_pobjs:
+	@if [ "${GMONOUT}" != "" ]; then \
+	    for F in ${SRCS}; do \
+	        F=`echo $$F | sed 's/.[cly]$$/.po/'`; \
+	        F=`echo $$F | sed 's/.cc$$/.po/'`; \
+	        F=`echo $$F | sed 's/.asm$$/.po/'`; \
+	        ${MAKE} $$F; \
+	    done; \
+	fi
+
+${PROG}: _prog_objs
+	@if [ "${PROG}" != "" ]; then \
+	    export _objs=""; \
+            for F in ${SRCS}; do \
+	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	_objs="$$_objs $$F"; \
+            done; \
+	    echo "${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}"; \
+	    ${CC} ${CFLAGS} ${LDFLAGS} -o ${PROG} $$_objs ${LIBS}; \
+	fi
+
+${GMONOUT}: _prog_pobjs
+	if [ "${GMONOUT}" != "" ]; then \
+	    export _pobjs=""; \
+            for F in ${SRCS}; do \
+	    	F=`echo $$F | sed 's/.[cly]$$/.po/'`; \
+	    	F=`echo $$F | sed 's/.cc$$/.po/'`; \
+	    	F=`echo $$F | sed 's/.asm$$/.po/'`; \
+	    	_pobjs="$$_pobjs $$F"; \
+            done; \
+	    echo "${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} $$_pobjs ${LIBS}"; \
+	    ${CC} -pg -DPROF ${LDFLAGS} -o ${GMONOUT} $$_pobjs ${LIBS}; \
+	fi
 
 clean: clean-subdir
 	@if [ "${PROG}" != "" ]; then \
-	    echo "rm -f ${PROG} ${GMONOUT} ${OBJS}"; \
-	    rm -f ${PROG} ${GMONOUT} ${OBJS}; \
+            for F in ${SRCS}; do \
+	    	F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	echo "rm -f $$F"; \
+	    	rm -f $$F; \
+            done; \
+	    echo "rm -f ${PROG} ${GMONOUT}"; \
+	    rm -f ${PROG} ${GMONOUT}; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
 	    echo "rm -f ${CLEANFILES}"; \
@@ -162,7 +196,7 @@ regress: regress-subdir
 
 depend: depend-subdir
 
-.PHONY: clean cleandir install deinstall regress depend
+.PHONY: clean cleandir install deinstall regress depend _prog_objs _prog_pobjs
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.dep.mk
