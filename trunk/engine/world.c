@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.14 2002/02/25 09:07:53 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.15 2002/02/25 11:25:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -55,22 +55,19 @@ savepath(char *obname, const char *suffix)
 {
 	static char path[FILENAME_MAX];
 	static struct stat sta;
-	char **ap, *pathv[32];	/* XXX */
+	char *p, *last;
 	char *datapath, *datapathp;
 	
-	datapath = strdup(world->datapath);
-	datapathp = datapath;
+	datapathp = datapath = strdup(world->datapath);
 
-	for (ap = pathv;
-	    (*ap = strtok(datapath, ":;")) != NULL;) {
-		sprintf(path, "%s/%s.%s", *ap, obname, suffix);
+	for (p = strtok_r(datapath, ":;", &last);
+	     p != NULL;
+	     p = strtok_r(NULL, ":;", &last)) {
+		sprintf(path, "%s/%s.%s", p, obname, suffix);
 		if (stat(path, &sta) == 0) {
 			dprintf("loading %s\n", path);
 			free(datapathp);
 			return (path);
-		}
-		if (**ap != '\0' && ++ap >= &pathv[10]) {
-			break;
 		}
 	}
 
@@ -89,7 +86,7 @@ world_create(char *name)
 	pwd = getpwuid(getuid());
 
 	world = (struct world *)emalloc(sizeof(struct world));
-	object_init(&world->obj, name, 0, &world_vec);
+	object_init(&world->obj, name, OBJ_DEFERGC, &world_vec);
 
 	world->udatadir = (char *)
 	    emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
@@ -122,7 +119,10 @@ world_create(char *name)
 
 	SLIST_INIT(&world->wobjsh);
 	SLIST_INIT(&world->wcharsh);
-	pthread_mutex_init(&world->lock, NULL);
+	if (pthread_mutex_init(&world->lock, NULL) != 0) {
+		dperror("world");
+		return (NULL);
+	}
 	
 	return (world);
 }
@@ -221,6 +221,5 @@ world_dump(void *p)
 	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		object_dump(ob);
 	}
-	object_dump((struct object *)wo);
 }
 
