@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.133 2003/01/24 08:26:30 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.134 2003/01/25 00:40:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -874,7 +874,7 @@ node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 	/* XXX cache the scaled surfaces. */
 	/* XXX inefficient */
 	SDL_LockSurface(view->v);
-	for (y = 0; y < dh; y++) {
+	for (y = 0; y < dh-1; y++) {
 		for (x = 0; x < dw; x++) {
 			src = (Uint8 *)s->pixels +
 			    (y*TILEH/m->tileh)*s->pitch +
@@ -907,9 +907,6 @@ node_draw(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 	SDL_Surface *su;
 	
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		rd.x = rx + nref->xcenter + nref->xmotion;
-		rd.y = ry + nref->ycenter + nref->ymotion;
-
 		switch (nref->type) {
 		case NODEREF_SPRITE:
 			su = SPRITE(nref->pobj, nref->offs);
@@ -932,10 +929,17 @@ node_draw(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 		default:				/* Not a drawable */
 			continue;
 		}
-
+		
 		if (m->zoom != 100) {
-			node_draw_scaled(m, su, rx, ry);
+			rd.x = rx + (nref->xcenter * m->zoom / 100) +
+			    (nref->xmotion * m->zoom / 100);
+			rd.y = ry + (nref->ycenter * m->zoom / 100) +
+			    (nref->ymotion * m->zoom / 100);
+			node_draw_scaled(m, su, rd.x, rd.y);
 		} else {
+			rd.x = rx + nref->xcenter + nref->xmotion;
+			rd.y = ry + nref->ycenter + nref->ymotion;
+
 			SDL_BlitSurface(su, NULL, view->v, &rd);
 		}
 	}
