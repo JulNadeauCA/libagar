@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.19 2002/11/06 15:25:26 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.20 2002/11/08 07:35:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -160,7 +160,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	/* New map view */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW), 0,
 	    xdiv, ydiv);
-	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 	event_new(bu, "button-pushed", 0, mapwin_new_view, "%p", mv);
 
 	/* Grid */
@@ -196,7 +196,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	/*
 	 * Map view
 	 */
-	reg = region_new(win, REGION_HALIGN, 10, 10, 90, 90);
+	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
 	region_attach(reg, mv);
 
 	win->focus = WIDGET(mv);
