@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.26 2004/08/26 06:18:20 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.27 2004/08/26 06:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -200,7 +200,7 @@ const struct unit length_units[] = {
 
 /* Units of area (SI derived) */
 const struct unit area_units[] = {
-	{ "u^2", "\xc2\xb5\xc2\xb2", N_("Square micrometers"),	1e-6, NULL },
+	{ "um^2", "\xc2\xb5\xc2\xb2", N_("Square micrometers"),	1e-6, NULL },
 	{ "mm^2", "mm\xc2\xb2",	N_("Square millimeters"),	1e-3, NULL },
 	{ "cm^2", "cm\xc2\xb2",	N_("Square centimeters"),	1e-2, NULL },
 	{ "in^2", "in\xc2\xb2",	N_("Square inches"),		0.0254,	NULL },
@@ -214,7 +214,7 @@ const struct unit area_units[] = {
 
 /* Units of volume (SI derived) */
 const struct unit volume_units[] = {
-	{ "u^3", "\xc2\xb5m\xc2\xb3", N_("Cubic micrometers"),	1e-6, NULL },
+	{ "um^3", "\xc2\xb5m\xc2\xb3", N_("Cubic micrometers"),	1e-6, NULL },
 	{ "mm^3", "mm\xc2\xb3",	N_("Cubic millimeters"),	1e-3, NULL },
 	{ "cm^3", "cm\xc2\xb3",	N_("Cubic centimeters"),	1e-2, NULL },
 	{ "in^3", "in\xc2\xb3",	N_("Cubic inches"),		0.0254, NULL },
