@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.46 2002/05/28 06:03:47 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.47 2002/05/31 10:42:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -288,24 +288,29 @@ engine_editmap(void)
 
 /* Caller must not hold world->lock. */
 void
+engine_stop(void)
+{
+	pthread_mutex_lock(&world->lock);
+	world->curmap = NULL;
+	pthread_mutex_unlock(&world->lock);
+}
+
+/* Caller must not hold world->lock. */
+void
 engine_destroy(void)
 {
-#if 0
 	/* Unlink all objects and add them to the free list. */
 	world_destroy(world);
 	
 	/* Force garbage collection. */
 	object_start_gc(0, NULL);
 	object_destroy_gc();
-#endif
 
 	/* Destroy the font engine. */
 	text_engine_destroy();
 
-#if 0
 	/* Free glyph cache. */
 	keycodes_freeglyphs();
-#endif
 
 	/* Shut down the input devices. XXX link */
 	input_destroy(keyboard);
