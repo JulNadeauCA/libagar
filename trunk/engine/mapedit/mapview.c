@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.87 2003/03/12 06:15:12 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.88 2003/03/12 06:20:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -117,11 +117,13 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
-	mv->constr.mode = MAPVIEW_CONSTR_VERT;
+
 	mv->constr.x = 0;
 	mv->constr.y = 0;
-	mv->tmap_win = NULL;
-	mv->tmap_insert = 0;
+	mv->constr.win = NULL;
+	mv->constr.replace = 0;
+	mv->constr.trigger = NULL;
+
 	mv->cur_node = NULL;
 	mv->cur_layer = 0;
 	mv->nodeed.trigger = NULL;
@@ -366,7 +368,7 @@ draw_layer:
 		     mx++, rx += mv->map->tilew) {
 			node = &m->map[my][mx];
 
-			MAP_CHECK_NODE(node, mx, my);
+			MAP_CHECK_NODE(node);
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
@@ -965,5 +967,17 @@ mapview_center(struct mapview *mv, int x, int y)
 	/* XXX */
 	pthread_mutex_unlock(&mv->map->lock);
 #endif
+}
+
+void
+mapview_set_selection(struct mapview *mv, int x, int y,
+    unsigned int w, unsigned int h)
+{
+	mv->msel.set = 0;
+	mv->esel.set = 1;
+	mv->esel.x = x;
+	mv->esel.y = y;
+	mv->esel.w = w;
+	mv->esel.h = h;
 }
 
