@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.6 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.7 2005/02/12 09:54:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -38,14 +38,22 @@ union tileview_val {
 	void *p;
 };
 
+struct tileview_handle {
+	int x, y;		/* Cached tile coords (set by draw routine) */
+	int over;		/* Mouse overlap */
+	int enable;		/* Mouse selection */
+};
+
 struct tileview_ctrl {
 	enum tileview_ctrl_type type;
 	Uint8 r, g, b, a;
 	struct event *event;
 
-	enum tileview_val_type	*valtypes;
-	union tileview_val	*vals;
+	enum tileview_val_type	*valtypes;		/* Entry types */
+	union tileview_val	*vals;			/* Values/pointers */
 	unsigned int		nvals;
+	struct tileview_handle	*handles;		/* User handles */
+	unsigned int		nhandles;
 
 	TAILQ_ENTRY(tileview_ctrl) ctrls;
 };
@@ -59,11 +67,11 @@ struct tileview {
 	int xoffs, yoffs;		/* Display offset */
 	int xms, yms;			/* Cursor coords in surface (pixels) */
 	int xsub, ysub;			/* Cursor subpixel coords (v.pixels) */
+	int xorig, yorig;		/* Origin used when moving controls */
 	SDL_Surface *scaled;		/* Scaled surface */
 	int scrolling;
 	int flags;
 #define TILEVIEW_AUTOREGEN	0x01	/* Regenerate the tile periodically */
-#define TILEVIEW_PRESEL		0x02	/* Pre-selection mode (ctrl) */
 
 	struct timeout zoom_to;		/* Zoom timeout */
 	struct timeout redraw_to;	/* Auto redraw timeout */
@@ -120,7 +128,6 @@ void tileview_pixel2i(struct tileview *, int, int);
 void tileview_rect2(struct tileview *, int, int, int, int);
 void tileview_rect2o(struct tileview *, int, int, int, int);
 void tileview_circle2o(struct tileview *, int, int, int);
-void tileview_handle(struct tileview *, int, int, int, int);
 
 struct tileview_ctrl *tileview_insert_ctrl(struct tileview *,
 			                   enum tileview_ctrl_type,
@@ -128,10 +135,16 @@ struct tileview_ctrl *tileview_insert_ctrl(struct tileview *,
 void		      tileview_remove_ctrl(struct tileview *,
 				           struct tileview_ctrl *);
 
-__inline__ int tileview_int(struct tileview_ctrl *, int);
-#define tileview_uint(ctrl,nval) (u_int)tileview_int((ctrl),(nval))
-__inline__ float tileview_float(struct tileview_ctrl *, int);
+__inline__ int	  tileview_int(struct tileview_ctrl *, int);
+__inline__ void	  tileview_set_int(struct tileview_ctrl *, int, int);
+__inline__ float  tileview_float(struct tileview_ctrl *, int);
+__inline__ void	  tileview_set_float(struct tileview_ctrl *, int, float);
 __inline__ double tileview_double(struct tileview_ctrl *, int);
+__inline__ void	  tileview_set_double(struct tileview_ctrl *, int, double);
+
+#define tileview_uint(ctrl,nval)	(u_int)tileview_int((ctrl),(nval))
+#define tileview_set_uint(tv,nval,v)	tileview_set_int((tv),(nval),(u_int)(v))
+
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.1 2005/02/11 04:51:04 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.2 2005/02/12 09:54:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -41,19 +41,7 @@
 void
 pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 {
-	unsigned int pixno = 0;
-	struct pixmap *opx;
-
-tryname:
-	snprintf(px->name, sizeof(px->name), "pixmap #%d", pixno);
-	TAILQ_FOREACH(opx, &ts->pixmaps, pixmaps) {
-		if (strcmp(opx->name, px->name) == 0)
-			break;
-	}
-	if (opx != NULL) {
-		pixno++;
-		goto tryname;
-	}
+	px->name[0] = '\0';
 	px->ts = ts;
 	px->flags = flags;
 	px->nrefs = 0;
@@ -70,34 +58,38 @@ pixmap_destroy(struct pixmap *px)
 }
 
 void
-pixmap_scale(struct pixmap *px, int w, int h)
+pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 {
 	struct tileset *ts = px->ts;
+	SDL_Surface *nsu;
 
-	if (px->su != NULL) {
-		SDL_FreeSurface(px->su);
-	}
-	px->su = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+	nsu = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
 	    w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask,
 	    ts->fmt->Gmask,
 	    ts->fmt->Bmask,
 	    ts->fmt->Amask);
-	if (px->su == NULL)
+	if (nsu == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
-}
 
-static void
-dimensions_changed(int argc, union evarg *argv)
-{
-	struct tileview *tv = argv[0].p;
-	struct tileview_ctrl *ctrl = argv[1].p;
-	int x = tileview_int(ctrl, 0);
-	int y = tileview_int(ctrl, 1);
-	u_int w = tileview_uint(ctrl, 2);
-	u_int h = tileview_uint(ctrl, 3);
+	if (px->su != NULL) {
+		SDL_Rect rd;
 
-	dprintf("changed: %d,%d,%u,%u\n", x, y, w, h);
+		SDL_SetAlpha(nsu, px->su->flags &
+		    (SDL_SRCALPHA|SDL_RLEACCEL),
+		    px->su->format->alpha);
+		SDL_SetColorKey(nsu, px->su->flags &
+		    (SDL_SRCCOLORKEY|SDL_RLEACCEL),
+		    px->su->format->colorkey);
+		SDL_SetAlpha(px->su, 0, 0);
+		SDL_SetColorKey(px->su, 0, 0);
+
+		rd.x = xoffs;
+		rd.y = yoffs;
+		SDL_BlitSurface(px->su, NULL, nsu, &rd);
+		SDL_FreeSurface(px->su);
+	}
+	px->su = nsu;
 }
 
 struct window *
@@ -126,5 +118,26 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	spinbutton_set_range(sb, 0, 255);
 	
 	return (win);
+}
+
+void
+pixmap_mousebuttondown(struct tileview *tv, struct pixmap *px,
+    int x, int y, int button)
+{
+	dprintf("%d,%d,%d\n", x, y, button);
+}
+
+void
+pixmap_mousebuttonup(struct tileview *tv, struct pixmap *px, int x, int y,
+    int button)
+{
+	dprintf("%d,%d,%d\n", x, y, button);
+}
+
+void
+pixmap_mousemotion(struct tileview *tv, struct pixmap *px, int x, int y,
+    int xrel, int yrel, int state)
+{
+	dprintf("%d,%d %d,%d %d\n", x, y, xrel, yrel, state);
 }
 

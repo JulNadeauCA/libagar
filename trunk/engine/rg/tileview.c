@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.7 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.9 2005/02/12 10:31:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ zoomin_tick(void *obj, Uint32 ival, void *arg)
 	if (tv->zoom > 1000) {
 		return (0);
 	}
-	tileview_set_zoom(tv, tv->zoom<100 ? tv->zoom+5 : tv->zoom+20, 1);
+	tileview_set_zoom(tv, tv->zoom+20, 1);
 	return (ival);
 }
 
@@ -84,10 +84,10 @@ zoomout_tick(void *obj, Uint32 ival, void *arg)
 {
 	struct tileview *tv = obj;
 
-	if (tv->zoom < 4) {
+	if (tv->zoom < 100) {
 		return (0);
 	}
-	tileview_set_zoom(tv, tv->zoom<100 ? tv->zoom-5 : tv->zoom-20, 1);
+	tileview_set_zoom(tv, tv->zoom-20, 1);
 	return (ival);
 }
 
@@ -100,6 +100,15 @@ move_cursor(struct tileview *tv, int x, int y)
 	tv->ysub = tv->yms%tv->pxsz;
 	tv->xms -= tv->xsub;
 	tv->yms -= tv->ysub;
+	tv->xms /= tv->pxsz;
+	tv->yms /= tv->pxsz;
+}
+
+static __inline__ int
+cursor_overlap(struct tileview_handle *th, int sx, int sy)
+{
+	return (sx >= th->x - 2 && sx <= th->x + 2 &&
+	        sy >= th->y - 2 && sy <= th->y + 2);
 }
 
 static void
@@ -109,10 +118,6 @@ tileview_keydown(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 
 	switch (keysym) {
-	case SDLK_LCTRL:
-	case SDLK_RCTRL:
-		tv->flags |= TILEVIEW_PRESEL;
-		break;
 	case SDLK_EQUALS:
 		timeout_set(&tv->zoom_to, zoomin_tick, NULL, 0);
 		timeout_del(tv, &tv->zoom_to);
@@ -142,10 +147,6 @@ tileview_keyup(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 
 	switch (keysym) {
-	case SDLK_LCTRL:
-	case SDLK_RCTRL:
-		tv->flags &= ~TILEVIEW_PRESEL;
-		break;
 	case SDLK_EQUALS:
 	case SDLK_MINUS:
 		timeout_del(tv, &tv->zoom_to);
@@ -160,10 +161,43 @@ tileview_buttondown(int argc, union evarg *argv)
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
+	struct tileview_ctrl *ctrl;
+	int sx, sy, i;
 
 	widget_focus(tv);
+
 	switch (button) {
 	case SDL_BUTTON_LEFT:
+		sx = (x - tv->xoffs)/tv->pxsz;
+		sy = (y - tv->yoffs)/tv->pxsz;
+		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
+			for (i = 0; i < ctrl->nhandles; i++) {
+				struct tileview_handle *th = &ctrl->handles[i];
+		
+				if (cursor_overlap(th, sx, sy)) {
+					th->enable = 1;
+					tv->xorig = sx;
+					tv->yorig = sy;
+					break;
+				}
+			}
+			if (i < ctrl->nhandles)
+				break;
+		}
+		if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
+			struct tile_element *tel = tv->tv_pixmap.tel;
+			struct pixmap *px = tel->tel_pixmap.px;
+
+			if (sx >= tel->tel_pixmap.x &&
+			    sx <= tel->tel_pixmap.x+px->su->w &&
+			    sy >= tel->tel_pixmap.y &&
+			    sy <= tel->tel_pixmap.y+px->su->h) {
+				pixmap_mousebuttondown(tv, px,
+				    sx - tel->tel_pixmap.x,
+				    sy - tel->tel_pixmap.y,
+				    button);
+			}
+		}
 		break;
 	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
@@ -172,18 +206,13 @@ tileview_buttondown(int argc, union evarg *argv)
 	case SDL_BUTTON_WHEELUP:
 		tileview_set_zoom(tv,
 		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+100, 1);
+		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		tileview_set_zoom(tv,
 		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-100, 1);
+		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
 		break;
-	}
-
-	if ((button == SDL_BUTTON_WHEELUP ||
-	     button == SDL_BUTTON_WHEELDOWN)) {
-		move_cursor(tv,
-		    x - tv->xoffs,
-		    y - tv->yoffs);
 	}
 }
 
@@ -192,10 +221,41 @@ tileview_buttonup(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int button = argv[1].i;
+	struct tileview_ctrl *ctrl;
+	int i;
 
 	if (button == SDL_BUTTON_RIGHT ||
-	    button == SDL_BUTTON_MIDDLE) {
+	    button == SDL_BUTTON_MIDDLE)
 		tv->scrolling = 0;
+
+	switch (button) {
+	case SDL_BUTTON_RIGHT:
+	case SDL_BUTTON_MIDDLE:
+		tv->scrolling = 0;
+		break;
+	case SDL_BUTTON_LEFT:
+		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
+			for (i = 0; i < ctrl->nhandles; i++) {
+				struct tileview_handle *th = &ctrl->handles[i];
+
+				if (th->enable) {
+					th->enable = 0;
+					break;
+				}
+			}
+			if (i < ctrl->nhandles)
+				break;
+		}
+		if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
+			struct tile_element *tel = tv->tv_pixmap.tel;
+			struct pixmap *px = tel->tel_pixmap.px;
+
+			pixmap_mousebuttonup(tv, px,
+			    tv->xms - tel->tel_pixmap.x,
+			    tv->yms - tel->tel_pixmap.y,
+			    button);
+		}
+		break;
 	}
 }
 
@@ -221,6 +281,143 @@ clamp_offsets(struct tileview *tv)
 	}
 }
 
+void
+tileview_set_int(struct tileview_ctrl *ctrl, int nval, int v)
+{
+	switch (ctrl->valtypes[nval]) {
+	case TILEVIEW_INT_VAL:
+		ctrl->vals[nval].i = v;
+		break;
+	case TILEVIEW_UINT_VAL:
+		ctrl->vals[nval].ui = (u_int)v;
+		break;
+	case TILEVIEW_INT_PTR:
+		*(int *)ctrl->vals[nval].p = v;
+		break;
+	case TILEVIEW_UINT_PTR:
+		*(u_int *)ctrl->vals[nval].p = (u_int)v;
+		break;
+	default:
+		fatal("cannot convert");
+	}
+}
+
+void
+tileview_set_float(struct tileview_ctrl *ctrl, int nval, float v)
+{
+	switch (ctrl->valtypes[nval]) {
+	case TILEVIEW_FLOAT_VAL:
+		ctrl->vals[nval].f = v;
+		break;
+	case TILEVIEW_DOUBLE_VAL:
+		ctrl->vals[nval].d = (double)v;
+		break;
+	case TILEVIEW_FLOAT_PTR:
+		*(float *)ctrl->vals[nval].p = v;
+		break;
+	case TILEVIEW_DOUBLE_PTR:
+		*(double *)ctrl->vals[nval].p = (double)v;
+		break;
+	default:
+		fatal("cannot convert");
+	}
+}
+
+void
+tileview_set_double(struct tileview_ctrl *ctrl, int nval, double v)
+{
+	switch (ctrl->valtypes[nval]) {
+	case TILEVIEW_FLOAT_VAL:
+		ctrl->vals[nval].f = (float)v;
+		break;
+	case TILEVIEW_DOUBLE_VAL:
+		ctrl->vals[nval].d = v;
+		break;
+	case TILEVIEW_FLOAT_PTR:
+		*(float *)ctrl->vals[nval].p = (float)v;
+		break;
+	case TILEVIEW_DOUBLE_PTR:
+		*(double *)ctrl->vals[nval].p = v;
+		break;
+	default:
+		fatal("cannot convert");
+	}
+}
+
+static void
+move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
+    int x2, int y2)
+{
+	struct tileview_handle *th = &ctrl->handles[nhandle];
+	int dx = x2 - tv->xorig;
+	int dy = y2 - tv->yorig;
+	int xoffs = 0;
+	int yoffs = 0;
+
+	if (dx == 0 && dy == 0)
+		return;
+
+	switch (ctrl->type) {
+	case TILEVIEW_RECTANGLE:
+		switch (nhandle) {
+		case 0:
+			tileview_set_int(ctrl, 0, x2);
+			tileview_set_int(ctrl, 1, y2);
+			break;
+		case 1:
+			{
+				int cy = tileview_int(ctrl, 1);
+				int ch = tileview_int(ctrl, 3);
+				int nh = ch-dy;
+
+				tileview_set_int(ctrl, 1, cy+dy);
+				tileview_set_int(ctrl, 3, nh>=8 ? nh : 8);
+				if (dy < 0 || dy > 0)
+					yoffs = -dy;
+			}
+			break;
+		case 2:
+			{
+				int ch = tileview_int(ctrl, 3);
+				int nh = ch+dy;
+
+				tileview_set_int(ctrl, 3, nh>=8 ? nh : 8);
+			}
+			break;
+		case 3:
+			{
+				int cw = tileview_int(ctrl, 2);
+				int nw = cw+dx;
+
+				tileview_set_int(ctrl, 2, nw>=8 ? nw : 8);
+			}
+			break;
+		case 4:
+			{
+				int cx = tileview_int(ctrl, 0);
+				int cw = tileview_int(ctrl, 2);
+				int nw = cw-dx;
+
+				tileview_set_int(ctrl, 0, cx+dx);
+				tileview_set_int(ctrl, 2, nw>=8 ? nw : 8);
+				if (dx < 0 || dx > 0)
+					xoffs = -dx;
+			}
+			break;
+		}
+		break;
+	case TILEVIEW_POINT:
+		tileview_set_int(ctrl, 0, tileview_int(ctrl, 0)+dx);
+		tileview_set_int(ctrl, 1, tileview_int(ctrl, 1)+dy);
+		break;
+	default:
+		break;
+	}
+
+	if (ctrl->event != NULL)
+		event_post(NULL, tv, ctrl->event->name, "%i,%i", xoffs, yoffs);
+}
+
 static void
 tileview_mousemotion(int argc, union evarg *argv)
 {
@@ -230,17 +427,60 @@ tileview_mousemotion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	int state = argv[5].i;
+	struct tileview_ctrl *ctrl;
+	int sx, sy, i;
 
 	if (tv->scrolling) {
 		tv->xoffs += xrel;
 		tv->yoffs += yrel;
 		clamp_offsets(tv);
+		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
+		return;
 	}
-	if (tv->flags & TILEVIEW_PRESEL) {
-		move_cursor(tv,
-		    x - tv->xoffs,
-		    y - tv->yoffs);
+
+	sx = x - tv->xoffs;
+	sy = y - tv->yoffs;
+	move_cursor(tv, sx, sy);
+	sx /= tv->pxsz;
+	sy /= tv->pxsz;
+
+	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
+		for (i = 0; i < ctrl->nhandles; i++) {
+			struct tileview_handle *th = &ctrl->handles[i];
+
+			if (th->enable) {
+				move_handle(tv, ctrl, i, sx, sy);
+				break;
+			} else {
+				if (cursor_overlap(th, sx, sy)) {
+					th->over = 1;
+				} else {
+					th->over = 0;
+				}
+			}
+		}
+		if (i < ctrl->nhandles)
+			break;
 	}
+	if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
+		struct tile_element *tel = tv->tv_pixmap.tel;
+		struct pixmap *px = tel->tel_pixmap.px;
+
+		if (sx >= tel->tel_pixmap.x &&
+		    sx <= tel->tel_pixmap.x+px->su->w &&
+		    sy >= tel->tel_pixmap.y &&
+		    sy <= tel->tel_pixmap.y+px->su->h) {
+			pixmap_mousemotion(tv, px,
+			    sx - tel->tel_pixmap.x,
+			    sy - tel->tel_pixmap.y,
+			    sx - tv->xorig,
+			    sy - tv->yorig,
+			    state);
+		}
+	}
+	
+	tv->xorig = sx;
+	tv->yorig = sy;
 }
 
 static Uint32
@@ -274,7 +514,7 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->xoffs = 0;
 	tv->yoffs = 0;
 	tv->scrolling = 0;
-	tv->flags = flags|TILEVIEW_PRESEL;
+	tv->flags = flags;
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 	tv->c.r = 255;
@@ -308,6 +548,7 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 {
 	struct tileview_ctrl *ctrl;
 	va_list ap;
+	int i;
 
 	ctrl = Malloc(sizeof(struct tileview_ctrl), M_WIDGET);
 	ctrl->type = type;
@@ -369,24 +610,37 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 	}
 	va_end(ap);
 out:
-#ifdef DEBUG
 	switch (ctrl->type) {
 	case TILEVIEW_POINT:
+		ctrl->nhandles = 1;
 		if (ctrl->nvals < 1)
-			fatal("incomplete spec");
+			fatal("incomplete");
 		break;
 	case TILEVIEW_RECTANGLE:
+		ctrl->nhandles = 5;
 		if (ctrl->nvals < 4)
-			fatal("incomplete spec");
+			fatal("incomplete");
 		break;
 	case TILEVIEW_CIRCLE:
+		ctrl->nhandles = 2;
 		if (ctrl->nvals < 2)
-			fatal("incomplete spec");
+			fatal("incomplete");
 		break;
 	default:
+		ctrl->nhandles = 0;
 		break;
 	}
-#endif
+	ctrl->handles = (ctrl->nhandles > 0) ?
+	    Malloc(sizeof(struct tileview_handle)*ctrl->nhandles, M_WIDGET) :
+	    NULL;
+	for (i = 0; i < ctrl->nhandles; i++) {
+		struct tileview_handle *th = &ctrl->handles[i];
+
+		th->x = -1;
+		th->y = -1;
+		th->over = 0;
+		th->enable = 0;
+	}
 	return (ctrl);
 }
 
@@ -395,7 +649,6 @@ tileview_free_ctrl(struct tileview_ctrl *ctrl)
 {
 	Free(ctrl->valtypes, M_WIDGET);
 	Free(ctrl->vals, M_WIDGET);
-	Free(ctrl->event, M_EVENT);
 	Free(ctrl, M_WIDGET);
 }
 
@@ -425,7 +678,7 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	int z1 = tv->zoom;
 	int pxsz1 = tv->pxsz;
 
-	if (z2 < 4 ||
+	if (z2 < 100 ||
 	    z2 > 1000)
 		return;
 
@@ -617,45 +870,6 @@ tileview_rect2o(struct tileview *tv, int x1, int y1, int w, int h)
 	}
 }
 
-void
-tileview_handle(struct tileview *tv, int x, int y, int ena, int over)
-{
-	if (over) {
-		tileview_color4i(tv, 150, 150, 150, 255);
-	} else {
-		tileview_color4i(tv, 110, 110, 110, 255);
-	}
-	
-	tileview_rect2(tv, x-1, y-1, 3, 3);		/* Inner circle */
-
-	tileview_color4i(tv, 255, 255, 255, 128);
-	tileview_pixel2i(tv, x, y);			/* Origin */
-
-	if (!ena)
-		tileview_color4i(tv, 200, 200, 200, 200);
-	else
-		tileview_color4i(tv, 60, 60, 60, 200);
-	
-	tileview_pixel2i(tv, x-2, y+1);			/* Highlight left */
-	tileview_pixel2i(tv, x-2, y);
-	tileview_pixel2i(tv, x-2, y-1);
-	tileview_pixel2i(tv, x-1, y-2);			/* Highlight top */
-	tileview_pixel2i(tv, x,   y-2);
-	tileview_pixel2i(tv, x+1, y-2);
-	
-	if (ena)
-		tileview_color4i(tv, 200, 200, 200, 200);
-	else
-		tileview_color4i(tv, 60, 60, 60, 200);
-		
-	tileview_pixel2i(tv, x-1, y+2);			/* Occlusion bottom */
-	tileview_pixel2i(tv, x,   y+2);
-	tileview_pixel2i(tv, x+1, y+2);
-	tileview_pixel2i(tv, x+2, y-1);
-	tileview_pixel2i(tv, x+2, y);
-	tileview_pixel2i(tv, x+2, y+1);
-}
-
 int
 tileview_int(struct tileview_ctrl *ctrl, int nval)
 {
@@ -669,7 +883,7 @@ tileview_int(struct tileview_ctrl *ctrl, int nval)
 	case TILEVIEW_UINT_PTR:
 		return (*(u_int *)ctrl->vals[nval].p);
 	default:
-		fatal("cannot convert binding");
+		fatal("cannot convert");
 	}
 }
 
@@ -686,7 +900,7 @@ tileview_float(struct tileview_ctrl *ctrl, int nval)
 	case TILEVIEW_DOUBLE_PTR:
 		return ((float)(*(double *)ctrl->vals[nval].p));
 	default:
-		fatal("cannot convert binding");
+		fatal("cannot convert");
 	}
 }
 
@@ -703,23 +917,59 @@ tileview_double(struct tileview_ctrl *ctrl, int nval)
 	case TILEVIEW_DOUBLE_PTR:
 		return (*(double *)ctrl->vals[nval].p);
 	default:
-		fatal("cannot convert binding");
+		fatal("cannot convert");
 	}
+}
+
+static void
+draw_handle(struct tileview *tv, struct tileview_handle *th)
+{
+	int x = th->x;
+	int y = th->y;
+
+	if (th->over) {
+		tileview_color4i(tv, 200, 200, 200, 255);
+	} else {
+		tileview_color4i(tv, 110, 110, 110, 255);
+	}
+	tileview_rect2(tv, x-1, y-1, 3, 3);		/* Inner circle */
+
+	tileview_color4i(tv, 255, 255, 255, 128);
+	tileview_pixel2i(tv, x, y);			/* Origin */
+
+	if (!th->enable)
+		tileview_color4i(tv, 200, 200, 200, 200);
+	else
+		tileview_color4i(tv, 60, 60, 60, 200);
+	
+	tileview_pixel2i(tv, x-2, y+1);			/* Highlight left */
+	tileview_pixel2i(tv, x-2, y);
+	tileview_pixel2i(tv, x-2, y-1);
+	tileview_pixel2i(tv, x-1, y-2);			/* Highlight top */
+	tileview_pixel2i(tv, x,   y-2);
+	tileview_pixel2i(tv, x+1, y-2);
+	
+	if (th->enable)
+		tileview_color4i(tv, 200, 200, 200, 200);
+	else
+		tileview_color4i(tv, 60, 60, 60, 200);
+		
+	tileview_pixel2i(tv, x-1, y+2);			/* Occlusion bottom */
+	tileview_pixel2i(tv, x,   y+2);
+	tileview_pixel2i(tv, x+1, y+2);
+	tileview_pixel2i(tv, x+2, y-1);
+	tileview_pixel2i(tv, x+2, y);
+	tileview_pixel2i(tv, x+2, y+1);
 }
 
 static void
 draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 {
-	tileview_color4i(tv, ctrl->r, ctrl->g, ctrl->b, ctrl->a);
-	switch (ctrl->type) {
-	case TILEVIEW_POINT:
-		{
-			int x = tileview_int(ctrl, 0);
-			int y = tileview_int(ctrl, 1);
+	int i;
 
-			tileview_circle2o(tv, x, y, 2);
-		}
-		break;
+	tileview_color4i(tv, ctrl->r, ctrl->g, ctrl->b, ctrl->a);
+
+	switch (ctrl->type) {
 	case TILEVIEW_RECTANGLE:
 		{
 			int x = tileview_int(ctrl, 0);
@@ -728,7 +978,27 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 			u_int h = tileview_uint(ctrl, 3);
 
 			tileview_rect2o(tv, x-1, y-1, w+1, h+1);
-			tileview_handle(tv, x-1, y-1, 0, 0);
+
+			ctrl->handles[0].x = x - 1;
+			ctrl->handles[0].y = y - 1;
+			ctrl->handles[1].x = x + w/2;
+			ctrl->handles[1].y = y - 1;
+			ctrl->handles[2].x = x + w/2;
+			ctrl->handles[2].y = y + h;
+			ctrl->handles[3].x = x + w;
+			ctrl->handles[3].y = y + h/2;
+			ctrl->handles[4].x = x - 1;
+			ctrl->handles[4].y = y + h/2;
+		}
+		break;
+	case TILEVIEW_POINT:
+		{
+			int x = tileview_int(ctrl, 0);
+			int y = tileview_int(ctrl, 1);
+
+			tileview_circle2o(tv, x, y, 2);
+			ctrl->handles[0].x = x;
+			ctrl->handles[0].y = y;
 		}
 		break;
 	case TILEVIEW_CIRCLE:
@@ -739,9 +1009,17 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 
 			tileview_circle2o(tv, x, y, r);
 			tileview_pixel2i(tv, x, y);
+
+			ctrl->handles[0].x = x;
+			ctrl->handles[0].y = y;
+			ctrl->handles[1].x = x+r;
+			ctrl->handles[1].y = y;
 		}
 		break;
 	}
+
+	for (i = 0; i < ctrl->nhandles; i++)
+		draw_handle(tv, &ctrl->handles[i]);
 }
 
 void
@@ -808,10 +1086,8 @@ tileview_draw(void *p)
 
 	widget_blit_from(tv, tv, 0, &rsrc, rdst.x, rdst.y);
 
-	if (tv->flags & TILEVIEW_PRESEL) {
-		tileview_color4i(tv, 255, 255, 255, 128);
-		tileview_pixel2i(tv, tv->xms/tv->pxsz, tv->yms/tv->pxsz);
-	}
+	tileview_color4i(tv, 255, 255, 255, 128);
+	tileview_pixel2i(tv, tv->xms, tv->yms);
 
 	TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls)
 		draw_control(tv, ctrl);

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.11 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.12 2005/02/12 09:54:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -66,7 +66,7 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 	if (t->su != NULL) {
 		SDL_FreeSurface(t->su);
 	}
-	t->flags = flags;
+	t->flags = flags|TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask,
 	    ts->fmt->Gmask,
@@ -104,7 +104,7 @@ tile_generate(struct tile *t)
 	struct tile_pixmap *tpx;
 	u_int i;
 
-	/* TODO check for opaque fill features first */
+	/* TODO check for opaque fill features/pixmaps first */
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
 
 	TAILQ_FOREACH(tel, &t->elements, elements) {
@@ -129,6 +129,7 @@ tile_generate(struct tile *t)
 
 				rd.x = tel->tel_pixmap.x;
 				rd.y = tel->tel_pixmap.y;
+
 				SDL_BlitSurface(px->su, NULL, t->su, &rd);
 			}
 			break;
@@ -377,6 +378,21 @@ element_closed(int argc, union evarg *argv)
 		tile_close_element(tv);
 }
 
+static void
+pixmap_resized(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[0].p;
+	struct tileview_ctrl *ctrl = argv[1].p;
+	struct pixmap *px = argv[2].p;
+	int xoffs = argv[3].i;
+	int yoffs = argv[4].i;
+	int w = tileview_int(ctrl, 2);
+	int h = tileview_int(ctrl, 3);
+
+	pixmap_scale(px, w, h, xoffs, yoffs);
+	tv->tile->flags |= TILE_DIRTY;
+}
+
 void
 tile_open_element(struct tileview *tv, struct tile_element *tel,
     struct window *pwin)
@@ -419,13 +435,18 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			    &tel->tel_pixmap.y,
 			    (u_int)tel->tel_pixmap.px->su->w,
 			    (u_int)tel->tel_pixmap.px->su->h);
-	
+			tv->tv_pixmap.ctrl->event =
+			    event_new(tv, NULL, pixmap_resized, "%p,%p",
+			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
+
 			win = pixmap_edit(tv, tel);
 			window_attach(pwin, win);
 			window_show(win);
 			tv->tv_pixmap.win = win;
 			event_new(win, "window-close", element_closed, "%p",
 			    tv);
+	
+			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
 	}
@@ -469,10 +490,23 @@ insert_pixmap(int argc, union evarg *argv)
 	struct tlist_item *eit;
 	struct pixmap *px;
 	struct tile_element *tel;
+	unsigned int pixno = 0;
+	struct pixmap *opx;
 
 	px = Malloc(sizeof(struct pixmap), M_RG);
 	pixmap_init(px, tv->ts, 0);
-	pixmap_scale(px, 32, 32);
+tryname:
+	snprintf(px->name, sizeof(px->name), "pixmap #%u", pixno);
+	TAILQ_FOREACH(opx, &tv->ts->pixmaps, pixmaps) {
+		if (strcmp(opx->name, px->name) == 0)
+			break;
+	}
+	if (opx != NULL) {
+		pixno++;
+		goto tryname;
+	}
+
+	pixmap_scale(px, 32, 32, 0, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
 
 	tel = tile_add_pixmap(tv->tile, px, 0, 0);
@@ -674,6 +708,8 @@ delete_element(int argc, union evarg *argv)
 	} else if (strcmp(it->class, "sketch") == 0) {
 		//
 	}
+
+	t->flags |= TILE_DIRTY;
 }
 
 static void

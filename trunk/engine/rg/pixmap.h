@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: pixmap.h,v 1.1 2005/02/11 04:51:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -20,7 +20,12 @@ __BEGIN_DECLS
 void		 pixmap_init(struct pixmap *, struct tileset *, int);
 void		 pixmap_destroy(struct pixmap *);
 struct window	*pixmap_edit(struct tileview *, struct tile_element *);
-void		 pixmap_scale(struct pixmap *, int, int);
+void		 pixmap_scale(struct pixmap *, int, int, int, int);
+
+void pixmap_mousebuttondown(struct tileview *, struct pixmap *, int, int, int);
+void pixmap_mousebuttonup(struct tileview *, struct pixmap *, int, int, int);
+void pixmap_mousemotion(struct tileview *, struct pixmap *, int, int, int,
+			int, int);
 __END_DECLS
 
 #include "close_code.h"
