@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.9 2003/01/29 00:39:24 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.10 2003/02/02 21:07:09 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -99,7 +99,7 @@ widget reacts to the following events:
 .It widget-scaled
 Adjust the map view.
 .It widget-lostfocus
-Stop zoom timers.
+Stop zoom timer.
 .It window-mousebuttonup
 Stop moving.
 .It window-mousebuttondown
@@ -113,7 +113,7 @@ is set.
 - or + keys stop zooming.
 .It window-keydown
 - or + keys start zooming.
-0 key zooms to 1:1
+0/1 keys zooms to 1:1
 .It window-mouseout
 Stop moving.
 Redisplay cursor if
