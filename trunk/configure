@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Do not edit!
-# File generated from configure.in by csoft-mk 1.9.
+# File generated from configure.in by csoft-mk 2.0.
 #
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -244,18 +244,18 @@ VERSION="\"1.0-beta\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
 echo "#endif /* VERSION */" >> config/version.h
-TTFDIR="$PREFIX/share/agar/fonts"
-echo "TTFDIR=$TTFDIR" >> Makefile.config
-TTFDIR="\"$PREFIX/share/agar/fonts\""
-echo "#ifndef TTFDIR" > config/ttfdir.h
-echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
-echo "#endif /* TTFDIR */" >> config/ttfdir.h
 SHAREDIR="$PREFIX/share/agar"
 echo "SHAREDIR=$SHAREDIR" >> Makefile.config
 SHAREDIR="\"$PREFIX/share/agar\""
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
 echo "#endif /* SHAREDIR */" >> config/sharedir.h
+TTFDIR="$PREFIX/share/agar/fonts"
+echo "TTFDIR=$TTFDIR" >> Makefile.config
+TTFDIR="\"$PREFIX/share/agar/fonts\""
+echo "#ifndef TTFDIR" > config/ttfdir.h
+echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
+echo "#endif /* TTFDIR */" >> config/ttfdir.h
 LIBDIR="$PREFIX/lib/agar"
 echo "LIBDIR=$LIBDIR" >> Makefile.config
 LIBDIR="\"$PREFIX/lib/agar\""
@@ -1214,6 +1214,12 @@ else
 echo "The SDL test would not compile."
 exit 1
 fi
+echo "#ifndef SDL_LIBS" > config/sdl_libs.h
+echo "#define SDL_LIBS \"${SDL_LIBS}\"" >> config/sdl_libs.h
+echo "#endif /* SDL_LIBS */" >> config/sdl_libs.h
+echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
+echo "#define SDL_CFLAGS \"${SDL_CFLAGS}\"" >> config/sdl_cflags.h
+echo "#endif /* SDL_CFLAGS */" >> config/sdl_cflags.h
 echo -n "checking for FreeType (http://www.freetype.org)..."
 echo -n "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
