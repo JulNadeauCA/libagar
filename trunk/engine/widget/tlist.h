@@ -1,14 +1,22 @@
-/*	$Csoft: tlist.h,v 1.40 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.41 2005/01/23 11:47:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
 #define _AGAR_WIDGET_TLIST_H_
 
 #include <engine/widget/scrollbar.h>
+#include <engine/widget/menu.h>
 
 #include "begin_code.h"
 
 #define TLIST_LABEL_MAX	96
+
+struct tlist_popup {
+	const char *iclass;		/* Apply to items of this class */
+	struct AGMenuItem *item;
+	struct window *panel;
+	TAILQ_ENTRY(tlist_popup) popups;
+};
 
 struct tlist_item {
 	int	selected;		/* Effective selection */
@@ -21,11 +29,12 @@ struct tlist_item {
 	char		 text[TLIST_LABEL_MAX];	/* Label text */
 	int		 label;			/* Cached label surface */
 
+
 	Uint8	 depth;				/* Depth in tree */
 	Uint8	 flags;
 #define TLIST_VISIBLE_CHILDREN	0x01		/* Child items visible (tree) */
 #define TLIST_HAS_CHILDREN	0x02		/* Child items exist (tree) */
-
+	
 	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
 	TAILQ_ENTRY(tlist_item) selitems;	/* Saved selection hack */
 };
@@ -53,6 +62,8 @@ struct tlist {
 	int			 nitems;	/* Current item count */
 	int			 nvisitems;	/* Visible item count */
 	struct scrollbar	*sbar;		/* Vertical scrollbar */
+	struct AGMenu		*menu;		/* Menu (for popups) */
+	TAILQ_HEAD(,tlist_popup) popups;	/* Popup menus */
 };
 
 /* Traverse the user pointer of tlist items assumed to be of the same type. */
@@ -96,6 +107,8 @@ void			*tlist_item_pointer(struct tlist *);
 struct tlist_item	*tlist_item_text(struct tlist *, const char *);
 struct tlist_item	*tlist_item_first(struct tlist *);
 struct tlist_item	*tlist_item_last(struct tlist *);
+
+struct AGMenuItem	*tlist_set_popup(struct tlist *, const char *);
 __END_DECLS
 
 #include "close_code.h"
