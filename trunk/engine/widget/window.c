@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.228 2004/09/12 05:48:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.229 2004/09/16 04:06:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -61,7 +61,8 @@ const struct widget_ops window_ops = {
 enum {
 	BGFILL_COLOR,
 	BG_COLOR,
-	HIGHLIGHT_COLOR
+	HIGHLIGHT_COLOR,
+	BORDER_BASE_COLOR
 };
 
 static const SDL_Color default_border[] = {
@@ -74,7 +75,7 @@ static const SDL_Color default_border[] = {
 };
 
 static const struct style_colormod default_colormods[] = {
-	{ "button",	"frame",	{ 206, 206, 206, 255 } },
+	{ "button",	"frame",	{ 90, 90, 90, 255 } },
 	{ "button",	"disabled",	{ 106, 106, 106, 255 } },
 	{ "button",	"text",		{ 0, 0, 0, 255 } },
 	{ NULL,		NULL,		{ 0, 0, 0, 0 } }
@@ -303,7 +304,7 @@ void
 window_draw(void *p)
 {
 	struct window *win = p;
-	int i, ncolor = 0;
+	int i, ncolor = BORDER_BASE_COLOR;
 
 	primitives.rect_filled(win, 0, 0, WIDGET(win)->w, WIDGET(win)->h,
 	    BG_COLOR);
@@ -312,7 +313,7 @@ window_draw(void *p)
 		return;
 
 	/* Draw the window frame (expected to fit inside padding). */
-	for (i = 0; i < win->h_border_w; i++, ncolor++) {
+	for (i = 1; i < win->h_border_w-1; i++, ncolor++) {
 		primitives.line(win,
 		    i,
 		    i,
@@ -326,7 +327,7 @@ window_draw(void *p)
 		    WIDGET(win)->h - i,
 		    ncolor);
 	}
-	for (i = 0; i < win->v_border_w; i++, ncolor++) {
+	for (i = 1; i < win->v_border_w-1; i++, ncolor++) {
 		primitives.line(win,
 		    i,
 		    i,
@@ -404,8 +405,7 @@ window_destroy(void *p)
 	struct window *win = p;
 
 	pthread_mutex_destroy(&win->lock);
-	/* view_detach_queued() frees the subwindow list. */
-
+	/* view_detach_queued() will free the sub-windows */
 	widget_destroy(win);
 }
 
@@ -422,7 +422,7 @@ window_shown(int argc, union evarg *argv)
 		/* First pass: initial sizing. */
 		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
 
-		/* Second pass: [wh]fill and homogenous box divisions. */
+		/* Second pass: [wh]fill and homogenous divisions. */
 		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
 	
 		/* Position the window and cache the absolute widget coords. */
@@ -1154,9 +1154,8 @@ window_scale(void *p, int w, int h)
 		y += wid->h + win->spacing;
 	}
 
-	/* Don't effect padding on the titlebar. */
 	if (win->tbar != NULL) {
-		WIDGET(win->tbar)->x = 2;
+		WIDGET(win->tbar)->x = 1;
 		WIDGET(win->tbar)->y = 1;
 		WIDGET(win->tbar)->w = WIDGET(win)->w - 2;
 	}
