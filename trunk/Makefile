@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.30 2003/01/01 04:12:39 vedge Exp $
+#	$Csoft: Makefile,v 1.31 2003/02/06 02:08:11 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp engine
 SUBDIR+= cave
@@ -21,7 +21,7 @@ configure: .PHONY
 	cvs commit -m "sync; rien" configure
 
 clean-config: Makefile.config
-	rm -fr config config.log Makefile.config
+	rm -fr config config.log
 
 snap: cleandir
 	sh mk/dist.sh
