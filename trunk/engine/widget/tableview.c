@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.7 2004/11/22 21:57:40 phip Exp $	*/
+/*	$Csoft: tableview.c,v 1.8 2004/11/23 12:41:58 phip Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -140,8 +140,8 @@ tableview_init(struct tableview * tv, int flags, datafunc data_callback,
 	if (flags & TABLEVIEW_SELMULTI)
 		tv->selmulti = 1;
 
-	tv->head_height = tv->header ? text_font_height(NULL) : 0;
-	tv->row_height = text_font_height(NULL) + 2;
+	tv->head_height = tv->header ? text_font_height : 0;
+	tv->row_height = text_font_height+2;
 	tv->dblclicked = 0;
 	tv->sbar_v = scrollbar_new(tv, SCROLLBAR_VERT);
 	tv->sbar_h = (flags & TABLEVIEW_HORIZ) ?
