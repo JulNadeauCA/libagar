@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.7 2003/08/01 04:44:29 vedge Exp $
+# $Csoft: fr.po,v 1.8 2003/08/01 22:52:56 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -681,11 +681,11 @@ msgstr "Couches de %s"
 
 #: engine/mapedit/layedit.c:217
 msgid "New layer: "
-msgstr "Nouvelle couche: "
+msgstr "Nom: "
 
 #: engine/mapedit/layedit.c:220
 msgid "Push"
-msgstr "Pousser"
+msgstr "Ajouter"
 
 #: engine/mapedit/layedit.c:234
 msgid "Rename"
@@ -693,7 +693,7 @@ msgstr "Renommer"
 
 #: engine/mapedit/layedit.c:245
 msgid "Pop"
-msgstr "Popper"
+msgstr "Détruire"
 
 #: engine/mapedit/layedit.c:247 engine/mapedit/objedit.c:231
 #: engine/mapedit/tool/merge.c:286
