@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.3 2002/09/09 00:42:54 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.4 2002/09/16 16:44:12 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -10,9 +10,9 @@ struct monitor {
 	int	 flags;
 
 	struct {
-		struct	window *toolbar;
-		struct	window *object_browser;
-		struct	window *sprite_browser;
+		struct window	*toolbar;
+		struct window	*object_browser;
+		struct window	*sprite_browser;
 	} wins;
 };
 
@@ -33,7 +33,8 @@ struct monitor_tool {
 
 enum {
 	MONITOR_SPRITE_BROWSER,
-	MONITOR_OBJECT_BROWSER
+	MONITOR_OBJECT_BROWSER,
+	MONITOR_MAP_VIEW
 };
 
 #define	MONITOR_TOOL(t)		((struct monitor_tool *)(t))
