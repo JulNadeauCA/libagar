@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: nodeedit.c,v 1.1 2003/03/02 04:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -42,7 +42,6 @@
 
 #include "mapedit.h"
 #include "mapview.h"
-#include "nodeedit.h"
 
 static void
 nodeedit_close_win(int argc, union evarg *argv)
@@ -50,7 +49,7 @@ nodeedit_close_win(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
-	widget_set_int(mv->node.button, "state", 0);
+	widget_set_int(mv->nodeed.trigger, "state", 0);
 }
 
 static void
@@ -66,8 +65,8 @@ nodeedit_poll(int argc, union evarg *argv)
 	char flags[96];
 	
 	if (node == NULL) {
-		label_printf(mv->node.node_flags_lab, "-");
-		label_printf(mv->node.node_size_lab, "-");
+		label_printf(mv->nodeed.node_flags_lab, "-");
+		label_printf(mv->nodeed.node_size_lab, "-");
 		return;
 	}
 	
@@ -89,7 +88,7 @@ nodeedit_poll(int argc, union evarg *argv)
 	else if (node->flags & NODE_EDGE_N)	strcat(flags, "N-edge ");
 	else if (node->flags & NODE_EDGE_S)	strcat(flags, "S-edge ");
 
-	label_printf(mv->node.node_flags_lab, "Node flags: %s", flags);
+	label_printf(mv->nodeed.node_flags_lab, "Node flags: %s", flags);
 
 	tlist_clear_items(tl);
 
@@ -127,11 +126,11 @@ nodeedit_poll(int argc, union evarg *argv)
 
 	tlist_restore_selections(tl);
 	
-	label_printf(mv->node.node_size_lab, "Node size: %lu bytes",
+	label_printf(mv->nodeed.node_size_lab, "Node size: %lu bytes",
 	    (unsigned long)nodesz);
-	label_printf(mv->node.noderef_type_lab, "-");
-	label_printf(mv->node.noderef_flags_lab, "-");
-	label_printf(mv->node.noderef_center_lab, "-");
+	label_printf(mv->nodeed.noderef_type_lab, "-");
+	label_printf(mv->nodeed.noderef_flags_lab, "-");
+	label_printf(mv->nodeed.noderef_center_lab, "-");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
@@ -157,11 +156,11 @@ nodeedit_poll(int argc, union evarg *argv)
 			if (nref->flags & NODEREF_BLOCK)
 				strcat(flags, "block ");
 			
-			label_printf(mv->node.noderef_type_lab,
+			label_printf(mv->nodeed.noderef_type_lab,
 			    "Noderef type: %s", type);
-			label_printf(mv->node.noderef_flags_lab,
+			label_printf(mv->nodeed.noderef_flags_lab,
 			    "Noderef flags: %s", flags);
-			label_printf(mv->node.noderef_center_lab,
+			label_printf(mv->nodeed.noderef_center_lab,
 			    "Noderef centering: %d,%d",
 			    nref->xcenter, nref->ycenter);
 			break;
@@ -181,7 +180,7 @@ mapview_node_op(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int op = argv[2].i;
-	struct tlist *tl = mv->node.refs_tl;
+	struct tlist *tl = mv->nodeed.refs_tl;
 	struct tlist_item *it;
 	struct node *node = mv->cur_node;
 	struct noderef *nref;
@@ -250,15 +249,15 @@ nodeedit_init(struct mapview *mv)
 	
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		mv->node.node_flags_lab = label_new(reg, 100, -1, " ");
-		mv->node.node_size_lab = label_new(reg, 100, -1, " ");
+		mv->nodeed.node_flags_lab = label_new(reg, 100, -1, " ");
+		mv->nodeed.node_size_lab = label_new(reg, 100, -1, " ");
 	}
 	
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
 	{
-		mv->node.noderef_type_lab = label_new(reg, 100, -1, " ");
-		mv->node.noderef_flags_lab = label_new(reg, 100, -1, " ");
-		mv->node.noderef_center_lab = label_new(reg, 100, -1, " ");
+		mv->nodeed.noderef_type_lab = label_new(reg, 100, -1, " ");
+		mv->nodeed.noderef_flags_lab = label_new(reg, 100, -1, " ");
+		mv->nodeed.noderef_center_lab = label_new(reg, 100, -1, " ");
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
@@ -284,12 +283,12 @@ nodeedit_init(struct mapview *mv)
 	
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
 	{
-		mv->node.refs_tl = tlist_new(reg, 100, 100,
+		mv->nodeed.refs_tl = tlist_new(reg, 100, 100,
 		    TLIST_POLL|TLIST_MULTI);
-		tlist_set_item_height(mv->node.refs_tl, TILEH);
-		event_new(mv->node.refs_tl, "tlist-poll",
+		tlist_set_item_height(mv->nodeed.refs_tl, TILEH);
+		event_new(mv->nodeed.refs_tl, "tlist-poll",
 		    nodeedit_poll, "%p", mv);
 	}
 
-	mv->node.win = win;
+	mv->nodeed.win = win;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.146 2003/02/24 04:06:37 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.147 2003/02/24 06:43:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -341,10 +341,10 @@ mapedit_win_option(int argc, union evarg *argv)
 		}
 		break;
 	case MAPEDIT_TOOL_NODEEDIT:
-		if (mv->node.win->flags & WINDOW_SHOWN) {
-			window_hide(mv->node.win);
+		if (mv->nodeed.win->flags & WINDOW_SHOWN) {
+			window_hide(mv->nodeed.win);
 		} else {
-			window_show(mv->node.win);
+			window_show(mv->nodeed.win);
 		}
 		break;
 	}
@@ -410,7 +410,7 @@ mapedit_win_new(struct map *m)
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
-		mv->node.button = bu;
+		mv->nodeed.trigger = bu;
 
 		lab = label_polled_new(reg, 30, -1, NULL, " Layer: %[u8]",
 		    &mv->cur_layer);

@@ -1,5 +1,7 @@
-/*	$Csoft: mapview.h,v 1.27 2003/02/24 06:43:31 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.28 2003/02/26 02:03:43 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/nodeedit.h>
 
 struct mapview {
 	struct widget	wid;
@@ -47,15 +49,7 @@ struct mapview {
 		Sint16	ssx, ssy;
 		int	tilew, tileh;
 	} izoom;
-	struct {		/* For node edition */
-		struct window	*win;		/* Node edition window */
-		struct button	*button;
-		struct label	*node_flags_lab, *node_size_lab;
-		struct label	*noderef_type_lab, *noderef_flags_lab;
-		struct label	*noderef_center_lab;
-		struct tlist	*refs_tl;
-		struct tlist	*transforms_tl;
-	} node;
+	struct nodeedit	 nodeed;
 	struct window	*tmap_win;	/* Tile map window */
 	int		 tmap_insert;	/* Insert mode? */
 	struct button	*tmap_button;

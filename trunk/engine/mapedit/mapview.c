@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.75 2003/02/26 02:03:43 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.76 2003/03/02 04:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -42,7 +42,6 @@
 
 #include "mapedit.h"
 #include "mapview.h"
-#include "nodeedit.h"
 
 #include "tool/tool.h"
 #include "tool/shift.h"
@@ -112,7 +111,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->tmap_insert = 0;
 	mv->cur_node = NULL;
 	mv->cur_layer = 0;
-	mv->node.button = NULL;
+	mv->nodeed.trigger = NULL;
 	mv->zoom_tm = NULL;
 	
 	mv->map = m;

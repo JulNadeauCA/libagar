@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.5 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.6 2003/02/22 11:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -123,7 +123,7 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 		}
 		break;
 	case SHIFT_SELECTIVE:
-		TAILQ_FOREACH(it, &mv->node.refs_tl->items, items) {
+		TAILQ_FOREACH(it, &mv->nodeed.refs_tl->items, items) {
 			if (it->selected) {
 				nref = it->p1;
 				if (nref->xcenter + relx < 65535 &&
