@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.60 2002/08/19 05:28:29 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.61 2002/08/21 01:00:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -60,11 +60,12 @@ int	engine_debug = 1;	/* Enable debugging */
 
 pthread_key_t engine_errorkey;	/* Used by AGAR_{Get,Set}Error() */
 
-struct	world *world;
-struct	gameinfo *gameinfo;
-struct	config *config;
-int	mapediting;
+const struct gameinfo *gameinfo;	/* Game name, copyright, version */
+struct world *world;			/* Describes game elements */
+struct config *config;			/* Global configuration settings */
+int mapediting;				/* Map edition mode */
 
+/* Input devices */
 struct input *keyboard = NULL;
 struct input *joy = NULL;
 struct input *mouse = NULL;
@@ -83,7 +84,8 @@ printusage(char *progname, int flags)
 }
 
 int
-engine_init(int argc, char *argv[], struct gameinfo *gi, char *path, int flags)
+engine_init(int argc, char *argv[], const struct gameinfo *gi,
+    char *path, int flags)
 {
 	int c, njoy = -1, fullscreen = 0;
 
@@ -92,14 +94,14 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path, int flags)
 	mapediting = 0;
 	gameinfo = gi;
 	
+	printf("AGAR engine v%s\n", ENGINE_VERSION);
+	printf("%s %s\n", gameinfo->name, gameinfo->version);
+	printf("%s\n", gameinfo->copyright);
+	
 	while ((c = getopt(argc, argv, "vfegl:n:j:W:H:")) != -1) {
 		switch (c) {
 		case 'v':
-			printf("AGAR engine v%s\n", ENGINE_VERSION);
-			printf("%s v%d.%d\n", gameinfo->name,
-			    gameinfo->ver[0], gameinfo->ver[1]);
-			printf("%s\n", gameinfo->copyright);
-			exit (255);
+			exit (0);
 		case 'f':
 			fullscreen++;
 			break;
@@ -161,7 +163,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path, int flags)
 	} else {
 		view_init(GFX_ENGINE_TILEBASED);
 	}
-
 
 #ifdef XDEBUG
 	/* Request synchronous X events, and set error handlers. */
