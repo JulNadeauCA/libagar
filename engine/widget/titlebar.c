@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.4 2003/06/12 13:57:42 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.5 2003/06/21 06:50:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -86,7 +86,10 @@ titlebar_init(struct titlebar *tbar, int flags)
 	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 
 	object_set_ops(tbar, &titlebar_ops);
-	OBJECT(tbar)->gfx = gfx_fetch(tbar, "/engine/widget/window");
+
+	if (gfx_fetch(tbar, "/engine/widget/window") == -1) {
+		fatal("%s", error_get());
+	}
 	gfx_wire(OBJECT(tbar)->gfx);
 
 	tbar->flags = flags;
