@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.17 2002/12/26 07:11:14 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.18 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,9 +70,7 @@ error_set(const char *fmt, ...)
 	char *ekey, *buf;
 	
 	va_start(args, fmt);
-	if (vasprintf(&buf, fmt, args) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
+	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
 #ifdef SERIALIZATION
