@@ -1,12 +1,13 @@
-/*	$Csoft: version.h,v 1.4 2002/09/04 03:19:02 vedge Exp $	*/
+/*	$Csoft: version.h,v 1.5 2003/01/17 06:52:19 vedge Exp $	*/
 /*	Public domain	*/
 
 struct version {
 	char	*name;
-	Uint32	 vermaj, vermin;
+	Uint32	 major;
+	Uint32	 minor;
 };
 
-int	version_read(int, const struct version *);
+int	version_read(int, const struct version *, struct version *);
 void	version_write(int, const struct version *);
 void	version_buf_write(struct fobj_buf *, const struct version *);
 

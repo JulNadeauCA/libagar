@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.13 2003/01/12 04:07:16 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.14 2003/01/16 04:07:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -121,7 +121,7 @@ perso_load(void *p, int fd)
 	struct perso *perso = p;
 	struct input *input = NULL;
 
-	if (version_read(fd, &perso_ver) != 0) {
+	if (version_read(fd, &perso_ver, NULL) != 0) {
 		return (-1);
 	}
 

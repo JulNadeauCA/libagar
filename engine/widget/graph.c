@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.21 2002/12/25 22:07:11 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.22 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -118,7 +118,7 @@ graph_load(void *p, int fd)
 	struct graph *gra = p;
 	Uint32 nitems, i;
 
-	version_read(fd, &graph_ver);
+	version_read(fd, &graph_ver, NULL);
 	gra->type = read_uint32(fd);
 	gra->flags = read_uint32(fd);
 	gra->origin_y = read_uint8(fd);

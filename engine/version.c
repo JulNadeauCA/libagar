@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.24 2003/01/17 06:52:19 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.25 2003/02/22 00:09:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -51,11 +51,11 @@ int	version_debug = 0;
  */
 
 int
-version_read(int fd, const struct version *ver)
+version_read(int fd, const struct version *ver, struct version *rver)
 {
 	char sig[64];
 	int siglen;
-	Uint32 vermin, vermaj;
+	Uint32 major, minor;
 	char *user, *host;
 
 	siglen = strlen(ver->name);
@@ -65,23 +65,28 @@ version_read(int fd, const struct version *ver)
 		error_set("%s: bad magic", ver->name);
 		return (-1);
 	}
-	vermin = read_uint32(fd);
-	vermaj = read_uint32(fd);
+	minor = read_uint32(fd);
+	major = read_uint32(fd);
 
-	if (vermaj != ver->vermaj) {
+	if (rver != NULL) {
+		rver->minor = minor;
+		rver->major = major;
+	}
+
+	if (major != ver->major) {
 		error_set("%s: major differs: v%d.%d != %d.%d", ver->name,
-		    vermaj, vermin, ver->vermaj, ver->vermin);
+		    major, minor, ver->major, ver->minor);
 		warning("%s\n", error_get());
 		return (-1);
 	}
-	if (vermin != ver->vermin) {
+	if (minor != ver->minor) {
 		warning("%s: minor differs: v%d.%d != %d.%d\n", ver->name,
-		    vermaj, vermin, ver->vermaj, ver->vermin);
+		    major, minor, ver->major, ver->minor);
 	}
 
 	user = read_string(fd, NULL);
 	host = read_string(fd, NULL);
-	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, vermaj, vermin, user, host);
+	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, major, minor, user, host);
 	free(user);
 	free(host);
 
@@ -95,8 +100,8 @@ version_write(int fd, const struct version *ver)
 	char host[64];
 
 	Write(fd, ver->name, strlen(ver->name));
-	write_uint32(fd, ver->vermin);
-	write_uint32(fd, ver->vermaj);
+	write_uint32(fd, ver->minor);
+	write_uint32(fd, ver->major);
 	
 	pw = getpwuid(getuid());
 	write_string(fd, pw->pw_name);
@@ -113,8 +118,8 @@ version_buf_write(struct fobj_buf *buf, const struct version *ver)
 	char host[64];
 
 	buf_write(buf, ver->name, strlen(ver->name));
-	buf_write_uint32(buf, ver->vermin);
-	buf_write_uint32(buf, ver->vermaj);
+	buf_write_uint32(buf, ver->minor);
+	buf_write_uint32(buf, ver->major);
 	
 	pw = getpwuid(getuid());
 	buf_write_string(buf, pw->pw_name);

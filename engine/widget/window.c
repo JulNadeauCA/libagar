@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.161 2003/02/04 02:39:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.162 2003/02/10 06:13:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1425,7 +1425,7 @@ window_load(void *p, int fd)
 	struct window *win = p;
 	Uint16 view_w, view_h;
 
-	if (version_read(fd, &window_ver) != 0) {
+	if (version_read(fd, &window_ver, NULL) != 0) {
 		return (-1);
 	}
 
