@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.53 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.54 2005/01/17 02:20:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -306,6 +306,7 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	}
 	it = tlist_insert_item(tl, object_icon(pob), label, pob);
 	it->depth = depth;
+	it->class = "object";
 
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
@@ -351,6 +352,7 @@ objedit_window(void)
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{
+		struct AGMenuItem *mi;
 		int i;
 
 		name_tb = textbox_new(vb, _("Name: "));
@@ -372,6 +374,51 @@ objedit_window(void)
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 		event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 		    OBJEDIT_EDIT_DATA);
+
+
+		mi = tlist_set_popup(objs_tl, "object");
+		{
+			ag_menu_action(mi, _("Edit data..."),
+			    ICON(OBJEDIT_ICON), SDLK_e, KMOD_CTRL,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
+			ag_menu_action(mi, _("Edit generic information..."),
+			    ICON(OBJGENEDIT_ICON), SDLK_g, KMOD_CTRL,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
+
+			ag_menu_separator(mi);
+			
+			ag_menu_action(mi, _("Load"),
+			    ICON(OBJLOAD_ICON), SDLK_l, KMOD_CTRL,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_LOAD);
+			
+			ag_menu_action(mi, _("Save"),
+			    ICON(OBJSAVE_ICON), SDLK_s, KMOD_CTRL,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_SAVE);
+			
+			ag_menu_separator(mi);
+			
+			ag_menu_action(mi, _("Duplicate"),
+			    ICON(OBJDUP_ICON), SDLK_d, KMOD_CTRL,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
+			
+			ag_menu_action(mi, _("Move up"),
+			    ICON(OBJMOVEUP_ICON), SDLK_u, KMOD_SHIFT,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_UP);
+			
+			ag_menu_action(mi, _("Move down"),
+			    ICON(OBJMOVEDOWN_ICON), SDLK_d, KMOD_SHIFT,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_DOWN);
+			
+			ag_menu_separator(mi);
+			
+			ag_menu_action(mi, _("Reinitialize"),
+			    ICON(OBJREINIT_ICON), 0, 0,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
+			
+			ag_menu_action(mi, _("Destroy"),
+			    ICON(TRASH_ICON), SDLK_x, KMOD_CTRL,
+			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
+		}
 
 		toolbar_add_button(tbar, 0, ICON(OBJCREATE_ICON), 0, 0,
 		    create_obj, "%p, %p, %p", objs_tl, name_tb,
