@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.63 2002/12/23 02:56:50 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.64 2002/12/24 10:26:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -81,8 +81,6 @@ struct object {
 #else
 # define OBJECT_ASSERT(ob, type)
 #endif
-
-#define OBJECT_ISTYPE(pob, ptype) (strcmp(OBJECT((pob))->type, (ptype)) == 0)
 
 struct object	*object_new(char *, char *, char *, int, const void *);
 void		 object_init(struct object *, char *, char *, char *,

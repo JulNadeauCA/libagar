@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.53 2002/12/23 02:56:50 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.54 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,9 +28,9 @@
 
 #include "engine.h"
 
-#include <libfobj/fobj.h>
-
 #include "world.h"
+
+#include <libfobj/fobj.h>
 
 #include "mapedit/mapedit.h"
 
@@ -71,7 +71,7 @@ world_load(void *p, int fd)
 
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		debug(DEBUG_STATE, "loading %s\n", ob->name);
-		if (curmapedit != NULL && OBJECT_ISTYPE(ob, "map")) {
+		if (curmapedit != NULL && strcmp(ob->type, "map") == 0) {
 			/* XXX map editor hack */
 			continue;
 		}
@@ -95,7 +95,7 @@ world_save(void *p, int fd)
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		debug(DEBUG_STATE, "saving %s\n", ob->name);
 
-		if (curmapedit != NULL && OBJECT_ISTYPE(ob, "map")) {
+		if (curmapedit != NULL && strcmp(ob->type, "map") == 0) {
 			/* XXX map editor hack */
 			continue;
 		}
@@ -134,41 +134,39 @@ world_destroy(void *p)
 }
 
 void
-world_attach(void *parent, void *child)
+world_attach(void *child)
 {
-	struct world *wo = parent;
 	struct object *ob = child;
 
-	pthread_mutex_lock(&wo->lock);
+	pthread_mutex_lock(&world->lock);
 
-	SLIST_INSERT_HEAD(&wo->wobjs, ob, wobjs);
-	wo->nobjs++;
+	SLIST_INSERT_HEAD(&world->wobjs, ob, wobjs);
+	world->nobjs++;
 	ob->state = OBJECT_CONSISTENT;
 
-	event_post(ob, "attached", "%p", wo);
+	event_post(ob, "attached", "%p", world);
 
-	pthread_mutex_unlock(&wo->lock);
+	pthread_mutex_unlock(&world->lock);
 }
 
 void
-world_detach(void *parent, void *child)
+world_detach(void *child)
 {
-	struct world *wo = parent;
 	struct object *ob = child;
 	
 	debug(DEBUG_GC, "freeing %s\n", ob->name);
 
-	pthread_mutex_lock(&wo->lock);
+	pthread_mutex_lock(&world->lock);
 	if (ob->state != OBJECT_CONSISTENT) {
 		fatal("inconsistent: %s\n", ob->name);
 	}
 	
-	event_post(ob, "detached", "%p", wo);
-	SLIST_REMOVE(&wo->wobjs, ob, object, wobjs);
-	wo->nobjs--;
+	event_post(ob, "detached", "%p", world);
+	SLIST_REMOVE(&world->wobjs, ob, object, wobjs);
+	world->nobjs--;
 	ob->state = OBJECT_ZOMBIE;
 
-	pthread_mutex_unlock(&wo->lock);
+	pthread_mutex_unlock(&world->lock);
 
 	object_destroy(ob);
 }
