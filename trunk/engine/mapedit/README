@@ -1,0 +1,54 @@
+
+The map editor manipulates map entry references (sprites and animations,
+currently), in addition to various properties.
+
+Each map entry has a linked list of structures containing a pointer to
+an object, flags, and an offset (whose meaning is dependent to flags).
+The lowest sprite/animation on the stack is drawn first.
+
+The editor has 3 `windows'. The tile stack (left) displays the stack of
+references for the map entry under the cursor. The tile list (right)
+shows a circular list of available sprites/animations for the current
+object. The object list (top) shows the icons for all objects known by
+the map editor.
+
+KEYBOARD
+========
+
+Directional:	Move the cursor on the map.
+Ctrl+Left:	Scroll object list left.
+Ctrl+Right:	Scroll object list right.
+PgUp:		Scroll tile list up.
+PgDn:		Scroll tile list down.
+
+'a':		Add a new tile reference at the highest layer.
+'d':		Remove the tile at the highest layer.
+'s':		Save this map to <mapname>.map.
+'l':		Load this map from <mapname>.map.
+'i':		Initialize an empty map.
+'o':		Position the cursor on the map origin.
+'x':		Print the current tile stack.
+
+'b':		Mark a non-navigable surface, or:
+'w':		Mark a surface 'walkable'.
+'c':		Mark a surface 'climbable'.
+'p':		Mark a surface 'slippery'.
+
+Shift+'O':	Toggle the 'origin' attribute.
+Shift+'B':	Toggle the 'bio' attribute.
+Shift+'R':	Toggle the 'regen' attribute.
+Shift+'S':	Toggle the 'slow' attribute.
+Shift+'H':	Toggle the 'haste' attribute.
+
+Ctrl+'I':	Fill the map with the current tile.
+Ctrl+'T':	Toggle the tile list window.
+Ctrl+'S':	Toggle the tile stack window.
+Ctrl+'O':	Toggle the object list window.
+
+
+MOUSE
+=====
+Holding the mouse's left button, the map is scrolled. The middle (or
+right) button positions the edit cursor at the cursor's position,
+and the third button adds a new tile reference.
+
