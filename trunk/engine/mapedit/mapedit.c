@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.65 2002/03/14 04:59:42 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.66 2002/03/14 05:08:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -267,13 +267,13 @@ mapedit_link(void *p)
 	med->tilelist.x = m->view->width - m->tilew;
 	med->tilelist.y = m->tileh;
 	med->tilelist.w = m->tilew;
-	med->tilelist.h = m->view->height;
+	med->tilelist.h = m->view->height - m->tilew;
 	med->tilelist_offs = 0;
 
 	med->tilestack.x = 0;
 	med->tilestack.y = m->tileh;
 	med->tilestack.w = m->tilew;
-	med->tilestack.h = m->view->height;
+	med->tilestack.h = m->view->height - m->tilew;
 
 	med->objlist.x = m->tilew;
 	med->objlist.y = 0;
