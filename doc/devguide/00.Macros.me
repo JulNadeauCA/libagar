@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: 00.Macros.me,v 1.1 2004/01/23 06:26:59 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -64,8 +64,9 @@
 \t\t\\n($1.\\n($2.\\n($3.\t\\$1
 .)x
 ..
-.\" Begin preformatted text
+.\" Begin block
 .de Bd
+.(b
 .ds Bt \\$1
 .br
 .if "\\$1"-code" \{\
@@ -116,6 +117,7 @@ Figure \\n(BM.\\n(Bm: \\*(BN
 .	f
 .	ps
 .\}
+.)b
 ..
 .\" Function name
 .de Fn
@@ -132,4 +134,8 @@ Figure \\n(BM.\\n(Bm: \\*(BN
 .\" Manual page reference
 .de Xr
 \f(CR\\$1\fP(\\$2)\\$3
+..
+.\" Define
+.de Dv
+\f(CR\\$1\fP
 ..
