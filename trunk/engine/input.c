@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.41 2003/05/08 12:27:59 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.42 2003/05/09 01:59:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -239,7 +239,6 @@ input_destroy(void *p)
 		break;
 	}
 	pthread_mutex_destroy(&in->lock);
-	free(in);
 }
 
 /* Look for an input device of the given name. */
