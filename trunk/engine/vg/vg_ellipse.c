@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.5 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.6 2004/05/12 04:50:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -172,7 +172,7 @@ finish:
 	tool_pop_status(t);
 }
 
-const struct tool ellipse_tool = {
+const struct tool vg_ellipse_tool = {
 	N_("Ellipses"),
 	N_("Draw ellipses."),
 	VGCIRCLES_ICON,
