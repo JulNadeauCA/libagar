@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.30 2002/05/06 02:19:14 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.31 2002/05/08 09:44:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,7 +46,6 @@ static SDL_Rect	**view_allocmaprects(struct map *, int, int);
 static SDL_Rect	*view_allocrects(struct map *, int, int);
 static void	view_freemask(struct viewport *);
 static void	view_freemaprects(struct viewport *);
-static void	view_freerects(struct viewport *);
 
 struct viewport *mainview;
 extern TAILQ_HEAD(windows_head, window) windowsh;	/* window.c */
@@ -219,15 +218,8 @@ view_freemaprects(struct viewport *v)
 	v->maprects = NULL;
 }
 
-static void
-view_freerects(struct viewport *v)
-{
-	free(v->rects);
-	v->rects = NULL;
-}
-
 struct viewport *
-view_create(int w, int h, int depth, int flags)
+view_new(int w, int h, int depth, int flags)
 {
 	struct viewport *v;
 
@@ -257,12 +249,16 @@ view_create(int w, int h, int depth, int flags)
 void
 view_destroy(struct viewport *v)
 {
-	if (v->mapmask != NULL)
+	if (v->mapmask != NULL) {
 		view_freemask(v);
-	if (v->maprects != NULL)
+	}
+	if (v->maprects != NULL) {
 		view_freemaprects(v);
-	if (v->rects != NULL)
-		view_freerects(v);
+	}
+	if (v->rects != NULL) {
+		free(v->rects);
+		v->rects = NULL;
+	}
 	pthread_mutex_destroy(&v->lock);
 	free(v);
 }
