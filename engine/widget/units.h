@@ -1,4 +1,4 @@
-/*	$Csoft: units.h,v 1.6 2003/12/09 07:01:23 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.7 2004/02/24 12:24:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_UNITS_H_
@@ -6,13 +6,19 @@
 #include "begin_code.h"
 
 struct unit {
-	char	 *abbr;		/* Abbreviation */
+	char	 *abbr;		/* Abbreviation/symbol */
 	char	 *name;		/* Long name */
-	double	  divider;	/* Divider (with respect to the base unit) */
-	double	(*func)(double); /* Conversion function */
+	double	  divider;	/* Base unit divider (for linear conv) */
+	double	(*func)(double); /* Function (for nonlinear conv) */
 };
 
 __BEGIN_DECLS
+__inline__ const struct unit *unit(const struct unit[], const char *);
+__inline__ double unit2base(double, const struct unit *);
+#define		  unit2basef(n, u) ((float)unit2base((float)(n), (u)))
+__inline__ double base2unit(double, const struct unit *);
+#define		  base2unitf(n, u) ((float)base2unit((float)(n), (u)))
+
 extern const struct unit identity_unit;
 extern const struct unit length_units[];
 extern const struct unit area_units[];
@@ -31,7 +37,7 @@ extern const struct unit capacitance_units[];
 extern const struct unit inductance_units[];
 extern const struct unit frequency_units[];
 extern const struct unit pressure_units[];
-extern const struct unit metabolic_cost_units[];
+extern const struct unit metabolic_expenditure_units[];
 __END_DECLS
 
 #include "close_code.h"

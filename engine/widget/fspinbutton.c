@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.17 2004/03/30 00:22:56 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.18 2004/04/13 01:21:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -120,7 +120,7 @@ fspinbutton_return(int argc, union evarg *argv)
 	char *s;
 
 	stringb = widget_get_binding(fsu->input, "string", &s);
-	fspinbutton_set_value(fsu, strtod(s, NULL)*fsu->unit->divider);
+	fspinbutton_set_value(fsu, unit2base(strtod(s, NULL), fsu->unit));
 	widget_binding_unlock(stringb);
 
 	event_post(NULL, fsu, "fspinbutton-return", NULL);
@@ -269,11 +269,11 @@ fspinbutton_draw(void *p)
 	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
 		textbox_printf(fsu->input, fsu->format,
-		    *(double *)value/fsu->unit->divider);
+		    base2unit(*(double *)value, fsu->unit));
 		break;
 	case WIDGET_FLOAT:
 		textbox_printf(fsu->input, fsu->format,
-		    *(float *)value/fsu->unit->divider);
+		    base2unit(*(float *)value, fsu->unit));
 		break;
 	}
 	widget_binding_unlock(valueb);
@@ -286,23 +286,24 @@ fspinbutton_add_value(struct fspinbutton *fsu, double inc)
 	struct widget_binding *valueb, *minb, *maxb;
 	void *value;
 	double *min, *max;
+	double binc;
 
-	inc *= fsu->unit->divider;
-
+	binc = unit2base(inc, fsu->unit);
 	valueb = widget_get_binding(fsu, "value", &value);
 	minb = widget_get_binding(fsu, "min", &min);
 	maxb = widget_get_binding(fsu, "max", &max);
 
 	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
-		*(double *)value = *(double *)value+inc < *min ? *min :
-		                   *(double *)value+inc > *max ? *max :
-				   *(double *)value+inc;
+		*(double *)value = *(double *)value+binc < *min ? *min :
+		                   *(double *)value+binc > *max ? *max :
+				   *(double *)value+binc;
+		
 		break;
 	case WIDGET_FLOAT:
-		*(float *)value = *(float *)value+inc < *min ? *min :
-		                  *(float *)value+inc > *max ? *max :
-				  *(float *)value+inc;
+		*(float *)value = *(float *)value+binc < *min ? *min :
+		                  *(float *)value+binc > *max ? *max :
+				  *(float *)value+binc;
 		break;
 	default:
 		break;
