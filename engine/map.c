@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.239 2005/03/03 10:59:22 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.240 2005/03/05 12:14:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -45,10 +45,14 @@
 #include <engine/widget/menu.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/mspinbutton.h>
+#include <engine/widget/notebook.h>
+#include <engine/widget/separator.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
 #include <engine/mapedit/layedit.h>
+
+#include <engine/rg/tileset.h>
 #endif
 
 #include <string.h>
@@ -1581,15 +1585,6 @@ save_map(int argc, union evarg *argv)
 }
 
 static void
-close_map(int argc, union evarg *argv)
-{
-	struct map *m = argv[1].p;
-	struct window *win = argv[2].p;
-
-	event_post(NULL, win, "window-close", NULL);
-}
-
-static void
 switch_tool(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
@@ -1620,7 +1615,10 @@ edit_properties(int argc, union evarg *argv)
 	struct spinbutton *sb;
 	struct checkbox *cbox;
 
-	win = window_new(WINDOW_NO_RESIZE, NULL);
+	if ((win = window_new(WINDOW_NO_RESIZE, "map-props-%s",
+	    OBJECT(m)->name)) == NULL) {
+		return;
+	}
 	window_set_caption(win, _("Properties of \"%s\""), OBJECT(m)->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	
@@ -1710,6 +1708,131 @@ edit_properties(int argc, union evarg *argv)
 	window_show(win);
 }
 
+static void
+find_art(struct tlist *tl, struct object *pob)
+{
+	struct object *cob;
+	struct tlist_item *it;
+
+	if (OBJECT_TYPE(pob, "tileset")) {
+		struct tileset *ts = (struct tileset *)pob;
+		struct tlist_item *sit;
+		struct tile *t;
+		struct animation *anim;
+
+		it = tlist_insert(tl, object_icon(ts), "%s%s", pob->name,
+		    (pob->flags&OBJECT_DATA_RESIDENT) ? _(" (resident)") : "");
+		it->p1 = pob;
+		it->depth = 0;
+		it->class = "tileset";
+		
+		pthread_mutex_lock(&ts->lock);
+		
+		if (!TAILQ_EMPTY(&ts->tiles) ||
+		    !TAILQ_EMPTY(&ts->animations))
+			it->flags |= TLIST_HAS_CHILDREN;
+
+		if (it->flags & TLIST_HAS_CHILDREN &&
+		    tlist_visible_children(tl, it)) {
+			TAILQ_FOREACH(t, &ts->tiles, tiles) {
+				sit = tlist_insert(tl, t->su, "%s (%ux%u)",
+				    t->name, t->su->w, t->su->h);
+				sit->depth = 1;
+				sit->class = "tile";
+				sit->p1 = t;
+			}
+			TAILQ_FOREACH(anim, &ts->animations, animations) {
+				sit = tlist_insert(tl,
+				    anim->nframes>0 ? anim->frames[0].su : NULL,
+				    "%s (%ux%u*%u)",
+				    anim->name, anim->w, anim->h,
+				    anim->nframes);
+				sit->depth = 1;
+				sit->class = "anim";
+				sit->p1 = anim;
+			}
+		}
+		pthread_mutex_unlock(&ts->lock);
+	}
+
+	TAILQ_FOREACH(cob, &pob->children, cobjs)
+		find_art(tl, cob);
+}
+
+static void
+find_objs(struct tlist *tl, struct object *pob, int depth)
+{
+	struct object *cob;
+	struct tlist_item *it;
+	SDL_Surface *icon;
+
+	it = tlist_insert(tl, object_icon(pob), "%s%s", pob->name,
+	    (pob->flags & OBJECT_DATA_RESIDENT) ? " (resident)" : "");
+	it->depth = depth;
+	it->class = "object";
+	it->p1 = pob;
+
+	if (!TAILQ_EMPTY(&pob->children)) {
+		it->flags |= TLIST_HAS_CHILDREN;
+		if (object_root(pob) == pob)
+			it->flags |= TLIST_VISIBLE_CHILDREN;
+	}
+	if ((it->flags & TLIST_HAS_CHILDREN) &&
+	    tlist_visible_children(tl, it)) {
+		TAILQ_FOREACH(cob, &pob->children, cobjs)
+			find_objs(tl, cob, depth+1);
+	}
+}
+
+static void
+poll_art(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *pob = argv[1].p;
+	struct tlist_item *it;
+
+	tlist_clear_items(tl);
+	lock_linkage();
+	find_art(tl, pob);
+	unlock_linkage();
+	tlist_restore_selections(tl);
+}
+
+static void
+poll_objs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *pob = argv[1].p;
+	struct tlist_item *it;
+
+	tlist_clear_items(tl);
+	lock_linkage();
+	find_objs(tl, pob, 0);
+	unlock_linkage();
+	tlist_restore_selections(tl);
+}
+
+static void
+poll_layers(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct map *m = argv[1].p;
+	struct tlist_item *it;
+	int i;
+
+	tlist_clear_items(tl);
+	for (i = 0; i < m->nlayers; i++) {
+		struct map_layer *lay = &m->layers[i];
+
+		it = tlist_insert(tl, NULL, "%s%s%s",
+		    (i == m->cur_layer) ? "[*] " : "", lay->name,
+		    lay->visible ? "" : _(" (hidden)"));
+		it->p1 = lay;
+		it->class = "layer";
+	}
+	tlist_restore_selections(tl);
+}
+
 struct window *
 map_edit(void *p)
 {
@@ -1725,13 +1848,14 @@ map_edit(void *p)
 	struct mapview *mv;
 	struct AGMenu *menu;
 	struct AGMenuItem *pitem;
+	struct box *box_h, *box_v;
 	int flags = MAPVIEW_PROPS|MAPVIEW_GRID;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
 	
 	win = window_new(0, NULL);
-	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
+	window_set_caption(win, "%s", OBJECT(m)->name);
 
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 
@@ -1742,7 +1866,7 @@ map_edit(void *p)
 	statusbar_init(statbar);
 
 	mapview_init(mv, m, flags, toolbar, statbar);
-	mapview_prescale(mv, 12, 8);
+	mapview_prescale(mv, 2, 2);
 
 	menu = menu_new(win);
 	pitem = menu_add_item(menu, _("Map"));
@@ -1757,7 +1881,7 @@ map_edit(void *p)
 		    edit_properties, "%p, %p", mv, win);
 		menu_action(pitem, _("Import media..."), MEDIASEL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &mediasel_tool, m, 1));
+		    mapview_reg_tool(mv, &mediasel_tool, m, 0));
 		
 		menu_separator(pitem);
 
@@ -1767,11 +1891,6 @@ map_edit(void *p)
 		menu_int_flags(pitem, _("Indestructible"), TRASH_ICON,
 		    &OBJECT(m)->flags, OBJECT_INDESTRUCTIBLE,
 		    &OBJECT(m)->lock, 0);
-		
-		menu_separator(pitem);
-
-		menu_action(pitem, _("Close"), CLOSE_ICON,
-		    close_map, "%p, %p", m, win);
 	}
 
 	pitem = menu_add_item(menu, _("View"));
@@ -1809,7 +1928,7 @@ map_edit(void *p)
 	{
 		menu_action(pitem, _("Edit layers"), MAGNIFIER_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &layedit_tool, m, 1));
+		    mapview_reg_tool(mv, &layedit_tool, m, 0));
 	}
 
 	pitem = menu_add_item(menu, _("Tools"));
@@ -1819,10 +1938,10 @@ map_edit(void *p)
 		    mapview_reg_tool(mv, &select_tool, m, 1));
 		menu_action(pitem, _("Stamp"), STAMP_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &stamp_tool, m, 0));
+		    mapview_reg_tool(mv, &stamp_tool, m, 1));
 		menu_action(pitem, _("Eraser"), ERASER_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &eraser_tool, m, 0));
+		    mapview_reg_tool(mv, &eraser_tool, m, 1));
 		menu_action(pitem, _("Resize"), RESIZE_TOOL_ICON,
 		    0, 0, switch_tool, "%p, %p", mv,
 		    mapview_reg_tool(mv, &resize_tool, m, 1));
@@ -1836,28 +1955,65 @@ map_edit(void *p)
 		
 		menu_action(pitem, _("Entity properties"), PROPEDIT_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &propedit_tool, m, 0));
+		    mapview_reg_tool(mv, &propedit_tool, m, 01));
 		menu_action(pitem, _("Displace sprite"), SHIFT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &shift_tool, m, 0));
+		    mapview_reg_tool(mv, &shift_tool, m, 1));
 		menu_action(pitem, _("Flip/mirror sprite"), FLIP_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &flip_tool, m, 0));
+		    mapview_reg_tool(mv, &flip_tool, m, 1));
 		menu_action(pitem, _("Invert sprite"), INVERT_TOOL_ICON,
 		    switch_tool, "%p, %p", mv,
-		    mapview_reg_tool(mv, &invert_tool, m, 0));
+		    mapview_reg_tool(mv, &invert_tool, m, 1));
 	}
 	
 	object_attach(win, toolbar);
+	separator_new(win, SEPARATOR_HORIZ);
 
-	laysel = combo_new(win, COMBO_POLL, _("Layer:"));
-	textbox_printf(laysel->tbox, "%d. %s", m->cur_layer,
-	    m->layers[m->cur_layer].name);
-	event_new(laysel->list, "tlist-poll", layedit_poll, "%p", m);
-	event_new(laysel, "combo-selected", mapview_selected_layer, "%p", mv);
+	box_h = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+	{
+		struct notebook *nb;
+		struct notebook_tab *ntab;
+		struct tlist *tl;
 	
-	object_attach(win, mv);
+		nb = notebook_new(box_h, NOTEBOOK_HFILL);
+		ntab = notebook_add_tab(nb, _("Artwork"), BOX_VERT);
+		notebook_select_tab(nb, ntab);
+		{
+			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
+			event_new(tl, "tlist-poll", poll_art, "%p", world);
+		}
+
+		ntab = notebook_add_tab(nb, _("Objects"), BOX_VERT);
+		{
+			tl = tlist_new(ntab, TLIST_POLL|TLIST_TREE);
+			event_new(tl, "tlist-poll", poll_objs, "%p", world);
+		}
+		
+		ntab = notebook_add_tab(nb, _("Layers"), BOX_VERT);
+		{
+			tl = tlist_new(ntab, TLIST_POLL);
+			event_new(tl, "tlist-poll", poll_layers, "%p", m);
+		}
+		
+		box_v = box_new(box_h, BOX_VERT, BOX_WFILL|BOX_HFILL);
+		{
+			laysel = combo_new(box_v, COMBO_POLL, _("Layer:"));
+			event_new(laysel->list, "tlist-poll", layedit_poll,
+			    "%p", m);
+			event_new(laysel, "combo-selected",
+			    mapview_selected_layer, "%p", mv);
+			combo_select_pointer(laysel, &m->layers[m->cur_layer]);
+			object_attach(box_v, mv);
+		}
+	}
+
 	object_attach(win, statbar);
+
+	window_scale(win, -1, -1);
+	window_set_geometry(win,
+	    view->w/4, view->h/4,
+	    view->w/2, view->h/2);
 
 	widget_focus(mv);
 	return (win);
