@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.5 2002/02/07 05:17:02 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.6 2002/02/14 06:30:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -40,13 +40,7 @@ static void	world_destroy(void *);
 struct world *
 world_create(char *name)
 {
-	world = (struct world *)malloc(sizeof(struct world));
-	if (world == NULL) {
-		perror("world");
-		return (NULL);
-	}
-
-	/* Initialize the world structure. */
+	world = (struct world *)emalloc(sizeof(struct world));
 	object_create(&world->obj, name, NULL, DESTROY_HOOK);
 	world->obj.destroy_hook = world_destroy;
 

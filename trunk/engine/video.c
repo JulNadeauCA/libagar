@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.11 2002/02/01 02:05:35 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.12 2002/02/14 06:30:24 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -129,7 +129,7 @@ video_create(char *path, SDL_Surface *s)
 		return (NULL);
 	}
 
-	v = malloc(sizeof(struct video));
+	v = emalloc(sizeof(struct video));
 	v->fd = 0;
 	v->mpeg = NULL;
 	v->lock = SDL_CreateMutex();

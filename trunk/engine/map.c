@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.21 2002/02/13 00:31:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.22 2002/02/14 05:26:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -65,8 +65,6 @@ map_create(char *name, char *desc, int flags, int width, int height)
 	int x = 0, y = 0;
 
 	m = (struct map *)emalloc(sizeof(struct map));
-
-	/* Initialize the map structure. */
 	object_create(&m->obj, name, desc,
 	    DESTROY_HOOK|LOAD_FUNC|SAVE_FUNC|OBJ_DEFERGC|OBJ_EDITABLE);
 	m->obj.destroy_hook = map_destroy;
@@ -187,7 +185,6 @@ node_addref(struct node *node, struct object *ob, int offs, int rflags)
 	struct map_aref *aref;
 
 	aref = (struct map_aref *)emalloc(sizeof(struct map_aref));
-
 	aref->pobj = ob;
 	aref->offs = offs;
 	aref->flags = rflags;

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.7 2002/02/10 03:44:46 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.8 2002/02/14 06:30:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -66,10 +66,7 @@ view_create(int w, int h, int tilew, int tileh, int depth, int flags)
 {
 	struct viewport *v;
 
-	v = malloc(sizeof(struct viewport));
-	if (v == NULL) {
-		return (NULL);
-	}
+	v = emalloc(sizeof(struct viewport));
 	v->width = w;
 	v->height = h;
 	v->tilew = tilew;
@@ -99,11 +96,7 @@ window_create(struct viewport *view, int x, int y, int w, int h, char *caption)
 {
 	struct window *win;
 
-	win = malloc(sizeof(struct window));
-	if (win == NULL) {
-		return (NULL);
-	}
-
+	win = emalloc(sizeof(struct window));
 	win->v = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, view->depth,
 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
 	if (win->v == NULL) {

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.9 2002/02/11 23:26:57 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.10 2002/02/14 05:25:47 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -177,6 +177,7 @@ engine_join(void)
 void
 engine_destroy(void)
 {
+	exit(0);
 	object_destroy(world);
 
 	if (joy != NULL) {

@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.2 2002/02/08 00:18:01 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.3 2002/02/08 00:37:40 vedge Exp $	*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,12 +15,8 @@ int
 anim_addframe(struct anim *anim, SDL_Surface *surface)
 {
 	if (anim->frames == NULL) {			/* Initialize */
-		anim->frames = (SDL_Surface **)malloc(NFINIT *
+		anim->frames = (SDL_Surface **)emalloc(NFINIT *
 		    sizeof(SDL_Surface *));
-		if (anim->frames == NULL) {
-			perror("malloc");
-			return (-1);
-		}
 		anim->maxframes = NFINIT;
 		anim->nframes = 0;
 	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
@@ -44,11 +40,7 @@ anim_create(int delay)
 {
 	struct anim *anim;
 
-	anim = malloc(sizeof(struct anim));
-	if (anim == NULL) {
-		return (NULL);
-	}
-
+	anim = emalloc(sizeof(struct anim));
 	anim->frames = NULL;
 	anim->nframes = 0;
 	anim->delay = delay;

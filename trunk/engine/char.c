@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.12 2002/02/14 05:25:09 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.13 2002/02/14 23:33:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -52,11 +52,7 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 {
 	struct character *ch;
 	
-	ch = (struct character *)malloc(sizeof(struct character));
-	if (ch == NULL) {
-		return (NULL);
-	}
-
+	ch = (struct character *)emalloc(sizeof(struct character));
 	object_create(&ch->obj, name, desc, flags);
 	ch->event_hook = char_event;
 	ch->map = NULL;
