@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.11 2004/03/24 01:18:40 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.12 2004/03/24 01:42:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -126,10 +126,10 @@ spinbutton_keydown(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	switch (keysym) {
 	case SDLK_UP:
-		spinbutton_add(sbu, sbu->incr);
+		spinbutton_add_value(sbu, sbu->incr);
 		break;
 	case SDLK_DOWN:
-		spinbutton_add(sbu, -sbu->incr);
+		spinbutton_add_value(sbu, -sbu->incr);
 		break;
 	}
 	pthread_mutex_unlock(&sbu->lock);
@@ -158,7 +158,7 @@ spinbutton_up(int argc, union evarg *argv)
 	struct spinbutton *sbu = argv[1].p;
 
 	pthread_mutex_lock(&sbu->lock);
-	spinbutton_add(sbu, sbu->incr);
+	spinbutton_add_value(sbu, sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 	
 	event_post(NULL, sbu, "spinbutton-changed", NULL);
@@ -170,7 +170,7 @@ spinbutton_down(int argc, union evarg *argv)
 	struct spinbutton *sbu = argv[1].p;
 	
 	pthread_mutex_lock(&sbu->lock);
-	spinbutton_add(sbu, -sbu->incr);
+	spinbutton_add_value(sbu, -sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 	
 	event_post(NULL, sbu, "spinbutton-changed", NULL);
@@ -268,79 +268,233 @@ spinbutton_draw(void *p)
 }
 
 void
-spinbutton_add(struct spinbutton *sbu, int inc)
+spinbutton_add_value(struct spinbutton *sbu, ...)
 {
 	struct widget_binding *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
+	va_list ap;
 
 	valueb = widget_get_binding(sbu, "value", &value);
 	minb = widget_get_binding(sbu, "min", &min);
 	maxb = widget_get_binding(sbu, "max", &max);
 
+	va_start(ap, sbu);
 	switch (valueb->type) {
 	case WIDGET_INT:
-		if (*(int *)value + inc >= *min &&
-		    *(int *)value + inc <= *max)
-			*(int *)value += inc;
+		{
+			int inc = va_arg(ap, int);
+
+			if (*(int *)value+inc >= *min &&
+			    *(int *)value+inc <= *max)
+				*(int *)value += inc;
+		}
 		break;
 	case WIDGET_UINT:
-		if (*(unsigned int *)value + inc >= *min &&
-		    *(unsigned int *)value + inc <= *max)
-			*(unsigned int *)value += inc;
+		{
+			unsigned int inc = va_arg(ap, unsigned int);
+
+			if (*(unsigned int *)value+inc >= *min &&
+			    *(unsigned int *)value+inc <= *max)
+				*(unsigned int *)value += inc;
+		}
 		break;
 	case WIDGET_UINT8:
-		if (*(Uint8 *)value + inc >= *min &&
-		    *(Uint8 *)value + inc <= *max)
-			*(Uint8 *)value += inc;
+		{
+			Uint8 inc = va_arg(ap, Uint8);
+
+			if (*(Uint8 *)value+inc >= *min &&
+			    *(Uint8 *)value+inc <= *max)
+				*(Uint8 *)value += inc;
+		}
 		break;
 	case WIDGET_SINT8:
-		if (*(Sint8 *)value + inc >= *min &&
-		    *(Sint8 *)value + inc <= *max)
-			*(Sint8 *)value += inc;
+		{
+			Sint8 inc = va_arg(ap, Sint8);
+
+			if (*(Sint8 *)value+inc >= *min &&
+			    *(Sint8 *)value+inc <= *max)
+				*(Sint8 *)value += inc;
+		}
 		break;
 	case WIDGET_UINT16:
-		if (*(Uint16 *)value + inc >= *min &&
-		    *(Uint16 *)value + inc <= *max)
-			*(Uint16 *)value += inc;
+		{
+			Uint16 inc = va_arg(ap, Uint16);
+
+			if (*(Uint16 *)value+inc >= *min &&
+			    *(Uint16 *)value+inc <= *max)
+				*(Uint16 *)value += inc;
+		}
 		break;
 	case WIDGET_SINT16:
-		if (*(Sint16 *)value + inc >= *min &&
-		    *(Sint16 *)value + inc <= *max)
-			*(Sint16 *)value += inc;
+		{
+			Sint16 inc = va_arg(ap, Sint16);
+
+			if (*(Sint16 *)value+inc >= *min &&
+			    *(Sint16 *)value+inc <= *max)
+				*(Sint16 *)value += inc;
+		}
 		break;
 	case WIDGET_UINT32:
-		if (*(Uint32 *)value + inc >= *min &&
-		    *(Uint32 *)value + inc <= *max)
-			*(Uint32 *)value += inc;
+		{
+			Uint32 inc = va_arg(ap, Uint32);
+
+			if (*(Uint32 *)value+inc >= *min &&
+			    *(Uint32 *)value+inc <= *max)
+				*(Uint32 *)value += inc;
+		}
 		break;
 	case WIDGET_SINT32:
-		if (*(Sint32 *)value + inc >= *min &&
-		    *(Sint32 *)value + inc <= *max)
-			*(Sint32 *)value += inc;
+		{
+			Sint32 inc = va_arg(ap, Sint32);
+
+			if (*(Sint32 *)value+inc >= *min &&
+			    *(Sint32 *)value+inc <= *max)
+				*(Sint32 *)value += inc;
+		}
 		break;
 	default:
 		break;
 	}
+	va_end(ap);
 
 	event_post(NULL, sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
+
 	widget_binding_unlock(maxb);
 	widget_binding_unlock(minb);
 	widget_binding_unlock(valueb);
 }
 
 void
-spinbutton_set_value(struct spinbutton *sbu, int nvalue)
+spinbutton_set_value(struct spinbutton *sbu, ...)
 {
-	struct widget_binding *valueb;
-	int *value;
+	struct widget_binding *valueb, *minb, *maxb;
+	void *value;
+	int *min, *max;
+	va_list ap;
 
 	valueb = widget_get_binding(sbu, "value", &value);
-	*value = nvalue;
+	minb = widget_get_binding(sbu, "min", &min);
+	maxb = widget_get_binding(sbu, "max", &max);
+
+	va_start(ap, sbu);
+	switch (valueb->type) {
+	case WIDGET_INT:
+		{
+			int i = va_arg(ap, int);
+
+			if (i < *min) {
+				*(int *)value = *min;
+			} else if (i > *max) {
+				*(int *)value = *max;
+			} else {
+				*(int *)value = i;
+			}
+		}
+		break;
+	case WIDGET_UINT:
+		{
+			unsigned int i = va_arg(ap, unsigned int);
+
+			if (i < (unsigned int)*min) {
+				*(unsigned int *)value = *min;
+			} else if (i > (unsigned int)*max) {
+				*(unsigned int *)value = *max;
+			} else {
+				*(unsigned int *)value = i;
+			}
+		}
+		break;
+	case WIDGET_UINT8:
+		{
+			Uint8 i = va_arg(ap, Uint8);
+
+			if (i < (Uint8)*min) {
+				*(Uint8 *)value = *min;
+			} else if (i > (Uint8)*max) {
+				*(Uint8 *)value = *max;
+			} else {
+				*(Uint8 *)value = i;
+			}
+		}
+		break;
+	case WIDGET_SINT8:
+		{
+			Sint8 i = va_arg(ap, Sint8);
+
+			if (i < (Sint8)*min) {
+				*(Sint8 *)value = *min;
+			} else if (i > (Sint8)*max) {
+				*(Sint8 *)value = *max;
+			} else {
+				*(Sint8 *)value = i;
+			}
+		}
+		break;
+	case WIDGET_UINT16:
+		{
+			Uint16 i = va_arg(ap, Uint16);
+
+			if (i < (Uint16)*min) {
+				*(Uint16 *)value = *min;
+			} else if (i > (Uint16)*max) {
+				*(Uint16 *)value = *max;
+			} else {
+				*(Uint16 *)value = i;
+			}
+		}
+		break;
+	case WIDGET_SINT16:
+		{
+			Sint16 i = va_arg(ap, Sint16);
+
+			if (i < (Sint16)*min) {
+				*(Sint16 *)value = *min;
+			} else if (i > (Sint16)*max) {
+				*(Sint16 *)value = *max;
+			} else {
+				*(Sint16 *)value = i;
+			}
+		}
+		break;
+	case WIDGET_UINT32:
+		{
+			Uint32 i = va_arg(ap, Uint32);
+
+			if (i < (Uint32)*min) {
+				*(Uint32 *)value = *min;
+			} else if (i > (Uint32)*max) {
+				*(Uint32 *)value = *max;
+			} else {
+				*(Uint32 *)value = i;
+			}
+		}
+		break;
+	case WIDGET_SINT32:
+		{
+			Sint32 i = va_arg(ap, Sint32);
+
+			if (i < (Sint32)*min) {
+				*(Sint32 *)value = *min;
+			} else if (i > (Sint32)*max) {
+				*(Sint32 *)value = *max;
+			} else {
+				*(Sint32 *)value = i;
+			}
+		}
+		break;
+	default:
+		break;
+	}
+	va_end(ap);
+
 	event_post(NULL, sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
+
 	widget_binding_unlock(valueb);
+	widget_binding_unlock(minb);
+	widget_binding_unlock(maxb);
 }
 
 void
@@ -364,6 +518,22 @@ spinbutton_set_max(struct spinbutton *sbu, int nmax)
 	maxb = widget_get_binding(sbu, "max", &max);
 	*max = nmax;
 	widget_binding_modified(maxb);
+	widget_binding_unlock(maxb);
+}
+
+void
+spinbutton_set_range(struct spinbutton *sbu, int nmin, int nmax)
+{
+	struct widget_binding *minb, *maxb;
+	int *min, *max;
+
+	minb = widget_get_binding(sbu, "min", &min);
+	maxb = widget_get_binding(sbu, "max", &max);
+	*min = nmin;
+	*max = nmin;
+	widget_binding_modified(minb);
+	widget_binding_modified(maxb);
+	widget_binding_unlock(minb);
 	widget_binding_unlock(maxb);
 }
 
