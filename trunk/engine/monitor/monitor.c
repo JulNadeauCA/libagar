@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.2 2002/09/02 04:55:39 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.3 2002/09/04 03:21:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -90,7 +90,8 @@ toolbar_window(struct monitor *mon)
 	struct region *reg;
 	struct button *button;
 
-	win = window_new("Monitor", WINDOW_SOLID, view->w - 86, 16,
+	win = window_new("monitor-toolbar", "Monitor", WINDOW_SOLID,
+	    view->w - 86, 16,
 	    130, 104,
 	    130, 104);
 	
