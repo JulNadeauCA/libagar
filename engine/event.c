@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.6 2002/02/05 06:15:54 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.7 2002/02/07 08:12:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -55,6 +55,7 @@ event_hotkey(SDL_Event *ev)
 			world_dump(world);
 			return (0);
 		}
+		break;
 #endif /* DEBUG */
 	case SDLK_f:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
@@ -62,12 +63,11 @@ event_hotkey(SDL_Event *ev)
 			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
 			return (0);
 		}
-	case SDLK_q:
-		if (mainview->flags & SDL_FULLSCREEN) {
-			mainview->flags &= ~(SDL_FULLSCREEN);
-			view_fullscreen(mainview, 0);
+		break;
+	case SDLK_c:
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			quit();
 		}
-		quit();
 		break;
 	default:
 		break;
