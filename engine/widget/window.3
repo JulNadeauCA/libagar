@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.21 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: window.3,v 1.22 2003/04/25 22:49:27 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -137,13 +137,12 @@ may be modified at run time (assuming the
 is locked), and may include:
 .Pp
 .Bd -literal
-#define WINDOW_TITLEBAR		0x01	/* Draw a title bar */
-#define WINDOW_SCALE		0x02	/* Scale the initial geometry (%) */
-#define WINDOW_CENTER		0x04	/* Center the initial position */
-#define WINDOW_SHOWN		0x10	/* Window is visible */
-#define WINDOW_SAVE_POSITION	0x20	/* Save position/geometry on close */
-#define WINDOW_HIDDEN_BODY	0x40	/* Draw the titlebar only */
-#define WINDOW_PERSISTENT	WINDOW_HIDDEN_BODY
+#define WINDOW_TITLEBAR		0x01  /* Draw a title bar */
+#define WINDOW_SCALE		0x02  /* Scale the initial geometry (%) */
+#define WINDOW_CENTER		0x04  /* Center the initial position */
+#define WINDOW_SHOWN		0x10  /* Window is visible */
+#define WINDOW_SAVE_POSITION	0x20  /* Save position/geometry on close */
+#define WINDOW_HIDDEN_BODY	0x40  /* Draw the titlebar only */
 .Ed
 .Pp
 The
