@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.6 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.7 2002/06/27 00:15:44 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef union evarg {
@@ -28,7 +28,7 @@ enum {
 	USER_WINDOW_EVENT
 };
 
-void	*event_loop(void *);
+void	 event_loop(void);
 void	 event_new(void *, char *, int, void (*)(int, union evarg *),
 	     const char *, ...);
 void	 event_post(void *, char *, const char *fmt, ...);
