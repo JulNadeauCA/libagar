@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.61 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.62 2003/06/06 09:03:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -9,6 +9,7 @@
 #include "begin_code.h"
 
 #define WIDGET_COLORS_MAX	16
+#define WIDGET_COLOR_NAME_MAX	16
 #define WIDGET_TYPE_MAX		32
 
 struct widget_ops {
@@ -60,11 +61,12 @@ struct widget {
 	int	 x, y;			/* Coordinates in parent */
 	int	 w, h;			/* Allocated geometry */
 
-	char				*color_names[WIDGET_COLORS_MAX];
-	Uint32				 colors[WIDGET_COLORS_MAX];
-	int				ncolors;
-	SLIST_HEAD(, widget_binding)	 bindings;
+	char	 color_names[WIDGET_COLORS_MAX][WIDGET_COLOR_NAME_MAX];
+	Uint32	 colors[WIDGET_COLORS_MAX];
+	int	ncolors;
+
 	pthread_mutex_t			 bindings_lock;
+	SLIST_HEAD(, widget_binding)	 bindings;	    /* Bound values */
 };
 
 #define WIDGET(wi)		((struct widget *)(wi))
@@ -87,6 +89,8 @@ extern __inline__ int	 widget_relative_area(void *, int, int);
 extern __inline__ int	 widget_area(void *, int, int);
 extern DECLSPEC void	 widget_map_color(void *, int, const char *, Uint8,
 			                  Uint8, Uint8, Uint8);
+extern __inline__ int	 widget_push_color(struct widget *, Uint32);
+extern __inline__ void	 widget_pop_color(struct widget *);
 
 extern __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
 extern __inline__ void	 widget_put_pixel(void *, int, int, Uint32);

@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.68 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.69 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -158,13 +158,17 @@ button_draw(void *p)
 
 	pressed = widget_get_bool(b, "state");
 	if (!b->sensitive) {
-		primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
+		primitives.box(b,
+		    0, 0,
+		    WIDGET(b)->w, WIDGET(b)->h,
 		    -1,
-		    WIDGET_COLOR(b, DISABLED_COLOR));
+		    DISABLED_COLOR);
 	} else {
-		primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
+		primitives.box(b,
+		    0, 0,
+		    WIDGET(b)->w, WIDGET(b)->h,
 		    pressed ? -1 : 1,
-		    WIDGET_COLOR(b, FRAME_COLOR));
+		    FRAME_COLOR);
 	}
 
 	switch (b->justify) {

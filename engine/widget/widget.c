@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.58 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.59 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -52,9 +52,6 @@ const struct version widget_ver = {
 
 pthread_mutex_t widget_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void widget_free_colors(struct widget *);
-static void widget_free_bindings(struct widget *);
-
 void
 widget_init(void *p, const char *type, const void *wops, int flags)
 {
@@ -86,17 +83,9 @@ widget_load(void *p, struct netbuf *buf)
 	
 	copy_string(wid->type, buf, sizeof(wid->type));
 	wid->flags = (int)read_uint32(buf);
-	wid->cx = (int)read_sint16(buf);
-	wid->cy = (int)read_sint16(buf);
-	wid->x = (int)read_sint16(buf);
-	wid->y = (int)read_sint16(buf);
-	wid->w = (int)read_uint16(buf);
-	wid->h = (int)read_uint16(buf);
-
-	widget_free_colors(wid);
 	wid->ncolors = (int)read_uint32(buf);
 	if (wid->ncolors >= WIDGET_COLORS_MAX) {
-		error_set("too many colors");
+		error_set("color stack oflow");
 		return (-1);
 	}
 	for (i = 0; i < wid->ncolors; i++) {
@@ -111,7 +100,6 @@ widget_load(void *p, struct netbuf *buf)
 		widget_map_color(wid, i, name, r, g, b, a);
 		free(name);
 	}
-
 	return (0);
 }
 
@@ -125,13 +113,6 @@ widget_save(void *p, struct netbuf *buf)
 
 	write_string(buf, wid->type);
 	write_uint32(buf, (Uint32)wid->flags);
-	write_sint16(buf, (Sint16)wid->cx);
-	write_sint16(buf, (Sint16)wid->cy);
-	write_sint16(buf, (Sint16)wid->x);
-	write_sint16(buf, (Sint16)wid->y);
-	write_uint16(buf, (Uint16)wid->w);
-	write_uint16(buf, (Uint16)wid->h);
-
 	write_uint32(buf, wid->ncolors);
 	for (i = 0; i < wid->ncolors; i++) {
 		Uint8 r, g, b, a;
@@ -631,50 +612,30 @@ widget_binding_modified(struct widget_binding *bind)
 	}
 }
 
-/*
- * Add a color scheme entry with a default value.
- * The widget's parent window must be locked, if the widget is attached.
- */
+/* Add a named entry to a widget's color stack. */
 void
 widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b,
     Uint8 a)
 {
 	struct widget *wid = p;
 
-	if (ind > WIDGET_COLORS_MAX)
-		fatal("too many colors");
-	if (ind > wid->ncolors)
-		wid->ncolors++;
-
+#ifdef DEBUG
+	if (ind >= WIDGET_COLORS_MAX)
+		fatal("color stack oflow");
+#endif
 	wid->colors[ind] = SDL_MapRGBA(vfmt, r, g, b, a);
-	wid->color_names[ind] = Strdup(name);
+	strlcpy(wid->color_names[ind], name, sizeof(wid->color_names[ind]));
+	
+	if (ind >= wid->ncolors)
+		wid->ncolors = ind+1;
 }
 
 void
 widget_destroy(void *p)
 {
 	struct widget *wid = p;
-	
-	widget_free_colors(wid);
-	widget_free_bindings(wid);
-}
-
-static void
-widget_free_colors(struct widget *wid)
-{
-	int i;
-
-	for (i = 0; i < wid->ncolors; i++) {
-		free(wid->color_names[i]);
-	}
-}
-
-static void
-widget_free_bindings(struct widget *wid)
-{
 	struct widget_binding *bind, *nbind;
 
-	/* Free the binding list */
 	for (bind = SLIST_FIRST(&wid->bindings);
 	     bind != SLIST_END(&wid->bindings);
 	     bind = nbind) {
@@ -993,5 +954,28 @@ widget_set_type(void *p, const char *name)
 
 	strlcpy(wid->type, name, sizeof(wid->type));
 	strlcpy(OBJECT(wid)->name, name, sizeof(OBJECT(wid)->name));
+}
+
+/* Push an unnamed entry onto a widget's color stack. */
+__inline__ int	
+widget_push_color(struct widget *wid, Uint32 color)
+{
+	int ncolor;
+
+#ifdef DEBUG
+	if (wid->ncolors+1 >= WIDGET_COLORS_MAX)
+		fatal("color stack oflow");
+#endif
+	ncolor = wid->ncolors++;
+	wid->colors[ncolor] = color;
+	wid->color_names[ncolor][0] = '\0';
+	return (ncolor);
+}
+
+/* Pop the highest color off a widget's color stack. */
+__inline__ void
+widget_pop_color(struct widget *wid)
+{
+	wid->ncolors--;
 }
 

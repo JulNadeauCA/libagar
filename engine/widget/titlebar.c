@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.65 2003/05/25 08:24:12 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.1 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -118,11 +118,13 @@ titlebar_draw(void *p)
 {
 	struct titlebar *tbar = p;
 
-	primitives.box(tbar, 0, 0, WIDGET(tbar)->w, WIDGET(tbar)->h,
+	primitives.box(tbar,
+	    0,
+	    0,
+	    WIDGET(tbar)->w,
+	    WIDGET(tbar)->h,
 	    tbar->pressed ? -1 : 1,
-	    WINDOW_FOCUSED(tbar->win) ?
-	    WIDGET_COLOR(tbar, FOCUSED_COLOR) :
-	    WIDGET_COLOR(tbar, UNFOCUSED_COLOR));
+	    WINDOW_FOCUSED(tbar->win) ? FOCUSED_COLOR : UNFOCUSED_COLOR);
 }
 
 static void

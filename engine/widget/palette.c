@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.14 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.15 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,8 @@ const struct widget_ops palette_ops = {
 };
 
 enum {
-	BG_COLOR
+	BG_COLOR,
+	CURRENT_COLOR
 };
 
 static void	palette_changed(int, union evarg *);
@@ -72,6 +73,7 @@ palette_init(struct palette *pal, enum palette_type type)
 	widget_bind(pal, "color", WIDGET_UINT32, NULL, &pal->color);
 
 	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196, 255);
+	widget_map_color(pal, CURRENT_COLOR, "_current", 0, 0, 0, 255);
 
 	pal->color = 0;
 	pal->type = type; 
@@ -178,14 +180,17 @@ palette_draw(void *p)
 	Uint8 r, g, b, a;
 
 	color = widget_get_uint32(pal, "color");
+
+	WIDGET_COLOR(pal, CURRENT_COLOR) = color;
 	primitives.rect_filled(pal,
 	    pal->rpreview.x, pal->rpreview.y,
 	    pal->rpreview.w, pal->rpreview.h,
-	    color);
+	    CURRENT_COLOR);
+
 	primitives.frame(pal,
 	    pal->rpreview.x, pal->rpreview.y,
 	    pal->rpreview.w, pal->rpreview.h,
-	    WIDGET_COLOR(pal, BG_COLOR));
+	    BG_COLOR);
 	
 	SDL_GetRGBA(color, vfmt, &r, &g, &b, &a);
 	widget_set_int(pal->bars[0], "value", (int)r);

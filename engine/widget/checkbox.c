@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.41 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.42 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -110,9 +110,11 @@ checkbox_draw(void *p)
 {
 	struct checkbox *cbox = p;
 
-	primitives.box(cbox, 0, 0, WIDGET(cbox)->h, WIDGET(cbox)->h,
+	primitives.box(cbox,
+	    0, 0,
+	    WIDGET(cbox)->h, WIDGET(cbox)->h,
 	    widget_get_bool(cbox, "state") ? -1 : 1,
-	    WIDGET_COLOR(cbox, BOX_COLOR));
+	    BOX_COLOR);
 
 	widget_blit(cbox, cbox->label_s, WIDGET(cbox)->h + XSPACING, 0);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.30 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.31 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -114,24 +114,39 @@ radio_draw(void *p)
 	struct radio *rad = p;
 	int y, i;
 
-	primitives.frame(rad, 0, 0, WIDGET(rad)->w, WIDGET(rad)->h,
-	    WIDGET_COLOR(rad, FRAME_COLOR));
+	primitives.frame(rad,
+	    0,
+	    0,
+	    WIDGET(rad)->w,
+	    WIDGET(rad)->h,
+	    FRAME_COLOR);
 
 	for (i = 0, y = YPADDING;
 	     i < rad->nitems;
 	     i++, y += (rad->radius + YSPACING)) {
 		primitives.circle(rad,
-		    XPADDING, y,
-		    rad->radius, rad->radius, rad->radius/2,
-		    WIDGET_COLOR(rad, OUTSIDE_COLOR));
+		    XPADDING,
+		    y,
+		    rad->radius,
+		    rad->radius,
+		    rad->radius/2,
+		    OUTSIDE_COLOR);
 
 		if (widget_get_int(rad, "value") == i) {
-			primitives.circle(rad, XPADDING, y,
-			    rad->radius, rad->radius, rad->radius/3,
-			    WIDGET_COLOR(rad, INSIDE_COLOR));
-			primitives.circle(rad, XPADDING, y,
-			    rad->radius, rad->radius, rad->radius/4,
-			    WIDGET_COLOR(rad, OUTSIDE_COLOR));
+			primitives.circle(rad,
+			    XPADDING,
+			    y,
+			    rad->radius,
+			    rad->radius,
+			    rad->radius/3,
+			    INSIDE_COLOR);
+			primitives.circle(rad,
+			    XPADDING,
+			    y,
+			    rad->radius,
+			    rad->radius,
+			    rad->radius/4,
+			    OUTSIDE_COLOR);
 		}
 
 		widget_blit(rad, rad->labels[i],

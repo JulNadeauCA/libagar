@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.47 2003/05/26 03:03:33 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.48 2003/06/06 03:18:14 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -120,25 +120,37 @@ put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
 	}
 }
 
-/* Render a 3D-style box. */
+/*
+ * Render a 3D-style box with a RGB difference of -60,-60,-60 and 60,60,60
+ * between the two border lines. Offset the background color and swap the
+ * border colors depending on the z value.
+ */
 static void
-box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 {
 	struct widget *wid = p;
-	Uint32 lcol, rcol, bcol;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
+	int lcol, rcol, bcol;
 
-	lcol = (z < 0) ?
+	if (ncolor >= WIDGET_COLORS_MAX)
+		fatal("color stack oflow");
+
+	lcol = widget_push_color(wid, (z < 0) ?
 	    alter_color(color, -60, -60, -60) :
-	    alter_color(color, 60, 60, 60);
-	rcol = (z < 0) ?
+	    alter_color(color, 60, 60, 60));
+	rcol = widget_push_color(wid, (z < 0) ?
 	    alter_color(color, 60, 60, 60) :
-	    alter_color(color, -60, -60, -60);
-	bcol = (z < 0) ?
-	    alter_color(color, -20, -20, -20) :
-	    color;
+	    alter_color(color, -60, -60, -60));
 
-	if (widget_holds_focus(wid))
-		bcol = alter_color(bcol, 6, 6, 15);
+	if (widget_holds_focus(wid)) {
+		bcol = widget_push_color(wid, (z < 0) ?
+		    alter_color(color, -14, -13, -4) :
+		    alter_color(color, 6, 7, 16));
+	} else {
+		bcol = widget_push_color(wid, (z < 0) ?
+		    alter_color(color, -20, -20, -20) :
+		    alter_color(color, 10, 10, 10));
+	}
 
 	primitives.rect_filled(wid,
 	    xoffs,
@@ -171,17 +183,25 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 	    xoffs + w - 1,
 	    yoffs + h - 1,
 	    rcol);
+
+	widget_pop_color(wid);
+	widget_pop_color(wid);
+	widget_pop_color(wid);
 }
 
-/* Render a 3D-style frame. */
+/*
+ * Render a 3D-style frame with a RGB difference of -80,-80,-80 and 80,80,80
+ * between the two border lines.
+ */
 static void
-frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
+frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
-	Uint32 lcol, rcol;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
+	int lcol, rcol;
 
-	lcol = alter_color(color, 80, 80, 80);
-	rcol = alter_color(color, -80, -80, -80);
+	lcol = widget_push_color(wid, alter_color(color, 80, 80, 80));
+	rcol = widget_push_color(wid, alter_color(color, -80, -80, -80));
 
 	primitives.line(wid,			/* Top */
 	    xoffs,
@@ -207,14 +227,18 @@ frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 	    xoffs + w - 1,
 	    yoffs + h - 1,
 	    rcol);
+
+	widget_pop_color(wid);
+	widget_pop_color(wid);
 }
 
-/* Render a circle. */
+/* Render a circle using a modification Jack E. Bresenham's line algorithm. */
 static void
 circle_bresenham(void *p, int xoffs, int yoffs, int w, int h, int radius,
-    Uint32 color)
+    int ncolor)
 {
 	struct widget *wid = p;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int x = 0;
 	int y = radius;
 	int cx = w/2 + xoffs + wid->cx;
@@ -249,22 +273,31 @@ circle_bresenham(void *p, int xoffs, int yoffs, int w, int h, int radius,
 
 /* Render two lines with +50,50,50 RGB difference. */
 static void
-line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+line2(void *wid, int x1, int y1, int x2, int y2, int ncolor)
 {
-	primitives.line(wid, x1, y1, x2, y2, color);
-	primitives.line(wid, x1+1, y1+1, x2+1, y2+1,
-	    alter_color(color, 50, 50, 50));
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
+	int ncolor2;
+
+	primitives.line(wid, x1, y1, x2, y2, ncolor);
+	
+	ncolor2 = widget_push_color(wid, alter_color(color, 50, 50, 50));
+	primitives.line(wid, x1+1, y1+1, x2+1, y2+1, ncolor2);
+	widget_pop_color(wid);
 }
 
-/* Render a segment from x1,y1 to x2,y2. */
+/*
+ * Render a straight line between x1,y1 to x2,y2 using a derivate of the
+ * line algorithm developed by Jack E. Bresenham.
+ */
 static void
-line_bresenham(void *widget, int px1, int py1, int px2, int py2, Uint32 color)
+line_bresenham(void *widget, int px1, int py1, int px2, int py2, int ncolor)
 {
 	struct widget *wid = widget;
 	int dx, dy, dpr, dpru, p;
 	int yinc = view->v->pitch;
 	int xyinc = vfmt->BytesPerPixel + yinc;
 	Uint8 *fb1, *fb2;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	int x1 = wid->cx + px1;
 	int y1 = wid->cy + py1;
 	int x2 = wid->cx + px2;
@@ -387,7 +420,7 @@ done:
 
 /* Render an outlined rectangle. */
 static void
-rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
+rect_outlined(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
 
@@ -396,32 +429,33 @@ rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 	    y,
 	    x + w - 1,
 	    y,
-	    color);
+	    ncolor);
 	primitives.line(wid, 		/* Bottom */
 	    x,
 	    y + h - 1,
 	    x + w - 1,
 	    y + h - 1,
-	    color);
+	    ncolor);
 	primitives.line(wid, 		/* Left */
 	    x,
 	    y,
 	    x,
 	    y + h - 1,
-	    color);
+	    ncolor);
 	primitives.line(wid, 		/* Right */
 	    x + w - 1,
 	    y,
 	    x + w - 1,
 	    y + h - 1,
-	    color);
+	    ncolor);
 }
 
 /* Render a filled rectangle. */
 static void
-rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
+rect_filled(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	SDL_Rect rd;
 
 	rd.x = wid->cx + x;
@@ -433,7 +467,7 @@ rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
 
 /* Render a [+] sign scaled to a w,h box (for trees). */
 static void
-plus(void *p, int x, int y, int w, int h, Uint32 color)
+plus(void *p, int x, int y, int w, int h, int ncolor)
 {
 	int xcenter = x + w/2;
 	int ycenter = y + h/2;
@@ -443,18 +477,18 @@ plus(void *p, int x, int y, int w, int h, Uint32 color)
 	    y,
 	    xcenter,
 	    y + h,
-	    color);
+	    ncolor);
 	primitives.line2(p,
 	    x,
 	    ycenter,
 	    x + w,
 	    ycenter,
-	    color);
+	    ncolor);
 }
 
 /* Render a [-] sign scaled to a w,h box (for trees). */
 static void
-minus(void *p, int x, int y, int w, int h, Uint32 color)
+minus(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
 	int ycenter = y+h/2;
@@ -464,23 +498,23 @@ minus(void *p, int x, int y, int w, int h, Uint32 color)
 	    ycenter,
 	    x + w,
 	    ycenter,
-	    color);
+	    ncolor);
 }
 
 #ifdef HAVE_OPENGL
 
 /* Render a line using OpenGL. */
 static void
-line_opengl(void *p, int x1, int y1, int x2, int y2, Uint32 color)
+line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 {
 	struct widget *wid = p;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
+	int x1 = wid->cx + px1;
+	int y1 = wid->cy + py1;
+	int x2 = wid->cx + px2;
+	int y2 = wid->cy + py2;
 	Uint8 r, g, b;
 	
-	x1 += wid->cx;
-	y1 += wid->cy;
-	x2 += wid->cx;
-	y2 += wid->cy;
-
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
@@ -491,9 +525,10 @@ line_opengl(void *p, int x1, int y1, int x2, int y2, Uint32 color)
 
 /* Render a filled rectangle using OpenGL. */
 static void
-rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
+rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	Uint8 r, g, b;
 
 	SDL_GetRGB(color, vfmt, &r, &g, &b);

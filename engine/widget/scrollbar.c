@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.25 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.26 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -213,20 +213,22 @@ scrollbar_draw(void *p)
 	
 	switch (sb->type) {
 	case SCROLLBAR_HORIZ:
-		if (WIDGET(sb)->w < sb->button_size*2 + 6)
+		if (WIDGET(sb)->w < sb->button_size*2 + 6) {
 			return;
+		}
 		maxcoord = WIDGET(sb)->w;
 		break;
 	case SCROLLBAR_VERT:
-		if (WIDGET(sb)->h < sb->button_size*2 + 6)
+		if (WIDGET(sb)->h < sb->button_size*2 + 6) {
 			return;
+		}
 		maxcoord = WIDGET(sb)->h;
 		break;
 	}
 
 	value = widget_get_int(sb, "value");
-	min =	widget_get_int(sb, "min");
-	max =	widget_get_int(sb, "max");
+	min = widget_get_int(sb, "min");
+	max = widget_get_int(sb, "max");
 
 #ifdef DEBUG
 	if (min < 0 || max < min || value < min || value > max)
@@ -234,21 +236,25 @@ scrollbar_draw(void *p)
 		    min, max, value);
 #endif
 
-	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
-	    WIDGET_COLOR(sb, BG_COLOR));
+	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1, BG_COLOR);
 
 	switch (sb->type) {
 	case SCROLLBAR_VERT:
-		/* Scrolling buttons */
-		primitives.box(sb, 0, 0, WIDGET(sb)->w, sb->button_size,
+		primitives.box(sb,
+		    0,
+		    0,
+		    WIDGET(sb)->w,
+		    sb->button_size,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
-		    WIDGET_COLOR(sb, BUTTON_COLOR));
-		primitives.box(sb, 0, WIDGET(sb)->h - sb->button_size,
-		    WIDGET(sb)->w, sb->button_size,
+		    BUTTON_COLOR);
+		primitives.box(sb,
+		    0,
+		    WIDGET(sb)->h - sb->button_size,
+		    WIDGET(sb)->w,
+		    sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-		    WIDGET_COLOR(sb, BUTTON_COLOR));
+		    BUTTON_COLOR);
 
-		/* Scrolling bar */
 		if (max > 0) {
 			if (sb->bar_size == -1) {		/* Full range */
 				h = WIDGET(sb)->h - sb->button_size*2;
@@ -267,21 +273,27 @@ scrollbar_draw(void *p)
 			y = WIDGET(sb)->h - sb->button_size*2 - h;
 
 		primitives.box(sb,
-		    0, sb->button_size+y,
-		    WIDGET(sb)->w, h,
+		    0,
+		    sb->button_size + y,
+		    WIDGET(sb)->w,
+		    h,
 		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-		    WIDGET_COLOR(sb, BUTTON_COLOR));
+		    BUTTON_COLOR);
 		break;
 	case SCROLLBAR_HORIZ:
-		primitives.box(sb, 0, 0,
-		    sb->button_size, WIDGET(sb)->h,
+		primitives.box(sb,
+		    0,
+		    0,
+		    sb->button_size,
+		    WIDGET(sb)->h,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
-		    WIDGET_COLOR(sb, BUTTON_COLOR));
+		    BUTTON_COLOR);
 		primitives.box(sb,
 		    WIDGET(sb)->w - sb->button_size, 0,
-		    WIDGET(sb)->h, sb->button_size,
+		    WIDGET(sb)->h,
+		    sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-		    WIDGET_COLOR(sb, BUTTON_COLOR));
+		    BUTTON_COLOR);
 
 		if (max > 0) {
 			if (sb->bar_size == -1) {		/* Full range */
@@ -300,10 +312,12 @@ scrollbar_draw(void *p)
 			x = WIDGET(sb)->w - sb->button_size*2 - w;
 
 		primitives.box(sb,
-		    sb->button_size+x, 0,
-		    w, WIDGET(sb)->h,
+		    sb->button_size + x,
+		    0,
+		    w,
+		    WIDGET(sb)->h,
 		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-		    WIDGET_COLOR(sb, BUTTON_COLOR));
+		    BUTTON_COLOR);
 		break;
 	}
 }
