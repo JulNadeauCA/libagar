@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.21 2002/07/08 05:24:08 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.22 2002/07/08 08:39:40 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -49,7 +49,7 @@
 
 static const struct version config_ver = {
 	"agar config",
-	1, 1
+	2, 0
 };
 
 static const struct object_ops config_ops = {
@@ -61,9 +61,11 @@ static const struct object_ops config_ops = {
 static const enum {
 	CLOSE_BUTTON,
 	SAVE_BUTTON,
+	FULLSCREEN_CBOX,
 	FONTCACHE_CBOX,
+	ASYNCBLIT_CBOX,
+	VISREGIONS_CBOX,
 	DEBUG_CBOX,
-	DEBUG_BUTTON,
 	UDATADIR_TBOX,
 	SYSDATADIR_TBOX,
 	W_TBOX,
@@ -97,6 +99,7 @@ config_init(struct config *con)
 	con->view.w = CONFIG_DEFAULT_WIDTH;
 	con->view.h = CONFIG_DEFAULT_HEIGHT;
 	con->view.bpp = CONFIG_DEFAULT_BPP;
+	con->widget_flags = 0;
 	pthread_mutex_init(&con->lock, NULL);
 }
 
@@ -126,7 +129,7 @@ config_load(void *p, int fd)
 	config->view.w = fobj_read_uint32(fd);
 	config->view.h = fobj_read_uint32(fd);
 	config->view.bpp = fobj_read_uint32(fd);
-	config_apply(config);
+	config->widget_flags = fobj_read_uint32(fd);
 
 	pthread_mutex_unlock(&con->lock);
 
@@ -146,7 +149,7 @@ config_save(void *p, int fd)
 	fobj_write_uint32(fd, con->view.w);
 	fobj_write_uint32(fd, con->view.h);
 	fobj_write_uint32(fd, con->view.bpp);
-	
+	fobj_write_uint32(fd, con->widget_flags);
 	pthread_mutex_unlock(&con->lock);
 	
 	dprintf("saved settings (flags=0x%x)\n", config->flags);
@@ -159,32 +162,50 @@ config_settings_win(struct config *con)
 	struct window *win;
 	struct region *reg;
 	struct button *close_button, *save_button, *debug_button;
-	struct checkbox *fontcache_cbox;
 	struct textbox *udatadir_tbox, *sysdatadir_tbox, *w_tbox, *h_tbox;
+	struct checkbox *fontcache_cbox, *visregions_cbox, *fullscreen_cbox;
 #ifdef DEBUG
 	struct checkbox *debug_cbox;
 #endif
 
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_CENTER,
-	    0, 0, 320, 260, 235, 236);
+	    0, 0, 320, 380, 320, 380);
 
+	/*
+	 * Flags
+	 */
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 35);
+
+	/* Async blit */
+	fontcache_cbox = checkbox_new(reg, "Asynchronous blits (restart)", 10,
+	    (con->flags & CONFIG_ASYNCBLIT) ? CHECKBOX_PRESSED : 0);
+	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
+	    "%i", ASYNCBLIT_CBOX);
+	/* Full screen */
+	fullscreen_cbox = checkbox_new(reg, "Full screen", 10,
+	    (con->flags & CONFIG_FULLSCREEN) ? CHECKBOX_PRESSED : 0);
+	event_new(fullscreen_cbox, "checkbox-changed", 0, apply,
+	    "%i", FULLSCREEN_CBOX);
 	/* Font cache */
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 25);
-	fontcache_cbox = checkbox_new(reg, "Font cache", 50,
+	fontcache_cbox = checkbox_new(reg, "Font cache", 20,
 	    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
 	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
 	    "%i", FONTCACHE_CBOX);
 	/* Debugging */
 #ifdef DEBUG
-	debug_cbox = checkbox_new(reg, "Debugging enabled", 50,
+	debug_cbox = checkbox_new(reg, "Debugging enabled", 10,
 	    engine_debug ? CHECKBOX_PRESSED : 0);
 	event_new(debug_cbox, "checkbox-changed", 0, apply,
 	    "%i", DEBUG_CBOX);
+	visregions_cbox = checkbox_new(reg, "Visible regions", 10,
+	    (con->widget_flags & CONFIG_REGION_BORDERS) ? CHECKBOX_PRESSED : 0);
+	event_new(visregions_cbox, "checkbox-changed", 0, apply,
+	    "%i", VISREGIONS_CBOX);
 #endif
 
 	/* Data directories */
-	reg = region_new(win, REGION_VALIGN,  0, 25, 100, 40);
+	reg = region_new(win, REGION_VALIGN,  0, 40, 100, 18);
 	udatadir_tbox = textbox_new(reg, "  User datadir: ", 0, 100, 50);
 	event_new(udatadir_tbox, "textbox-changed", 0, apply,
 	    "%i", UDATADIR_TBOX);
@@ -193,7 +214,7 @@ config_settings_win(struct config *con)
 	    "%i", SYSDATADIR_TBOX);
 	
 	/* Resolution */
-	reg = region_new(win, REGION_HALIGN,  0, 65, 100, 20);
+	reg = region_new(win, REGION_HALIGN,  0, 60, 100, 10);
 	w_tbox = textbox_new(reg, "Width : ", 0, 50, 100);
 	event_new(w_tbox, "textbox-changed", 0, apply,
 	    "%i", W_TBOX);
@@ -202,8 +223,8 @@ config_settings_win(struct config *con)
 	    "%i", H_TBOX);
 
 	/* Close button */
-	reg = region_new(win, REGION_HALIGN, 0,  85, 100, 15);
-	close_button = button_new(reg, "Close", NULL, 0, 50, 97);
+	reg = region_new(win, REGION_HALIGN, 0,  80, 100, 20);
+	close_button = button_new(reg, "Close", NULL, 0, 49, 97);
 	event_new(close_button, "button-pushed", 0, apply,
 	    "%i", CLOSE_BUTTON);
 	/* Save button */
@@ -250,31 +271,47 @@ apply(int argc, union evarg *argv)
 		pthread_mutex_lock(&config->lock);
 		if (argv[2].i) {
 			config->flags |= CONFIG_FONT_CACHE;
+			keycodes_loadglyphs();
 		} else {
 			config->flags &= ~(CONFIG_FONT_CACHE);
+			keycodes_freeglyphs();
 		}
-		config_apply(config);
+		pthread_mutex_unlock(&config->lock);
+		break;
+	case FULLSCREEN_CBOX:
+		pthread_mutex_lock(&config->lock);
+		if (argv[2].i) {
+			config->flags |= CONFIG_FULLSCREEN;
+		} else {
+			config->flags &= ~(CONFIG_FULLSCREEN);
+		}
+		SDL_WM_ToggleFullScreen(view->v);
+		VIEW_REDRAW();
+		pthread_mutex_unlock(&config->lock);
+		break;
+	case ASYNCBLIT_CBOX:
+		pthread_mutex_lock(&config->lock);
+		if (argv[2].i) {
+			config->flags |= CONFIG_ASYNCBLIT;
+		} else {
+			config->flags &= ~(CONFIG_ASYNCBLIT);
+		}
 		pthread_mutex_unlock(&config->lock);
 		break;
 #ifdef DEBUG
 	case DEBUG_CBOX:
 		engine_debug = argv[2].i;	/* XXX unsafe */
 		break;
+	case VISREGIONS_CBOX:
+		pthread_mutex_lock(&config->lock);
+		if (argv[2].i) {
+			config->widget_flags |= CONFIG_REGION_BORDERS;
+		} else {
+			config->widget_flags &= ~(CONFIG_REGION_BORDERS);
+		}
+		pthread_mutex_unlock(&config->lock);
+		break;
 #endif
-	}
-}
-
-/*
- * Apply configuration settings.
- * config structure must be locked.
- */
-void
-config_apply(struct config *con)
-{
-	if (con->flags & CONFIG_FONT_CACHE) {
-		keycodes_loadglyphs();
-	} else {
-		keycodes_freeglyphs();
 	}
 }
 
