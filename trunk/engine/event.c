@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.118 2002/12/24 10:29:09 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.119 2002/12/29 02:13:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -47,6 +47,7 @@
 #include "widget/label.h"
 #include "widget/text.h"
 #include "widget/graph.h"
+#include "widget/scrollbar.h"
 
 #include "mapedit/mapview.h"
 
@@ -142,6 +143,13 @@ event_hotkey(SDL_Event *ev)
 }
 
 #ifdef DEBUG
+struct window *
+event_show_fps_counter(void)
+{
+	window_show(fps_win);
+	return (fps_win);
+}
+
 static __inline__ void
 event_update_fps_counter(void)
 {
@@ -169,23 +177,44 @@ event_init_fps_counter(void)
 	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
 	    133, 104, 125, 91);
 	window_set_caption(fps_win, "Refresh rate");
-	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, 100);
-	fps_label = label_new(reg, 100, 15, "...");
-	fps_graph = graph_new(reg, "Refresh rate", GRAPH_LINES,
-	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
-	    100, 85);
-	fps_refresh_current = graph_add_item(fps_graph, "refresh-current",
-	    SDL_MapRGB(view->v->format, 0, 160, 0));
-	fps_event_count = graph_add_item(fps_graph, "event-rate",
-	    SDL_MapRGB(view->v->format, 0, 0, 180));
-	fps_event_overhead = graph_add_item(fps_graph, "event-overhead",
-	    SDL_MapRGB(view->v->format, 150, 40, 50));
+	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 80, 100);
+	{
+		fps_label = label_new(reg, 100, 15, "...");
+		fps_graph = graph_new(reg, "Refresh rate", GRAPH_LINES,
+		    GRAPH_SCROLL|GRAPH_ORIGIN, 200, 100, 85);
+		fps_refresh_current = graph_add_item(fps_graph,
+		    "refresh-current",
+		    SDL_MapRGB(view->v->format, 0, 160, 0));
+		fps_event_count = graph_add_item(fps_graph,
+		    "event-rate",
+		    SDL_MapRGB(view->v->format, 0, 0, 180));
+		fps_event_overhead = graph_add_item(fps_graph,
+		    "event-overhead",
+		    SDL_MapRGB(view->v->format, 150, 40, 50));
+	}
+	
+	reg = region_new(fps_win, REGION_HALIGN, 80, 0, 20, 100);
+	{
+		struct scrollbar *sb;
+	
+		sb = scrollbar_new(reg, 50, 100, SCROLLBAR_VERT);
+		widget_bind(sb, "value", WIDGET_INT, &view->lock,
+		    &view->refresh.min_delay);
+		widget_set_int(sb, "min", 10);
+		widget_set_int(sb, "max", 100);
+
+		sb = scrollbar_new(reg, 50, 100, SCROLLBAR_VERT);
+		widget_bind(sb, "value", WIDGET_INT, &view->lock,
+		   &view->refresh.max_delay);
+		widget_set_int(sb, "min", 10);
+		widget_set_int(sb, "max", 100);
+	}
 
 	if (engine_debug > 0) {
 		window_show(monitor.toolbar);
 	}
 }
-#endif
+#endif /* DEBUG */
 
 /*
  * Adjust the refresh rate.
