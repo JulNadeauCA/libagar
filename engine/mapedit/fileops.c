@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.2 2002/07/06 23:52:37 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.3 2002/07/07 06:26:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -103,6 +103,36 @@ fileops_save_map(int argc, union evarg *argv)
 
 void
 fileops_load_map(int argc, union evarg *argv)
+{
+	struct widget *wid = argv[0].p;
+	struct mapedit *med = argv[1].p;
+	struct textbox *name_tbox = argv[2].p;
+	char *name = name_tbox->text;
+	struct window *win;
+	struct map *m;
+
+	if (strcmp(name, "") == 0) {
+		warning("no map name given\n");
+		return;
+	}
+
+	m = emalloc(sizeof(struct map));
+	map_init(m, name, NULL, MAP_2D);
+
+	object_load(m);
+
+	win = mapwin_new(med, m);
+	view_attach(win);
+	window_show(win);
+
+	textbox_printf(name_tbox, "");
+
+	window_hide_locked(wid->win);
+	
+}
+
+void
+fileops_revert_map(int argc, union evarg *argv)
 {
 	char path[FILENAME_MAX];
 	struct mapview *mv = argv[1].p;
