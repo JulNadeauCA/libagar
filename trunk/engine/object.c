@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.129 2003/06/13 02:47:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.130 2003/06/14 00:23:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1067,7 +1067,7 @@ object_edit(void *p)
 		struct tlist *tl;
 
 		tl = tlist_new(bo, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 4);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 2);
 		event_new(tl, "tlist-poll", poll_props, "%p", ob);
 	}
 
