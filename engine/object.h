@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.104 2004/03/05 15:22:17 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.105 2004/03/17 12:32:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -115,7 +115,6 @@ int	 object_copy_filename(const void *, char *, size_t)
 void		*object_find(const char *);
 __inline__ void	*object_root(const void *);
 __inline__ void *object_find_parent(void *, const char *, const char *);
-__inline__ int	 object_depended(const void *);
 int		 object_in_use(const void *);
 void		 object_set_type(void *, const char *);
 void		 object_set_name(void *, const char *);

@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.59 2004/03/12 03:55:23 vedge Exp $
+.\"	$Csoft: object.3,v 1.60 2004/03/17 12:32:59 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -236,7 +236,7 @@ acquire and release the world's linkage lock, respectively.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
-.Fn object_depended "const void *obj"
+.Fn object_in_use "const void *obj"
 .Pp
 .Ft "struct object_dep *"
 .Fn object_add_dep "void *obj" "void *depobj"
@@ -252,10 +252,10 @@ acquire and release the world's linkage lock, respectively.
 .nr nS 0
 .Pp
 The
-.Fn object_depended
+.Fn object_in_use
 function returns 1 if the given object
 .Fa obj
-is used by another object (which must be sharing the same root).
+is used by another object (the two objects must be sharing the same root).
 .Pp
 The
 .Fn object_add_dep
