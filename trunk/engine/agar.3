@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.7 2002/09/07 04:30:26 vedge Exp $
+.\"	$Csoft: agar.3,v 1.8 2002/09/16 06:10:51 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -48,9 +48,8 @@ by providing a well-defined interface.
 .Sh OBJECT EXISTENCE PROTECTION
 .Bl -bullet -width 4n
 The global, recursive mutex
-.Va world->lock
-protects object existence in a way that allows game objects to be detached
-at any time.
+.Va world->lock ,
+ensures that no game object is attached/detached, as long as it is locked.
 .It
 Since the rendering routines must frequently lock the object list when
 resolving node references, the object list
