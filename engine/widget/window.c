@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.214 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.215 2004/01/22 09:58:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -349,6 +349,8 @@ window_shown(int argc, union evarg *argv)
 
 	if (win->flags & WINDOW_PERSISTENT)
 		object_load(win);
+	
+	event_post(NULL, win, "window-shown", NULL);
 }
 
 static void
@@ -380,6 +382,8 @@ window_hidden(int argc, union evarg *argv)
 
 	if (win->flags & WINDOW_PERSISTENT)
 		object_save(win);
+
+	event_post(NULL, win, "window-hidden", NULL);
 }
 
 /* Toggle the visibility of a window. */
