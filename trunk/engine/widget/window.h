@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.60 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.61 2003/04/12 01:45:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -70,7 +70,6 @@ struct window {
 	 (ya) < ((win)->rd.y+(win)->rd.h))
 
 #define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
-
 
 struct window	*window_new(char *, int, int, int, int, int, int, int);
 struct window	*window_generic_new(int, int, const char *, ...);

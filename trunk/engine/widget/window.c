@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.176 2003/04/24 01:36:16 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.177 2003/04/24 07:04:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -95,6 +95,8 @@ int	window_debug = 0;
 pthread_mutex_t window_lock = PTHREAD_MUTEX_INITIALIZER;
 Uint32 window_ngeneric = 0;
 int window_xoffs = -1, window_yoffs = -1;
+static SDL_Surface *close_icon, *hidden_body_icon, *hide_body_icon;
+static int icons_inited = 0;
 
 struct window *
 window_new(char *name, int flags, int x, int y, int w, int h,
@@ -167,9 +169,19 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 
 	/* Detach by default. */
 	event_new(win, "window-close", window_generic_detach, "%p", win);
-
 	view_attach(win);
 	return (win);
+}
+
+static void
+window_init_icons(struct window *win)
+{
+	int i;
+
+	i = text_font_height(font) + win->borderw;
+	close_icon = view_scale_surface(SPRITE(win, 0), i, i);
+	hidden_body_icon = view_scale_surface(SPRITE(win, 1), i, i);
+	hide_body_icon = view_scale_surface(SPRITE(win, 2), i, i);
 }
 
 void
@@ -186,10 +198,10 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		pthread_mutex_lock(&window_lock);
 		window_ngeneric++;
 		pthread_mutex_unlock(&window_lock);
-
 		snprintf(wname, sizeof(wname), "win-generic%u",
 		    window_ngeneric++);
 	}
+
 	for (i = 0; i < sizeof(wname); i++) {	
 		if (wname[i] == '\0')
 			break;
@@ -199,6 +211,12 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	object_init(OBJECT(win), "window", wname, 0, &window_ops);
 	if (object_load_art(win, "window", 1) == -1)
 		fatal("window: %s", error_get());
+	
+	/* Prescale the titlebar icons. */
+	pthread_mutex_lock(&window_lock);
+	if (!icons_inited++)
+		window_init_icons(win);
+	pthread_mutex_unlock(&window_lock);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
 	    "background",
@@ -407,16 +425,19 @@ window_draw_titlebar(struct window *win)
 	bcolor = WINDOW_FOCUSED(win) ?
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_FOCUSED_COLOR) :
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_UNFOCUSED_COLOR);
-	primitives.box(win, bw-1, bw-1, th-1, th-4,	/* Close */
+	primitives.box(win, bw-1, bw-1, th-1, th-4,		/* Close */
 	    (win->clicked_button == WINDOW_CLOSE_BUTTON) ? -1 : 1,
 	    bcolor);
-	widget_blit(win, SPRITE(win, 0), bw, bw-1);
+	widget_blit(win, close_icon, bw, bw-1);
 
 	primitives.box(win, th+bw-1, bw-1, th-1, th-4,		/* Hide */
 	    (win->clicked_button == WINDOW_HIDE_BUTTON) ? -1 : 1,
 	    bcolor);
-	widget_blit(win, SPRITE(win, (win->flags & WINDOW_HIDDEN_BODY) ? 1 : 2),
-	    th+bw, bw-1);
+	if (win->flags & WINDOW_HIDDEN_BODY) {
+		widget_blit(win, hidden_body_icon, th+bw, bw-1);
+	} else {
+		widget_blit(win, hide_body_icon, th+bw, bw-1);
+	}
 
 	/* Border */
 	primitives.line(win,
