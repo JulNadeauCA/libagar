@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.45 2002/05/11 04:01:45 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.46 2002/05/13 06:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -54,21 +54,37 @@ static const struct version char_ver = {
 	1, 1
 };
 
-static const struct obvec char_vec = {
+static const struct object_ops char_ops = {
 	NULL,		/* destroy */
 	char_load,
 	char_save,
-	char_link,
-	char_unlink
+	NULL,		/* onattach */
+	NULL,		/* ondetach */
+	char_attach,
+	char_detach
 };
 
 static Uint32	char_time(Uint32, void *);
 
+struct character *
+char_new(char *name, char *media)
+{
+	struct character *ch;
+
+	ch = emalloc(sizeof(struct character));
+	char_init(ch, name, media);
+
+	pthread_mutex_lock(&world->lock);
+	world_attach(world, ch);
+	pthread_mutex_unlock(&world->lock);
+
+	return (ch);
+}
 
 void
 char_init(struct character *ch, char *name, char *media)
 {
-	object_init(&ch->obj, name, media, OBJ_ART|OBJ_BLOCK, &char_vec);
+	object_init(&ch->obj, name, media, OBJ_ART|OBJ_BLOCK, &char_ops);
 
 	ch->flags = 0;
 	ch->level = 0;
@@ -225,40 +241,30 @@ char_save(void *p, int fd)
 	return (0);
 }
 
-/* World must be locked. */
-int
-char_link(void *ob)
+void
+char_attach(void *parent, void *child)
 {
-	struct character *ch = (struct character *)ob;
-
-	SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
+	struct character *ch = child;
 
 	pthread_mutex_lock(&ch->lock);
 	ch->timer = SDL_AddTimer(ch->maxspeed, char_time, ch);
 	pthread_mutex_unlock(&ch->lock);
-
-	return (0);
 }
 
-/* World must be locked. */
-int
-char_unlink(void *ob)
+void
+char_detach(void *parent, void *child)
 {
-	struct character *ch = (struct character *)ob;
+	struct character *ch = child;
 
 	pthread_mutex_lock(&ch->lock);
 	SDL_RemoveTimer(ch->timer);
 	pthread_mutex_unlock(&ch->lock);
-
-	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
-
-	return (0);
 }
 
 static Uint32
 char_time(Uint32 ival, void *p)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 	struct map *m;
 	struct mappos *pos;
 	Uint32 x, y, moved = 0;

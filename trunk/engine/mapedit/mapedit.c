@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.87 2002/05/13 10:18:30 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.88 2002/05/13 10:20:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,12 +55,14 @@ static const struct version mapedit_ver = {
 	1, 0
 };
 
-static const struct obvec mapedit_ops = {
+static const struct object_ops mapedit_ops = {
 	NULL,
 	mapedit_load,
 	mapedit_save,
-	mapedit_link,
-	mapedit_unlink
+	mapedit_onattach,
+	mapedit_ondetach,
+	NULL,		 /* attach */
+	NULL		 /* detach */
 };
 
 enum {
@@ -88,7 +90,7 @@ enum {
 static struct window *coords_win = NULL;
 static struct label *coords_label;
 
-static void	 mapedit_shadow(struct mapedit *);
+static void	 mapedit_shadow(struct mapedit *, void *);
 static void	 mapedit_tilelist(struct mapedit *);
 static void	 mapedit_tilestack(struct mapedit *);
 static void	 mapedit_objlist(struct mapedit *);
@@ -126,15 +128,15 @@ mapedit_init(struct mapedit *med, char *name)
 
 /*
  * Construct a list of shadow objects and references.
- * Map editor must be locked.
+ * Map editor and world must be locked.
  */
 static void
-mapedit_shadow(struct mapedit *med)
+mapedit_shadow(struct mapedit *med, void *parent)
 {
+	struct world *wo = parent;
 	struct object *ob;
 
-	pthread_mutex_lock(&world->lock);
-	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
 		struct editobj *eob;
 		
 		if ((ob->flags & OBJ_ART) == 0 ||
@@ -204,16 +206,15 @@ mapedit_shadow(struct mapedit *med)
 	if (med->curobj == NULL) {
 		fatal("%s: nothing to edit!\n", med->obj.name);
 	}
-
-	pthread_mutex_unlock(&world->lock);
 }
 
-int
-mapedit_link(void *p)
+void
+mapedit_onattach(void *parent, void *child)
 {
 	static char caption[FILENAME_MAX];
 	char path[FILENAME_MAX];
-	struct mapedit *med = p;
+	struct world *wo = parent;
+	struct mapedit *med = child;
 	struct map *m;
 	struct node *node;
 	int fd, new = 0;
@@ -229,7 +230,7 @@ mapedit_link(void *p)
 	}
 	
 	/* Users must copy maps to udatadir in order to edit them. */
-	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
+	sprintf(path, "%s/%s.m", wo->udatadir, med->margs.name);
 
 	if ((fd = open(path, O_RDONLY, 0)) > 0) {
 		close(fd);
@@ -238,9 +239,8 @@ mapedit_link(void *p)
 		m = emalloc(sizeof(struct map));
 		map_init(m, med->margs.name, NULL, MAP_2D);
 
-		pthread_mutex_lock(&world->lock);
+		/* World already locked */
 		object_loadfrom(m, path);	/* Will lock map */
-		pthread_mutex_unlock(&world->lock);
 	} else {
 		struct node *origin;
 
@@ -287,20 +287,18 @@ mapedit_link(void *p)
 	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
 	view_center(m->view, m->defx, m->defy);
 
-	/* Set the window caption. */
-	pthread_mutex_lock(&world->lock);
+	/* Set the window caption. World already locked. */
 	if (object_strfind(med->margs.name) == NULL) {
 		sprintf(caption, "%s [unknown] (%s)", OBJECT(m)->name, path);
-		object_link(m);
+		world_attach(wo, m);
 	} else {
 		sprintf(caption, "%s [%d] (%s)", OBJECT(m)->name,
 		    OBJECT(m)->id, path);
 	}
-	pthread_mutex_unlock(&world->lock);
 	SDL_WM_SetCaption(caption, "agar");
 
 	/* Create the structures defining what is editable. */
-	mapedit_shadow(med);
+	mapedit_shadow(med, wo);
 
 	/* Position a map edition cursor on the map. */
 	node = &m->map[m->defy][m->defx];
@@ -322,14 +320,12 @@ mapedit_link(void *p)
 
 	/* curmapedit must be non-NULL when mapedit_update() starts. */
 	pthread_create(&update_th, NULL, mapedit_update, med);
-
-	return (0);
 }
 
-int
-mapedit_unlink(void *p)
+void
+mapedit_ondetach(void *parent, void *child)
 {
-	struct mapedit *med = p;
+	struct mapedit *med = child;
 	struct map *m;
 	struct node *node;
 	struct noderef *nref;
@@ -372,7 +368,6 @@ mapedit_unlink(void *p)
 		free(eob);
 	}
 	pthread_mutex_unlock(&med->lock);
-	return (0);
 }
 
 /* XXX use widgets */
@@ -1101,8 +1096,8 @@ mapedit_show_coords(struct mapedit *med)
 
 	if (coords_win == NULL) {
 		/* Coordinates window/label. */
-		nw = window_new(med->map->view, "Coordinates",
-		    WINDOW_SOLID, 0, 64, 64, 224, 32);
+		nw = window_new("Coordinates", WINDOW_SOLID, 0,
+		    64, 64, 224, 32);
 		coords_label = label_new(nw, "...", 0, 7, 7);
 		coords_win = nw;
 	} else {
@@ -1110,9 +1105,7 @@ mapedit_show_coords(struct mapedit *med)
 		coords_win = NULL;
 
 		/* Destroy the coordinates window. */
-		pthread_mutex_lock(&world->lock);
-		object_unlink(nw);
-		pthread_mutex_unlock(&world->lock);
+		view_detach(mainview, nw);
 	}
 }
 

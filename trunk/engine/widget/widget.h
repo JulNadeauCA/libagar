@@ -1,13 +1,14 @@
-/*	$Csoft: widget.h,v 1.12 2002/05/02 06:27:42 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.13 2002/05/06 02:22:06 vedge Exp $	*/
 
 struct window;
 
 struct widget_ops {
-	struct	 obvec obvec;
+	const	 struct object_ops obops;
+
+	/* Render widget. */
 	void	 (*widget_draw)(void *);
+	/* Dispatch an event to this widget. */
 	void	 (*widget_event)(void *, SDL_Event *, int);
-	void	 (*widget_link)(void *, struct window *);
-	void	 (*widget_unlink)(void *);
 };
 
 struct widget {
@@ -22,11 +23,10 @@ struct widget {
 	Uint16	w, h;			/* Can be defined by draw routine */
 
 	TAILQ_ENTRY(widget) widgets;	/* Widgets within parent window */
-	TAILQ_ENTRY(widget) uwidgets;	/* Widgets queued for removal */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
-#define WIDGET_VEC(ob)	((struct widget_ops *)OBJECT((ob))->vec)
+#define WIDGET_OPS(ob)	((struct widget_ops *)OBJECT((ob))->ops)
 
 /* Expand to absolute widget coordinates. */
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->x) + WIDGET((wi))->x)
@@ -58,11 +58,7 @@ enum {
 	CHECKBOX_DOWN
 };
 
-void		 widget_init(struct widget *, char *, void *,
-		     Sint16, Sint16, Uint16, Uint16);
-void		 widget_link(void *, struct window *win);
-void		 widget_unlink(void *);
-
-void		 widget_draw(void *);
+void		 widget_init(struct widget *, char *, char *, const void *,
+		    Sint16, Sint16, Uint16, Uint16);
 void		 widget_event(void *, SDL_Event *, int);
 

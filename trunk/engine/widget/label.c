@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.11 2002/05/02 06:28:30 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.12 2002/05/06 02:22:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -43,46 +43,49 @@
 #include "window.h"
 #include "label.h"
 
-static struct widget_ops label_ops = {
+static const struct widget_ops label_ops = {
 	{
-		NULL,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL,		/* link */
-		NULL		/* unlink */
+		NULL,	/* destroy */
+		NULL,	/* load */
+		NULL,	/* save */
+		NULL,	/* on attach */
+		NULL,	/* on detach */
+		NULL,	/* attach */
+		NULL	/* detach */
 	},
 	label_draw,
-	NULL,		/* widget event */
-	NULL,		/* widget link */
-	NULL		/* widget unlink */
+	NULL		/* widget event */
 };
 
 struct label *
 label_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 {
-	struct label *lab;
+	struct label *label;
 
-	lab = emalloc(sizeof(struct label));
-	label_init(lab, caption, flags, x, y);
-	widget_link(lab, win);
-	return (lab);
+	label = emalloc(sizeof(struct label));
+	label_init(label, caption, flags, x, y);
+
+	pthread_mutex_lock(&win->lock);
+	window_attach(win, label);
+	pthread_mutex_unlock(&win->lock);
+	return (label);
 }
 
 void
-label_init(struct label *l, char *caption, int flags, Sint16 x, Sint16 y)
+label_init(struct label *label, char *caption, int flags, Sint16 x, Sint16 y)
 {
 	/* XXX Leave geometry undefined, TTF-dependent. */
-	widget_init(&l->wid, "label", &label_ops, x, y, 0, 0);
+	widget_init(&label->wid, "label", "widget", &label_ops, x, y, 0, 0);
 
-	strcpy(l->caption, caption);
-	l->flags = flags;
+	strcpy(label->caption, caption);
+	label->flags = flags;
 }
 
 void
 label_draw(void *p)
 {
 	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-	struct label *l = (struct label *)p;
+	struct label *l = p;
 	SDL_Surface *s;
 
 	s = TTF_RenderText_Solid(font, l->caption, white);

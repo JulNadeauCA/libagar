@@ -49,7 +49,7 @@ static void	fullscrn_cbox_push(struct checkbox *);
 static void
 close_button_push(struct button *b)
 {
-	window_unlink(WIDGET(b)->win);
+	view_detach(mainview, WIDGET(b)->win);
 }
 
 static void
@@ -78,8 +78,8 @@ engine_config(void)
 	char sharetxt[2048];
 
 	/* Settings window */
-	win = window_new(mainview, "Engine settings", WINDOW_TITLEBAR,
-	    WINDOW_GRADIENT, 64, 64, 512, 256);
+	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
+	    64, 64, 512, 256);
 	pthread_mutex_lock(&win->lock);
 	upper_seg = SLIST_FIRST(&win->winsegsh);
 	pthread_mutex_unlock(&win->lock);

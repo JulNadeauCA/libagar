@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.50 2002/05/13 10:19:07 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.51 2002/05/14 09:06:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,28 +49,21 @@ enum {
 
 static LIST_HEAD(, object_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
 static LIST_HEAD(, object_audio) audiosh = LIST_HEAD_INITIALIZER(&audiosh);
-
+static pthread_mutex_t media_lock = PTHREAD_MUTEX_INITIALIZER;
 static SDL_TimerID gctimer;
 
-struct gc {
-	struct	object *ob;
-	LIST_ENTRY(gc) gcs;
-};
-
-static LIST_HEAD(, gc) gcsh = LIST_HEAD_INITIALIZER(&gcsh);
-static pthread_mutex_t gc_lock = PTHREAD_MUTEX_INITIALIZER;
-
-static const struct obvec null_obvec = {
+static const struct object_ops null_ops = {
 	NULL,	/* destroy */
 	NULL,	/* load */
 	NULL,	/* save */
-	NULL,	/* link */
-	NULL	/* unlink */
+	NULL,	/* onattach */
+	NULL,	/* ondetach */
+	NULL,	/* attach */
+	NULL	/* detach */
 };
 
 static struct object_art	*object_get_art(char *);
 static struct object_audio	*object_get_audio(char *);
-static void			 object_destroy(struct object *);
 
 int
 object_addanim(struct object_art *art, struct anim *anim)
@@ -117,7 +110,7 @@ object_get_art(char *media)
 {
 	struct object_art *art = NULL, *eart;
 
-	pthread_mutex_lock(&gc_lock);
+	pthread_mutex_lock(&media_lock);
 	LIST_FOREACH(eart, &artsh, arts) {
 		if (strcmp(eart->name, media) == 0) {
 			art = eart;	/* Already in pool */
@@ -146,7 +139,7 @@ object_get_art(char *media)
 		
 		LIST_INSERT_HEAD(&artsh, art, arts);
 	}
-	pthread_mutex_unlock(&gc_lock);
+	pthread_mutex_unlock(&media_lock);
 
 	return (art);
 }
@@ -157,7 +150,7 @@ object_get_audio(char *media)
 {
 	struct object_audio *audio = NULL, *eaudio;
 
-	pthread_mutex_lock(&gc_lock);
+	pthread_mutex_lock(&media_lock);
 
 	LIST_FOREACH(eaudio, &audiosh, audios) {
 		if (strcmp(eaudio->name, media) == 0) {
@@ -185,7 +178,7 @@ object_get_audio(char *media)
 		LIST_INSERT_HEAD(&audiosh, audio, audios);
 	}
 
-	pthread_mutex_unlock(&gc_lock);
+	pthread_mutex_unlock(&media_lock);
 	return (audio);
 }
 
@@ -200,15 +193,15 @@ object_name(char *base, int num)
 }
 
 struct object *
-object_new(char *name, char *media, int flags, const void *vecp)
+object_new(char *name, char *media, int flags, const void *opsp)
 {
 	struct object *ob;
 
 	ob = emalloc(sizeof(struct object));
-	object_init(ob, name, media, flags, vecp);
+	object_init(ob, name, media, flags, opsp);
 
 	pthread_mutex_lock(&world->lock);
-	object_link(ob);
+	world_attach(world, ob);
 	pthread_mutex_unlock(&world->lock);
 
 	return (ob);
@@ -216,7 +209,7 @@ object_new(char *name, char *media, int flags, const void *vecp)
 
 void
 object_init(struct object *ob, char *name, char *media, int flags,
-    const void *vecp)
+    const void *opsp)
 {
 	static int curid = 0;	/* The world has id 0 */
 
@@ -226,7 +219,7 @@ object_init(struct object *ob, char *name, char *media, int flags,
 	sprintf(ob->saveext, "ag");
 	ob->flags = flags;
 	ob->pos = NULL;
-	ob->vec = (vecp != NULL) ? vecp : &null_obvec;
+	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	pthread_mutex_init(&ob->pos_lock, NULL);
 
 	if (ob->flags & OBJ_ART) {
@@ -243,15 +236,25 @@ object_init(struct object *ob, char *name, char *media, int flags,
 	}
 }
 
-static void
-object_destroy(struct object *ob)
+void
+object_destroy(void *p)
 {
-	if (ob->name != NULL) {
+	struct object *ob = p;
+
+	/* Decrement usage counts for the media pool. */
+	if (ob->art != NULL)
+		ob->art->used--;
+	if (ob->audio != NULL)
+		ob->audio->used--;
+
+	/* Free allocated resources. */
+	if (OBJECT_OPS(ob)->destroy != NULL) {
+		OBJECT_OPS(ob)->destroy(ob);
+	}
+	if (ob->name != NULL)
 		free(ob->name);
-	}
-	if (ob->desc != NULL) {
+	if (ob->desc != NULL)
 		free(ob->desc);
-	}
 	pthread_mutex_destroy(&ob->pos_lock);
 	free(ob);
 }
@@ -260,39 +263,32 @@ object_destroy(struct object *ob)
 Uint32
 object_start_gc(Uint32 ival, void *p)
 {
-	struct gc *gc, *nextgc;
 	struct object_audio *audio;
-	struct object_art *art;
+	struct object_art *art, *nextart;
 
-#if 1
-	return (0);
-#endif
-
-	pthread_mutex_lock(&gc_lock);
-
-	/* Object pool */
-	for (gc = LIST_FIRST(&gcsh);
-	     gc != LIST_END(&gcsh);
-	     gc = nextgc) {
-	     	struct object *ob = gc->ob;
-	
-		nextgc = LIST_NEXT(gc, gcs);
-		LIST_REMOVE(gc, gcs);
-
-		dprintf("free %s\n", ob->name);
-		if (ob->vec->destroy != NULL) {
-			ob->vec->destroy(ob);
-		}
-		object_destroy(ob);
-		free(gc);
-	}
-	LIST_INIT(&gcsh);
+	pthread_mutex_lock(&media_lock);
 
 	/* Art pool */
-	LIST_FOREACH(art, &artsh, arts) {
+	for (art = LIST_FIRST(&artsh);
+	     art != LIST_END(&artsh);
+	     art = nextart) {
+		nextart = LIST_NEXT(art, arts);
 		if (art->used < 1) {
-			/* gc */
-			dprintf("gc art\n");
+			int i;
+
+			for (i = 0; i < art->nsprites; i++) {
+				free(art->sprites[i]);
+			}
+			for (i = 0; i < art->nanims; i++) {
+				anim_destroy(art->anims[i]);
+			}
+#if 0
+			dprintf("freed: %s (%d sprites, %d anims)\n",
+			    art->name, art->nsprites, art->nanims);
+#endif
+
+			free(art->name);
+			free(art);
 		}
 	}
 
@@ -304,7 +300,7 @@ object_start_gc(Uint32 ival, void *p)
 		}
 	}
 
-	pthread_mutex_unlock(&gc_lock);
+	pthread_mutex_unlock(&media_lock);
 	return (ival);
 }
 
@@ -312,15 +308,14 @@ object_start_gc(Uint32 ival, void *p)
 void
 object_init_gc(void)
 {
+	/* XXX pref */
 	gctimer = SDL_AddTimer(1000, object_start_gc, NULL);
-	dprintf("started garbage collection\n");
 }
 
 void
 object_destroy_gc(void)
 {
 	SDL_RemoveTimer(gctimer);
-	dprintf("stopped garbage collection\n");
 }
 
 /*
@@ -333,7 +328,7 @@ object_loadfrom(void *p, char *path)
 	struct object *ob = p;
 	int fd;
 
-	if (ob->vec->load == NULL) {
+	if (OBJECT_OPS(ob)->load == NULL) {
 		return (-1);
 	}
 
@@ -344,7 +339,7 @@ object_loadfrom(void *p, char *path)
 		return (-1);
 	}
 
-	if (ob->vec->load(ob, fd) != 0) {
+	if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
 		close(fd);
 		return (-1);
 	}
@@ -363,7 +358,7 @@ object_load(void *p)
 	char *path;
 	int fd, rv;
 
-	if (ob->vec->load == NULL) {
+	if (OBJECT_OPS(ob)->load == NULL) {
 		return (0);
 	}
 
@@ -378,7 +373,7 @@ object_load(void *p)
 		fatal("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
-	rv = ob->vec->load(ob, fd);
+	rv = OBJECT_OPS(ob)->load(ob, fd);
 	close(fd);
 	return (rv);
 }
@@ -394,7 +389,7 @@ object_save(void *p)
 	char path[FILENAME_MAX];
 	int fd;
 
-	if (ob->vec->save == NULL) {
+	if (OBJECT_OPS(ob)->save == NULL) {
 		return (0);
 	}
 
@@ -404,78 +399,11 @@ object_save(void *p)
 		fatal("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
-	if (ob->vec->save(ob, fd) != 0) {
+	if (OBJECT_OPS(ob)->save(ob, fd) != 0) {
 		close(fd);
 		return (-1);
 	}
 	close(fd);
-	return (0);
-}
-
-/*
- * Link an object to the world, from this point, unprotected members of
- * the object structure cannot be modified.
- *
- * World must be locked.
- */
-int
-object_link(void *p)
-{
-	struct object *ob = p;
-	
-	if (ob->vec->link != NULL) {
-		ob->vec->link(ob);
-	}
-
-	SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
-	world->nobjs++;
-	return (0);
-}
-
-/* Queue an unlinked object for garbage collection. */
-void
-object_queue_gc(struct object *ob)
-{
-	struct gc *ngc;
-
-	if (ob->vec->unlink != NULL) {
-		ob->vec->unlink(ob);
-	}
-	
-	/* Decrement usage counts for the media pool. */
-	if (ob->art != NULL)
-		ob->art->used--;
-	if (ob->audio != NULL)
-		ob->audio->used--;
-
-	/* Queue for garbage collection. */
-	ngc = emalloc(sizeof(struct gc));
-	ngc->ob = ob;
-	pthread_mutex_lock(&gc_lock);
-	LIST_INSERT_HEAD(&gcsh, ngc, gcs);
-	pthread_mutex_unlock(&gc_lock);
-}
-
-/* 
- * Mark an object structure inconsistent.
- * World must be locked.
- */
-int
-object_unlink(void *p)
-{
-	struct object *ob = p;
-
-#ifdef DEBUG
-	if (object_strfind(ob->name) == NULL) {
-		fatal("%s not linked\n", ob->name);
-	}
-#endif
-
-	world->nobjs--;
-	SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
-
-	object_queue_gc(ob);
-
 	return (0);
 }
 
@@ -525,16 +453,20 @@ object_dump(void *p)
 		printf(" (%s)", ob->desc);
 	}
 	printf("\n[ ");
-	if (ob->vec->destroy != NULL)
+	if (OBJECT_OPS(ob)->destroy != NULL)
 		printf("destroy ");
-	if (ob->vec->load != NULL)
+	if (OBJECT_OPS(ob)->load != NULL)
 		printf("load ");
-	if (ob->vec->save != NULL)
+	if (OBJECT_OPS(ob)->save != NULL)
 		printf("save ");
-	if (ob->vec->link != NULL)
-		printf("link ");
-	if (ob->vec->unlink != NULL)
-		printf("unlink ");
+	if (OBJECT_OPS(ob)->onattach != NULL)
+		printf("on-attach ");
+	if (OBJECT_OPS(ob)->ondetach != NULL)
+		printf("on-detach ");
+	if (OBJECT_OPS(ob)->attach != NULL)
+		printf("attach ");
+	if (OBJECT_OPS(ob)->detach != NULL)
+		printf("detach ");
 	printf("]\n");
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.86 2002/05/13 08:01:04 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.87 2002/05/13 10:19:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -50,12 +50,14 @@ static const struct version map_ver = {
 	1, 11
 };
 
-static const struct obvec map_ops = {
+static const struct object_ops map_ops = {
 	map_destroy,
 	map_load,
 	map_save,
-	NULL,		/* link */
-	NULL		/* unlink */
+	NULL,		/* onattach */
+	NULL,		/* ondetach */
+	NULL,		/* attach */
+	NULL		/* detach */
 };
 
 struct draw {
@@ -163,12 +165,11 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
  * Display a particular map.
  *
  * This map, the current map and the world must not be locked by the
- * caller thread.
+ * caller thread. World must be locked.
  */
 void
 map_focus(struct map *m)
 {
-	pthread_mutex_lock(&world->lock);
 	if (world->curmap != NULL && world->curmap != m) {
 		dprintf("unfocusing %s\n", OBJECT(world->curmap)->name);
 		pthread_mutex_lock(&world->curmap->lock);
@@ -177,8 +178,6 @@ map_focus(struct map *m)
 	}
 	dprintf("focusing %s\n", OBJECT(m)->name);
 	world->curmap = m;
-	world->curview = m->view;
-	pthread_mutex_unlock(&world->lock);
 
 	pthread_mutex_lock(&m->lock);
 	m->view->map = m;
@@ -198,11 +197,10 @@ map_unfocus(struct map *m)
 
 	pthread_mutex_lock(&world->lock);
 	world->curmap = NULL;
-	pthread_mutex_unlock(&world->lock);
-
 	if (curmapedit != NULL) {
-		mapedit_unlink(curmapedit);
+		world_detach(world, curmapedit);
 	}
+	pthread_mutex_unlock(&world->lock);
 }
 
 /*
@@ -343,14 +341,12 @@ map_destroy(void *p)
 {
 	struct map *m = p;
 
-	pthread_mutex_lock(&m->lock);
 	if (m->flags & MAP_FOCUSED) {
 		map_unfocus(m);
 	}
 	if (m->map != NULL) {
 		map_freenodes(m);
 	}
-	pthread_mutex_unlock(&m->lock);
 }
 
 /*

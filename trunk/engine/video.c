@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.17 2002/05/03 20:16:26 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.18 2002/05/11 04:06:37 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,14 +48,6 @@
 
 #include <engine/engine.h>
 #include <engine/video.h>
-
-static const struct obvec video_ops = {
-	NULL,		/* destroy */
-	NULL,		/* load */
-	NULL,		/* save */
-	NULL,		/* link */
-	NULL		/* unlink */
-};
 
 #ifdef CONF_SMPEG
 
@@ -135,7 +127,7 @@ video_init(struct video *v, char *path, SDL_Surface *s)
 	}
 #endif
 
-	object_init(&v->obj, "video", NULL, 0, &video_ops);
+	object_init(&v->obj, "video", NULL, 0, NULL);
 
 	v->fd = 0;
 	v->mpeg = NULL;

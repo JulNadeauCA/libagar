@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.29 2002/05/08 09:44:41 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.30 2002/05/13 10:19:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,22 +42,24 @@
 
 #include <engine/mapedit/mapedit.h>
 
-static const struct obvec world_vec = {
+static const struct object_ops world_ops = {
 	NULL,
 	world_load,
 	world_save,
-	NULL,		/* link */
-	NULL		/* unlink */
+	NULL,		/* onattach */
+	NULL,		/* ondetach */
+	world_attach,
+	world_detach
 };
 
 char *
 savepath(char *obname, const char *suffix)
 {
-	static char path[FILENAME_MAX];
-	static struct stat sta;
+	struct stat sta;
 	char *p, *last;
-	char *datapath, *datapathp;
-	
+	char *datapath, *datapathp, *path;
+
+	path = emalloc((size_t)FILENAME_MAX);
 	datapathp = datapath = strdup(world->datapath);
 
 	for (p = strtok_r(datapath, ":;", &last);
@@ -69,9 +71,9 @@ savepath(char *obname, const char *suffix)
 			return (path);
 		}
 	}
-
-	fatal("%s.%s not in %s\n", obname, suffix, world->datapath);
 	free(datapathp);
+	free(path);
+	fatal("%s.%s not in %s\n", obname, suffix, world->datapath);
 	return (NULL);
 }
 
@@ -84,7 +86,7 @@ world_init(struct world *wo, char *name)
 	
 	pwd = getpwuid(getuid());
 
-	object_init(&wo->obj, name, NULL, 0, &world_vec);
+	object_init(&wo->obj, name, NULL, 0, &world_ops);
 
 	wo->udatadir = (char *)emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
 	wo->sysdatadir = (char *)emalloc(strlen(SHAREDIR) + strlen(name) + 4);
@@ -110,10 +112,8 @@ world_init(struct world *wo, char *name)
 
 	wo->curmap = NULL;
 	wo->nobjs = 0;
-	wo->nchars = 0;
 
 	SLIST_INIT(&wo->wobjsh);
-	SLIST_INIT(&wo->wcharsh);
 	pthread_mutex_init(&wo->lock, NULL);
 }
 
@@ -177,11 +177,11 @@ world_destroy(void *p)
 	struct world *wo = p;
 	struct object *ob, *nextob;
 	
-	pthread_mutex_lock(&wo->lock);
-
 	if (wo->curmap != NULL) {
 		map_unfocus(wo->curmap);
 	}
+	
+	pthread_mutex_lock(&wo->lock);
 
 	printf("freed:");
 	fflush(stdout);
@@ -191,15 +191,50 @@ world_destroy(void *p)
 		nextob = SLIST_NEXT(ob, wobjs);
 		printf(" %s", ob->name);
 		fflush(stdout);
-		object_queue_gc(ob);
-		free(ob);
+		object_destroy(ob);
 	}
 	printf(".\n");
 
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
+
 	pthread_mutex_unlock(&wo->lock);
 	pthread_mutex_destroy(&wo->lock);
+}
+
+/* Attach an object to the world. */
+void
+world_attach(void *parent, void *child)
+{
+	struct world *wo = parent;
+	struct object *ob = child;
+
+	dprintf("attach %s to %s\n", ob->name, OBJECT(wo)->name);
+
+	if (OBJECT_OPS(ob)->onattach != NULL) {
+		OBJECT_OPS(ob)->onattach(wo, ob);
+	}
+
+	SLIST_INSERT_HEAD(&wo->wobjsh, ob, wobjs);
+	wo->nobjs++;
+}
+
+/* Detach an object from the world, and free it. */
+void
+world_detach(void *parent, void *child)
+{
+	struct world *wo = parent;
+	struct object *ob = child;
+	
+	dprintf("detach %s from %s\n", ob->name, OBJECT(wo)->name);
+
+	SLIST_REMOVE(&wo->wobjsh, ob, object, wobjs);
+	wo->nobjs--;
+	
+	if (OBJECT_OPS(ob)->ondetach != NULL) {
+		OBJECT_OPS(ob)->ondetach(wo, ob);
+	}
+	object_destroy(ob);
 }
 

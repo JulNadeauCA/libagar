@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.18 2002/04/24 05:17:15 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.19 2002/05/11 04:01:45 vedge Exp $	*/
 
 struct character {
 	struct	object obj;
@@ -37,9 +37,10 @@ enum {
 
 #define CHARACTER(ob)	((struct character *)(ob))
 
+struct character *char_new(char *, char *);
 void		  char_init(struct character *, char *, char *);
 int		  char_load(void *, int);
 int		  char_save(void *, int);
-int		  char_link(void *);
-int		  char_unlink(void *);
+void		  char_attach(void *, void *);
+void		  char_detach(void *, void *);
 
