@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.10 2002/07/24 09:26:37 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.11 2002/08/22 23:04:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
@@ -12,6 +12,6 @@ extern int font_h;
 int		 text_engine_init(void);
 void		 text_engine_destroy(void);
 SDL_Surface	*text_render(char *, int, Uint32, char *);
-void		 text_msg(char *, ...);
+void		 text_msg(char *, char *, ...);
 
 #endif	/* _AGAR_TEXT_TEXT_H_ */
