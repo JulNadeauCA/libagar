@@ -153,7 +153,7 @@ clean:		clean-subdir
 	    fi; \
 	fi
 
-cleandir:	cleandir-subdir clean-depend
+cleandir:	clean cleandir-subdir clean-depend
 	rm -fR .libs
 
 install:	install-subdir lib${LIB}.a lib${LIB}.la
