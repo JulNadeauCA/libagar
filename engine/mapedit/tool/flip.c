@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.6 2003/03/26 10:04:18 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.7 2003/03/28 00:23:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -64,8 +64,8 @@ flip_window(void *p)
 
 	win = window_new("mapedit-tool-flip", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    157, 76,
-	    157, 76);
+	    177, 196,
+	    177, 196);
 	window_set_caption(win, "Flip");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);

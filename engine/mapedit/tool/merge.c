@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.30 2003/03/28 03:08:47 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.31 2003/04/12 01:45:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -126,8 +126,7 @@ merge_create_brush(int argc, union evarg *argv)
 	}
 
 	m = Malloc(sizeof(struct map));
-	map_init(m, m_name, NULL);
-
+	map_init(m, m_name);
 	if (object_load(m, NULL) == -1) {
 		if (map_alloc_nodes(m,
 		    prop_get_uint32(&mapedit, "default-brush-width"),
@@ -230,8 +229,8 @@ merge_window(void *p)
 
 	win = window_new("mapedit-tool-merge", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    213, 323,
-	    151, 285);
+	    265, 294,
+	    265, 294);
 	window_set_caption(win, "Merge");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
@@ -663,7 +662,7 @@ merge_load(void *p, struct netbuf *buf)
 		dprintf("loading brush: %s\n", m_name);
 
 		nbrush = Malloc(sizeof(struct map));
-		map_init(nbrush, m_name, NULL);
+		map_init(nbrush, m_name);
 		map_load(nbrush, buf);
 
 		SLIST_INSERT_HEAD(&mer->brushes, OBJECT(nbrush), wobjs);
