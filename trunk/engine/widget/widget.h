@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.60 2003/05/24 15:46:17 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.61 2003/06/06 03:18:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -80,7 +80,7 @@ extern DECLSPEC int	 widget_save(void *, struct netbuf *);
 
 extern DECLSPEC void	 widget_set_type(void *, const char *);
 extern DECLSPEC void	 widget_set_geometry(void *, int, int);
-extern DECLSPEC void	 widget_set_focus(void *);
+extern DECLSPEC void	 widget_focus(void *);
 extern __inline__ int	 widget_holds_focus(void *);
 extern struct widget	*widget_find_focus(void *);
 extern __inline__ int	 widget_relative_area(void *, int, int);

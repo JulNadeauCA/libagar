@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.59 2003/05/25 04:25:19 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.60 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -300,7 +300,7 @@ textbox_mousebuttondown(int argc, union evarg *argv)
 	struct textbox *tbox = argv[0].p;
 	int x = argv[2].i;
 	
-	widget_set_focus(tbox);
+	widget_focus(tbox);
 	tbox->newx = x;
 }
 

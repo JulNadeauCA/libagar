@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.36 2003/05/26 03:03:31 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.37 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -244,7 +244,7 @@ propedit_window(void *p)
 		int i;
 
 		rad = radio_new(vb, node_modes);
-		widget_set_focus(rad);
+		widget_focus(rad);
 		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
 
 		cbox = checkbox_new(vb, "Origin");

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.114 2003/05/26 03:03:30 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.115 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -667,7 +667,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	int y = argv[3].i;
 	struct node *curnode;
 	
-	widget_set_focus(mv);
+	widget_focus(mv);
 
 	pthread_mutex_lock(&mv->map->lock);
 	mapview_map_coords(mv, &x, &y);

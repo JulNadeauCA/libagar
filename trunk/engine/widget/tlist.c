@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.63 2003/05/26 03:03:33 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.64 2003/06/06 03:18:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -560,7 +560,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	struct tlist_item *ti;
 	int tind;
 	
-	widget_set_focus(tl);
+	widget_focus(tl);
 
 	if (button != SELECTION_MOUSE_BUTTON) 		/* Selection button? */
 		return;

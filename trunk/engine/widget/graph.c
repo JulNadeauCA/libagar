@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.30 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.31 2003/06/06 02:16:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -248,7 +248,7 @@ graph_focus(int argc, union evarg *argv)
 	struct graph *gra = argv[0].p;
 
 	gra->flags &= ~(GRAPH_SCROLL);
-	widget_set_focus(gra);
+	widget_focus(gra);
 }
 
 void

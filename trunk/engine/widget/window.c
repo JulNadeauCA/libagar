@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.191 2003/06/06 04:34:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.192 2003/06/06 05:59:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -677,7 +677,7 @@ window_event(SDL_Event *ev)
 				    (ev->key.keysym.mod & KMOD_SHIFT));
 				goto out;
 			}
-			if (WIDGET(win)->flags & WIDGET_FOCUSED) {
+			if (WINDOW_FOCUSED(win)) {
 				struct widget *fwid;
 
 				if ((fwid = widget_find_focus(win)) != NULL) {
@@ -694,6 +694,9 @@ window_event(SDL_Event *ev)
 					 * changes the window focus.
 					 */
 					keydown_win = win;
+				} else {
+					dprintf("no focused widget in %s\n",
+					    OBJECT(win)->name);
 				}
 			}
 		}

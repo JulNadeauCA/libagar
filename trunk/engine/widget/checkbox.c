@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.40 2003/05/26 03:02:55 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.41 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -123,7 +123,7 @@ checkbox_mousebutton(int argc, union evarg *argv)
 	struct checkbox *cbox = argv[0].p;
 	int button = argv[1].i;
 
-	widget_set_focus(cbox);
+	widget_focus(cbox);
 
 	if (button == SDL_BUTTON(1))
 		checkbox_toggle(cbox);
