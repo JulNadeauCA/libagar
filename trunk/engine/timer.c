@@ -1,4 +1,4 @@
-/*	$Csoft: timer.c,v 1.3 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: timer.c,v 1.4 2003/04/24 07:04:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -54,6 +54,8 @@ timer_new(const char *name, Uint32 ival, Uint32 (*callback)(Uint32, void *),
 
 	timer = Malloc(sizeof(struct timer));
 	timer_init(timer, name, ival, callback, arg);
+
+	/* XXX attach to something else */
 	world_attach(timer);
 	return (timer);
 }
