@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.65 2004/03/30 15:50:44 vedge Exp $
+#	$Csoft: Makefile,v 1.66 2004/04/22 01:52:27 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -17,7 +17,7 @@ SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	statusbar.c
 MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 textbox.3 \
 	window.3 bitmap.3 scrollbar.3 tlist.3 palette.3 text.3 box.3 \
-	hbox.3 vbox.3 combo.3 fspinbutton.3 ucombo.3 spinbutton.3
+	hbox.3 vbox.3 combo.3 fspinbutton.3 ucombo.3 spinbutton.3 units.3
 
 CFLAGS+=${SDL_CFLAGS}
 

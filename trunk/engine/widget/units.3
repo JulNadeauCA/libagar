@@ -1,0 +1,147 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2004 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 10, 2004
+.Dt UNITS 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm units
+.Nd agar unit conversion facility
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/units.h>
+.Ed
+.Sh DESCRIPTION
+The Agar
+.Nm
+facility implements linear as well as nonlinear unit conversion.
+Each unit is attributed an abbreviation and a long name.
+A double-precision divider is associated with linear units, and a function
+pointer is associated with nonlinear units.
+Units are arranged in unit groups, and Agar's
+.Pa engine/widget/units.c
+defines the groups:
+.Pp
+.Bl -tag -compact -width "metabolic_expenditure_units "
+.It length_units
+Units of length/distance
+.It area_units
+Units of area
+.It volume_units
+Units of volume
+.It speed_units
+Units of speed or velocity
+.It mass_units
+Units of weight
+.It time_units
+Units of time
+.It current_units
+Units of electrical current
+.It temperature_units
+Units of temperature
+.It substance_amount_units
+Units of substance amount
+.It light_units
+Units of light measurement
+.It power_units
+Units of power
+.It emf_units
+Units of electromotive force
+.It resistance_units
+Units of electrical resistance
+.It capacitance_units
+Units of electrical capacitance
+.It inductance_units
+Units of electrical inductance
+.It frequency_units
+Units of frequency
+.It pressure_units
+Units of pressure and stress
+.It metabolic_expenditure_units
+Units of metabolic cost of physical activities
+(somewhat humorous)
+.El
+.Sh INTERFACE
+.nr nS 1
+.Ft "const struct unit *"
+.Fn unit "const struct unit group[]" "const char *abbr"
+.Pp
+.Ft "double"
+.Fn unit2base "double n" "const struct unit *unit"
+.Pp
+.Ft "double"
+.Fn base2unit "double n" "const struct unit *unit"
+.nr nS 0
+.Pp
+The
+.Fn unit
+function looks up
+.Fa group
+for an unit with an abbreviation matching
+.Fa abbr ,
+and returns the unit on success and NULL if none was found.
+.Pp
+The
+.Fn unit2base
+function converts from
+.Fa n
+in given units to the equivalent number in base units.
+.Pp
+The
+.Fn base2unit
+function converts the
+.Fa n
+in base units to the equivalent number in given units.
+.Sh EXAMPLES
+The following code fragment prints the equivalent milliseconds for a given
+number of seconds:
+.Bd -literal -offset indent
+const struct unit *ms = unit(time_units, "ms");
+double secs = 5;
+
+printf("%f seconds = %f milliseconds", secs, base2unit(secs, ms));
+.Ed
+.Pp
+The following code fragment obtains the equivalent of 27 degrees Celsius in
+kilo-Kelvins:
+.Bd -literal -offset indent
+const struct unit *degC = unit(temperature_units, "degC");
+const struct unit *kK = unit(temperature_units, "kK");
+double Tnom;
+
+Tnom = base2unit(unit2base(27, degC), kK);
+.Ed
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr fspinbutton 3 ,
+.Xr widget 3
+.Sh HISTORY
+The
+.Nm
+facility first appeared in Agar 1.0.
