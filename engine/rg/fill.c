@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.10 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.11 2005/03/06 04:57:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,7 +36,7 @@
 #include <engine/widget/hsvpal.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/box.h>
-#include <engine/widget/fspinbutton.h>
+#include <engine/widget/spinbutton.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -69,6 +69,7 @@ fill_init(void *p, struct tileset *ts, int flags)
 
 	feature_init(f, ts, flags, &fill_ops);
 	f->type = FILL_SOLID;
+	f->alpha = 255;
 	f->f_gradient.c1 = SDL_MapRGB(ts->fmt, 0, 0, 0);
 	f->f_gradient.c2 = SDL_MapRGB(ts->fmt, 0, 0, 0);
 }
@@ -154,29 +155,24 @@ fill_edit(void *p, struct tileview *tv)
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
 		struct hsvpal *hsv1, *hsv2;
-		struct fspinbutton *fsb;
+		struct spinbutton *sb;
+		struct box *hb;
 
-		label_new(box, LABEL_STATIC, _("Color 1: "));
-		hsv1 = hsvpal_new(box, tv->ts->fmt);
-		widget_bind(hsv1, "pixel", WIDGET_UINT32, &f->f_gradient.c1);
+		hb = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+		{
+			hsv1 = hsvpal_new(hb, tv->ts->fmt);
+			widget_bind(hsv1, "pixel", WIDGET_UINT32,
+			    &f->f_gradient.c1);
 
-		label_new(box, LABEL_STATIC, _("Color 2: "));
-		hsv2 = hsvpal_new(box, tv->ts->fmt);
-		widget_bind(hsv2, "pixel", WIDGET_UINT32, &f->f_gradient.c2);
+			hsv2 = hsvpal_new(hb, tv->ts->fmt);
+			widget_bind(hsv2, "pixel", WIDGET_UINT32,
+			    &f->f_gradient.c2);
+		}
 		
-		fsb = fspinbutton_new(box, NULL, _("Alpha 1: "));
-		fspinbutton_prescale(fsb, "0.000");
-		widget_bind(fsb, "value", WIDGET_FLOAT, &hsv1->a);
-		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.010);
-		fspinbutton_set_precision(fsb, "f", 3);
-		
-		fsb = fspinbutton_new(box, NULL, _("Alpha 2: "));
-		fspinbutton_prescale(fsb, "0.000");
-		widget_bind(fsb, "value", WIDGET_FLOAT, &hsv2->a);
-		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.010);
-		fspinbutton_set_precision(fsb, "f", 3);
+		sb = spinbutton_new(box, _("Alpha: "));
+		widget_bind(sb, "value", WIDGET_UINT8, &f->alpha);
+		spinbutton_set_range(sb, 0, 255);
+		spinbutton_set_increment(sb, 5);
 	}
 	return (win);
 }
@@ -186,11 +182,11 @@ fill_apply(void *p, struct tile *t, int x, int y)
 {
 	struct fill *fi = p;
 	SDL_Surface *su = t->su;
-	Uint8 r1, g1, b1, a1;
-	Uint8 r2, g2, b2, a2;
+	Uint8 r1, g1, b1;
+	Uint8 r2, g2, b2;
 	
-	SDL_GetRGBA(fi->f_gradient.c1, t->ts->fmt, &r1, &g1, &b1, &a1);
-	SDL_GetRGBA(fi->f_gradient.c2, t->ts->fmt, &r2, &g2, &b2, &a2);
+	SDL_GetRGB(fi->f_gradient.c1, t->ts->fmt, &r1, &g1, &b1);
+	SDL_GetRGB(fi->f_gradient.c2, t->ts->fmt, &r2, &g2, &b2);
 
 	switch (fi->type) {
 	case FILL_SOLID:
@@ -203,21 +199,29 @@ fill_apply(void *p, struct tile *t, int x, int y)
 			SDL_LockSurface(su);
 			for (y = 0; y < su->h; y++) {
 				Uint32 c;
-				Uint8 a = (su->h-y)*255/su->h;
+				Uint8 a = (Uint8)(su->h-y)*255/su->h;
 
-				c = SDL_MapRGBA(t->ts->fmt,
+				c = SDL_MapRGB(t->ts->fmt,
 				    (((r1 - r2) * a) >> 8) + r2,
 				    (((g1 - g2) * a) >> 8) + g2,
-				    (((b1 - b2) * a) >> 8) + b2,
-				    (((a1 - a2) * a) >> 8) + a2);
+				    (((b1 - b2) * a) >> 8) + b2);
 
 				for (x = 0; x < su->w; x++) {
-					prim_blend_rgb(t->su, x, y,
-					    PRIM_BLEND_SRCALPHA,
-					    (((r1 - r2) * a) >> 8) + r2,
-					    (((g1 - g2) * a) >> 8) + g2,
-					    (((b1 - b2) * a) >> 8) + b2,
-					    (((a1 - a2) * a) >> 8) + a2);
+					if (fi->alpha == 255) {
+						prim_put_pixel(t->su, x, y,
+						    SDL_MapRGBA(t->su->format,
+						    (((r1 - r2) * a) >> 8) + r2,
+						    (((g1 - g2) * a) >> 8) + g2,
+						    (((b1 - b2) * a) >> 8) + b2,
+						    fi->alpha));
+					} else {
+						prim_blend_rgb(t->su, x, y,
+						    PRIM_BLEND_SRCALPHA,
+						    (((r1 - r2) * a) >> 8) + r2,
+						    (((g1 - g2) * a) >> 8) + g2,
+						    (((b1 - b2) * a) >> 8) + b2,
+						    fi->alpha);
+					}
 				}
 			}
 			SDL_UnlockSurface(su);
@@ -237,7 +241,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 					    (((r1 - r2) * a) >> 8) + r2,
 					    (((g1 - g2) * a) >> 8) + g2,
 					    (((b1 - b2) * a) >> 8) + b2,
-					    (((a1 - a2) * a) >> 8) + a2);
+					    fi->alpha);
 				}
 			}
 			SDL_UnlockSurface(su);
@@ -257,7 +261,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				    (((r1 - r2) * a) >> 8) + r2,
 				    (((g1 - g2) * a) >> 8) + g2,
 				    (((b1 - b2) * a) >> 8) + b2,
-				    (((a1 - a2) * a) >> 8) + a2);
+				    fi->alpha);
 				prim_circle2(t, x, y, i);
 			}
 			SDL_UnlockSurface(su);
@@ -273,29 +277,29 @@ invert_colors(int argc, union evarg *argv)
 {
 	struct fill *fi = argv[1].p;
 	struct tileset *ts = FEATURE(fi)->ts;
-	Uint8 r, g, b, a;
+	Uint8 r, g, b;
 
 	switch (fi->type) {
 	case FILL_SOLID:
-		SDL_GetRGBA(fi->f_solid.c, ts->fmt, &r, &g, &b, &a);
+		SDL_GetRGB(fi->f_solid.c, ts->fmt, &r, &g, &b);
 		r = 255 - r;
 		g = 255 - g;
 		b = 255 - b;
-		fi->f_solid.c = SDL_MapRGBA(ts->fmt, r, g, b, a);
+		fi->f_solid.c = SDL_MapRGB(ts->fmt, r, g, b);
 		break;
 	case FILL_HGRADIENT:
 	case FILL_VGRADIENT:
 	case FILL_CGRADIENT:
-		SDL_GetRGBA(fi->f_gradient.c1, ts->fmt, &r, &g, &b, &a);
+		SDL_GetRGB(fi->f_gradient.c1, ts->fmt, &r, &g, &b);
 		r = 255 - r;
 		g = 255 - g;
 		b = 255 - b;
-		fi->f_gradient.c1 = SDL_MapRGBA(ts->fmt, r, g, b, a);
-		SDL_GetRGBA(fi->f_gradient.c2, ts->fmt, &r, &g, &b, &a);
+		fi->f_gradient.c1 = SDL_MapRGB(ts->fmt, r, g, b);
+		SDL_GetRGB(fi->f_gradient.c2, ts->fmt, &r, &g, &b);
 		r = 255 - r;
 		g = 255 - g;
 		b = 255 - b;
-		fi->f_gradient.c2 = SDL_MapRGBA(ts->fmt, r, g, b, a);
+		fi->f_gradient.c2 = SDL_MapRGB(ts->fmt, r, g, b);
 		break;
 	default:
 		break;
