@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.40 2002/09/19 21:13:12 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.41 2002/09/20 02:41:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -22,7 +22,7 @@ typedef enum {
 TAILQ_HEAD(regionsq, region);
 
 struct window {
-	struct	 widget wid;
+	struct	 widget wid;		/* For primitives and color scheme */
 
 	/*
 	 * Read-only once attached
@@ -39,10 +39,7 @@ struct window {
 	window_type_t	type;
 
 	char	*caption;		/* Titlebar text */
-	Uint32	 caption_color;
-	SDL_Surface *caption_s;
 
-	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
 	Uint32	*border;		/* Border colors */
 	int	 borderw;		/* Border width */
 	int	 titleh;		/* Titlebar height */
@@ -68,9 +65,6 @@ struct window {
 };
 
 #define WINDOW(w)	((struct window *)(w))
-
-#define WINDOW_FOCUSED(w) (TAILQ_LAST(&view->windows, \
-			   windowq) == (w))
 
 #define WINDOW_CYCLE(w)	 do {					\
 	TAILQ_REMOVE(&view->windows, (w), windows);		\
