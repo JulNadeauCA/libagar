@@ -122,6 +122,13 @@ else
     LOCALEDIR=${SHAREDIR}/locale
 fi
 
+if [ "${with_manpages}" = "no" ]; then
+    NOMAN=yes
+fi
+if [ "${with_docs}" = "no" ]; then
+    NODOC=yes
+fi
+
 if [ "${srcdir}" != "" ]; then
 	echo "concurrent build (source in ${srcdir})"
 #	if [ ! -e "${srcdir}" ]; then
@@ -169,6 +176,8 @@ echo "    --srcdir                       Source tree for concurrent build [.]"
 echo "    --help                         Display this message"
 echo "    --enable-nls                   Native Language Support [yes]"
 echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [check]"
+echo "    --with-manpages                Manual pages (-mdoc) [yes]"
+echo "    --with-docs                    Printable docs (-me/tbl/eqn/pic/refer) [no]"
 echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-smpeg                   MPEG playback using smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
