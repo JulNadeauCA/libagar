@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.119 2003/08/06 04:11:26 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.120 2003/09/04 03:14:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -190,8 +190,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	config_init(config);
 	object_load(config);
 
-	/* Initialize the font engine. */
-	unicode_init();
+	/* Initialize the text rendering engine. */
 	if (prop_get_bool(config, "font-engine") &&
 	    text_init() == -1) {
 		fatal("text_init: %s", error_get());
@@ -199,8 +198,8 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 
 	/* Attach the input devices. */
 	if (flags & ENGINE_INIT_INPUT) {
-		input_new(INPUT_KEYBOARD, 0);
-		input_new(INPUT_MOUSE, 0);
+		kbd_new(0);
+		mouse_new(0);
 
 		if (prop_get_bool(config, "input.joysticks") &&
 		    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
@@ -208,7 +207,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 
 			njoys = SDL_NumJoysticks();
 			for (i = 0; i < njoys; i++)
-				input_new(INPUT_JOY, i);
+				joy_new(i);
 		}
 	}
 
@@ -231,16 +230,10 @@ engine_destroy(void)
 	if (mapedition)
 		object_save(&mapedit);
 #endif
-	/* Detach the windows, free the viewport. */
-	view_destroy();
-
-	/* Destroy the world. */
-	object_destroy(world);
-
-	/* Destroy the text and input subsystems. */
-	text_destroy();
-	input_destroy_all();
-	unicode_destroy();
+	view_destroy();				/* Detach windows & viewport */
+	object_destroy(world);			/* Destroy the world */
+	text_destroy();				/* Destroy the text engine */
+	input_destroy();			/* Free the input devices */
 
 	/* Release the engine configuration object. */
 	object_destroy(config);

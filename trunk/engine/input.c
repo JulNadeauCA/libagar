@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.47 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.48 2003/07/08 00:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -31,327 +31,95 @@
 #include <engine/physics.h>
 #include <engine/input.h>
 
-const struct object_ops input_ops = {
-	NULL,		/* init */
-	NULL,		/* reinit */
-	input_destroy,
-	NULL,		/* load */
-	NULL,		/* save */
-	NULL		/* edit */
-};
-
-static TAILQ_HEAD(, input) inputs;
+static SLIST_HEAD(, input) inputs;
 pthread_mutex_t		   input_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/* Initialize and attach a new input device. */
-struct input *
-input_new(enum input_type type, int index)
+/* Initialize and attach an input device. */
+void
+input_register(void *p, enum input_type type, const char *name,
+    const struct input_driver *drv)
 {
-	char name[OBJECT_NAME_MAX];
-	struct input *input;
+	struct input *in = p;
 
-	switch (type) {
-	case INPUT_KEYBOARD:
-		snprintf(name, sizeof(name), _("keyboard%d"), index);
-		break;
-	case INPUT_JOY:
-		snprintf(name, sizeof(name), _("joy%d"), index);
-		break;
-	case INPUT_MOUSE:
-		snprintf(name, sizeof(name), _("mouse%d"), index);
-		break;
-	}
-
-	input = Malloc(sizeof(struct input));
-	object_init(input, "input-device", name, &input_ops);
-
-	input->type = type;
-	input->index = index;
-	input->p = NULL;
-	input->pos = NULL;
-	pthread_mutex_init(&input->lock, NULL);
-
-#ifdef DEBUG
-	prop_set_int(input, "events", 0);
-#endif
-	switch (type) {
-	case INPUT_JOY:
-		{
-			SDL_Joystick *joy;
-
-			if (index < 0) {
-				error_set("bad joystick index");
-				return (NULL);
-			}
-			joy = input->p = SDL_JoystickOpen(index);
-			if (joy == NULL) {
-				error_set("joy[%d]: %s", index, SDL_GetError());
-				return (NULL);
-			}
-			SDL_JoystickEventState(SDL_ENABLE);
-			prop_set_string(input, "joy-name",
-			    (char *)SDL_JoystickName(index));
-			prop_set_int(input, "joy-naxes",
-			    SDL_JoystickNumAxes(joy));
-			prop_set_int(input, "joy-nbuttons",
-			    SDL_JoystickNumButtons(joy));
-			prop_set_int(input, "joy-nballs",
-			    SDL_JoystickNumBalls(joy));
-			break;
-		}
-	default:
-		break;
-	}
+	strlcpy(in->name, name, sizeof(in->name));
+	in->type = type;
+	in->drv = drv;
+	in->pos = NULL;
 
 	pthread_mutex_lock(&input_lock);
-	TAILQ_INSERT_HEAD(&inputs, input, inputs);
+	SLIST_INSERT_HEAD(&inputs, in, inputs);
 	pthread_mutex_unlock(&input_lock);
-	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
-	return (input);
+
+	dprintf("registered %s (%s)\n", in->name, in->drv->name);
 }
 
-/*
- * Process a keyboard event.
- * The input structure must be locked.
- */
-static void
-input_key(struct input *in, SDL_Event *ev)
+/* Detach and free an input device structure. */
+void
+input_deregister(void *p)
 {
-	int set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
+	struct input *in = p;
 
-	switch (ev->key.keysym.sym) {
-	case SDLK_UP:
-		if (in->pos->y > 1) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_UP);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_UP);
-			}
-		}
-		break;
-	case SDLK_DOWN:
-		if (in->pos->y < in->pos->map->maph - 2) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_DOWN);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_DOWN);
-			}
-		}
-		break;
-	case SDLK_LEFT:
-		if (in->pos->x > 1) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_LEFT);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_LEFT);
-			}
-		}
-		break;
-	case SDLK_RIGHT:
-		if (in->pos->x < in->pos->map->mapw - 2) {
-			if (set) {
-				mapdir_set(&in->pos->dir, DIR_RIGHT);
-			} else {
-				mapdir_unset(&in->pos->dir, DIR_RIGHT);
-			}
-		}
-		break;
-	default:
-		/* XXX ... */
-		break;
-	}
-}
+	if (in->drv->in_close != NULL)
+		in->drv->in_close(in);
 
-/*
- * Process a joystick event.
- * The input structure must be locked.
- */
-static void
-input_joy(struct input *in, SDL_Event *ev)
-{
-	static int lastdir = 0;
+	pthread_mutex_lock(&input_lock);
+	SLIST_REMOVE(&inputs, in, input, inputs);
+	pthread_mutex_unlock(&input_lock);
 
-	switch (ev->jaxis.axis) {
-	case 0:	/* X */
-		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_LEFT;
-			lastdir &= ~(DIR_RIGHT);
-			mapdir_set(&in->pos->dir, DIR_LEFT);
-		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_RIGHT;
-			lastdir &= ~(DIR_LEFT);
-			mapdir_set(&in->pos->dir, DIR_RIGHT);
-		} else {
-			mapdir_unset(&in->pos->dir, DIR_ALL);
-		}
-		break;
-	case 1:	/* Y */
-		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_UP;
-			lastdir &= ~(DIR_DOWN);
-			mapdir_set(&in->pos->dir, DIR_UP);
-		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_DOWN;
-			lastdir &= ~(DIR_UP);
-			mapdir_set(&in->pos->dir, DIR_DOWN);
-		} else {
-			mapdir_unset(&in->pos->dir, DIR_ALL);
-		}
-		break;
-	}
-}	
-
-/* Process a mouse event. */
-static void
-input_mouse(struct input *in, SDL_Event *ev)
-{
-	/* XXX ... */
+	free(in);
 }
 
 /* Destroy all attached input device structures. */
 void
-input_destroy_all(void)
+input_destroy(void)
 {
 	struct input *in, *nin;
 
 	pthread_mutex_lock(&input_lock);
-	for (in = TAILQ_FIRST(&inputs);
-	     in != TAILQ_END(&inputs);
+	for (in = SLIST_FIRST(&inputs);
+	     in != SLIST_END(&inputs);
 	     in = nin) {
-		nin = TAILQ_NEXT(in, inputs);
-		object_destroy(in);
+		nin = SLIST_NEXT(in, inputs);
+
+		if (in->drv->in_close != NULL) {
+			in->drv->in_close(in);
+		}
 		free(in);
 	}
-	TAILQ_INIT(&inputs);
+	SLIST_INIT(&inputs);
 	pthread_mutex_unlock(&input_lock);
 }
 
-/* Release an input device structure. */
-void
-input_destroy(void *p)
-{
-	struct input *in = p;
-
-	switch (in->type) {
-	case INPUT_JOY:
-		SDL_JoystickClose(in->p);
-		break;
-	default:
-		break;
-	}
-	pthread_mutex_destroy(&in->lock);
-}
-
 /* Look for an input device of the given name. */
-struct input *
+void *
 input_find(const char *name)
 {
 	struct input *in;
 
 	pthread_mutex_lock(&input_lock);
-	TAILQ_FOREACH(in, &inputs, inputs) {
-		if (strcmp(OBJECT(in)->name, name) == 0)
+	SLIST_FOREACH(in, &inputs, inputs) {
+		if (strcmp(in->name, name) == 0)
 			break;
 	}
 	pthread_mutex_unlock(&input_lock);
 	return (in);
 }
 
-/*
- * Map an SDL input device event to an input device object.
- * Input device list must be locked.
- */
-static struct input *
-input_find_ev(enum input_type type, SDL_Event *ev)
-{
-	struct input *in;
-
-	TAILQ_FOREACH(in, &inputs, inputs) {
-		if (in->type != type)
-			continue;
-
-		switch (type) {
-		case INPUT_KEYBOARD:
-			switch (ev->type) {
-			case SDL_KEYUP:
-			case SDL_KEYDOWN:
-				if (ev->key.which == in->index)
-					return (in);
-			}
-			break;
-		case INPUT_MOUSE:
-			switch (ev->type) {
-			case SDL_MOUSEMOTION:
-				if (ev->motion.which == in->index)
-					return (in);
-				break;
-			case SDL_MOUSEBUTTONUP:
-			case SDL_MOUSEBUTTONDOWN:
-				if (ev->button.which == in->index)
-					return (in);
-				break;
-			}
-			break;
-		case INPUT_JOY:
-			switch (ev->type) {
-			case SDL_JOYAXISMOTION:
-				if (ev->jaxis.which == in->index)
-					return (in);
-				break;
-			case SDL_JOYBALLMOTION:
-				if (ev->jball.which == in->index)
-					return (in);
-				break;
-			case SDL_JOYHATMOTION:
-				if (ev->jhat.which == in->index)
-					return (in);
-				break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-				if (ev->jbutton.which == in->index)
-					return (in);
-				break;
-			}
-			break;
-		}
-	}
-
-	return (NULL);
-}
-
 /* Translate an SDL event. */
 void
-input_event(enum input_type type, SDL_Event *ev)
+input_event(enum input_type type, const SDL_Event *ev)
 {
 	struct input *in;
 
 	pthread_mutex_lock(&input_lock);
-
-	/* See which input device should handle this event. */
-	in = input_find_ev(type, ev);
-	if (in == NULL) {
-		dprintf("unmatched event %d\n", ev->type);
-		goto out2;
+	SLIST_FOREACH(in, &inputs, inputs) {
+		if (in->type == type &&
+		    in->drv->in_match(in, ev))
+			break;
 	}
-
-	pthread_mutex_lock(&in->lock);
-	if (in->pos == NULL) {
-		goto out1;
+	if (in != NULL && in->pos != NULL) {
+		in->drv->in_event(in, ev);
 	}
-	switch (type) {
-	case INPUT_KEYBOARD:
-		input_key(in, ev);
-		break;
-	case INPUT_JOY:
-		input_joy(in, ev);
-		break;
-	case INPUT_MOUSE:
-		input_mouse(in, ev);
-		break;
-	}
-out1:
-	pthread_mutex_unlock(&in->lock);
-out2:
 	pthread_mutex_unlock(&input_lock);
 }
 
