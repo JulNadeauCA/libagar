@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.22 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: object.3,v 1.23 2003/01/16 04:07:26 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -80,12 +80,11 @@ The
 function initializes
 .Fa ob
 as an object of type
-.Fa type
-(an arbitrary string identifier describing the type of structure)
+.Fa type .
 .Pp
-If
+If the
 .Fa archive
-is not null, it identifies a
+argument is not NULL, it identifies a
 .Xr fobj 3
 (with the
 .Sq .fob
@@ -93,12 +92,9 @@ suffix) to be looked up in the data directories (the
 .Sq path.data_path
 setting) and loaded.
 .Pp
-.Fn object_destroy
-is called to free all resources associated with
-.Fa ob .
 The
 .Fa ops
-argument is a pointer to the following structure:
+argument, if not NULL, is a pointer to the following structure:
 .Bd -literal
 struct object_ops {
 	void	(*destroy)(void *ob);		/* Free resources */
@@ -118,6 +114,11 @@ argument may contain:
 #define OBJECT_AUDIO_CACHE	0x10	/* Never decrement the ref count */
 #define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
 .Ed
+.Pp
+The
+.Fn object_destroy
+function is called to free all resources associated with
+.Fa ob .
 .Sh SAVING STATES
 .nr nS 1
 .Ft "int"
