@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.2 2002/11/07 05:17:58 vedge Exp $
+#	$Csoft: dist.sh,v 1.3 2002/12/11 03:43:13 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
@@ -14,9 +14,8 @@ rm -fR `find agar-${DATE} \( -name CVS \
     -or -name \*.o \
     -or -name \*.a \
     -or -name \*.core \
-    -or -name oldxcf.c \
-    -or -name oldxcf.h \
     -or -name \*.ttf \
+    -or -name .\*.swp \
     -or -name LICENSE.ttf \)`
 
 echo "packaging"
