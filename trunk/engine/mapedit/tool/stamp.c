@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.22 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.23 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -100,6 +100,10 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 
 	if (srcnode == NULL) {
 		text_msg("Error", "No source node");
+		return;
+	}
+	if (srcnode == dstnode) {
+		text_msg("Error", "Source node == destination node");
 		return;
 	}
 
