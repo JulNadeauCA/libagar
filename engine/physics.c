@@ -245,8 +245,6 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 /*
  * Update a map direction, and return a non-zero value if the map
  * coordinates have changed (so that the caller can move the reference).
- *
- * Must be called on a locked map.
  */
 int
 mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
@@ -257,6 +255,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 	Uint32 moved = 0;
 
 	map = dir->map;
+	pthread_mutex_assert(&map->lock);
 	node = &map->map[*mapy][*mapx];
 	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
 	if (nref == NULL) {
@@ -429,8 +428,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 /*
  * Called after a movement, to ensure continuation if necessary, or
  * stop moving.
- *
- * Must be called on a locked map.
  */
 void
 mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
@@ -438,6 +435,7 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 	struct node *node;
 	struct noderef *nref;
 
+	pthread_mutex_assert(&dir->map->lock);
 	node = &dir->map->map[*mapy][*mapx];
 	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
 

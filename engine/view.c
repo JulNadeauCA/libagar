@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.29 2002/05/03 20:18:46 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.30 2002/05/06 02:19:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -331,8 +331,11 @@ view_redraw(struct viewport *view)
 		view->map->redraw++;
 	}
 	if (curmapedit != NULL) {
-		mapedit_tilelist(curmapedit);
 		mapedit_objlist(curmapedit);
+
+		pthread_mutex_lock(&curmapedit->map->lock);
+		mapedit_tilelist(curmapedit);
+		pthread_mutex_unlock(&curmapedit->map->lock);
 	}
 	if (!TAILQ_EMPTY(&windowsh)) {
 		window_draw_all();
