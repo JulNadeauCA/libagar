@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.46 2002/11/12 02:00:02 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.47 2002/11/13 00:22:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -39,10 +39,13 @@ struct noderef {
 #define MAPREF_ANY		0xffff
 #define MAPREF_DONTSAVE		0
 	Uint32	offs;
+	
+	Sint32	xoffs;		/* X motion offset */
+	Sint32	yoffs;		/* Y motion offset */
 
 	/* Animation variables */
-	Sint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0 */
-	int	frame, fdelta;	/* For MAPREF_ANIM_INDEPENDENT */
+	int	frame;		/* Animation frame # */
+	int	fdelta;		/* For MAPREF_ANIM_INDEPENDENT */
 
 	TAILQ_ENTRY(noderef) nrefs;	/* Node reference list */
 };

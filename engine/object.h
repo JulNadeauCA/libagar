@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.56 2002/11/27 05:11:24 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.57 2002/11/28 01:05:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -61,12 +61,6 @@ struct object {
 
 #define OBJECT(ob)	((struct object *)(ob))
 #define OBJECT_OPS(ob)	(((struct object *)(ob))->ops)
-
-#define OBJECT_UNUSED(ob, type)	do {			\
-	pthread_mutex_lock(&(ob)->type->used_lock);	\
-	(ob)->type->used--;				\
-	pthread_mutex_unlock(&(ob)->type->used_lock);	\
-} while (/*CONSTCOND*/ 0)
 
 #ifdef DEBUG
 # define OBJECT_ASSERT(ob, typestr) do {				\

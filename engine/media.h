@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: media.h,v 1.1 2002/09/02 08:11:34 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -50,6 +50,12 @@ struct media_audio {
 #define ANIM(ob, i)	((struct object *)(ob))->art->anims[(i)]
 #define SAMPLE(ob, i)	((struct object *)(ob))->audio->samples[(i)]
 #endif
+
+#define MEDIA_UNUSED(ob, type)	do {			\
+	pthread_mutex_lock(&(ob)->type->used_lock);	\
+	(ob)->type->used--;				\
+	pthread_mutex_unlock(&(ob)->type->used_lock);	\
+} while (/*CONSTCOND*/ 0)
 
 struct media_art	*media_get_art(char *, struct object *);
 struct media_audio	*media_get_audio(char *, struct object *);

@@ -1,4 +1,4 @@
-/*	$Csoft: media.c,v 1.5 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: media.c,v 1.6 2002/11/28 07:35:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -42,13 +42,24 @@ enum {
 	NSPRITES_GROW = 2
 };
 
-static LIST_HEAD(, media_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
+/* XXX use a hash table or a tree. */
+static LIST_HEAD(, media_art) artsh = LIST_HEAD_INITIALIZER(&artsh);
 static LIST_HEAD(, media_audio) audiosh = LIST_HEAD_INITIALIZER(&audiosh);
+
 static pthread_mutex_t media_lock = PTHREAD_MUTEX_INITIALIZER;
-static SDL_TimerID gctimer;
+static SDL_TimerID media_tick;
 
 extern int mapediting;
 
+#ifdef DEBUG
+#define DEBUG_GC	0x01
+#define DEBUG_LOADING	0x02
+
+int	media_debug = DEBUG_GC|DEBUG_LOADING;
+#define engine_debug	media_debug;
+#endif
+
+/* Break a sprite into tiles. */
 void
 media_break_sprite(struct media_art *art, SDL_Surface *sprite)
 {
@@ -68,6 +79,7 @@ media_break_sprite(struct media_art *art, SDL_Surface *sprite)
 		for (x = 0, art->mx = 0; x < sprite->w; x += TILEW, art->mx++) {
 			SDL_Surface *s;
 
+			/* Allocate a surface for the fragment. */
 			s = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
 			    TILEW, TILEH, 32,
 			    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
@@ -76,6 +88,7 @@ media_break_sprite(struct media_art *art, SDL_Surface *sprite)
 				    SDL_GetError());
 			}
 
+			/* Copy the frament as is. */
 			SDL_SetAlpha(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
@@ -84,9 +97,10 @@ media_break_sprite(struct media_art *art, SDL_Surface *sprite)
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
 
+			/* Add a reference to the tile map for map edition. */
 			if (mapediting) {
 				struct node *n;
-			
+
 				if (art->mx > m->mapw) {	/* XXX pref */
 					art->mx = 0;
 				}
@@ -98,6 +112,7 @@ media_break_sprite(struct media_art *art, SDL_Surface *sprite)
 			}
 		}
 	}
+	media_add_sprite(art, sprite, MAPREF_SAVE|MAPREF_SPRITE, 0);
 	SDL_FreeSurface(sprite);
 }
 
@@ -119,6 +134,7 @@ media_add_sprite(struct media_art *art, SDL_Surface *sprite, Uint32 mflags,
 	}
 	art->sprites[art->nsprites++] = sprite;
 
+	/* Insert into the tile map for map edition purposes. */
 	if (map_tiles && mapediting) { 
 		struct node *n;
 
@@ -133,83 +149,86 @@ media_add_sprite(struct media_art *art, SDL_Surface *sprite, Uint32 mflags,
 	}
 }
 
-
-/* Load images into the media pool. */
+/* Load artwork into the media pool. */
 struct media_art *
 media_get_art(char *media, struct object *ob)
 {
-	struct media_art *art = NULL, *eart;
+	struct media_art *art;
+	struct fobj *fob;
+	char *obpath;
+	Uint32 i;
 
 	pthread_mutex_lock(&media_lock);
-	LIST_FOREACH(eart, &artsh, arts) {
-		if (strcmp(eart->name, media) == 0) {
-			art = eart;	/* Already in pool */
+
+	/* XXX use a hash table or a tree. */
+	LIST_FOREACH(art, &artsh, arts) {
+		if (strcmp(art->name, media) == 0) {
+			/* Already loaded */
+			pthread_mutex_unlock(&media_lock);
+			return (art);
 		}
 	}
 
-	if (art == NULL) {
-		struct fobj *fob;
-		char *obpath;
-		Uint32 i;
-	
-		obpath = object_path(media, "fob");
-		if (obpath == NULL) {
-			if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
-				ob->flags &= ~(OBJECT_ART);
-				goto done;
-			} else {
-				fatal("%s: %s\n", media, error_get());
-			}
+	/* Load the data file. */
+	obpath = object_path(media, "fob");
+	if (obpath == NULL) {
+		if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
+			ob->flags &= ~(OBJECT_ART);
+			pthread_mutex_unlock(&media_lock);
+			return (NULL);
+		} else {
+			fatal("%s: %s\n", media, error_get());
 		}
+	}
 
-		art = emalloc(sizeof(struct media_art));
-		art->name = strdup(media);
-		art->sprites = NULL;
-		art->nsprites = 0;
-		art->maxsprites = 0;
-		art->anims = NULL;
-		art->nanims = 0;
-		art->maxanims = 0;
-		art->used = 1;
-		art->map = NULL;
-		art->mx = -1;
-		art->my = 0;
-		art->pobj = ob;		/* XXX */
-		art->cursprite = 0;
-		art->curanim = 0;
-		art->curflags = 0;
-		pthread_mutex_init(&art->used_lock, NULL);
+	art = emalloc(sizeof(struct media_art));
+	art->name = strdup(media);
+	art->sprites = NULL;
+	art->nsprites = 0;
+	art->maxsprites = 0;
+	art->anims = NULL;
+	art->nanims = 0;
+	art->maxanims = 0;
+	art->used = 1;
+	art->map = NULL;
+	art->mx = -1;
+	art->my = 0;
+	art->pobj = ob;		/* XXX */
+	art->cursprite = 0;
+	art->curanim = 0;
+	art->curflags = 0;
+	pthread_mutex_init(&art->used_lock, NULL);
 
-		if (mapediting) {
-			char s[FILENAME_MAX];
+	/* Create a tile map for map edition purposes. */
+	if (mapediting) {
+		char s[FILENAME_MAX];
 
-			art->map = emalloc(sizeof(struct map));
-			sprintf(s, "t-%s", media);
-			map_init(art->map, s, NULL, 0);
-			map_allocnodes(art->map, 1, 1);
-		}
+		art->map = emalloc(sizeof(struct map));
+		sprintf(s, "t-%s", media);
+		map_init(art->map, s, NULL, 0);
+		map_allocnodes(art->map, 1, 1);
+	}
 
-		fob = fobj_load(obpath);
-		for (i = 0; i < fob->head.nobjs; i++) {
-			if (xcf_check(fob->fd, fob->offs[i]) == 0) {
-				int rv;
+	/* Load images in XCF format. */
+	fob = fobj_load(obpath);
+	for (i = 0; i < fob->head.nobjs; i++) {
+		if (xcf_check(fob->fd, fob->offs[i]) == 0) {
+			int rv;
 				
-				rv = xcf_load(fob->fd, (off_t)fob->offs[i],
-				    art);
-				if (rv != 0) {
-					fatal("xcf_load: %s\n", error_get());
-				}
-			} else {
-				dprintf("not a xcf in slot %d\n", i);
+			rv = xcf_load(fob->fd, (off_t)fob->offs[i], art);
+			if (rv != 0) {
+				fatal("xcf_load: %s\n", error_get());
 			}
+		} else {
+			debug(DEBUG_LOADING, "not a xcf in slot %d\n", i);
 		}
-		fobj_free(fob);
-		
-		LIST_INSERT_HEAD(&artsh, art, arts);
 	}
-done:
-	pthread_mutex_unlock(&media_lock);
+	fobj_free(fob);
 
+	/* Cache this image. */
+	LIST_INSERT_HEAD(&artsh, art, arts);
+
+	pthread_mutex_unlock(&media_lock);
 	return (art);
 }
 
@@ -217,48 +236,52 @@ done:
 struct media_audio *
 media_get_audio(char *media, struct object *ob)
 {
-	struct media_audio *audio = NULL, *eaudio;
+	struct media_audio *audio;
+	struct fobj *fob;
+	Uint32 i;
+	char *obpath;
 
 	pthread_mutex_lock(&media_lock);
 
-	LIST_FOREACH(eaudio, &audiosh, audios) {
-		if (strcmp(eaudio->name, media) == 0) {
-			audio = eaudio;	/* Already in pool */
+	/* XXX use a hash table or a tree. */
+	LIST_FOREACH(audio, &audiosh, audios) {
+		if (strcmp(audio->name, media) == 0) {
+			/* Already loaded */
+			pthread_mutex_unlock(&media_lock);
+			return (audio);
 		}
 	}
 
-	if (audio == NULL) {
-		struct fobj *fob;
-		Uint32 i;
-		char *obpath;
+	audio = emalloc(sizeof(struct media_audio));
+	audio->name = strdup(media);
+	/* XXX todo */
+	audio->samples = NULL;
+	audio->nsamples = 0;
+	audio->maxsamples = 0;
+	audio->used = 0;
 
-		audio = emalloc(sizeof(struct media_audio));
-		audio->name = strdup(media);
+	/* See if the data file exists. */
+	obpath = object_path(media, "fob");
+	if (obpath == NULL) {
+		if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
+			ob->flags &= ~(OBJECT_AUDIO);
+			pthread_mutex_unlock(&media_lock);
+			return (NULL);
+		} else {
+			fatal("%s: %s\n", media, error_get());
+		}
+	}
+
+	/* Load samples in ? format. */
+	fob = fobj_load(obpath);
+	for (i = 0; i < fob->head.nobjs; i++) {
 		/* XXX todo */
-		audio->samples = NULL;
-		audio->nsamples = 0;
-		audio->maxsamples = 0;
-		audio->used = 0;
-
-		obpath = object_path(media, "fob");
-		if (obpath == NULL) {
-			if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
-				ob->flags &= ~(OBJECT_AUDIO);
-				goto done;
-			} else {
-				fatal("%s: %s\n", media, error_get());
-			}
-		}
-
-		fob = fobj_load(obpath);
-		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX todo */
-			/* ... */
-		}
-		fobj_free(fob);
-		
-		LIST_INSERT_HEAD(&audiosh, audio, audios);
 	}
-done:
+	fobj_free(fob);
+
+	/* Cache the sample. */
+	LIST_INSERT_HEAD(&audiosh, audio, audios);
+
 	pthread_mutex_unlock(&media_lock);
 	return (audio);
 }
@@ -280,18 +303,18 @@ media_start_gc(Uint32 ival, void *p)
 			int i;
 
 			for (i = 0; i < art->nsprites; i++) {
-				free(art->sprites[i]);
+				/* Free the static surfaces. */
+				SDL_FreeSurface(art->sprites[i]);
 			}
 			for (i = 0; i < art->nanims; i++) {
-				anim_destroy(art->anims[i]);
+				/* Free the animations. */
+				object_destroy(art->anims[i]);
 			}
-#if 0
-			if (art->map != NULL) {
-				map_destroy(art->map);
-				free(art->map);
+			if (mapediting && art->map != NULL) {
+				/* Free the tile map. */
+				object_destroy(art->map);
 			}
-#endif
-			dprintf("freed: %s (%d sprites, %d anims)\n",
+			debug(DEBUG_GC, "freed: %s (%d sprites, %d anims)\n",
 			    art->name, art->nsprites, art->nanims);
 
 			free(art->name);
@@ -302,8 +325,7 @@ media_start_gc(Uint32 ival, void *p)
 	/* Audio pool */
 	LIST_FOREACH(audio, &audiosh, audios) {
 		if (audio->used < 1) {
-			/* gc */
-			dprintf("gc audio\n");
+			/* XXX todo */
 		}
 	}
 
@@ -314,13 +336,13 @@ media_start_gc(Uint32 ival, void *p)
 void
 media_init_gc(void)
 {
-	gctimer = SDL_AddTimer(1000, media_start_gc, NULL);
+	media_tick = SDL_AddTimer(1000, media_start_gc, NULL);
 }
 
 void
 media_destroy_gc(void)
 {
-	SDL_RemoveTimer(gctimer);
+	SDL_RemoveTimer(media_tick);
 }
 
 #ifdef DEBUG
