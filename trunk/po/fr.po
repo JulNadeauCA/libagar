@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.23 2003/11/20 04:44:02 vedge Exp $
+# $Csoft: fr.po,v 1.24 2003/12/05 01:26:34 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-11-19 23:53-0400\n"
+"POT-Creation-Date: 2003-12-09 19:05-0400\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
@@ -557,6 +557,9 @@ msgstr "Renommer"
 msgid "Pop"
 msgstr "Supprimer"
 
+msgid "Destructive Pop"
+msgstr ""
+
 msgid "Edit"
 msgstr "Éditer"
 
@@ -631,14 +634,23 @@ msgstr "Détruire"
 msgid "The zoom is out of range."
 msgstr "La fréquence de rafraîchissement est hors limite."
 
-msgid "All"
-msgstr "Tout"
-
-msgid "Highest"
-msgstr "Plus haut"
-
 msgid "Eraser"
 msgstr "Gomme à effacer"
+
+msgid "Remove the highest node reference."
+msgstr ""
+
+msgid "Color Inversion"
+msgstr "Inversion de couleur"
+
+msgid "Invert the color of a tile."
+msgstr "Inverser la couleur d'une tuile."
+
+msgid "Clear/Fill"
+msgstr "Effacement/Remplissage"
+
+msgid "Clear or fill the whole layer/selection."
+msgstr "Effacer ou remplir la sélection ou le calque entier."
 
 msgid "Pattern fill"
 msgstr "Motif"
@@ -646,8 +658,14 @@ msgstr "Motif"
 msgid "Clear"
 msgstr "Effacer"
 
-msgid "Fill"
-msgstr "Remplissage"
+msgid "The copy/paste buffer is empty."
+msgstr "Le tampon de copie est vide!"
+
+msgid "Flip Tile"
+msgstr "Retourner Tuile"
+
+msgid "Apply a flip/mirror transformation on a tile."
+msgstr "Retourner une tuile horizontalement ou verticalement."
 
 msgid "Horizontal"
 msgstr "Horizontal"
@@ -655,26 +673,17 @@ msgstr "Horizontal"
 msgid "Vertical"
 msgstr "Vertical"
 
-msgid "Flip"
-msgstr "Retourner"
+msgid "Multi"
+msgstr "Multiple"
 
-msgid "No map is visible."
-msgstr "Aucune carte n'est visible."
-
-msgid "There is no visible map."
-msgstr "Aucune carte n'est présentement visible."
-
-msgid "Magnifier"
-msgstr "Loupe"
-
-msgid "1:1 zoom"
-msgstr "Zoom 1:1"
-
-msgid "Zoom %: "
-msgstr "Zoom %: "
+msgid "Multi (individual)"
+msgstr "Multiple (individuel)"
 
 msgid "Merge tool"
 msgstr "Fusion"
+
+msgid "Apply patterns, interpolating edge tiles."
+msgstr "Appliquer des motifs avec rebords."
 
 msgid "Load set"
 msgstr "Charger"
@@ -689,8 +698,72 @@ msgstr "Aucun nom de pinceau n'a été donné."
 msgid "A `%s' brush exists."
 msgstr "Un pinceau du nom de «%s» existe."
 
-msgid "Node props"
-msgstr "Propriétés de noeud"
+msgid "Magnifier"
+msgstr "Loupe"
+
+msgid "Zoom in and out specific areas of the map."
+msgstr "Zoom avant et arrière sur une carte."
+
+msgid "There is no visible map."
+msgstr "Aucune carte n'est présentement visible."
+
+msgid "1:1 zoom"
+msgstr "Zoom 1:1"
+
+#, c-format
+msgid "Zoom %%: "
+msgstr "Zoom %%: "
+
+msgid "Stamp"
+msgstr "Étampe"
+
+msgid "Insert the contents of the copy/paste buffer."
+msgstr "Insérer le contenu du tampon de copie."
+
+msgid "Insert"
+msgstr "Insérer"
+
+msgid "Shift tool"
+msgstr "Outil déplacement"
+
+msgid "Displace a tile with the mouse."
+msgstr "Déplacer une tuile à l'aide de la souris."
+
+msgid "Highest"
+msgstr "Plus haut"
+
+msgid "All"
+msgstr "Tout"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Position or reposition objects on maps."
+msgstr "Positionnement et repositionnement d'objets sur carte."
+
+msgid "Submap: "
+msgstr "Sous-map: "
+
+msgid "Input device: "
+msgstr "Pilotes d'entrée: "
+
+msgid "Speed: "
+msgstr "Vitesse: "
+
+msgid "Center view around"
+msgstr "Centrer la vue"
+
+msgid "Soft motion"
+msgstr "Déplacement incrémental"
+
+msgid "Pass through"
+msgstr "Passage au travers"
+
+msgid "Property editor"
+msgstr "Éditeur de propriétés"
+
+msgid "Alter the properties of node references."
+msgstr "Changer les propriétés des références de noeuds."
 
 msgid "Block"
 msgstr "Bloquer"
@@ -716,6 +789,12 @@ msgstr "Rapide"
 msgid "Origin"
 msgstr "Origine"
 
+msgid "Selection"
+msgstr "Sélection"
+
+msgid "Select a rectangle of nodes."
+msgstr "Sélectionner une zone rectangulaire sur la carte."
+
 msgid "There is no selection to copy."
 msgstr "Il n'y a aucune sélection a copier."
 
@@ -728,38 +807,11 @@ msgstr "Il n'y a aucune sélection à supprimer."
 msgid "There is no selection to cut."
 msgstr "Il n'y a aucune sélection à couper."
 
-msgid "Shift"
-msgstr "Déplacement"
+msgid "Resize tool"
+msgstr "Redimensionnement"
 
-msgid "Multi"
-msgstr "Multiple"
-
-msgid "Insert"
-msgstr "Insérer"
-
-msgid "Stamp"
-msgstr "Étampe"
-
-msgid "Position"
-msgstr "Position"
-
-msgid "Submap: "
-msgstr "Sous-map: "
-
-msgid "Input device: "
-msgstr "Pilotes d'entrée: "
-
-msgid "Speed: "
-msgstr "Vitesse: "
-
-msgid "Center view around"
-msgstr "Centrer la vue"
-
-msgid "Soft motion"
-msgstr "Déplacement incrémental"
-
-msgid "Pass through"
-msgstr "Passage au travers"
+msgid "Resize a map's node array."
+msgstr "Effectuer un redimensionnement de la carte."
 
 msgid "A JPEG error has occured."
 msgstr "Une erreur JPEG s'est produite."
@@ -923,6 +975,9 @@ msgstr "+"
 
 msgid "-"
 msgstr "-"
+
+msgid "Ångstroms"
+msgstr ""
 
 msgid "Microns"
 msgstr "Microns"
@@ -1356,6 +1411,78 @@ msgstr "Kilofarads"
 msgid "Megafarads"
 msgstr "Mégafarads"
 
+msgid "Microhenries"
+msgstr "Microhenries"
+
+msgid "Millihenries"
+msgstr "Millihenries"
+
+msgid "Henries"
+msgstr "Henries"
+
+msgid "Kilohenries"
+msgstr "Kilohenries"
+
+msgid "Microhertz"
+msgstr "Microhertz"
+
+msgid "Millihertz"
+msgstr "Millihertz"
+
+msgid "Hertz"
+msgstr "Hertz"
+
+msgid "Kilohertz"
+msgstr "Kilohertz"
+
+msgid "Megahertz"
+msgstr "Mégahertz"
+
+msgid "Gigahertz"
+msgstr "Gigahertz"
+
+msgid "Pascals"
+msgstr "Pascals"
+
+msgid "Hectopascals"
+msgstr "Hectopascals"
+
+msgid "Millibars"
+msgstr "Millibars"
+
+msgid "Kilopascals"
+msgstr "Kilopascals"
+
+msgid "Bars"
+msgstr "Bars"
+
+msgid "Kg-force per square meters"
+msgstr "Force-Kg par mètres carrés"
+
+msgid "Centimeters of water"
+msgstr "Centimètres d'eau"
+
+msgid "Inches of water"
+msgstr "Pouces d'eau"
+
+msgid "Centimeters of mercury"
+msgstr "Centimètres de mercure"
+
+msgid "Feet of water"
+msgstr "Pieds d'eau"
+
+msgid "Inches of mercury"
+msgstr "Pouces de mercure"
+
+msgid "Meters of water"
+msgstr "Mètres d'eau"
+
+msgid "Atmospheres"
+msgstr "Atmosphères"
+
+msgid "Kips per square inch"
+msgstr "Kips par pouces carrés"
+
 msgid "Object"
 msgstr "Objet"
 
@@ -1516,7 +1643,7 @@ msgid "Resistance Calculation"
 msgstr "Calcul de Résistance"
 
 msgid "Resistance: "
-msgstr "Résistance"
+msgstr "Résistance: "
 
 msgid "Current Calculation"
 msgstr "Calcul de Courant"
@@ -1535,6 +1662,15 @@ msgstr "Sommet: "
 
 msgid "Average: "
 msgstr "Moyenne: "
+
+msgid "Waveform Combination"
+msgstr "Combinaison de formes d'onde"
+
+msgid "Waveform 1"
+msgstr "Forme d'onde 1"
+
+msgid "Amplitude"
+msgstr "Amplitude"
 
 msgid "Capacitance Approximation"
 msgstr "Approximation de Capacitance"
@@ -1622,6 +1758,54 @@ msgstr "Épaisseur: "
 
 msgid "Temperature: "
 msgstr "Température: "
+
+msgid "Length Equivalence"
+msgstr "Équivalence de Longueur"
+
+msgid "Length: "
+msgstr "Longueur: "
+
+msgid "Weight Equivalence"
+msgstr "Équivalence de Poids"
+
+msgid "Weight: "
+msgstr "Poids: "
+
+msgid "Impedance"
+msgstr "Impédance"
+
+msgid "Capacitive reactance: "
+msgstr "Réactance capacitive: "
+
+msgid "Inductive reactance: "
+msgstr "Réactance inductive: "
+
+msgid "Impedance: "
+msgstr "Impédance: "
+
+msgid "Frequency: "
+msgstr "Fréquence: "
+
+msgid "Capacitance: "
+msgstr "Capacitance: "
+
+msgid "Inductance: "
+msgstr "Inductance: "
+
+msgid "Pressure Equivalence"
+msgstr "Équivalence de Pression"
+
+msgid "Pressure: "
+msgstr "Pression: "
+
+#~ msgid "Fill"
+#~ msgstr "Remplissage"
+
+#~ msgid "No map is visible."
+#~ msgstr "Aucune carte n'est visible."
+
+#~ msgid "Node props"
+#~ msgstr "Propriétés de noeud"
 
 #~ msgid "Name: %s (%s)"
 #~ msgstr "Nom: «%s» (%s)"
