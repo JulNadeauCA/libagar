@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.17 2004/01/03 04:25:11 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.1 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -62,7 +62,9 @@ static const char *mement_names[] = {
 	"den",
 	"text",
 	"typesw",
-	"input"
+	"input",
+	"cad",
+	"eda"
 };
 
 static void
