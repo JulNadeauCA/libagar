@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.39 2003/06/06 02:44:04 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.40 2003/06/13 02:48:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -67,7 +67,6 @@ monitor_init(struct monitor *mon, const char *name)
 #if defined(DEBUG) && defined(THREADS) && defined(HAVE_JPEG)
 		{ MONITOR_SCREENSHOT, "Screenshot", screenshot_window },
 #endif
-		{ MONITOR_OBJECT_BROWSER, "Objects", object_browser_window },
 		{ MONITOR_WIDGET_BROWSER, "Widgets", widget_browser_window },
 		{ MONITOR_VIEW_PARAMS, "View params", view_params_window }
 	};
