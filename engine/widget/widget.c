@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.55 2003/05/22 05:45:46 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.56 2003/05/24 07:36:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <config/floating_point.h>
 #include <engine/compat/snprintf.h>
+#include <engine/compat/strlcpy.h>
 
 #include <engine/engine.h>
 #include <engine/view.h>
@@ -40,7 +41,6 @@
 
 #ifdef DEBUG
 #define DEBUG_BINDINGS		0x01
-#define DEBUG_BINDING_LOOKUPS	0x02
 
 int	widget_debug = 0;
 #define engine_debug widget_debug
@@ -62,7 +62,7 @@ widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 	object_init(wid, "widget", widname, wops);
 	object_load_art(wid, name, 1);
 
-	wid->type = Strdup(name);
+	strlcpy(wid->type, name, sizeof(wid->type));
 	wid->flags = 0;
 	wid->win = NULL;
 	wid->x = 0;
@@ -77,10 +77,7 @@ widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 	pthread_mutex_init(&wid->bindings_lock, NULL);
 }
 
-/*
- * Associate a widget with a parent region.
- * The parent region's window must be locked.
- */
+/* Associate a widget with a parent region. XXX */
 void
 widget_set_parent(void *child, void *parent)
 {
@@ -94,10 +91,7 @@ widget_set_parent(void *child, void *parent)
 	wid->win = reg->win;
 }
 
-/*
- * Bind an arbitrary value to a widget.
- * The data pointed to must remain consistent as long as the widget exists.
- */
+/* Bind a variable to a widget. */
 struct widget_binding *
 widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 {
@@ -105,17 +99,23 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	struct widget_binding *binding;
 	pthread_mutex_t *mu = NULL;
 	void *p1, *p2 = NULL;
+	size_t size = 0;
 	va_list ap;
 
 	va_start(ap, type);
 	switch (type) {
 	case WIDGET_PROP:
-		p1 = va_arg(ap, void *);
-		p2 = va_arg(ap, char *);
+		p1 = va_arg(ap, void *);		/* Object */
+		p2 = va_arg(ap, char *);		/* Property name */
+		break;
+	case WIDGET_STRING:
+		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
+		p1 = va_arg(ap, void *);		/* Buffer */
+		size = va_arg(ap, size_t);		/* Size of buffer */
 		break;
 	default:
-		mu = va_arg(ap, pthread_mutex_t *);
-		p1 = va_arg(ap, void *);
+		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
+		p1 = va_arg(ap, void *);		/* Data */
 		break;
 	}
 	va_end(ap);
@@ -131,6 +131,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 			binding->type = type;
 			binding->p1 = p1;
 			binding->p2 = p2;
+			binding->size = size;
 			binding->mutex = mu;
 
 			debug_n(DEBUG_BINDINGS, " -> %d(%p,%p,%p)\n",
@@ -147,6 +148,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	binding->name = Strdup(name);
 	binding->p1 = p1;
 	binding->p2 = p2;
+	binding->size = size;
 	binding->mutex = mu;
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
@@ -158,7 +160,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	return (binding);
 }
 
-int
+__inline__ int
 widget_get_int(void *wid, const char *name)
 {
 	int *i;
@@ -168,7 +170,7 @@ widget_get_int(void *wid, const char *name)
 	return (*i);
 }
 
-Uint8
+__inline__ Uint8
 widget_get_uint8(void *wid, const char *name)
 {
 	Uint8 *i;
@@ -177,7 +179,7 @@ widget_get_uint8(void *wid, const char *name)
 		fatal("%s", error_get());
 	return (*i);
 }
-Sint8
+__inline__ Sint8
 widget_get_sint8(void *wid, const char *name)
 {
 	Sint8 *i;
@@ -187,7 +189,7 @@ widget_get_sint8(void *wid, const char *name)
 	return (*i);
 }
 
-Uint16
+__inline__ Uint16
 widget_get_uint16(void *wid, const char *name)
 {
 	Uint16 *i;
@@ -196,7 +198,7 @@ widget_get_uint16(void *wid, const char *name)
 		fatal("%s", error_get());
 	return (*i);
 }
-Sint16
+__inline__ Sint16
 widget_get_sint16(void *wid, const char *name)
 {
 	Sint16 *i;
@@ -206,7 +208,7 @@ widget_get_sint16(void *wid, const char *name)
 	return (*i);
 }
 
-Uint32
+__inline__ Uint32
 widget_get_uint32(void *wid, const char *name)
 {
 	Uint32 *i;
@@ -215,7 +217,7 @@ widget_get_uint32(void *wid, const char *name)
 		fatal("%s", error_get());
 	return (*i);
 }
-Sint32
+__inline__ Sint32
 widget_get_sint32(void *wid, const char *name)
 {
 	Sint32 *i;
@@ -226,7 +228,7 @@ widget_get_sint32(void *wid, const char *name)
 }
 
 #ifdef FLOATING_POINT
-float
+__inline__ float
 widget_get_float(void *wid, const char *name)
 {
 	float *f;
@@ -236,7 +238,7 @@ widget_get_float(void *wid, const char *name)
 	return (*f);
 }
 
-double
+__inline__ double
 widget_get_double(void *wid, const char *name)
 {
 	double *d;
@@ -247,17 +249,34 @@ widget_get_double(void *wid, const char *name)
 }
 #endif /* FLOATING_POINT */
 
-char *
+__inline__ char *
 widget_get_string(void *wid, const char *name)
 {
-	char *s;
+	struct widget_binding *binding;
+	char *s, *sd;
 
-	if (widget_binding_get(wid, name, &s) == NULL)
+	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
 		fatal("%s", error_get());
+	sd = Strdup(s);
+	widget_binding_unlock(binding);
 	return (s);
 }
 
-void *
+__inline__ size_t
+widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
+{
+	struct widget_binding *binding;
+	char *s;
+	size_t rv;
+
+	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
+		fatal("%s", error_get());
+	rv = strlcpy(dst, s, dst_size);
+	widget_binding_unlock(binding);
+	return (rv);
+}
+
+__inline__ void *
 widget_get_pointer(void *wid, const char *name)
 {
 	void *p;
@@ -267,7 +286,7 @@ widget_get_pointer(void *wid, const char *name)
 	return (p);
 }
 
-void
+__inline__ void
 widget_set_int(void *wid, const char *name, int ni)
 {
 	struct widget_binding *binding;
@@ -279,7 +298,7 @@ widget_set_int(void *wid, const char *name, int ni)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_uint8(void *wid, const char *name, Uint8 ni)
 {
 	struct widget_binding *binding;
@@ -291,7 +310,7 @@ widget_set_uint8(void *wid, const char *name, Uint8 ni)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_sint8(void *wid, const char *name, Sint8 ni)
 {
 	struct widget_binding *binding;
@@ -303,7 +322,7 @@ widget_set_sint8(void *wid, const char *name, Sint8 ni)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_uint16(void *wid, const char *name, Uint16 ni)
 {
 	struct widget_binding *binding;
@@ -315,7 +334,7 @@ widget_set_uint16(void *wid, const char *name, Uint16 ni)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_sint16(void *wid, const char *name, Sint16 ni)
 {
 	struct widget_binding *binding;
@@ -327,7 +346,7 @@ widget_set_sint16(void *wid, const char *name, Sint16 ni)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_uint32(void *wid, const char *name, Uint32 ni)
 {
 	struct widget_binding *binding;
@@ -339,7 +358,7 @@ widget_set_uint32(void *wid, const char *name, Uint32 ni)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_sint32(void *wid, const char *name, Sint32 ni)
 {
 	struct widget_binding *binding;
@@ -352,7 +371,7 @@ widget_set_sint32(void *wid, const char *name, Sint32 ni)
 }
 
 #ifdef FLOATING_POINT
-void
+__inline__ void
 widget_set_float(void *wid, const char *name, float nf)
 {
 	struct widget_binding *binding;
@@ -364,7 +383,7 @@ widget_set_float(void *wid, const char *name, float nf)
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_double(void *wid, const char *name, double nd)
 {
 	struct widget_binding *binding;
@@ -377,22 +396,19 @@ widget_set_double(void *wid, const char *name, double nd)
 }
 #endif /* FLOATING_POINT */
 
-void
+__inline__ void
 widget_set_string(void *wid, const char *name, char *ns)
 {
 	struct widget_binding *binding;
-	char **s;
+	char *s;
 
 	if ((binding = widget_binding_get_locked(wid, name, &s)) == NULL)
 		fatal("%s", error_get());
-
-	/* XXX realloc */
-	free(*s);
-	*s = Strdup(ns);
+	strlcpy(s, ns, binding->size);
 	widget_binding_unlock(binding);
 }
 
-void
+__inline__ void
 widget_set_pointer(void *wid, const char *name, void *np)
 {
 	struct widget_binding *binding;
@@ -416,10 +432,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 	struct widget_binding *binding;
 	struct prop *prop;
 
-	debug(DEBUG_BINDING_LOOKUPS, "look up `%s' in %s, return in %p%s.\n",
-	    name, OBJECT(wid)->name, res,
-	    return_locked ? ", return locked" : "");
-
 	pthread_mutex_lock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) == 0) {
@@ -429,79 +441,44 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 			case WIDGET_BOOL:
 			case WIDGET_INT:
 				*(int **)res = (int *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\t%s %s = %d\n",
-				    (binding->type == WIDGET_BOOL) ?
-				    "bool" : "int", name, *(int *)binding->p1);
 				break;
 			case WIDGET_UINT8:
 				*(Uint8 **)res = (Uint8 *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tUint8 %s = %d\n",
-				    name, *(Uint8 *)binding->p1);
 				break;
 			case WIDGET_SINT8:
 				*(Sint8 **)res = (Sint8 *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tSint8 %s = %d\n",
-				    name, *(Sint8 *)binding->p1);
 				break;
 			case WIDGET_UINT16:
 				*(Uint16 **)res = (Uint16 *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tUint16 %s = %d\n",
-				    name, *(Uint16 *)binding->p1);
 				break;
 			case WIDGET_SINT16:
 				*(Sint16 **)res = (Sint16 *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tSint16 %s = %d\n",
-				    name, *(Sint16 *)binding->p1);
 				break;
 			case WIDGET_UINT32:
 				*(Uint32 **)res = (Uint32 *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tUint32 %s = %d\n",
-				    name, *(Uint32 *)binding->p1);
 				break;
 			case WIDGET_SINT32:
 				*(Sint32 **)res = (Sint32 *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tSint32 %s = %d\n",
-				    name, *(Sint32 *)binding->p1);
 				break;
 #ifdef FLOATING_POINT
 			case WIDGET_FLOAT:
 				*(float **)res = (float *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tfloat %s = %f\n",
-				    name, *(float *)binding->p1);
 				break;
 			case WIDGET_DOUBLE:
 				*(double **)res = (double *)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tdouble %s = %f\n",
-				    name, *(double *)binding->p1);
 				break;
 #endif
 			case WIDGET_STRING:
 				*(char ***)res = (char **)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tchar *%s = \"%s\"\n",
-				    name, *(char **)binding->p1);
 				break;
 			case WIDGET_POINTER:
 				*(void ***)res = (void **)binding->p1;
-				debug(DEBUG_BINDING_LOOKUPS,
-				    "\tvoid *%s = %p\n",
-				    name, *(void **)binding->p1);
 				break;
 			case WIDGET_PROP:			/* Convert */
 				prop = prop_get(binding->p1,
 				    (char *)binding->p2, PROP_ANY, NULL);
-				if (prop == NULL) {
+				if (prop == NULL)
 					fatal("%s", error_get());
-				}
 
 				switch (prop->type) {
 				case PROP_BOOL:
@@ -569,27 +546,25 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 	return (NULL);
 }
 
-void
+__inline__ void
 widget_binding_lock(struct widget_binding *bind)
 {
-	if (bind->mutex != NULL) {
+	if (bind->mutex != NULL)
 		pthread_mutex_lock(bind->mutex);
-	}
 }
 
-void
+__inline__ void
 widget_binding_unlock(struct widget_binding *bind)
 {
-	if (bind->mutex != NULL) {
+	if (bind->mutex != NULL)
 		pthread_mutex_unlock(bind->mutex);
-	}
 }
 
 /*
  * Generate a prop-modified event after manipulating the property values
  * manually. The property must be locked.
  */
-void
+__inline__ void
 widget_binding_modified(struct widget_binding *bind)
 {
 	if (bind->type == WIDGET_PROP) {
@@ -607,13 +582,13 @@ widget_binding_modified(struct widget_binding *bind)
  * The widget's parent window must be locked, if the widget is attached.
  */
 void
-widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
+widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b)
 {
 	struct widget *wid = p;
 	struct widget_color *col;
 	
 	if (ind > WIDGET_MAX_COLORS)
-		fatal("%d colors > %d", ind, WIDGET_MAX_COLORS);
+		fatal("too many colors");
 	if (ind > wid->ncolors)
 		wid->ncolors++;
 
@@ -631,8 +606,6 @@ widget_destroy(void *p)
 	struct widget *wid = p;
 	struct widget_color *color, *next_color;
 	struct widget_binding *bind, *next_bind;
-
-	free(wid->type);
 
 	/* Free the color scheme */
 	for (color = SLIST_FIRST(&wid->colors);

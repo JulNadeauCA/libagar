@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.27 2003/05/22 06:17:02 vedge Exp $
+.\"	$Csoft: widget.3,v 1.28 2003/05/24 07:36:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,26 +41,8 @@
 Agar widgets are derived from the
 .Nm
 structure.
-Widgets are attached to parent container widgets, and their coordinates and
-geometry are variable.
-.Sh LOCKING POLICIES
-Widget initialization and free routines do not need to be concerned about
-locking.
-.Pp
-In event context, the widgets can assume that their parent window is locked,
-so internal properties of other widgets inside the same window can be
-manipulated (for widgets inside other windows, explicit locking is required).
-.Pp
-The visibility of any window may be altered, and new windows may be attached
-immediately.
-Detach operations on existing windows are deferred until the current event is
-processed.
-.Pp
-.Sh POSITIONMENT
-The effective position and geometry of widgets is managed by the widget
-container (ie.
-.Xr region 3
-or another widget), and is hidden from the widget layer by macros.
+Widgets are attached to parent container widgets, whose role is to manage the
+widget coordinates and geometry.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
@@ -262,15 +244,23 @@ to read and manipulate directly.
 Widget bindings eliminate the need for event handlers for widgets manipulating
 variables of primitive data types.
 For example, the
-.Xr scrollbar
+.Xr scrollbar 3
 widget defines
 .Sq value ,
 .Sq min
 and
 .Sq max
 as
-.Ft int
-bindings.
+.Dv WIDGET_INT
+bindings
+and
+the
+.Xr textbox 3
+widget defines a
+.Sq string
+as a
+.Dv WIDGET_STRING
+binding.
 .Pp
 All widgets provide default bindings, which point to data allocated and
 initialized by the widget itself.
@@ -323,6 +313,10 @@ function is called to override the default bindings.
 .Pp
 .Ft char *
 .Fn widget_get_string "void *widget" "const char *binding"
+.Pp
+.Ft size_t
+.Fn widget_copy_string "void *widget" "const char *binding" "char *dst" \
+                       "size_t dst_size"
 .Pp
 .Ft void *
 .Fn widget_get_pointer "void *widget" "const char *binding"
@@ -380,10 +374,24 @@ The object that holds the property.
 The property identifier.
 .El
 .Pp
+If
+.Fa type
+is
+.Dv WIDGET_STRING ,
+the following arguments are:
+.Bl -tag -width "pthread_mutex_t * " -compact
+.It pthread_mutex_t *
+A lock to acquire when manipulating the data, or NULL
+.It char *
+A pointer to the string.
+.It size_t
+The full size of the string buffer.
+.El
+.Pp
 Otherwise, the following arguments are:
 .Bl -tag -width "pthread_mutex_t * " -compact
 .It pthread_mutex_t *
-A lock to acquire when manipulating the data.
+A lock to acquire when manipulating the data, or NULL.
 .It void *
 A pointer to the data.
 .El
@@ -422,10 +430,31 @@ caller must invoke
 when done manipulating the data.
 .Pp
 The
-.Fa widget_get_TYPE
+.Fn widget_get_TYPE
 and
-.Fa widget_set_TYPE
+.Fn widget_set_TYPE
 variants manipulate the bound values atomically.
+.Fn widget_get_string
+returns a copy of the string, or NULL on failure and
+.Fn widget_copy_string
+copies up to
+.Fa dst_size
+- 1 bytes from the string to
+.Fa dst ,
+NUL-terminating the result.
+.Fn widget_copy_string
+returns the number of bytes that would have been copied if
+.Fa dst_size
+was unlimited.
+.Sh THREAD SAFETY
+In event context, the widgets can assume that their parent window is locked,
+and internal properties of other widgets inside the same window can be
+manipulated (for widgets inside other windows, explicit locking is required).
+.Pp
+The visibility of any window may be altered, and new windows may be attached
+immediately.
+In event context, window detach operations are deferred until processing of
+the current event is complete.
 .Sh EVENTS
 The
 .Nm
