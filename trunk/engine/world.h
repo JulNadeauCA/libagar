@@ -1,13 +1,8 @@
-/*	$Csoft: world.h,v 1.19 2002/06/12 20:40:06 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.20 2002/06/25 17:59:51 vedge Exp $	*/
 /*	Public domain	*/
 
 struct world {
 	struct	object obj;
-
-	/* Read-only while running */
-	char	*datapath;		/* Search path for states */
-	char	*udatadir;		/* User data directory path */
-	char	*sysdatadir;		/* System-wide data directory path */
 
 	/* Read-write, thread-safe */
 	SLIST_HEAD(, object) wobjsh;	/* Game objects */

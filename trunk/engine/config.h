@@ -1,4 +1,4 @@
-/*	$Csoft: config.h,v 1.6 2002/07/16 04:22:50 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.7 2002/08/17 22:17:32 vedge Exp $	*/
 /*	Public domain	*/
 
 struct config {
@@ -15,6 +15,12 @@ struct config {
 #define CONFIG_FONT_CACHE	0x01	/* Cache common glyphs */
 #define CONFIG_FULLSCREEN	0x02	/* Try full-screen mode */
 #define CONFIG_ASYNCBLIT	0x04	/* Asynchronous screen updates */
+
+	struct {
+		char	*data_path;		/* Path to data files */
+		char	*user_data_dir;		/* User data file directory */
+		char	*sys_data_dir;		/* System data directory */
+	} path;
 
 	struct {
 		int	w, h, bpp;

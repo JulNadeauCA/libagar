@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.43 2002/08/23 10:20:43 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.44 2002/08/23 10:33:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,20 +28,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <libfobj/fobj.h>
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/physics.h>
-#include <engine/mapedit/mapedit.h>
+#include "engine.h"
+
+#include "mapedit/mapedit.h"
 
 static const struct object_ops world_ops = {
 	NULL,
@@ -52,45 +47,13 @@ static const struct object_ops world_ops = {
 void
 world_init(struct world *wo, char *name)
 {
-	struct passwd *pwd;
-	struct stat sta;
-	char *pathenv;
-
-	pwd = getpwuid(getuid());
-
-	wo->udatadir = emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
-	sprintf(wo->udatadir, "%s/.%s", pwd->pw_dir, name);
-
-	wo->sysdatadir = emalloc(strlen(SHAREDIR) + strlen(name) + 4);
-	sprintf(wo->sysdatadir, SHAREDIR);
-
-	pathenv = getenv("AGAR_STATE_PATH");
-	if (pathenv != NULL) {
-		wo->datapath = strdup(pathenv);
-	} else {
-		wo->datapath = emalloc(strlen(wo->udatadir) +
-		    strlen(wo->sysdatadir) + 4);
-		sprintf(wo->datapath, "%s:%s", wo->udatadir, wo->sysdatadir);
-	}
-
-	if (stat(wo->sysdatadir, &sta) != 0) {
-		warning("%s: %s\n", wo->sysdatadir, strerror(errno));
-	}
-	if (stat(wo->udatadir, &sta) != 0 &&
-	    mkdir(wo->udatadir, 00700) != 0) {
-		fatal("%s: %s\n", wo->udatadir, strerror(errno));
-	}
-	
 	object_init(&wo->obj, "world", name, NULL, 0, &world_ops);
 	wo->nobjs = 0;
 	SLIST_INIT(&wo->wobjsh);
 	pthread_mutex_init(&wo->lock, NULL);
 }
 
-/*
- * Load state of active objects.
- * World must be locked.
- */
+/* World must be locked. */
 int
 world_load(void *p, int fd)
 {
@@ -111,14 +74,11 @@ world_load(void *p, int fd)
 	return (0);
 }
 
-/*
- * Save the world!
- * World must be locked.
- */
+/* World must be locked. */
 int
 world_save(void *p, int fd)
 {
-	struct world *wo = (struct world *)p;
+	struct world *wo = p;
 	struct object *ob;
 
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
@@ -128,13 +88,12 @@ world_save(void *p, int fd)
 			/* XXX map editor hack */
 			continue;
 		}
-		write_uint32(fd, ob->id);
 		write_string(fd, ob->name);
 		write_string(fd, (ob->desc != NULL) ? ob->desc : "");
 		object_save(ob);
 	}
 
-	printf("%s: saved %d objects\n", OBJECT(wo)->name, wo->nobjs);
+	dprintf("saved %d objects\n", wo->nobjs);
 	return (0);
 }
 
@@ -159,15 +118,11 @@ world_destroy(void *p)
 	}
 	printf(".\n");
 
-	free(wo->datapath);
-	free(wo->udatadir);
-	free(wo->sysdatadir);
-
 	pthread_mutex_unlock(&wo->lock);
 	pthread_mutex_destroy(&wo->lock);
 }
 
-/* Attach an object to the world. */
+/* World must be locked. */
 void
 world_attach(void *parent, void *child)
 {
@@ -180,7 +135,7 @@ world_attach(void *parent, void *child)
 	event_post(ob, "attached", "%p", wo);
 }
 
-/* Detach an object from the world, and free it. */
+/* World must be locked. */
 void
 world_detach(void *parent, void *child)
 {
