@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.146 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.147 2003/04/12 01:34:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -511,7 +511,7 @@ event_dispatch(SDL_Event *ev)
  * element is always a pointer to the parent object.
  */
 struct event *
-event_new(void *p, char *name, void (*handler)(int, union evarg *),
+event_new(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
 	struct object *ob = p;
@@ -584,7 +584,7 @@ event_post_async(void *p)
  *     operation should be queued like it is done in the window system.
  */
 void
-event_post(void *obp, char *name, const char *fmt, ...)
+event_post(void *obp, const char *name, const char *fmt, ...)
 {
 	struct object *ob = obp;
 	struct event *eev, *neev;
@@ -628,7 +628,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 
 /* Forward an event, without modifying the original event structure. */
 void
-event_forward(void *child, char *name, int argc, union evarg *argv)
+event_forward(void *child, const char *name, int argc, union evarg *argv)
 {
 	union evarg nargv[EVENT_MAX_ARGS];
 	struct object *ob = child;
