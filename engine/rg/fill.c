@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.8 2005/02/19 07:21:13 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.9 2005/03/03 10:51:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -57,6 +57,7 @@ const struct feature_ops fill_ops = {
 	NULL,		/* destroy */
 	fill_apply,
 	fill_menu,
+	fill_toolbar,
 	fill_edit
 };
 
@@ -345,3 +346,18 @@ fill_menu(void *p, struct AGMenuItem *mi)
 	menu_action(mi, _("Invert colors"), RG_INVERT_ICON,
 	    invert_colors, "%p", fi);
 }
+
+struct toolbar *
+fill_toolbar(void *p, struct tileview *tv)
+{
+	struct fill *fi = p;
+	struct toolbar *tbar;
+
+	tbar = toolbar_new(tv->tel_box, TOOLBAR_VERT, 1, 0);
+	toolbar_add_button(tbar, 0, ICON(RG_SWAP_ICON), 0, 0,
+	    swap_gradient, "%p", fi);
+	toolbar_add_button(tbar, 0, ICON(RG_INVERT_ICON), 0, 0,
+	    invert_colors, "%p", fi);
+	return (tbar);
+}
+

@@ -1,4 +1,4 @@
-/*	$Csoft: feature.h,v 1.7 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: feature.h,v 1.8 2005/03/03 10:51:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FEATURE_H_
@@ -23,6 +23,7 @@ struct feature_ops {
 	void (*destroy)(void *);
 	void (*apply)(void *, struct tile *, int, int);
 	void (*menu)(void *, struct AGMenuItem *);
+	struct toolbar *(*toolbar)(void *, struct tileview *);
 	struct window *(*edit)(void *, struct tileview *);
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.14 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.15 2005/03/04 13:35:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -6,6 +6,9 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/menu.h>
+#include <engine/widget/toolbar.h>
+#include <engine/widget/box.h>
+
 #include <engine/rg/tileset.h>
 #include <engine/timeout.h>
 
@@ -90,7 +93,7 @@ struct tileview_sketch_tool_ops {
 	void (*mousebuttonup)(void *, struct sketch *, double, double, int);
 	void (*mousemotion)(void *, struct sketch *, double, double, double,
 	    double);
-	void (*mousewheel)(void *, struct sketch *, int);
+	int (*mousewheel)(void *, struct sketch *, int);
 	void (*keydown)(void *, struct sketch *, int, int);
 	void (*keyup)(void *, struct sketch *, int, int);
 };
@@ -129,12 +132,16 @@ struct tileview {
 	int scrolling;
 	int flags;
 #define TILEVIEW_AUTOREGEN	0x01	/* Regenerate the tile periodically */
+#define TILEVIEW_NO_SCROLLING	0x02	/* Disable right click scrolling */
 
 	struct timeout zoom_to;		/* Zoom timeout */
 	struct timeout redraw_to;	/* Auto redraw timeout */
 
 	int edit_mode;
 	enum tileview_state state;
+	struct box *tel_box;		/* Element-specific toolbar container */
+	struct toolbar *tel_tbar;	/* Element-specific toolbar */
+
 	union {
 		struct {
 			struct tile_element *tel;
@@ -224,6 +231,7 @@ __inline__ void	  tileview_set_double(struct tileview_ctrl *, int, double);
 #define tileview_set_uint(tv,nval,v)	tileview_set_int((tv),(nval),(u_int)(v))
 
 void tileview_select_tool(struct tileview *, struct tileview_tool *);
+void tileview_unselect_tool(struct tileview *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.11 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.12 2005/03/04 13:34:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -68,6 +68,7 @@ void		 pixmap_destroy(struct pixmap *);
 int		 pixmap_load(struct pixmap *, struct netbuf *);
 void		 pixmap_save(struct pixmap *, struct netbuf *);
 struct window	*pixmap_edit(struct tileview *, struct tile_element *);
+struct toolbar	*pixmap_toolbar(struct tileview *, struct tile_element *);
 void		 pixmap_update(struct tileview *, struct tile_element *);
 void		 pixmap_scale(struct pixmap *, int, int, int, int);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.h,v 1.1 2005/03/03 10:51:19 vedge Exp $	*/
+/*	$Csoft: sketch.h,v 1.2 2005/03/04 13:35:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCH_H_
@@ -56,6 +56,7 @@ void sketch_redo(struct tileview *, struct tile_element *);
 
 void sketch_open_menu(struct tileview *, int, int);
 void sketch_close_menu(struct tileview *);
+struct toolbar *sketch_toolbar(struct tileview *, struct tile_element *);
 __END_DECLS
 
 #include "close_code.h"
