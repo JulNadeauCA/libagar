@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.55 2003/03/13 08:43:33 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.56 2003/03/13 23:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -176,6 +176,7 @@ label_printf(struct label *label, const char *fmt, ...)
 {
 	va_list args;
 	char *buf;
+	size_t sl;
 
 #ifdef DEBUG
 	if (label->type != LABEL_STATIC)
@@ -186,11 +187,13 @@ label_printf(struct label *label, const char *fmt, ...)
 	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
+	sl = strlen(buf);
+
 	pthread_mutex_lock(&label->text.lock);
 
 	/* Update the string. */
-	label->text.caption = erealloc(label->text.caption, strlen(buf));
-	strlcpy(label->text.caption, buf, sizeof(label->text.caption));
+	label->text.caption = erealloc(label->text.caption, sl);
+	strlcpy(label->text.caption, buf, sl);
 	free(buf);
 
 	/* Update the static surface. */
