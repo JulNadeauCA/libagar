@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.1 2004/09/29 05:49:33 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.2 2004/09/29 08:15:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ submenu_timeout(void *obj, Uint32 ival, void *arg)
 #endif
 	ag_menu_expand(m, item,
 	    WIDGET(mview)->cx + WIDGET(mview)->w,
-	    WIDGET(mview)->cy + item->y - m->vspace);
+	    WIDGET(mview)->cy + item->y);
 
 	return (0);
 }
@@ -112,7 +112,7 @@ mousemotion(int argc, union evarg *argv)
 	for (i = 0; i < pitem->nsubitems; i++) {
 		struct AGMenuItem *subitem = &pitem->subitems[i];
 
-		y += WIDGET_SURFACE(m,subitem->label)->h + mview->vspace;
+		y += m->itemh;
 		if (my < y) {
 			if (mx > WIDGET(mview)->w &&
 			    subitem->nsubitems == 0) {
@@ -148,7 +148,7 @@ mousebuttonup(int argc, union evarg *argv)
 		struct AGMenuItem *subitem = &pitem->subitems[i];
 		SDL_Surface *label = WIDGET_SURFACE(m, subitem->label);
 
-		y += label->h + m->vspace;
+		y += m->itemh;
 		if (my < y) {
 			if (subitem->event != NULL) {
 				event_post(NULL, m, subitem->event->name, NULL);
@@ -235,7 +235,7 @@ ag_menu_view_draw(void *p)
 			    x,
 			    y + m->itemh/2 - WIDGET_SURFACE(mview,0)->h/2 - 1);
 		}
-		y += label->h + mview->vspace;
+		y += m->itemh;
 	}
 }
 
@@ -267,7 +267,7 @@ ag_menu_view_scale(void *p, int w, int h)
 			if (req_w > WIDGET(mview)->w) {
 				WIDGET(mview)->w = req_w;
 			}
-			WIDGET(mview)->h += label->h + mview->vspace;
+			WIDGET(mview)->h += m->itemh;
 		}
 	}
 }
