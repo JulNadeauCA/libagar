@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.133 2004/05/01 12:38:00 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.134 2004/05/02 09:37:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -71,12 +71,13 @@
 pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
 #endif
 
-struct engine_proginfo *proginfo;	/* Game name, copyright, version */
-struct config *config;			/* Global configuration settings */
-struct object *world;			/* The Old Roots of Evil */
-pthread_mutex_t linkage_lock;		/* Protects object linkage */
-struct object engine_icons;		/* Global engine icons */
+struct engine_proginfo *proginfo;
+struct config *config;
+struct object *world;
+pthread_mutex_t linkage_lock;
+struct object engine_icons;
 void (*engine_atexit_func)(void) = NULL;
+extern pthread_mutex_t timeout_lock;
 
 /* Initialize the Agar engine. */
 int
@@ -96,7 +97,6 @@ engine_preinit(struct engine_proginfo *prog, int flags)
 	bindtextdomain("agar", LOCALEDIR);
 	textdomain("agar");
 #endif
-
 	error_init();
 
 #ifdef THREADS
@@ -105,6 +105,7 @@ engine_preinit(struct engine_proginfo *prog, int flags)
 	    PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
 	pthread_mutex_init(&gfxq_lock, &recursive_mutexattr);
+	pthread_mutex_init(&timeout_lock, &recursive_mutexattr);
 #endif
 
 #ifdef HAVE_PROGNAME
@@ -262,6 +263,7 @@ engine_destroy(void)
 	Free(config, M_OBJECT);
 
 	pthread_mutex_destroy(&gfxq_lock);
+	pthread_mutex_destroy(&timeout_lock);
 #if 0
 	pthread_mutex_destroy(&linkage_lock);	/* XXX */
 #endif
