@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.13 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -60,12 +60,12 @@ static const struct widget_ops button_ops = {
 };
 
 struct button *
-button_new(struct region *reg, char *caption, int flags, int w, int h)
+button_new(struct region *reg, char *caption, int flags, int rw, int rh)
 {
 	struct button *button;
 
 	button = emalloc(sizeof(struct button));
-	button_init(button, caption, flags, w, h);
+	button_init(button, caption, flags, rw, rh);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, button);
@@ -75,9 +75,9 @@ button_new(struct region *reg, char *caption, int flags, int w, int h)
 }
 
 void
-button_init(struct button *b, char *caption, int flags, int w, int h)
+button_init(struct button *b, char *caption, int flags, int rw, int rh)
 {
-	widget_init(&b->wid, "button", "widget", &button_ops, w, h);
+	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
 
 	b->caption = strdup(caption);
 	b->flags = flags;

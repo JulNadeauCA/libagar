@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.15 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.16 2002/05/19 15:27:56 vedge Exp $	*/
 
 struct window;
 
@@ -15,12 +15,13 @@ struct widget {
 	struct	 object obj;
 
 	int	 flags;
-#define WIDGET_HIDE		0x01	/* Don't draw widget. */
-#define WIDGET_FOCUS		0x02	/* Catch keys and mouse motion. */
+#define WIDGET_HIDE		0x01	/* Don't draw widget */
+#define WIDGET_FOCUS		0x02	/* Catch keys and mouse motion */
 
 	struct	window *win;		/* Parent window */
-	Sint16	x, y;			/* Coordinates within parent window */
-	Uint16	w, h;			/* Can be defined by draw routine */
+	int	rw, rh;			/* Requested geometry (%) */
+	int	x, y;			/* Allocated coordinates in window */
+	int	w, h;			/* Allocated geometry */
 
 	TAILQ_ENTRY(widget) widgets;	/* Widgets inside region */
 };
@@ -52,8 +53,6 @@ struct widget {
 
 /* Sprites. All widgets share the same art. */
 enum {
-	BUTTON_UP = 0,
-	BUTTON_DOWN,
 	CHECKBOX_UP,
 	CHECKBOX_DOWN
 };
