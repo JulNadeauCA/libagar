@@ -1,4 +1,4 @@
-/*	$Csoft: main.c,v 1.64 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.1 2005/01/27 05:46:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -74,6 +74,8 @@ static char *serv_port = "1173";
 static pthread_t serv_th;
 static int server_inited = 0;
 static int jpeg_quality = 75;
+
+void start_server(int, union evarg *);
 
 static void
 my_exit(void)
