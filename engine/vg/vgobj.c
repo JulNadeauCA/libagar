@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.1 2004/04/11 03:27:45 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.2 2004/04/17 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -207,7 +207,7 @@ struct window *
 vgobj_edit(void *obj)
 {
 	extern const struct tool line_tool, point_tool, origin_tool,
-	    circle_tool;
+	    circle_tool, ellipse_tool;
 	struct vgobj *vgo = obj;
 	struct vg *vg = vgo->vg;
 	struct window *win;
@@ -266,6 +266,7 @@ vgobj_edit(void *obj)
 		mapview_reg_tool(mv, &point_tool, vg);
 		mapview_reg_tool(mv, &line_tool, vg);
 		mapview_reg_tool(mv, &circle_tool, vg);
+		mapview_reg_tool(mv, &ellipse_tool, vg);
 	}
 
 	object_attach(win, statbar);
