@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.80 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.81 2003/07/04 12:30:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -130,7 +130,8 @@ extern SDL_PixelFormat *vfmt;	/* view.c */
 __BEGIN_DECLS
 int		 view_init(enum gfx_engine);
 void		 view_attach(void *);
-void		 view_detach(void *);
+void		 view_detach(struct window *);
+__inline__ void	 view_detach_queued(void);
 void		 view_destroy(void);
 int		 view_set_refresh(int, int);
 struct window	*view_window_exists(const char *);
