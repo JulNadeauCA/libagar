@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.6 2002/05/26 05:59:15 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.7 2002/05/26 06:07:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 #include <engine/queue.h>
 #include <engine/version.h>
 
+#include "primitive.h"
 #include "text.h"
 #include "window.h"
 #include "widget.h"
@@ -78,7 +79,7 @@ textbox_new(struct region *reg, char *label, int flags, int rw)
 }
 
 void
-textbox_init(struct textbox *b, char *label, int flags, int rw)
+textbox_init(struct textbox *tbox, char *label, int flags, int rw)
 {
 	SDL_Surface *s;
 
@@ -86,19 +87,22 @@ textbox_init(struct textbox *b, char *label, int flags, int rw)
 	if (s == NULL) {
 		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
 	}
-	
-	b->xmargin = 4;
-	b->ymargin = 3;
+	tbox->xmargin = 4;
+	tbox->ymargin = 3;
 
-	widget_init(&b->wid, "textbox", "widget", &textbox_ops, rw, 0);
-	WIDGET(b)->h = s->h + b->ymargin*2;
+	widget_init(&tbox->wid, "textbox", "widget", &textbox_ops, rw, -1);
+	WIDGET(tbox)->h = (s->h * 2) + tbox->ymargin;
 
-	b->flags = flags;
-	b->flags |= TEXTBOX_CURSOR;
-	b->text = strdup("");
-	b->label = label != NULL ? strdup(label) : NULL;
-	b->textpos = -1;
-	b->typed = NULL;
+	SDL_FreeSurface(s);
+
+	tbox->flags = flags;
+	tbox->flags |= TEXTBOX_CURSOR;
+	tbox->text = strdup("");
+	tbox->label = label != NULL ? strdup(label) : NULL;
+	tbox->textpos = -1;
+	tbox->textoffs = 0;
+
+	tbox->typed = NULL;
 }
 
 void
@@ -130,60 +134,41 @@ void
 textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
-	int i, j, x, y, tw;
-	int bx, by;
-	Uint32 lcol, rcol, bcol, curscol;
+	int i, cursdrawn, j, x, y, tw;
+	Uint32 curscol;
+	SDL_Surface *box_s;
 
-	if (WIDGET_FOCUSED(tbox)) {
-		lcol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 50, 50, 50);
-		rcol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 200, 200, 200);
-		bcol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 100, 100, 100);
-		curscol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 0, 0, 0);
-	} else {
-		lcol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 200, 200, 200);
-		rcol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 50, 50, 50);
-		bcol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 80, 80, 80);
-		curscol = bcol;
-	}
+	curscol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 0, 0, 0);
 
-	/* Background */
-	SDL_LockSurface(WIDGET_SURFACE(tbox));
-	for (by = 0; by < WIDGET(tbox)->h; by++) {
-		for (bx = 0; bx < WIDGET(tbox)->w; bx++) {
-			if (by < 1)
-				WIDGET_PUT_PIXEL(tbox, bx, by, lcol);
-			else if (bx < 1)
-				WIDGET_PUT_PIXEL(tbox, bx, by, lcol);
-			else if (by >= WIDGET(tbox)->h - 1)
-				WIDGET_PUT_PIXEL(tbox, bx, by, rcol);
-			else if (bx >= WIDGET(tbox)->w - 1)
-				WIDGET_PUT_PIXEL(tbox, bx, by, rcol);
-			else
-				WIDGET_PUT_PIXEL(tbox, bx, by, bcol);
-		}
-	}
-	SDL_UnlockSurface(WIDGET_SURFACE(tbox));
+	box_s = primitive_box(WIDGET(tbox)->w, WIDGET(tbox)->h,
+	    WIDGET_FOCUSED(tbox) ? -1 : 1);
+	WIDGET_DRAW(tbox, box_s, 0, 0);
 
 	tw = strlen(tbox->text);
 	if (tbox->textpos < 0) {
 		tbox->textpos = tw;
 	}
-#if 0
-	dprintf("textpos = %d/%d\n", tbox->textpos, tw);
-#endif
 
-	for (i = 0, x = tbox->xmargin, y = tbox->ymargin; (i < tw + 1); i++) {
-		if (x > (WIDGET(tbox)->w - tbox->xmargin*2)) {
-			/* scroll .. */
-			return;
+	cursdrawn = 0;
+
+	for (i = tbox->textoffs, x = tbox->xmargin, y = tbox->ymargin;
+	    (i < tw+1); i++) {
+		if (x >= WIDGET(tbox)->w) {
+			if (tbox->textpos >= tw-4) {
+				tbox->textoffs++;	/* Scroll */
+				cursdrawn++;
+			}
+			goto after;
 		}
-		if (i == tbox->textpos && tbox->flags & TEXTBOX_CURSOR) {
+		if (i == tbox->textpos && tbox->flags & TEXTBOX_CURSOR &&
+		    WIDGET_FOCUSED(tbox)) {
 			SDL_LockSurface(WIDGET_SURFACE(tbox));
 			for (j = 2; j < WIDGET(tbox)->h - 4; j++) {
 				WIDGET_PUT_PIXEL(tbox, x, y+j, curscol);
 				WIDGET_PUT_PIXEL(tbox, x+1, y+j, curscol);
 			}
 			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
+			cursdrawn++;
 		}
 		if (i < tw && tbox->text[i] != '\0') {
 			SDL_Surface *text_s;
@@ -213,6 +198,10 @@ textbox_draw(void *p)
 				}
 			}
 		}
+	}
+after:
+	if (!cursdrawn) {
+		tbox->textoffs = tbox->textpos;
 	}
 }
 
