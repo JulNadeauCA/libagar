@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.39 2003/04/12 01:35:19 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.40 2003/04/24 07:04:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ input_new(int type, int index)
 	}
 
 	input = Malloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, OBJECT_STATIC, NULL);
+	object_init(&input->obj, "input-device", name, 0, NULL);
 
 	input->type = type;
 	input->index = index;
@@ -100,6 +100,7 @@ input_new(int type, int index)
 	TAILQ_INSERT_HEAD(&inputs, input, inputs);
 	pthread_mutex_unlock(&input_lock);
 
+	/* XXX attach to something else */
 	world_attach(input);
 	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
 	return (input);
