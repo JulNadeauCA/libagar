@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.12 2002/02/05 14:54:46 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.13 2002/02/07 05:14:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define TILESHIFT	5	/* 32x32 */
+#define TILESHIFT	5	/* 32x32 */ 
 
 #include <stdio.h>
 #include <stdlib.h>
