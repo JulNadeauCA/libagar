@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.2 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.3 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -89,10 +89,8 @@ transform_load(int fd, struct transform *trans)
 {
 	int i, found = 0;
 
-	/* Read the transform type. */
+	/* Look for a matching transform. */
 	trans->type = read_uint8(fd);
-
-	/* Look for a matching function. */
 	for (i = 0; i < ntransforms; i++) {
 		if (transforms[i].type == trans->type) {
 			trans->func = transforms[i].func;
@@ -101,7 +99,6 @@ transform_load(int fd, struct transform *trans)
 	}
 	fatal("unknown transform: %d", trans->type);
 found:
-	/* Read the transform arguments. */
 	switch (trans->type) {
 	case TRANSFORM_SCALE:
 		trans->args.scale.w = read_uint16(fd);
@@ -140,10 +137,8 @@ transform_save(void *bufp, struct transform *trans)
 	struct fobj_buf *buf = bufp;
 	Uint8 i;
 
-	/* Save the transform type. */
 	buf_write_uint8(buf, trans->type);
 
-	/* Save the transform arguments. */
 	switch (trans->type) {
 	case TRANSFORM_SCALE:
 		buf_write_uint16(buf, trans->args.scale.w);
