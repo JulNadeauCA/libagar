@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.8 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.9 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -47,6 +47,20 @@ static struct widget_ops box_ops = {
 	box_scale
 };
 
+static struct widget_ops box_ops_visframe = {
+	{
+		NULL,		/* init */
+		NULL,		/* reinit */
+		box_destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	box_draw,
+	box_scale
+};
+
+
 enum {
 	FRAME_COLOR
 };
@@ -65,15 +79,18 @@ box_new(void *parent, enum box_type type, int flags)
 void
 box_init(struct box *bo, enum box_type type, int flags)
 {
-	widget_init(bo, "box", &box_ops, 0);
-	widget_map_color(bo, FRAME_COLOR, "frame", 80, 80, 80, 255);
+	if (flags & BOX_FRAME) {
+		widget_init(bo, "box", &box_ops_visframe, 0);
+		widget_map_color(bo, FRAME_COLOR, "frame", 105, 105, 90, 255);
+	} else {
+		widget_init(bo, "box", &box_ops, 0);
+	}
 
 	bo->type = type;
+	bo->depth = -1;
 
-	if (flags & BOX_WFILL)
-		WIDGET(bo)->flags |= WIDGET_WFILL;
-	if (flags & BOX_HFILL)
-		WIDGET(bo)->flags |= WIDGET_HFILL;
+	if (flags & BOX_WFILL)	WIDGET(bo)->flags |= WIDGET_WFILL;
+	if (flags & BOX_HFILL)	WIDGET(bo)->flags |= WIDGET_HFILL;
 
 	bo->padding = 4;
 	bo->spacing = 2;
@@ -90,15 +107,14 @@ box_destroy(void *p)
 	widget_destroy(box);
 }
 
-#if 0
 void
 box_draw(void *p)
 {
 	struct box *bo = p;
 
-	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, -1, FRAME_COLOR);
+	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, bo->depth,
+	    FRAME_COLOR);
 }
-#endif
 
 void
 box_scale(void *p, int w, int h)
@@ -317,5 +333,19 @@ box_set_spacing(struct box *bo, int spacing)
 {
 	pthread_mutex_lock(&bo->lock);
 	bo->spacing = spacing;
+	pthread_mutex_unlock(&bo->lock);
+}
+
+void
+box_set_color(struct box *bo, Uint8 r, Uint8 g, Uint8 b)
+{
+	WIDGET(bo)->colors[FRAME_COLOR] = SDL_MapRGB(vfmt, r, g, b);
+}
+
+void
+box_set_depth(struct box *bo, int depth)
+{
+	pthread_mutex_lock(&bo->lock);
+	bo->depth = depth;
 	pthread_mutex_unlock(&bo->lock);
 }
