@@ -1,4 +1,4 @@
-.\"	$Csoft: 03.Object.me,v 1.1 2004/01/23 06:27:00 vedge Exp $
+.\"	$Csoft: 03.Object.me,v 1.2 2004/02/17 04:51:38 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -62,29 +62,46 @@ Except in edition mode, these variables should be considered read-only.
 .Bd -fig "Public members of the \fBobject\fP structure"
 .TS
 center allbox tab(:);
-c c cw(4i)
-l l lw(4i).
-Member:Type:Description
+c | c | c | c
+l | l | c | l.
+Member:Type:Protection:Description
 _
-\f(CRtype\fP:String:T{
+\f(CRtype\fP:String:Read-only:T{
 This is an identifier which indicates the type of object.
 For example, this will be set to "map" for map objects and "perso" for
 character objects.
 T}
-\f(CRname\fP:String:T{
+\f(CRname\fP:String:Read-only:T{
 This is the object's identifier, unique to the object's parent.
 In order to reference a specific object in the world, an absolute reference
 as returned by
 .Fn object_copy_name ,
 must be used.
 T}
-\f(CRsave_pfx\fP:String:T{
-This path indicates an alternate directory location where to store the data
-files of this object and its descendants.
-It is typically used for special objects which are not linked to the world.
+\f(CRsave_pfx\fP:String:Read-only:T{
+This string defines an alternate directory location for the save files
+of this object and its children.
 T}
-\f(CRops\fP:Pointer:Generic object operation vector (\(-> Fig. X).
-\f(CRflags\fP:Integer:Generic object flags (\(-> Fig. X).
+\f(CRops\fP:Pointer:Read-only:Generic object operation vector (see Fig. X).
+\f(CRflags\fP:Integer:Read-only:Generic object flags (see Fig. X).
+\f(CRlock\fP:Mutex:-:T{
+Protects read-write members (if
+.Dv THREADS
+is set).
+T}
+\f(CRpos\fP:Pointer:T{
+.ce
+Read-write
+.br
+.ce
+.ps 8
+(protected by \f(CRlock\fP)
+T}:T{
+This variable points to a \fBposition\fP structure if the object holds
+a unique position on a map.
+If that is not the case, it is set to
+.Dv NULL .
+T}
 .TE
 .Ed
 .sp
@@ -99,7 +116,9 @@ _
 If this flag is set, the table of generic properties is not cleared prior to
 a load operation.
 T}
-\f(CROBJECT_NON_PERSISTENT\fP:This flag inhibits load and save operations on the object.
+\f(CROBJECT_NON_PERSISTENT\fP:T{
+This flag inhibits load and save operations on the object and its children.
+T}
 \f(CROBJECT_INDESTRUCTIBLE\fP:T{
 This is an advisory flag that indicates that this object should not be
 destroyed.
@@ -306,7 +325,8 @@ for operating systems without one.
 .)f
 We register an event handler function,
 .Fn door_open ,
-for the "door-open" event, and we initially display the submap "Closed".
+for the "door-open" event, and we initially display the projection map
+"Closed".
 .lp
 An artist could come up with a door bitmap containing three layers:
 .(l
@@ -315,9 +335,9 @@ An artist could come up with a door bitmap containing three layers:
 \(bu Opened door
 .l)
 .lp
-The level designer will then construct a model object with two submaps by
-importing the background on the two, the closed door layer for the
-"Closed" submap and the opened door layer for the "Open" submap.
+The level designer will then construct a model object with two projection maps
+by importing the background on the two, the closed door layer for the
+"Closed" map and the opened door layer for the "Open" map.
 The level designer then creates copies of the model door, for subsequent
 doors in the game.
 Of course, the level designer will probably want to use more than one door
@@ -335,7 +355,7 @@ door_init(void *obj, const char *name)
 	door->key = (int)arc4random();
 	door->inscription = NULL;
 	event_new(door, "door-open", door_open, NULL);
-	object_set_submap(door, "Closed");
+	object_set_projmap(door, "Closed");
 }
 .Ed
 .c3 "Load and save routines"
@@ -344,9 +364,11 @@ The object system will invoke the \fBload\fP operation to read the relevant
 parts of the door structure from file/network, and the \fBsave\fP operation
 to write its contents to machine independent format.
 Since \fBload\fP might be used to read data originating from the network,
-for instance, it is important to verify the consistency of the data.
-The \fBread_*\fP functions already perform some consistency checks of their
-own.
+for instance, it is important to verify the consistency of the data\(dg\(dg.
+.(f
+\(dg\(dg The \fBread_*\fP functions already perform some consistency checks
+of their own.
+.)f
 .Bd -code "The \fBdoor\fP object's save and load routines"
 int
 door_load(void *obj, struct netbuf *buf)
@@ -406,7 +428,7 @@ door_open(int argc, union evarg *argv)
 		door->locked = 0;
 	}
 	door->open = 1;
-	object_set_submap(door, "Open");
+	object_set_projmap(door, "Open");
 }
 .Ed
 .c3 "Submaps"
@@ -417,24 +439,26 @@ For instance, the appearance of a character will be defined by a set of maps,
 which could be named "Moving North", "Moving South", "Idle North",
 "Idle South", and so on.
 .lp
-Among other things, this method allows the game designers to apply transforms,
-such as \fBmirror\fP, so that the artist does not have to come up with separate
-"Moving West" and "Moving East" sprites, for instance.
-For a pseudo-3D game (such as \fIDiablo\fP\(dg), an object's set of submaps
-could be automatically generated from a 3D model.
+This method can accomodate very large dynamic objects, and it also allows the
+game designer to apply transforms, such as \fBmirror\fP, so that the artist
+does not have to come up with separate "Moving West" and "Moving East" sprites,
+for instance.
+For a pseudo-3D game (such as \fIDiablo\fP\(dg), an object's set of projection
+maps could be automatically generated from a 3D model.
 .(f
 \(dg \fIDiablo\fP is a trademark of Blizzard Entertainment.
 .)f
 .lp
-Since submaps may include more than one tile, node-specific flags provide a
-coarse but efficient collision detection method.
+Since projection maps may include more than one node, node-specific flags
+provide a coarse but efficient collision detection method.
 Bitmap masks and other techniques are used when more sophisticated collision
 detection is required (see chapter X).
 .lp
 The
-.Fn object_set_submap
-function selects among a series of \fBmap\fPs attached to the object,
-which one should be laid on top of the level map, and moved as the object moves.
+.Fn object_set_projmap
+function selects among a series of \fBmap\fPs associated with the object,
+which one should be laid on top of the level map and repositioned as the
+object moves from one node to another.
 .lp
 As far as our \fBdoor\fP object is concerned, the level designer will have
 to create two maps, "Closed" and "Open", and make sure that the relevant tiles
