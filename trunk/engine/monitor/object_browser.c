@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.5 2002/11/15 04:18:33 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.6 2002/11/16 00:57:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -126,6 +126,8 @@ tl_events_poll(int argc, union evarg *argv)
 		tlist_insert_item(tl, NULL, evh->name, evh);
 	}
 	pthread_mutex_unlock(&ob->events_lock);
+
+	tlist_restore_selections(tl);
 }
 
 /* Update the object list. */
@@ -147,6 +149,8 @@ tl_objs_poll(int argc, union evarg *argv)
 		tlist_insert_item(tl, icon, ob->name, ob);
 	}
 	pthread_mutex_unlock(&world->lock);
+
+	tlist_restore_selections(tl);
 }
 
 /* Show information about an object. */
@@ -167,6 +171,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	if (win == NULL) {
 		return;		/* Exists */
 	}
+	window_set_caption(win, "%s object (%s)", ob->name, ob->type);
 
 	/* Show the object's generic properties. */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 40);
@@ -207,7 +212,7 @@ object_browser_window(void)
 	}
 	window_set_caption(win, "Object browser");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	reg = region_new(win, 0, 0, 0, 100, 100);
 	tl_objs = tlist_new(reg, 100, 100, TLIST_POLL);
 	event_new(tl_objs, "tlist-changed", tl_objs_selected, NULL);
 	event_new(tl_objs, "tlist-poll", tl_objs_poll, NULL);
