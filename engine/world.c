@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.21 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.22 2002/04/09 03:38:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,9 @@
 static struct obvec world_vec = {
 	world_destroy,
 	world_load,
-	world_save
+	world_save,
+	NULL,		/* link */
+	NULL		/* unlink */
 };
 
 char *
