@@ -1,7 +1,7 @@
-/*	$Csoft: mgraph.c,v 1.43 2003/09/07 07:58:37 vedge Exp $	*/
+/*	$Csoft: mgraph.c,v 1.1 2004/01/03 04:15:39 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

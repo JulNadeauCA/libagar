@@ -1,7 +1,7 @@
-/*	$Csoft: layedit.c,v 1.16 2003/10/09 22:39:31 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.17 2003/12/05 01:21:23 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

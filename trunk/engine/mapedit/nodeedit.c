@@ -1,7 +1,7 @@
-/*	$Csoft: nodeedit.c,v 1.21 2003/09/04 03:15:48 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.22 2003/09/05 20:57:54 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

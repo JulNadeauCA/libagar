@@ -1,7 +1,7 @@
-/*	$Csoft: resize.c,v 1.34 2003/09/07 04:17:37 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.35 2003/12/05 01:21:26 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

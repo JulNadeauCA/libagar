@@ -1,7 +1,7 @@
-/*	$Csoft: pread.c,v 1.4 2003/06/21 06:50:19 vedge Exp $	*/
+/*	$Csoft: pread.c,v 1.5 2003/12/05 01:25:35 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

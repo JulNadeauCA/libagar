@@ -1,7 +1,7 @@
-/*	$Csoft: rootmap.c,v 1.32 2003/09/04 03:15:47 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.33 2003/11/15 03:55:59 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

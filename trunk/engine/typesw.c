@@ -1,7 +1,7 @@
-/*	$Csoft: typesw.c,v 1.6 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.7 2003/07/26 21:05:03 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

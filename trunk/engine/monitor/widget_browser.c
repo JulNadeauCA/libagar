@@ -1,7 +1,7 @@
-/*	$Csoft: widget_browser.c,v 1.28 2003/09/04 03:13:40 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.29 2003/10/13 23:49:01 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: error.c,v 1.2 2003/06/21 02:52:43 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.3 2003/06/21 07:14:18 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: label.c,v 1.72 2003/11/09 13:13:51 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.73 2003/11/10 22:40:17 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
