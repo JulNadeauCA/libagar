@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.34 2002/08/23 09:02:24 vedge Exp $
+#	$Csoft: Makefile,v 1.35 2002/08/23 10:17:06 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -10,20 +10,20 @@ SHARE=	README.engine \
 
 CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${FREETYPE_CFLAGS} ${X11_CFLAGS}
 
-MAN3=	agar.3 map.3 object.3
-CATMAN3=agar.cat3 map.cat3 object.cat3
+MAN3=	agar.3 map.3 object.3 view.3
+CATMAN3=agar.cat3 map.cat3 object.cat3 view.cat3
 
 LIB=	engine
 
 SRCS=	engine.c error.c event.c anim.c oldxcf.c ttf.c view.c physics.c \
-	input.c object.c audio.c video.c world.c map.c char.c version.c \
-	config.c ailment.c
+	input.c object.c audio.c video.c world.c map.c rootmap.c char.c \
+	version.c config.c ailment.c
 
 OBJS=	engine.o error.o event.o anim.o oldxcf.o ttf.o view.o physics.o \
-	input.o object.o audio.o video.o world.o map.o char.o version.o \
-	config.o ailment.o \
-	mapedit/mapedit.o
+	input.o object.o audio.o video.o world.o map.o rootmap.o char.o \
+	version.o config.o ailment.o
 
+OBJS+=	mapedit/mapedit.o
 OBJS+=	compat/setenv.o \
 	compat/strlcat.o \
 	compat/strlcpy.o \
