@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.3 2002/04/20 06:21:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.4 2002/04/20 09:17:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,57 +55,52 @@ static TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
 static pthread_mutex_t windowslock = PTHREAD_MUTEX_INITIALIZER;
 
 static SDL_TimerID timer = NULL;
-static Uint32 delta = 0;
+static Uint32 delta = 0, delta2 = 256;
 
 static Uint32	window_time(Uint32, void *);
 
 struct window *
 window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
-    enum window_bg bgtype, SDL_Rect rect, Uint32 *bgcolor, Uint32 *fgcolor)
+    Uint32 bgtype, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
-	struct window *w;
+	struct window *win;
 
-	w = (struct window *)emalloc(sizeof(struct window));
-	object_init(&w->obj, name, 0, &window_vec);
+	win = (struct window *)emalloc(sizeof(struct window));
+	object_init(&win->obj, name, 0, &window_vec);
 
-	w->caption = strdup(caption);
+	win->caption = strdup(caption);
+	win->view = view;
+	win->flags = flags;
+	win->bgtype = bgtype;
+	win->x = x;
+	win->y = y;
+	win->w = w;
+	win->h = h;
+	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
+	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
 
-	w->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, rect.w, rect.h,
-	    view->depth,
-	    0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-	if (w->surface == NULL) {
-		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
-	}
+	win->vmask.x = (x / view->map->tilew) - view->mapxoffs;
+	win->vmask.y = (y / view->map->tileh) - view->mapyoffs;
+	win->vmask.w = (w / view->map->tilew);
+	win->vmask.h = (h / view->map->tilew);
 
-	w->view = view;
-	w->flags = flags;
-	w->bgtype = bgtype;
-	w->rect = rect;
-	w->bgcolor = bgcolor;
-	w->fgcolor = fgcolor;
-
-	w->vmask.x = (rect.x / view->map->tilew) - view->mapxoffs;
-	w->vmask.y = (rect.y / view->map->tileh) - view->mapyoffs;
-	w->vmask.w = (rect.w / view->map->tilew);
-	w->vmask.h = (rect.h / view->map->tilew);
-
-	view_maskfill(view, &w->vmask, 1);
+	view_maskfill(view, &win->vmask, 1);
 
 	/* XXX pref */
-	w->border[0] = SDL_MapRGB(view->v->format, 50, 50, 50);
-	w->border[1] = SDL_MapRGB(view->v->format, 100, 100, 160);
-	w->border[2] = SDL_MapRGB(view->v->format, 192, 192, 192);
-	w->border[3] = SDL_MapRGB(view->v->format, 100, 100, 160);
-	w->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
+	win->border[0] = SDL_MapRGB(view->v->format, 50, 50, 50);
+	win->border[1] = SDL_MapRGB(view->v->format, 100, 100, 160);
+	win->border[2] = SDL_MapRGB(view->v->format, 192, 192, 192);
+	win->border[3] = SDL_MapRGB(view->v->format, 100, 100, 160);
+	win->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
 	
-	TAILQ_INIT(&w->widgetsh);
+	TAILQ_INIT(&win->widgetsh);
 
-	if (pthread_mutex_init(&w->widgetslock, NULL) != 0) {
+	if (pthread_mutex_init(&win->widgetslock, NULL) != 0) {
 		perror("widgetslock");
 		return (NULL);
 	}
 
-	return (w);
+	return (win);
 }
 
 int
@@ -122,11 +117,29 @@ window_quit(void)
 	}
 }
 
+void
+window_event(SDL_Event *ev, Uint32 flags)
+{
+	struct window *w;
+
+	pthread_mutex_lock(&windowslock);
+	TAILQ_FOREACH(w, &windowsh, windows) {
+		if (w->flags & flags) {
+			dprintf("event to %s\n", OBJECT(w)->name);
+			widget_event(w, ev, 0);
+		}
+	}
+	pthread_mutex_unlock(&windowslock);
+}
+
 static Uint32
 window_time(Uint32 ival, void *wp)
 {
-	if (delta++ > 32767) {
-		delta= 0;
+	if (delta++ > 256) {
+		delta = 0;
+	}
+	if (delta2-- < 1) {
+		delta2 = 256;
 	}
 
 	if (wp != NULL) {
@@ -158,29 +171,36 @@ window_draw(struct window *w)
 
 	/* Render the background. */
 	if (w->flags & WINDOW_PLAIN) {
-		SDL_FillRect(v, &w->rect, *w->bgcolor);
+		SDL_Rect rd;
+
+		rd.x = w->x;
+		rd.y = w->y;
+		rd.w = w->w;
+		rd.h = w->h;
+		
+		SDL_FillRect(v, &rd, w->bgcolor);
 	} else {
 		SDL_LockSurface(v);
-		for (yo = 0; yo < w->rect.h; yo++) {
-			for (xo = 0; xo < w->rect.w; xo++) {
-				dst = (Uint8 *)v->pixels + (w->rect.y+yo) *
-				    v->pitch + (w->rect.x+xo) *
+		for (yo = 0; yo < w->h; yo++) {
+			for (xo = 0; xo < w->w; xo++) {
+				dst = (Uint8 *)v->pixels + (w->y + yo) *
+				    v->pitch + (w->x+xo) *
 				    v->format->BytesPerPixel;
 
-				if (xo > w->rect.w - 4) {
-					col = w->border[w->rect.w - xo];
+				if (xo > w->w - 4) {
+					col = w->border[w->w - xo];
 				} else if (yo < 4) {
 					col = w->border[yo+1];
 				} else if (xo < 4) {
 					col = w->border[xo+1];
-				} else if (yo > w->rect.h - 4) {
-					col = w->border[w->rect.h - yo];
+				} else if (yo > w->h - 4) {
+					col = w->border[w->h - yo];
 				} else {
 					static Uint8 expcom;
 			
 					switch (w->bgtype) {
 					case WINDOW_SOLID:
-						col = *w->bgcolor;
+						col = w->bgcolor;
 						break;
 					case WINDOW_GRADIENT:
 						col = SDL_MapRGBA(v->format,
@@ -194,6 +214,17 @@ window_draw(struct window *w)
 							expcom -= 140;
 						col = SDL_MapRGBA(v->format,
 						    0, expcom, 0, 200);
+						break;
+					case WINDOW_CUBIC2:
+						expcom =
+						    ((yo+delta)^(xo-delta))+
+						    delta;
+						if (expcom > 150) {
+							expcom -= 140;
+						}
+						col = SDL_MapRGBA(v->format,
+						    0, 0, expcom, 0);
+						col *= (yo*xo);
 						break;
 					default:
 						break;
@@ -233,7 +264,7 @@ window_draw(struct window *w)
 	}
 	pthread_mutex_unlock(&w->widgetslock);
 
-	SDL_UpdateRect(v, w->rect.x, w->rect.y, w->rect.w, w->rect.h);
+	SDL_UpdateRect(v, w->x, w->y, w->w, w->h);
 }
 
 int
@@ -247,9 +278,8 @@ window_load(void *p, int fd)
 	
 	w->flags = fobj_read_uint32(fd);
 	w->caption = fobj_read_string(fd);
-	*w->bgcolor = fobj_read_uint32(fd);
-	*w->fgcolor = fobj_read_uint32(fd);
-	w->rect = fobj_read_rect(fd);
+	w->bgcolor = fobj_read_uint32(fd);
+	w->fgcolor = fobj_read_uint32(fd);
 
 	return (0);
 }
@@ -263,9 +293,8 @@ window_save(void *p, int fd)
 
 	fobj_write_uint32(fd, w->flags);
 	fobj_write_string(fd, w->caption);
-	fobj_write_uint32(fd, *w->bgcolor);
-	fobj_write_uint32(fd, *w->fgcolor);
-	fobj_write_rect(fd, w->rect);
+	fobj_write_uint32(fd, w->bgcolor);
+	fobj_write_uint32(fd, w->fgcolor);
 
 	return (0);
 }
@@ -315,7 +344,6 @@ window_destroy(void *ob)
 	}
 	pthread_mutex_unlock(&w->widgetslock);
 
-	SDL_FreeSurface(w->surface);
 	free(w->caption);
 	
 	view_maskfill(w->view, &w->vmask, -1);
