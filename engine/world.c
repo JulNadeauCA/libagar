@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.58 2003/02/04 02:35:59 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.59 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -101,7 +101,10 @@ world_save(void *p, int fd)
 		}
 		write_string(fd, ob->name);
 		write_string(fd, "");
-		object_save(ob);
+		if (object_save(ob) == -1) {
+			debug(DEBUG_STATE, "saving %s: %s\n", ob->name,
+			    error_get());
+		}
 	}
 	debug(DEBUG_STATE, "saved %d objects\n", wo->nobjs);
 

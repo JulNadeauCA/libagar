@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.37 2003/03/11 00:12:48 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.38 2003/03/13 08:38:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -188,7 +188,8 @@ fileops_save_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
-	object_save(mv->map);
+	if (object_save(mv->map) == -1)
+		text_msg("Error saving", "%s", error_get());
 }
 
 /* Load the map from disk. */

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.89 2003/03/13 06:22:41 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.90 2003/03/13 08:37:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -602,7 +602,6 @@ mapview_mousemotion(int argc, union evarg *argv)
 	if (mv->cx != -1 && mv->cy != -1) {
 		mv->cxrel = x - mv->mouse.x;
 		mv->cyrel = y - mv->mouse.y;
-		dprintf("rel %d,%d\n", mv->cxrel, mv->cyrel);
 	} else {
 		mv->cxrel = 0;
 		mv->cyrel = 0;
@@ -880,7 +879,10 @@ mapview_keydown(int argc, union evarg *argv)
 	if (mv->flags & MAPVIEW_SAVEABLE) {
 		switch (keysym) {
 		case SDLK_s:
-			object_save(mv->map);
+			if (object_save(mv->map) == -1) {
+				text_msg("Error saving map", "%s: %s",
+				    OBJECT(mv->map)->name, error_get());
+			}
 			break;
 		case SDLK_l:
 			if (object_load(mv->map) == -1) {
