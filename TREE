@@ -1,4 +1,4 @@
-$Csoft: TREE,v 1.1 2002/04/26 12:58:56 vedge Exp $
+$Csoft: TREE,v 1.2 2002/04/28 17:01:36 vedge Exp $
 
           +-[char]
           |
@@ -13,4 +13,6 @@ $Csoft: TREE,v 1.1 2002/04/26 12:58:56 vedge Exp $
 	  +-[window]    +--[label]
 	                |
 			+--[checkbox]
+                        |
+			+--[textbox]
 
