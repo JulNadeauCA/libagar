@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.4 2005/01/26 14:04:56 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.5 2005/01/30 02:34:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,6 +36,8 @@
 #include <engine/widget/button.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/menu.h>
+#include <engine/widget/checkbox.h>
+#include <engine/widget/mspinbutton.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -352,9 +354,11 @@ edit_feature(int argc, union evarg *argv)
 static void
 delete_feature(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tile *t = argv[2].p;
-	struct tlist *feat_tl = argv[3].p;
+	struct tileview *tv = argv[1].p;
+	struct tileset *ts = argv[2].p;
+	struct tile *t = argv[3].p;
+	struct tlist *feat_tl = argv[4].p;
+	struct window *pwin = argv[5].p;
 	struct tlist_item *it = tlist_item_selected(feat_tl);
 	struct tile_feature *tft;
 
@@ -370,6 +374,76 @@ delete_feature(int argc, union evarg *argv)
 	} else if (strcmp(it->class, "pixmap") == 0) {
 		//
 	}
+	
+	if (tv->edit_mode)
+		feature_close(tv, pwin);
+}
+
+static void
+resize_tile(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tile *t = argv[2].p;
+	struct mspinbutton *msb = argv[3].p;
+	struct window *pwin = argv[4].p;
+	struct checkbox *ckey_cb = argv[5].p;
+	struct checkbox *alpha_cb = argv[6].p;
+	struct tileview *tv = argv[7].p;
+	int w = widget_get_int(msb, "xvalue");
+	int h = widget_get_int(msb, "yvalue");
+	int flags = 0;
+
+	if (widget_get_int(ckey_cb, "state") == 1)
+		flags |= SDL_SRCALPHA;
+	if (widget_get_int(alpha_cb, "state") == 1)
+		flags |= SDL_SRCCOLORKEY;
+
+	tile_scale(ts, t, w, h, flags);
+	tileview_resize(tv, 100);
+	view_detach(pwin);
+}
+
+static void
+resize_tile_dlg(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tile *t = argv[2].p;
+	struct window *pwin = argv[3].p;
+	struct tileview *tv = argv[4].p;
+	struct window *win;
+	struct mspinbutton *msb;
+	struct box *box;
+	struct button *b;
+	struct checkbox *ckey_cb, *alpha_cb;
+
+	win = window_new(WINDOW_DETACH|WINDOW_NO_RESIZE|WINDOW_NO_MINIMIZE,
+	    NULL);
+	window_set_caption(win, _("Resize tile `%s'"), t->name);
+
+	msb = mspinbutton_new(win, "x", _("New size:"));
+	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
+	widget_set_int(msb, "xvalue", t->su->w);
+	widget_set_int(msb, "yvalue", t->su->h);
+
+	ckey_cb = checkbox_new(win, _("Colorkeying"));
+	widget_set_int(ckey_cb, "state", t->su->flags & SDL_SRCCOLORKEY);
+
+	alpha_cb = checkbox_new(win, _("Alpha blending"));
+	widget_set_int(alpha_cb, "state", t->su->flags & SDL_SRCALPHA);
+
+	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+	{
+		b = button_new(box, "OK");
+		event_new(b, "button-pushed", resize_tile,
+		    "%p,%p,%p,%p,%p,%p,%p",
+		    ts, t, msb, win, ckey_cb, alpha_cb, tv);
+
+		b = button_new(box, "Cancel");
+		event_new(b, "button-pushed", window_generic_detach, "%p", win);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
 }
 
 struct window *
@@ -417,6 +491,8 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	item = ag_menu_add_item(menu, _("Edit"));
 	{
+		ag_menu_action(item, _("Resize tile..."), NULL,
+		    0, 0, resize_tile_dlg, "%p,%p,%p,%p", ts, t, win, tv);
 	}
 
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL|BOX_FRAME);
@@ -444,7 +520,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 			
 			fbu = button_new(fbox, _("Delete"));
 			event_new(fbu, "button-pushed", delete_feature,
-			    "%p,%p,%p", ts, t, feat_tl);
+			    "%p,%p,%p,%p,%p", tv, ts, t, feat_tl, win);
 			WIDGET(fbu)->flags |= WIDGET_WFILL;
 		}
 		
