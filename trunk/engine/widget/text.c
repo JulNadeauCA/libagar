@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.49 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.50 2003/01/04 14:10:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -228,7 +228,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 }
 
 void
-text_msg(char *title, char *fmt, ...)
+text_msg(const char *caption, const char *format, ...)
 {
 	struct window *win;
 	struct region *reg;
@@ -239,8 +239,8 @@ text_msg(char *title, char *fmt, ...)
 	SDL_Surface *msg_eval;
 	Uint16 w, h;
 
-	va_start(args, fmt);
-	Vasprintf(&msg, fmt, args);
+	va_start(args, format);
+	Vasprintf(&msg, format, args);
 	va_end(args);
 
 	/* Auto-size the window. XXX waste */
@@ -250,6 +250,7 @@ text_msg(char *title, char *fmt, ...)
 	SDL_FreeSurface(msg_eval);
 
 	win = window_generic_new(w + 20, h + 100, NULL);
+	window_set_caption(win, "%s", caption);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
