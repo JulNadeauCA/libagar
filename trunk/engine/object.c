@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.164 2004/03/12 04:01:48 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.165 2004/03/17 12:32:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -251,35 +251,18 @@ find_depended(const void *p, const void *robj)
 	struct object_dep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-		if (dep->obj == robj)
+		if (dep->obj == robj &&
+		    robj != ob) {
+			error_set(_("The `%s' object is used by `%s'."),
+			    OBJECT(robj)->name, ob->name);
 			return (1);
+		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (find_depended(cob, robj))
 			return (1);
 	}
 	return (0);
-}
-
-/*
- * Return the number of references to an object by searching the dependency
- * tables of other objects sharing the same root.
- */
-int
-object_depended(const void *obj)
-{
-	struct object *root;
-	int rv;
-
-	lock_linkage();
-	root = object_root(obj);
-	rv = find_depended(root, obj);
-	unlock_linkage();
-
-	if (rv) {
-		error_set(_("The `%s' object is in use."), OBJECT(obj)->name);
-	}
-	return (rv);
 }
 
 /*
@@ -290,10 +273,12 @@ int
 object_in_use(const void *p)
 {
 	const struct object *ob = p, *cob;
+	struct object *root;
 
-	if (object_depended(ob)) {
+	root = object_root(ob);
+	if (find_depended(root, ob))
 		return (1);
-	}
+
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_in_use(cob))
 			return (1);
