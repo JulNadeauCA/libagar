@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.107 2002/07/20 02:09:08 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.108 2002/08/12 05:00:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -56,6 +56,15 @@ static const struct object_ops map_ops = {
 static __inline__ int	nodecmp(struct node *, struct node *);
 static __inline__ void	node_init(struct node *);
 static __inline__ void	node_free(struct map *, int, int);
+
+static void	map_load_flat_nodes(int, struct map *, struct object **,
+		    Uint32);
+static void	map_load_rle_nodes(int, struct map *, struct object **,
+		    Uint32);
+static void	map_save_flat_nodes(struct fobj_buf *, struct map *,
+		    struct object **, Uint32);
+static void	map_save_rle_nodes(struct fobj_buf *, struct map *,
+		    struct object **, Uint32);
 
 #define VIEW_MAPMASK(vx, vy)	(view->rootmap->mask[(vy)][(vx)])
 
@@ -211,8 +220,9 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 void
 map_init(struct map *m, char *name, char *media, Uint32 flags)
 {
+	/* XXX audio */
 	object_init(&m->obj, "map", name, media,
-	    (media != NULL) ? OBJ_OPTMEDIA|OBJ_ART : 0, &map_ops);
+	    (media != NULL) ? OBJECT_ART|OBJECT_MEDIA_CAN_FAIL : 0, &map_ops);
 	sprintf(m->obj.saveext, "m");
 	m->flags = (flags != 0) ? flags : MAP_2D;
 	m->redraw = 0;
@@ -237,9 +247,11 @@ rootmap_focus(struct map *m)
 	dprintf("focusing %s\n", OBJECT(m)->name);
 
 	pthread_mutex_lock(&view->lock);
-	if (view->rootmap == NULL) {
-		fatal("NULL rootmap\n");
-	}
+#if 0
+	dprintf("%s -> %s\n",
+	    (view->rootmap == NULL) ? "NULL" : OBJECT(view->rootmap->map)->name,
+	    OBJECT(m)->name);
+#endif
 	view->rootmap->map = m;
 	pthread_mutex_unlock(&view->lock);
 }
@@ -495,6 +507,10 @@ rootmap_animate(struct map *m)
 	int x, y, vx, vy, rx, ry, ox, oy;
 	int ri = 0;
 
+#ifdef DEBUG
+	SDL_FillRect(view->v, NULL, SDL_MapRGB(view->v->format, 200, 0, 0));
+#endif
+
 	for (y = rm->y, vy = 0;				/* Downward */
 	     vy < rm->h && y < m->maph;
 	     y++, vy++) {
@@ -583,6 +599,11 @@ rootmap_draw(struct map *m)
 	Uint32 nsprites;
 	int ri = 0;
 
+#ifdef DEBUG
+	SDL_FillRect(view->v, NULL, SDL_MapRGB(view->v->format, 0, 200, 0));
+	SDL_UpdateRect(view->v, 0, 0, 0, 0);
+#endif
+
 	for (y = rm->y, vy = 0;				/* Downward */
 	     vy < rm->h && y < m->maph;
 	     y++, vy++) {
@@ -664,60 +685,60 @@ node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
 	return (NULL);
 }
 
-int
-map_load(void *ob, int fd)
+static void
+map_load_flat_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 {
-	struct map *m = (struct map *)ob;
+	Uint32 x, y;
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *ref;
+			struct object *pobj = NULL;
+			Uint32 i, nrefs;
+
+			node->flags = fobj_read_uint32(fd);
+			node->v1 = fobj_read_uint32(fd);
+			node->v2 = fobj_read_uint32(fd);
+			nrefs = fobj_read_uint32(fd);
+#ifdef DEBUG
+			if (nrefs > 256)
+				dprintnode(m, x, y, "funny node");
+#endif
+			for (i = 0; i < nrefs; i++) {
+				Uint32 obji, offs, frame, flags;
+				struct object *pobj;
+
+				obji = fobj_read_uint32(fd);
+				offs = fobj_read_uint32(fd);
+				frame = fobj_read_uint32(fd);
+				flags = fobj_read_uint32(fd);
+			
+				if (obji > nobjs) {
+					fatal("bogus reference to 0x%x > 0x%x "
+					      "at %d,%d[%d]\n",
+					    obji, nobjs, x, y, i);
+				}
+				if ((pobj = pobjs[obji]) != NULL) {
+					ref = node_addref(node, pobj, offs,
+					    flags);
+					ref->frame = frame;
+				} else {
+					warning("ignoring reference to 0x%x at "
+					    "%d,%d[%d]\n", obji, x, y, i);
+				}
+			}
+		}
+	}
+}
+
+static void
+map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
+{
+	Uint32 refs = 0, i, j, nnrefs, count, totnodes = 0;
 	struct node node;
 	struct noderef *nref;
-	struct object **pobjs;
-	Uint32 x, y, refs = 0, i, j, nnrefs, nobjs, count, totnodes = 0;
-	Uint32 ox, oy;
-
-	if (version_read(fd, &map_ver) != 0) {
-		return (-1);
-	}
-
-	m->flags = fobj_read_uint32(fd);
-	m->mapw  = fobj_read_uint32(fd);
-	m->maph  = fobj_read_uint32(fd);
-	m->defx  = fobj_read_uint32(fd);
-	m->defy  = fobj_read_uint32(fd);
-
-	/* Pad: tilew, tileh */
-	fobj_read_uint32(fd);
-	fobj_read_uint32(fd);
-
-	/* Load the object map. */
-	nobjs = fobj_read_uint32(fd);
-	pobjs = emalloc(nobjs * sizeof(struct object *));
-	for (i = 0; i < nobjs; i++) {
-		struct object *pob;
-		char *s;
-
-		s = fobj_read_string(fd);
-		fobj_read_uint32(fd);		/* Unused */
-		pob = object_strfind(s);
-
-		pobjs[i] = pob;
-		if (pob != NULL) {
-#if 0
-			dprintf("%s uses: %s\n", OBJECT(m)->name, pob->name);
-#endif
-		} else {
-			warning("cannot translate \"%s\"\n", s);
-		}
-
-		free(s);
-	}
-
-	/* Allocate space for the nodes. */
-	pthread_mutex_lock(&m->lock);
-	if (m->map != NULL) {
-		map_freenodes(m);
-		m->map = NULL;
-	}
-	map_allocnodes(m, m->mapw, m->maph);
+	Uint32 x, y, ox, oy;
 
 	/* Read and decompress the nodes. */
 	for (x = 0, y = 0;;) {
@@ -786,18 +807,81 @@ map_load(void *ob, int fd)
 			
 			if (++x == m->mapw) {
 				if (++y == m->maph) {
-					goto done;
+					return;
 				}
 				x = 0;
 			}
 		}
 	}
-
 	if (totnodes != m->mapw * m->maph) {
 		dprintf("inconsistent map: %d nodes, should be %d\n", totnodes,
 		    m->mapw * m->maph);
 	}
-done:
+}
+
+int
+map_load(void *ob, int fd)
+{
+	struct map *m = (struct map *)ob;
+	struct object **pobjs;
+	Uint32 i, nobjs, tilew, tileh;
+
+	dprintf("loading %s\n", OBJECT(m)->name);
+
+	if (version_read(fd, &map_ver) != 0) {
+		return (-1);
+	}
+
+	m->flags = fobj_read_uint32(fd);
+	m->mapw  = fobj_read_uint32(fd);
+	m->maph  = fobj_read_uint32(fd);
+	m->defx  = fobj_read_uint32(fd);
+	m->defy  = fobj_read_uint32(fd);
+	tilew    = fobj_read_uint32(fd);
+	tileh    = fobj_read_uint32(fd);
+	if (tilew != TILEW || tileh != TILEH) {
+		warning("%s: %dx%d map tiles\n", OBJECT(m)->name, tilew, tileh);
+	}
+	dprintf("flags 0x%x, geo %dx%d, origin at %d,%d, %dx%d tiles\n",
+	    m->flags, m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
+
+	/* Load the object map. */
+	nobjs = fobj_read_uint32(fd);
+	pobjs = emalloc(nobjs * sizeof(struct object *));
+	for (i = 0; i < nobjs; i++) {
+		struct object *pob;
+		char *s;
+
+		s = fobj_read_string(fd);
+		fobj_read_uint32(fd);		/* Unused */
+		pob = object_strfind(s);
+
+		pobjs[i] = pob;
+		if (pob != NULL) {
+			dprintf("%s: uses %s\n", OBJECT(m)->name, pob->name);
+		} else {
+			warning("%s: cannot translate \"%s\"\n",
+			    OBJECT(m)->name, s);
+		}
+		free(s);
+	}
+
+	pthread_mutex_lock(&m->lock);
+
+	/* Initialize the nodes. */
+	if (m->map != NULL) {
+		map_freenodes(m);		/* XXX resize? */
+		m->map = NULL;
+	}
+	map_allocnodes(m, m->mapw, m->maph);
+
+	/* Read/decompress the nodes. */
+	if (m->flags & MAP_RLE_COMPRESSION) {
+		map_load_rle_nodes(fd, m, pobjs, nobjs);
+	} else {
+		map_load_flat_nodes(fd, m, pobjs, nobjs);
+	}
+
 	pthread_mutex_unlock(&m->lock);
 
 	free(pobjs);
@@ -840,51 +924,64 @@ nodecmp(struct node *n1, struct node *n2)
 	return (0);
 }
 
-/* World must be locked, map must not. */
-int
-map_save(void *p, int fd)
+static void
+map_save_flat_nodes(struct fobj_buf *buf, struct map *m,
+    struct object **pobjs, Uint32 nobjs)
 {
-	struct map *m = p;
-	struct fobj_buf *buf;
-	struct object *pob, **pobjs;
-	struct node *node;
-	size_t solen = 0;
-	off_t soffs;
-	Uint32 x, y, nobjs = 0;
-	int totcomp = 0, totnodes = 0;
+	Uint32 x, y;
+	int totnodes = 0, totrefs = 0, savedrefs = 0;
 
-	buf = fobj_create_buf(65536, 32767);
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct noderef *ref;
+			struct node *n = &m->map[y][x];
+			off_t soffs;
+			Uint32 nrefs = 0;
 
-	version_write(fd, &map_ver);
+			totnodes++;
 
-	fobj_bwrite_uint32(buf, m->flags);
-	fobj_bwrite_uint32(buf, m->mapw);
-	fobj_bwrite_uint32(buf, m->maph);
-	fobj_bwrite_uint32(buf, m->defx);
-	fobj_bwrite_uint32(buf, m->defy);
-	fobj_bwrite_uint32(buf, TILEW);
-	fobj_bwrite_uint32(buf, TILEH);
-	
-	soffs = buf->offs;
-	fobj_bwrite_uint32(buf, 0);
+			fobj_bwrite_uint32(buf, n->flags & ~(NODE_DONTSAVE));
+			fobj_bwrite_uint32(buf, n->v1);
+			fobj_bwrite_uint32(buf, n->v2);
 
-	/* Write the object map. */
-	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
-		solen += sizeof(struct object *);
-	}
-	pobjs = emalloc(solen);
-	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
-		if ((pob->flags & OBJ_ART) == 0) {
-			continue;
+			soffs = buf->offs;		/* Skip */
+			fobj_bwrite_uint32(buf, 0);
+
+			TAILQ_FOREACH(ref, &n->nrefsh, nrefs) {
+				Uint32 i;
+
+				totrefs++;
+				if ((ref->flags & MAPREF_SAVE) == 0) {
+					continue;
+				}
+				savedrefs++;
+				for (i = 0; i < nobjs; i++) {
+					if (pobjs[i] == ref->pobj) {
+						break;
+					}
+				}
+				fobj_bwrite_uint32(buf, i);
+				fobj_bwrite_uint32(buf, ref->offs);
+				fobj_bwrite_uint32(buf, ref->frame);
+				fobj_bwrite_uint32(buf, ref->flags);
+				nrefs++;
+			}
+			fobj_bpwrite_uint32(buf, nrefs, soffs);
 		}
-		fobj_bwrite_string(buf, pob->name);
-		fobj_bwrite_uint32(buf, 0);
-		pobjs[nobjs++] = pob;
 	}
-	fobj_bpwrite_uint32(buf, nobjs, soffs);
+	dprintf("%d nodes, %d saved refs (of %d total refs)\n", totnodes,
+	    savedrefs, totrefs);
+}
 
-	/* Write the RLE-compressed nodes. */
-	pthread_mutex_lock(&m->lock);
+static void
+map_save_rle_nodes(struct fobj_buf *buf, struct map *m, struct object **pobjs,
+    Uint32 nobjs)
+{
+	Uint32 x, y;
+	off_t soffs;
+	struct node *node;
+	int totnodes, totcomp;
+
 	for (x = 0, y = 0;;) {
 		struct noderef *nref;
 		struct node *cmpnode;
@@ -919,45 +1016,26 @@ map_save(void *p, int fd)
 		}
 		fobj_bpwrite_uint32(buf, nrefs, soffs);
 
+		/* Write the repeat count. */
 		count = 1;
 rle_scan:
 		if (++x == m->mapw) {
-#if 0
-			dprintf("at %d,%d wrap\n", x, y);
-#endif
 			if (++y == m->maph) {
-				goto done;
+				return;
 			}
 			x = 0;
 		}
-
-		if (0) {
-			cmpnode = &m->map[y][x];
-			while (nodecmp(node, cmpnode) == 0) {
-				count++;
-				totcomp++;
-				goto rle_scan;
-			}
-		} else {
-			count = 1;
-			totcomp++;
-		}
-
-		/* Write the repeat count. */
-		if (y == 63 && x == 63) {
+		for (cmpnode = &m->map[y][x]; nodecmp(node, cmpnode) == 0;) {
 			count++;
+			totcomp++;
+			goto rle_scan;
 		}
 		fobj_bwrite_uint32(buf, count);
 		totnodes += count;
-//		dprintf("count = %d (tot. %d compressed)\n", count, totcomp);
 	}
-done:
-	pthread_mutex_unlock(&m->lock);
-
-	fobj_flush_buf(buf, fd);
 
 #ifdef DEBUG
-	if (totnodes != m->mapw * m->maph) {
+	if (totnodes != m->mapw*m->maph) {
 		warning("wrote %d nodes, should be %d\n", totnodes,
 		    m->mapw * m->maph);
 	}
@@ -966,6 +1044,69 @@ done:
 	dprintf("%s: %dx%d, %d%% compression (%d nodes of %d)\n",
 	    OBJECT(m)->name, m->mapw, m->maph,
 	    totcomp * 100 / (m->mapw * m->maph), totcomp, (m->mapw * m->maph));
+}
+
+/* World must be locked, map must not. */
+int
+map_save(void *p, int fd)
+{
+	struct map *m = p;
+	struct fobj_buf *buf;
+	struct object *pob, **pobjs;
+	size_t solen = 0;
+	off_t soffs;
+	int totcomp = 0, totnodes = 0;
+	Uint32 nobjs = 0;
+
+	dprintf("saving %s\n", OBJECT(m)->name);
+
+	buf = fobj_create_buf(65536, 32767);
+
+	version_write(fd, &map_ver);
+
+	fobj_bwrite_uint32(buf, m->flags);
+	fobj_bwrite_uint32(buf, m->mapw);
+	fobj_bwrite_uint32(buf, m->maph);
+	fobj_bwrite_uint32(buf, m->defx);
+	fobj_bwrite_uint32(buf, m->defy);
+	fobj_bwrite_uint32(buf, TILEW);
+	fobj_bwrite_uint32(buf, TILEH);
+	dprintf("flags 0x%x, geo %dx%d, origin at %d,%d, %dx%d tiles\n",
+	    m->flags, m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
+
+	soffs = buf->offs;			/* Skip */
+	fobj_bwrite_uint32(buf, 0);
+
+	/* Write the object map. */
+	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+		solen += sizeof(struct object *);
+	}
+	pobjs = emalloc(solen);
+	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+		if ((pob->flags & OBJECT_ART) == 0 ||
+		     pob->flags & OBJECT_CANNOT_MAP) {
+			continue;
+		}
+		fobj_bwrite_string(buf, pob->name);
+		fobj_bwrite_uint32(buf, 0);
+		pobjs[nobjs++] = pob;
+		dprintf("reference %s\n", pob->name);
+	}
+	fobj_bpwrite_uint32(buf, nobjs, soffs);
+
+	pthread_mutex_lock(&m->lock);
+
+	/* Write the nodes. */
+	if (m->flags & MAP_RLE_COMPRESSION) {
+		map_save_rle_nodes(buf, m, pobjs, nobjs);
+	} else {
+		map_save_flat_nodes(buf, m, pobjs, nobjs);
+	}
+	
+	pthread_mutex_unlock(&m->lock);
+
+	fobj_flush_buf(buf, fd);
+
 	free(pobjs);
 	return (0);
 }
