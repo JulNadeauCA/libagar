@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.3 2002/01/30 12:46:34 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.4 2002/01/30 18:35:23 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -56,6 +56,13 @@ struct object {
 	int	 (*load)(void *, char *);
 	int	 (*save)(void *, char *);
 };
+
+#define WMASK_DOWN	0x01	/* Y axis - */
+#define WMASK_UP	0x02	/* Y axis + */
+#define WMASK_LEFT	0x04	/* X axis - */
+#define WMASK_RIGHT	0x08	/* X axis + */
+#define WMASK_ZIN	0x10	/* Z axis - */
+#define WMASK_ZOUT	0x20	/* Z axis + */
 
 int	 object_create(struct object *, char *, char *, int);
 void	 object_destroy(void *, void *);
