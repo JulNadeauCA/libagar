@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.69 2003/06/25 10:31:45 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.70 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -200,6 +200,7 @@ label_printf(struct label *label, const char *fmt, ...)
 
 		su = text_render(NULL, -1, WIDGET_COLOR(label, TEXT_COLOR), s);
 		label_set_surface(label, su);
+		SDL_FreeSurface(su);
 	} else {
 		label_set_surface(label, NULL);
 	}
