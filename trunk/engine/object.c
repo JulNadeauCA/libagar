@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.19 2002/02/17 10:32:11 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.20 2002/02/17 23:16:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -205,7 +205,6 @@ int
 object_load(void *p)
 {
 	struct object *ob = (struct object *)p;
-	char path[FILENAME_MAX];
 	int fd, rv;
 
 	if (ob->vec->load == NULL) {
@@ -213,15 +212,10 @@ object_load(void *p)
 	}
 
 	/* XXX mmap? */
-	sprintf(path, "%s/%s.o", world->udatadir, ob->name);
-	fd = open(path, O_RDONLY, 00600);
+	fd = open(savepath(ob->name, "ag"), O_RDONLY, 00600);
 	if (fd < 0) {
-		sprintf(path, "%s/%s.o", world->sysdatadir, ob->name);
-		fd = open(path, O_RDONLY, 00600);
-		if (fd < 0) {
-			perror(path);
-			return (-1);
-		}
+		perror(ob->name);
+		return (-1);
 	}
 	rv = ob->vec->load(ob, fd);
 	close(fd);
@@ -237,7 +231,7 @@ object_save(void *p)
 		char path[FILENAME_MAX];
 		int fd;
 
-		sprintf(path, "%s/%s.o", world->udatadir, ob->name);
+		sprintf(path, "%s/%s.ag", world->udatadir, ob->name);
 		fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
 		if (fd < 0) {
 			perror(path);
