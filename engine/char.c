@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.34 2002/04/18 03:55:16 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.35 2002/04/18 04:03:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,22 +42,25 @@
 
 #include <engine/widget/text.h>
 
-static struct obvec char_vec = {
-	char_destroy,
+enum {
+	DEFAULT_HP	= 10,
+	DEFAULT_MP	= 10,
+	DEFAULT_SPEED	= 30,
+	DEFAULT_ZUARS	= 0
+};
+
+static const struct obvec char_vec = {
+	NULL,		/* destroy */
 	char_load,
 	char_save,
 	char_link,
 	char_unlink
 };
 
-struct character *
-char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
+void
+char_init(struct character *ch, char *name, char *media)
 {
-	struct character *ch;
-	
-	ch = (struct character *)emalloc(sizeof(struct character));
-	object_init(&ch->obj, name, OBJ_EDITABLE, &char_vec);
-	sprintf(ch->obj.desc, desc);
+	object_init(&ch->obj, name, media, OBJ_ART, &char_vec);
 
 	ch->flags = 0;
 	ch->level = 0;
@@ -65,14 +68,12 @@ char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
 	ch->age = 0;
 	ch->seed = (Uint32)lrand48();
 
-	ch->maxhp = maxhp;
-	ch->maxmp = maxmp;
-	ch->hp = maxhp;
-	ch->mp = maxmp;
-	ch->maxspeed = 30;
-	ch->nzuars = 0;
-
-	return (ch);
+	ch->maxhp = DEFAULT_HP;
+	ch->maxmp = DEFAULT_MP;
+	ch->hp = ch->maxhp;
+	ch->mp = ch->maxmp;
+	ch->maxspeed = DEFAULT_SPEED;
+	ch->nzuars = DEFAULT_ZUARS;
 }
 
 int
@@ -239,14 +240,6 @@ char_unlink(void *ob)
 	pthread_mutex_lock(&world->lock);
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 	pthread_mutex_unlock(&world->lock);
-
-	return (0);
-}
-
-int
-char_destroy(void *p)
-{
-	/* ... */
 
 	return (0);
 }
