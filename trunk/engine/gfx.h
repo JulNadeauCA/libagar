@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.6 2003/07/14 03:42:52 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.7 2003/07/25 22:03:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -70,7 +70,7 @@ struct gfx {
 extern pthread_mutex_t	gfxq_lock;
 
 __BEGIN_DECLS
-int	 gfx_fetch(void *, const char *);
+int	 gfx_fetch(void *);
 void	 gfx_unused(struct gfx *);
 void	 gfx_wire(struct gfx *);
 void	 gfx_scan_alpha(SDL_Surface *);

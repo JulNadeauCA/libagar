@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.183 2003/07/26 12:34:50 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.184 2003/07/27 16:45:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -122,12 +122,9 @@ mapedit_init(void)
 	int i;
 	
 	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
+	object_wire_gfx(&mapedit, "/engine/mapedit/mapedit");
 	OBJECT(&mapedit)->flags |= OBJECT_RELOAD_PROPS;
 	OBJECT(&mapedit)->save_pfx = NULL;
-	if (gfx_fetch(&mapedit, "/engine/mapedit/mapedit") == -1) {
-		fatal("%s", error_get());
-	}
-	gfx_wire(OBJECT(&mapedit)->gfx);
 
 	map_init(&mapedit.copybuf, "copybuf");
 	mapedit.curtool = NULL;
@@ -155,9 +152,8 @@ mapedit_init(void)
 		*toolent->p = Malloc(toolent->size);
 		toolent->init(*toolent->p);
 	}
-	if (object_load(&mapedit) == -1) {
+	if (object_load(&mapedit) == -1)
 		dprintf("loading mapedit: %s\n", error_get());
-	}
 
 	objedit_win = objedit_window();
 	window_show(objedit_win);
@@ -259,8 +255,8 @@ mapedit_close_objdata(int argc, union evarg *argv)
 
 	view_detach(mobj->win);
 	TAILQ_REMOVE(&mapedit.dobjs, mobj, objs);
-	object_del_dep(mapedit.pseudo, mobj->obj);
 	object_page_out(mobj->obj, OBJECT_DATA);
+	object_del_dep(mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
@@ -278,9 +274,13 @@ mapedit_edit_objdata(struct object *ob)
 		window_show(mobj->win);
 		return;
 	}
-	
+
+	dprintf("pgin %s\n", ob->name);
+	if (object_page_in(ob, OBJECT_DATA) == -1) {
+		text_msg(MSG_ERROR, "Page in: %s", error_get());
+		return;
+	}
 	object_add_dep(mapedit.pseudo, ob);
-	object_page_in(ob, OBJECT_DATA);
 	
 	mobj = Malloc(sizeof(struct mapedit_obj));
 	mobj->obj = ob;

@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.6 2003/06/25 06:15:40 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.7 2003/07/08 00:34:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -78,6 +78,9 @@ void
 titlebar_init(struct titlebar *tbar, int flags)
 {
 	box_init(&tbar->hb, BOX_HORIZ, BOX_WFILL);
+	object_set_ops(tbar, &titlebar_ops);
+	object_wire_gfx(tbar, "/engine/widget/window");
+
 	box_set_padding(&tbar->hb, 5);
 	box_set_spacing(&tbar->hb, 0);
 
@@ -85,13 +88,6 @@ titlebar_init(struct titlebar *tbar, int flags)
 	widget_map_color(tbar, UNFOCUSED_COLOR, "unfocused", 35, 35, 35, 255);
 	widget_map_color(tbar, FOCUSED_COLOR, "focused", 40, 60, 73, 255);
 	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
-
-	object_set_ops(tbar, &titlebar_ops);
-
-	if (gfx_fetch(tbar, "/engine/widget/window") == -1) {
-		fatal("%s", error_get());
-	}
-	gfx_wire(OBJECT(tbar)->gfx);
 
 	tbar->flags = flags;
 	tbar->pressed = 0;

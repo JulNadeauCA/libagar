@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.10 2003/07/25 22:03:09 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.11 2003/08/11 22:26:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -241,7 +241,7 @@ gfx_unused(struct gfx *gfx)
 
 /* Load the named graphics package. */
 int
-gfx_fetch(void *p, const char *key)
+gfx_fetch(void *p)
 {
 	char path[MAXPATHLEN];
 	struct object *ob = p;
@@ -252,7 +252,7 @@ gfx_fetch(void *p, const char *key)
 	pthread_mutex_lock(&gfxq_lock);
 
 	TAILQ_FOREACH(gfx, &gfxq, gfxs) {
-		if (strcmp(gfx->name, key) == 0)
+		if (strcmp(gfx->name, ob->gfx_name) == 0)
 			break;
 	}
 	if (gfx != NULL) {
@@ -262,11 +262,12 @@ gfx_fetch(void *p, const char *key)
 		goto out;
 	}
 
-	if (config_search_file("load-path", key, "den", path, sizeof(path)))
+	if (config_search_file("load-path", ob->gfx_name, "den", path,
+	    sizeof(path)) == -1)
 		goto fail;
 
 	gfx = Malloc(sizeof(struct gfx));
-	gfx->name = Strdup(key);
+	gfx->name = Strdup(ob->gfx_name);
 	gfx->sprites = NULL;
 	gfx->csprites = NULL;
 	gfx->nsprites = 0;
@@ -307,6 +308,7 @@ fail:
 		free(gfx->name);
 		free(gfx);
 	}
+	ob->gfx = NULL;
 	return (-1);
 }
 
