@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.142 2004/04/20 09:19:56 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.143 2004/04/23 10:50:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -690,7 +690,7 @@ view_capture(SDL_Surface *su)
 		goto toobig;
 	if (strlcat(path, "/screenshot", sizeof(path)) >= sizeof(path))
 		goto toobig;
-	if (compat_mkdir(path, 0755) == -1 && errno != EEXIST) {
+	if (compat_mkdir(path) == -1 && errno != EEXIST) {
 		text_msg(MSG_ERROR, "mkdir %s: %s", path, strerror(errno));
 		return;
 	}

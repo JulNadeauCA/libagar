@@ -1,4 +1,4 @@
-/*	$Csoft: mkpath.c,v 1.2 2003/06/14 00:24:07 vedge Exp $	*/
+/*	$Csoft: mkpath.c,v 1.3 2004/04/23 10:50:54 vedge Exp $	*/
 /*	$OpenBSD: mkdir.c,v 1.14 2002/07/04 04:26:40 deraadt Exp $	*/
 /*	$NetBSD: mkdir.c,v 1.14 1995/06/25 21:59:21 mycroft Exp $	*/
 
@@ -54,12 +54,9 @@ char mkpath_copyright[] =
 
 /*
  * mkpath -- create directories.
- *	path     - path
- *	mode     - file mode of terminal directory
- *	dir_mode - file mode of intermediate directories
  */
 int
-mkpath(char *path, mode_t mode, mode_t dir_mode)
+mkpath(char *path)
 {
 	struct stat sb;
 	char *pathp, *slash;
@@ -76,8 +73,7 @@ mkpath(char *path, mode_t mode, mode_t dir_mode)
 
 		if (stat(pathp, &sb)) {
 			if (errno != ENOENT ||
-			    (compat_mkdir(pathp, done ? mode : dir_mode) &&
-			    errno != EEXIST)) {
+			    (compat_mkdir(pathp) && errno != EEXIST)) {
 				error_set("%s: %s", pathp, strerror(errno));
 				return (-1);
 			}

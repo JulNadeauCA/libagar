@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.172 2004/03/30 16:32:50 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.173 2004/04/11 03:29:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1134,7 +1134,7 @@ object_save(void *p)
 	}
 	strlcat(save_dir, obj_name, sizeof(save_dir));
 	if (stat(save_dir, &sta) == -1 &&
-	    mkpath(save_dir, 0700, 0700) == -1) {
+	    mkpath(save_dir) == -1) {
 		error_set("mkpath %s: %s", save_dir, strerror(errno));
 		goto fail_lock;
 	}
