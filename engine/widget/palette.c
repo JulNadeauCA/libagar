@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.43 2002/12/17 06:47:57 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.1 2002/12/21 10:25:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,9 +25,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
-#include <engine/compat/vasprintf.h>
-#include <engine/compat/strlcat.h>
 #include <engine/engine.h>
 
 #include <engine/view.h>
@@ -69,8 +66,8 @@ palette_new(struct region *reg, int flags, int w, int h)
 void
 palette_init(struct palette *pal, int flags, int rw, int rh)
 {
-	widget_init(&pal->wid, "palette", "widget", &palette_ops, rw, rh);
-	widget_map_color(pal, FRAME_COLOR, "palette-frame", 196, 196, 196);
+	widget_init(&pal->wid, "palette", &palette_ops, rw, rh);
+	widget_map_color(pal, FRAME_COLOR, "frame", 196, 196, 196);
 
 	pal->flags = flags;
 
@@ -118,10 +115,9 @@ palette_draw(void *p)
 	scrollbar_draw(&pal->b_sb);
 	scrollbar_draw(&pal->a_sb);
 
-	scrollbar_get_value(&pal->r_sb, &r);
-	scrollbar_get_value(&pal->g_sb, &g);
-	scrollbar_get_value(&pal->b_sb, &b);
-
+	r = widget_get_int(&pal->r_sb, "value");
+	g = widget_get_int(&pal->g_sb, "value");
+	b = widget_get_int(&pal->b_sb, "value");
 	color = SDL_MapRGB(view->v->format, (Uint8)r, (Uint8)g, (Uint8)b);
 
 	WIDGET_FILL_RECT(pal, &pal->rpreview, color);
@@ -132,26 +128,19 @@ palette_draw(void *p)
 void
 palette_set_color(struct palette *pal, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	scrollbar_set_value(&pal->r_sb, (int)r);
-	scrollbar_set_value(&pal->g_sb, (int)g);
-	scrollbar_set_value(&pal->b_sb, (int)b);
-	scrollbar_set_value(&pal->a_sb, (int)a);
+	widget_set_int(&pal->r_sb, "value", (int)r);
+	widget_set_int(&pal->g_sb, "value", (int)g);
+	widget_set_int(&pal->b_sb, "value", (int)b);
+	widget_set_int(&pal->a_sb, "value", (int)a);
 }
 
 void
 palette_get_color(struct palette *pal, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
 {
-	int rv, gv, bv, av;
-
-	scrollbar_get_value(&pal->r_sb, &rv);
-	scrollbar_get_value(&pal->g_sb, &gv);
-	scrollbar_get_value(&pal->b_sb, &bv);
-	scrollbar_get_value(&pal->a_sb, &av);
-
-	*r = (Uint8)rv;
-	*g = (Uint8)gv;
-	*b = (Uint8)bv;
-	*a = (Uint8)av;
+	*r = (Uint8)widget_get_int(&pal->r_sb, "value");
+	*g = (Uint8)widget_get_int(&pal->g_sb, "value");
+	*b = (Uint8)widget_get_int(&pal->b_sb, "value");
+	*a = (Uint8)widget_get_int(&pal->a_sb, "value");
 }
 
 void
