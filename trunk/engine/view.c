@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.92 2002/12/17 00:20:19 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.93 2002/12/20 08:55:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,6 +32,7 @@
 #include "physics.h"
 #include "config.h"
 #include "view.h"
+#include "world.h"
 
 #include "widget/widget.h"
 #include "widget/window.h"
@@ -56,35 +57,54 @@ view_init(gfx_engine_t ge)
 {
 	struct viewport *v;
 	int screenflags = SDL_HWSURFACE;
-	int bpp, w, h, mw, mh;
+	int bpp, mw, mh;
+	
+	v = emalloc(sizeof(struct viewport));
+	object_init(&v->obj, "view-port", "view", NULL, OBJECT_SYSTEM,
+	    &viewport_ops);
+	v->gfx_engine = ge;
+	v->rootmap = NULL;
+	v->winop = VIEW_WINOP_NONE;
+	TAILQ_INIT(&v->windows);
+	TAILQ_INIT(&v->detach);
+	pthread_mutexattr_init(&v->lockattr);
+	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&v->lock, &v->lockattr);
 
-	/* Obtain the display settings. */
+#ifdef HAVE_OPENGL
+	/* Initialize OpenGL attributes. */
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	/* Allow normal blitting operations as well as OpenGL operations. */
+	screenflags |= SDL_OPENGLBLIT;
+#endif
+
+	/* Obtain the display preferences. */
 	bpp = prop_uint32(config, "view.bpp");
-	w = prop_uint32(config, "view.w");
-	h = prop_uint32(config, "view.h");
-	mw = w / TILEW;
-	mh = h / TILEH;
+	v->w = prop_uint32(config, "view.w");
+	v->h = prop_uint32(config, "view.h");
+	mw = v->w / TILEW;
+	mh = v->h / TILEH;
 	if (prop_uint32(config, "flags") & CONFIG_FULLSCREEN)
 		screenflags |= SDL_FULLSCREEN;
 	if (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT)
 		screenflags |= SDL_ASYNCBLIT;
 
-	/* Allocate a structure describing the display. */
-	v = emalloc(sizeof(struct viewport));
-	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
-	v->gfx_engine = ge;
-	v->bpp = SDL_VideoModeOK(w, h, bpp, screenflags);
-	switch (v->bpp) {
-	case 8:
-		dprintf("exclusive palette access\n");
+	/* Negotiate the depth. */
+	v->bpp = SDL_VideoModeOK(v->w, v->h, bpp, screenflags);
+	if (v->bpp == 8)
 		screenflags |= SDL_HWPALETTE;
-		break;
-	}
-	v->w = prop_uint32(config, "view.w");
-	v->h = prop_uint32(config, "view.h");
+
+	/* Adapt resolution to tile geometry. */
 	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
 		v->w -= v->w % TILEW;
 		v->h -= v->h % TILEH;
+		prop_set_uint32(config, "view.w", v->w);
+		prop_set_uint32(config, "view.h", v->h);
 		dprintf("rounded resolution to %dx%d\n", v->w, v->h);
 	}
 	if (v->w < 640 || v->h < 480) {
@@ -92,25 +112,18 @@ view_init(gfx_engine_t ge)
 		free(v);
 		return (-1);
 	}
-	v->rootmap = NULL;
-	v->winop = VIEW_WINOP_NONE;
-	TAILQ_INIT(&v->windows);
-	TAILQ_INIT(&v->detach);
-	
+
 	/* Allocate the dirty rectangle array. */
 	v->maxdirty = v->w/TILEW * v->h/TILEH;
 	v->ndirty = 0;
 	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
 
-	pthread_mutexattr_init(&v->lockattr);
-	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&v->lock, &v->lockattr);
-
+	/* Allow resize in GUI mode. XXX thread unsafe? */
 	if (v->gfx_engine == GFX_ENGINE_GUI) {
-		/* XXX thread unsafe */
 		screenflags |= SDL_RESIZABLE;
 	}
 
+	/* Set the video mode. */
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
 		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->bpp,
@@ -121,27 +134,15 @@ view_init(gfx_engine_t ge)
 
 	switch (v->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
-		/* Allocate a structure describing the root map display. */
 		v->rootmap = emalloc(sizeof(struct viewmap));
-		v->rootmap->w = mw - 1;
-		v->rootmap->h = mh - 1;
-		v->rootmap->map = NULL;
-		v->rootmap->x = 0;
-		v->rootmap->y = 0;
-		v->rootmap->sx = 0;
-		v->rootmap->sy = 0;
-		
-		/* Calculate the default tile coordinates. */
-		v->rootmap->maprects = rootmap_alloc_maprects(mw + 1, mh + 1);
-
-		dprintf("tile-based mode: %dx%d rectangles\n", mw, mh);
+		rootmap_init(v->rootmap, mw, mh);
 		break;
 	case GFX_ENGINE_GUI:
-		dprintf("gui mode\n");
 		break;
 	}
 	view = v;
-	
+
+	world_attach(world, v);
 	return (0);
 }
 
@@ -270,7 +271,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	Uint8 *src, *dst, r1, g1, b1, a1;
 	int x, y;
 
-	ds = view_surface(SDL_HWSURFACE, w, h);
+	ds = view_surface(SDL_SWSURFACE, w, h);
 
 	if (SDL_MUSTLOCK(ss))
 		SDL_LockSurface(ss);

@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.16 2002/11/30 02:09:47 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.17 2002/12/01 14:41:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -39,6 +39,21 @@
 int	rootmap_debug = DEBUG_DIAG|DEBUG_FOCUS;
 #define	engine_debug rootmap_debug
 #endif
+
+void
+rootmap_init(struct viewmap *rm, int mw, int mh)
+{
+	rm->w = mw - 1;
+	rm->h = mh - 1;
+	rm->map = NULL;
+	rm->x = 0;
+	rm->y = 0;
+	rm->sx = 0;
+	rm->sy = 0;
+	
+	/* Calculate the default tile coordinates. */
+	rm->maprects = rootmap_alloc_maprects(mw, mh);
+}
 
 /*
  * Render all animations in the map view.
