@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.2 2004/05/07 01:43:17 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.3 2004/05/10 03:30:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -64,7 +64,8 @@ static const char *mement_names[] = {
 	"typesw",
 	"input",
 	"cad",
-	"eda"
+	"eda",
+	"game"
 };
 
 static void
@@ -81,13 +82,10 @@ poll_mements(int argc, union evarg *argv)
 	     ment++, i++) {
 		char text[TLIST_LABEL_MAX];
 
-		snprintf(text, sizeof(text),
-		    "[%s] - %u buffers (%lu / %lu)",
-		    mement_names[i],
-		    ment->nallocs - ment->nfrees,
-		    (unsigned long)ment->msize,
-		    (unsigned long)ment->rsize);
-		tlist_insert_item(tl, NULL, text, ment);
+		snprintf(text, sizeof(text), "[%s] - %u buffers (%lu)",
+		    mement_names[i], ment->nallocs - ment->nfrees,
+		    (unsigned long)ment->msize);
+		tlist_insert_item(tl, ICON(OBJ_ICON), text, ment);
 	}
 	tlist_restore_selections(tl);
 }
@@ -104,7 +102,7 @@ leak_window(void)
 	window_set_caption(win, _("Leak detection"));
 	window_set_closure(win, WINDOW_DETACH);
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
+	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
 	event_new(tl, "tlist-poll", poll_mements, NULL);
 	return (win);
 }
