@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.10 2002/11/19 05:06:32 vedge Exp $
+.\"	$Csoft: label.3,v 1.11 2003/01/01 05:18:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -48,10 +48,6 @@ widget displays a string of text, which can change at runtime.
 .Ft "struct label *"
 .Fn label_polled_new "struct region *reg" "int w" "int h" \
                      "pthread_mutex_t *mutex" "const char *fmt" "..."
-.Pp
-.Ft void
-.Fn label_init "struct label *label" "enum label_type type" "const char *s" \
-               "int w" "int h"
 .nr nS 0
 .Pp
 The
@@ -83,9 +79,9 @@ is a
 .Xr printf 3
 like format string, except that each subsequent argument is a pointer to a
 value.
-The
+The following sequences in the
 .Fa fmt
-format string may include:
+string are substituted by a value dereferenced before the widget is redrawn.
 .Pp
 .Bl -tag -compact -width "%d, %i, %x"
 .It %d, %i, %x
@@ -117,37 +113,6 @@ SDL_Rect *
 .It %[rect]
 SDL_Rect *
 .El
-.Pp
-The
-.Fn label_init
-function initializes a
-.Nm
-widget.
-If
-.Fa type
-is
-.Dv LABEL_STATIC ,
-the
-.Fa s
-argument is the string to display.
-If
-.Fa type
-is LABEL_POLLED ,
-the
-.Fa s
-argument is the format string.
-.Pp
-The
-justification defaults to
-.Dv LABEL_LEFT ,
-and may be one of:
-.Bd -literal
-enum {
-	LABEL_LEFT,
-	LABEL_CENTER,
-	LABEL_RIGHT
-} justify;
-.Ed
 .Sh TEXT CHANGES
 .nr nS 1
 .Ft void
