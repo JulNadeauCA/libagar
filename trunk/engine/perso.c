@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.41 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.42 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,8 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
+#include <engine/vg/vg.h>
+#include <engine/vg/drawing.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/hbox.h>
@@ -46,13 +48,16 @@ const struct version perso_ver = {
 	2, 0
 };
 
-const struct object_ops perso_ops = {
-	perso_init,
-	NULL,
-	perso_destroy,
-	perso_load,
-	perso_save,
-	perso_edit
+const struct gobject_ops perso_ops = {
+	{
+		perso_init,
+		gobject_reinit,
+		perso_destroy,
+		perso_load,
+		perso_save,
+		perso_edit
+	},
+	perso_specify
 };
 
 struct perso *
@@ -71,7 +76,7 @@ perso_init(void *obj, const char *name)
 {
 	struct perso *pers = obj;
 
-	object_init(pers, "perso", name, &perso_ops);
+	gobject_init(pers, "perso", name, &perso_ops);
 	pthread_mutex_init(&pers->lock, NULL);
 	pers->name[0] = '\0';
 	pers->flags = 0;
@@ -87,7 +92,7 @@ perso_init(void *obj, const char *name)
 void
 perso_destroy(void *obj)
 {
-	/* nothing yet */
+	gobject_destroy(obj);
 }
 
 int
@@ -96,6 +101,9 @@ perso_load(void *obj, struct netbuf *buf)
 	struct perso *perso = obj;
 
 	if (version_read(buf, &perso_ver, NULL) != 0)
+		return (-1);
+	
+	if (gobject_load(perso, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&perso->lock);
@@ -120,6 +128,9 @@ perso_save(void *obj, struct netbuf *buf)
 	struct perso *perso = obj;
 
 	version_write(buf, &perso_ver);
+	
+	if (gobject_save(perso, buf) == -1)
+		return (-1);
 
 	pthread_mutex_lock(&perso->lock);
 	write_string(buf, perso->name);
@@ -188,4 +199,51 @@ perso_edit(void *obj)
 		}
 	}
 	return (win);
+}
+
+int
+perso_specify(void *obj, void *space, void *arg)
+{
+	struct perso *pers = obj;
+	
+	dprintf("%s: specify (%s space)\n", OBJECT(pers)->name,
+	    OBJECT(space)->name);
+
+	if (OBJECT_TYPE(space, "map")) {
+		struct map *m = space;
+		struct map *sm = arg;
+
+		
+
+		return (0);
+	}
+	else if (OBJECT_TYPE(space, "drawing")) {
+		struct drawing *dwg = space;
+		struct vg *vg = dwg->vg;
+
+		vg_begin_element(vg, VG_TEXT);
+		vg_vertex2(vg, 0.500, 0.500);
+		vg_text_align(vg, VG_ALIGN_MC);
+		vg_printf(vg, "Perso %s", OBJECT(pers)->name);
+		vg_end_element(vg);
+
+		vg_begin_element(vg, VG_LINES);
+		vg_vertex2(vg, 0.000, 0.000);
+		vg_vertex2(vg, 0.200, 0.000);
+		vg_vertex2(vg, 0.800, 0.000);
+		vg_vertex2(vg, 1.000, 0.000);
+		vg_end_element(vg);
+	}
+#ifdef HAVE_OPENGL
+	else if (OBJECT_TYPE(space, "scene")) {
+		glBegin(GL_LINE_LOOP);
+		glVertex3f(-3, +3, 0);
+		glVertex3f(-3, -3, 0);
+		glVertex3f(+3, -3, 0);
+		glVertex3f(+3, +3, 0);
+		glEnd();
+		return (0);
+	}
+#endif
+	return (-1);
 }
