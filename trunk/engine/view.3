@@ -1,4 +1,4 @@
-.\"	$OpenBSD$
+.\"	$Csoft$
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\"
@@ -47,8 +47,8 @@ Windows are drawn directly to video memory, and can move independently of
 tile granularity.
 .It GFX_ENGINE_TILEBASED
 A single map is shown inside the root window.
-Windows are allowed using a masking scheme, and must move according to
-tile granularity.
+A map mask allows windows to be drawn on top of the map, as long as they
+are moved according to tile granularity.
 .El
 .Sh INITIALIZATION
 .nr nS 1
@@ -114,6 +114,12 @@ other windows).
 .nr nS 1
 .Ft "SDL_Surface *"
 .Fn view_surface "int flags" "int width" "int height"
+.Pp
+.Ft "SDL_Surface *"
+.Fn view_scale_surface "SDL_Surface *source" "Uint16 w" "Uint16 h"
+.Pp
+.Ft void
+.Fn view_unused_surface "SDL_Surface *scaled"
 .nr nS 0
 .Pp
 The
@@ -121,6 +127,25 @@ The
 function returns a newly allocated
 .Xr SDL_Surface 3
 structure of the given size, with masks in host byte order.
+.Pp
+The
+.Fn view_scale_surface
+function returns a pointer to a
+.Xr SDL_Surface 3
+structure which holds a copy of
+.Fa source ,
+bitmap-scaled to
+.Fa w
+by
+.Fa h
+pixels.
+If surface caching is enabled,
+.Fn view_scale_surface
+may return a precalculated surface, so the surface must be marked as unused
+with
+.Fn view_unused_surface ,
+instead of freed directly with
+.Xr SDL_FreeSurface 3 .
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr rootmap 3 ,
