@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.17 2002/09/09 01:23:38 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.18 2002/09/17 21:20:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -69,7 +69,7 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 	char *name;
 
 	name = object_name("window-region", curreg++);
-	object_init(&reg->obj, "window-region", name, NULL, NULL, &region_ops);
+	object_init(&reg->obj, "window-region", name, NULL, 0, &region_ops);
 	free(name);
 
 	reg->flags = flags;
