@@ -572,6 +572,7 @@ else
 echo "Could not find the FreeType2 library"
 exit 1
 fi
+echo -n "checking whether FreeType2 works..."
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -619,7 +620,6 @@ echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
 else
 	echo "no"
 fi
-echo -n "checking whether FreeType2 works..."
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "yes"
 else
