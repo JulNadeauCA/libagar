@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.67 2004/09/08 07:03:37 vedge Exp $
+.\"	$Csoft: object.3,v 1.68 2004/09/18 06:14:02 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -125,7 +125,7 @@ struct object_ops {
 	void (*destroy)(void *obj);			/* Release */
 	int  (*load)(void *obj, struct netbuf *buf);	/* Load data */
 	int  (*save)(void *obj, struct netbuf *buf);	/* Save data */
-	struct window *(*edit)(void *obj);		/* Edit object */
+	struct window *(*edit)(void *obj);		/* Edit data */
 };
 .Ed
 .Pp
@@ -154,6 +154,29 @@ operation is invoked from
 .Fn object_destroy .
 It must not free the object structure, and it does not need to bother about
 placing the object data back into a consistent state.
+.Pp
+The
+.Fn load
+and
+.Fn save
+operations are responsible for archiving any persistent object data
+(see the
+.Em ARCHIVING AND PAGING
+section for more information).
+.Pp
+If the compile-time option
+.Dv EDITION
+is defined, the
+.Fn edit
+operation is responsible for creating a new edition window for the
+object data (for example, the
+.Xr map 3
+object creates a
+.Xr mapview 3
+widget in edit mode), and returning it.
+If other windows are to be created as part of this object's edition process,
+they should be attached to the main edition window using
+.Xr window_attach 3 .
 .Pp
 The following
 .Nm
@@ -430,7 +453,7 @@ See
 and
 .Xr audio 3
 for more information.
-.Sh PERSISTENCE AND PAGING
+.Sh ARCHIVING AND PAGING
 .nr nS 1
 .Ft "int"
 .Fn object_load "void *obj"
@@ -448,8 +471,8 @@ for more information.
 These functions implement archiving of objects (also known as
 "serialization" or "flattening" in object-oriented terminology).
 Persistent object information such as size, dependencies and
-position in the hierarchy are encoded in machine-independent
-format (and usually saved to disk or network).
+position in the hierarchy are encoded in a machine-independent
+format.
 .Pp
 The
 .Fn load
