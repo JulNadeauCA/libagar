@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.24 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: label.3,v 1.25 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -153,6 +153,16 @@ The
 .Nm
 widget neither reacts to nor generates any event.
 .Pp
+.Sh EXAMPLES
+The following code snippet creates a window containing a static label:
+.Bd -literal
+{
+	struct window *win;
+
+	win = window_new(0, NULL);
+	label_new(win, "Foo");
+}
+.Ed
 .Sh TROUBLETONS
 The label polling mechanism is ugly and predates the implementation of widget
 bindings.
