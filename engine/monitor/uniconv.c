@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.7 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.8 2004/11/21 02:15:16 phip Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -174,12 +174,12 @@ static const int nunicode_ranges =
 static void
 select_range(int argc, union evarg *argv)
 {
+	static char text[4][128];
 	struct tableview *tv = argv[1].p;
 	struct tlist_item *it = argv[2].p;
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
 	Uint32 i, j, end;
-    static char text[4][128];
 	char *c;
 
 	for (i = 0; i < nunicode_ranges; i++) {
@@ -193,53 +193,37 @@ select_range(int argc, union evarg *argv)
 
 	tableview_row_del_all(tv);
 	
-    printf("start %i, end %i\n", range->start, end);
 	for (i = range->start; i < end; i++) {
 		if (i == 10)
 			continue;
         
-        /* prep column 0 */
-        unitext[0] = i;
-        unicode_export(UNICODE_TO_UTF8, utf8text, unitext, sizeof(unitext));
-        snprintf(text[0], sizeof(text[0]), "%s", utf8text);
+		/* prep column 0 */
+		unitext[0] = i;
+		unicode_export(UNICODE_TO_UTF8, utf8text, unitext,
+		    sizeof(unitext));
+		snprintf(text[0], sizeof(text[0]), "%s", utf8text);
         
-        /* prep column 1 */
-        snprintf(text[1], sizeof(text[1]), "%04x", i);
+		/* prep column 1 */
+		snprintf(text[1], sizeof(text[1]), "%04x", i);
         
-        /* prep column 2 */
-        bytetext[0] = '\0';
-        for (c = &utf8text[0]; *c != '\0'; c++) {
-            char s[4];
+		/* prep column 2 */
+		bytetext[0] = '\0';
+		for (c = &utf8text[0]; *c != '\0'; c++) {
+			char s[4];
             
-            snprintf(s, sizeof(s), "%x", (unsigned char)*c);
-            strlcat(bytetext, s, sizeof(bytetext));
-        }
-        snprintf(text[2], sizeof(text[2]), "%s", bytetext);
+			snprintf(s, sizeof(s), "%x", (unsigned char)*c);
+			strlcat(bytetext, s, sizeof(bytetext));
+		}
+		snprintf(text[2], sizeof(text[2]), "%s", bytetext);
         
-        /* prep column 3 */
-        snprintf(text[3], sizeof(text[3]), "%lu", i);
+		/* prep column 3 */
+		snprintf(text[3], sizeof(text[3]), "%lu", (unsigned long)i);
         
-        printf("%i: ", i);
-        j=0;
-        //for(j=0; j<4; j++)
-        {
-            int k = 0;
-            printf("'");
-            while(1)
-            {
-                if(text[j][k] == 0)
-                    break;
-                printf("%02x", text[j][k]);
-                ++k;
-            }
-            printf("', ");
-        }
-        printf("\n");
 		tableview_row_add(tv, 0, NULL, i, 
-                          0, text[0],
-                          1, text[1],
-                          2, text[2],
-                          3, text[3]);
+		    0, text[0],
+		    1, text[1],
+		    2, text[2],
+		    3, text[3]);
 	}
 }
 
@@ -270,7 +254,6 @@ uniconv_window(void)
 	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 3, "Deci", "00000");
 	
 	event_new(com, "combo-selected", select_range, "%p", tv);
-	
 	return (win);
 }
 
