@@ -1,5 +1,7 @@
-/*	$Csoft: units.h,v 1.10 2004/08/22 11:33:19 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.11 2004/08/23 06:41:59 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <config/historical_units.h>
 
 #ifndef _AGAR_WIDGET_UNITS_H_
 #define _AGAR_WIDGET_UNITS_H_
@@ -10,7 +12,7 @@ struct unit {
 	char	 *abbr;		/* Symbol */
 	char	 *name;		/* Long name */
 	double	  divider;	/* Base unit divider (for linear conv) */
-	double	(*func)(double); /* Function (for nonlinear conv) */
+	double	(*func)(double, int);	/* For nonlinear conversions */
 };
 
 __BEGIN_DECLS
@@ -22,6 +24,13 @@ __inline__ double  unit2unit(double, const struct unit *, const struct unit *);
 const struct unit *unit_best(const struct unit[], double);
 const char	  *unit_abbr(const struct unit *);
 __inline__ int	   unit_format(double, const struct unit[], char *, size_t);
+
+double	unit_fahrenheit(double, int);
+double	unit_celsius(double, int);
+#ifdef HISTORICAL_UNITS
+double	unit_rankine(double, int);
+double	unit_reaumur(double, int);
+#endif
 
 #define	unit2basef(n, u) ((float)unit2base((float)(n), (u)))
 #define	base2unitf(n, u) ((float)base2unit((float)(n), (u)))
