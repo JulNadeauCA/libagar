@@ -1,0 +1,183 @@
+.\"	$Csoft: version.3,v 1.2 2002/09/07 04:30:26 vedge Exp $
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 23, 2002
+.Dt PHYSICS 3
+.Os
+.Sh NAME
+.Nm physics
+.Nd agar physics simulation
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/physics.h>
+.Ed
+.Sh DESCRIPTION
+The agar
+.Nm
+interface implements movement.
+.Sh GENERIC DIRECTIONS
+This interface implements two-dimensional movement of an undefined construct
+inside an undefined area, with a key delay and key repeat.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn gendir_init "struct gendir *dir"
+.Pp
+.Ft "void"
+.Fn gendir_set "struct gendir *dir" "Uint32 direction"
+.Pp
+.Ft "void"
+.Fn gendir_unset "struct gendir *dir" "Uint32 direction"
+.Pp
+.Ft "Uint32"
+.Fn gendir_move "struct gendir *dir"
+.Pp
+.Ft "void"
+.Fn gendir_postmove "struct gendir *dir" "Uint32 moved"
+.nr nS 0
+.Pp
+The
+.Fn gendir_init
+function initializes a generic direction.
+.Pp
+The
+.Fn gendir_set
+function sets the direction of
+.Fa dir
+to
+.Fa direction .
+The
+.Fn gendir_unset
+requests
+.Fa dir
+to no longer move in
+.Fa direction .
+.Pp
+The
+.Fn gendir_move
+function is usually called from a timer callback to update the direction
+.Fa dir ,
+returning the direction towards which the object should move, or 0 if it
+should remain in its current position.
+.Pp
+If the timer callback has moved object, it should call
+.Fn gendir_postmove
+with the return value of
+.Fn gendir_move
+as the
+.Fa moved
+argument, to effect a
+.Fn gendir_unset
+operation and increment the necessary counters.
+.Sh MAP DIRECTIONS
+This interface implements two-dimensional movement of map references between
+adjacent map nodes.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn mapdir_init "struct mapdir *dir" "struct object *ob" "struct map *map" \
+                "Uint32 flags" "Uint32 speed"
+.Pp
+.Ft "void"
+.Fn mapdir_set "struct mapdir *dir" "Uint32 direction"
+.Pp
+.Ft "void"
+.Fn mapdir_unset "struct mapdir *dir" "Uint32 direction"
+.Pp
+.Ft "Uint32"
+.Fn mapdir_move "struct mapdir *dir" "Uint32 *map_x" "Uint32 *map_y"
+.Pp
+.Ft "void"
+.Fn mapdir_postmove "struct mapdir *dir" "Uint32 *map_x" "Uint32 *map_y" \
+                    "Uint32 moved"
+.nr nS 0
+.Pp
+The
+.Fn mapdir_init
+function initializes a map direction for object
+.Fa ob
+on map
+.Fa map .
+The
+.Fa flags
+may contain:
+.Pp
+.Bd -literal
+#define DIR_SCROLLVIEW	0x01	/* Scroll view if we reach boundaries. */
+#define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
+#define DIR_STATIC	0x04	/* Don't change sprites with directions. */
+#define DIR_PASSTHROUGH	0x08	/* Pass through map nodes. */
+.Ed
+.Pp
+The
+.Fn mapdir_set
+function sets the direction of
+.Fa dir
+to
+.Fa direction .
+The
+.Fn mapdir_unset
+requests
+.Fa dir
+to no longer move in
+.Fa direction .
+.Pp
+The
+.Fn mapdir_move
+function is usually called from a timer callback to update the direction
+.Fa dir ,
+returning the direction towards which the object should move, or 0 if it
+should remain in its current position.
+The
+.Fa map_x
+and
+.Fa map_y
+arguments should point to the current coordinates of the object on the map,
+and will be updated accordingly.
+.Pp
+If the timer callback has moved the map reference, it should call
+.Fn mapdir_postmove
+with the return value of
+.Fn mapdir_move
+as the
+.Fa moved
+argument, to effect a
+.Fn mapdir_unset
+operation, increment the necessary counters or ensure the object keeps
+moving.
+The
+.Fa map_x
+and
+.Fa map_y
+arguments are the same pointers that were passed to
+.Fn mapdir_move .
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr rootmap 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in AGAR 1.0
