@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.13 2003/03/02 04:07:47 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.14 2003/03/03 05:15:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -58,8 +58,9 @@ static void		 xcf_read_property(int, struct xcf_prop *);
 #define DEBUG_LAYER_NAMES	0x0400
 #define DEBUG_UNKNOWN_PROPS	0x0800
 #define DEBUG_XCF		0x1000
+#define DEBUG_ALPHA		0x2000
 
-int	xcf_debug = 0;
+int	xcf_debug = DEBUG_ALPHA;
 #define	engine_debug xcf_debug
 #endif
 
@@ -190,7 +191,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	}
 }
 
-static __inline__ Uint8 *
+static Uint8 *
 xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
@@ -200,7 +201,7 @@ xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
 	return (load);
 }
 
-static __inline__ Uint8 *
+static Uint8 *
 xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 {
 	int i, size, count, j;
@@ -281,11 +282,16 @@ xcf_read_tile(struct xcf_header *head, int fd, Uint32 len, int bpp,
 	return (NULL);
 }
 
+#define XCF_ALPHA_TRANSPARENT	0x01	/* Contains a transparent pixel */
+#define XCF_ALPHA_ALPHA		0x02	/* Contains an alpha pixel */
+#define XCF_ALPHA_OPAQUE	0x04	/* Contains an opaque pixel */
+
 /* 32-bit RGBA */
-static __inline__ void
-xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p)
+static void
+xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p, int *aflags)
 {
 	int x;
+	Uint8 alpha;
 	
 	for (x = tx; x < tx + ox; x++) {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -294,20 +300,35 @@ xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p)
 		    (**p & 0x0000ff00) |
 		    (**p & 0x00ff0000) |
 		    (**p & 0xff000000);
+		alpha = **row & 0x000000ff;
 #else
 		**row =
 		    (**p & 0xff000000) |
 		    (**p & 0x00ff0000) |
 		    (**p & 0x0000ff00) |
 		    (**p & 0x000000ff);
+		alpha = (**row & 0xff000000) >> 24;
 #endif
+		switch (alpha) {
+		case 0:
+			*aflags |= XCF_ALPHA_TRANSPARENT;
+			break;
+		case 255:
+			*aflags |= XCF_ALPHA_OPAQUE;
+			break;
+		default:
+			*aflags |= XCF_ALPHA_ALPHA;
+			break;
+		}
+
 		(*row)++;
 		(*p)++;
 	}
 }
 
+#if 0
 /* 32-bit RGB */
-static __inline__ void
+static void
 xcf_convert_tile24(int tx, int ox, Uint32 **row, Uint8 **p8)
 {
 	int x;
@@ -323,7 +344,7 @@ xcf_convert_tile24(int tx, int ox, Uint32 **row, Uint8 **p8)
 }
 
 /* Indexed or greyscale with alpha. */
-static __inline__ void
+static void
 xcf_convert_tile16(int tx, int ox, Uint32 **row, Uint8 **p8,
     struct xcf_header *head)
 {
@@ -357,7 +378,7 @@ xcf_convert_tile16(int tx, int ox, Uint32 **row, Uint8 **p8,
 }
 
 /* Indexed or greyscale. */
-static __inline__ void
+static void
 xcf_convert_tile8(int tx, int ox, Uint32 **row, Uint8 **p8,
     struct xcf_header *head)
 {
@@ -388,6 +409,7 @@ xcf_convert_tile8(int tx, int ox, Uint32 **row, Uint8 **p8,
 		fatal("bad 8bpp type\n");
 	}
 }
+#endif
 
 static SDL_Surface *
 xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
@@ -398,6 +420,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	Uint32 *p;
 	Uint8 *p8, *tile;
 	SDL_Surface *su;
+	int aflags = 0;
 
 	su = SDL_CreateRGBSurface(
 	    SDL_SWSURFACE,
@@ -504,8 +527,10 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 
 				switch (hier->bpp) {
 				case 4:
-					xcf_convert_tile32(tx, ox, &row, &p);
+					xcf_convert_tile32(tx, ox, &row, &p,
+					    &aflags);
 					break;
+#if 0
 				case 3:
 					xcf_convert_tile24(tx, ox, &row, &p8);
 					break;
@@ -517,6 +542,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 					xcf_convert_tile8(tx, ox, &row, &p8,
 					    head);
 					break;
+#endif
 				}
 			}
 			tx += 64;
@@ -534,6 +560,32 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	}
 	free(hier->level_offsets);
 	free(hier);
+
+	/* Adjust the alpha/colorkey properties of the surface. */
+	{	
+		Uint8 oldalpha, oldckey;
+
+		oldalpha = su->format->alpha;
+		oldckey = su->format->colorkey;
+
+		SDL_SetAlpha(su, 0, 0);
+		SDL_SetColorKey(su, 0, 0);
+		
+		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT)) {
+			debug(DEBUG_ALPHA, "alpha: %s\n", layer->name);
+			SDL_SetAlpha(su, SDL_SRCALPHA|SDL_RLEACCEL,
+			    oldalpha);
+#if 0
+		} else if (aflags & XCF_ALPHA_TRANSPARENT) {
+			debug(DEBUG_ALPHA, "colorkey (%u): %s\n", oldckey,
+			    layer->name);
+			SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL,
+			    0);
+#endif
+		} else {
+			debug(DEBUG_ALPHA, "opaque: %s\n", layer->name);
+		}
+	}
 
 	return (su);
 }
