@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.5 2002/02/01 05:52:45 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.6 2002/02/02 14:51:16 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -15,12 +15,6 @@ struct anim {
 	pthread_mutex_t lock;
 };
 
-/*
- * Most objects are derived from this structure. It is currently
- * only possible for objects to reside on one map only.
- *
- * XXX some of this should probably go elsewhere.
- */
 struct object {
 	char	*name;		/* Optional name */
 	char	*desc;		/* Optional description */
@@ -30,7 +24,7 @@ struct object {
 
 	int	 flags;
 #define OBJ_INVISIBLE	0x0001	/* Object is not visible on the map */
-#define OBJ_USED	0x0002	/* Destroy this object late (ie. maps) */
+#define OBJ_DEFERGC	0x0002	/* Defer garbage collection */
 #define OBJ_EDITABLE	0x0004	/* The map editor might use this object */
 #define TIME_HOOK	0x0010	/* Call every tick */
 #define EVENT_HOOK	0x0020	/* Receive events */
@@ -57,6 +51,8 @@ struct object {
 	void	 (*destroy_hook)(struct object *);
 	int	 (*load)(void *, char *);
 	int	 (*save)(void *, char *);
+
+	SLIST_ENTRY(object) wobjs;	/* All objects */
 };
 
 #define WMASK_DOWN	0x01	/* Y axis - */
@@ -67,15 +63,16 @@ struct object {
 #define WMASK_ZOUT	0x20	/* Z axis + */
 
 int	 object_create(struct object *, char *, char *, int);
-void	 object_destroy(void *, void *);
+int	 object_destroy(void *);
 void	 object_lategc(void);
 int	 object_init(void);
 int	 object_link(void *);
+int	 object_unlink(void *);
 void	 increase(int *, int, int);
 void	 decrease(int *, int, int);
 int	 object_wait(void *, int);
 #ifdef DEBUG
-void	 object_dump_obj(void *, void *);
+void	 object_dump(struct object *);
 #endif
 
 struct object	*object_strfind(char *);
