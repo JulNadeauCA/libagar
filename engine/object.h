@@ -1,18 +1,23 @@
-/*	$Csoft: object.h,v 1.13 2002/02/14 06:29:50 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.14 2002/02/15 10:50:24 vedge Exp $	*/
+
+struct obvec {
+	int	(*destroy)(void *);
+	void	(*event)(void *, SDL_Event *);
+	int	(*load)(void *, int);
+	int	(*save)(void *, int);
+	int	(*link)(void *);
+	int	(*unlink)(void *);
+};
 
 struct object {
 	char	*name;		/* Name string (key) */
 	char	*desc;		/* Optional description */
 	int	 id;		/* Unique identifier at runtime */
+	struct	 obvec *vec;
 
 	int	 flags;
-#define OBJ_INVISIBLE	0x0001	/* Object is not visible on the map */
-#define OBJ_DEFERGC	0x0002	/* Defer garbage collection */
-#define OBJ_EDITABLE	0x0004	/* The map editor might use this object */
-#define TIME_HOOK	0x0010	/* Call every tick */
-#define DESTROY_HOOK	0x0020	/* Pre-destroy hook */
-#define LOAD_FUNC	0x0100	/* Load routine */
-#define SAVE_FUNC	0x0200	/* Save routine */
+#define OBJ_DEFERGC	0x0001	/* Defer garbage collection */
+#define OBJ_EDITABLE	0x0002	/* The map editor might use this object */
 
 	struct	 anim **anims;	/* Animation structures */
 	int	 nanims;
@@ -21,21 +26,18 @@ struct object {
 	int	 nsprites;
 	int	 maxsprites;
 
-	void	 (*destroy_hook)(void *);
-	int	 (*load)(void *, char *);
-	int	 (*save)(void *, char *);
-
 	SLIST_ENTRY(object) wobjs;	/* All objects */
 };
 
-int	 object_create(struct object *, char *, char *, int);
+int	 object_init(struct object *, char *, int, struct obvec *vec);
 int	 object_addanim(struct object *, struct anim *);
 int	 object_addsprite(struct object *, SDL_Surface *);
 int	 object_destroy(void *);
 void	 object_lategc(void);
-int	 object_init(void);
 int	 object_link(void *);
 int	 object_unlink(void *);
+int	 object_load(void *);
+int	 object_save(void *);
 void	 increase(int *, int, int);
 void	 decrease(int *, int, int);
 #ifdef DEBUG
