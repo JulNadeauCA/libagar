@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.42 2003/07/08 00:34:52 vedge Exp $
+.\"	$Csoft: object.3,v 1.43 2003/07/26 12:28:45 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -442,6 +442,26 @@ to
 .Fa newparent .
 The linkage lock is held during the execution of the event handler.
 .El
+.Sh TROUBLETONS
+If the maximum number of references (0xffffffff-2) is reached, the object
+remains resident and the reference count is no longer incremented or
+decremented.
+The behavior of objects when this occurs requires special attention.
+.Pp
+Use of interdependencies with the paging system often increases debugging
+complexity.
+.Pp
+Code should be careful not to rely on an object's absolute path being constant,
+since it is possible to move objects between different parents.
+.Pp
+The
+.Va events_lock ,
+.Va props_lock
+and
+.Va lock
+members of the
+.Nm
+structure could be replaced by a single lock.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
