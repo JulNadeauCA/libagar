@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.63 2002/06/13 09:02:29 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.64 2002/06/25 17:42:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -61,8 +61,8 @@ static const struct object_ops null_ops = {
 	NULL	/* save */
 };
 
-static struct object_art	*object_get_art(char *);
-static struct object_audio	*object_get_audio(char *);
+static struct object_art	*object_get_art(char *, struct object *);
+static struct object_audio	*object_get_audio(char *, struct object *);
 
 int
 object_addanim(struct object_art *art, struct anim *anim)
@@ -140,7 +140,7 @@ object_addsprite(struct object_art *art, SDL_Surface *sprite)
 
 /* Load images into the media pool. */
 static struct object_art *
-object_get_art(char *media)
+object_get_art(char *media, struct object *ob)
 {
 	struct object_art *art = NULL, *eart;
 
@@ -155,6 +155,17 @@ object_get_art(char *media)
 		struct fobj *fob;
 		char *obpath;
 		Uint32 i;
+		
+		obpath = object_path(media, "fob");
+		if (obpath == NULL) {
+			if (ob->flags & OBJ_OPTMEDIA) {
+				dprintf("%s: %s\n", media, AGAR_GetError());
+				ob->flags &= ~(OBJ_ART);
+				goto done;
+			} else {
+				fatal("%s: %s\n", media, AGAR_GetError());
+			}
+		}
 
 		art = emalloc(sizeof(struct object_art));
 		art->name = strdup(media);
@@ -167,10 +178,6 @@ object_get_art(char *media)
 		art->used = 1;
 		pthread_mutex_init(&art->used_lock, NULL);
 
-		obpath = object_path(media, "fob");
-		if (obpath == NULL) {
-			fatal("%s: %s\n", media, AGAR_GetError());
-		}
 		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
 			xcf_load(fob, i, art);
@@ -180,6 +187,7 @@ object_get_art(char *media)
 		
 		LIST_INSERT_HEAD(&artsh, art, arts);
 	}
+done:
 	pthread_mutex_unlock(&media_lock);
 
 	return (art);
@@ -187,7 +195,7 @@ object_get_art(char *media)
 
 /* Load audio into the media pool. */
 static struct object_audio *
-object_get_audio(char *media)
+object_get_audio(char *media, struct object *ob)
 {
 	struct object_audio *audio = NULL, *eaudio;
 
@@ -214,7 +222,13 @@ object_get_audio(char *media)
 
 		obpath = object_path(media, "fob");
 		if (obpath == NULL) {
-			fatal("%s: %s\n", media, AGAR_GetError());
+			if (ob->flags & OBJ_OPTMEDIA) {
+				dprintf("%s: %s\n", media, AGAR_GetError());
+				ob->flags &= ~(OBJ_AUDIO);
+				goto done;
+			} else {
+				fatal("%s: %s\n", media, AGAR_GetError());
+			}
 		}
 
 		fob = fobj_load(obpath);
@@ -225,7 +239,7 @@ object_get_audio(char *media)
 		
 		LIST_INSERT_HEAD(&audiosh, audio, audios);
 	}
-
+done:
 	pthread_mutex_unlock(&media_lock);
 	return (audio);
 }
@@ -275,8 +289,10 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	pthread_mutex_init(&ob->events_lock, NULL);
 	pthread_mutex_init(&ob->maps_lock, NULL);
 
-	ob->art = (ob->flags & OBJ_ART) ? object_get_art(media) : NULL;
-	ob->audio = (ob->flags & OBJ_AUDIO) ? object_get_audio(media) : NULL;
+	ob->art = (ob->flags & OBJ_ART) ?
+	    object_get_art(media, ob) : NULL;
+	ob->audio = (ob->flags & OBJ_AUDIO) ?
+	    object_get_audio(media, ob) : NULL;
 }
 
 /* Object must not be attached. */

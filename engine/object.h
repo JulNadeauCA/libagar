@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.40 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.41 2002/06/09 10:27:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -97,6 +97,7 @@ struct object {
 #define OBJ_AUDIO	0x02		/* Load audio */
 #define OBJ_KEEPMEDIA	0x04		/* Keep graphics/audio cached */
 #define OBJ_BLOCK	0x10		/* Map: cannot walk through. XXX */
+#define OBJ_OPTMEDIA	0x20		/* Media load can fail */
 
 	struct	 object_art *art;	/* Static sprites */
 	struct	 object_audio *audio;	/* Static samples */
