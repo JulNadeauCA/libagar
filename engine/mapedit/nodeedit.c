@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.20 2003/08/29 04:55:20 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.21 2003/09/04 03:15:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -96,8 +96,9 @@ nodeedit_poll_refs(int argc, union evarg *argv)
 			    r->r_warp.y);
 			break;
 		}
-
+#if 0
 		transform_print(&r->transforms, label, sizeof(label));
+#endif
 		tlist_insert_item(tl, icon, label, r);
 		i++;
 	}
