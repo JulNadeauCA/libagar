@@ -1,4 +1,4 @@
-$Csoft: README.engine,v 1.5 2002/06/01 02:36:31 vedge Exp $
+$Csoft: README.engine,v 1.6 2002/06/07 11:07:18 vedge Exp $
 
 Global keys
 -----------
@@ -10,6 +10,7 @@ ESC:		Shut down the engine.
 Debug mode keys
 ---------------
 F2:		Load state.
+F3:		Primitive drawing algorithm switch.
 F4:		Save state.
 F5:		Spawn a map verification thread.
 F6:		Show frames per second.
