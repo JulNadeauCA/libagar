@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.8 2002/02/05 05:46:54 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.9 2002/02/07 05:16:36 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -19,20 +19,10 @@ struct object {
 #define LOAD_FUNC	0x0100	/* Load routine */
 #define SAVE_FUNC	0x0200	/* Save routine */
 
-	/*
-	 * Sprite and animation reference offsets are independent
-	 * (ie. offset 0 means animation 0 if the reference has the
-	 * MAPREF_ANIM flag set, or sprite 0 if the reference has
-	 * the MAPREF_SPRITE flag set).
-	 *
-	 * Animation and sprite lists are assumed to be constructed
-	 * at load-time, and not modified subsequently.
-	 */
 	GSList	*anims;		/* Animation structures */
 	int	 nanims;	/* Animation count */
 	GSList	*sprites;	/* Sprite surfaces */
 	int	 nsprites;	/* Sprite count */
-	pthread_mutex_t lock;	/* Lock on sprite list */
 
 	void	 (*destroy_hook)(void *);
 	int	 (*load)(void *, char *);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.8 2002/02/05 06:05:50 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.9 2002/02/07 05:16:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -63,10 +63,6 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 	ob->nsprites = 0;
 	ob->anims = NULL;
 	ob->nanims = 0;
-	if (pthread_mutex_init(&ob->lock, NULL) != 0) {
-		perror("object");
-		return (-1);
-	}
 	ob->destroy_hook = NULL;
 
 	return (0);
@@ -92,17 +88,9 @@ object_destroy(void *arg)
 		ob->destroy_hook(ob);
 	}
 	
-	if (pthread_mutex_lock(&ob->lock) == 0) {
-		for(i = 0; i < ob->nsprites; i++) {
-			SDL_FreeSurface(g_slist_nth_data(ob->sprites, i));
-		}
-		g_slist_free(ob->sprites);
-		pthread_mutex_unlock(&ob->lock);
-	} else {
-		perror("object");
+	for(i = 0; i < ob->nsprites; i++) {
+		SDL_FreeSurface(g_slist_nth_data(ob->sprites, i));
 	}
-
-	pthread_mutex_destroy(&ob->lock);
 	
 	dprintf("freed %s\n", ob->name);
 

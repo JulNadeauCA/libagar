@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.14 2002/02/07 05:24:52 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.15 2002/02/07 06:49:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -472,11 +472,6 @@ map_animate(Uint32 ival, void *p)
 			}
 
 			TAILQ_FOREACH(aref, &me->arefsh, marefs) {
-				if (pthread_mutex_lock(&aref->pobj->lock)
-				    != 0) {
-					perror(aref->pobj->name);
-					continue;
-				}
 				/*
 				 * The map rendering routine does not
 				 * bother drawing sprites on tiles
@@ -517,7 +512,6 @@ map_animate(Uint32 ival, void *p)
 						 */
 					}
 				}
-				pthread_mutex_unlock(&aref->pobj->lock);
 			}
 			if (curmapedit != NULL) {
 				mapedit_drawflags(m, me->flags, vx, vy);
