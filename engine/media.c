@@ -1,4 +1,4 @@
-/*	$Csoft: media.c,v 1.1 2002/09/02 08:11:34 vedge Exp $	*/
+/*	$Csoft: media.c,v 1.2 2002/09/06 01:29:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -36,6 +36,7 @@
 
 #include "engine.h"
 #include "map.h"
+#include "oldxcf.h"
 
 enum {
 	NANIMS_INIT =	4,
@@ -194,7 +195,13 @@ media_get_art(char *media, struct object *ob)
 		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {
 			if (xcf_check(fob->fd, fob->offs[i]) == 0) {
-				xcf_load(fob->fd, (off_t)fob->offs[i], art);
+				int rv;
+				
+				rv = xcf_load(fob->fd, (off_t)fob->offs[i],
+				    art);
+				if (rv != 0) {
+					fatal("xcf_load: %s\n", error_get());
+				}
 			} else {
 				dprintf("not a xcf in slot %d\n", i);
 			}
