@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.2 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.3 2004/04/26 07:03:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -40,23 +40,41 @@ snap_to_grid(struct vg *vg, double *x, double *y)
 {
 	double gx, gy;
 	double xoff, yoff;
+	int xsign = *x >= 0 ? 1 : -1;
+	int ysign = *y >= 0 ? 1 : -1;
 
 	/* XXX bletcherous */
-	for (gx = 0; gx <= *x-vg->grid_gap; gx += vg->grid_gap)
+	for (gx = 0; gx <= fabs(*x)-vg->grid_gap; gx += vg->grid_gap)
 	    ;;
-	for (gy = 0; gy <= *y-vg->grid_gap; gy += vg->grid_gap)
+	for (gy = 0; gy <= fabs(*y)-vg->grid_gap; gy += vg->grid_gap)
 	    ;;
 
-	xoff = *x - gx;
-	yoff = *y - gy;
+	xoff = fabs(*x) - gx;
+	yoff = fabs(*y) - gy;
 
-	*x = gx;
-	*y = gy;
+	if (xsign == 1) {
+		xoff = *x - gx;
+		*x = gx;
+		if (xoff > vg->grid_gap/2)
+			*x += vg->grid_gap;
+	} else {
+		xoff = fabs(*x) - gx;
+		*x = -gx;
+		if (xoff > vg->grid_gap/2)
+			*x -= vg->grid_gap;
+	}
 
-	if (xoff > vg->grid_gap/2)
-		*x +=  vg->grid_gap;
-	if (yoff > vg->grid_gap/2)
-		*y +=  vg->grid_gap;
+	if (ysign == 1) {
+		yoff = *y - gy;
+		*y = gy;
+		if (yoff > vg->grid_gap/2)
+			*y += vg->grid_gap;
+	} else {
+		yoff = fabs(*y) - gy;
+		*y = -gy;
+		if (yoff > vg->grid_gap/2)
+			*y -= vg->grid_gap;
+	}
 }
 
 static void
