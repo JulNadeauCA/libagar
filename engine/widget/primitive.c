@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.34 2003/01/01 05:18:41 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.35 2003/01/23 01:52:58 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -159,9 +159,6 @@ put_pixel2(Uint8 bpp, Uint8 *dst1, Uint8 *dst2, Uint32 color)
 	}
 }
 
-/*
- * Box algorithm
- */
 static void
 box_rect(void *p, SDL_Rect *rd, int z, Uint32 color)
 {
@@ -242,9 +239,6 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	    xoffs+w-1, yoffs+h-1, rcol);
 }
 
-/*
- * Frame algorithm
- */
 static void
 frame_rect(void *p, SDL_Rect *rd, Uint32 color)
 {
@@ -269,9 +263,6 @@ frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 	    xoffs+w-1, yoffs+h-1, color);
 }
 
-/*
- * Circle algorithm
- */
 static void
 circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
     Uint32 color)
@@ -310,9 +301,6 @@ circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
 	SDL_UnlockSurface(view->v);
 }
 
-/*
- * Line algorithm
- */
 static void
 line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
@@ -435,6 +423,7 @@ right_and_up_2:
 done:
 	SDL_UnlockSurface(view->v);
 }
+
 #ifdef HAVE_OPENGL
 static void
 line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
@@ -509,7 +498,7 @@ rect_opengl(void *p, SDL_Rect *rd, Uint32 color)
 	glColor3ub(r, g, b);
 	glRecti(nrd.x, nrd.y, nrd.x+nrd.w, nrd.y+nrd.h);
 }
-#endif
+#endif /* HAVE_OPENGL */
 
 /* Default primitives ops */
 struct primitive_ops primitives = {
