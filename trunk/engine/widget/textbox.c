@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.60 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.61 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -54,6 +54,9 @@ const struct widget_ops textbox_ops = {
 enum {
 	MOUSE_SCROLL_INCR =	4,
 	KBD_SCROLL_INCR =	4,
+};
+
+enum {
 	READWRITE_COLOR,
 	READONLY_COLOR,
 	TEXT_COLOR,
@@ -158,13 +161,15 @@ textbox_draw(void *p)
 drawtext:
 	x = tbox->label->w + tbox->xpadding;
 	y = tbox->ypadding;
-	primitives.box(tbox, x, 0,
+
+	primitives.box(tbox,
+	    x,
+	    0,
 	    WIDGET(tbox)->w - x - 1,
 	    WIDGET(tbox)->h,
 	    widget_holds_focus(tbox) ? -1 : 1,
-	    tbox->writeable ?
-	        WIDGET_COLOR(tbox, READWRITE_COLOR) :
-		WIDGET_COLOR(tbox, READONLY_COLOR));
+	    tbox->writeable ? READWRITE_COLOR : READONLY_COLOR);
+
 	x += tbox->xpadding;
 	if (widget_holds_focus(tbox)) {
 		x++;
@@ -185,14 +190,27 @@ drawtext:
 		lx = x;
 
 		if (i == tbox->pos && widget_holds_focus(tbox)) {
+#if 1
 			primitives.line(tbox,
-			    x, y,
-			    x, y + tbox->label->h - 2,
-			    WIDGET_COLOR(tbox, CURSOR_COLOR1));
+			    x,
+			    y,
+			    x,
+			    y + tbox->label->h - 2,
+			    CURSOR_COLOR1);
 			primitives.line(tbox,
-			    x+1, y,
-			    x+1, y + tbox->label->h - 2,
-			    WIDGET_COLOR(tbox, CURSOR_COLOR2));
+			    x + 1,
+			    y,
+			    x + 1,
+			    y + tbox->label->h - 2,
+			    CURSOR_COLOR2);
+#else
+			primitives.line2(tbox,
+			    x,
+			    y,
+			    x,
+			    y + tbox->label->h - 2,
+			    CURSOR_COLOR1);
+#endif
 			cursdrawn++;
 		}
 		

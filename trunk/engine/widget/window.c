@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.192 2003/06/06 05:59:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.193 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -61,7 +61,9 @@ const struct widget_ops window_ops = {
 enum {
 	BGFILL_COLOR,
 	BG_COLOR,
-	CAPTION_COLOR
+	CAPTION_COLOR,
+	CURRENT_COLOR,
+	HIGHLIGHT_COLOR
 };
 
 /* XXX */
@@ -146,6 +148,7 @@ window_init(void *p, const char *name)
 	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
 	widget_map_color(win, BG_COLOR, "background", 0, 0, 0, 255);
 	widget_map_color(win, CAPTION_COLOR, "caption", 250, 245, 250, 255);
+	widget_map_color(win, CURRENT_COLOR, "_current", 0, 0, 0, 255);
 
 	/* XXX special case */
 	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
@@ -153,6 +156,7 @@ window_init(void *p, const char *name)
 
 	win->flags = (name != NULL) ? WINDOW_SAVE_POSITION : 0;
 	win->visible = 0;
+
 	win->borderw = default_nborder;
 	win->border = Malloc(win->borderw * sizeof(Uint32));
 	for (i = 0; i < win->borderw; i++) {
@@ -160,6 +164,14 @@ window_init(void *p, const char *name)
 		    default_border[i].r,
 		    default_border[i].g,
 		    default_border[i].b);
+
+		if (i == win->borderw/2) {
+			widget_map_color(win, HIGHLIGHT_COLOR, "highlight",
+			    default_border[i].r,
+			    default_border[i].g,
+			    default_border[i].b,
+			    255);
+		}
 	}
 
 	pthread_mutex_init(&win->lock, &recursive_mutexattr);
@@ -183,90 +195,100 @@ void
 window_draw(void *p)
 {
 	struct window *win = p;
-	int i;
+	int i, ncol;
 
-	primitives.rect_filled(win, 0, 0,
-	    WIDGET(win)->w, WIDGET(win)->h,
-	    WIDGET_COLOR(win, BG_COLOR));
+	primitives.rect_filled(win,
+	    0,
+	    0,
+	    WIDGET(win)->w,
+	    WIDGET(win)->h,
+	    BG_COLOR);
 
 	/* Draw the window frame (expected to fit inside padding). */
 	for (i = 1; i < win->borderw; i++) {
+		ncol = widget_push_color(WIDGET(win), win->border[i]);
+
 		primitives.line(win,
 		    i,
 		    i,
 		    WIDGET(win)->w - i,
 		    i,
-		    win->border[i]);
+		    ncol);
 		primitives.line(win,
 		    i, 
 		    WIDGET(win)->h - i,
 		    WIDGET(win)->w - i,
 		    WIDGET(win)->h - i,
-		    win->border[i]);
+		    ncol);
 		primitives.line(win,
 		    i,
 		    i,
 		    i,
 		    WIDGET(win)->h - i,
-		    win->border[i]);
+		    ncol);
 		primitives.line(win,
 		    WIDGET(win)->w - i,
 		    i,
 		    WIDGET(win)->w - i,
 		    WIDGET(win)->h - i,
-		    win->border[i]);
+		    ncol);
+	
+		widget_pop_color(WIDGET(win));
 	}
 	
 	/* Draw the resize decorations. */
+	ncol = widget_push_color(WIDGET(win), win->border[0]);
 	primitives.line(win,				/* Lower left */
 	    18,
 	    WIDGET(win)->h - win->borderw,
 	    18,
 	    WIDGET(win)->h - 2,
-	    win->border[0]);
+	    ncol);
 	primitives.line(win,
 	    19,
 	    WIDGET(win)->h - win->borderw,
 	    19,
 	    WIDGET(win)->h - 2,
-	    win->border[win->borderw/2]);
+	    HIGHLIGHT_COLOR);
 	primitives.line(win,
 	    2,
 	    WIDGET(win)->h - 20,
 	    win->borderw,
 	    WIDGET(win)->h - 20,
-	    win->border[0]);
+	    ncol);
 	primitives.line(win,
 	    2,
 	    WIDGET(win)->h - 19,
 	    win->borderw,
 	    WIDGET(win)->h - 19,
-	    win->border[win->borderw/2]);
+	    HIGHLIGHT_COLOR);
 	
 	primitives.line(win,			       /* Lower right */
 	    WIDGET(win)->w - 19,
 	    WIDGET(win)->h - win->borderw,
 	    WIDGET(win)->w - 19,
 	    WIDGET(win)->h - 2,
-	    win->border[0]);
+	    ncol);
 	primitives.line(win,
 	    WIDGET(win)->w - 18,
 	    WIDGET(win)->h - win->borderw,
 	    WIDGET(win)->w - 18,
 	    WIDGET(win)->h - 2,
-	    win->border[win->borderw/2]);
+	    HIGHLIGHT_COLOR);
 	primitives.line(win,
 	    WIDGET(win)->w - win->borderw,
 	    WIDGET(win)->h - 20,
 	    WIDGET(win)->w - 2,
 	    WIDGET(win)->h - 20,
-	    win->border[0]);
+	    ncol);
 	primitives.line(win,
 	    WIDGET(win)->w - win->borderw,
 	    WIDGET(win)->h - 19,
 	    WIDGET(win)->w - 2,
 	    WIDGET(win)->h - 19,
-	    win->border[win->borderw/2]);
+	    HIGHLIGHT_COLOR);
+
+	widget_pop_color(WIDGET(win));
 }
 
 void
@@ -321,7 +343,7 @@ window_hidden(int argc, union evarg *argv)
 		primitives.rect_filled(win, 0, 0,
 		    WIDGET(win)->w,
 		    WIDGET(win)->h,
-		    WIDGET_COLOR(win, BGFILL_COLOR));
+		    BGFILL_COLOR);
 		
 		if (!view->opengl) {
 			SDL_UpdateRect(view->v,

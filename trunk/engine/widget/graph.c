@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.31 2003/06/06 02:16:26 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.32 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -54,7 +54,6 @@ const struct widget_ops graph_ops = {
 
 enum {
 	FRAME_COLOR,
-	TEXT_COLOR,
 	ORIGIN_COLOR1,
 	ORIGIN_COLOR2
 };
@@ -88,7 +87,6 @@ graph_init(struct graph *graph, const char *caption, enum graph_type type,
 	widget_init(graph, "graph", &graph_ops, WIDGET_WFILL|WIDGET_HFILL);
 
 	widget_map_color(graph, FRAME_COLOR, "frame", 50, 50, 50, 255);
-	widget_map_color(graph, TEXT_COLOR, "text", 200, 200, 200, 255);
 	widget_map_color(graph, ORIGIN_COLOR1, "origin1", 50, 50, 50, 255);
 	widget_map_color(graph, ORIGIN_COLOR2, "origin2", 150, 150, 150, 255);
 	
@@ -274,19 +272,25 @@ graph_draw(void *p)
 
 	origin_y = WIDGET(gra)->h * gra->origin_y / 100;
 
-	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0,
-	    WIDGET_COLOR(gra, FRAME_COLOR));
+	primitives.box(gra,
+	    0, 0,
+	    WIDGET(gra)->w, WIDGET(gra)->h,
+	    0,
+	    FRAME_COLOR);
 
 	if (gra->flags & GRAPH_ORIGIN) {
-		primitives.line(gra, 0, origin_y, WIDGET(gra)->w, origin_y,
-		    widget_holds_focus(gra) ?
-		    WIDGET_COLOR(gra, ORIGIN_COLOR1) :
-		    WIDGET_COLOR(gra, ORIGIN_COLOR2));
-		primitives.line(gra, 0, origin_y+1,
-		    WIDGET(gra)->w, origin_y+1,
-		    widget_holds_focus(gra) ?
-		    WIDGET_COLOR(gra, ORIGIN_COLOR2) :
-		    WIDGET_COLOR(gra, ORIGIN_COLOR1));
+		primitives.line(gra,
+		    0,
+		    origin_y,
+		    WIDGET(gra)->w,
+		    origin_y,
+		    widget_holds_focus(gra) ? ORIGIN_COLOR1 : ORIGIN_COLOR2);
+		primitives.line(gra,
+		    0,
+		    origin_y + 1,
+		    WIDGET(gra)->w,
+		    origin_y + 1,
+		    widget_holds_focus(gra) ? ORIGIN_COLOR2 : ORIGIN_COLOR1);
 	}
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
@@ -321,9 +325,19 @@ graph_draw(void *p)
 				widget_put_pixel(gra, x, y, gi->color);
 				break;
 			case GRAPH_LINES:
-				primitives.line(gra,
-				    x - gra->xinc, oy,
-				    x, y, gi->color);
+				{
+					int ncolor;
+
+					ncolor = widget_push_color(WIDGET(gra),
+					    gi->color);
+					primitives.line(gra,
+					    x - gra->xinc,
+					    oy,
+					    x,
+					    y,
+					    ncolor);
+					widget_pop_color(WIDGET(gra));
+				}
 				break;
 			}
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.115 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.116 2003/06/06 09:03:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -320,13 +320,13 @@ defcurs:
 	    rd.y + 1,
 	    mv->map->tilew - 1,
 	    mv->map->tileh - 1,
-	    WIDGET_COLOR(mv, CURSOR_COLOR));
+	    CURSOR_COLOR);
 	primitives.rect_outlined(mv,
 	    rd.x + 2,
 	    rd.y + 2,
 	    mv->map->tilew - 3,
 	    mv->map->tileh - 3,
-	    WIDGET_COLOR(mv, CURSOR_COLOR));
+	    CURSOR_COLOR);
 }
 
 static void
@@ -346,16 +346,20 @@ mapview_draw_background(struct mapview *mv)
 		     x < WIDGET(mv)->w;
 		     x += mapview_bg_squaresize) {
 			if (alt1++ == 1) {
-				primitives.rect_filled(mv, x, y,
+				primitives.rect_filled(mv,
+				    x,
+				    y,
 				    mapview_bg_squaresize,
 				    mapview_bg_squaresize,
-				    WIDGET_COLOR(mv, BG1_COLOR));
+				    BG1_COLOR);
 				alt1 = 0;
 			} else {
-				primitives.rect_filled(mv, x, y,
+				primitives.rect_filled(mv,
+				    x,
+				    y,
 				    mapview_bg_squaresize,
 				    mapview_bg_squaresize,
-				    WIDGET_COLOR(mv, BG2_COLOR));
+				    BG2_COLOR);
 			}
 		}
 		if (alt2++ == 1) {
@@ -421,10 +425,12 @@ draw_layer:
 			}
 			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
 				/* XXX overdraw */
-				primitives.rect_outlined(mv, rx, ry,
+				primitives.rect_outlined(mv,
+				    rx,
+				    ry,
 				    mv->map->tilew + 1,
 				    mv->map->tileh + 1,
-				    WIDGET_COLOR(mv, GRID_COLOR));
+				    GRID_COLOR);
 			}
 
 			if (!mapedition)
@@ -454,18 +460,20 @@ draw_layer:
 				/* Construction origin. XXX ugly */
 				if (mv->constr.x == mx && mv->constr.y == my) {
 					primitives.frame(mv,
-					    rx+2, ry+2,
-					    mv->map->tilew-3, mv->map->tileh-3,
-					    WIDGET_COLOR(mv,
-					    TSETORIG_COLOR));
+					    rx + 2,
+					    ry + 2,
+					    mv->map->tilew - 3,
+					    mv->map->tileh - 3,
+					    TSETORIG_COLOR);
 				}
 				/* Source node? XXX use selections */
 				if (node == mapedit.src_node) {
 					primitives.rect_outlined(mv,
-					    rx+1, ry+1,
+					    rx + 1,
+					    ry + 1,
 					    mv->map->tilew - 1,
 					    mv->map->tileh - 1,
-					    WIDGET_COLOR(mv, SRCNODE_COLOR));
+					    SRCNODE_COLOR);
 				}
 			}
 		}
@@ -477,12 +485,16 @@ next_layer:
 	
 	/* Indicate the selection. */
 	if (esel_x != -1) {
-		primitives.rect_outlined(mv, esel_x, esel_y, esel_w, esel_h,
-		    WIDGET_COLOR(mv, ESEL_COLOR));
+		primitives.rect_outlined(mv,
+		    esel_x, esel_y,
+		    esel_w, esel_h,
+		    ESEL_COLOR);
 	}
 	if (msel_x != -1) {
-		primitives.rect_outlined(mv, msel_x, msel_y, msel_w, msel_h,
-		    WIDGET_COLOR(mv, MSEL_COLOR));
+		primitives.rect_outlined(mv,
+		    msel_x, msel_y,
+		    msel_w, msel_h,
+		    MSEL_COLOR);
 	}
 
 	/* Draw the cursor for the current tool. */

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: box.c,v 1.1 2003/06/06 02:57:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -92,8 +92,7 @@ box_draw(void *p)
 #if 0
 	struct box *bo = p;
 
-	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, -1,
-	    WIDGET_COLOR(bo, FRAME_COLOR));
+	primitives.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, -1, FRAME_COLOR);
 #endif
 }
 

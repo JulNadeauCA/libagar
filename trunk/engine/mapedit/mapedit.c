@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.170 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.171 2003/06/06 09:03:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -248,6 +248,8 @@ new_view(int argc, union evarg *argv)
 	struct window *win;
 
 	win = window_new(NULL);
+	window_set_caption(win, "%s view", OBJECT(m)->name);
+
 	mapview_new(win, m, MAPVIEW_INDEPENDENT);
 	window_show(win);
 }
@@ -300,13 +302,14 @@ mapedit_window(struct map *m)
 	/* XXX order */
 
 	win = window_new(NULL);
+	window_set_caption(win, "%s edition", OBJECT(m)->name);
 	event_new(win, "window-close", mapedit_close, NULL);
 
 	mv = Malloc(sizeof(struct mapview));
 	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT);
 
 	/* Create the map edition toolbar. */
-	hb = hbox_new(win, 0);
+	hb = hbox_new(win, HBOX_WFILL);
 	hbox_set_spacing(hb, 0);
 	{
 		const struct {
@@ -364,8 +367,7 @@ mapedit_window(struct map *m)
 		    &mv->esel.x, &mv->esel.y);
 	}
 
-	hb = hbox_new(win, 0);
-	object_attach(hb, mv);
+	object_attach(win, mv);
 	widget_focus(mv);
 	return (win);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.64 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.65 2003/06/06 09:03:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -151,14 +151,12 @@ tlist_draw(void *p)
 	if (WIDGET(tl)->w < MIN_WIDTH || WIDGET(tl)->h < MIN_HEIGHT)
 		return;
 
-	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
-	    WIDGET_COLOR(tl, BG_COLOR));
+	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1, BG_COLOR);
 
 	pthread_mutex_lock(&tl->lock);
-
-	if (tl->flags & TLIST_POLL)
+	if (tl->flags & TLIST_POLL) {
 		event_post(tl, "tlist-poll", NULL);
-
+	}
 	offset = widget_get_int(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -177,7 +175,7 @@ tlist_draw(void *p)
 			    y,
 			    WIDGET(tl)->w - WIDGET(tl->sbar)->w,
 			    tl->item_h,
-			    WIDGET_COLOR(tl, SELECTION_COLOR));
+			    SELECTION_COLOR);
 		}
 
 		if (it->text != NULL)
@@ -190,38 +188,51 @@ tlist_draw(void *p)
 			int j;
 
 			primitives.line2(tl,
-			    tx-ts,	ty + ts/2,
-			    tx-ts,	ty - tl->item_h,
-			    WIDGET_COLOR(tl, LINE_COLOR));
+			    tx - ts,
+			    ty + ts/2,
+			    tx - ts,
+			    ty - tl->item_h,
+			    LINE_COLOR);
 			primitives.line2(tl,
-			    tx-ts,	ty + ts/2,
-			    tx,		ty + ts/2,
-			    WIDGET_COLOR(tl, LINE_COLOR));
+			    tx - ts,
+			    ty + ts/2,
+			    tx,
+			    ty + ts/2,
+			    LINE_COLOR);
 
 			for (j = 0; j < it->depth; j++) {
 				int lx = j*ts + 7;
 
 				primitives.line2(tl,
-				    lx,	ty + ts/2,
-				    lx,	ty - tl->item_h,
-				    WIDGET_COLOR(tl, LINE_COLOR));
+				    lx,
+				    ty + ts/2,
+				    lx,
+				    ty - tl->item_h,
+				    LINE_COLOR);
 			}
 
 			if (it->haschilds) {
 				primitives.frame(tl,
-				    tx, ty,
-				    ts, ts,
-				    WIDGET_COLOR(tl, LINE_COLOR));
+				    tx,
+				    ty,
+				    ts,
+				    ts,
+				    LINE_COLOR);
+
 				if (it->vischilds) {
 					primitives.minus(tl,
-					    tx+1, ty+1,
-					    ts-2, ts-2,
-					    WIDGET_COLOR(tl, LINE_COLOR));
+					    tx + 1,
+					    ty + 1,
+					    ts - 2,
+					    ts - 2,
+					    LINE_COLOR);
 				} else {
 					primitives.plus(tl,
-					    tx+1, ty+1,
-					    ts-2, ts-2,
-					    WIDGET_COLOR(tl, LINE_COLOR));
+					    tx + 1,
+					    ty + 1,
+					    ts - 2,
+					    ts - 2,
+					    LINE_COLOR);
 				}
 				goto drawtext;		/* Skip the icon */
 			}
@@ -239,8 +250,13 @@ drawtext:
 		}
 
 		y += tl->item_h;
-		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
-		    WIDGET_COLOR(tl, LINE_COLOR));
+
+		primitives.line(tl,
+		    0,
+		    y,
+		    WIDGET(tl)->w,
+		    y,
+		    LINE_COLOR);
 
 		visitems++;
 	}
