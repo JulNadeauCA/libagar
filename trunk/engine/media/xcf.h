@@ -1,5 +1,7 @@
-/*	$Csoft: xcf.h,v 1.3 2002/12/22 11:37:45 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.4 2002/12/23 03:05:44 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <config/have_ieee754.h>
 
 #define XCF_SIGNATURE	"gimp xcf "
 #define XCF_MAGIC_LEN	14
