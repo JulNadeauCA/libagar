@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.9 2002/11/08 06:02:47 vedge Exp $
+.\"	$Csoft: button.3,v 1.10 2003/01/01 05:18:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -73,8 +73,7 @@ The
 can be changed at runtime, and may include:
 .Pp
 .Bd -literal
-#define BUTTON_PRESSED	0x01		/* Button is pressed */
-#define BUTTON_STICKY	0x02		/* Button state is static */
+#define BUTTON_STICKY	0x01		/* Sticky state */
 .Ed
 .Sh EVENTS
 The
@@ -101,6 +100,15 @@ widget generates the following events:
 .Bl -tag -compact -width 2n
 .It Fn button-pushed "void"
 Button was pressed.
+.El
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "int *value"
+.It Va int *value
+Button state (1=pressed, 0=released)
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
