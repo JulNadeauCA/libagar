@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.165 2003/03/25 13:41:45 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.166 2003/03/26 02:52:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 
 static const struct version map_ver = {
 	"agar map",
-	4, 2
+	4, 3
 };
 
 static const struct object_ops map_ops = {
@@ -291,6 +291,7 @@ map_init(struct map *m, char *name, char *media)
 	m->zoom = 100;
 	m->ssx = TILEW;
 	m->ssy = TILEH;
+	m->cur_layer = 0;
 
 	m->layers = Malloc(sizeof(struct map_layer));
 	m->nlayers = 1;
@@ -833,6 +834,9 @@ map_load(void *ob, int fd)
 			map_layer_load(fd, m, &m->layers[i]);
 		}
 	}
+	if (ver.minor >= 3) {				/* Edited layer */
+		m->cur_layer = read_uint8(fd);
+	}
 
 	debug(DEBUG_STATE,
 	    "geo %ux%u, origin at %d,%d, %u%% zoom, %ux%u tiles\n",
@@ -1007,6 +1011,9 @@ map_save(void *p, int fd)
 		for (i = 0; i < m->nlayers; i++) {
 			map_layer_save(buf, &m->layers[i]);
 		}
+	}
+	if (map_ver.minor >= 3) {			/* Edited layer */
+		buf_write_uint8(buf, m->cur_layer);
 	}
 
 	/* Write the dependencies. */

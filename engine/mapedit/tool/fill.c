@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.13 2003/03/24 12:08:42 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.14 2003/03/25 13:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -112,7 +112,7 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 			}
 
 			/* Remove all refs on this layer. */
-			node_clear_layer(dstnode, mv->cur_layer);
+			node_clear_layer(dstnode, mv->map->cur_layer);
 
 			switch (fi->mode) {
 			case FILL_FILL_MAP:
@@ -120,7 +120,7 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 					struct noderef *nnref;
 
 					nnref = node_copy_ref(nref, dstnode);
-					nnref->layer = mv->cur_layer;
+					nnref->layer = mv->map->cur_layer;
 				}
 				break;
 			case FILL_CLEAR_MAP:

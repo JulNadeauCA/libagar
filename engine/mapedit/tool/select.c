@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.7 2003/03/16 03:57:08 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.8 2003/03/25 13:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -56,8 +56,15 @@ select_copy(void *p, struct mapview *mv)
 static void
 select_paste(void *p, struct mapview *mv)
 {
-	if (mv->esel.set)
-		selops_paste(mv);
+	if (mv->esel.set) {
+		selops_paste(mv, mv->esel.x, mv->esel.y);
+	} else {
+		if (mv->cx != -1 && mv->cy != -1) {
+			selops_paste(mv, mv->cx, mv->cy);
+		} else {
+			selops_paste(mv, 0, 0);
+		}
+	}
 }
 
 static void

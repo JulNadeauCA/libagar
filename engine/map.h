@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.81 2003/03/18 04:20:54 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.82 2003/03/25 13:42:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -105,6 +105,8 @@ struct map {
 	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
 	unsigned int	  tilew, tileh;	/* Tile geometry */
 	int		  defx, defy;	/* Map origin */
+	int		  cur_layer;	/* Layer being edited */
+
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
 

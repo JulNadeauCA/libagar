@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.27 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.28 2003/03/25 13:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ eraser_effect(void *p, struct mapview *mv, struct node *node)
 	     nref != TAILQ_END(&node->nrefs);
 	     nref = nnref) {
 		nnref = TAILQ_NEXT(nref, nrefs);
-		if (nref->layer == mv->cur_layer) {
+		if (nref->layer == mv->map->cur_layer) {
 			TAILQ_REMOVE(&node->nrefs, nref, nrefs);
 			noderef_destroy(nref);
 			free(nref);

@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.26 2003/03/24 12:08:42 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.27 2003/03/25 13:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -375,7 +375,7 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *srcnode,
 	struct noderef *nref, *nnref;
 	int other = 0;
 
-	mer->layer = mv->cur_layer;
+	mer->layer = mv->map->cur_layer;
 
 	if (TAILQ_EMPTY(&srcnode->nrefs))
 		return;

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.3 2003/03/24 12:08:40 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.4 2003/03/25 13:43:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -67,14 +67,14 @@ layedit_poll(int argc, union evarg *argv)
 
 		snprintf(text, sizeof(text), "%s (%svisible%s)\n",
 		    layer->name, !layer->visible ? "in" : "",
-		    (i == mv->cur_layer) ? ", editing" : "");
+		    (i == m->cur_layer) ? ", editing" : "");
 		tlist_insert_item(tl, NULL, text, layer);
 	}
 	tlist_restore_selections(tl);
 
 	/* XXX load/save hack */
-	if (mv->cur_layer >= m->nlayers) {
-		mv->cur_layer--;
+	if (m->cur_layer >= m->nlayers) {
+		m->cur_layer--;
 	}
 }
 
@@ -137,9 +137,9 @@ layedit_pop(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
-	if (mv->cur_layer == mv->map->nlayers-1 &&
+	if (mv->map->cur_layer == mv->map->nlayers-1 &&
 	    mv->map->nlayers > 1) {
-		mv->cur_layer--;
+		mv->map->cur_layer--;
 	}
 	map_pop_layer(mv->map);
 }
@@ -154,7 +154,7 @@ layedit_edit(int argc, union evarg *argv)
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
-			mv->cur_layer = i;
+			mv->map->cur_layer = i;
 			return;
 		}
 		i++;

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.37 2003/03/24 12:08:42 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.38 2003/03/25 13:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -111,7 +111,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 		     nref != TAILQ_END(&dstnode->nrefs);
 		     nref = nnref) {
 			nnref = TAILQ_NEXT(nref, nrefs);
-			if (nref->layer == mv->cur_layer) {
+			if (nref->layer == mv->map->cur_layer) {
 				TAILQ_REMOVE(&dstnode->nrefs, nref, nrefs);
 				noderef_destroy(nref);
 				free(nref);
@@ -122,7 +122,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	/* Copy the refs from the source node. */
 	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 		nref = node_copy_ref(nref, dstnode);
-		nref->layer = mv->cur_layer;
+		nref->layer = mv->map->cur_layer;
 	}
 
 	if (st->inherit_flags)

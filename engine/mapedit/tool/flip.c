@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.4 2003/03/24 12:06:01 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.5 2003/03/25 13:45:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -102,7 +102,7 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 		enum transform_type type = TRANSFORM_HFLIP;
 		struct transform *trans;
 		
-		if (nref->layer != mv->cur_layer)
+		if (nref->layer != mv->map->cur_layer)
 			continue;
 
 		switch (flip->mode) {
@@ -116,11 +116,13 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 
 		/* Same transform already applied? */
 		SLIST_FOREACH(trans, &nref->transforms, transforms) {
-			if (trans->type == type)
+			if (trans->type == type) {
+				SLIST_REMOVE(&nref->transforms, trans,
+				    transform, transforms);
 				break;
+			}
 		}
-		if (trans != NULL) {
-			dprintf("transform exists\n");
+		if (trans != NULL) {				/* Existing */
 			continue;
 		}
 
