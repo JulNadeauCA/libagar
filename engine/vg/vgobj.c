@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.2 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.3 2004/04/19 02:15:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include <engine/widget/palette.h>
 #include <engine/widget/toolbar.h>
 #include <engine/widget/statusbar.h>
+#include <engine/widget/combo.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -68,8 +69,8 @@ vgobj_init(void *p, const char *name)
 	struct vgobj *vgo = p;
 
 	object_init(vgo, "vgobj", name, &vgobj_ops);
-	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID);
-	vg_scale(vgo->vg, 4, 4, 1);
+	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID|VG_VISBBOXES);
+	vg_scale(vgo->vg, 8.5, 11, 1);
 	vg_rasterize(vgo->vg);
 }
 
@@ -197,10 +198,60 @@ snap_to(int argc, union evarg *argv)
 	struct vg *vg = argv[2].p;
 	int snap_mode = argv[3].i;
 
-	dprintf("snap mode %d\n", snap_mode);
-
 	toolbar_select_unique(tbar, bu);
 	vg_snap_mode(vg, snap_mode);
+}
+
+static void
+poll_layers(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct vg *vg = argv[1].p;
+	int i;
+	
+	tlist_clear_items(tl);
+	for (i = 0; i < vg->nlayers; i++) {
+		struct vg_layer *layer = &vg->layers[i];
+		char label[TLIST_LABEL_MAX];
+
+		if (layer->visible) {
+			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
+			    layer->name,
+			    (i == vg->cur_layer) ? _(", editing") : "");
+		} else {
+			snprintf(label, sizeof(label), _("%s (invisible %s)\n"),
+			    layer->name,
+			    (i == vg->cur_layer) ? _(", editing") : "");
+		}
+
+		tlist_insert_item(tl, NULL, label, layer);
+	}
+	tlist_restore_selections(tl);
+
+	/* XXX load/save hack */
+	if (vg->cur_layer >= vg->nlayers)
+		vg->cur_layer--;
+}
+
+static void
+select_layer(int argc, union evarg *argv)
+{
+	struct combo *com = argv[0].p;
+	struct vg *vg = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	int i = 0;
+
+	TAILQ_FOREACH(it, &com->list->items, items) {
+		if (it->selected) {
+			struct vg_layer *lay = it->p1;
+
+			vg->cur_layer = i;
+			textbox_printf(com->tbox, "%d. %s", i, lay->name);
+			return;
+		}
+		i++;
+	}
+	text_msg(MSG_ERROR, _("No layer is selected."));
 }
 
 struct window *
@@ -226,21 +277,23 @@ vgobj_edit(void *obj)
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
-	statusbar_add_label(statbar, LABEL_STATIC, ".");
 
 	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
 	box_set_spacing(bo, 0);
 	box_set_padding(bo, 0);
 	{
 		struct toolbar *snbar;
+		struct button *bu;
 
 		snbar = toolbar_new(bo, TOOLBAR_VERT, 1);
 		toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
 		    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
 		toolbar_add_button(snbar, 0, ICON(SNAP_RINT_ICON), 1, 0,
 		    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
-		toolbar_add_button(snbar, 0, ICON(SNAP_GRID_ICON), 1, 0,
+		bu = toolbar_add_button(snbar, 0, ICON(SNAP_GRID_ICON), 1, 0,
 		    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
+		widget_set_int(bu, "state", 1);
+
 		toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_ICON), 1, 0,
 		    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
 		toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_D_ICON), 1, 0,
@@ -258,15 +311,30 @@ vgobj_edit(void *obj)
 		toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_MANUAL_ICON),
 		    1, 0, snap_to, "%p,%p,%i", snbar, vg,
 		    VG_INTERSECTIONS_MANUAL);
+	
+		bo = box_new(bo, BOX_VERT, BOX_WFILL|BOX_HFILL);
+		box_set_spacing(bo, 0);
+		box_set_padding(bo, 0);
+		{
+			struct combo *laysel;
 
-		mv = mapview_new(bo, vg->map,
-		    MAPVIEW_EDIT|MAPVIEW_INDEPENDENT, tbar, statbar);
-		mapview_prescale(mv, 12, 6);
-		mapview_reg_tool(mv, &origin_tool, vg);
-		mapview_reg_tool(mv, &point_tool, vg);
-		mapview_reg_tool(mv, &line_tool, vg);
-		mapview_reg_tool(mv, &circle_tool, vg);
-		mapview_reg_tool(mv, &ellipse_tool, vg);
+			laysel = combo_new(bo, COMBO_POLL, _("Layer:"));
+			textbox_printf(laysel->tbox, "%d. %s", vg->cur_layer,
+			    vg->layers[vg->cur_layer].name);
+			event_new(laysel->list, "tlist-poll", poll_layers, "%p",
+			    vg);
+			event_new(laysel, "combo-selected", select_layer, "%p",
+			    vg);
+
+			mv = mapview_new(bo, vg->map,
+			    MAPVIEW_EDIT|MAPVIEW_INDEPENDENT, tbar, statbar);
+			mapview_prescale(mv, 10, 8);
+			mapview_reg_tool(mv, &origin_tool, vg);
+			mapview_reg_tool(mv, &point_tool, vg);
+			mapview_reg_tool(mv, &line_tool, vg);
+			mapview_reg_tool(mv, &circle_tool, vg);
+			mapview_reg_tool(mv, &ellipse_tool, vg);
+		}
 	}
 
 	object_attach(win, statbar);

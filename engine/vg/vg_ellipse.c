@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.1 2004/04/19 02:08:54 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.2 2004/04/20 01:05:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -61,6 +61,15 @@ vg_draw_ellipse(struct vg *vg, struct vg_element *vge)
 	vg_arc_primitive(vg, x, y, w, h, s, e, vge->color);
 }
 
+void
+vg_ellipse_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+{
+	r->x = vge->vtx[0].x - vge->vg_arc.w/2;
+	r->y = vge->vtx[0].y - vge->vg_arc.h/2;
+	r->w = vge->vg_arc.w;
+	r->h = vge->vg_arc.h;
+}
+
 #ifdef EDITION
 static struct vg_element *cur_ellipse;
 static int seq;
@@ -87,13 +96,14 @@ ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 			cur_ellipse->vg_arc.w = x - vg->origin[2].x;
 			cur_ellipse->vg_arc.h = y - vg->origin[2].y;
 		} 
+		cur_ellipse->redraw++;
+		vg_rasterize(vg);
 	} else {
 		vg->origin[2].x = x;
 		vg->origin[2].y = y;
 	}
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
-	vg_rasterize(vg);
 }
 
 static void
@@ -120,6 +130,7 @@ ellipse_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	default:
 		if (cur_ellipse != NULL) {
 			vg_undo_element(vg, cur_ellipse);
+			cur_ellipse->redraw++;
 			vg_rasterize(vg);
 		}
 		goto finish;

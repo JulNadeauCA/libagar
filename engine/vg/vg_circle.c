@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.3 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.4 2004/04/19 02:07:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -63,6 +63,15 @@ vg_draw_circle(struct vg *vg, struct vg_element *vge)
 	vg_circle_primitive(vg, rx, ry, radius, vge->color);
 }
 
+void
+vg_circle_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
+{
+	r->x = vge->vtx[0].x - vge->vg_circle.radius;
+	r->y = vge->vtx[0].y - vge->vg_circle.radius;
+	r->w = vge->vg_circle.radius*2;
+	r->h = vge->vg_circle.radius*2;
+}
+
 #ifdef EDITION
 static struct vg_element *cur_circle;
 static struct vg_vertex *cur_radius;
@@ -90,13 +99,18 @@ circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 		cur_radius->x = x;
 		cur_radius->y = y;
 		cur_circle->vg_circle.radius =
-		    sqrt(pow(x-vg->origin[1].x,2) +
-		         pow(y-vg->origin[1].y,2));
+		    sqrt(pow(x-vg->origin[2].x,2) +
+		         pow(y-vg->origin[2].y,2));
 	} else {
-		vg->origin[1].x = x;
-		vg->origin[1].y = y;
+		vg->origin[2].x = x;
+		vg->origin[2].y = y;
 	}
-	vg_rasterize(vg);
+	if (cur_circle != NULL) {
+		cur_circle->redraw++;
+		vg_rasterize(vg);
+	}
+	vg->origin[1].x = x;
+	vg->origin[1].y = y;
 }
 
 static void
@@ -122,6 +136,7 @@ circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	default:
 		if (cur_circle != NULL) {
 			vg_undo_element(vg, cur_circle);
+			cur_circle->redraw++;
 			vg_rasterize(vg);
 		}
 		goto finish;
