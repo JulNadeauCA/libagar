@@ -350,19 +350,18 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} >> config.log
 $CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_MATH" > config/have_math.h
 echo "#define HAVE_MATH" $HAVE_MATH >> config/have_math.h
 echo "#endif /* HAVE_MATH */" >> config/have_math.h
@@ -757,19 +756,18 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> config.log
 $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_SDL" > config/have_sdl.h
 echo "#define HAVE_SDL" $HAVE_SDL >> config/have_sdl.h
 echo "#endif /* HAVE_SDL */" >> config/have_sdl.h
@@ -845,19 +843,18 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> config.log
 $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
 echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> config/have_freetype.h
 echo "#endif /* HAVE_FREETYPE */" >> config/have_freetype.h
@@ -969,19 +966,18 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 >> config.log
 $CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_X11" > config/have_x11.h
 echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
 echo "#endif /* HAVE_X11 */" >> config/have_x11.h
@@ -1028,19 +1024,18 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} >> config.log
 $CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
+	echo "failed" >> config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
+	echo "ok" >> config.log
 	echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
 echo "#define HAVE_OPENGL" $HAVE_OPENGL >> config/have_opengl.h
 echo "#endif /* HAVE_OPENGL */" >> config/have_opengl.h
