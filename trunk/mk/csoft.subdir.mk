@@ -29,7 +29,7 @@
 MAKE?=	    make
 
 all-subdir:
-	@(if [ "${SUBDIR}" == "" ]; then \
+	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
 	    SUBDIR="${SUBDIR}"; \
@@ -42,7 +42,7 @@ all-subdir:
 	fi)
 
 clean-subdir:
-	@(if [ "${SUBDIR}" == "" ]; then \
+	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
 	    SUBDIR="${SUBDIR}"; \
@@ -55,7 +55,7 @@ clean-subdir:
 	fi)
 
 install-subdir:
-	@(if [ "${SUBDIR}" == "" ]; then \
+	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
 	    SUBDIR="${SUBDIR}"; \
@@ -69,7 +69,7 @@ install-subdir:
 
 
 deinstall-subdir:
-	@(if [ "${SUBDIR}" == "" ]; then \
+	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
 	    SUBDIR="${SUBDIR}"; \
@@ -82,7 +82,7 @@ deinstall-subdir:
 	fi)
 
 regress-subdir:
-	@(if [ "${SUBDIR}" == "" ]; then \
+	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
 	    SUBDIR="${SUBDIR}"; \
