@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.12 2002/08/20 05:58:18 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.13 2002/08/21 01:18:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -110,10 +110,6 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 	    objq_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(oq, "window-mousebuttondown", 0,
 	    objq_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(oq, "window-keyup", 0,
-	    objq_event, "%i", WINDOW_KEYUP);
-	event_new(oq, "window-keydown", 0,
-	    objq_event, "%i", WINDOW_KEYDOWN);
 }
 
 static void
