@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.31 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.32 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ radio_init(struct radio *rad, const char **items)
 	const char *s, **itemsp = items;
 	int i;
 
-	widget_init(rad, "radio", &radio_ops, WIDGET_CLIPPING);
+	widget_init(rad, "radio", &radio_ops, WIDGET_FOCUSABLE);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &rad->value);
 
 	widget_map_color(rad, INSIDE_COLOR, "inside", 210, 210, 210, 255);

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.59 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.60 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -174,6 +174,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 			    binding->type, binding->p1, binding->p2,
 			    binding->mutex);
 
+			event_post(wid, "widget-bound", "%p", binding);
 			pthread_mutex_unlock(&wid->bindings_lock);
 			return (binding);
 		}
@@ -191,8 +192,9 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	debug_n(DEBUG_BINDINGS,
 	    "%s: bound `%s' to %p (type=%d p2=%p mutex=%p)\n",
 	    OBJECT(wid)->name, name, p1, type, p2, mu);
-	pthread_mutex_unlock(&wid->bindings_lock);
 
+	event_post(wid, "widget-bound", "%p", binding);
+	pthread_mutex_unlock(&wid->bindings_lock);
 	return (binding);
 }
 
@@ -756,11 +758,13 @@ widget_focus(void *p)
 	do {
 		if (OBJECT_TYPE(pwid, "window"))
 			break;
-		if (pwid->flags & WIDGET_NO_FOCUS) {
+#if 0
+		if ((pwid->flags & WIDGET_FOCUSABLE) == 0) {
 			dprintf("parent (%s) is not focusable\n",
 			    OBJECT(pwid)->name);
 			break;
 		}
+#endif
 		dprintf("%s gained focus\n", OBJECT(pwid)->name);
 		pwid->flags |= WIDGET_FOCUSED;
 		event_post(pwid, "widget-gainfocus", NULL);
@@ -804,7 +808,7 @@ widget_draw(void *p)
 
 /* Set the geometry of a widget and invoke its scale operation. */
 void
-widget_set_geometry(void *p, int w, int h)
+widget_scale(void *p, int w, int h)
 {
 	struct widget *wid = p;
 

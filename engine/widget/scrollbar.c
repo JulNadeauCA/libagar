@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.26 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.27 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -76,7 +76,8 @@ scrollbar_new(void *parent, enum scrollbar_type type)
 void
 scrollbar_init(struct scrollbar *sb, enum scrollbar_type type)
 {
-	widget_init(sb, "scrollbar", &scrollbar_ops, WIDGET_UNFOCUSED_BUTTONUP);
+	widget_init(sb, "scrollbar", &scrollbar_ops,
+	    WIDGET_FOCUSABLE|WIDGET_UNFOCUSED_BUTTONUP);
 	widget_bind(sb, "value", WIDGET_INT, NULL, &sb->value);
 	widget_bind(sb, "min", WIDGET_INT, NULL, &sb->min);
 	widget_bind(sb, "max", WIDGET_INT, NULL, &sb->max);

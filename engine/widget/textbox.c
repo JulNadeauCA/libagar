@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.61 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.62 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -82,7 +82,8 @@ textbox_new(void *parent, const char *label)
 void
 textbox_init(struct textbox *tbox, const char *label)
 {
-	widget_init(tbox, "textbox", &textbox_ops, WIDGET_WFILL);
+	widget_init(tbox, "textbox", &textbox_ops,
+	    WIDGET_FOCUSABLE|WIDGET_WFILL);
 	widget_bind(tbox, "string", WIDGET_STRING, NULL, tbox->string,
 	    sizeof(tbox->string));
 
@@ -104,7 +105,6 @@ textbox_init(struct textbox *tbox, const char *label)
 	}
 	tbox->pos = -1;
 	tbox->offs = 0;
-	pthread_mutex_init(&tbox->lock, &recursive_mutexattr);
 	tbox->newx = -1;
 
 	event_new(tbox, "window-keydown", textbox_key, NULL);
@@ -121,7 +121,6 @@ textbox_destroy(void *ob)
 	if (tbox->label != NULL)
 		SDL_FreeSurface(tbox->label);
 
-	pthread_mutex_destroy(&tbox->lock);
 	widget_destroy(tbox);
 }
 
@@ -141,7 +140,6 @@ textbox_draw(void *p)
 		x = tbox->label->w;
 	}
 
-	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	tlen = strlen(s);
 
@@ -248,7 +246,6 @@ drawtext:
 		}
 	}
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->lock);
 }
 
 void
@@ -279,11 +276,10 @@ textbox_key(int argc, union evarg *argv)
 		return;
 	}
 
-	pthread_mutex_lock(&tbox->lock);
 	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
 		const struct keycode *kcode = &keycodes[i];
 
-		if (kcode->key != (SDLKey)keysym || kcode->func== NULL)
+		if (kcode->key != (SDLKey)keysym || kcode->func == NULL)
 			continue;
 
 		if (kcode->modmask == 0 || keymod & kcode->modmask) {
@@ -292,7 +288,6 @@ textbox_key(int argc, union evarg *argv)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&tbox->lock);
 }
 
 static void
@@ -329,7 +324,6 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	va_list args;
 	char *s;
 
-	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 
 	va_start(args, fmt);
@@ -338,9 +332,7 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 
 	tbox->pos = 0;
 	tbox->offs = 0;
-
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->lock);
 }
 
 char *
@@ -349,11 +341,9 @@ textbox_string(struct textbox *tbox)
 	struct widget_binding *stringb;
 	char *s, *sd;
 
-	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	sd = Strdup(s);
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->lock);
 	return (sd);
 }
 
@@ -364,12 +354,9 @@ textbox_copy_string(struct textbox *tbox, char *dst, size_t dst_size)
 	size_t rv;
 	char *s;
 
-	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	rv = strlcpy(dst, s, dst_size);
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->lock);
-
 	return (rv);
 }
 
@@ -380,12 +367,9 @@ textbox_int(struct textbox *tbox)
 	char *s;
 	int i;
 
-	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	i = atoi(s);
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->lock);
-
 	return (i);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.65 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.66 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ void
 tlist_init(struct tlist *tl, int flags)
 {
 	widget_init(tl, "tlist", &tlist_ops,
-	    WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
+	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
 
 	widget_map_color(tl, BG_COLOR, "background", 120, 120, 120, 255);
 	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240, 255);
@@ -135,7 +135,7 @@ tlist_scale(void *p, int w, int h)
 	WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->button_size;
 	WIDGET(tl->sbar)->y = 0;
 
-	widget_set_geometry(tl->sbar,
+	widget_scale(tl->sbar,
 	    tl->sbar->button_size,
 	    WIDGET(tl)->h);
 }

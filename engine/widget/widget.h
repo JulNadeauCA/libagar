@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.62 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.63 2003/06/08 00:21:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -49,7 +49,7 @@ struct widget {
 
 	char	 type[WIDGET_TYPE_MAX];
 	int	 flags;
-#define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus */
+#define WIDGET_FOCUSABLE	  0x01	/* Can grab focus */
 #define WIDGET_FOCUSED		  0x02	/* Holds focus (optimization) */
 #define WIDGET_UNFOCUSED_MOTION	  0x04	/* Unfocused mousemotion events */
 #define WIDGET_UNFOCUSED_BUTTONUP 0x08	/* Unfocused mousebuttonup events */
@@ -70,8 +70,9 @@ struct widget {
 };
 
 #define WIDGET(wi)		((struct widget *)(wi))
-#define WIDGET_OPS(ob)		((struct widget_ops *)OBJECT((ob))->ops)
-#define WIDGET_COLOR(wi,ind)	WIDGET(wi)->colors[ind]
+#define WIDGET_COLOR(wi, ind)	WIDGET(wi)->colors[ind]
+#define WIDGET_OPS(ob)		((struct widget_ops *)OBJECT(ob)->ops)
+#define WIDGET_SCALE(wi, w, h)	WIDGET_OPS(wi)->scale((wi), (w), (h))
 
 __BEGIN_DECLS
 extern DECLSPEC void	 widget_init(void *, const char *, const void *, int);
@@ -81,7 +82,7 @@ extern DECLSPEC int	 widget_load(void *, struct netbuf *);
 extern DECLSPEC int	 widget_save(void *, struct netbuf *);
 
 extern DECLSPEC void	 widget_set_type(void *, const char *);
-extern DECLSPEC void	 widget_set_geometry(void *, int, int);
+extern DECLSPEC void	 widget_scale(void *, int, int);
 extern DECLSPEC void	 widget_focus(void *);
 extern __inline__ int	 widget_holds_focus(void *);
 extern struct widget	*widget_find_focus(void *);

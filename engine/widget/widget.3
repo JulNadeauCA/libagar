@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.31 2003/06/06 09:03:54 vedge Exp $
+.\"	$Csoft: widget.3,v 1.32 2003/06/08 00:21:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -89,17 +89,18 @@ Acceptable
 include:
 .Pp
 .Bd -literal
-#define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus */
-#define WIDGET_UNFOCUSED_MOTION	  0x02	/* Unfocused mousemotion */
-#define WIDGET_UNFOCUSED_BUTTONUP 0x04	/* Unfocused mousebuttonup */
-#define WIDGET_CLIPPING		  0x08	/* Enable clipping */
-#define WIDGET_WFILL		  0x10	/* Expand to fill parent width */
-#define WIDGET_HFILL		  0x20	/* Expand to fill parent height */
+#define WIDGET_FOCUSABLE	  0x01	/* Can grab focus */
+#define WIDGET_FOCUSED		  0x02	/* Holds focus (optimization) */
+#define WIDGET_UNFOCUSED_MOTION	  0x04	/* Unfocused mousemotion */
+#define WIDGET_UNFOCUSED_BUTTONUP 0x08	/* Unfocused mousebuttonup */
+#define WIDGET_CLIPPING		  0x10	/* Enable clipping */
+#define WIDGET_WFILL		  0x20	/* Fill available width */
+#define WIDGET_HFILL		  0x40	/* Fill available height */
 .Ed
 .Pp
-The
-.Dv WIDGET_NO_FOCUS
-flag prevents the widget from gaining focus.
+Only widgets with the
+.Dv WIDGET_FOCUSABLE
+flag are able to gain focus.
 .Dv WIDGET_UNFOCUSED_MOTION
 and
 .Dv WIDGET_UNFOCUSED_BUTTONUP
@@ -107,7 +108,10 @@ enable reception of
 .Sq window-mousemotion
 and
 .Sq window-mousebuttonup
-events, respectively.
+events, respectively - these events are otherwise only posted to widgets with
+the
+.Dv WIDGET_FOCUSED
+flag.
 .Pp
 .Dv WIDGET_CLIPPING
 causes a clipping rectangle (as set by
@@ -586,13 +590,15 @@ structure generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn widget-shown "void"
-Widget is now visible.
+The widget is now visible.
 .It Fn widget-hidden "void"
-Widget is no longer visible.
+The widget is no longer visible.
 .It Fn widget-gainfocus "void"
-Widget now holds focus inside its container.
+The widget now holds focus inside its container.
 .It Fn widget-lostfocus "void"
-Widget no longer holds focus inside its container.
+The widget no longer holds focus.
+.It Fn widget-bound "struct widget_binding *binding"
+A widget binding has been added or modified.
 .El
 .Pp
 .Sh SEE ALSO

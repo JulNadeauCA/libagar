@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.116 2003/06/06 09:03:56 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.117 2003/06/08 00:21:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -124,7 +124,7 @@ void
 mapview_init(struct mapview *mv, struct map *m, int flags)
 {
 	widget_init(mv, "mapview", &mapview_ops,
-	    WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
+	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
 
 	object_load_art(mv, "/engine/mapedit/mapview/mapview", 0);
 

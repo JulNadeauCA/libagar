@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.15 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.16 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -69,7 +69,8 @@ palette_init(struct palette *pal, enum palette_type type)
 {
 	int i;
 
-	widget_init(pal, "palette", &palette_ops, WIDGET_WFILL);
+	widget_init(pal, "palette", &palette_ops,
+	    WIDGET_FOCUSABLE|WIDGET_WFILL);
 	widget_bind(pal, "color", WIDGET_UINT32, NULL, &pal->color);
 
 	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196, 255);
@@ -160,7 +161,7 @@ palette_scale(void *p, int w, int h)
 			WIDGET(pal->bars[i])->x = 0;
 			WIDGET(pal->bars[i])->y = i*sbh;
 
-			widget_set_geometry(pal->bars[i],
+			widget_scale(pal->bars[i],
 			    WIDGET(pal)->w - 8 - prevw,
 			    sbh);
 		}

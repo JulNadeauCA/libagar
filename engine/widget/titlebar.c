@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.1 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.2 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 	widget_set_type(tbar, "titlebar");
 	widget_map_color(tbar, UNFOCUSED_COLOR, "unfocused", 50, 50, 60, 255);
 	widget_map_color(tbar, FOCUSED_COLOR, "focused", 40, 60, 73, 255);
-	WIDGET(tbar)->flags |= (WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP);
+	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 
 	object_set_ops(tbar, &titlebar_ops);
 	object_load_art(tbar, "/engine/widget/window", 1);
@@ -96,10 +96,12 @@ titlebar_init(struct titlebar *tbar, int flags)
 	WIDGET(tbar->label)->flags |= WIDGET_WFILL;
 
 	tbar->hide_bu = button_new(tbar, NULL);
+	button_set_focusable(tbar->hide_bu, 0);
 	event_new(tbar->hide_bu, "button-pushed", titlebar_hide_win, "%p",
 	    tbar);
 
 	tbar->close_bu = button_new(tbar, NULL);
+	button_set_focusable(tbar->close_bu, 0);
 	event_new(tbar->close_bu, "button-pushed", titlebar_close_win, "%p",
 	    tbar);
 
