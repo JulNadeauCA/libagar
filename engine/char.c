@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.25 2002/03/12 15:51:14 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.26 2002/03/15 07:35:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,9 +33,12 @@
 #include <stdlib.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/char.h>
 #include <engine/physics.h>
 #include <engine/input.h>
 #include <engine/version.h>
+
 #include <engine/text/text.h>
 
 static struct obvec char_vec = {
@@ -43,11 +46,8 @@ static struct obvec char_vec = {
 	char_load,
 	char_save,
 	char_link,
-	char_unlink,
-	char_dump
+	char_unlink
 };
-
-static Uint32	char_time(Uint32, void *);
 
 struct character *
 char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
@@ -213,13 +213,6 @@ char_link(void *ob)
 	SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
 	pthread_mutex_unlock(&world->lock);
 
-	/* XXX speed */
-	ch->timer = SDL_AddTimer(ch->maxspeed / 2, char_time, ch);
-	if (ch->timer == NULL) {
-		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		return (-1);
-	}
-
 	return (0);
 }
 
@@ -232,11 +225,6 @@ char_unlink(void *ob)
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 	pthread_mutex_unlock(&world->lock);
 
-	if (ch->timer != NULL) {
-		SDL_RemoveTimer(ch->timer);
-		ch->timer = NULL;
-	}
-
 	return (0);
 }
 
@@ -245,82 +233,10 @@ char_destroy(void *p)
 {
 	struct character *ch = (struct character *)p;
 
-	SDL_RemoveTimer(ch->timer);
-
 	pthread_mutex_lock(&world->lock);
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 	pthread_mutex_unlock(&world->lock);
 
 	return (0);
-}
-
-void
-char_setspeed(struct character *ch, Uint32 speed)
-{
-#if 1
-	dprintf("not yet\n");
-#else
-	ch->curspeed = speed;
-
-	if (ch->curspeed >= ch->maxspeed) {
-		ch->curspeed = ch->maxspeed;
-	} else if (ch->curspeed <= 0) {
-		ch->curspeed = 1;
-	}
-	if (SDL_RemoveTimer(ch->timer)) {
-		ch->timer = SDL_AddTimer(ch->maxspeed - ch->curspeed,
-		    char_time, ch);
-	}
-#endif
-}
-
-/* XXX none of this is character-dependent */
-static Uint32
-char_time(Uint32 ival, void *obp)
-{
-	struct object *ob = (struct object *)obp;
-	struct mappos *pos = ob->pos;
-	struct map *m;
-	Uint32 x, y, moved = 0;
-
-	if (pos == NULL) {
-		/* Stop the timer. */
-		return (0);
-	}
-	m = pos->map;
-	x = pos->x;
-	y = pos->y;
-
-	moved = mapdir_move(&pos->dir, &x, &y);
-	if (moved != 0) {
-		static struct mappos opos;
-		struct mappos *npos;
-
-		pthread_mutex_lock(&m->lock);
-
-		opos = *pos;
-		object_mdel(ob, 0, MAPREF_SPRITE, m, opos.x, opos.y);
-		npos = object_madd(ob, 0, MAPREF_SPRITE, opos.input,
-		    m, opos.x, opos.y);
-		npos->dir = opos.dir;
-
-		mapdir_postmove(&npos->dir, &x, &y, moved);
-
-		pthread_mutex_unlock(&npos->map->lock);
-
-		m->redraw++;	/* XXX some waste */
-	}
-
-	return (ival);
-}
-
-void
-char_dump(void *p)
-{
-	struct character *ch = (struct character *)p;
-	
-	printf("lvl %d (exp %d) hp %d/%d mp %d/%d\n",
-	    ch->level, ch->exp, ch->hp, ch->maxhp,
-	    ch->mp, ch->maxmp);
 }
 

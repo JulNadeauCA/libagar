@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.12 2002/02/25 11:31:30 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.13 2002/03/03 06:21:56 vedge Exp $	*/
 
 struct character {
 	struct	object obj;
@@ -45,7 +45,4 @@ int		  char_load(void *, int);
 int		  char_save(void *, int);
 int		  char_link(void *);
 int		  char_unlink(void *);
-void		  char_dump(void *);
-
-void		  char_setspeed(struct character *, Uint32);
 
