@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.42 2002/08/19 05:27:10 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.43 2002/08/24 04:09:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -65,6 +65,9 @@ struct node {
 
 	Uint32	v1, v2;			/* Extra properties */
 	Uint32	nanims;			/* Animation count */
+#ifdef DEBUG
+	int	x, y;
+#endif
 };
 
 /* Region within the world. */

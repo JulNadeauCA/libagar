@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.2 2002/08/24 23:56:41 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.3 2002/08/28 03:48:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -50,7 +50,7 @@
 	int _i;								\
 									\
 	_i = view->rootmap->mask[(y)][(x)];				\
-	if (_i < 0 || _i > 32) {					\
+	if (_i < 0 || _i > 128) {					\
 		fatal("funny mask: %d at %d,%d\n", _i, (x), (y));	\
 	}								\
 	if (_i > 0) {							\
@@ -176,6 +176,8 @@ rootmap_animate(void)
 	int x, y, vx, vy, rx, ry, ox, oy;
 	int ri = 0;
 
+	return;
+
 	for (y = rm->y, vy = 0;				/* Downward */
 	     y < m->maph && vy <= rm->h;
 	     y++, vy++) {
@@ -191,6 +193,12 @@ rootmap_animate(void)
 			CHECK_MASK(vx, vy);
 
 			node = &m->map[y][x];
+#ifdef DEBUG
+			if (node->x != x || node->y != y) {
+				fatal("node at %d,%d should be at %d,%d\n",
+				    x, y, node->x, node->y);
+			}
+#endif
 			if (node->overlap > 0) {
 				/* Will later draw in a synchronized fashion. */
 				continue;
@@ -258,8 +266,14 @@ rootmap_draw(void)
 	struct noderef *nref;
 	Uint32 nsprites;
 	int ri = 0;
-
+	
 	dprintf("offset %d,%d\n", rm->x, rm->y);
+
+	if (rm->y > m->maph - rm->h ||
+	    rm->x > m->mapw - rm->w) {
+		dprintf("exceeds map boundaries\n");
+		return;
+	}
 
 	for (y = rm->y, vy = 0;				/* Downward */
 	     y < m->maph && vy <= rm->h;

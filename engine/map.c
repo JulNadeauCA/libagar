@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.112 2002/08/23 05:19:09 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.113 2002/08/24 04:09:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -121,6 +121,10 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h)
 		for (x = 0; x < w; x++) {
  			node = &m->map[y][x];
 			node_init(node);
+#ifdef DEBUG
+			node->x = x;
+			node->y = y;
+#endif
 		}
 	}
 }
@@ -210,6 +214,10 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 			if (x >= m->mapw || y >= m->maph) {
 				node = &m->map[y][x];
 				node_init(node);
+#ifdef DEBUG
+				node->x = x;
+				node->y = y;
+#endif
 			}
 		}
 	}
@@ -359,7 +367,11 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 			memset(node, 0, sizeof(struct node));
 			TAILQ_INIT(&node->nrefsh);
 			node->flags = nflags;
-	
+#ifdef DEBUG
+			node->x = x;
+			node->y = y;
+#endif
+
 			if (ob != NULL) {
 				node_addref(node, ob, offs, rflags);
 			}
@@ -878,6 +890,18 @@ map_verify_loop(void *arg)
 					    nref->yoffs > 0xff) {
 						fatal("%s:%d,%d: funny ref\n",
 						    OBJECT(m)->name, x, y);
+					}
+					if (nref->flags & MAPREF_SPRITE) {
+						SDL_Surface *s;
+
+						s = SPRITE(nref->pobj,
+						    nref->offs);
+						if (s->format->BytesPerPixel
+						    != 4) {
+							printf("%d bpp\n",
+							    s->format->
+							    BytesPerPixel);
+						}
 					}
 				}
 			}
