@@ -125,10 +125,17 @@ static char *
 textbox_insert_char(struct textbox *tbox, char c)
 {
 	int end;
+	char *s;
 	
 	end = strlen(tbox->text);
 	tbox->text = erealloc(tbox->text, end+1);
-	tbox->text[end] = c;
+	if (tbox->textpos == end) {
+		tbox->text[end] = c;
+	} else {
+		s = tbox->text + tbox->textpos;
+		memcpy(s+1, s, end - tbox->textpos);
+		tbox->text[tbox->textpos] = c;
+	}
 	tbox->text[end+1] = '\0';
 	tbox->textpos++;
 
