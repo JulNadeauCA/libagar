@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.13 2003/06/14 10:41:41 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.14 2003/06/14 11:25:06 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -640,8 +640,6 @@ ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 	/* Load each character and sum it's bounding box. */
 	x = 0;
 	for (ch = unicode; *ch != '\0'; ch++) {
-		Uint16 c = *ch;
-
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
 			return (-1);
 		}
@@ -770,7 +768,6 @@ ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 	xstart = 0;
 
 	for (ch = unicode; *ch; ch++) {
-		Uint16 c = *ch;
 		FT_Bitmap *current = NULL;
 
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP)
