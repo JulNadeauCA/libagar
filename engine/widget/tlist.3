@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.2 2002/11/14 02:17:10 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.3 2002/11/15 00:51:35 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -89,6 +89,9 @@ can be changed at runtime, and may include:
 .Fn tlist_clear_items "struct tlist *tlist"
 .Pp
 .Ft "void"
+.Fn tlist_restore_selections "struct tlist *tlist"
+.Pp
+.Ft "void"
 .Fn tlist_select "struct tlist *tlist"
 .Pp
 .Ft "void"
@@ -110,12 +113,11 @@ and the string pointed to by
 The
 .Fa p1
 argument is a user-defined pointer.
-.Pp
+The
 .Fn tlist_insert_item_selected
-calls
+function calls
 .Fn tlist_insert_item
 and sets the selected flag on the new item.
-.Pp
 The
 .Fn tlist_remove_item
 function detaches and frees
@@ -126,7 +128,14 @@ from its parent
 The
 .Fn tlist_clear_items
 function removes all items attached to
-.Fa tlist .
+.Fa tlist ,
+but remembers the selected items.
+The
+.Fn tlist_restore_selections
+function compares each item against the previous selections and restores
+the
+.Va selected
+flag accordingly.
 .Pp
 The
 .Fn tlist_select

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.9 2002/11/14 02:28:41 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.10 2002/11/15 00:51:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -13,7 +13,8 @@ struct tlist_item {
 	struct tlist	*tl_bp;		/* Back pointer to widget */
 	int		 selected;	/* Item selection */
 
-	TAILQ_ENTRY(tlist_item) items;
+	TAILQ_ENTRY(tlist_item) items;		/* Items in list */
+	TAILQ_ENTRY(tlist_item) selitems;	/* Hack */
 };
 
 TAILQ_HEAD(tlist_itemq, tlist_item);
@@ -34,7 +35,8 @@ struct tlist {
 	int	 yspacing;	/* Vert spacing */
 	int	 item_h;	/* Item height */
 
-	struct tlist_itemq	 items;
+	struct tlist_itemq	 items;		/* Current Items */
+	struct tlist_itemq	 selitems;	/* Saved items (selected) */
 	int			 nitems;
 	pthread_mutex_t		 items_lock;
 	pthread_mutexattr_t	 items_lockattr;
@@ -44,6 +46,9 @@ struct tlist		*tlist_new(struct region *, int, int, int);
 void			 tlist_init(struct tlist *, int, int, int);
 void	 		 tlist_draw(void *);
 void	 		 tlist_destroy(void *);
+
+void			 tlist_save_selections(struct tlist *);
+void			 tlist_restore_selections(struct tlist *);
 
 void			 tlist_remove_item(struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
