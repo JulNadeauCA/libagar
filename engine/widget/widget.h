@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.11 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.12 2002/05/02 06:27:42 vedge Exp $	*/
 
 struct window;
 
@@ -23,12 +23,6 @@ struct widget {
 
 	TAILQ_ENTRY(widget) widgets;	/* Widgets within parent window */
 	TAILQ_ENTRY(widget) uwidgets;	/* Widgets queued for removal */
-};
-
-struct widget_event {
-	struct	widget *widget;
-	SDL_Event ev;
-	int	flags;
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))

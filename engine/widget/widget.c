@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.10 2002/04/30 01:11:34 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.11 2002/05/02 06:27:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -43,10 +43,8 @@
 #include "window.h"
 #include "widget.h"
 
-extern TAILQ_HEAD(, widget) uwidgetsh;		/* window.c */
+extern TAILQ_HEAD(, widget) uwidgetsh;	/* window.c */
 extern pthread_mutex_t uwidgets_lock;	/* window.c */
-
-static void	*widget_dispatch_event(void *);
 
 void
 widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
@@ -70,21 +68,23 @@ widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
 	wid->h = h;
 }
 
-/* The window's widget lock must be held. */
 void
 widget_link(void *ob, struct window *win)
 {
 	struct widget *w = (struct widget *)ob;
 
 	w->win = win;
-	dprintf("%s widget linked to %s\n", OBJECT(ob)->name,
-	    OBJECT(win)->name);
 
 	if (WIDGET_VEC(w)->widget_link != NULL) {
 		WIDGET_VEC(w)->widget_link(ob, win);
 	}
 
+	pthread_mutex_lock(&win->lock);
 	TAILQ_INSERT_HEAD(&w->win->widgetsh, w, widgets);
+	pthread_mutex_unlock(&win->lock);
+	
+	dprintf("%s widget linked to %s\n", OBJECT(ob)->name,
+	    OBJECT(win)->name);
 
 	w->win->redraw++;
 }
@@ -104,64 +104,19 @@ widget_unlink(void *ob)
 	 * a list it might be traversing.
 	 */
 	pthread_mutex_lock(&uwidgets_lock);
-	TAILQ_INSERT_HEAD(&uwidgetsh, w, uwidgets);
+	//TAILQ_INSERT_HEAD(&uwidgetsh, w, uwidgets);
 	pthread_mutex_unlock(&uwidgets_lock);
 }
 
-/*
- * Render a widget.
- * Parent window's widget list must be locked.
- */
 void
 widget_draw(void *p)
 {
 	struct widget *w = (struct widget *)p;
-	
+
+	pthread_mutex_assert(&w->win->lock);
+
 	if (WIDGET_VEC(w)->widget_draw != NULL && !(w->flags & WIDGET_HIDE)) {
 		WIDGET_VEC(w)->widget_draw(w);
 	}
-}
-
-/*
- * Dispatch an event to a widget. The event handler runs in a newly
- * created thread, to avoid blocking in event context.
- * Parent window's widget list must be locked.
- */
-void
-widget_event(void *p, SDL_Event *ev, int flags)
-{
-	struct widget *w = (struct widget *)p;
-
-	if (WIDGET_VEC(w)->widget_event != NULL) {
-		pthread_t wevent_th;
-		struct widget_event *wev;
-
-		/* XXX pool */
-		wev = emalloc(sizeof(struct widget_event));
-		wev->widget = w;
-		wev->ev = *ev;		/* Structure copy */
-		wev->flags = flags;
-
-		/*
-		 * Widget events are processed in threads spawned from
-		 * the event thread. A copy of the SDL_Event is passed.
-		 */
-		if (pthread_create(&wevent_th, NULL, widget_dispatch_event,
-		    wev) != 0) {
-			fatal("wevent_th: %s\n", strerror(errno));
-		}
-	}
-}
-
-static void *
-widget_dispatch_event(void *arg)
-{
-	struct widget_event *wev = (struct widget_event *)arg;
-
-	WIDGET_VEC(wev->widget)->widget_event(wev->widget, &wev->ev,
-	    wev->flags);
-
-	free(wev);	/* XXX pool */
-	return (NULL);
 }
 
