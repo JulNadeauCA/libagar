@@ -215,25 +215,26 @@ fi
 cc_is_gcc=no
 if ./.cctest; then
     cc_is_gcc=yes
-    echo "-> success (gcc)" >> config.log
-    echo "yes, gcc"
+    echo "-> success: gcc" >> config.log
+    echo "yes"
 else
     echo "yes"
     echo "-> success" >> config.log
 fi
 
 rm -f .cctest .cctest.c
-echo -n "checking for float..."
-echo -n "checking for float..." >> config.log
+echo -n "checking for IEEE Std754-1985 floating point..."
+echo -n "checking for IEEE Std754-1985 floating point..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
 int
 main(int argc, char *argv[])
 {
-	float f = 0.1;
+	float f = 1.5;
+	double d = 2.5;
 
-	printf("%f\n", f);
+	printf("%f %d\n", f, d);
 	return (0);
 }
 
@@ -252,44 +253,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_FLOAT" >> engine/mcconfig.h
-echo "#define HAVE_FLOAT" $HAVE_FLOAT >> engine/mcconfig.h
-echo "#endif /* HAVE_FLOAT */" >> engine/mcconfig.h
-
-	echo "yes"
-else
-	echo "no"
-fi
-echo -n "checking for double..."
-echo -n "checking for double..." >> config.log
-cat << EOT > conftest.c
-int
-main(int argc, char *argv[])
-{
-	double d = 0.1;
-	
-	printf("%f\n", d);
-	return (0);
-}
-
-EOT
-compile="ok"
-echo "$CC -o conftest conftest.c" >> config.log
-$CC -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
-fi
-rm -f conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> config.log
-	echo "#ifndef HAVE_DOUBLE" >> engine/mcconfig.h
-echo "#define HAVE_DOUBLE" $HAVE_DOUBLE >> engine/mcconfig.h
-echo "#endif /* HAVE_DOUBLE */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_IEEE754" >> engine/mcconfig.h
+echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> engine/mcconfig.h
+echo "#endif /* HAVE_IEEE754 */" >> engine/mcconfig.h
 
 	echo "yes"
 else
