@@ -1,4 +1,4 @@
-# $Csoft: csoft.common.mk,v 1.10 2002/01/26 01:33:07 vedge Exp $
+# $Csoft: csoft.common.mk,v 1.11 2002/02/25 08:51:03 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -40,8 +40,8 @@ DEINSTALL_PROG=	rm -f
 DEINSTALL_LIB=	rm -f
 DEINSTALL_DATA=	rm -f
 
+SHAREDIR?=	${PREFIX}/share
 INST_BINDIR?=	${PREFIX}/bin
-INST_SHAREDIR?=	${PREFIX}/share
 INST_LIBDIR?=	${PREFIX}/lib
 INST_MANDIR?=	${PREFIX}/man
 
