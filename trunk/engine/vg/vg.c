@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.25 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.26 2004/05/30 01:29:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -572,8 +572,8 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 	struct vg_rect r1, r2;
 
 	if (!vge->drawn) {
-		vge->drawn = 1;
 		vge->ops->draw(vg, vge);
+		vge->drawn = 1;
 	}
 	if (vge->ops->bbox != NULL) {
 		vge->ops->bbox(vg, vge, &r1);
@@ -594,6 +594,7 @@ void
 vg_rasterize(struct vg *vg)
 {
 	struct vg_element *vge;
+	struct vg_block *vgb;
 	int i;
 
 	pthread_mutex_lock(&vg->lock);
@@ -604,7 +605,7 @@ vg_rasterize(struct vg *vg)
 	if (vg->flags & VG_VISBBOXES)
 		vg_draw_bboxes(vg);
 #endif
-
+	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		vge->drawn = 0;
 	}
@@ -958,6 +959,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 		write_uint32(buf, (Uint32)vgb->flags);
 		write_vertex(buf, &vgb->pos);
 		write_vertex(buf, &vgb->origin);
+		write_double(buf, vgb->theta);
 		nblocks++;
 	}
 	pwrite_uint32(buf, nblocks, nblocks_offs);
@@ -1080,8 +1082,8 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	vg->cur_layer = (int)read_uint32(buf);
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
-	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
-	    vg->scale);
+	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w,
+	    vg->h, vg->scale);
 	vg_scale(vg, vg->w, vg->h, vg->scale);
 
 	/* Read the origin points. */
@@ -1134,6 +1136,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		vgb->flags = (int)read_uint32(buf);
 		read_vertex(buf, &vgb->pos);
 		read_vertex(buf, &vgb->origin);
+		vgb->theta = read_double(buf);
 		TAILQ_INIT(&vgb->vges);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
 	}
