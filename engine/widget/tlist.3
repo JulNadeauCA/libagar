@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.34 2004/05/01 06:54:48 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.35 2004/05/06 06:24:09 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -83,8 +83,8 @@ may include:
 #define TLIST_POLL		0x04  /* Generate tlist-poll events */
 #define TLIST_DBLCLICK		0x08  /* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10  /* Hack to display trees */
-#define TLIST_STATIC_ICONS	0x20  /* Access/scale icon surfaces as items
-					 are being drawn for the first time */
+#define TLIST_STATIC_ICONS	0x20  /* Optimize on the assumption that
+					 surfaces are always accessible */
 .Ed
 .Pp
 The
@@ -161,8 +161,8 @@ function sets the position of the scrollbar to
 .Pp
 The
 .Fn tlist_insert_item
-function inserts a new item into
-.Fa tlist .
+function inserts a new item into the list.
+.Pp
 If the
 .Fa iconsrc
 argument is not NULL, the surface it points to is copied and scaled to icon
@@ -171,8 +171,10 @@ size, unless the
 flag is set.
 This flag indicates that for each item, the icon should be scaled (and cached)
 only if the item is currently visible.
-This option is most memory and cpu efficient when frequent inserts are required,
-but the icon surface must be accessible as long as the
+This option is most memory and cpu efficient when frequent inserts are required
+(such as with the
+.Dv TLIST_POLLED
+mode), but the icon surface must be accessible as long as the
 .Nm
 widget is visible.
 .Pp
@@ -213,7 +215,6 @@ and
 .Fn tlist_unselect
 functions manipulate the selected flag on
 .Fa item .
-.Pp
 The
 .Fn tlist_select_all
 and
@@ -249,6 +250,17 @@ The
 and
 .Fn tlist_item_last
 functions return the first and last items on the list.
+.Pp
+The caller must ensure that the
+.Nm
+is locked prior to invoking
+.Fn tlist_item_index ,
+.Fn tlist_item_selected ,
+.Fn tlist_item_pointer ,
+.Fn tlist_item_text ,
+.Fn tlist_item_first
+or
+.Fn tlist_item_last .
 .Sh EVENTS
 The
 .Nm
@@ -309,7 +321,10 @@ Tree display is a crude hack and should be implemented by another widget.
 The
 .Fn tlist_insert_item
 function should probably be renamed
-.Fn tlist_insert .
+.Fn tlist_insert
+and take a
+.Xr printf 3
+format string.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,

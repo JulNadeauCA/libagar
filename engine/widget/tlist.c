@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.90 2004/05/02 09:38:10 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.91 2004/05/06 06:24:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -80,6 +80,18 @@ tlist_new(void *parent, int flags)
 	return (tl);
 }
 
+static void
+tlist_detached(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+
+	pthread_mutex_lock(&tl->lock);
+	if (tl->dbltimer != NULL) {
+		SDL_RemoveTimer(tl->dbltimer);
+	}
+	pthread_mutex_unlock(&tl->lock);
+}
+
 void
 tlist_init(struct tlist *tl, int flags)
 {
@@ -106,6 +118,7 @@ tlist_init(struct tlist *tl, int flags)
 
 	tlist_prescale(tl, "XXXXXXXXXXXXXXX", 4);
 
+	event_new(tl, "detached", tlist_detached, NULL);
 	event_new(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
 	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
 	event_new(tl, "window-keydown", tlist_keydown, NULL);
@@ -125,12 +138,6 @@ tlist_destroy(void *p)
 	struct tlist *tl = p;
 	struct tlist_item *it, *nit;
 
-	pthread_mutex_lock(&tl->lock);
-	if (tl->dbltimer != NULL) {
-		SDL_RemoveTimer(tl->dbltimer);
-	}
-	pthread_mutex_unlock(&tl->lock);
-
 	for (it = TAILQ_FIRST(&tl->selitems);
 	     it != TAILQ_END(&tl->selitems);
 	     it = nit) {
@@ -144,7 +151,6 @@ tlist_destroy(void *p)
 		tlist_free_item(it);
 	}
 	pthread_mutex_destroy(&tl->lock);
-
 	widget_destroy(tl);
 }
 
@@ -670,20 +676,15 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		ti->selected++;
 
 		if (tl->flags & TLIST_DBLCLICK) {
+			if (tl->dbltimer != NULL) {
+				SDL_RemoveTimer(tl->dbltimer);
+			}
 			if (tl->dblclicked == ti) {
-				dprintf("%s: double-click effect\n",
-				    OBJECT(tl)->name);
-				if (tl->dbltimer != NULL)
-					SDL_RemoveTimer(tl->dbltimer);
 				event_post(NULL, tl, "tlist-dblclick", "%p",
 				    tl->dblclicked);
 				tl->dblclicked = NULL;
 				tl->dbltimer = NULL;
 			} else {
-				dprintf("%s: double-click start\n",
-				    OBJECT(tl)->name);
-				if (tl->dbltimer != NULL)
-					SDL_RemoveTimer(tl->dbltimer);
 				tl->dblclicked = ti;
 				tl->dbltimer = SDL_AddTimer(DBLCLICK_DELAY,
 				    tlist_dblclick_expire, tl);
@@ -770,99 +771,89 @@ tlist_scrolled(int argc, union evarg *argv)
 	tlist_adjust_scrollbar(tl);
 }
 
-/* Return the item at the given index. */
+/*
+ * Return the item at the given index.
+ * The tlist must be locked.
+ */
 struct tlist_item *
 tlist_item_index(struct tlist *tl, int index)
 {
 	struct tlist_item *it;
 	int i = 0;
 
-	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (++i == index) {
-			pthread_mutex_unlock(&tl->lock);
+		if (++i == index)
 			return (it);
-		}
 	}
-	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
-/* Return the first selected item. */
+/*
+ * Return the first selected item.
+ * The tlist must be locked.
+ */
 struct tlist_item *
 tlist_item_selected(struct tlist *tl)
 {
 	struct tlist_item *it;
 
-	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected) {
-			pthread_mutex_unlock(&tl->lock);
+		if (it->selected)
 			return (it);
-		}
 	}
-	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
-/* Return the pointer associated with the first selected item. */
+/*
+ * Return the pointer associated with the first selected item.
+ * The tlist must be locked.
+ */
 void *
 tlist_item_pointer(struct tlist *tl)
 {
 	struct tlist_item *it;
-	void *p;
 
-	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected) {
-			p = it->p1;
-			pthread_mutex_unlock(&tl->lock);
-			return (p);
-		}
+		if (it->selected)
+			return (it->p1);
 	}
-	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
-/* Return the first item matching a text string. */
+/*
+ * Return the first item matching a text string.
+ * The tlist must be locked.
+ */
 struct tlist_item *
 tlist_item_text(struct tlist *tl, const char *text)
 {
 	struct tlist_item *it;
 
-	pthread_mutex_lock(&tl->lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (strcmp(it->text, text) == 0) {
-			pthread_mutex_unlock(&tl->lock);
+		if (strcmp(it->text, text) == 0)
 			return (it);
-		}
 	}
-	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
 }
 
-/* Return the first item of a list. */
+/*
+ * Return the first item on the list.
+ * The tlist must be locked.
+ */
 struct tlist_item *
 tlist_item_first(struct tlist *tl)
 {
-	struct tlist_item *it;
-
-	pthread_mutex_lock(&tl->lock);
-	it = TAILQ_FIRST(&tl->items);
-	pthread_mutex_unlock(&tl->lock);
-	return (it);
+	return (TAILQ_FIRST(&tl->items));
 }
 
-/* Return the last item of a list. */
+/*
+ * Return the last item on the list.
+ * The tlist must be locked.
+ */
 struct tlist_item *
 tlist_item_last(struct tlist *tl)
 {
-	struct tlist_item *it;
-
-	pthread_mutex_lock(&tl->lock);
-	it = TAILQ_LAST(&tl->items, tlist_itemq);
-	pthread_mutex_unlock(&tl->lock);
-	return (it);
+	return (TAILQ_LAST(&tl->items, tlist_itemq));
 }
 
 /* Set the height to use for item display. */
