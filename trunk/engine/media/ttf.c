@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.10 2003/05/09 03:38:41 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.11 2003/05/18 00:17:03 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -30,17 +30,19 @@
  */
 
 #include <engine/engine.h>
-
-#include <math.h>
+#include <engine/unicode/unicode.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <freetype/freetype.h>
 #include <freetype/ftoutln.h>
 
-#include <SDL.h>
+#include <SDL_types.h>
+#undef linux			/* XXX broken byte swap macros */
+#include <SDL_endian.h>
 
 #include "ttf.h"
 
@@ -86,6 +88,9 @@ struct _ttf_font {
 	struct cached_glyph	*current;
 	struct cached_glyph	 cache[256];
 	struct cached_glyph	 scratch;
+
+	/* For non-scalable formats, we must remember which font index size */
+	int	font_size_family;
 };
 
 /* The FreeType font engine/library */
@@ -103,7 +108,6 @@ ttf_init(void)
 #if 0
 	FT_Int maj, min, patch;
 #endif
-
 	if (FT_Init_FreeType(&library) != 0) {
 		error_set("font engine init failed");
 		return (-1);
@@ -150,37 +154,68 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	}
 	face = font->face;
 
-	if (!FT_IS_SCALABLE(face)) {
-		error_set("non-scalable font face");
-		goto fail2;
+	/* Make sure that our font face is scalable (global metrics). */
+	if (FT_IS_SCALABLE(face)) {
+	  	/* Set the character size and use default DPI (72). */
+	  	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0)) {
+			error_set("could not set font size");
+			goto fail2;
+		}
+		/* Get the scalable font metrics for this font */
+		scale = face->size->metrics.y_scale;
+		font->ascent  = FT_CEIL(FT_MulFix(face->bbox.yMax, scale));
+		font->descent = FT_CEIL(FT_MulFix(face->bbox.yMin, scale));
+		font->height  = font->ascent - font->descent + /* baseline */ 1;
+		font->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
+		font->underline_offset = FT_FLOOR(FT_MulFix(
+		    face->underline_position, scale));
+		font->underline_height = FT_FLOOR(FT_MulFix(
+		    face->underline_thickness, scale));
+	} else {
+		/*
+		 * Non-scalable font case.  ptsize determines which family
+		 * or series of fonts to grab from the non-scalable format.
+		 * It is not the point size of the font.
+		 */
+		if (ptsize >= font->face->num_fixed_sizes) {
+			ptsize = font->face->num_fixed_sizes - 1;
+		}
+		font->font_size_family = ptsize;
+		FT_Set_Pixel_Sizes(face,
+		    face->available_sizes[ptsize].height,
+		    face->available_sizes[ptsize].width);
+	  	
+		/*
+		 * With non-scalale fonts, Freetype2 likes to fill many of the
+		 * font metrics with the value of 0. The size of the
+		 * non-scalable fonts must be determined differently or
+		 * sometimes cannot be determined.
+		 */
+	  	font->ascent = face->available_sizes[ptsize].height;
+	  	font->descent = 0;
+	  	font->height = face->available_sizes[ptsize].height;
+	  	font->lineskip = FT_CEIL(font->ascent);
+	  	font->underline_offset = FT_FLOOR(face->underline_position);
+	  	font->underline_height = FT_FLOOR(face->underline_thickness);
 	}
 
-	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0) != 0) {
-		error_set("error getting char size");
-		goto fail2;
-	}
-
-	/* Get the scalable font metrics for this font */
-	scale = face->size->metrics.y_scale;
-	font->ascent  = FT_CEIL(FT_MulFix(face->bbox.yMax, scale));
-	font->descent = FT_CEIL(FT_MulFix(face->bbox.yMin, scale));
-	font->height  = font->ascent - font->descent + /* baseline */ 1;
-	font->lineskip = FT_CEIL(FT_MulFix(face->height, scale));
-	font->underline_offset = FT_FLOOR(FT_MulFix(face->underline_position,
-	    scale));
-	font->underline_height = FT_FLOOR(FT_MulFix(face->underline_thickness,
-	    scale));
 	if (font->underline_height < 1) {
 		font->underline_height = 1;
 	}
+#ifdef DEBUG
+	printf("%s:\n", file);
+	printf("\tascent=%d, descent=%d, height=%d, lineskip=%d\n",
+	    font->ascent, font->descent, font->height, font->lineskip);
+	printf("\tunderline_offset=%d, underine_height=%d\n",
+	    font->underline_offset, font->underline_height);
+#endif
 
 	font->style = TTF_STYLE_NORMAL;
 	font->glyph_overhang = face->size->metrics.y_ppem / 10;
 
-	/* x offset = cos(((90.0-12)/360)*2*M_PI), or 12 degree angle */
+	/* x offset = cos(((90.0-12)/360)*2*M_PI), or 12 degree angle. */
 	font->glyph_italics = 0.207f;
 	font->glyph_italics *= font->height;
-
 	return (font);
 fail2:
 	ttf_close_font(font);
@@ -254,26 +289,38 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 		return (-1);
 	}
 
+	/* Get our glyph shortcuts */
 	glyph = face->glyph;
 	metrics = &glyph->metrics;
 	outline = &glyph->outline;
 
+	/* Get the glyph metrics if desired */
 	if ((want & CACHED_METRICS) && !(cached->stored & CACHED_METRICS)) {
-		/* Get the bounding box. */
-		cached->minx = FT_FLOOR(metrics->horiBearingX);
-		cached->maxx = cached->minx + FT_CEIL(metrics->width);
-		cached->maxy = FT_FLOOR(metrics->horiBearingY);
-		cached->miny = cached->maxy - FT_CEIL(metrics->height);
-		cached->yoffset = font->ascent - cached->maxy;
-		cached->advance = FT_CEIL(metrics->horiAdvance);
-
-#if 0
-		printf("min %dx%d, max %dx%d, yoffs %d, advance %d\n",
-		    cached->minx, cached->miny,
-		    cached->maxx, cached->maxy,
-		    cached->yoffset,
-		    cached->advance);
-#endif
+		if (FT_IS_SCALABLE(face)) {
+			/* Get the bounding box. */
+			cached->minx = FT_FLOOR(metrics->horiBearingX);
+			cached->maxx = cached->minx + FT_CEIL(metrics->width);
+			cached->maxy = FT_FLOOR(metrics->horiBearingY);
+			cached->miny = cached->maxy - FT_CEIL(metrics->height);
+			cached->yoffset = font->ascent - cached->maxy;
+			cached->advance = FT_CEIL(metrics->horiAdvance);
+		} else {
+			/* Get the bounding box for non-scalable format.
+			 * Again, freetype2 fills in many of the font metrics
+			 * with the value of 0, so some of the values we
+			 * need must be calculated differently with certain
+			 * assumptions about non-scalable formats.
+			 * */
+			cached->minx = FT_FLOOR(metrics->horiBearingX);
+			cached->maxx = cached->minx +
+			    FT_CEIL(metrics->horiAdvance);
+			cached->maxy = FT_FLOOR(metrics->horiBearingY);
+			cached->miny = cached->maxy -
+			    FT_CEIL(face->available_sizes
+			            [font->font_size_family].height);
+			cached->yoffset = 0;
+			cached->advance = FT_CEIL(metrics->horiAdvance);
+		}
 
 		/* Adjust for bold and italic text. */
 		if (font->style & TTF_STYLE_BOLD) {
@@ -325,7 +372,15 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 			dst = &cached->pixmap;
 		}
 		memcpy(dst, src, sizeof(*dst));
-		if (mono) {
+
+		/*
+		 * FT_Render_Glyph() and .fon fonts always generate a
+		 * two-color (black and white) glyphslot surface, even
+		 * when rendered in ft_render_mode_normal.  This is probably
+		 * a freetype2 bug because it is inconsistent with the
+		 * freetype2 documentation under FT_Render_Mode section.
+		 * */
+		if ( mono || !FT_IS_SCALABLE(face) ) {
 			dst->pitch *= 8;
 		}
 
@@ -344,12 +399,6 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 			dst->width += bump;
 		}
 
-#if 0
-		printf("copying: %s font, pitch %d, width %d, rows %d\n",
-		    mono ? "mono" : "normal",
-		    dst->pitch,
-		    dst->width, dst->rows);
-#endif
 		if (dst->rows != 0) {
 			dst->buffer = Malloc(dst->pitch * dst->rows);
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
@@ -384,9 +433,39 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 						ch <<= 1;
 						*dstp++ = (ch&0x80) >> 7;
 					}
+				} else if ( !FT_IS_SCALABLE(face) ) {
+					/*
+					 * This special case wouldn't
+					 * be here if the FT_Render_Glyph()
+					 * function wasn't buggy when it tried
+					 * to render a .fon font with 256
+					 * shades of gray.  Instead, it
+					 * returns a black and white surface
+					 * and we have to translate it back
+					 * to a 256 gray shaded surface. 
+					 */
+					unsigned char *srcp, *dstp;
+					unsigned char ch;
+					int j, k;
+					
+					srcp = src->buffer + soffset;
+					dstp = dst->buffer + doffset;
+
+					for ( j = 0; j < src->width; j += 8) {
+						ch = *srcp++;
+						for (k = 0; k < 8; ++k) {
+							if ((ch&0x80) >> 7) {
+								*dstp++ =
+								    NUM_GRAYS-1;
+							} else {
+								*dstp++ = 0x00;
+							}
+							ch <<= 1;
+						}
+					}
 				} else {
 					memcpy(dst->buffer+doffset,
-					       src->buffer+soffset, src->pitch);
+					    src->buffer+soffset, src->pitch);
 				}
 			}
 		}
@@ -449,47 +528,6 @@ ttf_find_glyph(ttf_font *font, Uint16 ch, int want)
 	return (retval);
 }
 
-static __inline__ Uint16 *
-ASCII_to_UNICODE(Uint16 *unicode, char *text, int len)
-{
-	int i;
-
-	for (i = 0; i < len; ++i) {
-		unicode[i] = ((unsigned char *)text)[i];
-	}
-	unicode[i] = 0;
-
-	return (unicode);
-}
-
-static __inline__ Uint16 *
-UTF8_to_UNICODE(Uint16 *unicode, char *utf8, int len)
-{
-	int i, j;
-	Uint16 ch;
-
-	for (i = 0, j = 0; i < len; ++i, ++j) {
-		ch = ((unsigned char *)utf8)[i];
-		if (ch >= 0xF0) {
-			ch  =  (Uint16)(utf8[i]&0x07) << 18;
-			ch |=  (Uint16)(utf8[++i]&0x3F) << 12;
-			ch |=  (Uint16)(utf8[++i]&0x3F) << 6;
-			ch |=  (Uint16)(utf8[++i]&0x3F);
-		} else if (ch >= 0xE0) {
-			ch  =  (Uint16)(utf8[i]&0x3F) << 12;
-			ch |=  (Uint16)(utf8[++i]&0x3F) << 6;
-			ch |=  (Uint16)(utf8[++i]&0x3F);
-		} else if (ch >= 0xC0) {
-			ch  =  (Uint16)(utf8[i]&0x3F) << 6;
-			ch |=  (Uint16)(utf8[++i]&0x3F);
-		}
-		unicode[j] = ch;
-	}
-	unicode[j] = 0;
-
-	return (unicode);
-}
-
 int
 ttf_font_height(ttf_font *font)
 {
@@ -545,57 +583,51 @@ ttf_glyph_metrics(ttf_font *font, Uint16 ch, int *minx,
 	if (ttf_find_glyph(font, ch, CACHED_METRICS) != 0) {
 		return (-1);
 	}
-	if (minx)	*minx = font->current->minx;
-	if (maxx)	*maxx = font->current->maxx;
-	if (miny)	*miny = font->current->miny;
-	if (maxy)	*maxy = font->current->maxy;
-	if (advance)	*advance = font->current->advance;
+	if (minx != NULL)
+		*minx = font->current->minx;
+	if (maxx != NULL)
+		*maxx = font->current->maxx;
+	if (miny != NULL)
+		*miny = font->current->miny;
+	if (maxy != NULL)
+		*maxy = font->current->maxy;
+	if (advance != NULL)
+		*advance = font->current->advance;
 	return (0);
 }
 
+/* Size Latin-1 text. */
 int
-ttf_size_text(ttf_font *font, char *text, int *w, int *h)
+ttf_size_text(ttf_font *font, const char *text, int *w, int *h)
 {
-	Uint16 *unicode_text;
-	size_t unicode_len;
+	Uint16 *unicode;
 	int status;
 
-	/* Copy the Latin-1 text to a UNICODE text buffer. */
-	unicode_len = strlen(text);
-	unicode_text = Malloc((unicode_len + 1) * (sizeof *unicode_text));
-	ASCII_to_UNICODE(unicode_text, text, unicode_len);
-
-	/* Render the new text. */
-	status = ttf_size_unicode(font, unicode_text, w, h);
-
-	free(unicode_text);
+	unicode = unicode_import(UNICODE_FROM_LATIN1, text);
+	status = ttf_size_unicode(font, unicode, w, h);
+	free(unicode);
 	return (status);
 }
 
+/* Size UTF-8 text. */
 int
-ttf_size_utf8(ttf_font *font, char *text, int *w, int *h)
+ttf_size_utf8(ttf_font *font, const char *utf8, int *w, int *h)
 {
-	Uint16 *unicode_text;
-	size_t unicode_len;
+	Uint16 *unicode;
 	int status;
 
-	/* Copy the UTF-8 text to a UNICODE text buffer. */
-	unicode_len = strlen(text);
-	unicode_text = Malloc((unicode_len + 1) * sizeof(*unicode_text));
-	UTF8_to_UNICODE(unicode_text, text, unicode_len);
-
-	/* Render the new text. */
-	status = ttf_size_unicode(font, unicode_text, w, h);
-
-	free(unicode_text);
+	unicode = unicode_import(UNICODE_FROM_UTF8, utf8);
+	status = ttf_size_unicode(font, unicode, w, h);
+	free(unicode);
 	return (status);
 }
 
+/* Size Unicode text. */
 int
-ttf_size_unicode(ttf_font *font, Uint16 *text, int *w, int *h)
+ttf_size_unicode(ttf_font *font, const Uint16 *unicode, int *w, int *h)
 {
 	int status;
-	Uint16 *ch;
+	const Uint16 *ch;
 	int x, z;
 	int minx, maxx;
 	int miny, maxy;
@@ -607,7 +639,7 @@ ttf_size_unicode(ttf_font *font, Uint16 *text, int *w, int *h)
 
 	/* Load each character and sum it's bounding box. */
 	x = 0;
-	for (ch = text; *ch != '\0'; ch++) {
+	for (ch = unicode; *ch != '\0'; ch++) {
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
 			return (-1);
 		}
@@ -652,60 +684,48 @@ ttf_size_unicode(ttf_font *font, Uint16 *text, int *w, int *h)
 	return status;
 }
 
-/* Convert the Latin-1 text to UNICODE and render it. */
+/* Render Latin-1 text. */
 SDL_Surface *
-ttf_render_text_solid(ttf_font *font, char *text, SDL_Color fg)
+ttf_render_text_solid(ttf_font *font, const char *latin1, SDL_Color fg)
 {
 	SDL_Surface *textsu;
-	Uint16 *unicode_text;
-	size_t unicode_len;
+	Uint16 *unicode;
 
-	/* Copy the Latin-1 text to a UNICODE text buffer. */
-	unicode_len = strlen(text);
-	unicode_text = Malloc((unicode_len + 1) * sizeof(*unicode_text));
-	ASCII_to_UNICODE(unicode_text, text, unicode_len);
-
-	/* Render the new text. */
-	textsu = ttf_render_unicode_solid(font, unicode_text, fg);
-
-	free(unicode_text);
+	unicode = unicode_import(UNICODE_FROM_LATIN1, latin1);
+	textsu = ttf_render_unicode_solid(font, unicode, fg);
+	free(unicode);
 	return (textsu);
 }
 
-/* Convert the UTF-8 text to UNICODE and render it. */
+/* Render UTF-8 text. */
 SDL_Surface *
-ttf_render_utf8_solid(ttf_font *font, char *text, SDL_Color fg)
+ttf_render_utf8_solid(ttf_font *font, const char *utf8, SDL_Color fg)
 {
 	SDL_Surface *textsu;
-	Uint16 *unicode_text;
-	size_t unicode_len;
+	Uint16 *unicode;
 
-	/* Copy the UTF-8 text to a UNICODE text buffer. */
-	unicode_len = strlen(text);
-	unicode_text = Malloc((unicode_len + 1) * sizeof(*unicode_text));
-	UTF8_to_UNICODE(unicode_text, text, unicode_len);
-
-	/* Render the new text. */
-	textsu = ttf_render_unicode_solid(font, unicode_text, fg);
-
-	free(unicode_text);
+	unicode = unicode_import(UNICODE_FROM_UTF8, utf8);
+	textsu = ttf_render_unicode_solid(font, unicode, fg);
+	free(unicode);
 	return (textsu);
 }
 
+/* Render UNICODE text. */
 SDL_Surface *
-ttf_render_unicode_solid(ttf_font *font, Uint16 *text, SDL_Color fg)
+ttf_render_unicode_solid(ttf_font *font, const Uint16 *unicode, SDL_Color fg)
 {
 	int xstart;
 	int width, height;
 	SDL_Surface *textsu;
 	SDL_Palette *palette;
-	Uint16 *ch;
+	const Uint16 *ch;
 	Uint8 *src, *dst;
 	int row, col;
 	struct cached_glyph *glyph;
+	int swapped = unicode_byteswapped;
 
 	/* Get the dimensions of the text surface. */
-	if ((ttf_size_unicode(font, text, &width, NULL) < 0) ||
+	if ((ttf_size_unicode(font, unicode, &width, NULL) < 0) ||
 	    width == 0) {
 		error_set("text has zero width");
 		return (NULL);
@@ -728,39 +748,58 @@ ttf_render_unicode_solid(ttf_font *font, Uint16 *text, SDL_Color fg)
 	palette->colors[1].r = fg.r;
 	palette->colors[1].g = fg.g;
 	palette->colors[1].b = fg.b;
-	if (SDL_SetColorKey(textsu, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0) != 0) {
-		error_set("SDL_SetColorKey: %s", SDL_GetError());
-		goto fail1;
-	}
+	SDL_SetColorKey(textsu, SDL_SRCCOLORKEY, 0);
 
 	/* Load and render each character. */
 	xstart = 0;
 
-	for (ch = text; *ch; ch++) {
+	for (ch = unicode; *ch; ch++) {
+		Uint16 c = *ch;
 		FT_Bitmap *current = NULL;
+
+		if (c == UNICODE_BOM_NATIVE) {
+			swapped = 0;
+			if (unicode == ch)
+				unicode++;
+			continue;
+		}
+		if (c == UNICODE_BOM_SWAPPED) {
+			swapped = 1;
+			if (unicode == ch)
+				unicode++;
+			continue;
+		}
+		if (swapped) {
+			c = SDL_Swap16(c);
+		}
 
 		if (ttf_find_glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP)
 		    != 0) {
 		    	goto fail1;
 		}
 		glyph = font->current;
-
 		current = &glyph->bitmap;
+
+		/* Compensate for wrap around bug with negative minx's */
+		if ((ch == unicode) && (glyph->minx < 0))
+			xstart -= glyph->minx;
+
 		for (row = 0; row < current->rows; ++row) {
+			if (row+glyph->yoffset >= textsu->h)
+				continue;
+
 			dst = (Uint8 *)textsu->pixels +
 				(row + glyph->yoffset)*textsu->pitch +
 				xstart + glyph->minx;
 			src = current->buffer + row*current->pitch;
 
-			for (col = current->width; col > 0; --col) {
+			for (col = current->width; col > 0; --col)
 				*dst++ |= *src++;
-			}
 		}
 
 		xstart += glyph->advance;
-		if (font->style & TTF_STYLE_BOLD) {
+		if (font->style & TTF_STYLE_BOLD)
 			xstart += font->glyph_overhang;
-		}
 	}
 
 	/* Handle the underline style. */
@@ -782,8 +821,9 @@ fail1:
 	return (NULL);
 }
 
+/* Render UNICODE glyph. */
 SDL_Surface *
-ttf_render_glyph_solid(ttf_font *font, Uint16 ch, SDL_Color fg)
+ttf_render_glyph_solid(ttf_font *font, Uint16 unicode, SDL_Color fg)
 {
 	SDL_Surface *textsu;
 	SDL_Palette *palette;
@@ -792,15 +832,15 @@ ttf_render_glyph_solid(ttf_font *font, Uint16 ch, SDL_Color fg)
 	struct cached_glyph *glyph;
 
 	/* Get the glyph itself */
-	if (ttf_find_glyph(font, ch, CACHED_METRICS|CACHED_BITMAP) != 0) {
+	if (ttf_find_glyph(font, unicode, CACHED_METRICS|CACHED_BITMAP) != 0) {
 		fatal("ttf_find_glyph: %s", error_get());
 	}
 	glyph = font->current;
 
 	/* Create the target surface */
 	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE,
-	    glyph->pixmap.width, glyph->pixmap.rows, 8,
-	    0, 0, 0, 0);
+	    glyph->pixmap.width, glyph->pixmap.rows,
+	    8, 0, 0, 0, 0);
 	if (textsu == NULL) {
 		error_set("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
@@ -814,12 +854,7 @@ ttf_render_glyph_solid(ttf_font *font, Uint16 ch, SDL_Color fg)
 	palette->colors[1].r = fg.r;
 	palette->colors[1].g = fg.g;
 	palette->colors[1].b = fg.b;
-	if (SDL_SetColorKey(textsu, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0) != 0) {
-		error_set("SDL_SetColorKey: %s", SDL_GetError());
-		SDL_FreeSurface(textsu);
-		return (NULL);
-	}
-
+	SDL_SetColorKey(textsu, SDL_SRCCOLORKEY, 0);
 
 	/* Copy the character from the pixmap */
 	src = glyph->pixmap.buffer;
