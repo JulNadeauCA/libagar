@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.34 2002/09/07 04:36:59 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.35 2002/09/09 01:23:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -48,7 +48,7 @@ static const struct widget_ops button_ops = {
 		NULL		/* save */
 	},
 	button_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
@@ -140,6 +140,8 @@ button_destroy(void *p)
 		view_unused_surface(b->slabel_s);
 	}
 	SDL_FreeSurface(b->label_s);
+
+	widget_destroy(b);
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.25 2002/09/07 04:34:14 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.26 2002/09/07 05:11:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -51,7 +51,7 @@ static const struct widget_ops textbox_ops = {
 		NULL		/* save */
 	},
 	textbox_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
@@ -141,6 +141,8 @@ textbox_destroy(void *ob)
 	free(tb->label);
 	free(tb->text.s);
 	pthread_mutex_destroy(&tb->text.lock);
+
+	widget_destroy(tb);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.2 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.3 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,7 +46,7 @@ static const struct widget_ops bitmap_ops = {
 		NULL	/* save */
 	},
 	bitmap_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 struct bitmap *
@@ -115,5 +115,6 @@ bitmap_destroy(void *p)
 	if (bmp->surface_s != NULL) {
 		view_unused_surface(bmp->surface_s);
 	}
+	widget_destroy(bmp);
 }
 

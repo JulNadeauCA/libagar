@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.21 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.22 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,7 +46,7 @@ static struct widget_ops checkbox_ops = {
 		NULL		/* save */
 	},
 	checkbox_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
@@ -112,6 +112,8 @@ checkbox_destroy(void *p)
 
 	SDL_FreeSurface(b->label_s);
 	free(b->caption);
+
+	widget_destroy(b);
 }
 
 void
