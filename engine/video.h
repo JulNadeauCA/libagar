@@ -1,6 +1,8 @@
-/*	$Csoft: video.h,v 1.2 2002/01/26 06:37:32 vedge Exp $	*/
+/*	$Csoft: video.h,v 1.3 2002/01/28 05:09:01 vedge Exp $	*/
 
+#ifdef CONF_SMPEG
 #include <smpeg.h>
+#endif
 
 struct video {
 	pthread_t	thread;
