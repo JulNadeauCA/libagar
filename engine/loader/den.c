@@ -1,4 +1,4 @@
-/*	$Csoft: den.c,v 1.5 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: den.c,v 1.6 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -65,7 +65,7 @@ den_read_header(struct den *den)
 	den->keywords = read_string(den->buf);
 
 	den->nmembers = read_uint32(den->buf);
-	den->members = Malloc(den->nmembers*sizeof(struct den_member), M_DEN);
+	den->members = Malloc(den->nmembers*sizeof(struct den_member), M_LOADER);
 
 	for (i = 0; i < den->nmembers; i++) {
 		struct den_member *memb = &den->members[i];
@@ -93,7 +93,7 @@ den_write_header(struct den *den, int nmemb)
 	write_string(den->buf, den->keywords);
 
 	/* Initialize the mapping table. */
-	den->members = Malloc(nmemb*sizeof(struct den_member), M_DEN);
+	den->members = Malloc(nmemb*sizeof(struct den_member), M_LOADER);
 	den->nmembers = (Uint32)nmemb;
 	for (i = 0; i < den->nmembers; i++) {
 		struct den_member *memb = &den->members[i];
@@ -136,11 +136,11 @@ den_open(const char *path, enum den_open_mode mode)
 {
 	struct den *den;
 
-	den = Malloc(sizeof(struct den), M_DEN);
+	den = Malloc(sizeof(struct den), M_LOADER);
 	den->buf = netbuf_open(path, (mode == DEN_READ) ? "rb" : "wb",
 	    NETBUF_BIG_ENDIAN);
 	if (den->buf == NULL) {
-		Free(den, M_DEN);
+		Free(den, M_LOADER);
 		return (NULL);
 	}
 
@@ -158,7 +158,7 @@ den_open(const char *path, enum den_open_mode mode)
 	return (den);
 fail:
 	netbuf_close(den->buf);
-	Free(den, M_DEN);
+	Free(den, M_LOADER);
 	return (NULL);
 }
 
@@ -171,8 +171,8 @@ den_close(struct den *den)
 	Free(den->copyright, 0);
 	Free(den->descr, 0);
 	Free(den->keywords, 0);
-	Free(den->members, M_DEN);
-	Free(den, M_DEN);
+	Free(den->members, M_LOADER);
+	Free(den, M_LOADER);
 }
 
 /* Import the contents of a file in a den archive. */

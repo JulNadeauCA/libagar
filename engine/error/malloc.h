@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.7 2004/07/24 02:01:24 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.8 2005/01/13 01:16:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -24,9 +24,7 @@ enum {
 	M_RG,		/* raster graphics */
 	M_VIEW,		/* view interface */
 	M_NETBUF,	/* network i/o */
-	M_TTF,		/* font loader */
-	M_XCF,		/* xcf image loader */
-	M_DEN,		/* den archive loader */
+	M_LOADER,	/* file loaders */
 	M_TEXT,		/* text rendering */
 	M_TYPESW,	/* type switch */
 	M_INPUT,	/* input devices */

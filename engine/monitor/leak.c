@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.11 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.12 2005/01/13 01:16:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -58,9 +58,7 @@ static const char *mement_names[] = {
 	"rg",
 	"view",
 	"netbuf",
-	"ttf",
-	"xcf",
-	"den",
+	"loader",
 	"text",
 	"typesw",
 	"input",

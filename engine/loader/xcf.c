@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.15 2004/09/18 06:15:01 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.16 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ xcf_read_property(struct netbuf *buf, struct xcf_prop *prop)
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
 		prop->data.colormap.size = read_uint32(buf);
 		prop->data.colormap.data = Malloc(prop->data.colormap.size*3,
-		    M_XCF);
+		    M_LOADER);
 		netbuf_read(prop->data.colormap.data, prop->data.colormap.size,
 		    3, buf);
 		debug(DEBUG_COLORMAPS, "%u-entry colormap\n",
@@ -147,7 +147,7 @@ xcf_read_property(struct netbuf *buf, struct xcf_prop *prop)
 		prop->data.parasite.flags = read_uint32(buf);
 		prop->data.parasite.size = read_uint32(buf);
 		prop->data.parasite.data = Malloc(prop->data.parasite.size,
-		    M_XCF);
+		    M_LOADER);
 		netbuf_read(prop->data.parasite.data, prop->data.parasite.size,
 		    1, buf);
 #if 0
@@ -168,7 +168,7 @@ xcf_read_property(struct netbuf *buf, struct xcf_prop *prop)
 		debug_n(DEBUG_PARASITES, "\n");
 #endif
 		Free(prop->data.parasite.name, 0);
-		Free(prop->data.parasite.data, M_XCF);
+		Free(prop->data.parasite.data, M_LOADER);
 		break;
 	case PROP_UNIT:
 		prop->data.unit = read_uint32(buf);
@@ -190,7 +190,7 @@ xcf_read_tile_flat(struct netbuf *buf, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
 
-	load = Malloc(len, M_XCF);
+	load = Malloc(len, M_LOADER);
 	netbuf_read(load, len, 1, buf);
 	return (load);
 }
@@ -202,17 +202,17 @@ xcf_read_tile_rle(struct netbuf *buf, Uint32 len, int bpp, int x, int y)
 	Uint8 *tilep, *tile, *data;
 	ssize_t rv;
 
-	tilep = tile = Malloc(len, M_XCF);
+	tilep = tile = Malloc(len, M_LOADER);
 	rv = netbuf_eread(tile, sizeof(Uint8), len, buf);
 #if 0
 	if (rv < len) {
 		error_set("short read");
-		Free(tile, M_XCF);
+		Free(tile, M_LOADER);
 		return (NULL);
 	}
 #endif
 
-	data = Malloc(x * y * bpp, M_XCF);
+	data = Malloc(x * y * bpp, M_LOADER);
 	for (i = 0; i < bpp; i++) {
 		Uint8 *d = &data[i];
 	
@@ -255,7 +255,7 @@ xcf_read_tile_rle(struct netbuf *buf, Uint32 len, int bpp, int x, int y)
 		}
 	}
 
-	Free(tilep, M_XCF);
+	Free(tilep, M_LOADER);
 	return (data);
 }
 
@@ -383,10 +383,10 @@ xcf_convert_level(struct netbuf *buf, Uint32 xcfoffs,
 			ty += 64;
 		}
 		if (ty >= level->h) {
-			Free(tile, M_XCF);
+			Free(tile, M_LOADER);
 			break;
 		}
-		Free(tile, M_XCF);
+		Free(tile, M_LOADER);
 	}
 }
 
@@ -421,13 +421,13 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	/* Read the hierarchy. */
 	netbuf_seek(buf, xcfoffs+layer->hierarchy_offset, SEEK_SET);
 
-	hier = Malloc(sizeof(struct xcf_hierarchy), M_XCF);
+	hier = Malloc(sizeof(struct xcf_hierarchy), M_LOADER);
 	hier->w = read_uint32(buf);
 	hier->h = read_uint32(buf);
 	hier->bpp = read_uint32(buf);
 
 	/* Read the level offsets. */
-	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT*sizeof(Uint32), M_XCF);
+	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT*sizeof(Uint32), M_LOADER);
 	hier->maxlevel_offsets = LEVEL_OFFSETS_INIT;
 	hier->nlevel_offsets = 0;
 	i = 0;
@@ -449,11 +449,11 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 		struct xcf_level *level;
 
 		netbuf_seek(buf, xcfoffs + hier->level_offsets[i], SEEK_SET);
-		level = Malloc(sizeof(struct xcf_level), M_XCF);
+		level = Malloc(sizeof(struct xcf_level), M_LOADER);
 		level->w = read_uint32(buf);
 		level->h = read_uint32(buf);
 		level->tile_offsets = Malloc(TILE_OFFSETS_INIT*sizeof(Uint32),
-		    M_XCF);
+		    M_LOADER);
 		level->maxtile_offsets = TILE_OFFSETS_INIT;
 		level->ntile_offsets = 0;
 
@@ -472,11 +472,11 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 		}
 		xcf_convert_level(buf, xcfoffs, hier, head, level, su, &aflags);
 
-		Free(level->tile_offsets, M_XCF);
-		Free(level, M_XCF);
+		Free(level->tile_offsets, M_LOADER);
+		Free(level, M_LOADER);
 	}
-	Free(hier->level_offsets, M_XCF);
-	Free(hier, M_XCF);
+	Free(hier->level_offsets, M_LOADER);
+	Free(hier, M_LOADER);
 
 	/* Adjust the alpha/colorkey properties of the surface. */
 	{	
@@ -548,12 +548,12 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	}
 
 	/* Read the XCF header. */
-	head = Malloc(sizeof(struct xcf_header), M_XCF);
+	head = Malloc(sizeof(struct xcf_header), M_LOADER);
 	head->w = read_uint32(buf);
 	head->h = read_uint32(buf);
 	if (head->w > XCF_WIDTH_MAX || head->h > XCF_HEIGHT_MAX) {
 		error_set(_("Nonsense XCF geometry: %ux%u."), head->w, head->h);
-		Free(head, M_XCF);
+		Free(head, M_LOADER);
 		return (-1);
 	}
 
@@ -565,7 +565,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 		break;
 	default:
 		error_set(_("Unknown base image type: %u."), head->base_type);
-		Free(head, M_XCF);
+		Free(head, M_LOADER);
 		return (-1);
 	}
 	head->compression = XCF_COMPRESSION_NONE;
@@ -585,7 +585,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 		case PROP_COLORMAP:
 			head->colormap.size = prop.data.colormap.size;
 			head->colormap.data = Malloc(3*head->colormap.size,
-			    M_XCF);
+			    M_LOADER);
 			memcpy(head->colormap.data, prop.data.colormap.data,
 			    3*head->colormap.size);
 			break;
@@ -612,7 +612,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 
 		netbuf_seek(buf, xcf_offs + head->layer_offstable[i-1],
 		    SEEK_SET);
-		layer = Malloc(sizeof(struct xcf_layer), M_XCF);
+		layer = Malloc(sizeof(struct xcf_layer), M_LOADER);
 		layer->w = read_uint32(buf);
 		layer->h = read_uint32(buf);
 		layer->layer_type = read_uint32(buf);
@@ -646,27 +646,27 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 		if ((su = xcf_convert_layer(buf, xcf_offs, head, layer))
 		    == NULL) {
 			Free(layer->name, 0);
-			Free(layer, M_XCF);
-			Free(head, M_XCF);
+			Free(layer, M_LOADER);
+			Free(head, M_LOADER);
 			return (-1);
 		}
 		if (xcf_insert_surface(gfx, su, layer->name, &curanim) == -1) {
 			Free(layer->name, 0);
-			Free(layer, M_XCF);
+			Free(layer, M_LOADER);
 			goto fail;
 		}
 		Free(layer->name, 0);
-		Free(layer, M_XCF);
+		Free(layer, M_LOADER);
 	}
 
-	Free(head->colormap.data, M_XCF);
-	Free(head->layer_offstable, M_XCF);
-	Free(head, M_XCF);
+	Free(head->colormap.data, M_LOADER);
+	Free(head->layer_offstable, M_LOADER);
+	Free(head, M_LOADER);
 	return (0);
 fail:
-	Free(head->colormap.data, M_XCF);
-	Free(head->layer_offstable, M_XCF);
-	Free(head, M_XCF);
+	Free(head->colormap.data, M_LOADER);
+	Free(head->layer_offstable, M_LOADER);
+	Free(head, M_LOADER);
 	return (-1);
 }
 

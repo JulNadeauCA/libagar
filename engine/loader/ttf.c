@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.11 2004/06/22 04:02:06 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.12 2005/02/08 15:48:36 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -81,7 +81,7 @@ ttf_open_font(const char *file, int ptsize)
 	FT_Face face;
 	FT_Fixed scale;
 
-	font = Malloc(sizeof(struct ttf_font), M_TTF);
+	font = Malloc(sizeof(struct ttf_font), M_LOADER);
 	memset(font, 0, sizeof(struct ttf_font));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
@@ -156,7 +156,7 @@ ttf_open_font(const char *file, int ptsize)
 fail2:
 	ttf_close_font(font);
 fail1:
-	Free(font, M_TTF);
+	Free(font, M_LOADER);
 	return (NULL);
 }
 
@@ -165,7 +165,7 @@ ttf_close_font(struct ttf_font *font)
 {
 	ttf_flush_cache(font);
 	FT_Done_Face(font->face);
-	Free(font, M_TTF);
+	Free(font, M_LOADER);
 }
 
 static void
@@ -330,7 +330,7 @@ ttf_load_glyph(struct ttf_font *font, Uint32 ch, struct ttf_glyph *cached,
 		}
 
 		if (dst->rows != 0) {
-			dst->buffer = Malloc(dst->pitch * dst->rows, M_TTF);
+			dst->buffer = Malloc(dst->pitch * dst->rows, M_LOADER);
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
 			for (i = 0; i < src->rows; i++) {
