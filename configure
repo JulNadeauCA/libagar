@@ -154,23 +154,23 @@ echo "    --enable-nls                   Native Language Support [default: yes]"
 exit 1
 fi
 SHAREDIR="$PREFIX/share/cave"
-echo SHAREDIR=$SHAREDIR >> Makefile.config
+echo "SHAREDIR=$SHAREDIR" >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
 echo "#endif /* SHAREDIR */" >> config/sharedir.h
 TTFDIR="$PREFIX/share/cave/fonts"
-echo TTFDIR=$TTFDIR >> Makefile.config
+echo "TTFDIR=$TTFDIR" >> Makefile.config
 TTFDIR="\"$PREFIX/share/cave/fonts\""
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
 echo "#endif /* TTFDIR */" >> config/ttfdir.h
 INST_MANDIR="$PREFIX/share/agar/man"
-echo INST_MANDIR=$INST_MANDIR >> Makefile.config
+echo "INST_MANDIR=$INST_MANDIR" >> Makefile.config
 INST_PSDIR="$PREFIX/share/agar/ps"
-echo INST_PSDIR=$INST_PSDIR >> Makefile.config
+echo "INST_PSDIR=$INST_PSDIR" >> Makefile.config
 LOCALEDIR="$PREFIX/share/locale"
-echo LOCALEDIR=$LOCALEDIR >> Makefile.config
+echo "LOCALEDIR=$LOCALEDIR" >> Makefile.config
 LOCALEDIR="\"$PREFIX/share/locale\""
 echo "#ifndef LOCALEDIR" > config/localedir.h
 echo "#define LOCALEDIR" $LOCALEDIR >> config/localedir.h
@@ -349,7 +349,7 @@ else
 	echo "no"
 fi
 if [ "${HAVE_MATH}" = "yes" ]; then
-echo MATH_LIBS=$MATH_LIBS >> Makefile.config
+echo "MATH_LIBS=$MATH_LIBS" >> Makefile.config
 else
 NONE=1
 fi
@@ -742,7 +742,7 @@ else
 	echo "no"
 fi
 CFLAGS="$CFLAGS -I$SRC"
-echo CFLAGS=$CFLAGS >> Makefile.config
+echo "CFLAGS=$CFLAGS" >> Makefile.config
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
@@ -783,8 +783,8 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 done
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
-echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
-echo SDL_LIBS=$SDL_LIBS >> Makefile.config
+echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
+echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
 else
 NONE=1
 fi
@@ -792,8 +792,8 @@ if [ "${sdl11_version}" != "" ]; then
 sdl_found=yes
 SDL_CFLAGS=$sdl11_cflags
 SDL_LIBS=$sdl11_libs
-echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
-echo SDL_LIBS=$SDL_LIBS >> Makefile.config
+echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
+echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
 else
 NONE=1
 fi
@@ -889,8 +889,8 @@ NONE=1
 fi
 if [ "${FREETYPE_VERSION}" != "" ]; then
 freetype_found=yes
-echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
-echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >> Makefile.config
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >> Makefile.config
 echo "yes"
 echo "yes" >> config.log
 else
@@ -1063,8 +1063,8 @@ x11_found=yes
 echo "#ifndef HAVE_X11" > config/have_x11.h
 echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
 echo "#endif /* HAVE_X11 */" >> config/have_x11.h
-echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
-echo X11_LIBS=$X11_LIBS >> Makefile.config
+echo "X11_CFLAGS=$X11_CFLAGS" >> Makefile.config
+echo "X11_LIBS=$X11_LIBS" >> Makefile.config
 else
 x11_found=no
 echo "#undef HAVE_X11" > config/have_x11.h
@@ -1113,15 +1113,15 @@ else
 	echo "no"
 fi
 if [ "${HAVE_OPENGL}" = "yes" ]; then
-echo OPENGL_CFLAGS=$OPENGL_CFLAGS >> Makefile.config
-echo OPENGL_LIBS=$OPENGL_LIBS >> Makefile.config
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
+echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
 else
 NONE=1
 fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
-echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 	fi
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
@@ -1184,8 +1184,8 @@ else
 	echo "no"
 fi
 if [ "${HAVE_JPEG}" != "" ]; then
-echo JPEG_CFLAGS=$JPEG_CFLAGS >> Makefile.config
-echo JPEG_LIBS=$JPEG_LIBS >> Makefile.config
+echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
+echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
 else
 NONE=1
 fi
@@ -1220,8 +1220,8 @@ echo "yes" >> config.log
 echo "#ifndef HAVE_SMPEG" > config/have_smpeg.h
 echo "#define HAVE_SMPEG" $HAVE_SMPEG >> config/have_smpeg.h
 echo "#endif /* HAVE_SMPEG */" >> config/have_smpeg.h
-echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
-echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
+echo "SMPEG_CFLAGS=$SMPEG_CFLAGS" >> Makefile.config
+echo "SMPEG_LIBS=$SMPEG_LIBS" >> Makefile.config
 else
 echo "no"
 echo "no" >> config.log
@@ -1233,7 +1233,7 @@ fi
 if [ "${enable_static}" = "yes" ]
  then
 LDFLAGS="-static"
-echo LDFLAGS=$LDFLAGS >> Makefile.config
+echo "LDFLAGS=$LDFLAGS" >> Makefile.config
 fi
 if [ "${enable_debug}" != "no" ]
  then
@@ -1355,31 +1355,31 @@ else
 	echo "no"
 fi
 if [ "${HAVE_GETTEXT}" != "" ]; then
-echo GETTEXT_CFLAGS=$GETTEXT_CFLAGS >> Makefile.config
-echo GETTEXT_LIBS=$GETTEXT_LIBS >> Makefile.config
-echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
+echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >> Makefile.config
+echo "GETTEXT_LIBS=$GETTEXT_LIBS" >> Makefile.config
+echo "HAVE_GETTEXT=$HAVE_GETTEXT" >> Makefile.config
 else
 NONE=1
 fi
 else
 echo "#undef HAVE_GETTEXT" > config/have_gettext.h
 HAVE_GETTEXT="no"
-echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
+echo "HAVE_GETTEXT=$HAVE_GETTEXT" >> Makefile.config
 fi
 if [ "${enable_nls}" != "no" ]
  then
 ENABLE_NLS="yes"
-echo ENABLE_NLS=$ENABLE_NLS >> Makefile.config
+echo "ENABLE_NLS=$ENABLE_NLS" >> Makefile.config
 ENABLE_NLS=1
 echo "#ifndef ENABLE_NLS" > config/enable_nls.h
 echo "#define ENABLE_NLS" $ENABLE_NLS >> config/enable_nls.h
 echo "#endif /* ENABLE_NLS */" >> config/enable_nls.h
 else
 ENABLE_NLS="no"
-echo ENABLE_NLS=$ENABLE_NLS >> Makefile.config
+echo "ENABLE_NLS=$ENABLE_NLS" >> Makefile.config
 echo "#undef ENABLE_NLS" > config/enable_nls.h
 fi
-echo PREFIX=$PREFIX >> Makefile.config
+echo "PREFIX=$PREFIX" >> Makefile.config
 echo "#ifndef PREFIX" > config/prefix.h
 echo "#define PREFIX \"$PREFIX\"" >> config/prefix.h
 echo "#endif /* PREFIX */" >> config/prefix.h
