@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.33 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.34 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,7 +53,8 @@ enum {
 	TEXT_COLOR
 };
 
-static void	checkbox_event(int, union evarg *);
+static void	checkbox_scaled(int , union evarg *);
+static void	checkbox_event(int , union evarg *);
 
 struct checkbox *
 checkbox_new(struct region *reg, int rh, const char *caption_fmt, ...)
@@ -78,6 +79,7 @@ void
 checkbox_init(struct checkbox *cbox, int rh, char *caption)
 {
 	widget_init(&cbox->wid, "checkbox", &checkbox_ops, -1, rh);
+	WIDGET(cbox)->flags |= WIDGET_CLIPPING;
 	widget_map_color(cbox, TEXT_COLOR, "text", 250, 250, 250);
 	widget_map_color(cbox, BOX_COLOR, "box", 100, 100, 100);
 
@@ -88,13 +90,6 @@ checkbox_init(struct checkbox *cbox, int rh, char *caption)
 	cbox->label_s = text_render(NULL, -1, WIDGET_COLOR(cbox, TEXT_COLOR),
 	    caption);
 	
-	/* Adjust size. */
-	if (rh < 0) {
-		WIDGET(cbox)->h = cbox->label_s->h;
-	}
-	cbox->cbox_w = cbox->label_s->h;			/* Square */
-	WIDGET(cbox)->w = cbox->cbox_w + 6 + cbox->label_s->w;
-
 	event_new(cbox, "window-mousebuttonup",
 	    checkbox_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(cbox, "window-mousebuttondown",
@@ -103,6 +98,7 @@ checkbox_init(struct checkbox *cbox, int rh, char *caption)
 	    checkbox_event, "%i", WINDOW_KEYUP);
 	event_new(cbox, "window-keydown",
 	    checkbox_event, "%i", WINDOW_KEYDOWN);
+	event_new(cbox, "widget-scaled", checkbox_scaled, NULL);
 }
 
 void
@@ -120,55 +116,54 @@ void
 checkbox_draw(void *p)
 {
 	struct checkbox *cbox = p;
-	int x = 0, y = 0;
 
-	/* Draw the checkbox. */
-	primitives.box(cbox, 0, 0, cbox->cbox_w, cbox->label_s->h,
+	primitives.box(cbox, 0, 0, WIDGET(cbox)->h, WIDGET(cbox)->h,
 	    widget_get_bool(cbox, "state") ? -1 : 1,
 	    WIDGET_COLOR(cbox, BOX_COLOR));
-
-	/* Draw the label. */
-	widget_blit(cbox, cbox->label_s, cbox->cbox_w + 6 + x, y);
+	widget_blit(cbox, cbox->label_s, WIDGET(cbox)->h + 6, 0);  /* Square */
 }
 
 static void
 checkbox_event(int argc, union evarg *argv)
 {
 	struct checkbox *cbox = argv[0].p;
-	int type = argv[1].i;
-	int button, keysym;
-	int pushed = 0;
+	struct widget_binding *stateb;
+	int *state;
 
-	OBJECT_ASSERT(argv[0].p, "widget");
-
-	switch (type) {
+	switch (argv[1].i) {
 	case WINDOW_MOUSEBUTTONDOWN:
-		button = argv[2].i;
-		if (button == 1) {
-			pushed++;
+		if (argv[2].i == 1) {		/* Button */
+			goto changed;
 		} else {
 			WIDGET_FOCUS(cbox);
 		}
 		break;
 	case WINDOW_KEYDOWN:
-		keysym = argv[2].i;
-		if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
-			pushed++;
+		if (argv[2].i == SDLK_RETURN ||	/* Keysym */
+		    argv[2].i == SDLK_SPACE) {
+			goto changed;
 		}
 		break;
 	}
+	return;
+changed:
+	stateb = widget_binding_get_locked(cbox, "state", &state);
+	*state = !(*state);
+	event_post(cbox, "checkbox-changed", "%i", *state);
+	widget_binding_modified(stateb);
+	widget_binding_unlock(stateb);
+}
 
-	if (pushed) {
-		struct widget_binding *stateb;
-		int *state;
+static void
+checkbox_scaled(int argc, union evarg *argv)
+{
+	struct checkbox *cb = argv[0].p;
+	int w = argv[1].i;
+	int h = argv[2].i;
 
-		stateb = widget_binding_get_locked(cbox, "state", &state);
-		*state = !(*state);
-		
-		event_post(cbox, "checkbox-changed", "%i", *state);
-
-		widget_binding_modified(stateb);
-		widget_binding_unlock(stateb);
-	}
+	if (WIDGET(cb)->rw == -1)
+		WIDGET(cb)->w = w;
+	if (WIDGET(cb)->rh == -1)
+		WIDGET(cb)->h = cb->label_s->h;
 }
 

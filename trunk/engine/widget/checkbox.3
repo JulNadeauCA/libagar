@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.6 2002/12/31 01:41:18 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.7 2003/01/01 05:18:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -93,15 +93,18 @@ widget generates the following events:
 .Pp
 .Bl -tag -width 2n
 .It Fn checkbox-changed "int state"
-State changed,
-.Fa state
-is positive if the checkbox is pressed.
+Checkbox state changed (1 = pressed, 0 = released).
+The
+.Sq state
+binding is locked during the event handler's execution.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
+.Xr button 3 ,
+.Xr radio 3 ,
+.Xr region 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm
