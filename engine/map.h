@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.74 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.75 2003/03/12 23:00:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -25,8 +25,8 @@ enum noderef_type {
 
 struct noderef {
 #ifdef DEBUG
-	char	magic[5];
-#define NODEREF_MAGIC "nref"
+	int	magic;
+#define NODEREF_MAGIC 0x1ad
 #endif
 	enum noderef_type	 type;		/* Type of reference */
 
@@ -59,9 +59,8 @@ TAILQ_HEAD(noderefq, noderef);
 
 struct node {
 #ifdef DEBUG
-	char	magic[5];
-#define NODE_MAGIC "node"
-	int	x, y;
+	int	magic;
+#define NODE_MAGIC 0x60cd
 #endif
 	struct noderefq	 nrefs;		/* Items on this node */
 	Uint32		 flags;
@@ -136,7 +135,7 @@ void		 noderef_save(struct fobj_buf *, struct object_table *,
 		     struct noderef *);
 __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
 
-void		 node_init(struct node *, int, int);
+void		 node_init(struct node *);
 void		 node_load(int, struct object_table *, struct node *);
 void		 node_save(struct fobj_buf *, struct object_table *,
 		     struct node *);
@@ -155,23 +154,15 @@ struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
 struct noderef	*node_add_warp(struct node *, char *, int, int, Uint8);
 
 #ifdef DEBUG
-extern int	 map_nodesigs;
-
-# define MAP_CHECK_NODE(node, mx, my) do {			\
-	if (map_nodesigs &&					\
-	    (strncmp(NODE_MAGIC, (node)->magic, 4) != 0 ||	\
-	     (node)->x != (mx) || (node)->y != (my))) {		\
-		fatal("bad node");				\
-	}							\
-} while (0)
-# define MAP_CHECK_NODEREF(nref) do {				\
-	if (map_nodesigs &&					\
-	    strncmp(NODEREF_MAGIC, (nref)->magic, 4) != 0) {	\
-		fatal("bad nref");				\
-	}							\
-} while (0)
+extern int map_nodesigs;
+# define MAP_CHECK_NODE(node)					\
+	if (map_nodesigs && node->magic != NODE_MAGIC)		\
+		fatal("bad node");
+# define MAP_CHECK_NODEREF(nref)				\
+	if (map_nodesigs && nref->magic != NODEREF_MAGIC)	\
+		fatal("bad nref");
 #else
-# define MAP_CHECK_NODE(node, mx, my)
+# define MAP_CHECK_NODE(node)
 # define MAP_CHECK_NODEREF(nref)
 #endif /* DEBUG */
 
