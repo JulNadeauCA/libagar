@@ -30,6 +30,8 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+echo > config.log
+
 mc_optarg=
 for mc_arg; do
 	case "$mc_arg" in
@@ -129,6 +131,7 @@ echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
 MAPDIR="$PREFIX/share/cave/maps"
 echo MAPDIR=$MAPDIR >> Makefile.config
 echo -n "checking for a usable make(1)..."
+echo "checking for a usable make(1)..." >> config.log
 if [ "$MAKE" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/make" ]; then
@@ -170,6 +173,7 @@ else
 fi
 rm -f .maketest .maketest2 .maketest3
 echo -n "checking for a usable C compiler..."
+echo "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
@@ -211,6 +215,93 @@ else
 fi
 
 rm -f .cctest .cctest.c
+echo -n "checking for setenv() and unsetenv() functions..."
+echo "checking for setenv() and unsetenv() functions..." >> config.log
+cat << EOT > conftest.c
+#include <stdlib.h>
+int
+main(int argc, char *argv[])
+{
+	(void)setenv("MANUCONF_SETENV_TEST", "foo", 1);
+	unsetenv("MANUCONF_SETENV_TEST");
+
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_SETENV" >> engine/mcconfig.h
+echo "#define HAVE_SETENV" $HAVE_SETENV >> engine/mcconfig.h
+echo "#endif /* HAVE_SETENV */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
+echo -n "checking for a vasprintf() function..."
+echo "checking for a vasprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <stdarg.h>
+
+int
+testprintf(const char *fmt, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start(args, fmt);
+	if (vasprintf(&buf, "%s", args) == -1) {
+		return (-1);
+	}
+	va_end(args);
+
+	free(buf);
+	return (0);
+}
+
+int
+main(int argc, char *argv[])
+{
+	return (testprintf("foo %s", "bar"));
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_VASPRINTF" >> engine/mcconfig.h
+echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> engine/mcconfig.h
+echo "#endif /* HAVE_VASPRINTF */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
 CFLAGS="$CFLAGS -g -I$S"
 echo CFLAGS=$CFLAGS >> Makefile.config
 if [ "${cc_is_gcc}" = "yes" ]
@@ -219,6 +310,7 @@ CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
+echo "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
 which="`which sdl-config`"
 if [ -n "$which" -a -x "$which" ]; then
@@ -249,21 +341,6 @@ which="`which sdl11-config`"
 if [ -n "$which" -a -x "$which" ]; then
 	sdl11_libs=`${which} --libs`
 fi
-sdl_dmedia_version=""
-which="`which sdl-config-dmedia`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl_dmedia_version=`${which} --version`
-fi
-sdl_dmedia_cflags=""
-which="`which sdl-config-dmedia`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl_dmedia_cflags=`${which} --cflags`
-fi
-sdl_dmedia_libs=""
-which="`which sdl-config-dmedia`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl_dmedia_libs=`${which} --libs`
-fi
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
@@ -280,15 +357,6 @@ echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
 NONE=1
 fi
-if [ "${sdl_dmedia_version}" != "" ]; then
-sdl_found=yes
-SDL_CFLAGS=$sdl_dmedia_cflags
-SDL_LIBS=$sdl_dmedia_libs
-echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
-echo SDL_LIBS=$SDL_LIBS >> Makefile.config
-else
-NONE=1
-fi
 if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
 else
@@ -296,6 +364,7 @@ echo "Missing SDL"
 exit 1
 fi
 echo -n "checking for FreeType (http://www.freetype.org)..."
+echo "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
 which="`which freetype-config`"
 if [ -n "$which" -a -x "$which" ]; then
@@ -327,6 +396,7 @@ fi
 if [ "${with_x11}" != "no" ]
  then
 echo -n "checking for X11 (http://www.xfree86.org/)..."
+echo "checking for X11 (http://www.xfree86.org/)..." >> config.log
 if [ -d /usr/X11R6 ]; then
 X11BASE=/usr/X11R6
 X11_CFLAGS=-I/usr/X11R6/include
