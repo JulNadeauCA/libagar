@@ -14,22 +14,14 @@ INSTALLATION
 2) Build the dependencies with the `depend' target.
    $ make depend
 
-3) Compile the library, binaries, archives and man pages (if nroff(1) is there).
+3) Compile the libs, binaries, archives and man pages (if nroff(1) is there).
    $ make
 
-4) Install the library, binaries, data files and manual pages.
+4) Install the libs, binaries, data files and manual pages.
    # make install
 
-5) Execute the game.
-   $ cave					# Game mode
-   $ cave -e					# Edition mode
-   $ cave -e -T $HOME/fonts -t myfont,18	# Override default font
-   $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Override load path
-
-6) Let the developers know whether the application compiled and ran fine.
-   You can insert comments in the subject, but make sure your return address
-   is valid if you want the developers to be able to reply you.
+5) Let the developers know of the success or failure you encountered.
    $ cat config.log | \
-     mail -s "VAXstation 3100: runs, fonts don't display" report@agar.csoft.org
+     mail -s "compiles and runs ok" report@agar.csoft.org
 
-$Csoft: INSTALL,v 1.12 2003/06/17 23:26:34 vedge Exp $
+$Csoft: INSTALL,v 1.13 2004/01/26 08:54:48 vedge Exp $
