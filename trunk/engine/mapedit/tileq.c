@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.10 2002/11/17 23:13:58 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.11 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -227,21 +227,21 @@ tileq_draw(void *p)
 
 		switch (ref->type) {
 		case EDITREF_SPRITE:
-			WIDGET_DRAW(tq, (SDL_Surface *)ref->p, 0, y);
+			widget_blit(tq, (SDL_Surface *)ref->p, 0, y);
 			break;
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
-			WIDGET_DRAW(tq, anim->frames[0][0], 0, y);
+			widget_blit(tq, anim->frames[0][0], 0, y);
 			break;
 		}
 
 		if (med->curoffs == sn) {
-			primitives.square(tq, 0, y, TILEW, TILEH,
+			primitives.rect_outlined(tq, 0, y, TILEW, TILEH,
 			    WIDGET_COLOR(tq, SELECTION_COLOR));
-			primitives.square(tq, 1, y+1, TILEW-1, TILEH-1,
+			primitives.rect_outlined(tq, 1, y+1, TILEW-1, TILEH-1,
 			    WIDGET_COLOR(tq, SELECTION_COLOR));
 		} else {
-			primitives.square(tq, 0, y, TILEW, TILEH,
+			primitives.rect_outlined(tq, 0, y, TILEW, TILEH,
 			    WIDGET_COLOR(tq, GRID_COLOR));
 		}
 nextref:
