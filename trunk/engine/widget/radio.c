@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.8 2002/08/12 06:57:54 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.9 2002/08/21 23:52:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 
 #include "primitive.h"
 #include "text.h"
