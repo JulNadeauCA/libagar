@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.54 2002/07/22 05:50:56 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.55 2002/07/24 09:29:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -268,9 +268,7 @@ window_draw(struct window *win)
 
 		/* Draw the widgets. */
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			if (!(wid->flags & WIDGET_HIDE)) {
-				WIDGET_OPS(wid)->widget_draw(wid);
-			}
+			WIDGET_OPS(wid)->widget_draw(wid);
 		}
 	}
 
@@ -315,8 +313,7 @@ window_animate(struct window *win)
 	/* Render animated widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			if (!(wid->flags & WIDGET_HIDE) &&
-			    WIDGET_OPS(wid)->widget_animate != NULL) {
+			if (WIDGET_OPS(wid)->widget_animate != NULL) {
 				WIDGET_OPS(wid)->widget_animate(wid);
 			}
 		}
@@ -724,9 +721,7 @@ window_event_all(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			/*
-			 * Window operation
-			 */
+			/* Window mouse motion operation */
 			switch (view->winop) {
 			case VIEW_WINOP_MOVE:
 				if (view->wop_win != win) {
@@ -803,9 +798,8 @@ window_event_all(SDL_Event *ev)
 			case VIEW_WINOP_NONE:
 				break;
 			}
-			/*
-			 * Widget event
-			 */
+
+			/* Widget mouse motion event */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					int widx, widy;
@@ -844,9 +838,8 @@ window_event_all(SDL_Event *ev)
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto nextwin;
 			}
-			/*
-			 * Window operation.
-			 */
+
+			/* Window mouse button operation */
 			if (ev->type == SDL_MOUSEBUTTONDOWN) {
 				if (ev->button.y - win->y <= win->titleh) {
 				    	if (ev->button.x - win->x < 20) {
@@ -870,9 +863,8 @@ window_event_all(SDL_Event *ev)
 					view->wop_win = win;
 				}	
 			}
-			/*
-			 * Widget event.
-			 */
+
+			/* Widget mouse button event */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if (!WIDGET_INSIDE(wid, ev->button.x,
