@@ -37,30 +37,30 @@ void
 mouse_motion(struct mapedit *med, SDL_Event *ev)
 {
 	static int ommapx, ommapy;
-	struct map *map = med->map;
+	struct map *m = med->map;
 
 	ommapx = med->mmapx;
 	ommapy = med->mmapy;
 
-	med->mmapx = ev->motion.x / med->map->view->tilew;
-	med->mmapy = ev->motion.y / med->map->view->tileh;
+	med->mmapx = ev->motion.x / m->tilew;
+	med->mmapy = ev->motion.y / m->tileh;
 	
 	if (ommapx < med->mmapx) {
-		if (map->view->mapx > 0) {
-			scroll(med->map, DIR_LEFT);
+		if (m->view->mapx > 0) {
+			scroll(m, DIR_LEFT);
 		}
 	} else if (med->mmapx < ommapx) {
-		if (map->view->mapx + map->view->mapw < map->mapw) {
-			scroll(med->map, DIR_RIGHT);
+		if (m->view->mapx + m->view->mapw < m->mapw) {
+			scroll(m, DIR_RIGHT);
 		}
 	}
 	if (ommapy < med->mmapy) {
-		if (map->view->mapy > 0) {
-			scroll(med->map, DIR_UP);
+		if (m->view->mapy > 0) {
+			scroll(m, DIR_UP);
 		}
 	} else if (med->mmapy < ommapy) {
-		if (map->view->mapy + map->view->maph < map->maph) {
-			scroll(med->map, DIR_DOWN);
+		if (m->view->mapy + m->view->maph < m->maph) {
+			scroll(m, DIR_DOWN);
 		}
 	}
 }
@@ -68,19 +68,19 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 void
 mouse_button(struct mapedit *med, SDL_Event *ev)
 {
-	struct map *map = med->map;
+	struct map *m = med->map;
 	int mx, my;
 
-	pthread_mutex_lock(&map->lock);
-	mx = map->view->mapx + ev->button.x / map->view->tilew;
-	my = map->view->mapy + ev->button.y / map->view->tileh;
+	pthread_mutex_lock(&m->lock);
+	mx = m->view->mapx + ev->button.x / m->tilew;
+	my = m->view->mapy + ev->button.y / m->tileh;
 	if (med->flags & MAPEDIT_TILESTACK)	/* XXX hack */
 		mx--;
 	if (med->flags & MAPEDIT_OBJLIST)	/* XXX hack */
 		my--;
 	mapedit_move(med, mx, my);
-	pthread_mutex_unlock(&map->lock);
-	map->redraw++;
+	pthread_mutex_unlock(&m->lock);
+	m->redraw++;
 
 	if (ev->button.button == 3) {
 		SDL_Event fev;
