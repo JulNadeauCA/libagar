@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.32 2002/08/20 09:13:19 vedge Exp $
+# $Csoft: configure.in,v 1.33 2002/08/23 09:48:29 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -26,10 +26,16 @@ hdefine(SHAREDIR, "\"$PREFIX/share/cave\"");
 # System map directory.
 mdefine(MAPDIR, "$PREFIX/share/cave/maps");
 
+# Build tools.
 check(make);
 check(cc);
 
+# Functions
+check(getenv);
 check(setenv);
+check(strsep);
+check(strlcat);
+check(strlcpy);
 check(vasprintf);
 
 mdefine(CFLAGS, "$CFLAGS -g -I$S");
