@@ -1,10 +1,12 @@
-/*	$Csoft: radio.h,v 1.6 2003/01/25 06:24:24 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.7 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
 #define _AGAR_WIDGET_RADIO_H_
 
 #include <engine/widget/widget.h>
+
+#include "begin_code.h"
 
 struct radio {
 	struct widget	wid;
@@ -24,9 +26,12 @@ struct radio {
 	} def;
 };
 
-struct radio	*radio_new(struct region *, const char *[]);
-void		 radio_init(struct radio *, const char *[]);
-void	 	 radio_draw(void *);
-void		 radio_destroy(void *);
+__BEGIN_DECLS
+extern DECLSPEC struct radio	*radio_new(struct region *, const char *[]);
+extern DECLSPEC void		 radio_init(struct radio *, const char *[]);
+extern DECLSPEC void	 	 radio_draw(void *);
+extern DECLSPEC void		 radio_destroy(void *);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_RADIO_H_ */

@@ -1,5 +1,9 @@
-/*	$Csoft: world.h,v 1.23 2002/11/27 05:05:30 vedge Exp $	*/
+/*	$Csoft: timer.h,v 1.1 2003/01/19 12:11:22 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_TIMER_H_
+#define _AGAR_TIMER_H_
+#include "begin_code.h"
 
 struct timer {
 	struct object	 obj;
@@ -16,11 +20,16 @@ struct timer {
 	pthread_mutex_t	 lock;
 };
 
-void		 timer_init(struct timer *, const char *, Uint32,
-		     Uint32 (*)(Uint32, void *), void *);
-void		 timer_start(struct timer *);
-void		 timer_stop(struct timer *);
-struct timer	*timer_new(const char *, Uint32,
-		     Uint32 (*)(Uint32, void *), void *);
-void		 timer_destroy(void *);
+__BEGIN_DECLS
+extern DECLSPEC void		 timer_init(struct timer *, const char *,
+				            Uint32, Uint32 (*)(Uint32, void *),
+					    void *);
+extern DECLSPEC void		 timer_start(struct timer *);
+extern DECLSPEC void		 timer_stop(struct timer *);
+extern DECLSPEC struct timer	*timer_new(const char *, Uint32,
+				           Uint32 (*)(Uint32, void *), void *);
+extern DECLSPEC void		 timer_destroy(void *);
+__END_DECLS
 
+#include "close_code.h"
+#endif	/* _AGAR_TIMER_H_ */

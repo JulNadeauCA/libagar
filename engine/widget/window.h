@@ -1,10 +1,12 @@
-/*	$Csoft: window.h,v 1.61 2003/04/12 01:45:49 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.62 2003/04/24 07:43:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
 #define _AGAR_WIDGET_WINDOW_H_
 
 #include <engine/widget/region.h>
+
+#include "begin_code.h"
 
 enum window_event {
 	WINDOW_MOUSEBUTTONUP,
@@ -71,31 +73,36 @@ struct window {
 
 #define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
 
-struct window	*window_new(char *, int, int, int, int, int, int, int);
-struct window	*window_generic_new(int, int, const char *, ...);
-void	 	 window_init(struct window *, char *, int, int, int, int, int,
-		     int, int);
+__BEGIN_DECLS
+extern DECLSPEC struct window	*window_new(char *, int, int, int, int, int,
+				            int, int);
+extern DECLSPEC struct window	*window_generic_new(int, int, const char *,
+				                    ...);
+extern DECLSPEC void	 	 window_init(struct window *, char *, int, int,
+				             int, int, int, int, int);
 
-int	 window_load(void *, struct netbuf *);
-int	 window_save(void *, struct netbuf *);
-void	 window_destroy(void *);
-void	 window_attach(void *, void *);
-void	 window_detach(void *, void *);
+extern DECLSPEC int	 window_load(void *, struct netbuf *);
+extern DECLSPEC int	 window_save(void *, struct netbuf *);
+extern DECLSPEC void	 window_destroy(void *);
+extern DECLSPEC void	 window_attach(void *, void *);
+extern DECLSPEC void	 window_detach(void *, void *);
 
-int	 window_show(struct window *);
-int	 window_hide(struct window *);
-void	 window_draw(struct window *);
-int	 window_event(SDL_Event *);
-void	 window_resize(struct window *);
-void	 window_set_caption(struct window *, const char *, ...);
-void	 window_set_spacing(struct window *, Uint8, Uint8);
-void	 window_set_geo(struct window *, Uint16, Uint16);
-void	 window_set_position(struct window *, Sint16, Sint16);
-void	 window_set_min_geo(struct window *, Uint16, Uint16);
-void	 window_set_titleh(struct window *, Uint8);
+extern DECLSPEC int	 window_show(struct window *);
+extern DECLSPEC int	 window_hide(struct window *);
+extern DECLSPEC void	 window_draw(struct window *);
+extern DECLSPEC int	 window_event(SDL_Event *);
+extern DECLSPEC void	 window_resize(struct window *);
+extern DECLSPEC void	 window_set_caption(struct window *, const char *, ...);
+extern DECLSPEC void	 window_set_spacing(struct window *, Uint8, Uint8);
+extern DECLSPEC void	 window_set_geo(struct window *, Uint16, Uint16);
+extern DECLSPEC void	 window_set_position(struct window *, Sint16, Sint16);
+extern DECLSPEC void	 window_set_min_geo(struct window *, Uint16, Uint16);
+extern DECLSPEC void	 window_set_titleh(struct window *, Uint8);
 
-void	 window_generic_detach(int, union evarg *);
-void	 window_generic_hide(int, union evarg *);
-void	 window_generic_show(int, union evarg *);
+extern DECLSPEC void	 window_generic_detach(int, union evarg *);
+extern DECLSPEC void	 window_generic_hide(int, union evarg *);
+extern DECLSPEC void	 window_generic_show(int, union evarg *);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_WINDOW_H_ */

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.38 2003/03/25 13:48:03 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.39 2003/03/26 10:03:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -10,6 +10,8 @@
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
+
+#include "begin_code.h"
 
 /* For construction of source tile maps. */
 struct mapview_constr {
@@ -108,19 +110,25 @@ enum mapview_prop_labels {
 
 struct node;
 
-struct mapview	*mapview_new(struct region *, struct map *, int, int, int);
-void		 mapview_init(struct mapview *, struct map *, int, int, int);
-void		 mapview_destroy(void *);
+__BEGIN_DECLS
+extern DECLSPEC struct mapview	*mapview_new(struct region *, struct map *, int,
+				             int, int);
+extern DECLSPEC void		 mapview_init(struct mapview *, struct map *,
+				              int, int, int);
+extern DECLSPEC void		 mapview_destroy(void *);
 
-void		 mapview_node_edit_win(struct mapview *);
-void		 mapview_draw(void *);
-void		 mapview_draw_props(struct mapview *, struct node *, int, int,
-		     int, int);
-void		 mapview_center(struct mapview *, int, int);
-int		 mapview_zoom(struct mapview *, int);
-void		 mapview_map_coords(struct mapview *, int *, int *);
-void		 mapview_set_selection(struct mapview *, int, int, int, int);
-int		 mapview_get_selection(struct mapview *, int *, int *,
-		    int *, int *);
+extern DECLSPEC void	 mapview_node_edit_win(struct mapview *);
+extern DECLSPEC void	 mapview_draw(void *);
+extern DECLSPEC void	 mapview_draw_props(struct mapview *, struct node *,
+			                    int, int, int, int);
+extern DECLSPEC void	 mapview_center(struct mapview *, int, int);
+extern DECLSPEC int	 mapview_zoom(struct mapview *, int);
+extern DECLSPEC void	 mapview_map_coords(struct mapview *, int *, int *);
+extern DECLSPEC void	 mapview_set_selection(struct mapview *, int, int, int,
+			                       int);
+extern DECLSPEC int	 mapview_get_selection(struct mapview *, int *, int *,
+			                       int *, int *);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_MAPEDIT_MAPVIEW_H_ */

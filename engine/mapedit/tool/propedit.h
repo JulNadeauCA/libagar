@@ -1,7 +1,9 @@
-/*	$Csoft: propedit.h,v 1.6 2003/02/10 23:05:19 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.7 2003/03/25 13:48:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
+
+#include "begin_code.h"
 
 enum propedit_mode {
 	PROPEDIT_CLEAR,
@@ -16,7 +18,11 @@ struct propedit {
 	Uint32		node_mask;	/* Node flags mask */
 };
 
-void		 propedit_init(void *);
-struct window	*propedit_window(void *);
-void		 propedit_effect(void *, struct mapview *, struct node *);
+__BEGIN_DECLS
+extern DECLSPEC void		 propedit_init(void *);
+extern DECLSPEC struct window	*propedit_window(void *);
+extern DECLSPEC void		 propedit_effect(void *, struct mapview *,
+				                 struct node *);
+__END_DECLS
 
+#include "close_code.h"

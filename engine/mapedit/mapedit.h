@@ -1,10 +1,12 @@
-/*	$Csoft: mapedit.h,v 1.77 2003/03/16 04:00:35 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.78 2003/04/12 01:45:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
 #define _AGAR_MAPEDIT_H_
 
 #include <engine/map.h>
+
+#include "begin_code.h"
 
 struct mapdir;
 struct gendir;
@@ -85,22 +87,25 @@ enum {
 	MAPEDIT_TOOL_FLIP
 };
 
-void	 mapedit_init(void);
-void	 mapedit_destroy(void *);
-int	 mapedit_load(void *, struct netbuf *);
-int	 mapedit_save(void *, struct netbuf *);
-
-struct window	*objq_window(void);
-void		 fileops_new_map(int, union evarg *);
-struct window	*fileops_new_map_window(void);
-void		 fileops_load_map(int, union evarg *);
-struct window	*fileops_load_map_window(void);
-void		 fileops_save_map(int, union evarg *);
-void		 fileops_revert_map(int, union evarg *);
-void		 fileops_clear_map(int, union evarg *);
-struct window	*mapedit_win_new(struct map *);
-
 extern struct mapedit	mapedit;
 extern int		mapedition;
 
+__BEGIN_DECLS
+extern DECLSPEC void	 mapedit_init(void);
+extern DECLSPEC void	 mapedit_destroy(void *);
+extern DECLSPEC int	 mapedit_load(void *, struct netbuf *);
+extern DECLSPEC int	 mapedit_save(void *, struct netbuf *);
+
+extern DECLSPEC struct window	*objq_window(void);
+extern DECLSPEC void		 fileops_new_map(int, union evarg *);
+extern DECLSPEC struct window	*fileops_new_map_window(void);
+extern DECLSPEC void		 fileops_load_map(int, union evarg *);
+extern DECLSPEC struct window	*fileops_load_map_window(void);
+extern DECLSPEC void		 fileops_save_map(int, union evarg *);
+extern DECLSPEC void		 fileops_revert_map(int, union evarg *);
+extern DECLSPEC void		 fileops_clear_map(int, union evarg *);
+extern DECLSPEC struct window	*mapedit_win_new(struct map *);
+__END_DECLS
+
+#include "close_code.h"
 #endif /* _AGAR_MAPEDIT_H_ */

@@ -1,8 +1,9 @@
-/*	$Csoft: physics.h,v 1.19 2003/03/10 02:13:40 vedge Exp $	    */
+/*	$Csoft: physics.h,v 1.20 2003/04/12 01:30:03 vedge Exp $	    */
 /*	Public domain	*/
 
 #ifndef _AGAR_PHYSICS_H_
 #define _AGAR_PHYSICS_H_
+#include "begin_code.h"
 
 #define DIR_UP		0x01
 #define DIR_DOWN	0x02
@@ -41,16 +42,20 @@ struct mapdir {
 #define DIR_PASSTHROUGH	0x08	/* Pass through all nodes. */
 };
 
-void	gendir_init(struct gendir *);
-void	gendir_set(struct gendir *, int);
-void	gendir_unset(struct gendir *, int);
-int	gendir_move(struct gendir *);
-void	gendir_postmove(struct gendir *, int);
+__BEGIN_DECLS
+extern DECLSPEC void	gendir_init(struct gendir *);
+extern DECLSPEC void	gendir_set(struct gendir *, int);
+extern DECLSPEC void	gendir_unset(struct gendir *, int);
+extern DECLSPEC int	gendir_move(struct gendir *);
+extern DECLSPEC void	gendir_postmove(struct gendir *, int);
 
-void	mapdir_init(struct mapdir *, struct object *, struct map *, int, int);
-void	mapdir_set(struct mapdir *, int);
-void	mapdir_unset(struct mapdir *, int);
-int	mapdir_move(struct mapdir *);
-void	mapdir_postmove(struct mapdir *, int *, int *, int);
+extern DECLSPEC void	mapdir_init(struct mapdir *, struct object *,
+			            struct map *, int, int);
+extern DECLSPEC void	mapdir_set(struct mapdir *, int);
+extern DECLSPEC void	mapdir_unset(struct mapdir *, int);
+extern DECLSPEC int	mapdir_move(struct mapdir *);
+extern DECLSPEC void	mapdir_postmove(struct mapdir *, int *, int *, int);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_PHYSICS_H_ */

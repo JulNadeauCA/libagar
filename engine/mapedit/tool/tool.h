@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.10 2003/03/16 23:13:55 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.11 2003/03/25 13:48:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_TOOL_H_
@@ -12,6 +12,8 @@
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
+
+#include "begin_code.h"
 
 struct tool_ops {
 	const struct object_ops	obops;
@@ -46,10 +48,14 @@ struct tool {
 #define TOOL_DIALOG_X	16
 #define TOOL_DIALOG_Y	205
 
-void		tool_init(struct tool *, char *, const void *);
-void		tool_destroy(void *);
-void		tool_bind_key(void *, SDLMod, SDLKey,
-		    void (*)(void *, struct mapview *), int);
-struct mapview *tool_mapview(void);
+__BEGIN_DECLS
+extern DECLSPEC void	tool_init(struct tool *, char *, const void *);
+extern DECLSPEC void	tool_destroy(void *);
+extern DECLSPEC void	tool_bind_key(void *, SDLMod, SDLKey,
+				      void (*)(void *, struct mapview *), int);
 
+extern DECLSPEC struct mapview	*tool_mapview(void);
+__END_DECLS
+
+#include "close_code.h"
 #endif /* _AGAR_MAPEDIT_TOOL_TOOL_H_ */

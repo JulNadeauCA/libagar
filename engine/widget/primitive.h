@@ -1,5 +1,9 @@
-/*	$Csoft: primitive.h,v 1.15 2002/12/26 07:03:22 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.16 2002/12/31 10:31:54 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_PRIMITIVE_H_
+#define _AGAR_WIDGET_PRIMITIVE_H_
+#include "begin_code.h"
 
 struct primitive_ops {
 	void	(*box)(void *p, int xoffs, int yoffs, int w, int h, int z,
@@ -18,6 +22,10 @@ struct primitive_ops {
 
 extern struct primitive_ops primitives;
 
-struct window	*primitive_config_window(void);
-void		 primitives_init(void);
+__BEGIN_DECLS
+extern DECLSPEC struct window	*primitive_config_window(void);
+extern DECLSPEC void		 primitives_init(void);
+__END_DECLS
 
+#include "close_code.h"
+#endif	/* _AGAR_WIDGET_PRIMITIVE_H_ */

@@ -1,5 +1,7 @@
-/*	$Csoft: layedit.h,v 1.1 2003/03/05 02:16:32 vedge Exp $	*/
+/*	$Csoft: layedit.h,v 1.2 2003/03/11 03:40:01 vedge Exp $	*/
 /*	Public domain	*/
+
+#include "begin_code.h"
 
 struct mapview;
 
@@ -12,3 +14,4 @@ struct layedit {
 
 void	layedit_init(struct mapview *);
 
+#include "close_code.h"

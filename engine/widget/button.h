@@ -1,10 +1,12 @@
-/*	$Csoft: button.h,v 1.21 2003/02/02 21:16:15 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.22 2003/03/20 01:19:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
 #define _AGAR_WIDGET_BUTTON_H_
 
 #include <engine/widget/widget.h>
+
+#include "begin_code.h"
 
 struct button {
 	struct widget	 wid;
@@ -27,13 +29,16 @@ struct button {
 	} def;
 };
 
-struct button	*button_new(struct region *, char *, SDL_Surface *, int, int,
-		     int);
-void		 button_init(struct button *, char *, SDL_Surface *, int, int,
-		     int);
-void		 button_destroy(void *);
-void		 button_draw(void *);
-void		 button_enable(struct button *);
-void		 button_disable(struct button *);
+__BEGIN_DECLS
+extern DECLSPEC struct button	*button_new(struct region *, char *,
+				            SDL_Surface *, int, int, int);
+extern DECLSPEC void		 button_init(struct button *, char *,
+				             SDL_Surface *, int, int, int);
+extern DECLSPEC void		 button_destroy(void *);
+extern DECLSPEC void		 button_draw(void *);
+extern DECLSPEC void		 button_enable(struct button *);
+extern DECLSPEC void		 button_disable(struct button *);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_BUTTON_H_ */

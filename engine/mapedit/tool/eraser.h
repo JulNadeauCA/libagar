@@ -1,7 +1,9 @@
-/*	$Csoft: eraser.h,v 1.11 2003/03/16 02:57:49 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.12 2003/03/25 13:48:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
+
+#include "begin_code.h"
 
 enum eraser_mode {
 	ERASER_ALL,
@@ -13,8 +15,13 @@ struct eraser {
 	int		mode;			/* Eraser mode */
 };
 
-void		 eraser_init(void *);
-struct window	*eraser_window(void *);
-void		 eraser_effect(void *, struct mapview *, struct node *);
-int		 eraser_load(void *, int);
-int		 eraser_save(void *, int);
+__BEGIN_DECLS
+extern DECLSPEC void		 eraser_init(void *);
+extern DECLSPEC struct window	*eraser_window(void *);
+extern DECLSPEC void		 eraser_effect(void *, struct mapview *,
+				               struct node *);
+extern DECLSPEC int		 eraser_load(void *, int);
+extern DECLSPEC int		 eraser_save(void *, int);
+__END_DECLS
+
+#include "close_code.h"
