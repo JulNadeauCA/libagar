@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.50 2002/12/31 00:55:31 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.51 2002/12/31 05:48:44 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -27,7 +27,6 @@
 
 #include <config/sharedir.h>
 #include <config/have_x11.h>
-#include <config/have_opengl.h>
 
 #include "engine.h"
 
