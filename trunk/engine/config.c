@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.62 2003/03/02 04:11:30 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.63 2003/03/12 07:59:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -332,7 +332,8 @@ config_apply(int argc, union evarg *argv)
 		window_hide(wid->win);
 		return;
 	case SAVE_BUTTON:
-		object_save(config);
+		if (object_save(config) == -1)
+			text_msg("Error saving", "%s", error_get());
 		return;
 	case PRIMITIVES_BUTTON:
 		window_show(primitives_win);

@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.22 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.23 2003/02/22 11:49:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -204,12 +204,14 @@ graph_key(int argc, union evarg *argv)
 		break;
 	case SDLK_s:
 		pthread_mutex_lock(&world->lock);
-		object_save(gra);
+		if (object_save(gra) == -1)
+			text_msg("Error saving", "%s", error_get());
 		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_l:
 		pthread_mutex_lock(&world->lock);
-		object_load(gra);
+		if (object_load(gra) == -1)
+			text_msg("Error loading", "%s", error_get());
 		pthread_mutex_unlock(&world->lock);
 	default:
 		break;

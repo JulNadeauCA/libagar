@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.153 2003/03/11 02:11:37 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.154 2003/03/13 08:38:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/button.h>
 #include <engine/widget/label.h>
+#include <engine/widget/text.h>
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
@@ -280,12 +281,10 @@ mapedit_load(void *p, int fd)
 	int i;
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		if (OBJECT_OPS(mapedit.tools[i])->load == NULL) {
+		if (OBJECT_OPS(mapedit.tools[i])->load == NULL)
 			continue;
-		}
-		if (object_load(mapedit.tools[i]) == -1) {
-			dprintf("%s\n", error_get());
-		}
+
+		object_load(mapedit.tools[i]);
 	}
 	return (0);
 }
@@ -296,10 +295,12 @@ mapedit_save(void *p, int fd)
 	int i;
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		if (OBJECT_OPS(mapedit.tools[i])->save == NULL) {
+		if (OBJECT_OPS(mapedit.tools[i])->save == NULL)
 			continue;
+
+		if (object_save(mapedit.tools[i]) == -1) {
+			text_msg("Error saving", "%s", error_get());
 		}
-		object_save(mapedit.tools[i]);
 	}
 	return (0);
 }
