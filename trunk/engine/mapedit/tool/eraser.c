@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.5 2002/07/09 08:25:21 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.6 2002/07/21 10:58:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -55,7 +55,8 @@ static const struct tool_ops eraser_ops = {
 		NULL		/* save */
 	},
 	eraser_window,
-	eraser_effect
+	eraser_effect,
+	NULL			/* cursor */
 };
 
 static void	eraser_event(int, union evarg *);
