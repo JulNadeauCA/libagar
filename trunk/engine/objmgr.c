@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.55 2005/02/01 03:15:11 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.1 2005/02/03 05:00:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -56,6 +56,7 @@ struct objent {
 static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
 static int edit_on_create = 1;
+static void *current_pobj = NULL;
 
 static void open_obj_data(struct object *);
 static void open_obj_generic(struct object *);
@@ -68,14 +69,15 @@ create_obj(int argc, union evarg *argv)
 	struct textbox *name_tb = argv[2].p;
 	struct tlist *objs_tl = argv[3].p;
 	struct window *dlg_win = argv[4].p;
-	struct tlist_item *parent_it;
+	struct tlist_item *it;
 	struct object *pobj;
 	void *nobj;
 
-	if ((parent_it = tlist_item_selected(objs_tl)) == NULL) {
-		parent_it = tlist_item_first(objs_tl);
+	if ((it = tlist_item_selected(objs_tl)) != NULL) {
+		pobj = it->p1;
+	} else {
+		 pobj = world;
 	}
-	pobj = parent_it->p1;
 	textbox_copy_string(name_tb, name, sizeof(name));
 	view_detach(dlg_win);
 
@@ -330,12 +332,23 @@ poll_objs(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *pob = argv[1].p;
+	struct object *dob = argv[2].p;
+	struct tlist_item *it;
 
 	lock_linkage();
 	tlist_clear_items(tl);
 	find_objs(tl, pob, 0);
 	tlist_restore_selections(tl);
 	unlock_linkage();
+
+	if (tlist_item_selected(tl) == NULL) {
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (it->p1 == dob)
+				break;
+		}
+		if (it != NULL)
+			tlist_select(tl, it);
+	}
 }
 
 static void
@@ -367,26 +380,38 @@ create_obj_dlg(int argc, union evarg *argv)
 	struct window *win;
 	struct object_type *t = argv[1].p;
 	struct window *pwin = argv[2].p;
-	struct tlist *objs_tl = argv[3].p;
+	struct tlist *pobj_tl;
 	struct box *bo;
 	struct textbox *tb;
 	struct checkbox *cb;
 
-	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|
-	                 WINDOW_NO_MINIMIZE, NULL);
+	win = window_new(WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE, NULL);
 	window_set_caption(win, _("New %s object"), t->type);
 	window_set_position(win, WINDOW_CENTER, 1);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		label_new(bo, LABEL_STATIC, _("Type: %s"), t->type);
-		label_new(bo, LABEL_STATIC, _("Size: %lu bytes"),
-		    (u_long)t->size);
-
 		tb = textbox_new(bo, _("Name: "));
 		widget_focus(tb);
+	}
+	
+	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
+	box_set_padding(bo, 0);
+	box_set_spacing(bo, 0);
+	{
+		label_new(bo, LABEL_STATIC, _("Parent object:"));
 
-		cb = checkbox_new(bo, _("Open edition window"));
+		pobj_tl = tlist_new(bo, TLIST_POLL|TLIST_TREE);
+		tlist_prescale(pobj_tl, "XXXXXXXXXXXXXXXX", 5);
+		widget_bind(pobj_tl, "selected", WIDGET_POINTER, &current_pobj);
+		event_new(pobj_tl, "tlist-poll", poll_objs, "%p,%p", world,
+		    current_pobj);
+	}
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		cb = checkbox_new(win, _("Open edition window"));
 		widget_bind(cb, "state", WIDGET_INT, &edit_on_create);
 	}
 
@@ -396,9 +421,9 @@ create_obj_dlg(int argc, union evarg *argv)
 	
 		btn = button_new(bo, _("OK"));
 		event_new(tb, "textbox-return", create_obj, "%p,%p,%p,%p", t,
-		    tb, objs_tl, win);
+		    tb, pobj_tl, win);
 		event_new(btn, "button-pushed", create_obj, "%p,%p,%p,%p", t,
-		    tb, objs_tl, win);
+		    tb, pobj_tl, win);
 		
 		btn = button_new(bo, _("Cancel"));
 		event_new(btn, "button-pushed", window_generic_detach, "%p",
@@ -429,27 +454,26 @@ objmgr_window(void)
 	objs_tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(objs_tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 	tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
-	event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
+	event_new(objs_tl, "tlist-poll", poll_objs, "%p,%p", world, NULL);
 	event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT_DATA);
 
 	m = ag_menu_new(win);
-	mi = ag_menu_add_item(m, _("World"));
+	mi = ag_menu_add_item(m, _("Objects"));
 	{
-		mj = ag_menu_action(mi, _("New object"), ICON(OBJCREATE_ICON),
-		    0, 0, NULL, NULL);
+		mj = ag_menu_action(mi, _("Create object"),
+		    ICON(OBJCREATE_ICON), 0, 0, NULL, NULL);
 		{
 			int i;
 
 			for (i = ntypesw-1; i >= 0; i--) {
-				struct object_type *t = &typesw[i];
 				char label[32];
+				struct object_type *t = &typesw[i];
 
 				strlcpy(label, t->type, sizeof(label));
 				label[0] = (char)toupper((int)label[0]);
 				ag_menu_action(mj, label, ICON(t->icon), 0, 0,
-				    create_obj_dlg, "%p,%p,%p", t, win,
-				    objs_tl);
+				    create_obj_dlg, "%p,%p", t, win);
 			}
 		}
 		ag_menu_separator(mi);
@@ -460,6 +484,8 @@ objmgr_window(void)
 	}
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
+	vbox_set_padding(vb, 0);
+	vbox_set_spacing(vb, 0);
 	{
 		struct AGMenuItem *mi;
 
