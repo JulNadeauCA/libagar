@@ -1,18 +1,15 @@
-/*	$Csoft: stamp.c,v 1.8 2002/07/30 22:19:52 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.9 2002/08/18 00:37:44 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -97,7 +94,7 @@ stamp_window(void *p)
 		NULL
 	};
 
-	win = window_new("Stamp", WINDOW_SOLID,
+	win = window_new("mapedit-tool-stamp", "Stamp", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 156, 101, 156, 101);
 	
 	/* Mode */

@@ -1,18 +1,15 @@
-/*	$Csoft: propedit.c,v 1.3 2002/08/19 07:33:32 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.4 2002/08/19 07:41:39 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -92,7 +89,7 @@ propedit_window(void *p)
 	struct radio *rad;
 	struct checkbox *cbox;
 
-	win = window_new("Node props", WINDOW_SOLID,
+	win = window_new("mapedit-tool-propedit", "Node props", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 149, 198, 149, 198);
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);

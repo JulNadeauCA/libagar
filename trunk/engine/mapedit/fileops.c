@@ -1,7 +1,7 @@
-/*	$Csoft: fileops.c,v 1.6 2002/08/19 05:33:02 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.7 2002/09/02 05:27:19 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc
+ * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,16 +131,20 @@ fileops_load_map(int argc, union evarg *argv)
 void
 fileops_revert_map(int argc, union evarg *argv)
 {
-	char path[FILENAME_MAX];
+	char *path;
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
+	char *s;
 
 	/* Always edit the user copy. */
-	snprintf(path, FILENAME_MAX, "%s/maps/%s.m",
-	    config->path.user_data_dir, OBJECT(m)->name);
+	s = prop_string(config, "path.user_data_dir");
+	asprintf(&path, "%s/maps/%s.m", s, OBJECT(m)->name);
+	free(s);
+
 	if (object_loadfrom(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
 	}
+	free(path);
 }
 
 void
