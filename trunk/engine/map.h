@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.3 2002/01/30 12:45:50 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.4 2002/01/30 17:50:52 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -15,10 +15,14 @@ struct map_aref {
 	int	flags;
 #define MAPREF_SAVE	0x0001	/* Map dumps must record this reference */
 #define MAPREF_SPRITE	0x0002	/* This is a sprite */
-#define MAPREF_ANIM	0x0004	/* This is sequence of sprites */
+#define MAPREF_ANIM	0x0004	/* this is sequence of sprites */
 #define MAPREF_WARP	0x0008	/* This is another map */
+
 	int	frame;		/* Animation frame # */
-	int	fwait;		/* Delay counter */
+	int	fwait;		/* Animation delay counter */
+
+	int	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
+				   used for direction and soft scroll. */
 };
 
 /* Back reference to map:x,y coordinate. */
@@ -84,7 +88,7 @@ extern int mapedit;		/* Map edition in progress */
 		struct map_aref *maref;				\
 								\
 		while ((maref = map_entry_arefobj((me),		\
-		    (struct object *)(ob), (offs)))) {		\
+		    (ob), (offs)))) {				\
 			map_entry_delref((me), (maref));	\
 		}						\
 	} while (/*CONSTCOND*/ 0)
