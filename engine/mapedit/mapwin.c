@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.30 2002/12/31 01:46:35 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.31 2003/01/01 05:18:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -40,7 +40,6 @@
 #include "mapwin.h"
 #include "mapview.h"
 #include "fileops.h"
-#include "tilestack.h"
 
 static void	mapwin_new_view(int, union evarg *);
 static void	mapwin_option(int, union evarg *);
@@ -102,7 +101,6 @@ mapwin_new(struct mapedit *med, struct map *m)
 	struct region *reg;
 	struct mapview *mv;
 	struct button *bu;
-	struct tilestack *ts;
 	const int xdiv = 100 / 7;
 	const int ydiv = 100;
 
@@ -119,7 +117,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	/*
 	 * Tools
 	 */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 10);
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 7);
 	reg->spacing = 1;
 
 	/* Load map */
@@ -162,15 +160,8 @@ mapwin_new(struct mapedit *med, struct map *m)
 	event_new(bu, "button-pushed",
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 
-	/* Tile stack */
-	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 90);
-	reg->spacing = 1;
-	ts = tilestack_new(reg, TILESTACK_VERT, 100, 100, mv);
-
-	/*
-	 * Map view
-	 */
-	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
+	/* Map view */
+	reg = region_new(win, REGION_HALIGN, 0, 7, 100, 93);
 	region_attach(reg, mv);
 	win->focus = WIDGET(mv);
 
