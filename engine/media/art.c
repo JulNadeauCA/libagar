@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.2 2002/12/03 04:08:22 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.3 2002/12/03 15:26:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -97,7 +97,10 @@ art_map_sprite(struct art *art, int offs)
 	}
 	map_adjust(art->map, (Uint32)art->mx, (Uint32)art->my);
 	node = &art->map->map[art->my][art->mx];
-	nref = node_addref(node, art->pobj, offs, MAPREF_SAVE|MAPREF_SPRITE);
+	nref = node_add_sprite(node, art->pobj, offs);
+	nref->flags |= NODEREF_SAVEABLE;
+
+	/* XXX pref */
 	node->flags = NODE_BLOCK;
 
 	return (nref);
@@ -110,6 +113,7 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 	int x, y, mw, mh;
 	SDL_Rect sd, rd;
 	struct map *m = art->map;
+	struct noderef *nref;
 
 	sd.w = TILEW;
 	sd.h = TILEH;
@@ -150,8 +154,11 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 				}
 				map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
 				n = &m->map[art->my][art->mx];
-				node_addref(n, art->pobj, art->cursprite++,
-				    MAPREF_SAVE|MAPREF_SPRITE);
+				nref = node_add_sprite(n, art->pobj,
+				    art->cursprite++);
+				nref->flags |= NODEREF_SAVEABLE;
+
+				/* XXX pref */
 				n->flags = NODE_BLOCK;
 			}
 		}
@@ -193,7 +200,7 @@ art_fetch(char *media, struct object *ob)
 	/* Load the data file. */
 	path = object_path(media, "fob");
 	if (path == NULL) {
-		if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
+		if (ob->flags & OBJECT_ART_CAN_FAIL) {
 			ob->flags &= ~(OBJECT_ART);
 			pthread_mutex_unlock(&artq_lock);
 			return (NULL);
@@ -230,7 +237,7 @@ art_fetch(char *media, struct object *ob)
 		asprintf(&mapname, "t-%s", media);
 		map_init(art->map, mapname, NULL, 0);
 		free(mapname);
-		map_allocnodes(art->map, 1, 1);
+		map_alloc_nodes(art->map, 1, 1);
 	}
 
 	/* Load images in XCF format. */
@@ -329,6 +336,7 @@ art_insert_anim(struct art *art, int delay)
 
 	if (mapediting) {
 		struct node *n;
+		struct noderef *nref;
 
 		if (++art->mx > 2) {	/* XXX pref */
 			art->mx = 0;
@@ -336,8 +344,11 @@ art_insert_anim(struct art *art, int delay)
 		}
 		map_adjust(art->map, art->mx, art->my);
 		n = &art->map->map[art->my][art->mx];
-		node_addref(n, art->pobj, art->curanim++,
-		    MAPREF_ANIM|MAPREF_ANIM_DELTA|MAPREF_SAVE);
+		nref = node_add_anim(n, art->pobj, art->curanim++,
+		    NODEREF_ANIM_AUTO);
+		nref->flags |= NODEREF_SAVEABLE;
+		
+		/* XXX pref */
 		n->flags = NODE_BLOCK;
 	}
 	return (anim);
@@ -361,25 +372,16 @@ art_anim_tick(struct art_anim *an, void *nrefp)
 	struct noderef *nref = nrefp;
 	Uint32 ticks;
 	
-	if (nref->flags & MAPREF_ANIM_DELTA &&
-	    (nref->flags & MAPREF_ANIM_STATIC) == 0) {
-		ticks = SDL_GetTicks();
-		if ((ticks - an->delta) >= an->delay) {
-			an->delta = ticks;
-			if (++an->frame > an->nframes - 1) {
-				/* Loop */
-				an->frame = 0;
-			}
-		}
-	} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
-		if ((nref->flags & MAPREF_ANIM_STATIC) == 0) {
-			if ((an->delay < 1) ||
-			    (++nref->fdelta > an->delay+1)) {
-				nref->fdelta = 0;
-				if (++nref->frame > an->nframes - 1) {
-					nref->frame = 0;
-				}
-			}
+	if ((nref->data.anim.flags & NODEREF_ANIM_AUTO) == 0) {
+		return;
+	}
+	
+	ticks = SDL_GetTicks();
+	if ((ticks - an->delta) >= an->delay) {
+		an->delta = ticks;
+		if (++an->frame > an->nframes - 1) {
+			/* Loop */
+			an->frame = 0;
 		}
 	}
 }
