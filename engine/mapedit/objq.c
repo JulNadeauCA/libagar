@@ -248,10 +248,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	    MAPVIEW_TILEMAP|MAPVIEW_PROPS|MAPVIEW_ZOOM,
 	    100, 100);
 	
-	if (object_load(ob->art->tiles.map) == -1) {
-		text_msg("Error loading tile map", "%s: %s",
-		    OBJECT(ob)->name, error_get());
-	}
+	object_load(ob->art->tiles.map);
 
 	/* Map operation buttons */
 	reg = region_new(win, REGION_HALIGN|REGION_CLIPPING, 0, 0, 100, -1);
