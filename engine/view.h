@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.33 2002/07/08 06:42:10 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.34 2002/07/18 12:04:37 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -61,16 +61,51 @@ struct viewport {
 	pthread_mutex_t lock;
 };
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-# define _PUT_PIXEL_24(dst, c)		\
+#ifdef VIEW_8BPP
+# define _VIEW_PUTPIXEL_8(dst, c)	\
+case 1:					\
+	(dst) = (c);			\
+	break;
+#else
+# define _VIEW_PUTPIXEL_8(dst, c)
+#endif
+
+#ifdef VIEW_16BPP
+# define _VIEW_PUTPIXEL_16(dst, c)	\
+case 2:					\
+	(dst) = (Uint16)(c);		\
+	break;
+#else
+# define _VIEW_PUTPIXEL_16(dst, c)
+#endif
+
+#ifdef VIEW_24BPP
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#  define _VIEW_PUTPIXEL_24(dst, c)	\
+case 3:					\
 	(dst)[0] = ((c)>>16) & 0xff;	\
 	(dst)[1] = ((c)>>8) & 0xff;	\
-	(dst)[2] =  (c) & 0xff
-#else
-# define _PUT_PIXEL_24(dst, c)		\
+	(dst)[2] =  (c) & 0xff;		\
+	break;
+# else
+#  define _VIEW_PUTPIXEL_24(dst, c)	\
+case 3:					\
 	(dst)[0] =  (c) & 0xff;		\
 	(dst)[1] = ((c)>>8) & 0xff;	\
-	(dst)[2] = ((c)>>16) & 0xff
+	(dst)[2] = ((c)>>16) & 0xff;	\
+	break;
+# endif
+#else
+# define _VIEW_PUTPIXEL_24(dst, c)
+#endif
+
+#ifdef VIEW_32BPP
+# define _VIEW_PUTPIXEL_32(dst, c)	\
+case 4:					\
+	(dst) = (Uint32)(c);		\
+	break;
+#else
+# define _VIEW_PUTPIXEL_32(dst, c)
 #endif
 
 /* XXX inefficient */
@@ -100,18 +135,10 @@ struct viewport {
 	    _view_alpha_gd, _view_alpha_bd);			\
 								\
 	switch ((s)->format->BytesPerPixel) {			\
-	case 1:							\
-		*_putpixel_dst = _view_col;			\
-		break;						\
-	case 2:							\
-		*(Uint16 *)_putpixel_dst = _view_col;		\
-		break;						\
-	case 3:							\
-		_PUT_PIXEL_24(_putpixel_dst, _view_col);	\
-		break;						\
-	case 4:							\
-		*(Uint32 *)_putpixel_dst = _view_col;		\
-		break;						\
+		_VIEW_PUTPIXEL_8(*_putpixel_dst,  _view_col)	\
+		_VIEW_PUTPIXEL_16(*_putpixel_dst, _view_col)	\
+		_VIEW_PUTPIXEL_24(*_putpixel_dst, _view_col)	\
+		_VIEW_PUTPIXEL_32(*_putpixel_dst, _view_col)	\
 	}							\
 } while (/*CONSTCOND*/0)
 
@@ -127,18 +154,10 @@ struct viewport {
 	    (vx)*(s)->format->BytesPerPixel;			\
 								\
 	switch ((s)->format->BytesPerPixel) {			\
-	case 1:							\
-		*_putpixel_dst = (c);				\
-		break;						\
-	case 2:							\
-		*(Uint16 *)_putpixel_dst = (c);			\
-		break;						\
-	case 3:							\
-		_PUT_PIXEL_24(_putpixel_dst, (c));		\
-		break;						\
-	case 4:							\
-		*(Uint32 *)_putpixel_dst = (c);			\
-		break;						\
+		_VIEW_PUTPIXEL_8(*_putpixel_dst,  (c))		\
+		_VIEW_PUTPIXEL_16(*_putpixel_dst, (c))		\
+		_VIEW_PUTPIXEL_24(*_putpixel_dst, (c))		\
+		_VIEW_PUTPIXEL_32(*_putpixel_dst, (c))		\
 	}							\
 } while (/*CONSTCOND*/0)
 
