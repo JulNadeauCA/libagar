@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.47 2002/09/16 16:03:19 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.48 2002/11/10 01:43:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,6 +32,10 @@
 #include <libfobj/fobj.h>
 
 #include "engine.h"
+
+#ifdef DEBUG
+#include "monitor/monitor.h"
+#endif
 
 #include "mapedit/mapedit.h"
 
@@ -108,22 +112,20 @@ world_destroy(void *p)
 {
 	struct world *wo = p;
 	struct object *ob, *nextob;
-
+	
 	pthread_mutex_lock(&wo->lock);
-
-	printf("freed:");
+	deprintf("freed:");
 	fflush(stdout);
 	for (ob = SLIST_FIRST(&wo->wobjs);
 	     ob != SLIST_END(&wo->wobjs);
 	     ob = nextob) {
 		nextob = SLIST_NEXT(ob, wobjs);
-		printf(" %s", ob->name);
+		deprintf(" %s", ob->name);
 		fflush(stdout);
 		object_destroy(ob);
 	}
-	printf(".\n");
+	deprintf(".\n");
 	pthread_mutex_unlock(&wo->lock);
-
 	pthread_mutex_destroy(&wo->lock);
 	pthread_mutexattr_destroy(&wo->lockattr);
 }
@@ -139,6 +141,12 @@ world_attach(void *parent, void *child)
 	SLIST_INSERT_HEAD(&wo->wobjs, ob, wobjs);
 	wo->nobjs++;
 	ob->state = OBJECT_CONSISTENT;
+
+#ifdef DEBUG
+	if (engine_debug > 0) {
+		event_post(&monitor, "world-attached-object", "%p", ob);
+	}
+#endif
 
 	event_post(ob, "attached", "%p", wo);
 
@@ -163,6 +171,11 @@ world_detach(void *parent, void *child)
 	wo->nobjs--;
 	ob->state = OBJECT_ZOMBIE;
 
+#ifdef DEBUG
+	if (engine_debug > 0) {
+		event_post(&monitor, "world-detached-object", "%p", ob);
+	}
+#endif
 	pthread_mutex_unlock(&wo->lock);
 
 	/* TODO defer */
