@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.15 2003/06/11 23:21:04 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.16 2003/06/15 08:54:19 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,7 +40,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget binds to a Latin-1 or UTF-16 text buffer and allows the user to edit its
+widget binds to a Latin-1 or Unicode text buffer and allows the user to edit its
 contents.
 .Sh INITIALIZATION
 .nr nS 1
@@ -127,11 +127,11 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "char *string"
+.Bl -tag -compact -width "Uint16 *string "
 .It Va char *string
-A fixed-size buffer containing NUL-terminated Latin-1 text to edit.
+Fixed-size Latin-1 text buffer.
 .It Va Uint16 *string
-A fixed-size buffer containing NUL-terminated Unicode text to edit.
+Fixed-size Unicode text buffer.
 .El
 .Sh EVENTS
 The
@@ -169,4 +169,4 @@ The
 widget first appeared in Agar 1.0.
 .Sh BUGS
 .Fn textbox_int
-should be replaced by integral bindings.
+will be obsoleted by integral type bindings.
