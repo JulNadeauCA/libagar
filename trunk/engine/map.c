@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.102 2002/06/25 17:42:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.103 2002/07/04 23:23:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -240,11 +240,6 @@ node_delref(struct node *node, struct noderef *nref)
 {
 	if (nref->flags & MAPREF_ANIM) {
 		node->nanims--;
-		node->flags &= ~(MAPREF_ANIM);
-		if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
-			nref->frame = 0;
-			nref->fdelta = 0;
-		}
 	}
 
 #ifdef DEBUG
