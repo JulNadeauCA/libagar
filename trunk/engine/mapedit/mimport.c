@@ -1,7 +1,7 @@
-/*	$Csoft: objq.c,v 1.80 2003/07/14 03:40:00 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.18 2003/07/08 00:34:54 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -31,23 +31,24 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/hbox.h>
+#include <engine/widget/box.h>
 #include <engine/widget/button.h>
+#include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
 
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
+#include "mapedit.h"
+#include "mapview.h"
 
 enum {
-	OBJQ_INSERT_LEFT,
-	OBJQ_INSERT_RIGHT,
-	OBJQ_INSERT_UP,
-	OBJQ_INSERT_DOWN
+	INSERT_LEFT,
+	INSERT_RIGHT,
+	INSERT_UP,
+	INSERT_DOWN
 };
 
 /* Generate graphical noderefs from newly imported graphics. */
 static void
-objq_import_gfx(int argc, union evarg *argv)
+mimport_gfx(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct mapview *mv = argv[2].p;
@@ -172,18 +173,18 @@ objq_import_gfx(int argc, union evarg *argv)
 		}
 
 		switch (mode) {
-		case OBJQ_INSERT_LEFT:
+		case INSERT_LEFT:
 			if ((mv->esel.x -= xinc) < 0)
 				mv->esel.x = 0;
 			break;
-		case OBJQ_INSERT_RIGHT:
+		case INSERT_RIGHT:
 			mv->esel.x += xinc;
 			break;
-		case OBJQ_INSERT_UP:
+		case INSERT_UP:
 			if ((mv->esel.y -= yinc) < 0)
 				mv->esel.y = 0;
 			break;
-		case OBJQ_INSERT_DOWN:
+		case INSERT_DOWN:
 			mv->esel.y += yinc;
 			break;
 		}
@@ -193,8 +194,8 @@ objq_import_gfx(int argc, union evarg *argv)
 }
 
 /* Create the graphic import selection window. */
-struct window *
-objq_import_window(struct object *ob, struct mapview *mv)
+void
+mimport_init(struct object *ob, struct mapview *mv)
 {
 	char label[TLIST_LABEL_MAX];
 	struct window *win;
@@ -247,7 +248,7 @@ objq_import_window(struct object *ob, struct mapview *mv)
 		for (i = 0; i < 4; i++) {
 			bu = button_new(hb, NULL);
 			button_set_label(bu, SPRITE(&mapedit, icons[i]));
-			event_new(bu, "button-pushed", objq_import_gfx,
+			event_new(bu, "button-pushed", mimport_gfx,
 			    "%p, %p, %i", tl, mv, i);
 		}
 #if 0
@@ -256,6 +257,15 @@ objq_import_window(struct object *ob, struct mapview *mv)
 		widget_bind(bu, "state", WIDGET_INT, NULL, &mv->constr.replace);
 #endif
 	}
-	return (win);
+}
+
+static void
+mimport_close_win(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct mapview *mv = argv[1].p;
+
+	widget_set_int(mv->mimport.trigger, "state", 0);
+	window_hide(win);
 }
 

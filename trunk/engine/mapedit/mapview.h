@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.46 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.47 2003/07/14 03:40:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -10,6 +10,7 @@
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
+#include <engine/mapedit/mimport.h>
 
 #include "begin_code.h"
 
@@ -65,8 +66,9 @@ struct mapview {
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
 
-	struct nodeedit		nodeed;	/* Node editor */
-	struct layedit		layed;	/* Layer editor */
+	struct nodeedit		nodeed;		/* Node editor */
+	struct layedit		layed;		/* Layer editor */
+	struct mimport		mimport;	/* Media import */
 };
 
 enum mapview_prop_labels {
