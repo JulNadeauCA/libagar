@@ -1,15 +1,19 @@
-/*	$Csoft$	*/
+/*	$Csoft: anim.h,v 1.1 2002/02/05 05:47:17 vedge Exp $	*/
 
 struct anim {
-	GSList	*frames;
-	int	nframes;
-	int	delay;		/* Interval in milliseconds */
-	int	gframe;		/* Used by the map editor */
-	int	gframedc;
+	SDL_Surface **frames;	/* Array of surfaces. */
+	int	maxframes;	/* Allocated surfaces. */
+	int	nframes;	/* Active surfaces. */
 
-	pthread_mutex_t lock;
+	int	delay;		/* Interval in milliseconds */
+
+	/* XXX used by the map editor. */
+	int	gframe;
+	int	gframedc;
 };
 
 struct anim	*anim_create(int);
 void		 anim_destroy(struct anim *);
+
+int	anim_addframe(struct anim *, SDL_Surface *);
 
