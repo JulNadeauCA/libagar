@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.26 2004/08/30 03:19:28 vedge Exp $
+.\"	$Csoft: view.3,v 1.27 2005/01/05 04:44:03 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -84,8 +84,8 @@ function sets the nominal refresh rate, given in frames per second.
 .Ft "SDL_Surface *"
 .Fn view_copy_surface "SDL_Surface *src"
 .Pp
-.Ft "SDL_Surface *"
-.Fn view_scale_surface "SDL_Surface *src" "Uint16 width" "Uint16 height"
+.Ft "void"
+.Fn view_scale_surface "SDL_Surface *src" "Uint16 width" "Uint16 height" "SDL_Surface **dst"
 .Pp
 .Ft "void"
 .Fn view_set_trans "SDL_Surface *su" "Uint8 alpha"
@@ -122,6 +122,9 @@ to
 by
 .Fa height
 pixels.
+If
+.Fa dst
+is NULL, a new surface is allocated and written to it.
 .Pp
 The
 .Fn view_set_trans

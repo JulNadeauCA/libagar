@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.89 2004/05/10 02:43:14 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.90 2004/08/31 00:51:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -146,7 +146,8 @@ void		 view_parse_fpsspec(const char *);
 
 __inline__ SDL_Surface	*view_surface(Uint32, int, int);
 __inline__ SDL_Surface	*view_copy_surface(SDL_Surface *);
-SDL_Surface		*view_scale_surface(SDL_Surface *, Uint16, Uint16);
+void			 view_scale_surface(SDL_Surface *, Uint16, Uint16,
+			                    SDL_Surface **);
 void			 view_set_trans(SDL_Surface *, Uint8);
 void			 view_capture(SDL_Surface *);
 __inline__ void		 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
