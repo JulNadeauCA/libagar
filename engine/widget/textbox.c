@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.49 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.50 2003/03/28 00:23:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -95,8 +95,12 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0);
 
 	tbox->flags = flags;
-	tbox->label = text_render(NULL, -1,
-	    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
+	if (label != NULL) {
+		tbox->label = text_render(NULL, -1,
+		    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
+	} else {
+		tbox->label = NULL;
+	}
 	tbox->text.s = Strdup("");
 	tbox->text.pos = -1;
 	tbox->text.offs = 0;
@@ -115,7 +119,9 @@ textbox_destroy(void *ob)
 {
 	struct textbox *tbox = ob;
 
-	SDL_FreeSurface(tbox->label);
+	if (tbox->label != NULL) {
+		SDL_FreeSurface(tbox->label);
+	}
 	free(tbox->text.s);
 	pthread_mutex_destroy(&tbox->text.lock);
 
@@ -126,15 +132,17 @@ void
 textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
-	int i, x, y, tw, lx;
+	int i, lx, tw, th;
+	int x = 0;
+	int y = tbox->ymargin;
 
-	x = tbox->label->w;
-	y = tbox->ymargin;
+	if (tbox->label != NULL) {
+		widget_blit(tbox, tbox->label,
+		    0,
+		    WIDGET(tbox)->h/2 - tbox->label->h/2);
+		x += tbox->label->w;
+	}
 
-	/* Label */
-	widget_blit(tbox, tbox->label, 0, WIDGET(tbox)->h/2 - tbox->label->h/2);
-
-	/* Frame */
 	if (WIDGET_FOCUSED(tbox)) {
 		x++;
 		y++;
@@ -147,65 +155,37 @@ textbox_draw(void *p)
 	        WIDGET_COLOR(tbox, FRAME_READONLY_COLOR) :
 		WIDGET_COLOR(tbox, FRAME_COLOR));
 
-	/*
-	 * Text
-	 */
-	x += tbox->xmargin;
-
 	pthread_mutex_lock(&tbox->text.lock);
+	tw = (int)strlen(tbox->text.s);
+	th = text_font_height(font);
 
-	tw = strlen(tbox->text.s);
-	if (tbox->text.pos < 0) {
+	/* Default to the end of the string. */
+	if (tbox->text.pos < 0)
 		tbox->text.pos = tw;
-	}
 
+	/* Move to the beginning of the string? */
 	if (tbox->newx >= 0 && tbox->newx <= tbox->label->w) {
-		tbox->text.pos = tbox->text.offs;
 		tbox->newx = -1;
+		tbox->text.pos = tbox->text.offs;
+		dprintf("move to start (%d, offs=%d)\n", tbox->text.pos,
+		    tbox->text.offs);
 	}
 
-	for (i = tbox->text.offs, lx = -1; i < (tw + 1); i++) {
-		if (x >= WIDGET(tbox)->w) {
-			if (tbox->text.pos >= tw-4) {
-				tbox->text.offs++;	/* Scroll */
-			}
-			goto out;
-		}
-
-		/* Effect mouse cursor moves. */
-		if (tbox->newx >= 0) {
-			if (tbox->newx >= lx && tbox->newx < x) {
-				tbox->text.pos = i - 1;
-				tbox->newx = -1;
-			}
+	x += tbox->xmargin;
+	for (i = tbox->text.offs, lx = -1;
+	     i < tw+1;
+	     i++) {
+		/* Move to a position inside the string? */
+		if (tbox->newx >= 0 &&
+		    tbox->newx >= lx && tbox->newx < x) {
+			tbox->newx = -1;
+			tbox->text.pos = i;
+			dprintf("move to %d\n", i);
 		}
 		lx = x;
 
-		/* Draw the characters. */
-		if (i < tw && tbox->text.s[i] != '\0' &&
-		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
-			SDL_Surface *text_s;
-			char c, str[2];
-
-			c = tbox->text.s[i];
-
-			if (c == '\n') {
-				y += tbox->label->h + 2;
-			} else {
-				str[0] = (char)c;
-				str[1] = '\0';
-				text_s = text_render(NULL, -1,
-				    WIDGET_COLOR(tbox, TEXT_COLOR),
-				    str);
-				widget_blit(tbox, text_s, x, y);
-				x += text_s->w;
-				SDL_FreeSurface(text_s);
-			}
-		}
-	
 		/* Draw the text cursor. */
-		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox) &&
-		    x < WIDGET(tbox)->w - tbox->xmargin*4) {
+		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox)) {
 			primitives.line(tbox,
 			    x, y,
 			    x, y + tbox->label->h - 2,
@@ -215,13 +195,35 @@ textbox_draw(void *p)
 			    x+1, y + tbox->label->h - 2,
 			    WIDGET_COLOR(tbox, CURSOR_COLOR2));
 		}
+
+		/* Draw the characters. */
+		if (i < tw && tbox->text.s[i] != '\0' &&
+		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
+			SDL_Surface *glyph;
+			char ch = tbox->text.s[i];
+
+			if (ch == '\n') {
+				y += tbox->label->h + 2;
+			} else {
+				char cs[2];
+
+				cs[0] = ch;
+				cs[1] = '\0';
+				glyph = text_render(NULL, -1,
+				    WIDGET_COLOR(tbox, TEXT_COLOR), cs);
+				widget_blit(tbox, glyph, x, y);
+				x += glyph->w;
+				SDL_FreeSurface(glyph);
+			}
+		}
 	}
 
+	/* Move to the visible end of the string? */
 	if (tbox->newx >= 0) {
-		tbox->text.pos = i - 1;
 		tbox->newx = -1;
+		tbox->text.pos = i-1;
+		dprintf("move to end\n");
 	}
-out:
 	pthread_mutex_unlock(&tbox->text.lock);
 }
 
