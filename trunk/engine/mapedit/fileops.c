@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.46 2003/04/24 07:04:43 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.47 2003/05/18 02:10:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -64,7 +64,7 @@ fileops_new_map_window(void)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		name_tbox = textbox_new(reg, "Name: ", 0, 100, -1);
+		name_tbox = textbox_new(reg, "Name: ");
 		win->focus = WIDGET(name_tbox);
 	}
 
@@ -72,15 +72,18 @@ fileops_new_map_window(void)
 	{
 		char s[16];
 
-		w_tbox = textbox_new(reg, "W: ", 0, 50, -1);
+		w_tbox = textbox_new(reg, "W: ");
 		snprintf(s, sizeof(s), "%u",
 		    prop_get_uint32(&mapedit, "default-map-width"));
 		textbox_printf(w_tbox, s);
 
-		h_tbox = textbox_new(reg, "H: ", 0, 50, -1);
+		h_tbox = textbox_new(reg, "H: ");
 		snprintf(s, sizeof(s), "%u",
 		    prop_get_uint32(&mapedit, "default-map-height"));
 		textbox_printf(h_tbox, s);
+		
+		WIDGET(w_tbox)->rw = 50;
+		WIDGET(h_tbox)->rw = 50;
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
@@ -115,7 +118,7 @@ fileops_load_map_window(void)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		name_tbox = textbox_new(reg, "Name: ", 0, 100, -1);
+		name_tbox = textbox_new(reg, "Name: ");
 		win->focus = WIDGET(name_tbox);
 	}
 	
