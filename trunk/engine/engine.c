@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.47 2002/05/31 10:42:38 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.48 2002/06/01 02:37:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -257,9 +257,13 @@ engine_xdebug(void)
 
 #endif	/* XDEBUG */
 
-/* Drop into map edition if requested. */
+/*
+ * Create static windows, drop into map edition if requested.
+ * This is done after static objects are created, and before the event
+ * loop is started.
+ */
 int
-engine_editmap(void)
+engine_start(void)
 {
 	struct mapedit *medit;
 
@@ -282,6 +286,9 @@ engine_editmap(void)
 	pthread_mutex_lock(&world->lock);
 	world_attach(world, medit);
 	pthread_mutex_unlock(&world->lock);
+
+	/* Create the configuration settings window. */
+	config_window(config);
 
 	return (1);
 }
