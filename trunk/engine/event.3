@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.15 2004/01/22 09:58:41 vedge Exp $
+.\"	$Csoft: event.3,v 1.16 2004/03/10 08:28:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -68,11 +68,14 @@ typedef union evarg {
 } *evargs;
 .Ed
 .Pp
-Note that
 .Va argv[0]
-is always a pointer to the
+always points to the
 .Xr object 3
-receiving the event.
+which is the receiver of the event.
+.Va argv[argc]
+always points to the
+.Xr object 3
+which is the sender of the event (or NULL).
 .Pp
 The
 .Nm
