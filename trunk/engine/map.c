@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.193 2003/09/14 02:26:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.194 2003/10/13 23:48:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -336,10 +336,10 @@ map_push_layer(struct map *m, const char *name)
 {
 	char layname[MAP_LAYER_NAME_MAX];
 
-	if (name != NULL) {
-		strlcpy(layname, name, sizeof(layname));
-	} else {
+	if (name[0] == '\0') {
 		snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
+	} else {
+		strlcpy(layname, name, sizeof(layname));
 	}
 
 	if (m->nlayers+1 > MAP_MAX_LAYERS) {
