@@ -135,6 +135,7 @@ echo "    --srcdir                       Source tree for concurrent builds [.]"
 echo "    --with-smpeg                   MPEG playback using smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
+echo "    --with-jpeg                    JPEG screenshot support [default: check]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
@@ -1073,6 +1074,74 @@ echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
+fi
+if [ "${with_jpeg}" != "no" ]
+ then
+echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
+echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
+echo "#ifndef JPEG_CFLAGS" > config/jpeg_cflags.h
+echo "#define JPEG_CFLAGS" $JPEG_CFLAGS >> config/jpeg_cflags.h
+echo "#endif /* JPEG_CFLAGS */" >> config/jpeg_cflags.h
+echo "#ifndef JPEG_LIBS" > config/jpeg_libs.h
+echo "#define JPEG_LIBS" $JPEG_LIBS >> config/jpeg_libs.h
+echo "#endif /* JPEG_LIBS */" >> config/jpeg_libs.h
+echo "ok"
+echo "ok" >> config.log
+echo -n "checking whether libjpeg works..."
+echo -n "checking whether libjpeg works..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <jpeglib.h>
+
+struct jpeg_error_mgr		jerr;
+struct jpeg_compress_struct	jcomp;
+
+int
+main(int argc, char *argv[])
+{
+	jcomp.jerr = jpeg_std_error(&jerr);
+
+	jpeg_create_compres(&jcomp);
+	jcomp.image_width = 32;
+	jcomp.image_height = 32;
+	jcomp.input_components = 3;
+	jcomp.in_color_space = JCS_RGB;
+
+	jpeg_set_defaults(&jcomp);
+	jpeg_set_quality(&jcomp, 75, TRUE);
+
+	jpeg_destroy_compress(&jcomp);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC {JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_JPEG" > config/have_jpeg.h
+echo "#define HAVE_JPEG" $HAVE_JPEG >> config/have_jpeg.h
+echo "#endif /* HAVE_JPEG */" >> config/have_jpeg.h
+
+	HAVE_JPEG=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_JPEG" > config/have_jpeg.h
+
+	echo "no"
+fi
+else
+echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
 if [ "${enable_static}" = "yes" ]
  then
