@@ -1226,8 +1226,14 @@ echo "#undef HAVE_SMPEG" > config/have_smpeg.h
 fi
 if [ "${with_gettext}" != "no" ]
  then
-echo -n "checking for a gettext library..."
-echo -n "checking for a gettext library..." >> config.log
+echo -n "checking for a gettext() function..."
+echo -n "checking for a gettext() function..." >> config.log
+GETTEXT_CFLAGS=-I/usr/local/include
+GETTEXT_LIBS="-L/usr/local/lib -lintl"
+echo "ok"
+echo "ok" >> config.log
+echo -n "checking whether gettext works..."
+echo -n "checking whether gettext works..." >> config.log
 cat << EOT > conftest.c
 #include <libintl.h>
 
@@ -1235,13 +1241,12 @@ int
 main(int argc, char *argv[])
 {
 	gettext("");
-	gettext_noop("");
 	return (0);
 }
 
 EOT
 compile="ok"
-$CC -I/usr/local/include -o conftest conftest.c -L/usr/local/lib -lintl 2>>config.log
+$CC ${GETTEXT_CFLAGS} -o conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
