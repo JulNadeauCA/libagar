@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.5 2002/07/18 11:49:46 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.6 2002/07/23 23:49:09 vedge Exp $	*/
 /*	Public domain	*/
 
 struct edcursor;
@@ -13,6 +13,7 @@ struct mapview {
 #define MAPVIEW_ZOOM	0x04	/* Allow zooming */
 #define MAPVIEW_TILEMAP	0x08	/* Tile map */
 #define MAPVIEW_GRID	0x10	/* Display a grid */
+#define MAPVIEW_PROPS	0x20
 
 	struct {		/* For scrolling */
 		int	move;
