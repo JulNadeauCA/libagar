@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.103 2002/11/15 00:49:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.104 2002/11/15 01:14:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <errno.h>
 
 #include <libfobj/fobj.h>
 
@@ -82,55 +82,71 @@ static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
 struct window *
-window_new(char *name, char *caption, int flags, int x, int y, int w, int h,
+window_new(char *name, int flags, int x, int y, int w, int h,
     int minw, int minh)
 {
 	struct window *win;
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, name, caption, flags, x, y, w, h, minw, minh);
+	window_init(win, name, flags, x, y, w, h, minw, minh);
 
-	/* Attach window to main view, make it visible. */
-	pthread_mutex_lock(&view->lock);
-	view_attach(win);
-	pthread_mutex_unlock(&view->lock);
-
+	view_attach(win);			/* Attach to view */
 	return (win);
 }
 
 struct window *
-window_generic_new(int w, int h, const char *caption_fmt, ...)
+window_generic_new(int w, int h, const char *name_fmt, ...)
 {
 	struct window *win;
 	va_list args;
-	char *caption;
+	char *name;
 	static pthread_mutex_t genlock = PTHREAD_MUTEX_INITIALIZER;
 	static int genxoffs = -1, genyoffs = -1;
 
-	va_start(args, caption_fmt);
-	vasprintf(&caption, caption_fmt, args);
-	va_end(args);
+	if (name_fmt != NULL) {
+		va_start(args, name_fmt);
+		if (vasprintf(&name, name_fmt, args) == -1) {
+			fatal("vasprintf: %s\n", strerror(errno));
+		}
+		va_end(args);
+		
+		pthread_mutex_lock(&view->lock);
+		TAILQ_FOREACH(win, &view->windows, windows) {
+			if (strlen(OBJECT(win)->name) > 4 &&
+			    strcmp(OBJECT(win)->name+4, name) == 0) {
+				view_focus(win);
+				pthread_mutex_unlock(&view->lock);
+				return (NULL);
+			}
+		}
+		pthread_mutex_unlock(&view->lock);
+	
+	} else {
+		name = NULL;
+	}
 
 	win = emalloc(sizeof(struct window));
+
 	pthread_mutex_lock(&genlock);
-	window_init(win, NULL, caption, 0,
+
+	window_init(win, name, 0,
 	    view->w/2 - w/2 + genxoffs,
 	    view->h/2 - h/2 + genyoffs,
 	    w, h, w, h);
+
 	if ((genxoffs += 3) + w > view->w/2)
 		genxoffs = 0;
 	if ((genyoffs += 3) + h > view->h/2)
 		genyoffs = 0;
+
 	pthread_mutex_unlock(&genlock);
+	
+	free(name);
 
 	/* Destroy the window instead of hiding it on close. */
 	event_new(win, "window-close", window_generic_detached, "%p", win);
 
-	/* Attach window to main view, make it visible. */
-	pthread_mutex_lock(&view->lock);
-	view_attach(win);
-	pthread_mutex_unlock(&view->lock);
-
+	view_attach(win);			/* Attach to view */
 	return (win);
 }
 
@@ -148,8 +164,8 @@ window_round(struct window *win, int x, int y, int w, int h)
 }
 
 void
-window_init(struct window *win, char *name, char *caption, int flags,
-    int rx, int ry, int rw, int rh, int minw, int minh)
+window_init(struct window *win, char *name, int flags, int rx, int ry,
+    int rw, int rh, int minw, int minh)
 {
 	char *wname;
 	int i;
@@ -218,7 +234,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	win->minw = minw;
 	win->minh = minh;
 
-	window_set_caption(win, "%s", caption);
+	window_set_caption(win, "Untitled");
 
 	/* Set the initial window position/geometry. */
 	if (win->flags & WINDOW_SCALE) {
@@ -1169,10 +1185,11 @@ window_set_caption(struct window *win, const char *fmt, ...)
 	/* XXX */
 	if (win->caption != NULL) {
 		free(win->caption);
-		win->caption = NULL;
 	}
 	va_start(args, fmt);
-	vasprintf(&win->caption, fmt, args);
+	if (vasprintf(&win->caption, fmt, args) == -1) {
+		fatal("vasprintf: %s\n", strerror(errno));
+	}
 	va_end(args);
 	
 	pthread_mutex_unlock(&win->lock);
