@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.93 2002/12/20 08:55:15 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.94 2002/12/23 03:05:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/have_opengl.h>
 
 #include "engine.h"
 
@@ -71,28 +73,41 @@ view_init(gfx_engine_t ge)
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&v->lock, &v->lockattr);
 
+	deprintf("OpenGL support is ");
 #ifdef HAVE_OPENGL
-	/* Initialize OpenGL attributes. */
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	if (prop_get_bool(config, "view.opengl")) {
+		/* Initialize OpenGL attributes. */
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	/* Allow normal blitting operations as well as OpenGL operations. */
-	screenflags |= SDL_OPENGLBLIT;
+		/* Allow normal blitting operations. */
+		screenflags |= SDL_OPENGLBLIT;
+		
+		deprintf("enabled.\n");
+	} else {
+		deprintf("disabled.\n");
+	}
+#else
+	deprintf("unavailable.\n");
 #endif
 
 	/* Obtain the display preferences. */
-	bpp = prop_uint32(config, "view.bpp");
-	v->w = prop_uint32(config, "view.w");
-	v->h = prop_uint32(config, "view.h");
+	bpp = prop_get_uint32(config, "view.bpp");
+	v->w = prop_get_uint32(config, "view.w");
+	v->h = prop_get_uint32(config, "view.h");
 	mw = v->w / TILEW;
 	mh = v->h / TILEH;
-	if (prop_uint32(config, "flags") & CONFIG_FULLSCREEN)
+
+	if (prop_get_bool(config, "view.full-screen")) {
 		screenflags |= SDL_FULLSCREEN;
-	if (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT)
+	}
+	if (prop_get_bool(config, "view.async-blits")) {
+		dprintf("asynchronous blits\n");
 		screenflags |= SDL_ASYNCBLIT;
+	}
 
 	/* Negotiate the depth. */
 	v->bpp = SDL_VideoModeOK(v->w, v->h, bpp, screenflags);
@@ -272,6 +287,13 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	int x, y;
 
 	ds = view_surface(SDL_SWSURFACE, w, h);
+	
+	if (ss->w == w && ss->h == h) {			/* Just copy */
+		SDL_SetAlpha(ss, 0, 0);
+		SDL_BlitSurface(ss, NULL, ds, NULL);
+		SDL_SetAlpha(ss, SDL_SRCALPHA, SDL_ALPHA_TRANSPARENT);
+		return (ds);
+	}
 
 	if (SDL_MUSTLOCK(ss))
 		SDL_LockSurface(ss);
