@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.30 2003/04/14 08:56:20 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.31 2003/06/06 02:42:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -170,12 +170,12 @@ error_fatal(const char *fmt, ...)
 char *
 Strdup(const char *s)
 {
-	size_t len;
+	size_t buflen;
 	char *ns;
 	
-	len = strlen(s);
-	ns = Malloc(len+1);
-	strlcpy(ns, s, len+1);
+	buflen = strlen(s)+1;
+	ns = Malloc(buflen);
+	memcpy(ns, s, buflen);
 	return (ns);
 }
 
