@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.221 2004/03/18 21:27:49 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.222 2004/03/28 06:08:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1216,7 +1216,7 @@ window_apply_alignment(struct window *win)
 	}
 	if (win->flags & WINDOW_CASCADE) {
 		pthread_mutex_lock(&window_lock);
-		if ((window_xoffs += text_font_height(font))+WIDGET(win)->w >
+		if ((window_xoffs += text_font_height(NULL))+WIDGET(win)->w >
 		    view->w/2) {
 			window_xoffs = 0;
 		}

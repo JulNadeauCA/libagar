@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.10 2004/04/10 02:43:43 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.11 2004/04/11 03:29:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -507,7 +507,7 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 	mediasel_refresh(msel);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
-	tlist_set_item_height(tl, ttf_font_height(font)*2);
+	tlist_set_item_height(tl, text_font_height(NULL)*2);
 	event_new(tl, "tlist-poll", poll_media, "%p", ob);
 
 	hb = box_new(vb, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);

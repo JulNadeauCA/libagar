@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.80 2004/04/20 08:57:56 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.81 2004/04/20 09:20:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -48,66 +48,53 @@ static const char *text_msg_titles[] = {
 	N_("Information")
 };
 
-ttf_font *font = NULL;			/* Default font */
-int	  text_composition = 1;		/* Built-in input composition */
-int	  text_rightleft = 0;		/* Right-to-left text display */
-
-#define FONT_NAME_MAX	32
-
-struct text_font {
-	char	  name[FONT_NAME_MAX];
-	int	  size;
-	int	  style;
-	ttf_font *font;
-	SLIST_ENTRY(text_font) fonts;
-};
+static struct text_font *default_font = NULL;
+int text_composition = 1;			/* Built-in input composition */
+int text_rightleft = 0;				/* Right-to-left text display */
 
 static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
     SLIST_HEAD_INITIALIZER(&text_fonts);
 pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /* Load and cache the named font. */
-static ttf_font *
+static struct text_font *
 text_load_font(const char *name, int size, int style)
 {
 	char path[MAXPATHLEN];
-	struct text_font *fon;
-	ttf_font *nfont;
+	struct text_font *font;
 
-	if (name == NULL) 				/* Default font */
-		return (font);
+	if (name == NULL)
+		return (default_font);
 
 	pthread_mutex_lock(&text_lock);
 
-	SLIST_FOREACH(fon, &text_fonts, fonts) {
-		if (strcmp(fon->name, name) == 0 &&
-		    fon->size == size &&
-		    fon->style == style)
+	SLIST_FOREACH(font, &text_fonts, fonts) {
+		if (strcmp(font->name, name) == 0 &&
+		    font->size == size &&
+		    font->style == style)
 			break;
 	}
-	if (fon != NULL) {
-		nfont = fon->font;
+	if (font != NULL)
 		goto out;
-	}
 
 	if (config_search_file("font-path", name, "ttf", path, sizeof(path))
 	    == -1)
 		fatal("%s", error_get());
+	
+	font = Malloc(sizeof(struct text_font), M_TEXT);
+	strlcpy(font->name, name, sizeof(font->name));
+	font->size = size;
+	font->style = style;
 
-	if ((nfont = ttf_open_font(path, size)) == NULL) {
+	if ((font->p = ttf_open_font(path, size)) == NULL) {
 		fatal("%s: %s", path, error_get());
 	}
-	ttf_set_font_style(nfont, style);
+	ttf_set_font_style(font->p, style);
 
-	fon = Malloc(sizeof(struct text_font), M_TEXT);
-	strlcpy(fon->name, name, sizeof(fon->name));
-	fon->size = size;
-	fon->style = style;
-	fon->font = nfont;
-	SLIST_INSERT_HEAD(&text_fonts, fon, fonts);		/* Cache */
+	SLIST_INSERT_HEAD(&text_fonts, font, fonts);
 out:
 	pthread_mutex_unlock(&text_lock);
-	return (nfont);
+	return (font);
 }
 
 /* Initialize the text rendering engine and set the default font. */
@@ -126,7 +113,7 @@ text_init(int flags)
 		    prop_get_string(config, "font-engine.default-font"),
 		    prop_get_int(config, "font-engine.default-size"),
 		    prop_get_int(config, "font-engine.default-style"));
-		font = text_load_font(
+		default_font = text_load_font(
 		    prop_get_string(config, "font-engine.default-font"),
 		    prop_get_int(config, "font-engine.default-size"),
 		    prop_get_int(config, "font-engine.default-style"));
@@ -143,46 +130,46 @@ text_destroy(void)
 	     fon != SLIST_END(&text_fonts);
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
-		ttf_close_font(fon->font);
+		ttf_close_font(fon->p);
 		Free(fon, M_TEXT);
 	}
 	ttf_destroy();
 }
 
 int
-text_font_height(ttf_font *fon)
+text_font_height(struct text_font *font)
 {
-	return (ttf_font_height((fon != NULL) ? fon : font));
+	return (ttf_font_height((font != NULL) ? font->p : default_font->p));
 }
 
 int
-text_font_ascent(ttf_font *fon)
+text_font_ascent(struct text_font *font)
 {
-	return (ttf_font_ascent((fon != NULL) ? fon : font));
+	return (ttf_font_ascent((font != NULL) ? font->p : default_font->p));
 }
 
 int
-text_font_descent(ttf_font *fon)
+text_font_descent(struct text_font *font)
 {
-	return (ttf_font_descent((fon != NULL) ? fon : font));
+	return (ttf_font_descent((font != NULL) ? font->p : default_font->p));
 }
 
 int
-text_font_line_skip(ttf_font *fon)
+text_font_line_skip(struct text_font *font)
 {
-	return (ttf_font_line_skip((fon != NULL) ? fon : font));
+	return (ttf_font_line_skip((font != NULL) ? font->p : default_font->p));
 }
 
 /* Render an Unicode character onto a new surface. */
 SDL_Surface *
 text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint32 ch)
 {
-	ttf_font *fon;
+	struct text_font *font;
 	SDL_Color col;
 	SDL_Surface *su;
 	Uint8 r, g, b;
 
-	fon = text_load_font(fontname, fontsize,
+	font = text_load_font(fontname, fontsize,
 	    prop_get_int(config, "font-engine.default-style"));
 
 	/* Decompose the color. */
@@ -191,7 +178,7 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint32 ch)
 	col.g = g;
 	col.b = b;
 
-	su = ttf_render_glyph_solid(fon, ch, col);
+	su = ttf_render_glyph_solid(font->p, ch, col);
 	if (su == NULL) {
 		fatal("rendering glyph: %s", error_get());
 	}
@@ -219,9 +206,9 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	SDL_Rect rd;
 	SDL_Color col;
 	SDL_Surface *su;
-	ttf_font *fon;
+	struct text_font *font;
 	Uint32 *ucs, *ucsd, *ucsp;
-	int nlines, maxw, fon_h;
+	int nlines, maxw, font_h;
 	Uint8 r, g, b;
 
 	if (text == NULL || text[0] == '\0') {
@@ -234,9 +221,9 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		return (su);
 	}
 
-	fon = text_load_font(fontname, fontsize,
+	font = text_load_font(fontname, fontsize,
 	    prop_get_int(config, "font-engine.default-style"));
-	fon_h = text_font_height(fon);
+	font_h = text_font_height(font);
 
 	/* Decompose the color. */
 	SDL_GetRGB(color, vfmt, &r, &g, &b);
@@ -252,7 +239,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	}
 
 	if (nlines == 0) {					/* One line */
-		su = ttf_render_unicode_solid(fon, ucs, col);
+		su = ttf_render_unicode_solid(font->p, ucs, col);
 		if (su == NULL) {
 			fatal("ttf_render_text_solid: %s", error_get());
 		}
@@ -267,12 +254,12 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		 * predict the width of the final surface.
 		 * XXX move to ttf_render_unicode_solid().
 		 */
-		lineskip = ttf_font_line_skip(fon);
+		lineskip = ttf_font_line_skip(font->p);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines, M_TEXT);
 		for (i = 0, maxw = 0;
 		    (ucsp = ucs4_sep(&ucs, sep)) != NULL && ucsp[0] != '\0';
 		    i++) {
-			lines[i] = ttf_render_unicode_solid(fon, ucsp, col);
+			lines[i] = ttf_render_unicode_solid(font->p, ucsp, col);
 			if (lines[i] == NULL) {
 				fatal("ttf_render_unicode_solid: %s",
 				    error_get());
@@ -284,7 +271,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		rd.x = 0;
 		rd.y = 0;
 		rd.w = 0;
-		rd.h = fon_h;
+		rd.h = font_h;
 
 		/* Generate the final surface. */
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE, maxw, lineskip*nlines,

@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.27 2004/03/12 02:50:38 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.28 2004/04/17 23:38:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -8,7 +8,13 @@
 
 #include "begin_code.h"
 
-extern ttf_font *font;
+struct text_font {
+	char	 name[32];
+	int	 size;
+	int	 style;
+	void	*p;
+	SLIST_ENTRY(text_font) fonts;
+};
 
 enum text_msg_title {
 	MSG_ERROR,
@@ -24,10 +30,10 @@ __BEGIN_DECLS
 int	 text_init(int);
 void	 text_parse_fontspec(char *);
 void	 text_destroy(void);
-int	 text_font_height(ttf_font *);
-int	 text_font_ascent(ttf_font *);
-int	 text_font_descent(ttf_font *);
-int	 text_font_line_skip(ttf_font *);
+int	 text_font_height(struct text_font *);
+int	 text_font_ascent(struct text_font *);
+int	 text_font_descent(struct text_font *);
+int	 text_font_line_skip(struct text_font *);
 
 __inline__ SDL_Surface	*text_render(const char *, int, Uint32, const char *);
 SDL_Surface		*text_render_unicode(const char *, int, Uint32,

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.86 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.87 2004/03/21 07:00:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -95,7 +95,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->flags = flags;
 	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
 	tl->selected = NULL;
-	tl->item_h = text_font_height(font) + 2;
+	tl->item_h = text_font_height(NULL)+2;
 	tl->dblclicked = NULL;
 	tl->dbltimer = NULL;
 	TAILQ_INIT(&tl->items);
