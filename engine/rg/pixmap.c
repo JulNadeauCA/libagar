@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.18 2005/03/04 13:34:38 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.19 2005/03/05 12:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -49,6 +49,7 @@
 #include "tileview.h"
 
 static SDL_Cursor *saved_cursor = NULL;
+int pixmap_source = 0;				/* Apply fill to pixmap only */
 
 void
 pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
@@ -490,10 +491,14 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 			NULL
 		};
 		struct radio *rad;
+		struct checkbox *cb;
 
 		label_new(bo, LABEL_STATIC, _("Blending method:"));
 		rad = radio_new(bo, blend_modes);
 		widget_bind(rad, "value", WIDGET_INT, &px->blend_mode);
+
+		cb = checkbox_new(bo, _("Use pixmap as source"));
+		widget_bind(cb, "state", WIDGET_BOOL, &pixmap_source);
 	}
 
 	separator_new(win, SEPARATOR_HORIZ);
@@ -602,7 +607,7 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 	struct pixmap *px = tel->tel_pixmap.px;
 	struct pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
 	struct pixmap_mod *mod;
-	Uint8 *src;
+	Uint8 *pSrc;
 	Uint8 r, g, b;
 	u_int v = (pixel & px->su->format->Amask) >>
 	          px->su->format->Ashift;
@@ -627,11 +632,11 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 		mod->x = (Uint16)x;
 		mod->y = (Uint16)y;
 	
-		if (SDL_MUSTLOCK(px->su)) { SDL_LockSurface(px->su); }
-		src = (Uint8 *)px->su->pixels + y*px->su->pitch +
+		SDL_LockSurface(px->su);
+		pSrc = (Uint8 *)px->su->pixels + y*px->su->pitch +
 		                                x*px->su->format->BytesPerPixel;
-		mod->val = *(Uint32 *)src;
-		if (SDL_MUSTLOCK(px->su)) { SDL_UnlockSurface(px->su); }
+		mod->val = *(Uint32 *)pSrc;
+		SDL_UnlockSurface(px->su);
 	}
 
 	/* Plot the pixel on the pixmap and update the scaled display. */
@@ -711,7 +716,7 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 	struct pixmap *px = tel->tel_pixmap.px;
 	struct pixmap_brush *br = px->curbrush;
 	SDL_Surface *brsu = br->px->su;
-	Uint8 *src = brsu->pixels;
+	Uint8 *pBrush = brsu->pixels;
 	Uint8 r, g, b, specA;
 	int x, y;
 	
@@ -739,8 +744,8 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 			if (x0+x >= px->su->w)
 				break;
 
-			brPx = *(Uint32 *)src;
-			src += sizeof(Uint32);
+			brPx = *(Uint32 *)pBrush;
+			pBrush += sizeof(Uint32);
 
 			if (brsu->format->Amask != 0) {
 				u_int v = (brPx & brsu->format->Amask) >>
@@ -861,10 +866,21 @@ fill_ortho(struct tileview *tv, struct tile_element *tel, int x, int y,
     Uint32 cOrig, Uint32 cFill)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
-	Uint8 *pDst = (Uint8 *)px->su->pixels +
+	Uint8 *pDst;
+	Uint32 cDst;
+	
+	SDL_LockSurface(px->su);
+	if (pixmap_source) {
+		pDst = (Uint8 *)px->su->pixels +
 		     y*px->su->pitch +
 		     x*px->su->format->BytesPerPixel;
-	Uint32 cDst = *(Uint32 *)pDst;
+	} else {
+		pDst = (Uint8 *)tv->tile->su->pixels +
+		     y*tv->tile->su->pitch +
+		     x*tv->tile->su->format->BytesPerPixel;
+	}
+	cDst = *(Uint32 *)pDst;
+	SDL_UnlockSurface(px->su);
 
 	if (cDst != cOrig)
 		return;
@@ -884,10 +900,21 @@ pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 	struct pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b, a = (Uint8)(px->a*255);
 	Uint8 *keystate;
-	Uint8 *pOrig = (Uint8 *)px->su->pixels +
+	Uint8 *pOrig;
+	Uint32 cOrig, cFill;
+
+	SDL_LockSurface(px->su);
+	if (pixmap_source) {
+		pOrig = (Uint8 *)px->su->pixels +
 		     y*px->su->pitch +
 		     x*px->su->format->BytesPerPixel;
-	Uint32 cOrig = *(Uint32 *)pOrig, cFill;
+	} else {
+		pOrig = (Uint8 *)tv->tile->su->pixels +
+		     y*tv->tile->su->pitch +
+		     x*tv->tile->su->format->BytesPerPixel;
+	}
+	cOrig = *(Uint32 *)pOrig;
+	SDL_UnlockSurface(px->su);
 
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_e]) {
@@ -907,14 +934,25 @@ static void
 pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
-	Uint8 *pDst = (Uint8 *)px->su->pixels +
-		      y*px->su->pitch +
-		      x*px->su->format->BytesPerPixel;
-	Uint32 cDst = *(Uint32 *)pDst;
+	Uint8 *pSrc;
+	Uint32 cSrc;
 	Uint8 r, g, b, a;
 	float h;
 
-	SDL_GetRGBA(cDst, px->su->format, &r, &g, &b, &a);
+	SDL_LockSurface(px->su);
+	if (pixmap_source) {
+		pSrc = (Uint8 *)px->su->pixels +
+		     y*px->su->pitch +
+		     x*px->su->format->BytesPerPixel;
+	} else {
+		pSrc = (Uint8 *)tv->tile->su->pixels +
+		     y*tv->tile->su->pitch +
+		     x*tv->tile->su->format->BytesPerPixel;
+	}
+	cSrc = *(Uint32 *)pSrc;
+	SDL_UnlockSurface(px->su);
+
+	SDL_GetRGBA(cSrc, px->su->format, &r, &g, &b, &a);
 	prim_rgb2hsv(r, g, b, &h, &px->s, &px->v);
 	px->h = h*360.0;
 	px->a = (float)(a/255);
@@ -935,6 +973,8 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 		return;
 	} else if (button == SDL_BUTTON_RIGHT) {
 		tv->scrolling++;
+		return;
+	} else if (button != SDL_BUTTON_LEFT) {
 		return;
 	}
 

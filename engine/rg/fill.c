@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.9 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.10 2005/03/05 12:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -33,9 +33,10 @@
 
 #include <engine/widget/window.h>
 #include <engine/widget/label.h>
-#include <engine/widget/palette.h>
+#include <engine/widget/hsvpal.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/box.h>
+#include <engine/widget/fspinbutton.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -133,7 +134,6 @@ fill_edit(void *p, struct tileview *tv)
 {
 	struct fill *f = p;
 	struct window *win;
-	struct palette *pal;
 	struct radio *rad;
 	static const char *modes[] = {
 		N_("Solid"),
@@ -151,21 +151,32 @@ fill_edit(void *p, struct tileview *tv)
 	rad = radio_new(win, modes);
 	widget_bind(rad, "value", WIDGET_INT, &f->type);
 
-	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_FRAME);
+	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
-		label_new(box, LABEL_STATIC, _("Solid color:"));
-		pal = palette_new(box, PALETTE_RGBA, tv->ts->fmt);
-		widget_bind(pal, "color", WIDGET_UINT32, &f->f_solid.c);
-	}
-	
-	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_FRAME);
-	{
-		label_new(box, LABEL_STATIC, _("Gradient colors:"));
-		pal = palette_new(box, PALETTE_RGBA, tv->ts->fmt);
-		widget_bind(pal, "color", WIDGET_UINT32, &f->f_gradient.c1);
+		struct hsvpal *hsv1, *hsv2;
+		struct fspinbutton *fsb;
 
-		pal = palette_new(box, PALETTE_RGBA, tv->ts->fmt);
-		widget_bind(pal, "color", WIDGET_UINT32, &f->f_gradient.c2);
+		label_new(box, LABEL_STATIC, _("Color 1: "));
+		hsv1 = hsvpal_new(box, tv->ts->fmt);
+		widget_bind(hsv1, "pixel", WIDGET_UINT32, &f->f_gradient.c1);
+
+		label_new(box, LABEL_STATIC, _("Color 2: "));
+		hsv2 = hsvpal_new(box, tv->ts->fmt);
+		widget_bind(hsv2, "pixel", WIDGET_UINT32, &f->f_gradient.c2);
+		
+		fsb = fspinbutton_new(box, NULL, _("Alpha 1: "));
+		fspinbutton_prescale(fsb, "0.000");
+		widget_bind(fsb, "value", WIDGET_FLOAT, &hsv1->a);
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.010);
+		fspinbutton_set_precision(fsb, "f", 3);
+		
+		fsb = fspinbutton_new(box, NULL, _("Alpha 2: "));
+		fspinbutton_prescale(fsb, "0.000");
+		widget_bind(fsb, "value", WIDGET_FLOAT, &hsv2->a);
+		fspinbutton_set_range(fsb, 0.0, 1.0);
+		fspinbutton_set_increment(fsb, 0.010);
+		fspinbutton_set_precision(fsb, "f", 3);
 	}
 	return (win);
 }
