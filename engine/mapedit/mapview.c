@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.86 2003/03/11 02:44:30 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.87 2003/03/12 06:15:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -656,7 +656,8 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	case 1:						/* Select/edit */
 		mv->cur_node = curnode;
 		if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] ||
-		    (SDL_GetModState() & KMOD_CTRL)) {
+		    (SDL_GetModState() & KMOD_CTRL) ||
+		    mv->flags & MAPVIEW_TILEMAP) {
 			mapview_begin_selection(mv);
 		}
 		break;
