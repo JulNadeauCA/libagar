@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.198 2003/06/12 22:28:39 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.199 2003/06/12 22:42:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1084,7 +1084,8 @@ window_scale(void *p, int w, int h)
 		}
 		if (wid->flags & WIDGET_HFILL) {
 			wid->h = h - totfixed -
-			    (nfixed*win->spacing + win->padding*2);
+			    (nfixed*win->spacing + win->padding*2) -
+			    win->spacing*2;
 		}
 		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 
