@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.56 2002/07/18 12:04:37 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.57 2002/07/21 10:58:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -106,12 +106,12 @@ view_allocrects(int w, int h)
 	
 	len = (w * h) * sizeof(SDL_Rect *);
 	rects = emalloc(len);
-	memset(rects, (int)NULL, len);
+	memset(rects, NULL, len);
 	return (rects);
 }
 
 /*
- * Increment mask nodes matching rd.
+ * Increment map mask nodes matching rd.
  * View must be locked.
  */
 void
@@ -125,14 +125,15 @@ view_maskfill(SDL_Rect *rd, int n)
 	}
 #endif
 
-	for (y = rd->y; y < rd->y + rd->h; y++) {
-		for (x = rd->x; x < rd->x + rd->w; x++) {
+	for (y = rd->y; y < rd->y+rd->h; y++) {
+		for (x = rd->x; x < rd->x+rd->w; x++) {
 			view->rootmap->mask[y][x] += n;
 		}
 	}
 }
 
 /*
+ * Free map mask nodes.
  * View must be locked.
  */
 static void
@@ -204,7 +205,7 @@ view_init(gfx_engine_t ge)
 		    SDL_GetError());
 	}
 
-	switch (ge) {
+	switch (v->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		v->rootmap = emalloc(sizeof(struct viewmap));
 		v->rootmap->w = mw - 1;
@@ -226,8 +227,6 @@ view_init(gfx_engine_t ge)
 		v->rootmap->rects = view_allocrects(mw, mh);
 	
 		SDL_WM_SetCaption("AGAR (tile-based)", "AGAR");
-		SDL_ShowCursor(SDL_DISABLE);
-		SDL_Delay(100);
 		break;
 	case GFX_ENGINE_GUI:
 		SDL_WM_SetCaption("AGAR (GUI)", "AGAR");
@@ -335,7 +334,7 @@ view_attach(void *child)
 
 /*
  * Detach a window from a view.
- * View muts be locked.
+ * View must be locked.
  */
 void
 view_detach(void *child)
@@ -347,7 +346,6 @@ view_detach(void *child)
 	TAILQ_REMOVE(&view->windowsh, win, windows);
 }
 
-/* Create a surface with native-endian masks. */
 SDL_Surface *
 view_surface(int flags, int w, int h)
 {
