@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.8 2002/09/12 09:35:00 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.9 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -82,9 +82,7 @@ tileq_new(struct region *reg, struct mapedit *med, int flags, int rw, int rh)
 	tileq = emalloc(sizeof(struct tileq));
 	tileq_init(tileq, med, flags, rw, rh);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, tileq);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (tileq);
 }

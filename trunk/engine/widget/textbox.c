@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.29 2002/11/12 02:45:33 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.30 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -72,9 +72,7 @@ textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
 	textbox = emalloc(sizeof(struct textbox));
 	textbox_init(textbox, label, flags, rw, rh);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, textbox);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (textbox);
 }

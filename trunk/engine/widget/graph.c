@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.14 2002/09/12 09:33:25 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.15 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -84,10 +84,8 @@ graph_new(struct region *reg, const char *caption, enum graph_type t,
 
 	graph = emalloc(sizeof(struct graph));
 	graph_init(graph, caption, t, flags, yrange, w, h);
-
-	pthread_mutex_lock(&reg->win->lock);
+	
 	region_attach(reg, graph);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (graph);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.6 2002/11/08 06:02:47 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.7 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,9 +77,7 @@ scrollbar_new(struct region *reg, int w, int h, int item_size, int flags)
 	sb = emalloc(sizeof(struct scrollbar));
 	scrollbar_init(sb, w, h, item_size, flags);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, sb);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (sb);
 }

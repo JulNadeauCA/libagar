@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.30 2002/09/19 22:07:54 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.31 2002/11/14 07:18:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -74,10 +74,8 @@ label_new(struct region *reg, int w, int h, const char *fmt, ...)
 
 	free(buf);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, label);
-	pthread_mutex_unlock(&reg->win->lock);
-	
+
 	return (label);
 }
 

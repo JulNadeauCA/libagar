@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.23 2002/11/14 05:59:00 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.24 2002/11/15 04:18:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -195,7 +195,6 @@ mapwin_new(struct mapedit *med, struct map *m)
 	 */
 	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
 	region_attach(reg, mv);
-
 	win->focus = WIDGET(mv);
 
 	return (win);

@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.20 2002/11/15 00:50:38 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.21 2002/11/15 21:47:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -61,15 +61,18 @@ region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 void
 region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 {
+	static pthread_mutex_t curreg_lock = PTHREAD_MUTEX_INITIALIZER;
 	static int curreg = 0;
 	char *name;
 
+	pthread_mutex_lock(&curreg_lock);
 	name = object_name("window-region", curreg++);
+	pthread_mutex_unlock(&curreg_lock);
+
 	object_init(&reg->obj, "window-region", name, NULL, 0, &region_ops);
 	free(name);
 
-	reg->flags = flags;
-
+	reg->flags = (flags != 0) ? flags : REGION_HALIGN;
 	reg->rx = rx;
 	reg->ry = ry;
 	reg->rw = rw;
@@ -116,6 +119,7 @@ region_attach(void *parent, void *child)
 	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);	/* Attach */
 	pthread_mutex_unlock(&reg->win->lock);
 	
+	OBJECT(child)->state = OBJECT_CONSISTENT;
 	event_post(child, "attached", "%p", parent);		/* Notify */
 }
 
@@ -135,6 +139,7 @@ region_detach(void *parent, void *child)
 	
 	event_post(child, "detached", parent);			/* Notify */
 
+	OBJECT(child)->state = OBJECT_ZOMBIE;
 	object_destroy(wid);
 }
 

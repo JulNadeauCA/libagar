@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.13 2002/09/12 09:43:34 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.14 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -65,9 +65,7 @@ radio_new(struct region *reg, char **items, int selitem)
 	rad = emalloc(sizeof(struct radio));
 	radio_init(rad, items, selitem);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, rad);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (rad);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.31 2002/11/14 05:59:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.32 2002/11/15 00:51:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -87,9 +87,7 @@ mapview_new(struct region *reg, struct mapedit *med, struct map *m,
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, m, flags, rw, rh);
 	
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, mv);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (mv);
 }
