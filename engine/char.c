@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.7 2002/01/30 17:48:59 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.8 2002/02/01 02:03:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,6 +39,11 @@
 
 #include <engine/engine.h>
 
+#define JOY_UP		0x01
+#define JOY_DOWN	0x02
+#define JOY_LEFT	0x04
+#define JOY_RIGHT	0x08
+
 static Uint32	char_time(Uint32, void *);
 
 struct character *
@@ -69,7 +74,6 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 	ch->mp = maxmp;
 	ch->seed = lrand48();
 	ch->effect = 0;
-	ch->direction = 0;
 
 	char_setsprite(ch, 2);	 /* XXX */
 
@@ -134,12 +138,30 @@ char_destroy(struct object *ob)
 	}
 }
 
+int
+char_canmove(struct character *ch, int nx, int ny)
+{
+	struct map_entry *me;
+
+	me = &ch->map->map[nx][ny];
+	return ((me->flags & MAPENTRY_WALK) ? 0 : -1);
+}
+
 void
 char_event(struct object *ob, SDL_Event *ev)
 {
-	struct character *fc = (struct character *)ob;
+	struct character *ch = (struct character *)ob;
+	struct map_aref *aref;
 
-	if ((fc->flags & CHAR_FOCUS) == 0) {
+	/* XXX limit one sprite/anim. */
+	aref = map_entry_arefobj(&ch->map->map[ch->x][ch->y], ob, -1);
+#ifdef DEBUG
+	if (aref == NULL) {
+		dprintf("%s is not at %dx%d\n", ob->name, ch->x, ch->y);
+	}
+#endif
+
+	if ((ch->flags & CHAR_FOCUS) == 0) {
 		/* We are not being controlled. */
 		return;
 	}
@@ -154,46 +176,39 @@ char_event(struct object *ob, SDL_Event *ev)
 		switch (ev->jaxis.axis) {
 		case 0:	/* X */
 			if (ev->jaxis.value < 0) {
-				lastdir |= CHAR_LEFT;
-				lastdir &= ~(CHAR_RIGHT);
+				lastdir |= JOY_LEFT;
+				lastdir &= ~(JOY_RIGHT);
 				nev.type = SDL_KEYDOWN;
 				nev.key.keysym.sym = SDLK_LEFT;
 				SDL_PushEvent(&nev);
 			} else if (ev->jaxis.value > 0) {
-				lastdir |= CHAR_RIGHT;
-				lastdir &= ~(CHAR_LEFT);
+				lastdir |= JOY_RIGHT;
+				lastdir &= ~(JOY_LEFT);
 				nev.type = SDL_KEYDOWN;
 				nev.key.keysym.sym = SDLK_RIGHT;
 				SDL_PushEvent(&nev);
 			} else {
-				object_wait(fc, lastdir);
-				if (lastdir & CHAR_LEFT) {
-					fc->direction &= ~(CHAR_LEFT);
-				} else if (lastdir & CHAR_RIGHT) {
-					fc->direction &= ~(CHAR_RIGHT);
-				}
+				/* Axis is 0, stop moving. */
+				object_wait(ch, lastdir);
+				aref->xoffs = 0;
 			}
 			break;
 		case 1:	/* Y */
 			if (ev->jaxis.value < 0) {
-				lastdir |= CHAR_UP;
-				lastdir &= ~(CHAR_DOWN);
+				lastdir |= JOY_UP;
+				lastdir &= ~(JOY_DOWN);
 				nev.type = SDL_KEYDOWN;
 				nev.key.keysym.sym = SDLK_UP;
 				SDL_PushEvent(&nev);
 			} else if (ev->jaxis.value > 0) {
-				lastdir |= CHAR_DOWN;
-				lastdir &= ~(CHAR_UP);
+				lastdir |= JOY_DOWN;
+				lastdir &= ~(JOY_UP);
 				nev.type = SDL_KEYDOWN;
 				nev.key.keysym.sym = SDLK_DOWN;
 				SDL_PushEvent(&nev);
 			} else {
-				object_wait(fc, lastdir);
-				if (lastdir & CHAR_UP) {
-					fc->direction &= ~(CHAR_UP);
-				} else if (lastdir & CHAR_DOWN) {
-					fc->direction &= ~(CHAR_DOWN);
-				}
+				object_wait(ch, lastdir);
+				aref->yoffs = 0;
 			}
 			break;
 		}
@@ -218,48 +233,44 @@ char_event(struct object *ob, SDL_Event *ev)
 		switch (ev->key.keysym.sym) {
 			case SDLK_d:
 				if (ev->type == SDL_KEYDOWN) {
-					fc->flags |= CHAR_DASH;
-					char_setspeed(fc, 40);
+					ch->flags |= CHAR_DASH;
+					char_setspeed(ch, 40);
 				} else if (ev->type == SDL_KEYUP) {
-					fc->flags &= ~(CHAR_DASH);
-					char_setspeed(fc, 1);
+					ch->flags &= ~(CHAR_DASH);
+					char_setspeed(ch, 1);
 				}
 				break;
 			case SDLK_UP:
 				if (ev->type == SDL_KEYDOWN) {
-					fc->direction &= ~(CHAR_DOWN);
-					fc->direction |= CHAR_UP;
+					aref->yoffs = -1;
 				} else if (ev->type == SDL_KEYUP) {
-					object_wait(fc, CHAR_UP);
-					fc->direction &= ~(CHAR_UP);
+					object_wait(ch, WMASK_UP);
+					aref->yoffs = 0;
 				}
 	
 				break;
 			case SDLK_DOWN:
 				if (ev->type == SDL_KEYDOWN) {
-					fc->direction &= ~(CHAR_UP);
-					fc->direction |= CHAR_DOWN;
+					aref->yoffs = 1;
 				} else if (ev->type == SDL_KEYUP) {
-					object_wait(fc, CHAR_DOWN);
-					fc->direction &= ~(CHAR_DOWN);
+					object_wait(ch, WMASK_DOWN);
+					aref->yoffs = 0;
 				}
 				break;
 			case SDLK_LEFT:
 				if (ev->type == SDL_KEYDOWN) {
-					fc->direction &= ~(CHAR_RIGHT);
-					fc->direction |= CHAR_LEFT;
+					aref->xoffs = -1;
 				} else if (ev->type == SDL_KEYUP) {
-					object_wait(fc, CHAR_LEFT);
-					fc->direction &= ~(CHAR_LEFT);
+					object_wait(ch, WMASK_LEFT);
+					aref->xoffs = 0;
 				}
 				break;
 			case SDLK_RIGHT:
 				if (ev->type == SDL_KEYDOWN) {
-					fc->direction &= ~(CHAR_LEFT);
-					fc->direction |= CHAR_RIGHT;
+					aref->xoffs = 1;
 				} else if (ev->type == SDL_KEYUP) {
-					object_wait(fc, CHAR_RIGHT);
-					fc->direction &= ~(CHAR_RIGHT);
+					object_wait(ch, WMASK_RIGHT);
+					aref->xoffs = 0;
 				}
 				break;
 			default:
@@ -351,90 +362,108 @@ char_time(Uint32 ival, void *obp)
 {
 	struct object *ob = (struct object *)obp;
 	struct character *ch = (struct character *)ob;
-	static int mapx, mapy;
+	struct map_aref *aref;
 
-	mapx = ch->x;
-	mapy = ch->y;
-
-	if (ch->effect & EFFECT_REGEN) {
-		/* XXX rate? */
-		increase(&ch->hp, 1, ch->hp);
+	/* XXX limit one sprite/anim. */
+	aref = map_entry_arefobj(&ch->map->map[ch->x][ch->y], ob, -1);
+#ifdef DEBUG
+	if (aref == NULL) {
+		dprintf("%s is not at %dx%d\n", ob->name, ch->x, ch->y);
 	}
-	if (ch->effect & EFFECT_POISON) {
-		/* XXX rate? */
-		decrease(&ch->hp, 1, 0);
-	}
+#endif
 
-	if (ch->hp <= 0) {
-		object_destroy(ob, NULL);
-		curmap->redraw++;
-	}
-
-	if (ch->direction & CHAR_UP) {
-		char_setsprite(ch, 2);
-		decrease(&mapy, 1, 1);
-		if(ch->map->view->mapy - mapy >= 0) {
-			SCROLL_UP(&ch->map);
+	/*
+	 * Soft scroll, and move when the sequence is over.
+	 */
+	if (aref->yoffs < 0) {
+		if (aref->yoffs == -1) {
+			/* See if this move is possible. */
+			if (char_canmove(ch, ch->x, ch->y - 1) < 0) {
+				dprintf("blocked!\n");
+				aref->yoffs = 0;
+				goto xoffsck;
+			}
+			char_setsprite(ch, 2);
 		}
-		ob->wmask |= CHAR_UP;
-	} else if (ch->direction & CHAR_DOWN) {
-		char_setsprite(ch, 1);
-		increase(&mapy, 1, ch->map->mapw - 1);
-		if (ch->map->view->mapy - mapy <=
-		    -ch->map->view->maph + 1) {
-			SCROLL_DOWN(&ch->map);
+		if (--aref->yoffs < -ch->map->view->tileh) {
+			aref->yoffs = 0;
+			char_move(ch, ch->x, ch->y - 1);
+			ob->wmask |= WMASK_UP;
 		}
-		ob->wmask |= CHAR_DOWN;
-	}
-		
-	if (ch->direction & CHAR_LEFT) {
-		char_setsprite(ch, 3);
-		decrease(&mapx, 1, 1);
-		if(ch->map->view->mapx - mapx >= 0) {
-			SCROLL_LEFT(&ch->map);
+	} else if (aref->yoffs > 0) {
+		if (aref->yoffs == 1) {
+			/* See if this move is possible. */
+			if (char_canmove(ch, ch->x, ch->y + 1) < 0) {
+				dprintf("blocked!\n");
+				aref->yoffs = 0;
+				goto xoffsck;
+			}
+			char_setsprite(ch, 1);
 		}
-		ob->wmask |= CHAR_LEFT;
-	} else if (ch->direction & CHAR_RIGHT) {
-		char_setsprite(ch, 4);
-		increase(&mapx, 1, ch->map->mapw - 1);
-		if (ch->map->view->mapx - mapx <=
-		    -ch->map->view->mapw + 1) {
-			SCROLL_RIGHT(&ch->map);
-		}
-		ob->wmask |= CHAR_RIGHT;
-	}
-
-	if (mapx != ch->x || mapy != ch->y) {
-		struct map_entry *nme = &ch->map->map[mapx][mapy];
-			
-		/* Walk on the destination tile, if possible. */
-		if (nme->flags & MAPENTRY_WALK) {
-			char_move(ch, mapx, mapy);
-			ch->map->redraw++;
-		}
-
-		/* Assume various conditions. */
-		if (nme->flags & MAPENTRY_BIO) {
-			decrease(&ch->hp, 1, 1);
-			dprintf("bio. hp = %d/%d\n", ch->hp, ch->maxhp);
-		} else if (nme->flags & MAPENTRY_REGEN) {
-			increase(&ch->hp, 1, ch->maxhp);
-			dprintf("regen. hp = %d/%d\n", ch->hp, ch->maxhp);
-		}
-
-		if (nme->flags & MAPENTRY_SLOW) {
-			/* XXX rate */
-			nme->v1 = -10;
-			char_setspeed(ch, ch->curspeed + nme->v1);
-			dprintf("slow. speed = %d\n", ch->curspeed);
-		} else if (nme->flags & MAPENTRY_HASTE) {
-			/* XXX rate */
-			nme->v1 = 10;
-			char_setspeed(ch, ch->curspeed + nme->v1);
-			dprintf("haste. speed = %d\n", ch->curspeed);
+		if (++aref->yoffs > ch->map->view->tileh) {
+			aref->yoffs = 0;
+			char_move(ch, ch->x, ch->y + 1);
+			ob->wmask |= WMASK_DOWN;
 		}
 	}
-	
+xoffsck:
+	if (aref->xoffs < 0) {
+		if (aref->xoffs == -1) {
+			/* See if this move is possible. */
+			if (char_canmove(ch, ch->x - 1, ch->y) < 0) {
+				dprintf("blocked!\n");
+				aref->xoffs = 0;
+				goto xoffsck;
+			}
+			char_setsprite(ch, 3);
+		}
+		if (--aref->xoffs < -ch->map->view->tilew) {
+			aref->xoffs = 0;
+			char_move(ch, ch->x - 1, ch->y);
+			ob->wmask |= WMASK_LEFT;
+		}
+	} else if (aref->xoffs > 0) {
+		if (aref->xoffs == 1) {
+			/* See if this move is possible. */
+			if (char_canmove(ch, ch->x + 1, ch->y) < 0) {
+				dprintf("blocked!\n");
+				aref->xoffs = 0;
+				goto ailmentck;
+			}
+			char_setsprite(ch, 4);
+		}
+		if (++aref->xoffs > ch->map->view->tilew) {
+			aref->xoffs = 0;
+			char_move(ch, ch->x + 1, ch->y);
+			ob->wmask |= WMASK_RIGHT;
+		}
+	}
+
+ailmentck:
+	/* Assume various status ailments. */
+
+#if 0
+	if (nme->flags & MAPENTRY_BIO) {
+		decrease(&ch->hp, 1, 1);
+		dprintf("bio. hp = %d/%d\n", ch->hp, ch->maxhp);
+	} else if (nme->flags & MAPENTRY_REGEN) {
+		increase(&ch->hp, 1, ch->maxhp);
+		dprintf("regen. hp = %d/%d\n", ch->hp, ch->maxhp);
+	}
+
+	if (nme->flags & MAPENTRY_SLOW) {
+		/* XXX rate */
+		nme->v1 = -10;
+		char_setspeed(ch, ch->curspeed + nme->v1);
+		dprintf("slow. speed = %d\n", ch->curspeed);
+	} else if (nme->flags & MAPENTRY_HASTE) {
+		/* XXX rate */
+		nme->v1 = 10;
+		char_setspeed(ch, ch->curspeed + nme->v1);
+		dprintf("haste. speed = %d\n", ch->curspeed);
+	}
+#endif
+
 	return (ival);
 }
 
@@ -451,14 +480,6 @@ char_dump_char(void *ob, void *p)
 	printf("\t\t< ");
 	if (ch->flags & CHAR_FOCUS)
 		printf("focused ");
-	if (ch->direction & CHAR_UP)
-		printf("going-up ");
-	if (ch->direction & CHAR_DOWN)
-		printf("going-down ");
-	if (ch->direction & CHAR_LEFT)
-		printf("going-left ");
-	if (ch->direction & CHAR_RIGHT)
-		printf("going-right ");
 	printf(">");
 }
 

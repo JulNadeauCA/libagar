@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.4 2002/01/30 17:49:42 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.5 2002/02/01 02:03:34 vedge Exp $	*/
 
 /*
  * Data shared by all character types.
@@ -23,12 +23,6 @@ struct character {
 	int	curspeed;	/* Current speed */
 	int	maxspeed;	/* Max. speed in ms */
 
-	int	direction;	/* Motion */
-#define CHAR_UP		0x01
-#define CHAR_DOWN	0x02
-#define CHAR_LEFT	0x04
-#define CHAR_RIGHT	0x08
-
 	int	flags;		/* Current state */
 #define CHAR_FOCUS	0x0001	/* Being controlled/viewed */
 #define CHAR_ANIM	0x0002	/* Animation in progress */
@@ -42,6 +36,7 @@ struct character *char_create(char *, char *, int, int, int);
 int	char_setanim(struct character *, int);
 int	char_setsprite(struct character *, int);
 int	char_add(struct character *, struct map *, int, int);
+int	char_canmove(struct character *, int, int);
 int	char_move(struct character *, int, int);
 int	char_del(struct character *, struct map *, int, int);
 
