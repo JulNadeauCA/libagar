@@ -1,5 +1,8 @@
-/*	$Csoft: tlist.h,v 1.11 2002/11/17 23:11:38 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.12 2002/11/19 06:08:38 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_TLIST_H_
+#define _AGAR_WIDGET_TLIST_H_
 
 #include <engine/widget/scrollbar.h>
 
@@ -36,8 +39,9 @@ struct tlist {
 	int	 item_h;	/* Item height */
 
 	struct tlist_itemq	 items;		/* Current Items */
-	struct tlist_itemq	 selitems;	/* Saved items (selected) */
-	int			 nitems;
+	struct tlist_itemq	 selitems;	/* Saved items */
+	int			 nitems;	/* Current item count */
+	int			 nvisitems;	/* Visible item count */
 	pthread_mutex_t		 items_lock;
 	pthread_mutexattr_t	 items_lockattr;
 };
@@ -64,3 +68,4 @@ struct tlist_item	*tlist_item_index(struct tlist *, int);
 struct tlist_item	*tlist_item_selected(struct tlist *);
 struct tlist_item	*tlist_item_text(struct tlist *, char *);
 
+#endif /* _AGAR_WIDGET_TLIST_H_ */

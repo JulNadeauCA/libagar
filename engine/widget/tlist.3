@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.4 2002/11/17 23:11:38 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.5 2002/11/19 06:08:38 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -99,6 +99,15 @@ can be changed at runtime, and may include:
 .Pp
 .Ft "void"
 .Fn tlist_unselect_all "struct tlist *tlist"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_item_index "struct tlist *tlist" "int index"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_item_selected "struct tlist *tlist"
+.Pp
+.Ft "struct tlist_item *"
+.Fn tlist_item_text "struct tlist *tlist" "char *text"
 .nr nS 0
 .Pp
 The
@@ -149,17 +158,6 @@ The
 .Fn tlist_unselect_all
 function clears the selected flag on all items attached to
 .Fa tlist .
-.Sh LOOKING UP ITEMS
-.nr nS 1
-.Ft "struct tlist_item *"
-.Fn tlist_item_index "struct tlist *tlist" "int index"
-.Pp
-.Ft "struct tlist_item *"
-.Fn tlist_item_selected "struct tlist *tlist"
-.Pp
-.Ft "struct tlist_item *"
-.Fn tlist_item_text "struct tlist *tlist" "char *text"
-.nr nS 0
 .Pp
 The
 .Fn tlist_item_index
