@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.7 2002/10/30 17:18:19 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.8 2002/11/22 08:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -51,7 +51,7 @@ tool_init(struct tool *tool, char *name, struct mapedit *med,
 	tool->med = med;
 	tool->win = (TOOL_OPS(tool)->tool_window != NULL) ? 
 	    TOOL_OPS(tool)->tool_window(tool) : NULL;
-	tool->type = strdup(name);
+	tool->type = Strdup(name);
 }
 
 struct mapview *
