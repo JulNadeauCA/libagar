@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.13 2002/02/14 23:33:47 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.14 2002/02/15 02:31:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -234,7 +234,7 @@ char_add(struct character *ch, struct map *m, int x, int y)
 	ch->map = m;
 	if ((ch->flags & CHAR_ONMAP) == 0) {
 		mapdir_init(&ch->dir, (struct object *)ch, m,
-		    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 2, 5);
+		    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 5);
 		ch->flags |= CHAR_ONMAP;
 	}
 
