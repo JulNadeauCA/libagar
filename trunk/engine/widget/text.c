@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.17 2002/06/03 18:34:10 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.18 2002/06/06 10:18:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -47,9 +47,7 @@
 static const struct object_ops text_ops = {
 	text_destroy,
 	NULL,		/* load */
-	NULL,		/* save */
-	NULL,		/* attach */
-	NULL		/* detach */
+	NULL		/* save */
 };
 
 static TAILQ_HEAD(, text) textsh = TAILQ_HEAD_INITIALIZER(textsh);

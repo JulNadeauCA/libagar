@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.19 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.20 2002/06/06 10:18:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -50,9 +50,7 @@ static const struct widget_ops button_ops = {
 	{
 		button_destroy,
 		NULL,		/* load */
-		NULL,		/* save */
-		NULL,		/* attach */
-		NULL		/* detach */
+		NULL		/* save */
 	},
 	button_draw
 };

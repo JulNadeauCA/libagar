@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.46 2002/06/03 18:33:52 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.47 2002/06/06 10:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,9 +45,7 @@
 static const struct object_ops viewport_ops = {
 	view_destroy,
 	NULL,		/* load */
-	NULL,		/* save */
-	view_attach,
-	view_detach
+	NULL		/* save */
 };
 
 static int	**view_allocmask(int, int);

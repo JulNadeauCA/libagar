@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.8 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.9 2002/06/06 10:18:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -47,9 +47,7 @@
 static const struct object_ops region_ops = {
 	region_destroy,
 	NULL,		/* load */
-	NULL,		/* save */
-	region_attach,
-	region_detach
+	NULL		/* save */
 };
 
 struct region *

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.96 2002/06/03 18:36:56 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.97 2002/06/06 10:15:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -60,9 +60,7 @@ static const struct version mapedit_ver = {
 static const struct object_ops mapedit_ops = {
 	NULL,
 	mapedit_load,
-	mapedit_save,
-	NULL,		 /* attach */
-	NULL		 /* detach */
+	mapedit_save
 };
 
 enum {
@@ -85,8 +83,8 @@ static const int stickykeys[] = {	/* Keys applied after each move. */
 static struct window *coords_win = NULL;	/* XXX thread unsafe */
 static struct label *coords_label;
 
-static void	 mapedit_onattach(int, union evarg *);
-static void	 mapedit_ondetach(int, union evarg *);
+static void	 mapedit_attached(int, union evarg *);
+static void	 mapedit_detached(int, union evarg *);
 static void	 mapedit_shadow(struct mapedit *, void *);
 static void	 mapedit_tilelist(struct mapedit *);
 static void	 mapedit_tilestack(struct mapedit *);
@@ -125,8 +123,8 @@ mapedit_init(struct mapedit *med, char *name)
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
 
-	event_new(med, "attach", 0, mapedit_onattach, NULL);
-	event_new(med, "detach", 0, mapedit_ondetach, NULL);
+	event_new(med, "attached", 0, mapedit_attached, NULL);
+	event_new(med, "detached", 0, mapedit_detached, NULL);
 }
 
 /*
@@ -212,7 +210,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 }
 
 static void
-mapedit_onattach(int argc, union evarg *argv)
+mapedit_attached(int argc, union evarg *argv)
 {
 	static char caption[FILENAME_MAX];
 	char path[FILENAME_MAX];
@@ -325,7 +323,7 @@ mapedit_onattach(int argc, union evarg *argv)
 }
 
 static void
-mapedit_ondetach(int argc, union evarg *argv)
+mapedit_detached(int argc, union evarg *argv)
 {
 	struct mapedit *med = argv[0].p;
 	struct map *m;

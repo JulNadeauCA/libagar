@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.39 2002/06/08 08:04:05 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.40 2002/06/09 10:08:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -16,10 +16,6 @@ struct object_ops {
 	void	(*destroy)(void *);		/* Free resources */
 	int	(*load)(void *, int);		/* Load from fd */
 	int	(*save)(void *, int);		/* Save to fd */
-
-	/* Container functions. */
-	void	(*attach)(void *, void *);	/* Attach child */
-	void	(*detach)(void *, void *);	/* Detach child */
 };
 
 struct object_art {
