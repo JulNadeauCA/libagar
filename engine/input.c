@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.33 2003/01/12 04:07:16 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.34 2003/01/16 04:07:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@ input_new(int type, int index)
 	char *name;
 	struct input *input;
 	int rv = 0;
-	
+
 	switch (type) {
 	case INPUT_KEYBOARD:
 		Asprintf(&name, "keyboard%d", index);
@@ -67,19 +67,35 @@ input_new(int type, int index)
 	input->pos = NULL;
 	pthread_mutex_init(&input->lock, NULL);
 
+#ifdef DEBUG
+	prop_set_int(input, "events", 0);
+#endif
+
 	switch (type) {
 	case INPUT_JOY:
-		if (index < 0) {
-			error_set("bad index");
-			return (NULL);
+		{
+			SDL_Joystick *joy;
+
+			if (index < 0) {
+				error_set("bad joystick index");
+				return (NULL);
+			}
+			joy = input->p = SDL_JoystickOpen(index);
+			if (joy == NULL) {
+				error_set("joy[%d]: %s", index, SDL_GetError());
+				return (NULL);
+			}
+			SDL_JoystickEventState(SDL_ENABLE);
+			prop_set_string(input, "joy-name",
+			    (char *)SDL_JoystickName(index));
+			prop_set_int(input, "joy-naxes",
+			    SDL_JoystickNumAxes(joy));
+			prop_set_int(input, "joy-nbuttons",
+			    SDL_JoystickNumButtons(joy));
+			prop_set_int(input, "joy-nballs",
+			    SDL_JoystickNumBalls(joy));
+			break;
 		}
-		input->p = SDL_JoystickOpen(index);
-		if (input->p == NULL) {
-			error_set("joy[%d]: %s", index, SDL_GetError());
-			return (NULL);
-		}
-		SDL_JoystickEventState(SDL_ENABLE);
-		break;
 	default:
 		break;
 	}
@@ -312,7 +328,9 @@ void
 input_event(enum input_type type, SDL_Event *ev)
 {
 	struct input *in;
-	
+	struct prop *nevents_pr;
+	int *nevents;
+
 	pthread_mutex_lock(&inputs_lock);
 
 	/* See which input device should handle this event. */
@@ -322,6 +340,12 @@ input_event(enum input_type type, SDL_Event *ev)
 		dprintf("unrecognized event %d\n", ev->type);
 		return;
 	}
+
+#ifdef DEBUG
+	/* Increment the event counter. */
+	nevents_pr = prop_get(in, "events", PROP_INT, &nevents);
+	nevents++;
+#endif
 
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
