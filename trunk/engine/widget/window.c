@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.131 2002/12/25 02:28:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.132 2002/12/26 01:33:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -71,6 +71,7 @@ static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 static void	winop_close(struct window *);
 static void	winop_hide_body(struct window *);
+static void	resize_reg(int, struct window *, struct region *);
 
 #ifdef DEBUG
 #define DEBUG_STATE		0x01
@@ -108,9 +109,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 
 	if (name_fmt != NULL) {				/* Single instance */
 		va_start(args, name_fmt);
-		if (vasprintf(&name, name_fmt, args) == -1) {
-			fatal("vasprintf: %s\n", strerror(errno));
-		}
+		Vasprintf(&name, name_fmt, args);
 		va_end(args);
 		
 		pthread_mutex_lock(&view->lock);
@@ -161,7 +160,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	int fl = flags;
 
 	if (name != NULL) {					/* Unique */
-		asprintf(&wname, "win-%s", name);
+		Asprintf(&wname, "win-%s", name);
 		fl |= WINDOW_SAVE_POSITION;
 	} else {						/* Generic */
 		static int curwindow = 0;
@@ -172,7 +171,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		curwindow++;
 		pthread_mutex_unlock(&curwindow_lock);
 
-		asprintf(&wname, "win-generic%d", curwindow++);
+		Asprintf(&wname, "win-generic%d", curwindow++);
 	}
 	object_init(&win->wid.obj, "window", wname, NULL, 0, &window_ops);
 	free(wname);
@@ -206,7 +205,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		    default_border[i].b);
 	}
 
-	fl |= (WINDOW_TITLEBAR|WINDOW_MATERIALIZE|WINDOW_DEMATERIALIZE);
+	fl |= (WINDOW_TITLEBAR);
 
 	win->titleh = font_h + win->borderw;
 	win->flags = fl;
@@ -945,7 +944,7 @@ scan_wins:
 			case VIEW_WINOP_HRESIZE:
 				winop_resize(view->winop, win, &ev->motion);
 				goto posted;
-			case VIEW_WINOP_NONE:
+			default:
 				break;
 			}
 			if (win->flags & WINDOW_HIDDEN_BODY) {
@@ -959,6 +958,17 @@ scan_wins:
 			 * flag set.
 			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
+#if 0
+				if (reg->flags & REGION_RESIZING) {
+					switch (view->winop) {
+					case VIEW_WINOP_REGRESIZE_LEFT:
+					case VIEW_WINOP_REGRESIZE_RIGHT:
+					default:
+						break;
+					}
+					window_resize(win);
+				}
+#endif
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if ((VIEW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
@@ -986,12 +996,11 @@ scan_wins:
 				/* Don't catch events. */
 				goto next_win;
 			}
-			/*
-			 * Send the mouse button release event to the widget
-			 * that holds focus inside the focused window, and
-			 * any widget with the WIDGET_UNFOCUSED_BUTTONUP flag.
-			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
+				/* Clear the resize operation flag. */
+				reg->flags &= ~(REGION_RESIZING);
+
+				/* Send the mousebuttonup event to widgets. */
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if ((VIEW_FOCUSED(win) &&
 					     WIDGET_FOCUSED(wid)) ||
@@ -1042,15 +1051,34 @@ scan_wins:
 				}
 				view->wop_win = win;
 			}
-			/*
-			 * Send the mouse button press event to the
-			 * widget under the cursor.
-			 */
 			if (win->flags & WINDOW_HIDDEN_BODY) {
 				/* Don't catch events. */
 				goto next_win;
 			}
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
+#if 0
+				/* Select this region for resize? */
+				if (ev->button.x == win->rd.x+reg->x) {
+					resize_reg(VIEW_WINOP_REGRESIZE_LEFT,
+					    win, reg);
+					goto posted;
+				} else if (ev->button.x == win->rd.x+reg->x+
+				    reg->w) {
+					resize_reg(VIEW_WINOP_REGRESIZE_RIGHT,
+					    win, reg);
+					goto posted;
+				} else if (ev->button.y == win->rd.x+reg->y) {
+					resize_reg(VIEW_WINOP_REGRESIZE_UP,
+					    win, reg);
+					goto posted;
+				} else if (ev->button.y == win->rd.y+reg->y+
+				    reg->h) {
+					resize_reg(VIEW_WINOP_REGRESIZE_DOWN,
+					    win, reg);
+					goto posted;
+				}
+#endif
+				/* Post mousebuttondown event to widget. */
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if (!WIDGET_INSIDE(wid, ev->button.x,
 					    ev->button.y)) {
@@ -1277,9 +1305,122 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 }
 
 /*
- * Effect a change in window geometry.
+ * Resize a region with the mouse.
  * The window must be locked.
  */
+static void
+resize_reg(int op, struct window *win, struct region *reg)
+{
+	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) == NULL) {
+		return;
+	}
+	view->winop = op;
+	view->wop_win = win;
+	reg->flags |= REGION_RESIZING;
+}
+
+/* Update the window's caption. */
+void
+window_set_caption(struct window *win, const char *fmt, ...)
+{
+	va_list args;
+
+	pthread_mutex_lock(&win->lock);
+
+	/* XXX */
+	Free(win->caption);
+	va_start(args, fmt);
+	Vasprintf(&win->caption, fmt, args);
+	va_end(args);
+	
+	pthread_mutex_unlock(&win->lock);
+}
+
+int
+window_load(void *p, int fd)
+{
+	struct window *win = p;
+	Uint16 view_w, view_h;
+
+	if (version_read(fd, &window_ver) != 0) {
+		return (-1);
+	}
+
+	win->flags |= read_uint32(fd);
+	
+	view_w = read_uint16(fd);
+	view_h = read_uint16(fd);
+
+	win->rd.x = read_sint16(fd) * view->v->w / view_w;
+	win->rd.y = read_sint16(fd) * view->v->h / view_h;
+	win->rd.w = read_uint16(fd) * view->v->w / view_w;
+	win->rd.h = read_uint16(fd) * view->v->h / view_h;
+
+	win->saved_rd.x = read_sint16(fd) * view->v->w / view_w;
+	win->saved_rd.y = read_sint16(fd) * view->v->h / view_h;
+	win->saved_rd.w = read_uint16(fd) * view->v->w / view_w;
+	win->saved_rd.h = read_uint16(fd) * view->v->h / view_h;
+	
+	debug(DEBUG_STATE, "%s: %dx%d for %dx%d at [%d,%d]\n",
+	    OBJECT(win)->name, win->rd.w, win->rd.h, view_w, view_h,
+	    win->rd.x, win->rd.y);
+
+	/* Ensure the window fits inside the view area. */
+	window_resize(win);
+
+	return (0);
+}
+
+int
+window_save(void *p, int fd)
+{
+	struct window *win = p;
+
+	debug(DEBUG_STATE, "saving %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
+
+	version_write(fd, &window_ver);
+
+	write_uint32(fd, win->flags & WINDOW_PERSISTENT);
+	
+	write_uint16(fd, view->v->w);
+	write_uint16(fd, view->v->h);
+
+	write_sint16(fd, win->rd.x);
+	write_sint16(fd, win->rd.y);
+	write_uint16(fd, win->rd.w);
+	write_uint16(fd, win->rd.h);
+
+	write_sint16(fd, win->saved_rd.x);
+	write_sint16(fd, win->saved_rd.y);
+	write_uint16(fd, win->saved_rd.w);
+	write_uint16(fd, win->saved_rd.h);
+
+	return (0);
+}
+
+void
+window_generic_detach(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	OBJECT_ASSERT(win, "window");
+
+	view_detach(win);
+}
+
+void
+window_generic_hide(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	OBJECT_ASSERT(win, "window");
+
+	if (win->flags & WINDOW_SHOWN) {
+		window_hide(win);
+	}
+}
+
 void
 window_resize(struct window *win)
 {
@@ -1423,112 +1564,9 @@ window_resize(struct window *win)
 				x += wid->w + reg->spacing;
 			}
 		}
-	}
+ 	}
 
 	debug_n(DEBUG_RESIZE_GEO, "%s: %dx%d\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 }
 
-/* Update the window's caption. */
-void
-window_set_caption(struct window *win, const char *fmt, ...)
-{
-	va_list args;
-
-	pthread_mutex_lock(&win->lock);
-
-	/* XXX */
-	Free(win->caption);
-	va_start(args, fmt);
-	if (vasprintf(&win->caption, fmt, args) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
-	va_end(args);
-	
-	pthread_mutex_unlock(&win->lock);
-}
-
-int
-window_load(void *p, int fd)
-{
-	struct window *win = p;
-	Uint16 view_w, view_h;
-
-	if (version_read(fd, &window_ver) != 0) {
-		return (-1);
-	}
-
-	win->flags |= read_uint32(fd);
-	
-	view_w = read_uint16(fd);
-	view_h = read_uint16(fd);
-
-	win->rd.x = read_sint16(fd) * view->v->w / view_w;
-	win->rd.y = read_sint16(fd) * view->v->h / view_h;
-	win->rd.w = read_uint16(fd) * view->v->w / view_w;
-	win->rd.h = read_uint16(fd) * view->v->h / view_h;
-
-	win->saved_rd.x = read_sint16(fd) * view->v->w / view_w;
-	win->saved_rd.y = read_sint16(fd) * view->v->h / view_h;
-	win->saved_rd.w = read_uint16(fd) * view->v->w / view_w;
-	win->saved_rd.h = read_uint16(fd) * view->v->h / view_h;
-	
-	debug(DEBUG_STATE, "%s: %dx%d for %dx%d at [%d,%d]\n",
-	    OBJECT(win)->name, win->rd.w, win->rd.h, view_w, view_h,
-	    win->rd.x, win->rd.y);
-
-	/* Ensure the window fits inside the view area. */
-	window_resize(win);
-
-	return (0);
-}
-
-int
-window_save(void *p, int fd)
-{
-	struct window *win = p;
-
-	debug(DEBUG_STATE, "saving %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
-	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
-
-	version_write(fd, &window_ver);
-
-	write_uint32(fd, win->flags & WINDOW_PERSISTENT);
-	
-	write_uint16(fd, view->v->w);
-	write_uint16(fd, view->v->h);
-
-	write_sint16(fd, win->rd.x);
-	write_sint16(fd, win->rd.y);
-	write_uint16(fd, win->rd.w);
-	write_uint16(fd, win->rd.h);
-
-	write_sint16(fd, win->saved_rd.x);
-	write_sint16(fd, win->saved_rd.y);
-	write_uint16(fd, win->saved_rd.w);
-	write_uint16(fd, win->saved_rd.h);
-
-	return (0);
-}
-
-void
-window_generic_detach(int argc, union evarg *argv)
-{
-	struct window *win = argv[1].p;
-
-	OBJECT_ASSERT(win, "window");
-
-	view_detach(win);
-}
-
-void
-window_generic_hide(int argc, union evarg *argv)
-{
-	struct window *win = argv[1].p;
-
-	OBJECT_ASSERT(win, "window");
-
-	if (win->flags & WINDOW_SHOWN) {
-		window_hide(win);
-	}
-}
