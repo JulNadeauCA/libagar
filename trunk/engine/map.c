@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.229 2004/07/24 02:02:16 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.230 2004/08/02 03:17:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1360,7 +1360,7 @@ create_view(int argc, union evarg *argv)
 	struct window *pwin = argv[2].p;
 	struct window *win;
 
-	win = window_new(NULL);
+	win = window_new(0, NULL);
 	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
 	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT, NULL, NULL);
 	window_attach(pwin, win);
@@ -1385,9 +1385,8 @@ map_edit(void *p)
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;
 	
-	win = window_new(NULL);
+	win = window_new(0, NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
-	window_set_closure(win, WINDOW_DETACH);
 	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.36 2004/05/24 00:36:39 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.37 2004/06/18 03:11:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -628,11 +628,10 @@ gfx_debug_window(void)
 	struct window *win;
 	struct tlist *tl;
 
-	if ((win = window_new("gfx-debug")) == NULL) {
+	if ((win = window_new(WINDOW_DETACH, "gfx-debug")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Resident graphics"));
-	window_set_closure(win, WINDOW_DETACH);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	tlist_set_item_height(tl, TILESZ);

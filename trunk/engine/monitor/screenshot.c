@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.14 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.15 2004/03/30 16:32:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -254,11 +254,11 @@ screenshot_window(void)
 	struct label *lab;
 	struct spinbutton *sbu;
 	
-	if ((win = window_new("monitor-screenshot")) == NULL)
+	if ((win = window_new(WINDOW_DETACH|WINDOW_NO_VRESIZE,
+	    "monitor-screenshot")) == NULL) {
 		return (NULL);
-
+	}
 	window_set_caption(win, _("Screenshot"));
-	window_set_closure(win, WINDOW_DETACH);
 
 	vb = vbox_new(win, VBOX_WFILL);
 	{

@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.8 2004/05/16 04:41:32 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.9 2004/05/17 07:08:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -28,7 +28,9 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
+
 #include "ucombo.h"
+
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 #include <engine/widget/label.h>
@@ -57,22 +59,21 @@ ucombo_new(void *parent)
 	return (com);
 }
 
-/* Hide the item selection window. */
 static void
 ucombo_collapse(struct ucombo *com)
 {
 	struct widget_binding *stateb;
 	int *state;
 
-	if (com->win == NULL)
+	if (com->panel == NULL)
 		return;
 
-	com->saved_w = WIDGET(com->win)->w;
-	com->saved_h = WIDGET(com->win)->h;
-	window_hide(com->win);
+	com->saved_w = WIDGET(com->panel)->w;
+	com->saved_h = WIDGET(com->panel)->h;
+	window_hide(com->panel);
 	object_detach(com->list);
-	view_detach(com->win);
-	com->win = NULL;
+	view_detach(com->panel);
+	com->panel = NULL;
 	
 	stateb = widget_get_binding(com->button, "state", &state);
 	*state = 0;
@@ -80,40 +81,36 @@ ucombo_collapse(struct ucombo *com)
 	widget_binding_unlock(stateb);
 }
 
-/* Display the item selection window. */
 static void
 ucombo_expand(int argc, union evarg *argv)
 {
 	struct ucombo *com = argv[1].p;
 	int expand = argv[2].i;
+	struct widget *pan;
 
-	if (expand) {						/* Expand */
-		struct widget *win;
+	if (expand) {
+		com->panel = window_new(WINDOW_NO_TITLEBAR|
+		                        WINDOW_NO_DECORATIONS, NULL);
+		pan = WIDGET(com->panel);
 
-		com->win = window_new(NULL);
-		win = WIDGET(com->win);
-		object_detach(com->win->tbar);
-		object_destroy(com->win->tbar);
-		Free(com->win->tbar, M_OBJECT);
-
-		object_attach(com->win, com->list);
+		object_attach(com->panel, com->list);
 	
-		win->w = com->saved_w > 0 ? com->saved_w : WIDGET(com)->w*4;
-		win->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		win->x = WIDGET(com)->cx;
-		win->y = WIDGET(com)->cy;
-		if (win->x+win->w > view->w)
-			win->w = view->w - win->x;
-		if (win->y+win->h > view->h)
-			win->h = view->h - win->y;
+		pan->w = com->saved_w > 0 ? com->saved_w : WIDGET(com)->w*4;
+		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
+		pan->x = WIDGET(com)->cx;
+		pan->y = WIDGET(com)->cy;
+		if (pan->x+pan->w > view->w)
+			pan->w = view->w - pan->x;
+		if (pan->y+pan->h > view->h)
+			pan->h = view->h - pan->y;
 		
 		tlist_prescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
 		WIDGET_SCALE(com->list, -1, -1);
-		WIDGET_SCALE(win, -1, -1);
-		WIDGET_SCALE(win, win->w, win->h);
-		widget_update_coords(com->win, win->x, win->y);
+		WIDGET_SCALE(pan, -1, -1);
+		WIDGET_SCALE(pan, pan->w, pan->h);
+		widget_update_coords(pan, pan->x, pan->y);
 
-		window_show(com->win);
+		window_show(com->panel);
 	} else {
 		ucombo_collapse(com);
 	}
@@ -142,7 +139,7 @@ ucombo_init(struct ucombo *com)
 {
 	widget_init(com, "ucombo", &ucombo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL|
 	    WIDGET_UNFOCUSED_BUTTONUP);
-	com->win = NULL;
+	com->panel = NULL;
 	com->saved_h = 0;
 
 	com->button = button_new(com, "...");
@@ -160,10 +157,10 @@ ucombo_destroy(void *p)
 {
 	struct ucombo *com = p;
 
-	if (com->win != NULL) {
-		window_hide(com->win);
+	if (com->panel != NULL) {
+		window_hide(com->panel);
 		object_detach(com->list);
-		view_detach(com->win);
+		view_detach(com->panel);
 	}
 	object_destroy(com->list);
 	Free(com->list, M_OBJECT);

@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.5 2004/06/02 00:40:11 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.6 2004/06/02 00:42:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -240,11 +240,10 @@ uniconv_window(void)
 	struct tlist *tl;
 	int i;
 
-	if ((win = window_new("uniconv")) == NULL) {
+	if ((win = window_new(WINDOW_DETACH, "uniconv")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Unicode Conversion"));
-	window_set_closure(win, WINDOW_DETACH);
 	
 	label_new(win, LABEL_POLLED, "%s (%s )", &utf8text, &bytetext);
 

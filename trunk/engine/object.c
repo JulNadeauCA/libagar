@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.183 2004/08/02 03:17:07 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.184 2004/08/25 05:43:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1679,10 +1679,9 @@ object_edit(void *p)
 	struct box *bo;
 	struct textbox *tbox;
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_NO_VRESIZE|WINDOW_DETACH, NULL);
 	window_set_caption(win, _("%s object"), ob->name);
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
-	window_set_closure(win, WINDOW_DETACH);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{

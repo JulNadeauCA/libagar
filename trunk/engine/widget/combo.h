@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.6 2003/11/10 22:41:12 vedge Exp $	*/
+/*	$Csoft: combo.h,v 1.7 2004/05/15 02:12:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
@@ -22,8 +22,8 @@ struct combo {
 	struct textbox *tbox;		/* Text input */
 	struct button *button;		/* [...] button */
 	struct tlist *list;		/* List of items */
-	struct window *win;		/* Pop-up window */
-	int saved_h;			/* Saved pop-up window height */
+	struct window *panel;
+	int saved_h;			/* Saved panel height */
 };
 
 __BEGIN_DECLS

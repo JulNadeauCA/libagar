@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.124 2004/08/27 06:50:18 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.125 2004/09/11 06:13:45 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -308,9 +308,8 @@ config_window(struct config *con)
 	struct textbox *tbox;
 	struct checkbox *cbox;
 
-	win = window_new("config-engine-settings");
+	win = window_new(WINDOW_NO_VRESIZE, "config-engine-settings");
 	window_set_caption(win, _("Engine settings"));
-	window_set_closure(win, WINDOW_HIDE);
 	hb = hbox_new(win, 0);
 	vb = vbox_new(hb, 0);
 	vbox_set_spacing(vb, 2);

@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.19 2004/05/15 02:12:00 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.20 2004/05/16 04:41:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -75,14 +75,14 @@ combo_collapse(struct combo *com)
 	struct widget_binding *stateb;
 	int *state;
 
-	if (com->win == NULL)
+	if (com->panel == NULL)
 		return;
 
-	com->saved_h = WIDGET(com->win)->h;
-	window_hide(com->win);
+	com->saved_h = WIDGET(com->panel)->h;
+	window_hide(com->panel);
 	object_detach(com->list);
-	view_detach(com->win);
-	com->win = NULL;
+	view_detach(com->panel);
+	com->panel = NULL;
 	
 	stateb = widget_get_binding(com->button, "state", &state);
 	*state = 0;
@@ -97,28 +97,26 @@ combo_expand(int argc, union evarg *argv)
 	int expand = argv[2].i;
 
 	if (expand) {						/* Expand */
-		struct widget *win;
+		struct widget *pan;
 
-		com->win = window_new(NULL);
-		win = WIDGET(com->win);
-		object_detach(com->win->tbar);
-		object_destroy(com->win->tbar);
-		Free(com->win->tbar, M_OBJECT);
-
-		object_attach(com->win, com->list);
+		com->panel = window_new(WINDOW_NO_TITLEBAR|
+				        WINDOW_NO_DECORATIONS, NULL);
+		pan = WIDGET(com->panel);
+		object_attach(com->panel, com->list);
 	
-		win->w = WIDGET(com)->w - WIDGET(com->button)->w;
-		win->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		win->x = WIDGET(com)->cx;
-		win->y = WIDGET(com)->cy;
-		if (win->x+win->w > view->w)
-			win->w = view->w - win->x;
-		if (win->y+win->h > view->h)
-			win->h = view->h - win->y;
+		pan->w = WIDGET(com)->w - WIDGET(com->button)->w;
+		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
+		pan->x = WIDGET(com)->cx;
+		pan->y = WIDGET(com)->cy;
+		if (pan->x+pan->w > view->w)
+			pan->w = view->w - pan->x;
+		if (pan->y+pan->h > view->h)
+			pan->h = view->h - pan->y;
 
-		WIDGET_SCALE(win, win->w, win->h);
-		widget_update_coords(com->win, win->x, win->y);
-		window_show(com->win);
+		WIDGET_SCALE(pan, pan->w, pan->h);
+		widget_update_coords(pan, pan->x, pan->y);
+
+		window_show(com->panel);
 	} else {
 		combo_collapse(com);
 	}
@@ -169,9 +167,8 @@ combo_mousebuttonup(int argc, union evarg *argv)
 	int x = WIDGET(com)->cx + argv[2].i;
 	int y = WIDGET(com)->cy + argv[3].i;
 
-	if (com->win != NULL && !widget_area(com->win, x, y)) {
+	if (com->panel != NULL && !widget_area(com->panel, x, y))
 		combo_collapse(com);
-	}
 }
 #endif
 
@@ -180,7 +177,7 @@ combo_init(struct combo *com, const char *label, int flags)
 {
 	widget_init(com, "combo", &combo_ops, WIDGET_FOCUSABLE|WIDGET_WFILL|
 	    WIDGET_UNFOCUSED_BUTTONUP);
-	com->win = NULL;
+	com->panel = NULL;
 	com->flags = flags;
 	com->saved_h = 0;
 
@@ -210,10 +207,10 @@ combo_destroy(void *p)
 {
 	struct combo *com = p;
 
-	if (com->win != NULL) {
-		window_hide(com->win);
+	if (com->panel != NULL) {
+		window_hide(com->panel);
 		object_detach(com->list);
-		view_detach(com->win);
+		view_detach(com->panel);
 	}
 	object_destroy(com->list);
 	Free(com->list, M_OBJECT);

@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.4 2004/05/12 05:34:25 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.5 2004/07/24 02:01:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -97,11 +97,10 @@ leak_window(void)
 	struct window *win;
 	struct tlist *tl;
 
-	if ((win = window_new("monitor-leak")) == NULL) {
+	if ((win = window_new(WINDOW_DETACH, "monitor-leak")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Leak detection"));
-	window_set_closure(win, WINDOW_DETACH);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
 	event_new(tl, "tlist-poll", poll_mements, NULL);
