@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.18 2002/09/13 11:08:30 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.19 2002/09/16 14:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -158,6 +158,11 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	struct button *bu;
 	char *wname;
 
+	if (eob == NULL) {
+		fatal("NULL editobj\n");		/* XXX */
+	}
+	ob = eob->pobj;
+
 	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
 		if (tm->ob == eob->pobj) {
 			window_show(tm->win);
@@ -245,41 +250,26 @@ objq_event(int argc, union evarg *argv)
 	int curoffs;
 
 	switch (argv[1].i) {
-	case WINDOW_MOUSEMOTION:
-		x = argv[2].i / TILEW;
-		ox = oq->mouse.x;
-		oq->mouse.x = x;
-
-		ms = SDL_GetMouseState(NULL, NULL);
-		if (ms & SCROLL_BUTTON_MASK) {
-			if (oq->mouse.x > ox &&		/* Down */
-			    --oq->offs < 0) {
-				oq->offs = med->neobjs - 1;
-			}
-			if (oq->mouse.x < ox &&		/* Up */
-			    ++oq->offs > med->neobjs-1) {
-				oq->offs = 0;
-			}
-		}
-		break;
 	case WINDOW_MOUSEBUTTONUP:
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
 		x = argv[3].i;
+
 		if (button != SELECT_BUTTON) {
 			break;
 		}
-		curoffs = oq->offs + x/TILEW;
-		if (curoffs < 0) {
-			/* Wrap */
-			curoffs += oq->offs + med->neobjs;
-		} else if (med->ref.offs >= med->neobjs) {
-			curoffs -= med->neobjs;
-		}
-		while (curoffs > med->neobjs-1) {
-			curoffs -= med->neobjs;
+		if (med->neobjs == 0) {
+			break;
+		}	
+		curoffs = x/TILEW;
+		if (curoffs >= med->neobjs) {
+			curoffs = med->neobjs - 1;
 		}
 		TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
+		if (eob == NULL) {
+			dprintf("no editable object at offset 0x%x\n", curoffs);
+			break;
+		}
 		objq_select(oq, med, eob);
 		break;
 	}
@@ -321,23 +311,16 @@ objq_draw(void *p)
 	struct objq *oq = p;
 	struct mapedit *med = oq->med;
 	struct editobj *eob;
-	int x = 0, i, sn;
+	int x = 0, i;
 	
-	for (i = 0, sn = oq->offs;
-	     i < (WIDGET(oq)->w / TILEW);
-	     i++, x += TILEW) {
-		if (sn > -1) {
-			/* Absolute */
-			TAILQ_INDEX(eob, &med->eobjsh, eobjs, sn);
-		} else {
-			/* Wrap */
-			TAILQ_INDEX(eob, &med->eobjsh, eobjs,
-			    sn + med->neobjs);
-			if (eob == NULL) {
-				goto nextref;
-			}
+	for (i = 0;
+	    i < (WIDGET(oq)->w / TILEW) && i < med->neobjs;
+	    i++, x += TILEW) {
+		TAILQ_INDEX(eob, &med->eobjsh, eobjs, i);
+		if (eob == NULL) {
+			fatal("no editable object at 0x%x\n", i);
 		}
-
+		
 		WIDGET_DRAW(oq, SPRITE(eob->pobj, 0), x, 0);
 
 		if (med->curobj == eob) {
@@ -348,10 +331,6 @@ objq_draw(void *p)
 		} else {
 			primitives.square(oq, x, 0, TILEW, TILEH,
 			    WIDGET_COLOR(oq, GRID_COLOR));
-		}
-nextref:
-		if (++sn >= med->neobjs) {
-			sn = 0;
 		}
 	}
 }
