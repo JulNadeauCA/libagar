@@ -1,4 +1,4 @@
-/*	$Csoft: config.h,v 1.2 2002/06/01 02:38:42 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.3 2002/06/09 10:08:04 vedge Exp $	*/
 /*	Public domain	*/
 
 struct config {
@@ -9,7 +9,14 @@ struct config {
 
 	/* Read-write, thread-safe */
 	Uint32	 flags;	
-#define CONFIG_FONT_CACHE	0x0001	/* Cache common glyphs */
+#define CONFIG_FONT_CACHE	0x01	/* Cache common glyphs */
+#define CONFIG_FULLSCREEN	0x02	/* Try full-screen mode */
+#define CONFIG_ASYNCBLIT	0x04	/* Asynchronous screen updates */
+
+	struct {
+		int	w, h, bpp;
+	} view;
+
 	pthread_mutex_t lock;
 };
 
