@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.54 2004/01/22 09:58:42 vedge Exp $
+.\"	$Csoft: object.3,v 1.55 2004/02/20 04:20:33 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -420,8 +420,10 @@ and
 for instance.
 The
 .Nm
-interface is responsible for keeping the object's projection in sync, and
-adjusting the motion offsets of its noderefs in response to movement.
+interface is responsible for keeping the object's projection in sync.
+When an object is in motion, a two-dimensional "motion" offset (kept in the
+.Ft position
+structure) is incremented at a specific rate, until it leaves the tile area
 .nr nS 1
 .Ft "int"
 .Fn object_set_projmap "void *obj" "const char *map_name"
