@@ -1,18 +1,17 @@
-#	$Csoft: Makefile,v 1.17 2003/07/28 04:37:01 vedge Exp $
+#	$Csoft: Makefile,v 1.18 2003/08/06 04:11:30 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 LIB=	monitor
 SRCS=	monitor.c widget_browser.c view_params.c screenshot.c
-OBJS=	monitor.o widget_browser.o view_params.o screenshot.o
 
+XCF=		toolbar.xcf monitor.xcf
 DEN=		monitor.den
 DEN_DIR=	engine/monitor
 DEN_NAME=	"Debug monitor icons"
 DEN_AUTHOR=	"vedge@"
 DEN_COPYRIGHT=	"2002, 2003 CubeSoft Communications, Inc."
-XCF=		toolbar.xcf monitor.xcf
 
 CFLAGS+=${SDL_CFLAGS} ${JPEG_CFLAGS}
 
