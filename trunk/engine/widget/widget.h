@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.24 2002/07/07 06:34:25 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.25 2002/07/09 09:29:25 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -17,6 +17,7 @@ struct widget {
 	
 	char	*type;			/* Widget type identifier */
 	struct	window *win;		/* Parent window */
+	struct	region *reg;		/* Parent region */
 	int	rw, rh;			/* Requested geometry (%) */
 	int	x, y;			/* Allocated coordinates in window */
 	int	w, h;			/* Allocated geometry */
