@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.26 2003/03/18 02:54:29 vedge Exp $
+.\"	$Csoft: object.3,v 1.27 2003/03/22 04:26:02 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -173,28 +173,13 @@ and the result is NUL-terminated.
 .Fn object_path
 returns 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
-Agar organizes maps in such a way that an arbitrary amount of node items
-(noderefs) may point to specific data associated with specific objects.
-Objects that wish to assume a unique position on a map store a back reference
-in the
-.Va pos
-member of the
-.Nm
-structure.
-If
-.Va pos
-is not
-.Dv NULL ,
-it points to a structure describing the map, the node coordinates and the
-noderef which represents this object.
-.Pp
-The noderef representing the object does not have the
-.Dv NODEREF_SAVEABLE
-flag set, so the noderef will not be included in
-.Xr map 3
-states.
-Instead, the object implementations manually handle creation, loading and
-saving of these noderefs.
+Agar maintains a stack of noderef structures for each node on a
+.Xr map 3 .
+Some types of noderefs point to specific data associated with an
+.Nm ,
+such as sprites or animations.
+Objects like game characters store a back reference to a unique position
+on the map as well.
 .Pp
 .nr nS 1
 .Ft "void"
@@ -213,7 +198,7 @@ saving of these noderefs.
 .Pp
 The
 .Fn object_set_position
-function points an object's position to
+function sets the object's unique position to
 .Fa nref
 on the node at the
 .Fa x ,
