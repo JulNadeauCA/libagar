@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.96 2003/10/09 22:39:28 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.97 2003/10/11 04:31:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -90,10 +90,7 @@ struct object {
 	Uint32		 data_used;		/* Derivate data ref count */
 
 	struct object_position	*pos;		/* Position on a map */
-
-	pthread_mutex_t		 events_lock;
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
-	pthread_mutex_t		 props_lock;
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 
 	/* Uses linkage_lock */

@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.49 2003/09/14 02:29:52 vedge Exp $
+.\"	$Csoft: object.3,v 1.50 2003/10/11 04:24:53 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -513,15 +513,6 @@ The behavior of objects when this occurs requires special attention.
 .Pp
 Code should be careful not to rely on an object's absolute path being constant,
 since it is possible to move objects between different parents.
-.Pp
-The
-.Va events_lock ,
-.Va props_lock
-and
-.Va lock
-members of the
-.Nm
-structure could be replaced by a single lock.
 .Pp
 Eventually, if media types other than gfx/audio is required, the
 .Nm
