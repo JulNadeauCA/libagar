@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.43 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.44 2002/11/28 07:19:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -9,7 +9,9 @@
 #include <engine/mcconfig.h>
 
 #if !defined(__OpenBSD__)
+# ifndef _XOPEN_SOURCE
 # define _XOPEN_SOURCE 500	/* For recursive mutexes and pread()/pwrite() */
+# endif
 #endif
 
 #include <sys/types.h>
@@ -28,8 +30,6 @@
 # define pthread_mutexattr_t	int
 # define pthread_t		int
 #endif
-
-#undef _XOPEN_SOURCE
 
 #include <SDL.h>		 /* For SDL types */
 
