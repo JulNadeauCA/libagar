@@ -43,6 +43,7 @@ enum {
 };
 
 static void	mapdir_change(struct mapdir *, struct noderef *);
+static void	mapdir_setsprite(struct mapdir *, Uint32, int);
 
 void
 gendir_init(struct gendir *dir)
@@ -118,14 +119,6 @@ gendir_postmove(struct gendir *dir, Uint32 moved)
 	} else {
 		dir->noffs++;
 	}
-
-#if 0
-	/* Set this direction (eg. key press). */
-	if (dir->set != 0) {
-		dir->current |= dir->set;
-		dir->set = 0;
-	}
-#endif
 }
 
 void
@@ -158,6 +151,22 @@ mapdir_set(struct mapdir *dir, Uint32 direction, Uint32 set)
 	}
 }
 
+static void
+mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
+{
+	struct noderef *nref = dir->ob->pos->nref;
+
+	nref->offs = sprite;
+
+	if (isanim) {
+		nref->flags |= MAPREF_ANIM;
+		nref->flags &= ~(MAPREF_SPRITE);
+	} else {
+		nref->flags |= MAPREF_SPRITE;
+		nref->flags &= ~(MAPREF_ANIM);
+	}
+}
+
 /*
  * Change map direction if necessary. X/Y velocity values are
  * mutually exclusive, and so are direction flags.
@@ -166,6 +175,8 @@ static void
 mapdir_change(struct mapdir *dir, struct noderef *nref)
 {
 	if (dir->set & DIR_UP) {
+		mapdir_setsprite(dir, DIR_ANIM_MOVEUP, 1);
+
 		dir->set &= ~(DIR_UP);
 		nref->yoffs = -1;
 		dir->current |= DIR_UP;
@@ -175,6 +186,8 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 		dir->current &= ~(DIR_RIGHT);
 	}
 	if (dir->set & DIR_DOWN) {
+		mapdir_setsprite(dir, DIR_ANIM_MOVEDOWN, 1);
+
 		dir->set &= ~(DIR_DOWN);
 		nref->yoffs = 1;
 		dir->current |= DIR_DOWN;
@@ -184,6 +197,8 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 		dir->current &= ~(DIR_RIGHT);
 	}
 	if (dir->set & DIR_LEFT) {
+		mapdir_setsprite(dir, DIR_ANIM_MOVELEFT, 1);
+
 		dir->set &= ~(DIR_LEFT);
 		nref->xoffs = -1;
 		dir->current |= DIR_LEFT;
@@ -193,6 +208,8 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 		dir->current &= ~(DIR_DOWN);
 	}
 	if (dir->set & DIR_RIGHT) {
+		mapdir_setsprite(dir, DIR_ANIM_MOVERIGHT, 1);
+
 		dir->set &= ~(DIR_RIGHT);
 		nref->xoffs = 1;
 		dir->current |= DIR_RIGHT;
@@ -380,21 +397,29 @@ mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 			dir->current &= ~(DIR_UP);
 			dir->clear &= ~(DIR_UP);
 			nref->yoffs = 0;
+		
+			mapdir_setsprite(dir, DIR_SPRITE_UP, 0);
 		}
 		if (dir->clear & DIR_DOWN) {
 			dir->current &= ~(DIR_DOWN);
 			dir->clear &= ~(DIR_DOWN);
 			nref->yoffs = 0;
+			
+			mapdir_setsprite(dir, DIR_SPRITE_DOWN, 0);
 		}
 		if (dir->clear & DIR_LEFT) {
 			dir->current &= ~(DIR_LEFT);
 			dir->clear &= ~(DIR_LEFT);
 			nref->xoffs = 0;
+			
+			mapdir_setsprite(dir, DIR_SPRITE_LEFT, 0);
 		}
 		if (dir->clear & DIR_RIGHT) {
 			dir->current &= ~(DIR_RIGHT);
 			dir->clear &= ~(DIR_RIGHT);
 			nref->xoffs = 0;
+			
+			mapdir_setsprite(dir, DIR_SPRITE_RIGHT, 0);
 		}
 	}
 
