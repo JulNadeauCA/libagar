@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.16 2002/02/21 02:18:10 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.17 2002/02/23 02:53:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -47,7 +47,9 @@ static int mapw = 64, maph = 64;
 static int tilew = 32, tileh = 32;
 static int mapediting;
 
-static SDL_Joystick *joy = NULL;
+struct input *keyboard = NULL;
+struct input *joy = NULL;
+struct input *mouse = NULL;
 
 static void printusage(char *);
 
@@ -70,7 +72,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 	extern int xcf_debug;
 
 	curmapedit = NULL;
-	curchar = NULL;
 
 	njoy = 0;
 	mapediting = 0;
@@ -140,16 +141,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
 		njoy = -1;
 	}
-	if (njoy >= 0) {
-		joy = SDL_JoystickOpen(njoy);
-		if (joy != NULL) {
-			dprintf("using joystick #%d: %s\n",
-			    njoy, SDL_JoystickName(njoy));
-			SDL_JoystickEventState(SDL_ENABLE);
-		} else if (njoy > 0) {
-			warning("no joystick at #%d\n", njoy);
-		}
-	}
+
 	if (flags & SDL_FULLSCREEN) {
 		/* Give the new mode some time to take effect. */
 		SDL_Delay(1000);
@@ -171,6 +163,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 		fatal("world_create\n");
 		return (-1);
 	}
+	
+	/* Initialize input devices. */
+	keyboard = input_create(INPUT_KEYBOARD, 0);
+	joy = input_create(INPUT_JOY, njoy);
+	mouse = input_create(INPUT_MOUSE, 0);
 
 	return (0);
 }
@@ -203,10 +200,6 @@ void
 engine_destroy(void)
 {
 	object_destroy(world);
-
-	if (joy != NULL) {
-		SDL_JoystickClose(joy);
-	}
 
 	SDL_Quit();
 	exit(0);
