@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.112 2004/05/15 06:07:12 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.113 2004/06/18 03:03:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -55,6 +55,7 @@ struct object {
 #define OBJECT_STATIC		0x20	/* Don't free() after detach */
 #define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
 #define OBJECT_WAS_RESIDENT	0x80	/* Used internally by object_load() */
+#define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
 				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY)
 #define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT)
