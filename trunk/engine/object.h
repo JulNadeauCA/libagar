@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.87 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.88 2003/07/08 00:34:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -14,6 +14,12 @@
 struct map;
 struct input;
 struct event;
+
+enum object_page_item {
+	OBJECT_GFX,		/* Shared graphics */
+	OBJECT_AUDIO,		/* Shared audio samples */
+	OBJECT_DATA		/* Object data */
+};
 
 struct object_ops {
 	void	(*init)(void *, const char *);		/* Initialize */
@@ -41,9 +47,10 @@ struct object_dep {
 	TAILQ_ENTRY(object_dep) deps;
 };
 
-#define OBJECT_TYPE_MAX		32
-#define OBJECT_NAME_MAX		64
-#define OBJECT_PATH_MAX		1024
+#define OBJECT_TYPE_MAX	32
+#define OBJECT_NAME_MAX	64
+#define OBJECT_PATH_MAX	1024
+#define OBJECT_MAX_USED	(0xffffffff-2)
 
 TAILQ_HEAD(objectq, object);
 
@@ -52,19 +59,24 @@ struct object {
 	char	 name[OBJECT_NAME_MAX];		/* Identifier */
 	char	*save_pfx;			/* Save dir prefix */
 
-	struct gfx	*gfx;			/* Associated graphics */
-	struct audio	*audio;			/* Associated audio samples */
-	
 	const struct object_ops	*ops;		/* Generic operations */
 
 	int	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't free props before load */
 #define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible by user
-					   (advisory flag only) */
+#define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible (advisory) */
+#define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 
-	pthread_mutex_t		 lock;
+	pthread_mutex_t	 lock;
+	struct gfx	*gfx;			/* Associated graphics */
+	char		*gfx_name;		/* Gfx to fetch */
+	Uint32		 gfx_used;		/* Gfx ref count */
+	struct audio	*audio;			/* Associated audio samples */
+	char		*audio_name;		/* Audio to fetch */
+	Uint32		 audio_used;		/* Audio ref count */
+	Uint32		 data_used;		/* Derivate data ref count */
+
 	struct object_position	*pos;		/* Position on a map */
 
 	pthread_mutex_t		 events_lock;
@@ -83,7 +95,6 @@ struct object {
 #define OBJECT_ICON(ob)	(((ob)->gfx != NULL && (ob)->gfx->nsprites > 0) ? \
 			 SPRITE(ob, 0) : NULL)
 
-#define OBJECT_NAME(ob, n)	(strcmp(OBJECT(ob)->name, (n)) == 0)
 #define OBJECT_TYPE(ob, t)	(strcmp(OBJECT(ob)->type, (t)) == 0)
 
 #define OBJECT_FOREACH_CHILD(var, ob, type)				\
@@ -100,6 +111,16 @@ __BEGIN_DECLS
 struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
 void		 object_reinit(void *);
+int		 object_load(void *);
+int		 object_load_data(void *);
+int		 object_save(void *);
+int		 object_destroy(void *);
+#ifdef EDITION
+struct window	*object_edit(void *);
+#endif
+
+int	 object_page_in(void *, enum object_page_item);
+int	 object_page_out(void *, enum object_page_item);
 
 void	 object_set_type(void *, const char *);
 void	 object_set_name(void *, const char *);
@@ -115,14 +136,6 @@ int	 object_copy_filename(const void *, char *, size_t);
 void		*object_find(const char *);
 __inline__ void	*object_root(void *);
 __inline__ int	 object_used(void *);
-
-int	 object_load(void *);
-int	 object_save(void *);
-int	 object_destroy(void *);
-
-#ifdef EDITION
-struct window	*object_edit(void *);
-#endif
 
 int	 object_free_childs(struct object *);
 void	 object_free_props(struct object *);
@@ -141,7 +154,7 @@ int	 object_load_position(void *, struct netbuf *);
 
 struct object_dep	 *object_add_dep(void *, void *);
 __inline__ struct object *object_find_dep(const void *, Uint32);
-Uint32			  object_dep_index(const void *, const struct object *);
+Uint32			  object_dep_index(const void *, const void *);
 void			  object_del_dep(void *, const void *);
 __END_DECLS
 

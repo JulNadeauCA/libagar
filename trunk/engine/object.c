@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.139 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.140 2003/07/08 00:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -115,7 +115,12 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->parent = NULL;
 	ob->flags = 0;
 	ob->gfx = NULL;
+	ob->gfx_name = NULL;
+	ob->gfx_used = 0;
 	ob->audio = NULL;
+	ob->audio_name = NULL;
+	ob->audio_used = 0;
+	ob->data_used = 0;
 	ob->pos = NULL;
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->childs);
@@ -158,6 +163,8 @@ object_reinit(void *p)
 		TAILQ_REMOVE(&ob->deps, dep, deps);
 		free(dep);
 	}
+
+	ob->flags &= ~(OBJECT_DATA_RESIDENT);
 }
 
 /* Recursive function to construct absolute object names. */
@@ -172,7 +179,7 @@ object_name_search(const void *obj, char *path, size_t path_len)
 	name_len = strlen(ob->name)+1;
 	
 	if (sizeof("/")+name_len+sizeof("/")+cur_len >= path_len) {
-		error_set(_("The path exceeds >= %lu bytes"),
+		error_set(_("The path exceeds >= %lu bytes."),
 		    (unsigned long)path_len);
 		return (-1);
 	}
@@ -222,7 +229,7 @@ object_root(void *obj)
 		}
 		ob = ob->parent;
 	}
-	fatal("no root?");
+	return (NULL);
 }
 
 /*
@@ -459,12 +466,12 @@ object_destroy(void *p)
 
 	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
-		ob->gfx = NULL;
 	}
 	if (ob->audio != NULL) {
 		audio_unused(ob->audio);
-		ob->audio = NULL;
 	}
+	Free(ob->gfx_name);
+	Free(ob->audio_name);
 
 	object_free_props(ob);
 	object_free_events(ob);
@@ -509,47 +516,180 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 	return (-1);
 }
 
-/* Load the state of an object and its descendants. */
+/* Page in or increment reference counts on media/data. */
+int
+object_page_in(void *p, enum object_page_item item)
+{
+	struct object *ob = p;
+
+	dprintf("%s\n", ob->name);
+
+	pthread_mutex_lock(&ob->lock);
+	switch (item) {
+	case OBJECT_GFX:
+		dprintf("gfx of %s: %s; used = %u++\n", ob->name, ob->gfx_name,
+		    ob->gfx_used);
+		if (ob->gfx_name == NULL) {
+			error_set(_("The `%s' object contains no graphics."));
+			goto fail;
+		}
+		/* XXX deal with existing gfx */
+		if (ob->gfx == NULL &&
+		    gfx_fetch(ob, ob->gfx_name) == -1) {
+			goto fail;
+		}
+		if (++ob->gfx_used > OBJECT_MAX_USED) {
+			ob->gfx_used = OBJECT_MAX_USED;
+		}
+		break;
+	case OBJECT_AUDIO:
+		dprintf("audio of %s: %s; used = %u++\n", ob->name,
+		    ob->audio_name, ob->audio_used);
+		if (ob->gfx_name == NULL) {
+			error_set(_("The `%s' object contains no audio."));
+			goto fail;
+		}
+		/* XXX deal with existing audio */
+		if (ob->audio == NULL &&
+		    audio_fetch(ob, ob->audio_name) == -1) {
+			goto fail;
+		}
+		if (++ob->audio_used > OBJECT_MAX_USED) {
+			ob->audio_used = OBJECT_MAX_USED;
+		}
+		break;
+	case OBJECT_DATA:
+		dprintf("data of %s; used = %u++\n", ob->name, ob->data_used);
+		if (ob->data_used == 0) {
+			if (object_load_data(ob) == -1) {
+				dprintf("%s: %s\n", ob->name, error_get());
+				/*
+				 * Assume that this failure means the data has
+				 * never been saved before.
+				 */
+				ob->flags |= OBJECT_DATA_RESIDENT;
+			}
+		}
+		if (++ob->data_used > OBJECT_MAX_USED) {
+			ob->data_used = OBJECT_MAX_USED;
+		}
+		break;
+	}
+	pthread_mutex_unlock(&ob->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	return (-1);
+}
+
+/*
+ * Page out or decrement reference counts on media/data (unless the
+ * reference count has reached the maximum).
+ */
+int
+object_page_out(void *p, enum object_page_item item)
+{
+	struct object *ob = p;
+
+	dprintf("%s\n", ob->name);
+
+	pthread_mutex_lock(&ob->lock);
+	switch (item) {
+	case OBJECT_GFX:
+		dprintf("%s: -gfx (used=%u)\n", ob->name, ob->gfx_used);
+#ifdef DEBUG
+		if (((long)ob->gfx_used-1) < 0)
+			fatal("neg gfx ref count");
+#endif
+		if (ob->gfx_used != OBJECT_MAX_USED &&
+		    --ob->gfx_used == 0) {
+			dprintf("%s: gc gfx\n", ob->name);
+			gfx_unused(ob->gfx);
+			ob->gfx = NULL;
+		}
+		break; 
+	case OBJECT_AUDIO:
+#ifdef DEBUG
+		if (((long)ob->audio_used-1) < 0)
+			fatal("neg audio ref count");
+#endif
+		dprintf("%s: -audio (used=%u)\n", ob->name, ob->audio_used);
+		if (ob->audio_used != OBJECT_MAX_USED &&
+		    --ob->audio_used == 0) {
+			dprintf("%s: gc audio\n", ob->name);
+			audio_unused(ob->audio);
+			ob->audio = NULL;
+		}
+		break;
+	case OBJECT_DATA:
+		dprintf("%s: -data (used=%u)\n", ob->name, ob->data_used);
+#ifdef DEBUG
+		if (((long)ob->data_used-1) < 0)
+			fatal("neg data ref count");
+#endif
+		if (ob->data_used != OBJECT_MAX_USED &&
+		    --ob->data_used == 0) {
+			dprintf("gc data\n");
+			if (object_save(ob) == -1) {
+				goto fail;
+			}
+			object_reinit(ob);
+		}
+		break;
+	}
+	pthread_mutex_unlock(&ob->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	return (-1);
+}
+
+/* Load the generic part of an object and its descendants and invoke reinit. */
 int
 object_load(void *p)
 {
 	char path[MAXPATHLEN];
 	struct object *ob = p;
 	struct netbuf *buf;
-	char *gfx, *audio;
-	Uint32 count, i;
-	int ti;
+	Uint32 count, i, flags;
+	int ti, flags_save;
+	
+	lock_linkage();
+	pthread_mutex_lock(&ob->lock);
 
+	flags_save = ob->flags;
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
 		error_set(_("The `%s' object is non-persistent."), ob->name);
-		return (-1);
+		goto fail_lock;
 	}
-
 	if (object_copy_filename(ob, path, sizeof(path)) == -1)
-		return (-1);
+		goto fail_lock;
 
 	debug(DEBUG_STATE, "%s: %s\n", ob->name, path);
 
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
-		return (-1);
+		goto fail_lock;
 	}
 	if (version_read(buf, &object_ver, NULL) == -1) {
-		netbuf_close(buf);
-		return (-1);
+		goto fail;
 	}
-
-	lock_linkage();
 
 	/* Reinitialize the state of the object; clear the dependencies. */
 	object_reinit(ob);
 
+	/* Ignore the data offset, it is only used by object_load_data(). */
+	read_uint32(buf);
+
 	/* Read the object flags. */
-	ob->flags = (int)read_uint32(buf);
-	if (ob->flags & OBJECT_NON_PERSISTENT) {
+	flags = read_uint32(buf);
+	if (flags & (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT)) {
 		error_set(_("The `%s' save has inconsistent flags."), ob->name);
-		return (-1);
+		goto fail;
 	}
+
+	ob->flags = (int)flags;
+	ob->flags |= (flags_save & OBJECT_DATA_RESIDENT);
 
 	/* Decode and resolve the saved dependencies. */
 	/* XXX too early */
@@ -579,41 +719,32 @@ object_load(void *p)
 		goto fail;
 
 	/* Decode and restore the position. */
-	pthread_mutex_lock(&ob->lock);
 	if (read_uint32(buf) > 0 &&
-	    object_load_position(ob, buf) == -1) {
-		pthread_mutex_unlock(&ob->lock);
+	    object_load_position(ob, buf) == -1)
 		goto fail;
-	}
-	pthread_mutex_unlock(&ob->lock);
 
-	/* Decode and fetch the associated gfx/audio packages. */
-	if ((gfx = read_string(buf)) != NULL) {
-		dprintf("%s: gfx: %s\n", ob->name, gfx);
-		if (gfx_fetch(ob, gfx) == -1) {
-			goto fail;
-		}
-		free(gfx);
-	}
-	if ((audio = read_string(buf)) != NULL) {
-		dprintf("%s: audio: %s\n", ob->name, audio);
-		if (audio_fetch(ob, audio) == -1) {
-			goto fail;
-		}
-		free(audio);
-	}
+	/* Decode the graphics/audio references (resolved later). */
+	/* XXX deal with existing refs */
+	Free(ob->gfx_name);
+	Free(ob->audio_name);
+	ob->gfx_name = read_string(buf);
+	ob->audio_name = read_string(buf);
+	dprintf("%s: audio=%s, gfx=%s\n", ob->name, ob->audio_name,
+	    ob->gfx_name);
 
 	/*
 	 * Load the child objects.
 	 *
 	 * If an saved object matches an attached object's name and type,
-	 * invoke reinit/load on it. Otherwise, allocate and attach a new
-	 * object from scratch using the type switch.
+	 * invoke reinit on it (and reload its data if it is resident).
+	 * Otherwise, allocate and attach a new object from scratch using
+	 * the type switch.
 	 *
 	 * Try to destroy the attached objects which do not have saved
 	 * states, and are not currently in use.
 	 *
 	 * XXX ensure that there is no duplicate names.
+	 * XXX destroy unmatched objects.
 	 */
 	count = read_uint32(buf);
 	for (i = 0; i < count; i++) {
@@ -639,7 +770,6 @@ object_load(void *p)
 			}
 			dprintf("%s: reinit %s (existing)\n", ob->name,
 			    eob->name);
-			object_reinit(eob);
 
 			if (object_load(eob) == -1)
 				goto fail;
@@ -674,22 +804,91 @@ object_load(void *p)
 		}
 	}
 
+	/* Reload the data only if it is currently resident. */
+	if (ob->flags & OBJECT_DATA_RESIDENT) {
+		dprintf("%s: resident/reload\n", ob->name);
+		if (ob->ops->load != NULL &&
+		    ob->ops->load(ob, buf) == -1)
+			goto fail;
+	} else {
+		dprintf("%s: not resident/ignore\n", ob->name);
+	}
+
+	netbuf_close(buf);
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
+	return (0);
+fail:
+	object_reinit(ob);
+	netbuf_close(buf);
+fail_lock:
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
+	return (-1);
+}
+
+/*
+ * Load object data. Called as part of a page in operation and for reading
+ * data when saving a non-resident object.
+ *
+ * XXX no provision for saved data being out of sync with the generic object.
+ */
+int
+object_load_data(void *p)
+{
+	struct object *ob = p;
+	char path[MAXPATHLEN];
+	struct netbuf *buf;
+	off_t data_offs;
+
+	lock_linkage();
+	pthread_mutex_lock(&ob->lock);
+
+	dprintf("%s\n", ob->name);
+
+	if (ob->flags & OBJECT_DATA_RESIDENT) {
+		error_set(_("The data of `%s' is already resident."), ob->name);
+		goto fail_lock;
+	}
+
+	if (object_copy_filename(ob, path, sizeof(path)) == -1) {
+		goto fail_lock;
+	}
+	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
+		error_set("%s: %s", path, strerror(errno));
+		goto fail_lock;
+	}
+
+	if (version_read(buf, &object_ver, NULL) == -1)
+		goto fail;
+
+	/* Seek to the beginning of the data. */
+	data_offs = (off_t)read_uint32(buf);
+	netbuf_seek(buf, data_offs, SEEK_SET);
+
+	/* Read the object data, mark it as resident. */
 	if (ob->ops->load != NULL &&
 	    ob->ops->load(ob, buf) == -1) {
 		goto fail;
 	}
+	ob->flags |= OBJECT_DATA_RESIDENT;
 
-	unlock_linkage();
 	netbuf_close(buf);
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
 	return (0);
 fail:
-	object_reinit(ob);
-	unlock_linkage();
 	netbuf_close(buf);
+fail_lock:
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
 	return (-1);
 }
 
-/* Recursively save the state of an object and its descendents. */
+/*
+ * Save the state of an object and its descendents.
+ * If the data is not resident, it is paged in and saved.
+ */
 int
 object_save(void *p)
 {
@@ -701,15 +900,19 @@ object_save(void *p)
 	struct stat sta;
 	struct netbuf *buf;
 	struct object *child;
-	off_t count_offs;
+	off_t count_offs, data_offs;
 	Uint32 count;
 	struct object_dep *dep;
+	int resident;
 	
+	lock_linkage();
+	pthread_mutex_lock(&ob->lock);
+
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
 		error_set(_("The `%s' object is non-persistent."), ob->name);
-		return (-1);
+		goto fail_lock;
 	}
-
+	resident = ob->flags & OBJECT_DATA_RESIDENT;
 	object_copy_name(ob, obj_name, sizeof(obj_name));
 	
 	/* Create the save directory. */
@@ -722,24 +925,38 @@ object_save(void *p)
 	if (stat(save_dir, &sta) == -1 &&
 	    mkpath(save_dir, 0700, 0700) == -1) {
 		error_set("mkpath %s: %s", save_dir, strerror(errno));
-		return (-1);
+		goto fail_lock;
 	}
 
-	/* Open the data file. */
+	/* Page in the data unless it is already resident. */
+	if (!resident) {
+		dprintf("paging in for saving purposes\n");
+		if (object_load_data(ob) == -1) {
+			/*
+			 * Assume that this failure means the data has never
+			 * been saved before.
+			 */
+			ob->flags |= OBJECT_DATA_RESIDENT;
+		}
+	}
+
 	strlcpy(save_file, save_dir, sizeof(save_file));
 	strlcat(save_file, "/", sizeof(save_file));
 	strlcat(save_file, ob->name, sizeof(save_file));
 	strlcat(save_file, ".", sizeof(save_file));
 	strlcat(save_file, ob->type, sizeof(save_file));
+
 	debug(DEBUG_STATE, "saving `%s' to `%s'\n", ob->name, save_file);
 	if ((buf = netbuf_open(save_file, "wb", NETBUF_BIG_ENDIAN)) == NULL)
-		return (-1);
+		goto fail_reinit;
 
 	version_write(buf, &object_ver);
 
-	lock_linkage();
-	
-	/* Encode the saveable object flags. */
+	/* Skip the data offset. */
+	data_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+
+	/* Encode the object generic flags. */
 	write_uint32(buf, (Uint32)(ob->flags & OBJECT_SAVED_FLAGS));
 
 	/* Encode the object dependencies. */
@@ -759,21 +976,18 @@ object_save(void *p)
 	/* Encode the generic properties. */
 	if (prop_save(ob, buf) == -1)
 		goto fail;
-
+	
 	/* Encode the position. */
-	pthread_mutex_lock(&ob->lock);
 	if (ob->pos != NULL) {
 		write_uint32(buf, 1);
 		object_save_position(ob, buf);
 	} else {
 		write_uint32(buf, 0);
 	}
-	pthread_mutex_unlock(&ob->lock);
-
 	/* Encode the media references. */
-	write_string(buf, ob->gfx != NULL ? ob->gfx->name : NULL);
-	write_string(buf, ob->audio != NULL ? ob->audio->name : NULL);
-
+	write_string(buf, ob->gfx_name);
+	write_string(buf, ob->audio_name);
+	
 	/* Save the child objects. */
 	count_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
@@ -792,19 +1006,31 @@ object_save(void *p)
 	}
 	pwrite_uint32(buf, count, count_offs);
 
+	/* Write the data offset. */
+	dprintf("doffs = 0x%lx\n", (unsigned long)netbuf_tell(buf));
+	pwrite_uint32(buf, netbuf_tell(buf), data_offs);
+
 	/* Save the object derivate data. */
 	if (ob->ops->save != NULL &&
-	    ob->ops->save(ob, buf) == -1) {
+	    ob->ops->save(ob, buf) == -1)
 		goto fail;
-	}
 
-	unlock_linkage();
 	netbuf_flush(buf);
 	netbuf_close(buf);
+	if (!resident) {
+		object_reinit(ob);
+	}
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
 	return (0);
 fail:
-	unlock_linkage();
 	netbuf_close(buf);
+fail_reinit:
+	if (!resident)
+		object_reinit(ob);
+fail_lock:
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
 	return (-1);
 }
 
@@ -1032,11 +1258,11 @@ object_save_position(const void *p, struct netbuf *buf)
 int
 object_load_position(void *p, struct netbuf *buf)
 {
+	char submap_id[OBJECT_PATH_MAX];
+	char input_id[OBJECT_PATH_MAX];
 	int x, y, layer, center;
 	struct object *ob = p;
 	struct map *m = ob->parent;
-	char submap_id[OBJECT_PATH_MAX];
-	char input_id[OBJECT_PATH_MAX];
 
 	pthread_mutex_lock(&ob->lock);
 	pthread_mutex_lock(&m->lock);
@@ -1160,9 +1386,10 @@ object_find_dep(const void *p, Uint32 ind)
 
 /* Return the index of a dependency (ie. for save routines). */
 Uint32
-object_dep_index(const void *p, const struct object *depobj)
+object_dep_index(const void *p, const void *depobjp)
 {
 	const struct object *ob = p;
+	const struct object *depobj = depobjp;
 	struct object_dep *dep;
 	Uint32 i;
 
@@ -1211,9 +1438,10 @@ object_del_dep(void *p, const void *depobj)
 }
 
 #ifdef EDITION
+
 /* Update the dependencies display. */
 static void
-poll_deps(int argc, union evarg *argv)
+object_poll_deps(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
@@ -1301,13 +1529,20 @@ select_gfx(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	char *text = argv[2].s;
+	
+	Free(ob->gfx_name);
 
 	if (text[0] == '\0' && ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
 		ob->gfx = NULL;
+		ob->gfx_name = NULL;
 	} else {
-		if (gfx_fetch(ob, text) == -1)
+		if (gfx_fetch(ob, text) == -1) {
 			text_msg(MSG_ERROR, "%s", error_get());
+			ob->gfx_name = NULL;
+		} else {
+			ob->gfx_name = Strdup(text);
+		}
 	}
 }
 
@@ -1320,9 +1555,14 @@ select_audio(int argc, union evarg *argv)
 	if (text[0] == '\0' && ob->audio != NULL) {
 		audio_unused(ob->audio);
 		ob->audio = NULL;
+		ob->audio_name = NULL;
 	} else {
-		if (audio_fetch(ob, text) == -1)
+		if (audio_fetch(ob, text) == -1) {
 			text_msg(MSG_ERROR, "%s", error_get());
+			ob->audio_name = NULL;
+		} else {
+			ob->audio_name = Strdup(text);
+		}
 	}
 }
 
@@ -1343,10 +1583,13 @@ object_edit(void *p)
 	object_copy_name(ob, obj_name, sizeof(obj_name));
 	label_new(win, _("Name: %s (%s)"), ob->name, obj_name);
 	label_new(win, _("Type: %s"), ob->type);
-	label_new(win, _("Flags : 0x%02x"), ob->flags);
+	label_polled_new(win, &ob->lock, _("Flags : 0x%x"), &ob->flags);
 
-	label_polled_new(win, NULL, _("Parent: %[obj]"), &ob->parent);
+	label_polled_new(win, &linkage_lock, _("Parent: %[obj]"), &ob->parent);
 	label_polled_new(win, &ob->lock, "Pos: %p", &ob->pos);
+	label_polled_new(win, &ob->lock,
+	    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]",
+	    &ob->gfx_used, &ob->audio_used, &ob->data_used);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
@@ -1362,10 +1605,10 @@ object_edit(void *p)
 		event_new(gfx_com, "combo-selected", select_gfx, "%p", ob);
 		event_new(aud_com, "combo-selected", select_audio, "%p", ob);
 
-		if (ob->gfx != NULL)
-			textbox_printf(gfx_com->tbox, "%s", ob->gfx->name);
-		if (ob->audio != NULL)
-			textbox_printf(aud_com->tbox, "%s", ob->audio->name);
+		if (ob->gfx_name != NULL)
+			textbox_printf(gfx_com->tbox, "%s", ob->gfx_name);
+		if (ob->audio_name != NULL)
+			textbox_printf(aud_com->tbox, "%s", ob->audio_name);
 
 		prop_copy_string(config, "den-path", den_path,
 		    sizeof(den_path));
@@ -1400,8 +1643,8 @@ object_edit(void *p)
 
 		label_new(bo, _("Dependencies:"));
 		tl = tlist_new(bo, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 4);
-		event_new(tl, "tlist-poll", poll_deps, "%p", ob);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 2);
+		event_new(tl, "tlist-poll", object_poll_deps, "%p", ob);
 	}
 	return (win);
 }
