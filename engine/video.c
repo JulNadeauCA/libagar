@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.7 2002/01/28 05:08:23 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.8 2002/01/28 05:23:15 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -40,7 +40,9 @@
 #include <pthread.h>
 
 #include <SDL.h>
+#ifdef CONF_X11
 #include <SDL_syswm.h>
+#endif
 #include <glib.h>
 
 #include <engine/debug.h>
