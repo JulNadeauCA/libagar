@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.23 2002/03/03 06:44:20 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.24 2002/03/05 17:45:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -207,13 +207,9 @@ char_link(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		perror("world");
-		return (-1);
-	}
+	pthread_mutex_lock(&world->lock);
+	SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
+	pthread_mutex_unlock(&world->lock);
 
 	/* XXX speed */
 	ch->timer = SDL_AddTimer(ch->maxspeed / 2, char_time, ch);
@@ -230,13 +226,9 @@ char_unlink(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		perror("world");
-		return (-1);
-	}
+	pthread_mutex_lock(&world->lock);
+	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
+	pthread_mutex_unlock(&world->lock);
 
 	if (ch->timer != NULL) {
 		SDL_RemoveTimer(ch->timer);
