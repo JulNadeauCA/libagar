@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.169 2004/11/30 11:49:45 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.170 2004/12/17 03:19:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -737,17 +737,38 @@ mouse_buttondown(int argc, union evarg *argv)
 {
 	extern int magnifier_zoom_inc;
 	struct mapview *mv = argv[0].p;
+	struct map *m = mv->map;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
 	int xoff, yoff;
+	struct tool *tool;
 
 	widget_focus(mv);
 
-	pthread_mutex_lock(&mv->map->lock);
+	pthread_mutex_lock(&m->lock);
 	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
 	if (mv->cx < 0 || mv->cy < 0)
 		goto out;
+	
+	TAILQ_FOREACH(tool, &mv->tools, tools) {
+		struct tool_mbinding *mbinding;
+
+		SLIST_FOREACH(mbinding, &tool->mbindings, mbindings) {
+			if (mbinding->button != button) {
+				continue;
+			}
+			if (mbinding->edit &&
+			   (((mv->flags & MAPVIEW_EDIT) == 0) ||
+			    ((OBJECT(m)->flags & OBJECT_READONLY)))) {
+				continue;
+			}
+			tool->mv = mv;
+			mbinding->func(tool, 1);
+			if (mbinding->override)
+				goto out;
+		}
+	}
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
@@ -777,7 +798,7 @@ mouse_buttondown(int argc, union evarg *argv)
 		if (button == 1 && mv->curtool->effect != NULL &&
 		    selbounded(mv, mv->cx, mv->cy)) {
 			mv->curtool->effect(mv->curtool,
-			    &mv->map->map[mv->cy][mv->cx]);
+			    &m->map[mv->cy][mv->cx]);
 		}
 		if (mv->curtool->mousebuttondown != NULL)
 			mv->curtool->mousebuttondown(mv->curtool,
@@ -795,23 +816,44 @@ mouse_buttondown(int argc, union evarg *argv)
 		    "dblclick-expire", NULL);
 	}
 out:
-	pthread_mutex_unlock(&mv->map->lock);
+	pthread_mutex_unlock(&m->lock);
 }
 
 static void
 mouse_buttonup(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
+	struct map *m = mv->map;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
 	int xoff, yoff;
+	struct tool *tool;
 	
-	pthread_mutex_lock(&mv->map->lock);
+	pthread_mutex_lock(&m->lock);
 	mapview_ncoords(mv, &x, &y, &xoff, &yoff);
 	if (mv->cx < 0 || mv->cy < 0) {
 		mv->mouse.scrolling = 0;
 		goto out;
+	}
+	
+	TAILQ_FOREACH(tool, &mv->tools, tools) {
+		struct tool_mbinding *mbinding;
+
+		SLIST_FOREACH(mbinding, &tool->mbindings, mbindings) {
+			if (mbinding->button != button) {
+				continue;
+			}
+			if (mbinding->edit &&
+			   (((mv->flags & MAPVIEW_EDIT) == 0) ||
+			    ((OBJECT(m)->flags & OBJECT_READONLY)))) {
+				continue;
+			}
+			tool->mv = mv;
+			mbinding->func(tool, 0);
+			if (mbinding->override)
+				goto out;
+		}
 	}
 
 	switch (argv[1].i) {
@@ -844,7 +886,7 @@ mouse_buttonup(int argc, union evarg *argv)
 			    xoff, yoff, button);
 	}
 out:
-	pthread_mutex_unlock(&mv->map->lock);
+	pthread_mutex_unlock(&m->lock);
 }
 
 /* Begin a mouse selection. */
