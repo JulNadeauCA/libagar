@@ -99,6 +99,7 @@ for path in $PATH; do
 	if [ -x "${path}/pwd" ]; then
 		S=`${path}/pwd `
 	fi
+done
 echo >Makefile.config
 echo >engine/mcconfig.h
 if [ "${help}" = "yes" ]
@@ -495,36 +496,42 @@ for path in $PATH; do
 	if [ -x "${path}/sdl-config" ]; then
 		sdl_version=`${path}/sdl-config --version`
 	fi
+done
 SDL_CFLAGS=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
 	fi
+done
 SDL_LIBS=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
 	fi
+done
 sdl11_version=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/sdl11-config" ]; then
 		sdl11_version=`${path}/sdl11-config --version`
 	fi
+done
 sdl11_cflags=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/sdl11-config" ]; then
 		sdl11_cflags=`${path}/sdl11-config --cflags`
 	fi
+done
 sdl11_libs=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/sdl11-config" ]; then
 		sdl11_libs=`${path}/sdl11-config --libs`
 	fi
+done
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
@@ -616,18 +623,21 @@ for path in $PATH; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_VERSION=`${path}/freetype-config --version`
 	fi
+done
 FREETYPE_CFLAGS=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
 	fi
+done
 FREETYPE_LIBS=""
 IFS=:
 for path in $PATH; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_LIBS=`${path}/freetype-config --libs`
 	fi
+done
 if [ "${FREETYPE_VERSION}" != "" ]; then
 freetype_found=yes
 echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
