@@ -1,4 +1,4 @@
-# $Csoft$
+# $Csoft: no.po,v 1.1 2003/09/24 04:40:43 geir Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -32,7 +32,7 @@ msgstr ""
 "Last-Translator: Geir Harald Hansen <geirhans@ifi.uio.no>\n"
 "Language-Team: Norwegian <no@csoft.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: cave/main.c:56 cave/main.c:97
@@ -77,7 +77,7 @@ msgstr "bredde"
 
 #: cave/main.c:211
 msgid "height"
-msgstr "høyde"
+msgstr "hÃ¸yde"
 
 #: cave/main.c:212
 msgid "frames/sec"
@@ -89,7 +89,7 @@ msgstr "skrifttype"
 
 #: cave/main.c:213
 msgid "size"
-msgstr "størrelse"
+msgstr "stÃ¸rrelse"
 
 #: cave/main.c:215
 msgid "load-path"
@@ -143,12 +143,12 @@ msgstr "Sammensetning av inndata"
 
 #: engine/config.c:246
 msgid "Right->left (Arabic, Hebrew, ...)"
-msgstr "Høyre->venstre (Arabisk, Hebraisk, ...)"
+msgstr "HÃ¸yre->venstre (Arabisk, Hebraisk, ...)"
 
 #. Thread unsafe, but not very dangerous.
 #: engine/config.c:250
 msgid "Debugging"
-msgstr "Feilsøking"
+msgstr "FeilsÃ¸king"
 
 #: engine/config.c:253
 msgid "Idle time prediction"
@@ -181,7 +181,7 @@ msgstr "Bredde: "
 
 #: engine/config.c:305
 msgid "Height: "
-msgstr "Høyde: "
+msgstr "HÃ¸yde: "
 
 #: engine/config.c:316
 msgid "Close"
@@ -193,7 +193,7 @@ msgstr "Lagre"
 
 #: engine/config.c:352
 msgid "The search path is too big."
-msgstr "Søkestien er for lang."
+msgstr "SÃ¸kestien er for lang."
 
 #: engine/config.c:358
 #, c-format
@@ -217,11 +217,11 @@ msgstr "Video maske er 0x%04x,0x%04x,0x%04x,0x%04x\n"
 
 #: engine/engine.c:147
 msgid "Window manager is available.\n"
-msgstr "Vindushåndterer er tilgjengelig.\n"
+msgstr "VindushÃ¥ndterer er tilgjengelig.\n"
 
 #: engine/engine.c:149
 msgid "Window manager is unavailable.\n"
-msgstr "Vindushåndterer er ikke tilgjengelig.\n"
+msgstr "VindushÃ¥ndterer er ikke tilgjengelig.\n"
 
 #: engine/engine.c:154
 msgid "Hardware surfaces are available.\n"
@@ -237,7 +237,7 @@ msgstr "\tMaskinvare blitter\n"
 
 #: engine/engine.c:166
 msgid "\tHardware->hardware colorkey blits\n"
-msgstr "\tMaskinvare->maskinvare fargenøkkel blitter\n"
+msgstr "\tMaskinvare->maskinvare fargenÃ¸kkel blitter\n"
 
 #: engine/engine.c:168
 msgid "\tHardware->hardware alpha blits\n"
@@ -249,7 +249,7 @@ msgstr "\tProgramvare->maskinvare blitter\n"
 
 #: engine/engine.c:173
 msgid "\tSoftware->hardware colorkey blits\n"
-msgstr "\tProgramvare->maskinvare fargenøkkel blitter\n"
+msgstr "\tProgramvare->maskinvare fargenÃ¸kkel blitter\n"
 
 #: engine/engine.c:175
 msgid "\tSoftware->hardware alpha blits\n"
@@ -433,7 +433,7 @@ msgstr "Objektet `%s' er ikke persistent."
 #: engine/object.c:743
 #, c-format
 msgid "%s: Cannot resolve dependency `%s'"
-msgstr "%s: Kan ikke løse avhengighet `%s'"
+msgstr "%s: Kan ikke lÃ¸se avhengighet `%s'"
 
 #: engine/object.c:819
 #, c-format
@@ -453,7 +453,7 @@ msgstr "Ukjent objekttype: `%s'"
 #: engine/object.c:997
 #, c-format
 msgid "The data of `%s' is already resident."
-msgstr "Data tilhørende `%s' er allerede lastet inn."
+msgstr "Data tilhÃ¸rende `%s' er allerede lastet inn."
 
 #: engine/object.c:1183
 #, c-format
@@ -462,7 +462,7 @@ msgstr "Det finnes ingen inndata-enhet ved navn `%s'."
 
 #: engine/object.c:1190
 msgid "There is no position to control."
-msgstr "Det finnes ingen posisjon å kontrollere."
+msgstr "Det finnes ingen posisjon Ã¥ kontrollere."
 
 #: engine/object.c:1276
 #, c-format
@@ -512,7 +512,7 @@ msgstr "%s person"
 
 #: engine/perso.c:170
 msgid "Level: "
-msgstr "Nivå: "
+msgstr "NivÃ¥: "
 
 #: engine/perso.c:174
 msgid "Experience: "
@@ -541,7 +541,7 @@ msgstr "Mangler minne for streng."
 #: engine/prop.c:326
 #, c-format
 msgid "Unsupported property type: %d."
-msgstr "Ustøttet egenskapstype: %d."
+msgstr "UstÃ¸ttet egenskapstype: %d."
 
 #: engine/prop.c:335
 #, c-format
@@ -550,7 +550,7 @@ msgstr "%s har ingen `%s' egenskap (type %d)."
 
 #: engine/prop.c:524
 msgid "The prop key too big."
-msgstr "Egenskapsnøkkelen er for stor."
+msgstr "EgenskapsnÃ¸kkelen er for stor."
 
 #: engine/prop.c:573
 msgid "String too big."
@@ -592,11 +592,11 @@ msgstr "Viewport allerede klargjort."
 
 #: engine/view.c:122
 msgid "Unsupported graphic mode."
-msgstr "Ustøttet grafikkmodus."
+msgstr "UstÃ¸ttet grafikkmodus."
 
 #: engine/view.c:141
 msgid "The resolution is too small."
-msgstr "Oppløsningen er for liten."
+msgstr "OpplÃ¸sningen er for liten."
 
 #: engine/view.c:148
 #, c-format
@@ -609,7 +609,7 @@ msgstr "Oppdateringsfrekvens utenfor rekkevidde."
 
 #: engine/view.c:700
 msgid "Screenshot feature requires libjpeg"
-msgstr "Støtte for tagning av skjermbilder krever libjpeg"
+msgstr "StÃ¸tte for tagning av skjermbilder krever libjpeg"
 
 #: engine/input/joy.c:39
 msgid "Joystick"
@@ -625,7 +625,7 @@ msgstr "Mus"
 
 #: engine/loader/ttf.c:107
 msgid "Font engine initialization failed."
-msgstr "Klargjøring av skriftmotor feilet."
+msgstr "KlargjÃ¸ring av skriftmotor feilet."
 
 #: engine/loader/ttf.c:134
 #, c-format
@@ -642,7 +642,7 @@ msgstr "Ugyldig TTF skrifttype."
 
 #: engine/loader/ttf.c:156
 msgid "Failed to set font size."
-msgstr "Kunne ikke sette skriftstørrelse."
+msgstr "Kunne ikke sette skriftstÃ¸rrelse."
 
 #: engine/loader/ttf.c:282
 msgid "Failed to load the TTF glyph."
@@ -737,7 +737,7 @@ msgstr "Lag NN (synlig, redigerer)"
 
 #: engine/mapedit/mapedit.c:175
 msgid "Tools"
-msgstr "Verktøy"
+msgstr "VerktÃ¸y"
 
 #: engine/mapedit/mapview.c:525
 msgid "The zoom is out of range."
@@ -783,7 +783,7 @@ msgstr "Inget objektnavn ble spesifisert."
 #: engine/mapedit/objedit.c:149
 #, c-format
 msgid "The `%s' object is indestructible."
-msgstr "Objektet `%s' kan ikke ødelegges."
+msgstr "Objektet `%s' kan ikke Ã¸delegges."
 
 #: engine/mapedit/objedit.c:174
 msgid " (resident)"
@@ -819,7 +819,7 @@ msgstr "Flytt ned"
 
 #: engine/mapedit/objedit.c:252
 msgid "Destroy"
-msgstr "Ødelegg"
+msgstr "Ã˜delegg"
 
 #: engine/mapedit/tool/eraser.c:57 engine/mapedit/tool/flip.c:61
 #: engine/mapedit/tool/shift.c:71
@@ -829,19 +829,19 @@ msgstr "Alle"
 #: engine/mapedit/tool/eraser.c:58 engine/mapedit/tool/flip.c:62
 #: engine/mapedit/tool/shift.c:70
 msgid "Highest"
-msgstr "Høyeste"
+msgstr "HÃ¸yeste"
 
 #: engine/mapedit/tool/eraser.c:69
 msgid "Eraser"
-msgstr "Viskelær"
+msgstr "ViskelÃ¦r"
 
 #: engine/mapedit/tool/fill.c:57
 msgid "Pattern fill"
-msgstr "Mønsterfylling"
+msgstr "MÃ¸nsterfylling"
 
 #: engine/mapedit/tool/fill.c:58
 msgid "Clear"
-msgstr "Tøm"
+msgstr "TÃ¸m"
 
 #: engine/mapedit/tool/fill.c:69
 msgid "Fill"
@@ -869,7 +869,7 @@ msgstr "Det finnes inget synlig kart."
 
 #: engine/mapedit/tool/magnifier.c:95
 msgid "Magnifier"
-msgstr "Forstørrelsesglass"
+msgstr "ForstÃ¸rrelsesglass"
 
 #: engine/mapedit/tool/magnifier.c:99
 msgid "1:1 zoom"
@@ -881,7 +881,7 @@ msgstr "Zoom %: "
 
 #: engine/mapedit/tool/merge.c:109
 msgid "Merge tool"
-msgstr "Sammenflettingsverktøy"
+msgstr "SammenflettingsverktÃ¸y"
 
 #: engine/mapedit/tool/merge.c:133
 msgid "Load set"
@@ -914,7 +914,7 @@ msgstr "Blokker"
 
 #: engine/mapedit/tool/propedit.c:212
 msgid "Walk"
-msgstr "Gå"
+msgstr "GÃ¥"
 
 #: engine/mapedit/tool/propedit.c:213
 msgid "Climb"
@@ -986,16 +986,16 @@ msgstr "Synsfelt"
 
 #: engine/monitor/monitor.c:81
 msgid "Debug monitor"
-msgstr "Overvåkning for feilsøking"
+msgstr "OvervÃ¥kning for feilsÃ¸king"
 
 #: engine/monitor/screenshot.c:75
 msgid "A JPEG error has occured."
-msgstr "Det har oppstått en JPEG feil."
+msgstr "Det har oppstÃ¥tt en JPEG feil."
 
 #: engine/monitor/screenshot.c:125
 #, c-format
 msgid "Transmitting frame %d"
-msgstr "Overfører bilde %d"
+msgstr "OverfÃ¸rer bilde %d"
 
 #: engine/monitor/screenshot.c:182
 msgid "Already connected to a server."
@@ -1016,7 +1016,7 @@ msgstr "kunne ikke opprette socket"
 
 #: engine/monitor/screenshot.c:215
 msgid "connection refused"
-msgstr "tilkoblingsforsøk avvist"
+msgstr "tilkoblingsforsÃ¸k avvist"
 
 #: engine/monitor/screenshot.c:228
 #, c-format
@@ -1038,7 +1038,7 @@ msgstr "Status: %s."
 
 #: engine/monitor/screenshot.c:267
 msgid "Transmitting frame XXXXXXXXXXX"
-msgstr "Overfører bilde XXXXXXXXXXX"
+msgstr "OverfÃ¸rer bilde XXXXXXXXXXX"
 
 #: engine/monitor/screenshot.c:270
 msgid "Host: "
@@ -1123,11 +1123,11 @@ msgstr "Flagg: 0x%x"
 #: engine/monitor/widget_browser.c:177
 #, c-format
 msgid "Geo: %dx%d at %d,%d (view %d,%d)"
-msgstr "Geo: %dx%d på %d,%d (synsområde %d,%d)"
+msgstr "Geo: %dx%d pÃ¥ %d,%d (synsomrÃ¥de %d,%d)"
 
 #: engine/monitor/widget_browser.c:181
 msgid "Geo: 0000x0000 at 0000x0000 (view 0000,0000)"
-msgstr "Geo: 0000x0000 på 0000x0000 (synsområde 0000,0000)"
+msgstr "Geo: 0000x0000 pÃ¥ 0000x0000 (synsomrÃ¥de 0000,0000)"
 
 #: engine/monitor/widget_browser.c:257
 #, c-format
@@ -1136,7 +1136,7 @@ msgstr "vindu %s"
 
 #: engine/monitor/widget_browser.c:270 engine/monitor/widget_browser.c:298
 msgid "Examine"
-msgstr "Undersøk"
+msgstr "UndersÃ¸k"
 
 #: engine/monitor/widget_browser.c:288
 msgid "Window stack"
@@ -1181,7 +1181,7 @@ msgstr "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
 #: screenshotd/screenshotd.c:153
 #, c-format
 msgid " %s [-vfF] [-w width] [-h height]"
-msgstr " %s [-vfF] [-w bredde] [-h høyde]"
+msgstr " %s [-vfF] [-w bredde] [-h hÃ¸yde]"
 
 #: screenshotd/screenshotd.c:155
 msgid " [-H host] [-P port]"
@@ -1189,11 +1189,11 @@ msgstr " [-H maskinnavn] [-P port]"
 
 #: screenshotd/screenshotd.c:156 sumo/sumo.c:384
 msgid " [-r fps] [-t font,size,style]"
-msgstr " [-r fps] [-t skrifttype,størrelse,stil]"
+msgstr " [-r fps] [-t skrifttype,stÃ¸rrelse,stil]"
 
 #: screenshotd/screenshotd.c:158
 msgid " [-d level] [-T]"
-msgstr " [-d nivå] [-T]"
+msgstr " [-d nivÃ¥] [-T]"
 
 #: screenshotd/server.c:100
 msgid "Too many clients."
@@ -1233,7 +1233,7 @@ msgstr "ny"
 
 #: sumo/session.c:466
 msgid "Queue"
-msgstr "Kø"
+msgstr "KÃ¸"
 
 #: sumo/session.c:470
 msgid "Start download"
@@ -1267,7 +1267,7 @@ msgstr "SUMO Klient"
 #: sumo/sumo.c:129
 #, c-format
 msgid "%2d. (locked session)"
-msgstr "%2d. (låst økt)"
+msgstr "%2d. (lÃ¥st Ã¸kt)"
 
 #: sumo/sumo.c:157
 msgid "Missing SUMO host/port."
@@ -1288,7 +1288,7 @@ msgstr "%s feilet"
 
 #: sumo/sumo.c:261
 msgid "SUMO sessions"
-msgstr "SUMO økter"
+msgstr "SUMO Ã¸kter"
 
 #: sumo/sumo.c:265
 msgid "SUMO host: "
@@ -1321,4 +1321,4 @@ msgstr "Passiv modus"
 #: sumo/sumo.c:382
 #, c-format
 msgid "Usage: %s [-vfFe] [-w width] [-h height]"
-msgstr "Bruk: %s [-vfFe] [-w bredde] [-h høyde]"
+msgstr "Bruk: %s [-vfFe] [-w bredde] [-h hÃ¸yde]"
