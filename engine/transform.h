@@ -1,4 +1,4 @@
-/*	$Csoft: transform.h,v 1.7 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.8 2003/07/05 12:20:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TRANSFORM_H_
@@ -11,11 +11,11 @@ enum transform_type {
 };
 
 struct transform {
-	enum transform_type	type;
+	enum transform_type	  type;
 	void			(*func)(SDL_Surface **, int, Uint32 *);
-	Uint32			*args;
-	int			nargs;
-	SLIST_ENTRY(transform)	transforms;
+	Uint32			 *args;
+	int			  nargs;
+	TAILQ_ENTRY(transform)	  transforms;
 };
 
 __BEGIN_DECLS

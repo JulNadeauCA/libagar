@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.7 2003/07/25 22:03:09 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.8 2003/08/21 04:27:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -18,14 +18,14 @@ struct gfx_anim {
 struct gfx_cached_sprite {
 	SDL_Surface	*su;			/* Modified sprite */
 	Uint32		 last_drawn;		/* Time last draw occured */
-	SLIST_HEAD(,transform)	transforms;	/* Applied transforms */
+	TAILQ_HEAD(,transform)	transforms;	/* Applied transforms */
 	SLIST_ENTRY(gfx_cached_sprite) sprites;
 };
 
 struct gfx_cached_anim {
 	struct gfx_anim	*anim;			/* Modified anim */
 	Uint32		 last_drawn;		/* Time last draw occured */
-	SLIST_HEAD(,transform)	transforms;	/* Applied transforms */
+	TAILQ_HEAD(,transform)	transforms;	/* Applied transforms */
 	SLIST_ENTRY(gfx_cached_anim) anims;
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.189 2003/08/11 22:27:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.190 2003/08/26 07:55:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->r_gfx.xmotion = 0;
 	r->r_gfx.ymotion = 0;
 	r->r_gfx.edge = 0;
-	SLIST_INIT(&r->transforms);
+	TAILQ_INIT(&r->transforms);
 }
 
 /*
@@ -118,10 +118,10 @@ noderef_destroy(struct map *m, struct noderef *r)
 {
 	struct transform *trans, *ntrans;
 
-	for (trans = SLIST_FIRST(&r->transforms);
-	     trans != SLIST_END(&r->transforms);
+	for (trans = TAILQ_FIRST(&r->transforms);
+	     trans != TAILQ_END(&r->transforms);
 	     trans = ntrans) {
-		ntrans = SLIST_NEXT(trans, transforms);
+		ntrans = TAILQ_NEXT(trans, transforms);
 		transform_destroy(trans);
 	}
 
@@ -528,12 +528,12 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 	dr->layer = (dlayer == -1) ? sr->layer : dlayer;
 
 	/* Inherit the transformations. */
-	SLIST_FOREACH(trans, &sr->transforms, transforms) {
+	TAILQ_FOREACH(trans, &sr->transforms, transforms) {
 		struct transform *ntrans;
 
 		ntrans = Malloc(sizeof(struct transform));
 		transform_init(ntrans, trans->type, trans->nargs, trans->args);
-		SLIST_INSERT_HEAD(&dr->transforms, ntrans, transforms);
+		TAILQ_INSERT_TAIL(&dr->transforms, ntrans, transforms);
 	}
 	return (dr);
 }
@@ -759,7 +759,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			free(trans);
 			goto fail;
 		}
-		SLIST_INSERT_HEAD(&(*r)->transforms, trans, transforms);
+		TAILQ_INSERT_TAIL(&(*r)->transforms, trans, transforms);
 	}
 	return (0);
 fail:
@@ -913,7 +913,7 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 	/* Save the transforms. */
 	ntrans_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
-	SLIST_FOREACH(trans, &r->transforms, transforms) {
+	TAILQ_FOREACH(trans, &r->transforms, transforms) {
 		transform_save(buf, trans);
 		ntrans++;
 	}
@@ -1058,9 +1058,8 @@ noderef_draw_sprite(struct noderef *r)
 	struct gfx_spritecl *spritecl;
 	SDL_Surface *origsu = SPRITE(r->r_sprite.obj, r->r_sprite.offs);
 
-	if (SLIST_EMPTY(&r->transforms)) {
+	if (TAILQ_EMPTY(&r->transforms))
 		return (origsu);
-	}
 
 	/*
 	 * Look for a cached sprite with the same transforms, in the same
@@ -1070,17 +1069,17 @@ noderef_draw_sprite(struct noderef *r)
 	SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
 		struct transform *tr1, *tr2;
 				
-		for (tr1 = SLIST_FIRST(&r->transforms),
-		     tr2 = SLIST_FIRST(&csprite->transforms);
-		     tr1 != SLIST_END(&r->transforms) &&
-		     tr2 != SLIST_END(&csprite->transforms);
-		     tr1 = SLIST_NEXT(tr1, transforms),
-		     tr2 = SLIST_NEXT(tr2, transforms)) {
+		for (tr1 = TAILQ_FIRST(&r->transforms),
+		     tr2 = TAILQ_FIRST(&csprite->transforms);
+		     tr1 != TAILQ_END(&r->transforms) &&
+		     tr2 != TAILQ_END(&csprite->transforms);
+		     tr1 = TAILQ_NEXT(tr1, transforms),
+		     tr2 = TAILQ_NEXT(tr2, transforms)) {
 			if (transform_compare(tr1, tr2) != 0)
 				break;
 		}
-		if (tr1 == SLIST_END(&r->transforms) &&
-		    tr2 == SLIST_END(&csprite->transforms))
+		if (tr1 == TAILQ_END(&r->transforms) &&
+		    tr2 == TAILQ_END(&csprite->transforms))
 			break;
 	}
 	if (csprite == NULL) {
@@ -1109,7 +1108,7 @@ noderef_draw_sprite(struct noderef *r)
 		ncsprite = Malloc(sizeof(struct gfx_cached_sprite));
 		ncsprite->su = su;
 		ncsprite->last_drawn = SDL_GetTicks();
-		SLIST_INIT(&ncsprite->transforms);
+		TAILQ_INIT(&ncsprite->transforms);
 
 		/* Copy the sprite as-is. */
 		SDL_SetAlpha(origsu, 0, 0);
@@ -1119,7 +1118,7 @@ noderef_draw_sprite(struct noderef *r)
 		SDL_SetAlpha(origsu, saflags, salpha);
 
 		/* Apply the transformations. */
-		SLIST_FOREACH(trans, &r->transforms, transforms) {
+		TAILQ_FOREACH(trans, &r->transforms, transforms) {
 			SDL_LockSurface(su);
 			trans->func(&su, trans->nargs, trans->args);
 			SDL_UnlockSurface(su);
@@ -1127,7 +1126,7 @@ noderef_draw_sprite(struct noderef *r)
 			ntrans = Malloc(sizeof(struct transform));
 			transform_init(ntrans, trans->type, trans->nargs,
 			    trans->args);
-			SLIST_INSERT_HEAD(&ncsprite->transforms, ntrans,
+			TAILQ_INSERT_TAIL(&ncsprite->transforms, ntrans,
 			    transforms);
 		}
 

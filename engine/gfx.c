@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.12 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.13 2003/08/26 07:55:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -334,10 +334,10 @@ gfx_destroy(struct gfx *gfx)
 		     csprite != SLIST_END(&spritecl->sprites);
 		     csprite = ncsprite) {
 			ncsprite = SLIST_NEXT(csprite, sprites);
-			for (trans = SLIST_FIRST(&csprite->transforms);
-			     trans != SLIST_END(&csprite->transforms);
+			for (trans = TAILQ_FIRST(&csprite->transforms);
+			     trans != TAILQ_END(&csprite->transforms);
 			     trans = ntrans) {
-				ntrans = SLIST_NEXT(trans, transforms);
+				ntrans = TAILQ_NEXT(trans, transforms);
 				transform_destroy(trans);
 			}
 			SDL_FreeSurface(csprite->su);
@@ -358,10 +358,10 @@ gfx_destroy(struct gfx *gfx)
 		     canim != SLIST_END(&animcl->anims);
 		     canim = ncanim) {
 			ncanim = SLIST_NEXT(canim, anims);
-			for (trans = SLIST_FIRST(&canim->transforms);
-			     trans != SLIST_END(&canim->transforms);
+			for (trans = TAILQ_FIRST(&canim->transforms);
+			     trans != TAILQ_END(&canim->transforms);
 			     trans = ntrans) {
-				ntrans = SLIST_NEXT(trans, transforms);
+				ntrans = TAILQ_NEXT(trans, transforms);
 				transform_destroy(trans);
 			}
 			gfx_destroy_anim(canim->anim);
