@@ -1,17 +1,11 @@
-/*	$Csoft: object.h,v 1.1 2004/10/19 10:55:42 vedge Exp $	*/
+/*	$Csoft: space.h,v 1.1 2004/11/21 11:15:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PHYS_SPACE_H_
 #define _AGAR_PHYS_SPACE_H_
 #include "begin_code.h"
 
-struct space_entity {
-	void *obj;			/* Pointer to object instance */
-	struct space_coords coords;	/* Coordinates of entity */
-	struct quaternion dir;		/* Orientation of entity */
-};
-
-struct space_coords {
+struct coords {
 	enum {
 		COORDS_CARTESIAN,
 		COORDS_SPHERICAL,
@@ -51,10 +45,21 @@ struct space_coords {
 #define c_map coords.map
 };
 
+struct quaternion {
+	double x, y, z, w;
+};
+
+struct space_entity {
+	void *obj;			/* Pointer to object instance */
+	struct coords coords;		/* Coordinates of entity */
+	struct quaternion dir;		/* Orientation of entity */
+};
+
 struct space {
 	struct object obj;
 	pthread_mutex_t	lock;
 };
+
 #define SPACE(ob) ((struct space *)(ob))
 
 __BEGIN_DECLS
