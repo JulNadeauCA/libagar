@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.36 2003/04/25 04:11:01 vedge Exp $
+.\"	$Csoft: map.3,v 1.37 2003/05/08 12:11:16 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -89,7 +89,10 @@ and a layer number defining the order of rendering.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
-.Fn map_init "struct map *map" "char *name"
+.Fn map_init "void *obj" "char *name"
+.Pp
+.Ft "struct map *"
+.Fn map_new "void *parent" "char *name"
 .Pp
 .Ft void
 .Fn map_destroy "void *map"
@@ -113,10 +116,17 @@ and a layer number defining the order of rendering.
 .Fn map_set_zoom "struct map *map" "Uint16 factor"
 .nr nS 0
 .Pp
-The
 .Fn map_init
-function initializes a map identified by the string
+initializes
+.Fa obj
+as a
+.Nm
+identified by the string
 .Fa name .
+.Fn map_new
+allocates, initializes and attaches a new map to
+.Fa parent ,
+unless the latter is a NULL pointer.
 .Pp
 The
 .Fn map_destroy

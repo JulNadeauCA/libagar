@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.42 2003/05/09 01:59:47 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.43 2003/05/09 02:01:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -33,10 +33,11 @@
 #include <engine/physics.h>
 #include <engine/input.h>
 
-static const struct object_ops input_ops = {
+const struct object_ops input_ops = {
+	NULL,		/* init */
 	input_destroy,
-	NULL,
-	NULL
+	NULL,		/* load */
+	NULL		/* save */
 };
 
 static TAILQ_HEAD(, input) inputs;
@@ -62,7 +63,7 @@ input_new(enum input_type type, int index)
 	}
 
 	input = Malloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, 0, &input_ops);
+	object_init(input, "input-device", name, &input_ops);
 
 	input->type = type;
 	input->index = index;

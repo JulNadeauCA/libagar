@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.31 2003/04/12 01:42:35 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.32 2003/04/24 07:04:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,7 +34,8 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 
-static const struct object_ops region_ops = {
+const struct object_ops region_ops = {
+	NULL,		/* init */
 	region_destroy,
 	NULL,		/* load */
 	NULL		/* save */
@@ -67,7 +68,7 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 	pthread_mutex_unlock(&region_lock);
 
 	snprintf(name, sizeof(name), "region%u", region_count);
-	object_init(&reg->obj, "window-region", name, 0, &region_ops);
+	object_init(&reg->obj, "window-region", name, &region_ops);
 
 	reg->flags = (flags != 0) ? flags : REGION_HALIGN;
 	reg->rx = rx;
@@ -120,7 +121,6 @@ region_attach(void *parent, void *child)
 	reg->nwidgets++;
 	pthread_mutex_unlock(&reg->win->lock);
 	
-	OBJECT(child)->state = OBJECT_CONSISTENT;
 	event_post(child, "attached", "%p", parent);		/* Notify */
 }
 
@@ -143,7 +143,6 @@ region_detach(void *parent, void *child)
 	
 	event_post(wid, "detached", "%p", parent);		/* Notify */
 
-	OBJECT(wid)->state = OBJECT_DETACHED;
 	object_destroy(wid);
 	free(wid);
 }

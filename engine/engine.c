@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.98 2003/04/12 01:32:36 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.99 2003/05/08 12:11:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <config/have_x11.h>
+#include <config/have_progname.h>
 #include <engine/compat/setenv.h>
 #include <engine/compat/strlcat.h>
 
@@ -36,7 +37,6 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
-#include <engine/world.h>
 
 #ifdef DEBUG
 #include <engine/monitor/monitor.h>
@@ -62,24 +62,18 @@ int	engine_debug = 1;		/* Enable debugging */
 
 #ifdef THREADS
 pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
-pthread_key_t		engine_errorkey;	/* Multi-threaded error code */
+pthread_key_t		engine_errorkey;	/* Multithreaded error code */
 #else
-char *engine_errorkey;				/* Single-threaded error code */
+char *engine_errorkey;				/* Unithreaded error code */
 #endif
 
-const struct engine_proginfo *proginfo;	/* Game name, copyright, version */
-struct world *world;			/* Describes game elements */
+struct engine_proginfo *proginfo;	/* Game name, copyright, version */
 struct config *config;			/* Global configuration settings */
+struct object *world;			/* The Old Roots of Evil */
 
-#ifdef HAVE_X11
-static int	engine_xerror(Display *, XErrorEvent *);
-static int	engine_xioerror(Display *);
-static void	engine_xdebug(void);
-#endif
-
+/* Initialize the Agar engine. */
 int
-engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
-    int flags)
+engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 {
 	static int inited = 0;
 	const SDL_VideoInfo *vinfo;
@@ -99,6 +93,14 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	engine_errorkey = NULL;
 #endif
 
+#ifdef HAVE_PROGNAME
+	{
+		extern char *__progname;
+
+		prog->name = __progname;
+	}
+#endif
+
 	printf("Agar engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", prog->name, prog->version);
 	printf("%s\n\n", prog->copyright);
@@ -111,19 +113,20 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 
 	if (flags & ENGINE_INIT_GFX) {
 #ifdef HAVE_X11
-		setenv("SDL_VIDEO_X11_WMCLASS", prog->name, 1);
+		setenv("SDL_VIDEO_X11_WMCLASS", prog->progname, 1);
 #endif
 		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 			error_set("SDL_INIT_VIDEO: %s", SDL_GetError());
 			return (-1);
 		}
-		SDL_WM_SetCaption(prog->name, prog->prog);
+		SDL_WM_SetCaption(prog->name, prog->progname);
 
 		/* Print video device information. */
 		vinfo = SDL_GetVideoInfo();
 		if (vinfo != NULL) {
 			char accel[4096];
 			char unaccel[4096];
+			size_t size = 4096;
 
 			printf(
 			    "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n",
@@ -141,20 +144,20 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 			unaccel[0] = '\0';
 
 			strlcat(vinfo->blit_hw ? accel : unaccel,
-			    "\tHardware blits\n", 4096);
+			    "\tHardware blits\n", size);
 			strlcat(vinfo->blit_hw_CC ? accel : unaccel,
-			    "\tHardware->hardware colorkey blits\n", 4096);
+			    "\tHardware->hardware colorkey blits\n", size);
 			strlcat(vinfo->blit_hw_A ? accel : unaccel,
-			    "\tHardware->hardware alpha blits\n", 4096);
+			    "\tHardware->hardware alpha blits\n", size);
 		
 			strlcat(vinfo->blit_sw ? accel : unaccel,
-			    "\tSoftware->hardware blits\n", 4096);
+			    "\tSoftware->hardware blits\n", size);
 			strlcat(vinfo->blit_sw_CC ? accel : unaccel,
-			    "\tSoftware->hardware colorkey blits\n", 4096);
+			    "\tSoftware->hardware colorkey blits\n", size);
 			strlcat(vinfo->blit_sw_A ? accel : unaccel,
-			    "\tSoftware->hardware alpha blits\n", 4096);
+			    "\tSoftware->hardware alpha blits\n", size);
 			strlcat(vinfo->blit_fill ? accel : unaccel,
-			    "\tColor fills\n", 4096);
+			    "\tColor fills\n", size);
 
 			if (accel[0] != '\0')
 				printf("Accelerated operations:\n%s", accel);
@@ -164,23 +167,15 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 			printf("\n");
 		}
 	}
-	
-	/* Initialize/load engine settings. */
+
 	config = config_new();
 	object_load(config, NULL);
 
-	/* Initialize the world structure. */
-	world = Malloc(sizeof(struct world));
-	world_init(world, prog->prog);
-
-	/* Start up the font engine. */
-	if (prop_get_bool(config, "font-engine")) {
-		if (text_init() == -1) {
-			fatal("text_init: %s", error_get());
-		}
+	if (prop_get_bool(config, "font-engine") &&
+	    text_init() == -1) {
+		fatal("text_init: %s", error_get());
 	}
 
-	/* Initialize the input devices. */
 	if (flags & ENGINE_INIT_INPUT) {
 		input_new(INPUT_KEYBOARD, 0);
 		input_new(INPUT_MOUSE, 0);
@@ -190,77 +185,19 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 			int i, njoys;
 
 			njoys = SDL_NumJoysticks();
-			for (i = 0; i < njoys; i++) {
+			for (i = 0; i < njoys; i++)
 				input_new(INPUT_JOY, i);
-			}
 		}
 		keycodes_init();
 	}
 
-#ifdef HAVE_X11
-	if (flags & ENGINE_INIT_GFX &&
-	    prop_get_bool(config, "view.xsync")) {
-		/* Request synchronous X events, and set error handlers. */
-		engine_xdebug();
-	}
-#endif
-
+	world = object_new(NULL, "world", "world", NULL);
+	object_load(world, NULL);
 	inited++;
 	return (0);
 }
 
-#ifdef HAVE_X11
-
-static int
-engine_xerror(Display *dis, XErrorEvent *xerror)
-{
-	fprintf(stderr, "X error: request 0x%x (minor 0x%x): error %d\n",
-	    xerror->request_code, xerror->minor_code,
-	    xerror->error_code);
-	abort();
-
-	return (-1);
-}
-
-static int
-engine_xioerror(Display *dis)
-{
-	fprintf(stderr, "X I/O error\n");
-	abort();
-
-	return (-1);
-}
-
-static void
-engine_xdebug(void)
-{
-	SDL_SysWMinfo wm;
-	const SDL_VideoInfo *vinfo;
-
-	vinfo = SDL_GetVideoInfo();
-	if (!vinfo->wm_available) {
-		return;
-	}
-
-	SDL_VERSION(&wm.version);
-	if (SDL_GetWMInfo(&wm) != 1) {
-		warning("SDL_GetWMInfo: %s\n", SDL_GetError());
-		return;
-	}
-	if (wm.subsystem == SDL_SYSWM_X11) {
-		wm.info.x11.lock_func();
-		warning("synchronous X events\n");
-		XSynchronize(wm.info.x11.display, True);
-		wm.info.x11.unlock_func();
-	}
-
-	/* Catch X errors. */
-	XSetErrorHandler((XErrorHandler)engine_xerror);
-	XSetIOErrorHandler((XIOErrorHandler)engine_xioerror);
-}
-
-#endif	/* HAVE_X11 */
-
+/* Request a shutdown. */
 void
 engine_stop(void)
 {
@@ -278,21 +215,23 @@ engine_stop(void)
 }
 
 /*
- * Caller must not hold world->lock.
+ * Release all resources allocated by the Agar engine.
  * Only one thread must be running.
  */
 void
 engine_destroy(void)
 {
-	if (mapedition) {
+	object_destroy(world);
+
+	if (mapedition)
 		object_save(&mapedit, NULL);
-	}
-	world_destroy(world);
+
 	text_destroy();
 	input_destroy_all();
 
 	object_destroy(view);
 	free(view);
+
 	object_destroy(config);
 	free(config);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.163 2003/04/24 07:04:43 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.164 2003/05/08 12:14:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -29,7 +29,6 @@
 #include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/map.h>
-#include <engine/world.h>
 #include <engine/view.h>
 #include <engine/prop.h>
 
@@ -57,7 +56,8 @@
 #include "tool/fill.h"
 #include "tool/flip.h"
 
-static const struct object_ops mapedit_ops = {
+const struct object_ops mapedit_ops = {
+	NULL,			/* init */
 	mapedit_destroy,
 	mapedit_load,
 	mapedit_save
@@ -132,8 +132,8 @@ mapedit_init(void)
 	struct mapedit *med = &mapedit;
 	int i;
 
-	object_init(&med->obj, "map-editor", "map-editor", OBJECT_RELOAD_PROPS,
-	    &mapedit_ops);
+	object_init(&med->obj, "map-editor", "map-editor", &mapedit_ops);
+	OBJECT(med)->flags |= OBJECT_RELOAD_PROPS;
 	if (object_load_art(med, "mapedit", 1) == -1)
 		fatal("mapedit: %s", error_get());
 

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.60 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.61 2003/04/26 06:19:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -72,11 +72,12 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 #include "begin_code.h"
 
 struct engine_proginfo {
-	char	*prog;		/* Name of the executable */
+	char	*progname;	/* Name of the executable */
 	char	*name;		/* Name of the game */
 	char	*copyright;	/* Copyright notice */
 	char	*version;	/* Version of the game */
 };
+extern struct engine_proginfo *proginfo;	/* engine.c */
 
 enum {
 	ICON_GAME,
@@ -86,9 +87,11 @@ enum {
 #define ENGINE_INIT_GFX		0x01		/* Graphic engine */
 #define ENGINE_INIT_INPUT	0x02		/* Input devices */
 
+extern struct object *world;	/* Roots of Evil */
+
 __BEGIN_DECLS
-extern DECLSPEC int	 engine_init(int, char **,
-			    const struct engine_proginfo *, int);
+extern DECLSPEC int	 engine_init(int, char **, struct engine_proginfo *,
+			             int);
 extern DECLSPEC void	 engine_stop(void);
 extern DECLSPEC void	 engine_destroy(void);
 __END_DECLS

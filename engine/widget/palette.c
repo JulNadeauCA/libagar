@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.9 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.10 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,8 +35,9 @@
 #include <engine/widget/region.h>
 #include <engine/widget/window.h>
 
-static const struct widget_ops palette_ops = {
+const struct widget_ops palette_ops = {
 	{
+		NULL,		/* init */
 		palette_destroy,
 		NULL,		/* load */
 		NULL		/* save */

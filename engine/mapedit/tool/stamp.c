@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.39 2003/03/26 10:04:18 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.40 2003/04/24 07:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,8 +34,9 @@
 #include <engine/widget/text.h>
 #include <engine/widget/checkbox.h>
 
-static const struct tool_ops stamp_ops = {
+const struct tool_ops stamp_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */

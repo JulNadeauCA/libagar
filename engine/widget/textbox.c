@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.50 2003/03/28 00:23:12 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.51 2003/04/25 09:40:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,8 +45,9 @@
 #include <strings.h>
 #include <errno.h>
 
-static const struct widget_ops textbox_ops = {
+const struct widget_ops textbox_ops = {
 	{
+		NULL,		/* init */
 		textbox_destroy,
 		NULL,		/* load */
 		NULL		/* save */

@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.16 2003/04/12 01:41:16 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.17 2003/04/24 05:42:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,8 +45,9 @@
 
 #include "monitor.h"
 
+/* Update the window list display. */
 static void
-tl_windows_poll(int argc, union evarg *argv)
+poll_windows(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct window *win;
@@ -62,8 +63,9 @@ tl_windows_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
+/* Set the visibility bit on a window. */
 static void
-tl_windows_show(int argc, union evarg *argv)
+show_window(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
@@ -79,8 +81,9 @@ tl_windows_show(int argc, union evarg *argv)
 	window_show(win);
 }
 
+/* Clear the visibility bit on a window. */
 static void
-tl_windows_hide(int argc, union evarg *argv)
+hide_window(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
@@ -96,8 +99,9 @@ tl_windows_hide(int argc, union evarg *argv)
 	window_hide(win);
 }
 
+/* Detach a window (assuming it is not referenced). */
 static void
-tl_windows_detach(int argc, union evarg *argv)
+detach_window(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
@@ -113,8 +117,9 @@ tl_windows_detach(int argc, union evarg *argv)
 	view_detach(win);
 }
 
+/* Update the list of a window's regions. */
 static void
-tl_regions_poll(int argc, union evarg *argv)
+poll_regions(int argc, union evarg *argv)
 {
 	struct tlist *tl_regions = argv[0].p;
 	struct window *pwin = argv[1].p;
@@ -131,8 +136,9 @@ tl_regions_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl_regions);
 }
 
+/* Remove a region (assuming its widgets are not referenced). */
 static void
-tl_regions_detach(int argc, union evarg *argv)
+detach_region(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct window *win = argv[2].p;
@@ -149,8 +155,9 @@ tl_regions_detach(int argc, union evarg *argv)
 	window_detach(win, reg);
 }
 
+/* Update the list of widgets for the selected region. */
 static void
-tl_widgets_poll(int argc, union evarg *argv)
+poll_widgets(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct tlist *tl_regions = argv[2].p;
@@ -172,8 +179,9 @@ tl_widgets_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
+/* Detach a widget (assuming it is not referenced). */
 static void
-tl_widgets_detach(int argc, union evarg *argv)
+detach_widget(int argc, union evarg *argv)
 {
 	struct tlist *tl_widgets = argv[1].p;
 	struct tlist *tl_regions = argv[2].p;
@@ -198,8 +206,9 @@ tl_widgets_detach(int argc, union evarg *argv)
 	region_detach(reg, wid);
 }
 
+/* Update the list of colors for a widget. */
 static void
-tl_colors_poll(int argc, union evarg *argv)
+poll_colors(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct widget *wid = argv[1].p;
@@ -216,8 +225,9 @@ tl_colors_poll(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
+/* Select a color to edit in a widget's color scheme. */
 static void
-tl_colors_selected(int argc, union evarg *argv)
+select_color(int argc, union evarg *argv)
 {
 	struct widget *wid = argv[1].p;
 	struct palette *pal = argv[2].p;
@@ -228,8 +238,9 @@ tl_colors_selected(int argc, union evarg *argv)
 	    NULL, &WIDGET_COLOR(wid, color->ind));
 }
 
+/* Display widget information. */
 static void
-tl_widgets_examine(int argc, union evarg *argv)
+examine_widget(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
@@ -259,17 +270,16 @@ tl_widgets_examine(int argc, union evarg *argv)
 
 	reg = region_new(win, REGION_VALIGN,	0, 0,		100, 50);
 	{
-		label_new(reg, 100, -1, "Identifier: \"%s\"",
-		    OBJECT(wid)->name);
+		label_new(reg, 100, -1, "Name: \"%s\"", OBJECT(wid)->name);
 
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Flags: 0x%x", &wid->flags);
+		label_polled_new(reg, 100, -1, &pwin->lock, "Flags: 0x%x",
+		    &wid->flags);
 
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Type: %s", &wid->type);
+		label_polled_new(reg, 100, -1, &pwin->lock, "Type: %s",
+		    &wid->type);
 		
 		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Parent: region %p in window %p", &wid->reg, &wid->win);
+		    "Parent: %[obj]:%[obj]", &wid->win, &wid->reg);
 
 		label_polled_new(reg, 100, -1, &pwin->lock,
 		    "Geometry: requested %dx%d, allocated %dx%d at [%d,%d]",
@@ -283,21 +293,20 @@ tl_widgets_examine(int argc, union evarg *argv)
 		struct palette *pal;
 
 		tl_colors = tlist_new(reg, 100, 50, TLIST_POLL);
-		event_new(tl_colors, "tlist-poll",
-		    tl_colors_poll, "%p", wid);
+		event_new(tl_colors, "tlist-poll", poll_colors, "%p", wid);
 	
 		pal = palette_new(reg, 100, 50, 3);
-		
-		event_new(tl_colors, "tlist-changed",
-		    tl_colors_selected, "%p, %p", wid, pal);
+		event_new(tl_colors, "tlist-changed", select_color, "%p, %p",
+		    wid, pal);
 	}
 	
 	pthread_mutex_unlock(&pwin->lock);
 	window_show(win);
 }
 
+/* Display window information. */
 static void
-tl_windows_examine(int argc, union evarg *argv)
+examine_window(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
@@ -323,63 +332,51 @@ tl_windows_examine(int argc, union evarg *argv)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 45);
 	{
-		label_new(reg, 100, -1, "Identifier: \"%s\"",
-		    OBJECT(pwin)->name);
+		label_new(reg, 100, -1, "Name: \"%s\"", OBJECT(pwin)->name);
+
+		label_polled_new(reg, 100, -1, &pwin->lock, "Flags: 0x%x",
+		    &pwin->flags);
+
+		label_polled_new(reg, 100, -1, &pwin->lock, "Caption: \"%s\"",
+		    &pwin->caption);
 
 		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Flags: 0x%x", &pwin->flags);
-
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Caption: \"%s\"", &pwin->caption);
-
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Effective geometry: %[wxh] at %[x,y]",
-		    &pwin->rd, &pwin->rd);
-#if 0
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Body: %[rect]", &pwin->body);
-
-		label_polled_new(reg, 100, -1, &pwin->lock,
-		    "Focus: %p",
-		    &pwin->focus);
-#endif
+		    "Effective geometry: %[rect]", &pwin->rd);
 	}
 
 	/* Region list */
 	reg = region_new(win, REGION_HALIGN, 0,  45, 80, 25);
 	{
 		tl_regions = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_regions, "tlist-poll",
-		    tl_regions_poll, "%p", pwin);
+		event_new(tl_regions, "tlist-poll", poll_regions, "%p", pwin);
 	}
 	reg = region_new(win, REGION_VALIGN, 81, 45, 19, 25);
 	{
 		struct button *bu;
 
 		bu = button_new(reg, "Detach", NULL, 0, 100, 100);
-		event_new(bu, "button-pushed",
-		    tl_regions_detach, "%p, %p", tl_regions, pwin);
+		event_new(bu, "button-pushed", detach_region, "%p, %p",
+		    tl_regions, pwin);
 	}
 
 	/* Widget list */
 	reg = region_new(win, REGION_HALIGN, 0,  70, 80, 27);
 	{
 		tl_widgets = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_widgets, "tlist-poll",
-		    tl_widgets_poll, "%p, %p", pwin, tl_regions);
+		event_new(tl_widgets, "tlist-poll", poll_widgets, "%p, %p",
+		    pwin, tl_regions);
 	}
 	reg = region_new(win, REGION_VALIGN, 81, 70, 19, 27);
 	{
 		struct button *bu;
 
 		bu = button_new(reg, "Examine", NULL, 0, 100, 50);
-		event_new(bu, "button-pushed",
-		    tl_widgets_examine, "%p, %p", tl_widgets);
+		event_new(bu, "button-pushed", examine_widget, "%p, %p",
+		    tl_widgets);
 
 		bu = button_new(reg, "Detach", NULL, 0, 100, 50);
-		event_new(bu, "button-pushed",
-		    tl_widgets_detach, "%p, %p, %p", tl_widgets, tl_regions,
-		        pwin);
+		event_new(bu, "button-pushed", detach_widget, "%p, %p, %p",
+		    tl_widgets, tl_regions, pwin);
 	}
 
 	pthread_mutex_unlock(&pwin->lock);
@@ -403,7 +400,7 @@ widget_browser_window(void)
 	reg = region_new(win, 0, 0, 0, 80, 100);
 	{
 		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", tl_windows_poll, NULL);
+		event_new(tl, "tlist-poll", poll_windows, NULL);
 	}
 	
 	reg = region_new(win, REGION_VALIGN, 81, 0, 19, 100);
@@ -411,16 +408,16 @@ widget_browser_window(void)
 		struct button *bu;
 		
 		bu = button_new(reg, "Examine", NULL, 0, 100, 25);
-		event_new(bu, "button-pushed", tl_windows_examine, "%p", tl);
+		event_new(bu, "button-pushed", examine_window, "%p", tl);
 
 		bu = button_new(reg, "Show", NULL, 0, 100, 25);
-		event_new(bu, "button-pushed", tl_windows_show, "%p", tl);
+		event_new(bu, "button-pushed", show_window, "%p", tl);
 
 		bu = button_new(reg, "Hide", NULL, 0, 100, 25);
-		event_new(bu, "button-pushed", tl_windows_hide, "%p", tl);
+		event_new(bu, "button-pushed", hide_window, "%p", tl);
 
 		bu = button_new(reg, "Detach", NULL, 0, 100, 25);
-		event_new(bu, "button-pushed", tl_windows_detach, "%p", tl);
+		event_new(bu, "button-pushed", detach_window, "%p", tl);
 	}
 
 	return (win);

@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.71 2003/04/24 06:58:44 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.72 2003/05/08 12:15:06 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,14 +27,12 @@
  */
 
 #include <config/sharedir.h>
-#include <config/have_x11.h>
 
 #include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/map.h>
-#include <engine/world.h>
 #include <engine/prop.h>
 
 #include <engine/widget/text.h>
@@ -57,15 +55,9 @@
 #include <pwd.h>
 #include <unistd.h>
 
-static const struct version config_ver = {
+const struct version config_ver = {
 	"agar config",
 	3, 0
-};
-
-static const struct object_ops config_ops = {
-	NULL,	/* destroy */
-	NULL,	/* load */
-	NULL	/* save */
 };
 
 static struct window *primitives_win;	/* Primitive algorithm switch */
@@ -119,13 +111,12 @@ config_prop_modified(int argc, union evarg *argv)
 void
 config_init(struct config *con)
 {
-	extern const struct engine_proginfo *proginfo;		/* engine.c */
 	struct passwd *pwd;
 	struct stat sta;
 	char *udatadir, *sysdatadir;
 
-	object_init(&con->obj, "engine-config", "config", OBJECT_RELOAD_PROPS,
-	    &config_ops);
+	object_init(con, "engine-config", "config", NULL);
+	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS;
 
 	/* Object settings */
 	prop_set_bool(con, "object.art.map-tiles", 0);
@@ -133,9 +124,6 @@ config_init(struct config *con)
 	/* Visual settings */
 	prop_set_bool(con, "view.full-screen", 0);
 	prop_set_bool(con, "view.async-blits", 0);
-#ifdef HAVE_X11
-	prop_set_bool(con, "view.xsync", 0);
-#endif
 #ifdef HAVE_OPENGL
 	prop_set_bool(con, "view.opengl", 0);
 #endif
@@ -161,7 +149,7 @@ config_init(struct config *con)
 	/* Data directories. */
 	pwd = getpwuid(getuid());
 	prop_set_string(con, "path.user_data_dir", "%s/.%s",
-	    pwd->pw_dir, proginfo->prog);
+	    pwd->pw_dir, proginfo->progname);
 	prop_set_string(con, "path.sys_data_dir", "%s", SHAREDIR);
 
 	udatadir = prop_get_string(con, "path.user_data_dir");
@@ -206,9 +194,6 @@ config_window(struct config *con)
 #ifdef DEBUG
 			{ "widget.reg-borders",	"Region borders" },
 			{ "widget.any-size", "Arbitrary window sizes" },
-# ifdef HAVE_X11
-			{ "view.xsync",	"Synchronous X events (restart)" },
-# endif
 #endif
 #ifdef HAVE_OPENGL
 			{ "view.opengl", "OpenGL rendering context (restart)" },

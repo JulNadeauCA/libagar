@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.34 2003/05/08 12:12:25 vedge Exp $
+.\"	$Csoft: object.3,v 1.35 2003/05/09 02:24:07 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,38 +38,41 @@
 #include <engine/object.h>
 .Ed
 .Sh DESCRIPTION
-The Agar game logic is built upon the
+The Agar game logic is built upon a tree of
 .Nm
-structure, which implements:
+structures.
+Similar to a filesystem, objects are referenced either by absolute or relative
+path names.
 .Pp
+The
+.Nm
+layer implements:
 .Bl -bullet -compact
 .It
-Garbage collection.
+Memory management (paging and garbage collection)
 .It
-Graphical/audio data management.
+Persistence
 .It
-State saving to network format.
+Linkage
 .It
-State loading from network format.
+Graphical/audio data management
 .It
-Positions on maps.
+Position/appearance on maps
 .It
-Object interdependencies.
+Dependencies
 .It
-Generic events and properties.
+Generic events and properties
 .El
-.Sh INITIALIZATION
+.Sh INITIALIZATION/LINKAGE
 .nr nS 1
 .Ft "struct object *"
-.Fn object_new "void *parent" "char *type" "char *name" "int flags" \
-               "const void *ops"
+.Fn object_new "void *parent" "const char *type" "char *name" "const void *ops"
 .Pp
 .Ft "void"
-.Fn object_init "struct object *ob" "char *type" "char *name" "int flags" \
-               "const void *ops"
+.Fn object_init "void *obj" "const char *type" "char *name" "const void *ops"
 .Pp
 .Ft int
-.Fn object_load_art "void *ob" "const char *key" "int wired"
+.Fn object_load_art "void *obj" "const char *key" "int wired"
 .Pp
 .Ft "void"
 .Fn object_attach "void *parent" "void *child"
@@ -78,16 +81,10 @@ Generic events and properties.
 .Fn object_detach "void *parent" "void *child"
 .Pp
 .Ft "void"
-.Fn object_destroy "void *ob"
+.Fn object_move "void *oldparent" "void *child" "void *newparent"
 .Pp
-.Ft "void"
-.Fn object_free_events "struct object *obj"
-.Pp
-.Ft "void"
-.Fn object_free_props "struct object *obj"
-.Pp
-.Ft "void"
-.Fn object_free_childs "struct object *obj"
+.Ft "char *"
+.Fn object_name "void *obj"
 .Pp
 .nr nS 0
 The
@@ -98,11 +95,12 @@ function allocates, initializes and attaches a new, generic object to a parent
 is not NULL).
 .Fn object_init
 initializes
-.Fa ob
+.Fa obj
 as an object of type
 .Fa type .
+The
 .Fa name
-must not exceed
+string must not exceed
 .Fa OBJECT_NAME_MAX
 - 1 in length and
 .Fa type
@@ -116,19 +114,11 @@ argument, if not NULL, is a pointer to the following structure (or a derivate
 of it):
 .Bd -literal
 struct object_ops {
-	void (*destroy)(void *obj);		      /* Free resources */
-	int  (*load)(void *obj, struct netbuf *buf);  /* Load from buf */
-	int  (*save)(void *obj, struct netbuf *buf);  /* Save to buf */
+	void (*init)(void *obj, char *name);		/* Initialize */
+	void (*destroy)(void *obj);			/* Release */
+	int  (*load)(void *obj, struct netbuf *buf);	/* Load from buf */
+	int  (*save)(void *obj, struct netbuf *buf);	/* Save to buf */
 };
-.Ed
-.Pp
-The
-.Fa flags
-argument may contain:
-.Bd -literal
-#define OBJECT_RELOAD_PROPS	0x01	/* Don't clear props before load */
-#define OBJECT_RELOAD_CHILDS	0x02	/* Reload existing childs, instead
-					   of removing them before load */
 .Ed
 .Pp
 The
@@ -139,10 +129,9 @@ function searches for an archive named
 .Sq .fob
 extension) and loads graphics from it.
 .Fa key
-identifies a group of graphics which multiple objects can share, with a
-reference count.
-When this reference count reaches zero, the graphical data is freed (they
-stay resident if the
+identifies a group of graphics which multiple objects can share.
+These groups of graphics contain a reference count.
+When this count reaches zero, the graphics are freed (they stay resident if the
 .Fa wire
 argument is 1).
 .Fn object_load_art
@@ -155,9 +144,48 @@ and
 functions respectively link and unlink a
 .Fa child
 object against a
-.Fa parent
-object.
+.Fa parent ,
+and raises
+.Fn attached
+and
+.Fn detached
+events.
+.Fn object_move
+moves
+.Fa child
+from
+.Fa oldparent
+to
+.Fa newparent ,
+raising
+.Fn detached ,
+.Fn attached
+and
+.Fn moved
+events in order.
 .Pp
+The
+.Fn object_name
+function returns a copy of an object's absolute name by doing an inverse
+traversal of the object tree, until the root is reached.
+.Fn object_name
+returns a pointer to a newly allocated, NUL-terminated string containing the
+resulting pathname.
+.Sh GARBAGE COLLECTION
+.nr nS 1
+.Ft "void"
+.Fn object_destroy "void *obj"
+.Pp
+.Ft "void"
+.Fn object_free_events "struct object *obj"
+.Pp
+.Ft "void"
+.Fn object_free_props "struct object *obj"
+.Pp
+.Ft "void"
+.Fn object_free_childs "struct object *obj"
+.Pp
+.nr nS 0
 The
 .Fn object_destroy
 function is called to free all resources reserved by
@@ -169,6 +197,7 @@ structures,
 .Fn object_destroy
 does not call
 .Xr free 3 .
+.Pp
 .Fn object_destroy
 calls
 .Fn object_free_events ,
@@ -177,23 +206,36 @@ and
 .Fn object_free_childs ,
 but these functions may be called directly in order to clear the event handler
 list, the property table and the attached objects, respectively.
-.Sh SAVING STATES
+.Sh PERSISTENCE
+One of the design goals of the agar
+.Nm 
+system is
+.Em persistence .
+This is achieved by invoking object-specific
+.Va load
+and
+.Va save
+operations to write/read the state of objects (and their children) in machine
+independent (network) format.
+Since child objects must be allocatable and fully initializable from scratch,
+an array stores the possible object types along with their structure size and
+a pointer to their operation vector.
 .nr nS 1
 .Ft "int"
-.Fn object_load "void *ob" "char *path"
+.Fn object_load "void *obj" "char *path"
 .Pp
 .Ft "int"
-.Fn object_save "void *ob" "char *path"
+.Fn object_save "void *obj" "char *path"
 .Pp
 .Ft "int"
-.Fn object_path "const char *name" "const char *suffix" "char *dst"
+.Fn object_path "const char *name" "const char *suffix" "char *dst" \
                 "size_t dst_size"
 .Pp
 .nr nS 0
 The
 .Fn object_load
 function loads the state of
-.Fa ob
+.Fa obj
 from network format.
 The data is loaded from a file at the given location if
 .Fa path
@@ -207,7 +249,7 @@ setting).
 The
 .Fn object_save
 function saves the state of
-.Fa ob
+.Fa obj
 in network format.
 The data is saved to a specific file if
 .Fa path
@@ -215,31 +257,6 @@ is not NULL, otherwise it is saved in the user's data directory (the
 .Sq path.user_data_dir
 .Xr config 3
 setting).
-.Pp
-Recursively, each child associated with
-.Fa ob
-is loaded/saved as well.
-.Pp
-Object derivates set the
-.Va load
-and
-.Va save
-operations in order to save custom data.
-In addition to this custom data,
-.Fn object_load
-and
-.Fn object_save
-also preserve:
-.Bl -bullet -compact
-.It
-Position, if any.
-.It
-Generic properties (machine-independent types only).
-.It
-Child
-.Nm
-structures.
-.El
 .Pp
 Both
 .Fn object_load
@@ -278,19 +295,20 @@ layer is responsible for keeping the submap copy in sync, and adjusting the
 motion offsets of its noderefs in response to movement.
 .nr nS 1
 .Ft "int"
-.Fn object_set_submap "void *ob" "char *map_name"
+.Fn object_set_submap "void *obj" "char *map_name"
 .Pp
 .Ft "void"
-.Fn object_load_submap "void *ob" "char *map_name"
+.Fn object_load_submap "void *obj" "char *map_name"
 .Pp
 .Ft "void"
-.Fn object_set_position "void *ob" "struct map *map" "int x" "int y" "int layer"
+.Fn object_set_position "void *obj" "struct map *map" "int x" "int y" \
+                        "int layer"
 .Pp
 .Ft "void"
-.Fn object_unset_position "void *ob"
+.Fn object_unset_position "void *obj"
 .Pp
 .Ft "void"
-.Fn object_control "void *ob" "struct input *in" "int center"
+.Fn object_control "void *obj" "struct input *in" "int center"
 .Pp
 .nr nS 0
 The
@@ -316,7 +334,7 @@ The
 function assigns the input device
 .Fa in
 to the position associated with
-.Fa ob ,
+.Fa obj ,
 centering the view and enabling soft-scrolling if
 .Fa center
 is non-zero .
@@ -382,13 +400,34 @@ reads dependencies from
 into
 .Fa table ,
 and returns 0 on success or -1 if an error occured.
+.Sh EVENTS
+The
+.Nm
+layer generates the following events:
+.Pp
+.Bl -tag -width 2n
+.It Fn attached "void *parent"
+The object has been attached to a
+.Fa parent
+object, which remains locked during the execution of the event handler.
+.It Fn detached "void *parent"
+The object has been detached from its
+.Fa parent
+object, which remains locked during the execution of the event handler.
+.It Fn moved "void *oldparent" "void *newparent"
+The object has been moved from
+.Fa oldparent
+to
+.Fa newparent .
+Both parents remain locked throughout the execution of the event handler.
+.El
 .Sh SEE ALSO
-.Xr agar 3
-.Xr event 3
+.Xr agar 3 ,
+.Xr event 3 ,
+.Xr fobj 3 ,
+.Xr physics 3 ,
 .Xr prop 3
-.Xr physics 3
 .Sh HISTORY
 The
 .Nm
 interface appeared in Agar 1.0
-.\" .Sh CAVEATS

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.74 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.75 2003/05/08 12:12:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -17,6 +17,7 @@ struct event;
 
 /* Generic object operations */
 struct object_ops {
+	void	(*init)(void *, char *);		/* Initialize */
 	void	(*destroy)(void *);			/* Free resources */
 	int	(*load)(void *, struct netbuf *);	/* Load from network */
 	int	(*save)(void *, struct netbuf *);	/* Save to network */
@@ -34,43 +35,42 @@ struct object_position {
 	struct map	*map;		/* Map (or NULL) */
 	int		 x, y;		/* Map coordinates */
 	int		 layer;		/* Current layer */
-	int		 center;	/* Center the view around this */
+	int		 center;	/* Center the view around this? */
 	struct map	*submap;	/* Current submap */
 	struct input	*input;		/* Controller (or NULL) */
 	struct mapdir	 dir;		/* Map direction (not saved) */
 };
 
-#define OBJECT_TYPE_MAX		128
-#define OBJECT_NAME_MAX		256
+#define OBJECT_TYPE_MAX		32
+#define OBJECT_NAME_MAX		64
 
+/* Generic object */
 struct object {
-	char			*type;	/* Type of object */
-	char			*name;	/* Identification string */
+	char	 type[OBJECT_TYPE_MAX];	/* Type of object */
+	char	 name[OBJECT_NAME_MAX];	/* Identifier */
 	const struct object_ops	*ops;	/* Generic operations */
-	int			 flags;
-#define OBJECT_RELOAD_PROPS	0x01	/* Don't clear props list before load */
-#define OBJECT_RELOAD_CHILDS	0x02	/* Reload existing childs, instead
-					   of removing them before load */
-	enum {
-		OBJECT_EMBRYONIC,	/* Inconsistent/Unattached */
-		OBJECT_CONSISTENT,	/* Attached */
-		OBJECT_DETACHING,	/* Detach in progress */
-		OBJECT_DETACHED		/* Inconsistent/Detached */
-	} state;
-	struct art		*art;	/* Graphical data (independent) */
-	SLIST_ENTRY(object)	 wobjs;	/* Parent's list */
+	void	*parent;		/* Parent object (or NULL) */
+
+	Uint8	 flags;
+#define OBJECT_RELOAD_PROPS	0x01	/* Don't remove props before load */
+#define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
+#define OBJECT_STATIC		0x04	/* Parent should not call free(3) */
+
+	struct art		*art;	/* Associated set of graphics */
+	TAILQ_ENTRY(object)	 cobjs;	/* Child objects */
 
 	pthread_mutex_t		 lock;
 	struct object_position	*pos;		/* Position on a map */
-	SLIST_HEAD(, object)	 childs;	/* Child objects */
-
-	pthread_mutex_t		 events_lock;
-	TAILQ_HEAD(, event)	 events;	/* Event handlers */
-	pthread_mutex_t		 props_lock;
-	TAILQ_HEAD(, prop)	 props;		/* Generic properties */
+	TAILQ_HEAD(,object)	 childs;	/* Descendants */
+	pthread_mutex_t		 events_lock;	/* XXX use lock? */
+	TAILQ_HEAD(,event)	 events;	/* Event handlers */
+	pthread_mutex_t		 props_lock;	/* XXX use lock? */
+	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
+#define OBJECT_ICON(ob)	(((ob)->art != NULL && (ob)->art->nsprites > 0) ? \
+			 SPRITE(ob, 0) : NULL)
 
 #ifdef DEBUG
 # define OBJECT_ASSERT(ob, typestr) do {				\
@@ -83,13 +83,17 @@ struct object {
 #endif
 
 __BEGIN_DECLS
-extern DECLSPEC struct object	*object_new(void *, char *, char *, int,
+extern DECLSPEC struct object	*object_new(void *, const char *, char *,
 				            const void *);
-extern DECLSPEC void	 object_init(struct object *, char *, char *, int,
-			             const void *);
+extern DECLSPEC void		 object_init(void *, const char *, char *,
+				             const void *);
+
 extern DECLSPEC int	 object_load_art(void *, const char *, int);
 extern DECLSPEC void	 object_attach(void *, void *);
 extern DECLSPEC void	 object_detach(void *, void *);
+extern DECLSPEC void	 object_move(void *, void *, void *);
+extern DECLSPEC char	*object_name(void *);
+extern DECLSPEC void	*object_find(void *, char *);
 extern DECLSPEC int	 object_load(void *, char *);
 extern DECLSPEC int	 object_save(void *, char *);
 extern DECLSPEC void	 object_destroy(void *);

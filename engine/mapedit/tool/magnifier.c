@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.26 2003/05/06 05:54:02 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.27 2003/05/07 13:07:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,8 +35,9 @@
 #include <engine/widget/button.h>
 #include <engine/widget/text.h>
 
-static const struct tool_ops magnifier_ops = {
+const struct tool_ops magnifier_ops = {
 	{
+		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */

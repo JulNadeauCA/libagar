@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.64 2003/05/07 12:15:21 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.65 2003/05/08 03:31:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,12 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
+#include <engine/compat/snprintf.h>
 #include <engine/engine.h>
 
 #include <engine/map.h>
 #include <engine/view.h>
-#include <engine/world.h>
 
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
@@ -246,7 +245,7 @@ objq_close_tmap(int argc, union evarg *argv)
 }
 
 static void
-tl_objs_toggle_replace(int argc, union evarg *argv)
+tog_replace(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int state = argv[2].i;
@@ -255,7 +254,7 @@ tl_objs_toggle_replace(int argc, union evarg *argv)
 }
 
 static void
-tl_objs_selected(int argc, union evarg *argv)
+select_tileset(int argc, union evarg *argv)
 {
 	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
@@ -391,7 +390,7 @@ tl_objs_selected(int argc, union evarg *argv)
 			for (i = 0; i < ob->art->nanims; i++) {
 				struct art_anim *an = ob->art->anims[i];
 
-				snprintf(s, sizeof(s), "s%u\n%u frames\n", i,
+				snprintf(s, sizeof(s), "a%u\n%u frames\n", i,
 				    an->nframes);
 				tlist_insert_item(tl, (an->nframes > 0) ?
 				    an->frames[0] : NULL, s, ob);
@@ -416,8 +415,7 @@ tl_objs_selected(int argc, union evarg *argv)
 			}
 			bu = button_new(reg_buttons2, "Replace", NULL,
 			    BUTTON_STICKY, 100, -1);
-			event_new(bu, "button-pushed",
-			    tl_objs_toggle_replace, "%p", mv);
+			event_new(bu, "button-pushed", tog_replace, "%p", mv);
 		}
 	}
 }
@@ -445,7 +443,7 @@ objq_window(void)
 		tl = tlist_new(reg, 100, 100, 0);
 		tlist_set_item_height(tl, TILEH);
 		pthread_mutex_lock(&world->lock);
-		SLIST_FOREACH(ob, &world->wobjs, wobjs) {
+		TAILQ_FOREACH(ob, &world->childs, cobjs) {
 			SDL_Surface *icon = NULL;
 
 			if (ob->art == NULL)
@@ -465,7 +463,7 @@ objq_window(void)
 			tlist_insert_item(tl, icon, s, ob);
 		}
 		pthread_mutex_unlock(&world->lock);
-		event_new(tl, "tlist-changed", tl_objs_selected, NULL);
+		event_new(tl, "tlist-changed", select_tileset, NULL);
 	}
 	return (win);
 }

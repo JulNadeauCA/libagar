@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.27 2003/04/12 01:45:49 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.28 2003/05/08 11:59:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -37,13 +37,14 @@
 #include <engine/widget/region.h>
 #include <engine/widget/window.h>
 
-static const struct version graph_ver = {
+const struct version graph_ver = {
 	"agar graph",
 	2, 0
 };
 
-static const struct widget_ops graph_ops = {
+const struct widget_ops graph_ops = {
 	{
+		NULL,		/* init */
 		graph_destroy,
 		graph_load,
 		graph_save

@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.26 2003/05/07 00:46:44 vedge Exp $
+.\"	$Csoft: agar.3,v 1.27 2003/05/09 02:03:42 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,8 +41,6 @@ is a high-level game/simulation engine.
 .Nm
 currently implements the following subsystems:
 .Bl -tag -width "transform(3) " -compact
-.It config
-Generic engine/game configuration settings
 .It Xr event 3
 Generic event processing
 .It Xr input 3
@@ -53,7 +51,7 @@ Processing of events from input devices
 Level edition
 .It Xr object 3
 Generic object framework
-.It Xr perso 3
+.It perso
 Game characters
 .It Xr physics 3
 Movement of objects inside levels
@@ -69,50 +67,9 @@ Signatures and versioning of data
 Video display interface
 .It Xr widget 3
 Widget set framework
-.It Xr media 3
+.It media
 Loading of data (ie. gfx/audio) from various formats
 .El
-.Sh THREAD SAFETY
-The following subsystems do not provide thread safety:
-.Bl -tag -width "mapedit(3) " -compact
-.It Xr mapedit 3
-Level edition
-.El
-.Pp
-The other
-.Nm
-subsystems provide thread-safe interfaces, using the following locking
-primitives:
-.Bl -bullet -compact
-.It
-Simple mutexes
-.It
-Recursive mutexes
-.It
-Read-write locks
-.El
-.Sh THREAD SAFETY
-In structure definitions for thread-safe interfaces, all members of a
-structure that follow a lock are protected it, unless mentioned otherwise.
-Members that do not follow a lock are read-only once the structure is
-attached (not once the structure is initialized, since derivate structures
-may need to initialize additional data before attach).
-.Bd -literal
-struct foo {
-	char	*name;		/* RO once attached */
-	int	 type;		/* RO once attached */
-
-	pthread_mutex_t	 pos_lock;
-	struct map	*map;	/* RW (pos_lock) */
-	int		 x, y;	/* RW (pos_lock) */
-};
-.Ed
-.Pp
-If multi-threading support was enabled at compile time,
-.Pa Aq engine/engine.h
-defines error-checking wrappers around
-.Fn pthread_*
-calls (or no-ops with threads disabled).
 .Sh INCLUDE FILES
 For maximum portability, SDL's
 .Pa Aq begin_code.h
@@ -162,6 +119,61 @@ Generic
 .Xr event 3
 handling.
 .El
+.Sh OBJECT TREE
+In Agar games/simulations, the elements are logically organized as a tree of
+.Ft object
+structures, each containing a list of child objects.
+.Pp
+Generic
+.Xr object 3
+operations like
+.Fn object_load ,
+.Fn object_save ,
+and
+.Fn object_destroy
+when applied to the parent also effect the child objects, recursively.
+It is possible to dynamically load and free custom data (like
+.Xr map 3
+nodes), but the contents of the
+.Ft object
+structure remain resident.
+An object tree might look like:
+.Bd -literal
+world --- village -*- house1  *- armor
+                   |          |
+                   *- jephre -*- sword
+                              |
+                              *- potion
+.Ed
+.Pp
+In this example, calling
+.Fn object_save
+on
+.Pa /world/village
+would also save
+.Pa /world/village/house1 ,
+.Pa /world/village/jephre ,
+.Pa /world/village/jephre/armor ,
+and so on.
+When
+.Fn object_load
+is next invoked on
+.Sq /world/village ,
+those objects will be allocated and initialized from scratch.
+.Pp
+In this example, the character,
+.Pa /world/village/jephre ,
+might have been initialized by the character editor and attached to the
+.Pa /world/village
+map by a level designer, in order to assign a default position and default
+character status and items.
+Fully loading and saving the state of a game may be accomplished by calling
+.Fn object_load
+and
+.Fn object_save
+on the
+.Pa /world
+object.
 .Sh GENERIC ERROR HANDLING
 .nr nS 1
 .Ft void
@@ -191,6 +203,47 @@ The
 function prints an error message and causes the application to exit, or
 .Xr abort 3
 if debugging is enabled.
+.Sh THREAD SAFETY
+The following subsystems do not provide thread safety:
+.Bl -tag -width "mapedit(3) " -compact
+.It Xr mapedit 3
+Level edition
+.El
+.Pp
+The other
+.Nm
+subsystems provide thread-safe interfaces, using the following locking
+primitives:
+.Bl -bullet -compact
+.It
+Simple mutexes
+.It
+Recursive mutexes
+.It
+Read-write locks
+.El
+.Pp
+In structure definitions for thread-safe interfaces, all members of a
+structure that follow a lock are protected it, unless mentioned otherwise.
+Members that do not follow a lock are read-only once the structure is
+attached (not once the structure is initialized, since derivate structures
+may need to initialize additional data before attach).
+.Bd -literal
+struct foo {
+	char	*name;		/* RO once attached */
+	int	 type;		/* RO once attached */
+
+	pthread_mutex_t	 pos_lock;
+	struct map	*map;	/* RW (pos_lock) */
+	int		 x, y;	/* RW (pos_lock) */
+};
+.Ed
+.Pp
+If multi-threading support was enabled at compile time,
+.Pa Aq engine/engine.h
+defines error-checking wrappers around
+.Fn pthread_*
+calls (or no-ops with threads disabled).
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,
@@ -202,6 +255,5 @@ if debugging is enabled.
 .Xr rootmap 3 ,
 .Xr version 3 ,
 .Xr view 3 ,
-.Xr world 3 ,
 .Xr widget 3 ,
 .Xr window 3

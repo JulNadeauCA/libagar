@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.120 2003/04/26 06:26:09 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.121 2003/05/08 12:13:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -36,7 +36,6 @@
 #include <engine/physics.h>
 #include <engine/config.h>
 #include <engine/view.h>
-#include <engine/world.h>
 #include <engine/prop.h>
 
 #include <engine/widget/widget.h>
@@ -62,7 +61,8 @@ enum {
 	VIEW_NDIRTY_RECTS =	4096
 };
 
-static const struct object_ops viewport_ops = {
+const struct object_ops viewport_ops = {
+	NULL,		/* init */
 	view_destroy,
 	NULL,		/* load */
 	NULL		/* save */
@@ -90,7 +90,7 @@ view_init(enum gfx_engine ge)
 	}
 
 	v = Malloc(sizeof(struct viewport));
-	object_init(&v->obj, "view-port", "view", 0, &viewport_ops);
+	object_init(v, "view-port", "view", &viewport_ops);
 	v->gfx_engine = ge;
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
@@ -303,7 +303,7 @@ view_detach(void *child)
 }
 
 SDL_Surface *
-view_surface(int flags, int w, int h)
+view_surface(Uint32 flags, int w, int h)
 {
 	SDL_Surface *s;
 
@@ -350,25 +350,29 @@ SDL_Surface *
 view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 {
 	SDL_Surface *ds;
-	Uint32 col =0;
+	Uint32 col = 0;
 	Uint8 *src, *dst, r1, g1, b1, a1;
 	int x, y;
 
-	ds = view_surface(SDL_SWSURFACE |
-	    (ss->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)), w, h);
+	ds = view_surface(ss->flags, w, h);
+	ds->format->alpha = ss->format->alpha;
+	ds->format->colorkey = ss->format->colorkey;
 
-	/* Original size; inefficient. */
 	if (ss->w == w && ss->h == h) {
 		Uint32 saflags = ss->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
 		Uint8 salpha = ss->format->alpha;
+		Uint32 sckflags = ss->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+		Uint32 sckey = ss->format->colorkey;
 
+		/* Return a copy of the original surface. */
 		SDL_SetAlpha(ss, 0, 0);
+		SDL_SetColorKey(ss, 0, 0);
 		SDL_BlitSurface(ss, NULL, ds, NULL);
 		SDL_SetAlpha(ss, saflags, salpha);
+		SDL_SetColorKey(ss, sckflags, sckey);
 		return (ds);
 	}
 
-	/* Scaled. XXX cache. */
 	if (SDL_MUSTLOCK(ss))
 		SDL_LockSurface(ss);
 	if (SDL_MUSTLOCK(ds))
@@ -400,8 +404,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 				    &r1, &g1, &b1, &a1);
 				break;
 			}
-
-			/* Transparency hack for text surfaces. */
+			/* XXX transparency hack for text surfaces. */
 			if (r1 == 15 && g1 == 15 && b1 == 15) {
 				a1 = 0;
 			}
@@ -589,11 +592,10 @@ view_capture(SDL_Surface *su)
 	}
 
 	for (;;) {
-		extern const struct engine_proginfo *proginfo;	/* engine.c */
 		char file[FILENAME_MAX];
 
 		snprintf(file, sizeof(file), "%s/%s%u.jpg", path,
-		    proginfo->prog, seq++);
+		    proginfo->progname, seq++);
 		if ((fd = open(file, O_WRONLY|O_CREAT|O_EXCL, 0600)) == -1) {
 			if (errno == EEXIST) {
 				continue;

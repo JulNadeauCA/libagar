@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.36 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.37 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,6 +45,7 @@
 
 static struct widget_ops checkbox_ops = {
 	{
+		NULL,		/* init */
 		checkbox_destroy,
 		NULL,		/* load */
 		NULL		/* save */

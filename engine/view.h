@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.74 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.75 2003/04/26 06:26:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -18,24 +18,22 @@ enum gfx_engine {
 /* Map display */
 struct viewmap {
 	/* Read-only */
-	int	w, h;			/* View geometry in nodes */
+	int		  w, h;		/* View geometry in nodes */
 
 	/* Read-write (shares viewport->lock) */
-	struct	map *map;		/* Currently visible map */
-	int	x, y;			/* Offset in map */
-	Sint16	sx, sy;			/* Soft scroll offset */
-
-	/* Optimizations */
-	SDL_Rect **maprects;		/* Rectangles needed to draw the map. */
+	struct map	 *map;		/* Currently visible map */
+	int		  x, y;		/* Offset in map */
+	Sint16		  sx, sy;	/* Soft scroll offset */
+	SDL_Rect	**maprects;	/* Destination rectangles for drawing
+					   nodes (optimization) */
 };
 
 TAILQ_HEAD(windowq, window);
 
 struct viewport {
-	struct	object obj;
+	struct object	 obj;
 
-	/* Read-only */
-	enum gfx_engine gfx_engine;	/* Rendering method */
+	enum gfx_engine  gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	int		 w, h;		/* Display geometry */
@@ -47,13 +45,11 @@ struct viewport {
 		int	 min_delay;	/* Minimum delay in ms */
 		int	 max_delay;	/* Maximum delay in ms */
 	} refresh;
-
 	SDL_Rect	*dirty;		/* Video rectangles to update */
 	int		 ndirty;	/* Number of rectangles to update */
 	int		 maxdirty;	/* Size of dirty rectangle array */
 
-	/* Read-write, thread-safe */
-	pthread_mutex_t		lock;
+	pthread_mutex_t	 lock;
 	struct windowq	 windows;	/* Windows in view */
 	struct windowq	 detach;	/* Windows to free */
 	struct window	*focus_win;	/* Give focus to this window,
@@ -157,7 +153,7 @@ extern DECLSPEC void		 view_detach_queued(void);
 extern DECLSPEC void		 view_destroy(void *);
 extern DECLSPEC int		 view_set_refresh(int, int);
 extern DECLSPEC struct window	*view_window_exists(char *);
-extern DECLSPEC SDL_Surface	*view_surface(int, int, int);
+extern DECLSPEC SDL_Surface	*view_surface(Uint32, int, int);
 extern DECLSPEC SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16,
 				                    Uint16);
 extern DECLSPEC SDL_Surface	*view_copy_surface(SDL_Surface *);
