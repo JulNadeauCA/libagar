@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.68 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.69 2003/06/17 23:30:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -209,7 +209,7 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint16 ch)
 }
 
 /* Render Latin-1 text onto a new surface. */
-__inline__ SDL_Surface *
+SDL_Surface *
 text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
 	Uint16 *ucs;
@@ -222,7 +222,7 @@ text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 }
 
 /* Render UTF-8 encoded text onto a new surface. */
-__inline__ SDL_Surface *
+SDL_Surface *
 text_render_utf8(const char *fontname, int fontsize, Uint32 color,
     const char *utf8)
 {
@@ -341,7 +341,7 @@ text_prescale_unicode(const Uint16 *ucs, int *w, int *h)
 }
 
 /* Return the expected size of a Latin-1 text. */
-__inline__ void
+void
 text_prescale(const char *text, int *w, int *h)
 {
 	Uint16 *ucs;

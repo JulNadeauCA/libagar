@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.28 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.29 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -323,13 +323,13 @@ scrollbar_draw(void *p)
 	}
 }
 
-__inline__ void
+void
 scrollbar_set_bar_size(struct scrollbar *sb, int bsize)
 {
 	sb->bar_size = bsize;
 }
 
-__inline__ void
+void
 scrollbar_get_bar_size(struct scrollbar *sb, int *bsize)
 {
 	*bsize = sb->bar_size;
