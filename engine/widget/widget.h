@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.40 2002/11/13 00:22:31 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.41 2002/11/14 02:17:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -35,12 +35,6 @@ struct widget {
 #define WIDGET_UNFOCUSED_BUTTONUP	0x04	/* Receive window-mousebuttonup
 						   events even when the widget
 						   isn't focused. */
-	struct {
-		SDL_Surface	*source;	/* Source surface */
-		int		 redraw;	/* Update the source surface */
-		pthread_mutex_t  lock;
-	} surface;
-
 	char	*type;			/* Widget type identifier */
 	struct	window *win;		/* Parent window */
 	struct	region *reg;		/* Parent region */
