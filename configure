@@ -131,6 +131,7 @@ echo "Host: $HOST"
 echo > Makefile.config
 echo "Host: $HOST" > config.log
 mkdir config 1>/dev/null 2>&1
+if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --srcdir                       Source tree for concurrent builds [.]"
@@ -151,6 +152,7 @@ echo "    --enable-24bpp                 Support for 24 bpp display [default: ye
 echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
 echo "    --enable-nls                   Native Language Support [default: yes]"
 exit 1
+fi
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
