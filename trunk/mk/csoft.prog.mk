@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.23 2002/09/06 00:58:47 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.24 2002/10/01 08:37:44 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -161,7 +161,7 @@ install: install-subdir ${PROG}
 	    echo "${INSTALL_PROG} ${PROG} ${INST_BINDIR}"; \
 	    ${INSTALL_PROG} ${PROG} ${INST_BINDIR}; \
 	fi
-        @export _share="${SHARE}"; \
+	@export _share="${SHARE}"; \
         if [ "$$_share" != "" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
@@ -171,7 +171,7 @@ install: install-subdir ${PROG}
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                 ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
-        fi
+	fi
 
 deinstall: deinstall-subdir
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \

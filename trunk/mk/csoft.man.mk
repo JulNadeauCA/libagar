@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.15 2002/09/06 00:58:47 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.16 2002/09/19 22:12:58 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
