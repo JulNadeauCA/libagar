@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.5 2002/01/27 10:59:35 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.6 2002/01/27 12:10:59 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -41,12 +41,16 @@
 
 #include <SDL.h>
 #include <SDL_syswm.h>
-#include <smpeg.h>
 #include <glib.h>
+
+#ifdef CONF_SMPEG
+#include <smpeg.h>
+#endif
 
 #include <engine/debug.h>
 #include <engine/video.h>
 
+#ifdef CONF_SMPEG
 
 static void     *video_tick(void *);
 
@@ -86,12 +90,15 @@ videodone:
 	return (NULL);
 }
 
+#endif
+
 /*
  * Play an audiovisual mpeg stream. The surface should be 
  */
 struct video *
 video_create(char *path, SDL_Surface *s)
 {
+#ifdef CONF_SMPEG
 	SDL_SysWMinfo wm;
 	SMPEG_Info info;
 	struct stat sta;
@@ -123,7 +130,6 @@ video_create(char *path, SDL_Surface *s)
 	}
 
 	v = malloc(sizeof(struct video));
-	v->flags = 0;
 	v->fd = 0;
 	v->mpeg = NULL;
 	v->lock = SDL_CreateMutex();
@@ -175,12 +181,14 @@ videoerr:
 		}
 		free(v);
 	}
+#endif /* CONF_SMPEG */
 	return (NULL);
 }
 
 void
 video_destroy(struct video *v)
 {
+#ifdef CONF_SMPEG
 	SDL_mutexP(v->lock);
 	pthread_kill(v->thread, SIGTERM);
 	SMPEG_stop(v->mpeg);
@@ -191,5 +199,6 @@ video_destroy(struct video *v)
 	SDL_mutexV(v->lock);
 	SDL_DestroyMutex(v->lock);
 	free(v);
+#endif /* CONF_SMPEG */
 }
 
