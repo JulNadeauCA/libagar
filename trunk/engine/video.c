@@ -1,4 +1,4 @@
-/*	$Csoft$	 */
+/*	$Csoft: video.c,v 1.1 2002/01/26 03:37:38 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,159 +39,147 @@
 #include <pthread.h>
 
 #include <SDL.h>
+#include <SDL/SDL_syswm.h>
 #include <smpeg.h>
+#include <glib.h>
 
-#include "debug.h"
-#include "video.h"
+#include <engine/debug.h>
+#include <engine/video.h>
 
-static SDL_mutex *mpeg_mutex;
-static int stream = 0;
 
 static void     *video_tick(void *);
 
 static void *
 video_tick(void *arg)
 {
-	SMPEG *mpeg = (SMPEG *)arg;
+	struct video *v = (struct video *)arg;
 	SMPEG_Info info;
-	SDL_Event event;
+	SDL_Event ev;
 
-	SDL_mutexP(mpeg_mutex);
-	SMPEG_getinfo(mpeg, &info);
+	SDL_mutexP(v->lock);
+	SMPEG_getinfo(v->mpeg, &info);
 
-	while (SMPEG_status(mpeg) == SMPEG_PLAYING) {
-		SDL_mutexV(mpeg_mutex);
-		while (SDL_WaitEvent(&event)) {
-			switch (event.type) {
+	while (SMPEG_status(v->mpeg) == SMPEG_PLAYING) {
+		SDL_mutexV(v->lock);
+		while (SDL_WaitEvent(&ev)) {
+			switch (ev.type) {
 			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym) {
+				switch (ev.key.keysym.sym) {
 				case SDLK_ESCAPE:
-					/* Stop */
-					break;
-				case SDLK_f:
-					/* Fullscreen */
-					break;
-				case SDLK_SPACE:
-					/* Double size */
-					break;
+					goto videodone;
 				default:
 					break;
 				}
 				break;
-			case SDL_MOUSEBUTTONDOWN:
-				switch (event.button.button) {
-				case 2:
-					/* Double size */
-					break;
-				case 3:
-					/* Fullscreen */
-					break;
-				}
-				break;
+			case SDL_QUIT:
+				goto videodone;
 			default:
 				break;
 			}
 		}
 	}
-	SDL_mutexV(mpeg_mutex);
+videodone:
+	SDL_mutexV(v->lock);
 	return (NULL);
 }
 
 /*
  * Play an audiovisual mpeg stream. The surface should be 
  */
-int
-video_play(char *path, SDL_Surface *v)
+struct video *
+video_create(char *path, SDL_Surface *s)
 {
 	SMPEG_Info info;
-	int bitrate = 0, srate = 0, nch = 1;
-	int fd;
-	char *errmsg;
-	struct stat buf;
-	SMPEG *mpeg;
-	pthread_t video_th;
+	SDL_SysWMinfo wm;
+	struct stat sta;
+	char *errmsg, **exts;
+	struct video *v;
+	int i, xvideo = 0, nexts = 0;
 
-	if ((stat(path, &buf) < 0) || !S_ISFIFO(buf.st_mode)) {
-		stream = 0;
-		mpeg = SMPEG_new(path, &info, 1);
-	} else {
-		fd = open(path, O_RDONLY, 0);
-		stream = 1;
-		mpeg = SMPEG_new_descr(fd, &info, 1);
+	/*
+	 * Work around smpeg not returning an error code when the
+	 * XVideo extension is missing. We must obtain a pointer to
+	 * the X11 Display structure through the window manager.
+	 */
+	SDL_VERSION(&wm.version);
+	if (SDL_GetWMInfo(&wm) != 1) {
+		return (NULL);
 	}
-
-	errmsg = SMPEG_error(mpeg);
-	if (errmsg != NULL) {
-		fatal("%s: %s\n", path, errmsg);
-		SMPEG_delete(mpeg);
+	wm.info.x11.lock_func();
+	exts = XListExtensions(wm.info.x11.display, &nexts);
+	for (i = 0; i < nexts; i++) {
+		if (strcmp("XVideo", exts[i]) == 0) {
+			xvideo++;
+			break;
+		}
+	}
+	wm.info.x11.unlock_func();
+	if (!xvideo) {
+		warning("XVideo extension missing, skipping video.\n");
 		return (NULL);
 	}
 
-	mpeg_mutex = SDL_CreateMutex();
+	v = malloc(sizeof(struct video));
+	v->flags = 0;
+	v->fd = 0;
+	v->mpeg = NULL;
+	v->lock = SDL_CreateMutex();
 
-	SMPEG_scaleXY(mpeg, v->w, v->h);
-
-	SDL_mutexP(mpeg_mutex);
-
-	SMPEG_setdisplay(mpeg, v, NULL, NULL);
-	SMPEG_enablevideo(mpeg, 1);
-	SMPEG_enableaudio(mpeg, 1);
-	SMPEG_loop(mpeg, 0);
-	SMPEG_play(mpeg);
-#if 0
-		SMPEG_Filter *filter;
-		
-		filter = SMPEGfilter_bilinear();
-		filter = SMPEG_filter(mpeg, filter);
-		filter->destroy(filter);
-#endif
-	SDL_mutexV(mpeg_mutex);
-
-	if (info.has_audio) {
-		char *tmp = strstr(info.audio_string, "kbit/s");
-		if (tmp) {
-			while (isdigit(tmp[-1])) {
-				tmp--;
-			}
-			sscanf(tmp, "%dkbit/s", &bitrate);
-		}
-		tmp = strstr(info.audio_string, "Hz");
-		if (tmp) {
-			while (isdigit(tmp[-1])) {
-				tmp--;
-			}
-			sscanf(tmp, "%dHz", &srate);
-		}
-		if (strstr(info.audio_string, "stereo")) {
-			nch = 2;
-		} else if (strstr(info.audio_string, "mono")) {
-			nch = 1;
-		}
+	if ((stat(path, &sta) < 0) || !S_ISFIFO(sta.st_mode)) {
+		v->fd = 0;
+		v->mpeg = SMPEG_new(path, &info, 1);
+	} else {
+		v->fd = open(path, O_RDONLY, 0);
+		v->mpeg = SMPEG_new_descr(v->fd, &info, 1);
 	}
+
+	errmsg = SMPEG_error(v->mpeg);
+	if (errmsg != NULL) {
+		fatal("%s: %s\n", path, errmsg);
+		SMPEG_delete(v->mpeg);
+		return (NULL);
+	}
+
+	SMPEG_scaleXY(v->mpeg, s->w, s->h);
+
+	SDL_mutexP(v->lock);
+
+	SMPEG_setdisplay(v->mpeg, s, NULL, NULL);
+	SMPEG_enablevideo(v->mpeg, 1);
+	SMPEG_enableaudio(v->mpeg, 1);
+	SMPEG_loop(v->mpeg, 0);
+	SMPEG_play(v->mpeg);
+
+	/* XXX preference */
+#if 0
+	SMPEG_Filter *filter;
+		
+	filter = SMPEGfilter_bilinear();
+	filter = SMPEG_filter(v->mpeg, filter);
+	filter->destroy(filter);
+#endif
+	SDL_mutexV(v->lock);
 
 	putenv("SDL_VIDEO_CENTERED=0");
-	if (pthread_create(&video_th, NULL, video_tick, mpeg) != 0) {
+	if (pthread_create(&v->thread, NULL, video_tick, v) != 0) {
 		perror("playback");
-		return (-1);
+		return (NULL);
 	}
-	pthread_join(video_th, NULL);
-	return (0);
+	return (v);
 }
 
-#if 0
-void 
-stop()
+void
+video_destroy(struct video *v)
 {
-	SDL_mutexP(mpeg_mutex);
-	SDL_KillThread(thread);
-	SMPEG_stop(mpeg);
-	SMPEG_delete(mpeg);
-	if (stream)
-		close(fd);
-
-	SDL_mutexV(mpeg_mutex);
-	SDL_DestroyMutex(mpeg_mutex);
-	SDL_FreeSurface(screen);
-	stream = 0;
+	SDL_mutexP(v->lock);
+	pthread_kill(v->thread, SIGTERM);
+	SMPEG_stop(v->mpeg);
+	SMPEG_delete(v->mpeg);
+	if (v->fd != 0) {
+		close(v->fd);
+	}
+	SDL_mutexV(v->lock);
+	SDL_DestroyMutex(v->lock);
+	free(v);
 }
-#endif
+
