@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.8 2003/03/13 06:22:55 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.9 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -105,6 +105,8 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct fill *fi = p;
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
+	int dx = 0, dy = 0;
+	int w = m->mapw, h = m->maph;
 	int x, y;
 
 	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
@@ -112,8 +114,10 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 		return;
 	}
 
-	for (y = 0; y < m->maph; y++) {
-		for (x = 0; x < m->mapw; x++) {
+	mapview_get_selection(mv, &dx, &dy, &w, &h);
+
+	for (y = dy; y < dy+h; y++) {
+		for (x = dx; x < dx+w; x++) {
 			struct node *dstnode = &m->map[y][x];
 			struct noderef *nref, *nnref;
 
