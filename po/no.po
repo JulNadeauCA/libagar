@@ -1,0 +1,1324 @@
+# $Csoft$
+#
+# Copyright (c) 2003 CubeSoft Communications, Inc.
+# <http://www.csoft.org>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: agar 1.0\n"
+"POT-Creation-Date: 2003-09-21 22:10+0200\n"
+"PO-Revision-Date: 2003-09-23 23:16+0200\n"
+"Last-Translator: Geir Harald Hansen <geirhans@ifi.uio.no>\n"
+"Language-Team: Norwegian <no@csoft.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: cave/main.c:56 cave/main.c:97
+msgid "Trek to the Cave"
+msgstr "Trek to the Cave"
+
+#: cave/main.c:57
+msgid "Copyright (c) 2002, 2003 CubeSoft Communications, Inc.\n"
+msgstr "Copyright (c) 2002, 2003 CubeSoft Communications, Inc.\n"
+
+#: cave/main.c:102
+msgid "New Game"
+msgstr "Nytt spill"
+
+#: cave/main.c:104
+msgid "Load Game"
+msgstr "Last inn spill"
+
+#: cave/main.c:106
+msgid "Quit Game"
+msgstr "Avslutt spill"
+
+#: cave/main.c:128 sumo/sumo.c:321
+#, c-format
+msgid "%s %s\n"
+msgstr "%s %s\n"
+
+#: cave/main.c:129 sumo/sumo.c:322
+#, c-format
+msgid ""
+"%s\n"
+"\n"
+msgstr "%s\n\n"
+
+#: cave/main.c:191
+msgid "Unreasonable refresh rate\n"
+msgstr "Ugyldig oppdateringsfrekvens\n"
+
+#: cave/main.c:211
+msgid "width"
+msgstr "bredde"
+
+#: cave/main.c:211
+msgid "height"
+msgstr "høyde"
+
+#: cave/main.c:212
+msgid "frames/sec"
+msgstr "bilder/sekund"
+
+#: cave/main.c:213
+msgid "font"
+msgstr "skrifttype"
+
+#: cave/main.c:213
+msgid "size"
+msgstr "størrelse"
+
+#: cave/main.c:215
+msgid "load-path"
+msgstr "lastesti"
+
+#: cave/main.c:215
+msgid "den-path"
+msgstr "den-sti"
+
+#: cave/main.c:215
+msgid "save-path"
+msgstr "lagresti"
+
+#: cave/main.c:216
+msgid "font-path"
+msgstr "skrifttype-sti"
+
+#: engine/config.c:122
+#, c-format
+msgid "Save the configuration and restart %s for OpenGL mode to take effect"
+msgstr "Lagre konfigurasjonen og start om %s for at OpenGL modus skal tre i kraft"
+
+#: engine/config.c:128
+#, c-format
+msgid "Save the configuration and restart %s for async blits to take effect"
+msgstr "Lagre konfigurasjonen og start om %s for at asynkrone blitter skal tre i kraft"
+
+#: engine/config.c:214
+msgid "Engine settings"
+msgstr "Spillmotor-innstillinger"
+
+#: engine/config.c:225
+msgid "Full screen"
+msgstr "Fullskjerm"
+
+#: engine/config.c:226
+msgid "Asynchronous blits"
+msgstr "Asynkrone blitter"
+
+#: engine/config.c:228
+msgid "OpenGL rendering context"
+msgstr "OpenGL rendering kontekst"
+
+#: engine/config.c:230
+msgid "Unicode keyboard translation"
+msgstr "Unicode tastatur oversetting"
+
+#: engine/config.c:242
+msgid "Input composition"
+msgstr "Sammensetning av inndata"
+
+#: engine/config.c:246
+msgid "Right->left (Arabic, Hebrew, ...)"
+msgstr "Høyre->venstre (Arabisk, Hebraisk, ...)"
+
+#. Thread unsafe, but not very dangerous.
+#: engine/config.c:250
+msgid "Debugging"
+msgstr "Feilsøking"
+
+#: engine/config.c:253
+msgid "Idle time prediction"
+msgstr "Beregning av inaktiv tid"
+
+#: engine/config.c:261
+msgid "Input devices:"
+msgstr "Inndata enheter:"
+
+#: engine/config.c:270
+msgid "Data save dir: "
+msgstr "Katalog for datalagring:"
+
+#: engine/config.c:276
+msgid "Data load path: "
+msgstr "Katalog for datainnlasting:"
+
+#: engine/config.c:282
+msgid "Font path: "
+msgstr "Skrifttype-sti: "
+
+#: engine/config.c:288
+msgid "Den path: "
+msgstr "Den-sti: "
+
+#. XXX propose some default resolutions.
+#: engine/config.c:299
+msgid "Width: "
+msgstr "Bredde: "
+
+#: engine/config.c:305
+msgid "Height: "
+msgstr "Høyde: "
+
+#: engine/config.c:316
+msgid "Close"
+msgstr "Lukk"
+
+#: engine/config.c:321 engine/mapedit/objedit.c:244
+msgid "Save"
+msgstr "Lagre"
+
+#: engine/config.c:352
+msgid "The search path is too big."
+msgstr "Søkestien er for lang."
+
+#: engine/config.c:358
+#, c-format
+msgid "Cannot find `%s.%s' in <%s>."
+msgstr "Kan ikke finne `%s.%s' i <%s>."
+
+#: engine/engine.c:113
+#, c-format
+msgid "Agar engine v%s\n"
+msgstr "Agar motor v%s\n"
+
+#: engine/engine.c:138
+#, c-format
+msgid "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n"
+msgstr "Video-enhet er %dbpp (ckey=0x%x, alpha=0x%04x)\n"
+
+#: engine/engine.c:142
+#, c-format
+msgid "Video mask is 0x%04x,0x%04x,0x%04x,0x%04x\n"
+msgstr "Video maske er 0x%04x,0x%04x,0x%04x,0x%04x\n"
+
+#: engine/engine.c:147
+msgid "Window manager is available.\n"
+msgstr "Vindushåndterer er tilgjengelig.\n"
+
+#: engine/engine.c:149
+msgid "Window manager is unavailable.\n"
+msgstr "Vindushåndterer er ikke tilgjengelig.\n"
+
+#: engine/engine.c:154
+msgid "Hardware surfaces are available.\n"
+msgstr "Maskinvare-overflater er tilgjengelig.\n"
+
+#: engine/engine.c:157
+msgid "Hardware surfaces are unavailable.\n"
+msgstr "Maskinvare-overflater er ikke tilgjengelig.\n"
+
+#: engine/engine.c:164
+msgid "\tHardware blits\n"
+msgstr "\tMaskinvare blitter\n"
+
+#: engine/engine.c:166
+msgid "\tHardware->hardware colorkey blits\n"
+msgstr "\tMaskinvare->maskinvare fargenøkkel blitter\n"
+
+#: engine/engine.c:168
+msgid "\tHardware->hardware alpha blits\n"
+msgstr "\tMaskinvare->maskinvare alfa blitter\n"
+
+#: engine/engine.c:171
+msgid "\tSoftware->hardware blits\n"
+msgstr "\tProgramvare->maskinvare blitter\n"
+
+#: engine/engine.c:173
+msgid "\tSoftware->hardware colorkey blits\n"
+msgstr "\tProgramvare->maskinvare fargenøkkel blitter\n"
+
+#: engine/engine.c:175
+msgid "\tSoftware->hardware alpha blits\n"
+msgstr "\tProgramvare->maskinvare alfa blitter\n"
+
+#: engine/engine.c:177
+msgid "\tColor fills\n"
+msgstr "\tFarge fyllinger\n"
+
+#: engine/engine.c:180
+#, c-format
+msgid ""
+"Accelerated operations:\n"
+"%s"
+msgstr ""
+"Akselererte operasjoner:\n"
+"%s"
+
+#: engine/engine.c:182
+#, c-format
+msgid ""
+"Unaccelerated operations:\n"
+"%s"
+msgstr ""
+"Uakselererte operasjoner:\n"
+"%s"
+
+#: engine/event.c:159 engine/monitor/monitor.c:65
+msgid "Refresh rate"
+msgstr "Oppdateringsfrekvens"
+
+#: engine/gfx.c:598 engine/monitor/monitor.c:71
+msgid "Resident graphics"
+msgstr "Innlastet grafikk"
+
+#: engine/map.c:157 engine/map.c:213
+#, c-format
+msgid "%ux%u nodes exceed %ux%u."
+msgstr "%ux%u noder overstiger %ux%u."
+
+#: engine/map.c:202 engine/map.c:329
+msgid "Layer 0"
+msgstr "Lag 0"
+
+#: engine/map.c:342
+#, c-format
+msgid "Layer %u"
+msgstr "Lag %u"
+
+#: engine/map.c:346
+msgid "Too many layers."
+msgstr "For mange lag."
+
+#: engine/map.c:685
+#, c-format
+msgid "Cannot resolve sprite: %u."
+msgstr "Kan ikke finne sprite: %u."
+
+#: engine/map.c:708
+#, c-format
+msgid "Cannot resolve anim: %u."
+msgstr "Kan ikke finne animasjon: %u."
+
+#: engine/map.c:726
+msgid "Warp map name is too big."
+msgstr "Varpekartnavn er for langt."
+
+#: engine/map.c:733
+msgid "Invalid warp coordinates."
+msgstr "Ugyldige varpekoordinater."
+
+#: engine/map.c:744
+msgid "Unknown type of noderef."
+msgstr "Ukjent type nodereferanse."
+
+#: engine/map.c:750
+msgid "Too many transforms."
+msgstr "For mange transformasjoner."
+
+#: engine/map.c:781
+msgid "Too many noderefs."
+msgstr "For mange nodereferanser."
+
+#: engine/map.c:827
+msgid "Invalid map geometry."
+msgstr "Ugyldig kartgeometri."
+
+#: engine/map.c:842
+msgid "Too many map layers."
+msgstr "For mange kartlag."
+
+#: engine/map.c:1216
+#, c-format
+msgid "%s map view"
+msgstr "%s kartoversikt"
+
+#: engine/map.c:1281
+#, c-format
+msgid "The `%s' map is read-only."
+msgstr "Kartet `%s' er skrivebeskyttet."
+
+#: engine/map.c:1314
+msgid "There is no active selection."
+msgstr "Ingen aktive markinger."
+
+#: engine/map.c:1495
+#, c-format
+msgid "m%u (%ux%u nodes)\n"
+msgstr "m%u (%ux%u noder)\n"
+
+#: engine/map.c:1502
+#, c-format
+msgid "s%u (%ux%u pixels, %ubpp)\n"
+msgstr "s%u (%ux%u piksler, %ubpp)\n"
+
+#: engine/map.c:1510
+#, c-format
+msgid "a%u (%u frames)\n"
+msgstr "a%u (%u bilder)\n"
+
+#: engine/map.c:1528
+#, c-format
+msgid "%s graphics"
+msgstr "%s grafikk"
+
+#: engine/map.c:1553 engine/mapedit/tool/stamp.c:58
+msgid "Replace"
+msgstr "Bytt ut"
+
+#: engine/map.c:1577
+#, c-format
+msgid "%s map edition"
+msgstr "%s kartutgave"
+
+#. XXX combo
+#: engine/map.c:1640
+#, c-format
+msgid "  Layer #%d"
+msgstr "  Lag #%d"
+
+#: engine/object.c:170
+#, c-format
+msgid "The path exceeds >= %lu bytes."
+msgstr "Stien overstiger >= %lu bytes."
+
+#: engine/object.c:264
+#, c-format
+msgid "The `%s' object is in use."
+msgstr "Objektet `%s' er i bruk."
+
+#: engine/object.c:365
+#, c-format
+msgid "The object `%s' does not exist."
+msgstr "Objektet `%s' finnes ikke."
+
+#: engine/object.c:522
+#, c-format
+msgid "The %s/%s.%s file is not in load-path."
+msgstr "Filen %s/%s.%s er ikke i lastestien."
+
+#: engine/object.c:552
+#, c-format
+msgid "The %s directory is not in load-path."
+msgstr "Katalogen %s er ikke i lastestien."
+
+#: engine/object.c:568
+#, c-format
+msgid "The `%s' object contains no graphics."
+msgstr "Objektet `%s' inneholder ingen grafikk."
+
+#: engine/object.c:583
+#, c-format
+msgid "The `%s' object contains no audio."
+msgstr "Objektet `%s' inneholder ingen lyd."
+
+#: engine/object.c:707 engine/object.c:1046
+#, c-format
+msgid "The `%s' object is non-persistent."
+msgstr "Objektet `%s' er ikke persistent."
+
+#: engine/object.c:743
+#, c-format
+msgid "%s: Cannot resolve dependency `%s'"
+msgstr "%s: Kan ikke løse avhengighet `%s'"
+
+#: engine/object.c:819
+#, c-format
+msgid "The `%s' save has inconsistent flags."
+msgstr "Lagringen `%s' har inkonsekvente flagg."
+
+#: engine/object.c:865
+#, c-format
+msgid "Bad coordinates: %d,%d,%d"
+msgstr "Ugyldige koordinater: %d,%d,%d"
+
+#: engine/object.c:949
+#, c-format
+msgid "Unknown object type: `%s'"
+msgstr "Ukjent objekttype: `%s'"
+
+#: engine/object.c:997
+#, c-format
+msgid "The data of `%s' is already resident."
+msgstr "Data tilhørende `%s' er allerede lastet inn."
+
+#: engine/object.c:1183
+#, c-format
+msgid "There is no input device named `%s'."
+msgstr "Det finnes ingen inndata-enhet ved navn `%s'."
+
+#: engine/object.c:1190
+msgid "There is no position to control."
+msgstr "Det finnes ingen posisjon å kontrollere."
+
+#: engine/object.c:1276
+#, c-format
+msgid "There is no submap named `%s'."
+msgstr "Det finnes ingen underkart ved navn `%s'."
+
+#: engine/object.c:1725
+#, c-format
+msgid "%s object"
+msgstr "%s objekt"
+
+#: engine/object.c:1735 engine/perso.c:166 engine/mapedit/objedit.c:226
+#: engine/mapedit/tool/merge.c:118
+msgid "Name: "
+msgstr "Navn: "
+
+#: engine/object.c:1742
+msgid "Graphics: "
+msgstr "Grafikk: "
+
+#: engine/object.c:1743
+msgid "Audio: "
+msgstr "Lyd: "
+
+#: engine/object.c:1783 engine/monitor/widget_browser.c:172
+#, c-format
+msgid "Type: %s"
+msgstr "Type: %s"
+
+#: engine/object.c:1784
+#, c-format
+msgid "Flags : 0x%x"
+msgstr "Flagg: 0x%x"
+
+#: engine/object.c:1786
+msgid "Parent: %[obj]"
+msgstr "Forelder: %[obj]"
+
+#: engine/object.c:1800
+msgid "Dependencies:"
+msgstr "Avhengigheter:"
+
+#: engine/perso.c:157
+#, c-format
+msgid "%s character"
+msgstr "%s person"
+
+#: engine/perso.c:170
+msgid "Level: "
+msgstr "Nivå: "
+
+#: engine/perso.c:174
+msgid "Experience: "
+msgstr "Erfaring: "
+
+#: engine/perso.c:178
+msgid "Age: "
+msgstr "Alder: "
+
+#: engine/perso.c:181
+msgid "Zuars: "
+msgstr "Zuars: "
+
+#: engine/perso.c:187
+msgid "HP: "
+msgstr "HP: "
+
+#: engine/perso.c:198
+msgid "MP: "
+msgstr "MP: "
+
+#: engine/prop.c:66
+msgid "Out of memory for string."
+msgstr "Mangler minne for streng."
+
+#: engine/prop.c:326
+#, c-format
+msgid "Unsupported property type: %d."
+msgstr "Ustøttet egenskapstype: %d."
+
+#: engine/prop.c:335
+#, c-format
+msgid "%s has no `%s' property (type %d)."
+msgstr "%s har ingen `%s' egenskap (type %d)."
+
+#: engine/prop.c:524
+msgid "The prop key too big."
+msgstr "Egenskapsnøkkelen er for stor."
+
+#: engine/prop.c:573
+msgid "String too big."
+msgstr "Streng er for stor."
+
+#: engine/prop.c:582
+#, c-format
+msgid "Cannot load prop of type 0x%x."
+msgstr "Kan ikke laste egenskap av type 0x%x."
+
+#: engine/prop.c:659
+#, c-format
+msgid "Cannot save prop of type 0x%x."
+msgstr "Kan ikke lagre egenskap av type 0x%x."
+
+#: engine/transform.c:65 engine/transform.c:119
+msgid "Too many transform args."
+msgstr "For mange transformasjonsargumenter."
+
+#: engine/transform.c:88 engine/transform.c:136
+msgid "Unknown transform algorithm."
+msgstr "Ukjent transformasjonsalgoritme."
+
+#: engine/typesw.c:42
+msgid "Object"
+msgstr "Objekt"
+
+#: engine/typesw.c:43
+msgid "Map"
+msgstr "Kart"
+
+#: engine/typesw.c:44
+msgid "Character"
+msgstr "Person"
+
+#: engine/view.c:74
+msgid "The viewport is already initialized."
+msgstr "Viewport allerede klargjort."
+
+#: engine/view.c:122
+msgid "Unsupported graphic mode."
+msgstr "Ustøttet grafikkmodus."
+
+#: engine/view.c:141
+msgid "The resolution is too small."
+msgstr "Oppløsningen er for liten."
+
+#: engine/view.c:148
+#, c-format
+msgid "Setting %dx%dx%d mode: %s"
+msgstr "Innstilling %dx%dx%d modus: %s"
+
+#: engine/view.c:465
+msgid "The refresh rate is out of range."
+msgstr "Oppdateringsfrekvens utenfor rekkevidde."
+
+#: engine/view.c:700
+msgid "Screenshot feature requires libjpeg"
+msgstr "Støtte for tagning av skjermbilder krever libjpeg"
+
+#: engine/input/joy.c:39
+msgid "Joystick"
+msgstr "Styrespak"
+
+#: engine/input/kbd.c:38
+msgid "Keyboard"
+msgstr "Tastatur"
+
+#: engine/input/mouse.c:38
+msgid "Mouse"
+msgstr "Mus"
+
+#: engine/loader/ttf.c:107
+msgid "Font engine initialization failed."
+msgstr "Klargjøring av skriftmotor feilet."
+
+#: engine/loader/ttf.c:134
+#, c-format
+msgid "Cannot font face: `%s'."
+msgstr "Kan ikke finne skrifttype: `%s'."
+
+#: engine/loader/ttf.c:142
+msgid "Error getting TTF font face."
+msgstr "Feil ved henting av TTF skrifttype."
+
+#: engine/loader/ttf.c:146
+msgid "Bad TTF font face."
+msgstr "Ugyldig TTF skrifttype."
+
+#: engine/loader/ttf.c:156
+msgid "Failed to set font size."
+msgstr "Kunne ikke sette skriftstørrelse."
+
+#: engine/loader/ttf.c:282
+msgid "Failed to load the TTF glyph."
+msgstr "Kunne ikke laste TTF glyfer."
+
+#: engine/loader/ttf.c:350
+msgid "Cannot render mono glyph."
+msgstr "Kan ikke tegne mono glyf."
+
+#: engine/loader/ttf.c:356
+msgid "Cannot render normal glyph."
+msgstr "Kan ikke tegne normal glyf."
+
+#: engine/loader/ttf.c:713
+msgid "The text has zero width."
+msgstr "Teksten har null bredde."
+
+#: engine/loader/xcf.c:268
+#, c-format
+msgid "Unknown XCF compression: %d."
+msgstr "Ukjent XCF kompresjon: %d."
+
+#: engine/loader/xcf.c:549
+msgid "Cannot read XCF magic."
+msgstr "Kan ikke lese XCF signatur."
+
+#: engine/loader/xcf.c:553
+msgid "Bad XCF magic."
+msgstr "Ugyldig XCF signatur."
+
+#: engine/loader/xcf.c:562
+#, c-format
+msgid "Nonsense XCF geometry: %ux%u."
+msgstr "Ugyldig XCF geometri: %ux%u."
+
+#: engine/loader/xcf.c:574
+#, c-format
+msgid "Unknown base image type: %u."
+msgstr "Ukjent basis bildetype: %u."
+
+#: engine/mapedit/layedit.c:70
+#, c-format
+msgid "%s (visible %s)\n"
+msgstr "%s (synlig %s)\n"
+
+#: engine/mapedit/layedit.c:72 engine/mapedit/layedit.c:76
+msgid ", editing"
+msgstr ", redigerer"
+
+#: engine/mapedit/layedit.c:74
+#, c-format
+msgid "%s (invisible %s)\n"
+msgstr "%s (usynlig %s)\n"
+
+#: engine/mapedit/layedit.c:173 engine/mapedit/layedit.c:194
+msgid "No layer is selected."
+msgstr "Ingen lag er valgt."
+
+#: engine/mapedit/layedit.c:207
+#, c-format
+msgid "%s layers"
+msgstr "%s lag"
+
+#: engine/mapedit/layedit.c:217
+msgid "New layer: "
+msgstr "Nytt lag: "
+
+#: engine/mapedit/layedit.c:220
+msgid "Push"
+msgstr "Stable"
+
+#: engine/mapedit/layedit.c:234
+msgid "Rename"
+msgstr "Gi nytt navn"
+
+#: engine/mapedit/layedit.c:245
+msgid "Pop"
+msgstr "Ta fra stabel"
+
+#: engine/mapedit/layedit.c:247 engine/mapedit/objedit.c:241
+#: engine/mapedit/tool/merge.c:137
+msgid "Edit"
+msgstr "Rediger"
+
+#: engine/mapedit/layedit.c:249
+msgid "Show/hide"
+msgstr "Vis/gjem"
+
+#: engine/mapedit/layedit.c:254
+msgid "Layer NN (visible, editing)    "
+msgstr "Lag NN (synlig, redigerer)"
+
+#: engine/mapedit/mapedit.c:175
+msgid "Tools"
+msgstr "Verktøy"
+
+#: engine/mapedit/mapview.c:525
+msgid "The zoom is out of range."
+msgstr "Zoom utenfor rekkevidde."
+
+#: engine/mapedit/nodeedit.c:127
+msgid "No node is selected."
+msgstr "Ingen node valgt."
+
+#: engine/mapedit/nodeedit.c:185
+#, c-format
+msgid "%s node"
+msgstr "%s node"
+
+#: engine/mapedit/nodeedit.c:192 engine/mapedit/tool/merge.c:139
+msgid "Remove"
+msgstr "Fjern"
+
+#: engine/mapedit/nodeedit.c:195
+msgid "Dup"
+msgstr "Dupliser"
+
+#: engine/mapedit/nodeedit.c:198
+msgid "Up"
+msgstr "Opp"
+
+#: engine/mapedit/nodeedit.c:201
+msgid "Down"
+msgstr "Ned"
+
+#: engine/mapedit/objedit.c:60
+msgid "No object type was specified."
+msgstr "Ingen objekttype ble spesifisert."
+
+#: engine/mapedit/objedit.c:68
+msgid "No such object type."
+msgstr "Ingen slik objekttype."
+
+#: engine/mapedit/objedit.c:74
+msgid "No object name was specified."
+msgstr "Inget objektnavn ble spesifisert."
+
+#: engine/mapedit/objedit.c:149
+#, c-format
+msgid "The `%s' object is indestructible."
+msgstr "Objektet `%s' kan ikke ødelegges."
+
+#: engine/mapedit/objedit.c:174
+msgid " (resident)"
+msgstr " (innlastet)"
+
+#: engine/mapedit/objedit.c:217
+msgid "Object editor"
+msgstr "Objekt editor"
+
+#: engine/mapedit/objedit.c:227
+msgid "Type: "
+msgstr "Type: "
+
+#: engine/mapedit/objedit.c:240 engine/mapedit/tool/merge.c:122
+msgid "Create"
+msgstr "Lag"
+
+#: engine/mapedit/objedit.c:242
+msgid "Edit obj"
+msgstr "Rediger objekt"
+
+#: engine/mapedit/objedit.c:243
+msgid "Load"
+msgstr "Last"
+
+#: engine/mapedit/objedit.c:250
+msgid "Move up"
+msgstr "Flytt opp"
+
+#: engine/mapedit/objedit.c:251
+msgid "Move down"
+msgstr "Flytt ned"
+
+#: engine/mapedit/objedit.c:252
+msgid "Destroy"
+msgstr "Ødelegg"
+
+#: engine/mapedit/tool/eraser.c:57 engine/mapedit/tool/flip.c:61
+#: engine/mapedit/tool/shift.c:71
+msgid "All"
+msgstr "Alle"
+
+#: engine/mapedit/tool/eraser.c:58 engine/mapedit/tool/flip.c:62
+#: engine/mapedit/tool/shift.c:70
+msgid "Highest"
+msgstr "Høyeste"
+
+#: engine/mapedit/tool/eraser.c:69
+msgid "Eraser"
+msgstr "Viskelær"
+
+#: engine/mapedit/tool/fill.c:57
+msgid "Pattern fill"
+msgstr "Mønsterfylling"
+
+#: engine/mapedit/tool/fill.c:58
+msgid "Clear"
+msgstr "Tøm"
+
+#: engine/mapedit/tool/fill.c:69
+msgid "Fill"
+msgstr "Fyll"
+
+#: engine/mapedit/tool/flip.c:56
+msgid "Horizontal"
+msgstr "Horisontal"
+
+#: engine/mapedit/tool/flip.c:57
+msgid "Vertical"
+msgstr "Vertikal"
+
+#: engine/mapedit/tool/flip.c:74
+msgid "Flip"
+msgstr "Snu"
+
+#: engine/mapedit/tool/magnifier.c:62
+msgid "No map is visible."
+msgstr "Inget kart synlig."
+
+#: engine/mapedit/tool/magnifier.c:75
+msgid "There is no visible map."
+msgstr "Det finnes inget synlig kart."
+
+#: engine/mapedit/tool/magnifier.c:95
+msgid "Magnifier"
+msgstr "Forstørrelsesglass"
+
+#: engine/mapedit/tool/magnifier.c:99
+msgid "1:1 zoom"
+msgstr "1:1 zoom"
+
+#: engine/mapedit/tool/magnifier.c:103
+msgid "Zoom %: "
+msgstr "Zoom %: "
+
+#: engine/mapedit/tool/merge.c:109
+msgid "Merge tool"
+msgstr "Sammenflettingsverktøy"
+
+#: engine/mapedit/tool/merge.c:133
+msgid "Load set"
+msgstr "Last sett"
+
+#: engine/mapedit/tool/merge.c:135
+msgid "Save set"
+msgstr "Lagre sett"
+
+#: engine/mapedit/tool/merge.c:181
+msgid "No brush name was given."
+msgstr "Inget penselnavn angitt."
+
+#: engine/mapedit/tool/merge.c:187
+#, c-format
+msgid "A `%s' brush exists."
+msgstr "En `%s' pensel eksisterer."
+
+#: engine/mapedit/tool/position.c:63
+msgid "Position"
+msgstr "Posisjon"
+
+#: engine/mapedit/tool/propedit.c:204
+msgid "Node props"
+msgstr "Node egenskaper"
+
+#: engine/mapedit/tool/propedit.c:211
+msgid "Block"
+msgstr "Blokker"
+
+#: engine/mapedit/tool/propedit.c:212
+msgid "Walk"
+msgstr "Gå"
+
+#: engine/mapedit/tool/propedit.c:213
+msgid "Climb"
+msgstr "Klatre"
+
+#: engine/mapedit/tool/propedit.c:220
+msgid "Bio"
+msgstr "Bio"
+
+#: engine/mapedit/tool/propedit.c:221
+msgid "Regen"
+msgstr "Regenerering"
+
+#: engine/mapedit/tool/propedit.c:222
+msgid "Slow"
+msgstr "Sinke"
+
+#: engine/mapedit/tool/propedit.c:223
+msgid "Haste"
+msgstr "Haste"
+
+#: engine/mapedit/tool/propedit.c:233
+msgid "Origin"
+msgstr "Utgangspunkt"
+
+#: engine/mapedit/tool/select.c:56
+msgid "There is no selection to copy."
+msgstr "Ingenting markert for kopiering."
+
+#: engine/mapedit/tool/select.c:90
+msgid "The copy buffer is empty!"
+msgstr "Kopieringsbufferen er tom!"
+
+#: engine/mapedit/tool/select.c:128
+msgid "There is no selection to kill."
+msgstr "Ingenting markert for sletting."
+
+#: engine/mapedit/tool/select.c:146
+msgid "There is no selection to cut."
+msgstr "Ingenting markert for klipping."
+
+#: engine/mapedit/tool/shift.c:63
+msgid "Shift"
+msgstr "Forskyv"
+
+#: engine/mapedit/tool/shift.c:80
+msgid "Multi"
+msgstr "Flere"
+
+#: engine/mapedit/tool/stamp.c:59
+msgid "Insert"
+msgstr "Flett inn"
+
+#: engine/mapedit/tool/stamp.c:69
+msgid "Stamp"
+msgstr "Stemple"
+
+#: engine/monitor/monitor.c:67 engine/monitor/screenshot.c:260
+msgid "Screenshot"
+msgstr "Ta skjermbilde"
+
+#: engine/monitor/monitor.c:69
+msgid "Widgets"
+msgstr "Widgets"
+
+#: engine/monitor/monitor.c:70 engine/monitor/view_params.c:55
+msgid "Viewport"
+msgstr "Synsfelt"
+
+#: engine/monitor/monitor.c:81
+msgid "Debug monitor"
+msgstr "Overvåkning for feilsøking"
+
+#: engine/monitor/screenshot.c:75
+msgid "A JPEG error has occured."
+msgstr "Det har oppstått en JPEG feil."
+
+#: engine/monitor/screenshot.c:125
+#, c-format
+msgid "Transmitting frame %d"
+msgstr "Overfører bilde %d"
+
+#: engine/monitor/screenshot.c:182
+msgid "Already connected to a server."
+msgstr "Allerede tilkoblet server."
+
+#: engine/monitor/screenshot.c:190
+msgid "Missing server hostname/port."
+msgstr "Mangler server maskinnavn/port."
+
+#: engine/monitor/screenshot.c:195
+#, c-format
+msgid "Connecting to %s:%s.."
+msgstr "Kobler til %s:%s.."
+
+#: engine/monitor/screenshot.c:211
+msgid "failed to create socket"
+msgstr "kunne ikke opprette socket"
+
+#: engine/monitor/screenshot.c:215
+msgid "connection refused"
+msgstr "tilkoblingsforsøk avvist"
+
+#: engine/monitor/screenshot.c:228
+#, c-format
+msgid "Connected to %s"
+msgstr "Tilkoblet %s"
+
+#: engine/monitor/screenshot.c:245
+msgid "Disconnected"
+msgstr "Koblet fra"
+
+#: engine/monitor/screenshot.c:265
+msgid "Idle"
+msgstr "Inaktiv"
+
+#: engine/monitor/screenshot.c:266
+#, c-format
+msgid "Status: %s."
+msgstr "Status: %s."
+
+#: engine/monitor/screenshot.c:267
+msgid "Transmitting frame XXXXXXXXXXX"
+msgstr "Overfører bilde XXXXXXXXXXX"
+
+#: engine/monitor/screenshot.c:270
+msgid "Host: "
+msgstr "Maskin: "
+
+#: engine/monitor/screenshot.c:271
+msgid "Port: "
+msgstr "Port: "
+
+#: engine/monitor/screenshot.c:273
+msgid "Refresh rate (ms): "
+msgstr "Oppdateringsfrekvens (ms): "
+
+#: engine/monitor/screenshot.c:285 sumo/sumo.c:294
+msgid "Connect"
+msgstr "Koble til"
+
+#: engine/monitor/screenshot.c:289
+msgid "Disconnect"
+msgstr "Koble fra"
+
+#: engine/monitor/view_params.c:64
+msgid "GUI"
+msgstr "GUI"
+
+#: engine/monitor/view_params.c:67
+msgid "Tile-based"
+msgstr "Tile (flis) basert"
+
+#: engine/monitor/view_params.c:70
+#, c-format
+msgid "Graphic engine: %s %s"
+msgstr "Grafikkmotor: %s %s"
+
+#: engine/monitor/view_params.c:76
+#, c-format
+msgid "Window op: %d (%p)"
+msgstr "Vindusoperasjon: %d (%p)"
+
+#: engine/monitor/view_params.c:79
+msgid "Window op: 000 (0x00000000)"
+msgstr "Vindusoperasjon: 000 (0x00000000)"
+
+#: engine/monitor/view_params.c:85
+msgid "Map: %[obj]"
+msgstr "Kart: %[obj]"
+
+#: engine/monitor/view_params.c:87
+#, c-format
+msgid "Map geometry: %dx%d"
+msgstr "Kartgeometri: %dx%d"
+
+#: engine/monitor/view_params.c:89
+#, c-format
+msgid "Map offset: %d,%d (soft %d,%d)"
+msgstr "Kartposisjon: %d,%d (soft %d,%d)"
+
+#: engine/monitor/widget_browser.c:76 engine/monitor/widget_browser.c:94
+#: engine/monitor/widget_browser.c:112 engine/monitor/widget_browser.c:249
+msgid "No window is selected."
+msgstr "Inget vindu er valgt."
+
+#: engine/monitor/widget_browser.c:159
+msgid "No widget is selected."
+msgstr "Ingen widget er valgt."
+
+#: engine/monitor/widget_browser.c:165
+#, c-format
+msgid "%s widget"
+msgstr "widget %s"
+
+#: engine/monitor/widget_browser.c:171 engine/monitor/widget_browser.c:260
+#, c-format
+msgid "Name: \"%s\""
+msgstr "Navn: \"%s\""
+
+#: engine/monitor/widget_browser.c:173 engine/monitor/widget_browser.c:261
+#, c-format
+msgid "Flags: 0x%x"
+msgstr "Flagg: 0x%x"
+
+#: engine/monitor/widget_browser.c:177
+#, c-format
+msgid "Geo: %dx%d at %d,%d (view %d,%d)"
+msgstr "Geo: %dx%d på %d,%d (synsområde %d,%d)"
+
+#: engine/monitor/widget_browser.c:181
+msgid "Geo: 0000x0000 at 0000x0000 (view 0000,0000)"
+msgstr "Geo: 0000x0000 på 0000x0000 (synsområde 0000,0000)"
+
+#: engine/monitor/widget_browser.c:257
+#, c-format
+msgid "%s window"
+msgstr "vindu %s"
+
+#: engine/monitor/widget_browser.c:270 engine/monitor/widget_browser.c:298
+msgid "Examine"
+msgstr "Undersøk"
+
+#: engine/monitor/widget_browser.c:288
+msgid "Window stack"
+msgstr "Vindustabel"
+
+#: engine/monitor/widget_browser.c:300
+msgid "Show"
+msgstr "Vis"
+
+#: engine/monitor/widget_browser.c:302
+msgid "Hide"
+msgstr "Gjem"
+
+#: engine/monitor/widget_browser.c:304
+msgid "Detach"
+msgstr "Koble fra"
+
+#: engine/widget/text.c:46
+msgid "Error"
+msgstr "Feil"
+
+#: engine/widget/text.c:47
+msgid "Warning"
+msgstr "Advarsel"
+
+#: engine/widget/text.c:48
+msgid "Information"
+msgstr "Informasjon"
+
+#: engine/widget/text.c:357
+msgid "Ok"
+msgstr "Ok"
+
+#: screenshotd/screenshotd.c:55
+msgid "Agar screenshot daemon"
+msgstr "Agar serverprosess for skjermbildetagning"
+
+#: screenshotd/screenshotd.c:56 sumo/sumo.c:62
+msgid "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
+msgstr "Copyright (c) 2003 CubeSoft Communications, Inc.\n"
+
+#: screenshotd/screenshotd.c:153
+#, c-format
+msgid " %s [-vfF] [-w width] [-h height]"
+msgstr " %s [-vfF] [-w bredde] [-h høyde]"
+
+#: screenshotd/screenshotd.c:155
+msgid " [-H host] [-P port]"
+msgstr " [-H maskinnavn] [-P port]"
+
+#: screenshotd/screenshotd.c:156 sumo/sumo.c:384
+msgid " [-r fps] [-t font,size,style]"
+msgstr " [-r fps] [-t skrifttype,størrelse,stil]"
+
+#: screenshotd/screenshotd.c:158
+msgid " [-d level] [-T]"
+msgstr " [-d nivå] [-T]"
+
+#: screenshotd/server.c:100
+msgid "Too many clients."
+msgstr "For mange klienter."
+
+#: screenshotd/server.c:168
+#, c-format
+msgid "%s: %s failed"
+msgstr "%s: %s feilet"
+
+#: screenshotd/session.c:106
+msgid "Bad JPEG magic."
+msgstr "Ugyldig JPEG signatur."
+
+#: sumo/session.c:74
+#, c-format
+msgid "%lu MB"
+msgstr "%lu KB"
+
+#: sumo/session.c:77
+#, c-format
+msgid "%lu KB"
+msgstr "%lu KB"
+
+#: sumo/session.c:80
+#, c-format
+msgid "%lu B"
+msgstr "%lu B"
+
+#: sumo/session.c:235
+msgid "No directory is selected"
+msgstr "Ingen katalog er valgt"
+
+#: sumo/session.c:435
+msgid "new"
+msgstr "ny"
+
+#: sumo/session.c:466
+msgid "Queue"
+msgstr "Kø"
+
+#: sumo/session.c:470
+msgid "Start download"
+msgstr "Begynn nedlasting"
+
+#: sumo/session.c:518 sumo/session.c:548
+#, c-format
+msgid "I/O error: %s"
+msgstr "Inn/ut feil: %s"
+
+#: sumo/session.c:521 sumo/session.c:551
+msgid "EOF from server"
+msgstr "EOF fra server"
+
+#: sumo/session.c:643
+msgid "idle"
+msgstr "inaktiv"
+
+#: sumo/session.c:653
+msgid "busy"
+msgstr "opptatt"
+
+#: sumo/session.c:682
+msgid "exiting"
+msgstr "avslutter"
+
+#: sumo/sumo.c:61
+msgid "SUMO Client"
+msgstr "SUMO Klient"
+
+#: sumo/sumo.c:129
+#, c-format
+msgid "%2d. (locked session)"
+msgstr "%2d. (låst økt)"
+
+#: sumo/sumo.c:157
+msgid "Missing SUMO host/port."
+msgstr "Mangler SUMO maskinnavn/port."
+
+#: sumo/sumo.c:161
+msgid "Missing FTP host/port."
+msgstr "Mangler FTP maskinnavn/port."
+
+#: sumo/sumo.c:165
+msgid "Missing FTP user/pass."
+msgstr "Mangler FTP brukernavn/passord."
+
+#: sumo/sumo.c:213
+#, c-format
+msgid "%s failed"
+msgstr "%s feilet"
+
+#: sumo/sumo.c:261
+msgid "SUMO sessions"
+msgstr "SUMO økter"
+
+#: sumo/sumo.c:265
+msgid "SUMO host: "
+msgstr "SUMO maskin: "
+
+#: sumo/sumo.c:266
+msgid "SUMO port: "
+msgstr "SUMO port: "
+
+#: sumo/sumo.c:280
+msgid "FTP host: "
+msgstr "FTP maskin: "
+
+#: sumo/sumo.c:281
+msgid "FTP port: "
+msgstr "FTP port: "
+
+#: sumo/sumo.c:282
+msgid "FTP user: "
+msgstr "FTP bruker: "
+
+#: sumo/sumo.c:283
+msgid "FTP pass: "
+msgstr "FTP passord: "
+
+#: sumo/sumo.c:284
+msgid "Passive mode"
+msgstr "Passiv modus"
+
+#: sumo/sumo.c:382
+#, c-format
+msgid "Usage: %s [-vfFe] [-w width] [-h height]"
+msgstr "Bruk: %s [-vfFe] [-w bredde] [-h høyde]"
