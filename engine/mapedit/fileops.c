@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.10 2002/09/12 09:35:23 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.11 2002/09/13 11:08:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -148,7 +148,7 @@ fileops_revert_map(int argc, union evarg *argv)
 	asprintf(&path, "%s/maps/%s.m", s, OBJECT(m)->name);
 	free(s);
 
-	if (object_loadfrom(mv->map, path) == 0) {
+	if (object_load_from(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
 	}
 	free(path);

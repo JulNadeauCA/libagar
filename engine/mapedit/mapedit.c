@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.120 2002/09/12 09:35:23 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.121 2002/09/13 11:08:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -92,7 +92,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 	struct world *wo = parent;
 	struct object *ob;
 
-	SLIST_FOREACH(ob, &wo->wobjsh, wobjs) {
+	SLIST_FOREACH(ob, &wo->wobjs, wobjs) {
 		struct editobj *eob;
 		
 		if ((ob->flags & OBJECT_ART) == 0 ||
