@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.109 2004/03/25 09:00:52 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.110 2004/03/30 16:32:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -28,6 +28,8 @@
 
 #include <config/sharedir.h>
 #include <config/ttfdir.h>
+#include <config/have_getpwuid.h>
+#include <config/have_getuid.h>
 
 #include <compat/asprintf.h>
 
@@ -57,7 +59,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 #include <pwd.h>
+#endif
 #include <unistd.h>
 
 const struct version config_ver = {
@@ -180,10 +184,14 @@ config_init(struct config *con)
 	prop_set_int(con, "font-engine.default-style", 0);
 	prop_set_bool(con, "input.joysticks", 1);
 
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	pwd = getpwuid(getuid());
 	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
 	strlcat(udatadir, "/.", sizeof(udatadir));
 	strlcat(udatadir, proginfo->progname, sizeof(udatadir));
+#else
+	udatadir[0] = '\0';
+#endif
 
 	prop_set_string(con, "save-path", "%s", udatadir);
 	prop_set_string(con, "den-path", "%s", SHAREDIR);
