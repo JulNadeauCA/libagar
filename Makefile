@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.46 2004/04/26 03:40:33 vedge Exp $
+#	$Csoft: Makefile,v 1.47 2004/11/23 02:37:49 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -48,7 +48,7 @@ fastclean:
 	find . -type d -and -name .libs -exec rm -fR {} \;
 
 install-includes:
-	${INSTALL_INCL_DIR} ${INCLDIR}
+	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
 	${SUDO} env \
 	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 	    INSTALL_INCL="${INSTALL_INCL}" \
