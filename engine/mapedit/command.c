@@ -171,36 +171,34 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 }
 
 void
-mapedit_load(struct mapedit *med)
+mapedit_loadmap(struct mapedit *med)
 {
-	char path[FILENAME_MAX];
 	struct map *map = med->map;
 	int x, y;
 
 	mapedit_setpointer(med, 0);
+
 	map_freenodes(map);
-	sprintf(path, "%s.map", map->obj.name);
-	if (map_load(med->map, path) == 0) {
+
+	if (object_load(med->map) == 0) {
 		x = map->defx;
 		y = map->defy;
 		map->map[x][y].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
 		view_center(map->view, x, y);
+	} else {
+		map_allocnodes(map, map->mapw, map->maph,
+		    map->tilew, map->tileh);
 	}
 	mapedit_setpointer(med, 1);
 	map->redraw++;
 }
 
 void
-mapedit_save(struct mapedit *med)
+mapedit_savemap(struct mapedit *med)
 {
-	char path[FILENAME_MAX];
-
-	sprintf(path, "%s.map", med->map->obj.name);
-	dprintf("saving %s...\n", path);
-	med->map->obj.save((struct object *)med->map, path);
-	dprintf("done\n");
+	object_save(med->map);
 }
 
 void
