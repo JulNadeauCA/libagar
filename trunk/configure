@@ -94,7 +94,11 @@ fi
 
 if [ "${srcdir}" != "" ]; then
 	if [ ! -e "${srcdir}" ]; then
-		echo "Cannot find source directory `${srcdir}'"
+		echo "Cannot find source directory: ${srcdir}"
+		exit 1
+	fi
+	if [ ! -e "${srcdir}/configure.in" ]; then
+		echo "Invalid source directory: ${srcdir}"
 		exit 1
 	fi
 	SRC=${srcdir}
