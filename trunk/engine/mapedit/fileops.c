@@ -174,7 +174,7 @@ fileops_new_map(int argc, union evarg *argv)
 	}
 
 	m->origin.x = w / 2;
-	m->origin.x = h - 2;	/* XXX pref */
+	m->origin.y = h - 2;	/* XXX pref */
 
 	win = mapedit_win_new(m);
 	view_attach(win);
