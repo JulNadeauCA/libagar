@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.11 2003/01/01 05:18:38 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.12 2003/01/19 12:09:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -133,7 +133,7 @@ propedit_window(void *p)
 		int i;
 
 		for (i = 0; i < nprops; i++) {
-			cbox = checkbox_new(reg, 15, props[i].name);
+			cbox = checkbox_new(reg, -1, props[i].name);
 			event_new(cbox, "checkbox-changed",
 			    propedit_event, "%p, %i", pe, props[i].flag);
 		}

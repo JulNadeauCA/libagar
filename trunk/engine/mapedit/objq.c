@@ -241,6 +241,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		cury = 140;
 	}
 	window_set_caption(win, "%s", ob->name);
+	window_set_spacing(win, 1, 4);
 
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, ob->art->tiles.map,
@@ -253,52 +254,46 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 
 	/* Map operation buttons */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 10);
-	reg->spacing = 1;
+	reg = region_new(win, REGION_HALIGN|REGION_CLIPPING, 0, 0, 100, -1);
+	region_set_spacing(reg, 1, 1);
 	{
-		const int xdiv = 14;
-	
 		bu = button_new(reg, NULL,		/* Load map */
-		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
 		bu = button_new(reg, NULL,		/* Save map */
-		    SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 		
 		bu = button_new(reg, NULL,		/* Clear map */
-		    SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
 		
 		bu = button_new(reg, NULL,		/* Toggle grid */
-		    SPRITE(med, MAPEDIT_TOOL_GRID),
-		    BUTTON_STICKY, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		bu = button_new(reg, NULL,		/* Toggle props */
-		    SPRITE(med, MAPEDIT_TOOL_PROPS),
-		    BUTTON_STICKY, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_PROPS), BUTTON_STICKY, -1, -1);
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 		bu = button_new(reg, NULL,		/* Toggle map edition */
-		    SPRITE(med, MAPEDIT_TOOL_EDIT),
-		    BUTTON_STICKY, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 		
 		bu = button_new(reg, NULL,	       /* Toggle node edition */
-		    SPRITE(med, MAPEDIT_TOOL_NODEEDIT),
-		    BUTTON_STICKY, xdiv, 100);
+		    SPRITE(med, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
@@ -306,12 +301,14 @@ tl_objs_selected(int argc, union evarg *argv)
 
 		event_new(win, "window-close", tilemap_close, "%p, %p", mv, bu);
 	}
-	/* Map view */
-	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
-	reg->spacing = 1;
+
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
+	region_set_spacing(reg, 0, 0);
 	{
+		/* Map view */
 		region_attach(reg, mv);
 	}
+
 	window_show(win);
 
 	/* Create the tile selection window. */
