@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.157 2004/05/30 23:30:36 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.158 2004/06/19 04:01:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 #include "mapview.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 const struct widget_ops mapview_ops = {
 	{
