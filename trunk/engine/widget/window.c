@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.97 2002/11/12 05:17:20 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.98 2002/11/13 00:22:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -437,11 +437,15 @@ window_hide(struct window *win)
 	
 	win->flags &= ~(WINDOW_SHOWN);
 
-	/* Redraw the background in GUI mode. */
+	/* Update the background. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
 		SDL_FillRect(view->v, &win->rd, bg_color);
 		SDL_UpdateRect(view->v, win->rd.x, win->rd.y,
 		    win->rd.w, win->rd.h);
+	} else {
+		if (view->rootmap != NULL) {		/* Redraw the map. */
+			view->rootmap->map->redraw++;
+		}
 	}
 
 	if (win->flags & WINDOW_SAVE_POSITION) {
@@ -590,8 +594,8 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			    nrd.y, nrd.w, nrd.h);
 		}
 	}
-	
-	if (view->rootmap != NULL) {
+
+	if (view->rootmap != NULL) {		/* Redraw the map. */
 		view->rootmap->map->redraw++;
 	}
 }
@@ -892,10 +896,6 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 
 	ro = win->rd;		/* Structure copy */
 
-#if 0
-	SDL_FillRect(view->v, &win->rd, bg_color);
-#endif
-
 	nx = win->rd.x;
 	ny = win->rd.y;
 
@@ -962,7 +962,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	/* Effect the change. */
 	window_resize(win);
 
-	/* Update the surrounding rectangles in GUI mode. */
+	/* Update the background. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
 		/* Rectangle at the left (lresize operation). */
 		if (win->rd.x > ro.x) {
@@ -982,6 +982,9 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			    win->rd.x, win->rd.y + win->rd.h,
 			    ro.w, ro.h - win->rd.h);
 		}
+	} else if (view->rootmap != NULL) {
+		/* Redraw the map. */
+		view->rootmap->map->redraw++;
 	}
 }
 
