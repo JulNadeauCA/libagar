@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.h,v 1.9 2003/06/06 02:50:19 vedge Exp $	*/
+/*	$Csoft: rootmap.h,v 1.10 2003/06/18 00:46:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ROOTMAP_H_
@@ -7,6 +7,13 @@
 
 struct viewmap;
 struct viewport;
+
+enum {
+	ROOTMAP_N,
+	ROOTMAP_S,
+	ROOTMAP_W,
+	ROOTMAP_E
+};
 
 __BEGIN_DECLS
 void		  rootmap_init(struct viewmap *, int, int);
