@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.18 2002/05/02 06:29:19 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.19 2002/05/02 09:37:02 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -36,5 +36,6 @@ void	 engine_destroy(void);
 void	 engine_config(void);
 
 void	*emalloc(size_t);
+void	*erealloc(void *, size_t);
 
 #endif	/* _AGAR_ENGINE_H_ */
