@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.3 2002/07/07 06:28:17 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.4 2002/07/07 10:17:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -73,7 +73,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	/* Load map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
 	    0, 0, 0);
-	event_new(bu, "button-pushed", 0, fileops_load_map, "%p", mv);
+	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
 	/* Save map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
 	    0, 0, 0);
