@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.35 2003/05/09 02:24:07 vedge Exp $
+.\"	$Csoft: object.3,v 1.36 2003/05/18 00:16:57 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -86,6 +86,12 @@ Generic events and properties
 .Ft "char *"
 .Fn object_name "void *obj"
 .Pp
+.Ft "void"
+.Fn lock_linkage "void"
+.Pp
+.Ft "void"
+.Fn unlock_linkage "void"
+.Pp
 .nr nS 0
 The
 .Fn object_new
@@ -171,6 +177,16 @@ traversal of the object tree, until the root is reached.
 .Fn object_name
 returns a pointer to a newly allocated, NUL-terminated string containing the
 resulting pathname.
+.Pp
+Since
+.Fn object_name
+must traverse the tree backwards and the parents may change, a big lock is
+required in order to protect linkage.
+.Fn lock_linkage
+and
+.Fn unlock_linkage
+acquire and release the linkage lock, respectively.
+If thread safety was not enabled at compile-time, these functions are no-ops.
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"
@@ -409,17 +425,19 @@ layer generates the following events:
 .It Fn attached "void *parent"
 The object has been attached to a
 .Fa parent
-object, which remains locked during the execution of the event handler.
+object.
+The linkage lock is held during the execution of the event handler.
 .It Fn detached "void *parent"
 The object has been detached from its
 .Fa parent
-object, which remains locked during the execution of the event handler.
+object.
+The linkage lock is held during the execution of the event handler.
 .It Fn moved "void *oldparent" "void *newparent"
 The object has been moved from
 .Fa oldparent
 to
 .Fa newparent .
-Both parents remain locked throughout the execution of the event handler.
+The linkage lock is held during the execution of the event handler.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

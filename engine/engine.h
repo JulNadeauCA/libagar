@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.61 2003/04/26 06:19:52 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.62 2003/05/18 00:16:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -23,13 +23,10 @@
 #endif
 
 #ifdef THREADS
-# if !defined(__OpenBSD__)
-#  ifndef _XOPEN_SOURCE
-#  define _XOPEN_SOURCE 500	/* XXX for recursive mutexes */
-#  endif
-# endif
+# define _XOPEN_SOURCE 500	/* Require recursive mutexes */
 # include <pthread.h>		/* For pthread types */
 # include <signal.h>		/* For pthread_kill() */
+# undef _XOPEN_SOURCE
 #else
 # define pthread_mutex_t	int
 # define pthread_mutexattr_t	int
@@ -94,6 +91,8 @@ extern DECLSPEC int	 engine_init(int, char **, struct engine_proginfo *,
 			             int);
 extern DECLSPEC void	 engine_stop(void);
 extern DECLSPEC void	 engine_destroy(void);
+extern __inline__ void	 lock_linkage(void);
+extern __inline__ void	 unlock_linkage(void);
 __END_DECLS
 
 #include "close_code.h"

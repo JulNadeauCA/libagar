@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.174 2003/04/25 22:53:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.175 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1087,7 +1087,7 @@ map_save(void *p, struct netbuf *buf)
 		write_uint8(buf, m->origin.layer);
 
 	/* Write the dependencies. */
-	pthread_mutex_lock(&world->lock);
+	lock_linkage();
 	object_table_init(&deps);
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -1101,7 +1101,7 @@ map_save(void *p, struct netbuf *buf)
 			}
 		}
 	}
-	pthread_mutex_unlock(&world->lock);
+	unlock_linkage();
 	object_table_save(&deps, buf);
 
 	/* Write the nodes. */
