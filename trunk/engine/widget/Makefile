@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.72 2004/11/22 02:46:27 vedge Exp $
+#	$Csoft: Makefile,v 1.73 2005/02/02 09:28:23 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -19,7 +19,7 @@ MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 textbox.3 \
 	window.3 bitmap.3 scrollbar.3 tlist.3 palette.3 text.3 box.3 \
 	hbox.3 vbox.3 combo.3 fspinbutton.3 ucombo.3 spinbutton.3 units.3
 
-CFLAGS+=${SDL_CFLAGS}
+CFLAGS+=${SDL_CFLAGS} ${FREETYPE_CFLAGS}
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk

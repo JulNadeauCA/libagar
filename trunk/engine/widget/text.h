@@ -1,10 +1,8 @@
-/*	$Csoft: text.h,v 1.37 2004/11/30 11:36:37 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.38 2005/01/17 02:20:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
-
-#include <engine/loader/ttf.h>
 
 #include "begin_code.h"
 
@@ -12,12 +10,6 @@ enum text_msg_title {
 	MSG_ERROR,
 	MSG_WARNING,
 	MSG_INFO
-};
-
-enum text_engine {
-	TEXT_ENGINE_FREETYPE,		/* FreeType */
-	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
-	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
 };
 
 /* Cached text surface. */
@@ -42,12 +34,13 @@ struct text_font {
 
 __BEGIN_DECLS
 extern int text_font_height, text_font_ascent, text_font_descent,
-	   text_font_line_skip;
+	   text_font_line_skip, text_tab_width, text_blink_rate;
 
-int	 text_init(enum text_engine);
+int	 text_init(void);
 void	 text_parse_fontspec(char *);
 void	 text_destroy(void);
 
+struct text_font	*text_fetch_font(const char *, int, int);
 __inline__ SDL_Surface	*text_render(const char *, int, Uint32, const char *);
 SDL_Surface		*text_render_unicode(const char *, int, Uint32,
 			                     const Uint32 *);

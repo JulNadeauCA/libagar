@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.83 2005/02/07 05:38:04 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.84 2005/02/07 13:17:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -28,6 +28,16 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
+#include <engine/config.h>
+
+#include <config/have_freetype.h>
+
+#ifdef HAVE_FREETYPE
+#include <engine/loader/ttf.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
+#endif
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -60,6 +70,7 @@ enum {
 };
 
 static void mousebuttondown(int, union evarg *);
+static void mousemotion(int, union evarg *);
 static void keydown(int, union evarg *);
 static void keyup(int, union evarg *);
 
@@ -107,7 +118,6 @@ repeat_expire(void *obj, Uint32 ival, void *arg)
 {
 	struct textbox *tb = obj;
 
-	dprintf("repeat %d\n", tb->repeat.key);
 	if (process_key(tb, tb->repeat.key, tb->repeat.mod,
 	    tb->repeat.unicode) == 0) {
 		return (0);
@@ -121,17 +131,39 @@ delay_expire(void *obj, Uint32 ival, void *arg)
 	struct textbox *tb = obj;
 
 	timeout_replace(tb, &tb->repeat_to, kbd_repeat);
+	timeout_del(tb, &tb->cblink_to);
+	tb->blink_state = 1;
 	return (0);
 }
 
+static Uint32
+blink_expire(void *obj, Uint32 ival, void *arg)
+{
+	struct textbox *tb = obj;
+
+	tb->blink_state = !tb->blink_state;
+	return (ival);
+}
+
 static void
-lostfocus(int argc, union evarg *argv)
+gained_focus(int argc, union evarg *argv)
+{
+	struct textbox *tb = argv[0].p;
+
+	timeout_del(tb, &tb->delay_to);
+	timeout_del(tb, &tb->repeat_to);
+	timeout_replace(tb, &tb->cblink_to, text_blink_rate);
+}
+
+static void
+lost_focus(int argc, union evarg *argv)
 {
 	struct textbox *tb = argv[0].p;
 
 	lock_timeout(tb);
 	timeout_del(tb, &tb->delay_to);
 	timeout_del(tb, &tb->repeat_to);
+	timeout_del(tb, &tb->cblink_to);
 	unlock_timeout(tb);
 }
 
@@ -157,6 +189,10 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->pos = 0;
 	tbox->offs = 0;
 	tbox->compose = 0;
+	tbox->blink_state = 1;
+	tbox->sel_x1 = 0;
+	tbox->sel_x2 = 0;
+	tbox->sel_edit = 0;
 
 	if (label != NULL) {
 		tbox->label = text_render(NULL, -1,
@@ -169,12 +205,15 @@ textbox_init(struct textbox *tbox, const char *label)
 	
 	timeout_set(&tbox->repeat_to, repeat_expire, NULL, 0);
 	timeout_set(&tbox->delay_to, delay_expire, NULL, 0);
+	timeout_set(&tbox->cblink_to, blink_expire, NULL, 0);
 
 	event_new(tbox, "window-keydown", keydown, NULL);
 	event_new(tbox, "window-keyup", keyup, NULL);
 	event_new(tbox, "window-mousebuttondown", mousebuttondown, NULL);
-	event_new(tbox, "widget-lostfocus", lostfocus, NULL);
-	event_new(tbox, "widget-hidden", lostfocus, NULL);
+	event_new(tbox, "window-mousemotion", mousemotion, NULL);
+	event_new(tbox, "widget-gainfocus", gained_focus, NULL);
+	event_new(tbox, "widget-lostfocus", lost_focus, NULL);
+	event_new(tbox, "widget-hidden", lost_focus, NULL);
 }
 
 void
@@ -193,20 +232,25 @@ textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
 	struct widget_binding *stringb;
-	int i, x = 0, y;
+	struct text_font *font;
+	int i, x, y;
 	size_t len;
 	char *s;
 
 	if (tbox->label != NULL) {
 		widget_blit(tbox, tbox->label, 0,
 		    WIDGET(tbox)->h/2 - tbox->label->h/2);
-		x = tbox->label->w;
 	}
+
+	font = text_fetch_font(
+	    prop_get_string(config, "font-engine.default-font"),
+	    prop_get_int(config, "font-engine.default-size"),
+	    0);
 
 	stringb = widget_get_binding(tbox, "string", &s);
 	len = strlen(s);
 
-	x = tbox->label->w + tbox->xpadding;
+	x = ((tbox->label!=NULL) ? tbox->label->w : 0) + tbox->xpadding;
 	y = tbox->ypadding;
 
 	primitives.box(tbox,
@@ -214,37 +258,83 @@ textbox_draw(void *p)
 	    0,
 	    WIDGET(tbox)->w - x - 1,
 	    WIDGET(tbox)->h,
-	    widget_holds_focus(tbox) ? -1 : 1,
+	    (WIDGET(tbox)->flags & WIDGET_FOCUSED) ? -1 : 1,
 	    tbox->writeable ? READWRITE_COLOR : READONLY_COLOR);
 
 	x += tbox->xpadding;
-	if (widget_holds_focus(tbox)) {
+	if (WIDGET(tbox)->flags & WIDGET_FOCUSED) {
 		x++;
 		y++;
 	}
 	for (i = 0; i <= len; i++) {
-		SDL_Surface *glyph;
+		int invert = 0;
 
-		if (i == tbox->pos && widget_holds_focus(tbox)) {
-			primitives.line2(tbox, x, y, x, y+tbox->label->h-2,
-			    CURSOR_COLOR);
+		if ((WIDGET(tbox)->flags & WIDGET_FOCUSED) &&
+		    tbox->blink_state) {
+			if (i == tbox->pos) {
+				primitives.line(tbox,
+				    x,
+				    y + 1,
+				    x,
+				    y + text_font_height - 2,
+				    CURSOR_COLOR);
+			}
 		}
-		if (x > WIDGET(tbox)->w - tbox->xpadding*4)
+		if (i == len)
 			break;
 
-		if (i < len && s[i] != '\n') {
-			char tcs[2];
+		if (s[i] == '\n') {
+			y += text_font_line_skip;
+			continue;
+		} else if (s[i] == '\t') {
+			x += text_tab_width;
+			continue;
+		}
+		{
+			FT_Bitmap *ftbmp;
+			Uint32 ch = (Uint32)s[i];
+			struct ttf_font *ttf = font->p;
+			struct ttf_glyph *glyph;
+			int xglyph, yglyph;
+			Uint8 *src;
 
-			/* XXX */
-			tcs[0] = s[i];
-			tcs[1] = '\0';
-			glyph = text_render(NULL, -1,
-			    WIDGET_COLOR(tbox, TEXT_COLOR), tcs);
-			widget_blit(tbox, glyph, x, y);
-			x += glyph->w;
-			SDL_FreeSurface(glyph);
+			if (ttf_find_glyph(ttf, ch,
+			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+				continue;
+			}
+			glyph = ttf->current;
+			ftbmp = &glyph->bitmap;
+			src = ftbmp->buffer;
+
+			if (i == 0 && glyph->minx < 0) {
+				x -= glyph->minx;
+			}
+			if ((x + glyph->minx + ftbmp->width + 4)
+			    >= WIDGET(tbox)->w)
+				continue;
+
+			for (yglyph = 0; yglyph < ftbmp->rows; yglyph++) {
+				/* Work around FreeType 9.3.3 bug. */
+				if (glyph->yoffset < 0)
+					glyph->yoffset = 0;
+
+				for (xglyph = 0; xglyph < ftbmp->width;
+				     xglyph++) {
+					if ((invert && src[xglyph]) ||
+					   (!invert && !src[xglyph])) {
+						continue;
+					}
+					widget_put_pixel(tbox,
+					    x + glyph->minx + xglyph,
+					    y + glyph->yoffset + yglyph,
+					    WIDGET_COLOR(tbox, TEXT_COLOR));
+				}
+				src += ftbmp->pitch;
+			}
+			x += glyph->advance;
 		}
 	}
+out:
 	widget_binding_unlock(stringb);
 }
 
@@ -277,30 +367,26 @@ keydown(int argc, union evarg *argv)
 	if (!tbox->writeable)
 		return;
 
-	if (keysym == SDLK_TAB ||
-	    keysym == SDLK_ESCAPE) {
+	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
 		return;
 	}
 	if (keysym == SDLK_RETURN) {
-		lock_timeout(tbox);
-		timeout_del(tbox, &tbox->delay_to);
-		timeout_del(tbox, &tbox->repeat_to);
-		unlock_timeout(tbox);
-
+		widget_unset_focus(tbox);
 		event_post(NULL, tbox, "textbox-return", NULL);
-		WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 		return;
 	}
-
+	
 	tbox->repeat.key = keysym;
 	tbox->repeat.mod = keymod;
 	tbox->repeat.unicode = unicode;
+	tbox->blink_state = 1;
 
 	lock_timeout(tbox);
-	timeout_del(tbox, &tbox->delay_to);
 	timeout_del(tbox, &tbox->repeat_to);
 	if (process_key(tbox, keysym, keymod, unicode) == 1) {
 		timeout_replace(tbox, &tbox->delay_to, kbd_delay);
+	} else {
+		timeout_del(tbox, &tbox->delay_to);
 	}
 	unlock_timeout(tbox);
 }
@@ -308,17 +394,100 @@ keydown(int argc, union evarg *argv)
 static void
 keyup(int argc, union evarg *argv)
 {
-	struct textbox *tbox = argv[0].p;
+	struct textbox *tb = argv[0].p;
 	SDLKey keysym = (SDLKey)argv[1].i;
 	int keymod = argv[2].i;
 	Uint32 unicode = (Uint32)argv[3].i;
 
-	if ((keysym == tbox->repeat.key && unicode == tbox->repeat.unicode) ||
+	if ((keysym == tb->repeat.key && unicode == tb->repeat.unicode) ||
 	    (keysym == SDLK_RETURN)) {
-		lock_timeout(tbox);
-		timeout_del(tbox, &tbox->repeat_to);
-		timeout_del(tbox, &tbox->delay_to);
-		unlock_timeout(tbox);
+		lock_timeout(tb);
+		timeout_del(tb, &tb->repeat_to);
+		timeout_del(tb, &tb->delay_to);
+		timeout_replace(tb, &tb->cblink_to, text_blink_rate);
+		unlock_timeout(tb);
+	}
+}
+
+/* Map mouse coordinates to a position within the string. */
+static int
+cursor_position(struct textbox *tbox, int mx, int my, int *pos)
+{
+	struct widget_binding *stringb;
+	struct text_font *font;
+	int tstart = 0;
+	int i, x, y;
+	size_t len;
+	char *s;
+
+	x = ((tbox->label!=NULL) ? tbox->label->w : 0) + tbox->xpadding;
+	if (mx <= x) {
+		return (-1);
+	}
+	x += tbox->xpadding + (WIDGET(tbox)->flags & WIDGET_FOCUSED) ? 1 : 0;
+	y = tbox->ypadding;
+
+	stringb = widget_get_binding(tbox, "string", &s);
+	len = strlen(s);
+	font = text_fetch_font(
+	    prop_get_string(config, "font-engine.default-font"),
+	    prop_get_int(config, "font-engine.default-size"), 0);
+
+	for (i = tstart; i < len; i++) {
+		if (s[i] == '\n') {
+			y += text_font_line_skip;
+			continue;
+		} else if (s[i] == '\t') {
+			x += text_tab_width;
+			continue;
+		}
+		{
+			Uint32 ch = (Uint32)s[i];
+			struct ttf_font *ttf = font->p;
+			FT_Bitmap *ftbmp;
+			struct ttf_glyph *glyph;
+
+			if (ttf_find_glyph(ttf, ch,
+			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+				continue;
+			}
+			glyph = ttf->current;
+			ftbmp = &glyph->bitmap;
+
+			if (i == 0 && glyph->minx < 0)
+				x -= glyph->minx;
+			if ((x + glyph->minx+ftbmp->width) >= WIDGET(tbox)->w)
+				continue;
+		
+			if (mx >= x && mx < x+glyph->minx+ftbmp->width) {
+				*pos = i;
+				goto in;
+			}
+			x += glyph->minx+ftbmp->width;
+		}
+	}
+	widget_binding_unlock(stringb);
+	return (1);
+in:
+	widget_binding_unlock(stringb);
+	return (0);
+}
+
+static void
+move_cursor(struct textbox *tbox, int mx, int my)
+{
+	int rv;
+
+	rv = cursor_position(tbox, mx, my, &tbox->pos);
+	if (rv == -1) {
+		tbox->pos = 0;
+	} else if (rv == 1) {
+		struct widget_binding *stringb;
+		char *s;
+		
+		stringb = widget_get_binding(tbox, "string", &s);
+		tbox->pos = strlen(s);
+		widget_binding_unlock(stringb);
 	}
 }
 
@@ -326,10 +495,27 @@ static void
 mousebuttondown(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
-//	int x = argv[2].i;
+	int btn = argv[1].i;
+	int mx = argv[2].i;
+	int my = argv[3].i;
+	int rv;
 	
 	widget_focus(tbox);
-//	tbox->newx = x;
+
+	if (btn == SDL_BUTTON_LEFT)
+		move_cursor(tbox, mx, my);
+}
+
+static void
+mousemotion(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	int mx = argv[1].i;
+	int my = argv[2].i;
+	int state = argv[5].i;
+
+	if (state & SDL_BUTTON_LEFT)
+		move_cursor(tbox, mx, my);
 }
 
 void

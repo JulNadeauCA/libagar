@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.97 2005/01/17 02:20:07 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.98 2005/01/31 08:32:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -26,9 +26,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_freetype.h>
+
 #include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/config.h>
+
+#ifdef HAVE_FREETYPE
+#include <engine/loader/ttf.h>
+#endif
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -49,6 +55,8 @@ int text_font_height = 0;		/* Default font height (px) */
 int text_font_ascent = 0;		/* Default font ascent (px) */
 int text_font_descent = 0;		/* Default font descent (px) */
 int text_font_line_skip = 0;		/* Default font line skip (px) */
+int text_tab_width = 40;		/* Tab width (px) */
+int text_blink_rate = 250;		/* Cursor blink rate (ms) */
 
 #define TEXT_NBUCKETS 1024
 
@@ -67,8 +75,8 @@ static struct {
 } text_cache[TEXT_NBUCKETS];
 static struct timeout text_timeout;		/* Timer for text_tmsg() */
 
-static struct text_font *
-fetch_font(const char *name, int size, int style)
+struct text_font *
+text_fetch_font(const char *name, int size, int style)
 {
 	char path[MAXPATHLEN];
 	struct text_font *font;
@@ -92,11 +100,15 @@ fetch_font(const char *name, int size, int style)
 	font->size = size;
 	font->style = style;
 
-	dprintf("open %s (%d points)\n", path, size);
+#ifdef HAVE_FREETYPE
+	dprintf("%s (%d pts)\n", path, size);
 	if ((font->p = ttf_open_font(path, size)) == NULL) {
 		fatal("%s: %s", path, error_get());
 	}
 	ttf_set_font_style(font->p, style);
+#else
+	/* TODO */
+#endif
 
 	SLIST_INSERT_HEAD(&text_fonts, font, fonts);
 out:
@@ -113,33 +125,29 @@ expire_tmsg(void *obj, Uint32 ival, void *arg)
 	return (0);
 }
 
-/* Initialize the text rendering engine and set the default font. */
+/* Initialize the font engine and configure the default font. */
 int
-text_init(enum text_engine te)
+text_init(void)
 {
 	int i;
 
 	if (prop_get_bool(config, "font-engine") == 0)
 		return (0);
 
-	switch (te) {
-	case TEXT_ENGINE_FREETYPE:
-		if (ttf_init() == -1) {
-			error_set("ttf_init: %s", SDL_GetError());
-			return (-1);
-		}
-		default_font = fetch_font(
-		    prop_get_string(config, "font-engine.default-font"),
-		    prop_get_int(config, "font-engine.default-size"),
-		    prop_get_int(config, "font-engine.default-style"));
-		text_font_height = ttf_font_height(default_font->p);
-		text_font_ascent = ttf_font_ascent(default_font->p);
-		text_font_descent = ttf_font_descent(default_font->p);
-		text_font_line_skip = ttf_font_line_skip(default_font->p);
-		break;
-	default:
-		break;
+#ifdef HAVE_FREETYPE
+	if (ttf_init() == -1) {
+		error_set("ttf_init: %s", SDL_GetError());
+		return (-1);
 	}
+	default_font = text_fetch_font(
+	    prop_get_string(config, "font-engine.default-font"),
+	    prop_get_int(config, "font-engine.default-size"),
+	    prop_get_int(config, "font-engine.default-style"));
+	text_font_height = ttf_font_height(default_font->p);
+	text_font_ascent = ttf_font_ascent(default_font->p);
+	text_font_descent = ttf_font_descent(default_font->p);
+	text_font_line_skip = ttf_font_line_skip(default_font->p);
+#endif
 
 	for (i = 0; i < TEXT_NBUCKETS; i++) {
 		SLIST_INIT(&text_cache[i].texts);
@@ -148,7 +156,7 @@ text_init(enum text_engine te)
 }
 
 static void
-text_free_text(struct text *txt)
+free_text(struct text *txt)
 {
 	Free(txt->s, 0);
 	SDL_FreeSurface(txt->su);
@@ -168,7 +176,7 @@ text_destroy(void)
 		     txt != SLIST_END(&text_cache[i].texts);
 		     txt = ntxt) {
 			ntxt = SLIST_NEXT(txt, texts);
-			text_free_text(txt);
+			free_text(txt);
 		}
 		SLIST_INIT(&text_cache[i].texts);
 	}
@@ -177,10 +185,14 @@ text_destroy(void)
 	     fon != SLIST_END(&text_fonts);
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
+#ifdef HAVE_FREETYPE
 		ttf_close_font(fon->p);
+#endif
 		Free(fon, M_TEXT);
 	}
+#ifdef HAVE_FREETYPE
 	ttf_destroy();
+#endif
 }
 
 static __inline__ int
@@ -233,8 +245,13 @@ text_render2(const char *fontname, int fontsize, Uint32 color, const char *s)
 void
 text_unused2(struct text *txt)
 {
-	if (--txt->nrefs < 0)
-		fatal("nrefs < 0");
+	if (--txt->nrefs == 0) {
+		int h;
+
+		h = text_hash(txt->s);
+		SLIST_REMOVE(&text_cache[h].texts, txt, text, texts);
+		free_text(txt);
+	}
 }
 
 /* Render UTF-8 text onto a new surface. */
@@ -251,6 +268,8 @@ text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 	free(ucs);
 	return (su);
 }
+
+#ifdef HAVE_FREETYPE
 
 /* Render (possibly multi-line) UCS-4 text onto a new surface. */
 /* TODO use pools to get rid of all the insane allocations */
@@ -276,7 +295,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		return (su);
 	}
 
-	font = fetch_font(fontname != NULL ? fontname :
+	font = text_fetch_font(fontname != NULL ? fontname :
 	    prop_get_string(config, "font-engine.default-font"),
 	    fontsize >= 0 ? fontsize :
 	    prop_get_int(config, "font-engine.default-size"), 0);
@@ -358,12 +377,25 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	return (su);
 }
 
+#else /* !HAVE_FREETYPE */
+
+SDL_Surface *
+text_render_unicode(const char *fontname, int fontsize, Uint32 color,
+    const Uint32 *text)
+{
+	/* TODO bitmap version */
+	return (NULL);
+}
+
+#endif /* HAVE_FREETYPE */
+
 /* Return the expected size of an Unicode text element. */
 void
 text_prescale_unicode(const Uint32 *ucs, int *w, int *h)
 {
 	SDL_Surface *su;
 
+	/* XXX get the bounding box instead */
 	su = text_render_unicode(NULL, -1, 0, ucs);
 	if (w != NULL)
 		*w = (int)su->w;
