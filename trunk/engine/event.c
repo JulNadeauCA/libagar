@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.92 2002/11/13 01:33:39 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.93 2002/11/14 05:57:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -164,12 +164,16 @@ event_loop(void)
 	    0, 0, 133, 104, 125, 91);
 	reg = region_new(fps_win, REGION_VALIGN,
 	    0, 0, 100, 100);
-	fps_label = label_new(reg, "...", 100, 20);
+	fps_label = label_new(reg, 100, 20, "...");
 	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
 	    100, 80);
 	fps_item = graph_add_item(fps_graph, "fps",
 	    SDL_MapRGB(view->v->format, 0, 160, 0));
+		
+	if (engine_debug > 0) {
+		window_show(monitor.wins.toolbar);
+	}
 #endif
 
 	/* Start the media garbage collection process. */
