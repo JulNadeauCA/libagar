@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.6 2003/06/26 02:34:51 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.7 2003/06/29 11:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -292,9 +292,10 @@ gfx_fetch(void *p, const char *key)
 
 		gfx->tile_map = Malloc(sizeof(struct map));
 		map_init(gfx->tile_map, map_name);
-		if (map_alloc_nodes(gfx->tile_map, 4, 4) == -1) {
+		OBJECT(gfx->tile_map)->save_pfx = "/tilesets";
+
+		if (map_alloc_nodes(gfx->tile_map, 4, 4) == -1)
 			goto fail;
-		}
 	} else {
 		gfx->tile_map = NULL;
 	}
