@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.64 2004/05/24 00:37:07 vedge Exp $
+.\"	$Csoft: object.3,v 1.65 2004/05/29 05:57:07 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -589,6 +589,8 @@ The object has been moved from its current parent to
 .Fa new_parent .
 The linkage lock is held during the execution of the event handler.
 This event originates from the current parent object.
+.It Fn renamed "void"
+The object's name has just been modified.
 .El
 .Sh TROUBLETONS
 If the maximum number of references (0xffffffff-2) is reached, the object
