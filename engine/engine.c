@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.20 2002/03/03 06:22:22 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.21 2002/03/05 06:35:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -182,26 +182,31 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, char *path)
 void
 engine_editmap(void)
 {
-	if (mapediting) {
-		struct mapedit *medit;
+	struct mapedit *medit;
 
-		medit = mapedit_create("mapedit");
-		if (medit == NULL) {
-			return;
-		}
-		/* Set the map edition arguments. */
-		medit->margs.name = strdup(mapstr);
-		medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
-		medit->margs.mapw = mapw;
-		medit->margs.maph = maph;
-		medit->margs.tilew = tilew;
-		medit->margs.tileh = tileh;
-
-		/* Start map edition. */
-		object_link(medit);
-		event_loop();
-		engine_destroy();
+	if (!mapediting) {
+		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+		SDL_EventState(SDL_MOUSEBUTTONDOWN, SDL_IGNORE);
+		SDL_EventState(SDL_MOUSEBUTTONUP, SDL_IGNORE);
+		return;
 	}
+
+	medit = mapedit_create("mapedit0");
+	if (medit == NULL) {
+		return;
+	}
+	/* Set the map edition arguments. */
+	medit->margs.name = strdup(mapstr);
+	medit->margs.desc = (mapdesc != NULL) ? strdup(mapdesc) : "";
+	medit->margs.mapw = mapw;
+	medit->margs.maph = maph;
+	medit->margs.tilew = tilew;
+	medit->margs.tileh = tileh;
+
+	/* Start map edition. */
+	object_link(medit);
+	event_loop();
+	engine_destroy();
 }
 
 void
