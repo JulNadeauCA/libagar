@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.66 2003/05/18 00:16:59 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.67 2003/05/18 02:10:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -366,37 +366,37 @@ open_tileset(int argc, union evarg *argv)
 
 		reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 		{
-			char s[128];
+			char label[TLIST_LABEL_MAX];
 
 			tl = tlist_new(reg, 100, 0, TLIST_MULTI);
-			tlist_set_item_height(tl, TILEH);
+			tlist_set_item_height(tl, ttf_font_height(font)*2);
 
 			for (i = 0; i < ob->art->nsubmaps; i++) {
-				snprintf(s, sizeof(s),
+				snprintf(label, sizeof(label),
 				    "m%u\n%ux%u nodes\n", i,
 				    ob->art->submaps[i]->mapw,
 				    ob->art->submaps[i]->maph);
-				tlist_insert_item(tl, NULL, s,
-				    ob->art->submaps[i]);
+				tlist_insert_item(tl, NULL,
+				    label, ob->art->submaps[i]);
 			}
 
 			for (i = 0; i < ob->art->nsprites; i++) {
-				snprintf(s, sizeof(s),
+				snprintf(label, sizeof(label),
 				    "s%u\n%ux%u pixels, %ubpp\n", i,
 				    ob->art->sprites[i]->w,
 				    ob->art->sprites[i]->h,
 				    ob->art->sprites[i]->format->BitsPerPixel);
 				tlist_insert_item(tl, ob->art->sprites[i],
-				    s, ob);
+				    label, ob);
 			}
 			
 			for (i = 0; i < ob->art->nanims; i++) {
 				struct art_anim *an = ob->art->anims[i];
 
-				snprintf(s, sizeof(s), "a%u\n%u frames\n", i,
-				    an->nframes);
+				snprintf(label, sizeof(label),
+				    "a%u\n%u frames\n", i, an->nframes);
 				tlist_insert_item(tl, (an->nframes > 0) ?
-				    an->frames[0] : NULL, s, ob);
+				    an->frames[0] : NULL, label, ob);
 			}
 		}
 		
@@ -427,19 +427,18 @@ open_tileset(int argc, union evarg *argv)
 static void
 find_gfx(struct tlist *tl, struct object *pob)
 {
-	char s[64];
+	char label[TLIST_LABEL_MAX];
 	struct object *cob;
 
 	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
 		if (cob->art == NULL)
 			continue;
-
-		snprintf(s, sizeof(s), "%s\n%ua/%us/%um\n",
+		snprintf(label, sizeof(label), "%s\n%ua/%us/%um\n",
 		    cob->name,
 		    cob->art->nanims,
 		    cob->art->nsprites,
 		    cob->art->nsubmaps);
-		tlist_insert_item(tl, OBJECT_ICON(cob), s, cob);
+		tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
 		find_gfx(tl, cob);
 	}
 }
@@ -464,11 +463,11 @@ tilesets_window(void)
 		struct tlist *tl;
 
 		tl = tlist_new(reg, 100, 100, 0);
-		tlist_set_item_height(tl, TILEH);
+		tlist_set_item_height(tl, ttf_font_height(font)*2);
 
-		pthread_mutex_lock(&world->lock);
+		lock_linkage();
 		find_gfx(tl, world);
-		pthread_mutex_unlock(&world->lock);
+		unlock_linkage();
 
 		event_new(tl, "tlist-changed", open_tileset, NULL);
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.55 2003/05/08 01:45:27 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.56 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -207,20 +207,10 @@ tlist_draw(void *p)
 
 		x += tl->item_h + 4;
 		if (textsu != NULL) {
-			SDL_Rect clip_save;
-			SDL_Rect clip;
-			
-			SDL_GetClipRect(view->v, &clip_save);
-			clip.x = WIDGET_ABSX(tl);
-			clip.y = WIDGET_ABSY(tl)+y;
-			clip.w = WIDGET(tl)->w - WIDGET(&tl->sbar)->w;
-			clip.h = tl->item_h;
-			SDL_SetClipRect(view->v, &clip);
 			widget_blit(tl, textsu,
 			    x,
 			    y + tl->item_h/2 - textsu->h/2);
 			SDL_FreeSurface(textsu);
-			SDL_SetClipRect(view->v, &clip_save);
 		}
 
 		y += tl->item_h;
@@ -273,14 +263,12 @@ tlist_free_item(struct tlist_item *it)
 {
 	if (it->icon != NULL)
 		SDL_FreeSurface(it->icon);
-	free(it->text);
 	free(it);
 }
 
 void
-tlist_remove_item(struct tlist_item *it)
+tlist_remove_item(struct tlist *tl, struct tlist_item *it)
 {
-	struct tlist *tl = it->tl_bp;
 	struct widget_binding *offsetb;
 	int *offset;
 	int nitems;
@@ -352,17 +340,7 @@ tlist_clear_items(struct tlist *tl)
 static __inline__ int
 tlist_item_compare(struct tlist_item *it1, struct tlist_item *it2)
 {
-	if (it1->text_len == it2->text_len &&		/* Optimization */
-	    strcmp(it1->text, it2->text) == 0) {	/* Same text? */
-#if 0
-	    /* XXX */
-	    strcmp(it1->text, it2->text) == 0 &&	/* Same text? */
-	    it1->icon == it2->icon &&			/* Same icon? */
-	    it1->p1 == it2->p1) {			/* Same user pointer? */
-#endif
-		return (1);
-	}
-	return (0);
+	return (it1->p1 == it2->p1);
 }
 
 /* Restore previous item selections. */
@@ -388,11 +366,10 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	it = Malloc(sizeof(struct tlist_item));
 	it->icon = NULL;
 	it->selected = 0;
-	
-	it->text = Strdup(text);
+
+	strlcpy(it->text, text, sizeof(it->text));
 	it->text_len = strlen(text);
 	it->p1 = p1;
-	it->tl_bp = tl;
 	tlist_set_item_icon(tl, it, icon);			/* Square */
 	return (it);
 }
@@ -433,28 +410,28 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, char *text,
 
 /* Set the selection flag on an item. */
 int
-tlist_select(struct tlist_item *it)
+tlist_select(struct tlist *tl, struct tlist_item *it)
 {
 	int old;
 
-	pthread_mutex_lock(&it->tl_bp->lock);
+	pthread_mutex_lock(&tl->lock);
 	old = it->selected;
 	it->selected++;
-	pthread_mutex_unlock(&it->tl_bp->lock);
+	pthread_mutex_unlock(&tl->lock);
 
 	return (old);
 }
 
 /* Clear the selection flag on an item. */
 int
-tlist_unselect(struct tlist_item *it)
+tlist_unselect(struct tlist *tl, struct tlist_item *it)
 {
 	int old;
 
-	pthread_mutex_lock(&it->tl_bp->lock);
+	pthread_mutex_lock(&tl->lock);
 	old = it->selected;
 	it->selected = 0;
-	pthread_mutex_unlock(&it->tl_bp->lock);
+	pthread_mutex_unlock(&tl->lock);
 
 	return (old);
 }

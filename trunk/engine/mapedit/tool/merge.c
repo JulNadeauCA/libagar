@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.32 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.33 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -141,7 +141,8 @@ merge_create_brush(int argc, union evarg *argv)
 
 	TAILQ_INSERT_HEAD(&mer->brushes, OBJECT(m), cobjs);
 	tlist_unselect_all(mer->brushes_tl);
-	tlist_select(tlist_insert_item_head(mer->brushes_tl, NULL, m_name, m));
+	tlist_select(mer->brushes_tl,
+	    tlist_insert_item_head(mer->brushes_tl, NULL, m_name, m));
 	textbox_printf(name_tbox, "");
 }
 
@@ -195,7 +196,7 @@ merge_remove_brush(int argc, union evarg *argv)
 			}
 
 			TAILQ_REMOVE(&mer->brushes, brush, cobjs);
-			tlist_remove_item(it);
+			tlist_remove_item(mer->brushes_tl, it);
 			object_destroy(brush);
 			free(brush);
 		}

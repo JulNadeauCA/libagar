@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.40 2003/03/25 13:48:08 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.41 2003/04/12 01:45:49 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -574,13 +574,13 @@ primitive_config_window(void)
 		tlist_insert_item(tl, NULL, "2d-style", box_2d);
 
 		it = tlist_insert_item(tl, NULL, "3d-style", box_3d);
-		tlist_select(it);
+		tlist_select(tl, it);
 		event_new(tl, "tlist-changed", apply, "%i", BOX);
 
 		lab = label_new(reg, 100, 10, "Frame:");
 		tl = tlist_new(reg, 100, 35, 0);
 		it = tlist_insert_item(tl, NULL, "3d-style", frame_3d);
-		tlist_select(it);
+		tlist_select(tl, it);
 		event_new(tl, "tlist-changed", apply, "%i", FRAME);
 	}
 
@@ -592,12 +592,12 @@ primitive_config_window(void)
 		tl = tlist_new(reg, 100, 35, 0);
 		it_bres = tlist_insert_item(tl, NULL, "Bresenham",
 		    line_bresenham);
-		tlist_select(it_bres);
+		tlist_select(tl, it_bres);
 #ifdef HAVE_OPENGL
 		it = tlist_insert_item(tl, NULL, "OpenGL", line_opengl);
 		if (view->opengl) {
-			tlist_select(it);
-			tlist_unselect(it_bres);
+			tlist_select(tl, it);
+			tlist_unselect(tl, it_bres);
 		}
 #endif
 		event_new(tl, "tlist-changed", apply, "%i", LINE);
@@ -605,7 +605,7 @@ primitive_config_window(void)
 		lab = label_new(reg, 100, 10, "Circle:");
 		tl = tlist_new(reg, 100, 35, 0);
 		it = tlist_insert_item(tl, NULL, "Bresenham", circle_bresenham);
-		tlist_select(it);
+		tlist_select(tl, it);
 		event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
 	}
 	return (win);
