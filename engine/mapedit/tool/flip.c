@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.3 2003/03/18 06:34:40 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.4 2003/03/24 12:06:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -27,21 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/version.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include "flip.h"
+
 #include <engine/widget/radio.h>
 #include <engine/widget/text.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include <libfobj/fobj.h>
-
-#include "tool.h"
-#include "flip.h"
 
 static const struct tool_ops flip_ops = {
 	{
@@ -62,6 +52,7 @@ flip_init(void *p)
 
 	tool_init(&flip->tool, "flip", &flip_ops);
 	flip->mode = FLIP_HORIZ;
+	flip->which = FLIP_ALL;
 }
 
 struct window *
@@ -84,11 +75,19 @@ flip_window(void *p)
 			"Vertical",
 			NULL
 		};
+		static const char *which_items[] = {
+			"All",
+			"Highest",
+			NULL
+		};
 		struct radio *rad;
 
 		rad = radio_new(reg, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &flip->mode);
 		win->focus = WIDGET(rad);
+		
+		rad = radio_new(reg, which_items);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &flip->which);
 	}
 	return (win);
 }
@@ -97,30 +96,43 @@ void
 flip_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct flip *flip = p;
-	struct transform *trans;
-	enum transform_type type;
 	struct noderef *nref;
-	int added = 0;
-
-	trans = emalloc(sizeof(struct transform));
-	type = (flip->mode == FLIP_HORIZ) ? TRANSFORM_HFLIP : TRANSFORM_VFLIP;
-	if (transform_init(trans, type, 0, NULL) == -1) {
-		text_msg("Error initing transform", "%s", error_get());
-		free(trans);
-		return;
-	}
-
-	/* XXX remove other flips! */
-	/* XXX highest, all */
-
+	
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+		enum transform_type type = TRANSFORM_HFLIP;
+		struct transform *trans;
+		
 		if (nref->layer != mv->cur_layer)
 			continue;
-		SLIST_INSERT_HEAD(&nref->transforms, trans, transforms);
-		added++;
-	}
 
-	if (!added)
-		free(trans);
+		switch (flip->mode) {
+		case FLIP_HORIZ:
+			type = TRANSFORM_HFLIP;
+			break;
+		case FLIP_VERT:
+			type = TRANSFORM_VFLIP;
+			break;
+		}
+
+		/* Same transform already applied? */
+		SLIST_FOREACH(trans, &nref->transforms, transforms) {
+			if (trans->type == type)
+				break;
+		}
+		if (trans != NULL) {
+			dprintf("transform exists\n");
+			continue;
+		}
+
+		trans = transform_new(type, 0, NULL);
+		if (trans == NULL) {
+			text_msg("Error initing transform", "%s", error_get());
+			continue;
+		}
+		SLIST_INSERT_HEAD(&nref->transforms, trans, transforms);
+
+		if (flip->which == FLIP_HIGHEST)
+			break;
+	}
 }
 
