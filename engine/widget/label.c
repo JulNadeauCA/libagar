@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.16 2002/05/22 02:03:01 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.17 2002/05/28 12:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -59,8 +59,7 @@ static const struct widget_ops label_ops = {
 		NULL,	/* attach */
 		NULL	/* detach */
 	},
-	label_draw,
-	NULL		/* widget event */
+	label_draw
 };
 
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */

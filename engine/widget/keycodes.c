@@ -43,21 +43,23 @@
 
 static char	*insert_char(struct textbox *, char);
 
-static void	 insert_alpha(struct textbox *, SDL_Event *, char *);
-static void	 insert_ascii(struct textbox *, SDL_Event *, char *);
+static void	 insert_alpha(struct textbox *, SDLKey, int, char *);
+static void	 insert_ascii(struct textbox *, SDLKey, int, char *);
 
-static void	 key_bspace(struct textbox *, SDL_Event *, char *);
-static void	 key_delete(struct textbox *, SDL_Event *, char *);
-static void	 key_home(struct textbox *, SDL_Event *, char *);
-static void	 key_end(struct textbox *, SDL_Event *, char *);
-static void	 key_kill(struct textbox *, SDL_Event *, char *);
-static void	 key_left(struct textbox *, SDL_Event *, char *);
-static void	 key_right(struct textbox *, SDL_Event *, char *);
+static void	 key_bspace(struct textbox *, SDLKey, int, char *);
+static void	 key_delete(struct textbox *, SDLKey, int, char *);
+static void	 key_home(struct textbox *, SDLKey, int, char *);
+static void	 key_end(struct textbox *, SDLKey, int, char *);
+static void	 key_kill(struct textbox *, SDLKey, int, char *);
+static void	 key_left(struct textbox *, SDLKey, int, char *);
+static void	 key_right(struct textbox *, SDLKey, int, char *);
 
 extern TTF_Font *font;		/* XXX pref */
 
 #if KEYCODES_KEYMAP == KEYMAP_US
 # include "keymaps/us.h"
+#elif KEYCODES_KEYMAP == KEYMAP_UTU
+# include "keymaps/utu.h"
 #else
 # error "Unknown KEYCODES_KEYMAP"
 #endif
@@ -80,22 +82,31 @@ insert_char(struct textbox *tbox, char c)
 	tbox->text[end + 1] = '\0';
 	tbox->textpos++;
 
+	event_post(tbox, "textbox-changed", "%s, %c", tbox->text,
+	    tbox->text[end]);
+
 	return (&tbox->text[end]);
 }
 
 static void
-insert_alpha(struct textbox *tbox, SDL_Event *ev, char *arg)
+insert_alpha(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	char *c;
+	int i, il;
 
-	c = insert_char(tbox, (char)ev->key.keysym.sym);
-	if ((ev->key.keysym.mod & KMOD_SHIFT) && isalpha((int)*c)) {
-		(int)*c = toupper((int)*c);
+	for (i = 0, il = strlen(arg); i < il; i++) {
+		c = insert_char(tbox, arg[i]);
+		if (keymod & KMOD_CAPS) {
+			(int)*c = (keymod & KMOD_SHIFT) ?
+			    tolower((int)*c) : toupper((int)*c);
+		} else if (keymod & KMOD_SHIFT) {
+			(int)*c = toupper((int)*c);
+		}
 	}
 }
 
 static void
-insert_ascii(struct textbox *tbox, SDL_Event *ev, char *arg)
+insert_ascii(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	int i, il;
 
@@ -106,7 +117,7 @@ insert_ascii(struct textbox *tbox, SDL_Event *ev, char *arg)
 }
 
 static void
-key_bspace(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	int textlen;
 
@@ -132,7 +143,7 @@ key_bspace(struct textbox *tbox, SDL_Event *ev, char *arg)
 }
 
 static void
-key_delete(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	int textlen;
 
@@ -150,7 +161,7 @@ key_delete(struct textbox *tbox, SDL_Event *ev, char *arg)
 }
 
 static void
-key_home(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_home(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	tbox->textpos = 0;
 	if (tbox->textoffs > 0) {
@@ -159,7 +170,7 @@ key_home(struct textbox *tbox, SDL_Event *ev, char *arg)
 }
 
 static void
-key_end(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_end(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	tbox->textpos = strlen(tbox->text);
 
@@ -171,13 +182,13 @@ key_end(struct textbox *tbox, SDL_Event *ev, char *arg)
 }
 
 static void
-key_kill(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_kill(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	tbox->text[tbox->textpos] = '\0';
 }
 
 static void
-key_left(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_left(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	if (--tbox->textpos < 1) {
 		tbox->textpos = 0;
@@ -188,7 +199,7 @@ key_left(struct textbox *tbox, SDL_Event *ev, char *arg)
 }
 
 static void
-key_right(struct textbox *tbox, SDL_Event *ev, char *arg)
+key_right(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
 	if (tbox->textpos < strlen(tbox->text)) {
 		tbox->textpos++;

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.10 2002/05/28 05:59:39 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.11 2002/05/28 12:45:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -53,9 +53,10 @@ static struct widget_ops checkbox_ops = {
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
-	checkbox_draw,
-	checkbox_event
+	checkbox_draw
 };
+
+static void	checkbox_event(int, union evarg *);
 
 struct checkbox *
 checkbox_new(struct region *reg, char *caption, int flags)
@@ -92,6 +93,15 @@ checkbox_init(struct checkbox *cbox, char *caption, int flags)
 	cbox->flags = flags;
 	cbox->justify = CHECKBOX_LEFT;
 	cbox->label_s = s;
+	
+	event_new(cbox, "window-mousebuttonup", 0,
+	    checkbox_event, "%d", WINDOW_MOUSEBUTTONUP);
+	event_new(cbox, "window-mousebuttondown", 0,
+	    checkbox_event, "%d", WINDOW_MOUSEBUTTONDOWN);
+	event_new(cbox, "window-keyup", 0,
+	    checkbox_event, "%d", WINDOW_KEYUP);
+	event_new(cbox, "window-keydown", 0,
+	    checkbox_event, "%d", WINDOW_KEYDOWN);
 }
 
 void
@@ -128,23 +138,26 @@ checkbox_draw(void *p)
 	WIDGET_DRAW(cbox, cbox->label_s, x, y);
 }
 
-void
-checkbox_event(void *p, SDL_Event *ev, int flags)
+static void
+checkbox_event(int argc, union evarg *argv)
 {
-	struct checkbox *cbox = p;
+	struct checkbox *cbox = argv[0].p;
+	int type = argv[1].i;
+	int button, keysym;
 	int pushed = 0;
-
-	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:
-		if (ev->button.button == 1) {
+	
+	switch (type) {
+	case WINDOW_MOUSEBUTTONDOWN:
+		button = argv[2].i;
+		if (button == 1) {
 			pushed++;
 		} else {
 			WIDGET_FOCUS(cbox);
 		}
 		break;
-	case SDL_KEYDOWN:
-		if (ev->key.keysym.sym == SDLK_RETURN ||
-		    ev->key.keysym.sym == SDLK_SPACE) {
+	case WINDOW_KEYDOWN:
+		keysym = argv[2].i;
+		if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 			pushed++;
 		}
 		break;
@@ -158,9 +171,8 @@ checkbox_event(void *p, SDL_Event *ev, int flags)
 		} else {
 			cbox->flags |= CHECKBOX_PRESSED;
 		}
-		if (cbox->push != NULL) {
-			cbox->push(cbox);
-		}
+		event_post(cbox, "checkbox-changed", "%d",
+		    (cbox->flags & CHECKBOX_PRESSED));
 	}
 }
 
