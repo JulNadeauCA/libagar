@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.38 2004/05/09 10:06:23 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.39 2004/05/11 01:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -263,6 +263,7 @@ obj_op(int argc, union evarg *argv)
 				continue;
 			}
 			object_detach(ob);
+			object_unlink_datafiles(ob);
 			object_destroy(ob);
 			if ((ob->flags & OBJECT_STATIC) == 0) {
 				Free(ob, M_OBJECT);
