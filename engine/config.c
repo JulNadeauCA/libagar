@@ -1,7 +1,7 @@
-/*	$Csoft: config.c,v 1.33 2002/09/03 09:30:18 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.34 2002/09/05 03:24:10 vedge Exp $	    */
 
 /*
- * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,9 +59,9 @@ static const struct version config_ver = {
 };
 
 static const struct object_ops config_ops = {
-	config_destroy,
-	config_load,
-	config_save
+	NULL,	/* destroy */
+	NULL,	/* load */
+	NULL	/* save */
 };
 
 enum {
@@ -85,10 +85,9 @@ enum {
 	AL_SQUARE_RADIO
 };
 
-#define CONFIG_DEFAULT_WIDTH 	800
-#define CONFIG_DEFAULT_HEIGHT 	600
-#define CONFIG_DEFAULT_BPP 	32
-#define CONFIG_DEFAULT_FLAGS	(CONFIG_FONT_CACHE)
+static struct config_prop	*config_get_prop(const char *);
+static void			 config_apply_string(int, union evarg *);
+static void			 config_apply_int(int, union evarg *);
 
 struct config *
 config_new(void)
@@ -108,96 +107,43 @@ config_init(struct config *con)
 	struct passwd *pwd;
 	struct stat sta;
 	char *spath;
+	char *udatadir, *sysdatadir;
 
 	pwd = getpwuid(getuid());
 
 	object_init(&con->obj, "engine-config", "config", NULL, 0, &config_ops);
-	con->flags = CONFIG_FONT_CACHE;
-	con->view.w = CONFIG_DEFAULT_WIDTH;
-	con->view.h = CONFIG_DEFAULT_HEIGHT;
-	con->view.bpp = CONFIG_DEFAULT_BPP;
-	con->widget_flags = 0;
 
-	/* User data directory */
-	asprintf(&con->path.user_data_dir, "%s/.%s", pwd->pw_dir,
-	    gameinfo->prog);
+	/* Generic engine operation flags. */
+	prop_set_uint32(con, "flags", CONFIG_FONT_CACHE);
 
-	/* System data directory */
-	asprintf(&con->path.sys_data_dir, "%s", SHAREDIR);
+	/* Graphic settings. */
+	prop_set_uint32(con, "view.w",	 800);
+	prop_set_uint32(con, "view.h",	 600);
+	prop_set_uint32(con, "view.bpp", 32);
 
-	/* Datafile path */
-	asprintf(&con->path.data_path, "%s:%s",
-	    con->path.user_data_dir,
-	    con->path.sys_data_dir);
-	
-	if (stat(con->path.sys_data_dir, &sta) != 0) {
-		warning("%s: %s\n", con->path.sys_data_dir, strerror(errno));
+	/* Widget settings */
+	prop_set_uint32(con, "widgets.flags", 0);
+
+	/* Caching settings */
+	prop_set_uint32(con, "caching.surface_kB", 1024);
+	prop_set_uint32(con, "caching.glyph_kB", 0);
+
+	/* Pathnames */
+	prop_set_string(con, "path.user_data_dir",
+	    "%s/.%s", pwd->pw_dir, gameinfo->prog);
+	prop_set_string(con, "path.sys_data_dir",
+	    "%s", SHAREDIR);
+	udatadir = prop_string(con, "path.user_data_dir");
+	sysdatadir = prop_string(con, "path.sys_data_dir");
+	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
+
+	if (stat(sysdatadir, &sta) != 0) {
+		warning("%s: %s\n", sysdatadir, strerror(errno));
 	}
-	
-	if (stat(con->path.user_data_dir, &sta) != 0 &&
-	    mkdir(con->path.user_data_dir, 00700) != 0) {
-		warning("created %s\n", con->path.user_data_dir);
-		fatal("%s: %s\n", con->path.user_data_dir, strerror(errno));
+	if (stat(udatadir, &sta) != 0 && mkdir(udatadir, 00700) != 0) {
+		warning("created %s\n", udatadir);
+		fatal("%s: %s\n", udatadir, strerror(errno));
 	}
-
-	pthread_mutex_init(&con->lock, NULL);
-}
-
-void
-config_destroy(void *p)
-{
-	struct config *con = p;
-
-	free(con->path.data_path);
-	free(con->path.user_data_dir);
-	free(con->path.sys_data_dir);
-
-	pthread_mutex_destroy(&con->lock);
-}
-
-int
-config_load(void *p, int fd)
-{
-	struct config *con = p;
-
-	pthread_mutex_lock(&con->lock);
-
-	version_read(fd, &config_ver);
-	config->flags = read_uint32(fd);
-	config->view.w = read_uint32(fd);
-	config->view.h = read_uint32(fd);
-	config->view.bpp = read_uint32(fd);
-	config->widget_flags = read_uint32(fd);
-	config->path.data_path = read_string(fd);
-	config->path.user_data_dir = read_string(fd);
-	config->path.sys_data_dir = read_string(fd);
-
-	pthread_mutex_unlock(&con->lock);
-
-	dprintf("loaded settings (flags=0x%x)\n", config->flags);
-	return (0);
-}
-
-int
-config_save(void *p, int fd)
-{
-	struct config *con = p;
-
-	pthread_mutex_lock(&con->lock);
-
-	version_write(fd, &config_ver);
-	write_uint32(fd, con->flags);
-	write_uint32(fd, con->view.w);
-	write_uint32(fd, con->view.h);
-	write_uint32(fd, con->view.bpp);
-	write_uint32(fd, con->widget_flags);
-	write_string(fd, con->path.data_path);
-	write_string(fd, con->path.user_data_dir);
-	write_string(fd, con->path.sys_data_dir);
-	pthread_mutex_unlock(&con->lock);
-	
-	dprintf("saved settings (flags=0x%x)\n", config->flags);
-	return (0);
 }
 
 /*
@@ -221,25 +167,28 @@ config_init_wins(struct config *con)
 	 */
 	win = window_new("config-engine-settings", "Engine settings",
 	    WINDOW_CENTER, 0, 0,
-	    480, 467,
-	    273, 467);
+	    267, 319,
+	    267, 319);
 	con->windows.settings = win;
 
 	/* Flags */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
 	{
 		cbox = checkbox_new(reg, "Asynchronous blits (restart)", 0,
-		    (con->flags & CONFIG_ASYNCBLIT) ? CHECKBOX_PRESSED : 0);
+		    (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT) ?
+		     CHECKBOX_PRESSED : 0);
 		event_new(cbox, "checkbox-changed", 0, config_apply,
 		    "%i", ASYNCBLIT_CBOX);
 
 		cbox = checkbox_new(reg, "Full screen", 0,
-		    (con->flags & CONFIG_FULLSCREEN) ? CHECKBOX_PRESSED : 0);
+		    (prop_uint32(config, "flags") & CONFIG_FULLSCREEN) ?
+		     CHECKBOX_PRESSED : 0);
 		event_new(cbox, "checkbox-changed", 0, config_apply,
 		    "%i", FULLSCREEN_CBOX);
 		
 		cbox = checkbox_new(reg, "Font cache", 0,
-		    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
+		    (prop_uint32(config, "flags") & CONFIG_FONT_CACHE) ?
+		     CHECKBOX_PRESSED : 0);
 		event_new(cbox, "checkbox-changed", 0, config_apply,
 		    "%i", FONTCACHE_CBOX);
 
@@ -250,13 +199,15 @@ config_init_wins(struct config *con)
 		    "%i", DEBUG_CBOX);
 
 		cbox = checkbox_new(reg, "Visible regions", 0,
-		    (con->widget_flags & CONFIG_REGION_BORDERS) ?
+		    (prop_uint32(config, "widgets.flags") &
+		     CONFIG_REGION_BORDERS) ?
 		     CHECKBOX_PRESSED : 0);
 		event_new(cbox, "checkbox-changed", 0, config_apply,
 		    "%i", VISREGIONS_CBOX);
 
 		cbox = checkbox_new(reg, "Arbitrary window sizes", 0,
-		    (con->widget_flags & CONFIG_WINDOW_ANYSIZE) ?
+		    (prop_uint32(config, "widgets.flags") &
+		     CONFIG_WINDOW_ANYSIZE) ?
 		     CHECKBOX_PRESSED : 0);
 		event_new(cbox, "checkbox-changed", 0, config_apply,
 		    "%i", ANYSIZE_CBOX);
@@ -264,43 +215,48 @@ config_init_wins(struct config *con)
 	}
 
 	/* Directories */
-	reg = region_new(win, REGION_VALIGN,  0, 45, 100, 18);
+	reg = region_new(win, REGION_VALIGN,  0, 41, 100, 34);
 	{
-		tbox = textbox_new(reg, "  User datadir: ",
-		    0, 100, 33);
-		textbox_printf(tbox, "%s", config->path.user_data_dir);
-		event_new(tbox, "textbox-changed", 0,
-		    config_apply, "%i", UDATADIR_TBOX);
+		char *s;
 
-		tbox = textbox_new(reg, "System datadir: ",
-		    0, 100, 33);
-		textbox_printf(tbox, "%s", config->path.sys_data_dir);
+		tbox = textbox_new(reg, "  User datadir: ", 0, 100, 33);
+		s = prop_string(config, "path.user_data_dir");
+		textbox_printf(tbox, "%s", s);
+		free(s);
 		event_new(tbox, "textbox-changed", 0,
-		    config_apply, "%i", SYSDATADIR_TBOX);
+		    config_apply_string, "%s", "path.user_data_dir");
+	
+		tbox = textbox_new(reg, "System datadir: ", 0, 100, 33);
+		s = prop_string(config, "path.sys_data_dir");
+		textbox_printf(tbox, "%s", s);
+		free(s);
+		event_new(tbox, "textbox-changed", 0,
+		    config_apply_string, "%s", "path.sys_data_dir");
 		
-		tbox = textbox_new(reg, "Data file path: ",
-		    0, 100, 33);
-		textbox_printf(tbox, "%s", config->path.data_path);
+		tbox = textbox_new(reg, "Data file path: ", 0, 100, 33);
+		s = prop_string(config, "path.data_path");
+		textbox_printf(tbox, "%s", s);
+		free(s);
 		event_new(tbox, "textbox-changed", 0,
-		    config_apply, "%i", DATAPATH_TBOX);
+		    config_apply_string, "%s", "path.data_path");
 	}
 
 	/* Resolution */
-	reg = region_new(win, REGION_HALIGN,  0, 70, 100, 10);
+	reg = region_new(win, REGION_HALIGN,  0, 75, 100, 12);
 	{
 		tbox = textbox_new(reg, "Width : ", 0, 50, 100);
-		textbox_printf(tbox, "%d", con->view.w);
+		textbox_printf(tbox, "%d", prop_uint32(config, "view.w"));
 		event_new(tbox, "textbox-changed", 0,
-		    config_apply, "%i", W_TBOX);
+		    config_apply_int, "%s", "view.w");
 
 		tbox = textbox_new(reg, "Height: ", 0, 50, 100);
-		textbox_printf(tbox, "%d", con->view.h);
+		textbox_printf(tbox, "%d", prop_uint32(config, "view.h"));
 		event_new(tbox, "textbox-changed", 0,
-		    config_apply, "%i", H_TBOX);
+		    config_apply_int, "%s", "view.h");
 	}
 
 	/* Buttons */
-	reg = region_new(win, REGION_HALIGN, 0,  90, 100, 10);
+	reg = region_new(win, REGION_HALIGN, 0,  87, 100, 13);
 	{
 		button = button_new(reg, "Close", NULL, 0, 50, 90);
 		event_new(button, "button-pushed", 0,
@@ -343,28 +299,38 @@ config_init_wins(struct config *con)
 	}
 }
 
-#define CONFIG_SET_FLAG(con, _field, flag, val) do {	\
-	pthread_mutex_lock(&(con)->lock);		\
-	if ((val)) {					\
-		(con)->_field |= (flag);		\
-	} else {					\
-		(con)->_field &= ~(flag);		\
-	}						\
-	pthread_mutex_unlock(&(con)->lock);		\
+#define CONFIG_SET_FLAG(con, var, flag, val) do {		\
+	if ((val)) {						\
+		prop_set_uint32((con), (var),			\
+		    prop_uint32((con), (var)) | (flag));	\
+	} else {						\
+		prop_set_uint32((con), (var),			\
+		    prop_uint32((con), (var)) & ~(flag));	\
+	}							\
 } while (/*CONSTCOND*/ 0)
 
-#define CONFIG_SET_STRING(con, _field, text) do {	\
-	pthread_mutex_lock(&(con)->lock);		\
-	free((con)->_field);				\
-	(con)->_field = strdup((text));			\
-	pthread_mutex_unlock(&(con)->lock);		\
-} while (/*CONSTCOND*/ 0)
-			
-#define CONFIG_SET_INT(con, _field, i) do {		\
-	pthread_mutex_lock(&(con)->lock);		\
-	(con)->_field = (i);				\
-	pthread_mutex_unlock(&(con)->lock);		\
-} while (/*CONSTCOND*/ 0)
+static void
+config_apply_string(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	char *varname = argv[1].s;
+
+	prop_set_string(config, varname, "%s", tbox->text);
+}
+
+static void
+config_apply_int(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	char *varname = argv[1].s;
+
+	prop_set_int(config, varname, atoi(tbox->text));
+}
+
+static void
+config_apply_bool(int argc, union evarg *argv)
+{
+}
 
 void
 config_apply(int argc, union evarg *argv)
@@ -383,22 +349,21 @@ config_apply(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case UDATADIR_TBOX:
-		CONFIG_SET_STRING(config, path.user_data_dir, tbox->text);
 		break;
 	case SYSDATADIR_TBOX:
-		CONFIG_SET_STRING(config, path.sys_data_dir, tbox->text);
+		prop_set_string(config, "path.sys_data_dir", "%s", tbox->text);
 		break;
 	case DATAPATH_TBOX:
-		CONFIG_SET_STRING(config, path.data_path, tbox->text);
+		prop_set_string(config, "path.data_path", "%s", tbox->text);
 		break;
 	case W_TBOX:
-		CONFIG_SET_INT(config, view.w, atoi(tbox->text));
+		prop_set_int(config, "view.w", atoi(tbox->text));
 		break;
 	case H_TBOX:
-		CONFIG_SET_INT(config, view.h, atoi(tbox->text));
+		prop_set_int(config, "view.h", atoi(tbox->text));
 		break;
 	case FONTCACHE_CBOX:
-		CONFIG_SET_FLAG(config, flags, CONFIG_FONT_CACHE, argv[2].i);
+		CONFIG_SET_FLAG(config, "flags", CONFIG_FONT_CACHE, argv[2].i);
 		if (argv[2].i) {
 			keycodes_loadglyphs();
 		} else {
@@ -406,23 +371,23 @@ config_apply(int argc, union evarg *argv)
 		}
 		break;
 	case FULLSCREEN_CBOX:
-		CONFIG_SET_FLAG(config, flags, CONFIG_FULLSCREEN, argv[2].i);
+		CONFIG_SET_FLAG(config, "flags", CONFIG_FULLSCREEN, argv[2].i);
 		SDL_WM_ToggleFullScreen(view->v);
 		VIEW_REDRAW();
 		break;
 	case ASYNCBLIT_CBOX:
-		CONFIG_SET_FLAG(config, flags, CONFIG_ASYNCBLIT, argv[2].i);
+		CONFIG_SET_FLAG(config, "flags", CONFIG_ASYNCBLIT, argv[2].i);
 		break;
 #ifdef DEBUG
 	case DEBUG_CBOX:
 		engine_debug = argv[2].i;	/* XXX unsafe */
 		break;
 	case VISREGIONS_CBOX:
-		CONFIG_SET_FLAG(config, widget_flags, CONFIG_REGION_BORDERS,
+		CONFIG_SET_FLAG(config, "widgets.flags", CONFIG_REGION_BORDERS,
 		    argv[2].i);
 		break;
 	case ANYSIZE_CBOX:
-		CONFIG_SET_FLAG(config, widget_flags, CONFIG_WINDOW_ANYSIZE,
+		CONFIG_SET_FLAG(config, "widgets.flags", CONFIG_WINDOW_ANYSIZE,
 		    argv[2].i);
 		break;
 #endif
