@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.45 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.46 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -54,9 +54,9 @@ struct tool propedit_tool = {
 	NULL			/* mouse */
 };
 
-static Uint32 node_mode = 0;			/* Set the physics mode */
-static Uint32 node_flags = 0;			/* Set the physics flags */
-static int origin = 0;				/* Move point of origin */
+static Uint32 node_mode = 0;
+static Uint32 node_flags = 0;
+static int origin = 0;
 
 static void
 propedit_set_edge(struct mapview *mv, enum noderef_edge edge)
@@ -212,8 +212,6 @@ propedit_init(void)
 		} props[] = {
 			{ NODEREF_BIO,		N_("Bio")	 },
 			{ NODEREF_REGEN,	N_("Regen")	 },
-			{ NODEREF_SLOW,		N_("Slow")	 },
-			{ NODEREF_HASTE,	N_("Haste")	 },
 		};
 		const int nprops = sizeof(props) / sizeof(props[0]);
 		struct radio *rad;
@@ -296,8 +294,8 @@ propedit_effect(struct mapview *mv, struct map *m, struct node *node)
 		if (r->layer != m->cur_layer)
 			continue;
 
-		r->flags &= ~(NODEREF_BIO|NODEREF_REGEN|NODEREF_SLOW|
-		              NODEREF_HASTE|NODEREF_WALK|NODEREF_CLIMB);
+		r->flags &= ~(NODEREF_BIO|NODEREF_REGEN|NODEREF_WALK|
+		              NODEREF_CLIMB);
 		r->flags |= node_flags;
 	
 		if (node_mode == 0) {

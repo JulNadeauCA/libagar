@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.196 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.197 2004/01/23 06:24:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	5, 0
+	5, 1
 };
 
 const struct object_ops map_ops = {
@@ -85,6 +85,7 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->type = type;
 	r->flags = 0;
 	r->layer = 0;
+	r->friction = 0;
 	r->r_gfx.xcenter = 0;
 	r->r_gfx.ycenter = 0;
 	r->r_gfx.xmotion = 0;
@@ -94,7 +95,7 @@ noderef_init(struct noderef *r, enum noderef_type type)
 }
 
 /*
- * Adjust noderef centering offsets.
+ * Adjust the centering offset of a given node reference.
  * The parent map, if any, must be locked.
  */
 void
@@ -105,7 +106,7 @@ noderef_set_center(struct noderef *r, int xcenter, int ycenter)
 }
 
 /*
- * Adjust noderef motion offsets.
+ * Adjust the motion offset of a given node reference.
  * The parent map, if any, must be locked.
  */
 void
@@ -113,6 +114,16 @@ noderef_set_motion(struct noderef *r, int xmotion, int ymotion)
 {
 	r->r_gfx.xmotion = (Sint16)xmotion;
 	r->r_gfx.ymotion = (Sint16)ymotion;
+}
+
+/*
+ * Define the coefficient of friction/acceleration for a given node reference.
+ * The parent map, if any, must be locked.
+ */
+void
+noderef_set_friction(struct noderef *r, int coeff)
+{
+	r->friction = (Sint8)coeff;
 }
 
 void
@@ -433,8 +444,8 @@ node_add_warp(struct map *map, struct node *node, const char *mapname,
 }
 
 /*
- * Move a reference to dm:dn and associate with dlayer.
- * Both source and destination maps must be locked.
+ * Move a reference to a specified node and optionally assign to a
+ * specified layer.
  */
 void
 node_move_ref(struct map *sm, struct node *sn, struct noderef *r,
@@ -528,6 +539,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 	}
 	dr->flags = sr->flags;
 	dr->layer = (dlayer == -1) ? sr->layer : dlayer;
+	dr->friction = sr->friction;
 
 	/* Inherit the transformations. */
 	TAILQ_FOREACH(trans, &sr->transforms, transforms) {
@@ -669,6 +681,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	type = (enum noderef_type)read_uint32(buf);
 	flags = (Uint8)read_uint32(buf);
 	layer = read_uint8(buf);
+	friction = read_sint8(buf);
 
 	/* Read the reference data. */
 	switch (type) {
@@ -690,6 +703,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			*r = node_add_sprite(m, node, pobj, offs);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
+			(*r)->friction = friction;
 			(*r)->r_gfx.xcenter = xcenter;
 			(*r)->r_gfx.ycenter = ycenter;
 		}
@@ -713,6 +727,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			*r = node_add_anim(m, node, pobj, offs, aflags);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
+			(*r)->friction = friction;
 			(*r)->r_gfx.xcenter = xcenter;
 			(*r)->r_gfx.ycenter = ycenter;
 		}
@@ -740,6 +755,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			*r = node_add_warp(m, node, map_id, ox, oy, dir);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
+			(*r)->friction = friction;
 		}
 		break;
 	default:
@@ -793,16 +809,6 @@ node_load(struct map *m, struct netbuf *buf, struct node *node)
 	return (0);
 }
 
-static void
-map_layer_load(struct netbuf *buf, struct map *m, struct map_layer *lay)
-{
-	copy_string(lay->name, buf, sizeof(lay->name));
-	lay->visible = (int)read_uint8(buf);
-	lay->xinc = read_sint16(buf);
-	lay->yinc = read_sint16(buf);
-	lay->alpha = read_uint8(buf);
-}
-
 int
 map_load(void *ob, struct netbuf *buf)
 {
@@ -848,7 +854,13 @@ map_load(void *ob, struct netbuf *buf)
 	if (m->layers > 0) {
 		m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
 		for (i = 0; i < m->nlayers; i++) {
-			map_layer_load(buf, m, &m->layers[i]);
+			struct map_layer *lay = &m->layers[i];
+
+			copy_string(lay->name, buf, sizeof(lay->name));
+			lay->visible = (int)read_uint8(buf);
+			lay->xinc = read_sint16(buf);
+			lay->yinc = read_sint16(buf);
+			lay->alpha = read_uint8(buf);
 		}
 	}
 	m->cur_layer = (int)read_uint8(buf);
@@ -886,6 +898,7 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 	write_uint32(buf, (Uint32)r->type);
 	write_uint32(buf, (Uint32)r->flags);
 	write_uint8(buf, r->layer);
+	write_sint8(buf, r->friction);
 
 	/* Save the reference. */
 	switch (r->type) {
@@ -941,11 +954,6 @@ node_save(struct map *m, struct netbuf *buf, struct node *node)
 static void
 map_layer_save(struct netbuf *buf, const struct map_layer *lay)
 {
-	write_string(buf, lay->name);
-	write_uint8(buf, (Uint8)lay->visible);
-	write_sint16(buf, lay->xinc);
-	write_sint16(buf, lay->yinc);
-	write_uint8(buf, lay->alpha);
 }
 
 int
@@ -972,7 +980,13 @@ map_save(void *p, struct netbuf *buf)
 	/* Write the layer information. */
 	write_uint32(buf, m->nlayers);
 	for (i = 0; i < m->nlayers; i++) {
-		map_layer_save(buf, &m->layers[i]);
+		struct map_layer *lay = &m->layers[i];
+
+		write_string(buf, lay->name);
+		write_uint8(buf, (Uint8)lay->visible);
+		write_sint16(buf, lay->xinc);
+		write_sint16(buf, lay->yinc);
+		write_uint8(buf, lay->alpha);
 	}
 	write_uint8(buf, m->cur_layer);
 	write_uint8(buf, m->origin.layer);

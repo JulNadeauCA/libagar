@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.139 2003/12/05 01:21:23 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.140 2004/01/03 04:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/physics.h>
 #include <engine/map.h>
 #include <engine/view.h>
 
@@ -257,8 +256,6 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 		{ NODEREF_CLIMB,	MAPVIEW_CLIMB },
 		{ NODEREF_BIO,		MAPVIEW_BIO },
 		{ NODEREF_REGEN,	MAPVIEW_REGEN },
-		{ NODEREF_SLOW,		MAPVIEW_SLOW },
-		{ NODEREF_HASTE,	MAPVIEW_HASTE },
 	};
 	const struct {
 		Uint32	edge;

@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.22 2003/09/05 20:57:54 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.23 2004/01/03 04:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-#include <engine/physics.h>
 #include <engine/map.h>
 #include <engine/view.h>
 
