@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.83 2003/11/15 03:57:02 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.84 2004/03/12 02:51:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -38,8 +38,7 @@ struct viewport {
 	struct {
 		int	 current;	/* Estimated refresh rate in ms */
 		int	 delay;		/* Current refresh delay in ms */
-		int	 min_delay;	/* Minimum delay in ms */
-		int	 max_delay;	/* Maximum delay in ms */
+		int	 max_delay;	/* Nominal refresh rate delay in ms */
 	} refresh;
 	SDL_Rect	*dirty;		/* Video rectangles to update */
 	unsigned int	 ndirty;	/* Number of rectangles to update */
@@ -110,7 +109,7 @@ case 4:					\
 	 (ay) >= (s)->clip_rect.y &&			\
 	 (ay) <= (s)->clip_rect.y+(s)->clip_rect.h)
 
-/* The surface must be locked. */
+/* The surface must be locked if it is a hardware surface. */
 #define VIEW_PUT_PIXEL(s, vx, vy, c) do {				\
 	if (VIEW_INSIDE_CLIP_RECT((s), (vx), (vy))) {			\
 		Uint8 *_view_dst = (Uint8 *)(s)->pixels +		\
@@ -122,6 +121,17 @@ case 4:					\
 			_VIEW_PUTPIXEL_32(_view_dst, (c))		\
 		}							\
 	}								\
+} while (0)
+
+#define VIEW_PUT_UNCLIPPED_PIXEL(s, vx, vy, c) do {		\
+	Uint8 *_view_dst = (Uint8 *)(s)->pixels +		\
+	    (vy)*(s)->pitch + (vx)*(s)->format->BytesPerPixel;	\
+	switch ((s)->format->BytesPerPixel) {			\
+		_VIEW_PUTPIXEL_8(_view_dst,  (c))		\
+		_VIEW_PUTPIXEL_16(_view_dst, (c))		\
+		_VIEW_PUTPIXEL_24(_view_dst, (c))		\
+		_VIEW_PUTPIXEL_32(_view_dst, (c))		\
+	}							\
 } while (0)
 
 extern struct viewport *view;	/* view.c */
