@@ -1,4 +1,4 @@
-.\"	$Csoft: char.3,v 1.4 2002/02/01 02:03:34 vedge Exp $
+.\"	$Csoft: char.3,v 1.5 2002/02/01 06:09:42 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -61,9 +61,6 @@ Directional/speed information
 .Fn char_link "void *obj"
 .Pp
 .Ft "void"
-.Fn char_event "struct object *obj" "SDL_Event *event"
-.Pp
-.Ft "void"
 .Fn char_destroy "void *obj"
 .Pp
 .nr nS 0
@@ -72,9 +69,9 @@ Directional/speed information
 allocates a new character structure. 
 Once it is in a consistent state, a call to
 .Fn char_link
-is made so the character can start handling events and time. A
-character is destroyed and unlinked from all maps with a call
-to
+is made so the character can start handling time (and events, if the
+character is focused).
+A character is destroyed and unlinked from all maps with a call to
 .Fn char_destroy .
 .Fn char_event
 delivers a SDL event to the character layer, it is called either
