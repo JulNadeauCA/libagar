@@ -93,14 +93,8 @@ if [ "${prefix}" != "" ]; then
 else
     PREFIX=/usr/local
 fi
-S=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/pwd" ]; then
-		S=`${path}/pwd `
-	fi
-done
 echo >Makefile.config
-echo >engine/mcconfig.h
+echo >engine/confdefs
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
@@ -122,9 +116,9 @@ fi
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
-echo "#ifndef SHAREDIR" >> engine/mcconfig.h
-echo "#define SHAREDIR" $SHAREDIR >> engine/mcconfig.h
-echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
+echo "#ifndef SHAREDIR" > engine/confdefs/sharedir.h
+echo "#define SHAREDIR" $SHAREDIR >> engine/confdefs/sharedir.h
+echo "#endif /* SHAREDIR */" >> engine/confdefs/sharedir.h
 MAPDIR="$PREFIX/share/cave/map"
 echo MAPDIR=$MAPDIR >> Makefile.config
 TTFDIR="$PREFIX/share/cave/ttf"
@@ -133,49 +127,6 @@ FOBJDIR="$PREFIX/share/cave/fob"
 echo FOBJDIR=$FOBJDIR >> Makefile.config
 INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config
-echo -n "checking for a usable make(1)..."
-echo -n "checking for a usable make(1)..." >> config.log
-echo "checking for a usable make(1)..." >> config.log
-if [ "$MAKE" = "" ]; then
-	for i in `echo $PATH |sed 's/:/ /g'`; do
-		if [ -x "${i}/make" ]; then
-			MAKE="${i}/make"
-		elif [ -x "${i}/make" ]; then
-			MAKE="${i}/make"
-		fi
-	done
-fi
-
-cat << 'EOT' > .maketest
-ASSIGN= foo
-ASSIGN?= foo
-ASSIGN+= bar
-
-all: write-test
-
-write-test:
-	@echo > .maketest2
-
-.BEGIN:
-	@echo -n
-
-TOP=	.
-include ${TOP}/.maketest3
-EOT
-
-echo >> .maketest3
-
-echo "$MAKE -f .maketest" >>config.log
-$MAKE -f .maketest 2>>config.log
-if [ $? != 0 -o ! -e .maketest2 ]; then
-    echo "-> failure" >> config.log
-    echo "no"
-    exit 1
-else
-    echo "yes"
-    echo "-> success" >> config.log
-fi
-rm -f .maketest .maketest2 .maketest3
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 echo "checking for a usable C compiler..." >> config.log
@@ -254,9 +205,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_IEEE754" >> engine/mcconfig.h
-echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> engine/mcconfig.h
-echo "#endif /* HAVE_IEEE754 */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_IEEE754" > engine/confdefs/have_ieee754.h
+echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> engine/confdefs/have_ieee754.h
+echo "#endif /* HAVE_IEEE754 */" >> engine/confdefs/have_ieee754.h
 
 	echo "yes"
 else
@@ -289,9 +240,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_LONG_DOUBLE" >> engine/mcconfig.h
-echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> engine/mcconfig.h
-echo "#endif /* HAVE_LONG_DOUBLE */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_LONG_DOUBLE" > engine/confdefs/have_long_double.h
+echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> engine/confdefs/have_long_double.h
+echo "#endif /* HAVE_LONG_DOUBLE */" >> engine/confdefs/have_long_double.h
 
 	echo "yes"
 else
@@ -324,9 +275,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_GETENV" >> engine/mcconfig.h
-echo "#define HAVE_GETENV" $HAVE_GETENV >> engine/mcconfig.h
-echo "#endif /* HAVE_GETENV */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_GETENV" > engine/confdefs/have_getenv.h
+echo "#define HAVE_GETENV" $HAVE_GETENV >> engine/confdefs/have_getenv.h
+echo "#endif /* HAVE_GETENV */" >> engine/confdefs/have_getenv.h
 
 	echo "yes"
 else
@@ -361,9 +312,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_SETENV" >> engine/mcconfig.h
-echo "#define HAVE_SETENV" $HAVE_SETENV >> engine/mcconfig.h
-echo "#endif /* HAVE_SETENV */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_SETENV" > engine/confdefs/have_setenv.h
+echo "#define HAVE_SETENV" $HAVE_SETENV >> engine/confdefs/have_setenv.h
+echo "#endif /* HAVE_SETENV */" >> engine/confdefs/have_setenv.h
 
 	echo "yes"
 else
@@ -396,9 +347,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_STRSEP" >> engine/mcconfig.h
-echo "#define HAVE_STRSEP" $HAVE_STRSEP >> engine/mcconfig.h
-echo "#endif /* HAVE_STRSEP */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_STRSEP" > engine/confdefs/have_strsep.h
+echo "#define HAVE_STRSEP" $HAVE_STRSEP >> engine/confdefs/have_strsep.h
+echo "#endif /* HAVE_STRSEP */" >> engine/confdefs/have_strsep.h
 
 	echo "yes"
 else
@@ -431,9 +382,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_STRLCAT" >> engine/mcconfig.h
-echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> engine/mcconfig.h
-echo "#endif /* HAVE_STRLCAT */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_STRLCAT" > engine/confdefs/have_strlcat.h
+echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> engine/confdefs/have_strlcat.h
+echo "#endif /* HAVE_STRLCAT */" >> engine/confdefs/have_strlcat.h
 
 	echo "yes"
 else
@@ -466,9 +417,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_STRLCPY" >> engine/mcconfig.h
-echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> engine/mcconfig.h
-echo "#endif /* HAVE_STRLCPY */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_STRLCPY" > engine/confdefs/have_strlcpy.h
+echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> engine/confdefs/have_strlcpy.h
+echo "#endif /* HAVE_STRLCPY */" >> engine/confdefs/have_strlcpy.h
 
 	echo "yes"
 else
@@ -507,9 +458,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_ASPRINTF" >> engine/mcconfig.h
-echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> engine/mcconfig.h
-echo "#endif /* HAVE_ASPRINTF */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_ASPRINTF" > engine/confdefs/have_asprintf.h
+echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> engine/confdefs/have_asprintf.h
+echo "#endif /* HAVE_ASPRINTF */" >> engine/confdefs/have_asprintf.h
 
 	echo "yes"
 else
@@ -559,9 +510,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_VASPRINTF" >> engine/mcconfig.h
-echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> engine/mcconfig.h
-echo "#endif /* HAVE_VASPRINTF */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_VASPRINTF" > engine/confdefs/have_vasprintf.h
+echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> engine/confdefs/have_vasprintf.h
+echo "#endif /* HAVE_VASPRINTF */" >> engine/confdefs/have_vasprintf.h
 
 	echo "yes"
 else
@@ -682,9 +633,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_SDL" >> engine/mcconfig.h
-echo "#define HAVE_SDL" $HAVE_SDL >> engine/mcconfig.h
-echo "#endif /* HAVE_SDL */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_SDL" > engine/confdefs/have_sdl.h
+echo "#define HAVE_SDL" $HAVE_SDL >> engine/confdefs/have_sdl.h
+echo "#endif /* HAVE_SDL */" >> engine/confdefs/have_sdl.h
 
 	HAVE_SDL=yes
 
@@ -769,9 +720,9 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_FREETYPE" >> engine/mcconfig.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/mcconfig.h
-echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
+	echo "#ifndef HAVE_FREETYPE" > engine/confdefs/have_freetype.h
+echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/confdefs/have_freetype.h
+echo "#endif /* HAVE_FREETYPE */" >> engine/confdefs/have_freetype.h
 
 	HAVE_FREETYPE=yes
 
@@ -827,81 +778,81 @@ fi
 	if [ "${x11_found}" = "yes" ]
  then
 USE_X11=1
-echo "#ifndef USE_X11" >> engine/mcconfig.h
-echo "#define USE_X11" $USE_X11 >> engine/mcconfig.h
-echo "#endif /* USE_X11 */" >> engine/mcconfig.h
+echo "#ifndef USE_X11" > engine/confdefs/use_x11.h
+echo "#define USE_X11" $USE_X11 >> engine/confdefs/use_x11.h
+echo "#endif /* USE_X11 */" >> engine/confdefs/use_x11.h
 	fi
 fi
 if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]
  then
 XDEBUG=1
-echo "#ifndef XDEBUG" >> engine/mcconfig.h
-echo "#define XDEBUG" $XDEBUG >> engine/mcconfig.h
-echo "#endif /* XDEBUG */" >> engine/mcconfig.h
+echo "#ifndef XDEBUG" > engine/confdefs/xdebug.h
+echo "#define XDEBUG" $XDEBUG >> engine/confdefs/xdebug.h
+echo "#endif /* XDEBUG */" >> engine/confdefs/xdebug.h
 fi
 if [ "${with_gl}" = "yes" ]
  then
 HAVE_OPENGL=1
-echo "#ifndef HAVE_OPENGL" >> engine/mcconfig.h
-echo "#define HAVE_OPENGL" $HAVE_OPENGL >> engine/mcconfig.h
-echo "#endif /* HAVE_OPENGL */" >> engine/mcconfig.h
+echo "#ifndef HAVE_OPENGL" > engine/confdefs/have_opengl.h
+echo "#define HAVE_OPENGL" $HAVE_OPENGL >> engine/confdefs/have_opengl.h
+echo "#endif /* HAVE_OPENGL */" >> engine/confdefs/have_opengl.h
 fi
 if [ "${enable_debug}" = "yes" ]
  then
 DEBUG=1
-echo "#ifndef DEBUG" >> engine/mcconfig.h
-echo "#define DEBUG" $DEBUG >> engine/mcconfig.h
-echo "#endif /* DEBUG */" >> engine/mcconfig.h
+echo "#ifndef DEBUG" > engine/confdefs/debug.h
+echo "#define DEBUG" $DEBUG >> engine/confdefs/debug.h
+echo "#endif /* DEBUG */" >> engine/confdefs/debug.h
 LOCKDEBUG=1
-echo "#ifndef LOCKDEBUG" >> engine/mcconfig.h
-echo "#define LOCKDEBUG" $LOCKDEBUG >> engine/mcconfig.h
-echo "#endif /* LOCKDEBUG */" >> engine/mcconfig.h
+echo "#ifndef LOCKDEBUG" > engine/confdefs/lockdebug.h
+echo "#define LOCKDEBUG" $LOCKDEBUG >> engine/confdefs/lockdebug.h
+echo "#endif /* LOCKDEBUG */" >> engine/confdefs/lockdebug.h
 fi
 if [ "${enable_map_editor}" != "no" ]
  then
 MAP_EDITOR=1
-echo "#ifndef MAP_EDITOR" >> engine/mcconfig.h
-echo "#define MAP_EDITOR" $MAP_EDITOR >> engine/mcconfig.h
-echo "#endif /* MAP_EDITOR */" >> engine/mcconfig.h
+echo "#ifndef MAP_EDITOR" > engine/confdefs/map_editor.h
+echo "#define MAP_EDITOR" $MAP_EDITOR >> engine/confdefs/map_editor.h
+echo "#endif /* MAP_EDITOR */" >> engine/confdefs/map_editor.h
 fi
 if [ "${enable_serialization}" != "no" ]
  then
 SERIALIZATION=1
-echo "#ifndef SERIALIZATION" >> engine/mcconfig.h
-echo "#define SERIALIZATION" $SERIALIZATION >> engine/mcconfig.h
-echo "#endif /* SERIALIZATION */" >> engine/mcconfig.h
+echo "#ifndef SERIALIZATION" > engine/confdefs/serialization.h
+echo "#define SERIALIZATION" $SERIALIZATION >> engine/confdefs/serialization.h
+echo "#endif /* SERIALIZATION */" >> engine/confdefs/serialization.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
 VIEW_8BPP=1
-echo "#ifndef VIEW_8BPP" >> engine/mcconfig.h
-echo "#define VIEW_8BPP" $VIEW_8BPP >> engine/mcconfig.h
-echo "#endif /* VIEW_8BPP */" >> engine/mcconfig.h
+echo "#ifndef VIEW_8BPP" > engine/confdefs/view_8bpp.h
+echo "#define VIEW_8BPP" $VIEW_8BPP >> engine/confdefs/view_8bpp.h
+echo "#endif /* VIEW_8BPP */" >> engine/confdefs/view_8bpp.h
 fi
 if [ "${enable_16bpp}" != "no" ]
  then
 VIEW_16BPP=1
-echo "#ifndef VIEW_16BPP" >> engine/mcconfig.h
-echo "#define VIEW_16BPP" $VIEW_16BPP >> engine/mcconfig.h
-echo "#endif /* VIEW_16BPP */" >> engine/mcconfig.h
+echo "#ifndef VIEW_16BPP" > engine/confdefs/view_16bpp.h
+echo "#define VIEW_16BPP" $VIEW_16BPP >> engine/confdefs/view_16bpp.h
+echo "#endif /* VIEW_16BPP */" >> engine/confdefs/view_16bpp.h
 fi
 if [ "${enable_24bpp}" != "no" ]
  then
 VIEW_24BPP=1
-echo "#ifndef VIEW_24BPP" >> engine/mcconfig.h
-echo "#define VIEW_24BPP" $VIEW_24BPP >> engine/mcconfig.h
-echo "#endif /* VIEW_24BPP */" >> engine/mcconfig.h
+echo "#ifndef VIEW_24BPP" > engine/confdefs/view_24bpp.h
+echo "#define VIEW_24BPP" $VIEW_24BPP >> engine/confdefs/view_24bpp.h
+echo "#endif /* VIEW_24BPP */" >> engine/confdefs/view_24bpp.h
 fi
 if [ "${enable_32bpp}" != "no" ]
  then
 VIEW_32BPP=1
-echo "#ifndef VIEW_32BPP" >> engine/mcconfig.h
-echo "#define VIEW_32BPP" $VIEW_32BPP >> engine/mcconfig.h
-echo "#endif /* VIEW_32BPP */" >> engine/mcconfig.h
+echo "#ifndef VIEW_32BPP" > engine/confdefs/view_32bpp.h
+echo "#define VIEW_32BPP" $VIEW_32BPP >> engine/confdefs/view_32bpp.h
+echo "#endif /* VIEW_32BPP */" >> engine/confdefs/view_32bpp.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
-echo "#ifndef PREFIX" >> engine/mcconfig.h
-echo "#define PREFIX \"$PREFIX\"" >> engine/mcconfig.h
-echo "#endif /* PREFIX */" >> engine/mcconfig.h
+echo "#ifndef PREFIX" > engine/confdefs/prefix.h
+echo "#define PREFIX \"$PREFIX\"" >> engine/confdefs/prefix.h
+echo "#endif /* PREFIX */" >> engine/confdefs/prefix.h
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log
