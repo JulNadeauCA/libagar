@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.2 2004/03/18 03:12:25 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.3 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,42 +52,66 @@ static struct widget_ops toolbar_ops = {
 };
 
 struct toolbar *
-toolbar_new(void *parent, enum toolbar_type type)
+toolbar_new(void *parent, enum toolbar_type type, int nrows)
 {
 	struct toolbar *tbar;
 
 	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(tbar, type);
+	toolbar_init(tbar, type, nrows);
 	object_attach(parent, tbar);
 	return (tbar);
 }
 
 void
-toolbar_init(struct toolbar *tbar, enum toolbar_type type)
+toolbar_init(struct toolbar *tbar, enum toolbar_type type, int nrows)
 {
+	int i;
+	
 	switch (type) {
 	case TOOLBAR_HORIZ:
-		box_init(&tbar->box, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		box_init(&tbar->box, BOX_VERT, BOX_WFILL);
 		break;
 	case TOOLBAR_VERT:
-		box_init(&tbar->box, BOX_VERT, BOX_HFILL|BOX_HOMOGENOUS);
+		box_init(&tbar->box, BOX_HORIZ, BOX_HFILL);
 		break;
 	}
-	object_set_ops(tbar, &toolbar_ops);
-	box_set_padding(&tbar->box, 5);
+	box_set_padding(&tbar->box, 2);
 	box_set_spacing(&tbar->box, 1);
+	object_set_ops(tbar, &toolbar_ops);
+
 	tbar->type = type;
+	tbar->nrows = 0;
+	for (i = 0; i < nrows && i < TOOLBAR_MAX_ROWS; i++) {
+		switch (type) {
+		case TOOLBAR_HORIZ:
+			tbar->rows[i] = box_new(&tbar->box, BOX_HORIZ,
+			    BOX_WFILL|BOX_HOMOGENOUS);
+			break;
+		case TOOLBAR_VERT:
+			tbar->rows[i] = box_new(&tbar->box, BOX_VERT, 
+			    BOX_HFILL|BOX_HOMOGENOUS);
+			break;
+		}
+		box_set_padding(tbar->rows[i], 1);
+		box_set_spacing(tbar->rows[i], 1);
+		tbar->nrows++;
+	}
 }
 
 struct button *
-toolbar_add_button(struct toolbar *tbar, SDL_Surface *icon, int sticky, int def,
-    void (*handler)(int, union evarg *), const char *fmt, ...)
+toolbar_add_button(struct toolbar *tbar, int row, SDL_Surface *icon,
+    int sticky, int def, void (*handler)(int, union evarg *),
+    const char *fmt, ...)
 {
 	struct button *bu;
 	struct event *ev;
 	va_list ap;
 
-	bu = button_new(&tbar->box, NULL);
+#ifdef DEBUG
+	if (row < 0 || row > tbar->nrows)
+		fatal("no such row %d", row);
+#endif
+	bu = button_new(tbar->rows[row], NULL);
 	button_set_label(bu, icon);
 	button_set_focusable(bu, 0);
 	button_set_sticky(bu, sticky);

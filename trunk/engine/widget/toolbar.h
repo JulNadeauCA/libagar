@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.6 2003/11/10 22:41:12 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.1 2004/03/17 04:00:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -10,6 +10,8 @@
 
 #include "begin_code.h"
 
+#define TOOLBAR_MAX_ROWS	8
+
 enum toolbar_type {
 	TOOLBAR_HORIZ,
 	TOOLBAR_VERT
@@ -17,17 +19,19 @@ enum toolbar_type {
 
 struct toolbar {
 	struct box box;
+	struct box *rows[TOOLBAR_MAX_ROWS];
 	enum toolbar_type type;
+	int nrows;
 };
 
 __BEGIN_DECLS
-struct toolbar	*toolbar_new(void *, enum toolbar_type);
-void		 toolbar_init(struct toolbar *, enum toolbar_type);
+struct toolbar	*toolbar_new(void *, enum toolbar_type, int);
+void		 toolbar_init(struct toolbar *, enum toolbar_type, int);
 void		 toolbar_scale(void *, int, int);
 void	 	 toolbar_destroy(void *);
-struct button	*toolbar_add_button(struct toolbar *, SDL_Surface *, int, int,
-		                    void (*)(int, union evarg *), const char *,
-				    ...);
+struct button	*toolbar_add_button(struct toolbar *, int, SDL_Surface *, int,
+		                    int, void (*)(int, union evarg *),
+				    const char *, ...);
 __END_DECLS
 
 #include "close_code.h"
