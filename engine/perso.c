@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.42 2005/01/05 04:44:03 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.43 2005/02/08 15:57:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -117,7 +117,7 @@ perso_load(void *obj, struct netbuf *buf)
 	perso->hp = (int)read_uint32(buf);
 	perso->maxmp = (int)read_uint32(buf);
 	perso->mp = (int)read_uint32(buf);
-	perso->nzuars = (unsigned int)read_uint32(buf);
+	perso->nzuars = (u_int)read_uint32(buf);
 	pthread_mutex_unlock(&perso->lock);
 	return (0);
 }

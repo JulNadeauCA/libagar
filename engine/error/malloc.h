@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.8 2005/01/13 01:16:39 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.9 2005/02/11 02:29:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -37,8 +37,8 @@ enum {
 
 struct error_mement {
 	size_t msize;			/* Total allocated memory */
-	unsigned int nallocs;		/* Total number of allocations */
-	unsigned int nfrees;		/* Total number of frees */
+	u_int nallocs;			/* Total number of allocations */
+	u_int nfrees;			/* Total number of frees */
 };
 
 __BEGIN_DECLS

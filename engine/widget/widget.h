@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.88 2005/02/08 08:28:22 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.89 2005/03/09 06:39:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -75,7 +75,7 @@ struct widget {
 					   parent by default) */
 
 	SDL_Surface	**surfaces;	/* Registered surfaces */
-	unsigned int	 nsurfaces;
+	u_int		 nsurfaces;
 #ifdef HAVE_OPENGL
 	GLuint		*textures;	/* Cached OpenGL textures */
 	GLfloat		*texcoords;	/* Cached texture coordinates */
@@ -141,7 +141,7 @@ __inline__ void		 widget_binding_lock(struct widget_binding *);
 __inline__ void		 widget_binding_unlock(struct widget_binding *);
 __inline__ void		 widget_binding_modified(struct widget_binding *);
 
-__inline__ unsigned int	 widget_get_uint(void *, const char *);
+__inline__ u_int	 widget_get_uint(void *, const char *);
 __inline__ int		 widget_get_int(void *, const char *);
 #define			 widget_get_bool widget_get_int
 __inline__ Uint8	 widget_get_uint8(void *, const char *);
@@ -158,7 +158,7 @@ __inline__ char	  *widget_get_string(void *, const char *);
 __inline__ size_t  widget_copy_string(void *, const char *, char *, size_t)
 		       BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
-__inline__ void	 widget_set_uint(void *, const char *, unsigned int);
+__inline__ void	 widget_set_uint(void *, const char *, u_int);
 __inline__ void	 widget_set_int(void *, const char *, int);
 #define		 widget_set_bool widget_set_int
 __inline__ void	 widget_set_uint8(void *, const char *, Uint8);

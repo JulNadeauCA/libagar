@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.7 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.8 2005/03/03 10:51:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@ feature_init(void *p, struct tileset *ts, int flags,
 {
 	struct feature *ft = p;
 	struct feature *oft;
-	unsigned int featno = 0;
+	u_int featno = 0;
 	
 tryname:
 	snprintf(ft->name, sizeof(ft->name), "%s #%d", ops->type, featno);

@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.4 2005/01/31 08:32:48 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.5 2005/03/03 10:59:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -19,7 +19,7 @@ struct AGMenuItem {
 	SDLMod key_mod;
 	int x, y;			/* Position in parent view */
 	struct AGMenuItem *subitems;	/* Child items */
-	unsigned int nsubitems;
+	u_int		  nsubitems;
 	
 	struct event *onclick;		/* Event to raise on selection */
 
@@ -46,7 +46,7 @@ struct AGMenuItem {
 struct AGMenu {
 	struct widget wid;
 	struct AGMenuItem *items;	/* Top-level items */
-	unsigned int nitems;
+	u_int		  nitems;
 	int selecting;			/* Selection in progress */
 	struct AGMenuItem *sel_item;	/* Selected top-level item */
 	int hspace, vspace;		/* Spacing */

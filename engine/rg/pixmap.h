@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.13 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.14 2005/03/06 10:40:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -17,7 +17,7 @@ struct pixmap_mod {
 };
 struct pixmap_undoblk {
 	struct pixmap_mod *mods;	/* Undoable modifications */
-	unsigned int	  nmods;
+	u_int		  nmods;
 };
 
 enum pixmap_blend_mode {
@@ -53,7 +53,7 @@ struct pixmap {
 	SDL_Surface *su;		/* Pixmap surface */
 	u_int nrefs;			/* Number of tile references */
 	struct pixmap_undoblk *ublks;	/* Undo blocks */
-	unsigned int nublks, curblk;
+	u_int nublks, curblk;
 
 	float h, s, v, a;			/* Current pixel value */
 	struct pixmap_brush *curbrush;		/* Current brush */

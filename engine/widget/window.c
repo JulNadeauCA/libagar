@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.247 2005/03/10 09:43:34 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.248 2005/03/11 05:13:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -475,7 +475,7 @@ window_hide(struct window *win)
 }
 
 static void
-count_widgets(struct widget *wid, unsigned int *nwidgets)
+count_widgets(struct widget *wid, u_int *nwidgets)
 {
 	struct widget *cwid;
 
@@ -487,7 +487,7 @@ count_widgets(struct widget *wid, unsigned int *nwidgets)
 }
 
 static void
-map_widgets(struct widget *wid, struct widget **widgets, unsigned int *i)
+map_widgets(struct widget *wid, struct widget **widgets, u_int *i)
 {
 	struct widget *cwid;
 
@@ -507,7 +507,7 @@ cycle_focus(struct window *win, int reverse)
 {
 	struct widget **widgets;
 	struct widget *olfocus;
-	unsigned int nwidgets = 0;
+	u_int nwidgets = 0;
 	int i = 0;
 
 	if ((olfocus = widget_find_focus(win)) == NULL) {

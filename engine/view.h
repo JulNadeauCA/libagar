@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.91 2005/01/23 11:54:50 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.92 2005/01/31 08:20:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -34,9 +34,9 @@ struct viewport {
 		int	 r;		/* Estimated refresh rate in ms */
 		int	 rnom;		/* Nominal FPS (expressed as 1000/n) */
 	} refresh;
-	SDL_Rect	*dirty;		/* Video rectangles to update */
-	unsigned int	 ndirty;	/* Number of rectangles to update */
-	unsigned int	 maxdirty;	/* Size of dirty rectangle array */
+	SDL_Rect *dirty;		/* Video rectangles to update */
+	u_int	 ndirty;
+	u_int  maxdirty;
 
 	pthread_mutex_t	 lock;
 	struct windowq	 windows;	/* Windows in view */

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.41 2005/03/03 10:56:45 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.42 2005/03/05 12:14:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -776,10 +776,10 @@ vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 
 /* Push a series of vertices onto the vertex array. */
 void
-vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
+vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, u_int nsvtx)
 {
 	struct vg_element *vge = vg->cur_vge;
-	unsigned int i;
+	u_int i;
 	
 	for (i = 0; i < nsvtx; i++) {
 		struct vg_vertex *vtx;

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.169 2005/03/05 12:15:08 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.170 2005/03/10 05:37:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -762,7 +762,7 @@ view_capture(SDL_Surface *su)
 	struct jpeg_compress_struct jcomp;
 	Uint8 *jcopybuf;
 	FILE *fp;
-	unsigned int seq = 0;
+	u_int seq = 0;
 	int fd;
 	JSAMPROW row[1];
 	int x;

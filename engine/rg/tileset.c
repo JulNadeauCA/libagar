@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.18 2005/03/10 09:44:02 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.19 2005/03/11 05:28:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -489,7 +489,7 @@ insert_tile(int argc, union evarg *argv)
 	if (ins_tile_ckeying)	flags |= TILE_SRCCOLORKEY;
 
 	if (ins_tile_name[0] == '\0') {
-		unsigned int nameno = 0;
+		u_int nameno = 0;
 tryname1:
 		snprintf(ins_tile_name, sizeof(ins_tile_name), _("Tile #%d"),
 		    nameno);

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.39 2004/10/27 10:43:14 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.40 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -159,7 +159,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 {
 	char mapname[OBJECT_NAME_MAX];
 	int x, y, mx, my;
-	unsigned int mw, mh;
+	u_int mw, mh;
 	SDL_Rect sd, rd;
 	struct map *fragmap;
 

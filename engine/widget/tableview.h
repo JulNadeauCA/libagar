@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tableview.h,v 1.5 2005/02/07 05:37:52 vedge Exp $	*/
 /*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
@@ -25,7 +25,7 @@ enum {
 
 struct tableview_column {
 	colID cid;
-	unsigned int idx;		/* Index into row->cell[] */
+	u_int idx;		/* Index into row->cell[] */
 
 	/* Flags */
 	int mousedown :1;
@@ -86,7 +86,7 @@ struct tableview {
 	int prew, preh;			/* Prescale hint */
 	
 	/* columns */
-	unsigned int		 columncount;
+	u_int			 columncount;
 	struct tableview_column *column;
 	char sortMode;			/* Sort mode (a or b) */
 	
@@ -104,13 +104,13 @@ struct tableview {
 	
 	/* drawing hints */
 	struct {
-		unsigned int redraw_last;
-		unsigned int redraw_rate;
+		u_int redraw_last;
+		u_int redraw_rate;
 		int dirty;
-		unsigned int count;
+		u_int count;
 		struct rowdocket_item {
 			struct tableview_row *row;
-			unsigned int depth;
+			u_int depth;
 		} *items;
 	} visible;
 };
@@ -141,7 +141,7 @@ void tableview_draw(void *);
 struct tableview *tableview_new(void *, int, datafunc, compfunc);
 void tableview_init(struct tableview *, int, datafunc, compfunc);
 void tableview_prescale(struct tableview *, const char *, int);
-void tableview_set_update(struct tableview *, unsigned int);
+void tableview_set_update(struct tableview *, u_int);
 
 void tableview_col_add(struct tableview *, int, colID, const char *, char *);
 

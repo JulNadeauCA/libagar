@@ -1,4 +1,4 @@
-/*	$Csoft: sketch.h,v 1.2 2005/03/04 13:35:08 vedge Exp $	*/
+/*	$Csoft: sketch.h,v 1.3 2005/03/05 12:13:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCH_H_
@@ -17,7 +17,7 @@ struct sketch_mod {
 };
 struct sketch_undoblk {
 	struct sketch_mod *mods;	/* Undoable modifications */
-	unsigned int	  nmods;
+	u_int		  nmods;
 };
 
 struct sketch {
@@ -28,7 +28,7 @@ struct sketch {
 	u_int nrefs;
 	float h, s, v, a;
 	struct sketch_undoblk *ublks;
-	unsigned int nublks, curblk;
+	u_int nublks, curblk;
 	TAILQ_ENTRY(sketch) sketches;
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.23 2003/08/31 11:58:07 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.24 2003/10/09 22:39:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -64,7 +64,7 @@ void		 prop_destroy(struct prop *);
 struct prop	*prop_copy(const struct prop *);
 struct prop	*prop_set(void *, const char *, enum prop_type, ...);
 struct prop	*prop_set_bool(void *, const char *, int);
-struct prop	*prop_set_uint(void *, const char *, unsigned int);
+struct prop	*prop_set_uint(void *, const char *, u_int);
 struct prop	*prop_set_int(void *, const char *, int);
 struct prop	*prop_set_uint8(void *, const char *, Uint8);
 struct prop	*prop_set_sint8(void *, const char *, Sint8);
@@ -83,7 +83,7 @@ struct prop	*prop_set_pointer(void *, const char *, void *);
 
 struct prop	*prop_get(void *, const char *, enum prop_type, void *);
 int		 prop_get_bool(void *, const char *);
-unsigned int	 prop_get_uint(void *, const char *);
+u_int		 prop_get_uint(void *, const char *);
 int		 prop_get_int(void *, const char *);
 Uint8	 	 prop_get_uint8(void *, const char *);
 Sint8	 	 prop_get_sint8(void *, const char *);
