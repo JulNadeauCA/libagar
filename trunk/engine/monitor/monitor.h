@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.17 2003/05/14 03:43:31 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.18 2003/06/06 02:44:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MONITOR_MONITOR_H_
@@ -31,7 +31,6 @@ __BEGIN_DECLS
 extern DECLSPEC void		 monitor_init(struct monitor *, const char *);
 extern DECLSPEC void		 monitor_destroy(void *);
 
-extern DECLSPEC struct window	*object_browser_window(void);
 extern DECLSPEC struct window	*widget_browser_window(void);
 extern DECLSPEC struct window	*view_params_window(void);
 extern DECLSPEC struct window	*screenshot_window(void);
