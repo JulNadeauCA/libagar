@@ -28,3 +28,6 @@
 
 VERSION=1.2
 
+INSTALLDATA?=	install -c -m 644
+INSTALLBIN?=	install -c -m 755
+
