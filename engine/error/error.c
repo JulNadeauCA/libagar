@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.31 2003/06/06 02:42:28 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.32 2003/06/14 03:36:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <config/threads.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -34,35 +34,40 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-
 #ifdef THREADS
-extern pthread_key_t engine_errorkey;	/* engine.c */
-#else
-extern char *engine_errorkey;		/* engine.c */
+#include <pthread.h>
 #endif
 
-void *
-Malloc(size_t len)
-{
-	void *p;
+#include <engine/error/error.h>
 
-	p = malloc(len);
-	if (p == NULL) {
-		fatal("could not malloc %lu bytes", (unsigned long)len);
-	}
-	return (p);
+#ifdef THREADS
+pthread_key_t	 error_key;		/* Thread-safe error code */
+#else
+char		*error_key;		/* Thread-unsafe error code */
+#endif
+
+#ifdef DEBUG
+int		 engine_debug = 1;	/* Default debug level */
+#endif
+
+void
+error_init(void)
+{
+#ifdef THREAD
+	pthread_key_create(&error_key, NULL);
+#else
+	error_key = NULL;
+#endif
 }
 
-void *
-Realloc(void *ptr, size_t len)
+void
+error_destroy(void)
 {
-	void *p;
-
-	p = realloc(ptr, len);
-	if (p == NULL) {
-		fatal("could not realloc %lu bytes", (unsigned long)len);
-	}
-	return (p);
+#ifdef THREADS
+	pthread_key_delete(error_key);
+#else
+	Free(error_key);
+#endif
 }
 
 void
@@ -78,15 +83,15 @@ error_set(const char *fmt, ...)
 	{
 		char *ekey;
 
-		ekey = (char *)pthread_getspecific(engine_errorkey);
+		ekey = (char *)pthread_getspecific(error_key);
 		if (ekey != NULL) {
 			free(ekey);
 		}
-		pthread_setspecific(engine_errorkey, buf);
+		pthread_setspecific(error_key, buf);
 	}
 #else
-	Free(engine_errorkey);
-	engine_errorkey = buf;
+	Free(error_key);
+	error_key = buf;
 #endif
 }
 
@@ -94,24 +99,39 @@ const char *
 error_get(void)
 {
 #ifdef THREADS
-	return ((const char *)pthread_getspecific(engine_errorkey));
+	return ((const char *)pthread_getspecific(error_key));
 #else
-	return ((const char *)engine_errorkey);
+	return ((const char *)error_key);
 #endif
 }
 
-void
-_dprintf_noop(const char *fmt, ...)
+void *
+error_malloc(size_t len)
 {
+	void *p;
+
+	p = malloc(len);
+	if (p == NULL) {
+		fatal("malloc failed");
+	}
+	return (p);
 }
 
-void
-_debug_noop(int level, const char *fmt, ...)
+void *
+error_realloc(void *ptr, size_t len)
 {
+	void *p;
+
+	p = realloc(ptr, len);
+	if (p == NULL) {
+		fatal("realloc failed");
+	}
+	return (p);
 }
 
+
 void
-_dprintf(const char *fmt, ...)
+error_dprintf(const char *fmt, ...)
 {
 #ifdef DEBUG
 	if (engine_debug > 0) {
@@ -125,7 +145,12 @@ _dprintf(const char *fmt, ...)
 }
 
 void
-_debug(int mask, const char *fmt, ...)
+error_dprintf_nop(const char *fmt, ...)
+{
+}
+
+void
+error_debug(int mask, const char *fmt, ...)
 {
 #ifdef DEBUG
 	if (engine_debug & mask) {
@@ -140,7 +165,12 @@ _debug(int mask, const char *fmt, ...)
 }
 
 void
-_debug_n(int mask, const char *fmt, ...)
+error_debug_nop(int level, const char *fmt, ...)
+{
+}
+
+void
+error_debug_n(int mask, const char *fmt, ...)
 {
 #ifdef DEBUG
 	if (engine_debug & mask) {
@@ -168,7 +198,7 @@ error_fatal(const char *fmt, ...)
 }
 
 char *
-Strdup(const char *s)
+error_strdup(const char *s)
 {
 	size_t buflen;
 	char *ns;
@@ -187,38 +217,5 @@ Asprintf(char **ret, const char *format, ...)
 	va_start(ap, format);
 	Vasprintf(ret, format, ap);
 	va_end(ap);
-}
-
-ssize_t
-Read(int fd, void *buf, size_t size)
-{
-	ssize_t rv;
-	
-	rv = read(fd, buf, size);
-	if (rv == -1) {
-		fatal("read(%lu): %s", (unsigned long)size,
-		    strerror(errno));
-	}
-	if (rv != size) {
-		fatal("short read: %lu/%lu", (unsigned long)size,
-		    (unsigned long)rv);
-	}
-	return (rv);
-}
-
-ssize_t
-Write(int fd, const void *buf, size_t size)
-{
-	ssize_t rv;
-	
-	rv = write(fd, buf, size);
-	if (rv == -1) {
-		fatal("write(%lu): %s", (unsigned long)size,
-		    strerror(errno));
-	} else if (rv != size) {
-		fatal("short write: %lu/%lu", (unsigned long)rv,
-		    (unsigned long)size);
-	}
-	return (rv);
 }
 
