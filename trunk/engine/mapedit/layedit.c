@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.4 2003/03/25 13:43:55 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.5 2003/03/26 10:04:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -240,11 +240,14 @@ layedit_init(struct mapview *mv)
 
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
 	{
-		mv->layed.layers_tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		mv->layed.layers_tl = tlist_new(reg, 100, 100, 
+		    TLIST_POLL|TLIST_DBLCLICK);
 		event_new(mv->layed.layers_tl, "tlist-poll",
 		    layedit_poll, "%p", mv);
 		event_new(mv->layed.layers_tl, "tlist-changed",
 		    layedit_update_name, "%p, %p", mv, rename_tb);
+		event_new(mv->layed.layers_tl, "tlist-dblclick",
+		    layedit_edit, "%p", mv);
 	}
 
 	mv->layed.win = win;
