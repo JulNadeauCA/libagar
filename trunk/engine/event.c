@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.195 2005/02/11 04:51:16 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.196 2005/02/20 06:23:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -110,7 +110,11 @@ event_hotkey(SDL_Event *ev)
 		break;
 #endif /* DEBUG */
 	case SDLK_F1:
-		window_show(config->settings);
+		if (!config->settings->visible) {
+			window_show(config->settings);
+		} else {
+			window_focus(config->settings);
+		}
 		break;
 	case SDLK_F8:
 		view_capture(view->v);
