@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.34 2003/03/11 01:57:31 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.35 2003/03/13 08:37:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -116,7 +116,7 @@ void		 mapview_draw(void *);
 void		 mapview_draw_props(struct mapview *, struct node *, int, int,
 		     int, int);
 void		 mapview_center(struct mapview *, int, int);
-void		 mapview_zoom(struct mapview *, int);
+int		 mapview_zoom(struct mapview *, int);
 void		 mapview_map_coords(struct mapview *, int *, int *);
 void		 mapview_set_selection(struct mapview *, int, int,
 		     unsigned int, unsigned int);
