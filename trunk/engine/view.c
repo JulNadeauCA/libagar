@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.83 2002/11/22 23:11:02 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.84 2002/11/26 01:38:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -60,7 +60,7 @@ static pthread_mutex_t cached_surfaces_lock = { PTHREAD_MUTEX_INITIALIZER };
 static void	free_cached_surface(struct cached_surface *);
 
 #ifdef DEBUG
-int	view_debug = 0;
+int	view_debug = 1;
 #define engine_debug view_debug
 #endif
 
