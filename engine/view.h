@@ -1,12 +1,12 @@
-/*	$Csoft$	*/
+/*	$Csoft: view.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 struct viewport {
 	int	fps;			/* Refresh rate in FPS */
 	int	width, height, depth;	/* Viewport geometry */
 	int	tilew, tileh;		/* Tile geometry */
 	int	flags;			/* SDL surface flags */
-	int	mapw, maph;		/* Width/height in map units */
-	int	mapx, mapy;		/* Coordinates withint his map */
+	int	mapw, maph;		/* Width/height in nodes */
+	int	mapx, mapy;		/* Map coordinates */
 	int	redraw;			/* Need redrawing */
 	struct	map *map;		/* Currently visible map */
 	GSList	*wins;			/* Viewport sub-surfaces */
