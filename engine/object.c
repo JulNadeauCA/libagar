@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.195 2005/04/02 03:13:27 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.196 2005/04/06 04:10:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -748,10 +748,16 @@ object_page_out(void *p, enum object_page_item item)
 #endif
 		if (ob->data_used != OBJECT_DEP_MAX &&
 		    --ob->data_used == 0) {
-			if (object_save(ob) == -1) {
-				goto fail;
+		    	extern int mapedition;
+
+			if (mapedition && (ob->flags & OBJECT_EDIT_RESIDENT)) {
+				ob->data_used = 1;
+			} else {
+				if (object_save(ob) == -1) {
+					goto fail;
+				}
+				object_free_data(ob);
 			}
-			object_free_data(ob);
 		}
 		break;
 	}
@@ -845,15 +851,18 @@ object_resolve_deps(void *p)
 }
 
 /*
- * Reload the data of an object and its children which are currently resident.
- * The object and linkage must be locked.
+ * Reload the data of an object and its children which are currently resident
+ * (or have the special OBJECT_EDIT_RESIDENT flag set). The object and linkage
+ * must be locked.
  */
 int
 object_reload_data(void *p)
 {
 	struct object *ob = p, *cob;
+	extern int mapedition;
 
-	if (ob->flags & OBJECT_WAS_RESIDENT) {
+	if ((ob->flags & OBJECT_WAS_RESIDENT) ||
+	    (mapedition && (ob->flags & OBJECT_EDIT_RESIDENT))) {
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(p) == -1)
 			return (-1);

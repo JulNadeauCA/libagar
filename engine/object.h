@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.115 2004/10/16 09:33:48 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.116 2005/02/03 09:19:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -56,11 +56,12 @@ struct object {
 #define OBJECT_WAS_RESIDENT	0x080	/* Used internally by object_load() */
 #define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
 #define OBJECT_REOPEN_ONLOAD	0x200	/* Close and reopen editor on load */
+#define OBJECT_EDIT_RESIDENT	0x400	/* Remain resident (for editor) */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
 				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY|\
-				 OBJECT_REOPEN_ONLOAD)
+				 OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT)
 #define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT|\
-				 OBJECT_REOPEN_ONLOAD)
+				 OBJECT_REOPEN_ONLOAD|OBJECT_EDIT_RESIDENT)
 
 	pthread_mutex_t	 lock;
 	struct gfx	*gfx;		/* Associated graphics package */
