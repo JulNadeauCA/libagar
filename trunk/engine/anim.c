@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.9 2002/05/03 20:12:35 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.10 2002/06/09 10:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -36,47 +36,47 @@
 #include "map.h"
 
 enum {
-	NFINIT = 1,	/* Pointers allocated at initialization. */
+	NFINIT = 2,	/* Pointers allocated at initialization. */
 	NFGROW = 2	/* Pointers allocated at growth. */
 };
 
 int
 anim_addframe(struct anim *anim, SDL_Surface *surface)
 {
+	int i, x, y;
+	SDL_Rect sd, rd;
+
+	anim->w = (surface->w / TILEW);
+	anim->h = (surface->h / TILEH);
+	anim->nparts = anim->w + anim->h - 1;
+
 	if (anim->frames == NULL) {			/* Initialize */
-		anim->frames = emalloc(NFINIT * sizeof(SDL_Surface *));
+		anim->frames = emalloc(anim->nparts * sizeof(SDL_Surface *));
+		for (i = 0; i < anim->nparts; i++) {
+			*(anim->frames + i) =
+			    emalloc(NFINIT * sizeof(struct SDL_Surface *));
+		}
 		anim->maxframes = NFINIT;
 		anim->nframes = 0;
 	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
-		SDL_Surface **newframes;
+		for (i = 0; i < anim->nparts; i++) {
+			SDL_Surface **su;
 
-		newframes = erealloc(anim->frames,
-		    (NFGROW * anim->maxframes) * sizeof(SDL_Surface *));
+			su = erealloc(*(anim->frames + i),
+			    NFGROW * anim->maxframes *
+			    sizeof(struct SDL_Surface *));
+			*(anim->frames + i) = su;
+		}
 		anim->maxframes *= NFGROW;
-		anim->frames = newframes;
 	}
-	anim->frames[anim->nframes++] = surface;
-	return (0);
-}
-
-int
-anim_breakframe(struct anim *anim, SDL_Surface *sprite)
-{
-	int x, y;
-	SDL_Rect sd, rd;
-
-	sd.x = 0;
-	sd.y = 0;
+	
 	sd.w = TILEW;
 	sd.h = TILEH;
-
 	rd.x = 0;
 	rd.y = 0;
-	rd.w = TILEW;
-	rd.h = TILEH;
-
-	for (y = 0; y < sprite->h; y += TILEH) {
-		for (x = 0; x < sprite->w; x += TILEW) {
+	
+	for (y = 0, i = 0; y < surface->h; y += TILEH) {
+		for (x = 0; x < surface->w; x += TILEW) {
 			SDL_Surface *s;
 
 			s = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
@@ -86,17 +86,17 @@ anim_breakframe(struct anim *anim, SDL_Surface *sprite)
 				fatal("SDL_AllocSurface: %s\n", SDL_GetError());
 			}
 
-			SDL_SetAlpha(sprite, 0, 0);
+			SDL_SetAlpha(surface, 0, 0);
 			sd.x = x;
 			sd.y = y;
-			SDL_BlitSurface(sprite, &sd, s, &rd);
-			anim_addframe(anim, s);
-			SDL_SetAlpha(sprite, SDL_SRCALPHA,
+			SDL_BlitSurface(surface, &sd, s, &rd);
+			anim->frames[i++][anim->nframes] = s;
+			SDL_SetAlpha(surface, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
 		}
 	}
-	SDL_FreeSurface(sprite);
 
+	anim->nframes++;
 	return (0);
 }
 
@@ -114,10 +114,15 @@ anim_init(struct anim *anim, int delay)
 void
 anim_destroy(struct anim *anim)
 {
-	int i;
+	int i, j;
 
-	for (i = 0; i < anim->nframes; i++) {
-		SDL_FreeSurface(anim->frames[i]);
+	for (j = 0; j < anim->nframes; j++) {
+		for (i = 0; i < anim->nparts; i++) {
+			SDL_FreeSurface(anim->frames[i][j]);
+		}
+#if 0
+		free(*(anim->frames + j));
+#endif
 	}
 	free(anim->frames);
 	free(anim);

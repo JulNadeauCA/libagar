@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.59 2002/06/09 10:03:15 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.60 2002/06/09 10:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -67,8 +67,6 @@ static struct object_audio	*object_get_audio(char *);
 int
 object_addanim(struct object_art *art, struct anim *anim)
 {
-	
-
 	if (art->anims == NULL) {			/* Initialize */
 		art->anims = emalloc(NANIMS_INIT * sizeof(struct anim *));
 		art->maxanims = NANIMS_INIT;
@@ -91,15 +89,10 @@ object_breaksprite(struct object_art *art, SDL_Surface *sprite)
 	int x, y;
 	SDL_Rect sd, rd;
 
-	sd.x = 0;
-	sd.y = 0;
 	sd.w = TILEW;
 	sd.h = TILEH;
-
 	rd.x = 0;
 	rd.y = 0;
-	rd.w = TILEW;
-	rd.h = TILEH;
 
 	for (y = 0; y < sprite->h; y += TILEH) {
 		for (x = 0; x < sprite->w; x += TILEW) {
@@ -572,6 +565,12 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 
 	/* Display smooth transitions from one node to another. */
 	node->flags |= NODE_ANIM;
+	if (y > 1) {
+		struct node *onode;
+
+		onode = &m->map[y - 1][x];
+		onode->flags |= NODE_OVERLAP;
+	}
 	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, 3);
 
 	/* Set the input device. */
@@ -607,6 +606,12 @@ object_delpos(void *obp)	/* XXX will change */
 			node = &pos->map->map[pos->y][pos->x];
 			node_delref(node, pos->nref);
 			node->flags &= ~(NODE_ANIM);
+			if (pos->y > 1) {
+				struct node *onode;
+
+				onode = &pos->map->map[pos->y - 1][pos->x];
+				onode->flags &= ~(NODE_OVERLAP);
+			}
 		}
 		free(pos);
 		ob->pos = NULL;

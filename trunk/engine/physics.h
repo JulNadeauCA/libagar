@@ -1,4 +1,4 @@
-/*	$Csoft: physics.h,v 1.14 2002/05/11 04:06:06 vedge Exp $	    */
+/*	$Csoft: physics.h,v 1.15 2002/06/09 10:08:04 vedge Exp $	    */
 /*	Public domain	*/
 
 struct noderef;
@@ -13,17 +13,14 @@ enum {
 };
 
 enum {
-	DIR_SPRITE_UP		= 1,
-	DIR_SPRITE_DOWN		= 2,
-	DIR_SPRITE_LEFT		= 3,
-	DIR_SPRITE_RIGHT	= 4
-};
-
-enum {
-	DIR_ANIM_MOVEUP		= 0,
-	DIR_ANIM_MOVEDOWN	= 1,
-	DIR_ANIM_MOVELEFT	= 2,
-	DIR_ANIM_MOVERIGHT	= 3
+	DIR_ANIM_IDLEUP		= 0,
+	DIR_ANIM_IDLEDOWN	= 1,
+	DIR_ANIM_IDLELEFT	= 2,
+	DIR_ANIM_IDLERIGHT	= 3,
+	DIR_ANIM_MOVEUP		= 4,
+	DIR_ANIM_MOVEDOWN	= 5,
+	DIR_ANIM_MOVELEFT	= 6,
+	DIR_ANIM_MOVERIGHT	= 7
 };
 
 /* 2D movement of undefined constructs in an infinite area. */

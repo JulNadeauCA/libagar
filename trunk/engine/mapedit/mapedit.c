@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.97 2002/06/06 10:15:51 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.98 2002/06/09 10:27:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -525,7 +525,8 @@ mapedit_tilelist(struct mapedit *med)
 			break;
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
-			SDL_BlitSurface(anim->frames[0], NULL, m->view->v, &rd);
+			SDL_BlitSurface(anim->frames[0][0], NULL, m->view->v,
+			    &rd);
 			break;
 		}
 
@@ -585,7 +586,7 @@ mapedit_tilestack(struct mapedit *med)
 			static struct anim *anim;
 
 			anim = ANIM(nref->pobj, nref->offs);
-			SDL_BlitSurface(anim->frames[0],
+			SDL_BlitSurface(anim->frames[0][0],
 			    NULL, m->view->v, &rd);
 			if (nref->flags & MAPREF_ANIM_DELTA) {
 				SDL_BlitSurface(
@@ -1082,6 +1083,17 @@ mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_HASTE), NULL,
 		    m->view->v, rd);
 	}
+
+#if 0
+	/* Debugging */
+	if (flags & NODE_ANIM)
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_ANIM), NULL,
+		    m->view->v, rd);
+	if (flags & NODE_OVERLAP)
+		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_OVERLAP), NULL,
+		    m->view->v, rd);
+#endif
+
 done:
 	pthread_mutex_unlock(&curmapedit->lock);
 }
