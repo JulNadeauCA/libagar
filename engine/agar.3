@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.21 2003/04/24 04:23:10 vedge Exp $
+.\"	$Csoft: agar.3,v 1.22 2003/04/24 08:07:34 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -37,11 +37,7 @@
 .Nd graphical game engine
 .Sh DESCRIPTION
 .Nm
-is a graphical game engine.
-.Sh SUBSYSTEMS
-The
-.Nm
-engine implements the following interfaces:
+is a graphical engine implementing the following subsystems:
 .Bl -tag -width "transform(3) " -compact
 .It config
 Generic engine/game configuration settings
@@ -54,7 +50,7 @@ Processing of events from input devices
 .It Xr mapedit 3
 Level edition
 .It Xr object 3
-Generic object structure
+Generic object framework
 .It Xr perso 3
 Game characters
 .It Xr physics 3
@@ -63,8 +59,6 @@ Movement of objects inside levels
 Generic properties
 .It Xr rootmap 3
 Level display in game mode
-.It Xr transform 3
-Graphical transformations applied to node references
 .It Xr version 3
 Signatures and versioning of data
 .It Xr view 3
@@ -122,13 +116,13 @@ and
 .Pa Aq config/*.h
 includes should come first, followed by
 .Pa Aq engine/engine.h .
-which itself may includes:
+which itself includes:
 .Pp
 .Bl -tag -width "<engine/compat/queue.h> " -compact
 .It Pa Aq pthread.h
 POSIX threads, if enabled at compile-time.
 .It Pa Aq SDL.h
-SDL library interface.
+Software DirectMedia Layer.
 .It Pa Aq GL/GL.h
 OpenGL interface, if enabled at compile-time.
 .It Pa Aq engine/compat/queue.h
@@ -143,8 +137,7 @@ definition, required by generic load/save operations.
 Error wrappers,
 .Fn warning
 and
-.Fn fatal
-macros and generic error handling.
+.Fn fatal .
 .It Pa Aq engine/object.h
 Generic
 .Xr object 3
