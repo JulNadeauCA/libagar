@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.78 2002/11/14 05:58:59 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.79 2002/11/14 07:11:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -149,11 +149,8 @@ view_init(gfx_engine_t ge)
 
 		dprintf("precalculated %dx%d rectangles (%d Kb)\n",
 		    mw, mh, (mw*mh * sizeof(SDL_Rect)) / 1024);
-
-		SDL_WM_SetCaption("AGAR (tile-based)", "AGAR");
 		break;
 	case GFX_ENGINE_GUI:
-		SDL_WM_SetCaption("AGAR (GUI)", "AGAR");
 		break;
 	}
 	view = v;
@@ -401,10 +398,7 @@ view_invalidate_surface(SDL_Surface *scaled)
 	fatal("not in surface cache: %p\n", scaled);
 }
 
-/*
- * Focus on a window.
- * View and window must be locked.
- */
+/* Focus on a window. */
 void
 view_focus(struct window *win)
 {
