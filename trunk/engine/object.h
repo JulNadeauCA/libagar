@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.4 2002/01/30 18:35:23 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.5 2002/02/01 05:52:45 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -9,6 +9,8 @@ struct anim {
 	GSList	*frames;
 	int	nframes;
 	int	delay;		/* Interval in milliseconds */
+	int	gframe;		/* Used by the map editor */
+	int	gframedc;
 
 	pthread_mutex_t lock;
 };
