@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.10 2002/11/15 04:18:32 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.11 2002/11/22 08:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,6 +33,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
+#include <engine/widget/text.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -110,15 +111,13 @@ resize_do(int argc, union evarg *argv)
 {
 	struct resize *res = argv[1].p;
 	struct textbox *tbox_w = argv[2].p, *tbox_h = argv[3].p;
-	struct mapview *mv = tool_mapview();
-	struct map *m = mv->map;
+	struct mapview *mv;
+	struct map *m;
 	Uint32 w, h;
 
 	mv = tool_mapview();
-	if (mv == NULL) {
-		warning("no view\n");
-		return;
-	}
+	if (mv == NULL)
+		return;			/* No selection */
 	m = mv->map;
 
 	w = (Uint32)textbox_int(tbox_w);
