@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.33 2002/11/19 05:06:32 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.34 2002/11/19 05:09:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -287,7 +287,7 @@ label_draw(void *p)
 							    [ri++];
 
 							asprintf(&s2,
-							    "%dx%d at %d,%d",
+							    "%dx%d at [%d,%d]",
 							    rd->w, rd->h,
 							    rd->x, rd->y);
 							fmtp += 5;
