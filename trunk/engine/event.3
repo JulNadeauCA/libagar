@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.1 2002/09/19 22:07:13 vedge Exp $
+.\"	$Csoft: event.3,v 1.2 2002/11/14 06:01:36 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -35,11 +35,32 @@
 #include <engine/event.h>
 .Ed
 .Sh DESCRIPTION
-The agar
-.Nm
-system can post events to agar
+Agar implements generic events using a list of event handlers for
 .Xr object 3
-structures and derivates.
+structures.
+The
+.Nm
+subsystem also implements the
+.Sq main loop
+used by Agar applications, which performs the following operations:
+.Bl -tag -width "Event processing"
+.It Video updates
+The display is updated when a counter exceeds a refresh rate.
+The time it took for the frame to be drawn is taken in consideration as the
+refresh rate is recalculated, so animations always show the same speed.
+Video updates have precedence in the event loop.
+.Pp
+If the frame was too complicated to draw in one cycle, the minimum delay is
+decremented down to the minimum set by
+.Xr view_set_refresh 3 .
+This can be avoided by lowering the frame rate to ensure that the frame is
+rendered in one cycle, or reducing the amount of time spent in rendering
+functions.
+.It Event processing
+SDL events are translated to
+.Nm
+structures, which are sent to the relevant subsystems.
+.El
 .Sh EVENT HANDLERS
 Event handlers are identified by null-terminated strings.
 Event handler arguments are described by an array of unions:
