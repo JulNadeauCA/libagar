@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.7 2005/02/06 05:02:58 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.8 2005/02/06 07:05:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -431,7 +431,7 @@ create_obj_dlg(int argc, union evarg *argv)
 		label_new(bo, LABEL_STATIC, _("Parent object:"));
 
 		pobj_tl = tlist_new(bo, TLIST_POLL|TLIST_TREE);
-		tlist_prescale(pobj_tl, "XXXXXXXXXXXXXXXX", 5);
+		tlist_prescale(pobj_tl, "XXXXXXXXXXXXXXXXXXX", 5);
 		widget_bind(pobj_tl, "selected", WIDGET_POINTER, &current_pobj);
 		event_new(pobj_tl, "tlist-poll", poll_objs, "%p,%p", world,
 		    current_pobj);
