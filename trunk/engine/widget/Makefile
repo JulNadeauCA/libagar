@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.37 2002/12/24 10:20:24 vedge Exp $
+#	$Csoft: Makefile,v 1.38 2002/12/31 07:03:49 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -22,7 +22,7 @@ CATMAN3=widget.cat3 button.cat3 graph.cat3 checkbox.cat3 label.cat3 radio.cat3 \
 	region.cat3 textbox.cat3 window.cat3 bitmap.cat3 scrollbar.cat3 \
 	tlist.cat3
 
-CFLAGS+=	${SDL_CFLAGS}
+CFLAGS+=	${SDL_CFLAGS} ${OPENGL_CFLAGS}
 
 all:	window.fob window_offs.h
 
