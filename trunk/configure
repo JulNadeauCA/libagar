@@ -1,139 +1,169 @@
 #!/bin/sh
-# Do not edit: File generated from configure.in
+#
+# Do not edit!
+# File generated from configure.in by manuconf v1.1.
+#
+# Copyright (c) 2001, CubeSoft Communications, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistribution of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistribution in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of CubeSoft Communications, nor the names of
+#    its contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 echo >Makefile.config
-echo -n "checking for SDL >= 1.2.0...";
+echo >config.h
+for OPT in $@; do
+if [ "$OPT" = "--with-smpeg" ]; then
+WITH_SMPEG=1
+echo WITH_SMPEG=$WITH_SMPEG >> Makefile.config
+else
+NONE=1
+fi
+done
+for OPT in $@; do
+if [ "$OPT" = "--without-smpeg" ]; then
+WITHOUT_SMPEG=1
+echo WITHOUT_SMPEG=$WITHOUT_SMPEG >> Makefile.config
+else
+NONE=1
+fi
+done
+if [ "$1" == "--help" ]; then
+echo "Usage: ./configure [args]"
+echo "    --with-smpeg         Play videos through the smpeg library [yes]"
+echo "    --without-smpeg      "
+exit 1
+fi
+if [ "$1" == "--version" ]; then
+echo "Manuconf v1.1"
+exit 1
+fi
+echo -n "checking for SDL >= 1.2.0..."
 SDL_VERSION=`sdl-config --version 2>/dev/null`
 SDL_CFLAGS=`sdl-config --cflags 2>/dev/null`
 SDL_LIBS=`sdl-config --libs 2>/dev/null`
 SDL11_VERSION=`sdl11-config --version 2>/dev/null`
 SDL11_CFLAGS=`sdl11-config --cflags 2>/dev/null`
 SDL11_LIBS=`sdl11-config --libs 2>/dev/null`
-
 if [ "$SDL_VERSION" != "" ]; then
- SDL_FOUND=yes
-
- echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
-
- echo SDL_LIBS=$SDL_LIBS >> Makefile.config
-
+SDL_FOUND=yes
+echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
- false
+NONE=1
 fi
-
 if [ "$SDL11_VERSION" != "" ]; then
- SDL_FOUND=yes
-
- SDL_CFLAGS=$SDL11_CFLAGS
-
- SDL_LIBS=$SDL11_LIBS
-
- echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
-
- echo SDL_LIBS=$SDL_LIBS >> Makefile.config
-
+SDL_FOUND=yes
+SDL_CFLAGS=$SDL11_CFLAGS
+SDL_LIBS=$SDL11_LIBS
+echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
- false
+NONE=1
 fi
-
 if [ "$SDL_FOUND" = "yes" ]; then
- echo "ok";
+echo "ok"
 else
- echo "missing";
- echo "*** This package requires SDL >= 1.2.0";
- echo "*** Get it from http://www.libsdl.org/";
- echo "ERROR: Missing SDL";
- exit 1
+echo "*** SDL >= 1.2.0 is required"
+echo "*** Get it from http://www.libsdl.org/"
+echo "ERROR: SDL >= 1.2.0 is missing"
+exit 1
 fi
-echo -n "checking for glib >= 1.2.0...";
+echo -n "checking for glib >= 1.2.0..."
 GLIB_VERSION=`glib-config --version 2>/dev/null`
 GLIB_CFLAGS=`glib-config --cflags 2>/dev/null`
 GLIB_LIBS=`glib-config --libs 2>/dev/null`
 GLIB12_VERSION=`glib12-config --version 2>/dev/null`
 GLIB12_CFLAGS=`glib12-config --cflags 2>/dev/null`
 GLIB12_LIBS=`glib12-config --libs 2>/dev/null`
-
 if [ "$GLIB_VERSION" != "" ]; then
- GLIB_FOUND=yes
-
- echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
-
- echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
-
+GLIB_FOUND=yes
+echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
+echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
 else
- false
+NONE=1
 fi
-
 if [ "$GLIB12_VERSION" != "" ]; then
- GLIB_FOUND=yes
-
- GLIB_CFLAGS=$GLIB12_CFLAGS
-
- GLIB_LIBS=$GLIB12_LIBS
-
- echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
-
- echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
-
+GLIB_FOUND=yes
+GLIB_CFLAGS=$GLIB12_CFLAGS
+GLIB_LIBS=$GLIB12_LIBS
+echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
+echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
 else
- false
+NONE=1
 fi
-
 if [ "$GLIB_FOUND" = "yes" ]; then
- echo "ok";
+echo "ok"
 else
- echo "missing";
- echo "*** This package requires glib >= 1.2.0";
- echo "*** Get it from http://www.gtk.org/";
- echo "ERROR: Missing glib";
- exit 1
+echo "missing"
+echo "*** This package requires glib >= 1.2.0"
+echo "*** Get it from http://www.gtk.org/"
+echo "ERROR: Missing glib"
+exit 1
 fi
-echo -n "checking for smpeg >= 0.4.3...";
+if [ "$WITHOUT_SMPEG" = "" ]; then
+echo -n "checking for x11..."
+if [ -d /usr/X11R6 ]; then
+X11BASE=/usr/X11R6
+CONF_X11FOUND=1
+X11_CFLAGS=-I/usr/X11R6/include
+X11_LIBS=-L/usr/X11R6/lib
+else
+NONE=1
+fi
+if [ -d /usr/X386 ]; then
+X11BASE=/usr/X386
+CONF_X11FOUND=1
+X11_CFLAGS=-I/usr/X386/include
+X11_LIBS=-L/usr/X386/lib
+else
+NONE=1
+fi
+if [ "$X11BASE" != "" ]; then
+echo "$X11BASE"
+echo "#ifndef CONF_X11FOUND" >> config.h
+echo "#define CONF_X11FOUND $CONF_X11FOUND" >> config.h
+echo "#endif /* CONF_X11FOUND */" >> config.h
+echo X11BASE=$X11BASE >> Makefile.config
+echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
+echo X11_LIBS=$X11_LIBS >> Makefile.config
+else
+echo "*** X11R6 >= 3 is required"
+echo "*** Get it from http://www.xfree86.org/"
+echo "ERROR: X11R6 >= 3 is missing"
+exit 1
+fi
+echo -n "checking for smpeg >= 0.4.3..."
 SMPEG_VERSION=`smpeg-config --version 2>/dev/null`
 SMPEG_CFLAGS=`smpeg-config --cflags 2>/dev/null`
 SMPEG_LIBS=`smpeg-config --libs 2>/dev/null`
-
 if [ "$SMPEG_VERSION" != "" ]; then
- echo "ok";echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
-
- echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
-
+echo "ok"
+echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
+echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
- echo "missing";
- echo "*** This package requires smpeg >= 0.4.3";
- echo "*** Get it from http://www.icculus.org/";
- echo "ERROR: Missing smpeg";
- exit 1
+echo "*** smpeg >= 0.4.3 is required"
+echo "*** Get it from http://www.icculus.org/"
+echo "ERROR: smpeg >= 0.4.3 is missing"
+exit 1
 fi
-echo -n "checking for x11...";
-
-if [ -d /usr/X11R6 ]; then
- XFOUND=/usr/X11R6
- X11_CFLAGS=-I/usr/X11R6/include
- X11_LIBS=-L/usr/X11R6/lib
-
-else
- XNOTFOUND=/usr/X11R6
-
-fi
-
-if [ -d /usr/X386 ]; then
- XFOUND=/usr/X386
- X11_CFLAGS=-I/usr/X386/include
- X11_LIBS=-L/usr/X386/lib
-
-else
- XNOTFOUND=/usr/X386
-
-fi
-
-if [ "$XFOUND" != "" ]; then
- echo "$XFOUND";
- echo X11BASE=$X11BASE >> Makefile.config
- echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
- echo X11_LIBS=$X11_LIBS >> Makefile.config
-
-else
- echo "missing";echo "*** This package requires X11";
- echo "ERROR: Cannot find X11";
- exit 1
 fi
