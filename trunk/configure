@@ -249,6 +249,21 @@ which="`which sdl11-config`"
 if [ -n "$which" -a -x "$which" ]; then
 	sdl11_libs=`${which} --libs`
 fi
+sdl_dmedia_version=""
+which="`which sdl-config-dmedia`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl_dmedia_version=`${which} --version`
+fi
+sdl_dmedia_cflags=""
+which="`which sdl-config-dmedia`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl_dmedia_cflags=`${which} --cflags`
+fi
+sdl_dmedia_libs=""
+which="`which sdl-config-dmedia`"
+if [ -n "$which" -a -x "$which" ]; then
+	sdl_dmedia_libs=`${which} --libs`
+fi
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
@@ -260,6 +275,15 @@ if [ "${sdl11_version}" != "" ]; then
 sdl_found=yes
 SDL_CFLAGS=$sdl11_cflags
 SDL_LIBS=$sdl11_libs
+echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+echo SDL_LIBS=$SDL_LIBS >> Makefile.config
+else
+NONE=1
+fi
+if [ "${sdl_dmedia_version}" != "" ]; then
+sdl_found=yes
+SDL_CFLAGS=$sdl_dmedia_cflags
+SDL_LIBS=$sdl_dmedia_libs
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
