@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.14 2002/04/14 01:04:22 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.15 2002/04/20 09:15:31 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -6,6 +6,7 @@
 #include <engine/config.h>
 
 #include <pthread.h>
+#include <stdlib.h>
 
 #include <SDL.h>
 
