@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.43 2002/03/01 02:54:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.44 2002/03/01 06:03:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -45,8 +45,9 @@ static struct obvec map_vec = {
 	map_destroy,
 	map_load,
 	map_save,
-	NULL,
-	NULL
+	NULL,		/* link */
+	NULL,		/* unlink */
+	map_dump
 };
 
 struct draw {
@@ -63,6 +64,10 @@ static void	 map_draw(struct map *);
 static void	 map_animate(struct map *);
 static void	*map_draw_th(void *);
 
+/*
+ * Allocate nodes for the given map geometry.
+ * Must be called on a locked map.
+ */
 void
 map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 {
@@ -81,12 +86,8 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	    ;;
 	m->shtiley = i;
 
-	dprintf("%s is %dKb in core (%dx%d, %d-byte nodes)\n", m->obj.name,
-	    ((w * h) * sizeof(struct node)) / 1024,
-	    w, h, sizeof(struct node));
-
+	/* Allocate the two-dimensional node array. */
 	m->map = (struct node **)emalloc(((w) * (h)) * sizeof(struct node *));
-
 	for (i = 0; i < h; i++) {
 		*(m->map + i) = (struct node *)emalloc(w * sizeof(struct node));
 	}
@@ -97,14 +98,14 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	}
 }
 
-/* Free map nodes. Must be called on a locked map. */
+/*
+ * Free map nodes.
+ * Must be called on a locked map.
+ */
 void
 map_freenodes(struct map *m)
 {
 	Uint32 x, y;
-
-	dprintf("freeing %dx%d nodes from %s\n",
-	    m->mapw, m->maph, m->obj.name);
 
 	for (x = 0; x < m->mapw; x++) {
 		for (y = 0; y < m->maph; y++) {
@@ -125,10 +126,8 @@ map_create(char *name, char *desc, Uint32 flags)
 	object_init(&m->obj, name, OBJ_DEFERGC|OBJ_EDITABLE, &map_vec);
 	m->obj.desc = (desc != NULL) ? strdup(desc) : NULL;
 	sprintf(m->obj.saveext, "m");
-
 	m->flags = flags;
 	m->view = mainview;
-
 	if (pthread_mutex_init(&m->lock, NULL) != 0) {
 		return (NULL);
 	}
@@ -142,11 +141,13 @@ map_draw_th(void *p)
 	struct map *m = (struct map *)p;
 
 	while (m->flags & MAP_FOCUSED) {
+		pthread_mutex_lock(&m->lock);
 		map_animate(m);
 		if (m->redraw) {
 			m->redraw = 0;
 			map_draw(m);
 		}
+		pthread_mutex_unlock(&m->lock);
 		text_drawall();	/* XXX some waste */
 		SDL_Delay(2);
 	}
@@ -301,18 +302,23 @@ map_destroy(void *p)
 {
 	struct map *m = (struct map *)p;
 
+	pthread_mutex_lock(&m->lock);
+
 	if (m->flags & MAP_FOCUSED) {
 		map_unfocus(m);
 	}
 
-	pthread_mutex_lock(&m->lock);
 	map_freenodes(m);
+
 	pthread_mutex_unlock(&m->lock);
 
 	return (0);
 }
 
-/* Must be called on a locked map. */
+/*
+ * Initialize a node.
+ * Must be called on a locked map.
+ */
 static void
 node_init(struct node *node, Uint32 flags)
 {
@@ -321,7 +327,10 @@ node_init(struct node *node, Uint32 flags)
 	TAILQ_INIT(&node->nrefsh);
 }
 
-/* Must be called on a locked map. */
+/*
+ * Free all the references of a node.
+ * Must be called on a locked map.
+ */
 static void
 node_destroy(struct node *node)
 {
@@ -366,8 +375,8 @@ map_plot_sprite(struct map *m, SDL_Surface *s, Uint32 x, Uint32 y)
 }
 
 /*
- * Update all animations in the map view, and move references
- * with a nonzero x/y offset value.
+ * Render all animations in the map view.
+ * Must be called on a locked map.
  */
 static void
 map_animate(struct map *m)
@@ -378,8 +387,6 @@ map_animate(struct map *m)
 
 	TAILQ_INIT(&deferdraws);
 	
-	pthread_mutex_lock(&m->lock);
-
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
 	    (vy < m->view->maph + m->view->mapyoffs);
 	     y++, vy++) {
@@ -430,6 +437,8 @@ map_animate(struct map *m)
 				/*
 				 * Blit only once other sprites/frames are
 				 * drawn (ie. soft-scrolling).
+				 *
+				 * XXX pre-allocate
 				 */
 				if (nref->xoffs != 0 || nref->yoffs != 0) {
 					struct draw *ndraw;
@@ -485,18 +494,17 @@ map_animate(struct map *m)
 		}
 		TAILQ_INIT(&deferdraws);
 	}
-
-	pthread_mutex_unlock(&m->lock);
 }
 
-/* Draw all sprites in the map view. */
+/*
+ * Draw all sprites in the map view.
+ * Must be called on a locked map.
+ */
 static void
 map_draw(struct map *m)
 {
 	static Uint32 x, y;
 	static Uint32 vx, vy;
-
-	pthread_mutex_lock(&m->lock);
 
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
 	     vy < m->view->maph + m->view->mapyoffs;
@@ -507,6 +515,7 @@ map_draw(struct map *m)
 		     x++, vx++) {
 			static struct node *node;
 			static struct noderef *nref;
+			static int nsprites;
 
 			node = &m->map[x][y];
 
@@ -518,17 +527,19 @@ map_draw(struct map *m)
 			if (curmapedit != NULL) {
 				mapedit_predraw(m, node->flags, vx, vy);
 			}
-	
+
+			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref->flags & MAPREF_SPRITE) {
 					map_plot_sprite(m,
 					    nref->pobj->sprites[nref->offs],
 					    (vx << m->shtilex) + nref->xoffs,
 					    (vy << m->shtiley) + nref->yoffs);
+					nsprites++;
 				}
 			}
 
-			if (curmapedit != NULL) {
+			if (nsprites > 0 && curmapedit != NULL) {
 				mapedit_postdraw(m, node->flags, vx, vy);
 			}
 		}
@@ -537,9 +548,8 @@ map_draw(struct map *m)
 	if (curmapedit != NULL) {
 		mapedit_tilestack(curmapedit);
 	}
-	pthread_mutex_unlock(&m->lock);
 
-	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);	/* XXX waste */
+	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 }
 
 /*
@@ -564,7 +574,8 @@ node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
 }
 
 /*
- * Load a map from file. The map must be already locked.
+ * Load a map from file.
+ * Must be called on a locked map.
  */
 int
 map_load(void *ob, int fd)
@@ -725,9 +736,12 @@ map_save(void *ob, int fd)
 }
 
 void
-map_dump(struct map *m)
+map_dump(void *p)
 {
-	printf("%3d. %10s geo %dx%d flags 0x%x\n", m->obj.id, m->obj.name,
-	    m->mapw, m->maph, m->flags);
+	struct map *m = (struct map *)p;
+
+	printf("flags 0x%x geo %dx%d tilegeo %dx%d origin at %dx%d\n",
+	    m->flags, m->mapw, m->maph, m->tilew, m->tileh, m->defx, m->defy,
+	    m->defx, m->defy);
 }
 
