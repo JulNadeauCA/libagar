@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.126 2002/12/04 04:23:12 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.127 2002/12/13 07:47:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,6 +59,12 @@ mapedit_init(struct mapedit *med, char *name)
 {
 	object_init(&med->obj, "map-editor", name, "mapedit",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &mapedit_ops);
+	prop_set_int(med, "zoom-minimum", 4);
+	prop_set_int(med, "zoom-maximum", 400);
+	prop_set_int(med, "zoom-increment", 2);
+	prop_set_int(med, "zoom-speed", 60);
+	prop_set_bool(med, "tilemap-scroll-x", 0);
+	prop_set_bool(med, "tilemap-scroll-y", 1);
 	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
 	med->ref.obj = NULL;

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.11 2002/11/10 21:45:53 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.12 2002/12/01 14:41:03 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapedit;
@@ -13,7 +13,6 @@ struct mapview {
 #define MAPVIEW_TILEMAP		0x08	/* Tile map */
 #define MAPVIEW_GRID		0x10	/* Display a grid */
 #define MAPVIEW_PROPS		0x20	/* Display node properties */
-#define MAPVIEW_SHOW_CURSOR	0x40	/* Show mouse cursor */
 
 	int	 prop_style;	/* Attribute background (or -1) */
 
