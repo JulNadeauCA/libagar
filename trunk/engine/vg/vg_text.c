@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.4 2004/05/05 16:45:35 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.5 2004/05/12 04:51:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -27,9 +27,12 @@
  */
 
 #include <engine/engine.h>
+
 #ifdef EDITION
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/combo.h>
+
 #include <engine/mapedit/mapview.h>
 #include <engine/mapedit/tool.h>
 #endif
@@ -137,66 +140,175 @@ vg_printf(struct vg *vg, const char *fmt, ...)
 	} else {
 		vge->vg_text.text[0] = '\0';
 	}
-
-	if (vge->vg_text.su != NULL) {
-		SDL_FillRect(vge->vg_text.su, NULL,
-		    SDL_MapRGBA(vge->vg_text.su->format, 0, 0, 0,
-		    SDL_ALPHA_TRANSPARENT));
-	}
+	if (vge->vg_text.su != NULL)
+		SDL_FreeSurface(vge->vg_text.su);
 }
 
 void
 vg_draw_text(struct vg *vg, struct vg_element *vge)
 {
 	SDL_Rect rd;
+	SDL_Surface *su;
 	int x, y;
-
+	
+	if (vge->vg_text.su == NULL) {
+		vge->vg_text.su = text_render(NULL, -1, vge->color,
+		    vge->vg_text.text);
+	}
+	su = vge->vg_text.su;
+	
 #ifdef DEBUG
 	if (vge->nvtx < 1)
 		fatal("nvtx < 1");
 #endif
 	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
-	rd.x = (Sint16)x;
-	rd.y = (Sint16)y;
-
-	/* XXX align ... */
-
-	if (vge->vg_text.su == NULL) {
-		vge->vg_text.su = text_render(NULL, -1, vge->color,
-		    vge->vg_text.text);
+	switch (vge->vg_text.align) {
+	case VG_ALIGN_TL:
+		rd.x = (Sint16)x;
+		rd.y = (Sint16)y;
+		break;
+	case VG_ALIGN_TC:
+		rd.x = (Sint16)x - su->w/2;
+		rd.y = (Sint16)y;
+		break;
+	case VG_ALIGN_TR:
+		rd.x = (Sint16)x - su->w;
+		rd.y = (Sint16)y;
+		break;
+	case VG_ALIGN_ML:
+		rd.x = (Sint16)x;
+		rd.y = (Sint16)y - su->h/2;
+		break;
+	case VG_ALIGN_MC:
+		rd.x = (Sint16)x - su->w/2;
+		rd.y = (Sint16)y - su->h/2;
+		break;
+	case VG_ALIGN_MR:
+		rd.x = (Sint16)x - su->w;
+		rd.y = (Sint16)y - su->h/2;
+		break;
+	case VG_ALIGN_BL:
+		rd.x = (Sint16)x;
+		rd.y = (Sint16)y - su->h;
+		break;
+	case VG_ALIGN_BC:
+		rd.x = (Sint16)x - su->w/2;
+		rd.y = (Sint16)y - su->h;
+		break;
+	case VG_ALIGN_BR:
+		rd.x = (Sint16)x - su->w;
+		rd.y = (Sint16)y - su->h;
+		break;
+	default:
+		break;
 	}
-	SDL_BlitSurface(vge->vg_text.su, NULL, vg->su, &rd);
+	SDL_BlitSurface(su, NULL, vg->su, &rd);
 }
 
 void
 vg_text_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 {
-	double vx, vy;
-	SDL_Surface *su = vge->vg_text.su;
-
-	if (su == NULL) {
+#ifdef DEBUG
+	if (vge->nvtx < 1)
+		fatal("nvtx < 1");
+#endif
+	if (vge->vg_text.su != NULL) {
+		vg_vlength(vg, (int)vge->vg_text.su->w, &r->w);
+		vg_vlength(vg, (int)vge->vg_text.su->h, &r->h);
+	} else {
 		r->x = 0;
 		r->y = 0;
 		r->w = 0;
 		r->h = 0;
-		return;
 	}
 }
 
 #ifdef EDITION
 static struct vg_element *cur_text;
 static struct vg_vertex *cur_vtx;
+static enum vg_alignment cur_align;
+
+static void
+select_alignment(int argc, union evarg *argv)
+{
+	struct combo *com = argv[0].p;
+	struct tool *t = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	char *align = (char *)it->p1;
+
+	switch (align[0]) {
+	case 'T':
+		switch (align[1]) {
+		case 'L':
+			cur_align = VG_ALIGN_TL;
+			break;
+		case 'C':
+			cur_align = VG_ALIGN_TC;
+			break;
+		case 'R':
+			cur_align = VG_ALIGN_TR;
+			break;
+		}
+		break;
+	case 'M':
+		switch (align[1]) {
+		case 'L':
+			cur_align = VG_ALIGN_ML;
+			break;
+		case 'C':
+			cur_align = VG_ALIGN_MC;
+			break;
+		case 'R':
+			cur_align = VG_ALIGN_MR;
+			break;
+		}
+		break;
+	case 'B':
+		switch (align[1]) {
+		case 'L':
+			cur_align = VG_ALIGN_BL;
+			break;
+		case 'C':
+			cur_align = VG_ALIGN_BC;
+			break;
+		case 'R':
+			cur_align = VG_ALIGN_BR;
+			break;
+		}
+		break;
+	}
+}
 
 static void
 text_tool_init(struct tool *t)
 {
 	struct window *win;
-	struct ucombo *ucom;
+	struct combo *com;
 	struct textbox *tb;
+	struct tlist_item *it;
 
-	tool_push_status(t, _("Specify the text's center point.\n"));
+	win = tool_window(t, "vg-tool-text");
+
+	tb = textbox_new(win, _("Text: "));
+
+	com = combo_new(win, 0, _("Alignment: "));
+	it = tlist_insert_item(com->list, ICON(VGTL_ICON), _("Top/left"), "TL");
+	tlist_insert_item(com->list, ICON(VGTC_ICON), _("Top/center"), "TC");
+	tlist_insert_item(com->list, ICON(VGTR_ICON), _("Top/right"), "TR");
+	tlist_insert_item(com->list, ICON(VGML_ICON), _("Middle/left"), "ML");
+	tlist_insert_item(com->list, ICON(VGMC_ICON), _("Middle/center"), "MC");
+	tlist_insert_item(com->list, ICON(VGMR_ICON), _("Middle/right"), "MR");
+	tlist_insert_item(com->list, ICON(VGBL_ICON), _("Bottom/left"), "BL");
+	tlist_insert_item(com->list, ICON(VGBC_ICON), _("Bottom/center"), "BC");
+	tlist_insert_item(com->list, ICON(VGBR_ICON), _("Bottom/right"), "BR");
+	event_new(com, "combo-selected", select_alignment, "%p", t);
+	combo_select(com, it);
+
 	cur_text = NULL;
 	cur_vtx = NULL;
+	cur_align = VG_ALIGN_TL;
+	
+	tool_push_status(t, _("Specify the position of the text."));
 }
 
 static void
@@ -205,8 +317,6 @@ text_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 {
 	struct vg *vg = t->p;
 	double x, y;
-	
-	if ((b & SDL_BUTTON(1)) == 0)
 	
 	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
 	if (cur_vtx != NULL) {
@@ -237,7 +347,8 @@ text_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		vg_printf(vg, "Foo");
 		vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 		cur_vtx = vg_vertex2(vg, vx, vy);
-		tool_push_status(t, _("Type the text or [undo element].\n"));
+		vg_text_align(vg, cur_align);
+		cur_text->redraw++;
 		break;
 	default:
 		if (cur_text != NULL) {
