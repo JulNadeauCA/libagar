@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.19 2002/07/30 22:23:57 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.21 2002/08/20 09:17:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -117,12 +117,8 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	event_new(tbox, "widget-shown", 0, textbox_shown, NULL);
 	event_new(tbox, "widget-hidden", 0, textbox_hidden, NULL);
 
-	event_new(tbox, "window-mousebuttonup", 0,
-	    textbox_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(tbox, "window-mousebuttondown", 0,
 	    textbox_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(tbox, "window-keyup", 0,
-	    textbox_event, "%i", WINDOW_KEYUP);
 	event_new(tbox, "window-keydown", 0,
 	    textbox_event, "%i", WINDOW_KEYDOWN);
 }
@@ -284,7 +280,7 @@ textbox_event(int argc, union evarg *argv)
 
 /* Window must be locked */
 void
-textbox_printf(struct textbox *tbox, char *fmt, ...)
+textbox_printf(struct textbox *tbox, const char *fmt, ...)
 {
 	va_list args;
 	char *buf;

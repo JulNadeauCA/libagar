@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.7 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.8 2002/06/20 16:34:44 vedge Exp $	*/
 /*	Public domain	*/
 
 struct textbox {
@@ -24,5 +24,5 @@ void		 textbox_destroy(void *);
 void		 textbox_shown(int argc, union evarg *argv);
 void		 textbox_hidden(int argc, union evarg *argv);
 void		 textbox_draw(void *);
-void		 textbox_printf(struct textbox *te, char *fmt, ...);
+void		 textbox_printf(struct textbox *te, const char *fmt, ...);
 
