@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.2 2003/06/21 02:52:43 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.3 2003/07/08 00:21:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_ERROR_ERROR_H_
@@ -9,7 +9,6 @@
 #include <stdlib.h>
 
 #include <config/debug.h>
-#include <config/lockdebug.h>
 #include <config/threads.h>
 
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
@@ -112,7 +111,7 @@ __END_DECLS
 #endif	/* DEBUG */
 
 #ifdef THREADS
-# ifdef LOCKDEBUG
+# ifdef DEBUG
 #  define pthread_mutex_lock(mutex) \
 	if (pthread_mutex_lock(mutex) != 0) \
 		fatal("lock")
@@ -127,7 +126,7 @@ __END_DECLS
 	if ((_rv = pthread_mutex_destroy(mutex)) != 0)		\
 		fatal("mutex destroy: %s", strerror(_rv));	\
  } while (0)
-# endif /* LOCKDEBUG */
+# endif /* DEBUG */
 # define Pthread_create(thread, attr, func, arg) \
 	if (pthread_create((thread), (attr), (func), (arg)) != 0) \
 		fatal("thread create")
