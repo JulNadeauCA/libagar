@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.96 2005/02/08 08:28:22 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.97 2005/02/12 08:17:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -787,32 +787,46 @@ widget_inherit_color(void *dp, int di, const char *name, void *sp)
 
 /*
  * Register a surface with the given widget. In OpenGL mode, generate
- * a texture as well. The surface is freed as the widget is destroyed.
+ * a texture as well. Mapped surfaces are automatically freed when the
+ * widget is destroyed.
  */
 int
 widget_map_surface(void *p, SDL_Surface *su)
 {
 	struct widget *wid = p;
+	int i, idx = -1;
 
-	wid->surfaces = Realloc(wid->surfaces,
-	    (wid->nsurfaces+1)*sizeof(SDL_Surface *));
-	wid->surfaces[wid->nsurfaces] = su;
+	for (i = 0; i < wid->nsurfaces; i++) {
+		if (wid->surfaces[i] == NULL) {
+			idx = i;
+			break;
+		}
+	}
+	if (i == wid->nsurfaces) {
+		wid->surfaces = Realloc(wid->surfaces,
+		    (wid->nsurfaces+1)*sizeof(SDL_Surface *));
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			wid->textures = Realloc(wid->textures,
+			    (wid->nsurfaces+1)*sizeof(GLuint));
+			wid->texcoords = Realloc(wid->texcoords,
+			    (wid->nsurfaces+1)*sizeof(GLfloat)*4);
+		}
+#endif
+		idx = wid->nsurfaces++;
+	}
 
+	wid->surfaces[idx] = su;
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
-		GLuint name;
+		GLuint texname;
 	
-		wid->textures = Realloc(wid->textures,
-		    (wid->nsurfaces+1)*sizeof(GLuint));
-		wid->texcoords = Realloc(wid->texcoords,
-		    (wid->nsurfaces+1)*sizeof(GLfloat)*4);
-
-		name = (su == NULL) ? 0 :
-		    view_surface_texture(su, &wid->texcoords[wid->nsurfaces*4]);
-		wid->textures[wid->nsurfaces] = name;
+		texname = (su == NULL) ? 0 :
+		    view_surface_texture(su, &wid->texcoords[idx*4]);
+		wid->textures[idx] = texname;
 	}
 #endif
-	return (wid->nsurfaces++);
+	return (idx);
 }
 
 /*
