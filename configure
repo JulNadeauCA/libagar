@@ -57,24 +57,48 @@ else
 NONE=1
 fi
 done
-if [ "$1" == "--help" ]; then
+if [ "$1" = "--help" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
 echo "    --with-smpeg         Play videos through the smpeg library [yes]"
 echo "    --without-smpeg      "
 exit 1
 fi
-if [ "$1" == "--version" ]; then
+if [ "$1" = "--version" ]; then
 echo "Manuconf v1.1"
 exit 1
 fi
 echo -n "checking for SDL >= 1.2.0..."
-SDL_VERSION=`sdl-config --version 2>/dev/null`
-SDL_CFLAGS=`sdl-config --cflags 2>/dev/null`
-SDL_LIBS=`sdl-config --libs 2>/dev/null`
-SDL11_VERSION=`sdl11-config --version 2>/dev/null`
-SDL11_CFLAGS=`sdl11-config --cflags 2>/dev/null`
-SDL11_LIBS=`sdl11-config --libs 2>/dev/null`
+if [ -x "`which sdl-config`" ]; then
+SDL_VERSION=`sdl-config --version`
+else
+SDL_VERSION=""
+fi
+if [ -x "`which sdl-config`" ]; then
+SDL_CFLAGS=`sdl-config --cflags`
+else
+SDL_CFLAGS=""
+fi
+if [ -x "`which sdl-config`" ]; then
+SDL_LIBS=`sdl-config --libs`
+else
+SDL_LIBS=""
+fi
+if [ -x "`which sdl11-config`" ]; then
+SDL11_VERSION=`sdl11-config --version`
+else
+SDL11_VERSION=""
+fi
+if [ -x "`which sdl11-config`" ]; then
+SDL11_CFLAGS=`sdl11-config --cflags`
+else
+SDL11_CFLAGS=""
+fi
+if [ -x "`which sdl11-config`" ]; then
+SDL11_LIBS=`sdl11-config --libs`
+else
+SDL11_LIBS=""
+fi
 if [ "$SDL_VERSION" != "" ]; then
 SDL_FOUND=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
@@ -100,12 +124,36 @@ echo "ERROR: SDL >= 1.2.0 is missing"
 exit 1
 fi
 echo -n "checking for glib >= 1.2.0..."
-GLIB_VERSION=`glib-config --version 2>/dev/null`
-GLIB_CFLAGS=`glib-config --cflags 2>/dev/null`
-GLIB_LIBS=`glib-config --libs 2>/dev/null`
-GLIB12_VERSION=`glib12-config --version 2>/dev/null`
-GLIB12_CFLAGS=`glib12-config --cflags 2>/dev/null`
-GLIB12_LIBS=`glib12-config --libs 2>/dev/null`
+if [ -x "`which glib-config`" ]; then
+GLIB_VERSION=`glib-config --version`
+else
+GLIB_VERSION=""
+fi
+if [ -x "`which glib-config`" ]; then
+GLIB_CFLAGS=`glib-config --cflags`
+else
+GLIB_CFLAGS=""
+fi
+if [ -x "`which glib-config`" ]; then
+GLIB_LIBS=`glib-config --libs`
+else
+GLIB_LIBS=""
+fi
+if [ -x "`which glib12-config`" ]; then
+GLIB12_VERSION=`glib12-config --version`
+else
+GLIB12_VERSION=""
+fi
+if [ -x "`which glib12-config`" ]; then
+GLIB12_CFLAGS=`glib12-config --cflags`
+else
+GLIB12_CFLAGS=""
+fi
+if [ -x "`which glib12-config`" ]; then
+GLIB12_LIBS=`glib12-config --libs`
+else
+GLIB12_LIBS=""
+fi
 if [ "$GLIB_VERSION" != "" ]; then
 GLIB_FOUND=yes
 echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
@@ -164,9 +212,21 @@ echo "ERROR: X11R6 >= 3 is missing"
 exit 1
 fi
 echo -n "checking for smpeg >= 0.4.3..."
-SMPEG_VERSION=`smpeg-config --version 2>/dev/null`
-SMPEG_CFLAGS=`smpeg-config --cflags 2>/dev/null`
-SMPEG_LIBS=`smpeg-config --libs 2>/dev/null`
+if [ -x "`which smpeg-config`" ]; then
+SMPEG_VERSION=`smpeg-config --version`
+else
+SMPEG_VERSION=""
+fi
+if [ -x "`which smpeg-config`" ]; then
+SMPEG_CFLAGS=`smpeg-config --cflags`
+else
+SMPEG_CFLAGS=""
+fi
+if [ -x "`which smpeg-config`" ]; then
+SMPEG_LIBS=`smpeg-config --libs`
+else
+SMPEG_LIBS=""
+fi
 if [ "$SMPEG_VERSION" != "" ]; then
 echo "ok"
 echo "#ifndef CONF_SMPEG" >> config.h
