@@ -11,6 +11,7 @@ enum shift_mode {
 struct shift {
 	struct tool	tool;
 	int		mode;
+	int		multi;
 };
 
 void		 shift_init(void *);

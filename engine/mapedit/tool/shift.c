@@ -31,6 +31,7 @@
 #include "shift.h"
 
 #include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
 
 static const struct tool_ops shift_ops = {
 	{
@@ -51,6 +52,7 @@ shift_init(void *p)
 
 	tool_init(&sh->tool, "shift", &shift_ops);
 	sh->mode = 0;
+	sh->multi = 0;
 }
 
 struct window *
@@ -74,9 +76,13 @@ shift_window(void *p)
 			NULL
 		};
 		struct radio *rad;
+		struct checkbox *cb;
 
 		rad = radio_new(reg, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
+
+		cb = checkbox_new(reg, -1, "Multi");
+		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->multi);
 	}
 	return (win);
 }
@@ -91,11 +97,13 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 	int h = 1;
 	int x, y;
 
-	if (mapview_get_selection(mv, &selx, &sely, &w, &h) == -1 ||
-	    selx < 0 || selx >= mv->map->mapw ||
-	    sely < 0 || sely >= mv->map->maph) {
-		dprintf("out of range\n");
-		return;
+	if (!sh->multi ||
+	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
+		if (selx < 0 || selx >= mv->map->mapw ||
+		    sely < 0 || sely >= mv->map->maph) {
+			dprintf("out of range\n");
+			return;
+		}
 	}
 
 	for (y = sely; y < sely+h; y++) {
@@ -107,12 +115,42 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 				if (nref->layer != mv->map->cur_layer)
 					continue;
 
-				if (nref->xcenter + relx < NODEREF_MAX_CENTER &&
-				    nref->ycenter + rely < NODEREF_MAX_CENTER) {
-					nref->xcenter += relx;
-					nref->ycenter += rely;
-				}
+				if (SDL_GetModState() & KMOD_CTRL) {
+					noderef_set_center(nref,
+					    nref->xcenter+relx,
+					    nref->ycenter+rely);
+				} else {
+					noderef_set_motion(nref,
+					    nref->xmotion+relx,
+					    nref->ymotion+rely);
 
+					dprintf("motion: %d,%d\n",
+					    (int)nref->xmotion,
+					    (int)nref->ymotion);
+
+					if (nref->xmotion < -(TILEW/2)) {
+						if (node_move_ref(nref, node,
+						    mv->map, x-1, y) == 0)
+							mv->mouse.x--;
+						nref->xmotion = TILEW/2;
+					} else if (nref->xmotion > TILEW/2) {
+						if (node_move_ref(nref, node,
+						    mv->map, x+1, y) == 0)
+							mv->mouse.x++;
+						nref->xmotion = -(TILEW/2);
+					}
+					if (nref->ymotion < -(TILEH/2)) {
+						if (node_move_ref(nref, node,
+						    mv->map, x, y-1) == 0)
+							mv->mouse.y--;
+						nref->ymotion = TILEH/2;
+					} else if (nref->ymotion > TILEH/2) {
+						if (node_move_ref(nref, node,
+						    mv->map, x, y+1) == 0)
+							mv->mouse.y++;
+						nref->ymotion = -(TILEH/2);
+					}
+				}
 				if (sh->mode == SHIFT_HIGHEST)
 					break;
 			}
