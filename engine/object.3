@@ -47,12 +47,24 @@ layer implements:
 .It
 garbage collection.
 .It
-graphic/audio storage.
+media storage.
 .It
 tile mapping (for map edition).
 .It
 state saving/loading.
 .El
+.Sh SHARED MEDIA
+Objects may be associated with shared
+.Dq media
+(graphics, audio).
+Media is allocated/deallocated by the engine by keeping a list of media
+structures independent from objects and reference counts.
+The reference count is incremented when an newly allocated object references
+the media structure, and decremented when an object is freed (as long as
+unless the object has the
+.Dv OBJECT_KEEP_MEDIA
+flag set).
+When the reference count drops to zero, the media is freed.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
