@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.27 2002/06/25 18:01:46 vedge Exp $
+# $Csoft: configure.in,v 1.28 2002/06/27 03:04:24 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -9,14 +9,21 @@ register("--enable-debug",	"Engine debugging [default: no]");
 register("--enable-xdebug",	"Synchronous X11 events [default: no]");
 register("--enable-map-editor",	"Level edition [default: yes]");
 register("--enable-serialization",	"Thread-safe engine [default: yes]");
+register("--enable-8bpp",	"Support 8 bpp display [default: yes]");
+register("--enable-16bpp",	"Support 16 bpp display [default: yes]");
+register("--enable-24bpp",	"Support 24 bpp display [default: yes]");
+register("--enable-32bpp",	"Support 32 bpp display [default: yes]");
 register("--help",		"Show this message");
 
 if [ "${help}" = "yes" ]; then
 	help();
 fi
 
+# System data directory.
 mdefine(SHAREDIR, "$PREFIX/share/geggy");
 hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
+
+# System map directory.
 mdefine(MAPDIR, "$PREFIX/share/geggy/maps");
 
 check(make);
@@ -29,6 +36,7 @@ fi
 
 require(sdl, 1.2.0);
 
+# Enable x11-specific code (only useful for debugging).
 if [ "${with_x11}" != "no" ]; then
 	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
 	if [ "${x11_found}" = "yes" ]; then
@@ -36,19 +44,37 @@ if [ "${with_x11}" != "no" ]; then
 	fi
 fi
 
+# Request synchronous X events (slow).
 if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]; then
 	hdefine(XDEBUG, 1);
 fi
 
+# Debug code. Debug level can change at runtime.
 if [ "${enable_debug}" = "yes" ]; then
 	hdefine(DEBUG, 1);
 	hdefine(LOCKDEBUG, 1);
 fi
 
+# Drop in edition mode with -e.
 if [ "${enable_map_editor}" != "no" ]; then
 	hdefine(MAPEDIT, 1);
 fi
 
+# Enable thread safety.
 if [ "${enable_serialization}" != "no" ]; then
 	hdefine(SERIALIZATION, 1);
+fi
+
+# Reduce code size and gain some cycles by disabling unused modes.
+if [ "${enable_8bpp}" != "no" ]; then
+	hdefine(VIEW_8BPP, 1);
+fi
+if [ "${enable_16bpp}" != "no" ]; then
+	hdefine(VIEW_16BPP, 1);
+fi
+if [ "${enable_24bpp}" != "no" ]; then
+	hdefine(VIEW_24BPP, 1);
+fi
+if [ "${enable_32bpp}" != "no" ]; then
+	hdefine(VIEW_32BPP, 1);
 fi
