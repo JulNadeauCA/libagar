@@ -52,11 +52,11 @@ Each object structure holds optional entry points,
 .Pp
 .Bd -literal
 struct obvec {
-	int	(*destroy)(void *);	# called before destroy
-	int	(*load)(void *, int);	# load from fd
-	int	(*save)(void *, int);	# save to fd
-	int	(*link)(void *);	# called before link
-	int	(*unlink)(void *);	# called after unlnk
+	int	(*destroy)(void *ob);		/* called before destroy */
+	int	(*load)(void *ob, int fd);	/* load from fd */
+	int	(*save)(void *ob, int fd);	/* save to fd */
+	int	(*link)(void *ob);		/* called before link */
+	int	(*unlink)(void *ob);		/* called after unlink */
 };
 .Ed
 .Pp
@@ -101,6 +101,7 @@ removes
 .Fa ob
 from the list of active objects.
 .Sh SAVING STATES
+.nr nS 1
 .Ft "int"
 .Fn object_load "struct object *ob"
 .Pp
@@ -125,6 +126,27 @@ from the file at
 saves the state of
 .Fa ob
 to the user's data directory.
+.Sh MAP OPERATIONS
+.nr nS 1
+.Ft "struct mappos *"
+.Fn object_addpos "void *ob" "Uint32 offs" "Uint32 flags" "struct input *in" "struct map *map" "Uint32 x" "Uint32 y"
+.Pp
+.Ft "void"
+.Fn object_delpos "void *ob" "Uint32 offs" "Uint32 flags" "struct map *map" "Uint32 x" "Uint32 y"
+.Pp
+.nr nS 0
+.Fn object_addpos
+adds a reference to
+.Fa ob
+at the given map coordinates, and creates a back reference (mappos)
+structure, which defines the single position of this object on a map,
+as well as speed, direction (mapdir) and an optional input device pointer.
+.Pp
+.Fn object_delpos
+removes a reference to
+.Fa ob
+at the given map coordinates, and destroys the back reference (mappos)
+structure.
 .Sh SEE ALSO
 .Xr agar 3
 .Sh HISTORY
