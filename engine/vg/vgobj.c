@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.10 2004/05/12 04:53:14 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.11 2004/05/13 02:50:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -176,8 +176,14 @@ rasterize_vgobj(struct mapview *mv, void *p)
 struct window *
 vgobj_edit(void *obj)
 {
-	extern const struct tool line_tool, point_tool, origin_tool,
-	    circle_tool, ellipse_tool, text_tool;
+	extern const struct tool vg_scale_tool;
+	extern const struct tool vg_grid_tool;
+	extern const struct tool vg_origin_tool;
+	extern const struct tool vg_point_tool;
+	extern const struct tool vg_line_tool;
+	extern const struct tool vg_circle_tool;
+	extern const struct tool vg_ellipse_tool;
+	extern const struct tool vg_text_tool;
 	struct vgobj *vgo = obj;
 	struct vg *vg = vgo->vg;
 	struct window *win;
@@ -218,12 +224,14 @@ vgobj_edit(void *obj)
 			mapview_prescale(mv, 10, 8);
 			mapview_reg_draw_cb(mv, rasterize_vgobj, vg);
 
-			mapview_reg_tool(mv, &origin_tool, vg);
-			mapview_reg_tool(mv, &point_tool, vg);
-			mapview_reg_tool(mv, &line_tool, vg);
-			mapview_reg_tool(mv, &circle_tool, vg);
-			mapview_reg_tool(mv, &ellipse_tool, vg);
-			mapview_reg_tool(mv, &text_tool, vg);
+			mapview_reg_tool(mv, &vg_scale_tool, vg);
+			mapview_reg_tool(mv, &vg_grid_tool, vg);
+			mapview_reg_tool(mv, &vg_origin_tool, vg);
+			mapview_reg_tool(mv, &vg_point_tool, vg);
+			mapview_reg_tool(mv, &vg_line_tool, vg);
+			mapview_reg_tool(mv, &vg_circle_tool, vg);
+			mapview_reg_tool(mv, &vg_ellipse_tool, vg);
+			mapview_reg_tool(mv, &vg_text_tool, vg);
 		}
 	}
 

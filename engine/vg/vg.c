@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.22 2004/05/18 02:47:42 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.23 2004/05/24 03:32:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,8 @@
 #include <engine/widget/button.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/tlist.h>
+#include <engine/mapedit/mapview.h>
+#include <engine/mapedit/tool.h>
 #endif
 
 #include "vg.h"
@@ -1266,6 +1268,8 @@ fail:
 
 #ifdef EDITION
 
+static struct timeout zoom_in_to, zoom_out_to;
+
 void
 vg_geo_changed(int argc, union evarg *argv)
 {
@@ -1347,4 +1351,196 @@ vg_layer_selector(void *parent, struct vg *vg)
 	return (com);
 }
 
+static void
+zoom_status(struct tool *t, struct vg *vg)
+{
+	mapview_status(t->mv, _("Scaling factor: %.2f, grid: %.2f"),
+	    vg->scale, vg->grid_gap);
+}
+
+static Uint32
+zoom_in_tick(void *p, Uint32 ival, void *arg)
+{
+	struct tool *t = arg;
+	struct vg *vg = t->p;
+
+	vg->scale += 0.125;
+	zoom_status(t, vg);
+	return (ival);
+}
+
+static Uint32
+zoom_out_tick(void *p, Uint32 ival, void *arg)
+{
+	struct tool *t = arg;
+	struct vg *vg = t->p;
+
+	vg->scale -= 0.125;
+	if (vg->scale < 0.125) {
+		vg->scale = 0.125;
+	}
+	zoom_status(t, vg);
+	return (ival);
+}
+
+static void
+zoom_in(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	if (state) {
+		if (SDL_GetModState() & KMOD_CTRL) {
+			return;
+		}
+		timeout_add(NULL, &zoom_in_to, 80);
+	} else {
+		lock_timeout(NULL);
+		if (timeout_scheduled(NULL, &zoom_in_to)) {
+			timeout_del(NULL, &zoom_in_to);
+		}
+		unlock_timeout(NULL);
+	}
+}
+
+static void
+zoom_out(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	if (state) {
+		if (SDL_GetModState() & KMOD_CTRL) {
+			return;
+		}
+		vg->scale -= 0.125;
+		if (vg->scale < 0.125) {
+			vg->scale = 0.125;
+		}
+		timeout_add(NULL, &zoom_out_to, 80);
+	} else {
+		lock_timeout(NULL);
+		if (timeout_scheduled(NULL, &zoom_out_to)) {
+			timeout_del(NULL, &zoom_out_to);
+		}
+		unlock_timeout(NULL);
+	}
+}
+
+static void
+zoom_ident(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	vg->scale = 1.0;
+	zoom_status(t, vg);
+}
+
+static void
+toggle_grid(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	if (state) {
+		if (vg->flags & VG_VISGRID) {
+			vg->flags &= ~VG_VISGRID;
+		} else {
+			vg->flags |= VG_VISGRID;
+		}
+	}
+}
+
+static void
+toggle_bboxes(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	if (state) {
+		if (vg->flags & VG_VISBBOXES) {
+			vg->flags &= ~VG_VISBBOXES;
+		} else {
+			vg->flags |= VG_VISBBOXES;
+		}
+	}
+}
+
+static void
+expand_grid(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	if (state) {
+		vg->grid_gap += 0.25;
+		zoom_status(t, vg);
+	}
+}
+
+static void
+contract_grid(struct tool *t, int state)
+{
+	struct vg *vg = t->p;
+
+	if (state) {
+		vg->grid_gap -= 0.25;
+		if (vg->grid_gap < 0.25) {
+			vg->grid_gap = 0.25;
+		}
+		zoom_status(t, vg);
+	}
+}
+
+static void
+init_scale_tool(struct tool *t)
+{
+	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_ident, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_1, zoom_ident, 0);
+
+	timeout_set(&zoom_in_to, zoom_in_tick, t, 0);
+	timeout_set(&zoom_out_to, zoom_out_tick, t, 0);
+}
+
+static void
+init_grid_tool(struct tool *t)
+{
+	tool_bind_key(t, KMOD_NONE, SDLK_g, toggle_grid, 0);
+	tool_bind_key(t, KMOD_NONE, SDLK_b, toggle_bboxes, 0);
+	tool_bind_key(t, KMOD_CTRL, SDLK_EQUALS, expand_grid, 0);
+	tool_bind_key(t, KMOD_CTRL, SDLK_MINUS, contract_grid, 0);
+}
+
+const struct tool vg_scale_tool = {
+	N_("Scale drawing"),
+	N_("Zoom in and out on the drawing."),
+	MAGNIFIER_TOOL_ICON,
+	-1,
+	init_scale_tool,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
+
+const struct tool vg_grid_tool = {
+	N_("Grid"),
+	N_("Toggle the grid."),
+	SNAP_GRID_ICON,
+	-1,
+	init_grid_tool,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	NULL,			/* mousemotion */
+	NULL,			/* mousebuttondown */
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
 #endif /* EDITION */
