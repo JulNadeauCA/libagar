@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.10 2002/11/07 04:30:01 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.11 2002/11/12 02:25:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -284,7 +284,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	it->tl_bp = tl;
 
 	pthread_mutex_lock(&tl->items_lock);
-	TAILQ_INSERT_HEAD(&tl->items, it, items);
+	TAILQ_INSERT_TAIL(&tl->items, it, items);
 	scrollbar_set_range(sb, ++tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
 
