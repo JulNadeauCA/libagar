@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.95 2005/02/05 02:52:05 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.96 2005/02/08 08:28:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1089,9 +1089,9 @@ widget_focus(void *p)
 }
 
 /* Evaluate whether a given widget is at least partially visible. */
-/* TODO optimize on a per window basis; partial occlusion. */
+/* TODO optimize on a per window basis */
 static __inline__ int
-widget_occulted(struct widget *wid)
+widget_completely_occulted(struct widget *wid)
 {
 	struct window *owin;
 	struct window *wwin;
@@ -1124,7 +1124,7 @@ widget_draw(void *p)
 	struct widget *cwid;
 
 	if (WIDGET_OPS(wid)->draw != NULL &&
-	    !widget_occulted(wid)) {
+	    !widget_completely_occulted(wid)) {
 		SDL_Rect clip_save;
 
 		if (wid->flags & WIDGET_CLIPPING) {
