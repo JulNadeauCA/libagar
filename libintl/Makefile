@@ -1,9 +1,9 @@
-#	$Csoft: Makefile,v 1.3 2003/08/13 01:47:35 vedge Exp $
+#	$Csoft: Makefile,v 1.4 2004/03/10 16:58:40 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-LIB=		intl
+LIB=		bsd_intl
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 
