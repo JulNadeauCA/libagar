@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.24 2005/02/27 05:55:54 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.25 2005/03/03 10:51:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -465,7 +465,7 @@ close_tile(int argc, union evarg *argv)
 }
 
 static void
-element_closed(int argc, union evarg *argv)
+close_element(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct tileview *tv = argv[1].p;
@@ -522,10 +522,13 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 
 			tv->state = TILEVIEW_FEATURE_EDIT;
 			tv->tv_feature.ft = ft;
+			tv->tv_feature.menu = NULL;
+			tv->tv_feature.menu_item = NULL;
+			tv->tv_feature.menu_win = NULL;
 
 			if (ft->ops->flags & FEATURE_AUTOREDRAW)
 				tileview_set_autoredraw(tv, 1, 125);
-
+			
 			if (ft->ops->edit != NULL) {
 				win = ft->ops->edit(ft, tv);
 				window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
@@ -533,7 +536,7 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 				window_show(win);
 
 				tv->tv_feature.win = win;
-				event_new(win, "window-close", element_closed,
+				event_new(win, "window-close", close_element,
 				    "%p", tv);
 				
 				view->focus_win = pwin;
@@ -560,16 +563,17 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			    event_new(tv, NULL, pixmap_buttonup, "%p,%p",
 			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
 			tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
+			tv->tv_pixmap.win = win = pixmap_edit(tv, tel);
+			tv->tv_pixmap.menu = NULL;
+			tv->tv_pixmap.menu_item = NULL;
+			tv->tv_pixmap.menu_win = NULL;
 
-			win = pixmap_edit(tv, tel);
 			window_attach(pwin, win);
 			window_show(win);
-			tv->tv_pixmap.win = win;
-			event_new(win, "window-close", element_closed, "%p",
-			    tv);
-			
+			event_new(win, "window-close", close_element, "%p", tv);
 			view->focus_win = pwin;
 			widget_focus(tv);
+
 			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
@@ -588,14 +592,14 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			tv->tv_sketch.ctrl->buttonup =
 			    event_new(tv, NULL, sketch_buttonup, "%p,%p",
 			    tv->tv_sketch.ctrl, tel->tel_sketch.sk);
+			tv->tv_sketch.win = win = sketch_edit(tv, tel);
+			tv->tv_sketch.menu = NULL;
+			tv->tv_sketch.menu_item = NULL;
+			tv->tv_sketch.menu_win = NULL;
 
-			win = sketch_edit(tv, tel);
 			window_attach(pwin, win);
 			window_show(win);
-			tv->tv_sketch.win = win;
-			event_new(win, "window-close", element_closed, "%p",
-			    tv);
-			
+			event_new(win, "window-close", close_element, "%p", tv);
 			view->focus_win = pwin;
 			widget_focus(tv);
 			tv->tile->flags |= TILE_DIRTY;
@@ -624,17 +628,17 @@ tile_close_element(struct tileview *tv)
 	case TILEVIEW_PIXMAP_EDIT:
 		if (tv->tv_pixmap.win != NULL) {
 			tileview_remove_ctrl(tv, tv->tv_pixmap.ctrl);
+			tv->tv_pixmap.ctrl = NULL;
 			view_detach(tv->tv_pixmap.win);
 			tv->tv_pixmap.win = NULL;
-			tv->tv_pixmap.ctrl = NULL;
 		}
 		break;
 	case TILEVIEW_SKETCH_EDIT:
 		if (tv->tv_sketch.win != NULL) {
 			tileview_remove_ctrl(tv, tv->tv_sketch.ctrl);
+			tv->tv_sketch.ctrl = NULL;
 			view_detach(tv->tv_sketch.win);
 			tv->tv_sketch.win = NULL;
-			tv->tv_sketch.ctrl = NULL;
 		}
 		break;
 	default:

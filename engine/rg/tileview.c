@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.20 2005/02/27 05:55:54 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.21 2005/03/03 10:51:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -112,7 +112,7 @@ cursor_overlap(struct tileview_handle *th, int sx, int sy)
 }
 
 static void
-tileview_keydown(int argc, union evarg *argv)
+keydown(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int keysym = argv[1].i;
@@ -180,7 +180,7 @@ tileview_keydown(int argc, union evarg *argv)
 }
 
 static void
-tileview_keyup(int argc, union evarg *argv)
+keyup(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int keysym = argv[1].i;
@@ -224,7 +224,7 @@ sketch_coincident(struct tile_element *tel, int x, int y)
 }
 
 static void
-tileview_buttondown(int argc, union evarg *argv)
+mousebuttondown(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int button = argv[1].i;
@@ -289,6 +289,16 @@ tileview_buttondown(int argc, union evarg *argv)
 		break;
 	case SDL_BUTTON_MIDDLE:
 		switch (tv->state) {
+		case TILEVIEW_PIXMAP_EDIT:
+			pixmap_open_menu(tv,
+			    WIDGET(tv)->cx + x,
+			    WIDGET(tv)->cy + y);
+			break;
+		case TILEVIEW_SKETCH_EDIT:
+			sketch_open_menu(tv,
+			    WIDGET(tv)->cx + x,
+			    WIDGET(tv)->cy + y);
+			break;
 		case TILEVIEW_FEATURE_EDIT:
 			if (tv->tv_feature.ft->ops->menu != NULL) {
 				feature_open_menu(tv,
@@ -331,7 +341,7 @@ tileview_buttondown(int argc, union evarg *argv)
 }
 
 static void
-tileview_buttonup(int argc, union evarg *argv)
+mousebuttonup(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int button = argv[1].i;
@@ -565,7 +575,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 }
 
 static void
-tileview_mousemotion(int argc, union evarg *argv)
+mousemotion(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int x = argv[1].i;
@@ -632,15 +642,13 @@ tileview_mousemotion(int argc, union evarg *argv)
 					double vx, vy, vxrel, vyrel;
 
 					vg_vcoords2(tel->tel_sketch.sk->vg,
-					    0, 0,
-					    sx - tel->tel_pixmap.x,
-					    sy - tel->tel_pixmap.y,
-					    &vx, &vy);
+					    sx - tel->tel_sketch.x,
+					    sy - tel->tel_sketch.y,
+					    0, 0, &vx, &vy);
 					vg_vcoords2(tel->tel_sketch.sk->vg,
-					    0, 0,
 					    sx - tv->xorig,
 					    sy - tv->yorig,
-					    &vxrel, &vyrel);
+					    0, 0, &vxrel, &vyrel);
 					sketch_mousemotion(tv, tel,
 					    vx/TILESZ, vy/TILESZ,
 					    vxrel/TILESZ, vyrel/TILESZ,
@@ -679,6 +687,10 @@ tileview_reg_tool(struct tileview *tv, const void *p)
 	tvt->ops = ops;
 	tvt->tv = tv;
 	tvt->flags = ops->flags;
+	tvt->win = NULL;
+	if (ops->init != NULL) {
+		ops->init(tvt);
+	}
 	TAILQ_INSERT_TAIL(&tv->tools, tvt, tools);
 	return (tvt);
 }
@@ -711,17 +723,18 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->c.a = 128;
 	TAILQ_INIT(&tv->ctrls);
 	TAILQ_INIT(&tv->tools);
+	tv->cur_tool = NULL;
 
 	widget_map_surface(tv, NULL);
 	tileview_set_zoom(tv, 100, 0);
 
 	timeout_set(&tv->redraw_to, autoredraw, NULL, 0);
 	
-	event_new(tv, "window-keydown", tileview_keydown, NULL);
-	event_new(tv, "window-keyup", tileview_keyup, NULL);
-	event_new(tv, "window-mousebuttonup", tileview_buttonup, NULL);
-	event_new(tv, "window-mousebuttondown", tileview_buttondown, NULL);
-	event_new(tv, "window-mousemotion", tileview_mousemotion, NULL);
+	event_new(tv, "window-keydown", keydown, NULL);
+	event_new(tv, "window-keyup", keyup, NULL);
+	event_new(tv, "window-mousebuttonup", mousebuttonup, NULL);
+	event_new(tv, "window-mousebuttondown", mousebuttondown, NULL);
+	event_new(tv, "window-mousemotion", mousemotion, NULL);
 }
 
 #define INSERT_VALUE(vt,memb, type,arg) do {			\
@@ -1387,3 +1400,38 @@ tileview_destroy(void *p)
 	widget_destroy(tv);
 }
 
+static void
+close_tool_win(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	
+	view_detach(tv->cur_tool->win);
+	tv->cur_tool->win = NULL;
+}
+
+void
+tileview_select_tool(struct tileview *tv, struct tileview_tool *tvt)
+{
+	struct window *pwin = widget_parent_window(tv);
+
+#ifdef DEBUG
+	if (pwin == NULL)
+		fatal("%s has no parent window", OBJECT(tv)->name);
+#endif
+
+	if (tv->cur_tool != NULL && tv->cur_tool->win != NULL) {
+		view_detach(tv->cur_tool->win);
+		tv->cur_tool->win = NULL;
+	}
+
+	if (tvt->ops->edit != NULL) {
+		tvt->win = tvt->ops->edit(tvt);
+		window_set_caption(tvt->win, _(tvt->ops->name));
+		window_set_position(tvt->win, WINDOW_LOWER_LEFT, 0);
+		window_attach(pwin, tvt->win);
+		window_show(tvt->win);
+		event_new(tvt->win, "window-close", close_tool_win, "%p", tv);
+	}
+	
+	tv->cur_tool = tvt;
+}
