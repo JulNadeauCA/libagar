@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.6 2002/12/24 10:25:22 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.7 2002/12/30 02:56:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_ieee754.h>
@@ -14,8 +14,6 @@ struct prop {
 		PROP_SINT16,
 		PROP_UINT32,
 		PROP_SINT32,
-		PROP_UINT64,
-		PROP_SINT64,
 		PROP_FLOAT,
 		PROP_DOUBLE,
 		PROP_LONG_DOUBLE,
@@ -32,10 +30,6 @@ struct prop {
 		Sint16	 s16;
 		Uint32	 u32;
 		Sint32	 s32;
-#ifdef SDL_HAS_64BIT_TYPE
-		Uint64	 u64;
-		Sint64	 s64;
-#endif
 		float	 	f;
 		double	 	d;
 #ifdef HAVE_LONG_DOUBLE
@@ -60,10 +54,6 @@ struct prop	*prop_set_uint16(void *, char *, Uint16);
 struct prop	*prop_set_sint16(void *, char *, Sint16);
 struct prop	*prop_set_uint32(void *, char *, Uint32);
 struct prop	*prop_set_sint32(void *, char *, Sint32);
-#ifdef SDL_HAS_64BIT_TYPE
-struct prop	*prop_set_uint64(void *, char *, Uint64);
-struct prop	*prop_set_sint64(void *, char *, Sint64);
-#endif
 struct prop	*prop_set_float(void *, char *, float);
 struct prop	*prop_set_double(void *, char *, double);
 #ifdef HAVE_LONG_DOUBLE
@@ -81,10 +71,6 @@ Uint16	 	 prop_get_uint16(void *, char *);
 Sint16	 	 prop_get_sint16(void *, char *);
 Uint32	 	 prop_get_uint32(void *, char *);
 Sint32	 	 prop_get_sint32(void *, char *);
-#ifdef SDL_HAS_64BIT_TYPE
-Uint64	 	 prop_get_uint64(void *, char *);
-Sint64		 prop_get_sint64(void *, char *);
-#endif
 float		 prop_get_float(void *, char *);
 double		 prop_get_double(void *, char *);
 #ifdef HAVE_LONG_DOUBLE

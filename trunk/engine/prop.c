@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.19 2003/01/23 03:58:09 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.20 2003/02/22 11:49:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -109,18 +109,6 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		nprop->data.s32 = va_arg(ap, Sint32);
 		debug(DEBUG_SET, "s32 %s: %d\n", key, nprop->data.s32);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
-	case PROP_UINT64:
-		nprop->data.u64 = va_arg(ap, Uint64);
-		debug(DEBUG_SET, "u64 %s: %ld\n", key,
-		    (long)nprop->data.u64);
-		break;
-	case PROP_SINT64:
-		nprop->data.s64 = va_arg(ap, Sint64);
-		debug(DEBUG_SET, "s64 %s: %ld\n", key,
-		    (long)nprop->data.s64);
-		break;
-#endif
 	case PROP_FLOAT:
 		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
 		debug(DEBUG_SET, "float %s: %f\n", key, nprop->data.f);
@@ -200,22 +188,6 @@ prop_set_sint32(void *ob, char *key, Sint32 i)
 {
 	return (prop_set(ob, key, PROP_SINT32, i));
 }
-
-#ifdef SDL_HAS_64BIT_TYPE
-struct prop *
-prop_set_uint64(void *ob, char *key, Uint64 i)
-{
-	return (prop_set(ob, key, PROP_UINT64, i));
-}
-
-struct prop *
-prop_set_sint64(void *ob, char *key, Sint64 i)
-{
-	return (prop_set(ob, key, PROP_SINT64, i));
-	fatal("SDL does not provide a 64-bit type\n");
-	return (NULL);
-}
-#endif	/* SDL_HAS_64BIT_TYPE */
 
 struct prop *
 prop_set_float(void *ob, char *key, float f)
@@ -304,14 +276,6 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			case PROP_SINT32:
 				*(Sint32 *)p = prop->data.s32;
 				break;
-#ifdef SDL_HAS_64BIT_TYPE
-			case PROP_UINT64:
-				*(Uint64 *)p = prop->data.u64;
-				break;
-			case PROP_SINT64:
-				*(Sint64 *)p = prop->data.s64;
-				break;
-#endif
 			case PROP_FLOAT:
 				*(float *)p = prop->data.f;
 				break;
@@ -433,30 +397,6 @@ prop_get_sint32(void *p, char *key)
 	return (i);
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
-Uint64
-prop_get_uint64(void *p, char *key)
-{
-	Uint64 i;
-
-	if (prop_get(p, key, PROP_UINT64, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
-	return (i);
-}
-
-Sint64
-prop_get_sint64(void *p, char *key)
-{
-	Sint64 i;
-
-	if (prop_get(p, key, PROP_SINT64, &i) == NULL) {
-		fatal("%s\n", error_get());
-	}
-	return (i);
-}
-#endif /* SDL_HAS_64BIT_TYPE */
-
 float
 prop_get_float(void *p, char *key)
 {
@@ -565,14 +505,6 @@ prop_load(void *p, int fd)
 		case PROP_INT:
 			prop_set_int(ob, key, (int)read_sint32(fd));
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
-		case PROP_UINT64:
-			prop_set_uint64(ob, key, read_uint64(fd));
-			break;
-		case PROP_SINT64:
-			prop_set_sint64(ob, key, read_sint64(fd));
-			break;
-#endif
 		/* XXX vax floating point */
 #ifdef HAVE_IEEE754
 		case PROP_FLOAT:
@@ -656,14 +588,6 @@ prop_save(void *p, int fd)
 		case PROP_INT:
 			buf_write_sint32(buf, (Sint32)prop->data.i);
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
-		case PROP_UINT64:
-			buf_write_uint64(buf, prop->data.u64);
-			break;
-		case PROP_SINT64:
-			buf_write_sint64(buf, prop->data.s64);
-			break;
-#endif
 		/* XXX vax floating point */
 #ifdef HAVE_IEEE754
 		case PROP_FLOAT:
