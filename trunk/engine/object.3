@@ -33,9 +33,11 @@
 .Nm object
 .Nd AGAR object abstraction
 .Sh SYNOPSIS
+.Bd -literal
 #include <engine/object.h>
 #include <engine/map.h>
 #include <engine/input.h>
+.Ed
 .Sh DESCRIPTION
 The agar
 .Nm
@@ -45,9 +47,11 @@ layer implements:
 .It
 garbage collection.
 .It
-the storage of sprites.
+graphic/audio storage.
 .It
-a list of active object structures.
+tile mapping (for map edition).
+.It
+state saving/loading.
 .El
 .Pp
 Each object structure holds optional entry points,
@@ -57,46 +61,39 @@ struct obvec {
 	void	(*destroy)(void *ob);		/* called before destroy */
 	int	(*load)(void *ob, int fd);	/* load from fd */
 	int	(*save)(void *ob, int fd);	/* save to fd */
-	int	(*link)(void *ob);		/* called before link */
-	int	(*unlink)(void *ob);		/* called after unlink */
 };
 .Ed
 .Pp
 which are called by
 the generic
 .Fn object_destroy ,
-.Fn object_link ,
-.Fn object_unlink ,
-.Fn object_load ,
-.Fn object_save
+.Fn object_load
 and
-.Fn object_dump
+.Fn object_save
 functions.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn object_init "struct object *ob" "char *name" "char *arname" "int flags" "struct obvec *vec"
+.Fn object_init "struct object *ob" "char *type" "char *name" "char *media" "int flags" "const void *vecp"
 .Pp
 .Ft "void"
-.Fn object_destroy "struct object *ob"
-.Pp
-.Ft "int"
-.Fn object_link "struct object *ob"
-.Pp
-.Ft "int"
-.Fn object_unlink "struct object *ob"
-.nr nS 0
+.Fn object_destroy "void *ob"
 .Pp
 .Fn object_init
 initializes
 .Fa ob
+as an object of type
+.Fa type
+(an arbitrary string identifier describing the type of structure)
 and loads data from
-.Fa arname
-into the static media pool, if
-.Fa arname
-is not NULL.
+.Fa media
+into the static media pool, if the latter is not NULL.
+.Pp
 .Fn object_destroy
-If frees all resources associated with this object.
+frees all resources associated with this object.
+.Fn object_destroy
+must be called once the object is not attached to any other object.
+.Pp
 If
 .Fa flags
 contains
@@ -104,32 +101,21 @@ contains
 or
 .Dv OBJ_AUDIO ,
 graphics and samples are loaded from media.
-.Pp
-.Fn object_link
-appends
-.Fa ob
-to the list of active objects, and
-.Fn object_unlink
-removes
-.Fa ob
-from the list of active objects and adds it to the garbage queue.
-The garbage collector will eventually call the
-.Em destroy
-op to request all allocated memory to be freed.
-The object list lock must be held when calls are made to
-.Fn object_link
-and
-.Fn object_link .
+.Dv OBJ_KEEPMEDIA
+prevents garbage collection from freeing the media when the reference
+count drops to zero.
+.Dv OBJ_OPTMEDIA
+makes media load failures non-fatal.
 .Sh SAVING STATES
 .nr nS 1
 .Ft "int"
-.Fn object_load "struct object *ob"
+.Fn object_load "void *ob"
 .Pp
 .Ft "int"
-.Fn object_loadfrom "struct object *ob" "char *path"
+.Fn object_loadfrom "void *ob" "char *path"
 .Pp
 .Ft "int"
-.Fn object_save "struct object *ob"
+.Fn object_save "void *ob"
 .Pp
 .nr nS 0
 .Pp
