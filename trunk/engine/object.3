@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.47 2003/08/26 03:37:24 vedge Exp $
+.\"	$Csoft: object.3,v 1.48 2003/08/26 07:55:00 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -132,9 +132,6 @@ system to indicate that the object's data currently resides in memory.
 .Fn object_init "void *obj" "const char *type" "const char *name" \
                 "const void *ops"
 .Pp
-.Ft void
-.Fn object_reinit "void *obj" "int free_deps"
-.Pp
 .Ft "void"
 .Fn object_attach "void *parent" "void *child"
 .Pp
@@ -198,29 +195,6 @@ struct object_ops {
 	struct window *(*edit)(void *obj);		/* Edit object */
 };
 .Ed
-.Pp
-The
-.Fn object_reinit
-function invokes the
-.Va reinit
-operation of
-.Fa obj
-(if there is one).
-The
-.Va reinit
-operation of
-.Xr map 3 ,
-for instance, frees the contents of all nodes of the map.
-If the
-.Fa free_deps
-argument is non-zero, the contents of the dependency table are removed
-(otherwise all dependencies are expected to have a reference count of either
-0 or
-.Dv OBJECT_DEP_MAX ) .
-.Fn object_reinit
-also clears the
-.Dv OBJECT_DATA_RESIDENT
-flag.
 .Pp
 The
 .Fn object_attach
@@ -315,6 +289,9 @@ in network format.
 .Ft "int"
 .Fn object_destroy "void *obj"
 .Pp
+.Ft void
+.Fn object_free_data "void *obj"
+.Pp
 .Ft "void"
 .Fn object_free_events "struct object *obj"
 .Pp
@@ -346,7 +323,22 @@ and
 .Fn object_free_childs ,
 but these functions may be called directly in order to clear the event handler
 list, the property table and the attached objects, respectively.
-.Sh PERSISTENCE
+.Pp
+The
+.Fn object_free_data
+function invokes the
+.Va reinit
+operation of
+.Fa obj
+(if there is one) in order to free object data, and clears the
+.Dv OBJECT_DATA_RESIDENT
+flag.
+The
+.Va reinit
+operation of
+.Xr map 3 ,
+for example, frees the contents of all nodes of the map.
+.Sh PERSISTENCE AND PAGING
 .nr nS 1
 .Ft "int"
 .Fn object_load "void *obj"
@@ -363,33 +355,42 @@ list, the property table and the attached objects, respectively.
 .Pp
 The
 .Fn object_load
-loads the generic part of an object from the first file found in the
-search path (the colon-separated
+function loads the state of an object and its descendants from
+machine-independent format.
+The first file found in the search path (the colon-separated
 .Sq load-path
-config setting).
+config setting) is used.
 .Fn object_load
-invokes itself on the child objects in a recursive manner.
-Note that
-.Fn object_load
-does not load the object data, unless it is currently resident as result of
-a previous
-.Fn object_page_in
-operation.
-.Pp
+performs the following operations, in order:
+.Bl -enum
+.It
+Load the generic part of
+.Fa obj
+and its descendants.
 Saved child objects found in the data file are each compared against the
 currently attached objects.
 If a match is found, the
 .Va reinit
 op is called.
-The
-.Va load
-is invoked only if there is currently resident data.
 If there is no currently attached object matching a saved object, one is
 dynamically allocated and initialized using the type switch (the
 .Va typesw[]
 array).
 If a currently attached object has no matching saved object, it is destroyed
 (as long as it is not currently in use).
+.It
+Resolve the dependencies of
+.Fa obj
+and its descendants, so encoded object references may be decoded in the
+following step.
+.It
+Reload the data of
+.Fa obj
+and its descendants, if currently resident (as a result of a previous
+.Fn object_page_in
+invocation), decoding object references (which are encoded as indexes into the
+dependency table).
+.El
 .Pp
 The
 .Fn object_save
@@ -426,7 +427,7 @@ For
 .Dv OBJECT_DATA ,
 .Fn object_save
 and
-.Fn object_reinit
+.Fn object_free_data
 are used.
 .Pp
 These functions return 0 on success or -1 if an error occured.
@@ -450,9 +451,6 @@ motion offsets of its noderefs in response to movement.
 .Fn object_set_submap "void *obj" "const char *map_name"
 .Pp
 .Ft "void"
-.Fn object_load_submap "void *obj" "const char *map_name"
-.Pp
-.Ft "void"
 .Fn object_set_position "void *obj" "struct map *map" "int x" "int y" \
                         "int layer"
 .Pp
@@ -470,9 +468,6 @@ function searches an object's descendents for a map named
 and selects it as the current submap.
 .Fn object_set_submap
 returns 0 on success or -1 on failure.
-.Fn object_load_submap
-initializes and loads a submap called
-.Fa map_name .
 .Pp
 The
 .Fn object_set_position
@@ -516,9 +511,6 @@ remains resident and the reference count is no longer incremented or
 decremented.
 The behavior of objects when this occurs requires special attention.
 .Pp
-Use of interdependencies with the paging system often increases debugging
-complexity.
-.Pp
 Code should be careful not to rely on an object's absolute path being constant,
 since it is possible to move objects between different parents.
 .Pp
@@ -534,8 +526,6 @@ structure could be replaced by a single lock.
 Eventually, if media types other than gfx/audio is required, the
 .Nm
 layer could handle media associations in a more generic manner.
-The names of gfx/audio references is only limited to 64k by
-.Fn read_string .
 .Pp
 The underlying
 .Fn object_load
@@ -549,4 +539,4 @@ mechanic is complicated.
 .Sh HISTORY
 The
 .Nm
-interface appeared in Agar 1.0
+layer appeared in Agar 1.0

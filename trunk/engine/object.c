@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.145 2003/09/07 00:24:07 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.146 2003/09/07 07:59:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -133,47 +133,23 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 }
 
 /*
- * Reinitialize the state of an object; clear the dependency table (including
- * wired dependencies) if the free_deps argument is non-zero.
+ * Reinitialize the state of an object (eg. free map nodes), but preserve
+ * the dependencies (which are assumed to then have a reference count of 0).
  */
 void
-object_reinit(void *p, int free_deps)
+object_free_data(void *p)
 {
 	struct object *ob = p;
-	struct object_dep *dep, *ndep;
 
-	if (ob->ops->reinit != NULL) {
-		ob->flags |= OBJECT_PRESERVE_DEPS;
-		ob->ops->reinit(ob);
-		ob->flags &= ~(OBJECT_PRESERVE_DEPS);
-	}
-
-	if (free_deps) {
-		for (dep = TAILQ_FIRST(&ob->deps);
-		     dep != TAILQ_END(&ob->deps);
-		     dep = ndep) {
-			ndep = TAILQ_NEXT(dep, deps);
-#ifdef DEBUG
-			if (dep->count < OBJECT_DEP_MAX &&
-			    dep->count > 0)
-				fatal("%u deps upon %s remain", dep->count,
-				    dep->obj->name);
-#endif
-			free(dep);
+	if (ob->flags & OBJECT_DATA_RESIDENT) {
+		dprintf("%s: was resident\n", ob->name);
+		if (ob->ops->reinit != NULL) {
+			ob->flags |= OBJECT_PRESERVE_DEPS;
+			ob->ops->reinit(ob);
+			ob->flags &= ~(OBJECT_PRESERVE_DEPS);
 		}
-		TAILQ_INIT(&ob->deps);
+		ob->flags &= ~(OBJECT_DATA_RESIDENT);
 	}
-#ifdef DEBUG
-	else {
-		TAILQ_FOREACH(dep, &ob->deps, deps) {
-			if (dep->count < OBJECT_DEP_MAX &&
-			    dep->count > 0)
-				fatal("%u deps upon %s remain", dep->count,
-				    dep->obj->name);
-		}
-	}
-#endif
-	ob->flags &= ~(OBJECT_DATA_RESIDENT);
 }
 
 /* Recursive function to construct absolute object names. */
@@ -388,6 +364,21 @@ object_find(const char *name)
 	return (rv);
 }
 
+/* Clear the dependency table. */
+void
+object_free_deps(struct object *ob)
+{
+	struct object_dep *dep, *ndep;
+
+	for (dep = TAILQ_FIRST(&ob->deps);
+	     dep != TAILQ_END(&ob->deps);
+	     dep = ndep) {
+		ndep = TAILQ_NEXT(dep, deps);
+		free(dep);
+	}
+	TAILQ_INIT(&ob->deps);
+}
+
 /* Detach and free child objects. */
 int
 object_free_childs(struct object *pob)
@@ -405,9 +396,8 @@ object_free_childs(struct object *pob)
 		ncob = TAILQ_NEXT(cob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
 		object_destroy(cob);
-		if ((cob->flags & OBJECT_STATIC) == 0) {
+		if ((cob->flags & OBJECT_STATIC) == 0)
 			free(cob);
-		}
 	}
 	TAILQ_INIT(&pob->childs);
 	pthread_mutex_unlock(&pob->lock);
@@ -582,7 +572,7 @@ object_page_in(void *p, enum object_page_item item)
 				 * never been saved before.
 				 * XXX
 				 */
-				text_msg(MSG_ERROR, "%s", error_get());
+				text_msg(MSG_ERROR, "New (%s)", error_get());
 				dprintf("load_data: %s; no previous save?\n",
 				    error_get());
 				ob->flags |= OBJECT_DATA_RESIDENT;
@@ -655,7 +645,7 @@ object_page_out(void *p, enum object_page_item item)
 			if (object_save(ob) == -1) {
 				goto fail;
 			}
-			object_reinit(ob, 0);
+			object_free_data(ob);
 		}
 		break;
 	}
@@ -667,110 +657,222 @@ fail:
 	return (-1);
 }
 
-/* Load the generic part of an object and its descendants and invoke reinit. */
+/*
+ * 1. Load the generic part of an object and descendants, freeing their data.
+ * 2. Resolve the dependency of the object and descendants.
+ * 3. Reload the data of the object and descendants that were resident.
+ */
 int
 object_load(void *p)
+{
+	struct object *ob = p;
+
+	lock_linkage();
+	pthread_mutex_lock(&ob->lock);
+	
+	if (ob->flags & OBJECT_NON_PERSISTENT) {
+		error_set(_("The `%s' object is non-persistent."), ob->name);
+		goto fail;
+	}
+
+	if (object_load_generic(ob) == -1 ||
+	    object_resolve_deps(ob) == -1 ||
+	    object_reload_data(ob) == -1)
+		goto fail;
+
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	unlock_linkage();
+	return (-1);
+}
+
+/*
+ * Resolve the encoded dependencies of an object and its descendants.
+ * The object linkage must be locked.
+ */
+int
+object_resolve_deps(void *p)
+{
+	struct object *ob = p, *cob;
+	struct object_dep *dep;
+
+	TAILQ_FOREACH(dep, &ob->deps, deps) {
+		if (dep->obj != NULL) {
+			dprintf("%s: already resolved dep: %s\n", ob->name,
+			    dep->obj->name);
+			continue;
+		}
+		dprintf("%s: resolving `%s'\n", ob->name, dep->path);
+		if ((dep->obj = object_find(dep->path)) == NULL) {
+			error_set(_("%s: Cannot resolve dependency `%s'"));
+			return (-1);
+		}
+		free(dep->path);
+		dep->path = NULL;
+	}
+
+	TAILQ_FOREACH(cob, &ob->childs, cobjs) {
+		if (object_resolve_deps(cob) == -1)
+			return (-1);
+	}
+	return (0);
+}
+
+/*
+ * Reload the data of resident object and descendants.
+ * The object and linkage must be locked.
+ */
+int
+object_reload_data(void *p)
+{
+	struct object *ob = p, *cob;
+
+	dprintf("`%s'\n", ob->name);
+	if (ob->flags & OBJECT_WAS_RESIDENT) {
+		dprintf("%s: was resident\n", ob->name);
+		ob->flags &= ~(OBJECT_WAS_RESIDENT);
+		if (object_load_data(p) == -1)
+			return (-1);
+	}
+	TAILQ_FOREACH(cob, &ob->childs, cobjs) {
+		if (object_reload_data(cob) == -1)
+			return (-1);
+	}
+	return (0);
+}
+
+/*
+ * Load the generic part of an object and descendants.
+ * The object and linkage must be locked.
+ */
+int
+object_load_generic(void *p)
 {
 	char path[MAXPATHLEN];
 	struct object *ob = p;
 	struct netbuf *buf;
-	Uint32 count, i, flags;
-	int ti, flags_save;
+	Uint32 count, i;
+	int ti, flags, flags_save;
 
-	lock_linkage();
-	pthread_mutex_lock(&ob->lock);
-
-	flags_save = ob->flags;
-	if (ob->flags & OBJECT_NON_PERSISTENT) {
-		error_set(_("The `%s' object is non-persistent."), ob->name);
-		goto fail_lock;
-	}
 	if (object_copy_filename(ob, path, sizeof(path)) == -1)
-		goto fail_lock;
-
-	debug(DEBUG_STATE, "%s: %s\n", ob->name, path);
-
+		return (-1);
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
-		goto fail_lock;
+		return (-1);
 	}
 	if (version_read(buf, &object_ver, NULL) == -1)
 		goto fail;
+	
+	/*
+	 * Must free the resident data in order to clear the dependencies.
+	 * Sets the OBJECT_WAS_RESIDENT flag to be used at data load stage.
+	 */
+	if (ob->flags & OBJECT_DATA_RESIDENT) {
+		ob->flags |= OBJECT_WAS_RESIDENT;
+		object_free_data(ob);
+	}
+	object_free_deps(ob);
 
-	/* Reinitialize the state of the object; free the dependency table. */
-	object_reinit(ob, 1);
-
-	/* Ignore the data offset, it is only used by object_load_data(). */
+	/* Skip the data offset. */
 	read_uint32(buf);
 
-	/* Read and verify the object flags. */
-	flags = read_uint32(buf);
-	if (flags & (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT)) {
+	/* Read and verify the generic object flags. */
+	flags_save = ob->flags;
+	if ((flags = (int)read_uint32(buf)) &
+	    (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT|OBJECT_WAS_RESIDENT)) {
 		error_set(_("The `%s' save has inconsistent flags."), ob->name);
 		goto fail;
 	}
-	ob->flags = (int)flags;
-	ob->flags |= (flags_save & OBJECT_DATA_RESIDENT);
+	dprintf("%s: read flags: 0x%x\n", ob->name, flags);
+	ob->flags = flags | (flags_save & OBJECT_WAS_RESIDENT);
+	dprintf("%s: 0x%x\n", ob->name, ob->flags);
+	if (ob->flags & OBJECT_WAS_RESIDENT) {
+		dprintf("%s: was resident\n", ob->name);
+	}
 
-	/* Decode and resolve the saved dependencies. */
-	/* XXX too early */
+	/* Decode the saved dependencies (to be resolved later). */
 	count = read_uint32(buf);
 	for (i = 0; i < count; i++) {
-		char dep_name[OBJECT_PATH_MAX];
 		struct object_dep *dep;
-		struct object *dep_obj;
-
-		copy_string(dep_name, buf, sizeof(dep_name));
-		if ((dep_obj = object_find(dep_name)) == NULL)
-			goto fail;
 
 		dep = Malloc(sizeof(struct object_dep));
-		dep->obj = dep_obj;
+		dep->path = read_string(buf);
+		dep->obj = NULL;
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-		debug(DEBUG_DEPS, "%s: depends on %s (%p)\n", ob->name,
-		    dep_name, dep->obj);
+		debug(DEBUG_DEPS, "%s: depends on `%s'\n", ob->name, dep->path);
 	}
 
 	/* Decode the generic properties. */
-	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0) {
-		object_free_props(ob);
-	}
 	if (prop_load(ob, buf) == -1)
 		goto fail;
 
 	/* Decode and restore the position. */
-	if (read_uint32(buf) > 0 &&
-	    object_load_position(ob, buf) == -1)
-		goto fail;
+	if (read_uint32(buf) > 0) {
+		char submap_id[OBJECT_PATH_MAX];
+		char input_id[OBJECT_PATH_MAX];
+		struct map *m = ob->parent;		/* XXX ... */
+		int x, y, z, center;
+
+		pthread_mutex_lock(&m->lock);
+		x = (int)read_uint32(buf);
+		y = (int)read_uint32(buf);
+		z = (int)read_uint8(buf);
+		center = (int)read_uint8(buf);
+		copy_string(submap_id, buf, sizeof(submap_id));
+		copy_string(input_id, buf, sizeof(input_id));
+		debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, z,
+		    center ? ", centered" : "");
+		if (x < 0 || x >= m->mapw ||
+		    y < 0 || y >= m->maph ||
+		    z < 0 || z >= m->nlayers) {
+			error_set(_("Bad coordinates: %d,%d,%d"), x, y, z);
+			pthread_mutex_unlock(&m->lock);
+			goto fail;
+		}
+		if (submap_id != NULL &&
+		    object_set_submap(ob, submap_id) == -1) {
+			pthread_mutex_unlock(&m->lock);
+			goto fail;
+		}
+		object_set_position(ob, m, x, y, z);
+		if (input_id != NULL) {
+			object_control(ob, input_id);
+		} else {
+			debug(DEBUG_STATE, "%s: no controller\n", ob->name);
+		}
+		pthread_mutex_unlock(&m->lock);
+	}
 
 	/*
 	 * Decode the gfx/audio references. Try to resolve them immediately
 	 * only if there is currently resident media.
+	 * XXX enforce OBJECT_PATH_MAX
 	 */
 	Free(ob->gfx_name);
 	Free(ob->audio_name);
-	ob->gfx_name = read_string(buf);
-	ob->audio_name = read_string(buf);
-	if (ob->gfx != NULL &&
+	ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX);
+	ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX);
+	if (ob->gfx != NULL && ob->gfx_name != NULL &&
 	    gfx_fetch(ob) == -1) {
 		dprintf("%s gfx: %s\n", ob->name, error_get());
 		Free(ob->gfx_name);
 		ob->gfx_name = NULL;
 	}
-	if (ob->audio != NULL &&
+	if (ob->audio != NULL && ob->audio_name != NULL &&
 	    audio_fetch(ob) == -1) {
 		dprintf("%s audio: %s\n", ob->name, error_get());
 		Free(ob->audio_name);
 		ob->audio_name = NULL;
 	}
-	dprintf("%s: audio=%s, gfx=%s\n", ob->name, ob->audio_name,
-	    ob->gfx_name);
 
 	/*
-	 * Load the child objects.
+	 * Load the generic part of the child objects.
 	 *
-	 * If an saved object matches an attached object's name and type,
+	 * If a saved object matches an existing object's name and type,
 	 * invoke reinit on it (and reload its data if it is resident).
 	 * Otherwise, allocate and attach a new object from scratch using
 	 * the type switch.
@@ -803,14 +905,10 @@ object_load(void *p)
 			if (eob->flags & OBJECT_NON_PERSISTENT) {
 				fatal("existing non-persistent object");
 			}
-			dprintf("%s: reinit %s (existing)\n", ob->name,
-			    eob->name);
-
-			if (object_load(eob) == -1)
+			if (object_load_generic(eob) == -1)
 				goto fail;
 		} else {
-			dprintf("%s: alloc %s (new %s)\n", ob->name,
-			    cname, ctype);
+			dprintf("%s: alloc %s (%s)\n", ob->name, cname, ctype);
 		 	for (ti = 0; ti < ntypesw; ti++) {
 				if (strcmp(typesw[ti].type, ctype) == 0)
 					break;
@@ -831,98 +929,68 @@ object_load(void *p)
 				object_init(child, ctype, cname,
 				    typesw[ti].ops);
 			}
-
 			object_attach(ob, child);
-
-			if (object_load(child) == -1)
+			if (object_load_generic(child) == -1)
 				goto fail;
 		}
 	}
 
-	/* Reload the data only if it is currently resident. */
-	if (ob->flags & OBJECT_DATA_RESIDENT) {
-		dprintf("%s: resident/reload\n", ob->name);
-		if (ob->ops->load != NULL &&
-		    ob->ops->load(ob, buf) == -1)
-			goto fail;
-	} else {
-		dprintf("%s: not resident/ignore\n", ob->name);
-	}
-
 	netbuf_close(buf);
-	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
 	return (0);
 fail:
-	object_reinit(ob, 1);
+	object_free_data(ob);
+	object_free_deps(ob);
 	netbuf_close(buf);
-fail_lock:
-	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
 	return (-1);
 }
 
 /*
- * Load object data. Called as part of a page in operation and for reading
- * data when saving a non-resident object.
+ * Load object data. Called as part of a page in operation, for reading
+ * data when saving a non-resident object, and from object_load() for
+ * reloading data of resident objects.
+ *
+ * The object must be locked.
  *
  * XXX no provision for saved data being out of sync with the generic object.
  */
 int
 object_load_data(void *p)
 {
-	struct object *ob = p;
 	char path[MAXPATHLEN];
+	struct object *ob = p;
 	struct netbuf *buf;
 	off_t data_offs;
 
-	lock_linkage();
-	pthread_mutex_lock(&ob->lock);
-
 	if (ob->flags & OBJECT_DATA_RESIDENT) {
 		error_set(_("The data of `%s' is already resident."), ob->name);
-		goto fail_lock;
+		return (-1);
 	}
 
-	if (object_copy_filename(ob, path, sizeof(path)) == -1) {
-		goto fail_lock;
-	}
+	if (object_copy_filename(ob, path, sizeof(path)) == -1)
+		return (-1);
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
-		goto fail_lock;
+		return (-1);
 	}
 
 	if (version_read(buf, &object_ver, NULL) == -1)
 		goto fail;
 
-	/* Seek to the beginning of the data. */
 	data_offs = (off_t)read_uint32(buf);
-	dprintf("seek to %d\n", (int)data_offs);
 	netbuf_seek(buf, data_offs, SEEK_SET);
-
-	/* Read the object data, mark it as resident. */
 	if (ob->ops->load != NULL &&
-	    ob->ops->load(ob, buf) == -1) {
+	    ob->ops->load(ob, buf) == -1)
 		goto fail;
-	}
-	ob->flags |= OBJECT_DATA_RESIDENT;
 
+	ob->flags |= OBJECT_DATA_RESIDENT;
 	netbuf_close(buf);
-	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
 	return (0);
 fail:
 	netbuf_close(buf);
-fail_lock:
-	pthread_mutex_unlock(&ob->lock);
-	unlock_linkage();
 	return (-1);
 }
 
-/*
- * Save the state of an object and its descendents.
- * If the data is not resident, it is paged in and saved.
- */
+/* Save the state of an object and its descendents. */
 int
 object_save(void *p)
 {
@@ -964,7 +1032,7 @@ object_save(void *p)
 
 	/* Page in the data unless it is already resident. */
 	if (!was_resident) {
-		debug(DEBUG_PAGING, "paging in for saving purposes\n");
+		debug(DEBUG_PAGING, "paging `%s' data for save\n", ob->name);
 		if (object_load_data(ob) == -1) {
 			/*
 			 * Assume that this failure means the data has never
@@ -982,17 +1050,13 @@ object_save(void *p)
 	strlcat(save_file, ".", sizeof(save_file));
 	strlcat(save_file, ob->type, sizeof(save_file));
 
-	debug(DEBUG_STATE, "saving `%s' to `%s'\n", ob->name, save_file);
 	if ((buf = netbuf_open(save_file, "wb", NETBUF_BIG_ENDIAN)) == NULL)
 		goto fail_reinit;
 
 	version_write(buf, &object_ver);
 
-	/* Skip the data offset. */
 	data_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
-
-	/* Encode the object generic flags. */
 	write_uint32(buf, (Uint32)(ob->flags & OBJECT_SAVED_FLAGS));
 
 	/* Encode the object dependencies. */
@@ -1014,11 +1078,21 @@ object_save(void *p)
 	
 	/* Encode the position. */
 	if (ob->pos != NULL) {
+		struct object_position *pos = ob->pos;
+
 		write_uint32(buf, 1);
-		object_save_position(ob, buf);
+		write_uint32(buf, (Uint32)pos->x);
+		write_uint32(buf, (Uint32)pos->y);
+		write_uint8(buf, (Uint8)pos->z);
+		write_uint8(buf, (Uint8)pos->center);
+		write_string(buf, (pos->submap != NULL) ?
+		    OBJECT(pos->submap)->name : NULL);
+		write_string(buf, (pos->input != NULL) ?
+		    OBJECT(pos->input)->name : "");
 	} else {
 		write_uint32(buf, 0);
 	}
+
 	/* Encode the media references. */
 	write_string(buf, ob->gfx_name);
 	write_string(buf, ob->audio_name);
@@ -1040,8 +1114,6 @@ object_save(void *p)
 		count++;
 	}
 	pwrite_uint32(buf, count, count_offs);
-
-	/* Write the data offset. */
 	pwrite_uint32(buf, netbuf_tell(buf), data_offs);
 
 	/* Save the object derivate data. */
@@ -1052,7 +1124,7 @@ object_save(void *p)
 	netbuf_flush(buf);
 	netbuf_close(buf);
 	if (!was_resident) {
-		object_reinit(ob, 0);
+		object_free_data(ob);
 	}
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
@@ -1061,7 +1133,7 @@ fail:
 	netbuf_close(buf);
 fail_reinit:
 	if (!was_resident)
-		object_reinit(ob, 0);
+		object_free_data(ob);
 fail_lock:
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
@@ -1081,6 +1153,7 @@ object_control(void *p, const char *inname)
 	}
 
 	pthread_mutex_lock(&ob->lock);
+
 	if (ob->pos == NULL) {
 		error_set(_("There is no position to control."));
 		goto fail;
@@ -1148,22 +1221,6 @@ object_unproject_submap(struct object_position *pos)
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
 			node_clear(pos->map, &pos->map->map[y][x], pos->z);
 		}
-	}
-}
-
-/* Load a submap of a given name. */
-void
-object_load_submap(void *p, const char *name)
-{
-	struct object *ob = p;
-	struct map *sm;
-
-	sm = Malloc(sizeof(struct map));
-	map_init(sm, name);
-	if (object_load(sm) == 0) {
-		object_attach(ob, sm);
-	} else {
-		fatal("loading %s: %s", name, error_get());
 	}
 }
 
@@ -1261,81 +1318,6 @@ object_unset_position(void *p)
 		ob->pos = NULL;
 	}
 	pthread_mutex_unlock(&ob->lock);
-}
-
-/*
- * Save the position of an object relative to its parent map, as well as
- * the current submap and associated input device, if any.
- */
-void
-object_save_position(const void *p, struct netbuf *buf)
-{
-	const struct object *ob = p;
-	const struct object_position *pos = ob->pos;
-
-	write_uint32(buf, (Uint32)pos->x);
-	write_uint32(buf, (Uint32)pos->y);
-	write_uint8(buf, (Uint8)pos->z);
-	write_uint8(buf, (Uint8)pos->center);
-	write_string(buf, (pos->submap != NULL) ?
-	    OBJECT(pos->submap)->name : NULL);
-	write_string(buf, (pos->input != NULL) ?
-	    OBJECT(pos->input)->name : "");
-}
-
-/*
- * Load the position of an object inside its parent map, as well as the
- * submap to display. Try to reassign the last used input device.
- */
-int
-object_load_position(void *p, struct netbuf *buf)
-{
-	char submap_id[OBJECT_PATH_MAX];
-	char input_id[OBJECT_PATH_MAX];
-	int x, y, z, center;
-	struct object *ob = p;
-	struct map *m = ob->parent;
-
-	pthread_mutex_lock(&ob->lock);
-	pthread_mutex_lock(&m->lock);
-
-	x = (int)read_uint32(buf);
-	y = (int)read_uint32(buf);
-	z = (int)read_uint8(buf);
-	center = (int)read_uint8(buf);
-
-	copy_string(submap_id, buf, sizeof(submap_id));
-	copy_string(input_id, buf, sizeof(input_id));
-
-	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, z,
-	    center ? ", centered" : "");
-
-	if (x < 0 || x >= m->mapw ||
-	    y < 0 || y >= m->maph ||
-	    z < 0 || z >= m->nlayers) {
-		error_set(_("Bad coordinates: %d,%d,%d"), x, y, z);
-		goto fail;
-	}
-	if (submap_id != NULL &&
-	    object_set_submap(ob, submap_id) == -1) {
-		goto fail;
-	}
-	object_set_position(ob, m, x, y, z);
-
-	if (input_id != NULL) {
-		if (object_control(ob, input_id) == -1)
-			debug(DEBUG_STATE, "%s: %s\n", ob->name, error_get());
-	} else {
-		debug(DEBUG_STATE, "%s: no controller\n", ob->name);
-	}
-
-	pthread_mutex_unlock(&m->lock);
-	pthread_mutex_unlock(&ob->lock);
-	return (0);
-fail:
-	pthread_mutex_unlock(&m->lock);
-	pthread_mutex_unlock(&ob->lock);
-	return (-1);
 }
 
 /* Override an object's type; thread unsafe. */

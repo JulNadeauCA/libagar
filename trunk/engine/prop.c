@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.41 2003/08/31 11:58:07 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.42 2003/09/04 03:14:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -511,6 +511,10 @@ prop_load(void *p, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&ob->props_lock);
+
+	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0)
+		object_free_props(ob);
+
 	nprops = read_uint32(buf);
 	for (i = 0; i < nprops; i++) {
 		char key[PROP_KEY_MAX];
