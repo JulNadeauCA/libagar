@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.76 2003/07/01 03:28:02 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.77 2003/07/01 03:36:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -215,9 +215,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 	struct tlist *tl;
 	Uint32 i;
 
-	if ((win = window_new("mapedit-tss-%s", ob->name)) == NULL) {
-		return (NULL);
-	}
+	win = window_new(NULL);
 	window_set_caption(win, "%s", ob->name);
 	window_set_closure(win, WINDOW_HIDE);
 
@@ -276,6 +274,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 static void
 open_tileset(int argc, union evarg *argv)
 {
+	char ob_name[OBJECT_PATH_MAX];
 	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
 	struct window *win;
@@ -283,7 +282,8 @@ open_tileset(int argc, union evarg *argv)
 	struct mapview *mv;
 	struct button *bu;
 
-	if ((win = window_new("mapedit-ts-%s", ob->name)) == NULL) {
+	object_copy_name(ob, ob_name, sizeof(ob_name));
+	if ((win = window_new("mapedit-ts-%s", ob_name)) == NULL) {
 		return;
 	}
 	window_set_caption(win, "%s", ob->name);
