@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.171 2004/03/17 04:02:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.172 2004/03/18 02:35:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -539,6 +539,7 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			neev->handler(neev->argc, neev->argv);
 		}
 		free(neev);
+		break;
 	}
 	pthread_mutex_unlock(&rcvr->lock);
 	return (eev != NULL);
