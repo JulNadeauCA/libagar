@@ -351,10 +351,12 @@ mapdir_update_moving(struct mapdir *dir, int xmotion, int ymotion)
 int
 mapdir_move(struct mapdir *dir)
 {
-	struct object_position *pos = dir->ob->pos;
+	struct object_position *pos;
 	int x, y;
 
-	pthread_mutex_lock(&pos->lock);
+	pthread_mutex_lock(&dir->ob->lock);
+	pos = dir->ob->pos;
+
 	pthread_mutex_lock(&pos->map->lock);
 	pthread_mutex_lock(&pos->submap->lock);
 
@@ -398,12 +400,12 @@ mapdir_move(struct mapdir *dir)
 out:
 	pthread_mutex_unlock(&pos->submap->lock);
 	pthread_mutex_unlock(&pos->map->lock);
-	pthread_mutex_unlock(&pos->lock);
+	pthread_mutex_unlock(&dir->ob->lock);
 	return (0);
 fail:
 	pthread_mutex_unlock(&pos->submap->lock);
 	pthread_mutex_unlock(&pos->map->lock);
-	pthread_mutex_unlock(&pos->lock);
+	pthread_mutex_unlock(&dir->ob->lock);
 	return (-1);
 }
 
