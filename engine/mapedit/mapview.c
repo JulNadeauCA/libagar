@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.40 2002/12/31 01:46:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.41 2002/12/31 05:48:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -128,38 +128,38 @@ static __inline__ void
 draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
 {
 	if (mv->prop_style > 0) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, mv->prop_style), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, mv->prop_style), rx, ry);
 	}
 
 	if (node->flags & NODE_BLOCK) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BLOCK), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_BLOCK), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_WALK) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_WALK), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_WALK), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_CLIMB) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_CLIMB), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_CLIMB), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 	
 	if (node->flags & NODE_BIO) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BIO), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_BIO), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_REGEN) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_REGEN), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_REGEN), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 	
 	if (node->flags & NODE_SLOW) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_SLOW), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_SLOW), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_HASTE) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_HASTE), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_HASTE), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 
 	if (node->flags & NODE_ORIGIN) {
-		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_ORIGIN), rx, ry);
+		widget_blit(mv, SPRITE(mv->med, MAPEDIT_ORIGIN), rx, ry);
 		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 }
@@ -224,11 +224,11 @@ mapview_draw(void *p)
 				} else if (mv->map->tilew > 6 &&
 				    mv->map->tileh > 6) {
 					/* XXX cosmetic */
-					primitives.square(mv,
+					primitives.rect_outlined(mv,
 					    rx+1, ry+1,
 					    mv->map->tilew-1, mv->map->tileh-1,
 					    WIDGET_COLOR(mv, CURSOR_COLOR));
-					primitives.square(mv,
+					primitives.rect_outlined(mv,
 					    rx+2, ry+2,
 					    mv->map->tilew-3, mv->map->tileh-3,
 					    WIDGET_COLOR(mv, CURSOR_COLOR));
@@ -246,12 +246,12 @@ mapview_draw(void *p)
 				    nref->pobj == med->ref.obj &&
 				    nref->offs == med->ref.offs) {
 					/* XXX cosmetic */
-					primitives.square(mv,
+					primitives.rect_outlined(mv,
 					    rx+1, ry+1,
 					    mv->map->tilew-1, mv->map->tileh-1,
 					    WIDGET_COLOR(mv,
 					        TILE_SELECTION_COLOR));
-					primitives.square(mv,
+					primitives.rect_outlined(mv,
 					    rx+2, ry+2,
 					    mv->map->tilew-3, mv->map->tileh-3,
 					    WIDGET_COLOR(mv,
@@ -268,7 +268,7 @@ mapview_draw(void *p)
 
 	/* Highlight if the widget is focused. */
 	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
-		primitives.square(mv,
+		primitives.rect_outlined(mv,
 		    0, 0,
 		    WIDGET(mv)->w, WIDGET(mv)->h,
 		    WIDGET_COLOR(mv, BORDER_COLOR));

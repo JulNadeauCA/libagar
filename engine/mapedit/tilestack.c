@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.16 2002/12/17 06:43:53 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.17 2002/12/24 10:30:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -124,34 +124,34 @@ tilestack_draw(void *p)
 		case NODEREF_SPRITE:
 			su = view_scale_surface(SPRITE(nref->pobj, nref->offs),
 			    WIDGET(ts)->w, WIDGET(ts)->w);
-			WIDGET_DRAW(ts, su, 0, y);
+			widget_blit(ts, su, 0, y);
 			SDL_FreeSurface(su);
 			break;
 		case NODEREF_ANIM:
 			an = ANIM(nref->pobj, nref->offs);
 			su = view_scale_surface(an->frames[0],
 			    WIDGET(ts)->w, WIDGET(ts)->w);
-			WIDGET_DRAW(ts, su, 0, y);
+			widget_blit(ts, su, 0, y);
 			SDL_FreeSurface(su);
 
 			if (nref->data.anim.flags & NODEREF_ANIM_AUTO) {
-				WIDGET_DRAW(ts,
+				widget_blit(ts,
 				    SPRITE(mv->med, MAPEDIT_ANIM_DELTA_TXT),
 				    0, y);
 			}
-			WIDGET_DRAW(ts, SPRITE(mv->med, MAPEDIT_ANIM_TXT),
+			widget_blit(ts, SPRITE(mv->med, MAPEDIT_ANIM_TXT),
 			    0, y);
 			break;
 		case NODEREF_WARP:
 			su = text_render(NULL, -1,
 			    SDL_MapRGB(view->v->format, 255, 255, 255),
 			    nref->data.warp.map);
-			WIDGET_DRAW(ts, su, 0, y);
+			widget_blit(ts, su, 0, y);
 			SDL_FreeSurface(su);
 			break;
 		}
 
-		primitives.square(ts, 0, y, TILEW, TILEH,
+		primitives.rect_outlined(ts, 0, y, TILEW, TILEH,
 		    WIDGET_COLOR(ts, GRID_COLOR));
 
 		y += TILEH;
