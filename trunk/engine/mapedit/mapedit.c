@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.21 2002/02/10 03:51:00 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.22 2002/02/10 04:33:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -51,6 +51,15 @@ static int	mapedit_shadow(struct mapedit *);
 static Uint32	mapedit_time(Uint32, void *);
 static void	mapedit_event(struct mapedit *, SDL_Event *);
 static void	mapedit_bg(SDL_Surface *, int, int, int, int);
+
+static const int stickykeys[] = {
+	SDLK_a,	/* Add */
+	SDLK_d,	/* Del */
+	SDLK_b,	/* Block */
+	SDLK_w,	/* Walk */
+	SDLK_c,	/* Climb */
+	SDLK_p	/* Slippery */
+};
 
 struct mapedit *curmapedit;
 
@@ -683,8 +692,19 @@ mapedit_time(Uint32 ival, void *p)
 
 	moved = direction_update(&med->cursor_dir, map, &mapx, &mapy);
 	if (moved != 0) {
+		static int i, nkeys;
+		static SDL_Event nev;
+
 		MAPEDIT_MOVE(med, mapx, mapy);
 		map->redraw++;
+
+		for (i = 0; i < sizeof(stickykeys) / sizeof(int); i++) {
+			if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
+				nev.type = SDL_KEYDOWN;
+				nev.key.keysym.sym = stickykeys[i];
+				SDL_PushEvent(&nev);
+			}
+		}
 	}
 
 	moved = direction_update(&med->listw_dir, NULL, NULL, NULL);
