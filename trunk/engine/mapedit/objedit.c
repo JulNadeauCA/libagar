@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.46 2004/06/08 00:59:12 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.47 2004/08/23 07:25:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -172,8 +172,8 @@ close_obj_data(int argc, union evarg *argv)
 	Free(oent, M_MAPEDIT);
 }
 
-static void
-open_obj_data(struct object *ob)
+void
+objedit_open_data(struct object *ob)
 {
 	struct objent *oent;
 	
@@ -219,7 +219,7 @@ obj_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				open_obj_data(ob);
+				objedit_open_data(ob);
 			}
 			break;
 		case OBJEDIT_EDIT_GENERIC:
