@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.2 2003/05/22 05:41:07 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.3 2003/05/22 08:30:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -44,9 +44,9 @@ create_obj(int argc, union evarg *argv)
 {
 	char name[OBJECT_NAME_MAX];
 	char type[OBJECT_TYPE_MAX];
-	struct textbox *name_tb = argv[1].p;
-	struct textbox *type_tb = argv[2].p;
-	struct tlist *objs_tl = argv[3].p;
+	struct tlist *objs_tl = argv[1].p;
+	struct textbox *name_tb = argv[2].p;
+	struct textbox *type_tb = argv[3].p;
 	struct tlist_item *it;
 	void *nobj;
 	int i;
@@ -82,6 +82,42 @@ create_obj(int argc, union evarg *argv)
 
 	it = tlist_item_selected(objs_tl);
 	object_attach((it != NULL) ? it->p1 : world, nobj);
+}
+
+/* Edit the selected objects. */
+static void
+edit_objs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		struct object *ob = it->p1;
+
+		if (!it->selected)
+			continue;
+
+		if (ob->ops->edit != NULL)
+			ob->ops->edit(ob);
+	}
+}
+
+/* Detach and the selected objects. */
+static void
+destroy_objs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		struct object *ob = it->p1;
+
+		if (!it->selected)
+			continue;
+
+		object_detach(ob->parent, ob);
+		object_destroy(ob);
+	}
 }
 
 /* Recursive function to display the object tree. */
@@ -137,6 +173,25 @@ poll_objs(int argc, union evarg *argv)
 	unlock_linkage();
 }
 
+/* Enable/disable the operation buttons in response to selection changes. */
+static void
+select_objs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct button *destroy_bu = argv[2].p;
+	struct tlist_item *it;
+	
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected)
+			break;
+	}
+	if (it == NULL) {
+		button_disable(destroy_bu);
+	} else {
+		button_enable(destroy_bu);
+	}
+}
+
 /* Create the object editor window. */
 struct window *
 objedit_window(void)
@@ -144,24 +199,26 @@ objedit_window(void)
 	struct window *win;
 	struct region *reg;
 	struct textbox *name_tb, *type_tb;
-	struct button *create_bu;
+	struct button *create_bu, *edit_bu, *destroy_bu;
 	struct tlist *objs_tl;
 
 	win = window_generic_new(320, 240, "mapedit-objedit");
 	window_set_caption(win, "Object editor");
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		name_tb = textbox_new(reg, "New: ", 0, 75, -1);
-		create_bu = button_new(reg, "Create", NULL, 0, 23, -1);
-		button_set_padding(create_bu, 6);
+		name_tb = textbox_new(reg, "New: ");
+		type_tb = textbox_new(reg, "Type: ");
+		textbox_printf(type_tb, "map");
 	}
 	
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
-		type_tb = textbox_new(reg, "Type: ", 0, 100, -1);
-		textbox_printf(type_tb, "map");
+		create_bu = button_new(reg, "Create", NULL, 0, 33, -1);
+		edit_bu = button_new(reg, "Edit", NULL, 0, 33, -1);
+		destroy_bu = button_new(reg, "Destroy", NULL, 0, 33, -1);
+		button_disable(destroy_bu);
 	}
 	
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
@@ -172,12 +229,18 @@ objedit_window(void)
 		tlist_set_item_height(objs_tl, ttf_font_height(font)*2);
 #endif
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
+		event_new(objs_tl, "tlist-changed", select_objs, "%p, %p",
+		    objs_tl, destroy_bu);
 	}
 	
 	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p",
-	    name_tb, type_tb, objs_tl);
+	    objs_tl, name_tb, type_tb);
+	event_new(type_tb, "textbox-return", create_obj, "%p, %p, %p",
+	    objs_tl, name_tb, type_tb);
 	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p",
-	    name_tb, type_tb, objs_tl);
+	    objs_tl, name_tb, type_tb);
+	event_new(edit_bu, "button-pushed", edit_objs, "%p", objs_tl);
+	event_new(destroy_bu, "button-pushed", destroy_objs, "%p", objs_tl);
 
 	window_show(win);
 	return (win);
