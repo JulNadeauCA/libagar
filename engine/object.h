@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.88 2003/07/08 00:34:52 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.89 2003/07/26 12:28:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -30,6 +30,11 @@ struct object_ops {
 	struct window *(*edit)(void *);			/* Edit object */
 };
 
+/*
+ * If the object occupies a unique position on a map, this structure
+ * describes its coordinates, which submap to display for a given
+ * orientation/status, and how the position is controlled.
+ */
 struct object_position {
 	struct map	*map;		/* Map (or NULL) */
 	int		 x, y;		/* Map coordinates */
@@ -40,6 +45,14 @@ struct object_position {
 	struct mapdir	 dir;		/* Map direction (not saved) */
 };
 
+/*
+ * This structure describes a dependency of an object toward another object.
+ * If the count reaches OBJECT_DEP_MAX, the dependency cannot be removed
+ * before the object is destroyed (object_del_dep() becomes a no-op).
+ *
+ * XXX we could use 64-bit count on 64-bit arches but the saves wouldn't
+ * be portable to arches without 64-bit type.
+ */
 struct object_dep {
 	struct object	*obj;		/* Object */
 	Uint32		 count;		/* Reference count */
@@ -66,6 +79,8 @@ struct object {
 #define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
 #define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible (advisory) */
 #define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
+#define OBJECT_PRESERVE_DEPS	0x10	/* Don't remove a dependency when its
+					   reference count reaches 0. */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 
 	pthread_mutex_t	 lock;
@@ -110,9 +125,10 @@ struct object {
 __BEGIN_DECLS
 struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
-void		 object_reinit(void *);
+void		 object_reinit(void *, int);
 int		 object_load(void *);
 int		 object_load_data(void *);
+void		 object_wire_gfx(void *, const char *);
 int		 object_save(void *);
 int		 object_destroy(void *);
 #ifdef EDITION

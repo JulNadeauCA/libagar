@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.44 2003/08/13 19:45:55 vedge Exp $
+.\"	$Csoft: object.3,v 1.45 2003/08/19 01:18:41 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -87,6 +87,9 @@ interface.
 .Fn object_init "void *obj" "const char *type" "const char *name" \
                 "const void *ops"
 .Pp
+.Ft void
+.Fn object_reinit "void *obj" "int free_deps"
+.Pp
 .Ft "void"
 .Fn object_attach "void *parent" "void *child"
 .Pp
@@ -150,6 +153,29 @@ struct object_ops {
 	struct window *(*edit)(void *obj);		/* Edit object */
 };
 .Ed
+.Pp
+The
+.Fn object_reinit
+function invokes the
+.Va reinit
+operation of
+.Fa obj
+(if there is one).
+The
+.Va reinit
+operation of
+.Xr map 3 ,
+for instance, frees the contents of all nodes of the map.
+If the
+.Fa free_deps
+argument is non-zero, the contents of the dependency table are removed
+(otherwise all dependencies are expected to have a reference count of either
+0 or
+.Dv OBJECT_DEP_MAX ) .
+.Fn object_reinit
+also clears the
+.Dv OBJECT_DATA_RESIDENT
+flag.
 .Pp
 The
 .Fn object_attach
@@ -292,9 +318,7 @@ list, the property table and the attached objects, respectively.
 .Pp
 The
 .Fn object_load
-function invokes the
-.Va reinit
-op of an object and loads its generic part from the first file found in the
+loads the generic part of an object from the first file found in the
 search path (the colon-separated
 .Sq load-path
 config setting).
@@ -302,9 +326,8 @@ config setting).
 invokes itself on the child objects in a recursive manner.
 Note that
 .Fn object_load
-does not invoke the
-.Va load
-op unless there is currently data resident, as a result of a previous
+does not load the object data, unless it is currently resident as result of
+a previous
 .Fn object_page_in
 operation.
 .Pp
