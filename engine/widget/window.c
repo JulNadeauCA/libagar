@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.169 2003/03/14 04:02:43 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.170 2003/03/15 00:45:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -228,9 +228,10 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	}
 
 	fl |= (WINDOW_TITLEBAR);
+	win->flags = fl;
+	win->clicked_button = WINDOW_NO_BUTTON;
 
 	win->titleh = text_font_height(font) + win->borderw;
-	win->flags = fl;
 	win->focus = NULL;
 	win->caption = Strdup("Untitled");
 	win->minw = minw;
