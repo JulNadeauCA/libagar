@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.86 2004/04/10 02:34:05 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.87 2004/05/22 03:18:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -26,8 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/floating_point.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
 
@@ -36,13 +34,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-
-#ifdef DEBUG
-#define DEBUG_BINDINGS		0x01
-
-int	widget_debug = 0;
-#define engine_debug widget_debug
-#endif
 
 const struct version widget_ver = {
 	"agar widget",
@@ -68,9 +59,16 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->ncolors = 0;
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, &recursive_mutexattr);
+
+	wid->nsurfaces = 0;
+	wid->surfaces = NULL;
+#ifdef HAVE_OPENGL
+	wid->textures = NULL;
+	wid->texcoords = NULL;
+#endif
 }
 
-/* Bind a protected variable to a widget. */
+/* Bind a mutex-protected variable to a widget. */
 struct widget_binding *
 widget_bind_protected(void *widp, const char *name, pthread_mutex_t *mutex,
     enum widget_binding_type type, ...)
@@ -178,19 +176,11 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	pthread_mutex_lock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) == 0) {
-			debug_n(DEBUG_BINDINGS,
-			    "%s: modified binding `%s': %d(%p,%p)",
-			    OBJECT(wid)->name, name, binding->type,
-			    binding->p1, binding->p2);
-
 			binding->type = type;
 			binding->p1 = p1;
 			binding->p2 = p2;
 			binding->size = size;
 			binding->vtype = widget_vtype(binding);
-
-			debug_n(DEBUG_BINDINGS, " -> %d(%p,%p)\n",
-			    binding->type, binding->p1, binding->p2);
 
 			event_post(NULL, wid, "widget-bound", "%p", binding);
 			pthread_mutex_unlock(&wid->bindings_lock);
@@ -207,9 +197,6 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	binding->mutex = NULL;
 	binding->vtype = widget_vtype(binding);
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
-
-	debug_n(DEBUG_BINDINGS, "%s: bound `%s' to %p (type=%d)\n",
-	    OBJECT(wid)->name, name, p1, type);
 
 	event_post(NULL, wid, "widget-bound", "%p", binding);
 	pthread_mutex_unlock(&wid->bindings_lock);
@@ -718,9 +705,10 @@ widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b,
 {
 	struct widget *wid = p;
 
+#ifdef DEBUG
 	if (ind >= WIDGET_COLORS_MAX)
-		fatal("color stack oflow");
-
+		fatal("color stack overflow");
+#endif
 	wid->colors[ind] = SDL_MapRGBA(vfmt, r, g, b, a);
 	strlcpy(wid->color_names[ind], name, sizeof(wid->color_names[ind]));
 
@@ -728,11 +716,80 @@ widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b,
 		wid->ncolors = ind+1;
 }
 
+/*
+ * Register a surface with the given widget. In OpenGL mode, generate
+ * a texture as well. The surface is freed as the widget is destroyed.
+ */
+int
+widget_map_surface(void *p, SDL_Surface *su)
+{
+	struct widget *wid = p;
+
+	wid->surfaces = Realloc(wid->surfaces,
+	    (wid->nsurfaces+1)*sizeof(SDL_Surface *));
+	wid->surfaces[wid->nsurfaces] = su;
+
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		GLuint name;
+	
+		wid->textures = Realloc(wid->textures,
+		    (wid->nsurfaces+1)*sizeof(GLuint));
+		wid->texcoords = Realloc(wid->texcoords,
+		    (wid->nsurfaces+1)*sizeof(GLfloat)*4);
+
+		name = (su == NULL) ? 0 :
+		    view_surface_texture(su, &wid->texcoords[wid->nsurfaces*4]);
+		wid->textures[wid->nsurfaces] = name;
+	}
+#endif
+	return (wid->nsurfaces++);
+}
+
+/*
+ * Replace the contents of a registered surface, and regenerate
+ * the matching texture in OpenGL mode.
+ */
+void
+widget_replace_surface(void *p, int name, SDL_Surface *su)
+{
+	struct widget *wid = p;
+
+	if (wid->surfaces[name] != NULL) {
+		SDL_FreeSurface(wid->surfaces[name]);
+	}
+	wid->surfaces[name] = su;
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		if (wid->textures[name] != 0) {
+			glDeleteTextures(1, &wid->textures[name]);
+		}
+		wid->textures[name] = (su == NULL) ? 0 :
+		    view_surface_texture(su, &wid->texcoords[name*4]);
+	}
+#endif
+}
+
 void
 widget_destroy(void *p)
 {
 	struct widget *wid = p;
 	struct widget_binding *bind, *nbind;
+	unsigned int i;
+
+	for (i = 0; i < wid->nsurfaces; i++) {
+		if (wid->surfaces[i] != NULL)
+			SDL_FreeSurface(wid->surfaces[i]);
+#ifdef HAVE_OPENGL
+		if (wid->textures[i] != 0)
+			glDeleteTextures(1, &wid->textures[i]);
+	}
+#endif
+	Free(wid->surfaces, M_WIDGET);
+#ifdef HAVE_OPENGL
+	Free(wid->textures, M_WIDGET);
+	Free(wid->texcoords, M_WIDGET);
+#endif
 
 	for (bind = SLIST_FIRST(&wid->bindings);
 	     bind != SLIST_END(&wid->bindings);
@@ -788,9 +845,67 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 			glDisable(GL_BLEND);
 		}
 	} else
-#endif
+#endif /* HAVE_OPENGL */
 	{
 		SDL_BlitSurface(srcsu, NULL, view->v, &rd);
+	}
+}
+
+/*
+ * Perform a fast blit from a registered surface to the display
+ * at coordinates relative to the widget; clipping is done.
+ */
+void
+widget_blit2(void *p, int name, int x, int y)
+{
+	struct widget *wid = p;
+	SDL_Surface *su = wid->surfaces[name];
+	SDL_Rect rd;
+
+	if (su == NULL)
+		return;
+
+	rd.x = wid->cx + x;
+	rd.y = wid->cy + y;
+	rd.w = su->w <= wid->w ? su->w : wid->w;		/* Clip */
+	rd.h = su->h <= wid->h ? su->h : wid->h;		/* Clip */
+
+#ifdef HAVE_OPENGL
+	if (view->opengl) {
+		GLuint texture = wid->textures[name];
+		GLfloat *texcoord = &wid->texcoords[name*4];
+		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+
+#ifdef DEBUG
+		if (texture == 0)
+			fatal("invalid texture name");
+#endif
+		glBindTexture(GL_TEXTURE_2D, texture);
+
+		if (alpha) {
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		}
+	
+		glBegin(GL_TRIANGLE_STRIP);
+		{
+			glTexCoord2f(texcoord[0], texcoord[1]);
+			glVertex2i(rd.x, rd.y);
+			glTexCoord2f(texcoord[2], texcoord[1]);
+			glVertex2i(rd.x+su->w, rd.y);
+			glTexCoord2f(texcoord[0], texcoord[3]);
+			glVertex2i(rd.x, rd.y+su->h);
+			glTexCoord2f(texcoord[2], texcoord[3]);
+			glVertex2i(rd.x+su->w, rd.y+su->h);
+		}
+		glEnd();
+
+		if (alpha)
+			glDisable(GL_BLEND);
+	} else
+#endif /* HAVE_OPENGL */
+	{
+		SDL_BlitSurface(su, NULL, view->v, &rd);
 	}
 }
 
@@ -1055,7 +1170,7 @@ widget_push_color(struct widget *wid, Uint32 color)
 
 #ifdef DEBUG
 	if (wid->ncolors+1 >= WIDGET_COLORS_MAX)
-		fatal("color stack oflow");
+		fatal("color stack overflow");
 #endif
 	ncolor = wid->ncolors++;
 	wid->colors[ncolor] = color;

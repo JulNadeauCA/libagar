@@ -1,8 +1,10 @@
-/*	$Csoft: widget.h,v 1.79 2004/05/14 04:10:35 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.80 2004/05/22 03:18:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
+
+#include <config/have_opengl.h>
 
 #include "begin_code.h"
 
@@ -13,8 +15,11 @@
 
 struct widget_ops {
 	const struct object_ops	obops;
-	void			(*draw)(void *);
-	void			(*scale)(void *, int, int);
+	void (*draw)(void *);
+	void (*scale)(void *, int, int);
+	void (*scale_default)(void *);
+	void (*scale_minimum)(void *);
+	int (*spacing)(void *, void *);
 };
 
 enum widget_binding_type {
@@ -62,21 +67,30 @@ struct widget {
 #define WIDGET_EXCEDENT		  0x80	/* Used internally for scale */
 
 	int	 cx, cy;		/* Coordinates in view */
-	int	 x, y;			/* Coordinates in parent */
+	int	 x, y;			/* Coordinates in container */
 	int	 w, h;			/* Allocated geometry */
 
 	char	 color_names[WIDGET_COLORS_MAX][WIDGET_COLOR_NAME_MAX];
 	Uint32	 colors[WIDGET_COLORS_MAX];
 	int	ncolors;
 
+	SDL_Surface	**surfaces;	/* Registered surfaces */
+	unsigned int	 nsurfaces;
+#ifdef HAVE_OPENGL
+	GLuint		*textures;	/* Matching OpenGL textures */
+	GLfloat		*texcoords;	/* Texture coordinates */
+#endif
 	pthread_mutex_t			 bindings_lock;
-	SLIST_HEAD(, widget_binding)	 bindings;	    /* Bound values */
+	SLIST_HEAD(, widget_binding)	 bindings;
 };
 
 #define WIDGET(wi)		((struct widget *)(wi))
 #define WIDGET_COLOR(wi, ind)	WIDGET(wi)->colors[ind]
 #define WIDGET_OPS(ob)		((struct widget_ops *)OBJECT(ob)->ops)
 #define WIDGET_SCALE(wi, w, h)	WIDGET_OPS(wi)->scale((wi), (w), (h))
+#define WIDGET_SURFACE(wi, ind)	WIDGET(wi)->surfaces[ind]
+#define WIDGET_TEXTURE(wi, ind)	WIDGET(wi)->textures[ind]
+#define WIDGET_TEXCOORD(wi, ind) WIDGET(wi)->texcoords[(ind)*4]
 
 __BEGIN_DECLS
 extern int kbd_delay;
@@ -102,7 +116,12 @@ void		 widget_map_color(void *, int, const char *, Uint8, Uint8,
 __inline__ int   widget_push_color(struct widget *, Uint32);
 __inline__ void  widget_pop_color(struct widget *);
 
+int		 widget_map_surface(void *, SDL_Surface *);
+__inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);
+
 __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
+void		 widget_blit2(void *, int, int, int);
+
 __inline__ void	 widget_put_pixel(void *, int, int, Uint32);
 
 void  widget_mousemotion(struct window *, struct widget *, int, int, int, int,
