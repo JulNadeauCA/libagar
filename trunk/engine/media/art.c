@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.1 2002/12/01 14:41:05 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.2 2002/12/03 04:08:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -434,12 +434,9 @@ tl_sprites_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_sprites = argv[0].p;
 	struct bitmap *bmp_sprite = argv[1].p;
-	struct tlist_item *it_sprite;
+	struct tlist_item *it_sprite = argv[2].p;
 
-	it_sprite = tlist_item_selected(tl_sprites);
-	if (it_sprite != NULL) {
-		bitmap_set_surface(bmp_sprite, (SDL_Surface *)it_sprite->p1);
-	}
+	bitmap_set_surface(bmp_sprite, (SDL_Surface *)it_sprite->p1);
 }
 
 static void
@@ -514,15 +511,11 @@ tl_anims_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_anims = argv[0].p;
 	struct bitmap *bmp_anim = argv[1].p;
-	struct tlist_item *it_anim;
+	struct tlist_item *it_anim = argv[2].p;
+	struct art_anim *anim = it_anim->p1;
 
-	it_anim = tlist_item_selected(tl_anims);
-	if (it_anim != NULL) {
-		struct art_anim *anim = it_anim->p1;
-
-		if (anim->nframes > 0) {
-			bitmap_set_surface(bmp_anim, anim->frames[0]);
-		}
+	if (anim->nframes > 0) {
+		bitmap_set_surface(bmp_anim, anim->frames[0]);
 	}
 }
 
