@@ -1,4 +1,4 @@
-.\"	$Csoft: box.3,v 1.5 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: box.3,v 1.6 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -62,6 +62,12 @@ widget packs its children horizontally or vertically.
 .Pp
 .Ft void
 .Fn box_set_spacing "struct box *box" "int spacing"
+.Pp
+.Ft void
+.Fn box_set_color "struct box *box" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn box_set_depth "struct box *box" "int depth"
 .nr nS 0
 .Pp
 The
@@ -87,8 +93,9 @@ Acceptable
 include:
 .Bd -literal
 #define BOX_HOMOGENOUS  0x01    /* Divide space evenly */
-#define BOX_WFILL       0x02    /* Fill remaining width */
-#define BOX_HFILL       0x04    /* Fill remaining height */
+#define BOX_WFILL       0x02    /* Fill container's remaining width */
+#define BOX_HFILL       0x04    /* Fill container's remaining height */
+#define BOX_FRAME	0x08	/* Display a frame */
 .Ed
 .Pp
 The
@@ -106,6 +113,14 @@ pixels.
 sets the spacing between individual child widgets to
 .Fa spacing
 pixels.
+.Pp
+Assuming that the
+.Dv BOX_FRAME
+flag was given,
+.Fn box_set_color
+and
+.Fn box_set_depth
+control the color and the depth of the frame.
 .Sh EVENTS
 The
 .Nm
