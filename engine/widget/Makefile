@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.8 2002/05/16 21:11:38 vedge Exp $
+#	$Csoft: Makefile,v 1.9 2002/05/19 12:55:02 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -10,7 +10,7 @@ SHARE=	LICENSE.ttf \
 	dignity.ttf kingrich.ttf larabie.ttf pakenham.ttf suigener.ttf \
 	zekton.ttf zerothre.ttf zerotwos.ttf zrnic.ttf
 FOBJS=	widget.fob
-XCF=	button.xcf checkbox.xcf
+XCF=	checkbox.xcf
 
 CFLAGS+=	${SDL_CFLAGS}
 
