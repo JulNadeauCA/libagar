@@ -1,7 +1,8 @@
-#	$Csoft: Makefile,v 1.22 2002/06/04 22:47:49 darkroot Exp $
+#	$Csoft: Makefile,v 1.23 2002/06/04 22:49:31 darkroot Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
+
 
 all: Makefile.config all-subdir
 clean: clean-subdir
