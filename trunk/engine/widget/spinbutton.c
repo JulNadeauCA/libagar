@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.9 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.10 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -77,7 +77,43 @@ spinbutton_bound(int argc, union evarg *argv)
 	struct widget_binding *binding = argv[1].p;
 
 	if (strcmp(binding->name, "value") == 0) {
+		pthread_mutex_lock(&sbu->lock);
+		switch (binding->type) {
+		case WIDGET_INT:
+			sbu->min = INT_MIN+1;
+			sbu->max = INT_MAX-1;
+			break;
+		case WIDGET_UINT:
+			sbu->min = 0;
+			sbu->max = UINT_MAX-1;
+			break;
+		case WIDGET_UINT8:
+			sbu->min = 0;
+			sbu->max = 0xffU;
+			break;
+		case WIDGET_SINT8:
+			sbu->min = -0x7f+1;
+			sbu->max =  0x7f-1;
+			break;
+		case WIDGET_UINT16:
+			sbu->min = 0;
+			sbu->max = 0xffffU;
+			break;
+		case WIDGET_SINT16:
+			sbu->min = -0x7fff+1;
+			sbu->max =  0x7fff-1;
+			break;
+		case WIDGET_UINT32:
+			sbu->min = 0;
+			sbu->max = 0xffffffffU;
+			break;
+		case WIDGET_SINT32:
+			sbu->min = -0x7fffffff+1;
+			sbu->max =  0x7fffffff-1;
+			break;
+		}
 		textbox_printf(sbu->tbox, "%d", *(int *)binding->p1);
+		pthread_mutex_unlock(&sbu->lock);
 	}
 }
 
@@ -243,58 +279,42 @@ spinbutton_add(struct spinbutton *sbu, int inc)
 
 	switch (valueb->type) {
 	case WIDGET_INT:
-		if (*(int *)value + inc >= INT_MIN+1 &&
-		    *(int *)value + inc <= INT_MAX-1 &&
-		    *(int *)value + inc >= *min &&
+		if (*(int *)value + inc >= *min &&
 		    *(int *)value + inc <= *max)
 			*(int *)value += inc;
 		break;
 	case WIDGET_UINT:
-		if (*(unsigned int *)value + inc >= 0 &&
-		    *(unsigned int *)value + inc <= UINT_MAX-1 &&
-		    *(unsigned int *)value + inc >= *min &&
+		if (*(unsigned int *)value + inc >= *min &&
 		    *(unsigned int *)value + inc <= *max)
 			*(unsigned int *)value += inc;
 		break;
 	case WIDGET_UINT8:
-		if (*(Uint8 *)value + inc >= 0 &&
-		    *(Uint8 *)value + inc <= 0xffU &&
-		    *(Uint8 *)value + inc >= *min &&
+		if (*(Uint8 *)value + inc >= *min &&
 		    *(Uint8 *)value + inc <= *max)
 			*(Uint8 *)value += inc;
 		break;
 	case WIDGET_SINT8:
-		if (*(Sint8 *)value + inc >= -0x7f+1 &&
-		    *(Sint8 *)value + inc <=  0x7f-1 &&
-		    *(Sint8 *)value + inc >= *min &&
+		if (*(Sint8 *)value + inc >= *min &&
 		    *(Sint8 *)value + inc <= *max)
 			*(Sint8 *)value += inc;
 		break;
 	case WIDGET_UINT16:
-		if (*(Uint16 *)value + inc >= 0 &&
-		    *(Uint16 *)value + inc <= 0xffffU &&
-		    *(Uint16 *)value + inc >= *min &&
+		if (*(Uint16 *)value + inc >= *min &&
 		    *(Uint16 *)value + inc <= *max)
 			*(Uint16 *)value += inc;
 		break;
 	case WIDGET_SINT16:
-		if (*(Sint16 *)value + inc >= -0x7fff+1 &&
-		    *(Sint16 *)value + inc <=  0x7fff-1 &&
-		    *(Sint16 *)value + inc >= *min &&
+		if (*(Sint16 *)value + inc >= *min &&
 		    *(Sint16 *)value + inc <= *max)
 			*(Sint16 *)value += inc;
 		break;
 	case WIDGET_UINT32:
-		if (*(Uint32 *)value + inc >= 0 &&
-		    *(Uint32 *)value + inc <= 0xffffffffU &&
-		    *(Uint32 *)value + inc >= *min &&
+		if (*(Uint32 *)value + inc >= *min &&
 		    *(Uint32 *)value + inc <= *max)
 			*(Uint32 *)value += inc;
 		break;
 	case WIDGET_SINT32:
-		if (*(Sint32 *)value + inc >= -0x7fffffff+1 &&
-		    *(Sint32 *)value + inc <=  0x7fffffff-1 &&
-		    *(Sint32 *)value + inc >= *min &&
+		if (*(Sint32 *)value + inc >= *min &&
 		    *(Sint32 *)value + inc <= *max)
 			*(Sint32 *)value += inc;
 		break;
