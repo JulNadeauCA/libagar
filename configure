@@ -184,6 +184,10 @@ if [ "$CC" = "" ]; then
 			CC="${i}/gcc"
 		fi
 	done
+	if [ "$CC" = "" ]; then
+		echo "Could not find a compiler."
+		exit 1
+	fi
 fi
 
 cat << 'EOT' > .cctest.c
