@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.2 2002/01/30 17:47:43 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.3 2002/02/01 11:57:21 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -160,7 +160,7 @@ engine_join(void)
 void
 engine_destroy(void)
 {
-	object_destroy(world, NULL);
+	object_destroy(world);
 
 	if (joy != NULL) {
 		SDL_JoystickClose(joy);
