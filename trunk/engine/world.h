@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.2 2002/02/03 11:21:43 vedge Exp $	*/
 
 #include <glib.h>
 
@@ -20,7 +20,6 @@ struct world {
 extern struct world *world;
 
 extern struct world *world_create(char *);
-extern void	     world_destroy(struct object *);
 extern void	     quit(void);
 #ifdef DEBUG
 extern void	     world_dump(struct world *);
