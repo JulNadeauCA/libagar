@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.4 2005/01/26 14:04:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -6,6 +6,8 @@
 #include "begin_code.h"
 
 #define TILE_NAME_MAX 32
+#define TILE_SIZE_MIN 2
+#define TILE_SIZE_MAX 1024
 
 struct tile_feature {
 	struct feature *ft;

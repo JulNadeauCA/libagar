@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.4 2005/01/26 14:04:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -356,6 +356,7 @@ poll_tileset(int argc, union evarg *argv)
 		    t->su->w, t->su->h);
 		it = tlist_insert_item(tl, t->su, label, t);
 		it->depth = 0;
+		it->class = "tile";
 
 		if (!TAILQ_EMPTY(&t->features)) {
 			it->flags |= TLIST_HAS_CHILDREN;
@@ -373,6 +374,7 @@ poll_tileset(int argc, union evarg *argv)
 
 			it = tlist_insert_item(tl, ICON(OBJ_ICON), label, ft);
 			it->depth = 1;
+			it->class = "feature";
 
 			TAILQ_FOREACH(fts, &ft->sketches, sketches) {
 				snprintf(label, sizeof(label),
@@ -385,6 +387,7 @@ poll_tileset(int argc, union evarg *argv)
 				it = tlist_insert_item(tl, ICON(DRAWING_ICON),
 				    label, fts);
 				it->depth = 2;
+				it->class = "sketch";
 			}
 		}
 	}
@@ -485,7 +488,7 @@ insert_tile_dlg(int argc, union evarg *argv)
 	msb = mspinbutton_new(win, "x", _("Size:"));
 	widget_bind(msb, "xvalue", WIDGET_INT, &ins_tile_w);
 	widget_bind(msb, "yvalue", WIDGET_INT, &ins_tile_h);
-	mspinbutton_set_range(msb, 2, 1024);
+	mspinbutton_set_range(msb, TILE_SIZE_MIN, TILE_SIZE_MAX);
 
 	cb = checkbox_new(win, _("Alpha blending"));
 	widget_bind(cb, "state", WIDGET_INT, &ins_tile_alpha);
@@ -545,7 +548,8 @@ edit_tiles(int argc, union evarg *argv)
 	TAILQ_FOREACH(it, &tl->items, items) {
 		struct tile *t = it->p1;
 
-		if (!it->selected) {
+		if (!it->selected ||
+		    strcmp(it->class, "tile") != 0) {
 			continue;
 		}
 		win = tile_edit(ts, t);
@@ -589,13 +593,13 @@ tileset_edit(void *p)
 			event_new(btn, "button-pushed", insert_tile_dlg,
 			    "%p,%p", ts, win);
 
-			btn = button_new(btnbox, _("Edit tiles"));
+			btn = button_new(btnbox, _("Edit tile(s)"));
 			event_new(btn, "button-pushed", edit_tiles, "%p,%p,%p",
 			    ts, tl, win);
 			event_new(tl, "tlist-dblclick", edit_tiles, "%p,%p,%p",
 			    ts, tl, win);
 
-			btn = button_new(btnbox, _("Delete tiles"));
+			btn = button_new(btnbox, _("Delete tile(s)"));
 			event_new(btn, "button-pushed", delete_tiles, "%p,%p",
 			    tl, ts);
 		}
