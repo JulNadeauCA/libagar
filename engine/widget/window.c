@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.94 2002/11/10 03:14:08 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.95 2002/11/12 02:25:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -326,32 +326,7 @@ window_draw(struct window *win)
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-#if 0
-			if (WIDGET_OPS(wid)->widget_update != NULL) {
-				/* Indirect rendering method */
-				pthread_mutex_lock(&wid->surface.lock);
-
-				if (wid->surface.redraw != 0) {
-					wid->surface.redraw = 0;
-					WIDGET_OPS(wid)->widget_update(wid);
-				}
-
-				/* XXX move rect to widget structure */
-				rd.x = WIDGET_ABSX(wid);
-				rd.y = WIDGET_ABSY(wid);
-				rd.w = wid->w;
-				rd.h = wid->h;
-
-				SDL_BlitSurface(wid->surface.source, NULL,
-				    view->v, &rd);
-				pthread_mutex_unlock(&wid->surface.lock);
-			} else if (WIDGET_OPS(wid)->widget_draw != NULL) {
-#endif
-				/* Direct rendering method */
-				WIDGET_OPS(wid)->widget_draw(wid);
-#if 0
-			}
-#endif
+			WIDGET_OPS(wid)->widget_draw(wid);
 		}
 
 #ifdef DEBUG
