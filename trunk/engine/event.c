@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.151 2003/05/22 05:45:45 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.152 2003/05/25 16:05:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -35,14 +35,8 @@
 #include <engine/rootmap.h>
 #include <engine/view.h>
 
-#ifdef DEBUG
-#include <engine/monitor/monitor.h>
-#endif
-
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/label.h>
-#include <engine/widget/text.h>
 #include <engine/widget/graph.h>
 
 #include <string.h>
@@ -72,16 +66,16 @@ static struct graph_item *fps_refresh_current, *fps_event_count,
     *fps_event_idletime;
 #endif	/* DEBUG */
 
-int	event_idle = 1;			/* Delay at full frame rate */
-int	event_idletime = -1;		/* SDL_Delay() granularity */
+int	event_idle = 1;		/* Delay at full frame rate */
+int	event_idletime = -1;	/* Approximate SDL_Delay() granularity */
+int	event_idlemin = 15;	/* Minimum refresh rate to begin idling */
 
 static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
 #ifdef THREADS
-static void	*event_post_async(void *);
+static void	*event_async(void *);
 #endif
 
-/* View must be locked. */
 static void
 event_hotkey(SDL_Event *ev)
 {
@@ -95,11 +89,16 @@ event_hotkey(SDL_Event *ev)
 			SDL_PushEvent(&vexp);
 		}
 		break;
+	case SDLK_F2:
+		if (object_save(world) == -1)
+			text_msg("Error saving world", "%s", error_get());
+		break;
+	case SDLK_F4:
+		if (object_load(world) == -1)
+			text_msg("Error loading world", "%s", error_get());
+		break;
 	case SDLK_F6:
 		window_show(fps_win);
-		break;
-	case SDLK_F7:
-		window_show(monitor.toolbar);
 		break;
 #endif /* DEBUG */
 	case SDLK_F1:
@@ -117,7 +116,7 @@ event_hotkey(SDL_Event *ev)
 		}
 #ifdef DEBUG
 		else {
-			dprintf("brutal exit\n");
+			dprintf("brutal!\n");
 			SDL_Quit();
 			exit(0);
 		}
@@ -157,33 +156,18 @@ event_update_fps_counter(void)
 static void
 event_init_fps_counter(void)
 {
-	struct region *reg;
-
-	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
-	    248, 166, 125, 91);
+	fps_win = window_new("fps-counter");
 	window_set_caption(fps_win, "Refresh rate");
-	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		fps_label = label_new(reg, 100, -1, "...");
-	}
+	window_set_position(fps_win, WINDOW_LOWER_CENTER, 0);
+	window_set_closure(fps_win, WINDOW_HIDE);
 
-	reg = region_new(fps_win, REGION_VALIGN, 0, -1, 100, 0);
-	{
-		fps_graph = graph_new(reg, "Refresh rate", GRAPH_LINES,
-		    GRAPH_SCROLL|GRAPH_ORIGIN, 200, 100, 100);
-		fps_refresh_current = graph_add_item(fps_graph,
-		    "refresh-current",
-		    SDL_MapRGB(vfmt, 0, 160, 0));
-		fps_event_count = graph_add_item(fps_graph,
-		    "event-rate",
-		    SDL_MapRGB(vfmt, 0, 0, 180));
-		fps_event_idletime = graph_add_item(fps_graph,
-		    "event-idle",
-		    SDL_MapRGB(vfmt, 200, 200, 200));
-	}
-	
-	if (engine_debug > 0)
-		window_show(monitor.toolbar);
+	fps_label = label_new(fps_win, "...");
+	fps_graph = graph_new(fps_win, "Refresh rate", GRAPH_LINES,
+	    GRAPH_SCROLL|GRAPH_ORIGIN, 200);
+
+	fps_refresh_current = graph_add_item(fps_graph, "refresh", 0, 160, 0);
+	fps_event_count = graph_add_item(fps_graph, "event", 0, 0, 180);
+	fps_event_idletime = graph_add_item(fps_graph, "idle", 200, 200, 200);
 }
 #endif /* DEBUG */
 
@@ -193,14 +177,14 @@ event_adjust_refresh(Uint32 ntick)
 {
 	view->refresh.current = view->refresh.delay - (SDL_GetTicks() - ntick);
 #ifdef DEBUG
-	if (fps_win->flags & WINDOW_SHOWN)
+	if (fps_win->visible)
 		event_update_fps_counter();
 #endif
 	if (view->refresh.current < 1)
 		view->refresh.current = 1;
 }
 
-/* Process SDL events, perform video updates and idle when we can afford it. */
+/* Process SDL events, perform video updates and idle. */
 void
 event_loop(void)
 {
@@ -228,6 +212,7 @@ event_loop(void)
 					pthread_mutex_unlock(&view->lock);
 					return;
 				}
+
 				pthread_mutex_lock(&m->lock);
 				rootmap_animate();
 				if (m->redraw != 0) {
@@ -235,13 +220,19 @@ event_loop(void)
 					rootmap_draw();
 				}
 				pthread_mutex_unlock(&m->lock);
-				VIEW_UPDATE(view->v->clip_rect);
+
+				view_update(0, 0, 0, 0);
 			}
 
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
-				if (win->flags & WINDOW_SHOWN)
-					window_draw(win);
+				if (!win->visible) {
+					continue;
+				}
+				widget_draw(win);
+				view_update(
+				    WIDGET(win)->x, WIDGET(win)->y,
+				    WIDGET(win)->w, WIDGET(win)->h);
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
@@ -265,15 +256,13 @@ event_loop(void)
 #ifdef DEBUG
 			event_count++;
 #endif
-		} else if (event_idle && view->refresh.current > 15) {
+		} else if (event_idle &&
+		           view->refresh.current > event_idlemin) {
 			/*
-			 * Sleep if the display is not likely to be redrawn
-			 * within the next few milliseconds.
-			 *
-			 * XXX 
+			 * Relinquish the CPU if there is sufficient expected
+			 * delay until the next rendering operation.
 			 */
-			if (t - ltick < view->refresh.delay -
-			    (event_idletime > 9) ? event_idletime : 20) {
+			if (t-ltick < view->refresh.delay-event_idletime) {
 				SDL_Delay(1);
 			}
 			event_idletime = SDL_GetTicks() - t;
@@ -293,40 +282,40 @@ event_dispatch(SDL_Event *ev)
 
 	switch (ev->type) {
 	case SDL_VIDEORESIZE:
-		debug(DEBUG_VIDEORESIZE_EV,
-		    "SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w, ev->resize.h);
+		debug(DEBUG_VIDEORESIZE_EV, "SDL_VIDEORESIZE: w=%d h=%d\n",
+		    ev->resize.w, ev->resize.h);
+		/* XXX set a minimum! */
 		SDL_SetVideoMode(ev->resize.w, ev->resize.h, 0, view->v->flags);
 		if (view->v == NULL) {
-			fatal("setting %dx%d mode: %s",
-			    ev->resize.w, ev->resize.h, SDL_GetError());
+			fatal("%ux%u: %s", ev->resize.w, ev->resize.h,
+			    SDL_GetError());
 		}
 		old_w = view->w;
 		old_h = view->h;
 		view->w = ev->resize.w;
 		view->h = ev->resize.h;
 		TAILQ_FOREACH(win, &view->windows, windows) {
-			win->rd.x = win->rd.x * ev->resize.w/old_w;
-			win->rd.y = win->rd.y * ev->resize.h/old_h;
-			win->rd.w = win->rd.w * ev->resize.w/old_w;
-			win->rd.h = win->rd.h * ev->resize.h/old_h;
-			win->saved_rd.x = win->saved_rd.x * ev->resize.w/old_w;
-			win->saved_rd.y = win->saved_rd.y * ev->resize.h/old_h;
-			win->saved_rd.w = win->saved_rd.w * ev->resize.w/old_w;
-			win->saved_rd.h = win->saved_rd.h * ev->resize.h/old_h;
-			window_resize(win);
+			WIDGET(win)->x = WIDGET(win)->x*ev->resize.w/old_w;
+			WIDGET(win)->y = WIDGET(win)->y*ev->resize.h/old_h;
+			WIDGET(win)->w = WIDGET(win)->w*ev->resize.w/old_w;
+			WIDGET(win)->h = WIDGET(win)->h*ev->resize.h/old_h;
+			win->saved_w = win->saved_w*ev->resize.w/old_w;
+			win->saved_h = win->saved_h*ev->resize.h/old_h;
+
+			WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
+			    WIDGET(win)->h);
 		}
 		break;
 	case SDL_VIDEOEXPOSE:
 		debug(DEBUG_VIDEOEXPOSE_EV, "SDL_VIDEOEXPOSE\n");
 		if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-			pthread_mutex_lock(&view->rootmap->map->lock);
-			view->rootmap->map->redraw++;
-			pthread_mutex_unlock(&view->rootmap->map->lock);
+			rootmap_redraw();
 		}
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
-			if (win->flags & WINDOW_SHOWN)
-				window_draw(win);
+			if (win->visible) {
+				widget_draw(win);
+			}
 			pthread_mutex_unlock(&win->lock);
 		}
 #ifdef HAVE_OPENGL
@@ -335,13 +324,15 @@ event_dispatch(SDL_Event *ev)
 #endif
 		break;
 	case SDL_MOUSEMOTION:
-		if (!TAILQ_EMPTY(&view->windows))
+		if (!TAILQ_EMPTY(&view->windows)) {
 			window_event(ev);
+		}
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		if (!TAILQ_EMPTY(&view->windows))
+		if (!TAILQ_EMPTY(&view->windows)) {
 			window_event(ev);
+		}
 		break;
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
@@ -363,26 +354,30 @@ event_dispatch(SDL_Event *ev)
 		{
 			int rv = 0;
 
-			if (!TAILQ_EMPTY(&view->windows))
+			if (!TAILQ_EMPTY(&view->windows)) {
 				rv = window_event(ev);
-			if (rv == 0)
+			}
+			if (rv == 0) {
 				input_event(INPUT_KEYBOARD, ev);
+			}
 		}
 		break;
 	case SDL_QUIT:
-		if (view->rootmap == NULL) 			/* XXX */
+		if (view->rootmap == NULL) { 			/* XXX */
 			pthread_mutex_unlock(&view->lock);
+		}
 		engine_stop();
 		break;
 	}
 	
-	if (!TAILQ_EMPTY(&view->detach))
+	if (!TAILQ_EMPTY(&view->detach)) {
 		view_detach_queued();
+	}
 	pthread_mutex_unlock(&view->lock);
 }
 
 #define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
-	if ((eev)->argc >= EVENT_MAX_ARGS) {			\
+	if ((eev)->argc >= EVENT_ARGS_MAX) {			\
 		fatal("too many args");				\
 	}							\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
@@ -460,7 +455,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 		newev = 1;
 	}
 	ev->flags = 0;
-	memset(ev->argv, 0, sizeof(union evarg) * EVENT_MAX_ARGS);
+	memset(ev->argv, 0, sizeof(union evarg) * EVENT_ARGS_MAX);
 	ev->argv[0].p = ob;
 	ev->argc = 1;
 	ev->handler = handler;
@@ -482,22 +477,42 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	return (ev);
 }
 
+/* Forward an event to an object's descendents. */
+static __inline__ void
+event_forward_children(void *p, struct event *ev)
+{
+	struct object *ob = p, *cob;
+
+	OBJECT_FOREACH_CHILD(cob, ob, object) {
+		event_forward(cob, ev->name, ev->argc, ev->argv);
+	}
+}
+
 #ifdef THREADS
+
+/* Invoke an asynchronous event handler routine. */
 static void *
-event_post_async(void *p)
+event_async(void *p)
 {
 	struct event *eev = p;
+	struct object *ob = OBJECT(eev->argv[0].p);
 
-	debug(DEBUG_ASYNC_EVENTS, "%s: async event `%s' start\n",
-	    OBJECT(eev->argv[0].p)->name, eev->name);
+	debug(DEBUG_ASYNC_EVENTS, "%s: %s begin\n", ob->name, eev->name);
 	eev->handler(eev->argc, eev->argv);
-	debug(DEBUG_ASYNC_EVENTS, "%s: async event `%s' end\n",
-	    OBJECT(eev->argv[0].p)->name, eev->name);
+	debug(DEBUG_ASYNC_EVENTS, "%s: %s end\n", ob->name, eev->name);
 
-	free(eev);
+	if (eev->flags & EVENT_FORWARD_CHILDREN) {
+		debug(DEBUG_ASYNC_EVENTS, "%s: forwarding %s to descendents\n",
+		    ob->name, eev->name);
+		lock_linkage();
+		event_forward_children(ob, eev);
+		unlock_linkage();
+		free(eev);
+	}
 	return (NULL);
 }
-#endif
+
+#endif /* THREADS */
 
 /*
  * Invoke an event handler. The lock on the object's event list is recursive
@@ -506,18 +521,17 @@ event_post_async(void *p)
  * XXX event handlers cannot modify the parent object's event list, such an
  *     operation should be queued like it is done in the window system.
  */
-void
-event_post(void *obp, const char *name, const char *fmt, ...)
+int
+event_post(void *p, const char *evname, const char *fmt, ...)
 {
-	struct object *ob = obp;
+	struct object *ob = p;
 	struct event *eev, *neev;
 
-	debug(DEBUG_EVENT_DELIVERY, "posting `%s' event to %s\n", name,
-	    ob->name);
+	debug(DEBUG_EVENT_DELIVERY, "%s to %s\n", evname, ob->name);
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
-		if (strcmp(name, eev->name) != 0) {
+		if (strcmp(evname, eev->name) != 0) {
 			continue;
 		}
 		neev = Malloc(sizeof(struct event));
@@ -533,40 +547,60 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 
 		if (neev->flags & EVENT_ASYNC) {
 #ifdef THREADS
-			pthread_t async_event_th;
+			pthread_t th;
 
-			Pthread_create(&async_event_th, NULL,
-			    event_post_async, neev);
+			/* Will free the event structure when done. */
+			Pthread_create(&th, NULL, event_async, neev);
 #else
 			fatal("requires THREADS");
 #endif
 		} else {
 			neev->handler(neev->argc, neev->argv);
+
+			if (neev->flags & EVENT_FORWARD_CHILDREN) {
+				debug(DEBUG_EVENT_DELIVERY,
+				    "%s: forwarding %s to descendents\n",
+				    ob->name, evname);
+
+				lock_linkage();
+				event_forward_children(ob, neev);
+				unlock_linkage();
+			}
 			free(neev);
 		}
 		break;
 	}
 	pthread_mutex_unlock(&ob->events_lock);
+	return ((eev == NULL) ? 0 : 1);
 }
 
 /* Forward an event, without modifying the original event structure. */
 void
-event_forward(void *child, const char *name, int argc, union evarg *argv)
+event_forward(void *p, const char *evname, int argc, union evarg *argv)
 {
-	union evarg nargv[EVENT_MAX_ARGS];
-	struct object *ob = child;
+	union evarg nargv[EVENT_ARGS_MAX];
+	struct object *ob = p;
 	struct event *ev;
 
-	debug(DEBUG_EVENT_DELIVERY, "forwarding `%s' event to %s\n",
-	    name, ob->name);
+	debug(DEBUG_EVENT_DELIVERY, "%s event to %s\n", evname, ob->name);
 
 	pthread_mutex_lock(&ob->events_lock);
 	memcpy(nargv, argv, argc * sizeof(union evarg));
-	nargv[0].p = child;
+	nargv[0].p = ob;
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(name, ev->name) != 0)
+		if (strcmp(evname, ev->name) != 0) {
 			continue;
+		}
 		ev->handler(argc, nargv);
+
+		if (ev->flags & EVENT_FORWARD_CHILDREN) {
+			debug(DEBUG_EVENT_DELIVERY, "%s to %s descendents\n",
+			    evname, ob->name);
+
+			lock_linkage();
+			event_forward_children(ob, ev);
+			unlock_linkage();
+		}
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 }

@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.9 2003/05/14 02:53:23 vedge Exp $
+.\"	$Csoft: event.3,v 1.10 2003/05/18 00:16:57 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -107,7 +107,7 @@ structures, which are sent to the relevant subsystems.
 .Ft "struct event *"
 .Fn event_new "void *obj" "const char *name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn event_post "void *obj" "const char *name" "const char *fmt" "..."
 .Pp
 .Ft "void"
@@ -164,11 +164,13 @@ a new thread is created in order to service the event (assuming that the
 compile-time option was enabled).
 .Fa fmt
 is a format string and the arguments following it are inserted
-after the arguments registed by
+after the arguments registered by
 .Fn event_new
 in the
 .Fa evarg
 array.
+.Fn event_post
+returns 1 if an event handler was invoked, otherwise 0.
 .Pp
 The
 .Fn event_forward
