@@ -1,4 +1,4 @@
-/*	$Csoft: merge.h,v 1.7 2003/02/13 11:30:14 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.8 2003/02/16 23:54:14 vedge Exp $	*/
 /*	Public domain	*/
 
 enum merge_mode {
@@ -18,6 +18,7 @@ struct merge {
 	struct brushq	 brushes;
 	int		 inherit_flags;		/* Inherit node flags */
 	int		 random_shift;		/* Random noderef shifts */
+	Uint8		 layer;
 };
 
 void		 merge_init(void *);
@@ -28,5 +29,6 @@ int		 merge_load(void *, int);
 int		 merge_save(void *, int);
 int		 merge_cursor(void *, struct mapview *, SDL_Rect *);
 void		 merge_interpolate(struct merge *, struct map *,
-		     struct node *, struct node *, Uint32, Uint32);
+		     struct node *, struct node *, Uint32, Uint32,
+		     struct mapview *);
 

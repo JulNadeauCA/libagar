@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.17 2003/02/26 02:03:48 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.18 2003/03/05 02:16:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -75,6 +75,7 @@ merge_init(void *p)
 	merge->mode = MERGE_REPLACE;
 	merge->inherit_flags = 1;
 	merge->random_shift = 0;
+	merge->layer = 0;
 
 	SLIST_INIT(&merge->brushes);
 }
@@ -287,7 +288,7 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 				merge_interpolate(mer, sm,
 				    &sm->map[sy][sx],
 				    &dm->map[dy][dx],
-				    dx, dy);
+				    dx, dy, mv);
 			}
 		}
 	}
@@ -297,10 +298,11 @@ static void
 merge_copy_node(struct merge *mer, struct node *srcnode, struct node *dstnode,
     Uint32 dx, Uint32 dy)
 {
-	struct noderef *nref;
+	struct noderef *nref, *nnref;
 
 	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		node_copy_ref(nref, dstnode);
+		nnref = node_copy_ref(nref, dstnode);
+		nnref->layer = mer->layer;
 	}
 
 	if (mer->inherit_flags) {
@@ -318,7 +320,7 @@ merge_copy_edge(struct merge *mer, struct map *sm, struct node *dstnode,
 	for (sy = 0; sy < sm->maph; sy++) {
 		for (sx = 0; sx < sm->mapw; sx++) {
 			struct node *srcnode = &sm->map[sy][sx];
-			struct noderef *nref;
+			struct noderef *nref, *nnref;
 
 			if (TAILQ_EMPTY(&srcnode->nrefs) ||
 			   (srcnode->flags & nedge) == 0)
@@ -326,9 +328,13 @@ merge_copy_edge(struct merge *mer, struct map *sm, struct node *dstnode,
 
 			/* XXX randomize/increment */
 			dprintf("edge\n");
-			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
-				node_copy_ref(nref, dstnode);
-			dstnode->flags = srcnode->flags;
+			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+				nnref = node_copy_ref(nref, dstnode);
+				nnref->layer = mer->layer;
+			}
+			if (mer->inherit_flags) {
+				dstnode->flags = srcnode->flags;
+			}
 			dstnode->flags &= ~(NODE_EDGE_ANY);
 			dstnode->flags |= nedge;
 			return;
@@ -345,7 +351,7 @@ merge_copy_filling(struct merge *mer, struct map *sm, struct node *dstnode)
 	for (sy = 0; sy < sm->maph; sy++) {
 		for (sx = 0; sx < sm->mapw; sx++) {
 			struct node *srcnode = &sm->map[sy][sx];
-			struct noderef *nref;
+			struct noderef *nref, *nnref;
 			
 			if (TAILQ_EMPTY(&srcnode->nrefs) ||
 			   (srcnode->flags & NODE_EDGE_ANY))
@@ -354,46 +360,51 @@ merge_copy_filling(struct merge *mer, struct map *sm, struct node *dstnode)
 			dprintf("filling\n");
 
 			/* XXX randomize/increment */
-			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
-				node_copy_ref(nref, dstnode);
-			dstnode->flags = srcnode->flags;
+			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+				nnref = node_copy_ref(nref, dstnode);
+				nnref->layer = mer->layer;
+			}
+			if (mer->inherit_flags) {
+				dstnode->flags = srcnode->flags;
+			}
 			return;
 		}
 	}
-}
-
-static void
-merge_mix_edges(struct merge *mer, struct map *sm, struct node *srcnode,
-    struct node *dstnode)
-{
-	struct noderef *nref;
-
-	dprintf("mix\n");
-
-	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		node_copy_ref(nref, dstnode);
-	}
-	dstnode->flags |= srcnode->flags & NODE_EDGE_ANY;
 }
 
 #define NODE_EDGE_FILLING 0
 
 void
 merge_interpolate(struct merge *mer, struct map *sm, struct node *srcnode,
-    struct node *dstnode, Uint32 dx, Uint32 dy)
+    struct node *dstnode, Uint32 dx, Uint32 dy, struct mapview *mv)
 {
 	Uint32 srcedge = srcnode->flags & NODE_EDGE_ANY;
 	Uint32 dstedge = dstnode->flags & NODE_EDGE_ANY;
-	
+	struct noderef *nref, *nnref;
+	int other = 0;
+
+	mer->layer = mv->cur_layer;
+
 	if (TAILQ_EMPTY(&srcnode->nrefs))
 		return;
-	if (TAILQ_EMPTY(&dstnode->nrefs)) {
+
+	/* Remove other noderefs on this layer. */
+	for (nref = TAILQ_FIRST(&dstnode->nrefs);
+	     nref != TAILQ_END(&dstnode->nrefs);
+	     nref = nnref) {
+		nnref = TAILQ_NEXT(nref, nrefs);
+		if (nref->layer == mer->layer) {
+			TAILQ_REMOVE(&dstnode->nrefs, nref, nrefs);
+			noderef_destroy(nref);
+			free(nref);
+
+			other++;
+		}
+	}
+	if (!other) {					/* Empty */
 		merge_copy_node(mer, srcnode, dstnode, dx, dy);
 		return;
 	}
-
-	node_destroy(dstnode);
-	node_init(dstnode, dx, dy);
 
 	switch (dstedge) {
 	case NODE_EDGE_FILLING:
@@ -515,7 +526,6 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *srcnode,
 			break;
 		case NODE_EDGE_E:
 			/* XXX */
-			merge_mix_edges(mer, sm, srcnode, dstnode);
 			break;
 		}
 		break;
