@@ -163,7 +163,9 @@ objq_insert_tiles(int argc, union evarg *argv)
 		    mv->constr.x + srcsu->w/TILEW + 1,
 		    mv->constr.y + srcsu->h/TILEH + 1);
 		node = &m->map[mv->constr.y][mv->constr.x];
-		node_init(node, mv->constr.x, mv->constr.y);
+		if (mv->tmap_insert == 0) {			/* Replace */
+			node_init(node, mv->constr.x, mv->constr.y);
+		}
 		switch (t) {
 		case NODEREF_SPRITE:
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
@@ -214,6 +216,16 @@ tilemap_close(int argc, union evarg *argv)
 	window_hide(win);
 
 	widget_set_int(nodeedit_button, "state", 0);
+}
+
+static void
+tl_objs_selected_insert(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	int state = argv[2].i;
+
+	dprintf("state %d\n", state);
+	mv->tmap_insert = state;
 }
 
 static void
@@ -322,13 +334,16 @@ tl_objs_selected(int argc, union evarg *argv)
 		struct button *button;
 		struct label *lab;
 		struct tlist *tl;
+		struct region *reg_buttons;
 		int i;
-	
-		reg = region_new(win, 0, 0, 0, 100, 85);
+		
+		reg_buttons = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
+
+		reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 		{
 			char *s;
 
-			tl = tlist_new(reg, 100, 100, TLIST_MULTI);
+			tl = tlist_new(reg, 100, 0, TLIST_MULTI);
 			tlist_set_item_height(tl,
 			    prop_get_int(&mapedit, "tilemap-item-size"));
 
@@ -348,8 +363,7 @@ tl_objs_selected(int argc, union evarg *argv)
 				free(s);
 			}
 		}
-		
-		reg = region_new(win, REGION_HALIGN, 0, 85, 100, 10);
+
 		{
 			int i;
 			int icons[] = {
@@ -358,14 +372,22 @@ tl_objs_selected(int argc, union evarg *argv)
 				MAPEDIT_TOOL_UP,
 				MAPEDIT_TOOL_DOWN
 			};
-		
+			struct button *bu;
+
+			bu = button_new(reg_buttons, "Insert", NULL,
+			    BUTTON_STICKY, 20, -1);
+			event_new(bu, "button-pushed",
+			    tl_objs_selected_insert, "%p", mv);
+
 			for (i = 0; i < 4; i++) {
-				button = button_new(reg, NULL,
-				    SPRITE(&mapedit, icons[i]), 0, 100/4, 100);
+				button = button_new(reg_buttons, NULL,
+				    SPRITE(&mapedit, icons[i]), 0, 80/4, -1);
 				event_new(button, "button-pushed",
 				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
 			}
 		}
+	
+		
 	}
 }
 

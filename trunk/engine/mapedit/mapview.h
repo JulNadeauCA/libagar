@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.26 2003/02/22 11:42:37 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.27 2003/02/24 06:43:31 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
@@ -41,6 +41,7 @@ struct mapview {
 	SDL_TimerID	 zoom_tm;
 	int		*tilew, *tileh;
 	int		 cx, cy;	/* Cursor position (nodes) */
+	int		 cw, ch;	/* Cursor geometry (nodes) */
 	struct {		/* For MAPVIEW_INDEPENDENT */
 		Uint16	zoom;
 		Sint16	ssx, ssy;
@@ -56,6 +57,7 @@ struct mapview {
 		struct tlist	*transforms_tl;
 	} node;
 	struct window	*tmap_win;	/* Tile map window */
+	int		 tmap_insert;	/* Insert mode? */
 	struct button	*tmap_button;
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.29 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.30 2003/02/25 01:23:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ stamp_window(void *p)
 		struct radio *rad;
 		static const char *mode_items[] = {
 			"Replace",
-			"Insert highest",
+			"Insert",
 			NULL
 		};
 
@@ -106,6 +106,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
 	struct noderef *nref;
+	int origin = 0;
 
 	if (srcnode == NULL) {
 		text_msg("Error", "No source node");
@@ -117,6 +118,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	}
 
 	if (st->mode == STAMP_REPLACE) {
+		origin = dstnode->flags & NODE_ORIGIN;
 		node_destroy(dstnode);
 		node_init(dstnode, mv->cx, mv->cy);
 	}
@@ -125,10 +127,9 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 		node_copy_ref(nref, dstnode);
 	}
 
-	if (dstnode->flags & NODE_ORIGIN) {
-		dstnode->flags = srcnode->flags & NODE_ORIGIN;
-	} else {
-		dstnode->flags = srcnode->flags;
+	dstnode->flags = srcnode->flags;
+	if (origin) {
+		dstnode->flags |= NODE_ORIGIN;
 	}
 }
 

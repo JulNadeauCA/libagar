@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.2 2003/02/20 05:32:45 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.3 2003/02/22 11:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -117,14 +117,16 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 		for (x = 0; x < m->mapw; x++) {
 			struct node *dstnode = &m->map[y][x];
 			struct noderef *nref;
-			
+			int origin;
+
 			MAP_CHECK_NODE(dstnode, x, y);
 
 			if (srcnode == dstnode) {
-				text_msg("Error", "Circular reference");
-				return;
+				/* Avoid circular reference */
+				continue;
 			}
 
+			origin = dstnode->flags & NODE_ORIGIN;
 			node_destroy(dstnode);
 			node_init(dstnode, x, y);
 
@@ -136,7 +138,10 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 				break;
 			}
 
-			dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
+			dstnode->flags = srcnode->flags;
+			if (origin) {
+				dstnode->flags |= NODE_ORIGIN;
+			}
 		}
 	}
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.73 2003/02/24 06:43:31 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.74 2003/02/24 06:54:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -358,6 +358,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->constr.y = 0;
 	mv->constr.nflags = NODEREF_SAVEABLE;
 	mv->tmap_win = NULL;
+	mv->tmap_insert = 0;
 	mv->cur_node = NULL;
 	mv->cur_layer = 0;
 	mv->node.button = NULL;
@@ -371,6 +372,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->my = m->defy;
 	mv->cx = -1;
 	mv->cy = -1;
+	mv->cw = 1;
+	mv->ch = 1;
 
 	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		mv->izoom.zoom = 100;
@@ -619,7 +622,8 @@ mapview_draw(void *p)
 			if (node == mapedit.src_node) {
 				primitives.rect_outlined(mv,
 				    rx+1, ry+1,
-				    mv->map->tilew-1, mv->map->tileh-1,
+				    mv->cw*mv->map->tilew - 1,
+				    mv->ch*mv->map->tileh - 1,
 				    WIDGET_COLOR(mv, SRC_NODE_COLOR));
 			}
 			/* Indicate the construction origin. */
@@ -762,6 +766,19 @@ mapview_mousemotion(int argc, union evarg *argv)
 
 	if (mv->mouse.scrolling) {
 		mapview_mouse_scroll(mv, xrel, yrel);
+	} else if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] &&
+	    state & SDL_BUTTON(1) &&
+	    mv->cx != -1 && mv->cy != -1) {
+	    	dprintf("x %d mx %d\n", x, mv->mouse.x);
+		mv->cw += x - mv->mouse.x;
+		mv->ch += y - mv->mouse.y;
+		if (mv->cw < 1)
+			mv->cw = 1;
+		if (mv->ch < 1)
+			mv->ch = 1;
+				
+		dprintf("cw -> %d", mv->cw);
+		dprintf("ch -> %d", mv->ch);
 	} else if (mv->flags & MAPVIEW_EDIT) {
 		if (state & SDL_BUTTON(2)) {
 			shift_mouse(mapedit.tools[MAPEDIT_SHIFT], mv,
@@ -818,6 +835,8 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	switch (button) {
 	case 1:						/* Select/edit */
 		mv->cur_node = srcnode;
+		mv->cw = 1;
+		mv->ch = 1;
 		break;
 	case 2:						/* Select/center */
 		mv->flags |= MAPVIEW_NO_CURSOR;
