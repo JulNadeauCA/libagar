@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.79 2003/06/06 02:54:57 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.80 2003/06/18 00:46:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -16,10 +16,9 @@ enum gfx_engine {
 };
 
 struct viewmap {
-	/* Read-only */
-	int		  w, h;		/* View geometry in nodes */
+	int  w, h;			/* View geometry in nodes */
 
-	/* Read-write (shares viewport->lock) */
+	/* Shares viewport->lock. */
 	struct map	 *map;		/* Currently visible map */
 	int		  x, y;		/* Offset in map */
 	Sint16		  sx, sy;	/* Soft scroll offset */
@@ -30,8 +29,6 @@ struct viewmap {
 TAILQ_HEAD(windowq, window);
 
 struct viewport {
-	struct object obj;
-
 	enum gfx_engine  gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
@@ -134,20 +131,20 @@ __BEGIN_DECLS
 int		 view_init(enum gfx_engine);
 void		 view_attach(void *);
 void		 view_detach(void *);
-void		 view_detach_queued(void);
-void		 view_destroy(void *);
+void		 view_destroy(void);
 int		 view_set_refresh(int, int);
-struct window	*view_window_exists(char *);
-SDL_Surface	*view_surface(Uint32, int, int);
-SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
-void		 view_set_trans(SDL_Surface *, Uint8);
-SDL_Surface	*view_copy_surface(SDL_Surface *);
-void		 view_capture(SDL_Surface *);
-__inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16, Uint8, Uint8,
-		                  Uint8, Uint8);
-__inline__ void	 view_update(int, int, int, int);
+struct window	*view_window_exists(const char *);
+
+__inline__ SDL_Surface	*view_surface(Uint32, int, int);
+__inline__ SDL_Surface	*view_copy_surface(SDL_Surface *);
+SDL_Surface		*view_scale_surface(SDL_Surface *, Uint16, Uint16);
+void			 view_set_trans(SDL_Surface *, Uint8);
+void			 view_capture(SDL_Surface *);
+__inline__ void		 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
+			                  Uint8, Uint8, Uint8, Uint8);
+__inline__ void		 view_update(int, int, int, int);
 #ifdef HAVE_OPENGL
-GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
+GLuint			 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
 __END_DECLS
 
