@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.1 2002/07/30 22:19:34 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.2 2002/08/12 06:56:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -91,18 +91,6 @@ propedit_window(void *p)
 	struct region *reg;
 	struct radio *rad;
 	struct checkbox *cbox;
-	static const char *mode_items[] = {
-		"Clear",
-		"Set",
-		"Unset",
-		NULL
-	};
-	static const char *block_items[] = {
-		"Block",
-		"Walk",
-		"Climb",
-		NULL
-	};
 
 	win = window_new("Node props", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 149, 198, 149, 198);
@@ -110,28 +98,53 @@ propedit_window(void *p)
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
 
 	/* Mode */
-	rad = radio_new(reg, mode_items, 0, 0);
-	event_new(rad, "radio-changed", 0, propedit_event, "%p, %i", pe, -1);
+	{
+		static const char *items[] = {
+			"Clear",
+			"Set",
+			"Unset",
+			NULL
+		};
+
+		rad = radio_new(reg, items, 0, 0);
+		event_new(rad, "radio-changed", 0,
+		    propedit_event, "%p, %i", pe, -1);
+	}
 
 	/* Block/walk/climb */
-	rad = radio_new(reg, block_items, 0, 0);
-	event_new(rad, "radio-changed", 0, propedit_event, "%p, %i", pe, 0);
-	
+	{
+		static const char *items[] = {
+			"Block",
+			"Walk",
+			"Climb",
+			NULL
+		};
+
+		rad = radio_new(reg, items, 0, 0);
+		event_new(rad, "radio-changed", 0,
+		    propedit_event, "%p, %i", pe, 0);
+	}
+
 	reg = region_new(win, REGION_VALIGN, 0, 40, 100, 60);
 	
-	/* Bio, regen, slow, haste */
-	cbox = checkbox_new(reg, "Bio", 20, 0);
-	event_new(cbox, "checkbox-changed", 0,
-	    propedit_event, "%p, %i", pe, NODE_BIO);
-	cbox = checkbox_new(reg, "Regen", 20, 0);
-	event_new(cbox, "checkbox-changed", 0,
-	    propedit_event, "%p, %i", pe, NODE_REGEN);
-	cbox = checkbox_new(reg, "Slow", 20, 0);
-	event_new(cbox, "checkbox-changed", 0,
-	    propedit_event, "%p, %i", pe, NODE_SLOW);
-	cbox = checkbox_new(reg, "Haste", 20, 0);
-	event_new(cbox, "checkbox-changed", 0,
-	    propedit_event, "%p, %i", pe, NODE_HASTE);
+	/* Node flags */
+	{
+		cbox = checkbox_new(reg, "Origin", 15, 0);
+		event_new(cbox, "checkbox-changed", 0,
+		    propedit_event, "%p, %i", pe, NODE_ORIGIN);
+		cbox = checkbox_new(reg, "Bio", 15, 0);
+		event_new(cbox, "checkbox-changed", 0,
+		    propedit_event, "%p, %i", pe, NODE_BIO);
+		cbox = checkbox_new(reg, "Regen", 15, 0);
+		event_new(cbox, "checkbox-changed", 0,
+		    propedit_event, "%p, %i", pe, NODE_REGEN);
+		cbox = checkbox_new(reg, "Slow", 15, 0);
+		event_new(cbox, "checkbox-changed", 0,
+		    propedit_event, "%p, %i", pe, NODE_SLOW);
+		cbox = checkbox_new(reg, "Haste", 15, 0);
+		event_new(cbox, "checkbox-changed", 0,
+		    propedit_event, "%p, %i", pe, NODE_HASTE);
+	}
 
 	win->focus = WIDGET(rad);
 
