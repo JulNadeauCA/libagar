@@ -98,11 +98,7 @@ sub Scan
 		$ndir =~ s/^\.\///;
 
 		if (-d "$dir/$ent" and ! -e "$dir/$ent/$COOKIE") {
-			unless (mkdir("$BUILD/$ndir/$ent")) {
-#				if ($! != EEXIST) {
-#					die "$BUILD/$ndir/$ent: $!";
-#				}
-			}
+			mkdir("$BUILD/$ndir/$ent", 0755);
 			Scan("$dir/$ent");
 		} else {
 			if ($ent eq 'Makefile') {
