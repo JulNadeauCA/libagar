@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.13 2002/02/07 05:14:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.14 2002/02/07 05:24:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -443,7 +443,7 @@ map_animate(Uint32 ival, void *p)
 		/* XXX */
 		if (curmapedit != NULL &&
 		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
-			continue;
+			vy++;
 		}
 	
 		for (x = m->view->mapx, vx = 0;
@@ -460,7 +460,7 @@ map_animate(Uint32 ival, void *p)
 				}
 				if (vx == 0 &&
 				    curmapedit->flags & MAPEDIT_TILESTACK) {
-					continue;
+					vx++;
 				}
 			}
 
@@ -602,7 +602,7 @@ map_draw(Uint32 ival, void *p)
 	     	/* XXX */
 		if (curmapedit != NULL &&
 		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
-			continue;
+			vy++;
 		}
 
 		for (x = m->view->mapx, vx = 0;
@@ -615,7 +615,7 @@ map_draw(Uint32 ival, void *p)
 			if (curmapedit != NULL) {
 				if (vx == 0 &&
 				    curmapedit->flags & MAPEDIT_TILESTACK) {
-					continue;
+					vx++;
 				}
 				if (vx == m->view->mapw &&
 				    curmapedit->flags & MAPEDIT_TILELIST) {
