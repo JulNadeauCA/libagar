@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.18 2004/05/11 02:53:45 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.19 2004/05/12 01:00:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -87,7 +87,6 @@ const struct unit identity_unit = { "", "", 1, NULL };
 const struct unit length_units[] = {
 	{ "\xc3\x85",	N_("\xc3\x85ngstroms"),	0.0000000001,		NULL },
 	{ "\xc2\xb5",	N_("Microns"),		0.000001,		NULL },
-	{ "\xc2\xb5m",	N_("Micrometers"),	0.000001,		NULL },
 	{ "mil",	N_("Mils"),		0.000025,		NULL },
 	{ "mm",		N_("Millimeters"),	0.001,			NULL },
 	{ "in",		N_("Inches"),		0.0254,			NULL },
