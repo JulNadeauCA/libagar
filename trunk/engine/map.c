@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.49 2002/03/05 13:25:28 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.50 2002/03/05 17:01:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -564,6 +564,9 @@ map_draw(struct map *m)
 			}
 			if (nsprites > 0) {
 				MAPEDIT_POSTDRAW(m, node, vx, vy);
+			} else {
+				view->rects[ri++] =
+				    view->maprects[vy][vx];
 			}
 		}
 	}
