@@ -125,81 +125,131 @@ objq_insert_tiles(int argc, union evarg *argv)
 	int mode = argv[3].i;
 	struct tlist_item *it;
 	struct map *m = mv->map;
+	int sx, sy, dx, dy;
+
+	if (!mv->esel.set) {
+		text_msg("Error", "No selection");
+		return;
+	}
 
 	mv->constr.mode = mode;
+	mv->constr.x = mv->esel.x;
+	mv->constr.y = mv->esel.y;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
-		struct object *pobj = it->p1;
 		struct node *node;
-		struct noderef *nref = NULL;
-		enum noderef_type t;
-		SDL_Surface *srcsu;
+		struct noderef *nref, *nnref;
+		struct object *pobj = it->p1;
+		struct map *submap = it->p1;
+		int t, xinc, yinc;
 		Uint32 ind;
-		struct art_anim *anim;
  
-		if (!it->selected)
-			continue;
-		if (it->text_len < 2)
+		if (!it->selected || it->text_len < 2)
 			continue;
 
 		ind = (Uint32)atoi(it->text + 1);
 		switch (it->text[0]) {
 		case 's':
-			t = NODEREF_SPRITE;
-			srcsu = SPRITE(pobj, ind);
+			{
+				SDL_Surface *srcsu = SPRITE(pobj, ind);
+
+				t = NODEREF_SPRITE;
+				xinc = srcsu->w / TILEW;
+				yinc = srcsu->h / TILEW;
+			}
 			break;
 		case 'a':
-			t = NODEREF_ANIM;
-			anim = ANIM(pobj, ind);
-			srcsu = anim->frames[0];
+			{
+				struct object *pobj = it->p1;
+				struct art_anim *anim = ANIM(pobj, ind);
+				SDL_Surface *srcsu = anim->frames[0];
+
+				t = NODEREF_ANIM;
+				xinc = srcsu->w / TILEW;
+				yinc = srcsu->h / TILEW;
+			}
+			break;
+		case 'm':
+			t = -1;
+			xinc = submap->mapw;
+			yinc = submap->maph;
 			break;
 		default:
-			fatal("bad nref");
+			fatal("bad ref");
 		}
 
-		dprintf("constr: %d,%d\n", mv->constr.x, mv->constr.y);
-
 		if (map_adjust(m,
-		    mv->constr.x + srcsu->w/TILEW + 1,
-		    mv->constr.y + srcsu->h/TILEH + 1) == -1) {
+		    mv->constr.x + xinc + 1,
+		    mv->constr.y + yinc + 1) == -1) {
 			text_msg("Error growing map", "%s");
 			continue;
 		}
-		node = &m->map[mv->constr.y][mv->constr.x];
-		if (mv->tmap_insert == 0) {			/* Replace */
-			node_init(node, mv->constr.x, mv->constr.y);
-		}
+
 		switch (t) {
 		case NODEREF_SPRITE:
+			node = &m->map[mv->constr.y][mv->constr.x];
+			if (mv->tmap_insert == 0) {		/* Replace */
+				node_init(node, mv->constr.x, mv->constr.y);
+			}
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
 			nref = node_add_sprite(node, pobj, ind);
+			nref->flags |= NODEREF_SAVEABLE;
 			break;
 		case NODEREF_ANIM:
+			node = &m->map[mv->constr.y][mv->constr.x];
+			if (mv->tmap_insert == 0) {		/* Replace */
+				node_init(node, mv->constr.x, mv->constr.y);
+			}
 			dprintf("+anim: %s:%d\n", pobj->name, ind);
 			nref = node_add_anim(node, pobj, ind,
 			    NODEREF_ANIM_AUTO);
+			nref->flags |= NODEREF_SAVEABLE;
+			break;
+		case -1:					/* Submap */
+			dprintf("+submap %u,%u\n", submap->mapw, submap->maph);
+			for (sy = 0, dy = mv->constr.y;
+			     sy < submap->maph && dy < m->maph;
+			     sy++, dy++) {
+				for (sx = 0, dx = mv->constr.x;
+				     sx < submap->mapw && dx < m->mapw;
+				     sx++, dx++) {
+					struct node *srcnode =
+					    &submap->map[sy][sx];
+					struct node *dstnode = &m->map[dy][dx];
+
+					if (mv->tmap_insert == 0) {
+						/* Replace */
+						node_init(dstnode, dx, dy);
+					}
+					TAILQ_FOREACH(nref, &srcnode->nrefs,
+					    nrefs) {
+						nnref = node_copy_ref(nref,
+						    dstnode);
+						nnref->flags |=
+						    NODEREF_SAVEABLE;
+					}
+					dstnode->flags = srcnode->flags;
+				}
+			}
 			break;
 		default:
 			fatal("bad nref");
 		}
-		nref->flags |= mv->constr.nflags;
 
 		switch (mode) {
 		case OBJQ_INSERT_LEFT:
-			mv->constr.x -= srcsu->w/TILEW;
-			if (mv->constr.x < 0)
+			if ((mv->constr.x -= xinc) < 0)
 				mv->constr.x = 0;
 			break;
 		case OBJQ_INSERT_RIGHT:
-			mv->constr.x += srcsu->w/TILEW;
+			mv->constr.x += xinc;
 			break;
 		case OBJQ_INSERT_UP:
-			mv->constr.y -= srcsu->h/TILEH;
-			if (mv->constr.y < 0)
+			if ((mv->constr.y -= yinc) < 0)
 				mv->constr.y = 0;
 			break;
 		case OBJQ_INSERT_DOWN:
-			mv->constr.y += srcsu->h/TILEH;
+			mv->constr.y += yinc;
 			break;
 		}
 	}
@@ -260,10 +310,10 @@ tl_objs_selected(int argc, union evarg *argv)
 	window_set_spacing(win, 1, 4);
 
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, ob->art->tiles.map, MAPVIEW_TILEMAP|MAPVIEW_PROPS,
+	mapview_init(mv, ob->art->tile_map, MAPVIEW_TILEMAP|MAPVIEW_PROPS,
 	    100, 100);
 	
-	object_load(ob->art->tiles.map);
+	object_load(ob->art->tile_map);
 
 	/* Map operation buttons */
 	reg = region_new(win, REGION_HALIGN|REGION_CLIPPING, 0, 0, 100, -1);
@@ -337,7 +387,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		struct label *lab;
 		struct tlist *tl;
 		struct region *reg_buttons;
-		int i;
+		Uint32 i;
 		
 		reg_buttons = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
 
@@ -348,6 +398,14 @@ tl_objs_selected(int argc, union evarg *argv)
 			tl = tlist_new(reg, 100, 0, TLIST_MULTI);
 			tlist_set_item_height(tl,
 			    prop_get_int(&mapedit, "tilemap-item-size"));
+			
+			for (i = 0; i < ob->art->nsubmaps; i++) {
+				struct map *submap = ob->art->submaps[i];
+			
+				Asprintf(&s, "m%d", i);
+				tlist_insert_item(tl, NULL, s, submap);
+				free(s);
+			}
 
 			for (i = 0; i < ob->art->nsprites; i++) {
 				Asprintf(&s, "s%d", i);

@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.22 2003/03/10 02:13:46 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.23 2003/03/11 00:13:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,14 +44,15 @@
 
 enum {
 	NANIMS_INIT =	1,
-	NSPRITES_INIT =	1,
 	NANIMS_GROW =	4,
+	NSPRITES_INIT =	1,
 	NSPRITES_GROW = 4,
 	FRAMES_INIT =	2,
-	FRAMES_GROW =	8
+	FRAMES_GROW =	8,
+	NSUBMAPS_INIT =	1,
+	NSUBMAPS_GROW =	4
 };
 
-/* XXX use a hash table or a tree. */
 static TAILQ_HEAD(, art) artq = TAILQ_HEAD_INITIALIZER(artq);
 static pthread_mutex_t	 artq_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -66,30 +67,32 @@ int	art_debug = DEBUG_GC|DEBUG_LOADING;
 static void	art_destroy(struct art *);
 static void	art_destroy_anim(struct art_anim *);
 
-/* Insert a sprite of arbitrary size, return the assigned sprite index. */
+/* Attach a surface of arbitrary size. */
 int
 art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 {
-	/* Insert into the sprite table. */
 	if (art->sprites == NULL) {			/* Initialize */
 		art->maxsprites = NSPRITES_INIT;
 		art->sprites = emalloc(art->maxsprites * sizeof(SDL_Surface *));
 		art->nsprites = 0;
-	} else if (art->nsprites >= art->maxsprites) {	/* Grow */
+	} else if (art->nsprites+1 > art->maxsprites) {	/* Grow */
 		art->maxsprites += NSPRITES_GROW;
 		art->sprites = erealloc(art->sprites,
 		    art->maxsprites * sizeof(SDL_Surface *));
 	}
-	art->sprites[art->nsprites++] = sprite;
-	return (art->cursprite++);
+	art->sprites[art->nsprites] = sprite;
+	return (art->nsprites++);
 }
 
-/* Break a sprite into tile-sized fragments. */
-void
-art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
+/* Break a surface into tile-sized fragments and map them. */
+struct map *
+art_insert_fragments(struct art *art, SDL_Surface *sprite)
 {
-	int x, y, mw, mh;
+	int x, y, mx, my;
+	unsigned int mw, mh;
 	SDL_Rect sd, rd;
+	struct map *fragmap;
+	char *name;
 
 	sd.w = TILEW;
 	sd.h = TILEH;
@@ -98,12 +101,22 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 	mw = sprite->w/TILEW;
 	mh = sprite->h/TILEH;
 
-	for (y = 0; y < sprite->h; y += TILEH) {
-		for (x = 0; x < sprite->w; x += TILEW) {
+	fragmap = emalloc(sizeof(struct map));
+	Asprintf(&name, "frag-%s%d", art->name);
+	map_init(fragmap, name, NULL);
+	free(name);
+	if (map_alloc_nodes(fragmap, mw, mh) == -1) {
+		fatal("map_alloc_nodes: %s", error_get());
+	}
+
+	for (y = 0, my = 0; y < sprite->h; y += TILEH, my++) {
+		for (x = 0, mx = 0; x < sprite->w; x += TILEW, mx++) {
 			SDL_Surface *su;
 			Uint32 saflags = sprite->flags &
 			    (SDL_SRCALPHA|SDL_RLEACCEL);
 			Uint8 salpha = sprite->format->alpha;
+			struct node *node = &fragmap->map[my][mx];
+			Uint32 nsprite;
 
 			/* Allocate a surface for the fragment. */
 			su = SDL_CreateRGBSurface(SDL_SWSURFACE |
@@ -113,7 +126,7 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 			    sprite->format->Rmask, sprite->format->Gmask,
 			    sprite->format->Bmask, sprite->format->Amask);
 			if (su == NULL) {
-				fatal("SDL_CreateRGBSurface: %s\n",
+				fatal("SDL_CreateRGBSurface: %s",
 				    SDL_GetError());
 			}
 			
@@ -122,10 +135,15 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, su, &rd);
-			art_insert_sprite(art, su, 0);
+			nsprite = art_insert_sprite(art, su, 0);
 			SDL_SetAlpha(sprite, saflags, salpha);
+
+			node_add_sprite(node, art->pobj, nsprite);
 		}
 	}
+
+	art_insert_submap(art, fragmap);
+	return (fragmap);
 }
 
 void
@@ -135,12 +153,12 @@ art_unused(struct art *art)
 	if (--art->used == 0) {
 		art_destroy(art);
 	} else if (art->used < 0) {
-		fatal("ref count < 0\n");
+		fatal("ref count < 0");
 	}
 	pthread_mutex_unlock(&art->used_lock);
 }
 
-/* Load artwork when an object is initialized. */
+/* Load graphical data associated with an object. */
 struct art *
 art_fetch(char *archive, struct object *ob)
 {
@@ -152,66 +170,65 @@ art_fetch(char *archive, struct object *ob)
 	pthread_mutex_lock(&artq_lock);
 
 	TAILQ_FOREACH(art, &artq, arts) {			/* Cached? */
-		if (strcmp(art->name, archive) == 0) {
-			pthread_mutex_unlock(&artq_lock);
-			return (art);
-		}
+		if (strcmp(art->name, archive) == 0)
+			break;
 	}
+	if (art != NULL)
+		goto out;
 
 	/* Load the data file. */
-	path = object_path(archive, "fob");
-	if (path == NULL) {
+	if ((path = object_path(archive, "fob")) == NULL) {
 		if (ob->flags & OBJECT_ART_CAN_FAIL) {
 			ob->flags &= ~(OBJECT_ART);
-			pthread_mutex_unlock(&artq_lock);
-			return (NULL);
+			goto out;
 		} else {
-			fatal("%s: %s\n", archive, error_get());
+			fatal("loading %s: %s", archive, error_get());
 		}
 	}
 
 	art = emalloc(sizeof(struct art));
 	art->name = Strdup(archive);
+
+	art->pobj = ob;				/* For submap refs */
 	art->sprites = NULL;
 	art->nsprites = 0;
 	art->maxsprites = 0;
 	art->anims = NULL;
 	art->nanims = 0;
 	art->maxanims = 0;
-	art->used = 1;
-	art->pobj = ob;		/* XXX */
-	art->cursprite = 0;
-	art->curanim = 0;
-	art->tiles.map = NULL;
+	art->submaps = NULL;
+	art->nsubmaps = 0;
+	art->maxsubmaps = 0;
 
+	art->used = 1;
 	pthread_mutex_init(&art->used_lock, NULL);
 
-	/* Create a tile map for level edition purposes. */
 	if (prop_get_bool(config, "object.art.map-tiles")) {
 		char *mapname;
 
-		art->tiles.map = emalloc(sizeof(struct map));
+		art->tile_map = emalloc(sizeof(struct map));
 		Asprintf(&mapname, "t-%s", archive);
-		map_init(art->tiles.map, mapname, NULL);
+		map_init(art->tile_map, mapname, NULL);
 		free(mapname);
 
-		if (map_alloc_nodes(art->tiles.map, 2, 2) == -1) {
-			fatal("failed node alloc: %s\n", error_get());
+		if (map_alloc_nodes(art->tile_map, 2, 2) == -1) {
+			fatal("failed node alloc: %s", error_get());
 		}
+	} else {
+		art->tile_map = NULL;
 	}
 
 	/* Load images in XCF format. */
-	fob = fobj_load(path);
-	if (fob == NULL) {
-		fatal("%s: %s\n", path, fobj_error);
-	}
+	if ((fob = fobj_load(path)) == NULL)
+		fatal("%s: %s", path, fobj_error);
+
 	for (i = 0; i < fob->head.nobjs; i++) {
 		if (xcf_check(fob->fd, fob->offs[i]) == 0) {
 			int rv;
 				
 			rv = xcf_load(fob->fd, (off_t)fob->offs[i], art);
 			if (rv != 0) {
-				fatal("xcf_load: %s\n", error_get());
+				fatal("xcf_load: %s", error_get());
 			}
 		} else {
 			debug(DEBUG_LOADING, "not a xcf in slot %d\n", i);
@@ -219,9 +236,8 @@ art_fetch(char *archive, struct object *ob)
 	}
 	fobj_free(fob);
 
-	/* Allow other objects to reuse this artwork. */
-	TAILQ_INSERT_HEAD(&artq, art, arts);
-
+	TAILQ_INSERT_HEAD(&artq, art, arts);			/* Cache */
+out:
 	pthread_mutex_unlock(&artq_lock);
 	return (art);
 }
@@ -229,20 +245,23 @@ art_fetch(char *archive, struct object *ob)
 static void
 art_destroy(struct art *art)
 {
-	int i;
+	Uint32 i;
 	
 	pthread_mutex_lock(&artq_lock);
 	TAILQ_REMOVE(&artq, art, arts);
 	pthread_mutex_unlock(&artq_lock);
 
-	for (i = 0; i < art->nsprites; i++) {
+	for (i = 0; i < art->nsprites; i++)
 		SDL_FreeSurface(art->sprites[i]);
-	}
-	for (i = 0; i < art->nanims; i++) {
+	for (i = 0; i < art->nanims; i++)
 		art_destroy_anim(art->anims[i]);
+	for (i = 0; i < art->nsubmaps; i++) {
+		map_destroy(art->submaps[i]);
+		free(art->submaps[i]);
 	}
-	if (art->tiles.map != NULL)
-		object_destroy(art->tiles.map);
+
+	if (art->tile_map != NULL)
+		object_destroy(art->tile_map);
 
 	debug(DEBUG_GC, "freed %s (%d sprites, %d anims)\n",
 	    art->name, art->nsprites, art->nanims);
@@ -251,26 +270,38 @@ art_destroy(struct art *art)
 	free(art);
 }
 
-/* Insert a frame into an animation. */
-void
+Uint32
 art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 {
-	int x, y;
-	SDL_Rect sd, rd;
-
 	if (anim->frames == NULL) {			/* Initialize */
 		anim->frames = emalloc(FRAMES_INIT * sizeof(SDL_Surface *));
 		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
-	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
+	} else if (anim->nframes+1 > anim->maxframes) {	/* Grow */
 		anim->maxframes += FRAMES_GROW;
 		anim->frames = erealloc(anim->frames,
 		    anim->maxframes * sizeof(SDL_Surface *));
 	}
 	anim->frames[anim->nframes++] = surface;
+	return (anim->nframes);
 }
 
-/* Create a new animation. */
+Uint32
+art_insert_submap(struct art *art, struct map *m)
+{
+	if (art->submaps == NULL) {			/* Initialize */
+		art->submaps = emalloc(NSUBMAPS_INIT * sizeof(struct map *));
+		art->maxsubmaps = NSUBMAPS_INIT;
+		art->nsubmaps = 0;
+	} else if (art->nsubmaps+1 > art->maxsubmaps) {	/* Grow */
+		art->maxsubmaps += NSUBMAPS_GROW;
+		art->submaps = erealloc(art->submaps,
+		    art->maxsubmaps * sizeof(struct map *));
+	}
+	art->submaps[art->nsubmaps] = m;
+	return (art->nsubmaps++);
+}
+
 struct art_anim *
 art_insert_anim(struct art *art, int delay)
 {
@@ -334,11 +365,11 @@ SDL_Surface *
 art_get_sprite(struct object *ob, int i)
 {
 	if ((ob->flags & OBJECT_ART) == 0)
-		fatal("%s: no art\n", ob->name);
+		fatal("%s: no art", ob->name);
 	if (ob->art == NULL)
-		fatal("%s: null art\n", ob->name);
+		fatal("%s: null art", ob->name);
 	if (i > ob->art->nsprites)
-		fatal("no sprite at %s:%d\n", ob->name, i);
+		fatal("no sprite at %s:%d", ob->name, i);
 
 	return (ob->art->sprites[i]);
 }
@@ -347,11 +378,11 @@ struct art_anim *
 art_get_anim(struct object *ob, int i)
 {
 	if ((ob->flags & OBJECT_ART) == 0)
-		fatal("%s: no art\n", ob->name);
+		fatal("%s: no art", ob->name);
 	if (ob->art == NULL)
-		fatal("%s: null art\n", ob->name);
+		fatal("%s: null art", ob->name);
 	if (i > ob->art->nanims)
-		fatal("no anim at %s:%d\n", ob->name, i);
+		fatal("no anim at %s:%d", ob->name, i);
 	return (ob->art->anims[i]);
 }
 
@@ -379,9 +410,11 @@ tl_medias_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_sprites = argv[1].p;
 	struct tlist *tl_anims = argv[2].p;
+	struct tlist *tl_submaps = argv[3].p;
 
 	widget_set_int(tl_sprites->vbar, "value", 0);
 	widget_set_int(tl_anims->vbar, "value", 0);
+	widget_set_int(tl_submaps->vbar, "value", 0);
 }
 
 static void
@@ -456,6 +489,32 @@ tl_anims_poll(int argc, union evarg *argv)
 }
 
 static void
+tl_submaps_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct tlist *tl_medias = argv[1].p;
+	struct tlist_item *it_media;
+	struct art *art;
+	int i;
+
+	if ((it_media = tlist_item_selected(tl_medias)) == NULL)
+		return;					/* No selection */
+	art = it_media->p1;
+
+	tlist_clear_items(tl);
+	for (i = 0; i < art->nsubmaps; i++) {
+		struct map *submap = art->submaps[i];
+		char *s;
+
+		Asprintf(&s, "%s:%d (%dx%d)", art->name, i,
+		    submap->mapw, submap->maph);
+		tlist_insert_item(tl, NULL, s, submap);
+		free(s);
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
 tl_anims_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_anims = argv[0].p;
@@ -476,11 +535,11 @@ art_browser_window(void)
 	struct tlist *tl_medias;
 	struct bitmap *bmp_sprite, *bmp_anim;
 
-	if ((win = window_generic_new(512, 246, "monitor-media-browser"))
+	if ((win = window_generic_new(512, 246, "monitor-art-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
-	window_set_caption(win, "Art browser");
+	window_set_caption(win, "Graphics");
 
 	/* Art entries */
 	reg = region_new(win, 0, 0, 0, 30, 100);
@@ -499,22 +558,26 @@ art_browser_window(void)
 	/* Sprites/animation lists */
 	reg = region_new(win, REGION_VALIGN, 30, 0, 40, 100);
 	{
-		struct tlist *tl_sprites, *tl_anims;
+		struct tlist *tl_sprites, *tl_anims, *tl_submaps;
 	
-		tl_sprites = tlist_new(reg, 100, 50, TLIST_POLL);
+		tl_sprites = tlist_new(reg, 100, 33, TLIST_POLL);
 		event_new(tl_sprites, "tlist-changed",
 		    tl_sprites_selected, "%p", bmp_sprite);
 		event_new(tl_sprites, "tlist-poll",
 		    tl_sprites_poll, "%p", tl_medias);
 		
-		tl_anims = tlist_new(reg, 100, 50, TLIST_POLL);
+		tl_anims = tlist_new(reg, 100, 33, TLIST_POLL);
 		event_new(tl_anims, "tlist-changed",
 		    tl_anims_selected, "%p", bmp_anim);
 		event_new(tl_anims, "tlist-poll",
 		    tl_anims_poll, "%p", tl_medias);
+		
+		tl_submaps = tlist_new(reg, 100, 33, TLIST_POLL);
+		event_new(tl_submaps, "tlist-poll",
+		    tl_submaps_poll, "%p", tl_medias);
 	
 		event_new(tl_medias, "tlist-changed", tl_medias_selected,
-		    "%p, %p", tl_sprites, tl_anims);
+		    "%p, %p, %p", tl_sprites, tl_anims, tl_submaps);
 	}
 
 	return (win);

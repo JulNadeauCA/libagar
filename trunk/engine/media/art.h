@@ -1,40 +1,37 @@
-/*	$Csoft: art.h,v 1.2 2002/12/24 10:32:11 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.3 2002/12/31 00:59:01 vedge Exp $	*/
 /*	Public domain	*/
 
+struct object;
 struct noderef;
 
 struct art_anim {
-	SDL_Surface	**frames;
-	int		maxframes;
-	int		frame, nframes;
-	int		delta, delay;	/* For MAPREF_ANIM_DELTA */
+	SDL_Surface	 **frames;
+	Uint32		  nframes;
+	Uint32		maxframes;
+	Uint32		   frame;
+	int		   delta;
+	int		   delay;
 };
 
-/* Static image or animation */
 struct art {
-	/* Read-only when attached */
-	char		*name;			/* Identifier */
-	SDL_Surface	**sprites;		/* Static surfaces */
-	struct art_anim	**anims;		/* Animations */
-	int		 nsprites;		/* Loaded sprites */
-	int		 maxsprites;		/* Allocated sprites */
-	int		 nanims;		/* Loaded animations */
-	int		 maxanims;		/* Allocated animations */
+	char		  *name;	/* Identifier */
+	struct object	  *pobj;	/* For submap refs */
 
-	/* Tile fragment map, automatically generated. */
-	struct {
-		struct map	*map;
-	} tiles;
+	SDL_Surface	 **sprites;	/* Static images */
+	Uint32		  nsprites;
+	Uint32		maxsprites;
+	struct art_anim	 **anims;	/* Animations */
+	Uint32		  nanims;
+	Uint32		maxanims;
+	struct map	 **submaps;	/* Fragment maps (for map edition) */
+	Uint32		  nsubmaps;
+	Uint32		maxsubmaps;
 
-	Uint32		 cursprite;		/* Last added sprite# */
-	Uint32		 curanim;		/* Last added anim# */
-	struct object	*pobj;
+	struct map	*tile_map;	/* User map of source nodes */
 
-	/* Read-write, thread-safe */
-	int		used;			/* Reference count */
-	pthread_mutex_t used_lock;
-
-	TAILQ_ENTRY(art) arts;			/* Art pool */
+	pthread_mutex_t	 used_lock;
+	int		 used;		/* Reference count */
+	TAILQ_ENTRY(art) arts;		/* Art pool */
 };
 
 #ifdef DEBUG
@@ -49,10 +46,11 @@ struct art	*art_fetch(char *, struct object *);
 void		 art_unused(struct art *);
 
 int		 art_insert_sprite(struct art *, SDL_Surface *, int);
-void		 art_insert_sprite_tiles(struct art *, SDL_Surface *);
+struct map	*art_insert_fragments(struct art *, SDL_Surface *);
+Uint32		 art_insert_submap(struct art *, struct map *);
 
 struct art_anim	*art_insert_anim(struct art *, int);
-void		 art_insert_anim_frame(struct art_anim *, SDL_Surface *);
+Uint32		 art_insert_anim_frame(struct art_anim *, SDL_Surface *);
 void		 art_anim_tick(struct art_anim *, struct noderef *);
 
 #ifdef DEBUG
