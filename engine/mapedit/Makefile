@@ -1,13 +1,13 @@
-#	$Csoft: Makefile,v 1.19 2002/06/23 02:28:10 vedge Exp $
+#	$Csoft: Makefile,v 1.20 2002/06/23 02:40:33 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 LIB=	mapedit
 SRCS=	mapedit.c config.c fileops.c toolbar.c mapview.c mapwin.c edcursor.c \
-	tilewin.c
+	tilewin.c tilestack.c
 OBJS=	mapedit.o config.o fileops.o toolbar.o mapview.o mapwin.o edcursor.o \
-	tilewin.o
+	tilewin.o tilestack.o
 FOBJS=	mapedit.fob edcursor.fob
 
 CFLAGS+=	${SDL_CFLAGS}
