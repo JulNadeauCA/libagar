@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.135 2003/06/25 06:14:03 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.136 2003/06/25 07:57:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -233,7 +233,6 @@ object_find_child(struct object *parent, const char *name)
 	char cname[OBJECT_NAME_MAX], *s;
 	struct object *child;
 
-	dprintf("%s\n", name);
 	TAILQ_FOREACH(child, &parent->childs, cobjs) {
 		if (strcmp(child->name, name) != 0)
 			continue;
@@ -338,8 +337,10 @@ object_destroy(void *p)
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 	
-	if (ob->gfx != NULL)
+	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
+		ob->gfx = NULL;
+	}
 
 	pthread_mutex_destroy(&ob->lock);
 	pthread_mutex_destroy(&ob->events_lock);
@@ -367,7 +368,7 @@ object_file(struct object *ob)
 		}
 		free(file);
 	}
-	error_set(_("%s.%s is not in <load-path>"), ob->name, ob->type);
+	error_set("%s.%s is not in load-path", ob->name, ob->type);
 	free(path);
 	free(objname);
 	return (NULL);
@@ -1091,26 +1092,32 @@ object_scan_dens(struct object *ob, const char *hint, struct combo *com,
 }
 
 static void
-object_select_gfx(int argc, union evarg *argv)
+select_gfx(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	char *text = argv[2].s;
 
-	if (gfx_fetch(ob, it->text) == -1) {
-		text_msg(MSG_ERROR, _("Fetching %s gfx: %s"), it->text,
-		    error_get());
+	if (text[0] == '\0' && ob->gfx != NULL) {
+		gfx_unused(ob->gfx);
+		ob->gfx = NULL;
+	} else {
+		if (gfx_fetch(ob, text) == -1)
+			text_msg(MSG_ERROR, "%s", error_get());
 	}
 }
 
 static void
-object_select_audio(int argc, union evarg *argv)
+select_audio(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
-	struct tlist_item *it = argv[2].p;
+	char *text = argv[2].s;
 
-	if (audio_fetch(ob, it->text) == -1) {
-		text_msg(MSG_ERROR, _("Fetching %s audio: %s"), it->text,
-		    error_get());
+	if (text[0] == '\0' && ob->audio != NULL) {
+		audio_unused(ob->audio);
+		ob->audio = NULL;
+	} else {
+		if (audio_fetch(ob, text) == -1)
+			text_msg(MSG_ERROR, "%s", error_get());
 	}
 }
 
@@ -1135,7 +1142,7 @@ object_edit(void *p)
 	label_new(win, _("Type: \"%s\""), ob->type);
 	label_new(win, _("Flags : 0x%02x"), ob->flags);
 
-	label_polled_new(win, NULL, _("Parent: %p"), &ob->parent);
+	label_polled_new(win, NULL, _("Parent: %[obj]"), &ob->parent);
 	label_polled_new(win, &ob->lock, "Pos: %p", &ob->pos);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
@@ -1145,11 +1152,16 @@ object_edit(void *p)
 
 		gfx_com = combo_new(bo, _("Gfx: "));
 		aud_com = combo_new(bo, _("Audio: "));
-		
-		event_new(gfx_com, "combo-selected", object_select_gfx, "%p",
-		    ob);
-		event_new(aud_com, "combo-selected", object_select_audio, "%p",
-		    ob);
+
+		textbox_prescale(gfx_com->tbox, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+
+		event_new(gfx_com, "combo-selected", select_gfx, "%p", ob);
+		event_new(aud_com, "combo-selected", select_audio, "%p", ob);
+
+		if (ob->gfx != NULL)
+			textbox_printf(gfx_com->tbox, "%s", ob->gfx->name);
+		if (ob->audio != NULL)
+			textbox_printf(aud_com->tbox, "%s", ob->audio->name);
 
 		denpath = prop_get_string(config, "den-path");
 		for (dir = strtok_r(denpath, ":", &last);
