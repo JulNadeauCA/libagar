@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.56 2002/07/30 22:23:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.57 2002/08/12 06:57:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,9 +58,8 @@ static const struct object_ops window_ops = {
 /* XXX struct */
 #include "borders/grey8.h"
 
-static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-
 static void	window_move(struct window *, Sint16, Sint16);
+static void	window_update_mask(struct window *);
 
 struct window *
 window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
@@ -113,6 +112,7 @@ window_init(struct window *win, char *caption, int flags,
 	win->focus = NULL;
 	win->caption = NULL;
 	win->caption_s = NULL;
+	win->caption_color = SDL_MapRGB(view->v->format, 255, 255, 255);
 
 	window_titlebar_printf(win, "%s", caption);
 
@@ -384,15 +384,14 @@ window_show(struct window *win)
 {
 	int rv;
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
+	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
 		pthread_mutex_lock(&view->lock);
 
 	pthread_mutex_lock(&win->lock);
 	rv = window_show_locked(win);
-	window_resize(win);
 	pthread_mutex_unlock(&win->lock);
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
+	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
 		pthread_mutex_unlock(&view->lock);
 
 	return (rv);
@@ -404,14 +403,14 @@ window_hide(struct window *win)
 {
 	int rv;
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
+	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
 		pthread_mutex_lock(&view->lock);
 
 	pthread_mutex_lock(&win->lock);
 	rv = window_hide_locked(win);
 	pthread_mutex_unlock(&win->lock);
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
+	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
 		pthread_mutex_unlock(&view->lock);
 
 	return (rv);
@@ -433,17 +432,8 @@ window_show_locked(struct window *win)
 	
 	win->flags |= WINDOW_SHOWN;
 
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		/* Calculate and increment the tile mask for this area. */
-		win->vmask.x = (win->x / TILEW);
-		win->vmask.y = (win->y / TILEH);
-		win->vmask.w = (win->w / TILEW);
-		win->vmask.h = (win->h / TILEW);
-		view_maskfill(&win->vmask, 1);
-		break;
-	default:
-		break;
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		window_update_mask(win);
 	}
 
 	view->focus_win = win;
@@ -453,6 +443,7 @@ window_show_locked(struct window *win)
 			event_post(wid, "widget-shown", "%p", win);
 		}
 	}
+	window_resize(win);
 	return (prev);
 }
 
@@ -584,6 +575,17 @@ cycle_widgets(struct window *win, int reverse)
 	}
 }
 
+/* Update the map view mask in tile-based mode. */
+static void
+window_update_mask(struct window *win)
+{
+	win->vmask.x = (win->x / TILEW);
+	win->vmask.y = (win->y / TILEH);
+	win->vmask.w = (win->w / TILEW);
+	win->vmask.h = (win->h / TILEW);
+	view_maskfill(&win->vmask, 1);
+}
+
 /* View and window must be locked. */
 static void
 window_move(struct window *win, Sint16 xrel, Sint16 yrel)
@@ -596,7 +598,9 @@ window_move(struct window *win, Sint16 xrel, Sint16 yrel)
 		tilew = 16;	/* XXX pref */
 		tileh = 16;
 		break;
-	default:
+	case GFX_ENGINE_TILEBASED:
+		tilew = TILEW;
+		tileh = TILEH;
 		break;
 	}
 
@@ -606,25 +610,21 @@ window_move(struct window *win, Sint16 xrel, Sint16 yrel)
 		moved++;
 	}
 
-	if (win->x < 16)
-		win->x = 16;
-	if (win->y < 16)
-		win->y = 16;
-	if (win->x+win->w > view->w - 16)
-		win->x = view->w - win->w - 16;
-	if (win->y+win->h > view->h - 16)
-		win->y = view->h - win->h - 16;
+	if (win->x < tilew)
+		win->x = tilew;
+	if (win->y < tileh)
+		win->y = tileh;
+	if (win->x+win->w > view->w - tilew)
+		win->x = view->w - win->w - tilew;
+	if (win->y+win->h > view->h - tileh)
+		win->y = view->h - win->h - tileh;
 
 	if (moved) {
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_TILEBASED:
 			/* Move the tile mask over to the new position. */
 			view_maskfill(&win->vmask, -1);
-			win->vmask.x = (win->x / TILEW);
-			win->vmask.y = (win->y / TILEH);
-			win->vmask.w = (win->w / TILEW);
-			win->vmask.h = (win->h / TILEW);
-			view_maskfill(&win->vmask, 1);
+			window_update_mask(win);
 			break;
 		case GFX_ENGINE_GUI:
 			/* XXX cosmetic */
@@ -710,7 +710,6 @@ window_event_all(SDL_Event *ev)
 		break;
 	}
 
-	/* Dispatch relevant events to relevant windows. */
 	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
 		pthread_mutex_lock(&win->lock);
 		if ((win->flags & WINDOW_SHOWN) == 0) {
@@ -899,9 +898,8 @@ window_event_all(SDL_Event *ev)
 			default:
 				break;
 			}
-			/*
-			 * Tab cycling.
-			 */
+
+			/* Tab cycling */
 			if (ev->key.keysym.sym == SDLK_TAB &&
 			    ev->type == SDL_KEYUP) {
 				cycle_widgets(win,
@@ -909,9 +907,8 @@ window_event_all(SDL_Event *ev)
 				win->redraw++;
 				goto posted;
 			}
-			/*
-			 * Widget event.
-			 */
+
+			/* Widget event */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if (!WIDGET_FOCUSED(wid)) {
@@ -948,15 +945,23 @@ void
 window_resize(struct window *win)
 {
 	struct region *reg;
+	int minw = 16, minh = 16;
 
-	if (win->x < 16)
-		win->x = 16;
-	if (win->y < 16)
-		win->y = 16;
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		minw = TILEW;
+		minh = TILEH;
+		view_maskfill(&win->vmask, -1);
+	}
+	
+	if (win->x < minw)
+		win->x = minw;
+	if (win->y < minh)
+		win->y = minh;
+
 	if (win->x+win->w > view->w)
-		win->w = view->w - win->x - 16;
+		win->w = view->w - win->x - minw;
 	if (win->y+win->h > view->h)
-		win->h = view->h - win->y - 16;
+		win->h = view->h - win->y - minh;
 
 	win->body.x = win->x + win->borderw;
 	win->body.y = win->y + win->borderw*2 + win->titleh;
@@ -1067,9 +1072,13 @@ window_resize(struct window *win)
 			}
 		}
 	}
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		window_update_mask(win);
+	}
+
 #ifdef DEBUG
 	if (config->widget_flags & CONFIG_WINDOW_ANYSIZE) {
-		dprintf("%d, %d\n", win->w, win->h);
+		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->w, win->h);
 	}
 #endif
 }
@@ -1092,8 +1101,7 @@ window_titlebar_printf(struct window *win, char *fmt, ...)
 	if (win->caption_s != NULL) {
 		SDL_FreeSurface(win->caption_s);
 	}
-	win->caption_s = TTF_RenderText_Solid(font, win->caption, white);
-	if (win->caption_s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
+	win->caption_s = text_render(NULL, -1, win->caption_color,
+	    win->caption);
 }
+
