@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.12 2002/09/07 04:36:59 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.13 2002/09/08 03:45:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -56,7 +56,7 @@ static const struct widget_ops graph_ops = {
 		graph_save
 	},
 	graph_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
@@ -379,4 +379,6 @@ graph_destroy(void *p)
 		nextgit = TAILQ_NEXT(git, items);
 		free(git);
 	}
+
+	widget_destroy(gra);
 }
