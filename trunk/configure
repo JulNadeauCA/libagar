@@ -40,7 +40,7 @@ if [ "$PREFIX" = "" ]; then
 PREFIX=/usr/local
 fi
 echo >Makefile.config
-echo >config.h
+echo >engine/config.h
 for OPT in $@; do
 if [ "$OPT" = "--with-smpeg" ]; then
 WITH_SMPEG=1
@@ -143,9 +143,9 @@ NONE=1
 fi
 if [ "$X11BASE" != "" ]; then
 echo "$X11BASE"
-echo "#ifndef CONF_X11" >> config.h
-echo "#define CONF_X11 $CONF_X11" >> config.h
-echo "#endif /* CONF_X11 */" >> config.h
+echo "#ifndef CONF_X11" >> engine/config.h
+echo "#define CONF_X11 $CONF_X11" >> engine/config.h
+echo "#endif /* CONF_X11 */" >> engine/config.h
 echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
@@ -173,9 +173,9 @@ SMPEG_LIBS=""
 fi
 if [ "$SMPEG_VERSION" != "" ]; then
 echo "ok"
-echo "#ifndef CONF_SMPEG" >> config.h
-echo "#define CONF_SMPEG $CONF_SMPEG" >> config.h
-echo "#endif /* CONF_SMPEG */" >> config.h
+echo "#ifndef CONF_SMPEG" >> engine/config.h
+echo "#define CONF_SMPEG $CONF_SMPEG" >> engine/config.h
+echo "#endif /* CONF_SMPEG */" >> engine/config.h
 echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
 echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
@@ -186,6 +186,6 @@ exit 1
 fi
 fi
 echo PREFIX=$PREFIX >> Makefile.config
-echo "#ifndef PREFIX" >> config.h
-echo "#define PREFIX \"$PREFIX\"" >> config.h
-echo "#endif /* PREFIX */" >> config.h
+echo "#ifndef PREFIX" >> engine/config.h
+echo "#define PREFIX \"$PREFIX\"" >> engine/config.h
+echo "#endif /* PREFIX */" >> engine/config.h

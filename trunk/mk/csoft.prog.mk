@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.15 2002/02/03 00:10:24 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.16 2002/02/18 02:07:36 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
