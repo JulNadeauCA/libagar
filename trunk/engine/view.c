@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.37 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.38 2002/05/19 14:32:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -380,6 +380,8 @@ scroll(struct map *m, int dir)
 void
 view_redraw(struct viewport *view)
 {
+	struct window *win;
+
 	if (view->map != NULL) {		/* Async */
 		view->map->redraw++;
 	}
@@ -387,8 +389,10 @@ view_redraw(struct viewport *view)
 		curmapedit->redraw++;
 	}
 	pthread_mutex_lock(&view->lock);
-	if (!TAILQ_EMPTY(&view->windowsh)) {	/* Sync */
-		window_draw_all();
+	TAILQ_FOREACH(win, &mainview->windowsh, windows) {
+		pthread_mutex_lock(&win->lock);
+		window_draw(win);
+		pthread_mutex_unlock(&win->lock);
 	}
 	pthread_mutex_unlock(&view->lock);
 }
@@ -424,7 +428,7 @@ view_attach(void *parent, void *child)
 	}
 
 	pthread_mutex_lock(&view->lock);
-	TAILQ_INSERT_HEAD(&view->windowsh, win, windows);
+	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
 	pthread_mutex_unlock(&view->lock);
 }
 
@@ -473,5 +477,33 @@ view_surface(int flags, int w, int h)
 		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 	}
 	return (s);
+}
+
+/*
+ * Focus on a window.
+ * View and window must be locked.
+ */
+void
+view_focus(struct viewport *view, struct window *win)
+{
+	struct window *cwin;
+
+	dprintf("focus on %s\n", OBJECT(win)->name);
+
+	TAILQ_REMOVE(&view->windowsh, win, windows);
+	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+	
+	TAILQ_FOREACH(cwin, &view->windowsh, windows) {
+		if (cwin == win) {
+			continue;
+		}
+		pthread_mutex_lock(&cwin->lock);
+		cwin->flags &= ~(WINDOW_FOCUS);
+		cwin->redraw++;
+		pthread_mutex_unlock(&cwin->lock);
+	}
+	
+	win->flags |= WINDOW_FOCUS;
+	win->redraw++;
 }
 
