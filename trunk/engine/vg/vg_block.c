@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.1 2004/04/30 05:24:26 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.2 2004/05/02 09:43:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -39,12 +39,13 @@
 
 /* Create a new block and select it for edition. */
 struct vg_block *
-vg_begin_block(struct vg *vg, const char *name)
+vg_begin_block(struct vg *vg, const char *name, int flags)
 {
 	struct vg_block *vgb;
 
 	vgb = Malloc(sizeof(struct vg_block), M_VG);
 	strlcpy(vgb->name, name, sizeof(vgb->name));
+	vgb->flags = flags;
 	vgb->pos.x = 0;
 	vgb->pos.y = 0;
 	vgb->pos.z = 0;
@@ -64,6 +65,19 @@ vg_end_block(struct vg *vg)
 	vg->cur_block = NULL;
 }
 
+struct vg_block *
+vg_get_block(struct vg *vg, const char *name)
+{
+	struct vg_block *vgb;
+
+	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
+		if (strcmp(vgb->name, name) == 0)
+			break;
+	}
+	return (vgb);
+}
+
+/* Displace the elements associated with a block. */
 void
 vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
     int layer)
@@ -84,6 +98,7 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 	vgb->pos.y = y;
 }
 
+/* Destroy a block as well as the elements associated with it. */
 void
 vg_destroy_block(struct vg *vg, struct vg_block *vgb)
 {

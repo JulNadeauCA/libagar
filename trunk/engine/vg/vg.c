@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.16 2004/05/01 00:55:20 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.17 2004/05/02 01:24:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -88,7 +88,14 @@ static const struct vg_element_ops vge_types[] = {
 		vg_ellipse_init,
 		vg_draw_ellipse,
 		vg_ellipse_bbox
-	}
+	},
+	{
+		VG_MASK,
+		N_("Polygonal mask"),
+		vg_mask_init,
+		vg_draw_mask,
+		NULL
+	},
 };
 const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
@@ -400,6 +407,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	int i;
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
+	vge->flags = 0;
 	vge->type = eltype;
 	vge->layer = vg->cur_layer;
 	vge->redraw = 1;
@@ -418,8 +426,10 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 
 	if (vg->cur_block != NULL) {
-		TAILQ_INSERT_HEAD(&vg->cur_block->vges, vge, vgbmbs);
+		TAILQ_INSERT_TAIL(&vg->cur_block->vges, vge, vgbmbs);
 		vge->block = vg->cur_block;
+		if (vge->block->flags & VG_BLOCK_NOSAVE)
+			vge->flags |= VG_ELEMENT_NOSAVE;
 	} else {
 		vge->block = NULL;
 	}
@@ -461,8 +471,12 @@ vg_draw_bboxes(struct vg *vg)
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < nvge_types; i++) {
-			if (vge_types[i].type == vge->type)
+			if (vge_types[i].type == vge->type &&
+			    vge_types[i].bbox != NULL)
 				vge_types[i].bbox(vg, vge, &bbox);
+		}
+		if (vge_types[i].bbox == NULL) {
+			continue;
 		}
 		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
 		vg_rlength(vg, bbox.w, &w);
@@ -497,14 +511,17 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 	}
 
 	/* Evaluate collisions with other elements. */
-	vge->ops.bbox(vg, vge, &r1);
-	TAILQ_FOREACH(ovge, &vg->vges, vges) {
-		if (ovge->drawn || ovge == vge) {
-			continue;
+	if (vge->ops.bbox != NULL) {
+		vge->ops.bbox(vg, vge, &r1);
+		TAILQ_FOREACH(ovge, &vg->vges, vges) {
+			if (ovge->drawn || ovge == vge ||
+			    ovge->ops.bbox == NULL) {
+				continue;
+			}
+			ovge->ops.bbox(vg, ovge, &r2);
+			if (vg_collision(vg, &r1, &r2))
+				vg_rasterize_element(vg, ovge);
 		}
-		ovge->ops.bbox(vg, ovge, &r2);
-		if (vg_collision(vg, &r1, &r2))
-			vg_rasterize_element(vg, ovge);
 	}
 }
 
@@ -780,7 +797,11 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	nblocks_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
+		if (vgb->flags & VG_BLOCK_NOSAVE)
+			continue;
+
 		write_string(buf, vgb->name);
+		write_uint32(buf, (Uint32)vgb->flags);
 		write_vertex(buf, &vgb->pos);
 		write_vertex(buf, &vgb->origin);
 		nblocks++;
@@ -791,7 +812,8 @@ vg_save(struct vg *vg, struct netbuf *buf)
 	nvges_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		int i;
+		if (vge->flags & VG_ELEMENT_NOSAVE)
+			continue;
 
 		write_uint32(buf, (Uint32)vge->type);
 		write_string(buf, vge->block != NULL ? vge->block->name : NULL);
@@ -817,6 +839,11 @@ vg_save(struct vg *vg, struct netbuf *buf)
 			write_string(buf, vge->vg_text.text);
 			write_double(buf, vge->vg_text.angle);
 			write_uint32(buf, (Uint32)vge->vg_text.align);
+			break;
+		case VG_MASK:
+			write_float(buf, vge->vg_mask.scale);
+			write_uint8(buf, (Uint8)vge->vg_mask.visible);
+			write_string(buf, NULL);		       /* Pad */
 			break;
 		default:
 			break;
@@ -898,8 +925,10 @@ vg_load(struct vg *vg, struct netbuf *buf)
 
 		vgb = Malloc(sizeof(struct vg_block), M_VG);
 		copy_string(vgb->name, buf, sizeof(vgb->name));
+		vgb->flags = (int)read_uint32(buf);
 		read_vertex(buf, &vgb->pos);
 		read_vertex(buf, &vgb->origin);
+		TAILQ_INIT(&vgb->vges);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
 	}
 
@@ -908,22 +937,42 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	nelements = read_uint32(buf);
 	dprintf("%u elements\n", nelements);
 	for (i = 0; i < nelements; i++) {
-		char block[VG_BLOCK_NAME_MAX];
 		enum vg_element_type type;
 		struct vg_element *vge;
+		struct vg_block *block;
+		char *block_id;
 		Uint32 nlayer, color;
 		int j;
-		
+	
 		type = (enum vg_element_type)read_uint32(buf);
-		copy_string(block, buf, sizeof(block));
+		block_id = read_string_len(buf, VG_BLOCK_NAME_MAX);
 		nlayer = (int)read_uint32(buf);
 		color = read_color(buf, vfmt);
+
+		if (block_id != NULL) {
+			TAILQ_FOREACH(block, &vg->blocks, vgbs) {
+				if (strcmp(block->name, block_id) == 0)
+					break;
+			}
+			if (block == NULL) {
+				error_set("bad block reference");
+				goto fail;
+			}
+			dprintf("el %d: linked with %s\n", type, block->name);
+		} else {
+			block = NULL;
+		}
 
 		vge = vg_begin_element(vg, type);
 		vge->nvtx = read_uint32(buf);
 		vge->vtx = Malloc(vge->nvtx*sizeof(struct vg_vertex), M_VG);
-		for (j = 0; j < vge->nvtx; j++)
+		for (j = 0; j < vge->nvtx; j++) {
 			read_vertex(buf, &vge->vtx[j]);
+		}
+		if (block != NULL) {
+			TAILQ_INSERT_TAIL(&block->vges, vge, vgbmbs);
+			vge->block = block;
+		}
 
 		switch (vge->type) {
 		case VG_CIRCLE:
@@ -942,6 +991,11 @@ vg_load(struct vg *vg, struct netbuf *buf)
 			vge->vg_text.angle = read_double(buf);
 			vge->vg_text.align = (enum vg_alignment)
 			    read_uint32(buf);
+			break;
+		case VG_MASK:
+			vge->vg_mask.scale = read_float(buf);
+			vge->vg_mask.visible = (int)read_uint8(buf);
+			read_string(buf);			       /* Pad */
 			break;
 		default:
 			break;
