@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.13 2003/05/24 15:46:36 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.14 2003/06/06 03:18:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,7 +40,8 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a user-editable text area.
+widget binds to a fixed-size string buffer and allows the user to edit
+its contents.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct textbox *"
@@ -89,7 +90,9 @@ default).
 .Pp
 The
 .Fn textbox_printf
-function overwrites the string.
+function uses
+.Xr vsnprintf 3
+to overwrite the string.
 .Pp
 The
 .Fn textbox_string
@@ -99,14 +102,13 @@ copies up to
 .Fa dst_size
 -1 bytes from the string to
 .Fa dst ,
-NUL-terminating the result.
-.Fn textbox_copy_string
-returns the number of characters that would have been copied if
+NUL-terminating the result and returning the number of characters that would
+have been copied if
 .Fa dst_size
 was unlimited.
 .Pp
 .Fn textbox_int
-tries to convert the string  to an integer value.
+tries to convert the string to an integer value.
 .Sh BINDINGS
 The
 .Nm
@@ -114,8 +116,8 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "char *string"
 .It Va char *string
-A static, NUL-terminated string to edit.
-As an exceptional case, the full size of the buffer is passed to
+A fixed-size buffer containing a NUL-terminated string to edit.
+The full size of the buffer is passed to
 .Fn widget_bind
 along with this pointer.
 .El
@@ -126,9 +128,12 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Move focus to the widget, position cursor.
+Move focus to the widget.
+Position the cursor at a specific position.
+.It window-mousemotion
+Move the cursor and scroll.
 .It window-keydown
-Insert a character according to the current keymap.
+Perform the action that the current keymap associates with this key.
 .El
 .Pp
 The

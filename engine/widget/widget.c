@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.61 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.62 2003/06/10 07:59:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -480,10 +480,7 @@ widget_set_pointer(void *wid, const char *name, void *np)
 	widget_binding_unlock(binding);
 }
 
-/*
- * Look for a binding and return the pointer value in p.
- * XXX use a hash table
- */
+/* Look for a binding and return the pointer value in p. */
 struct widget_binding *
 _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 {
@@ -899,9 +896,8 @@ widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
 		    yrel);
 	}
 
-	OBJECT_FOREACH_CHILD(cwid, wid, widget) {
+	OBJECT_FOREACH_CHILD(cwid, wid, widget)
 		widget_mousemotion(win, cwid, x, y, xrel, yrel);
-	}
 }
 
 /*
