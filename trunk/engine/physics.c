@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.49 2002/12/24 10:25:38 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.50 2003/01/01 05:18:34 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -247,7 +247,7 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 	if (dir->flags & DIR_PASSTHROUGH) {		/* Pass through */
 		return (1);
 	}
-	if (node->flags & NODE_BLOCK) {			/* Node block */
+	if ((node->flags & NODE_WALK) == 0) {		/* Node block */
 		return (0);
 	}
 	/* XXX could be more sophisticated */

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.56 2003/02/04 02:31:10 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.57 2003/02/08 00:34:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -60,16 +60,15 @@ struct node {
 #endif
 	struct noderefq	 nrefs;		/* Items on this node */
 	Uint32		 flags;
-#define NODE_BLOCK	0x0001		/* Cannot walk through */
-#define NODE_ORIGIN	0x0002		/* Origin of this map */
-#define NODE_WALK	0x0004		/* Can walk through */
-#define NODE_CLIMB	0x0008		/* Can climb (eg. ladder) */
-#define NODE_SLIP	0x0010		/* Slippery */
-#define NODE_BIO	0x0100		/* Cause Poison */
-#define NODE_REGEN	0x0200		/* Cause HP Regeneration */
-#define NODE_SLOW	0x0400		/* Decrease speed */
-#define NODE_HASTE	0x0800		/* Increase speed */
-#define NODE_HAS_ANIM	0x1000		/* Contains an anim? (optimization) */
+#define NODE_ORIGIN	0x0001		/* Origin of this map */
+#define NODE_WALK	0x0002		/* Can walk through */
+#define NODE_CLIMB	0x0004		/* Can climb (eg. ladder) */
+#define NODE_SLIP	0x0008		/* Slippery */
+#define NODE_BIO	0x0010		/* Cause Poison */
+#define NODE_REGEN	0x0020		/* Cause HP Regeneration */
+#define NODE_SLOW	0x0040		/* Decrease speed */
+#define NODE_HASTE	0x0080		/* Increase speed */
+#define NODE_HAS_ANIM	0x0100		/* Contains an anim? (optimization) */
 #define NODE_EPHEMERAL	NODE_HAS_ANIM
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.56 2003/02/06 02:59:06 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.57 2003/02/10 04:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -123,7 +123,6 @@ mapview_node_poll(int argc, union evarg *argv)
 	
 	flags[0] = '\0';
 	if (node->flags & NODE_ORIGIN)		strcat(flags, "origin ");
-	if (node->flags & NODE_BLOCK)		strcat(flags, "block ");
 	else if (node->flags & NODE_WALK)	strcat(flags, "walk ");
 	else if (node->flags & NODE_CLIMB)	strcat(flags, "climb ");
 	if (node->flags & NODE_SLIP)		strcat(flags, "slip ");
@@ -409,40 +408,29 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 static __inline__ void
 draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
 {
+	const struct {
+		Uint32		flag;
+		Uint32		sprite;
+	} sprites[] = {
+		{ NODE_WALK,	MAPVIEW_WALK },
+		{ NODE_CLIMB,	MAPVIEW_CLIMB },
+		{ NODE_BIO,	MAPVIEW_BIO },
+		{ NODE_REGEN,	MAPVIEW_REGEN },
+		{ NODE_SLOW,	MAPVIEW_SLOW },
+		{ NODE_HASTE,	MAPVIEW_HASTE },
+		{ NODE_ORIGIN,	MAPVIEW_ORIGIN }
+	};
+	const int nsprites = sizeof(sprites) / sizeof(sprites[0]);
+	int i;
+
 	if (mv->prop_style > 0) {
 		widget_blit(mv, SPRITE(mv, mv->prop_style), rx, ry);
 	}
-
-	if (node->flags & NODE_BLOCK) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_BLOCK), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	} else if (node->flags & NODE_WALK) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_WALK), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	} else if (node->flags & NODE_CLIMB) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_CLIMB), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	}
-	
-	if (node->flags & NODE_BIO) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_BIO), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	} else if (node->flags & NODE_REGEN) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_REGEN), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	}
-	
-	if (node->flags & NODE_SLOW) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_SLOW), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	} else if (node->flags & NODE_HASTE) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_HASTE), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
-	}
-
-	if (node->flags & NODE_ORIGIN) {
-		widget_blit(mv, SPRITE(mv, MAPVIEW_ORIGIN), rx, ry);
-		rx += SPRITE(mv, MAPVIEW_BLOCK)->w;
+	for (i = 0; i < nsprites; i++) {
+		if (node->flags & sprites[i].flag) {
+			widget_blit(mv, SPRITE(mv, sprites[i].sprite), rx, ry);
+			rx += SPRITE(mv, sprites[i].sprite)->w;
+		}
 	}
 }
 
@@ -751,7 +739,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 	}
 	if (mv->flags & MAPVIEW_TILEMAP) {
 		if ((mouse & SDL_BUTTON(1)) &&
-		    (mv->cx > 0) && (mv->cy > 0)) {
+		    (mv->cx >= 0) && (mv->cy >= 0)) {
 			struct node *srcnode = &mv->map->map[mv->cy][mv->cx];
 
 			if (!TAILQ_EMPTY(&srcnode->nrefs)) {
