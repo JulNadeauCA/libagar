@@ -34,6 +34,10 @@
 #include "command.h"
 #include "mouse.h"
 
+/*
+ * Map editor mouse motion handler.
+ * Must be called on a locked map.
+ */
 void
 mouse_motion(struct mapedit *med, SDL_Event *ev)
 {
@@ -103,17 +107,13 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	if (SDL_GetMouseState(NULL, NULL) &
 	   (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
 	   	if (med->cursor_dir.current == 0) {
-			pthread_mutex_lock(&m->lock);
 			mapedit_move(med, mx, my);
 			mapedit_sticky(med);
-			pthread_mutex_unlock(&m->lock);
 			m->redraw++;
 		}
 	}
 	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_RMASK) {
-		pthread_mutex_lock(&m->lock);
 		mapedit_push(med, &m->map[mx][my], med->curoffs, med->curflags);
-		pthread_mutex_unlock(&m->lock);
 		m->redraw++;
 	}
 	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
@@ -138,31 +138,33 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	}
 }
 
+/*
+ * Map editor mouse button handler.
+ * Must be called on a locked map.
+ */
 void
 mouse_button(struct mapedit *med, SDL_Event *ev)
 {
 	struct map *m = med->map;
 	Uint32 mx, my;
-
-	pthread_mutex_lock(&m->lock);
+	
+	if (med->cursor_dir.current != 0) {
+		return;
+	}
+	
 	mx = (m->view->mapx + ev->button.x / m->tilew) - 1;
 	my = (m->view->mapy + ev->button.y / m->tileh) - 1;
 
-	if (med->cursor_dir.current == 0 &&
-	    mx > 1 && my > 1 &&
-	    mx < m->view->mapw && my < m->view->mapy) {
-	    	static SDL_Event nev;
-
-		nev.motion.x = ev->button.x;
-		nev.motion.y = ev->button.y;
-		mouse_motion(med, &nev);
+	if ((mx > 1 && my > 1) &&
+	    (mx < m->mapw && my < m->maph)) {
+		dprintf("move to %dx%d\n", mx, my);
+		mapedit_move(med, mx, my);
+		mapedit_sticky(med);
 		if (ev->button.button == 3) {
 			mapedit_push(med, &m->map[mx][my], med->curoffs,
 			    med->curflags);
 		}
+		m->redraw++;
 	}
-	
-	pthread_mutex_unlock(&m->lock);
-	m->redraw++;
 }
 
