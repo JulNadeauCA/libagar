@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.58 2003/03/05 16:14:53 vedge Exp $
+# $Csoft: configure.in,v 1.59 2003/03/14 04:14:23 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -45,7 +45,10 @@ check(vasprintf);
 
 mdefine(CFLAGS, "$CFLAGS -I$SRC");
 if [ "${cc_is_gcc}" = "yes" ]; then
-	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
+    mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
+fi
+if [ "${cc_is_gcc3}" = "yes" ]; then
+    mdefine(CFLAGS, "$CFLAGS -Wno-missing-headers");
 fi
 
 require(sdl, 1.2.0);
