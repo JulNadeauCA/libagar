@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.4 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.5 2002/01/30 12:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -97,7 +97,7 @@ char_link(void *objp)
 		return (-1);
 	}
 	
-	ch->timer = SDL_AddTimer(30 + (ch->maxspeed - ch->curspeed),
+	ch->timer = SDL_AddTimer(60 + (ch->maxspeed - ch->curspeed),
 	    char_time, ch);
 	if (ch->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
