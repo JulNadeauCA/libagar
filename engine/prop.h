@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.2 2002/09/06 01:25:24 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.3 2002/11/28 06:28:39 vedge Exp $	*/
 /*	Public domain	*/
 
 struct prop {
@@ -36,7 +36,7 @@ struct prop {
 };
 
 struct prop	*prop_set(void *, char *, enum prop_type, ...);
-void		 prop_get(void *, char *, enum prop_type, void *);
+int		 prop_get(void *, char *, enum prop_type, void *);
 
 struct prop	*prop_set_bool(void *, char *, int);
 struct prop	*prop_set_int(void *, char *, int);

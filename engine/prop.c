@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.8 2002/11/28 06:28:39 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.9 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -48,10 +48,7 @@ int	prop_debug = DEBUG_STATE|DEBUG_SET;
 #define engine_debug prop_debug
 #endif
 
-/*
- * Modify a property, or create a new one if it does not exist.
- * The property list must not be locked by the caller thread.
- */
+/* Modify a property, or create a new one if it does not exist. */
 struct prop *
 prop_set(void *p, char *key, enum prop_type type, ...)
 {
@@ -236,15 +233,18 @@ prop_set_bool(void *ob, char *key, int i)
 	return (prop_set(ob, key, PROP_BOOL, i));
 }
 
-void
+/* Obtain the value of a property. */
+int
 prop_get(void *obp, char *key, enum prop_type t, void *p)
 {
 	struct object *ob = obp;
 	struct prop *prop;
 
+	/* XXX use a hash table */
 	pthread_mutex_lock(&ob->props_lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		if (prop->type == t && strcmp(key, prop->key) == 0) {
+		if (prop->type == t &&
+		    strcmp(key, prop->key) == 0) {
 			switch (t) {
 			case PROP_INT:
 			case PROP_BOOL:
@@ -289,10 +289,11 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 				break;
 			}
 			pthread_mutex_unlock(&ob->props_lock);
-			return;
+			return (0);
 		}
 	}
-	fatal("%s has no \"%s\" property (type 0x%x)\n", ob->name, key, t);
+	error_set("%s has no \"%s\" property (type 0x%x)\n", ob->name, key, t);
+	return (-1);
 }
 
 int
@@ -301,7 +302,9 @@ prop_int(void *p, char *key)
 	struct object *ob = p;
 	int i;
 
-	prop_get(ob, key, PROP_INT, &i);
+	if (prop_get(ob, key, PROP_INT, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -311,7 +314,9 @@ prop_uint8(void *p, char *key)
 	struct object *ob = p;
 	Uint8 i;
 
-	prop_get(ob, key, PROP_UINT8, &i);
+	if (prop_get(ob, key, PROP_UINT8, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -321,7 +326,9 @@ prop_sint8(void *p, char *key)
 	struct object *ob = p;
 	Sint8 i;
 
-	prop_get(ob, key, PROP_SINT8, &i);
+	if (prop_get(ob, key, PROP_SINT8, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -331,7 +338,9 @@ prop_uint16(void *p, char *key)
 	struct object *ob = p;
 	Uint16 i;
 
-	prop_get(ob, key, PROP_UINT16, &i);
+	if (prop_get(ob, key, PROP_UINT16, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -341,7 +350,9 @@ prop_sint16(void *p, char *key)
 	struct object *ob = p;
 	Sint16 i;
 
-	prop_get(ob, key, PROP_SINT16, &i);
+	if (prop_get(ob, key, PROP_SINT16, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -351,7 +362,9 @@ prop_uint32(void *p, char *key)
 	struct object *ob = p;
 	Uint32 i;
 
-	prop_get(ob, key, PROP_UINT32, &i);
+	if (prop_get(ob, key, PROP_UINT32, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -361,7 +374,9 @@ prop_sint32(void *p, char *key)
 	struct object *ob = p;
 	Sint32 i;
 
-	prop_get(ob, key, PROP_SINT32, &i);
+	if (prop_get(ob, key, PROP_SINT32, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 }
 
@@ -372,7 +387,9 @@ prop_uint64(void *p, char *key)
 	struct object *ob = p;
 	Uint64 i;
 
-	prop_get(ob, key, PROP_UINT64, &i);
+	if (prop_get(ob, key, PROP_UINT64, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 #else
 	fatal("SDL does not provide a 64-bit type\n");
@@ -387,7 +404,9 @@ prop_sint64(void *p, char *key)
 	struct object *ob = p;
 	Sint64 i;
 
-	prop_get(ob, key, PROP_SINT64, &i);
+	if (prop_get(ob, key, PROP_SINT64, &i) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (i);
 #else
 	fatal("SDL does not provide a 64-bit type\n");
@@ -401,7 +420,9 @@ prop_string(void *p, char *key)
 	struct object *ob = p;
 	char *s;
 
-	prop_get(ob, key, PROP_STRING, &s);
+	if (prop_get(ob, key, PROP_STRING, &s) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (s);
 }
 
@@ -411,7 +432,9 @@ prop_pointer(void *p, char *key)
 	struct object *ob = p;
 	void *np;
 
-	prop_get(ob, key, PROP_POINTER, &np);
+	if (prop_get(ob, key, PROP_POINTER, &np) == -1) {
+		fatal("%s\n", error_get());
+	}
 	return (np);
 }
 
