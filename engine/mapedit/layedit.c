@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.2 2003/03/02 07:29:53 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.1 2003/03/05 02:16:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -102,6 +102,43 @@ layedit_push(int argc, union evarg *argv)
 }
 
 static void
+layedit_update_name(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct textbox *tb = argv[2].p;
+	struct tlist_item *it = argv[3].p;
+	int state = argv[4].i;
+	struct map_layer *lay;
+
+	if (!state) {
+		return;
+	}
+	lay = it->p1;
+	textbox_printf(tb, "%s", lay->name);
+}
+
+static void
+layedit_rename(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct textbox *name_tbox = argv[2].p;
+	struct tlist *layers_tl = mv->layed.layers_tl;
+	struct tlist_item *it;
+	struct map_layer *lay;
+	char *new_name;
+
+	if ((it = tlist_item_selected(mv->layed.layers_tl)) == NULL) {
+		return;
+	}
+	lay = it->p1;
+
+	free(lay->name);
+	lay->name = textbox_string(name_tbox);
+	
+	textbox_printf(name_tbox, "");
+}
+
+static void
 layedit_pop(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
@@ -157,6 +194,8 @@ layedit_init(struct mapview *mv)
 	struct map *m = mv->map;
 	struct window *win;
 	struct region *reg;
+	struct layedit *layed = &mv->layed;
+	struct textbox *rename_tb;
 
 	win = window_generic_new(268, 346, "mapedit-lay-%s-%s",
 	    OBJECT(mv)->name, OBJECT(m)->name);
@@ -169,18 +208,28 @@ layedit_init(struct mapview *mv)
 	
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
+		struct textbox *tb;
 		struct button *bu;
-		struct textbox *name_tbox;
 
-		name_tbox = textbox_new(reg, "New layer: ", 0, 75, -1);
-		event_new(name_tbox, "textbox-return",
-		    layedit_push, "%p, %p", mv, name_tbox);
+		tb = textbox_new(reg, "New layer: ", 0, 75, -1);
+		event_new(tb, "textbox-return", layedit_push, "%p, %p", mv, tb);
 
 		bu = button_new(reg, "Push", NULL, 0, 25, -1);
-		event_new(bu, "button-pushed",
-		    layedit_push, "%p, %p", mv, name_tbox);
+		event_new(bu, "button-pushed", layedit_push, "%p, %p", mv, tb);
 	}
+	
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	{
+		struct button *bu;
 
+		rename_tb = textbox_new(reg, "-> ", 0, 75, -1);
+		event_new(rename_tb, "textbox-return",
+		    layedit_rename, "%p, %p", mv, rename_tb);
+
+		bu = button_new(reg, "Rename", NULL, 0, 25, -1);
+		event_new(bu, "button-pushed",
+		    layedit_rename, "%p, %p", mv, rename_tb);
+	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
@@ -201,6 +250,8 @@ layedit_init(struct mapview *mv)
 		mv->layed.layers_tl = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(mv->layed.layers_tl, "tlist-poll",
 		    layedit_poll, "%p", mv);
+		event_new(mv->layed.layers_tl, "tlist-changed",
+		    layedit_update_name, "%p, %p", mv, rename_tb);
 	}
 
 	mv->layed.win = win;
