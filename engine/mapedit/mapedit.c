@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.89 2002/05/15 07:28:11 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.90 2002/05/17 06:32:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -296,7 +296,8 @@ mapedit_onattach(void *parent, void *child)
 		sprintf(caption, "%s [%d] (%s)", OBJECT(m)->name,
 		    OBJECT(m)->id, path);
 	}
-	SDL_WM_SetCaption(caption, "agar");
+	SDL_WM_SetCaption(caption, "Map editor");
+	SDL_WM_SetIcon(SPRITE(world, ICON_MAPEDITION), NULL);
 
 	/* Create the structures defining what is editable. */
 	mapedit_shadow(med, wo);
@@ -1096,13 +1097,13 @@ mapedit_show_coords(struct mapedit *med)
 	struct window *nw;
 
 	if (coords_win == NULL) {
-		struct segment *coords_seg;
+		struct region *coords_reg;
 
 		/* Coordinates window/label. */
 		nw = window_new("Coordinates", WINDOW_SOLID, 0,
 		    64, 64, 224, 32);
-		coords_seg = segment_new(nw, SEGMENT_HORIZ, 100);
-		coords_label = label_new(coords_seg, "...", 0, 7, 7);
+		coords_reg = region_new(nw, WIDGET_HALIGN, 0, 0, 100, 100, 0);
+		coords_label = label_new(coords_reg, "...", 0);
 		coords_win = nw;
 	} else {
 		nw = coords_win;
