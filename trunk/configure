@@ -370,6 +370,54 @@ else
 
 	echo "no"
 fi
+echo -n "checking for the C math library..."
+echo -n "checking for the C math library..." >> config.log
+echo "checking for the C math library..." >> config.log
+cat << EOT > conftest.c
+#include <math.h>
+
+int
+main(int argc, char *argv[])
+{
+	float f;
+	double d;
+
+	abs(0);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo $CC ${CFLAGS} -o conftest conftest.c -lm >> config.log
+$CC ${CFLAGS} -o conftest conftest.c -lm 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_MATH" > config/have_math.h
+echo "#define HAVE_MATH" $HAVE_MATH >> config/have_math.h
+echo "#endif /* HAVE_MATH */" >> config/have_math.h
+
+	HAVE_MATH=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_MATH" > config/have_math.h
+
+	echo "no"
+fi
+if [ "${HAVE_MATH}" = "yes" ]; then
+echo MATH_LIBS=$MATH_LIBS >> Makefile.config
+else
+NONE=1
+fi
 echo -n "checking for a getenv() function..."
 echo -n "checking for a getenv() function..." >> config.log
 echo "checking for a getenv() function..." >> config.log
