@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.22 2003/04/24 07:04:42 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.23 2003/05/08 12:15:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,10 +34,8 @@
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/perso.h>
-#include <engine/input.h>
 #include <engine/version.h>
 #include <engine/view.h>
-#include <engine/world.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

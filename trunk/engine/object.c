@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.120 2003/04/24 07:04:42 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.121 2003/05/08 12:12:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -436,8 +436,10 @@ object_control(void *p, char *inname)
 	struct object *ob = p;
 	struct input *in;
 
-	if ((in = input_find(inname)) == NULL)
+	if ((in = input_find(inname)) == NULL) {
+		error_set("no such input device: `%s'", inname);
 		return (-1);
+	}
 
 	pthread_mutex_lock(&ob->lock);
 	if (ob->pos == NULL) {
