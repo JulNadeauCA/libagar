@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.53 2002/11/09 06:01:51 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.54 2002/11/10 01:43:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -120,13 +120,13 @@ struct object {
 
 #define OBJECT_ISTYPE(pob, ptype) (strcmp(OBJECT((pob))->type, (ptype)) == 0)
 
-struct	object *object_new(char *, char *, char *, int, const void *);
-void	object_init(struct object *, char *, char *, char *, int, const void *);
-int	object_load(void *);
-int	object_load_from(void *, char *);
-int	object_save(void *);
-void	object_destroy(void *);
-
+struct object	*object_new(char *, char *, char *, int, const void *);
+void		 object_init(struct object *, char *, char *, char *,
+		     int, const void *);
+int		 object_load(void *);
+int		 object_load_from(void *, char *);
+int		 object_save(void *);
+void		 object_destroy(void *);
 char		*object_name(const char *, int);
 char		*object_path(char *, const char *);
 
