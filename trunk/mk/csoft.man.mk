@@ -1,17 +1,14 @@
-# $Csoft: csoft.man.mk,v 1.14 2002/05/10 22:41:48 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.15 2002/09/06 00:58:47 vedge Exp $
 
-# Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
-# <http://www.csoft.org>
+# Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
 # 1. Redistribution of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-# 2. Redistribution in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-# 3. Neither the name of CubeSoft Communications, nor the names of its
+# 2. Neither the name of CubeSoft Communications, nor the names of its
 #    contributors may be used to endorse or promote products derived from
 #    this software without specific prior written permission.
 # 
@@ -55,6 +52,46 @@ clean-man:
 
 install-man: ${MANS} ${CATMANS}
 	@if [ "${MANS}" != "       " ]; then \
+	    if [ ! -d "${INST_MANDIR}" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man1" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man1"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man1; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man2" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man2"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man2; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man3" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man3"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man3; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man4" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man4"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man4; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man5" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man5"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man5; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man6" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man6"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man6; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man7" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man7"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man7; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man8" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man8"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man8; \
+	    fi; \
+	    if [ ! -d "${INST_MANDIR}/man9" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/man9"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/man9; \
+	    fi; \
 	    for F in ${MAN1}; do \
 	        echo "${INSTALL_DATA} $$F ${INST_MANDIR}/man1"; \
 	        ${INSTALL_DATA} $$F ${INST_MANDIR}/man1; \
@@ -93,60 +130,78 @@ install-man: ${MANS} ${CATMANS}
 	    done; \
 	fi
 	@if [ "${CATMANS}" != "       " ]; then \
-	    if [ -d "${INST_MANDIR}/cat1" ]; then \
-	        for F in ${CATMAN1}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat1"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat1; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat1" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat1"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat1; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat2" ]; then \
-	        for F in ${CATMAN2}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat2"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat2; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat2" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat2"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat2; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat3" ]; then \
-	        for F in ${CATMAN3}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat3"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat3; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat3" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat3"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat3; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat4" ]; then \
-	        for F in ${CATMAN4}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat4"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat4; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat4" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat4"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat4; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat5" ]; then \
-	        for F in ${CATMAN5}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat5"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat5; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat5" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat5"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat5; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat6" ]; then \
-	        for F in ${CATMAN6}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat6"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat6; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat6" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat6"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat6; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat7" ]; then \
-	        for F in ${CATMAN7}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat7"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat7; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat7" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat7"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat7; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat8" ]; then \
-	        for F in ${CATMAN8}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat8"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat8; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat8" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat8"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat8; \
 	    fi; \
-	    if [ -d "${INST_MANDIR}/cat9" ]; then \
-	        for F in ${CATMAN9}; do \
-	             echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat9"; \
-	             ${INSTALL_DATA} $$F ${INST_MANDIR}/cat9; \
-	        done; \
+	    if [ ! -d "${INST_MANDIR}/cat9" ]; then \
+	        echo "${INSTALL_MAN_DIR} ${INST_MANDIR}/cat9"; \
+	        ${INSTALL_MAN_DIR} ${INST_MANDIR}/cat9; \
 	    fi; \
+	    for F in ${CATMAN1}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat1"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat1; \
+	    done; \
+	    for F in ${CATMAN2}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat2"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat2; \
+	    done; \
+	    for F in ${CATMAN3}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat3"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat3; \
+	    done; \
+	    for F in ${CATMAN4}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat4"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat4; \
+	    done; \
+	    for F in ${CATMAN5}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat5"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat5; \
+	    done; \
+	    for F in ${CATMAN6}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat6"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat6; \
+	    done; \
+	    for F in ${CATMAN7}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat7"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat7; \
+	    done; \
+	    for F in ${CATMAN8}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat8"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat8; \
+	    done; \
+	    for F in ${CATMAN9}; do \
+	         echo "${INSTALL_DATA} $$F ${INST_MANDIR}/cat9"; \
+	         ${INSTALL_DATA} $$F ${INST_MANDIR}/cat9; \
+	    done; \
 	fi
 	
 deinstall-man:

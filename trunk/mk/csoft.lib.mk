@@ -1,17 +1,14 @@
-# $Csoft: csoft.lib.mk,v 1.17 2002/05/10 22:41:48 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.19 2002/09/06 00:58:47 vedge Exp $
 
-# Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
-# <http://www.csoft.org>
+# Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
 # 1. Redistribution of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-# 2. Redistribution in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-# 3. Neither the name of CubeSoft Communications, nor the names of its
+# 2. Neither the name of CubeSoft Communications, nor the names of its
 #    contributors may be used to endorse or promote products derived from
 #    this software without specific prior written permission.
 # 
@@ -49,7 +46,7 @@ BINMODE?=	755
 
 STATIC?=	Yes
 SHARED?=	No
-VERSION?=	1:0:0
+SOVERSION?=	1:0:0
 
 .SUFFIXES:  .o .po .lo .c .cc .C .cxx .s .S .asm .y
 
@@ -138,9 +135,9 @@ lib${LIB}.a:	${OBJS}
 lib${LIB}.la:	${LIBTOOL} ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
 	    echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	     -shared -version-info ${VERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}"; \
+	     -shared -version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}"; \
 	    ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		-version-info ${VERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}; \
+		-version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}; \
 	fi
 
 clean:		clean-subdir
@@ -171,17 +168,18 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
 	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
 	    fi; \
 	fi
-	@if [ "${SHARE}" != "" ]; then \
-	    if [ ! -d "${SHAREDIR}" ]; then \
-	        echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-	        ${INSTALL_DATA_DIR} ${SHAREDIR}; \
-	    fi; \
-	    for F in ${SHARE}; do \
-	        echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-	        ${INSTALL_DATA} $$F ${SHAREDIR}; \
-	    done; \
-	fi
-	
+        @export _share="${SHARE}"; \
+        if [ "$$_share" != "" ]; then \
+            if [ ! -d "${SHAREDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
+                ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+            fi; \
+            for F in $$_share; do \
+                echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+                ${INSTALL_DATA} $$F ${SHAREDIR}; \
+            done; \
+        fi
+
 deinstall:	deinstall-subdir
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
 	    echo "${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a"; \
