@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.1.1.1 2002/09/01 09:03:06 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.2 2002/09/02 04:55:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -49,6 +49,7 @@
 
 #include "tool/monitor_tool.h"
 #include "tool/object_browser.h"
+#include "tool/media_browser.h"
 
 const struct object_ops monitor_ops = {
 	monitor_destroy,
@@ -72,6 +73,11 @@ show_tool(int argc, union evarg *argv)
 		pthread_mutex_lock(&mon->wins.object_browser->lock);
 		window_show_locked(mon->wins.object_browser);
 		pthread_mutex_unlock(&mon->wins.object_browser->lock);
+		return;
+	case MONITOR_MEDIA_BROWSER:
+		pthread_mutex_lock(&mon->wins.media_browser->lock);
+		window_show_locked(mon->wins.media_browser);
+		pthread_mutex_unlock(&mon->wins.media_browser->lock);
 		return;
 	}
 }
@@ -97,6 +103,13 @@ toolbar_window(struct monitor *mon)
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0,
 	    show_tool, "%p, %i", mon, MONITOR_OBJECT_BROWSER);
+	
+	/* Media browser */
+	button = button_new(reg, NULL,
+	    SPRITE(mon, MONITOR_MEDIA_BROWSER), 0, xdiv, ydiv);
+	win->focus = WIDGET(button);
+	event_new(button, "button-pushed", 0,
+	    show_tool, "%p, %i", mon, MONITOR_MEDIA_BROWSER);
 
 	reg = region_new(win, REGION_VALIGN, -1, 50, 100, 50);
 	reg->spacing = 1;
@@ -111,6 +124,7 @@ monitor_init(struct monitor *mon, char *name)
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
 	mon->wins.toolbar = toolbar_window(mon);
 	mon->wins.object_browser = object_browser_window(mon);
+	mon->wins.media_browser = media_browser_window(mon);
 }
 
 void
