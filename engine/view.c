@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.77 2002/11/13 00:22:30 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.78 2002/11/14 05:58:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -170,20 +170,17 @@ view_detach_queued(void)
 {
 	struct window *win, *nwin;
 
-	deprintf("detaching queued windows:");
 	for (win = TAILQ_FIRST(&view->detach);
 	     win != TAILQ_END(&view->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 
-		deprintf(" %s (%s)", OBJECT(win)->name, win->caption);
 		TAILQ_REMOVE(&view->windows, win, windows);
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
 		object_destroy(win);
 	}
 	TAILQ_INIT(&view->detach);
-	deprintf("\n");
 }
 
 void
