@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.231 2004/09/12 05:57:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.232 2004/10/16 09:33:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1205,7 +1205,7 @@ draw_sprite(struct noderef *r)
  * If there are transforms to apply, return a pointer to a matching
  * entry in the anim transformation cache, or allocate a new one.
  */
-static __inline__ SDL_Surface *
+static SDL_Surface *
 draw_anim(struct noderef *r)
 {
 	struct gfx_anim *oanim = ANIM(r->r_anim.obj, r->r_anim.offs);
