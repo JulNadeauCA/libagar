@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.147 2004/04/26 03:21:17 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.148 2004/05/02 09:38:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -58,8 +58,6 @@
 struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
 const SDL_VideoInfo *vinfo;
-
-static void destroy_window(struct window *);
 
 int
 view_init(enum gfx_engine ge)
@@ -197,7 +195,6 @@ view_destroy(void)
 {
 	struct window *win, *nwin;
 
-	/* Release the windows and widgets. */
 	for (win = TAILQ_FIRST(&view->windows);
 	     win != TAILQ_END(&view->windows);
 	     win = nwin) {
@@ -206,13 +203,8 @@ view_destroy(void)
 		Free(win, M_OBJECT);
 	}
 
-	/* Free the rectangle caches. */
-	if (view->rootmap != NULL) {
-		rootmap_free_maprects(view);
-		Free(view->rootmap, M_VIEW);
-	}
+	Free(view->rootmap, M_VIEW);
 	Free(view->dirty, M_VIEW);
-
 	pthread_mutex_destroy(&view->lock);
 	Free(view, M_VIEW);
 	view = NULL;
@@ -245,40 +237,35 @@ view_attach(void *child)
 	pthread_mutex_unlock(&view->lock);
 }
 
-/*
- * Queue the detachment a window from a view.
- * Garbage collection is done once event processing is complete.
- */
-void
-view_detach(struct window *win)
-{
-	pthread_mutex_lock(&view->lock);
-	window_hide(win);
-	TAILQ_INSERT_TAIL(&view->detach, win, detach);
-	pthread_mutex_unlock(&view->lock);
-}
-
-/* Release the given window and its child windows. */
 static void
-destroy_window(struct window *win)
+detach_window(struct window *win)
 {
 	struct window *subwin, *nsubwin;
-	
-	window_hide(win);
 
 	for (subwin = TAILQ_FIRST(&win->subwins);
 	     subwin != TAILQ_END(&win->subwins);
 	     subwin = nsubwin) {
 		nsubwin = TAILQ_NEXT(subwin, swins);
-		destroy_window(subwin);
+		detach_window(subwin);
 	}
 	TAILQ_INIT(&win->subwins);
+	
+	window_hide(win);
+	event_post(view, win, "detached", NULL);
 	TAILQ_REMOVE(&view->windows, win, windows);
-	object_destroy(win);
-	Free(win, M_OBJECT);
+	TAILQ_INSERT_TAIL(&view->detach, win, detach);
 }
 
-/* Perform deferred window garbage collection. */
+/* Place a window and its children on the detachment queue. */
+void
+view_detach(struct window *win)
+{
+	pthread_mutex_lock(&view->lock);
+	detach_window(win);
+	pthread_mutex_unlock(&view->lock);
+}
+
+/* Release the windows on the detachment queue. */
 void
 view_detach_queued(void)
 {
@@ -288,7 +275,8 @@ view_detach_queued(void)
 	     win != TAILQ_END(&view->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
-		destroy_window(win);
+		object_destroy(win);
+		Free(win, M_OBJECT);
 	}
 	TAILQ_INIT(&view->detach);
 }
