@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.166 2004/03/17 17:26:55 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.167 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -496,6 +496,7 @@ object_destroy(void *p)
 	struct object *ob = p;
 	struct object_dep *dep, *ndep;
 
+	object_unlink_datafiles(ob);
 	object_free_children(ob);
 	
 	if (ob->pos != NULL)
@@ -1449,7 +1450,7 @@ rename:
  * Remove the data files of an object and its children.
  * The linkage must be locked.
  */
-static void
+void
 object_unlink_datafiles(void *p)
 {
 	char path[MAXPATHLEN];

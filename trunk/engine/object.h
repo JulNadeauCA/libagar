@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.105 2004/03/17 12:32:59 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.106 2004/03/17 17:26:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -125,6 +125,7 @@ void	 object_move_up(void *);
 void	 object_move_down(void *);
 void	*object_duplicate(void *);
 void	 object_destroy(void *);
+void	 object_unlink_datafiles(void *);
 
 void	 object_free_children(struct object *);
 void	 object_free_props(struct object *);
