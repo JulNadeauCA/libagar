@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.38 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.39 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -28,9 +28,6 @@
 
 #include <engine/engine.h>
 #include <engine/map.h>
-#include <engine/rootmap.h>
-#include <engine/perso.h>
-#include <engine/view.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/hbox.h>
@@ -41,6 +38,8 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <string.h>
+
+#include "perso.h"
 
 const struct version perso_ver = {
 	"agar personage",
@@ -55,14 +54,6 @@ const struct object_ops perso_ops = {
 	perso_save,
 	perso_edit
 };
-
-#ifdef DEBUG
-#define	DEBUG_STATE	0x01
-#define DEBUG_POSITION	0x02
-
-int	perso_debug = DEBUG_STATE|DEBUG_POSITION;
-#define engine_debug	perso_debug
-#endif
 
 struct perso *
 perso_new(void *parent, const char *name)
