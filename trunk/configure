@@ -575,8 +575,8 @@ fi
 cat << EOT > conftest.c
 #include <stdio.h>
 
-#include <freetype2/freetype/freetype.h>
-#include <freetype2/freetype/ftoutln.h>
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
 
 int
 main(int argc, char *argv[])
