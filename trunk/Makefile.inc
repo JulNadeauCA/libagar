@@ -1,9 +1,6 @@
-#	$Csoft: Makefile.inc,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $
-
-VERSION?=	0.2
+#	$Csoft: Makefile.inc,v 1.2 2002/01/26 20:17:34 vedge Exp $
 
 CFLAGS+=	-I${TOP}
-CFLAGS+=	-DVERSION=\"${VERSION}\"
 CFLAGS+=	-Wall -Werror -Wmissing-prototypes -Wunused -g -DDEBUG
 
 include ${TOP}/libfobj/Makefile.inc
