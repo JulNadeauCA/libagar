@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.5 2005/01/30 05:41:25 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.6 2005/02/05 02:55:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -24,14 +24,14 @@ struct tile {
 #define TILE_SRCALPHA	 0x02		/* Alpha source */
 #define TILE_DIRTY	 0x04		/* Mark for redraw */
 	Uint8 used;
+	SDL_Color c;
+	Uint32 pc;
+	struct {
+		int w;			/* Line width */
+		
+	} line;
 	TAILQ_HEAD(,tile_feature) features;
 	TAILQ_ENTRY(tile) tiles;
-};
-
-enum tile_blend_mode {
-	TILE_BLEND_DSTALPHA,
-	TILE_BLEND_SRCALPHA,
-	TILE_BLEND_MIXALPHA
 };
 
 __BEGIN_DECLS
@@ -46,10 +46,6 @@ int		tile_load(struct tileset *, struct tile *, struct netbuf *);
 
 struct tile_feature *tile_add_feature(struct tile *, void *);
 void		     tile_remove_feature(struct tile *, void *);
-
-__inline__ void	tile_put_pixel(struct tile *, int, int, Uint32);
-__inline__ void	tile_blend_rgb(struct tile *, int, int, enum tile_blend_mode,
-		               Uint8, Uint8, Uint8, Uint8);
 __END_DECLS
 
 #include "close_code.h"

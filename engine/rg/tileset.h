@@ -1,8 +1,8 @@
-/*	$Csoft: tileset.h,v 1.2 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.3 2005/01/31 08:40:35 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_BG_TILESET_H_
-#define _AGAR_BG_TILESET_H_
+#ifndef _AGAR_RG_TILESET_H_
+#define _AGAR_RG_TILESET_H_
 
 struct tileset;
 struct tile;
@@ -13,6 +13,7 @@ struct feature;
 #include <engine/vg/vg.h>
 #include <engine/rg/tile.h>
 #include <engine/rg/feature.h>
+#include <engine/rg/prim.h>
 
 #include "begin_code.h"
 
@@ -56,4 +57,4 @@ struct window	 *tileset_edit(void *);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_BG_TILESET_H_ */
+#endif	/* _AGAR_RG_TILESET_H_ */

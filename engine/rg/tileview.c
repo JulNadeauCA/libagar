@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.4 2005/02/05 03:23:32 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.5 2005/02/05 06:06:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ zoomin_tick(void *obj, Uint32 ival, void *arg)
 {
 	struct tileview *tv = obj;
 
-	if (tv->zoom > 800) {
+	if (tv->zoom > 1000) {
 		return (0);
 	}
 	tileview_set_zoom(tv, tv->zoom<100 ? tv->zoom+5 : tv->zoom+20, 1);
@@ -80,11 +80,22 @@ zoomout_tick(void *obj, Uint32 ival, void *arg)
 {
 	struct tileview *tv = obj;
 
-	if (tv->zoom < 10) {
+	if (tv->zoom < 4) {
 		return (0);
 	}
 	tileview_set_zoom(tv, tv->zoom<100 ? tv->zoom-5 : tv->zoom-20, 1);
 	return (ival);
+}
+
+static __inline__ void
+move_cursor(struct tileview *tv, int x, int y)
+{
+	tv->xms = x;
+	tv->yms = y;
+	tv->xsub = tv->xms%tv->pxsz;
+	tv->ysub = tv->yms%tv->pxsz;
+	tv->xms -= tv->xsub;
+	tv->yms -= tv->ysub;
 }
 
 static void
@@ -101,13 +112,13 @@ tileview_keydown(int argc, union evarg *argv)
 	case SDLK_EQUALS:
 		timeout_set(&tv->zoom_to, zoomin_tick, NULL, 0);
 		timeout_del(tv, &tv->zoom_to);
-		timeout_add(tv, &tv->zoom_to, 1);
+		timeout_add(tv, &tv->zoom_to, 10);
 		zoomin_tick(tv, 0, NULL);
 		break;
 	case SDLK_MINUS:
 		timeout_set(&tv->zoom_to, zoomout_tick, NULL, 0);
 		timeout_del(tv, &tv->zoom_to);
-		timeout_add(tv, &tv->zoom_to, 1);
+		timeout_add(tv, &tv->zoom_to, 10);
 		zoomout_tick(tv, 0, NULL);
 		break;
 	case SDLK_0:
@@ -143,6 +154,8 @@ tileview_buttondown(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	int button = argv[1].i;
+	int x = argv[2].i;
+	int y = argv[3].i;
 
 	widget_focus(tv);
 	switch (button) {
@@ -154,13 +167,19 @@ tileview_buttondown(int argc, union evarg *argv)
 		break;
 	case SDL_BUTTON_WHEELUP:
 		tileview_set_zoom(tv,
-		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+20, 1);
+		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+100, 1);
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		tileview_set_zoom(tv,
-		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-20, 1);
-		tileview_set_zoom(tv, tv->zoom-10, 1);
+		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-100, 1);
 		break;
+	}
+
+	if ((button == SDL_BUTTON_WHEELUP ||
+	     button == SDL_BUTTON_WHEELDOWN)) {
+		move_cursor(tv,
+		    x - tv->xoffs,
+		    y - tv->yoffs);
 	}
 }
 
@@ -213,13 +232,10 @@ tileview_mousemotion(int argc, union evarg *argv)
 		tv->yoffs += yrel;
 		clamp_offsets(tv);
 	}
-	if (tv->flags |= TILEVIEW_PRESEL) {
-		tv->xms = x - tv->xoffs;
-		tv->yms = y - tv->yoffs;
-		tv->xsub = tv->xms%tv->pxsz;
-		tv->ysub = tv->yms%tv->pxsz;
-		tv->xms -= tv->xsub;
-		tv->yms -= tv->ysub;
+	if (tv->flags & TILEVIEW_PRESEL) {
+		move_cursor(tv,
+		    x - tv->xoffs,
+		    y - tv->yoffs);
 	}
 }
 
@@ -252,7 +268,7 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->xoffs = 0;
 	tv->yoffs = 0;
 	tv->scrolling = 0;
-	tv->flags = flags;
+	tv->flags = flags|TILEVIEW_PRESEL;
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
 	widget_map_surface(tv, NULL);
@@ -284,6 +300,11 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 {
 	struct tile *t = tv->tile;
 	int z1 = tv->zoom;
+	int pxsz1 = tv->pxsz;
+
+	if (z2 < 4 ||
+	    z2 > 1000)
+		return;
 
 	tv->zoom = z2;
 	tv->pxsz = z2/100;
@@ -291,8 +312,8 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 		tv->pxsz = 1;
 
 	tv->scaled = SDL_CreateRGBSurface(SDL_SWSURFACE,
-	    t->su->w*z2/100,
-	    t->su->h*z2/100,
+	    z2>=100 ? t->su->w*tv->pxsz : t->su->w*z2/100,
+	    z2>=100 ? t->su->h*tv->pxsz : t->su->h*z2/100,
 	    t->su->format->BitsPerPixel,
 	    t->su->format->Rmask, t->su->format->Gmask,
 	    t->su->format->Bmask, t->su->format->Amask);
@@ -305,8 +326,17 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	widget_replace_surface(tv, 0, tv->scaled);
 
 	if (adj_offs) {
-		tv->xoffs += (t->su->w*z1 - t->su->w*z2)/100/2;
-		tv->yoffs += (t->su->h*z1 - t->su->h*z2)/100/2;
+		int dx, dy;
+		if (z2 >= 100) {
+			dx = (t->su->w*pxsz1 - t->su->w*tv->pxsz)/2;
+			dy = (t->su->h*pxsz1 - t->su->h*tv->pxsz)/2;
+		} else {
+			dx = (t->su->w*z1 - t->su->w*z2)/100/2;
+			dy = (t->su->h*z1 - t->su->h*z2)/100/2;
+		}
+		tv->xoffs += dx;
+		tv->yoffs += dy;
+		clamp_offsets(tv);
 	}
 
 	t->flags |= TILE_DIRTY;
