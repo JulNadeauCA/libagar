@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.33 2002/04/14 01:35:12 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.34 2002/04/18 03:55:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -40,7 +40,7 @@
 #include <engine/input.h>
 #include <engine/version.h>
 
-#include <engine/text/text.h>
+#include <engine/widget/text.h>
 
 static struct obvec char_vec = {
 	char_destroy,

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: window.c,v 1.1 2002/04/18 03:57:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -139,8 +139,10 @@ window_unlink(void *ob)
 }
 
 int
-window_destroy(void *p)
+window_destroy(void *ob)
 {
+	struct window *w = (struct window *)ob;
+
 	free(w->caption);
 
 	return (0);

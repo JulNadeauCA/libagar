@@ -34,7 +34,8 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/physics.h>
-#include <engine/text/text.h>
+
+#include <engine/widget/text.h>
 
 #include "mapedit.h"
 #include "command.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.74 2002/04/14 01:35:13 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.75 2002/04/14 04:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <engine/version.h>
 #include <engine/map.h>
 #include <engine/physics.h>
-#include <engine/text/text.h>
+#include <engine/widget/text.h>
 
 #include "mapedit.h"
 #include "mapedit_offs.h"

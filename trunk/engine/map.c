@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.71 2002/04/15 03:44:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.72 2002/04/16 08:44:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,8 +41,9 @@
 #include <engine/physics.h>
 #include <engine/version.h>
 
-#include <engine/text/text.h>
 #include <engine/mapedit/mapedit.h>
+
+#include <engine/widget/text.h>
 
 static struct obvec map_vec = {
 	map_destroy,
