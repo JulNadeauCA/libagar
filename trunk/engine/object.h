@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.62 2002/12/15 15:56:45 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.63 2002/12/23 02:56:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -64,6 +64,7 @@ struct object {
 	pthread_mutexattr_t	 events_lockattr;
 	TAILQ_HEAD(, prop)	 props;		/* Generic properties */
 	pthread_mutex_t		 props_lock;
+	pthread_mutexattr_t	 props_lockattr;
 
 	SLIST_ENTRY(object) wobjs;		/* Parent's list */
 };
