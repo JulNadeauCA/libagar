@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.73 2003/10/09 22:39:34 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.74 2003/11/15 03:53:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -11,7 +11,8 @@
 
 enum window_close_mode {
 	WINDOW_HIDE,		/* Hide window on close */
-	WINDOW_DETACH		/* Detach window on close */
+	WINDOW_DETACH,		/* Detach window on close */
+	WINDOW_IGNORE		/* Ignore the titlebar close button */
 };
 
 enum window_alignment {

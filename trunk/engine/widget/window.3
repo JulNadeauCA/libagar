@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.30 2004/03/09 04:21:05 vedge Exp $
+.\"	$Csoft: window.3,v 1.31 2004/03/10 03:19:56 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -125,7 +125,8 @@ event handler:
 .Bd -literal
 enum window_close_mode {
 	WINDOW_HIDE,		/* Hide window on close */
-	WINDOW_DETACH		/* Detach window on close */
+	WINDOW_DETACH,		/* Detach window on close */
+	WINDOW_IGNORE		/* Ignore titlebar close button */
 };
 .Ed
 .Pp
