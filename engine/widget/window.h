@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.78 2004/09/16 04:06:10 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.79 2004/09/25 01:57:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -102,6 +102,8 @@ void	 window_remove_titlebar(struct window *);
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
 void	 window_generic_show(int, union evarg *);
+
+int	 window_surrounded(struct window *);
 __END_DECLS
 
 #include "close_code.h"
