@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.136 2004/08/27 06:50:18 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.137 2004/08/30 03:20:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -228,10 +228,8 @@ engine_init(void)
 	config_window(config);
 
 #ifdef DEBUG
-	if (engine_debug > 0) {
-		monitor_init(&monitor, "debug-monitor");
-		window_show(monitor.toolbar);
-	}
+	if (engine_debug > 0)
+		monitor_init();
 #endif
 	return (0);
 }
