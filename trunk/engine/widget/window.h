@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.81 2004/11/30 11:32:08 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.82 2005/01/31 08:20:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -99,6 +99,7 @@ int	 window_event(SDL_Event *);
 void	 window_resize(struct window *);
 void	 window_focus(struct window *);
 void	 window_remove_titlebar(struct window *);
+void	 window_clamp(struct window *);
 
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);

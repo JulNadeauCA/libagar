@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.235 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.236 2005/01/31 08:20:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -101,7 +101,6 @@ const struct style default_style = {
 
 static void	window_shown(int, union evarg *);
 static void	window_hidden(int, union evarg *);
-static void	clamp_to_view(struct window *);
 static void	apply_alignment(struct window *);
 static void	move_window(struct window *, SDL_MouseMotionEvent *);
 static void	resize_window(int, struct window *, SDL_MouseMotionEvent *);
@@ -630,7 +629,7 @@ move_window(struct window *win, SDL_MouseMotionEvent *motion)
 
 	WIDGET(win)->x += motion->xrel;
 	WIDGET(win)->y += motion->yrel;
-	clamp_to_view(win);
+	window_clamp(win);
 
 	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
 
@@ -910,23 +909,29 @@ out:
  * Clamp the window geometry/coordinates down to the view area.
  * The window must be locked.
  */
-static void
-clamp_to_view(struct window *win)
+void
+window_clamp(struct window *win)
 {
-	if (WIDGET(win)->x < 0)
-		WIDGET(win)->x = 0;
-	if (WIDGET(win)->y < 0)
-		WIDGET(win)->y = 0;
+	struct widget *w = WIDGET(win);
+	
+	if (w->x + w->w > view->w)
+		w->x = view->w - w->w;
+	if (w->y + w->h > view->h)
+		w->y = view->h - w->h;
 
-	if (WIDGET(win)->w > view->w)
-		WIDGET(win)->w = view->w;
-	if (WIDGET(win)->h > view->h)
-		WIDGET(win)->h = view->h;
+	if (w->x < 0)
+		w->x = 0;
+	if (w->y < 0)
+		w->y = 0;
 
-	if ((WIDGET(win)->x + WIDGET(win)->w) > view->w)
-		WIDGET(win)->x = view->w - WIDGET(win)->w;
-	if ((WIDGET(win)->y + WIDGET(win)->h) > view->h)
-		WIDGET(win)->y = view->h - WIDGET(win)->h;
+	if (w->x+w->w > view->w) {
+		w->x = 0;
+		w->w = view->w - 1;
+	}
+	if (w->y+w->h > view->h) {
+		w->y = 0;
+		w->h = view->h - 1;
+	}
 }
 
 /*
@@ -1199,6 +1204,7 @@ window_scale(void *p, int w, int h)
 		WIDGET(win->tbar)->w = WIDGET(win)->w - 1;
 	}
 out:
+	window_clamp(win);
 	pthread_mutex_unlock(&win->lock);
 }
 
@@ -1317,7 +1323,7 @@ apply_alignment(struct window *win)
 		WIDGET(win)->y += window_yoffs;
 		pthread_mutex_unlock(&window_lock);
 	}
-	clamp_to_view(win);
+	window_clamp(win);
 }
 
 /* Set the text to show inside a window's titlebar. */
