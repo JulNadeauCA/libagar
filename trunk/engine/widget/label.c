@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.3 2002/04/21 08:02:56 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.4 2002/04/21 13:33:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -47,13 +47,14 @@ extern TTF_Font *font;		/* text */
 
 static struct widvec label_vec = {
 	{
-		label_destroy,
+		NULL,
 		NULL,		/* load */
 		NULL,		/* save */
 		label_link,	/* link */
 		label_unlink	/* unlink */
 	},
-	label_draw
+	label_draw,
+	NULL		/* event */
 };
 
 struct label *
@@ -61,30 +62,15 @@ label_create(struct window *win, char *name, char *caption, Uint32 flags,
     Sint16 x, Sint16 y)
 {
 	struct label *l;
-	SDL_Rect rd;
-
-	rd.x = x;
-	rd.y = y;
-	rd.w = 0;	/* variable */
-	rd.h = 0;	/* variable */
 
 	l = (struct label *)emalloc(sizeof(struct label));
-	widget_init(&l->wid, name, 0, &label_vec, win, rd);
 
-	l->caption = strdup(caption);
+	/* Leave geometry undefined, TTF-dependent. */
+	widget_init(&l->wid, name, 0, &label_vec, win, x, y, 0, 0);
+	strcpy(l->caption, caption);
 	l->flags = flags;
 
 	return (l);
-}
-
-int
-label_destroy(void *ob)
-{
-	struct label *l = (struct label*)ob;
-
-	free(l->caption);
-
-	return (0);
 }
 
 int
