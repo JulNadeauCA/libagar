@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.4 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.5 2003/03/11 02:46:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -48,8 +48,6 @@ static const struct tool_ops select_ops = {
 	NULL,			/* effect */
 	NULL			/* mouse */
 };
-
-static void	select_event(int, union evarg *);
 
 void
 select_init(void *p)
