@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.27 2003/06/14 07:12:36 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.28 2003/09/07 04:17:51 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -101,13 +101,10 @@ by
 .Fa h
 pixels.
 .Pp
-The
 .Fn tlist_prescale
-function arranges for a
-.Nm
-to request enough height to display
+requests sufficient height to display
 .Fa nitems
-and enough width to display
+items at once, and sufficient width to display an item containing
 .Fa text .
 .Pp
 The
