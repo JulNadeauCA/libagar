@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.153 2004/08/27 06:50:18 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.154 2004/08/31 00:51:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -193,13 +193,17 @@ fail:
 int
 view_resize(int w, int h)
 {
+	Uint32 flags = view->v->flags & (SDL_SWSURFACE|SDL_FULLSCREEN|
+	                                 SDL_HWSURFACE|SDL_ASYNCBLIT|
+					 SDL_HWPALETTE|SDL_RESIZABLE|
+					 SDL_OPENGL);
 	struct window *win;
 	SDL_Surface *su;
 	int ow, oh;
 
 	/* XXX set a minimum! */
-	if ((su = SDL_SetVideoMode(w, h, 0, view->v->flags)) == NULL) {
-		dprintf("resizing to %ux%u: %s", w, h, SDL_GetError());
+	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
+		error_set("resize to %ux%u: %s", w, h, SDL_GetError());
 		return (-1);
 	}
 	ow = view->w;
