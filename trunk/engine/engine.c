@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.29 2002/04/23 07:18:49 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.30 2002/04/23 13:28:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ struct	gameinfo *gameinfo;
 static char *mapdesc = NULL, *mapstr = NULL;
 static int mapw = 64, maph = 64;
 static int tilew = 32, tileh = 32;
-static int mapediting;
+int mapediting;
 
 struct input *keyboard = NULL;
 struct input *joy = NULL;
