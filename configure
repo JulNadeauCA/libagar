@@ -124,6 +124,7 @@ echo "    --without-smpeg      Never use the smpeg library (for videos)"
 echo "    --without-x11        Never use X11 (for videos and debugging)"
 echo "    --enable-debug       Build with debugging code"
 echo "    --enable-xdebug      Force synchronous X11 events (very slow)"
+echo "    --enable-wdebug      Debug widgets"
 echo "    --version            Show manuconf version"
 echo "    --help               Show this message"
 exit 1
@@ -280,13 +281,13 @@ echo "#ifndef USE_X11" >> engine/config.h
 echo "#define USE_X11 $USE_X11" >> engine/config.h
 echo "#endif /* USE_X11 */" >> engine/config.h
 	fi
-	if [ "${enable_debug}" = "yes" ]
+fi
+if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]
  then
 XDEBUG=1
 echo "#ifndef XDEBUG" >> engine/config.h
 echo "#define XDEBUG $XDEBUG" >> engine/config.h
 echo "#endif /* XDEBUG */" >> engine/config.h
-	fi
 fi
 if [ "${enable_debug}" = "yes" ]
  then
@@ -298,6 +299,13 @@ LOCKDEBUG=1
 echo "#ifndef LOCKDEBUG" >> engine/config.h
 echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
 echo "#endif /* LOCKDEBUG */" >> engine/config.h
+fi
+if [ "${enable_wdebug}" = "yes" ]
+ then
+WIDGET_DEBUG=1
+echo "#ifndef WIDGET_DEBUG" >> engine/config.h
+echo "#define WIDGET_DEBUG $WIDGET_DEBUG" >> engine/config.h
+echo "#endif /* WIDGET_DEBUG */" >> engine/config.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/config.h
