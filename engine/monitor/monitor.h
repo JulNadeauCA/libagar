@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.13 2002/12/24 10:33:23 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.14 2002/12/31 02:00:56 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -17,6 +17,7 @@ enum {
 	MONITOR_WIDGET_BROWSER,
 	MONITOR_VIEW_PARAMS,
 	MONITOR_FPS_COUNTER,
+	MONITOR_SCREENSHOT,
 	MONITOR_PROPS_BASE
 };
 
@@ -29,4 +30,5 @@ struct window	*object_browser_window(void);
 struct window	*level_browser_window(void);
 struct window	*widget_browser_window(void);
 struct window	*view_params_window(void);
+struct window	*screenshot_window(void);
 
