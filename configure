@@ -1006,14 +1006,10 @@ if [ "${with_gl}" != "no" ]
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
 echo "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
-case "$HOST" in
-	*-OpenBSD-* | *-NetBSD-* | *-FreeBSD-*)
-		OPENGL_LIBS="-L/usr/X11R6/lib -lGL"
-		;;
-	*)
-		OPENGL_LIBS="-lGL"
-		;;
-esac
+if [ "${x11_found}" = "yes" ]; then
+	OPENGL_CFLAGS="${X11_CFLAGS}"
+	OPENGL_LIBS="${X11_LIBS} -lGL"
+fi
 echo -n "checking whether OpenGL works..."
 echo -n "checking whether OpenGL works..." >> config.log
 cat << EOT > conftest.c
@@ -1054,12 +1050,6 @@ else
 	echo "#undef HAVE_OPENGL" > config/have_opengl.h
 
 	echo "no"
-fi
-if [ "${HAVE_OPENGL}" = "yes" ]; then
-NONE=1
-else
-echo "The OpenGL test would not compile."
-exit 1
 fi
 fi
 if [ "${enable_debug}" = "yes" ]
