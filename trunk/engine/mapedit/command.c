@@ -157,7 +157,6 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 
 	*x = map->defx;
 	*y = map->defy;
-	view_center(map->view, *x, *y);
 	map->redraw++;
 }
 

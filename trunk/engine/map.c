@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.30 2002/02/16 05:23:33 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.31 2002/02/16 05:32:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -64,8 +64,6 @@ map_allocnodes(struct map *m, int w, int h, int tilew, int tileh)
 
 	m->mapw = w;
 	m->maph = h;
-	m->defx = w / 2;
-	m->defy = h - 1;
 	m->tilew = tilew;
 	m->tileh = tileh;
 

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.35 2002/02/16 04:58:59 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.36 2002/02/16 05:33:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -81,10 +81,17 @@ mapedit_create(char *name, char *desc, int mapw, int maph, int tilew, int tileh)
 		map = map_create(name, NULL, 0);
 		map_load(map, path);
 	} else {
+		struct node *origin;
+
 		/* Create a new map of the specified geometry. */
 		dprintf("creating %s anew\n", name);
 		map = map_create(name, desc, MAP_2D);
 		map_allocnodes(map, mapw, maph, tilew, tileh);
+		map->defx = mapw / 2;
+		map->defy = maph - 1;
+
+		origin = &map->map[map->defx][map->defy];
+		origin->flags |= NODE_ORIGIN;
 	}
 	if (object_strfind(name) == NULL) {
 		dprintf("%s is not in core\n", name);
@@ -142,7 +149,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph, int tilew, int tileh)
 	pthread_mutex_lock(&map->lock);
 	node_addref(&map->map[med->x][med->y],
 	    (struct object *)med, MAPEDIT_SELECT, MAPREF_ANIM);
-	(&med->map->map[med->x][med->y])->flags |= NODE_ANIM;
+	(&map->map[med->x][med->y])->flags |= (NODE_ANIM|NODE_ORIGIN);
 	pthread_mutex_unlock(&map->lock);
 
 	curmapedit = med;
