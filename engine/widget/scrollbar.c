@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.15 2002/12/31 02:15:46 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.16 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -211,12 +211,20 @@ scrollbar_draw(void *p)
 	struct scrollbar *sb = p;
 	int value, min, max;
 	int w, h, x, y;
-	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
-	    WIDGET(sb)->w : WIDGET(sb)->h;
+	int maxcoord;
 	int coord;
 	
-	if (maxcoord < sb->button_size*2 + sb->bar_size) {
-		return;
+	switch (sb->orientation) {
+	case SCROLLBAR_HORIZ:
+		if (WIDGET(sb)->w < sb->button_size*2 + 6)
+			return;
+		maxcoord = WIDGET(sb)->w;
+		break;
+	case SCROLLBAR_VERT:
+		if (WIDGET(sb)->h < sb->button_size*2 + 6)
+			return;
+		maxcoord = WIDGET(sb)->h;
+		break;
 	}
 
 	value = widget_get_int(sb, "value");
@@ -250,8 +258,8 @@ scrollbar_draw(void *p)
 			h = WIDGET(sb)->h - sb->button_size*2;
 			y = 0;
 		}
-		if (h < sb->button_size)
-			h = sb->button_size;
+		if (h < 4)
+			h = 4;
 		if (sb->button_size + h + y > WIDGET(sb)->h - sb->button_size)
 			y = WIDGET(sb)->h - sb->button_size*2 - h;
 
@@ -283,8 +291,8 @@ scrollbar_draw(void *p)
 			w = WIDGET(sb)->w - sb->button_size*2;
 			x = 0;
 		}
-		if (w < sb->button_size)
-			w = sb->button_size;
+		if (w < 4)
+			w = 4;
 		if (sb->button_size + w + x > WIDGET(sb)->w - sb->button_size)
 			x = WIDGET(sb)->w - sb->button_size*2 - w;
 
