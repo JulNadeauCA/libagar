@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.102 2002/11/26 06:00:01 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.103 2002/11/28 02:47:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -412,7 +412,7 @@ event_dispatch(SDL_Event *ev)
 		EVENT_INSERT_ARG((eev), (ap), f, double);	\
 		break;						\
 	case 'c':						\
-		EVENT_INSERT_ARG((eev), (ap), c, char);		\
+		EVENT_INSERT_ARG((eev), (ap), c, int);		\
 		break;						\
 	case 's':						\
 		EVENT_INSERT_ARG((eev), (ap), s, char *);	\
