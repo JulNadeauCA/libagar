@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.9 2002/12/04 04:22:44 vedge Exp $
+.\"	$Csoft: view.3,v 1.10 2002/12/28 06:00:26 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -77,9 +77,6 @@ success and -1 on failure.
 .Pp
 .Ft void
 .Fn view_detach_queued "void"
-.Pp
-.Ft "bool"
-.Fn VIEW_FOCUSED "struct window *window"
 .nr nS 0
 .Pp
 The
@@ -94,12 +91,6 @@ function detaches the window pointed to by
 from the view by adding it to the detach queue.
 The detachment will be performed later by
 .Fa view_detach_queued .
-.Pp
-The
-.Fn VIEW_FOCUSED
-macro evaluates to true if
-.Fa window
-currently holds focus.
 .Sh VIDEO SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"
