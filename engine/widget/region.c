@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: region.c,v 1.1 2002/05/19 14:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ region_init(struct region *reg, enum widget_align walign, int rx, int ry,
 	reg->h = 0;
 	reg->spacing = spacing;
 	reg->win = NULL;
-	SLIST_INIT(&reg->widgetsh);
+	TAILQ_INIT(&reg->widgetsh);
 }
 
 void
@@ -129,7 +129,7 @@ region_attach(void *parent, void *child)
 		OBJECT_OPS(wid)->onattach(reg->win, wid);
 	}
 
-	SLIST_INSERT_HEAD(&reg->widgetsh, wid, widgets);
+	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);
 	
 	/* Reposition/resize regions and widgets. */
 	window_resize(wid->win);
@@ -156,7 +156,7 @@ region_detach(void *parent, void *child)
 		OBJECT_OPS(wid)->ondetach(wid->win, wid);
 	}
 
-	SLIST_REMOVE(&reg->widgetsh, wid, widget, widgets);
+	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);
 	wid->win->redraw++;
 }
 

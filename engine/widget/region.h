@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: region.h,v 1.1 2002/05/19 14:30:24 vedge Exp $	*/
 
 enum widget_align {
 	WIDGET_HALIGN,		/* Align widgets horizontally */
@@ -19,7 +19,7 @@ struct region {
 
 	/* Set on attach */
 	struct	window *win;		/* Back pointer to window */
-	SLIST_HEAD(, widget) widgetsh;	/* Child widgets */
+	TAILQ_HEAD(, widget) widgetsh;	/* Child widgets */
 	SLIST_ENTRY(region) regions;	/* Regions in window */
 };
 

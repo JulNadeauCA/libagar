@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.14 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.15 2002/05/19 14:30:24 vedge Exp $	*/
 
 struct window;
 
@@ -22,7 +22,7 @@ struct widget {
 	Sint16	x, y;			/* Coordinates within parent window */
 	Uint16	w, h;			/* Can be defined by draw routine */
 
-	SLIST_ENTRY(widget) widgets;	/* Widgets inside region */
+	TAILQ_ENTRY(widget) widgets;	/* Widgets inside region */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
