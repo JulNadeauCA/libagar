@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: debug.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 #ifdef DEBUG
 extern int engine_debug;
@@ -23,7 +23,8 @@ n		printf("%s: " fmt, __FUNCTION__ , ##args)
 #define	dprintf(arg...)		((void)0)
 #define	dprintfa(arg...)	((void)0)
 #define dprintfn(n, arg...)	((void)0)
-#define	fatal(fmt, args...)					\
-	printf("%s: " fmt, __FUNCTION__ , ##args)
+#define	fatal(fmt, args...)	printf("%s: " fmt, __FUNCTION__ , ##args)
 #endif /* DEBUG */
+
+#define warning(fmt, args...)	printf("%s: " fmt, __FUNCTION__ , ##args)
 
