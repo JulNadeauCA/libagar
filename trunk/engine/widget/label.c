@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.9 2002/04/30 01:11:34 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.10 2002/04/30 08:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,7 +58,7 @@ static struct widget_ops label_ops = {
 };
 
 struct label *
-label_new(struct window *win, char *caption, Uint32 flags, Sint16 x, Sint16 y)
+label_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
 {
 	struct label *lab;
 
@@ -73,7 +73,7 @@ label_new(struct window *win, char *caption, Uint32 flags, Sint16 x, Sint16 y)
 }
 
 void
-label_init(struct label *l, char *caption, Uint32 flags, Sint16 x, Sint16 y)
+label_init(struct label *l, char *caption, int flags, Sint16 x, Sint16 y)
 {
 	/* XXX Leave geometry undefined, TTF-dependent. */
 	widget_init(&l->wid, "label", &label_ops, x, y, 0, 0);
