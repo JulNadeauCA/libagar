@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.71 2002/09/01 00:43:56 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.72 2002/09/01 08:51:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -36,10 +36,13 @@
 #include <string.h>
 #include <math.h>
 
+#include <libfobj/fobj.h>
+
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/config.h>
+#include <engine/version.h>
 
 #include <engine/compat/vasprintf.h>
 #include <engine/mapedit/mapedit.h>
@@ -49,10 +52,15 @@
 #include "window.h"
 #include "primitive.h"
 
+static const struct version window_ver = {
+	"agar window",
+	1, 0
+};
+
 static const struct object_ops window_ops = {
 	window_destroy,
-	NULL,		/* load */
-	NULL		/* save */
+	window_load,
+	window_save
 };
 
 Uint32 bg_color = 0;
@@ -68,13 +76,13 @@ static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
 /* View must not be locked. */
 struct window *
-window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
+window_new(char *name, char *caption, int flags, int x, int y, int w, int h, int minw,
     int minh)
 {
 	struct window *win;
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, flags, x, y, w, h, minw, minh);
+	window_init(win, name, caption, flags, x, y, w, h, minw, minh);
 
 	/* Attach window to main view, make it visible. */
 	pthread_mutex_lock(&view->lock);
@@ -95,25 +103,35 @@ window_round(struct window *win, int x, int y, int w, int h)
 }
 
 void
-window_init(struct window *win, char *caption, int flags,
+window_init(struct window *win, char *name, char *caption, int flags,
     int rx, int ry, int rw, int rh, int minw, int minh)
 {
-	static int nwindow = 0;
-	char *name;
+	char *wname;
 	int i;
 
 	if (bg_color == 0) {
 		/* Set the background color. */
 		bg_color = SDL_MapRGB(view->v->format, 0, 0, 0);
 	}
+	
+	if (name != NULL) {					/* Unique */
+		asprintf(&wname, "win-%s", name);
+		flags |= WINDOW_SAVE_POSITION;
+	} else {						/* Generic */
+		static int curwindow = 0;
+		pthread_mutex_t curwindow_lock = PTHREAD_MUTEX_INITIALIZER;
 
-	/* XXX pref */
-	flags |= WINDOW_TITLEBAR;
+		pthread_mutex_lock(&curwindow_lock);
+		curwindow++;
+		pthread_mutex_unlock(&curwindow_lock);
 
-	name = object_name("window", nwindow++);
-	object_init(&win->wid.obj, "window", name, "window",
-	    OBJECT_ART, &window_ops);
-	free(name);
+		asprintf(&wname, "win-generic%d", curwindow++);
+	}
+
+	object_init(&win->wid.obj, "window", wname, "window", OBJECT_ART,
+	    &window_ops);
+
+	free(wname);
 	
 	/* XXX pref */
 	win->borderw = default_nborder;
@@ -126,6 +144,7 @@ window_init(struct window *win, char *caption, int flags,
 
 	win->titleh = font_h + win->borderw;
 	win->flags = flags;
+	win->flags |= WINDOW_TITLEBAR;
 	win->type = (flags & WINDOW_TYPE) == 0 ? WINDOW_DEFAULT_TYPE :
 	    (flags & WINDOW_TYPE);
 	win->spacing = 4;
@@ -418,7 +437,7 @@ window_show(struct window *win)
 	return (rv);
 }
 
-/* View and window must not be locked. */
+/* View, window and world must not be locked by the caller thread. */
 int
 window_hide(struct window *win)
 {
@@ -433,6 +452,10 @@ window_hide(struct window *win)
 
 	if (view->gfx_engine != GFX_ENGINE_GUI)		/* XXX */
 		pthread_mutex_unlock(&view->lock);
+
+	if (win->flags & WINDOW_SAVE_POSITION) {
+		object_save(win);
+	}
 
 	return (rv);
 }
@@ -450,7 +473,12 @@ window_show_locked(struct window *win)
 		/* Already visible. */
 		return (prev);
 	}
-	
+
+	if (win->flags & WINDOW_SAVE_POSITION) {
+		/* Try to load previously saved window geometry/coordinates. */
+		object_load(win);
+	}
+
 	win->flags |= WINDOW_SHOWN;
 
 	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
@@ -470,7 +498,8 @@ window_show_locked(struct window *win)
 
 /*
  * Window must be locked.
- * View must be locked in tile-based mode. XXX
+ * View must be locked in tile-based mode XXX
+ * World must not be locked by the caller thread.
  */
 int
 window_hide_locked(struct window *win)
@@ -513,6 +542,10 @@ window_hide_locked(struct window *win)
 			SDL_UpdateRect(view->v, rd.x, rd.y, rd.w, rd.h);
 		}
 		break;
+	}
+	
+	if (win->flags & WINDOW_SAVE_POSITION) {
+		object_save(win);
 	}
 
 	return (prev);
@@ -1216,3 +1249,36 @@ window_titlebar_printf(struct window *win, const char *fmt, ...)
 	    win->caption);
 }
 
+int
+window_load(void *p, int fd)
+{
+	struct window *win = p;
+
+	if (version_read(fd, &window_ver) != 0) {
+		return (-1);
+	}
+
+	win->x = read_uint32(fd);
+	win->y = read_uint32(fd);
+	win->w = read_uint32(fd);
+	win->h = read_uint32(fd);
+
+	/* Ensure the window fits inside the view area. */
+	window_resize(win);
+
+	return (0);
+}
+
+int
+window_save(void *p, int fd)
+{
+	struct window *win = p;
+
+	version_write(fd, &window_ver);
+	write_uint32(fd, win->x);
+	write_uint32(fd, win->y);
+	write_uint32(fd, win->w);
+	write_uint32(fd, win->h);
+	
+	return (0);
+}

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.34 2002/08/18 00:42:35 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.35 2002/08/22 04:50:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -33,13 +33,14 @@ struct window {
 
 	/* Read-only once attached */
 	int	 flags;
-#define WINDOW_PLAIN		0x01	/* Solid, no borders */
-#define WINDOW_ANIMATE		0x04	/* Redraw each tick */
-#define WINDOW_TITLEBAR		0x08	/* Draw title bar */
-#define WINDOW_ROUNDEDGES	0x10	/* Round edges */
-#define WINDOW_SCALE		0x20	/* Scale regions/widgets */
-#define WINDOW_SHOWN		0x40	/* Visible */
-#define WINDOW_CENTER		0x80	/* Center window */
+#define WINDOW_PLAIN		0x001	/* Solid, no borders */
+#define WINDOW_ANIMATE		0x004	/* Redraw each tick */
+#define WINDOW_TITLEBAR		0x008	/* Draw title bar */
+#define WINDOW_ROUNDEDGES	0x010	/* Round edges */
+#define WINDOW_SCALE		0x020	/* Scale regions/widgets */
+#define WINDOW_SHOWN		0x040	/* Visible */
+#define WINDOW_CENTER		0x080	/* Center window */
+#define WINDOW_SAVE_POSITION	0x100	/* Save window position on hide/exit */
 
 	window_type_t	type;
 
@@ -119,13 +120,14 @@ struct window {
 
 /* Wrappers for high-level code. */
 
-struct window	*window_new(char *, int, int, int, int, int, int, int);
-void	 	 window_init(struct window *, char *, int,
-		     int, int, int, int, int, int);
-
-void	 window_destroy(void *);
-void	 window_attach(void *, void *);
-void	 window_detach(void *, void *);
+struct window	*window_new(char *, char *, int, int, int, int, int, int, int);
+void	 	 window_init(struct window *, char *, char *, int, int, int,
+		     int, int, int, int);
+int		 window_load(void *, int);
+int		 window_save(void *, int);
+void		 window_destroy(void *);
+void		 window_attach(void *, void *);
+void		 window_detach(void *, void *);
 
 int	 window_show(struct window *);
 int	 window_hide(struct window *);
