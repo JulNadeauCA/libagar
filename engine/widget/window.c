@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.216 2004/03/10 03:19:56 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.217 2004/03/10 16:58:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -98,7 +98,6 @@ struct window *
 window_new(const char *fmt, ...)
 {
 	struct window *win = NULL;
-	struct event *ev;
 
 	pthread_mutex_lock(&view->lock);
 	if (fmt != NULL) {				/* Unique instance */
@@ -129,14 +128,12 @@ window_new(const char *fmt, ...)
 
 		win = Malloc(sizeof(struct window));
 		window_init(win, name);
-		ev = event_new(win, "window-close", window_generic_hide, NULL);
-		ev->flags |= EVENT_FORWARD_CHILDREN;
+		event_new(win, "window-close", window_generic_hide, "%p", win);
 	} else {						/* Generic */
 		win = Malloc(sizeof(struct window));
 		window_init(win, NULL);
-		ev = event_new(win, "window-close", window_generic_detach,
-		    NULL);
-		ev->flags |= EVENT_FORWARD_CHILDREN;
+		event_new(win, "window-close", window_generic_detach, "%p",
+		    win);
 	}
 	view_attach(win);
 out:
@@ -1169,17 +1166,16 @@ window_set_position(struct window *win, enum window_alignment alignment,
 void
 window_set_closure(struct window *win, enum window_close_mode mode)
 {
-	struct event *ev;
-
 	switch (mode) {
 	case WINDOW_HIDE:
-		ev = event_new(win, "window-close", window_generic_hide, NULL);
-		ev->flags |= EVENT_FORWARD_CHILDREN;
+		event_new(win, "window-close", window_generic_hide, "%p", win);
 		break;
 	case WINDOW_DETACH:
-		ev = event_new(win, "window-close", window_generic_detach,
-		    NULL);
-		ev->flags |= EVENT_FORWARD_CHILDREN;
+		event_new(win, "window-close", window_generic_detach, "%p",
+		    win);
+		break;
+	case WINDOW_IGNORE:
+		event_remove(win, "window-close");
 		break;
 	}
 }
