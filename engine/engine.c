@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.87 2002/12/31 05:48:44 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.88 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -169,7 +169,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
 	world_init(world, prog->prog);
-	world_attach(world, config);
+	world_attach(config);
 
 	/* Initialize the font engine. */
 	if (flags & ENGINE_INIT_TEXT &&
