@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.165 2003/03/03 05:18:04 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.166 2003/03/04 00:32:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -163,9 +163,9 @@ void
 window_init(struct window *win, char *name, int flags, int rx, int ry,
     int rw, int rh, int minw, int minh)
 {
+	size_t namelen;
 	char *wname;
-	int i;
-	int fl = flags;
+	int i, fl = flags;
 
 	if (name != NULL) {					/* Unique */
 		Asprintf(&wname, "win-%s", name);
@@ -180,6 +180,12 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		pthread_mutex_unlock(&curwindow_lock);
 
 		Asprintf(&wname, "win-generic%d", curwindow++);
+	}
+	namelen = strlen(wname);
+	for (i = 0; i < namelen; i++) {	
+		if (wname[i] == '/') {		/* XXX restrict further */
+			wname[i] = '_';
+		}
 	}
 	object_init(&win->wid.obj, "window", wname, "window",
 	    OBJECT_ART|OBJECT_ART_CACHE, &window_ops);
