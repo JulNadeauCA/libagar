@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.11 2003/09/05 10:22:33 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.12 2004/03/02 08:58:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -14,7 +14,6 @@ struct gfx_anim {
 	Uint32		maxframes;
 
 	Uint32	frame;			/* Current frame# */
-	int	delta, delay;		/* Timing */
 };
 
 struct gfx_cached_sprite {
@@ -81,10 +80,8 @@ Uint32	 gfx_insert_sprite(struct gfx *, SDL_Surface *, int);
 int	 gfx_insert_fragments(struct gfx *, SDL_Surface *);
 Uint32	 gfx_insert_submap(struct gfx *, struct map *);
 
-struct gfx_anim	*gfx_insert_anim(struct gfx *, int);
+struct gfx_anim	*gfx_insert_anim(struct gfx *);
 Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
-void		 gfx_anim_tick(struct gfx_anim *, struct noderef *);
-
 #ifdef DEBUG
 __inline__ SDL_Surface		*gfx_get_sprite(struct object *, Uint32);
 __inline__ struct gfx_anim	*gfx_get_anim(struct object *, Uint32);

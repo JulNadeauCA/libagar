@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.6 2003/12/05 00:44:15 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.7 2004/01/03 04:25:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -493,38 +493,17 @@ xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
     struct gfx_anim **anim)
 {
 	if (strstr(name, "ms)") != NULL) {		/* XXX ugly */
-		char *aname, *anamep;
-		int adelay = 0;
-	
-		anamep = aname = Strdup(name);
-		if ((aname = strchr(aname, '(')) != NULL) {
-			char *sd;
-
-			aname++;
-			if ((sd = strchr(aname, 'm')) == NULL) {
-				adelay = 0;
-			} else {
-				*sd = '\0';
-				adelay = atoi(aname);
-			}
-		}
-		free(anamep);
-
-		/* Allocate a new animation. */
-		*anim = gfx_insert_anim(gfx, adelay);
+		*anim = gfx_insert_anim(gfx);
 	} else {
 		if (*anim != NULL && name[0] == '+') {
-			/* Insert animation frame */
 			gfx_insert_anim_frame(*anim, su);
 		} else {
 			*anim = NULL;
 			if ((su->h > TILEH || su->w > TILEW) &&
 			    strstr(name, "(break)") != NULL) {
-				/* Break down into tiles. */
 				if (gfx_insert_fragments(gfx, su) == -1)
 					return (-1);
 			} else {
-				/* Original size */
 		   		gfx_insert_sprite(gfx, su, 0);
 			}
 		}
