@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.146 2004/04/25 08:18:09 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.147 2004/04/26 03:21:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -263,6 +263,8 @@ static void
 destroy_window(struct window *win)
 {
 	struct window *subwin, *nsubwin;
+	
+	window_hide(win);
 
 	for (subwin = TAILQ_FIRST(&win->subwins);
 	     subwin != TAILQ_END(&win->subwins);
@@ -270,8 +272,7 @@ destroy_window(struct window *win)
 		nsubwin = TAILQ_NEXT(subwin, swins);
 		destroy_window(subwin);
 	}
-
-	window_hide(win);
+	TAILQ_INIT(&win->subwins);
 	TAILQ_REMOVE(&view->windows, win, windows);
 	object_destroy(win);
 	Free(win, M_OBJECT);
