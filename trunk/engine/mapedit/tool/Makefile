@@ -1,11 +1,11 @@
-#	$Csoft: Makefile,v 1.2 2002/07/09 08:24:48 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2002/07/12 02:53:12 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
 
 LIB=	tool
-SRCS=	tool.c stamp.c eraser.c magnifier.c resize.c
-OBJS=	tool.o stamp.o eraser.o magnifier.o resize.o
+SRCS=	tool.c stamp.c eraser.c magnifier.c resize.c propedit.c
+OBJS=	tool.o stamp.o eraser.o magnifier.o resize.o propedit.o
 
 CFLAGS+=	${SDL_CFLAGS}
 
