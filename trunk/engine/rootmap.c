@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.31 2003/07/04 12:30:53 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.32 2003/09/04 03:15:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,14 +31,6 @@
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
-
-#ifdef DEBUG
-#define DEBUG_FOCUS	0x01
-#define DEBUG_DIAG	0x02
-
-int	rootmap_debug = DEBUG_DIAG|DEBUG_FOCUS;
-#define	engine_debug rootmap_debug
-#endif
 
 void
 rootmap_init(struct viewmap *rm, int mw, int mh)
@@ -98,9 +90,8 @@ draw_layer:
 		}
 	}
 next_layer:
-	if (++layer < m->nlayers) {
-		goto draw_layer;			/* Draw next layer */
-	}
+	if (++layer < m->nlayers) 
+		goto draw_layer;
 }
 
 /*
@@ -116,14 +107,6 @@ rootmap_draw(void)
 	struct noderef *nref;
 	int mx, my, rx, ry;
 	int layer = 0;
-
-#ifdef DEBUG
-	/* XXX */
-	if (rm->y > m->maph - rm->h || rm->x > m->mapw - rm->w) {
-		debug(DEBUG_DIAG, "offset exceeds map boundaries\n");
-		return;
-	}
-#endif
 
 draw_layer:
 	if (!m->layers[layer].visible) {
@@ -146,16 +129,16 @@ draw_layer:
 		}
 	}
 next_layer:
-	if (++layer < m->nlayers) {
-		goto draw_layer;			/* Draw next layer */
-	}
+	if (++layer < m->nlayers)
+		goto draw_layer;
 }
 
+/* Display the given map. */
 void
 rootmap_focus(struct map *m)
 {
 	pthread_mutex_lock(&view->lock);
-	debug(DEBUG_FOCUS, "%s -> %s\n",
+	dprintf("%s -> %s\n",
 	    (view->rootmap == NULL || view->rootmap->map == NULL) ? "NULL" :
 	    OBJECT(view->rootmap->map)->name, OBJECT(m)->name);
 	view->rootmap->map = m;
@@ -168,7 +151,7 @@ rootmap_center(struct map *m, int mapx, int mapy)
 	struct viewmap *rm = view->rootmap;
 	int nx, ny;
 
-	debug(DEBUG_FOCUS, "centering on map `%s'\n", OBJECT(m)->name);
+	dprintf("centering on map `%s'\n", OBJECT(m)->name);
 
 	pthread_mutex_lock(&m->lock);
 	nx = mapx - rm->w/2;
@@ -199,7 +182,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 	rm = view->rootmap;
 
 	switch (dir) {
-	case DIR_UP:
+	case DIR_N:
 		if ((rm->sy -= inc) <= -TILEH) {
 			if (--rm->y < 0) {
 				rm->y = 0;
@@ -207,7 +190,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 			rm->sy = 0;
 		}
 		break;
-	case DIR_DOWN:
+	case DIR_S:
 		if ((rm->sy += inc) >= TILEH) {
 			if (++rm->y > (m->maph - rm->h)) {
 				rm->y = m->maph - rm->h;
@@ -215,7 +198,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 			rm->sy = 0;
 		}
 		break;
-	case DIR_LEFT:
+	case DIR_W:
 		if ((rm->sx -= inc) <= -TILEW) {
 			if (--rm->x < 0) {
 				rm->x = 0;
@@ -223,7 +206,7 @@ rootmap_scroll(struct map *m, int dir, int inc)
 			rm->sx = 0;
 		}
 		break;
-	case DIR_RIGHT:
+	case DIR_E:
 		if ((rm->sx += inc) >= TILEH) {
 			if (++rm->x > (m->mapw - rm->w)) {
 				rm->x = m->mapw - rm->w;
