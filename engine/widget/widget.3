@@ -1,0 +1,215 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt WIDGET 3
+.Os
+.Sh NAME
+.Nm widget
+.Nd agar widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/window.h>
+#include <engine/widget/region.h>
+#include <engine/widget/widget.h>
+.Ed
+.Sh DESCRIPTION
+Agar widgets are derived from the
+.Nm
+structure.
+Widgets are attached to window
+.Xr region 3
+structures, and their coordinates and geometry are variable.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn widget_init "struct widget *wid" "char *name" "char *media" "const void *widget_ops" "int rw" "int rh"
+.nr nS 0
+.Pp
+The
+.Fn widget_init
+function initializes a widget identified by
+.Fa name ,
+and media if the
+.Fa media
+argument is not
+.Dv NULL .
+.Pp
+The
+.Fa widget_ops
+argument is a pointer to the following structure:
+.Bd -literal
+struct widget_ops {
+	const struct object_ops	obops;		/* Object ops */
+
+	void	 (*widget_draw)(void *);	/* Rendering routine */
+	void	 (*widget_animate)(void *);	/* Animation routine */
+};
+.Ed
+.Pp
+Since widgets don't hold persistent properties, their identification
+string is simply the widget type followed by a random number.
+Certain widgets may have save/load routines.
+.Pp
+The widget initially requests an area of size
+.Fa rw
+x
+.Fa rh .
+If
+.Fa rw
+and
+.Fa rh
+are greater than zero, they are considered percentiles of the total
+space occupied by the parent region.
+If they are zero, the widget requests all available space inside the region.
+If
+.Fa rw
+or
+.Fa rh
+is negative, the requested geometry is in pixels.
+.Pp
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
+#define WIDGET_MOUSEOUT		0x02	/* Catch window-mouseout events */
+.Ed
+.Pp
+The
+.Dv WIDGET_NO_FOCUS
+flag prevents the widget from gaining focus.
+The
+.Dv WIDGET_MOUSEOUT
+flag triggers a window-mouseout event whenever the mouse moves outside of
+the area covered by the widget.
+.Sh COLOR SCHEME
+.nr nS 1
+.Ft void
+.Fn widget_map_color "struct widget *wid" "int index" "char *name" "Uint8 r" "Uint8 g" "Uint8 b"
+.nr nS 0
+.Pp
+The
+.Fn widget_map_color
+function registers a color referenced by the null-terminated string pointed
+to by
+.Fa name ,
+with a default value of
+.Fa r ,
+.Fa g
+and
+.Fa b .
+The
+.Fa index
+argument is an index into the widget color table (an arbitrary-size
+array of color values).
+This allows the color scheme to change at run time without expensive
+operations in widget rendering routines.
+.Sh MACROS
+.nr nS 1
+.Ft Uint32
+.Fn WIDGET_COLOR "struct widget *wid" "int index"
+.Pp
+.Ft Uint32
+.Fn WIDGET_ABSX "struct widget *wid"
+.Pp
+.Ft Uint32
+.Fn WIDGET_ABSY "struct widget *wid"
+.Pp
+.Ft void
+.Fn WIDGET_DRAW "struct widget *wid" "SDL_Surface *surface" "Sint16 x" "Sint16 y"
+.Pp
+.Ft void
+.Fn WIDGET_FILL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint16 w" "Uint16 h" "Uint32 color"
+.Pp
+.Ft void
+.Fn WIDGET_PUT_PIXEL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint32 color"
+.Pp
+.Ft void
+.Fn WIDGET_PUT_ALPHAPIXEL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint32 color" "Uint8 a"
+.Pp
+.Ft SDL_Surface *
+.Fn WIDGET_SURFACE "struct widget *wid"
+.Pp
+.Ft void
+.Fn WIDGET_FOCUS "struct widget *wid"
+.Pp
+.Ft bool
+.Fn WIDGET_INSIDE "struct widget *wid" "Sint16 x" "Sint16 y"
+.nr nS 0
+.Pp
+.Fn WIDGET_COLOR
+returns the color at index
+.Fa index .
+.Fn WIDGET_ABSX
+and
+.Fn WIDGET_ABSY
+return the absolute coordinates of a widget.
+.Pp
+.Fn WIDGET_DRAW
+blits the surface
+.Fa surface
+onto the widget at offset
+.Fa x ,
+.Fa y
+with
+.Xr SDL_BlitSurface 3 .
+.Pp
+.Fn WIDGET_PUT_PIXEL
+writes a pixel of value
+.Fa color
+at coordinates
+.Fa x ,
+.Fa y
+on the widget surface (using the
+.Xr WINDOW_PUT_PIXEL 3
+macro, which in turn uses the
+.Xr VIEW_PUT_PIXEL 3
+macro).
+.Fn WIDGET_PUT_ALPHAPIXEL
+writes a pixel at coordinates
+.Fa x ,
+.Fa y
+of the widget, after alpha-blending the pixel using alpha value
+.Fa a .
+.Pp
+.Fn WIDGET_SURFACE
+returns a widget surface.
+.Fn WIDGET_FOCUS
+gives focus to a widget.
+The
+.Fn WIDGET_INSIDE
+macro evaluates to true if coordinates
+.Fa x
+and
+.Fa y
+are inside the widget area.
+.Sh SEE ALSO
+.Xr agar 3 .
+.Sh HISTORY
+The
+.Nm
+structure first appeared in AGAR 1.0.
