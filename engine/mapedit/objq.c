@@ -26,12 +26,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/asprintf.h>
 #include <engine/engine.h>
+
 #include <engine/map.h>
 #include <engine/view.h>
 #include <engine/world.h>
-
-#include <stdio.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -327,24 +327,26 @@ tl_objs_selected(int argc, union evarg *argv)
 	
 		reg = region_new(win, 0, 0, 0, 100, 85);
 		{
-			char s[8];
+			char *s;
 
 			tl = tlist_new(reg, 100, 100, TLIST_MULTI);
 			tlist_set_item_height(tl,
 			    prop_get_int(&mapedit, "tilemap-item-size"));
 
 			for (i = 0; i < ob->art->nsprites; i++) {
-				snprintf(s, 8, "s%d", i);
+				Asprintf(&s, "s%d", i);
 				tlist_insert_item(tl, ob->art->sprites[i],
 				    s, ob);
+				free(s);
 			}
 			
 			for (i = 0; i < ob->art->nanims; i++) {
 				struct art_anim *an = ob->art->anims[i];
 			
-				snprintf(s, 8, "a%d", i);
+				Asprintf(&s, "a%d", i);
 				tlist_insert_item(tl, (an->nframes > 0) ?
 				    an->frames[0] : NULL, s, ob);
+				free(s);
 			}
 		}
 		
