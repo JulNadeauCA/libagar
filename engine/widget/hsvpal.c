@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.3 2005/02/17 08:14:39 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.4 2005/02/18 12:04:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -204,8 +204,7 @@ hsvpal_scale(void *p, int w, int h)
 	pal->circle.rin = pal->circle.rout - pal->circle.width;
 	pal->circle.dh = (float)(1.0/(pal->circle.rout*M_PI));
 	pal->circle.x = WIDGET(pal)->w/2;
-	pal->circle.y = (WIDGET(pal)->h - pal->rpreview.h)/2 -
-	    pal->circle.spacing;
+	pal->circle.y = (WIDGET(pal)->h - pal->rpreview.h)/2;
 
 	pal->triangle.x = WIDGET(pal)->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
