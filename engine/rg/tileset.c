@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.9 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.10 2005/02/11 04:50:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -211,10 +211,11 @@ tileset_load(void *obj, struct netbuf *buf)
 		Uint8 type;
 
 		px = Malloc(sizeof(struct pixmap), M_RG);
+		pixmap_init(px, ts, 0);
+
 		copy_string(px->name, buf, sizeof(px->name));
 		px->flags = (int)read_uint32(buf);
-		px->su = read_surface(buf, vfmt);
-		if (px->su == NULL) {
+		if ((px->su = read_surface(buf, vfmt)) == NULL) {
 			Free(px, M_RG);
 			goto fail;
 		}
@@ -416,7 +417,8 @@ poll_tileset(int argc, union evarg *argv)
 					struct pixmap *px = tel->tel_pixmap.px;
 
 					snprintf(label, sizeof(label),
-					    "%s [%d,%d] %s", px->name,
+					    "%s(%u) [%d,%d] %s", px->name,
+					    px->nrefs,
 					    tel->tel_pixmap.x,
 					    tel->tel_pixmap.y,
 					    tel->visible ? "" : "(invisible)");
