@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.162 2003/03/14 07:10:04 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.163 2003/03/18 03:07:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -207,7 +207,7 @@ map_free_layers(struct map *m)
 int
 map_resize(struct map *m, unsigned int w, unsigned int h)
 {
-	int i, sx, sy, dx, dy;
+	int sx, sy, dx, dy;
 	struct noderef *nref, *nnref;
 	struct node **nmap;
 
@@ -278,8 +278,6 @@ map_set_zoom(struct map *m, Uint16 zoom)
 void
 map_init(struct map *m, char *name, char *media)
 {
-	int i;
-
 	object_init(&m->obj, "map", name, media,
 	    (media != NULL) ? OBJECT_ART|OBJECT_ART_CAN_FAIL: 0, &map_ops);
 	m->redraw = 0;
@@ -572,7 +570,6 @@ void
 map_destroy(void *p)
 {
 	struct map *m = p;
-	int i = 0;
 
 #if defined(DEBUG) && defined(THREADS)
 	if (map_debug & DEBUG_SCAN) {
@@ -597,7 +594,6 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
     struct noderef **nref)
 {
 	enum noderef_type type;
-	struct transform *trans;
 	Uint32 ntrans = 0;
 	Uint32 flags;
 	Uint8 layer;
@@ -1077,7 +1073,6 @@ map_check(void *arg)
 static void
 noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 {
-	SDL_Rect clip;
 	int x, y, dh, dw, sx, sy;
 	Uint8 *src, r1, g1, b1, a1;
 
@@ -1100,13 +1095,39 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 			    sy*s->pitch +
 			    sx*s->format->BytesPerPixel;
 			if (s->flags & SDL_SRCALPHA) {
-				SDL_GetRGBA(*(Uint32 *)src, s->format,
-				    &r1, &g1, &b1, &a1);
+				switch (s->format->BytesPerPixel) {
+				case 4:
+					SDL_GetRGBA(*(Uint32 *)src, s->format,
+					    &r1, &g1, &b1, &a1);
+					break;
+				case 3:
+				case 2:
+					SDL_GetRGBA(*(Uint16 *)src, s->format,
+					    &r1, &g1, &b1, &a1);
+					break;
+				case 1:
+					SDL_GetRGBA(*src, s->format,
+					    &r1, &g1, &b1, &a1);
+					break;
+				}
 				view_alpha_blend(view->v, rx+x, ry+y,
 				    r1, g1, b1, a1);
 			} else {
-				SDL_GetRGB(*(Uint32 *)src, s->format,
-				    &r1, &g1, &b1);
+				switch (s->format->BytesPerPixel) {
+				case 4:
+					SDL_GetRGB(*(Uint32 *)src, s->format,
+					    &r1, &g1, &b1);
+					break;
+				case 3:
+				case 2:
+					SDL_GetRGB(*(Uint16 *)src, s->format,
+					    &r1, &g1, &b1);
+					break;
+				case 1:
+					SDL_GetRGB(*src, s->format,
+					    &r1, &g1, &b1);
+					break;
+				}
 				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
 				    SDL_MapRGB(view->v->format, r1, g1, b1));
 			}
@@ -1116,42 +1137,130 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 		SDL_UnlockSurface(view->v);
 }
 
+static __inline__ SDL_Surface *
+noderef_draw_sprite(struct noderef *nref)
+{
+	struct art_cached_sprite *csprite;
+	struct art_spritecl *spritecl;
+	SDL_Surface *origsu = SPRITE(nref->pobj, nref->offs);
+
+	if (SLIST_EMPTY(&nref->transforms)) {
+		return (origsu);
+	}
+
+	spritecl = &nref->pobj->art->csprites[nref->offs];
+
+	/* Look for a sprite with the same transforms, in the same order. */
+	SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
+		struct transform *tr1, *tr2;
+				
+		for (tr1 = SLIST_FIRST(&nref->transforms),
+		     tr2 = SLIST_FIRST(&csprite->transforms);
+		     tr1 != SLIST_END(&nref->transforms) &&
+		     tr2 != SLIST_END(&csprite->transforms);
+		     tr1 = SLIST_NEXT(tr1, transforms),
+		     tr2 = SLIST_NEXT(tr2, transforms)) {
+			if (transform_compare(tr1, tr2) != 0)
+				break;
+		}
+		if (tr1 == SLIST_END(&nref->transforms) &&
+		    tr2 == SLIST_END(&csprite->transforms))
+			break;
+	}
+	if (csprite == NULL) {					/* Cache miss */
+		struct transform *trans, *ntrans;
+		SDL_Surface *su;
+		Uint32 saflags = origsu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
+		Uint8 salpha = origsu->format->alpha;
+		struct art_cached_sprite *ncsprite;
+
+		dprintf("cache miss\n");
+
+		/* Allocate the new sprite surface. */
+		su = SDL_CreateRGBSurface(SDL_SWSURFACE |
+		    (origsu->flags &
+		     (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+		     origsu->w, origsu->h, origsu->format->BitsPerPixel,
+		     origsu->format->Rmask,
+		     origsu->format->Gmask,
+		     origsu->format->Bmask,
+		     origsu->format->Amask);
+		if (su == NULL) {
+			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		}
+
+		/* Copy the sprite as-is. */
+		SDL_SetAlpha(origsu, 0, 0);
+		SDL_BlitSurface(origsu, NULL, su, NULL);
+		SDL_SetAlpha(origsu, saflags, salpha);
+
+		/* Allocate a new cache entry. */
+		ncsprite = emalloc(sizeof(struct art_cached_sprite));
+		ncsprite->su = su;
+		ncsprite->last_drawn = SDL_GetTicks();
+
+		/* Apply the transformations. */
+		SLIST_FOREACH(trans, &nref->transforms, transforms) {
+			trans->func(&su, trans->nargs, trans->args);
+
+			ntrans = emalloc(sizeof(struct transform));
+			transform_init(ntrans, trans->type, trans->nargs,
+			    trans->args);
+			SLIST_INSERT_HEAD(&ncsprite->transforms, ntrans,
+			    transforms);
+		}
+
+		/* Link the new cache entry. */
+		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
+
+		return (su);
+	} else {						/* Cache hit */
+		csprite->last_drawn = SDL_GetTicks();
+		return (csprite->su);
+	}
+}
+
+static __inline__ SDL_Surface *
+noderef_draw_anim(struct noderef *nref)
+{
+	struct art_anim *anim = ANIM(nref->pobj, nref->offs);
+
+	/* XXX do this somewhere else! */
+	art_anim_tick(anim, nref);
+
+	return (anim->frames[anim->frame]);
+}
+
 /*
  * Render a map node.
  * The node's parent map, if any, must be locked.
+ *
+ * XXX cache scaled nodes; doing this in real time is very expensive.
+ * XXX opengl support and texture mgmt.
  */
 __inline__ void
 noderef_draw(struct map *m, struct noderef *nref, int rx, int ry)
 {
 	SDL_Rect rd;
 	SDL_Surface *su;
-	
+
 	switch (nref->type) {
 	case NODEREF_SPRITE:
-		su = SPRITE(nref->pobj, nref->offs);
+		su = noderef_draw_sprite(nref);
 		break;
 	case NODEREF_ANIM:
-		{
-			struct art_anim *anim;
-			
-			anim = ANIM(nref->pobj, nref->offs);
-			if (anim == NULL) {
-				fatal("bad anim\n");
-			}
-			su = anim->frames[anim->frame];
-			
-			/* XXX do this somewhere else! */
-			art_anim_tick(anim, nref);
-		}
+		su = noderef_draw_anim(nref);
 		break;
 	default:				/* Not a drawable */
 		return;
 	}
 
 	if (m->zoom != 100) {
-		rd.x = rx + (nref->xcenter * m->zoom / 100) +
+		rd.x = rx +
+		    (nref->xcenter * m->zoom / 100) +
 		    (nref->xmotion * m->zoom / 100);
-		rd.y = ry + (nref->ycenter * m->zoom / 100) +
+		rd.y = ry +
+		    (nref->ycenter * m->zoom / 100) +
 		    (nref->ymotion * m->zoom / 100);
 		noderef_draw_scaled(m, su, rd.x, rd.y);
 	} else {

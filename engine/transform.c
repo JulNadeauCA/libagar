@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.4 2003/03/13 08:41:08 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.5 2003/03/18 06:34:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,19 +26,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/view.h>
 
 #include <libfobj/fobj.h>
 
-#include "map.h"
-#include "view.h"
+#include <string.h>
 
-static SDL_Surface	*transform_hflip(SDL_Surface *, int, Uint32 *);
-static SDL_Surface	*transform_vflip(SDL_Surface *, int, Uint32 *);
+static void	transform_hflip(SDL_Surface **, int, Uint32 *);
+static void	transform_vflip(SDL_Surface **, int, Uint32 *);
 
 static const struct {
 	enum transform_type	type;
-	SDL_Surface		*(*func)(SDL_Surface *, int, Uint32 *);
+	void			(*func)(SDL_Surface **, int, Uint32 *);
 } transforms[] = {
 	{	TRANSFORM_HFLIP,	transform_hflip		},
 	{	TRANSFORM_VFLIP,	transform_vflip		}
@@ -66,8 +67,12 @@ transform_init(struct transform *trans, enum transform_type type,
 	trans->type = type;
 	trans->func = NULL;
 	trans->nargs = argc;
-	trans->args = emalloc(argc * sizeof(Uint32));
-	memcpy(trans->args, argv, argc * sizeof(Uint32));
+	if (argc > 0) {
+		trans->args = emalloc(argc * sizeof(Uint32));
+		memcpy(trans->args, argv, argc * sizeof(Uint32));
+	} else {
+		trans->args = NULL;
+	}
 
 	/* Look for a matching algorithm. */
 	for (i = 0; i < ntransforms; i++) {
@@ -95,9 +100,22 @@ transform_copy(struct transform *src, struct transform *dst)
 	dst->type = src->type;
 	dst->func = src->func;
 
+	dst->nargs = src->nargs;
 	Free(dst->args);
-	dst->args = emalloc(src->nargs * sizeof(Uint32));
-	memcpy(dst->args, src->args, src->nargs * sizeof(Uint32));
+	if (src->args != NULL) {
+		dst->args = emalloc(src->nargs * sizeof(Uint32));
+		memcpy(dst->args, src->args, src->nargs * sizeof(Uint32));
+	} else {
+		dst->args = NULL;
+	}
+}
+
+__inline__ int
+transform_compare(struct transform *tr1, struct transform *tr2)
+{
+	return (tr1->type == tr2->type && tr1->nargs == tr2->nargs &&
+	    (tr1->nargs == 0 ||
+	     memcmp(tr1->args, tr2->args, tr1->nargs * sizeof(Uint32))) == 0);
 }
 
 int
@@ -145,19 +163,15 @@ transform_save(void *bufp, struct transform *trans)
 		buf_write_uint32(buf, trans->args[i]);
 }
 
-static SDL_Surface *
-transform_hflip(SDL_Surface *su, int argc, Uint32 *argv)
+static void
+transform_hflip(SDL_Surface **su, int argc, Uint32 *argv)
 {
 	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
 }
 
-static SDL_Surface *
-transform_vflip(SDL_Surface *su, int argc, Uint32 *argv)
+static void
+transform_vflip(SDL_Surface **su, int argc, Uint32 *argv)
 {
 	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
 }
 
