@@ -143,7 +143,7 @@ echo "    --with-smpeg                   Play videos through smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      Support OpenGL operations [default: check]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
-echo "    --enable-serialization         Thread-safe engine [default: yes]"
+echo "    --enable-threads               Thread safety [default: yes]"
 echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support 24 bpp display [default: yes]"
@@ -1139,14 +1139,14 @@ else
 echo "#undef DEBUG" > config/debug.h
 echo "#undef LOCKDEBUG" > config/lockdebug.h
 fi
-if [ "${enable_serialization}" != "no" ]
+if [ "${enable_threads}" != "no" ]
  then
-SERIALIZATION=1
-echo "#ifndef SERIALIZATION" > config/serialization.h
-echo "#define SERIALIZATION" $SERIALIZATION >> config/serialization.h
-echo "#endif /* SERIALIZATION */" >> config/serialization.h
+THREADS=1
+echo "#ifndef THREADS" > config/threads.h
+echo "#define THREADS" $THREADS >> config/threads.h
+echo "#endif /* THREADS */" >> config/threads.h
 else
-echo "#undef SERIALIZATION" > config/serialization.h
+echo "#undef THREADS" > config/threads.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
