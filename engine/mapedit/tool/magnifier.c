@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.25 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.26 2003/05/06 05:54:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <engine/engine.h>
+#include <engine/view.h>
 
 #include "magnifier.h"
 
@@ -41,7 +42,7 @@ static const struct tool_ops magnifier_ops = {
 		NULL		/* save */
 	},
 	magnifier_window,
-	NULL,			/* cursor */
+	NULL,
 	NULL,
 	magnifier_mouse
 };
@@ -79,6 +80,7 @@ magnifier_init(void *p)
 	struct magnifier *mag = p;
 
 	tool_init(&mag->tool, "magnifier", &magnifier_ops);
+	TOOL(mag)->cursor = SPRITE(mag, TOOL_MAGNIFIER_CURSOR);
 	mag->increment = 30;
 }
 
