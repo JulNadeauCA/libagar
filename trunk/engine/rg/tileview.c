@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.25 2005/03/09 06:39:19 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.26 2005/03/11 08:56:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -1251,6 +1251,9 @@ tileview_scaled_pixel(struct tileview *tv, int x, int y, Uint8 r, Uint8 g,
 	int sy = y*tv->pxsz;
 	Uint32 pixel;
 	Uint8 *dst;
+
+	if (sx < 0 || sy < 0 || sx >= tv->scaled->w || sy >= tv->scaled->h)
+		return;
 
 	pixel = SDL_MapRGB(tv->scaled->format, r, g, b);
 
