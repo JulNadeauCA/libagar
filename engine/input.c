@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.7 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.8 2002/04/10 09:23:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -114,28 +114,17 @@ input_time(Uint32 ival, void *p)
 		static struct mappos opos;
 		struct mappos *npos;
 		struct noderef *nref;
-		struct node *nnode;
 		
-		nnode = &m->map[x][y];
-		if ((nnode->flags & NODE_BLOCK) == 0) {
-			opos = *in->pos;
-			nref = opos.nref;
+		opos = *in->pos;
+		nref = opos.nref;
 	
-			object_delpos(nref->pobj);
-			npos = object_addpos(nref->pobj, nref->offs,
-			    nref->flags, opos.input, m, x, y);
-			npos->dir = opos.dir;
+		object_delpos(nref->pobj);
+		npos = object_addpos(nref->pobj, nref->offs, nref->flags,
+		    opos.input, m, x, y);
+		npos->dir = opos.dir;
 
-			m->redraw++;
-			mapdir_postmove(&npos->dir, &x, &y, moved);
-		} else {
-			opos = *in->pos;
-			nref = opos.nref;
-
-			nref->xoffs = 0;
-			nref->yoffs = 0;
-			m->redraw++;
-		}
+		m->redraw++;
+		mapdir_postmove(&npos->dir, &x, &y, moved);
 	}
 	pthread_mutex_unlock(&m->lock);
 
