@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.35 2004/03/10 13:46:17 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.36 2004/03/22 01:13:17 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -35,6 +35,7 @@ MAN7?=""
 MAN8?=""
 MAN9?=""
 MANS=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
+NOMAN?=
 
 all: all-subdir preformat-man
 install: install-man-dirs install-man install-subdir
@@ -63,7 +64,7 @@ depend: depend-subdir
 	  ${NROFF} -Tps -mandoc > $@) || (rm -f $@; true)
 
 preformat-man:
-	@if [ "${MAN1}" != "" ]; then \
+	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN1}" = "" ]; then \
 	        for F in ${MAN1}; do \
 	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
@@ -74,7 +75,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN1} ${PSMAN1}; \
 	    fi; \
 	fi
-	@if [ "${MAN2}" != "" ]; then \
+	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN2}" = "" ]; then \
 	        for F in ${MAN2}; do \
 	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
@@ -85,7 +86,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN2} ${PSMAN2}; \
 	    fi; \
 	fi
-	@if [ "${MAN3}" != "" ]; then \
+	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN3}" = "" ]; then \
 	        for F in ${MAN3}; do \
 	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
@@ -96,7 +97,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN3} ${PSMAN3}; \
 	    fi; \
 	fi
-	@if [ "${MAN4}" != "" ]; then \
+	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN4}" = "" ]; then \
 	        for F in ${MAN4}; do \
 	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
@@ -107,7 +108,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN4} ${PSMAN4}; \
 	    fi; \
 	fi
-	@if [ "${MAN5}" != "" ]; then \
+	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN5}" = "" ]; then \
 	        for F in ${MAN5}; do \
 	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
@@ -118,7 +119,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN5} ${PSMAN5}; \
 	    fi; \
 	fi
-	@if [ "${MAN6}" != "" ]; then \
+	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN6}" = "" ]; then \
 	        for F in ${MAN6}; do \
 	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
@@ -129,7 +130,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN6} ${PSMAN6}; \
 	    fi; \
 	fi
-	@if [ "${MAN7}" != "" ]; then \
+	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN7}" = "" ]; then \
 	        for F in ${MAN7}; do \
 	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
@@ -140,7 +141,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN7} ${PSMAN7}; \
 	    fi; \
 	fi
-	@if [ "${MAN8}" != "" ]; then \
+	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN8}" = "" ]; then \
 	        for F in ${MAN8}; do \
 	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
@@ -151,7 +152,7 @@ preformat-man:
 	        ${MAKE} ${CATMAN8} ${PSMAN8}; \
 	    fi; \
 	fi
-	@if [ "${MAN9}" != "" ]; then \
+	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN9}" = "" ]; then \
 	        for F in ${MAN9}; do \
 	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
@@ -385,7 +386,7 @@ install-man-dirs:
 	fi
 
 install-man:
-	@if [ "${MAN1}" != "" ]; then \
+	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN1}" = "" ]; then \
 	        for F in ${MAN1}; do \
 	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
@@ -412,7 +413,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN2}" != "" ]; then \
+	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN2}" = "" ]; then \
 	        for F in ${MAN2}; do \
 	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
@@ -439,7 +440,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN3}" != "" ]; then \
+	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN3}" = "" ]; then \
 	        for F in ${MAN3}; do \
 	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
@@ -466,7 +467,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN4}" != "" ]; then \
+	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN4}" = "" ]; then \
 	        for F in ${MAN4}; do \
 	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
@@ -493,7 +494,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN5}" != "" ]; then \
+	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN5}" = "" ]; then \
 	        for F in ${MAN5}; do \
 	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
@@ -520,7 +521,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN6}" != "" ]; then \
+	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN6}" = "" ]; then \
 	        for F in ${MAN6}; do \
 	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
@@ -547,7 +548,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN7}" != "" ]; then \
+	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN7}" = "" ]; then \
 	        for F in ${MAN7}; do \
 	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
@@ -574,7 +575,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN8}" != "" ]; then \
+	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN8}" = "" ]; then \
 	        for F in ${MAN8}; do \
 	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
@@ -601,7 +602,7 @@ install-man:
 		done; \
 	    fi; \
 	fi
-	@if [ "${MAN9}" != "" ]; then \
+	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    if [ "${CATMAN9}" = "" ]; then \
 	        for F in ${MAN9}; do \
 	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
