@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.39 2004/02/26 10:34:53 vedge Exp $
+#	$Csoft: Makefile,v 1.40 2004/03/10 16:58:29 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -14,7 +14,7 @@ all: all-subdir
 clean: clean-subdir
 cleandir: cleandir-config cleandir-subdir
 install: install-subdir install-includes
-deinstall: deinstall-subdir
+deinstall: deinstall-subdir deinstall-includes
 depend: prereq depend-subdir
 regress: regress-subdir
 
@@ -45,8 +45,12 @@ install-includes:
 		    ${INCLDIR}; \
 	fi
 
+deinstall-includes:
+	rm -fR ${INCLDIR}
+
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: prereq configure clean-config release install-includes
+.PHONY: prereq configure clean-config release
+.PHONY: install-includes deinstall-includes
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.subdir.mk
