@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.102 2002/11/14 07:51:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.103 2002/11/15 00:49:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -104,13 +104,24 @@ window_generic_new(int w, int h, const char *caption_fmt, ...)
 	struct window *win;
 	va_list args;
 	char *caption;
-	
+	static pthread_mutex_t genlock = PTHREAD_MUTEX_INITIALIZER;
+	static int genxoffs = -1, genyoffs = -1;
+
 	va_start(args, caption_fmt);
 	vasprintf(&caption, caption_fmt, args);
 	va_end(args);
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, NULL, caption, WINDOW_CENTER, -1, -1, w, h, w, h);
+	pthread_mutex_lock(&genlock);
+	window_init(win, NULL, caption, 0,
+	    view->w/2 - w/2 + genxoffs,
+	    view->h/2 - h/2 + genyoffs,
+	    w, h, w, h);
+	if ((genxoffs += 3) + w > view->w/2)
+		genxoffs = 0;
+	if ((genyoffs += 3) + h > view->h/2)
+		genyoffs = 0;
+	pthread_mutex_unlock(&genlock);
 
 	/* Destroy the window instead of hiding it on close. */
 	event_new(win, "window-close", window_generic_detached, "%p", win);
