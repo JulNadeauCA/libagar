@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.8 2002/01/30 18:35:50 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.9 2002/02/05 05:59:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -880,7 +880,6 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				em->map[mapx][mapy].flags |= MAPENTRY_ORIGIN;
 				view_center(em->view, mapx, mapy);
 			}
-			free(path);
 			mapedit_pointer(med, 1);
 			em->redraw++;
 			break;
@@ -892,6 +891,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				} else {
 					med->flags |= MAPEDIT_TILELIST;
 				}
+				view_setmode(em->view);	/* XXX hack */
 				em->redraw++;
 			}
 			break;
@@ -914,7 +914,6 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				dprintf("saving %s...\n", path);
 				em->obj.save((struct object *)em, path);
 				dprintf("done\n");
-				free(path);
 			}
 			break;
 		case SDLK_g:
