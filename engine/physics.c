@@ -49,31 +49,23 @@ direction_init(struct direction *dir, int flags, int hiwat)
  * clear it (asynchronously).
  */
 void
-direction_set(struct direction *dir, int dirset, int set)
+direction_set(struct direction *dir, int dirmask, int set)
 {
 	if (!set) {
-		dir->clear |= dirset;
+		dir->clear |= dirmask;
 		return;
 	}
 
-#if 0
-	switch (dirset) {
-	case DIR_UP:
+	if (dirmask & DIR_UP)
 		dir->current &= ~(DIR_DOWN);
-		break;
-	case DIR_DOWN:
+	if (dirmask & DIR_DOWN)
 		dir->current &= ~(DIR_UP);
-		break;
-	case DIR_LEFT:
+	if (dirmask & DIR_LEFT)
 		dir->current &= ~(DIR_RIGHT);
-		break;
-	case DIR_RIGHT:
+	if (dirmask & DIR_RIGHT)
 		dir->current &= ~(DIR_LEFT);
-		break;
-	}
-#endif
 
-	dir->current = dirset;
+	dir->current |= dirmask;
 }
 
 /*
@@ -86,32 +78,11 @@ direction_update(struct direction *dir, struct map *map, int *mapx, int *mapy)
 {
 	int move = 0;
 
-	/* Clear any direction that should be cleared, first. */
 	if (dir->clear != 0) {
-		if ((dir->clear & DIR_UP) && (dir->moved & DIR_UP)) {
-			dir->current &=	~(DIR_UP);
-			dir->moved &=	~(DIR_UP);
-		}
-		if ((dir->clear & DIR_DOWN) && (dir->moved & DIR_DOWN)) {
-			dir->current &=	~(DIR_DOWN);
-			dir->moved &=	~(DIR_DOWN);
-		}
-		if ((dir->clear & DIR_LEFT) && (dir->moved & DIR_LEFT)) {
-			dir->current &=	~(DIR_LEFT);
-			dir->moved &=	~(DIR_LEFT);
-		}
-		if ((dir->clear & DIR_RIGHT) && (dir->moved & DIR_RIGHT)) {
-			dir->current &=	~(DIR_RIGHT);
-			dir->moved &=	~(DIR_RIGHT);
-		}
+		dir->current &= ~dir->clear;
 		dir->clear = 0;
 	}
 
-	/*
-	 * Perform movements as long as the key have been pressed
-	 * for a reasonable amount of time, or right away if no
-	 * movement was registered.
-	 */
 	if (dir->current != 0 &&
 	   (dir->moved == 0 || ++dir->tick > dir->hiwat)) {
 		dir->tick = 0;
