@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.23 2002/04/14 01:15:54 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.1 2002/04/18 03:57:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -227,7 +227,7 @@ text_renderbg(SDL_Surface *v, SDL_Rect *rd)
 	static Uint32 col;
 	static Uint32 border[5];
 	Uint8 *dst = v->pixels;
-	Uint32 x, y;
+	Uint32 xo, yo;
 
 	/* XXX waste */
 	border[0] = SDL_MapRGB(v->format, 50, 50, 50);
@@ -237,19 +237,25 @@ text_renderbg(SDL_Surface *v, SDL_Rect *rd)
 	border[4] = SDL_MapRGB(v->format, 50, 50, 50);
 
 	SDL_LockSurface(v);
-	for (y = rd->y; y < rd->h; y++) {
-		for (x = rd->x; x < rd->w; x++) {
-			if (x > rd->w - 4) {
-				col = border[rd->w - x];
-			} else if (y < 4) {
-				col = border[y+1];
-			} else if (x < 4) {
-				col = border[x+1];
-			} else if (y > rd->h - 4) {
-				col = border[rd->h - y];
+	for (yo = 0; yo < rd->h; yo++) {
+		for (xo = 0; xo < rd->w; xo++) {
+			static Uint32 y, x;
+		
+			y = rd->y + yo;
+			x = rd->x + xo;
+
+			if (xo > rd->w - 4) {
+				col = border[rd->w - xo];
+			} else if (yo < 4) {
+				col = border[yo+1];
+			} else if (xo < 4) {
+				col = border[xo+1];
+			} else if (yo > rd->h - 4) {
+				col = border[rd->h - yo];
 			} else {
 				/* XXX pref */
-				col = SDL_MapRGBA(v->format, y, 0, x >> 2, 200);
+				col = SDL_MapRGBA(v->format, yo, 0, xo >> 2,
+				    200);
 			}
 		
 			switch (v->format->BytesPerPixel) {
