@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.2 2004/09/29 08:15:52 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.3 2004/10/07 02:13:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -249,7 +249,7 @@ ag_menu_view_scale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		WIDGET(mview)->w = 0;
-		WIDGET(mview)->h = mview->vspace;
+		WIDGET(mview)->h = 0;
 		
 		for (i = 0; i < pitem->nsubitems; i++) {
 			struct AGMenuItem *subitem = &pitem->subitems[i];
