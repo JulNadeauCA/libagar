@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.21 2002/04/09 00:58:55 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.22 2002/04/18 04:03:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -40,7 +40,8 @@
 
 #include <engine/mapedit/mapedit.h>
 
-#include <engine/widget/text.h>
+#include <engine/widget/window.h>
+#include <engine/widget/text.h>	/* XXX window */
 
 extern struct gameinfo *gameinfo;
 
@@ -70,6 +71,9 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 #ifdef DEBUG
+	case SDLK_F1:
+		engine_config();
+		break;
 	case SDLK_F2:
 		object_save(world);
 		break;
@@ -121,7 +125,8 @@ event_loop(void)
 					dprintf("overrun (delta=%d)\n", delta);
 					delta = 1;
 				}
-				text_drawall();
+				text_drawall();		/* XXX window */
+				window_drawall();
 			}
 			pthread_mutex_unlock(&m->lock);
 			ltick = SDL_GetTicks();
