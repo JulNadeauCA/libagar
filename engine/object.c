@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.118 2003/04/14 08:56:20 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.119 2003/04/18 04:03:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -68,18 +68,17 @@ static const struct object_ops null_ops = {
 #define DEBUG_GC	0x040
 
 int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
-	               DEBUG_ATTACH|DEBUG_GC;
+	               DEBUG_ATTACH|DEBUG_GC|DEBUG_DEPS;
 #define engine_debug object_debug
 #endif
 
 struct object *
-object_new(void *parent, char *type, char *name, char *media, int flags,
-    const void *opsp)
+object_new(void *parent, char *type, char *name, int flags, const void *opsp)
 {
 	struct object *ob;
 
 	ob = Malloc(sizeof(struct object));
-	object_init(ob, type, name, media, flags, opsp);
+	object_init(ob, type, name, flags, opsp);
 
 	if (parent != NULL) {
 		object_attach(parent, ob);
@@ -88,7 +87,7 @@ object_new(void *parent, char *type, char *name, char *media, int flags,
 }
 
 void
-object_init(struct object *ob, char *type, char *name, char *media, int flags,
+object_init(struct object *ob, char *type, char *name, int flags,
     const void *opsp)
 {
 	if (strlen(type) >= OBJECT_TYPE_MAX ||
@@ -97,7 +96,7 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	}
 	ob->type = Strdup(type);
 	ob->name = Strdup(name);
-	
+	ob->art = NULL;
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
@@ -108,8 +107,6 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	pthread_mutex_init(&ob->lock, NULL);
 	pthread_mutex_init(&ob->props_lock, &recursive_mutexattr);
 	pthread_mutex_init(&ob->events_lock, &recursive_mutexattr);
-
-	ob->art = (ob->flags & OBJECT_ART) ? art_fetch(media, ob) : NULL;
 }
 
 /* Attach a child object to a parent object. */
@@ -194,6 +191,19 @@ object_free_events(struct object *ob)
 	pthread_mutex_unlock(&ob->events_lock);
 }
 
+int
+object_load_art(void *p, const char *key, int wired)
+{
+	struct object *ob = p;
+
+	ob->art = art_fetch(ob, key);
+	if (ob->art == NULL)
+		return (-1);
+	if (wired)
+		art_wire(ob->art);
+	return (0);
+}
+
 void
 object_destroy(void *p)
 {
@@ -201,8 +211,7 @@ object_destroy(void *p)
 	
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
-
-	if ((ob->flags & OBJECT_ART_CACHE) == 0 && ob->art != NULL)
+	if (ob->art != NULL)
 		art_unused(ob->art);
 
 	object_free_events(ob);
@@ -399,7 +408,7 @@ toobig:
 
 /* Search the data file directories. */
 int
-object_path(char *obname, const char *suffix, char *dst, size_t dst_size)
+object_path(const char *obname, const char *suffix, char *dst, size_t dst_size)
 {
 	char datapath[FILENAME_MAX];
 	struct stat sta;
@@ -507,7 +516,7 @@ object_load_submap(void *p, char *name)
 	struct map *sm;
 
 	sm = Malloc(sizeof(struct map));
-	map_init(sm, name, ob->name);
+	map_init(sm, name);
 	if (object_load(sm, NULL) == 0) {
 		object_attach(ob, sm);
 	} else {
@@ -706,6 +715,13 @@ object_table_destroy(struct object_table *obt)
 void
 object_table_insert(struct object_table *obt, struct object *obj)
 {
+	int i;
+
+	for (i = 0; i < obt->nobjs; i++) {
+		if (obt->objs[i] == obj)
+			return;				/* Existing entry */
+	}
+
 	if (obt->objs != NULL) {
 		obt->objs = Realloc(obt->objs, (obt->nobjs + 1) *
 		    sizeof(struct object *));

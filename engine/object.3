@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.29 2003/03/29 03:01:43 vedge Exp $
+.\"	$Csoft: object.3,v 1.31 2003/04/14 08:56:20 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -125,14 +125,8 @@ The
 .Fa flags
 argument may contain:
 .Bd -literal
-#define OBJECT_ART		0x01	/* Load graphics */
-#define OBJECT_ART_CACHE	0x02	/* Keep graphics cached */
-#define OBJECT_ART_CAN_FAIL	0x04	/* Graphic load can fail */
-#define OBJECT_AUDIO		0x08	/* Load audio */
-#define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
-#define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
-#define OBJECT_CANNOT_MAP	0x40	/* Don't insert in object tables */
-#define OBJECT_STATIC		0x80	/* Don't destroy (if attached) */
+#define OBJECT_STATIC		0x01	/* Don't destroy (if attached) */
+#define OBJECT_RELOAD_PROPS	0x02	/* Don't clear props before load */
 .Ed
 .Pp
 The
@@ -165,7 +159,8 @@ does not call
 .Fn object_save "void *ob" "char *path"
 .Pp
 .Ft "int"
-.Fn object_path "char *name" "const char *suffix" "char *dst" "size_t dst_size"
+.Fn object_path "const char *name" "const char *suffix" "char *dst"
+                "size_t dst_size"
 .Pp
 .nr nS 0
 The
@@ -351,7 +346,8 @@ The
 function inserts
 .Fa obj
 in
-.Fa table .
+.Fa table ,
+if it is not already there.
 .Pp
 The
 .Fn object_table_save

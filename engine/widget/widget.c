@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.50 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.51 2003/04/12 01:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -59,8 +59,8 @@ widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 	pthread_mutex_unlock(&widget_lock);
 
 	snprintf(widname, sizeof(widname), "%s%u", name, curwidget);
-	object_init(&wid->obj, "widget", widname, name,
-	    OBJECT_ART|OBJECT_ART_CACHE|OBJECT_ART_CAN_FAIL, wops);
+	object_init(&wid->obj, "widget", widname, 0, wops);
+	object_load_art(wid, name, 1);
 
 	wid->type = Strdup(name);
 	wid->flags = 0;

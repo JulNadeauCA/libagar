@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.30 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.31 2003/04/12 01:42:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -67,7 +67,7 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 	pthread_mutex_unlock(&region_lock);
 
 	snprintf(name, sizeof(name), "region%u", region_count);
-	object_init(&reg->obj, "window-region", name, NULL, 0, &region_ops);
+	object_init(&reg->obj, "window-region", name, 0, &region_ops);
 
 	reg->flags = (flags != 0) ? flags : REGION_HALIGN;
 	reg->rx = rx;

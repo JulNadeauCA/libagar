@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.60 2003/03/28 03:03:21 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.61 2003/04/12 01:45:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -54,27 +54,23 @@ objq_update(struct tlist *tl)
 	struct object *ob;
 
 	tlist_clear_items(tl);
-
 	pthread_mutex_lock(&world->lock);
 	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
 		SDL_Surface *icon = NULL;
 
-		if ((ob->flags & OBJECT_ART) == 0 ||
-		    ob->flags & OBJECT_CANNOT_MAP)
+		if (ob->art == NULL)
 			continue;
 
-		if (ob->art != NULL && ob->art->nsprites > 0) {
+		if (ob->art != NULL && ob->art->nsprites > 0)
 			icon = ob->art->sprites[0];
-		}
 		tlist_insert_item(tl, icon, ob->name, ob);
 	}
 	pthread_mutex_unlock(&world->lock);
-
 	tlist_restore_selections(tl);
 }
 
 static void
-tilemap_option(int argc, union evarg *argv)
+objq_tmap_option(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int opt = argv[2].i;
@@ -255,7 +251,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 }
 
 static void
-tilemap_close(int argc, union evarg *argv)
+objq_close_tmap(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
@@ -344,7 +340,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		bu = button_new(reg, NULL,		/* Toggle props */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS), BUTTON_STICKY,
@@ -352,23 +348,24 @@ tl_objs_selected(int argc, union evarg *argv)
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 		bu = button_new(reg, NULL,		/* Toggle map edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 		
 		bu = button_new(reg, NULL,	       /* Toggle node edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY,
 		    -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
 
-		event_new(win, "window-close", tilemap_close, "%p, %p", mv, bu);
+		event_new(win, "window-close", objq_close_tmap,
+		    "%p, %p", mv, bu);
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.38 2003/03/25 13:41:13 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.39 2003/04/12 01:35:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -56,8 +56,7 @@ input_new(int type, int index)
 	}
 
 	input = Malloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, NULL, OBJECT_STATIC,
-	    NULL);
+	object_init(&input->obj, "input-device", name, OBJECT_STATIC, NULL);
 
 	input->type = type;
 	input->index = index;

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.43 2003/03/25 13:43:41 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.45 2003/04/16 18:17:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -165,7 +165,7 @@ fileops_new_map(int argc, union evarg *argv)
 	h = textbox_int(h_tbox);
 
 	m = Malloc(sizeof(struct map));
-	map_init(m, name, NULL);
+	map_init(m, name);
 	if (map_alloc_nodes(m, (unsigned int)w, (unsigned int)h) == -1) {
 		text_msg("Error allocating nodes", "%s", error_get());
 		object_destroy(m);
@@ -220,8 +220,7 @@ fileops_load_map(int argc, union evarg *argv)
 	}
 	
 	m = Malloc(sizeof(struct map));
-	map_init(m, name, NULL);
-
+	map_init(m, name);
 	if (object_load(m, NULL) == -1) {
 		text_msg("Error loading map", "%s", error_get());
 		object_destroy(m);

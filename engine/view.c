@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.117 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.118 2003/04/12 01:45:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -90,8 +90,7 @@ view_init(enum gfx_engine ge)
 	}
 
 	v = Malloc(sizeof(struct viewport));
-	object_init(&v->obj, "view-port", "view", NULL,
-	    OBJECT_STATIC, &viewport_ops);
+	object_init(&v->obj, "view-port", "view", OBJECT_STATIC, &viewport_ops);
 	v->gfx_engine = ge;
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;

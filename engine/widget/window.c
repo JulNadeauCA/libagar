@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.175 2003/04/12 01:45:49 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.176 2003/04/24 01:36:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -196,9 +196,9 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		if (wname[i] == '/') 		/* XXX restrict further */
 			wname[i] = '_';
 	}
-	object_init(OBJECT(win), "window", wname, "window", OBJECT_ART,
-	    &window_ops);
-	art_wire(OBJECT(win)->art);
+	object_init(OBJECT(win), "window", wname, 0, &window_ops);
+	if (object_load_art(win, "window", 1) == -1)
+		fatal("window: %s", error_get());
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
 	    "background",

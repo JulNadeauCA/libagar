@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.19 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.21 2003/04/18 04:03:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -77,21 +77,23 @@ int	perso_debug = DEBUG_STATE|DEBUG_POSITION;
 #endif
 
 struct perso *
-perso_new(char *name, char *media, int hp, int mp)
+perso_new(char *name, int hp, int mp)
 {
 	struct perso *pers;
 
 	pers = Malloc(sizeof(struct perso));
-	perso_init(pers, name, media, hp, mp);
+	perso_init(pers, name, hp, mp);
 
 	world_attach(pers);
 	return (pers);
 }
 
 void
-perso_init(struct perso *pers, char *name, char *media, int hp, int mp)
+perso_init(struct perso *pers, char *name, int hp, int mp)
 {
-	object_init(&pers->obj, "perso", name, media, OBJECT_ART, &perso_ops);
+	object_init(&pers->obj, "perso", name, 0, &perso_ops);
+	object_load_art(pers, name, 0);
+
 	object_load_submap(pers, "n-idle");
 	object_load_submap(pers, "s-idle");
 	object_load_submap(pers, "w-idle");

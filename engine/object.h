@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.70 2003/03/22 04:26:02 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.72 2003/04/17 08:18:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -46,15 +46,8 @@ struct object {
 	char			*name;	/* Identification string */
 	const struct object_ops	*ops;	/* Generic operations */
 	int			 flags;
-#define OBJECT_ART		0x001	/* Load graphics */
-#define OBJECT_ART_CACHE	0x002	/* Keep graphics cached */
-#define OBJECT_ART_CAN_FAIL	0x004	/* Graphic load can fail */
-#define OBJECT_AUDIO		0x008	/* Load audio */
-#define OBJECT_AUDIO_CACHE	0x010	/* Keep audio cached */
-#define OBJECT_AUDIO_CAN_FAIL	0x020	/* Audio load can fail */
-#define OBJECT_CANNOT_MAP	0x040	/* Don't insert in object tables */
-#define OBJECT_STATIC		0x080	/* Don't destroy (if attached) */
-#define OBJECT_RELOAD_PROPS	0x100	/* Don't clear props list before load */
+#define OBJECT_STATIC		0x01	/* Don't destroy (if attached) */
+#define OBJECT_RELOAD_PROPS	0x02	/* Don't clear props list before load */
 	enum {
 		OBJECT_EMBRYONIC,	/* Inconsistent/Unattached */
 		OBJECT_CONSISTENT,	/* Attached */
@@ -86,9 +79,10 @@ struct object {
 # define OBJECT_ASSERT(ob, type)
 #endif
 
-struct object	*object_new(void *, char *, char *, char *, int, const void *);
-void		 object_init(struct object *, char *, char *, char *,
-		     int, const void *);
+struct object	*object_new(void *, char *, char *, int, const void *);
+void		 object_init(struct object *, char *, char *, int,
+		     const void *);
+int		 object_load_art(void *, const char *, int);
 void		 object_attach(void *, void *);
 void		 object_detach(void *, void *);
 int		 object_load(void *, char *);
@@ -97,7 +91,7 @@ void		 object_destroy(void *);
 void		 object_free_childs(struct object *);
 void		 object_free_props(struct object *);
 void	 	 object_free_events(struct object *);
-int		 object_path(char *, const char *, char *, size_t);
+int		 object_path(const char *, const char *, char *, size_t);
 
 int		 object_control(void *, char *);
 void		 object_center(void *);
