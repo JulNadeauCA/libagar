@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.67 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.68 2003/06/09 23:14:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -32,7 +32,7 @@ struct window {
 	struct widget wid;
 
 	int	 flags;
-#define WINDOW_SAVE_POSITION	0x01	/* Save position/geometry on close */
+#define WINDOW_PERSISTENT	0x01	/* Persistent position/geometry */
 #define WINDOW_CASCADE		0x02	/* Increment position slightly */
 
 	int	 visible;		/* Window is visible */

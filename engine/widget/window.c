@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.200 2003/06/13 02:44:34 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.201 2003/06/15 08:54:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -151,7 +151,7 @@ window_init(void *p, const char *name)
 	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
 	strlcpy(OBJECT(win)->type, "window", sizeof(OBJECT(win)->type));
 
-	win->flags = (name != NULL) ? WINDOW_SAVE_POSITION : 0;
+	win->flags = 0;
 	win->visible = 0;
 
 	win->borderw = default_nborder;
@@ -303,7 +303,7 @@ window_shown(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	int init = (WIDGET(win)->x == -1 && WIDGET(win)->y == -1);
 
-	if (win->flags & WINDOW_SAVE_POSITION) {
+	if (win->flags & WINDOW_PERSISTENT) {
 		object_load(win);
 	}
 
@@ -353,7 +353,7 @@ window_hidden(int argc, union evarg *argv)
 		break;
 	}
 
-	if (win->flags & WINDOW_SAVE_POSITION) {
+	if (win->flags & WINDOW_PERSISTENT) {
 		object_save(win);
 	}
 }
