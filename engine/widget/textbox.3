@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.4 2002/08/26 07:19:12 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.5 2002/09/07 04:30:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -122,13 +122,11 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -width 2n
-.It Fn textbox-return "char *s"
-Return was pressed, and the string
-.Fa s
+.It Fn textbox-return "void"
+Return was pressed.
 is currently entered.
-.It Fn textbox-changed "char *s"
-The string changed to
-.Fa s .
+.It Fn textbox-changed "void"
+The string was modified.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
