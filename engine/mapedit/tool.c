@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.8 2004/05/25 07:27:02 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.9 2004/06/25 10:50:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <compat/vasprintf.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
