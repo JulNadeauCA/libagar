@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.46 2002/12/25 03:29:02 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.47 2002/12/26 07:10:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -180,12 +180,15 @@ struct widget {
 
 void	widget_init(struct widget *, char *, const void *, int, int);
 void	widget_destroy(void *);
-
+void	widget_set_parent(void *, void *);
+void	widget_set_position(void *, Sint16, Sint16);
+void	widget_set_geometry(void *, Uint16, Uint16);
+void	widget_get_position(void *, Sint16 *, Sint16 *);
+void	widget_get_geometry(void *, Uint16 *, Uint16 *);
 void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
 
 struct widget_binding	*widget_bind(void *, const char *,
 			     enum widget_binding_type, ...);
-
 struct widget_binding	*_widget_binding_get(void *, const char *, void *, int);
 #define			  widget_binding_get(widp, name, res) \
 			 _widget_binding_get((widp), (name), (res), 0)
@@ -201,9 +204,4 @@ int	widget_get_int(void *, const char *);
 
 void	widget_set_int(void *, const char *, int);
 #define	widget_set_bool	widget_set_int
-
-void	widget_set_position(void *, Sint16, Sint16);
-void	widget_set_geometry(void *, Uint16, Uint16);
-void	widget_get_position(void *, Sint16 *, Sint16 *);
-void	widget_get_geometry(void *, Uint16 *, Uint16 *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.33 2002/12/20 01:01:13 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.34 2002/12/26 07:10:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -71,6 +71,23 @@ widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 	SLIST_INIT(&wid->colors);
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, NULL);
+}
+
+/*
+ * Associate a widget with a parent region.
+ * The parent region's window must be locked.
+ */
+void
+widget_set_parent(void *child, void *parent)
+{
+	struct widget *wid = child;
+	struct region *reg = parent;
+
+	OBJECT_ASSERT(wid, "widget");
+	OBJECT_ASSERT(reg, "window-region");
+
+	wid->reg = reg;
+	wid->win = reg->win;
 }
 
 /*
