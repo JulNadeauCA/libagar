@@ -703,6 +703,39 @@ else
 fi
 CFLAGS="$CFLAGS -I$SRC"
 echo CFLAGS=$CFLAGS >> Makefile.config
+echo -n "checking for smpeg (http://www.lokigames.com/development/smpeg.php3)..."
+echo -n "checking for smpeg (http://www.lokigames.com/development/smpeg.php3)..." >> config.log
+smpeg_version=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/smpeg-config" ]; then
+		smpeg_version=`${path}/smpeg-config --version`
+	fi
+done
+SMPEG_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/smpeg-config" ]; then
+		SMPEG_CFLAGS=`${path}/smpeg-config --cflags`
+	fi
+done
+SMPEG_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/smpeg-config" ]; then
+		SMPEG_LIBS=`${path}/smpeg-config --libs`
+	fi
+done
+if [ "${smpeg_version}" != "" ]; then
+echo "ok"
+echo "ok" >> config.log
+echo "#ifndef HAVE_SMPEG" > config/have_smpeg.h
+echo "#define HAVE_SMPEG" $HAVE_SMPEG >> config/have_smpeg.h
+echo "#endif /* HAVE_SMPEG */" >> config/have_smpeg.h
+echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
+echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
+else
+echo "missing"
+exit 1
+echo "#undef HAVE_SMPEG" > config/have_smpeg.h
+fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
