@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.79 2003/05/26 03:03:29 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.80 2003/06/06 03:20:29 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -265,7 +265,7 @@ config_window(struct config *con)
 		button = button_new(hb, "Close");
 		event_new(button, "button-pushed", window_generic_hide, 
 		    "%p", win);
-		widget_set_focus(button);
+		widget_focus(button);
 
 		button = button_new(hb, "Save");
 		event_new(button, "button-pushed", config_save, NULL);
