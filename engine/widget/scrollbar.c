@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.23 2003/05/18 00:17:05 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.24 2003/05/24 15:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,9 +31,8 @@
 
 #include "scrollbar.h"
 
-#include <engine/widget/primitive.h>
-#include <engine/widget/region.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 const struct widget_ops scrollbar_ops = {
 	{
@@ -44,14 +43,12 @@ const struct widget_ops scrollbar_ops = {
 		NULL		/* edit */
 	},
 	scrollbar_draw,
-	NULL		/* update */
+	scrollbar_scale
 };
 
 enum {
-	BACKGROUND_COLOR,
-	SCROLL_BUTTON_COLOR,
-	SCROLL_TRIANGLE_COLOR1,
-	SCROLL_TRIANGLE_COLOR2
+	BG_COLOR,
+	BUTTON_COLOR
 };
 
 enum button {
@@ -61,59 +58,48 @@ enum button {
 	BUTTON_SCROLL
 };
 
-static void	scrollbar_mouse_buttonup(int, union evarg *);
-static void	scrollbar_mouse_buttondown(int, union evarg *);
-static void	scrollbar_mouse_motion(int, union evarg *);
-static void	scrollbar_scaled(int, union evarg *);
+static void	scrollbar_mousebuttonup(int, union evarg *);
+static void	scrollbar_mousebuttondown(int, union evarg *);
+static void	scrollbar_mousemotion(int, union evarg *);
 
 struct scrollbar *
-scrollbar_new(struct region *reg, int w, int h,
-    enum scrollbar_orientation orient)
+scrollbar_new(void *parent, enum scrollbar_type type)
 {
 	struct scrollbar *sb;
 
 	sb = Malloc(sizeof(struct scrollbar));
-	scrollbar_init(sb, w, h, orient);
-	region_attach(reg, sb);
+	scrollbar_init(sb, type);
+	object_attach(parent, sb);
 	return (sb);
 }
 
 void
-scrollbar_init(struct scrollbar *sb, int w, int h,
-    enum scrollbar_orientation orient)
+scrollbar_init(struct scrollbar *sb, enum scrollbar_type type)
 {
-	widget_init(&sb->wid, "scrollbar", &scrollbar_ops, w, h);
-	widget_map_color(sb, BACKGROUND_COLOR, "background", 120, 120, 120);
-	widget_map_color(sb, SCROLL_BUTTON_COLOR, "button", 140, 140, 140);
-	widget_map_color(sb, SCROLL_TRIANGLE_COLOR1, "triangle", 160, 160, 160);
-	widget_map_color(sb, SCROLL_TRIANGLE_COLOR2, "triangle2", 80, 80, 80);
+	widget_init(sb, "scrollbar", &scrollbar_ops, WIDGET_UNFOCUSED_BUTTONUP);
+	widget_bind(sb, "value", WIDGET_INT, NULL, &sb->value);
+	widget_bind(sb, "min", WIDGET_INT, NULL, &sb->min);
+	widget_bind(sb, "max", WIDGET_INT, NULL, &sb->max);
 
-	widget_bind(sb, "value", WIDGET_INT, &sb->def.lock, &sb->def.value);
-	widget_bind(sb, "min", WIDGET_INT, &sb->def.lock, &sb->def.min);
-	widget_bind(sb, "max", WIDGET_INT, &sb->def.lock, &sb->def.max);
+	widget_map_color(sb, BG_COLOR, "background", 120, 120, 120, 255);
+	widget_map_color(sb, BUTTON_COLOR, "button", 140, 140, 140, 255);
 
-	sb->orientation = orient;
+	sb->value = 0;
+	sb->min = 0;
+	sb->max = 0;
+	sb->type = type;
 	sb->curbutton = BUTTON_NONE;
 	sb->bar_size = 30;
-	sb->button_size = 25;
+	sb->button_size = text_font_height(font);
 
-	sb->def.value = 0;
-	sb->def.min = 0;
-	sb->def.max = 0;
-	pthread_mutex_init(&sb->def.lock, &recursive_mutexattr);
-
-	event_new(sb, "window-mousebuttondown",
-	    scrollbar_mouse_buttondown, NULL);
-	event_new(sb, "window-mousebuttonup",
-	    scrollbar_mouse_buttonup, NULL);
-	event_new(sb, "window-mousemotion",
-	    scrollbar_mouse_motion, NULL);
-	event_new(sb, "widget-scaled",
-	    scrollbar_scaled, NULL);
+	event_new(sb, "window-mousebuttondown", scrollbar_mousebuttondown,
+	    NULL);
+	event_new(sb, "window-mousebuttonup", scrollbar_mousebuttonup, NULL);
+	event_new(sb, "window-mousemotion", scrollbar_mousemotion, NULL);
 }
 
 static void
-scrollbar_mouse_buttonup(int argc, union evarg *argv)
+scrollbar_mousebuttonup(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
 
@@ -156,15 +142,15 @@ changed:
 }
 
 static void
-scrollbar_mouse_buttondown(int argc, union evarg *argv)
+scrollbar_mousebuttondown(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
-	int coord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	int coord = (sb->type == SCROLLBAR_HORIZ) ?
 	    argv[2].i : argv[3].i;
-	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	int maxcoord = (sb->type == SCROLLBAR_HORIZ) ?
 	    WIDGET(sb)->w : WIDGET(sb)->h;
 
-	WIDGET_FOCUS(sb);
+	widget_set_focus(sb);
 
 	if (coord < sb->button_size) {
 		sb->curbutton = BUTTON_UP;
@@ -177,12 +163,12 @@ scrollbar_mouse_buttondown(int argc, union evarg *argv)
 }
 
 static void
-scrollbar_mouse_motion(int argc, union evarg *argv)
+scrollbar_mousemotion(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
-	int coord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	int coord = (sb->type == SCROLLBAR_HORIZ) ?
 	    argv[1].i : argv[2].i;
-	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
+	int maxcoord = (sb->type == SCROLLBAR_HORIZ) ?
 	    WIDGET(sb)->w : WIDGET(sb)->h;
 	
 	if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) {
@@ -190,17 +176,29 @@ scrollbar_mouse_motion(int argc, union evarg *argv)
 	}
 }
 
-static void
-scrollbar_scaled(int argc, union evarg *argv)
+void
+scrollbar_scale(void *p, int rw, int rh)
 {
-	struct scrollbar *sb = argv[0].p;
+	struct scrollbar *sb = p;
 
-	switch (sb->orientation) {
+	switch (sb->type) {
 	case SCROLLBAR_HORIZ:
-		sb->button_size = WIDGET(sb)->h;	/* Square */
+		if (rw == -1)
+			WIDGET(sb)->w = sb->button_size*4;
+		if (rh == -1) {
+			WIDGET(sb)->h = sb->button_size;
+		} else {
+			sb->button_size = WIDGET(sb)->h;	/* Square */
+		}
 		break;
 	case SCROLLBAR_VERT:
-		sb->button_size = WIDGET(sb)->w;	/* Square */
+		if (rw == -1) {
+			WIDGET(sb)->w = sb->button_size;
+		} else {
+			sb->button_size = WIDGET(sb)->w;	/* Square */
+		}
+		if (rh == -1)
+			WIDGET(sb)->h = sb->button_size*4;
 		break;
 	}
 }
@@ -213,7 +211,7 @@ scrollbar_draw(void *p)
 	int w, h, x, y;
 	int maxcoord;
 	
-	switch (sb->orientation) {
+	switch (sb->type) {
 	case SCROLLBAR_HORIZ:
 		if (WIDGET(sb)->w < sb->button_size*2 + 6)
 			return;
@@ -237,18 +235,18 @@ scrollbar_draw(void *p)
 #endif
 
 	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
-	    WIDGET_COLOR(sb, BACKGROUND_COLOR));
+	    WIDGET_COLOR(sb, BG_COLOR));
 
-	switch (sb->orientation) {
+	switch (sb->type) {
 	case SCROLLBAR_VERT:
 		/* Scrolling buttons */
 		primitives.box(sb, 0, 0, WIDGET(sb)->w, sb->button_size,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
-		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		    WIDGET_COLOR(sb, BUTTON_COLOR));
 		primitives.box(sb, 0, WIDGET(sb)->h - sb->button_size,
 		    WIDGET(sb)->w, sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		    WIDGET_COLOR(sb, BUTTON_COLOR));
 
 		/* Scrolling bar */
 		if (max > 0) {
@@ -272,18 +270,18 @@ scrollbar_draw(void *p)
 		    0, sb->button_size+y,
 		    WIDGET(sb)->w, h,
 		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		    WIDGET_COLOR(sb, BUTTON_COLOR));
 		break;
 	case SCROLLBAR_HORIZ:
 		primitives.box(sb, 0, 0,
 		    sb->button_size, WIDGET(sb)->h,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
-		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		    WIDGET_COLOR(sb, BUTTON_COLOR));
 		primitives.box(sb,
 		    WIDGET(sb)->w - sb->button_size, 0,
 		    WIDGET(sb)->h, sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
-		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		    WIDGET_COLOR(sb, BUTTON_COLOR));
 
 		if (max > 0) {
 			if (sb->bar_size == -1) {		/* Full range */
@@ -305,7 +303,7 @@ scrollbar_draw(void *p)
 		    sb->button_size+x, 0,
 		    w, WIDGET(sb)->h,
 		    (sb->curbutton == BUTTON_SCROLL) ? -1 : 1,
-		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
+		    WIDGET_COLOR(sb, BUTTON_COLOR));
 		break;
 	}
 }

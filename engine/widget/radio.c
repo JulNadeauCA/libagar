@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.28 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.29 2003/05/26 03:03:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,10 +31,8 @@
 
 #include "radio.h"
 
-#include <engine/widget/primitive.h>
-#include <engine/widget/text.h>
-#include <engine/widget/region.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 static struct widget_ops radio_ops = {
 	{
@@ -45,78 +43,69 @@ static struct widget_ops radio_ops = {
 		NULL		/* edit */
 	},
 	radio_draw,
-	NULL		/* update */
+	radio_scale
 };
 
 enum {
 	XSPACING =	7,
 	YSPACING =	2,
 	XPADDING =	4,
-	YPADDING =	4
+	YPADDING =	4,
 };
 
 enum {
 	INSIDE_COLOR,
 	OUTSIDE_COLOR,
 	TEXT_COLOR,
-	FRAME_COLOR
+	FRAME_COLOR,
+	MOUSEBUTTONDOWN_EVENT,
+	KEYDOWN_EVENT
 };
 
 static void	radio_event(int, union evarg *);
-static void	radio_scaled(int, union evarg *);
 
 struct radio *
-radio_new(struct region *reg, const char **items)
+radio_new(void *parent, const char **items)
 {
 	struct radio *rad;
 
 	rad = Malloc(sizeof(struct radio));
 	radio_init(rad, items);
-	region_attach(reg, rad);
+	object_attach(parent, rad);
 	return (rad);
 }
 
 void
 radio_init(struct radio *rad, const char **items)
 {
-	const char *s;
-	int i, fh;
+	const char *s, **itemsp = items;
+	int i;
 
-	widget_init(&rad->wid, "radio", &radio_ops, -1, -1);
-	WIDGET(rad)->flags |= WIDGET_CLIPPING;
+	widget_init(rad, "radio", &radio_ops, WIDGET_CLIPPING);
+	widget_bind(rad, "value", WIDGET_INT, NULL, &rad->value);
 
-	widget_map_color(rad, INSIDE_COLOR, "inside", 210, 210, 210);
-	widget_map_color(rad, OUTSIDE_COLOR, "outside", 180, 180, 180);
-	widget_map_color(rad, TEXT_COLOR, "text", 240, 240, 240);
-	widget_map_color(rad, FRAME_COLOR, "frame", 120, 120, 120);
+	widget_map_color(rad, INSIDE_COLOR, "inside", 210, 210, 210, 255);
+	widget_map_color(rad, OUTSIDE_COLOR, "outside", 180, 180, 180, 255);
+	widget_map_color(rad, TEXT_COLOR, "text", 240, 240, 240, 255);
+	widget_map_color(rad, FRAME_COLOR, "frame", 120, 120, 120, 255);
 
-	widget_bind(rad, "value", WIDGET_INT, NULL, &rad->def.value);
-	rad->def.value = -1;
-
-	rad->items = items;
-
-	fh = text_font_height(font);
-	rad->radius = fh;
+	rad->value = -1;
+	rad->radius = text_font_height(font);
 	rad->max_w = 0;
-	
-	for (rad->nitems = 0; (s = *items++) != NULL; rad->nitems++) ;;
 
+	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
+		;;
 	rad->labels = Malloc(sizeof(SDL_Surface *) * rad->nitems);
 	for (i = 0; i < rad->nitems; i++) {
-		SDL_Surface *su;
-
-		su = text_render(NULL, -1, WIDGET_COLOR(rad, TEXT_COLOR),
-		    (char *)rad->items[i]);
-		rad->labels[i] = su;
-		if (su->w > rad->max_w)
-			rad->max_w = su->w;
+		rad->labels[i] = text_render(NULL, -1,
+		    WIDGET_COLOR(rad, TEXT_COLOR), items[i]);
+		if (rad->labels[i]->w > rad->max_w)
+			rad->max_w = rad->labels[i]->w;
 	}
 
-	event_new(rad, "window-mousebuttondown",
-	    radio_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(rad, "window-keydown",
-	    radio_event, "%i", WINDOW_KEYDOWN);
-	event_new(rad, "widget-scaled", radio_scaled, NULL);
+	event_new(rad, "window-mousebuttondown", radio_event, "%i",
+	    MOUSEBUTTONDOWN_EVENT);
+	event_new(rad, "window-keydown", radio_event, "%i", KEYDOWN_EVENT);
 }
 
 void
@@ -144,6 +133,7 @@ radio_draw(void *p)
 			    rad->radius, rad->radius, rad->radius/4,
 			    WIDGET_COLOR(rad, OUTSIDE_COLOR));
 		}
+
 		widget_blit(rad, rad->labels[i],
 		   XPADDING + rad->radius + XSPACING, y);
 	}
@@ -157,20 +147,21 @@ radio_destroy(void *p)
 
 	for (i = 0; i < rad->nitems; i++)
 		SDL_FreeSurface(rad->labels[i]);
+
 	widget_destroy(rad);
 }
 
-static void
-radio_scaled(int argc, union evarg *argv)
+void
+radio_scale(void *p, int rw, int rh)
 {
-	struct radio *rad = argv[0].p;
+	struct radio *rad = p;
 
-	if (WIDGET(rad)->rw == -1)
-		WIDGET(rad)->w = rad->radius + XSPACING + rad->max_w +
-		    XPADDING*2;
-	if (WIDGET(rad)->rh == -1)
-		WIDGET(rad)->h = rad->nitems*(YSPACING+ rad->radius) +
-		    YPADDING*2;
+	if (rw == -1)
+		WIDGET(rad)->w = XPADDING*2 + XSPACING + rad->radius +
+		    rad->max_w;
+
+	if (rh == -1)
+		WIDGET(rad)->h = rad->nitems*(YSPACING+rad->radius)+YPADDING*2;
 }
 
 static void
@@ -186,13 +177,13 @@ radio_event(int argc, union evarg *argv)
 	valueb = widget_binding_get_locked(rad, "value", &sel);
 
 	switch (type) {
-	case WINDOW_MOUSEBUTTONDOWN:
+	case MOUSEBUTTONDOWN_EVENT:
 		button = argv[2].i;
 		y = argv[4].i;
 		*sel = (y/(rad->radius + YSPACING/2));
-		WIDGET_FOCUS(rad);
+		widget_set_focus(rad);
 		break;
-	case WINDOW_KEYDOWN:
+	case KEYDOWN_EVENT:
 		keysym = argv[2].i;
 		switch ((SDLKey)keysym) {
 		case SDLK_DOWN:
@@ -213,7 +204,6 @@ radio_event(int argc, union evarg *argv)
 
 	if (*sel >= rad->nitems)
 		*sel = rad->nitems - 1;
-
 	event_post(rad, "radio-changed", "%i", *sel);
 	widget_binding_unlock(valueb);
 }

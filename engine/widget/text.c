@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.61 2003/05/17 23:59:15 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.62 2003/05/22 05:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,19 +26,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/vsnprintf.h>
-#include <engine/compat/strsep.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
 #include <engine/config.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
 #include <engine/widget/label.h>
 #include <engine/widget/bitmap.h>
 #include <engine/widget/button.h>
-#include <engine/widget/text.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
 
@@ -48,23 +44,25 @@
 
 ttf_font *font = NULL;		/* Default font */
 
-/* Cached fonts */
+#define FONT_NAME_MAX	32
+
 struct text_font {
-	char	 *name;
+	char	  name[FONT_NAME_MAX];
 	int	  size;
 	int	  style;
 	ttf_font *font;
 	SLIST_ENTRY(text_font) fonts;
 };
 
-static SLIST_HEAD(text_fontq, text_font) text_fonts =
+static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
     SLIST_HEAD_INITIALIZER(&text_fonts);
 pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static ttf_font *
-text_load_font(char *name, int size, int style)
+text_load_font(const char *name, int size, int style)
 {
-	char path[FILENAME_MAX];
+	char fname[FILENAME_MAX];
+	char *path = NULL;
 	ttf_font *nfont;
 	struct text_font *fon;
 
@@ -77,27 +75,30 @@ text_load_font(char *name, int size, int style)
 		if (strcmp(fon->name, name) == 0 &&
 		    fon->size == size &&
 		    fon->style == style) {
-			pthread_mutex_unlock(&text_lock);
-			return (fon->font);
+			nfont = fon->font;
+			goto out;
 		}
 	}
 
-	if (object_path(name, "ttf", path, sizeof(path)) == -1)
-		fatal("%s.ttf: %s", name, error_get());
+	snprintf(fname, sizeof(fname), "/engine/widget/fonts/%s", name);
+	if ((path = config_search_file("load-path", fname, "ttf")) == NULL)
+		fatal("%s", error_get());
 
-	if ((nfont = ttf_open_font(path, size)) == NULL)
+	if ((nfont = ttf_open_font(path, size)) == NULL) {
 		fatal("%s: %s", path, error_get());
-
+	}
 	ttf_set_font_style(nfont, style);
 
 	fon = Malloc(sizeof(struct text_font));
-	fon->name = Strdup(name);
+	strlcpy(fon->name, name, sizeof(fon->name));
 	fon->size = size;
 	fon->style = style;
 	fon->font = nfont;
 
 	SLIST_INSERT_HEAD(&text_fonts, fon, fonts);		/* Cache */
+out:
 	pthread_mutex_unlock(&text_lock);
+	Free(path);
 	return (nfont);
 }
 
@@ -115,11 +116,11 @@ text_init(void)
 void
 text_set_default_font(char *name, int size, int style)
 {
-	if (font != NULL) {
-		/* Replacing the default font would be thread-unsafe. */
+#ifdef DEBUG
+	/* Replacing the default font would be thread-unsafe. */
+	if (font != NULL)
 		fatal("default font already set");
-	}
-
+#endif
 	dprintf("%s:%d,%d\n",
 	    prop_get_string(config, "font-engine.default-font"),
 	    prop_get_int(config, "font-engine.default-size"),
@@ -134,7 +135,6 @@ text_set_default_font(char *name, int size, int style)
 static void
 text_destroy_font(struct text_font *fon)
 {
-	free(fon->name);
 	ttf_close_font(fon->font);
 }
 
@@ -179,7 +179,7 @@ text_font_line_skip(ttf_font *fon)
 
 /* Render a single glyph onto a new surface. */
 SDL_Surface *
-text_render_glyph(char *fontname, int fontsize, Uint32 color, char ch)
+text_render_glyph(const char *fontname, int fontsize, Uint32 color, char ch)
 {
 	ttf_font *fon;
 	SDL_Color col;
@@ -203,7 +203,7 @@ text_render_glyph(char *fontname, int fontsize, Uint32 color, char ch)
 
 /* Render a (possibly multi-line) string onto a new surface. */
 SDL_Surface *
-text_render(char *fontname, int fontsize, Uint32 color, char *s)
+text_render(const char *fontname, int fontsize, Uint32 color, const char *s)
 {
 	SDL_Surface *su;
 	SDL_Color col;
@@ -214,9 +214,8 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	char *sd, *sp;
 
 	if (s == NULL || s[0] == '\0' ||
-	    !prop_get_bool(config, "font-engine")) {	    /* Null surface */
+	    !prop_get_bool(config, "font-engine")) 	    /* Null surface */
 		return (view_surface(SDL_SWSURFACE, 0, 0));
-	}
 
 	fon = text_load_font(fontname, fontsize,
 	    prop_get_int(config, "font-engine.default-style"));
@@ -242,12 +241,13 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 		}
 	} else {						/* Multiline */
 		SDL_Surface **lines, **lp;
-		int i;
+		int lineskip, i;
 
 		/*
 		 * Render the text to an array of surfaces, since we cannot
 		 * predict the width of the final surface.
 		 */
+		lineskip = ttf_font_line_skip(fon);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines);
 		for (lp = lines, maxw = 0;
 		    (sp = strsep(&sd, "\n")) != NULL;
@@ -256,10 +256,10 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 				*lp = NULL;
 				continue;
 			}
-			*lp = ttf_render_text_solid(fon, sp, col);
-			if (*lp == NULL) {
+
+			if ((*lp = ttf_render_text_solid(fon, sp, col)) == NULL)
 				fatal("ttf_render_text_solid: %s", error_get());
-			}
+
 			if ((*lp)->w > maxw)
 				maxw = (*lp)->w;	/* Grow width */
 		}
@@ -292,42 +292,28 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 void
 text_msg(const char *caption, const char *format, ...)
 {
-	char msg[LABEL_MAX_LENGTH];
+	char msg[LABEL_MAX];
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
 	va_list args;
-	SDL_Surface *msgsu;
-	int w, h;
+	struct button *button;
 
 	va_start(args, format);
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	/* Auto-size the window. XXX waste! */
-	msgsu = text_render(NULL, -1, 0, msg);
-	w = (int)msgsu->w;
-	h = (int)msgsu->h;
-	SDL_FreeSurface(msgsu);
-
-	win = window_generic_new(msgsu->w + 20,
-	    msgsu->h + ttf_font_height(font) + 60,
-	    NULL);
+	win = window_new(NULL);
 	window_set_caption(win, "%s", caption);
-	
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		label_new(reg, -1, -1, msg);
-	}
+	window_set_position(win, WINDOW_CENTER, 1);
 
-	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
-	{
-		struct button *button;
+	vb = vbox_new(win, 0);
+	label_new(vb, msg);
 
-		button = button_new(reg, "Ok", NULL, 0, 100, 0);
-		WIDGET_FOCUS(button);
-		event_new(button, "button-pushed", window_generic_detach,
-		    "%p", win);
-		window_show(win);
-	}
+	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
+	button = button_new(vb, "Ok");
+	event_new(button, "button-pushed", window_generic_detach, "%p", win);
+
+	widget_set_focus(button);
+	window_show(win);
 }
 

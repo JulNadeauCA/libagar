@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.12 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.13 2003/05/26 03:02:55 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,14 +40,19 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a checkbox with a label.
+widget displays a string of text next to a button used to trigger an
+.Ft int
+binding.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft struct checkbox *
-.Fn checkbox_new "struct region *reg" "const char *caption_fmt" "..."
+.Ft "struct checkbox *"
+.Fn checkbox_new "void *parent" "const char *caption_fmt" "..."
 .Pp
-.Ft void
+.Ft "void"
 .Fn checkbox_init "struct checkbox *checkbox" "char *caption"
+.Pp
+.Ft "void"
+.Fn checkbox_toggle "struct checkbox *checkbox"
 .nr nS 0
 .Pp
 The
@@ -62,6 +67,14 @@ initializes a
 .Nm
 widget with the label set to
 .Fa caption .
+If the length of the label string exceeds
+.Dv CHECKBOX_CAPTION_MAX
+- 1, the label is truncated.
+.Pp
+The
+.Fn checkbox_toggle
+function inverts the current state of
+.Fa checkbox .
 .Sh BINDINGS
 The
 .Nm
@@ -69,7 +82,7 @@ widget provides the following bindings:
 .Pp
 .Bl -tag -compact -width "int *value"
 .It Va int *state
-State (1=pressed, 0=released).
+State (1=enabled, 0=disabled).
 .El
 .Sh EVENTS
 The
@@ -78,7 +91,7 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Trigger the state if button is 1, otherwise give focus to the widget.
+Trigger the state if button is 1, otherwise only give focus to the widget.
 .It window-keydown
 Trigger the state if key is
 .Dv SDLK_RETURN
@@ -92,7 +105,7 @@ widget generates the following events:
 .Pp
 .Bl -tag -width 2n
 .It Fn checkbox-changed "int state"
-Checkbox state changed (1 = pressed, 0 = released).
+Checkbox state changed (1=enabled, 0=disabled).
 The
 .Sq state
 binding remains locked during the event handler's execution.
@@ -101,7 +114,6 @@ binding remains locked during the event handler's execution.
 .Xr agar 3 ,
 .Xr button 3 ,
 .Xr radio 3 ,
-.Xr region 3 ,
 .Xr widget 3 ,
 .Xr window 3
 .Sh HISTORY

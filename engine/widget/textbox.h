@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.17 2003/05/24 00:29:00 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.18 2003/05/24 15:43:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -12,28 +12,27 @@
 
 struct textbox {
 	struct widget	 wid;
+	char	 	 string[TEXTBOX_DEFAULT_MAX];	/* Def string binding */
 	int		 writeable;			/* Read/write? */
-	int		 xpadding, ypadding;
-	int		 newx;
-	SDL_Surface	*label;
-	struct {
-		int	 pos;
-		int	 offs;
-		pthread_mutex_t lock;
-	} text;
-	struct {
-		char	 string[TEXTBOX_DEFAULT_MAX];
-	} def;
+	int		 xpadding, ypadding;		/* Text padding */
+	int		 newx;				/* Mouse seek */
+	SDL_Surface	*label;				/* Label (left) */
+	
+	pthread_mutex_t lock;
+	int		pos;		/* Position in text */
+	int		offs;		/* Text display offset */
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct textbox	*textbox_new(struct region *, const char *);
-extern DECLSPEC void		 textbox_init(struct textbox *, const char *);
-extern DECLSPEC void		 textbox_destroy(void *);
+extern DECLSPEC struct textbox	*textbox_new(void *, const char *);
+
+extern DECLSPEC void	 textbox_init(struct textbox *, const char *);
+extern DECLSPEC void	 textbox_destroy(void *);
+extern DECLSPEC void	 textbox_draw(void *);
+extern DECLSPEC void	 textbox_scale(void *, int, int);
 
 extern DECLSPEC void	 textbox_shown(int, union evarg *);
 extern DECLSPEC void	 textbox_hidden(int, union evarg *);
-extern DECLSPEC void	 textbox_draw(void *);
 extern DECLSPEC void	 textbox_printf(struct textbox *, const char *, ...);
 extern DECLSPEC char	*textbox_string(struct textbox *);
 extern DECLSPEC size_t	 textbox_copy_string(struct textbox *, char *, size_t);

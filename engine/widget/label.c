@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.64 2003/05/24 15:53:44 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.65 2003/05/25 08:24:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,16 +26,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
-#include <engine/compat/vasprintf.h>
-#include <engine/compat/strlcat.h>
-#include <engine/compat/strlcpy.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
-
-#include <engine/widget/text.h>
-#include <engine/widget/region.h>
 
 #include "label.h"
 
@@ -52,103 +44,90 @@ const struct widget_ops label_ops = {
 		NULL		/* edit */
 	},
 	label_draw,
-	NULL		/* update */
+	label_scale
 };
 
 enum {
 	TEXT_COLOR
 };
 
-/* Create and attach a new static label. */
 struct label *
-label_new(struct region *reg, int w, int h, const char *fmt, ...)
+label_new(void *parent, const char *fmt, ...)
 {
 	struct label *label;
 	va_list args;
-	char *buf;
+	char buf[LABEL_MAX];
 
 	va_start(args, fmt);
-	Vasprintf(&buf, fmt, args);
+	vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
 
 	label = Malloc(sizeof(struct label));
-	label_init(label, LABEL_STATIC, buf, w, h);
-	free(buf);
-	region_attach(reg, label);
+	label_init(label, LABEL_STATIC, buf);
+	object_attach(parent, label);
 	return (label);
 }
 
-static void
-label_scaled(int argc, union evarg *argv)
+void
+label_scale(void *p, int rw, int rh)
 {
-	struct label *lab = argv[0].p;
+	struct label *lab = p;
 
 	switch (lab->type) {
 	case LABEL_STATIC:
-		pthread_mutex_lock(&lab->text.lock);
-		if (lab->text.surface != NULL) {
-			if (WIDGET(lab)->rw == -1)
-				WIDGET(lab)->w = lab->text.surface->w;
-			if (WIDGET(lab)->rh == -1)
-				WIDGET(lab)->h = lab->text.surface->h;
+		pthread_mutex_lock(&lab->lock);
+		if (rw == -1 && rh == -1 && lab->surface != NULL) {
+			WIDGET(lab)->w = lab->surface->w;
+			WIDGET(lab)->h = lab->surface->h;
 		}
-		pthread_mutex_unlock(&lab->text.lock);
+		pthread_mutex_unlock(&lab->lock);
 		break;
 	case LABEL_POLLED:
-		if (WIDGET(lab)->rh == -1)
+		if (rh == -1 && rh == -1) {
+			/* Not critical since polled labels are wfill. */
+			WIDGET(lab)->w = 10;
 			WIDGET(lab)->h = text_font_height(font);
+		}
 		break;
 	}
 }
 
-/* Initialize a static or polled label. */
 void
-label_init(struct label *label, enum label_type type, const char *s,
-    int rw, int rh)
+label_init(struct label *label, enum label_type type, const char *s)
 {
-	widget_init(&label->wid, "label", &label_ops, rw, rh);
-	
-	widget_map_color(label, TEXT_COLOR, "text", 250, 250, 250);
+	widget_init(label, "label", &label_ops, 0);
+	widget_map_color(label, TEXT_COLOR, "text", 250, 250, 250, 255);
 
 	label->type = type;
 	switch (type) {
 	case LABEL_STATIC:
 		if (s != NULL) {
-			label->text.caption = Strdup(s);
-			label->text.surface = text_render(NULL, -1,
-			    WIDGET_COLOR(label, TEXT_COLOR),
-			    label->text.caption);
+			label->surface = text_render(NULL, -1,
+			    WIDGET_COLOR(label, TEXT_COLOR), s);
 		} else {
-			label->text.caption = NULL;
-			label->text.surface = NULL;
+			label->surface = NULL;
 		}
-		pthread_mutex_init(&label->text.lock, NULL);
+		pthread_mutex_init(&label->lock, NULL);
 		break;
 	case LABEL_POLLED:
-		label->text.caption = NULL;
-		label->text.surface = NULL;
-		label->poll.fmt = Strdup(s);
-
-		memset(label->poll.ptrs, 0,
-		    sizeof(void *) * LABEL_MAX_POLLITEMS);
+		label->surface = NULL;
+		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
+		memset(label->poll.ptrs, 0, sizeof(void *) * LABEL_POLL_MAX);
 		label->poll.nptrs = 0;
 		break;
 	}
-
-	event_new(label, "widget-scaled", label_scaled, NULL);
 }
 
-/* Create a new polled label. */
 struct label *
-label_polled_new(struct region *reg, int w, int h, pthread_mutex_t *mutex,
-    const char *fmt, ...)
+label_polled_new(void *parent, pthread_mutex_t *mutex, const char *fmt, ...)
 {
 	struct label *label;
 	va_list args;
 	const char *p;
 
 	label = Malloc(sizeof(struct label));
-	label_init(label, LABEL_POLLED, fmt, w, h);
+	label_init(label, LABEL_POLLED, fmt);
+	WIDGET(label)->flags |= WIDGET_WFILL;
 
 	label->poll.lock = mutex;
 
@@ -162,50 +141,55 @@ label_polled_new(struct region *reg, int w, int h, pthread_mutex_t *mutex,
 			case '%':
 				break;
 			default:
-				label->poll.ptrs[label->poll.nptrs++] =
-				    va_arg(args, void *);
+				if (label->poll.nptrs+1 < LABEL_POLL_MAX) {
+					label->poll.ptrs[label->poll.nptrs++] =
+					    va_arg(args, void *);
+				}
 				break;
 			}
 		}
 	}
 	va_end(args);
 
-	region_attach(reg, label);
-
+	object_attach(parent, label);
 	return (label);
 }
 
-/* Update the text of a static label. */
+/* Modify the surface of a static label. */
+void
+label_set_surface(struct label *label, SDL_Surface *su)
+{
+	pthread_mutex_lock(&label->lock);
+	if (label->surface != NULL) {
+		SDL_FreeSurface(label->surface);
+	}
+	label->surface = su;
+	pthread_mutex_unlock(&label->lock);
+}
+
+/* Display a string of text in a static label. */
 void
 label_printf(struct label *label, const char *fmt, ...)
 {
+	char s[LABEL_MAX];
 	va_list args;
 
 #ifdef DEBUG
 	if (label->type != LABEL_STATIC)
 		fatal("not a static label");
 #endif
-	
-	pthread_mutex_lock(&label->text.lock);
-
-	free(label->text.caption);
 	va_start(args, fmt);
-	Vasprintf(&label->text.caption, fmt, args);
+	vsnprintf(s, sizeof(s), fmt, args);
 	va_end(args);
+	
+	if (s[0] != '\0') {
+		SDL_Surface *su;
 
-	if (label->text.surface != NULL)
-		SDL_FreeSurface(label->text.surface);
-	if (label->text.caption[0] != '\0') {
-		label->text.surface = text_render(NULL, -1,
-		    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
-		WIDGET(label)->w = label->text.surface->w;
-		WIDGET(label)->h = label->text.surface->h;
+		su = text_render(NULL, -1, WIDGET_COLOR(label, TEXT_COLOR), s);
+		label_set_surface(label, su);
 	} else {
-		label->text.surface = NULL;
-		WIDGET(label)->w = 0;
-		WIDGET(label)->h = 0;
+		label_set_surface(label, NULL);
 	}
-	pthread_mutex_unlock(&label->text.lock);
 }
 
 #define LABEL_ARG(_type)	(*(_type *)label->poll.ptrs[ri])
@@ -306,10 +290,10 @@ static const struct {
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 /* Display a polled label. */
-static __inline__ void
+static void
 label_draw_polled(struct label *label)
 {
-	char s[LABEL_MAX_LENGTH];
+	char s[LABEL_MAX];
 	char s2[32];
 	SDL_Surface *ts;
 	char *fmtp;
@@ -409,15 +393,13 @@ label_draw(void *p)
 {
 	struct label *label = p;
 
-	/* XXX justify */
-
 	switch (label->type) {
 	case LABEL_STATIC:
-		pthread_mutex_lock(&label->text.lock);
-		if (label->text.surface != NULL) {
-			widget_blit(label, label->text.surface, 0, 0);
+		pthread_mutex_lock(&label->lock);
+		if (label->surface != NULL) {
+			widget_blit(label, label->surface, 0, 0);
 		}
-		pthread_mutex_unlock(&label->text.lock);
+		pthread_mutex_unlock(&label->lock);
 		break;
 	case LABEL_POLLED:
 		label_draw_polled(label);
@@ -430,18 +412,11 @@ label_destroy(void *p)
 {
 	struct label *label = p;
 
-	switch (label->type) {
-	case LABEL_STATIC:
-		free(label->text.caption);
-		if (label->text.surface != NULL) {
-			SDL_FreeSurface(label->text.surface);
+	if (label->type == LABEL_STATIC) {
+		if (label->surface != NULL) {
+			SDL_FreeSurface(label->surface);
 		}
-		pthread_mutex_destroy(&label->text.lock);
-		break;
-	case LABEL_POLLED:
-		free(label->poll.fmt);
-		break;
+		pthread_mutex_destroy(&label->lock);
 	}
-
 	widget_destroy(label);
 }

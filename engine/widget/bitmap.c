@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.14 2003/05/17 23:58:10 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.15 2003/05/24 15:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,8 +29,6 @@
 #include <engine/engine.h>
 #include <engine/view.h>
 
-#include <engine/widget/region.h>
-
 #include "bitmap.h"
 
 const struct widget_ops bitmap_ops = {
@@ -42,60 +40,45 @@ const struct widget_ops bitmap_ops = {
 		NULL		/* edit */
 	},
 	bitmap_draw,
-	NULL		/* update */
+	bitmap_scale
 };
 
 struct bitmap *
-bitmap_new(struct region *reg, int w, int h)
+bitmap_new(void *parent)
 {
 	struct bitmap *bitmap;
 
 	bitmap = Malloc(sizeof(struct bitmap));
-	bitmap_init(bitmap, w, h);
-	region_attach(reg, bitmap);
+	bitmap_init(bitmap);
+	object_attach(parent, bitmap);
 	return (bitmap);
 }
 
 void
-bitmap_init(struct bitmap *bitmap, int w, int h)
+bitmap_init(struct bitmap *bmp)
 {
-	widget_init(&bitmap->wid, "bitmap", &bitmap_ops, w, h);
+	widget_init(bmp, "bitmap", &bitmap_ops, 0);
 
-	bitmap->surface = NULL;
-	bitmap->surface_s = NULL;
-	event_new(bitmap, "widget-scaled", bitmap_scaled, NULL);
-}
-
-/* Update the visible surface. */
-void
-bitmap_set_surface(struct bitmap *bmp, SDL_Surface *su)
-{
-	/* Allocate a copy of the original. */
-	if (bmp->surface != NULL)
-		SDL_FreeSurface(bmp->surface);
-	bmp->surface = view_scale_surface(su, su->w, su->h);
-
-	/* Update the scaled version. */
-	event_post(bmp, "widget-scaled", NULL);
+	bmp->surface = NULL;
+	bmp->surface_s = NULL;
 }
 
 void
-bitmap_scaled(int argc, union evarg *argv)
+bitmap_scale(void *p, int rw, int rh)
 {
-	struct bitmap *bmp = argv[0].p;
+	struct bitmap *bmp = p;
 
-	if (bmp->surface == NULL)
-		return;
+	if (rw == -1 && rh == -1) {
+		WIDGET(bmp)->w = bmp->surface != NULL ? bmp->surface->w : 32;
+		WIDGET(bmp)->h = bmp->surface != NULL ? bmp->surface->h : 32;
+	}
 
-	if (WIDGET(bmp)->rw == -1)
-		WIDGET(bmp)->w = bmp->surface->w;
-	if (WIDGET(bmp)->rh == -1)
-		WIDGET(bmp)->h = bmp->surface->h;
-
-	if (bmp->surface_s != NULL)
+	if (bmp->surface_s != NULL) {
 		SDL_FreeSurface(bmp->surface_s);
-	bmp->surface_s = view_scale_surface(bmp->surface,
-	    WIDGET(bmp)->w, WIDGET(bmp)->h);
+	}
+	bmp->surface_s = (bmp->surface != NULL) ?
+	    view_scale_surface(bmp->surface, WIDGET(bmp)->w, WIDGET(bmp)->h) :
+	    NULL;
 }
 
 void
@@ -113,9 +96,22 @@ bitmap_destroy(void *p)
 {
 	struct bitmap *bmp = p;
 
-	if (bmp->surface_s != NULL) {
+	if (bmp->surface != NULL)
+		SDL_FreeSurface(bmp->surface);
+	if (bmp->surface_s != NULL)
 		SDL_FreeSurface(bmp->surface_s);
-	}
+
 	widget_destroy(bmp);
+}
+
+/* Update the visible surface. */
+void
+bitmap_set_surface(struct bitmap *bmp, SDL_Surface *su)
+{
+	if (bmp->surface != NULL)
+		SDL_FreeSurface(bmp->surface);
+
+	bmp->surface = view_copy_surface(su);
+	bitmap_scale(bmp, 0, 0);
 }
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.28 2003/05/24 07:36:45 vedge Exp $
+.\"	$Csoft: widget.3,v 1.29 2003/05/24 15:46:17 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,68 +40,160 @@
 .Sh DESCRIPTION
 Agar widgets are derived from the
 .Nm
-structure.
-Widgets are attached to parent container widgets, whose role is to manage the
-widget coordinates and geometry.
+object and organized in a tree structure.
+Widgets fall under one of three categories:
+.Bl -tag -width "Composite widgets "
+.It Container widgets
+Containers arrange the position and geometry of their children in a specific
+order.
+.Xr hbox 3 ,
+.Xr vbox 3
+and
+.Xr window 3
+are the most commonly used container widgets.
+.It Composite widgets
+Composite widgets create pre-defined child widgets and arrange them in a
+specific manner.
+For example, the
+.Xr tlist 3
+widget attaches a vertical
+.Xr scrollbar 3
+to itself.
+Composite widgets can behave like containers as well, like
+.Xr window 3
+which attaches a
+.Xr titlebar 3
+widget to itself but accepts other widgets.
+.It Simple widgets
+Simple widgets do not contain any children.
+.Xr button 3
+and
+.Xr label 3
+are examples of simple widgets.
+The behavior is undefined if one attempts to attach children to such widgets.
+.El
 .Sh INITIALIZATION
 .nr nS 1
-.Ft void
-.Fn widget_init "struct widget *wid" "char *name" \
-                "const void *widget_ops" "int rw" "int rh"
+.Ft "void"
+.Fn widget_init "void *widget" "const char *type" "const void *widget_ops" \
+                "int flags"
 .nr nS 0
 .Pp
 The
 .Fn widget_init
-function initializes a widget structure.
+function initializes a generic
+.Nm
+structure.
+Acceptable
+.Fa flags
+include:
+.Pp
+.Bd -literal
+#define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus */
+#define WIDGET_UNFOCUSED_MOTION	  0x02	/* Unfocused mousemotion */
+#define WIDGET_UNFOCUSED_BUTTONUP 0x04	/* Unfocused mousebuttonup */
+#define WIDGET_CLIPPING		  0x08	/* Enable clipping */
+#define WIDGET_WFILL		  0x10	/* Expand to fill parent width */
+#define WIDGET_HFILL		  0x20	/* Expand to fill parent height */
+.Ed
+.Pp
+The
+.Dv WIDGET_NO_FOCUS
+flag prevents the widget from gaining focus.
+.Dv WIDGET_UNFOCUSED_MOTION
+and
+.Dv WIDGET_UNFOCUSED_BUTTONUP
+enable reception of
+.Sq window-mousemotion
+and
+.Sq window-mousebuttonup
+events, respectively.
+.Pp
+.Dv WIDGET_CLIPPING
+causes a clipping rectangle (as set by
+.Xr SDL_SetClipRect 3 )
+to surround the widget area for the duration of the draw operation.
+.Pp
+The
+.Dv WIDGET_WFILL
+and
+.Dv WIDGET_HFILL
+flags indicate to container widgets that the widget wishes to allocate the
+remaining width or height inside the container area.
+.Pp
+The
 .Fa widget_ops
+argument to
+.Fn widget_init
 is a pointer to the following structure:
 .Bd -literal
 struct widget_ops {
 	const struct object_ops	obops;		/* Generic object(3) ops */
-	void	 (*draw)(void *);		/* Rendering routine */
-	void	 (*size)(void *, int *, int *);	/* Size request routine */
+	void (*draw)(void *p);			/* Rendering routine */
+	void (*scale)(void *p, int w, int h);	/* Size request routine */
 };
 .Ed
+.Sh GEOMETRY MANAGEMENT
+The
+.Va scale
+operation is invoked to set the size of a widget.
+With
+.Fa w ,
+.Fa h
+arguments of -1,
+.Va scale
+is expected to choose a default, minimum geometry sufficient to display the
+widget aesthetically.
 .Pp
-Since widgets don't hold persistent properties, their
-.Xr object 3
-name is simply the widget type followed by a random number.
+Containers set the
+.Va w ,
+.Va h
+geometries and relative
+.Va x ,
+.Va y
+positions of their children prior to invoking their
+.Va scale
+operation (with arguments of
+.Va w ,
+.Va h ) .
 .Pp
-The widget initially requests an area of size
-.Fa rw
-x
-.Fa rh .
-If
-.Fa rw
-and
-.Fa rh
-are greater than zero, they are considered percentiles of the total
-space occupied by the parent region.
-If they are zero, the widget requests all available space inside the region.
-If
-.Fa rw
-or
-.Fa rh
-is negative, the widget provides a default geometry.
+Widgets must not make any assumptions about their own position inside their
+parent container.
+.Sh FOCUS STATE
+.nr nS 1
+.Ft "int"
+.Fn widget_holds_focus "void *widget"
+.Pp
+.Ft "void"
+.Fn widget_set_focus "void *widget"
+.nr nS 0
 .Pp
 The
-.Fa flags
-can be changed at runtime, and may include:
+.Fn widget_holds_focus
+function returns 1 if a widget has the
+.Dv WIDGET_FOCUSED
+flag set.
+Note that this flag is not effective (although it may affect widget layout)
+unless all parent widgets have the flag set as well.
 .Pp
-.Bd -literal
-#define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus. */
-#define WIDGET_UNFOCUSED_MOTION	  0x02	/* Catch window-mousemotion
-					   when widget isn't focused. */
-#define WIDGET_UNFOCUSED_BUTTONUP 0x04	/* Catch window-mousebuttonup
-					   when widget isn't focused, */
-#define WIDGET_CLIPPING		  0x08	/* Set the clipping rectangle to
-					   the widget area before draw. */
-.Ed
+.Fn widget_set_focus
+sets the
+.Dv WIDGET_FOCUSED
+flag on a widget and all of its parent widgets, until the parent window is
+reached.
+The effect of the focus state is determined by the widget implementation.
+Usually it enables reception of keyboard and mouse motion events and affects
+the widget appearance.
+.Pp
+Window focus is independent from widget focus; the highest window on the
+stack always holds focus; the
+.Fn WINDOW_FOCUSED
+macro may be used to test this.
 .Sh COLOR SCHEME
 .nr nS 1
 .Ft void
-.Fn widget_map_color "struct widget *wid" "int index" "char *name" "Uint8 r" \
-                     "Uint8 g" "Uint8 b"
+.Fn widget_map_color "struct widget *wid" "int index" "const char *name" \
+                     "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
 .Pp
 .Ft Uint32
 .Fn WIDGET_COLOR "struct widget *wid" "int index"
@@ -110,20 +202,13 @@ can be changed at runtime, and may include:
 .Pp
 The
 .Fn widget_map_color
-function registers a color referenced by the null-terminated string pointed
-to by
-.Fa name ,
-with a default value of
-.Fa r ,
-.Fa g
-and
-.Fa b .
-The
-.Fa index
-argument is an index into the widget color table (an arbitrary-sized array of
-color values).
-This allows the color scheme to change at run time without expensive
-lookup operations in widget rendering routines.
+function adds a new entry to a widget's color scheme, with a default color
+composed from the given RGBA component values.
+The rendering routines obtain the colors using
+.Fa index ,
+but the colors may also be referenced by their
+.Fa name
+string.
 .Pp
 The
 .Fn WIDGET_COLOR
@@ -131,111 +216,131 @@ macro returns the color at index
 .Fa index .
 .Sh COORDINATES
 .nr nS 1
-.Ft void
-.Fn widget_get_position "struct widget *wid" "Sint16 *x" "Sint16 *y"
-.Pp
-.Ft void
-.Fn widget_set_geometry "struct widget *wid" "Uint16 *w" "Uint16 *h"
-.Pp
-.Ft void
-.Fn widget_set_position "struct widget *wid" "Sint16 x" "Sint16 y"
-.Pp
-.Ft void
-.Fn widget_set_geometry "struct widget *wid" "Uint16 w" "Uint16 h"
-.Pp
-.Ft Uint32
-.Fn WIDGET_ABSX "struct widget *wid"
-.Pp
-.Ft Uint32
-.Fn WIDGET_ABSY "struct widget *wid"
-.Pp
-.Ft bool
-.Fn WIDGET_INSIDE "struct widget *wid" "Sint16 x" "Sint16 y"
-.Pp
-.Ft bool
-.Fn WIDGET_INSIDE_RELATIVE "struct widget *wid" "Sint16 x" "Sint16 y"
-.Pp
+.Ft int
+.Fn widget_area "void *widget" "int x" "int y"
 .nr nS 0
-The
-.Fn widget_set_position
-and
-.Fn widget_get_position
-change and return the widget's effective position inside the window,
-respectively.
 .Pp
 The
-.Fn widget_set_geometry
-and
-.Fn widget_get_geometry
-change and return the widget's effective geometry, respectively.
-.Pp
-The
-.Fn WIDGET_ABSX
-and
-.Fn WIDGET_ABSY
-macros return the window coordinates of a widget.
-.Pp
-The
-.Fn WIDGET_INSIDE
-macro evaluates to true if window coordinates
+.Fn widget_area
+function returns 1 if absolute view coordinates
 .Fa x
 and
 .Fa y
-are inside the widget area.
-The
-.Fn WIDGET_INSIDE_RELATIVE
-macro evaluates to true if widget-relative coordiates
-.FA x
-and
-.Fa y
-are inside the widget area.
+are inside the area allocated by the widget.
 .Sh RENDERING
+The
+.Va draw
+operation, if not NULL, is expected to render the widget to the video display.
+Note that this operation is automatically invoked on children.
+.Pp
 .nr nS 1
 .Ft void
-.Fn widget_blit "struct widget *wid" "SDL_Surface *src" "int xoffs" \
-                "int yoffs"
+.Fn widget_blit "void *widget" "SDL_Surface *src" "int x" "int y"
 .Pp
 .Ft void
-.Fn WIDGET_PUT_PIXEL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint32 color"
+.Fn widget_put_pixel "void *widget" "int x" "int y" "Uint32 color"
 .Pp
 .Ft void
-.Fn WIDGET_PUT_ALPHAPIXEL "struct widget *wid" "Sint16 x" "Sint16 y" \
-                          "Uint32 color" "Uint8 a"
+.Fn primitives.box "void *widget" "int x" "int y" "int w" "int h" "int z" \
+                   "Uint32 color"
 .Pp
 .Ft void
-.Fn WIDGET_FOCUS "struct widget *wid"
+.Fn primitives.frame "void *widget" "int x" "int y" "int w" "int h" \
+                     "Uint32 color"
+.Pp
+.Ft void
+.Fn primitives.circle "void *widget "int x" "int y" "int w" "int h" \
+                      "Uint32 color"
+.Pp
+.Ft void
+.Fn primitives.line "void *widget" "int x1" "int y1" "int x2" "int y2" \
+                    "Uint32 color"
+.Pp
+.Ft void
+.Fn primitives.line2 "void *widget" "int x1" "int y1" "int x2" "int y2" \
+                    "Uint32 color"
+.Pp
+.Ft void
+.Fn primitives.rect_outlined "void *widget" "int x" "int y" "int w" "int h" \
+                             "Uint32 color"
+.Pp
+.Ft void
+.Fn primitives.rect_filled "void *widget" "SDL_Rect *rd" "Uint32 color"
+.Pp
 .nr nS 0
-.Pp
 The
 .Fn widget_blit
-function performs a blit from source surface
+function performs a surface blit from
 .Fa src
-to the display at
-.Fa xoffs ,
-.Fa yoffs
-relative to the widget's current coordinates.
+to the video display at widget-relative coordinates
+.Fa x
+and
+.Fa y .
 .Pp
 The
-.Fn WIDGET_PUT_PIXEL
-macro writes a pixel of value
+.Fn widget_put_pixel
+function writes a pixel of value
 .Fa color
-at coordinates
+at widget-relative coordinates
 .Fa x ,
 .Fa y
-on the widget surface.
-The
-.Fn WIDGET_PUT_ALPHAPIXEL
-macro writes a pixel at coordinates
-.Fa x ,
-.Fa y
-of the widget, after alpha-blending the pixel using alpha value
-.Fa a .
+relative to
+.Fa widget ,
+assuming the pixel is inside the current clipping rectangle as set by
+.Xr SDL_SetClipRect 3 .
 .Pp
+.Fn primitives.box
+draws a 3D-style box of size
+.Fa w ,
+.Fa h
+at
+.Fa x ,
+.Fa y .
 The
-.Fn WIDGET_FOCUS
-macro gives focus to a widget and posts a
-.Fn widget-gainfocus
-event.
+.Fa z
+argument indicates the apparent depth.
+.Pp
+.Fn primitives.frame
+draws a 3D-style frame of size
+.Fa w ,
+.Fa h
+at
+.Fa x ,
+.Fa y .
+.Pp
+.Fn primitives.circle
+draws a circle of size
+.Fa w ,
+.Fa h
+at
+.Fa x ,
+.Fa y .
+.Pp
+.Fn primitives.line
+draws a line from
+.Fa x1 ,
+.Fa y1
+to
+.Fa x2 ,
+.Fa y2 .
+.Fn primitives.line2
+is a variant which draws two lines with a RGB difference of +50,+50,+50.
+.Pp
+.Fn primitives.rect_outlined
+draws a border of size
+.Fa w ,
+.Fa h
+at
+.Fa x ,
+.Fa y .
+.Pp
+.Fn primitives.rect_filled
+draws a filled rectangle of size
+.Fa rd->w ,
+.Fa rd->h
+at
+.Fa rd->x ,
+.Fa rd->y .
 .Sh BINDINGS
 The
 .Nm widget
@@ -254,19 +359,15 @@ as
 .Dv WIDGET_INT
 bindings
 and
-the
 .Xr textbox 3
-widget defines a
-.Sq string
-as a
+edits a
 .Dv WIDGET_STRING
 binding.
 .Pp
 All widgets provide default bindings, which point to data allocated and
 initialized by the widget itself.
-The
 .Fn widget_bind
-function is called to override the default bindings.
+is called to override those default bindings.
 .nr nS 1
 .Ft "struct widget_binding *"
 .Fn widget_bind "void *widget" "const char *binding" \
@@ -277,6 +378,9 @@ function is called to override the default bindings.
 .Pp
 .Ft "struct widget_binding *"
 .Fn widget_binding_get_locked "void *widget" "const char *binding" "void *res"
+.Pp
+.Ft void
+.Fn widget_binding_lock "struct widget_binding *binding"
 .Pp
 .Ft void
 .Fn widget_binding_unlock "struct widget_binding *binding"
@@ -370,7 +474,7 @@ the following arguments are:
 .Bl -tag -width "struct object * " -compact
 .It struct object *
 The object that holds the property.
-.It char *
+.It const char *
 The property identifier.
 .El
 .Pp
@@ -382,7 +486,7 @@ the following arguments are:
 .Bl -tag -width "pthread_mutex_t * " -compact
 .It pthread_mutex_t *
 A lock to acquire when manipulating the data, or NULL
-.It char *
+.It const char *
 A pointer to the string.
 .It size_t
 The full size of the string buffer.
@@ -435,15 +539,14 @@ and
 .Fn widget_set_TYPE
 variants manipulate the bound values atomically.
 .Fn widget_get_string
-returns a copy of the string, or NULL on failure and
+returns a copy of the string (or NULL on failure).
 .Fn widget_copy_string
 copies up to
 .Fa dst_size
 - 1 bytes from the string to
 .Fa dst ,
-NUL-terminating the result.
-.Fn widget_copy_string
-returns the number of bytes that would have been copied if
+NUL-terminating the result and returning the number of bytes that would
+have been copied if
 .Fa dst_size
 was unlimited.
 .Sh THREAD SAFETY
@@ -461,42 +564,19 @@ The
 structure generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
-.It Fn widget-shown "struct window *win"
-Widget is now visible inside window
-.Fa win .
-.It Fn widget-hidden "struct window *win"
-Widget is no longer visible inside window
-.Fa win .
+.It Fn widget-shown "void"
+Widget is now visible.
+.It Fn widget-hidden "void"
+Widget is no longer visible.
 .It Fn widget-gainfocus "void"
-Widget now holds focus inside its parent window.
+Widget now holds focus inside its container.
 .It Fn widget-lostfocus "void"
-Widget no longer holds focus inside its parent window.
-.It Fn widget-scaled "int w" "int h"
-Widget's parent region was resized to
-.Fa w
-by
-.Fa h
-pixels.
-Widgets can assume that a
-.Fn widget-scaled
-event is always generated before
-.Fn widget_draw
-is first called.
-Widgets can adopt any geometry when handling
-.Fn widget-scaled
-events, as long as they fit inside 
-.Fa w
-by
-.Fa h
-pixels.
-The order of input events and draw operation is undefined if widgets
-overlap.
+Widget no longer holds focus inside its container.
 .El
 .Pp
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr window 3 ,
-.Xr region 3 ,
 .Xr bitmap 3 ,
 .Xr button 3 ,
 .Xr checkbox 3 ,
@@ -511,4 +591,8 @@ overlap.
 .Sh HISTORY
 The
 .Nm
-structure first appeared in Agar 1.0.
+interface first appeared in Agar 1.0.
+.Sh BUGS
+The
+.Fn widget_binding_get
+interface is too complicated.

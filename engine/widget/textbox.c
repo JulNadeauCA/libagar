@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.58 2003/05/25 04:22:12 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.59 2003/05/25 04:25:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,19 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/strlcpy.h>
-#include <engine/compat/vsnprintf.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
 
-#include <engine/widget/primitive.h>
-#include <engine/widget/text.h>
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
-#include <engine/widget/region.h>
+#include <engine/widget/primitive.h>
 
 #include <string.h>
 #include <stdarg.h>
@@ -53,51 +48,48 @@ const struct widget_ops textbox_ops = {
 		NULL		/* edit */
 	},
 	textbox_draw,
-	NULL		/* update */
+	textbox_scale
 };
 
 enum {
 	MOUSE_SCROLL_INCR =	4,
 	KBD_SCROLL_INCR =	4,
-	FRAME_COLOR,
-	FRAME_READONLY_COLOR,
+	READWRITE_COLOR,
+	READONLY_COLOR,
 	TEXT_COLOR,
 	CURSOR_COLOR1,
 	CURSOR_COLOR2
 };
 
-static void	textbox_scaled(int, union evarg *);
 static void	textbox_mousemotion(int, union evarg *);
 static void	textbox_mousebuttondown(int, union evarg *);
 static void	textbox_key(int, union evarg *);
 
 struct textbox *
-textbox_new(struct region *reg, const char *label)
+textbox_new(void *parent, const char *label)
 {
 	struct textbox *textbox;
 
 	textbox = Malloc(sizeof(struct textbox));
 	textbox_init(textbox, label);
-	region_attach(reg, textbox);
+	object_attach(parent, textbox);
 	return (textbox);
 }
 
 void
 textbox_init(struct textbox *tbox, const char *label)
 {
-	widget_init(&tbox->wid, "textbox", &textbox_ops, 100, -1);
+	widget_init(tbox, "textbox", &textbox_ops, WIDGET_WFILL);
+	widget_bind(tbox, "string", WIDGET_STRING, NULL, tbox->string,
+	    sizeof(tbox->string));
 
-	widget_bind(tbox, "string", WIDGET_STRING, NULL, tbox->def.string,
-	    sizeof(tbox->def.string));
-	tbox->def.string[0] = '\0';
+	widget_map_color(tbox, READWRITE_COLOR, "edition", 100, 100, 100, 255);
+	widget_map_color(tbox, READONLY_COLOR, "read-only", 40, 40, 40, 255);
+	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250, 255);
+	widget_map_color(tbox, CURSOR_COLOR1, "cursor1", 50, 50, 50, 255);
+	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0, 255);
 
-	widget_map_color(tbox, FRAME_COLOR, "frame", 100, 100, 100);
-	widget_map_color(tbox, FRAME_READONLY_COLOR, "frame-readonly",
-	    40, 40, 40);
-	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250);
-	widget_map_color(tbox, CURSOR_COLOR1, "cursor1", 50, 50, 50);
-	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0);
-
+	tbox->string[0] = '\0';
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
 	tbox->writeable = 1;
@@ -107,16 +99,15 @@ textbox_init(struct textbox *tbox, const char *label)
 	} else {
 		tbox->label = NULL;
 	}
-	tbox->text.pos = -1;
-	tbox->text.offs = 0;
-	pthread_mutex_init(&tbox->text.lock, &recursive_mutexattr);
+	tbox->pos = -1;
+	tbox->offs = 0;
+	pthread_mutex_init(&tbox->lock, &recursive_mutexattr);
 	tbox->newx = -1;
 
 	event_new(tbox, "window-keydown", textbox_key, NULL);
 	event_new(tbox, "window-mousebuttondown", textbox_mousebuttondown,
 	    NULL);
 	event_new(tbox, "window-mousemotion", textbox_mousemotion, NULL);
-	event_new(tbox, "widget-scaled", textbox_scaled, NULL);
 }
 
 void
@@ -127,7 +118,7 @@ textbox_destroy(void *ob)
 	if (tbox->label != NULL)
 		SDL_FreeSurface(tbox->label);
 
-	pthread_mutex_destroy(&tbox->text.lock);
+	pthread_mutex_destroy(&tbox->lock);
 	widget_destroy(tbox);
 }
 
@@ -147,21 +138,21 @@ textbox_draw(void *p)
 		x = tbox->label->w;
 	}
 
-	pthread_mutex_lock(&tbox->text.lock);
+	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	tlen = strlen(s);
 
 	/* Default to the end of the string. */
-	if (tbox->text.pos < 0)
-		tbox->text.pos = tlen;
+	if (tbox->pos < 0)
+		tbox->pos = tlen;
 
 	/* Move to the beginning of the string? */
 	if (tbox->newx >= 0 && tbox->newx <= tbox->label->w) {
 		if (tbox->newx < tbox->label->w - tbox->xpadding) {
-			if ((tbox->text.offs -= MOUSE_SCROLL_INCR) < 0)
-				tbox->text.offs = 0;
+			if ((tbox->offs -= MOUSE_SCROLL_INCR) < 0)
+				tbox->offs = 0;
 		}
-		tbox->text.pos = tbox->text.offs;
+		tbox->pos = tbox->offs;
 		tbox->newx = -1;
 	}
 drawtext:
@@ -170,16 +161,16 @@ drawtext:
 	primitives.box(tbox, x, 0,
 	    WIDGET(tbox)->w - x - 1,
 	    WIDGET(tbox)->h,
-	    WIDGET_FOCUSED(tbox) ? -1 : 1,
+	    widget_holds_focus(tbox) ? -1 : 1,
 	    tbox->writeable ?
-	        WIDGET_COLOR(tbox, FRAME_COLOR) :
-		WIDGET_COLOR(tbox, FRAME_READONLY_COLOR));
+	        WIDGET_COLOR(tbox, READWRITE_COLOR) :
+		WIDGET_COLOR(tbox, READONLY_COLOR));
 	x += tbox->xpadding;
-	if (WIDGET_FOCUSED(tbox)) {
+	if (widget_holds_focus(tbox)) {
 		x++;
 		y++;
 	}
-	for (i = tbox->text.offs, lx = -1;
+	for (i = tbox->offs, lx = -1;
 	     i <= tlen;
 	     i++) {
 		SDL_Surface *glyph;
@@ -189,11 +180,11 @@ drawtext:
 		if (tbox->newx >= 0 &&
 		    tbox->newx >= lx && tbox->newx < x) {
 			tbox->newx = -1;
-			tbox->text.pos = i;
+			tbox->pos = i;
 		}
 		lx = x;
 
-		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox)) {
+		if (i == tbox->pos && widget_holds_focus(tbox)) {
 			primitives.line(tbox,
 			    x, y,
 			    x, y + tbox->label->h - 2,
@@ -223,32 +214,35 @@ drawtext:
 			SDL_FreeSurface(glyph);
 		}
 	}
-	if (WIDGET_FOCUSED(tbox) && !cursdrawn) {
-		if (tbox->text.pos > i)
-			tbox->text.offs += KBD_SCROLL_INCR;
+	if (widget_holds_focus(tbox) && !cursdrawn) {
+		if (tbox->pos > i)
+			tbox->offs += KBD_SCROLL_INCR;
 		goto drawtext;
 	}
 
 	/* Move beyond the visible end of the string? */
 	if (tbox->newx >= 0) {
 		tbox->newx = -1;
-		tbox->text.pos = i-1;
+		tbox->pos = i-1;
 		if (i < tlen) {
-			tbox->text.offs += MOUSE_SCROLL_INCR;
-			tbox->text.pos++;
+			tbox->offs += MOUSE_SCROLL_INCR;
+			tbox->pos++;
 		}
 	}
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->text.lock);
+	pthread_mutex_unlock(&tbox->lock);
 }
 
-static void
-textbox_scaled(int argc, union evarg *argv)
+void
+textbox_scale(void *p, int rw, int rh)
 {
-	struct textbox *tbox = argv[0].p;
-	
-	if (WIDGET(tbox)->rh == -1)
+	struct textbox *tbox = p;
+
+	if (rw == -1 && rh == -1) {
+		/* XXX more sensible default */
+		WIDGET(tbox)->w = tbox->label->w + tbox->xpadding*2 + 50;
 		WIDGET(tbox)->h = tbox->label->h + tbox->ypadding*2;
+	}
 }
 
 static void
@@ -267,7 +261,7 @@ textbox_key(int argc, union evarg *argv)
 		return;
 	}
 
-	pthread_mutex_lock(&tbox->text.lock);
+	pthread_mutex_lock(&tbox->lock);
 	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
 		const struct keycode *kcode = &keycodes[i];
 
@@ -280,7 +274,7 @@ textbox_key(int argc, union evarg *argv)
 			break;
 		}
 	}
-	pthread_mutex_unlock(&tbox->text.lock);
+	pthread_mutex_unlock(&tbox->lock);
 }
 
 static void
@@ -306,7 +300,7 @@ textbox_mousebuttondown(int argc, union evarg *argv)
 	struct textbox *tbox = argv[0].p;
 	int x = argv[2].i;
 	
-	WIDGET(tbox)->win->focus = WIDGET(tbox);
+	widget_set_focus(tbox);
 	tbox->newx = x;
 }
 
@@ -317,18 +311,18 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	va_list args;
 	char *s;
 
-	pthread_mutex_lock(&tbox->text.lock);
+	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 
 	va_start(args, fmt);
 	vsnprintf(s, stringb->size, fmt, args);
 	va_end(args);
 
-	tbox->text.pos = 0;
-	tbox->text.offs = 0;
+	tbox->pos = 0;
+	tbox->offs = 0;
 
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->text.lock);
+	pthread_mutex_unlock(&tbox->lock);
 }
 
 char *
@@ -337,11 +331,11 @@ textbox_string(struct textbox *tbox)
 	struct widget_binding *stringb;
 	char *s, *sd;
 
-	pthread_mutex_lock(&tbox->text.lock);
+	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	sd = Strdup(s);
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->text.lock);
+	pthread_mutex_unlock(&tbox->lock);
 	return (sd);
 }
 
@@ -352,11 +346,11 @@ textbox_copy_string(struct textbox *tbox, char *dst, size_t dst_size)
 	size_t rv;
 	char *s;
 
-	pthread_mutex_lock(&tbox->text.lock);
+	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	rv = strlcpy(dst, s, dst_size);
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->text.lock);
+	pthread_mutex_unlock(&tbox->lock);
 
 	return (rv);
 }
@@ -368,11 +362,11 @@ textbox_int(struct textbox *tbox)
 	char *s;
 	int i;
 
-	pthread_mutex_lock(&tbox->text.lock);
+	pthread_mutex_lock(&tbox->lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	i = atoi(s);
 	widget_binding_unlock(stringb);
-	pthread_mutex_unlock(&tbox->text.lock);
+	pthread_mutex_unlock(&tbox->lock);
 
 	return (i);
 }

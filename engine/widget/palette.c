@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.13 2003/05/22 05:45:46 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.14 2003/05/24 15:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -32,71 +32,66 @@
 #include "palette.h"
 
 #include <engine/widget/primitive.h>
-#include <engine/widget/region.h>
 #include <engine/widget/window.h>
 
 const struct widget_ops palette_ops = {
 	{
 		NULL,		/* init */
-		palette_destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
 	palette_draw,
-	NULL			/* update */
+	palette_scale
 };
 
 enum {
 	BG_COLOR
 };
 
-static void	palette_mousebuttondown(int, union evarg *);
-static void	palette_mousebuttonup(int, union evarg *);
-static void	palette_mousemotion(int, union evarg *);
-static void	palette_attached(int, union evarg *);
 static void	palette_changed(int, union evarg *);
 
 struct palette *
-palette_new(struct region *reg, int w, int h, int nbars)
+palette_new(void *parent, enum palette_type type)
 {
 	struct palette *pal;
 
 	pal = Malloc(sizeof(struct palette));
-	palette_init(pal, w, h, nbars);
-	region_attach(reg, pal);
+	palette_init(pal, type);
+	object_attach(parent, pal);
 	return (pal);
 }
 
 void
-palette_init(struct palette *pal, int rw, int rh, int nbars)
+palette_init(struct palette *pal, enum palette_type type)
 {
 	int i;
 
-	widget_init(&pal->wid, "palette", &palette_ops, rw, rh);
-	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196);
+	widget_init(pal, "palette", &palette_ops, WIDGET_WFILL);
+	widget_bind(pal, "color", WIDGET_UINT32, NULL, &pal->color);
 
-	widget_bind(pal, "color", WIDGET_UINT32, NULL, &pal->def.color);
-	pal->def.color = 0;
-	
-	pal->cur_sb = NULL;
-	pal->nbars = nbars;
-	pal->bars = Malloc(sizeof(struct scrollbar *) * pal->nbars);
+	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196, 255);
 
-	for (i = 0; i < pal->nbars; i++) {
-		pal->bars[i] = Malloc(sizeof(struct scrollbar));
-		scrollbar_init(pal->bars[i], -1, -1, SCROLLBAR_HORIZ);
-		WIDGET(pal->bars[i])->flags |= WIDGET_NO_FOCUS;
-		widget_set_int(pal->bars[i], "max", 255);
-		event_new(pal->bars[i], "scrollbar-changed",
-		    palette_changed, "%p, %i", pal, i);
+	pal->color = 0;
+	pal->type = type; 
+
+	switch (type) {
+	case PALETTE_RGB:
+		pal->nbars = 3;
+		break;
+	case PALETTE_RGBA:
+		pal->nbars = 4;
+		break;
 	}
 
-	event_new(pal, "attached", palette_attached, NULL);
-	event_new(pal, "widget-scaled", palette_scaled, NULL);
-	event_new(pal, "window-mousebuttondown", palette_mousebuttondown, NULL);
-	event_new(pal, "window-mousebuttonup", palette_mousebuttonup, NULL);
-	event_new(pal, "window-mousemotion", palette_mousemotion, NULL);
+	for (i = 0; i < pal->nbars; i++) {
+		pal->bars[i] = scrollbar_new(pal, SCROLLBAR_HORIZ);
+
+		widget_set_int(pal->bars[i], "max", 255);
+		event_new(pal->bars[i], "scrollbar-changed", palette_changed,
+		    "%p, %i", pal, i);
+	}
 }
 
 static void
@@ -106,111 +101,73 @@ palette_changed(int argc, union evarg *argv)
 	int nbar = argv[2].i;
 	struct widget_binding *colorb;
 	Uint32 *color;
-	Uint8 r, g, b;
+	Uint8 r, g, b, a;
 
 	if ((colorb = widget_binding_get_locked(pal, "color", &color)) == NULL)
 		fatal("%s", error_get());
-	
-	SDL_GetRGB(*color, vfmt, &r, &g, &b);
+
+	SDL_GetRGBA(*color, vfmt, &r, &g, &b, &a);
 	switch (nbar) {
-	case PALETTE_RED:
+	case 0:
 		r = widget_get_int(pal->bars[nbar], "value");
 		break;
-	case PALETTE_GREEN:
+	case 1:
 		g = widget_get_int(pal->bars[nbar], "value");
 		break;
-	case PALETTE_BLUE:
+	case 2:
 		b = widget_get_int(pal->bars[nbar], "value");
 		break;
+	case 3:
+		a = widget_get_int(pal->bars[nbar], "value");
+		break;
 	}
-	*color = SDL_MapRGB(vfmt, r, g, b);
+	*color = SDL_MapRGBA(vfmt, r, g, b, a);
 	widget_binding_unlock(colorb);
 }
 
-static void
-palette_attached(int argc, union evarg *argv)
-{
-	struct palette *pal = argv[0].p;
-	struct region *reg = argv[1].p;
-	int i;
-
-	for (i = 0; i < pal->nbars; i++) {
-		widget_set_parent(pal->bars[i], reg);
-	}
-}
-
-static struct scrollbar *
-palette_which_scrollbar(struct palette *pal, int y)
-{
-	int sbh = WIDGET(pal)->h/pal->nbars;
-
-	if (y < sbh) {
-		return (pal->bars[0]);
-	} else if (y > sbh && y < sbh*2) {
-		return (pal->bars[1]);
-	} else if (y > sbh*2 && y < sbh*3) {
-		return (pal->bars[2]);
-	} else if (y > sbh*3 && y < sbh*4) {
-		return (pal->bars[3]);
-	}
-	return (NULL);
-}
-
-static void
-palette_mousebuttondown(int argc, union evarg *argv)
-{
-	struct palette *pal = argv[0].p;
-	int y = argv[3].i;
-	struct scrollbar *sb;
-
-	sb = palette_which_scrollbar(pal, y);
-	if (sb != NULL) {
-		WIDGET_FOCUS(pal);
-		pal->cur_sb = sb;
-		event_forward(sb, "window-mousebuttondown", argc, argv);
-	}
-}
-
-static void
-palette_mousebuttonup(int argc, union evarg *argv)
-{
-	struct palette *pal = argv[0].p;
-
-	if (pal->cur_sb != NULL) {
-		event_forward(pal->cur_sb, "window-mousebuttonup", argc, argv);
-		pal->cur_sb = NULL;
-	}
-}
-
-static void
-palette_mousemotion(int argc, union evarg *argv)
-{
-	struct palette *pal = argv[0].p;
-
-	if (pal->cur_sb != NULL) {
-		event_forward(pal->cur_sb, "window-mousemotion", argc, argv);
-	}
-}
-
 void
-palette_scaled(int argc, union evarg *argv)
+palette_scale(void *p, int w, int h)
 {
-	struct palette *pal = argv[0].p;
-	int w = argv[1].i;
-	int h = argv[2].i/2;
-	int i, sbh = h / pal->nbars;
+	struct palette *pal = p;
+	int i, y = 0;
 
-	for (i = 0; i < pal->nbars; i++) {
-		widget_set_position(pal->bars[i], WIDGET(pal)->x,
-		    WIDGET(pal)->y + i*sbh);
-		widget_set_geometry(pal->bars[i], w - h - 2, sbh);
-		event_forward(pal->bars[i], "widget-scaled", argc, argv);
+	if (w == -1 && h == -1) {
+		WIDGET(pal)->w = 0;
+		WIDGET(pal)->h = 0;
+
+		for (i = 0; i < pal->nbars; i++) {
+			struct widget *bar = (struct widget *)pal->bars[i];
+
+			WIDGET_OPS(bar)->scale(bar, -1, -1);
+			if (bar->w > WIDGET(pal)->w) {
+				WIDGET(pal)->w = bar->w;
+			}
+			WIDGET(pal)->h += bar->h;
+
+			bar->x = 0;
+			bar->y = y;
+			y += bar->h;
+		}
+
+		WIDGET(pal)->w += WIDGET(pal)->h;
+	} else {
+		int sbh = h / pal->nbars;
+		int prevw = h;					/* Square */
+
+		for (i = 0; i < pal->nbars; i++) {
+			WIDGET(pal->bars[i])->x = 0;
+			WIDGET(pal->bars[i])->y = i*sbh;
+
+			widget_set_geometry(pal->bars[i],
+			    WIDGET(pal)->w - 8 - prevw,
+			    sbh);
+		}
+
+		pal->rpreview.x = WIDGET(pal)->w - prevw;
+		pal->rpreview.y = 0;
+		pal->rpreview.w = prevw;
+		pal->rpreview.h = WIDGET(pal)->h;
 	}
-
-	pal->rpreview.x = w - h;
-	pal->rpreview.y = 0;
-	pal->rpreview.w = h;
-	pal->rpreview.h = WIDGET(pal)->h;
 }
 
 void
@@ -218,34 +175,24 @@ palette_draw(void *p)
 {
 	struct palette *pal = p;
 	Uint32 color;
-	Uint8 r, g, b;
+	Uint8 r, g, b, a;
 
 	color = widget_get_uint32(pal, "color");
-	primitives.rect_filled(pal, &pal->rpreview, color);
+	primitives.rect_filled(pal,
+	    pal->rpreview.x, pal->rpreview.y,
+	    pal->rpreview.w, pal->rpreview.h,
+	    color);
 	primitives.frame(pal,
 	    pal->rpreview.x, pal->rpreview.y,
 	    pal->rpreview.w, pal->rpreview.h,
 	    WIDGET_COLOR(pal, BG_COLOR));
 	
-	SDL_GetRGB(color, vfmt, &r, &g, &b);
+	SDL_GetRGBA(color, vfmt, &r, &g, &b, &a);
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
 	widget_set_int(pal->bars[2], "value", (int)b);
-
-	scrollbar_draw(pal->bars[0]);
-	scrollbar_draw(pal->bars[1]);
-	scrollbar_draw(pal->bars[2]);
-}
-
-void
-palette_destroy(void *p)
-{
-	struct palette *pal = p;
-	int i;
-
-	for (i = 0; i < pal->nbars; i++) {
-		widget_destroy(pal->bars[i]);
+	if (pal->nbars > 3) {
+		widget_set_int(pal->bars[3], "value", (int)a);
 	}
-	free(pal->bars);
-	widget_destroy(pal);
 }
+

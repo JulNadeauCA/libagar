@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.16 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: button.3,v 1.17 2003/03/20 01:19:39 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,10 +45,10 @@ an image.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct button *"
-.Fn button_new "struct region *reg" "char *caption" "SDL_Surface *image" "int flags" "int rw" "int rh"
+.Fn button_new "void *parent" "char *caption"
 .Pp
 .Ft void
-.Fn button_init "struct button *button" "char *caption" "SDL_Surface *image" "int flags" "int rw" "int rh"
+.Fn button_init "struct button *button" "char *caption"
 .Pp
 .Ft void
 .Fn button_enable "struct button *button"
@@ -56,7 +56,22 @@ an image.
 .Ft void
 .Fn button_disable "struct button *button"
 .Pp
+.Ft void
+.Fn button_set_padding "struct button *button" "int padding"
+.Pp
+.Ft void
+.Fn button_set_focusable "struct button *button" "int focusable"
+.Pp
+.Ft void
+.Fn button_set_sticky "struct button *button" "int sticky"
+.Pp
+.Ft void
+.Fn button_set_justify "struct button *button" "enum button_justify jus"
+.Pp
+.Ft void
+.Fn button_set_label "struct button *button" "SDL_Surface *su"
 .nr nS 0
+.Pp
 The
 .Fn button_new
 function allocates, initializes, and attaches a
@@ -66,31 +81,52 @@ The
 .Fn button_init
 function initializes a
 .Nm
-widget of size
-.Fa rw
-x
-.Fa rh
-displaying either a string of text if
-.Fa caption
-is non-null, or an image if
-.Fa image
-is non-null.
-The
-.Fa flags
-can be changed at runtime, and may include:
-.Pp
-.Bd -literal
-#define BUTTON_STICKY	0x01		/* Sticky state */
-#define BUTTON_NOFOCUS	0x02		/* Don't gain focus */
-.Ed
+widget displaying
+.Fa caption ,
+unless it is NULL.
 .Pp
 The
 .Fn button_enable
-function allows
-.Fa button
-to receive events.
+and
 .Fn button_disable
-disables reception of events.
+functions trigger the sensitivity of the
+.Nm
+widget.
+.Pp
+The
+.Fn button_set_padding
+function sets the padding around the label in pixels.
+.Pp
+The
+.Fn button_set_focusable
+function with an argument of 0 prevents the button from gaining focus.
+The default is to allow buttons to gain focus.
+.Pp
+The
+.Fn button_set_sticky
+function with an argument of 1 arranges for the button to trigger its state
+only on reception of
+.Fn window-mousebuttondown
+events.
+By default,
+.Fn window-mousebuttonup
+events reset the state to 0.
+.Pp
+The
+.Fn button_set_justify
+function controls the label justification setting:
+.Pp
+.Bd -literal
+enum button_justify {
+	BUTTON_LEFT,
+	BUTTON_CENTER,
+	BUTTON_RIGHT
+};
+.Ed
+.Pp
+The
+.Fn button_set_label
+function uses the given surface for the label.
 .Sh EVENTS
 The
 .Nm
@@ -102,11 +138,12 @@ Release the button if the cursor is inside the widget area.
 .It window-mousebuttondown
 Press the button.
 .It window-keyup
-Release the button.
+Release the button, unless sticky mode is in effect.
 .It window-keydown
 Press the button.
 .It window-mousemotion
-Abort a button press if the cursor is moving outside the button area.
+Abort a button press if the cursor is moving outside the button area and sticky
+mode is not in effect.
 .El
 .Pp
 The
@@ -129,9 +166,13 @@ Button state (1=pressed, 0=released)
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Sh BUGS
+A more general interface may be preferable to
+.Fn button_enable
+and
+.Fn button_disable .
