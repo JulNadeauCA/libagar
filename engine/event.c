@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.138 2003/03/02 01:00:13 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.139 2003/03/02 03:54:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,6 @@
 #include "widget/label.h"
 #include "widget/text.h"
 #include "widget/graph.h"
-#include "widget/scrollbar.h"
 
 #include "mapedit/mapview.h"
 
@@ -131,11 +130,14 @@ event_hotkey(SDL_Event *ev)
 
 			nev.type = SDL_QUIT;
 			SDL_PushEvent(&nev);
-		} else {
+		}
+#ifdef DEBUG
+		else {
 			dprintf("brutal exit\n");
 			SDL_Quit();
 			exit(0);
 		}
+#endif
 		break;
 	default:
 		break;
@@ -157,8 +159,8 @@ event_update_fps_counter(void)
 {
 	static int einc = 0;
 
-	label_printf(fps_label, "delay: %dms, gfx: %dms",
-	    view->refresh.delay, view->refresh.current);
+	label_printf(fps_label, "%dms/%dms",
+	    view->refresh.current, view->refresh.delay);
 	graph_plot(fps_refresh_current, view->refresh.current);
 	graph_plot(fps_event_count, event_count * 30 / 10);
 	graph_plot(fps_event_idletime, event_idletime);
@@ -178,11 +180,15 @@ event_init_fps_counter(void)
 	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
 	    248, 166, 125, 91);
 	window_set_caption(fps_win, "Refresh rate");
-	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 80, 100);
+	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		fps_label = label_new(reg, 100, 15, "...");
+		fps_label = label_new(reg, 100, -1, "...");
+	}
+
+	reg = region_new(fps_win, REGION_VALIGN, 0, -1, 100, 0);
+	{
 		fps_graph = graph_new(reg, "Refresh rate", GRAPH_LINES,
-		    GRAPH_SCROLL|GRAPH_ORIGIN, 200, 100, 85);
+		    GRAPH_SCROLL|GRAPH_ORIGIN, 200, 100, 100);
 		fps_refresh_current = graph_add_item(fps_graph,
 		    "refresh-current",
 		    SDL_MapRGB(view->v->format, 0, 160, 0));
@@ -194,23 +200,6 @@ event_init_fps_counter(void)
 		    SDL_MapRGB(view->v->format, 200, 200, 200));
 	}
 	
-	reg = region_new(fps_win, REGION_HALIGN, 80, 0, 20, 100);
-	{
-		struct scrollbar *sb;
-	
-		sb = scrollbar_new(reg, 50, 100, SCROLLBAR_VERT);
-		widget_bind(sb, "value", WIDGET_INT, &view->lock,
-		    &view->refresh.min_delay);
-		widget_set_int(sb, "min", 10);
-		widget_set_int(sb, "max", 100);
-
-		sb = scrollbar_new(reg, 50, 100, SCROLLBAR_VERT);
-		widget_bind(sb, "value", WIDGET_INT, &view->lock,
-		   &view->refresh.max_delay);
-		widget_set_int(sb, "min", 10);
-		widget_set_int(sb, "max", 100);
-	}
-
 	if (engine_debug > 0) {
 		window_show(monitor.toolbar);
 	}
@@ -223,7 +212,9 @@ event_adjust_refresh(Uint32 ntick)
 {
 	view->refresh.current = view->refresh.delay - (SDL_GetTicks() - ntick);
 #ifdef DEBUG
-	event_update_fps_counter();
+	if (fps_win->flags & WINDOW_SHOWN) {
+		event_update_fps_counter();
+	}
 #endif
 	if (view->refresh.current < 1) {
 		view->refresh.current = 1;
