@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.16 2003/01/27 02:19:10 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.17 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -65,6 +65,26 @@ tool_init(struct tool *tool, char *name, const void *ops)
 	}
 	tool->type = Strdup(name);
 	tool->button = NULL;
+	SLIST_INIT(&tool->bindings);
+}
+
+void
+tool_destroy(void *p)
+{
+	struct tool *tool = p;
+	struct tool_binding *binding, *nbinding;
+
+	if (tool->win != NULL) {
+		view_detach(tool->win);
+	}
+	free(tool->type);
+	
+	for (binding = SLIST_FIRST(&tool->bindings);
+	     binding != SLIST_END(&tool->bindings);
+	     binding = nbinding) {
+		nbinding = SLIST_NEXT(binding, bindings);
+		free(binding);
+	}
 }
 
 /* Return the first visible mapview widget. */
@@ -94,3 +114,17 @@ tool_mapview(void)
 	return (NULL);
 }
 
+void
+tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
+    void (*func)(void *, struct mapview *),
+    int edit)
+{
+	struct tool *tool = p;
+	struct tool_binding *binding;
+
+	binding = emalloc(sizeof(struct tool_binding));
+	binding->key = keysym;
+	binding->func = func;
+	binding->edit = edit;
+	SLIST_INSERT_HEAD(&tool->bindings, binding, bindings);
+}
