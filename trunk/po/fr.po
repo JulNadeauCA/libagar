@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.30 2004/03/10 17:17:26 vedge Exp $
+# $Csoft: fr.po,v 1.31 2004/03/12 02:18:01 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2004-03-10 12:59-0400\n"
+"POT-Creation-Date: 2004-03-20 04:22-0400\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <fr@csoft.org>\n"
@@ -112,8 +112,8 @@ msgid "The search path is too big."
 msgstr "Le chemin d'accès est trop grand."
 
 #, c-format
-msgid "Cannot find `%s.%s' in <%s>."
-msgstr "Impossible de trouver «%s.%s» dans <%s>."
+msgid "Cannot find `%s.%s' in %s (%s)."
+msgstr "Impossible de trouver «%s.%s» dans %s (%s)."
 
 #, c-format
 msgid "Video device is %dbpp (ckey=0x%x, alpha=0x%04x)\n"
@@ -177,8 +177,8 @@ msgid "The path exceeds >= %lu bytes."
 msgstr "Le chemin d'accès fait >= %lu octets."
 
 #, c-format
-msgid "The `%s' object is in use."
-msgstr "L'objet «%s» est en cours d'utilisation."
+msgid "The `%s' object is used by `%s'."
+msgstr "L'objet «%s» est présentement utilisé par «%s»."
 
 #, c-format
 msgid "The object `%s' does not exist."
@@ -262,12 +262,8 @@ msgid "Too many layers."
 msgstr "Trop de calques."
 
 #, c-format
-msgid "Cannot resolve sprite: %u."
-msgstr "Impossible de résoudre le sprite: %u."
-
-#, c-format
-msgid "Cannot resolve anim: %u."
-msgstr "Impossible de résoudre l'animation: %u."
+msgid "Cannot resolve object: %u."
+msgstr "Impossible de résoudre l'objet: %u."
 
 msgid "Warp map name is too big."
 msgstr "Le nom de carte de téléportation est trop grand."
@@ -281,6 +277,9 @@ msgstr "Type de référence de noeud inconnu."
 msgid "Too many transforms."
 msgstr "Trop de transformations."
 
+msgid "Too many node masks."
+msgstr "Trop de masques de noeud."
+
 msgid "Too many noderefs."
 msgstr "Trop de références de noeud."
 
@@ -290,35 +289,12 @@ msgstr "Géométrie de carte invalide."
 msgid "Too many map layers."
 msgstr "La carte comporte trop de calques."
 
+msgid "Missing layer zero."
+msgstr "Calque zéro manquant."
+
 #, c-format
 msgid "%s map view"
 msgstr "Vue sur «%s»"
-
-#, c-format
-msgid "The `%s' map is read-only."
-msgstr "La carte «%s» est en mode lecture-seulement."
-
-msgid "There is no active selection."
-msgstr "La carte ne comporte aucune sélection."
-
-#, c-format
-msgid "m%u (%ux%u nodes)\n"
-msgstr "m%u (%ux%u noeuds)\n"
-
-#, c-format
-msgid "s%u (%ux%u pixels, %ubpp)\n"
-msgstr "s%u (%ux%u pixels, %ubpp)\n"
-
-#, c-format
-msgid "a%u (%u frames)\n"
-msgstr "a%u (%u frames)\n"
-
-#, c-format
-msgid "Load media into `%s'"
-msgstr "Importation de média vers «%s»"
-
-msgid "No layer is selected."
-msgstr "Aucun calque n'est sélectionné."
 
 #, c-format
 msgid "%s map edition"
@@ -393,6 +369,9 @@ msgstr "La fréquence de rafraîchissement est hors limite."
 msgid "Screenshot feature requires libjpeg"
 msgstr "La capture d'écran requiert libjpeg"
 
+msgid "Unreasonable refresh rate; ignoring\n"
+msgstr "Fréquence de rafraîchissement déraisonnable ignorée\n"
+
 msgid "Too many transform args."
 msgstr "Trop d'arguments de transformation."
 
@@ -455,6 +434,9 @@ msgstr ", édition"
 #, c-format
 msgid "%s (invisible %s)\n"
 msgstr "%s (invisible %s)\n"
+
+msgid "No layer is selected."
+msgstr "Aucun calque n'est sélectionné."
 
 #, c-format
 msgid "%s layers"
@@ -549,17 +531,40 @@ msgstr "Déplacer bas"
 msgid "Destroy"
 msgstr "Détruire"
 
+#, c-format
+msgid "The `%s' map is read-only."
+msgstr "La carte «%s» est en mode lecture-seulement."
+
 msgid "The zoom is out of range."
 msgstr "La fréquence de rafraîchissement est hors limite."
+
+msgid "There is no active selection."
+msgstr "La carte ne comporte aucune sélection."
+
+#, c-format
+msgid "m%u (%ux%u nodes)\n"
+msgstr "m%u (%ux%u noeuds)\n"
+
+#, c-format
+msgid "s%u (%ux%u pixels, %ubpp)\n"
+msgstr "s%u (%ux%u pixels, %ubpp)\n"
+
+#, c-format
+msgid "a%u (%u frames)\n"
+msgstr "a%u (%u frames)\n"
+
+#, c-format
+msgid "Load media into `%s'"
+msgstr "Importation de média vers «%s»"
 
 msgid "Graphics: "
 msgstr "Graphiques: "
 
-msgid "Audio: "
-msgstr "Son: "
-
 msgid "Refresh"
 msgstr "Rafraîchir"
+
+msgid "Audio: "
+msgstr "Son: "
 
 msgid "Eraser"
 msgstr "Gomme à effacer"
@@ -809,6 +814,9 @@ msgstr "Vue"
 
 msgid "Unicode conversion"
 msgstr "Conversion Unicode"
+
+msgid "Leak detection"
+msgstr "Détection de fuite de mémoire"
 
 msgid "Debug monitor"
 msgstr "Moniteur de déboguage"
@@ -1501,6 +1509,9 @@ msgstr "Joystick"
 msgid "Illegal coordinates: %s[%d,%d,%d]"
 msgstr "Coordonées illégales: %s[%d,%d,%d]"
 
+#~ msgid "Cannot resolve anim: %u."
+#~ msgstr "Impossible de résoudre l'animation: %u."
+
 #~ msgid "Trek to the Cave"
 #~ msgstr "Trek to the Cave"
 
@@ -1515,9 +1526,6 @@ msgstr "Coordonées illégales: %s[%d,%d,%d]"
 
 #~ msgid "Quit Game"
 #~ msgstr "Quitter le jeu"
-
-#~ msgid "Unreasonable refresh rate\n"
-#~ msgstr "Fréquence de rafraîchissement déraisonnable\n"
 
 #~ msgid "width"
 #~ msgstr "largeur"
