@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.4 2002/09/19 22:07:53 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.5 2002/11/08 07:36:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,21 +25,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include "engine.h"
+#include "compat/vasprintf.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
 
 #include <libfobj/fobj.h>
 #include <libfobj/buf.h>
 
-#include "compat/vasprintf.h"
-#include "engine.h"
 #include "version.h"
 
 static const struct version prop_ver = {

@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.3 2002/11/19 06:08:03 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.4 2002/11/20 04:09:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,17 +25,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <engine/engine.h>
 
 #ifdef DEBUG
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <engine/engine.h>
+#include <engine/view.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

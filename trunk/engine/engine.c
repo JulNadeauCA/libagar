@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.72 2002/11/12 05:17:16 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.73 2002/11/14 08:02:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,24 +25,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mcconfig.h"
+#include "engine.h"
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#ifdef USE_X11
+#ifdef XDEBUG
 #include <SDL_syswm.h>
 #endif
 
-#include "engine.h"
 #include "map.h"
 #include "physics.h"
 #include "input.h"
 #include "config.h"
 #include "rootmap.h"
+#include "view.h"
+#include "world.h"
 
 #include "mapedit/mapedit.h"
 
@@ -53,16 +48,15 @@
 #include "widget/text.h"
 #include "widget/widget.h"
 #include "widget/window.h"
-#include "widget/textbox.h"
 
 #ifdef DEBUG
-int	engine_debug = 1;	/* Enable debugging */
+int	engine_debug = 1;		/* Enable debugging */
 #endif
 
 #ifdef SERIALIZATION
-pthread_key_t engine_errorkey;	/* Used by AGAR_{Get,Set}Error() */
+pthread_key_t engine_errorkey;		/* Multi-threaded error code */
 #else
-char *engine_errorkey;
+char *engine_errorkey;			/* Single-threaded error code */
 #endif
 
 const struct gameinfo *gameinfo;	/* Game name, copyright, version */
@@ -95,6 +89,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	/* Create a thread-specific key for errno style error messages. */
 	pthread_key_create(&engine_errorkey, NULL);
 #else
+	/* Use a string for errno style error messages. */
 	engine_errorkey = NULL;
 #endif
 
@@ -104,8 +99,10 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	printf("AGAR engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", gameinfo->name, gameinfo->version);
 	printf("%s\n", gameinfo->copyright);
-	
+
+#ifdef USE_X11
 	setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
+#endif
 
 	while ((c = getopt(argc, argv, "vfegl:n:j:w:h:")) != -1) {
 		switch (c) {
@@ -119,14 +116,14 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 			break;
 		case 'w':
 			w = atoi(optarg);
-			if (w < 1 || w > 65536) {
+			if (w < 1 || w > 65535) {
 				fprintf(stderr, "invalid width argument\n");
 				exit(1);
 			}
 			break;
 		case 'h':
 			h = atoi(optarg);
-			if (w < 1 || w > 65536) {
+			if (w < 1 || w > 65535) {
 				fprintf(stderr, "invalid height argument\n");
 				exit(1);
 			}
@@ -177,10 +174,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 		}
 	}
 
-	/*
-	 * Set the video mode.
-	 * Initialize the masks and rectangles in game mode.
-	 */
+	/* Initialize the graphic engine. */
 	if (mapediting || (flags & ENGINE_INIT_GUI)) {
 		view_init(GFX_ENGINE_GUI);
 	} else {

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.13 2002/11/15 04:18:32 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.14 2002/11/22 05:41:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,20 +25,12 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <engine/engine.h>
+
 #include <engine/map.h>
-#include <engine/version.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/label.h>
 #include <engine/widget/radio.h>
 
 #include <engine/mapedit/mapedit.h>

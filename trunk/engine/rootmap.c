@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.9 2002/11/12 05:17:16 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.10 2002/11/13 00:22:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,14 +25,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "engine.h"
+
 #include "map.h"
 #include "rootmap.h"
 #include "physics.h"
+#include "view.h"
+#include "anim.h"
 
 /*
  * Render a map node.

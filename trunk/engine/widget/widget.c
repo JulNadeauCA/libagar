@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.26 2002/11/09 06:01:27 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.27 2002/11/19 08:38:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,14 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-
 #include <engine/engine.h>
+
+#include <engine/view.h>
 
 #include "widget.h"
 #include "window.h"

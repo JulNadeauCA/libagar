@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.118 2002/11/10 01:43:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.119 2002/11/12 02:00:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,19 +25,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
+#include "engine.h"
 
 #include <libfobj/fobj.h>
 #include <libfobj/buf.h>
 
-#include "engine.h"
 #include "map.h"
 #include "version.h"
 #include "config.h"
+#include "world.h"
 
 #include "widget/text.h"
 

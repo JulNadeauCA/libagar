@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.15 2002/11/14 05:59:03 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.16 2002/11/17 23:13:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,16 +25,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include <engine/engine.h>
+
 #include <engine/version.h>
+#include <engine/view.h>
+#include <engine/world.h>
 
 #include <libfobj/fobj.h>
 
@@ -216,6 +211,7 @@ graph_key(int argc, union evarg *argv)
 		object_load(gra);
 		pthread_mutex_unlock(&world->lock);
 	default:
+		break;
 	}
 }
 
@@ -230,13 +226,12 @@ graph_scroll(int argc, union evarg *argv)
 		return;
 	}
 
-	gra->xoffs -= xrel;
-	if (gra->xoffs < 0)
+	if ((gra->xoffs -= xrel) < 0) {
 		gra->xoffs = 0;
-
-	gra->origin_y += yrel;
-	if (gra->origin_y > 100)
+	}
+	if ((gra->origin_y += yrel) > 100) {
 		gra->origin_y = 100;
+	}
 }
 
 static void

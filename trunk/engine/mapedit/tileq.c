@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.9 2002/11/14 05:59:00 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.10 2002/11/17 23:13:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,15 +25,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include <engine/engine.h>
-#include <engine/queue.h>
+
 #include <engine/map.h>
 
 #include <engine/widget/widget.h>

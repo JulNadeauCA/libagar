@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.24 2002/11/14 07:52:08 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.25 2002/11/15 04:18:34 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -25,9 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-
 #include <engine/engine.h>
+
+#include <engine/view.h>
 
 #include "widget.h"
 #include "window.h"
@@ -879,5 +879,4 @@ primitive_sequence(struct window *win, enum primitive_seq seq)
 		primitives.box = old_box;
 		break;
 	}
-#undef REDRAW()
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.25 2002/11/14 05:59:03 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.26 2002/11/17 23:13:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,13 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <engine/engine.h>
+
+#include <engine/view.h>
 
 #include "primitive.h"
 #include "text.h"

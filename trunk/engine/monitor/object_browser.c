@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.8 2002/11/19 07:07:47 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.9 2002/11/22 05:41:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,19 +25,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
-
+#include <engine/engine.h>
 #include <engine/compat/asprintf.h>
 
 #ifdef DEBUG
 
-#include <sys/types.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <engine/engine.h>
+#include <engine/world.h>
+#include <engine/view.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

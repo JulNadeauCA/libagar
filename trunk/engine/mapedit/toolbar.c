@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.23 2002/11/14 05:59:00 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.24 2002/11/15 04:18:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,15 +25,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-
 #include <engine/engine.h>
-#include <engine/version.h>
+
 #include <engine/map.h>
-#include <engine/physics.h>
+#include <engine/view.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/text.h>

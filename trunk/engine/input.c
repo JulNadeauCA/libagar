@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.19 2002/10/30 17:18:04 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.20 2002/11/13 23:13:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,12 +25,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#include "engine.h"
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/physics.h>
-#include <engine/input.h>
+#include "map.h"
+#include "physics.h"
+#include "input.h"
 
 static TAILQ_HEAD(, input) inputs;
 static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
