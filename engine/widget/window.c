@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.153 2003/01/23 03:10:04 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.154 2003/01/23 03:15:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1085,12 +1085,12 @@ scan_wins:
 				    win->titleh + win->borderw) {
 					win->clicked_button =
 					    WINDOW_CLOSE_BUTTON;
-					goto next_win;
+					goto posted;
 				} else if (ev->button.x - win->rd.x <
 				    win->titleh*2 + win->borderw) {
 					win->clicked_button =
 					    WINDOW_HIDE_BUTTON;
-					goto next_win;
+					goto posted;
 				}
 				view->winop = VIEW_WINOP_MOVE;
 				view->wop_win = win;
