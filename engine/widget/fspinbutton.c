@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.24 2004/08/26 06:03:49 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.25 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -196,7 +196,7 @@ init_unit_system(struct fspinbutton *fsu, const char *unit_key)
 		struct tlist_item *it;
 
 		it = tlist_insert_item(fsu->units->list, NULL, _(unit->name),
-		    unit);
+		    (void *)unit);
 		if (unit == fsu->unit)
 			it->selected++;
 	}
