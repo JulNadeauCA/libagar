@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.184 2003/05/22 08:03:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.185 2003/05/22 08:16:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1675,7 +1675,7 @@ window_resize(struct window *win)
 }
 
 void
-window_set_spacing(struct window *win, Uint8 xsp, Uint8 ysp)
+window_set_spacing(struct window *win, int xsp, int ysp)
 {
 	pthread_mutex_lock(&win->lock);
 	win->xspacing = xsp;
@@ -1684,25 +1684,25 @@ window_set_spacing(struct window *win, Uint8 xsp, Uint8 ysp)
 }
 
 void
-window_set_geo(struct window *win, Uint16 w, Uint16 h)
+window_set_geo(struct window *win, int w, int h)
 {
 	pthread_mutex_lock(&win->lock);
-	win->rd.w = w;
-	win->rd.h = h;
+	win->rd.w = (Uint16)w;
+	win->rd.h = (Uint16)h;
 	pthread_mutex_unlock(&win->lock);
 }
 
 void
-window_set_position(struct window *win, Sint16 x, Sint16 y)
+window_set_position(struct window *win, int x, int y)
 {
 	pthread_mutex_lock(&win->lock);
-	win->rd.x = x;
-	win->rd.y = y;
+	win->rd.x = (Sint16)x;
+	win->rd.y = (Sint16)y;
 	pthread_mutex_unlock(&win->lock);
 }
 
 void
-window_set_min_geo(struct window *win, Uint16 minw, Uint16 minh)
+window_set_min_geo(struct window *win, int minw, int minh)
 {
 	pthread_mutex_lock(&win->lock);
 	win->minw = minw;
@@ -1711,7 +1711,7 @@ window_set_min_geo(struct window *win, Uint16 minw, Uint16 minh)
 }
 
 void
-window_set_titleh(struct window *win, Uint8 h)
+window_set_titleh(struct window *win, int h)
 {
 	pthread_mutex_lock(&win->lock);
 	win->titleh = h;

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.63 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.64 2003/05/22 08:16:27 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -96,11 +96,11 @@ extern DECLSPEC void	 window_draw(struct window *);
 extern DECLSPEC int	 window_event(SDL_Event *);
 extern DECLSPEC void	 window_resize(struct window *);
 extern DECLSPEC void	 window_set_caption(struct window *, const char *, ...);
-extern DECLSPEC void	 window_set_spacing(struct window *, Uint8, Uint8);
-extern DECLSPEC void	 window_set_geo(struct window *, Uint16, Uint16);
-extern DECLSPEC void	 window_set_position(struct window *, Sint16, Sint16);
-extern DECLSPEC void	 window_set_min_geo(struct window *, Uint16, Uint16);
-extern DECLSPEC void	 window_set_titleh(struct window *, Uint8);
+extern DECLSPEC void	 window_set_spacing(struct window *, int, int);
+extern DECLSPEC void	 window_set_geo(struct window *, int, int);
+extern DECLSPEC void	 window_set_position(struct window *, int, int);
+extern DECLSPEC void	 window_set_min_geo(struct window *, int, int);
+extern DECLSPEC void	 window_set_titleh(struct window *, int);
 
 extern DECLSPEC void	 window_generic_detach(int, union evarg *);
 extern DECLSPEC void	 window_generic_hide(int, union evarg *);
