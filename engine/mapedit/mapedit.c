@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.4 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.5 2002/01/30 12:50:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -67,11 +67,11 @@ mapedit_create(char *name, char *desc)
 		
 		dprintf("editing %s\n", path);
 		/* The description, geometry and flags will be loaded. */
-		em = map_create(name, NULL, -1, -1, -1, NULL, path);
+		em = map_create(name, NULL, MAP_2D, 128, 128, path);
 	} else {
 		/* Create a new map. */
 		dprintf("creating %s\n", path);
-		em = map_create(name, desc, MAP_2D, 128, 128, NULL, NULL);
+		em = map_create(name, desc, MAP_2D, 128, 128, NULL);
 	}
 
 	med = (struct mapedit *)malloc(sizeof(struct mapedit));
@@ -94,6 +94,7 @@ mapedit_create(char *name, char *desc)
 	med->listodir = 0;
 	med->cursdir = 0;
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST;
+	med->flags = 0;
 
 	med->tilelist = window_create(em->view,
 	    (em->view->width - em->view->tilew), em->view->tileh,
@@ -245,7 +246,8 @@ static void
 mapedit_pointer(struct mapedit *med, int enable)
 {
 	if (enable) {
-		MAP_ADDANIM(med->map, med->x, med->y, med, MAPEDIT_SELECT);
+		MAP_ADDANIM(med->map, med->x, med->y,
+		    (struct object *)med, MAPEDIT_SELECT);
 	} else {
 		MAP_DELREF(med->map, med->x, med->y,
 		    (struct object *)med, MAPEDIT_SELECT);
