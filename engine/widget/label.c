@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.34 2002/11/19 05:09:30 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.35 2002/11/19 05:10:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,6 +25,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/vasprintf.h>
+#include <engine/compat/strlcat.h>
+
 #include <sys/types.h>
 
 #include <stdio.h>
@@ -35,7 +38,6 @@
 #include <errno.h>
 
 #include <engine/engine.h>
-#include <engine/compat/vasprintf.h>
 
 #include "text.h"
 #include "widget.h"
@@ -99,7 +101,7 @@ label_init(struct label *label, enum label_type type, const char *s,
 		label->text.surface = NULL;
 		label->poll.fmt = strdup(s);
 
-		memset(label->poll.ptrs, NULL,
+		memset(label->poll.ptrs, 0,
 		    sizeof(void *) * LABEL_MAX_POLLITEMS);
 		label->poll.nptrs = 0;
 		break;

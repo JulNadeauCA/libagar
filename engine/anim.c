@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.17 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.18 2002/11/09 02:46:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/compat/asprintf.h>
 
 #include <stdlib.h>
 #include <stdio.h>
