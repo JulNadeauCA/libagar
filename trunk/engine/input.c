@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.6 2002/03/25 12:58:40 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.7 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -83,6 +83,7 @@ input_create(int type, int index)
 		rv = mouse_init(input, index);
 		break;
 	}
+
 	if (rv != 0) {
 		free(input);
 		return (NULL);
@@ -114,16 +115,15 @@ input_time(Uint32 ival, void *p)
 		struct mappos *npos;
 		struct noderef *nref;
 		struct node *nnode;
-
+		
 		nnode = &m->map[x][y];
 		if ((nnode->flags & NODE_BLOCK) == 0) {
 			opos = *in->pos;
 			nref = opos.nref;
 	
-			object_mdel(nref->pobj, nref->offs, nref->flags,
-			    m, opos.x, opos.y);
-			npos = object_madd(nref->pobj, nref->offs, nref->flags,
-			    opos.input, m, x, y);
+			object_delpos(nref->pobj);
+			npos = object_addpos(nref->pobj, nref->offs,
+			    nref->flags, opos.input, m, x, y);
 			npos->dir = opos.dir;
 
 			m->redraw++;
@@ -153,25 +153,21 @@ input_key(struct input *in, SDL_Event *ev)
 	case SDLK_UP:
 		if (in->pos->y > 1) {
 			mapdir_set(&in->pos->dir, DIR_UP, set);
-			in->pos->nref->offs = 0;
 		}
 		break;
 	case SDLK_DOWN:
 		if (in->pos->y < in->pos->map->maph - 2) {
 			mapdir_set(&in->pos->dir, DIR_DOWN, set);
-			in->pos->nref->offs = 1;
 		}
 		break;
 	case SDLK_LEFT:
 		if (in->pos->x > 1) {
 			mapdir_set(&in->pos->dir, DIR_LEFT, set);
-			in->pos->nref->offs = 2;
 		}
 		break;
 	case SDLK_RIGHT:
 		if (in->pos->x < in->pos->map->mapw - 2) {
 			mapdir_set(&in->pos->dir, DIR_RIGHT, set);
-			in->pos->nref->offs = 3;
 		}
 		break;
 	default:
