@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.69 2002/08/19 05:33:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.70 2002/08/19 07:33:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,6 +53,10 @@ extern struct window *game_menu_win;
 
 #ifdef DEBUG
 
+int event_debug = 0;
+
+#define EVENT_DEBUG if (event_debug) printf
+
 static const struct event_proto {
 	char *evname;
 	char *fmt;
@@ -100,21 +104,15 @@ static const struct event_proto {
 
 static struct window *fps_win;
 
+#else
+#define EVENT_DEBUG
 #endif	/* DEBUG */
-
-#define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
-	if ((eev)->argc == EVENT_MAXARGS) {				\
-		fatal("too many args\n");				\
-	}								\
-	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);		\
-} while (/*CONSTCOND*/ 0)
 
 static void	 event_hotkey(SDL_Event *);
 static void	*event_post_async(void *);
 #ifdef DEBUG
 static void	 event_checkproto(struct object *, char *, const char *);
 #endif
-
 
 static void
 event_hotkey(SDL_Event *ev)
@@ -154,8 +152,8 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_v:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
 			text_msg("AGAR engine v%s\n%s v%d.%d\n%s\n",
-			    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
-			    gameinfo->ver[1], gameinfo->copyright);
+			    ENGINE_VERSION, gameinfo->name, gameinfo->version,
+			    gameinfo->copyright);
 		}
 		break;
 	case SDLK_t:	/* XXX move */
@@ -176,7 +174,7 @@ event_hotkey(SDL_Event *ev)
 #ifdef DEBUG
 #define UPDATE_FPS(delta) do {				\
 	label_printf(fps_label, "%d FPS", (delta));	\
-	graph_plot(fps_graph_item, (delta));		\
+	graph_plot(fps_item, (delta));			\
 } while (/*CONSTCOND*/0)
 #else
 #define UPDATE_FPS(delta)
@@ -202,17 +200,10 @@ event_loop(void)
 	struct region *reg;
 	struct label *fps_label;
 	struct graph *fps_graph;
-	struct graph_item *fps_graph_item;
+	struct graph_item *fps_item;
 
-#if 0
-	fps_win = window_new("Frames/second", WINDOW_SOLID,
-	    view->w-143, view->h-114,
-	    133, 104,
-	    125, 91);
-#else
 	fps_win = window_new("Frames/second", WINDOW_CENTER,
 	    0, 0, 133, 104, 125, 91);
-#endif
 	reg = region_new(fps_win, REGION_VALIGN,
 	    0, 0, 100, 100);
 	fps_label = label_new(reg, "...", 0);
@@ -220,7 +211,7 @@ event_loop(void)
 	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
 	    100, 80);
-	fps_graph_item = graph_add_item(fps_graph, "fps",
+	fps_item = graph_add_item(fps_graph, "fps",
 	    SDL_MapRGB(view->v->format, 0, 160, 0));
 #endif
 
@@ -279,14 +270,18 @@ event_loop(void)
 			}
 
 			ltick = SDL_GetTicks();
-		} else if (SDL_PollEvent(&ev)) {
+		} else if (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
 			case SDL_VIDEORESIZE:
+				EVENT_DEBUG("SDL_VIDEORESIZE: w=%d h=%d\n",
+				    ev.resize.w, ev.resize.h);
+
 				view->w = ev.resize.w;
 				view->h = ev.resize.h;
 				break;
 			case SDL_VIDEOEXPOSE:
-				dprintf("expose\n");
+				EVENT_DEBUG("SDL_VIDEOEXPOSE\n");
+
 				pthread_mutex_lock(&view->lock);
 				switch (view->gfx_engine) {
 				case GFX_ENGINE_TILEBASED:
@@ -316,6 +311,9 @@ event_loop(void)
 				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_MOUSEMOTION:
+				EVENT_DEBUG("SDL_MOUSEMOTION x=%d y=%d\n",
+				    ev.motion.x, ev.motion.y);
+			
 				rv = 0;
 				pthread_mutex_lock(&view->lock);
 				if (!TAILQ_EMPTY(&view->windowsh)) {
@@ -324,6 +322,12 @@ event_loop(void)
 				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_MOUSEBUTTONUP:
+				EVENT_DEBUG("SDL_MOUSEBUTTON%s b=%d "
+				    "x=%d y=%d\n",
+				    (ev.button.type == SDL_MOUSEBUTTONUP) ?
+				    "UP" : "DOWN", ev.button.button,
+				    ev.button.x, ev.button.y);
+				/* FALLTHROUGH */
 			case SDL_MOUSEBUTTONDOWN:
 				rv = 0;
 				pthread_mutex_lock(&view->lock);
@@ -335,6 +339,13 @@ event_loop(void)
 			case SDL_JOYAXISMOTION:
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
+				EVENT_DEBUG("SDL_JOY%s\n",
+				    (ev.type == SDL_JOYAXISMOTION) ?
+				    "AXISMOTION" :
+				    (ev.type == SDL_JOYBUTTONDOWN) ?
+				    "BUTTONDOWN" :
+				    (ev.type == SDL_JOYBUTTONUP) ?
+				    "BUTTONUP" : "???");
 				pthread_mutex_lock(&view->lock);
 				input_event(joy, &ev);
 				/* XXX widgets ... */
@@ -344,6 +355,13 @@ event_loop(void)
 				event_hotkey(&ev);
 				/* FALLTHROUGH */
 			case SDL_KEYUP:
+				EVENT_DEBUG("SDL_KEY%s keysym=%d state=%s\n",
+				    (ev.key.type == SDL_KEYUP) ?
+				    "UP" : "DOWN",
+				    (int)ev.key.keysym.sym,
+				    (ev.key.state == SDL_PRESSED) ?
+				    "PRESSED" : "RELEASED");
+
 				rv = 0;
 				pthread_mutex_lock(&view->lock);
 				if (!TAILQ_EMPTY(&view->windowsh)) {
@@ -355,12 +373,20 @@ event_loop(void)
 				pthread_mutex_unlock(&view->lock);
 				break;
 			case SDL_QUIT:
+				EVENT_DEBUG("SDL_QUIT\n");
 				engine_stop();
 				break;
 			}
 		}
 	}
 }
+
+#define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
+	if ((eev)->argc == EVENT_MAXARGS) {				\
+		fatal("too many args\n");				\
+	}								\
+	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);		\
+} while (/*CONSTCOND*/ 0)
 
 #define EVENT_PUSHARG(ap, fmt, eev)				\
 	switch ((fmt)) {					\
@@ -472,7 +498,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 		event_checkproto(ob, name, fmt);
 #endif
 
-	pthread_mutex_lock(&ob->events_lock);
+	pthread_mutex_lock(&ob->events_lock);		/* XXX inefficient */
 	TAILQ_FOREACH(eev, &ob->events, events) {
 		if (strcmp(name, eev->name) != 0) {
 			continue;
