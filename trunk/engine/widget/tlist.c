@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.41 2003/03/03 05:16:16 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.42 2003/03/12 07:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -82,6 +82,7 @@ void
 tlist_init(struct tlist *tl, int rw, int rh, int flags)
 {
 	widget_init(&tl->wid, "tlist", &tlist_ops, rw, rh);
+	WIDGET(tl)->flags |= WIDGET_CLIPPING;
 
 	widget_map_color(tl, BACKGROUND_COLOR, "background", 120, 120, 120);
 	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240);
@@ -157,12 +158,14 @@ tlist_scaled(int argc, union evarg *argv)
 void
 tlist_draw(void *p)
 {
-	SDL_Rect rclip;
 	struct tlist *tl = p;
 	struct tlist_item *it;
 	int item_h;
 	int y = 0, i = 0;
 	int val, visitems = 0;
+
+	if (WIDGET(tl)->w < 32 || WIDGET(tl)->h < 4)
+		return;
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
@@ -172,24 +175,17 @@ tlist_draw(void *p)
 		event_post(tl, "tlist-poll", NULL);
 	}
 
-	rclip.x = WIDGET_ABSX(tl);		/* XXX use WIDGET_CLIP? */
-	rclip.y = WIDGET_ABSY(tl);
-	rclip.w = WIDGET(tl)->w;
-	rclip.h = WIDGET(tl)->h;
-
 	val = widget_get_int(tl->vbar, "value");
 
-	SDL_SetClipRect(view->v, &rclip);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		SDL_Surface *su;
+		SDL_Surface *textsu = NULL;
 		int x = 2;
 
-		if (i++ < val) {
+		if (i++ < val)
 			continue;
-		}
-		if (y > WIDGET(tl)->h - it->icon_h) {
-			goto out;
-		}
+		if (y > WIDGET(tl)->h - tl->item_h)
+			break;
+
 		if (it->selected) {
 			SDL_Rect rd;
 
@@ -202,26 +198,28 @@ tlist_draw(void *p)
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
 
-		su = text_render(NULL, -1,
-		    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
-	
+		if (it->text != NULL) {
+			textsu = text_render(NULL, -1,
+			    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
+		}
 		if (it->icon != NULL) {
 			widget_blit(tl, it->icon, x, y);
 		}
-		x += it->icon_w + 4;
+		x += tl->item_h + 4;
 
-		widget_blit(tl, su, x, y + it->icon_w/2 - su->h/2);
+		if (textsu != NULL) {
+			widget_blit(tl, textsu,
+			    x,
+			    y + tl->item_h/2 - textsu->h/2);
+		}
+		SDL_FreeSurface(textsu);
 
 		y += tl->item_h;
 		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
 		    WIDGET_COLOR(tl, LINE_COLOR));
 
-		SDL_FreeSurface(su);
-
 		visitems++;
 	}
-out:
-	SDL_SetClipRect(view->v, NULL);
 
 	tl->nvisitems = visitems;
 	if (tl->nitems > 0 && visitems > 0 && visitems < tl->nitems) {
@@ -335,18 +333,13 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	struct tlist_item *it;
 
 	it = emalloc(sizeof(struct tlist_item));
-	it->icon_w = tl->item_h;			/* Square */
-	it->icon_h = tl->item_h;
+	it->icon = NULL;
 	it->selected = 0;
-	if (icon != NULL) {
-		it->icon = view_scale_surface(icon, it->icon_w, it->icon_h);
-	} else {
-		it->icon = NULL;
-	}
 	it->text = Strdup(text);
 	it->text_len = strlen(text);
 	it->p1 = p1;
 	it->tl_bp = tl;
+	tlist_set_item_icon(tl, it, icon);			/* Square */
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
@@ -477,16 +470,14 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		return;
 	}
 	
-	if (button != SELECTION_MOUSE_BUTTON) {		/* Selection button? */
+	if (button != SELECTION_MOUSE_BUTTON) 		/* Selection button? */
 		return;
-	}
 	
 	pthread_mutex_lock(&tl->items_lock);
+
 	tind = (widget_get_int(tl->vbar, "value") + y / tl->item_h) + 1;
-	ti = tlist_item_index(tl, tind);
-	if (ti == NULL) {
+	if ((ti = tlist_item_index(tl, tind)) == NULL)
 		goto out;
-	}
 
 	if (tl->flags & TLIST_MULTI) {
 		if (SDL_GetModState() & KMOD_SHIFT) {
@@ -691,9 +682,30 @@ tlist_set_item_height(struct tlist *tl, int ih)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		it->icon_w = ih;			/* Square */
-		it->icon_h = ih;
+		if (it->icon != NULL) {
+			SDL_Surface *nicon;
+
+			nicon = view_scale_surface(it->icon,
+			    tl->item_h, tl->item_h);		/* Square */
+			SDL_FreeSurface(it->icon);
+			it->icon = nicon;
+		}
 	}
 	pthread_mutex_unlock(&tl->items_lock);
+}
+
+/* Update an item's icon. */
+void
+tlist_set_item_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *icon)
+{
+	if (it->icon != NULL)
+		SDL_FreeSurface(it->icon);
+
+	if (icon != NULL) {
+		it->icon = view_scale_surface(icon,
+		    tl->item_h, tl->item_h);			/* Square */
+	} else {
+		it->icon = NULL;
+	}
 }
 
