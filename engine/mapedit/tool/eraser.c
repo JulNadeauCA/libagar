@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.37 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.38 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 
 #include "eraser.h"
 
-#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
 
 const struct tool_ops eraser_ops = {
@@ -42,46 +41,33 @@ const struct tool_ops eraser_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	eraser_window,
+	NULL,
 	NULL,			/* cursor */
 	eraser_effect,
 	NULL			/* mouse */
 };
 
 void
-eraser_init(void *obj)
-{
-	struct eraser *eraser = obj;
-
-	tool_init(&eraser->tool, "eraser", &eraser_ops, MAPEDIT_TOOL_ERASER);
-	eraser->mode = ERASER_ALL;
-}
-
-struct window *
-eraser_window(void *p)
+eraser_init(void *p)
 {
 	struct eraser *er = p;
+	static const char *mode_items[] = {
+		N_("All"),
+		N_("Highest"),
+		NULL
+	};
 	struct window *win;
-	struct vbox *vb;
+	struct radio *rad;
+
+	tool_init(&er->tool, "eraser", &eraser_ops, MAPEDIT_TOOL_ERASER);
+	er->mode = ERASER_ALL;
 
 	win = window_new("mapedit-tool-eraser");
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	window_set_caption(win, _("Eraser"));
-
-	vb = vbox_new(win, 0);
-	{
-		static const char *mode_items[] = {
-			N_("All"),
-			N_("Highest"),
-			NULL
-		};
-		struct radio *rad;
-
-		rad = radio_new(vb, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
-		widget_focus(rad);
-	}
-	return (win);
+	rad = radio_new(win, mode_items);
+	widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
+	widget_focus(rad);
 }
 
 void
