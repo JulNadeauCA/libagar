@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.20 2002/06/12 20:40:09 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.21 2002/06/25 17:32:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,7 +55,6 @@ static pthread_mutex_t textslock = PTHREAD_MUTEX_INITIALIZER;
 
 static int gx = 0, gy = 0;	/* Current cascading coordinates */
 static int ntexts = 0;		/* Concurrent text window count */
-static int maxfonth;		/* Maximum font height */
 
 /* XXX prefs */
 #define FONTNAME	"larabie"
@@ -66,7 +65,9 @@ static int maxfonth;		/* Maximum font height */
 #define TIMEGRANUL	1000
 
 TTF_Font *font;
-static SDL_Color white = { 255, 255, 255 };
+int font_h;			/* Maximum font height */
+
+static SDL_Color white = { 255, 255, 255 };	/* XXX fgcolor */
 
 static Uint32	 text_tick(Uint32, void *);
 static void	 text_renderbg(SDL_Surface *, SDL_Rect *);
@@ -101,7 +102,7 @@ text_engine_init(void)
 	if (stext == NULL) {
 		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
 	}
-	maxfonth = stext->h;
+	font_h = stext->h;
 	SDL_FreeSurface(stext);
 
 	SDL_AddTimer(TIMEGRANUL, text_tick, NULL);
@@ -144,7 +145,7 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 	te->y = y > 0 ? y : gy;
 	te->tx = XMARGIN;
 	te->ty = YMARGIN;
-	te->nlines = te->h / maxfonth;
+	te->nlines = te->h / font_h;
 	te->bgcolor = SDL_MapRGB(view->v->format, 30, 90, 180);
 	te->fgcolor = &white;
 	te->v = view->v;	/* XXX */
@@ -369,7 +370,7 @@ text_render(struct text *te, char *text)
 			SDL_FreeSurface(stext);
 
 			textp = sp + 1;
-			te->ty += maxfonth + LINESPACE;
+			te->ty += font_h + LINESPACE;
 			te->tx = XMARGIN;
 		}
 	}
@@ -426,7 +427,7 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 	free(bufc);
 
 	/* Adjust the geometry with the map, for optimization purposes. */
-	while (h - YMARGIN < (nlines * maxfonth))
+	while (h - YMARGIN < (nlines * font_h))
 		h += TILEH;
 	while (w - XMARGIN < longlinew + XMARGIN)
 		w += TILEW;
