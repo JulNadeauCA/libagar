@@ -1006,13 +1006,8 @@ if [ "${with_gl}" != "no" ]
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
 echo "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
-if [ "${x11_found_includes}" = "yes" ]; then
-	OPENGL_CFLAGS="${X11_CFLAGS}"
-fi
-if [ "${x11_found_libs}" = "yes" ]; then
-	OPENGL_LIBS="${X11_LIBS}"
-fi
-OPENGL_LIBS="${OPENGL_LIBS} -lX11"
+OPENGL_CFLAGS="${X11_CFLAGS}"
+OPENGL_LIBS="${X11_LIBS} -lGL"
 cat << EOT > conftest.c
 #include <GL/gl.h>
 
