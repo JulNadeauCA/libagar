@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.75 2002/04/25 12:48:08 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.76 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,12 @@
 
 #include <engine/widget/text.h>
 
-static const struct obvec map_vec = {
+static const struct version map_ver = {
+	"agar map",
+	1, 11
+};
+
+static const struct obvec map_ops = {
 	map_destroy,
 	map_load,
 	map_save,
@@ -61,8 +66,7 @@ struct draw {
 	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
 };
 
-static void	 node_init(struct node *, Uint32);
-static void	 node_destroy(struct node *);
+static void	 node_reinit(struct node *);
 
 /*
  * Allocate nodes for the given map geometry.
@@ -93,7 +97,10 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	}
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			node_init(&m->map[y][x], 0);
+			struct node *node = &m->map[y][x];
+		
+			TAILQ_INIT(&node->nrefsh);
+			node_reinit(node);
 		}
 	}
 }
@@ -109,7 +116,7 @@ map_freenodes(struct map *m)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			node_destroy(&m->map[y][x]);
+			node_reinit(&m->map[y][x]);	/* Free refs */
 		}
 		free(*(m->map + x));
 	}
@@ -119,13 +126,22 @@ map_freenodes(struct map *m)
 void
 map_init(struct map *m, char *name, char *media, Uint32 flags)
 {
-	memset(m, 0, sizeof(struct map));
 	object_init(&m->obj, name, media, (media != NULL) ? OBJ_ART : 0,
-	    &map_vec);
+	    &map_ops);
 	sprintf(m->obj.saveext, "m");
 	m->flags = flags;
+	m->redraw = 0;
+	m->fps = 100;		/* XXX pref */
+	m->mapw = 0;
+	m->maph = 0;
+	m->tilew = 0;
+	m->tileh = 0;
+	m->shtilex = 0;
+	m->shtiley = 0;
+	m->defx = 0;
+	m->defy = 0;
+	m->map = NULL;
 	m->view = mainview;
-	m->fps = 100;
 	pthread_mutex_init(&m->lock, NULL);
 }
 
@@ -260,8 +276,8 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
 		
-			node_destroy(node);
-			node_init(node, nflags);
+			node_reinit(node);
+			node->flags = nflags;
 	
 			if (ob != NULL) {
 				node_addref(node, ob, offs, rflags);
@@ -289,33 +305,27 @@ map_destroy(void *p)
 }
 
 /*
- * Initialize a node.
+ * Reinitialize a node.
  * Must be called on a locked map.
  */
 static void
-node_init(struct node *node, Uint32 flags)
+node_reinit(struct node *node)
 {
-	memset(node, 0, sizeof(struct node));
-	node->flags = flags;
-	TAILQ_INIT(&node->nrefsh);
-}
+	struct noderef *nref, *nextnref;
 
-/*
- * Free all the references of a node.
- * Must be called on a locked map.
- */
-static void
-node_destroy(struct node *node)
-{
-	struct noderef *nref1, *nref2;
-
-	nref1 = TAILQ_FIRST(&node->nrefsh);
-	while (nref1 != NULL) {
-		nref2 = TAILQ_NEXT(nref1, nrefs);
-		free(nref1);
-		nref1 = nref2;
+	for (nref = TAILQ_FIRST(&node->nrefsh);
+	     nref != TAILQ_END(&node->nrefsh);
+	     nref = nextnref) {
+		nextnref = TAILQ_NEXT(nref, nrefs);
+		free(nref);
 	}
 	TAILQ_INIT(&node->nrefsh);
+
+	node->nnrefs = 0;
+	node->flags = 0;
+	node->v1 = 0;
+	node->v2 = 0;
+	node->nanims = 0;
 }
 
 static __inline__ void
@@ -601,8 +611,8 @@ map_load(void *ob, int fd)
 
 	/* The viewport (and the map mask), might change sizes. */
 	text_destroyall();
-	
-	if (version_read(fd, "agar map", 1, 11) != 0) {
+
+	if (version_read(fd, &map_ver) != 0) {
 		return (-1);
 	}
 
@@ -692,7 +702,7 @@ map_save(void *ob, int fd)
 
 	buf = fobj_create_buf(65536, 32767);
 
-	version_write(fd, "agar map", 1, 11);
+	version_write(fd, &map_ver);
 
 	fobj_bwrite_uint32(buf, m->flags);
 	fobj_bwrite_uint32(buf, m->mapw);

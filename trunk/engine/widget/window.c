@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.10 2002/04/26 11:40:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.11 2002/04/26 13:04:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,8 +45,8 @@
 
 static const struct obvec window_vec = {
 	window_destroy,
-	window_load,
-	window_save,
+	NULL,
+	NULL,
 	window_link,
 	window_unlink
 };
@@ -255,38 +255,6 @@ window_draw(struct window *win)
 	} else {
 		win->redraw = 0;
 	}
-}
-
-int
-window_load(void *p, int fd)
-{
-	struct window *w = (struct window *)p;
-
-	if (version_read(fd, "agar window", 1, 0) != 0) {
-		return (-1);
-	}
-	
-	w->flags = fobj_read_uint32(fd);
-	w->caption = fobj_read_string(fd);
-	w->bgcolor = fobj_read_uint32(fd);
-	w->fgcolor = fobj_read_uint32(fd);
-
-	return (0);
-}
-
-int
-window_save(void *p, int fd)
-{
-	struct window *w = (struct window *)p;
-
-	version_write(fd, "agar window", 1, 0);
-
-	fobj_write_uint32(fd, w->flags);
-	fobj_write_string(fd, w->caption);
-	fobj_write_uint32(fd, w->bgcolor);
-	fobj_write_uint32(fd, w->fgcolor);
-
-	return (0);
 }
 
 /* Must be called when win->lock is held. */

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.6 2002/04/24 14:08:54 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.7 2002/04/26 11:40:48 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -41,8 +41,6 @@ struct window {
 void	 window_init(struct window *, struct viewport *, char *, char *, Uint32,
 	     Uint32, Sint16, Sint16, Uint16, Uint16);
 void	 window_destroy(void *);
-int	 window_load(void *, int);
-int	 window_save(void *, int);
 int	 window_link(void *);
 int	 window_unlink(void *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.40 2002/04/25 12:47:13 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.41 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,6 +49,11 @@ enum {
 	DEFAULT_ZUARS	= 0
 };
 
+static const struct version char_ver = {
+	"agar char",
+	1, 1
+};
+
 static const struct obvec char_vec = {
 	NULL,		/* destroy */
 	char_load,
@@ -56,6 +61,7 @@ static const struct obvec char_vec = {
 	char_link,
 	char_unlink
 };
+
 
 void
 char_init(struct character *ch, char *name, char *media)
@@ -84,7 +90,7 @@ char_load(void *p, int fd)
 	struct input *input = NULL;
 	struct map *m;
 
-	if (version_read(fd, "agar char", 1, 1) != 0) {
+	if (version_read(fd, &char_ver) != 0) {
 		return (-1);
 	}
 
@@ -172,7 +178,7 @@ char_save(void *p, int fd)
 		return (-1);
 	}
 
-	version_write(fd, "agar char", 1, 1);
+	version_write(fd, &char_ver);
 
 	/* Write character properties. */
 	fobj_bwrite_string(buf, ch->obj.name);
