@@ -985,15 +985,20 @@ x11_found_libs=yes
 else
 NONE=1
 fi
-if [ "${x11_found_includes}" != "" ]; then
+if [ "${x11_found_includes}" != "" -a ${x11_found_libs} != "" ]; then
 echo "yes"
 echo "yes" >> config.log
 x11_found=yes
+echo "#ifndef HAVE_X11" > config/have_x11.h
+echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
+echo "#endif /* HAVE_X11 */" >> config/have_x11.h
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
 echo "no"
 echo "no" >> config.log
+x11_found=no
+echo "#undef HAVE_X11" > config/have_x11.h
 fi
 	if [ "${x11_found}" = "yes" ]
  then
