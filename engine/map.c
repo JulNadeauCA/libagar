@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.22 2002/02/14 05:26:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.23 2002/02/15 02:31:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -715,8 +715,9 @@ map_load(void *ob, char *path)
 			/* Read the map entry flags. */
 			node->flags = fobj_read_uint32(f);
 
-			/* Read the optional integer value. */
+			/* Read the optional integer values. */
 			node->v1 = fobj_read_uint32(f);
+			node->v2 = fobj_read_uint32(f);
 
 			/* Read the reference count. */
 			narefs = fobj_read_uint32(f);
@@ -800,10 +801,11 @@ map_save(void *ob, char *path)
 			int nrefs = 0;
 			
 			/* Write the node flags. */
-			fobj_write_uint32(f, node->flags);
+			fobj_write_uint32(f, node->flags & ~(NODE_DONTSAVE));
 			
-			/* Write the optional integer value. */
+			/* Write the optional integer values. */
 			fobj_write_uint32(f, node->v1);
+			fobj_write_uint32(f, node->v2);
 
 			/* We do not know the reference count yet. */
 			soffs = lseek(f, 0, SEEK_CUR);
