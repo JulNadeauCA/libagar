@@ -75,23 +75,20 @@ static void		 apply(int, union evarg *);
 static void
 apply(int argc, union evarg *argv)
 {
-	struct button *b = argv[0].p;
-	struct checkbox *cbox = argv[0].p;
-
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
-		window_hide(WIDGET(b)->win);
+		window_hide(WIDGET(argv[0].p)->win);
 		break;
 	case SAVE_BUTTON:
 		object_save(config);
 		text_msg(4, TEXT_SLEEP, "Saved settings.\n");
 		break;
 	case FULLSCRN_CBOX:
-		view_fullscreen(mainview, cbox->flags & CHECKBOX_PRESSED);
+		view_fullscreen(mainview, argv[2].i);
 		break;
 	case FONTCACHE_CBOX:
 		pthread_mutex_lock(&config->lock);
-		if (cbox->flags & CHECKBOX_PRESSED) {
+		if (argv[2].i) {
 			config->flags |= CONFIG_FONT_CACHE;
 		} else {
 			config->flags &= ~(CONFIG_FONT_CACHE);
