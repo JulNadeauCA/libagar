@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.79 2003/03/07 00:44:10 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.80 2003/03/10 01:23:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -384,8 +384,7 @@ draw_layer:
 				    WIDGET_COLOR(mv, GRID_COLOR));
 			}
 
-			if (!mapedition ||
-			    mv->map->tilew < 7 || mv->map->tileh < 7)
+			if (!mapedition)
 				continue;
 
 			/* Indicate the mouse/effective selections. */
@@ -397,6 +396,7 @@ draw_layer:
 				    mv->msel.yoffs*mv->map->tileh-2,
 				    WIDGET_COLOR(mv, MOUSE_SEL_COLOR));
 			}
+#if 0
 			if (mv->esel.set &&
 			    mx >= mv->esel.x &&
 			    my >= mv->esel.y &&
@@ -408,6 +408,18 @@ draw_layer:
 				    mv->map->tileh,
 				    WIDGET_COLOR(mv, EFFECTIVE_SEL_COLOR));
 			}
+#else
+			if (mv->esel.set &&
+			    mv->esel.x == mx && mv->esel.y == my) {
+				primitives.rect_outlined(mv,
+				    rx-1, ry-1,
+				    mv->map->tilew*mv->esel.w,
+				    mv->map->tileh*mv->esel.h,
+				    WIDGET_COLOR(mv, EFFECTIVE_SEL_COLOR));
+			}
+#endif
+			if (mv->map->tilew < 7 || mv->map->tileh < 7)
+				continue;
 
 			/* Draw the position cursor. */
 			if (mv->cur_node == node) {
@@ -702,29 +714,31 @@ mapview_effect_selection(struct mapview *mv)
 		mv->esel.h = -mv->msel.yoffs;
 	}
 
-	excess = (mv->esel.x + mv->esel.w) - mv->map->mapw;
-	if (excess > 0) {
+	
+	if ((excess = (mv->esel.x + mv->esel.w) - mv->map->mapw) > 0) {
 		if (excess < mv->esel.w) {
+			dprintf("x excess = %d\n", excess);
 			mv->esel.w -= excess;
-		} else {
-			goto fail;
 		}
 	}
-	excess = (mv->esel.y + mv->esel.h) - mv->map->maph;
-	if (excess > 0) {
+	
+	if ((excess = (mv->esel.y + mv->esel.h) - mv->map->maph) > 0) {
 		if (excess < mv->esel.h) {
+			dprintf("y excess = %d\n", excess);
 			mv->esel.h -= excess;
-		} else {
-			goto fail;
 		}
 	}
 
+	if (mv->esel.x < 0) {
+		mv->esel.w += mv->esel.x;
+		mv->esel.x = 0;
+	}
+	if (mv->esel.y < 0) {
+		mv->esel.h += mv->esel.y;
+		mv->esel.y = 0;
+	}
+
 	mv->esel.set = 1;
-	mv->msel.set = 0;
-	return;
-fail:
-	dprintf("fail!\n");
-	mv->esel.set = 0;
 	mv->msel.set = 0;
 }
 
