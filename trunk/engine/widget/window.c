@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.183 2003/05/22 05:45:46 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.184 2003/05/22 08:03:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,8 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/strlcpy.h>
 #include <engine/compat/snprintf.h>
 #include <engine/compat/vasprintf.h>
+#include <engine/compat/vsnprintf.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
@@ -79,9 +81,6 @@ static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 static void	winop_close(struct window *);
 static void	winop_hide_body(struct window *);
-#if 0
-static void	resize_reg(int, struct window *, struct region *);
-#endif
 
 #ifdef DEBUG
 #define DEBUG_STATE		0x01
@@ -178,8 +177,6 @@ window_init_icons(struct window *win)
 {
 	int i;
 
-	dprintf("initing icons\n");
-
 	i = win->titleh - win->borderw;
 	close_icon = view_scale_surface(SPRITE(win, 0), i, i);
 	hidden_body_icon = view_scale_surface(SPRITE(win, 1), i, i);
@@ -258,7 +255,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 	win->titleh = text_font_height(font) + win->borderw;
 	win->focus = NULL;
-	win->caption = Strdup("Untitled");
+	strlcpy(win->caption, "Untitled", sizeof(win->caption));
 	win->minw = minw;
 	win->minh = minh;
 	win->xspacing = 3;
@@ -578,8 +575,6 @@ window_destroy(void *p)
 		object_destroy(reg);
 		free(reg);
 	}
-
-	free(win->caption);
 	free(win->border);
 	pthread_mutex_destroy(&win->lock);
 }
@@ -1384,13 +1379,9 @@ window_set_caption(struct window *win, const char *fmt, ...)
 	va_list args;
 
 	pthread_mutex_lock(&win->lock);
-
-	/* XXX */
-	Free(win->caption);
 	va_start(args, fmt);
-	Vasprintf(&win->caption, fmt, args);
+	vsnprintf(win->caption, sizeof(win->caption), fmt, args);
 	va_end(args);
-	
 	pthread_mutex_unlock(&win->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.62 2003/04/24 07:43:06 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.63 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -7,6 +7,8 @@
 #include <engine/widget/region.h>
 
 #include "begin_code.h"
+
+#define WINDOW_CAPTION_MAX	96
 
 enum window_event {
 	WINDOW_MOUSEBUTTONUP,
@@ -24,7 +26,7 @@ struct widget;
 struct window {
 	struct widget	wid;		/* For primitives and color schemes */
 
-	int	flags;
+	int		flags;
 #define WINDOW_TITLEBAR		0x01	/* Draw a title bar */
 #define WINDOW_SCALE		0x02	/* Scale the initial geometry (%) */
 #define WINDOW_CENTER		0x04	/* Center the initial position */
@@ -40,16 +42,17 @@ struct window {
 	} clicked_button;
 
 	Uint32	*border;		/* Border colors */
-	Uint8	 borderw;		/* Border width */
-	Uint8	 titleh;		/* Titlebar height */
-	Uint16	 minw, minh;		/* Minimum window geometry */
-	Uint8	 xspacing, yspacing;	/* Spacing between regions */
+	int	 borderw;		/* Border width */
+	int	 titleh;		/* Titlebar height */
+	int	 minw, minh;		/* Minimum window geometry */
+	int	 xspacing, yspacing;	/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
 
-	pthread_mutex_t		 lock;
-	SDL_Rect		 rd;		/* Current geometry */
-	SDL_Rect		 saved_rd;	/* Original geometry */
-	char			*caption;	/* Titlebar text */
+	pthread_mutex_t	 lock;
+	SDL_Rect	 rd;				/* Current geometry */
+	SDL_Rect	 saved_rd;			/* Original geometry */
+	char		 caption[WINDOW_CAPTION_MAX];	/* Titlebar text */
+
 	struct widget		*focus;		/* Focused widget */
 	struct regionsq		 regionsh;	/* Regions */
 	TAILQ_ENTRY(window)	 windows;	/* Windows in view */
