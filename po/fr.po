@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.33 2004/04/06 01:24:45 vedge Exp $
+# $Csoft: fr.po,v 1.34 2004/05/14 19:09:19 vedge Exp $
 #
 # Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -458,7 +458,7 @@ msgstr "Indiquez la position du second point ou [défaire la ligne].\n"
 
 #, c-format
 msgid "Specify point %d or [close/undo vertex].\n"
-msgstr "Indiquez la position du point %d ou [fermer/défaire la vertex]"
+msgstr "Indiquez la position du point %d ou [fermer/défaire vertex].\n"
 
 msgid "Lines and polylines"
 msgstr "Lignes et polylignes"
