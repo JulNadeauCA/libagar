@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.136 2003/06/25 07:57:28 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.137 2003/06/25 10:33:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -282,8 +282,7 @@ object_free_childs(struct object *pob)
 		ncob = TAILQ_NEXT(cob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
 		object_destroy(cob);
-		if ((cob->flags & OBJECT_STATIC) == 0)
-			free(cob);
+		free(cob);
 	}
 	TAILQ_INIT(&pob->childs);
 	pthread_mutex_unlock(&pob->lock);
