@@ -295,12 +295,33 @@ else
 echo "Missing SDL"
 exit 1
 fi
-echo -n "checking for SDL_ttf (http://www.libsdl.org/projects/SDL_ttf/release/)..."
-if [ -x `which showfont` -a -x `which glfont` ]; then
-found=yes
+echo -n "checking for FreeType (http://www.freetype.org)..."
+FREETYPE_VERSION=""
+which="`which freetype-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	FREETYPE_VERSION=`${which} --version`
+fi
+FREETYPE_CFLAGS=""
+which="`which freetype-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	FREETYPE_CFLAGS=`${which} --cflags`
+fi
+FREETYPE_LIBS=""
+which="`which freetype-config`"
+if [ -n "$which" -a -x "$which" ]; then
+	FREETYPE_LIBS=`${which} --libs`
+fi
+if [ "${FREETYPE_VERSION}" != "" ]; then
+freetype_found=yes
+echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
+echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
+else
+NONE=1
+fi
+if [ "${freetype_found}" = "yes" ]; then
 echo "ok"
 else
-echo "missing"
+echo "Missing FreeType"
 exit 1
 fi
 if [ "${with_x11}" != "no" ]
