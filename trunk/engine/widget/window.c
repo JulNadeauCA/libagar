@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.194 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.195 2003/06/08 23:51:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -76,7 +76,6 @@ static void	window_clamp(struct window *);
 static void	window_focus(struct window *);
 
 static void	window_apply_alignment(struct window *);
-static void	window_remap_widgets(void *, int, int);
 
 static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
@@ -1210,7 +1209,7 @@ window_apply_alignment(struct window *win)
 }
 
 /* Cache the absolute view coordinates of a widget and its descendents. */
-static void
+void
 window_remap_widgets(void *parent, int x, int y)
 {
 	struct widget *pwid = parent, *cwid;
