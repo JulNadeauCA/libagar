@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.c,v 1.1 2004/03/26 04:57:10 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.c,v 1.2 2004/08/22 12:08:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -225,7 +225,6 @@ init_unit_system(struct mfspinbutton *fsu, const char *unit_key)
 	if (!found) {
 		fatal("unknown unit: `%s'", unit_key);
 	}
-	dprintf("found unit %s (%f)\n", unit->key, unit->divider);
 	fsu->unit = unit;
 	update_unit_button(fsu);
 
