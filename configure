@@ -138,7 +138,7 @@ echo "    --srcdir                       Source tree for concurrent builds [.]"
 echo "    --with-smpeg                   Play videos through smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      Support OpenGL operations [default: check]"
-echo "    --enable-debug                 Engine debugging [default: no]"
+echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-serialization         Thread-safe engine [default: yes]"
 echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support 16 bpp display [default: yes]"
@@ -1121,7 +1121,7 @@ SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
 fi
-if [ "${enable_debug}" = "yes" ]
+if [ "${enable_debug}" != "no" ]
  then
 DEBUG=1
 echo "#ifndef DEBUG" > config/debug.h
