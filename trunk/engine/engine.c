@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.35 2002/04/28 15:07:09 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.36 2002/04/30 01:12:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,11 +41,6 @@
 
 #include <engine/mapedit/mapedit.h>
 
-#include <engine/widget/window.h>
-#include <engine/widget/widget.h>
-#include <engine/widget/label.h>
-#include <engine/widget/button.h>
-#include <engine/widget/checkbox.h>
 #include <engine/widget/text.h>
 
 #ifdef DEBUG
@@ -53,19 +48,17 @@ int	engine_debug = 1;
 #endif
 struct	world *world;
 struct	gameinfo *gameinfo;
-
-static char *mapdesc = NULL, *mapstr = NULL;
-static int mapw = 64, maph = 64;
-static int tilew = 32, tileh = 32;
 int mapediting;
 
 struct input *keyboard = NULL;
 struct input *joy = NULL;
 struct input *mouse = NULL;
 
+static char *mapdesc = NULL, *mapstr = NULL;
+static int mapw = 64, maph = 64;	/* Default map geometry */
+static int tilew = 32, tileh = 32;	/* XXX pref */
+
 static void	printusage(char *);
-static void	close_button_push(struct button *);
-static void	fullscrn_cbox_push(struct checkbox *);
 
 static void
 printusage(char *progname)
@@ -242,35 +235,5 @@ emalloc(size_t len)
 		engine_destroy();
 	}
 	return (p);
-}
-
-void
-engine_config(void)
-{
-	struct window *win;
-	struct checkbox *fullscr_cbox;
-	struct button *close_button;
-
-	/* Settings window */
-	win = window_new(mainview, "Engine settings", 0, WINDOW_CUBIC,
-	    64, 64, 512, 256);
-
-	fullscr_cbox = checkbox_new(win, "Full-screen mode", 0, 10, 10);
-	fullscr_cbox->push = fullscrn_cbox_push;
-
-	close_button = button_new(win, "Close", 0, (win->w)/2-64, win->h-64);
-	close_button->push = close_button_push;
-}
-
-static void
-close_button_push(struct button *b)
-{
-	object_unlink(WIDGET(b)->win);
-}
-
-static void
-fullscrn_cbox_push(struct checkbox *b)
-{
-	view_fullscreen(mainview, b->flags & CHECKBOX_PRESSED);
 }
 
