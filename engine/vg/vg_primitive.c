@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.1 2004/03/30 16:03:13 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -99,6 +99,36 @@ vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
 	}
 	vg_put_pixel(vg, rx-radius, ry, color);
 	vg_put_pixel(vg, rx+radius, ry, color);
+}
+
+/*
+ * Draw a partial ellipse centered around [cx,cy]. Angles a1, a2 are
+ * given in degrees. It is assumed that a2 > a1.
+ * XXX not optimized
+ */
+void
+vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,
+    Uint32 color)
+{
+	SDL_Surface *su = vg->su;
+	int px = 0, py = 0;
+	int w2 = w/2, h2 = h/2;
+	int a;
+
+	while (a2 < a1)
+		a2 += 360;
+
+	for (a = a1; a <= a2; a++) {
+		int x, y;
+
+		x = ((long)vg_cos_tbl[a % 360]*(long)w2/1024) + cx; 
+		y = ((long)vg_sin_tbl[a % 360]*(long)h2/1024) + cy;
+		if (a != a1) {
+			vg_line_primitive(vg, px, py, x, y, color);
+		}
+		px = x;
+		py = y;
+	}
 }
 
 /*
