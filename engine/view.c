@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.123 2003/05/22 05:45:45 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.124 2003/05/24 15:53:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -426,6 +426,45 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	if (SDL_MUSTLOCK(ss))
 		SDL_UnlockSurface(ss);
 	return (ds);
+}
+
+/* Set the alpha value of all pixels in a surface where a != 0. */
+void
+view_set_trans(SDL_Surface *su, Uint8 alpha)
+{
+	int x, y;
+
+	if (SDL_MUSTLOCK(su))
+		SDL_LockSurface(su);
+	for (y = 0; y < su->h; y++) {
+		for (x = 0; x < su->w; x++) {
+			Uint8 *dst = (Uint8 *)su->pixels +
+			    y*su->pitch +
+			    x*su->format->BytesPerPixel;
+			Uint32 npixel;
+			Uint8 r, g, b, a;
+
+			SDL_GetRGBA(*(Uint32 *)dst, su->format, &r, &g, &b, &a);
+
+			if (r == 15 && g == 15 && b == 15) {
+				/* XXX transparency hack for text surfaces. */
+				a = 0;
+			} else {
+				if (a != 0)
+					a = alpha;
+			}
+
+			npixel = SDL_MapRGBA(su->format, r, g, b, a);
+			switch (su->format->BytesPerPixel) {
+				_VIEW_PUTPIXEL_8(dst, npixel)
+				_VIEW_PUTPIXEL_16(dst, npixel)
+				_VIEW_PUTPIXEL_24(dst, npixel)
+				_VIEW_PUTPIXEL_32(dst, npixel)
+			}
+		}
+	}
+	if (SDL_MUSTLOCK(su))
+		SDL_UnlockSurface(su);
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.76 2003/05/18 00:16:58 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.77 2003/05/22 05:45:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -157,6 +157,7 @@ extern DECLSPEC struct window	*view_window_exists(char *);
 extern DECLSPEC SDL_Surface	*view_surface(Uint32, int, int);
 extern DECLSPEC SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16,
 				                    Uint16);
+extern DECLSPEC void		 view_set_trans(SDL_Surface *, Uint8);
 extern DECLSPEC SDL_Surface	*view_copy_surface(SDL_Surface *);
 extern DECLSPEC void		 view_capture(SDL_Surface *);
 extern DECLSPEC __inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
