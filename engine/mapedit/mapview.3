@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.16 2003/02/24 06:43:31 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.17 2003/03/05 18:22:19 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm mapview
-.Nd agar map view widget
+.Nd agar level display/edition widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/mapedit/mapview.h>
@@ -40,7 +40,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements display and edition of
+widget displays
 .Xr map 3
 structures.
 .Sh INITIALIZATION
@@ -74,20 +74,25 @@ The
 can be changed at runtime, and may include:
 .Pp
 .Bd -literal
-#define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
-#define MAPVIEW_ZOOM		 0x002	/* Allow zooming */
-#define MAPVIEW_INDEPENDENT	 0x004	/* Zoom/ss[xy] independent from map's */
-#define MAPVIEW_TILEMAP		 0x008	/* Map of `source' nodes */
-#define MAPVIEW_GRID		 0x010	/* Display a grid */
-#define MAPVIEW_PROPS		 0x020	/* Display node properties */
-#define MAPVIEW_SAVEABLE	 0x200	/* Load/save keys */
+#define MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
+#define MAPVIEW_INDEPENDENT	0x002	/* Zoom/ss independent from map */
+#define MAPVIEW_TILEMAP		0x004	/* Map of `source' nodes */
+#define MAPVIEW_GRID		0x008	/* Display a grid */
+#define MAPVIEW_PROPS		0x010	/* Display node properties */
+#define MAPVIEW_SAVEABLE	0x100	/* Load/save keys */
+#define MAPVIEW_NO_CURSOR	0x200	/* Hide cursor */
 .Ed
 .Pp
 The
 .Dv MAPVIEW_EDIT
-and
+flag enables write operations on the map.
 .Dv MAPVIEW_TILEMAP
-flags are only available in level edition mode.
+allows nodes on this map to be selected as source nodes for level edition
+operations.
+The latter two flags are only available if the level editor ,
+.Xr mapedit 3 ,
+is initialized.
+.Pp
 The
 .Dv MAPVIEW_INDEPENDENT
 flag enables the use of zoom factors and soft-scroll offsets that are
@@ -99,30 +104,34 @@ The
 .Nm
 widget reacts to the following events:
 .Pp
-.Bl -tag -compact -width 25n
+.Bl -tag -width 25n
 .It widget-scaled
-Adjust the map view.
+Readjust the visible map area.
 .It widget-lostfocus
-Stop zoom timer.
-.It window-mousebuttonup
-Stop moving.
+Stop any zooming in process.
 .It window-mousebuttondown
-Right button moves the view, left button invokes the current tool
-if
+The right mouse button enables scrolling.
+The left mouse button invokes the current tool, if
 .Dv MAPVIEW_EDIT
-is set, or selects a tile if
-.Dv MAPVIEW_TILEMAP
 is set.
+.It window-mousebuttonup
+Stop scrolling or terminate a selection.
+.It window-mousemotion
+If the right mouse button is held, pan the view.
+If a mouse selection is in progress, adjust the position relative to
+the selection origin.
+In edition mode, call current tool if the left mouse button is held,
+or adjust the centering if the middle mouse button is held.
 .It window-keyup
 - or + keys stop zooming.
 .It window-keydown
 - or + keys start zooming.
-0/1 keys zooms to 1:1
+0/1 keys zooms to 1:1.
+In
+.Dv MAPVIEW_EDIT
+mode, edition keys are available.
 .It window-mouseout
 Stop moving.
-Redisplay cursor if
-.Dv MAPVIEW_SHOW_CURSOR
-is not set.
 .El
 .Pp
 The
