@@ -58,7 +58,7 @@ struct text_font {
 };
 
 static SLIST_HEAD(text_fontq, text_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
-static pthread_mutex_t fonts_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t fonts_lock = { PTHREAD_MUTEX_INITIALIZER };
 
 static TTF_Font *
 get_font(char *name, int size, int style)
