@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.2 2004/03/28 05:55:38 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.3 2004/04/13 01:21:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -17,9 +17,15 @@ enum toolbar_type {
 	TOOLBAR_VERT
 };
 
+struct toolbar_button {
+	int row;				/* Assigned row */
+	struct button *bu;
+};
+
 struct toolbar {
 	struct box box;
 	struct box *rows[TOOLBAR_MAX_ROWS];
+	struct toolbar_button *buttons;
 	enum toolbar_type type;
 	int nrows;
 };

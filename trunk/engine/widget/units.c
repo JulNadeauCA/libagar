@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.25 2004/08/26 06:02:26 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.26 2004/08/26 06:18:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -374,14 +374,21 @@ const struct unit resistance_units[] = {
 
 /* Units of first order temperature coefficients of resistance. */
 const struct unit resistance_Tcoeff1_units[] = {
-	{ "ohms/degC", "\xce\xa9/\xc2\xb0\x43", "Ohms/\xc2\xb0\x43", 1.0, NULL},
-	{ NULL, NULL, NULL,					0, NULL }
+	{ "mohms/degC", "m\xce\xa9/\xc2\xb0\x43", "Milliohms per \xc2\xb0\x43",
+	  1e-3, NULL},
+	{ "ohms/degC", "\xce\xa9/\xc2\xb0\x43", "Ohms per\xc2\xb0\x43",
+	  1.0, NULL},
+	{ NULL, NULL, NULL, 0, NULL }
 };
 
 /* Units of second order temperature coefficients of resistance. */
 const struct unit resistance_Tcoeff2_units[] = {
+	{ "mohms/degC^2", "m\xce\xa9/\xc2\xb0\x43\xc2\xb2",
+	  "Milliohms per \xc2\xb0\x43\xc2\xb2",
+	  1e-3, NULL},
 	{ "ohms/degC^2", "\xce\xa9/\xc2\xb0\x43\xc2\xb2",
-	                 "Ohms/\xc2\xb0\x43\xc2\xb2", 1.0, NULL},
+	  "Ohms per \xc2\xb0\x43\xc2\xb2",
+	  1.0, NULL},
 	{ NULL, NULL, NULL, 0, NULL }
 };
 
