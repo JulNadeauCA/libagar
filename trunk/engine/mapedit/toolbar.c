@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.11 2002/07/18 11:50:47 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.12 2002/07/20 02:03:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -107,6 +107,7 @@ init_tools(struct mapedit *med)
 	med->tools.stamp = TOOL(stamp_new(med, 0));
 	med->tools.eraser = TOOL(eraser_new(med, 0));
 	med->tools.magnifier = TOOL(magnifier_new(med, 0));
+	med->tools.resize = TOOL(resize_new(med, 0));
 }
 
 void
@@ -234,7 +235,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	h_tbox = textbox_new(reg, "H: ", 0, 50, 100);
 	textbox_printf(h_tbox, "64");
 
-	reg = region_new(win, REGION_HALIGN, 2, 70, 98, 25);
+	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 25);
 	button = button_new(reg, "Create map", NULL, 0, 100, 100);
 	event_new(button, "button-pushed", 0, fileops_new_map,
 	    "%p, %p, %p, %p, %p",
@@ -249,14 +250,18 @@ mapedit_init_toolbar(struct mapedit *med)
 	 * Create the `Load map' dialog.
 	 */
 	win = window_new("Load map", WINDOW_CENTER,
-	    0, 0, 320, 128, 120, 96);
+	    0, 0,
+	    320, 120,
+	    100, 105);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 99);
 	/* Map name */
-	name_tbox = textbox_new(reg, "Name: ", 0, 100, 50);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
+	name_tbox = textbox_new(reg, "Name: ", 0, 100, 100);
 	win->focus = WIDGET(name_tbox);
+	
 	/* Button */
-	button = button_new(reg, "Load map", NULL, 0, 99, 50);
+	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
+	button = button_new(reg, "Load map", NULL, 0, 100, 100);
 	event_new(button, "button-pushed", 0, fileops_load_map,
 	    "%p, %p", med, name_tbox);
 	event_new(name_tbox, "textbox-return", 0, fileops_load_map,

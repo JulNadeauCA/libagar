@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.2 2002/07/08 05:22:18 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.3 2002/07/20 18:53:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -124,9 +124,11 @@ radio_draw(void *p)
 	struct radio *rad = p;
 	SDL_Surface *su;
 	int x = 0, y, i;
-	
+
+#if 0
 	primitives.frame(rad, 0, 0, WIDGET(rad)->w, WIDGET(rad)->h,
 	    WIDGET_FOCUSED(rad) ? 1 : 0);
+#endif
 
 	for (i = 0, y = 0; i < rad->nitems;
 	     i++, y += rad->radio.h+rad->yspacing/2) {
