@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.69 2003/06/17 23:30:48 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.70 2003/06/30 01:12:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -244,7 +244,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	SDL_Color col;
 	SDL_Surface *su;
 	ttf_font *fon;
-	Uint16 *ucs, *ucsp;
+	Uint16 *ucs, *ucsd, *ucsp;
 	int nlines, maxw, fon_h;
 	Uint8 r, g, b;
 
@@ -263,7 +263,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	col.b = b;
 
 	/* Find out the line count. */
-	ucs = ucsdup(text);
+	ucsd = ucs = ucsdup(text);
 	for (ucsp = ucs, nlines = 0; *ucsp != '\0'; ucsp++) {
 		if (*ucsp == '\n')
 			nlines++;
@@ -275,7 +275,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 			fatal("ttf_render_text_solid: %s", error_get());
 		}
 	} else {						/* Multiline */
-		SDL_Surface **lines, **lp;
+		SDL_Surface **lines;
 		int lineskip, i;
 		const Uint16 sep[2] = { '\n', '\0' };
 
@@ -285,21 +285,16 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		 */
 		lineskip = ttf_font_line_skip(fon);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines);
-		for (lp = lines, maxw = 0;
-		    (ucsp = ucssep(&ucs, sep)) != NULL;
-		    lp++) {
-		    	if (ucsp[0] == '\0') {
-				*lp = NULL;
-				continue;
-			}
-			if ((*lp = ttf_render_unicode_solid(fon, ucsp, col)) ==
-			    NULL) {
+		for (i = 0, maxw = 0;
+		    (ucsp = ucssep(&ucs, sep)) != NULL && ucsp[0] != '\0';
+		    i++) {
+			lines[i] = ttf_render_unicode_solid(fon, ucsp, col);
+			if (lines[i] == NULL) {
 				fatal("ttf_render_unicode_solid: %s",
 				    error_get());
 			}
-
-			if ((*lp)->w > maxw)
-				maxw = (*lp)->w;	/* Grow width */
+			if (lines[i]->w > maxw)
+				maxw = lines[i]->w;	/* Grow width */
 		}
 
 		rd.x = 0;
@@ -312,9 +307,6 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		for (i = 0;
 		     i < nlines;
 		     i++, rd.y += lineskip) {
-			if (lines[i] == NULL)
-				continue;
-
 			rd.w = lines[i]->w;
 			SDL_BlitSurface(lines[i], NULL, su, &rd);
 			SDL_FreeSurface(lines[i]);
@@ -322,7 +314,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		free(lines);
 	}
 
-	free(ucs);
+	free(ucsd);
 	return (su);
 }
 
