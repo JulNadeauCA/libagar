@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.18 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.19 2003/02/22 11:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -156,10 +156,6 @@ magnifier_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel,
     Uint8 state)
 {
 	struct magnifier *mag = p;
-
-	if ((state & SDL_BUTTON(1)) == 0) {
-		return;
-	}
 
 	switch (mag->mode) {
 	case MAGNIFIER_ZOOM_IN:
