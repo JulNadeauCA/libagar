@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.23 2003/04/12 01:45:46 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.24 2003/04/14 08:56:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@ static void		 xcf_read_property(struct netbuf *, struct xcf_prop *);
 #define DEBUG_XCF		0x1000
 #define DEBUG_ALPHA		0x2000
 
-int	xcf_debug = 0xffff;
+int	xcf_debug = DEBUG_LAYER_NAMES;
 #define	engine_debug xcf_debug
 #endif
 
