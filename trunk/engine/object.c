@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.48 2002/05/11 04:05:19 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.49 2002/05/13 06:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -463,7 +463,7 @@ object_queue_gc(struct object *ob)
 int
 object_unlink(void *p)
 {
-	struct object *ob = (struct object *)p;
+	struct object *ob = p;
 
 #ifdef DEBUG
 	if (object_strfind(ob->name) == NULL) {

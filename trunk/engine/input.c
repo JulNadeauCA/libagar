@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.13 2002/05/02 06:25:09 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.14 2002/05/11 03:58:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ input_event(void *p, SDL_Event *ev)
 
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
-		dprintf("%s: not controlling anything\n", in->obj.name);
+		dprintf("%s: not controlling anything\n", OBJECT(in)->name);
 		goto done;
 	}
 	switch (in->type) {
