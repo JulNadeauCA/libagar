@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.9 2002/02/07 05:16:26 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.10 2002/02/07 23:34:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -194,7 +194,7 @@ object_wait(void *obp, int mask)
 	}
 
 	ob->wmask &= ~(mask);
-	dprintf("%s: timeout waiting on mask 0x%x\n", ob->name, mask);
+	fatal("%s: timeout waiting on mask 0x%x\n", ob->name, mask);
 
 	return (0);
 }
