@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.35 2003/01/16 04:12:23 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.36 2003/01/18 06:56:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -433,7 +433,7 @@ tlist_mousemotion(int argc, union evarg *argv)
 
 	if (*value >= *max) {
 		/* Don't scroll past the end. */
-		*value = *max - tl->nvisitems - 1;
+		*value = *max - tl->nvisitems;
 	}
 
 	widget_binding_unlock(valueb);
