@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.37 2004/06/18 03:11:24 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.38 2004/09/12 05:57:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -492,28 +492,6 @@ gfx_insert_anim(struct gfx *gfx)
 }
 
 #ifdef DEBUG
-SDL_Surface *
-gfx_get_sprite(struct object *ob, Uint32 i)
-{
-	if (ob->gfx == NULL)
-		fatal("no gfx in %s", ob->name);
-	if (i > ob->gfx->nsprites)
-		fatal("no sprite at %s:%d", ob->name, i);
-
-	return (ob->gfx->sprites[i]);
-}
-
-struct gfx_anim *
-gfx_get_anim(struct object *ob, Uint32 i)
-{
-	if (ob->gfx == NULL)
-		fatal("no gfx in %s", ob->name);
-	if (i > ob->gfx->nanims)
-		fatal("no anim at %s:%d", ob->name, i);
-
-	return (ob->gfx->anims[i]);
-}
-
 static void
 poll_gfx(int argc, union evarg *argv)
 {
@@ -639,6 +617,4 @@ gfx_debug_window(void)
 
 	return (win);
 }
-
 #endif /* DEBUG */
-
