@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.30 2003/02/04 02:35:38 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.31 2003/02/06 02:56:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -69,12 +69,14 @@ fileops_new_map_window(void)
 		char *s;
 
 		w_tbox = textbox_new(reg, "W: ", 0, 50, -1);
-		Asprintf(&s, "%d", prop_get_uint32(&mapedit, "default-width"));
+		Asprintf(&s, "%d",
+		    prop_get_uint32(&mapedit, "default-map-width"));
 		textbox_printf(w_tbox, s);
 		free(s);
 
 		h_tbox = textbox_new(reg, "H: ", 0, 50, -1);
-		Asprintf(&s, "%d", prop_get_uint32(&mapedit, "default-height"));
+		Asprintf(&s, "%d",
+		    prop_get_uint32(&mapedit, "default-map-height"));
 		textbox_printf(h_tbox, s);
 		free(s);
 	}
