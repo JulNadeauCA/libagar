@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.164 2004/10/02 07:55:06 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.165 2004/10/06 04:37:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -164,6 +164,7 @@ sel_tool(int argc, union evarg *argv)
 	}
 }
 
+#if 0
 static void
 update_tooltips(int argc, union evarg *argv)
 {
@@ -177,6 +178,7 @@ update_tooltips(int argc, union evarg *argv)
 		tool_update_status(tool);
 	}
 }
+#endif
 
 void
 mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
@@ -194,8 +196,10 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 		ntool->trigger = toolbar_add_button(mv->toolbar,
 		    mv->toolbar->nrows-1, icon, 1, 0, sel_tool,
 		    "%p, %p, %p", mv, ntool, p);
+#if 0
 		event_new(ntool->trigger, "button-mouseoverlap",
 		    update_tooltips, "%p, %p", mv, ntool);
+#endif
 	}
 
 	TAILQ_INSERT_TAIL(&mv->tools, ntool, tools);
