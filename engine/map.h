@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.94 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.95 2003/06/29 11:33:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -119,45 +119,45 @@ struct map {
 };
 
 __BEGIN_DECLS
-struct map *map_new(void *, const char *);
-void	    map_init(void *, const char *);
-int	    map_load(void *, struct netbuf *);
-int	    map_save(void *, struct netbuf *);
-void	    map_destroy(void *);
-void	    map_edit(void *);
+struct map	*map_new(void *, const char *);
+void		 map_init(void *, const char *);
+void		 map_reinit(void *);
+int		 map_load(void *, struct netbuf *);
+int		 map_save(void *, struct netbuf *);
+void		 map_destroy(void *);
 
-int	 map_alloc_nodes(struct map *, unsigned int, unsigned int);
-void	 map_free_nodes(struct map *);
-int	 map_resize(struct map *, unsigned int, unsigned int);
-void	 map_set_zoom(struct map *, Uint16);
-int	 map_push_layer(struct map *, const char *);
-void	 map_pop_layer(struct map *);
+#ifdef EDITION
+struct window	*map_edit(void *);
+#endif
+
+int		 map_alloc_nodes(struct map *, unsigned int, unsigned int);
+void		 map_free_nodes(struct map *);
+int		 map_resize(struct map *, unsigned int, unsigned int);
+void		 map_set_zoom(struct map *, Uint16);
+int		 map_push_layer(struct map *, const char *);
+void		 map_pop_layer(struct map *);
 
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);
 __inline__ void	 noderef_set_motion(struct noderef *, int, int);
 void	 	 noderef_destroy(struct map *, struct noderef *);
-int		 noderef_load(struct map *, struct netbuf *,
-		              struct object_table *, struct node *,
+int		 noderef_load(struct map *, struct netbuf *, struct node *,
 			      struct noderef **);
-void	 	 noderef_save(struct map *, struct netbuf *,
-		              struct object_table *, struct noderef *);
+void	 	 noderef_save(struct map *, struct netbuf *, struct noderef *);
 __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
 
-void		 node_init(struct node *);
-int		 node_load(struct map *, struct netbuf *, struct object_table *,
-		           struct node *);
-void		 node_save(struct map *, struct netbuf *, struct object_table *,
-		           struct node *);
+__inline__ void	 node_init(struct node *);
+int		 node_load(struct map *, struct netbuf *, struct node *);
+void		 node_save(struct map *, struct netbuf *, struct node *);
 void		 node_destroy(struct map *, struct node *);
 void		 node_clear(struct map *, struct node *, int);
 
-__inline__ void	 node_copy(struct map *, struct node *, int, struct map *,
-		           struct node *, int);
+__inline__ void	 node_copy(struct map *, struct node *, int,
+		           struct map *, struct node *, int);
 void		 node_move_ref(struct map *, struct node *, struct noderef *,
 		               struct map *, struct node *, int);
-struct noderef	*node_copy_ref(struct noderef *, struct map *, struct node *,
-		               int);
+struct noderef	*node_copy_ref(const struct noderef *, struct map *,
+		               struct node *, int);
 void		 node_moveup_ref(struct node *, struct noderef *);
 void		 node_movedown_ref(struct node *, struct noderef *);
 void		 node_movetail_ref(struct node *, struct noderef *);

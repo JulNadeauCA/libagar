@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.40 2003/06/19 01:24:37 vedge Exp $
+.\"	$Csoft: map.3,v 1.41 2003/06/29 11:33:41 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -94,15 +94,6 @@ and a layer number defining the order of rendering.
 .Ft "struct map *"
 .Fn map_new "void *parent" "const char *name"
 .Pp
-.Ft void
-.Fn map_destroy "void *map"
-.Pp
-.Ft int
-.Fn map_load "void *map" "struct netbuf *buf"
-.Pp
-.Ft int
-.Fn map_save "void *map" "struct netbuf *buf"
-.Pp
 .Ft int
 .Fn map_alloc_nodes "struct map *map" "unsigned int w" "unsigned int h"
 .Pp
@@ -127,22 +118,6 @@ identified by the string
 allocates, initializes and attaches a new map to
 .Fa parent ,
 unless the latter is a NULL pointer.
-.Pp
-The
-.Fn map_destroy
-function frees resources allocated by a map (such as the node arrays and
-the stack of layers).
-.Pp
-The
-.Fn map_load
-function reads a map in network format from
-.Fa buf ,
-after freeing the existing nodes/layers.
-.Fn map_load
-returns 0 on success or -1 on failure.
-.Fn map_save
-saves a map in network format to
-.Fa buf .
 .Pp
 The
 .Fn map_alloc_nodes
@@ -180,12 +155,11 @@ Unless the factor is 100%, bitmap scaling is performed for graphical noderefs.
 .Fn node_init "struct node *node"
 .Pp
 .Ft int
-.Fn node_load "struct map *map" "struct netbuf *buf" \
-              "struct object_table *deps" "struct node *node"
+.Fn node_load "struct map *map" "struct netbuf *buf" "struct node *node"
 .Pp
 .Ft void
-.Fn node_save "struct map *map" "struct netbuf *buf" \
-              "struct object_table *deps" "struct node *node"
+.Fn node_save "const struct map *map" "struct netbuf *buf" \
+              "const struct node *node"
 .Pp
 .Ft void
 .Fn node_destroy "struct map *map" "struct node *node"
@@ -197,6 +171,8 @@ function initializes a node.
 The
 .Fn node_destroy
 function frees resources allocated by a node (such as the reference stack).
+To reinitialize a node, this function must be followed by
+.Fn node_init .
 .Pp
 The
 .Fn node_load
@@ -222,12 +198,11 @@ saves a node to
 .Pp
 .Ft int
 .Fn noderef_load "struct map *map" "struct netbuf *buf" \
-                 "struct object_table *deps" "struct node *node" \
-                 "struct noderef **nref"
+                 "struct node *node" "struct noderef **nref"
 .Pp
 .Ft void
-.Fn noderef_save "struct map *map" "struct netbuf *savebuf" \
-                 "struct object_table *deps" "struct noderef *nref"
+.Fn noderef_save "const struct map *map" "struct netbuf *buf" \
+                 "const struct noderef *nref"
 .nr nS 0
 .Pp
 The
@@ -248,17 +223,17 @@ pixels, respectively.
 The
 .Fn noderef_destroy
 function frees the resources reserved by a noderef.
+It must be followed by
+.Fa noderef_init
+to reinitialize the noderef.
 .Pp
 The
 .Fn noderef_load
-function loads a node reference from
-.Fa buf ,
-returning 0 on success or -1 on failure.
+and
 .Fn noderef_save
-saves a node reference to
-.Fa buf ,
-encoding object references using
-.Fa deps .
+functions respectively decode and encode a node reference.
+.Fn noderef_load
+returns 0 on success or -1 on failure.
 .Sh NODE MANIPULATIONS
 .nr nS 1
 .Ft void
@@ -267,18 +242,18 @@ encoding object references using
                   "struct node *dst_node" "int dst_layer"
 .Pp
 .Ft "struct noderef *"
-.Fn node_copy_ref "struct noderef *src_nref" "struct map *dst_map" \
+.Fn node_copy_ref "const struct noderef *src_nref" "struct map *dst_map" \
                   "struct node *dst_node" "int dst_layer"
 .Pp
 .Ft void
 .Fn node_remove_ref "struct map *map" "struct node *node" "struct noderef *nref"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_sprite "struct map *map" "struct node *node" "void *obj" \
+.Fn node_add_sprite "struct map *map" "struct node *node" "const void *obj" \
                     "Uint32 index"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_anim "struct map *map" "struct node *node" "void *obj" \
+.Fn node_add_anim "struct map *map" "struct node *node" "const void *obj" \
                   "Uint32 index" "Uint32 flags"
 .Pp
 .Ft "struct noderef *"
@@ -328,12 +303,14 @@ The
 .Fn new_map
 argument of
 .Fn node_add_warp
-is the absolute pathname of the destination map and
+is the pathname of the destination map (as returned by
+.Fn object_copy_name ) .
+The
 .Fa x ,
 .Fa y
 and
 .Fa dir
-describe the initial position and direction.
+arguments describe the initial position and direction of warped objects.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr mapedit 3 ,

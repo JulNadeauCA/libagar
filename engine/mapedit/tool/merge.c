@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.41 2003/06/21 06:50:24 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.42 2003/06/29 11:33:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,6 +49,7 @@ const struct version merge_ver = {
 const struct tool_ops merge_ops = {
 	{
 		NULL,		/* init */
+		NULL,		/* reinit */
 		merge_destroy,
 		merge_load,
 		merge_save,

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.138 2003/06/26 02:42:53 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.139 2003/06/29 11:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,6 @@
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/label.h>
-#include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
 #endif
@@ -55,11 +54,12 @@
 
 const struct version object_ver = {
 	"agar object",
-	2, 0
+	5, 0
 };
 
 const struct object_ops object_ops = {
 	NULL,	/* init */
+	NULL,	/* reinit */
 	NULL,	/* destroy */
 	NULL,	/* load */
 	NULL,	/* save */
@@ -75,19 +75,18 @@ const struct object_ops object_ops = {
 #define DEBUG_LINKAGE	0x020
 #define DEBUG_GC	0x040
 
-int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
-	               DEBUG_DEPS;
+int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL;
 #define engine_debug object_debug
 #endif
 
 /* Allocate, initialize and attach a generic object. */
 struct object *
-object_new(void *parent, const char *type, const char *name, const void *opsp)
+object_new(void *parent, const char *name)
 {
 	struct object *ob;
 
 	ob = Malloc(sizeof(struct object));
-	object_init(ob, type, name, opsp);
+	object_init(ob, "object", name, NULL);
 
 	if (parent != NULL) {
 		object_attach(parent, ob);
@@ -102,24 +101,23 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	struct object *ob = p;
 	char *c;
 
-	if (strlcpy(ob->type, type, sizeof(ob->type)) >= sizeof(ob->type))
-		fatal("type too big");
+	strlcpy(ob->type, type, sizeof(ob->type));
+	strlcpy(ob->name, name, sizeof(ob->name));
 
-	if (strlcpy(ob->name, name, sizeof(ob->name)) >= sizeof(ob->name)) {
-		fatal("name too big");
-	}
+	/* Prevent the pathname separator from creating ambiguities. */
 	for (c = ob->name; *c != '\0'; c++) {
-		if (*c == '/')				/* Pathname separator */
+		if (*c == '/')
 			*c = '_';
 	}
 
+	ob->save_pfx = "/world";
 	ob->ops = (opsp != NULL) ? opsp : &object_ops;
 	ob->parent = NULL;
 	ob->flags = 0;
 	ob->gfx = NULL;
 	ob->audio = NULL;
 	ob->pos = NULL;
-	SLIST_INIT(&ob->deps);
+	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->childs);
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
@@ -128,49 +126,146 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	pthread_mutex_init(&ob->events_lock, &recursive_mutexattr);
 }
 
-/* Recursive function to construct absolute object names. */
-static void
-object_name_search(void *obj, char **s, size_t *sl)
+/*
+ * Reinitialize the state of an object and ensure that no dependency remains,
+ * except for permanent dependencies (which are only released on destroy).
+ *
+ * This is useful to reset the state of an object before a load operation
+ * (freeing the map(3) nodes, for instances).
+ */
+void
+object_reinit(void *p)
 {
-	struct object *ob = obj;
-	size_t namelen;
-	char *sp;
+	struct object *ob = p;
+	struct object_dep *dep, *ndep;
 
-	namelen = strlen(ob->name);
-	*sl += namelen+1;
-	sp = *s = Realloc(*s, *sl);
+	if (ob->ops->reinit != NULL)
+		ob->ops->reinit(ob);
 
-	memmove(sp+namelen+1, sp, (*sl)-namelen-1);
-	sp[0] = '/';
-	memcpy(sp+1, ob->name, namelen);
+	for (dep = TAILQ_FIRST(&ob->deps);
+	     dep != TAILQ_END(&ob->deps);
+	     dep = ndep) {
+		ndep = TAILQ_NEXT(dep, deps);
 
-	if (ob->parent != NULL)
-		object_name_search(ob->parent, s, sl);
+		if (dep->count == OBJECT_DEP_MAX)
+			continue;
+
+		/* Ensure the reinit operation did its job. */
+		if (dep->count > 0) {
+			fatal("%s still depends on %s", ob->name,
+			    dep->obj->name);
+		}
+		TAILQ_REMOVE(&ob->deps, dep, deps);
+		free(dep);
+	}
 }
 
-/* Return the absolute name of an object. */
-char *
-object_name(void *obj)
+/* Recursive function to construct absolute object names. */
+static int
+object_name_search(const void *obj, char *path, size_t path_len)
 {
-	struct object *ob = obj;
-	size_t sl, namelen;
-	char *s;
+	const struct object *ob = obj;
+	size_t name_len, cur_len;
+	int rv = 0;
 
-	namelen = strlen(ob->name);
-	sl = 1+namelen+1;
-	s = Malloc(sl);
+	cur_len = strlen(path)+1;
+	name_len = strlen(ob->name)+1;
+	
+	if (sizeof("/")+name_len+sizeof("/")+cur_len >= path_len) {
+		error_set(_("The path exceeds >= %lu bytes"),
+		    (unsigned long)path_len);
+		return (-1);
+	}
+	
+	/* Prepend / and the object name. */
+	memmove(&path[name_len], path, cur_len);    /* Move the NUL as well */
+	path[0] = '/';
+	memcpy(&path[1], ob->name, name_len-1);	    /* Omit the NUL */
 
-	s[0] = '/';
-	memcpy(s+1, ob->name, namelen);
+	if (ob->parent != world && ob->parent != NULL)
+		rv = object_name_search(ob->parent, path, path_len);
+
+	return (rv);
+}
+
+/* Copy the absolute pathname of an object to a fixed-size buffer. */
+int
+object_copy_name(const void *obj, char *path, size_t path_len)
+{
+	const struct object *ob = obj;
+	int rv = 0;
+
+	path[0] = '/';
+	path[1] = '\0';
+	strlcat(path, ob->name, path_len);
 
 	lock_linkage();
-	if (ob->parent != NULL) {
-		object_name_search(ob->parent, &s, &sl);
+	if (ob->parent != world && ob->parent != NULL) {
+		rv = object_name_search(ob->parent, path, path_len);
 	}
 	unlock_linkage();
+	return (rv);
+}
 
-	s[sl-1] = '\0';
-	return (s);
+/*
+ * Return the root of the object tree in which an object resides.
+ * The linkage must be locked.
+ */
+void *
+object_root(void *obj)
+{
+	struct object *ob = obj;
+
+	while (ob != NULL) {
+		if (ob->parent == NULL) {
+			return (ob);
+		}
+		ob = ob->parent;
+	}
+	fatal("no root?");
+}
+
+/*
+ * Search an object and its children for a dependency upon robj.
+ * The linkage must be locked.
+ */
+static int
+object_used_search(const void *p, const void *robj)
+{
+	const struct object *ob = p, *cob;
+	struct object_dep *dep;
+
+	TAILQ_FOREACH(dep, &ob->deps, deps) {
+		if (dep->obj == robj)
+			return (1);
+	}
+	TAILQ_FOREACH(cob, &ob->childs, cobjs) {
+		if (object_used_search(cob, robj))
+			return (1);
+	}
+	return (0);
+}
+
+/*
+ * Return the number of references to an object by searching the dependency
+ * tables of other objects sharing the same root.
+ */
+int
+object_used(void *obj)
+{
+	struct object *root;
+	int used;
+
+	lock_linkage();
+	root = object_root(obj);
+	used = object_used_search(root, obj);
+	unlock_linkage();
+
+	if (used) {
+		dprintf("%s: in use\n", OBJECT(obj)->name);
+		error_set(_("The `%s' object is in use."), OBJECT(obj)->name);
+	}
+	return (used);
 }
 
 /* Move an object from a parent to another. */
@@ -229,54 +324,62 @@ object_detach(void *parentp, void *childp)
 
 /* Traverse the object tree using a pathname. */
 static void *
-object_find_child(struct object *parent, const char *name)
+object_find_child(const struct object *parent, const char *name)
 {
-	char cname[OBJECT_NAME_MAX], *s;
+	char node_name[OBJECT_PATH_MAX];
+	void *rv;
+	char *s;
 	struct object *child;
 
+	strlcpy(node_name, name, sizeof(node_name));
+
+	if ((s = strchr(node_name, '/')) != NULL) {
+		*s = '\0';
+	}
 	TAILQ_FOREACH(child, &parent->childs, cobjs) {
-		if (strcmp(child->name, name) != 0)
+		if (strcmp(child->name, node_name) != 0)
 			continue;
 
-		if ((s = strchr(cname, '/')) != NULL) {
-			strlcpy(cname, s, sizeof(cname));
-			if ((s = strchr(cname, '/')) != NULL) {
-				*s = '\0';
-			}
-			return (object_find_child(child, cname));
+		if ((s = strchr(name, '/')) != NULL) {
+			rv = object_find_child(child, s+1);
+			if (rv != NULL)
+				return (rv);
 		}
+		return (child);
 	}
 	return (NULL);
 }
 
-/* Search for the named object. The name is relative to the parent. */
+/* Search for the named object (absolute path). */
 void *
-object_find(void *parentp, const char *name)
+object_find(const char *name)
 {
-	char cname[OBJECT_NAME_MAX], *s;
-	struct object *parent = parentp;
 	void *rv;
 
-	if (parent == NULL)
-		parent = world;
-
-	strlcpy(cname, name, sizeof(cname));
-	if ((s = strchr(cname, '/')) != NULL)
-		*s = '\0';
+	if (name[0] != '/')
+		fatal("not an absolute path");
 
 	lock_linkage();
-	rv = object_find_child(parent, cname);
+	rv = object_find_child(world, name+1);
 	unlock_linkage();
+
+	if (rv == NULL) {
+		error_set(_("The object `%s' does not exist."), name);
+	}
 	return (rv);
 }
 
 /* Detach and free child objects. */
-void
+int
 object_free_childs(struct object *pob)
 {
 	struct object *cob, *ncob;
 
 	pthread_mutex_lock(&pob->lock);
+	TAILQ_FOREACH(cob, &pob->childs, cobjs) {
+		if (object_used(cob))
+			goto fail;
+	}
 	for (cob = TAILQ_FIRST(&pob->childs);
 	     cob != TAILQ_END(&pob->childs);
 	     cob = ncob) {
@@ -287,6 +390,10 @@ object_free_childs(struct object *pob)
 	}
 	TAILQ_INIT(&pob->childs);
 	pthread_mutex_unlock(&pob->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&pob->lock);
+	return (-1);
 }
 
 /* Clear an object's property table. */
@@ -324,164 +431,241 @@ object_free_events(struct object *ob)
 	pthread_mutex_unlock(&ob->events_lock);
 }
 
-/* Release the resources allocated by an object and its child objects. */
-void
+/* Release the resources allocated by an object and its children. */
+int
 object_destroy(void *p)
 {
 	struct object *ob = p;
+	struct object_dep *dep, *ndep;
 
-	object_free_childs(ob);
-	object_free_events(ob);
-	object_free_props(ob);
-	
+	if (object_used(ob))
+		return (-1);
+
+	if (object_free_childs(ob) == -1)
+		return (-1);
+
+	if (ob->ops->reinit != NULL) {
+		ob->ops->reinit(ob);
+	}
+	for (dep = TAILQ_FIRST(&ob->deps);
+	     dep != TAILQ_END(&ob->deps);
+	     dep = ndep) {
+		ndep = TAILQ_NEXT(dep, deps);
+		free(dep);
+	}
+
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
-	
+
 	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
 		ob->gfx = NULL;
 	}
+	if (ob->audio != NULL) {
+		audio_unused(ob->audio);
+		ob->audio = NULL;
+	}
+
+	object_free_props(ob);
+	object_free_events(ob);
 
 	pthread_mutex_destroy(&ob->lock);
 	pthread_mutex_destroy(&ob->events_lock);
 	pthread_mutex_destroy(&ob->props_lock);
+	return (0);
 }
 
-/* Return the full pathname to an object's data file on disk. */
-static char *
-object_file(struct object *ob)
+/* Copy the full pathname to an object's data file to a fixed-size buffer. */
+int
+object_copy_filename(const void *p, char *path, size_t path_len)
 {
+	char load_path[MAXPATHLEN];
+	char obj_name[OBJECT_PATH_MAX];
+	const struct object *ob = p;
 	struct stat sta;
-	char *path, *dir, *last;
-	char *objname;
+	char *dir, *last;
 
-	path = prop_get_string(config, "load-path");
-	objname = object_name(ob);
-	for (dir = strtok_r(path, ":", &last);
+	prop_copy_string(config, "load-path", load_path, sizeof(load_path));
+	object_copy_name(ob, obj_name, sizeof(obj_name));
+
+	for (dir = strtok_r(load_path, ":", &last);
 	     dir != NULL;
 	     dir = strtok_r(NULL, ":", &last)) {
-		char *file;
-
-		Asprintf(&file, "%s%s/%s.%s", dir, objname, ob->name, ob->type);
-		if (stat(file, &sta) == 0) {
-			return (file);
+	     	strlcpy(path, dir, path_len);
+		if (ob->save_pfx != NULL) {
+			strlcat(path, ob->save_pfx, path_len);
 		}
-		free(file);
+		strlcat(path, obj_name, path_len);
+		strlcat(path, "/", path_len);
+		strlcat(path, ob->name, path_len);
+		strlcat(path, ".", path_len);
+		strlcat(path, ob->type, path_len);
+
+		if (stat(path, &sta) == 0)
+			return (0);
 	}
-	error_set("%s.%s is not in load-path", ob->name, ob->type);
-	free(path);
-	free(objname);
-	return (NULL);
+	error_set(_("The %s/%s.%s file is not in load-path."), obj_name,
+	    ob->name, ob->type);
+	return (-1);
 }
 
 /* Load the state of an object and its descendants. */
 int
 object_load(void *p)
 {
+	char path[MAXPATHLEN];
 	struct object *ob = p;
-	char *path;
 	struct netbuf *buf;
-	Uint32 i, nchilds;
 	char *gfx, *audio;
+	Uint32 count, i;
+	int ti;
 
-	if ((path = object_file(ob)) == NULL) {
-		dprintf("%s: %s\n", ob->name, error_get());
+	if (ob->flags & OBJECT_NON_PERSISTENT) {
+		error_set(_("The `%s' object is non-persistent."), ob->name);
 		return (-1);
 	}
 
-	debug(DEBUG_STATE, "loading `%s' from `%s'\n", ob->name, path);
-	buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN);
-	if (buf == NULL) {
+	if (object_copy_filename(ob, path, sizeof(path)) == -1)
+		return (-1);
+
+	debug(DEBUG_STATE, "%s: %s\n", ob->name, path);
+
+	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
-		free(path);
 		return (-1);
 	}
-	free(path);
-
 	if (version_read(buf, &object_ver, NULL) == -1) {
 		netbuf_close(buf);
 		return (-1);
 	}
 
 	lock_linkage();
-	pthread_mutex_lock(&ob->lock);
 
-	/* Load the generic properties. */
+	/* Reinitialize the state of the object; clear the dependencies. */
+	object_reinit(ob);
+
+	/* Read the object flags. */
+	ob->flags = (int)read_uint32(buf);
+	if (ob->flags & OBJECT_NON_PERSISTENT) {
+		error_set(_("The `%s' save has inconsistent flags."), ob->name);
+		return (-1);
+	}
+
+	/* Decode and resolve the saved dependencies. */
+	/* XXX too early */
+	count = read_uint32(buf);
+	for (i = 0; i < count; i++) {
+		char dep_name[OBJECT_PATH_MAX];
+		struct object_dep *dep;
+		struct object *dep_obj;
+
+		copy_string(dep_name, buf, sizeof(dep_name));
+		if ((dep_obj = object_find(dep_name)) == NULL)
+			goto fail;
+
+		dep = Malloc(sizeof(struct object_dep));
+		dep->obj = dep_obj;
+		dep->count = 0;
+		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
+		dprintf("%s: depends on %s (%p)\n", ob->name, dep_name,
+		    dep->obj);
+	}
+
+	/* Decode the generic properties. */
+	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0) {
+		object_free_props(ob);
+	}
 	if (prop_load(ob, buf) == -1)
 		goto fail;
 
-	/* Load the position. */
+	/* Decode and restore the position. */
+	pthread_mutex_lock(&ob->lock);
 	if (read_uint32(buf) > 0 &&
 	    object_load_position(ob, buf) == -1) {
+		pthread_mutex_unlock(&ob->lock);
 		goto fail;
 	}
+	pthread_mutex_unlock(&ob->lock);
 
-	/* Load the media references. */
+	/* Decode and fetch the associated gfx/audio packages. */
 	if ((gfx = read_string(buf)) != NULL) {
+		dprintf("%s: gfx: %s\n", ob->name, gfx);
 		if (gfx_fetch(ob, gfx) == -1) {
 			goto fail;
 		}
 		free(gfx);
 	}
 	if ((audio = read_string(buf)) != NULL) {
+		dprintf("%s: audio: %s\n", ob->name, audio);
 		if (audio_fetch(ob, audio) == -1) {
 			goto fail;
 		}
 		free(audio);
 	}
 
-	/* Load the child objects. */
-	if (ob->flags & OBJECT_RELOAD_CHILDS) {
-		fatal("not yet");
-	} else {
-		object_free_childs(ob);
+	/*
+	 * Load the child objects.
+	 *
+	 * If an saved object matches an attached object's name and type,
+	 * invoke reinit/load on it. Otherwise, allocate and attach a new
+	 * object from scratch using the type switch.
+	 *
+	 * Try to destroy the attached objects which do not have saved
+	 * states, and are not currently in use.
+	 *
+	 * XXX ensure that there is no duplicate names.
+	 */
+	count = read_uint32(buf);
+	for (i = 0; i < count; i++) {
+		char cname[OBJECT_NAME_MAX];
+		char ctype[OBJECT_TYPE_MAX];
+		struct object *eob, *child;
 
-		nchilds = read_uint32(buf);
-		for (i = 0; i < nchilds; i++) {
-			char cname[OBJECT_NAME_MAX];
-			char ctype[OBJECT_TYPE_MAX];
-			struct object *child;
-			Uint32 cflags;
-			const struct object_type *type;
-			int ti;
+		copy_string(cname, buf, sizeof(cname));
+		copy_string(ctype, buf, sizeof(ctype));
 
-			if (copy_string(cname, buf, sizeof(cname)) >=
-			    sizeof(cname)) {
-				error_set("child name too big");
-				goto fail;
+		OBJECT_FOREACH_CHILD(eob, ob, object) {
+			if (strcmp(eob->name, cname) == 0)
+				break;
+		}
+		if (eob != NULL) {
+			/* XXX free the existing object or ignore */
+			if (strcmp(eob->type, ctype) != 0) {
+				fatal("existing object of different type");
 			}
-			if (copy_string(ctype, buf, sizeof(ctype)) >=
-			    sizeof(ctype)) {
-				error_set("child type too big");
-				goto fail;
+			/* XXX ignore */
+			if (eob->flags & OBJECT_NON_PERSISTENT) {
+				fatal("existing non-persistent object");
 			}
-			cflags = read_uint32(buf);
+			dprintf("%s: reinit %s (existing)\n", ob->name,
+			    eob->name);
+			object_reinit(eob);
 
-			/*
-			 * Find out how much memory to allocate and which
-			 * function to call for initialization.
-			 */
-		 	for (ti = 0, type = NULL; ti < ntypesw; ti++) {
-				if (strcmp(typesw[ti].type, ctype) == 0) {
-					type = &typesw[ti];
+			if (object_load(eob) == -1)
+				goto fail;
+		} else {
+			dprintf("%s: alloc %s (new %s)\n", ob->name,
+			    cname, ctype);
+		 	for (ti = 0; ti < ntypesw; ti++) {
+				if (strcmp(typesw[ti].type, ctype) == 0)
 					break;
-				}
 			}
-			if (type == NULL) {
-				error_set("unknown type `%s'", ctype);
+			if (ti == ntypesw) {
+				error_set(_("Unknown object type: `%s'"),
+				    ctype);
 				goto fail;
 			}
+			dprintf("%s: child `%s' (%s, %lu bytes)\n", ob->name,
+			    cname, typesw[ti].desc,
+			    (unsigned long)typesw[ti].size);
 
-			dprintf("%s: %s (%lu bytes)\n", type->type, type->desc,
-			    (unsigned long)type->size);
-
-			child = Malloc(type->size);
-			if (type->ops->init != NULL) {
-				type->ops->init(child, cname);
+			child = Malloc(typesw[ti].size);
+			if (typesw[ti].ops->init != NULL) {
+				typesw[ti].ops->init(child, cname);
 			} else {
-				object_init(child, ctype, cname, type->ops);
+				object_init(child, ctype, cname,
+				    typesw[ti].ops);
 			}
-			child->flags |= (int)cflags;
 
 			object_attach(ob, child);
 
@@ -489,105 +673,136 @@ object_load(void *p)
 				goto fail;
 		}
 	}
+
 	if (ob->ops->load != NULL &&
 	    ob->ops->load(ob, buf) == -1) {
 		goto fail;
 	}
-	pthread_mutex_unlock(&ob->lock);
+
 	unlock_linkage();
 	netbuf_close(buf);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
+	object_reinit(ob);
 	unlock_linkage();
 	netbuf_close(buf);
 	return (-1);
 }
 
 /* Recursively save the state of an object and its descendents. */
-/* XXX remove previous dir contents */
 int
 object_save(void *p)
 {
-	char *s, *savepath, *savedir, *file;
+	char save_path[MAXPATHLEN];
+	char save_dir[MAXPATHLEN];
+	char save_file[MAXPATHLEN];
+	char obj_name[OBJECT_PATH_MAX];
 	struct object *ob = p;
 	struct stat sta;
 	struct netbuf *buf;
 	struct object *child;
-	off_t nchilds_offs;
-	Uint32 nchilds = 0;
-
-	savepath = prop_get_string(config, "save-path");
-	s = object_name(ob);
-	Asprintf(&savedir, "%s%s", savepath, s);
-	free(savepath);
-	free(s);
-
-	if (stat(savedir, &sta) == -1 &&
-	    mkpath(savedir, 0700, 0700) == -1) {
-		error_set("mkpath %s: %s", savedir, strerror(errno));
-		free(savedir);
+	off_t count_offs;
+	Uint32 count;
+	struct object_dep *dep;
+	
+	if (ob->flags & OBJECT_NON_PERSISTENT) {
+		error_set(_("The `%s' object is non-persistent."), ob->name);
 		return (-1);
 	}
-	Asprintf(&file, "%s/%s.%s", savedir, ob->name, ob->type);
-	free(savedir);
 
-	debug(DEBUG_STATE, "saving `%s' to `%s'\n", ob->name, file);
-	buf = netbuf_open(file, "wb", NETBUF_BIG_ENDIAN);
-	if (buf == NULL) {
-		error_set("%s: %s", file, strerror(errno));
-		free(file);
+	object_copy_name(ob, obj_name, sizeof(obj_name));
+	
+	/* Create the save directory. */
+	prop_copy_string(config, "save-path", save_path, sizeof(save_path));
+	strlcpy(save_dir, save_path, sizeof(save_dir));
+	if (ob->save_pfx != NULL) {
+		strlcat(save_dir, ob->save_pfx, sizeof(save_dir));
+	}
+	strlcat(save_dir, obj_name, sizeof(save_dir));
+	if (stat(save_dir, &sta) == -1 &&
+	    mkpath(save_dir, 0700, 0700) == -1) {
+		error_set("mkpath %s: %s", save_dir, strerror(errno));
 		return (-1);
 	}
-	free(file);
+
+	/* Open the data file. */
+	strlcpy(save_file, save_dir, sizeof(save_file));
+	strlcat(save_file, "/", sizeof(save_file));
+	strlcat(save_file, ob->name, sizeof(save_file));
+	strlcat(save_file, ".", sizeof(save_file));
+	strlcat(save_file, ob->type, sizeof(save_file));
+	debug(DEBUG_STATE, "saving `%s' to `%s'\n", ob->name, save_file);
+	if ((buf = netbuf_open(save_file, "wb", NETBUF_BIG_ENDIAN)) == NULL)
+		return (-1);
 
 	version_write(buf, &object_ver);
 
 	lock_linkage();
-	pthread_mutex_lock(&ob->lock);
+	
+	/* Encode the saveable object flags. */
+	write_uint32(buf, (Uint32)(ob->flags & OBJECT_SAVED_FLAGS));
 
-	/* Save the generic properties. */
+	/* Encode the object dependencies. */
+	count_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
+	     dep != TAILQ_END(&ob->deps);
+	     dep = TAILQ_NEXT(dep, deps), count++) {
+		char dep_name[OBJECT_PATH_MAX];
+		
+		object_copy_name(dep->obj, dep_name, sizeof(dep_name));
+		dprintf("saving dep: `%s'\n", dep_name);
+		write_string(buf, dep_name);
+	}
+	pwrite_uint32(buf, count, count_offs);
+
+	/* Encode the generic properties. */
 	if (prop_save(ob, buf) == -1)
 		goto fail;
 
-	/* Save the position. */
+	/* Encode the position. */
+	pthread_mutex_lock(&ob->lock);
 	if (ob->pos != NULL) {
 		write_uint32(buf, 1);
 		object_save_position(ob, buf);
 	} else {
 		write_uint32(buf, 0);
 	}
+	pthread_mutex_unlock(&ob->lock);
 
-	/* Save the media references. */
+	/* Encode the media references. */
 	write_string(buf, ob->gfx != NULL ? ob->gfx->name : NULL);
 	write_string(buf, ob->audio != NULL ? ob->audio->name : NULL);
 
 	/* Save the child objects. */
-	nchilds_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);				/* Skip count */
-	TAILQ_FOREACH(child, &ob->childs, cobjs) {	/* Save descendents */
+	count_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	count = 0;
+	TAILQ_FOREACH(child, &ob->childs, cobjs) {
+		if (child->flags & OBJECT_NON_PERSISTENT) {
+			dprintf("skipping non persistent: %s\n", child->name);
+			continue;
+		}
 		write_string(buf, child->name);
 		write_string(buf, child->type);
-		write_uint32(buf, (Uint32)child->flags);
-
-		if (object_save(child) == -1)
+		if (object_save(child) == -1) {
 			goto fail;
-
-		nchilds++;
+		}
+		count++;
 	}
-	pwrite_uint32(buf, nchilds, nchilds_offs);	/* Write count */
-	if (ob->ops->save != NULL &&			/* Save custom data */
+	pwrite_uint32(buf, count, count_offs);
+
+	/* Save the object derivate data. */
+	if (ob->ops->save != NULL &&
 	    ob->ops->save(ob, buf) == -1) {
 		goto fail;
 	}
 
-	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
 	netbuf_flush(buf);
 	netbuf_close(buf);
 	return (0);
 fail:
-	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
 	netbuf_close(buf);
 	return (-1);
@@ -601,13 +816,13 @@ object_control(void *p, const char *inname)
 	struct input *in;
 
 	if ((in = input_find(inname)) == NULL) {
-		error_set("no such input device: %s", inname);
+		error_set(_("There is no input device named `%s'."), inname);
 		return (-1);
 	}
 
 	pthread_mutex_lock(&ob->lock);
 	if (ob->pos == NULL) {
-		error_set("no position");
+		error_set(_("There is no position to control."));
 		goto fail;
 	}
 	debug(DEBUG_CONTROL, "%s: <%s>\n", ob->name, OBJECT(in)->name);
@@ -711,7 +926,7 @@ object_set_submap(void *p, const char *name)
 			break;
 	}
 	if (submap == NULL) {
-		error_set("no such submap");
+		error_set(_("There is no submap named `%s'."), name);
 		goto fail;
 	}
 	if (ob->pos != NULL) {
@@ -795,10 +1010,10 @@ object_unset_position(void *p)
  * the current submap and associated input device, if any.
  */
 void
-object_save_position(void *p, struct netbuf *buf)
+object_save_position(const void *p, struct netbuf *buf)
 {
-	struct object *ob = p;
-	struct object_position *pos = ob->pos;
+	const struct object *ob = p;
+	const struct object_position *pos = ob->pos;
 
 	write_uint32(buf, (Uint32)pos->x);
 	write_uint32(buf, (Uint32)pos->y);
@@ -820,7 +1035,8 @@ object_load_position(void *p, struct netbuf *buf)
 	int x, y, layer, center;
 	struct object *ob = p;
 	struct map *m = ob->parent;
-	char *submap_id, *input_id;
+	char submap_id[OBJECT_PATH_MAX];
+	char input_id[OBJECT_PATH_MAX];
 
 	pthread_mutex_lock(&ob->lock);
 	pthread_mutex_lock(&m->lock);
@@ -830,8 +1046,8 @@ object_load_position(void *p, struct netbuf *buf)
 	layer = (int)read_uint8(buf);
 	center = (int)read_uint8(buf);
 
-	submap_id = read_string(buf);
-	input_id = read_string(buf);
+	copy_string(submap_id, buf, sizeof(submap_id));
+	copy_string(input_id, buf, sizeof(input_id));
 
 	debug(DEBUG_STATE, "%s: at [%d,%d,%d]%s\n", ob->name, x, y, layer,
 	    center ? ", centered" : "");
@@ -839,7 +1055,7 @@ object_load_position(void *p, struct netbuf *buf)
 	if (x < 0 || x >= m->mapw ||
 	    y < 0 || y >= m->maph ||
 	    layer < 0 || layer >= m->nlayers) {
-		error_set("bad coords: %d,%d,%d", x, y, layer);
+		error_set(_("Bad coordinates: %d,%d,%d"), x, y, layer);
 		goto fail;
 	}
 	if (submap_id != NULL &&
@@ -855,256 +1071,191 @@ object_load_position(void *p, struct netbuf *buf)
 		debug(DEBUG_STATE, "%s: no controller\n", ob->name);
 	}
 
-	free(submap_id);
-	free(input_id);
 	pthread_mutex_unlock(&m->lock);
 	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
-	free(submap_id);
-	free(input_id);
 	pthread_mutex_unlock(&m->lock);
 	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
 
-/* Initialize a dependency table. */
+/* Override an object's type; thread unsafe. */
 void
-object_table_init(struct object_table *obt)
+object_set_type(void *p, const char *type)
 {
-	obt->objs = NULL;
-	obt->nobjs = 0;
+	struct object *ob = p;
+
+	strlcpy(ob->type, type, sizeof(ob->type));
 }
 
-/* Release the resources allocated by a dependency table. */
+/* Override an object's name; thread unsafe. */
 void
-object_table_destroy(struct object_table *obt)
+object_set_name(void *p, const char *name)
 {
-	Free(obt->objs);
+	struct object *ob = p;
+	char *c;
+
+	strlcpy(ob->name, name, sizeof(ob->name));
+
+	for (c = &ob->name[0]; *c != '\0'; c++) {
+		if (*c == '/')			/* Pathname separator */
+			*c = '_';
+	}
 }
 
-/* Insert an object into a dependency table. */
-void
-object_table_insert(struct object_table *obt, struct object *obj)
-{
-	int i;
-
-	for (i = 0; i < obt->nobjs; i++) {
-		if (obt->objs[i] == obj)
-			return;				/* Existing entry */
-	}
-
-	if (obt->objs != NULL) {
-		obt->objs = Realloc(obt->objs, (obt->nobjs + 1) *
-		    sizeof(struct object *));
-	} else {
-		obt->objs = Malloc(sizeof(struct object *));
-	}
-	obt->objs[obt->nobjs] = obj;
-	obt->nobjs++;
-}
-
-/* Encode a dependency table. */
-void
-object_table_save(struct object_table *obt, struct netbuf *buf)
-{
-	off_t nobjs_offs;
-	struct object *pob;
-	Uint32 i;
-
-	nobjs_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);				/* Skip */
-	for (i = 0; i < obt->nobjs; i++) {
-		char *name;
-
-		pob = obt->objs[i];
-		name = object_name(pob);
-
-		write_string(buf, pob->name);
-		write_string(buf, pob->type);
-
-		free(name);
-	}
-	pwrite_uint32(buf, obt->nobjs, nobjs_offs);
-}
-
-/* Decode a dependency table. */
-int
-object_table_load(struct object_table *obt, struct netbuf *buf,
-    const char *objname)
-{
-	Uint32 i, nobjs;
-
-	nobjs = read_uint32(buf);
-
-	lock_linkage();
-	for (i = 0; i < nobjs; i++) {
-		char type[OBJECT_TYPE_MAX];
-		struct object *pob;
-		char *name;
-
-		if ((name = read_string(buf)) == NULL) {
-			goto fail;
-		}
-		if (copy_string(type, buf, sizeof(type)) >= sizeof(type)) {
-			error_set("object type too big");
-			goto fail;
-		}
-
-		debug_n(DEBUG_DEPS, "\t%s: depends on %s...", objname, name);
-		if ((pob = object_find(world, name)) != NULL) {
-			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
-			if (strcmp(pob->type, type) != 0) {
-				error_set("%s: expected %s to be of type %s",
-				    objname, name, type);
-				free(name);
-				goto fail;
-			}
-		} else {
-			debug_n(DEBUG_DEPS, "missing\n");
-		}
-		object_table_insert(obt, pob);
-
-		free(name);
-	}
-	unlock_linkage();
-	return (0);
-fail:
-	unlock_linkage();
-	return (-1);
-}
-
-/* Override an object's default ops (thread unsafe). */
+/* Override an object's ops; thread unsafe. */
 void
 object_set_ops(void *p, const void *ops)
 {
 	OBJECT(p)->ops = ops;
 }
 
-/* Add a new dependency or increment a reference count on one. */
-void
+/* Add a new dependency or increment the reference count on one. */
+struct object_dep *
 object_add_dep(void *p, void *depobj)
 {
 	struct object *ob = p;
 	struct object_dep *dep;
 
-	SLIST_FOREACH(dep, &ob->deps, deps) {
+	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == depobj)
 			break;
 	}
 	if (dep != NULL) {
-		dprintf("incrementing %s's ref count\n", OBJECT(depobj)->name);
+		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
+		    OBJECT(depobj)->name, dep->count);
 		if (++dep->count > OBJECT_DEP_MAX) {
-			dprintf("too many deps on %s (wiring)\n",
-			    OBJECT(depobj)->name);
+			fprintf(stderr, "%s: wiring %s dep (too many refs)\n",
+			    ob->name, OBJECT(depobj)->name);
 			dep->count = OBJECT_DEP_MAX;
 		}
 	} else {
+		debug(DEBUG_DEPS, "%s: +[%s]\n", ob->name,
+		    OBJECT(depobj)->name);
 		dep = Malloc(sizeof(struct object_dep));
 		dep->obj = depobj;
 		dep->count = 1;
-		SLIST_INSERT_HEAD(&ob->deps, dep, deps);
-		dprintf("new dep to %s\n", OBJECT(depobj)->name);
+		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
 	}
+	return (dep);
+}
+
+/* Return the dependency at the given index (ie. for load routines). */
+struct object *
+object_find_dep(const void *p, Uint32 ind)
+{
+	const struct object *ob = p;
+	struct object_dep *dep;
+	Uint32 i;
+
+	for (dep = TAILQ_FIRST(&ob->deps), i = 0;
+	     dep != TAILQ_END(&ob->deps);
+	     dep = TAILQ_NEXT(dep, deps), i++) {
+		if (i == ind)
+			break;
+	}
+	return (dep != NULL ? dep->obj : NULL);
+}
+
+/* Return the index of a dependency (ie. for save routines). */
+Uint32
+object_dep_index(const void *p, const struct object *depobj)
+{
+	const struct object *ob = p;
+	struct object_dep *dep;
+	Uint32 i;
+
+	for (dep = TAILQ_FIRST(&ob->deps), i = 0;
+	     dep != TAILQ_END(&ob->deps);
+	     dep = TAILQ_NEXT(dep, deps), i++) {
+		if (dep->obj == depobj)
+			return (i);
+	}
+	fatal("%s: no such dep", depobj->name);
+	return (0);
 }
 
 /*
- * Decrement the reference count of a dependency, removing it if the count
- * reaches 0.
+ * Decrement the reference count on a dependency and remove it if the
+ * reference count reaches 0.
  */
 void
-object_del_dep(void *p, void *depobj)
+object_del_dep(void *p, const void *depobj)
 {
 	struct object *ob = p;
 	struct object_dep *dep;
-
-	SLIST_FOREACH(dep, &ob->deps, deps) {
+	
+	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == depobj)
 			break;
 	}
 	if (dep == NULL)
-		fatal("no such dep");
+		fatal("%s: no such dep", OBJECT(depobj)->name);
 
-	dprintf("decrement refcount to %s\n", OBJECT(depobj)->name);
-	if (--dep->count == 0) {
-		dprintf("removing dep to %s\n", OBJECT(depobj)->name);
-		SLIST_REMOVE(&ob->deps, dep, object_dep, deps);
+	if (dep->count == OBJECT_DEP_MAX)			/* Wired */
+		return;
+
+	if ((dep->count-1) == 0) {
+		debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
+		    OBJECT(depobj)->name);
+		TAILQ_REMOVE(&ob->deps, dep, deps);
 		free(dep);
+	} else if ((dep->count-1) < 0) {
+		fatal("neg ref count");
+	} else {
+		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
+		    OBJECT(depobj)->name, dep->count);
+		dep->count--;
 	}
 }
 
 #ifdef EDITION
-enum {
-	LOAD_OP,
-	SAVE_OP,
-	EDIT_OP
-};
-
-/* Invoke an object's load/save/edit operation. */
+/* Update the dependencies display. */
 static void
-object_invoke_op(int argc, union evarg *argv)
-{
-	struct object *ob = argv[1].p;
-	int op = argv[2].i;
-
-	switch (op) {
-	case LOAD_OP:
-		if (object_load(ob) == -1)
-			text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
-		break;
-	case SAVE_OP:
-		if (object_save(ob) == -1)
-			text_msg(MSG_ERROR, "%s: %s", ob->name, error_get());
-		break;
-	case EDIT_OP:
-		if (ob->ops->edit != NULL) {
-			ob->ops->edit(ob);
-		} else {
-			text_msg(MSG_ERROR, _("%s has no edit op"), ob->name);
-		}
-		break;
-	}
-}
-
-/* Update the properties display. */
-static void
-poll_props(int argc, union evarg *argv)
+poll_deps(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
-	struct prop *prop;
+	struct object_dep *dep;
 
 	tlist_clear_items(tl);
-	pthread_mutex_lock(&ob->props_lock);
-	TAILQ_FOREACH(prop, &ob->props, props) {
-		char val[TLIST_LABEL_MAX];
+	lock_linkage();
+	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		char label[TLIST_LABEL_MAX];
 
-		prop_print_value(val, sizeof(val), prop);
-		snprintf(label, sizeof(label), "%s = %s", prop->key, val);
-		tlist_insert_item(tl, NULL, label, prop);
+		if (dep->count == OBJECT_DEP_MAX) {
+			snprintf(label, sizeof(label), "%s (perm)",
+			    dep->obj->name);
+		} else {
+			snprintf(label, sizeof(label), "%s (%u)",
+			    dep->obj->name, dep->count);
+		}
+		tlist_insert_item(tl, OBJECT_ICON(dep->obj), label, dep);
 	}
-	pthread_mutex_unlock(&ob->props_lock);
+	unlock_linkage();
 	tlist_restore_selections(tl);
 }
 
-/* Search subdirectories for .den files containing the given hint. */
+/* Search subdirectories for .den files containing a given hint. */
 static void
-object_scan_dens(struct object *ob, const char *hint, struct combo *com,
+object_scan_dens(const struct object *ob, const char *hint, struct combo *com,
     const char *spath)
 {
 	DIR *di;
 	struct dirent *dent;
 
 	if ((di = opendir(".")) == NULL) {
-		dprintf("opendir .: %s\n", strerror(errno));
+		text_msg(MSG_ERROR, "opendir: %s\n", strerror(errno));
 		return;
 	}
 	while ((dent = readdir(di)) != NULL) {
+		char path[MAXPATHLEN];
 		struct stat sta;
-		char *ext, *path;
+		char *ext;
 
-		if (dent->d_name[0] == '.') {
+		if (strcmp(dent->d_name, ".") == 0 ||
+		    strcmp(dent->d_name, "..") == 0) {
 			continue;
 		}
 		if (stat(dent->d_name, &sta) == -1) {
@@ -1112,7 +1263,10 @@ object_scan_dens(struct object *ob, const char *hint, struct combo *com,
 			continue;
 		}
 
-		Asprintf(&path, "%s/%s", spath, dent->d_name);
+		strlcpy(path, spath, sizeof(path));
+		strlcat(path, "/", sizeof(path));
+		strlcat(path, dent->d_name, sizeof(path));
+
 		if ((sta.st_mode & S_IFREG) &&
 		    (ext = strrchr(dent->d_name, '.')) != NULL &&
 		    strcasecmp(ext, ".den") == 0) {
@@ -1131,12 +1285,13 @@ object_scan_dens(struct object *ob, const char *hint, struct combo *com,
 			if (chdir(dent->d_name) == 0) {
 				object_scan_dens(ob, hint, com, path);
 				if (chdir("..") == -1) {
-					free(path);
+					text_msg(MSG_ERROR, "chdir ..: %s\n",
+					    strerror(errno));
+					closedir(di);
 					return;
 				}
 			}
 		}
-		free(path);
 	}
 	closedir(di);
 }
@@ -1171,25 +1326,23 @@ select_audio(int argc, union evarg *argv)
 	}
 }
 
-void
+struct window *
 object_edit(void *p)
 {
+	char obj_name[OBJECT_PATH_MAX];
 	struct object *ob = p;
 	struct window *win;
 	struct box *bo;
-	struct button *bu;
-	char *obname;
 
-	obname = object_name(ob);
-	if ((win = window_new("object-edit-%s", obname)) == NULL) {
-		goto out;
-	}
+	win = window_new(NULL);
 	window_set_caption(win, _("%s object"), ob->name);
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
 	window_set_closure(win, WINDOW_DETACH);
 
-	label_new(win, _("Name: \"%s\""), ob->name);
-	label_new(win, _("Type: \"%s\""), ob->type);
+	/* XXX path subject to change */
+	object_copy_name(ob, obj_name, sizeof(obj_name));
+	label_new(win, _("Name: %s (%s)"), ob->name, obj_name);
+	label_new(win, _("Type: %s"), ob->type);
 	label_new(win, _("Flags : 0x%02x"), ob->flags);
 
 	label_polled_new(win, NULL, _("Parent: %[obj]"), &ob->parent);
@@ -1197,13 +1350,14 @@ object_edit(void *p)
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
+		char den_path[MAXPATHLEN];
 		struct combo *gfx_com, *aud_com;
-		char *denpath, *dir, *last;
+		char *dir, *last;
 
-		gfx_com = combo_new(bo, _("Gfx: "));
+		gfx_com = combo_new(bo, _("Graphics: "));
 		aud_com = combo_new(bo, _("Audio: "));
 
-		textbox_prescale(gfx_com->tbox, "XXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+		textbox_prescale(gfx_com->tbox, "XXXXXXXXXXXXXX");
 
 		event_new(gfx_com, "combo-selected", select_gfx, "%p", ob);
 		event_new(aud_com, "combo-selected", select_audio, "%p", ob);
@@ -1213,53 +1367,43 @@ object_edit(void *p)
 		if (ob->audio != NULL)
 			textbox_printf(aud_com->tbox, "%s", ob->audio->name);
 
-		denpath = prop_get_string(config, "den-path");
-		for (dir = strtok_r(denpath, ":", &last);
+		prop_copy_string(config, "den-path", den_path,
+		    sizeof(den_path));
+
+		for (dir = strtok_r(den_path, ":", &last);
 		     dir != NULL;
 		     dir = strtok_r(NULL, ":", &last)) {
-			if (chdir(dir) == -1) {
-				dprintf("skipping %s: %s\n", dir,
+			char cwd[MAXPATHLEN];
+
+			if (getcwd(cwd, sizeof(cwd)) == NULL) {
+				text_msg(MSG_ERROR, "getcwd: %s",
 				    strerror(errno));
 				continue;
 			}
-			object_scan_dens(ob, "gfx", gfx_com, "");
-			object_scan_dens(ob, "audio", aud_com, "");
-		}
-		free(denpath);
-	}
 
-	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
-	box_set_padding(bo, 0);
-	{
-		bu = button_new(bo, _("Load"));
-		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
-		    LOAD_OP);
-		bu = button_new(bo, _("Save"));
-		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
-		    SAVE_OP);
-		bu = button_new(bo, _("Edit"));
-		event_new(bu, "button-pushed", object_invoke_op, "%p, %i", ob,
-		    EDIT_OP);
+			if (chdir(dir) == 0) {
+				object_scan_dens(ob, "gfx", gfx_com, "");
+				object_scan_dens(ob, "audio", aud_com, "");
+				if (chdir(cwd) == -1) {
+					text_msg(MSG_ERROR, "chdir %s: %s",
+					    cwd, strerror(errno));
+					continue;
+				}
+			}
+		}
 	}
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	box_set_padding(bo, 0);
+	box_set_padding(bo, 2);
 	{
 		struct tlist *tl;
 
+		label_new(bo, _("Dependencies:"));
 		tl = tlist_new(bo, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 2);
-		event_new(tl, "tlist-poll", poll_props, "%p", ob);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 4);
+		event_new(tl, "tlist-poll", poll_deps, "%p", ob);
 	}
-
-	window_show(win);
-
-	if (ob->ops->edit != NULL) {
-		ob->ops->edit(ob);
-	}
-out:
-	free(obname);
-	return;
+	return (win);
 }
 
 #endif /* EDITION */

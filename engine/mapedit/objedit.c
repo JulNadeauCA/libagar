@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.14 2003/06/22 22:18:03 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.15 2003/06/30 06:39:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -57,7 +57,7 @@ create_obj(int argc, union evarg *argv)
 
 	textbox_copy_string(type_tb, type, sizeof(type));
 	if (type[0] == '\0') {
-		text_msg(MSG_ERROR, _("No object type was specified"));
+		text_msg(MSG_ERROR, _("No object type was specified."));
 		return;
 	}
 	for (i = 0; i < ntypesw; i++) {
@@ -65,13 +65,13 @@ create_obj(int argc, union evarg *argv)
 			break;
 	}
 	if (i == ntypesw) {
-		text_msg(MSG_ERROR, _("No such object type"));
+		text_msg(MSG_ERROR, _("No such object type."));
 		return;
 	}
 
 	textbox_copy_string(name_tb, name, sizeof(name));
 	if (name[0] == '\0') {
-		text_msg(MSG_ERROR, _("No object name was specified"));
+		text_msg(MSG_ERROR, _("No object name was specified."));
 		return;
 	}
 
@@ -86,6 +86,7 @@ create_obj(int argc, union evarg *argv)
 
 enum {
 	OBJEDIT_EDIT,
+	OBJEDIT_EDIT_OBJ,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
 	OBJEDIT_DESTROY
@@ -96,6 +97,7 @@ invoke_op(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
+	struct window *win;
 	int op = argv[2].i;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -106,7 +108,14 @@ invoke_op(int argc, union evarg *argv)
 
 		switch (op) {
 		case OBJEDIT_EDIT:
-			object_edit(ob);
+			if (ob->ops->edit != NULL) {
+				win = ob->ops->edit(ob);
+				window_show(win);
+			}
+			break;
+		case OBJEDIT_EDIT_OBJ:
+			win = object_edit(ob);
+			window_show(win);
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {
@@ -121,9 +130,25 @@ invoke_op(int argc, union evarg *argv)
 			}
 			break;
 		case OBJEDIT_DESTROY:
-			if (it->p1 != world) {
-				object_detach(ob->parent, ob);
-				object_destroy(ob);
+			if (it->p1 == world) {
+				continue;
+			}
+			if (object_used(ob)) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
+				continue;
+			}
+			if (ob->flags & OBJECT_INDESTRUCTIBLE) {
+				text_msg(MSG_ERROR,
+				    _("The `%s' object is indestructible."),
+				    ob->name);
+				continue;
+			}
+			object_detach(ob->parent, ob);
+			if (object_destroy(ob) == -1) {
+				text_msg(MSG_ERROR, "%s: %s", ob->name,
+				    error_get());
+				continue;
 			}
 			break;
 		}
@@ -172,7 +197,8 @@ objedit_window(void)
 	struct window *win;
 	struct vbox *vb;
 	struct textbox *name_tb;
-	struct button *create_bu, *edit_bu, *load_bu, *save_bu, *destroy_bu;
+	struct button *create_bu, *edit_bu, *oedit_bu, *load_bu, *save_bu,
+	    *destroy_bu;
 	struct combo *types_com;
 	struct tlist *objs_tl;
 
@@ -200,10 +226,10 @@ objedit_window(void)
 		{
 			create_bu = button_new(hb, _("Create"));
 			edit_bu = button_new(hb, _("Edit"));
+			oedit_bu = button_new(hb, _("Edit obj"));
 			load_bu = button_new(hb, _("Load"));
 			save_bu = button_new(hb, _("Save"));
 			destroy_bu = button_new(hb, _("Destroy"));
-			button_disable(destroy_bu);
 		}
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);
@@ -220,6 +246,8 @@ objedit_window(void)
 
 	event_new(edit_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT);
+	event_new(oedit_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_EDIT_OBJ);
 	event_new(load_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
 	    OBJEDIT_LOAD);
 	event_new(save_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,

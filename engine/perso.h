@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.12 2003/06/10 07:53:49 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.13 2003/06/15 08:54:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -28,7 +28,7 @@ __BEGIN_DECLS
 struct perso	*perso_new(void *, const char *);
 void		 perso_init(void *, const char *);
 void		 perso_destroy(void *);
-void		 perso_edit(void *);
+struct window	*perso_edit(void *);
 int		 perso_load(void *, struct netbuf *);
 int		 perso_save(void *, struct netbuf *);
 __END_DECLS

@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.46 2003/06/06 02:41:52 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.47 2003/06/17 23:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 
 const struct object_ops input_ops = {
 	NULL,		/* init */
+	NULL,		/* reinit */
 	input_destroy,
 	NULL,		/* load */
 	NULL,		/* save */

@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.7 2003/06/25 10:51:49 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.8 2003/07/02 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 static struct widget_ops combo_ops = {
 	{
 		NULL,			/* init */
+		NULL,			/* reinit */
 		combo_destroy,
 		NULL,			/* load */
 		NULL,			/* save */

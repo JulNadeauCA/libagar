@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.86 2003/06/26 02:42:53 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.87 2003/06/29 11:33:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -17,16 +17,11 @@ struct event;
 
 struct object_ops {
 	void	(*init)(void *, const char *);		/* Initialize */
+	void	(*reinit)(void *);			/* Reinitialize */
 	void	(*destroy)(void *);			/* Free resources */
 	int	(*load)(void *, struct netbuf *);	/* Load from network */
 	int	(*save)(void *, struct netbuf *);	/* Save to network */
-	void	(*edit)(void *);			/* Edition */
-};
-
-struct object_table {
-	struct object	**objs;
-	Uint32		 nobjs;
-	Uint32		*used;
+	struct window *(*edit)(void *);			/* Edit object */
 };
 
 struct object_position {
@@ -41,28 +36,33 @@ struct object_position {
 
 struct object_dep {
 	struct object	*obj;		/* Object */
-	unsigned long	 count;		/* Reference count */
-#define OBJECT_DEP_MAX	(ULONG_MAX-1)	/* Remain resident if reached */
-	SLIST_ENTRY(object_dep)	 deps;
+	Uint32		 count;		/* Reference count */
+#define OBJECT_DEP_MAX	(0xffffffff-2)	/* Remain resident if reached */
+	TAILQ_ENTRY(object_dep) deps;
 };
 
 #define OBJECT_TYPE_MAX		32
 #define OBJECT_NAME_MAX		64
+#define OBJECT_PATH_MAX		1024
 
 TAILQ_HEAD(objectq, object);
 
 struct object {
 	char	 type[OBJECT_TYPE_MAX];		/* Type of object */
 	char	 name[OBJECT_NAME_MAX];		/* Identifier */
+	char	*save_pfx;			/* Save dir prefix */
 
+	struct gfx	*gfx;			/* Associated graphics */
+	struct audio	*audio;			/* Associated audio samples */
+	
 	const struct object_ops	*ops;		/* Generic operations */
 
 	int	 flags;
-#define OBJECT_RELOAD_PROPS	0x01	/* Don't remove props before load */
-#define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
-
-	struct gfx	*gfx;		/* Associated graphics */
-	struct audio	*audio;		/* Associated audio samples */
+#define OBJECT_RELOAD_PROPS	0x01	/* Don't free props before load */
+#define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
+#define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible by user
+					   (advisory flag only) */
+#define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 
 	pthread_mutex_t		 lock;
 	struct object_position	*pos;		/* Position on a map */
@@ -73,7 +73,7 @@ struct object {
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 
 	/* Uses linkage_lock */
-	SLIST_HEAD(,object_dep)	 deps;		/* Object dependencies */
+	TAILQ_HEAD(,object_dep)	 deps;		/* Object dependencies */
 	struct objectq		 childs;	/* Descendants */
 	void			*parent;	/* Parent object */
 	TAILQ_ENTRY(object)	 cobjs;		/* Child objects */
@@ -97,24 +97,34 @@ struct object {
 	    (var) = (struct type *)TAILQ_PREV(OBJECT(var), objectq, cobjs))
 
 __BEGIN_DECLS
-struct object	*object_new(void *, const char *, const char *, const void *);
+struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
-void		 object_set_ops(void *, const void *);
+void		 object_reinit(void *);
+
+void	 object_set_type(void *, const char *);
+void	 object_set_name(void *, const char *);
+void	 object_set_ops(void *, const void *);
 
 void	 object_attach(void *, void *);
 void	 object_detach(void *, void *);
 void	 object_move(void *, void *, void *);
-char	*object_name(void *);
-void	*object_find(void *, const char *);
+
+int	 object_copy_name(const void *, char *, size_t);
+int	 object_copy_filename(const void *, char *, size_t);
+
+void		*object_find(const char *);
+__inline__ void	*object_root(void *);
+__inline__ int	 object_used(void *);
 
 int	 object_load(void *);
 int	 object_save(void *);
-void	 object_destroy(void *);
+int	 object_destroy(void *);
+
 #ifdef EDITION
-void	 object_edit(void *);
+struct window	*object_edit(void *);
 #endif
 
-void	 object_free_childs(struct object *);
+int	 object_free_childs(struct object *);
 void	 object_free_props(struct object *);
 void 	 object_free_events(struct object *);
 int	 object_path(const char *, const char *, char *, size_t);
@@ -126,18 +136,13 @@ int	 object_set_submap(void *, const char *);
 
 void	 object_set_position(void *, struct map *, int, int, int);
 void	 object_unset_position(void *);
-void	 object_save_position(void *, struct netbuf *);
+void	 object_save_position(const void *, struct netbuf *);
 int	 object_load_position(void *, struct netbuf *);
 
-void	 object_table_init(struct object_table *);
-void	 object_table_destroy(struct object_table *);
-void	 object_table_insert(struct object_table *, struct object *);
-void	 object_table_save(struct object_table *, struct netbuf *);
-int	 object_table_load(struct object_table *, struct netbuf *,
-	                   const char *);
-
-void	 object_add_dep(void *, void *);
-void	 object_del_dep(void *, void *);
+struct object_dep	 *object_add_dep(void *, void *);
+__inline__ struct object *object_find_dep(const void *, Uint32);
+Uint32			  object_dep_index(const void *, const struct object *);
+void			  object_del_dep(void *, const void *);
 __END_DECLS
 
 #include "close_code.h"

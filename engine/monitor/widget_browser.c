@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.24 2003/06/17 23:38:43 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.25 2003/06/30 06:39:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -245,7 +245,7 @@ examine_window(int argc, union evarg *argv)
 
 	it = tlist_item_selected(wintl);
 	if (it == NULL) {
-		text_msg(MSG_ERROR, _("No window is selected"));
+		text_msg(MSG_ERROR, _("No window is selected."));
 		return;
 	}
 	pwin = it->p1;
@@ -253,10 +253,10 @@ examine_window(int argc, union evarg *argv)
 	if ((win = window_new("monitor-win-%s", OBJECT(pwin)->name)) == NULL) {
 		return;
 	}
-	window_set_caption(win, "%s window", OBJECT(pwin)->name);
+	window_set_caption(win, _("%s window"), OBJECT(pwin)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
-	label_new(win, "Name: \"%s\"", OBJECT(pwin)->name);
+	label_new(win, _("Name: \"%s\""), OBJECT(pwin)->name);
 	label_polled_new(win, &pwin->lock, "Flags: 0x%x", &pwin->flags);
 
 	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
@@ -266,7 +266,7 @@ examine_window(int argc, union evarg *argv)
 	{
 		struct button *bu;
 
-		bu = button_new(hb, "Examine");
+		bu = button_new(hb, _("Examine"));
 		event_new(bu, "button-pushed", examine_widget, "%p, %p",
 		    tl, pwin);
 	}
@@ -284,7 +284,7 @@ widget_browser_window(void)
 	if ((win = window_new("monitor-window-stack")) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, "Window stack");
+	window_set_caption(win, _("Window stack"));
 	window_set_closure(win, WINDOW_DETACH);
 
 	tl = tlist_new(win, TLIST_POLL);
@@ -294,13 +294,13 @@ widget_browser_window(void)
 	{
 		struct button *bu;
 		
-		bu = button_new(hb, "Examine");
+		bu = button_new(hb, _("Examine"));
 		event_new(bu, "button-pushed", examine_window, "%p", tl);
-		bu = button_new(hb, "Show");
+		bu = button_new(hb, _("Show"));
 		event_new(bu, "button-pushed", show_window, "%p", tl);
-		bu = button_new(hb, "Hide");
+		bu = button_new(hb, _("Hide"));
 		event_new(bu, "button-pushed", hide_window, "%p", tl);
-		bu = button_new(hb, "Detach");
+		bu = button_new(hb, _("Detach"));
 		event_new(bu, "button-pushed", detach_window, "%p", tl);
 	}
 	return (win);

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.12 2003/06/17 23:30:44 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.13 2003/06/29 11:33:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -45,9 +45,11 @@
 static void
 layedit_close_win(int argc, union evarg *argv)
 {
+	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
 	widget_set_int(mv->layed.trigger, "state", 0);
+	window_hide(win);
 }
 
 /* Display the layers of a map. */
@@ -93,7 +95,7 @@ layedit_push(int argc, union evarg *argv)
 	char *name;
 	
 	name = textbox_string(name_tbox);
-	if (strcmp("", name) == 0) {
+	if (name[0] == '\0') {
 		free(name);
 		name = NULL;					/* Default */
 	}
@@ -201,10 +203,7 @@ layedit_init(struct mapview *mv)
 	struct textbox *rename_tb;
 	struct tlist *tl;
 
-	win = window_new("mapedit-lay-%s-%s", OBJECT(mv)->name,
-	    OBJECT(m)->name);
-	if (win == NULL)
-		return;
+	win = window_new(NULL);
 	window_set_caption(win, _("%s layers"), OBJECT(m)->name);
 	window_set_spacing(win, 2);
 	event_new(win, "window-close", layedit_close_win, "%p", mv);

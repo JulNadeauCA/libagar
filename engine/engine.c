@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.112 2003/06/26 02:34:51 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.113 2003/07/04 12:33:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -39,7 +39,10 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
+
+#ifdef EDITION
 #include <engine/mapedit/mapedit.h>
+#endif
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -196,7 +199,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	}
 
 	/* Create the world. */
-	world = object_new(NULL, "object", "world", NULL);
+	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;
 	return (0);
@@ -209,10 +212,11 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 void
 engine_destroy(void)
 {
+#ifdef EDITION
 	/* Preserve map editor settings. */
 	if (mapedition)
 		object_save(&mapedit);
-
+#endif
 	/* Detach the windows, free the viewport. */
 	view_destroy();
 
