@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.11 2002/04/24 13:18:38 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.12 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,7 +46,6 @@ static const struct obvec input_vec = {
 static int	keyboard_init(struct input *, int);
 static int	joy_init(struct input *, int);
 static int	mouse_init(struct input *, int);
-static Uint32	input_time(Uint32, void *);
 
 void
 input_init(struct input *input, int type, int index)
@@ -84,45 +83,6 @@ input_init(struct input *input, int type, int index)
 		rv = mouse_init(input, index);
 		break;
 	}
-}
-
-static Uint32
-input_time(Uint32 ival, void *p)
-{
-	struct input *in = (struct input *)p;
-	struct map *m;
-	Uint32 x, y, moved = 0;
-
-	if (in->pos == NULL) {
-		return (ival);
-	}
-
-	m = in->pos->map;
-	x = in->pos->x;
-	y = in->pos->y;
-	
-	pthread_mutex_lock(&m->lock);
-
-	moved = mapdir_move(&in->pos->dir, &x, &y);
-	if (moved != 0) {
-		static struct mappos opos;
-		struct mappos *npos;
-		struct noderef *nref;
-		
-		opos = *in->pos;
-		nref = opos.nref;
-	
-		object_delpos(nref->pobj);
-		npos = object_addpos(nref->pobj, nref->offs, nref->flags,
-		    opos.input, m, x, y);
-		npos->dir = opos.dir;
-
-		m->redraw++;
-		mapdir_postmove(&npos->dir, &x, &y, moved);
-	}
-	pthread_mutex_unlock(&m->lock);
-
-	return (ival);
 }
 
 static void
@@ -256,8 +216,7 @@ input_save(void *p, int fd)
 static int
 keyboard_init(struct input *in, int index)
 {
-	/* XXX pref */
-	in->timer = SDL_AddTimer(20, input_time, in);
+	/* XXX ... */
 
 	return (0);
 }
