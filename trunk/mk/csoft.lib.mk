@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.6 2001/12/04 16:56:02 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.9 2002/01/26 01:31:28 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -26,19 +26,17 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-PREFIX?=	/usr/local
 CFLAGS?=	-Wall -g
 SH?=		sh
 CC?=		cc
 AR?=		ar
 RANLIB?=	ranlib
-MAKE?=		make
-INSTALL?=	install
 
-# XXX elf
+LIB_INSTALL=	No
+
 ASM?=		nasm
-ASMOUT?=	aoutb
-ASMFLAGS=	-f ${ASMOUT} -g -w-orphan-labels
+ASMFLAGS?=	-g -w-orphan-labels
+ASM_PICFLAGS?=	-DPIC
 
 LIBTOOL?=	libtool
 LTCONFIG?=	./ltconfig
@@ -74,7 +72,17 @@ CFLAGS+=    ${COPTS}
 # Assembly
 #
 .asm.o:
-	${ASM} ${ASMFLAGS} -o $@ $< 
+	@echo "#ifdef __ELF__" > .elftest
+	@echo "IS ELF" >> .elftest
+	@echo "#endif" >> .elftest
+	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
+	    echo "${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	else \
+	    echo "${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
+	    ${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	fi
+	@rm -f .elftest
 
 #
 # Lex
@@ -124,48 +132,44 @@ lib${LIB}.a:	${OBJS}
 
 lib${LIB}.la:	${LIBTOOL} ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
-	    echo ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		-version-info ${VERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}; \
+	    echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
+	     -shared -version-info ${VERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}"; \
 	    ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
 		-version-info ${VERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}; \
 	fi
 
 clean:		clean-subdir
 	@if [ "${LIB}" != "" ]; then \
-		echo "rm -fr lib${LIB}.a ${OBJS}"; \
-		rm -fr lib${LIB}.a ${OBJS}; \
-	fi
-	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
+	    echo "rm -f lib${LIB}.a ${OBJS}"; \
+	    rm -f lib${LIB}.a ${OBJS}; \
+	    if [ "${SHARED}" = "Yes" ]; then \
 		echo rm -f lib${LIB}.la ${SHOBJS} ${LIBTOOL} ${LTCONFIG_LOG}; \
 		rm -f lib${LIB}.la ${SHOBJS} ${LIBTOOL} ${LTCONFIG_LOG}; \
+	    fi; \
 	fi
 
 install:	install-subdir lib${LIB}.a lib${LIB}.la
-	@if [ "${LIB}" != "" ]; then \
-	    echo "${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
-		${BINOWN} ${BINGRP} -m ${BINMODE} lib${LIB}.a ${PREFIX}/lib"; \
-	    ${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
-		${BINOWN} ${BINGRP} -m ${BINMODE} lib${LIB}.a ${PREFIX}/lib; \
-	fi
-	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
-	    echo "${LIBTOOL} --mode=install \
-	    ${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
-		${BINOWN} ${BINGRP} -m ${BINMODE} lib${LIB}.la ${PREFIX}/lib"; \
-	    ${LIBTOOL} --mode=install \
-	    ${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP} \
-		${BINOWN} ${BINGRP} -m ${BINMODE} lib${LIB}.la ${PREFIX}/lib; \
+	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
+	    echo "${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}"; \
+	    ${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}; \
+	    if [ "${SHARED}" = "Yes" ]; then \
+	        echo "${LIBTOOL} --mode=install \
+	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}"; \
+	        ${LIBTOOL} --mode=install \
+	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
+	    fi; \
 	fi
 	
-uninstall:	uninstall-subdir
-	@if [ "${LIB}" != "" ]; then \
-		echo "rm -f ${PREFIX}/lib/lib${LIB}.a"; \
-		rm -f ${PREFIX}/lib/lib${LIB}.a; \
-	fi
-	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
-	    echo "${LIBTOOL} --mode=uninstall \
-		rm -f ${PREFIX}/lib/lib${LIB}.la"; \
-	    ${LIBTOOL} --mode=uninstall \
-	        rm -f ${PREFIX}/lib/lib${LIB}.la; \
+deinstall:	deinstall-subdir
+	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
+	    echo "${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a"; \
+	    ${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a; \
+	    if [ "${SHARED}" == "Yes" ]; then \
+	        echo "${LIBTOOL} --mode=uninstall \
+		    rm -f ${PREFIX}/lib/lib${LIB}.la"; \
+	        ${LIBTOOL} --mode=uninstall \
+		    rm -f ${PREFIX}/lib/lib${LIB}.la; \
+	    fi; \
 	fi
 
 ${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
