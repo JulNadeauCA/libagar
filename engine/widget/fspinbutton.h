@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.6 2003/11/20 02:40:32 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.7 2003/11/20 06:49:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -19,8 +19,8 @@ struct fspinbutton {
 	double value;			/* Value binding */
 	double min, max;		/* Value boundaries */
 	char format[8];			/* Format for printf (for precision) */
-	float incr;			/* Increment for [+]/[-] buttons */
-	const struct unit *unit;	/* Chosen conversion unit */
+	double incr;			/* Increment for [+]/[-] buttons */
+	const struct unit *unit;	/* Conversion unit (or NULL) */
 	int writeable;
 
 	struct textbox *input;		/* Text input */
@@ -45,7 +45,7 @@ void	fspinbutton_set_value(struct fspinbutton *, double);
 void	fspinbutton_set_min(struct fspinbutton *, double);
 void	fspinbutton_set_max(struct fspinbutton *, double);
 void	fspinbutton_set_range(struct fspinbutton *, double, double);
-void	fspinbutton_set_increment(struct fspinbutton *, float);
+void	fspinbutton_set_increment(struct fspinbutton *, double);
 void	fspinbutton_set_units(struct fspinbutton *, const struct unit[]);
 void	fspinbutton_select_unit(struct fspinbutton *, const char *);
 void	fspinbutton_set_precision(struct fspinbutton *, const char *, int);
