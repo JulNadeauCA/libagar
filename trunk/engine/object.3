@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.27 2003/03/22 04:26:02 vedge Exp $
+.\"	$Csoft: object.3,v 1.28 2003/03/25 13:27:27 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -175,11 +175,12 @@ returns 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
 Agar maintains a stack of noderef structures for each node on a
 .Xr map 3 .
-Some types of noderefs point to specific data associated with an
-.Nm ,
+Some types of noderefs point to specific data associated with an object,
 such as sprites or animations.
-Objects like game characters store a back reference to a unique position
-on the map as well.
+Game objects (such as characters) store a back reference to a single node on a
+.Xr map 3 .
+This node is expected to contain an arbitrary amount of noderefs that move
+along with the object on the map.
 .Pp
 .nr nS 1
 .Ft "void"
@@ -198,16 +199,14 @@ on the map as well.
 .Pp
 The
 .Fn object_set_position
-function sets the object's unique position to
-.Fa nref
-on the node at the
+function sets the object's unique position to the node at the
 .Fa x ,
 .Fa y
 coordinates of
 .Fa map .
 .Fn object_set_position
-does not create any noderef but if there is currently a position, its noderef
-is removed.
+does not create any noderef but if there is currently a position, its
+noderefs are removed.
 .Fn object_set_position
 is usually called after a new noderef is created (with
 .Fn node_add_sprite
