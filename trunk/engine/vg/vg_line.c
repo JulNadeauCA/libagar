@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.3 2004/04/10 04:55:17 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.4 2004/04/11 03:28:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -46,8 +46,8 @@ vg_draw_lines(struct vg *vg, struct vg_element *vge)
 	int i;
 
 	for (i = 0; i < vge->nvtx-1; i += 2) {
-		vg_rcoords(vg, vge->vtx[i].x, vge->vtx[i].y, &x1, &y1);
-		vg_rcoords(vg, vge->vtx[i+1].x, vge->vtx[i+1].y, &x2, &y2);
+		vg_rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x1, &y1);
+		vg_rcoords2(vg, vge->vtx[i+1].x, vge->vtx[i+1].y, &x2, &y2);
 		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
 	}
 }
@@ -66,8 +66,8 @@ vg_draw_line_strip(struct vg *vg, struct vg_element *vge)
 		vx = vge->vtx[i].x;
 		vy = vge->vtx[i].y;
 
-		vg_rcoords(vg, px, py, &x1, &y1);
-		vg_rcoords(vg, vx, vy, &x2, &y2);
+		vg_rcoords2(vg, px, py, &x1, &y1);
+		vg_rcoords2(vg, vx, vy, &x2, &y2);
 		vg_line_primitive(vg, x1, y1, x2, y2, vge->color);
 
 		px = vx;
@@ -87,10 +87,12 @@ static enum {
 	MODE_LOOP
 } mode = MODE_STRIP;
 
-static int seq = 0;
+static int seq;
+static struct vg_element *cur_line;
+static struct vg_vertex *cur_vtx;
 
 static void
-line_init(struct tool *t)
+line_tool_init(struct tool *t)
 {
 	static const char *mode_items[] = {
 		N_("Line segments"),
@@ -106,6 +108,27 @@ line_init(struct tool *t)
 	widget_bind(rad, "value", WIDGET_INT, &mode);
 	
 	tool_push_status(t, _("Specify first point.\n"));
+	seq = 0;
+	cur_line = NULL;
+	cur_vtx = NULL;
+}
+
+static void
+line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
+    int txoff, int tyoff, int txorel, int tyorel, int b)
+{
+	struct vg *vg = t->p;
+	double x, y;
+	
+	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+	vg->origin[1].x = x;
+	vg->origin[1].y = y;
+
+	if (cur_vtx != NULL) {
+		cur_vtx->x = x;
+		cur_vtx->y = y;
+	}
+	vg_rasterize(vg);
 }
 
 static void
@@ -117,44 +140,59 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 
 	switch (mode) {
 	case MODE_SEGMENTS:
-		if (seq++ == 0) {
-			vg_begin(vg, VG_LINES);
-			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-			vg_snap_to(vg, &vx, &vy);
-			vg_vertex2(vg, vx, vy);
-			tool_push_status(t,
-			    _("Specify second point or [undo].\n"), seq);
+		if (b == 1) {
+			if (seq++ == 0) {
+				cur_line = vg_begin(vg, VG_LINES);
+				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+				vg_vertex2(vg, vx, vy);
+				cur_vtx = vg_vertex2(vg, vx, vy);
+				vg_rasterize(vg);
+				tool_push_status(t, _("Specify second point "
+				                      "or [undo line].\n"));
+			} else {
+				goto finish;
+			}
 		} else {
-			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-			vg_snap_to(vg, &vx, &vy);
-			vg_vertex2(vg, vx, vy);
-			vg_end(vg);
-			vg_rasterize(vg);
-			tool_pop_status(t);
+			if (cur_line != NULL) {
+				vg_undo_element(vg, cur_line);
+				vg_rasterize(vg);
+			}
+			goto finish;
 		}
 		break;
 	case MODE_STRIP:
 		if (b == 1) {
 			if (seq++ == 0) {
-				vg_begin(vg, VG_LINE_STRIP);
+				cur_line = vg_begin(vg, VG_LINE_STRIP);
+				vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+				vg_vertex2(vg, vx, vy);
 			} else {
 				tool_pop_status(t);
 			}
-			tool_push_status(t,
-			    _("Specify point %d or [close].\n"), seq+1);
-
-			vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
-			vg_vertex2(vg, vx, vy);
+			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			cur_vtx = vg_vertex2(vg, vx, vy);
 			vg_rasterize(vg);
+
+			tool_push_status(t, _("Specify point %d or "
+			                      "[close/undo vertex].\n"),
+					      seq+1);
 		} else {
-			vg_end(vg);
-			seq = 0;
-			tool_pop_status(t);
+			if (cur_vtx != NULL) {
+				vg_pop_vertex(vg);
+				vg_rasterize(vg);
+			}
+			goto finish;
 		}
 		break;
 	default:
 		break;
 	}
+	return;
+finish:
+	cur_line = NULL;
+	cur_vtx = NULL;
+	seq = 0;
+	tool_pop_status(t);
 }
 
 const struct tool line_tool = {
@@ -162,13 +200,13 @@ const struct tool line_tool = {
 	N_("Draw line segments, strips and loops."),
 	VGLINES_ICON,
 	-1,
-	line_init,
+	line_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	NULL,			/* mousemotion */
+	line_mousemotion,
 	line_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */

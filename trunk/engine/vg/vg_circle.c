@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.1 2004/03/30 16:03:44 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -28,6 +28,11 @@
 
 #include <engine/engine.h>
 
+#ifdef EDITION
+#include <engine/mapedit/mapview.h>
+#include <engine/mapedit/tool.h>
+#endif
+
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
@@ -53,12 +58,95 @@ vg_draw_circle(struct vg *vg, struct vg_element *vge)
 {
 	int rx, ry, radius;
 
-#ifdef DEBUG
-	if (vge->nvtx < 2)
-		fatal("<2 vertices");
-#endif
-	vg_rcoords(vg, vge->vtx[0].x, vge->vtx[0].y, &rx, &ry);
+	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &rx, &ry);
 	vg_rlength(vg, vge->vg_circle.radius, &radius);
 	vg_circle_primitive(vg, rx, ry, radius, vge->color);
 }
 
+#ifdef EDITION
+static struct vg_element *cur_circle;
+static struct vg_vertex *cur_radius;
+static int seq;
+
+static void
+circle_tool_init(struct tool *t)
+{
+	tool_push_status(t, _("Specify the circle's center point.\n"));
+	seq = 0;
+	cur_circle = NULL;
+	cur_radius = NULL;
+}
+
+static void
+circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
+    int txoff, int tyoff, int txorel, int tyorel, int b)
+{
+	struct vg *vg = t->p;
+	double x, y;
+	
+	vg_vcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
+
+	if (cur_radius != NULL) {
+		cur_radius->x = x;
+		cur_radius->y = y;
+		cur_circle->vg_circle.radius = fabs(x-vg->origin[1].x);
+	} else {
+		vg->origin[1].x = x;
+		vg->origin[1].y = y;
+	}
+	vg_rasterize(vg);
+}
+
+static void
+circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
+    int b)
+{
+	struct vg *vg = t->p;
+	double vx, vy;
+
+	switch (b) {
+	case 1:
+		if (seq++ == 0) {
+			cur_circle = vg_begin(vg, VG_CIRCLE);
+			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
+			vg_vertex2(vg, vx, vy);
+			cur_radius = vg_vertex2(vg, vx, vy);
+			tool_push_status(t, _("Specify the circle's radius "
+			                      "or [undo circle].\n"));
+		} else {
+			goto finish;
+		}
+		break;
+	default:
+		if (cur_circle != NULL) {
+			vg_undo_element(vg, cur_circle);
+			vg_rasterize(vg);
+		}
+		goto finish;
+	}
+	return;
+finish:
+	cur_circle = NULL;
+	cur_radius = NULL;
+	seq = 0;
+	tool_pop_status(t);
+}
+
+const struct tool circle_tool = {
+	N_("Circles"),
+	N_("Draw circles."),
+	VGCIRCLES_ICON,
+	-1,
+	circle_tool_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,			/* cursor */
+	NULL,			/* effect */
+	circle_mousemotion,
+	circle_mousebuttondown,
+	NULL,			/* mousebuttonup */
+	NULL,			/* keydown */
+	NULL			/* keyup */
+};
+#endif /* EDITION */
