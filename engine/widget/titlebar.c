@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.20 2005/02/19 09:31:43 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.21 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -51,8 +51,6 @@ const struct widget_ops titlebar_ops = {
 
 static void titlebar_mousebuttondown(int, union evarg *);
 static void titlebar_mousebuttonup(int, union evarg *);
-static void titlebar_hide_win(int, union evarg *);
-static void titlebar_close_win(int, union evarg *);
 
 struct titlebar *
 titlebar_new(void *parent, int flags)
@@ -64,6 +62,48 @@ titlebar_new(void *parent, int flags)
 	object_attach(parent, tbar);
 	tbar->win = (struct window *)parent;
 	return (tbar);
+}
+
+static void
+maximize_window(int argc, union evarg *argv)
+{
+	struct titlebar *tbar = argv[1].p;
+	struct window *win = tbar->win;
+
+	if (win->flags & WINDOW_MAXIMIZED) {
+		window_set_geometry(win, win->savx, win->savy, win->savw,
+		    win->savh);
+		win->flags &= ~(WINDOW_MAXIMIZED);
+		if (!view->opengl) {
+			SDL_FillRect(view->v, NULL, COLOR(BG_COLOR));
+			SDL_UpdateRect(view->v, 0, 0, view->v->w, view->v->h);
+		}
+	} else {
+		win->savx = WIDGET(win)->x;
+		win->savy = WIDGET(win)->y;
+		win->savw = WIDGET(win)->w;
+		win->savh = WIDGET(win)->h;
+		window_set_geometry(win, 0, 0, view->w, view->h);
+		win->flags |= WINDOW_MAXIMIZED;
+	}
+}
+
+static void
+minimize_window(int argc, union evarg *argv)
+{
+	struct titlebar *tbar = argv[1].p;
+	struct window *win = tbar->win;
+
+	win->flags |= WINDOW_ICONIFIED;
+	window_hide(win);
+}
+
+static void
+close_window(int argc, union evarg *argv)
+{
+	struct titlebar *tbar = argv[1].p;
+
+	event_post(NULL, tbar->win, "window-close", NULL);
 }
 
 void
@@ -84,28 +124,41 @@ titlebar_init(struct titlebar *tbar, int flags)
 	tbar->win = NULL;
 	tbar->label = label_new(tbar, LABEL_STATIC, _("Untitled"));
 	WIDGET(tbar->label)->flags |= WIDGET_WFILL;
+	
+	if ((flags & TITLEBAR_NO_MAXIMIZE) == 0) {
+		tbar->maximize_btn = button_new(tbar, NULL);
+		button_set_focusable(tbar->maximize_btn, 0);
+		button_set_label(tbar->maximize_btn,
+		    SPRITE(tbar, TITLEBAR_MAXIMIZE_ICON));
+		button_set_padding(tbar->maximize_btn, 1);
+		event_new(tbar->maximize_btn, "button-pushed", maximize_window,
+		    "%p", tbar);
+	} else {
+		tbar->maximize_btn = NULL;
+	}
 
 	if ((flags & TITLEBAR_NO_MINIMIZE) == 0) {
-		tbar->hide_bu = button_new(tbar, NULL);
-		button_set_focusable(tbar->hide_bu, 0);
-		button_set_label(tbar->hide_bu,
-		    SPRITE(tbar, TITLEBAR_HIDE_ICON));
-		button_set_padding(tbar->hide_bu, 1);
-		event_new(tbar->hide_bu, "button-pushed", titlebar_hide_win,
+		tbar->minimize_btn = button_new(tbar, NULL);
+		button_set_focusable(tbar->minimize_btn, 0);
+		button_set_label(tbar->minimize_btn,
+		    SPRITE(tbar, TITLEBAR_MINIMIZE_ICON));
+		button_set_padding(tbar->minimize_btn, 1);
+		event_new(tbar->minimize_btn, "button-pushed", minimize_window,
 		    "%p", tbar);
 	} else {
-		tbar->hide_bu = NULL;
+		tbar->minimize_btn = NULL;
 	}
+
 	if ((flags & TITLEBAR_NO_CLOSE) == 0) {
-		tbar->close_bu = button_new(tbar, NULL);
-		button_set_focusable(tbar->close_bu, 0);
-		button_set_label(tbar->close_bu,
+		tbar->close_btn = button_new(tbar, NULL);
+		button_set_focusable(tbar->close_btn, 0);
+		button_set_label(tbar->close_btn,
 		    SPRITE(tbar, TITLEBAR_CLOSE_ICON));
-		button_set_padding(tbar->close_bu, 1);
-		event_new(tbar->close_bu, "button-pushed", titlebar_close_win,
+		button_set_padding(tbar->close_btn, 1);
+		event_new(tbar->close_btn, "button-pushed", close_window,
 		    "%p", tbar);
 	} else {
-		tbar->close_bu = NULL;
+		tbar->close_btn = NULL;
 	}
 
 	event_new(tbar, "window-mousebuttondown", titlebar_mousebuttondown,
@@ -152,23 +205,6 @@ titlebar_mousebuttonup(int argc, union evarg *argv)
 	view->winop = VIEW_WINOP_NONE;
 	view->wop_win = NULL;
 	pthread_mutex_unlock(&view->lock);
-}
-
-static void
-titlebar_hide_win(int argc, union evarg *argv)
-{
-	struct titlebar *tbar = argv[1].p;
-
-	/* TODO */
-//	tbar->win->visible = 0;
-}
-
-static void
-titlebar_close_win(int argc, union evarg *argv)
-{
-	struct titlebar *tbar = argv[1].p;
-
-	event_post(NULL, tbar->win, "window-close", NULL);
 }
 
 void
