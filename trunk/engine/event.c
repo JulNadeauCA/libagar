@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.16 2002/03/03 06:22:42 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.17 2002/03/12 14:07:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -90,23 +90,18 @@ event_loop(void)
 	for (ntick = 0, delta = m->fps;;) {
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
-			if (pthread_mutex_lock(&m->lock) == 0) {
-				map_animate(m);
-				if (m->redraw) {
-					m->redraw = 0;
-					map_draw(m);
-					delta = m->fps -
-					    (SDL_GetTicks() - ntick);
-					if (delta < 1) {
-						dprintf("overrun (delta=%d)\n",
-						    delta);
-						delta = 1;
-					}
+			pthread_mutex_lock(&m->lock);
+			map_animate(m);
+			if (m->redraw) {
+				m->redraw = 0;
+				map_draw(m);
+				delta = m->fps - (SDL_GetTicks() - ntick);
+				if (delta < 1) {
+					dprintf("overrun (delta=%d)\n", delta);
+					delta = 1;
 				}
-				pthread_mutex_unlock(&m->lock);
-			} else {
-				perror("map");
 			}
+			pthread_mutex_unlock(&m->lock);
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			if (ev.type == SDL_KEYDOWN) {

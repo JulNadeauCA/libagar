@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.28 2002/03/03 06:24:12 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.29 2002/03/05 18:54:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -266,13 +266,9 @@ object_link(void *p)
 		return (-1);
 	}
 
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		dperror("world");
-		return (-1);
-	}
+	pthread_mutex_lock(&world->lock);
+	SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
+	pthread_mutex_unlock(&world->lock);
 	return (0);
 }
 
@@ -282,13 +278,9 @@ object_unlink(void *p)
 {
 	struct object *ob = p;
 
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		dperror("world");
-		return (-1);
-	}
+	pthread_mutex_lock(&world->lock);
+	SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
+	pthread_mutex_unlock(&world->lock);
 
 	if (ob->vec->unlink != NULL &&
 	    ob->vec->unlink(ob) != 0) {
@@ -321,17 +313,14 @@ object_strfind(char *s)
 {
 	struct object *ob;
 
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
-			if (strcmp(ob->name, s) == 0) {
-				pthread_mutex_unlock(&world->lock);
-				return (ob);
-			}
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+		if (strcmp(ob->name, s) == 0) {
+			pthread_mutex_unlock(&world->lock);
+			return (ob);
 		}
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		dperror("world");
 	}
+	pthread_mutex_unlock(&world->lock);
 
 	return (NULL);
 }
