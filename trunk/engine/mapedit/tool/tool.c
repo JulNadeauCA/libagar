@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.18 2003/03/16 03:57:57 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.19 2003/03/16 04:10:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -98,12 +98,10 @@ tool_mapview(void)
 		}
 		TAILQ_FOREACH(reg, &win->regionsh, regions) {
 			TAILQ_FOREACH(wid, &reg->widgets, widgets) {
-				if (!WIDGET_FOCUSED(wid)) {
+				if (!WIDGET_FOCUSED(wid))
 					continue;
-				}
-				if (strcmp(wid->type, "mapview") == 0) {
+				if (strcmp(wid->type, "mapview") == 0)
 					return ((struct mapview *)wid);
-				}
 			}
 		}
 	}
@@ -113,14 +111,14 @@ tool_mapview(void)
 
 void
 tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
-    void (*func)(void *, struct mapview *),
-    int edit)
+    void (*func)(void *, struct mapview *), int edit)
 {
 	struct tool *tool = p;
 	struct tool_binding *binding;
 
 	binding = emalloc(sizeof(struct tool_binding));
 	binding->key = keysym;
+	binding->mod = keymod;
 	binding->func = func;
 	binding->edit = edit;
 	SLIST_INSERT_HEAD(&tool->bindings, binding, bindings);

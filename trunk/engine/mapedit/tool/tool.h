@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.8 2003/02/22 11:47:51 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.9 2003/03/16 03:57:57 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -16,6 +16,7 @@ struct tool_ops {
 
 struct tool_binding {
 	const char	 *name;
+	SDLMod		  mod;
 	SDLKey		  key;
 	int		  edit;			/* Require MAPVIEW_EDIT? */
 	void		(*func)(void *, struct mapview *);
