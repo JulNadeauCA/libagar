@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.9 2002/01/28 05:36:43 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.10 2002/01/30 12:47:11 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -104,6 +104,7 @@ video_create(char *path, SDL_Surface *s)
 	struct video *v = NULL;
 	int i, xvideo = 0, nexts = 0;
 
+	dprintf("enter: %s\n", path);
 	/*
 	 * Work around smpeg not returning an error code when the
 	 * XVideo extension is missing. We must obtain a pointer to
@@ -111,11 +112,13 @@ video_create(char *path, SDL_Surface *s)
 	 */
 	SDL_VERSION(&wm.version);
 	if (SDL_GetWMInfo(&wm) != 1) {
+		warning("SDL_GetWMInfo: %s\n", SDL_GetError());
 		return (NULL);
 	}
 	wm.info.x11.lock_func();
 	exts = XListExtensions(wm.info.x11.display, &nexts);
 	for (i = 0; i < nexts; i++) {
+		dprintf("x11 extension: \"%s\"\n", exts[i]);
 		if (strcmp("XVideo", exts[i]) == 0) {
 			xvideo++;
 		}
@@ -123,7 +126,7 @@ video_create(char *path, SDL_Surface *s)
 	free(exts);
 	wm.info.x11.unlock_func();
 	if (!xvideo) {
-		warning("XVideo extension missing, skipping video.\n");
+		warning("XVideo extension missing.\n");
 		return (NULL);
 	}
 
