@@ -1,4 +1,4 @@
-/*	$Csoft: dir.c,v 1.1 2004/04/23 10:50:52 vedge Exp $	*/
+/*	$Csoft: dir.c,v 1.2 2004/04/23 10:58:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+
+#include <compat/dir.h>
 
 int
 compat_mkdir(const char *dir)
