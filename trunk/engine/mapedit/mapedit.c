@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.100 2002/06/12 20:40:08 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.101 2002/06/13 09:01:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -81,9 +81,6 @@ static const int stickykeys[] = {	/* Keys applied after each move. */
 	SDLK_p	/* Slippery */
 };
 
-static struct window *coords_win = NULL;	/* XXX thread unsafe */
-static struct label *coords_label;
-
 static void	 mapedit_attached(int, union evarg *);
 static void	 mapedit_detached(int, union evarg *);
 static void	 mapedit_shadow(struct mapedit *, void *);
@@ -94,11 +91,12 @@ static void	*mapedit_update(void *);
 static void	 mapedit_bg(SDL_Surface *, SDL_Rect *, Uint32);
 static void	 mapedit_state(struct mapedit *, SDL_Rect *);
 static void	 mapedit_key(struct mapedit *, SDL_Event *);
-static void	 mapedit_show_coords(struct mapedit *);
 
 void
 mapedit_init(struct mapedit *med, char *name)
 {
+	struct region *coords_reg;
+
 	object_init(&med->obj, "map-editor", name, "mapedit", OBJ_ART,
 	    &mapedit_ops);
 	med->flags = MAPEDIT_DRAWPROPS;
@@ -119,6 +117,13 @@ mapedit_init(struct mapedit *med, char *name)
 	pthread_mutex_init(&med->lock, NULL);
 	
 	med->settings_win = mapedit_config_win(med);
+	med->coords_win = window_new("Coordinates",
+	    WINDOW_SOLID|WINDOW_ABSOLUTE|WINDOW_TITLEBAR, 0,
+	    32, 32, 320, 64);
+	coords_reg = region_new(med->coords_win,
+	    REGION_HALIGN|REGION_CENTER,
+	    0,   0, 100, 100);
+	med->coords_label = label_new(coords_reg, "...", 0);
 
 	mapdir_init(&med->cursor_dir, OBJECT(med), NULL, -1, -1);
 	gendir_init(&med->listw_dir);
@@ -745,7 +750,14 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			break;
 		case SDLK_c:
 			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_show_coords(med);
+				pthread_mutex_lock(&mainview->lock);
+				/* XXX unsafe */
+				if (med->coords_win->flags & WINDOW_SHOW) {
+					window_hide(med->coords_win);
+				} else {
+					window_show(med->coords_win);
+				}
+				pthread_mutex_unlock(&mainview->lock);
 			} else {
 				mapedit_nodeflags(med, node, NODE_CLIMB);
 			}
@@ -822,20 +834,24 @@ mapedit_event(void *ob, SDL_Event *ev)
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
-		if (coords_win != NULL) {
+		/* XXX race */
+		if (med->coords_win->flags & WINDOW_SHOW) {
+			pthread_mutex_lock(&med->coords_win->lock);
 			if (ev->motion.y <= TILEH ||
 			    med->mmapx >= (mainview->mapw - 1)) {
-				label_printf(coords_label, "%s:%d (0x%x)",
+				label_printf(med->coords_label,
+				    "%s:%d (0x%x)",
 				    OBJECT(med->curobj->pobj)->name,
 				    med->curoffs, med->curflags);
 			} else {
-				label_printf(coords_label, "%d,%d [%s:%d,%d]",
-				    ev->motion.x, ev->motion.y,
-				    OBJECT(med->map)->name,
+				label_printf(med->coords_label,
+				    "curs: %d,%d; mouse: %d,%d <%d,%d>",
+				    med->x, med->y,
 				    mainview->mapx + med->mmapx - 1,
-				    mainview->mapy + med->mmapy - 1);
+				    mainview->mapy + med->mmapy - 1,
+				    ev->motion.x, ev->motion.y);
 			}
-			coords_win->redraw++;
+			pthread_mutex_unlock(&med->coords_win->lock);
 		}
 		mouse_motion(med, ev);
 		break;
@@ -1088,34 +1104,5 @@ mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 		    mainview->v, rd);
 	}
 	pthread_mutex_unlock(&curmapedit->lock);
-}
-
-/*
- * Toggle the coordinates window.
- * Map editor and map must be locked.
- */
-static void
-mapedit_show_coords(struct mapedit *med)
-{
-	struct window *nw;
-
-	if (coords_win == NULL) {
-		struct region *coords_reg;
-
-		/* Coordinates window/label. */
-		nw = window_new("Coordinates", WINDOW_SOLID|WINDOW_ABSOLUTE, 0,
-		    64, 64, 224, 64);
-		coords_reg = region_new(nw, REGION_HALIGN|REGION_CENTER,
-		    0, 0, 100, 100);
-		coords_label = label_new(coords_reg, "...", 0);
-
-		coords_win = nw;
-	} else {
-		nw = coords_win;
-		coords_win = NULL;
-
-		/* Destroy the coordinates window. */
-		view_detach(nw);
-	}
 }
 
