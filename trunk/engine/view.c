@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.139 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.140 2004/03/24 08:47:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -328,7 +328,7 @@ view_copy_surface(SDL_Surface *ss)
 }
 
 /*
- * Allocate a new surface containing a bitmap of ss scaled to wxh.
+ * Allocate a new surface containing a pixmap of ss scaled to wxh.
  * The source surface must not be locked by the calling thread.
  */
 SDL_Surface *
