@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.14 2004/03/02 11:10:30 vedge Exp $
+#	$Csoft: dist.sh,v 1.15 2004/03/02 11:15:02 vedge Exp $
 
 VER=`date +%m%d%Y`
 DISTFILE=agar-${VER}
@@ -39,7 +39,7 @@ gpg -ab ${DISTFILE}.tar.gz
 
 echo "uploading"
 scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} vedge@resin:www/snap
-ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
+ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.* && /bin/sh ~vedge/bin/agar.sh"
 
 echo "notifying agar-announce@"
 TMP=`mktemp /tmp/agarannounceXXXXXXXX`
