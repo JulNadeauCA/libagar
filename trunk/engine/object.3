@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.18 2002/12/14 04:27:47 vedge Exp $
+.\"	$Csoft: object.3,v 1.19 2002/12/15 15:56:45 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -93,14 +93,22 @@ function initializes
 as an object of type
 .Fa type
 (an arbitrary string identifier describing the type of structure)
+.Pp
+If
+.Fa media
+is not null, a
+.Xr fobj 3
+archive with the
+.Sq .fob
+suffix is looked up in the data directories (the
+.Sq path.data_path
+setting).
 and loads data from
 .Fa media
 into the static media pool, if the latter is not NULL.
-.Pp
-The
 .Fn object_destroy
-function frees all resources associated with this object, and must be
-called when the object is not attached to any other object.
+is called to free all resources associated with
+.Fa ob .
 The
 .Fa ops
 argument is a pointer to the following structure:
