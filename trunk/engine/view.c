@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.99 2002/12/31 00:53:12 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.100 2002/12/31 00:55:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -75,6 +75,7 @@ view_init(gfx_engine_t ge)
 	v->ndirty = 0;
 	v->maxdirty = 4096;
 	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
+	v->opengl = 0;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
 	pthread_mutexattr_init(&v->lockattr);
@@ -97,7 +98,7 @@ view_init(gfx_engine_t ge)
 
 	switch (v->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
-		dprintf("mode: direct video / tile-based\n");
+		dprintf("direct video / tile-based\n");
 	
 		/* Adapt resolution to tile geometry. */
 		v->w -= v->w % TILEW;
@@ -109,26 +110,26 @@ view_init(gfx_engine_t ge)
 		rootmap_init(v->rootmap, v->w / TILEW, v->h / TILEH);
 		break;
 	case GFX_ENGINE_GUI:
-		dprintf("mode: direct video / gui\n");
-
+		dprintf("direct video / gui\n");
 		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
 		break;
-#ifdef HAVE_OPENGL
-	case GFX_ENGINE_GL:
-		dprintf("mode: opengl\n");
+	default:
+		error_set("unsupported graphic mode");
+		goto fail;
+	}
 
+#ifdef HAVE_OPENGL
+	if (prop_get_bool(config, "view.opengl")) {
 		screenflags |= SDL_OPENGL;
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		break;
-#endif
-	default:
-		error_set("unsupported graphic mode");
-		goto fail;
+		
+		v->opengl = 1;
 	}
+#endif
 
 	if (v->w < 320 || v->h < 240) {
 		error_set("minimum resolution is 320x240");
@@ -143,8 +144,8 @@ view_init(gfx_engine_t ge)
 		goto fail;
 	}
 
-#if defined(HAVE_OPENGL) && defined(DEBUG)
-	if (v->gfx_engine == GFX_ENGINE_GL) {
+#ifdef HAVE_OPENGL
+	if (v->opengl) {
 		int red, blue, green, alpha, depth, dbuf, bsize;
 
 		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
@@ -152,21 +153,22 @@ view_init(gfx_engine_t ge)
 		SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
 		SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &alpha);
 		SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &bsize);
-		SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &dbuf);
 		SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
 
-		dprintf("gl: depth = %d\n", depth);
-		dprintf("gl: red = %d, green = %d, blue = %d, alpha = %d\n",
-		    red, green, blue, alpha);
-		dprintf("gl: double-buffering = %s, buffer = %s\n",
-		    dbuf ? "on" : "off", bsize);
-	
+		prop_set_int(config, "view.gl.depth", depth);
+		prop_set_int(config, "view.gl.red_size", red);
+		prop_set_int(config, "view.gl.green_size", green);
+		prop_set_int(config, "view.gl.blue_size", blue);
+		prop_set_int(config, "view.gl.alpha_size", alpha);
+		prop_set_int(config, "view.gl.buffer_size", bsize);
+
+		SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &dbuf);
 		if (!dbuf) {
 			error_set("gl: could not enable double buffering");
 			goto fail;
 		}
 	}
-#endif /* HAVE_OPENGL and DEBUG */
+#endif /* HAVE_OPENGL */
 
 	prop_set_uint16(config, "view.w", v->w);
 	prop_set_uint16(config, "view.h", v->h);

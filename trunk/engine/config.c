@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.49 2002/12/29 03:24:00 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.50 2002/12/31 00:55:31 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,7 +26,8 @@
  */
 
 #include <config/sharedir.h>
-#include <config/xdebug.h>
+#include <config/have_x11.h>
+#include <config/have_opengl.h>
 
 #include "engine.h"
 
@@ -104,8 +105,12 @@ config_prop_modified(int argc, union evarg *argv)
 		}
 	} else if (strcmp(prop->key, "view.full-screen") == 0) {
 		if (view != NULL) {
+			SDL_Event vexp;
+
 			SDL_WM_ToggleFullScreen(view->v);
-			VIEW_REDRAW();
+
+			vexp.type = SDL_VIDEOEXPOSE;
+			SDL_PushEvent(&vexp);
 		}
 	}
 }
@@ -129,8 +134,11 @@ config_init(struct config *con)
 	prop_set_bool(con,   "view.font-cache", 1);
 	prop_set_bool(con,   "view.full-screen", 0);
 	prop_set_bool(con,   "view.async-blits", 0);
-#ifdef XDEBUG
+#ifdef HAVE_X11
 	prop_set_bool(con,   "view.xsync", 0);
+#endif
+#ifdef HAVE_OPENGL
+	prop_set_bool(con,   "view.opengl", 0);
 #endif
 	prop_set_uint16(con, "view.w", 800);
 	prop_set_uint16(con, "view.h", 600);
@@ -191,10 +199,11 @@ config_window(struct config *con)
 #ifdef DEBUG
 			{ "widget.reg-borders",	"Region borders" },
 			{ "widget.any-size", "Arbitrary window sizes" },
-#endif
-#ifdef XDEBUG
+# ifdef HAVE_X11
 			{ "view.xsync",	"Synchronous X events (restart)" },
+# endif
 #endif
+			{ "view.opengl", "OpenGL rendering context (restart)" },
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
 		int i;

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.85 2002/12/29 02:13:53 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.86 2002/12/30 02:58:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,13 +26,13 @@
  */
 
 #include <config/serialization.h>
-#include <config/xdebug.h>
+#include <config/have_x11.h>
 
 #include "compat/setenv.h"
 #include "compat/strlcat.h"
 #include "engine.h"
 
-#ifdef XDEBUG
+#ifdef HAVE_X11
 #include <SDL_syswm.h>
 #endif
 
@@ -68,7 +68,7 @@ const struct engine_proginfo *proginfo;	/* Game name, copyright, version */
 struct world *world;			/* Describes game elements */
 struct config *config;			/* Global configuration settings */
 
-#ifdef XDEBUG
+#ifdef HAVE_X11
 static int	engine_xerror(Display *, XErrorEvent *);
 static int	engine_xioerror(Display *);
 static void	engine_xdebug(void);
@@ -106,7 +106,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	}
 
 	if (flags & ENGINE_INIT_GFX) {
-#ifdef USE_X11
+#ifdef HAVE_X11
 		setenv("SDL_VIDEO_X11_WMCLASS", prog->name, 1);
 #endif
 		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -191,7 +191,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 		keycodes_init();
 	}
 
-#ifdef XDEBUG
+#ifdef HAVE_X11
 	if (flags & ENGINE_INIT_GFX &&
 	    prop_get_bool(config, "view.xsync")) {
 		/* Request synchronous X events, and set error handlers. */
@@ -203,7 +203,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	return (0);
 }
 
-#ifdef XDEBUG
+#ifdef HAVE_X11
 
 static int
 engine_xerror(Display *dis, XErrorEvent *xerror)
@@ -253,7 +253,7 @@ engine_xdebug(void)
 	XSetIOErrorHandler((XIOErrorHandler)engine_xioerror);
 }
 
-#endif	/* XDEBUG */
+#endif	/* HAVE_X11 */
 
 void
 engine_stop(void)

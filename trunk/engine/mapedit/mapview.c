@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.39 2002/12/24 10:30:53 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.40 2002/12/31 01:46:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -267,7 +267,7 @@ mapview_draw(void *p)
 	}
 
 	/* Highlight if the widget is focused. */
-	if (WIDGET_FOCUSED(mv) && VIEW_FOCUSED(WIDGET(mv)->win)) {
+	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
 		primitives.square(mv,
 		    0, 0,
 		    WIDGET(mv)->w, WIDGET(mv)->h,
