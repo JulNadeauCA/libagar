@@ -111,10 +111,10 @@ tilemap_option(int argc, union evarg *argv)
 		}
 		break;
 	case MAPEDIT_TOOL_NODEEDIT:
-		if (mv->node_win->flags & WINDOW_SHOWN) {
-			window_hide(mv->node_win);
+		if (mv->node.win->flags & WINDOW_SHOWN) {
+			window_hide(mv->node.win);
 		} else {
-			window_show(mv->node_win);
+			window_show(mv->node.win);
 		}
 		break;
 	}
@@ -208,7 +208,7 @@ tilemap_close(int argc, union evarg *argv)
 	if (mv->tmap_win != NULL) {
 		window_hide(mv->tmap_win);
 	}
-	window_hide(mv->node_win);
+	window_hide(mv->node.win);
 	window_hide(win);
 
 	widget_set_int(nodeedit_button, "state", 0);
@@ -297,7 +297,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
-		mv->node_button = bu;
+		mv->node.button = bu;
 
 		event_new(win, "window-close", tilemap_close, "%p, %p", mv, bu);
 	}

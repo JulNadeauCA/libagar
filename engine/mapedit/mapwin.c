@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.36 2003/01/23 07:03:53 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.37 2003/01/25 06:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -93,10 +93,10 @@ mapwin_option(int argc, union evarg *argv)
 		}
 		break;
 	case MAPEDIT_TOOL_NODEEDIT:
-		if (mv->node_win->flags & WINDOW_SHOWN) {
-			window_hide(mv->node_win);
+		if (mv->node.win->flags & WINDOW_SHOWN) {
+			window_hide(mv->node.win);
 		} else {
-			window_show(mv->node_win);
+			window_show(mv->node.win);
 		}
 		break;
 	}
@@ -171,7 +171,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
-		mv->node_button = bu;
+		mv->node.button = bu;
 	}
 
 	/* Map view */

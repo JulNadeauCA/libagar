@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.16 2003/01/20 12:06:57 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.17 2003/01/25 06:29:29 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapedit;
@@ -36,13 +36,23 @@ struct mapview {
 	struct node	*cur_node;
 	int		mx, my;		/* Display offset */
 	int		mw, mh;		/* Display size in nodes */
+	Sint16		ssx, ssy;	/* Soft scrolling offsets */
+	Uint16		zoom;		/* Zoom (%) */
+	int		tilew, tileh;
 
 	struct mapedit	*med;		/* Back pointer to map editor */
 	struct window	*tmap_win;	/* Tile map window */
 	struct button	*tmap_button;
-	struct window	*node_win;	/* Node edition window */
-	struct button	*node_button;
-	struct tlist	*node_tlist;	/* Node edition list */
+
+	struct {		/* For node edition */
+		struct window	*win;		/* Node edition window */
+		struct button	*button;
+		struct label	*node_flags_lab, *node_size_lab;
+		struct label	*noderef_type_lab, *noderef_flags_lab;
+		struct label	*noderef_center_lab;
+		struct tlist	*refs_tl;
+		struct tlist	*transforms_tl;
+	} node;
 };
 
 struct mapview	*mapview_new(struct region *, struct mapedit *, struct map *,

@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.14 2003/01/25 06:29:30 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.15 2003/01/26 06:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,10 +51,9 @@ tool_window_close(int argc, union evarg *argv)
 void
 tool_init(struct tool *tool, char *name, const void *ops)
 {
-	static int toolid = 0;
 	char *toolname;
 
-	toolname = object_name(name, toolid++);
+	Asprintf(&toolname, "tool-%s", name);
 	object_init(&tool->obj, "tool", toolname, NULL, 0, ops);
 	free(toolname);
 
@@ -65,6 +64,7 @@ tool_init(struct tool *tool, char *name, const void *ops)
 		    tool_window_close, "%p", tool);
 	}
 	tool->type = Strdup(name);
+	tool->button = NULL;
 }
 
 /* Return the first visible mapview widget. */
