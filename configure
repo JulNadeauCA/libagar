@@ -95,7 +95,7 @@ fi
 SRC=`pwd`
 BUILD=`pwd`
 
-echo > ${BUILD}/config.log
+echo > $BUILD/config.log
 
 echo >Makefile.config
 if [ "${help}" = "yes" ]
@@ -159,10 +159,10 @@ main(int argc, char *argv[])
 }
 EOT
 
-echo "$CC -o .cctest .cctest.c" >>${BUILD}/config.log
-$CC -o .cctest .cctest.c 2>>${BUILD}/config.log
+echo "$CC -o .cctest .cctest.c" >>$BUILD/config.log
+$CC -o .cctest .cctest.c 2>>$BUILD/config.log
 if [ $? != 0 -o ! -e .cctest ]; then
-    echo "-> failure" >> ${BUILD}/config.log
+    echo "-> failure" >> $BUILD/config.log
     echo "no"
     exit 1
 fi
@@ -170,11 +170,11 @@ fi
 cc_is_gcc=no
 if ./.cctest; then
     cc_is_gcc=yes
-    echo "-> success: gcc" >> ${BUILD}/config.log
+    echo "-> success: gcc" >> $BUILD/config.log
     echo "yes"
 else
     echo "yes"
-    echo "-> success" >> ${BUILD}/config.log
+    echo "-> success" >> $BUILD/config.log
 fi
 
 rm -f .cctest .cctest.c
@@ -195,14 +195,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -233,14 +233,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -271,14 +271,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -311,14 +311,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -349,14 +349,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -387,14 +387,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -425,14 +425,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -469,14 +469,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -524,14 +524,14 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC -o conftest conftest.c" >> ${BUILD}/config.log
-$CC -o conftest conftest.c 2>>${BUILD}/config.log
+echo "$CC -o conftest conftest.c" >> $BUILD/config.log
+$CC -o conftest conftest.c 2>>$BUILD/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 else
     if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	    echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	    compile="failed"
     fi
 fi
@@ -653,11 +653,11 @@ compile="ok"
 echo $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> /config.log
 $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: compiler had non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
@@ -742,11 +742,11 @@ compile="ok"
 echo $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> /config.log
 $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>/config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> ${BUILD}/config.log
+	echo "-> failed: compiler had non-zero exit status" >> $BUILD/config.log
 	compile="failed"
 fi
 if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> ${BUILD}/config.log
+	echo "-> failed: compiler did not produce an executable" >> $BUILD/config.log
 	compile="failed"
 fi
 rm -f conftest conftest.c
