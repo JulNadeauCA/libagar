@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.3 2002/04/21 09:07:44 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.4 2002/04/22 04:44:17 vedge Exp $	*/
 
 struct window {
 	struct	 object obj;
@@ -48,5 +48,7 @@ int		 window_link(void *);
 int		 window_unlink(void *);
 
 void		 window_draw(struct window *);
-void		 window_mouse_button(SDL_Event *, Uint32);
+void		 window_mouse_motion(SDL_Event *);
+void		 window_mouse_button(SDL_Event *);
+void		 window_key(SDL_Event *);
 
