@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.38 2002/06/12 20:40:06 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.39 2002/06/25 17:42:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -34,9 +34,9 @@ struct noderef {
 #define MAPREF_ANY		0xffff
 #define MAPREF_DONTSAVE		0
 	Uint32	offs;
-	Sint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
-				   used for direction and soft scroll. */
 
+	/* Animation variables */
+	Sint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0 */
 	int	frame, fdelta;	/* For MAPREF_ANIM_INDEPENDENT */
 
 	TAILQ_ENTRY(noderef) nrefs;	/* Node reference list */
@@ -72,7 +72,7 @@ struct map {
 	struct	object obj;
 
 	Uint32	flags;
-#define MAP_2D		0x0020		/* Two-dimensional */
+#define MAP_2D		0x20		/* Two-dimensional */
 
 	int	redraw;			/* Redraw at next tick
 					   (can be inconsistent) */
@@ -106,6 +106,8 @@ void	map_destroy(void *);
 void	map_clean(struct map *, struct object *, Uint32, Uint32, Uint32);
 void	map_allocnodes(struct map *, Uint32, Uint32);
 void	map_freenodes(struct map *);
+void	map_shrink(struct map *, Uint32, Uint32);
+void	map_grow(struct map *, Uint32, Uint32);
 #ifdef DEBUG
 void	map_verify(struct map *);
 #endif
