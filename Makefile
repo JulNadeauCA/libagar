@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.36 2003/07/28 04:23:49 vedge Exp $
+#	$Csoft: Makefile,v 1.37 2003/08/06 04:11:22 vedge Exp $
 
 SUBDIR=	 dencomp \
 	 denex \
@@ -33,6 +33,6 @@ snap: cleandir
 	sh mk/dist.sh
 	sh mk/agar-cvs.sh
 
-.PHONY: clean cleandir install deinstall depend regress prereq clean-config snap
+.PHONY: clean cleandir install deinstall depend regress prereq clean-config snap configure
 
 include mk/csoft.subdir.mk
