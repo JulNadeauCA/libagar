@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.31 2003/02/06 02:56:19 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.32 2003/02/10 04:02:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -210,7 +210,7 @@ fileops_load_map(int argc, union evarg *argv)
 	}
 	path = object_path(name, "map");			/* Existing? */
 	if (path == NULL) {
-		text_msg("Error", "%s.", error_get());
+		text_msg("Error finding map", "%s", error_get());
 		goto out;
 	} else {
 		free(path);
@@ -219,7 +219,11 @@ fileops_load_map(int argc, union evarg *argv)
 	m = emalloc(sizeof(struct map));
 	map_init(m, MAP_2D, name, NULL);
 
-	object_load(m);
+	if (object_load(m) == -1) {
+		text_msg("Error loading map", "%s", error_get());
+		free(m);
+		goto out;
+	}
 
 	win = mapwin_new(m);
 	view_attach(win);
@@ -248,7 +252,7 @@ fileops_revert_map(int argc, union evarg *argv)
 	if (object_load_from(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
 	} else {
-		text_msg("Error", "Could not revert: %s", error_get());
+		text_msg("Error reverting", "%s", error_get());
 	}
 	free(path);
 }

@@ -249,7 +249,8 @@ tl_objs_selected(int argc, union evarg *argv)
 	    100, 100);
 	
 	if (object_load(ob->art->tiles.map) == -1) {
-		dprintf("loading tile map: %s\n", error_get());
+		text_msg("Error loading tile map", "%s: %s",
+		    OBJECT(ob)->name, error_get());
 	}
 
 	/* Map operation buttons */

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.27 2003/02/17 02:46:39 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.27 2003/02/17 02:46:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -41,134 +41,124 @@
 #include <libfobj/fobj.h>
 
 #include "tool.h"
-#include "stamp.h"
+#include "fill.h"
 
-static const struct tool_ops stamp_ops = {
+static const struct tool_ops fill_ops = {
 	{
 		NULL,		/* destroy */
-		stamp_load,
-		stamp_save
+		fill_load,
+		fill_save
 	},
-	stamp_window,
-	stamp_cursor,
-	stamp_effect
+	fill_window,
+	NULL,			/* cursor */
+	fill_effect
 };
 
-static const struct version stamp_ver = {
-	"agar stamp tool",
+static const struct version fill_ver = {
+	"agar fill tool",
 	0, 0
 };
 
 void
-stamp_init(void *p)
+fill_init(void *p)
 {
-	struct stamp *stamp = p;
+	struct fill *fill = p;
 
-	tool_init(&stamp->tool, "stamp", &stamp_ops);
+	tool_init(&fill->tool, "fill", &fill_ops);
 
-	stamp->mode = STAMP_REPLACE;
+	fill->mode = FILL_MAP;
 }
 
 struct window *
-stamp_window(void *p)
+fill_window(void *p)
 {
-	struct stamp *st = p;
+	struct fill *fi = p;
 	struct window *win;
 	struct region *reg;
 
-	win = window_new("mapedit-tool-stamp", 0,
+	win = window_new("mapedit-tool-fill", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
 	    157, 76,
 	    157, 76);
-	window_set_caption(win, "Stamp");
+	window_set_caption(win, "Fill");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
 		struct radio *rad;
 		static const char *mode_items[] = {
-			"Replace",
-			"Insert highest",
+			"Fill map",
+			"Clear map",
 			NULL
 		};
 
 		rad = radio_new(reg, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
 		win->focus = WIDGET(rad);
 	}
 	return (win);
 }
 
 void
-stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
+fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 {
-	struct stamp *st = p;
+	struct fill *fi = p;
 	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
-	struct noderef *nref;
+	struct noderef *nref, *nnref;
+	Uint32 x, y;
 
-	if (srcnode == NULL) {
+	if (srcnode == NULL && fi->mode == FILL_MAP) {
 		text_msg("Error", "No source node");
 		return;
 	}
-	if (srcnode == dstnode) {
-		text_msg("Error", "Source node == destination node");
-		return;
-	}
 
-	if (st->mode == STAMP_REPLACE) {
-		node_destroy(dstnode);
-		node_init(dstnode, mv->cx, mv->cy);
-	}
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *dstnode = &m->map[y][x];
+			struct noderef *nref;
+			
+			MAP_CHECK_NODE(dstnode, x, y);
 
-	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		node_copy_ref(nref, dstnode);
+			if (srcnode == dstnode) {
+				text_msg("Error",
+				    "Source node == destination node");
+				continue;
+			}
+
+			node_destroy(dstnode);
+			node_init(dstnode, x, y);
+
+			switch (fi->mode) {
+			case FILL_MAP:
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+					node_copy_ref(nref, dstnode);
+				}
+				break;
+			}
+
+			dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
+		}
 	}
-	dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
 }
 
 int
-stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+fill_load(void *p, int fd)
 {
-	struct stamp *st = p;
-	SDL_Surface *srcsu;
-	struct noderef *nref;
+	struct fill *fill = p;
 
-	if (mapedit.src_node == NULL) {
+	if (version_read(fd, &fill_ver) == -1)
 		return (-1);
-	}
-
-	TAILQ_FOREACH(nref, &mapedit.src_node->nrefs, nrefs) {
-		noderef_draw(mv->map, nref,
-		    rd->x + WIDGET_ABSX(mv),
-		    rd->y + WIDGET_ABSY(mv));
-	}
+	fill->mode = (int)read_uint32(fd);
+	dprintf("mode 0x%x\n", fill->mode);
 	return (0);
 }
 
 int
-stamp_load(void *p, int fd)
+fill_save(void *p, int fd)
 {
-	struct stamp *stamp = p;
+	struct fill *fill = p;
 
-	if (version_read(fd, &stamp_ver) == -1) {
-		return (-1);
-	}
-	
-	stamp->mode = (int)read_uint32(fd);
-
-	dprintf("mode 0x%x\n", stamp->mode);
-
-	return (0);
-}
-
-int
-stamp_save(void *p, int fd)
-{
-	struct stamp *stamp = p;
-
-	version_write(fd, &stamp_ver);
-
-	write_uint32(fd, (Uint32)stamp->mode);
-	
+	version_write(fd, &fill_ver);
+	write_uint32(fd, (Uint32)fill->mode);
 	return (0);
 }
