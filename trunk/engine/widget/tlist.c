@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.53 2003/05/04 02:09:43 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.54 2003/05/04 02:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -59,7 +59,9 @@ enum {
 	SELECTION_MOUSE_BUTTON = 1,
 	DEFAULT_BUTTON_SIZE =	 20,
 	PAGE_INCREMENT =	 4,
-	DBLCLICK_DELAY =	 250
+	DBLCLICK_DELAY =	 250,
+	MIN_WIDTH =		 26,
+	MIN_HEIGHT =		 5
 };
 
 static void	tlist_mousebuttondown(int, union evarg *);
@@ -162,7 +164,7 @@ tlist_draw(void *p)
 	int y = 0, i = 0;
 	int offset, visitems = 0;
 
-	if (WIDGET(tl)->w < 32 || WIDGET(tl)->h < 4)
+	if (WIDGET(tl)->w < MIN_WIDTH || WIDGET(tl)->h < MIN_HEIGHT)
 		return;
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
@@ -170,10 +172,8 @@ tlist_draw(void *p)
 
 	pthread_mutex_lock(&tl->lock);
 
-	if (tl->flags & TLIST_POLL) {
-		/* Update the list. */
+	if (tl->flags & TLIST_POLL)
 		event_post(tl, "tlist-poll", NULL);
-	}
 
 	offset = widget_get_int(&tl->sbar, "value");
 
@@ -206,10 +206,20 @@ tlist_draw(void *p)
 
 		x += tl->item_h + 4;
 		if (textsu != NULL) {
+			SDL_Rect clip_save;
+			SDL_Rect clip;
+			
+			SDL_GetClipRect(view->v, &clip_save);
+			clip.x = WIDGET_ABSX(tl);
+			clip.y = WIDGET_ABSY(tl)+y;
+			clip.w = WIDGET(tl)->w - WIDGET(&tl->sbar)->w;
+			clip.h = tl->item_h;
+			SDL_SetClipRect(view->v, &clip);
 			widget_blit(tl, textsu,
 			    x,
 			    y + tl->item_h/2 - textsu->h/2);
 			SDL_FreeSurface(textsu);
+			SDL_SetClipRect(view->v, &clip_save);
 		}
 
 		y += tl->item_h;
@@ -579,9 +589,10 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 
 		if (tl->flags & TLIST_DBLCLICK) {
 			if (tl->dblclicked == ti) {
-				SDL_RemoveTimer(tl->dbltimer);
 				dprintf("%s: double-click effect\n",
 				    OBJECT(tl)->name);
+				if (tl->dbltimer != NULL)
+					SDL_RemoveTimer(tl->dbltimer);
 				event_post(tl, "tlist-dblclick", "%p",
 				    tl->dblclicked);
 				tl->dblclicked = NULL;
