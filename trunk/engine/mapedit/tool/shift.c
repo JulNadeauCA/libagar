@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.27 2003/09/07 04:17:37 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.28 2003/10/13 23:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,42 +27,43 @@
  */
 
 #include <engine/engine.h>
-
-#include "shift.h"
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-const struct tool_ops shift_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* cursor */
+void shift_mouse(struct mapview *, Sint16, Sint16);
+static void shift_init(void);
+
+struct tool shift_tool = {
+	N_("Shift tool"),
+	N_("Displace a tile with the mouse."),
+	MAPEDIT_TOOL_SHIFT,
+	-1,
+	shift_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	NULL,			/* effect */
+	NULL,			/* cursor */
 	NULL			/* mouse */
 };
 
-void
-shift_init(void *p)
+static enum shift_mode {
+	SHIFT_HIGHEST,			/* Highest reference */
+	SHIFT_ALL			/* All references on layer */
+} mode = SHIFT_HIGHEST;
+
+static int multi = 0;			/* Apply to whole selection? */
+
+static void
+shift_init(void)
 {
-	struct shift *sh = p;
 	struct window *win;
 	struct vbox *vb;
 
-	tool_init(&sh->tool, "shift", &shift_ops, MAPEDIT_TOOL_SHIFT);
-	sh->mode = 0;
-	sh->multi = 0;
-	
-	win = TOOL(sh)->win = window_new("mapedit-tool-shift");
-	window_set_caption(win, _("Shift"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	event_new(win, "window-close", tool_window_close, "%p", sh);
+	win = tool_window_new(&shift_tool, "mapedit-tool-shift");
 
 	vb = vbox_new(win, 0);
 	{
@@ -75,17 +76,16 @@ shift_init(void *p)
 		struct checkbox *cb;
 
 		rad = radio_new(vb, modes);
-		widget_bind(rad, "value", WIDGET_INT, &sh->mode);
+		widget_bind(rad, "value", WIDGET_INT, &mode);
 		
 		cb = checkbox_new(vb, _("Multi"));
-		widget_bind(cb, "state", WIDGET_INT, &sh->multi);
+		widget_bind(cb, "state", WIDGET_INT, &multi);
 	}
 }
 
 void
-shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
+shift_mouse(struct mapview *mv, Sint16 relx, Sint16 rely)
 {
-	struct shift *sh = p;
 	struct map *m = mv->map;
 	int selx = mv->mx + mv->mouse.x;
 	int sely = mv->my + mv->mouse.y;
@@ -93,7 +93,7 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 	int h = 1;
 	int x, y;
 
-	if (!sh->multi ||
+	if (!multi ||
 	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
 		if (selx < 0 || selx >= m->mapw ||
 		    sely < 0 || sely >= m->maph)
@@ -113,7 +113,7 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 				    nref->r_gfx.xcenter+relx,
 				    nref->r_gfx.ycenter+rely);
 
-				if (sh->mode == SHIFT_HIGHEST)
+				if (mode == SHIFT_HIGHEST)
 					break;
 			}
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.15 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.16 2003/10/09 22:39:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 #include "mapedit.h"
 #include "mapview.h"
 
+/* Close the layer edition window. */
 static void
 layedit_close_win(int argc, union evarg *argv)
 {
@@ -52,7 +53,7 @@ layedit_close_win(int argc, union evarg *argv)
 	window_hide(win);
 }
 
-/* Display the layers of a map. */
+/* Update the list of layers. */
 static void
 layedit_poll(int argc, union evarg *argv)
 {
@@ -90,37 +91,33 @@ layedit_poll(int argc, union evarg *argv)
 static void
 layedit_push(int argc, union evarg *argv)
 {
+	char name[MAP_LAYER_NAME_MAX];
 	struct mapview *mv = argv[1].p;
 	struct textbox *name_tbox = argv[2].p;
-	char *name;
 	
-	name = textbox_string(name_tbox);
-	if (name[0] == '\0') {
-		free(name);
-		name = NULL;					/* Default */
-	}
+	textbox_copy_string(name_tbox, name, sizeof(name));
+
 	if (map_push_layer(mv->map, name) != 0) {
 		text_msg(MSG_ERROR, "%s", error_get());
 	} else {
-		textbox_printf(name_tbox, " ");			/* Clear */
+		textbox_printf(name_tbox, " ");
 	}
-	Free(name);
 }
 
 /* Effect the selection of a layer. */
 static void
 layedit_select(int argc, union evarg *argv)
 {
-	struct textbox *tb = argv[2].p;
+	struct textbox *rename_tb = argv[2].p;
 	struct tlist_item *it = argv[3].p;
-	int state = argv[4].i;
+	int selected = argv[4].i;
 	struct map_layer *lay;
 
-	if (!state) {
+	if (!selected) {
 		return;
 	}
 	lay = it->p1;
-	textbox_printf(tb, "%s", lay->name);
+	textbox_printf(rename_tb, "%s", lay->name);
 }
 
 /* Rename a layer. */
@@ -141,17 +138,40 @@ layedit_rename(int argc, union evarg *argv)
 	textbox_printf(name_tbox, " ");
 }
 
-/* Remove the highest layer from a map. */
+/* Remove the highest layer. */
 static void
 layedit_pop(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
+	int destructive = argv[2].i;
+	struct map *m = mv->map;
+	int x, y;
 
-	if (mv->map->cur_layer == mv->map->nlayers-1 &&
-	    mv->map->nlayers > 1) {
-		mv->map->cur_layer--;
+	if (m->cur_layer == m->nlayers-1 &&
+	    m->nlayers > 1) {
+		m->cur_layer--;
 	}
-	map_pop_layer(mv->map);
+	map_pop_layer(m);
+
+	if (destructive) {
+		for (y = 0; y < m->maph; y++) {
+			for (x = 0; x < m->mapw; x++) {
+				struct node *node = &m->map[y][x];
+				struct noderef *r, *nr;
+
+				for (r = TAILQ_FIRST(&node->nrefs);
+				     r != TAILQ_END(&node->nrefs);
+				     r = nr) {
+					nr = TAILQ_NEXT(r, nrefs);
+					if (r->layer != m->cur_layer-1)
+						continue;
+
+					TAILQ_REMOVE(&node->nrefs, r, nrefs);
+					noderef_destroy(m, r);
+				}
+			}
+		}
+	}
 }
 
 /* Toggle edition of a layer. */
@@ -243,7 +263,9 @@ layedit_init(struct mapview *mv)
 		struct button *bu;
 
 		bu = button_new(hb, _("Pop"));
-		event_new(bu, "button-pushed", layedit_pop, "%p", mv);
+		event_new(bu, "button-pushed", layedit_pop, "%p, %i", mv, 0);
+		bu = button_new(hb, _("Destructive Pop"));
+		event_new(bu, "button-pushed", layedit_pop, "%p, %i", mv, 1);
 		bu = button_new(hb, _("Edit"));
 		event_new(bu, "button-pushed", layedit_edit, "%p", mv);
 		bu = button_new(hb, _("Show/hide"));

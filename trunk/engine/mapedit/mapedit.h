@@ -1,48 +1,56 @@
-/*	$Csoft: mapedit.h,v 1.90 2003/09/07 04:17:35 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.91 2003/11/15 03:57:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
 #define _AGAR_MAPEDIT_H_
 
-#include <engine/map.h>
+#include <engine/mapedit/mapview.h>
+
+#include <engine/widget/window.h>
+#include <engine/widget/button.h>
 
 #include "begin_code.h"
 
-struct mapdir;
-struct tool;
-
-enum {
-	MAPEDIT_STAMP,
-	MAPEDIT_ERASER,
-	MAPEDIT_MAGNIFIER,
-	MAPEDIT_RESIZE,
-	MAPEDIT_PROPEDIT,
-	MAPEDIT_SELECT,
-	MAPEDIT_SHIFT,
-	MAPEDIT_MERGE,
-	MAPEDIT_FILL,
-	MAPEDIT_FLIP,
-	MAPEDIT_POSITION,
-	MAPEDIT_NTOOLS
+struct tool_kbinding {
+	const char *name;			/* Description */
+	SDLMod mod;				/* Key modifier */
+	SDLKey key;				/* Key */
+	int edit;				/* Require edition mode */
+	void (*func)(struct mapview *);		/* Callback function */
+	SLIST_ENTRY(tool_kbinding) kbindings;
 };
 
-struct mapedit_obj {
-	struct object	*obj;		/* Object being edited */
-	struct window	*win;		/* Generic edition window */
-	TAILQ_ENTRY(mapedit_obj) objs;
+struct tool {
+	const char *name;			/* Name of the tool */
+	const char *desc;			/* Short description */
+	int icon;				/* Icon (-1 = none) */
+	int cursor_index;			/* Cursor (-1 = none) */
+
+	void (*init)(void);
+	void (*destroy)(void);
+	int  (*load)(struct netbuf *);
+	int  (*save)(struct netbuf *);
+	void (*effect)(struct mapview *, struct map *, struct node *);
+	int  (*cursor)(struct mapview *, SDL_Rect *);
+	void (*mouse)(struct mapview *, Sint16, Sint16, Uint8);
+
+	struct window *win;			/* Tool settings window */
+	struct button *trigger;
+	SDL_Surface *cursor_su;			/* Static cursor surface */
+	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
 };
 
 struct mapedit {
-	struct object	obj;
-	struct tool	*tools[MAPEDIT_NTOOLS];	/* Map edition tools */
-	struct tool	*curtool;		/* Selected tool */
-	struct map	 copybuf;		/* Copy/paste buffer */
-	struct object	 pseudo;		/* Pseudo-object (for deps) */
-	TAILQ_HEAD(,mapedit_obj) dobjs;
-	TAILQ_HEAD(,mapedit_obj) gobjs;
+	struct object obj;
+	struct tool *curtool;		/* Selected tool */
+	struct map copybuf;		/* Copy/paste buffer */
+	struct object pseudo;		/* Pseudo-object (for depkeeping) */
 };
 
+#define	TOOL(t)	((struct tool *)(t))
+
 enum {
+	/* Tool icons */
 	MAPEDIT_TOOL_OBJEDITOR,
 	MAPEDIT_TOOL_STAMP,
 	MAPEDIT_TOOL_ERASER,
@@ -65,20 +73,36 @@ enum {
 	MAPEDIT_TOOL_FILL,
 	MAPEDIT_TOOL_FLIP,
 	MAPEDIT_TOOL_MIMPORT,
-	MAPEDIT_TOOL_POSITION
+	MAPEDIT_TOOL_POSITION,
+	MAPEDIT_TOOL_INVERT,
+
+	/* Tool cursors */
+	MAPEDIT_SELECT_CURSOR,
+	MAPEDIT_FILL_CURSOR,
+	MAPEDIT_MAGNIFIER_CURSOR,
+	MAPEDIT_RESIZE_V_CURSOR,
+	MAPEDIT_RESIZE_H_CURSOR,
+	MAPEDIT_ERASER_CURSOR
 };
 
-extern struct mapedit	mapedit;
-extern int		mapedition;
+extern struct mapedit mapedit;
+extern int mapedition;
+extern struct tool *mapedit_tools[];
+extern const int mapedit_ntools;
 
 __BEGIN_DECLS
-void	 mapedit_init(void);
-int	 mapedit_load(void *, struct netbuf *);
-int	 mapedit_save(void *, struct netbuf *);
-void	 mapedit_edit_objdata(struct object *);
-void	 mapedit_edit_objgen(struct object *);
+void	mapedit_init(void);
+void	mapedit_destroy(void *);
+int	mapedit_load(void *, struct netbuf *);
+int	mapedit_save(void *, struct netbuf *);
+void	mapedit_edit_objdata(struct object *);
+void	mapedit_edit_objgen(struct object *);
 
 struct window	*objedit_window(void);
+struct mapview	*tool_mapview(void);
+struct window	*tool_window_new(struct tool *, const char *);
+void		 tool_bind_key(void *, SDLMod, SDLKey,
+		               void (*)(struct mapview *), int);
 __END_DECLS
 
 #include "close_code.h"

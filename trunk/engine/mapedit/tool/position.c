@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.4 2003/10/14 03:15:26 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.5 2003/11/15 03:58:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,31 +28,38 @@
 
 #include <engine/engine.h>
 #include <engine/input.h>
-
-#include "position.h"
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/tlist.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/spinbutton.h>
 
-static int	position_cursor(void *, struct mapview *, SDL_Rect *);
-static void	position_effect(void *, struct mapview *, struct map *,
-		                struct node *);
+static void position_init(void);
+static int position_cursor(struct mapview *, SDL_Rect *);
+static void position_effect(struct mapview *, struct map *, struct node *);
 
-const struct tool_ops position_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	position_cursor,
+struct tool position_tool = {
+	N_("Position"),
+	N_("Position or reposition objects on maps."),
+	MAPEDIT_TOOL_POSITION,
+	-1,
+	position_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	position_effect,
+	position_cursor,
 	NULL			/* mouse */
 };
+
+static int speed = 1;			/* Movement/scrolling increment */
+static int center_view = 0;		/* Center view around? */
+static int soft_motion = 1;		/* Soft-scrolling */
+static int pass_through = 0;		/* Ignore node movement restrictions */
+static void *obj = NULL;		/* Object to position */
+static void *submap = NULL;		/* Object submap to display */
+static void *input_dev = NULL;		/* Input device to control object */
 
 static struct tlist_item *
 find_objs(struct tlist *tl, struct object *pob, int depth)
@@ -113,8 +120,7 @@ static void
 poll_submaps(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct position *po = argv[1].p;
-	struct object *ob = po->obj;
+	struct object *ob = obj;
 
 	if (ob == NULL)
 		return;
@@ -123,29 +129,19 @@ poll_submaps(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
-void
-position_init(void *p)
+static void
+position_init(void)
 {
-	struct position *po = p;
 	struct window *win;
 	struct box *bo;
 	struct tlist *tl;
 
-	tool_init(&po->tool, "position", &position_ops, MAPEDIT_TOOL_POSITION);
-	po->speed = 1;
-	po->center_view = 0;
-	po->soft_motion = 1;
-	po->pass_through = 0;
-
-	win = TOOL(po)->win = window_new("mapedit-tool-position");
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	window_set_caption(win, _("Position"));
-	event_new(win, "window-close", tool_window_close, "%p", po);
+	win = tool_window_new(&position_tool, "mapedit-tool-position");
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl)->flags |= WIDGET_HFILL;
 	tlist_prescale(tl, "XXXXXXXXXXXXXXXXX", 5);
-	widget_bind(tl, "selected", WIDGET_POINTER, &po->obj);
+	widget_bind(tl, "selected", WIDGET_POINTER, &obj);
 	event_new(tl, "tlist-poll", poll_objs, "%p", world);
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
@@ -155,36 +151,34 @@ position_init(void *p)
 		struct combo *com;
 
 		com = combo_new(bo, COMBO_POLL, _("Submap: "));
-		event_new(com->list, "tlist-poll", poll_submaps, "%p", po);
-		widget_bind(com->list, "selected", WIDGET_POINTER, &po->submap);
+		event_new(com->list, "tlist-poll", poll_submaps, NULL);
+		widget_bind(com->list, "selected", WIDGET_POINTER, &submap);
 
 		com = combo_new(bo, COMBO_POLL, _("Input device: "));
 		event_new(com->list, "tlist-poll", poll_input_devs, NULL);
-		widget_bind(com->list, "selected", WIDGET_POINTER,
-		    &po->input_dev);
+		widget_bind(com->list, "selected", WIDGET_POINTER, &input_dev);
 	
 		sb = spinbutton_new(bo, _("Speed: "));
-		widget_bind(sb, "value", WIDGET_INT, &po->speed);
+		widget_bind(sb, "value", WIDGET_INT, &speed);
 		spinbutton_set_min(sb, 1);
 		spinbutton_set_max(sb, 16);
 		spinbutton_set_increment(sb, 1);
 		
 		cb = checkbox_new(bo, _("Center view around"));
-		widget_bind(cb, "state", WIDGET_BOOL, &po->center_view);
+		widget_bind(cb, "state", WIDGET_BOOL, &center_view);
 		
 		cb = checkbox_new(bo, _("Soft motion"));
-		widget_bind(cb, "state", WIDGET_BOOL, &po->soft_motion);
+		widget_bind(cb, "state", WIDGET_BOOL, &soft_motion);
 		
 		cb = checkbox_new(bo, _("Pass through"));
-		widget_bind(cb, "state", WIDGET_BOOL, &po->pass_through);
+		widget_bind(cb, "state", WIDGET_BOOL, &pass_through);
 	}
 }
 
 static void
-position_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
+position_effect(struct mapview *mv, struct map *m, struct node *dn)
 {
-	struct position *po = p;
-	struct object *ob = po->obj;
+	struct object *ob = obj;
 	int dirflags = 0;
 
 	if (ob == NULL)
@@ -192,21 +186,21 @@ position_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
 
 	dprintf("position `%s'\n", ob->name);
 	object_set_position(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer);
-	object_set_submap(ob, po->submap);
-	ob->pos->input = po->input_dev;
+	object_set_submap(ob, submap);
+	ob->pos->input = input_dev;
 
-	if (po->center_view)
+	if (center_view)
 		dirflags |= DIR_CENTER_VIEW;
-	if (po->soft_motion)
+	if (soft_motion)
 		dirflags |= DIR_SOFT_MOTION;
-	if (po->pass_through)
+	if (pass_through)
 		dirflags |= DIR_PASS_THROUGH;
 
-	object_set_direction(ob, DIR_S, dirflags, po->speed);
+	object_set_direction(ob, DIR_S, dirflags, speed);
 }
 
 static int
-position_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+position_cursor(struct mapview *mv, SDL_Rect *rd)
 {
 	return (-1);
 }
