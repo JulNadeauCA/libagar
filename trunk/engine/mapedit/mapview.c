@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.17 2002/08/18 00:35:43 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.18 2002/08/19 05:33:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -173,26 +173,34 @@ draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
 
 	if (node->flags & NODE_BLOCK) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BLOCK), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_WALK) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_WALK), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_CLIMB) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_CLIMB), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 	
 	if (node->flags & NODE_BIO) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BIO), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_REGEN) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_REGEN), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 	
 	if (node->flags & NODE_SLOW) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_SLOW), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	} else if (node->flags & NODE_HASTE) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_HASTE), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 
 	if (node->flags & NODE_ORIGIN) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_ORIGIN), rx, ry);
+		rx += SPRITE(mv->med, MAPEDIT_BLOCK)->w;
 	}
 }
 
@@ -314,7 +322,7 @@ mapview_draw(void *p)
 			}
 			
 			if (nsprites > 0 && mv->flags & MAPVIEW_PROPS &&
-			    mv->zoom > 30) {
+			    mv->zoom >= 60) {
 				draw_node_props(mv, node, rx, ry);
 			}
 
