@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.12 2002/05/06 02:22:06 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.13 2002/05/15 07:28:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 
 static const struct widget_ops label_ops = {
 	{
-		NULL,	/* destroy */
+		label_destroy,
 		NULL,	/* load */
 		NULL,	/* save */
 		NULL,	/* on attach */
@@ -58,41 +58,51 @@ static const struct widget_ops label_ops = {
 };
 
 struct label *
-label_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
+label_new(struct region *reg, char *caption, int flags)
 {
 	struct label *label;
 
 	label = emalloc(sizeof(struct label));
-	label_init(label, caption, flags, x, y);
+	label_init(label, caption, flags);
 
-	pthread_mutex_lock(&win->lock);
-	window_attach(win, label);
-	pthread_mutex_unlock(&win->lock);
+	pthread_mutex_lock(&reg->win->lock);
+	region_attach(reg, label);
+	pthread_mutex_unlock(&reg->win->lock);
+
 	return (label);
 }
 
 void
-label_init(struct label *label, char *caption, int flags, Sint16 x, Sint16 y)
+label_init(struct label *label, char *caption, int flags)
 {
-	/* XXX Leave geometry undefined, TTF-dependent. */
-	widget_init(&label->wid, "label", "widget", &label_ops, x, y, 0, 0);
+	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
+	SDL_Surface *s;
 
-	strcpy(label->caption, caption);
+	label->caption = strdup(caption);
+
+	s = TTF_RenderText_Solid(font, label->caption, white);
+	if (s == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+	}
+
+	widget_init(&label->wid, "label", "widget", &label_ops, s->w, s->h);
+	label->label_s = s;
 	label->flags = flags;
 }
 
 void
 label_draw(void *p)
 {
-	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 	struct label *l = p;
-	SDL_Surface *s;
 
-	s = TTF_RenderText_Solid(font, l->caption, white);
-	if (s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
-	WIDGET_DRAW(l, s, 0, 0);
-	SDL_FreeSurface(s);
+	WIDGET_DRAW(l, l->label_s, 0, 0);
 }
 
+void
+label_destroy(void *p)
+{
+	struct label *l = p;
+
+	free(l->caption);
+	SDL_FreeSurface(l->label_s);
+}

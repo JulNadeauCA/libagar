@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.13 2002/05/06 02:22:06 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.14 2002/05/15 07:28:13 vedge Exp $	*/
 
 struct window;
 
@@ -22,7 +22,7 @@ struct widget {
 	Sint16	x, y;			/* Coordinates within parent window */
 	Uint16	w, h;			/* Can be defined by draw routine */
 
-	TAILQ_ENTRY(widget) widgets;	/* Widgets within parent window */
+	SLIST_ENTRY(widget) widgets;	/* Widgets inside region */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
@@ -58,7 +58,6 @@ enum {
 	CHECKBOX_DOWN
 };
 
-void		 widget_init(struct widget *, char *, char *, const void *,
-		    Sint16, Sint16, Uint16, Uint16);
-void		 widget_event(void *, SDL_Event *, int);
+void	widget_init(struct widget *, char *, char *, const void *, int, int);
+void	widget_event(void *, SDL_Event *, int);
 

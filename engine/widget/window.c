@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.20 2002/05/13 08:01:05 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.21 2002/05/15 07:28:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,8 +58,8 @@ static Uint32 delta = 0, delta2 = 256;
 
 /* XXX fucking insane */
 struct window *
-window_new(char *caption, Uint32 flags, window_type_t type,
-    Sint16 x, Sint16 y, Uint16 w, Uint16 h) {
+window_new(char *caption, int flags, enum window_type type, int x, int y,
+    int w, int h) {
 	struct window *win;
 
 	win = emalloc(sizeof(struct window));
@@ -75,13 +75,13 @@ window_new(char *caption, Uint32 flags, window_type_t type,
 /* XXX fucking insane */
 void
 window_init(struct window *win, struct viewport *view, char *caption,
-    Uint32 flags, window_type_t type, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
+    int flags, enum window_type type, int x, int y, int w, int h)
 {
 	static int nwindow = 0;
 	char *name;
 
 	name = object_name("window", nwindow++);
-	object_init(&win->obj, name, NULL, 0, &window_ops);
+	object_init(&win->obj, "window", name, NULL, 0, &window_ops);
 	free(name);
 
 	win->caption = strdup(caption);
@@ -103,6 +103,7 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->w = w;
 	win->h = h;
 	win->redraw = 0;
+	
 	/* XXX pref */
 	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
 	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
@@ -111,7 +112,6 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->vmask.y = (y / view->map->tileh) - view->mapyoffs;
 	win->vmask.w = (w / view->map->tilew);
 	win->vmask.h = (h / view->map->tilew);
-	dprintrect("vmask", &win->vmask);
 
 	/* XXX pref */
 	win->border[0] = SDL_MapRGB(view->v->format, 50, 50, 50);
@@ -120,30 +120,13 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->border[3] = SDL_MapRGB(view->v->format, 100, 100, 160);
 	win->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
 	
-	TAILQ_INIT(&win->widgetsh);
-	SLIST_INIT(&win->winsegsh);
-
+	SLIST_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, NULL);
-
-#if 0
-	/* Allocate a segment covering the whole window. */
-	win->rootseg = winseg_new(win, NULL, WINSEG_HORIZ, 0);
-#endif
-}
-
-void
-window_mouse_motion(struct viewport *view, SDL_Event *ev)
-{
-}
-
-void
-window_key(struct viewport *view, SDL_Event *ev)
-{
 }
 
 /* View must be locked. */
 static void *
-window_dispatch_event(void *p)
+dispatch_widget_event(void *p)
 {
 	struct window_event *wev = p;
 
@@ -154,35 +137,40 @@ window_dispatch_event(void *p)
 	return (NULL);
 }
 
-/* Called in event context. View must be locked. */
 void
-window_mouse_button(struct viewport *view, SDL_Event *ev)
+window_widget_event(void *parent, void *child, void *arg)
 {
-	struct window *win;
-	struct widget *w = NULL;
+	pthread_t cbthread;
+	struct widget *wid = child;
+	struct window_event *wev;
+	SDL_Event *ev = arg;
 
-	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windows_head) {
-		if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
-			continue;
-		}
-		TAILQ_FOREACH(w, &win->widgetsh, widgets) {
-			pthread_mutex_lock(&win->lock);
-			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y) &&
-			    WIDGET_OPS(w)->widget_event != NULL) {
-			    	struct window_event *wev;
-				pthread_t cbthread;
+	dprintf("parent = %s\n", OBJECT(parent)->type);
 
-				wev = emalloc(sizeof(struct window_event));
-				wev->w = w;
-				wev->flags = 0;
-				wev->ev = *ev;
+	OBJECT_ASSERT(child, "widget");
 
-				pthread_create(&cbthread, NULL,
-				    window_dispatch_event, wev);
-			}
-			pthread_mutex_unlock(&win->lock);
+	if (WIDGET_OPS(wid)->widget_event == NULL) {
+		return;
+	}
+
+	switch (ev->type) {
+	case SDL_MOUSEBUTTONDOWN:
+	case SDL_MOUSEBUTTONUP:
+		if (WIDGET_INSIDE(wid, ev->button.x, ev->button.y)) {
+			wev = emalloc(sizeof(struct window_event));
+			wev->w = wid;
+			wev->flags = 0;
+			wev->ev = *ev;
+			pthread_create(&cbthread, NULL, dispatch_widget_event,
+			    wev);
 		}
 		break;
+	case SDL_KEYDOWN:
+	case SDL_KEYUP:
+		dprintf("key\n");
+		break;
+	default:
+		fatal("cannot handle event\n");
 	}
 }
 
@@ -255,13 +243,17 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 	return (0);
 }
 
-/* Window must be locked. */
+/*
+ * Render a window.
+ * Window must be locked.
+ */
 void
 window_draw(struct window *win)
 {
 	SDL_Surface *v = win->view->v;
 	Uint32 xo, yo, col = 0;
 	Uint8 *dst, expcom;
+	struct region *reg;
 	struct widget *wid;
 	int rv;
 
@@ -366,10 +358,11 @@ window_draw(struct window *win)
 	}
 
 	/* Render the widgets. */
-	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
-		if (WIDGET_OPS(wid)->widget_draw != NULL &&
-		    !(wid->flags & WIDGET_HIDE)) {
-			WIDGET_OPS(wid)->widget_draw(wid);
+	SLIST_FOREACH(reg, &win->regionsh, regions) {
+		SLIST_FOREACH(wid, &reg->widgetsh, widgets) {
+			if (!(wid->flags & WIDGET_HIDE)) {
+				WIDGET_OPS(wid)->widget_draw(wid);
+			}
 		}
 	}
 	SDL_UpdateRect(v, win->x, win->y, win->w, win->h);
@@ -403,17 +396,20 @@ window_onattach(void *parent, void *child)
 	win->redraw++;
 }
 
-/* Called when window is detached from view. */
+/*
+ * Called when window is detached from view.
+ * Will lock window.
+ */
 void
 window_ondetach(void *parent, void *child)
 {
 	struct viewport *view = parent;
 	struct window *win = child;
+#if 0
 	struct widget *wid, *nextwid;
 
 	dprintf("%s is being detached from %s\n", OBJECT(win)->name,
 	    OBJECT(view)->name);
-
 	/* Free child widgets implicitly. */
 	pthread_mutex_lock(&win->lock);
 	for (wid = TAILQ_FIRST(&win->widgetsh);
@@ -427,68 +423,59 @@ window_ondetach(void *parent, void *child)
 		free(wid);
 	}
 	pthread_mutex_unlock(&win->lock);
+#endif
 
 	/* Decrement the view mask for this area. */
-	view_maskfill(win->view, &win->vmask, -1);
-	if (win->view->map != NULL) {
-		win->view->map->redraw++;
+	view_maskfill(view, &win->vmask, -1);
+	if (view->map != NULL) {
+		view->map->redraw++;
 	}
 }
 
 /*
- * Attach widget to window.
- * Window must be locked, the widget list may be modified in an orderly
- * manner (eg. a widget's attach routine can attach other widgets).
+ * Attach a region to this window.
+ * Window must be locked.
  */
 void
 window_attach(void *parent, void *child)
 {
 	struct window *win = parent;
-	struct widget *wid = child;
+	struct region *reg = child;
+
+	OBJECT_ASSERT(parent, "window");
+	OBJECT_ASSERT(child, "window-region");
 	
-	dprintf("attach %s to %s\n", OBJECT(wid)->name, OBJECT(win)->name);
-	
-	wid->win = win;
+	reg->win = win;
+	reg->x = reg->rx * win->w / 100;
+	reg->y = reg->ry * win->h / 100;
+	reg->w = reg->rw * win->w / 100;
+	reg->h = reg->rh * win->h / 100;
 
-	if (OBJECT_OPS(wid)->onattach != NULL) {
-		OBJECT_OPS(wid)->onattach(win, wid);
-	}
-
-	TAILQ_INSERT_HEAD(&win->widgetsh, wid, widgets);
-	win->redraw++;
-
-	dprintf("widget %s attached to %s\n", OBJECT(wid)->name,
-	    OBJECT(win)->name);
+	SLIST_INSERT_HEAD(&win->regionsh, reg, regions);
 }
 
 /*
- * Detach widget from window and free it.
- * Window must be locked, the widget list may be modified in an orderly
- * manner (eg. a widget's attach routine can attach other widgets).
+ * Detach a segment from this window.
+ * Window must be locked.
  */
 void
 window_detach(void *parent, void *child)
 {
 	struct window *win = parent;
-	struct widget *wid = child;
-	
-	dprintf("detach %s from %s\n", OBJECT(wid)->name, OBJECT(win)->name);
+	struct region *reg = child;
 
-	if (OBJECT_OPS(wid)->ondetach != NULL) {
-		OBJECT_OPS(wid)->ondetach(win, wid);
-	}
+	OBJECT_ASSERT(parent, "window");
+	OBJECT_ASSERT(child, "window-segment");
 
-	TAILQ_REMOVE(&win->widgetsh, wid, widgets);
-	win->redraw++;
-
-	object_destroy(win);
+	SLIST_REMOVE(&win->regionsh, reg, region, regions);
 }
 
 void
 window_destroy(void *p)
 {
 	struct window *win = p;
-	struct winseg *seg, *nextseg = NULL;
+#if 0
+	struct segment *seg, *nextseg = NULL;
 
 	/* Free segments. */
 	for (seg = SLIST_FIRST(&win->winsegsh);
@@ -497,57 +484,9 @@ window_destroy(void *p)
 		nextseg = SLIST_NEXT(seg, winsegs);
 		free(seg);
 	}
+#endif
 	pthread_mutex_destroy(&win->lock);
 	free(win->caption);
-}
-
-struct winseg *
-winseg_new(struct window *win, struct winseg *pseg, window_seg_t type, int req)
-{
-	struct winseg *seg;
-
-	seg = emalloc(sizeof(struct winseg));
-	seg->win = win;
-	seg->pseg = pseg;
-	seg->req = req;
-	seg->type = type;
-
-	if (pseg == NULL) {	/* Root segment */
-		dprintf("root segment for %s: %dx%d\n", OBJECT(win)->name,
-		    win->w, win->h);
-		seg->x = 0;
-		seg->y = 0;
-		seg->w = win->w;
-		seg->h = win->h;
-	} else {
-		seg->x = pseg->x;
-		seg->y = pseg->y;
-		switch (type) {
-		case WINSEG_HORIZ:
-			seg->w = pseg->w;
-			seg->h = pseg->h / 2;
-			break;
-		case WINSEG_VERT:
-			seg->w = pseg->w / 2;
-			seg->h = pseg->h;
-			break;
-		}
-		dprintf("child segment for %s: ", OBJECT(win)->name);
-		dprintf("%d,%d size %dx%d\n", seg->x, seg->y, seg->w,
-		    seg->h);
-	}
-
-	pthread_mutex_lock(&win->lock);
-	SLIST_INSERT_HEAD(&win->winsegsh, seg, winsegs);
-	pthread_mutex_unlock(&win->lock);
-
-	return (seg);
-}
-
-void
-winseg_destroy(struct winseg *seg)
-{
-	free(seg);
 }
 
 /* Window list must be locked. */
@@ -562,6 +501,40 @@ window_draw_all(void)
 			window_draw(win);
 		}
 		pthread_mutex_unlock(&win->lock);
+	}
+}
+
+void
+window_resize(struct window *win)
+{
+	struct region *reg;
+
+	dprintf("resize\n");
+
+	SLIST_FOREACH(reg, &win->regionsh, regions) {
+		struct widget *wid;
+		int x, y;
+
+		x = reg->x;
+		y = reg->y;
+	
+		SLIST_FOREACH(wid, &reg->widgetsh, widgets) {
+			wid->x = x;
+			wid->y = y;
+
+			if (!(wid->flags & WIDGET_HIDE)) {
+				WIDGET_OPS(wid)->widget_draw(wid);
+			}
+
+			switch (reg->walign) {
+			case WIDGET_HALIGN:
+				x += wid->w + reg->spacing;
+				break;
+			case WIDGET_VALIGN:
+				y += wid->h + reg->spacing;
+				break;
+			}
+		}
 	}
 }
 

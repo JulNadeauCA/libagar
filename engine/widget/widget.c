@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.12 2002/05/06 02:22:06 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.13 2002/05/15 07:28:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,22 +48,20 @@ extern pthread_mutex_t uwidgets_lock;	/* window.c */
 
 void
 widget_init(struct widget *wid, char *name, char *style, const void *wops,
-    Sint16 x, Sint16 y, Uint16 w, Uint16 h)
+    int w, int h)
 {
 	static Uint32 widid = 0;
 	char *widname;
 
 	/* Prepend parent window's name. */
 	widname = object_name(name, widid++);
-	object_init(&wid->obj, widname, style, OBJ_ART, wops);
+	object_init(&wid->obj, "widget", widname, style, OBJ_ART, wops);
 	free(widname);
 
 	wid->flags = 0;
 	wid->win = NULL;
-	wid->x = x;
-	wid->y = y;
-
-	/* Geometry may be undefined at this point. */
+	wid->x = 0;
+	wid->y = 0;
 	wid->w = w;
 	wid->h = h;
 }
