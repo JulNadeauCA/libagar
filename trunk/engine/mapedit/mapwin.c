@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.17 2002/09/13 11:08:30 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.18 2002/09/23 00:47:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -63,7 +63,7 @@ mapwin_new_view(int argc, union evarg *argv)
 	    OBJECT(m)->name, m->mapw, m->maph);
 	win = emalloc(sizeof(struct window));
 	window_init(win, NULL, caption, WINDOW_SOLID,
-	    96, 96, 375, 293, 100, 64);
+	    96, 96, 375, 293, 114, 136);
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
@@ -124,7 +124,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 
 	win = emalloc(sizeof(struct window));
 	window_init(win, NULL, caption, WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 420, 300, 375, 293);
+	    0, 0, 420, 300, 114, 136);
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
