@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.19 2002/06/22 16:05:37 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.20 2002/06/25 17:33:04 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -63,7 +63,11 @@ static const enum {
 	SAVE_BUTTON,
 	FONTCACHE_CBOX,
 	DEBUG_CBOX,
-	DEBUG_BUTTON
+	DEBUG_BUTTON,
+	UDATADIR_TBOX,
+	SYSDATADIR_TBOX,
+	W_TBOX,
+	H_TBOX
 } widgets;
 
 #define CONFIG_DEFAULT_WIDTH 	800
@@ -153,69 +157,93 @@ static struct window *
 config_settings_win(struct config *con)
 {
 	struct window *win;
-	struct region *lbody_reg, *rbody_reg, *text_reg, *buttons_reg;
+	struct region *reg;
 	struct button *close_button, *save_button, *debug_button;
 	struct checkbox *fontcache_cbox;
+	struct textbox *udatadir_tbox, *sysdatadir_tbox, *w_tbox, *h_tbox;
 #ifdef DEBUG
 	struct checkbox *debug_cbox;
 #endif
-	struct textbox *udatadir_tbox, *sysdatadir_tbox;
 
 	/* Settings window */
-	win = window_new("Engine settings", 0,      20,  20,  60, 60);
+	win = window_new("Engine settings", WINDOW_CENTER, 0, 0, 320, 260);
 
-	lbody_reg = region_new(win, REGION_VALIGN,   0,   0,  50, 30);
-	rbody_reg = region_new(win, REGION_VALIGN,  50,   0,  50, 30);
-	text_reg = region_new(win, REGION_VALIGN,    0,  30, 100, 30);
-	buttons_reg = region_new(win, REGION_HALIGN, 0,  80, 100, 20);
-
-	fontcache_cbox = checkbox_new(lbody_reg, "Font cache", 33,
+	/* Font cache */
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 25);
+	fontcache_cbox = checkbox_new(reg, "Font cache", 50,
 	    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
 	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
 	    "%i", FONTCACHE_CBOX);
-
+	/* Debugging */
 #ifdef DEBUG
-	debug_cbox = checkbox_new(lbody_reg, "Debugging enabled", 33,
+	debug_cbox = checkbox_new(reg, "Debugging enabled", 50,
 	    engine_debug ? CHECKBOX_PRESSED : 0);
 	event_new(debug_cbox, "checkbox-changed", 0, apply,
 	    "%i", DEBUG_CBOX);
 #endif
 
-	udatadir_tbox = textbox_new(text_reg,   "  User datadir: ", 0, 100, 50);
-	sysdatadir_tbox = textbox_new(text_reg, "System datadir: ", 0, 100, 50);
+	/* Data directories */
+	reg = region_new(win, REGION_VALIGN,  0, 25, 100, 40);
+	udatadir_tbox = textbox_new(reg, "  User datadir: ", 0, 100, 50);
+	event_new(udatadir_tbox, "textbox-changed", 0, apply,
+	    "%i", UDATADIR_TBOX);
+	sysdatadir_tbox = textbox_new(reg, "System datadir: ", 0, 100, 50);
+	event_new(sysdatadir_tbox, "textbox-changed", 0, apply,
+	    "%i", SYSDATADIR_TBOX);
+	
+	/* Resolution */
+	reg = region_new(win, REGION_HALIGN,  0, 65, 100, 20);
+	w_tbox = textbox_new(reg, "Width : ", 0, 50, 100);
+	event_new(w_tbox, "textbox-changed", 0, apply,
+	    "%i", W_TBOX);
+	h_tbox = textbox_new(reg, "Height: ", 0, 50, 100);
+	event_new(h_tbox, "textbox-changed", 0, apply,
+	    "%i", H_TBOX);
 
+	/* Close button */
+	reg = region_new(win, REGION_HALIGN, 0,  85, 100, 15);
+	close_button = button_new(reg, "Close", NULL, 0, 50, 97);
+	event_new(close_button, "button-pushed", 0, apply,
+	    "%i", CLOSE_BUTTON);
+	/* Save button */
+	save_button = button_new(reg, "Save", NULL, 0, 49, 97);
+	event_new(save_button, "button-pushed", 0, apply,
+	    "%i", SAVE_BUTTON);
+	win->focus = WIDGET(close_button);
+	
 	pthread_mutex_lock(&win->lock);
 	textbox_printf(udatadir_tbox, "%s", world->udatadir);
 	textbox_printf(sysdatadir_tbox, "%s", world->sysdatadir);
+	textbox_printf(w_tbox, "%d", con->view.w);
+	textbox_printf(h_tbox, "%d", con->view.h);
 	pthread_mutex_unlock(&win->lock);
-	
-	debug_button = button_new(rbody_reg, "Debug settings", NULL, 0,
-	    100, 50);
-	debug_button->justify = BUTTON_LEFT;
-	event_new(debug_button, "button-pushed", 0, apply,
-	    "%i", DEBUG_BUTTON);
 
-	close_button = button_new(buttons_reg, "Close", NULL, 0, 50, 97);
-	event_new(close_button, "button-pushed", 0, apply,
-	    "%i", CLOSE_BUTTON);
-
-	save_button = button_new(buttons_reg, "Save", NULL, 0, 49, 97);
-	event_new(save_button, "button-pushed", 0, apply,
-	    "%i", SAVE_BUTTON);
-	
-	win->focus = WIDGET(udatadir_tbox);
 	return (win);
 }
 
 static void
 apply(int argc, union evarg *argv)
 {
+	struct textbox *tbox;
+
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
 		window_hide_locked(WIDGET(argv[0].p)->win);
 		break;
 	case SAVE_BUTTON:
 		object_save(config);
+		break;
+	case UDATADIR_TBOX:
+	case SYSDATADIR_TBOX:
+		/* XXX */
+		break;
+	case W_TBOX:
+		tbox = argv[0].p;
+		config->view.w = atoi(tbox->text);
+		break;
+	case H_TBOX:
+		tbox = argv[0].p;
+		config->view.h = atoi(tbox->text);
 		break;
 	case FONTCACHE_CBOX:
 		pthread_mutex_lock(&config->lock);
