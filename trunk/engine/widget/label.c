@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.79 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.80 2004/09/28 04:26:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -263,6 +263,14 @@ label_rect(struct label *label, char *s, size_t len, int ri)
 	snprintf(s, len, "%ux%u at %d,%d", rd->w, rd->h, rd->x, rd->y);
 }
 
+static void
+label_int_bool(struct label *label, char *s, size_t len, int ri)
+{
+	int *flag = &LABEL_ARG(int);
+
+	snprintf(s, len, "%s", *flag ? _("yes") : _("no"));
+}
+
 static const struct {
 	char	 *fmt;
 	size_t	  fmt_len;
@@ -279,6 +287,7 @@ static const struct {
 	{ "wxh", sizeof("wxh"),		label_wxh },
 	{ "x,y", sizeof("x,y"),		label_xy },
 	{ "rect", sizeof("rect"),	label_rect },
+	{ "ibool", sizeof("ibool"),	label_int_bool },
 };
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
