@@ -1,4 +1,4 @@
-/*	$Csoft: monitor_tool.c,v 1.1.1.1 2002/09/01 09:03:06 vedge Exp $	*/
+/*	$Csoft: monitor_tool.c,v 1.2 2002/09/06 01:30:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,7 +33,6 @@
 #include <errno.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

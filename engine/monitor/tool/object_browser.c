@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.4 2002/09/07 05:12:19 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.8 2002/09/09 00:45:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -121,7 +121,7 @@ object_browser_window(void *p)
 	struct bitmap *bmp;
 	struct tlist *objlist;
 
-	win = window_new("monitor-media-browser", "Media browser",
+	win = window_new("monitor-media-browser", "Object browser",
 	    WINDOW_SOLID|WINDOW_CENTER,
 	    0, 0, 184, 100, 184, 100);
 

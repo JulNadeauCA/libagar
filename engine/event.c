@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.79 2002/09/08 03:45:25 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.80 2002/09/11 08:50:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -112,19 +112,19 @@ event_hotkey(SDL_Event *ev)
 		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDLK_F6:
-		window_show(fps_win);
+		window_show(fps_win, 1, 1);
 		break;
 	case SDLK_F7:
 		if (engine_debug > 0) {
-			window_show(monitor.wins.toolbar);
+			window_show(monitor.wins.toolbar, 1, 1);
 		}
 		break;
 #endif
 	case SDLK_F1:
-		window_show(config->windows.settings);
+		window_show(config->windows.settings, 1, 1);
 		break;
 	case SDLK_F3:
-		window_show(config->windows.algorithm_sw);
+		window_show(config->windows.algorithm_sw, 1, 1);
 		break;
 #ifdef DEBUG
 	case SDLK_v:
@@ -140,13 +140,13 @@ event_hotkey(SDL_Event *ev)
 			mv = mapview_new(reg, curmapedit, view->rootmap->map,
 			    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
 			    100, 100);
-			window_show(win);
+			window_show(win, 1, 1);
 		}
 		break;
 #endif
-	case SDLK_t:	/* XXX move */
+	case SDLK_t:
 		if (curmapedit != NULL) {
-			window_show(curmapedit->toolbar_win);
+			window_show(curmapedit->toolbar_win, 1, 1);
 		}
 		break;
 	case SDLK_ESCAPE:
@@ -161,7 +161,7 @@ event_hotkey(SDL_Event *ev)
 
 #ifdef DEBUG
 #define UPDATE_FPS(delta) do {				\
-	label_printf(fps_label, "%d FPS", (delta));	\
+	label_printf(fps_label, "%d/100", (delta));	\
 	graph_plot(fps_item, (delta));			\
 } while (/*CONSTCOND*/0)
 #else
