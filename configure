@@ -120,13 +120,13 @@ echo "    --enable-32bpp                 Support 32 bpp display [default: yes]"
 echo "    --help                         Show this message"
 exit 1
 fi
-SHAREDIR="$PREFIX/share/geggy"
+SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
-SHAREDIR="\"$PREFIX/share/geggy\""
+SHAREDIR="\"$PREFIX/share/cave\""
 echo "#ifndef SHAREDIR" >> engine/mcconfig.h
 echo "#define SHAREDIR" $SHAREDIR >> engine/mcconfig.h
 echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
-MAPDIR="$PREFIX/share/geggy/maps"
+MAPDIR="$PREFIX/share/cave/maps"
 echo MAPDIR=$MAPDIR >> Makefile.config
 echo -n "checking for a usable make(1)..."
 if [ "$MAKE" = "" ]; then
