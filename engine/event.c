@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.120 2002/12/31 02:20:53 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.121 2002/12/31 05:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -400,13 +400,10 @@ event_dispatch(SDL_Event *ev)
 			view->rootmap->map->redraw++;
 			pthread_mutex_unlock(&world->lock);
 			break;
-		case GFX_ENGINE_GUI:
-			/* Redraw the whole screen. */
-			SDL_FillRect(view->v, NULL,
-			    SDL_MapRGB(view->v->format, 0, 0, 0));
-			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
+		default:
 			break;
 		}
+
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			pthread_mutex_lock(&win->lock);
 			if (win->flags & WINDOW_SHOWN) {
@@ -414,6 +411,11 @@ event_dispatch(SDL_Event *ev)
 			}
 			pthread_mutex_unlock(&win->lock);
 		}
+#ifdef HAVE_OPENGL
+		if (view->opengl) {
+			SDL_GL_SwapBuffers();
+		}
+#endif
 		break;
 	case SDL_MOUSEMOTION:
 		debug(DEBUG_MOUSEMOTION_EV, "SDL_MOUSEMOTION x=%d y=%d\n",
