@@ -1,10 +1,10 @@
-#	$Csoft: Makefile,v 1.2 2002/04/20 05:47:21 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2002/04/20 11:18:17 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 LIB=	widget
-SRCS=	widget.c window.c text.c label.c button.o
+SRCS=	widget.c window.c text.c label.c button.c
 OBJS=	widget.o window.o text.o label.o button.o
 SHARE=	LICENSE.ttf \
 	dignity.ttf kingrich.ttf larabie.ttf pakenham.ttf suigener.ttf \
