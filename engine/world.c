@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.3 2002/01/30 12:47:11 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.4 2002/02/03 11:21:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,6 +39,8 @@
 
 #include <engine/engine.h>
 
+static void	world_destroy(void *);
+
 struct world *
 world_create(char *name)
 {
@@ -63,13 +65,16 @@ world_create(char *name)
 }
 
 void
-world_destroy(struct object *obj)
+world_destroy(void *p)
 {
+	struct world *wo = (struct world *)p;
 	struct object *nob;
-	
-	map_unfocus(curmap);
 
-	SLIST_FOREACH(nob, &world->wobjsh, wobjs) {
+	if (curmap != NULL && (curmap->flags & MAP_FOCUSED)) {
+		map_unfocus(curmap);
+	}
+
+	SLIST_FOREACH(nob, &wo->wobjsh, wobjs) {
 		object_destroy(nob);
 		object_unlink(nob);
 	}
