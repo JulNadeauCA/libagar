@@ -1,4 +1,4 @@
-$Csoft: README.engine,v 1.7 2002/08/17 22:12:16 vedge Exp $
+$Csoft: README.engine,v 1.8 2002/09/01 02:48:37 vedge Exp $
 
 Global keys
 -----------
@@ -17,11 +17,4 @@ F6:		Show frames per second.
 F7:		Debug monitor.
 Ctrl+r:		Redraw the map.
 Ctrl+v:		Map view
-
-Environment variables
----------------------
-
-AGAR_STATE_PATH		Comma-separated list of directories containing
-			state save files and maps. This defaults to
-			"$HOME/.gamename:$PREFIX/share/gamename"
 
