@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.187 2003/08/06 04:09:56 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.188 2003/08/07 22:42:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -127,12 +127,16 @@ noderef_destroy(struct map *m, struct noderef *r)
 
 	switch (r->type) {
 	case NODEREF_SPRITE:
-		object_del_dep(m, r->r_sprite.obj);
-		object_page_out(r->r_sprite.obj, OBJECT_GFX);
+		if (r->r_sprite.obj != NULL) {
+			object_del_dep(m, r->r_sprite.obj);
+			object_page_out(r->r_sprite.obj, OBJECT_GFX);
+		}
 		break;
 	case NODEREF_ANIM:
-		object_del_dep(m, r->r_anim.obj);
-		object_page_out(r->r_anim.obj, OBJECT_GFX);
+		if (r->r_anim.obj != NULL) {
+			object_del_dep(m, r->r_anim.obj);
+			object_page_out(r->r_anim.obj, OBJECT_GFX);
+		}
 		break;
 	case NODEREF_WARP:
 		free(r->r_warp.map);
@@ -1161,9 +1165,23 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 
 	switch (r->type) {
 	case NODEREF_SPRITE:
+#if defined(DEBUG) || defined(EDITION)
+		if (r->r_sprite.obj->gfx == NULL ||
+		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
+			dprintf("bad sprite offs %d\n", (int)r->r_sprite.offs);
+			return;
+		}
+#endif
 		su = noderef_draw_sprite(r);
 		break;
 	case NODEREF_ANIM:
+#if defined(DEBUG) || defined(EDITION)
+		if (r->r_anim.obj->gfx == NULL ||
+		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
+			dprintf("bad anim offs %d\n", (int)r->r_anim.offs);
+			return;
+		}
+#endif
 		su = noderef_draw_anim(r);
 		break;
 	default:				/* Not a drawable */
@@ -1270,7 +1288,10 @@ enum {
 	INSERT_DOWN
 };
 
-/* Generate graphical noderefs from newly imported graphics. */
+/*
+ * Generate graphical noderefs from media associated with a map object.
+ * The map is resized as necessary.
+ */
 static void
 map_import_gfx(int argc, union evarg *argv)
 {
@@ -1360,6 +1381,11 @@ map_import_gfx(int argc, union evarg *argv)
 			break;
 		case -1:					/* Submap */
 			dprintf("+submap %u,%u\n", submap->mapw, submap->maph);
+			/*
+			 * Copy the elements of a fragment submap. The NULL
+			 * references are translated to the object itself,
+			 * to avoid complications with dependencies.
+			 */
 			for (sy = 0, dy = mv->esel.y;
 			     sy < submap->maph && dy < m->maph;
 			     sy++, dy++) {
@@ -1383,6 +1409,11 @@ map_import_gfx(int argc, union evarg *argv)
 							}
 							r->r_sprite.obj =
 							    OBJECT(m);
+							object_add_dep(m, m);
+							if (object_page_in(m,
+							    OBJECT_GFX) == -1) {
+								fatal("page");
+							}
 							break;
 						case NODEREF_ANIM:
 							if (r->r_anim.obj
@@ -1391,6 +1422,11 @@ map_import_gfx(int argc, union evarg *argv)
 							}
 							r->r_anim.obj =
 							    OBJECT(m);
+							object_add_dep(m, m);
+							if (object_page_in(m,
+							    OBJECT_GFX) == -1) {
+								fatal("page");
+							}
 							break;
 						default:
 							break;
@@ -1542,6 +1578,7 @@ map_edit(void *p)
 	window_attach(win, mv->mimport.win);
 
 	/* Create the map edition toolbar. */
+	/* XXX toolbar widget */
 	bo = box_new(win, BOX_HORIZ, BOX_WFILL);
 	box_set_spacing(bo, 0);
 	{
