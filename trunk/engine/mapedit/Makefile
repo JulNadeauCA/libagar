@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.54 2003/08/13 01:47:35 vedge Exp $
+#	$Csoft: Makefile,v 1.55 2003/08/26 01:20:26 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -10,7 +10,7 @@ LIB=	mapedit
 SRCS=	layedit.c mapedit.c mapview.c nodeedit.c objedit.c
 MAN3=	mapview.3
 
-XCF=		mapedit.xcf toolbar.xcf
+XCF=		toolbar.xcf
 DEN=		mapedit.den
 DEN_DIR=	engine/mapedit
 DEN_NAME=	"Map editor icons"
