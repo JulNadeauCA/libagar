@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: command.c,v 1.43 2002/06/22 20:38:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,8 +41,6 @@
 #include "command.h"
 
 static void	 mapedit_setcursor(struct mapedit *, int);
-static void	*mapedit_do_loadmap(void *);
-static void	*mapedit_do_savemap(void *);
 
 
 /*
@@ -188,7 +186,7 @@ mapedit_fillmap(struct mapedit *med)
 
 /* Move the origin of the map to x,y. */
 void
-mapedit_setorigin(struct mapedit *med, int *x, int *y)
+mapedit_set_origin(struct mapedit *med, int *x, int *y)
 {
 	struct map *map = med->map;
 	
@@ -203,134 +201,6 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 	map->redraw++;
 	
 	text_msg(2, TEXT_SLEEP, "Set origin at %dx%d.\n", *x, *y);
-}
-
-/* Load map from file for edition purposes. */
-static void *
-mapedit_do_loadmap(void *arg)
-{
-	struct mapedit *med = arg;
-	struct map *m = med->map;
-	char path[FILENAME_MAX];
-	Uint32 x, y;
-	
-	mapedit_setcursor(med, 0);
-
-	/* Users must copy maps to udatadir in order to edit them. */
-	/* XXX redundant */
-	sprintf(path, "%s/maps/%s.m", world->udatadir, med->margs.name);
-
-	pthread_mutex_lock(&world->lock);
-
-	if (object_loadfrom(m, path) == 0) {	/* Will reallocate nodes, and
-						   lock the map as well. */
-		x = m->defx;
-		y = m->defy;
-		m->map[y][x].flags |= NODE_ORIGIN;
-		med->x = x;
-		med->y = y;
-		view_center(m, x, y);
-	}
-	pthread_mutex_unlock(&world->lock);
-
-	mapedit_setcursor(med, 1);
-
-	text_msg(2, TEXT_SLEEP, "Loaded %s.\n", OBJECT(m)->name);
-
-	VIEW_REDRAW();
-	return (NULL);
-}
-
-/* Save map to file. */
-static void *
-mapedit_do_savemap(void *arg)
-{
-	struct mapedit *med = arg;
-
-	object_save(med->map);
-	text_msg(2, TEXT_SLEEP, "Saved %s.\n", OBJECT(med->map)->name);
-	return (NULL);
-}
-
-void
-mapedit_loadmap(struct mapedit *med)
-{
-	pthread_t loadmap_th;
-
-	pthread_create(&loadmap_th, NULL, mapedit_do_loadmap, med);
-}
-
-void
-mapedit_savemap(struct mapedit *med)
-{
-	pthread_t savemap_th;
-
-	pthread_create(&savemap_th, NULL, mapedit_do_savemap, med);
-}
-
-void
-mapedit_examine(struct map *em, int x, int y)
-{
-	char ss[1024], *s = ss;
-	struct noderef *nref;
-	struct node *node;
-	int i;
-	
-	node = &em->map[y][x];
-
-	sprintf(s, "<%dx%d>", x, y);
-
-	/* Keep in sync with map.h */
-	if (node->flags == NODE_BLOCK) {
-		s = strcat(s, " block");
-	} else {	/* XXX ugly */
-		if (node->flags & NODE_ORIGIN)
-			s = strcat(s, " origin");
-		if (node->flags & NODE_WALK)
-			s = strcat(s, " walk");
-		if (node->flags & NODE_CLIMB)
-			s = strcat(s, " climb");
-		if (node->flags & NODE_SLIP)
-			s = strcat(s, " slippery");
-		if (node->flags & NODE_BIO)
-			s = strcat(s, " bio");
-		if (node->flags & NODE_REGEN)
-			s = strcat(s, " regen");
-		if (node->flags & NODE_SLOW)
-			s = strcat(s, " slow");
-		if (node->flags & NODE_HASTE)
-			s = strcat(s, " haste");
-		if (node->v1 > 0) {
-			char sv[64];
-
-			sprintf(sv, " (v1=%d)", node->v1);
-			s = strcat(s, sv);
-		}
-	}
-	s = strcat(s, "\n");
-
-	i = 0;
-	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		char *obs;
-
-		obs = emalloc(256);	/* XXX */
-		sprintf(obs, "[%2d] %s:%d ", i++, nref->pobj->name, nref->offs);
-		if (nref->flags & MAPREF_SAVE)
-			obs = strcat(obs, "saveable ");
-		if (nref->flags & MAPREF_SPRITE)
-			obs = strcat(obs, "sprite ");
-		if (nref->flags & MAPREF_ANIM)
-			obs = strcat(obs, "animation ");
-		if (nref->flags & MAPREF_MAP_WARP)
-			obs = strcat(obs, "map-warp ");
-		if (nref->flags & MAPREF_MAP_NODE)
-			obs = strcat(obs, "map-node ");
-		obs = strcat(obs, "\n");
-		s = strcat(s, obs);
-		free(obs);
-	}
-
-	text_msg(8, TEXT_SLEEP, "%s", s);
 }
 
 /* Toggle map editor flags. */
