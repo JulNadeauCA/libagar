@@ -1,4 +1,4 @@
-.\"	$Csoft: char.3,v 1.1 2002/01/30 12:11:06 vedge Exp $
+.\"	$Csoft: char.3,v 1.2 2002/01/30 12:13:51 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -61,7 +61,7 @@ Directional/speed information
 .Fn char_link "void *obj"
 .Pp
 .Ft "void"
-.Fn char_event "struct object *, SDL_Event *"
+.Fn char_event "struct object *obj" "SDL_Event *event"
 .Pp
 .Ft "void"
 .Fn char_destroy "void *obj"
