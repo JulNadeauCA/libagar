@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.27 2002/08/20 07:56:29 vedge Exp $
+#	$Csoft: Makefile,v 1.28 2002/08/23 07:16:00 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= cave
@@ -18,6 +18,7 @@ prereq:
 configure: .PHONY
 	cat configure.in | manuconf > configure
 	chmod 755 configure
+	cvs commit -m "sync; rien" configure
 
 clean-config: Makefile.config
 	rm -f engine/mcconfig.h
