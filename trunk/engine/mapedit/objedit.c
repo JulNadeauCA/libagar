@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.11 2003/06/13 02:49:38 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.12 2003/06/17 23:30:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -199,6 +199,7 @@ objedit_window(void)
 			load_bu = button_new(hb, _("Load"));
 			save_bu = button_new(hb, _("Save"));
 			destroy_bu = button_new(hb, _("Destroy"));
+			button_disable(destroy_bu);
 		}
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);

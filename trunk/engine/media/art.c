@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.38 2003/06/06 01:55:54 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.39 2003/06/16 00:39:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/button.h>
 
-#include "xcf.h"
+#include <engine/media/loader/xcf.h>
 
 enum {
 	NANIMS_INIT =	1,

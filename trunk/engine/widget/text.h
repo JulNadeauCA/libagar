@@ -1,10 +1,10 @@
-/*	$Csoft: text.h,v 1.21 2003/06/17 23:30:48 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.22 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
 
-#include <engine/media/ttf.h>
+#include <engine/media/loader/ttf.h>
 
 #include "begin_code.h"
 
@@ -38,8 +38,7 @@ SDL_Surface		*text_render_unicode(const char *, int, Uint32,
 __inline__ SDL_Surface	*text_render_glyph(const char *, int, Uint32, Uint16);
 void			 text_prescale_unicode(const Uint16 *, int *, int *);
 __inline__ void		 text_prescale(const char *, int *, int *);
-
-void	 text_msg(enum text_msg_title, const char *, ...);
+void			 text_msg(enum text_msg_title, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"
