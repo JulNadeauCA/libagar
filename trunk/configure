@@ -110,7 +110,7 @@ for i in `echo $PATH |sed 's/:/ /g'`; do
 	fi
 done
 echo >Makefile.config
-echo >engine/config.h
+echo >engine/mcconfig.h
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
@@ -126,9 +126,9 @@ fi
 SHAREDIR="$PREFIX/share/geggy"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/geggy\""
-echo "#ifndef SHAREDIR" >> engine/config.h
-echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
-echo "#endif /* SHAREDIR */" >> engine/config.h
+echo "#ifndef SHAREDIR" >> engine/mcconfig.h
+echo "#define SHAREDIR $SHAREDIR" >> engine/mcconfig.h
+echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
 echo -n "checking for a usable C compiler..."
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
@@ -271,37 +271,37 @@ fi
 	if [ "${x11_found}" = "yes" ]
  then
 USE_X11=1
-echo "#ifndef USE_X11" >> engine/config.h
-echo "#define USE_X11 $USE_X11" >> engine/config.h
-echo "#endif /* USE_X11 */" >> engine/config.h
+echo "#ifndef USE_X11" >> engine/mcconfig.h
+echo "#define USE_X11 $USE_X11" >> engine/mcconfig.h
+echo "#endif /* USE_X11 */" >> engine/mcconfig.h
 	fi
 fi
 if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]
  then
 XDEBUG=1
-echo "#ifndef XDEBUG" >> engine/config.h
-echo "#define XDEBUG $XDEBUG" >> engine/config.h
-echo "#endif /* XDEBUG */" >> engine/config.h
+echo "#ifndef XDEBUG" >> engine/mcconfig.h
+echo "#define XDEBUG $XDEBUG" >> engine/mcconfig.h
+echo "#endif /* XDEBUG */" >> engine/mcconfig.h
 fi
 if [ "${enable_debug}" = "yes" ]
  then
 DEBUG=1
-echo "#ifndef DEBUG" >> engine/config.h
-echo "#define DEBUG $DEBUG" >> engine/config.h
-echo "#endif /* DEBUG */" >> engine/config.h
+echo "#ifndef DEBUG" >> engine/mcconfig.h
+echo "#define DEBUG $DEBUG" >> engine/mcconfig.h
+echo "#endif /* DEBUG */" >> engine/mcconfig.h
 LOCKDEBUG=1
-echo "#ifndef LOCKDEBUG" >> engine/config.h
-echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
-echo "#endif /* LOCKDEBUG */" >> engine/config.h
+echo "#ifndef LOCKDEBUG" >> engine/mcconfig.h
+echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/mcconfig.h
+echo "#endif /* LOCKDEBUG */" >> engine/mcconfig.h
 fi
 if [ "${enable_wdebug}" = "yes" ]
  then
 WIDGET_DEBUG=1
-echo "#ifndef WIDGET_DEBUG" >> engine/config.h
-echo "#define WIDGET_DEBUG $WIDGET_DEBUG" >> engine/config.h
-echo "#endif /* WIDGET_DEBUG */" >> engine/config.h
+echo "#ifndef WIDGET_DEBUG" >> engine/mcconfig.h
+echo "#define WIDGET_DEBUG $WIDGET_DEBUG" >> engine/mcconfig.h
+echo "#endif /* WIDGET_DEBUG */" >> engine/mcconfig.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
-echo "#ifndef PREFIX" >> engine/config.h
-echo "#define PREFIX \"$PREFIX\"" >> engine/config.h
-echo "#endif /* PREFIX */" >> engine/config.h
+echo "#ifndef PREFIX" >> engine/mcconfig.h
+echo "#define PREFIX \"$PREFIX\"" >> engine/mcconfig.h
+echo "#endif /* PREFIX */" >> engine/mcconfig.h
