@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.45 2003/06/18 00:47:00 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.46 2003/07/08 00:34:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -25,8 +25,7 @@ struct mapview {
 #define MAPVIEW_ZOOMING_IN	 0x020
 #define MAPVIEW_ZOOMING_OUT	 0x040
 #define MAPVIEW_CENTER		 0x080
-#define MAPVIEW_SAVEABLE	 0x100	/* Load/save keys */
-#define MAPVIEW_NO_CURSOR	 0x200	/* Hide cursor */
+#define MAPVIEW_NO_CURSOR	 0x100	/* Hide cursor */
 
 	int	 prop_bg;		/* Background of node attributes */
 	int	 prop_style;		/* Style of node attributes */
