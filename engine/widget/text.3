@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.8 2003/06/30 02:58:58 vedge Exp $
+.\"	$Csoft: text.3,v 1.9 2003/08/25 03:59:13 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -99,11 +99,7 @@ returns the recommended spacing in pixels between lines of text.
 .nr nS 1
 .Ft "SDL_Surface *"
 .Fn text_render_unicode "const char *font_name" "int font_size" "Uint32 color" \
-                "const Uint16 *utf16"
-.Pp
-.Ft "SDL_Surface *"
-.Fn text_render_utf8 "const char *font_name" "int font_size" "Uint32 color" \
-                "const char *utf8"
+                "const Uint32 *ucs"
 .Pp
 .Ft "SDL_Surface *"
 .Fn text_render "const char *font_name" "int font_size" "Uint32 color" \
@@ -111,26 +107,22 @@ returns the recommended spacing in pixels between lines of text.
 .Pp
 .Ft "SDL_Surface *"
 .Fn text_render_glyph "const char *font_name" "int font_size" "Uint32 color" \
-                      "Uint16 ch"
+                      "Uint32 uch"
 .Pp
 .Ft "void"
-.Fn text_prescale_unicode "const Uint16 *utf16" "int *w" "int *h"
-.Pp
-.Ft "void"
-.Fn text_prescale_utf8 "const char *utf8" "int *w" "int *h"
+.Fn text_prescale_unicode "const Uint32 *ucs" "int *w" "int *h"
 .Pp
 .Ft "void"
 .Fn text_prescale "const char *text" "int *w" "int *h"
 .nr nS 0
 .Pp
 The
-.Fn text_render ,
+.Fn text_render
+function renders UTF-8 text to a newly allocated surface.
 .Fn text_render_unicode
-and
-.Fn text_render_utf8
-functions render text to a newly allocated surface.
+renders UCS-4 text to a newly allocated surface.
 .Fn text_render_glyph
-renders an Unicode character onto a new surface.
+renders an UCS-4 encoded Unicode character onto a new surface.
 A
 .Fa font_name
 argument of NULL or a
@@ -138,10 +130,9 @@ argument of NULL or a
 argument of -1 indicates that the defaults should be used.
 .Pp
 The
-.Fn text_prescale ,
-.Fn text_prescale_unicode
+.Fn text_prescale
 and
-.Fn text_prescale_utf8
+.Fn text_prescale_unicode
 functions return the expected surface dimensions for the given text.
 .Sh TROUBLETONS
 Something more sophisticated is needed to deal with unpredictable text surface

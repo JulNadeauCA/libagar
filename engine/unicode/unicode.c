@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.2 2003/06/14 22:07:46 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.3 2003/08/10 23:02:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -43,83 +43,138 @@ unicode_destroy(void)
 {
 }
 
-/* Convert a string of a specific encoding to UTF-16. */
-void
-unicode_convert(enum unicode_conv conv, Uint16 *unicode, const char *text,
-    size_t len)
+/* Return the UCS-4 representation of the given string/encoding. */
+Uint32 *
+unicode_import(enum unicode_conv conv, const char *s)
 {
-	size_t i, j;
+	Uint32 *ucs;
+	size_t len;
+	int i, j;
+
+	len = strlen(s);
+	ucs = Malloc((len + 1) * sizeof(Uint32));
 
 	switch (conv) {
 	case UNICODE_FROM_ASCII:
 	case UNICODE_FROM_LATIN1:
 		for (i = 0; i < len; i++) {
-			unicode[i] = ((const unsigned char *)text)[i];
+			ucs[i] = ((const unsigned char *)s)[i];
 		}
-		unicode[i] = 0;
+		ucs[i] = '\0';
 		break;
 	case UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < len; i++, j++) {
-			Uint16 ch = ((const unsigned char *)text)[i];
+			Uint32 ch = ((const unsigned char *)s)[i];
 
+#if 1
 			if (ch >= 0xf0) {
-				ch  = (Uint16)(text[i]   & 0x07) << 18;
-				ch |= (Uint16)(text[++i] & 0x3f) << 12;
-				ch |= (Uint16)(text[++i] & 0x3f) << 6;
-				ch |= (Uint16)(text[++i] & 0x3f);
+				ch  = (Uint16)(s[i]   & 0x07) << 18;
+				ch |= (Uint16)(s[++i] & 0x3f) << 12;
+				ch |= (Uint16)(s[++i] & 0x3f) << 6;
+				ch |= (Uint16)(s[++i] & 0x3f);
 			} else if (ch >= 0xe0) {
-				ch  = (Uint16)(text[i]   & 0x3f) << 12;
-				ch |= (Uint16)(text[++i] & 0x3f) << 6;
-				ch |= (Uint16)(text[++i] & 0x3f);
+				ch  = (Uint16)(s[i]   & 0x3f) << 12;
+				ch |= (Uint16)(s[++i] & 0x3f) << 6;
+				ch |= (Uint16)(s[++i] & 0x3f);
 			} else if (ch >= 0xc0) {
-				ch  = (Uint16)(text[i]   & 0x3f) << 6;
-				ch |= (Uint16)(text[++i] & 0x3f);
+				ch  = (Uint16)(s[i]   & 0x3f) << 6;
+				ch |= (Uint16)(s[++i] & 0x3f);
 			}
-			unicode[j] = ch;
+			ucs[j] = ch;
+#endif
 		}
-		unicode[j] = 0;
+		ucs[j] = '\0';
+		break;
+	default:
 		break;
 	}
-}
-
-/* Duplicate a string and convert to UTF-16. */
-Uint16 *
-unicode_import(enum unicode_conv conv, const char *text)
-{
-	Uint16 *unicode;
-	size_t len;
-	
-	len = strlen(text);
-	unicode = Malloc((len + 1) * sizeof(Uint16));
-	unicode_convert(conv, unicode, text, len);
-	return (unicode);
+	return (ucs);
 }
 
 /*
- * Return the length of a Unicode text in characters, without the
- * terminating NUL.
+ * Convert a UCS-4 string to the given encoding.
+ * At most dst_size-1 bytes will be copied. The string is NUL-terminated
+ * unless dst_size == 0.
+ *
+ * If retval >= dst_size, truncation occurred. If retval == -1, a
+ * conversion error has occurred.
  */
-size_t
-ucslen(const Uint16 *unicode)
+ssize_t
+unicode_export(enum unicode_conv conv, char *dst, const Uint32 *ucs,
+    size_t dst_size)
 {
 	size_t len;
 
-	for (len = 0; *unicode != '\0'; unicode++) {
+	switch (conv) {
+	case UNICODE_TO_UTF8:
+		for (len = 0; *ucs != '\0' && len < dst_size; ucs++) {
+			Uint32 uch = *ucs;
+			int chlen, ch1, i;
+
+			if (uch < 0x80) {
+				chlen = 1;
+				ch1 = 0;
+			} else if (uch < 0x800) {	
+				chlen = 2;
+				ch1 = 0xc0;
+			} else if (uch < 0x10000) {
+				chlen = 3;
+				ch1 = 0xe0;
+			} else if (uch < 0x200000) {
+				chlen = 4;
+				ch1 = 0xf0;
+			} else if (uch < 0x4000000) {
+				chlen = 5;
+				ch1 = 0xf8;
+			} else if (uch <= 0x7fffffff) {
+				chlen = 6;
+				ch1 = 0xfc;
+			} else {
+				return (-1);
+			}
+			if (len+chlen+1 >= dst_size) {
+				return ((ssize_t)len+chlen);
+			}
+			for (i = chlen - 1; i > 0; i--) {
+				dst[i] = (uch & 0x3f) | 0x80;
+				uch >>= 6;
+			}
+			dst[0] = uch | ch1;
+			dst += chlen;
+			len += chlen;
+		}
+		*dst = '\0';
+		return (len);
+	default:
+		return (-1);
+	}
+}
+
+/*
+ * Return the length of a UCS-4 string in characters, without the
+ * terminating NUL.
+ */
+size_t
+ucs4_len(const Uint32 *ucs)
+{
+	size_t len;
+
+	for (len = 0; *ucs != '\0'; ucs++) {
 		len++;
 	}
 	return (len);
 }
 
-/* Duplicate a Unicode string. */
-Uint16 *
-ucsdup(const Uint16 *unicode)
+/* Duplicate a UCS-4 string. */
+Uint32 *
+ucs4_dup(const Uint32 *ucs)
 {
 	size_t buflen;
-	Uint16 *ns;
+	Uint32 *ns;
 	
-	buflen = (ucslen(unicode)+1) * sizeof(Uint16);
+	buflen = (ucs4_len(ucs)+1) * sizeof(Uint32);
 	ns = Malloc(buflen);
-	memcpy(ns, unicode, buflen);
+	memcpy(ns, ucs, buflen);
 	return (ns);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.72 2003/07/14 03:35:04 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.73 2003/07/28 15:29:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -186,7 +186,7 @@ text_font_line_skip(ttf_font *fon)
 
 /* Render an Unicode character onto a new surface. */
 SDL_Surface *
-text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint16 ch)
+text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint32 ch)
 {
 	ttf_font *fon;
 	SDL_Color col;
@@ -209,43 +209,29 @@ text_render_glyph(const char *fontname, int fontsize, Uint32 color, Uint16 ch)
 	return (su);
 }
 
-/* Render Latin-1 text onto a new surface. */
+/* Render UTF-8 text onto a new surface. */
 SDL_Surface *
 text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
-	Uint16 *ucs;
+	Uint32 *ucs;
 	SDL_Surface *su;
 
-	ucs = unicode_import(UNICODE_FROM_LATIN1, text);
+	ucs = unicode_import(UNICODE_FROM_UTF8, text);
 	su = text_render_unicode(fontname, fontsize, color, ucs);
 	free(ucs);
 	return (su);
 }
 
-/* Render UTF-8 encoded text onto a new surface. */
-SDL_Surface *
-text_render_utf8(const char *fontname, int fontsize, Uint32 color,
-    const char *utf8)
-{
-	Uint16 *ucs;
-	SDL_Surface *su;
-
-	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
-	su = text_render_unicode(fontname, fontsize, color, ucs);
-	free(ucs);
-	return (su);
-}
-
-/* Render (possibly multi-line) UTF-16 encoded text onto a new surface. */
+/* Render (possibly multi-line) UCS-4 text onto a new surface. */
 SDL_Surface *
 text_render_unicode(const char *fontname, int fontsize, Uint32 color,
-    const Uint16 *text)
+    const Uint32 *text)
 {
 	SDL_Rect rd;
 	SDL_Color col;
 	SDL_Surface *su;
 	ttf_font *fon;
-	Uint16 *ucs, *ucsd, *ucsp;
+	Uint32 *ucs, *ucsd, *ucsp;
 	int nlines, maxw, fon_h;
 	Uint8 r, g, b;
 
@@ -264,7 +250,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	col.b = b;
 
 	/* Find out the line count. */
-	ucsd = ucs = ucsdup(text);
+	ucsd = ucs = ucs4_dup(text);
 	for (ucsp = ucs, nlines = 0; *ucsp != '\0'; ucsp++) {
 		if (*ucsp == '\n')
 			nlines++;
@@ -278,7 +264,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	} else {						/* Multiline */
 		SDL_Surface **lines;
 		int lineskip, i;
-		const Uint16 sep[2] = { '\n', '\0' };
+		const Uint32 sep[2] = { '\n', '\0' };
 
 		/*
 		 * Render the text to an array of surfaces, since we cannot
@@ -287,7 +273,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		lineskip = ttf_font_line_skip(fon);
 		lines = Malloc(sizeof(SDL_Surface *) * nlines);
 		for (i = 0, maxw = 0;
-		    (ucsp = ucssep(&ucs, sep)) != NULL && ucsp[0] != '\0';
+		    (ucsp = ucs4_sep(&ucs, sep)) != NULL && ucsp[0] != '\0';
 		    i++) {
 			lines[i] = ttf_render_unicode_solid(fon, ucsp, col);
 			if (lines[i] == NULL) {
@@ -319,9 +305,9 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	return (su);
 }
 
-/* Return the expected size of an UTF-16 encoded text. */
+/* Return the expected size of an Unicode text element. */
 void
-text_prescale_unicode(const Uint16 *ucs, int *w, int *h)
+text_prescale_unicode(const Uint32 *ucs, int *w, int *h)
 {
 	SDL_Surface *su;
 
@@ -333,13 +319,13 @@ text_prescale_unicode(const Uint16 *ucs, int *w, int *h)
 	SDL_FreeSurface(su);
 }
 
-/* Return the expected size of a Latin-1 text. */
+/* Return the expected surface size for a UTF-8 string. */
 void
 text_prescale(const char *text, int *w, int *h)
 {
-	Uint16 *ucs;
+	Uint32 *ucs;
 
-	ucs = unicode_import(UNICODE_FROM_LATIN1, text);
+	ucs = unicode_import(UNICODE_FROM_UTF8, text);
 	text_prescale_unicode(ucs, w, h);
 	free(ucs);
 }

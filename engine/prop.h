@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.21 2003/06/15 05:08:39 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.22 2003/07/04 12:31:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -11,7 +11,6 @@
 
 #define PROP_KEY_MAX		64
 #define PROP_STRING_MAX		65535
-#define PROP_UNICODE_MAX	32767
 
 enum prop_type {
 	PROP_UINT,
@@ -30,7 +29,6 @@ enum prop_type {
 	PROP_STRING,
 	PROP_POINTER,
 	PROP_BOOL,
-	PROP_UNICODE,		/* UTF-16 encoding */
 	PROP_ANY
 };
 
@@ -52,7 +50,6 @@ struct prop {
 #endif
 		char	*s;
 		void	*p;
-		Uint16	*ucs;
 	} data;
 	TAILQ_ENTRY(prop) props;
 };
@@ -80,7 +77,6 @@ struct prop	*prop_set_float(void *, const char *, float);
 struct prop	*prop_set_double(void *, const char *, double);
 #endif
 struct prop	*prop_set_string(void *, const char *, const char *, ...);
-struct prop	*prop_set_unicode(void *, const char *, Uint16 *);
 struct prop	*prop_set_pointer(void *, const char *, void *);
 
 struct prop	*prop_get(void *, const char *, enum prop_type, void *);
@@ -98,9 +94,7 @@ float		 prop_get_float(void *, const char *);
 double		 prop_get_double(void *, const char *);
 #endif
 char		*prop_get_string(void *, const char *);
-Uint16		*prop_get_unicode(void *, const char *);
 size_t		 prop_copy_string(void *, const char *, char *, size_t);
-size_t		 prop_copy_unicode(void *, const char *, Uint16 *, size_t);
 void		*prop_get_pointer(void *, const char *);
 
 void		 prop_print_value(char *, size_t, struct prop *);

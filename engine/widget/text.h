@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.23 2003/06/18 01:10:29 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.24 2003/06/21 06:50:27 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -31,12 +31,10 @@ int	 text_font_descent(ttf_font *);
 int	 text_font_line_skip(ttf_font *);
 
 __inline__ SDL_Surface	*text_render(const char *, int, Uint32, const char *);
-__inline__ SDL_Surface	*text_render_utf8(const char *, int, Uint32,
-			                  const char *);
 SDL_Surface		*text_render_unicode(const char *, int, Uint32,
-			                     const Uint16 *);
-__inline__ SDL_Surface	*text_render_glyph(const char *, int, Uint32, Uint16);
-void			 text_prescale_unicode(const Uint16 *, int *, int *);
+			                     const Uint32 *);
+__inline__ SDL_Surface	*text_render_glyph(const char *, int, Uint32, Uint32);
+void			 text_prescale_unicode(const Uint32 *, int *, int *);
 __inline__ void		 text_prescale(const char *, int *, int *);
 void			 text_msg(enum text_msg_title, const char *, ...);
 __END_DECLS

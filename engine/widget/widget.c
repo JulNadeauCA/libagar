@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.70 2003/07/04 12:25:44 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.71 2003/07/08 00:14:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -89,12 +89,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		break;
 	case WIDGET_STRING:
 		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
-		p1 = va_arg(ap, char *);		/* Text buffer */
-		size = va_arg(ap, size_t);		/* Size of buffer */
-		break;
-	case WIDGET_UNICODE:
-		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
-		p1 = va_arg(ap, Uint16 *);		/* Text buffer */
+		p1 = va_arg(ap, char *);		/* Latin-1 text */
 		size = va_arg(ap, size_t);		/* Size of buffer */
 		break;
 	default:
@@ -209,9 +204,6 @@ widget_get_binding(void *widp, const char *name, ...)
 		case WIDGET_STRING:
 			*(char ***)res = (char **)binding->p1;
 			break;
-		case WIDGET_UNICODE:
-			*(Uint16 ***)res = (Uint16 **)binding->p1;
-			break;
 		case WIDGET_PROP:			/* Convert */
 			if ((prop = prop_get(binding->p1, (char *)binding->p2,
 			    PROP_ANY, NULL)) == NULL) {
@@ -250,9 +242,6 @@ widget_get_binding(void *widp, const char *name, ...)
 #endif
 			case PROP_STRING:
 				*(char ***)res = (char **)&prop->data.s;
-				break;
-			case PROP_UNICODE:
-				*(Uint16 ***)res = (Uint16 **)&prop->data.ucs;
 				break;
 			default:
 				error_set("prop translation failed");
@@ -431,20 +420,6 @@ widget_get_string(void *wid, const char *name)
 	return (sd);
 }
 
-Uint16 *
-widget_get_unicode(void *wid, const char *name)
-{
-	struct widget_binding *b;
-	Uint16 *ucs, *ucsd;
-
-	if ((b = widget_get_binding(wid, name, &ucs)) == NULL) {
-		fatal("%s", error_get());
-	}
-	ucsd = ucsdup(ucs);
-	widget_binding_unlock(b);
-	return (ucsd);
-}
-
 size_t
 widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
 {
@@ -456,21 +431,6 @@ widget_copy_string(void *wid, const char *name, char *dst, size_t dst_size)
 		fatal("%s", error_get());
 	}
 	rv = strlcpy(dst, s, dst_size);
-	widget_binding_unlock(b);
-	return (rv);
-}
-
-size_t
-widget_copy_unicode(void *wid, const char *name, Uint16 *dst, size_t dst_size)
-{
-	struct widget_binding *b;
-	Uint16 *s;
-	size_t rv;
-
-	if ((b = widget_get_binding(wid, name, &s)) == NULL) {
-		fatal("%s", error_get());
-	}
-	rv = ucslcpy(dst, s, dst_size);
 	widget_binding_unlock(b);
 	return (rv);
 }
@@ -616,24 +576,7 @@ widget_set_string(void *wid, const char *name, const char *ns)
 	if ((binding = widget_get_binding(wid, name, &s)) == NULL) {
 		fatal("%s", error_get());
 	}
-	if (strlcpy(s, ns, binding->size) >= binding->size) {
-		dprintf("%s: string oflow\n", name);
-	}
-	widget_binding_unlock(binding);
-}
-
-void
-widget_set_unicode(void *wid, const char *name, const Uint16 *text)
-{
-	struct widget_binding *binding;
-	Uint16 *ucs;
-
-	if ((binding = widget_get_binding(wid, name, &ucs)) == NULL) {
-		fatal("%s", error_get());
-	}
-	if (ucslcpy(ucs, text, binding->size) >= binding->size) {
-		dprintf("%s: string oflow\n", name);
-	}
+	strlcpy(s, ns, binding->size);
 	widget_binding_unlock(binding);
 }
 

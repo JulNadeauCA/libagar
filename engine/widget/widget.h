@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.67 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.68 2003/07/04 12:25:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -32,7 +32,6 @@ enum widget_binding_type {
 	WIDGET_FLOAT,
 	WIDGET_DOUBLE,
 	WIDGET_STRING,
-	WIDGET_UNICODE,
 	WIDGET_PROP
 };
 
@@ -121,10 +120,8 @@ __inline__ float	 widget_get_float(void *, const char *);
 __inline__ double	 widget_get_double(void *, const char *);
 #endif
 __inline__ char		*widget_get_string(void *, const char *);
-__inline__ Uint16	*widget_get_unicode(void *, const char *);
 
 __inline__ size_t widget_copy_string(void *, const char *, char *, size_t);
-__inline__ size_t widget_copy_unicode(void *, const char *, Uint16 *, size_t);
 
 __inline__ void	 widget_set_uint(void *, const char *, unsigned int);
 __inline__ void	 widget_set_int(void *, const char *, int);
@@ -140,7 +137,6 @@ __inline__ void	 widget_set_float(void *, const char *, float);
 __inline__ void	 widget_set_double(void *, const char *, double);
 #endif
 __inline__ void	 widget_set_string(void *, const char *, const char *);
-__inline__ void	 widget_set_unicode(void *, const char *, const Uint16 *);
 __END_DECLS
 
 #include "close_code.h"

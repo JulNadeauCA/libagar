@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.39 2003/07/04 12:31:48 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.40 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,14 +62,6 @@ prop_copy(const struct prop *prop)
 	case PROP_STRING:
 		nprop->data.s = strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
-			free(nprop);
-			error_set(_("Out of memory for string."));
-			return (NULL);
-		}
-		break;
-	case PROP_UNICODE:
-		nprop->data.ucs = ucsdup(prop->data.ucs);
-		if (nprop->data.ucs == NULL) {
 			free(nprop);
 			error_set(_("Out of memory for string."));
 			return (NULL);
@@ -156,10 +148,6 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 	case PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
 		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
-		break;
-	case PROP_UNICODE:
-		nprop->data.ucs = va_arg(ap, Uint16 *);
-		debug(DEBUG_SET, "unicode %s: ...\n", key);
 		break;
 	case PROP_POINTER:
 		nprop->data.p = va_arg(ap, void *);
@@ -256,12 +244,6 @@ prop_set_string(void *ob, const char *key, const char *fmt, ...)
 }
 
 struct prop *
-prop_set_unicode(void *ob, const char *key, Uint16 *ucs)
-{
-	return (prop_set(ob, key, PROP_UNICODE, ucs));
-}
-
-struct prop *
 prop_set_pointer(void *ob, const char *key, void *p)
 {
 	return (prop_set(ob, key, PROP_POINTER, p));
@@ -336,9 +318,6 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 #endif
 			case PROP_STRING:
 				*(char **)p = prop->data.s;
-				break;
-			case PROP_UNICODE:
-				*(Uint16 **)p = prop->data.ucs;
 				break;
 			case PROP_POINTER:
 				*(void **)p = prop->data.p;
@@ -496,20 +475,6 @@ prop_get_string(void *p, const char *key)
 	return (sd);
 }
 
-Uint16 *
-prop_get_unicode(void *p, const char *key)
-{
-	Uint16 *ucs, *ucsd;
-
-	prop_lock(p);
-	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL) {
-		fatal("%s", error_get());
-	}
-	ucsd = ucsdup(ucs);
-	prop_unlock(p);
-	return (ucsd);
-}
-
 size_t
 prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
 {
@@ -521,21 +486,6 @@ prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
 		fatal("%s", error_get());
 	}
 	sl = strlcpy(buf, s, bufsize);
-	prop_unlock(p);
-	return (sl);
-}
-
-size_t
-prop_copy_unicode(void *p, const char *key, Uint16 *buf, size_t bufsize)
-{
-	Uint16 *ucs;
-	size_t sl;
-
-	prop_lock(p);
-	if (prop_get(p, key, PROP_UNICODE, &ucs) == NULL) {
-		fatal("%s", error_get());
-	}
-	sl = ucslcpy(buf, ucs, bufsize);
 	prop_unlock(p);
 	return (sl);
 }
@@ -624,20 +574,6 @@ prop_load(void *p, struct netbuf *buf)
 				free(s);
 			}
 			break;
-		case PROP_UNICODE:
-			{
-				Uint16 *ucs;
-
-				ucs = read_unicode(buf);
-				if (ucslen(ucs) >= PROP_UNICODE_MAX) {
-					error_set(_("Unicode string too big."));
-					free(ucs);
-					goto fail;
-				}
-				prop_set_unicode(ob, key, ucs);
-				free(ucs);
-			}
-			break;
 		default:
 			error_set(_("Cannot load prop of type 0x%x."), t);
 			goto fail;
@@ -710,9 +646,6 @@ prop_save(void *p, struct netbuf *buf)
 		case PROP_STRING:
 			write_string(buf, prop->data.s);
 			break;
-		case PROP_UNICODE:
-			write_unicode(buf, prop->data.ucs);
-			break;
 		case PROP_POINTER:
 			debug(DEBUG_STATE,
 			    "skipped machine-dependent property `%s'\n",
@@ -738,9 +671,6 @@ prop_destroy(struct prop *prop)
 {
 	switch (prop->type) {
 	case PROP_STRING:
-		Free(prop->data.s);
-		break;
-	case PROP_UNICODE:
 		Free(prop->data.s);
 		break;
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: ucssep.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993
@@ -44,15 +44,15 @@
  * On return, *stringp points past the last NUL written (if there might
  * be further tokens), or is NULL (if there are definitely no more tokens).
  *
- * If *stringp is NULL, ucssep() returns NULL.
+ * If *stringp is NULL, ucs4_sep() returns NULL.
  */
-Uint16 *
-ucssep(Uint16 **stringp, const Uint16 *delim)
+Uint32 *
+ucs4_sep(Uint32 **stringp, const Uint32 *delim)
 {
-	Uint16 *s;
-	const Uint16 *spanp;
-	Uint16 c, sc;
-	Uint16 *tok;
+	Uint32 *s;
+	const Uint32 *spanp;
+	Uint32 c, sc;
+	Uint32 *tok;
 
 	if ((s = *stringp) == NULL) {
 		return (NULL);

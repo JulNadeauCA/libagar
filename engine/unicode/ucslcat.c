@@ -1,4 +1,4 @@
-/*	$Csoft: ucslcat.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
+/*	$Csoft: ucslcat.c,v 1.2 2003/06/15 05:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -24,19 +24,19 @@
 #include "unicode.h"
 
 /*
- * Appends src to string dst of size bytes. At most (bytes-1)/sizeof(u16)
+ * Appends src to string dst of size bytes. At most (bytes-1)/sizeof(Uint32)
  * Unicode characters will be copied.
  *
- * Always NUL terminates (unless bytes <= ucslen(dst)*sizeof(u16)).
- * Returns (ucslen(src) + MIN(bytes, ucslen(initial dst))) * sizeof(u16)
+ * Always NUL terminates (unless bytes <= ucs4_len(dst)*sizeof(Uint32)).
+ * Returns (ucs4_len(src) + MIN(bytes, ucs4_len(initial dst)))*sizeof(Uint32)
  * If retval >= bytes, truncation occurred.
  */
 size_t
-ucslcat(Uint16 *dst, const Uint16 *src, size_t bytes)
+ucs4_lcat(Uint32 *dst, const Uint32 *src, size_t bytes)
 {
-	Uint16 *d = dst;
-	const Uint16 *s = src;
-	size_t siz = bytes / sizeof(Uint16);
+	Uint32 *d = dst;
+	const Uint32 *s = src;
+	size_t siz = bytes / sizeof(Uint32);
 	size_t n = siz;
 	size_t dlen;
 
@@ -48,7 +48,7 @@ ucslcat(Uint16 *dst, const Uint16 *src, size_t bytes)
 	n = siz - dlen;
 
 	if (n == 0) {
-		return ((dlen + ucslen(s))*sizeof(Uint16));
+		return ((dlen + ucs4_len(s))*sizeof(Uint32));
 	}
 	while (*s != '\0') {
 		if (n != 1) {
@@ -59,6 +59,6 @@ ucslcat(Uint16 *dst, const Uint16 *src, size_t bytes)
 	}
 	*d = '\0';
 
-	return ((dlen + (s - src))*sizeof(Uint16));   /* Does not include NUL */
+	return ((dlen + (s - src))*sizeof(Uint32));   /* Does not include NUL */
 }
 

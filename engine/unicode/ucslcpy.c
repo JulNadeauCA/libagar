@@ -1,4 +1,4 @@
-/*	$Csoft: ucslcpy.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
+/*	$Csoft: ucslcpy.c,v 1.2 2003/06/15 05:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -24,18 +24,19 @@
 #include "unicode.h"
 
 /*
- * Copy src to string dst of size bytes. At most (bytes-1)/sizeof(u16)
+ * Copy src to string dst of size bytes. At most (bytes-1)/sizeof(Uint32)
  * Unicode characters will be copied.
  *
  * Always NUL terminates (unless bytes == 0).
- * Returns ucslen(src)*sizeof(u16); if retval >= bytes, truncation occurred.
+ * Returns ucs4_len(src)*sizeof(Uint32); if retval >= bytes, truncation
+ * occurred.
  */
 size_t
-ucslcpy(Uint16 *dst, const Uint16 *src, size_t bytes)
+ucs4_lcpy(Uint32 *dst, const Uint32 *src, size_t bytes)
 {
-	Uint16 *d = dst;
-	const Uint16 *s = src;
-	size_t n = bytes / sizeof(Uint16);
+	Uint32 *d = dst;
+	const Uint32 *s = src;
+	size_t n = bytes / sizeof(Uint32);
 
 	/* Copy as many characters as will fit. */
 	if (n != 0 && --n != 0) {
@@ -55,6 +56,6 @@ ucslcpy(Uint16 *dst, const Uint16 *src, size_t bytes)
 			;
 	}
 
-	return ((s - src - 1) * sizeof(Uint16));      /* Does not include NUL */
+	return ((s - src - 1) * sizeof(Uint32));      /* Does not include NUL */
 }
 

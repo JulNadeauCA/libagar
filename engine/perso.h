@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.13 2003/06/15 08:54:18 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.14 2003/07/08 00:34:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -11,7 +11,7 @@ struct perso {
 	struct object obj;
 
 	pthread_mutex_t	 lock;
-	Uint16		 name[PERSO_NAME_MAX];	/* Name set by user */
+	char		 name[PERSO_NAME_MAX];	/* Name set by user */
 	Uint32		 flags;
 	Uint32		 seed;			/* Random seed */
 	Sint32		 level;			/* Current level */
