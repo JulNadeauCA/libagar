@@ -1,15 +1,12 @@
-#	$Csoft: Makefile,v 1.2 2002/01/26 01:37:22 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2002/01/26 20:08:11 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
 
 all: all-subdir
-clean: clean-subdir clean-config
+clean: clean-subdir
 install: install-subdir
 deinstall: deinstall-subdir
-
-clean-config:
-	rm -f Makefile.config
 
 .BEGIN:
 	@if [ ! -e "Makefile.config" ]; then \
