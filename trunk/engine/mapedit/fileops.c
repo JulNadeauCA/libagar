@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.1 2002/06/22 20:43:04 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.2 2002/07/06 23:52:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -45,6 +45,7 @@
 #include "command.h"
 #include "fileops.h"
 #include "mapwin.h"
+#include "mapview.h"
 
 void
 fileops_new_map(int argc, union evarg *argv)
@@ -92,3 +93,49 @@ fileops_new_map(int argc, union evarg *argv)
 	window_hide_locked(wid->win);
 }
 
+void
+fileops_save_map(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+
+	object_save(mv->map);
+}
+
+void
+fileops_load_map(int argc, union evarg *argv)
+{
+	char path[FILENAME_MAX];
+	struct mapview *mv = argv[1].p;
+	struct map *m = mv->map;
+
+	/* Always edit the user copy. */
+	snprintf(path, FILENAME_MAX, "%s/maps/%s.m",
+	    world->udatadir, OBJECT(m)->name);
+	if (object_loadfrom(mv->map, path) == 0) {
+		mapview_center(mv, m->defx, m->defy);
+	}
+}
+
+void
+fileops_clear_map(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct mapedit *med = mv->med;
+	struct map *m = mv->map;
+	struct editref *eref;
+
+	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, med->curoffs);
+
+	switch (eref->type) {
+	case EDITREF_SPRITE:
+		map_clean(m, med->curobj->pobj, eref->spritei,
+		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
+		    MAPREF_SAVE|MAPREF_SPRITE);
+		break;
+	case EDITREF_ANIM:
+		map_clean(m, med->curobj->pobj, eref->animi,
+		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
+		    MAPREF_SAVE|MAPREF_ANIM|MAPREF_ANIM_DELTA);
+		break;
+	}
+}
