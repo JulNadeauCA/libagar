@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.43 2004/04/25 02:11:01 vedge Exp $
+#	$Csoft: Makefile,v 1.44 2004/04/25 02:13:32 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -8,7 +8,8 @@ SUBDIR=	 agar-config \
 	 denex \
 	 engine \
 	 libintl \
-	 po
+	 po \
+	 compat
 
 all: all-subdir
 clean: clean-subdir
