@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.21 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.22 2002/05/19 14:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -359,7 +359,7 @@ window_draw(struct window *win)
 
 	/* Render the widgets. */
 	SLIST_FOREACH(reg, &win->regionsh, regions) {
-		SLIST_FOREACH(wid, &reg->widgetsh, widgets) {
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			if (!(wid->flags & WIDGET_HIDE)) {
 				WIDGET_OPS(wid)->widget_draw(wid);
 			}
@@ -405,25 +405,8 @@ window_ondetach(void *parent, void *child)
 {
 	struct viewport *view = parent;
 	struct window *win = child;
-#if 0
-	struct widget *wid, *nextwid;
 
-	dprintf("%s is being detached from %s\n", OBJECT(win)->name,
-	    OBJECT(view)->name);
-	/* Free child widgets implicitly. */
-	pthread_mutex_lock(&win->lock);
-	for (wid = TAILQ_FIRST(&win->widgetsh);
-	     wid != TAILQ_END(&win->widgetsh);
-	     wid = nextwid) {
-		nextwid = TAILQ_NEXT(wid, widgets);
-		if (OBJECT_OPS(wid)->ondetach != NULL)
-			OBJECT_OPS(wid)->ondetach(win, wid);
-		if (OBJECT_OPS(wid)->destroy != NULL)
-			OBJECT_OPS(wid)->destroy(wid);
-		free(wid);
-	}
-	pthread_mutex_unlock(&win->lock);
-#endif
+	/* XXX ... */
 
 	/* Decrement the view mask for this area. */
 	view_maskfill(view, &win->vmask, -1);
@@ -509,8 +492,6 @@ window_resize(struct window *win)
 {
 	struct region *reg;
 
-	dprintf("resize\n");
-
 	SLIST_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
 		int x, y;
@@ -518,7 +499,7 @@ window_resize(struct window *win)
 		x = reg->x;
 		y = reg->y;
 	
-		SLIST_FOREACH(wid, &reg->widgetsh, widgets) {
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			wid->x = x;
 			wid->y = y;
 

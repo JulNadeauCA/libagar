@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.37 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.38 2002/05/19 14:32:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -177,7 +177,7 @@ event_loop(void *arg)
 					    regions) {
 						struct widget *wid;
 
-						SLIST_FOREACH(wid,
+						TAILQ_FOREACH(wid,
 						    &reg->widgetsh, widgets) {
 							if (wid->flags &
 							    WIDGET_HIDE) {

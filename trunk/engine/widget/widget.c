@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.13 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,9 +42,6 @@
 
 #include "window.h"
 #include "widget.h"
-
-extern TAILQ_HEAD(, widget) uwidgetsh;	/* window.c */
-extern pthread_mutex_t uwidgets_lock;	/* window.c */
 
 void
 widget_init(struct widget *wid, char *name, char *style, const void *wops,
