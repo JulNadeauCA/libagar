@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.33 2003/06/25 00:26:13 vedge Exp $
+.\"	$Csoft: agar.3,v 1.34 2003/07/08 00:34:52 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -215,17 +215,15 @@ For the
 .Ft struct netbuf
 definition, required by load/save function prototypes.
 .It Pa Aq engine/loader/integral.h
-For integers.
+For saving integers.
 .It Pa Aq engine/loader/real.h
-For real numbers.
+For saving real numbers.
 .It Pa Aq engine/loader/string.h
-For Latin-1 text.
-.It Pa Aq engine/loader/unicode.h
-For Unicode text.
+For saving text.
 .It Pa Aq engine/loader/version.h
 For versioning.
 .It Pa Aq engine/error/error.h
-Error handling.
+Generic error handling.
 .It Pa Aq engine/object.h
 Generic
 .Xr object 3
