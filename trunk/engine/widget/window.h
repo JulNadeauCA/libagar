@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.27 2002/07/08 05:24:50 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.28 2002/07/08 08:39:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -9,7 +9,8 @@ enum window_event {
 	WINDOW_KEYUP,
 	WINDOW_KEYDOWN,
 	WINDOW_MOUSEMOTION,
-	WINDOW_MOUSEOUT
+	WINDOW_MOUSEOUT,
+	WINDOW_WIDGET_SCALED
 };
 	
 typedef enum {
@@ -44,6 +45,8 @@ struct window {
 	window_type_t	type;
 
 	char	*caption;		/* Titlebar text */
+	SDL_Surface *caption_s;
+
 	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
 	Uint32	*border;		/* Border colors */
 	int	 borderw;		/* Border width */
@@ -69,12 +72,6 @@ struct window {
 
 #define WINDOW_FOCUSED(w) (TAILQ_LAST(&view->windowsh, \
 			   windowq) == (w))
-
-#define WINDOW_FOCUS(w)	 do {					\
-	TAILQ_REMOVE(&view->windowsh, (w), windows);		\
-	TAILQ_INSERT_TAIL(&view->windowsh, (w), windows);	\
-	view->focus_win = NULL;					\
-} while (/*CONSTCOND*/0)
 
 #define WINDOW_CYCLE(w)	 do {					\
 	TAILQ_REMOVE(&view->windowsh, (w), windows);		\
@@ -138,4 +135,5 @@ void	 window_draw(struct window *);
 void	 window_animate(struct window *);
 int	 window_event_all(SDL_Event *);
 void	 window_resize(struct window *);
+void	 window_titlebar_printf(struct window *, char *, ...);
 
