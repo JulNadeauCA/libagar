@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.49 2002/11/12 05:17:16 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.50 2002/11/13 00:22:30 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -10,10 +10,11 @@ typedef enum {
 struct viewmap {
 	/* Read-only */
 	int	w, h;			/* View geometry in nodes */
-	
+
 	/* Read-write (shares viewport->lock) */
 	struct	map *map;		/* Currently visible map */
 	int	x, y;			/* Offset in map */
+	int	sx, sy;			/* Soft scroll offset */
 
 	/* Optimizations */
 	SDL_Rect **maprects;		/* Rectangles needed to draw the map. */
@@ -172,7 +173,7 @@ case 4:					\
 	
 extern struct viewport *view;	/* view.c */
 
-void	 view_init(gfx_engine_t);
+int	 view_init(gfx_engine_t);
 void	 view_attach(void *);
 void	 view_detach(void *);
 void	 view_detach_queued(void);

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.77 2002/11/25 03:44:32 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.78 2002/11/25 23:57:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -224,9 +224,13 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 
 	/* Initialize the graphic engine. */
 	if (mapediting || (flags & ENGINE_INIT_GUI)) {
-		view_init(GFX_ENGINE_GUI);
+		if (view_init(GFX_ENGINE_GUI) != 0) {
+			fatal("setting gui mode: %s\n", error_get());
+		}
 	} else {
-		view_init(GFX_ENGINE_TILEBASED);
+		if (view_init(GFX_ENGINE_TILEBASED) != 0) {
+			fatal("setting tile-based mode: %s\n", error_get());
+		}
 	}
 
 #ifdef XDEBUG

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.82 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.83 2002/11/22 23:11:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,8 +59,13 @@ static pthread_mutex_t cached_surfaces_lock = { PTHREAD_MUTEX_INITIALIZER };
 
 static void	free_cached_surface(struct cached_surface *);
 
+#ifdef DEBUG
+int	view_debug = 0;
+#define engine_debug view_debug
+#endif
+
 /* Initialize the graphic engine. */
-void
+int
 view_init(gfx_engine_t ge)
 {
 	struct viewport *v;
@@ -87,9 +92,12 @@ view_init(gfx_engine_t ge)
 	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
 		v->w -= v->w % TILEW;
 		v->h -= v->h % TILEH;
+		dprintf("rounded resolution to %dx%d\n", v->w, v->h);
 	}
 	if (v->w < 640 || v->h < 480) {
-		fatal("minimum resolution is 640x480\n");
+		error_set("minimum resolution is 640x480");
+		free(v);
+		return (-1);
 	}
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
@@ -111,7 +119,6 @@ view_init(gfx_engine_t ge)
 		screenflags |= SDL_HWPALETTE;
 		break;
 	}
-
 #if 0
 	switch (v->gfx_engine) {
 	case GFX_ENGINE_GUI:
@@ -120,11 +127,12 @@ view_init(gfx_engine_t ge)
 	default:
 	}
 #endif
-
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
-		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->bpp,
+		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->bpp,
 		    SDL_GetError());
+		free(v);
+		return (-1);
 	}
 
 	switch (v->gfx_engine) {
@@ -136,6 +144,8 @@ view_init(gfx_engine_t ge)
 		v->rootmap->map = NULL;
 		v->rootmap->x = 0;
 		v->rootmap->y = 0;
+		v->rootmap->sx = 0;
+		v->rootmap->sy = 0;
 		
 		/*
 		 * Precalculate node rectangles as well as an array
@@ -144,13 +154,16 @@ view_init(gfx_engine_t ge)
 		 */
 		v->rootmap->maprects = rootmap_alloc_maprects(mw, mh);
 
-		dprintf("precalculated %dx%d rectangles (%d Kb)\n",
+		dprintf("tile-based mode: %dx%d rectangles (%d Kb)\n",
 		    mw, mh, (mw*mh * sizeof(SDL_Rect)) / 1024);
 		break;
 	case GFX_ENGINE_GUI:
+		dprintf("gui mode\n");
 		break;
 	}
 	view = v;
+
+	return (0);
 }
 
 /*
@@ -169,6 +182,7 @@ view_detach_queued(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 
+		dprintf("%s\n", OBJECT(win)->name);
 		TAILQ_REMOVE(&view->windows, win, windows);
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
