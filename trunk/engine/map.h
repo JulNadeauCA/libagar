@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.37 2002/06/10 04:27:06 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.38 2002/06/12 20:40:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -32,6 +32,7 @@ struct noderef {
 #define MAPREF_MAP_WARP		0x1000	/* Jump to another map */
 #define MAPREF_MAP_NODE		0x2000	/* Node of another map */
 #define MAPREF_ANY		0xffff
+#define MAPREF_DONTSAVE		0
 	Uint32	offs;
 	Sint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
 				   used for direction and soft scroll. */
@@ -71,7 +72,6 @@ struct map {
 	struct	object obj;
 
 	Uint32	flags;
-#define MAP_FOCUSED	0x0001		/* Being displayed */
 #define MAP_2D		0x0020		/* Two-dimensional */
 
 	int	redraw;			/* Redraw at next tick
@@ -89,18 +89,20 @@ struct map {
 	SLIST_ENTRY(map) wmaps;		/* Active maps */
 };
 
-#define MAP_COORD(x, view)	((x) / TILEW)
+#define MAP_COORD(x)	((x) / TILEW)
+
+/* View must be locked */
+#define MAP_FOCUSED(m)	(mainview->rootmap.map == (m))
+
+void	rootmap_draw(struct map *);
+void	rootmap_animate(struct map *);
+void	rootmap_focus(struct map *);
 
 void	map_init(struct map *, char *, char *, Uint32);
 int	map_load(void *, int);
 int	map_save(void *, int);
 void	map_destroy(void *);
 
-void	map_draw(struct map *);
-void	map_animate(struct map *);
-
-void	map_focus(struct map *);
-void	map_unfocus(struct map *);
 void	map_clean(struct map *, struct object *, Uint32, Uint32, Uint32);
 void	map_allocnodes(struct map *, Uint32, Uint32);
 void	map_freenodes(struct map *);
