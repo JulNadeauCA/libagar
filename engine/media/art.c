@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.33 2003/03/26 10:04:29 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.35 2003/04/14 08:56:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -561,7 +561,7 @@ tl_medias_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_items = argv[1].p;
 
-	widget_set_int(tl_items->vbar, "value", 0);
+	widget_set_int(&tl_items->sbar, "value", 0);
 }
 
 static void
