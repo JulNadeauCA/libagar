@@ -1,6 +1,4 @@
-/*	$Csoft: queue.h,v 1.2 2002/02/03 11:15:27 vedge Exp $	*/
-/*	$OpenBSD: queue.h,v 1.22 2001/06/23 04:39:35 angelos Exp $	*/
-/*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
+/*	$Csoft: queue.h,v 1.3 2002/02/05 06:07:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993
@@ -458,6 +456,18 @@ struct {								\
 		}							\
 	}								\
 } while (0)
+
+#define TAILQ_DUP(avar, acount, ahead, atype, afield) do {	\
+		struct atype *tq_dup_e;				\
+		Uint32 tq_dup_i = 0;				\
+								\
+		avar = (struct atype **)emalloc((acount) *	\
+		    sizeof(struct atype *)); 			\
+		TAILQ_FOREACH(tq_dup_e, ahead, afield) {	\
+			(avar)[tq_dup_i++] = tq_dup_e;		\
+		}						\
+	} while (/*CONSTCOND*/0)
+
 
 /*
  * Circular queue definitions.
