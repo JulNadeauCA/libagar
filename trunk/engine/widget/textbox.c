@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.78 2004/03/25 06:47:48 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.79 2004/03/26 04:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -315,10 +315,9 @@ textbox_mousemotion(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 	int x = argv[1].i;
-	Uint8 ms;
+	int state = argv[2].i;
 
-	ms = SDL_GetMouseState(NULL, NULL);
-	if (ms & SDL_BUTTON_LEFT) {
+	if (state & SDL_BUTTON_LEFT) {
 		if (x > tbox->label->w) {
 			tbox->newx = x;
 		} else if (x <= tbox->label->w) {

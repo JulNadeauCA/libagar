@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.82 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.83 2004/03/25 06:48:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -973,21 +973,23 @@ widget_relative_area(void *p, int x, int y)
  */
 void
 widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
-    int xrel, int yrel)
+    int xrel, int yrel, int state)
 {
 	struct widget *cwid;
 
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_MOTION)) {
-		event_post(NULL, wid, "window-mousemotion", "%i, %i, %i, %i",
+		event_post(NULL, wid, "window-mousemotion",
+		    "%i, %i, %i, %i, %i",
 		    x - wid->cx,
 		    y - wid->cy,
 		    xrel,
-		    yrel);
+		    yrel,
+		    state);
 	}
 
 	OBJECT_FOREACH_CHILD(cwid, wid, widget)
-		widget_mousemotion(win, cwid, x, y, xrel, yrel);
+		widget_mousemotion(win, cwid, x, y, xrel, yrel, state);
 }
 
 /*

@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.31 2004/03/10 03:19:56 vedge Exp $
+.\"	$Csoft: window.3,v 1.32 2004/03/12 02:49:50 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -223,7 +223,7 @@ The
 widget delivers the following events to its child widgets:
 .Pp
 .Bl -tag -width 2n
-.It Fn window-mousemotion "int x" "int y" "int xrel" "int yrel"
+.It Fn window-mousemotion "int x" "int y" "int xrel" "int yrel" "int state"
 The mouse cursor has moved to widget-relative coordinates
 .Fa x
 and
@@ -235,6 +235,9 @@ and
 .Fa yrel
 arguments represent the displacement relative to the last position of the
 mouse cursor.
+.Fa state
+holds the present button state, as returned by
+.Xr SDL_GetMouseState 3 .
 Regardless of the mouse position, this event is posted to widgets that either
 hold focus inside the focused window, or have the
 .Dv WIDGET_UNFOCUSED_MOTION
