@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.59 2003/03/20 01:19:39 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.60 2003/03/20 04:09:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -137,10 +137,9 @@ button_destroy(void *p)
 static void
 button_scaled(int argc, union evarg *argv)
 {
+	const int xspace = 2, yspace = 1;
 	struct button *b = argv[0].p;
 	int x, y, nw, nh;
-	Uint32 col = 0;
-	Uint8 *src, *dst, r1, g1, b1, a1;
 
 	if (WIDGET(b)->rw == -1)
 		WIDGET(b)->w = b->label_s->w;
@@ -149,11 +148,11 @@ button_scaled(int argc, union evarg *argv)
 
 	/* Scale the label to a reasonable size. */
 	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
-	if (nw > WIDGET(b)->w - 6)
-		nw = WIDGET(b)->w - 6;
+	if (nw > WIDGET(b)->w - xspace)
+		nw = WIDGET(b)->w - xspace;
 	nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
-	if (nh > WIDGET(b)->h - 6)
-		nh = WIDGET(b)->h - 6;
+	if (nh > WIDGET(b)->h - yspace)
+		nh = WIDGET(b)->h - yspace;
 
 	if (nw > b->label_s->w*2)
 		nw = b->label_s->w*2;
@@ -165,7 +164,7 @@ button_scaled(int argc, union evarg *argv)
 		SDL_FreeSurface(b->slabel_s);
 		b->slabel_s = NULL;
 	}
-	if (nw < 4 || nh < 4) {					/* Null */
+	if (nw < 6 || nh < 6) {					/* Null */
 		b->slabel_s = view_surface(SDL_SWSURFACE, 0, 0);
 	} else {						/* Scaled */
 		b->slabel_s = view_scale_surface(b->label_s, nw, nh);
@@ -175,6 +174,7 @@ button_scaled(int argc, union evarg *argv)
 void
 button_draw(void *p)
 {
+	const int xspace = 2;
 	struct button *b = p;
 	SDL_Surface *label = b->slabel_s;
 	int x = 0, y = 0;
@@ -186,19 +186,19 @@ button_draw(void *p)
 	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h, pressed ? -1 : 1,
 	    WIDGET_COLOR(b, FRAME_COLOR));
 	
-	if (WIDGET(b)->w < 6 || WIDGET(b)->h < 6)
+	if (WIDGET(b)->w < 8 || WIDGET(b)->h < 8)
 		return;
 
 	/* Label */
 	switch (b->justify) {
 	case BUTTON_LEFT:
-		x = 6;
+		x = xspace;
 		break;
 	case BUTTON_CENTER:
 		x = (WIDGET(b)->w - label->w) / 2;
 		break;
 	case BUTTON_RIGHT:
-		x = WIDGET(b)->w - label->w - 6;
+		x = WIDGET(b)->w - label->w - xspace;
 		break;
 	}
 	y = ((WIDGET(b)->h - label->h) / 2) - 1;
