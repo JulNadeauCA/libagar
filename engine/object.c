@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.94 2002/12/13 12:27:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.95 2002/12/14 04:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -301,7 +301,7 @@ object_path(char *obname, const char *suffix)
 	free(datapathp);
 	free(path);
 
-	error_set("cannot find %s.%s", obname, suffix);
+	error_set("Cannot find %s.%s", obname, suffix);
 	return (NULL);
 }
 
