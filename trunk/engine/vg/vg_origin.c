@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.7 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.8 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -181,7 +181,7 @@ origin_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	}
 }
 
-const struct tool vg_origin_tool = {
+struct tool vg_origin_tool = {
 	N_("Origin"),
 	N_("Displace the origin point."),
 	VGORIGIN_ICON,

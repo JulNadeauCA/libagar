@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.11 2004/05/25 07:25:23 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.12 2004/05/29 05:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -159,7 +159,7 @@ finish:
 	tool_pop_status(t);
 }
 
-const struct tool vg_circle_tool = {
+struct tool vg_circle_tool = {
 	N_("Circles"),
 	N_("Draw circles."),
 	VGCIRCLES_ICON,
