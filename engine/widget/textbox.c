@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.15 2002/07/20 18:56:31 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.16 2002/07/21 10:58:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -49,7 +49,6 @@
 #include "keycodes.h"
 
 extern TTF_Font *font;		/* XXX pref */
-static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
 static const struct widget_ops textbox_ops = {
 	{
@@ -59,6 +58,13 @@ static const struct widget_ops textbox_ops = {
 	},
 	textbox_draw,
 	NULL		/* animate */
+};
+
+enum {
+	FRAME_COLOR	= 0,
+	TEXT_COLOR	= 1,
+	CURSOR_COLOR1	= 2,
+	CURSOR_COLOR2	= 3
 };
 
 static void	textbox_event(int, union evarg *);
@@ -83,15 +89,17 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 {
 	SDL_Surface *s;
 
-	s = TTF_RenderText_Solid(font, "ABCD1234", white);
-	if (s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
+	s = text_render(NULL, -1, 0, "ABCD1234");
 	tbox->xmargin = 4;
 	tbox->ymargin = 3;
 
 	widget_init(&tbox->wid, "textbox", "widget", &textbox_ops, rw, rh);
 	WIDGET(tbox)->h = (s->h * 2) + (tbox->ymargin * 2);
+
+	widget_map_color(tbox, FRAME_COLOR, "textbox-frame", 100, 100, 100);
+	widget_map_color(tbox, TEXT_COLOR, "textbox-text", 250, 250, 250);
+	widget_map_color(tbox, CURSOR_COLOR1, "textbox-cursor1", 50, 50, 50);
+	widget_map_color(tbox, CURSOR_COLOR2, "textbox-cursor2", 0, 0, 0);
 
 	SDL_FreeSurface(s);
 
@@ -99,10 +107,8 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	tbox->flags |= TEXTBOX_CURSOR;
 	tbox->text = strdup("");
 	tbox->label = label != NULL ? strdup(label) : NULL;
-	tbox->label_s = TTF_RenderText_Solid(font, label, white);
-	if (tbox->label_s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", TTF_GetError());
-	}
+	tbox->label_s = text_render(NULL, -1,
+	    WIDGET(tbox)->color[TEXT_COLOR], (char *)label);
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
 
@@ -149,11 +155,8 @@ textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
 	int i, j, x, y, tw;
-	Uint32 curscol;
 	SDL_Surface *label_s = tbox->label_s;
 
-	curscol = SDL_MapRGB(WIDGET_SURFACE(tbox)->format, 0, 0, 0);
-	
 	x = label_s->w;
 	y = tbox->ymargin;
 
@@ -164,7 +167,8 @@ textbox_draw(void *p)
 	primitives.box(tbox, x, 0,
 	    WIDGET(tbox)->w - (tbox->xmargin * 2) - label_s->w,
 	    label_s->h + (tbox->ymargin * 2),
-	    WIDGET_FOCUSED(tbox) ? -1 : 1);
+	    WIDGET_FOCUSED(tbox) ? -1 : 1,
+	    WIDGET(tbox)->color[FRAME_COLOR]);
 	
 	/*
 	 * Text
@@ -188,8 +192,10 @@ textbox_draw(void *p)
 		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
 			SDL_LockSurface(WIDGET_SURFACE(tbox));
 			for (j = 1; j < label_s->h; j++) {
-				WIDGET_PUT_PIXEL(tbox, x, y+j, curscol);
-				WIDGET_PUT_PIXEL(tbox, x+1, y+j, curscol);
+				WIDGET_PUT_PIXEL(tbox, x, y+j,
+				    WIDGET(tbox)->color[CURSOR_COLOR1]);
+				WIDGET_PUT_PIXEL(tbox, x+1, y+j,
+				    WIDGET(tbox)->color[CURSOR_COLOR2]);
 			}
 			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
 		}
@@ -211,15 +217,11 @@ textbox_draw(void *p)
 			} else {
 				str[0] = (char)c;
 				str[1] = '\0';
-				text_s = TTF_RenderText_Solid(font, str, white);
-				if (text_s == NULL) {
-					warning("TTF_RenderTextSolid: %s\n",
-					    SDL_GetError());
-				} else {
-					WIDGET_DRAW(tbox, text_s, x, y);
-					x += text_s->w;
-					SDL_FreeSurface(text_s);
-				}
+				text_s = text_render(NULL, -1,
+				    WIDGET(tbox)->color[TEXT_COLOR], str);
+				WIDGET_DRAW(tbox, text_s, x, y);
+				x += text_s->w;
+				SDL_FreeSurface(text_s);
 			}
 		}
 	}

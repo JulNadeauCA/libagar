@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.21 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.22 2002/06/25 17:32:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -59,7 +59,9 @@ static const struct widget_ops label_ops = {
 	NULL		/* animate */
 };
 
-static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
+enum {
+	LABEL_TEXT = 0
+};
 
 struct label *
 label_new(struct region *reg, const char *caption, int flags)
@@ -82,7 +84,6 @@ label_printf(struct label *label, const char *fmt, ...)
 {
 	va_list args;
 	char *buf;
-	SDL_Surface *s;
 
 	va_start(args, fmt);
 	vasprintf(&buf, fmt, args);
@@ -93,30 +94,26 @@ label_printf(struct label *label, const char *fmt, ...)
 	free(buf);
 
 	SDL_FreeSurface(label->label_s);
-	s = TTF_RenderText_Solid(font, label->caption, white);
-	if (s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
-	label->label_s = s;
-	WIDGET(label)->w = s->w;
-	WIDGET(label)->h = s->h;
-	WIDGET(label)->win->redraw++;
+	label->label_s = text_render(NULL, -1, WIDGET(label)->color[LABEL_TEXT],
+	    label->caption);
+
+	WIDGET(label)->w = label->label_s->w;
+	WIDGET(label)->h = label->label_s->h;
 }
 
 void
 label_init(struct label *label, const char *caption, int flags)
 {
-	SDL_Surface *s;
+	widget_init(&label->wid, "label", "widget", &label_ops, -1, -1);
+	widget_map_color(label, LABEL_TEXT, "label-text", 250, 250, 250);
 
-	label->caption = strdup(caption);
-	s = TTF_RenderText_Solid(font, label->caption, white);
-	if (s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
-
-	widget_init(&label->wid, "label", "widget", &label_ops, s->w, s->h);
-	label->label_s = s;
 	label->flags = flags;
+	label->caption = strdup(caption);
+	label->label_s = text_render(NULL, -1, WIDGET(label)->color[LABEL_TEXT],
+	    label->caption);
+
+	WIDGET(label)->w = label->label_s->w;
+	WIDGET(label)->h = label->label_s->h;
 }
 
 void
