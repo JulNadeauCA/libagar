@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.24 2002/11/15 04:18:31 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.25 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -114,7 +114,6 @@ mapedit_init_toolbar(struct mapedit *med)
 	struct region *reg;
 	struct textbox *name_tbox, *media_tbox, *w_tbox, *h_tbox;
 	struct button *button;
-	struct objq *oqueue;
 	const int xdiv = 100, ydiv = 25;
 
 	/* Create the tool objects. */
@@ -206,9 +205,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	window_set_caption(win, "Objects");
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
-	oqueue = objq_new(reg, med, 0, 100, 100);
-	win->focus = WIDGET(oqueue);
-	med->objlist_win = win;
+	med->objlist_win = objq_window(med);
 
 	/*
 	 * Create the `New map' dialog.
