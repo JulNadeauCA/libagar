@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.h,v 1.4 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.5 2003/01/25 06:29:30 vedge Exp $	*/
 /*	Public domain	*/
 
 enum eraser_mode {
@@ -18,8 +18,7 @@ struct eraser {
 	} selection;
 };
 
-struct eraser	*eraser_new(void);
-void		 eraser_init(struct eraser *);
+void		 eraser_init(void *);
 struct window	*eraser_window(void *);
 void		 eraser_effect(void *, struct mapview *, Uint32, Uint32);
 

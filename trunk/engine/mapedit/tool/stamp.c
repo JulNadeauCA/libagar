@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.20 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.21 2003/01/25 06:29:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,19 +51,11 @@ static const struct tool_ops stamp_ops = {
 	NULL			/* cursor */
 };
 
-struct stamp *
-stamp_new(void)
-{
-	struct stamp *stamp;
-
-	stamp = emalloc(sizeof(struct stamp));
-	stamp_init(stamp);
-	return (stamp);
-}
-
 void
-stamp_init(struct stamp *stamp)
+stamp_init(void *p)
 {
+	struct stamp *stamp = p;
+
 	tool_init(&stamp->tool, "stamp", &stamp_ops);
 
 	stamp->mode = STAMP_REPLACE;
@@ -102,7 +94,7 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	struct stamp *st = p;
 	struct map *m = mv->map;
 	struct node *dstnode = &m->map[y][x];
-	struct node *srcnode = mapedit->src_node;
+	struct node *srcnode = mapedit.src_node;
 	struct noderef *nref, *nnref;
 
 	if (srcnode == NULL) {

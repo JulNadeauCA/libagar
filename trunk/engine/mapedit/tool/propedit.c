@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.13 2003/01/23 02:13:21 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.14 2003/01/25 06:29:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,19 +53,11 @@ static const struct tool_ops propedit_ops = {
 
 static void	propedit_event(int, union evarg *);
 
-struct propedit *
-propedit_new(void)
-{
-	struct propedit *pe;
-
-	pe = emalloc(sizeof(struct propedit));
-	propedit_init(pe);
-	return (pe);
-}
-
 void
-propedit_init(struct propedit *pe)
+propedit_init(void *p)
 {
+	struct propedit *pe = p;
+
 	tool_init(&pe->tool, "propedit", &propedit_ops);
 
 	pe->mode = PROPEDIT_CLEAR;

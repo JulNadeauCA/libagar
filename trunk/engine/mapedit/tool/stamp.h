@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.h,v 1.3 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.4 2003/01/25 06:29:30 vedge Exp $	*/
 /*	Public domain	*/
 
 enum stamp_mode {
@@ -9,10 +9,11 @@ enum stamp_mode {
 struct stamp {
 	struct tool	tool;
 	int		mode;
+
+	TAILQ_HEAD(, map) brushes;
 };
 
-struct stamp	*stamp_new(void);
-void		 stamp_init(struct stamp *);
+void		 stamp_init(void *);
 struct window	*stamp_window(void *);
 void		 stamp_effect(void *, struct mapview *, Uint32, Uint32);
 
