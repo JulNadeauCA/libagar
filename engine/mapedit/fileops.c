@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.28 2003/01/27 08:00:00 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.29 2003/02/02 21:13:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -52,7 +52,9 @@ fileops_new_map_window(void)
 	struct button *button;
 
 	win = window_new("mapedit-new-map-dialog", WINDOW_CENTER,
-	     0, 0, 380, 162, 187, 162);
+	     0, 0,
+	     380, 162,
+	     187, 162);
 	window_set_caption(win, "Create a map");
 	window_set_spacing(win, 0, 10);
 
@@ -64,10 +66,17 @@ fileops_new_map_window(void)
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
+		char *s;
+
 		w_tbox = textbox_new(reg, "W: ", 0, 50, -1);
-		textbox_printf(w_tbox, "64");
+		Asprintf(&s, "%d", prop_get_uint32(&mapedit, "default-width"));
+		textbox_printf(w_tbox, s);
+		free(s);
+
 		h_tbox = textbox_new(reg, "H: ", 0, 50, -1);
-		textbox_printf(h_tbox, "64");
+		Asprintf(&s, "%d", prop_get_uint32(&mapedit, "default-height"));
+		textbox_printf(h_tbox, s);
+		free(s);
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
@@ -250,22 +259,25 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct map *m = mv->map;
 	struct editref *eref;
 	Uint32 x, y, orx = 0, ory = 0;
+	int origin = 0;
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
-
+			
+			MAP_CHECK_NODE(node, x, y);
 			if (node->flags & NODE_ORIGIN) {
 				orx = x;
 				ory = y;
+				origin++;
 			}
-			node_destroy(node, x, y);
+			node_destroy(node);
 			node_init(node, x, y);
 		}
 	}
 
 	/* Reset the origin. */
-	if (orx > 0 && ory > 0) {
+	if (origin) {
 		m->map[orx][ory].flags |= NODE_ORIGIN;
 	}
 }

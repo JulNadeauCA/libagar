@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.19 2003/01/27 08:00:00 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.20 2003/02/02 21:12:39 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
@@ -11,6 +11,8 @@ struct mapview {
 #define MAPVIEW_TILEMAP		 0x08	/* Map of `source' nodes */
 #define MAPVIEW_GRID		 0x10	/* Display a grid */
 #define MAPVIEW_PROPS		 0x20	/* Display node properties */
+#define MAPVIEW_ZOOMING_IN	 0x40
+#define MAPVIEW_ZOOMING_OUT	 0x80
 
 	int	 prop_bg;	/* Background of node attributes */
 	int	 prop_style;	/* Style of node attributes */
@@ -32,20 +34,18 @@ struct mapview {
 
 	struct map	*map;
 	struct node	*cur_node;
-	int		mx, my;		/* Display offset (nodes) */
-	int		mw, mh;		/* Display size (nodes) */
-	Sint16		ssx, ssy;	/* Soft scrolling offsets */
+	int		 mx, my;	/* Display offset (nodes) */
+	int		 mw, mh;	/* Display size (nodes) */
+	Sint16		 ssx, ssy;	/* Soft scrolling offsets */
 	Uint16		*zoom;		/* Zoom (%) */
+	SDL_TimerID	 zoom_tm;
 	int		*tilew, *tileh;
-	int		cx, cy;		/* Cursor position (nodes) */
+	int		 cx, cy;	/* Cursor position (nodes) */
 
 	struct {		/* For MAPVIEW_INDEPENDENT_ZOOM */
 		Uint16	zoom;
 		int	tilew, tileh;
 	} izoom;
-
-	struct window	*tmap_win;	/* Tile map window */
-	struct button	*tmap_button;
 
 	struct {		/* For node edition */
 		struct window	*win;		/* Node edition window */
@@ -56,6 +56,8 @@ struct mapview {
 		struct tlist	*refs_tl;
 		struct tlist	*transforms_tl;
 	} node;
+	struct window	*tmap_win;	/* Tile map window */
+	struct button	*tmap_button;
 };
 
 enum mapview_prop_labels {

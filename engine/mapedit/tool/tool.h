@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.5 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.6 2003/02/02 21:14:02 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -7,9 +7,9 @@ struct mapview;
 struct tool_ops {
 	const struct object_ops	obops;
 
-	struct window *(*window)(void *);
-	void	       (*cursor)(void *, struct mapview *, Uint32, Uint32);
-	void	       (*effect)(void *, struct mapview *, struct node *);
+	struct window	*(*window)(void *);
+	int		 (*cursor)(void *, struct mapview *, SDL_Rect *);
+	void		 (*effect)(void *, struct mapview *, struct node *);
 };
 
 struct tool {
