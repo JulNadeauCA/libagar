@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.49 2002/03/01 03:11:39 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.50 2002/03/01 06:02:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -226,8 +226,6 @@ mapedit_link(void *p)
 	struct mapedit *med = (struct mapedit *)p;
 	struct map *m = med->map;
 	struct node *node;
-	struct text *text;
-	char s[4096];
 	int fd, new = 0;
 	
 	/* Users must copy maps to udatadir in order to edit them. */
@@ -279,12 +277,8 @@ mapedit_link(void *p)
 	view_center(m->view, m->defx, m->defy);
 	mapedit_setcaption(med, new ? "new" : path);
 
-	/* Display text for ~10 seconds */
-	text = text_create(64, 64, med->map->view->width - 128, 32,
-	    TEXT_SLEEP, 6000);
-	object_link(text);
-	sprintf(s, "Editing \"%s\" (%s)", m->obj.name, new ? "new" : path);
-	text_render(text, s);
+	text_msg(10000, TEXT_SLEEP,
+	    "Editing \"%s\" (%s)\n", m->obj.name, new ? "new" : path);
 
 	/* Create the structures defining what is editable. */
 	mapedit_shadow(med);
