@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.87 2004/08/20 01:31:02 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.88 2004/08/20 01:37:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -246,13 +246,13 @@ text_unused2(struct text *txt)
 
 /* Render UTF-8 text onto a new surface. */
 /* XXX use state variables for font spec */
+/* XXX inefficient */
 SDL_Surface *
 text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 {
 	Uint32 *ucs;
 	SDL_Surface *su;
 
-	/* XXX inefficient */
 	ucs = unicode_import(UNICODE_FROM_UTF8, text);
 	su = text_render_unicode(fontname, fontsize, color, ucs);
 	free(ucs);
@@ -421,7 +421,7 @@ text_msg(enum text_msg_title title, const char *format, ...)
 
 /* Prompt the user for a floating-point value. */
 void
-text_edit_float(double *fp, double min, double max, const struct unit *unit,
+text_edit_float(double *fp, double min, double max, const char *unit,
     const char *format, ...)
 {
 	char msg[LABEL_MAX];
