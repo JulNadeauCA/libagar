@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.9 2002/12/13 07:44:38 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.10 2002/12/13 07:51:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -9,13 +9,13 @@
 	do {							\
 		printf("%s: " fmt, __FUNCTION__ , ##args);	\
 		abort();					\
-	} while (/*CONSTCOND*/0)
+	} while (0)
 # else
 #  define fatal(fmt, args...)					\
 	do {							\
 		printf("%s: " fmt, __FUNCTION__ , ##args);	\
 		engine_stop();					\
-	} while (/*CONSTCOND*/0)
+	} while (0)
 # endif
 #else
 # define warning	printf
@@ -26,7 +26,7 @@
 	if ((p) != NULL) {	\
 		free((p));	\
 	}			\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 char	*Strdup(const char *);
 void	*emalloc(size_t);
@@ -46,7 +46,7 @@ void		 error_set(const char *, ...);
 		fatal("read(%ld): read %ld bytes\n", (long)size,	\
 		    (long)_Read_rv);					\
 	}								\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 #define Write(fd, buf, size) do {					\
 	ssize_t _Write_rv;						\
@@ -59,7 +59,7 @@ void		 error_set(const char *, ...);
 		fatal("write(%ld): wrote %ld bytes\n", (long)size,	\
 		    (long)_Write_rv);					\
 	}								\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 #define elseek(fd, off, whence) do {					\
 	off_t _elseek_rv;						\
@@ -73,13 +73,14 @@ void		 error_set(const char *, ...);
 		     "???",						\
 		    strerror(errno));					\
 	}								\
-} while (/*CONSTCOND*/0)
+} while (0)
 
+void	Asprintf(char **, const char *, ...);
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
 	if (vasprintf((msg), (fmt), (args)) == -1) {		\
 		fatal("vasprintf: %s\n", strerror(errno));	\
 	}							\
 	va_end((args));						\
-} while (/*CONSTCOND*/0)
+} while (0)
 
