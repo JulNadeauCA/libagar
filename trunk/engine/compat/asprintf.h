@@ -1,7 +1,7 @@
-/*	$Csoft: vasprintf.h,v 1.4 2002/11/07 19:00:14 vedge Exp $	*/
+/*	$Csoft: asprintf.h,v 1.4 2002/11/22 23:00:53 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mcconfig.h>
+#include <config/have_asprintf.h>
 
 #ifdef HAVE_ASPRINTF
 # ifdef __linux__
