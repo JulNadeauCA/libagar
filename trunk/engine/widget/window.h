@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.85 2005/03/05 12:15:10 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.86 2005/03/09 06:39:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -53,7 +53,8 @@ struct window {
 	struct titlebar	*tbar;			/* Titlebar (if any) */
 	enum window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
-	int xpadding, ypadding;			/* Window padding (px) */
+	int xpadding;				/* Window padding (px) */
+	int ypadding_top, ypadding_bot;
 	int minw, minh;				/* Minimum geometry (px) */
 	
 	TAILQ_HEAD(,window) subwins;		/* Sub-windows */
@@ -84,7 +85,7 @@ void	 window_set_caption(struct window *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
 void	 window_set_spacing(struct window *, int);
-void	 window_set_padding(struct window *, int, int);
+void	 window_set_padding(struct window *, int, int, int);
 void	 window_set_position(struct window *, enum window_alignment, int);
 void	 window_set_closure(struct window *, int);
 void	 window_set_style(struct window *, const struct style *);
