@@ -1,11 +1,11 @@
-#	$Csoft: Makefile,v 1.19 2002/02/28 12:49:02 vedge Exp $
+#	$Csoft: Makefile,v 1.20 2002/03/17 05:32:27 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
 SUBDIR=	mapedit text
 
-SHARE=	README
+SHARE=	README.engine
 
 CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
 
