@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.81 2003/06/06 09:04:14 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.82 2003/06/13 03:59:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,8 @@
 #include <engine/map.h>
 #include <engine/prop.h>
 
+#include <engine/unicode/unicode.h>
+
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
 #include <engine/widget/hbox.h>
@@ -59,8 +61,10 @@
 
 const struct version config_ver = {
 	"agar config",
-	4, 0
+	5, 0
 };
+
+static int config_notify = 0;			/* GUI notifications */
 
 static void
 config_change_path(int argc, union evarg *argv)
@@ -113,14 +117,24 @@ config_prop_modified(int argc, union evarg *argv)
 				SDL_PushEvent(&vexp);
 			}
 		}
-#if 0
-	} else if (strcmp(prop->key, "view.opengl") == 0) {
-		text_msg("Warning", "Restart %s for OpenGL mode to take effect",
+	} else if (strcmp(prop->key, "view.opengl") == 0 &&
+	    prop->data.i && config_notify) {
+		text_msg("Warning",
+		    "Save the configuration and restart %s for OpenGL mode "
+		    "to take effect",
 		    proginfo->progname);
-	} else if (strcmp(prop->key, "view.async-blits") == 0) {
-		text_msg("Warning", "Restart %s for async blits to take effect",
+	} else if (strcmp(prop->key, "view.async-blits") == 0 &&
+	    prop->data.i && config_notify) {
+		text_msg("Warning",
+		    "Save the configuration and restart %s for async blits"
+		    "to take effect",
 		    proginfo->progname);
-#endif
+	} else if (strcmp(prop->key, "input.unicode") == 0) {
+		if (SDL_EnableUNICODE(prop->data.i)) {
+			dprintf("disabled unicode translation\n");
+		} else {
+			dprintf("enabled unicode translation\n");
+		}
 	}
 }
 
@@ -144,12 +158,14 @@ config_init(struct config *con)
 	prop_set_uint8(con, "view.depth", 32);
 	
 	prop_set_bool(con, "widget.noinitscale", 0);
+	
 
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
 	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 
+	prop_set_bool(con, "input.unicode", 0);
 	prop_set_bool(con, "input.joysticks", 1);
 
 	pwd = getpwuid(getuid());
@@ -196,6 +212,7 @@ config_window(struct config *con)
 			{ "view.opengl", "OpenGL rendering context" },
 #endif
 			{ "widget.noinitscale", "Skip initial widget scaling" },
+			{ "input.unicode", "Unicode keyboard translation" }
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
 		int i;
@@ -271,6 +288,7 @@ config_window(struct config *con)
 		event_new(button, "button-pushed", config_save, NULL);
 	}
 	config->settings = win;
+	config_notify++;
 }
 
 /* Return the full pathname to a data file. */

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.105 2003/06/06 22:34:40 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.106 2003/06/13 03:59:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
-
+#include <engine/unicode/unicode.h>
 #include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/widget.h>
@@ -168,6 +168,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	config_init(config);
 	object_load(config);
 
+	unicode_init();
 	if (prop_get_bool(config, "font-engine") &&
 	    text_init() == -1) {
 		fatal("text_init: %s", error_get());
@@ -208,6 +209,7 @@ engine_destroy(void)
 
 	text_destroy();
 	input_destroy_all();
+	unicode_destroy();
 
 	object_destroy(view);
 	free(view);
