@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.19 2002/07/21 10:58:18 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.20 2002/07/24 09:30:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -70,8 +70,7 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 }
 
 void
-widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b,
-    Uint8 a)
+widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 {
 	struct widget *wid = p;
 	struct widget_color *col;
@@ -83,7 +82,7 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b,
 	if (ind > wid->ncolors)
 		wid->ncolors++;
 
-	wid->color[ind] = SDL_MapRGBA(view->v->format, r, g, b, a);
+	wid->color[ind] = SDL_MapRGB(view->v->format, r, g, b);
 
 	col = emalloc(sizeof(struct widget_color));
 	col->name = strdup(name);
