@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.12 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.13 2003/07/03 06:43:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
@@ -16,7 +16,7 @@ struct graph;
 struct graph_item {
 	char	 name[GRAPH_ITEM_NAME_MAX];	/* Description */
 	Uint32	 color;				/* Line color */
-	Sint32	*vals;				/* Value array */
+	Sint16	*vals;				/* Value array */
 	Uint32	 nvals;
 	Uint32	 maxvals;
 
@@ -40,26 +40,26 @@ struct graph {
 #define GRAPH_SCROLL	0x01	/* Scroll if the end is not visible */
 #define GRAPH_ORIGIN	0x02	/* Visible origin */
 
-	Sint32		 yrange;	/* Max. value */
-	Sint32		 xoffs;		/* Display offset */
+	Sint16		 yrange;	/* Max. value */
+	Sint16		 xoffs;		/* Display offset */
 	int		 xinc;		/* X increment */
 	int		 origin_y;	/* Origin position (%) */
 	struct itemq	 items;		/* Lists of values */
 };
 
 __BEGIN_DECLS
-struct graph *graph_new(void *, const char *, enum graph_type, int, Sint32);
+struct graph *graph_new(void *, const char *, enum graph_type, int, Sint16);
 
 struct graph_item	*graph_add_item(struct graph *, const char *, Uint8,
 			                Uint8, Uint8);
 void			 graph_free_items(struct graph *);
 
-void	 graph_init(struct graph *, const char *, enum graph_type, int, Sint32);
+void	 graph_init(struct graph *, const char *, enum graph_type, int, Sint16);
 void	 graph_destroy(void *);
 void	 graph_draw(void *);
 void	 graph_scale(void *, int, int);
 
-void		 graph_plot(struct graph_item *, Sint32);
+void		 graph_plot(struct graph_item *, Sint16);
 __inline__ void	 graph_scroll(struct graph *, int);
 __END_DECLS
 
