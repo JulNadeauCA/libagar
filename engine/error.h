@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.5 2002/08/20 00:09:42 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.6 2002/11/08 07:36:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -21,6 +21,12 @@
 # define warning	printf
 # define fatal		printf
 #endif
+
+#define Free(p) do {		\
+	if ((p) != NULL) {	\
+		free((p));	\
+	}			\
+} while (/*CONSTCOND*/0)
 
 void	*emalloc(size_t);
 void	*erealloc(void *, size_t);
