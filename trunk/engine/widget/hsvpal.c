@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.7 2005/03/06 04:22:25 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.8 2005/03/06 04:30:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -154,6 +154,28 @@ mousemotion(int argc, union evarg *argv)
 	}
 }
 
+static void
+binding_changed(int argc, union evarg *argv)
+{
+	struct hsvpal *hsv = argv[0].p;
+	struct widget_binding *bind = argv[1].p;
+
+	if (bind->type == WIDGET_UINT32 &&
+	    strcmp(bind->name, "pixel") == 0) {
+		Uint8 r, g, b, a;
+		float h, s, v;
+		Uint32 pixel = *(Uint32 *)bind->p1;
+
+		SDL_GetRGBA(pixel, hsv->format, &r, &g, &b, &a);
+		prim_rgb2hsv(r, g, b, &h, &s, &v);
+		widget_set_float(hsv, "hue", h);
+		widget_set_float(hsv, "saturation", s);
+		widget_set_float(hsv, "value", v);
+		widget_set_float(hsv, "alpha", ((float)a)/255.0);
+	}
+	
+}
+
 void
 hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 {
@@ -184,6 +206,7 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	event_new(pal, "window-mousebuttonup", mousebuttonup, NULL);
 	event_new(pal, "window-mousebuttondown", mousebuttondown, NULL);
 	event_new(pal, "window-mousemotion", mousemotion, NULL);
+	event_new(pal, "widget-bound", binding_changed, NULL);
 }
 
 void
@@ -235,7 +258,7 @@ hsvpal_draw(void *p)
 	
 	/* Render the circle of hues. */
 	for (h = 0.0; h < 2*M_PI; h += pal->circle.dh) {
-		prim_hsv2rgb(h/(2*M_PI), 1.0, 1.0, &r, &g, &b);
+		prim_hsv2rgb((h/(2*M_PI)*360.0), 1.0, 1.0, &r, &g, &b);
 		pc = SDL_MapRGB(vfmt, r, g, b);
 
 		for (i = 0; i < pal->circle.width; i++) {
@@ -255,7 +278,7 @@ hsvpal_draw(void *p)
 		            (float)(pal->triangle.h);
 
 		for (x = 0; x < y; x++) {
-			prim_hsv2rgb(cur_h/(2*M_PI), sat,
+			prim_hsv2rgb((cur_h/(2*M_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &r, &g, &b);
 			pc = SDL_MapRGB(vfmt, r, g, b);
@@ -292,7 +315,7 @@ hsvpal_draw(void *p)
 	    CIRCLE_COLOR);
 
 	/* Draw the preview rectangle. */
-	prim_hsv2rgb(cur_h/(2*M_PI), cur_s, cur_v, &r, &g, &b);
+	prim_hsv2rgb((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
 	WIDGET_COLOR(pal,CUR_COLOR) = SDL_MapRGB(vfmt, r, g, b);
 	if (a < 255) {
 		/* 
