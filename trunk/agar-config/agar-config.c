@@ -1,4 +1,4 @@
-/*	$Csoft: agar-config.c,v 1.11 2005/01/05 10:51:24 vedge Exp $	*/
+/*	$Csoft: agar-config.c,v 1.12 2005/01/17 02:20:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
 #include <config/have_jpeg.h>
+#include <config/have_libqnet.h>
 
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
@@ -65,6 +66,10 @@
 #ifdef HAVE_JPEG
 #include <config/jpeg_libs.h>
 #include <config/jpeg_cflags.h>
+#endif
+#ifdef HAVE_LIBQNET
+#include <config/libqnet_libs.h>
+#include <config/libqnet_cflags.h>
 #endif
 
 #include <stdio.h>
@@ -115,6 +120,9 @@ main(int argc, char *argv[])
 #ifdef JPEG_CFLAGS
 			printf("%s ", JPEG_CFLAGS);
 #endif
+#ifdef LIBQNET_CFLAGS
+			printf("%s ", LIBQNET_CFLAGS);
+#endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
@@ -144,6 +152,9 @@ main(int argc, char *argv[])
 #endif
 #ifdef JPEG_LIBS
 			printf("%s ", JPEG_LIBS);
+#endif
+#ifdef LIBQNET_LIBS
+			printf("%s ", LIBQNET_LIBS);
 #endif
 			printf("\n");
 		}
