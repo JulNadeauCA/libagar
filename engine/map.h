@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.2 2002/01/30 08:20:43 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -23,7 +23,7 @@ struct map_aref {
 
 /* Back reference to map:x,y coordinate. */
 struct map_bref {
-	struct	map *m;		/* Map structure */
+	struct	map *map;	/* Map structure */
 	int	x, y;		/* X:Y coordinate */
 };
 
@@ -74,15 +74,19 @@ extern int mapedit;		/* Map edition in progress */
 	map_entry_addref(&(m)->map[(x)][(y)],			\
 	    (struct object *)(ob), (offs), MAPREF_SPRITE);	\
 
-/* Drop any animation/sprite reference to ob:offs at m:x,y */
+/*
+ * Drop an animation/sprite reference to ob:offs at m:x,y. If offs is
+ * negative, drop all references to ob:*.
+ */
 #define MAP_DELREF(m, x, y, ob, offs)					\
 	do {								\
 		struct map_entry *me = &(m)->map[(x)][(y)];		\
 		struct map_aref *maref;					\
 									\
-		maref = map_entry_arefobj((me), (struct object *)(ob),	\
-		    (offs));						\
-		map_entry_delref((me), (maref));			\
+		while ((maref = map_entry_arefobj((me),			\
+		    (struct object *)(ob), (offs)))) {			\
+			map_entry_delref((me), (maref));		\
+		}							\
 	} while (/*CONSTCOND*/ 0)
 
 struct map	*map_create(char *, char *, int, int, int,
@@ -96,7 +100,6 @@ struct map_aref	*map_entry_arefobj(struct map_entry *,
 int	map_focus(struct map *);
 int	map_link(void *);
 int	map_entry_delref(struct map_entry *, struct map_aref *);
-int	map_entry_moveref(struct map *, struct object *, int, int, int);
 void	map_clean(struct map *, struct object *, int, int, int);
 int	map_animset(struct map *, int);
 #ifdef DEBUG
