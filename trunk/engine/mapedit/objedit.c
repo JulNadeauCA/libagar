@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.3 2003/05/22 08:30:31 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.4 2003/05/24 15:48:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -216,7 +216,7 @@ objedit_window(void)
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
 		create_bu = button_new(reg, "Create", NULL, 0, 33, -1);
-		edit_bu = button_new(reg, "Edit", NULL, 0, 33, -1);
+		edit_bu = button_new(reg, "Edit", NULL, 0, 34, -1);
 		destroy_bu = button_new(reg, "Destroy", NULL, 0, 33, -1);
 		button_disable(destroy_bu);
 	}
