@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.10 2002/07/09 09:27:53 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.11 2002/07/18 11:50:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -131,6 +131,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	    68, 146,
 	    68, 146);
 
+	/*
+	 * Left side of toolbar.
+	 */
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
 
@@ -141,24 +144,27 @@ mapedit_init_toolbar(struct mapedit *med)
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_NEW_MAP);
 	
+	/* Object list */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, -1, -1);
+	event_new(button, "button-pushed", 0, push, "%p, %i", med,
+	    MAPEDIT_TOOL_OBJLIST);
+	
 	/* Stamp */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_STAMP), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_STAMP);
 	
-	/* Eraser */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, -1, -1);
-	event_new(button, "button-pushed", 0, push, "%p, %i", med,
-	    MAPEDIT_TOOL_ERASER);
-	
 	/* Magnifier */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_MAGNIFIER);
-
+	
+	/*
+	 * Right side of toolbar.
+	 */
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	reg->spacing = 1;
 	
@@ -169,19 +175,29 @@ mapedit_init_toolbar(struct mapedit *med)
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_LOAD_MAP);
 
-	/* Object list */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, -1, -1);
-	event_new(button, "button-pushed", 0, push, "%p, %i", med,
-	    MAPEDIT_TOOL_OBJLIST);
-
 	/* Tile list */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, -1, -1);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_TILEQ);
-
+	
+	/* Eraser */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, -1, -1);
+	event_new(button, "button-pushed", 0, push, "%p, %i", med,
+	    MAPEDIT_TOOL_ERASER);
+	
+	/* Resize tool */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_RESIZE), 0, -1, -1);
+	event_new(button, "button-pushed", 0, push, "%p, %i", med,
+	    MAPEDIT_TOOL_RESIZE);
+	
 	med->toolbar_win = win;
+
+	/*
+	 * Related dialog windows.
+	 */
 
 	/* Object list window */
 	win = window_new("Object", WINDOW_SOLID,
@@ -200,7 +216,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	tqueue = tileq_new(reg, med, 0, 100, 100);
 	win->focus = WIDGET(tqueue);
 	med->tileq_win = win;
-
+	
 	/*
 	 * Create the `New map' dialog.
 	 */
