@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.131 2003/01/20 12:06:57 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.132 2003/01/23 02:13:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -45,6 +45,7 @@
 #include "tool/magnifier.h"
 #include "tool/resize.h"
 #include "tool/propedit.h"
+#include "tool/select.h"
 
 static const struct version mapedit_ver = {
 	"agar map editor",
@@ -98,6 +99,9 @@ mapedit_select_tool(int argc, union evarg *argv)
 	case MAPEDIT_TOOL_PROPEDIT:
 		med->curtool = med->tools.propedit;
 		break;
+	case MAPEDIT_TOOL_SELECT:
+		med->curtool = med->tools.select;
+		break;
 	}
 	
 	if (med->curtool->win != NULL) {
@@ -109,7 +113,7 @@ mapedit_select_tool(int argc, union evarg *argv)
 void
 mapedit_init(struct mapedit *med, char *name)
 {
-	const int xdiv = 100, ydiv = 25;
+	const int xdiv = 100, ydiv = 20;
 	struct window *win;
 	struct region *reg;
 	struct button *button;
@@ -123,6 +127,7 @@ mapedit_init(struct mapedit *med, char *name)
 	med->tools.magnifier = TOOL(magnifier_new());
 	med->tools.resize = TOOL(resize_new());
 	med->tools.propedit = TOOL(propedit_new());
+	med->tools.select = TOOL(select_new());
 	
 	prop_set_int(med, "zoom-minimum", 4);
 	prop_set_int(med, "zoom-maximum", 400);
@@ -173,6 +178,14 @@ mapedit_init(struct mapedit *med, char *name)
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_MAGNIFIER);
+		
+		button = button_new(reg, NULL,			/* Select */
+		    SPRITE(med, MAPEDIT_TOOL_SELECT), BUTTON_STICKY,
+		    xdiv, ydiv);
+		med->tools.select->button = button;
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", mapedit_select_tool,
+		    "%p, %i", med, MAPEDIT_TOOL_SELECT);
 	}
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
@@ -207,6 +220,14 @@ mapedit_init(struct mapedit *med, char *name)
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_PROPEDIT);
+		
+		button = button_new(reg, NULL,			/* Select */
+		    SPRITE(med, MAPEDIT_TOOL_SELECT), BUTTON_STICKY,
+		    xdiv, ydiv);
+		med->tools.select->button = button;
+		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+		event_new(button, "button-pushed", mapedit_select_tool,
+		    "%p, %i", med, MAPEDIT_TOOL_SELECT);
 	}
 	med->toolbar_win = win;
 
