@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.4 2002/07/07 00:24:02 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.5 2002/07/07 06:27:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@
 
 static const struct widget_ops mapview_ops = {
 	{
-		mapview_destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL		/* save */
 	},
@@ -111,72 +111,6 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 }
 
 void
-mapview_destroy(void *p)
-{
-	struct mapview *mv = p;
-
-	OBJECT_ASSERT(mv, "widget");
-
-	/* ... */
-}
-
-/*
- * Render an animated node.
- * Map must be locked.
- */
-static __inline__ void
-mapview_animnode(struct mapview *mv, struct node *node, Uint32 rx, Uint32 ry)
-{
-	SDL_Surface *src;
-	struct noderef *nref;
-	struct anim *anim;
-	struct map *m = mv->map;
-	int i, j, frame;
-	Uint32 t;
-
-	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		anim = ANIM(nref->pobj, nref->offs);
-		frame = anim->frame;
-
-		if ((nref->flags & MAPREF_ANIM) == 0) {
-			continue;
-		}
-
-		if (nref->flags & MAPREF_ANIM_DELTA &&
-		   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
-			t = SDL_GetTicks();
-			if ((t - anim->delta) >= anim->delay) {
-				anim->delta = t;
-				if (++anim->frame > anim->nframes - 1) {
-					/* Loop */
-					anim->frame = 0;
-				}
-			}
-		} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
-			frame = nref->frame;
-
-			if ((nref->flags & MAPREF_ANIM_STATIC) == 0) {
-				if ((anim->delay < 1) ||
-				    (++nref->fdelta > anim->delay+1)) {
-					nref->fdelta = 0;
-					if (++nref->frame > anim->nframes - 1) {
-						/* Loop */
-						nref->frame = 0;
-					}
-				}
-			}
-		}
-
-		for (i = 0, j = anim->nparts - 1; i < anim->nparts; i++, j--) {
-			src = anim->frames[j][frame];
-			WIDGET_DRAW(mv, src,
-			    rx + nref->xoffs,
-			    ry + nref->yoffs - (i * TILEH));
-		}
-	}
-}
-
-void
 mapview_draw(void *p)
 {
 	struct mapview *mv = p;
@@ -210,7 +144,67 @@ mapview_draw(void *p)
 					    rx, ry);
 					nsprites++;
 				} else if (nref->flags & MAPREF_ANIM) {
-					mapview_animnode(mv, node, rx, ry);
+					SDL_Surface *src;
+					struct anim *anim;
+					int i, j, frame;
+					Uint32 t;
+
+					anim = ANIM(nref->pobj, nref->offs);
+					if (anim == NULL) {
+						fatal("%s:%d invalid\n",
+						    nref->pobj->name,
+						    nref->offs);
+					}
+					frame = anim->frame;
+					
+					if ((nref->flags & MAPREF_ANIM) == 0) {
+						continue;
+					}
+
+					if (nref->flags & MAPREF_ANIM_DELTA &&
+					   (nref->flags & MAPREF_ANIM_STATIC)
+					    == 0) {
+						t = SDL_GetTicks();
+						if ((t - anim->delta) >=
+						    anim->delay) {
+							anim->delta = t;
+							if (++anim->frame >
+							    anim->nframes - 1) {
+								/* Loop */
+								anim->frame = 0;
+							}
+						}
+					} else if (nref->flags &
+					    MAPREF_ANIM_INDEPENDENT) {
+						frame = nref->frame;
+
+						if ((nref->flags &
+						    MAPREF_ANIM_STATIC) == 0) {
+							if ((anim->delay < 1) ||
+							    (++nref->fdelta >
+							       anim->delay+1)) {
+								nref->fdelta =
+								    0;
+								if (
+								++nref->frame >
+								anim->nframes -
+								1) {
+									nref->
+									frame =
+									0;
+								}
+							}
+						}
+					}
+
+					for (i = 0, j = anim->nparts - 1;
+					    i < anim->nparts; i++, j--) {
+						src = anim->frames[j][frame];
+						WIDGET_DRAW(mv, src,
+						    rx + nref->xoffs,
+						    ry + nref->yoffs -
+						    (i * TILEH));
+					}
 				}
 			}
 			
