@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.42 2003/05/20 12:05:20 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.43 2003/05/22 03:41:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,11 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/view_8bpp.h>
-#include <config/view_16bpp.h>
-#include <config/view_24bpp.h>
-#include <config/view_32bpp.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
 
@@ -40,14 +35,7 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/primitive.h>
 
-static void	apply(int, union evarg *);
-
-enum {
-	BOX,
-	FRAME,
-	CIRCLE,
-	LINE
-};
+struct primitive_ops primitives;
 
 /* Add to the rgb components of a pixel. */
 static __inline__ Uint32
@@ -96,6 +84,7 @@ put_pixel1(Uint8 *dst, Uint32 color, int x, int y)
 {
 	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y))
 		return;
+
 	switch (view->v->format->BytesPerPixel) {
 		_VIEW_PUTPIXEL_32(dst, color);
 		_VIEW_PUTPIXEL_24(dst, color);
@@ -131,47 +120,9 @@ put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
 	}
 }
 
+/* Render a 3D-style box. */
 static void
-box_rect(void *p, SDL_Rect *rd, int z, Uint32 color)
-{
-	primitives.box(p, rd->x, rd->y, rd->w, rd->h, z, color);
-}
-static void
-box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
-    Uint32 color)
-{
-	struct widget *wid = p;
-	Uint32 bgcolor;
-	SDL_Rect rd;
-
-	bgcolor = (z < 0) ? alter_color(color, -20, -20, -20) : color;
-	if (WIDGET_FOCUSED(wid)) {
-		bgcolor = alter_color(bgcolor, 6, 6, 15);
-	}
-
-	/* Background */
-	rd.x = xoffs;
-	rd.y = yoffs;
-	rd.w = w;
-	rd.h = h;
-	primitives.rect_filled(wid, &rd, bgcolor);
-
-	primitives.line(wid,			/* Top */
-	    xoffs, yoffs,
-	    xoffs+w-1, yoffs, color);
-	primitives.line(wid,			/* Left */
-	    xoffs, yoffs,
-	    xoffs, yoffs+h-1, color);
-	primitives.line(wid,			/* Bottom */
-	    xoffs, yoffs+h-1,
-	    xoffs+w-1, yoffs+h-1, color);
-	primitives.line(wid,			/* Right */
-	    xoffs+w-1, yoffs,
-	    xoffs+w-1, yoffs+h-1, color);
-}
-static void
-box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
-    Uint32 color)
+box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
 	struct widget *wid = p;
 	Uint32 lcol, rcol, bcol;
@@ -211,13 +162,9 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	    xoffs+w-1, yoffs+h-1, rcol);
 }
 
+/* Render a 3D-style frame. */
 static void
-frame_rect(void *p, SDL_Rect *rd, Uint32 color)
-{
-	primitives.frame(p, rd->x, rd->y, rd->w, rd->h, color);
-}
-static void
-frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
+frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
@@ -235,6 +182,7 @@ frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 	    xoffs+w-1, yoffs+h-1, color);
 }
 
+/* Render a circle. */
 static void
 circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
     Uint32 color)
@@ -273,6 +221,7 @@ circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
 	SDL_UnlockSurface(view->v);
 }
 
+/* Render a segment from px1,py1 to px2,py2. */
 static void
 line_bresenham(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
 {
@@ -403,7 +352,61 @@ done:
 	SDL_UnlockSurface(view->v);
 }
 
+/* Render an outlined rectangle. */
+static void
+rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
+{
+	struct widget *wid = p;
+
+	primitives.line(wid,		/* Top */
+	    x, y,
+	    x + w - 1, y, color);
+	primitives.line(wid,		/* Bottom */
+	    x, y + h - 1,
+	    x + w - 1, y + h - 1, color);
+	primitives.line(wid,		/* Left */
+	    x, y,
+	    x, y + h - 1, color);
+	primitives.line(wid,		/* Right */
+	    x+w - 1, y,
+	    x+w - 1, y + h - 1, color);
+}
+
+/* Render a filled rectangle. */
+static void
+rect_filled(void *p, SDL_Rect *rd, Uint32 color)
+{
+	SDL_Rect nrd = *rd;
+
+	nrd.x += WIDGET(p)->win->rd.x + WIDGET(p)->x;
+	nrd.y += WIDGET(p)->win->rd.y + WIDGET(p)->y;
+
+	SDL_FillRect(view->v, &nrd, color);
+}
+
+static void
+plus(void *p, int more, int x, int y, int w, int h, Uint32 color)
+{
+	struct widget *wid = p;
+	int xcenter = x+w/2;
+	int ycenter = y+h/2;
+
+	if (more) {
+		primitives.line(wid,
+		    xcenter,	y,
+		    xcenter,	y + h,
+		    color);
+	}
+
+	primitives.line(wid,
+	    x,		ycenter,
+	    x + w,	ycenter,
+	    color);
+}
+
 #ifdef HAVE_OPENGL
+
+/* Render a line using OpenGL. */
 static void
 line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
@@ -424,39 +427,8 @@ line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 	}
 	glEnd();
 }
-#endif /* HAVE_OPENGL */
 
-static void
-rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
-{
-	struct widget *wid = p;
-
-	primitives.line(wid,		/* Top */
-	    x, y,
-	    x + w - 1, y, color);
-	primitives.line(wid,		/* Bottom */
-	    x, y + h - 1,
-	    x + w - 1, y + h - 1, color);
-	primitives.line(wid,		/* Left */
-	    x, y,
-	    x, y + h - 1, color);
-	primitives.line(wid,		/* Right */
-	    x+w - 1, y,
-	    x+w - 1, y + h - 1, color);
-}
-
-static void
-rect_filled(void *p, SDL_Rect *rd, Uint32 color)
-{
-	SDL_Rect nrd = *rd;
-
-	nrd.x += WIDGET(p)->win->rd.x + WIDGET(p)->x;
-	nrd.y += WIDGET(p)->win->rd.y + WIDGET(p)->y;
-
-	SDL_FillRect(view->v, &nrd, color);
-}
-
-#ifdef HAVE_OPENGL
+/* Render a filled rectangle using OpenGL. */
 static void
 rect_opengl(void *p, SDL_Rect *rd, Uint32 color)
 {
@@ -470,107 +442,27 @@ rect_opengl(void *p, SDL_Rect *rd, Uint32 color)
 	glColor3ub(r, g, b);
 	glRecti(nrd.x, nrd.y, nrd.x+nrd.w, nrd.y+nrd.h);
 }
-#endif /* HAVE_OPENGL */
 
-/* Default primitives ops */
-struct primitive_ops primitives = {
-	box_3d,			/* box */
-	box_rect,		/* box (SDL_Rect) */
-	frame_3d,		/* frame */
-	frame_rect,		/* frame (SDL_Rect) */
-	circle_bresenham,	/* circle */
-	line_bresenham,		/* line */
-	rect_outlined,		/* outlined rectangle */
-	rect_filled		/* filled rectangle */
-};
+#endif /* HAVE_OPENGL */
 
 void
 primitives_init(void)
 {
+	primitives.box = box;
+	primitives.frame = frame;
+	primitives.circle = circle_bresenham;
+	primitives.rect_outlined = rect_outlined;
+	primitives.plus = plus;
+
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
 		primitives.line = line_opengl;
 		primitives.rect_filled = rect_opengl;
-	}
+	} else
 #endif
-}
-
-struct window *
-primitive_config_window(void)
-{
-	struct window *win;
-	struct region *reg;
-	struct label *lab;
-	struct tlist *tl;
-	struct tlist_item *it;
-
-	win = window_new("widget-primitive-sw", WINDOW_CENTER, -1, -1,
-	    303, 190, 303, 190);
-	window_set_caption(win, "Widget primitives");
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 100);
 	{
-		lab = label_new(reg, 100, 10, "Box:");
-		tl = tlist_new(reg, 100, 35, 0);
-		tlist_insert_item(tl, NULL, "2d-style", box_2d);
-
-		it = tlist_insert_item(tl, NULL, "3d-style", box_3d);
-		tlist_select(tl, it);
-		event_new(tl, "tlist-changed", apply, "%i", BOX);
-
-		lab = label_new(reg, 100, 10, "Frame:");
-		tl = tlist_new(reg, 100, 35, 0);
-		it = tlist_insert_item(tl, NULL, "3d-style", frame_3d);
-		tlist_select(tl, it);
-		event_new(tl, "tlist-changed", apply, "%i", FRAME);
-	}
-
-	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
-	{	
-		struct tlist_item *it_bres, *it;
-	
-		lab = label_new(reg, 100, 10, "Line:");
-		tl = tlist_new(reg, 100, 35, 0);
-		it_bres = tlist_insert_item(tl, NULL, "Bresenham",
-		    line_bresenham);
-		tlist_select(tl, it_bres);
-#ifdef HAVE_OPENGL
-		it = tlist_insert_item(tl, NULL, "OpenGL", line_opengl);
-		if (view->opengl) {
-			tlist_select(tl, it);
-			tlist_unselect(tl, it_bres);
-		}
-#endif
-		event_new(tl, "tlist-changed", apply, "%i", LINE);
-		
-		lab = label_new(reg, 100, 10, "Circle:");
-		tl = tlist_new(reg, 100, 35, 0);
-		it = tlist_insert_item(tl, NULL, "Bresenham", circle_bresenham);
-		tlist_select(tl, it);
-		event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
-	}
-	return (win);
-}
-
-static void
-apply(int argc, union evarg *argv)
-{
-	int prim = argv[1].i;
-	struct tlist_item *sel = argv[2].p;
-
-	switch (prim) {
-	case BOX:
-		primitives.box = sel->p1;
-		break;
-	case FRAME:
-		primitives.frame = sel->p1;
-		break;
-	case CIRCLE:
-		primitives.circle = sel->p1;
-		break;
-	case LINE:
-		primitives.line = sel->p1;
-		break;
+		primitives.line = line_bresenham;
+		primitives.rect_filled = rect_filled;
 	}
 }
 

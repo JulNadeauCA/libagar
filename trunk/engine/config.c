@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.72 2003/05/08 12:15:06 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.73 2003/05/18 00:16:57 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -44,7 +44,6 @@
 #include <engine/widget/checkbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
-#include <engine/widget/primitive.h>
 #include <engine/widget/tlist.h>
 
 #include <sys/stat.h>
@@ -60,12 +59,9 @@ const struct version config_ver = {
 	3, 0
 };
 
-static struct window *primitives_win;	/* Primitive algorithm switch */
-
 enum {
 	CLOSE_BUTTON,
 	SAVE_BUTTON,
-	PRIMITIVES_BUTTON,
 	UDATADIR_TBOX,
 	SYSDATADIR_TBOX,
 	DATAPATH_TBOX,
@@ -265,22 +261,15 @@ config_window(struct config *con)
 	/* Buttons */
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
-		button = button_new(reg, "Close", NULL, 0, 33, 100);
+		button = button_new(reg, "Close", NULL, 0, 50, 100);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", CLOSE_BUTTON);
 		win->focus = WIDGET(button);
 
-		button = button_new(reg, "Save", NULL, 0, 34, 100);
+		button = button_new(reg, "Save", NULL, 0, 50, 100);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", SAVE_BUTTON);
-		
-		button = button_new(reg, "Primitives", NULL, 0, 33, 100);
-		event_new(button, "button-pushed",
-		    config_apply, "%i", PRIMITIVES_BUTTON);
 	}
-
-	/* Primitive algorithm switch */
-	primitives_win = primitive_config_window();
 	config->settings = win;
 }
 
@@ -321,9 +310,6 @@ config_apply(int argc, union evarg *argv)
 	case SAVE_BUTTON:
 		if (object_save(config, NULL) == -1)
 			text_msg("Error saving", "%s", error_get());
-		return;
-	case PRIMITIVES_BUTTON:
-		window_show(primitives_win);
 		return;
 	}
 
