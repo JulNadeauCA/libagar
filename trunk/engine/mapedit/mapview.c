@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.127 2003/07/08 00:34:54 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.128 2003/07/08 04:51:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -134,8 +134,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	mv->flags = (flags | MAPVIEW_CENTER);
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
-	mv->prew = 8;
-	mv->preh = 6;
+	mv->prew = 4;
+	mv->preh = 4;
 
 	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
