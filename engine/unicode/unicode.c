@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.2 2003/06/14 22:07:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ unicode_convert(enum unicode_conv conv, Uint16 *unicode, const char *text,
 }
 
 /* Duplicate a string and convert to UTF-16. */
-__inline__ Uint16 *
+Uint16 *
 unicode_import(enum unicode_conv conv, const char *text)
 {
 	Uint16 *unicode;
@@ -99,7 +99,7 @@ unicode_import(enum unicode_conv conv, const char *text)
  * Return the length of a Unicode text in characters, without the
  * terminating NUL.
  */
-__inline__ size_t
+size_t
 ucslen(const Uint16 *unicode)
 {
 	size_t len;
@@ -111,7 +111,7 @@ ucslen(const Uint16 *unicode)
 }
 
 /* Duplicate a Unicode string. */
-__inline__ Uint16 *
+Uint16 *
 ucsdup(const Uint16 *unicode)
 {
 	size_t buflen;
@@ -122,16 +122,4 @@ ucsdup(const Uint16 *unicode)
 	memcpy(ns, unicode, buflen);
 	return (ns);
 }
-
-#ifdef DEBUG
-void
-ucsdump(const Uint16 *unicode)
-{
-	const Uint16 *text = unicode;
-
-	while (*text++ != '\0') {
-		fprintf(stderr, "%04x %c\n", *text, (unsigned char)*text);
-	}
-}
-#endif
 

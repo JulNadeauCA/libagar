@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.h,v 1.2 2003/06/14 22:07:46 vedge Exp $	*/
+/*	$Csoft: unicode.h,v 1.3 2003/06/18 00:47:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_
@@ -21,19 +21,13 @@ enum unicode_conv {
 __BEGIN_DECLS
 void	 unicode_init(void);
 void	 unicode_destroy(void);
-
-__inline__ Uint16 *unicode_import(enum unicode_conv, const char *);
-void		   unicode_convert(enum unicode_conv, Uint16 *, const char *,
-		                   size_t);
-
-__inline__ size_t ucslen(const Uint16 *);
-size_t		  ucslcpy(Uint16 *, const Uint16 *, size_t);
-size_t		  ucslcat(Uint16 *, const Uint16 *, size_t);
-Uint16		 *ucsdup(const Uint16 *);
-Uint16		 *ucssep(Uint16 **, const Uint16 *);
-#ifdef DEBUG
-void		  ucsdump(const Uint16 *);
-#endif
+Uint16	*unicode_import(enum unicode_conv, const char *);
+void	 unicode_convert(enum unicode_conv, Uint16 *, const char *, size_t);
+size_t	 ucslen(const Uint16 *);
+size_t	 ucslcpy(Uint16 *, const Uint16 *, size_t);
+size_t	 ucslcat(Uint16 *, const Uint16 *, size_t);
+Uint16	*ucsdup(const Uint16 *);
+Uint16	*ucssep(Uint16 **, const Uint16 *);
 __END_DECLS
 
 #include "close_code.h"
