@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.57 2004/02/29 17:34:24 vedge Exp $
+.\"	$Csoft: object.3,v 1.58 2004/03/02 08:58:12 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,7 +52,7 @@ Paging and garbage collection of object data
 .It
 Object dependencies and linkage
 .It
-Shared data (such as audio and graphics)
+Shared media
 .It
 Generic events
 .It
@@ -86,7 +86,9 @@ If this flag is set,
 .Fn object_page_in
 and
 .Fn object_page_out
-are no-ops (but still increment the reference count).
+with an argument of
+.Dv OBJECT_DATA
+become no-ops (but still increment the reference count).
 .Pp
 The
 .Dv OBJECT_INDESTRUCTIBLE
@@ -314,6 +316,50 @@ The
 operation of
 .Xr map 3 ,
 for example, frees the contents of all nodes of the map.
+.Sh SHARED MEDIA
+.Pp
+Data that is shared between multiple objects (such as graphics or audio) is
+referred to as "shared media".
+Agar uses a two-level reference count scheme to perform efficient garbage
+collection of this data, and allow object-specific media overrides.
+.Pp
+The
+.Fn object_page_in
+and
+.Fn object_page_out
+functions increment and decrement reference counts that are part of the
+.Nm
+structure.
+A transition of 0->1 on such an object-specific reference count causes
+the shared media reference count to be increased (if its reference count
+goes 0->1, the media is actually read from disk).
+Conversely, a transition of 1->0 on object-specific reference counts cause
+the shared media reference count to be decreased (if it goes 1->0, the media
+is freed from memory).
+.Pp
+Once media has been made available through
+.Fn object_page_in ,
+the
+.Va gfx
+(for
+.Dv OBJECT_GFX )
+or
+.Va audio
+(for
+.Dv OBJECT_AUDIO )
+member of the
+.Nm
+structure becomes accessible.
+.Pp
+Sprites, animations and generated maps are accessed directly through
+.Va gfx .
+Audio samples are accessed directly through
+.Va audio .
+See
+.Xr gfx 3
+and
+.Xr audio 3
+for more information.
 .Sh PERSISTENCE AND PAGING
 .nr nS 1
 .Ft "int"
@@ -378,33 +424,22 @@ in network format.
 .Pp
 The
 .Fn object_page_in
-function fetches data associated with an object.
-If the data is already resident, its reference count is incremented.
+function fetches either object data or shared media.
+If the data is already resident, the reference count is incremented.
 The
 .Fa item
 argument may be one of:
 .Bd -literal
 enum object_page_item {
-	OBJECT_GFX,		/* Graphics */
-	OBJECT_AUDIO,		/* Audio data */
+	OBJECT_GFX,		/* Shared graphics */
+	OBJECT_AUDIO,		/* Shared audio */
 	OBJECT_DATA		/* Object derivate data */
 };
 .Ed
 .Pp
 The
 .Fn object_page_out
-function decrements the reference count on data.
-For
-.Dv OBJECT_GFX
-and
-.Dv OBJECT_AUDIO ,
-the reference count is decremented on the shared media.
-For
-.Dv OBJECT_DATA ,
-.Fn object_save
-and
-.Fn object_free_data
-are used.
+function decrements the reference count on shared media or object data.
 .Pp
 These functions return 0 on success or -1 if an error occured.
 .Sh MAP OPERATIONS
