@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.141 2003/02/04 02:31:10 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.142 2003/02/05 00:42:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -510,6 +510,32 @@ node_movedown_ref(struct node *node, struct noderef *nref)
 	if (prev != NULL) {
 		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
 		TAILQ_INSERT_BEFORE(prev, nref, nrefs);
+	}
+}
+
+/*
+ * Move a noderef to the tail of the queue.
+ * The map containing the node must be locked.
+ */
+void
+node_movetail_ref(struct node *node, struct noderef *nref)
+{
+	if (nref != TAILQ_LAST(&node->nrefs, noderefq)) {
+		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
+		TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
+	}
+}
+
+/*
+ * Move a noderef to the head of the queue.
+ * The map containing the node must be locked.
+ */
+void
+node_movehead_ref(struct node *node, struct noderef *nref)
+{
+	if (nref != TAILQ_FIRST(&node->nrefs)) {
+		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
+		TAILQ_INSERT_HEAD(&node->nrefs, nref, nrefs);
 	}
 }
 
