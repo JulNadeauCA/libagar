@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.61 2004/03/17 17:26:55 vedge Exp $
+.\"	$Csoft: object.3,v 1.62 2004/05/10 05:14:52 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,8 +43,9 @@ The Agar game logic is built upon a tree of
 structures.
 The
 .Nm
-interface is responsible for:
-.Bl -bullet -compact
+layer is responsible for:
+.Pp
+.Bl -bullet -compact -offset indent
 .It
 Persistence
 .It
@@ -185,11 +186,21 @@ and
 .Fn object_detach
 functions respectively link and unlink a child object against a parent
 project.
+.Pp
+Prior to detaching the object,
+.Fn object_detach
+cancels any
+.Xr timeout 3
+event scheduled for execution that does not have the
+.Dv TIMEOUT_DETACHABLE
+flag set.
+.Pp
 These operations raise
 .Fn attached
 and
 .Fn detached
 events.
+.Pp
 .Fn object_move
 moves
 .Fa child
@@ -203,6 +214,10 @@ raising
 and
 .Fn moved
 events in order.
+Unlike
+.Fn object_detach ,
+.Fn object_move
+does not cancel scheduled timeout events.
 .Pp
 The
 .Fn object_root
@@ -303,8 +318,9 @@ The
 function is called to free all resources reserved by the given object, including
 its children (assuming that they are not currently in use).
 .Fn object_destroy
-returns 0 on success or -1 if the given object (or one of its children)
-is currently in use.
+also cancels any
+.Xr timeout 3
+event scheduled for future execution.
 To permit static allocation,
 .Fn object_destroy
 does not invoke
@@ -321,6 +337,11 @@ and
 .Fn object_free_children ,
 but these functions may be called directly in order to destroy and reinitialize
 the event handler list, the property table and the child objects, respectively.
+.Pp
+In addition to reinitializing the event handler table,
+.Fn object_free_events
+also cancels any scheduled event.
+.Pp
 .Dv object_free_children
 invokes
 .Xr free 3
@@ -420,6 +441,12 @@ config setting) is used.
 performs the following operations, in order:
 .Bl -enum
 .It
+Cancel any scheduled
+.Xr timeout 3
+event that does not have the
+.Dv TIMEOUT_LOADABLE
+flag set.
+.It
 Load the generic part of
 .Fa obj
 and its descendants.
@@ -487,7 +514,7 @@ and
 for instance.
 The
 .Nm
-interface is responsible for keeping the object's projection in sync.
+layer is responsible for keeping the object's projection in sync.
 When an object is in motion, a two-dimensional "motion" offset (kept in the
 .Ft position
 structure) is incremented at a specific rate, until it leaves the tile area
@@ -530,7 +557,7 @@ to the position associated with
 .Sh EVENTS
 The
 .Nm
-interface generates the following events:
+mechanism generates the following events:
 .Pp
 .Bl -tag -width 2n
 .It Fn attached "void"
@@ -562,7 +589,8 @@ interface could handle media associations in a more generic manner.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
-.Xr prop 3
+.Xr prop 3 ,
+.Xr timeout 3
 .Sh HISTORY
 The
 .Nm

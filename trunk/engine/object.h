@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.110 2004/05/06 06:20:08 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.111 2004/05/10 02:42:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -138,6 +138,7 @@ void	 object_free_props(struct object *);
 void 	 object_free_events(struct object *);
 void	 object_free_deps(struct object *);
 void	 object_free_zerodeps(struct object *);
+void 	 object_cancel_timeouts(struct object *, int);
 
 int	 object_page_in(void *, enum object_page_item);
 int	 object_page_out(void *, enum object_page_item);
