@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.15 2004/02/24 13:07:02 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.16 2004/05/06 06:23:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -71,6 +71,13 @@ base2unit(double n, const struct unit *unit)
 	} else {
 		return (n/unit->divider);
 	}
+}
+
+/* Convert n from one unit system to another. */
+double
+unit2unit(double n, const struct unit *ufrom, const struct unit *uto)
+{
+	return (base2unit(unit2base(n, ufrom), uto));
 }
 
 /* Default unit (identity) */
