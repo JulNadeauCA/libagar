@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.15 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.16 2002/06/03 02:30:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -160,10 +160,10 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 	}
 
 	/* Prevent overlapping blits. */
-	te->mvmask.x = (te->x / te->view->map->tilew) - te->view->mapxoffs;
-	te->mvmask.y = (te->y / te->view->map->tileh) - te->view->mapyoffs;
-	te->mvmask.w = (te->w / te->view->map->tilew);
-	te->mvmask.h = (te->h / te->view->map->tileh);
+	te->mvmask.x = (te->x / TILEW) - te->view->mapxoffs;
+	te->mvmask.y = (te->y / TILEH) - te->view->mapyoffs;
+	te->mvmask.w = (te->w / TILEW);
+	te->mvmask.h = (te->h / TILEH);
 }
 
 void
@@ -405,11 +405,7 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 	char *buf, *bufc, *s, *last;
 	struct text *te;
 	int w = 0, h = 0, nlines, longlinew, cycle;
-	int wgran, hgran;
 	
-	wgran = mainview->map->tilew;
-	hgran = mainview->map->tileh;
-
 	va_start(args, fmt);
 	vasprintf(&buf, fmt, args);
 	va_end(args);
@@ -433,29 +429,27 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 
 	/* Adjust the geometry with the map, for optimization purposes. */
 	while (h - YMARGIN < (nlines * maxfonth))
-		h += hgran;
+		h += TILEH;
 	while (w - XMARGIN < longlinew + XMARGIN)
-		w += wgran;
+		w += TILEW;
 
 	cycle = 1;
 	TAILQ_FOREACH(te, &textsh, texts) {
-		if (te->y <= hgran << 1) {
+		if (te->y <= TILEH << 1) {
 			cycle = 0;
 		}
 	}
 	if (cycle) {
-		gx = wgran * 2;
-		gy = mainview->map->tileh << 1;
+		gx = TILEW * 2;
+		gy = TILEH << 1;
 	} else {
-		gx += wgran;
-		gy += hgran;
+		gx += TILEW;
+		gy += TILEH;
 	}
-	if ((gy + h) >= mainview->h) {
-		gy = hgran;
-	}
-	if ((gx + w) >= mainview->w) {
-		gx = wgran;
-	}
+	if ((gy + h) >= mainview->h)
+		gy = TILEH;
+	if ((gx + w) >= mainview->w)
+		gx = TILEW;
 
 	te = emalloc(sizeof(struct text));
 	text_init(te, gx, gy, w, h, flags, delay);
