@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.75 2003/03/12 23:00:22 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.76 2003/03/13 06:21:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -156,10 +156,10 @@ struct noderef	*node_add_warp(struct node *, char *, int, int, Uint8);
 #ifdef DEBUG
 extern int map_nodesigs;
 # define MAP_CHECK_NODE(node)					\
-	if (map_nodesigs && node->magic != NODE_MAGIC)		\
+	if (map_nodesigs && (node)->magic != NODE_MAGIC)	\
 		fatal("bad node");
 # define MAP_CHECK_NODEREF(nref)				\
-	if (map_nodesigs && nref->magic != NODEREF_MAGIC)	\
+	if (map_nodesigs && (nref)->magic != NODEREF_MAGIC)	\
 		fatal("bad nref");
 #else
 # define MAP_CHECK_NODE(node)
