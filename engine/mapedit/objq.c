@@ -53,8 +53,6 @@ enum {
 	OBJQ_INSERT_DOWN
 };
 
-static void	 tilemap_option(int, union evarg *);
-
 static void
 tl_objs_poll(int argc, union evarg *argv)
 {
@@ -110,6 +108,13 @@ tilemap_option(int argc, union evarg *argv)
 		} else {
 			mv->flags |= MAPVIEW_EDIT;
 			window_show(mv->tmap_win);
+		}
+		break;
+	case MAPEDIT_TOOL_NODEEDIT:
+		if (mv->node_win->flags & WINDOW_SHOWN) {
+			window_hide(mv->node_win);
+		} else {
+			window_show(mv->node_win);
 		}
 		break;
 	}
@@ -194,6 +199,22 @@ objq_insert_tiles(int argc, union evarg *argv)
 }
 
 static void
+tilemap_close(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct mapview *mv = argv[1].p;
+	struct button *nodeedit_button = argv[2].p;
+
+	if (mv->tmap_win != NULL) {
+		window_hide(mv->tmap_win);
+	}
+	window_hide(mv->node_win);
+	window_hide(win);
+
+	widget_set_int(nodeedit_button, "value", 0);
+}
+
+static void
 tl_objs_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
@@ -226,7 +247,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
 	    MAPVIEW_PROPS,
 	    100, 100);
-
+	
 	if (object_load(ob->art->tiles.map) == -1) {
 		dprintf("loading tile map: %s\n", error_get());
 	}
@@ -235,41 +256,55 @@ tl_objs_selected(int argc, union evarg *argv)
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 10);
 	reg->spacing = 1;
 	{
+		const int xdiv = 14;
+	
 		bu = button_new(reg, NULL,		/* Load map */
-		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, 16, 100);
+		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, 100);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
 		bu = button_new(reg, NULL,		/* Save map */
-		    SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0, 16, 100);
+		    SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0, xdiv, 100);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 		
 		bu = button_new(reg, NULL,		/* Clear map */
-		    SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0, 16, 100);
+		    SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0, xdiv, 100);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
 		
 		bu = button_new(reg, NULL,		/* Toggle grid */
 		    SPRITE(med, MAPEDIT_TOOL_GRID),
-		    BUTTON_STICKY|BUTTON_PRESSED, 16, 100);
+		    BUTTON_STICKY, xdiv, 100);
+		widget_set_bool(bu, "value", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		bu = button_new(reg, NULL,		/* Toggle props */
 		    SPRITE(med, MAPEDIT_TOOL_PROPS),
-		    BUTTON_STICKY|BUTTON_PRESSED, 16, 100);
+		    BUTTON_STICKY, xdiv, 100);
+		widget_set_bool(bu, "value", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
-		bu = button_new(reg, NULL,		/* Toggle edition */
+		bu = button_new(reg, NULL,		/* Toggle map edition */
 		    SPRITE(med, MAPEDIT_TOOL_EDIT),
-		    BUTTON_STICKY, 16, 100);
+		    BUTTON_STICKY, xdiv, 100);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+		
+		bu = button_new(reg, NULL,	       /* Toggle node edition */
+		    SPRITE(med, MAPEDIT_TOOL_NODEEDIT),
+		    BUTTON_STICKY, xdiv, 100);
+		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		event_new(bu, "button-pushed",
+		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		mv->node_button = bu;
+
+		event_new(win, "window-close", tilemap_close, "%p, %p", mv, bu);
 	}
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
@@ -331,10 +366,9 @@ tl_objs_selected(int argc, union evarg *argv)
 	
 			for (i = 0; i < 4; i++) {
 				button = button_new(reg, NULL,
-				    SPRITE(med, icons[i]), 0, 16, 90);
+				    SPRITE(med, icons[i]), 0, 14, 90);
 				event_new(button, "button-pushed",
-				    objq_insert_tiles, "%p, %p, %i",
-				    tl, mv, i);
+				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
 			}
 		}
 	}
@@ -346,7 +380,7 @@ objq_window(struct mapedit *med)
 	struct window *win;
 	struct region *reg;
 
-	win = window_generic_new(215, 140, "mapedit-objq");
+	win = window_generic_new(221, 112, "mapedit-objq");
 	if (win == NULL)
 		return (NULL);		/* Exists */
 	event_new(win, "window-close", window_generic_hide, "%p", win);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.44 2003/01/18 08:24:44 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.45 2003/01/19 12:09:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,6 +35,8 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/label.h>
+#include <engine/widget/tlist.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -55,6 +57,7 @@ enum {
 	BORDER_COLOR,
 	GRID_COLOR,
 	CURSOR_COLOR,
+	POSITION_CURSOR_COLOR,
 	CONSTR_ORIGIN_COLOR,
 	SRC_NODE_COLOR,
 	BACKGROUND1_COLOR,
@@ -90,10 +93,75 @@ mapview_new(struct region *reg, struct mapedit *med, struct map *m,
 	return (mv);
 }
 
+static void
+mapview_node_win_close(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct mapview *mv = argv[1].p;
+
+	window_hide(win);
+	widget_set_int(mv->node_button, "value", 0);
+}
+
+static void
+mapview_node_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct label *label = argv[1].p;
+	struct map *m = argv[2].p;
+	struct mapview *mv = argv[3].p;
+	struct node *src_node = mv->cur_node;
+	struct noderef *nref;
+	int i = 0;
+
+	if (src_node == NULL) {
+		label_printf(label, "No source node");
+		return;
+	} else {
+		label_printf(label, "Flags: 0x%x", src_node->flags);
+	}
+
+	pthread_mutex_lock(&m->lock);
+	tlist_clear_items(tl);
+	TAILQ_FOREACH(nref, &src_node->nrefs, nrefs) {
+		SDL_Surface *icon = NULL;
+		struct art_anim *anim;
+		char *text;
+
+		switch (nref->type) {
+		case NODEREF_SPRITE:
+			Asprintf(&text, "%d. s(%s:%d)", i, nref->pobj->name,
+			    nref->offs);
+			icon = nref->pobj->art->sprites[nref->offs];
+			break;
+		case NODEREF_ANIM:
+			Asprintf(&text, "%d. a(%s:%d)", i, nref->pobj->name,
+			    nref->offs);
+			anim = nref->pobj->art->anims[nref->offs];
+			if (anim->nframes > 0) {
+				icon = anim->frames[0];
+			}
+			break;
+		case NODEREF_WARP:
+			Asprintf(&text, "%d. w(%s:%d,%d)", i,
+			    nref->data.warp.map, nref->data.warp.x,
+			    nref->data.warp.y);
+			break;
+		}
+		tlist_insert_item(tl, icon, text, nref);
+		free(text);
+		i++;
+	}
+	tlist_restore_selections(tl);
+	pthread_mutex_unlock(&m->lock);
+}
+
 void
 mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
 {
+	struct region *reg;
+
 	widget_init(&mv->wid, "mapview", &mapview_ops, rw, rh);
 	mv->wid.flags |= WIDGET_CLIPPING;
 
@@ -113,7 +181,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->constr.y = 0;
 	mv->constr.nflags = NODEREF_SAVEABLE;
 	mv->tmap_win = NULL;
-	mv->node_win = NULL;
+	mv->cur_node = NULL;
 
 	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
 		fatal("no map editor\n");
@@ -122,6 +190,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	widget_map_color(mv, BORDER_COLOR, "border", 200, 200, 200);
 	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100);
 	widget_map_color(mv, CURSOR_COLOR, "cursor", 100, 100, 100);
+	widget_map_color(mv, POSITION_CURSOR_COLOR, "pos-cursor", 0, 100, 150);
 	widget_map_color(mv, CONSTR_ORIGIN_COLOR, "constr-orig", 100, 100, 130);
 	widget_map_color(mv, SRC_NODE_COLOR, "src-node", 0, 190, 0);
 	widget_map_color(mv, BACKGROUND2_COLOR, "background-2", 175, 175, 175);
@@ -134,6 +203,27 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
+	
+	/* Create the node edition window. */
+	mv->node_win = window_generic_new(268, 346, "mapedit-node-%s",
+	    OBJECT(m)->name);
+	event_new(mv->node_win, "window-close",
+	    mapview_node_win_close, "%p", mv);
+
+	window_set_caption(mv->node_win, "%s node", OBJECT(m)->name);
+	reg = region_new(mv->node_win, REGION_VALIGN, 0, 0, 100, 100);
+	{
+		struct label *lab;
+		struct tlist *tl;
+
+		lab = label_new(reg, 100, 50, "...");
+	
+		tl = tlist_new(reg, 100, 50, TLIST_POLL|TLIST_MULTI);
+		tlist_set_item_height(tl, TILEH);
+		event_new(tl, "tlist-poll", mapview_node_poll, "%p, %p, %p",
+		    lab, m, mv);
+		mv->node_tlist = tl;
+	}
 }
 
 static __inline__ void
@@ -281,6 +371,14 @@ mapview_draw(void *p)
 					    mv->map->tilew-3, mv->map->tileh-3,
 					    WIDGET_COLOR(mv, CURSOR_COLOR));
 				}
+			}
+
+			/* Draw the position cursor. */
+			if (mv->cur_node == node) {
+				primitives.rect_outlined(mv,
+				    rx+3, ry+3,
+				    mv->map->tilew-5, mv->map->tileh-5,
+				    WIDGET_COLOR(mv, POSITION_CURSOR_COLOR));
 			}
 
 			/* Draw the tile map selection cursor. */
@@ -470,26 +568,26 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	WIDGET_FOCUS(mv);
 	if (button > 1) {
 		mv->mouse.move++;
-	} else if (mv->flags & MAPVIEW_EDIT) {
-		if (med->curtool != NULL &&
-		   (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-		   (mv->mx+x < mv->map->mapw) &&
-		   (mv->my+y < mv->map->maph) &&
-		    TOOL_OPS(med->curtool)->tool_effect != NULL) {
-			TOOL_OPS(med->curtool)->tool_effect(
-			    med->curtool, mv, mv->mx+x, mv->my+y);
-		}
 	}
-	if (mv->flags & MAPVIEW_TILEMAP) {
-		if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-		    (mv->mx+x < mv->map->mapw) &&
-		    (mv->my+y < mv->map->maph)) {
-			if (SDL_GetModState() & KMOD_CTRL) {
-				mv->constr.x = mv->mx+x;
-				mv->constr.y = mv->my+y;
-				return;
+
+	if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+	    (mv->mx+x < mv->map->mapw) && (mv->my+y < mv->map->maph)) {
+		if (mv->flags & MAPVIEW_EDIT &&
+		    med->curtool != NULL &&
+		    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+			TOOL_OPS(med->curtool)->tool_effect(med->curtool,
+			    mv, mv->mx+x, mv->my+y);
+		}
+		
+		if (button == 1) {
+			mv->cur_node = &mv->map->map[mv->my+y][mv->mx+x];
+			if (mv->flags & MAPVIEW_TILEMAP) {
+				if ((SDL_GetModState() & KMOD_CTRL)) {
+					mv->constr.x = mv->mx+x;
+					mv->constr.y = mv->my+y;
+				}
+				med->src_node = mv->cur_node;
 			}
-			med->src_node = &mv->map->map[mv->my+y][mv->mx+x];
 		}
 	}
 }

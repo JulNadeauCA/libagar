@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.129 2003/01/01 05:18:37 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.130 2003/01/19 12:09:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ mapedit_select_tool(int argc, union evarg *argv)
 
 	if (med->curtool != NULL && med->curtool->win != NULL) {
 		window_hide(med->curtool->win);
-		med->curtool->button->flags &= ~(BUTTON_PRESSED);
+		widget_set_bool(med->curtool->button, "value", 0);
 	}
 
 	switch (argv[2].i) {
@@ -140,7 +140,7 @@ mapedit_init(struct mapedit *med, char *name)
 	event_new(med, "detached", mapedit_detached, NULL);
 	
 	/* Create the toolbar. */
-	win = window_new("mapedit-toolbar", 0, 0, 0, 94, 153, 73, 134);
+	win = window_new("mapedit-toolbar", 0, 0, 0, 94, 153, 63, 126);
 	window_set_caption(win, "Tools");
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 100);
 	reg->spacing = 1;
