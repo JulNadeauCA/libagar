@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.10 2002/02/05 06:38:03 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.11 2002/02/05 14:19:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 #include "mapedit.h"
 #include "mapedit_offs.h"
 
-static void	mapedit_destroy(struct object *);
+static void	mapedit_destroy(void *);
 static Uint32	mapedit_time(Uint32, void *);
 static void	mapedit_event(struct mapedit *, SDL_Event *);
 static void	mapedit_setflag(struct mapedit *, struct node *, int);
@@ -57,24 +57,32 @@ mapedit_create(char *name, char *desc)
 {
 	char path[FILENAME_MAX];
 	struct mapedit *med;
-	struct map *em;
+	struct map *map;
 	struct fobj *fob;
 	struct object *ob;
 	int fd;
+	int tilew, tileh;
 
 	strcpy(path, name);
 	strcat(path, ".map");
-
+	
 	if ((fd = open(path, O_RDONLY, 0)) > 0) {
 		close(fd);
-		
-		dprintf("editing %s\n", path);
+		dprintf("editing %s from %s\n", name, path);
 		/* The description, geometry and flags will be loaded. */
-		em = map_create(name, NULL, MAP_2D, 128, 128, path);
+		map = map_create(name, NULL, MAP_2D, 128, 128);
+		map_load(map, path);
 	} else {
 		/* Create a new map. */
-		dprintf("creating %s\n", path);
-		em = map_create(name, desc, MAP_2D, 128, 128, NULL);
+		printf("anew");
+		dprintf("creating %s anew\n", name);
+		map = map_create(name, desc, MAP_2D, 128, 128);
+	}
+	if (object_strfind(name) == NULL) {
+		dprintf("%s is not in core\n", name);
+		map_link(map);
+	} else {
+		dprintf("%s is in core\n", name);
 	}
 
 	med = (struct mapedit *)malloc(sizeof(struct mapedit));
@@ -86,9 +94,9 @@ mapedit_create(char *name, char *desc)
 	object_create(&med->obj, "mapedit", "Map editor", DESTROY_HOOK);
 	med->obj.destroy_hook = mapedit_destroy;
 	med->event_hook = mapedit_event;
-	med->map = em;
-	med->x = em->defx;
-	med->y = em->defy;
+	med->map = map;
+	med->x = map->defx;
+	med->y = map->defy;
 
 	med->curobj = NULL;
 	med->curflags = 0;
@@ -98,19 +106,24 @@ mapedit_create(char *name, char *desc)
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST|
 	    MAPEDIT_DRAWPROPS;
 
-	med->tilelist = window_create(em->view,
-	    (em->view->width - em->view->tilew), em->view->tileh,
-	    em->view->tilew, em->view->height, "Tile list");
-	med->tilestack = window_create(em->view,
+	tilew = map->view->tilew;
+	tileh = map->view->tileh;
+
+	med->tilelist = window_create(map->view,
+	    (map->view->width - tilew), tileh,
+	    tilew, map->view->height,
+	    "Tile list");
+	med->tilestack = window_create(map->view,
 	    0, 0,
-	    em->view->tilew, em->view->height, "Tile stack");
-	med->objlist = window_create(em->view,
-	    em->view->tilew, 0,
-	    em->view->width - em->view->tilew, em->view->tileh,
+	    tilew, map->view->height,
+	    "Tile stack");
+	med->objlist = window_create(map->view,
+	    tilew, 0,
+	    map->view->width - tilew, tileh,
 	    "Object list");
 
 	fob = fobj_load("../engine/mapedit/mapedit.fob");
-	xcf_load(fob, MAPEDIT_XCF, NULL, &med->obj);
+	xcf_load(fob, MAPEDIT_XCF, (struct object *)med);
 	fobj_free(fob);
 
 	/*
@@ -121,17 +134,25 @@ mapedit_create(char *name, char *desc)
 	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
 
+	med->curobj = NULL;
+
 	pthread_mutex_lock(&world->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		struct editobj *eob;
 		
+		dprintf("shadow \"%s\"\n", ob->name);
+
 		if ((ob->flags & OBJ_EDITABLE) == 0) {
+			dprintf("skipping %s (non-editable)\n", ob->name);
+			continue;
+		}
+		if (ob->nsprites < 1 || ob->nanims < 1) {
+			dprintf("skipping %s (no sprite/anim)\n", ob->name);
 			continue;
 		}
 
 		eob = malloc(sizeof(struct editobj));
 		if (eob == NULL) {
-			perror("editobj");
 			pthread_mutex_unlock(&world->lock);
 			return (NULL);
 		}
@@ -149,7 +170,7 @@ mapedit_create(char *name, char *desc)
 
 		dprintf("%s has %d sprites, %d anims\n", ob->name,
 		    eob->nsprites, eob->nanims);
-		
+
 		/* XXX for now */
 		if (eob->nsprites > 0) {
 			med->curobj = eob;
@@ -205,37 +226,41 @@ mapedit_create(char *name, char *desc)
 	}
 	pthread_mutex_unlock(&world->lock);
 
-	object_link(med);
-
-	if (pthread_mutex_lock(&em->lock) == 0) {
-		/* Position mapedit on the map. */
-		MAPEDIT_PLOT(med, em, em->defx, em->defy);
-		pthread_mutex_unlock(&em->lock);
+	if (med->curobj == NULL) {
+		fatal("%s: nothing to edit!\n", med->obj.name);
 	}
 
-	view_center(em->view, em->defx, em->defy);
-	em->redraw++;
+	dprintf("%s: editing %d object(s)\n", med->obj.name, med->neobjs);
+
+	object_link(med);
+
+	if (pthread_mutex_lock(&map->lock) == 0) {
+		/* Position mapedit on the map. */
+		MAPEDIT_PLOT(med, map, map->defx, map->defy);
+		pthread_mutex_unlock(&map->lock);
+	}
+
+	view_center(map->view, map->defx, map->defy);
+	map->redraw++;
 	
 	curmapedit = med;
 	
 	/* XXX tune */
-	med->timer = SDL_AddTimer(em->view->fps + 120, mapedit_time, med);
+	med->timer = SDL_AddTimer(map->view->fps + 100, mapedit_time, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		object_destroy(med);
-		object_unlink(med);
 		return (NULL);
 	}
 	
-	view_setmode(em->view);	/* XXX hack */
+	view_setmode(map->view);	/* XXX hack */
 
 	return (med);
 }
 
 static void
-mapedit_destroy(struct object *obp)
+mapedit_destroy(void *p)
 {
-	struct mapedit *med = (struct mapedit *)obp;
+	struct mapedit *med = (struct mapedit *)p;
 	struct editobj *eob;
 
 	SDL_RemoveTimer(med->timer);
