@@ -53,14 +53,20 @@ const struct widget_ops textbox_ops = {
 };
 
 enum {
+	MOUSE_SCROLL_INCR =	4,
+	KBD_SCROLL_INCR =	4,
+};
+
+enum {
 	READWRITE_COLOR,
 	READONLY_COLOR,
 	TEXT_COLOR,
 	CURSOR_COLOR
 };
 
-static void textbox_mousebuttondown(int, union evarg *);
-static void textbox_key(int, union evarg *);
+static void	textbox_mousemotion(int, union evarg *);
+static void	textbox_mousebuttondown(int, union evarg *);
+static void	textbox_key(int, union evarg *);
 
 struct textbox *
 textbox_new(void *parent, const char *label)
@@ -92,9 +98,6 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->writeable = 1;
 	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
-	tbox->pos = 0;
-	tbox->offs = 0;
-	tbox->compose = 0;
 
 	if (label != NULL) {
 		tbox->label = text_render(NULL, -1,
@@ -104,10 +107,15 @@ textbox_init(struct textbox *tbox, const char *label)
 	} else {
 		tbox->label = NULL;
 	}
+	tbox->pos = -1;
+	tbox->offs = 0;
+	tbox->newx = -1;
+	tbox->compose = 0;
 
 	event_new(tbox, "window-keydown", textbox_key, NULL);
 	event_new(tbox, "window-mousebuttondown", textbox_mousebuttondown,
 	    NULL);
+	event_new(tbox, "window-mousemotion", textbox_mousemotion, NULL);
 }
 
 void
@@ -126,9 +134,11 @@ textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
 	struct widget_binding *stringb;
-	int i, x = 0, y;
-	size_t len;
-	char *s;
+	size_t ucslen = 0;
+	Uint32 *ucs_text;
+	int i, lx, cursdrawn = 0;
+	int x = 0, y;
+	char *utf8;
 
 	if (tbox->label != NULL) {
 		widget_blit(tbox, tbox->label, 0,
@@ -136,9 +146,29 @@ textbox_draw(void *p)
 		x = tbox->label->w;
 	}
 
-	stringb = widget_get_binding(tbox, "string", &s);
-	len = strlen(s);
+	stringb = widget_get_binding(tbox, "string", &utf8);
+	ucs_text = unicode_import(UNICODE_FROM_UTF8, utf8);
+	ucslen = ucs4_len(ucs_text);
 
+	if (tbox->pos < 0) {					/* Default */
+		tbox->pos = ucslen;
+	} else if (tbox->pos > ucslen) {			/* Past end */
+		tbox->pos = ucslen;
+	}
+
+	/* Move to the beginning of the string? */
+	if (tbox->newx >= 0 && tbox->newx <= tbox->label->w) {
+		if (tbox->newx < tbox->label->w - tbox->xpadding) {
+			if ((tbox->offs -= MOUSE_SCROLL_INCR) < 0)
+				tbox->offs = 0;
+		}
+		tbox->pos = tbox->offs;
+		if (tbox->pos > ucslen) {
+			tbox->pos = ucslen;
+		}
+		tbox->newx = -1;
+	}
+drawtext:
 	x = tbox->label->w + tbox->xpadding;
 	y = tbox->ypadding;
 
@@ -155,29 +185,66 @@ textbox_draw(void *p)
 		x++;
 		y++;
 	}
-	for (i = 0; i <= len; i++) {
+	for (i = tbox->offs, lx = -1;
+	     i <= ucslen;
+	     i++) {
 		SDL_Surface *glyph;
+		Uint32 *ucs = ucs_text;
+		Uint32 uch = ucs[i];
+
+		/* Move to a position inside the string? */
+		if (tbox->newx >= 0 &&
+		    tbox->newx >= lx && tbox->newx < x) {
+			tbox->newx = -1;
+			tbox->pos = i;
+			if (tbox->pos > ucslen)
+				tbox->pos = ucslen;
+		}
+		lx = x;
 
 		if (i == tbox->pos && widget_holds_focus(tbox)) {
 			primitives.line2(tbox, x, y, x, y+tbox->label->h-2,
 			    CURSOR_COLOR);
+			cursdrawn++;
 		}
+		
 		if (x > WIDGET(tbox)->w - tbox->xpadding*4)
 			break;
 
-		if (i < len && s[i] != '\n') {
-			char tcs[2];
+		if (uch == '\n') {
+			y += tbox->label->h + 2;
+		} else {
+			Uint32 tcs[2];
 
-			/* XXX */
-			tcs[0] = s[i];
+			/* XXX use text_render_glyph when it is fixed */
+			tcs[0] = uch;
 			tcs[1] = '\0';
-			glyph = text_render(NULL, -1,
+			glyph = text_render_unicode(NULL, -1,
 			    WIDGET_COLOR(tbox, TEXT_COLOR), tcs);
 			widget_blit(tbox, glyph, x, y);
 			x += glyph->w;
 			SDL_FreeSurface(glyph);
 		}
 	}
+	if (widget_holds_focus(tbox) && !cursdrawn) {
+		if (tbox->pos > i) {
+			tbox->offs += KBD_SCROLL_INCR;
+		}
+		goto drawtext;
+	}
+
+	/* Move beyond the visible end of the string? */
+	if (tbox->newx >= 0) {
+		tbox->newx = -1;
+		tbox->pos = i-1;
+		if (i < ucslen) {
+			tbox->offs += MOUSE_SCROLL_INCR;
+			tbox->pos++;
+		}
+		if (tbox->pos > ucslen)
+			tbox->pos = ucslen;
+	}
+	free(ucs_text);
 	widget_binding_unlock(stringb);
 }
 
@@ -227,8 +294,8 @@ textbox_key(int argc, union evarg *argv)
 		   (kcode->key != keysym || kcode->func == NULL))
 			continue;
 		
-		dprintf("key %d (mod 0x%x), pos=%d\n", kcode->key,
-		    kcode->modmask, tbox->pos);
+		dprintf("key %d (mod 0x%x), offs=%d, pos=%d\n", kcode->key,
+		    kcode->modmask, tbox->offs, tbox->pos);
 
 		if (kcode->key == SDLK_LAST ||
 		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
@@ -245,13 +312,29 @@ textbox_key(int argc, union evarg *argv)
 }
 
 static void
+textbox_mousemotion(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	int x = argv[1].i;
+	int state = argv[2].i;
+
+	if (state & SDL_BUTTON_LEFT) {
+		if (x > tbox->label->w) {
+			tbox->newx = x;
+		} else if (x <= tbox->label->w) {
+			tbox->newx = 0;
+		}
+	}
+}
+
+static void
 textbox_mousebuttondown(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
-//	int x = argv[2].i;
+	int x = argv[2].i;
 	
 	widget_focus(tbox);
-//	tbox->newx = x;
+	tbox->newx = x;
 }
 
 void
@@ -271,6 +354,7 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	}
 	/* XXX */
 	tbox->pos = 0;
+	tbox->offs = 0;
 	widget_binding_unlock(stringb);
 }
 
