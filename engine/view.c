@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.128 2003/07/04 12:30:26 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.129 2003/07/08 00:05:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -200,23 +200,23 @@ view_destroy(void)
 {
 	struct window *win, *nwin;
 
+	/* Release the windows and widgets. */
 	for (win = TAILQ_FIRST(&view->windows);
 	     win != TAILQ_END(&view->windows);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
-		dprintf("freeing: %s (attached)\n", OBJECT(win)->name);
 		object_destroy(win);
 		free(win);
 	}
-	TAILQ_INIT(&view->windows);
 
+	/* Free the rectangle caches. */
 	if (view->rootmap != NULL) {
 		rootmap_free_maprects(view);
 		free(view->rootmap);
 	}
 	free(view->dirty);
-	pthread_mutex_destroy(&view->lock);
 
+	pthread_mutex_destroy(&view->lock);
 	free(view);
 	view = NULL;
 }
@@ -256,7 +256,6 @@ void
 view_detach(struct window *win)
 {
 	pthread_mutex_lock(&view->lock);
-	dprintf("%s (%s)\n", OBJECT(win)->name, win->caption);
 	window_hide(win);
 	TAILQ_INSERT_TAIL(&view->detach, win, detach);
 	pthread_mutex_unlock(&view->lock);
