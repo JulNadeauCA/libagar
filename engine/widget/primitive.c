@@ -40,12 +40,13 @@ primitive_box(int w, int h, int z)
 
 	if (z < 0) {
 		lcol = SDL_MapRGB(s->format, 20, 20, 20);
-		rcol = SDL_MapRGB(s->format, 200, 200, 200);
+		rcol = SDL_MapRGB(s->format, 140, 140, 140);
+		bcol = SDL_MapRGB(s->format, 70, 70, 70);
 	} else {
-		lcol = SDL_MapRGB(s->format, 200, 200, 200);
+		lcol = SDL_MapRGB(s->format, 140, 140, 140);
 		rcol = SDL_MapRGB(s->format, 20, 20, 20);
+		bcol = SDL_MapRGB(s->format, 90, 90, 90);
 	}
-	bcol = SDL_MapRGB(s->format, 90, 90, 90);
 
 	/* Background */
 	SDL_FillRect(s, NULL, bcol);
