@@ -1,4 +1,6 @@
-/*	$Csoft: mapedit.h,v 1.20 2002/02/25 09:08:37 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.21 2002/03/01 06:02:32 vedge Exp $	*/
+
+#include <engine/physics.h>
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
