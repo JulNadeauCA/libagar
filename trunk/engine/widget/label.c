@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.43 2002/12/17 06:47:57 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.44 2002/12/25 22:07:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -203,7 +203,7 @@ label_draw(void *p)
 			     fmtp++) {
 
 #define LABEL_ARG(fmt, _la_type)					\
-	asprintf(&s2, (fmt), *(_la_type *)label->poll.ptrs[ri++])
+	Asprintf(&s2, (fmt), *(_la_type *)label->poll.ptrs[ri++])
 
 				if (*fmtp == '%' && *(fmtp+1) != '\0') {
 					switch (*(fmtp+1)) {
