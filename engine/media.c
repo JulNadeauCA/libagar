@@ -1,4 +1,4 @@
-/*	$Csoft: media.c,v 1.2 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: media.c,v 1.3 2002/09/16 01:50:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <libfobj/fobj.h>
