@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.33 2002/11/07 04:29:45 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.34 2002/11/07 19:16:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -256,6 +256,8 @@ text_msg(char *title, char *fmt, ...)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	lab = label_new(reg, msg, 100, 60);
 	button = button_new(reg, "Ok", NULL, 0, 99, 40);
+	WIDGET_FOCUS(button);
+
 	event_new(button, "button-pushed", 0,
 	    window_detach_generic, "%p", win);
 	event_new(win, "window-close", 0,
