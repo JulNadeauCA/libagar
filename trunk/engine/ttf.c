@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.1 2002/08/20 09:15:10 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.3 2002/08/20 09:33:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -33,12 +33,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ttnameid.h>
+#include <freetype2/freetype/freetype.h>
+#include <freetype2/freetype/ftoutln.h>
 
 #include <SDL.h>
 
+#include "error.h"
 #include "ttf.h"
 
 #define UNICODE(c)	c
@@ -151,7 +151,7 @@ TTF_OpenFontIndex(const char *file, int ptsize, long index)
 
 	error = FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0);
 	if (error != 0) {
-		TTF_SetFTError("could not set font size", error);
+		error_set("could not set font size");
 		TTF_CloseFont(font);
 		return (NULL);
 	}
