@@ -172,7 +172,6 @@ INST_PSDIR="$PREFIX/share/agar/ps"
 echo INST_PSDIR=$INST_PSDIR >> Makefile.config
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
-echo "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
@@ -299,7 +298,6 @@ else
 fi
 echo -n "checking for BSD-style __progname..."
 echo -n "checking for BSD-style __progname..." >> config.log
-echo "checking for BSD-style __progname..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 int
@@ -338,7 +336,6 @@ else
 fi
 echo -n "checking for the C math library..."
 echo -n "checking for the C math library..." >> config.log
-echo "checking for the C math library..." >> config.log
 MATH_LIBS=-lm
 cat << EOT > conftest.c
 #include <math.h>
@@ -388,7 +385,6 @@ NONE=1
 fi
 echo -n "checking for a getenv() function..."
 echo -n "checking for a getenv() function..." >> config.log
-echo "checking for a getenv() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
@@ -426,7 +422,6 @@ else
 fi
 echo -n "checking for setenv() and unsetenv() functions..."
 echo -n "checking for setenv() and unsetenv() functions..." >> config.log
-echo "checking for setenv() and unsetenv() functions..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
@@ -466,7 +461,6 @@ else
 fi
 echo -n "checking for a strsep() function..."
 echo -n "checking for a strsep() function..." >> config.log
-echo "checking for a strsep() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -504,7 +498,6 @@ else
 fi
 echo -n "checking for a strlcat() function..."
 echo -n "checking for a strlcat() function..." >> config.log
-echo "checking for a strlcat() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -542,7 +535,6 @@ else
 fi
 echo -n "checking for a strlcpy() function..."
 echo -n "checking for a strlcpy() function..." >> config.log
-echo "checking for a strlcpy() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -580,7 +572,6 @@ else
 fi
 echo -n "checking for an asprintf() function..."
 echo -n "checking for an asprintf() function..." >> config.log
-echo "checking for an asprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -624,7 +615,6 @@ else
 fi
 echo -n "checking for a vasprintf() function..."
 echo -n "checking for a vasprintf() function..." >> config.log
-echo "checking for a vasprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <stdarg.h>
@@ -686,7 +676,6 @@ echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
-echo "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
@@ -811,7 +800,6 @@ exit 1
 fi
 echo -n "checking for FreeType (http://www.freetype.org)..."
 echo -n "checking for FreeType (http://www.freetype.org)..." >> config.log
-echo "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
@@ -902,7 +890,6 @@ if [ "${with_x11}" != "no" ]
  then
 echo -n "checking for the X window system..."
 echo -n "checking for the X window system..." >> config.log
-echo "checking for the X window system..." >> config.log
 x11_found_includes=no
 x11_found_libs=no
 if [ -d /usr/include/X11/X11 ]; then
@@ -1035,7 +1022,6 @@ if [ "${with_gl}" != "no" ]
  then
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
 echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
-echo "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
 OPENGL_CFLAGS="${X11_CFLAGS}"
 OPENGL_LIBS="${X11_LIBS} -lGL"
 cat << EOT > conftest.c
