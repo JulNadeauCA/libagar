@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.28 2002/07/08 08:39:45 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.29 2002/07/18 12:09:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -10,6 +10,7 @@ enum window_event {
 	WINDOW_KEYDOWN,
 	WINDOW_MOUSEMOTION,
 	WINDOW_MOUSEOUT,
+	WINDOW_LOSTFOCUS,
 	WINDOW_WIDGET_SCALED
 };
 	
