@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.69 2002/03/17 09:15:09 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.70 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -287,7 +287,7 @@ mapedit_link(void *p)
 	view_center(m->view, m->defx, m->defy);
 	mapedit_setcaption(med, new ? "new" : path);
 
-	text_msg(1000, TEXT_SLEEP,
+	text_msg(1, TEXT_SLEEP,
 	    "Editing \"%s\" (%s)\n", m->obj.name, new ? "new" : path);
 
 	/* Create the structures defining what is editable. */
