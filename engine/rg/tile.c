@@ -40,22 +40,31 @@
 #include "tileset.h"
 #include "tileview.h"
 
-struct tile *
-tile_insert(struct tileset *ts, const char *name, Uint16 w, Uint16 h,
-    Uint8 flags)
+#include "fill.h"
+
+void
+tile_init(struct tile *t, const char *name)
 {
-	struct tile *t;
+	strlcpy(t->name, name, sizeof(t->name));
+	t->flags = 0;
+	t->used = 0;
+	t->features = NULL;
+	t->nfeatures = 0;
+	t->su = NULL;
+}
+
+void
+tile_scale(struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
+{
 	Uint32 sflags = SDL_SWSURFACE;
 
 	if (flags & TILE_CKEYING)	sflags |= SDL_SRCCOLORKEY;
 	if (flags & TILE_BLENDING)	sflags |= SDL_SRCALPHA;
 
-	t = Malloc(sizeof(struct tile), M_OBJECT);
-	strlcpy(t->name, name, sizeof(t->name));
+	if (t->su != NULL) {
+		SDL_FreeSurface(t->su);
+	}
 	t->flags = flags;
-	t->used = 0;
-	t->features = NULL;
-	t->nfeatures = 0;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 		0xff000000,
@@ -72,21 +81,104 @@ tile_insert(struct tileset *ts, const char *name, Uint16 w, Uint16 h,
 	if (t->su == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
-	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
-	return (t);
+}
+
+struct tile_feature *
+tile_add_feature(struct tile *t, void *ft)
+{
+	struct tile_feature *tft;
+
+	t->features = Realloc(t->features,
+	    sizeof(struct tile_feature)*(t->nfeatures+1));
+	tft = &t->features[t->nfeatures++];
+	tft->ft = ft;
+	tft->x = 0;
+	tft->y = 0;
+	tft->visible = 1;
+	return (tft);
 }
 
 void
-tile_remove(struct tileset *ts, struct tile *t)
+tile_remove_feature(struct tile *t, void *ftp)
 {
-	TAILQ_REMOVE(&ts->tiles, t, tiles);
-	tile_destroy(t);
+	int i;
+
+	for (i = 0; i < t->nfeatures; i++) {
+		struct tile_feature *tft = &t->features[i];
+
+		if (tft->ft == ftp)
+			break;
+	}
+	/* TODO */
+}
+
+void
+tile_save(struct tile *t, struct netbuf *buf)
+{
+	u_int i;
+
+	write_string(buf, t->name);
+	write_uint8(buf, t->flags);
+	write_uint16(buf, t->su->w);
+	write_uint16(buf, t->su->h);
+
+	dprintf("%s: saving %u features\n", t->name, t->nfeatures);
+
+	write_uint32(buf, (Uint32)t->nfeatures);
+	for (i = 0; i < t->nfeatures; i++) {
+		struct tile_feature *tft = &t->features[i];
+
+		dprintf("%s: saving %s feature\n", t->name, tft->ft->name);
+		write_string(buf, tft->ft->name);
+		write_sint32(buf, (Sint32)tft->x);
+		write_sint32(buf, (Sint32)tft->y);
+		write_uint8(buf, (Uint8)tft->visible);
+	}
+}
+
+int
+tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
+{
+	Uint32 i, nfeatures;
+	Uint16 w, h;
+	Uint8 flags;
+	
+	flags = read_uint8(buf);
+	w = read_uint16(buf);
+	h = read_uint16(buf);
+	tile_scale(t, w, h, flags);
+
+	nfeatures = read_uint32(buf);
+	dprintf("%s: %ux%u, %u features\n", t->name, w, h, nfeatures);
+	for (i = 0; i < nfeatures; i++) {
+		char feat_name[FEATURE_NAME_MAX];
+		struct feature *ft;
+		Sint32 x, y;
+		Uint8 visible;
+
+		copy_string(feat_name, buf, sizeof(feat_name));
+		x = read_sint32(buf);
+		y = read_sint32(buf);
+		visible = read_uint8(buf);
+		dprintf("%s: feat %s at %d,%d\n", t->name, feat_name, x, y);
+
+		TAILQ_FOREACH(ft, &ts->features, features) {
+			if (strcmp(ft->name, feat_name) == 0)
+				break;
+		}
+		if (ft == NULL) {
+			error_set("Nonexistent feature: `%s'", feat_name);
+			return (-1);
+		}
+		tile_add_feature(t, ft);
+	}
+	return (0);
 }
 
 void
 tile_destroy(struct tile *t)
 {
-
+	
 }
 
 static void
@@ -101,6 +193,22 @@ close_tile(int argc, union evarg *argv)
 	pthread_mutex_unlock(&ts->lock);
 
 	view_detach(win);
+}
+
+static void
+insert_fill(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tile *t = argv[2].p;
+	struct fill *fill;
+
+	fill = Malloc(sizeof(struct fill), M_RG);
+	fill_init(fill, "Fill #0", 0);
+	TAILQ_INSERT_TAIL(&ts->features, FEATURE(fill), features);
+	tile_add_feature(t, fill);
+
+	if (FEATURE(fill)->ops->edit != NULL)
+		FEATURE(fill)->ops->edit(fill);
 }
 
 struct window *
@@ -120,7 +228,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	item = ag_menu_add_item(menu, _("Features"));
 	{
 		ag_menu_action(item, _("Fill"), NULL,
-		    SDLK_f, KMOD_CTRL, NULL, "%p,%p", ts, t);
+		    SDLK_f, KMOD_CTRL, insert_fill, "%p,%p", ts, t);
 		    
 		ag_menu_action(item, _("Sketch projection"), NULL,
 		    SDLK_s, KMOD_CTRL, NULL, "%p,%p", ts, t);
@@ -133,6 +241,10 @@ tile_edit(struct tileset *ts, struct tile *t)
 		
 		ag_menu_action(item, _("Revolved base"), NULL,
 		    SDLK_r, KMOD_CTRL, NULL, "%p,%p", ts, t);
+	}
+
+	item = ag_menu_add_item(menu, _("Edit"));
+	{
 	}
 
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL|BOX_FRAME);

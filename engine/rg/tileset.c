@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.1 2005/01/05 10:51:24 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -57,6 +57,13 @@ const struct object_ops tileset_ops = {
 	tileset_edit
 };
 
+extern const struct feature_ops fill_ops;
+
+const struct feature_ops *feature_tbl[] = {
+	&fill_ops,
+	NULL
+};
+
 void
 tileset_init(void *obj, const char *name)
 {
@@ -86,7 +93,7 @@ tileset_reinit(void *obj)
 	     t = nt) {
 		nt = TAILQ_NEXT(t, tiles);
 		tile_destroy(t);
-		Free(t, M_OBJECT);
+		Free(t, M_RG);
 	}
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
@@ -94,14 +101,14 @@ tileset_reinit(void *obj)
 		nsk = TAILQ_NEXT(sk, sketches);
 //		sketch_destroy(sk);
 		vg_destroy(sk->vg);
-		Free(sk, M_OBJECT);
+		Free(sk, M_RG);
 	}
 	for (ft = TAILQ_FIRST(&ts->features);
 	     ft != TAILQ_END(&ts->features);
 	     ft = nft) {
 		nft = TAILQ_NEXT(ft, features);
 		feature_destroy(ft);
-		Free(ft, M_OBJECT);
+		Free(ft, M_RG);
 	}
 	
 	TAILQ_INIT(&ts->tiles);
@@ -122,50 +129,114 @@ int
 tileset_load(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
-	Uint32 i, ntiles;
+	Uint32 i, ntiles, nfeatures;
 
 	if (version_read(buf, &tileset_ver, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&ts->lock);
+
+	/* Load the features. */
+	nfeatures = read_uint32(buf);
+	for (i = 0; i < nfeatures; i++) {
+		const struct feature_ops *ftops;
+		char name[FEATURE_NAME_MAX];
+		char type[FEATURE_TYPE_MAX];
+		size_t len;
+		struct feature *ft;
+		int flags;
+		
+		copy_string(name, buf, sizeof(name));
+		copy_string(type, buf, sizeof(type));
+		flags = (int)read_uint32(buf);
+
+		for (ftops = feature_tbl[0];
+		     ftops != NULL;
+		     ftops++) {
+			dprintf("ft tbl: %s (%u)\n", ftops->type, ftops->len);
+			if (strcmp(ftops->type, type) == 0)
+				break;
+		}
+		if (ftops == NULL) {
+			/* TODO ignore */
+			error_set("%s: unknown feature type `%s'", name, type);
+			goto fail;
+		}
+
+		ft = Malloc(ftops->len, M_RG);
+		ft->ops = ftops;
+		ft->ops->init(ft, name, flags);
+
+		if (feature_load(ft, buf) == -1) {
+			feature_destroy(ft);
+			Free(ft, M_RG);
+			goto fail;
+		}
+		TAILQ_INSERT_TAIL(&ts->features, ft, features);
+	}
+	
+	/* Load the tiles. */
 	ntiles = read_uint32(buf);
 	for (i = 0; i < ntiles; i++) {
-		struct tile *t;
 		char name[TILE_NAME_MAX];
-		Uint8 flags;
-		Uint16 w, h;
-
+		struct tile *t;
+		
+		t = Malloc(sizeof(struct tile), M_RG);
 		copy_string(name, buf, sizeof(name));
-		flags = read_uint8(buf);
-		w = read_uint16(buf);
-		h = read_uint16(buf);
-		t = tile_insert(ts, name, w, h, flags);
+		tile_init(t, name);
+		if (tile_load(ts, t, buf) == -1) {
+			tile_destroy(t);
+			Free(t, M_RG);
+			goto fail;
+		}
+		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	}
+
 	pthread_mutex_unlock(&ts->lock);
 	return (0);
+fail:
+	pthread_mutex_unlock(&ts->lock);
+	return (-1);
 }
 
 int
 tileset_save(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
-	Uint32 ntiles = 0;
-	off_t ntiles_offs;
+	Uint32 ntiles = 0, nfeatures = 0;
+	off_t ntiles_offs, nfeatures_offs;
 	struct tile *t;
+	struct feature *ft;
 
 	version_write(buf, &tileset_ver);
 
 	pthread_mutex_lock(&ts->lock);
+
+	/* Save the features. */
+	dprintf("%s: saving features\n", OBJECT(ts)->name);
+	nfeatures_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(ft, &ts->features, features) {
+		dprintf("%s: saving feature %s (%s)\n", OBJECT(ts)->name,
+		    ft->name, ft->ops->type);
+		write_string(buf, ft->name);
+		write_string(buf, ft->ops->type);
+		write_uint32(buf, ft->flags);
+		feature_save(ft, buf);
+		nfeatures++;
+	}
+	pwrite_uint32(buf, nfeatures, nfeatures_offs);
+	
+	/* Save the tiles. */
+	dprintf("%s: saving tiles\n", OBJECT(ts)->name);
 	ntiles_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		write_string(buf, t->name);
-		write_uint8(buf, t->flags);
-		write_uint16(buf, t->su->w);
-		write_uint16(buf, t->su->h);
+		tile_save(t, buf);
 		ntiles++;
 	}
 	pwrite_uint32(buf, ntiles, ntiles_offs);
+	
 	pthread_mutex_unlock(&ts->lock);
 	return (0);
 }
@@ -189,27 +260,31 @@ poll_tileset(int argc, union evarg *argv)
 		    t->su->w, t->su->h);
 		it = tlist_insert_item(tl, t->su, label, t);
 		it->depth = 0;
+
+		if (t->nfeatures > 0) {
+			it->flags |= TLIST_HAS_CHILDREN;
+			if (!tlist_visible_children(tl, it))
+				continue;
+		}
 		
 		for (i = 0; i < t->nfeatures; i++) {
 			struct tile_feature *tft = &t->features[i];
 			struct feature *ft = tft->ft;
 			struct feature_sketch *fts;
 
-			snprintf(label, sizeof(label), "%s [%d,%d] %s %s",
+			snprintf(label, sizeof(label), "%s [%d,%d] %s",
 			    ft->name, tft->x, tft->y,
-			    tft->visible ? "visible" : "invisible",
-			    tft->suppressed ? "suppressed" : "");
+			    tft->visible ? "" : "(invisible)");
 
 			it = tlist_insert_item(tl, ICON(OBJ_ICON), label, ft);
 			it->depth = 1;
 
 			TAILQ_FOREACH(fts, &ft->sketches, sketches) {
 				snprintf(label, sizeof(label),
-				    "%s [at %d,%d] %s %s (vg %fx%f)",
+				    "%s [at %d,%d] %s (vg %fx%f)",
 				    fts->sk->name,
 				    fts->x, fts->y,
-				    (fts->visible ? "visible" : "invisible"),
-				    (fts->suppressed ? "suppressed" : ""),
+				    (fts->visible ? "" : "(invisible)"),
 				    fts->sk->vg->w, fts->sk->vg->h);
 
 				it = tlist_insert_item(tl, ICON(DRAWING_ICON),
@@ -282,7 +357,11 @@ tryname2:
 		}
 	}
 
-	tile_insert(ts, ins_tile_name, ins_tile_w, ins_tile_h, flags);
+	t = Malloc(sizeof(struct tile), M_RG);
+	tile_init(t, ins_tile_name);
+	tile_scale(t, ins_tile_w, ins_tile_h, flags);
+	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
+
 	ins_tile_name[0] = '\0';
 	view_detach(pwin);
 }
@@ -352,8 +431,8 @@ delete_tiles(int argc, union evarg *argv)
 			    t->name);
 			continue;
 		}
-		tile_remove(ts, t);
-		Free(t, M_OBJECT);
+		TAILQ_REMOVE(&ts->tiles, t, tiles);
+		Free(t, M_RG);
 	}
 	pthread_mutex_unlock(&ts->lock);
 }
