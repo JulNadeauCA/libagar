@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.3 2002/01/25 12:32:25 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.4 2002/01/26 03:38:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,11 +37,7 @@
 #include <pthread.h>
 #include <SDL.h>
 
-#include <engine/debug.h>
-#include <engine/view.h>
-#include <engine/object.h>
-#include <engine/world.h>
-#include <engine/map.h>
+#include <engine/engine.h>
 
 static GSList	*lategc;
 
@@ -63,9 +59,6 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 		perror("object");
 		return (-1);
 	}
-	ob->map = NULL;
-	ob->mapx = 1;
-	ob->mapy = 1;
 	ob->time_hook = NULL;
 	ob->event_hook = NULL;
 	ob->destroy_hook = NULL;
@@ -235,12 +228,7 @@ object_dump_obj(void *obp, void *p)
 		printf(" load");
 	if (ob->flags & SAVE_FUNC)
 		printf(" save");
-	printf(" )");
-
-	if (ob->map != NULL) {
-		printf(" on %s:%dx%d", ob->map->obj.name, ob->mapx, ob->mapy);
-	}
-	printf("\n");
+	printf(" )\n");
 }
 
 #endif /* DEBUG */
