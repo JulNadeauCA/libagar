@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.27 2002/03/17 09:13:48 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.28 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -69,6 +69,7 @@ char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
 	ch->hp = maxhp;
 	ch->mp = maxmp;
 	ch->maxspeed = 30;
+	ch->nzuars = 0;
 
 	dprintf("%s: new: hp %d/%d mp %d/%d\n",
 	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp);
@@ -84,7 +85,7 @@ char_load(void *p, int fd)
 	struct input *input = NULL;
 	struct map *m;
 
-	if (version_read(fd, "agar char", 1, 0) != 0) {
+	if (version_read(fd, "agar char", 1, 1) != 0) {
 		return (-1);
 	}
 
@@ -101,6 +102,8 @@ char_load(void *p, int fd)
 	ch->hp = fobj_read_uint32(fd);
 	ch->maxmp = fobj_read_uint32(fd);
 	ch->mp = fobj_read_uint32(fd);
+
+	ch->nzuars = fobj_read_uint32(fd);
 
 #if 0
 	text_msg(4000, TEXT_SLEEP|TEXT_DEBUG,
@@ -167,7 +170,7 @@ char_save(void *p, int fd)
 		return (-1);
 	}
 
-	version_write(fd, "agar char", 1, 0);
+	version_write(fd, "agar char", 1, 1);
 
 	/* Write character properties. */
 	fobj_bwrite_string(buf, ch->obj.name);
@@ -182,6 +185,8 @@ char_save(void *p, int fd)
 	fobj_bwrite_uint32(buf, ch->hp);
 	fobj_bwrite_uint32(buf, ch->maxmp);
 	fobj_bwrite_uint32(buf, ch->mp);
+	
+	fobj_bwrite_uint32(buf, ch->nzuars);
 
 	if (pos != NULL) {
 		fobj_bwrite_uint32(buf, 1);
