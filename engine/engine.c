@@ -85,6 +85,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 {
 	int c, fullscreen = 0;
 	int w = -1, h = -1;
+	const SDL_VideoInfo *vinfo;
 
 #ifdef SERIALIZATION
 	/* Create a thread-specific key for errno style error messages. */
@@ -100,10 +101,40 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	printf("AGAR engine v%s\n", ENGINE_VERSION);
 	printf("%s %s\n", gameinfo->name, gameinfo->version);
 	printf("%s\n", gameinfo->copyright);
-
+	
+	vinfo = SDL_GetVideoInfo();
+	if (vinfo != NULL) {
 #ifdef USE_X11
-	setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
+		if (vinfo->wm_available) {
+			/* Try to set the window manager class name. */
+			setenv("SDL_VIDEO_X11_WMCLASS", gameinfo->name, 1);
+		}
 #endif
+		printf("Hardware surfaces: %s\n", vinfo->hw_available ? "available" : "unavailable");
+		printf("Window manager: %s\n", vinfo->wm_available ? "available" : "unavailable");
+		printf("\n");
+		printf("Hardware blits are %saccelerated\n", vinfo->blit_hw ? "" : "un");
+		printf("Hardware->hardware colorkey blits are %saccelerated\n",
+		    vinfo->blit_hw_CC ? "" : "un");
+		printf("Hardware->hardware alpha blits are %saccelerated\n", vinfo->blit_hw_A ? "" : "un");
+		printf("\n");
+		printf("Software->hardware blits are %saccelerated\n",
+		    vinfo->blit_sw ? "" : "un");
+		printf("Software->hardware colorkey blits are %saccelerated\n",
+		    vinfo->blit_sw_CC ? "" : "un");
+		printf("Software->hardware colorkey blits are %saccelerated\n",
+		    vinfo->blit_sw_A ? "" : "un");
+		printf("\n");
+		printf("Color fills are %saccelerated\n", vinfo->blit_fill ? "" : "un");
+		printf("Video memory: %d Kb\n", vinfo->video_mem);
+		printf("Video device: %d bytes per pixel (%dbpp), colorkey is 0x%x, overall alpha is 0x%x",
+		    vinfo->vfmt->BytesPerPixel, vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
+		    vinfo->vfmt->alpha);
+		printf("Video mask: r=0x%x g=0x%x, b=0x%x, a=0x%x\n",
+		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask, vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
+		printf("Precision loss: r=0x%x g=0x%x, b=0x%x, a=0x%x\n",
+		    vinfo->vfmt->Rloss, vinfo->vfmt->Gloss, vinfo->vfmt->Bloss, vinfo->vfmt->Aloss);
+	}
 
 	while ((c = getopt(argc, argv, "vfegl:n:j:w:h:")) != -1) {
 		switch (c) {
@@ -217,6 +248,13 @@ static void
 engine_xdebug(void)
 {
 	SDL_SysWMinfo wm;
+	SDL_VideoInfo *vinfo;
+
+	vinfo = SDL_GetVideoInfo();
+	if (!vinfo->wm_available) {
+		warning("no window manager availablen");
+		return (0);
+	}
 
 	SDL_VERSION(&wm.version);
 	if (SDL_GetWMInfo(&wm) != 1) {
