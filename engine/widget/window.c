@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.148 2003/01/21 04:21:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.149 2003/01/23 02:00:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1579,7 +1579,7 @@ window_resize(struct window *win)
 			if (reg->rw == 100)
 				reg->w -= win->xspacing + 1;
 		} else if (reg->rw == 0) {		/* remaining space */
-			reg->w = win->body.w - regx - xmar;
+			reg->w = win->body.w - (regx - xmar) - win->xspacing;
 		}
 
 		/* Set the region's effective height. */
@@ -1605,7 +1605,7 @@ window_resize(struct window *win)
 			if (reg->rh == 100)
 				reg->h -= win->yspacing;
 		} else if (reg->rh == 0) {		/* remaining space */
-			reg->h = win->body.h - regy - ymar;
+			reg->h = win->body.h - (regy - ymar) - win->yspacing;
 		}
 
 		/* Resize the widgets. */
