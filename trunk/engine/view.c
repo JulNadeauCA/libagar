@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.36 2002/05/13 08:26:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.37 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -112,7 +112,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	}
 
 	if (caption != NULL) {
-		SDL_WM_SetCaption(caption, "agar");
+		SDL_WM_SetCaption(caption, "AGAR");
 	}
 	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {
@@ -258,7 +258,7 @@ view_new(int w, int h, int depth, int flags)
 	struct viewport *v;
 
 	v = emalloc(sizeof(struct viewport));
-	object_init(&v->obj, "view", NULL, 0, &viewport_ops);
+	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
 	v->fps = -1;
 	v->width = w;
 	v->height = h;
@@ -448,5 +448,30 @@ view_detach(void *parent, void *child)
 	pthread_mutex_unlock(&view->lock);
 
 	object_destroy(win);
+}
+
+SDL_Surface *
+view_surface(int flags, int w, int h)
+{
+	SDL_Surface *s;
+	Uint32 rmask, gmask, bmask, amask;
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	rmask = 0xff000000;
+	gmask = 0x00ff0000;
+	bmask = 0x0000ff00;
+	amask = 0x000000ff;
+#else
+	rmask = 0x000000ff;
+	gmask = 0x0000ff00;
+	bmask = 0x00ff0000;
+	amask = 0xff000000;
+#endif
+
+	s = SDL_CreateRGBSurface(flags, w, h, 32, rmask, gmask, bmask, amask);
+	if (s == NULL) {
+		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+	}
+	return (s);
 }
 

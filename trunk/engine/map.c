@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.87 2002/05/13 10:19:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.88 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -142,7 +142,7 @@ map_freenodes(struct map *m)
 void
 map_init(struct map *m, char *name, char *media, Uint32 flags)
 {
-	object_init(&m->obj, name, media, (media != NULL) ? OBJ_ART : 0,
+	object_init(&m->obj, "map", name, media, (media != NULL) ? OBJ_ART : 0,
 	    &map_ops);
 	sprintf(m->obj.saveext, "m");
 	m->flags = flags;

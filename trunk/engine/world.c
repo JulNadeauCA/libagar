@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.30 2002/05/13 10:19:07 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.31 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -83,10 +83,8 @@ world_init(struct world *wo, char *name)
 	struct passwd *pwd;
 	struct stat sta;
 	char *pathenv;
-	
-	pwd = getpwuid(getuid());
 
-	object_init(&wo->obj, name, NULL, 0, &world_ops);
+	pwd = getpwuid(getuid());
 
 	wo->udatadir = (char *)emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
 	wo->sysdatadir = (char *)emalloc(strlen(SHAREDIR) + strlen(name) + 4);
@@ -109,10 +107,10 @@ world_init(struct world *wo, char *name)
 	    mkdir(wo->udatadir, 00700) != 0) {
 		fatal("%s: %s\n", wo->udatadir, strerror(errno));
 	}
-
+	
+	object_init(&wo->obj, "world", name, name, OBJ_ART, &world_ops);
 	wo->curmap = NULL;
 	wo->nobjs = 0;
-
 	SLIST_INIT(&wo->wobjsh);
 	pthread_mutex_init(&wo->lock, NULL);
 }

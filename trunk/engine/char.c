@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.46 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.47 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -84,7 +84,8 @@ char_new(char *name, char *media)
 void
 char_init(struct character *ch, char *name, char *media)
 {
-	object_init(&ch->obj, name, media, OBJ_ART|OBJ_BLOCK, &char_ops);
+	object_init(&ch->obj, "character", name, media, OBJ_ART|OBJ_BLOCK,
+	    &char_ops);
 
 	ch->flags = 0;
 	ch->level = 0;
