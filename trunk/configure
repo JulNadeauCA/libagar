@@ -134,8 +134,6 @@ echo "    --with-smpeg                   Play videos through smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      Support OpenGL operations [default: no]"
 echo "    --enable-debug                 Engine debugging [default: no]"
-echo "    --enable-xdebug                Synchronous X11 events [default: no]"
-echo "    --enable-map-editor            Level edition [default: yes]"
 echo "    --enable-serialization         Thread-safe engine [default: yes]"
 echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support 16 bpp display [default: yes]"
@@ -890,7 +888,7 @@ echo "#endif /* USE_X11 */" >> config/use_x11.h
 echo "#undef USE_X11" > config/use_x11.h
 	fi
 fi
-if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]
+if [ "${enable_debug}" = "yes" -a "${x11_found}" = "yes" ]
  then
 XDEBUG=1
 echo "#ifndef XDEBUG" > config/xdebug.h
