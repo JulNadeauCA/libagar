@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.28 2002/08/21 23:51:31 vedge Exp $
+#	$Csoft: Makefile,v 1.29 2002/08/22 04:50:20 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -9,15 +9,15 @@ SHARE=	README.graph
 
 LIB=	widget
 SRCS=	widget.c window.c region.c text.c label.c button.c checkbox.c \
-	textbox.c keycodes.c primitive.c radio.c graph.c
+	textbox.c keycodes.c primitive.c radio.c graph.c bitmap.c
 OBJS=	widget.o window.o region.o text.o label.o button.o checkbox.o \
-	textbox.o keycodes.o primitive.o radio.o graph.o
+	textbox.o keycodes.o primitive.o radio.o graph.o bitmap.o
 FOBJS=	widget.fob window.fob
 
 MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 \
-	region.3 textbox.3 window.3
+	region.3 textbox.3 window.3 bitmap.3
 CATMAN3=widget.cat3 button.cat3 graph.cat3 checkbox.cat3 label.cat3 radio.cat3 \
-	region.cat3 textbox.cat3 window.cat3
+	region.cat3 textbox.cat3 window.cat3 bitmap.cat3
 
 CFLAGS+=	${SDL_CFLAGS}
 
