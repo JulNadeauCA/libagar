@@ -32,6 +32,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -60,7 +61,7 @@ version_read(int fd, char *osig, int overmin, int overmaj)
 	siglen = strlen(osig);
 
 	if (read(fd, sig, siglen) != siglen ||
-	    strcmp(sig, osig) != 0) {
+	    strncmp(sig, osig, siglen) != 0) {
 		fatal("%s: bad magic\n", osig);
 		return (-1);
 	}
@@ -97,7 +98,7 @@ version_write(int fd, char *osig, int overmin, int overmaj)
 	
 	pw = getpwuid(getuid());
 	fobj_write_string(fd, pw->pw_name);
-	gethostname(host, sizeof(*host));
+	gethostname(host, sizeof(host));
 	fobj_write_string(fd, host);
 
 	return (0);
