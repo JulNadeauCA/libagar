@@ -73,16 +73,29 @@ echo "    --with-smpeg         Play videos through the smpeg library [yes]"
 echo "    --without-smpeg      "
 exit 1
 fi
-if [ -x "`which which`" ]; then
-GCC=`which gcc`
-else
-GCC=""
+echo -n "checking for gcc..."
+if [ "$CC" = "" ]; then
+    CC=cc
 fi
-if [ $GCC != "" ]; then
-GCC=1
+cat << 'EOT' > .gcctest.c
+int
+main(int argc, char *argv[])
+{
+#ifdef __GNUC__
+	return (0);
+#else
+	return (1);
+#endif
+}
+EOT
+$CC -o .gcctest .gcctest.c
+if ./.test; then
+    GCC=Yes
+    echo "yes"
 else
-NONE=1
+    echo "no"
 fi
+rm -f .gcctest .gcctest.c
 if [ -x "`which uname`" ]; then
 UNAME=`uname `
 else
