@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.105 2002/11/15 04:15:31 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.106 2002/11/15 21:53:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -226,8 +226,6 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 	win->titleh = font_h + win->borderw;
 	win->flags = fl;
-	win->type = ((fl & WINDOW_TYPE) == 0) ?
-	    WINDOW_DEFAULT_TYPE : (fl & WINDOW_TYPE);
 	win->spacing = 4;
 	win->focus = NULL;
 	win->caption = strdup("Untitled");
@@ -1090,6 +1088,9 @@ window_resize(struct window *win)
 		/* Region geometry */
 		if (reg->rw > 0) {
 			reg->w = (reg->rw * win->body.w / 100);
+			if (reg->w > win->rd.w - 16) {
+				reg->w = win->rd.w - 16;
+			}
 		} else if (reg->rw == 0) {
 			reg->w = win->rd.w - x;
 		} else {
@@ -1097,7 +1098,10 @@ window_resize(struct window *win)
 		}
 		
 		if (reg->rh >= 0) {
-			reg->h = (reg->rh * win->body.h / 100) - 4; /* XXX */
+			reg->h = (reg->rh * win->body.h / 100) - 4;
+			if (reg->h > win->rd.h - 32) {
+				reg->h = win->rd.h - 32;
+			}
 		} else if (reg->rh == 0) {
 			reg->h = win->rd.h - y;
 		} else {

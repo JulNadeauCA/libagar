@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.46 2002/11/15 00:49:54 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.47 2002/11/15 04:15:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -12,13 +12,6 @@ enum window_event {
 	WINDOW_MOUSEOUT
 };
 	
-typedef enum {
-	WINDOW_SOLID =		0x100,	/* Plain, no decorations. */
-	WINDOW_GRADIENT =	0x200,	/* Blue/red gradient. */
-#define WINDOW_TYPE		(WINDOW_SOLID | WINDOW_GRADIENT)
-#define WINDOW_DEFAULT_TYPE	(WINDOW_GRADIENT)
-} window_type_t;
-
 TAILQ_HEAD(regionsq, region);
 
 struct window {
@@ -38,8 +31,6 @@ struct window {
 #define WINDOW_MATERIALIZE	0x200	/* Materialize effect */
 #define WINDOW_DEMATERIALIZE	0x400	/* Dematerialize effect */
 
-	window_type_t	type;
-
 	char	*caption;		/* Titlebar text */
 
 	Uint32	*border;		/* Border colors */
@@ -49,8 +40,7 @@ struct window {
 	int	 minw, minh;
 	int	 spacing;		/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
-	SDL_Rect vmask;			/* View mask (in nodes)
-					   Used only in tile mode. */
+	
 	/*
 	 * Read-write, thread-safe
 	 */
