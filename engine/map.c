@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.129 2002/12/31 05:48:44 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.130 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -269,14 +269,10 @@ void
 map_adjust(struct map *m, Uint32 mx, Uint32 my)
 {
 	pthread_mutex_lock(&m->lock);
-
-	if (mx >= m->mapw) {
-		map_grow(m, m->mapw + mx, m->maph);
-	}
-	if (my >= m->maph) {
-		map_grow(m, m->mapw, m->maph + my);
-	}
-	
+	if (mx >= m->mapw)
+		map_grow(m, mx, m->maph);
+	if (my >= m->maph)
+		map_grow(m, m->mapw, my);
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -865,9 +861,13 @@ node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 			SDL_GetRGBA(*(Uint32 *)src, s->format,
 			    &r1, &g1, &b1, &a1);
 			col = SDL_MapRGB(view->v->format, r1, g1, b1);
+#if 0
 			if (a1 > 200) {
 				VIEW_PUT_PIXEL(view->v, rx+x, ry+y, col);
 			}
+#else
+			VIEW_PUT_ALPHAPIXEL(view->v, rx+x, ry+y, col, a1);
+#endif
 		}
 	}
 	SDL_UnlockSurface(view->v);
