@@ -1,4 +1,4 @@
-/*	$Csoft: denex.c,v 1.1 2003/06/21 06:50:17 vedge Exp $	*/
+/*	$Csoft: denex.c,v 1.2 2004/01/03 04:25:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -27,9 +27,11 @@
  */
 
 #include <config/have_progname.h>
-#include <engine/compat/strlcpy.h>
-#include <engine/compat/strlcat.h>
-#include <engine/compat/snprintf.h>
+
+#include <compat/strlcpy.h>
+#include <compat/strlcat.h>
+#include <compat/snprintf.h>
+
 #include <engine/error/error.h>
 
 #include <stdio.h>

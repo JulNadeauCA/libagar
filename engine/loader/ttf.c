@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.3 2003/07/05 12:17:23 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.4 2003/08/31 11:58:08 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -34,13 +34,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <compat/math.h>
+
 #include <freetype/freetype.h>
 #include <freetype/ftoutln.h>
 #include <SDL_endian.h>
 
 #include <engine/loader/ttf.h>
-
 
 /* FIXME: Right now we assume the gray-scale renderer Freetype is using
    supports 256 shades of gray, but we should instead key off of num_grays

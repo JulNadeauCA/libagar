@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.76 2003/10/09 22:39:28 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.77 2003/12/05 00:44:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -52,14 +52,14 @@
 
 #include <engine/error/error.h>
 
-#include <engine/compat/queue.h>
-#include <engine/compat/strlcpy.h>
-#include <engine/compat/strlcat.h>
-#include <engine/compat/snprintf.h>
-#include <engine/compat/vsnprintf.h>
-#include <engine/compat/asprintf.h>
-#include <engine/compat/vasprintf.h>
-#include <engine/compat/strsep.h>
+#include <compat/queue.h>
+#include <compat/strlcpy.h>
+#include <compat/strlcat.h>
+#include <compat/snprintf.h>
+#include <compat/vsnprintf.h>
+#include <compat/asprintf.h>
+#include <compat/vasprintf.h>
+#include <compat/strsep.h>
 
 #include <engine/loader/netbuf.h>
 #include <engine/loader/integral.h>

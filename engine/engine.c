@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.122 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.123 2004/02/25 18:09:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -31,8 +31,8 @@
 #include <config/have_setlocale.h>
 #include <config/localedir.h>
 
-#include <engine/compat/setenv.h>
-#include <engine/compat/strlcat.h>
+#include <compat/setenv.h>
+#include <compat/strlcat.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>

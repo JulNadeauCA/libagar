@@ -1,4 +1,4 @@
-/*	$Csoft: dencomp.c,v 1.2 2003/06/21 07:14:17 vedge Exp $	*/
+/*	$Csoft: dencomp.c,v 1.3 2004/01/03 04:25:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -27,10 +27,12 @@
  */
 
 #include <config/have_progname.h>
-#include <engine/compat/strlcpy.h>
-#include <engine/compat/strlcat.h>
-#include <engine/compat/strsep.h>
-#include <engine/compat/snprintf.h>
+
+#include <compat/strlcpy.h>
+#include <compat/strlcat.h>
+#include <compat/strsep.h>
+#include <compat/snprintf.h>
+
 #include <engine/error/error.h>
 
 #include <stdio.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.7 2004/01/03 04:25:08 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.8 2004/02/02 01:52:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,7 +29,7 @@
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
 
-#include <engine/compat/gethostname.h>
+#include <compat/gethostname.h>
 #include <engine/error/error.h>
 
 #include <sys/types.h>
