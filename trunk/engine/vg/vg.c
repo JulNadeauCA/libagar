@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.10 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.11 2004/04/23 10:46:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -28,6 +28,13 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
+
+#ifdef EDITION
+#include <engine/widget/toolbar.h>
+#include <engine/widget/button.h>
+#include <engine/widget/combo.h>
+#include <engine/widget/tlist.h>
+#endif
 
 #include "vg.h"
 #include "vg_primitive.h"
@@ -633,3 +640,87 @@ vg_pop_layer(struct vg *vg)
 	if (--vg->nlayers < 1)
 		vg->nlayers = 1;
 }
+
+#ifdef EDITION
+void
+vg_geo_changed(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+
+	vg_scale(vg, vg->w, vg->h, vg->scale);
+	vg->redraw++;
+}
+
+void
+vg_changed(int argc, union evarg *argv)
+{
+	struct vg *vg = argv[1].p;
+
+	vg->redraw++;
+}
+
+static void
+poll_layers(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct vg *vg = argv[1].p;
+	int i;
+	
+	tlist_clear_items(tl);
+	for (i = 0; i < vg->nlayers; i++) {
+		struct vg_layer *layer = &vg->layers[i];
+		char label[TLIST_LABEL_MAX];
+
+		if (layer->visible) {
+			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
+			    layer->name,
+			    (i == vg->cur_layer) ? _(", editing") : "");
+		} else {
+			snprintf(label, sizeof(label), _("%s (invisible %s)\n"),
+			    layer->name,
+			    (i == vg->cur_layer) ? _(", editing") : "");
+		}
+		tlist_insert_item(tl, NULL, label, layer);
+	}
+	tlist_restore_selections(tl);
+
+	/* XXX load/save hack */
+	if (vg->cur_layer >= vg->nlayers)
+		vg->cur_layer--;
+}
+
+static void
+select_layer(int argc, union evarg *argv)
+{
+	struct combo *com = argv[0].p;
+	struct vg *vg = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	int i = 0;
+
+	TAILQ_FOREACH(it, &com->list->items, items) {
+		if (it->selected) {
+			struct vg_layer *lay = it->p1;
+
+			vg->cur_layer = i;
+			textbox_printf(com->tbox, "%d. %s", i, lay->name);
+			return;
+		}
+		i++;
+	}
+	text_msg(MSG_ERROR, _("No layer is selected."));
+}
+
+struct combo *
+vg_layer_selector(void *parent, struct vg *vg)
+{
+	struct combo *com;
+
+	com = combo_new(parent, COMBO_POLL, _("Layer:"));
+	textbox_printf(com->tbox, "%d. %s", vg->cur_layer,
+	    vg->layers[vg->cur_layer].name);
+	event_new(com->list, "tlist-poll", poll_layers, "%p", vg);
+	event_new(com, "combo-selected", select_layer, "%p", vg);
+	return (com);
+}
+
+#endif /* EDITION */

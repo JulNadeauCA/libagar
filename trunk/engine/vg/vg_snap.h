@@ -1,8 +1,10 @@
-/*	$Csoft: vg_snap.h,v 1.1 2004/04/11 03:28:43 vedge Exp $	*/
+/*	$Csoft: vg_snap.h,v 1.2 2004/04/17 00:43:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_SNAP_H_
 #define _AGAR_VG_SNAP_H_
+
+#include <engine/widget/toolbar.h>
 #include "begin_code.h"
 
 enum vg_snap_mode {
@@ -22,6 +24,7 @@ __BEGIN_DECLS
 void		vg_snap_to(struct vg *, double *, double *);
 __inline__ void	vg_snap_mode(struct vg *, enum vg_snap_mode);
 __inline__ void	vg_draw_grid(struct vg *);
+struct toolbar *vg_snap_toolbar(void *, struct vg *, enum toolbar_type);
 __END_DECLS
 
 #include "close_code.h"

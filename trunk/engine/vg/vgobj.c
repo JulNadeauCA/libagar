@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.5 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.6 2004/04/23 03:38:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -102,23 +102,6 @@ vgobj_save(void *p, struct netbuf *buf)
 }
 
 static void
-geochg(int argc, union evarg *argv)
-{
-	struct vg *vg = argv[1].p;
-
-	vg_scale(vg, vg->w, vg->h, vg->scale);
-	vg->redraw++;
-}
-
-static void
-vgchg(int argc, union evarg *argv)
-{
-	struct vg *vg = argv[1].p;
-
-	vg->redraw++;
-}
-
-static void
 vgobj_settings(int argc, union evarg *argv)
 {
 	struct window *pwin = argv[1].p;
@@ -139,129 +122,43 @@ vgobj_settings(int argc, union evarg *argv)
 	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vg->h);
 	mfspinbutton_set_min(mfsu, 1.0);
 	mfspinbutton_set_increment(mfsu, 0.1);
-	event_new(mfsu, "mfspinbutton-changed", geochg, "%p", vg);
+	event_new(mfsu, "mfspinbutton-changed", vg_geo_changed, "%p", vg);
 
-	fsu = fspinbutton_new(win, NULL, _("First origin point radius: "));
-	widget_bind(fsu, "value", WIDGET_FLOAT, &vg->origin_radius[0]);
-	fspinbutton_set_min(fsu, 0.1);
-	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vg);
-	
-	fsu = fspinbutton_new(win, NULL, _("Second origin point radius: "));
-	widget_bind(fsu, "value", WIDGET_FLOAT, &vg->origin_radius[1]);
-	fspinbutton_set_min(fsu, 0.1);
-	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vg);
-	
 	fsu = fspinbutton_new(win, NULL, _("Grid interval: "));
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->grid_gap);
 	fspinbutton_set_min(fsu, 0.0625);
 	fspinbutton_set_increment(fsu, 0.0625);
-	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vg);
+	event_new(fsu, "fspinbutton-changed", vg_changed, "%p", vg);
 	
 	fsu = fspinbutton_new(win, NULL, _("Scaling factor: "));
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->scale);
 	fspinbutton_set_min(fsu, 0.1);
 	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", geochg, "%p", vg);
+	event_new(fsu, "fspinbutton-changed", vg_geo_changed, "%p", vg);
 		
 	label_new(win, LABEL_STATIC, _("Background color: "));
 	pal = palette_new(win, PALETTE_RGB);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->fill_color);
-	event_new(pal, "palette-changed", vgchg, "%p", vg);
+	event_new(pal, "palette-changed", vg_changed, "%p", vg);
 	
 	label_new(win, LABEL_STATIC, _("Grid color: "));
 	pal = palette_new(win, PALETTE_RGB);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->grid_color);
-	event_new(pal, "palette-changed", vgchg, "%p", vg);
-
-	label_new(win, LABEL_STATIC, _("First origin color: "));
-	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "color", WIDGET_UINT32, &vg->origin_color[0]);
-	event_new(pal, "palette-changed", vgchg, "%p", vg);
-	
-	label_new(win, LABEL_STATIC, _("Second origin color: "));
-	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "color", WIDGET_UINT32, &vg->origin_color[1]);
-	event_new(pal, "palette-changed", vgchg, "%p", vg);
+	event_new(pal, "palette-changed", vg_changed, "%p", vg);
 
 	window_attach(pwin, win);
 	window_show(win);
 }
 
 static void
-snap_to(int argc, union evarg *argv)
-{
-	struct button *bu = argv[0].p;
-	struct toolbar *tbar = argv[1].p;
-	struct vg *vg = argv[2].p;
-	int snap_mode = argv[3].i;
-
-	toolbar_select_unique(tbar, bu);
-	vg_snap_mode(vg, snap_mode);
-}
-
-static void
-poll_layers(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	struct vg *vg = argv[1].p;
-	int i;
-	
-	tlist_clear_items(tl);
-	for (i = 0; i < vg->nlayers; i++) {
-		struct vg_layer *layer = &vg->layers[i];
-		char label[TLIST_LABEL_MAX];
-
-		if (layer->visible) {
-			snprintf(label, sizeof(label), _("%s (visible %s)\n"),
-			    layer->name,
-			    (i == vg->cur_layer) ? _(", editing") : "");
-		} else {
-			snprintf(label, sizeof(label), _("%s (invisible %s)\n"),
-			    layer->name,
-			    (i == vg->cur_layer) ? _(", editing") : "");
-		}
-
-		tlist_insert_item(tl, NULL, label, layer);
-	}
-	tlist_restore_selections(tl);
-
-	/* XXX load/save hack */
-	if (vg->cur_layer >= vg->nlayers)
-		vg->cur_layer--;
-}
-
-static void
-select_layer(int argc, union evarg *argv)
-{
-	struct combo *com = argv[0].p;
-	struct vg *vg = argv[1].p;
-	struct tlist_item *it = argv[2].p;
-	int i = 0;
-
-	TAILQ_FOREACH(it, &com->list->items, items) {
-		if (it->selected) {
-			struct vg_layer *lay = it->p1;
-
-			vg->cur_layer = i;
-			textbox_printf(com->tbox, "%d. %s", i, lay->name);
-			return;
-		}
-		i++;
-	}
-	text_msg(MSG_ERROR, _("No layer is selected."));
-}
-
-static void
-rasterize_vg(struct mapview *mv, void *p)
+rasterize_vgobj(struct mapview *mv, void *p)
 {
 	struct vg *vg = p;
 
 	if (vg->redraw) {
 		vg->redraw = 0;
 		vg_clear(vg);
-		vg_rasterize(p);
+		vg_rasterize(vg);
 	}
 }
 
@@ -274,7 +171,6 @@ vgobj_edit(void *obj)
 	struct vg *vg = vgo->vg;
 	struct window *win;
 	struct box *bo;
-	struct mapview *mv;
 	struct toolbar *tbar;
 	struct statusbar *statbar;
 
@@ -296,51 +192,20 @@ vgobj_edit(void *obj)
 		struct toolbar *snbar;
 		struct button *bu;
 
-		snbar = toolbar_new(bo, TOOLBAR_VERT, 1);
-		toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
-		toolbar_add_button(snbar, 0, ICON(SNAP_RINT_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
-		bu = toolbar_add_button(snbar, 0, ICON(SNAP_GRID_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
-		widget_set_int(bu, "state", 1);
+		snbar = vg_snap_toolbar(bo, vg, TOOLBAR_VERT);
 
-		toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
-		toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_D_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
-
-		toolbar_add_button(snbar, 0, ICON(SNAP_CLOSEST_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
-		toolbar_add_button(snbar, 0, ICON(SNAP_CENTERPT_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
-		toolbar_add_button(snbar, 0, ICON(SNAP_MIDDLEPT_ICON), 1, 0,
-		    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
-		toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_AUTO_ICON),
-		    1, 0, snap_to, "%p,%p,%i", snbar, vg,
-		    VG_INTERSECTIONS_AUTO);
-		toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_MANUAL_ICON),
-		    1, 0, snap_to, "%p,%p,%i", snbar, vg,
-		    VG_INTERSECTIONS_MANUAL);
-	
 		bo = box_new(bo, BOX_VERT, BOX_WFILL|BOX_HFILL);
 		box_set_spacing(bo, 0);
 		box_set_padding(bo, 0);
 		{
 			struct combo *laysel;
-
-			laysel = combo_new(bo, COMBO_POLL, _("Layer:"));
-			textbox_printf(laysel->tbox, "%d. %s", vg->cur_layer,
-			    vg->layers[vg->cur_layer].name);
-			event_new(laysel->list, "tlist-poll", poll_layers, "%p",
-			    vg);
-			event_new(laysel, "combo-selected", select_layer, "%p",
-			    vg);
-
-			mv = mapview_new(bo, vg->map,
-			    MAPVIEW_EDIT|MAPVIEW_INDEPENDENT, tbar, statbar);
+			struct mapview *mv;
+		
+			laysel = vg_layer_selector(bo, vg);
+			mv = mapview_new(bo, vg->map, MAPVIEW_EDIT, tbar,
+			    statbar);
 			mapview_prescale(mv, 10, 8);
-			mapview_reg_draw_cb(mv, rasterize_vg, vg);
+			mapview_reg_draw_cb(mv, rasterize_vgobj, vg);
 
 			mapview_reg_tool(mv, &origin_tool, vg);
 			mapview_reg_tool(mv, &point_tool, vg);
