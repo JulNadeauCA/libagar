@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.106 2003/01/20 14:22:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.107 2003/02/10 04:45:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -325,20 +325,26 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	Uint8 *src, *dst, r1, g1, b1, a1;
 	int x, y;
 
-	ds = view_surface(SDL_SWSURFACE, w, h);
-	
-	if (ss->w == w && ss->h == h) {			/* Just copy */
+	ds = view_surface(SDL_SWSURFACE |
+	    (ss->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+	    w, h);
+
+	/* Original size; inefficient. */
+	if (ss->w == w && ss->h == h) {
+		Uint32 saflags = ss->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
+		Uint8 salpha = ss->format->alpha;
+
 		SDL_SetAlpha(ss, 0, 0);
 		SDL_BlitSurface(ss, NULL, ds, NULL);
-		SDL_SetAlpha(ss, SDL_SRCALPHA, SDL_ALPHA_TRANSPARENT);
+		SDL_SetAlpha(ss, saflags, salpha);
 		return (ds);
 	}
 
+	/* Scaled. XXX cache. */
 	if (SDL_MUSTLOCK(ss))
 		SDL_LockSurface(ss);
 	if (SDL_MUSTLOCK(ds))
 		SDL_LockSurface(ds);
-
 	for (y = 0; y < ds->h; y++) {
 		for (x = 0; x < ds->w; x++) {
 			src = (Uint8 *)ss->pixels +
@@ -381,7 +387,6 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 			}
 		}
 	}
-
 	if (SDL_MUSTLOCK(ds))
 		SDL_UnlockSurface(ds);
 	if (SDL_MUSTLOCK(ss))
@@ -397,6 +402,8 @@ view_set_refresh(int min_delay, int max_delay)
 		error_set("out of range");
 		return (-1);
 	}
+	
+	dprintf("%d fps (%dms)\n", 1000/max_delay, max_delay);
 
 	pthread_mutex_lock(&view->lock);
 	view->refresh.current = 0;
@@ -456,7 +463,7 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	}
 
 	/* Disable alpha blending state of the source surface. */
-	sflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCELOK);
+	sflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
 	salpha = sourcesu->format->alpha;
 	if (sflags & SDL_SRCALPHA) {
 		SDL_SetAlpha(sourcesu, 0, 0);
