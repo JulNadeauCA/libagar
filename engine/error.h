@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.4 2002/08/13 00:01:24 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.5 2002/08/20 00:09:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -28,29 +28,29 @@ void	*erealloc(void *, size_t);
 const char	*error_get(void);
 void		 error_set(const char *, ...);
 
-#define eread(fd, buf, size) do {					\
-	ssize_t _eread_rv;						\
+#define Read(fd, buf, size) do {					\
+	ssize_t _Read_rv;						\
 									\
-	_eread_rv = read((fd), (buf), (size));				\
-	if (_eread_rv == -1) { 						\
+	_Read_rv = read((fd), (buf), (size));				\
+	if (_Read_rv == -1) { 						\
 		fatal("read(%ld): %s\n", (long)size, strerror(errno));	\
 	}								\
-	if (_eread_rv != size) {					\
+	if (_Read_rv != size) {					\
 		fatal("read(%ld): read %ld bytes\n", (long)size,	\
-		    (long)_eread_rv);					\
+		    (long)_Read_rv);					\
 	}								\
 } while (/*CONSTCOND*/0)
 
-#define ewrite(fd, buf, size) do {					\
-	ssize_t _ewrite_rv;						\
+#define Write(fd, buf, size) do {					\
+	ssize_t _Write_rv;						\
 									\
-	_ewrite_rv = write((fd), (buf), (size));			\
-	if (_ewrite_rv == -1) {						\
+	_Write_rv = write((fd), (buf), (size));			\
+	if (_Write_rv == -1) {						\
 		fatal("write(%ld): %s\n", (long)size, strerror(errno));	\
 	}								\
-	if (_ewrite_rv != (size)) {					\
+	if (_Write_rv != (size)) {					\
 		fatal("write(%ld): wrote %ld bytes\n", (long)size,	\
-		    (long)_ewrite_rv);					\
+		    (long)_Write_rv);					\
 	}								\
 } while (/*CONSTCOND*/0)
 
