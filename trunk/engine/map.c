@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.108 2002/08/12 05:00:19 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.109 2002/08/19 05:26:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -526,7 +526,7 @@ rootmap_animate(struct map *m)
 
 			i = VIEW_MAPMASK(vx, vy);
 			if (i < 0 || i > 32) {
-				dprintf("funny mask: %d at %d,%d\n", i, vx, vy);
+				fatal("funny mask: %d at %d,%d\n", i, vx, vy);
 				return;
 			}
 #endif
