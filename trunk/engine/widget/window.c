@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.104 2002/11/15 01:14:19 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.105 2002/11/15 04:15:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -230,11 +230,9 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	    WINDOW_DEFAULT_TYPE : (fl & WINDOW_TYPE);
 	win->spacing = 4;
 	win->focus = NULL;
-	win->caption = NULL;
+	win->caption = strdup("Untitled");
 	win->minw = minw;
 	win->minh = minh;
-
-	window_set_caption(win, "Untitled");
 
 	/* Set the initial window position/geometry. */
 	if (win->flags & WINDOW_SCALE) {
