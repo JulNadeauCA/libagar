@@ -1,4 +1,4 @@
-# $Csoft: csoft.subdir.mk,v 1.8 2002/01/26 15:14:19 vedge Exp $
+# $Csoft: csoft.subdir.mk,v 1.9 2002/01/27 11:27:12 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -29,50 +29,68 @@
 MAKE?=	    make
 
 all-subdir:
-	@if [ "${SUBDIR}" != "" ]; then \
-		for DIR in ${SUBDIR}; do \
+	@(if [ "${SUBDIR}" == "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$DIR"; \
-		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/); \
 		done; \
-	fi
+	fi)
 
 clean-subdir:
-	@if [ "${SUBDIR}" != "" ]; then \
-		for DIR in ${SUBDIR}; do \
+	@(if [ "${SUBDIR}" == "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$DIR"; \
-		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ clean); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
 		done; \
-	fi
-
-depend-subdir:
-	@if [ "${SUBDIR}" != "" ]; then \
-		for DIR in ${SUBDIR}; do \
-		    echo "==> ${REL}$$DIR"; \
-		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ depend); \
-		done; \
-	fi
+	fi)
 
 install-subdir:
-	@if [ "${SUBDIR}" != "" ]; then \
-		for DIR in ${SUBDIR}; do \
+	@(if [ "${SUBDIR}" == "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$DIR"; \
-		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ install); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ install); \
 		done; \
-	fi
+	fi)
+
 
 deinstall-subdir:
-	@if [ "${SUBDIR}" != "" ]; then \
-		for DIR in ${SUBDIR}; do \
+	@(if [ "${SUBDIR}" == "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$DIR"; \
-		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ deinstall); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
 		done; \
-	fi
+	fi)
 
 regress-subdir:
-	@if [ "${SUBDIR}" != "" ]; then \
-		for DIR in ${SUBDIR}; do \
+	@(if [ "${SUBDIR}" == "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$DIR"; \
-		    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ regress); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ regress); \
 		done; \
-	fi
+	fi)
 
