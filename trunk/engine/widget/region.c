@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.19 2002/11/07 19:11:06 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.20 2002/11/15 00:50:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -112,9 +112,9 @@ region_attach(void *parent, void *child)
 	wid->win = reg->win;
 	wid->reg = reg;
 
-	pthread_mutex_lock(&reg->lock);
+	pthread_mutex_lock(&reg->win->lock);
 	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);	/* Attach */
-	pthread_mutex_unlock(&reg->lock);
+	pthread_mutex_unlock(&reg->win->lock);
 	
 	event_post(child, "attached", "%p", parent);		/* Notify */
 }
@@ -129,9 +129,9 @@ region_detach(void *parent, void *child)
 	OBJECT_ASSERT(parent, "window-region");
 	OBJECT_ASSERT(child, "widget");
 
-	pthread_mutex_lock(&reg->lock);
+	pthread_mutex_lock(&reg->win->lock);
 	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);		/* Detach */
-	pthread_mutex_unlock(&reg->lock);
+	pthread_mutex_unlock(&reg->win->lock);
 	
 	event_post(child, "detached", parent);			/* Notify */
 
