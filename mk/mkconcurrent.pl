@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 #
+# $Csoft$
+#
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
 # All rights reserved.
@@ -82,7 +84,7 @@ sub ConvertMakefile
 					# C source
 					$objsrc =~ s/\.o$/\.c/g;
 				} elsif ($type =~ /CATMAN\d/) {
-					# Nroff->catman
+					# Nroff->ASCII
 					$objsrc =~ s/\.cat(\d)$/.\1/;
 				} elsif ($type =~ /PSMAN\d/) {
 					# Nroff->postscript
@@ -93,10 +95,10 @@ sub ConvertMakefile
 					# C source
 					push @deps, << 'EOF';
 	@echo "${CC} ${CFLAGS} ${CPPFLAGS}" -c $<
-	@${CC} ${CFLAGS} -I`pwd` -I${BUILD} ${CPPFLAGS} -c $<
+	@${CC} ${CFLAGS} -I${BUILD} ${CPPFLAGS} -c $<
 EOF
 				} elsif ($type =~ /CATMAN\d/) {
-					# Nroff->catman
+					# Nroff->ASCII
 					push @deps, << 'EOF';
 	@echo "${NROFF} -Tascii -mandoc $< > $@"
 	@${NROFF} -Tascii -mandoc $< > $@ || exit 0
@@ -110,7 +112,7 @@ EOF
 				}
 			}
 		}
-		if (/^\s*(SRCS|MAN\d|XCF|XCF\d|TTF|MAP)\s*=\s*(.+)$/) {
+		if (/^\s*(SRCS|MAN\d|XCF|TTF|MAP)\s*=\s*(.+)$/) {
 			my $type = $1;
 			my $srcs = $2;
 			foreach my $src (split(/\s/, $srcs)) {

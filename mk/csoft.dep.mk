@@ -32,10 +32,10 @@ depend:	${DPADD} depend-subdir
 	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \
 	  if [ "${BUILD}" != "" ]; then \
-	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I`pwd` -I${BUILD} \
+	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I${BUILD} \
 	       $$files; \
 	  else \
-	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I`pwd` $$files; \
+	   env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} $$files; \
 	  fi; \
 	 fi
 
