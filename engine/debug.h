@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.9 2002/05/06 02:16:47 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.10 2002/05/07 05:21:04 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
@@ -50,47 +50,21 @@ extern int engine_debug;
 #include <string.h>
 #include <pthread.h>
 
-extern pthread_key_t lockassert_key;	/* engine.c */
-
-#define LOCKASSERT_NOOP		(void *)0x0
-#define LOCKASSERT_CHECK	(void *)0x1
-#define LOCKASSERT_FAILED	(void *)0x2
-
 /* Mutexes */
 #define pthread_mutex_lock(mutex)					\
 	do {								\
 		if (pthread_mutex_lock((mutex)) != 0) {			\
-			if (pthread_getspecific(lockassert_key) ==	\
-			    LOCKASSERT_CHECK) {				\
-				pthread_setspecific(lockassert_key,	\
-				    LOCKASSERT_FAILED);			\
-			} else {					\
-				fatal("mutex(%p): %s\n", mutex,		\
-				    strerror(errno));			\
-			}						\
+			fatal("mutex(%p): %s\n", mutex,			\
+			    strerror(errno));				\
 		}							\
 	} while (/*CONSTCOND*/0)
 #define pthread_mutex_unlock(mutex) 					\
 	do {								\
 		if (pthread_mutex_unlock((mutex)) != 0) {		\
-			fatal("mutex(%p): %s\n", mutex, strerror(errno)); \
+			fatal("mutex(%p): %s\n", mutex,			\
+			    strerror(errno));				\
 		}							\
 	} while (/*CONSTCOND*/0)
-#if 0
-#define pthread_mutex_assert(mutex)					\
-	do {								\
-		pthread_setspecific(lockassert_key, LOCKASSERT_CHECK);	\
-		pthread_mutex_lock((mutex));				\
-		if (pthread_getspecific(lockassert_key) !=		\
-		    LOCKASSERT_FAILED) {				\
-			fatal("pthread_mutex_assert: %p is not held\n",	\
-			    (mutex));					\
-		}							\
-		pthread_setspecific(lockassert_key, LOCKASSERT_NOOP);	\
-	} while (/*CONSTCOND*/0)
-#else
-#define pthread_mutex_assert(mutex) ((void)(0))
-#endif
 #define pthread_mutex_init(mutex, attr)	do {				\
 		if (pthread_mutex_init((mutex), (attr)) != 0) {		\
 			fatal("pthread_mutex_init: %s\n",		\
@@ -103,9 +77,9 @@ extern pthread_key_t lockassert_key;	/* engine.c */
 			    strerror(errno));				\
 		}							\
 	} while (/*CONSTCOND*/0)
+#define pthread_mutex_assert(mutex)
 
 /* Read/write locks */
-
 #define pthread_rwlock_init(rwlock, attr) do {				\
 		if (pthread_rwlock_init((rwlock), (attr)) != 0) {	\
 			fatal("pthread_rwlock_init: %s\n",		\
@@ -120,14 +94,12 @@ extern pthread_key_t lockassert_key;	/* engine.c */
 	} while (/*CONSTCOND*/0)
 
 /* Threads */
-
 #define pthread_create(thread, attr, func, arg) do {			\
 		if (pthread_create((thread), (attr), (func), (arg))	\
 		    != 0) {						\
 			fatal("pthread_create: %s\n", strerror(errno));	\
 		}							\
 	} while (/*CONSTCOND*/0)
-
 #define pthread_join(thread, valptr) do {				\
 		if (pthread_join((thread), (valptr)) != 0) {		\
 			fatal("pthread_join: %s\n", strerror(errno));	\
