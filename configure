@@ -135,68 +135,1218 @@ echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --srcdir                       Source tree for concurrent builds [.]"
 echo "    --help                         Display this message"
+echo "    --with-smpeg                   MPEG playback using smpeg [default: CHECK]"
+echo "    --with-x11                     X11-specific code [default: CHECK]"
+echo "    --with-gl                      OpenGL rendering support [default: CHECK]"
+echo "    --with-jpeg                    JPEG screenshot support [default: CHECK]"
+echo "    --with-gettext                 Use gettext tools [default: CHECK]"
+echo "    --enable-edition               Graphical edition [default: yes]"
+echo "    --enable-debug                 Engine debugging [default: yes]"
+echo "    --enable-threads               Thread safety [default: no]"
+echo "    --enable-floating-point        Floating point operations [default: yes]"
+echo "    --enable-static                Produce a static binary [default: no]"
+echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
+echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
+echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
+echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
+echo "    --enable-nls                   Native Language Support [default: yes]"
 exit 1
+SHAREDIR="$PREFIX/share/cave"
+SHAREDIR="\"$PREFIX/share/cave\""
+echo "#ifndef SHAREDIR" > /sharedir.h
+echo "#define SHAREDIR" $SHAREDIR >> /sharedir.h
+echo "#endif /* SHAREDIR */" >> /sharedir.h
+TTFDIR="$PREFIX/share/cave/fonts"
+TTFDIR="\"$PREFIX/share/cave/fonts\""
+echo "#ifndef TTFDIR" > /ttfdir.h
+echo "#define TTFDIR" $TTFDIR >> /ttfdir.h
+echo "#endif /* TTFDIR */" >> /ttfdir.h
+INST_MANDIR="$PREFIX/share/agar/man"
+INST_PSDIR="$PREFIX/share/agar/ps"
+LOCALEDIR="$PREFIX/share/locale"
+LOCALEDIR="\"$PREFIX/share/locale\""
+echo "#ifndef LOCALEDIR" > /localedir.h
+echo "#define LOCALEDIR" $LOCALEDIR >> /localedir.h
+echo "#endif /* LOCALEDIR */" >> /localedir.h
+echo -n "checking for a usable C compiler..."
+echo -n "checking for a usable C compiler..." >> config.log
+if [ "$CC" = "" ]; then
+	for i in `echo $PATH |sed 's/:/ /g'`; do
+		if [ -x "${i}/cc" ]; then
+			CC="${i}/cc"
+		elif [ -x "${i}/gcc" ]; then
+			CC="${i}/gcc"
+		fi
+	done
+	if [ "$CC" = "" ]; then
+		echo "Could not find a C compiler, try setting CC."
+		echo "CC is unset and cc/gcc is not in PATH." >> config.log
+		exit 1
+	fi
+fi
+
+cat << 'EOT' > cc-test.c
+int
+main(int argc, char *argv[])
+{
+	return (0);
+}
+EOT
+
+$CC -o cc-test cc-test.c 2>>config.log
+if [ $? != 0 ]; then
+    echo "no"
+	echo "The test C program failed to compile."
+	rm -f cc-test cc-test.c
+    exit 1
+fi
+echo "yes"
+
+rm -f cc-test cc-test.c
+echo -n "checking for IEEE 754 floating point..."
+echo -n "checking for IEEE 754 floating point..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	float f = 1.5;
+	double d = 2.5;
+
+	printf("%f %d\n", f, d);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_IEEE754" > /have_ieee754.h
+echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> /have_ieee754.h
+echo "#endif /* HAVE_IEEE754 */" >> /have_ieee754.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_IEEE754" > /have_ieee754.h
+
+	echo "no"
+fi
+echo -n "checking for long double..."
+echo -n "checking for long double..." >> config.log
+cat << EOT > conftest.c
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+	
+	printf("%Lf\n", ld);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_LONG_DOUBLE" > /have_long_double.h
+echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> /have_long_double.h
+echo "#endif /* HAVE_LONG_DOUBLE */" >> /have_long_double.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_LONG_DOUBLE" > /have_long_double.h
+
+	echo "no"
+fi
+echo -n "checking for BSD-style __progname..."
+echo -n "checking for BSD-style __progname..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+int
+main(int argc, char *argv[])
+{
+	extern char *__progname;
+	printf("%s\n", __progname);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_PROGNAME" > /have_progname.h
+echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> /have_progname.h
+echo "#endif /* HAVE_PROGNAME */" >> /have_progname.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_PROGNAME" > /have_progname.h
+
+	echo "no"
+fi
+echo -n "checking for the C math library..."
+echo -n "checking for the C math library..." >> config.log
+MATH_LIBS=-lm
+cat << EOT > conftest.c
+#include <math.h>
+
+int
+main(int argc, char *argv[])
+{
+	float f = 1.0;
+	double d = 1.0;
+
+	d = fabs(d);
+	f = fabsf(f);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_MATH" > /have_math.h
+echo "#define HAVE_MATH" $HAVE_MATH >> /have_math.h
+echo "#endif /* HAVE_MATH */" >> /have_math.h
+
+	HAVE_MATH=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_MATH" > /have_math.h
+
+	echo "no"
+fi
+if [ "${HAVE_MATH}" = "yes" ]; then
+else
+NONE=1
+fi
+echo -n "checking for a gethostname() function..."
+echo -n "checking for a gethostname() function..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	char hostname[64];
+	int rv;
+
+	rv = gethostname(hostname, sizeof(hostname));
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETHOSTNAME" > /have_gethostname.h
+echo "#define HAVE_GETHOSTNAME" $HAVE_GETHOSTNAME >> /have_gethostname.h
+echo "#endif /* HAVE_GETHOSTNAME */" >> /have_gethostname.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_GETHOSTNAME" > /have_gethostname.h
+
+	echo "no"
+fi
+echo -n "checking for a getenv() function..."
+echo -n "checking for a getenv() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdlib.h>
+int
+main(int argc, char *argv[])
+{
+	(void)getenv("PATH");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETENV" > /have_getenv.h
+echo "#define HAVE_GETENV" $HAVE_GETENV >> /have_getenv.h
+echo "#endif /* HAVE_GETENV */" >> /have_getenv.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_GETENV" > /have_getenv.h
+
+	echo "no"
+fi
+echo -n "checking for setenv() and unsetenv() functions..."
+echo -n "checking for setenv() and unsetenv() functions..." >> config.log
+cat << EOT > conftest.c
+#include <stdlib.h>
+int
+main(int argc, char *argv[])
+{
+	(void)setenv("MANUCONF_SETENV_TEST", "foo", 1);
+	unsetenv("MANUCONF_SETENV_TEST");
+
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SETENV" > /have_setenv.h
+echo "#define HAVE_SETENV" $HAVE_SETENV >> /have_setenv.h
+echo "#endif /* HAVE_SETENV */" >> /have_setenv.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_SETENV" > /have_setenv.h
+
+	echo "no"
+fi
+echo -n "checking for a strsep() function..."
+echo -n "checking for a strsep() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strsep(NULL, NULL);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_STRSEP" > /have_strsep.h
+echo "#define HAVE_STRSEP" $HAVE_STRSEP >> /have_strsep.h
+echo "#endif /* HAVE_STRSEP */" >> /have_strsep.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_STRSEP" > /have_strsep.h
+
+	echo "no"
+fi
+echo -n "checking for a strlcat() function..."
+echo -n "checking for a strlcat() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strlcat(NULL, NULL, 0);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_STRLCAT" > /have_strlcat.h
+echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> /have_strlcat.h
+echo "#endif /* HAVE_STRLCAT */" >> /have_strlcat.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_STRLCAT" > /have_strlcat.h
+
+	echo "no"
+fi
+echo -n "checking for a strlcpy() function..."
+echo -n "checking for a strlcpy() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strlcpy(NULL, NULL, 0);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_STRLCPY" > /have_strlcpy.h
+echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> /have_strlcpy.h
+echo "#endif /* HAVE_STRLCPY */" >> /have_strlcpy.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_STRLCPY" > /have_strlcpy.h
+
+	echo "no"
+fi
+echo -n "checking for an asprintf() function..."
+echo -n "checking for an asprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	char *buf;
+
+	if (asprintf(&buf, "foo %s", "bar") == 0) {
+		free(buf);
+	    return (0);
+	}
+	return (1);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_ASPRINTF" > /have_asprintf.h
+echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> /have_asprintf.h
+echo "#endif /* HAVE_ASPRINTF */" >> /have_asprintf.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_ASPRINTF" > /have_asprintf.h
+
+	echo "no"
+fi
+echo -n "checking for a vasprintf() function..."
+echo -n "checking for a vasprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <stdarg.h>
+
+int
+testprintf(const char *fmt, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start(args, fmt);
+	if (vasprintf(&buf, "%s", args) == -1) {
+		return (-1);
+	}
+	va_end(args);
+
+	free(buf);
+	return (0);
+}
+
+int
+main(int argc, char *argv[])
+{
+	return (testprintf("foo %s", "bar"));
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_VASPRINTF" > /have_vasprintf.h
+echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> /have_vasprintf.h
+echo "#endif /* HAVE_VASPRINTF */" >> /have_vasprintf.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_VASPRINTF" > /have_vasprintf.h
+
+	echo "no"
+fi
+echo -n "checking for a snprintf() function..."
+echo -n "checking for a snprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	char buf[16];
+
+	(void)snprintf(buf, sizeof(buf), "foo");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SNPRINTF" > /have_snprintf.h
+echo "#define HAVE_SNPRINTF" $HAVE_SNPRINTF >> /have_snprintf.h
+echo "#endif /* HAVE_SNPRINTF */" >> /have_snprintf.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_SNPRINTF" > /have_snprintf.h
+
+	echo "no"
+fi
+echo -n "checking for a vsnprintf() function..."
+echo -n "checking for a vsnprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <stdarg.h>
+
+static void
+testfmt(const char *fmt, ...)
+{
+	char buf[16];
+	va_list ap;
+	
+	va_start(ap, fmt);
+	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
+	va_end(ap);
+}
+
+int
+main(int argc, char *argv[])
+{
+	testfmt("foo", 1, 2, 3);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_VSNPRINTF" > /have_vsnprintf.h
+echo "#define HAVE_VSNPRINTF" $HAVE_VSNPRINTF >> /have_vsnprintf.h
+echo "#endif /* HAVE_VSNPRINTF */" >> /have_vsnprintf.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_VSNPRINTF" > /have_vsnprintf.h
+
+	echo "no"
+fi
+echo -n "checking for a setlocale() function..."
+echo -n "checking for a setlocale() function..." >> config.log
+cat << EOT > conftest.c
+#include <locale.h>
+
+int
+main(int argc, char *argv[])
+{
+	setlocale(LC_ALL, "");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SETLOCALE" > /have_setlocale.h
+echo "#define HAVE_SETLOCALE" $HAVE_SETLOCALE >> /have_setlocale.h
+echo "#endif /* HAVE_SETLOCALE */" >> /have_setlocale.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_SETLOCALE" > /have_setlocale.h
+
+	echo "no"
+fi
+CFLAGS="$CFLAGS -I$SRC"
+echo -n "checking for SDL (http://www.libsdl.org)..."
+echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
+sdl_version=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		sdl_version=`${path}/sdl-config --version`
+	fi
+done
+SDL_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_CFLAGS=`${path}/sdl-config --cflags`
+	fi
+done
+SDL_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_LIBS=`${path}/sdl-config --static-libs`
+	fi
+done
+sdl11_version=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl11-config" ]; then
+		sdl11_version=`${path}/sdl11-config --version`
+	fi
+done
+sdl11_cflags=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl11-config" ]; then
+		sdl11_cflags=`${path}/sdl11-config --cflags`
+	fi
+done
+sdl11_libs=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/sdl11-config" ]; then
+		sdl11_libs=`${path}/sdl11-config --static-libs`
+	fi
+done
+if [ "${sdl_version}" != "" ]; then
+sdl_found=yes
+else
+NONE=1
+fi
+if [ "${sdl11_version}" != "" ]; then
+sdl_found=yes
+SDL_CFLAGS=$sdl11_cflags
+SDL_LIBS=$sdl11_libs
+else
+NONE=1
+fi
+if [ "${sdl_found}" = "yes" ]; then
+echo "ok"
+echo "ok" >> config.log
+else
+echo "Could not find the SDL library. Make sure sdl-config is in PATH."
+exit 1
+fi
+echo -n "checking whether SDL works..."
+echo -n "checking whether SDL works..." >> config.log
+cat << EOT > conftest.c
+
+#include <stdio.h>
+
+#include <SDL.h>
+
+int
+main(int argc, char *argv[])
+{
+	SDL_Surface su;
+	SDL_TimerID tid;
+	SDL_Color color;
+	SDL_Event event;
+	Uint8 u8;
+	Uint16 u16;
+	Uint32 u32;
+	Sint8 s8;
+	Sint16 s16;
+	Sint32 s32;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	SDL_Quit();
+	return (0);
+}
+
+
+EOT
+compile="ok"
+$CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SDL" > /have_sdl.h
+echo "#define HAVE_SDL" $HAVE_SDL >> /have_sdl.h
+echo "#endif /* HAVE_SDL */" >> /have_sdl.h
+
+	HAVE_SDL=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_SDL" > /have_sdl.h
+
+	echo "no"
+fi
+if [ "${HAVE_SDL}" = "yes" ]; then
+NONE=1
+else
+echo "The SDL test would not compile."
+exit 1
+fi
+echo -n "checking for FreeType (http://www.freetype.org)..."
+echo -n "checking for FreeType (http://www.freetype.org)..." >> config.log
+FREETYPE_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/freetype-config" ]; then
+		FREETYPE_VERSION=`${path}/freetype-config --version`
+	fi
+done
+FREETYPE_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/freetype-config" ]; then
+		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+	fi
+done
+FREETYPE_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/freetype-config" ]; then
+		FREETYPE_LIBS=`${path}/freetype-config --libs`
+	fi
+done
+if [ -d /usr/freeware/include ]; then
+FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
+else
+NONE=1
+fi
+if [ "${FREETYPE_VERSION}" != "" ]; then
+freetype_found=yes
+echo "yes"
+echo "yes" >> config.log
+else
+echo "Cannot find FreeType. Make sure freetype-config is in your $PATH."
+exit 1
+fi
+echo -n "checking whether FreeType works..."
+echo -n "checking whether FreeType works..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
+
+int
+main(int argc, char *argv[])
+{
+	FT_UInt uint;
+	FT_Bitmap bitmap;
+	FT_Face face;
+	FT_Library library;
+
+	FT_Init_FreeType(&library);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_FREETYPE" > /have_freetype.h
+echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> /have_freetype.h
+echo "#endif /* HAVE_FREETYPE */" >> /have_freetype.h
+
+	HAVE_FREETYPE=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_FREETYPE" > /have_freetype.h
+
+	echo "no"
+fi
+if [ "${HAVE_FREETYPE}" = "yes" ]; then
+NONE=1
+else
+echo "The FreeType test would not compile."
+exit 1
+fi
 if [ "${with_x11}" != "no" ]
  then
+echo -n "checking for the X window system..."
+echo -n "checking for the X window system..." >> config.log
+x11_found_includes=no
+x11_found_libs=no
+if [ -d /usr/include/X11/X11 ]; then
+X11_CFLAGS="-I/usr/include/X11"
+x11_found_includes=yes
 else
+NONE=1
+fi
+if [ -d /usr/include/X11R6/X11 ]; then
+X11_CFLAGS="-I/usr/include/X11R6"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/X11/include/X11 ]; then
+X11_CFLAGS="-I/usr/local/X11/include"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/X11R6/include/X11 ]; then
+X11_CFLAGS="-I/usr/local/X11R6/include"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11/X11 ]; then
+X11_CFLAGS="-I/usr/local/include/X11"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/include/X11R6/X11 ]; then
+X11_CFLAGS="-I/usr/local/include/X11R6"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/X11/include/X11 ]; then
+X11_CFLAGS="-I/usr/X11/include"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/X11R6/include/X11 ]; then
+X11_CFLAGS="-I/usr/X11R6/include"
+x11_found_includes=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/X11/lib ]; then
+X11_LIBS="-L/usr/local/X11/lib"
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/X11R6/lib ]; then
+X11_LIBS="-L/usr/local/X11R6/lib"
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ -d /usr/X11/lib ]; then
+X11_LIBS="-L/usr/X11/lib"
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ -d /usr/X11R6/lib ]; then
+X11_LIBS="-L/usr/X11R6/lib"
+x11_found_libs=yes
+else
+NONE=1
+fi
+cat << EOT > conftest.c
+#include <X11/Xlib.h>
+
+int
+main(int argc, char *argv[])
+{
+	Display *disp;
+
+	disp = XOpenDisplay(NULL);
+	XCloseDisplay(disp);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_X11" > /have_x11.h
+echo "#define HAVE_X11" $HAVE_X11 >> /have_x11.h
+echo "#endif /* HAVE_X11 */" >> /have_x11.h
+
+	HAVE_X11=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_X11" > /have_x11.h
+
+	echo "no"
+fi
+if [ "${HAVE_X11}" != "" ]; then
+x11_found=yes
+echo "#ifndef HAVE_X11" > /have_x11.h
+echo "#define HAVE_X11" $HAVE_X11 >> /have_x11.h
+echo "#endif /* HAVE_X11 */" >> /have_x11.h
+else
+x11_found=no
+echo "#undef HAVE_X11" > /have_x11.h
+fi
+else
+echo "#undef HAVE_X11" > /have_x11.h
 fi
 if [ "${with_gl}" != "no" ]
  then
+echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
+echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
+OPENGL_CFLAGS="${X11_CFLAGS}"
+OPENGL_LIBS="${X11_LIBS} -lGL"
+cat << EOT > conftest.c
+#include <GL/gl.h>
+
+int
+main(int argc, char *argv[])
+{
+	GLdouble d;
+
+	glFlush();
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_OPENGL" > /have_opengl.h
+echo "#define HAVE_OPENGL" $HAVE_OPENGL >> /have_opengl.h
+echo "#endif /* HAVE_OPENGL */" >> /have_opengl.h
+
+	HAVE_OPENGL=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_OPENGL" > /have_opengl.h
+
+	echo "no"
+fi
+if [ "${HAVE_OPENGL}" = "yes" ]; then
+else
+NONE=1
+fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
+SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 	fi
 else
+echo "#undef HAVE_OPENGL" > /have_opengl.h
 fi
 if [ "${with_jpeg}" != "no" ]
  then
+echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
+echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
+JPEG_CFLAGS=-I/usr/local/include
+JPEG_LIBS="-L/usr/local/lib -ljpeg"
+echo "ok"
+echo "ok" >> config.log
+echo -n "checking whether libjpeg works..."
+echo -n "checking whether libjpeg works..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <jpeglib.h>
+
+struct jpeg_error_mgr		jerr;
+struct jpeg_compress_struct	jcomp;
+
+int
+main(int argc, char *argv[])
+{
+	jcomp.err = jpeg_std_error(&jerr);
+
+	jpeg_create_compress(&jcomp);
+	jcomp.image_width = 32;
+	jcomp.image_height = 32;
+	jcomp.input_components = 3;
+	jcomp.in_color_space = JCS_RGB;
+
+	jpeg_set_defaults(&jcomp);
+	jpeg_set_quality(&jcomp, 75, TRUE);
+
+	jpeg_destroy_compress(&jcomp);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_JPEG" > /have_jpeg.h
+echo "#define HAVE_JPEG" $HAVE_JPEG >> /have_jpeg.h
+echo "#endif /* HAVE_JPEG */" >> /have_jpeg.h
+
+	HAVE_JPEG=yes
+
+	echo "yes"
 else
+	echo "#undef HAVE_JPEG" > /have_jpeg.h
+
+	echo "no"
+fi
+if [ "${HAVE_JPEG}" != "" ]; then
+else
+NONE=1
+fi
+else
+echo "#undef HAVE_JPEG" > /have_jpeg.h
 fi
 if [ "${with_smpeg}" != "no" ]
  then
+echo -n "checking for smpeg (http://www.lokigames.com/development/smpeg.php3)..."
+echo -n "checking for smpeg (http://www.lokigames.com/development/smpeg.php3)..." >> config.log
+smpeg_version=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/smpeg-config" ]; then
+		smpeg_version=`${path}/smpeg-config --version`
+	fi
+done
+SMPEG_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/smpeg-config" ]; then
+		SMPEG_CFLAGS=`${path}/smpeg-config --cflags`
+	fi
+done
+SMPEG_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/smpeg-config" ]; then
+		SMPEG_LIBS=`${path}/smpeg-config --libs`
+	fi
+done
+if [ "${smpeg_version}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo "#ifndef HAVE_SMPEG" > /have_smpeg.h
+echo "#define HAVE_SMPEG" $HAVE_SMPEG >> /have_smpeg.h
+echo "#endif /* HAVE_SMPEG */" >> /have_smpeg.h
 else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_SMPEG" > /have_smpeg.h
+fi
+else
+echo "#undef HAVE_SMPEG" > /have_smpeg.h
 fi
 if [ "${enable_static}" = "yes" ]
  then
+LDFLAGS="-static"
 fi
 if [ "${enable_debug}" != "no" ]
  then
+DEBUG=1
+echo "#ifndef DEBUG" > /debug.h
+echo "#define DEBUG" $DEBUG >> /debug.h
+echo "#endif /* DEBUG */" >> /debug.h
+LOCKDEBUG=1
+echo "#ifndef LOCKDEBUG" > /lockdebug.h
+echo "#define LOCKDEBUG" $LOCKDEBUG >> /lockdebug.h
+echo "#endif /* LOCKDEBUG */" >> /lockdebug.h
 else
+echo "#undef DEBUG" > /debug.h
+echo "#undef LOCKDEBUG" > /lockdebug.h
 fi
 if [ "${enable_threads}" = "yes" ]
  then
+THREADS=1
+echo "#ifndef THREADS" > /threads.h
+echo "#define THREADS" $THREADS >> /threads.h
+echo "#endif /* THREADS */" >> /threads.h
 else
+echo "#undef THREADS" > /threads.h
 fi
 if [ "${enable_floating_point}" != "no" ]
  then
+FLOATING_POINT=1
+echo "#ifndef FLOATING_POINT" > /floating_point.h
+echo "#define FLOATING_POINT" $FLOATING_POINT >> /floating_point.h
+echo "#endif /* FLOATING_POINT */" >> /floating_point.h
 else
+echo "#undef FLOATING_POINT" > /floating_point.h
 fi
 if [ "${enable_edition}" != "no" ]
  then
+EDITION=1
+echo "#ifndef EDITION" > /edition.h
+echo "#define EDITION" $EDITION >> /edition.h
+echo "#endif /* EDITION */" >> /edition.h
 else
+echo "#undef EDITION" > /edition.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
+VIEW_8BPP=1
+echo "#ifndef VIEW_8BPP" > /view_8bpp.h
+echo "#define VIEW_8BPP" $VIEW_8BPP >> /view_8bpp.h
+echo "#endif /* VIEW_8BPP */" >> /view_8bpp.h
 else
+echo "#undef VIEW_8BPP" > /view_8bpp.h
 fi
 if [ "${enable_16bpp}" != "no" ]
  then
+VIEW_16BPP=1
+echo "#ifndef VIEW_16BPP" > /view_16bpp.h
+echo "#define VIEW_16BPP" $VIEW_16BPP >> /view_16bpp.h
+echo "#endif /* VIEW_16BPP */" >> /view_16bpp.h
 else
+echo "#undef VIEW_16BPP" > /view_16bpp.h
 fi
 if [ "${enable_24bpp}" != "no" ]
  then
+VIEW_24BPP=1
+echo "#ifndef VIEW_24BPP" > /view_24bpp.h
+echo "#define VIEW_24BPP" $VIEW_24BPP >> /view_24bpp.h
+echo "#endif /* VIEW_24BPP */" >> /view_24bpp.h
 else
+echo "#undef VIEW_24BPP" > /view_24bpp.h
 fi
 if [ "${enable_32bpp}" != "no" ]
  then
+VIEW_32BPP=1
+echo "#ifndef VIEW_32BPP" > /view_32bpp.h
+echo "#define VIEW_32BPP" $VIEW_32BPP >> /view_32bpp.h
+echo "#endif /* VIEW_32BPP */" >> /view_32bpp.h
 else
+echo "#undef VIEW_32BPP" > /view_32bpp.h
 fi
 if [ "${with_gettext}" != "no" ]
  then
+echo -n "checking for a gettext library..."
+echo -n "checking for a gettext library..." >> config.log
+GETTEXT_CFLAGS=-I/usr/local/include
+GETTEXT_LIBS="-L/usr/local/lib -lintl"
+echo "ok"
+echo "ok" >> config.log
+echo -n "checking whether gettext works..."
+echo -n "checking whether gettext works..." >> config.log
+cat << EOT > conftest.c
+#include <libintl.h>
+
+int
+main(int argc, char *argv[])
+{
+	gettext("");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${GETTEXT_CFLAGS} -o conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETTEXT" > /have_gettext.h
+echo "#define HAVE_GETTEXT" $HAVE_GETTEXT >> /have_gettext.h
+echo "#endif /* HAVE_GETTEXT */" >> /have_gettext.h
+
+	HAVE_GETTEXT=yes
+
+	echo "yes"
 else
+	echo "#undef HAVE_GETTEXT" > /have_gettext.h
+
+	echo "no"
+fi
+if [ "${HAVE_GETTEXT}" != "" ]; then
+else
+NONE=1
+fi
+else
+echo "#undef HAVE_GETTEXT" > /have_gettext.h
+HAVE_GETTEXT="no"
 fi
 if [ "${enable_nls}" != "no" ]
  then
+ENABLE_NLS="yes"
+ENABLE_NLS=1
+echo "#ifndef ENABLE_NLS" > /enable_nls.h
+echo "#define ENABLE_NLS" $ENABLE_NLS >> /enable_nls.h
+echo "#endif /* ENABLE_NLS */" >> /enable_nls.h
 else
+ENABLE_NLS="no"
+echo "#undef ENABLE_NLS" > /enable_nls.h
 fi
 echo "#ifndef PREFIX" > /prefix.h
 echo "#define PREFIX \"$PREFIX\"" >> /prefix.h
