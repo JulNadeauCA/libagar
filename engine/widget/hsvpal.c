@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.4 2005/02/18 12:04:37 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.5 2005/02/19 07:06:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -164,6 +164,7 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	widget_bind(pal, "saturation", WIDGET_FLOAT, &pal->s);
 	widget_bind(pal, "value", WIDGET_FLOAT, &pal->v);
 	widget_bind(pal, "alpha", WIDGET_FLOAT, &pal->a);
+	widget_bind(pal, "pixel", WIDGET_UINT32, &pal->pixel);
 
 	widget_map_color(pal, CIRCLE_COLOR, "circle", 0, 0, 0, 255);
 	widget_map_color(pal, TILE1_COLOR, "tile1", 140, 140, 140, 255);
@@ -175,6 +176,7 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	pal->s = 0.0;
 	pal->v = 0.0;
 	pal->a = 1.0;
+	pal->pixel = SDL_MapRGBA(fmt, 0, 0, 0, 255);
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = HSVPAL_SEL_NONE;
@@ -225,6 +227,7 @@ hsvpal_draw(void *p)
 	float h;
 	Uint32 pc;
 	Uint8 r, g, b;
+	Uint8 a = (Uint8)(cur_a*255);
 	int x, y;
 	int i;
 
@@ -291,7 +294,7 @@ hsvpal_draw(void *p)
 	/* Draw the preview rectangle. */
 	prim_hsv2rgb(cur_h/(2*M_PI), cur_s, cur_v, &r, &g, &b);
 	WIDGET_COLOR(pal,CUR_COLOR) = SDL_MapRGB(vfmt, r, g, b);
-	if (cur_a < 1.0) {
+	if (a < 255) {
 		/* 
 		 * TODO optimize on the basis that the background is
 		 * predictable.
@@ -307,7 +310,7 @@ hsvpal_draw(void *p)
 				view_alpha_blend(view->v,
 				    WIDGET(pal)->cx+x,
 				    WIDGET(pal)->cy+y,
-				    r, g, b, (Uint8)(cur_a*255));
+				    r, g, b, a);
 			}
 		}
 	} else {
@@ -316,5 +319,8 @@ hsvpal_draw(void *p)
 		    pal->rpreview.w, pal->rpreview.h,
 		    CUR_COLOR);
 	}
+
+	/* Update the pixel binding (hack). */
+	widget_set_uint32(pal, "pixel", SDL_MapRGBA(pal->format, r, g, b, a));
 }
 
