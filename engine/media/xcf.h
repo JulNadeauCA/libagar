@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.h,v 1.8 2003/03/02 04:07:47 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.9 2003/03/03 05:15:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -141,6 +141,6 @@ enum {
 	PROP_USER_UNIT
 };
 
-int 	xcf_check(int, off_t);
-int	xcf_load(int, off_t, struct art *);
+int 	xcf_check(struct netbuf *buf, off_t);
+int	xcf_load(struct netbuf *buf, off_t, struct art *);
 

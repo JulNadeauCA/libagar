@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.173 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.174 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -92,6 +92,9 @@ int	window_debug = 0;
 #define	engine_debug window_debug
 #endif
 
+pthread_mutex_t window_lock = PTHREAD_MUTEX_INITIALIZER;
+Uint32 window_ngeneric = 0;
+
 struct window *
 window_new(char *name, int flags, int x, int y, int w, int h,
     int minw, int minh)
@@ -112,7 +115,6 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	struct window *win;
 	va_list args;
 	char *name;
-	static pthread_mutex_t genlock = PTHREAD_MUTEX_INITIALIZER;
 	static int genxoffs = -1, genyoffs = -1;
 
 	if (name_fmt != NULL) {				/* Single instance */
@@ -141,7 +143,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	win = Malloc(sizeof(struct window));
 
 	/* Initialize the window, figure out the initial coordinates. */
-	pthread_mutex_lock(&genlock);
+	pthread_mutex_lock(&window_lock);
 	window_init(win, name, 0,
 	    view->w/2 - w/2 + genxoffs,
 	    view->h/2 - h/2 + genyoffs,
@@ -151,7 +153,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	if ((genyoffs += 3) + h > view->h/2)
 		genyoffs = 0;
 	window_clamp(win);
-	pthread_mutex_unlock(&genlock);
+	pthread_mutex_unlock(&window_lock);
 	
 	free(name);
 
@@ -173,14 +175,12 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		snprintf(wname, sizeof(wname), "win-%s", name);
 		fl |= WINDOW_SAVE_POSITION;
 	} else {						/* Generic */
-		static Uint32 curwindow = 0;
-		static pthread_mutex_t curwindow_lock =
-		    PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_lock(&window_lock);
+		window_ngeneric++;
+		pthread_mutex_unlock(&window_lock);
 
-		pthread_mutex_lock(&curwindow_lock);
-		curwindow++;
-		pthread_mutex_unlock(&curwindow_lock);
-		snprintf(wname, sizeof(wname), "win-generic%u", curwindow++);
+		snprintf(wname, sizeof(wname), "win-generic%u",
+		    window_ngeneric++);
 	}
 	for (i = 0; i < sizeof(wname); i++) {	
 		if (wname[i] == '\0')
@@ -267,9 +267,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	win->wid.h = 0;
 
 	TAILQ_INIT(&win->regionsh);
-	pthread_mutexattr_init(&win->lockattr);
-	pthread_mutexattr_settype(&win->lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&win->lock, &win->lockattr);
+	pthread_mutex_init(&win->lock, &recursive_mutexattr);
 }
 
 /*
@@ -553,6 +551,7 @@ window_detach(void *parent, void *child)
 	pthread_mutex_unlock(&win->lock);
 
 	object_destroy(reg);
+	free(reg);
 }
 
 void
@@ -568,12 +567,12 @@ window_destroy(void *p)
 	     reg = nextreg) {
 		nextreg = TAILQ_NEXT(reg, regions);
 		object_destroy(reg);
+		free(reg);
 	}
 
 	free(win->caption);
 	free(win->border);
 	pthread_mutex_destroy(&win->lock);
-	pthread_mutexattr_destroy(&win->lockattr);
 }
 
 int
@@ -594,7 +593,7 @@ window_show(struct window *win)
 
 	if (win->flags & WINDOW_SAVE_POSITION) {
 		/* Try to load previously saved window geometry/coordinates. */
-		object_load(win);
+		object_load(win, NULL);
 	}
 
 	view->focus_win = win;		/* Focus */
@@ -665,7 +664,7 @@ window_hide(struct window *win)
 
 	/* Save the window position and geometry. */
 	if (win->flags & WINDOW_SAVE_POSITION) {
-		object_save(win);
+		object_save(win, NULL);
 	}
 
 	pthread_mutex_unlock(&win->lock);
@@ -1424,29 +1423,28 @@ window_set_caption(struct window *win, const char *fmt, ...)
 }
 
 int
-window_load(void *p, int fd)
+window_load(void *p, struct netbuf *buf)
 {
 	struct window *win = p;
 	Uint16 view_w, view_h;
 
-	if (version_read(fd, &window_ver, NULL) != 0) {
+	if (version_read(buf, &window_ver, NULL) != 0)
 		return (-1);
-	}
 
-	win->flags |= read_uint32(fd);
+	win->flags |= read_uint32(buf);
 	
-	view_w = read_uint16(fd);
-	view_h = read_uint16(fd);
+	view_w = read_uint16(buf);
+	view_h = read_uint16(buf);
 
-	win->rd.x = read_sint16(fd) * view->v->w / view_w;
-	win->rd.y = read_sint16(fd) * view->v->h / view_h;
-	win->rd.w = read_uint16(fd) * view->v->w / view_w;
-	win->rd.h = read_uint16(fd) * view->v->h / view_h;
+	win->rd.x = read_sint16(buf) * view->v->w / view_w;
+	win->rd.y = read_sint16(buf) * view->v->h / view_h;
+	win->rd.w = read_uint16(buf) * view->v->w / view_w;
+	win->rd.h = read_uint16(buf) * view->v->h / view_h;
 
-	win->saved_rd.x = read_sint16(fd) * view->v->w / view_w;
-	win->saved_rd.y = read_sint16(fd) * view->v->h / view_h;
-	win->saved_rd.w = read_uint16(fd) * view->v->w / view_w;
-	win->saved_rd.h = read_uint16(fd) * view->v->h / view_h;
+	win->saved_rd.x = read_sint16(buf) * view->v->w / view_w;
+	win->saved_rd.y = read_sint16(buf) * view->v->h / view_h;
+	win->saved_rd.w = read_uint16(buf) * view->v->w / view_w;
+	win->saved_rd.h = read_uint16(buf) * view->v->h / view_h;
 	
 	debug(DEBUG_STATE, "%s: %dx%d for %dx%d at [%d,%d]\n",
 	    OBJECT(win)->name, win->rd.w, win->rd.h, view_w, view_h,
@@ -1459,29 +1457,29 @@ window_load(void *p, int fd)
 }
 
 int
-window_save(void *p, int fd)
+window_save(void *p, struct netbuf *buf)
 {
 	struct window *win = p;
 
 	debug(DEBUG_STATE, "saving %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
 
-	version_write(fd, &window_ver);
+	version_write(buf, &window_ver);
 
-	write_uint32(fd, win->flags & WINDOW_PERSISTENT);
+	write_uint32(buf, win->flags & WINDOW_PERSISTENT);
 	
-	write_uint16(fd, view->v->w);
-	write_uint16(fd, view->v->h);
+	write_uint16(buf, view->v->w);
+	write_uint16(buf, view->v->h);
 
-	write_sint16(fd, win->rd.x);
-	write_sint16(fd, win->rd.y);
-	write_uint16(fd, win->rd.w);
-	write_uint16(fd, win->rd.h);
+	write_sint16(buf, win->rd.x);
+	write_sint16(buf, win->rd.y);
+	write_uint16(buf, win->rd.w);
+	write_uint16(buf, win->rd.h);
 
-	write_sint16(fd, win->saved_rd.x);
-	write_sint16(fd, win->saved_rd.y);
-	write_uint16(fd, win->saved_rd.w);
-	write_uint16(fd, win->saved_rd.h);
+	write_sint16(buf, win->saved_rd.x);
+	write_sint16(buf, win->saved_rd.y);
+	write_uint16(buf, win->saved_rd.w);
+	write_uint16(buf, win->saved_rd.h);
 
 	return (0);
 }

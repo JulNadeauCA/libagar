@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.46 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.47 2003/03/29 04:23:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -96,9 +96,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 
-	pthread_mutexattr_init(&tl->items_lockattr);
-	pthread_mutexattr_settype(&tl->items_lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&tl->items_lock, &tl->items_lockattr);
+	pthread_mutex_init(&tl->items_lock, &recursive_mutexattr);
 
 	tl->vbar = Malloc(sizeof(struct scrollbar));
 	scrollbar_init(tl->vbar, -1, -1, SCROLLBAR_VERT);
@@ -118,11 +116,10 @@ tlist_destroy(void *p)
 	struct tlist *tl = p;
 	
 	tlist_clear_items(tl);
-
-	pthread_mutexattr_destroy(&tl->items_lockattr);
 	pthread_mutex_destroy(&tl->items_lock);
-	
 	object_destroy(tl->vbar);
+	free(tl->vbar);
+
 	widget_destroy(tl);
 }
 

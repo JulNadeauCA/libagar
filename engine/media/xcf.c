@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.21 2003/03/24 12:08:43 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.22 2003/03/25 13:48:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -40,13 +40,13 @@
 
 #include "xcf.h"
 
-static SDL_Surface	*xcf_convert_layer(int, Uint32, struct xcf_header *,
-			     struct xcf_layer *);
+static SDL_Surface	*xcf_convert_layer(struct netbuf *, Uint32,
+			     struct xcf_header *, struct xcf_layer *);
 static void		 xcf_insert_surface(struct art *, SDL_Surface *,
 			     char *, struct art_anim **);
-static Uint8		*xcf_read_tile(struct xcf_header *, int, Uint32, int,
-			    int, int);
-static void		 xcf_read_property(int, struct xcf_prop *);
+static Uint8		*xcf_read_tile(struct xcf_header *, struct netbuf *,
+			    Uint32, int, int, int);
+static void		 xcf_read_property(struct netbuf *, struct xcf_prop *);
 
 #ifdef DEBUG
 #define DEBUG_COLORMAPS		0x0001
@@ -76,54 +76,65 @@ enum {
 };
 
 int 
-xcf_check(int fd, off_t xcf_offs)
+xcf_check(struct netbuf *buf, off_t xcf_offs)
 {
 	char magic[XCF_MAGIC_LEN];
+	off_t oldoffs;
+	ssize_t rv;
 
-	if ((Pread(fd, magic, XCF_MAGIC_LEN, xcf_offs) == XCF_MAGIC_LEN)) {
+	oldoffs = buf->offs;
+	buf->offs = xcf_offs;
+
+	if ((rv = netbuf_read_chunk(buf, magic, XCF_MAGIC_LEN))
+	    == XCF_MAGIC_LEN) {
 		if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) == 0) {
+			buf->offs = oldoffs;
 			return (0);
 		}
+	} else if (rv == -1) {
+		fprintf(stderr, "xcf_check: pread: %s\n", strerror(errno));
 	}
+	buf->offs = oldoffs;
 	return (-1);
 }
 
 static void 
-xcf_read_property(int fd, struct xcf_prop *prop)
+xcf_read_property(struct netbuf *buf, struct xcf_prop *prop)
 {
 	Uint32 i;
 	Uint8 c;
 
-	prop->id = read_uint32(fd);
-	prop->length = read_uint32(fd);
+	prop->id = read_uint32(buf);
+	prop->length = read_uint32(buf);
 
 	debug(DEBUG_XCF, "id %u len %u\n", prop->id, prop->length);
 	
 	switch (prop->id) {
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
-		prop->data.colormap.size = read_uint32(fd);
+		prop->data.colormap.size = read_uint32(buf);
 		prop->data.colormap.data = Malloc(prop->data.colormap.size*3);
-		Read(fd, prop->data.colormap.data, prop->data.colormap.size*3);
+		netbuf_read(buf, prop->data.colormap.data,
+		    prop->data.colormap.size*3);
 		debug(DEBUG_COLORMAPS, "%u-entry colormap\n",
 		    prop->data.colormap.size);
 		break;
 	case PROP_OFFSETS:		         /* Offset of layer in image */
-		prop->data.offset.x = read_sint32(fd);
-		prop->data.offset.y = read_sint32(fd);
+		prop->data.offset.x = read_sint32(buf);
+		prop->data.offset.y = read_sint32(buf);
 		debug(DEBUG_LAYER_OFFSETS, "offsets %d,%d\n",
 		    prop->data.offset.x, prop->data.offset.y);
 		break;
 	case PROP_OPACITY:				    /* Layer opacity */
-		prop->data.opacity = read_uint32(fd);
+		prop->data.opacity = read_uint32(buf);
 		debug(DEBUG_LAYER_OPACITY, "opacity %u\n",
 		    prop->data.opacity);
 		break;
 	case PROP_MODE:					 /* Application mode */
-		prop->data.mode = read_uint32(fd);
+		prop->data.mode = read_uint32(buf);
 		debug(DEBUG_LAYER_MODE, "mode %u\n", prop->data.mode);
 		break;
 	case PROP_COMPRESSION:			    /* Tile compression mode */
-		Read(fd, &c, 1);
+		netbuf_read(buf, &c, 1);
 		prop->data.compression = (enum xcf_compression)c;
 		debug(DEBUG_IMAGE_COMPRESSION, "compression %s\n",
 		    prop->data.compression == XCF_COMPRESSION_NONE ? "none" :
@@ -131,7 +142,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		    "???");
 		break;
 	case PROP_COLOR:			       /* Color of a channel */
-		Read(fd, &prop->data.color, 3);
+		netbuf_read(buf, &prop->data.color, 3);
 		debug(DEBUG_CHANNELS, "color %u,%u,%u\n",
 		    prop->data.color[0],
 		    prop->data.color[1],
@@ -139,8 +150,8 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		break;
 	case PROP_GUIDES:			                  /* Guides */
 		for (i = 0; i < prop->length / 5; i++) {
-			prop->data.guide.position = read_sint32(fd);
-			prop->data.guide.orientation = read_sint8(fd);
+			prop->data.guide.position = read_sint32(buf);
+			prop->data.guide.orientation = read_sint8(buf);
 			debug(DEBUG_GUIDES,
 			    "guide: position %u, orientation %u\n",
 			    prop->data.guide.position,
@@ -149,21 +160,22 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		break;
 #if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 	case PROP_RESOLUTION:				 /* Image resolution */
-		prop->data.resolution.x = read_float(fd);
-		prop->data.resolution.y = read_float(fd);
+		prop->data.resolution.x = read_float(buf);
+		prop->data.resolution.y = read_float(buf);
 		debug(DEBUG_RESOLUTIONS, "resolution %f x %f\n",
 		    prop->data.resolution.x, prop->data.resolution.y);
 		break;
 #endif
 	case PROP_TATTOO:					/* Tattoo */
-		prop->data.tattoo_state = read_uint32(fd);
+		prop->data.tattoo_state = read_uint32(buf);
 		break;
 	case PROP_PARASITE:					/* Parasite */
-		prop->data.parasite.name = read_string(fd, NULL);
-		prop->data.parasite.flags = read_uint32(fd);
-		prop->data.parasite.size = read_uint32(fd);
+		prop->data.parasite.name = read_string(buf, NULL);
+		prop->data.parasite.flags = read_uint32(buf);
+		prop->data.parasite.size = read_uint32(buf);
 		prop->data.parasite.data = Malloc(prop->data.parasite.size);
-		Read(fd, prop->data.parasite.data, prop->data.parasite.size);
+		netbuf_read(buf, prop->data.parasite.data,
+		    prop->data.parasite.size);
 		debug_n(DEBUG_PARASITES, "parasite: %s (flags 0x%X size %u)",
 		    prop->data.parasite.name, prop->data.parasite.flags,
 		    prop->data.parasite.size);
@@ -182,7 +194,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		free(prop->data.parasite.name);
 		break;
 	case PROP_UNIT:
-		prop->data.unit = read_uint32(fd);
+		prop->data.unit = read_uint32(buf);
 		debug(DEBUG_UNITS, "unit: %u\n", prop->data.unit);
 		break;
 	case PROP_USER_UNIT:
@@ -192,29 +204,29 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	default:
 		debug(DEBUG_UNKNOWN_PROPS, "unknown: id %u len %u\n",
 		    prop->id, prop->length);
-		Lseek(fd, prop->length, SEEK_CUR);
+		buf->offs += prop->length;
 	}
 }
 
 static Uint8 *
-xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
+xcf_read_tile_flat(struct netbuf *buf, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
 
 	load = Malloc(len);
-	Read(fd, load, len);
+	netbuf_read(buf, load, len);
 	return (load);
 }
 
 static Uint8 *
-xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
+xcf_read_tile_rle(struct netbuf *buf, Uint32 len, int bpp, int x, int y)
 {
 	int i, size, count, j;
 	Uint8 *tilep, *tile, *data;
 	ssize_t rv;
 
 	tilep = tile = Malloc(len);
-	rv = read(fd, tile, len);
+	rv = netbuf_read_chunk(buf, tile, len);
 	if (rv == -1) {
 		error_set("read(%ld): %s", (long)len, strerror(errno));
 		free(tile);
@@ -274,14 +286,14 @@ xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 }
 
 static Uint8 *
-xcf_read_tile(struct xcf_header *head, int fd, Uint32 len, int bpp,
+xcf_read_tile(struct xcf_header *head, struct netbuf *buf, Uint32 len, int bpp,
     int x, int y)
 {
 	switch (head->compression) {
 	case XCF_COMPRESSION_NONE:
-		return (xcf_read_tile_flat(fd, len, bpp, x, y));
+		return (xcf_read_tile_flat(buf, len, bpp, x, y));
 	case XCF_COMPRESSION_RLE:
-		return (xcf_read_tile_rle(fd, len, bpp, x, y));
+		return (xcf_read_tile_rle(buf, len, bpp, x, y));
 	}
 	error_set("unknown compression: %d", head->compression);
 	return (NULL);
@@ -332,7 +344,7 @@ xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p, int *aflags)
 }
 
 static SDL_Surface *
-xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
+xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
 {
 	struct xcf_hierarchy *hier;
@@ -364,11 +376,12 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	}
 
 	/* Read the hierarchy. */
-	Lseek(fd, xcfoffs + layer->hierarchy_offset, SEEK_SET);
+	buf->offs = xcfoffs + layer->hierarchy_offset;
+
 	hier = Malloc(sizeof(struct xcf_hierarchy));
-	hier->w = read_uint32(fd);
-	hier->h = read_uint32(fd);
-	hier->bpp = read_uint32(fd);
+	hier->w = read_uint32(buf);
+	hier->h = read_uint32(buf);
+	hier->bpp = read_uint32(buf);
 
 	/* Read the level offsets. */
 	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT * sizeof(Uint32));
@@ -382,7 +395,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 			    hier->maxlevel_offsets * sizeof(Uint32));
 		}
 		if ((hier->level_offsets[hier->nlevel_offsets] =
-		    read_uint32(fd)) == 0) {
+		    read_uint32(buf)) == 0) {
 			break;
 		}
 		hier->nlevel_offsets++;
@@ -393,12 +406,11 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 		struct xcf_level *level;
 		int j;
 
-		Lseek(fd, xcfoffs + hier->level_offsets[i], SEEK_SET);
+		buf->offs = xcfoffs + hier->level_offsets[i];
 		level = Malloc(sizeof(struct xcf_level));
-		level->w = read_uint32(fd);
-		level->h = read_uint32(fd);
-		level->tile_offsets = Malloc(TILE_OFFSETS_INIT *
-		    sizeof(Uint32));
+		level->w = read_uint32(buf);
+		level->h = read_uint32(buf);
+		level->tile_offsets = Malloc(TILE_OFFSETS_INIT*sizeof(Uint32));
 		level->maxtile_offsets = TILE_OFFSETS_INIT;
 		level->ntile_offsets = 0;
 
@@ -410,7 +422,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 				    level->maxtile_offsets * sizeof(Uint32));
 			}
 			if ((level->tile_offsets[level->ntile_offsets] =
-			    read_uint32(fd)) == 0) {
+			    read_uint32(buf)) == 0) {
 				break;
 			}
 			level->ntile_offsets++;
@@ -419,18 +431,18 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 		ty = 0;
 		tx = 0;
 		for (j = 0; j < level->ntile_offsets; j++) {
-			Lseek(fd, xcfoffs + level->tile_offsets[j], SEEK_SET);
+			buf->offs = xcfoffs + level->tile_offsets[j];
 			ox = (tx + 64 > level->w) ? (level->w % 64) : 64;
 			oy = (ty + 64 > level->h) ? (level->h % 64) : 64;
 
 			if (level->tile_offsets[j + 1] != 0) {
-				tile = xcf_read_tile(head, fd,
+				tile = xcf_read_tile(head, buf,
 				    level->tile_offsets[j + 1] -
 				    level->tile_offsets[j],
 				    hier->bpp,
 				    ox, oy);
 			} else {
-				tile = xcf_read_tile(head, fd,
+				tile = xcf_read_tile(head, buf,
 				    ox * oy * 6,
 				    hier->bpp,
 				    ox, oy);
@@ -550,7 +562,7 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
 }
 
 int
-xcf_load(int fd, off_t xcf_offs, struct art *art)
+xcf_load(struct netbuf *buf, off_t xcf_offs, struct art *art)
 {
 	struct xcf_header *head;
 	int i, offsets;
@@ -559,18 +571,18 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	struct art_anim *curanim = NULL;
 
 	/* Skip the signature. */
-	Lseek(fd, xcf_offs + XCF_MAGIC_LEN, SEEK_SET);
+	buf->offs = xcf_offs + XCF_MAGIC_LEN;
 
 	/* Read the XCF header. */
 	head = Malloc(sizeof(struct xcf_header));
-	head->w = read_uint32(fd);
-	head->h = read_uint32(fd);
+	head->w = read_uint32(buf);
+	head->h = read_uint32(buf);
 	if (head->w > 65536 || head->h > 65536) {
 		error_set("nonsense geometry: %ux%u", head->w, head->h);
 		free(head);
 		return (-1);
 	}
-	head->base_type = read_uint32(fd);
+	head->base_type = read_uint32(buf);
 	switch (head->base_type) {
 	case XCF_IMAGE_RGB:
 	case XCF_IMAGE_GREYSCALE:
@@ -589,7 +601,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 
 	/* Read the image properties. */
 	do {
-		xcf_read_property(fd, &prop);
+		xcf_read_property(buf, &prop);
 
 		switch (prop.id) {
 		case PROP_COMPRESSION:
@@ -609,7 +621,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	/* Reader the layer offsets. */
 	head->layer_offstable = NULL;
 	offsets = 0;
-	for (offsets = 0; (offset = read_uint32(fd)) != 0; offsets++) {
+	for (offsets = 0; (offset = read_uint32(buf)) != 0; offsets++) {
 		/* XXX inefficient */
 		head->layer_offstable = Realloc(head->layer_offstable,
 		    sizeof(Uint32) * (offsets + 1));
@@ -622,19 +634,19 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		struct xcf_prop prop;
 		SDL_Surface *su;
 
-		Lseek(fd, xcf_offs + head->layer_offstable[i - 1], SEEK_SET);
+		buf->offs = xcf_offs + head->layer_offstable[i-1];
 		layer = Malloc(sizeof(struct xcf_layer));
-		layer->w = read_uint32(fd);
-		layer->h = read_uint32(fd);
-		layer->layer_type = read_uint32(fd);
-		layer->name = read_string(fd, NULL);
+		layer->w = read_uint32(buf);
+		layer->h = read_uint32(buf);
+		layer->layer_type = read_uint32(buf);
+		layer->name = read_string(buf, NULL);
 
 		debug(DEBUG_LAYER_NAMES, "%s: %ux%u\n", layer->name,
 		    layer->w, layer->h);
 
 		/* Read the layer properties. */
 		do {
-			xcf_read_property(fd, &prop);
+			xcf_read_property(buf, &prop);
 
 			switch (prop.id) {
 			case PROP_OFFSETS:
@@ -650,11 +662,11 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 			}
 		} while (prop.id != PROP_END);
 
-		layer->hierarchy_offset = read_uint32(fd);
-		layer->mask_offset = read_uint32(fd);
+		layer->hierarchy_offset = read_uint32(buf);
+		layer->mask_offset = read_uint32(buf);
 
 		/* Convert this layer to a SDL surface. */
-		su = xcf_convert_layer(fd, xcf_offs, head, layer);
+		su = xcf_convert_layer(buf, xcf_offs, head, layer);
 		if (su == NULL) {
 			free(layer->name);
 			free(layer);

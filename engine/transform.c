@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.6 2003/03/24 12:05:37 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.7 2003/03/25 13:28:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -115,13 +115,13 @@ transform_compare(struct transform *tr1, struct transform *tr2)
 }
 
 int
-transform_load(int fd, struct transform *trans)
+transform_load(struct netbuf *buf, struct transform *trans)
 {
 	int i;
 
-	trans->type = read_uint8(fd);
+	trans->type = read_uint8(buf);
 	trans->func = NULL;
-	trans->nargs = (int)read_uint8(fd);
+	trans->nargs = (int)read_uint8(buf);
 	if (trans->nargs > TRANSFORM_MAX_ARGS) {
 		error_set("too many args");
 		return (-1);
@@ -130,7 +130,7 @@ transform_load(int fd, struct transform *trans)
 	Free(trans->args);
 	trans->args = Malloc(trans->nargs * sizeof(Uint32));
 	for (i = 0; i < trans->nargs; i++)
-		trans->args[i] = read_uint32(fd);
+		trans->args[i] = read_uint32(buf);
 
 	/* Look for a matching algorithm. */
 	for (i = 0; i < ntransforms; i++) {
@@ -147,16 +147,15 @@ transform_load(int fd, struct transform *trans)
 }
 
 void
-transform_save(void *bufp, struct transform *trans)
+transform_save(struct netbuf *buf, struct transform *trans)
 {
-	struct fobj_buf *buf = bufp;
 	int i;
 
-	buf_write_uint8(buf, trans->type);
-	buf_write_uint8(buf, trans->nargs);
+	write_uint8(buf, trans->type);
+	write_uint8(buf, trans->nargs);
 
 	for (i = 0; i < trans->nargs; i++)
-		buf_write_uint32(buf, trans->args[i]);
+		write_uint32(buf, trans->args[i]);
 }
 
 static void

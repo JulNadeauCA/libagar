@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.16 2003/03/13 03:28:56 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.17 2003/03/29 04:23:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -39,7 +39,6 @@ struct tlist {
 	int			 nitems;	/* Current item count */
 	int			 nvisitems;	/* Visible item count */
 	pthread_mutex_t		 items_lock;
-	pthread_mutexattr_t	 items_lockattr;
 };
 
 struct tlist		*tlist_new(struct region *, int, int, int);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.59 2003/03/23 04:54:33 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.60 2003/03/25 13:48:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -22,8 +22,6 @@ struct widget;
 struct window {
 	struct widget	wid;		/* For primitives and color schemes */
 
-	/* Read-only once attached */
-
 	int	flags;
 #define WINDOW_TITLEBAR		0x01	/* Draw a title bar */
 #define WINDOW_SCALE		0x02	/* Scale the initial geometry (%) */
@@ -38,16 +36,15 @@ struct window {
 		WINDOW_CLOSE_BUTTON,
 		WINDOW_HIDE_BUTTON
 	} clicked_button;
+
 	Uint32	*border;		/* Border colors */
 	Uint8	 borderw;		/* Border width */
 	Uint8	 titleh;		/* Titlebar height */
 	Uint16	 minw, minh;		/* Minimum window geometry */
 	Uint8	 xspacing, yspacing;	/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
-	
-	/* Read-write, thread-safe */
-	pthread_mutex_t		lock;
-	pthread_mutexattr_t	lockattr;
+
+	pthread_mutex_t		 lock;
 	SDL_Rect		 rd;		/* Current geometry */
 	SDL_Rect		 saved_rd;	/* Original geometry */
 	char			*caption;	/* Titlebar text */
@@ -80,8 +77,8 @@ struct window	*window_generic_new(int, int, const char *, ...);
 void	 	 window_init(struct window *, char *, int, int, int, int, int,
 		     int, int);
 
-int	 window_load(void *, int);
-int	 window_save(void *, int);
+int	 window_load(void *, struct netbuf *);
+int	 window_save(void *, struct netbuf *);
 void	 window_destroy(void *);
 void	 window_attach(void *, void *);
 void	 window_detach(void *, void *);

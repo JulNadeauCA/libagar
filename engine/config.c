@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.67 2003/03/24 12:08:39 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.68 2003/03/25 13:48:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,6 +53,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <pwd.h>
 #include <unistd.h>
 
@@ -333,7 +334,7 @@ config_apply(int argc, union evarg *argv)
 		window_hide(wid->win);
 		return;
 	case SAVE_BUTTON:
-		if (object_save(config) == -1)
+		if (object_save(config, NULL) == -1)
 			text_msg("Error saving", "%s", error_get());
 		return;
 	case PRIMITIVES_BUTTON:

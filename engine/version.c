@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.27 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.28 2003/03/25 13:42:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -42,32 +42,25 @@ int	version_debug = 0;
 #define	engine_debug version_debug
 #endif
 
-/*
- * The version minor of a structure is incremented when the changes
- * do not affect reading of a previous version (ie. additions).
- *
- * The version major of a structure is incremented when the changes
- * introduce incompatibilites with a previous version (ie. removals),
- * this is usually avoided using padding whenever possible.
- */
-
 int
-version_read(int fd, const struct version *ver, struct version *rver)
+version_read(struct netbuf *buf, const struct version *ver,
+    struct version *rver)
 {
+	char user[VERSION_USER_MAX];
+	char host[VERSION_HOST_MAX];
 	char sig[64];
 	int siglen;
 	Uint32 major, minor;
-	char *user, *host;
 
 	siglen = strlen(ver->name);
 
-	if (read(fd, sig, siglen) != siglen ||
+	if (netbuf_read_chunk(buf, sig, siglen) != siglen ||
 	    strncmp(sig, ver->name, siglen) != 0) {
 		error_set("%s: bad magic", ver->name);
 		return (-1);
 	}
-	minor = read_uint32(fd);
-	major = read_uint32(fd);
+	minor = read_uint32(buf);
+	major = read_uint32(buf);
 
 	if (rver != NULL) {
 		rver->minor = minor;
@@ -84,48 +77,32 @@ version_read(int fd, const struct version *ver, struct version *rver)
 		    major, minor, ver->major, ver->minor);
 	}
 
-	user = read_string(fd, NULL);
-	host = read_string(fd, NULL);
+	copy_string(user, buf, sizeof(user));
+	copy_string(host, buf, sizeof(host));
 	dprintf("%s: v%d.%d (%s@%s)\n", ver->name, major, minor, user, host);
-	free(user);
-	free(host);
-
 	return (0);
 }
 
 void
-version_write(int fd, const struct version *ver)
+version_write(struct netbuf *buf, const struct version *ver)
 {
 	struct passwd *pw;
 	char host[64];
 
-	Write(fd, ver->name, strlen(ver->name));
-	write_uint32(fd, ver->minor);
-	write_uint32(fd, ver->major);
+	netbuf_write(buf, ver->name, strlen(ver->name));
+	write_uint32(buf, ver->minor);
+	write_uint32(buf, ver->major);
 	
-	pw = getpwuid(getuid());
-	write_string(fd, pw->pw_name);
-	if (gethostname(host, sizeof(host)) != 0) {
-		fatal("gethostname: %s", strerror(errno));
+	if ((pw = getpwuid(getuid())) != NULL) {
+		write_string(buf, pw->pw_name);
+	} else {
+		write_string(buf, "???");
 	}
-	write_string(fd, host);
-}
 
-void
-version_buf_write(struct fobj_buf *buf, const struct version *ver)
-{
-	struct passwd *pw;
-	char host[64];
-
-	buf_write(buf, ver->name, strlen(ver->name));
-	buf_write_uint32(buf, ver->minor);
-	buf_write_uint32(buf, ver->major);
-	
-	pw = getpwuid(getuid());
-	buf_write_string(buf, pw->pw_name);
-	if (gethostname(host, sizeof(host)) != 0) {
-		fatal("gethostname: %s", strerror(errno));
+	if (gethostname(host, sizeof(host)) == 0) {
+		write_string(buf, host);
+	} else {
+		write_string(buf, "???");
 	}
-	buf_write_string(buf, host);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.76 2003/03/13 08:38:27 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.77 2003/03/16 04:00:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -87,8 +87,8 @@ enum {
 
 void	 mapedit_init(void);
 void	 mapedit_destroy(void *);
-int	 mapedit_load(void *, int);
-int	 mapedit_save(void *, int);
+int	 mapedit_load(void *, struct netbuf *);
+int	 mapedit_save(void *, struct netbuf *);
 
 struct window	*objq_window(void);
 void		 fileops_new_map(int, union evarg *);

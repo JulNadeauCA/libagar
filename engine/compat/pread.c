@@ -1,4 +1,4 @@
-/*	$Csoft: pread.c,v 1.1 2003/03/13 22:43:54 vedge Exp $	*/
+/*	$Csoft: pread.c,v 1.2 2003/03/24 07:44:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #include "pread.h"
 
 ssize_t
-Pread(int fd, void *buf, size_t size, off_t offs)
+pread(int fd, void *buf, size_t size, off_t offs)
 {
 	off_t offs_save;
 	ssize_t rv;

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.18 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.19 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -98,9 +98,7 @@ scrollbar_init(struct scrollbar *sb, int w, int h,
 	sb->def.value = 0;
 	sb->def.min = 0;
 	sb->def.max = 0;
-	pthread_mutexattr_init(&sb->def.lockattr);
-	pthread_mutexattr_settype(&sb->def.lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&sb->def.lock, &sb->def.lockattr);
+	pthread_mutex_init(&sb->def.lock, &recursive_mutexattr);
 
 	event_new(sb, "window-mousebuttondown",
 	    scrollbar_mouse_buttondown, NULL);

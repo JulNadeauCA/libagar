@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.116 2003/03/24 12:08:39 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.117 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -230,6 +230,7 @@ view_detach_queued(void)
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
 		object_destroy(win);
+		free(win);
 	}
 	TAILQ_INIT(&view->detach);
 }
