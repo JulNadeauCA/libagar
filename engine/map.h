@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.86 2003/04/24 01:03:06 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.87 2003/04/24 04:48:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -121,7 +121,7 @@ struct map {
 #endif
 };
 
-void		 map_init(struct map *, char *, char *);
+void		 map_init(struct map *, char *);
 int		 map_load(void *, struct netbuf *);
 int		 map_save(void *, struct netbuf *);
 void		 map_destroy(void *);
