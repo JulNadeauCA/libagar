@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.c,v 1.3 2003/01/01 05:18:35 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.4 2003/03/25 13:48:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@ asprintf(char **ret, const char *fmt, ...)
 	}
 
 	/* Too large. */
-	buf = Realloc(buf, size);
+	buf = Realloc(buf, size+1);
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);

@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.26 2003/03/25 09:37:35 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.27 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -172,9 +172,9 @@ Strdup(const char *s)
 	size_t len;
 	char *ns;
 	
-	len = strlen(s) + 1;
-	ns = Malloc(len);
-	strlcpy(ns, s, len);
+	len = strlen(s);
+	ns = Malloc(len+1);
+	strlcpy(ns, s, len+1);
 	return (ns);
 }
 

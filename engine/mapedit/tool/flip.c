@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.5 2003/03/25 13:45:22 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.6 2003/03/26 10:04:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -108,9 +108,11 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 		switch (flip->mode) {
 		case FLIP_HORIZ:
 			type = TRANSFORM_HFLIP;
+			dprintf("horiz\n");
 			break;
 		case FLIP_VERT:
 			type = TRANSFORM_VFLIP;
+			dprintf("vert\n");
 			break;
 		}
 
@@ -119,15 +121,16 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 			if (trans->type == type) {
 				SLIST_REMOVE(&nref->transforms, trans,
 				    transform, transforms);
+				dprintf("removed duplicate\n");
 				break;
 			}
 		}
 		if (trans != NULL) {				/* Existing */
+			dprintf("existing transform %d\n", type);
 			continue;
 		}
 
-		trans = transform_new(type, 0, NULL);
-		if (trans == NULL) {
+		if ((trans = transform_new(type, 0, NULL)) == NULL) {
 			text_msg("Error initing transform", "%s", error_get());
 			continue;
 		}

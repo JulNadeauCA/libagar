@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.7 2003/03/24 12:08:41 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.8 2003/03/25 13:44:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -56,52 +56,58 @@ nodeedit_close_win(int argc, union evarg *argv)
 static void
 nodeedit_poll(int argc, union evarg *argv)
 {
+	static char flags[96];
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
 	struct node *node;
 	struct tlist_item *it;
 	struct noderef *nref;
-	size_t nodesz = 0;
-	int i = 0, sx, sy;
-	char flags[96];
+	Uint32 i = 0;
+	int sx, sy;
 	
 	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
-		label_printf(mv->nodeed.node_flags_lab, "-");
-		label_printf(mv->nodeed.node_size_lab, "-");
+		label_printf(mv->nodeed.node_flags_lab, "");
 		return;
 	}
 	node = &mv->map->map[sy][sx];
 	
 	flags[0] = '\0';
-	if (node->flags & NODE_WALK)
+	if (node->flags & NODE_WALK) {				/* Movement */
 		strlcat(flags, "walk ", sizeof(flags));
-	else if (node->flags & NODE_CLIMB)
+	} else if (node->flags & NODE_CLIMB) {
 		strlcat(flags, "climb ", sizeof(flags));
+	} else {
+		strlcat(flags, "block ", sizeof(flags));
+	}
 	if (node->flags & NODE_SLIP)
 		strlcat(flags, "slip ", sizeof(flags));
-	if (node->flags & NODE_BIO)
-		strlcat(flags, "bio ", sizeof(flags));
-	else if (node->flags & NODE_REGEN)
-		strlcat(flags, "regen ", sizeof(flags));
-	if (node->flags & NODE_SLOW)
-		strlcat(flags, "slow ", sizeof(flags));
-	else if (node->flags & NODE_HASTE)
-		strlcat(flags, "haste ", sizeof(flags));
-	
-	if (node->flags & (NODE_EDGE_NW))
-		strlcat(flags, "NW-edge ", sizeof(flags));
-	else if (node->flags & (NODE_EDGE_NE))
-		strlcat(flags, "NE-edge ", sizeof(flags));
-	else if (node->flags & (NODE_EDGE_SW))
-		strlcat(flags, "SW-edge ", sizeof(flags));
-	else if (node->flags & (NODE_EDGE_SE))
-		strlcat(flags, "SE-edge ", sizeof(flags));
-	else if (node->flags & NODE_EDGE_N)
-		strlcat(flags, "N-edge ", sizeof(flags));
-	else if (node->flags & NODE_EDGE_S)
-		strlcat(flags, "S-edge ", sizeof(flags));
 
-	label_printf(mv->nodeed.node_flags_lab, "Node flags: %s", flags);
+	if (node->flags & NODE_BIO) {				/* Health mod */
+		strlcat(flags, "bio ", sizeof(flags));
+	} else if (node->flags & NODE_REGEN) {
+		strlcat(flags, "regen ", sizeof(flags));
+	}
+	if (node->flags & NODE_SLOW) {				/* Speed mod */
+		strlcat(flags, "slow ", sizeof(flags));
+	} else if (node->flags & NODE_HASTE) {
+		strlcat(flags, "haste ", sizeof(flags));
+	}
+
+	if (node->flags & (NODE_EDGE_NW)) {			/* Edges */
+		strlcat(flags, "NW-edge ", sizeof(flags));
+	} else if (node->flags & (NODE_EDGE_NE)) {
+		strlcat(flags, "NE-edge ", sizeof(flags));
+	} else if (node->flags & (NODE_EDGE_SW)) {
+		strlcat(flags, "SW-edge ", sizeof(flags));
+	} else if (node->flags & (NODE_EDGE_SE)) {
+		strlcat(flags, "SE-edge ", sizeof(flags));
+	} else if (node->flags & NODE_EDGE_N) {
+		strlcat(flags, "N-edge ", sizeof(flags));
+	} else if (node->flags & NODE_EDGE_S) {
+		strlcat(flags, "S-edge ", sizeof(flags));
+	}
+
+	label_printf(mv->nodeed.node_flags_lab, "Node flags: [ %s]", flags);
 
 	tlist_clear_items(tl);
 
@@ -112,42 +118,38 @@ nodeedit_poll(int argc, union evarg *argv)
 
 		switch (nref->type) {
 		case NODEREF_SPRITE:
-			snprintf(text, sizeof(text), "%u. s(%s:%u)",
-			    nref->layer, nref->pobj->name, nref->offs);
+			snprintf(text, sizeof(text), "%u. [%u] s(%s:%u)",
+			    i, nref->layer, nref->pobj->name, nref->offs);
 			icon = nref->pobj->art->sprites[nref->offs];
 			break;
 		case NODEREF_ANIM:
-			snprintf(text, sizeof(text), "%u. a(%s:%u)",
-			    nref->layer, nref->pobj->name, nref->offs);
+			snprintf(text, sizeof(text), "%u. [%u] a(%s:%u)",
+			    i, nref->layer, nref->pobj->name, nref->offs);
 			anim = nref->pobj->art->anims[nref->offs];
 			if (anim->nframes > 0) {
 				icon = anim->frames[0];
 			}
 			break;
 		case NODEREF_WARP:
-			snprintf(text, sizeof(text), "%u. w(%s:%d,%d)",
-			    nref->layer, nref->data.warp.map, nref->data.warp.x,
-			    nref->data.warp.y);
+			snprintf(text, sizeof(text), "%u. [%u]. w(%s:%d,%d)",
+			    i, nref->layer, nref->data.warp.map,
+			    nref->data.warp.x, nref->data.warp.y);
 			break;
 		}
 		tlist_insert_item(tl, icon, text, nref);
 		i++;
-
-		nodesz += sizeof(nref);
 	}
 
 	tlist_restore_selections(tl);
 	
-	label_printf(mv->nodeed.node_size_lab,
-	    "Node size: %lu bytes", (unsigned long)nodesz);
-	label_printf(mv->nodeed.noderef_type_lab, "-");
-	label_printf(mv->nodeed.noderef_flags_lab, "-");
-	label_printf(mv->nodeed.noderef_center_lab, "-");
+	label_printf(mv->nodeed.noderef_type_lab, "");
+	label_printf(mv->nodeed.noderef_flags_lab, "");
+	label_printf(mv->nodeed.noderef_center_lab, "");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected) {
 			struct noderef *nref = it->p1;
-			char flags[32];
+			char nrflags[32];
 			char *type = "";
 
 			switch (nref->type) {
@@ -162,16 +164,16 @@ nodeedit_poll(int argc, union evarg *argv)
 				break;
 			}
 			
-			flags[0] = '\0';
+			nrflags[0] = '\0';
 			if (nref->flags & NODEREF_SAVEABLE)
-				strlcat(flags, "saveable ", sizeof(flags));
+				strlcat(nrflags, "saveable ", sizeof(nrflags));
 			if (nref->flags & NODEREF_BLOCK)
-				strlcat(flags, "block ", sizeof(flags));
-			
+				strlcat(nrflags, "block ", sizeof(nrflags));
+
 			label_printf(mv->nodeed.noderef_type_lab,
 			    "Noderef type: %s", type);
 			label_printf(mv->nodeed.noderef_flags_lab,
-			    "Noderef flags: %s", flags);
+			    "Noderef flags: [ %s]", nrflags);
 			label_printf(mv->nodeed.noderef_center_lab,
 			    "Noderef centering: %d,%d",
 			    nref->xcenter, nref->ycenter);
@@ -264,7 +266,6 @@ nodeedit_init(struct mapview *mv)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		mv->nodeed.node_flags_lab = label_new(reg, 100, -1, " ");
-		mv->nodeed.node_size_lab = label_new(reg, 100, -1, " ");
 	}
 	
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
