@@ -1,0 +1,19 @@
+$Csoft$
+
+Global keys
+-----------
+
+ESC:		Shut down the engine.
+Ctrl+F:		Toggle fullscreen mode.
+
+F2:		Load state (debug).
+F4:		Save state (debug).
+Ctrl+W:		Show the active object list (debug).
+
+Environment variables
+---------------------
+
+AGAR_STATE_PATH		Comma-separated list of directories containing
+			state save files and maps. This defaults to
+			"$HOME/.gamename:$PREFIX/share/gamename"
+
