@@ -137,7 +137,7 @@ echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --srcdir                       Source tree for concurrent builds [.]"
 echo "    --with-smpeg                   Play videos through smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
-echo "    --with-gl                      Support OpenGL operations [default: no]"
+echo "    --with-gl                      Support OpenGL operations [default: check]"
 echo "    --enable-debug                 Engine debugging [default: no]"
 echo "    --enable-serialization         Thread-safe engine [default: yes]"
 echo "    --enable-8bpp                  Support 8 bpp display [default: yes]"
@@ -661,7 +661,7 @@ else
 
 	echo "no"
 fi
-CFLAGS="$CFLAGS -g -I$SRC"
+CFLAGS="$CFLAGS -I$SRC"
 echo CFLAGS=$CFLAGS >> Makefile.config
 if [ "${cc_is_gcc}" = "yes" ]
  then
@@ -1000,33 +1000,67 @@ echo "no" >> config.log
 x11_found=no
 echo "#undef HAVE_X11" > config/have_x11.h
 fi
-	if [ "${x11_found}" = "yes" ]
- then
-USE_X11=1
-echo "#ifndef USE_X11" > config/use_x11.h
-echo "#define USE_X11" $USE_X11 >> config/use_x11.h
-echo "#endif /* USE_X11 */" >> config/use_x11.h
-	else
-echo "#undef USE_X11" > config/use_x11.h
-	fi
 fi
-if [ "${enable_debug}" = "yes" -a "${x11_found}" = "yes" ]
+if [ "${with_gl}" != "no" ]
  then
-XDEBUG=1
-echo "#ifndef XDEBUG" > config/xdebug.h
-echo "#define XDEBUG" $XDEBUG >> config/xdebug.h
-echo "#endif /* XDEBUG */" >> config/xdebug.h
-else
-echo "#undef XDEBUG" > config/xdebug.h
+echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..."
+echo -n "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
+echo "checking for OpenGL (http://www.sgi.com/software/opengl)..." >> config.log
+case "$HOST" in
+	*-OpenBSD-* | *-NetBSD-* | *-FreeBSD-*)
+		OPENGL_LIBS="-L/usr/X11R6/lib -lGL"
+		;;
+	*)
+		OPENGL_LIBS="-lGL"
+		;;
+esac
+echo -n "checking whether OpenGL works..."
+echo -n "checking whether OpenGL works..." >> config.log
+cat << EOT > conftest.c
+#include <GL/gl.h>
+
+int
+main(int argc, char *argv[])
+{
+	GLdouble d;
+
+	glFlush();
+	return (0);
+}
+
+EOT
+compile="ok"
+echo $CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} >> config.log
+$CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
 fi
-if [ "${with_gl}" = "yes" ]
- then
-HAVE_OPENGL=1
-echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
 echo "#define HAVE_OPENGL" $HAVE_OPENGL >> config/have_opengl.h
 echo "#endif /* HAVE_OPENGL */" >> config/have_opengl.h
+
+	HAVE_OPENGL=yes
+
+	echo "yes"
 else
-echo "#undef HAVE_OPENGL" > config/have_opengl.h
+	echo "#undef HAVE_OPENGL" > config/have_opengl.h
+
+	echo "no"
+fi
+if [ "${HAVE_OPENGL}" = "yes" ]; then
+NONE=1
+else
+echo "The OpenGL test would not compile."
+exit 1
+fi
 fi
 if [ "${enable_debug}" = "yes" ]
  then
@@ -1041,15 +1075,6 @@ echo "#endif /* LOCKDEBUG */" >> config/lockdebug.h
 else
 echo "#undef DEBUG" > config/debug.h
 echo "#undef LOCKDEBUG" > config/lockdebug.h
-fi
-if [ "${enable_map_editor}" != "no" ]
- then
-MAP_EDITOR=1
-echo "#ifndef MAP_EDITOR" > config/map_editor.h
-echo "#define MAP_EDITOR" $MAP_EDITOR >> config/map_editor.h
-echo "#endif /* MAP_EDITOR */" >> config/map_editor.h
-else
-echo "#undef MAP_EDITOR" > config/map_editor.h
 fi
 if [ "${enable_serialization}" != "no" ]
  then
