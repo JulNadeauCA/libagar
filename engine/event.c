@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.65 2002/07/22 05:56:32 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.66 2002/07/27 07:03:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -248,10 +248,7 @@ event_loop(void *arg)
 			TAILQ_FOREACH(win, &view->windowsh, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
-					window_animate(win);
-				    	/* XXX ignore redraw flag,
-					   that will require a fancy
-					   microtile algorithm */
+					/* XXX */
 					window_draw(win);
 				}
 				pthread_mutex_unlock(&win->lock);
