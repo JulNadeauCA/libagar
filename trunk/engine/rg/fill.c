@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.11 2005/03/06 04:57:15 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.12 2005/03/06 10:39:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -209,17 +209,16 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				for (x = 0; x < su->w; x++) {
 					if (fi->alpha == 255) {
 						prim_put_pixel(t->su, x, y,
-						    SDL_MapRGBA(t->su->format,
-						    (((r1 - r2) * a) >> 8) + r2,
-						    (((g1 - g2) * a) >> 8) + g2,
-						    (((b1 - b2) * a) >> 8) + b2,
-						    fi->alpha));
+						    SDL_MapRGB(t->su->format,
+						    (((r1 - r2)*a) >> 8) + r2,
+						    (((g1 - g2)*a) >> 8) + g2,
+						    (((b1 - b2)*a) >> 8) + b2));
 					} else {
 						prim_blend_rgb(t->su, x, y,
 						    PRIM_BLEND_SRCALPHA,
-						    (((r1 - r2) * a) >> 8) + r2,
-						    (((g1 - g2) * a) >> 8) + g2,
-						    (((b1 - b2) * a) >> 8) + b2,
+						    (((r1 - r2)*a) >> 8) + r2,
+						    (((g1 - g2)*a) >> 8) + g2,
+						    (((b1 - b2)*a) >> 8) + b2,
 						    fi->alpha);
 					}
 				}
