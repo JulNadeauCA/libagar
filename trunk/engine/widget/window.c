@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.66 2002/08/26 07:19:12 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.67 2002/08/28 03:42:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -976,6 +976,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect ro;
 	int nx, ny;
+	int tw = 16, th = 16;
 
 	ro.x = win->x;
 	ro.y = win->y;
@@ -1030,13 +1031,24 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		win->y = ny;
 	}
 	pthread_mutex_unlock(&config->lock);
+	
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		tw = TILEW;
+		th = TILEH;
+	}
+	if (win->x < tw) {
+		win->x = tw;
+	}
+	if (win->y < th) {
+		win->y = th;
+	}
 
-	/* Clamp to maximum window geometry. */
-	if (win->x+win->w > view->w - 16) {
+	/* Clamp to view boundaries. */
+	if (win->x+win->w > view->w - tw) {
 		win->x = ro.x;
 		win->w = ro.w;
 	}
-	if (win->y+win->h > view->h - 16) {
+	if (win->y+win->h > view->h - th) {
 		win->y = ro.y;
 		win->h = ro.h;
 	}
