@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.114 2004/08/02 03:17:07 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.115 2004/10/16 09:33:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -46,18 +46,21 @@ struct object {
 	char	*save_pfx;			/* Save dir prefix */
 	const struct object_ops *ops;		/* Generic operation vector */
 	int	 flags;
-#define OBJECT_RELOAD_PROPS	0x01	/* Don't free props before load */
-#define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
-#define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible (advisory) */
-#define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
-#define OBJECT_PRESERVE_DEPS	0x10	/* Preserve cnt=0 dependencies */
-#define OBJECT_STATIC		0x20	/* Don't free() after detach */
-#define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
-#define OBJECT_WAS_RESIDENT	0x80	/* Used internally by object_load() */
+#define OBJECT_RELOAD_PROPS	0x001	/* Don't free props before load */
+#define OBJECT_NON_PERSISTENT	0x002	/* Never include in saves */
+#define OBJECT_INDESTRUCTIBLE	0x004	/* Not destructible (advisory) */
+#define OBJECT_DATA_RESIDENT	0x008	/* Object data is resident */
+#define OBJECT_PRESERVE_DEPS	0x010	/* Preserve cnt=0 dependencies */
+#define OBJECT_STATIC		0x020	/* Don't free() after detach */
+#define OBJECT_READONLY		0x040	/* Disallow edition (advisory) */
+#define OBJECT_WAS_RESIDENT	0x080	/* Used internally by object_load() */
 #define OBJECT_IN_SAVE		0x100	/* Used internally by object_load() */
+#define OBJECT_REOPEN_ONLOAD	0x200	/* Close and reopen editor on load */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
-				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY)
-#define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT)
+				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY|\
+				 OBJECT_REOPEN_ONLOAD)
+#define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT|\
+				 OBJECT_REOPEN_ONLOAD)
 
 	pthread_mutex_t	 lock;
 	struct gfx	*gfx;		/* Associated graphics package */

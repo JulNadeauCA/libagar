@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.2 2005/02/03 05:31:58 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.3 2005/02/03 05:43:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -587,6 +587,33 @@ objmgr_destroy(void)
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
 		Free(oent, M_MAPEDIT);
+	}
+}
+
+/*
+ * Close and reopen all edition windows associated with an object, if there
+ * are any. This is called automatically from object_load() for objects with
+ * the flag OBJECT_REOPEN_ONLOAD.
+ */
+void
+objmgr_reopen(struct object *obj)
+{
+	struct objent *oent;
+
+	TAILQ_FOREACH(oent, &dobjs, objs) {
+		if (oent->obj == obj) {
+			dprintf("reopening %s\n", obj->name);
+
+			window_hide(oent->win);
+			event_post(NULL, oent->obj, "edit-close", NULL);
+			view_detach(oent->win);
+
+			event_post(NULL, oent->obj, "edit-open", NULL);
+			oent->win = obj->ops->edit(obj);
+			window_show(oent->win);
+			event_new(oent->win, "window-close", close_obj_data,
+			    "%p", oent);
+		}
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.189 2005/01/27 05:46:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.190 2005/01/28 12:50:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/rootmap.h>
 #include <engine/typesw.h>
 #include <engine/mkpath.h>
+#include <engine/objmgr.h>
 
 #ifdef EDITION
 #include <engine/widget/window.h>
@@ -811,10 +812,16 @@ object_load(void *p)
 	if (object_reload_data(ob) == -1)
 		goto fail;
 
+	if (ob->flags & OBJECT_REOPEN_ONLOAD) {
+		objmgr_reopen(ob);
+	}
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
 	return (0);
 fail:
+	if (ob->flags & OBJECT_REOPEN_ONLOAD) {
+		objmgr_reopen(ob);
+	}
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
 	return (-1);
