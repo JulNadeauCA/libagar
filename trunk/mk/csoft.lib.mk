@@ -249,9 +249,6 @@ cleandir-lib:
 	rm -f ${LIBTOOL} ${LTCONFIG_LOG}
 
 install-lib:
-	for F in `ls -1`; do
-		${INSTALL_DATA} $$F ${INCLDIR}
-	done
 	@if [ "${INCL}" != "" ]; then \
 	    if [ ! -d "${INCLDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
