@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.116 2004/04/25 09:15:23 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.117 2004/04/26 03:21:17 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -225,7 +225,6 @@ config_load(void *p, struct netbuf *buf)
 	if (version_read(buf, &config_ver, NULL) != 0)
 		return (-1);
 
-	dprintf("load\n");
 	kbd_unitrans = read_uint8(buf);
 	text_composition = read_uint8(buf);
 	window_freescale = read_uint8(buf);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.174 2004/04/23 10:55:33 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.175 2004/04/23 12:47:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -138,7 +138,6 @@ object_free_data(void *p)
 	struct object *ob = p;
 
 	if (ob->flags & OBJECT_DATA_RESIDENT) {
-		dprintf("%s: was resident\n", ob->name);
 		if (ob->ops->reinit != NULL) {
 			ob->flags |= OBJECT_PRESERVE_DEPS;
 			ob->ops->reinit(ob);
@@ -791,7 +790,6 @@ object_resolve_deps(void *p)
 			    ob->name, dep->obj->name);
 			continue;
 		}
-		dprintf("%s: resolving `%s'\n", ob->name, dep->path);
 		if ((dep->obj = object_find(dep->path)) == NULL) {
 			error_set(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
@@ -818,7 +816,6 @@ object_reload_data(void *p)
 	struct object *ob = p, *cob;
 
 	if (ob->flags & OBJECT_WAS_RESIDENT) {
-		dprintf("reloading %s\n", ob->name);
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(p) == -1)
 			return (-1);
@@ -843,8 +840,6 @@ object_resolve_position(void *p)
 		struct position *pos = ob->pos;
 		struct map *projmap;
 		
-		dprintf("%s: has position; reloading\n", ob->name);
-
 		if ((pos->map = object_find(pos->map_name)) == NULL) {
 			error_set(_("No such level map: `%s'"), pos->map_name);
 			return (-1);
@@ -856,8 +851,6 @@ object_resolve_position(void *p)
 		}
 		position_set_projmap(ob, projmap);
 		return (0);
-	} else {
-		dprintf("%s: has no position\n", ob->name);
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_resolve_position(cob) == -1)
@@ -1016,7 +1009,6 @@ object_load_generic(void *p)
 			if (object_load_generic(eob) == -1)
 				goto fail;
 		} else {
-			dprintf("%s: alloc %s (%s)\n", ob->name, cname, ctype);
 		 	for (ti = 0; ti < ntypesw; ti++) {
 				if (strcmp(typesw[ti].type, ctype) == 0)
 					break;
@@ -1026,9 +1018,6 @@ object_load_generic(void *p)
 				    ctype);
 				goto fail;
 			}
-			dprintf("%s: child `%s' (%s, %lu bytes)\n", ob->name,
-			    cname, typesw[ti].type,
-			    (unsigned long)typesw[ti].size);
 
 			child = Malloc(typesw[ti].size, M_OBJECT);
 			if (typesw[ti].ops->init != NULL) {
@@ -1204,7 +1193,6 @@ object_save(void *p)
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
 		if (child->flags & OBJECT_NON_PERSISTENT) {
-			dprintf("skipping non persistent: %s\n", child->name);
 			continue;
 		}
 		write_string(buf, child->name);
