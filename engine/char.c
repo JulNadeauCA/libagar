@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.50 2002/06/06 10:18:19 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.51 2002/06/09 09:06:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -57,9 +57,7 @@ static const struct version char_ver = {
 static const struct object_ops char_ops = {
 	char_destroy,	/* destroy */
 	char_load,
-	char_save,
-	NULL,		/* attach */
-	NULL		/* detach */
+	char_save
 };
 
 static Uint32	char_time(Uint32, void *);
@@ -109,8 +107,8 @@ char_init(struct character *ch, char *name, char *media)
 
 	pthread_mutex_init(&ch->lock, NULL);
 
-	event_new(ch, "attach", 0, char_onattach, NULL);
-	event_new(ch, "detach", 0, char_ondetach, NULL);
+	event_new(ch, "attached", 0, char_attached, NULL);
+	event_new(ch, "detached", 0, char_detached, NULL);
 }
 
 void
@@ -267,7 +265,7 @@ char_save(void *p, int fd)
 }
 
 void
-char_onattach(int argc, union evarg *argv)
+char_attached(int argc, union evarg *argv)
 {
 	struct character *ch = argv[0].p;
 
@@ -277,7 +275,7 @@ char_onattach(int argc, union evarg *argv)
 }
 
 void
-char_ondetach(int argc, union evarg *argv)
+char_detached(int argc, union evarg *argv)
 {
 	struct character *ch = argv[0].p;
 

@@ -55,9 +55,7 @@ static const struct version config_ver = {
 static const struct object_ops config_ops = {
 	config_destroy,
 	config_load,
-	config_save,
-	NULL,		/* attach */
-	NULL		/* detach */
+	config_save
 };
 
 static const enum {

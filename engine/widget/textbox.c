@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.11 2002/06/03 02:30:59 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.12 2002/06/06 10:18:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -55,9 +55,7 @@ static const struct widget_ops textbox_ops = {
 	{
 		textbox_destroy,
 		NULL,		/* load */
-		NULL,		/* save */
-		NULL,		/* attach */
-		NULL		/* detach */
+		NULL		/* save */
 	},
 	textbox_draw
 };

@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.22 2002/06/09 08:34:32 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.23 2002/06/09 10:08:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/ailment.h>
@@ -44,6 +44,6 @@ void		  char_init(struct character *, char *, char *);
 void		  char_destroy(void *);
 int		  char_load(void *, int);
 int		  char_save(void *, int);
-void		  char_onattach(int, union evarg *);
-void		  char_ondetach(int, union evarg *);
+void		  char_attached(int, union evarg *);
+void		  char_detached(int, union evarg *);
 

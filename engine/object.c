@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.58 2002/06/08 08:05:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.59 2002/06/09 10:03:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,9 +58,7 @@ static SDL_TimerID gctimer;
 static const struct object_ops null_ops = {
 	NULL,	/* destroy */
 	NULL,	/* load */
-	NULL,	/* save */
-	NULL,	/* attach */
-	NULL	/* detach */
+	NULL	/* save */
 };
 
 static struct object_art	*object_get_art(char *);
@@ -541,10 +539,6 @@ object_dump(void *p)
 		printf("load ");
 	if (OBJECT_OPS(ob)->save != NULL)
 		printf("save ");
-	if (OBJECT_OPS(ob)->attach != NULL)
-		printf("attach ");
-	if (OBJECT_OPS(ob)->detach != NULL)
-		printf("detach ");
 	printf("]\n");
 }
 

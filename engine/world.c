@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.35 2002/06/03 18:36:52 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.36 2002/06/06 10:18:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,9 +45,7 @@
 static const struct object_ops world_ops = {
 	NULL,
 	world_load,
-	world_save,
-	world_attach,
-	world_detach
+	world_save
 };
 
 void
@@ -185,7 +183,7 @@ world_attach(void *parent, void *child)
 	SLIST_INSERT_HEAD(&wo->wobjsh, ob, wobjs);
 	wo->nobjs++;
 	
-	event_post(ob, "attach", "%p", wo);
+	event_post(ob, "attached", "%p", wo);
 }
 
 /* Detach an object from the world, and free it. */
@@ -195,7 +193,7 @@ world_detach(void *parent, void *child)
 	struct world *wo = parent;
 	struct object *ob = child;
 	
-	event_post(ob, "detach", "%p", wo);
+	event_post(ob, "detached", "%p", wo);
 	
 	SLIST_REMOVE(&wo->wobjsh, ob, object, wobjs);
 	wo->nobjs--;
