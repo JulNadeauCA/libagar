@@ -1,6 +1,16 @@
 
-- double check that map locks are not held long.
+engine:
 - document the engine.
 - rewrite xcf loader.
 - variable-sized sprite centering.
+
+map editor:
+- transpose.
+- cut/paste regions.
+- setting widgets.
+- intricate patterns.
+- joystick remapping.
+
+game:
+- joystick remapping.
 
