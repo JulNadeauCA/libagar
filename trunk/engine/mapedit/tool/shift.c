@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.18 2003/05/08 12:26:58 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.19 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,8 @@ const struct tool_ops shift_ops = {
 		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	shift_window,
 	NULL,			/* cursor */
@@ -114,10 +115,11 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 				if (nref->layer != mv->map->cur_layer)
 					continue;
 
-				if (SDL_GetModState() & KMOD_CTRL) {
+//				if (SDL_GetModState() & KMOD_CTRL) {
 					noderef_set_center(nref,
 					    nref->xcenter+relx,
 					    nref->ycenter+rely);
+#if 0
 				} else {
 					noderef_set_motion(nref,
 					    nref->xmotion+relx,
@@ -150,6 +152,7 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 						nref->ymotion = -(TILEH/2);
 					}
 				}
+#endif
 				if (sh->mode == SHIFT_HIGHEST)
 					break;
 			}
