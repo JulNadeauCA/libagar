@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.31 2003/03/25 13:46:34 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.32 2003/03/26 02:52:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -267,10 +267,8 @@ art_fetch(char *archive, struct object *ob)
 			break;
 	}
 	if (art != NULL) {
-		if (++art->used > ART_MAX_USED) {
-			dprintf("%s: too many refs\n", archive);
+		if (++art->used > ART_MAX_USED)
 			art->used = ART_MAX_USED; 	/* Remain resident */
-		}
 		goto out;
 	}
 
