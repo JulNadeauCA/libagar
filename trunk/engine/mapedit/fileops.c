@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.5 2002/08/18 00:37:43 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.6 2002/08/19 05:33:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -31,9 +31,8 @@
 #include <fcntl.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/map.h>
-#include <engine/physics.h>
+#include <engine/config.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -73,7 +72,6 @@ fileops_new_map(int argc, union evarg *argv)
 	m = emalloc(sizeof(struct map));
 	map_init(m, name, strcmp(media, "") == 0 ? NULL : media, MAP_2D);
 
-	pthread_mutex_lock(&m->lock);
 	map_allocnodes(m, w, h);
 
 	m->defx = w / 2;
@@ -81,7 +79,6 @@ fileops_new_map(int argc, union evarg *argv)
 
 	origin = &m->map[m->defy][m->defx];
 	origin->flags |= NODE_ORIGIN;
-	pthread_mutex_unlock(&m->lock);
 
 	win = mapwin_new(med, m);
 	view_attach(win);
@@ -140,7 +137,7 @@ fileops_revert_map(int argc, union evarg *argv)
 
 	/* Always edit the user copy. */
 	snprintf(path, FILENAME_MAX, "%s/maps/%s.m",
-	    world->udatadir, OBJECT(m)->name);
+	    config->path.user_data_dir, OBJECT(m)->name);
 	if (object_loadfrom(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: edcursor.c,v 1.1 2002/07/07 00:22:54 vedge Exp $	*/
+/*	$Csoft: edcursor.c,v 1.2 2002/08/12 06:50:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -63,10 +63,7 @@ edcursor_new(int flags, struct mapview *mv, struct map *m)
 	ed = emalloc(sizeof(struct edcursor));
 	edcursor_init(ed, flags, mv, m);
 
-	pthread_mutex_lock(&world->lock);
 	world_attach(world, ed);
-	pthread_mutex_unlock(&world->lock);
-
 	return (ed);
 }
 
