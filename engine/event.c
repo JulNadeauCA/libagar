@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.142 2003/03/12 23:02:14 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.143 2003/03/20 01:17:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -124,6 +124,9 @@ event_hotkey(SDL_Event *ev)
 		if (mapedition) {
 			window_show(mapedit.win.toolbar);
 		}
+		break;
+	case SDLK_F8:
+		view_capture(view->v);
 		break;
 	case SDLK_ESCAPE:
 		if ((ev->key.keysym.mod & KMOD_SHIFT) == 0) {
