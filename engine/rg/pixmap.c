@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.11 2005/02/22 08:56:53 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.12 2005/02/23 07:37:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -795,25 +795,64 @@ pixmap_mousewheel(struct tileview *tv, struct tile_element *tel,
 	return (0);
 }
 
+static __inline__ void
+pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 r, g, b;
+	Uint8 a = (Uint8)(px->a*255);
+	Uint8 *keystate;
+	int erase_mode;
+	enum pixmap_blend_mode bmode_save = 0;
+	enum pixmap_brush_type btype_save = 0;
+
+	keystate = SDL_GetKeyState(NULL);
+	erase_mode = keystate[SDLK_e];
+
+	if (erase_mode) {
+		r = 0;
+		g = 0;
+		b = 0;
+		a = 0;
+	} else {
+		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
+	}
+
+	if (erase_mode) {
+		bmode_save = px->blend_mode;
+		px->blend_mode = PIXMAP_NO_BLENDING;
+	}
+
+	if (px->curbrush != NULL) {
+		if (erase_mode) {
+			btype_save = px->curbrush->type;
+			px->curbrush->type = PIXMAP_BRUSH_MONO;
+		}
+
+		pixmap_apply_brush(tv, tel, x, y,
+		    SDL_MapRGBA(px->su->format, r, g, b, a));
+
+		if (erase_mode) {
+			px->curbrush->type = btype_save;
+		}
+	} else {
+		pixmap_put_pixel(tv, tel, x, y,
+		    SDL_MapRGBA(px->su->format, r, g, b, a), 1);
+	}
+	
+	if (erase_mode)
+		px->blend_mode = bmode_save;
+}
+
 void
 pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     int x, int y, int button)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
-	Uint8 r, g, b;
-
-	prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
 
 	pixmap_begin_undoblk(px);
+	pixmap_apply(tv, tel, x, y);
 
-	if (px->curbrush != NULL) {
-		pixmap_apply_brush(tv, tel, x, y,
-		    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)));
-	} else {
-		pixmap_put_pixel(tv, tel, x, y,
-		    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)),
-		    1);
-	}
 }
 
 void
@@ -828,19 +867,8 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
-	Uint8 r, g, b;
 
 	if (state & SDL_BUTTON_LEFT) {
-		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
-
-		if (px->curbrush != NULL) {
-			pixmap_apply_brush(tv, tel, x, y,
-			    SDL_MapRGBA(px->su->format, r, g, b,
-			    (Uint8)(px->a*255)));
-		} else {
-			pixmap_put_pixel(tv, tel, x, y,
-			    SDL_MapRGBA(px->su->format, r, g, b,
-			    (Uint8)(px->a*255)), 1);
-		}
+		pixmap_apply(tv, tel, x, y);
 	}
 }
