@@ -576,7 +576,7 @@ else
 
 	echo "no"
 fi
-CFLAGS="$CFLAGS -g -I$SRC -I$SRC/engine"
+CFLAGS="$CFLAGS -g -I$SRC"
 echo CFLAGS=$CFLAGS >> Makefile.config
 if [ "${cc_is_gcc}" = "yes" ]
  then
