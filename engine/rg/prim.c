@@ -1,4 +1,4 @@
-/*	$Csoft: prim.c,v 1.3 2005/02/18 03:31:04 vedge Exp $	*/
+/*	$Csoft: prim.c,v 1.4 2005/02/27 06:47:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -59,15 +59,15 @@ prim_rgb2hsv(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 		deltaB = ((vMax - vB)/6.0 + deltaMax/2.0) / deltaMax;
 
 		if (vR == vMax) {
-			*h = deltaB - deltaG;
+			*h = (deltaB - deltaG)*360.0;
 		} else if (vG == vMax) {
-			*h = 1/3 + deltaR - deltaB;
+			*h = 120.0 + (deltaR - deltaB)*360.0;	/* 1/3 */
 		} else if (vB == vMax) {
-			*h = 2/3 + deltaG - deltaR;
+			*h = 240.0 + (deltaG - deltaR)*360.0;	/* 2/3 */
 		}
 
 		if (*h < 0.0)	(*h)++;
-		if (*h > 1.0)	(*h)--;
+		if (*h > 360.0)	(*h)--;
 	}
 }
 
@@ -86,7 +86,7 @@ prim_hsv2rgb(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 		return;
 	}
 	
-	hv = h*6.0;
+	hv = h/60.0;
 	iv = floorf(hv);
 	var[0] = v * (1 - s);
 	var[1] = v * (1 - s*(hv - iv));

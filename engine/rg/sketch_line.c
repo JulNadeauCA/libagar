@@ -1,4 +1,4 @@
-/*	$Csoft: sketch_line.c,v 1.2 2005/03/04 13:35:08 vedge Exp $	*/
+/*	$Csoft: sketch_line.c,v 1.3 2005/03/05 12:13:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -99,7 +99,7 @@ mousebuttondown(void *p, struct sketch *sk, double x, double y, int button)
 			lt->seq = CONTINUE_LINE;
 			tv->flags |= TILEVIEW_NO_SCROLLING;
 	
-			prim_hsv2rgb(sk->h/360.0, sk->s, sk->v, &r, &g, &b);
+			prim_hsv2rgb(sk->h, sk->s, sk->v, &r, &g, &b);
 			vg_color4(vg, r, g, b, (int)(sk->a*255.0));
 		}
 		break;

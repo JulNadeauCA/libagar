@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.19 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.20 2005/03/06 04:57:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -49,7 +49,7 @@
 #include "tileview.h"
 
 static SDL_Cursor *saved_cursor = NULL;
-int pixmap_source = 0;				/* Apply fill to pixmap only */
+int pixmap_source = 1;
 
 void
 pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
@@ -435,7 +435,7 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 		struct fspinbutton *fsb;
 		struct box *hb;
 
-		pal = hsvpal_new(bo, px->su->format);
+		pal = hsvpal_new(bo, tv->ts->fmt);
 		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
 		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
@@ -832,7 +832,7 @@ pixmap_apply(struct tileview *tv, struct tile_element *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
+		prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
 	}
 
 	if (erase_mode) {
@@ -923,7 +923,7 @@ pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 		b = 0;
 		a = 0;
 	} else {
-		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
+		prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
 	}
 	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
 	fill_ortho(tv, tel, x, y, cOrig, cFill);
@@ -937,7 +937,6 @@ pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
 	Uint8 *pSrc;
 	Uint32 cSrc;
 	Uint8 r, g, b, a;
-	float h;
 
 	SDL_LockSurface(px->su);
 	if (pixmap_source) {
@@ -953,8 +952,7 @@ pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
 	SDL_UnlockSurface(px->su);
 
 	SDL_GetRGBA(cSrc, px->su->format, &r, &g, &b, &a);
-	prim_rgb2hsv(r, g, b, &h, &px->s, &px->v);
-	px->h = h*360.0;
+	prim_rgb2hsv(r, g, b, &px->h, &px->s, &px->v);
 	px->a = (float)(a/255);
 }
 
