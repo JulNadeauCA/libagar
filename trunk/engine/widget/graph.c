@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.3 2002/07/22 05:22:07 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.4 2002/07/27 07:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -40,24 +40,32 @@
 #include <engine/queue.h>
 #include <engine/version.h>
 
+#include <libfobj/fobj.h>
+
 #include "text.h"
 #include "widget.h"
 #include "window.h"
 #include "graph.h"
 #include "primitive.h"
 
+static const struct version graph_ver = {
+	"agar graph",
+	1, 0
+};
+
 static const struct widget_ops graph_ops = {
 	{
 		graph_destroy,
-		NULL,	/* load */
-		NULL	/* save */
+		graph_load,
+		graph_save
 	},
 	graph_draw,
 	NULL		/* animate */
 };
 
 enum {
-	FRAME_COLOR	= 0
+	FRAME_COLOR	= 0,
+	TEXT_COLOR	= 1
 };
 
 enum {
@@ -65,14 +73,15 @@ enum {
 	NITEMS_GROW =	16
 };
 
+static void	graph_key(int, union evarg *);
 static void	graph_scroll(int, union evarg *);
 static void	graph_focus(int, union evarg *);
 static void	graph_resume_scroll(int, union evarg *);
 static void	graph_scaled(int, union evarg *);
 
 struct graph *
-graph_new(struct region *reg, const char *caption, enum graph_type t, int flags,
-    Sint32 yrange, int w, int h)
+graph_new(struct region *reg, const char *caption, enum graph_type t,
+    Uint32 flags, Sint32 yrange, int w, int h)
 {
 	struct graph *graph;
 
@@ -88,10 +97,11 @@ graph_new(struct region *reg, const char *caption, enum graph_type t, int flags,
 
 void
 graph_init(struct graph *graph, const char *caption, enum graph_type t,
-    int flags, Sint32 yrange, int w, int h)
+    Uint32 flags, Sint32 yrange, int w, int h)
 {
 	widget_init(&graph->wid, "graph", "widget", &graph_ops, w, h);
 	widget_map_color(graph, FRAME_COLOR, "graph-frame", 50, 50, 50);
+	widget_map_color(graph, TEXT_COLOR, "graph-text", 200, 200, 200);
 	
 	graph->type = t;
 	graph->flags = flags;
@@ -105,9 +115,117 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	TAILQ_INIT(&graph->items);
 
 	event_new(graph, "window-mousemotion", 0, graph_scroll, NULL);
+	event_new(graph, "window-keydown", 0, graph_key, NULL);
 	event_new(graph, "window-mousebuttonup", 0, graph_resume_scroll, NULL);
 	event_new(graph, "window-mousebuttondown", 0, graph_focus, NULL);
 	event_new(graph, "widget-scaled", 0, graph_scaled, NULL);
+}
+
+int
+graph_load(void *p, int fd)
+{
+	struct graph *gra = p;
+	Uint32 nitems, i;
+
+	version_read(fd, &graph_ver);
+	gra->type = fobj_read_uint32(fd);
+	gra->flags = fobj_read_uint32(fd);
+	gra->origin_y = fobj_read_uint32(fd);
+	gra->origin_color[0] = fobj_read_uint32(fd);
+	gra->origin_color[1] = fobj_read_uint32(fd);
+	gra->xinc = fobj_read_uint32(fd);
+	gra->yrange = fobj_read_sint32(fd);
+	gra->xoffs = fobj_read_uint32(fd);
+	gra->caption = fobj_read_string(fd);
+	
+	nitems = fobj_read_uint32(fd);
+	for (i = 0; i < nitems; i++) {
+		struct graph_item *nitem;
+		Uint32 vi, color, nvals;
+		char *s;
+
+		s = fobj_read_string(fd);
+		color = fobj_read_uint32(fd);
+		nvals = fobj_read_uint32(fd);
+
+		nitem = graph_add_item(gra, s, color);
+
+		for (vi = 0; vi < nvals; vi++) {
+			graph_plot(nitem, fobj_read_sint32(fd));
+		}
+	}
+
+	dprintf("loaded %s\n", gra->caption);
+	return (0);
+}
+
+int
+graph_save(void *p, int fd)
+{
+	struct graph *gra = p;
+	struct graph_item *gi;
+	Uint32 nitems = 0;
+
+	version_write(fd, &graph_ver);
+	fobj_write_uint32(fd, gra->type);
+	fobj_write_uint32(fd, gra->flags);
+	fobj_write_uint32(fd, gra->origin_y);
+	fobj_write_uint32(fd, gra->origin_color[0]);
+	fobj_write_uint32(fd, gra->origin_color[1]);
+	fobj_write_uint32(fd, gra->xinc);
+	fobj_write_uint32(fd, gra->yrange);
+	fobj_write_uint32(fd, gra->xoffs);
+	fobj_write_string(fd, gra->caption);
+	
+	TAILQ_FOREACH(gi, &gra->items, items) {
+		nitems++;
+	}
+	fobj_write_uint32(fd, nitems);
+
+	TAILQ_FOREACH(gi, &gra->items, items) {
+		Uint32 i;
+
+		fobj_write_string(fd, gi->name);
+		fobj_write_uint32(fd, gi->color);
+		fobj_write_uint32(fd, gi->nvals);
+		for (i = 0; i < gi->nvals; i++) {
+			fobj_write_sint32(fd, gi->vals[i]);
+		}
+	}
+
+	dprintf("saved %s\n", gra->caption);
+	return (0);
+}
+
+static void
+graph_key(int argc, union evarg *argv)
+{
+	struct graph *gra = argv[0].p;
+	SDLKey key = (SDLKey)argv[1].p;
+
+	switch (key) {
+	case SDLK_0:
+		gra->xoffs = 0;
+		break;
+	case SDLK_LEFT:
+		if ((gra->xoffs -= 10) < 0) {
+			gra->xoffs = 0;
+		}
+		break;
+	case SDLK_RIGHT:
+		gra->xoffs += 10;
+		break;
+	case SDLK_s:
+		pthread_mutex_lock(&world->lock);
+		object_save(gra);
+		pthread_mutex_unlock(&world->lock);
+		break;
+	case SDLK_l:
+		pthread_mutex_lock(&world->lock);
+		object_load(gra);
+		pthread_mutex_unlock(&world->lock);
+	default:
+	}
 }
 
 static void
@@ -177,18 +295,12 @@ graph_draw(void *p)
 	}
 
 	TAILQ_FOREACH(gi, &gra->items, items) {
-		if (gra->xoffs > gi->nvals) {
+		if (gra->xoffs > gi->nvals || gra->xoffs < 0) {
 			continue;
 		}
-		for (x = 1, i = gra->xoffs; ++i < gi->nvals; x += gra->xinc) {
-			if (x > WIDGET(gra)->w) {
-				if (gra->flags & GRAPH_SCROLL) {
-					gra->xoffs += gra->xinc;
-					x -= gra->xinc;
-				} else {
-					continue;
-				}
-			}
+		for (x = 1, i = gra->xoffs;
+		     ++i < gi->nvals && x < WIDGET(gra)->w;
+		     x += gra->xinc) {
 
 			oval = gi->vals[i] * WIDGET(gra)->h / gra->yrange;
 			y = gra->origin_y - oval;
@@ -233,6 +345,7 @@ graph_add_item(struct graph *gra, char *name, Uint32 color)
 	gi->color = color;
 	gi->vals = NULL;
 	gi->nvals = 0;
+	gi->graph = gra;
 
 	TAILQ_INSERT_HEAD(&gra->items, gi, items);
 
@@ -255,6 +368,11 @@ graph_plot(struct graph_item *gi, Sint32 val)
 		gi->vals = newvals;
 	}
 	gi->vals[gi->nvals++] = val;
+	
+	if (gi->graph->flags & GRAPH_SCROLL &&
+	    gi->nvals > WIDGET(gi->graph)->w/2) {
+		gi->graph->xoffs++;
+	}
 }
 
 void
