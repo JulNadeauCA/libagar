@@ -623,6 +623,84 @@ else
 
 	echo "no"
 fi
+echo -n "checking for a snprintf() function..."
+echo -n "checking for a snprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	char buf[16];
+
+	(void)snprintf(buf, sizeof(buf), "foo");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SNPRINTF" > config/have_snprintf.h
+echo "#define HAVE_SNPRINTF" $HAVE_SNPRINTF >> config/have_snprintf.h
+echo "#endif /* HAVE_SNPRINTF */" >> config/have_snprintf.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_SNPRINTF" > config/have_snprintf.h
+
+	echo "no"
+fi
+echo -n "checking for a vsnprintf() function..."
+echo -n "checking for a vsnprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+#include <stdarg.h>
+
+static void
+testfmt(const char *fmt, ...)
+{
+	char buf[16];
+	va_list ap;
+	
+	va_start(ap, fmt);
+	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
+	va_end(ap);
+}
+
+int
+main(int argc, char *argv[])
+{
+	testfmt("foo", 1, 2, 3);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_VSNPRINTF" > config/have_vsnprintf.h
+echo "#define HAVE_VSNPRINTF" $HAVE_VSNPRINTF >> config/have_vsnprintf.h
+echo "#endif /* HAVE_VSNPRINTF */" >> config/have_vsnprintf.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_VSNPRINTF" > config/have_vsnprintf.h
+
+	echo "no"
+fi
 CFLAGS="$CFLAGS -I$SRC"
 echo CFLAGS=$CFLAGS >> Makefile.config
 echo -n "checking for SDL (http://www.libsdl.org)..."
