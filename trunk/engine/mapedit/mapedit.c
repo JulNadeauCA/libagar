@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.59 2002/03/05 18:53:12 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.60 2002/03/07 13:22:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -268,8 +268,7 @@ mapedit_link(void *p)
 	med->tilelist.w = m->tilew;
 	med->tilelist.h = m->view->height;
 
-	/* Center on the icon. */
-	med->tilelist_offs = 0 - ((med->tilelist.h / m->tileh) / 2);
+	med->tilelist_offs = 0;
 
 	med->tilestack.x = 0;
 	med->tilestack.y = m->tileh;
@@ -293,7 +292,8 @@ mapedit_link(void *p)
 
 	pthread_mutex_lock(&m->lock);
 	node = &m->map[m->defx][m->defy];
-	node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
+	node_addref(node, med, MAPEDIT_SELECT,
+	    MAPREF_ANIM|MAPREF_ANIM_INDEPENDENT);
 	node->flags |= (NODE_ANIM|NODE_ORIGIN);
 	pthread_mutex_unlock(&m->lock);
 	
@@ -586,6 +586,17 @@ mapedit_tilestack(struct mapedit *med)
 			anim = nref->pobj->anims[nref->offs];
 			SDL_BlitSurface(anim->frames[0],
 			    NULL, m->view->v, &rd);
+			if (nref->flags & MAPREF_ANIM_DELTA) {
+				SDL_BlitSurface(
+				    SPRITE(med, MAPEDIT_ANIM_DELTA_TXT), NULL,
+				    m->view->v, &rd);
+			} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
+				SDL_BlitSurface(
+				    SPRITE(med, MAPEDIT_ANIM_INDEPENDENT_TXT),
+				    NULL, m->view->v, &rd);
+			}
+			SDL_BlitSurface(SPRITE(med, MAPEDIT_ANIM_TXT), NULL,
+			    m->view->v, &rd);
 		} else if (nref->flags & MAPREF_SPRITE) {
 			SDL_BlitSurface(nref->pobj->sprites[nref->offs],
 			    NULL, m->view->v, &rd);
@@ -647,9 +658,7 @@ mapedit_event(void *ob, SDL_Event *ev)
 		mouse_motion(med, ev);
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		if (ev->button.button != SDL_BUTTON_LEFT) {
-			mouse_button(med, ev);
-		}
+		mouse_button(med, ev);
 		break;
 	case SDL_JOYAXISMOTION:
 		joy_axismotion(med, ev);
@@ -712,7 +721,8 @@ mapedit_move(struct mapedit *med, Uint32 x, Uint32 y)
 	node->flags &= ~(NODE_ANIM);
 	
 	node = &med->map->map[x][y];
-	node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
+	node_addref(node, med, MAPEDIT_SELECT,
+	    MAPREF_ANIM|MAPREF_ANIM_INDEPENDENT);
 	node->flags |= NODE_ANIM;
 
 	med->x = x;
@@ -807,7 +817,8 @@ mapedit_lists_tick(Uint32 ival, void *p)
 				med->curobj = TAILQ_FIRST(&med->eobjsh);
 			}
 		}
-		med->curoffs = 1;
+		med->tilelist_offs = 0;
+		med->curoffs = 0;
 		mapedit_objlist(med);
 		med->map->redraw++;
 		mapedit_tilelist(med);
