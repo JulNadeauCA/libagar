@@ -1,4 +1,4 @@
-/*	$Csoft: units.h,v 1.3 2003/11/17 15:10:52 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.4 2003/11/19 11:09:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_UNITS_H_
@@ -28,6 +28,8 @@ extern const struct unit power_units[];
 extern const struct unit emf_units[];
 extern const struct unit resistance_units[];
 extern const struct unit capacitance_units[];
+extern const struct unit inductance_units[];
+extern const struct unit frequency_units[];
 __END_DECLS
 
 #include "close_code.h"
