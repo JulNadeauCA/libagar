@@ -1,4 +1,4 @@
-/*	$Csoft: art.h,v 1.7 2003/03/17 23:43:23 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.8 2003/03/17 23:48:53 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -13,24 +13,51 @@ struct art_anim {
 	int		   delay;
 };
 
-struct art {
-	char		  *name;	/* Identifier */
-	struct object	  *pobj;	/* For submap refs */
+struct art_cached_sprite {
+	SDL_Surface	*su;			/* Modified sprite */
+	Uint32		 last_drawn;		/* Time last draw occured */
+	Uint32		 refcount;		/* Reference count */
+	SLIST_HEAD(,transform)	transforms;	/* Applied transforms */
+	SLIST_ENTRY(art_cached_sprite) sprites;
+};
 
-	SDL_Surface	 **sprites;	/* Static images */
-	Uint32		  nsprites;
-	Uint32		maxsprites;
-	struct art_anim	 **anims;	/* Animations */
-	Uint32		  nanims;
-	Uint32		maxanims;
-	struct map	 **submaps;	/* Fragment maps (for map edition) */
+struct art_cached_anim {
+	struct art_anim	*anim;			/* Modified anim */
+	Uint32		 last_drawn;		/* Time last draw occured */
+	Uint32		 refcount;		/* Reference count */
+	SLIST_HEAD(,transform)	transforms;	/* Applied transforms */
+	SLIST_ENTRY(art_cached_anim) anims;
+};
+
+struct art_spritecl {
+	SLIST_HEAD(,art_cached_sprite)	sprites;
+};
+
+struct art_animcl {
+	SLIST_HEAD(,art_cached_anim)	anims;
+};
+
+struct art {
+	char		  *name;		/* Shared identifier */
+	struct object	  *pobj;		/* For submap refs */
+
+	SDL_Surface		 **sprites;	/* Static images */
+	struct art_spritecl	 *csprites;	/* Sprite transform cache */
+	Uint32			  nsprites;
+	Uint32			maxsprites;
+	struct art_anim		 **anims;	/* Animations */
+	struct art_animcl	 *canims;	/* Anim transform cache */
+	Uint32			  nanims;
+	Uint32			maxanims;
+
+	struct map	  *tile_map;	/* User map of source nodes */
+	struct map	 **submaps;	/* Sprite fragment maps */
 	Uint32		  nsubmaps;
 	Uint32		maxsubmaps;
 
-	struct map	*tile_map;	/* User map of source nodes */
-
 	pthread_mutex_t	 used_lock;
-	unsigned int	 used;		/* Reference count */
+	Uint32		 used;		/* Reference count */
+#define ART_MAX_USED	 (0xffffffff-1)
 	TAILQ_ENTRY(art) arts;		/* Art pool */
 };
 
@@ -44,6 +71,7 @@ struct art {
 
 struct art	*art_fetch(char *, struct object *);
 void		 art_unused(struct art *);
+void		 art_wire(struct art *);
 void		 art_scan_alpha(SDL_Surface *);
 
 Uint32		 art_insert_sprite(struct art *, SDL_Surface *, int);
