@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.48 2003/07/26 12:35:39 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.49 2003/08/06 04:10:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -26,13 +26,12 @@ struct mapview {
 	int	flags;
 #define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
 #define MAPVIEW_INDEPENDENT	 0x002	/* Zoom/ss independent from map's */
-#define MAPVIEW_TILESET		 0x004	/* Map of source nodes */
-#define MAPVIEW_GRID		 0x008	/* Display a grid */
-#define MAPVIEW_PROPS		 0x010	/* Display node properties */
-#define MAPVIEW_ZOOMING_IN	 0x020
-#define MAPVIEW_ZOOMING_OUT	 0x040
-#define MAPVIEW_CENTER		 0x080
-#define MAPVIEW_NO_CURSOR	 0x100	/* Hide cursor */
+#define MAPVIEW_GRID		 0x004	/* Display a grid */
+#define MAPVIEW_PROPS		 0x008	/* Display node properties */
+#define MAPVIEW_ZOOMING_IN	 0x010
+#define MAPVIEW_ZOOMING_OUT	 0x020
+#define MAPVIEW_CENTER		 0x040
+#define MAPVIEW_NO_CURSOR	 0x080	/* Hide cursor */
 
 	int	 prop_bg;		/* Background of node attributes */
 	int	 prop_style;		/* Style of node attributes */

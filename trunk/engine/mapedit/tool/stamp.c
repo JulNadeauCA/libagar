@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.48 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.49 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,20 +30,18 @@
 
 #include "stamp.h"
 
-#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
 
 const struct tool_ops stamp_ops = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
-		tool_destroy,
+		stamp_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	stamp_window,
+	NULL,			/* window */
 	stamp_cursor,
 	stamp_effect,
 	NULL			/* mouse */
@@ -52,68 +50,93 @@ const struct tool_ops stamp_ops = {
 void
 stamp_init(void *p)
 {
-	struct stamp *stamp = p;
-
-	tool_init(&stamp->tool, "stamp", &stamp_ops);
-	TOOL(stamp)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_STAMP);
-	stamp->mode = STAMP_REPLACE;
-}
-
-struct window *
-stamp_window(void *p)
-{
+	struct stamp *st = p;
 	static const char *mode_items[] = {
 		N_("Replace"),
 		N_("Insert"),
 		NULL
 	};
-	struct stamp *st = p;
 	struct window *win;
 	struct radio *rad;
 
-	win = window_new("mapedit-tool-stamp");
+	tool_init(&st->tool, "stamp", &stamp_ops, MAPEDIT_TOOL_STAMP);
+	st->mode = STAMP_REPLACE;
+	map_init(&st->map, "stampbuf");
+	map_alloc_nodes(&st->map, 4, 4);
+
+	win = TOOL(st)->win = window_new("mapedit-tool-stamp");
 	window_set_caption(win, _("Stamp"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
 	widget_focus(rad);
-	return (win);
+}
+
+void
+stamp_destroy(void *p)
+{
+	struct stamp *st = p;
+
+	object_destroy(&st->map);
 }
 
 void
 stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
-	struct node *sn = mapedit.src_node;
-	struct noderef *r;
+	struct stamp *st = p;
+	struct map *copybuf = &mapedit.copybuf;
+	int sx, sy, dx, dy;
+	
+	for (sy = 0, dy = mv->cy - copybuf->maph/2;
+	     sy < copybuf->maph && dy < m->maph;
+	     sy++, dy++) {
+		for (sx = 0, dx = mv->cx - copybuf->mapw/2;
+		     sx < copybuf->mapw && dx < m->mapw;
+		     sx++, dx++) {
+			struct node *sn = &copybuf->map[sy][sx];
+			struct node *dn = &m->map[dy][dx];
+			struct noderef *r;
 
-	if (sn == NULL) {
-		text_msg(MSG_ERROR, _("No source node is selected."));
-		return;
-	}
-	if (sn == node)					/* Circular reference */
-		return;
+			if (st->mode == STAMP_REPLACE)
+				node_clear(m, dn, m->cur_layer);
 
-	node_clear(m, node, m->cur_layer);
-
-	TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
-		node_copy_ref(r, m, node, m->cur_layer);
+			TAILQ_FOREACH(r, &sn->nrefs, nrefs)
+				node_copy_ref(r, m, dn, m->cur_layer);
+		}
 	}
 }
 
 int
 stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
+	struct map *copybuf = &mapedit.copybuf;
 	struct noderef *r;
-
-	if (mapedit.src_node == NULL)
+	int sx, sy, dx, dy;
+	int rv = -1;
+	
+	/* Avoid circular references when viewing the copy buffer. */
+	if (mv->map == copybuf)
 		return (-1);
 
-	TAILQ_FOREACH(r, &mapedit.src_node->nrefs, nrefs) {
-		noderef_draw(mv->map, r,
-		    WIDGET(mv)->cx + rd->x,
-		    WIDGET(mv)->cy + rd->y);
+	for (sy = 0, dy = rd->y - (copybuf->maph * mv->map->tileh)/2;
+	     sy < copybuf->maph;
+	     sy++, dy += mv->map->tileh) {
+		for (sx = 0, dx = rd->x - (copybuf->mapw * mv->map->tilew)/2;
+		     sx < copybuf->mapw;
+		     sx++, dx += mv->map->tilew) {
+			struct node *sn = &copybuf->map[sy][sx];
+
+			TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
+				noderef_draw(mv->map, r,
+				    WIDGET(mv)->cx+dx,
+				    WIDGET(mv)->cy+dy);
+				rv = 0;
+			}
+			if (mv->flags & MAPVIEW_PROPS)
+				mapview_draw_props(mv, sn, dx, dy, -1, -1);
+		}
 	}
-	return (0);
+	return (rv);
 }
 

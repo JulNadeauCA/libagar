@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.46 2003/08/21 04:26:40 vedge Exp $
+.\"	$Csoft: object.3,v 1.47 2003/08/26 03:37:24 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -91,6 +91,8 @@ structure are defined as:
 #define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
 #define OBJECT_PRESERVE_DEPS	0x10	/* Don't remove a dependency
 					   if its reference count is 0. */
+#define OBJECT_STATIC		0x20	/* Don't free() after detach. */
+#define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 .Ed
 .Pp
@@ -102,14 +104,25 @@ table from being cleared as part of a load operation.
 .Dv OBJECT_NON_PERSISTENT
 prevents the object and its descendents from being saved as part of a save
 operation.
+If this flag is set,
+.Fn object_page_in
+and
+.Fn object_page_out
+are no-ops (but still increment the reference count).
 .Pp
 The
 .Dv OBJECT_INDESTRUCTIBLE
 flag advises the object editor not to destroy this object.
+.Dv OBJECT_READONLY
+advises the object-specific
+.Va edit
+operation that this object should not be edited.
 .Pp
 The
 .Dv OBJECT_DATA_RESIDENT
-flag indicates that the object's data is resident.
+flag is set by the
+.Nm
+system to indicate that the object's data currently resides in memory.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "struct object *"

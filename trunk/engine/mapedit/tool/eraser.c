@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.36 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.37 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,8 +53,7 @@ eraser_init(void *obj)
 {
 	struct eraser *eraser = obj;
 
-	tool_init(&eraser->tool, "eraser", &eraser_ops);
-	TOOL(eraser)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_ERASER);
+	tool_init(&eraser->tool, "eraser", &eraser_ops, MAPEDIT_TOOL_ERASER);
 	eraser->mode = ERASER_ALL;
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.41 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.42 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -175,8 +175,7 @@ propedit_init(void *p)
 {
 	struct propedit *pe = p;
 
-	tool_init(&pe->tool, "propedit", &propedit_ops);
-	TOOL(pe)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_PROPEDIT);
+	tool_init(&pe->tool, "propedit", &propedit_ops, MAPEDIT_TOOL_PROPEDIT);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
 	tool_bind_key(pe, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);

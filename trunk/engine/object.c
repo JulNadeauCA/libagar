@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.142 2003/08/06 04:10:24 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.143 2003/08/21 04:26:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -76,8 +76,7 @@ const struct object_ops object_ops = {
 #define DEBUG_GC	0x040
 #define DEBUG_PAGING	0x080
 
-int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
-		       DEBUG_PAGING;
+int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL;
 #define engine_debug object_debug
 #endif
 
@@ -406,7 +405,9 @@ object_free_childs(struct object *pob)
 		ncob = TAILQ_NEXT(cob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
 		object_destroy(cob);
-		free(cob);
+		if ((cob->flags & OBJECT_STATIC) == 0) {
+			free(cob);
+		}
 	}
 	TAILQ_INIT(&pob->childs);
 	pthread_mutex_unlock(&pob->lock);
@@ -569,6 +570,11 @@ object_page_in(void *p, enum object_page_item item)
 	case OBJECT_DATA:
 		debug(DEBUG_PAGING, "data of %s; used = %u++\n", ob->name,
 		    ob->data_used);
+		if (ob->flags & OBJECT_NON_PERSISTENT) {
+			debug(DEBUG_PAGING, "%s: non-persistent; ignoring\n",
+			    ob->name);
+			goto out;
+		}
 		if (ob->data_used == 0) {
 			if (object_load_data(ob) == -1) {
 				/*
@@ -582,6 +588,7 @@ object_page_in(void *p, enum object_page_item item)
 				ob->flags |= OBJECT_DATA_RESIDENT;
 			}
 		}
+out:
 		if (++ob->data_used > OBJECT_MAX_USED) {
 			ob->data_used = OBJECT_MAX_USED;
 		}
@@ -634,6 +641,11 @@ object_page_out(void *p, enum object_page_item item)
 	case OBJECT_DATA:
 		debug(DEBUG_PAGING, "%s: -data (used=%u)\n", ob->name,
 		    ob->data_used);
+		if (ob->flags & OBJECT_NON_PERSISTENT) {
+			debug(DEBUG_PAGING, "%s: non-persistent; skipping\n",
+			    ob->name);
+			goto out;
+		}
 #ifdef DEBUG
 		if (ob->data_used == 0)
 			fatal("neg data ref count");
@@ -647,6 +659,7 @@ object_page_out(void *p, enum object_page_item item)
 		}
 		break;
 	}
+out:
 	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:

@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.24 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.25 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,8 +53,7 @@ fill_init(void *p)
 {
 	struct fill *fill = p;
 
-	tool_init(&fill->tool, "fill", &fill_ops);
-	TOOL(fill)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_FILL);
+	tool_init(&fill->tool, "fill", &fill_ops, MAPEDIT_TOOL_FILL);
 	TOOL(fill)->cursor = SPRITE(fill, TOOL_FILL_CURSOR);
 	fill->mode = FILL_FILL_MAP;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.188 2003/08/07 22:42:00 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.189 2003/08/11 22:27:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1272,12 +1272,19 @@ map_toggle_mimport(int argc, union evarg *argv)
 static void
 map_toggle_edition(int argc, union evarg *argv)
 {
+	struct button *bu = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
 	if (mv->flags & MAPVIEW_EDIT) {
 		mv->flags &= ~(MAPVIEW_EDIT);
 	} else {
-		mv->flags |= MAPVIEW_EDIT;
+		if (OBJECT(mv->map)->flags & OBJECT_READONLY) {
+			text_msg(MSG_ERROR, _("The `%s' map is read-only."),
+			    OBJECT(mv->map)->name);
+			widget_set_bool(bu, "state", 0);
+		} else {
+			mv->flags |= MAPVIEW_EDIT;
+		}
 	}
 }
 
@@ -1563,13 +1570,17 @@ map_edit(void *p)
 	struct window *win;
 	struct box *bo;
 	struct mapview *mv;
-	
+	int ro = OBJECT(m)->flags & OBJECT_READONLY;
+	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
+
+	if (!ro)
+		flags |= MAPVIEW_EDIT;
+
 	win = window_new(NULL);
 	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
 
 	mv = Malloc(sizeof(struct mapview));
-	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|
-	                    MAPVIEW_GRID);
+	mapview_init(mv, m, flags);
 	window_attach(win, mv->nodeed.win);
 	window_attach(win, mv->layed.win);
 
@@ -1607,7 +1618,7 @@ map_edit(void *p)
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
 		button_set_focusable(bu, 0);
 		button_set_sticky(bu, 1);
-		widget_set_bool(bu, "state", 1);
+		widget_set_bool(bu, "state", !ro);
 		event_new(bu, "button-pushed", map_toggle_edition, "%p", mv);
 
 		mv->nodeed.trigger = bu = button_new(bo, NULL);

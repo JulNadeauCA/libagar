@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.132 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.133 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	pthread_mutex_unlock(&m->lock);
 
 	/* The map editor is required for tilesets/edition. */
-	if (!mapedition && (mv->flags & (MAPVIEW_TILESET|MAPVIEW_EDIT)))
+	if (!mapedition && (mv->flags & MAPVIEW_EDIT))
 		fatal("no map editor");
 
 	widget_map_color(mv, BORDER_COLOR, "border", 200, 200, 200, 255);
@@ -482,19 +482,6 @@ draw_layer:
 			}
 			if (mv->map->tilew < 7 || mv->map->tileh < 7)
 				continue;
-
-			/* Indicate the source node selection. XXX selection? */
-			if ((mv->flags & MAPVIEW_TILESET)) {
-				/* Source node? XXX use selections */
-				if (node == mapedit.src_node) {
-					primitives.rect_outlined(mv,
-					    rx + 1,
-					    ry + 1,
-					    mv->map->tilew - 1,
-					    mv->map->tileh - 1,
-					    SRCNODE_COLOR);
-				}
-			}
 		}
 	}
 next_layer:
@@ -672,15 +659,6 @@ mapview_mousemotion(int argc, union evarg *argv)
 				    state);
 			}
 		}
-	} else if (mv->flags & MAPVIEW_TILESET) {		/* Source */
-		if ((state & SDL_BUTTON(1)) &&
-		    (mv->cx != -1) && (mv->cy != -1)) {
-			struct node *srcnode = &mv->map->map[mv->cy][mv->cx];
-
-			if (!TAILQ_EMPTY(&srcnode->nrefs)) {
-				mapedit.src_node = srcnode;
-			}
-		}
 	}
 	pthread_mutex_unlock(&mv->map->lock);
 
@@ -730,10 +708,6 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			TOOL_OPS(mapedit.curtool)->effect(mapedit.curtool,
 			    mv, mv->map, curnode);
 		}
-	}
-	if (mv->flags & MAPVIEW_TILESET) {
-		if (!TAILQ_EMPTY(&curnode->nrefs))
-			mapedit.src_node = curnode;
 	}
 out:
 	pthread_mutex_unlock(&mv->map->lock);
@@ -911,7 +885,9 @@ mapview_keydown(int argc, union evarg *argv)
 				    (binding->mod == KMOD_NONE ||
 				     keymod & binding->mod)) {
 					if (binding->edit &&
-					   (mv->flags & MAPVIEW_EDIT) == 0) {
+					   (((mv->flags & MAPVIEW_EDIT) == 0) ||
+					    ((OBJECT(mv->map)->flags &
+					      OBJECT_READONLY)))) {
 						continue;
 					}
 					binding->func(tool, mv);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.184 2003/07/27 16:45:13 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.185 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -123,19 +123,28 @@ mapedit_init(void)
 	
 	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
 	object_wire_gfx(&mapedit, "/engine/mapedit/mapedit");
-	OBJECT(&mapedit)->flags |= OBJECT_RELOAD_PROPS;
+	OBJECT(&mapedit)->flags |= (OBJECT_RELOAD_PROPS|OBJECT_STATIC);
 	OBJECT(&mapedit)->save_pfx = NULL;
-
-	map_init(&mapedit.copybuf, "copybuf");
 	mapedit.curtool = NULL;
-	mapedit.src_node = NULL;
 	TAILQ_INIT(&mapedit.dobjs);
 	TAILQ_INIT(&mapedit.gobjs);
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
-	mapedit.pseudo = object_new(world, "map-editor");
-	OBJECT(mapedit.pseudo)->flags |= (OBJECT_NON_PERSISTENT|
-	                                  OBJECT_INDESTRUCTIBLE);
+	object_init(&mapedit.pseudo, "object", "map-editor", NULL);
+	OBJECT(&mapedit.pseudo)->flags |= (OBJECT_NON_PERSISTENT|OBJECT_STATIC|
+	                                   OBJECT_INDESTRUCTIBLE);
+	object_attach(world, &mapedit.pseudo);
+
+	/*
+	 * Allocate the copy/paste buffer.
+	 * Use OBJECT_READONLY to avoid circular reference in case a user
+	 * attempts to paste contents of the copy buffer into itself.
+	 */
+	map_init(&mapedit.copybuf, "copybuf");
+	OBJECT(&mapedit.copybuf)->flags |= (OBJECT_NON_PERSISTENT|OBJECT_STATIC|
+	                                    OBJECT_INDESTRUCTIBLE|
+					    OBJECT_READONLY);
+	object_attach(&mapedit.pseudo, &mapedit.copybuf);
 
 	mapedition = 1;
  
@@ -225,9 +234,8 @@ mapedit_load(void *p, struct netbuf *buf)
 		struct tool *tool = mapedit.tools[i];
 
 		if (OBJECT(tool)->ops->load != NULL &&
-		    object_load(tool) == -1) {
+		    object_load(tool) == -1)
 			text_msg(MSG_ERROR, "%s", error_get());
-		}
 	}
 	return (0);
 }
@@ -256,7 +264,7 @@ mapedit_close_objdata(int argc, union evarg *argv)
 	view_detach(mobj->win);
 	TAILQ_REMOVE(&mapedit.dobjs, mobj, objs);
 	object_page_out(mobj->obj, OBJECT_DATA);
-	object_del_dep(mapedit.pseudo, mobj->obj);
+	object_del_dep(&mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
@@ -275,12 +283,11 @@ mapedit_edit_objdata(struct object *ob)
 		return;
 	}
 
-	dprintf("pgin %s\n", ob->name);
 	if (object_page_in(ob, OBJECT_DATA) == -1) {
-		text_msg(MSG_ERROR, "Page in: %s", error_get());
+		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
-	object_add_dep(mapedit.pseudo, ob);
+	object_add_dep(&mapedit.pseudo, ob);
 	
 	mobj = Malloc(sizeof(struct mapedit_obj));
 	mobj->obj = ob;
@@ -297,7 +304,7 @@ mapedit_close_objgen(int argc, union evarg *argv)
 
 	view_detach(mobj->win);
 	TAILQ_REMOVE(&mapedit.gobjs, mobj, objs);
-	object_del_dep(mapedit.pseudo, mobj->obj);
+	object_del_dep(&mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
@@ -316,7 +323,7 @@ mapedit_edit_objgen(struct object *ob)
 		return;
 	}
 	
-	object_add_dep(mapedit.pseudo, ob);
+	object_add_dep(&mapedit.pseudo, ob);
 	
 	mobj = Malloc(sizeof(struct mapedit_obj));
 	mobj->obj = ob;

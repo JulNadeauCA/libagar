@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.43 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.44 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -87,8 +87,7 @@ merge_init(void *p)
 {
 	struct merge *merge = p;
 
-	tool_init(&merge->tool, "merge", &merge_ops);
-	TOOL(merge)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_MERGE);
+	tool_init(&merge->tool, "merge", &merge_ops, MAPEDIT_TOOL_MERGE);
 	merge->mode = MERGE_REPLACE;
 	merge->random_shift = 0;
 	merge->layer = 0;
@@ -461,10 +460,9 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	struct tlist_item *it;
 	int rv = -1;
 	
-	/* XXX ugly */
-	if (strncmp(OBJECT(mv->map)->name, "brush(", 6) == 0) {
+	/* XXX ugly work around circular ref */
+	if (strncmp(OBJECT(mv->map)->name, "brush(", 6) == 0)
 		return (-1);
-	}
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		if (!it->selected)

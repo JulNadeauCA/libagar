@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.13 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.14 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -53,8 +53,7 @@ flip_init(void *p)
 {
 	struct flip *flip = p;
 
-	tool_init(&flip->tool, "flip", &flip_ops);
-	TOOL(flip)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_FLIP);
+	tool_init(&flip->tool, "flip", &flip_ops, MAPEDIT_TOOL_FLIP);
 	flip->mode = FLIP_HORIZ;
 	flip->which = FLIP_ALL;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.h,v 1.14 2003/06/18 00:47:01 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.15 2003/06/29 11:33:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -7,18 +7,18 @@
 
 enum stamp_mode {
 	STAMP_REPLACE,
-	STAMP_INSERT_HIGHEST,
-	STAMP_INSERT_INDEX
+	STAMP_INSERT_HIGHEST
 };
 
 struct stamp {
-	struct tool	tool;
-	int		mode;
+	struct tool	 tool;
+	int		 mode;
+	struct map	 map;
 };
 
 __BEGIN_DECLS
 void		 stamp_init(void *);
-struct window	*stamp_window(void *);
+void		 stamp_destroy(void *);
 int		 stamp_cursor(void *, struct mapview *, SDL_Rect *);
 void		 stamp_effect(void *, struct mapview *, struct map *,
 		              struct node *);
