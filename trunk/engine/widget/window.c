@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.5 2002/04/21 09:07:43 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.6 2002/04/22 04:44:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ static struct obvec window_vec = {
 TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
 pthread_mutex_t windowslock = PTHREAD_MUTEX_INITIALIZER;
 
-static Uint32 nwindows = 0;
+Uint32 nwindows = 0;
 
 static Uint32 delta = 0, delta2 = 256;
 
@@ -113,14 +113,20 @@ window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
 	return (win);
 }
 
-/*
- * Dispatch a mouse click event to the appropriate window,
- * switching focus when appropriate.
- *
- * Called from the event loop.
- */
 void
-window_mouse_button(SDL_Event *ev, Uint32 flags)
+window_mouse_motion(SDL_Event *ev)
+{
+	dprintf("mouse motion\n");
+}
+
+void
+window_key(SDL_Event *ev)
+{
+	dprintf("key\n");
+}
+
+void
+window_mouse_button(SDL_Event *ev)
 {
 	struct window *win, **winds;
 	struct widget *w = NULL, **wids;
@@ -136,6 +142,9 @@ window_mouse_button(SDL_Event *ev, Uint32 flags)
 		if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 			continue;
 		}
+
+		dprintf("event to %s\n", OBJECT(win)->name);
+		
 		pthread_mutex_lock(&win->widgetslock);
 		TAILQ_DUP(wids, win->nwidgets, &win->widgetsh, widget, widgets);
 		pthread_mutex_unlock(&win->widgetslock);
@@ -147,7 +156,13 @@ window_mouse_button(SDL_Event *ev, Uint32 flags)
 				widget_event(w, ev, 0);
 			}
 		}
+
+		free(wids);
+		
+		break;
 	}
+
+	free(winds);
 }
 
 void
@@ -332,15 +347,12 @@ window_unlink(void *ob)
 		wid = (struct widget *)wids[i];
 		object_unlink(wid);
 	}
-
 	pthread_mutex_lock(&windowslock);
 	TAILQ_REMOVE(&windowsh, win, windows);
 	pthread_mutex_unlock(&windowslock);
+	free(wids);
 	
 	nwindows--;
-
-
-	free(wids);
 	return (0);
 }
 
@@ -366,7 +378,6 @@ window_destroy(void *ob)
 	win->view->map->redraw++;
 	
 	pthread_mutex_destroy(&win->widgetslock);
-
 	free(wids);
 	return (0);
 }
