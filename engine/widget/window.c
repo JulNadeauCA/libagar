@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.167 2003/03/04 23:17:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.168 2003/03/11 00:13:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1403,7 +1403,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 static void
 resize_reg(int op, struct window *win, struct region *reg)
 {
-	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) == NULL) {
+	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) == 0) {
 		return;
 	}
 	view->winop = op;
