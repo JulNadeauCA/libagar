@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.108 2002/12/13 07:38:01 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.109 2002/12/13 10:40:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -257,6 +257,8 @@ event_loop(void)
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
+		} else if (view->gfx_engine == GFX_ENGINE_GUI) {
+			SDL_Delay(10);
 		}
 	}
 }
