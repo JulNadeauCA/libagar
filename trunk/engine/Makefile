@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.53 2002/12/17 06:44:28 vedge Exp $
+#	$Csoft: Makefile,v 1.54 2002/12/24 10:20:56 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -19,11 +19,11 @@ CATMAN3=agar.cat3 map.cat3 object.cat3 view.cat3 version.cat3 rootmap.cat3 \
 LIB=	engine
 
 SRCS=	engine.c error.c event.c ttf.c view.c physics.c \
-	input.c object.c audio.c world.c map.c rootmap.c perso.c \
+	input.c object.c world.c map.c rootmap.c perso.c \
 	version.c config.c prop.c transform.c
 
 OBJS=	engine.o error.o event.o ttf.o view.o physics.o \
-	input.o object.o audio.o world.o map.o rootmap.o perso.o \
+	input.o object.o world.o map.o rootmap.o perso.o \
 	version.o config.o prop.o transform.o
 
 OBJS+=	mapedit/mapedit.o \
