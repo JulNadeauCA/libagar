@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.17 2004/01/03 04:25:11 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.18 2004/03/30 16:32:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,9 +70,19 @@ view_params_window(void)
 		label_new(vb, LABEL_STATIC, _("Graphic engine: %s %s"), engine,
 		    view->opengl ? "(OpenGL)" : "");
 
-		lab = label_new(vb, LABEL_POLLED_MT, "%dx%dx%d",
-		    &view->lock, &view->w, &view->h, &view->depth);
+		lab = label_new(vb, LABEL_POLLED_MT, "%dx%d", &view->lock,
+		    &view->w, &view->h);
 		label_prescale(lab, "0000x0000x00");
+
+		label_new(vb, LABEL_STATIC, _("Depth: %dbpp"),
+		    vinfo->vfmt->BitsPerPixel);
+		label_new(vb, LABEL_STATIC,
+		    _("Video masks: %08x,%08x,%08x,%08x"),
+		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask, vinfo->vfmt->Bmask,
+		    vinfo->vfmt->Amask);
+		label_new(vb, LABEL_STATIC, _("Color key: %d"),
+		    vinfo->vfmt->colorkey);
+		label_new(vb, LABEL_STATIC, _("Alpha: %d"), vinfo->vfmt->alpha);
 
 		lab = label_new(vb, LABEL_POLLED_MT, _("Window op: %d (%p)"),
 		    &view->lock, &view->winop, &view->wop_win);
