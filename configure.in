@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.38 2002/11/10 01:06:43 vedge Exp $
+# $Csoft: configure.in,v 1.39 2002/11/10 01:29:06 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -73,7 +73,7 @@ fi
 
 # Drop in edition mode with -e.
 if [ "${enable_map_editor}" != "no" ]; then
-	hdefine(MAPEDIT, 1);
+	hdefine(MAP_EDITOR, 1);
 fi
 
 # Enable thread safety.
