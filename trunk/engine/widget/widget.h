@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.81 2004/09/12 05:50:38 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.82 2004/09/16 04:06:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -123,6 +123,7 @@ __inline__ void  widget_pop_color(void *);
 
 int		 widget_map_surface(void *, SDL_Surface *);
 __inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);
+#define		 widget_unmap_surface(w, n) widget_replace_surface((w),(n),NULL)
 
 __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
 void		 widget_blit2(void *, int, int, int);

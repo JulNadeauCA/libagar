@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.13 2004/04/23 12:47:20 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.14 2004/05/13 02:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -529,7 +529,7 @@ mediasel_init(struct tool *t)
 			mediasel_refresh(m, MEDIASEL_AUDIO, com);
 		}
 
-		tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
+		tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 		tlist_set_item_height(tl, text_font_height(NULL)*2);
 		event_new(tl, "tlist-poll", poll_gfxmedia, "%p", OBJECT(m));
 

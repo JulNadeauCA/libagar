@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.5 2004/07/24 02:01:49 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.6 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -102,7 +102,7 @@ leak_window(void)
 	}
 	window_set_caption(win, _("Leak detection"));
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_STATIC_ICONS);
+	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 	event_new(tl, "tlist-poll", poll_mements, NULL);
 	return (win);
 }

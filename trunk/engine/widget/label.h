@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.23 2003/10/09 22:39:34 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.24 2004/03/30 15:55:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -21,7 +21,7 @@ struct label {
 	struct widget wid;
 	enum label_type	type;
 	pthread_mutex_t	lock;
-	SDL_Surface *surface;
+	int surface;
 	int prew, preh;
 	struct {
 		char fmt[LABEL_MAX];

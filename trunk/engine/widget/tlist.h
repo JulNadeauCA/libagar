@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.38 2004/05/15 02:27:17 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.39 2004/05/31 20:44:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -15,10 +15,10 @@ struct tlist_item {
 	int	overlap;		/* Temporary selection */
 
 	SDL_Surface	*iconsrc;		/* Source icon (or NULL) */
-	SDL_Surface	*icon;			/* Scaled icon (or NULL) */
+	int		 icon;			/* Cached icon surface */
 	void		*p1;			/* User-supplied pointer */
 	char		 text[TLIST_LABEL_MAX];	/* Label text */
-	SDL_Surface	*label;			/* Rasterized text */
+	int		 label;			/* Cached label surface */
 
 	Uint8	 depth;				/* Depth in tree */
 	Uint8	 flags;
@@ -39,8 +39,6 @@ struct tlist {
 #define TLIST_MULTI_STICKY	0x02	/* Multiple sticky selections */
 #define TLIST_POLL		0x04	/* Generate tlist-poll events */
 #define TLIST_TREE		0x10	/* Hack to display trees */
-#define TLIST_STATIC_ICONS	0x20	/* Icon surfaces may be accessed
-					   at any time (avoids scale/copy) */
 
 	void	*selected;		/* Default `selected' binding */
 	int	 prew, preh;		/* Prescale hint */

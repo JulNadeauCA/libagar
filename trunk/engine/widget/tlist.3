@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.41 2004/05/15 02:27:17 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.42 2004/09/17 03:21:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -88,8 +88,6 @@ may include:
 #define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
 #define TLIST_POLL		0x04  /* Generate tlist-poll events */
 #define TLIST_TREE		0x10  /* Hack to display trees */
-#define TLIST_STATIC_ICONS	0x20  /* Icon surfaces may be accessed
-				         at any time (avoids scale/copy) */
 .Ed
 .Pp
 The
@@ -168,24 +166,9 @@ The
 .Fn tlist_insert_item
 function inserts a new item into the list.
 .Pp
-If the
-.Fa iconsrc
-argument is not NULL, the surface it points to is copied and scaled to icon
-size, unless the
-.Dv TLIST_STATIC_ICONS
-flag is set.
-This flag indicates that for each item, the icon should be scaled (and cached)
-only if the item is currently visible.
-This option is most memory and cpu efficient when frequent inserts are required
-(such as with the
-.Dv TLIST_POLLED
-mode), but the icon surface must be accessible as long as the
-.Nm
-widget is visible.
-.Pp
 The
 .Fa p1
-argument is a user-defined pointer.
+argument is a user-defined pointer associated with the item.
 For selections to function properly in
 .Dv TLIST_POLLED
 mode, every unique item on the list should have a unique

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.55 2004/09/05 13:09:08 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.56 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ monitor_init(void)
 	window_set_caption(win, _("Debug monitor"));
 	window_set_position(win, WINDOW_LOWER_LEFT, 0);
 
-	tl_tools = tlist_new(win, TLIST_STATIC_ICONS);
+	tl_tools = tlist_new(win, 0);
 	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
 	event_new(tl_tools, "tlist-dblclick", selected_tool, NULL);
 

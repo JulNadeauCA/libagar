@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.77 2004/03/30 15:55:17 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.78 2004/04/09 07:31:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -108,9 +108,9 @@ label_scale(void *p, int rw, int rh)
 	switch (lab->type) {
 	case LABEL_STATIC:
 		pthread_mutex_lock(&lab->lock);
-		if (rw == -1 && rh == -1 && lab->surface != NULL) {
-			WIDGET(lab)->w = lab->surface->w;
-			WIDGET(lab)->h = lab->surface->h;
+		if (rw == -1 && rh == -1 && lab->surface != -1) {
+			WIDGET(lab)->w = WIDGET_SURFACE(lab,lab->surface)->w;
+			WIDGET(lab)->h = WIDGET_SURFACE(lab,lab->surface)->h;
 		}
 		pthread_mutex_unlock(&lab->lock);
 		break;
@@ -133,19 +133,15 @@ label_init(struct label *label, enum label_type type, const char *s)
 
 	switch (type) {
 	case LABEL_STATIC:
-		if (s != NULL) {
-			label->surface = text_render(NULL, -1,
-			    WIDGET_COLOR(label, 0), s);
-		} else {
-			label->surface = NULL;
-		}
+		label->surface = (s==NULL) ? -1 : widget_map_surface(label,
+		    text_render(NULL, -1, WIDGET_COLOR(label, 0), s));
 		pthread_mutex_init(&label->lock, NULL);
 		break;
 	case LABEL_POLLED:
 	case LABEL_POLLED_MT:
 		label_prescale(label, "XXXXXXXXXXXXXXXXX");
 		WIDGET(label)->flags |= WIDGET_WFILL;
-		label->surface = NULL;
+		label->surface = -1;
 		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
 		memset(label->poll.ptrs, 0, sizeof(void *)*LABEL_MAX_POLLPTRS);
 		label->poll.nptrs = 0;
@@ -162,15 +158,12 @@ label_prescale(struct label *lab, const char *text)
 void
 label_set_surface(struct label *label, SDL_Surface *su)
 {
+#ifdef DEBUG
+	if (label->type != LABEL_STATIC)
+		fatal("label is not static");
+#endif
 	pthread_mutex_lock(&label->lock);
-	if (label->surface != NULL) {
-		SDL_FreeSurface(label->surface);
-	}
-	if (su != NULL) {
-		label->surface = view_copy_surface(su);;
-	} else {
-		label->surface = NULL;
-	}
+	widget_replace_surface(label, 0, su);
 	pthread_mutex_unlock(&label->lock);
 }
 
@@ -182,23 +175,14 @@ label_printf(struct label *label, const char *fmt, ...)
 
 #ifdef DEBUG
 	if (label->type != LABEL_STATIC)
-		fatal("not a static label");
+		fatal("label is not static");
 #endif
 	va_start(args, fmt);
 	vsnprintf(s, sizeof(s), fmt, args);
 	va_end(args);
 	
-	if (s[0] != '\0') {
-		SDL_Surface *su;
-		
-		if (label->surface != NULL) {
-			SDL_FreeSurface(label->surface);
-		}
-		label->surface = text_render(NULL, -1, WIDGET_COLOR(label, 0),
-		    s);
-	} else {
-		label_set_surface(label, NULL);
-	}
+	label_set_surface(label, (s[0]=='\0') ? NULL :
+	    text_render(NULL, -1, WIDGET_COLOR(label, 0), s));
 }
 
 #define LABEL_ARG(_type)	(*(_type *)label->poll.ptrs[ri])
@@ -419,9 +403,7 @@ label_draw(void *p)
 	switch (label->type) {
 	case LABEL_STATIC:
 		pthread_mutex_lock(&label->lock);
-		if (label->surface != NULL) {
-			widget_blit(label, label->surface, 0, 0);
-		}
+		widget_blit2(label, label->surface, 0, 0);
 		pthread_mutex_unlock(&label->lock);
 		break;
 	case LABEL_POLLED:
@@ -441,12 +423,8 @@ label_destroy(void *p)
 	struct label *label = p;
 
 	if (label->type == LABEL_STATIC) {
-		if (label->surface != NULL) {
-			SDL_FreeSurface(label->surface);
-		}
 		pthread_mutex_destroy(&label->lock);
 	}
-
 	widget_destroy(label);
 }
 

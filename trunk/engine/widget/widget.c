@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.89 2004/09/12 08:06:54 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.90 2004/09/16 04:06:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -828,14 +828,18 @@ widget_destroy(void *p)
 		if (wid->surfaces[i] != NULL)
 			SDL_FreeSurface(wid->surfaces[i]);
 #ifdef HAVE_OPENGL
-		if (wid->textures[i] != 0)
+		if (view->opengl &&
+		    wid->textures[i] != 0)
 			glDeleteTextures(1, &wid->textures[i]);
 #endif
 	}
 	Free(wid->surfaces, M_WIDGET);
+
 #ifdef HAVE_OPENGL
-	Free(wid->textures, M_WIDGET);
-	Free(wid->texcoords, M_WIDGET);
+	if (view->opengl) {
+		Free(wid->textures, M_WIDGET);
+		Free(wid->texcoords, M_WIDGET);
+	}
 #endif
 
 	for (bind = SLIST_FIRST(&wid->bindings);
@@ -866,14 +870,17 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 	if (view->opengl) {
 		GLuint texture;
 		GLfloat texcoord[4];
-
-		/* XXX very inefficient */
+		int alpha = (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY));
 
 		texture = view_surface_texture(srcsu, texcoord);
+	
+		glEnable(GL_TEXTURE_2D);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		if (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY)) {
+	
+		if (alpha) {
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		glBegin(GL_TRIANGLE_STRIP);
 		{
@@ -888,9 +895,12 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
 		}
 		glEnd();
 		glDeleteTextures(1, &texture);
-		if (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY)) {
+		if (alpha) {
 			glDisable(GL_BLEND);
 		}
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_TEXTURE_2D);
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -909,7 +919,7 @@ widget_blit2(void *p, int name, int x, int y)
 	SDL_Surface *su = wid->surfaces[name];
 	SDL_Rect rd;
 
-	if (su == NULL)
+	if (name == -1 || su == NULL)
 		return;
 
 	rd.x = wid->cx + x;
@@ -927,11 +937,13 @@ widget_blit2(void *p, int name, int x, int y)
 		if (texture == 0)
 			fatal("invalid texture name");
 #endif
+		glEnable(GL_TEXTURE_2D);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glBindTexture(GL_TEXTURE_2D, texture);
 
 		if (alpha) {
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 	
 		glBegin(GL_TRIANGLE_STRIP);
@@ -947,8 +959,11 @@ widget_blit2(void *p, int name, int x, int y)
 		}
 		glEnd();
 
-		if (alpha)
+		if (alpha) {
 			glDisable(GL_BLEND);
+		}
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_TEXTURE_2D);
 	} else
 #endif /* HAVE_OPENGL */
 	{
