@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.3 2003/07/05 12:17:23 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -63,7 +63,7 @@ struct cached_glyph {
 	int	miny, maxy;
 	int	yoffset;
 	int	advance;
-	Uint16	cached;
+	Uint32	cached;
 };
 
 struct _ttf_font {
@@ -94,9 +94,8 @@ static FT_Library library;
 
 static void	ttf_flush_cache(ttf_font *);
 static void	ttf_flush_glyph(struct cached_glyph *);
-static int	ttf_load_glyph(ttf_font *, Uint16, struct cached_glyph *,
-		    int);
-static int	ttf_find_glyph(ttf_font *, Uint16, int);
+static int	ttf_load_glyph(ttf_font *, Uint32, struct cached_glyph *, int);
+static int	ttf_find_glyph(ttf_font *, Uint32, int);
 
 int
 ttf_init(void)
@@ -266,8 +265,7 @@ ttf_flush_cache(ttf_font *font)
 }
 
 static int
-ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
-    int want)
+ttf_load_glyph(ttf_font *font, Uint32 ch, struct cached_glyph *cached, int want)
 {
 	FT_Face face;
 	FT_GlyphSlot glyph;
@@ -506,7 +504,7 @@ ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
 }
 
 static int
-ttf_find_glyph(ttf_font *font, Uint16 ch, int want)
+ttf_find_glyph(ttf_font *font, Uint32 ch, int want)
 {
 	int retval = 0;
 
@@ -573,8 +571,8 @@ ttf_font_face_style(ttf_font *font)
 }
 
 int
-ttf_glyph_metrics(ttf_font *font, Uint16 ch, int *minx,
-    int *maxx, int *miny, int *maxy, int *advance)
+ttf_glyph_metrics(ttf_font *font, Uint32 ch, int *minx, int *maxx, int *miny,
+    int *maxy, int *advance)
 {
 	if (ttf_find_glyph(font, ch, CACHED_METRICS) != 0) {
 		return (-1);
@@ -589,27 +587,15 @@ ttf_glyph_metrics(ttf_font *font, Uint16 ch, int *minx,
 		*maxy = font->current->maxy;
 	if (advance != NULL)
 		*advance = font->current->advance;
+
 	return (0);
 }
 
-/* Size Latin-1 text. */
+/* Predict the size of rendered UTF-8 text. */
 int
-ttf_size_text(ttf_font *font, const char *text, int *w, int *h)
+ttf_size_text(ttf_font *font, const char *utf8, int *w, int *h)
 {
-	Uint16 *ucs;
-	int status;
-
-	ucs = unicode_import(UNICODE_FROM_LATIN1, text);
-	status = ttf_size_unicode(font, ucs, w, h);
-	free(ucs);
-	return (status);
-}
-
-/* Size UTF-8 text. */
-int
-ttf_size_utf8(ttf_font *font, const char *utf8, int *w, int *h)
-{
-	Uint16 *ucs;
+	Uint32 *ucs;
 	int status;
 
 	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
@@ -618,12 +604,12 @@ ttf_size_utf8(ttf_font *font, const char *utf8, int *w, int *h)
 	return (status);
 }
 
-/* Size Unicode text. */
+/* Predict the size of rendered UCS-4 text. */
 int
-ttf_size_unicode(ttf_font *font, const Uint16 *ucs, int *w, int *h)
+ttf_size_unicode(ttf_font *font, const Uint32 *ucs, int *w, int *h)
 {
 	int status;
-	const Uint16 *ch;
+	const Uint32 *ch;
 	int x, z;
 	int minx, maxx;
 	int miny, maxy;
@@ -695,25 +681,12 @@ ttf_size_unicode(ttf_font *font, const Uint16 *ucs, int *w, int *h)
 	return (status);
 }
 
-/* Render Latin-1 text. */
+/* Render UTF-8 text to a new surface. */
 SDL_Surface *
-ttf_render_text_solid(ttf_font *font, const char *latin1, SDL_Color fg)
+ttf_render_text_solid(ttf_font *font, const char *utf8, SDL_Color fg)
 {
 	SDL_Surface *textsu;
-	Uint16 *ucs;
-
-	ucs = unicode_import(UNICODE_FROM_LATIN1, latin1);
-	textsu = ttf_render_unicode_solid(font, ucs, fg);
-	free(ucs);
-	return (textsu);
-}
-
-/* Render UTF-8 text. */
-SDL_Surface *
-ttf_render_utf8_solid(ttf_font *font, const char *utf8, SDL_Color fg)
-{
-	SDL_Surface *textsu;
-	Uint16 *ucs;
+	Uint32 *ucs;
 
 	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
 	textsu = ttf_render_unicode_solid(font, ucs, fg);
@@ -721,15 +694,15 @@ ttf_render_utf8_solid(ttf_font *font, const char *utf8, SDL_Color fg)
 	return (textsu);
 }
 
-/* Render UNICODE text. */
+/* Render UCS-4 text to a new surface. */
 SDL_Surface *
-ttf_render_unicode_solid(ttf_font *font, const Uint16 *ucs, SDL_Color fg)
+ttf_render_unicode_solid(ttf_font *font, const Uint32 *ucs, SDL_Color fg)
 {
 	int xstart;
 	int width, height;
 	SDL_Surface *textsu;
 	SDL_Palette *palette;
-	const Uint16 *ch;
+	const Uint32 *ch;
 	Uint8 *src, *dst;
 	int row, col;
 	struct cached_glyph *glyph;
@@ -814,9 +787,9 @@ fail1:
 	return (NULL);
 }
 
-/* Render UNICODE glyph. */
+/* Render a UCS-4 encoded Unicode character. */
 SDL_Surface *
-ttf_render_glyph_solid(ttf_font *font, Uint16 uch, SDL_Color fg)
+ttf_render_glyph_solid(ttf_font *font, Uint32 uch, SDL_Color fg)
 {
 	SDL_Surface *textsu;
 	SDL_Palette *palette;

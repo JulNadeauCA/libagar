@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.h,v 1.3 2003/06/18 00:47:03 vedge Exp $	*/
+/*	$Csoft: unicode.h,v 1.4 2003/08/10 23:02:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_
@@ -6,28 +6,22 @@
 #include "begin_code.h"
 
 enum unicode_conv {
-	UNICODE_FROM_ASCII,		/* ASCII text */
-	UNICODE_FROM_LATIN1,		/* Latin-1 text */
-	UNICODE_FROM_UTF8		/* UTF-8 text */
+	UNICODE_FROM_ASCII,		/* ASCII -> UCS-4 */
+	UNICODE_FROM_LATIN1,		/* Latin-1 -> UCS-4 */
+	UNICODE_FROM_UTF8,		/* UTF-8 -> UCS-4 */
+	UNICODE_TO_UTF8			/* UCS-4 -> UTF-8 */
 };
-
-/*
- * ZERO WIDTH NO-BREAKSPACE (Unicode byte order mark).
- * Load routines must handle byteswapping and strip the BOM.
- */
-#define UNICODE_BOM_NATIVE	0xfeff
-#define UNICODE_BOM_SWAPPED	0xfffe
 
 __BEGIN_DECLS
 void	 unicode_init(void);
 void	 unicode_destroy(void);
-Uint16	*unicode_import(enum unicode_conv, const char *);
-void	 unicode_convert(enum unicode_conv, Uint16 *, const char *, size_t);
-size_t	 ucslen(const Uint16 *);
-size_t	 ucslcpy(Uint16 *, const Uint16 *, size_t);
-size_t	 ucslcat(Uint16 *, const Uint16 *, size_t);
-Uint16	*ucsdup(const Uint16 *);
-Uint16	*ucssep(Uint16 **, const Uint16 *);
+Uint32	*unicode_import(enum unicode_conv, const char *);
+ssize_t	 unicode_export(enum unicode_conv, char *, const Uint32 *, size_t);
+size_t	 ucs4_len(const Uint32 *);
+size_t	 ucs4_lcpy(Uint32 *, const Uint32 *, size_t);
+size_t	 ucs4_lcat(Uint32 *, const Uint32 *, size_t);
+Uint32	*ucs4_dup(const Uint32 *);
+Uint32	*ucs4_sep(Uint32 **, const Uint32 *);
 __END_DECLS
 
 #include "close_code.h"

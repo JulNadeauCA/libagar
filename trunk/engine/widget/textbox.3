@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.17 2003/06/15 08:57:49 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.18 2003/06/25 10:31:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,8 +40,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget binds to a Latin-1 or Unicode text buffer and allows the user to edit its
-contents.
+widget binds to a UTF-8 text buffer and allows the user to edit its contents.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct textbox *"
@@ -89,15 +88,8 @@ to be large enough to display the given string.
 .Ft "char *"
 .Fn textbox_string "struct textbox *textbox"
 .Pp
-.Ft "Uint16 *"
-.Fn textbox_unicode "struct textbox *textbox"
-.Pp
 .Ft "size_t"
 .Fn textbox_copy_string "struct textbox *textbox" "char *dst" "size_t dst_size"
-.Pp
-.Ft "size_t"
-.Fn textbox_copy_unicode "struct textbox *textbox" "Uint16 *dst" \
-                         "size_t dst_size"
 .Pp
 .Ft int
 .Fn textbox_int "struct textbox *textbox"
@@ -107,21 +99,17 @@ The
 .Fn textbox_printf
 function uses
 .Xr vsnprintf 3
-to overwrite the string with Latin-1 text.
+to overwrite the contents of the text buffer.
 .Pp
 The
 .Fn textbox_string
-and
-.Fn textbox_unicode
-functions return a copy of Latin-1/Unicode text.
+function returns a copy of the text buffer.
 .Pp
 The
 .Fn textbox_copy_string
-and
-.Fn textbox_copy_unicode
-functions copy up to
+function copies up to
 .Fa dst_size
-- 1 bytes from Latin-1/Unicode text to
+- 1 bytes from the text buffer
 .Fa dst ,
 NUL-terminating the result and returning the number of bytes that would
 have been copied if
@@ -135,11 +123,9 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "Uint16 *string "
+.Bl -tag -compact -width "char *string "
 .It Va char *string
-Fixed-size Latin-1 text buffer.
-.It Va Uint16 *string
-Fixed-size Unicode text buffer.
+Fixed-size buffer of UTF-8 text.
 .El
 .Sh EVENTS
 The

@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.39 2003/06/15 05:08:43 vedge Exp $
+.\"	$Csoft: widget.3,v 1.40 2003/06/15 08:54:19 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -451,16 +451,9 @@ is called to override those default bindings.
 .Ft "char *"
 .Fn widget_get_string "void *widget" "const char *binding"
 .Pp
-.Ft "Uint16 *"
-.Fn widget_get_unicode "void *widget" "const char *binding"
-.Pp
 .Ft size_t
 .Fn widget_copy_string "void *widget" "const char *binding" "char *dst" \
                        "size_t dst_size"
-.Pp
-.Ft size_t
-.Fn widget_copy_unicode "void *widget" "const char *binding" "Uint16 *dst" \
-                        "size_t dst_size"
 .Pp
 .Ft void
 .Fn widget_set_bool "void *widget" "const char *binding" "int i"
@@ -498,9 +491,6 @@ is called to override those default bindings.
 .Ft void
 .Fn widget_set_string "void *widget" "const char *binding" "const char *s"
 .Pp
-.Ft void
-.Fn widget_set_unicode "void *widget" "const char *binding" "const Uint16 *ucs"
-.Pp
 .nr nS 0
 The
 .Fn widget_bind
@@ -523,13 +513,12 @@ enum widget_binding_type {
 	WIDGET_FLOAT,
 	WIDGET_DOUBLE,
 	WIDGET_STRING,
-	WIDGET_UNICODE,
 	WIDGET_PROP
 }
 .Ed
 .Pp
 The meaning of the following arguments depend on the type:
-.Bl -tag -width "WIDGET_UNICODE "
+.Bl -tag -width "WIDGET_STRING "
 .It WIDGET_PROP
 Translate a
 .Xr prop 3
@@ -552,14 +541,10 @@ Fixed-size Latin-1 text buffer.
 .It "size_t bufsize"
 Total buffer size in bytes.
 .El
-.It WIDGET_UNICODE
-Fixed-size Unicode text buffer.
 .Pp
 .Bl -tag -width "pthread_mutex_t *lock " -compact
 .It "pthread_mutex_t *lock"
 Lock to acquire, or NULL.
-.It "Uint16 *text"
-Fixed-size Unicode text buffer.
 .It "size_t bufsize"
 Total buffer size in bytes.
 .El
@@ -589,11 +574,9 @@ and
 .Fn widget_set_TYPE
 variants manipulate the bound values atomically.
 .Pp
-.Fn widget_get_string
-returns a copy of the string (or NULL on failure).
 The
-.Fn widget_get_unicode
-variant copies Unicode text.
+.Fn widget_get_string
+function returns a copy of the string (or NULL on failure).
 .Fn widget_copy_string
 copies up to
 .Fa dst_size
@@ -603,9 +586,6 @@ NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
-The
-.Fn widget_copy_unicode
-variant copies Unicode text.
 .Sh THREAD SAFETY
 In event context, the widgets can assume that their parent window is locked,
 and internal properties of other widgets inside the same window can be

@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.10 2003/06/15 05:08:39 vedge Exp $
+.\"	$Csoft: prop.3,v 1.11 2003/07/04 12:31:48 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -63,7 +63,6 @@ enum prop_type {
 	PROP_STRING,
 	PROP_POINTER,		/* Not persistent */
 	PROP_BOOL,
-	PROP_UNICODE,		/* Unicode text (UTF-16) */
 	PROP_ANY
 } type;
 .Ed
@@ -117,15 +116,8 @@ enum prop_type {
 .Ft "char *"
 .Fn prop_get_string "void *obj" "const char *key"
 .Pp
-.Ft "Uint16 *"
-.Fn prop_get_unicode "void *obj" "const char *key"
-.Pp
 .Ft size_t
 .Fn prop_copy_string "void *obj" "const char *key" "char *dst" "size_t dst_size"
-.Pp
-.Ft size_t
-.Fn prop_copy_unicode "void *obj" "const char *key" "Uint16 *dst" \
-                      "size_t dst_size"
 .Pp
 .Ft "void *"
 .Fn prop_get_pointer "void *obj" "const char *key"
@@ -165,12 +157,8 @@ and return the associated value, raising a fatal condition if there is no
 match.
 .Pp
 .Fn prop_get_string
-and
-.Fn prop_get_unicode
-both return a copy of the string.
+returns a copy of the string.
 .Fn prop_copy_string
-and
-.Fn prop_copy_unicode
 copies up to
 .Fa dst_size
 - 1 characters from the value of a string property to
@@ -219,9 +207,6 @@ NUL-terminating the result.
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_string "void *obj" "const char *key" "const char *fmt" "..."
-.Pp
-.Ft "struct prop *"
-.Fn prop_set_unicode "void *obj" "const char *key" "const char *fmt" "..."
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_pointer "void *obj" "const char *key" "void *ptr"

@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.11 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.12 2003/08/29 05:06:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -100,12 +100,13 @@ transform_destroy(struct transform *trans)
 	free(trans);
 }
 
-__inline__ int
+int
 transform_compare(const struct transform *tr1, const struct transform *tr2)
 {
-	return (tr1->type == tr2->type && tr1->nargs == tr2->nargs &&
+	return (tr1->type == tr2->type &&
+	    tr1->nargs == tr2->nargs &&
 	    (tr1->nargs == 0 ||
-	     memcmp(tr1->args, tr2->args, tr1->nargs * sizeof(Uint32))) == 0);
+	     memcmp(tr1->args, tr2->args, tr1->nargs*sizeof(Uint32))) == 0);
 }
 
 int
