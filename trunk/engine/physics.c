@@ -40,8 +40,8 @@ gendir_init(struct gendir *dir)
 	dir->moved = 0;
 }
 
-int
-gendir_set(struct gendir *dir, int direction, int set)
+Uint32
+gendir_set(struct gendir *dir, Uint32 direction, Uint32 set)
 {
 	if (set) {
 		dir->clear &= ~direction;
@@ -53,7 +53,7 @@ gendir_set(struct gendir *dir, int direction, int set)
 	return (0);
 }
 
-int
+Uint32
 gendir_move(struct gendir *dir)
 {
 	if (dir->current == 0 && dir->set != 0) {
@@ -64,7 +64,7 @@ gendir_move(struct gendir *dir)
 }
 
 void
-gendir_postmove(struct gendir *dir, int moved)
+gendir_postmove(struct gendir *dir, Uint32 moved)
 {
 	/* Clear this direction (eg. key release). */
 	if (dir->clear != 0) {
@@ -81,7 +81,7 @@ gendir_postmove(struct gendir *dir, int moved)
 
 void
 mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
-    int flags, int speed)
+    Uint32 flags, Uint32 speed)
 {
 	dir->set = 0;
 	dir->current = 0;
@@ -98,7 +98,7 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
  * clear it (asynchronously).
  */
 void
-mapdir_set(struct mapdir *dir, int direction, int set)
+mapdir_set(struct mapdir *dir, Uint32 direction, Uint32 set)
 {
 	if (set) {
 		dir->clear &= ~direction;
@@ -159,16 +159,16 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
  * coordinates have changed (so that the caller can move the reference).
  */
 int
-mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
+mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 {
 	struct map *map;
 	struct noderef *nref;
 	struct node *node;
-	int moved = 0;
+	Uint32 moved = 0;
 
 	map = dir->map;
 	node = &map->map[*mapx][*mapy];
-	nref = node_findref(node, dir->ob, -1);
+	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
 	if (nref == NULL) {
 		dprintf("%s not at %s:%dx%d\n", dir->ob->name,
 		    dir->map->obj.name, *mapx, *mapy);
@@ -281,13 +281,13 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
  * stop moving.
  */
 void
-mapdir_postmove(struct mapdir *dir, int *mapx, int *mapy, int moved)
+mapdir_postmove(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy, Uint32 moved)
 {
 	struct node *node;
 	struct noderef *nref;
 
 	node = &dir->map->map[*mapx][*mapy];
-	nref = node_findref(node, dir->ob, -1);
+	nref = node_findref(node, dir->ob, -1, MAPREF_ANY);
 
 	/* Clear any direction first (ie. key release). */
 	if (dir->clear != 0) {
