@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.9 2002/02/15 02:31:32 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.10 2002/02/16 04:55:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -46,14 +46,6 @@ view_setmap(struct viewport *v, struct map *m)
 	v->map = m;
 	v->mapw = (v->width / m->tilew);
 	v->maph = (v->height / m->tileh);
-
-#if 1
-	/* XXX make room for edition windows */
-	if (curmapedit != NULL && curmapedit->flags & MAPEDIT_TILELIST) {
-		v->mapw--;
-		v->maph--;
-	}
-#endif
 
 	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.29 2002/02/16 04:54:11 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.30 2002/02/16 05:23:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -145,7 +145,7 @@ map_draw_th(void *p)
 			m->redraw = 0;
 			map_draw(m);
 		}
-		SDL_Delay(3);
+		SDL_Delay(2);
 	}
 
 	return (NULL);
@@ -412,7 +412,7 @@ map_animate(struct map *m)
 
 			/* XXX */
 			if (curmapedit != NULL) {
-				if (vx == m->view->mapw &&
+				if (vx == m->view->mapw - 1 &&
 				    curmapedit->flags & MAPEDIT_TILELIST) {
 					continue;
 				}
