@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.137 2004/08/30 03:20:40 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.138 2004/09/05 13:09:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ void (*engine_atexit_func)(void) = NULL;
 extern pthread_mutex_t timeout_lock;
 
 enum gfx_engine gfx_mode = GFX_ENGINE_GUI;
-enum text_engine text_mode = TEXT_ENGINE_TTF;
+enum text_engine text_mode = TEXT_ENGINE_FREETYPE;
 
 /* Initialize the Agar engine. */
 int

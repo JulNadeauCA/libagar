@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.34 2004/08/22 12:07:46 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.35 2004/08/23 06:42:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -15,7 +15,7 @@ enum text_msg_title {
 };
 
 enum text_engine {
-	TEXT_ENGINE_TTF,		/* FreeType */
+	TEXT_ENGINE_FREETYPE,		/* FreeType */
 	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
 	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
 };

@@ -1,4 +1,4 @@
-.\"	$Csoft: engine.3,v 1.1 2004/08/30 03:19:17 vedge Exp $
+.\"	$Csoft: engine.3,v 1.2 2004/08/30 03:20:21 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -129,16 +129,16 @@ The
 function selects the font engine among:
 .Bd -literal
 enum text_engine {
-	TEXT_ENGINE_TTF,		/* FreeType */
+	TEXT_ENGINE_FREETYPE,		/* FreeType */
 	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
 	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
 };
 .Ed
 .Pp
 At the time, only
-.Dv TEXT_ENGINE_TTF
+.Dv TEXT_ENGINE_FREETYPE
 is implemented.
-.Dv TEXT_ENGINE_TTF
+.Dv TEXT_ENGINE_FREETYPE
 obtains its glyphs from the FreeType library.
 .Sh INCLUDE FILES
 The

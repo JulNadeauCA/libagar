@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.90 2004/08/23 06:42:57 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.91 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ fetch_font(const char *name, int size, int style)
 	if (font != NULL)
 		goto out;
 
-	if (config_search_file("font-path", name, "ttf", path, sizeof(path))
+	if (config_search_file("font-path", name, NULL, path, sizeof(path))
 	    == -1)
 		fatal("%s", error_get());
 	
@@ -119,7 +119,7 @@ text_init(enum text_engine te)
 		return (0);
 
 	switch (te) {
-	case TEXT_ENGINE_TTF:
+	case TEXT_ENGINE_FREETYPE:
 		if (ttf_init() == -1) {
 			error_set("ttf_init: %s", SDL_GetError());
 			return (-1);
@@ -510,15 +510,15 @@ text_parse_fontspec(char *fontspec)
 {
 	char *s;
 
-	if ((s = strsep(&fontspec, ":,./")) != NULL &&
+	if ((s = strsep(&fontspec, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		prop_set_string(config, "font-engine.default-font", s);
 	}
-	if ((s = strsep(&fontspec, ":,./")) != NULL &&
+	if ((s = strsep(&fontspec, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		prop_set_int(config, "font-engine.default-size", atoi(s));
 	}
-	if ((s = strsep(&fontspec, ":,./")) != NULL &&
+	if ((s = strsep(&fontspec, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		prop_set_int(config, "font-engine.default-style", atoi(s));
 	}

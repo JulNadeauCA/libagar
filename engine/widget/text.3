@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.17 2004/08/20 01:31:02 vedge Exp $
+.\"	$Csoft: text.3,v 1.18 2004/08/23 06:44:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -69,7 +69,7 @@ The
 function initializes the text subsystem using the given font engine:
 .Bd -literal
 enum text_engine {
-	TEXT_ENGINE_TTF,		/* FreeType */
+	TEXT_ENGINE_FREETYPE,		/* FreeType */
 	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
 	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
 };
@@ -83,12 +83,12 @@ settings:
 .It Va font-engine.default-font
 This specifies the default font face to use.
 With
-.Dv TEXT_TTF ,
-this is the name of the font file (without the
-.Sq .ttf
-extension).
+.Dv TEXT_ENGINE_FREETYPE ,
+this is the name of the font file to load.
 With
-.Dv TEXT_BITMAP ,
+.Dv TEXT_ENGINE_BITMAP
+and
+.Dv TEXT_ENGINE_PIXMAP ,
 this is the name of the font bitmap file.
 In both cases, the file should reside in one of the directories specified in
 the
