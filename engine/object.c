@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.178 2004/05/10 02:42:46 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.179 2004/05/15 06:07:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -67,14 +67,14 @@ const struct object_ops object_ops = {
 };
 
 #ifdef DEBUG
-#define DEBUG_STATE	0x001
-#define DEBUG_DEPS	0x004
-#define DEBUG_CONTROL	0x010
-#define DEBUG_LINKAGE	0x020
-#define DEBUG_GC	0x040
-#define DEBUG_PAGING	0x080
+#define DEBUG_STATE	0x01
+#define DEBUG_DEPS	0x04
+#define DEBUG_DEPRESV	0x08
+#define DEBUG_LINKAGE	0x10
+#define DEBUG_GC	0x20
+#define DEBUG_PAGING	0x40
 
-int	object_debug = DEBUG_STATE|DEBUG_CONTROL;
+int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
 #define engine_debug object_debug
 #endif
 
@@ -536,6 +536,8 @@ object_destroy(void *p)
 	struct object *ob = p;
 	struct object_dep *dep, *ndep;
 
+	debug(DEBUG_GC, "destroy %s (parent=%p)\n", ob->name, ob->parent);
+
 	/* Cancel every scheduled timeout event. */
 	object_cancel_timeouts(ob, 0);
 
@@ -833,16 +835,19 @@ object_resolve_deps(void *p)
 	struct object_dep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
+		debug(DEBUG_DEPRESV, "%s: depends on %s...", ob->name,
+		    dep->path);
 		if (dep->obj != NULL) {
-			debug(DEBUG_DEPS, "%s: already resolved `%s'\n",
-			    ob->name, dep->obj->name);
+			debug(DEBUG_DEPRESV, "already resolved\n");
 			continue;
 		}
 		if ((dep->obj = object_find(dep->path)) == NULL) {
+			debug(DEBUG_DEPRESV, "unexisting\n");
 			error_set(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
 			return (-1);
 		}
+		debug(DEBUG_DEPRESV, "%p (%s)\n", dep->obj, dep->obj->name);
 		Free(dep->path, 0);
 		dep->path = NULL;
 	}
@@ -929,6 +934,8 @@ object_load_generic(void *p)
 	}
 	if (version_read(buf, &object_ver, NULL) == -1)
 		goto fail;
+	
+	debug(DEBUG_STATE, "loading %s (generic)\n", ob->name);
 	
 	/*
 	 * Must free the resident data in order to clear the dependencies.
@@ -1111,17 +1118,17 @@ object_load_data(void *p)
 		error_set(_("The data of `%s' is already resident."), ob->name);
 		return (-1);
 	}
-
 	if (object_copy_filename(ob, path, sizeof(path)) == -1)
 		return (-1);
 	if ((buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN)) == NULL) {
 		error_set("%s: %s", path, strerror(errno));
 		return (-1);
 	}
+	debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
 
 	if (version_read(buf, &object_ver, NULL) == -1)
 		goto fail;
-
+	
 	data_offs = (off_t)read_uint32(buf);
 	netbuf_seek(buf, data_offs, SEEK_SET);
 	if (ob->ops->load != NULL &&
@@ -1155,6 +1162,7 @@ object_save(void *p)
 	
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
+	debug(DEBUG_STATE, "saving %s\n", ob->name);
 
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
 		error_set(_("The `%s' object is non-persistent."), ob->name);
