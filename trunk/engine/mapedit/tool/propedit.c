@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.16 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.17 2003/02/10 23:05:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -72,6 +72,7 @@ propedit_set_node_mode(int argc, union evarg *argv)
 	struct propedit *pe = argv[1].p;
 	int index = argv[2].i;
 	const Uint32 modes[] = {
+		0,
 		NODE_WALK,
 		NODE_CLIMB
 	};
@@ -118,6 +119,7 @@ propedit_window(void *p)
 			NULL
 		};
 		static const char *node_modes[] = {
+			"Block",
 			"Walk",
 			"Climb",
 			NULL
@@ -189,6 +191,10 @@ propedit_effect(void *p, struct mapview *mv, struct node *node)
 	}
 	
 	node->flags &= ~(NODE_WALK|NODE_CLIMB);
-	node->flags |= pe->node_mode;
+	if (pe->node_mode == 0) {
+		node->flags &= ~(NODE_WALK);
+	} else {
+		node->flags |= pe->node_mode;
+	}
 }
 
