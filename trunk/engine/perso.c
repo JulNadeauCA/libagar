@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.28 2003/06/08 22:48:38 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.29 2003/06/10 07:47:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -125,8 +125,8 @@ perso_load(void *obj, struct netbuf *buf)
 	pthread_mutex_lock(&perso->lock);
 	copy_string(perso->name, buf, sizeof(perso->name));
 	perso->flags = read_uint32(buf);
-	perso->level = read_uint32(buf);
-	perso->exp = (int)read_uint32(buf);
+	perso->level = read_sint32(buf);
+	perso->exp = read_uint32(buf);
 	perso->age = (int)read_uint32(buf);
 	perso->seed = read_uint32(buf);
 	perso->maxhp = (int)read_uint32(buf);
@@ -148,8 +148,8 @@ perso_save(void *obj, struct netbuf *buf)
 	pthread_mutex_lock(&perso->lock);
 	write_string(buf, perso->name);
 	write_uint32(buf, perso->flags);
-	write_uint32(buf, perso->level);
-	write_uint32(buf, (Uint32)perso->exp);
+	write_sint32(buf, perso->level);
+	write_uint32(buf, perso->exp);
 	write_uint32(buf, perso->age);
 	write_uint32(buf, perso->seed);
 	write_uint32(buf, (Uint32)perso->maxhp);
@@ -184,17 +184,18 @@ perso_edit(void *obj)
 		    pers->name, sizeof(pers->name));
 
 		sbu = spinbutton_new(vb, "Level: ");
-		widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+		widget_bind(sbu, "value", WIDGET_SINT32, &pers->lock,
 		    &pers->level);
 
 		sbu = spinbutton_new(vb, "Experience: ");
-		widget_bind(sbu, "value", WIDGET_INT, &pers->lock, &pers->exp);
+		widget_bind(sbu, "value", WIDGET_UINT32, &pers->lock,
+		    &pers->exp);
 
 		sbu = spinbutton_new(vb, "Age: ");
 		widget_bind(sbu, "value", WIDGET_INT, &pers->lock, &pers->age);
 
 		sbu = spinbutton_new(vb, "Zuars: ");
-		widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+		widget_bind(sbu, "value", WIDGET_UINT32, &pers->lock,
 		    &pers->nzuars);
 
 		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
