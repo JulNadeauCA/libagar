@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.10 2003/02/17 11:51:02 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.11 2003/02/28 14:36:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -52,18 +52,19 @@ extern ssize_t	pwrite(int, const void *, size_t, off64_t);
 #endif
 
 #ifdef DEBUG
-#define DEBUG_COLORMAPS		0x001
-#define DEBUG_LAYER_OFFSETS	0x002
-#define DEBUG_LAYER_OPACITY	0x004
-#define DEBUG_LAYER_MODE	0x008
-#define DEBUG_IMAGE_COMPRESSION	0x010
-#define DEBUG_CHANNELS		0x020
-#define DEBUG_GUIDES		0x040
-#define DEBUG_RESOLUTIONS	0x080
-#define DEBUG_PARASITES		0x100
-#define DEBUG_UNITS		0x200
-#define DEBUG_LAYER_NAMES	0x400
-#define DEBUG_UNKNOWN_PROPS	0x800
+#define DEBUG_COLORMAPS		0x0001
+#define DEBUG_LAYER_OFFSETS	0x0002
+#define DEBUG_LAYER_OPACITY	0x0004
+#define DEBUG_LAYER_MODE	0x0008
+#define DEBUG_IMAGE_COMPRESSION	0x0010
+#define DEBUG_CHANNELS		0x0020
+#define DEBUG_GUIDES		0x0040
+#define DEBUG_RESOLUTIONS	0x0080
+#define DEBUG_PARASITES		0x0100
+#define DEBUG_UNITS		0x0200
+#define DEBUG_LAYER_NAMES	0x0400
+#define DEBUG_UNKNOWN_PROPS	0x0800
+#define DEBUG_XCF		0x1000
 
 int	xcf_debug = 0;
 #define	engine_debug xcf_debug
@@ -91,12 +92,14 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	prop->id = read_uint32(fd);
 	prop->length = read_uint32(fd);
 
+	debug(DEBUG_XCF, "id %u len %u\n", prop->id, prop->length);
+	
 	switch (prop->id) {
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
 		prop->data.colormap.size = read_uint32(fd);
 		prop->data.colormap.data = emalloc(prop->data.colormap.size*3);
 		Read(fd, prop->data.colormap.data, prop->data.colormap.size*3);
-		debug(DEBUG_COLORMAPS, "%d-entry colormap\n",
+		debug(DEBUG_COLORMAPS, "%u-entry colormap\n",
 		    prop->data.colormap.size);
 		break;
 	case PROP_OFFSETS:		         /* Offset of layer in image */
@@ -107,12 +110,12 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		break;
 	case PROP_OPACITY:				    /* Layer opacity */
 		prop->data.opacity = read_uint32(fd);
-		debug(DEBUG_LAYER_OPACITY, "opacity %d\n",
+		debug(DEBUG_LAYER_OPACITY, "opacity %u\n",
 		    prop->data.opacity);
 		break;
 	case PROP_MODE:					 /* Application mode */
 		prop->data.mode = read_uint32(fd);
-		debug(DEBUG_LAYER_MODE, "mode %d\n", prop->data.mode);
+		debug(DEBUG_LAYER_MODE, "mode %u\n", prop->data.mode);
 		break;
 	case PROP_COMPRESSION:			    /* Tile compression mode */
 		Read(fd, &c, 1);
@@ -139,14 +142,14 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 			    prop->data.guide.orientation);
 		}
 		break;
-	case PROP_RESOLUTION:				 /* Image resolution */
 #ifdef HAVE_IEEE754
+	case PROP_RESOLUTION:				 /* Image resolution */
 		prop->data.resolution.x = read_float(fd);
 		prop->data.resolution.y = read_float(fd);
 		debug(DEBUG_RESOLUTIONS, "resolution %f x %f\n",
 		    prop->data.resolution.x, prop->data.resolution.y);
-#endif
 		break;
+#endif
 	case PROP_TATTOO:					/* Tattoo */
 		prop->data.tattoo_state = read_uint32(fd);
 		break;
@@ -156,7 +159,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		prop->data.parasite.size = read_uint32(fd);
 		prop->data.parasite.data = emalloc(prop->data.parasite.size);
 		Read(fd, prop->data.parasite.data, prop->data.parasite.size);
-		debug_n(DEBUG_PARASITES, "parasite: %s (flags 0x%x size %d)",
+		debug_n(DEBUG_PARASITES, "parasite: %s (flags 0x%X size %u)",
 		    prop->data.parasite.name, prop->data.parasite.flags,
 		    prop->data.parasite.size);
 		if (strcmp(prop->data.parasite.name, "gimp-comment") == 0) {
@@ -175,14 +178,14 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		break;
 	case PROP_UNIT:
 		prop->data.unit = read_uint32(fd);
-		debug(DEBUG_UNITS, "unit: %d\n", prop->data.unit);
+		debug(DEBUG_UNITS, "unit: %u\n", prop->data.unit);
 		break;
 	case PROP_USER_UNIT:
 	case PROP_PATHS:
 		/* XXX ... */
 		break;
 	default:
-		debug(DEBUG_UNKNOWN_PROPS, "unknown: id %d len %d\n",
+		debug(DEBUG_UNKNOWN_PROPS, "unknown: id %u len %u\n",
 		    prop->id, prop->length);
 		Lseek(fd, prop->length, SEEK_CUR);
 	}
@@ -562,6 +565,8 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	head->compression = XCF_COMPRESSION_NONE;
 	head->colormap.size = 0;
 	head->colormap.data = NULL;
+	
+	debug(DEBUG_XCF, "%ux%u, type %u\n", head->w, head->h, head->base_type);
 
 	/* Read the image properties. */
 	do {
