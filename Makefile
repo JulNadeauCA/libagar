@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.17 2002/04/26 04:22:42 vedge Exp $
+#	$Csoft: Makefile,v 1.18 2002/04/26 04:24:06 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
@@ -22,5 +22,6 @@ configure: .PHONY
 
 clean-config: Makefile.config
 	rm -f engine/config.h
+	rm -f config.log
 
 include mk/csoft.subdir.mk
