@@ -1,4 +1,6 @@
-/*	$Csoft: char.h,v 1.20 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.21 2002/06/03 18:33:04 vedge Exp $	*/
+
+#include <engine/ailment.h>
 
 struct character {
 	struct	object obj;
@@ -11,11 +13,10 @@ struct character {
 	Uint32	flags;
 #define CHAR_FOCUS	0x0001	/* Focus on character */
 #define CHAR_DASH	0x0010	/* Boost timer temporarily */
-#define CHAR_REGEN	0x0020	/* HP regeneration */
-#define CHAR_POISON	0x0040	/* HP decay */
-#define CHAR_DOOM	0x0080	/* Doom */
 #define CHAR_DONTSAVE	(CHAR_DASH)
-	
+
+	struct	ailmentq ailments;	/* Status ailments */
+
 	Uint32	maxhp, maxmp;	/* Maximum HP/MP */
 	Uint32	hp, mp;		/* Effective HP/MP */
 	Uint32	maxspeed;	/* Max. speed in ms (saved) */
