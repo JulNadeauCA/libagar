@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.45 2002/11/27 05:14:15 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.46 2002/11/28 01:06:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -308,8 +308,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					nref->yoffs = 0;
 					return (0);
 				}
-				m->map[(*mapy)-1][*mapx].overlap++;
-				m->map[(*mapy)-2][*mapx].overlap++;
 			} else {
 				nref->yoffs = 0;
 				mapdir_unset(dir, DIR_UP);
@@ -319,14 +317,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		    	rootmap_scroll(m, DIR_UP, dir->speed);
 		}
 		if (nref->yoffs <= (-TILEW + dir->speed)) {
-			node->flags &= ~(NODE_ANIM);
 			dir->moved |= DIR_UP;
 			moved |= DIR_UP;
 			if ((*mapy)-- < 1) {
 				*mapy = 1;
 			}
-			m->map[*mapy][*mapx].overlap--;
-			m->map[(*mapy)-1][*mapx].overlap--;
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
 				nref->yoffs -= dir->speed;
@@ -348,7 +343,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					nref->yoffs = 0;
 					return (0);
 				}
-				m->map[(*mapy)+1][*mapx].overlap++;
 			} else {
 				nref->yoffs = 0;
 				mapdir_unset(dir, DIR_DOWN);
@@ -359,13 +353,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		}
 		if (nref->yoffs >= TILEW - dir->speed) {
 			nref->yoffs = 1;
-			node->flags &= ~(NODE_ANIM);
 			dir->moved |= DIR_DOWN;
 			moved |= DIR_DOWN;
 			if (++(*mapy) > m->maph - 1) {
 				*mapy = m->maph - 1;
 			}
-			m->map[*mapy][*mapx].overlap--;
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
 				nref->yoffs += dir->speed;
@@ -386,8 +378,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					nref->xoffs = 0;
 					return (0);
 				}
-				m->map[*mapy][(*mapx)-1].overlap++;
-				m->map[(*mapy)-1][(*mapx)-1].overlap++;
 			} else {
 				nref->xoffs = 0;
 				mapdir_unset(dir, DIR_LEFT);
@@ -398,14 +388,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		}
 		if (nref->xoffs <= (-TILEW + dir->speed)) {
 			nref->xoffs = -1;
-			node->flags &= ~(NODE_ANIM);
 			dir->moved |= DIR_LEFT;
 			moved |= DIR_LEFT;
 			if ((*mapx)-- < 1) {
 				*mapx = 1;
 			}
-			m->map[*mapy][*mapx].overlap--;
-			m->map[(*mapy)-1][*mapx].overlap--;
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
 				nref->xoffs -= dir->speed;
@@ -426,8 +413,6 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					nref->xoffs = 0;
 					return (0);
 				}
-				m->map[*mapy][(*mapx)+1].overlap++;
-				m->map[(*mapy)-1][(*mapx)+1].overlap++;
 			} else {
 				nref->xoffs = 0;
 				mapdir_unset(dir, DIR_RIGHT);
@@ -438,14 +423,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		}
 		if (nref->xoffs >= (TILEW - dir->speed)) {
 			nref->xoffs = 1;
-			node->flags &= ~(NODE_ANIM);
 			dir->moved |= DIR_RIGHT;
 			moved |= DIR_RIGHT;
 			if (++(*mapx) > m->mapw-1) {
 				*mapx = m->mapw-1;
 			}
-			m->map[*mapy][*mapx].overlap--;
-			m->map[(*mapy)-1][*mapx].overlap--;
 		} else {
 			if (dir->flags & DIR_SOFTSCROLL) {
 				nref->xoffs += dir->speed;

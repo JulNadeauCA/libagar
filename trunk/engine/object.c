@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.91 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.92 2002/11/30 02:09:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -93,10 +93,10 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	    PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&ob->events_lock, &ob->events_lockattr);
 
-	ob->art = (ob->flags & OBJECT_ART) ?
-	    media_get_art(media, ob) : NULL;
-	ob->audio = (ob->flags & OBJECT_AUDIO) ?
-	    media_get_audio(media, ob) : NULL;
+	ob->art = (ob->flags & OBJECT_ART) ? art_fetch(media, ob) : NULL;
+#if 0
+	ob->audio = (ob->flags & OBJECT_AUDIO) ? audio_fetch(media, ob) : NULL;
+#endif
 }
 
 /* Object must not be attached. */
@@ -114,9 +114,11 @@ object_destroy(void *p)
 
 	if ((ob->flags & OBJECT_KEEP_MEDIA) == 0) {
 		if (ob->art != NULL)
-			MEDIA_UNUSED(ob, art);
+			art_unused(ob->art);
+#if 0
 		if (ob->audio != NULL)
-			MEDIA_UNUSED(ob, audio);
+			audio_unused(ob->audio);
+#endif
 	}
 
 	for (eev = TAILQ_FIRST(&ob->events);
@@ -138,11 +140,8 @@ object_destroy(void *p)
 	pthread_mutex_destroy(&ob->props_lock);
 	pthread_mutexattr_destroy(&ob->events_lockattr);
 
-	if (ob->name != NULL)
-		free(ob->name);
-	if (ob->type != NULL)
-		free(ob->type);
-
+	Free(ob->name);
+	Free(ob->type);
 	free(ob);
 }
 
@@ -317,13 +316,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 		return (NULL);
 	}
 
-	/* Display smooth transitions from one node to another. */
-	node->flags |= NODE_ANIM;
-	if (y > 1) {
-		m->map[y - 1][x].overlap++;
-	}
-	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL,
-	    speed);
+	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, speed);
 
 	/* Set the input device. */
 	pos->input = in;
@@ -358,10 +351,6 @@ object_delpos(void *obp)	/* XXX will change */
 	
 			node = &pos->map->map[pos->y][pos->x];
 			node_delref(node, pos->nref);
-			node->flags &= ~(NODE_ANIM);
-			if (pos->y > 1) {
-				pos->map->map[pos->y - 1][pos->x].overlap--;
-			}
 		}
 		free(pos);
 		ob->pos = NULL;
