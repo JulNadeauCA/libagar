@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.82 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.83 2004/01/22 09:58:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -418,7 +418,7 @@ tlist_restore_selections(struct tlist *tl)
  * polling routines when displaying trees.
  */
 int
-tlist_visible_childs(struct tlist *tl, struct tlist_item *cit)
+tlist_visible_children(struct tlist *tl, struct tlist_item *cit)
 {
 	struct tlist_item *sit;
 
