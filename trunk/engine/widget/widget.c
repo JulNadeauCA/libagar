@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: widget.c,v 1.1 2002/04/18 03:57:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -49,12 +49,9 @@ static struct obvec widget_vec = {
 	widget_unlink
 };
 
-static TAILQ_HEAD(, widget) widgetsh = TAILQ_HEAD_INITIALIZER(widgetsh);
-static pthread_mutex_t widgetslock = PTHREAD_MUTEX_INITIALIZER;
-
 struct widget *
 widget_create(struct window *win, char *name, Uint32 flags, SDL_Rect rect,
-    Uint32 *bgcolor, Uint32 *fgcolor)
+    Uint32 *fgcolor)
 {
 	struct widget *w;
 	struct viewport *view;
@@ -65,17 +62,9 @@ widget_create(struct window *win, char *name, Uint32 flags, SDL_Rect rect,
 	w->win = win;
 	w->flags = flags;
 	w->rect = rect;
-	w->bgcolor = bgcolor;
 	w->fgcolor = fgcolor;
 
 	view = w->win->view;
-
-	w->vmask.x = (rect.x / view->map->tilew) - view->mapxoffs;
-	w->vmask.y = (rect.y / view->map->tileh) - view->mapyoffs;
-	w->vmask.w = (rect.w / view->map->tilew);
-	w->vmask.h = (rect.h / view->map->tilew);
-
-	view_maskfill(view, &w->vmask, 1);
 
 	return (w);
 }
@@ -90,7 +79,6 @@ widget_load(void *p, int fd)
 	}
 	
 	w->flags = fobj_read_uint32(fd);
-	*w->bgcolor = fobj_read_uint32(fd);
 	*w->fgcolor = fobj_read_uint32(fd);
 	w->rect = fobj_read_rect(fd);
 
@@ -105,7 +93,6 @@ widget_save(void *p, int fd)
 	version_write(fd, "agar widget", 1, 0);
 
 	fobj_write_uint32(fd, w->flags);
-	fobj_write_uint32(fd, *w->bgcolor);
 	fobj_write_uint32(fd, *w->fgcolor);
 	fobj_write_rect(fd, w->rect);
 
@@ -117,9 +104,11 @@ widget_link(void *ob)
 {
 	struct widget *w = (struct widget *)ob;
 
-	pthread_mutex_lock(&widgetslock);
-	TAILQ_INSERT_HEAD(&widgetsh, w, widgets);
-	pthread_mutex_unlock(&widgetslock);
+	dprintf("link to %s\n", OBJECT(w->win)->name);
+
+	pthread_mutex_lock(&w->win->widgetslock);
+	TAILQ_INSERT_HEAD(&w->win->widgetsh, w, widgets);
+	pthread_mutex_unlock(&w->win->widgetslock);
 
 	return (0);
 }
@@ -129,9 +118,9 @@ widget_unlink(void *ob)
 {
 	struct widget *w = (struct widget *)ob;
 	
-	pthread_mutex_lock(&widgetslock);
-	TAILQ_REMOVE(&widgetsh, w, widgets);
-	pthread_mutex_unlock(&widgetslock);
+	pthread_mutex_lock(&w->win->widgetslock);
+	TAILQ_REMOVE(&w->win->widgetsh, w, widgets);
+	pthread_mutex_unlock(&w->win->widgetslock);
 
 	return (0);
 }
@@ -144,3 +133,23 @@ widget_destroy(void *p)
 	return (0);
 }
 
+void
+widget_init(struct widget *w, char *name, Uint32 flags, void *vecp,
+    struct window *win, SDL_Rect rd)
+{
+	object_init(&w->obj, name, 0, vecp);
+
+	w->flags = flags;
+	w->rect = rd;
+	w->win = win;
+}
+
+void
+widget_draw(void *p)
+{
+	struct widget *w = (struct widget*)p;
+	
+	if (WIDVEC(w)->draw != NULL) {
+		WIDVEC(w)->draw(w);
+	}
+}
