@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.79 2002/11/14 07:11:47 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.80 2002/11/15 01:58:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -208,8 +208,9 @@ view_destroy(void *p)
 	free(v->dirty);
 
 	pthread_mutex_unlock(&v->lock);
-	pthread_mutexattr_destroy(&v->lockattr);
+
 	pthread_mutex_destroy(&v->lock);
+	pthread_mutexattr_destroy(&v->lockattr);
 }
 
 /* Attach a window to a view. */
