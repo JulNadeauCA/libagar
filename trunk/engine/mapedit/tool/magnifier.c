@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.41 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.42 2004/04/10 04:55:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -93,6 +93,8 @@ magnifier_init(struct tool *t)
 	spinbutton_set_min(sbu, 4);
 	spinbutton_set_max(sbu, 600);
 	event_new(sbu, "spinbutton-changed", zoom_specific, "%p", t->mv);
+
+	tool_push_status(t, _("Click to [zoom-in/center/zoom-out]."));
 }
 
 static void
@@ -102,10 +104,11 @@ magnifier_mousebuttondown(struct tool *t, int x, int y, int xoff, int yoff,
 	struct mapview *mv = t->mv;
 	int z = *mv->zoom;
 
+	/* XXX logarithmic */
 	if (b == 1) {
-		z += 1;
+		z += 10;
 	} else if (b == 3) {
-		z -= 1;
+		z -= 10;
 	}
 	mapview_zoom(mv, z);
 	mapview_center(mv, x, y);

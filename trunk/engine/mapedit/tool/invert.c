@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.3 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.4 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 
 #include <engine/widget/radio.h>
 
+static void invert_init(struct tool *);
 static void invert_effect(struct tool *, struct node *);
 
 const struct tool invert_tool = {
@@ -38,7 +39,7 @@ const struct tool invert_tool = {
 	N_("Invert the color of a tile."),
 	INVERT_TOOL_ICON,
 	INVERT_TOOL_ICON,
-	NULL,			/* init */
+	invert_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
@@ -50,6 +51,12 @@ const struct tool invert_tool = {
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };
+
+static void
+invert_init(struct tool *t)
+{
+	tool_push_status(t, _("Specify the tile to invert."));
+}
 
 static void
 invert_effect(struct tool *t, struct node *n)
