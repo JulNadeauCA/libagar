@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.119 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.120 2002/12/14 03:31:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -408,32 +408,37 @@ window_draw(struct window *win)
 		SDL_FillRect(view->v, &win->rd,
 		    WIDGET_COLOR(win, BACKGROUND_COLOR));
 	}
-
-	/* Widgets */
-	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		debug_n(DEBUG_DRAW, " %s(%d,%d)\n",
-		    OBJECT(reg)->name, reg->x, reg->y);
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			debug_n(DEBUG_DRAW, "  %s(%d,%d)\n", OBJECT(wid)->name,
-			    wid->x, wid->y);
-			WIDGET_OPS(wid)->widget_draw(wid);
-		}
-
-#ifdef DEBUG
-		if (prop_uint32(config, "widgets.flags") &
-		    CONFIG_REGION_BORDERS) {
-			primitives.square(win,
-			    reg->x, reg->y,
-			    reg->w, reg->h,
-			    SDL_MapRGB(view->v->format, 255, 255, 255));
-		}
-#endif
-	}
 	
-	/* Decorations */
+	/* Title bar */
 	if (win->flags & WINDOW_TITLEBAR) {
 		window_draw_titlebar(win);
 	}
+
+	/* Widgets */
+	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
+		TAILQ_FOREACH(reg, &win->regionsh, regions) {
+			debug_n(DEBUG_DRAW, " %s(%d,%d)\n",
+			    OBJECT(reg)->name, reg->x, reg->y);
+			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				debug_n(DEBUG_DRAW, "  %s(%d,%d)\n",
+				    OBJECT(wid)->name,
+				    wid->x, wid->y);
+				WIDGET_OPS(wid)->widget_draw(wid);
+			}
+
+#ifdef DEBUG
+			if (prop_uint32(config, "widgets.flags") &
+			    CONFIG_REGION_BORDERS) {
+				primitives.square(win,
+				    reg->x, reg->y,
+				    reg->w, reg->h,
+				    SDL_MapRGB(view->v->format, 255, 255, 255));
+			}
+#endif
+		}
+	}
+
+	/* Decorations */
 	window_draw_frame(win);
 
 	/* Queue the video update. */
