@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.69 2003/08/31 11:58:11 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.70 2003/10/09 22:39:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -11,6 +11,7 @@
 #define WIDGET_COLORS_MAX	16
 #define WIDGET_COLOR_NAME_MAX	16
 #define WIDGET_TYPE_MAX		32
+#define WIDGET_BINDING_NAME_MAX	16
 
 struct widget_ops {
 	const struct object_ops	obops;
@@ -36,11 +37,13 @@ enum widget_binding_type {
 };
 
 struct widget_binding {
-	int		 type;		/* Type of value */
-	char		*name;		/* Identifier */
-	pthread_mutex_t	*mutex;		/* Optional lock */
+	char	name[WIDGET_BINDING_NAME_MAX];
+	int	type;
+
+	pthread_mutex_t	*mutex;	
 	void		*p1, *p2;
 	size_t		 size;
+
 	SLIST_ENTRY(widget_binding) bindings;
 };
 
@@ -101,6 +104,9 @@ int   widget_mousebuttondown(struct window *, struct widget *, int, int, int);
 
 struct widget_binding	*widget_bind(void *, const char *,
 			             enum widget_binding_type, ...);
+struct widget_binding	*widget_bind_protected(void *, const char *,
+			                       pthread_mutex_t *,
+					       enum widget_binding_type, ...);
 struct widget_binding	*widget_get_binding(void *, const char *, ...);
 __inline__ void		 widget_binding_lock(struct widget_binding *);
 __inline__ void		 widget_binding_unlock(struct widget_binding *);

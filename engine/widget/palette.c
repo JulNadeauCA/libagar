@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.18 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.19 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@ palette_init(struct palette *pal, enum palette_type type)
 
 	widget_init(pal, "palette", &palette_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_bind(pal, "color", WIDGET_UINT32, NULL, &pal->color);
+	widget_bind(pal, "color", WIDGET_UINT32, &pal->color);
 
 	widget_map_color(pal, BG_COLOR, "frame", 196, 196, 196, 255);
 	widget_map_color(pal, CURRENT_COLOR, "_current", 0, 0, 0, 255);

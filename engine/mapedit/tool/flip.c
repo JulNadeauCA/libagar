@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.16 2003/08/26 13:48:21 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.17 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -76,10 +76,10 @@ flip_init(void *p)
 	event_new(win, "window-close", tool_window_close, "%p", flip);
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, NULL, &flip->mode);
+	widget_bind(rad, "value", WIDGET_INT, &flip->mode);
 
 	rad = radio_new(win, which_items);
-	widget_bind(rad, "value", WIDGET_INT, NULL, &flip->which);
+	widget_bind(rad, "value", WIDGET_INT, &flip->which);
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.192 2003/09/04 03:15:47 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.193 2003/09/14 02:26:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1552,7 +1552,7 @@ map_import_window(struct mapview *mv)
 #if 0
 		bu = button_new(bo, _("Replace"));
 		button_set_sticky(bu, 1);
-		widget_bind(bu, "state", WIDGET_INT, NULL, &mv->constr.replace);
+		widget_bind(bu, "state", WIDGET_INT, &mv->constr.replace);
 #endif
 	}
 

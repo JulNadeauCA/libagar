@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.148 2003/09/17 05:31:18 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.149 2003/10/09 22:35:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1736,14 +1736,14 @@ object_edit(void *p)
 		char *dir, *last;
 	
 		tbox = textbox_new(bo, _("Name: "));
-		widget_bind(tbox, "string", WIDGET_STRING, NULL, ob->name,
+		widget_bind(tbox, "string", WIDGET_STRING, ob->name,
 		    sizeof(ob->name));
 		event_new(tbox, "textbox-prechg", object_name_prechg, "%p", ob);
 		event_new(tbox, "textbox-postchg", object_name_postchg, "%p",
 		    ob);
 
-		gfx_com = combo_new(bo, _("Graphics: "));
-		aud_com = combo_new(bo, _("Audio: "));
+		gfx_com = combo_new(bo, 0, _("Graphics: "));
+		aud_com = combo_new(bo, 0, _("Audio: "));
 
 		textbox_prescale(gfx_com->tbox, "XXXXXXXXXXXXXX");
 

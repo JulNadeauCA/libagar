@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.71 2003/09/02 02:04:30 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.72 2003/09/17 05:31:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ textbox_init(struct textbox *tbox, const char *label)
 {
 	widget_init(tbox, "textbox", &textbox_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	widget_bind(tbox, "string", WIDGET_STRING, NULL, tbox->string,
+	widget_bind(tbox, "string", WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));
 
 	widget_map_color(tbox, READWRITE_COLOR, "edition", 100, 100, 100, 255);

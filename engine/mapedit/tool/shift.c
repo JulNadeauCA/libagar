@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.26 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.27 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -75,10 +75,10 @@ shift_init(void *p)
 		struct checkbox *cb;
 
 		rad = radio_new(vb, modes);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
+		widget_bind(rad, "value", WIDGET_INT, &sh->mode);
 		
 		cb = checkbox_new(vb, _("Multi"));
-		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->multi);
+		widget_bind(cb, "state", WIDGET_INT, &sh->multi);
 	}
 }
 

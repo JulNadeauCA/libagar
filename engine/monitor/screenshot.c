@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.10 2003/07/28 15:29:59 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.11 2003/09/17 04:54:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -272,8 +272,10 @@ screenshot_window(void)
 
 		sbu = spinbutton_new(vb, _("Refresh rate (ms): "));
 		spinbutton_set_min(sbu, 1);
-		widget_bind(sbu, "value", WIDGET_INT, &xmit_lock, &xmit_delay);
+		widget_bind_protected(sbu, "value", &xmit_lock, WIDGET_INT,
+		    &xmit_delay);
 		spinbutton_set_max(sbu, 10000);
+
 		textbox_printf(porttb, "%i", default_port);
 	}
 

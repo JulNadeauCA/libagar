@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.39 2003/08/29 04:55:43 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.40 2003/09/07 04:17:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,7 +70,7 @@ eraser_init(void *p)
 	event_new(win, "window-close", tool_window_close, "%p", er);
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
+	widget_bind(rad, "value", WIDGET_INT, &er->mode);
 }
 
 static void
