@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.5 2003/11/15 03:58:07 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.6 2003/12/05 01:21:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -120,12 +120,18 @@ static void
 poll_submaps(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct object *ob = obj;
+	struct object *ob = obj, *child;
 
 	if (ob == NULL)
 		return;
 
 	tlist_clear_items(tl);
+	TAILQ_FOREACH(child, &ob->childs, cobjs) {
+		if (strcmp(child->type, "map") == 0) {
+			tlist_insert_item(tl, OBJECT_ICON(child), child->name,
+			    child);
+		}
+	}
 	tlist_restore_selections(tl);
 }
 
@@ -181,10 +187,15 @@ position_effect(struct mapview *mv, struct map *m, struct node *dn)
 	struct object *ob = obj;
 	int dirflags = 0;
 
-	if (ob == NULL)
+	if (ob == NULL) {
+		text_msg(MSG_ERROR, _("No object selected."));
 		return;
+	}
+	if (submap == NULL) {
+		text_msg(MSG_ERROR, _("No submap selected."));
+		return;
+	}
 
-	dprintf("position `%s'\n", ob->name);
 	object_set_position(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer);
 	object_set_submap(ob, submap);
 	ob->pos->input = input_dev;
