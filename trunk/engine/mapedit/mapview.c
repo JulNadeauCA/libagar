@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.1 2002/06/22 20:44:01 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.2 2002/06/23 02:38:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/physics.h>
 #include <engine/map.h>
 
@@ -43,8 +42,11 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 
+#include "mapedit.h"
 #include "mapview.h"
 #include "edcursor.h"
+
+#include "tool/tool.h"
 
 static const struct widget_ops mapview_ops = {
 	{
@@ -120,7 +122,7 @@ mapview_destroy(void *p)
  * Map must be locked.
  */
 static __inline__ void
-mapview_rendernode(struct mapview *mv, struct node *node, Uint32 rx, Uint32 ry)
+mapview_animnode(struct mapview *mv, struct node *node, Uint32 rx, Uint32 ry)
 {
 	SDL_Surface *src;
 	struct noderef *nref;
@@ -132,7 +134,11 @@ mapview_rendernode(struct mapview *mv, struct node *node, Uint32 rx, Uint32 ry)
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		anim = ANIM(nref->pobj, nref->offs);
 		frame = anim->frame;
-		
+
+		if ((nref->flags & MAPREF_ANIM) == 0) {
+			continue;
+		}
+
 		if (nref->flags & MAPREF_ANIM_DELTA &&
 		   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
 			t = SDL_GetTicks();
@@ -192,11 +198,6 @@ mapview_draw(void *p)
 			rx = vx << m->shtilex;
 
 			node = &m->map[my][mx];
-
-			if (node->nanims > 0 || ((node->flags & NODE_ANIM))) {
-				mapview_rendernode(mv, node, rx, ry);
-				continue;
-			}
 			
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
@@ -205,9 +206,11 @@ mapview_draw(void *p)
 					    SPRITE(nref->pobj, nref->offs),
 					    rx, ry);
 					nsprites++;
+				} else if (nref->flags & MAPREF_ANIM) {
+					mapview_animnode(mv, node, rx, ry);
 				}
 			}
-
+			
 			if (nsprites > 0) {
 			/*	MAPEDIT_POSTDRAW(m, node, vx, vy); */
 			}
@@ -247,6 +250,7 @@ mapview_event(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	struct map *m = mv->map;
+	struct mapedit *med = mv->med;
 	int type = argv[1].i;
 	int button, x, y;
 
@@ -254,32 +258,59 @@ mapview_event(int argc, union evarg *argv)
 
 	switch (type) {
 	case WINDOW_MOUSEMOTION:
-		if (mv->mouse.move == 0) {
-			return;
-		}
-
 		x = argv[2].i / TILEW;
 		y = argv[3].i / TILEH;
-
-		mapview_scroll(mv,
-		    (mv->mouse.x < x) ? DIR_LEFT :
-		    (mv->mouse.x > x) ? DIR_RIGHT :
-		    (mv->mouse.y < y) ? DIR_UP :
-		    (mv->mouse.y > y) ? DIR_DOWN : 0);
-		
+	
+		/* Scroll */
+		if (mv->mouse.move) {
+			mapview_scroll(mv,
+			    (mv->mouse.x < x) ? DIR_LEFT :
+			    (mv->mouse.x > x) ? DIR_RIGHT :
+			    (mv->mouse.y < y) ? DIR_UP :
+			    (mv->mouse.y > y) ? DIR_DOWN : 0);
+		} else {
+			if (med->curtool != NULL &&
+			    (x != mv->mouse.x || y != mv->mouse.y) &&
+			    SDL_GetMouseState(NULL, NULL) &
+			    SDL_BUTTON_LMASK) {
+				pthread_mutex_lock(&med->lock);
+				if (TOOL_OPS(med->curtool)->tool_effect
+				    != NULL) {
+				    	edcursor_set(mv->cursor, 0);
+					TOOL_OPS(med->curtool)->tool_effect(
+					    med->curtool, m,
+					    mv->mx+x, mv->my+y);
+				    	edcursor_set(mv->cursor, 1);
+				}
+				pthread_mutex_unlock(&med->lock);
+			}
+		}
+	
 		mv->mouse.x = x;
 		mv->mouse.y = y;
 		break;
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
+		x = argv[3].i / TILEW;
+		y = argv[4].i / TILEH;
 		WIDGET_FOCUS(mv);
-		if (button == 1) {
+		if (button > 1) {
 			mv->mouse.move++;
+		} else {
+			pthread_mutex_lock(&med->lock);
+			if (med->curtool != NULL &&
+			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+				edcursor_set(mv->cursor, 0);
+				TOOL_OPS(med->curtool)->tool_effect(
+				    med->curtool, m, mv->mx + x, mv->my + y);
+				edcursor_set(mv->cursor, 1);
+			}
+			pthread_mutex_unlock(&med->lock);
 		}
 		break;
 	case WINDOW_MOUSEBUTTONUP:
 		button = argv[2].i;
-		if (button == 1) {
+		if (button > 1) {
 			mv->mouse.move = 0;
 		}
 		break;
@@ -309,25 +340,24 @@ mapview_scaled(int argc, union evarg *argv)
 	mv->mw = w/TILEW - 1;
 	mv->mh = h/TILEH - 1;
 
-	if (w == 0 || h == 0) {
-		dprintf("%s: scaled to zero\n", OBJECT(mv)->name);
+	if (mv->flags & MAPVIEW_CENTER) {
+		mapview_center(mv, mv->cursor->x, mv->cursor->y);
+		mv->flags &= ~(MAPVIEW_CENTER);
 	}
-
-	dprintf("scaled to %dx%d\n", w, h);
 }
 
 void
-mapview_center(struct mapview *mv, Uint32 x, Uint32 y)
+mapview_center(struct mapview *mv, int x, int y)
 {
 	struct map *m = mv->map;
-	Uint32 nx, ny;
+	int nx, ny;
 
 	nx = x - (mv->mw / 2);
 	ny = y - (mv->mh / 2);
 	
-	if (nx <= 0)
+	if (nx < 0)
 		nx = 0;
-	if (ny <= 0)
+	if (ny < 0)
 		ny = 0;
 	if (nx >= m->mapw-mv->mw)
 		nx = m->mapw - mv->mw;
