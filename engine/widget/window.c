@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.23 2002/05/19 15:27:56 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.24 2002/05/19 15:37:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -54,7 +54,12 @@ static const struct object_ops window_ops = {
 	window_detach
 };
 
+/* XXX struct */
+#include "border_grey8.h"
+
 static Uint32 delta = 0, delta2 = 256;
+
+static void	post_widget_ev(void *, void *, void *);
 
 /* XXX fucking insane */
 struct window *
@@ -62,13 +67,14 @@ window_new(char *caption, int flags, enum window_type type, int x, int y,
     int w, int h) {
 	struct window *win;
 
+	flags |= WINDOW_ROUNDEDGES;	/* XXX pref */
+
 	win = emalloc(sizeof(struct window));
 	window_init(win, mainview, caption, flags, type, x, y, w, h);
 
 	/* Attach window to main view. */
 	view_attach(mainview, win);
 
-	dprintf("new window\n");
 	return (win);
 }
 
@@ -79,15 +85,32 @@ window_init(struct window *win, struct viewport *view, char *caption,
 {
 	static int nwindow = 0;
 	char *name;
+	int i;
 
 	name = object_name("window", nwindow++);
 	object_init(&win->obj, "window", name, NULL, 0, &window_ops);
 	free(name);
+	
+	/* XXX pref */
+	win->borderw = default_nborder;
+	win->border = emalloc(win->borderw * sizeof(Uint32));
+	for (i = 0; i < win->borderw; i++) {
+		win->border[i] = SDL_MapRGB(view->v->format,
+		    default_border[i].r, default_border[i].g,
+		    default_border[i].b);
+	}
+	
+	win->titleh = 18 + win->borderw;	/* XXX font */
 
 	win->caption = strdup(caption);
 	win->view = view;
 	win->flags = flags;
 	win->type = type;
+	win->spacing = 4;
+	win->body.x = x + win->borderw;
+	win->body.y = y + win->borderw*2 + win->titleh;
+	win->body.w = w - win->borderw*2;
+	win->body.h = h - win->borderw*2 - win->titleh;
 
 	switch (win->type) {
 	case WINDOW_CUBIC:
@@ -102,8 +125,6 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->y = y;
 	win->w = w;
 	win->h = h;
-	win->xmargin = 16;
-	win->ymargin = 32;
 	win->redraw = 0;
 	
 	/* XXX pref */
@@ -115,13 +136,6 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->vmask.w = (w / view->map->tilew);
 	win->vmask.h = (h / view->map->tilew);
 
-	/* XXX pref */
-	win->border[0] = SDL_MapRGB(view->v->format, 50, 50, 50);
-	win->border[1] = SDL_MapRGB(view->v->format, 100, 100, 160);
-	win->border[2] = SDL_MapRGB(view->v->format, 192, 192, 192);
-	win->border[3] = SDL_MapRGB(view->v->format, 100, 100, 160);
-	win->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
-	
 	SLIST_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, NULL);
 }
@@ -139,15 +153,13 @@ dispatch_widget_event(void *p)
 	return (NULL);
 }
 
-void
-window_widget_event(void *parent, void *child, void *arg)
+static void
+post_widget_ev(void *parent, void *child, void *arg)
 {
 	pthread_t cbthread;
 	struct widget *wid = child;
 	struct window_event *wev;
 	SDL_Event *ev = arg;
-
-	dprintf("parent = %s\n", OBJECT(parent)->type);
 
 	OBJECT_ASSERT(child, "widget");
 
@@ -156,8 +168,8 @@ window_widget_event(void *parent, void *child, void *arg)
 	}
 
 	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:
 	case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEBUTTONDOWN:
 		if (WIDGET_INSIDE(wid, ev->button.x, ev->button.y)) {
 			wev = emalloc(sizeof(struct window_event));
 			wev->w = wid;
@@ -172,44 +184,53 @@ window_widget_event(void *parent, void *child, void *arg)
 		dprintf("key\n");
 		break;
 	default:
-		fatal("cannot handle event\n");
+		fatal("cannot handle event: %d\n", ev->type);
 	}
 }
 
-#define WINDOW_CORNER(xo, yo) do {			\
-	int z;						\
-	z = ((xo) * (yo))/2;				\
-	if (z < 2) {					\
-		return (-1);				\
-	} else {					\
-		*col = win->border[((xo) * (yo))/2];	\
-		return (1);				\
-	}						\
+#define WINDOW_CORNER(win, xo, yo) do {				\
+	if (win->flags & WINDOW_ROUNDEDGES) {			\
+		int z;						\
+		z = ((xo) * (yo)) + ((win)->borderw/2);		\
+		if (z < (win)->borderw) {			\
+			return (-1);				\
+		} else {					\
+			*col = (win)->border[((xo)*(yo)) /	\
+			    ((win)->borderw)+1];		\
+			return (1);				\
+		}						\
+	} else {						\
+		*col = SDL_MapRGB((win)->view->v->format,	\
+		    180, 180, 180);				\
+		return (1);					\
+	}							\
 } while (/*CONSTCOND*/0)
 
 static __inline__ int
 window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 {
-	if (xo < 4 && yo < 4) {
+	if (xo < win->borderw && yo < win->borderw) {
 		/* Upper left */
-		WINDOW_CORNER(xo, yo);
-	} else if (yo < 4 && xo > win->w - 4) {
+		WINDOW_CORNER(win, xo, yo);
+	} else if (yo < win->borderw && xo > (win->w - win->borderw)) {
 		/* Upper right */
-		WINDOW_CORNER(win->w - xo, yo);
-	} else if (xo > win->w - 4 && yo > win->h - 4) {
+		WINDOW_CORNER(win, win->w - xo, yo);
+	} else if (xo > (win->w - win->borderw) &&
+	           yo > (win->h - win->borderw)) {
 		/* Lower right */
-		WINDOW_CORNER(win->w - xo, win->h - yo);
-	} else if (xo < 4 && yo > win->h - 4) {
+		WINDOW_CORNER(win, win->w - xo, win->h - yo);
+	} else if (xo < win->borderw && yo > win->h - win->borderw) {
 		/* Lower left */
-		WINDOW_CORNER(xo, win->h - yo);
+		WINDOW_CORNER(win, xo, win->h - yo);
 	}
 
 	if (win->flags & WINDOW_TITLEBAR) {
-		if (yo < 24 && xo > 4 && xo < win->w - 4) {
-			if (yo < 4) {
+		if (yo < (win->titleh + win->borderw) && xo > win->borderw &&
+		    xo < win->w - win->borderw) {
+			if (yo < win->borderw) {
 				*col = win->border[yo+1];
-			} else if (yo > 20) {
-				*col = win->border[yo-20];
+			} else if (yo > win->titleh) {
+				*col = win->border[yo-win->titleh];
 			} else {
 				switch (win->type) {
 				case WINDOW_CUBIC:
@@ -229,16 +250,16 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 		}
 	}
 	
-	if (xo > win->w - 4) {
+	if (xo > (win->w - win->borderw)) {
 		*col = win->border[win->w - xo];
 		return (1);
-	} else if (yo < 4) {
+	} else if (yo < win->borderw) {
 		*col = win->border[yo+1];
 		return (1);
-	} else if (xo < 4) {
+	} else if (xo < win->borderw) {
 		*col = win->border[xo+1];
 		return (1);
-	} else if (yo > win->h - 4) {
+	} else if (yo > (win->h - win->borderw)) {
 		*col = win->border[win->h - yo];
 		return (1);
 	}
@@ -252,9 +273,10 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 void
 window_draw(struct window *win)
 {
-	SDL_Surface *v = win->view->v;
+	struct viewport *view = win->view;
+	SDL_Surface *v = view->v;
 	Uint32 xo, yo, col = 0;
-	Uint8 *dst, expcom;
+	Uint8 expcom;
 	struct region *reg;
 	struct widget *wid;
 	int rv;
@@ -273,10 +295,6 @@ window_draw(struct window *win)
 		SDL_LockSurface(v);
 		for (yo = 0; yo < win->h; yo++) {
 			for (xo = 0; xo < win->w; xo++) {
-				dst = (Uint8 *)v->pixels + (win->y + yo) *
-				    v->pitch + (win->x+xo) *
-				    v->format->BytesPerPixel;
-
 				rv = window_decoration(win, xo, yo, &col);
 				if (rv < 0) {
 					continue;
@@ -313,28 +331,7 @@ window_draw(struct window *win)
 						break;
 					}
 				}
-				switch (v->format->BytesPerPixel) {
-				case 1:
-					*dst = col;
-					break;
-				case 2:
-					*(Uint16 *)dst = col;
-					break;
-				case 3:
-					if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-						dst[0] = (col>>16) & 0xff;
-						dst[1] = (col>>8) & 0xff;
-						dst[2] = col & 0xff;
-					} else {
-						dst[0] = col & 0xff;
-						dst[1] = (col>>8) & 0xff;
-						dst[2] = (col>>16) & 0xff;
-					}
-					break;
-				case 4:
-					*((Uint32 *)dst) = col;
-					break;
-				}
+				WINDOW_PUT_PIXEL(win, xo, yo, col);
 			}
 		}
 		SDL_UnlockSurface(v);
@@ -351,16 +348,37 @@ window_draw(struct window *win)
 		if (s == NULL) {
 			fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
 		}
-		rd.x = win->x + (win->w - s->w - 6); /* XXX border width */
-		rd.y = win->y + 4;
+		rd.x = win->x + (win->w - s->w - win->borderw);
+		rd.y = win->y + win->borderw;
 		rd.w = s->w;
 		rd.h = s->h;
-		SDL_BlitSurface(s, NULL, win->view->v, &rd);
+		SDL_BlitSurface(s, NULL, v, &rd);
 		SDL_FreeSurface(s);
 	}
 
 	/* Render the widgets. */
 	SLIST_FOREACH(reg, &win->regionsh, regions) {
+		if (reg->flags & REGION_BORDER) {
+			Uint32 c;
+			int x, y;
+
+			SDL_LockSurface(win->view->v);
+			for (y = 0; y < reg->h; y++) {
+				for (x = 0; x < reg->w; x++) {
+					if (x < 1 || y < 1 ||
+					    x >= reg->w-1 ||
+					    y >= reg->h-1) {
+						c = SDL_MapRGB(v->format,
+						    255, 255, 255);
+
+						REGION_PUT_PIXEL(reg, x, y, c);
+					}
+				}
+			}
+			SDL_UnlockSurface(win->view->v);
+		}
+
+		/* Draw the widgets. */
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			if (!(wid->flags & WIDGET_HIDE)) {
 				WIDGET_OPS(wid)->widget_draw(wid);
@@ -400,7 +418,7 @@ window_onattach(void *parent, void *child)
 
 /*
  * Called when window is detached from view.
- * Will lock window.
+ * Will lock window and view.
  */
 void
 window_ondetach(void *parent, void *child)
@@ -415,6 +433,12 @@ window_ondetach(void *parent, void *child)
 	if (view->map != NULL) {
 		view->map->redraw++;
 	}
+
+	/* Other windows may become visible. */
+	pthread_mutex_lock(&view->lock);
+	TAILQ_FOREACH(win, &view->windowsh, windows)
+		win->redraw++;
+	pthread_mutex_unlock(&view->lock);
 }
 
 /*
@@ -431,10 +455,6 @@ window_attach(void *parent, void *child)
 	OBJECT_ASSERT(child, "window-region");
 	
 	reg->win = win;
-	reg->x = reg->rx * win->w / 100;
-	reg->y = reg->ry * win->h / 100;
-	reg->w = reg->rw * win->w / 100;
-	reg->h = reg->rh * win->h / 100;
 
 	SLIST_INSERT_HEAD(&win->regionsh, reg, regions);
 }
@@ -472,6 +492,7 @@ window_destroy(void *p)
 #endif
 	pthread_mutex_destroy(&win->lock);
 	free(win->caption);
+	free(win->border);
 }
 
 /* Window list must be locked. */
@@ -480,12 +501,54 @@ window_draw_all(void)
 {
 	struct window *win;
 
-	TAILQ_FOREACH_REVERSE(win, &mainview->windowsh, windows, windows_head) {
+	TAILQ_FOREACH(win, &mainview->windowsh, windows) {
 		pthread_mutex_lock(&win->lock);
 		if (win->redraw) {
 			window_draw(win);
 		}
 		pthread_mutex_unlock(&win->lock);
+	}
+}
+
+/*
+ * Dispatch events to widgets and windows.
+ * View must be locked.
+ */
+void
+window_event_all(struct viewport *view, SDL_Event *ev)
+{
+	struct region *reg;
+	struct window *win;
+	struct widget *wid;
+
+	switch (ev->type) {
+	case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEBUTTONDOWN:
+		TAILQ_FOREACH(win, &view->windowsh, windows) {
+			pthread_mutex_lock(&win->lock);
+			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
+				goto nextwin;
+			}
+			if (win->flags & WINDOW_FOCUS) {
+				SLIST_FOREACH(reg, &win->regionsh, regions) {
+					TAILQ_FOREACH(wid, &reg->widgetsh,
+					     widgets) {
+						if (wid->flags & WIDGET_HIDE) {
+							goto nextwin;
+						}
+						post_widget_ev(reg, wid, ev);
+					}
+				}
+			} else {
+				view_focus(view, win);
+			}
+nextwin:
+			pthread_mutex_unlock(&win->lock);
+		}
+		break;
+	case SDL_KEYUP:
+	case SDL_KEYDOWN:
+		break;
 	}
 }
 
@@ -496,32 +559,44 @@ window_resize(struct window *win)
 
 	SLIST_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
-		int x, y;
+		int x, y, nwidgets;
+		
+		/* Scale/position the region. */
+		reg->x = (reg->rx * win->body.w / 100) + (win->body.x - win->x);
+		reg->y = (reg->ry * win->body.h / 100) + (win->body.y - win->y);
+		reg->w = (reg->rw * win->body.w / 100);
+		reg->h = (reg->rh * win->body.h / 100);
+		
+		nwidgets = 0;
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			nwidgets++;
+		}
 
-		x = reg->x + reg->win->xmargin;
-		y = reg->y + reg->win->ymargin;
+		reg->x += reg->spacing;
+		reg->y += reg->spacing;
+		reg->w -= reg->spacing * nwidgets;
+		reg->h -= reg->spacing * nwidgets;
+
+		x = reg->x;
+		y = reg->y;
 	
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			/* Scale/position the widget. */
 			wid->x = x;
 			wid->y = y;
+			wid->w = wid->rw * reg->w / 100 - reg->spacing/2;
+			wid->h = wid->rh * reg->h / 100 - reg->spacing/2;
 
-			if (wid->y > (reg->win->h - reg->win->ymargin)) {
-				wid->y -= reg->win->ymargin;
-			}
+			if (wid->w >= reg->w)
+				wid->w = reg->w;
+			if (wid->h >= reg->h)
+				wid->h = reg->h;
 
-			if (!(wid->flags & WIDGET_HIDE)) {
-				WIDGET_OPS(wid)->widget_draw(wid);
-			}
-
-			switch (reg->walign) {
-			case WIDGET_HALIGN:
-				x += wid->w + reg->spacing;
-				break;
-			case WIDGET_VALIGN:
+			if (reg->flags & REGION_VALIGN) {
 				y += wid->h + reg->spacing;
-				break;
+			} else if (reg->flags & REGION_HALIGN) {
+				x += wid->w + reg->spacing;
 			}
-
 		}
 	}
 }
