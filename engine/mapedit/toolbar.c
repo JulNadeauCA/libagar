@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.20 2002/09/12 09:35:23 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.21 2002/09/13 11:08:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -259,6 +259,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	/* Button */
 	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
 	button = button_new(reg, "Load map", NULL, 0, 100, 100);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 	event_new(button, "button-pushed", 0, fileops_load_map,
 	    "%p, %p", med, name_tbox);
 	event_new(name_tbox, "textbox-return", 0, fileops_load_map,

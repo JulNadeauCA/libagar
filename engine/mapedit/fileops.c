@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.12 2002/09/16 15:47:30 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.13 2002/11/07 17:51:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -41,6 +41,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/text.h>
 
 #include "mapedit.h"
 #include "command.h"
@@ -67,7 +68,7 @@ fileops_new_map(int argc, union evarg *argv)
 	media = textbox_string(media_tbox);
 
 	if (strcmp(name, "") == 0) {
-		warning("no map name given\n");
+		text_msg("Error", "No map name given.");
 		goto out;
 	}
 	w = (Uint32)textbox_int(w_tbox);
@@ -117,7 +118,7 @@ fileops_load_map(int argc, union evarg *argv)
 	name = textbox_string(name_tbox);
 
 	if (strcmp(name, "") == 0) {
-		warning("no map name given\n");
+		text_msg("Error", "No map name given.");
 		goto out;
 	}
 
