@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.13 2002/02/07 06:28:00 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.14 2002/02/07 06:48:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -430,7 +430,7 @@ mapedit_tilelist(struct mapedit *med)
 	rd.w = tilew;
 	rd.h = win->height;
 	mapedit_bg(win->view->v, rd.x, rd.y, win->view->width,
-	    win->view->height);
+	    win->view->height + tileh); /* XXX */
 	rd.h = tileh;
 		
 	/*
@@ -664,6 +664,10 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 
 			mx = em->view->mapx + ev->button.x / em->view->tilew;
 			my = em->view->mapy + ev->button.y / em->view->tileh;
+			if (med->flags & MAPEDIT_TILESTACK)
+				mx--;
+			if (med->flags & MAPEDIT_OBJLIST)
+				my--;
 
 			MAPEDIT_MOVE(med, mx, my);
 			pthread_mutex_unlock(&em->lock);
@@ -925,6 +929,18 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			view_center(em->view, mapx, mapy);
 			moved++;
 			break;
+		case SDLK_t:
+			if (ev->key.keysym.mod & KMOD_CTRL) {
+				/* Toggle the tile list window. */
+				if (med->flags & MAPEDIT_TILELIST) {
+					med->flags &= ~(MAPEDIT_TILELIST);
+				} else {
+					med->flags |= MAPEDIT_TILELIST;
+				}
+				view_setmode(em->view);	/* XXX hack */
+				em->redraw++;
+			}
+			break;
 		case SDLK_l:
 			/* Load this map from file. */
 			mapedit_pointer(med, 0);
@@ -938,18 +954,6 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			}
 			mapedit_pointer(med, 1);
 			em->redraw++;
-			break;
-		case SDLK_t:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				/* Toggle the tile list window. */
-				if (med->flags & MAPEDIT_TILELIST) {
-					med->flags &= ~(MAPEDIT_TILELIST);
-				} else {
-					med->flags |= MAPEDIT_TILELIST;
-				}
-				view_setmode(em->view);	/* XXX hack */
-				em->redraw++;
-			}
 			break;
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
