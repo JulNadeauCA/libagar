@@ -152,6 +152,10 @@ clean:		clean-subdir
 		rm -f lib${LIB}.la ${SHOBJS} ${LIBTOOL} ${LTCONFIG_LOG}; \
 	    fi; \
 	fi
+	@if [ "${CLEANFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANFILES}"; \
+	    rm -f ${CLEANFILES}; \
+	fi
 
 cleandir:	clean cleandir-subdir clean-depend
 	rm -fR .libs
