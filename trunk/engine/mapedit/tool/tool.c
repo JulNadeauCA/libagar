@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tool.c,v 1.1 2002/07/07 00:23:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -60,5 +60,34 @@ tool_init(struct tool *tool, char *name, struct mapedit *med,
 	tool->med = med;
 	tool->win = (TOOL_OPS(tool)->tool_window != NULL) ? 
 	    TOOL_OPS(tool)->tool_window(tool) : NULL;
+	tool->type = strdup(name);
+}
+
+struct mapview *
+tool_mapview(void)
+{
+	struct window *win;
+	struct region *reg;
+	struct widget *wid;
+
+	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+		if ((win->flags & WINDOW_SHOWN) == 0) {
+			continue;
+		}
+		TAILQ_FOREACH(reg, &win->regionsh, regions) {
+			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				int widx, widy;
+
+				if (!WIDGET_FOCUSED(wid)) {
+					continue;
+				}
+				if (strcmp(wid->type, "mapview") == 0) {
+					return ((struct mapview *)wid);
+				}
+			}
+		}
+	}
+
+	return (NULL);
 }
 
