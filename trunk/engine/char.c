@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.56 2002/08/21 01:00:58 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.57 2002/08/24 04:08:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -264,6 +264,7 @@ char_save(void *p, int fd)
 	}
 	pthread_mutex_unlock(&ch->lock);
 	fobj_flush_buf(buf, fd);
+	fobj_destroy_buf(buf);
 	return (0);
 }
 
