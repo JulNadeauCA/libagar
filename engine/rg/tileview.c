@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.26 2005/03/11 08:56:15 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.27 2005/03/11 10:46:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -49,12 +49,12 @@ const struct widget_ops tileview_ops = {
 };
 
 struct tileview *
-tileview_new(void *parent, struct tileset *ts, struct tile *t, int flags)
+tileview_new(void *parent, struct tileset *ts, int flags)
 {
 	struct tileview *tv;
 
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
-	tileview_init(tv, ts, t, flags);
+	tileview_init(tv, ts, flags);
 	object_attach(parent, tv);
 	return (tv);
 }
@@ -701,15 +701,30 @@ tileview_reg_tool(struct tileview *tv, const void *p)
 }
 
 void
-tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
-    int flags)
+tileview_set_tile(struct tileview *tv, struct tile *t)
+{
+	if (tv->tile != NULL) {
+		tv->tile->nrefs--;
+	}
+	tv->tile = t;
+	if (t != NULL) {
+		t->nrefs++;
+		tileview_set_zoom(tv, 100, 0);
+	}
+}
+
+void
+tileview_init(struct tileview *tv, struct tileset *ts, int flags)
 {
 	widget_init(tv, "tileview", &tileview_ops, WIDGET_WFILL|WIDGET_HFILL|
 	                                           WIDGET_FOCUSABLE|
 						   WIDGET_CLIPPING);
 	tv->ts = ts;
-	tv->tile = tile;
+	tv->tile = NULL;
 	tv->scaled = NULL;
+	tv->zoom = 100;
+	tv->pxsz = 1;
+	tv->pxlen = 0;
 	tv->xoffs = 0;
 	tv->yoffs = 0;
 	tv->scrolling = 0;
@@ -728,7 +743,6 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	TAILQ_INIT(&tv->ctrls);
 
 	widget_map_surface(tv, NULL);
-	tileview_set_zoom(tv, 100, 0);
 
 	timeout_set(&tv->redraw_to, autoredraw, NULL, 0);
 	
@@ -943,8 +957,13 @@ tileview_scale(void *p, int rw, int rh)
 	int lim;
 
 	if (rw == -1 && rh == -1) {
-		WIDGET(tv)->w = tv->tile->su->w + TILEVIEW_MIN_W;
-		WIDGET(tv)->h = tv->tile->su->h + TILEVIEW_MIN_H;
+		if (tv->tile != NULL) {
+			WIDGET(tv)->w = tv->tile->su->w + TILEVIEW_MIN_W;
+			WIDGET(tv)->h = tv->tile->su->h + TILEVIEW_MIN_H;
+		} else {
+			WIDGET(tv)->w = TILEVIEW_MIN_W;
+			WIDGET(tv)->h = TILEVIEW_MIN_H;
+		}
 	} else {
 		if (tv->xoffs >
 		   (lim = (WIDGET(tv)->w - TILEVIEW_MIN_W))) {
@@ -1294,6 +1313,9 @@ tileview_draw(void *p)
 	int dxoffs, dyoffs;
 	int drawbg = 2;
 
+	if (t == NULL)
+		return;
+
 	if (tv->state == TILEVIEW_SKETCH_EDIT) {
 		struct sketch *sk = tv->tv_sketch.sk;
 
@@ -1405,7 +1427,10 @@ tileview_destroy(void *p)
 	struct tileview *tv = p;
 	struct tileview_ctrl *ctrl, *nctrl;
 	struct tileview_tool *tool, *ntool;
-
+	
+	if (tv->tile != NULL) {
+		tv->tile->nrefs--;
+	}
 	for (ctrl = TAILQ_FIRST(&tv->ctrls);
 	     ctrl != TAILQ_END(&tv->ctrls);
 	     ctrl = nctrl) {
