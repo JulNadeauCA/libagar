@@ -175,10 +175,7 @@ key_end(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	tbox->textpos = strlen(tbox->text);
 
 	/* XXX botch */
-	tbox->textoffs = tbox->textpos - 10;
-	if (tbox->textoffs < 0) {
-		tbox->textoffs = tbox->textpos;
-	}
+	tbox->textoffs = 0;
 }
 
 static void
