@@ -25,13 +25,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdlib.h>
+
 #include <engine/engine.h>
 
+#include "window.h"
+#include "widget.h"
 #include "primitive.h"
 
 SDL_Surface *
-primitive_box(int w, int h, int z)
+primitive_box(void *p, int w, int h, int z)
 {
+	struct widget *wid = p;
 	SDL_Surface *s;
 	int x, y;
 	Uint32 lcol, rcol, bcol;
@@ -39,13 +44,22 @@ primitive_box(int w, int h, int z)
 	s = view_surface(SDL_SWSURFACE, w, h);
 
 	if (z < 0) {
+		z = abs(z);
 		lcol = SDL_MapRGB(s->format, 20, 20, 20);
 		rcol = SDL_MapRGB(s->format, 140, 140, 140);
-		bcol = SDL_MapRGB(s->format, 70, 70, 70);
+		if (WIDGET_FOCUSED(wid)) {
+			bcol = SDL_MapRGB(s->format, 100, 100, 100);
+		} else {
+			bcol = SDL_MapRGB(s->format, 60, 60, 60);
+		}
 	} else {
 		lcol = SDL_MapRGB(s->format, 140, 140, 140);
 		rcol = SDL_MapRGB(s->format, 20, 20, 20);
-		bcol = SDL_MapRGB(s->format, 90, 90, 90);
+		if (WIDGET_FOCUSED(wid)) {
+			bcol = SDL_MapRGB(s->format, 110, 110, 110);
+		} else {
+			bcol = SDL_MapRGB(s->format, 90, 90, 90);
+		}
 	}
 
 	/* Background */
@@ -55,9 +69,9 @@ primitive_box(int w, int h, int z)
 	SDL_LockSurface(s);		/* XXX not needed */
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {	/* XXX waste */
-			if (y < 1 || x < 1) {
+			if (y < z || x < z) {
 				VIEW_PUT_PIXEL(s, x, y, lcol);
-			} else if (y >= (h - 1) || x >= (w - 1)) {
+			} else if (y >= (h - z) || x >= (w - z)) {
 				VIEW_PUT_PIXEL(s, x, y, rcol);
 			}
 		}
