@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.166 2003/03/26 02:52:14 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.167 2003/03/26 10:04:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -678,35 +678,32 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 		break;
 	case NODEREF_WARP:
 		{
-			char *map_id;
+			char map_id[OBJECT_NAME_MAX];
 			Uint32 ox, oy;
 			Uint8 dir;
 
-			map_id = read_string(fd, NULL);
-			if (map_id == NULL) {
-				error_set("map_id: %s", fobj_error);
+			if (copy_string(map_id, fd, sizeof(map_id)) >=
+			    sizeof(map_id)) {
+				error_set("map_id too big");
 				return (-1);
 			}
-			ox = read_uint32(fd);
-			oy = read_uint32(fd);
-			if (ox > MAP_MAX_WIDTH || oy > MAP_MAX_HEIGHT) {
+			ox = (int)read_uint32(fd);
+			oy = (int)read_uint32(fd);
+			if (ox < 0 || ox > MAP_MAX_WIDTH || 
+			    ox < 0 || oy > MAP_MAX_HEIGHT) {
 				error_set("bad warp coords");
-				free(map_id);
 				return (-1);
 			}
 			dir = read_uint8(fd);
-			debug(DEBUG_NODEREFS, "warp: to %s:%u,%u, dir 0x%X\n",
+			debug(DEBUG_NODEREFS, "warp: to %s:%d,%d, dir 0x%x\n",
 			    map_id, ox, oy, dir);
-			*nref = node_add_warp(node, map_id, (int)ox, (int)oy,
-			    dir);
-			if (*nref == NULL) {
-				free(map_id);
+
+			if ((*nref = node_add_warp(node, map_id, ox, oy, dir))
+			    == NULL) {
 				return (-1);
 			}
 			(*nref)->flags = flags;
 			(*nref)->layer = layer;
-			
-			free(map_id);
 		}
 		break;
 	default:
