@@ -1,7 +1,9 @@
-#	$Csoft: Makefile,v 1.3 2002/08/23 10:15:33 vedge Exp $
+#	$Csoft: Makefile,v 1.4 2002/09/16 09:33:42 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
+
+LIB=	compat
 
 CFLAGS+=-I.. ${SDL_CFLAGS}
 
