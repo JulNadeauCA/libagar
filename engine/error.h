@@ -1,7 +1,17 @@
-/*	$Csoft: error.h,v 1.18 2003/04/14 08:56:20 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.19 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <sys/types.h>
+
+#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+# if defined(__cplusplus)
+#  define __BEGIN_DECLS	extern "C" {
+#  define __END_DECLS	}
+# else
+#  define __BEGIN_DECLS
+#  define __END_DECLS
+# endif
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
