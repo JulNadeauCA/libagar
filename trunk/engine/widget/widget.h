@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.63 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.64 2003/06/08 23:53:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -21,6 +21,7 @@ struct widget_ops {
 enum widget_binding_type {
 	WIDGET_NONE,
 	WIDGET_BOOL,
+	WIDGET_UINT,
 	WIDGET_INT,
 	WIDGET_UINT8,
 	WIDGET_SINT8,
@@ -122,7 +123,9 @@ extern __inline__ void	 widget_binding_lock(struct widget_binding *);
 extern __inline__ void	 widget_binding_unlock(struct widget_binding *);
 extern __inline__ void	 widget_binding_modified(struct widget_binding *);
 
-extern __inline__ int	 widget_get_int(void *, const char *);
+extern __inline__ unsigned int  widget_get_uint(void *, const char *);
+extern __inline__ int		widget_get_int(void *, const char *);
+
 extern __inline__ Uint8	 widget_get_uint8(void *, const char *);
 extern __inline__ Sint8	 widget_get_sint8(void *, const char *);
 extern __inline__ Uint16 widget_get_uint16(void *, const char *);
@@ -137,7 +140,10 @@ extern __inline__ char	*widget_get_string(void *, const char *);
 extern __inline__ size_t widget_copy_string(void *, const char *, char *,
 			                    size_t);
 extern __inline__ void	*widget_get_pointer(void *, const char *);
+
+extern __inline__ void	 widget_set_uint(void *, const char *, unsigned int);
 extern __inline__ void	 widget_set_int(void *, const char *, int);
+
 extern __inline__ void	 widget_set_uint8(void *, const char *, Uint8);
 extern __inline__ void	 widget_set_sint8(void *, const char *, Sint8);
 extern __inline__ void	 widget_set_uint16(void *, const char *, Uint16);

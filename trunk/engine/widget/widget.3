@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.34 2003/06/09 01:31:13 vedge Exp $
+.\"	$Csoft: widget.3,v 1.35 2003/06/10 01:06:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -417,6 +417,9 @@ is called to override those default bindings.
 .Ft int
 .Fn widget_get_int "void *widget" "const char *binding"
 .Pp
+.Ft "unsigned int"
+.Fn widget_get_uint "void *widget" "const char *binding"
+.Pp
 .Ft Uint8
 .Fn widget_get_uint8 "void *widget" "const char *binding"
 .Pp
@@ -456,6 +459,9 @@ is called to override those default bindings.
 .Pp
 .Ft void
 .Fn widget_set_int "void *widget" "const char *binding" "int i"
+.Pp
+.Ft void
+.Fn widget_set_uint "void *widget" "const char *binding" "unsigned int i"
 .Pp
 .Ft void
 .Fn widget_set_uint8 "void *widget" "const char *binding" "Uint8 u8"
@@ -533,6 +539,7 @@ argument include:
 enum widget_binding_type {
 	WIDGET_NONE,
 	WIDGET_BOOL,
+	WIDGET_UINT,
 	WIDGET_INT,
 	WIDGET_UINT8,
 	WIDGET_SINT8,
