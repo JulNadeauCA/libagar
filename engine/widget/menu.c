@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: menu.c,v 1.1 2004/09/12 05:51:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,8 +52,7 @@ static struct widget_ops ag_menu_ops = {
 
 enum {
 	UNZEL_COLOR,
-	SEL_COLOR,
-	TEXT_COLOR
+	SEL_COLOR
 };
 
 struct AGMenu *
@@ -68,78 +67,253 @@ ag_menu_new(void *parent)
 }
 
 void
+ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
+{
+	struct AGMenuView *mview;
+	struct window *panel;
+
+	panel = window_new(WINDOW_NO_TITLEBAR|WINDOW_NO_DECORATIONS, NULL);
+	window_set_padding(panel, 0, 0);
+
+	WIDGET(panel)->x = x;
+	WIDGET(panel)->y = y;
+
+	mview = Malloc(sizeof(struct AGMenuView), M_OBJECT);
+	ag_menu_view_init(mview, panel, m, item);
+	object_attach(panel, mview);
+	item->view = mview;
+	
+	WIDGET_SCALE(panel, -1, -1);
+	widget_update_coords(panel, WIDGET(panel)->x, WIDGET(panel)->y);
+	window_show(panel);
+}
+
+void
+ag_menu_collapse(struct AGMenu *m, struct AGMenuItem *item)
+{
+	int i;
+
+	for (i = 0; i < item->nsubitems; i++) {
+		struct AGMenuItem *subitem = &item->subitems[i];
+
+		if (subitem->view != NULL &&
+		    subitem->view->panel != NULL) {
+			view_detach(subitem->view->panel);
+			subitem->view = NULL;
+		}
+	}
+	if (item->view->panel != NULL) {
+		view_detach(item->view->panel);
+		item->view = NULL;
+	}
+}
+
+static void
+mousebuttondown(int argc, union evarg *argv)
+{
+	struct AGMenu *m = argv[0].p;
+	int button = argv[1].i;
+	int x = argv[2].i;
+	int y = argv[3].i;
+	int i;
+
+	for (i = 0; i < m->nitems; i++) {
+		struct AGMenuItem *mitem = &m->items[i];
+		SDL_Surface *label = WIDGET_SURFACE(m,mitem->label);
+
+		if (x >= mitem->x &&
+		    x < (mitem->x + label->w + m->hspace) &&
+		    y >= mitem->y &&
+		    y < (mitem->y + label->h + m->vspace)) {
+		    	if (m->sel_item == mitem) {
+				ag_menu_collapse(m, mitem);
+				m->sel_item = NULL;
+				m->selecting = 0;
+			} else {
+				if (m->sel_item != NULL) {
+					ag_menu_collapse(m, m->sel_item);
+				}
+				m->sel_item = mitem;
+				ag_menu_expand(m, mitem,
+				    WIDGET(m)->cx+mitem->x,
+				    WIDGET(m)->cy+mitem->y+1+label->h);
+				m->selecting = 1;
+			}
+			break;
+		}
+	}
+}
+
+static void
+mousebuttonup(int argc, union evarg *argv)
+{
+	struct AGMenu *m = argv[0].p;
+	int button = argv[1].i;
+	int x = argv[2].i;
+	int y = argv[3].i;
+
+#if 0
+	if (m->sel_item != NULL && m->sel_subitem == NULL &&
+	    x >= m->sel_item->x &&
+	    x < (m->sel_item->x + WIDGET_SURFACE(m,m->sel_item->label)->w +
+	        m->hspace) &&
+	    y >= m->sel_item->y &&
+	    y < (m->sel_item->y + WIDGET_SURFACE(m,m->sel_item->label)->h +
+	        m->vspace)) {
+		m->sel_item = NULL;
+	}
+#endif
+}
+
+static void
+mousemotion(int argc, union evarg *argv)
+{
+	struct AGMenu *m = argv[0].p;
+	int x = argv[1].i;
+	int y = argv[2].i;
+	int i;
+
+	if (!m->selecting || y < 0 || y >= WIDGET(m)->h-1)
+		return;
+
+	for (i = 0; i < m->nitems; i++) {
+		struct AGMenuItem *mitem = &m->items[i];
+		SDL_Surface *label = WIDGET_SURFACE(m,mitem->label);
+
+		if (x >= mitem->x &&
+		    x < (mitem->x + label->w + m->hspace) &&
+		    y >= mitem->y &&
+		    y < (mitem->y + label->h + m->vspace)) {
+		    	if (mitem != m->sel_item) {
+				if (m->sel_item != NULL) {
+					ag_menu_collapse(m, m->sel_item);
+				}
+				m->sel_item = mitem;
+				ag_menu_expand(m, mitem,
+				    WIDGET(m)->cx+mitem->x,
+				    WIDGET(m)->cy+mitem->y+1+label->h);
+			}
+			break;
+		}
+	}
+	if (i == m->nitems && m->sel_item != NULL) {
+		ag_menu_collapse(m, m->sel_item);
+		m->sel_item = NULL;
+	}
+}
+
+void
 ag_menu_init(struct AGMenu *m)
 {
-	widget_init(m, "menu", &ag_menu_ops, WIDGET_WFILL|
-	                                  WIDGET_UNFOCUSED_BUTTONUP);
+	widget_init(m, "AGMenu", &ag_menu_ops, WIDGET_WFILL|
+					       WIDGET_UNFOCUSED_MOTION|
+	                                       WIDGET_UNFOCUSED_BUTTONUP);
 	widget_map_color(m, UNZEL_COLOR, "unzelected", 100, 100, 100, 255);
 	widget_map_color(m, SEL_COLOR, "selected", 50, 50, 120, 255);
-	widget_map_color(m, TEXT_COLOR, "text", 240, 240, 240, 255);
 
 	m->items = Malloc(sizeof(struct AGMenuItem), M_WIDGET);
 	m->nitems = 0;
 	m->vspace = 5;
 	m->hspace = 17;
-#if 0
-	event_new(com, "window-mousebuttondown", ag_menu_mousebuttondown, NULL);
-	event_new(com, "window-mousebuttonup", ag_menu_mousebuttonup, NULL);
-#endif
+	m->selecting = 0;
+	m->sel_item = NULL;
+	m->itemh = text_font_height(NULL) + m->vspace;
+
+	event_new(m, "window-mousebuttondown", mousebuttondown, NULL);
+	event_new(m, "window-mousebuttonup", mousebuttonup, NULL);
+	event_new(m, "window-mousemotion", mousemotion, NULL);
 }
 
 struct AGMenuItem *
 ag_menu_add_item(struct AGMenu *m, const char *text)
 {
-	struct AGMenuItem *mit;
+	struct AGMenuItem *mitem;
 	
 	m->items = Realloc(m->items, (m->nitems+1)*sizeof(struct AGMenuItem));
-	mit = &m->items[m->nitems++];
-	mit->text = text;
-	mit->surface = text_render(NULL, -1, TEXT_COLOR, text);
-	mit->key_equiv = 0;
-	mit->key_mod = 0;
-	mit->fn = NULL;
-	mit->subitems = NULL;
-	mit->nsubitems = 0;
-	return (mit);
+	mitem = &m->items[m->nitems++];
+	mitem->text = text;
+	mitem->label = widget_map_surface(m,
+	    text_render(NULL, -1, 0, text));
+	mitem->icon = -1;
+	mitem->key_equiv = 0;
+	mitem->key_mod = 0;
+	mitem->view = NULL;
+	mitem->event = NULL;
+	mitem->subitems = NULL;
+	mitem->nsubitems = 0;
+	mitem->pmenu = m;
+	mitem->sel_subitem = NULL;
+	mitem->pitem = NULL;
+	return (mitem);
 }
 
 struct AGMenuItem *
-ag_menu_add_subitem(struct AGMenuItem *pmit, const char *text, SDL_Surface *icon,
-    SDLKey key_equiv, SDLMod key_mod, void (*fn)(void *), void *arg)
+ag_menu_add_subitem(struct AGMenuItem *pitem, const char *text,
+    SDL_Surface *icon, SDLKey key_equiv, SDLMod key_mod,
+    void (*fn)(int, union evarg *), const char *fmt, ...)
 {
-	struct AGMenuItem *mit;
+	char evname[EVENT_NAME_MAX];
+	struct AGMenuItem *subitem;
+	struct AGMenu *m = pitem->pmenu;
+	SDL_Surface *text_su;
+	va_list ap;
 	
-	if (pmit->subitems == NULL) {
-		pmit->subitems = Malloc(sizeof(struct AGMenuItem), M_WIDGET);
+	if (pitem->subitems == NULL) {
+		pitem->subitems = Malloc(sizeof(struct AGMenuItem), M_WIDGET);
 	} else {
-		pmit->subitems = Realloc(pmit->subitems,
-		    (pmit->nsubitems+1)*sizeof(struct AGMenuItem));
+		pitem->subitems = Realloc(pitem->subitems,
+		    (pitem->nsubitems+1)*sizeof(struct AGMenuItem));
 	}
-	mit = &pmit->subitems[pmit->nsubitems++];
-	mit->text = text;
-	mit->surface = text_render(NULL, -1, TEXT_COLOR, text);
-	/* TODO icon */
-	mit->key_equiv = key_equiv;
-	mit->key_mod = key_mod;
-	mit->fn = fn;
-	mit->arg = arg;
-	mit->subitems = NULL;
-	mit->nsubitems = 0;
-	return (mit);
+
+	text_su = text_render(NULL, -1, 0, text);
+
+	subitem = &pitem->subitems[pitem->nsubitems++];
+	subitem->text = text;
+	subitem->label = widget_map_surface(m, text_su);
+	subitem->icon = (icon != NULL) ?
+	    widget_map_surface(m, view_copy_surface(icon)) : -1;
+
+	subitem->key_equiv = key_equiv;
+	subitem->key_mod = key_mod;
+	subitem->subitems = NULL;
+	subitem->nsubitems = 0;
+	subitem->view = NULL;
+	subitem->pmenu = m;
+	subitem->sel_subitem = NULL;
+	subitem->y = (pitem->nsubitems-1)*m->itemh;
+	subitem->pitem = pitem;
+
+	snprintf(evname, sizeof(evname), "select-%p", subitem);
+	subitem->event = event_new(m, evname, fn, NULL);
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		for (; *fmt != '\0'; fmt++) {
+			EVENT_PUSH_ARG(ap, *fmt, subitem->event);
+		}
+		va_end(ap);
+	}
+	return (subitem);
 }
 
-static void
-free_subitems(struct AGMenuItem *mit)
+void
+ag_menu_free_subitems(struct AGMenuItem *mit)
 {
 	int i;
 
-	if (mit->surface != NULL) {
-		SDL_FreeSurface(mit->surface);
+	if (mit->label != -1) {
+		widget_unmap_surface(mit->pmenu, mit->label);
+		mit->label = -1;
 	}
-	for (i = 0; i < mit->nsubitems; i++) {
-		free_subitems(&mit->subitems[i]);
+	if (mit->icon != -1) {
+		widget_unmap_surface(mit->pmenu, mit->icon);
+		mit->icon = -1;
 	}
+	for (i = 0; i < mit->nsubitems; i++)
+		ag_menu_free_subitems(&mit->subitems[i]);
+
 	Free(mit->subitems, M_WIDGET);
+	mit->subitems = NULL;
+	mit->nsubitems = 0;
 }
 
 void
@@ -148,7 +322,7 @@ ag_menu_free_items(struct AGMenu *m)
 	int i;
 
 	for (i = 0; i < m->nitems; i++) {
-		free_subitems(&m->items[i]);
+		ag_menu_free_subitems(&m->items[i]);
 	}
 	m->nitems = 0;
 }
@@ -167,8 +341,6 @@ void
 ag_menu_draw(void *p)
 {
 	struct AGMenu *m = p;
-	int x = m->hspace;
-	int y = m->vspace;
 	int i;
 
 	if (WIDGET(m)->w < m->hspace*2 ||
@@ -178,17 +350,20 @@ ag_menu_draw(void *p)
 	primitives.box(m, 0, 0, WIDGET(m)->w, WIDGET(m)->h, 1, UNZEL_COLOR);
 	
 	for (i = 0; i < m->nitems; i++) {
-		struct AGMenuItem *mit = &m->items[i];
+		struct AGMenuItem *mitem = &m->items[i];
+		SDL_Surface *label = WIDGET_SURFACE(m, mitem->label);
 
-		if (mit->surface == NULL) {
-			continue;
+		if (mitem == m->sel_item) {
+			primitives.rect_filled(m,
+			    mitem->x,
+			    mitem->y - m->vspace/2,
+			    label->w + m->hspace,
+			    label->h + m->vspace - 1,
+			    SEL_COLOR);
 		}
-		widget_blit(m, mit->surface, x, y);
-		x += mit->surface->w + m->hspace;
-		if (x > view->w/2) {
-			x = m->hspace;
-			y += mit->surface->h + m->vspace;
-		}
+		widget_blit_surface(m, mitem->label,
+		    mitem->x + m->hspace/2,
+		    mitem->y + m->vspace/2);
 	}
 }
 
@@ -201,25 +376,26 @@ ag_menu_scale(void *p, int w, int h)
 		int x, y;
 		int i;
 
-		x = WIDGET(m)->w = m->hspace;
-		y = WIDGET(m)->h = m->vspace;
+		x = WIDGET(m)->w = m->hspace/2;
+		y = WIDGET(m)->h = m->vspace/2;
 
 		for (i = 0; i < m->nitems; i++) {
-			struct AGMenuItem *mit = &m->items[i];
+			struct AGMenuItem *mitem = &m->items[i];
+			SDL_Surface *label = WIDGET_SURFACE(m, mitem->label);
 
-			if (mit->surface == NULL) {
-				continue;
-			}
-			x += mit->surface->w+m->hspace;
-			if (WIDGET(m)->h < mit->surface->h) {
-				WIDGET(m)->h += mit->surface->h + m->vspace;
+			mitem->x = x;
+			mitem->y = y;
+
+			x += label->w+m->hspace;
+			if (WIDGET(m)->h < label->h) {
+				WIDGET(m)->h += label->h + m->vspace;
 			}
 			if (x > view->w/2) {
 				x = m->hspace;			/* Wrap */
-				y += mit->surface->h + m->vspace;
-				WIDGET(m)->h += mit->surface->h;
+				y += label->h + m->vspace;
+				WIDGET(m)->h += label->h;
 			} else {
-				WIDGET(m)->w += mit->surface->w + m->hspace;
+				WIDGET(m)->w += label->w + m->hspace;
 			}
 		}
 	}
