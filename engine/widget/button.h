@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.18 2003/01/20 12:05:45 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.19 2003/01/21 03:41:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -9,6 +9,7 @@ struct button {
 
 	int		 flags;
 #define BUTTON_STICKY	0x01
+#define BUTTON_NOFOCUS	0x02
 
 	char		*caption;	/* String, or NULL */
 	SDL_Surface	*label_s;	/* Label (or image) */
