@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.75 2003/08/07 23:28:57 vedge Exp $
+# $Csoft: configure.in,v 1.76 2003/08/08 00:19:07 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -25,10 +25,6 @@ HDEFINE(TTFDIR, "\"$PREFIX/share/cave/fonts\"")
 # Manual and PostScript installation directories.
 MDEFINE(INST_MANDIR, "$PREFIX/share/agar/man")
 MDEFINE(INST_PSDIR, "$PREFIX/share/agar/ps")
-
-# Where to install locales for multi-language support.
-MDEFINE(LOCALEDIR, "$PREFIX/share/locale")
-HDEFINE(LOCALEDIR, "\"$PREFIX/share/locale\"")
 
 CHECK(cc)
 CHECK(progname)
