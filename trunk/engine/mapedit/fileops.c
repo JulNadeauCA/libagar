@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.22 2002/12/30 06:30:49 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.23 2003/01/01 05:18:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -239,7 +239,7 @@ fileops_revert_map(int argc, union evarg *argv)
 	udatadir = prop_get_string(config, "path.user_data_dir");
 
 	/* Always edit the user copy. */
-	asprintf(&path, "%s/maps/%s.map", udatadir, OBJECT(m)->name);
+	Asprintf(&path, "%s/maps/%s.map", udatadir, OBJECT(m)->name);
 
 	if (object_load_from(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
