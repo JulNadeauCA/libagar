@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.20 2005/02/22 08:44:16 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.21 2005/02/24 03:08:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -420,9 +420,13 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 				window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 				window_attach(pwin, win);
 				window_show(win);
+
 				tv->tv_feature.win = win;
 				event_new(win, "window-close", element_closed,
 				    "%p", tv);
+				
+				view->focus_win = pwin;
+				widget_focus(tv);
 			} else {
 				tv->tv_feature.win = NULL;
 			}
@@ -451,6 +455,9 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			tv->tv_pixmap.win = win;
 			event_new(win, "window-close", element_closed, "%p",
 			    tv);
+			
+			view->focus_win = pwin;
+			widget_focus(tv);
 	
 			tv->tile->flags |= TILE_DIRTY;
 		}
@@ -936,7 +943,10 @@ tile_edit(struct tileset *ts, struct tile *t)
 	struct tileview *tv;
 	struct tlist *tl_feats;
 
-	win = window_new(WINDOW_DETACH, NULL);
+	if ((win = window_new(WINDOW_DETACH, "tile-%s:%s",
+	    OBJECT(ts)->name, t->name)) == NULL) {
+		return (NULL);
+	}
 	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
 	event_new(win, "window-close", close_tile, "%p,%p", ts, t);
 	
