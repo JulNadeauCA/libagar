@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.11 2005/02/03 04:59:00 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.12 2005/02/03 05:14:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -397,9 +397,10 @@ ag_menu_view_scale(void *p, int w, int h)
 			int req_w = mview->hspace*2;
 
 			if (subitem->icon != -1) {
-				req_w += WIDGET_SURFACE(m,subitem->icon)->w +
-				    mview->hspace;
+				req_w += WIDGET_SURFACE(m,subitem->icon)->w;
 			}
+			req_w += m->itemh;
+		
 			if (subitem->label != -1) {
 				req_w += WIDGET_SURFACE(m,subitem->label)->w +
 				    mview->hspace;
