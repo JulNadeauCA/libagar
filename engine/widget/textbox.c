@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.51 2003/04/25 09:40:37 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.52 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -83,8 +83,8 @@ textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
 void
 textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 {
-	tbox->xmargin = 4;
-	tbox->ymargin = 3;
+	tbox->xpadding = 4;
+	tbox->ypadding = 3;
 
 	widget_init(&tbox->wid, "textbox", &textbox_ops, rw, rh);
 
@@ -135,7 +135,7 @@ textbox_draw(void *p)
 	struct textbox *tbox = p;
 	int i, lx, tw, th;
 	int x = 0;
-	int y = tbox->ymargin;
+	int y = tbox->ypadding;
 
 	if (tbox->label != NULL) {
 		widget_blit(tbox, tbox->label,
@@ -149,7 +149,7 @@ textbox_draw(void *p)
 		y++;
 	}
 	primitives.box(tbox, x, 0,
-	    WIDGET(tbox)->w - tbox->xmargin*2 - tbox->label->w,
+	    WIDGET(tbox)->w - tbox->label->w - 1,
 	    WIDGET(tbox)->h,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
 	    tbox->flags & TEXTBOX_READONLY ?
@@ -172,7 +172,7 @@ textbox_draw(void *p)
 		    tbox->text.offs);
 	}
 
-	x += tbox->xmargin;
+	x += tbox->xpadding;
 	for (i = tbox->text.offs, lx = -1;
 	     i < tw+1;
 	     i++) {
@@ -199,7 +199,7 @@ textbox_draw(void *p)
 
 		/* Draw the characters. */
 		if (i < tw && tbox->text.s[i] != '\0' &&
-		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
+		    x < WIDGET(tbox)->w - (tbox->xpadding*4)) {
 			SDL_Surface *glyph;
 			char ch = tbox->text.s[i];
 
@@ -234,7 +234,7 @@ textbox_scaled(int argc, union evarg *argv)
 	struct textbox *tbox = argv[0].p;
 	
 	if (WIDGET(tbox)->rh == -1)
-		WIDGET(tbox)->h = tbox->label->h + tbox->ymargin*2;
+		WIDGET(tbox)->h = tbox->label->h + tbox->ypadding*2;
 }
 
 static void
