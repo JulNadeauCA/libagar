@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.13 2005/02/22 04:19:17 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.14 2005/03/03 10:59:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -89,9 +89,9 @@ menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 	menu_view_init(mview, panel, m, item);
 	object_attach(panel, mview);
 	item->view = mview;
-	
+
 	WIDGET_SCALE(panel, -1, -1);
-	widget_update_coords(panel, WIDGET(panel)->x, WIDGET(panel)->y);
+	WINDOW_UPDATE(panel);
 	window_show(panel);
 	return (panel);
 }

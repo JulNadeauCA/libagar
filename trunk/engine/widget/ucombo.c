@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.10 2004/09/12 05:52:26 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.11 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -99,6 +99,8 @@ ucombo_expand(int argc, union evarg *argv)
 		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
 		pan->x = WIDGET(com)->cx;
 		pan->y = WIDGET(com)->cy;
+
+		/* XXX redundant check */
 		if (pan->x+pan->w > view->w)
 			pan->w = view->w - pan->x;
 		if (pan->y+pan->h > view->h)
@@ -107,9 +109,7 @@ ucombo_expand(int argc, union evarg *argv)
 		tlist_prescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
 		WIDGET_SCALE(com->list, -1, -1);
 		WIDGET_SCALE(pan, -1, -1);
-		WIDGET_SCALE(pan, pan->w, pan->h);
-		widget_update_coords(pan, pan->x, pan->y);
-
+		WINDOW_UPDATE(pan);
 		window_show(com->panel);
 	} else {
 		ucombo_collapse(com);
