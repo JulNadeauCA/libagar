@@ -110,6 +110,10 @@ the area covered by the widget.
 .nr nS 1
 .Ft void
 .Fn widget_map_color "struct widget *wid" "int index" "char *name" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft Uint32
+.Fn WIDGET_COLOR "struct widget *wid" "int index"
+.Pp
 .nr nS 0
 .Pp
 The
@@ -128,17 +132,38 @@ argument is an index into the widget color table (an arbitrary-size
 array of color values).
 This allows the color scheme to change at run time without expensive
 operations in widget rendering routines.
-.Sh MACROS
-.nr nS 1
-.Ft Uint32
-.Fn WIDGET_COLOR "struct widget *wid" "int index"
 .Pp
+The
+.Fn WIDGET_COLOR
+macro returns the color at index
+.Fa index .
+.Sh COORDINATES
+.nr nS 1
 .Ft Uint32
 .Fn WIDGET_ABSX "struct widget *wid"
 .Pp
 .Ft Uint32
 .Fn WIDGET_ABSY "struct widget *wid"
 .Pp
+.Ft bool
+.Fn WIDGET_INSIDE "struct widget *wid" "Sint16 x" "Sint16 y"
+.nr nS 0
+.Pp
+The
+.Fn WIDGET_ABSX
+and
+.Fn WIDGET_ABSY
+macros return the absolute coordinates of a widget.
+.Pp
+The
+.Fn WIDGET_INSIDE
+macro evaluates to true if coordinates
+.Fa x
+and
+.Fa y
+are inside the widget area.
+.Sh RENDERING
+.nr nS 1
 .Ft void
 .Fn WIDGET_DRAW "struct widget *wid" "SDL_Surface *surface" "Sint16 x" "Sint16 y"
 .Pp
@@ -156,21 +181,11 @@ operations in widget rendering routines.
 .Pp
 .Ft void
 .Fn WIDGET_FOCUS "struct widget *wid"
-.Pp
-.Ft bool
-.Fn WIDGET_INSIDE "struct widget *wid" "Sint16 x" "Sint16 y"
 .nr nS 0
 .Pp
-.Fn WIDGET_COLOR
-returns the color at index
-.Fa index .
-.Fn WIDGET_ABSX
-and
-.Fn WIDGET_ABSY
-return the absolute coordinates of a widget.
-.Pp
+The
 .Fn WIDGET_DRAW
-blits the surface
+macro blits the surface
 .Fa surface
 onto the widget at offset
 .Fa x ,
@@ -178,35 +193,28 @@ onto the widget at offset
 with
 .Xr SDL_BlitSurface 3 .
 .Pp
+The
 .Fn WIDGET_PUT_PIXEL
-writes a pixel of value
+macro writes a pixel of value
 .Fa color
 at coordinates
 .Fa x ,
 .Fa y
-on the widget surface (using the
-.Xr WINDOW_PUT_PIXEL 3
-macro, which in turn uses the
-.Xr VIEW_PUT_PIXEL 3
-macro).
+on the widget surface.
+The
 .Fn WIDGET_PUT_ALPHAPIXEL
-writes a pixel at coordinates
+macro writes a pixel at coordinates
 .Fa x ,
 .Fa y
 of the widget, after alpha-blending the pixel using alpha value
 .Fa a .
 .Pp
-.Fn WIDGET_SURFACE
-returns a widget surface.
-.Fn WIDGET_FOCUS
-gives focus to a widget.
 The
-.Fn WIDGET_INSIDE
-macro evaluates to true if coordinates
-.Fa x
-and
-.Fa y
-are inside the widget area.
+.Fn WIDGET_SURFACE
+macro returns a widget surface.
+The
+.Fn WIDGET_FOCUS
+macro gives focus to a widget.
 .Sh SEE ALSO
 .Xr agar 3 .
 .Sh HISTORY
