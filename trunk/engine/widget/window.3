@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.10 2002/09/17 21:42:25 vedge Exp $
+.\"	$Csoft: window.3,v 1.11 2002/09/19 21:13:12 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -239,22 +239,20 @@ objects:
 Window gained focus.
 .It Fn window-lostfocus "void"
 Window no longer focused.
-.It Fn window-mouseout "void"
-The widget has the
-.Dv WIDGET_MOUSEOUT
-flag set and the mouse has moved outside of the widget area.
 .It Fn window-mousemotion "int x" "int y" "int xrel" "int yrel"
 The mouse cursor has moved to widget-relative coordinates
 .Fa x
 and
 .Fa y
-inside the widget area, and the widget currently holds the focus.
+(which may be negative) and the widget currently holds the focus.
 The
 .Fa xrel
 and
 .Fa yrel
 arguments represent the displacement relative to the last position of the
 mouse cursor.
+This event is generated even when the mouse is moving outside the widget
+area.
 .It Fn window-mousebuttonup "int button" "int x" "int y"
 The mouse button indexed by
 .Fa button
