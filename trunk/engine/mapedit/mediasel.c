@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.1 2004/03/09 06:16:18 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.1 2004/03/10 04:30:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -74,6 +74,8 @@ media_selected(int argc, union evarg *argv)
 			    error_get());
 			return;
 		}
+		gfx_unused(msel->obj->gfx);
+		msel->obj->gfx = NULL;
 		msel->obj->gfx_name = Strdup(it->text);
 		break;
 	case MEDIASEL_AUDIO:
@@ -89,6 +91,8 @@ media_selected(int argc, union evarg *argv)
 			    error_get());
 			return;
 		}
+		audio_unused(msel->obj->audio);
+		msel->obj->audio = NULL;
 		msel->obj->audio_name = Strdup(it->text);
 		break;
 	}
