@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.1 2002/01/30 12:30:04 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.2 2002/01/30 17:47:43 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -144,6 +144,8 @@ engine_mapedit(void)
 			fatal("mapedit_create\n");
 			return (1);
 		}
+
+		/* Map is in a consistent state. Display animations. */
 		map_focus(medit->map);
 	}
 	return (0);
@@ -152,9 +154,6 @@ engine_mapedit(void)
 void
 engine_join(void)
 {
-	/* Enable animations on the map view. */
-	map_animset(curmap, 1);
-
 	event_loop();
 }
 
