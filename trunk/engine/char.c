@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.43 2002/04/28 14:21:02 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.44 2002/05/02 06:25:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ static Uint32	char_time(Uint32, void *);
 void
 char_init(struct character *ch, char *name, char *media)
 {
-	object_init(&ch->obj, name, media, OBJ_ART, &char_vec);
+	object_init(&ch->obj, name, media, OBJ_ART|OBJ_BLOCK, &char_vec);
 
 	ch->flags = 0;
 	ch->level = 0;
@@ -82,6 +82,8 @@ char_init(struct character *ch, char *name, char *media)
 	ch->mp = ch->maxmp;
 	ch->maxspeed = DEFAULT_SPEED;
 	ch->nzuars = DEFAULT_ZUARS;
+
+	pthread_mutex_init(&ch->lock, NULL);
 }
 
 int
@@ -95,6 +97,8 @@ char_load(void *p, int fd)
 	if (version_read(fd, &char_ver) != 0) {
 		return (-1);
 	}
+
+	pthread_mutex_lock(&ch->lock);
 
 	/* Read character properties. */
 	free(fobj_read_string(fd));		/* Ignore name */
@@ -142,11 +146,9 @@ char_load(void *p, int fd)
 
 		m = (struct map *)object_strfind(mname);
 		if (m != NULL) {
-			struct node *node;
 			struct mappos *npos;
 
 			pthread_mutex_lock(&m->lock);
-			node = &m->map[y][x];
 			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
 			pthread_mutex_unlock(&m->lock);
@@ -166,6 +168,8 @@ char_load(void *p, int fd)
 		dprintf("%s is nowhere.\n", ob->name);
 	}
 	
+	pthread_mutex_unlock(&ch->lock);
+	
 	return (0);
 }
 
@@ -182,6 +186,8 @@ char_save(void *p, int fd)
 	}
 
 	version_write(fd, &char_ver);
+	
+	pthread_mutex_lock(&ch->lock);
 
 	/* Write character properties. */
 	fobj_bwrite_string(buf, ch->obj.name);
@@ -215,32 +221,36 @@ char_save(void *p, int fd)
 	} else {
 		fobj_bwrite_uint32(buf, 0);
 	}
-
+	pthread_mutex_unlock(&ch->lock);
 	fobj_flush_buf(buf, fd);
 	return (0);
 }
 
+/* World must be locked. */
 int
 char_link(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
-	/* Assume world->lock is held */
 	SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
 
+	pthread_mutex_lock(&ch->lock);
 	ch->timer = SDL_AddTimer(ch->maxspeed, char_time, ch);
+	pthread_mutex_unlock(&ch->lock);
 
 	return (0);
 }
 
+/* World must be locked. */
 int
 char_unlink(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
+	pthread_mutex_lock(&ch->lock);
 	SDL_RemoveTimer(ch->timer);
+	pthread_mutex_unlock(&ch->lock);
 
-	/* Assume world->lock is held */
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 
 	return (0);
@@ -251,35 +261,33 @@ char_time(Uint32 ival, void *p)
 {
 	struct object *ob = (struct object *)p;
 	struct map *m;
+	struct mappos *pos;
 	Uint32 x, y, moved = 0;
-
+	
 	if (ob->pos == NULL) {
 		return (ival);
 	}
 
-	m = ob->pos->map;
-	x = ob->pos->x;
-	y = ob->pos->y;
+	/* Obtain the position. XXX array */
+	pthread_mutex_lock(&ob->pos_lock);
+	pos = ob->pos;
+	pthread_mutex_unlock(&ob->pos_lock);
+
+	m = pos->map;
+	x = pos->x;
+	y = pos->y;
 	
 	pthread_mutex_lock(&m->lock);
 
-	moved = mapdir_move(&ob->pos->dir, &x, &y);
+	/* Move the character if necessary. */
+	moved = mapdir_move(&pos->dir, &x, &y);
 	if (moved != 0) {
-		static struct mappos opos;
-		struct mappos *npos;
-		struct noderef *nref;
-		
-		opos = *ob->pos;
-		nref = opos.nref;
+		struct mappos *newpos;
 	
-		object_delpos(nref->pobj);
-		npos = object_addpos(nref->pobj, nref->offs, nref->flags,
-		    opos.input, m, x, y);
-		npos->dir = opos.dir;
-
-		m->redraw++;
-		mapdir_postmove(&npos->dir, &x, &y, moved);
+		newpos = object_movepos(ob, m, x, y);
+		mapdir_postmove(&newpos->dir, &x, &y, moved);
 	}
+
 	pthread_mutex_unlock(&m->lock);
 
 	return (ival);
