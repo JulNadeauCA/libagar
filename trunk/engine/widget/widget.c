@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.38 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.39 2003/01/01 05:18:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 #define DEBUG_BINDINGS		0x01
 #define DEBUG_BINDING_LOOKUPS	0x02
 
-int	widget_debug = DEBUG_BINDINGS;
+int	widget_debug = 0;
 #define engine_debug widget_debug
 #endif
 
