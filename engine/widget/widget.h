@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.83 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.84 2004/09/28 04:24:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -125,8 +125,8 @@ void		 widget_inherit_color(void *, int, const char *, void *);
 int		 widget_map_surface(void *, SDL_Surface *);
 __inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);
 
-__inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
-void		 widget_blit_from(void *, void *, int, int, int);
+void	 widget_blit(void *, SDL_Surface *, int, int);
+void	 widget_blit_from(void *, void *, int, int, int);
 
 #define widget_unmap_surface(w, n) widget_replace_surface((w),(n),NULL)
 #define	widget_blit_surface(p,n,x,y) widget_blit_from((p),(p),(n),(x),(y))
