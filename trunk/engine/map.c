@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.205 2004/03/09 06:28:14 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.206 2004/03/10 03:12:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1305,6 +1305,7 @@ toggle_media(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 	struct window *win = mv->mimport.win;
 	
+	pthread_mutex_lock(&win->lock);
 	if (win->visible) {
 		window_hide(win);
 	} else {
@@ -1316,6 +1317,7 @@ toggle_media(int argc, union evarg *argv)
 		}
 		window_show(win);
 	}
+	pthread_mutex_unlock(&win->lock);
 }
 
 /* Toggle map read-write mode. */
@@ -1531,12 +1533,10 @@ media_window_hidden(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
-	if (OBJECT(mv->map)->gfx_name != NULL) {
+	if (OBJECT(mv->map)->gfx_name != NULL)
 		object_page_out(mv->map, OBJECT_GFX);
-	}
-	if (OBJECT(mv->map)->audio_name != NULL) {
+	if (OBJECT(mv->map)->audio_name != NULL)
 		object_page_out(mv->map, OBJECT_AUDIO);
-	}
 }
 
 /* Update the graphic import list. */
@@ -1621,7 +1621,7 @@ media_window(struct mapview *mv)
 	}
 
 	event_new(win, "window-close", media_window_close, "%p", mv);
-	event_new(win, "widget-hidden", media_window_hidden, "%p", mv);
+	event_new(win, "window-hidden", media_window_hidden, "%p", mv);
 	return (win);
 }
 
