@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.86 2005/03/08 08:37:11 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.87 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -529,7 +529,7 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 		text[0] = '\0';
 	}
 	/* XXX */
-	tbox->pos = 0;
+	tbox->pos = strlen(text);
 	widget_binding_unlock(stringb);
 }
 
