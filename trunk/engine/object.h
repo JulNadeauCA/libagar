@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.2 2002/01/25 11:17:26 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -50,9 +50,6 @@ struct object {
 	GSList	*sprites;	/* Sprite surfaces */
 	int	 nsprites;	/* Sprite count */
 	pthread_mutex_t lock;	/* Lock on sprite list */
-
-	struct	 map *map;	/* Parent map (or NULL) */
-	int	 mapx, mapy;	/* XXX Map coordinates */
 
 	void	 (*time_hook)(struct object *);
 	void	 (*event_hook)(struct object *, SDL_Event *);
