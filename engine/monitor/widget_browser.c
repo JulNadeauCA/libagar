@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.31 2004/02/20 04:20:02 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.32 2004/03/17 12:35:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -173,13 +173,14 @@ examine_widget(int argc, union evarg *argv)
 	{
 		struct label *lab;
 
-		label_new(vb, _("Name: \"%s\""), OBJECT(wid)->name);
-		label_new(vb, _("Type: %s"), wid->type);
-		label_polled_new(vb, &pwin->lock, _("Flags: 0x%x"),
+		label_new(vb, LABEL_STATIC, _("Name: \"%s\""),
+		    OBJECT(wid)->name);
+		label_new(vb, LABEL_STATIC, _("Type: %s"), wid->type);
+		label_new(vb, LABEL_POLLED_MT, _("Flags: 0x%x"), &pwin->lock,
 		    &wid->flags);
 
-		lab = label_polled_new(vb, &pwin->lock,
-		    _("Geo: %dx%d at %d,%d (view %d,%d)"),
+		lab = label_new(vb, LABEL_POLLED_MT,
+		    _("Geo: %dx%d at %d,%d (view %d,%d)"), &pwin->lock,
 		    &wid->w, &wid->h, &wid->x, &wid->y,
 		    &wid->cx, &wid->cy);
 		label_prescale(lab,
@@ -271,8 +272,9 @@ examine_window(int argc, union evarg *argv)
 	window_set_caption(win, _("%s window"), OBJECT(pwin)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
-	label_new(win, _("Name: \"%s\""), OBJECT(pwin)->name);
-	label_polled_new(win, &pwin->lock, _("Flags: 0x%x"), &pwin->flags);
+	label_new(win, LABEL_STATIC, _("Name: \"%s\""), OBJECT(pwin)->name);
+	label_new(win, LABEL_POLLED_MT, _("Flags: 0x%x"), &pwin->lock,
+	    &pwin->flags);
 
 	tl = tlist_new(win, TLIST_TREE|TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_widgets, "%p", pwin);

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.175 2004/03/20 08:16:03 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.176 2004/03/20 08:21:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -140,8 +140,6 @@ update_fps_counter(void)
 {
 	static int einc = 0;
 
-	label_printf(fps_label, "%dms/%dms",
-	    view->refresh.current, view->refresh.delay);
 	graph_plot(fps_refresh, view->refresh.current);
 	graph_plot(fps_events, event_count * 30 / 10);
 	graph_plot(fps_idle, event_idletime);
@@ -161,7 +159,11 @@ init_fps_counter(void)
 	window_set_position(fps_win, WINDOW_LOWER_CENTER, 0);
 	window_set_closure(fps_win, WINDOW_HIDE);
 
-	fps_label = label_new(fps_win, "...");
+	fps_label = label_new(fps_win, LABEL_POLLED,
+	    "%dms/%dms, %d events, %dms idle",
+	    &view->refresh.current, &view->refresh.delay, &event_count,
+	    &event_idletime);
+
 	fps_graph = graph_new(fps_win, "Refresh rate", GRAPH_LINES,
 	    GRAPH_ORIGIN, 100);
 

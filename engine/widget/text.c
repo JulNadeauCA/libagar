@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.77 2004/03/12 02:50:38 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.78 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -337,7 +337,7 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	window_set_position(win, WINDOW_CENTER, 1);
 
 	vb = vbox_new(win, 0);
-	label_new(vb, msg);
+	label_new(vb, LABEL_STATIC, msg);
 
 	vb = vbox_new(win, VBOX_HOMOGENOUS|VBOX_WFILL|VBOX_HFILL);
 	button = button_new(vb, _("Ok"));

@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.2 2004/01/03 04:25:11 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.3 2004/03/28 07:35:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -107,7 +107,7 @@ uniconv_window(void)
 	window_set_caption(win, _("Unicode Conversion"));
 	window_set_closure(win, WINDOW_DETACH);
 	
-	label_polled_new(win, NULL, "%s (%s )", &utf8text, &bytetext);
+	label_new(win, LABEL_POLLED, "%s (%s )", &utf8text, &bytetext);
 
 	sbu = spinbutton_new(win, "Unicode: ");
 	spinbutton_set_min(sbu, 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.13 2004/01/03 04:25:11 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.14 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -263,7 +263,7 @@ screenshot_window(void)
 	vb = vbox_new(win, VBOX_WFILL);
 	{
 		strlcpy(status, _("Idle"), sizeof(status));
-		lab = label_polled_new(vb, NULL, _("Status: %s."), &status);
+		lab = label_new(vb, LABEL_POLLED, _("Status: %s."), &status);
 		label_prescale(lab, _("Transmitting frame XXXXXXXXXXX"));
 		WIDGET(lab)->flags |= WIDGET_CLIPPING;
 

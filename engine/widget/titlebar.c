@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.12 2004/03/17 04:01:11 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.13 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -95,7 +95,7 @@ titlebar_init(struct titlebar *tbar, int flags)
 	tbar->pressed = 0;
 	tbar->win = NULL;
 	
-	tbar->label = label_new(tbar, "Untitled");
+	tbar->label = label_new(tbar, LABEL_STATIC, _("Untitled"));
 	WIDGET(tbar->label)->flags |= WIDGET_WFILL;
 
 	tbar->hide_bu = button_new(tbar, NULL);
