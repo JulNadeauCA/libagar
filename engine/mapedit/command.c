@@ -40,7 +40,10 @@
 #include "mapedit.h"
 #include "command.h"
 
-static void	mapedit_setpointer(struct mapedit *, int);
+static void	 mapedit_setpointer(struct mapedit *, int);
+static void	*mapedit_do_loadmap(void *);
+static void	*mapedit_do_savemap(void *);
+
 
 /*
  * All the following operations must be performed
@@ -53,6 +56,8 @@ mapedit_setpointer(struct mapedit *med, int enable)
 	static int oxoffs = 0, oyoffs = 0;
 	struct noderef *nref;
 	struct node *node = &med->map->map[med->y][med->x];
+
+	pthread_mutex_assert(&med->map->lock);
 
 	if (enable) {
 		nref = node_addref(node, med, MAPEDIT_SELECT,
@@ -83,6 +88,8 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 {
 	struct editref *eref;
 	struct noderef *nref;
+	
+	pthread_mutex_assert(&med->map->lock);
 
 	mapedit_setpointer(med, 0);
 
@@ -115,20 +122,27 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 
 /* Remove the highest reference off the node stack. */
 void
-mapedit_pop(struct mapedit *med, struct node *node)
+mapedit_pop(struct mapedit *med, struct node *node, int clear)
 {
-	struct noderef *nref;
-	int i = 0;
+	pthread_mutex_assert(&med->map->lock);
 
 	mapedit_setpointer(med, 0);
-	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		if (i++ == (node->nnrefs - 1)) {
-			node_delref(node, nref);
-			med->map->redraw++;
-			goto done;
+	if (clear) {
+		struct noderef *nref, *nextnref;
+
+		for (nref = TAILQ_FIRST(&node->nrefsh);
+		     nref != TAILQ_END(&node->nrefsh);
+		     nref = nextnref) {
+			nextnref = TAILQ_NEXT(nref, nrefs);
+			free(nref);
+		}
+		TAILQ_INIT(&node->nrefsh);
+	} else {
+		if (!TAILQ_EMPTY(&node->nrefsh)) {
+			node_delref(node, TAILQ_LAST(&node->nrefsh,
+			    nrefs_head));
 		}
 	}
-done:
 	mapedit_setpointer(med, 1);
 }
 
@@ -136,9 +150,12 @@ done:
 void
 mapedit_clearmap(struct mapedit *med)
 {
+	pthread_mutex_assert(&med->map->lock);
+
 	mapedit_setpointer(med, 0);
 	map_clean(med->map, NULL, 0, 0, 0);
 	mapedit_setpointer(med, 1);
+
 	med->map->redraw++;
 	mapedit_objlist(med);
 	mapedit_tilelist(med);
@@ -152,6 +169,8 @@ void
 mapedit_fillmap(struct mapedit *med)
 {
 	struct editref *eref;
+
+	pthread_mutex_assert(&med->map->lock);
 
 	mapedit_setpointer(med, 0);
 
@@ -185,6 +204,8 @@ void
 mapedit_setorigin(struct mapedit *med, int *x, int *y)
 {
 	struct map *map = med->map;
+	
+	pthread_mutex_assert(&med->map->lock);
 
 	map->map[map->defy][map->defx].flags &= ~(NODE_ORIGIN);
 	map->defx = *x;
@@ -199,53 +220,65 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 	text_msg(2, TEXT_SLEEP, "Set origin at %dx%d.\n", *x, *y);
 }
 
-void
-mapedit_loadmap(struct mapedit *med)
+static void *
+mapedit_do_loadmap(void *arg)
 {
-	struct map *map = med->map;
+	struct mapedit *med = arg;
+	struct map *m = med->map;
 	char path[FILENAME_MAX];
 	Uint32 x, y;
-
+	
 	mapedit_setpointer(med, 0);
 
-	map_freenodes(map);
-	
 	/* Users must copy maps to udatadir in order to edit them. */
 	/* XXX redundant */
 	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
 
 	pthread_mutex_lock(&world->lock);
-	pthread_mutex_unlock(&med->map->lock);		/* XXX */
-	if (object_loadfrom(med->map, path) == 0) {
-		x = map->defx;
-		y = map->defy;
-		map->map[y][x].flags |= NODE_ORIGIN;
+
+	if (object_loadfrom(m, path) == 0) {	/* Will reallocate nodes, and
+						   lock the map as well. */
+		x = m->defx;
+		y = m->defy;
+		m->map[y][x].flags |= NODE_ORIGIN;
 		med->x = x;
 		med->y = y;
-		view_center(map->view, x, y);
-	} else {
-		/* Reallocate nodes we just freed. */
-		map_allocnodes(map, map->mapw, map->maph,
-		    map->tilew, map->tileh);
+		view_center(m->view, x, y);
 	}
-	pthread_mutex_lock(&med->map->lock);		/* XXX */
 	pthread_mutex_unlock(&world->lock);
 
 	mapedit_setpointer(med, 1);
-	map->redraw++;
 
-	mapedit_objlist(med);
-	mapedit_tilelist(med);
+	text_msg(2, TEXT_SLEEP, "Loaded %s.\n", OBJECT(m)->name);
+	
+	view_redraw(m->view);
+	return (NULL);
+}
+
+void
+mapedit_loadmap(struct mapedit *med)
+{
+	pthread_t loadmap_th;
+
+	pthread_create(&loadmap_th, NULL, mapedit_do_loadmap, med);
+}
+
+static void *
+mapedit_do_savemap(void *arg)
+{
+	struct mapedit *med = arg;
+
+	object_save(med->map);
+	return (NULL);
 }
 
 void
 mapedit_savemap(struct mapedit *med)
 {
 	struct map *m = med->map;
+	pthread_t savemap_th;
 
-	pthread_mutex_lock(&world->lock);
-	object_save(m);
-	pthread_mutex_unlock(&world->lock);
+	pthread_create(&savemap_th, NULL, mapedit_do_savemap, med);
 
 	text_msg(2, TEXT_SLEEP, "Saved %s.\n", OBJECT(m)->name);
 }
@@ -257,6 +290,8 @@ mapedit_examine(struct map *em, int x, int y)
 	struct noderef *nref;
 	struct node *node;
 	int i;
+	
+	pthread_mutex_assert(&em->lock);
 
 	node = &em->map[y][x];
 
@@ -330,6 +365,7 @@ mapedit_editflags(struct mapedit *med, int mask)
 void
 mapedit_nodeflags(struct mapedit *med, struct node *node, Uint32 flag)
 {
+	pthread_mutex_assert(&med->map->lock);
 	if (flag == 0) {
 		node->flags &= NODE_DONTSAVE;
 	} else if (flag == NODE_WALK) {

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.83 2002/04/28 11:05:53 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.84 2002/04/30 01:12:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -158,6 +158,7 @@ mapedit_shadow(struct mapedit *med)
 			med->curoffs = 1;
 		}
 		
+		pthread_mutex_lock(&eob->lock);
 		if (eob->nsprites > 0) {
 			Uint32 y;
 
@@ -191,6 +192,8 @@ mapedit_shadow(struct mapedit *med)
 				eob->nrefs++;
 			}
 		}
+		pthread_mutex_unlock(&eob->lock);
+
 		pthread_mutex_lock(&med->eobjslock);
 		TAILQ_INSERT_HEAD(&med->eobjsh, eob, eobjs);
 		med->neobjs++;
@@ -215,6 +218,8 @@ mapedit_link(void *p)
 	struct map *m = med->map;
 	struct node *node;
 	int fd, new = 0;
+	
+	pthread_mutex_lock(&keyslock);	/* Block keystrokes */
 
 	if (med->margs.mapw < MAP_MINWIDTH || med->margs.maph < MAP_MINHEIGHT) {
 		fatal("minimum map size is %dx%d\n", MAP_MINWIDTH,
@@ -227,19 +232,27 @@ mapedit_link(void *p)
 	if ((fd = open(path, O_RDONLY, 0)) > 0) {
 		close(fd);
 
+		dprintf("loading existing map\n");
+
 		m = emalloc(sizeof(struct map));
 		map_init(m, med->margs.name, NULL, MAP_2D);
+
 		pthread_mutex_lock(&world->lock);
 		object_loadfrom(m, path);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		struct node *origin;
+
+		dprintf("creating new map\n");
 		
 		/* Create a new map of the specified geometry. */
 		m = emalloc(sizeof(struct map));
 		map_init(m, med->margs.name, NULL, MAP_2D);
+
+		pthread_mutex_lock(&m->lock);
 		map_allocnodes(m, med->margs.mapw, med->margs.maph,
 		    med->margs.tilew, med->margs.tileh);
+		pthread_mutex_unlock(&m->lock);
 
 		m->defx = med->margs.mapw / 2;
 		m->defy = med->margs.maph - 2;
@@ -247,6 +260,8 @@ mapedit_link(void *p)
 		origin->flags |= NODE_ORIGIN;
 		new++;
 	}
+
+	pthread_mutex_lock(&m->lock);
 
 	med->map = m;
 	med->x = m->defx;
@@ -285,22 +300,18 @@ mapedit_link(void *p)
 	pthread_mutex_unlock(&world->lock);
 	SDL_WM_SetCaption(caption, "agar");
 
-	text_msg(1, TEXT_SLEEP,
-	    "Editing \"%s\" (%s)\n", OBJECT(m)->name, new ? "new" : path);
-
 	/* Create the structures defining what is editable. */
 	mapedit_shadow(med);
 
-	pthread_mutex_lock(&m->lock);
 	node = &m->map[m->defy][m->defx];
 	node_addref(node, med, MAPEDIT_SELECT,
 	    MAPREF_ANIM|MAPREF_ANIM_INDEPENDENT);
 	node->flags |= (NODE_ANIM|NODE_ORIGIN);
+
 	pthread_mutex_unlock(&m->lock);
 	
 	/* Map is now in a consistent state. XXX focus? */
 	map_focus(m);
-	m->redraw++;
 
 	med->timer = SDL_AddTimer(med->cursor_speed, mapedit_cursor_tick, med);
 	if (med->timer == NULL) {
@@ -312,18 +323,19 @@ mapedit_link(void *p)
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		return (-1);
 	}
-
-	curmapedit = med;
+	
 	dprintf("editing %d object(s)\n", med->neobjs);
+	curmapedit = med;
 
 	/* Draw the lists. */
-	pthread_mutex_lock(&keyslock);
-	pthread_mutex_lock(&med->map->lock);
-	mapedit_objlist(med);
-	mapedit_tilelist(med);
-	pthread_mutex_unlock(&med->map->lock);
+	view_redraw(m->view);
+
 	pthread_mutex_unlock(&keyslock);
 
+#if 0
+	text_msg(1, TEXT_SLEEP,
+	    "Editing \"%s\" (%s)\n", OBJECT(m)->name, new ? "new" : path);
+#endif
 	return (0);
 }
 
@@ -334,7 +346,9 @@ mapedit_unlink(void *p)
 	struct map *m = med->map;
 	struct node *node;
 	struct noderef *nref;
+#if 0
 	struct editobj *eob, *nexteob;
+#endif
 
 	SDL_RemoveTimer(med->timer);
 	SDL_Delay(100);	/* XXX */
@@ -350,24 +364,30 @@ mapedit_unlink(void *p)
 	}
 	pthread_mutex_unlock(&m->lock);
 	m->redraw++;
-	
+
+#if 0	/* XXX */
 	pthread_mutex_lock(&med->eobjslock);
 	for (eob = TAILQ_FIRST(&med->eobjsh);
 	     eob != TAILQ_END(&med->eobjsh);
 	     eob = nexteob) {
-		struct editref *eref;
+		struct editref *eref, *nexteref;
 
 		nexteob = TAILQ_NEXT(eob, eobjs);
-
 		pthread_mutex_lock(&eob->lock);
-		SIMPLEQ_FOREACH(eref, &eob->erefsh, erefs) {
+		for (eref = SIMPLEQ_FIRST(&eob->erefsh);
+		     eref != SIMPLEQ_END(&eob->erefsh);
+		     eref = nexteref) {
+			nexteref = SIMPLEQ_NEXT(eref, erefs);
 			free(eref);
 		}
 		pthread_mutex_unlock(&eob->lock);
+
 		pthread_mutex_destroy(&eob->lock);
 		free(eob);
 	}
 	pthread_mutex_unlock(&med->eobjslock);
+#endif
+
 	return (0);
 }
 
@@ -478,6 +498,8 @@ mapedit_tilelist(struct mapedit *med)
 	Uint32 i;
 	int sn;
 	
+	pthread_mutex_assert(&m->lock);
+	
 	rd = med->tilelist;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
 	rd.h = m->tilew;
@@ -560,6 +582,8 @@ mapedit_tilestack(struct mapedit *med)
 	struct map *m = med->map;
 	struct noderef *nref;
 	Uint32 i;
+	
+	pthread_mutex_assert(&m->lock);
 
 	rd = med->tilestack;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
@@ -601,10 +625,6 @@ mapedit_tilestack(struct mapedit *med)
 	    med->tilestack.w, med->tilestack.h);
 }
 
-/*
- * Draw a list of objects in the object ring.
- * This must be called when the world is locked.
- */
 void
 mapedit_objlist(struct mapedit *med)
 {
@@ -720,7 +740,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			mapedit_push(med, node, med->curoffs, med->curflags);
 			break;
 		case SDLK_d:
-			mapedit_pop(med, node);
+			mapedit_pop(med, node, ev->key.keysym.mod & KMOD_SHIFT);
 			break;
 		case SDLK_b:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
@@ -779,9 +799,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_nodeflags(med, node, NODE_SLOW);
 			} else {
-				pthread_mutex_unlock(&med->map->lock);
 				mapedit_savemap(med);
-				pthread_mutex_lock(&med->map->lock);
 			}
 			break;
 		case SDLK_g:
@@ -937,7 +955,7 @@ mapedit_sticky(struct mapedit *med)
 		if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
 			nev.type = SDL_KEYDOWN;
 			nev.key.keysym.sym = stickykeys[i];
-			nev.key.keysym.mod = 0;
+			nev.key.keysym.mod = SDL_GetModState();
 			SDL_PushEvent(&nev);
 		}
 	}
