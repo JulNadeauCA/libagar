@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.7 2002/04/02 19:55:13 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.8 2002/04/24 13:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -50,12 +50,8 @@ anim_addframe(struct anim *anim, SDL_Surface *surface)
 	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
 		SDL_Surface **newframes;
 
-		newframes = (SDL_Surface **)realloc(anim->frames,
+		newframes = (SDL_Surface **)erealloc(anim->frames,
 		    (NFGROW * anim->maxframes) * sizeof(SDL_Surface *));
-		if (newframes == NULL) {
-			dperror("realloc");
-			return (-1);
-		}
 		anim->maxframes *= NFGROW;
 		anim->frames = newframes;
 	}
