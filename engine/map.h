@@ -145,7 +145,10 @@ void		 node_save(struct netbuf *, struct object_table *,
 void		 node_destroy(struct node *);
 void		 node_clear_layer(struct node *, Uint8);
 
-void		 node_move_ref(struct noderef *, struct node *, struct node *);
+int		 node_move_ref(struct noderef *, struct node *, struct map *,
+		     int, int);
+void		 node_move_ref_direct(struct noderef *, struct node *,
+		     struct node *);
 struct noderef	*node_copy_ref(struct noderef *, struct node *);
 void		 node_remove_ref(struct node *, struct noderef *);
 void		 node_moveup_ref(struct node *, struct noderef *);
