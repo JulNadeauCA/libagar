@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.58 2003/05/22 05:43:12 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.59 2003/05/22 08:30:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -211,7 +211,7 @@ tlist_draw(void *p)
 		}
 		
 		if (it->haschilds) {
-			int ts = tl->item_h/2;
+			int ts = tl->item_h/2+1;
 			int ty = y + ts/2;
 
 			primitives.rect_outlined(tl,
