@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.6 2002/02/05 14:54:20 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.7 2002/02/07 08:12:13 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -170,5 +170,6 @@ engine_destroy(void)
 	}
 
 	SDL_Quit();
+	exit(0);
 }
 
