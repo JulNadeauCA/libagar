@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.24 2004/05/21 03:30:14 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.25 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -56,18 +56,18 @@ enum {
 static void palette_changed(int, union evarg *);
 
 struct palette *
-palette_new(void *parent, enum palette_type type)
+palette_new(void *parent, enum palette_type type, SDL_PixelFormat *fmt)
 {
 	struct palette *pal;
 
 	pal = Malloc(sizeof(struct palette), M_OBJECT);
-	palette_init(pal, type);
+	palette_init(pal, type, fmt);
 	object_attach(parent, pal);
 	return (pal);
 }
 
 void
-palette_init(struct palette *pal, enum palette_type type)
+palette_init(struct palette *pal, enum palette_type type, SDL_PixelFormat *fmt)
 {
 	int i;
 
@@ -80,6 +80,7 @@ palette_init(struct palette *pal, enum palette_type type)
 
 	pal->color = 0;
 	pal->type = type; 
+	pal->format = fmt;
 
 	switch (type) {
 	case PALETTE_RGB:
@@ -109,7 +110,7 @@ palette_changed(int argc, union evarg *argv)
 	Uint8 r, g, b, a;
 
 	colorb = widget_get_binding(pal, "color", &color);
-	SDL_GetRGBA(*color, vfmt, &r, &g, &b, &a);
+	SDL_GetRGBA(*color, pal->format, &r, &g, &b, &a);
 	switch (nbar) {
 	case 0:
 		r = widget_get_int(pal->bars[nbar], "value");
@@ -124,7 +125,7 @@ palette_changed(int argc, union evarg *argv)
 		a = widget_get_int(pal->bars[nbar], "value");
 		break;
 	}
-	*color = SDL_MapRGBA(vfmt, r, g, b, a);
+	*color = SDL_MapRGBA(pal->format, r, g, b, a);
 	widget_binding_unlock(colorb);
 
 	event_post(NULL, pal, "palette-changed", NULL);
@@ -137,7 +138,7 @@ palette_scale(void *p, int w, int h)
 	int i, y = 0;
 
 	if (w == -1 && h == -1) {
-		WIDGET(pal)->w = 0;
+		WIDGET(pal)->w = 128;
 		WIDGET(pal)->h = 0;
 
 		for (i = 0; i < pal->nbars; i++) {
@@ -196,14 +197,14 @@ palette_draw(void *p)
 	    pal->rpreview.w, pal->rpreview.h,
 	    BG_COLOR);
 	
-	SDL_GetRGBA(color, vfmt, &r, &g, &b, &a);
+	SDL_GetRGBA(color, pal->format, &r, &g, &b, &a);
 	widget_set_int(pal->bars[0], "value", (int)r);
 	widget_set_int(pal->bars[1], "value", (int)g);
 	widget_set_int(pal->bars[2], "value", (int)b);
-	if (pal->nbars > 3)
+	if (pal->nbars >= 4)
 		widget_set_int(pal->bars[3], "value", (int)a);
 
-	label_color = SDL_MapRGB(vfmt, 255-r, 255-g, 255-b);
+	label_color = SDL_MapRGB(pal->format, 255-r, 255-g, 255-b);
 	snprintf(text, sizeof(text), "%u\n%u\n%u\n", r, g, b);
 	label = text_render(prop_get_string(config, "font-engine.default-font"),
 	    10, label_color, text);

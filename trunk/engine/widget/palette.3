@@ -1,4 +1,4 @@
-.\"	$Csoft: palette.3,v 1.6 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: palette.3,v 1.7 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -49,10 +49,10 @@ widget binds to a pixel in order to manipulate its 8-bit RGBA components.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct palette *"
-.Fn palette_new "void *parent" "enum palette_type type"
+.Fn palette_new "void *parent" "enum palette_type type" "SDL_PixelFormat *fmt"
 .Pp
 .Ft void
-.Fn palette_init "struct palette *palette" "enum palette_type type"
+.Fn palette_init "struct palette *palette" "enum palette_type type" "SDL_PixelFormat *fmt"
 .nr nS 0
 .Pp
 The
