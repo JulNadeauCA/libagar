@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.75 2003/05/24 15:46:53 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.76 2003/05/25 02:53:43 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -107,9 +107,9 @@ config_prop_modified(int argc, union evarg *argv)
 void
 config_init(struct config *con)
 {
+	char udatadir[FILENAME_MAX], sysdatadir[FILENAME_MAX];
 	struct passwd *pwd;
 	struct stat sta;
-	char *udatadir, *sysdatadir;
 
 	object_init(con, "engine-config", "config", NULL);
 	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS;
@@ -148,18 +148,14 @@ config_init(struct config *con)
 	    pwd->pw_dir, proginfo->progname);
 	prop_set_string(con, "path.sys_data_dir", "%s", SHAREDIR);
 
-	udatadir = prop_get_string(con, "path.user_data_dir");
-	sysdatadir = prop_get_string(con, "path.sys_data_dir");
-	if (stat(sysdatadir, &sta) != 0) {
-		warning("%s: %s\n", sysdatadir, strerror(errno));
-	}
+	prop_copy_string(con, "path.user_data_dir", udatadir, sizeof(udatadir));
+	prop_copy_string(con, "path.sys_data_dir", sysdatadir,
+	    sizeof(sysdatadir));
 	if (stat(udatadir, &sta) != 0 &&
 	    mkdir(udatadir, 00700) != 0) {
 		fatal("%s: %s", udatadir, strerror(errno));
 	}
 	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
-	free(udatadir);
-	free(sysdatadir);
 
 	event_new(con, "prop-modified", config_prop_modified, NULL);
 }
