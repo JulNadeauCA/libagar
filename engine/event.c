@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.193 2005/02/06 07:05:51 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.194 2005/02/08 15:47:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@
 #define DEBUG_PROPAGATION	0x100
 #define DEBUG_SCHED		0x200
 
-int	event_debug = DEBUG_UNDERRUNS|DEBUG_ASYNC|DEBUG_SCHED;
+int	event_debug = DEBUG_UNDERRUNS|DEBUG_ASYNC;
 #define	engine_debug event_debug
 int	event_count = 0;
 
