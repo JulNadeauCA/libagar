@@ -133,20 +133,20 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 			/* Move cursor */
 			if (ommapx < med->mmapx) {
 				if (mainview->mapx > 0) {
-					scroll(m, DIR_LEFT);
+					view_scroll(m, DIR_LEFT);
 				}
 			} else if (med->mmapx < ommapx) {
 				if (mainview->mapx + mainview->mapw < m->mapw) {
-					scroll(m, DIR_RIGHT);
+					view_scroll(m, DIR_RIGHT);
 				}
 			}
 			if (ommapy < med->mmapy) {
 				if (mainview->mapy > 0) {
-					scroll(m, DIR_UP);
+					view_scroll(m, DIR_UP);
 				}
 			} else if (med->mmapy < ommapy) {
 				if (mainview->mapy + mainview->maph < m->maph) {
-					scroll(m, DIR_DOWN);
+					view_scroll(m, DIR_DOWN);
 				}
 			}
 		}
