@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.4 2002/09/09 08:09:37 vedge Exp $
+.\"	$Csoft: view.3,v 1.5 2002/09/19 20:56:44 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -92,6 +92,9 @@ is used.
 .Pp
 .Ft "void"
 .Fn view_focus "struct window *window"
+.Pp
+.Ft "bool"
+.Fn VIEW_FOCUSED "struct window *window"
 .nr nS 0
 .Pp
 The
@@ -113,6 +116,11 @@ function places the given
 .Fa window
 at the tail of the window list (so it is drawn last, at the top of
 other windows).
+The
+.Fn VIEW_FOCUSED
+macro evaluates to true if
+.Fa window
+currently holds focus.
 .Sh VIDEO SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"

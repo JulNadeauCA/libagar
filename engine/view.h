@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.45 2002/09/19 20:56:44 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.46 2002/09/20 02:41:04 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -164,11 +164,17 @@ case 4:					\
 	}								\
 } while (/*CONSTCOND*/0)
 
-#define VIEW_REDRAW() do {				\
-	SDL_Event rdev;					\
-							\
-	rdev.type = SDL_VIDEOEXPOSE;			\
-	SDL_PushEvent(&rdev);				\
+#define VIEW_REDRAW() do {		\
+	SDL_Event rdev;			\
+					\
+	rdev.type = SDL_VIDEOEXPOSE;	\
+	SDL_PushEvent(&rdev);		\
+} while (/*CONSTCOND*/0)
+
+#define VIEW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
+
+#define VIEW_FOCUS(w) do {				\
+	view->focus_win = (w);				\
 } while (/*CONSTCOND*/0)
 
 extern struct viewport *view;	/* view.c */
