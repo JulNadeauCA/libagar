@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.10 2005/01/31 08:32:48 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.11 2005/02/01 08:24:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -178,7 +178,13 @@ mousemotion(int argc, union evarg *argv)
 
 	if (!m->selecting || y < 0 || y >= WIDGET(m)->h-1)
 		return;
-	
+
+	if (x < 0 && m->sel_item != NULL) {
+		ag_menu_collapse(m, m->sel_item);
+		m->sel_item = NULL;
+		return;
+	}
+
 	for (i = 0; i < m->nitems; i++) {
 		struct AGMenuItem *mitem = &m->items[i];
 		SDL_Surface *label = WIDGET_SURFACE(m,mitem->label);
@@ -199,10 +205,12 @@ mousemotion(int argc, union evarg *argv)
 			break;
 		}
 	}
+#if 0
 	if (i == m->nitems && m->sel_item != NULL) {
 		ag_menu_collapse(m, m->sel_item);
 		m->sel_item = NULL;
 	}
+#endif
 }
 
 void
