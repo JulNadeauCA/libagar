@@ -1,4 +1,4 @@
-.\"	$Csoft: rootmap.3,v 1.5 2003/03/23 11:11:05 vedge Exp $
+.\"	$Csoft: rootmap.3,v 1.6 2003/03/23 11:35:49 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -54,6 +54,9 @@ argument.
 .Sh MAP DISPLAY
 .nr nS 1
 .Ft "void"
+.Fn rootmap_redraw "void"
+.Pp
+.Ft "void"
 .Fn rootmap_animate "void"
 .Pp
 .Ft "void"
@@ -70,18 +73,19 @@ argument.
 .nr nS 0
 .Pp
 The
+.Fn rootmap_redraw
+function is called to set the redraw flag on the root map.
+.Pp
+The
 .Fn rootmap_animate
 function updates the animations displayed by the root map.
-The
 .Fn rootmap_draw
-function renders static nodes.
+renders static nodes.
 .Fn rootmap_draw
 is usually called from the event loop
 when the
 .Dv redraw
-member of the root
-.Xr map 3
-structure is non-zero.
+flag of the root map is non-zero.
 .Pp
 The
 .Fn rootmap_focus
