@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.26 2002/11/22 08:56:52 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.27 2002/12/08 01:14:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -36,7 +36,6 @@
 #include <engine/widget/text.h>
 
 #include "mapedit.h"
-#include "command.h"
 #include "mapwin.h"
 #include "mapview.h"
 #include "fileops.h"
