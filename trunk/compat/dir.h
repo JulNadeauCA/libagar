@@ -1,4 +1,4 @@
-/*	$Csoft: dir.h,v 1.2 2004/04/23 11:45:29 vedge Exp $	*/
+/*	$Csoft: dir.h,v 1.3 2004/04/24 04:33:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_COMPAT_DIR_H_
@@ -10,6 +10,9 @@
 #undef SLIST_ENTRY
 #undef INPUT_KEYBOARD
 #undef INPUT_MOUSE
+#else
+#include <sys/types.h>
+#include <dirent.h>
 #endif
 
 struct compat_dirent {
