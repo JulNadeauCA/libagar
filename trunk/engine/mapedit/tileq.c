@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.4 2002/07/07 00:24:02 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.5 2002/07/20 19:10:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 #include "mapedit.h"
 #include "tileq.h"
@@ -63,6 +64,11 @@ enum {
 	TILEQ_SCROLL_BUTTON_MASK =	(SDL_BUTTON_MMASK|SDL_BUTTON_RMASK),
 	TILEQ_SCROLLUP_KEY =		SDLK_PAGEUP,
 	TILEQ_SCROLLDOWN_KEY =		SDLK_PAGEDOWN
+};
+
+enum {
+	SELECTION_COLOR,
+	GRID_COLOR
 };
 
 #define TILEQ_ADJUST(tq, med) do {			\
@@ -90,6 +96,9 @@ void
 tileq_init(struct tileq *tq, struct mapedit *med, int flags, int rw, int rh)
 {
 	widget_init(&tq->wid, "tileq", "widget", &tileq_ops, rw, rh);
+	widget_map_color(tq, SELECTION_COLOR, "tileq-selection", 0, 200, 0);
+	widget_map_color(tq, GRID_COLOR, "tileq-grid", 208, 208, 208);
+
 	tq->med = med;
 	tq->offs = 0;
 	tq->flags = (flags != 0) ? flags : TILEQ_VERT;
@@ -239,9 +248,13 @@ tileq_draw(void *p)
 		}
 
 		if (med->curoffs == sn) {
-			WIDGET_DRAW(tq, SPRITE(med, MAPEDIT_CIRQSEL), 0, y);
+			primitives.square(tq, 0, y, TILEW, TILEH,
+			    WIDGET_COLOR(tq, SELECTION_COLOR));
+			primitives.square(tq, 1, y+1, TILEW-1, TILEH-1,
+			    WIDGET_COLOR(tq, SELECTION_COLOR));
 		} else {
-			WIDGET_DRAW(tq, SPRITE(med, MAPEDIT_GRID), 0, y);
+			primitives.square(tq, 0, y, TILEW, TILEH,
+			    WIDGET_COLOR(tq, GRID_COLOR));
 		}
 nextref:
 		if (++sn >= med->curobj->nrefs) {

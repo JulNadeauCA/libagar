@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.4 2002/07/07 10:17:14 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.5 2002/07/20 19:10:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 #include "tilestack.h"
 #include "mapview.h"
@@ -54,6 +55,11 @@ static const struct widget_ops tilestack_ops = {
 	},
 	tilestack_draw,
 	NULL		/* animate */
+};
+
+enum {
+	SELECTION_COLOR,
+	GRID_COLOR
 };
 
 static void	tilestack_scaled(int, union evarg *);
@@ -78,6 +84,9 @@ tilestack_init(struct tilestack *ts, int flags, int rw, int rh,
     struct mapview *mv)
 {
 	widget_init(&ts->wid, "tilestack", "widget", &tilestack_ops, rw, rh);
+	widget_map_color(ts, SELECTION_COLOR, "tilestack-selection", 0, 200, 0);
+	widget_map_color(ts, GRID_COLOR, "tilestack-grid", 208, 208, 208);
+
 	ts->offs = 0;
 	ts->flags = (flags != 0) ? flags : TILESTACK_VERT;
 	ts->mv = mv;
@@ -139,8 +148,10 @@ tilestack_draw(void *p)
 			WIDGET_DRAW(ts, SPRITE(mv->med, MAPEDIT_ANIM_TXT),
 			    0, y);
 		}
-		/* XXX inefficient */
-		WIDGET_DRAW(ts, SPRITE(mv->med, MAPEDIT_GRID), 0, y);
+
+		primitives.square(ts, 0, y, TILEW, TILEH,
+		    WIDGET_COLOR(ts, GRID_COLOR));
+
 		y += TILEH;
 		if (y + TILEH > WIDGET(ts)->h) {
 			dprintf("y %d > %d\n", y, WIDGET(ts)->h);
