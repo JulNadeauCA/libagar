@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.19 2005/02/22 08:44:16 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.20 2005/02/27 05:55:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -117,21 +117,45 @@ tileview_keydown(int argc, union evarg *argv)
 	struct tileview *tv = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
-	
-	if (tv->state == TILEVIEW_PIXMAP_EDIT)
+
+	switch (tv->state) {
+	case TILEVIEW_PIXMAP_EDIT:
 		pixmap_keydown(tv, tv->tv_pixmap.tel, keysym, keymod);
+		break;
+	case TILEVIEW_SKETCH_EDIT:
+		sketch_keydown(tv, tv->tv_sketch.tel, keysym, keymod);
+		break;
+	default:
+		break;
+	}
 
 	switch (keysym) {
 	case SDLK_z:
-		if ((keymod & KMOD_CTRL) &&
-		    (tv->state == TILEVIEW_PIXMAP_EDIT)) {
-			pixmap_undo(tv, tv->tv_pixmap.tel);
+		if (keymod & KMOD_CTRL) {
+			switch (tv->state) {
+			case TILEVIEW_PIXMAP_EDIT:
+				pixmap_undo(tv, tv->tv_pixmap.tel);
+				break;
+			case TILEVIEW_SKETCH_EDIT:
+				sketch_undo(tv, tv->tv_sketch.tel);
+				break;
+			default:
+				break;
+			}
 		}
 		break;
 	case SDLK_r:
-		if ((keymod & KMOD_CTRL) &&
-		    (tv->state == TILEVIEW_PIXMAP_EDIT)) {
-			pixmap_redo(tv, tv->tv_pixmap.tel);
+		if (keymod & KMOD_CTRL) {
+			switch (tv->state) {
+			case TILEVIEW_PIXMAP_EDIT:
+				pixmap_redo(tv, tv->tv_pixmap.tel);
+				break;
+			case TILEVIEW_SKETCH_EDIT:
+				sketch_redo(tv, tv->tv_sketch.tel);
+				break;
+			default:
+				break;
+			}
 		} else {
 			tv->tile->flags |= TILE_DIRTY;
 		}
@@ -162,8 +186,16 @@ tileview_keyup(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
 	
-	if (tv->state == TILEVIEW_PIXMAP_EDIT)
+	switch (tv->state) {
+	case TILEVIEW_PIXMAP_EDIT:
 		pixmap_keyup(tv, tv->tv_pixmap.tel, keysym, keymod);
+		break;
+	case TILEVIEW_SKETCH_EDIT:
+		sketch_keyup(tv, tv->tv_sketch.tel, keysym, keymod);
+		break;
+	default:
+		break;
+	}
 
 	switch (keysym) {
 	case SDLK_EQUALS:
@@ -177,9 +209,18 @@ static __inline__ int
 pixmap_coincident(struct tile_element *tel, int x, int y)
 {
 	return (x >= tel->tel_pixmap.x &&
-	    x < tel->tel_pixmap.x + tel->tel_pixmap.px->su->w &&
-	    y >= tel->tel_pixmap.y &&
-	    y < tel->tel_pixmap.y + tel->tel_pixmap.px->su->h);
+	        x < tel->tel_pixmap.x + tel->tel_pixmap.px->su->w &&
+	        y >= tel->tel_pixmap.y &&
+	        y < tel->tel_pixmap.y + tel->tel_pixmap.px->su->h);
+}
+
+static __inline__ int
+sketch_coincident(struct tile_element *tel, int x, int y)
+{
+	return (x >= tel->tel_sketch.x &&
+	        x < tel->tel_sketch.x + tel->tel_sketch.sk->vg->su->w &&
+	        y >= tel->tel_sketch.y &&
+	        y < tel->tel_sketch.y + tel->tel_sketch.sk->vg->su->h);
 }
 
 static void
@@ -207,6 +248,19 @@ tileview_buttondown(int argc, union evarg *argv)
 				    button);
 				break;
 			}
+		} else if (tv->state == TILEVIEW_SKETCH_EDIT) {
+			if (sketch_coincident(tel, sx, sy)) {
+				double vx, vy;
+
+				vg_vcoords2(tel->tel_sketch.sk->vg,
+				    sx - tel->tel_sketch.x,
+				    sy - tel->tel_sketch.y,
+				    0, 0, &vx, &vy);
+				sketch_mousebuttondown(tv, tel,
+				    vx/TILESZ, vy/TILESZ,
+				    button);
+				break;
+			}
 		}
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
@@ -230,13 +284,31 @@ tileview_buttondown(int argc, union evarg *argv)
 				break;
 		}
 		break;
-	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
 		tv->scrolling++;
+		break;
+	case SDL_BUTTON_MIDDLE:
+		switch (tv->state) {
+		case TILEVIEW_FEATURE_EDIT:
+			if (tv->tv_feature.ft->ops->menu != NULL) {
+				feature_open_menu(tv,
+				    WIDGET(tv)->cx + x,
+				    WIDGET(tv)->cy + y);
+			} else {
+				tv->scrolling++;
+			}
+			break;
+		default:
+			tv->scrolling++;
+			break;
+		}
 		break;
 	case SDL_BUTTON_WHEELUP:
 		if (tv->state == TILEVIEW_PIXMAP_EDIT) {
 			if (pixmap_mousewheel(tv, tel, 0) == 1)
+				break;
+		} else if (tv->state == TILEVIEW_SKETCH_EDIT) {
+			if (sketch_mousewheel(tv, tel, 0) == 1)
 				break;
 		}
 		tileview_set_zoom(tv,
@@ -246,6 +318,9 @@ tileview_buttondown(int argc, union evarg *argv)
 	case SDL_BUTTON_WHEELDOWN:
 		if (tv->state == TILEVIEW_PIXMAP_EDIT) {
 			if (pixmap_mousewheel(tv, tel, 1) == 1)
+				break;
+		} else if (tv->state == TILEVIEW_SKETCH_EDIT) {
+			if (sketch_mousewheel(tv, tel, 1) == 1)
 				break;
 		}
 		tileview_set_zoom(tv,
@@ -289,14 +364,39 @@ tileview_buttonup(int argc, union evarg *argv)
 			if (i < ctrl->nhandles)
 				break;
 		}
-		if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
-			struct tile_element *tel = tv->tv_pixmap.tel;
-			struct pixmap *px = tel->tel_pixmap.px;
+		if (ctrl == NULL) {
+			switch (tv->state) {
+			case TILEVIEW_PIXMAP_EDIT:
+				{
+					struct tile_element *tel =
+					    tv->tv_pixmap.tel;
+					struct pixmap *px = tel->tel_pixmap.px;
 
-			pixmap_mousebuttonup(tv, tel,
-			    tv->xms - tel->tel_pixmap.x,
-			    tv->yms - tel->tel_pixmap.y,
-			    button);
+					pixmap_mousebuttonup(tv, tel,
+					    tv->xms - tel->tel_pixmap.x,
+					    tv->yms - tel->tel_pixmap.y,
+					    button);
+				}
+				break;
+			case TILEVIEW_SKETCH_EDIT:
+				{
+					struct tile_element *tel =
+					    tv->tv_sketch.tel;
+					struct sketch *sk = tel->tel_sketch.sk;
+					double vx, vy;
+				
+					vg_vcoords2(tel->tel_sketch.sk->vg,
+					    tv->xms - tel->tel_sketch.x,
+					    tv->yms - tel->tel_sketch.y,
+					    0, 0, &vx, &vy);
+
+					sketch_mousebuttonup(tv, tel, vx, vy,
+					    button);
+				}
+				break;
+			default:
+				break;
+			}
 		}
 		break;
 	}
@@ -508,16 +608,48 @@ tileview_mousemotion(int argc, union evarg *argv)
 		if (i < ctrl->nhandles)
 			break;
 	}
-	if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
-		struct tile_element *tel = tv->tv_pixmap.tel;
+	if (ctrl == NULL) {
+		switch (tv->state) {
+		case TILEVIEW_PIXMAP_EDIT:
+			{
+				struct tile_element *tel = tv->tv_pixmap.tel;
 
-		if (pixmap_coincident(tel, sx, sy)) {
-			pixmap_mousemotion(tv, tel,
-			    sx - tel->tel_pixmap.x,
-			    sy - tel->tel_pixmap.y,
-			    sx - tv->xorig,
-			    sy - tv->yorig,
-			    state);
+				if (pixmap_coincident(tel, sx, sy)) {
+					pixmap_mousemotion(tv, tel,
+					    sx - tel->tel_pixmap.x,
+					    sy - tel->tel_pixmap.y,
+					    sx - tv->xorig,
+					    sy - tv->yorig,
+					    state);
+				}
+			}
+			break;
+		case TILEVIEW_SKETCH_EDIT:
+			{
+				struct tile_element *tel = tv->tv_sketch.tel;
+
+				if (sketch_coincident(tel, sx, sy)) {
+					double vx, vy, vxrel, vyrel;
+
+					vg_vcoords2(tel->tel_sketch.sk->vg,
+					    0, 0,
+					    sx - tel->tel_pixmap.x,
+					    sy - tel->tel_pixmap.y,
+					    &vx, &vy);
+					vg_vcoords2(tel->tel_sketch.sk->vg,
+					    0, 0,
+					    sx - tv->xorig,
+					    sy - tv->yorig,
+					    &vxrel, &vyrel);
+					sketch_mousemotion(tv, tel,
+					    vx/TILESZ, vy/TILESZ,
+					    vxrel/TILESZ, vyrel/TILESZ,
+					    state);
+				}
+			}
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -535,6 +667,20 @@ autoredraw(void *obj, Uint32 ival, void *arg)
 	    &tv->scaled);
 	tv->tile->flags &= ~TILE_DIRTY;
 	return (ival);
+}
+
+struct tileview_tool *
+tileview_reg_tool(struct tileview *tv, const void *p)
+{
+	const struct tileview_tool_ops *ops = p;
+	struct tileview_tool *tvt;
+
+	tvt = Malloc(ops->len, M_RG);
+	tvt->ops = ops;
+	tvt->tv = tv;
+	tvt->flags = ops->flags;
+	TAILQ_INSERT_TAIL(&tv->tools, tvt, tools);
+	return (tvt);
 }
 
 void
@@ -564,6 +710,7 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->c.b = 255;
 	tv->c.a = 128;
 	TAILQ_INIT(&tv->ctrls);
+	TAILQ_INIT(&tv->tools);
 
 	widget_map_surface(tv, NULL);
 	tileview_set_zoom(tv, 100, 0);
@@ -696,6 +843,15 @@ tileview_free_ctrl(struct tileview_ctrl *ctrl)
 	Free(ctrl->valtypes, M_WIDGET);
 	Free(ctrl->vals, M_WIDGET);
 	Free(ctrl, M_WIDGET);
+}
+
+static void
+tileview_free_tool(struct tileview_tool *t)
+{
+	if (t->ops->destroy != NULL) {
+		t->ops->destroy(t);
+	}
+	Free(t, M_RG);
 }
 
 void
@@ -1214,12 +1370,19 @@ tileview_destroy(void *p)
 {
 	struct tileview *tv = p;
 	struct tileview_ctrl *ctrl, *nctrl;
+	struct tileview_tool *tool, *ntool;
 
 	for (ctrl = TAILQ_FIRST(&tv->ctrls);
 	     ctrl != TAILQ_END(&tv->ctrls);
 	     ctrl = nctrl) {
 		nctrl = TAILQ_NEXT(ctrl, ctrls);
 		tileview_free_ctrl(ctrl);
+	}
+	for (tool = TAILQ_FIRST(&tv->tools);
+	     tool != TAILQ_END(&tv->tools);
+	     tool = ntool) {
+		ntool = TAILQ_NEXT(tool, tools);
+		tileview_free_tool(tool);
 	}
 	widget_destroy(tv);
 }

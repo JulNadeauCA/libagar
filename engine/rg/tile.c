@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.23 2005/02/27 03:13:57 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.24 2005/02/27 05:55:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -134,6 +134,19 @@ tile_generate(struct tile *t)
 				SDL_BlitSurface(px->su, NULL, t->su, &rd);
 			}
 			break;
+		case TILE_SKETCH:
+			{
+				struct sketch *sk = tel->tel_sketch.sk;
+				struct vg *vg = sk->vg;
+				SDL_Rect rd;
+
+				rd.x = tel->tel_sketch.x;
+				rd.y = tel->tel_sketch.y;
+				rd.w = vg->su->w;
+				rd.h = vg->su->h;
+				SDL_BlitSurface(vg->su, NULL, t->su, &rd);
+			}
+			break;
 		}
 	}
 }
@@ -198,6 +211,24 @@ tile_add_pixmap(struct tile *t, struct pixmap *px, int x, int y)
 	return (tel);
 }
 
+struct tile_element *
+tile_add_sketch(struct tile *t, struct sketch *sk, int x, int y)
+{
+	struct tile_element *tel;
+
+	tel = Malloc(sizeof(struct tile_element), M_RG);
+	tel->type = TILE_SKETCH;
+	tel->visible = 1;
+	tel->tel_sketch.sk = sk;
+	tel->tel_sketch.x = x;
+	tel->tel_sketch.y = y;
+	tel->tel_sketch.alpha = 255;
+	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
+	sk->nrefs++;
+	t->flags |= TILE_DIRTY;
+	return (tel);
+}
+
 void
 tile_remove_pixmap(struct tile *t, struct pixmap *px, int destroy)
 {
@@ -211,12 +242,35 @@ tile_remove_pixmap(struct tile *t, struct pixmap *px, int destroy)
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel, M_RG);
 		if (--px->nrefs == 0 && destroy) {
-			text_tmsg(MSG_INFO, 500,
+			text_tmsg(MSG_INFO, 250,
 			    _("Destroying unreferenced pixmap `%s'."),
 			    px->name);
 			TAILQ_REMOVE(&t->ts->pixmaps, px, pixmaps);
 			pixmap_destroy(px);
 			Free(px, M_RG);
+		}
+	}
+}
+
+void
+tile_remove_sketch(struct tile *t, struct sketch *sk, int destroy)
+{
+	struct tile_element *tel;
+
+	TAILQ_FOREACH(tel, &t->elements, elements) {
+		if (tel->tel_sketch.sk == sk)
+			break;
+	}
+	if (tel != NULL) {
+		TAILQ_REMOVE(&t->elements, tel, elements);
+		Free(tel, M_RG);
+		if (--sk->nrefs == 0 && destroy) {
+			text_tmsg(MSG_INFO, 250,
+			    _("Destroying unreferenced sketch `%s'."),
+			    sk->name);
+			TAILQ_REMOVE(&t->ts->sketches, sk, sketches);
+			sketch_destroy(sk);
+			Free(sk, M_RG);
 		}
 	}
 }
@@ -261,6 +315,18 @@ tile_save(struct tile *t, struct netbuf *buf)
 				write_sint32(buf, (Sint32)tel->tel_pixmap.x);
 				write_sint32(buf, (Sint32)tel->tel_pixmap.y);
 				write_uint8(buf, (Uint8)tel->tel_pixmap.alpha);
+			}
+			break;
+		case TILE_SKETCH:
+			{
+				struct sketch *sk = tel->tel_sketch.sk;
+
+				dprintf("%s: saving %s sketch ref\n", t->name,
+				    sk->name);
+				write_string(buf, sk->name);
+				write_sint32(buf, (Sint32)tel->tel_sketch.x);
+				write_sint32(buf, (Sint32)tel->tel_sketch.y);
+				write_uint8(buf, (Uint8)tel->tel_sketch.alpha);
 			}
 			break;
 		}
@@ -342,8 +408,35 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 				tel->visible = visible;
 			}
 			break;
+		case TILE_SKETCH:
+			{
+				char sk_name[SKETCH_NAME_MAX];
+				struct sketch *sk;
+				Sint32 x, y;
+				Uint32 w, h;
+				int alpha;
+
+				copy_string(sk_name, buf, sizeof(sk_name));
+				x = read_sint32(buf);
+				y = read_sint32(buf);
+				alpha = (int)read_uint8(buf);
+
+				dprintf("%s: sk %s at %d,%d (a=%u)\n", t->name,
+				    sk_name, x, y, alpha);
+				TAILQ_FOREACH(sk, &ts->sketches, sketches) {
+					if (strcmp(sk->name, sk_name) == 0)
+						break;
+				}
+				if (sk == NULL) {
+					error_set("bad sketch: %s", sk_name);
+					return (-1);
+				}
+				tel = tile_add_sketch(t, sk, x, y);
+				tel->tel_sketch.alpha = alpha;
+				tel->visible = visible;
+			}
+			break;
 		default:
-			dprintf("unimplemented tile element %d\n", type);
 			break;
 		}
 	}
@@ -393,6 +486,24 @@ pixmap_buttonup(int argc, union evarg *argv)
 	
 	if (w != px->su->w || h != px->su->h) 
 		pixmap_scale(px, w, h, ctrl->xoffs, ctrl->yoffs);
+
+	tile_generate(t);
+	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
+	t->flags &= ~(TILE_DIRTY);
+}
+
+static void
+sketch_buttonup(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[0].p;
+	struct tileview_ctrl *ctrl = argv[1].p;
+	struct sketch *sk = argv[2].p;
+	struct tile *t = tv->tile;
+	int w = tileview_int(ctrl, 2);
+	int h = tileview_int(ctrl, 3);
+	
+	if (w != sk->vg->su->w || h != sk->vg->su->h) 
+		sketch_scale(sk, w, h, 1.0);
 
 	tile_generate(t);
 	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
@@ -459,7 +570,34 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			
 			view->focus_win = pwin;
 			widget_focus(tv);
-	
+			tv->tile->flags |= TILE_DIRTY;
+		}
+		break;
+	case TILE_SKETCH:
+		{
+			struct window *win;
+			
+			tv->state = TILEVIEW_SKETCH_EDIT;
+			tv->tv_sketch.sk = tel->tel_sketch.sk;
+			tv->tv_sketch.tel = tel;
+			tv->tv_sketch.ctrl = tileview_insert_ctrl(tv,
+			    TILEVIEW_RECTANGLE, "%*i,%*i,%u,%u",
+			    &tel->tel_sketch.x,
+			    &tel->tel_sketch.y,
+			    32, 32);
+			tv->tv_sketch.ctrl->buttonup =
+			    event_new(tv, NULL, sketch_buttonup, "%p,%p",
+			    tv->tv_sketch.ctrl, tel->tel_sketch.sk);
+
+			win = sketch_edit(tv, tel);
+			window_attach(pwin, win);
+			window_show(win);
+			tv->tv_sketch.win = win;
+			event_new(win, "window-close", element_closed, "%p",
+			    tv);
+			
+			view->focus_win = pwin;
+			widget_focus(tv);
 			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
@@ -475,6 +613,9 @@ tile_close_element(struct tileview *tv)
 		if (tv->tv_feature.ft->ops->flags & FEATURE_AUTOREDRAW) {
 			tileview_set_autoredraw(tv, 0, 0);
 		}
+		if (tv->tv_feature.menu != NULL) {
+			feature_close_menu(tv);
+		}
 		if (tv->tv_feature.win != NULL) {
 			view_detach(tv->tv_feature.win);
 			tv->tv_feature.win = NULL;
@@ -486,6 +627,14 @@ tile_close_element(struct tileview *tv)
 			view_detach(tv->tv_pixmap.win);
 			tv->tv_pixmap.win = NULL;
 			tv->tv_pixmap.ctrl = NULL;
+		}
+		break;
+	case TILEVIEW_SKETCH_EDIT:
+		if (tv->tv_sketch.win != NULL) {
+			tileview_remove_ctrl(tv, tv->tv_sketch.ctrl);
+			view_detach(tv->tv_sketch.win);
+			tv->tv_sketch.win = NULL;
+			tv->tv_sketch.ctrl = NULL;
 		}
 		break;
 	default:
@@ -541,6 +690,57 @@ tryname:
 		}
 		tel = eit->p1;
 		if (tel->tel_pixmap.px == px) {
+			tlist_select(tl_feats, eit);
+			break;
+		}
+	}
+}
+
+static void
+create_sketch(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	struct tlist_item *eit;
+	struct sketch *sk, *osk;
+	struct tile_element *tel;
+	unsigned int skno = 0;
+
+	sk = Malloc(sizeof(struct sketch), M_RG);
+	sketch_init(sk, tv->ts, 0);
+tryname:
+	snprintf(sk->name, sizeof(sk->name), "sketch #%u", skno);
+	TAILQ_FOREACH(osk, &tv->ts->sketches, sketches) {
+		if (strcmp(osk->name, sk->name) == 0)
+			break;
+	}
+	if (osk != NULL) {
+		skno++;
+		goto tryname;
+	}
+
+	sketch_scale(sk, 32, 32, 1.0);
+	TAILQ_INSERT_TAIL(&tv->ts->sketches, sk, sketches);
+	tel = tile_add_sketch(tv->tile, sk, 0, 0);
+	tv->tile->flags |= TILE_DIRTY;
+	
+	if (tv->edit_mode) {
+		tile_close_element(tv);
+	}
+	tile_open_element(tv, tel, pwin);
+
+	/* Select the newly inserted feature. */
+	event_post(NULL, tl_feats, "tlist-poll", NULL);
+	tlist_unselect_all(tl_feats);
+	TAILQ_FOREACH(eit, &tl_feats->items, items) {
+		struct tile_element *tel;
+
+		if (strcmp(eit->class, "sketch") != 0) {
+			continue;
+		}
+		tel = eit->p1;
+		if (tel->tel_sketch.sk == sk) {
 			tlist_select(tl_feats, eit);
 			break;
 		}
@@ -633,6 +833,92 @@ attach_pixmap_dlg(int argc, union evarg *argv)
 }
 
 static void
+attach_sketch(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct window *win_dlg = argv[3].p;
+	struct tlist *tl_feats = argv[4].p;
+	struct tlist *tl_sketches = argv[5].p;
+	struct tlist_item *it;
+	struct tile_element *tel;
+	struct sketch *sk;
+
+	if ((it = tlist_item_selected(tl_sketches)) == NULL) {
+		return;
+	}
+	sk = it->p1;
+
+	tel = tile_add_sketch(tv->tile, sk, 0, 0);
+	if (tv->edit_mode) {
+		tile_close_element(tv);
+	}
+	tile_open_element(tv, tel, pwin);
+
+	/* Select the newly inserted feature. */
+	event_post(NULL, tl_feats, "tlist-poll", NULL);
+	tlist_unselect_all(tl_feats);
+	TAILQ_FOREACH(it, &tl_feats->items, items) {
+		struct tile_element *tel;
+
+		if (strcmp(it->class, "sketch") != 0) {
+			continue;
+		}
+		tel = it->p1;
+		if (tel->tel_sketch.sk == sk) {
+			tlist_select(tl_feats, it);
+			break;
+		}
+	}
+
+	view_detach(win_dlg);
+}
+
+static void
+attach_sketch_dlg(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	struct tlist *tl;
+	struct sketch *sk;
+	struct window *win;
+	struct box *bo;
+
+	win = window_new(WINDOW_MODAL|WINDOW_NO_MINIMIZE, NULL);
+	window_set_caption(win, _("Attach existing sketch"));
+
+	tl = tlist_new(win, 0);
+	tlist_set_item_height(tl, TILESZ);
+	tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXXXXXXXX", 5);
+
+	TAILQ_FOREACH(sk, &tv->ts->sketches, sketches) {
+		struct tlist_item *it;
+
+		it = tlist_insert(tl, ICON(DRAWING_ICON), "%s (%ux%u, %.0f%%)",
+		    sk->name, sk->vg->su->w, sk->vg->su->h,
+		    sk->vg->scale*100.0);
+		it->p1 = sk;
+	}
+	
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	{
+		struct button *bu;
+	
+		bu = button_new(bo, _("OK"));
+		event_new(bu, "button-pushed", attach_sketch, "%p,%p,%p,%p,%p",
+		    tv, pwin, win, tl_feats, tl);
+	
+		bu = button_new(bo, _("Cancel"));
+		event_new(bu, "button-pushed", window_generic_detach, "%p",
+		    win);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
+}
+
+static void
 insert_fill(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
@@ -675,6 +961,8 @@ poll_items(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 	struct tileset *ts = argv[1].p;
 	struct tile *t = argv[2].p;
+	struct window *win = argv[3].p;
+	struct tileview *tv = argv[4].p;
 	struct tile_element *tel;
 
 	tlist_clear_items(tl);
@@ -689,9 +977,11 @@ poll_items(int argc, union evarg *argv)
 			struct feature_sketch *fsk;
 			struct feature_pixmap *fpx;
 	
-			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s",
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s%s",
+			    (tv->state==TILEVIEW_FEATURE_EDIT &&
+			     tv->tv_feature.ft == ft) ? "* " : "",
 			    ft->name,
-			    tel->visible ? "" : " (invisible)");
+			    tel->visible ? "" : _(" (invisible)"));
 			it->class = "feature";
 			it->p1 = tel;
 			it->depth = 0;
@@ -705,28 +995,105 @@ poll_items(int argc, union evarg *argv)
 
 			TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
 				it = tlist_insert(tl, ICON(DRAWING_ICON),
-				    "%s%s", fsk->sk->name,
-				    fsk->visible ? "" : " (invisible)");
+				    "%s%s%s",
+				    (tv->state==TILEVIEW_SKETCH_EDIT &&
+				     tv->tv_sketch.sk == fsk->sk) ? "* ": "",
+				    fsk->sk->name,
+				    fsk->visible ? "" : _(" (invisible)"));
 				it->class = "feature-sketch";
 				it->p1 = fsk;
 			}
 
 			TAILQ_FOREACH(fpx, &ft->pixmaps, pixmaps) {
 				it = tlist_insert(tl, ICON(DRAWING_ICON),
-				    "%s (%d,%d) %s", fpx->px->name,
-				    fpx->x, fpx->y,
-				    fpx->visible ? "" : " (invisible)");
+				    "%s%s (%d,%d)%s",
+				    (tv->state==TILEVIEW_PIXMAP_EDIT &&
+				     tv->tv_pixmap.px == fpx->px) ? "* ": "",
+				    fpx->px->name, fpx->x, fpx->y,
+				    fpx->visible ? "" : _(" (invisible)"));
 				it->class = "feature-pixmap";
 				it->p1 = fpx;
 			}
 		} else if (tel->type == TILE_PIXMAP) {
 			struct pixmap *px = tel->tel_pixmap.px;
 
-			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s", px->name,
-			    tel->visible ? "" : " (invisible)");
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s%s",
+			    (tv->state==TILEVIEW_PIXMAP_EDIT &&
+			     tv->tv_pixmap.px == px) ? "* ": "",
+			    px->name,
+			    tel->visible ? "" : _(" (invisible)"));
 			it->class = "pixmap";
 			it->p1 = tel;
 			it->depth = 0;
+		} else if (tel->type == TILE_SKETCH) {
+			struct sketch *sk = tel->tel_sketch.sk;
+			struct vg *vg = sk->vg;
+			struct vg_element *vge;
+
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s%s",
+			    (tv->state==TILEVIEW_SKETCH_EDIT &&
+			     tv->tv_sketch.sk == sk) ? "* ": "",
+			    sk->name,
+			    tel->visible ? "" : _(" (invisible)"));
+			it->class = "sketch";
+			it->p1 = tel;
+			it->depth = 0;
+
+			if (!TAILQ_EMPTY(&vg->vges)) {
+				it->flags |= TLIST_HAS_CHILDREN;
+			}
+			if (!tlist_visible_children(tl, it))
+				continue;
+
+			TAILQ_FOREACH(vge, &vg->vges, vges) {
+				static const char *element_names[] = {
+					N_("points"),
+					N_("lines"),
+					N_("line strip"),
+					N_("line loop"),
+					N_("triangles"),
+					N_("triangle strip"),
+					N_("triangle fan"),
+					N_("quads"),
+					N_("quad strip"),
+					N_("polygon"),
+					N_("circle"),
+					N_("arc"),
+					N_("ellipse"),
+					N_("bezier curve"),
+					N_("bezigon"),
+					N_("text"),
+					N_("polygon mask")
+				};
+				static const int icons[] = {
+					VGPOINTS_ICON,
+					VGLINES_ICON,
+					VGLINES_ICON,
+					VGLINES_ICON,
+					-1,
+					-1,
+					-1,
+					-1,
+					-1,
+					-1,
+					VGCIRCLES_ICON,
+					VGCIRCLES_ICON,
+					VGCIRCLES_ICON,
+					-1,
+					-1,
+					VGTEXT_ICON,
+					-1
+				};
+			
+				it = tlist_insert(tl,
+				    icons[vge->type] != -1 ?
+				    ICON(icons[vge->type]) : NULL,
+				    "%s%s", (vge == vg->cur_vge) ? "* " : "",
+				    element_names[vge->type]);
+				it->class = "sketch-element";
+				it->p1 = vge;
+				it->depth = 1;
+			}
 		}
 	}
 
@@ -744,7 +1111,25 @@ edit_element(int argc, union evarg *argv)
 	int replace = argv[4].i;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
-	struct tlist_item *it = NULL;
+	struct tlist_item *it;
+	struct tile_element *tel = NULL;
+
+	if ((it = tlist_item_selected(tl)) == NULL) {
+		return;
+	}
+	if (strcmp(it->class, "feature") == 0 ||
+	    strcmp(it->class, "pixmap") == 0 ||
+	    strcmp(it->class, "sketch") == 0) {
+		tel = it->p1;
+	} else if (tv->state == TILEVIEW_SKETCH_EDIT &&
+	           strcmp(it->class, "sketch-element") == 0) {
+		vg_select_element(tv->tv_sketch.sk->vg,
+		    (struct vg_element *)it->p1);
+		t->flags |= TILE_DIRTY;
+		return;
+	} else {
+		return;
+	}
 
 	if (replace) {
 		if (tv->edit_mode) {
@@ -766,12 +1151,7 @@ edit_element(int argc, union evarg *argv)
 		tv->edit_mode = 0;
 		return;
 	}
-	if (strcmp(it->class, "feature") == 0 ||
-	    strcmp(it->class, "pixmap") == 0) {
-		struct tile_element *tel = it->p1;
-
-		tile_open_element(tv, tel, pwin);
-	}
+	tile_open_element(tv, tel, pwin);
 }
 
 static void
@@ -785,9 +1165,20 @@ delete_element(int argc, union evarg *argv)
 	struct tlist_item *it;
 	struct tile_element *tel;
 
-	if ((it = tlist_item_selected(tl_feats)) == NULL) {
+	if ((it = tlist_item_selected(tl_feats)) == NULL)
+		return;
+
+	if (tv->state == TILEVIEW_SKETCH_EDIT &&
+	    strcmp(it->class, "sketch-element") == 0) {
+	    	struct vg *vg = tv->tv_sketch.sk->vg;
+
+		vg_destroy_element(vg, (struct vg_element *)it->p1);
+		vg_redraw_elements(vg);
+		vg_rasterize(vg);
+		t->flags |= TILE_DIRTY;
 		return;
 	}
+
 	tel = it->p1;
 
 	/* XXX check that it's the element being deleted */
@@ -799,7 +1190,7 @@ delete_element(int argc, union evarg *argv)
 	} else if (strcmp(it->class, "pixmap") == 0) {
 		tile_remove_pixmap(t, tel->tel_pixmap.px, !detach_only);
 	} else if (strcmp(it->class, "sketch") == 0) {
-		//
+		tile_remove_sketch(t, tel->tel_sketch.sk, !detach_only);
 	}
 
 	t->flags |= TILE_DIRTY;
@@ -882,7 +1273,8 @@ move_element_up(int argc, union evarg *argv)
 
 	if ((it = tlist_item_selected(tl)) == NULL ||
 	    (strcmp(it->class, "feature") != 0 &&
-	     strcmp(it->class, "pixmap") != 0)) {
+	     strcmp(it->class, "pixmap") != 0 &&
+	     strcmp(it->class, "sketch") != 0)) {
 		return;
 	}
 	tel = it->p1;
@@ -905,7 +1297,8 @@ move_element_down(int argc, union evarg *argv)
 
 	if ((it = tlist_item_selected(tl)) == NULL ||
 	    (strcmp(it->class, "feature") != 0 &&
-	     strcmp(it->class, "pixmap") != 0)) {
+	     strcmp(it->class, "pixmap") != 0 &&
+	     strcmp(it->class, "sketch") != 0)) {
 		return;
 	}
 	tel = it->p1;
@@ -926,7 +1319,8 @@ visible_element(int argc, union evarg *argv)
 	struct tile_element *tel, *ntel;
 
 	if ((it = tlist_item_selected(tl)) == NULL ||
-	    strcmp(it->class, "pixmap") != 0) {
+	    (strcmp(it->class, "pixmap") != 0 &&
+	     strcmp(it->class, "sketch") != 0)) {
 		return;
 	}
 	tel = it->p1;
@@ -975,8 +1369,8 @@ tile_edit(struct tileset *ts, struct tile *t)
 {
 	struct window *win;
 	struct box *box;
-	struct AGMenu *m;
-	struct AGMenuItem *item;
+	struct AGMenu *me;
+	struct AGMenuItem *mi;
 	struct tileview *tv;
 	struct tlist *tl_feats;
 
@@ -989,121 +1383,160 @@ tile_edit(struct tileset *ts, struct tile *t)
 	
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
 	tileview_init(tv, ts, t, TILEVIEW_AUTOREGEN);
+	{
+		extern struct tileview_sketch_tool_ops sketch_line_ops;
+
+		tileview_reg_tool(tv, &sketch_line_ops);
+	}
 	
 	tl_feats = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_feats, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl_feats)->flags &= ~(WIDGET_WFILL);
 	tlist_prescale(tl_feats, _("FEATURE #000"), 5);
-	event_new(tl_feats, "tlist-poll", poll_items, "%p,%p", ts, t);
+	event_new(tl_feats, "tlist-poll", poll_items, "%p,%p,%p,%p", ts, t, win,
+	    tv);
 
-	item = tlist_set_popup(tl_feats, "feature");
+	mi = tlist_set_popup(tl_feats, "feature");
 	{
-		ag_menu_action(item, _("Edit feature"), ICON(OBJEDIT_ICON),
-		    SDLK_e, KMOD_CTRL,
+		menu_action(mi, _("Edit feature"), OBJEDIT_ICON,
 		    edit_element, "%p,%p,%p,%p", tv, tl_feats, win, 1);
-		
-		ag_menu_action(item, _("Detach feature"), ICON(TRASH_ICON),
-		    SDLK_d, KMOD_CTRL,
+		menu_action(mi, _("Detach feature"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
-		
-		ag_menu_action(item, _("Destroy feature"), ICON(TRASH_ICON),
-		    SDLK_x, KMOD_CTRL,
+		menu_action(mi, _("Destroy feature"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
 		
-		ag_menu_separator(item);
+		menu_separator(mi);
 		
-		ag_menu_action(item, _("Move up"), ICON(OBJMOVEUP_ICON),
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT,
 		    move_element_up, "%p,%p", tv, tl_feats);
-
-		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
 		    move_element_down, "%p,%p", tv, tl_feats);
 	}
 
-	item = tlist_set_popup(tl_feats, "pixmap");
+	mi = tlist_set_popup(tl_feats, "pixmap");
 	{
-		ag_menu_action(item, _("Edit pixmap"), ICON(OBJEDIT_ICON),
-		    SDLK_e, KMOD_CTRL,
+		menu_action(mi, _("Edit pixmap"), OBJEDIT_ICON,
 		    edit_element, "%p,%p,%p,%p", tv, tl_feats, win, 1);
-		
-		ag_menu_action(item, _("Detach pixmap"), ICON(TRASH_ICON),
-		    SDLK_d, KMOD_CTRL,
+		menu_action(mi, _("Detach pixmap"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
-		
-		ag_menu_action(item, _("Destroy pixmap"), ICON(TRASH_ICON),
-		    SDLK_x, KMOD_CTRL,
+		menu_action(mi, _("Destroy pixmap"), TRASH_ICON,
 		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
 		
-		ag_menu_separator(item);
+		menu_separator(mi);
 		
-		ag_menu_action(item, _("Move up"), ICON(OBJMOVEUP_ICON),
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
 		    SDLK_u, KMOD_SHIFT,
 		    move_element_up, "%p,%p", tv, tl_feats);
-
-		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
 		    SDLK_d, KMOD_SHIFT,
 		    move_element_down, "%p,%p", tv, tl_feats);
 		
-		ag_menu_separator(item);
+		menu_separator(mi);
 
-		ag_menu_action(item, _("Toggle visibility"),
-		    ICON(OBJCREATE_ICON),
-		    SDLK_d, KMOD_SHIFT,
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
 		    visible_element, "%p,%p", tv, tl_feats);
 	}
-
-	m = ag_menu_new(win);
-
-	item = ag_menu_add_item(m, _("Features"));
+	
+	mi = tlist_set_popup(tl_feats, "sketch");
 	{
-		ag_menu_action(item, _("Fill"), NULL,
+		menu_action(mi, _("Edit sketch"), OBJEDIT_ICON,
+		    edit_element, "%p,%p,%p,%p", tv, tl_feats, win, 1);
+		
+		menu_action(mi, _("Detach sketch"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
+		
+		menu_action(mi, _("Destroy sketch"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
+		
+		menu_separator(mi);
+		
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT,
+		    move_element_up, "%p,%p", tv, tl_feats);
+
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT,
+		    move_element_down, "%p,%p", tv, tl_feats);
+		
+		menu_separator(mi);
+
+		menu_action(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		    visible_element, "%p,%p", tv, tl_feats);
+	}
+	
+	mi = tlist_set_popup(tl_feats, "sketch-element");
+	{
+		menu_action(mi, _("Edit sketch element"), OBJEDIT_ICON,
+		    edit_element, "%p,%p,%p,%p", tv, tl_feats, win, 1);
+		
+		menu_action(mi, _("Delete sketch element"), TRASH_ICON,
+		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
+#if 0
+		menu_separator(mi);
+		menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+		    SDLK_u, KMOD_SHIFT,
+		    move_vg_element_up, "%p,%p", tv, tl_feats);
+
+		menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		    SDLK_d, KMOD_SHIFT,
+		    move_vg_element_down, "%p,%p", tv, tl_feats);
+#endif
+	}
+
+	me = menu_new(win);
+	mi = menu_add_item(me, _("Features"));
+	{
+		menu_action_kb(mi, _("Fill"), RG_FILL_ICON,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
 		    insert_fill, "%p,%p,%p", tv, win, tl_feats);
 		    
-		ag_menu_action(item, _("Sketch projection"), NULL,
+		menu_action_kb(mi, _("Sketch projection"),RG_SKETCH_PROJ_ICON,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
 		
-		ag_menu_action(item, _("Polygon"), NULL,
+		menu_action_kb(mi, _("Polygon"), RG_POLYGON_ICON,
 		    SDLK_p, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
 		
-		ag_menu_action(item, _("Extruded base"), NULL,
+		menu_action_kb(mi, _("Extrusion"), RG_EXTRUSION_ICON,
 		    SDLK_e, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
 		
-		ag_menu_action(item, _("Solid of revolution"), NULL,
+		menu_action_kb(mi, _("Solid of revolution"),
+		    RG_REVOLUTION_ICON,
 		    SDLK_r, KMOD_CTRL|KMOD_SHIFT,
 		    NULL, "%p,%p", ts, t);
 	}
 	
-	item = ag_menu_add_item(m, _("Pixmaps"));
+	mi = menu_add_item(me, _("Pixmaps"));
 	{
-		ag_menu_action(item, _("Create new pixmap..."),
-		    ICON(DRAWING_ICON),
-		    SDLK_p, KMOD_CTRL,
+		menu_action(mi, _("Create new pixmap..."), RG_PIXMAP_ICON,
 		    create_pixmap, "%p,%p,%p", tv, win, tl_feats);
-		
-		ag_menu_action(item, _("Attach existing pixmap..."),
-		    ICON(DRAWING_ICON),
-		    SDLK_p, KMOD_CTRL,
+		menu_action(mi, _("Attach pixmap..."),
+		    RG_PIXMAP_ATTACH_ICON,
 		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
-
-	item = ag_menu_add_item(m, _("Edit"));
+	
+	mi = menu_add_item(me, _("Sketches"));
 	{
-		ag_menu_action(item, _("Undo"), NULL, SDLK_z, KMOD_CTRL,
+		menu_action(mi, _("Create new sketch..."), RG_SKETCH_ICON,
+		    create_sketch, "%p,%p,%p", tv, win, tl_feats);
+		menu_action(mi, _("Attach sketch..."), RG_SKETCH_ATTACH_ICON,
+		    attach_sketch_dlg, "%p,%p,%p", tv, win, tl_feats);
+	}
+
+	mi = menu_add_item(me, _("Edit"));
+	{
+		menu_action_kb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
 		    tile_undo, "%p", tv);
-		
-		ag_menu_action(item, _("Redo"), NULL, SDLK_r, KMOD_CTRL,
+		menu_action_kb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
 		    tile_redo, "%p", tv);
 
-		ag_menu_separator(item);
+		menu_separator(mi);
 
-		ag_menu_action(item, _("Resize tile..."),
-		    ICON(RESIZE_TOOL_ICON),
-		    SDLK_r, KMOD_CTRL,
+		menu_action(mi, _("Resize tile..."), RG_PIXMAP_RESIZE_ICON,
 		    resize_tile_dlg, "%p,%p", tv, win);
 	}
 

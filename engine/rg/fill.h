@@ -1,4 +1,4 @@
-/*	$Csoft: fill.h,v 1.1 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.2 2005/01/26 02:43:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_FILL_H_
@@ -42,6 +42,7 @@ void		 fill_init(void *, struct tileset *, int);
 int		 fill_load(void *, struct netbuf *);
 void		 fill_save(void *, struct netbuf *);
 void		 fill_apply(void *, struct tile *, int, int);
+void		 fill_menu(void *, struct AGMenuItem *);
 struct window	*fill_edit(void *, struct tileview *);
 __END_DECLS
 

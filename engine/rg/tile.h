@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.8 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.9 2005/02/18 09:59:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -11,7 +11,8 @@
 
 enum tile_element_type {
 	TILE_FEATURE,
-	TILE_PIXMAP
+	TILE_PIXMAP,
+	TILE_SKETCH
 };
 
 struct tile_element {
@@ -27,9 +28,15 @@ struct tile_element {
 			int x, y;
 			int alpha;
 		} pixmap;
+		struct {
+			struct sketch *sk;
+			int x, y;
+			int alpha;
+		} sketch;
 	} data;
 #define tel_feature data.feature
 #define tel_pixmap  data.pixmap
+#define tel_sketch  data.sketch
 	TAILQ_ENTRY(tile_element) elements;
 };
 
@@ -71,9 +78,12 @@ void		tile_save(struct tile *, struct netbuf *);
 int		tile_load(struct tileset *, struct tile *, struct netbuf *);
 
 struct tile_element *tile_add_pixmap(struct tile *, struct pixmap *, int, int);
+struct tile_element *tile_add_sketch(struct tile *, struct sketch *, int, int);
 struct tile_element *tile_add_feature(struct tile *, void *, int, int);
+
 void		     tile_remove_feature(struct tile *, void *, int);
 void		     tile_remove_pixmap(struct tile *, struct pixmap *, int);
+void		     tile_remove_sketch(struct tile *, struct sketch *, int);
 
 void	tile_open_element(struct tileview *, struct tile_element *,
 	                  struct window *);
