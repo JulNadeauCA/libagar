@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.62 2002/03/13 07:37:19 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.63 2002/03/14 03:32:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -104,8 +104,6 @@ mapedit_create(char *name)
 	med->curobj = NULL;
 	med->curoffs = 0;
 	med->curflags = 0;
-	med->tilelist_offs = 0;
-	med->objlist_offs = 0;
 
 	mapdir_init(&med->cursor_dir, (struct object *)med, NULL, -1, -1);
 	gendir_init(&med->listw_dir);
