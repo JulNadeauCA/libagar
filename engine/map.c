@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.143 2003/02/08 00:34:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.144 2003/02/10 04:01:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 
 static const struct version map_ver = {
 	"agar map",
-	3, 0
+	4, 0
 };
 
 static const struct object_ops map_ops = {
@@ -100,6 +100,7 @@ noderef_init(struct noderef *nref)
 	nref->ycenter = 0;
 	nref->xmotion = 0;
 	nref->ymotion = 0;
+	nref->layer = 0;
 	SLIST_INIT(&nref->transforms);
 }
 
@@ -109,9 +110,8 @@ noderef_destroy(struct noderef *nref)
 	struct transform *trans, *ntrans;
 
 #ifdef DEBUG
-	if (strcmp(NODEREF_MAGIC, nref->magic) != 0) {
+	if (strcmp(NODEREF_MAGIC, nref->magic) != 0)
 		fatal("bad nref\n");
-	}
 	strncpy(nref->magic, "free", 5);
 #endif
 
@@ -572,10 +572,12 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 	Uint32 i, ntrans = 0;
 	struct transform *trans;
 	Uint32 flags;
+	Uint8 layer;
 
-	/* Read the type of reference and flags. */
+	/* Read the type of reference, flags and the layer#. */
 	type = read_uint32(fd);
 	flags = read_uint32(fd);
+	layer = read_uint8(fd);
 
 	/* Read the reference data. */
 	switch (type) {
@@ -603,6 +605,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
+				(*nref)->layer = layer;
 			} else {
 				fatal("missing sprite dep 0x%x\n", obji);
 			}
@@ -632,6 +635,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
+				(*nref)->layer = layer;
 			} else {
 				fatal("missing anim dep 0x%x\n", obji);
 			}
@@ -651,6 +655,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 			    map_id, ox, oy, dir);
 			*nref = node_add_warp(node, map_id, ox, oy, dir);
 			(*nref)->flags = flags;
+			(*nref)->layer = layer;
 			
 			free(map_id);
 		}
@@ -756,16 +761,13 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 	Uint32 i, ntrans = 0;
 	struct transform *trans;
 
-#ifdef DEBUG
-	if (strcmp(NODEREF_MAGIC, nref->magic) != 0) {
-		fatal("bad nref\n");
-	}
-#endif
 	/* Save the type of reference and flags. */
 	buf_write_uint32(buf, nref->type);
 	buf_write_uint32(buf, nref->flags);
+	buf_write_uint8(buf, nref->layer);
 
-	debug(DEBUG_NODEREFS, "type %d, flags 0x%x\n", nref->type, nref->flags);
+	debug(DEBUG_NODEREFS, "type %d, flags 0x%x, layer %d\n",
+	    nref->type, nref->flags, nref->layer);
 
 	/* Save the reference data. */
 	switch (nref->type) {

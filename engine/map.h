@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.58 2003/02/10 23:07:59 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.59 2003/02/13 11:30:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -20,18 +20,17 @@ struct noderef {
 	char	magic[5];
 #define NODEREF_MAGIC "nref"
 #endif
-	enum noderef_type	 type;	/* Type of reference */
+	enum noderef_type	 type;		/* Type of reference */
+
 	Uint32			 flags;
-#define NODEREF_SAVEABLE	0x01	/* Saveable reference */
-#define NODEREF_BLOCK		0x04	/* Block other objects on maps */
-#define NODEREF_EPHEMERAL	0x00
+#define NODEREF_SAVEABLE	0x01		/* Saveable reference */
+#define NODEREF_BLOCK		0x04		/* Similar to NODE_BLOCK */
 
-	struct object	*pobj;		/* Object pointer */
-	Uint32		 offs;		/* Sprite/anim array offset */
-
-	Sint16	xcenter, ycenter;	/* Sprite/anim centering offsets */
-	Sint16	xmotion, ymotion;	/* Sprite/anim motion offsets */
-
+	Uint8		 layer;			/* Layer# */
+	struct object	*pobj;			/* Object pointer */
+	Uint32		 offs;			/* Sprite/anim array offset */
+	Sint16		 xcenter, ycenter;	/* Centering offsets */
+	Sint16		 xmotion, ymotion;	/* Motion offsets */
 	union {
 		struct {
 			Uint32	flags;
@@ -44,7 +43,6 @@ struct noderef {
 			Uint8	 dir;		/* Default direction */
 		} warp;
 	} data;
-
 	SLIST_HEAD(, transform) transforms;	/* Run-time tile transforms */
 	TAILQ_ENTRY(noderef) nrefs;		/* Node reference list */
 };
