@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.4 2002/02/05 06:08:12 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.5 2002/02/05 14:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -80,7 +80,7 @@ view_create(int w, int h, int tilew, int tileh, int depth, int flags)
 	v->tileh = tileh;
 	v->flags = flags;
 	v->depth = SDL_VideoModeOK(v->width, v->height, depth, v->flags);
-	v->wins = NULL;
+	SLIST_INIT(&v->winsh);
 	v->mapx = 0;
 	v->mapy = 0;
 
@@ -122,9 +122,7 @@ window_create(struct viewport *view, int x, int y, int w, int h, char *caption)
 	win->view = view;
 	win->x = x;
 	win->y = y;
-
-	/* XXX lock */
-	view->wins = g_slist_append(view->wins, win);
+	SLIST_INSERT_HEAD(&view->winsh, win, wins);
 
 	return (win);
 }
@@ -142,8 +140,11 @@ window_destroy(void *winp, void *arg)
 void
 view_destroy(struct viewport *v)
 {
-	/* XXX lock */
-	g_slist_foreach(v->wins, (GFunc)window_destroy, NULL);
+	struct window *win;
+
+	SLIST_FOREACH(win, &v->winsh, wins) {
+		window_destroy(win, NULL);
+	}
 }
 
 int
@@ -170,5 +171,25 @@ view_center(struct viewport *view, int mapx, int mapy)
 		view->mapx = 0;
 	if (view->mapy <= 0)
 		view->mapy = 0;
+}
+
+void
+scroll(struct map *m, int dir)
+{
+	switch (dir) {
+	case DIR_UP:
+		decrease(&m->view->mapy, 1, 0);
+		break;
+	case DIR_DOWN:
+		increase(&m->view->mapy, 1, m->maph - m->view->maph);
+		break;
+	case DIR_LEFT:
+		decrease(&m->view->mapx, 1, 0);
+		break;
+	case DIR_RIGHT:
+		increase(&m->view->mapy, 1, m->mapw - m->view->mapw);
+		break;
+	}
+	m->redraw++;
 }
 

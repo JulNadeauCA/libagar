@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.2 2002/02/07 08:12:53 vedge Exp $	*/
 
 struct viewport {
 	int	fps;			/* Refresh rate in FPS */
@@ -9,7 +9,7 @@ struct viewport {
 	int	mapx, mapy;		/* Map coordinates */
 	int	redraw;			/* Need redrawing */
 	struct	map *map;		/* Currently visible map */
-	GSList	*wins;			/* Viewport sub-surfaces */
+	SLIST_HEAD(, window) winsh;	/* Viewport sub-surfaces */
 	SDL_TimerID mapdrawt;		/* Map redraw timer */
 	SDL_TimerID mapanimt;		/* Map animation timer */
 	SDL_Surface *v;
@@ -21,6 +21,7 @@ struct window {
 	int	 x, y;
 	struct	 viewport *view;	/* Back pointer to viewport */
 	SDL_Surface *v;
+	SLIST_ENTRY(window) wins;
 };
 
 extern struct viewport *mainview;	/* view.c */
@@ -32,12 +33,7 @@ int		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
 struct window	*window_create(struct viewport *, int, int, int, int, char *);
 void		 window_destroy(void *, void *);
-void		 window_draw(struct window *w);
+void		 window_draw(struct window *);
 
-#define SCROLL_UP(m)	decrease(m->view->mapy, 1, 0)
-#define SCROLL_DOWN(m)	increase(m->view->mapy, 1, \
-			    m->maph - m->view->maph)
-#define SCROLL_LEFT(m)	decrease(m->view->mapx, 1, 0)
-#define SCROLL_RIGHT(m)	increase(m->view->mapx, 1, \
-			    m->mapw - m->view->mapw)
+void		 scroll(struct map *, int);
 
