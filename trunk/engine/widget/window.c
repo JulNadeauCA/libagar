@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.225 2004/05/13 11:01:11 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.226 2004/05/22 03:18:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -183,8 +183,8 @@ window_init(void *p, const char *name)
 	win->alignment = WINDOW_CENTER;
 	win->spacing = 2;
 	win->padding = win->borderw + 2;
-	win->minw = 0;
-	win->minh = 0;
+	win->minh = win->borderw*2 + text_font_height(NULL);
+	win->minw = win->minh*2;
 	win->tbar = titlebar_new(win, 0);
 	TAILQ_INIT(&win->subwins);
 
@@ -1061,10 +1061,11 @@ window_scale(void *p, int w, int h)
 			WIDGET(win)->h += wid->h + win->spacing;
 			y += wid->h + win->spacing;
 		}
-
+#if 0
 		/* Prevent further scaling of widgets to unaesthetic sizes. */
 		win->minw = WIDGET(win)->w;
 		win->minh = WIDGET(win)->h;
+#endif
 		goto out;
 	}
 
