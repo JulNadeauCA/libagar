@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.29 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.30 2002/05/02 06:30:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -64,6 +64,9 @@ event_hotkey(SDL_Event *ev)
 			pthread_mutex_unlock(&world->lock);
 		}
 		break;
+	case SDLK_r:
+		world->curmap->redraw++;
+		break;
 	case SDLK_F1:
 		engine_config();
 		break;
@@ -110,28 +113,22 @@ event_loop(void *arg)
 	Uint32 ltick, ntick;
 	Sint32 delta;
 	SDL_Event ev;
-	struct map *m = world->curmap;
+	struct map *m = NULL;
 	struct window *win;
 
-	if (m == NULL) {
-		fatal("no map\n");
-		return (NULL);
-	}
-	
 	/* Start the garbage collection process. */
 	object_init_gc();
 
-	ltick = SDL_GetTicks();
-
-	for (ntick = 0, delta = m->fps;;) {
+	/* XXX pref: max fps */
+	for (ntick = 0, ltick = SDL_GetTicks(), delta = 100;;) {
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
+			m = world->curmap;
 			pthread_mutex_lock(&m->lock);
 
 			map_animate(m);
 
 			if (m->redraw) {
-				dprintf("redraw\n");
 				m->redraw = 0;
 				map_draw(m);
 				delta = m->fps - (SDL_GetTicks() - ntick);
