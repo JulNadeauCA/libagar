@@ -1,0 +1,219 @@
+.\"	$Csoft: agar.3,v 1.40 2004/02/26 10:34:58 vedge Exp $
+.\"
+.\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
+.\"
+.Dd NOVEMBER 26, 2001
+.Dt AGAR 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm engine
+.Nd agar engine initialization and globals
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/engine.h>
+.Ed
+.Sh DESCRIPTION
+.Pp
+These functions are responsible for the initialization of Agar's internals,
+the initialization of SDL (and possibly OpenGL), the selection of the video
+mode, the font engine and the attachment of input devices.
+.Pp
+.nr nS 1
+.Ft "int"
+.Fn engine_preinit "const char *progname"
+.Pp
+.Ft "void"
+.Fn engine_set_gfxmode "enum gfx_engine mode"
+.Pp
+.Ft "void"
+.Fn engine_set_textmode "enum text_engine mode"
+.Pp
+.Ft "int"
+.Fn engine_init "void"
+.nr nS 0
+.Pp
+The
+.Fn engine_preinit
+function initializes Agar's internal data structures as well as SDL.
+Agar applications should invoke
+.Fn engine_preinit
+first, with the name of the application as the
+.Fa progname
+argument.
+By default, Agar will use
+.Pa ~/.<progname>
+for the application's data files.
+.Pp
+The
+.Fn engine_init
+function sets the video mode, initializes the font engine and input devices.
+.Pp
+Between the calls to
+.Fn engine_init
+and
+.Fn engine_preinit ,
+several parameters may be set, such as the font engine, the font directory,
+the default font and the graphic mode to use.
+.Pp
+The
+.Fn engine_set_gfxmode
+selects the graphic mode.
+The graphic mode is mostly a hint to the Agar GUI which tells it how to
+optimize certain GUI operations depending on your expected use of the
+frame buffer outside of the GUI (ie. in the background).
+This setting defines, for instance, the way the background is redrawn after
+a window displacement or resizing.
+Available graphic modes include:
+.Bd -literal
+enum gfx_engine {
+	GFX_ENGINE_GUI,		/* Direct video/OpenGL, solid background */
+	GFX_ENGINE_TILEBASED	/* Direct video/OpenGL, map background */
+};
+.Ed
+.Pp
+The
+.Dv GFX_ENGINE_GUI
+mode asserts that the background is a solid color.
+When windows are moved or resized under this mode, Agar uses
+.Xr SDL_FillRect 3
+(or
+.Xr glRecti 3
+in OpenGL mode) to redraw parts of the background that need updating.
+.Pp
+The
+.Dv GFX_ENGINE_TILEBASED
+mode assumes that the background is the rendering of a
+.Xr map 3 .
+Therefore, it uses the
+.Fn draw
+operation of the map being displayed for redrawing the background.
+A map must be always visible under this mode, even if it is empty.
+Setting the background map to NULL causes the application to exit.
+.Pp
+The
+.Dv GFX_ENGINE_TILEBASED
+mode is preferable for applications such as 2D games, since it also optimizes
+the way animations are processed.
+.Pp
+The
+.Fn engine_set_textmode
+function selects the font engine among:
+.Bd -literal
+enum text_engine {
+	TEXT_ENGINE_TTF,		/* FreeType */
+	TEXT_ENGINE_BITMAP,		/* Fixed-size bitmap */
+	TEXT_ENGINE_PIXMAP		/* Fixed-size pixmap */
+};
+.Ed
+.Pp
+At the time, only
+.Dv TEXT_ENGINE_TTF
+is implemented.
+.Dv TEXT_ENGINE_TTF
+obtains its glyphs from the FreeType library.
+.Sh INCLUDE FILES
+The
+.Pa Aq compat/*.h
+and
+.Pa Aq config/*.h
+includes should come first, followed by
+.Pa Aq engine/engine.h ,
+which itself includes:
+.Pp
+.Bl -tag -width "<engine/loader/integral.h> " -compact
+.It Pa Aq pthread.h
+POSIX threads, if available and enabled.
+.It Pa Aq SDL.h
+Software DirectMedia Layer.
+.It Pa Aq GL/GL.h
+OpenGL interface, if available and enabled.
+.It Pa Aq compat/queue.h
+4.4BSD
+.Xr queue 3
+definitions.
+.It Pa Aq compat/strlcpy.h
+For
+.Xr strlcpy 3 .
+.It Pa Aq compat/strlcat.h
+For
+.Xr strlcat 3 .
+.It Pa Aq compat/snprintf.h
+For
+.Xr snprintf 3 .
+.It Pa Aq compat/vsnprintf.h
+For
+.Xr vsnprintf 3 .
+.It Pa Aq compat/vasprintf.h
+For
+.Xr vasprintf 3 .
+.It Pa Aq compat/asprintf.h
+For
+.Xr asprintf 3 .
+.It Pa Aq compat/strsep.h
+For
+.Xr strsep 3 .
+.It Pa Aq engine/loader/netbuf.h
+For the
+.Ft struct netbuf
+definition, required by load/save function prototypes.
+.It Pa Aq engine/loader/integral.h
+For saving integers.
+.It Pa Aq engine/loader/real.h
+For saving real numbers.
+.It Pa Aq engine/loader/string.h
+For saving text.
+.It Pa Aq engine/loader/version.h
+For versioning.
+.It Pa Aq engine/error/error.h
+Generic error handling.
+.It Pa Aq engine/object.h
+Generic
+.Xr object 3
+types and operations.
+.It Pa Aq engine/event.h
+For the
+.Ft union evarg
+definition and generic
+.Xr event 3
+handling.
+.El
+.Sh SEE ALSO
+.Xr object 3 ,
+.Xr input 3 ,
+.Xr map 3 ,
+.Xr view 3 ,
+.Xr vg 3 ,
+.Xr widget 3 ,
+.Xr window 3
+.Pp
+.Bd -literal
+http://www.libsdl.org/
+http://www.opengl.org/
+.Ed
