@@ -191,10 +191,6 @@ deinstall:	deinstall-subdir
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
-	    if [ -d "${SHAREDIR}" ]; then \
-	        echo "rmdir ${SHAREDIR}"; \
-	        rmdir ${SHAREDIR}; \
-	    fi; \
 	fi
 
 ${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}

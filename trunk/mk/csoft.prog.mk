@@ -178,10 +178,6 @@ deinstall: deinstall-subdir
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
-	    if [ -d "${SHAREDIR}" ]; then \
-	        echo "rmdir ${SHAREDIR}"; \
-	        rmdir ${SHAREDIR}; \
-	    fi; \
 	fi
 
 regress: regress-subdir
