@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.130 2003/01/19 12:09:40 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.131 2003/01/20 12:06:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ mapedit_select_tool(int argc, union evarg *argv)
 
 	if (med->curtool != NULL && med->curtool->win != NULL) {
 		window_hide(med->curtool->win);
-		widget_set_bool(med->curtool->button, "value", 0);
+		widget_set_bool(med->curtool->button, "state", 0);
 	}
 
 	switch (argv[2].i) {
@@ -105,8 +105,6 @@ mapedit_select_tool(int argc, union evarg *argv)
 	}
 	WIDGET_FOCUS(wid);
 }
-
-
 
 void
 mapedit_init(struct mapedit *med, char *name)
@@ -140,69 +138,72 @@ mapedit_init(struct mapedit *med, char *name)
 	event_new(med, "detached", mapedit_detached, NULL);
 	
 	/* Create the toolbar. */
-	win = window_new("mapedit-toolbar", 0, 0, 0, 94, 153, 63, 126);
+	win = window_new("mapedit-toolbar", 0,
+	    0, 0,
+	    94, 153,
+	    63, 126);
 	window_set_caption(win, "Tools");
+	window_set_spacing(win, 0, 0);
+
 	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 100);
-	reg->spacing = 1;
+	region_set_spacing(reg, 0, 0);
 	{
-		/* New map */
-		button = button_new(reg, NULL,
+		button = button_new(reg, NULL,			/* New map */
 		    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, xdiv, ydiv);
 		win->focus = WIDGET(button);
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p %i", med, MAPEDIT_TOOL_NEW_MAP);
 	
-		/* Object list */
-		button = button_new(reg, NULL,
+		button = button_new(reg, NULL,			/* Obj list */
 		    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_OBJLIST);
 	
-		/* Stamp */
-		med->tools.stamp->button = button = button_new(reg, NULL,
+		button = button_new(reg, NULL,			/* Stamp */
 		    SPRITE(med, MAPEDIT_TOOL_STAMP), BUTTON_STICKY, xdiv, ydiv);
+		med->tools.stamp->button = button;
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_STAMP);
-	
-		/* Magnifier */
-		med->tools.magnifier->button = button = button_new(reg, NULL,
+
+		button = button_new(reg, NULL,			/* Magnifier */
 		    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), BUTTON_STICKY,
 		    xdiv, ydiv);
+		med->tools.magnifier->button = button;
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_MAGNIFIER);
 	}
+
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
-	reg->spacing = 1;
+	region_set_spacing(reg, 0, 0);
 	{
-		/* Load map */
-		button = button_new(reg, NULL,
+		button = button_new(reg, NULL,			/* Load map */
 		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, ydiv);
 		win->focus = WIDGET(button);
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p %i", med, MAPEDIT_TOOL_LOAD_MAP);
 
-		/* Eraser */
-		med->tools.eraser->button = button = button_new(reg, NULL,
+		button = button_new(reg, NULL,			/* Eraser */
 		    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY,
 		    xdiv, ydiv);
+		med->tools.eraser->button = button;
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_ERASER);
-	
-		/* Resize tool */
-		med->tools.resize->button = button = button_new(reg, NULL,
+
+		button = button_new(reg, NULL,			/* Resize map */
 		    SPRITE(med, MAPEDIT_TOOL_RESIZE), BUTTON_STICKY,
 		    xdiv, ydiv);
+		med->tools.resize->button = button;
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_RESIZE);
-	
-		/* Property edition tool */
-		med->tools.propedit->button = button = button_new(reg, NULL,
+
+		button = button_new(reg, NULL,			/* Prop edit */
 		    SPRITE(med, MAPEDIT_TOOL_PROPEDIT), BUTTON_STICKY,
 		    xdiv, ydiv);
+		med->tools.propedit->button = button;
 		WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p, %i", med, MAPEDIT_TOOL_PROPEDIT);
