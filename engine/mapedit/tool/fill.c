@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.25 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.26 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 
 #include "fill.h"
 
-#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
 
 const struct tool_ops fill_ops = {
@@ -42,7 +41,7 @@ const struct tool_ops fill_ops = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	fill_window,
+	NULL,			/* window */
 	NULL,			/* cursor */
 	fill_effect,
 	NULL			/* mouse */
@@ -51,74 +50,59 @@ const struct tool_ops fill_ops = {
 void
 fill_init(void *p)
 {
-	struct fill *fill = p;
-
-	tool_init(&fill->tool, "fill", &fill_ops, MAPEDIT_TOOL_FILL);
-	TOOL(fill)->cursor = SPRITE(fill, TOOL_FILL_CURSOR);
-	fill->mode = FILL_FILL_MAP;
-}
-
-struct window *
-fill_window(void *p)
-{
+	struct fill *fi = p;
 	static const char *mode_items[] = {
-		N_("Fill"),
+		N_("Pattern fill"),
 		N_("Clear"),
 		NULL
 	};
-	struct fill *fi = p;
 	struct window *win;
-	struct vbox *vb;
 	struct radio *rad;
 
-	win = window_new("mapedit-tool-fill");
+	tool_init(&fi->tool, "fill", &fill_ops, MAPEDIT_TOOL_FILL);
+	TOOL(fi)->cursor = SPRITE(fi, TOOL_FILL_CURSOR);
+	fi->mode = FILL_PATTERN;
+
+	win = TOOL(fi)->win = window_new("mapedit-tool-fill");
 	window_set_caption(win, _("Fill"));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-
-	vb = vbox_new(win, 0);
-	rad = radio_new(vb, mode_items);
+	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
-	return (win);
 }
 
 void
 fill_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct fill *fi = p;
-	struct node *srcnode = mapedit.src_node;
-	int sx, sy, dx, dy;
-	int w, h;
+	struct map *copybuf = &mapedit.copybuf;
+	int sx = 0, sy = 0, dx = 0, dy = 0;
+	int dw = m->mapw, dh = m->maph;
+	int x, y;
 
-	if (srcnode == NULL && fi->mode == FILL_FILL_MAP) {
-		text_msg(MSG_ERROR, _("No source node."));
+	if (copybuf->mapw == 0 || copybuf->maph == 0)
 		return;
-	}
 
-	dx = 0;
-	dy = 0;
-	w = m->mapw;
-	h = m->maph;
-	mapview_get_selection(mv, &dx, &dy, &w, &h);
+	mapview_get_selection(mv, &dx, &dy, &dw, &dh);
 
-	for (sy = dy; sy < dy+h; sy++) {
-		for (sx = dx; sx < dx+w; sx++) {
-			struct node *dn = &m->map[sy][sx];
-
-			if (fi->mode == FILL_FILL_MAP &&
-			    srcnode == dn) {
-				/* Avoid circular reference */
-				continue;
-			}
+	for (y = dy; y < dy+dh; y++) {
+		for (x = dx; x < dx+dw; x++) {
+			struct node *sn = &copybuf->map[sy][sx];
+			struct node *dn = &m->map[y][x];
 
 			node_clear(m, dn, m->cur_layer);
 
-			if (fi->mode == FILL_FILL_MAP) {
+			if (fi->mode == FILL_PATTERN) {
 				struct noderef *r;
 
-				TAILQ_FOREACH(r, &srcnode->nrefs, nrefs)
+				TAILQ_FOREACH(r, &sn->nrefs, nrefs)
 					node_copy_ref(r, m, dn, m->cur_layer);
 			}
+
+			if (++sx >= copybuf->mapw)
+				sx = 0;
 		}
+		if (++sy >= copybuf->maph)
+			sy = 0;
 	}
 }
 
