@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.18 2002/05/24 09:15:31 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.19 2002/05/26 06:08:17 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -8,6 +8,8 @@ enum window_type {
 	WINDOW_CUBIC,		/* Weird algorithm #1 */
 	WINDOW_CUBIC2		/* Weird algorithm #2 */
 };
+
+TAILQ_HEAD(regionsq, region);
 
 struct window {
 	struct	 object obj;
@@ -36,8 +38,8 @@ struct window {
 	/* Read-write, thread-safe */
 	int	 redraw;		/* Redraw at next tick */
 	struct	 widget *focus;		/* Focused widget */
-	
-	SLIST_HEAD(, region) regionsh;	/* Regions */
+
+	struct	 regionsq regionsh;
 	TAILQ_ENTRY(window) windows;	/* Windows in view */
 	pthread_mutex_t	lock;
 };
