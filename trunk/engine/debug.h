@@ -4,9 +4,12 @@
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
 
-void	_dprintf(const char *fmt, ...);
-void	_debug(int, const char *fmt, ...);
-void	_debug_n(int, const char *fmt, ...);
+void	_dprintf(const char *, ...);
+void	_debug(int, const char *, ...);
+void	_debug_n(int, const char *, ...);
+void	_dprintf_noop(const char *, ...);
+void	_debug_noop(int, const char *, ...);
+void	_debug_n_noop(int, const char *, ...);
 
 #ifdef DEBUG
 extern int engine_debug;
@@ -14,7 +17,7 @@ extern int engine_debug;
 #  define dprintf(fmt, args...)						\
 	do {								\
 		if (engine_debug)					\
-			printf("%s: " fmt, __FUNCTION__, ##args);	\
+			printf("%s: " fmt, __FUNCTION__ , ##args);	\
 	} while (0)
 #  define deprintf(fmt, args...)					\
 	do {								\
@@ -24,7 +27,7 @@ extern int engine_debug;
 #  define debug(mask, fmt, args...)					\
 	do {								\
 		if (engine_debug & (mask))				\
-			printf("%s: " fmt, __FUNCTION__, ##args);	\
+			printf("%s: " fmt , __FUNCTION__ , ##args);	\
 	} while (0)
 #  define debug_n(mask, fmt, args...)					\
 	do {								\
