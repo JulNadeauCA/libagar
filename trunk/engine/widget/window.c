@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.116 2002/11/28 07:35:15 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.117 2002/12/04 04:22:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -321,7 +321,7 @@ window_draw(struct window *win)
 		int bw = win->borderw + 2;
 		int th = win->titleh - 2;
 		SDL_Surface *caption;
-		SDL_Rect rd;
+		SDL_Rect rd, rclip;
 
 		/* XXX yuck */
 		rd.x = win->rd.x + win->borderw;
@@ -336,6 +336,10 @@ window_draw(struct window *win)
 		
 		rd.w = win->rd.w;
 		rd.h = win->rd.h;
+	
+		rclip = rd;
+		rclip.x += th*2;			/* Buttons */
+		SDL_SetClipRect(view->v, &rclip);
 		
 		/* Caption */
 		caption = text_render(NULL, -1,
@@ -347,8 +351,10 @@ window_draw(struct window *win)
 		rd.y = win->rd.y + win->borderw;
 		SDL_BlitSurface(caption, NULL, v, &rd);
 		SDL_FreeSurface(caption);
+		
+		SDL_SetClipRect(view->v, NULL);
 
-		/* Render the close button. */
+		/* Close */
 		for (i = 2; i < win->borderw - 1; i++) {
 			primitives.line(win,
 			    bw + i, bw,
@@ -359,10 +365,9 @@ window_draw(struct window *win)
 			    th + i, bw,
 			    win->border[i]);
 		}
-	
 		th -= 4;
 
-		/* Render the minimize button. */
+		/* Minimize */
 		for (i = 2; i < win->borderw - 1; i++) {
 			primitives.line(win,
 			    i + bw + th, bw + 2,
