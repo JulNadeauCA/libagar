@@ -111,21 +111,15 @@ for i in `echo $PATH |sed 's/:/ /g'`; do
 done
 echo >Makefile.config
 echo >engine/config.h
-if [ "${version}" = "yes" ]
- then
-echo "Manuconf v1.2"
-exit 1
-fi
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
-echo "    --without-smpeg      Never use the smpeg library (for videos)"
-echo "    --without-x11        Never use X11 (for videos and debugging)"
-echo "    --enable-debug       Build with debugging code"
-echo "    --enable-xdebug      Force synchronous X11 events (very slow)"
-echo "    --enable-wdebug      Debug widgets"
-echo "    --version            Show manuconf version"
+echo "    --without-smpeg      Never play videos"
+echo "    --without-x11        Omit X11-specific code"
+echo "    --enable-debug       Engine debugging"
+echo "    --enable-xdebug      Synchronous X11 events"
+echo "    --enable-wdebug      Widget set debugging"
 echo "    --help               Show this message"
 exit 1
 fi
