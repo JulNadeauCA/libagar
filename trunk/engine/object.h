@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.29 2002/04/30 01:11:33 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.30 2002/05/02 06:23:59 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -46,22 +46,28 @@ struct object_audio {
 };
 
 struct object {
+	/*
+	 * Static members
+	 */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
 	int	 id;			/* Unique identifier at runtime */
 	char	 saveext[4];		/* File extension for state saves */
 	const	 struct obvec *vec;	/* Generic functions */
-
 	int	 flags;
 #define OBJ_ART		0x01		/* Load graphics */
 #define OBJ_AUDIO	0x02		/* Load audio */
+#define OBJ_BLOCK	0x04		/* Cannot go through object */
 
 	struct	 object_art *art;	/* Static sprites */
 	struct	 object_audio *audio;	/* Static samples */
-
-	struct	 mappos *pos;		/* Position on the map */
-
 	SLIST_ENTRY(object) wobjs;	/* Linked objects */
+	/*
+	 * Dynamic members
+	 */
+	/* XXX will be a two-dimensional array. */
+	struct	 mappos *pos;		/* Position on the map */
+	pthread_mutex_t	pos_lock;	/* Lock on position */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
@@ -92,6 +98,7 @@ void	 object_destroy_gc(void);
 struct object	*object_strfind(char *);
 struct mappos	*object_addpos(void *, Uint32, Uint32, struct input *,
 		    struct map *, Uint32, Uint32);
+struct mappos	*object_movepos(void *, struct map *, int, int);
 void		 object_delpos(void *);
 
 #endif	/* _AGAR_OBJECT_H_ */
