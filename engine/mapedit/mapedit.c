@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.16 2002/02/08 00:19:28 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.17 2002/02/08 00:37:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -239,9 +239,6 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 		pthread_mutex_unlock(&map->lock);
 	}
 
-	view_center(map->view, map->defx, map->defy);
-	map->redraw++;
-	
 	curmapedit = med;
 	
 	/* XXX tune */
@@ -252,7 +249,10 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	}
 	
 	view_setmode(map->view);	/* XXX hack */
-
+	view_center(map->view, map->defx, map->defy);
+	
+	map->redraw++;
+	
 	return (med);
 }
 
@@ -640,6 +640,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	 * Mouse edition.
 	 */
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+		dprintf("mousebuttondown\n");
 		if (ev->button.button == 1) {
 			return;
 		}
@@ -678,6 +679,8 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	if (ev->type == SDL_JOYAXISMOTION) {
 		static SDL_Event nev;
 		static int lastdir = 0;
+
+		dprintf("joyaxis\n");
 
 		switch (ev->jaxis.axis) {
 		case 0:	/* X */
@@ -730,7 +733,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	if (ev->type == SDL_JOYBUTTONDOWN || ev->type == SDL_JOYBUTTONUP) {
 		static SDL_Event nev;
 
-		dprintf("key %d\n", ev->jbutton.button);
+		dprintf("joybutton %d\n", ev->jbutton.button);
 
 		nev.type = (ev->type == SDL_JOYBUTTONUP) ?
 		    SDL_KEYUP : SDL_KEYDOWN;
@@ -982,98 +985,98 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 		}
 
 		pthread_mutex_unlock(&em->lock);
-	}
 
-	/*
-	 * Directional keys.
-	 */
-	switch (ev->key.keysym.sym) {
-	case SDLK_UP:
-		if (ev->type == SDL_KEYDOWN) {
-			/* Move cursor up. */
-			med->cursdir |= MAPEDIT_UP;
-			med->cursdir &= ~(MAPEDIT_DOWN);
-		} else if (ev->type == SDL_KEYUP) {
-			object_wait(med, MAPEDIT_UP);
-			med->cursdir &= ~(MAPEDIT_UP);
-		}
-		break;
-	case SDLK_DOWN:
-		if (ev->type == SDL_KEYDOWN) {
-			/* Move cursor down. */
-			med->cursdir |= MAPEDIT_DOWN;
-			med->cursdir &= ~(MAPEDIT_UP);
-		} else if (ev->type == SDL_KEYUP) {
-			object_wait(med, MAPEDIT_DOWN);
-			med->cursdir &= ~(MAPEDIT_DOWN);
-		}
-		break;
-	case SDLK_LEFT:
-		if (ev->type == SDL_KEYDOWN) {
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				/* Move object list window left. */
-				med->listodir |= MAPEDIT_CTRLLEFT;
-				med->listodir &= ~(MAPEDIT_CTRLRIGHT);
-			} else {
-				/* Move cursor left. */
-				med->cursdir |= MAPEDIT_LEFT;
-				med->cursdir &= ~(MAPEDIT_RIGHT);
+		/*
+		 * Directional keys.
+		 */
+		switch (ev->key.keysym.sym) {
+		case SDLK_UP:
+			if (ev->type == SDL_KEYDOWN) {
+				/* Move cursor up. */
+				med->cursdir |= MAPEDIT_UP;
+				med->cursdir &= ~(MAPEDIT_DOWN);
+			} else if (ev->type == SDL_KEYUP) {
+				object_wait(med, MAPEDIT_UP);
+				med->cursdir &= ~(MAPEDIT_UP);
 			}
-			return;
-		} else if (ev->type == SDL_KEYUP) {
-			if (med->listodir != 0) {
-				med->listodir &= ~(MAPEDIT_CTRLLEFT);
-				object_wait(med, MAPEDIT_CTRLLEFT);
-			} else {
-				object_wait(med, MAPEDIT_LEFT);
-				med->cursdir &= ~(MAPEDIT_LEFT);
+			break;
+		case SDLK_DOWN:
+			if (ev->type == SDL_KEYDOWN) {
+				/* Move cursor down. */
+				med->cursdir |= MAPEDIT_DOWN;
+				med->cursdir &= ~(MAPEDIT_UP);
+			} else if (ev->type == SDL_KEYUP) {
+				object_wait(med, MAPEDIT_DOWN);
+				med->cursdir &= ~(MAPEDIT_DOWN);
 			}
-		}
-		break;
-	case SDLK_RIGHT:
-		if (ev->type == SDL_KEYDOWN) {
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				/* Move object list window right. */
-				med->listodir |= MAPEDIT_CTRLRIGHT;
-				med->listodir &= ~(MAPEDIT_CTRLLEFT);
-			} else {
-				/* Move cursor right */
-				med->cursdir |= MAPEDIT_RIGHT;
-				med->cursdir &= ~(MAPEDIT_LEFT);
+			break;
+		case SDLK_LEFT:
+			if (ev->type == SDL_KEYDOWN) {
+				if (ev->key.keysym.mod & KMOD_CTRL) {
+					/* Move object list window left. */
+					med->listodir |= MAPEDIT_CTRLLEFT;
+					med->listodir &= ~(MAPEDIT_CTRLRIGHT);
+				} else {
+					/* Move cursor left. */
+					med->cursdir |= MAPEDIT_LEFT;
+					med->cursdir &= ~(MAPEDIT_RIGHT);
+				}
+				return;
+			} else if (ev->type == SDL_KEYUP) {
+				if (med->listodir != 0) {
+					med->listodir &= ~(MAPEDIT_CTRLLEFT);
+					object_wait(med, MAPEDIT_CTRLLEFT);
+				} else {
+					object_wait(med, MAPEDIT_LEFT);
+					med->cursdir &= ~(MAPEDIT_LEFT);
+				}
 			}
-			return;
-		} else if (ev->type == SDL_KEYUP) {
-			if (med->listodir != 0) {
-				med->listodir &= ~(MAPEDIT_CTRLRIGHT);
-				object_wait(med, MAPEDIT_CTRLRIGHT);
-			} else {
-				object_wait(med, MAPEDIT_RIGHT);
-				med->cursdir &= ~(MAPEDIT_RIGHT);
+			break;
+		case SDLK_RIGHT:
+			if (ev->type == SDL_KEYDOWN) {
+				if (ev->key.keysym.mod & KMOD_CTRL) {
+					/* Move object list window right. */
+					med->listodir |= MAPEDIT_CTRLRIGHT;
+					med->listodir &= ~(MAPEDIT_CTRLLEFT);
+				} else {
+					/* Move cursor right */
+					med->cursdir |= MAPEDIT_RIGHT;
+					med->cursdir &= ~(MAPEDIT_LEFT);
+				}
+				return;
+			} else if (ev->type == SDL_KEYUP) {
+				if (med->listodir != 0) {
+					med->listodir &= ~(MAPEDIT_CTRLRIGHT);
+					object_wait(med, MAPEDIT_CTRLRIGHT);
+				} else {
+					object_wait(med, MAPEDIT_RIGHT);
+					med->cursdir &= ~(MAPEDIT_RIGHT);
+				}
 			}
+			break;
+		case SDLK_PAGEUP:
+			if (ev->type == SDL_KEYDOWN) {
+				/* Move tile list window up. */
+				med->listwdir |= MAPEDIT_UP;
+				med->listwdir &= ~(MAPEDIT_DOWN);
+			} else if (ev->type == SDL_KEYUP) {
+				object_wait(med, MAPEDIT_PAGEUP);
+				med->listwdir &= ~(MAPEDIT_UP);
+			}
+			break;
+		case SDLK_PAGEDOWN:
+			if (ev->type == SDL_KEYDOWN) {
+				/* Move tile list window down. */
+				med->listwdir |= MAPEDIT_DOWN;
+				med->listwdir &= ~(MAPEDIT_UP);
+			} else if (ev->type == SDL_KEYUP) {
+				object_wait(med, MAPEDIT_PAGEDOWN);
+				med->listwdir &= ~(MAPEDIT_DOWN);
+			}
+			break;
+		default:
+			break;
 		}
-		break;
-	case SDLK_PAGEUP:
-		if (ev->type == SDL_KEYDOWN) {
-			/* Move tile list window up. */
-			med->listwdir |= MAPEDIT_UP;
-			med->listwdir &= ~(MAPEDIT_DOWN);
-		} else if (ev->type == SDL_KEYUP) {
-			object_wait(med, MAPEDIT_PAGEUP);
-			med->listwdir &= ~(MAPEDIT_UP);
-		}
-		break;
-	case SDLK_PAGEDOWN:
-		if (ev->type == SDL_KEYDOWN) {
-			/* Move tile list window down. */
-			med->listwdir |= MAPEDIT_DOWN;
-			med->listwdir &= ~(MAPEDIT_UP);
-		} else if (ev->type == SDL_KEYUP) {
-			object_wait(med, MAPEDIT_PAGEDOWN);
-			med->listwdir &= ~(MAPEDIT_DOWN);
-		}
-		break;
-	default:
-		break;
 	}
 }
 
