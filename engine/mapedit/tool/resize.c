@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.37 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.38 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -52,14 +52,14 @@ const struct tool resize_tool = {
 
 static void
 resize_mousemotion(struct tool *t, int x, int y, int xrel, int yrel, int xo,
-    int yo, int xorel, int yorel, int b)
+    int yo, int xorel, int yorel, int state)
 {
 	struct mapview *mv = t->mv;
 	struct map *m = mv->map;
 	int w = m->mapw;
 	int h = m->maph;
 
-	if ((b & SDL_BUTTON(1)) == 0)
+	if ((state & SDL_BUTTON(1)) == 0)
 		return;
 
 	if (xrel < 0 && --w < 1) {

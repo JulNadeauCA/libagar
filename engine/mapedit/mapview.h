@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.52 2004/03/30 15:56:51 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.53 2004/04/10 02:43:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -121,9 +121,11 @@ enum mapview_prop_labels {
 struct node;
 
 __BEGIN_DECLS
-struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *);
+struct mapview	*mapview_new(void *, struct map *, int, struct toolbar *,
+		             struct statusbar *);
+void	 	 mapview_init(struct mapview *, struct map *, int,
+		              struct toolbar *, struct statusbar *);
 
-void	 mapview_init(struct mapview *, struct map *, int, struct toolbar *);
 void	 mapview_destroy(void *);
 void	 mapview_draw(void *);
 void	 mapview_scale(void *, int, int);
@@ -150,7 +152,6 @@ void	 mapview_selected_layer(int, union evarg *);
 void	 mapview_toggle_grid(int, union evarg *);
 void	 mapview_toggle_props(int, union evarg *);
 
-void	 mapview_bind_statusbar(struct mapview *, struct statusbar *);
 void	 mapview_status(struct mapview *, const char *, ...);
 __END_DECLS
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.31 2004/03/30 15:56:51 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.32 2004/04/10 02:43:43 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -47,11 +47,11 @@ structures.
 .nr nS 1
 .Ft struct mapview *
 .Fn mapview_new "void *parent" "struct map *map" "int flags" \
-                "struct toolbar *toolbar"
+                "struct toolbar *toolbar" "struct statusbar *statbar"
 .Pp
 .Ft void
 .Fn mapview_init "struct mapview *mv" "struct map *map" "int flags" \
-                 "struct toolbar *toolbar"
+                 "struct toolbar *toolbar" "struct statusbar *statbar"
 .Pp
 .Ft void
 .Fn mapview_prescale "struct mapview *mv" "int w" "int h"

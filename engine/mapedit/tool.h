@@ -1,9 +1,11 @@
-/*	$Csoft: tool.h,v 1.1 2004/03/30 15:56:52 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.2 2004/04/10 02:43:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
 #define _AGAR_MAPEDIT_TOOL_H_
 #include "begin_code.h"
+
+#define TOOL_STATUS_MAX	8
 
 struct mapview;
 struct tool_kbinding;
@@ -28,7 +30,9 @@ struct tool {
 	                      int b);
 	void (*keydown)(struct tool *t, int ksym, int kmod);
 	void (*keyup)(struct tool *t, int ksym, int kmod);
-
+	
+	char *status[TOOL_STATUS_MAX];		/* Status message stack */
+	int nstatus;
 	struct mapview *mv;			/* Associated mapview */
 	void *p;				/* User pointer */
 	struct window *win;			/* Settings window */
@@ -54,6 +58,9 @@ struct window	*tool_window(void *, const char *);
 void		 tool_bind_key(void *, SDLMod, SDLKey,
 		               void (*)(struct mapview *), int);
 void		 tool_unbind_key(void *, SDLMod, SDLKey);
+void		 tool_push_status(struct tool *, const char *, ...);
+void		 tool_pop_status(struct tool *);
+void		 tool_update_status(struct tool *);
 __END_DECLS
 
 #include "close_code.h"
