@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.5 2002/12/22 12:08:35 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.6 2002/12/24 10:25:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_ieee754.h>
@@ -6,7 +6,7 @@
 
 struct prop {
 	char *key;
-	enum prop_type {
+	enum prop_type {		/* Sync monitor/object_browser.c */
 		PROP_INT,
 		PROP_UINT8,
 		PROP_SINT8,
@@ -36,12 +36,10 @@ struct prop {
 		Uint64	 u64;
 		Sint64	 s64;
 #endif
-#ifdef HAVE_IEEE754
 		float	 	f;
 		double	 	d;
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 		long double	ld;
-# endif
 #endif
 		char	*s;
 		void	*p;
@@ -49,8 +47,9 @@ struct prop {
 	TAILQ_ENTRY(prop) props;
 };
 
-int		 prop_load(void *, int);
-int		 prop_save(void *, int);
+int	 prop_load(void *, int);
+int	 prop_save(void *, int);
+void	 prop_destroy(struct prop *);
 
 struct prop	*prop_set(void *, char *, enum prop_type, ...);
 struct prop	*prop_set_bool(void *, char *, int);
@@ -65,12 +64,10 @@ struct prop	*prop_set_sint32(void *, char *, Sint32);
 struct prop	*prop_set_uint64(void *, char *, Uint64);
 struct prop	*prop_set_sint64(void *, char *, Sint64);
 #endif
-#ifdef HAVE_IEEE754
 struct prop	*prop_set_float(void *, char *, float);
 struct prop	*prop_set_double(void *, char *, double);
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 struct prop	*prop_set_long_double(void *, char *, long double);
-# endif
 #endif
 struct prop	*prop_set_string(void *, char *, char *, ...);
 struct prop	*prop_set_pointer(void *, char *, void *);
@@ -88,13 +85,11 @@ Sint32	 	 prop_get_sint32(void *, char *);
 Uint64	 	 prop_get_uint64(void *, char *);
 Sint64		 prop_get_sint64(void *, char *);
 #endif
-#ifdef HAVE_IEEE754
 float		 prop_get_float(void *, char *);
 double		 prop_get_double(void *, char *);
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 long double	 prop_get_long_double(void *, char *);
-# endif
-#endif /* HAVE_IEEE754 */
+#endif
 char		*prop_get_string(void *, char *);
 void		*prop_get_pointer(void *, char *);
 

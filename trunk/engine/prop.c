@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.13 2002/12/24 10:25:22 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.14 2002/12/26 07:12:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -68,7 +68,7 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	}
 	if (nprop == NULL) {
 		nprop = emalloc(sizeof(struct prop));
-		nprop->key = key;
+		nprop->key = Strdup(key);
 		nprop->type = type;
 	} else {
 		modify++;
@@ -78,72 +78,69 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	switch (type) {
 	case PROP_INT:
 		nprop->data.i = va_arg(ap, int);
-		debug(DEBUG_SET, "int %s: %d\n", nprop->key, nprop->data.i);
+		debug(DEBUG_SET, "int %s: %d\n", key, nprop->data.i);
 		break;
 	case PROP_BOOL:
 		nprop->data.i = va_arg(ap, int);		/* Promoted */
-		debug(DEBUG_SET, "bool %s: %d\n", nprop->key, nprop->data.i);
+		debug(DEBUG_SET, "bool %s: %d\n", key, nprop->data.i);
 		break;
 	case PROP_UINT8:
 		nprop->data.u8 = (Uint8)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "u8 %s: %d\n", nprop->key, nprop->data.u8);
+		debug(DEBUG_SET, "u8 %s: %d\n", key, nprop->data.u8);
 		break;
 	case PROP_SINT8:
 		nprop->data.s8 = (Sint8)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "s8 %s: %d\n", nprop->key, nprop->data.s8);
+		debug(DEBUG_SET, "s8 %s: %d\n", key, nprop->data.s8);
 		break;
 	case PROP_UINT16:
 		nprop->data.u16 = (Uint16)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "u16 %s: %d\n", nprop->key, nprop->data.u16);
+		debug(DEBUG_SET, "u16 %s: %d\n", key, nprop->data.u16);
 		break;
 	case PROP_SINT16:
 		nprop->data.s16 = (Sint16)va_arg(ap, int);	/* Promoted */
-		debug(DEBUG_SET, "s16 %s: %d\n", nprop->key, nprop->data.s16);
+		debug(DEBUG_SET, "s16 %s: %d\n", key, nprop->data.s16);
 		break;
 	case PROP_UINT32:
 		nprop->data.u32 = va_arg(ap, Uint32);
-		debug(DEBUG_SET, "u32 %s: %d\n", nprop->key, nprop->data.u32);
+		debug(DEBUG_SET, "u32 %s: %d\n", key, nprop->data.u32);
 		break;
 	case PROP_SINT32:
 		nprop->data.s32 = va_arg(ap, Sint32);
-		debug(DEBUG_SET, "s32 %s: %d\n", nprop->key, nprop->data.s32);
+		debug(DEBUG_SET, "s32 %s: %d\n", key, nprop->data.s32);
 		break;
 #ifdef SDL_HAS_64BIT_TYPE
 	case PROP_UINT64:
 		nprop->data.u64 = va_arg(ap, Uint64);
-		debug(DEBUG_SET, "u64 %s: %ld\n", nprop->key,
+		debug(DEBUG_SET, "u64 %s: %ld\n", key,
 		    (long)nprop->data.u64);
 		break;
 	case PROP_SINT64:
 		nprop->data.s64 = va_arg(ap, Sint64);
-		debug(DEBUG_SET, "s64 %s: %ld\n", nprop->key,
+		debug(DEBUG_SET, "s64 %s: %ld\n", key,
 		    (long)nprop->data.s64);
 		break;
 #endif
-#ifdef HAVE_IEEE754
 	case PROP_FLOAT:
 		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
-		debug(DEBUG_SET, "float %s: %f\n", nprop->key, nprop->data.f);
+		debug(DEBUG_SET, "float %s: %f\n", key, nprop->data.f);
 		break;
 	case PROP_DOUBLE:
 		nprop->data.d = va_arg(ap, double);
-		debug(DEBUG_SET, "double %s: %f\n", nprop->key, nprop->data.d);
+		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 	case PROP_LONG_DOUBLE:
 		nprop->data.ld = va_arg(ap, long double);
-		debug(DEBUG_SET, "long double %s: %Lf\n", nprop->key,
-		    nprop->data.ld);
+		debug(DEBUG_SET, "long double %s: %Lf\n", key, nprop->data.ld);
 		break;
-# endif
 #endif
 	case PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
-		debug(DEBUG_SET, "string %s: %s\n", nprop->key, nprop->data.s);
+		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
 		break;
 	case PROP_POINTER:
 		nprop->data.p = va_arg(ap, void *);
-		debug(DEBUG_SET, "pointer %s: %p\n", nprop->key, nprop->data.p);
+		debug(DEBUG_SET, "pointer %s: %p\n", key, nprop->data.p);
 		break;
 	default:
 		fatal("unsupported type: %d\n", type);
@@ -219,7 +216,6 @@ prop_set_sint64(void *ob, char *key, Sint64 i)
 }
 #endif	/* SDL_HAS_64BIT_TYPE */
 
-#ifdef HAVE_IEEE754
 struct prop *
 prop_set_float(void *ob, char *key, float f)
 {
@@ -232,14 +228,13 @@ prop_set_double(void *ob, char *key, double d)
 	return (prop_set(ob, key, PROP_DOUBLE, d));
 }
 
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 struct prop *
 prop_set_long_double(void *ob, char *key, long double ld)
 {
 	return (prop_set(ob, key, PROP_LONG_DOUBLE, ld));
 }
-# endif
-#endif /* HAVE_IEEE754 */
+#endif
 
 struct prop *
 prop_set_string(void *ob, char *key, char *fmt, ...)
@@ -316,18 +311,16 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 				*(Sint64 *)p = prop->data.s64;
 				break;
 #endif
-#ifdef HAVE_IEEE754
 			case PROP_FLOAT:
 				*(float *)p = prop->data.f;
 				break;
 			case PROP_DOUBLE:
 				*(double *)p = prop->data.d;
 				break;
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 			case PROP_LONG_DOUBLE:
 				*(long double *)p = prop->data.ld;
 				break;
-# endif
 #endif
 			case PROP_STRING:
 				/* Strdup'd for thread safety. */
@@ -473,7 +466,6 @@ prop_get_sint64(void *p, char *key)
 }
 #endif /* SDL_HAS_64BIT_TYPE */
 
-#ifdef HAVE_IEEE754
 float
 prop_get_float(void *p, char *key)
 {
@@ -498,7 +490,7 @@ prop_get_double(void *p, char *key)
 	return (d);
 }
 
-# ifdef HAVE_LONG_DOUBLE
+#ifdef HAVE_LONG_DOUBLE
 long double
 prop_get_long_double(void *p, char *key)
 {
@@ -510,8 +502,7 @@ prop_get_long_double(void *p, char *key)
 	}
 	return (ld);
 }
-# endif
-#endif /* HAVE_IEEE754 */
+#endif
 
 char *
 prop_get_string(void *p, char *key)
@@ -593,6 +584,7 @@ prop_load(void *p, int fd)
 			prop_set_sint64(ob, key, read_sint64(fd));
 			break;
 #endif
+		/* XXX vax floating point */
 #ifdef HAVE_IEEE754
 		case PROP_FLOAT:
 			prop_set_float(ob, key, read_float(fd));
@@ -680,6 +672,7 @@ prop_save(void *p, int fd)
 			buf_write_sint64(buf, prop->data.s64);
 			break;
 #endif
+		/* XXX vax floating point */
 #ifdef HAVE_IEEE754
 		case PROP_FLOAT:
 			buf_write_float(buf, prop->data.f);
@@ -718,3 +711,16 @@ prop_save(void *p, int fd)
 	return (0);
 }
 
+void
+prop_destroy(struct prop *prop)
+{
+	switch (prop->type) {
+	case PROP_STRING:
+		Free(prop->data.s);
+		break;
+	default:
+		break;
+	}
+	free(prop->key);
+	free(prop);
+}
