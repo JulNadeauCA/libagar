@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.5 2002/09/02 08:12:34 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.6 2002/09/06 01:29:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -336,16 +336,15 @@ rootmap_focus(struct map *m)
 	pthread_mutex_unlock(&view->lock);
 }
 
-/*
- * Center the root map view around given coordinates.
- * Map must be locked.
- */
+/* Center the root map view around given coordinates. */
 void
 rootmap_center(struct map *m, int mapx, int mapy)
 {
 	struct viewport *v = view;
 	struct viewmap *rm = v->rootmap;
 	int nx, ny;
+
+	pthread_mutex_lock(&m->lock);
 
 	nx = mapx - (rm->w / 2);
 	ny = mapy - (rm->h / 2);
@@ -362,6 +361,8 @@ rootmap_center(struct map *m, int mapx, int mapy)
 	rm->x = nx;
 	rm->y = ny;
 	m->redraw++;
+	
+	pthread_mutex_unlock(&m->lock);
 }
 
 /*
