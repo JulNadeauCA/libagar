@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.82 2002/09/13 11:08:29 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.83 2002/09/16 16:01:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -67,6 +67,7 @@ static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
 static void	*event_post_async(void *);
 
+/* View must be locked. */
 static void
 event_hotkey(SDL_Event *ev)
 {
@@ -86,13 +87,11 @@ event_hotkey(SDL_Event *ev)
 		object_load(world);
 		break;
 	case SDLK_F5:
-		pthread_mutex_lock(&view->lock);
 		if (view->rootmap != NULL) {
 			text_msg("Checking %s\n",
 			    OBJECT(view->rootmap->map)->name);
 			map_verify(view->rootmap->map);
 		}
-		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDLK_F6:
 		window_show(fps_win);
@@ -102,37 +101,20 @@ event_hotkey(SDL_Event *ev)
 			window_show(monitor.wins.toolbar);
 		}
 		break;
-#endif
+#endif /* DEBUG */
 	case SDLK_F1:
 		window_show(config->windows.settings);
 		break;
 	case SDLK_F3:
 		window_show(config->windows.algorithm_sw);
 		break;
-#ifdef DEBUG
-	case SDLK_v:
-		if (ev->key.keysym.mod & KMOD_CTRL &&
-		    view->rootmap != NULL) {
-			struct window *win;
-			struct region *reg;
-			struct mapview *mv;
-
-			win = window_new(NULL, "Map view", WINDOW_TITLEBAR,
-			    -1, -1, 320, 200, 320, 200);
-			reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-			mv = mapview_new(reg, curmapedit, view->rootmap->map,
-			    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
-			    100, 100);
-			window_show(win);
-		}
-		break;
-#endif
 	case SDLK_t:
 		if (curmapedit != NULL) {
 			window_show(curmapedit->toolbar_win);
 		}
 		break;
 	case SDLK_ESCAPE:
+		pthread_mutex_unlock(&view->lock);
 		pthread_mutex_unlock(&world->lock);
 		engine_stop();
 		return;
@@ -156,7 +138,7 @@ event_hotkey(SDL_Event *ev)
 	(delta) = EVENT_MAXFPS - (SDL_GetTicks() - (ntick));	\
 	UPDATE_FPS((delta));					\
 	if ((delta) < 1) {					\
-		dprintf("%d FPS\n", (delta));			\
+		dprintf("%d/%d frames\n", (delta), 100);	\
 		(delta) = 1;					\
 	}							\
 } while (/*CONSTCOND*/0)
@@ -192,7 +174,7 @@ event_loop(void)
 	media_init_gc();
 
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_MAXFPS;;) {
-		ntick = SDL_GetTicks();
+		ntick = SDL_GetTicks();			/* Rendering starts */
 
 		if ((ntick - ltick) >= delta) {
 			pthread_mutex_lock(&view->lock);
@@ -242,6 +224,7 @@ event_loop(void)
 			}
 			pthread_mutex_unlock(&view->lock);
 
+			/* Update the display. */
 			if (nwrects > 0) {
 				SDL_UpdateRects(view->v, nwrects, wrects);
 				nwrects = 0;
@@ -254,8 +237,7 @@ event_loop(void)
 				COMPUTE_DELTA(delta, ntick);
 #endif
 			}
-
-			ltick = SDL_GetTicks();
+			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
 		}
@@ -268,6 +250,8 @@ event_dispatch(SDL_Event *ev)
 	int rv;
 	struct window *win;
 
+	pthread_mutex_lock(&view->lock);
+
 	switch (ev->type) {
 	case SDL_VIDEORESIZE:
 		EVENT_DEBUG("SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w,
@@ -277,8 +261,6 @@ event_dispatch(SDL_Event *ev)
 		break;
 	case SDL_VIDEOEXPOSE:
 		EVENT_DEBUG("SDL_VIDEOEXPOSE\n");
-
-		pthread_mutex_lock(&view->lock);
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_TILEBASED:
 			/* Redraw the map only. */
@@ -300,17 +282,14 @@ event_dispatch(SDL_Event *ev)
 			}
 			pthread_mutex_unlock(&win->lock);
 		}
-		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDL_MOUSEMOTION:
 		EVENT_DEBUG("SDL_MOUSEMOTION x=%d y=%d\n", ev->motion.x,
 		    ev->motion.y);
 		rv = 0;
-		pthread_mutex_lock(&view->lock);
 		if (!TAILQ_EMPTY(&view->windowsh)) {
-			rv = window_event_all(ev);
+			rv = window_event(ev);
 		}
-		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDL_MOUSEBUTTONUP:
 		EVENT_DEBUG("SDL_MOUSEBUTTON%s b=%d x=%d y=%d\n",
@@ -320,11 +299,9 @@ event_dispatch(SDL_Event *ev)
 		/* FALLTHROUGH */
 	case SDL_MOUSEBUTTONDOWN:
 		rv = 0;
-		pthread_mutex_lock(&view->lock);
 		if (!TAILQ_EMPTY(&view->windowsh)) {
-			rv = window_event_all(ev);
+			rv = window_event(ev);
 		}
-		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
@@ -333,10 +310,7 @@ event_dispatch(SDL_Event *ev)
 		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
 		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
 		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" : "???");
-		pthread_mutex_lock(&view->lock);
 		input_event(joy, ev);
-		/* XXX widgets ... */
-		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDL_KEYDOWN:
 		event_hotkey(ev);
@@ -348,20 +322,26 @@ event_dispatch(SDL_Event *ev)
 		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
 
 		rv = 0;
-		pthread_mutex_lock(&view->lock);
 		if (!TAILQ_EMPTY(&view->windowsh)) {
-			rv = window_event_all(ev);
+			rv = window_event(ev);
 		}
 		if (rv == 0) {
 			input_event(keyboard, ev);
 		}
-		pthread_mutex_unlock(&view->lock);
 		break;
 	case SDL_QUIT:
 		EVENT_DEBUG("SDL_QUIT\n");
+		pthread_mutex_unlock(&view->lock);
 		engine_stop();
 		break;
 	}
+	
+	/* Process the detach queue. */
+	if (!TAILQ_EMPTY(&view->detach)) {
+		view_detach_queued();
+	}
+
+	pthread_mutex_unlock(&view->lock);
 }
 
 #define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
