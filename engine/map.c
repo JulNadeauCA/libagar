@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.163 2003/03/18 03:07:35 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.164 2003/03/24 12:05:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,15 +26,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/engine.h>
 
 #include <libfobj/fobj.h>
 
-#include "map.h"
-#include "version.h"
-#include "config.h"
-#include "world.h"
-#include "view.h"
+#include <engine/map.h>
+#include <engine/version.h>
+#include <engine/config.h>
+#include <engine/world.h>
+#include <engine/view.h>
 
 static const struct version map_ver = {
 	"agar map",
@@ -156,9 +156,9 @@ map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
 	m->mapw = w;
 	m->maph = h;
 
-	m->map = emalloc(h * sizeof(struct node *));
+	m->map = Malloc(h * sizeof(struct node *));
 	for (y = 0; y < h; y++) {
-		m->map[y] = emalloc(w * sizeof(struct node));
+		m->map[y] = Malloc(w * sizeof(struct node));
 
 		for (x = 0; x < w; x++) {
 			node_init(&m->map[y][x]);
@@ -222,9 +222,9 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 	pthread_mutex_lock(&m->lock);
 
 	/* Allocate and initialize new node arrays. */
-	nmap = emalloc(h * sizeof(struct node *));
+	nmap = Malloc(h * sizeof(struct node *));
 	for (dy = 0; dy < h; dy++) {
-		nmap[dy] = emalloc(w * sizeof(struct node));
+		nmap[dy] = Malloc(w * sizeof(struct node));
 		for (dx = 0; dx < w; dx++) {
 			node_init(&nmap[dy][dx]);
 		}
@@ -292,7 +292,7 @@ map_init(struct map *m, char *name, char *media)
 	m->ssx = TILEW;
 	m->ssy = TILEH;
 
-	m->layers = emalloc(sizeof(struct map_layer));
+	m->layers = Malloc(sizeof(struct map_layer));
 	m->nlayers = 1;
 	map_layer_init(&m->layers[0], "Layer 0");
 
@@ -333,7 +333,7 @@ map_push_layer(struct map *m, char *name)
 		error_set("too many layers");
 		return (-1);
 	}
-	m->layers = erealloc(m->layers,
+	m->layers = Realloc(m->layers,
 	    (m->nlayers+1) * sizeof(struct map_layer));
 	if (name == NULL) {				/* Default name */
 		char *s;
@@ -366,7 +366,7 @@ node_add_sprite(struct node *node, void *pobj, Uint32 offs)
 {
 	struct noderef *nref;
 
-	nref = emalloc(sizeof(struct noderef));
+	nref = Malloc(sizeof(struct noderef));
 	noderef_init(nref);
 	nref->type = NODEREF_SPRITE;
 	nref->pobj = pobj;
@@ -384,7 +384,7 @@ node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
 {
 	struct noderef *nref;
 
-	nref = emalloc(sizeof(struct noderef));
+	nref = Malloc(sizeof(struct noderef));
 	noderef_init(nref);
 	nref->type = NODEREF_ANIM;
 	nref->pobj = pobj;
@@ -407,7 +407,7 @@ node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
 	if (x > MAP_MAX_WIDTH || y > MAP_MAX_HEIGHT)
 		fatal("bad warp coords");
 
-	nref = emalloc(sizeof(struct noderef));
+	nref = Malloc(sizeof(struct noderef));
 	noderef_init(nref);
 	nref->type = NODEREF_WARP;
 	nref->data.warp.map = Strdup(mapname);
@@ -437,7 +437,7 @@ node_move_ref(struct noderef *nref, struct node *src_node,
 struct noderef *
 node_copy_ref(struct noderef *src, struct node *dst_node)
 {
-	struct transform *src_trans;
+	struct transform *trans;
 	struct noderef *dst = NULL;
 
 	/* Allocate a new noderef with the same data. */
@@ -469,12 +469,12 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
 	dst->layer = src->layer;
 
 	/* Inherit the transformations. */
-	SLIST_FOREACH(src_trans, &src->transforms, transforms) {
-		struct transform *dst_trans;
+	SLIST_FOREACH(trans, &src->transforms, transforms) {
+		struct transform *ntrans;
 
-		dst_trans = emalloc(sizeof(struct transform));
-		transform_copy(src_trans, dst_trans);
-		SLIST_INSERT_HEAD(&dst->transforms, dst_trans, transforms);
+		ntrans = Malloc(sizeof(struct transform));
+		transform_init(ntrans, trans->type, trans->nargs, trans->args);
+		SLIST_INSERT_HEAD(&dst->transforms, ntrans, transforms);
 	}
 	return (dst);
 }
@@ -721,7 +721,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 	for (i = 0; i < ntrans; i++) {
 		struct transform *trans;
 
-		trans = emalloc(sizeof(struct transform));
+		trans = Malloc(sizeof(struct transform));
 		if (transform_load(fd, trans) == -1) {
 			free(trans);
 			goto fail;
@@ -827,7 +827,7 @@ map_load(void *ob, int fd)
 			goto fail;
 		}
 		debug(DEBUG_STATE, "%d layers\n", m->nlayers);
-		m->layers = emalloc(m->nlayers * sizeof(struct map_layer));
+		m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
 		for (i = 0; i < m->nlayers; i++) {
 			map_layer_load(fd, m, &m->layers[i]);
 		}
@@ -1172,6 +1172,8 @@ noderef_draw_sprite(struct noderef *nref)
 		SDL_Surface *su;
 		Uint32 saflags = origsu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
 		Uint8 salpha = origsu->format->alpha;
+		Uint32 scflags = origsu->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+		Uint32 scolorkey = origsu->format->colorkey;
 		struct art_cached_sprite *ncsprite;
 
 		dprintf("cache miss\n");
@@ -1188,31 +1190,32 @@ noderef_draw_sprite(struct noderef *nref)
 		if (su == NULL) {
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 		}
-
-		/* Copy the sprite as-is. */
-		SDL_SetAlpha(origsu, 0, 0);
-		SDL_BlitSurface(origsu, NULL, su, NULL);
-		SDL_SetAlpha(origsu, saflags, salpha);
-
-		/* Allocate a new cache entry. */
-		ncsprite = emalloc(sizeof(struct art_cached_sprite));
+		
+		ncsprite = Malloc(sizeof(struct art_cached_sprite));
 		ncsprite->su = su;
 		ncsprite->last_drawn = SDL_GetTicks();
 
+		/* Copy the sprite as-is. */
+		SDL_SetAlpha(origsu, 0, 0);
+		SDL_SetColorKey(origsu, 0, 0);
+		SDL_BlitSurface(origsu, NULL, su, NULL);
+		SDL_SetColorKey(origsu, scflags, scolorkey);
+		SDL_SetAlpha(origsu, saflags, salpha);
+
 		/* Apply the transformations. */
 		SLIST_FOREACH(trans, &nref->transforms, transforms) {
+			SDL_LockSurface(su);
 			trans->func(&su, trans->nargs, trans->args);
+			SDL_UnlockSurface(su);
 
-			ntrans = emalloc(sizeof(struct transform));
+			ntrans = Malloc(sizeof(struct transform));
 			transform_init(ntrans, trans->type, trans->nargs,
 			    trans->args);
 			SLIST_INSERT_HEAD(&ncsprite->transforms, ntrans,
 			    transforms);
 		}
 
-		/* Link the new cache entry. */
 		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
-
 		return (su);
 	} else {						/* Cache hit */
 		csprite->last_drawn = SDL_GetTicks();
