@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.9 2002/11/17 23:13:11 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.10 2002/11/26 11:01:00 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -24,7 +24,7 @@ void	 monitor_init(struct monitor *, char *name);
 void	 monitor_destroy(void *);
 
 struct window	*object_browser_window(void);
-struct window	*sprite_browser_window(void);
 struct window	*level_browser_window(void);
 struct window	*widget_browser_window(void);
 struct window	*view_params_window(void);
+
