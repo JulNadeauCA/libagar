@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.1 2002/11/17 23:13:11 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.2 2002/11/19 05:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -48,10 +48,6 @@
 
 #include "monitor.h"
 
-/*
- * Window stack
- */
-
 static void
 tl_windows_poll(int argc, union evarg *argv)
 {
@@ -72,32 +68,53 @@ tl_windows_poll(int argc, union evarg *argv)
 static void
 tl_windows_show(int argc, union evarg *argv)
 {
-	struct window *win = argv[1].p;
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+	struct window *win;
 
+	it = tlist_item_selected(tl);
+	if (it == NULL) {
+		text_msg("Error", "No window is selected");
+		return;
+	}
+
+	win = it->p1;
 	window_show(win);
 }
 
 static void
 tl_windows_hide(int argc, union evarg *argv)
 {
-	struct window *win = argv[1].p;
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+	struct window *win;
 
+	it = tlist_item_selected(tl);
+	if (it == NULL) {
+		text_msg("Error", "No window is selected");
+		return;
+	}
+
+	win = it->p1;
 	window_hide(win);
 }
 
 static void
 tl_windows_detach(int argc, union evarg *argv)
 {
-	struct button *bu = argv[0].p;
-	struct window *win = argv[1].p;
+	struct tlist *tl = argv[1].p;
+	struct tlist_item *it;
+	struct window *win;
 
-	view_detach(WIDGET(bu)->win);
+	it = tlist_item_selected(tl);
+	if (it == NULL) {
+		text_msg("Error", "No window is selected");
+		return;
+	}
+
+	win = it->p1;
 	view_detach(win);
 }
-
-/*
- * Region list
- */
 
 static void
 tl_regions_poll(int argc, union evarg *argv)
@@ -118,13 +135,85 @@ tl_regions_poll(int argc, union evarg *argv)
 }
 
 static void
+tl_regions_detach(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	struct window *win = argv[2].p;
+	struct tlist_item *it;
+	struct region *reg;
+
+	it = tlist_item_selected(tl);
+	if (it == NULL) {
+		text_msg("Error", "No region is selected");
+		return;
+	}
+
+	reg = it->p1;
+	window_detach(win, reg);
+}
+
+static void
+tl_widgets_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct window *pwin = argv[1].p;
+	struct tlist *tl_regions = argv[2].p;
+	struct tlist_item *ti;
+	struct region *reg;
+	struct widget *wid;
+	
+	tlist_clear_items(tl);
+
+	ti = tlist_item_selected(tl_regions);
+	if (ti == NULL) {
+		return;
+	}
+	reg = ti->p1;
+
+	pthread_mutex_lock(&pwin->lock);
+	TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+		tlist_insert_item(tl, NULL, OBJECT(wid)->name, wid);
+	}
+	pthread_mutex_unlock(&pwin->lock);
+
+	tlist_restore_selections(tl);
+}
+
+static void
+tl_widgets_detach(int argc, union evarg *argv)
+{
+	struct tlist *tl_widgets = argv[1].p;
+	struct tlist *tl_regions = argv[2].p;
+	struct window *win = argv[3].p;
+	struct tlist_item *it;
+	struct region *reg;
+	struct widget *wid;
+	
+	it = tlist_item_selected(tl_regions);
+	if (it == NULL) {
+		text_msg("Error", "No region is selected");
+		return;
+	}
+	reg = it->p1;
+
+	it = tlist_item_selected(tl_widgets);
+	if (it == NULL) {
+		text_msg("Error", "No widget is selected");
+		return;
+	}
+	wid = it->p1;
+
+	region_detach(reg, wid);
+}
+
+static void
 tl_windows_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl_windows = argv[0].p;
 	struct tlist_item *it = argv[1].p;
-	struct window *pwin = it->p1;
-	struct window *win;
+	struct window *pwin = it->p1, *win;
 	struct region *reg;
+	struct tlist *tl_regions, *tl_widgets;
 	int i;
 
 	win = window_generic_new(466, 261,
@@ -136,7 +225,7 @@ tl_windows_selected(int argc, union evarg *argv)
 	
 	pthread_mutex_lock(&pwin->lock);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
+	reg = region_new(win, REGION_VALIGN,	0, 0,		100, 50);
 	{
 		label_new(reg, 100, 0, "Identifier: \"%s\"",
 		    OBJECT(pwin)->name);
@@ -167,27 +256,37 @@ tl_windows_selected(int argc, union evarg *argv)
 		    "Focus: %p",
 		    &pwin->focus);
 	}
-	
-	reg = region_new(win, 0, 0, 70, 60, 30);
+
+	reg = region_new(win, 0,		0,  50,		80, 25);
 	{
-		struct tlist *tl;
-
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", tl_regions_poll, "%p", pwin);
+		tl_regions = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl_regions, "tlist-poll",
+		    tl_regions_poll, "%p", pwin);
 	}
-
-	reg = region_new(win, REGION_VALIGN, 61, 70, 39, 30);
+	
+	reg = region_new(win, REGION_VALIGN,	81, 50,		19, 25);
 	{
 		struct button *bu;
 
-		bu = button_new(reg, "Show", NULL, 0, 100, 33);
-		event_new(bu, "button-pushed", tl_windows_show, "%p", pwin);
+		bu = button_new(reg, "Detach", NULL, 0, 100, 100);
+		event_new(bu, "button-pushed", tl_regions_detach, "%p, %p",
+		    tl_regions, pwin);
+	}
+	
+	reg = region_new(win, 0,		0,  75,		80, 25);
+	{
+		tl_widgets = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl_widgets, "tlist-poll", tl_widgets_poll, "%p, %p",
+		    pwin, tl_regions);
+	}
+	
+	reg = region_new(win, REGION_VALIGN,	81, 75,		19, 25);
+	{
+		struct button *bu;
 
-		bu = button_new(reg, "Hide", NULL, 0, 100, 33);
-		event_new(bu, "button-pushed", tl_windows_hide, "%p", pwin);
-
-		bu = button_new(reg, "Detach", NULL, 0, 100, 33);
-		event_new(bu, "button-pushed", tl_windows_detach, "%p", pwin);
+		bu = button_new(reg, "Detach", NULL, 0, 100, 100);
+		event_new(bu, "button-pushed", tl_widgets_detach, "%p, %p",
+		    tl_widgets, tl_regions, pwin);
 	}
 
 	pthread_mutex_unlock(&pwin->lock);
@@ -199,7 +298,8 @@ widget_browser_window(void)
 {
 	struct window *win;
 	struct region *reg;
-	struct tlist *tl_windows;
+	struct tlist *tl;
+
 
 	if ((win = window_generic_new(184, 100, "monitor-widget-browser"))
 	    == NULL) {
@@ -207,10 +307,26 @@ widget_browser_window(void)
 	}
 	window_set_caption(win, "Window stack");
 
-	reg = region_new(win, 0, 0, 0, 100, 100);
-	tl_windows = tlist_new(reg, 100, 100, TLIST_POLL);
-	event_new(tl_windows, "tlist-changed", tl_windows_selected, NULL);
-	event_new(tl_windows, "tlist-poll", tl_windows_poll, NULL);
+	reg = region_new(win, 0, 0, 0, 80, 100);
+	{
+		tl = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl, "tlist-changed", tl_windows_selected, NULL);
+		event_new(tl, "tlist-poll", tl_windows_poll, NULL);
+	}
+	
+	reg = region_new(win, REGION_VALIGN, 81, 0, 19, 100);
+	{
+		struct button *bu;
+
+		bu = button_new(reg, "Show", NULL, 0, 100, 33);
+		event_new(bu, "button-pushed", tl_windows_show, "%p", tl);
+
+		bu = button_new(reg, "Hide", NULL, 0, 100, 33);
+		event_new(bu, "button-pushed", tl_windows_hide, "%p", tl);
+
+		bu = button_new(reg, "Detach", NULL, 0, 100, 33);
+		event_new(bu, "button-pushed", tl_windows_detach, "%p", tl);
+	}
 
 	return (win);
 }
