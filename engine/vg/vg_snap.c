@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.8 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.9 2005/03/03 10:56:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -171,7 +171,7 @@ vg_snap_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
 	struct toolbar *snbar;
 	struct button *bu;
 
-	snbar = toolbar_new(parent, ttype, 1);
+	snbar = toolbar_new(parent, ttype, 1, TOOLBAR_HOMOGENOUS);
 	toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
 	toolbar_add_button(snbar, 0, ICON(SNAP_RINT_ICON), 1, 0,

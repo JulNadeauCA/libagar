@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.11 2004/11/25 02:49:01 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.12 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -99,15 +99,13 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 			vge->vtx[i].x -= vgb->pos.x - x;
 			vge->vtx[i].y -= vgb->pos.y - y;
 		}
-		if (layer != -1) {
+		if (layer != -1)
 			vge->layer = layer;
-		}
-		vge->redraw = 1;
 	}
 	
 	vgb->pos.x = x;
 	vgb->pos.y = y;
-	vg->redraw = 1;
+	vg->redraw++;
 }
 
 /* Modify a block's angle of rotation. */
@@ -139,7 +137,6 @@ vg_rotate_block(struct vg *vg, struct vg_block *vgb, double theta)
 			vg_pol2car(vg, r, theta, &x, &y);
 			vg_rel2abs(vg, x, y, &vge->vtx[i]);
 		}
-		vge->redraw = 1;
 	}
 	vg_select_block(vg, block_save);
 	vg->redraw++;

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.15 2004/11/24 05:37:09 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.16 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -181,9 +181,6 @@ line_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	if (cur_vtx != NULL) {
 		cur_vtx->x = x;
 		cur_vtx->y = y;
-	}
-	if (cur_line != NULL) {
-		cur_line->redraw++;
 		vg->redraw++;
 	}
 }
@@ -234,7 +231,6 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			}
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			cur_vtx = vg_vertex2(vg, vx, vy);
-			cur_line->redraw++;
 			vg->redraw++;
 
 			tool_push_status(t, _("Specify point %d or "
@@ -246,7 +242,6 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 					cur_line = NULL;
 				} else {
 					vg_pop_vertex(vg);
-					cur_line->redraw++;
 				}
 				vg->redraw++;
 			}

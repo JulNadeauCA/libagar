@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.14 2004/11/25 02:47:17 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.15 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -114,9 +114,6 @@ circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	} else {
 		vg->origin[2].x = x;
 		vg->origin[2].y = y;
-	}
-	if (cur_circle != NULL) {
-		cur_circle->redraw++;
 		vg->redraw++;
 	}
 	vg->origin[1].x = x;

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ellipse.c,v 1.9 2004/10/06 04:37:09 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.c,v 1.10 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -128,7 +128,6 @@ ellipse_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 			cur_ellipse->vg_arc.w = cos(theta)*m*2;
 			cur_ellipse->vg_arc.h = sin(theta)*m*2;
 		} 
-		cur_ellipse->redraw++;
 	} else {
 		vg->origin[2].x = x;
 		vg->origin[2].y = y;

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_ortho.c,v 1.1 2004/04/27 11:43:55 vedge Exp $	*/
+/*	$Csoft: vg_ortho.c,v 1.2 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@ vg_ortho_toolbar(void *parent, struct vg *vg, enum toolbar_type ttype)
 	struct toolbar *snbar;
 	struct button *bu;
 
-	snbar = toolbar_new(parent, ttype, 1);
+	snbar = toolbar_new(parent, ttype, 1, TOOLBAR_HOMOGENOUS);
 	bu = toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_NO_ORTHO);
 	widget_set_int(bu, "state", 1);
