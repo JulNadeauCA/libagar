@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.19 2003/02/22 11:44:05 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.20 2003/02/22 11:48:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,8 +62,6 @@ magnifier_init(void *p)
 	struct magnifier *mag = p;
 
 	tool_init(&mag->tool, "magnifier", &magnifier_ops);
-	mag->tool.flags |= TOOL_NO_EDIT;
-	mag->mode = MAGNIFIER_ZOOM_IN;
 	mag->increment = 30;
 }
 
@@ -76,23 +74,9 @@ magnifier_window(void *p)
 
 	win = window_new("mapedit-tool-magnifier", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    102, 147,
-	    102, 147);
+	    98, 86,
+	    98, 86);
 	window_set_caption(win, "Magnifier");
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		struct radio *rad;
-		static const char *mode_items[] = {
-			"Zoom in",
-			"Zoom out",
-			NULL
-		};
-
-		rad = radio_new(reg, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &mag->mode);
-		win->focus = WIDGET(rad);
-	}
 
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
 	{
@@ -112,7 +96,6 @@ magnifier_window(void *p)
 		    "%p, %c", mag, 's');
 		textbox_printf(tbox, "100");
 	}
-
 	return (win);
 }
 
@@ -121,34 +104,18 @@ magnifier_event(int argc, union evarg *argv)
 {
 	struct magnifier *mag = argv[1].p;
 	struct mapview *mv;
+	
+	if ((mv = tool_mapview()) == NULL)
+		return;
 
 	switch (argv[2].c) {
 	case 'o':
-		if ((mv = tool_mapview()) != NULL) {
-			mapview_zoom(mv, 100);
-		}
+		mapview_zoom(mv, 100);
 		break;
 	case 's':
-		if ((mv = tool_mapview()) != NULL) {
-			struct textbox *tbox = argv[0].p;
-			int fac;
-
-			fac = textbox_int(tbox);
-			if (fac < -32767) {
-				fac = -32767;
-			} else if (fac > 32767) {
-				fac = 32767;
-			}
-			mapview_zoom(mv, fac);
-		}
+		mapview_zoom(mv, textbox_int(argv[0].p));
+		break;
 	}
-}
-
-void
-magnifier_effect(void *p, struct mapview *mv, struct node *node)
-{
-	struct magnifier *mag = p;
-
 }
 
 void
@@ -157,23 +124,6 @@ magnifier_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel,
 {
 	struct magnifier *mag = p;
 
-	switch (mag->mode) {
-	case MAGNIFIER_ZOOM_IN:
-		if (xrel != 0) {
-			mapview_zoom(mv, mv->map->zoom + xrel);
-#if 0
-			mapview_center(mv, mv->cx, mv->cy);
-#endif
-		}
-		break;
-	case MAGNIFIER_ZOOM_OUT:
-		if (xrel != 0) {
-			mapview_zoom(mv, mv->map->zoom - xrel);
-#if 0
-			mapview_center(mv, mv->cx, mv->cy);
-#endif
-		}
-		break;
-	}
+	mapview_zoom(mv, *mv->zoom + xrel);
 }
 
