@@ -1,4 +1,4 @@
-/*	$Csoft: physics.h,v 1.15 2002/06/09 10:08:04 vedge Exp $	    */
+/*	$Csoft: physics.h,v 1.16 2002/06/09 15:04:29 vedge Exp $	    */
 /*	Public domain	*/
 
 struct noderef;
@@ -13,14 +13,14 @@ enum {
 };
 
 enum {
-	DIR_ANIM_IDLEUP		= 0,
-	DIR_ANIM_IDLEDOWN	= 1,
-	DIR_ANIM_IDLELEFT	= 2,
-	DIR_ANIM_IDLERIGHT	= 3,
-	DIR_ANIM_MOVEUP		= 4,
-	DIR_ANIM_MOVEDOWN	= 5,
-	DIR_ANIM_MOVELEFT	= 6,
-	DIR_ANIM_MOVERIGHT	= 7
+	DIR_ANIM_IDLEUP,
+	DIR_ANIM_IDLEDOWN,
+	DIR_ANIM_IDLELEFT,
+	DIR_ANIM_IDLERIGHT,
+	DIR_ANIM_MOVEUP,
+	DIR_ANIM_MOVEDOWN,
+	DIR_ANIM_MOVELEFT,
+	DIR_ANIM_MOVERIGHT
 };
 
 /* 2D movement of undefined constructs in an infinite area. */
@@ -62,13 +62,15 @@ struct mappos {
 };
 
 void	gendir_init(struct gendir *);
-Uint32	gendir_set(struct gendir *, Uint32, Uint32);
+void	gendir_set(struct gendir *, Uint32);
+void	gendir_unset(struct gendir *, Uint32);
 Uint32	gendir_move(struct gendir *);
 void	gendir_postmove(struct gendir *, Uint32);
 
 void	mapdir_init(struct mapdir *, struct object *, struct map *, Uint32,
 	    Uint32);
-void	mapdir_set(struct mapdir *, Uint32, Uint32);
+void	mapdir_set(struct mapdir *, Uint32);
+void	mapdir_unset(struct mapdir *, Uint32);
 int	mapdir_move(struct mapdir *, Uint32 *, Uint32 *);
 void	mapdir_postmove(struct mapdir *, Uint32 *, Uint32 *, Uint32);
 
