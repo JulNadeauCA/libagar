@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.115 2004/04/24 04:33:33 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.116 2004/04/25 09:15:23 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -177,29 +177,46 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
 	prop_set_uint8(con, "view.fps", 15);
-
-	prop_set_bool(con, "font-engine", 1);
-	prop_set_string(con, "font-engine.default-font", "zekton");
-	prop_set_int(con, "font-engine.default-size", 14);
-	prop_set_int(con, "font-engine.default-style", 0);
 	prop_set_bool(con, "input.joysticks", 1);
 
+	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	pwd = getpwuid(getuid());
 	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
 	strlcat(udatadir, "/.", sizeof(udatadir));
 	strlcat(udatadir, proginfo->progname, sizeof(udatadir));
-	if (stat(udatadir, &sta) != 0 &&
-	    Mkdir(udatadir) != 0)
-		fatal("%s: %s", udatadir, strerror(errno));
 #else
-	udatadir[0] = '\0';
+	udatadir[0] = '.';
+	strlcpy(&udatadir[1], proginfo->progname, sizeof(udatadir)-1);
 #endif
-
+	if (stat(udatadir, &sta) != 0 &&
+	    Mkdir(udatadir) != 0) {
+		fatal("%s: %s", udatadir, strerror(errno));
+	}
 	prop_set_string(con, "save-path", "%s", udatadir);
+
 	prop_set_string(con, "den-path", "%s", SHAREDIR);
 	prop_set_string(con, "load-path", "%s:%s", udatadir, SHAREDIR);
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
+
+#ifdef HAVE_FREETYPE
+# ifdef WIN32
+	prop_set_bool(con, "font-engine", 1);
+	prop_set_string(con, "font-engine.default-font", "verdana");
+	prop_set_int(con, "font-engine.default-size", 14);
+	prop_set_int(con, "font-engine.default-style", 0);
+# else
+	prop_set_bool(con, "font-engine", 1);
+	prop_set_string(con, "font-engine.default-font", "zekton");
+	prop_set_int(con, "font-engine.default-size", 14);
+	prop_set_int(con, "font-engine.default-style", 0);
+# endif
+#else
+	prop_set_bool(con, "font-engine", 1);
+	prop_set_string(con, "font-engine.default-font", "bitmap");
+	prop_set_int(con, "font-engine.default-size", -1);
+	prop_set_int(con, "font-engine.default-style", -1);
+#endif /* HAVE_FREETYPE */
 }
 
 int

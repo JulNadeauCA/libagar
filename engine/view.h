@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.86 2004/04/10 02:36:16 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.87 2004/04/20 09:16:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -9,11 +9,6 @@
 #include <config/view_16bpp.h>
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
-
-enum gfx_engine {
-	GFX_ENGINE_GUI,		/* Direct video/OpenGL, solid background */
-	GFX_ENGINE_TILEBASED	/* Direct video/OpenGL, map background */
-};
 
 struct viewmap {
 	int  w, h;			/* View geometry in nodes */

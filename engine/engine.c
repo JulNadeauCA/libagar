@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.130 2004/04/20 09:16:39 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.131 2004/04/25 08:18:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -46,11 +46,15 @@
 #ifdef EDITION
 #include <engine/mapedit/mapedit.h>
 #endif
+#ifdef DEBUG
+#include <engine/monitor/monitor.h>
+#endif
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
+#include <engine/widget/primitive.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,7 +79,7 @@ struct object engine_icons;		/* Global engine icons */
 
 /* Initialize the Agar engine. */
 int
-engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
+engine_preinit(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 {
 	static int inited = 0;
 	
@@ -92,22 +96,20 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	textdomain("agar");
 #endif
 
-	/* Initialize the error handling facility. */
 	error_init();
 
 #ifdef THREADS
 	pthread_mutexattr_init(&recursive_mutexattr);
 	pthread_mutexattr_settype(&recursive_mutexattr,
 	    PTHREAD_MUTEX_RECURSIVE);
-
 	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
 	pthread_mutex_init(&gfxq_lock, &recursive_mutexattr);
 #endif
 
 #ifdef HAVE_PROGNAME
-	/* Prefer __progname on BSD systems. */
 	{
 		extern char *__progname;
+
 		prog->progname = __progname;
 	}
 #endif
@@ -115,104 +117,116 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	printf("Agar %s\n", VERSION);
 	proginfo = prog;
 
-	/* Initialize the SDL library. */
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		error_set("SDL_Init: %s", SDL_GetError());
 		return (-1);
 	}
-	if (flags & ENGINE_INIT_GFX) {
 #ifdef HAVE_X11
-		setenv("SDL_VIDEO_X11_WMCLASS", prog->progname, 1);
+	setenv("SDL_VIDEO_X11_WMCLASS", prog->progname, 1);
 #endif
-		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-			error_set("SDL_INIT_VIDEO: %s", SDL_GetError());
-			return (-1);
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+		error_set("SDL_INIT_VIDEO: %s", SDL_GetError());
+		return (-1);
+	}
+	SDL_WM_SetCaption(prog->name, prog->progname);
+
+	vinfo = SDL_GetVideoInfo();
+	if (vinfo != NULL) {
+		char accel[2048];
+		char unaccel[2048];
+		size_t size = 2048;
+
+		printf(_("Video device is %dbpp "
+		         "(ckey=%d, alpha=%d)\n"),
+		    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
+		    vinfo->vfmt->alpha);
+		printf(_("Video mask is 0x%08x,0x%08x,0x%08x,0x%08x\n"),
+		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
+		    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
+
+		if (vinfo->wm_available) {
+			printf(_("Window manager is available.\n"));
+		} else {
+			printf(_("Window manager is unavailable.\n"));
 		}
-		SDL_WM_SetCaption(prog->name, prog->progname);
-
-		/* Print video device information. */
-		vinfo = SDL_GetVideoInfo();
-		if (vinfo != NULL) {
-			char accel[2048];
-			char unaccel[2048];
-			size_t size = 2048;
-
-			printf(_("Video device is %dbpp "
-			         "(ckey=%d, alpha=%d)\n"),
-			    vinfo->vfmt->BitsPerPixel, vinfo->vfmt->colorkey,
-			    vinfo->vfmt->alpha);
-			printf(_("Video mask is 0x%08x,0x%08x,0x%08x,0x%08x\n"),
-			    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
-			    vinfo->vfmt->Bmask, vinfo->vfmt->Amask);
-
-			if (vinfo->wm_available) {
-				printf(_("Window manager is available.\n"));
-			} else {
-				printf(_("Window manager is unavailable.\n"));
-			}
 			
-			if (vinfo->hw_available) {
-				printf(
-				    _("Hardware surfaces are available.\n"));
-			} else {
-				printf(
-				    _("Hardware surfaces are unavailable.\n"));
-			}
-		
-			accel[0] = '\0';
-			unaccel[0] = '\0';
-
-			strlcat(vinfo->blit_hw ? accel : unaccel,
-			    _("\tHardware blits\n"), size);
-			strlcat(vinfo->blit_hw_CC ? accel : unaccel,
-			    _("\tHardware->hardware colorkey blits\n"), size);
-			strlcat(vinfo->blit_hw_A ? accel : unaccel,
-			    _("\tHardware->hardware alpha blits\n"), size);
-		
-			strlcat(vinfo->blit_sw ? accel : unaccel,
-			    _("\tSoftware->hardware blits\n"), size);
-			strlcat(vinfo->blit_sw_CC ? accel : unaccel,
-			    _("\tSoftware->hardware colorkey blits\n"), size);
-			strlcat(vinfo->blit_sw_A ? accel : unaccel,
-			    _("\tSoftware->hardware alpha blits\n"), size);
-			strlcat(vinfo->blit_fill ? accel : unaccel,
-			    _("\tColor fills\n"), size);
-
-			if (accel[0] != '\0')
-				printf(_("Accelerated operations:\n%s"), accel);
-			if (unaccel[0] != '\0')
-				printf(_("Unaccelerated operations:\n%s"),
-				    unaccel);
-			printf("\n");
+		if (vinfo->hw_available) {
+			printf(_("Hardware surfaces are available.\n"));
+		} else {
+			printf(_("Hardware surfaces are unavailable.\n"));
 		}
+		
+		accel[0] = '\0';
+		unaccel[0] = '\0';
+
+		strlcat(vinfo->blit_hw ? accel : unaccel,
+		    _("\tHardware blits\n"), size);
+		strlcat(vinfo->blit_hw_CC ? accel : unaccel,
+		    _("\tHardware->hardware colorkey blits\n"), size);
+		strlcat(vinfo->blit_hw_A ? accel : unaccel,
+		    _("\tHardware->hardware alpha blits\n"), size);
+		
+		strlcat(vinfo->blit_sw ? accel : unaccel,
+		    _("\tSoftware->hardware blits\n"), size);
+		strlcat(vinfo->blit_sw_CC ? accel : unaccel,
+		    _("\tSoftware->hardware colorkey blits\n"), size);
+		strlcat(vinfo->blit_sw_A ? accel : unaccel,
+		    _("\tSoftware->hardware alpha blits\n"), size);
+		strlcat(vinfo->blit_fill ? accel : unaccel,
+		    _("\tColor fills\n"), size);
+
+		if (accel[0] != '\0')
+			printf(_("Accelerated operations:\n%s"), accel);
+		if (unaccel[0] != '\0')
+			printf(_("Unaccelerated operations:\n%s"), unaccel);
+
+		printf("\n");
 	}
 
-	/* Initialize the type switch and register the built-in types. */
 	typesw_init();
 
-	/* Initialize and load the user engine settings. */
 	config = Malloc(sizeof(struct config), M_OBJECT);
 	config_init(config);
 	object_load(config);
 
-	/* Attach the input devices. */
-	if (flags & ENGINE_INIT_INPUT) {
-		kbd_new(0);
-		mouse_new(0);
-
-		if (prop_get_bool(config, "input.joysticks") &&
-		    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
-			int i, njoys;
-
-			njoys = SDL_NumJoysticks();
-			for (i = 0; i < njoys; i++)
-				joy_new(i);
-		}
-	}
-
 	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;
+	return (0);
+}
+
+int
+engine_init(enum gfx_engine ge, enum text_engine te)
+{
+	int i, njoys;
+	
+	if (view_init(ge) == -1 ||
+	    text_init(te) == -1)
+		return (-1);
+	
+	kbd_new(0);
+	mouse_new(0);
+
+	if (prop_get_bool(config, "input.joysticks") &&
+	    SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+		njoys = SDL_NumJoysticks();
+		for (i = 0; i < njoys; i++)
+			joy_new(i);
+	}
+
+	primitives_init();
+
+	object_init(&engine_icons, "object", "icons", NULL);
+	object_wire_gfx(&engine_icons, "/engine/icons/icons");
+
+	config_window(config);
+
+#ifdef DEBUG
+	if (engine_debug > 0) {
+		monitor_init(&monitor, "debug-monitor");
+		window_show(monitor.toolbar);
+	}
+#endif
 	return (0);
 }
 

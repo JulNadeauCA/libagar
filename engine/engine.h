@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.80 2004/03/25 05:36:34 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.81 2004/04/11 03:29:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -123,16 +123,18 @@ struct engine_proginfo {
 	char	*version;	/* Version of the game */
 };
 
-extern struct engine_proginfo *proginfo;	/* engine.c */
+extern struct engine_proginfo *proginfo; /* engine.c */
+extern struct object *world;		/* engine.c */
+extern pthread_mutex_t linkage_lock;	/* engine.c */
 
-#define ENGINE_INIT_GFX		0x01		/* Graphic engine */
-#define ENGINE_INIT_INPUT	0x02		/* Input devices */
-
-extern struct object *world;		/* Roots of Evil */
-extern pthread_mutex_t linkage_lock;	/* Protects object linkage */
+enum gfx_engine {
+	GFX_ENGINE_GUI,		/* Direct video/OpenGL, solid background */
+	GFX_ENGINE_TILEBASED	/* Direct video/OpenGL, map background */
+};
 
 __BEGIN_DECLS
-int		 engine_init(int, char **, struct engine_proginfo *, int);
+int		 engine_preinit(int, char **, struct engine_proginfo *, int);
+int		 engine_init(enum gfx_engine, enum text_engine);
 void		 engine_destroy(void);
 __inline__ void	 lock_linkage(void);
 __inline__ void	 unlock_linkage(void);
