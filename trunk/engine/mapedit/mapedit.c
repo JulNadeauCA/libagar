@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.137 2003/01/27 08:00:00 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.138 2003/02/02 21:13:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -116,13 +116,16 @@ mapedit_init(void)
 	prop_set_int(med, "zoom-increment", 8);
 	prop_set_int(med, "zoom-speed", 60);
 	prop_set_int(med, "tilemap-item-size", 16);
-	prop_set_bool(med, "tilemap-scroll-x", 0);
-	prop_set_bool(med, "tilemap-scroll-y", 1);
 	prop_set_bool(med, "tilemap-bg-moving", 1);
 	prop_set_int(med, "tilemap-bg-square-size", 16);
-	
+	prop_set_uint32(med, "default-width", 64);
+	prop_set_uint32(med, "default-height", 32);
+
 	mapedition = 1;
-	
+
+	/* Load the settings. */
+	object_load(&mapedit);
+
 	/* Initialize the map edition tools. */
 	for (i = 0; i < ntools; i++) {
 		const struct tools_ent *toolent = &tools[i];
