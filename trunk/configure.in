@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.44 2002/12/28 10:05:06 vedge Exp $
+# $Csoft: configure.in,v 1.45 2002/12/29 02:44:53 vedge Exp $
 
 makeout(Makefile.config);
 inclout(config);
@@ -35,6 +35,7 @@ check(make);
 check(cc);
 
 # Functions
+check(progname);
 check(getenv);
 check(setenv);
 check(strsep);
