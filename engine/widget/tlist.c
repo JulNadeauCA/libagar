@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.103 2005/01/05 04:44:06 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.104 2005/01/23 11:47:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -68,6 +68,7 @@ static void tlist_scrolled(int, union evarg *);
 static void free_item(struct tlist *, struct tlist_item *);
 static void select_item(struct tlist *, struct tlist_item *);
 static void unselect_item(struct tlist *, struct tlist_item *);
+static void show_popup(struct tlist *, struct tlist_popup *);
 
 struct tlist *
 tlist_new(void *parent, int flags)
@@ -188,11 +189,15 @@ tlist_init(struct tlist *tl, int flags)
 	tl->keymoved = 0;
 	tl->item_h = text_font_height+2;
 	tl->dblclicked = 0;
-	TAILQ_INIT(&tl->items);
-	TAILQ_INIT(&tl->selitems);
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
+	TAILQ_INIT(&tl->items);
+	TAILQ_INIT(&tl->selitems);
+	TAILQ_INIT(&tl->popups);
+	
+	tl->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	ag_menu_init(tl->menu);
 
 	tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXXXXXX", 4);
 
@@ -219,6 +224,7 @@ tlist_destroy(void *p)
 {
 	struct tlist *tl = p;
 	struct tlist_item *it, *nit;
+	struct tlist_popup *tp, *ntp;
 
 	for (it = TAILQ_FIRST(&tl->selitems);
 	     it != TAILQ_END(&tl->selitems);
@@ -232,6 +238,14 @@ tlist_destroy(void *p)
 		nit = TAILQ_NEXT(it, items);
 		free_item(tl, it);
 	}
+	for (tp = TAILQ_FIRST(&tl->popups);
+	     tp != TAILQ_END(&tl->popups);
+	     tp = ntp) {
+		ntp = TAILQ_NEXT(tp, popups);
+		Free(tp, M_WIDGET);
+	}
+	object_destroy(tl->menu);
+
 	pthread_mutex_destroy(&tl->lock);
 	widget_destroy(tl);
 }
@@ -690,15 +704,15 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	
 	widget_focus(tl);
 
-	if (button != 1)
-		return;
-	
 	pthread_mutex_lock(&tl->lock);
 
 	tind = (widget_get_int(tl->sbar, "value") + y/tl->item_h) + 1;
+
+	/* XXX use array */
 	if ((ti = tlist_item_index(tl, tind)) == NULL)
 		goto out;
 
+	/* Expand the children if the user clicked on the [+] sign. */
 	if (ti->flags & TLIST_HAS_CHILDREN) {
 		int th = tl->item_h/2;
 
@@ -713,7 +727,8 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 			goto out;
 		}
 	}
-	
+
+	/* Handle range selections. */
 	/* XXX atrocious */
 	if (tl->flags & TLIST_MULTI) {
 		if (SDL_GetModState() & KMOD_SHIFT) {
@@ -764,6 +779,28 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	
 	select_item(tl, ti);
 
+	/* Display any popup menu associated with this item's class. */
+	if (button == SDL_BUTTON_RIGHT &&
+	    ti->class != NULL) {
+		struct tlist_popup *tp;
+	
+		TAILQ_FOREACH(tp, &tl->popups, popups) {
+			if (strcmp(tp->iclass, ti->class) == 0)
+				break;
+		}
+		if (tp != NULL) {
+			dprintf("popup (%s)\n", ti->class);
+			show_popup(tl, tp);
+			goto out;
+		} else {
+			dprintf("no popup for `%s' class\n", ti->class);
+		}
+		goto out;
+	} else if (button != SDL_BUTTON_LEFT) {
+		goto out;
+	}
+
+	/* Handle double clicks. */
 	if (tl->dblclicked) {
 		event_cancel(tl, "dblclick-expire");
 		event_post(NULL, tl, "tlist-dblclick", "%p", ti);
@@ -944,5 +981,41 @@ tlist_set_icon(struct tlist *tl, struct tlist_item *it, SDL_Surface *iconsrc)
 		widget_unmap_surface(tl, it->icon);
 		it->icon = -1;
 	}
+}
+
+/* Create a new popup menu for items of the given class. */
+struct AGMenuItem *
+tlist_set_popup(struct tlist *tl, const char *iclass)
+{
+	struct tlist_popup *tp;
+
+	tp = Malloc(sizeof(struct tlist_popup), M_WIDGET);
+	tp->iclass = iclass;
+	tp->item = ag_menu_add_item(tl->menu, NULL);
+	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
+	return (tp->item);
+}
+
+static void
+show_popup(struct tlist *tl, struct tlist_popup *tp)
+{
+	struct AGMenu *m = tl->menu;
+	int x, y;
+
+#ifdef DEBUG
+	if (widget_parent_window(tl) == NULL)
+		fatal("%s is unattached", OBJECT(tl)->name);
+#endif
+	SDL_GetMouseState(&x, &y);
+
+	if (tp->panel != NULL) {
+		ag_menu_collapse(m, tp->item);
+		tp->panel = NULL;
+	}
+	if (m->sel_item != NULL) {
+		ag_menu_collapse(m, m->sel_item);
+	}
+	m->sel_item = tp->item;
+	tp->panel = ag_menu_expand(m, tp->item, x+4, y+4);
 }
 
