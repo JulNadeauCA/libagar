@@ -1,7 +1,5 @@
-/*	$Csoft: xcf.h,v 1.4 2002/12/23 03:05:44 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.5 2002/12/24 10:32:11 vedge Exp $	*/
 /*	Public domain	*/
-
-#include <config/have_ieee754.h>
 
 #define XCF_SIGNATURE	"gimp xcf "
 #define XCF_MAGIC_LEN	14
@@ -66,11 +64,7 @@ struct xcf_prop {
 		 */
 		Uint8	 color[3];		/* RGB triplet for color */
 		struct {
-#ifdef HAVE_IEEE754
 			float	x, y;		/* Resolution */
-#else
-			Uint32	x, y;		/* Resolution */
-#endif
 		} resolution;
 	} data;
 };
