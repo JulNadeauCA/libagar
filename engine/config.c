@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.84 2003/06/15 05:08:39 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.85 2003/06/15 05:17:42 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -163,7 +163,7 @@ config_init(struct config *con)
 	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 
-	prop_set_bool(con, "input.unicode", 0);
+	prop_set_bool(con, "input.unicode", 1);
 	prop_set_bool(con, "input.joysticks", 1);
 
 	pwd = getpwuid(getuid());
