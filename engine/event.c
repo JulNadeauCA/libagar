@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.153 2003/06/06 02:06:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.154 2003/06/06 09:04:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -305,6 +305,8 @@ event_dispatch(SDL_Event *ev)
 
 			WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
 			    WIDGET(win)->h);
+			window_remap_widgets(win, WIDGET(win)->x,
+			    WIDGET(win)->y);
 		}
 		break;
 	case SDL_VIDEOEXPOSE:

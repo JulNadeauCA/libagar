@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.66 2003/05/25 02:53:45 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.67 2003/06/06 03:18:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -72,6 +72,7 @@ extern DECLSPEC void	 window_hide(struct window *);
 extern DECLSPEC int	 window_toggle_visibility(struct window *);
 extern DECLSPEC int	 window_event(SDL_Event *);
 extern DECLSPEC void	 window_resize(struct window *);
+extern DECLSPEC void	 window_remap_widgets(void *, int, int);
 
 extern DECLSPEC void	 window_set_caption(struct window *, const char *, ...);
 extern DECLSPEC void	 window_set_spacing(struct window *, int);
