@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.33 2002/05/11 05:55:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.34 2002/05/13 06:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -123,7 +123,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	}
 
 	SDL_ShowCursor(SDL_ENABLE);
-	
+	SDL_Delay(100);
 	return (0);
 }
 
