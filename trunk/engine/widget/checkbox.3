@@ -1,4 +1,4 @@
-.\"	$Csoft: checkbox.3,v 1.4 2002/09/07 04:30:24 vedge Exp $
+.\"	$Csoft: checkbox.3,v 1.5 2002/09/12 09:54:49 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -42,10 +42,10 @@ widget implements a checkbox with a label.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct checkbox *
-.Fn checkbox_new "struct region *reg" "char *caption" "int rh" "int flags"
+.Fn checkbox_new "struct region *reg" "char *caption" "int rh"
 .Pp
 .Ft void
-.Fn checkbox_init "struct checkbox *checkbox" "char *caption" "int rh" "int flags"
+.Fn checkbox_init "struct checkbox *checkbox" "char *caption" "int rh"
 .nr nS 0
 .Pp
 The
@@ -61,13 +61,15 @@ widget of height
 .Fa rh
 and a label set to
 .Fa caption .
+.Sh BINDINGS
 The
-.Fa flags
-can be changed at runtime, and may include:
+.Nm
+widget provides the following bindings:
 .Pp
-.Bd -literal
-#define CHECKBOX_PRESSED	0x01		/* Checkbox pressed */
-.Ed
+.Bl -tag -compact -width "int *value"
+.It Va int *state
+State (1=pressed, 2=released).
+.El
 .Sh EVENTS
 The
 .Nm
