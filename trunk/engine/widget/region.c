@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.1 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.2 2002/05/19 15:27:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -55,8 +55,7 @@ static const struct object_ops region_ops = {
 };
 
 struct region *
-region_new(void *parent, enum widget_align walign, int rx, int ry, int rw,
-    int rh, int spacing)
+region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 {
 	struct region *reg;
 	struct window *win = parent;
@@ -64,7 +63,7 @@ region_new(void *parent, enum widget_align walign, int rx, int ry, int rw,
 	OBJECT_ASSERT(parent, "window");
 
 	reg = emalloc(sizeof(struct region));
-	region_init(reg, walign, rx, ry, rw, rh, spacing);
+	region_init(reg, flags, rx, ry, rw, rh);
 
 	pthread_mutex_lock(&win->lock);
 	window_attach(win, reg);
@@ -74,8 +73,7 @@ region_new(void *parent, enum widget_align walign, int rx, int ry, int rw,
 }
 
 void
-region_init(struct region *reg, enum widget_align walign, int rx, int ry,
-    int rw, int rh, int spacing)
+region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 {
 	static int curreg = 0;
 	char *regname;
@@ -85,16 +83,20 @@ region_init(struct region *reg, enum widget_align walign, int rx, int ry,
 	    &region_ops);
 	free(regname);
 
-	reg->walign = walign;
+	reg->flags = flags;
+#ifdef DEBUG
+	reg->flags |= REGION_BORDER;
+#endif
+
 	reg->rx = rx;
 	reg->ry = ry;
-	reg->rw = NULL;
-	reg->rh = NULL;
+	reg->rw = rw;
+	reg->rh = rh;
 	reg->x = 0;
 	reg->y = 0;
 	reg->w = 0;
 	reg->h = 0;
-	reg->spacing = spacing;
+	reg->spacing = 10;
 	reg->win = NULL;
 	TAILQ_INIT(&reg->widgetsh);
 }
