@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.15 2002/02/25 09:00:40 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.16 2002/03/03 06:22:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -76,43 +76,76 @@ void
 event_loop(void)
 {
 	SDL_Event ev;
+	struct map *m = world->curmap;
+	static Uint32 ltick, ntick;
+	static Sint32 delta;
 
-	while (SDL_WaitEvent(&ev)) {
-		if (ev.type == SDL_KEYDOWN) {
-			event_hotkey(&ev);
-		}
-		switch (ev.type) {
-		case SDL_VIDEOEXPOSE:
-			world->curmap->redraw++;
-			continue;
-		case SDL_MOUSEMOTION:
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-			if (curmapedit != NULL) {	/* XXX */
-				mapedit_event(curmapedit, &ev);
-				break;
+	if (m == NULL) {
+		fatal("no map\n");
+		return;
+	}
+
+	ltick = SDL_GetTicks();
+
+	for (ntick = 0, delta = m->fps;;) {
+		ntick = SDL_GetTicks();
+		if ((ntick - ltick) >= delta) {
+			if (pthread_mutex_lock(&m->lock) == 0) {
+				map_animate(m);
+				if (m->redraw) {
+					m->redraw = 0;
+					map_draw(m);
+					delta = m->fps -
+					    (SDL_GetTicks() - ntick);
+					if (delta < 1) {
+						dprintf("overrun (delta=%d)\n",
+						    delta);
+						delta = 1;
+					}
+				}
+				pthread_mutex_unlock(&m->lock);
+			} else {
+				perror("map");
 			}
-			input_event(mouse, &ev);
-			break;
-		case SDL_JOYAXISMOTION:
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-			if (curmapedit != NULL) {	/* XXX */
-				mapedit_event(curmapedit, &ev);
-				break;
+			ltick = SDL_GetTicks();
+		} else if (SDL_PollEvent(&ev)) {
+			if (ev.type == SDL_KEYDOWN) {
+				event_hotkey(&ev);
 			}
-			input_event(joy, &ev);
-			break;
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			if (curmapedit != NULL) {	/* XXX */
-				mapedit_event(curmapedit, &ev);
+			switch (ev.type) {
+			case SDL_VIDEOEXPOSE:
+				world->curmap->redraw++;
+				continue;
+			case SDL_MOUSEMOTION:
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if (curmapedit != NULL) {	/* XXX */
+					mapedit_event(curmapedit, &ev);
+					break;
+				}
 				break;
+			case SDL_JOYAXISMOTION:
+			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+				if (curmapedit != NULL) {	/* XXX */
+					mapedit_event(curmapedit, &ev);
+					break;
+				} else {
+					input_event(joy, &ev);
+				}
+				break;
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				if (curmapedit != NULL) {	/* XXX */
+					mapedit_event(curmapedit, &ev);
+					break;
+				} else {
+					input_event(keyboard, &ev);
+				}
+				break;
+			case SDL_QUIT:
+				return;
 			}
-			input_event(keyboard, &ev);
-			break;
-		case SDL_QUIT:
-			return;
 		}
 	}
 }
