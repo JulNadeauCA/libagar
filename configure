@@ -199,10 +199,7 @@ echo "#endif /* CONF_SMPEG */" >> engine/config.h
 echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
 echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
-echo "*** smpeg >= 0.4.3 is required"
-echo "*** Get it from http://www.icculus.org/"
-echo "ERROR: smpeg >= 0.4.3 is missing"
-exit 1
+NONE=1
 fi
 fi
 echo PREFIX=$PREFIX >> Makefile.config
