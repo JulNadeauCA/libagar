@@ -135,6 +135,7 @@ scrollbar_mouse_select(struct scrollbar *sb, int coord, int maxcoord)
 	}
 
 	max = widget_get_int(sb, "max");
+	dprintf("max = %d\n", max);
 
 	if (ncoord > maxcoord - sb->bar_size - sb->button_size) { /* Down */
 		widget_set_int(sb, "value", max);
@@ -221,6 +222,12 @@ scrollbar_draw(void *p)
 	value = widget_get_int(sb, "value");
 	min =	widget_get_int(sb, "min");
 	max =	widget_get_int(sb, "max");
+
+#ifdef DEBUG
+	if (min < 0 || max < min || value < min || value > max)
+		fatal("bad value/range: min=%d, max=%d, value=%d",
+		    min, max, value);
+#endif
 
 	primitives.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
 	    WIDGET_COLOR(sb, BACKGROUND_COLOR));
