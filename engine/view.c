@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.138 2004/03/18 03:15:48 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.139 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -300,26 +300,13 @@ view_detach_queued(void)
 	TAILQ_INIT(&view->detach);
 }
 
-/* Allocate a 32bpp surface with native masks. */
 SDL_Surface *
 view_surface(Uint32 flags, int w, int h)
 {
 	SDL_Surface *s;
 
-	s = SDL_CreateRGBSurface(flags, w, h, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		0xff000000,
-		0x00ff0000,
-		0x0000ff00,
-		0x000000ff
-#else
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-#endif
-	    );
-	if (s == NULL) {
+	if ((s = SDL_CreateRGBSurface(flags, w, h, 32,
+	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, vfmt->Amask)) == NULL) {
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	return (s);
@@ -331,8 +318,7 @@ view_copy_surface(SDL_Surface *ss)
 {
 	SDL_Surface *rs;
 
-	rs = SDL_ConvertSurface(ss, ss->format,
-	    SDL_SWSURFACE |
+	rs = SDL_ConvertSurface(ss, ss->format, SDL_SWSURFACE |
 	    (ss->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL)));
 	if (rs == NULL) {
 		error_set("SDL_ConvertSurface: %s", SDL_GetError());
@@ -343,7 +329,7 @@ view_copy_surface(SDL_Surface *ss)
 
 /*
  * Allocate a new surface containing a bitmap of ss scaled to wxh.
- * The source surface must not be locked by the caller thread.
+ * The source surface must not be locked by the calling thread.
  */
 SDL_Surface *
 view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
