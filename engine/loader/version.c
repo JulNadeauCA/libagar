@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.6 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.7 2004/01/03 04:25:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -26,6 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_getpwuid.h>
+#include <config/have_getuid.h>
+
 #include <engine/compat/gethostname.h>
 #include <engine/error/error.h>
 
@@ -35,8 +38,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 #include <pwd.h>
+#endif
 
 #include <engine/loader/netbuf.h>
 #include <engine/loader/integral.h>
@@ -96,12 +101,16 @@ version_write(struct netbuf *buf, const struct version *ver)
 	netbuf_write(ver->name, strlen(ver->name), 1, buf);
 	write_uint32(buf, ver->minor);
 	write_uint32(buf, ver->major);
-	
+
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	if ((pw = getpwuid(getuid())) != NULL) {
 		write_string(buf, pw->pw_name);
 	} else {
 		write_string(buf, "???");
 	}
+#else
+	write_string(buf, "???");
+#endif
 
 	if (gethostname(host, sizeof(host)) == 0) {
 		write_string(buf, host);
