@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.19 2003/03/09 00:34:42 vedge Exp $
+.\"	$Csoft: agar.3,v 1.20 2003/04/12 00:35:05 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,65 +42,61 @@ is a graphical game engine.
 The
 .Nm
 engine implements the following interfaces:
-.Pp
 .Bl -tag -width "transform(3) " -compact
 .It config
-Generic engine/game configuration settings.
+Generic engine/game configuration settings
 .It Xr event 3
-Generic event processing.
+Generic event processing
 .It input
 Processing of events from input devices such as keyboards, mice, joysticks
-and network sessions.
+and network sessions
 .It Xr map 3
-2D multilayered, tile-based levels.
+2D multilayered, tile-based levels
 .It Xr mapedit 3
-Level edition.
+Level edition
 .It Xr object 3
-Generic object structure.
+Generic object structure
 .It Xr perso 3
-Game characters.
+Game characters
 .It Xr physics 3
-Movement of objects inside levels.
+Movement of objects inside levels
 .It Xr prop 3
-Generic properties.
+Generic properties
 .It Xr rootmap 3
-Level display in game mode.
+Level display in game mode
 .It Xr transform 3
-Graphical transformations applied to node references.
+Graphical transformations applied to node references
 .It Xr version 3
-Signatures and versioning of data.
+Signatures and versioning of data
 .It Xr view 3
-Video display interface.
+Video display interface
 .It Xr widget 3
-Widget set framework.
+Widget set framework
 .It Xr media 3
-Loading of data (ie. graphics/audio) from various formats.
+Loading of data (ie. graphics/audio) from various formats
 .El
 .Sh THREAD SAFETY
 The following subsystems do not provide thread safety:
-.Pp
 .Bl -tag -width "mapedit(3) " -compact
 .It Xr mapedit 3
-Level edition.
+Level edition
 .El
 .Pp
 The other
 .Nm
 subsystems provide thread-safe interfaces, using the following locking
 primitives:
-.Pp
-.Bl -enum -compact
+.Bl -bullet -compact
 .It
-Simple mutexes.
+Simple mutexes
 .It
-Recursive mutexes.
+Recursive mutexes
 .It
-Read-write locks.
+Read-write locks
 .El
-.Sh HEADER FILES
-Headers should not include other headers, except for ancestral structures
-(which must be protected against multiple inclusion).
-.Pp
+.Sh STYLE GUIDELINES
+.Bl -tag -width "Includes "
+.It Threads
 In structure definitions for thread-safe interfaces, all members of a
 structure that follow a lock are protected it, unless mentioned otherwise.
 Members that do not follow a lock are read-only once the structure is
@@ -108,14 +104,62 @@ attached (not once the structure is initialized, since derivate structures
 may need to initialize additional data before attach).
 .Bd -literal
 struct foo {
-	char		*name;		/* RO once attached */
-	int		 type;		/* RO once attached */
+	char	*name;		/* RO once attached */
+	int	 type;		/* RO once attached */
 
 	pthread_mutex_t	 pos_lock;
-	struct map	*map;		/* RW, protected by pos_lock */
-	int		 x, y;		/* RW, protected by pos_lock */
+	struct map	*map;	/* RW (pos_lock) */
+	int		 x, y;	/* RW (pos_lock) */
 };
 .Ed
+.It Includes
+The
+.Pa Aq engine/compat/*.h
+and
+.Pa Aq config/*.h
+includes should come first, followed by
+.Pa Aq engine/engine.h .
+.Pp
+If threads support was enabled at compile time,
+.Pa Aq engine/engine.h
+defines error-checking wrappers around
+.Fn pthread_*
+calls (or no-ops with threads disabled).
+.Bl -tag -width "<engine/compat/queue.h> "
+.It Pa Aq sys/types.h
+Primitive types as defined by
+.St -p1003.1
+.It Pa Aq pthread.h
+POSIX threads library interface, included only if threads support was
+enabled at compile-time.
+.It Pa Aq SDL.h
+SDL library interface.
+.It Pa Aq GL/GL.h
+OpenGL library interface, included only if OpenGL support was enabled at
+compile-time.
+.It Pa Aq engine/compat/queue.h
+4.4BSD
+.Xr queue 3
+definitions.
+.It Pa Aq libfobj/fobj.h
+For the
+.Ft struct netbuf
+definition, required by generic load/save operations.
+.It Pa Aq engine/error.h
+Error wrappers,
+.Fn warning
+and
+.Fn fatal
+macros and generic error handling.
+.It Pa Aq engine/object.h
+Generic
+.Xr object 3
+types and operations.
+.It Pa Aq engine/event.h
+Generic
+.Xr event 3
+handling.
+.El
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,
