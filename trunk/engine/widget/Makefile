@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.31 2002/09/06 01:27:39 vedge Exp $
+#	$Csoft: Makefile,v 1.32 2002/09/07 04:34:21 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -17,9 +17,9 @@ OBJS=	widget.o window.o region.o text.o label.o button.o checkbox.o \
 FOBJS=	widget.fob window.fob
 
 MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 \
-	region.3 textbox.3 window.3 bitmap.3
+	region.3 textbox.3 window.3 bitmap.3 scrollbar.3
 CATMAN3=widget.cat3 button.cat3 graph.cat3 checkbox.cat3 label.cat3 radio.cat3 \
-	region.cat3 textbox.cat3 window.cat3 bitmap.cat3
+	region.cat3 textbox.cat3 window.cat3 bitmap.cat3 scrollbar.cat3
 
 CFLAGS+=	${SDL_CFLAGS}
 
