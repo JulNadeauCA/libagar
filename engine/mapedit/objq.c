@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.1 2002/06/25 17:27:22 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.2 2002/07/06 23:57:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -119,7 +119,6 @@ objq_event(int argc, union evarg *argv)
 
 		ms = SDL_GetMouseState(NULL, NULL);
 		if (ms & OBJQ_SCROLL_BUTTON_MASK) {
-			pthread_mutex_lock(&med->lock);
 			if (oq->mouse.x > ox &&		/* Down */
 			    --oq->offs < 0) {
 				oq->offs = med->neobjs - 1;
@@ -128,7 +127,6 @@ objq_event(int argc, union evarg *argv)
 			    ++oq->offs > med->neobjs-1) {
 				oq->offs = 0;
 			}
-			pthread_mutex_unlock(&med->lock);
 		}
 		break;
 	case WINDOW_MOUSEBUTTONUP:
@@ -138,7 +136,6 @@ objq_event(int argc, union evarg *argv)
 		if (button != OBJQ_SELECT_BUTTON) {
 			break;
 		}
-		pthread_mutex_lock(&med->lock);
 		curoffs = oq->offs + x/TILEW;
 		if (curoffs < 0) {
 			/* Wrap */
@@ -154,8 +151,6 @@ objq_event(int argc, union evarg *argv)
 		med->curoffs = 0;
 
 		dprintf("obj: %p\n", med->curobj);
-
-		pthread_mutex_unlock(&med->lock);
 		break;
 	case WINDOW_KEYDOWN:
 		break;
@@ -184,8 +179,6 @@ objq_draw(void *p)
 	struct editobj *eob;
 	int x = 0, i, sn;
 	
-	pthread_mutex_lock(&med->lock);
-
 	for (i = 0, sn = oq->offs;
 	     i < (WIDGET(oq)->w / TILEW) - 1;
 	     i++, x += TILEW) {
@@ -213,7 +206,5 @@ nextref:
 			sn = 0;
 		}
 	}
-	
-	pthread_mutex_unlock(&med->lock);
 }
 

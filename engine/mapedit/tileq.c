@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.2 2002/06/25 17:27:51 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.3 2002/07/06 23:57:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -124,8 +124,6 @@ tileq_event(int argc, union evarg *argv)
 
 		ms = SDL_GetMouseState(NULL, NULL);
 		if (ms & TILEQ_SCROLL_BUTTON_MASK) {
-			pthread_mutex_lock(&med->lock);
-			pthread_mutex_lock(&med->curobj->lock);
 			TILEQ_ADJUST(tq, med);
 
 			if (tq->mouse.y > oy &&		/* Down */
@@ -136,8 +134,6 @@ tileq_event(int argc, union evarg *argv)
 			    ++tq->offs > med->curobj->nrefs-1) {
 				tq->offs = 0;
 			}
-			pthread_mutex_unlock(&med->curobj->lock);
-			pthread_mutex_unlock(&med->lock);
 		}
 		break;
 	case WINDOW_MOUSEBUTTONUP:
@@ -148,8 +144,6 @@ tileq_event(int argc, union evarg *argv)
 		if (button != TILEQ_SELECT_BUTTON) {
 			break;
 		}
-		pthread_mutex_lock(&med->lock);
-		pthread_mutex_lock(&med->curobj->lock);
 		TILEQ_ADJUST(tq, med);
 
 		med->curoffs = tq->offs + y/TILEH;
@@ -162,12 +156,8 @@ tileq_event(int argc, union evarg *argv)
 		while (med->curoffs > med->curobj->nrefs - 1) {
 			med->curoffs -= med->curobj->nrefs;
 		}
-		pthread_mutex_unlock(&med->curobj->lock);
-		pthread_mutex_unlock(&med->lock);
 		break;
 	case WINDOW_KEYDOWN:
-		pthread_mutex_lock(&med->lock);
-		pthread_mutex_lock(&med->curobj->lock);
 		TILEQ_ADJUST(tq, med);
 
 		/* XXX gendir */
@@ -184,8 +174,6 @@ tileq_event(int argc, union evarg *argv)
 			break;
 		default:
 		}
-		pthread_mutex_unlock(&med->curobj->lock);
-		pthread_mutex_unlock(&med->lock);
 		break;
 	}
 }
@@ -214,9 +202,6 @@ tileq_draw(void *p)
 	if (med->curobj == NULL) {
 		return;
 	}
-
-	pthread_mutex_lock(&med->lock);
-	pthread_mutex_lock(&med->curobj->lock);
 
 	TILEQ_ADJUST(tq, med);
 
@@ -263,8 +248,5 @@ nextref:
 			sn = 0;
 		}
 	}
-	
-	pthread_mutex_unlock(&med->curobj->lock);
-	pthread_mutex_unlock(&med->lock);
 }
 
