@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.70 2003/07/08 00:34:58 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.71 2003/09/07 00:20:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -363,8 +363,14 @@ label_draw_polled(struct label *label)
 				ri++;
 				break;
 			case 'p':
-				snprintf(s2, sizeof(s2),
-				    "%p", LABEL_ARG(void *));
+				snprintf(s2, sizeof(s2), "%p",
+				    LABEL_ARG(void *));
+				strlcat(s, s2, sizeof(s));
+				ri++;
+				break;
+			case 'f':
+				snprintf(s2, sizeof(s2), "%.2f",
+				    LABEL_ARG(double));
 				strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
