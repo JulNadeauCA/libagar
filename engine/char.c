@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.19 2002/02/25 08:55:08 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.20 2002/02/25 11:31:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
 	struct character *ch;
 	
 	ch = (struct character *)emalloc(sizeof(struct character));
-	object_init(&ch->obj, name, flags, &char_vec);
+	object_init(&ch->obj, name, OBJ_EDITABLE, &char_vec);
 	sprintf(ch->obj.desc, desc);
 
 	ch->flags = 0;
