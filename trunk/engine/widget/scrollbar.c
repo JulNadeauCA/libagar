@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.38 2004/03/28 06:08:14 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.39 2004/03/28 07:41:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ scrollbar_init(struct scrollbar *sb, enum scrollbar_type type)
 	sb->type = type;
 	sb->curbutton = BUTTON_NONE;
 	sb->bar_size = 30;
-	sb->button_size = text_font_height(font);
+	sb->button_size = text_font_height(NULL);
 
 	event_new(sb, "window-mousebuttondown", scrollbar_mousebuttondown,
 	    NULL);

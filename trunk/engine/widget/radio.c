@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.41 2004/03/18 03:03:11 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.42 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -91,7 +91,7 @@ radio_init(struct radio *rad, const char **items)
 	widget_map_color(rad, FRAME_COLOR, "frame", 120, 120, 120, 255);
 
 	rad->value = -1;
-	rad->radius = text_font_height(font) / 2;
+	rad->radius = text_font_height(NULL)/2;
 	rad->max_w = 0;
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
