@@ -1,4 +1,4 @@
-.\"	$Csoft: 03.Object.me,v 1.4 2004/02/29 17:36:18 vedge Exp $
+.\"	$Csoft: 03.Object.me,v 1.5 2004/03/02 08:53:24 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -335,7 +335,7 @@ We register an event handler function,
 for the "door-open" event, and we initially display the projection map
 "Closed".
 .lp
-An artist could come up with a door bitmap containing three layers:
+An artist could come up with a door pixmap containing three layers:
 .(l
 \(bu Background and decorations
 \(bu Closed door
@@ -348,7 +348,7 @@ by importing the background on the two, the closed door layer for the
 The level designer then creates copies of the model door, for subsequent
 doors in the game.
 Of course, the level designer will probably want to use more than one door
-model, either using Agar map transformations or different door bitmaps
+model, either using Agar map transformations or different door pixmaps
 altogether.
 .Bd -code "Initialization of the \fBdoor\fP object"
 void
