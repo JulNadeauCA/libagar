@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.16 2003/04/24 01:35:26 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.17 2003/04/24 07:01:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -100,10 +100,8 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 	if (!sh->multi ||
 	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
 		if (selx < 0 || selx >= mv->map->mapw ||
-		    sely < 0 || sely >= mv->map->maph) {
-			dprintf("out of range\n");
+		    sely < 0 || sely >= mv->map->maph)
 			return;
-		}
 	}
 
 	for (y = sely; y < sely+h; y++) {
