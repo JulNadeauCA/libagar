@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.59 2003/04/12 01:45:49 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.60 2003/04/25 09:38:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/vasprintf.h>
+#include <engine/compat/vsnprintf.h>
 #include <engine/compat/strsep.h>
 
 #include <engine/engine.h>
@@ -36,6 +36,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/label.h>
+#include <engine/widget/bitmap.h>
 #include <engine/widget/button.h>
 #include <engine/widget/text.h>
 #include <engine/widget/textbox.h>
@@ -287,41 +288,46 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	return (su);
 }
 
+/* Display a message. */
 void
 text_msg(const char *caption, const char *format, ...)
 {
+	char msg[LABEL_MAX_LENGTH];
 	struct window *win;
 	struct region *reg;
-	struct label *lab;
-	struct button *button;
 	va_list args;
-	char *msg;
-	SDL_Surface *msg_eval;
-	Uint16 w, h;
+	SDL_Surface *msgsu;
+	int w, h;
 
 	va_start(args, format);
-	Vasprintf(&msg, format, args);
+	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	/* Auto-size the window. XXX waste */
-	msg_eval = text_render(NULL, -1, 0, msg);
-	w = msg_eval->w;
-	h = msg_eval->h;
-	SDL_FreeSurface(msg_eval);
+	/* Auto-size the window. XXX waste! */
+	msgsu = text_render(NULL, -1, 0, msg);
+	w = (int)msgsu->w;
+	h = (int)msgsu->h;
+	SDL_FreeSurface(msgsu);
 
-	win = window_generic_new(w + 20, h + 100, NULL);
+	win = window_generic_new(msgsu->w + 20,
+	    msgsu->h + ttf_font_height(font) + 60,
+	    NULL);
 	window_set_caption(win, "%s", caption);
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		lab = label_new(reg, 100, 60, msg);
-		button = button_new(reg, "Ok", NULL, 0, 99, 40);
-		WIDGET_FOCUS(button);
+		label_new(reg, -1, -1, msg);
+	}
 
-		event_new(button, "button-pushed",
-		    window_generic_detach, "%p", win);
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
+	{
+		struct button *button;
+
+		button = button_new(reg, "Ok", NULL, 0, 100, 0);
+		WIDGET_FOCUS(button);
+		event_new(button, "button-pushed", window_generic_detach,
+		    "%p", win);
 		window_show(win);
 	}
-	free(msg);
 }
 
