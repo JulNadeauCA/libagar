@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.38 2004/05/10 05:15:01 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.39 2004/05/14 05:08:59 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -216,6 +216,11 @@ and
 .Fn tlist_unselect
 functions manipulate the selected flag on
 .Fa item .
+Unless the
+.Dv TLIST_MULTI
+flag is set,
+.Fn tlist_select
+clears the selection flag on every other item.
 The
 .Fn tlist_select_all
 and
