@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.24 2002/07/07 06:48:43 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.25 2002/07/18 12:06:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -130,36 +130,34 @@ void
 button_draw(void *p)
 {
 	struct button *b = p;
-	SDL_Surface *label = b->label_s, *bg;
+	SDL_Surface *label = b->label_s;
 	int x = 0, y = 0;
 
 	OBJECT_ASSERT(p, "widget");
 
-	/* Button. XXX cache */
-	bg = primitive_box(b, WIDGET(b)->w, WIDGET(b)->h,
+	/* Button */
+	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
 	    (b->flags & BUTTON_PRESSED) ? -1 : 1);
-	WIDGET_DRAW(b, bg, 0, 0);
 
+	/* Label */
 	switch (b->justify) {
 	case BUTTON_LEFT:
 		x = b->xmargin;
 		break;
 	case BUTTON_CENTER:
-		x = ((bg->w - label->w) >> 1) + (b->xmargin>>2) - 1;
+		x = ((WIDGET(b)->w - label->w) >> 1) + (b->xmargin>>2) - 1;
 		break;
 	case BUTTON_RIGHT:
-		x = bg->w - label->w - b->xmargin;
+		x = WIDGET(b)->w - label->w - b->xmargin;
 		break;
 	}
-	y = ((bg->h - label->h) >> 1) - 1;
+	y = ((WIDGET(b)->h - label->h) >> 1) - 1;
 
 	if (b->flags & BUTTON_PRESSED) {
 		x++;
 		y++;
 	}
-
 	WIDGET_DRAW(b, b->label_s, x, y);
-	SDL_FreeSurface(bg);
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.15 2002/06/09 10:27:28 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.16 2002/06/20 16:36:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -115,23 +115,20 @@ void
 checkbox_draw(void *p)
 {
 	struct checkbox *cbox = p;
-	SDL_Surface *box_s;
 	int x = 0, y = 0;
 
 	/* Checkbox */
-	box_s = primitive_box(cbox, cbox->cbox_w, cbox->label_s->h,
+	primitives.box(cbox, 0, 0, cbox->cbox_w, cbox->label_s->h,
 	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1);
 
 	/* Label (cached) */
 	switch (cbox->justify) {
 	case CHECKBOX_LEFT:
 	case CHECKBOX_RIGHT:
-		WIDGET_DRAW(cbox, box_s, 0, 0);
-		x = box_s->w + cbox->xspacing;
+		x = cbox->cbox_w + cbox->xspacing;
 		y = 0;
 		break;
 	}
-	SDL_FreeSurface(box_s);
 
 	WIDGET_DRAW(cbox, cbox->label_s, x, y);
 }
