@@ -1,7 +1,7 @@
-/*	$Csoft: asprintf.h,v 1.2 2002/10/19 06:42:42 vedge Exp $	*/
+/*	$Csoft: asprintf.h,v 1.1 2002/11/07 17:51:17 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <compat/config.h>
+#include <engine/mcconfig.h>
 
 #ifndef HAVE_ASPRINTF
 #error "no compat asprintf()"
