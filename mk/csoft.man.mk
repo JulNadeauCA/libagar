@@ -45,6 +45,7 @@ CATMAN8?=""
 CATMAN9?=""
 MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 NOMAN?=
+PAGER?=more
 
 all: all-subdir preformat-man
 install: install-man-dirs install-man install-subdir
