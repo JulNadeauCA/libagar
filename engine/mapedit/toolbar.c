@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.15 2002/08/12 06:55:07 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.16 2002/08/18 00:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -129,8 +129,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	 */
 	win = window_new("Tool", WINDOW_SOLID,
 	    16, 16,
-	    70, 174,
-	    70, 174);
+	    70, 147,
+	    70, 147);
 
 	/*
 	 * Left side of toolbar.
