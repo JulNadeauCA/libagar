@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.47 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.48 2002/05/19 14:32:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 enum {
 	DEFAULT_HP	= 10,
 	DEFAULT_MP	= 10,
-	DEFAULT_SPEED	= 30,
+	DEFAULT_SPEED	= 5,
 	DEFAULT_ZUARS	= 0
 };
 
@@ -60,8 +60,8 @@ static const struct object_ops char_ops = {
 	char_save,
 	NULL,		/* onattach */
 	NULL,		/* ondetach */
-	char_attach,
-	char_detach
+	NULL,		/* attach */
+	NULL		/* detach */
 };
 
 static Uint32	char_time(Uint32, void *);
@@ -101,6 +101,9 @@ char_init(struct character *ch, char *name, char *media)
 	ch->nzuars = DEFAULT_ZUARS;
 
 	pthread_mutex_init(&ch->lock, NULL);
+
+	event_new(ch, "attach", 0, char_onattach, NULL);
+	event_new(ch, "detach", 0, char_ondetach, NULL);
 }
 
 int
@@ -243,9 +246,9 @@ char_save(void *p, int fd)
 }
 
 void
-char_attach(void *parent, void *child)
+char_onattach(int argc, union evarg *argv)
 {
-	struct character *ch = child;
+	struct character *ch = argv[0].p;
 
 	pthread_mutex_lock(&ch->lock);
 	ch->timer = SDL_AddTimer(ch->maxspeed, char_time, ch);
@@ -253,9 +256,9 @@ char_attach(void *parent, void *child)
 }
 
 void
-char_detach(void *parent, void *child)
+char_ondetach(int argc, union evarg *argv)
 {
-	struct character *ch = child;
+	struct character *ch = argv[0].p;
 
 	pthread_mutex_lock(&ch->lock);
 	SDL_RemoveTimer(ch->timer);
@@ -269,7 +272,7 @@ char_time(Uint32 ival, void *p)
 	struct map *m;
 	struct mappos *pos;
 	Uint32 x, y, moved = 0;
-	
+
 	if (ob->pos == NULL) {
 		return (ival);
 	}
@@ -289,7 +292,7 @@ char_time(Uint32 ival, void *p)
 	moved = mapdir_move(&pos->dir, &x, &y);
 	if (moved != 0) {
 		struct mappos *newpos;
-	
+
 		newpos = object_movepos(ob, m, x, y);
 		mapdir_postmove(&newpos->dir, &x, &y, moved);
 	}
