@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.15 2002/04/14 04:52:58 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.16 2002/05/02 06:28:59 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -37,6 +37,7 @@ void		 view_destroy(struct viewport *);
 int		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
 void		 view_maskfill(struct viewport *, SDL_Rect *, Uint32);
+void		 view_redraw(struct viewport *);
 
 void		 scroll(struct map *, int);
 

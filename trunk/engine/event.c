@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.30 2002/05/02 06:30:01 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.31 2002/05/02 09:32:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -67,9 +67,6 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_r:
 		world->curmap->redraw++;
 		break;
-	case SDLK_F1:
-		engine_config();
-		break;
 	case SDLK_F2:
 		pthread_mutex_lock(&world->lock);
 		object_save(world);
@@ -84,14 +81,14 @@ event_hotkey(SDL_Event *ev)
 		text_msg(5, TEXT_SLEEP, "%d ticks\n", SDL_GetTicks());
 		break;
 #endif
+	case SDLK_F1:
+		engine_config();
+		break;
 	case SDLK_f:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
-			static SDL_Event nev;
-
 			view_fullscreen(mainview,
 			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-			nev.type = SDL_VIDEOEXPOSE;
-			SDL_PushEvent(&nev);
+			view_redraw(mainview);
 		}
 		break;
 	case SDLK_v:
@@ -114,7 +111,6 @@ event_loop(void *arg)
 	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = NULL;
-	struct window *win;
 
 	/* Start the garbage collection process. */
 	object_init_gc();
@@ -141,15 +137,7 @@ event_loop(void *arg)
 			pthread_mutex_unlock(&m->lock);
 
 			if (!TAILQ_EMPTY(&windowsh)) {
-				/* Shares world->lock */
-				pthread_mutex_lock(&world->lock);
-				TAILQ_FOREACH_REVERSE(win, &windowsh, windows,
-				    windows_head) {
-					if (win->redraw) {
-						window_draw(win);
-					}
-				}
-				pthread_mutex_unlock(&world->lock);
+				window_draw_all();
 			}
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
@@ -158,11 +146,7 @@ event_loop(void *arg)
 			}
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
-				world->curmap->redraw++;
-				if (curmapedit != NULL) {
-					mapedit_tilelist(curmapedit);
-					mapedit_objlist(curmapedit);
-				}
+				view_redraw(mainview);
 				break;
 			case SDL_MOUSEMOTION:
 				if (curmapedit != NULL) {	/* XXX */
