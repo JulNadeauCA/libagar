@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.10 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.11 2004/03/30 16:02:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -28,11 +28,12 @@
 
 #include <engine/engine.h>
 #include <engine/typesw.h>
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/object.h>
 #include <engine/map.h>
 #include <engine/perso.h>
-#include <engine/vg/vgedit.h>
+#include <engine/vg/vgobj.h>
 
 struct object_type *typesw = NULL;
 int ntypesw = 0;
@@ -42,14 +43,14 @@ void
 typesw_init(void)
 {
 	extern const struct object_ops object_ops, map_ops, perso_ops,
-	    vgedit_ops;
+	    vgobj_ops;
 
 	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
 
-	typesw_register("object", sizeof(struct object), &object_ops);
-	typesw_register("map", sizeof(struct map), &map_ops);
-	typesw_register("perso", sizeof(struct perso), &perso_ops);
-	typesw_register("vgedit", sizeof(struct vgedit), &vgedit_ops);
+	typesw_register("object", sizeof(struct object), &object_ops, OBJ_ICON);
+	typesw_register("map", sizeof(struct map), &map_ops, MAP_ICON);
+	typesw_register("perso", sizeof(struct perso), &perso_ops, PERSO_ICON);
+	typesw_register("vgobj", sizeof(struct vgobj), &vgobj_ops, VGOBJ_ICON);
 }
 
 void
@@ -60,7 +61,8 @@ typesw_destroy(void)
 
 /* Register an object type. */
 void
-typesw_register(const char *type, size_t size, const struct object_ops *ops)
+typesw_register(const char *type, size_t size, const struct object_ops *ops,
+    int icon)
 {
 	struct object_type *ntype;
 
@@ -70,5 +72,6 @@ typesw_register(const char *type, size_t size, const struct object_ops *ops)
 	strlcpy(ntype->type, type, sizeof(ntype->type));
 	ntype->size = size;
 	ntype->ops = ops;
+	ntype->icon = icon;
 }
 
