@@ -32,14 +32,26 @@
 #include <engine/input.h>
 #include <engine/physics.h>
 
+/*
+ * These timings have a granularity proportional to the
+ * interval of the timer calling gendir_move().
+ */
+enum {
+	GENDIR_REPEAT_DELAY =	30,	/* Repeat delay */
+	GENDIR_REPEAT_IVAL =	10	/* Repeat interval */
+};
+
 static void	mapdir_change(struct mapdir *, struct noderef *);
 
 void
 gendir_init(struct gendir *dir)
 {
 	dir->set = 0;
+	dir->current = 0;
 	dir->clear = 0;
 	dir->moved = 0;
+	dir->offs = 0;
+	dir->noffs = 0;
 }
 
 Uint32
@@ -58,11 +70,40 @@ gendir_set(struct gendir *dir, Uint32 direction, Uint32 set)
 Uint32
 gendir_move(struct gendir *dir)
 {
-	if (dir->current == 0 && dir->set != 0) {
-		dir->current |= dir->set;
-		dir->set = 0;
+	if (dir->clear != 0) {
+		Uint32 r = dir->current;
+
+		dir->current &= ~(dir->clear);
+		dir->clear = 0;
+		dir->noffs = 0;
+		dir->offs = 0;
+		return (r);
 	}
-	return (dir->current);
+
+	if (dir->current != 0) {
+		/* Keyboard repeat delay */
+		if (dir->noffs > 0) {
+			if (dir->noffs++ > GENDIR_REPEAT_DELAY) {
+				/* chain */
+				return (dir->current);
+			}
+		}
+
+		/* Repeat interval */
+		if (dir->offs++ > GENDIR_REPEAT_IVAL) {
+			dir->offs = 0;
+			dprintf("offs\n");
+			return (dir->current);
+		} else {
+			return (0);
+		}
+	} else {
+		if (dir->set != 0) {
+			dir->current |= dir->set;
+			dir->set = 0;
+		}
+	}
+	return (0);
 }
 
 void
@@ -72,13 +113,19 @@ gendir_postmove(struct gendir *dir, Uint32 moved)
 	if (dir->clear != 0) {
 		dir->current &= ~(dir->clear);
 		dir->clear = 0;
+		dir->noffs = 0;
+		dir->offs = 0;
+	} else {
+		dir->noffs++;
 	}
 
+#if 0
 	/* Set this direction (eg. key press). */
 	if (dir->set != 0) {
 		dir->current |= dir->set;
 		dir->set = 0;
 	}
+#endif
 }
 
 void
