@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.16 2005/02/18 03:31:04 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.17 2005/02/18 09:59:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -843,6 +843,24 @@ move_element_down(int argc, union evarg *argv)
 	t->flags |= TILE_DIRTY;
 }
 
+static void
+visible_element(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tlist *tl = argv[2].p;
+	struct tile *t = tv->tile;
+	struct tlist_item *it;
+	struct tile_element *tel, *ntel;
+
+	if ((it = tlist_item_selected(tl)) == NULL ||
+	    strcmp(it->class, "pixmap") != 0) {
+		return;
+	}
+	tel = it->p1;
+	tel->visible = !tel->visible;
+	t->flags |= TILE_DIRTY;
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -914,6 +932,13 @@ tile_edit(struct tileset *ts, struct tile *t)
 		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
 		    SDLK_d, KMOD_SHIFT,
 		    move_element_down, "%p,%p", tv, etl);
+		
+		ag_menu_separator(item);
+
+		ag_menu_action(item, _("Toggle visibility"),
+		    ICON(OBJCREATE_ICON),
+		    SDLK_d, KMOD_SHIFT,
+		    visible_element, "%p,%p", tv, etl);
 	}
 
 	m = ag_menu_new(win);

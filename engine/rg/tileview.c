@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.13 2005/02/17 04:47:18 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.15 2005/02/18 04:14:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -166,6 +166,15 @@ tileview_keyup(int argc, union evarg *argv)
 	}
 }
 
+static __inline__ int
+pixmap_coincident(struct tile_element *tel, int x, int y)
+{
+	return (x >= tel->tel_pixmap.x &&
+	    x < tel->tel_pixmap.x + tel->tel_pixmap.px->su->w &&
+	    y >= tel->tel_pixmap.y &&
+	    y < tel->tel_pixmap.y + tel->tel_pixmap.px->su->h);
+}
+
 static void
 tileview_buttondown(int argc, union evarg *argv)
 {
@@ -174,6 +183,7 @@ tileview_buttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tileview_ctrl *ctrl;
+	struct tile_element *tel = tv->tv_pixmap.tel;
 	int sx, sy, i;
 
 	widget_focus(tv);
@@ -182,6 +192,13 @@ tileview_buttondown(int argc, union evarg *argv)
 	case SDL_BUTTON_LEFT:
 		sx = (x - tv->xoffs)/tv->pxsz;
 		sy = (y - tv->yoffs)/tv->pxsz;
+		if (tv->state == TILEVIEW_PIXMAP_EDIT) {
+			if (pixmap_coincident(tel, sx, sy))
+				pixmap_mousebuttondown(tv, tel,
+				    sx - tel->tel_pixmap.x,
+				    sy - tel->tel_pixmap.y,
+				    button);
+		}
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
 				struct tileview_handle *th = &ctrl->handles[i];
@@ -201,31 +218,25 @@ tileview_buttondown(int argc, union evarg *argv)
 			if (i < ctrl->nhandles)
 				break;
 		}
-		if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
-			struct tile_element *tel = tv->tv_pixmap.tel;
-			struct pixmap *px = tel->tel_pixmap.px;
-
-			if (sx >= tel->tel_pixmap.x &&
-			    sx < tel->tel_pixmap.x+px->su->w &&
-			    sy >= tel->tel_pixmap.y &&
-			    sy < tel->tel_pixmap.y+px->su->h) {
-				pixmap_mousebuttondown(tv, tel,
-				    sx - tel->tel_pixmap.x,
-				    sy - tel->tel_pixmap.y,
-				    button);
-			}
-		}
 		break;
 	case SDL_BUTTON_MIDDLE:
 	case SDL_BUTTON_RIGHT:
 		tv->scrolling++;
 		break;
 	case SDL_BUTTON_WHEELUP:
+		if (tv->state == TILEVIEW_PIXMAP_EDIT) {
+			if (pixmap_mousewheel(tv, tel, 0) == 1)
+				break;
+		}
 		tileview_set_zoom(tv,
 		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+100, 1);
 		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
 		break;
 	case SDL_BUTTON_WHEELDOWN:
+		if (tv->state == TILEVIEW_PIXMAP_EDIT) {
+			if (pixmap_mousewheel(tv, tel, 1) == 1)
+				break;
+		}
 		tileview_set_zoom(tv,
 		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-100, 1);
 		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
@@ -485,12 +496,8 @@ tileview_mousemotion(int argc, union evarg *argv)
 	}
 	if (ctrl == NULL && tv->state == TILEVIEW_PIXMAP_EDIT) {
 		struct tile_element *tel = tv->tv_pixmap.tel;
-		struct pixmap *px = tel->tel_pixmap.px;
 
-		if (sx >= tel->tel_pixmap.x &&
-		    sx < tel->tel_pixmap.x+px->su->w &&
-		    sy >= tel->tel_pixmap.y &&
-		    sy < tel->tel_pixmap.y+px->su->h) {
+		if (pixmap_coincident(tel, sx, sy)) {
 			pixmap_mousemotion(tv, tel,
 			    sx - tel->tel_pixmap.x,
 			    sy - tel->tel_pixmap.y,

@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.6 2005/02/18 03:31:04 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.7 2005/02/18 11:40:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -145,10 +145,6 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	mspinbutton_set_range(msb, 0, TILE_SIZE_MAX-1);
 	event_new(msb, "mspinbutton-changed", update_tv, "%p", tv);
 	
-	cb = checkbox_new(win, _("Visible"));
-	widget_bind(cb, "state", WIDGET_INT, &tel->visible);
-	event_new(cb, "checkbox-changed", update_tv, "%p", tv);
-	
 #if 0
 	sb = spinbutton_new(win, _("Transparency: "));
 	widget_bind(sb, "value", WIDGET_INT, &tel->tel_pixmap.alpha);
@@ -156,13 +152,12 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	event_new(sb, "spinbutton-changed", update_tv, "%p", tv);
 #endif
 
-#ifdef DEBUG
+#if 0
 	label_new(win, LABEL_POLLED, "Undo level: %u/%u", &px->curblk,
 	    &px->nublks);
 #endif
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	box_set_spacing(bo, 0);
 	{
 		struct hsvpal *pal;
 		struct fspinbutton *fsb;
@@ -173,6 +168,7 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
 		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
 		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
+		widget_bind(pal, "alpha", WIDGET_FLOAT, &px->a);
 	
 		hb = box_new(bo, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		box_set_padding(hb, 1);
@@ -224,7 +220,6 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 
 		label_new(bo, LABEL_STATIC, _("Blending method:"));
 		rad = radio_new(bo, blend_modes);
-		WIDGET(rad)->flags |= WIDGET_WFILL;
 		widget_bind(rad, "value", WIDGET_INT, &px->blend_mode);
 	}
 	return (win);
@@ -352,6 +347,40 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel,
 		tv->tile->flags |= TILE_DIRTY;
 		break;
 	}
+}
+
+int
+pixmap_mousewheel(struct tileview *tv, struct tile_element *tel,
+    int nwheel)
+{
+	Uint8 *keystate = SDL_GetKeyState(NULL);
+	struct pixmap *px = tel->tel_pixmap.px;
+
+	if (keystate[SDLK_h]) {
+		px->h += (nwheel == 0) ? -3 : 3;
+		if (px->h < 0.0) { px->h = 359.0; }
+		else if (px->h > 359.0) { px->h = 0.0; }
+		return (1);
+	}
+	if (keystate[SDLK_s]) {
+		px->s += (nwheel == 0) ? 0.05 : -0.05;
+		if (px->s < 0.0) {  px->s = 0.0; }
+		else if (px->s > 1.0) { px->s = 1.0; }
+		return (1);
+	}
+	if (keystate[SDLK_v]) {
+		px->v += (nwheel == 0) ? -0.05 : 0.05;
+		if (px->v < 0.0) { px->v = 0.0; }
+		else if (px->v > 1.0) { px->v = 1.0; }
+		return (1);
+	}
+	if (keystate[SDLK_a]) {
+		px->a += (nwheel == 0) ? 0.1 : -0.1;
+		if (px->a < 0.0) { px->a = 0.0; }
+		else if (px->a > 1.0) { px->a = 1.0; }
+		return (1);
+	}
+	return (0);
 }
 
 void

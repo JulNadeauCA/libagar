@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.4 2005/02/18 03:31:04 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.5 2005/02/18 11:40:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -58,6 +58,7 @@ void pixmap_mousebuttonup(struct tileview *, struct tile_element *, int, int,
 			  int);
 void pixmap_mousemotion(struct tileview *, struct tile_element *, int, int, int,
 			int, int);
+int  pixmap_mousewheel(struct tileview *, struct tile_element *, int);
 
 void pixmap_begin_undoblk(struct pixmap *);
 void pixmap_undo(struct tileview *, struct tile_element *);
