@@ -1,0 +1,112 @@
+.\"	$Csoft: button.3,v 1.6 2002/09/07 04:30:24 vedge Exp $
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd September 11, 2002
+.Dt SCROLLBAR 3
+.Os
+.Sh NAME
+.Nm scrollbar
+.Nd agar scroll bar widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/scrollbar.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget represents a single value inside a arbitrary range.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct scrollbar *"
+.Fn scrollbar_new "struct region *reg" "int w" "int h" "int item_h" "int flags"
+.Pp
+.Ft void
+.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" "int item_h" "int flags"
+.Pp
+.Ft void
+.Fn scrollbar_set_range "struct scrollbar *scrollbar" "int max"
+.nr nS 0
+.Pp
+The
+.Fn scrollbar_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn scrollbar_init
+function initializes a
+.Nm
+widget of size
+.Fa w
+x
+.Fa h .
+It is assumed that each visible item (ie. a list item, or a map node) is
+.Fa item_size
+pixels.
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define SCROLLBAR_HORIZONTAL	0x01	/* Horizontal scroll bar */
+#define SCROLLBAR_VERTICAL	0x02	/* Vertical scroll bar */
+.Ed
+.Pp
+The
+.Fn scrollbar_set_change
+function changes the high range value to
+.Fa max .
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It window-mousebuttondown
+Jump to an arbitrary position.
+.It window-mousemotion
+Scroll.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn scrollbar-changed "int pos"
+Scrollbar position has changed, the display offset is now
+.Fa pos .
+.El
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3 ,
+.Xr window 3 ,
+.Xr region 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
