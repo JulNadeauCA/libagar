@@ -586,6 +586,108 @@ else
 
 	echo "no"
 fi
+echo -n "checking for a getpwuid() function..."
+echo -n "checking for a getpwuid() function..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <pwd.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct passwd *pwd;
+	uid_t uid = 0;
+
+	pwd = getpwuid(uid);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETPWUID" > config/have_getpwuid.h
+echo "#define HAVE_GETPWUID" $HAVE_GETPWUID >> config/have_getpwuid.h
+echo "#endif /* HAVE_GETPWUID */" >> config/have_getpwuid.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_GETPWUID" > config/have_getpwuid.h
+
+	echo "no"
+fi
+echo -n "checking for a getuid() function..."
+echo -n "checking for a getuid() function..." >> config.log
+cat << EOT > conftest.c
+#include <sys/types.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	uid_t uid;
+
+	uid = getuid();
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETUID" > config/have_getuid.h
+echo "#define HAVE_GETUID" $HAVE_GETUID >> config/have_getuid.h
+echo "#endif /* HAVE_GETUID */" >> config/have_getuid.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_GETUID" > config/have_getuid.h
+
+	echo "no"
+fi
+echo -n "checking for a strsep() function..."
+echo -n "checking for a strsep() function..." >> config.log
+cat << EOT > conftest.c
+#include <string.h>
+int
+main(int argc, char *argv[])
+{
+	(void)strsep(NULL, NULL);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: non-zero exit status" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_STRSEP" > config/have_strsep.h
+echo "#define HAVE_STRSEP" $HAVE_STRSEP >> config/have_strsep.h
+echo "#endif /* HAVE_STRSEP */" >> config/have_strsep.h
+
+	echo "yes"
+else
+    echo "#undef HAVE_STRSEP" > config/have_strsep.h
+
+	echo "no"
+fi
 echo -n "checking for a getenv() function..."
 echo -n "checking for a getenv() function..." >> config.log
 cat << EOT > conftest.c
