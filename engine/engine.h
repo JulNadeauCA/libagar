@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.34 2002/09/12 09:44:33 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.35 2002/09/14 01:00:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -7,7 +7,6 @@
 #include <engine/mcconfig.h>
 
 #include <pthread.h>
-#include <stdlib.h>
 
 #include <SDL.h>
 
