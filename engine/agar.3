@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.18 2003/03/05 23:18:12 vedge Exp $
+.\"	$Csoft: agar.3,v 1.19 2003/03/09 00:34:42 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -57,7 +57,7 @@ and network sessions.
 Level edition.
 .It Xr object 3
 Generic object structure.
-.It perso
+.It Xr perso 3
 Game characters.
 .It Xr physics 3
 Movement of objects inside levels.
@@ -67,18 +67,14 @@ Generic properties.
 Level display in game mode.
 .It Xr transform 3
 Graphical transformations applied to node references.
-.It ttf
-Interface to FreeType library.
 .It Xr version 3
 Signatures and versioning of data.
 .It Xr view 3
 Video display interface.
 .It Xr widget 3
 Widget set framework.
-.It xcf
-Loader for
-.Xr xcf 5
-type image files.
+.It Xr media 3
+Loading of data (ie. graphics/audio) from various formats.
 .El
 .Sh THREAD SAFETY
 The following subsystems do not provide thread safety:
@@ -90,8 +86,8 @@ Level edition.
 .Pp
 The other
 .Nm
-subsystems provide thread-safe interfaces (unless documented otherwise), using
-the following locking primitives:
+subsystems provide thread-safe interfaces, using the following locking
+primitives:
 .Pp
 .Bl -enum -compact
 .It
@@ -101,6 +97,25 @@ Recursive mutexes.
 .It
 Read-write locks.
 .El
+.Sh HEADER FILES
+Headers should not include other headers, except for ancestral structures
+(which must be protected against multiple inclusion).
+.Pp
+In structure definitions for thread-safe interfaces, all members of a
+structure that follow a lock are protected it, unless mentioned otherwise.
+Members that do not follow a lock are read-only once the structure is
+attached (not once the structure is initialized, since derivate structures
+may need to initialize additional data before attach).
+.Bd -literal
+struct foo {
+	char		*name;		/* RO once attached */
+	int		 type;		/* RO once attached */
+
+	pthread_mutex_t	 pos_lock;
+	struct map	*map;		/* RW, protected by pos_lock */
+	int		 x, y;		/* RW, protected by pos_lock */
+};
+.Ed
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,

@@ -1,4 +1,4 @@
-.\"	$Csoft: physics.3,v 1.9 2003/03/10 02:13:40 vedge Exp $
+.\"	$Csoft: physics.3,v 1.10 2003/03/23 11:35:49 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm physics
-.Nd agar physics simulation
+.Nd agar movement interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/physics.h>
@@ -40,8 +40,8 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-interface manages the movement of objects, usually in reaction to input
-device event.
+interface manages movement of objects, usually in reaction to input device
+events.
 The directions are represented by these flags:
 .Bd -literal
 #define DIR_UP		0x01
@@ -50,6 +50,7 @@ The directions are represented by these flags:
 #define DIR_RIGHT	0x08
 #define DIR_ALL		0xff
 .Ed
+.Pp
 .Sh GENERIC DIRECTIONS
 These functions implement generic two-dimensional movement.
 .Pp
@@ -58,16 +59,16 @@ These functions implement generic two-dimensional movement.
 .Fn gendir_init "struct gendir *dir"
 .Pp
 .Ft "void"
-.Fn gendir_set "struct gendir *dir" "Uint32 direction"
+.Fn gendir_set "struct gendir *dir" "int direction"
 .Pp
 .Ft "void"
-.Fn gendir_unset "struct gendir *dir" "Uint32 direction"
+.Fn gendir_unset "struct gendir *dir" "int direction"
 .Pp
-.Ft "Uint32"
+.Ft "int"
 .Fn gendir_move "struct gendir *dir"
 .Pp
 .Ft "void"
-.Fn gendir_postmove "struct gendir *dir" "Uint32 moved"
+.Fn gendir_postmove "struct gendir *dir" "int moved"
 .nr nS 0
 .Pp
 The
@@ -115,32 +116,25 @@ and
 .Fn mapdir_unset
 in reaction to input device events.
 The particular object implementation then calls
-.Fn mapdir_move ,
-usually from a timer callback function.
-If
 .Fn mapdir_move
-returns a non-zero value,
-.Fn object_move
-is then used to effect the movement and
-.Fn mapdir_postmove
-is called to unset directions as necessary.
+(usually from a timer callback function) in order to effect movement.
 .nr nS 1
 .Ft "void"
 .Fn mapdir_init "struct mapdir *dir" "struct object *ob" "struct map *map" \
-                "Uint32 flags" "Uint32 speed"
+                "int flags" "int speed"
 .Pp
 .Ft "void"
-.Fn mapdir_set "struct mapdir *dir" "Uint32 direction"
+.Fn mapdir_set "struct mapdir *dir" "int direction"
 .Pp
 .Ft "void"
-.Fn mapdir_unset "struct mapdir *dir" "Uint32 direction"
+.Fn mapdir_unset "struct mapdir *dir" "int direction"
 .Pp
-.Ft "Uint32"
+.Ft "int"
 .Fn mapdir_move "struct mapdir *dir" "int *map_x" "int *map_y"
 .Pp
 .Ft "void"
 .Fn mapdir_postmove "struct mapdir *dir" "int *map_x" "int *map_y" \
-                    "Uint32 moved"
+                    "int moved"
 .nr nS 0
 .Pp
 The
@@ -204,6 +198,7 @@ arguments are the same pointers that were passed to
 .Fn mapdir_move .
 .Sh SEE ALSO
 .Xr agar 3 ,
+.Xr map 3 ,
 .Xr rootmap 3
 .Sh HISTORY
 The

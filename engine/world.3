@@ -1,4 +1,4 @@
-.\"	$Csoft: world.3,v 1.4 2003/02/22 00:28:17 vedge Exp $
+.\"	$Csoft: world.3,v 1.5 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -50,10 +50,10 @@ layer manages the list of active objects in a game.
 .Fn world_destroy "struct world *wo"
 .Pp
 .Ft "int"
-.Fn world_load "struct world *wo" "int fd"
+.Fn world_load "struct world *wo" "struct netbuf *buf"
 .Pp
 .Ft "int"
-.Fn world_save "struct world *wo" "int fd"
+.Fn world_save "struct world *wo" "struct netbuf *buf"
 .nr nS 0
 .Pp
 The
@@ -65,12 +65,12 @@ function destroys the world.
 .Pp
 The
 .Fn world_load
-function loads state of all active objects.
+function loads state of all active objects from
+.Fa buf .
 The
 .Fn world_save
-function saves state of all active objects, and the object map to file
-descriptor
-.Fa fd .
+function saves state of all active objects, and the object map to
+.Fa buf .
 .Sh OBJECT LIST
 .nr nS 1
 .Ft void
@@ -96,9 +96,9 @@ from the world.
 .Pp
 The
 .Fn world_find
-function searches the active objects for
+function searches the world's child list for
 .Fa name ,
-and returns NULL if there is no such object.
+and returns a pointer to it (or NULL if there is no such object attached).
 .Sh SEE ALSO
 .Xr agar 3 .
 .Sh HISTORY

@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.30 2003/03/18 03:07:35 vedge Exp $
+.\"	$Csoft: map.3,v 1.31 2003/03/18 04:20:46 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -61,8 +61,8 @@ If the tile is scaled to another size, the centering offset is scaled to the
 tile size, but the motion offset is not.
 .Pp
 Graphical noderefs provide the renderer with a list of graphical transforms
-that should be applied before the tile is drawn, and a layer number defining
-the order of rendering.
+that should be applied before the tile is drawn (the resulting tile is cached),
+and a layer number defining the order of rendering.
 .Pp
 .Sh INITIALIZATION
 .nr nS 1
@@ -73,10 +73,10 @@ the order of rendering.
 .Fn map_destroy "void *map"
 .Pp
 .Ft int
-.Fn map_load "void *map" "int fd"
+.Fn map_load "void *map" "struct netbuf *buf"
 .Pp
 .Ft int
-.Fn map_save "void *map" "int fd"
+.Fn map_save "void *map" "struct netbuf *buf"
 .Pp
 .Ft int
 .Fn map_alloc_nodes "struct map *map" "unsigned int w" "unsigned int h"
@@ -106,14 +106,14 @@ the stack of layers).
 .Pp
 The
 .Fn map_load
-function reads a map in machine-independent format from
-.Fa fd ,
+function reads a map in network format from
+.Fa buf ,
 after freeing the existing nodes/layers.
 .Fn map_load
 returns 0 on success or -1 on failure.
 .Fn map_save
-saves a map in machine-independent format to
-.Fa fd .
+saves a map in network format to
+.Fa buf .
 .Pp
 The
 .Fn map_alloc_nodes
@@ -151,10 +151,11 @@ Unless the factor is 100%, bitmap scaling is performed for graphical noderefs.
 .Fn node_init "struct node *node"
 .Pp
 .Ft int
-.Fn node_load "int fd" "struct object_table *deps" "struct node *node"
+.Fn node_load "struct netbuf *buf" "struct object_table *deps" \
+              "struct node *node"
 .Pp
 .Ft void
-.Fn node_save "struct fobj_buf *savebuf" "struct object_table *deps" \
+.Fn node_save "struct netbuf *buf" "struct object_table *deps" \
               "struct node *node"
 .Pp
 .Ft void
@@ -170,11 +171,12 @@ function frees resources allocated by a node (such as the reference stack).
 .Pp
 The
 .Fn node_load
-function loads a node in machine-independent format from
-.Fa fd ,
+function loads a node from
+.Fa buf ,
 returning 0 on success or -1 on failure.
 .Fn node_save
-saves a node in machine-independent format.
+saves a node to
+.Fa buf .
 .Sh NODE REFERENCES
 .nr nS 1
 .Ft void
@@ -184,8 +186,8 @@ saves a node in machine-independent format.
 .Fn noderef_destroy "struct noderef *nref"
 .Pp
 .Ft int
-.Fn noderef_load "int fd" "struct object_table *deps" "struct node *node" \
-                 "struct noderef **nref"
+.Fn noderef_load "struct netbuf *buf" "struct object_table *deps" \
+                 "struct node *node" "struct noderef **nref"
 .Pp
 .Ft void
 .Fn noderef_save "struct fobj_buf *savebuf" "struct object_table *deps" \
@@ -200,12 +202,13 @@ frees the resources reserved by a noderef (such as the transforms).
 .Pp
 The
 .Fn noderef_load
-function loads a node reference in machine-independent format from
-.Fa fd ,
+function loads a node reference from
+.Fa buf ,
 returning 0 on success or -1 on failure.
 .Fn noderef_save
-saves a node reference in machine-independent format, encoding the object
-references using
+saves a node reference to
+.Fa buf ,
+encoding object references using
 .Fa deps .
 .Sh NODE MANIPULATIONS
 .nr nS 1
