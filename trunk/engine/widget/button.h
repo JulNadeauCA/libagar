@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.29 2004/04/09 07:30:59 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.30 2004/09/12 05:51:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -18,10 +18,14 @@ struct button {
 	struct widget wid;
 	int state;			/* Default state binding */
 	enum button_justify justify;	/* Label justification */
-	int sensitive;			/* Service events? */
-	int sticky;			/* Sticky behavior? */
+	int flags;
+#define BUTTON_INSENSITIVE	0x01	/* Not responsive */
+#define BUTTON_STICKY		0x02	/* Toggle state */
+#define BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
+#define BUTTON_REPEAT		0x08	/* Send multiple button-pushed events */
 	int padding;			/* Padding in pixels */
-	int moverlap;			/* Cursor overlapping */
+	struct timeout delay_to;	/* Delay for triggering repeat mode */
+	struct timeout repeat_to;	/* Timeout for repeat mode */
 };
 
 __BEGIN_DECLS
@@ -39,6 +43,7 @@ void	 button_set_focusable(struct button *, int);
 void	 button_set_sticky(struct button *, int);
 void	 button_set_justify(struct button *, enum button_justify);
 void	 button_set_label(struct button *, SDL_Surface *);
+void	 button_set_repeat(struct button *, int);
 void	 button_printf(struct button *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
