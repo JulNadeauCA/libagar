@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.62 2002/06/10 04:27:06 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.63 2002/06/13 09:02:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -509,7 +509,7 @@ object_path(char *obname, const char *suffix)
 	for (p = strtok_r(datapath, ":;", &last);
 	     p != NULL;
 	     p = strtok_r(NULL, ":;", &last)) {
-	     	if (strcmp(suffix, ".m") == 0) {
+	     	if (strcmp(suffix, "m") == 0) {
 			sprintf(path, "%s/maps/%s.m", p, obname);
 		} else {
 			sprintf(path, "%s/%s.%s", p, obname, suffix);
