@@ -1,15 +1,16 @@
-/*	$Csoft: video.h,v 1.1 2002/01/26 03:37:38 vedge Exp $	*/
+/*	$Csoft: video.h,v 1.2 2002/01/26 06:37:32 vedge Exp $	*/
 
 #include <smpeg.h>
 
 struct video {
-	int	flags;
-#define VIDEO_STREAM	0x01
-	int	fd;
+	pthread_t	thread;
 
+	/* Private */
+#ifdef CONF_SMPEG
+	int		fd;
 	SMPEG	  	*mpeg;
-	pthread_t	thread;	/* Playback thread */
-	SDL_mutex	*lock;	/* Lock on mpeg */
+	SDL_mutex	*lock;
+#endif
 };
 
 struct video	*video_create(char *, SDL_Surface *);
