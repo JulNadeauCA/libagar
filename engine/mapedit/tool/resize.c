@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.4 2002/07/30 22:19:52 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.5 2002/08/12 06:56:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -41,7 +41,6 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
-#include <engine/widget/radio.h>
 #include <engine/widget/button.h>
 
 #include <engine/mapedit/mapedit.h>

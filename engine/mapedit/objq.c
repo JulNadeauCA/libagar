@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.8 2002/07/29 06:33:21 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.9 2002/07/30 22:21:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -116,7 +116,6 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 static void
 objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 {
-	char caption[4096];
 	struct object *ob = eob->pobj;
 	struct objq_tmap *tm;
 	struct window *win;
@@ -133,9 +132,8 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 		}
 	}
 
-	sprintf(caption, "%s", ob->name);
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, WINDOW_SOLID|WINDOW_CENTER,
+	window_init(win, ob->name, WINDOW_SOLID|WINDOW_CENTER,
 	    0, 0, 19 + TILEW*3, 318, 19+TILEW, 45+TILEH);
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	/* Map view */
@@ -194,7 +192,7 @@ objq_event(int argc, union evarg *argv)
 		if (curoffs < 0) {
 			/* Wrap */
 			curoffs += oq->offs + med->neobjs;
-		} else if (med->curoffs >= med->neobjs) {
+		} else if (med->ref.offs >= med->neobjs) {
 			curoffs -= med->neobjs;
 		}
 		while (curoffs > med->neobjs-1) {

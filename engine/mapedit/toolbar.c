@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.14 2002/07/30 22:22:53 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.15 2002/08/12 06:55:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -46,7 +46,6 @@
 #include "toolbar.h"
 #include "fileops.h"
 #include "tilestack.h"
-#include "tileq.h"
 #include "objq.h"
 
 #include "tool/tool.h"
@@ -68,9 +67,6 @@ push(int argc, union evarg *argv)
 		return;
 	case MAPEDIT_TOOL_LOAD_MAP:
 		window_show(med->load_map_win);
-		return;
-	case MAPEDIT_TOOL_TILEQ:
-		window_show(med->tileq_win);
 		return;
 	case MAPEDIT_TOOL_OBJLIST:
 		window_show(med->objlist_win);
@@ -123,7 +119,6 @@ mapedit_init_toolbar(struct mapedit *med)
 	struct region *reg;
 	struct textbox *name_tbox, *media_tbox, *w_tbox, *h_tbox;
 	struct button *button;
-	struct tileq *tqueue;
 	struct objq *oqueue;
 	
 	/* Create the tool objects. */
@@ -183,13 +178,6 @@ mapedit_init_toolbar(struct mapedit *med)
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_LOAD_MAP);
 
-	/* Tile list */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, -1, -1);
-	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
-	event_new(button, "button-pushed", 0, push, "%p, %i", med,
-	    MAPEDIT_TOOL_TILEQ);
-	
 	/* Eraser */
 	med->tools.eraser->button = button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY, -1, -1);
@@ -226,15 +214,6 @@ mapedit_init_toolbar(struct mapedit *med)
 	win->focus = WIDGET(oqueue);
 	med->objlist_win = win;
 
-	/* Tile list window */
-	win = window_new("Tile", WINDOW_SOLID,
-	    view->w-64, 90, 49, view->h-110, TILEW+42, TILEH+51);
-	reg = region_new(win, REGION_HALIGN,
-	    -6, 0, 100, 100);
-	tqueue = tileq_new(reg, med, 0, 100, 100);
-	win->focus = WIDGET(tqueue);
-	med->tileq_win = win;
-	
 	/*
 	 * Create the `New map' dialog.
 	 */
