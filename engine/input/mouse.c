@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.5 2004/02/26 10:18:20 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.6 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -39,6 +39,8 @@ const struct input_driver mouse_driver = {
 	mouse_match,
 	mouse_event
 };
+
+int mouse_dblclick_delay = 250;			/* Mouse double-click delay */
 
 struct mouse *
 mouse_new(int index)
