@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.26 2003/03/13 06:24:07 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.27 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,6 @@
 
 #include <engine/map.h>
 #include <engine/rootmap.h>
-#include <engine/physics.h>
 #include <engine/view.h>
 
 #ifdef DEBUG

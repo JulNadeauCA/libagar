@@ -1,8 +1,8 @@
-/*	$Csoft: input.h,v 1.9 2002/12/13 07:38:15 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.10 2003/01/23 03:57:56 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
-struct mappos;
+struct object_position;
 
 enum input_type {
 	INPUT_KEYBOARD,		/* Keyboard device */
@@ -18,8 +18,9 @@ struct input {
 	int		 index;			/* Device index */
 	void		*p;			/* User data */
 	
-	pthread_mutex_t  lock;
-	struct mappos	*pos;			/* Controlled map position */
+	pthread_mutex_t		 lock;
+	struct object_position	*pos;		/* Controlled map position */
+
 	TAILQ_ENTRY(input) inputs;
 };
 

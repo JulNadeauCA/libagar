@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.h,v 1.8 2002/12/30 06:30:24 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.9 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SCROLLBAR_H_
@@ -27,7 +27,6 @@ struct scrollbar {
 		int		    value;	/* Current value */
 		int		    min, max;	/* Range */
 		pthread_mutex_t	    lock;
-		pthread_mutexattr_t lockattr;
 	} def;
 };
 

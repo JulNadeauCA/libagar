@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.39 2003/03/24 12:08:45 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.40 2003/03/25 13:48:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -561,6 +561,7 @@ primitive_config_window(void)
 	struct region *reg;
 	struct label *lab;
 	struct tlist *tl;
+	struct tlist_item *it;
 
 	win = window_new("widget-primitive-sw", WINDOW_CENTER, -1, -1,
 	    303, 190, 303, 190);
@@ -570,16 +571,16 @@ primitive_config_window(void)
 	{
 		lab = label_new(reg, 100, 10, "Box:");
 		tl = tlist_new(reg, 100, 35, 0);
-		tlist_insert_item(tl, NULL,
-		    "2d-style", box_2d);
-		tlist_insert_item_selected(tl, NULL,
-		    "3d-style", box_3d);
+		tlist_insert_item(tl, NULL, "2d-style", box_2d);
+
+		it = tlist_insert_item(tl, NULL, "3d-style", box_3d);
+		tlist_select(it);
 		event_new(tl, "tlist-changed", apply, "%i", BOX);
 
 		lab = label_new(reg, 100, 10, "Frame:");
 		tl = tlist_new(reg, 100, 35, 0);
-		tlist_insert_item_selected(tl, NULL,
-		    "3d-style", frame_3d);
+		it = tlist_insert_item(tl, NULL, "3d-style", frame_3d);
+		tlist_select(it);
 		event_new(tl, "tlist-changed", apply, "%i", FRAME);
 	}
 
@@ -589,11 +590,11 @@ primitive_config_window(void)
 	
 		lab = label_new(reg, 100, 10, "Line:");
 		tl = tlist_new(reg, 100, 35, 0);
-		it_bres = tlist_insert_item_selected(tl, NULL,
-		    "Bresenham", line_bresenham);
+		it_bres = tlist_insert_item(tl, NULL, "Bresenham",
+		    line_bresenham);
+		tlist_select(it_bres);
 #ifdef HAVE_OPENGL
-		it = tlist_insert_item(tl, NULL,
-		    "OpenGL", line_opengl);
+		it = tlist_insert_item(tl, NULL, "OpenGL", line_opengl);
 		if (view->opengl) {
 			tlist_select(it);
 			tlist_unselect(it_bres);
@@ -603,8 +604,8 @@ primitive_config_window(void)
 		
 		lab = label_new(reg, 100, 10, "Circle:");
 		tl = tlist_new(reg, 100, 35, 0);
-		tlist_insert_item_selected(tl, NULL,
-		    "Bresenham", circle_bresenham);
+		it = tlist_insert_item(tl, NULL, "Bresenham", circle_bresenham);
+		tlist_select(it);
 		event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
 	}
 	return (win);

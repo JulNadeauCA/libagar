@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.59 2003/03/25 13:48:03 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.60 2003/03/28 03:03:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -319,7 +319,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	    100, 100);
 	mapview_set_selection(mv, 0, 0, 1, 1);
 
-	object_load(ob->art->tile_map);
+	object_load(ob->art->tile_map, NULL);
 
 	/* Map operation buttons */
 	reg = region_new(win, REGION_HALIGN|REGION_CLIPPING, 0, 0, 100, -1);

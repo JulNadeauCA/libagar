@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.32 2003/03/26 02:52:24 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.33 2003/03/26 10:04:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@ enum {
 };
 
 static TAILQ_HEAD(, art) artq = TAILQ_HEAD_INITIALIZER(artq);
-static pthread_mutex_t	 artq_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t		 artq_lock = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef DEBUG
 #define DEBUG_GC	0x01
@@ -254,9 +254,10 @@ art_unused(struct art *art)
 struct art *
 art_fetch(char *archive, struct object *ob)
 {
+	char path[FILENAME_MAX];
 	struct art *art;
 	struct fobj *fob;
-	char path[FILENAME_MAX];
+	struct netbuf buf;
 	Uint32 i;
 
 	pthread_mutex_lock(&artq_lock);
@@ -316,11 +317,13 @@ art_fetch(char *archive, struct object *ob)
 	if ((fob = fobj_load(path)) == NULL)
 		fatal("%s: %s", path, fobj_error);
 
+	netbuf_init(&buf, fob->fd, NETBUF_BIG_ENDIAN);
+
 	for (i = 0; i < fob->head.nobjs; i++) {
-		if (xcf_check(fob->fd, fob->offs[i]) == 0) {
+		if (xcf_check(&buf, fob->offs[i]) == 0) {
 			int rv;
 				
-			rv = xcf_load(fob->fd, (off_t)fob->offs[i], art);
+			rv = xcf_load(&buf, (off_t)fob->offs[i], art);
 			if (rv != 0) {
 				fatal("xcf_load: %s", error_get());
 			}
@@ -329,6 +332,8 @@ art_fetch(char *archive, struct object *ob)
 		}
 	}
 	fobj_free(fob);
+	netbuf_flush(&buf);
+	netbuf_destroy(&buf);
 
 	TAILQ_INSERT_HEAD(&artq, art, arts);			/* Cache */
 out:
@@ -399,10 +404,13 @@ art_destroy(struct art *art)
 	Free(art->canims);
 
 	/* Release the submaps. */
-	if (art->tile_map != NULL)
+	if (art->tile_map != NULL) {
 		object_destroy(art->tile_map);
+		free(art->tile_map);
+	}
 	for (i = 0; i < art->nsubmaps; i++) {
 		object_destroy(art->submaps[i]);
+		free(art->submaps[i]);
 	}
 	Free(art->submaps);
 

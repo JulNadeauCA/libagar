@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.57 2003/03/22 04:27:53 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.58 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -55,8 +55,10 @@ struct text_font {
 	ttf_font *font;
 	SLIST_ENTRY(text_font) fonts;
 };
-static SLIST_HEAD(text_fontq, text_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
-static pthread_mutex_t fonts_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static SLIST_HEAD(text_fontq, text_font) text_fonts =
+    SLIST_HEAD_INITIALIZER(&text_fonts);
+pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static ttf_font *
 text_load_font(char *name, int size, int style)
@@ -68,13 +70,13 @@ text_load_font(char *name, int size, int style)
 	if (name == NULL) 		/* Default font */
 		return (font);
 
-	pthread_mutex_lock(&fonts_lock);
+	pthread_mutex_lock(&text_lock);
 
-	SLIST_FOREACH(fon, &fonts, fonts) {
+	SLIST_FOREACH(fon, &text_fonts, fonts) {
 		if (strcmp(fon->name, name) == 0 &&
 		    fon->size == size &&
 		    fon->style == style) {
-			pthread_mutex_unlock(&fonts_lock);
+			pthread_mutex_unlock(&text_lock);
 			return (fon->font);
 		}
 	}
@@ -93,8 +95,8 @@ text_load_font(char *name, int size, int style)
 	fon->style = style;
 	fon->font = nfont;
 
-	SLIST_INSERT_HEAD(&fonts, fon, fonts);			/* Cache */
-	pthread_mutex_unlock(&fonts_lock);
+	SLIST_INSERT_HEAD(&text_fonts, fon, fonts);		/* Cache */
+	pthread_mutex_unlock(&text_lock);
 	return (nfont);
 }
 
@@ -140,8 +142,8 @@ text_destroy(void)
 {
 	struct text_font *fon, *nextfon;
 	
-	for (fon = SLIST_FIRST(&fonts);
-	     fon != SLIST_END(&fonts);
+	for (fon = SLIST_FIRST(&text_fonts);
+	     fon != SLIST_END(&text_fonts);
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
 		text_destroy_font(fon);

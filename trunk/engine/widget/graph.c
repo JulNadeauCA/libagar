@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.25 2003/03/20 02:53:57 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.26 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -109,34 +109,36 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 }
 
 int
-graph_load(void *p, int fd)
+graph_load(void *p, struct netbuf *buf)
 {
 	struct graph *gra = p;
 	Uint32 nitems, i;
 
-	version_read(fd, &graph_ver, NULL);
-	gra->type = read_uint32(fd);
-	gra->flags = read_uint32(fd);
-	gra->origin_y = read_uint8(fd);
-	gra->xinc = read_uint8(fd);
-	gra->yrange = read_sint32(fd);
-	gra->xoffs = read_sint32(fd);
-	gra->caption = read_string(fd, gra->caption);
+	if (version_read(buf, &graph_ver, NULL) == -1)
+		return (-1);
+
+	gra->type = read_uint32(buf);
+	gra->flags = read_uint32(buf);
+	gra->origin_y = read_uint8(buf);
+	gra->xinc = read_uint8(buf);
+	gra->yrange = read_sint32(buf);
+	gra->xoffs = read_sint32(buf);
+	gra->caption = read_string(buf, gra->caption);
 	
-	nitems = read_uint32(fd);
+	nitems = read_uint32(buf);
 	for (i = 0; i < nitems; i++) {
 		struct graph_item *nitem;
 		Uint32 vi, color, nvals;
 		char *s;
 
-		s = read_string(fd, NULL);
-		color = read_uint32(fd);
-		nvals = read_uint32(fd);
+		s = read_string(buf, NULL);
+		color = read_uint32(buf);
+		nvals = read_uint32(buf);
 		nitem = graph_add_item(gra, s, color);
 		free(s);
 
 		for (vi = 0; vi < nvals; vi++) {
-			graph_plot(nitem, read_sint32(fd));
+			graph_plot(nitem, read_sint32(buf));
 		}
 	}
 
@@ -145,36 +147,38 @@ graph_load(void *p, int fd)
 }
 
 int
-graph_save(void *p, int fd)
+graph_save(void *p, struct netbuf *buf)
 {
 	struct graph *gra = p;
 	struct graph_item *gi;
 	Uint32 nitems = 0;
+	off_t nitems_offs;
 
-	version_write(fd, &graph_ver);
-	write_uint32(fd, gra->type);
-	write_uint32(fd, gra->flags);
-	write_uint8(fd, gra->origin_y);
-	write_uint8(fd, gra->xinc);
-	write_uint32(fd, gra->yrange);
-	write_sint32(fd, gra->xoffs);
-	write_string(fd, gra->caption);
+	version_write(buf, &graph_ver);
+	write_uint32(buf, gra->type);
+	write_uint32(buf, gra->flags);
+	write_uint8(buf, gra->origin_y);
+	write_uint8(buf, gra->xinc);
+	write_uint32(buf, gra->yrange);
+	write_sint32(buf, gra->xoffs);
+	write_string(buf, gra->caption);
 	
-	TAILQ_FOREACH(gi, &gra->items, items) {
+	TAILQ_FOREACH(gi, &gra->items, items)
 		nitems++;
-	}
-	write_uint32(fd, nitems);
 
+	nitems_offs = buf->offs;
+	write_uint32(buf, 0);
 	TAILQ_FOREACH(gi, &gra->items, items) {
 		Uint32 i;
 
-		write_string(fd, gi->name);
-		write_uint32(fd, gi->color);
-		write_uint32(fd, gi->nvals);
+		write_string(buf, gi->name);
+		write_uint32(buf, gi->color);
+		write_uint32(buf, gi->nvals);
 		for (i = 0; i < gi->nvals; i++) {
-			write_sint32(fd, gi->vals[i]);
+			write_sint32(buf, gi->vals[i]);
 		}
 	}
+	pwrite_uint32(buf, nitems, nitems_offs);
 
 	dprintf("saved %s\n", gra->caption);
 	return (0);
@@ -200,13 +204,13 @@ graph_key(int argc, union evarg *argv)
 		break;
 	case SDLK_s:
 		pthread_mutex_lock(&world->lock);
-		if (object_save(gra) == -1)
+		if (object_save(gra, NULL) == -1)
 			text_msg("Error saving", "%s", error_get());
 		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_l:
 		pthread_mutex_lock(&world->lock);
-		if (object_load(gra) == -1)
+		if (object_load(gra, NULL) == -1)
 			text_msg("Error loading", "%s", error_get());
 		pthread_mutex_unlock(&world->lock);
 	default:

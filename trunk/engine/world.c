@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.62 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.63 2003/03/30 03:37:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -52,13 +52,11 @@ world_init(struct world *wo, char *name)
 	object_init(&wo->obj, "world", name, NULL, 0, &world_ops);
 	wo->nobjs = 0;
 	SLIST_INIT(&wo->wobjs);
-	pthread_mutexattr_init(&wo->lockattr);
-	pthread_mutexattr_settype(&wo->lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&wo->lock, &wo->lockattr);
+	pthread_mutex_init(&wo->lock, &recursive_mutexattr);
 }
 
 int
-world_load(void *p, int fd)
+world_load(void *p, struct netbuf *buf)
 {
 	struct world *wo = p;
 	struct object *ob;
@@ -73,7 +71,7 @@ world_load(void *p, int fd)
 			/* XXX map editor hack */
 			continue;
 		}
-		object_load(ob);
+		object_load(ob, NULL);
 	}
 	debug(DEBUG_STATE, "%s: loaded %d objects\n", OBJECT(wo)->name,
 	    wo->nobjs);
@@ -83,7 +81,7 @@ world_load(void *p, int fd)
 }
 
 int
-world_save(void *p, int fd)
+world_save(void *p, struct netbuf *buf)
 {
 	struct world *wo = p;
 	struct object *ob;
@@ -97,9 +95,9 @@ world_save(void *p, int fd)
 			/* XXX map editor hack */
 			continue;
 		}
-		write_string(fd, ob->name);
-		write_string(fd, "");
-		if (object_save(ob) == -1) {
+		write_string(buf, ob->name);
+		write_string(buf, "");
+		if (object_save(ob, NULL) == -1) {
 			debug(DEBUG_STATE, "saving %s: %s\n", ob->name,
 			    error_get());
 		}
@@ -126,12 +124,12 @@ world_destroy(void *p)
 		debug_n(DEBUG_GC, " %s", ob->name);
 		if ((ob->flags & OBJECT_STATIC) == 0) {
 			object_destroy(ob);
+			free(ob);
 		}
 	}
 	debug_n(DEBUG_GC, ".\n");
 	pthread_mutex_unlock(&wo->lock);
 	pthread_mutex_destroy(&wo->lock);
-	pthread_mutexattr_destroy(&wo->lockattr);
 }
 
 void
@@ -170,6 +168,7 @@ world_detach(void *child)
 	pthread_mutex_unlock(&world->lock);
 
 	object_destroy(ob);
+	free(ob);
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.32 2003/03/22 04:27:26 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.33 2003/03/24 12:08:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,7 +34,6 @@
 
 #include <engine/version.h>
 #include <engine/map.h>
-#include <engine/physics.h>
 #include <engine/view.h>
 
 #include <engine/widget/widget.h>

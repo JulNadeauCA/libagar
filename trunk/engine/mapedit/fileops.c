@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.42 2003/03/24 12:08:40 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.43 2003/03/25 13:43:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -41,6 +41,8 @@
 #include <engine/widget/checkbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/text.h>
+
+#include <string.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -146,7 +148,8 @@ fileops_new_map(int argc, union evarg *argv)
 	struct map *m;
 	int w, h;
 
-	if (textbox_copy_string(name_tbox, name, sizeof(name)) > sizeof(name)) {
+	if (textbox_copy_string(name_tbox, name, sizeof(name)) >=
+	    sizeof(name)) {
 		text_msg("Error", "Map name too big.");
 		return;
 	}
@@ -166,11 +169,12 @@ fileops_new_map(int argc, union evarg *argv)
 	if (map_alloc_nodes(m, (unsigned int)w, (unsigned int)h) == -1) {
 		text_msg("Error allocating nodes", "%s", error_get());
 		object_destroy(m);
+		free(m);
 		return;
 	}
 
-	m->defx = w / 2;
-	m->defy = h - 2;	/* XXX pref */
+	m->origin.x = w / 2;
+	m->origin.x = h - 2;	/* XXX pref */
 
 	win = mapedit_win_new(m);
 	view_attach(win);
@@ -186,21 +190,23 @@ fileops_save_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
-	if (object_save(mv->map) == -1)
+	if (object_save(mv->map, NULL) == -1)
 		text_msg("Error saving", "%s", error_get());
 }
 
-/* Load the map from disk. */
+/* Load a map from disk. */
 void
 fileops_load_map(int argc, union evarg *argv)
 {
-	char path[FILENAME_MAX], name[OBJECT_NAME_MAX];
+	char path[FILENAME_MAX];
+	char name[OBJECT_NAME_MAX];
 	struct widget *wid = argv[0].p;
 	struct textbox *name_tbox = argv[1].p;
 	struct window *win;
 	struct map *m;
 
-	if (textbox_copy_string(name_tbox, name, sizeof(name)) > sizeof(name)) {
+	if (textbox_copy_string(name_tbox, name, sizeof(name)) >=
+	    sizeof(name)) {
 		text_msg("Error", "Map name too big.");
 		return;
 	}
@@ -216,9 +222,10 @@ fileops_load_map(int argc, union evarg *argv)
 	m = Malloc(sizeof(struct map));
 	map_init(m, name, NULL);
 
-	if (object_load(m) == -1) {
+	if (object_load(m, NULL) == -1) {
 		text_msg("Error loading map", "%s", error_get());
 		object_destroy(m);
+		free(m);
 		return;
 	}
 
@@ -237,7 +244,8 @@ fileops_revert_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
-	char path[FILENAME_MAX], file[FILENAME_MAX];
+	char path[FILENAME_MAX];
+	char file[FILENAME_MAX];
 
 	/* Always edit the user copy. */
 	if (prop_copy_string(config, "path.user_data_dir", path, sizeof(path)) >
@@ -249,8 +257,8 @@ fileops_revert_map(int argc, union evarg *argv)
 	if (strlcat(path, file, sizeof(path)) > sizeof(path))
 		goto toobig;
 
-	if (object_load_from(mv->map, path) == 0) {
-		mapview_center(mv, m->defx, m->defy);
+	if (object_load(mv->map, path) == 0) {
+		mapview_center(mv, m->origin.x, m->origin.y);
 	} else {
 		text_msg("Error reverting", "%s", error_get());
 	}

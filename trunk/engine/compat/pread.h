@@ -1,7 +1,11 @@
-/*	$Csoft$	*/
+/*	$Csoft: pread.h,v 1.1 2003/03/13 22:43:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <sys/types.h>
 
-ssize_t	Pread(int, void *, size_t, off_t);
+#ifdef HAVE_PREAD
+#include <unistd.h>
+#else
+ssize_t	pread(int, void *, size_t, off_t);
+#endif
 

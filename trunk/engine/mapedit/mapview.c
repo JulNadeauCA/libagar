@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.97 2003/03/25 13:48:03 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.98 2003/03/26 10:03:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -149,8 +149,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->map = m;
 
 	pthread_mutex_lock(&m->lock);
-	mv->mx = m->defx;
-	mv->my = m->defy;
+	mv->mx = m->origin.x;
+	mv->my = m->origin.y;
 	mv->cx = -1;
 	mv->cy = -1;
 	mv->cxrel = 0;
@@ -271,8 +271,8 @@ mapview_draw_props(struct mapview *mv, struct node *node,
 	for (i = 0; i < nsprites; i++) {
 		if ((node->flags & sprites[i].flag) ||
 		    (sprites[i].flag == NODE_ORIGIN &&
-		     mx != -1 && mx == mv->map->defx &&
-		     my != -1 && my == mv->map->defy)) {
+		     mx != -1 && mx == mv->map->origin.x &&
+		     my != -1 && my == mv->map->origin.y)) {
 			widget_blit(mv, SPRITE(mv, sprites[i].sprite), x, y);
 			x += SPRITE(mv, sprites[i].sprite)->w;
 		}
@@ -891,13 +891,13 @@ mapview_keydown(int argc, union evarg *argv)
 	if (mv->flags & MAPVIEW_SAVEABLE) {
 		switch (keysym) {
 		case SDLK_s:
-			if (object_save(mv->map) == -1) {
+			if (object_save(mv->map, NULL) == -1) {
 				text_msg("Error saving map", "%s: %s",
 				    OBJECT(mv->map)->name, error_get());
 			}
 			break;
 		case SDLK_l:
-			if (object_load(mv->map) == -1) {
+			if (object_load(mv->map, NULL) == -1) {
 				text_msg("Error loading map", "%s: %s",
 				    OBJECT(mv->map)->name, error_get());
 			}
@@ -946,7 +946,7 @@ mapview_scaled(int argc, union evarg *argv)
 	mv->mh = WIDGET(mv)->h/(*mv->tileh) + 1;
 
 	if (mv->flags & MAPVIEW_CENTER) {
-		mapview_center(mv, mv->map->defx, mv->map->defy);
+		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
 		mv->flags &= ~(MAPVIEW_CENTER);
 	}
 

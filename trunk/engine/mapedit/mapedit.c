@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.159 2003/03/25 13:48:03 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.160 2003/03/26 10:04:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -155,7 +155,7 @@ mapedit_init(void)
 	}
 	
 	/* Load the settings. */
-	object_load(&mapedit);
+	object_load(&mapedit, NULL);
 
 	/* Create the dialogs. */
 	med->win.objlist = objq_window();
@@ -280,32 +280,38 @@ mapedit_destroy(void *p)
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
 		object_destroy(med->tools[i]);
+		free(med->tools[i]);
 	}
 }
 
 int
-mapedit_load(void *p, int fd)
+mapedit_load(void *p, struct netbuf *buf)
 {
 	int i;
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		if (OBJECT(mapedit.tools[i])->ops->load == NULL)
-			continue;
-		object_load(mapedit.tools[i]);
+		struct tool *tool = mapedit.tools[i];
+
+		if (OBJECT(tool)->ops->load != NULL &&
+		    object_load(tool, NULL) == -1) {
+			text_msg("Error loading", "%s", error_get());
+		}
 	}
 	return (0);
 }
 
 int
-mapedit_save(void *p, int fd)
+mapedit_save(void *p, struct netbuf *buf)
 {
 	int i;
 
 	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		if (OBJECT(mapedit.tools[i])->ops->save == NULL)
-			continue;
-		if (object_save(mapedit.tools[i]) == -1)
+		struct tool *tool = mapedit.tools[i];
+
+		if (OBJECT(tool)->ops->save != NULL &&
+		    object_save(mapedit.tools[i], NULL) == -1) {
 			text_msg("Error saving", "%s", error_get());
+		}
 	}
 	return (0);
 }

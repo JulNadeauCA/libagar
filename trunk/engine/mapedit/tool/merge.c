@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.29 2003/03/28 01:43:40 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.30 2003/03/28 03:08:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -43,6 +43,8 @@
 
 #include <libfobj/vector.h>
 
+#include <string.h>
+
 static const struct version merge_ver = {
 	"agar merge tool",
 	4, 0
@@ -70,19 +72,30 @@ merge_init(void *p)
 	merge->inherit_flags = 1;
 	merge->random_shift = 0;
 	merge->layer = 0;
-
 	SLIST_INIT(&merge->brushes);
 }
+
+#if 0
+static void
+merge_free_brushes(struct merge *mer)
+{
+	struct object *ob, *nob;
+
+	for (ob = SLIST_FIRST(&mer->brushes);
+	     ob != SLIST_END(&mer->brushes);
+	     ob = nob) {
+		nob = SLIST_NEXT(ob, wobjs);
+		object_destroy(ob);
+		free(ob);
+	}
+	SLIST_INIT(&mer->brushes);
+}
+#endif
 
 void
 merge_destroy(void *p)
 {
 	struct merge *mer = p;
-	struct object *ob;
-	
-	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
-		object_destroy(ob);
-	}
 
 	tool_destroy(mer);
 }
@@ -106,7 +119,7 @@ merge_create_brush(int argc, union evarg *argv)
 		return;
 	}
 	
-	snprintf(m_name, sizeof(m_name), "brUsh(%s)", brush_name);
+	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
 	if (tlist_item_text(mer->brushes_tl, m_name) != NULL) {
 		text_msg("Error", "%s already exists", m_name);
 		return;
@@ -115,7 +128,7 @@ merge_create_brush(int argc, union evarg *argv)
 	m = Malloc(sizeof(struct map));
 	map_init(m, m_name, NULL);
 
-	if (object_load(m) == -1) {
+	if (object_load(m, NULL) == -1) {
 		if (map_alloc_nodes(m,
 		    prop_get_uint32(&mapedit, "default-brush-width"),
 		    prop_get_uint32(&mapedit, "default-brush-height")) == -1) {
@@ -127,9 +140,8 @@ merge_create_brush(int argc, union evarg *argv)
 	}
 
 	SLIST_INSERT_HEAD(&mer->brushes, OBJECT(m), wobjs);
-
 	tlist_unselect_all(mer->brushes_tl);
-	tlist_insert_item_selected(mer->brushes_tl, NULL, m_name, m);
+	tlist_select(tlist_insert_item_head(mer->brushes_tl, NULL, m_name, m));
 	textbox_printf(name_tbox, "");
 }
 
@@ -182,9 +194,10 @@ merge_remove_brush(int argc, union evarg *argv)
 				view_detach(win);
 			}
 
-			tlist_remove_item(it);
 			SLIST_REMOVE(&mer->brushes, brush, object, wobjs);
+			tlist_remove_item(it);
 			object_destroy(brush);
+			free(brush);
 		}
 	}
 }
@@ -194,7 +207,8 @@ merge_load_brush_set(int argc, union evarg *argv)
 {
 	struct merge *mer = argv[1].p;
 
-	object_load(mer);
+	if (object_load(mer, NULL) == -1)
+		text_msg("Error loading brush set", "%s", error_get());
 }
 
 static void
@@ -202,7 +216,8 @@ merge_save_brush_set(int argc, union evarg *argv)
 {
 	struct merge *mer = argv[1].p;
 	
-	object_save(mer);
+	if (object_save(mer, NULL) == -1)
+		text_msg("Error saving brush set", "%s", error_get());
 }
 
 struct window *
@@ -620,65 +635,67 @@ merge_interpolate(struct merge *mer, struct map *sm, struct node *srcnode,
 }
 
 int
-merge_load(void *p, int fd)
+merge_load(void *p, struct netbuf *buf)
 {
 	struct merge *mer = p;
 	Uint32 i, nbrushes;
 	
-	if (version_read(fd, &merge_ver, NULL) != 0) {
+	if (version_read(buf, &merge_ver, NULL) != 0)
 		return (-1);
-	}
-	
-	mer->mode = (Uint32)read_uint32(fd);
-	mer->inherit_flags = (Uint32)read_uint32(fd);
-	mer->random_shift = (Uint32)read_uint32(fd);
+
+	mer->mode = (Uint32)read_uint32(buf);
+	mer->inherit_flags = (Uint32)read_uint32(buf);
+	mer->random_shift = (Uint32)read_uint32(buf);
 
 	tlist_clear_items(mer->brushes_tl);
+	SLIST_INIT(&mer->brushes);
 
-	nbrushes = read_uint32(fd);
+	nbrushes = read_uint32(buf);
 	for (i = 0; i < nbrushes; i++) {
 		struct map *nbrush;
-		char *m_name;
+		char m_name[OBJECT_NAME_MAX];
 
-		m_name = read_string(fd, NULL);
-		dprintf("`%s'\n", m_name);
+		if (copy_string(m_name, buf, sizeof(m_name)) >=
+		    sizeof(m_name)) {
+			text_msg("String overflow", "Brush name is too big");
+			continue;
+		}
+		dprintf("loading brush: %s\n", m_name);
 
 		nbrush = Malloc(sizeof(struct map));
 		map_init(nbrush, m_name, NULL);
-		map_load(nbrush, fd);
+		map_load(nbrush, buf);
 
 		SLIST_INSERT_HEAD(&mer->brushes, OBJECT(nbrush), wobjs);
-		tlist_insert_item(mer->brushes_tl, NULL, m_name, nbrush);
-		
-		free(m_name);
+		tlist_insert_item_head(mer->brushes_tl, NULL, m_name, nbrush);
 	}
 	return (0);
 }
 
 int
-merge_save(void *p, int fd)
+merge_save(void *p, struct netbuf *buf)
 {
 	struct merge *mer = p;
 	struct object *ob;
 	Uint32 nbrushes = 0;
 	off_t count_offs;
 
-	version_write(fd, &merge_ver);
+	version_write(buf, &merge_ver);
 
-	write_uint32(fd, (Uint32)mer->mode);
-	write_uint32(fd, (Uint32)mer->inherit_flags);
-	write_uint32(fd, (Uint32)mer->random_shift);
+	write_uint32(buf, (Uint32)mer->mode);
+	write_uint32(buf, (Uint32)mer->inherit_flags);
+	write_uint32(buf, (Uint32)mer->random_shift);
 
-	count_offs = Lseek(fd, 0, SEEK_CUR);
-	write_uint32(fd, 0);				/* Skip count */
+	count_offs = buf->offs;				/* Skip count */
+	write_uint32(buf, 0);	
 	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
 		struct brush *brush = (struct brush *)ob;
 
-		write_string(fd, ob->name);
-		map_save(brush, fd);
+		write_string(buf, ob->name);
+		map_save(brush, buf);
 		nbrushes++;
 	}
-	pwrite_uint32(fd, nbrushes, count_offs);	/* Write count */
+	pwrite_uint32(buf, nbrushes, count_offs);	/* Write count */
 	return (0);
 }
 
