@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.125 2004/02/29 17:34:24 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.126 2004/03/10 16:58:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -194,12 +194,6 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	config = Malloc(sizeof(struct config));
 	config_init(config);
 	object_load(config);
-
-	/* Initialize the text rendering engine. */
-	if (prop_get_bool(config, "font-engine") &&
-	    text_init() == -1) {
-		fatal("text_init: %s", error_get());
-	}
 
 	/* Attach the input devices. */
 	if (flags & ENGINE_INIT_INPUT) {

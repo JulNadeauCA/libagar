@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.20 2003/07/04 12:30:26 vedge Exp $
+.\"	$Csoft: view.3,v 1.21 2004/01/08 02:20:08 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -50,7 +50,7 @@ layer manages the video display.
 .Fn view_destroy "void"
 .Pp
 .Ft "int"
-.Fn view_set_refresh "int min_delay" "int max_delay"
+.Fn view_set_refresh "int fps"
 .nr nS 0
 .Pp
 The
@@ -78,8 +78,7 @@ function frees resources allocated by the view structure.
 .Pp
 The
 .Fn view_set_refresh
-function sets the minimum and maximum display refresh delay in milliseconds,
-returning 0 on success and -1 on failure.
+function sets the nominal refresh rate, given in frames per second.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"

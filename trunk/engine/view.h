@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.82 2003/07/08 00:05:04 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.83 2003/11/15 03:57:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -133,8 +133,9 @@ void		 view_attach(void *);
 void		 view_detach(struct window *);
 __inline__ void	 view_detach_queued(void);
 void		 view_destroy(void);
-int		 view_set_refresh(int, int);
+int		 view_set_refresh(int);
 struct window	*view_window_exists(const char *);
+void		 view_parse_fpsspec(const char *);
 
 __inline__ SDL_Surface	*view_surface(Uint32, int, int);
 __inline__ SDL_Surface	*view_copy_surface(SDL_Surface *);

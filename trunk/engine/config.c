@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.104 2004/02/25 18:08:49 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.105 2004/02/26 10:34:58 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -178,6 +178,8 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.min-w", 320);
 	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
+	prop_set_uint8(con, "view.fps", 17);
+
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
 	prop_set_int(con, "font-engine.default-size", 14);
@@ -236,7 +238,7 @@ config_save(void *p, struct netbuf *buf)
 }
 
 static void
-config_poll_input_devs(int argc, union evarg *argv)
+poll_input_devs(int argc, union evarg *argv)
 {
 	extern struct input_devq input_devs;
 	extern pthread_mutex_t input_lock;
@@ -309,7 +311,7 @@ config_window(struct config *con)
 		label_new(vb, _("Input devices:"));
 		tl = tlist_new(vb, TLIST_POLL);
 		tlist_prescale(tl, "keyboard0", 6);
-		event_new(tl, "tlist-poll", config_poll_input_devs, NULL);
+		event_new(tl, "tlist-poll", poll_input_devs, NULL);
 	}
 
 	vb = vbox_new(win, VBOX_WFILL);
@@ -360,7 +362,7 @@ config_window(struct config *con)
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
 	button = button_new(hb, _("Close"));
-	event_new(button, "button-pushed", window_generic_hide,  "%p", win);
+	event_new(button, "button-pushed", window_generic_hide, "%p", win);
 	button = button_new(hb, _("Save"));
 	event_new(button, "button-pushed", save_config, NULL);
 	config->settings = win;
@@ -397,7 +399,8 @@ config_search_file(const char *path_key, const char *name, const char *ext,
 		}
 	}
 	prop_copy_string(config, path_key, path, path_len);
-	error_set(_("Cannot find `%s.%s' in <%s>."), name, ext, path);
+	error_set(_("Cannot find `%s.%s' in %s (%s)."), name, ext, path_key,
+	    path);
 	return (-1);
 }
 
