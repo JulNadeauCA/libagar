@@ -34,7 +34,7 @@ depend:	${DPADD} depend-subdir
 	 if [ "$$files" != "" ]; then \
 	  echo ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; \
 	  if ${MKDEP} -a ${MKDEP} ${CFLAGS:M-[ID]*} $$files; then \
-	   echo "ok"; \
+	   echo `cat .depend | awk '{i++} END {print i}'` dependencies; \
 	  else \
 	   exit 1; \
 	  fi \
