@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.25 2002/03/07 13:22:50 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.26 2002/03/12 16:03:15 vedge Exp $	*/
 
 #include <engine/physics.h>
 
@@ -49,7 +49,8 @@ struct mapedit {
 	struct	mapedit_margs margs;	/* Map creation arguments */
 	struct	map *map;		/* Map being edited */
 	Uint32	x, y;			/* Cursor position */
-	Uint32	mmapx, mmapy, mtmapy;	/* Mouse coordinates */
+	Uint32	mmapx, mmapy;		/* Map view coordinates */
+	Uint32	mtmapx, mtmapy;		/* Lists coordinates */
 
 	struct	eobjs_head eobjsh;	/* Editor object references */
 	int	neobjs;
@@ -68,11 +69,12 @@ struct mapedit {
 	/* Tile list (right) */
 	SDL_Rect tilelist;		/* Region */
 	struct	 gendir listw_dir;	/* Scrolling direction */
-	int	 tilelist_offs;		/* First reference to show */
+	int	 tilelist_offs;
 
 	/* Obj list (top) */
 	SDL_Rect objlist;
 	struct	 gendir olistw_dir;
+	int	 objlist_offs;
 
 	SDL_TimerID timer;
 };
