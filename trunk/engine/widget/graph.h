@@ -1,24 +1,22 @@
-/*	$Csoft: graph.h,v 1.16 2003/09/07 00:21:18 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.17 2003/09/07 07:58:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
 #define _AGAR_WIDGET_GRAPH_H_
 
 #include <engine/widget/widget.h>
+#include <engine/widget/label.h>
 
 #include "begin_code.h"
-
-#define GRAPH_CAPTION_MAX	32
-#define GRAPH_ITEM_NAME_MAX	32
 
 typedef Sint16 graph_val_t;
 
 struct graph;
 
 struct graph_item {
-	char	 name[GRAPH_ITEM_NAME_MAX];	/* Description */
-	Uint32	 color;				/* Line color */
-	graph_val_t *vals;			/* Value array */
+	char	 name[LABEL_MAX];	/* Description */
+	Uint32	 color;			/* Line color */
+	graph_val_t *vals;		/* Value array */
 	Uint32	 nvals;
 	Uint32	 maxvals;
 	Uint32	 limit;
@@ -38,7 +36,7 @@ struct graph {
 	struct widget wid;
 
 	enum graph_type	 type;
-	char		 caption[GRAPH_CAPTION_MAX];
+	char		 caption[LABEL_MAX];
 	int		 flags;
 #define GRAPH_SCROLL	0x01	/* Scroll if the end is not visible */
 #define GRAPH_ORIGIN	0x02	/* Visible origin */
