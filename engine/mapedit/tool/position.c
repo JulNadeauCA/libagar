@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.7 2004/01/03 04:15:01 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.8 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -196,8 +196,13 @@ position_effect(struct mapview *mv, struct map *m, struct node *dn)
 		return;
 	}
 
-	object_set_position(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer);
-	object_set_submap(ob, submap);
+	dprintf("submap: %s\n", OBJECT(submap)->name);
+
+	if (object_set_position(ob, mv->map, mv->cx, mv->cy,
+	    mv->map->cur_layer, submap) == -1) {
+		text_msg(MSG_ERROR, "%s", error_get());
+		return;
+	}
 	ob->pos->input = input_dev;
 
 	if (center_view)

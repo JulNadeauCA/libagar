@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.73 2003/10/13 23:49:03 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.74 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -282,7 +282,7 @@ textbox_key(int argc, union evarg *argv)
 		return;
 	}
 	if (keysym == SDLK_RETURN) {
-		event_post(tbox, "textbox-return", NULL);
+		event_post(NULL, tbox, "textbox-return", NULL);
 		WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 		return;
 	}
@@ -299,9 +299,9 @@ textbox_key(int argc, union evarg *argv)
 		  	if (kcode->clr_compo) {
 				tbox->compose = 0;
 			}
-			event_post(tbox, "textbox-prechg", NULL);
+			event_post(NULL, tbox, "textbox-prechg", NULL);
 			kcode->func(tbox, keysym, keymod, kcode->arg, unicode);
-			event_post(tbox, "textbox-postchg", NULL);
+			event_post(NULL, tbox, "textbox-postchg", NULL);
 			break;
 		}
 	}

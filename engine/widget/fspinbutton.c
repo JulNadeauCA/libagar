@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.7 2003/12/11 01:23:32 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.8 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -130,8 +130,8 @@ fspinbutton_return(int argc, union evarg *argv)
 
 	WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
 
-	event_post(fsu, "fspinbutton-return", NULL);
-	event_post(fsu, "fspinbutton-changed", NULL);
+	event_post(NULL, fsu, "fspinbutton-return", NULL);
+	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 }
 
 static void
@@ -143,7 +143,7 @@ fspinbutton_up(int argc, union evarg *argv)
 	fspinbutton_add(fsu, fsu->incr);
 	pthread_mutex_unlock(&fsu->lock);
 	
-	event_post(fsu, "fspinbutton-changed", NULL);
+	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 }
 
 static void
@@ -155,7 +155,7 @@ fspinbutton_down(int argc, union evarg *argv)
 	fspinbutton_add(fsu, -fsu->incr);
 	pthread_mutex_unlock(&fsu->lock);
 	
-	event_post(fsu, "fspinbutton-changed", NULL);
+	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 }
 
 static void
@@ -311,7 +311,7 @@ fspinbutton_add(struct fspinbutton *fsu, double inc)
 	default:
 		break;
 	}
-	event_post(fsu, "fspinbutton-changed", NULL);
+	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 	widget_binding_modified(valueb);
 	widget_binding_unlock(valueb);
 }
@@ -332,7 +332,7 @@ fspinbutton_set_value(struct fspinbutton *fsu, double nvalue)
 		*(float *)value = (float)nvalue;
 		break;
 	}
-	event_post(fsu, "fspinbutton-changed", NULL);
+	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 	widget_binding_modified(valueb);
 	widget_binding_unlock(valueb);
 }

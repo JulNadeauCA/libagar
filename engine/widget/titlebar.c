@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.8 2003/08/21 04:27:03 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.9 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -169,6 +169,6 @@ titlebar_close_win(int argc, union evarg *argv)
 {
 	struct titlebar *tbar = argv[1].p;
 
-	event_post(tbar->win, "window-close", NULL);
+	event_post(NULL, tbar->win, "window-close", NULL);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.32 2003/10/13 23:49:03 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.33 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -140,7 +140,8 @@ scrollbar_mouse_select(struct scrollbar *sb, int coord, int maxcoord)
 	ncoord -= sb->button_size;
 	widget_set_int(sb, "value", ncoord * max / maxcoord);
 changed:
-	event_post(sb, "scrollbar-changed", "%i", widget_get_int(sb, "value"));
+	event_post(NULL, sb, "scrollbar-changed", "%i",
+	    widget_get_int(sb, "value"));
 }
 
 static void

@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.20 2003/07/02 09:19:29 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.21 2003/09/04 03:14:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -37,7 +37,7 @@ __BEGIN_DECLS
 struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
 		           const char *, ...);
 void		 event_loop(void);
-int		 event_post(void *, const char *, const char *, ...);
+int		 event_post(void *, void *, const char *, const char *, ...);
 void		 event_forward(void *, const char *, int, union evarg *);
 #ifdef DEBUG
 struct window	*fps_window(void);

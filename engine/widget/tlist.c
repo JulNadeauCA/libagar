@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.81 2003/10/15 03:43:08 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.82 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -181,7 +181,7 @@ tlist_draw(void *p)
 
 	pthread_mutex_lock(&tl->lock);
 	if (tl->flags & TLIST_POLL) {
-		event_post(tl, "tlist-poll", NULL);
+		event_post(NULL, tl, "tlist-poll", NULL);
 	}
 	offset = widget_get_int(tl->sbar, "value");
 
@@ -557,7 +557,7 @@ tlist_select_item(struct tlist *tl, struct tlist_item *it)
 	selectedb = widget_get_binding(tl, "selected", &selected);
 	*selected = it->p1;
 	it->selected++;
-	event_post(tl, "tlist-changed", "%p, %i", it, 1);
+	event_post(NULL, tl, "tlist-changed", "%p, %i", it, 1);
 	widget_binding_modified(selectedb);
 	widget_binding_unlock(selectedb);
 }
@@ -571,7 +571,7 @@ tlist_unselect_item(struct tlist *tl, struct tlist_item *it)
 	selectedb = widget_get_binding(tl, "selected", &selected);
 	*selected = NULL;
 	it->selected = 0;
-	event_post(tl, "tlist-changed", "%p, %i", it, 0);
+	event_post(NULL, tl, "tlist-changed", "%p, %i", it, 0);
 	widget_binding_modified(selectedb);
 	widget_binding_unlock(selectedb);
 }
@@ -664,7 +664,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 				    OBJECT(tl)->name);
 				if (tl->dbltimer != NULL)
 					SDL_RemoveTimer(tl->dbltimer);
-				event_post(tl, "tlist-dblclick", "%p",
+				event_post(NULL, tl, "tlist-dblclick", "%p",
 				    tl->dblclicked);
 				tl->dblclicked = NULL;
 				tl->dbltimer = NULL;

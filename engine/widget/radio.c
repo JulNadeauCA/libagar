@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.38 2003/10/13 23:49:03 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.39 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -212,7 +212,7 @@ radio_event(int argc, union evarg *argv)
 	if (*sel >= rad->nitems) {
 		*sel = rad->nitems - 1;
 	}
-	event_post(rad, "radio-changed", "%i", *sel);
+	event_post(NULL, rad, "radio-changed", "%i", *sel);
 	widget_binding_unlock(valueb);
 }
 

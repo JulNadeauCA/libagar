@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.13 2003/11/15 03:53:47 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.14 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -134,7 +134,7 @@ combo_select(int argc, union evarg *argv)
 	pthread_mutex_lock(&tl->lock);
 	if ((ti = tlist_item_selected(tl)) != NULL) {
 		textbox_printf(com->tbox, "%s", ti->text);
-		event_post(com, "combo-selected", "%s", ti);
+		event_post(NULL, com, "combo-selected", "%s", ti);
 	}
 	pthread_mutex_unlock(&tl->lock);
 	combo_collapse(com);
@@ -148,7 +148,7 @@ combo_return(int argc, union evarg *argv)
 	struct combo *com = argv[1].p;
 
 	textbox_copy_string(tbox, s, sizeof(s));
-	event_post(com, "combo-selected", "%s", s);
+	event_post(NULL, com, "combo-selected", "%s", s);
 }
 
 #if 0

@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.7 2003/11/09 13:13:40 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.8 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -112,8 +112,8 @@ spinbutton_return(int argc, union evarg *argv)
 
 	WIDGET(sbu->tbox)->flags &= ~(WIDGET_FOCUSED);
 
-	event_post(sbu, "spinbutton-return", NULL);
-	event_post(sbu, "spinbutton-changed", NULL);
+	event_post(NULL, sbu, "spinbutton-return", NULL);
+	event_post(NULL, sbu, "spinbutton-changed", NULL);
 }
 
 static void
@@ -125,7 +125,7 @@ spinbutton_up(int argc, union evarg *argv)
 	spinbutton_add(sbu, sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 	
-	event_post(sbu, "spinbutton-changed", NULL);
+	event_post(NULL, sbu, "spinbutton-changed", NULL);
 }
 
 static void
@@ -137,7 +137,7 @@ spinbutton_down(int argc, union evarg *argv)
 	spinbutton_add(sbu, -sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
 	
-	event_post(sbu, "spinbutton-changed", NULL);
+	event_post(NULL, sbu, "spinbutton-changed", NULL);
 }
 
 void
@@ -302,7 +302,7 @@ spinbutton_add(struct spinbutton *sbu, int inc)
 		break;
 	}
 
-	event_post(sbu, "spinbutton-changed", NULL);
+	event_post(NULL, sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
 	widget_binding_unlock(maxb);
 	widget_binding_unlock(minb);
@@ -317,7 +317,7 @@ spinbutton_set_value(struct spinbutton *sbu, int nvalue)
 
 	valueb = widget_get_binding(sbu, "value", &value);
 	*value = nvalue;
-	event_post(sbu, "spinbutton-changed", NULL);
+	event_post(NULL, sbu, "spinbutton-changed", NULL);
 	widget_binding_modified(valueb);
 	widget_binding_unlock(valueb);
 }

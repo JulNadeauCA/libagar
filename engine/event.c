@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.165 2003/11/15 03:53:46 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.166 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -386,8 +386,8 @@ event_dispatch(SDL_Event *ev)
 }
 
 #define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
-	if ((eev)->argc >= EVENT_ARGS_MAX) {			\
-		fatal("too many args");				\
+	if ((eev)->argc >= EVENT_ARGS_MAX-1) {			\
+		fatal("too many evh args");			\
 	}							\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
 } while (0)
@@ -431,12 +431,7 @@ event_dispatch(SDL_Event *ev)
 		fatal("bad arg");				\
 	}
 
-/*
- * Register an event handler.
- *
- * Arbitrary arguments are pushed onto an argument stack, whose first
- * element is always a pointer to the parent object.
- */
+/* Register a new event handler. */
 struct event *
 event_new(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
@@ -490,16 +485,17 @@ static void *
 event_async(void *p)
 {
 	struct event *eev = p;
-	struct object *ob = OBJECT(eev->argv[0].p);
+	struct object *rcvr = eev->argv[0].p;
 
-	debug(DEBUG_ASYNC, "%s: %s begin\n", ob->name, eev->name);
+	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
 	eev->handler(eev->argc, eev->argv);
-	debug(DEBUG_ASYNC, "%s: %s end\n", ob->name, eev->name);
+	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
 
 	if (eev->flags & EVENT_FORWARD_CHILDREN) {
-		debug(DEBUG_ASYNC, "%s: propagating %s\n", ob->name, eev->name);
+		debug(DEBUG_ASYNC, "%s: propagating %s\n", rcvr->name,
+		    eev->name);
 		lock_linkage();
-		event_forward_children(ob, eev);
+		event_forward_children(rcvr, eev);
 		unlock_linkage();
 		free(eev);
 	}
@@ -508,22 +504,29 @@ event_async(void *p)
 #endif /* THREADS */
 
 /*
- * Invoke an event handler. The lock on the object's event list is recursive
- * so the event handler can safely invoke other event handlers.
+ * Invoke an event handler routine.
  *
- * XXX event handlers cannot modify the parent object's event list, such an
- *     operation should be queued like it is done in the window system.
+ * Event handler invocations may be nested. However, the event handler table
+ * of the object should not be modified in event handler context.
+ *
+ * Arrangement of the argument vector:
+ *	[ptr to receiver obj]
+ *	[argument 1]
+ *	[argument n]
+ *	[ptr to sender obj]
  */
 int
-event_post(void *p, const char *evname, const char *fmt, ...)
+event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 {
-	struct object *ob = p;
+	struct object *sndr = sp;
+	struct object *rcvr = rp;
 	struct event *eev, *neev;
 
-	debug(DEBUG_EVENT_DELIVERY, "%s to %s\n", evname, ob->name);
+	debug(DEBUG_EVENT_DELIVERY, "%s: %s -> %s\n", evname,
+	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
 
-	pthread_mutex_lock(&ob->lock);
-	TAILQ_FOREACH(eev, &ob->events, events) {
+	pthread_mutex_lock(&rcvr->lock);
+	TAILQ_FOREACH(eev, &rcvr->events, events) {
 		if (strcmp(evname, eev->name) != 0)
 			continue;
 
@@ -537,6 +540,7 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 			}
 			va_end(ap);
 		}
+		eev->argv[eev->argc].p = sndr;
 
 		if (neev->flags & EVENT_ASYNC) {
 #ifdef THREADS
@@ -545,7 +549,7 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 			/* Will free the event structure when done. */
 			Pthread_create(&th, NULL, event_async, neev);
 #else
-			fatal("requires THREADS");
+			fatal("EVENT_ASYNC requires THREADS");
 #endif
 		} else {
 			neev->handler(neev->argc, neev->argv);
@@ -553,34 +557,34 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 			if (neev->flags & EVENT_FORWARD_CHILDREN) {
 				debug(DEBUG_EVENT_DELIVERY,
 				    "%s: forwarding %s to descendents\n",
-				    ob->name, evname);
+				    rcvr->name, evname);
 
 				lock_linkage();
-				event_forward_children(ob, neev);
+				event_forward_children(rcvr, neev);
 				unlock_linkage();
 			}
 			free(neev);
 		}
 		break;
 	}
-	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&rcvr->lock);
 	return (eev != NULL);
 }
 
 /* Forward an event, without modifying the original event structure. */
 void
-event_forward(void *p, const char *evname, int argc, union evarg *argv)
+event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 {
 	union evarg nargv[EVENT_ARGS_MAX];
-	struct object *ob = p;
+	struct object *rcvr = rp;
 	struct event *ev;
 
-	debug(DEBUG_EVENT_DELIVERY, "%s event to %s\n", evname, ob->name);
+	debug(DEBUG_EVENT_DELIVERY, "%s event to %s\n", evname, rcvr->name);
 
-	pthread_mutex_lock(&ob->lock);
+	pthread_mutex_lock(&rcvr->lock);
 	memcpy(nargv, argv, argc * sizeof(union evarg));
-	nargv[0].p = ob;
-	TAILQ_FOREACH(ev, &ob->events, events) {
+	nargv[0].p = rcvr;
+	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) != 0)
 			continue;
 
@@ -588,13 +592,13 @@ event_forward(void *p, const char *evname, int argc, union evarg *argv)
 
 		if (ev->flags & EVENT_FORWARD_CHILDREN) {
 			debug(DEBUG_EVENT_DELIVERY, "%s to %s descendents\n",
-			    evname, ob->name);
+			    evname, rcvr->name);
 
 			lock_linkage();
-			event_forward_children(ob, ev);
+			event_forward_children(rcvr, ev);
 			unlock_linkage();
 		}
 	}
-	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&rcvr->lock);
 }
 

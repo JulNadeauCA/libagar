@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.153 2003/12/05 00:45:31 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.154 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -263,31 +263,32 @@ object_used(void *obj)
 	return (used);
 }
 
-/* Move an object from a parent to another. */
+/* Move an object from one parent object to another. */
 void
 object_move(void *oldparentp, void *childp, void *newparentp)
 {
-	struct object *oldparent = oldparentp;
+	struct object *old_parent = oldparentp;
+	struct object *new_parent = newparentp;
 	struct object *child = childp;
-	struct object *newparent = newparentp;
 
 	lock_linkage();
 
-	TAILQ_REMOVE(&oldparent->childs, child, cobjs);
+	TAILQ_REMOVE(&old_parent->childs, child, cobjs);
 	child->parent = NULL;
-	event_post(child, "detached", "%p", oldparent);
+	event_post(old_parent, child, "detached", NULL);
 
-	TAILQ_INSERT_TAIL(&newparent->childs, child, cobjs);
-	child->parent = newparent;
-	event_post(child, "attached", "%p", newparent);
-	event_post(child, "moved", "%p, %p", oldparent, newparent);
-	debug(DEBUG_LINKAGE, "%s: moved %s to %s\n", oldparent->name,
-	    child->name, newparent->name);
+	TAILQ_INSERT_TAIL(&new_parent->childs, child, cobjs);
+	child->parent = new_parent;
+	event_post(new_parent, child, "attached", NULL);
+	event_post(old_parent, child, "moved", "%p", new_parent);
+
+	debug(DEBUG_LINKAGE, "%s: parent %s => %s\n", child->name,
+	    old_parent->name, new_parent->name);
 
 	unlock_linkage();
 }
 
-/* Attach a child object to a parent. */
+/* Attach a child object to some parent object. */
 void
 object_attach(void *parentp, void *childp)
 {
@@ -297,8 +298,8 @@ object_attach(void *parentp, void *childp)
 	lock_linkage();
 	TAILQ_INSERT_TAIL(&parent->childs, child, cobjs);
 	child->parent = parent;
-	event_post(child, "attached", "%p", parent);
-	debug(DEBUG_LINKAGE, "%s: attached %s\n", parent->name, child->name);
+	event_post(parent, child, "attached", NULL);
+	debug(DEBUG_LINKAGE, "%s: parent = %s\n", child->name, parent->name);
 	unlock_linkage();
 }
 
@@ -310,10 +311,14 @@ object_detach(void *parentp, void *childp)
 	struct object *child = childp;
 
 	lock_linkage();
+
 	TAILQ_REMOVE(&parent->childs, child, cobjs);
 	child->parent = NULL;
-	event_post(child, "detached", "%p", parent);
-	debug(DEBUG_LINKAGE, "%s: detached %s\n", parent->name, child->name);
+	event_post(child, parent, "detached", NULL);
+
+	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
+	    parent->name);
+
 	unlock_linkage();
 }
 
@@ -351,9 +356,10 @@ object_find(const char *name)
 {
 	void *rv;
 
+#ifdef DEBUG
 	if (name[0] != '/')
 		fatal("not an absolute path");
-
+#endif
 	lock_linkage();
 	rv = object_find_child(world, name+1);
 	unlock_linkage();
@@ -838,7 +844,7 @@ object_load_generic(void *p)
 		char map_id[OBJECT_PATH_MAX];
 		char submap_id[OBJECT_PATH_MAX];
 		char input_id[OBJECT_PATH_MAX];
-		struct map *m = ob->parent;		/* XXX ... */
+		struct map *map, *submap;
 		int x, y, z;
 
 		copy_string(map_id, buf, sizeof(map_id));
@@ -847,25 +853,30 @@ object_load_generic(void *p)
 		x = (int)read_uint32(buf);
 		y = (int)read_uint32(buf);
 		z = (int)read_uint8(buf);
+		
+		debug(DEBUG_STATE, "%s: at %s:[%d,%d,%d], as %s\n", ob->name,
+		    map_id, x, y, z, submap_id);
 
-		debug(DEBUG_STATE, "%s: at [%d,%d,%d]\n", ob->name, x, y, z);
-		pthread_mutex_lock(&m->lock);
-		if (x < 0 || x >= m->mapw || y < 0 || y >= m->maph ||
-		    z < 0 || z >= m->nlayers) {
-			error_set(_("Bad coordinates: %d,%d,%d"), x, y, z);
-			pthread_mutex_unlock(&m->lock);
+		if ((map = object_find(map_id)) == NULL) {
+			error_set(_("No such map: `%s'"), map_id);
 			goto fail;
 		}
-		if (submap_id != NULL &&
-		    object_set_submap(ob, submap_id) == -1) {
-			pthread_mutex_unlock(&m->lock);
+		if ((submap = object_find(submap_id)) == NULL) {
+			error_set(_("No such submap: `%s'"), submap_id);
 			goto fail;
 		}
-		object_set_position(ob, m, x, y, z);
-		if (input_id != NULL) {
-			object_set_input(ob, input_id);
+
+		pthread_mutex_lock(&map->lock);
+		if (object_set_position(ob, map, x, y, z, submap) == NULL) {
+			pthread_mutex_unlock(&map->lock);
+			goto fail;
 		}
-		pthread_mutex_unlock(&m->lock);
+		if (input_id != NULL &&
+		    object_set_input(ob, input_id) == -1) {
+			pthread_mutex_unlock(&map->lock);
+			goto fail;
+		}
+		pthread_mutex_unlock(&map->lock);
 	}
 
 	/*
@@ -1248,8 +1259,8 @@ object_set_submap(void *p, const char *name)
 	}
 	if (ob->pos != NULL) {
 		object_unproject_submap(ob->pos);
-		ob->pos->submap = (struct map *)submap;
 	}
+	ob->pos->submap = (struct map *)submap;
 
 	pthread_mutex_unlock(&ob->lock);
 	return (0);
@@ -1274,8 +1285,9 @@ object_set_direction(void *p, int dir, int dirflags, int speed)
 }
 
 /* Set the position of an object inside a map. */
-void
-object_set_position(void *p, struct map *dstmap, int x, int y, int z)
+int
+object_set_position(void *p, struct map *dstmap, int x, int y, int z,
+    struct map *submap)
 {
 	struct object *ob = p;
 
@@ -1284,19 +1296,20 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int z)
 	debug(DEBUG_POSITION, "%s: position -> %s:[%d,%d,%d]\n",
 	    ob->name, OBJECT(dstmap)->name, x, y, z);
 
-	if (ob->pos == NULL) {
+	if (ob->pos != NULL) {
+		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
+		object_unproject_submap(ob->pos);
+		object_detach(ob->pos->map, ob);
+	} else {
+		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
 		ob->pos = Malloc(sizeof(struct object_position));
 		ob->pos->map = NULL;
 		ob->pos->x = 0;
 		ob->pos->y = 0;
 		ob->pos->z = 0;
-		ob->pos->submap = NULL;
+		ob->pos->submap = submap;
 		ob->pos->input = NULL;
 		mapdir_init(&ob->pos->dir, ob, DIR_SOFT_MOTION, 1);
-	} else {
-		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
-		object_unproject_submap(ob->pos);
-		object_detach(ob->pos->map, ob);
 	}
 
 	pthread_mutex_lock(&dstmap->lock);
@@ -1307,17 +1320,21 @@ object_set_position(void *p, struct map *dstmap, int x, int y, int z)
 		ob->pos->x = x;
 		ob->pos->y = y;
 		ob->pos->z = z;
-		object_attach(ob->pos->map, ob);
 		object_project_submap(ob->pos);
 	} else {
-		debug(DEBUG_POSITION, "%s: bad coords %s:[%d,%d,%d]\n",
-		    ob->name, OBJECT(dstmap)->name, x, y, z);
-		free(ob->pos);
-		ob->pos = NULL;
+		error_set(_("Illegal coordinates: %s[%d,%d,%d]"),
+		    OBJECT(dstmap)->name, x, y, z);
+		goto fail;
 	}
 	pthread_mutex_unlock(&dstmap->lock);
-
 	pthread_mutex_unlock(&ob->lock);
+	return (0);
+fail:
+	free(ob->pos);
+	ob->pos = NULL;
+	pthread_mutex_unlock(&dstmap->lock);
+	pthread_mutex_unlock(&ob->lock);
+	return (-1);
 }
 
 /* Unset an object's position. */
@@ -1462,10 +1479,9 @@ object_del_dep(void *p, const void *depobj)
 		if (dep->obj == depobj)
 			break;
 	}
-#ifdef DEBUG
 	if (dep == NULL)
 		fatal("%s: no such dep", OBJECT(depobj)->name);
-#endif
+
 	if (dep->count == OBJECT_DEP_MAX)			/* Wired */
 		return;
 
@@ -1478,10 +1494,8 @@ object_del_dep(void *p, const void *depobj)
 		} else {
 			dep->count = 0;
 		}
-#ifdef DEBUG
 	} else if (dep->count == 0) {
 		fatal("neg ref count");
-#endif
 	} else {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
 		    OBJECT(depobj)->name, dep->count);
@@ -1537,7 +1551,6 @@ object_unlink_datafiles(void *p)
 
 	if (object_copy_dirname(ob, path, sizeof(path)) == 0)
 		rmdir(path);
-
 }
 
 #ifdef EDITION
@@ -1577,7 +1590,7 @@ object_scan_dens(const struct object *ob, const char *hint, struct combo *com,
 	struct dirent *dent;
 
 	if ((di = opendir(".")) == NULL) {
-		text_msg(MSG_ERROR, "opendir: %s\n", strerror(errno));
+		text_msg(MSG_ERROR, ".: %s", strerror(errno));
 		return;
 	}
 	while ((dent = readdir(di)) != NULL) {
@@ -1616,7 +1629,7 @@ object_scan_dens(const struct object *ob, const char *hint, struct combo *com,
 			if (chdir(dent->d_name) == 0) {
 				object_scan_dens(ob, hint, com, path);
 				if (chdir("..") == -1) {
-					text_msg(MSG_ERROR, "chdir ..: %s\n",
+					text_msg(MSG_ERROR, "..: %s",
 					    strerror(errno));
 					closedir(di);
 					return;
