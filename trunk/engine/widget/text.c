@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.82 2004/04/22 12:36:48 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.83 2004/04/26 03:21:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -196,6 +196,7 @@ text_render(const char *fontname, int fontsize, Uint32 color, const char *text)
 	Uint32 *ucs;
 	SDL_Surface *su;
 
+	/* XXX inefficient */
 	ucs = unicode_import(UNICODE_FROM_UTF8, text);
 	su = text_render_unicode(fontname, fontsize, color, ucs);
 	free(ucs);
