@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.29 2003/03/22 04:21:47 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.30 2003/03/24 12:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
+#include <engine/compat/snprintf.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
@@ -38,8 +38,6 @@
 #include <engine/widget/window.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/button.h>
-
-#include <libfobj/fobj.h>
 
 enum {
 	NANIMS_INIT =	1,
@@ -71,16 +69,16 @@ Uint32
 art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 {
 	if (art->sprites == NULL) {			/* Initialize */
-		art->sprites = emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
-		art->csprites = emalloc(NSPRITES_INIT *
+		art->sprites = Malloc(NSPRITES_INIT * sizeof(SDL_Surface *));
+		art->csprites = Malloc(NSPRITES_INIT *
 		    sizeof(struct art_spritecl));
 		art->maxsprites = NSPRITES_INIT;
 		art->nsprites = 0;
 	} else if (art->nsprites+1 > art->maxsprites) {	/* Grow */
 		art->maxsprites += NSPRITES_GROW;
-		art->sprites = erealloc(art->sprites,
+		art->sprites = Realloc(art->sprites,
 		    art->maxsprites * sizeof(SDL_Surface *));
-		art->csprites = erealloc(art->csprites,
+		art->csprites = Realloc(art->csprites,
 		    art->maxsprites * sizeof(struct art_spritecl));
 	}
 	SLIST_INIT(&art->csprites[art->nsprites].sprites);
@@ -177,7 +175,7 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 	mw = sprite->w/TILEW;
 	mh = sprite->h/TILEH;
 
-	fragmap = emalloc(sizeof(struct map));
+	fragmap = Malloc(sizeof(struct map));
 	snprintf(mapname, sizeof(mapname), "frag-%s%u", art->name,
 	    art->nsubmaps);
 	map_init(fragmap, mapname, NULL);
@@ -282,7 +280,7 @@ art_fetch(char *archive, struct object *ob)
 		}
 	}
 
-	art = emalloc(sizeof(struct art));
+	art = Malloc(sizeof(struct art));
 	art->name = Strdup(archive);
 	art->pobj = ob;				/* For submap refs */
 	art->sprites = NULL;
@@ -302,7 +300,7 @@ art_fetch(char *archive, struct object *ob)
 	if (prop_get_bool(config, "object.art.map-tiles")) {
 		char mapname[OBJECT_NAME_MAX];
 
-		art->tile_map = emalloc(sizeof(struct map));
+		art->tile_map = Malloc(sizeof(struct map));
 		snprintf(mapname, sizeof(mapname), "t-%s", archive);
 		map_init(art->tile_map, mapname, NULL);
 
@@ -416,12 +414,12 @@ Uint32
 art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 {
 	if (anim->frames == NULL) {			/* Initialize */
-		anim->frames = emalloc(FRAMES_INIT * sizeof(SDL_Surface *));
+		anim->frames = Malloc(FRAMES_INIT * sizeof(SDL_Surface *));
 		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
 	} else if (anim->nframes+1 > anim->maxframes) {	/* Grow */
 		anim->maxframes += FRAMES_GROW;
-		anim->frames = erealloc(anim->frames,
+		anim->frames = Realloc(anim->frames,
 		    anim->maxframes * sizeof(SDL_Surface *));
 	}
 	anim->frames[anim->nframes++] = surface;
@@ -433,11 +431,11 @@ art_insert_submap(struct art *art, struct map *m)
 {
 	if (art->submaps == NULL) {			/* Initialize */
 		art->maxsubmaps = NSUBMAPS_INIT;
-		art->submaps = emalloc(art->maxsubmaps * sizeof(struct map *));
+		art->submaps = Malloc(art->maxsubmaps * sizeof(struct map *));
 		art->nsubmaps = 0;
 	} else if (art->nsubmaps+1 > art->maxsubmaps) {	/* Grow */
 		art->maxsubmaps += NSUBMAPS_GROW;
-		art->submaps = erealloc(art->submaps,
+		art->submaps = Realloc(art->submaps,
 		    art->maxsubmaps * sizeof(struct map *));
 	}
 	art->submaps[art->nsubmaps] = m;
@@ -449,7 +447,7 @@ art_insert_anim(struct art *art, int delay)
 {
 	struct art_anim *anim;
 
-	anim = emalloc(sizeof(struct art_anim));
+	anim = Malloc(sizeof(struct art_anim));
 	anim->frames = NULL;
 	anim->maxframes = 0;
 	anim->frame = 0;
@@ -458,15 +456,15 @@ art_insert_anim(struct art *art, int delay)
 	anim->delay = delay;
 
 	if (art->anims == NULL) {			/* Initialize */
-		art->anims = emalloc(NANIMS_INIT * sizeof(struct anim *));
-		art->canims = emalloc(NANIMS_INIT * sizeof(struct art_animcl));
+		art->anims = Malloc(NANIMS_INIT * sizeof(struct anim *));
+		art->canims = Malloc(NANIMS_INIT * sizeof(struct art_animcl));
 		art->maxanims = NANIMS_INIT;
 		art->nanims = 0;
 	} else if (art->nanims >= art->maxanims) {	/* Grow */
 		art->maxanims += NANIMS_GROW;
-		art->anims = erealloc(art->anims,
+		art->anims = Realloc(art->anims,
 		    art->maxanims * sizeof(struct art_anim *));
-		art->canims = erealloc(art->canims,
+		art->canims = Realloc(art->canims,
 		    art->maxanims * sizeof(struct art_animcl));
 	}
 	SLIST_INIT(&art->canims[art->nanims].anims);
@@ -554,24 +552,21 @@ tl_medias_poll(int argc, union evarg *argv)
 static void
 tl_medias_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl_sprites = argv[1].p;
-	struct tlist *tl_anims = argv[2].p;
-	struct tlist *tl_submaps = argv[3].p;
+	struct tlist *tl_items = argv[1].p;
 
-	widget_set_int(tl_sprites->vbar, "value", 0);
-	widget_set_int(tl_anims->vbar, "value", 0);
-	widget_set_int(tl_submaps->vbar, "value", 0);
+	widget_set_int(tl_items->vbar, "value", 0);
 }
 
 static void
-tl_sprites_poll(int argc, union evarg *argv)
+tl_items_poll(int argc, union evarg *argv)
 {
-	char name[OBJECT_NAME_MAX + 80];
+	char name[OBJECT_NAME_MAX + 96];
 	struct tlist *tl = argv[0].p;
 	struct tlist *tl_medias = argv[1].p;
 	struct tlist_item *it_media;
 	struct art *art;
 	Uint32 i;
+	int j;
 
 	it_media = tlist_item_selected(tl_medias);
 	if (it_media == NULL) {
@@ -580,34 +575,27 @@ tl_sprites_poll(int argc, union evarg *argv)
 	art = it_media->p1;
 
 	tlist_clear_items(tl);
-	for (i = 0; i < art->nsprites; i++) {
+
+	for (i = 0; i < art->nsprites; i++) {			/* Sprites */
 		SDL_Surface *su = art->sprites[i];
+		struct art_spritecl *spritecl = &art->csprites[i];
+		struct art_cached_sprite *csprite;
 
 		snprintf(name, sizeof(name),
 		    "%s:%u (%ux%u)", art->name, i, su->w, su->h);
 		tlist_insert_item(tl, su, name, su);
+
+		j = 0;
+		SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
+			snprintf(name, sizeof(name),
+			    "%s:%u[%u] (%ux%u) - %u", art->name, i, j,
+			     su->w, su->h, csprite->last_drawn);
+			tlist_insert_item(tl, csprite->su, name, csprite);
+			j++;
+		}
 	}
-	tlist_restore_selections(tl);
-}
 
-static void
-tl_anims_poll(int argc, union evarg *argv)
-{
-	char name[OBJECT_NAME_MAX + 80];
-	struct tlist *tl = argv[0].p;
-	struct tlist *tl_medias = argv[1].p;
-	struct tlist_item *it_media;
-	struct art *art;
-	Uint32 i;
-
-	it_media = tlist_item_selected(tl_medias);
-	if (it_media == NULL) {
-		return;		/* No selection */
-	}
-	art = it_media->p1;
-
-	tlist_clear_items(tl);
-	for (i = 0; i < art->nanims; i++) {
+	for (i = 0; i < art->nanims; i++) {			/* Anims */
 		struct art_anim *anim = art->anims[i];
 		SDL_Surface *su = NULL;
 
@@ -620,25 +608,8 @@ tl_anims_poll(int argc, union evarg *argv)
 		}
 		tlist_insert_item(tl, su, name, anim);
 	}
-	tlist_restore_selections(tl);
-}
-
-static void
-tl_submaps_poll(int argc, union evarg *argv)
-{
-	char name[OBJECT_NAME_MAX + 80];
-	struct tlist *tl = argv[0].p;
-	struct tlist *tl_medias = argv[1].p;
-	struct tlist_item *it_media;
-	struct art *art;
-	Uint32 i;
-
-	if ((it_media = tlist_item_selected(tl_medias)) == NULL)
-		return;					/* No selection */
-	art = it_media->p1;
-
-	tlist_clear_items(tl);
-	for (i = 0; i < art->nsubmaps; i++) {
+	
+	for (i = 0; i < art->nsubmaps; i++) {			/* Submaps */
 		struct map *submap = art->submaps[i];
 
 		snprintf(name, sizeof(name), "%s:%u (%ux%u)", art->name, i,
@@ -655,32 +626,28 @@ art_browser_window(void)
 	struct region *reg;
 	struct tlist *tl_medias;
 
-	if ((win = window_generic_new(512, 246, "monitor-art-browser"))
+	if ((win = window_generic_new(348, 216, "monitor-art-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
+	window_set_min_geo(win, 246, 109);
 	window_set_caption(win, "Graphics");
-	reg = region_new(win, REGION_HALIGN, 0, 0, 30, 100);
+
+	reg = region_new(win, REGION_HALIGN, 0, 0, 40, 100);
 	{
 		tl_medias = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_medias, "tlist-poll", tl_medias_poll, NULL);
 	}
-	reg = region_new(win, REGION_VALIGN, 30, 0, 70, 100);
+	reg = region_new(win, REGION_VALIGN, 40, 0, 60, 100);
 	{
-		struct tlist *tl_sprites, *tl_anims, *tl_submaps;
+		struct tlist *tl_items;
 	
-		tl_sprites = tlist_new(reg, 100, 33, TLIST_POLL);
-		event_new(tl_sprites, "tlist-poll",
-		    tl_sprites_poll, "%p", tl_medias);
-		tl_anims = tlist_new(reg, 100, 33, TLIST_POLL);
-		event_new(tl_anims, "tlist-poll",
-		    tl_anims_poll, "%p", tl_medias);
-		tl_submaps = tlist_new(reg, 100, 33, TLIST_POLL);
-		event_new(tl_submaps, "tlist-poll",
-		    tl_submaps_poll, "%p", tl_medias);
+		tl_items = tlist_new(reg, 100, 100, TLIST_POLL);
+		event_new(tl_items, "tlist-poll",
+		    tl_items_poll, "%p", tl_medias);
 
 		event_new(tl_medias, "tlist-changed", tl_medias_selected,
-		    "%p, %p, %p", tl_sprites, tl_anims, tl_submaps);
+		    "%p", tl_items);
 	}
 	return (win);
 }
