@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: objedit.c,v 1.1 2003/05/20 11:25:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -92,6 +92,7 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	char dind[TLIST_LABEL_MAX];
 	struct object *cob;
 	size_t dsize = depth*4;
+	struct tlist_item *it;
 	int i;
 
 	if (dsize >= sizeof(dind))
@@ -107,8 +108,14 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 		snprintf(label, sizeof(label), "%s %s\n%s %s\n", dind,
 		    object_name(cob),
 		    dind, i == ntypesw ? cob->type : typesw[i].desc);
-		tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
-		find_objs(tl, cob, depth+1);
+		it = tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
+
+		if (!TAILQ_EMPTY(&cob->childs)) {
+			it->haschilds++;
+			if (tlist_visible_childs(tl, it)) {
+				find_objs(tl, cob, depth+1);
+			}
+		}
 	}
 }
 
@@ -154,7 +161,8 @@ objedit_window(void)
 	
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
-		objs_tl = tlist_new(reg, 100, 100, TLIST_POLL|TLIST_MULTI);
+		objs_tl = tlist_new(reg, 100, 100,
+		    TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 		tlist_set_item_height(objs_tl, ttf_font_height(font)*2);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
