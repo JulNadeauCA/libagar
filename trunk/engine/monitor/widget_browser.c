@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.35 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.36 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -203,7 +203,7 @@ examine_widget(int argc, union evarg *argv)
 		struct tlist *tl_colors;
 		struct palette *pal;
 
-		pal = palette_new(vb, PALETTE_RGB);
+		pal = palette_new(vb, PALETTE_RGB, vfmt);
 		tl_colors = tlist_new(vb, TLIST_POLL);
 		event_new(tl_colors, "tlist-poll", poll_colors, "%p", wid);
 		event_new(tl_colors, "tlist-changed", select_color, "%p, %p",
