@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.34 2002/11/22 08:56:52 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.35 2002/12/01 14:41:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -202,14 +202,7 @@ mapview_draw(void *p)
 
 			/* Draw node properties. */
 			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
-				TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-					if (nref->flags & MAPREF_SPRITE ||
-					    nref->flags & MAPREF_ANIM) {
-						draw_node_props(mv, node,
-						    rx, ry);
-						break;
-					}
-				}
+				draw_node_props(mv, node, rx, ry);
 			}
 
 			if (mv->flags & MAPVIEW_GRID) {
