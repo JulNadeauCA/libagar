@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.19 2002/02/10 19:29:48 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.20 2002/02/11 23:30:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -373,7 +373,6 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 
 	rd.w = s->w;
 	rd.h = s->h;
-
 	if (m->flags & MAP_VARTILEGEO) {
 		/* The sprite size should be a multiple of the tile size. */
 		if (rd.w > m->view->tilew) {
@@ -383,8 +382,6 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 			y -= (rs.h / m->view->tileh) / 2;
 		}
 	}
-
-	/* XXX pre-compute map/view coordinate pairs. */
 	rd.x = x;
 	rd.y = y;
 
@@ -508,6 +505,7 @@ map_animate(Uint32 ival, void *p)
 	}
 	
 	pthread_mutex_unlock(&m->lock);
+
 	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 
 	return (ival);
