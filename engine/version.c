@@ -38,7 +38,7 @@
 
 #include <libfobj/fobj.h>
 
-#include <engine/debug.h>
+#include <engine/engine.h>
 #include <engine/version.h>
 
 /*
