@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.h,v 1.8 2003/04/25 09:47:08 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.9 2003/05/08 05:17:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -9,6 +9,7 @@ struct propedit {
 	struct tool	tool;
 	Uint32		node_mode;
 	Uint32		node_flags;
+	int		origin;
 };
 
 __BEGIN_DECLS
