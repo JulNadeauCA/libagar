@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.4 2004/04/22 23:57:28 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.5 2004/05/02 09:36:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -63,10 +63,7 @@ destroy_tool_window(struct window *win)
 		nsubwin = TAILQ_NEXT(subwin, swins);
 		destroy_tool_window(subwin);
 	}
-	window_hide(win);
-	TAILQ_REMOVE(&view->windows, win, windows);
-	object_destroy(win);
-	Free(win, M_OBJECT);
+	view_detach(win);
 }
 
 void
