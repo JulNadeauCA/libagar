@@ -1,9 +1,10 @@
-/*	$Csoft: label.h,v 1.6 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.7 2002/05/02 06:28:30 vedge Exp $	*/
 
 struct label {
 	struct	 widget wid;
 
-	char	 caption[1024];
+	char	 *caption;
+	SDL_Surface *label_s;
 
 	int	 flags;
 #define LABEL_BOLD	0x01
@@ -16,8 +17,8 @@ struct label {
 	} justify;
 };
 
-struct label	*label_new(struct window *, char *, int, Sint16, Sint16);
-void		 label_init(struct label *, char *, int, Sint16, Sint16);
+struct label	*label_new(struct region *, char *, int);
+void		 label_init(struct label *, char *, int);
 void	 	 label_destroy(void *);
 
 void	 label_draw(void *);

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.5 2002/05/06 02:22:06 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.6 2002/05/15 07:28:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,60 +58,66 @@ static struct widget_ops checkbox_ops = {
 };
 
 struct checkbox *
-checkbox_new(struct window *win, char *caption, int flags, Sint16 x, Sint16 y)
+checkbox_new(struct region *reg, char *caption, int flags)
 {
 	struct checkbox *cb;
 
 	cb = emalloc(sizeof(struct checkbox));
-	checkbox_init(cb, caption, flags, x, y);
+	checkbox_init(cb, caption, flags);
 
-	pthread_mutex_lock(&win->lock);
-	window_attach(win, cb);
-	pthread_mutex_unlock(&win->lock);
+	pthread_mutex_lock(&reg->win->lock);
+	region_attach(reg, cb);
+	pthread_mutex_unlock(&reg->win->lock);
+
 	return (cb);
 }
 
 void
-checkbox_init(struct checkbox *b, char *caption, int flags, Sint16 x,
-    Sint16 y)
+checkbox_init(struct checkbox *b, char *caption, int flags)
 {
-	widget_init(&b->wid, "checkbox", "widget", &checkbox_ops, x, y, 0, 0);
+	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
+	int w, h;
 
+	widget_init(&b->wid, "checkbox", "widget", &checkbox_ops, 0, 0);
 	b->caption = strdup(caption);
 	b->flags = flags;
 	b->justify = CHECKBOX_LEFT;
 	b->xspacing = 6;
+	
+	w = SPRITE(b, CHECKBOX_DOWN)->w + b->xspacing;
+	h = SPRITE(b, CHECKBOX_DOWN)->h;
+	
+	/* Label */
+	b->label_s = TTF_RenderText_Solid(font, b->caption, white);
+	if (b->label_s == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+	}
+	w += b->label_s->w;
+	h += (b->label_s->h - h);	/* XXX center */
+
+	WIDGET(b)->w = w;
+	WIDGET(b)->h = h;
 }
 
 void
-checkbox_destroy(void *ob)
+checkbox_destroy(void *p)
 {
-	struct checkbox *b = (struct checkbox *)ob;
+	struct checkbox *b = p;
 
+	SDL_FreeSurface(b->label_s);
 	free(b->caption);
 }
 
 void
 checkbox_draw(void *p)
 {
-	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
-	struct checkbox *b = (struct checkbox *)p;
-	SDL_Surface *label, *cbox;
+	struct checkbox *b = p;
+	SDL_Surface *cbox;
 	Sint16 x = 0, y = 0;
 
 	/* Checkbox */
 	cbox = SPRITE(b, (b->flags & CHECKBOX_PRESSED) ?
 	    CHECKBOX_DOWN : CHECKBOX_UP);
-
-	/* Define checkbox geometry accordingly. */
-	WIDGET(b)->w = cbox->w;
-	WIDGET(b)->h = cbox->h;
-
-	/* Label */
-	label = TTF_RenderText_Solid(font, b->caption, white);
-	if (label == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
 
 	switch (b->justify) {
 	case CHECKBOX_LEFT:
@@ -121,8 +127,7 @@ checkbox_draw(void *p)
 		y = 0;
 		break;
 	}
-	WIDGET_DRAW(b, label, x, y);
-	SDL_FreeSurface(label);
+	WIDGET_DRAW(b, b->label_s, x, y);
 }
 
 void
