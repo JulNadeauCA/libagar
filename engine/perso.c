@@ -219,14 +219,14 @@ perso_time(Uint32 ival, void *p)
 {
 	struct object *ob = p;
 
-	pthread_mutex_lock(&ob->pos_lock);
+	pthread_mutex_lock(&ob->lock);
 	if (ob->pos != NULL &&
 	    mapdir_move(&ob->pos->dir) == -1) {
 		debug(DEBUG_POSITION, "%s: %s\n", ob->name, error_get());
 	} else {
 		debug(DEBUG_POSITION, "%s is nowhere!\n", ob->name);
 	}
-	pthread_mutex_unlock(&ob->pos_lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (ival);
 }
 
