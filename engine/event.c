@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.125 2003/01/08 21:25:59 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.126 2003/01/08 21:27:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -231,15 +231,9 @@ event_adjust_refresh(Uint32 ntick)
 #ifdef DEBUG
 	event_update_fps_counter();
 #endif
-	/*
-	 * Try to lower the refresh delay if the minimum frame rate is not
-	 * reached.
-	 *
-	 * This adjustment could be made without a visible change in speed
-	 * if we could predict the overhead of the future drawing operation.
-	 */
 	if (view->refresh.current < 1) {
 		view->refresh.current = 30;
+		view->refresh.delay = 15;
 #if 0
 		if (--view->refresh.delay < view->refresh.min_delay) {
 			debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
