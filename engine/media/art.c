@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.7 2002/12/21 10:27:06 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.8 2002/12/24 10:31:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/compat/asprintf.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
@@ -445,8 +447,8 @@ tl_medias_selected(int argc, union evarg *argv)
 	struct tlist *tl_sprites = argv[1].p;
 	struct tlist *tl_anims = argv[2].p;
 
-	scrollbar_set_value(tl_sprites->vbar, 0);
-	scrollbar_set_value(tl_anims->vbar, 0);
+	widget_set_int(tl_sprites->vbar, "value", 0);
+	widget_set_int(tl_anims->vbar, "value", 0);
 }
 
 static void
