@@ -1,0 +1,65 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+\fITABLE OF CONTENTS\fP
+.nr % 0
+.br
+.TS H
+tab(@);
+lw(5.9i) lw(.3i).
+@
+_
+
+Object interface@1
+Event system@6
+Generic properties@8
+Graphic engine@11
+Input device interface@14
+Movement interface@15
+Tile-based levels@17
+Widget framework@20
+Window system@27
+Font engine interface@30
+Container widget@32
+Horizontal container widget@33
+Vertical container widget@33
+Label widget@35
+Button widget@37
+Text input widget@39
+Floating-point spin button widget@41
+Checkbox widget@43
+Radio widget@44
+Scroll bar widget@45
+Tree/list widget@47
+Combo widget@50
+Unit combo widget@51
+Graph widget@52
+RGBA color selection widget@54
+Bitmap widget@55
+Level display/edition widget@56
+.TE
+.sp 29
