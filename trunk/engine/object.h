@@ -1,19 +1,7 @@
-/*	$Csoft: object.h,v 1.6 2002/02/02 14:51:16 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.7 2002/02/03 11:20:49 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
-
-#include <limits.h>
-
-struct anim {
-	GSList	*frames;
-	int	nframes;
-	int	delay;		/* Interval in milliseconds */
-	int	gframe;		/* Used by the map editor */
-	int	gframedc;
-
-	pthread_mutex_t lock;
-};
 
 struct object {
 	char	*name;		/* Optional name */
@@ -27,8 +15,7 @@ struct object {
 #define OBJ_DEFERGC	0x0002	/* Defer garbage collection */
 #define OBJ_EDITABLE	0x0004	/* The map editor might use this object */
 #define TIME_HOOK	0x0010	/* Call every tick */
-#define EVENT_HOOK	0x0020	/* Receive events */
-#define DESTROY_HOOK	0x0040	/* Pre-destroy hook */
+#define DESTROY_HOOK	0x0020	/* Pre-destroy hook */
 #define LOAD_FUNC	0x0100	/* Load routine */
 #define SAVE_FUNC	0x0200	/* Save routine */
 
@@ -47,7 +34,6 @@ struct object {
 	int	 nsprites;	/* Sprite count */
 	pthread_mutex_t lock;	/* Lock on sprite list */
 
-	void	 (*event_hook)(struct object *, SDL_Event *);
 	void	 (*destroy_hook)(struct object *);
 	int	 (*load)(void *, char *);
 	int	 (*save)(void *, char *);
