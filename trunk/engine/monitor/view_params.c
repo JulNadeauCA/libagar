@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.1 2002/11/26 11:01:00 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.2 2002/12/26 07:12:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -57,13 +57,28 @@ view_params_window(void)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
-		label_new(reg, 100, 0, "Graphic engine: %s",
-		    (view->gfx_engine == GFX_ENGINE_TILEBASED) ? "tile-based" :
-		    (view->gfx_engine == GFX_ENGINE_GUI) ? "gui" : "???");
-		label_new(reg, 100, 0, "Geometry: %dx%dx%d",
-		    view->w, view->h, view->bpp);
-		label_polled_new(reg, 100, 0, &view->lock, "Dirty rects: %d/%d",
-		    &view->ndirty, &view->maxdirty);
+		char *engine = "???";
+
+		switch (view->gfx_engine) {
+		case GFX_ENGINE_GUI:
+			engine = "GUI";
+			break;
+		case GFX_ENGINE_TILEBASED:
+			engine = "Tile-based";
+			break;
+#ifdef HAVE_OPENGL
+		case GFX_ENGINE_GL:
+			engine = "OpenGL";
+			break;
+#endif
+		}
+		label_new(reg, 100, 0, "Graphic engine: %s", engine);
+		label_polled_new(reg, 100, 0, &view->lock, "Depth: %dbpp",
+		    &view->bpp);
+		label_polled_new(reg, 100, 0, &view->lock, "Geometry: %dx%d",
+		    &view->w, &view->h);
+		label_polled_new(reg, 100, 0, &view->lock, "Dirty rects: %d",
+		    &view->maxdirty);
 		label_polled_new(reg, 100, 0, &view->lock, "Window op: %d (%p)",
 		    &view->winop, &view->wop_win);
 		label_polled_new(reg, 100, 0, NULL,

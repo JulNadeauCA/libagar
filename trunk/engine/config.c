@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.46 2002/12/26 07:11:00 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.47 2002/12/27 02:20:26 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -26,7 +26,6 @@
  */
 
 #include <config/sharedir.h>
-#include <config/have_opengl.h>
 
 #include "engine.h"
 
@@ -113,7 +112,7 @@ config_prop_modified(int argc, union evarg *argv)
 void
 config_init(struct config *con)
 {
-	extern const struct gameinfo *gameinfo;		/* engine.c */
+	extern const struct engine_proginfo *proginfo;		/* engine.c */
 	struct passwd *pwd;
 	struct stat sta;
 	char *spath;
@@ -122,16 +121,19 @@ config_init(struct config *con)
 	object_init(&con->obj, "engine-config", "config", NULL, OBJECT_SYSTEM,
 	    &config_ops);
 
+	/* Object settings */
+	prop_set_bool(con,   "object.art.map-tiles", 0);
+
 	/* Visual settings */
 	prop_set_bool(con,   "view.font-cache", 1);
 	prop_set_bool(con,   "view.full-screen", 0);
 	prop_set_bool(con,   "view.async-blits", 0);
-#ifdef HAVE_OPENGL
-	prop_set_bool(con,   "view.opengl", 1);
+#ifdef XDEBUG
+	prop_set_bool(con,   "view.xsync", 0);
 #endif
-	prop_set_uint32(con, "view.w", 800);
-	prop_set_uint32(con, "view.h", 600);
-	prop_set_uint32(con, "view.bpp", 32);
+	prop_set_uint16(con, "view.w", 800);
+	prop_set_uint16(con, "view.h", 600);
+	prop_set_uint8(con,  "view.bpp", 32);
 
 	/* Window system settings */
 	prop_set_bool(con, "widget.reg-borders", 0);
@@ -140,7 +142,7 @@ config_init(struct config *con)
 	/* Data directories. */
 	pwd = getpwuid(getuid());
 	prop_set_string(con, "path.user_data_dir", "%s/.%s",
-	    pwd->pw_dir, gameinfo->prog);
+	    pwd->pw_dir, proginfo->prog);
 	prop_set_string(con, "path.sys_data_dir", "%s", SHAREDIR);
 
 	udatadir = prop_get_string(con, "path.user_data_dir");
@@ -182,15 +184,15 @@ config_window(struct config *con)
 			char *name;
 			char *descr;
 		} settings[] = {
-			{ "view.font-cache",	"Font cache" },
-			{ "view.full-screen",	"Full screen" },
-			{ "view.async-blits",	"Asynchronous blits" },
-#ifdef HAVE_OPENGL
-			{ "view.opengl",	"OpenGL rendering context" },
-#endif
+			{ "view.font-cache", "Font cache" },
+			{ "view.full-screen", "Full screen" },
+			{ "view.async-blits", "Asynchronous blits (restart)" },
 #ifdef DEBUG
 			{ "widget.reg-borders",	"Region borders" },
-			{ "widget.any-size",	"Arbitrary window sizes" },
+			{ "widget.any-size", "Arbitrary window sizes" },
+#endif
+#ifdef XDEBUG
+			{ "view.xsync",	"Synchronous X events (restart)" },
 #endif
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
@@ -240,12 +242,12 @@ config_window(struct config *con)
 	reg = region_new(win, REGION_HALIGN,  0, 75, 100, 12);
 	{
 		tbox = textbox_new(reg, "Width : ", 0, 50, 100);
-		textbox_printf(tbox, "%d", prop_get_uint32(config, "view.w"));
+		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.w");
 
 		tbox = textbox_new(reg, "Height: ", 0, 50, 100);
-		textbox_printf(tbox, "%d", prop_get_uint32(config, "view.h"));
+		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.h");
 	}

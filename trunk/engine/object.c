@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.97 2002/12/15 15:56:45 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.98 2002/12/24 10:26:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -43,8 +43,6 @@
 #include "view.h"
 #include "rootmap.h"
 #include "world.h"
-
-extern int mapediting;
 
 static const struct object_ops null_ops = {
 	NULL,	/* destroy */

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.95 2002/12/24 10:24:24 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.96 2002/12/27 02:20:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -58,84 +58,91 @@ int
 view_init(gfx_engine_t ge)
 {
 	struct viewport *v;
-	int screenflags = SDL_HWSURFACE;
-	int bpp, mw, mh;
-	
+	int screenflags = SDL_SWSURFACE;
+	int bpp;
+
+	if (view != NULL) {
+		error_set("viewport is already initialized");
+		return (-1);
+	}
+
 	v = emalloc(sizeof(struct viewport));
 	object_init(&v->obj, "view-port", "view", NULL, OBJECT_SYSTEM,
 	    &viewport_ops);
 	v->gfx_engine = ge;
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
+	v->ndirty = 0;
+	v->maxdirty = 0;
+	v->dirty = NULL;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
 	pthread_mutexattr_init(&v->lockattr);
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&v->lock, &v->lockattr);
 
-	deprintf("OpenGL support is ");
-#ifdef HAVE_OPENGL
-	if (prop_get_bool(config, "view.opengl")) {
-		/* Initialize OpenGL attributes. */
-		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-		/* Allow normal blitting operations. */
-		screenflags |= SDL_OPENGLBLIT;
-		
-		deprintf("enabled.\n");
-	} else {
-		deprintf("disabled.\n");
-	}
-#else
-	deprintf("unavailable.\n");
-#endif
-
 	/* Obtain the display preferences. */
-	bpp = prop_get_uint32(config, "view.bpp");
-	v->w = prop_get_uint32(config, "view.w");
-	v->h = prop_get_uint32(config, "view.h");
-	mw = v->w / TILEW;
-	mh = v->h / TILEH;
-
-	if (prop_get_bool(config, "view.full-screen")) {
+	bpp = prop_get_uint8(config, "view.bpp");
+	v->w = prop_get_uint16(config, "view.w");
+	v->h = prop_get_uint16(config, "view.h");
+	if (prop_get_bool(config, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
-	}
-	if (prop_get_bool(config, "view.async-blits")) {
-		dprintf("asynchronous blits\n");
+	if (prop_get_bool(config, "view.async-blits"))
 		screenflags |= SDL_ASYNCBLIT;
-	}
 
 	/* Negotiate the depth. */
 	v->bpp = SDL_VideoModeOK(v->w, v->h, bpp, screenflags);
 	if (v->bpp == 8)
 		screenflags |= SDL_HWPALETTE;
 
-	/* Adapt resolution to tile geometry. */
-	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
+	switch (v->gfx_engine) {
+	case GFX_ENGINE_TILEBASED:
+		dprintf("mode: direct video / tile-based\n");
+	
+		/* Adapt resolution to tile geometry. */
 		v->w -= v->w % TILEW;
 		v->h -= v->h % TILEH;
-		prop_set_uint32(config, "view.w", v->w);
-		prop_set_uint32(config, "view.h", v->h);
 		dprintf("rounded resolution to %dx%d\n", v->w, v->h);
+
+		/* Initialize the map display. */
+		v->rootmap = emalloc(sizeof(struct viewmap));
+		rootmap_init(v->rootmap, v->w / TILEW, v->h / TILEH);
+
+		v->maxdirty = v->w/TILEW * v->h/TILEH;
+		break;
+	case GFX_ENGINE_GUI:
+		dprintf("mode: direct video / gui\n");
+
+		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
+
+		v->maxdirty = 500;
+		break;
+#ifdef HAVE_OPENGL
+	case GFX_ENGINE_GL:
+		dprintf("mode: opengl\n");
+
+		screenflags |= SDL_OPENGL;
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		break;
+#endif
+	default:
+		error_set("unsupported graphic mode");
+		goto fail;
 	}
-	if (v->w < 640 || v->h < 480) {
-		error_set("minimum resolution is 640x480");
-		free(v);
-		return (-1);
+
+	if (v->w < 320 || v->h < 240) {
+		error_set("minimum resolution is 320x240");
+		goto fail;
 	}
 
 	/* Allocate the dirty rectangle array. */
-	v->maxdirty = v->w/TILEW * v->h/TILEH;
-	v->ndirty = 0;
-	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
-
-	/* Allow resize in GUI mode. XXX thread unsafe? */
-	if (v->gfx_engine == GFX_ENGINE_GUI) {
-		screenflags |= SDL_RESIZABLE;
+	if (v->maxdirty > 0) {
+		v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
+		v->ndirty = 0;
 	}
 
 	/* Set the video mode. */
@@ -143,22 +150,43 @@ view_init(gfx_engine_t ge)
 	if (v->v == NULL) {
 		error_set("setting %dx%dx%d mode: %s", v->w, v->h, v->bpp,
 		    SDL_GetError());
-		free(v);
-		return (-1);
+		goto fail;
 	}
 
-	switch (v->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		v->rootmap = emalloc(sizeof(struct viewmap));
-		rootmap_init(v->rootmap, mw, mh);
-		break;
-	case GFX_ENGINE_GUI:
-		break;
+#if defined(HAVE_OPENGL) && defined(DEBUG)
+	if (v->gfx_engine == GFX_ENGINE_GL) {
+		int red, blue, green, alpha, depth, dbuf, bsize;
+
+		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
+		SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
+		SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
+		SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &alpha);
+		SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &bsize);
+		SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &dbuf);
+		SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
+
+		dprintf("depth = %d\n", depth);
+		dprintf("red = %d, green = %d, blue = %d, alpha = %d\n",
+		    red, green, blue, alpha);
+		dprintf("double-buffering = %s, buffer = %s\n",
+		    dbuf ? "on" : "off", bsize);
+	
+		if (!dbuf) {
+			error_set("could not enable OpenGL double buffering");
+			goto fail;
+		}
 	}
+#endif /* HAVE_OPENGL and DEBUG */
+
+	prop_set_uint16(config, "view.w", v->w);
+	prop_set_uint16(config, "view.h", v->h);
 	view = v;
-
-	world_attach(world, v);
 	return (0);
+fail:
+	pthread_mutex_destroy(&v->lock);
+	pthread_mutexattr_destroy(&v->lockattr);
+	free(v);
+	return (-1);
 }
 
 /*
@@ -350,18 +378,25 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	return (ds);
 }
 
-void
-view_set_speed(int minfps, int maxfps)
+int
+view_set_refresh(int min_delay, int max_delay)
 {
-	if (maxfps < 1 || maxfps > 800 || minfps < 1 || minfps > 800) {
-		fatal("bad fps\n");
+	if (min_delay < 0 || min_delay > 300 ||
+	    max_delay < 0 || max_delay > 300) {
+		error_set("out of range");
+		return (-1);
 	}
 
+	dprintf("minimum delay = %d, maximum delay = %d\n",
+	    min_delay, max_delay);
+
 	pthread_mutex_lock(&view->lock);
-	view->cur_fps_ticks = 0;
-	view->max_fps_ticks = 1000 / maxfps;
-	view->ticks_ceil = 1000 / maxfps;
-	view->min_ticks = 1000 / minfps;
+	view->refresh.current = 0;
+	view->refresh.delay = max_delay;
+	view->refresh.max_delay = max_delay;
+	view->refresh.min_delay = min_delay;
 	pthread_mutex_unlock(&view->lock);
+
+	return (0);
 }
 
