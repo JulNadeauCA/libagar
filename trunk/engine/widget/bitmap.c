@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.12 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.13 2003/04/12 01:41:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,41 +33,48 @@
 
 #include "bitmap.h"
 
-static const struct widget_ops bitmap_ops = {
+const struct widget_ops bitmap_ops = {
 	{
+		NULL,		/* init */
 		bitmap_destroy,
-		NULL,	/* load */
-		NULL	/* save */
+		NULL,		/* load */
+		NULL		/* save */
 	},
 	bitmap_draw,
 	NULL		/* update */
 };
 
 struct bitmap *
-bitmap_new(struct region *reg, SDL_Surface *surface, int w, int h)
+bitmap_new(struct region *reg, int w, int h)
 {
 	struct bitmap *bitmap;
 
 	bitmap = Malloc(sizeof(struct bitmap));
-	bitmap_init(bitmap, surface, w, h);
+	bitmap_init(bitmap, w, h);
 	region_attach(reg, bitmap);
 	return (bitmap);
 }
 
 void
-bitmap_init(struct bitmap *bitmap, SDL_Surface *surface, int w, int h)
+bitmap_init(struct bitmap *bitmap, int w, int h)
 {
 	widget_init(&bitmap->wid, "bitmap", &bitmap_ops, w, h);
 
-	bitmap->surface = surface;
+	bitmap->surface = NULL;
 	bitmap->surface_s = NULL;
 	event_new(bitmap, "widget-scaled", bitmap_scaled, NULL);
 }
 
+/* Update the visible surface. */
 void
 bitmap_set_surface(struct bitmap *bmp, SDL_Surface *su)
 {
-	bmp->surface = su;
+	/* Allocate a copy of the original. */
+	if (bmp->surface != NULL)
+		SDL_FreeSurface(bmp->surface);
+	bmp->surface = view_scale_surface(su, su->w, su->h);
+
+	/* Update the scaled version. */
 	event_post(bmp, "widget-scaled", NULL);
 }
 
@@ -95,7 +102,7 @@ bitmap_draw(void *p)
 {
 	struct bitmap *bmp = p;
 	
-	if (bmp->surface != NULL) {
+	if (bmp->surface_s != NULL) {
 		widget_blit(bmp, bmp->surface_s, 0, 0);
 	}
 }
