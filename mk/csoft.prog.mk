@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.36 2004/01/03 04:13:27 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.37 2004/03/10 13:46:17 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -207,9 +207,13 @@ cleandir-prog:
 	rm -f core *.core
 
 install-prog:
+	@if [ -e "${BINDIR}" ]; then \
+	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
+	    ${SUDO} ${INSTALL_PROG_DIR} ${BINDIR}; \
+	fi
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
-	    echo "${INSTALL_PROG} ${PROG} ${INST_BINDIR}"; \
-	    ${SUDO} ${INSTALL_PROG} ${PROG} ${INST_BINDIR}; \
+	    echo "${INSTALL_PROG} ${PROG} ${BINDIR}"; \
+	    ${SUDO} ${INSTALL_PROG} ${PROG} ${BINDIR}; \
 	fi
 	@export _share="${SHARE}"; \
         if [ "$$_share" != "" ]; then \
@@ -244,8 +248,8 @@ install-prog:
 
 deinstall-prog:
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
-	    echo "${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}"; \
-	    ${SUDO} ${DEINSTALL_PROG} ${INST_BINDIR}/${PROG}; \
+	    echo "${DEINSTALL_PROG} ${BINDIR}/${PROG}"; \
+	    ${SUDO} ${DEINSTALL_PROG} ${BINDIR}/${PROG}; \
 	fi
 	@if [ "${SHARE}" != "" ]; then \
 	    for F in ${SHARE}; do \
