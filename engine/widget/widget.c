@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.60 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.61 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -208,6 +208,16 @@ widget_get_int(void *wid, const char *name)
 	return (*i);
 }
 
+__inline__ unsigned int
+widget_get_uint(void *wid, const char *name)
+{
+	unsigned int *i;
+
+	if (widget_binding_get(wid, name, &i) == NULL)
+		fatal("%s", error_get());
+	return (*i);
+}
+
 __inline__ Uint8
 widget_get_uint8(void *wid, const char *name)
 {
@@ -329,6 +339,18 @@ widget_set_int(void *wid, const char *name, int ni)
 {
 	struct widget_binding *binding;
 	int *i;
+
+	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
+		fatal("%s", error_get());
+	*i = ni;
+	widget_binding_unlock(binding);
+}
+
+__inline__ void
+widget_set_uint(void *wid, const char *name, unsigned int ni)
+{
+	struct widget_binding *binding;
+	unsigned int *i;
 
 	if ((binding = widget_binding_get_locked(wid, name, &i)) == NULL)
 		fatal("%s", error_get());
@@ -471,111 +493,106 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 
 	pthread_mutex_lock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
-		if (strcmp(binding->name, name) == 0) {
-			if (binding->mutex != NULL)
-				pthread_mutex_lock(binding->mutex);
-			switch (binding->type) {
-			case WIDGET_BOOL:
-			case WIDGET_INT:
-				*(int **)res = (int *)binding->p1;
-				break;
-			case WIDGET_UINT8:
-				*(Uint8 **)res = (Uint8 *)binding->p1;
-				break;
-			case WIDGET_SINT8:
-				*(Sint8 **)res = (Sint8 *)binding->p1;
-				break;
-			case WIDGET_UINT16:
-				*(Uint16 **)res = (Uint16 *)binding->p1;
-				break;
-			case WIDGET_SINT16:
-				*(Sint16 **)res = (Sint16 *)binding->p1;
-				break;
-			case WIDGET_UINT32:
-				*(Uint32 **)res = (Uint32 *)binding->p1;
-				break;
-			case WIDGET_SINT32:
-				*(Sint32 **)res = (Sint32 *)binding->p1;
-				break;
-#ifdef FLOATING_POINT
-			case WIDGET_FLOAT:
-				*(float **)res = (float *)binding->p1;
-				break;
-			case WIDGET_DOUBLE:
-				*(double **)res = (double *)binding->p1;
-				break;
-#endif
-			case WIDGET_STRING:
-				*(char ***)res = (char **)binding->p1;
-				break;
-			case WIDGET_POINTER:
-				*(void ***)res = (void **)binding->p1;
-				break;
-			case WIDGET_PROP:			/* Convert */
-				prop = prop_get(binding->p1,
-				    (char *)binding->p2, PROP_ANY, NULL);
-				if (prop == NULL)
-					fatal("%s", error_get());
+		if (strcmp(binding->name, name) != 0)
+			continue;
 
-				switch (prop->type) {
-				case PROP_BOOL:
-				case PROP_INT:
-					*(int **)res = (int *)&prop->data.i;
-					break;
-				case PROP_UINT8:
-					*(Uint8 **)res =
-					    (Uint8 *)&prop->data.u8;
-					break;
-				case PROP_SINT8:
-					*(Sint8 **)res =
-					    (Sint8 *)&prop->data.s8;
-					break;
-				case PROP_UINT16:
-					*(Uint16 **)res =
-					    (Uint16 *)&prop->data.u16;
-					break;
-				case PROP_SINT16:
-					*(Sint16 **)res =
-					    (Sint16 *)&prop->data.s16;
-					break;
-				case PROP_UINT32:
-					*(Uint32 **)res =
-					    (Uint32 *)&prop->data.u32;
-					break;
-				case PROP_SINT32:
-					*(Sint32 **)res =
-					    (Sint32 *)&prop->data.s32;
-					break;
+		if (binding->mutex != NULL) {
+			pthread_mutex_lock(binding->mutex);
+		}
+		switch (binding->type) {
+		case WIDGET_BOOL:
+		case WIDGET_INT:
+			*(int **)res = (int *)binding->p1;
+			break;
+		case WIDGET_UINT:
+			*(unsigned int **)res = (unsigned int *)binding->p1;
+			break;
+		case WIDGET_UINT8:
+			*(Uint8 **)res = (Uint8 *)binding->p1;
+			break;
+		case WIDGET_SINT8:
+			*(Sint8 **)res = (Sint8 *)binding->p1;
+			break;
+		case WIDGET_UINT16:
+			*(Uint16 **)res = (Uint16 *)binding->p1;
+			break;
+		case WIDGET_SINT16:
+			*(Sint16 **)res = (Sint16 *)binding->p1;
+			break;
+		case WIDGET_UINT32:
+			*(Uint32 **)res = (Uint32 *)binding->p1;
+			break;
+		case WIDGET_SINT32:
+			*(Sint32 **)res = (Sint32 *)binding->p1;
+			break;
 #ifdef FLOATING_POINT
-				case PROP_FLOAT:
-					*(float **)res =
-					    (float *)&prop->data.f;
-					break;
-				case PROP_DOUBLE:
-					*(double **)res =
-					    (double *)&prop->data.d;
-					break;
+		case WIDGET_FLOAT:
+			*(float **)res = (float *)binding->p1;
+			break;
+		case WIDGET_DOUBLE:
+			*(double **)res = (double *)binding->p1;
+			break;
 #endif
-				case PROP_STRING:
-					*(char ***)res =
-					    (char **)&prop->data.s;
-					break;
-				case PROP_POINTER:
-					*(void ***)res =
-					    (void **)&prop->data.p;
-					break;
-				default:
-					fatal("cannot translate prop");
-				}
+		case WIDGET_STRING:
+			*(char ***)res = (char **)binding->p1;
+			break;
+		case WIDGET_POINTER:
+			*(void ***)res = (void **)binding->p1;
+			break;
+		case WIDGET_PROP:			/* Convert */
+			if ((prop = prop_get(binding->p1, (char *)binding->p2,
+			    PROP_ANY, NULL)) == NULL) {
+				fatal("%s", error_get());
+			}
+			switch (prop->type) {
+			case PROP_BOOL:
+			case PROP_INT:
+				*(int **)res = (int *)&prop->data.i;
+				break;
+			case PROP_UINT8:
+				*(Uint8 **)res = (Uint8 *)&prop->data.u8;
+				break;
+			case PROP_SINT8:
+				*(Sint8 **)res = (Sint8 *)&prop->data.s8;
+				break;
+			case PROP_UINT16:
+				*(Uint16 **)res = (Uint16 *)&prop->data.u16;
+				break;
+			case PROP_SINT16:
+				*(Sint16 **)res = (Sint16 *)&prop->data.s16;
+				break;
+			case PROP_UINT32:
+				*(Uint32 **)res = (Uint32 *)&prop->data.u32;
+				break;
+			case PROP_SINT32:
+				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
+				break;
+#ifdef FLOATING_POINT
+			case PROP_FLOAT:
+				*(float **)res = (float *)&prop->data.f;
+				break;
+			case PROP_DOUBLE:
+				*(double **)res = (double *)&prop->data.d;
+				break;
+#endif
+			case PROP_STRING:
+				*(char ***)res = (char **)&prop->data.s;
+				break;
+			case PROP_POINTER:
+				*(void ***)res = (void **)&prop->data.p;
 				break;
 			default:
-				fatal("unknown binding type");
+				fatal("cannot translate prop");
 			}
-			if (binding->mutex != NULL && !return_locked)
-				pthread_mutex_unlock(binding->mutex);
-			pthread_mutex_unlock(&wid->bindings_lock);
-			return (binding);
+			break;
+		default:
+			fatal("unknown binding type");
 		}
+		if (binding->mutex != NULL && !return_locked) {
+			pthread_mutex_unlock(binding->mutex);
+		}
+		pthread_mutex_unlock(&wid->bindings_lock);
+		return (binding);
 	}
 	pthread_mutex_unlock(&wid->bindings_lock);
 
