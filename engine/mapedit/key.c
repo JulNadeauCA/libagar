@@ -81,6 +81,9 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 		node = &med->map->map[mapx][mapy];
 
 		switch (ev->key.keysym.sym) {
+		case SDLK_INSERT:
+			mapedit_editflags(med, MAPEDIT_INSERT);
+			break;
 		case SDLK_a:
 			mapedit_push(med, node, med->curoffs, med->curflags);
 			break;

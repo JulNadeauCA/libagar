@@ -71,20 +71,20 @@ void
 mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 {
 	struct editref *eref;
+	struct noderef *nref;
 
 	mapedit_setpointer(med, 0);
+
+	if ((med->flags & MAPEDIT_INSERT) == 0) {	/* Replace */
+		TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+			node_delref(node, nref);
+		}
+	}
 
 	/* XXX inefficent */
 	pthread_mutex_lock(&med->curobj->lock);
 	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, refn);
 	pthread_mutex_unlock(&med->curobj->lock);
-
-#ifdef DEBUG
-	/* XXX should not happen */
-	if (eref == NULL) {
-		fatal("no editor ref at %d\n", refn);
-	}
-#endif
 
 	switch (eref->type) {
 	case EDITREF_SPRITE:
