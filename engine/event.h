@@ -1,11 +1,11 @@
-/*	$Csoft: event.h,v 1.9 2002/09/11 08:51:10 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.10 2002/11/14 05:57:34 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef union evarg {
 	void	*p;
 	char	*s;
-	char	 c;
 	int	 i;
+	char	 c;
 	long int li;
 	double	 f;
 } *evargs;
