@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.9 2003/01/23 03:33:47 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.1 2003/03/20 01:17:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,8 +63,6 @@ static struct label *statusl;
 
 static struct jpeg_error_mgr		 jerrmgr;
 static struct jpeg_compress_struct	 jcomp;
-static JSAMPLE				*jbuffer;
-Uint8					*jcopybuf;
 
 static void
 screenshot_error_exit(j_common_ptr jcomp)
@@ -83,6 +81,7 @@ screenshot_xmit(int fd)
 	int nframe = 0;
 	FILE *fp;
 	SDL_Surface *srcsu = view->v;
+	Uint8 *jcopybuf;
 
 	if ((fp = fdopen(fd, "w")) == NULL) {
 		text_msg("Error sending screenshot",
@@ -109,7 +108,6 @@ screenshot_xmit(int fd)
 
 	for (;;) {
 		JSAMPROW row[1];
-		JSAMPLE *src = jbuffer;
 		int x;
 	
 		label_printf(statusl, "Status: xmit frame %d", nframe);
@@ -151,7 +149,9 @@ screenshot_xmit(int fd)
 		SDL_Delay(1000);
 		nframe++;
 	}
+	free(jcopybuf);
 	jpeg_destroy_compress(&jcomp);
+	fclose(fp);
 }
 
 static void
