@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.14 2002/02/17 23:15:36 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.15 2002/02/25 09:00:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
+#include <engine/input.h>
 #include <engine/mapedit/mapedit.h>
 
 static void	event_hotkey(SDL_Event *);
