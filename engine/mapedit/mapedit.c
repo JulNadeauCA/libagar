@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.64 2002/03/14 04:50:13 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.65 2002/03/14 04:59:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -53,7 +53,7 @@ static struct obvec mapedit_vec = {
 };
 
 enum {
-	DEFAULT_CURSOR_SPEED = 40,	/* Cursor speed timer */
+	DEFAULT_CURSOR_SPEED = 20,	/* Cursor speed timer */
 	DEFAULT_LISTW_SPEED = 16	/* List scrolling timer */
 };
 
