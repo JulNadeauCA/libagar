@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.29 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.30 2002/09/07 04:33:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -104,9 +104,6 @@ get_font(char *name, int size, int style)
 int
 text_engine_init(void)
 {
-	static SDL_Color white = { 255, 255, 255 };
-	SDL_Surface *stext;
-
 	if (TTF_Init() < 0) {
 		fatal("TTF_Init: %s\n", SDL_GetError());
 		return (-1);
@@ -114,14 +111,7 @@ text_engine_init(void)
 
 	/* Load the default font. */
 	font = get_font(DEFAULT_FONT_NAME, DEFAULT_FONT_SIZE, 0);
-
-	/* Stupid hack to obtain the maximum height of the default font. */
-	stext = TTF_RenderText_Solid(font, " ", white);
-	if (stext == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
-	font_h = stext->h;
-	SDL_FreeSurface(stext);
+	font_h = TTF_FontHeight(font);
 
 	return (0);
 }
