@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.63 2002/08/24 04:10:13 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.64 2002/08/24 23:57:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,6 +55,8 @@ static const struct object_ops window_ops = {
 	NULL		/* save */
 };
 
+Uint32 bg_color = 0;
+
 /* XXX struct */
 #include "borders/grey8.h"
 
@@ -62,6 +64,7 @@ static void	window_move(struct window *, SDL_MouseMotionEvent *);
 static void	window_update_mask(struct window *);
 static void	window_clamp(struct window *, int, int);
 static void	window_round(struct window *, int, int, int, int);
+static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
 struct window *
 window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
@@ -96,6 +99,11 @@ window_init(struct window *win, char *caption, int flags,
 	static int nwindow = 0;
 	char *name;
 	int i;
+
+	if (bg_color == 0) {
+		/* Set the background color. */
+		bg_color = SDL_MapRGB(view->v->format, 0, 0, 0);
+	}
 
 	/* XXX pref */
 	flags |= WINDOW_TITLEBAR;
@@ -147,6 +155,8 @@ window_init(struct window *win, char *caption, int flags,
 			    view->h/2 - win->h/2,
 			    win->w, win->h);
 		}
+		/* Clamp to view area and leave a margin. */
+		window_clamp(win, TILEW, TILEH);
 		break;
 	case GFX_ENGINE_GUI:
 		if (flags & WINDOW_SCALE) {
@@ -164,12 +174,11 @@ window_init(struct window *win, char *caption, int flags,
 			win->x = view->w/2 - win->w/2;
 			win->y = view->h/2 - win->h/2;
 		}
+		/* Clamp to view area and leave a margin. */
+		window_clamp(win, 16, 16);
 		break;
 	}
 
-	/* Clamp to view area and leave a margin. */
-	window_clamp(win, TILEW, TILEH);
-	
 	/* Primitive operations will need this. */
 	win->wid.win = win;
 	win->wid.x = 0;
@@ -601,6 +610,12 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	int moved = 0;
 	int tilew, tileh;
+	SDL_Rect oldpos;
+
+	oldpos.x = win->x;
+	oldpos.y = win->y;
+	oldpos.w = win->w;
+	oldpos.h = win->h;
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
@@ -664,9 +679,10 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 			window_update_mask(win);
 			break;
 		case GFX_ENGINE_GUI:
-			/* XXX cosmetic */
-			SDL_FillRect(view->v, NULL,
-			    SDL_MapRGB(view->v->format, 0, 0, 0));
+			SDL_FillRect(view->v, &oldpos, bg_color);
+			window_draw(win);
+			SDL_UpdateRect(view->v, oldpos.x, oldpos.y,
+			    oldpos.w, oldpos.h);
 			break;
 		}
 	}
@@ -756,89 +772,24 @@ window_event_all(SDL_Event *ev)
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
 			/* Window mouse motion operation */
+			if (view->winop != VIEW_WINOP_NONE &&
+			    view->wop_win != win) {
+				goto nextwin;
+			}
 			switch (view->winop) {
 			case VIEW_WINOP_MOVE:
-				if (view->wop_win != win) {
-					goto nextwin;
-				}
 				window_move(win, &ev->motion);
 				goto posted;
 			case VIEW_WINOP_LRESIZE:
 			case VIEW_WINOP_RRESIZE:
 			case VIEW_WINOP_HRESIZE:
-				if (view->wop_win != win) {
-					goto nextwin;
-				}
-				/* Redraw the background. XXX inefficient */
-				if (view->gfx_engine == GFX_ENGINE_GUI) {
-					SDL_Rect rd;
-
-					rd.x = win->x;
-					rd.y = win->y;
-					rd.w = win->w;
-					rd.h = win->h;
-					SDL_FillRect(view->v, &rd, 0);
-				} while (/*CONSTCOND*/ 0);
-
-				nx = win->x;
-				ny = win->y;
-
-				/* Resize the window accordingly. */
-				switch (view->winop) {
-				case VIEW_WINOP_LRESIZE:
-					if (ev->motion.xrel < 0) {
-						win->w -= ev->motion.xrel;
-						nx = win->x + ev->motion.xrel;
-					} else if (ev->motion.xrel > 0) {
-						win->w -= ev->motion.xrel;
-						nx = win->x + ev->motion.xrel;
-					}
-					if (ev->motion.yrel < 0 ||
-					    ev->motion.yrel > 0) {
-						win->h += ev->motion.yrel;
-					}
-					break;
-				case VIEW_WINOP_RRESIZE:
-					if (ev->motion.xrel < 0 ||
-					    ev->motion.xrel > 0) {
-						win->w += ev->motion.xrel;
-					}
-					if (ev->motion.yrel < 0 ||
-					    ev->motion.yrel > 0) {
-						win->h += ev->motion.yrel;
-					}
-					break;
-				case VIEW_WINOP_HRESIZE:
-					if (ev->motion.yrel < 0 ||
-					    ev->motion.yrel > 0) {
-						win->h += ev->motion.yrel;
-					}
-				default:
-				}
-
-				/* Clamp to minimum window geometry. */
-				pthread_mutex_lock(&config->lock);
-				if (win->w < win->minw &&
-				    (config->widget_flags &
-				    CONFIG_WINDOW_ANYSIZE) == 0) {
-					win->w = win->minw;
-				} else {
-					win->x = nx;
-				}
-				if (win->h < win->minh &&
-				    (config->widget_flags &
-				    CONFIG_WINDOW_ANYSIZE) == 0) {
-					win->h = win->minh;
-				} else {
-					win->y = ny;
-				}
-				pthread_mutex_unlock(&config->lock);
+				/* Resize the window. */
+				winop_resize(view->winop, win, &ev->motion);
 
 				/* Resize the window regions/widgets. */
 				window_resize(win);
 				goto posted;
 			case VIEW_WINOP_NONE:
-				break;
 			}
 
 			/* Widget mouse motion event */
@@ -997,6 +948,68 @@ window_clamp(struct window *win, int minw, int minh)
 		win->x = view->w - win->w - minw;
 	if (win->y+win->h > view->h-minh)
 		win->y = view->h - win->h - minh;
+}
+
+/* Resize a window with the mouse. */
+static void
+winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
+{
+	SDL_Rect rd;
+	int nx, ny;
+
+	rd.x = win->x;
+	rd.y = win->y;
+	rd.w = win->w;
+	rd.h = win->h;
+	SDL_FillRect(view->v, &rd, 0);
+
+	nx = win->x;
+	ny = win->y;
+
+	/* Resize the window accordingly. */
+	switch (op) {
+	case VIEW_WINOP_LRESIZE:
+		if (motion->xrel < 0) {
+			win->w -= motion->xrel;
+			nx = win->x + motion->xrel;
+		} else if (motion->xrel > 0) {
+			win->w -= motion->xrel;
+			nx = win->x + motion->xrel;
+		}
+		if (motion->yrel < 0 || motion->yrel > 0) {
+			win->h += motion->yrel;
+		}
+		break;
+	case VIEW_WINOP_RRESIZE:
+		if (motion->xrel < 0 || motion->xrel > 0) {
+			win->w += motion->xrel;
+		}
+		if (motion->yrel < 0 || motion->yrel > 0) {
+			win->h += motion->yrel;
+		}
+		break;
+	case VIEW_WINOP_HRESIZE:
+		if (motion->yrel < 0 || motion->yrel > 0) {
+			win->h += motion->yrel;
+		}
+		default:
+	}
+
+	/* Clamp to minimum window geometry. */
+	pthread_mutex_lock(&config->lock);
+	if (win->w < win->minw &&
+	   (config->widget_flags & CONFIG_WINDOW_ANYSIZE) == 0) {
+		win->w = win->minw;
+	} else {
+		win->x = nx;
+	}
+	if (win->h < win->minh &&
+	   (config->widget_flags & CONFIG_WINDOW_ANYSIZE) == 0) {
+		win->h = win->minh;
+	} else {
+		win->y = ny;
+	}
+	pthread_mutex_unlock(&config->lock);
 }
 
 /* Window must be locked. */
