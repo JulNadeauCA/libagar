@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.112 2003/03/18 02:55:32 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.113 2003/03/22 04:26:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -485,7 +485,6 @@ object_table_insert(struct object_table *obt, struct object *obj)
 void
 object_table_save(struct fobj_buf *buf, struct object_table *obt)
 {
-	size_t solen = 0;
 	off_t nobjs_offs;
 	struct object *pob;
 	Uint32 i;

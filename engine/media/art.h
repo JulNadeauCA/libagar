@@ -1,4 +1,4 @@
-/*	$Csoft: art.h,v 1.8 2003/03/17 23:48:53 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.9 2003/03/22 04:21:47 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -16,7 +16,6 @@ struct art_anim {
 struct art_cached_sprite {
 	SDL_Surface	*su;			/* Modified sprite */
 	Uint32		 last_drawn;		/* Time last draw occured */
-	Uint32		 refcount;		/* Reference count */
 	SLIST_HEAD(,transform)	transforms;	/* Applied transforms */
 	SLIST_ENTRY(art_cached_sprite) sprites;
 };
@@ -24,7 +23,6 @@ struct art_cached_sprite {
 struct art_cached_anim {
 	struct art_anim	*anim;			/* Modified anim */
 	Uint32		 last_drawn;		/* Time last draw occured */
-	Uint32		 refcount;		/* Reference count */
 	SLIST_HEAD(,transform)	transforms;	/* Applied transforms */
 	SLIST_ENTRY(art_cached_anim) anims;
 };

@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.5 2003/03/10 05:49:10 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.6 2003/03/16 04:08:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -46,7 +46,6 @@
 static void
 nodeedit_close_win(int argc, union evarg *argv)
 {
-	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
 	widget_set_int(mv->nodeed.trigger, "state", 0);

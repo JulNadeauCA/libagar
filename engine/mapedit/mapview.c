@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.94 2003/03/16 23:15:23 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.95 2003/03/19 02:19:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,6 @@ int	mapview_bg_squaresize = 16;
 
 static void	mapview_scaled(int, union evarg *);
 static void	mapview_lostfocus(int, union evarg *);
-static void	mapview_scroll(struct mapview *, int);
 static void	mapview_mousemotion(int, union evarg *);
 static void	mapview_mousebuttondown(int, union evarg *);
 static void	mapview_mousebuttonup(int, union evarg *);
@@ -358,8 +357,7 @@ mapview_draw(void *p)
 	struct map *m = mv->map;
 	struct node *node;
 	struct noderef *nref;
-	int mx, my, rx, ry, alt = 0;
-	Uint32 col;
+	int mx, my, rx, ry;
 	Uint16 old_zoom = m->zoom;
 	int old_tilew = m->tilew;
 	int old_tileh = m->tileh;
@@ -810,7 +808,6 @@ mapview_keydown(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
-	int incr;
 
 	pthread_mutex_lock(&mv->map->lock);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.43 2003/03/13 03:28:56 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.44 2003/03/15 00:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -116,7 +116,6 @@ void
 tlist_destroy(void *p)
 {
 	struct tlist *tl = p;
-	struct tlist_item *it, *nextit;
 	
 	tlist_clear_items(tl);
 
@@ -140,8 +139,6 @@ tlist_scaled(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct scrollbar *sb = tl->vbar;
-	int w = argv[1].i;
-	int h = argv[2].i;
 
 	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - 20;
 	WIDGET(sb)->y = WIDGET(tl)->y;
@@ -156,7 +153,6 @@ tlist_draw(void *p)
 {
 	struct tlist *tl = p;
 	struct tlist_item *it;
-	int item_h;
 	int y = 0, i = 0;
 	int val, visitems = 0;
 
@@ -408,12 +404,7 @@ tlist_mousemotion(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct widget_binding *valueb, *maxb;
-	int x = argv[1].i;
-	int y = argv[2].i;
-	int xrel = argv[3].i;
-	int yrel = argv[4].i;
 	int *value, *max;
-	Uint8 ms;
 	
 	event_forward(tl->vbar, "window-mousemotion", argc, argv);
 
@@ -533,7 +524,7 @@ tlist_keydown(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct tlist_item *it, *pit;
-	struct widget_binding *maxb, *valueb;
+	struct widget_binding *valueb;
 	int keysym = argv[1].i;
 	int sel;
 	int *sb_value;
@@ -637,7 +628,6 @@ struct tlist_item *
 tlist_item_selected(struct tlist *tl)
 {
 	struct tlist_item *it;
-	int i = 0;
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -655,7 +645,6 @@ struct tlist_item *
 tlist_item_text(struct tlist *tl, char *text)
 {
 	struct tlist_item *it;
-	int i;
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {

@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.37 2003/03/09 03:00:26 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.38 2003/03/09 23:34:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -614,7 +614,6 @@ primitive_config_window(void)
 static void
 apply(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
 	int prim = argv[1].i;
 	struct tlist_item *sel = argv[2].p;
 

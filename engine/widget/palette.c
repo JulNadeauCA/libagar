@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.7 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.8 2003/03/11 00:13:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -159,8 +159,6 @@ static void
 palette_mousebuttondown(int argc, union evarg *argv)
 {
 	struct palette *pal = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
 	int y = argv[3].i;
 	struct scrollbar *sb;
 
@@ -218,7 +216,6 @@ void
 palette_draw(void *p)
 {
 	struct palette *pal = p;
-	int i;
 	Uint32 color;
 	Uint8 r, g, b;
 

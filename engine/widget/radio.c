@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.23 2003/03/02 04:13:15 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.24 2003/03/03 05:18:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -72,8 +72,7 @@ void
 radio_init(struct radio *rad, const char **items)
 {
 	const char *s;
-	int i, maxw;
-	int fh;
+	int i, fh;
 
 	widget_init(&rad->wid, "radio", &radio_ops, -1, -1);
 	WIDGET(rad)->flags |= WIDGET_CLIPPING;
@@ -127,8 +126,6 @@ radio_draw(void *p)
 
 	for (i = 0, y = 0; i < rad->nitems;
 	     i++, y += (rad->radius + rad->yspacing)) {
-		SDL_Surface *ls;
-	
 		/* Radio button */
 		primitives.circle(rad, 0, y,
 		    rad->radius, rad->radius, 6,
@@ -162,8 +159,6 @@ static void
 radio_scaled(int argc, union evarg *argv)
 {
 	struct radio *rad = argv[0].p;
-	int maxw = argv[1].i;
-	int maxh = argv[1].i;
 
 	if (WIDGET(rad)->rw == -1)
 		WIDGET(rad)->w = rad->radius + rad->xspacing + rad->max_w;

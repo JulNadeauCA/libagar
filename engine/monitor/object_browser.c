@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.25 2003/03/02 00:44:06 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.26 2003/03/22 05:19:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -64,10 +64,8 @@ static void
 tl_events_unregister(int argc, union evarg *argv)
 {
 	struct button *bu = argv[0].p;
-	struct tlist *tl_events = argv[1].p;
 	struct object *ob = argv[2].p;
 	struct event *evh = argv[3].p;
-	struct tlist_item *event_item;
 
 	/* Unregister the event handler. */
 	pthread_mutex_lock(&ob->events_lock);
@@ -89,7 +87,6 @@ tl_events_selected(int argc, union evarg *argv)
 	struct region *reg;
 	struct label *lab;
 	struct button *bu;
-	int i;
 
 	win = window_generic_new(299, 173,
 	    "monitor-object-browser-%s-evh-%s", ob->name, evh->name);
@@ -187,7 +184,6 @@ tl_objs_poll(int argc, union evarg *argv)
 static void
 tl_props_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl_props = argv[0].p;
 	struct label *lab_name = argv[1].p;
 	struct textbox *tb_set = argv[2].p;
 	struct tlist_item *it = argv[3].p;
@@ -252,7 +248,6 @@ static void
 tl_props_remove(int argc, union evarg *argv)
 {
 	struct tlist *tl_props = argv[1].p;
-	struct textbox *tb_set = argv[2].p;
 	struct object *ob = argv[3].p;
 	struct tlist_item *it;
 	struct prop *prop;
@@ -341,12 +336,10 @@ tl_props_apply(int argc, union evarg *argv)
 static void
 tl_objs_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
 	struct tlist_item *it = argv[1].p;
 	struct object *ob = it->p1;
 	struct window *win;
 	struct region *reg;
-	struct event *evh;
 
 	win = window_generic_new(432, 362, "monitor-object-%s", ob->name);
 	if (win == NULL) {

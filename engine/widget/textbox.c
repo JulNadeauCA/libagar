@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.46 2003/02/13 11:22:22 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.47 2003/03/22 04:22:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -120,7 +120,7 @@ void
 textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
-	int i, j, x, y, tw, lx;
+	int i, x, y, tw, lx;
 
 	x = tbox->label->w;
 	y = tbox->ymargin;
@@ -275,7 +275,6 @@ textbox_mousemotion(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 	int x = argv[1].i;
-	int y = argv[2].i;
 	Uint8 ms;
 
 	ms = SDL_GetMouseState(NULL, NULL);
@@ -292,7 +291,6 @@ static void
 textbox_mousebuttondown(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
-	int button = argv[1].i;
 	int x = argv[2].i;
 	
 	WIDGET(tbox)->win->focus = WIDGET(tbox);

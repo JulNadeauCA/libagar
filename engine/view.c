@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.114 2003/03/20 03:20:19 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.115 2003/03/22 04:24:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -270,7 +270,6 @@ view_window_exists(char *name)
 		if (strcmp(OBJECT(win)->name, name) == 0)
 			break;
 	}
-out:
 	pthread_mutex_unlock(&view->lock);
 	return (win);
 }
@@ -598,7 +597,6 @@ view_capture(SDL_Surface *su)
 	for (;;) {
 		extern const struct engine_proginfo *proginfo;	/* engine.c */
 		char file[FILENAME_MAX];
-		struct stat sb;
 
 		snprintf(file, sizeof(file), "%s/%s%u.jpg", path,
 		    proginfo->prog, seq++);

@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.24 2003/03/19 02:22:59 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.25 2003/03/20 01:17:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -100,7 +100,6 @@ merge_create_brush(int argc, union evarg *argv)
 	struct textbox *name_tbox = argv[2].p;
 	char *brush_name, *m_name;
 	struct map *m;
-	struct tlist_item *it;
 
 	brush_name = textbox_string(name_tbox);
 	if (strcmp(brush_name, "") == 0) {
@@ -667,9 +666,7 @@ int
 merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct merge *mer = p;
-	SDL_Surface *srcsu;
 	struct noderef *nref;
-	struct map *dm = mv->map;
 	struct map *sm;
 	int sx, sy, dx, dy;
 	struct tlist_item *it;

@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.35 2003/01/23 03:57:45 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.36 2003/03/22 04:26:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -42,7 +42,6 @@ input_new(int type, int index)
 {
 	char *name;
 	struct input *input;
-	int rv = 0;
 
 	switch (type) {
 	case INPUT_KEYBOARD:

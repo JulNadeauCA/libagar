@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.40 2003/03/22 04:27:09 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.41 2003/03/22 04:36:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -266,7 +266,6 @@ fileops_clear_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
-	struct editref *eref;
 	int x, y;
 
 	for (y = 0; y < m->maph; y++) {

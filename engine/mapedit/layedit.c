@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.1 2003/03/05 02:16:31 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.2 2003/03/11 03:40:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,6 @@
 static void
 layedit_close_win(int argc, union evarg *argv)
 {
-	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
 
 	widget_set_int(mv->layed.trigger, "state", 0);
@@ -59,7 +58,6 @@ layedit_poll(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
-	struct tlist_item *it;
 	int i;
 	
 	tlist_clear_items(tl);
@@ -104,7 +102,6 @@ layedit_push(int argc, union evarg *argv)
 static void
 layedit_update_name(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[1].p;
 	struct textbox *tb = argv[2].p;
 	struct tlist_item *it = argv[3].p;
 	int state = argv[4].i;
@@ -122,10 +119,8 @@ layedit_rename(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct textbox *name_tbox = argv[2].p;
-	struct tlist *layers_tl = mv->layed.layers_tl;
 	struct tlist_item *it;
 	struct map_layer *lay;
-	char *new_name;
 
 	if ((it = tlist_item_selected(mv->layed.layers_tl)) == NULL) {
 		return;
@@ -194,7 +189,6 @@ layedit_init(struct mapview *mv)
 	struct map *m = mv->map;
 	struct window *win;
 	struct region *reg;
-	struct layedit *layed = &mv->layed;
 	struct textbox *rename_tb;
 
 	win = window_generic_new(268, 346, "mapedit-lay-%s-%s",

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.16 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.17 2003/03/13 03:22:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,7 +63,6 @@ static void	scrollbar_mouse_buttonup(int, union evarg *);
 static void	scrollbar_mouse_buttondown(int, union evarg *);
 static void	scrollbar_mouse_motion(int, union evarg *);
 static void	scrollbar_scaled(int, union evarg *);
-static void	scrollbar_triangle(struct scrollbar *, int, int, int, Uint32);
 
 struct scrollbar *
 scrollbar_new(struct region *reg, int w, int h,
@@ -156,9 +155,6 @@ static void
 scrollbar_mouse_buttondown(int argc, union evarg *argv)
 {
 	struct scrollbar *sb = argv[0].p;
-	int button = argv[1].i;
-	int x = argv[2].i;
-	int y = argv[3].i;
 	int coord = (sb->orientation == SCROLLBAR_HORIZ) ?
 	    argv[2].i : argv[3].i;
 	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
@@ -212,7 +208,6 @@ scrollbar_draw(void *p)
 	int value, min, max;
 	int w, h, x, y;
 	int maxcoord;
-	int coord;
 	
 	switch (sb->orientation) {
 	case SCROLLBAR_HORIZ:

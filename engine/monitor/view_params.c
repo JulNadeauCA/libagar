@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.9 2003/01/23 03:33:47 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.10 2003/03/22 04:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -42,18 +42,6 @@
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
-
-static struct label *cliprect_label;
-
-static void
-apply(int argc, union evarg *argv)
-{
-	struct textbox *mindelay_tbox = argv[1].p;
-	struct textbox *maxdelay_tbox = argv[2].p;
-
-	view_set_refresh(textbox_int(mindelay_tbox),
-	    textbox_int(maxdelay_tbox));
-}
 
 struct window *
 view_params_window(void)

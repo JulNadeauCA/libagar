@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.11 2003/03/16 23:17:43 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.12 2003/03/18 06:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -113,7 +113,7 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 	for (y = dy; y < dy+h; y++) {
 		for (x = dx; x < dx+w; x++) {
 			struct node *dstnode = &m->map[y][x];
-			struct noderef *nref, *nnref;
+			struct noderef *nref;
 
 			if (fi->mode == FILL_FILL_MAP &&
 			    srcnode == dstnode) {

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.31 2003/03/20 01:17:06 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.32 2003/03/22 04:27:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,6 @@ struct monitor monitor;		/* Debug monitor */
 static void
 toolbar_selected_tool(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
 	struct tlist_item *it = argv[1].p;
 	struct window *(*win_func)() = it->p1;		/* XXX unsafe */
 	struct window *win;
