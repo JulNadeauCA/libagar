@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.8 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.9 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -162,7 +162,7 @@ line_tool_init(struct tool *t)
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
 	
-	tool_push_status(t, _("Specify first point.\n"));
+	tool_push_status(t, _("Specify first point."));
 	seq = 0;
 	cur_line = NULL;
 	cur_vtx = NULL;
@@ -205,7 +205,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 				vg_vertex2(vg, vx, vy);
 				cur_vtx = vg_vertex2(vg, vx, vy);
 				tool_push_status(t, _("Specify second point "
-				                      "or [undo line].\n"));
+				                      "or [undo line]."));
 			} else {
 				goto finish;
 			}
@@ -234,8 +234,7 @@ line_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			vg->redraw++;
 
 			tool_push_status(t, _("Specify point %d or "
-			                      "[close/undo vertex].\n"),
-					      seq+1);
+			                      "[close/undo vertex]."), seq+1);
 		} else {
 			if (cur_vtx != NULL) {
 				vg_pop_vertex(vg);

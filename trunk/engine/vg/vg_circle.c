@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.8 2004/05/12 04:53:13 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.9 2004/05/18 02:44:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -142,7 +142,7 @@ circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 			vg_vertex2(vg, vx, vy);
 			cur_radius = vg_vertex2(vg, vx, vy);
 			tool_push_status(t, _("Specify the circle's radius "
-			                      "or [undo circle].\n"));
+			                      "or [undo circle]."));
 		} else {
 			goto finish;
 		}

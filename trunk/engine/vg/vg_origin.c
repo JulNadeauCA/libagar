@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.4 2004/04/30 05:24:02 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.5 2004/04/30 05:39:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -138,7 +138,7 @@ origin_tool_init(struct tool *t)
 	widget_bind(sbu, "value", WIDGET_INT, &norigin);
 	spinbutton_set_range(sbu, 0, VG_NORIGINS-1);
 
-	tool_push_status(t, _("Specify origin point.\n"));
+	tool_push_status(t, _("Specify origin point."));
 }
 
 static void

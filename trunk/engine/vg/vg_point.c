@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.8 2004/04/30 12:18:14 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.9 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ vg_points_bbox(struct vg *vg, struct vg_element *vge, struct vg_rect *r)
 static void
 point_tool_init(struct tool *t)
 {
-	tool_push_status(t, _("Specify point.\n"));
+	tool_push_status(t, _("Specify the point location."));
 }
 
 static void
