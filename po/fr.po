@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.6 2003/08/01 04:39:33 vedge Exp $
+# $Csoft: fr.po,v 1.7 2003/08/01 04:44:29 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -715,7 +715,7 @@ msgstr "Aucun noeud n'est sélectionné."
 #: engine/mapedit/nodeedit.c:179
 #, c-format
 msgid "%s node"
-msgstr "noeud %s"
+msgstr "Noeud sur %s"
 
 #: engine/mapedit/nodeedit.c:186 engine/mapedit/tool/merge.c:288
 msgid "Remove"
