@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.9 2003/02/12 02:03:01 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.10 2003/02/12 02:47:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -219,11 +219,11 @@ merge_window(void *p)
 	{
 		struct button *bu;
 		
-		name_tbox = textbox_new(reg, "Name: ", 0, 80, 100);
+		name_tbox = textbox_new(reg, "Name: ", 0, 75, 100);
 		event_new(name_tbox, "textbox-return",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 
-		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 20, 100);
+		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 25, 100);
 		event_new(bu, "button-pushed",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 	}
@@ -253,8 +253,8 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 	struct merge *mer = p;
 	struct tlist_item *it;
 
-	/* Avoid circular references. */
-	if (strncmp(OBJECT(mv->map)->name, "brush-", 6) == 0) {
+	/* Avoid circular references. XXX ugly */
+	if (strncmp(OBJECT(mv->map)->name, "brush(", 6) == 0) {
 		text_msg("Error", "Circular reference");
 		return;
 	}
