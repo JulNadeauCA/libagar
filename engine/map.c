@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.157 2003/03/09 00:12:24 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.158 2003/03/10 02:13:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -465,8 +465,6 @@ node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
 	}
 #endif
 	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
-
-	node->flags |= NODE_HAS_ANIM;			/* Optimization */
 	return (nref);
 }
 
@@ -499,19 +497,6 @@ node_add_warp(struct node *node, char *mapname, int x, int y, Uint8 dir)
 	return (nref);
 }
 
-/* Check whether a node points to at least one animation. */
-static __inline__ int
-node_has_anim(struct node *node)
-{
-	struct noderef *nref;
-
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		if (nref->type == NODEREF_ANIM)
-			break;
-	}
-	return (nref != NULL);
-}
-
 /*
  * Move a node reference from one node to another, at the tail of the queue.
  * The map(s) containing the source/destination nodes must be locked.
@@ -522,13 +507,6 @@ node_move_ref(struct noderef *nref, struct node *src_node,
 {
 	TAILQ_REMOVE(&src_node->nrefs, nref, nrefs);
 	TAILQ_INSERT_TAIL(&dst_node->nrefs, nref, nrefs);
-
-	if (nref->type == NODEREF_ANIM) {		/* Optimization */
-		if (!node_has_anim(src_node)) {
-			src_node->flags &= ~(NODE_HAS_ANIM);
-		}
-		dst_node->flags |= NODE_HAS_ANIM;
-	}
 }
 
 /*
@@ -588,12 +566,6 @@ void
 node_remove_ref(struct node *node, struct noderef *nref)
 {
 	TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-
-	if (nref->type == NODEREF_ANIM &&
-	    !node_has_anim(node)) {			/* No other anims? */
-		node->flags &= ~(NODE_HAS_ANIM);
-	}
-
 	noderef_destroy(nref);
 	free(nref);
 }

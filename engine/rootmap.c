@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.22 2003/02/04 02:23:47 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.23 2003/03/08 03:36:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -93,13 +93,10 @@ draw_layer:
 			node = &m->map[my][mx];
 			MAP_CHECK_NODE(node, mx, my);
 
-			if ((node->flags & NODE_HAS_ANIM) == 0) {
-				/* rootmap_draw() shall handle this. */
-				continue;
-			}
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
-				if (nref->layer == layer) {
+				if (nref->type == NODEREF_ANIM &&
+				    nref->layer == layer) {
 					noderef_draw(m, nref, rx, ry);
 				}
 			}
@@ -147,14 +144,10 @@ draw_layer:
 			node = &m->map[my][mx];
 			MAP_CHECK_NODE(node, mx, my);
 
-			if (node->flags & NODE_HAS_ANIM) {
-				/* rootmap_animate() shall handle this. */
-				continue;
-			}
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
-
-				if (nref->layer == layer) {
+				if (nref->type == NODEREF_SPRITE &&
+				    nref->layer == layer) {
 					noderef_draw(m, nref, rx, ry);
 				}
 			}

@@ -1,5 +1,8 @@
-/*	$Csoft: map.h,v 1.70 2003/03/08 23:05:05 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.71 2003/03/10 02:13:39 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_MAP_H_
+#define _AGAR_MAP_H_
 
 #define TILEW		32
 #define TILEH		32
@@ -77,8 +80,7 @@ struct node {
 #define NODE_EDGE_SE	0x08000
 #define NODE_EDGE_ANY	(NODE_EDGE_N|NODE_EDGE_S|NODE_EDGE_W|NODE_EDGE_E| \
 			 NODE_EDGE_NW|NODE_EDGE_NE|NODE_EDGE_SW|NODE_EDGE_SE)
-#define NODE_HAS_ANIM	0x10000		/* Contains an anim? (optimization) */
-#define NODE_EPHEMERAL	(NODE_HAS_ANIM|NODE_ORIGIN)
+#define NODE_EPHEMERAL	(NODE_ORIGIN)
 };
 
 enum map_type {
@@ -178,3 +180,4 @@ extern int	 map_nodesigs;
 # define MAP_CHECK_NODEREF(nref, mx, my)
 #endif /* DEBUG */
 
+#endif /* _AGAR_MAP_H_ */
