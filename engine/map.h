@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.108 2004/04/10 02:35:50 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.109 2004/04/17 00:33:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -19,6 +19,7 @@
 #define NODEREF_MAX_TRANSFORMS	16384
 #define NODEREF_MAX_MASKS	16384
 
+#include <engine/space.h>
 #include <engine/transform.h>
 #include <engine/nodemask.h>
 
@@ -104,7 +105,7 @@ struct map_layer {
 };
 
 struct map {
-	struct object	  obj;
+	struct space space;
 
 	pthread_mutex_t	  lock;
 	unsigned int	  mapw, maph;	/* Map geometry */
