@@ -1,4 +1,4 @@
-/*	$Csoft: string.c,v 1.3 2003/06/25 06:15:07 vedge Exp $	*/
+/*	$Csoft: string.c,v 1.4 2003/07/05 12:17:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -51,21 +51,21 @@ read_string(struct netbuf *buf)
 	char *s;
 
 	if ((len = (size_t)read_uint32(buf)) > STRING_MAX) {
-		error_set(_("The string is too big."));
+		error_set("string is too big");
 		return (NULL);
 	} else if (len == 0) {
-		error_set(_("Zero-length string."));
+		error_set("zero-length string");
 		return (NULL);
 	}
 
 	if ((s = malloc(len)) == NULL) {
-		error_set(_("Out of memory for string!"));
+		error_set("out of memory for string");
 		return (NULL);
 	}
 	netbuf_read(s, len, 1, buf);
 
 	if (s[len-1] != '\0') {
-		error_set(_("The string is not NUL-terminated."));
+		error_set("the string is not NUL-terminated");
 		free(s);
 		return (NULL);
 	}
