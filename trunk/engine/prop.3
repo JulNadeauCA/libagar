@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.5 2003/04/12 00:35:06 vedge Exp $
+.\"	$Csoft: prop.3,v 1.6 2003/04/29 23:05:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -196,6 +196,13 @@ NUL-terminating the result.
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_long_double "void *obj" "char *key" "long double value"
+.Pp
+.Ft "struct prop *"
+.Fn prop_set_string "void *obj" "char *key" "const char *fmt" "..."
+.Pp
+.Ft "struct prop *"
+.Fn prop_set_pointer "void *obj" "char *key" "void *ptr"
+.Pp
 .nr nS 0
 The
 .Fn prop_set
