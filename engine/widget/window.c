@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.65 2002/08/25 09:10:42 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.66 2002/08/26 07:19:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -509,6 +509,7 @@ window_hide_locked(struct window *win)
 			rd.h = win->h;
 
 			SDL_FillRect(view->v, &rd, NULL);
+			SDL_UpdateRect(view->v, rd.x, rd.y, rd.w, rd.h);
 		}
 		break;
 	}
@@ -705,12 +706,16 @@ window_focus(struct window *win)
 	struct widget *wid;
 
 	lastwin = TAILQ_LAST(&view->windowsh, windowq);
-	if (lastwin == win) {
+	if (win != NULL && lastwin == win) {
+		/* The window already holds focus. */
 		return;
 	}
+
 	if (lastwin != NULL) {
+		/* Notify the previous window of the focus change. */
 		event_post(lastwin, "window-lostfocus", NULL);
 
+		/* Notify the previous window's widgets of the focus change. */
 		TAILQ_FOREACH(reg, &lastwin->regionsh, regions) {
 			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 				event_post(wid, "widget-lostfocus", NULL);
@@ -718,14 +723,16 @@ window_focus(struct window *win)
 		}
 	}
 
-	TAILQ_REMOVE(&view->windowsh, win, windows);
-	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
-	event_post(win, "window-gainfocus", NULL);
+	if (win != NULL) {
+		/*
+		 * Move the new window at the list tail (so the rendering
+		 * functions don't have to traverse the list backwards).
+		 */
+		TAILQ_REMOVE(&view->windowsh, win, windows);
+		TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
 
-	TAILQ_FOREACH(reg, &lastwin->regionsh, regions) {
-		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			event_post(wid, "widget-lostfocus", NULL);
-		}
+		/* Notify the new window of the focus change. */
+		event_post(win, "window-gainfocus", NULL);
 	}
 }
 
@@ -792,9 +799,6 @@ window_event_all(SDL_Event *ev)
 			case VIEW_WINOP_HRESIZE:
 				/* Resize the window. */
 				winop_resize(view->winop, win, &ev->motion);
-
-				/* Resize the window regions/widgets. */
-				window_resize(win);
 				goto posted;
 			case VIEW_WINOP_NONE:
 			}
@@ -945,6 +949,7 @@ posted:
 	if (focus_changed || view->focus_win != NULL) {
 		/* Reorder the window list. */
 		window_focus(view->focus_win);
+		view->focus_win = NULL;
 	}
 	return (1);
 }
@@ -962,18 +967,21 @@ window_clamp(struct window *win, int minw, int minh)
 		win->y = view->h - win->h - minh;
 }
 
-/* Resize a window with the mouse. */
+/*
+ * Resize a window with the mouse.
+ * Window must be locked, config must not be locked by the caller thread.
+ */
 static void
 winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect rd;
+	SDL_Rect ro;
 	int nx, ny;
 
-	rd.x = win->x;
-	rd.y = win->y;
-	rd.w = win->w;
-	rd.h = win->h;
-	SDL_FillRect(view->v, &rd, 0);
+	ro.x = win->x;
+	ro.y = win->y;
+	ro.w = win->w;
+	ro.h = win->h;
+	SDL_FillRect(view->v, &ro, 0);
 
 	nx = win->x;
 	ny = win->y;
@@ -1022,6 +1030,21 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		win->y = ny;
 	}
 	pthread_mutex_unlock(&config->lock);
+
+	/* Clamp to maximum window geometry. */
+	if (win->x+win->w > view->w - 16) {
+		win->x = ro.x;
+		win->w = ro.w;
+	}
+	if (win->y+win->h > view->h - 16) {
+		win->y = ro.y;
+		win->h = ro.h;
+	}
+
+	/* Effect the change. */
+	window_resize(win);
+	window_draw(win);
+	SDL_UpdateRect(view->v, ro.x, ro.y, ro.w, ro.h);
 }
 
 /* Window must be locked. */
