@@ -35,11 +35,12 @@ MANDIR?=	${PREFIX}/man
 PSDIR?=		${PREFIX}/man
 
 SUDO?=
-
-INSTALL_PROG=		install -c -m 555
-INSTALL_LIB=		install -c -m 444
-INSTALL_DATA=		install -c -m 444
-INSTALL_INCL=		install -c -m 444
+SH?=		sh
+FIND?=		find
+INSTALL_PROG=	install -c -m 555
+INSTALL_LIB=	install -c -m 444
+INSTALL_DATA=	install -c -m 444
+INSTALL_INCL=	install -c -m 444
 
 INSTALL_PROG_DIR=	mkdir -p
 INSTALL_LIB_DIR=	mkdir -p

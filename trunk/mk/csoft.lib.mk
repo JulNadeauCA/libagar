@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.45 2004/04/10 02:23:30 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.46 2004/04/24 05:49:25 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -249,6 +249,9 @@ cleandir-lib:
 	rm -f ${LIBTOOL} ${LTCONFIG_LOG}
 
 install-lib:
+	for F in `ls -1`; do
+		${INSTALL_DATA} $$F ${INCLDIR}
+	done
 	@if [ "${INCL}" != "" ]; then \
 	    if [ ! -d "${INCLDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
