@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.41 2004/05/15 02:25:15 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.42 2004/05/15 02:27:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -161,7 +161,9 @@ close_obj_data(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
-	
+
+	event_post(NULL, win, "objedit-close", NULL);
+	window_hide(win);
 	view_detach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
