@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.177 2004/03/30 16:32:50 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.178 2004/05/06 06:20:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -419,18 +419,6 @@ event_dispatch(SDL_Event *ev)
 	pthread_mutex_unlock(&view->lock);
 }
 
-/* Register a real-time event sequence. */
-struct eventseq *
-eventseq_new(void *p, const char *name)
-{
-	struct eventseq *eseq;
-
-	eseq = Malloc(sizeof(struct eventseq), M_EVENT);
-	strlcpy(eseq->name, name, sizeof(eseq->name));
-	TAILQ_INIT(&eseq->events);
-	return (eseq);
-}
-
 /* Register an event handling function. */
 struct event *
 event_new(void *p, const char *name, void (*handler)(int, union evarg *),
@@ -440,7 +428,6 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	struct event *ev;
 
 	pthread_mutex_lock(&ob->lock);
-
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, name) == 0)
 			break;
@@ -464,7 +451,6 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 		}
 		va_end(ap);
 	}
-
 	pthread_mutex_unlock(&ob->lock);
 	return (ev);
 }
