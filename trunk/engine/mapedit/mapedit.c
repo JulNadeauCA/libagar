@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.116 2002/08/19 05:33:02 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.117 2002/08/21 02:21:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -69,8 +69,6 @@ static void	 mapedit_shadow(struct mapedit *, void *);
 void
 mapedit_init(struct mapedit *med, char *name)
 {
-	struct region *coords_reg;
-
 	object_init(&med->obj, "map-editor", name, "mapedit",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &mapedit_ops);
 	med->flags = 0;
@@ -82,11 +80,6 @@ mapedit_init(struct mapedit *med, char *name)
 	med->node.flags = NODE_WALK;
 
 	mapedit_init_toolbar(med);
-	med->coords_win = window_new("Coordinates", WINDOW_SOLID,
-	    32, 32, 320, 64, 320, 64);
-	coords_reg = region_new(med->coords_win, REGION_HALIGN|REGION_CENTER,
-	    0,   0, 100, 100);
-	med->coords_label = label_new(coords_reg, "...", 0);
 	
 	event_new(med, "attached", 0, mapedit_attached, NULL);
 	event_new(med, "detached", 0, mapedit_detached, NULL);
