@@ -1,0 +1,99 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 20, 2002
+.Dt MAPEDIT 3
+.Os
+.Sh NAME
+.Nm mapview
+.Nd agar map view widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays a map, and implements:
+.Pp
+.Bl -bullet -compact
+.It
+Map edition (tools)
+.It
+Zoom in, zoom out
+.It
+Tile mapping
+.It
+Grid
+.It
+Node property display
+.El
+.Sh INITIALIZATION
+.nr nS 1
+.Ft void
+.Fn mapview_new "struct region *reg" "struct mapedit *med" "struct map *m" "int flags" "int rw" "int rh"
+.Pp
+.Ft void
+.Fn mapview_init "struct mapview *mv" "struct mapedit *med" "struct map *m" "int flags" "int rw" "int rh"
+.nr nS 0
+.Pp
+The
+.Fn mapview_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn mapview_init
+function initializes a
+.Nm
+widget of size
+.Fa rw
+x
+.Fa rh
+displaying map
+.Fa m .
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define MAPVIEW_CENTER		0x01	/* Center on cursor */
+#define MAPVIEW_EDIT		0x02	/* Mouse/keyboard edition */
+#define MAPVIEW_ZOOM		0x04	/* Allow zooming */
+#define MAPVIEW_TILEMAP		0x08	/* Tile map */
+#define MAPVIEW_GRID		0x10	/* Display a grid */
+#define MAPVIEW_PROPS		0x20	/* Display node properties */
+#define MAPVIEW_SHOW_CURSOR	0x40	/* Show mouse cursor */
+.Ed
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr mapview 3 ,
+.Xr objq 3 ,
+.Xr tilestack 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
