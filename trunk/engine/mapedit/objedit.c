@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.42 2004/05/15 02:27:35 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.43 2004/05/17 05:05:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -162,8 +162,8 @@ close_obj_data(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
 
-	event_post(NULL, win, "objedit-close", NULL);
 	window_hide(win);
+	event_post(NULL, oent->obj, "edit-close", NULL);
 	view_detach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
@@ -190,6 +190,8 @@ open_obj_data(struct object *ob)
 		return;
 	}
 	object_add_dep(&mapedit.pseudo, ob);
+
+	event_post(NULL, ob, "edit-open", NULL);
 	
 	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
