@@ -621,7 +621,7 @@ else
 	echo "no"
 fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
-echo "yes"
+NONE=1
 else
 echo "no"
 echo "The FreeType2 test would not compile."
