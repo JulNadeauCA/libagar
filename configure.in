@@ -35,7 +35,7 @@ if [ "${cc_is_gcc}" = "yes" ]; then
 fi
 
 require(sdl, 1.2.0);
-require(sdl_ttf, 2.0.5);
+require(freetype, 7.0.1);
 
 # Enable x11-specific code (only useful for debugging).
 if [ "${with_x11}" != "no" ]; then
