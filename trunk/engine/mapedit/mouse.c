@@ -37,9 +37,9 @@
 void
 mouse_motion(struct mapedit *med, SDL_Event *ev)
 {
-	static int ommapx, ommapy;
+	static Uint32 ommapx, ommapy;
 	struct map *m = med->map;
-	int mx, my;
+	Uint32 mx, my;
 
 	ommapx = med->mmapx;
 	ommapy = med->mmapy;
@@ -95,7 +95,7 @@ void
 mouse_button(struct mapedit *med, SDL_Event *ev)
 {
 	struct map *m = med->map;
-	int mx, my;
+	Uint32 mx, my;
 
 	pthread_mutex_lock(&m->lock);
 	mx = (m->view->mapx + ev->button.x / m->tilew) - 1;
