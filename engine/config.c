@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.110 2004/03/30 16:32:50 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.111 2004/04/21 01:47:10 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -31,7 +31,7 @@
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
 
-#include <compat/asprintf.h>
+#include <compat/dir.h>
 
 #include <engine/engine.h>
 #include <engine/config.h>
@@ -199,7 +199,7 @@ config_init(struct config *con)
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 
 	if (stat(udatadir, &sta) != 0 &&
-	    mkdir(udatadir, 0700) != 0)
+	    compat_mkdir(udatadir, 0700) != 0)
 		fatal("%s: %s", udatadir, strerror(errno));
 }
 
