@@ -1,10 +1,10 @@
-/*	$Csoft: widget.h,v 1.41 2002/11/14 02:17:45 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.42 2002/11/19 08:39:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
 
 struct widget_ops {
-	const	 struct object_ops obops;
+	const struct object_ops	obops;
 
 	/* Draw directly to video memory. */
 	void	 (*widget_draw)(void *);
@@ -26,28 +26,31 @@ struct region;
 
 /* Structure shares the parent window's lock. */
 struct widget {
-	struct	 object obj;
-	int	 flags;
-#define WIDGET_NO_FOCUS			0x01	/* Cannot gain focus. */
-#define WIDGET_UNFOCUSED_MOTION		0x02	/* Receive window-mousemotion
-						   events even when the widget
-						   isn't focused. */
-#define WIDGET_UNFOCUSED_BUTTONUP	0x04	/* Receive window-mousebuttonup
-						   events even when the widget
-						   isn't focused. */
-	char	*type;			/* Widget type identifier */
-	struct	window *win;		/* Parent window */
-	struct	region *reg;		/* Parent region */
-	int	rw, rh;			/* Requested geometry (%) */
-	int	x, y;			/* Allocated coordinates in window */
-	int	w, h;			/* Allocated geometry */
+	struct object	obj;
+
+	int		flags;
+#define WIDGET_NO_FOCUS		  0x01	/* Cannot gain focus */
+#define WIDGET_UNFOCUSED_MOTION	  0x02	/* Receive window-mousemotion events
+					   even when the widget isn't focused */
+#define WIDGET_UNFOCUSED_BUTTONUP 0x04	/* Receive window-mousebuttonup events
+					   even when the widget isn't focused */
+#define WIDGET_CLIPPING		  0x08	/* Set the clipping rectangle to the
+					   widget area before drawing. */
+
+	char		*type;		/* Widget type identifier */
+	struct window	*win;		/* Parent window */
+	struct region	*reg;		/* Parent region */
+
+	int	 rw, rh;	/* Requested geometry (%) */
+	int	 x, y;		/* Allocated coordinates in window */
+	int	 w, h;		/* Allocated geometry */
 
 	/* Color scheme */
-	Uint32	color[WIDGET_MAXCOLORS];
-	int	ncolors;
-	struct	widget_colorq colors;
+	Uint32			 color[WIDGET_MAXCOLORS];
+	int			ncolors;
+	struct widget_colorq	 colors;
 
-	TAILQ_ENTRY(widget) widgets;		/* Widgets inside region */
+	TAILQ_ENTRY(widget)	 widgets;	/* Region */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
@@ -67,7 +70,7 @@ struct widget {
 
 /* XXX optimize - move rect to wid structure */
 #define WIDGET_DRAW(wi, s, xo, yo) do {					\
-	static SDL_Rect _wdrd;						\
+	SDL_Rect _wdrd;							\
 									\
 	_wdrd.x = WIDGET_ABSX((wi)) + (xo);				\
 	_wdrd.y = WIDGET_ABSY((wi)) + (yo);				\
@@ -78,7 +81,7 @@ struct widget {
 
 /* XXX optimize - move rect to wid structure */
 #define WIDGET_FILL(wi, xo, yo, wdrw, wdrh, col) do {		\
-	static SDL_Rect _wdrd;					\
+	SDL_Rect _wdrd;						\
 								\
 	_wdrd.x = WIDGET_ABSX((wi)) + (xo);			\
 	_wdrd.y = WIDGET_ABSY((wi)) + (yo);			\
@@ -92,24 +95,26 @@ struct widget {
 # define WIDGET_PUT_PIXEL(wid, wdrx, wdry, c) do {			\
 	if ((wdrx) > WIDGET((wid))->w || (wdry) > WIDGET((wid))->h ||	\
 	    (wdrx) < 0 || (wdry) < 0) {					\
-		fatal("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,		\
+		dprintf("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,	\
 		    (wdrx), (wdry), WIDGET((wid))->w,			\
 		    WIDGET((wid))->h);					\
+	} else {							\
+		WINDOW_PUT_PIXEL(WIDGET((wid))->win,		 	\
+		    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c)); \
 	}								\
-	WINDOW_PUT_PIXEL(WIDGET((wid))->win,				\
-	    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c));	\
 } while (/*CONSTCOND*/0)
 
 # define WIDGET_PUT_ALPHAPIXEL(wid, wdrx, wdry, c, wa) do {		\
 	if ((wdrx) > WIDGET((wid))->w || (wdry) > WIDGET((wid))->h ||	\
 	    (wdrx) < 0 || (wdry) < 0) {					\
-		fatal("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,		\
+		dprintf("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,	\
 		    (wdrx), (wdry), WIDGET((wid))->w,			\
 		    WIDGET((wid))->h);					\
+	} else {							\
+		WINDOW_PUT_ALPHAPIXEL(WIDGET((wid))->win,		\
+		    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry),	\
+		    (c), (wa));						\
 	}								\
-	WINDOW_PUT_ALPHAPIXEL(WIDGET((wid))->win,			\
-	    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c),	\
-	    (wa));							\
 } while (/*CONSTCOND*/0)
 
 #else
@@ -125,45 +130,24 @@ struct widget {
 #endif	/* DEBUG */
 
 #define WIDGET_SURFACE(wid)	(WINDOW_SURFACE(WIDGET((wid))->win))
-
 #define WIDGET_FOCUSED(wid)	(WIDGET((wid))->win->focus == WIDGET((wid)))
-
-#define WIDGET_FOCUS(wid) do {					\
+#define WIDGET_FOCUS(wid)					\
 	if ((WIDGET((wid))->flags & WIDGET_NO_FOCUS) == 0) {	\
 		WIDGET((wid))->win->focus = WIDGET((wid));	\
 		event_post((wid), "widget-gainfocus", NULL);	\
-	}							\
-} while (/*CONSTCOND*/0)
+	}
 
-/* Test whether absolute coordinates match the widget area. */
-#define WIDGET_INSIDE(wida, xa, ya)				\
-    ((xa) > WIDGET_ABSX((wida))	&&				\
-     (ya) > WIDGET_ABSY((wida)) &&				\
-     (xa) < (WIDGET_ABSX((wida)) + WIDGET((wida))->w) &&	\
+#define WIDGET_INSIDE(wida, xa, ya)					\
+    ((xa) > WIDGET_ABSX((wida))	&& (ya) > WIDGET_ABSY((wida)) &&	\
+     (xa) < (WIDGET_ABSX((wida)) + WIDGET((wida))->w) &&		\
      (ya) < (WIDGET_ABSY((wida)) + WIDGET((wida))->h))
 
-#define WIDGET_INSIDE_RELATIVE(wida, xa, ya)	\
-    ((xa) >= 0 && 				\
-     (ya) >= 0 &&				\
-     (xa) <= WIDGET((wida))->w &&		\
-     (ya) <= WIDGET((wida))->h)
-
-#ifdef DEBUG
-# define WIDGET_ASSERT(ob, typestr) do {				\
-	if (strcmp(WIDGET((ob))->type, typestr) != 0) {			\
-		fprintf(stderr, "%s:%d: %s is not a %s\n", __FILE__,	\
-		    __LINE__, WIDGET((ob))->type, typestr);		\
-		abort();						\
-	}								\
-} while (/*CONSTCOND*/0)
-#else
-#define WIDGET_ASSERT(wid, name)
-#endif
+#define WIDGET_INSIDE_RELATIVE(wida, xa, ya)			\
+    ((xa) >= 0 && (ya) >= 0 &&					\
+     (xa) <= WIDGET((wida))->w && (ya) <= WIDGET((wida))->h)
 
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
 void	widget_destroy(void *);
-void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
 
-void	widget_attach(void *, void *);
-void	widget_detach(void *, void *);
+void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
 

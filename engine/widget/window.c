@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.126 2002/12/16 02:14:26 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.127 2002/12/16 13:38:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -335,7 +335,7 @@ window_draw_titlebar(struct window *win)
 	int bw = win->borderw + 2;
 	int th = win->titleh - 2;
 	SDL_Surface *caption;
-	SDL_Rect rd, rclip;
+	SDL_Rect rd, rclip, rclip_save;
 	int i;
 
 	/* XXX yuck */
@@ -354,6 +354,8 @@ window_draw_titlebar(struct window *win)
 	
 	rclip = rd;
 	rclip.x += th*2;			/* Buttons */
+
+	SDL_GetClipRect(view->v, &rclip_save);
 	SDL_SetClipRect(view->v, &rclip);
 		
 	/* Caption */
@@ -367,7 +369,7 @@ window_draw_titlebar(struct window *win)
 	SDL_BlitSurface(caption, NULL, view->v, &rd);
 	SDL_FreeSurface(caption);
 		
-	SDL_SetClipRect(view->v, NULL);
+	SDL_SetClipRect(view->v, &rclip_save);
 
 	/* Close */
 	for (i = 2; i < 5; i++) {
@@ -454,13 +456,31 @@ window_draw(struct window *win)
 	/* Render the widgets. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		TAILQ_FOREACH(reg, &win->regionsh, regions) {
-			debug_n(DEBUG_DRAW, " %s(%d,%d)\n",
-			    OBJECT(reg)->name, reg->x, reg->y);
+			debug_n(DEBUG_DRAW, " %s(%d,%d)\n", OBJECT(reg)->name,
+			    reg->x, reg->y);
 			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				SDL_Rect rclip_save;
+
 				debug_n(DEBUG_DRAW, "  %s(%d,%d)\n",
 				    OBJECT(wid)->name,
 				    wid->x, wid->y);
+
+				if (wid->flags & WIDGET_CLIPPING) {
+					SDL_Rect rclip;
+
+					rclip.x = WIDGET_ABSX(wid);
+					rclip.y = WIDGET_ABSY(wid);
+					rclip.w = wid->w;
+					rclip.h = wid->h;
+					SDL_GetClipRect(view->v, &rclip_save);
+					SDL_SetClipRect(view->v, &rclip);
+				}
+
 				WIDGET_OPS(wid)->widget_draw(wid);
+
+				if (wid->flags & WIDGET_CLIPPING) {
+					SDL_SetClipRect(view->v, &rclip_save);
+				}
 			}
 
 #ifdef DEBUG
