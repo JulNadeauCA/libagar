@@ -211,7 +211,7 @@ tilemap_close(int argc, union evarg *argv)
 	window_hide(mv->node_win);
 	window_hide(win);
 
-	widget_set_int(nodeedit_button, "value", 0);
+	widget_set_int(nodeedit_button, "state", 0);
 }
 
 static void
@@ -276,7 +276,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		bu = button_new(reg, NULL,		/* Toggle grid */
 		    SPRITE(med, MAPEDIT_TOOL_GRID),
 		    BUTTON_STICKY, xdiv, 100);
-		widget_set_bool(bu, "value", 1);
+		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
@@ -284,7 +284,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		bu = button_new(reg, NULL,		/* Toggle props */
 		    SPRITE(med, MAPEDIT_TOOL_PROPS),
 		    BUTTON_STICKY, xdiv, 100);
-		widget_set_bool(bu, "value", 1);
+		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);

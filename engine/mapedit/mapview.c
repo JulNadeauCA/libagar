@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.45 2003/01/19 12:09:40 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.46 2003/01/20 12:06:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -100,7 +100,7 @@ mapview_node_win_close(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 
 	window_hide(win);
-	widget_set_int(mv->node_button, "value", 0);
+	widget_set_int(mv->node_button, "state", 0);
 }
 
 static void
