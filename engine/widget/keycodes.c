@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.27 2003/06/15 05:08:43 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.28 2003/06/15 08:54:19 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -79,7 +79,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		s = text;
 		len = strlen(s);
 		if (len+1 >= stringb->size) {
-			goto fail;
+			goto out;
 		}
 		if (tbox->pos == len) {
 			if (trans && uch != 0) {
@@ -88,7 +88,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 				dprintf("keysym fallback: 0x%02x\n", keysym);
 				s[len] = (unsigned char)keysym;
 			} else {
-				goto fail;
+				goto out;
 			}
 		} else {
 			sp = s + tbox->pos;
@@ -99,7 +99,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 				dprintf("keysym fallback: 0x%02x\n", keysym);
 				s[tbox->pos] = (unsigned char)keysym;
 			} else {
-				goto fail;
+				goto out;
 			}
 		}
 		s[len+1] = '\0';
@@ -108,7 +108,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		ucs = text;
 		len = ucslen(ucs);
 		if (len+1 >= stringb->size/sizeof(Uint16)) {
-			goto fail;
+			goto out;
 		}
 		if (tbox->pos == len) {
 			if (trans && uch != 0) {
@@ -117,7 +117,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 				dprintf("keysym fallback: 0x%04x\n", keysym);
 				ucs[len] = (Uint16)keysym;
 			} else {
-				goto fail;
+				goto out;
 			}
 		} else {
 			ucsp = ucs + tbox->pos;
@@ -128,17 +128,14 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 				dprintf("keysym fallback: 0x%04x\n", keysym);
 				ucs[tbox->pos] = (Uint16)keysym;
 			} else {
-				goto fail;
+				goto out;
 			}
 		}
 		ucs[len+1] = '\0';
 		break;
 	}
 	tbox->pos++;
-	widget_binding_unlock(stringb);
-	return;
-fail:
-	tbox->pos = 0;
+out:
 	widget_binding_unlock(stringb);
 }
 

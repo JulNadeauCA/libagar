@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.64 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.65 2003/06/15 08:54:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -60,8 +60,7 @@ enum {
 	READWRITE_COLOR,
 	READONLY_COLOR,
 	TEXT_COLOR,
-	CURSOR_COLOR1,
-	CURSOR_COLOR2
+	CURSOR_COLOR
 };
 
 static void	textbox_mousemotion(int, union evarg *);
@@ -90,8 +89,7 @@ textbox_init(struct textbox *tbox, const char *label)
 	widget_map_color(tbox, READWRITE_COLOR, "edition", 100, 100, 100, 255);
 	widget_map_color(tbox, READONLY_COLOR, "read-only", 40, 40, 40, 255);
 	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250, 255);
-	widget_map_color(tbox, CURSOR_COLOR1, "cursor1", 50, 50, 50, 255);
-	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0, 255);
+	widget_map_color(tbox, CURSOR_COLOR, "cursor", 40, 40, 40, 255);
 
 	tbox->string[0] = '\0';
 	tbox->xpadding = 4;
@@ -152,11 +150,10 @@ textbox_draw(void *p)
 		break;
 	}
 
-	/* Default to the end of the string. */
-	if (tbox->pos < 0) {
+	if (tbox->pos < 0) {					/* Default */
 		tbox->pos = textlen;
-	} else if (tbox->pos > textlen) {
-		fatal("bad position! %d > %d", tbox->pos, textlen);
+	} else if (tbox->pos > textlen) {			/* Past end */
+		tbox->pos = textlen;
 	}
 
 	/* Move to the beginning of the string? */
@@ -166,6 +163,9 @@ textbox_draw(void *p)
 				tbox->offs = 0;
 		}
 		tbox->pos = tbox->offs;
+		if (tbox->pos > textlen) {
+			tbox->pos = textlen;
+		}
 		tbox->newx = -1;
 	}
 drawtext:
@@ -207,12 +207,14 @@ drawtext:
 		    tbox->newx >= lx && tbox->newx < x) {
 			tbox->newx = -1;
 			tbox->pos = i;
+			if (tbox->pos > textlen)
+				tbox->pos = textlen;
 		}
 		lx = x;
 
 		if (i == tbox->pos && widget_holds_focus(tbox)) {
 			primitives.line2(tbox, x, y, x, y+tbox->label->h-2,
-			    CURSOR_COLOR1);
+			    CURSOR_COLOR);
 			cursdrawn++;
 		}
 		
@@ -249,6 +251,8 @@ drawtext:
 			tbox->offs += MOUSE_SCROLL_INCR;
 			tbox->pos++;
 		}
+		if (tbox->pos > textlen)
+			tbox->pos = textlen;
 	}
 	widget_binding_unlock(stringb);
 }
@@ -300,6 +304,9 @@ textbox_key(int argc, union evarg *argv)
 			break;
 		}
 	}
+#if 0
+	dprintf("offs=%d, pos=%d\n", tbox->offs, tbox->pos);
+#endif
 }
 
 static void
