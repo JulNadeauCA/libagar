@@ -558,7 +558,7 @@ main(int argc, char *argv[])
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		fprintf("SDL_Init: %s\n", SDL_GetError());
 		return (1);
-	}
+	}bad
 	return (0);
 }
 
