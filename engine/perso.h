@@ -1,11 +1,11 @@
-/*	$Csoft: perso.h,v 1.14 2003/07/08 00:34:52 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.15 2003/08/31 11:58:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
 #define _AGAR_PERSO_H_
 #include "begin_code.h"
 
-#define PERSO_NAME_MAX	64
+#define PERSO_NAME_MAX	256
 
 struct perso {
 	struct object obj;
