@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.27 2003/02/17 02:46:39 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.1 2003/02/20 04:57:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -120,9 +120,8 @@ fill_effect(void *p, struct mapview *mv, struct node *dstnode)
 			MAP_CHECK_NODE(dstnode, x, y);
 
 			if (srcnode == dstnode) {
-				text_msg("Error",
-				    "Source node == destination node");
-				continue;
+				text_msg("Error", "Circular reference");
+				return;
 			}
 
 			node_destroy(dstnode);
