@@ -887,94 +887,113 @@ if [ "${with_x11}" != "no" ]
 echo -n "checking for the X window system..."
 echo -n "checking for the X window system..." >> config.log
 echo "checking for the X window system..." >> config.log
+x11_found_includes=no
+x11_found_libs=no
 if [ -d /usr/X11R6/include/X11 ]; then
 X11_CFLAGS=-I/usr/X11R6/include
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/X11/include/X11 ]; then
 X11_CFLAGS=-I/usr/X11/include
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/include/X11R6/X11 ]; then
 X11_CFLAGS=-I/usr/include/X11R6
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/include/X11/X11 ]; then
 X11_CFLAGS=-I/usr/include/X11
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/X11R6/include/X11 ]; then
 X11_CFLAGS=-I/usr/local/X11R6/include
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/X11/include/X11 ]; then
 X11_CFLAGS=-I/usr/local/X11/include
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/include/X11R6/X11 ]; then
 X11_CFLAGS=-I/usr/local/include/X11R6
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/include/X11/X11 ]; then
 X11_CFLAGS=-I/usr/local/include/X11
-else
-NONE=1
-fi
-if [ -d /usr/include/X11 ]; then
-X11_CFLAGS=-I/usr/include
+x11_found_includes=yes
 else
 NONE=1
 fi
 if [ -d /usr/local/include/X11 ]; then
 X11_CFLAGS=-I/usr/local/include
+x11_found_includes=yes
 else
 NONE=1
 fi
-if [ -d /usr/X386/include/X11 ]; then
-X11_CFLAGS=-I/usr/X386/include
+if [ -d /usr/include/X11 ]; then
+X11_CFLAGS=-I/usr/include
+x11_found_includes=yes
 else
 NONE=1
 fi
-if [ -d /usr/x386/include/X11 ]; then
-X11_CFLAGS=-I/usr/x386/include
+if [ -d /usr/X11R6/lib ]; then
+X11_LIBS=-L/usr/X11R6/lib -lX11
+x11_found_libs=yes
 else
 NONE=1
 fi
-if [ -d /usr/XFree86/include/X11/X11 ]; then
-X11_CFLAGS=-I/usr/XFree86/include/X11
+if [ -d /usr/X11/lib ]; then
+X11_LIBS=-L/usr/X11/lib -lX11
+x11_found_libs=yes
 else
 NONE=1
 fi
-if [ -d /usr/athena/include/X11 ]; then
-X11_CFLAGS=-I/usr/athena/include
+if [ -d /usr/local/X11R6/lib ]; then
+X11_LIBS=-L/usr/local/X11R6/lib -lX11
+x11_found_libs=yes
 else
 NONE=1
 fi
-if [ -d /usr/openwin/include/X11 ]; then
-X11_CFLAGS=-I/usr/openwin/include
+if [ -d /usr/local/X11/lib ]; then
+X11_LIBS=-L/usr/local/X11/lib -lX11
+x11_found_libs=yes
 else
 NONE=1
 fi
-if [ -d /usr/openwin/share/include/X11 ]; then
-X11_CFLAGS=-I/usr/openwin/share/include
+if [ -d /usr/local/lib ]; then
+X11_LIBS=-L/usr/local/lib -lX11
+x11_found_libs=yes
 else
 NONE=1
 fi
-if [ "${X11_CFLAGS}" != "" ]; then
+if [ -d /usr/lib ]; then
+X11_LIBS=-L/usr/lib -lX11
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ "${x11_found_includes}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
 x11_found=yes
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
+echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
-echo "missing"
-exit 1
+echo "no"
+echo "no" >> config.log
 fi
 	if [ "${x11_found}" = "yes" ]
  then
