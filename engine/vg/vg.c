@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.7 2004/04/20 01:05:43 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.8 2004/04/22 01:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -33,12 +33,12 @@
 #include "vg_primitive.h"
 
 static const struct vg_element_ops vge_types[] = {
-	{ VG_LINES,		vg_draw_line_segments,	vg_line_bbox },
-	{ VG_LINE_STRIP,	vg_draw_line_strip,	vg_line_bbox },
-	{ VG_LINE_LOOP,		vg_draw_line_loop,	vg_line_bbox },
-	{ VG_POINTS,		vg_draw_points,		vg_points_bbox },
-	{ VG_CIRCLE,		vg_draw_circle,		vg_circle_bbox },
-	{ VG_ELLIPSE,		vg_draw_ellipse,	vg_ellipse_bbox }
+    { VG_LINES,		NULL,		vg_draw_line_segments,	 vg_line_bbox },
+    { VG_LINE_STRIP,	NULL,		vg_draw_line_strip,	 vg_line_bbox },
+    { VG_LINE_LOOP,	NULL,		vg_draw_line_loop,	 vg_line_bbox },
+    { VG_POINTS,	vg_point_init,	vg_draw_points,        vg_points_bbox },
+    { VG_CIRCLE,	vg_circle_init,	vg_draw_circle,        vg_circle_bbox },
+    { VG_ELLIPSE,	vg_ellipse_init,vg_draw_ellipse,      vg_ellipse_bbox }
 };
 const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
@@ -62,7 +62,7 @@ vg_new(void *p, int flags)
 void
 vg_init(struct vg *vg, int flags)
 {
-	int i;
+	int i, x, y;
 
 	vg->flags = flags;
 	vg->w = 0;
@@ -82,6 +82,7 @@ vg_init(struct vg *vg, int flags)
 	vg->cur_layer = 0;
 	vg_push_layer(vg, _("Layer 0"));
 	vg->snap_mode = VG_GRID;
+	vg->mask = NULL;
 	TAILQ_INIT(&vg->vges);
 	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
 
@@ -107,6 +108,7 @@ vg_destroy(struct vg *vg)
 {
 	struct vg_element *vge, *nvge;
 	struct object *ob = vg->pobj;
+	int y;
 
 	Free(vg->origin, M_VG);
 	Free(vg->origin_radius, M_VG);
@@ -118,6 +120,17 @@ vg_destroy(struct vg *vg)
 		ob->gfx = NULL;
 	}
 	Free(vg->layers, M_VG);
+
+#if 0
+	if (vg->mask != NULL) {
+		for (y = 0; y < vg->map->maph; y++) {
+			Free(vg->mask[y], M_VG);
+		}
+		Free(vg->mask, M_VG);
+	}
+	object_destroy(vg->map);
+	Free(vg->map, M_OBJECT);
+#endif
 
 	for (vge = TAILQ_FIRST(&vg->vges);
 	     vge != TAILQ_END(&vg->vges);
@@ -165,8 +178,11 @@ vg_regen_fragments(struct vg *vg)
 			Uint8 salpha;
 			int fw, fh;
 
-			/* TODO if masked, skip */
-			
+#if 0
+			if (vg->mask[my][mx])
+				continue;
+#endif
+
 			saflags = vg->su->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
 			scflags = vg->su->flags&(SDL_SRCCOLORKEY|SDL_RLEACCEL);
 			salpha = vg->su->format->alpha;
@@ -238,17 +254,17 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 {
 	int pw = (int)(w*scale*TILESZ);
 	int ph = (int)(h*scale*TILESZ);
+	int mw, mh;
 	Uint32 suflags;
 	struct vg_element *vge;
+	int y;
 
-#ifdef DEBUG
 	if (scale < 0)
 		fatal("neg scale");
-#endif
+
+	vg->scale = scale;
 	vg->w = w;
 	vg->h = h;
-	vg->scale = scale;
-
 	dprintf("%.02fx%.02f*%.02f, %dx%d pixels\n", w, h, scale, pw, ph);
 
 	if (vg->su != NULL) {
@@ -262,11 +278,26 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 
 	vg_destroy_fragments(vg);
 	map_free_nodes(vg->map);
+	
+	mw = vg->su->w/TILESZ+1;
+	mh = vg->su->h/TILESZ+1;
 
-	if (map_alloc_nodes(vg->map, vg->su->w/TILESZ+1, vg->su->h/TILESZ+1)
-	    == -1) {
+	if (map_alloc_nodes(vg->map, mw, mh) == -1)
 		fatal("%s", error_get());
+
+#if 0
+	if (vg->mask != NULL) {
+		for (y = 0; y < mh; y++) {
+			Free(vg->mask[y], M_VG);
+		}
+		Free(vg->mask, M_VG);
 	}
+	vg->mask = Malloc(mh*sizeof(int), M_VG);
+	for (y = 0; y < mh; y++) {
+		vg->mask[y] = Malloc(mw*sizeof(int), M_VG);
+		memset(vg->mask[y], 0, mw*sizeof(int));
+	}
+#endif
 	TAILQ_FOREACH(vge, &vg->vges, vges)
 		vge->redraw++;
 }
@@ -276,11 +307,13 @@ struct vg_element *
 vg_begin(struct vg *vg, enum vg_element_type eltype)
 {
 	struct vg_element *vge;
+	int i;
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->type = eltype;
 	vge->layer = 0;
 	vge->redraw = 1;
+	vge->drawn = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
 	vge->line.style = VG_CONTINUOUS;
@@ -291,33 +324,12 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	vge->fill.pat.gfx_offs = 0;
 	vge->fill.color = SDL_MapRGB(vfmt, 255, 255, 255);
 	vge->color = SDL_MapRGB(vfmt, 255, 255, 255);
-	vge->bbox.x = 0;
-	vge->bbox.y = 0;
-	vge->bbox.w = 0;
-	vge->bbox.h = 0;
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 
-	switch (eltype) {
-	case VG_POINTS:
-		vge->vg_point.radius = 0.05;
-		break;
-	case VG_CIRCLE:
-		vge->vg_circle.radius = 0.025;
-		break;
-	case VG_ARC:
-	case VG_ELLIPSE:
-		vge->vg_arc.w = 1;
-		vge->vg_arc.h = 1;
-		vge->vg_arc.s = 0;
-		vge->vg_arc.e = 360;
-		break;
-	case VG_TEXT:
-		vge->vg_text.text[0] = '\0';
-		vge->vg_text.angle = 0;
-		vge->vg_text.align = VG_ALIGN_MC;
-		break;
-	default:
-		break;
+	for (i = 0; i < nvge_types; i++) {
+		if (vge_types[i].type == eltype &&
+		    vge_types[i].init != NULL)
+			vge_types[i].init(vg, vge);
 	}
 	return (vge);
 }
@@ -332,17 +344,61 @@ vg_clear(struct vg *vg)
 static void
 vg_draw_bboxes(struct vg *vg)
 {
+	struct vg_rect bbox;
 	struct vg_element *vge;
 	int x, y, w, h;
+	int i;
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		vg_rcoords2(vg, vge->bbox.x, vge->bbox.y, &x, &y);
-		vg_rlength(vg, vge->bbox.w, &w);
-		vg_rlength(vg, vge->bbox.h, &h);
+		for (i = 0; i < nvge_types; i++) {
+			if (vge_types[i].type == vge->type)
+				vge_types[i].bbox(vg, vge, &bbox);
+		}
+		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
+		vg_rlength(vg, bbox.w, &w);
+		vg_rlength(vg, bbox.h, &h);
 		vg_line_primitive(vg, x, y, x+w, y, vg->grid_color);
 		vg_line_primitive(vg, x, y, x, y+h, vg->grid_color);
 		vg_line_primitive(vg, x, y+h, x+w, y+h, vg->grid_color);
 		vg_line_primitive(vg, x+w, y, x+w, y+h, vg->grid_color);
+	}
+}
+
+int
+vg_collision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2)
+{
+	return (1);
+}
+
+/*
+ * Rasterize an element and the other elements coming in contact with it,
+ * in a recursive fashion.
+ */
+static void
+vg_rasterize_element(struct vg *vg, struct vg_element *vge)
+{
+	struct vg_element *ovge;
+	struct vg_rect r1, r2;
+	int i;
+	
+	for (i = 0; i < nvge_types; i++) {
+		if (vge_types[i].type == vge->type)
+			break;
+	}
+	if (!vge->drawn) {
+		vge_types[i].draw(vg, vge);
+		vge->drawn = 1;
+	}
+
+	/* Evaluate collisions with other elements. */
+	vge_types[i].bbox(vg, vge, &r1);
+	TAILQ_FOREACH(ovge, &vg->vges, vges) {
+		if (ovge->drawn || ovge == vge) {
+			continue;
+		}
+		vge_types[i].bbox(vg, ovge, &r2);
+		if (vg_collision(vg, &r1, &r2))
+			vg_rasterize_element(vg, ovge);
 	}
 }
 
@@ -353,16 +409,13 @@ vg_rasterize(struct vg *vg)
 	int i;
 
 	vg_clear(vg);
-
+	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		for (i = 0; i < nvge_types; i++) {
-			if (vge_types[i].type == vge->type) {
-#if 0
-				vge_types[i].bbox(vg, vge, &vge->bbox);
-#endif
-				vge_types[i].draw(vg, vge);
-			}
-		}
+		vge->drawn = 0;
+	}
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		if (vge->redraw)
+			vg_rasterize_element(vg, vge);
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);

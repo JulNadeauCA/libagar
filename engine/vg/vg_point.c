@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.4 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.5 2004/04/22 01:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -35,6 +35,12 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+
+void
+vg_point_init(struct vg *vg, struct vg_element *vge)
+{
+	vge->vg_point.radius = 0.05;
+}
 
 void
 vg_point_radius(struct vg *vg, double radius)

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.7 2004/04/20 01:05:43 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.8 2004/04/22 01:45:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -62,6 +62,7 @@ enum vg_element_type {
 
 struct vg_element_ops {
 	enum vg_element_type type;
+	void (*init)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
 };
@@ -106,9 +107,9 @@ struct vg_element {
 	enum vg_element_type type;
 	int layer;
 	int redraw;
+	int drawn;
 	Uint32 color;
 
-	struct vg_rect	  bbox;
 	struct vg_vertex *vtx;
 	unsigned int     nvtx;
 
@@ -147,6 +148,7 @@ struct vg {
 #define VG_VISBBOXES	0x10		/* Display bounding boxes */
 
 	pthread_mutex_t lock;
+	int **mask;			/* Fragment mask */
 	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */
 	Uint32 fill_color;		/* Background color */
@@ -200,6 +202,8 @@ __inline__ void	 vg_pop_layer(struct vg *);
 
 struct vg_element *vg_begin(struct vg *, enum vg_element_type);
 void		   vg_undo_element(struct vg *, struct vg_element *);
+__inline__ int	   vg_collision(struct vg *, struct vg_rect *,
+		                struct vg_rect *);
  
 __inline__ void	   vg_layer(struct vg *, int);
 __inline__ void	   vg_color(struct vg *, Uint32);

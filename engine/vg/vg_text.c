@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.2 2004/03/30 16:04:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -32,6 +32,14 @@
 #include "vg_text.h"
 
 #include <stdarg.h>
+
+void
+vg_text_init(struct vg *vg, struct vg_element *vge)
+{
+	vge->vg_text.text[0] = '\0';
+	vge->vg_text.angle = 0;
+	vge->vg_text.align = VG_ALIGN_MC;
+}
 
 /* Specify text alignment and angle. */
 void
