@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.8 2002/12/13 12:33:16 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.9 2002/12/13 12:41:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -276,7 +276,7 @@ perso_save(void *p, int fd)
 		 * to encode object identifiers and allows the character to
 		 * use sprite/animations from other objects.
 		 */
-		object_table_save(buf, OBJECT(perso), &pobjs, &nobjs);
+		pobjs = object_table_save(buf, OBJECT(perso), &nobjs);
 
 		/* Save the map id, node coordinates and input device id. */
 		buf_write_string(buf, OBJECT(pos->map)->name);

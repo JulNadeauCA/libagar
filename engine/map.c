@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.123 2002/12/13 11:14:16 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.124 2002/12/13 12:41:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -742,7 +742,7 @@ map_save(void *p, int fd)
 	struct map *m = p;
 	struct fobj_buf *buf;
 	struct object *pob, **pobjs;
-	Uint32 nobjs = 0;
+	Uint32 nobjs;
 	Uint32 x, y;
 
 	buf = fobj_create_buf(65536, 32767);
@@ -764,7 +764,7 @@ map_save(void *p, int fd)
 	buf_write_uint16(buf, m->zoom);
 
 	/* Save the possible dependencies. */
-	object_table_save(buf, OBJECT(m), &pobjs, &nobjs);
+	pobjs = object_table_save(buf, OBJECT(m), &nobjs);
 
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
