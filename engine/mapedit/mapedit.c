@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.195 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.196 2004/03/21 05:37:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -35,6 +35,8 @@
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/button.h>
+#include <engine/widget/checkbox.h>
+#include <engine/widget/spinbutton.h>
 
 #include <string.h>
 
@@ -81,7 +83,16 @@ const struct object_ops mapedit_ops = {
 	mapedit_destroy,
 	mapedit_load,
 	mapedit_save,
-	NULL				/* edit */
+	NULL
+};
+
+const struct object_ops mapedit_pseudo_ops = {
+	NULL,			/* init */
+	NULL,			/* reinit */
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	mapedit_settings	/* edit */
 };
 
 struct mapedit mapedit;
@@ -126,7 +137,8 @@ mapedit_init(void)
 	mapedit.curtool = NULL;
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
-	object_init(&mapedit.pseudo, "object", "map-editor", NULL);
+	object_init(&mapedit.pseudo, "object", "map-editor",
+	    &mapedit_pseudo_ops);
 	OBJECT(&mapedit.pseudo)->flags |= (OBJECT_NON_PERSISTENT|OBJECT_STATIC|
 	                                   OBJECT_INDESTRUCTIBLE);
 	object_attach(world, &mapedit.pseudo);
@@ -344,3 +356,65 @@ tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
 	SLIST_INSERT_HEAD(&tool->kbindings, kbinding, kbindings);
 }
 
+struct window *
+mapedit_settings(void *p)
+{
+	extern int mapview_bg, mapview_bg_moving, mapview_bg_squaresize;
+	struct window *win;
+	struct checkbox *cb;
+	struct spinbutton *sb;
+	struct box *bo;
+
+	win = window_new(NULL);
+	window_set_caption(win, _("Map editor settings"));
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	box_set_spacing(bo, 5);
+	{
+		cb = checkbox_new(bo, _("Enable background tiling"));
+		widget_bind(cb, "state", WIDGET_INT, &mapview_bg);
+
+		cb = checkbox_new(bo, _("Moving tiles"));
+		widget_bind(cb, "state", WIDGET_INT, &mapview_bg_moving);
+
+		sb = spinbutton_new(bo, _("Tile size: "));
+		widget_bind(sb, "value", WIDGET_INT, &mapview_bg_squaresize);
+		spinbutton_set_min(sb, 2);
+		spinbutton_set_max(sb, 16384);
+	}
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		cb = checkbox_new(bo, _("Selection-bounded edition"));
+		widget_bind(cb, "state", WIDGET_PROP, &mapedit,
+		    "sel-bounded-edition");
+	}
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		sb = spinbutton_new(bo, _("Default map width: "));
+		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		    "default-map-width");
+		spinbutton_set_min(sb, 1);
+		spinbutton_set_max(sb, MAP_MAX_WIDTH);
+
+		sb = spinbutton_new(bo, _("Default map height: "));
+		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		    "default-map-height");
+		spinbutton_set_min(sb, 1);
+		spinbutton_set_max(sb, MAP_MAX_HEIGHT);
+
+		sb = spinbutton_new(bo, _("Default brush width: "));
+		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		    "default-brush-width");
+		spinbutton_set_min(sb, 1);
+		spinbutton_set_max(sb, MAP_MAX_WIDTH);
+
+		sb = spinbutton_new(bo, _("Default brush height: "));
+		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		    "default-brush-height");
+		spinbutton_set_min(sb, 1);
+		spinbutton_set_max(sb, MAP_MAX_HEIGHT);
+	}
+	return (win);
+}
