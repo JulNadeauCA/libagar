@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.9 2004/04/22 12:36:09 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.10 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -55,7 +55,6 @@ vg_new(void *p, int flags)
 	gfx_new_pvt(ob, "vg");
 	vg->map = map_new(ob, "raster");
 	OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|OBJECT_INDESTRUCTIBLE;
-
 	return (vg);
 }
 
@@ -135,8 +134,6 @@ vg_destroy(struct vg *vg)
 		}
 		Free(vg->mask, M_VG);
 	}
-	object_destroy(vg->map);
-	Free(vg->map, M_OBJECT);
 #endif
 	for (vge = TAILQ_FIRST(&vg->vges);
 	     vge != TAILQ_END(&vg->vges);
