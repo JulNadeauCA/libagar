@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.47 2002/03/03 06:44:55 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.48 2002/03/05 06:34:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -368,30 +368,64 @@ map_plot_sprite(struct map *m, SDL_Surface *s, Uint32 x, Uint32 y)
 	SDL_BlitSurface(s, NULL, m->view->v, &rd);
 }
 
+static __inline__ void
+map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
+{
+	static struct noderef *nref;
+	static SDL_Surface *src;
+	static SDL_Rect rd;
+
+	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+		if (nref->flags & MAPREF_SPRITE) {
+			src = nref->pobj->sprites[nref->offs];
+		} else if (nref->flags & MAPREF_ANIM) {
+			static struct anim *anim;
+
+			anim = nref->pobj->anims[nref->offs];
+			src = anim->frames[nref->frame];
+				
+			if ((anim->delay < 1) ||
+			    (++nref->fwait > anim->delay)) {
+				nref->fwait = 0;
+				if (nref->frame++ >= anim->nframes - 1) {
+					/* Loop */
+					nref->frame = 0;
+				}
+			}
+		}
+		rd.w = src->w;
+		rd.h = src->h;
+		rd.x = rx + nref->xoffs;
+		rd.y = ry + nref->yoffs;
+		SDL_BlitSurface(src, NULL, m->view->v, &rd);
+	}
+}
+
 /*
  * Render all animations in the map view.
+ *
+ * Nodes with the NODE_ANIM flag set are rendered by the animator, even
+ * if there is no animation on the node (used for soft-scrolling); nearby
+ * nodes with the NODE_OVERLAP are redrawn first.
+ *
  * Must be called on a locked map.
  */
 static void
 map_animate(struct map *m)
 {
 	static Uint32 x, y;
-	static Uint32 vx, vy;
-	static TAILQ_HEAD(, draw) deferdraws;
+	static Uint32 vx, vy, rx, ry;
 
-	TAILQ_INIT(&deferdraws);
-	
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
 	    (vy < m->view->maph + m->view->mapyoffs);
 	     y++, vy++) {
+
+		ry = vy << m->shtiley;
 
 		for (x = m->view->mapx, vx = m->view->mapxoffs;
 		     vx < m->view->mapw + m->view->mapxoffs;
 		     x++, vx++) {
 			static struct node *node;
-			static struct noderef *nref;
-			static SDL_Surface *src;
-			static Uint32 rx, ry;
 			
 			if (m->view->mapmask[vy - m->view->mapyoffs]
 			    [vx - m->view->mapxoffs] > 0) {
@@ -399,99 +433,63 @@ map_animate(struct map *m)
 			}
 
 			node = &m->map[x][y];
-
-			if (node->nanims < 1 &&
-			   (node->flags & NODE_ANIM) == 0) {
-				/* map_draw() shall handle this. */
+			if (node->flags & NODE_OVERLAP) {
+				/* Will later draw in a synchronized fashion. */
 				continue;
 			}
 
-			if (curmapedit != NULL) {
-				mapedit_predraw(m, node->flags, vx, vy);
-			}
+			rx = vx << m->shtilex;
 
-			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-				rx = (vx << m->shtilex) + nref->xoffs;
-				ry = (vy << m->shtiley) + nref->yoffs;
+			if (node->flags & NODE_ANIM) {
+				static struct node *nnode;
 
-				if (nref->flags & MAPREF_SPRITE) {
-					src = nref->pobj->sprites[nref->offs];
-				} else if (nref->flags & MAPREF_ANIM) {
-					static struct anim *anim;
+				/* XXX boundaries ok? */
 
-					anim = nref->pobj->anims[nref->offs];
-					src = anim->frames[nref->frame];
-				
-					if ((anim->delay < 1) ||
-					    (++nref->fwait > anim->delay)) {
-						nref->fwait = 0;
-						if (nref->frame++ >=
-						    anim->nframes - 1) {
-						    	/* Loop */
-							nref->frame = 0;
-						}
-					}
+				nnode = &m->map[x - 1][y];	/* Left */
+				if (nnode->flags & NODE_OVERLAP && vx > 1) {
+					MAPEDIT_PREDRAW(m, nnode, vx - 1, vy);
+					map_rendernode(m, nnode,
+					    rx - m->tilew, ry);
+					MAPEDIT_POSTDRAW(m, nnode, vx - 1, vy);
 				}
-
-				/*
-				 * Blit only once other sprites/frames are
-				 * drawn (ie. soft-scrolling).
-				 *
-				 * XXX pre-allocate
-				 */
-				if (nref->xoffs != 0 || nref->yoffs != 0) {
-					struct draw *ndraw;
-
-					ndraw = (struct draw *)
-					    emalloc(sizeof(struct draw));
-					ndraw->s = src;
-					ndraw->x = rx;
-					ndraw->y = ry;
-					ndraw->flags = node->flags;
-
-					TAILQ_INSERT_TAIL(&deferdraws, ndraw,
-					    pdraws);
-				} else {
-					map_plot_sprite(m, src, rx, ry);
+				nnode = &m->map[x + 1][y];	/* Right */
+				if (nnode->flags & NODE_OVERLAP &&
+				    vx < m->view->mapw + m->view->mapxoffs) {
+					MAPEDIT_PREDRAW(m, nnode, vx + 1, vy);
+					map_rendernode(m, nnode,
+					    rx + m->tilew, ry);
+					MAPEDIT_POSTDRAW(m, nnode, vx + 1, vy);
 				}
-#if 0
-				if (nref->yoffs < 0)
-					map_plot_sprite(m,
-					    curmapedit->obj.sprites[
-					    MAPEDIT_NVEL], rx, ry);
-				if (nref->yoffs > 0)
-					map_plot_sprite(m,
-					    curmapedit->obj.sprites[
-					    MAPEDIT_SVEL], rx, ry);
-				if (nref->xoffs < 0)
-					map_plot_sprite(m,
-					    curmapedit->obj.sprites[
-					    MAPEDIT_WVEL], rx, ry);
-				if (nref->xoffs > 0)
-					map_plot_sprite(m,
-					    curmapedit->obj.sprites[
-					    MAPEDIT_EVEL], rx, ry);
-#endif
+				nnode = &m->map[x][y - 1];	/* Up */
+				if (nnode->flags & NODE_OVERLAP && vy > 1) {
+					MAPEDIT_PREDRAW(m, nnode, vx, vy - 1);
+					map_rendernode(m, nnode,
+					    rx, ry - m->tileh);
+					MAPEDIT_POSTDRAW(m, nnode, vx, vy - 1);
+				}
+				nnode = &m->map[x][y + 1];	/* Down */
+				if (nnode->flags & NODE_OVERLAP &&
+				    vy < m->view->maph + m->view->mapyoffs) {
+					MAPEDIT_PREDRAW(m, nnode, vx, vy + 1);
+					map_rendernode(m, nnode,
+					    rx, ry + m->tileh);
+					MAPEDIT_POSTDRAW(m, nnode, vx, vy + 1);
+				}
+				MAPEDIT_PREDRAW(m, node, vx, vy);
+				map_rendernode(m, node, rx, ry);
+				MAPEDIT_POSTDRAW(m, node, vx, vy);
+				SDL_UpdateRect(m->view->v,
+				    rx - m->tilew, ry - m->tileh,
+				    (m->tilew << 1) + m->tilew,
+				    (m->tileh << 1) + m->tileh);
+			} else if (node->nanims > 0) {
+				MAPEDIT_PREDRAW(m, node, vx, vy);
+				map_rendernode(m, node, rx, ry);
+				MAPEDIT_POSTDRAW(m, node, vx, vy);
+				SDL_UpdateRect(m->view->v, rx, ry,
+				    m->tilew, m->tileh);
 			}
-			
-			if (curmapedit != NULL) {
-				mapedit_postdraw(m, node->flags, vx, vy);
-			}
-			SDL_UpdateRect(m->view->v, rx, ry,
-			    m->tilew, m->tileh);
 		}
-	}
-
-	if (!TAILQ_EMPTY(&deferdraws)) {
-		struct draw *draw;
-	
-		TAILQ_FOREACH(draw, &deferdraws, pdraws) {
-			map_plot_sprite(m, draw->s, draw->x, draw->y);
-			SDL_UpdateRect(m->view->v,
-			    draw->x, draw->y, m->tilew, m->tileh);
-			free(draw);
-		}
-		TAILQ_INIT(&deferdraws);
 	}
 }
 
@@ -508,7 +506,6 @@ map_draw(struct map *m)
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
 	     vy < m->view->maph + m->view->mapyoffs;
 	     y++, vy++) {
-
 		for (x = m->view->mapx, vx = m->view->mapxoffs;
 		     vx < m->view->mapw + m->view->mapxoffs;
 		     x++, vx++) {
@@ -527,10 +524,8 @@ map_draw(struct map *m)
 				/* map_animate() shall handle this. */
 				continue;
 			}
-			
-			if (curmapedit != NULL) {
-				mapedit_predraw(m, node->flags, vx, vy);
-			}
+		
+			MAPEDIT_PREDRAW(m, node, vx, vy);
 
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
@@ -543,16 +538,18 @@ map_draw(struct map *m)
 				}
 			}
 
-			if (nsprites > 0 && curmapedit != NULL) {
-				mapedit_postdraw(m, node->flags, vx, vy);
+			if (nsprites > 0) {
+				MAPEDIT_POSTDRAW(m, node, vx, vy);
 			}
 		}
 	}
 
+	/* XXX does not belong here */
 	if (curmapedit != NULL) {
 		mapedit_tilestack(curmapedit);
 	}
 
+	/* XXX waste */
 	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 }
 
