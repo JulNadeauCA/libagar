@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.51 2002/03/05 17:11:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.52 2002/03/05 17:45:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -571,12 +571,13 @@ map_draw(struct map *m)
 		}
 	}
 
+	if (ri > 0) {
+		SDL_UpdateRects(view->v, ri, view->rects);
+	}
+
 	/* XXX does not belong here */
 	if (curmapedit != NULL) {
 		mapedit_tilestack(curmapedit);
-	}
-	if (ri > 0) {
-		SDL_UpdateRects(view->v, ri, view->rects);
 	}
 }
 
