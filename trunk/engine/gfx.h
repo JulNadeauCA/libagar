@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.14 2004/03/17 04:03:19 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.15 2004/03/20 05:01:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -68,7 +68,14 @@ struct gfx {
 #define ANIM(ob, i)	((struct object *)(ob))->gfx->anims[(i)]
 #endif
 
-extern pthread_mutex_t	gfxq_lock;
+#define GFX_ANIM_FRAME(r, an) \
+    (an)->frames[((r)->r_anim.flags & NODEREF_PVT_FRAME) ? \
+                 (r)->r_anim.frame : an->frame]
+
+TAILQ_HEAD(gfxq, gfx);
+
+extern struct gfxq gfxq;
+extern pthread_mutex_t gfxq_lock;
 
 __BEGIN_DECLS
 void		 gfx_init(struct gfx *, const char *);

@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.6 2004/03/18 03:07:53 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.7 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -298,7 +298,7 @@ import_media(int argc, union evarg *argv)
 		case NODEREF_ANIM:
 			node = &m->map[mv->esel.y][mv->esel.x];
 			node_clear(m, node, m->cur_layer);
-			r = node_add_anim(m, node, ob, ind, NODEREF_ANIM_AUTO);
+			r = node_add_anim(m, node, ob, ind, NODEREF_SHD_FRAME);
 			r->layer = m->cur_layer;
 			break;
 		case -1:					/* Submap */
