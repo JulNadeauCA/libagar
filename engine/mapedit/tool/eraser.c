@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.17 2003/01/01 05:18:38 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.18 2003/01/19 12:09:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,8 +51,6 @@ static const struct tool_ops eraser_ops = {
 	NULL			/* cursor */
 };
 
-static void	eraser_event(int, union evarg *);
-
 struct eraser *
 eraser_new(void)
 {
@@ -79,32 +77,29 @@ eraser_window(void *p)
 	struct eraser *er = p;
 	struct window *win;
 	struct region *reg;
-	struct radio *rad;
-	static char *mode_items[] = {
-		"All",
-		"Highest",
-		"Lowest",
-		"Selective",
-		NULL
-	};
 
-	win = window_new("mapedit-tool-eraser", 0, TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    120, 120, 120, 120);
+	win = window_new("mapedit-tool-eraser", 0,
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
+	    120, 120,
+	    120, 120);
 	window_set_caption(win, "Eraser");
+
 	reg = region_new(win, 0, 0, 0, 100, 100);
-	rad = radio_new(reg, mode_items, 0);
-	event_new(rad, "radio-changed", eraser_event, "%p", er);
-	
-	win->focus = WIDGET(rad);
+	{
+		struct radio *rad;
+		static const char *mode_items[] = {
+			"All",
+			"Highest",
+			"Lowest",
+			"Selective",
+			NULL
+		};
+
+		rad = radio_new(reg, mode_items);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &er->mode);
+		win->focus = WIDGET(rad);
+	}
 	return (win);
-}
-
-void
-eraser_event(int argc, union evarg *argv)
-{
-	struct eraser *eraser = argv[1].p;
-
-	eraser->mode = argv[3].c;
 }
 
 void
@@ -121,6 +116,7 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		     nref != TAILQ_END(&n->nrefs);
 		     nref = nnref) {
 			nnref = TAILQ_NEXT(nref, nrefs);
+			noderef_destroy(nref);
 			free(nref);
 		}
 		TAILQ_INIT(&n->nrefs);
@@ -135,7 +131,6 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 			node_remove_ref(n, TAILQ_FIRST(&n->nrefs));
 		}
 		break;
-#if 0
 	case ERASER_SELECTIVE:
 		TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 			if (nref->pobj == er->selection.pobj &&
@@ -144,7 +139,6 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 			}
 		}
 		break;
-#endif
 	default:
 		break;
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.12 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.13 2003/01/23 02:13:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -37,6 +37,17 @@
 
 #include "tool.h"
 
+static void
+tool_window_close(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct tool *tool = argv[1].p;
+
+	widget_set_int(tool->button, "state", 0);
+
+	mapedit->curtool = NULL;
+}
+
 void
 tool_init(struct tool *tool, char *name, const void *ops)
 {
@@ -49,6 +60,10 @@ tool_init(struct tool *tool, char *name, const void *ops)
 
 	tool->win = (TOOL_OPS(tool)->tool_window != NULL) ? 
 	    TOOL_OPS(tool)->tool_window(tool) : NULL;
+	if (tool->win != NULL) {
+		event_new(tool->win, "window-close",
+		    tool_window_close, "%p", tool);
+	}
 	tool->type = Strdup(name);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.20 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.20 2003/01/19 12:09:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -31,98 +31,113 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-#include <engine/widget/radio.h>
+#include <engine/widget/scrollbar.h>
 #include <engine/widget/text.h>
+#include <engine/widget/tlist.h>
+#include <engine/widget/radio.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
 
 #include "tool.h"
-#include "stamp.h"
+#include "shift.h"
 
-static const struct tool_ops stamp_ops = {
+static const struct tool_ops shift_ops = {
 	{
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL		/* save */
 	},
-	stamp_window,
-	stamp_effect,
+	shift_window,
+	NULL,			/* effect */
 	NULL			/* cursor */
 };
 
-struct stamp *
-stamp_new(void)
+struct shift *
+shift_new(void)
 {
-	struct stamp *stamp;
+	struct shift *sh;
 
-	stamp = emalloc(sizeof(struct stamp));
-	stamp_init(stamp);
-	return (stamp);
+	sh = emalloc(sizeof(struct shift));
+	shift_init(sh);
+	return (sh);
 }
 
 void
-stamp_init(struct stamp *stamp)
+shift_init(struct shift *sh)
 {
-	tool_init(&stamp->tool, "stamp", &stamp_ops);
-
-	stamp->mode = STAMP_REPLACE;
+	tool_init(&sh->tool, "shift", &shift_ops);
 }
 
 struct window *
-stamp_window(void *p)
+shift_window(void *p)
 {
-	struct stamp *st = p;
+	struct shift *sh = p;
 	struct window *win;
 	struct region *reg;
+	struct scrollbar *xsb, *ysb;
 
-	win = window_new("mapedit-tool-stamp", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 156, 101, 156, 101);
-	window_set_caption(win, "Stamp");
+	win = window_new("mapedit-tool-shift", 0,
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
+	    141, 158,
+	    165, 177);
+	window_set_caption(win, "Shift");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	{
 		struct radio *rad;
-		static const char *mode_items[] = {
-			"Replace",
-			"Insert highest",
+		static const char *modes[] = {
+			"Highest",
+			"Lowest",
+			"Selective",
+			"All",
 			NULL
 		};
-
-		rad = radio_new(reg, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
-		win->focus = WIDGET(rad);
+		
+		rad = radio_new(reg, modes);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
 	}
 	return (win);
 }
 
 void
-stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
+shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 {
-	struct stamp *st = p;
-	struct map *m = mv->map;
-	struct node *dstnode = &m->map[y][x];
-	struct node *srcnode = mapedit->src_node;
-	struct noderef *nref, *nnref;
+	struct shift *sh = p;
+	struct tlist_item *it;
+	struct node *node = mv->cur_node;
+	struct noderef *nref;
 
-	if (srcnode == NULL) {
-		text_msg("Error", "No source node");
-		return;
-	}
-
-	if (st->mode == STAMP_REPLACE) {
-		for (nref = TAILQ_FIRST(&dstnode->nrefs);
-		     nref != TAILQ_END(&dstnode->nrefs);
-		     nref = nnref) {
-			nnref = TAILQ_NEXT(nref, nrefs);
-			free(nref);
+	switch (sh->mode) {
+	case SHIFT_HIGHEST:
+		if (!TAILQ_EMPTY(&node->nrefs)) {
+			nref = TAILQ_LAST(&node->nrefs, noderefq);
+			nref->xcenter += relx;
+			nref->ycenter += rely;
 		}
-		TAILQ_INIT(&dstnode->nrefs);
+		break;
+	case SHIFT_LOWEST:
+		if (!TAILQ_EMPTY(&node->nrefs)) {
+			nref = TAILQ_FIRST(&node->nrefs);
+			nref->xcenter += relx;
+			nref->ycenter += rely;
+		}
+		break;
+	case SHIFT_SELECTIVE:
+		TAILQ_FOREACH(it, &mv->node_tlist->items, items) {
+			if (it->selected) {
+				nref = it->p1;
+				nref->xcenter += relx;
+				nref->ycenter += rely;
+			}
+		}
+		break;
+	case SHIFT_ALL:
+		TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+			nref->xcenter += relx;
+			nref->ycenter += rely;
+		}
+		break;
 	}
-
-	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		node_copy_ref(nref, dstnode);
-	}
-	dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
 }
 

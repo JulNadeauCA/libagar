@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.12 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.13 2003/01/23 02:13:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -69,7 +69,37 @@ propedit_init(struct propedit *pe)
 	tool_init(&pe->tool, "propedit", &propedit_ops);
 
 	pe->mode = PROPEDIT_CLEAR;
-	pe->nodeflags = 0;
+	pe->node_mask = 0;
+}
+
+static void
+propedit_set_node_mode(int argc, union evarg *argv)
+{
+	struct radio *rad = argv[0].p;
+	struct propedit *pe = argv[1].p;
+	const int flags[] = {
+		NODE_BLOCK,
+		NODE_WALK,
+		NODE_CLIMB
+	};
+		
+	pe->node_mask &= ~(NODE_BLOCK|NODE_WALK|NODE_CLIMB);
+	pe->node_mask |= flags[rad->selitem];
+}
+
+static void
+propedit_set_node_flags(int argc, union evarg *argv)
+{
+	struct checkbox *cbox = argv[0].p;
+	struct propedit *pe = argv[1].p;
+	int flag = argv[2].i;
+	int state = argv[3].i;
+
+	if (state) {
+		pe->node_mask |= flag;
+	} else {
+		pe->node_mask &= ~(flag);
+	}
 }
 
 struct window *
@@ -86,38 +116,29 @@ propedit_window(void *p)
 	window_set_caption(win, "Node props");
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
-
-	/* Mode */
 	{
-		static char *items[] = {
+		static const char *modes[] = {
 			"Clear",
 			"Set",
 			"Unset",
 			NULL
 		};
-
-		rad = radio_new(reg, items, 0);
-		event_new(rad, "radio-changed",
-		    propedit_event, "%p, %i", pe, -1);
-	}
-
-	/* Block/walk/climb */
-	{
-		static char *items[] = {
+		static const char *node_modes[] = {
 			"Block",
 			"Walk",
 			"Climb",
 			NULL
 		};
 
-		rad = radio_new(reg, items, 0);
+		rad = radio_new(reg, modes);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &pe->mode);
+
+		rad = radio_new(reg, node_modes);
 		event_new(rad, "radio-changed",
-		    propedit_event, "%p, %i", pe, 0);
+		    propedit_set_node_mode, "%p", pe);
 	}
 
 	reg = region_new(win, REGION_VALIGN, 0, 40, 100, 60);
-	
-	/* Node flags */
 	{
 		const struct {
 			int	 flag;
@@ -135,71 +156,13 @@ propedit_window(void *p)
 		for (i = 0; i < nprops; i++) {
 			cbox = checkbox_new(reg, -1, props[i].name);
 			event_new(cbox, "checkbox-changed",
-			    propedit_event, "%p, %i", pe, props[i].flag);
+			    propedit_set_node_flags, "%p, %i",
+			    pe, props[i].flag);
 		}
 	}
 
 	win->focus = WIDGET(rad);
 	return (win);
-}
-
-void
-propedit_event(int argc, union evarg *argv)
-{
-	struct propedit *pe = argv[1].p;
-	struct radio *rad;
-	int value = argv[2].i;
-
-	switch (value) {
-	case -1:					/* Mode */
-		{
-			struct radio *rad = argv[0].p;
-
-			switch (rad->selitem) {
-			case 0:
-				pe->mode = PROPEDIT_CLEAR;
-				break;
-			case 1:
-				pe->mode = PROPEDIT_SET;
-				break;
-			case 2:
-				pe->mode = PROPEDIT_UNSET;
-				break;
-			}
-		}
-		break;
-	case 0:						/* Block */
-		{
-			struct radio *rad = argv[0].p;
-		
-			pe->nodeflags &= ~(NODE_BLOCK|NODE_WALK|NODE_CLIMB);
-
-			switch (rad->selitem) {
-			case 0:
-				pe->nodeflags |= NODE_BLOCK;
-				break;
-			case 1:
-				pe->nodeflags |= NODE_WALK;
-				break;
-			case 2:
-				pe->nodeflags |= NODE_CLIMB;
-				break;
-			}
-		}
-		break;
-	default:					/* Flag */
-		{
-			struct checkbox *cbox = argv[0].p;
-			int state = argv[1].i;
-			
-			if (state) {
-				pe->nodeflags |= value;
-			} else {
-				pe->nodeflags &= ~(value);
-			}
-		}
-		break;
-	}
 }
 
 void
@@ -209,7 +172,7 @@ propedit_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	struct map *m = mv->map;
 	struct node *n = &m->map[y][x];
 
-	if (pe->nodeflags & NODE_ORIGIN) {
+	if (pe->node_mask & NODE_ORIGIN) {
 		struct node *on;
 
 		on = &m->map[m->defy][m->defx];
@@ -222,13 +185,13 @@ propedit_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 
 	switch (pe->mode) {
 	case PROPEDIT_CLEAR:
-		n->flags = pe->nodeflags;
+		n->flags = pe->node_mask;
 		break;
 	case PROPEDIT_SET:
-		n->flags |= pe->nodeflags;
+		n->flags |= pe->node_mask;
 		break;
 	case PROPEDIT_UNSET:
-		n->flags &= ~(pe->nodeflags);
+		n->flags &= ~(pe->node_mask);
 		break;
 	}
 }

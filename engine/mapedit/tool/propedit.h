@@ -1,14 +1,16 @@
-/*	$Csoft: propedit.h,v 1.1 2002/07/30 22:19:34 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.2 2003/01/19 12:09:42 vedge Exp $	*/
 /*	Public domain	*/
+
+enum propedit_mode {
+	PROPEDIT_CLEAR,
+	PROPEDIT_SET,
+	PROPEDIT_UNSET
+};
 
 struct propedit {
 	struct tool	tool;
-	enum {
-		PROPEDIT_CLEAR,
-		PROPEDIT_SET,
-		PROPEDIT_UNSET
-	} mode;
-	Uint32	nodeflags;
+	int		mode;		/* Mode */
+	Uint32		node_mask;	/* Node flags mask */
 };
 
 struct propedit	*propedit_new(void);
