@@ -1,4 +1,4 @@
-/*	$Csoft: map_view.c,v 1.1 2002/09/19 20:59:39 vedge Exp $	*/
+/*	$Csoft: level_browser.c,v 1.2 2002/11/15 04:18:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -39,85 +39,28 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-#include <engine/widget/text.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/button.h>
-#include <engine/widget/bitmap.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
-#include "map_view.h"
-
-static const struct monitor_tool_ops map_view_ops = {
-	{
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL		/* save */
-	},
-	map_view_window
-};
-
-static void	lookup_object(int, union evarg *);
-
-struct map_view *
-map_view_new(struct monitor *mon, int flags)
-{
-	struct map_view *map_view;
-
-	map_view = emalloc(sizeof(struct map_view));
-	map_view_init(map_view, mon, flags);
-
-	return (map_view);
-}
-
-void
-map_view_init(struct map_view *map_view, struct monitor *mon,
-    int flags)
-{
-	monitor_tool_init(&map_view->tool, "map_view", mon,
-	    &map_view_ops);
-
-	map_view->flags = flags;
-}
-
-void
-map_view_show(int argc, union evarg *argv)
-{
-	struct monitor *mon = argv[1].p;
-	struct map_view *nmv;
-
-	pthread_mutex_lock(&view->lock);
-	if (view->rootmap == NULL) {
-		text_msg("Error", "No root map.");
-		pthread_mutex_unlock(&view->lock);
-		return;
-	}
-	pthread_mutex_unlock(&view->lock);
-
-	nmv = map_view_new(mon, 0);
-	map_view_window(nmv);
-}
 
 struct window *
-map_view_window(void *p)
+level_browser_window(void)
 {
-	struct map_view *obr = p;
 	struct window *win;
 	struct region *reg;
 	struct mapview *mv;
 
-	if (view->rootmap == NULL) {
-		fatal("no root map");
+	win = window_generic_new(320, 200,
+	    "monitor-level-browser-%s", OBJECT(view->rootmap->map)->name);
+	if (win == NULL) {
+		return (NULL);		/* Exists */
 	}
-	
-	win = window_generic_new(320, 200, NULL);
 	window_set_caption(win, "%s view", OBJECT(view->rootmap->map)->name);
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	mv = mapview_new(reg, NULL, view->rootmap->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
-	window_show(win);
 
 	return (win);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.96 2002/11/15 04:18:30 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.97 2002/11/15 21:56:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -98,7 +98,7 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_F7:
 		if (engine_debug > 0) {
-			window_show(monitor.wins.toolbar);
+			window_show(monitor.toolbar);
 		}
 		break;
 #endif /* DEBUG */
@@ -172,7 +172,7 @@ event_loop(void)
 	    SDL_MapRGB(view->v->format, 0, 160, 0));
 		
 	if (engine_debug > 0) {
-		window_show(monitor.wins.toolbar);
+		window_show(monitor.toolbar);
 	}
 #endif
 

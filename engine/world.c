@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.48 2002/11/10 01:43:26 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.49 2002/11/14 05:58:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,10 +32,6 @@
 #include <libfobj/fobj.h>
 
 #include "engine.h"
-
-#ifdef DEBUG
-#include "monitor/monitor.h"
-#endif
 
 #include "mapedit/mapedit.h"
 
@@ -142,12 +138,6 @@ world_attach(void *parent, void *child)
 	wo->nobjs++;
 	ob->state = OBJECT_CONSISTENT;
 
-#ifdef DEBUG
-	if (engine_debug > 0) {
-		event_post(&monitor, "world-attached-object", "%p", ob);
-	}
-#endif
-
 	event_post(ob, "attached", "%p", wo);
 
 	pthread_mutex_unlock(&wo->lock);
@@ -171,11 +161,6 @@ world_detach(void *parent, void *child)
 	wo->nobjs--;
 	ob->state = OBJECT_ZOMBIE;
 
-#ifdef DEBUG
-	if (engine_debug > 0) {
-		event_post(&monitor, "world-detached-object", "%p", ob);
-	}
-#endif
 	pthread_mutex_unlock(&wo->lock);
 
 	/* TODO defer */
