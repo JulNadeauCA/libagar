@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.61 2002/08/21 01:00:58 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.62 2002/08/23 05:16:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,6 +45,7 @@
 #include "physics.h"
 #include "input.h"
 #include "config.h"
+#include "rootmap.h"
 
 #include "mapedit/mapedit.h"
 
@@ -80,7 +81,8 @@ static void	engine_xdebug(void);
 static void
 printusage(char *progname, int flags)
 {
-	fprintf(stderr, "Usage: %s [-efv] [-j joy#]\n", progname);
+	fprintf(stderr, "Usage: %s [-efv] [-w width] [-h height] [-j joy#]\n",
+	    progname);
 }
 
 int
@@ -88,6 +90,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
     char *path, int flags)
 {
 	int c, njoy = -1, fullscreen = 0;
+	int w = -1, h = -1;
 
 	pthread_key_create(&engine_errorkey, NULL);
 
@@ -98,7 +101,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	printf("%s %s\n", gameinfo->name, gameinfo->version);
 	printf("%s\n", gameinfo->copyright);
 	
-	while ((c = getopt(argc, argv, "vfegl:n:j:W:H:")) != -1) {
+	while ((c = getopt(argc, argv, "vfegl:n:j:w:h:")) != -1) {
 		switch (c) {
 		case 'v':
 			exit (0);
@@ -110,6 +113,20 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 			break;
 		case 'e':
 			mapediting++;
+			break;
+		case 'w':
+			w = atoi(optarg);
+			if (w < 1 || w > 65536) {
+				fprintf(stderr, "invalid width argument\n");
+				exit(1);
+			}
+			break;
+		case 'h':
+			h = atoi(optarg);
+			if (w < 1 || w > 65536) {
+				fprintf(stderr, "invalid height argument\n");
+				exit(1);
+			}
 			break;
 		default:
 			printusage(argv[0], flags);
@@ -143,10 +160,13 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	object_load(config);
 
 	/* Overrides */
-	if (fullscreen) {
+	if (fullscreen)
 		config->flags |= CONFIG_FULLSCREEN;
-	}
-	
+	if (w > 0)
+		config->view.w = w;
+	if (h > 0)
+		config->view.h = h;
+
 	/* Initialize input devices. */
 	keyboard = input_new(INPUT_KEYBOARD, 0);
 	if (njoy != -1) {	/* XXX default */
