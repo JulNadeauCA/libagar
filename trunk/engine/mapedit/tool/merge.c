@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.13 2003/02/16 23:54:14 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.14 2003/02/17 02:46:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@
 
 static const struct version merge_ver = {
 	"agar merge tool",
-	3, 0
+	4, 0
 };
 
 static const struct tool_ops merge_ops = {
