@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.52 2002/03/05 17:45:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.53 2002/03/05 17:51:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -484,7 +484,7 @@ map_animate(struct map *m)
 					    rx, ry + m->tileh);
 					MAPEDIT_POSTDRAW(m, nnode, vx, vy + 1);
 					view->rects[ri++] =
-					    view->maprects[vy - 1][vx];
+					    view->maprects[vy + 1][vx];
 				}
 				MAPEDIT_PREDRAW(m, node, vx, vy);
 				map_rendernode(m, node, rx, ry);
