@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.41 2003/05/08 03:29:34 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.42 2003/06/06 02:47:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -22,7 +22,7 @@ struct mapview_constr {
 };
 
 struct mapview {
-	struct widget	wid;
+	struct widget wid;
 
 	int	flags;
 #define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
@@ -38,37 +38,35 @@ struct mapview {
 	int	 prop_bg;		/* Background of node attributes */
 	int	 prop_style;		/* Style of node attributes */
 
-	struct {		/* Mouse scrolling state */
+	struct {			/* Mouse scrolling state */
 		int	scrolling;
 		int	centering;
 		int	x, y;
 	} mouse;
-	struct {		/* Temporary mouse selection */
+	struct {			/* Temporary mouse selection */
 		int	set;
-		int	x, y;		/* Selection origin */
-		int	xoffs, yoffs;	/* Displacement from origin */
+		int	x, y;
+		int	xoffs, yoffs;
 	} msel;
-	struct {		/* Effective map selection */
+	struct {			/* Effective map selection */
 		int	set;
-		int	x, y;	/* Rectangle origin */
-		int	w, h;	/* Rectangle geometry */
+		int	x, y;
+		int	w, h;
 	} esel;
 
 	Uint16		*zoom;		/* Zoom factor (%) */
 	int		 zoom_inc;	/* Zoom increment (%) */
 	int		 zoom_ival;	/* Zoom interval (ms) */
 	SDL_TimerID	 zoom_tm;	/* Zoom timer */
-
 	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
 	int		*tilew, *tileh;	/* Current tile geometry */
-
-	struct {		/* For MAPVIEW_INDEPENDENT zoom */
+	struct {			/* For MAPVIEW_INDEPENDENT zoom */
 		Uint16	 zoom;
 		Sint16	 ssx, ssy;
 		int	 tilew, tileh;
 	} izoom;
 
-	struct map	*map;		/* Map to display */
+	struct map	*map;		/* Map to display/edit */
 	int		 mx, my;	/* Display offset (nodes) */
 	unsigned int	 mw, mh;	/* Display size (nodes) */
 	int		 cx, cy;	/* Cursor position (nodes) */

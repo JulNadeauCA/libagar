@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.117 2003/06/08 00:21:02 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.118 2003/06/08 23:53:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,6 +57,17 @@ const struct widget_ops mapview_ops = {
 };
 
 enum {
+	DEFAULT_WIDTH =		10,	/* Default width (nodes) */
+	DEFAULT_HEIGHT =	7,	/* Default height (nodes) */
+	MAPVIEW_ZOOM_MIN =	4,	/* Min zoom factor (%) */
+	MAPVIEW_ZOOM_MAX =	600,	/* Max zoom factor (%) */
+	MAPVIEW_TILE_MAX =	16384,	/* Max tile geometry (pixels) */
+	MAPVIEW_ZOOM_INC =	8,	/* Zoom increment (%) */
+	MAPVIEW_ZOOM_IVAL =	80,	/* Zoom interval (ms) */
+	MAPVIEW_MIN_PROP_ZOOM =	60	/* Minimum zoom to draw props (%) */
+};
+
+enum {
 	BORDER_COLOR,
 	GRID_COLOR,
 	CURSOR_COLOR,
@@ -66,16 +77,6 @@ enum {
 	BG2_COLOR,
 	MSEL_COLOR,
 	ESEL_COLOR
-};
-
-enum {
-	DEFAULT_WIDTH =		10,		/* Default width (nodes) */
-	DEFAULT_HEIGHT =	7,		/* Default height (nodes) */
-	MAPVIEW_ZOOM_MIN =	4,		/* Min zoom factor (%) */
-	MAPVIEW_ZOOM_MAX =	600,		/* Max zoom factor (%) */
-	MAPVIEW_TILE_MAX =	16384,		/* Max tile geometry (pixels) */
-	MAPVIEW_ZOOM_INC =	8,		/* Zoom increment (%) */
-	MAPVIEW_ZOOM_IVAL =	80		/* Zoom interval (ms) */
 };
 
 int	mapview_bg = 1;
@@ -329,7 +330,7 @@ defcurs:
 	    CURSOR_COLOR);
 }
 
-static void
+static __inline__ void
 mapview_draw_background(struct mapview *mv)
 {
 	static int softbg = 0;
@@ -420,7 +421,8 @@ draw_layer:
 				}
 			}
 
-			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
+			if (mv->flags & MAPVIEW_PROPS &&
+			    mv->map->zoom >= MAPVIEW_MIN_PROP_ZOOM) {
 				mapview_draw_props(mv, node, rx, ry, mx, my);
 			}
 			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
@@ -905,7 +907,6 @@ mapview_keydown(int argc, union evarg *argv)
 		}
 	}
 
-	/* Save/load keys */
 	if (mv->flags & MAPVIEW_SAVEABLE) {
 		switch (keysym) {
 		case SDLK_s:
@@ -923,7 +924,6 @@ mapview_keydown(int argc, union evarg *argv)
 		}
 	}
 
-	/* Visualisation options */
 	switch (keysym) {
 	case SDLK_g:
 		if (mv->flags & MAPVIEW_GRID) {
@@ -1027,10 +1027,14 @@ int
 mapview_get_selection(struct mapview *mv, int *x, int *y, int *w, int *h)
 {
 	if (mv->esel.set) {
-		if (x != NULL)	*x = mv->esel.x;
-		if (y != NULL)	*y = mv->esel.y;
-		if (w != NULL)	*w = mv->esel.w;
-		if (h != NULL)	*h = mv->esel.h;
+		if (x != NULL)
+			*x = mv->esel.x;
+		if (y != NULL)
+			*y = mv->esel.y;
+		if (w != NULL)
+			*w = mv->esel.w;
+		if (h != NULL)
+			*h = mv->esel.h;
 		return (1);
 	} else {
 		return (0);
