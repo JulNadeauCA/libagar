@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.12 2002/02/14 05:26:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.13 2002/02/17 07:59:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -55,9 +55,17 @@ event_hotkey(SDL_Event *ev)
 			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
 		}
 		break;
+#ifdef DEBUG
+	case SDLK_F2:
+		object_save(world);
+		break;
+	case SDLK_F4:
+		object_load(world);
+		break;
+#endif
 	case SDLK_ESCAPE:
 		engine_destroy();
-		/*NOTREACHED*/
+		break;
 	default:
 		break;
 	}
