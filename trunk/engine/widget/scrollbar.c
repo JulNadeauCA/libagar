@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.13 2002/12/26 07:04:36 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.14 2002/12/30 06:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -163,6 +163,8 @@ scrollbar_mouse_buttondown(int argc, union evarg *argv)
 	int maxcoord = (sb->orientation == SCROLLBAR_HORIZ) ?
 	    WIDGET(sb)->w : WIDGET(sb)->h;
 
+	WIDGET_FOCUS(sb);
+
 	if (coord < sb->button_size) {
 		sb->curbutton = BUTTON_UP;
 	} else if (coord > maxcoord - sb->button_size) {
@@ -202,54 +204,6 @@ scrollbar_scaled(int argc, union evarg *argv)
 	}
 }
 
-enum {
-	TRIANGLE_LEFT,
-	TRIANGLE_RIGHT,
-	TRIANGLE_UP,
-	TRIANGLE_DOWN
-};
-
-static void
-scrollbar_triangle(struct scrollbar *sb, int xoffs, int yoffs, int orientation,
-    Uint32 color)
-{
-	int bh = sb->button_size;
-
-	switch (orientation) {
-	case TRIANGLE_UP:
-		primitives.line(sb,
-		    xoffs + bh/2, yoffs + 2,
-		    xoffs + bh - 2, yoffs + bh - bh/2,
-		    color);
-		primitives.line(sb,
-		    xoffs + 2, yoffs + bh - bh/2,
-		    xoffs + bh/2, yoffs + 2,
-		    color);
-		primitives.line(sb,
-		    xoffs + 2, yoffs + bh - bh/2,
-		    xoffs + bh - 2, yoffs + bh - bh/2,
-		    color);
-		break;
-	case TRIANGLE_DOWN:
-		primitives.line(sb,
-		    xoffs + 2, yoffs + 2,
-		    xoffs + bh - 2, yoffs + 2,
-		    color);
-		primitives.line(sb,
-		    xoffs + 2, yoffs + 2,
-		    xoffs + bh/2, yoffs + bh - bh/2,
-		    color);
-		primitives.line(sb,
-		    xoffs + bh/2, yoffs + bh - bh/2,
-		    xoffs + bh - 2, yoffs + 2,
-		    color);
-		break;
-	case TRIANGLE_LEFT:
-	case TRIANGLE_RIGHT:
-		break;
-	}
-}
-
 void
 scrollbar_draw(void *p)
 {
@@ -277,18 +231,11 @@ scrollbar_draw(void *p)
 		primitives.box(sb, 0, 0, WIDGET(sb)->w, sb->button_size,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
-		scrollbar_triangle(sb, -1, 2, TRIANGLE_UP,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
-		scrollbar_triangle(sb, 0, 3, TRIANGLE_UP,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
 		primitives.box(sb, 0, WIDGET(sb)->h - sb->button_size,
 		    WIDGET(sb)->w, sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
-		scrollbar_triangle(sb, -1, WIDGET(sb)->h - 17, TRIANGLE_DOWN,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
-		scrollbar_triangle(sb, 0, WIDGET(sb)->h - 16, TRIANGLE_DOWN,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
+
 		/* Scrolling bar */
 		if (max > 0) {
 			if (sb->bar_size < 0) {
@@ -302,12 +249,11 @@ scrollbar_draw(void *p)
 			h = WIDGET(sb)->h - sb->button_size*2;
 			y = 0;
 		}
-		if (h < sb->button_size) {
+		if (h < sb->button_size)
 			h = sb->button_size;
-		}
-		if (sb->button_size + h + y > WIDGET(sb)->h - sb->button_size) {
+		if (sb->button_size + h + y > WIDGET(sb)->h - sb->button_size)
 			y = WIDGET(sb)->h - sb->button_size*2 - h;
-		}
+
 		primitives.box(sb,
 		    0, sb->button_size+y,
 		    WIDGET(sb)->w, h,
@@ -315,25 +261,16 @@ scrollbar_draw(void *p)
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
 		break;
 	case SCROLLBAR_HORIZ:
-		/* Scrolling buttons */
 		primitives.box(sb, 0, 0,
 		    sb->button_size, WIDGET(sb)->h,
 		    (sb->curbutton == BUTTON_UP) ? -1 : 1,
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
-		scrollbar_triangle(sb, -1, 2, TRIANGLE_LEFT,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
-		scrollbar_triangle(sb, 0, 3, TRIANGLE_LEFT,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
 		primitives.box(sb,
 		    WIDGET(sb)->w - sb->button_size, 0,
 		    WIDGET(sb)->h, sb->button_size,
 		    (sb->curbutton == BUTTON_DOWN) ? -1 : 1,
 		    WIDGET_COLOR(sb, SCROLL_BUTTON_COLOR));
-		scrollbar_triangle(sb, -1, WIDGET(sb)->w - 17, TRIANGLE_RIGHT,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR1));
-		scrollbar_triangle(sb, 0, WIDGET(sb)->w - 16, TRIANGLE_RIGHT,
-		    WIDGET_COLOR(sb, SCROLL_TRIANGLE_COLOR2));
-		/* Scrolling bar */
+
 		if (max > 0) {
 			if (sb->bar_size < 0) {
 				w = WIDGET(sb)->w - sb->button_size*2;
@@ -345,12 +282,11 @@ scrollbar_draw(void *p)
 			w = WIDGET(sb)->w - sb->button_size*2;
 			x = 0;
 		}
-		if (w < sb->button_size) {
+		if (w < sb->button_size)
 			w = sb->button_size;
-		}
-		if (sb->button_size + w + x > WIDGET(sb)->w - sb->button_size) {
+		if (sb->button_size + w + x > WIDGET(sb)->w - sb->button_size)
 			x = WIDGET(sb)->w - sb->button_size*2 - w;
-		}
+
 		primitives.box(sb,
 		    sb->button_size+x, 0,
 		    w, WIDGET(sb)->h,
