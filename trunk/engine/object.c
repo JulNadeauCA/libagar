@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.193 2005/02/08 15:47:46 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.194 2005/03/11 08:59:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -43,6 +43,8 @@
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/notebook.h>
+#include <engine/widget/separator.h>
 #endif
 
 #include <sys/stat.h>
@@ -1588,7 +1590,7 @@ object_icon(void *p)
 #ifdef EDITION
 
 static void
-object_poll_deps(int argc, union evarg *argv)
+poll_deps(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct object *ob = argv[1].p;
@@ -1613,6 +1615,48 @@ object_poll_deps(int argc, union evarg *argv)
 }
 
 static void
+poll_gfx(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct gfx *gfx = ob->gfx;
+	Uint32 i;
+	
+	if (gfx == NULL)
+		return;
+	
+	tlist_clear_items(tl);
+	for (i = 0; i < gfx->nsprites; i++) {
+		SDL_Surface *su = gfx->sprites[i];
+
+		if (su != NULL) {
+			tlist_insert(tl, su, "%u. %ux%ux%u", i, su->w, su->h,
+			    su->format->BitsPerPixel);
+		} else {
+			tlist_insert(tl, su, "%u. (null)", i);
+		}
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
+poll_props(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct prop *prop;
+	
+	tlist_clear_items(tl);
+	TAILQ_FOREACH(prop, &ob->props, props) {
+		char val[TLIST_LABEL_MAX];
+
+		prop_print_value(val, sizeof(val), prop);
+		tlist_insert(tl, NULL, "%s = %s", prop->key, val);
+	}
+	tlist_restore_selections(tl);
+}
+
+static void
 rename_object(int argc, union evarg *argv)
 {
 	struct widget_binding *stringb;
@@ -1632,41 +1676,60 @@ object_edit(void *p)
 {
 	struct object *ob = p;
 	struct window *win;
-	struct box *bo;
 	struct textbox *tbox;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
+	struct tlist *tl;
 
-	win = window_new(WINDOW_NO_VRESIZE|WINDOW_DETACH, NULL);
-	window_set_caption(win, _("%s object"), ob->name);
+	win = window_new(WINDOW_DETACH, NULL);
+	window_set_caption(win, _("Object %s"), ob->name);
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
 
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Infos"), BOX_VERT);
+	notebook_select_tab(nb, ntab);
 	{
-		tbox = textbox_new(bo, _("Name: "));
+		tbox = textbox_new(ntab, _("Name: "));
 		textbox_printf(tbox, ob->name);
 		event_new(tbox, "textbox-return", rename_object, "%p", ob);
+		
+		separator_new(ntab, SEPARATOR_HORIZ);
+	
+		label_new(ntab, LABEL_STATIC, _("Type: %s"), ob->type);
+		label_new(ntab, LABEL_POLLED, _("Flags : 0x%x"), &ob->flags);
+		label_new(ntab, LABEL_POLLED_MT, _("Parent: %[obj]"),
+		    &linkage_lock, &ob->parent);
+
+		separator_new(ntab, SEPARATOR_HORIZ);
+
+		label_new(ntab, LABEL_POLLED, _("Data references: %[u32]"),
+		    &ob->data_used);
+		label_new(ntab, LABEL_POLLED, _("Graphic references: %[u32]"),
+		    &ob->gfx_used);
+		label_new(ntab, LABEL_POLLED, _("Audio references: %[u32]"),
+		    &ob->audio_used);
+	}
+
+	ntab = notebook_add_tab(nb, _("Deps"), BOX_VERT);
+	{
+		tl = tlist_new(ntab, TLIST_POLL);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
+		event_new(tl, "tlist-poll", poll_deps, "%p", ob);
 	}
 	
-	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	ntab = notebook_add_tab(nb, _("Gfx"), BOX_VERT);
 	{
-		label_new(bo, LABEL_STATIC, _("Type: %s"), ob->type);
-		label_new(bo, LABEL_POLLED_MT, _("Flags : 0x%x"), &ob->lock,
-		    &ob->flags);
-		label_new(bo, LABEL_POLLED_MT, _("Parent: %[obj]"),
-		    &linkage_lock, &ob->parent);
-		label_new(bo, LABEL_POLLED_MT,
-		    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]", &ob->lock,
-		    &ob->gfx_used, &ob->audio_used, &ob->data_used);
+		tl = tlist_new(ntab, TLIST_POLL);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
+		tlist_set_item_height(tl, TILESZ);
+		event_new(tl, "tlist-poll", poll_gfx, "%p", ob);
 	}
-
-	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	box_set_padding(bo, 2);
+	
+	ntab = notebook_add_tab(nb, _("Props"), BOX_VERT);
 	{
-		struct tlist *tl;
-
-		label_new(bo, LABEL_STATIC, _("Dependencies:"));
-		tl = tlist_new(bo, TLIST_POLL);
-		tlist_prescale(tl, "XXXXXXXXXXXX", 2);
-		event_new(tl, "tlist-poll", object_poll_deps, "%p", ob);
+		tl = tlist_new(ntab, TLIST_POLL);
+		tlist_prescale(tl, "XXXXXXXXXXXX", 6);
+		event_new(tl, "tlist-poll", poll_props, "%p", ob);
 	}
 	return (win);
 }
