@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.3 2003/06/21 06:39:44 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.4 2003/06/25 00:33:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -7,12 +7,12 @@ struct object;
 struct noderef;
 
 struct gfx_anim {
-	SDL_Surface	 **frames;
+	SDL_Surface	 **frames;	/* Animation frames */
 	Uint32		  nframes;
 	Uint32		maxframes;
-	Uint32		   frame;
-	int		   delta;
-	int		   delay;
+
+	Uint32	frame;			/* Current frame# */
+	int	delta, delay;		/* Timing */
 };
 
 struct gfx_cached_sprite {
@@ -57,7 +57,7 @@ struct gfx {
 
 	pthread_mutex_t	 used_lock;
 	Uint32		 used;		/* Reference count */
-#define ART_MAX_USED	 (0xffffffff-1)
+#define GFX_MAX_USED	 (0xffffffff-1)
 	TAILQ_ENTRY(gfx) gfxs;		/* Art pool */
 };
 
@@ -70,10 +70,10 @@ struct gfx {
 #endif
 
 __BEGIN_DECLS
-struct gfx	*gfx_fetch(void *, const char *);
-void		 gfx_unused(struct gfx *);
-void		 gfx_wire(struct gfx *);
-void		 gfx_scan_alpha(SDL_Surface *);
+int	 gfx_fetch(void *, const char *);
+void	 gfx_unused(struct gfx *);
+void	 gfx_wire(struct gfx *);
+void	 gfx_scan_alpha(SDL_Surface *);
 
 Uint32		 gfx_insert_sprite(struct gfx *, SDL_Surface *, int);
 struct map	*gfx_insert_fragments(struct gfx *, SDL_Surface *);

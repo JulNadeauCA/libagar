@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.3 2003/06/21 06:39:44 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.4 2003/06/25 00:33:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -86,9 +86,9 @@ void
 gfx_scan_alpha(SDL_Surface *su)
 {
 	enum {
-		ART_ALPHA_TRANSPARENT = 0x01,
-		ART_ALPHA_OPAQUE =	0x02,
-		ART_ALPHA_ALPHA =	0x04
+		GFX_ALPHA_TRANSPARENT = 0x01,
+		GFX_ALPHA_OPAQUE =	0x02,
+		GFX_ALPHA_ALPHA =	0x04
 	} aflags = 0;
 	Uint8 oldalpha = su->format->alpha;
 #if 0
@@ -122,13 +122,13 @@ gfx_scan_alpha(SDL_Surface *su)
 
 			switch (a) {
 			case SDL_ALPHA_TRANSPARENT:
-				aflags |= ART_ALPHA_TRANSPARENT;
+				aflags |= GFX_ALPHA_TRANSPARENT;
 				break;
 			case SDL_ALPHA_OPAQUE:
-				aflags |= ART_ALPHA_OPAQUE;
+				aflags |= GFX_ALPHA_OPAQUE;
 				break;
 			default:
-				aflags |= ART_ALPHA_ALPHA;
+				aflags |= GFX_ALPHA_ALPHA;
 				break;
 			}
 		}
@@ -139,11 +139,11 @@ gfx_scan_alpha(SDL_Surface *su)
 	/* XXX use rleaccel */
 	SDL_SetAlpha(su, 0, 0);
 	SDL_SetColorKey(su, 0, 0);
-	if (aflags & (ART_ALPHA_ALPHA|ART_ALPHA_TRANSPARENT)) {
+	if (aflags & (GFX_ALPHA_ALPHA|GFX_ALPHA_TRANSPARENT)) {
 		SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
 #if 0
 	/* XXX causes some images to be rendered incorrectly. */
-	} else if (aflags & ART_ALPHA_TRANSPARENT) {
+	} else if (aflags & GFX_ALPHA_TRANSPARENT) {
 		dprintf("colorkey %u\n", oldckey);
 		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
 #endif
@@ -217,21 +217,21 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	return (fragmap);
 }
 
-/* Disable garbage collection for a group of graphics. */
+/* Disable garbage collection. */
 void
 gfx_wire(struct gfx *gfx)
 {
 	pthread_mutex_lock(&gfx->used_lock);
-	gfx->used = ART_MAX_USED;
+	gfx->used = GFX_MAX_USED;
 	pthread_mutex_unlock(&gfx->used_lock);
 }
 
-/* Decrement the reference count on a group of graphics. */
+/* Decrement the reference count. */
 void
 gfx_unused(struct gfx *gfx)
 {
 	pthread_mutex_lock(&gfx->used_lock);
-	if (gfx->used != ART_MAX_USED &&		/* Remain resident? */
+	if (gfx->used != GFX_MAX_USED &&		/* Remain resident? */
 	    --gfx->used == 0) {
 		pthread_mutex_unlock(&gfx->used_lock);
 		gfx_destroy(gfx);
@@ -241,7 +241,7 @@ gfx_unused(struct gfx *gfx)
 }
 
 /* Load the named graphics package. */
-struct gfx *
+int
 gfx_fetch(void *p, const char *key)
 {
 	struct object *ob = p;
@@ -256,19 +256,19 @@ gfx_fetch(void *p, const char *key)
 		if (strcmp(gfx->name, key) == 0)
 			break;
 	}
-	if (gfx != NULL) {				/* Cached? */
-		if (++gfx->used > ART_MAX_USED) {
-			gfx->used = ART_MAX_USED; 	/* Remain resident */
+	if (gfx != NULL) {
+		if (++gfx->used > GFX_MAX_USED) {
+			gfx->used = GFX_MAX_USED;
 		}
 		goto out;
 	}
 
 	if ((path = config_search_file("load-path", key, "den")) == NULL)
-		fatal("searching %s: %s", key, error_get());
+		goto fail;
 
 	gfx = Malloc(sizeof(struct gfx));
 	gfx->name = Strdup(key);
-	gfx->pobj = ob;				/* For submap refs */
+	gfx->pobj = ob;				/* XXX For submap refs */
 	gfx->sprites = NULL;
 	gfx->csprites = NULL;
 	gfx->nsprites = 0;
@@ -281,35 +281,49 @@ gfx_fetch(void *p, const char *key)
 	gfx->nsubmaps = 0;
 	gfx->maxsubmaps = 0;
 	gfx->used = 1;
+	gfx->tile_map = NULL;
 	pthread_mutex_init(&gfx->used_lock, NULL);
 
-	if (mapedition) {				/* Map the tileset */
-		char mapname[OBJECT_NAME_MAX];
-
+	if (mapedition) {
 		gfx->tile_map = Malloc(sizeof(struct map));
-		snprintf(mapname, sizeof(mapname), "t-%s", key);
-		map_init(gfx->tile_map, mapname);
+		map_init(gfx->tile_map, key);
 		if (map_alloc_nodes(gfx->tile_map, 2, 2) == -1)
-			fatal("allocating nodes: %s", error_get());
-	} else {
-		gfx->tile_map = NULL;
+			goto fail;
 	}
 
-	/* Load images in XCF format. */
 	if ((den = den_open(path, DEN_READ)) == NULL) {
-		fatal("loading %s: %s", path, error_get());
+		goto fail;
 	}
 	for (i = 0; i < den->nmembers; i++) {
-		if (xcf_load(den->buf, den->members[i].offs, gfx) == -1)
-			fatal("loading xcf #%d: %s", i, error_get());
+		if (xcf_load(den->buf, den->members[i].offs, gfx) == -1) {
+			den_close(den);
+			goto fail;
+		}
 	}
 	den_close(den);
 
 	TAILQ_INSERT_HEAD(&gfxq, gfx, gfxs);			/* Cache */
 out:
 	pthread_mutex_unlock(&gfxq_lock);
+	if (ob->gfx != NULL) {
+		gfx_unused(ob->gfx);
+	}
+	ob->gfx = gfx;
 	Free(path);
-	return (gfx);
+	return (0);
+fail:
+	pthread_mutex_unlock(&gfxq_lock);
+	if (gfx != NULL) {
+		if (gfx->tile_map != NULL) {
+			object_destroy(gfx->tile_map);
+			free(gfx->tile_map);
+		}
+		pthread_mutex_destroy(&gfx->used_lock);
+		free(gfx->name);
+		free(gfx);
+	}
+	Free(path);
+	return (-1);
 }
 
 /* Release a group of graphics. */
