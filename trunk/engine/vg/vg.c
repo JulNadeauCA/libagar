@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.19 2004/05/10 05:17:05 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.20 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -191,6 +191,14 @@ vg_destroy_txtstyles(struct vg *vg)
 	TAILQ_INIT(&vg->txtstyles);
 }
 
+void
+vg_reinit(struct vg *vg)
+{
+	vg_destroy_elements(vg);
+	vg_destroy_blocks(vg);
+	vg_destroy_txtstyles(vg);
+	vg_destroy_fragments(vg);
+}
 
 void
 vg_destroy(struct vg *vg)
@@ -328,6 +336,8 @@ vg_destroy_fragments(struct vg *vg)
 	}
 	gfx->nsprites = 0;
 	gfx->nsubmaps = 0;
+	
+	map_free_nodes(vg->map);
 }
 
 /* Mark every element as dirty. */
@@ -367,12 +377,10 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	    vfmt->Rmask, vfmt->Gmask, vfmt->Bmask, vfmt->Amask)) == NULL)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 
+	/* Resize the fragment map. */
 	vg_destroy_fragments(vg);
-	map_free_nodes(vg->map);
-	
 	mw = vg->su->w/TILESZ+1;
 	mh = vg->su->h/TILESZ+1;
-
 	if (map_alloc_nodes(vg->map, mw, mh) == -1)
 		fatal("%s", error_get());
 
@@ -930,6 +938,9 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	dprintf("name `%s' bbox %.2fx%.2f scale %.2f\n", vg->name, vg->w, vg->h,
 	    vg->scale);
 
+	/* Prepare the fragment map. */
+	vg_scale(vg, vg->w, vg->h, vg->scale);
+
 	/* Read the origin points. */
 	if ((norigin = read_uint32(buf)) < 1) {
 		error_set("norigin < 1");
@@ -1080,6 +1091,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 	pthread_mutex_unlock(&vg->lock);
 	return (0);
 fail:
+	vg->redraw++;
 	pthread_mutex_unlock(&vg->lock);
 	return (-1);
 }
