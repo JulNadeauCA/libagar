@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.79 2003/07/08 00:34:59 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.80 2003/10/13 23:49:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -85,6 +85,7 @@ tlist_init(struct tlist *tl, int flags)
 {
 	widget_init(tl, "tlist", &tlist_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
+	widget_bind(tl, "selected", WIDGET_POINTER, &tl->selected);
 
 	widget_map_color(tl, BG_COLOR, "background", 120, 120, 120, 255);
 	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240, 255);
@@ -93,6 +94,7 @@ tlist_init(struct tlist *tl, int flags)
 
 	tl->flags = flags;
 	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
+	tl->selected = NULL;
 	tl->item_h = text_font_height(font) + 2;
 	tl->dblclicked = NULL;
 	tl->dbltimer = NULL;
@@ -102,7 +104,7 @@ tlist_init(struct tlist *tl, int flags)
 	tl->nvisitems = 0;
 	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
 
-	tlist_prescale(tl, "XXXXXXXXXXXX", 4);
+	tlist_prescale(tl, "XXXXXXXXXXXXXXX", 4);
 
 	event_new(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
 	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
@@ -308,6 +310,7 @@ tlist_adjust_scrollbar(struct tlist *tl)
 		*offset = noffset;
 		widget_binding_modified(offsetb);
 	}
+
 	widget_binding_unlock(offsetb);
 	widget_binding_unlock(maxb);
 }
@@ -546,6 +549,34 @@ tlist_dblclick_expire(Uint32 i, void *arg)
 }
 
 static void
+tlist_select_item(struct tlist *tl, struct tlist_item *it)
+{
+	struct widget_binding *selectedb;
+	void **selected;
+
+	selectedb = widget_get_binding(tl, "selected", &selected);
+	*selected = it->p1;
+	it->selected++;
+	event_post(tl, "tlist-changed", "%p, %i", it, 1);
+	widget_binding_modified(selectedb);
+	widget_binding_unlock(selectedb);
+}
+
+static void
+tlist_unselect_item(struct tlist *tl, struct tlist_item *it)
+{
+	struct widget_binding *selectedb;
+	void **selected;
+
+	selectedb = widget_get_binding(tl, "selected", &selected);
+	*selected = NULL;
+	it->selected = 0;
+	event_post(tl, "tlist-changed", "%p, %i", it, 0);
+	widget_binding_modified(selectedb);
+	widget_binding_unlock(selectedb);
+}
+
+static void
 tlist_mousebuttondown(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
@@ -648,7 +679,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 			}
 		}
 	}
-	event_post(tl, "tlist-changed", "%p, %i", ti, 1);
+	tlist_select_item(tl, ti);
 out:
 	pthread_mutex_unlock(&tl->lock);
 }
@@ -673,17 +704,8 @@ tlist_keydown(int argc, union evarg *argv)
 			if (it->selected) {
 				pit = TAILQ_PREV(it, tlist_itemq, items);
 				if (pit != NULL) {
-					/* Unselect current */
-					it->selected = 0;
-					event_post(tl, "tlist-changed",
-					    "%p, %i", it, 0);
-
-					/* Select previous */
-					pit->selected++;
-					event_post(tl, "tlist-changed",
-					    "%p, %i", pit, 1);
-				
-					/* Scroll */
+					tlist_unselect_item(tl, it);
+					tlist_select_item(tl, pit);
 					if (--(*offset) < 0) {
 						*offset = 0;
 					}
@@ -698,17 +720,8 @@ tlist_keydown(int argc, union evarg *argv)
 			if (it->selected) {
 				pit = TAILQ_NEXT(it, items);
 				if (pit != NULL) {
-					/* Unselect current */
-					it->selected = 0;
-					event_post(tl, "tlist-changed",
-					    "%p, %i", it, 0);
-					
-					/* Select next */
-					pit->selected++;
-					event_post(tl, "tlist-changed",
-					    "%p, %i", pit, 1);
-					
-					/* Scroll */
+					tlist_unselect_item(tl, it);
+					tlist_select_item(tl, pit);
 					if (++(*offset) >
 					    tl->nitems - tl->nvisitems) {
 						*offset = tl->nitems -
@@ -720,13 +733,15 @@ tlist_keydown(int argc, union evarg *argv)
 		}
 		break;
 	case SDLK_PAGEUP:
-		if ((*offset -= PAGE_INCREMENT) < 0)
+		if ((*offset -= PAGE_INCREMENT) < 0) {
 			*offset = 0;
+		}
 		widget_binding_modified(offsetb);
 		break;
 	case SDLK_PAGEDOWN:
-		if ((*offset += PAGE_INCREMENT) > tl->nitems - tl->nvisitems)
+		if ((*offset += PAGE_INCREMENT) > tl->nitems - tl->nvisitems) {
 			*offset = tl->nitems - tl->nvisitems;
+		}
 		widget_binding_modified(offsetb);
 		break;
 	default:

@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.29 2003/10/11 03:32:53 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.30 2003/10/13 23:49:03 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -259,13 +259,25 @@ The
 flag is set and the widget is about to be drawn or an event is being
 processed.
 .El
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "void *selected "
+.It Va void *selected
+The
+.Va p1
+value of the selected item, or NULL if there is no selection (not for use
+with the
+.Dv TLIST_MULTI
+flag).
+.El
 .Sh TROUBLETONS
 Polled mode handling is inefficient and increases the complexity of the code,
 since selections must be saved/restored according to their user pointer.
 .Pp
 Tree display is a crude hack and should be implemented by another widget.
-.Pp
-The item text labels could be cached.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.30 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.31 2003/06/30 06:39:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -38,6 +38,7 @@ struct tlist {
 #define TLIST_DBLCLICK		0x08	/* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10	/* Hack to display trees */
 
+	void	*selected;		/* Default `selected' binding */
 	int	 prew, preh;		/* Prescale hint */
 
 	pthread_mutex_t		 lock;
