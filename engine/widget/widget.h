@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.8 2002/04/26 11:40:48 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.9 2002/04/28 14:11:23 vedge Exp $	*/
 
 struct window;
 
@@ -53,7 +53,9 @@ struct widget {
 /* Sprites. All widgets share the same art. */
 enum {
 	BUTTON_UP = 0,
-	BUTTON_DOWN
+	BUTTON_DOWN,
+	CHECKBOX_UP,
+	CHECKBOX_DOWN
 };
 
 void		 widget_init(struct widget *, char *, void *,
