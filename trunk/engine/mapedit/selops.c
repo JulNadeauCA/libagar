@@ -1,4 +1,4 @@
-/*	$Csoft: selops.c,v 1.1 2003/03/10 05:49:10 vedge Exp $	*/
+/*	$Csoft: selops.c,v 1.2 2003/03/13 08:38:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -39,15 +39,15 @@ void
 selops_cut(struct mapview *mv)
 {
 	selops_copy(mv);
-	selops_clear(mv);
+	selops_kill(mv);
 }
 
 void
-selops_clear(struct mapview *mv)
+selops_kill(struct mapview *mv)
 {
 	int x, y;
 	
-	dprintf("clear [%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y,
+	dprintf("[%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y,
 	    mv->esel.w, mv->esel.h);
 
 	for (y = mv->esel.y;

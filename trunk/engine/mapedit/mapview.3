@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.20 2003/03/13 08:37:16 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.21 2003/03/15 04:21:37 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -124,11 +124,11 @@ returns 0 on success and -1 on error.
 .nr nS 1
 .Ft void
 .Fn mapview_set_selection "struct mapview *mv" "int x" "int y" \
-                          "unsigned int w" "unsigned int h"
+                          "int w" "int h"
 .Pp
 .Ft int
 .Fn mapview_get_selection "struct mapview *mv" "int *x" "int *y" \
-                          "unsigned int *w" "unsigned int *h"
+                          "int *w" "int *h"
 .nr nS 0
 The
 .Fn mapview_set_selection
@@ -144,7 +144,7 @@ also disables any mouse selection in progress.
 .Pp
 The
 .Fn mapview_get_selection
-function returns 1 if there is an active selection or 0 if there is none.
+returns 1 if there is an active selection or 0 if there is none.
 .Sh EVENTS
 The
 .Nm
