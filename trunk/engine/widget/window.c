@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.159 2003/02/02 00:34:58 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.160 2003/02/02 21:16:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -911,7 +911,6 @@ window_focus(struct window *win)
 #if 0
 		/* XXX */
 		if (lastwin->focus != NULL) {
-			/* Take the focus off the widget. */
 			event_post(lastwin->focus, "widget-lostfocus", NULL);
 			lastwin->focus = NULL;
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.26 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.27 2003/01/23 02:00:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -140,7 +140,7 @@ region_detach(void *parent, void *child)
 	
 	event_post(wid, "detached", "%p", parent);		/* Notify */
 
-	OBJECT(wid)->state = OBJECT_ZOMBIE;
+	OBJECT(wid)->state = OBJECT_DETACHED;
 	object_destroy(wid);
 }
 
