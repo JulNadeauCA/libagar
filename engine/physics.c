@@ -118,37 +118,47 @@ direction_update(struct direction *dir, struct map *map, int *mapx, int *mapy)
 
 		if (dir->current & DIR_UP) {
 			dir->moved |= DIR_UP;
-			decrease(mapy, 1, 1);
-			if ((dir->flags & DIR_SCROLL) &&
-			    (map->view->mapy - *mapy) >= 0) {
-			    	scroll(map, DIR_UP);
+			if (dir->flags & DIR_ONMAP) {
+				decrease(mapy, 1, 1);
+				if ((dir->flags & DIR_SCROLL) &&
+				    (map->view->mapy - *mapy) >= 0) {
+				    	scroll(map, DIR_UP);
+				}
 			}
-			move |= DIR_LEFT;
+			move |= DIR_UP;
 		}
 		if (dir->current & DIR_DOWN) {
 			dir->moved |= DIR_DOWN;
-			increase(mapy, 1, map->maph - 1);
-			if ((dir->flags & DIR_SCROLL) &&
-			    (map->view->mapy - *mapy) <= -map->view->maph) {
-				scroll(map, DIR_DOWN);
+			if (dir->flags & DIR_ONMAP) {
+				increase(mapy, 1, map->maph - 1);
+				if ((dir->flags & DIR_SCROLL) &&
+				    (map->view->mapy - *mapy) <=
+				     -map->view->maph) {
+					scroll(map, DIR_DOWN);
+				}
 			}
 			move |= DIR_DOWN;
 		}
 		if (dir->current & DIR_LEFT) {
 			dir->moved |= DIR_LEFT;
-			decrease(mapx, 1, 1);
-			if ((dir->flags & DIR_SCROLL) &&
-			    (map->view->mapx - *mapx) >= 0) {
-				scroll(map, DIR_LEFT);
+			if (dir->flags & DIR_LEFT) {
+				decrease(mapx, 1, 1);
+				if ((dir->flags & DIR_SCROLL) &&
+				    (map->view->mapx - *mapx) >= 0) {
+					scroll(map, DIR_LEFT);
+				}
 			}
 			move |= DIR_LEFT;
 		}
 		if (dir->current & DIR_RIGHT) {
 			dir->moved |= DIR_RIGHT;
-			increase(mapx, 1, map->mapw - 1);
-			if ((dir->flags & DIR_SCROLL) &&
-			    (map->view->mapx - *mapx) <= -map->view->mapw) {
-				scroll(map, DIR_RIGHT);
+			if (dir->flags & DIR_RIGHT) {
+				increase(mapx, 1, map->mapw - 1);
+				if ((dir->flags & DIR_SCROLL) &&
+				    (map->view->mapx - *mapx) <=
+				    -map->view->mapw) {
+					scroll(map, DIR_RIGHT);
+				}
 			}
 			move |= DIR_RIGHT;
 		}
