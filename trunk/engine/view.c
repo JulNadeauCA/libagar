@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.102 2003/01/01 03:31:10 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.103 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ int	view_debug = 1;
 
 /* Initialize the graphic engine. */
 int
-view_init(gfx_engine_t ge)
+view_init(enum gfx_engine ge)
 {
 	struct viewport *v;
 	int screenflags = SDL_SWSURFACE;
