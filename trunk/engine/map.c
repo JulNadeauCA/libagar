@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.209 2004/03/10 04:39:30 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.210 2004/03/12 04:06:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1177,8 +1177,9 @@ noderef_draw_anim(struct noderef *r)
 {
 	struct gfx_anim *anim = ANIM(r->r_anim.obj, r->r_anim.offs);
 
-	/* XXX do this somewhere else! */
-	gfx_anim_tick(anim, r);
+	/* XXX not very sophisticated */
+	if (++anim->frame >= anim->nframes)
+		anim->frame = 0;
 
 	/* XXX transforms */
 	return (anim->frames[anim->frame]);

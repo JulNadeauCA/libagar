@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.21 2004/03/12 02:47:50 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.22 2004/03/12 04:00:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -316,7 +316,7 @@ fail:
 }
 
 /* Release a graphics package that is no longer in use. */
-static void
+void
 gfx_destroy(struct gfx *gfx)
 {
 	Uint32 i;
@@ -427,7 +427,7 @@ gfx_insert_submap(struct gfx *gfx, struct map *m)
 
 /* Insert a new animation. */
 struct gfx_anim *
-gfx_insert_anim(struct gfx *gfx, int delay)
+gfx_insert_anim(struct gfx *gfx)
 {
 	struct gfx_anim *anim;
 	struct gfx_animcl *animcl;
@@ -437,8 +437,6 @@ gfx_insert_anim(struct gfx *gfx, int delay)
 	anim->maxframes = 0;
 	anim->frame = 0;
 	anim->nframes = 0;
-	anim->delta = 0;
-	anim->delay = delay;
 
 	if (gfx->anims == NULL) {			/* Initialize */
 		gfx->anims = Malloc(NANIMS_INIT * sizeof(struct anim *));
@@ -471,25 +469,6 @@ gfx_destroy_anim(struct gfx_anim *anim)
 	}
 	Free(anim->frames);
 	free(anim);
-}
-
-/* Update the current frame# on an animation. XXX */
-void
-gfx_anim_tick(struct gfx_anim *an, struct noderef *r)
-{
-	Uint32 ticks;
-	
-	if ((r->r_anim.flags & NODEREF_ANIM_AUTO) == 0)
-		return;
-	
-	ticks = SDL_GetTicks();
-	if ((ticks - an->delta) >= an->delay) {
-		an->delta = ticks;
-		if (++an->frame > an->nframes - 1) {
-			/* Loop */
-			an->frame = 0;
-		}
-	}
 }
 
 #ifdef DEBUG
