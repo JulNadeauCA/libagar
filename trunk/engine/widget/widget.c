@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.8 2002/04/28 14:11:23 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.9 2002/04/30 00:57:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,9 +53,9 @@ widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
 	char *widname;
 
 	/* Prepend parent window's name */
-	widname = emalloc(strlen(name) + 4);
-	sprintf(widname, "%s%d", name, widid++);
+	widname = object_name(name, widid++);
 	object_init(&wid->obj, widname, "widget", OBJ_ART, vecp);
+	free(widname);
 
 	wid->flags = 0;
 	wid->win = NULL;
