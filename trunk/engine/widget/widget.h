@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.64 2003/06/08 23:53:18 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.65 2003/06/10 07:59:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -57,6 +57,7 @@ struct widget {
 #define WIDGET_CLIPPING		  0x10	/* Enable clipping */
 #define WIDGET_WFILL		  0x20	/* Expand to fill available width */
 #define WIDGET_HFILL		  0x40	/* Expand to fill available height */
+#define WIDGET_EXCEDENT		  0x80	/* Used internally for scale */
 
 	int	 cx, cy;		/* Coordinates in view */
 	int	 x, y;			/* Coordinates in parent */
