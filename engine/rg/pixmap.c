@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.3 2005/02/14 07:26:32 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.4 2005/02/16 03:30:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/widget/fspinbutton.h>
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/checkbox.h>
+#include <engine/widget/hsvpal.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -49,8 +50,8 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->su = NULL;
 	px->bg = NULL;
 	px->h = 0.0;
-	px->s = 0.0;
-	px->v = 0.0;
+	px->s = 1.0;
+	px->v = 1.0;
 	px->a = 1.0;
 }
 
@@ -144,27 +145,34 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
+		struct hsvpal *pal;
 		struct fspinbutton *fsb;
-	
+
+		pal = hsvpal_new(bo, px->su->format);
+		WIDGET(pal)->flags |= WIDGET_WFILL|WIDGET_HFILL;
+		widget_bind(pal, "hue", WIDGET_FLOAT, &px->h);
+		widget_bind(pal, "saturation", WIDGET_FLOAT, &px->s);
+		widget_bind(pal, "value", WIDGET_FLOAT, &px->v);
+
 		fsb = fspinbutton_new(win, NULL, _("Hue: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->h);
-		fspinbutton_set_range(fsb, 0.0, 360.0);
-		fspinbutton_set_increment(fsb, 60);
+		widget_bind(fsb, "value", WIDGET_FLOAT, &px->h);
+		fspinbutton_set_range(fsb, 0.0, 359.0);
+		fspinbutton_set_increment(fsb, 1);
 		
 		fsb = fspinbutton_new(win, NULL, _("Saturation: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->s);
+		widget_bind(fsb, "value", WIDGET_FLOAT, &px->s);
 		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.1);
+		fspinbutton_set_increment(fsb, 0.01);
 		
 		fsb = fspinbutton_new(win, NULL, _("Value: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->v);
+		widget_bind(fsb, "value", WIDGET_FLOAT, &px->v);
 		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.1);
+		fspinbutton_set_increment(fsb, 0.01);
 		
 		fsb = fspinbutton_new(win, NULL, _("Source alpha: "));
-		widget_bind(fsb, "value", WIDGET_FLOAT, &tel->tel_pixmap.px->a);
+		widget_bind(fsb, "value", WIDGET_FLOAT, &px->a);
 		fspinbutton_set_range(fsb, 0.0, 1.0);
-		fspinbutton_set_increment(fsb, 0.1);
+		fspinbutton_set_increment(fsb, 0.01);
 	}
 	return (win);
 }
@@ -177,7 +185,7 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	Uint8 r, g, b;
 	Uint32 pc;
 
-	prim_hsv2rgb(px->h, px->s, px->v, &r, &g, &b);
+	prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
 
 	pc = SDL_MapRGB(px->su->format, r, g, b);
 	prim_put_pixel(px->su, x, y, pc);
@@ -195,6 +203,20 @@ void
 pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
     int xrel, int yrel, int state)
 {
-	dprintf("%d,%d %d,%d %d\n", x, y, xrel, yrel, state);
-}
+	struct pixmap *px = tel->tel_pixmap.px;
 
+	if (state & SDL_BUTTON_LEFT) {
+		Uint8 r, g, b;
+		Uint32 pc;
+
+		dprintf("%d,%d %d,%d %d\n", x, y, xrel, yrel, state); 
+		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
+
+		pc = SDL_MapRGB(px->su->format, r, g, b);
+		prim_put_pixel(px->su, x, y, pc);
+		tileview_scaled_pixel(tv,
+		    tel->tel_pixmap.x + x,
+		    tel->tel_pixmap.y + y,
+		    pc);
+	}
+}
