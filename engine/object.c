@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.128 2003/06/11 03:53:57 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.129 2003/06/13 02:47:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1032,11 +1032,11 @@ object_edit(void *p)
 	char *obname;
 
 	obname = object_name(ob);
-	if ((win = window_new("object-edit-%s", obname)) == NULL)
+	if ((win = window_new("object-edit-%s", obname)) == NULL) {
 		goto out;
-
+	}
 	window_set_caption(win, "%s object", ob->name);
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
 	window_set_closure(win, WINDOW_DETACH);
 
 	label_new(win, "Name: \"%s\"", ob->name);
