@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.37 2004/04/24 04:42:49 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.38 2004/04/24 05:40:31 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -34,7 +34,16 @@ MAN6?=""
 MAN7?=""
 MAN8?=""
 MAN9?=""
-MANS=	${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
+CATMAN1?=""
+CATMAN2?=""
+CATMAN3?=""
+CATMAN4?=""
+CATMAN5?=""
+CATMAN6?=""
+CATMAN7?=""
+CATMAN8?=""
+CATMAN9?=""
+MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 NOMAN?=
 
 all: all-subdir preformat-man
