@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.78 2004/01/22 09:58:46 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.79 2004/03/18 02:38:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -151,7 +151,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		}
 	}
 
-	binding = Malloc(sizeof(struct widget_binding));	/* Create */
+	binding = Malloc(sizeof(struct widget_binding));
 	strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
 	binding->p1 = p1;
