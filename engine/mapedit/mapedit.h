@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.9 2002/02/10 19:28:57 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.10 2002/02/14 06:32:07 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -60,27 +60,6 @@ struct mapedit {
 	void	 (*event_hook)(struct mapedit *, SDL_Event *);
 };
 
-/* Move mapedit to a new position. */
-#define MAPEDIT_MOVE(medp, nx, ny)					\
-	do {				    				\
-		MAP_DELREF((medp)->map, (medp)->x, (medp)->y,		\
-		    (struct object *)(medp), MAPEDIT_SELECT);		\
-		MAP_ADDANIM((medp)->map, nx, ny,			\
-		    (struct object *)(medp), MAPEDIT_SELECT);		\
-		(medp)->x = nx;						\
-		(medp)->y = ny;						\
-	} while (0)
-
-/* Position mapedit at m:x,y. */
-#define MAPEDIT_PLOT(med, pma, mx, my)				\
-	do {							\
-		(med)->map = (pma);				\
-		(med)->x = (mx);				\
-		(med)->y = (my);				\
-		MAP_ADDANIM((pma), (mx), (my),			\
-		    (struct object *)(med), MAPEDIT_SELECT);	\
-	} while (0)
-
 /* Editor anims */
 #define MAPEDIT_SELECT	0
 
@@ -102,6 +81,7 @@ struct mapedit *mapedit_create(char *, char *, int, int);
 void		mapedit_tilelist(struct mapedit *);
 void		mapedit_tilestack(struct mapedit *);
 void		mapedit_objlist(struct mapedit *);
+void		mapedit_move(struct mapedit *, int, int);
 
 extern struct mapedit *curmapedit;	/* Controlled map editor */
 
