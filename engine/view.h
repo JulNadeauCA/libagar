@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.64 2003/01/01 03:31:10 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.65 2003/01/03 23:28:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -113,41 +113,6 @@ case 4:					\
 # define _VIEW_PUTPIXEL_32(dst, c)
 #endif
 
-/* The surface must be locked. */
-#define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) 			\
-if (VIEW_INSIDE_CLIP_RECT((s), (avx), (avy))) {			\
-	Uint32 _view_col;					\
-	Uint8 _view_alpha_rs, _view_alpha_gs, _view_alpha_bs;	\
-	Uint8 _view_alpha_rd, _view_alpha_gd, _view_alpha_bd;	\
-	Uint8 *_putpixel_dst;					\
-								\
-	_putpixel_dst = (Uint8 *)(s)->pixels +			\
-	    (avy)*(s)->pitch +					\
-	    (avx)*(s)->format->BytesPerPixel;			\
-								\
-	SDL_GetRGB((c), (s)->format, &_view_alpha_rs,		\
-	    &_view_alpha_gs, &_view_alpha_bs);			\
-	SDL_GetRGB(*_putpixel_dst, (s)->format, &_view_alpha_rd,\
-	    &_view_alpha_gd, &_view_alpha_bd);			\
-								\
-	_view_alpha_rd = (((_view_alpha_rs - _view_alpha_rd) *	\
-	    (a)) >> 8) + _view_alpha_rd;			\
-	_view_alpha_gd = (((_view_alpha_gs - _view_alpha_gd) *	\
-	    (a)) >> 8) + _view_alpha_gd;			\
-	_view_alpha_bd = (((_view_alpha_bs - _view_alpha_bd) *	\
-	    (a)) >> 8) + _view_alpha_bd;			\
-	    							\
-	_view_col = SDL_MapRGB((s)->format, _view_alpha_rd,	\
-	    _view_alpha_gd, _view_alpha_bd);			\
-								\
-	switch ((s)->format->BytesPerPixel) {			\
-		_VIEW_PUTPIXEL_8(_putpixel_dst,  _view_col)	\
-		_VIEW_PUTPIXEL_16(_putpixel_dst, _view_col)	\
-		_VIEW_PUTPIXEL_24(_putpixel_dst, _view_col)	\
-		_VIEW_PUTPIXEL_32(_putpixel_dst, _view_col)	\
-	}							\
-}
-
 #define VIEW_INSIDE_CLIP_RECT(s, ax, ay)		\
 	((ax) >= (s)->clip_rect.x &&			\
 	 (ax) <= (s)->clip_rect.x+(s)->clip_rect.w &&	\
@@ -191,4 +156,6 @@ SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
 #ifdef HAVE_OPENGL
 GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
+extern __inline__ void	view_alpha_blend(SDL_Surface *, Sint16, Sint16,
+			    Uint8, Uint8, Uint8, Uint8);
 
