@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.12 2002/02/14 06:30:24 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.13 2002/02/15 02:31:32 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/config.h>
 
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -87,7 +89,7 @@ videodone:
 	return (NULL);
 }
 
-#endif
+#endif /* CONF_SMPEG */
 
 /*
  * Play an audiovisual mpeg stream. The surface should be 
