@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.50 2002/12/31 07:31:44 vedge Exp $
+# $Csoft: configure.in,v 1.51 2003/01/01 01:43:06 vedge Exp $
 # Public domain
 
 makeout(Makefile.config);
@@ -7,7 +7,7 @@ inclout(config);
 register("--with-smpeg",	"Play videos through smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"Support OpenGL operations [default: check]");
-register("--enable-debug",	"Engine debugging [default: no]");
+register("--enable-debug",	"Engine debugging [default: yes]");
 register("--enable-serialization", "Thread-safe engine [default: yes]");
 register("--enable-8bpp",	"Support 8 bpp display [default: yes]");
 register("--enable-16bpp",	"Support 16 bpp display [default: yes]");
@@ -62,7 +62,7 @@ if [ "${with_gl}" != "no" ]; then
 fi
 
 # Debugging?
-if [ "${enable_debug}" = "yes" ]; then
+if [ "${enable_debug}" != "no" ]; then
 	hdefine(DEBUG, 1);
 	hdefine(LOCKDEBUG, 1);
 else
