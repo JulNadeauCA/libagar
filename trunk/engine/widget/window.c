@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.229 2004/09/16 04:06:10 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.230 2004/09/18 06:16:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -120,16 +120,6 @@ int		window_xoffs = 0;
 int		window_yoffs = 0;
 int		window_freescale = 0;
 
-static __inline__ void
-convert_name(char *name)
-{
-	char *c;
-
-	for (c = &name[0]; *c != '\0'; c++)
-		if (*c == '/')
-			*c = '_';
-}
-
 static __inline__ int
 focus_existing(const char *name)
 {
@@ -149,9 +139,9 @@ focus_existing(const char *name)
 struct window *
 window_new(int flags, const char *fmt, ...)
 {
-	char name[OBJECT_NAME_MAX];
-	va_list ap;
+	char name[OBJECT_NAME_MAX], *c;
 	struct window *win;
+	va_list ap;
 
 	pthread_mutex_lock(&view->lock);
 	if (fmt != NULL) {
@@ -159,9 +149,14 @@ window_new(int flags, const char *fmt, ...)
 		vsnprintf(name, sizeof(name), fmt, ap);
 		va_end(ap);
 
-		convert_name(name);
-		if (focus_existing(name))
+		for (c = &name[0]; *c != '\0'; c++) {
+			if (*c == '/')
+				*c = '_';
+		}
+		if (focus_existing(name)) {
+			win = NULL;
 			goto out;
+		}
 
 		win = Malloc(sizeof(struct window), M_OBJECT);
 		window_init(win, name, flags);
@@ -190,6 +185,7 @@ window_init(void *p, const char *name, int flags)
 {
 	char wname[OBJECT_NAME_MAX];
 	struct window *win = p;
+	int titlebar_flags = 0;
 	struct event *ev;
 	int i;
 
@@ -223,7 +219,15 @@ window_init(void *p, const char *name, int flags)
 	window_set_style(win, &default_style);
 	
 	/* Create the titlebar unless disabled. */
-	win->tbar = (flags & WINDOW_NO_TITLEBAR) ? NULL : titlebar_new(win, 0);
+	if (flags & WINDOW_NO_CLOSE)
+		titlebar_flags |= TITLEBAR_NO_CLOSE;
+	if (flags & WINDOW_NO_MINIMIZE)
+		titlebar_flags |= TITLEBAR_NO_MINIMIZE;
+	if (flags & WINDOW_NO_MAXIMIZE)
+		titlebar_flags |= TITLEBAR_NO_MAXIMIZE;
+
+	win->tbar = (flags & WINDOW_NO_TITLEBAR) ? NULL :
+	    titlebar_new(win, titlebar_flags);
 
 	/* Automatically notify children of visibility changes. */
 	ev = event_new(win, "widget-shown", window_shown, NULL);
@@ -451,7 +455,6 @@ window_hidden(int argc, union evarg *argv)
 		    WIDGET(win)->w,
 		    WIDGET(win)->h,
 		    BGFILL_COLOR);
-		
 		if (!view->opengl) {
 			SDL_UpdateRect(view->v,
 			    WIDGET(win)->x, WIDGET(win)->y,
