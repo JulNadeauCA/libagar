@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.15 2004/03/20 05:01:02 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.16 2004/03/20 08:21:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -38,19 +38,18 @@ struct gfx_animcl {
 };
 
 struct gfx {
-	char	*name;				/* Shared identifier */
+	char *name;
 
 	SDL_Surface		 **sprites;	/* Static images */
 	struct gfx_spritecl	 *csprites;	/* Sprite transform cache */
 	Uint32			  nsprites;
 	Uint32			maxsprites;
-
 	struct gfx_anim		 **anims;	/* Animations */
 	struct gfx_animcl	 *canims;	/* Anim transform cache */
 	Uint32			  nanims;
 	Uint32			maxanims;
 
-	struct map	 **submaps;		/* Sprite fragment maps */
+	struct map	 **submaps;		/* Generated maps */
 	Uint32		  nsubmaps;
 	Uint32		maxsubmaps;
 
@@ -73,7 +72,6 @@ struct gfx {
                  (r)->r_anim.frame : an->frame]
 
 TAILQ_HEAD(gfxq, gfx);
-
 extern struct gfxq gfxq;
 extern pthread_mutex_t gfxq_lock;
 
@@ -85,9 +83,9 @@ void		 gfx_unused(struct gfx *);
 void		 gfx_wire(struct gfx *);
 void	 	 gfx_scan_alpha(SDL_Surface *);
 
-Uint32	 gfx_insert_sprite(struct gfx *, SDL_Surface *);
-int	 gfx_insert_fragments(struct gfx *, SDL_Surface *);
-Uint32	 gfx_insert_submap(struct gfx *, struct map *);
+Uint32		 gfx_insert_sprite(struct gfx *, SDL_Surface *);
+struct map	*gfx_insert_fragments(struct gfx *, SDL_Surface *);
+Uint32		 gfx_insert_submap(struct gfx *, struct map *);
 
 struct gfx_anim	*gfx_insert_anim(struct gfx *);
 Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
