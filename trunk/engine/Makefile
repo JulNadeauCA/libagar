@@ -1,9 +1,10 @@
-#	$Csoft: Makefile,v 1.11 2002/02/11 23:26:33 vedge Exp $
+#	$Csoft: Makefile,v 1.12 2002/02/14 05:23:00 vedge Exp $
 
 TOP=	..
 SUBDIR=	mapedit
 
-CFLAGS+=	${GLIB_CFLAGS} ${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
+CFLAGS+=	${GLIB_CFLAGS} ${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS} \
+		-DDATADIR=\"${PREFIX}/share\"
 
 MAN3=	char.3 agar.3 map.3 physics.3
 CATMAN3=char.cat3 agar.cat3 map.cat3 physics.cat3
