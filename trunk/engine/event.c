@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.75 2002/08/28 05:10:07 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.76 2002/09/01 08:58:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -206,8 +206,8 @@ event_loop(void)
 	    SDL_MapRGB(view->v->format, 0, 160, 0));
 #endif
 
-	/* Start the garbage collection process. */
-	object_init_gc();
+	/* Start the media garbage collection process. */
+	media_init_gc();
 
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_MAXFPS;;) {
 		ntick = SDL_GetTicks();
