@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.30 2002/09/07 04:33:15 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.31 2002/09/16 01:51:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -29,8 +29,13 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <engine/engine.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/button.h>
 
 #include "text.h"
 
@@ -51,6 +56,8 @@ struct text_font {
 
 static SLIST_HEAD(text_fontq, text_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
 static pthread_mutex_t fonts_lock = { PTHREAD_MUTEX_INITIALIZER };
+
+static void	text_msg_close(int, union evarg *);
 
 static TTF_Font *
 get_font(char *name, int size, int style)
@@ -141,29 +148,116 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	SDL_Color col;
 	Uint8 r, g, b;
 	TTF_Font *fon;
+	SDL_Rect rd;
+	int nlines, maxw;
+	char *sd, *sp;
 
 #ifdef DEBUG
 	if (s == NULL || strcmp("", s) == 0) {
 		fatal("empty string\n");
 	}
 #endif
-
+	/* Get a font handle. */
+	fon = get_font(fontname, fontsize, 0);
+	
+	/* Decompose the color. */
 	SDL_GetRGB(color, view->v->format, &r, &g, &b);
 	col.r = r;
 	col.g = g;
 	col.b = b;
 
-	fon = get_font(fontname, fontsize, 0);
-	su = TTF_RenderText_Solid(fon, s, col);
-	if (su == NULL) {
-		fatal("TTF_RenderText_Solid: %s\n", error_get());
+	/* Find out the line count. */
+	sd = strdup(s);
+	for (sp = sd, nlines = 0; *sp != '\0'; sp++) {
+		if (*sp == '\n') {
+			nlines++;
+		}
 	}
+
+	if (nlines == 0) {
+		/* Render a single line. */
+		su = TTF_RenderText_Solid(fon, sd, col);
+		if (su == NULL) {
+			fatal("TTF_RenderText_Solid: %s\n", error_get());
+		}
+	} else {
+		SDL_Surface **lines, **lp;
+		int i;
+	
+		/*
+		 * Render the text to an array of surfaces, since we cannot
+		 * predict the width of the final surface.
+		 */
+		lines = emalloc(sizeof(SDL_Surface *) * nlines);
+		for (lp = lines, maxw = 0;
+		    (sp = strsep(&sd, "\n")) != NULL;
+		    lp++) {
+		    	if (strcmp(sp, "") == 0) {
+				*lp = NULL;
+				continue;
+			}
+			*lp = TTF_RenderText_Solid(fon, sp, col);
+			if (*lp == NULL) {
+				fatal("TTF_RenderText_Solid: %s\n",
+				    error_get());
+			}
+			if ((*lp)->w > maxw) {
+				maxw = (*lp)->w;	/* Grow width */
+			}
+		}
+
+		rd.x = 0;
+		rd.y = 0;
+		rd.w = 0;
+		rd.h = TTF_FontHeight(fon);
+
+		/* Render the final surface. */
+		su = view_surface(SDL_SWSURFACE, maxw, rd.h * nlines);
+		for (i = 0;
+		     i < nlines;
+		     i++, rd.y += rd.h) {
+			if (lines[i] == NULL) {
+				continue;
+			}
+			rd.w = lines[i]->w;
+			SDL_BlitSurface(lines[i], NULL, su, &rd);
+			SDL_FreeSurface(lines[i]);
+		}
+		free(lines);
+	}
+
+	free(sd);
 	return (su);
 }
 
 void
-text_msg(char *fmt, ...)
+text_msg(char *title, char *fmt, ...)
 {
-	
+	struct window *win;
+	struct region *reg;
+	struct label *lab;
+	struct button *button;
+	va_list args;
+	char *msg;
+
+	va_start(args, fmt);
+	if (vasprintf(&msg, fmt, args) == -1) {
+		fatal("vasprintf: %s\n", strerror(errno));
+	}
+	va_end(args);
+
+	win = window_new(NULL, title, WINDOW_CENTER, -1, -1,
+	    253, 140, 229, 103);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	lab = label_new(reg, msg, 100, 60);
+	button = button_new(reg, "Ok", NULL, 0, 99, 40);
+	event_new(button, "button-pushed", 0,
+	    window_detach_generic, "%p", win);
+	event_new(win, "window-close", 0,
+	    window_detach_generic, "%p", win);
+
+	window_show(win);
+
+	free(msg);
 }
 
