@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.25 2002/02/11 23:32:01 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.26 2002/02/13 00:32:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,11 +33,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <pthread.h>
-#include <glib.h>
-#include <SDL.h>
-
-#include <libfobj/fobj.h>
 #include <engine/engine.h>
 
 #include "mapedit.h"
@@ -89,7 +84,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	}
 	if (object_strfind(name) == NULL) {
 		dprintf("%s is not in core\n", name);
-		map_link(map);
+		object_link(map);
 	} else {
 		dprintf("%s is in core\n", name);
 	}
@@ -105,9 +100,10 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	med->curobj = NULL;
 	med->curflags = 0;
 
-	direction_init(&med->cursor_dir, med, med->map, DIR_SCROLL, 2, 10);
-	direction_init(&med->listw_dir, med, med->map, DIR_SCROLL, 2, 10);
-	direction_init(&med->olistw_dir, med, med->map, 0, 2, 10);
+	mapdir_init(&med->cursor_dir, (struct object *)med, med->map,
+	    DIR_SCROLLVIEW, 2, 10);
+	gendir_init(&med->listw_dir);
+	gendir_init(&med->olistw_dir);
 
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST|
 	    MAPEDIT_DRAWPROPS;
@@ -213,7 +209,7 @@ mapedit_shadow(struct mapedit *med)
 				eref = emalloc(sizeof(struct editref));
 				eref->animi = -2;
 				eref->spritei = y;
-				eref->p = g_slist_nth_data(ob->sprites, y);
+				eref->p = ob->sprites[y];
 				eref->type = EDITREF_SPRITE;
 
 				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
@@ -230,7 +226,7 @@ mapedit_shadow(struct mapedit *med)
 				eref = emalloc(sizeof(struct editref));
 				eref->animi = z;
 				eref->spritei = -1;
-				eref->p = g_slist_nth_data(ob->anims, z);
+				eref->p = ob->anims[z];
 				eref->type = EDITREF_ANIM;
 
 				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
@@ -386,12 +382,12 @@ mapedit_tilelist(struct mapedit *med)
 		}
 
 		if (med->curoffs == sn) {
-			SDL_BlitSurface(g_slist_nth_data(
-			    curmapedit->obj.sprites, MAPEDIT_CIRQSEL),
+			SDL_BlitSurface(
+			    curmapedit->obj.sprites[MAPEDIT_CIRQSEL],
 			    &rs, win->view->v, &rd);
 		} else {
-			SDL_BlitSurface(g_slist_nth_data(
-			    curmapedit->obj.sprites, MAPEDIT_GRID), &rs,
+			SDL_BlitSurface(
+			    curmapedit->obj.sprites[MAPEDIT_GRID], &rs,
 			    win->view->v, &rd);
 		}
 		if (sn++ >= med->curobj->nrefs - 1) {
@@ -441,17 +437,16 @@ mapedit_tilestack(struct mapedit *med)
 		if (aref->flags & MAPREF_ANIM) {
 			static struct anim *anim;
 
-			anim = g_slist_nth_data(aref->pobj->anims, aref->offs);
+			anim = aref->pobj->anims[aref->offs];
 			SDL_BlitSurface(anim->frames[0],
 			    &rs, win->view->v, &rd);
 		} else if (aref->flags & MAPREF_SPRITE) {
-			SDL_BlitSurface(g_slist_nth_data(aref->pobj->sprites,
-			    aref->offs), &rs, win->view->v, &rd);
+			SDL_BlitSurface(aref->pobj->sprites[aref->offs],
+			    &rs, win->view->v, &rd);
 		}
 
-		SDL_BlitSurface(g_slist_nth_data(
-		    curmapedit->obj.sprites, MAPEDIT_GRID), &rs,
-		    win->view->v, &rd);
+		SDL_BlitSurface(curmapedit->obj.sprites[MAPEDIT_GRID],
+		    &rs, win->view->v, &rd);
 		rd.y += tileh;
 	}
 }
@@ -484,16 +479,16 @@ mapedit_objlist(struct mapedit *med)
 	rd.x = tilew;
 
 	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
-		SDL_BlitSurface(g_slist_nth_data(eob->pobj->sprites, 0),
+		SDL_BlitSurface(eob->pobj->sprites[0],
 		    &rs, win->view->v, &rd);
 		if (med->curobj == eob) {
-			SDL_BlitSurface(g_slist_nth_data(
-			    curmapedit->obj.sprites, MAPEDIT_CIRQSEL),
+			SDL_BlitSurface(
+			    curmapedit->obj.sprites[MAPEDIT_CIRQSEL],
 			    &rs, win->view->v, &rd);
 		} else {
-			SDL_BlitSurface(g_slist_nth_data(
-			    curmapedit->obj.sprites, MAPEDIT_GRID), &rs,
-			    win->view->v, &rd);
+			SDL_BlitSurface(
+			    curmapedit->obj.sprites[MAPEDIT_GRID],
+			    &rs, win->view->v, &rd);
 		}
 		rd.x += tilew;
 	}
@@ -628,28 +623,28 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 
 		switch (ev->key.keysym.sym) {
 		case SDLK_UP:
-			direction_set(&med->cursor_dir, DIR_UP, set);
+			mapdir_set(&med->cursor_dir, DIR_UP, set);
 			break;
 		case SDLK_DOWN:
-			direction_set(&med->cursor_dir, DIR_DOWN, set);
+			mapdir_set(&med->cursor_dir, DIR_DOWN, set);
 			break;
 		case SDLK_LEFT:
-			direction_set(&med->cursor_dir, DIR_LEFT, set);
+			mapdir_set(&med->cursor_dir, DIR_LEFT, set);
 			break;
 		case SDLK_RIGHT:
-			direction_set(&med->cursor_dir, DIR_RIGHT, set);
+			mapdir_set(&med->cursor_dir, DIR_RIGHT, set);
 			break;
 		case SDLK_PAGEUP:
-			direction_set(&med->listw_dir, DIR_UP, set);
+			gendir_set(&med->listw_dir, DIR_UP, set);
 			break;
 		case SDLK_PAGEDOWN:
-			direction_set(&med->listw_dir, DIR_DOWN, set);
+			gendir_set(&med->listw_dir, DIR_DOWN, set);
 			break;
 		case SDLK_DELETE:
-			direction_set(&med->olistw_dir, DIR_LEFT, set);
+			gendir_set(&med->olistw_dir, DIR_LEFT, set);
 			break;
 		case SDLK_END:
-			direction_set(&med->olistw_dir, DIR_RIGHT, set);
+			gendir_set(&med->olistw_dir, DIR_RIGHT, set);
 			break;
 		default:
 			break;
@@ -674,15 +669,14 @@ mapedit_time(Uint32 ival, void *p)
 	aref = node_arefobj(&map->map[mapx][mapy], (struct object *)med, -1);
 
 	/* Move the map edition cursor. */
-	moved = direction_update(&med->cursor_dir, &mapx, &mapy);
+	moved = mapdir_move(&med->cursor_dir, &mapx, &mapy);
 	if (moved != 0) {
 		SDL_Event nev;
 		int i, nkeys;
 
 		MAPEDIT_MOVE(med, mapx, mapy);
+		mapdir_postmove(&med->cursor_dir, &mapx, &mapy, moved);
 		map->redraw++;
-
-		direction_moved(&med->cursor_dir, &mapx, &mapy, moved);
 
 		for (i = 0; i < sizeof(stickykeys) / sizeof(int); i++) {
 			if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
@@ -693,43 +687,42 @@ mapedit_time(Uint32 ival, void *p)
 		}
 	}
 
-#if 0
-	moved = direction_update(&med->listw_dir, NULL, NULL, NULL, NULL);
-	if (moved & DIR_UP) {
-		if (med->curoffs-- < 0) {
+	moved = gendir_move(&med->listw_dir);
+	if (moved != 0) {
+		if (moved & DIR_UP && med->curoffs-- < 0) {
 			med->curoffs = med->curobj->nrefs - 1;
 		}
-		mapedit_tilelist(med);
-	}
-	if (moved & DIR_DOWN) {
-		if (med->curoffs++ > med->curobj->nrefs - 1) {
+		if (moved & DIR_DOWN &&
+		    med->curoffs++ > med->curobj->nrefs - 1) {
 			med->curoffs = 0;
 		}
 		mapedit_tilelist(med);
+		gendir_postmove(&med->listw_dir, moved);
 	}
-
-	moved = direction_update(&med->olistw_dir, NULL, NULL, NULL, NULL);
-	if (moved & DIR_LEFT) {
-		if (!TAILQ_EMPTY(&med->eobjsh)) {
-			med->curobj = TAILQ_PREV(med->curobj, eobjs_head,
-			    eobjs);
-			if (med->curobj == NULL) {
-				med->curobj = TAILQ_LAST(&med->eobjsh,
-				     eobjs_head);
+	
+	moved = gendir_move(&med->olistw_dir);
+	if (moved != 0) {
+		if (moved & DIR_LEFT) {
+			if (!TAILQ_EMPTY(&med->eobjsh)) {
+				med->curobj = TAILQ_PREV(med->curobj,
+				    eobjs_head, eobjs);
+				if (med->curobj == NULL) {
+					med->curobj = TAILQ_LAST(&med->eobjsh,
+					     eobjs_head);
+				}
+			}
+		}
+		if (moved & DIR_RIGHT) {
+			if (!TAILQ_EMPTY(&med->eobjsh)) {
+				med->curobj = TAILQ_NEXT(med->curobj, eobjs);
+				if (med->curobj == NULL) {
+					med->curobj = TAILQ_FIRST(&med->eobjsh);
+				}
 			}
 		}
 		mapedit_objlist(med);
+		gendir_postmove(&med->olistw_dir, moved);
 	}
-	if (moved & DIR_RIGHT) {
-		if (!TAILQ_EMPTY(&med->eobjsh)) {
-			med->curobj = TAILQ_NEXT(med->curobj, eobjs);
-			if (med->curobj == NULL) {
-				med->curobj = TAILQ_FIRST(&med->eobjsh);
-			}
-		}
-		mapedit_objlist(med);
-	}
-#endif
 	pthread_mutex_unlock(&map->lock);
 
 	return (ival);
