@@ -79,7 +79,7 @@ for arg; do
 	--help)
 	    help=yes
 	    ;;
-	--srcdir)
+	--srcdir=*)
 	    srcdir=$optarg
 	    ;;
 	*)
