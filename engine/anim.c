@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.14 2002/08/18 00:39:58 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.15 2002/08/19 05:28:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -103,7 +103,7 @@ anim_add_frame(struct anim *anim, SDL_Surface *surface)
 }
 
 void
-anim_insert(struct object_art *art, struct anim *anim, int mflags)
+anim_insert(struct media_art *art, struct anim *anim, int mflags)
 {
 	extern int mapediting;
 
