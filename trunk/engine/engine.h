@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.58 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.59 2003/04/12 01:32:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -59,6 +59,8 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 # define PTHREAD_MUTEX_RECURSIVE 0
 #endif
 
+#include "begin_code.h"
+
 struct engine_proginfo {
 	char	*prog;		/* Name of the executable */
 	char	*name;		/* Name of the game */
@@ -74,8 +76,12 @@ enum {
 #define ENGINE_INIT_GFX		0x01		/* Graphic engine */
 #define ENGINE_INIT_INPUT	0x02		/* Input devices */
 
-int	 engine_init(int, char **, const struct engine_proginfo *, int);
-void	 engine_stop(void);
-void	 engine_destroy(void);
+__BEGIN_DECLS
+extern DECLSPEC int	engine_init(int, char **,
+			    const struct engine_proginfo *, int);
+extern DECLSPEC void	 engine_stop(void);
+extern DECLSPEC void	 engine_destroy(void);
+__END_DECLS
 
+#include "close_code.h"
 #endif	/* !_AGAR_ENGINE_H_ */

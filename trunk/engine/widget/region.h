@@ -1,8 +1,9 @@
-/*	$Csoft: region.h,v 1.10 2003/03/23 04:54:32 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.11 2003/03/25 13:48:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_REGION_H_
 #define _AGAR_WIDGET_REGION_H_
+#include "begin_code.h"
 
 TAILQ_HEAD(widgetsq, widget);
 
@@ -37,11 +38,16 @@ struct region {
 	WINDOW_PUT_ALPHAPIXEL((reg)->win, (rx)+(reg)->x, (ry)+(reg)->y, \
 	    (c), (wa))
 
-struct region	*region_new(void *, int, int, int, int, int);
-void		 region_init(struct region *, int, int, int, int, int);
-void		 region_destroy(void *);
-void		 region_attach(void *, void *);
-void		 region_detach(void *, void *);
-void		 region_set_spacing(struct region *, Uint8, Uint8);
+__BEGIN_DECLS
+extern DECLSPEC struct region	*region_new(void *, int, int, int, int, int);
+extern DECLSPEC void		 region_init(struct region *, int, int, int,
+				             int, int);
+extern DECLSPEC void		 region_destroy(void *);
+extern DECLSPEC void		 region_attach(void *, void *);
+extern DECLSPEC void		 region_detach(void *, void *);
+extern DECLSPEC void		 region_set_spacing(struct region *, Uint8,
+				                    Uint8);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_REGION_H_ */

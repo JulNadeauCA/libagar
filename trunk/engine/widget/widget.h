@@ -1,10 +1,12 @@
-/*	$Csoft: widget.h,v 1.54 2003/03/23 04:54:33 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.55 2003/03/25 13:48:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
 
 #include <config/floating_point.h>
+
+#include "begin_code.h"
 
 #define WIDGET_MAX_COLORS	16
 
@@ -113,57 +115,65 @@ struct widget {
     ((xa) >= 0 && (ya) >= 0 &&					\
      (xa) <= WIDGET((wida))->w && (ya) <= WIDGET((wida))->h)
 
-void	widget_init(struct widget *, char *, const void *, int, int);
-void	widget_destroy(void *);
-void	widget_set_parent(void *, void *);
-void	widget_set_position(void *, Sint16, Sint16);
-void	widget_set_geometry(void *, Uint16, Uint16);
-void	widget_get_position(void *, Sint16 *, Sint16 *);
-void	widget_get_geometry(void *, Uint16 *, Uint16 *);
-void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
+__BEGIN_DECLS
+extern DECLSPEC void	widget_init(struct widget *, char *, const void *, int,
+			            int);
+extern DECLSPEC void	widget_destroy(void *);
+extern DECLSPEC void	widget_set_parent(void *, void *);
+extern DECLSPEC void	widget_set_position(void *, Sint16, Sint16);
+extern DECLSPEC void	widget_set_geometry(void *, Uint16, Uint16);
+extern DECLSPEC void	widget_get_position(void *, Sint16 *, Sint16 *);
+extern DECLSPEC void	widget_get_geometry(void *, Uint16 *, Uint16 *);
+extern DECLSPEC void	widget_map_color(void *, int, char *, Uint8, Uint8,
+			                 Uint8);
 
-struct widget_binding	*widget_bind(void *, const char *,
-			     enum widget_binding_type, ...);
-struct widget_binding	*_widget_binding_get(void *, const char *, void *, int);
+extern DECLSPEC struct widget_binding	*widget_bind(void *, const char *,
+					             enum widget_binding_type,
+						     ...);
+extern DECLSPEC struct widget_binding	*_widget_binding_get(void *,
+					                     const char *,
+							     void *, int);
 #define			  widget_binding_get(widp, name, res) \
 			 _widget_binding_get((widp), (name), (res), 0)
 #define			  widget_binding_get_locked(widp, name, res) \
 			 _widget_binding_get((widp), (name), (res), 1)
 
-void	widget_binding_lock(struct widget_binding *);
-void	widget_binding_modified(struct widget_binding *);
-void	widget_binding_unlock(struct widget_binding *);
+extern DECLSPEC void	widget_binding_lock(struct widget_binding *);
+extern DECLSPEC void	widget_binding_modified(struct widget_binding *);
+extern DECLSPEC void	widget_binding_unlock(struct widget_binding *);
 
-int	 widget_get_int(void *, const char *);
-#define	 widget_get_bool widget_get_int
-Uint8	 widget_get_uint8(void *, const char *);
-Sint8	 widget_get_sint8(void *, const char *);
-Uint16	 widget_get_uint16(void *, const char *);
-Sint16	 widget_get_sint16(void *, const char *);
-Uint32	 widget_get_uint32(void *, const char *);
-Sint32	 widget_get_sint32(void *, const char *);
+extern DECLSPEC int	 widget_get_int(void *, const char *);
+#define			 widget_get_bool widget_get_int
+extern DECLSPEC Uint8	 widget_get_uint8(void *, const char *);
+extern DECLSPEC Sint8	 widget_get_sint8(void *, const char *);
+extern DECLSPEC Uint16	 widget_get_uint16(void *, const char *);
+extern DECLSPEC Sint16	 widget_get_sint16(void *, const char *);
+extern DECLSPEC Uint32	 widget_get_uint32(void *, const char *);
+extern DECLSPEC Sint32	 widget_get_sint32(void *, const char *);
 #ifdef FLOATING_POINT
-float	 widget_get_float(void *, const char *);
-double	 widget_get_double(void *, const char *);
+extern DECLSPEC float	 widget_get_float(void *, const char *);
+extern DECLSPEC double	 widget_get_double(void *, const char *);
 #endif
-char	*widget_get_string(void *, const char *);
-void	*widget_get_pointer(void *, const char *);
+extern DECLSPEC char	*widget_get_string(void *, const char *);
+extern DECLSPEC void	*widget_get_pointer(void *, const char *);
 
-void	 widget_set_int(void *, const char *, int);
-#define	 widget_set_bool widget_set_int
-void	 widget_set_uint8(void *, const char *, Uint8);
-void	 widget_set_sint8(void *, const char *, Sint8);
-void	 widget_set_uint16(void *, const char *, Uint16);
-void	 widget_set_sint16(void *, const char *, Sint16);
-void	 widget_set_uint32(void *, const char *, Uint32);
-void	 widget_set_sint32(void *, const char *, Sint32);
+extern DECLSPEC void	 widget_set_int(void *, const char *, int);
+#define			 widget_set_bool widget_set_int
+extern DECLSPEC void	 widget_set_uint8(void *, const char *, Uint8);
+extern DECLSPEC void	 widget_set_sint8(void *, const char *, Sint8);
+extern DECLSPEC void	 widget_set_uint16(void *, const char *, Uint16);
+extern DECLSPEC void	 widget_set_sint16(void *, const char *, Sint16);
+extern DECLSPEC void	 widget_set_uint32(void *, const char *, Uint32);
+extern DECLSPEC void	 widget_set_sint32(void *, const char *, Sint32);
 #ifdef FLOATING_POINT
-void	 widget_set_float(void *, const char *, float);
-void	 widget_set_double(void *, const char *, double);
+extern DECLSPEC void	 widget_set_float(void *, const char *, float);
+extern DECLSPEC void	 widget_set_double(void *, const char *, double);
 #endif
-void	 widget_set_string(void *, const char *, char *);
-void	 widget_set_pointer(void *, const char *, void *);
+extern DECLSPEC void	 widget_set_string(void *, const char *, char *);
+extern DECLSPEC void	 widget_set_pointer(void *, const char *, void *);
 
-void	 widget_blit(void *, SDL_Surface *, int, int);
+extern DECLSPEC void	 widget_blit(void *, SDL_Surface *, int, int);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_H_ */

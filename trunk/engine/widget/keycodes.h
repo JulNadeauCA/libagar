@@ -1,5 +1,9 @@
-/*	$Csoft: keycodes.h,v 1.7 2002/09/07 04:34:14 vedge Exp $	*/
+/*	$Csoft: keycodes.h,v 1.8 2003/01/04 14:10:33 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_KEYCODES_H_
+#define _AGAR_WIDGET_KEYCODES_H_
+#include "begin_code.h"
 
 struct keycode {
 	char	*name;
@@ -23,5 +27,9 @@ struct keycode {
 
 extern const struct keycode keycodes[];		/* keymap */
 
-void	keycodes_init(void);
+__BEGIN_DECLS
+extern DECLSPEC void	keycodes_init(void);
+__END_DECLS
 
+#include "close_code.h"
+#endif	/* _AGAR_WIDGET_KEYCODES_H_ */

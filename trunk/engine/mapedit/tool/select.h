@@ -1,11 +1,16 @@
-/*	$Csoft: select.h,v 1.5 2003/03/12 23:59:25 vedge Exp $	*/
+/*	$Csoft: select.h,v 1.6 2003/03/25 13:48:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
+
+#include "begin_code.h"
 
 struct select {
 	struct tool	tool;
 };
 
-void		 select_init(void *);
+__BEGIN_DECLS
+extern DECLSPEC void	 select_init(void *);
+__END_DECLS
 
+#include "close_code.h"

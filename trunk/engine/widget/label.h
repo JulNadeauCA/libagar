@@ -1,10 +1,12 @@
-/*	$Csoft: label.h,v 1.16 2002/12/21 10:26:33 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.17 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
 #define _AGAR_WIDGET_LABEL_H_
 
 #include <engine/widget/widget.h>
+
+#include "begin_code.h"
 
 #define LABEL_MAX_LENGTH	2048
 #define LABEL_MAX_POLLITEMS	32
@@ -35,13 +37,19 @@ struct label {
 	} justify;
 };
 
-struct label	*label_new(struct region *, int, int, const char *, ...);
-struct label	*label_polled_new(struct region *, int, int, pthread_mutex_t *,
-		     const char *, ...);
-void		 label_init(struct label *, enum label_type, const char *,
-		     int, int);
-void	 	 label_destroy(void *);
-void		 label_draw(void *);
-void		 label_printf(struct label *, const char *, ...);
+__BEGIN_DECLS
+extern DECLSPEC struct label	*label_new(struct region *, int, int,
+				           const char *, ...);
+extern DECLSPEC struct label	*label_polled_new(struct region *, int, int,
+				           pthread_mutex_t *,
+					   const char *, ...);
+extern DECLSPEC void		 label_init(struct label *, enum label_type,
+				            const char *, int, int);
+extern DECLSPEC void 		 label_destroy(void *);
+extern DECLSPEC void		 label_draw(void *);
+extern DECLSPEC void		 label_printf(struct label *, const char *,
+				              ...);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_LABEL_H_ */

@@ -1,10 +1,12 @@
-/*	$Csoft: checkbox.h,v 1.11 2003/01/25 06:24:30 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.12 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CHECKBOX_H_
 #define _AGAR_WIDGET_CHECKBOX_H_
 
 #include <engine/widget/widget.h>
+
+#include "begin_code.h"
 
 struct checkbox {
 	struct widget	wid;
@@ -16,9 +18,13 @@ struct checkbox {
 	} def;
 };
 
-struct checkbox	*checkbox_new(struct region *, int, const char *, ...);
-void		 checkbox_init(struct checkbox *, int, char *);
-void		 checkbox_destroy(void *);
-void		 checkbox_draw(void *);
+__BEGIN_DECLS
+extern DECLSPEC struct checkbox	*checkbox_new(struct region *, int,
+				              const char *, ...);
+extern DECLSPEC void		 checkbox_init(struct checkbox *, int, char *);
+extern DECLSPEC void		 checkbox_destroy(void *);
+extern DECLSPEC void		 checkbox_draw(void *);
+__END_DECLS
 
+#include "close_code.h"
 #endif /* _AGAR_WIDGET_CHECKBOX_H_ */

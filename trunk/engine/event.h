@@ -1,7 +1,9 @@
-/*	$Csoft: event.h,v 1.14 2003/03/02 01:00:13 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.15 2003/03/20 01:17:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
+
+#include "begin_code.h"
 
 typedef union evarg {
 	void	*p;
@@ -26,14 +28,19 @@ struct event {
 	TAILQ_ENTRY(event) events;
 };
 
-void		 event_loop(void);
-struct event	*event_new(void *, char *, void (*)(int, union evarg *),
-		     const char *, ...);
-void		 event_post(void *, char *, const char *fmt, ...);
-void		 event_forward(void *, char *, int, union evarg *);
+extern int	 event_idle;			/* Enable idling? */
+
+__BEGIN_DECLS
+extern DECLSPEC void		 event_loop(void);
+extern DECLSPEC struct event	*event_new(void *, char *,
+				     void (*)(int, union evarg *),
+				     const char *, ...);
+extern DECLSPEC void		 event_post(void *, char *, const char *, ...);
+extern DECLSPEC void		 event_forward(void *, char *, int,
+				     union evarg *);
 #ifdef DEBUG
-struct window	*event_show_fps_counter(void);
+extern DECLSPEC struct window	*event_show_fps_counter(void);
 #endif
+__END_DECLS
 
-extern int	 event_idle;
-
+#include "close_code.h"

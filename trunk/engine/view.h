@@ -1,5 +1,9 @@
-/*	$Csoft: view.h,v 1.72 2003/03/20 03:20:19 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.73 2003/03/23 07:11:57 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_VIEW_H_
+#define _AGAR_VIEW_H_
+#include "begin_code.h"
 
 #include <config/view_8bpp.h>
 #include <config/view_16bpp.h>
@@ -146,22 +150,25 @@ case 4:					\
 
 extern struct viewport *view;	/* view.c */
 
-int	 view_init(enum gfx_engine);
-void	 view_attach(void *);
-void	 view_detach(void *);
-void	 view_detach_queued(void);
-void	 view_destroy(void *);
-int	 view_set_refresh(int, int);
-
-struct window	*view_window_exists(char *);
-
-SDL_Surface	*view_surface(int, int, int);
-SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
-SDL_Surface	*view_copy_surface(SDL_Surface *);
+__BEGIN_DECLS
+extern DECLSPEC int		 view_init(enum gfx_engine);
+extern DECLSPEC void		 view_attach(void *);
+extern DECLSPEC void		 view_detach(void *);
+extern DECLSPEC void		 view_detach_queued(void);
+extern DECLSPEC void		 view_destroy(void *);
+extern DECLSPEC int		 view_set_refresh(int, int);
+extern DECLSPEC struct window	*view_window_exists(char *);
+extern DECLSPEC SDL_Surface	*view_surface(int, int, int);
+extern DECLSPEC SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16,
+				                    Uint16);
+extern DECLSPEC SDL_Surface	*view_copy_surface(SDL_Surface *);
+extern DECLSPEC void		 view_capture(SDL_Surface *);
+extern DECLSPEC __inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
+				                   Uint8, Uint8, Uint8, Uint8);
 #ifdef HAVE_OPENGL
-GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
+extern DECLSPEC GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
-void		 view_capture(SDL_Surface *);
-__inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16, Uint8, Uint8,
-		     Uint8, Uint8);
+__END_DECLS
 
+#include "close_code.h"
+#endif	/* _AGAR_VIEW_H_ */

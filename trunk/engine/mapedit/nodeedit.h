@@ -1,5 +1,7 @@
-/*	$Csoft: nodeedit.h,v 1.2 2003/03/02 07:29:53 vedge Exp $	*/
+/*	$Csoft: nodeedit.h,v 1.3 2003/03/28 00:23:22 vedge Exp $	*/
 /*	Public domain	*/
+
+#include "begin_code.h"
 
 struct mapview;
 
@@ -12,5 +14,8 @@ struct nodeedit {
 	struct tlist	*refs_tl, *transforms_tl;
 };
 
-void	nodeedit_init(struct mapview *);
+__BEGIN_DECLS
+extern DECLSPEC void	nodeedit_init(struct mapview *);
+__END_DECLS
 
+#include "close_code.h"

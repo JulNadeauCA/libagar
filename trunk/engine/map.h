@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.87 2003/04/24 04:48:50 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.88 2003/04/24 06:58:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -21,6 +21,8 @@
 #define MAP_LAYER_NAME_MAX	128
 
 #include <engine/transform.h>
+
+#include "begin_code.h"
 
 enum noderef_type {
 	NODEREF_SPRITE,
@@ -121,48 +123,54 @@ struct map {
 #endif
 };
 
-void		 map_init(struct map *, char *);
-int		 map_load(void *, struct netbuf *);
-int		 map_save(void *, struct netbuf *);
-void		 map_destroy(void *);
-int		 map_alloc_nodes(struct map *, unsigned int, unsigned int);
-void		 map_free_nodes(struct map *);
-int		 map_resize(struct map *, unsigned int, unsigned int);
-void		 map_set_zoom(struct map *, Uint16);
-int		 map_push_layer(struct map *, char *);
-void		 map_pop_layer(struct map *);
+__BEGIN_DECLS
+extern DECLSPEC void	 map_init(struct map *, char *);
+extern DECLSPEC int	 map_load(void *, struct netbuf *);
+extern DECLSPEC int	 map_save(void *, struct netbuf *);
+extern DECLSPEC void	 map_destroy(void *);
+extern DECLSPEC int	 map_alloc_nodes(struct map *, unsigned int,
+			                 unsigned int);
+extern DECLSPEC void	 map_free_nodes(struct map *);
+extern DECLSPEC int	 map_resize(struct map *, unsigned int, unsigned int);
+extern DECLSPEC void	 map_set_zoom(struct map *, Uint16);
+extern DECLSPEC int	 map_push_layer(struct map *, char *);
+extern DECLSPEC void	 map_pop_layer(struct map *);
+extern DECLSPEC void	 noderef_init(struct noderef *);
+extern DECLSPEC int	 noderef_set_center(struct noderef *, int, int);
+extern DECLSPEC int	 noderef_set_motion(struct noderef *, int, int);
+extern DECLSPEC void	 noderef_destroy(struct noderef *);
+extern DECLSPEC int	 noderef_load(struct netbuf *, struct object_table *,
+			              struct node *, struct noderef **);
+extern DECLSPEC void	 noderef_save(struct netbuf *, struct object_table *,
+			              struct noderef *);
+extern __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
 
-void		 noderef_init(struct noderef *);
-int		 noderef_set_center(struct noderef *, int, int);
-int		 noderef_set_motion(struct noderef *, int, int);
-void		 noderef_destroy(struct noderef *);
-int		 noderef_load(struct netbuf *, struct object_table *,
-		     struct node *, struct noderef **);
-void		 noderef_save(struct netbuf *, struct object_table *,
-		     struct noderef *);
-__inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
+extern DECLSPEC void	 node_init(struct node *);
+extern DECLSPEC int	 node_load(struct netbuf *, struct object_table *,
+			           struct node *);
+extern DECLSPEC void	 node_save(struct netbuf *, struct object_table *,
+			           struct node *);
+extern DECLSPEC void	 node_destroy(struct node *);
+extern DECLSPEC void	 node_clear_layer(struct node *, Uint8);
 
-void		 node_init(struct node *);
-int		 node_load(struct netbuf *, struct object_table *,
-		     struct node *);
-void		 node_save(struct netbuf *, struct object_table *,
-		     struct node *);
-void		 node_destroy(struct node *);
-void		 node_clear_layer(struct node *, Uint8);
+extern DECLSPEC int	 node_move_ref(struct noderef *, struct node *,
+			               struct map *, int, int);
+extern DECLSPEC void	 node_move_ref_direct(struct noderef *, struct node *,
+			                      struct node *);
 
-int		 node_move_ref(struct noderef *, struct node *, struct map *,
-		     int, int);
-void		 node_move_ref_direct(struct noderef *, struct node *,
-		     struct node *);
-struct noderef	*node_copy_ref(struct noderef *, struct node *);
-void		 node_remove_ref(struct node *, struct noderef *);
-void		 node_moveup_ref(struct node *, struct noderef *);
-void		 node_movedown_ref(struct node *, struct noderef *);
-void		 node_movetail_ref(struct node *, struct noderef *);
-void		 node_movehead_ref(struct node *, struct noderef *);
-struct noderef	*node_add_sprite(struct node *, void *, Uint32);
-struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
-struct noderef	*node_add_warp(struct node *, char *, int, int, Uint8);
+extern DECLSPEC void	 node_moveup_ref(struct node *, struct noderef *);
+extern DECLSPEC void	 node_movedown_ref(struct node *, struct noderef *);
+extern DECLSPEC void	 node_movetail_ref(struct node *, struct noderef *);
+extern DECLSPEC void	 node_movehead_ref(struct node *, struct noderef *);
+extern DECLSPEC void	 node_remove_ref(struct node *, struct noderef *);
+
+extern DECLSPEC struct noderef	*node_copy_ref(struct noderef *, struct node *);
+extern DECLSPEC struct noderef	*node_add_sprite(struct node *, void *, Uint32);
+extern DECLSPEC struct noderef	*node_add_anim(struct node *, void *, Uint32,
+				               Uint8);
+extern DECLSPEC struct noderef	*node_add_warp(struct node *, char *, int, int,
+				               Uint8);
+__END_DECLS
 
 #ifdef DEBUG
 extern int map_nodesigs;
@@ -177,4 +185,5 @@ extern int map_nodesigs;
 # define MAP_CHECK_NODEREF(nref)
 #endif /* DEBUG */
 
+#include "close_code.h"
 #endif /* _AGAR_MAP_H_ */
