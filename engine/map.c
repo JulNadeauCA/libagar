@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.24 2002/02/15 04:24:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.25 2002/02/15 05:38:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -521,9 +521,11 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 	if (flags & NODE_HASTE)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
 		    vx, vy);
+#if 0
 	if (flags & NODE_ANIM)
 		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
 		    vx, vy);
+#endif
 }
 
 /* Draw all sprites in the map view. */
@@ -738,12 +740,14 @@ badmagic:
 }
 
 /*
- * Save a map to a file. The map must be already locked.
+ * Save a map to a file.
+ * Must be called on a locked map.
  */
 int
 map_save(void *ob, char *path)
 {
 	struct map *m = (struct map *)ob;
+	struct fobj_buf *buf;
 	int x = 0, y, f, totrefs = 0;
 
 	f = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
@@ -752,17 +756,19 @@ map_save(void *ob, char *path)
 		return (-1);
 	}
 
-	write(f, MAP_MAGIC, 10);
-	fobj_write_uint32(f, MAP_VERMAJ);
-	fobj_write_uint32(f, MAP_VERMIN);
+	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
 
-	fobj_write_uint32(f, m->flags);
-	fobj_write_uint32(f, m->mapw);
-	fobj_write_uint32(f, m->maph);
-	fobj_write_uint32(f, m->defx);
-	fobj_write_uint32(f, m->defy);
-	fobj_write_uint32(f, m->view->tilew);
-	fobj_write_uint32(f, m->view->tileh);
+	fobj_bwrite(buf, MAP_MAGIC, 10);
+	fobj_bwrite_uint32(buf, MAP_VERMAJ);
+	fobj_bwrite_uint32(buf, MAP_VERMIN);
+
+	fobj_bwrite_uint32(buf, m->flags);
+	fobj_bwrite_uint32(buf, m->mapw);
+	fobj_bwrite_uint32(buf, m->maph);
+	fobj_bwrite_uint32(buf, m->defx);
+	fobj_bwrite_uint32(buf, m->defy);
+	fobj_bwrite_uint32(buf, m->view->tilew);
+	fobj_bwrite_uint32(buf, m->view->tileh);
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
@@ -772,33 +778,35 @@ map_save(void *ob, char *path)
 			int nrefs = 0;
 			
 			/* Write the node flags. */
-			fobj_write_uint32(f, node->flags & ~(NODE_DONTSAVE));
+			fobj_bwrite_uint32(buf, node->flags & ~(NODE_DONTSAVE));
 			
 			/* Write the optional integer values. */
-			fobj_write_uint32(f, node->v1);
-			fobj_write_uint32(f, node->v2);
+			fobj_bwrite_uint32(buf, node->v1);
+			fobj_bwrite_uint32(buf, node->v2);
 
 			/* We do not know the reference count yet. */
-			soffs = lseek(f, 0, SEEK_CUR);
-			lseek(f, sizeof(Uint32), SEEK_CUR);
+			soffs = buf->offs;
+			fobj_bwrite_uint32(buf, 0);
 
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref != NULL && nref->flags & MAPREF_SAVE) {
-					fobj_write_string(f, nref->pobj->name);
-					fobj_write_uint32(f, nref->offs);
-					fobj_write_uint32(f, nref->frame);
-					fobj_write_uint32(f, nref->flags);
+					fobj_bwrite_string(buf,
+					    nref->pobj->name);
+					fobj_bwrite_uint32(buf, nref->offs);
+					fobj_bwrite_uint32(buf, nref->frame);
+					fobj_bwrite_uint32(buf, nref->flags);
 
 					nrefs++;
 				}
 			}
 
 			/* Write the reference count. */
-			fobj_pwrite_uint32(f, nrefs, soffs);
+			fobj_bpwrite_uint32(buf, nrefs, soffs);
 			totrefs += nrefs;
 		}
 	}
 
+	fobj_flush_buf(buf, f);
 	close(f);
 	dprintf("%s: %dx%d, %d refs\n", path, m->mapw, m->maph, totrefs);
 
