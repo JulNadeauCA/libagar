@@ -137,6 +137,7 @@ echo "    --with-smpeg                   MPEG playback using smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: check]"
+echo "    --with-gettext                 Use gettext tools [default: check]"
 echo "    --enable-edition               Graphical edition [default: yes]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
@@ -1311,6 +1312,58 @@ echo "#define VIEW_32BPP" $VIEW_32BPP >> config/view_32bpp.h
 echo "#endif /* VIEW_32BPP */" >> config/view_32bpp.h
 else
 echo "#undef VIEW_32BPP" > config/view_32bpp.h
+fi
+if [ "${with_gettext}" != "no" ]
+ then
+echo -n "checking for a gettext library..."
+echo -n "checking for a gettext library..." >> config.log
+GETTEXT_CFLAGS=-I/usr/local/include
+GETTEXT_LIBS="-L/usr/local/lib -lintl"
+echo "ok"
+echo "ok" >> config.log
+echo -n "checking whether gettext works..."
+echo -n "checking whether gettext works..." >> config.log
+cat << EOT > conftest.c
+#include <libintl.h>
+
+int
+main(int argc, char *argv[])
+{
+	gettext("");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${GETTEXT_CFLAGS} -o conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETTEXT" > config/have_gettext.h
+echo "#define HAVE_GETTEXT" $HAVE_GETTEXT >> config/have_gettext.h
+echo "#endif /* HAVE_GETTEXT */" >> config/have_gettext.h
+
+	HAVE_GETTEXT=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_GETTEXT" > config/have_gettext.h
+
+	echo "no"
+fi
+if [ "${HAVE_GETTEXT}" != "" ]; then
+echo GETTEXT_CFLAGS=$GETTEXT_CFLAGS >> Makefile.config
+echo GETTEXT_LIBS=$GETTEXT_LIBS >> Makefile.config
+echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
+else
+NONE=1
+fi
+else
+echo "#undef HAVE_GETTEXT" > config/have_gettext.h
 fi
 if [ "${enable_nls}" != "no" ]
  then
