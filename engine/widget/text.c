@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.11 2002/05/15 07:28:13 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.12 2002/05/19 14:27:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -448,10 +448,10 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 		gx += wgran;
 		gy += hgran;
 	}
-	if ((gy + h) >= mainview->height) {
+	if ((gy + h) >= mainview->h) {
 		gy = hgran;
 	}
-	if ((gx + w) >= mainview->width) {
+	if ((gx + w) >= mainview->w) {
 		gx = wgran;
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.16 2002/05/21 03:24:19 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.17 2002/05/22 02:03:01 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -33,6 +33,7 @@ struct window {
 
 	/* Read-write, thread-safe */
 	int	 redraw;		/* Redraw at next tick */
+	struct	 widget *focus;		/* Focused widget */
 	
 	SLIST_HEAD(, region) regionsh;	/* Regions */
 	TAILQ_ENTRY(window) windows;	/* Windows in view */
@@ -48,18 +49,39 @@ struct window_event {
 #define WINDOW(w)	((struct window *)(w))
 
 #ifdef DEBUG
+
 # define WINDOW_PUT_PIXEL(win, wrx, wry, c) do {			\
 	if ((wrx) > (win)->w || (wry) > (win)->h ||			\
 	    (wrx) < 0 || (wry) < 0) {					\
 		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
 		    (wrx), (wry), (win)->w, (win)->h);			\
 	}								\
-	VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry), (c)); \
+	VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx),			\
+	    (win)->y+(wry), (c));					\
 } while (/*CONSTCOND*/0)
+
+# define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) do {		\
+	if ((wrx) > (win)->w || (wry) > (win)->h ||			\
+	    (wrx) < 0 || (wry) < 0) {					\
+		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
+		    (wrx), (wry), (win)->w, (win)->h);			\
+	}								\
+	VIEW_PUT_ALPHAPIXEL((win)->view->v, (win)->x+(wrx),		\
+	    (win)->y+(wry), (c), (wa));					\
+} while (/*CONSTCOND*/0)
+
 #else
-# define WINDOW_PUT_PIXEL(win, wrx, wry, c) \
-	VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry), (c))
+
+# define WINDOW_PUT_PIXEL(win, wrx, wry, c, wa)				\
+ 	 VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry),	\
+	    (c), (wa))
+
+# define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c) \
+	VIEW_PUT_ALPHAPIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry), (c))
+
 #endif
+
+#define WINDOW_SURFACE(win)	((win)->view->v)
 
 #define WINDOW_INSIDE(wina, xa, ya)					\
 	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
@@ -77,6 +99,6 @@ void	 window_detach(void *, void *);
 
 void	 window_draw(struct window *);
 void	 window_draw_all(void);
-void	 window_event_all(struct viewport *, SDL_Event *);
+int	 window_event_all(struct viewport *, SDL_Event *);
 void	 window_resize(struct window *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: region.h,v 1.2 2002/05/19 15:27:56 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.3 2002/05/21 03:22:05 vedge Exp $	*/
 
 /* Widget container, attach to windows. */
 struct region {
@@ -31,11 +31,23 @@ struct region {
 		fatal("%s: %d,%d > %dx%d\n", OBJECT(reg)->name,		\
 		    (rrx), (rry), (reg)->w, (reg)->h);			\
 	}								\
-	WINDOW_PUT_PIXEL((reg)->win, (reg)->x+(rrx), (reg)->y+(rry), (c)); \
+	WINDOW_PUT_PIXEL((reg)->win, (reg)->x+(rrx), (reg)->y+(rry),	\
+	    (c));							\
+} while (/*CONSTCOND*/0)
+# define REGION_PUT_ALPHAPIXEL(reg, rrx, rry, c, wa) do {		\
+	if ((rrx) > (reg)->w || (rry) > (reg)->h) {			\
+		fatal("%s: %d,%d > %dx%d\n", OBJECT(reg)->name,		\
+		    (rrx), (rry), (reg)->w, (reg)->h);			\
+	}								\
+	WINDOW_PUT_ALPHAPIXEL((reg)->win, (reg)->x+(rrx),		\
+	    (reg)->y+(rry), (c), (wa));					\
 } while (/*CONSTCOND*/0)
 #else
 # define REGION_PUT_PIXEL(reg, rx, ry, c) \
 	WINDOW_PUT_PIXEL((reg)->win, (rx)+(reg)->x, (ry)+(reg)->y, (c))
+# define REGION_PUT_ALPHAPIXEL(reg, rx, ry, c, wa) \
+	WINDOW_PUT_ALPHAPIXEL((reg)->win, (rx)+(reg)->x, (ry)+(reg)->y, \
+	    (c), (wa))
 #endif
 
 struct region	*region_new(void *, int, int, int, int, int);
