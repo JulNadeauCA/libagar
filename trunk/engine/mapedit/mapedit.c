@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.165 2003/05/18 00:16:59 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.166 2003/05/18 02:10:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -243,7 +243,7 @@ toolbar_window(struct window *tilesets_win)
 void
 mapedit_init(void)
 {
-	struct window *toolbar_win, *tilesets_win;
+	struct window *toolbar_win, *tilesets_win, *objedit_win;
 	int i;
 	
 	object_init(&mapedit, "map-editor", "map-editor", &mapedit_ops);
@@ -272,9 +272,11 @@ mapedit_init(void)
 
 	tilesets_win = tilesets_window();
 	toolbar_win = toolbar_window(tilesets_win);
+	objedit_win = objedit_window();
 
 	window_show(toolbar_win);
 	window_show(tilesets_win);
+	window_show(objedit_win);
 }
 
 /* Release resources allocated by the map editor. */
