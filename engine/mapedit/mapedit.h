@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.70 2003/02/13 11:30:12 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.71 2003/02/20 04:57:25 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
@@ -88,7 +88,7 @@ struct window	*fileops_load_map_window(void);
 void		 fileops_save_map(int, union evarg *);
 void		 fileops_revert_map(int, union evarg *);
 void		 fileops_clear_map(int, union evarg *);
-struct window	*mapwin_new(struct map *);
+struct window	*mapedit_win_new(struct map *);
 
 extern struct mapedit	mapedit;
 extern int		mapedition;
