@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.6 2002/01/30 17:51:19 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.7 2002/01/30 17:57:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -745,14 +745,12 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 
 			switch (edref->type) {
 			case EDITREF_SPRITE:
-				MAP_ADDSPRITE(em, mapx, mapy,
-				    med->curobj->pobj, edref->spritei);
-				me->flags |= MAPREF_SAVE;
+				map_entry_addref(me, med->curobj->pobj,
+				    edref->spritei, MAPREF_SPRITE|MAPREF_SAVE);
 				break;
 			case EDITREF_ANIM:
-				MAP_ADDANIM(em, mapx, mapy,
-				    med->curobj->pobj, edref->animi);
-				me->flags |= MAPREF_SAVE;
+				map_entry_addref(me, med->curobj->pobj,
+				    edref->spritei, MAPREF_ANIM|MAPREF_SAVE);
 				break;
 			}
 			me->flags = med->curflags;
@@ -904,7 +902,9 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			} else {
 				/* Save this map to file. */
 				path = g_strdup_printf("%s.map", em->obj.name);
+				dprintf("saving %s...\n", path);
 				em->obj.save((struct object *)em, path);
+				dprintf("done\n");
 				free(path);
 			}
 			break;
@@ -922,7 +922,6 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 
 		pthread_mutex_unlock(&em->lock);
 	}
-	
 
 	/*
 	 * Directional keys.
