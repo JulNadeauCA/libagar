@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.33 2004/03/30 16:32:51 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.34 2004/05/06 08:25:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -177,7 +177,7 @@ examine_widget(int argc, union evarg *argv)
 	}
 	wid = it->p1;
 
-	win = window_new(NULL);
+	win = window_new(0, NULL);
 	window_set_caption(win, _("%s widget"), OBJECT(wid)->name);
 	
 	vb = vbox_new(win, VBOX_WFILL);
@@ -277,11 +277,11 @@ examine_window(int argc, union evarg *argv)
 	}
 	pwin = it->p1;
 
-	if ((win = window_new("monitor-win-%s", OBJECT(pwin)->name)) == NULL) {
+	if ((win = window_new(WINDOW_DETACH, "monitor-win-%s",
+	    OBJECT(pwin)->name)) == NULL) {
 		return;
 	}
 	window_set_caption(win, _("%s window"), OBJECT(pwin)->name);
-	window_set_closure(win, WINDOW_DETACH);
 
 	label_new(win, LABEL_STATIC, _("Name: \"%s\""), OBJECT(pwin)->name);
 	label_new(win, LABEL_POLLED_MT, _("Flags: 0x%x"), &pwin->lock,
@@ -309,11 +309,11 @@ widget_debug_window(void)
 	struct hbox *hb;
 	struct tlist *tl;
 
-	if ((win = window_new("monitor-window-stack")) == NULL) {
+	if ((win = window_new(WINDOW_DETACH, "monitor-window-stack"))
+	    == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Window stack"));
-	window_set_closure(win, WINDOW_DETACH);
 
 	tl = tlist_new(win, TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_windows, NULL);

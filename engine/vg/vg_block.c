@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.8 2004/05/31 07:16:30 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.9 2004/05/31 07:25:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -313,10 +313,9 @@ vg_block_editor(struct vg *vg)
 	struct box *bo;
 	struct tlist *tl;
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_HIDE, NULL);
 	window_set_caption(win, _("Blocks"));
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
-	window_set_closure(win, WINDOW_HIDE);
 	
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 	event_new(tl, "tlist-poll", poll_blocks, "%p", vg);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.204 2004/05/30 23:30:36 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.205 2004/07/24 02:08:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -114,9 +114,9 @@ mapedit_init(void)
 
 #if 0
 	/* Create the toolbar window. */
-	win = window_new("mapedit-toolbar");
+	win = window_new(0, "mapedit-toolbar");
 	window_set_caption(win, _("Tools"));
-	window_set_closure(win, WINDOW_IGNORE);
+	window_set_closure(win, 0);
 	window_set_position(win, WINDOW_UPPER_LEFT, 0);
 
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL|BOX_HFILL);
@@ -177,7 +177,7 @@ mapedit_settings(void *p)
 	struct mspinbutton *msb;
 	struct box *bo;
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_NO_VRESIZE, NULL);
 	window_set_caption(win, _("Map editor settings"));
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.89 2004/08/22 12:07:46 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.90 2004/08/23 06:42:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -413,7 +413,7 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_NO_RESIZE, NULL);
 	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
@@ -441,7 +441,7 @@ text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_NO_RESIZE, NULL);
 	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
@@ -476,7 +476,7 @@ text_edit_float(double *fp, double min, double max, const char *unit,
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_NO_VRESIZE, NULL);
 	window_set_caption(win, "%s", _("Enter real number"));
 	window_set_position(win, WINDOW_CENTER, 1);
 

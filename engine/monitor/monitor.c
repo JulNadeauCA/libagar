@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.54 2004/05/15 02:55:21 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.55 2004/09/05 13:09:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ monitor_init(void)
 	struct window *win;
 	int i;
 
-	win = window_new("monitor-toolbar");
+	win = window_new(0, "monitor-toolbar");
 	window_set_caption(win, _("Debug monitor"));
 	window_set_position(win, WINDOW_LOWER_LEFT, 0);
 

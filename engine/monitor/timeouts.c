@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.2 2004/05/07 01:43:17 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.1 2004/05/12 05:34:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -73,11 +73,10 @@ timeouts_window(void)
 	struct window *win;
 	struct tlist *tl;
 
-	if ((win = window_new("monitor-timeouts")) == NULL) {
+	if ((win = window_new(WINDOW_DETACH, "monitor-timeouts")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Running timers"));
-	window_set_closure(win, WINDOW_DETACH);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	event_new(tl, "tlist-poll", poll_timeouts, NULL);

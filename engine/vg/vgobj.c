@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.11 2004/05/13 02:50:29 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.12 2004/05/25 07:25:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -121,11 +121,11 @@ vgobj_settings(int argc, union evarg *argv)
 	struct fspinbutton *fsu;
 	struct palette *pal;
 	
-	if ((win = window_new("%s-settings", OBJECT(vgo)->name)) == NULL)
+	if ((win = window_new(WINDOW_HIDE|WINDOW_NO_VRESIZE, "%s-settings",
+	    OBJECT(vgo)->name)) == NULL)
 		return;
 
 	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(vgo)->name);
-	window_set_closure(win, WINDOW_HIDE);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	mfsu = mfspinbutton_new(win, NULL, "x", _("Geometry: "));
@@ -191,9 +191,8 @@ vgobj_edit(void *obj)
 	struct toolbar *tbar;
 	struct statusbar *statbar;
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Vector graphic: %s"), OBJECT(vgo)->name);
-	window_set_closure(win, WINDOW_DETACH);
 
 	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
 	toolbar_add_button(tbar, 0, ICON(SETTINGS_ICON), 0, 0,

@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.39 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.40 2004/03/24 08:46:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -144,9 +144,8 @@ perso_edit(void *obj)
 	struct window *win;
 	struct vbox *vb;
 
-	win = window_new(NULL);
+	win = window_new(WINDOW_DETACH|WINDOW_NO_VRESIZE, NULL);
 	window_set_caption(win, _("%s character"), OBJECT(pers)->name);
-	window_set_closure(win, WINDOW_DETACH);
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.47 2004/08/23 07:25:59 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.48 2004/08/26 07:34:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -346,9 +346,8 @@ objedit_window(void)
 	struct tlist *objs_tl;
 	struct toolbar *tbar;
 
-	win = window_new("mapedit-objedit");
+	win = window_new(0, "mapedit-objedit");
 	window_set_caption(win, _("Object editor"));
-	window_set_closure(win, WINDOW_HIDE);
 	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
