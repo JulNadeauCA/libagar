@@ -129,6 +129,8 @@ tileview_keydown(int argc, union evarg *argv)
 		if ((keymod & KMOD_CTRL) &&
 		    (tv->state == TILEVIEW_PIXMAP_EDIT)) {
 			pixmap_redo(tv, tv->tv_pixmap.tel);
+		} else {
+			tv->tile->flags |= TILE_DIRTY;
 		}
 		break;
 	case SDLK_EQUALS:
@@ -146,9 +148,6 @@ tileview_keydown(int argc, union evarg *argv)
 	case SDLK_0:
 	case SDLK_1:
 		tileview_set_zoom(tv, 100, 1);
-		break;
-	case SDLK_r:
-		tv->tile->flags |= TILE_DIRTY;
 		break;
 	}
 }
