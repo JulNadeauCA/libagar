@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.4 2003/08/31 11:58:09 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.5 2003/09/01 07:42:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -33,16 +33,6 @@
 
 #include "unicode.h"
 
-void
-unicode_init(void)
-{
-}
-
-void
-unicode_destroy(void)
-{
-}
-
 /* Calculate the length of a UTF-8 sequence in bytes. */
 static __inline__ int
 utf8_length(Uint8 ch)
@@ -76,7 +66,7 @@ unicode_import(enum unicode_conv conv, const char *s)
 	ucs = Malloc((len + 1) * sizeof(Uint32));
 
 	switch (conv) {
-	case UNICODE_FROM_ASCII:
+	case UNICODE_FROM_US_ASCII:
 		for (i = 0; i < len; i++) {
 			ucs[i] = ((const unsigned char *)s)[i];
 		}
