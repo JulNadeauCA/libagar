@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: object.3,v 1.14 2002/09/07 04:30:26 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -133,7 +133,7 @@ integer.
 .Fn object_load "void *ob"
 .Pp
 .Ft "int"
-.Fn object_loadfrom "void *ob" "char *path"
+.Fn object_load_from "void *ob" "char *path"
 .Pp
 .Ft "int"
 .Fn object_save "void *ob"
@@ -157,12 +157,6 @@ saves the state of
 .Fa ob
 to the user's data directory.
 .Pp
-The config structure must not be locked by the caller thread when
-.Fn object_load ,
-.Fn object_loadfrom
-and
-.Fn object_save
-are called.
 The thread-safe
 .Fn object_path
 function searches the data directories for a file matching the
@@ -284,23 +278,12 @@ The
 function frees resources used by the garbage collector.
 .Sh LOOKUP
 .nr nS 1
-.Ft "struct object *"
-.Fn object_strfind "char *name"
 .Ft "void"
 .Fn OBJECT_UNUSED "struct object *ob" "TYPE type"
 .Pp
 .Ft "void"
 .Fn OBJECT_ASSERT "struct object *ob" "char *obtype"
 .nr nS 0
-.Pp
-The
-.Fn object_strfind
-function looks up the list of objects linked against the world for an
-object identified by the null-terminated string
-.Fa name .
-The
-.Fn object_strfind
-function must be called when the world is locked.
 .Pp
 The
 .Fn OBJECT_UNUSED
