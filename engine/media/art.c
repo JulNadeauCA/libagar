@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.23 2003/03/11 00:13:13 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.24 2003/03/12 06:15:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,6 +84,75 @@ art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 	return (art->nsprites++);
 }
 
+/*
+ * Scan for alpha pixels on a surface and choose an optimal
+ * alpha/colorkey setting.
+ */
+void
+art_scan_alpha(SDL_Surface *su)
+{
+	enum {
+		ART_ALPHA_TRANSPARENT = 0x01,
+		ART_ALPHA_OPAQUE =	0x02,
+		ART_ALPHA_ALPHA =	0x04
+	} aflags = 0;
+	Uint8 oldalpha = su->format->alpha;
+	Uint8 oldckey = su->format->colorkey;
+	int x, y;
+
+	if (SDL_MUSTLOCK(su))
+		SDL_LockSurface(su);
+	for (y = 0; y < su->h; y++) {
+		for (x = 0; x < su->w; x++) {
+			Uint8 *pixel = (Uint8 *)su->pixels +
+			    y*su->pitch + x*su->format->BytesPerPixel;
+			Uint8 r, g, b, a;
+
+			switch (su->format->BytesPerPixel) {
+			case 4:
+				SDL_GetRGBA(*(Uint32 *)pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			case 2:
+				SDL_GetRGBA(*(Uint16 *)pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			case 1:
+				SDL_GetRGBA(*pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			}
+
+			switch (a) {
+			case SDL_ALPHA_TRANSPARENT:
+				aflags |= ART_ALPHA_TRANSPARENT;
+				break;
+			case SDL_ALPHA_OPAQUE:
+				aflags |= ART_ALPHA_OPAQUE;
+				break;
+			default:
+				aflags |= ART_ALPHA_ALPHA;
+				break;
+			}
+		}
+	}
+	if (SDL_MUSTLOCK(su))
+		SDL_UnlockSurface(su);
+
+	/* XXX use rleaccel */
+	SDL_SetAlpha(su, 0, 0);
+	SDL_SetColorKey(su, 0, 0);
+	if (aflags & (ART_ALPHA_ALPHA|ART_ALPHA_TRANSPARENT)) {
+		SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
+#if 0
+	/* XXX causes some images to be rendered incorrectly. */
+	} else if (aflags & XCF_ALPHA_TRANSPARENT) {
+		dprintf("colorkey %u\n", oldckey);
+		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
+#endif
+	}
+}
+
 /* Break a surface into tile-sized fragments and map them. */
 struct map *
 art_insert_fragments(struct art *art, SDL_Surface *sprite)
@@ -123,8 +192,10 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 			    (sprite->flags &
 			    (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
 			    TILEW, TILEH, sprite->format->BitsPerPixel,
-			    sprite->format->Rmask, sprite->format->Gmask,
-			    sprite->format->Bmask, sprite->format->Amask);
+			    sprite->format->Rmask,
+			    sprite->format->Gmask,
+			    sprite->format->Bmask,
+			    sprite->format->Amask);
 			if (su == NULL) {
 				fatal("SDL_CreateRGBSurface: %s",
 				    SDL_GetError());
@@ -137,6 +208,9 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 			SDL_BlitSurface(sprite, &sd, su, &rd);
 			nsprite = art_insert_sprite(art, su, 0);
 			SDL_SetAlpha(sprite, saflags, salpha);
+
+			/* Adjust the alpha properties of the fragment. */
+			art_scan_alpha(su);
 
 			node_add_sprite(node, art->pobj, nsprite);
 		}
@@ -152,8 +226,6 @@ art_unused(struct art *art)
 	pthread_mutex_lock(&art->used_lock);
 	if (--art->used == 0) {
 		art_destroy(art);
-	} else if (art->used < 0) {
-		fatal("ref count < 0");
 	}
 	pthread_mutex_unlock(&art->used_lock);
 }
