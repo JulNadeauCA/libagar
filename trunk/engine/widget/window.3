@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.17 2002/12/14 11:27:15 vedge Exp $
+.\"	$Csoft: window.3,v 1.18 2003/01/01 05:18:42 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -115,16 +115,18 @@ flag).
 .Pp
 The
 .Fa flags
-can be changed at runtime, and may include:
+may be modified at run time (assuming the
+.Nm
+is locked), and may include:
 .Pp
 .Bd -literal
-#define WINDOW_PLAIN		0x001	/* Solid, no borders */
-#define WINDOW_TITLEBAR		0x008	/* Draw title bar */
-#define WINDOW_ROUNDEDGES	0x010	/* Round edges */
-#define WINDOW_SCALE		0x020	/* Scale regions/widgets */
-#define WINDOW_SHOWN		0x040	/* Visible */
-#define WINDOW_CENTER		0x080	/* Center window */
-#define WINDOW_SAVE_POSITION	0x100	/* Save window position on disk */
+#define WINDOW_TITLEBAR		0x01	/* Draw a title bar */
+#define WINDOW_SCALE		0x02	/* Scale the initial geometry (%) */
+#define WINDOW_CENTER		0x04	/* Center the initial position */
+#define WINDOW_SHOWN		0x10	/* Window is visible */
+#define WINDOW_SAVE_POSITION	0x20	/* Save position/geometry on close */
+#define WINDOW_HIDDEN_BODY	0x40	/* Draw the titlebar only */
+#define WINDOW_PERSISTENT	WINDOW_HIDDEN_BODY
 .Ed
 .Pp
 The
