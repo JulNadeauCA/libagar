@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.c,v 1.3 2003/08/10 23:02:51 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.4 2003/08/31 11:58:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -43,6 +43,27 @@ unicode_destroy(void)
 {
 }
 
+/* Calculate the length of a UTF-8 sequence in bytes. */
+static __inline__ int
+utf8_length(Uint8 ch)
+{
+	if ((ch >> 7) == 0) {
+		return (1);
+	} else if (((ch & 0xe0) >> 5) == 0x6) {
+		return (2);
+	} else if (((ch & 0xf0) >> 4) == 0xe) {
+		return (3);
+	} else if (((ch & 0xf8) >> 3) == 0x1e) {
+		return (4);
+	} else if (((ch & 0xfc) >> 2) == 0x3e) {
+		return (5);
+	} else if (((ch & 0xfe) >> 1) == 0x7e) {
+		return (6);
+	} else {
+		return (-1);
+	}
+}
+
 /* Return the UCS-4 representation of the given string/encoding. */
 Uint32 *
 unicode_import(enum unicode_conv conv, const char *s)
@@ -56,7 +77,6 @@ unicode_import(enum unicode_conv conv, const char *s)
 
 	switch (conv) {
 	case UNICODE_FROM_ASCII:
-	case UNICODE_FROM_LATIN1:
 		for (i = 0; i < len; i++) {
 			ucs[i] = ((const unsigned char *)s)[i];
 		}
@@ -64,24 +84,44 @@ unicode_import(enum unicode_conv conv, const char *s)
 		break;
 	case UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < len; i++, j++) {
-			Uint32 ch = ((const unsigned char *)s)[i];
-
-#if 1
-			if (ch >= 0xf0) {
-				ch  = (Uint16)(s[i]   & 0x07) << 18;
-				ch |= (Uint16)(s[++i] & 0x3f) << 12;
-				ch |= (Uint16)(s[++i] & 0x3f) << 6;
-				ch |= (Uint16)(s[++i] & 0x3f);
-			} else if (ch >= 0xe0) {
-				ch  = (Uint16)(s[i]   & 0x3f) << 12;
-				ch |= (Uint16)(s[++i] & 0x3f) << 6;
-				ch |= (Uint16)(s[++i] & 0x3f);
-			} else if (ch >= 0xc0) {
-				ch  = (Uint16)(s[i]   & 0x3f) << 6;
-				ch |= (Uint16)(s[++i] & 0x3f);
+			switch (utf8_length(s[i])) {
+			case 1:
+				ucs[j] = (Uint32)s[i];
+				break;
+			case 2:
+				ucs[j] = ((Uint32)(s[i]   & 0x3f) << 6) |
+				          (Uint32)(s[++i] & 0x3f);
+				break;
+			case 3:
+				ucs[j] = ((Uint32)(s[i]   & 0x3f) << 12) |
+				         ((Uint32)(s[++i] & 0x3f) << 6) |
+				          (Uint32)(s[++i] & 0x3f);
+				break;
+			case 4:
+				ucs[j] = ((Uint32)(s[i]   & 0x07) << 18) |
+				         ((Uint32)(s[++i] & 0x3f) << 12) |
+				         ((Uint32)(s[++i] & 0x3f) << 6) |
+				          (Uint32)(s[++i] & 0x3f);
+				break;
+			case 5:
+				ucs[j] = ((Uint32)(s[i]   & 0x03) << 24) |
+				         ((Uint32)(s[++i] & 0x3f) << 18) |
+				         ((Uint32)(s[++i] & 0x3f) << 12) |
+				         ((Uint32)(s[++i] & 0x3f) << 6) |
+				          (Uint32)(s[++i] & 0x3f);
+				break;
+			case 6:
+				ucs[j] = ((Uint32)(s[i]   & 0x01) << 30) |
+				         ((Uint32)(s[++i] & 0x3f) << 24) |
+				         ((Uint32)(s[++i] & 0x3f) << 18) |
+				         ((Uint32)(s[++i] & 0x3f) << 12) |
+				         ((Uint32)(s[++i] & 0x3f) << 6) |
+				         (Uint32)(s[++i] & 0x3f);
+				break;
+			case -1:
+				ucs[j] = '?';
+				break;
 			}
-			ucs[j] = ch;
-#endif
 		}
 		ucs[j] = '\0';
 		break;

@@ -1,4 +1,4 @@
-/*	$Csoft: unicode.h,v 1.4 2003/08/10 23:02:51 vedge Exp $	*/
+/*	$Csoft: unicode.h,v 1.5 2003/08/31 11:58:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_UNICODE_H_
@@ -7,7 +7,6 @@
 
 enum unicode_conv {
 	UNICODE_FROM_ASCII,		/* ASCII -> UCS-4 */
-	UNICODE_FROM_LATIN1,		/* Latin-1 -> UCS-4 */
 	UNICODE_FROM_UTF8,		/* UTF-8 -> UCS-4 */
 	UNICODE_TO_UTF8			/* UCS-4 -> UTF-8 */
 };
