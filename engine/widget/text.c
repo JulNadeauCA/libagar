@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.58 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.59 2003/04/12 01:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -176,6 +176,31 @@ text_font_line_skip(ttf_font *fon)
 	return (ttf_font_line_skip((fon != NULL) ? fon : font));
 }
 
+/* Render a single glyph onto a new surface. */
+SDL_Surface *
+text_render_glyph(char *fontname, int fontsize, Uint32 color, char ch)
+{
+	ttf_font *fon;
+	SDL_Color col;
+	SDL_Surface *su;
+	Uint8 r, g, b;
+
+	fon = text_load_font(fontname, fontsize,
+	    prop_get_int(config, "font-engine.default-style"));
+
+	/* Decompose the color. */
+	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	col.r = r;
+	col.g = g;
+	col.b = b;
+
+	su = ttf_render_glyph_solid(fon, (unsigned char)ch, col);
+	if (su == NULL)
+		fatal("rendering glyph: %s", error_get());
+	return (su);
+}
+
+/* Render a (possibly multi-line) string onto a new surface. */
 SDL_Surface *
 text_render(char *fontname, int fontsize, Uint32 color, char *s)
 {
@@ -184,20 +209,18 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	Uint8 r, g, b;
 	ttf_font *fon;
 	SDL_Rect rd;
-	int nlines, maxw;
+	int nlines, maxw, fon_h;
 	char *sd, *sp;
 
-	if (s == NULL || strcmp("", s) == 0 ||
-	    !prop_get_bool(config, "font-engine")) {
-		/* Return an empty surface. */
-		dprintf("empty surface\n");
+	if (s == NULL || s[0] == '\0' ||
+	    !prop_get_bool(config, "font-engine")) {	    /* Null surface */
 		return (view_surface(SDL_SWSURFACE, 0, 0));
 	}
 
-	/* Get a font handle. */
 	fon = text_load_font(fontname, fontsize,
 	    prop_get_int(config, "font-engine.default-style"));
-	
+	fon_h = text_font_height(fon);
+
 	/* Decompose the color. */
 	SDL_GetRGB(color, view->v->format, &r, &g, &b);
 	col.r = r;
@@ -207,22 +230,18 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	/* Find out the line count. */
 	sd = Strdup(s);
 	for (sp = sd, nlines = 0; *sp != '\0'; sp++) {
-		if (*sp == '\n') {
+		if (*sp == '\n')
 			nlines++;
-		}
 	}
 
-	if (nlines == 0) {
-		/* Render a single line. */
+	if (nlines == 0) {					/* One line */
 		su = ttf_render_text_solid(fon, sd, col);
 		if (su == NULL) {
 			fatal("ttf_render_text_solid: %s", error_get());
 		}
-	} else {
+	} else {						/* Multiline */
 		SDL_Surface **lines, **lp;
 		int i;
-
-		/* XXX inefficient */
 
 		/*
 		 * Render the text to an array of surfaces, since we cannot
@@ -232,7 +251,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 		for (lp = lines, maxw = 0;
 		    (sp = strsep(&sd, "\n")) != NULL;
 		    lp++) {
-		    	if (strcmp(sp, "") == 0) {
+		    	if (sp[0] == '\0') {
 				*lp = NULL;
 				continue;
 			}
@@ -240,24 +259,23 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 			if (*lp == NULL) {
 				fatal("ttf_render_text_solid: %s", error_get());
 			}
-			if ((*lp)->w > maxw) {
+			if ((*lp)->w > maxw)
 				maxw = (*lp)->w;	/* Grow width */
-			}
 		}
 
 		rd.x = 0;
 		rd.y = 0;
 		rd.w = 0;
-		rd.h = ttf_font_height(fon);
+		rd.h = fon_h;
 
 		/* Render the final surface. */
-		su = view_surface(SDL_SWSURFACE, maxw, rd.h * nlines);
+		su = view_surface(SDL_SWSURFACE, maxw, rd.h*nlines);
 		for (i = 0;
 		     i < nlines;
 		     i++, rd.y += rd.h) {	/* XXX respect line skip */
-			if (lines[i] == NULL) {
+			if (lines[i] == NULL)
 				continue;
-			}
+
 			rd.w = lines[i]->w;
 			SDL_BlitSurface(lines[i], NULL, su, &rd);
 			SDL_FreeSurface(lines[i]);
@@ -304,7 +322,6 @@ text_msg(const char *caption, const char *format, ...)
 		    window_generic_detach, "%p", win);
 		window_show(win);
 	}
-
 	free(msg);
 }
 
