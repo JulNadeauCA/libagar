@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.130 2005/01/30 05:21:48 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.131 2005/01/30 05:39:27 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -224,8 +224,8 @@ config_init(struct config *con)
 	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 # else
-	prop_set_string(con, "font-engine.default-font", "zekton.ttf");
-	prop_set_int(con, "font-engine.default-size", 12);
+	prop_set_string(con, "font-engine.default-font", "Vera.ttf");
+	prop_set_int(con, "font-engine.default-size", 11);
 	prop_set_int(con, "font-engine.default-style", 0);
 # endif
 #else
