@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.46 2002/03/03 06:23:54 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.47 2002/03/03 06:44:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -348,12 +348,7 @@ node_destroy(struct node *node)
 void
 map_plot_sprite(struct map *m, SDL_Surface *s, Uint32 x, Uint32 y)
 {
-	static SDL_Rect rs, rd;
-
-	rs.w = s->w;
-	rs.h = s->h;
-	rs.x = 0;
-	rs.y = 0;
+	static SDL_Rect rd;
 
 	rd.w = s->w;
 	rd.h = s->h;
@@ -361,16 +356,16 @@ map_plot_sprite(struct map *m, SDL_Surface *s, Uint32 x, Uint32 y)
 		/* The sprite size should be a multiple of the tile size. */
 		/* XXX math */
 		if (rd.w > m->tilew) {
-			x -= (rs.w / m->tilew) / 2;
+			x -= (s->w / m->tilew) / 2;
 		}
 		if (rd.h > m->tileh) {
-			y -= (rs.h / m->tileh) / 2;
+			y -= (s->h / m->tileh) / 2;
 		}
 	}
 	rd.x = x;
 	rd.y = y;
 
-	SDL_BlitSurface(s, &rs, m->view->v, &rd);
+	SDL_BlitSurface(s, NULL, m->view->v, &rd);
 }
 
 /*
