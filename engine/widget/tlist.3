@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.35 2004/05/06 06:24:09 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.36 2004/05/06 08:45:08 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -316,7 +316,8 @@ flag).
 Polled mode handling is inefficient and increases the complexity of the code,
 since selections must be saved/restored according to their user pointer.
 .Pp
-Tree display is a crude hack and should be implemented by another widget.
+.Dv TLIST_TREE
+is a cheap and bletcherous hack.
 .Pp
 The
 .Fn tlist_insert_item
