@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.38 2003/07/03 06:43:50 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.39 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,7 +70,7 @@ static void	graph_resume_scroll(int, union evarg *);
 
 struct graph *
 graph_new(void *parent, const char *caption, enum graph_type type, int flags,
-    Sint32 yrange)
+    Sint16 yrange)
 {
 	struct graph *graph;
 
@@ -82,7 +82,7 @@ graph_new(void *parent, const char *caption, enum graph_type type, int flags,
 
 void
 graph_init(struct graph *graph, const char *caption, enum graph_type type,
-    int flags, Sint32 yrange)
+    int flags, Sint16 yrange)
 {
 	widget_init(graph, "graph", &graph_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL|WIDGET_HFILL);
@@ -185,7 +185,7 @@ graph_draw(void *p)
 	struct graph_item *gi;
 	int x, y, oy;
 	Uint32 i, origin_y;
-	Sint32 oval;
+	Sint16 oval;
 
 	origin_y = WIDGET(gra)->h * gra->origin_y / 100;
 
@@ -277,17 +277,17 @@ graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b)
 }
 
 void
-graph_plot(struct graph_item *gi, Sint32 val)
+graph_plot(struct graph_item *gi, Sint16 val)
 {
 	if (gi->vals == NULL) {				/* Initialize */
-		gi->vals = Malloc(NITEMS_INIT * sizeof(Sint32));
+		gi->vals = Malloc(NITEMS_INIT * sizeof(Sint16));
 		gi->maxvals = NITEMS_INIT;
 		gi->nvals = 0;
 	} else if (gi->nvals >= gi->maxvals) {		/* Grow */
-		Sint32 *newvals;
+		Sint16 *newvals;
 
 		newvals = Realloc(gi->vals,
-		    (NITEMS_GROW * gi->maxvals) * sizeof(Sint32));
+		    (NITEMS_GROW * gi->maxvals) * sizeof(Sint16));
 		gi->maxvals += NITEMS_GROW;
 		gi->vals = newvals;
 	}
