@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.54 2002/05/25 08:21:41 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.55 2002/05/28 06:03:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -27,6 +27,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,6 +122,7 @@ object_get_art(char *media)
 
 	if (art == NULL) {
 		struct fobj *fob;
+		char *obpath;
 		Uint32 i;
 
 		art = emalloc(sizeof(struct object_art));
@@ -129,9 +133,14 @@ object_get_art(char *media)
 		art->anims = NULL;
 		art->nanims = 0;
 		art->maxanims = 0;
-		art->used = 0;
+		art->used = 1;
+		pthread_mutex_init(&art->used_lock, NULL);
 
-		fob = fobj_load(savepath(media, "fob"));
+		obpath = object_path(media, "fob");
+		if (obpath == NULL) {
+			fatal("%s: %s\n", media, AGAR_GetError());
+		}
+		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
 			xcf_load(fob, i, art);
 		}
@@ -161,6 +170,7 @@ object_get_audio(char *media)
 	if (audio == NULL) {
 		struct fobj *fob;
 		Uint32 i;
+		char *obpath;
 
 		audio = emalloc(sizeof(struct object_audio));
 		audio->name = strdup(media);
@@ -168,8 +178,14 @@ object_get_audio(char *media)
 		audio->samples = NULL;
 		audio->nsamples = 0;
 		audio->maxsamples = 0;
+		audio->used = 0;
 
-		fob = fobj_load(savepath(media, "fob"));
+		obpath = object_path(media, "fob");
+		if (obpath == NULL) {
+			fatal("%s: %s\n", media, AGAR_GetError());
+		}
+
+		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX todo */
 			/* ... */
 		}
@@ -211,56 +227,66 @@ void
 object_init(struct object *ob, char *type, char *name, char *media, int flags,
     const void *opsp)
 {
-	static int curid = 0;	/* The world has id 0 */
+	static int curid = 0;	/* The world has id 0. XXX safe? */
 
 	ob->id = curid++;
 	ob->type = strdup(type);
 	ob->name = strdup(name);
 	ob->desc = NULL;
 	sprintf(ob->saveext, "ag");
+	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
-	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	pthread_mutex_init(&ob->pos_lock, NULL);
+	TAILQ_INIT(&ob->events);
+	pthread_mutex_init(&ob->events_lock, NULL);
 
-	if (ob->flags & OBJ_ART) {
-		ob->art = object_get_art(media);
-		ob->art->used++;
-	} else {
-		ob->art = NULL;
-	}
-	if (ob->flags & OBJ_AUDIO) {
-		ob->audio = object_get_audio(media);
-		ob->audio->used++;
-	} else {
-		ob->audio = NULL;
-	}
+	ob->art = (ob->flags & OBJ_ART) ? object_get_art(media) : NULL;
+	ob->audio = (ob->flags & OBJ_AUDIO) ? object_get_audio(media) : NULL;
 }
 
+/* Object must not be attached. */
 void
 object_destroy(void *p)
 {
 	struct object *ob = p;
-
-	/* Decrement usage counts for the media pool. */
-	if ((ob->flags & OBJ_KEEPMEDIA) == 0) {
-		if (ob->art != NULL)
-			ob->art->used--;
-		if (ob->audio != NULL)
-			ob->audio->used--;
-	}
-
-	/* Free allocated resources. */
+	struct event *eev, *nexteev;
+	
 	if (OBJECT_OPS(ob)->destroy != NULL) {
 		OBJECT_OPS(ob)->destroy(ob);
 	}
+	
+	pthread_mutex_lock(&ob->pos_lock);
+	ob->pos = NULL;
+	pthread_mutex_unlock(&ob->pos_lock);
+	pthread_mutex_destroy(&ob->pos_lock);
+
+	pthread_mutex_lock(&ob->events_lock);
+	for (eev = TAILQ_FIRST(&ob->events);
+	     eev != TAILQ_END(&ob->events);
+	     eev = nexteev) {
+		nexteev = TAILQ_NEXT(eev, events);
+		free(eev);
+	}
+	pthread_mutex_unlock(&ob->events_lock);
+	pthread_mutex_destroy(&ob->events_lock);
+
+	if ((ob->flags & OBJ_KEEPMEDIA) == 0) {
+		if (ob->art != NULL) {
+			OBJECT_UNUSED(ob, art);
+		}
+		if (ob->audio != NULL) {
+			OBJECT_UNUSED(ob, audio);
+		}
+	}
+
 	if (ob->name != NULL)
 		free(ob->name);
 	if (ob->type != NULL)
 		free(ob->type);
 	if (ob->desc != NULL)
 		free(ob->desc);
-	pthread_mutex_destroy(&ob->pos_lock);
+
 	free(ob);
 }
 
@@ -313,7 +339,6 @@ object_start_gc(Uint32 ival, void *p)
 void
 object_init_gc(void)
 {
-	/* XXX pref */
 	gctimer = SDL_AddTimer(1000, object_start_gc, NULL);
 }
 
@@ -367,8 +392,9 @@ object_load(void *p)
 		return (0);
 	}
 
-	path = savepath(ob->name, ob->saveext);
+	path = object_path(ob->name, ob->saveext);
 	if (path == NULL) {
+		dprintf("%s.%s: %s\n", ob->name, ob->saveext, AGAR_GetError());
 		return (-1);
 	}
 
@@ -412,24 +438,6 @@ object_save(void *p)
 	return (0);
 }
 
-void
-increase_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
-{
-	*variable += val;
-	if (*variable > bounds) {
-		*variable = bounds;
-	}
-}
-
-void
-decrease_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
-{
-	*variable -= val;
-	if (*variable < bounds) {
-		*variable = bounds;
-	}
-}
-
 /*
  * Search for an object matching the given string.
  * The world must be locked.
@@ -445,6 +453,32 @@ object_strfind(char *s)
 			return (ob);
 		}
 	}
+	return (NULL);
+}
+
+char *
+object_path(char *obname, const char *suffix)
+{
+	struct stat sta;
+	char *p, *last;
+	char *datapath, *datapathp, *path;
+
+	path = emalloc((size_t)FILENAME_MAX);
+	datapathp = datapath = strdup(world->datapath);
+
+	for (p = strtok_r(datapath, ":;", &last);
+	     p != NULL;
+	     p = strtok_r(NULL, ":;", &last)) {
+		sprintf(path, "%s/%s.%s", p, obname, suffix);
+		if (stat(path, &sta) == 0) {
+			free(datapathp);
+			return (path);
+		}
+	}
+	free(datapathp);
+	free(path);
+
+	AGAR_SetError("cannot find data file");
 	return (NULL);
 }
 

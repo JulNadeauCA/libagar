@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.35 2002/05/25 08:21:41 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.36 2002/05/28 06:03:47 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -16,6 +16,7 @@ struct object_ops {
 	int	(*save)(void *, int);		/* Save to fd */
 
 	/* Called when the container is locked, order is irrelevant. */
+	/* XXX event */
 	void	(*onattach)(void *, void *);	/* On attach to container */
 	void	(*ondetach)(void *, void *);	/* On detach to container */
 
@@ -25,15 +26,18 @@ struct object_ops {
 };
 
 struct object_art {
+	/* Read-only when in pool */
 	SDL_Surface **sprites;		/* Static surfaces */
-	int	nsprites, maxsprites;
-
 	struct	anim **anims;		/* Animations */
+	int	nsprites, maxsprites;
 	int	nanims, maxanims;
 
 	char	*name;			/* Parent name copy */
-	int	used;			/* Reference count */
 	LIST_ENTRY(object_art) arts;	/* Art pool */
+
+	/* Read-write, thread-safe */
+	int	used;			/* Reference count */
+	pthread_mutex_t used_lock;
 };
 
 struct object_audio_sample {
@@ -45,14 +49,16 @@ struct object_audio_sample {
 struct object_audio {
 	struct	object_audio_sample **samples;
 	int	nsamples, maxsamples;
-	
-	char	*name;			/* Parent name copy */
-	int	used;			/* Reference count */
+	char	*name;				/* Parent name copy */
 	LIST_ENTRY(object_audio) audios;	/* Audio pool */
+
+	/* Read-write, thread-safe */
+	int	used;				/* Reference count */
+	pthread_mutex_t used_lock;
 };
 
 struct object {
-	/* Read-only once consistent. */
+	/* Read-only once attached */
 	char	*type;			/* Type of immediate descendent */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
@@ -64,15 +70,19 @@ struct object {
 #define OBJ_ART		0x01		/* Load graphics */
 #define OBJ_AUDIO	0x02		/* Load audio */
 #define OBJ_KEEPMEDIA	0x04		/* Keep graphics/audio cached */
-#define OBJ_BLOCK	0x10		/* Map: cannot walk through */
+#define OBJ_BLOCK	0x10		/* Map: cannot walk through. XXX */
 
 	struct	 object_art *art;	/* Static sprites */
 	struct	 object_audio *audio;	/* Static samples */
-	SLIST_ENTRY(object) wobjs;	/* Linked objects */
 
 	/* Read-write */
-	struct	 mappos *pos;		/* Position on the map */
+	struct	 mappos *pos;		/* Position on the map. XXX array */
 	pthread_mutex_t	pos_lock;	/* Lock on position */
+	TAILQ_HEAD(,event) events;	/* Event handlers */
+	pthread_mutex_t	events_lock;	/* Lock on events/events processing */
+
+	/* Locking policy defined by the parent */
+	SLIST_ENTRY(object) wobjs;	/* Attached objects */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
@@ -82,8 +92,14 @@ struct object {
 #define ANIM(ob, sp)	OBJECT((ob))->art->anims[(sp)]
 #define SAMPLE(ob, sp)	OBJECT((ob))->audio->samples[(sp)]
 
+#define OBJECT_UNUSED(ob, type)	do {			\
+	pthread_mutex_lock(&(ob)->type->used_lock);	\
+	(ob)->type->used--;				\
+	pthread_mutex_unlock(&(ob)->type->used_lock);	\
+} while (/*CONSTCOND*/ 0)
+
 #ifdef DEBUG
-#define OBJECT_ASSERT(ob, typestr) do {					\
+# define OBJECT_ASSERT(ob, typestr) do {				\
 	if (strcmp(OBJECT((ob))->type, typestr) != 0) {			\
 		fprintf(stderr, "%s:%d: %s is not a %s\n", __FILE__,	\
 		    __LINE__, OBJECT((ob))->name, typestr);		\
@@ -91,7 +107,7 @@ struct object {
 	}								\
 } while (/*CONSTCOND*/0)
 #else
-#define OBJECT_ASSERT(ob, type)
+# define OBJECT_ASSERT(ob, type)
 #endif
 
 #define OBJECT_TYPE(pob, ptype)	(strcmp(OBJECT((pob))->type, (ptype)) == 0)
@@ -107,9 +123,8 @@ char	*object_name(char *, int);
 int	 object_loadfrom(void *, char *);
 int	 object_addanim(struct object_art *, struct anim *);
 int	 object_addsprite(struct object_art *, SDL_Surface *);
-void	 increase_uint32(Uint32 *, Uint32, Uint32);
-void	 decrease_uint32(Uint32 *, Uint32, Uint32);
 void	 object_dump(void *);
+char	*object_path(char *, const char *);
 
 void	 object_init_gc(void);
 Uint32	 object_start_gc(Uint32 ival, void *);
