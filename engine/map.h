@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.91 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.92 2003/05/24 15:53:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -122,9 +122,9 @@ struct map {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct map	*map_new(void *, char *);
+extern DECLSPEC struct map	*map_new(void *, const char *);
 
-extern DECLSPEC void	 map_init(void *, char *);
+extern DECLSPEC void	 map_init(void *, const char *);
 extern DECLSPEC int	 map_load(void *, struct netbuf *);
 extern DECLSPEC int	 map_save(void *, struct netbuf *);
 extern DECLSPEC void	 map_destroy(void *);
@@ -135,7 +135,7 @@ extern DECLSPEC int	 map_alloc_nodes(struct map *, unsigned int,
 extern DECLSPEC void	 map_free_nodes(struct map *);
 extern DECLSPEC int	 map_resize(struct map *, unsigned int, unsigned int);
 extern DECLSPEC void	 map_set_zoom(struct map *, Uint16);
-extern DECLSPEC int	 map_push_layer(struct map *, char *);
+extern DECLSPEC int	 map_push_layer(struct map *, const char *);
 extern DECLSPEC void	 map_pop_layer(struct map *);
 extern DECLSPEC void	 noderef_init(struct noderef *);
 extern DECLSPEC int	 noderef_set_center(struct noderef *, int, int);
@@ -170,8 +170,8 @@ extern DECLSPEC struct noderef	*node_copy_ref(struct noderef *, struct node *);
 extern DECLSPEC struct noderef	*node_add_sprite(struct node *, void *, Uint32);
 extern DECLSPEC struct noderef	*node_add_anim(struct node *, void *, Uint32,
 				               Uint8);
-extern DECLSPEC struct noderef	*node_add_warp(struct node *, char *, int, int,
-				               Uint8);
+extern DECLSPEC struct noderef	*node_add_warp(struct node *, const char *,
+				               int, int, Uint8);
 __END_DECLS
 
 #ifdef DEBUG
