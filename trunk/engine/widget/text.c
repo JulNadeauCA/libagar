@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.31 2002/09/16 01:51:27 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.32 2002/09/19 21:14:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,12 +32,14 @@
 #include <errno.h>
 
 #include <engine/engine.h>
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/label.h>
-#include <engine/widget/button.h>
 
+#include "widget.h"
+#include "window.h"
+#include "label.h"
+#include "button.h"
 #include "text.h"
+#include "textbox.h"
+#include "keycodes.h"
 
 /* XXX prefs */
 #define DEFAULT_FONT_NAME	"larabie"
@@ -107,7 +109,6 @@ get_font(char *name, int size, int style)
 	return (nfont);
 }
 
-/* Called at engine initialization. */
 int
 text_engine_init(void)
 {
@@ -123,12 +124,15 @@ text_engine_init(void)
 	return (0);
 }
 
-/* Called at engine shutdown. */
 void
 text_engine_destroy(void)
 {
 	struct text_font *fon, *nextfon;
+	
+	/* Free glyph cache. */
+	keycodes_freeglyphs();
 
+	/* Close the opened fonts. */
 	for (fon = SLIST_FIRST(&fonts);
 	     fon != SLIST_END(&fonts);
 	     fon = nextfon) {
@@ -137,7 +141,6 @@ text_engine_destroy(void)
 		TTF_CloseFont(fon->font);
 		free(nextfon);
 	}
-
 	TTF_Quit();
 }
 
