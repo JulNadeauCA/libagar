@@ -1,4 +1,4 @@
-# $Csoft: csoft.doc.mk,v 1.1 2004/01/19 10:30:30 vedge Exp $
+# $Csoft: csoft.doc.mk,v 1.3 2004/02/14 05:06:15 vedge Exp $
 
 # Copyright (c) 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -59,7 +59,7 @@ ${DOCPS}: ${DOCSRC} ${REFERDB}
 		(cat ${DOCSRC} | ${PIC} ${PICFLAGS}| ${EQN} ${EQNFLAGS}|\
 		    ${TBL} ${TBLFLAGS} | ${REFER} ${REFERFLAGS} |\
 		    ${ROFF} ${ROFFFLAGS} -Tps ${MACROS} > $@) || \
-		    (rm -f $@; false); \
+		    (rm -f $@; true); \
 	else \
 		echo "cat ${DOCSRC} | ${PIC} ${PICFLAGS}| ${EQN} ${EQNFLAGS}|\
 		    ${TBL} ${TBLFLAGS} | ${REFER} ${REFERFLAGS} -p${REFERDB} |\
@@ -67,11 +67,11 @@ ${DOCPS}: ${DOCSRC} ${REFERDB}
 		(cat ${DOCSRC} | ${PIC} ${PICFLAGS}| ${EQN} ${EQNFLAGS}|\
 		    ${TBL} ${TBLFLAGS} | ${REFER} ${REFERFLAGS} -p${REFERDB} |\
 		    ${ROFF} ${ROFFFLAGS} -Tps ${MACROS} > $@) || \
-		    (rm -f $@; false); \
+		    (rm -f $@; true); \
 	fi
 
 ${DOCPDF}: ${DOCPS}
-	(${PS2PDF} ${PS2PDFFLAGS} ${DOCPS} > ${DOCPDF}) || (rm -f $@; false)
+	(${PS2PDF} ${PS2PDFFLAGS} ${DOCPS} > ${DOCPDF}) || (rm -f $@; true)
 
 clean-doc:
 	rm -f ${DOCPS} ${DOCPDF}
