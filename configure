@@ -288,18 +288,17 @@ fi
 echo "yes"
 
 rm -f cc-test cc-test.c
-echo -n "checking for IEEE 754 floating point..."
-echo -n "checking for IEEE 754 floating point..." >> config.log
+echo -n "checking for floating point types..."
+echo -n "checking for floating point types..." >> config.log
 cat << EOT > conftest.c
-#include <stdio.h>
-
 int
 main(int argc, char *argv[])
 {
 	float f = 1.5;
 	double d = 2.5;
 
-	printf("%f %d\n", f, d);
+	f = 0;
+	d = 0;
 	return (0);
 }
 
@@ -330,8 +329,8 @@ int
 main(int argc, char *argv[])
 {
 	long double ld = 0.1;
-	
-	printf("%Lf\n", ld);
+
+	ld = 0;
 	return (0);
 }
 
@@ -403,7 +402,8 @@ cat << EOT > conftest.c
 void foo1(char *, ...)
      __attribute__((__format__ (printf, 1, 2)));
 void foo2(char *, ...)
-     __attribute__((__format__ (__printf__, 1, 2)));
+     __attribute__((__format__ (__printf__, 1, 2)))
+     __attribute__((__nonnull__ (1)));
 
 void foo1(char *a, ...) {}
 void foo2(char *a, ...) {}
