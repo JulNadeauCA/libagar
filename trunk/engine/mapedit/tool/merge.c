@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.4 2003/02/10 04:44:23 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.5 2003/02/10 05:46:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -78,14 +78,11 @@ merge_init(void *p)
 void
 merge_destroy(void *p)
 {
-	struct merge *m = p;
+	struct merge *mer = p;
 	struct object *ob;
-
-	SLIST_FOREACH(ob, &m->brushes, wobjs) {
-		struct brush *brush = (struct brush *)ob;
 	
-		object_save(brush);
-		object_destroy(brush);
+	SLIST_FOREACH(ob, &mer->brushes, wobjs) {
+		object_destroy(ob);
 	}
 }
 
