@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.23 2003/02/26 02:04:19 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.24 2003/02/26 13:02:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,8 +28,8 @@
 
 #include <string.h>
 
+#include <config/floating_point.h>
 #include <config/have_ieee754.h>
-
 #include <engine/engine.h>
 
 #ifdef DEBUG
@@ -219,12 +219,14 @@ tl_props_selected(int argc, union evarg *argv)
 		case PROP_SINT32:
 			textbox_printf(tb_set, "%d", prop->data.s32);
 			break;
+#ifdef FLOATING_POINT
 		case PROP_FLOAT:
 			textbox_printf(tb_set, "%f", prop->data.f);
 			break;
 		case PROP_DOUBLE:
 			textbox_printf(tb_set, "%f", prop->data.d);
 			break;
+#endif
 		case PROP_STRING:
 			textbox_printf(tb_set, "%s", prop->data.s);
 			break;
@@ -307,12 +309,14 @@ tl_props_apply(int argc, union evarg *argv)
 	case PROP_SINT32:
 		prop_set_sint32(ob, prop->key, (Sint32)atoi(tb_set->text.s));
 		break;
+#ifdef FLOATING_POINT
 	case PROP_FLOAT:
 		prop_set_float(ob, prop->key, (float)atof(tb_set->text.s));
 		break;
 	case PROP_DOUBLE:
 		prop_set_double(ob, prop->key, atof(tb_set->text.s));
 		break;
+#endif
 	case PROP_STRING:
 		prop_set_string(ob, prop->key, tb_set->text.s);
 		break;
