@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.88 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.89 2002/05/19 14:32:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -411,8 +411,8 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 #define XDEBUG_RECTS(view, ri) do {					\
 		int ei;							\
 		for (ei = 0; ei < (ri); ei++) {				\
-			if ((view)->rects[ei].x > (view)->width ||	\
-			    (view)->rects[ei].y > (view)->height) {	\
+			if ((view)->rects[ei].x > (view)->w ||		\
+			    (view)->rects[ei].y > (view)->h ) {		\
 				dprintrect("bogus", &(view)->rects[ei]);\
 				dprintf("bogus rectangle %d/%d\n", ei,	\
 				    ri);				\
