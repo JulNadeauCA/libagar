@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.4 2002/07/07 06:30:05 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.5 2002/07/07 06:32:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -192,6 +192,9 @@ mapedit_init_toolbar(struct mapedit *med)
 	reg = region_new(win, REGION_HALIGN, 2, 70, 98, 25);
 	button = button_new(reg, "Create map", NULL, 0, 100, 100);
 	event_new(button, "button-pushed", 0, fileops_new_map,
+	    "%p, %p, %p, %p, %p",
+	    med, name_tbox, media_tbox, w_tbox, h_tbox);
+	event_new(name_tbox, "textbox-return", 0, fileops_new_map,
 	    "%p, %p, %p, %p, %p",
 	    med, name_tbox, media_tbox, w_tbox, h_tbox);
 
