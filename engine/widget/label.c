@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.7 2002/04/26 11:40:48 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.8 2002/04/30 00:57:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -79,6 +79,7 @@ label_init(struct label *l, char *caption, Uint32 flags, Sint16 x, Sint16 y)
 {
 	/* XXX Leave geometry undefined, TTF-dependent. */
 	widget_init(&l->wid, "label", &label_ops, x, y, 0, 0);
+
 	strcpy(l->caption, caption);
 	l->flags = flags;
 }

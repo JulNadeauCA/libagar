@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.13 2002/04/28 14:11:23 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.14 2002/04/30 00:57:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -82,7 +82,12 @@ void
 window_init(struct window *win, struct viewport *view, char *caption,
     Uint32 flags, Uint32 bgtype, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
-	object_init(&win->obj, "window", NULL, 0, &window_ops);
+	static int nwindow = 0;
+	char *name;
+
+	name = object_name("window", nwindow++);
+	object_init(&win->obj, name, NULL, 0, &window_ops);
+	free(name);
 
 	win->caption = strdup(caption);
 	win->view = view;

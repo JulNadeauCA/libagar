@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.42 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.43 2002/04/28 11:03:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -196,6 +196,16 @@ object_get_audio(char *media)
 	return (audio);
 }
 
+char *
+object_name(char *base, int num)
+{
+	char *name;
+
+	name = emalloc(strlen(base) + 16);
+	sprintf(name, "%s%d", base, num);
+	return (name);
+}
+
 void
 object_init(struct object *ob, char *name, char *media, int flags,
     const void *vecp)
@@ -235,7 +245,7 @@ object_start_gc(Uint32 ival, void *p)
 	struct object_audio *audio;
 	struct object_art *art;
 
-#if 0
+#if 1
 	return (0);
 #endif
 
