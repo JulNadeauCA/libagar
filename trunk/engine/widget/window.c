@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.92 2002/11/09 07:43:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.93 2002/11/10 01:40:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -803,6 +803,7 @@ window_event(SDL_Event *ev)
 			if (WINDOW_INSIDE(win, ev->button.x, ev->button.y) &&
 			    win->flags & WINDOW_SHOWN) {
 				view->focus_win = win;
+				focus_changed++;
 				goto scan_wins;
 			}
 		}
