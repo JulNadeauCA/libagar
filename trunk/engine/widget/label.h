@@ -1,12 +1,15 @@
-/*	$Csoft: label.h,v 1.11 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.12 2002/08/21 23:51:39 vedge Exp $	*/
 /*	Public domain	*/
 
 struct label {
 	struct	 widget wid;
 
-	char	 *caption;
-	SDL_Surface *label_s;
-
+	struct {
+		char		*caption;
+		pthread_mutex_t	 lock;
+		SDL_Surface	*surface;
+	} text;
+	
 	int	 flags;
 #define LABEL_BOLD	0x01		/* Bold text */
 #define LABEL_ITALIC	0x02		/* Italic text */
@@ -18,8 +21,8 @@ struct label {
 	} justify;
 };
 
-struct label	*label_new(struct region *, const char *, int);
-void		 label_init(struct label *, const char *, int);
+struct label	*label_new(struct region *, const char *, int, int);
+void		 label_init(struct label *, const char *, int, int);
 void	 	 label_destroy(void *);
 void		 label_draw(void *);
 void		 label_printf(struct label *, const char *, ...);

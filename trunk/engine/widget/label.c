@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.27 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.28 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -49,26 +49,39 @@ static const struct widget_ops label_ops = {
 		NULL	/* save */
 	},
 	label_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
-	LABEL_TEXT = 0
+	TEXT_COLOR
 };
 
 struct label *
-label_new(struct region *reg, const char *caption, int flags)
+label_new(struct region *reg, const char *caption, int w, int h)
 {
 	struct label *label;
 
 	label = emalloc(sizeof(struct label));
-	label_init(label, caption, flags);
+	label_init(label, caption, w, h);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, label);
 	pthread_mutex_unlock(&reg->win->lock);
 
 	return (label);
+}
+
+void
+label_init(struct label *label, const char *caption, int rw, int rh)
+{
+	widget_init(&label->wid, "label", "widget", &label_ops, rw, rh);
+	widget_map_color(label, TEXT_COLOR, "label-text", 250, 250, 250);
+
+	label->flags = 0;
+	label->text.caption = strdup(caption);
+	label->text.surface = text_render(NULL, -1,
+	    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
+	pthread_mutex_init(&label->text.lock, NULL);
 }
 
 /* Window must be locked. */
@@ -84,47 +97,39 @@ label_printf(struct label *label, const char *fmt, ...)
 	}
 	va_end(args);
 
-	label->caption = erealloc(label->caption, strlen(buf));
-	sprintf(label->caption, buf);
+	pthread_mutex_lock(&label->text.lock);
+
+	label->text.caption = erealloc(label->text.caption, strlen(buf));
+	sprintf(label->text.caption, buf);
 	free(buf);
 
-	SDL_FreeSurface(label->label_s);
-	label->label_s = text_render(NULL, -1,
-	    WIDGET_COLOR(label, LABEL_TEXT), label->caption);
+	SDL_FreeSurface(label->text.surface);
+	label->text.surface = text_render(NULL, -1,
+	    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
 
-	WIDGET(label)->w = label->label_s->w;
-	WIDGET(label)->h = label->label_s->h;
-}
+	WIDGET(label)->w = label->text.surface->w;
+	WIDGET(label)->h = label->text.surface->h;
 
-void
-label_init(struct label *label, const char *caption, int flags)
-{
-	widget_init(&label->wid, "label", "widget", &label_ops, -1, -1);
-	widget_map_color(label, LABEL_TEXT, "label-text", 250, 250, 250);
-
-	label->flags = flags;
-	label->caption = strdup(caption);
-	label->label_s = text_render(NULL, -1,
-	    WIDGET_COLOR(label, LABEL_TEXT), label->caption);
-
-	WIDGET(label)->w = label->label_s->w;
-	WIDGET(label)->h = label->label_s->h;
+	pthread_mutex_unlock(&label->text.lock);
 }
 
 void
 label_draw(void *p)
 {
-	struct label *l = p;
+	struct label *label = p;
 
 	/* XXX justify, etc */
-	WIDGET_DRAW(l, l->label_s, 0, 0);
+	pthread_mutex_lock(&label->text.lock);
+	WIDGET_DRAW(label, label->text.surface, 0, 0);
+	pthread_mutex_unlock(&label->text.lock);
 }
 
 void
 label_destroy(void *p)
 {
-	struct label *l = p;
+	struct label *label = p;
 
-	free(l->caption);
-	SDL_FreeSurface(l->label_s);
+	free(label->text.caption);
+	SDL_FreeSurface(label->text.surface);
+	pthread_mutex_destroy(&label->text.lock);
 }
