@@ -1,4 +1,4 @@
-/*	$Csoft: art.h,v 1.3 2002/12/31 00:59:01 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.4 2003/03/12 06:15:14 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -30,7 +30,7 @@ struct art {
 	struct map	*tile_map;	/* User map of source nodes */
 
 	pthread_mutex_t	 used_lock;
-	int		 used;		/* Reference count */
+	unsigned int	 used;		/* Reference count */
 	TAILQ_ENTRY(art) arts;		/* Art pool */
 };
 
@@ -44,6 +44,7 @@ struct art {
 
 struct art	*art_fetch(char *, struct object *);
 void		 art_unused(struct art *);
+void		 art_scan_alpha(SDL_Surface *);
 
 int		 art_insert_sprite(struct art *, SDL_Surface *, int);
 struct map	*art_insert_fragments(struct art *, SDL_Surface *);
