@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.19 2002/09/16 14:07:53 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.20 2002/11/04 08:33:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/compat/asprintf.h>
 
 #include <sys/types.h>
 
