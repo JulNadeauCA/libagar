@@ -94,7 +94,7 @@ else
     PREFIX=/usr/local
 fi
 S=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/pwd" ]; then
 		S=`${path}/pwd `
 	fi
@@ -490,37 +490,37 @@ fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		sdl_version=`${path}/sdl-config --version`
 	fi
 done
 SDL_CFLAGS=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
 	fi
 done
 SDL_LIBS=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
 	fi
 done
 sdl11_version=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		sdl11_version=`${path}/sdl11-config --version`
 	fi
 done
 sdl11_cflags=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		sdl11_cflags=`${path}/sdl11-config --cflags`
 	fi
 done
 sdl11_libs=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		sdl11_libs=`${path}/sdl11-config --libs`
 	fi
@@ -611,19 +611,19 @@ fi
 echo -n "checking for FreeType (http://www.freetype.org)..."
 echo "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_VERSION=`${path}/freetype-config --version`
 	fi
 done
 FREETYPE_CFLAGS=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
 	fi
 done
 FREETYPE_LIBS=""
-for path in `echo  | sed 's/:/ /g'`; do
+for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_LIBS=`${path}/freetype-config --libs`
 	fi
