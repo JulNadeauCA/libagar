@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.5 2002/01/30 12:50:45 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.6 2002/01/30 17:51:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -94,7 +94,6 @@ mapedit_create(char *name, char *desc)
 	med->listodir = 0;
 	med->cursdir = 0;
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST;
-	med->flags = 0;
 
 	med->tilelist = window_create(em->view,
 	    (em->view->width - em->view->tilew), em->view->tileh,
