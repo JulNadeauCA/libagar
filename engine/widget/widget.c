@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.71 2003/07/08 00:14:09 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.72 2003/08/31 11:58:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		break;
 	case WIDGET_STRING:
 		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
-		p1 = va_arg(ap, char *);		/* Latin-1 text */
+		p1 = va_arg(ap, char *);		/* UTF-8 text */
 		size = va_arg(ap, size_t);		/* Size of buffer */
 		break;
 	default:
