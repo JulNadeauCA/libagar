@@ -39,23 +39,20 @@ done
 if [ "$PREFIX" = "" ]; then
 PREFIX=/usr/local
 fi
-if [ "" = "--version" ]; then
-echo "Manuconf v1.1"
-exit 0
-fi
-S="`pwd`"
 echo >Makefile.config
 echo >engine/config.h
 CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused -g -I$S"
 echo CFLAGS=$CFLAGS >> Makefile.config
-DEBUG=1
-echo "#ifndef DEBUG" >> engine/config.h
-echo "#define DEBUG $DEBUG" >> engine/config.h
-echo "#endif /* DEBUG */" >> engine/config.h
+SHAREDIR="$PREFIX/share/geggy"
+echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/geggy\""
 echo "#ifndef SHAREDIR" >> engine/config.h
 echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
 echo "#endif /* SHAREDIR */" >> engine/config.h
+DEBUG=1
+echo "#ifndef DEBUG" >> engine/config.h
+echo "#define DEBUG $DEBUG" >> engine/config.h
+echo "#endif /* DEBUG */" >> engine/config.h
 for OPT in $@; do
 if [ "$OPT" = "--with-smpeg" ]; then
 WITH_SMPEG=1
