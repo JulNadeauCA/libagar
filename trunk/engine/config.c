@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.120 2004/05/14 05:03:30 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.121 2004/06/04 19:59:26 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -206,12 +206,12 @@ config_init(struct config *con)
 # ifdef WIN32
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "verdana");
-	prop_set_int(con, "font-engine.default-size", 14);
+	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 # else
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
-	prop_set_int(con, "font-engine.default-size", 14);
+	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
 # endif
 #else
