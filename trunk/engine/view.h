@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.71 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.72 2003/03/20 03:20:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -91,12 +91,12 @@ case 2:					\
 case 3:					\
 	(dst)[0] = ((c)>>16) & 0xff;	\
 	(dst)[1] = ((c)>>8) & 0xff;	\
-	(dst)[2] =  (c) & 0xff;	\
+	(dst)[2] =  (c) & 0xff;		\
 	break;
 # else
 #  define _VIEW_PUTPIXEL_24(dst, c)	\
 case 3:					\
-	(dst)[0] =  (c) & 0xff;	\
+	(dst)[0] =  (c) & 0xff;		\
 	(dst)[1] = ((c)>>8) & 0xff;	\
 	(dst)[2] = ((c)>>16) & 0xff;	\
 	break;
@@ -162,7 +162,6 @@ SDL_Surface	*view_copy_surface(SDL_Surface *);
 GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
 void		 view_capture(SDL_Surface *);
-
-extern __inline__ void	view_alpha_blend(SDL_Surface *, Sint16, Sint16,
-			    Uint8, Uint8, Uint8, Uint8);
+__inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16, Uint8, Uint8,
+		     Uint8, Uint8);
 
