@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.186 2004/08/24 03:43:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.187 2004/08/31 00:51:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <config/threads.h>
+#include <config/have_opengl.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
@@ -158,10 +159,9 @@ update_fps_counter(void)
 static void
 init_fps_counter(void)
 {
-	fps_win = window_new("fps-counter");
+	fps_win = window_new(0, "fps-counter");
 	window_set_caption(fps_win, _("Refresh rate"));
 	window_set_position(fps_win, WINDOW_LOWER_CENTER, 0);
-	window_set_closure(fps_win, WINDOW_HIDE);
 
 	fps_label = label_new(fps_win, LABEL_POLLED,
 	    "%dms (nom %dms), %d evnt, %dms idle",
@@ -202,6 +202,13 @@ event_loop(void)
 		if (Tr2-Tr1 >= view->refresh.rnom) {
 			pthread_mutex_lock(&view->lock);
 			view->ndirty = 0;
+
+#if defined(DEBUG) && defined(HAVE_OPENGL)
+			if (view->opengl) {
+				glClearColor(255, 255, 0, 0);
+				glClear(GL_COLOR_BUFFER_BIT);
+			}
+#endif
 
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 				if (view->rootmap->map == NULL) {
@@ -309,12 +316,22 @@ event_dispatch(SDL_Event *ev)
 		view_videoexpose();
 		break;
 	case SDL_MOUSEMOTION:
+#if defined(__APPLE__) && defined(HAVE_OPENGL)
+		if (view->opengl) {
+			ev->motion.y = view->h - ev->motion.y;
+			ev->motion.yrel = -ev->motion.yrel;
+		}
+#endif
 		if (!TAILQ_EMPTY(&view->windows)) {
 			window_event(ev);
 		}
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
+#if defined(__APPLE__) && defined(HAVE_OPENGL)
+		if (view->opengl)
+			ev->button.y = view->h - ev->button.y;
+#endif
 		if (!TAILQ_EMPTY(&view->windows)) {
 			window_event(ev);
 		}
