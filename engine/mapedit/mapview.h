@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.59 2004/08/26 07:33:59 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.60 2004/10/01 03:09:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -32,8 +32,6 @@ struct mapview {
 #define MAPVIEW_INDEPENDENT	0x0002	/* Independent zoom/scroll */
 #define MAPVIEW_GRID		0x0004	/* Display the grid */
 #define MAPVIEW_PROPS		0x0008	/* Display node properties */
-#define MAPVIEW_ZOOMING_IN	0x0010	/* Zoomin in progression */
-#define MAPVIEW_ZOOMING_OUT	0x0020	/* Zoomout in progression */
 #define MAPVIEW_CENTER		0x0040	/* Request initial centering */
 #define MAPVIEW_NO_CURSOR	0x0080	/* Disable the cursor */
 
@@ -57,21 +55,20 @@ struct mapview {
 		int w, h;
 	} esel;
 
-	Uint16		*zoom;		/* Zoom factor (%) */
-	int		 zoom_inc;	/* Zoom increment (%) */
-	int		 zoom_ival;	/* Zoom interval (ms) */
-	SDL_TimerID	 zoom_tm;	/* Zoom timer */
-	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
-	int		*tilesz;	/* Current tile size */
-	struct {			/* For MAPVIEW_INDEPENDENT zoom */
-		Uint16	 zoom;
-		Sint16	 ssx, ssy;
+	u_int	*zoom;			/* Zoom factor (%) */
+	int	*ssx, *ssy;		/* Soft scroll offsets */
+	int	*tilesz;		/* Current tile size */
+	struct {
+		u_int	 zoom;
+		int	 ssx, ssy;
 		int	 tilesz;
 	} izoom;
 
 	struct map	*map;		/* Map to display/edit */
-	int		 mx, my;	/* Display offset (nodes) */
-	unsigned int	 mw, mh;	/* Display size (nodes) */
+	int	 	 mx, my;	/* Display offset (nodes) */
+	u_int	 	 mw, mh;	/* Display size (nodes) */
+	int		 wfit, hfit;	/* Dimension fits into display? */
+	int		 wmod, hmod;	/* Remainders */
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
 	int		 dblclicked;
@@ -129,24 +126,22 @@ void	 mapview_prescale(struct mapview *, int, int);
 void	 mapview_draw_props(struct mapview *, struct node *, int, int, int,
 	                    int);
 void	 mapview_center(struct mapview *, int, int);
-void	 mapview_zoom(struct mapview *, int);
+void	 mapview_set_scale(struct mapview *, u_int);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 
 __inline__ void	 mapview_map_coords(struct mapview *, int *, int *, int *,
 		                    int *);
+void	 	 mapview_reg_draw_cb(struct mapview *,
+				     void (*)(struct mapview *, void *),
+				     void *);
 
-void	 mapview_reg_draw_cb(struct mapview *,
-                             void (*)(struct mapview *, void *), void *);
 #ifdef EDITION
-void	 mapview_reg_tool(struct mapview *, const struct tool *, void *);
-void	 mapview_reg_stdtools(struct mapview *);
-void	 mapview_select_tool(struct mapview *, struct tool *, void *);
-void	 mapview_toggle_rw(int, union evarg *);
-void	 mapview_selected_layer(int, union evarg *);
+struct tool	*mapview_reg_tool(struct mapview *, const struct tool *,
+		                  void *, int);
+void	 	 mapview_select_tool(struct mapview *, struct tool *, void *);
+void		 mapview_selected_layer(int, union evarg *);
 #endif
-void	 mapview_toggle_grid(int, union evarg *);
-void	 mapview_toggle_props(int, union evarg *);
 
 void	 mapview_status(struct mapview *, const char *, ...);
 __END_DECLS

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.167 2004/11/23 02:54:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.168 2004/11/23 03:42:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -58,11 +58,10 @@ const struct widget_ops mapview_ops = {
 };
 
 enum {
-	MAPVIEW_ZOOM_MIN =	4,	/* Min zoom factor (%) */
-	MAPVIEW_ZOOM_MAX =	600,	/* Max zoom factor (%) */
-	MAPVIEW_ZOOM_INC =	8,	/* Zoom increment (%) */
-	MAPVIEW_ZOOM_IVAL =	80,	/* Zoom interval (ms) */
-	MAPVIEW_MIN_PROP_ZOOM =	60	/* Minimum zoom to draw props (%) */
+	ZOOM_MIN =	 20,	/* Min zoom factor (%) */
+	ZOOM_MAX =	 500,	/* Max zoom factor (%) */
+	ZOOM_PROPS_MIN = 60,	/* Min zoom factor for showing properties (%) */
+	ZOOM_GRID_MIN =	 20	/* Min zoom factor for showing the grid (%) */
 };
 
 enum {
@@ -75,7 +74,7 @@ enum {
 };
 
 int	mapview_bg = 1;			/* Background tiles enable */
-int	mapview_bg_moving = 1;		/* Background tiles scroll */
+int	mapview_bg_moving = 1;		/* Background tiles moving */
 int	mapview_bg_sqsize = 16;		/* Background tile size */
 int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
 
@@ -103,7 +102,8 @@ selecting(struct mapview *mv)
 {
 	extern struct tool select_tool;
 
-	return (mv->curtool == &select_tool ||
+	return ((mv->curtool != NULL &&
+	    mv->curtool->cursor_index == SELECT_CURSOR) || /* XXX hack */
 	    (SDL_GetModState() & KMOD_CTRL));
 }
 
@@ -141,10 +141,15 @@ mapview_select_tool(struct mapview *mv, struct tool *ntool, void *p)
 		ntool->mv = mv;
 
 		if (ntool->trigger != NULL) {
+			dprintf("%s(%p): trigger\n", ntool->name, ntool);
 			widget_set_bool(ntool->trigger, "state", 1);
 		}
 		if (ntool->win != NULL) {
+			dprintf("%s(%p): window (%s)\n", ntool->name, ntool,
+			    ntool->win->caption);
 			window_show(ntool->win);
+		} else {
+			dprintf("%s(%p): no window\n", ntool->name, ntool);
 		}
 		tool_update_status(ntool);
 	}
@@ -180,8 +185,9 @@ update_tooltips(int argc, union evarg *argv)
 }
 #endif
 
-void
-mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
+struct tool *
+mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p,
+    int in_toolbar)
 {
 	struct tool *ntool;
 
@@ -190,7 +196,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 	ntool->p = p;
 	tool_init(ntool, mv);
 
-	if (mv->toolbar != NULL) {
+	if (in_toolbar && mv->toolbar != NULL) {
 		SDL_Surface *icon = ntool->icon >= 0 ? ICON(ntool->icon) : NULL;
 
 		ntool->trigger = toolbar_add_button(mv->toolbar,
@@ -203,6 +209,7 @@ mapview_reg_tool(struct mapview *mv, const struct tool *tool, void *p)
 	}
 
 	TAILQ_INSERT_TAIL(&mv->tools, ntool, tools);
+	return (ntool);
 }
 
 void
@@ -215,25 +222,6 @@ mapview_reg_draw_cb(struct mapview *mv,
 	dcb->func = draw_func;
 	dcb->p = p;
 	SLIST_INSERT_HEAD(&mv->draw_cbs, dcb, draw_cbs);
-}
-
-void
-mapview_toggle_rw(int argc, union evarg *argv)
-{
-	struct button *bu = argv[0].p;
-	struct mapview *mv = argv[1].p;
-
-	if (mv->flags & MAPVIEW_EDIT) {
-		mv->flags &= ~(MAPVIEW_EDIT);
-	} else {
-		if (OBJECT(mv->map)->flags & OBJECT_READONLY) {
-			text_msg(MSG_ERROR, _("The `%s' map is read-only."),
-			    OBJECT(mv->map)->name);
-			widget_set_bool(bu, "state", 0);
-		} else {
-			mv->flags |= MAPVIEW_EDIT;
-		}
-	}
 }
 
 void
@@ -258,30 +246,6 @@ mapview_selected_layer(int argc, union evarg *argv)
 	text_msg(MSG_ERROR, _("No layer is selected."));
 }
 #endif /* EDITION */
-
-void
-mapview_toggle_grid(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	if (mv->flags & MAPVIEW_GRID) {
-		mv->flags &= ~(MAPVIEW_GRID);
-	} else {
-		mv->flags |= MAPVIEW_GRID;
-	}
-}
-
-void
-mapview_toggle_props(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-
-	if (mv->flags & MAPVIEW_PROPS) {
-		mv->flags &= ~(MAPVIEW_PROPS);
-	} else {
-		mv->flags |= MAPVIEW_PROPS;
-	}
-}
 
 void
 mapview_destroy(void *p)
@@ -334,6 +298,10 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->flags = (flags | MAPVIEW_CENTER);
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
+	mv->wfit = 0;
+	mv->hfit = 0;
+	mv->wmod = 0;
+	mv->hmod = 0;
 	mv->prew = 4;
 	mv->preh = 4;
 	mv->prop_style = 0;
@@ -341,9 +309,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->mouse.centering = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
-	mv->zoom_inc = MAPVIEW_ZOOM_INC;
-	mv->zoom_ival = MAPVIEW_ZOOM_IVAL;
-	mv->zoom_tm = NULL;
 	mv->map = m;
 	mv->dblclicked = 0;
 	mv->toolbar = toolbar;
@@ -406,30 +371,15 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	event_new(mv, "dblclick-expire", dblclick_expired, NULL);
 }
 
-/* Register standard map-level edition tools. XXX */
-void
-mapview_reg_stdtools(struct mapview *mv)
-{
-	toolbar_add_button(mv->toolbar, 0, ICON(GRID_ICON), 1,
-	    (mv->flags & MAPVIEW_GRID),
-	    mapview_toggle_grid, "%p", mv);
-	toolbar_add_button(mv->toolbar, 0, ICON(PROPS_ICON), 1,
-	    (mv->flags & MAPVIEW_PROPS),
-	    mapview_toggle_props, "%p", mv);
-	toolbar_add_button(mv->toolbar, 0, ICON(EDIT_ICON), 1,
-	    (mv->flags & MAPVIEW_EDIT),
-	    mapview_toggle_rw, "%p", mv);
-}
-
 /*
- * Translate widget coordinates to tile coordinates.
+ * Translate widget coordinates to map coordinates.
  * The map must be locked.
  */
 void
 mapview_map_coords(struct mapview *mv, int *x, int *y, int *xoff, int *yoff)
 {
-	*x -= *mv->ssx - *mv->tilesz;
-	*y -= *mv->ssy - *mv->tilesz;
+	*x -= *mv->ssx - *mv->tilesz*TILEOUT;
+	*y -= *mv->ssy - *mv->tilesz*TILEOUT;
 
 	*xoff = *x % *mv->tilesz;
 	*yoff = *y % *mv->tilesz;
@@ -524,8 +474,8 @@ draw_cursor(struct mapview *mv)
 		return;
 	}
 	
-	rd.x = mv->mouse.x*mv->map->tilesz - mv->map->tilesz + *mv->ssx;
-	rd.y = mv->mouse.y*mv->map->tilesz - mv->map->tilesz + *mv->ssy;
+	rd.x = mv->mouse.x*mv->map->tilesz - mv->map->tilesz*TILEOUT + *mv->ssx;
+	rd.y = mv->mouse.y*mv->map->tilesz - mv->map->tilesz*TILEOUT + *mv->ssy;
 
 	if (mv->curtool == NULL)
 		return;
@@ -603,8 +553,9 @@ mapview_draw(void *p)
 	struct node *node;
 	struct noderef *nref;
 	int mx, my, rx, ry;
-	Uint16 old_zoom = m->zoom;
+	int old_zoom = m->zoom;
 	int old_tilesz = m->tilesz;
+	int tilesz;
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
@@ -616,27 +567,29 @@ mapview_draw(void *p)
 		draw_background(mv);
 	
 	pthread_mutex_lock(&m->lock);
-
-	/* Deal with 0x0 maps. */
-	if (mv->map->map == NULL)
+	if (m->map == NULL)
 		goto out;
 
+	/* XXX kludge */
 	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		m->zoom = *mv->zoom;
 		m->tilesz = *mv->tilesz;
 	}
+	tilesz = m->tilesz;
 
 draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = mv->my, ry = *mv->ssy - mv->map->tilesz;
-	     ((my - mv->my) < mv->mh+2) && (my < m->maph);
-	     my++, ry += mv->map->tilesz) {
+	for (my = mv->my, ry = -TILEOUT*tilesz + *mv->ssy;
+//	     ((my - mv->my - TILEOUT) < mv->mh) &&
+	     (my < m->maph);
+	     my++, ry += tilesz) {
 
-		for (mx = mv->mx, rx = *mv->ssx - mv->map->tilesz;
-	     	     ((mx - mv->mx) < (mv->mw+2)) && (mx < m->mapw);
-		     mx++, rx += mv->map->tilesz) {
+		for (mx = mv->mx, rx = -TILEOUT*tilesz + *mv->ssx;
+//	     	     ((mx - mv->mx - TILEOUT) < mv->mw) &&
+		     (mx < m->mapw);
+		     mx++, rx += tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->layer == layer) {
@@ -647,15 +600,16 @@ draw_layer:
 			}
 
 			if (mv->flags & MAPVIEW_PROPS &&
-			    mv->map->zoom >= MAPVIEW_MIN_PROP_ZOOM) {
+			    m->zoom >= ZOOM_PROPS_MIN) {
 				mapview_draw_props(mv, node, rx, ry, mx, my);
 			}
-			if (mv->flags & MAPVIEW_GRID && mv->map->zoom >= 8) {
+			if (mv->flags & MAPVIEW_GRID &&
+			    m->zoom >= ZOOM_GRID_MIN) {
 				/* XXX overdraw */
 				primitives.rect_outlined(mv,
 				    rx, ry,
-				    mv->map->tilesz + 1,
-				    mv->map->tilesz + 1,
+				    tilesz + 1,
+				    tilesz + 1,
 				    GRID_COLOR);
 			}
 #ifdef EDITION
@@ -667,19 +621,17 @@ draw_layer:
 			    mv->msel.x == mx && mv->msel.y == my) {
 				msel_x = rx + 1;
 				msel_y = ry + 1;
-				msel_w = mv->msel.xoffs*mv->map->tilesz - 2;
-				msel_h = mv->msel.yoffs*mv->map->tilesz - 2;
+				msel_w = mv->msel.xoffs*tilesz - 2;
+				msel_h = mv->msel.yoffs*tilesz - 2;
 			}
 			
 			if (mv->esel.set &&
 			    mv->esel.x == mx && mv->esel.y == my) {
 				esel_x = rx;
 				esel_y = ry;
-				esel_w = mv->map->tilesz*mv->esel.w;
-				esel_h = mv->map->tilesz*mv->esel.h;
+				esel_w = tilesz*mv->esel.w;
+				esel_h = tilesz*mv->esel.h;
 			}
-			if (mv->map->tilesz < MAP_MIN_TILESZ)
-				continue;
 #endif /* EDITION */
 		}
 	}
@@ -719,65 +671,104 @@ out:
 }
 
 void
-mapview_zoom(struct mapview *mv, int zoom)
+mapview_set_scale(struct mapview *mv, u_int zoom)
 {
-	if (zoom < MAPVIEW_ZOOM_MIN)
-		zoom = MAPVIEW_ZOOM_MIN;
-	if (zoom > MAPVIEW_ZOOM_MAX)
-		zoom = MAPVIEW_ZOOM_MAX;
+	extern int magnifier_zoom_toval;
+
+	if (zoom < ZOOM_MIN)
+		zoom = ZOOM_MIN;
+	if (zoom > ZOOM_MAX)
+		zoom = ZOOM_MAX;
 
 	*mv->zoom = zoom;
 	*mv->tilesz = zoom*TILESZ/100;
 	if (*mv->tilesz > MAP_MAX_TILESZ) {
 		*mv->tilesz = MAP_MAX_TILESZ;
 	}
+	*mv->ssx = *mv->tilesz * TILEOUT;
+	*mv->ssy = *mv->tilesz * TILEOUT;
+
 	mv->mw = WIDGET(mv)->w/(*mv->tilesz) + 1;
 	mv->mh = WIDGET(mv)->h/(*mv->tilesz) + 1;
+	mv->wmod = mv->mw - WIDGET(mv)->w % *mv->tilesz;
+	mv->hmod = mv->mh - WIDGET(mv)->h % *mv->tilesz;
+	mv->wfit = (mv->map->mapw*(*mv->tilesz) <= WIDGET(mv)->w);
+	mv->hfit = (mv->map->maph*(*mv->tilesz) <= WIDGET(mv)->h);
 
-	mapview_status(mv, _("%d%% magnification"), zoom);
+	magnifier_zoom_toval = zoom;
 }
 
-static __inline__ void
-mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
+static void
+mapview_scroll(struct mapview *mv, int xrel, int yrel)
 {
+	struct map *m = mv->map;
+	int tilesz = *mv->tilesz;
 	int max;
 
-	if (xrel > 0 && (*mv->ssx += xrel) >= *mv->tilesz) {
-		if (--mv->mx < 0) {
-			mv->mx = 0;
-		} else {
-			*mv->ssx = 0;
-		}
-	} else if (xrel < 0 && ((*mv->ssx) += xrel) <= -(*mv->tilesz)) {
-		if (mv->mw < mv->map->mapw) {
-			max = mv->map->mapw - mv->mw - 1;
-			if (++mv->mx > max) {
-				mv->mx = max;
+	*mv->ssx += xrel;
+	*mv->ssy += yrel;
+
+	if (!mv->wfit) {
+		if (xrel < 0 && *mv->ssx < 0) {
+			if (++mv->mx > m->mapw - mv->mw) {
+				mv->mx = m->mapw - mv->mw;
+#if 0
+				*mv->ssx = 0;
+#endif
+			} else {
+				*mv->ssx = tilesz;
+			}
+		} else if (xrel > 0 && *mv->ssx > tilesz) {
+			if (--mv->mx < 0) {
+				mv->mx = 0;
+#if 0
+				if (*mv->ssx > tilesz*2)
+					*mv->ssx = tilesz*2;
+#endif
 			} else {
 				*mv->ssx = 0;
 			}
 		}
-	}
-	if (yrel > 0 && ((*mv->ssy) += yrel) >= *mv->tilesz) {
-		if (--mv->my < 0) {
-			mv->my = 0;
-		} else {
-			*mv->ssy = 0;
+	} else {
+		int mdiff = WIDGET(mv)->w - m->mapw*tilesz + TILEOUT*tilesz - 1;
+
+		if (*mv->ssx < TILEOUT*tilesz) {
+			*mv->ssx = TILEOUT*tilesz;
+		} else if (*mv->ssx > mdiff) {
+			*mv->ssx = mdiff;
 		}
-	} else if (yrel < 0 && (*mv->ssy += yrel) <= -(*mv->tilesz)) {
-		if (mv->mh < mv->map->maph) {
-			max = mv->map->maph - mv->mh - 1;
-			if (++mv->my > max) {
-				mv->my = max;
+	}
+	
+	if (!mv->hfit) {
+		if (yrel < 0 && *mv->ssy < 0) {
+			if (++mv->my > m->maph - mv->mh) {
+				mv->my = m->maph - mv->mh;
+#if 0
+				*mv->ssy = 0;
+#endif
+			} else {
+				*mv->ssy = tilesz;
+			}
+		} else if (yrel > 0 && *mv->ssy > tilesz) {
+			if (--mv->my < 0) {
+				mv->my = 0;
+#if 0
+				if (*mv->ssy > tilesz*2)
+					*mv->ssy = tilesz*2;
+#endif
 			} else {
 				*mv->ssy = 0;
 			}
 		}
+	} else {
+		int mdiff = WIDGET(mv)->h - m->maph*tilesz + TILEOUT*tilesz - 1;
+
+		if (*mv->ssy < TILEOUT*tilesz) {
+			*mv->ssy = TILEOUT*tilesz;
+		} else if (*mv->ssy > mdiff) {
+			*mv->ssy = mdiff;
+		}
 	}
-#if 0
-	if (*mv->ssx > *mv->tilesz)	*mv->ssx = *mv->tilesz;
-	if (*mv->ssy > *mv->tilesz)	*mv->ssy = *mv->tilesz;
-#endif
 }
 
 static void
@@ -798,7 +789,7 @@ mouse_motion(int argc, union evarg *argv)
 	mv->cyrel = y - mv->mouse.y;
 
 	if (mv->mouse.scrolling) {
-		mapview_mouse_scroll(mv, xrel, yrel);
+		mapview_scroll(mv, xrel, yrel);
 	} else if (mv->msel.set) {
 		mv->msel.xoffs += x - mv->mouse.x;
 		mv->msel.yoffs += y - mv->mouse.y;
@@ -828,12 +819,13 @@ mouse_motion(int argc, union evarg *argv)
 static void
 mouse_buttondown(int argc, union evarg *argv)
 {
+	extern int magnifier_zoom_inc;
 	struct mapview *mv = argv[0].p;
 	int button = argv[1].i;
 	int x = argv[2].i;
 	int y = argv[3].i;
 	int xoff, yoff;
-	
+
 	widget_focus(mv);
 
 	pthread_mutex_lock(&mv->map->lock);
@@ -841,19 +833,26 @@ mouse_buttondown(int argc, union evarg *argv)
 	if (mv->cx < 0 || mv->cy < 0)
 		goto out;
 
-	/* XXX configurable */
 	switch (button) {
-	case 1:						/* Select/edit */
+	case SDL_BUTTON_LEFT:
 		if (selecting(mv)) {
 			begin_selection(mv);
 		}
 		break;
-	case 2:						/* Adjust centering */
+	case SDL_BUTTON_RIGHT:
 		mv->flags |= MAPVIEW_NO_CURSOR;
 		mv->mouse.centering++;
 		break;
-	case 3:						/* Scroll */
+	case SDL_BUTTON_MIDDLE:
 		mv->mouse.scrolling++;
+		break;
+	case SDL_BUTTON_WHEELUP:
+		mapview_set_scale(mv, (*mv->zoom)-magnifier_zoom_inc);
+		mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+		break;
+	case SDL_BUTTON_WHEELDOWN:
+		mapview_set_scale(mv, (*mv->zoom)+magnifier_zoom_inc);
+		mapview_status(mv, _("%d%% magnification"), *mv->zoom);
 		break;
 	}
 
@@ -894,12 +893,13 @@ mouse_buttonup(int argc, union evarg *argv)
 	
 	pthread_mutex_lock(&mv->map->lock);
 	mapview_map_coords(mv, &x, &y, &xoff, &yoff);
-	if (mv->cx < 0 || mv->cy < 0)
+	if (mv->cx < 0 || mv->cy < 0) {
+		mv->mouse.scrolling = 0;
 		goto out;
+	}
 
-	/* XXX configurable */
 	switch (argv[1].i) {
-	case 1:
+	case SDL_BUTTON_LEFT:
 		if (selecting(mv) &&
 		    mv->msel.set &&
 		    (mv->msel.xoffs == 0 || mv->msel.yoffs == 0)) {
@@ -912,16 +912,17 @@ mouse_buttonup(int argc, union evarg *argv)
 			}
 		}
 		break;
-	case 2:
+	case SDL_BUTTON_RIGHT:
 		mv->flags &= ~(MAPVIEW_NO_CURSOR);
 		mv->mouse.centering = 0;
 		break;
-	case 3:
+	case SDL_BUTTON_MIDDLE:
 		mv->mouse.scrolling = 0;
 		break;
 	}
 	
-	if (mv->flags & MAPVIEW_EDIT && mv->curtool != NULL) {
+	if (mv->flags & MAPVIEW_EDIT &&
+	    mv->curtool != NULL) {
 		if (mv->curtool->mousebuttonup != NULL)
 			mv->curtool->mousebuttonup(mv->curtool, mv->cx, mv->cy,
 			    xoff, yoff, button);
@@ -1083,13 +1084,12 @@ mapview_scale(void *p, int rw, int rh)
 	}
 
 	pthread_mutex_lock(&mv->map->lock);
-	mv->mw = WIDGET(mv)->w/(*mv->tilesz) + 1;
-	mv->mh = WIDGET(mv)->h/(*mv->tilesz) + 1;
+	mapview_set_scale(mv, *mv->zoom);
+
 	if (mv->flags & MAPVIEW_CENTER) {
 		mapview_center(mv, mv->map->origin.x, mv->map->origin.y);
 		mv->flags &= ~(MAPVIEW_CENTER);
 	}
-	mapview_zoom(mv, *mv->zoom);
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
@@ -1098,31 +1098,28 @@ lost_focus(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 
-	mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
-	
 	event_cancel(mv, "dblclick-expire");
 }
 
 void
 mapview_center(struct mapview *mv, int x, int y)
 {
-	*mv->ssx = *mv->tilesz;
-	*mv->ssy = *mv->tilesz;
+	/* XXX */
 	mv->mx = x - mv->mw/2;
 	mv->my = y - mv->mh/2;
-
 	if (mv->mx < 0)
 		mv->mx = 0;
 	if (mv->my < 0)
 		mv->my = 0;
 
 	pthread_mutex_lock(&mv->map->lock);
-
 	if (mv->mx >= mv->map->mapw - mv->mw)
 		mv->mx = mv->map->mapw - mv->mw;
 	if (mv->my >= mv->map->maph - mv->mh)
 		mv->my = mv->map->maph - mv->mh;
 
+	*mv->ssx = *mv->tilesz * TILEOUT;
+	*mv->ssy = *mv->tilesz * TILEOUT;
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
