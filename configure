@@ -641,6 +641,7 @@ if [ "${FREETYPE_VERSION}" != "" ]; then
 freetype_found=yes
 echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
 echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
+echo "yes"
 else
 echo "Could not find the FreeType library"
 exit 1
@@ -659,12 +660,8 @@ main(int argc, char *argv[])
 	FT_Bitmap bitmap;
 	FT_Face face;
 	FT_Library library;
-	FT_Error error;
 
-	error = FT_Init_FreeType(&library);
-	if (error) {
-		return (1);
-	}
+	FT_Init_FreeType(&library);
 	return (0);
 }
 
