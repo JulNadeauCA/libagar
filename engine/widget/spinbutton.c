@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.14 2004/03/25 07:17:04 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.15 2004/03/25 09:00:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -145,10 +145,8 @@ spinbutton_return(int argc, union evarg *argv)
 	spinbutton_set_value(sbu, atoi(s));
 	widget_binding_unlock(stringb);
 
-	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
-
 	event_post(NULL, sbu, "spinbutton-return", NULL);
-	event_post(NULL, sbu, "spinbutton-changed", NULL);
+	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -180,7 +178,10 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 {
 	widget_init(sbu, "spinbutton", &spinbutton_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	
+	widget_bind(sbu, "value", WIDGET_INT, &sbu->value);
+	widget_bind(sbu, "min", WIDGET_INT, &sbu->min);
+	widget_bind(sbu, "max", WIDGET_INT, &sbu->max);
+
 	sbu->value = 0;
 	sbu->incr = 1;
 	sbu->writeable = 0;
@@ -191,10 +192,6 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 
 	event_new(sbu, "widget-bound", spinbutton_bound, NULL);
 	event_new(sbu, "window-keydown", spinbutton_keydown, NULL);
-
-	widget_bind(sbu, "value", WIDGET_INT, &sbu->value);
-	widget_bind(sbu, "min", WIDGET_INT, &sbu->min);
-	widget_bind(sbu, "max", WIDGET_INT, &sbu->max);
 
 	sbu->incbu = button_new(sbu, "+");
 	sbu->decbu = button_new(sbu, "-");
@@ -277,44 +274,44 @@ spinbutton_add_value(struct spinbutton *sbu, int inc)
 
 	switch (valueb->vtype) {
 	case WIDGET_INT:
-		if (*(int *)value+inc >= *min &&
-		    *(int *)value+inc <= *max)
-			*(int *)value += inc;
+		*(int *)value = *(int *)value+inc < *min ? *min :
+		                *(int *)value+inc > *max ? *max :
+				*(int *)value+inc;
 		break;
 	case WIDGET_UINT:
-		if (*(unsigned int *)value+inc >= *min &&
-		    *(unsigned int *)value+inc <= *max)
-			*(unsigned int *)value += inc;
+		*(u_int *)value = *(u_int *)value+inc < *min ? *min :
+		                  *(u_int *)value+inc > *max ? *max :
+			  	  *(u_int *)value+inc;
 		break;
 	case WIDGET_UINT8:
-		if (*(Uint8 *)value+inc >= *min &&
-		    *(Uint8 *)value+inc <= *max)
-			*(Uint8 *)value += inc;
+		*(Uint8 *)value = *(Uint8 *)value+inc < *min ? *min :
+		                  *(Uint8 *)value+inc > *max ? *max :
+			  	  *(Uint8 *)value+inc;
 		break;
 	case WIDGET_SINT8:
-		if (*(Sint8 *)value+inc >= *min &&
-		    *(Sint8 *)value+inc <= *max)
-			*(Sint8 *)value += inc;
+		*(Sint8 *)value = *(Sint8 *)value+inc < *min ? *min :
+		                  *(Sint8 *)value+inc > *max ? *max :
+			  	  *(Sint8 *)value+inc;
 		break;
 	case WIDGET_UINT16:
-		if (*(Uint16 *)value+inc >= *min &&
-		    *(Uint16 *)value+inc <= *max)
-			*(Uint16 *)value += inc;
+		*(Uint16 *)value = *(Uint16 *)value+inc < *min ? *min :
+		                   *(Uint16 *)value+inc > *max ? *max :
+			  	   *(Uint16 *)value+inc;
 		break;
 	case WIDGET_SINT16:
-		if (*(Sint16 *)value+inc >= *min &&
-		    *(Sint16 *)value+inc <= *max)
-			*(Sint16 *)value += inc;
+		*(Sint16 *)value = *(Sint16 *)value+inc < *min ? *min :
+		                   *(Sint16 *)value+inc > *max ? *max :
+			  	   *(Sint16 *)value+inc;
 		break;
 	case WIDGET_UINT32:
-		if (*(Uint32 *)value+inc >= *min &&
-		    *(Uint32 *)value+inc <= *max)
-			*(Uint32 *)value += inc;
+		*(Uint32 *)value = *(Uint32 *)value+inc < *min ? *min :
+		                   *(Uint32 *)value+inc > *max ? *max :
+			  	   *(Uint32 *)value+inc;
 		break;
 	case WIDGET_SINT32:
-		if (*(Sint32 *)value+inc >= *min &&
-		    *(Sint32 *)value+inc <= *max)
-			*(Sint32 *)value += inc;
+		*(Sint32 *)value = *(Sint32 *)value+inc < *min ? *min :
+		                   *(Sint32 *)value+inc > *max ? *max :
+			  	   *(Sint32 *)value+inc;
 		break;
 	default:
 		break;
@@ -346,104 +343,72 @@ spinbutton_set_value(struct spinbutton *sbu, ...)
 		{
 			int i = va_arg(ap, int);
 
-			if (i < *min) {
-				*(int *)value = *min;
-			} else if (i > *max) {
-				*(int *)value = *max;
-			} else {
-				*(int *)value = i;
-			}
+			*(int *)value = i < *min ? *min :
+			                i > *max ? *max :
+					i;
 		}
 		break;
 	case WIDGET_UINT:
 		{
-			unsigned int i = va_arg(ap, unsigned int);
+			u_int i = va_arg(ap, unsigned int);
 
-			if (i < (unsigned int)*min) {
-				*(unsigned int *)value = *min;
-			} else if (i > (unsigned int)*max) {
-				*(unsigned int *)value = *max;
-			} else {
-				*(unsigned int *)value = i;
-			}
+			*(u_int *)value = i < (u_int)*min ? (u_int)*min :
+			                  i > (u_int)*max ? (u_int)*max :
+					  i;
 		}
 		break;
 	case WIDGET_UINT8:
 		{
 			Uint8 i = va_arg(ap, Uint8);
 
-			if (i < (Uint8)*min) {
-				*(Uint8 *)value = *min;
-			} else if (i > (Uint8)*max) {
-				*(Uint8 *)value = *max;
-			} else {
-				*(Uint8 *)value = i;
-			}
+			*(Uint8 *)value = i < (Uint8)*min ? (Uint8)*min :
+			                  i > (Uint8)*max ? (Uint8)*max :
+					  i;
 		}
 		break;
 	case WIDGET_SINT8:
 		{
 			Sint8 i = va_arg(ap, Sint8);
 
-			if (i < (Sint8)*min) {
-				*(Sint8 *)value = *min;
-			} else if (i > (Sint8)*max) {
-				*(Sint8 *)value = *max;
-			} else {
-				*(Sint8 *)value = i;
-			}
+			*(Sint8 *)value = i < (Sint8)*min ? (Sint8)*min :
+			                  i > (Sint8)*max ? (Sint8)*max :
+					  i;
 		}
 		break;
 	case WIDGET_UINT16:
 		{
 			Uint16 i = va_arg(ap, Uint16);
 
-			if (i < (Uint16)*min) {
-				*(Uint16 *)value = *min;
-			} else if (i > (Uint16)*max) {
-				*(Uint16 *)value = *max;
-			} else {
-				*(Uint16 *)value = i;
-			}
+			*(Uint16 *)value = i < (Uint16)*min ? (Uint16)*min :
+			                   i > (Uint16)*max ? (Uint16)*max :
+					   i;
 		}
 		break;
 	case WIDGET_SINT16:
 		{
 			Sint16 i = va_arg(ap, Sint16);
 
-			if (i < (Sint16)*min) {
-				*(Sint16 *)value = *min;
-			} else if (i > (Sint16)*max) {
-				*(Sint16 *)value = *max;
-			} else {
-				*(Sint16 *)value = i;
-			}
+			*(Sint16 *)value = i < (Sint16)*min ? (Sint16)*min :
+			                   i > (Sint16)*max ? (Sint16)*max :
+					   i;
 		}
 		break;
 	case WIDGET_UINT32:
 		{
 			Uint32 i = va_arg(ap, Uint32);
 
-			if (i < (Uint32)*min) {
-				*(Uint32 *)value = *min;
-			} else if (i > (Uint32)*max) {
-				*(Uint32 *)value = *max;
-			} else {
-				*(Uint32 *)value = i;
-			}
+			*(Uint32 *)value = i < (Uint32)*min ? (Uint32)*min :
+			                   i > (Uint32)*max ? (Uint32)*max :
+					   i;
 		}
 		break;
 	case WIDGET_SINT32:
 		{
 			Sint32 i = va_arg(ap, Sint32);
 
-			if (i < (Sint32)*min) {
-				*(Sint32 *)value = *min;
-			} else if (i > (Sint32)*max) {
-				*(Sint32 *)value = *max;
-			} else {
-				*(Sint32 *)value = i;
-			}
+			*(Sint32 *)value = i < (Sint32)*min ? (Sint32)*min :
+			                   i > (Sint32)*max ? (Sint32)*max :
+					   i;
 		}
 		break;
 	default:

@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.14 2004/03/25 04:35:45 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.15 2004/03/25 07:17:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -53,8 +53,6 @@ static struct widget_ops fspinbutton_ops = {
 	fspinbutton_scale
 };
 
-static void	fspinbutton_unitsel(int, union evarg *);
-
 struct fspinbutton *
 fspinbutton_new(void *parent, const struct unit *unit, const char *fmt, ...)
 {
@@ -105,10 +103,10 @@ fspinbutton_keydown(int argc, union evarg *argv)
 	pthread_mutex_lock(&fsu->lock);
 	switch (keysym) {
 	case SDLK_UP:
-		fspinbutton_add_value(fsu, fsu->incr);
+		fspinbutton_add_value(fsu, fsu->inc);
 		break;
 	case SDLK_DOWN:
-		fspinbutton_add_value(fsu, -fsu->incr);
+		fspinbutton_add_value(fsu, -fsu->inc);
 		break;
 	}
 	pthread_mutex_unlock(&fsu->lock);
@@ -122,13 +120,11 @@ fspinbutton_return(int argc, union evarg *argv)
 	char *s;
 
 	stringb = widget_get_binding(fsu->input, "string", &s);
-	fspinbutton_set_value(fsu, strtod(s, NULL) * fsu->unit->divider);
+	fspinbutton_set_value(fsu, strtod(s, NULL)*fsu->unit->divider);
 	widget_binding_unlock(stringb);
 
-	WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
-
 	event_post(NULL, fsu, "fspinbutton-return", NULL);
-	event_post(NULL, fsu, "fspinbutton-changed", NULL);
+	WIDGET(fsu->input)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -137,10 +133,8 @@ fspinbutton_up(int argc, union evarg *argv)
 	struct fspinbutton *fsu = argv[1].p;
 
 	pthread_mutex_lock(&fsu->lock);
-	fspinbutton_add_value(fsu, fsu->incr);
+	fspinbutton_add_value(fsu, fsu->inc);
 	pthread_mutex_unlock(&fsu->lock);
-	
-	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 }
 
 static void
@@ -149,10 +143,8 @@ fspinbutton_down(int argc, union evarg *argv)
 	struct fspinbutton *fsu = argv[1].p;
 	
 	pthread_mutex_lock(&fsu->lock);
-	fspinbutton_add_value(fsu, -fsu->incr);
+	fspinbutton_add_value(fsu, -fsu->inc);
 	pthread_mutex_unlock(&fsu->lock);
-	
-	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 }
 
 static void
@@ -173,9 +165,11 @@ fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
 {
 	widget_init(fsu, "fspinbutton", &fspinbutton_ops, WIDGET_FOCUSABLE);
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &fsu->value);
+	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);
+	widget_bind(fsu, "max", WIDGET_DOUBLE, &fsu->max);
 	
 	fsu->value = 0.0;
-	fsu->incr = 1.0;
+	fsu->inc = 1.0;
 	fsu->input = textbox_new(fsu, label);
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
@@ -242,7 +236,6 @@ fspinbutton_scale(void *p, int w, int h)
 		return;
 	}
 
-	/* TODO right alignment */
 	WIDGET(input)->x = 0;
 	WIDGET(input)->y = 0;
 	widget_scale(input, w-uw-bw-4, h);
@@ -269,13 +262,11 @@ fspinbutton_draw(void *p)
 	struct widget_binding *valueb;
 	double *value;
 
-	if (WIDGET(fsu->input)->flags & WIDGET_FOCUSED) {
-		/* Assume edition is in progress. */
+	if (WIDGET(fsu->input)->flags & WIDGET_FOCUSED)
 		return;
-	}
 
 	valueb = widget_get_binding(fsu, "value", &value);
-	textbox_printf(fsu->input, fsu->format, *value / fsu->unit->divider);
+	textbox_printf(fsu->input, fsu->format, *value/fsu->unit->divider);
 	widget_binding_unlock(valueb);
 }
 
@@ -283,78 +274,114 @@ fspinbutton_draw(void *p)
 void
 fspinbutton_add_value(struct fspinbutton *fsu, double inc)
 {
-	struct widget_binding *valueb;
+	struct widget_binding *valueb, *minb, *maxb;
 	void *value;
+	double *min, *max;
+
+	inc *= fsu->unit->divider;
 
 	valueb = widget_get_binding(fsu, "value", &value);
+	minb = widget_get_binding(fsu, "min", &min);
+	maxb = widget_get_binding(fsu, "max", &max);
+
 	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
-		if (*(double *)value + inc >= fsu->min &&
-		    *(double *)value + inc <= fsu->max)
-			*(double *)value += inc * fsu->unit->divider;
+		*(double *)value = *(double *)value+inc < *min ? *min :
+		                   *(double *)value+inc > *max ? *max :
+				   *(double *)value+inc;
 		break;
 	case WIDGET_FLOAT:
-		if (*(float *)value + inc >= fsu->min &&
-		    *(float *)value + inc <= fsu->max)
-			*(float *)value += (float)inc * fsu->unit->divider;
+		*(float *)value = *(float *)value+inc < *min ? *min :
+		                  *(float *)value+inc > *max ? *max :
+				  *(float *)value+inc;
 		break;
 	default:
 		break;
 	}
 	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 	widget_binding_modified(valueb);
+
 	widget_binding_unlock(valueb);
+	widget_binding_unlock(minb);
+	widget_binding_unlock(maxb);
 }
 
-/* Alter the value bound to the spinbutton. */
 void
 fspinbutton_set_value(struct fspinbutton *fsu, double nvalue)
 {
-	struct widget_binding *valueb;
+	struct widget_binding *valueb, *minb, *maxb;
 	void *value;
+	double *min, *max;
 
 	valueb = widget_get_binding(fsu, "value", &value);
+	minb = widget_get_binding(fsu, "min", &min);
+	maxb = widget_get_binding(fsu, "max", &max);
+
 	switch (valueb->vtype) {
 	case WIDGET_DOUBLE:
-		*(double *)value = nvalue;
+		*(double *)value = nvalue < *min ? *min :
+		                   nvalue > *max ? *max :
+				   nvalue;
 		break;
 	case WIDGET_FLOAT:
-		*(float *)value = (float)nvalue;
+		*(float *)value = nvalue < *min ? *min :
+		                  nvalue > *max ? *max :
+				  nvalue;
 		break;
 	}
+
 	event_post(NULL, fsu, "fspinbutton-changed", NULL);
 	widget_binding_modified(valueb);
+
 	widget_binding_unlock(valueb);
+	widget_binding_unlock(minb);
+	widget_binding_unlock(maxb);
 }
 
-/* Set the minimum value. */
 void
 fspinbutton_set_min(struct fspinbutton *fsu, double nmin)
 {
-	pthread_mutex_lock(&fsu->lock);
-	fsu->min = nmin;
-	pthread_mutex_unlock(&fsu->lock);
+	struct widget_binding *minb;
+	void *min;
+	
+	minb = widget_get_binding(fsu, "min", &min);
+	switch (minb->vtype) {
+	case WIDGET_DOUBLE:
+		*(double *)min = nmin;
+		break;
+	case WIDGET_FLOAT:
+		*(float *)min = (float)nmin;
+		break;
+	}
+	widget_binding_unlock(minb);
 }
 
-/* Set the maximum value. */
 void
 fspinbutton_set_max(struct fspinbutton *fsu, double nmax)
 {
-	pthread_mutex_lock(&fsu->lock);
-	fsu->max = nmax;
-	pthread_mutex_unlock(&fsu->lock);
+	struct widget_binding *maxb;
+	void *max;
+	
+	maxb = widget_get_binding(fsu, "max", &max);
+	switch (maxb->vtype) {
+	case WIDGET_DOUBLE:
+		*(double *)max = nmax;
+		break;
+	case WIDGET_FLOAT:
+		*(float *)max = (float)nmax;
+		break;
+	}
+	widget_binding_unlock(maxb);
 }
 
-/* Set the increment for [+] and [-] buttons. */
 void
-fspinbutton_set_increment(struct fspinbutton *fsu, double incr)
+fspinbutton_set_increment(struct fspinbutton *fsu, double inc)
 {
 	pthread_mutex_lock(&fsu->lock);
-	fsu->incr = incr;
+	fsu->inc = inc;
 	pthread_mutex_unlock(&fsu->lock);
 }
 
-/* Set the precision to display. */
 void
 fspinbutton_set_precision(struct fspinbutton *fsu, const char *mode,
     int precision)
@@ -367,7 +394,6 @@ fspinbutton_set_precision(struct fspinbutton *fsu, const char *mode,
 	pthread_mutex_unlock(&fsu->lock);
 }
 
-/* Select which unit system to use. */
 void
 fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[])
 {
@@ -389,7 +415,6 @@ fspinbutton_set_units(struct fspinbutton *fsu, const struct unit units[])
 	pthread_mutex_unlock(&fsu->units->list->lock);
 }
 
-/* Select the unit to use. */
 void
 fspinbutton_select_unit(struct fspinbutton *fsu, const char *uname)
 {
@@ -410,7 +435,6 @@ fspinbutton_select_unit(struct fspinbutton *fsu, const char *uname)
 	pthread_mutex_unlock(&fsu->units->list->lock);
 }
 
-/* Set the writeability of a fspinbutton. */
 void
 fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
 {
@@ -429,12 +453,11 @@ fspinbutton_set_writeable(struct fspinbutton *fsu, int writeable)
 	pthread_mutex_unlock(&fsu->lock);
 }
 
-/* Define the range of acceptable values. */
 void
 fspinbutton_set_range(struct fspinbutton *fsu, double min, double max)
 {
 	pthread_mutex_lock(&fsu->lock);
-	fsu->min = min;
-	fsu->max = max;
+	fspinbutton_set_min(fsu, min);
+	fspinbutton_set_max(fsu, min);
 	pthread_mutex_unlock(&fsu->lock);
 }
