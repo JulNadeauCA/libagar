@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.16 2002/08/19 05:29:49 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.17 2002/09/07 04:34:14 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -81,7 +81,6 @@ insert_char(struct textbox *tbox, char c)
 	tbox->text.s[end + 1] = '\0';
 	tbox->text.pos++;
 
-	event_post(tbox, "textbox-changed", "%s", tbox->text.s);
 	return (&tbox->text.s[end]);
 }
 
@@ -137,7 +136,6 @@ key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 		if (tbox->text.offs < 1)
 			tbox->text.offs = 0;
 	}
-	event_post(tbox, "textbox-changed", "%s", tbox->text.s);
 }
 
 static void
@@ -156,7 +154,6 @@ key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 			tbox->text.s[i] = tbox->text.s[i + 1];
 		}
 	}
-	event_post(tbox, "textbox-changed", "%s", tbox->text.s);
 }
 
 static void

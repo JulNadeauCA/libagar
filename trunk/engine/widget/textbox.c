@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.24 2002/09/06 01:28:48 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.25 2002/09/07 04:34:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -43,8 +43,6 @@
 #include "window.h"
 #include "textbox.h"
 #include "keycodes.h"
-
-extern TTF_Font *font;		/* XXX pref */
 
 static const struct widget_ops textbox_ops = {
 	{
@@ -263,17 +261,16 @@ textbox_key(int argc, union evarg *argv)
 	struct textbox *tbox = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
-	int textlen, i;
-
-	pthread_mutex_lock(&tbox->text.lock);
-
-	textlen = strlen(tbox->text.s);
+	size_t textlen;
+	int i, modified = 0;
 
 	if (keysym == SDLK_RETURN) {
-		event_post(tbox, "textbox-return", "%s", tbox->text.s);
-		goto out;
+		event_post(tbox, "textbox-return", NULL);
+		return;
 	}
 
+	pthread_mutex_lock(&tbox->text.lock);
+	textlen = strlen(tbox->text.s);
 	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
 		const struct keycode *kcode;
 
@@ -284,11 +281,16 @@ textbox_key(int argc, union evarg *argv)
 		if (kcode->modmask == 0 || keymod & kcode->modmask) {
 			keycodes[i].callback(tbox, (SDLKey)keysym,
 			    keymod, keycodes[i].arg);
+			modified++;
 			goto out;
 		}
 	}
 out:
 	pthread_mutex_unlock(&tbox->text.lock);
+	
+	if (modified) {
+		event_post(tbox, "textbox-changed", NULL);
+	}
 }
 
 static void
@@ -305,8 +307,8 @@ textbox_mouse(int argc, union evarg *argv)
 			WIDGET(tbox)->win->focus = WIDGET(tbox);
 			WIDGET(tbox)->win->redraw++;
 			tbox->newx = x;
-			break;
 		}
+		break;
 	case WINDOW_MOUSEMOTION: {
 			int x = argv[2].i, y = argv[3].i;
 			Uint8 ms;
@@ -315,8 +317,8 @@ textbox_mouse(int argc, union evarg *argv)
 			if (ms & SDL_BUTTON_LEFT && x > tbox->label_s->w) {
 				tbox->newx = x;
 			}
-			break;
 		}
+		break;
 	}
 }
 
