@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.6 2002/07/29 06:33:21 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.7 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -45,12 +45,12 @@
 
 static const struct widget_ops tileq_ops = {
 	{
-		NULL,	/* destroy */
+		widget_destroy,
 		NULL,	/* load */
 		NULL	/* save */
 	},
 	tileq_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 static void	 tileq_scaled(int, union evarg *);

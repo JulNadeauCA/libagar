@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.7 2002/08/12 06:55:07 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.8 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,7 +33,6 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 #include <engine/map.h>
 
 #include <engine/widget/widget.h>
@@ -46,12 +45,12 @@
 
 static const struct widget_ops tilestack_ops = {
 	{
-		NULL,	/* destroy */
+		widget_destroy
 		NULL,	/* load */
 		NULL	/* save */
 	},
 	tilestack_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
