@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.81 2002/09/12 09:44:46 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.82 2002/09/13 11:08:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -56,33 +56,16 @@ extern struct gameinfo *gameinfo;	/* script */
 extern struct window *game_menu_win;
 
 #ifdef DEBUG
-
 int event_debug = 0;
-
-#define EVENT_DEBUG if (event_debug) printf
-
-static const struct event_proto {
-	char *evname;
-	char *fmt;
-} protos[] = {
-	/* Generic */
-	{ "attached", "%p" },				/* object */
-	{ "detached", "%p" }				/* object */
-};
-
 static struct window *fps_win;
-
-#else	/* !DEBUG */
-
+#define EVENT_DEBUG if (event_debug) printf
+#else
 #define EVENT_DEBUG
-
-#endif	/* DEBUG */
+#endif
 
 static void	 event_hotkey(SDL_Event *);
+static void	 event_dispatch(SDL_Event *);
 static void	*event_post_async(void *);
-#ifdef DEBUG
-static void	 event_checkproto(struct object *, char *, const char *);
-#endif
 
 static void
 event_hotkey(SDL_Event *ev)
@@ -156,6 +139,7 @@ event_hotkey(SDL_Event *ev)
 	default:
 		break;
 	}
+
 	pthread_mutex_unlock(&world->lock);
 }
 
@@ -182,8 +166,8 @@ event_loop(void)
 {
 	SDL_Event ev;
 	Uint32 ltick, ntick;
-	struct window *win;
 	int rv, delta;
+	struct window *win;
 	SDL_Rect wrects[64];
 	int nwrects = 0;
 #ifdef DEBUG
@@ -209,9 +193,11 @@ event_loop(void)
 
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_MAXFPS;;) {
 		ntick = SDL_GetTicks();
+
 		if ((ntick - ltick) >= delta) {
 			pthread_mutex_lock(&view->lock);
 
+			/* Tile-based rendering */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 				struct map *m = view->rootmap->map;
 
@@ -221,15 +207,22 @@ event_loop(void)
 					return;
 				}
 
+				pthread_mutex_lock(&world->lock);
 				pthread_mutex_lock(&m->lock);
+
+				/* Update animated nodes individually. */
 				rootmap_animate();
+
+				/* Update static nodes individually. */
 				if (m->redraw != 0) {
 					dprintf("tile: redraw\n");
 					rootmap_draw();
 					COMPUTE_DELTA(delta, ntick);
 					m->redraw = 0;
 				}
+				
 				pthread_mutex_unlock(&m->lock);
+				pthread_mutex_unlock(&world->lock);
 			}
 
 			/* Update the windows. */
@@ -264,112 +257,110 @@ event_loop(void)
 
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev) != 0) {
-			switch (ev.type) {
-			case SDL_VIDEORESIZE:
-				EVENT_DEBUG("SDL_VIDEORESIZE: w=%d h=%d\n",
-				    ev.resize.w, ev.resize.h);
-
-				view->w = ev.resize.w;
-				view->h = ev.resize.h;
-				break;
-			case SDL_VIDEOEXPOSE:
-				EVENT_DEBUG("SDL_VIDEOEXPOSE\n");
-
-				pthread_mutex_lock(&view->lock);
-				switch (view->gfx_engine) {
-				case GFX_ENGINE_TILEBASED:
-					/* Redraw the map only. */
-					pthread_mutex_lock(
-					    &view->rootmap->map->lock);
-					view->rootmap->map->redraw++;
-					pthread_mutex_unlock(
-					    &view->rootmap->map->lock);
-					break;
-				case GFX_ENGINE_GUI:
-					/* Redraw the whole screen. */
-					SDL_FillRect(view->v, NULL,
-					    SDL_MapRGB(view->v->format,
-					    0, 0, 0));
-					SDL_UpdateRect(view->v, 0, 0, 0 ,0);
-					break;
-				}
-				TAILQ_FOREACH(win, &view->windowsh, windows) {
-					pthread_mutex_lock(&win->lock);
-					if (win->flags & WINDOW_SHOWN) {
-						window_draw(win);
-					}
-					pthread_mutex_unlock(&win->lock);
-				}
-				pthread_mutex_unlock(&view->lock);
-				break;
-			case SDL_MOUSEMOTION:
-				EVENT_DEBUG("SDL_MOUSEMOTION x=%d y=%d\n",
-				    ev.motion.x, ev.motion.y);
-			
-				rv = 0;
-				pthread_mutex_lock(&view->lock);
-				if (!TAILQ_EMPTY(&view->windowsh)) {
-					rv = window_event_all(&ev);
-				}
-				pthread_mutex_unlock(&view->lock);
-				break;
-			case SDL_MOUSEBUTTONUP:
-				EVENT_DEBUG("SDL_MOUSEBUTTON%s b=%d "
-				    "x=%d y=%d\n",
-				    (ev.button.type == SDL_MOUSEBUTTONUP) ?
-				    "UP" : "DOWN", ev.button.button,
-				    ev.button.x, ev.button.y);
-				/* FALLTHROUGH */
-			case SDL_MOUSEBUTTONDOWN:
-				rv = 0;
-				pthread_mutex_lock(&view->lock);
-				if (!TAILQ_EMPTY(&view->windowsh)) {
-					rv = window_event_all(&ev);
-				}
-				pthread_mutex_unlock(&view->lock);
-				break;
-			case SDL_JOYAXISMOTION:
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-				EVENT_DEBUG("SDL_JOY%s\n",
-				    (ev.type == SDL_JOYAXISMOTION) ?
-				    "AXISMOTION" :
-				    (ev.type == SDL_JOYBUTTONDOWN) ?
-				    "BUTTONDOWN" :
-				    (ev.type == SDL_JOYBUTTONUP) ?
-				    "BUTTONUP" : "???");
-				pthread_mutex_lock(&view->lock);
-				input_event(joy, &ev);
-				/* XXX widgets ... */
-				pthread_mutex_unlock(&view->lock);
-				break;
-			case SDL_KEYDOWN:
-				event_hotkey(&ev);
-				/* FALLTHROUGH */
-			case SDL_KEYUP:
-				EVENT_DEBUG("SDL_KEY%s keysym=%d state=%s\n",
-				    (ev.key.type == SDL_KEYUP) ?
-				    "UP" : "DOWN",
-				    (int)ev.key.keysym.sym,
-				    (ev.key.state == SDL_PRESSED) ?
-				    "PRESSED" : "RELEASED");
-
-				rv = 0;
-				pthread_mutex_lock(&view->lock);
-				if (!TAILQ_EMPTY(&view->windowsh)) {
-					rv = window_event_all(&ev);
-				}
-				if (rv == 0) {
-					input_event(keyboard, &ev);
-				}
-				pthread_mutex_unlock(&view->lock);
-				break;
-			case SDL_QUIT:
-				EVENT_DEBUG("SDL_QUIT\n");
-				engine_stop();
-				break;
-			}
+			event_dispatch(&ev);
 		}
+	}
+}
+
+static void
+event_dispatch(SDL_Event *ev)
+{
+	int rv;
+	struct window *win;
+
+	switch (ev->type) {
+	case SDL_VIDEORESIZE:
+		EVENT_DEBUG("SDL_VIDEORESIZE: w=%d h=%d\n", ev->resize.w,
+		     ev->resize.h);
+		view->w = ev->resize.w;
+		view->h = ev->resize.h;
+		break;
+	case SDL_VIDEOEXPOSE:
+		EVENT_DEBUG("SDL_VIDEOEXPOSE\n");
+
+		pthread_mutex_lock(&view->lock);
+		switch (view->gfx_engine) {
+		case GFX_ENGINE_TILEBASED:
+			/* Redraw the map only. */
+			pthread_mutex_lock(&world->lock);
+			view->rootmap->map->redraw++;
+			pthread_mutex_unlock(&world->lock);
+			break;
+		case GFX_ENGINE_GUI:
+			/* Redraw the whole screen. */
+			SDL_FillRect(view->v, NULL,
+			    SDL_MapRGB(view->v->format, 0, 0, 0));
+			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
+			break;
+		}
+		TAILQ_FOREACH(win, &view->windowsh, windows) {
+			pthread_mutex_lock(&win->lock);
+			if (win->flags & WINDOW_SHOWN) {
+				window_draw(win);
+			}
+			pthread_mutex_unlock(&win->lock);
+		}
+		pthread_mutex_unlock(&view->lock);
+		break;
+	case SDL_MOUSEMOTION:
+		EVENT_DEBUG("SDL_MOUSEMOTION x=%d y=%d\n", ev->motion.x,
+		    ev->motion.y);
+		rv = 0;
+		pthread_mutex_lock(&view->lock);
+		if (!TAILQ_EMPTY(&view->windowsh)) {
+			rv = window_event_all(ev);
+		}
+		pthread_mutex_unlock(&view->lock);
+		break;
+	case SDL_MOUSEBUTTONUP:
+		EVENT_DEBUG("SDL_MOUSEBUTTON%s b=%d x=%d y=%d\n",
+		    (ev->button.type == SDL_MOUSEBUTTONUP) ?
+		    "UP" : "DOWN", ev->button.button, ev->button.x,
+		    ev->button.y);
+		/* FALLTHROUGH */
+	case SDL_MOUSEBUTTONDOWN:
+		rv = 0;
+		pthread_mutex_lock(&view->lock);
+		if (!TAILQ_EMPTY(&view->windowsh)) {
+			rv = window_event_all(ev);
+		}
+		pthread_mutex_unlock(&view->lock);
+		break;
+	case SDL_JOYAXISMOTION:
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		EVENT_DEBUG("SDL_JOY%s\n",
+		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
+		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
+		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" : "???");
+		pthread_mutex_lock(&view->lock);
+		input_event(joy, ev);
+		/* XXX widgets ... */
+		pthread_mutex_unlock(&view->lock);
+		break;
+	case SDL_KEYDOWN:
+		event_hotkey(ev);
+		/* FALLTHROUGH */
+	case SDL_KEYUP:
+		EVENT_DEBUG("SDL_KEY%s keysym=%d state=%s\n",
+		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
+		    (int)ev->key.keysym.sym,
+		    (ev->key.state == SDL_PRESSED) ? "PRESSED" : "RELEASED");
+
+		rv = 0;
+		pthread_mutex_lock(&view->lock);
+		if (!TAILQ_EMPTY(&view->windowsh)) {
+			rv = window_event_all(ev);
+		}
+		if (rv == 0) {
+			input_event(keyboard, ev);
+		}
+		pthread_mutex_unlock(&view->lock);
+		break;
+	case SDL_QUIT:
+		EVENT_DEBUG("SDL_QUIT\n");
+		engine_stop();
+		break;
 	}
 }
 
@@ -434,11 +425,6 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 	struct object *ob = p;
 	struct event *eev;
 
-#ifdef DEBUG
-	if (event_debug)
-		event_checkproto(ob, name, NULL);
-#endif
-
 	eev = emalloc(sizeof(struct event));
 	eev->name = name;
 	eev->flags = flags;
@@ -484,11 +470,6 @@ event_post(void *obp, char *name, const char *fmt, ...)
 {
 	struct object *ob = obp;
 	struct event *eev, *neev;
-
-#ifdef DEBUG
-	if (event_debug)
-		event_checkproto(ob, name, fmt);
-#endif
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
@@ -542,28 +523,4 @@ event_forward(void *child, char *name, int argc, union evarg *argv)
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 }
-
-#ifdef DEBUG
-static void
-event_checkproto(struct object *ob, char *evname, const char *fmt)
-{
-	const struct event_proto *eproto = NULL;
-	int i;
-
-	for (i = 0; i < sizeof(protos) / sizeof(struct event_proto); i++) {
-		eproto = &protos[i];
-
-		if (strcmp(eproto->evname, evname) == 0) {
-			if (fmt != NULL && strcmp(eproto->fmt, fmt) != 0) {
-				fatal("'%s' events use format: '%s'\n", evname,
-				    eproto->fmt);
-			}
-			break;
-		}
-	}
-	if (eproto == NULL) {
-		fatal("unknown event type `%s'\n", evname);
-	}
-}
-#endif
 
