@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.4 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: event.3,v 1.5 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -80,7 +80,7 @@ typedef union evarg {
 .Ed
 .Sh EVENT PROCESSING
 .nr nS 1
-.Ft "void"
+.Ft "struct event *"
 .Fn event_new "void *obj" "char *event" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
 .Ft "void"
