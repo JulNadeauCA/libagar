@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.11 2002/02/08 01:14:52 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.12 2002/02/10 01:38:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -58,7 +58,6 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 	ob->desc = (desc != NULL) ? strdup(desc) : NULL;
 	ob->id = curid++;
 	ob->flags = flags;
-	ob->wmask = 0;
 	ob->sprites = NULL;
 	ob->nsprites = 0;
 	ob->anims = NULL;

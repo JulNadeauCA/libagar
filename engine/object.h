@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.10 2002/02/07 23:34:09 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.11 2002/02/10 01:38:07 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -7,8 +7,6 @@ struct object {
 	char	*name;		/* Optional name */
 	char	*desc;		/* Optional description */
 	int	 id;		/* Equivalent of a PID */
-
-	int	 wmask;		/* Asynchronous wait mask */
 
 	int	 flags;
 #define OBJ_INVISIBLE	0x0001	/* Object is not visible on the map */
