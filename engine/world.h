@@ -1,14 +1,16 @@
-/*	$Csoft: world.h,v 1.13 2002/05/13 06:51:13 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.14 2002/05/15 07:28:06 vedge Exp $	*/
 
 struct world {
 	struct	object obj;
 
+	/* Read-only when running */
 	char	*datapath;		/* Search path for states */
 	char	*udatadir;		/* User data directory path */
 	char	*sysdatadir;		/* System-wide data directory path */
-	struct	map *curmap;		/* Map being displayed */
 
-	SLIST_HEAD(, object) wobjsh;	/* Active objects */
+	/* Read-write, thread-safe */
+	struct	map *curmap;		/* Map being displayed. */
+	SLIST_HEAD(, object) wobjsh;	/* Game objects */
 	int	nobjs;
 	pthread_mutex_t lock;		/* Lock on the entire structure */
 };
