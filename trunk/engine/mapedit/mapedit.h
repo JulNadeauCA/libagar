@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.54 2002/08/18 00:37:43 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.55 2002/08/21 01:18:10 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -118,9 +118,11 @@ enum {
 	MAPEDIT_TOOL_EDIT
 };
 
-void	mapedit_init(struct mapedit *, char *);
-int	mapedit_load(void *, int);
-int	mapedit_save(void *, int);
+void	 mapedit_init(struct mapedit *, char *);
+int	 mapedit_load(void *, int);
+int	 mapedit_save(void *, int);
+void	 mapedit_attached(int, union evarg *);
+void	 mapedit_detached(int, union evarg *);
 
 extern struct mapedit *curmapedit;	/* Controlled map editor */
 
