@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.84 2002/11/07 04:30:37 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.85 2002/11/07 17:54:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -472,7 +472,7 @@ window_hide(struct window *win)
 			rd.w = win->w;
 			rd.h = win->h;
 
-			SDL_FillRect(view->v, &rd, NULL);
+			SDL_FillRect(view->v, &rd, 0);
 			SDL_UpdateRect(view->v, rd.x, rd.y, rd.w, rd.h);
 		}
 		break;
