@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.61 2003/03/22 04:26:17 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.62 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -201,6 +201,7 @@ world_find(char *s)
 		}
 	}
 	pthread_mutex_unlock(&world->lock);
+	error_set("object `%s' not found", s);
 	return (NULL);
 }
 
