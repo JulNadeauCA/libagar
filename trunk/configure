@@ -92,8 +92,8 @@ else
     PREFIX=/usr/local
 fi
 
-SRC=`pwd`
-BUILD=`pwd`
+SRC=.
+BUILD=.
 
 echo > $BUILD/config.log
 
