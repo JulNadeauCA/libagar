@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.42 2002/05/26 04:08:47 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.43 2002/05/28 06:04:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +48,17 @@
 
 extern struct gameinfo *gameinfo;
 
-static void	event_hotkey(SDL_Event *);
+#define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
+	if ((eev)->argc == EVENT_MAXARGS) {				\
+		fatal("too many args\n");				\
+	}								\
+	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);		\
+} while (/*CONSTCOND*/ 0)
+
+static void	 event_hotkey(SDL_Event *);
+static void	 event_user(SDL_Event *);
+static void	*event_post_async(void *);
+static void	 event_pusharg(va_list, char, struct event *);
 
 static void
 event_hotkey(SDL_Event *ev)
@@ -102,6 +113,26 @@ event_hotkey(SDL_Event *ev)
 		break;
 	}
 	pthread_mutex_unlock(&world->lock);
+}
+
+static void
+event_user(SDL_Event *ev)
+{
+	struct window_event *wev;
+
+	switch (ev->user.code) {
+	case USER_WINDOW_EVENT:
+		wev = ev->user.data1;
+		pthread_mutex_lock(&mainview->lock);
+		pthread_mutex_lock(&wev->w->win->lock);
+		WIDGET_OPS(wev->w)->widget_event(wev->w, &wev->ev, wev->flags);
+		pthread_mutex_unlock(&wev->w->win->lock);
+		pthread_mutex_unlock(&mainview->lock);
+		free(wev);
+		break;
+	default:
+		fatal("unknown user event: %d\n", ev->user.code);
+	}
 }
 
 void *
@@ -180,6 +211,8 @@ event_loop(void *arg)
 				}
 				break;
 			case SDL_KEYDOWN:
+				event_hotkey(&ev);
+				/* FALLTHROUGH */
 			case SDL_KEYUP:
 				rv = 0;
 				pthread_mutex_lock(&mainview->lock);
@@ -194,7 +227,9 @@ event_loop(void *arg)
 						input_event(keyboard, &ev);
 					}
 				}
-				event_hotkey(&ev);
+				break;
+			case SDL_USEREVENT:
+				event_user(&ev);
 				break;
 			case SDL_QUIT:
 				return (NULL);
@@ -204,5 +239,135 @@ event_loop(void *arg)
 
 	engine_destroy();
 	return (NULL);
+}
+
+static void
+event_pusharg(va_list ap, char fmt, struct event *eev)
+{
+	switch (fmt) {
+	case 'd':
+	case 'i':
+	case 'o':
+	case 'u':
+	case 'x':
+	case 'X':
+		PUSH_EVENT_ARG(eev, ap, i, int);
+		break;
+	case 'D':
+	case 'O':
+	case 'U':
+		PUSH_EVENT_ARG(eev, ap, li, long int);
+		break;
+	case 'e':
+	case 'E':
+	case 'f':
+	case 'g':
+	case 'G':
+		PUSH_EVENT_ARG(eev, ap, f, double);
+		break;
+	case 'c':
+		PUSH_EVENT_ARG(eev, ap, c, char);
+		break;
+	case 's':
+		PUSH_EVENT_ARG(eev, ap, s, char *);
+		break;
+	case 'p':
+		PUSH_EVENT_ARG(eev, ap, p, void *);
+		break;
+	case ' ':
+	case ',':
+	case ';':
+	case '%':
+		break;
+	default:
+		fatal("unknown argument type\n");
+	}
+}
+
+/*
+ * Register an event handler.
+ *
+ * Arbitrary arguments are pushed onto an argument stack that the event
+ * handler reads. event_post() may push more args onto this stack.
+ * The first element is always a pointer to the object.
+ */
+void
+event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
+    const char *fmt, ...)
+{
+	struct object *ob = p;
+	struct event *eev;
+
+	eev = emalloc(sizeof(struct event));
+	eev->name = name;
+	eev->flags = flags;
+	memset(eev->argv, 0, sizeof(union evarg) * EVENT_MAXARGS);
+	eev->argv[0].p = ob;
+	eev->argc = 1;
+	eev->handler = handler;
+	
+	if (fmt != NULL) {
+		va_list ap;
+
+		for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
+			event_pusharg(ap, *fmt, eev);
+		}
+		va_end(ap);
+	}
+
+	dprintf("%s: register event \"%s\" (%d args)\n",
+	    OBJECT(ob)->name, eev->name, eev->argc);
+
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_INSERT_TAIL(&ob->events, eev, events);
+	pthread_mutex_unlock(&ob->events_lock);
+}
+
+static void *
+event_post_async(void *p)
+{
+	struct event *eev = p;
+
+	dprintf("%p: async event start\n", (void *)pthread_self());
+	eev->handler(eev->argc, eev->argv);
+	dprintf("%p: async event end\n", (void *)pthread_self());
+
+	free(eev);
+	return (NULL);
+}
+
+void
+event_post(void *obp, const char *name, const char *fmt, ...)
+{
+	struct object *ob = obp;
+	struct event *eev, *neev;
+
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_FOREACH(eev, &ob->events, events) {
+		if (strcmp(name, eev->name) != 0) {
+			continue;
+		}
+		neev = emalloc(sizeof(struct event));
+		memcpy(neev, eev, sizeof(struct event));
+		if (fmt != NULL) {
+			va_list ap;
+
+			for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
+				event_pusharg(ap, *fmt, neev);
+			}
+			va_end(ap);
+		}
+
+		if (neev->flags & EVENT_ASYNC) {
+			pthread_t async_event_th;
+
+			pthread_create(&async_event_th, NULL,
+			    event_post_async, neev);
+		} else {
+			neev->handler(neev->argc, neev->argv);
+			free(neev);
+		}
+	}
+	pthread_mutex_unlock(&ob->events_lock);
 }
 
