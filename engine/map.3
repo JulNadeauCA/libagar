@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.29 2003/03/18 01:51:22 vedge Exp $
+.\"	$Csoft: map.3,v 1.30 2003/03/18 03:07:35 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -121,8 +121,9 @@ function allocates
 .Fa w
 x
 .Fa h
-nodes, assuming that no node is currently allocated, and returns
-0 on success or -1 on failure.
+nodes, assuming that no node is currently allocated.
+.Fn map_alloc_nodes
+returns 0 on success or -1 on failure.
 The maximum allowable geometry is defined by
 .Dv MAP_MAX_WIDTH
 and
@@ -194,16 +195,14 @@ saves a node in machine-independent format.
 The
 .Fn noderef_init
 function initializes a node reference structure.
-The
 .Fn noderef_destroy
-function frees the resources reserved by a noderef (such as the transforms).
+frees the resources reserved by a noderef (such as the transforms).
 .Pp
 The
 .Fn noderef_load
 function loads a node reference in machine-independent format from
 .Fa fd ,
 returning 0 on success or -1 on failure.
-.Pp
 .Fn noderef_save
 saves a node reference in machine-independent format, encoding the object
 references using
