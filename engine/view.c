@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.18 2002/03/03 06:44:55 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.19 2002/03/04 02:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,7 +37,11 @@
 #include <engine/mapedit/mapedit.h>
 
 static Uint32	**view_allocmask(Uint32, Uint32);
+static SDL_Rect	**view_allocmaprects(struct map *, Uint32, Uint32);
+static SDL_Rect	*view_allocrects(struct map *, Uint32, Uint32);
 static void	view_freemask(struct viewport *);
+static void	view_freemaprects(struct viewport *);
+static void	view_freerects(struct viewport *);
 
 struct viewport *mainview;
 
@@ -97,10 +101,15 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	    v->fps, v->flags, v->width, v->height, v->depth,
 	    v->map->obj.name, v->mapx, v->mapy);
 
-	if (v->mapmask != NULL) {
+	if (v->mapmask != NULL)
 		view_freemask(v);
-	}
-	v->mapmask = view_allocmask(v->mapw, v->maph);
+	if (v->maprects != NULL)
+		view_freemaprects(v);
+	if (v->rects != NULL)
+		view_freerects(v);
+	v->mapmask = view_allocmask(v->mapw + 2, v->maph + 2);
+	v->maprects = view_allocmaprects(m, v->mapw + 2, v->maph + 2);
+	v->rects = view_allocrects(m, v->mapw + 2, v->maph + 2);
 
 	if (curmapedit != NULL) {
 		SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
@@ -128,6 +137,42 @@ view_allocmask(Uint32 w, Uint32 h)
 	return (mask);
 }
 
+static SDL_Rect **
+view_allocmaprects(struct map *m, Uint32 w, Uint32 h)
+{
+	SDL_Rect **rects;
+	Uint32 x, y;
+
+	rects = (SDL_Rect **)emalloc((w * h) * sizeof(SDL_Rect));
+	for (y = 0; y < h; y++) {
+		*(rects + y) = (SDL_Rect *)emalloc(w * sizeof(SDL_Rect));
+	}
+	
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			rects[y][x].x = (x << m->shtilex);
+			rects[y][x].y = (y << m->shtiley);
+			rects[y][x].w = m->tilew;
+			rects[y][x].h = m->tileh;
+		}
+	}
+
+	return (rects);
+}
+
+static SDL_Rect *
+view_allocrects(struct map *m, Uint32 w, Uint32 h)
+{
+	SDL_Rect *rects;
+	Uint32 len;
+
+	len = (w * h) * sizeof(SDL_Rect *);
+	rects = (SDL_Rect *)emalloc(len);
+	memset(rects, NULL, len);
+	
+	return (rects);
+}
+
 void
 view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 n)
 {
@@ -152,6 +197,25 @@ view_freemask(struct viewport *v)
 	v->mapmask = NULL;
 }
 
+static void
+view_freemaprects(struct viewport *v)
+{
+	Uint32 y;
+
+	for (y = 0; y < v->maph; y++) {
+		free(*(v->maprects + y));
+	}
+	free(v->maprects);
+	v->maprects = NULL;
+}
+
+static void
+view_freerects(struct viewport *v)
+{
+	free(v->rects);
+	v->rects = NULL;
+}
+
 struct viewport *
 view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 {
@@ -171,6 +235,8 @@ view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 	v->mapxoffs = 0;
 	v->mapyoffs = 0;
 	v->mapmask = NULL;
+	v->maprects = NULL;
+	v->rects = NULL;
 
 	return (v);
 }
@@ -178,9 +244,12 @@ view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 void
 view_destroy(struct viewport *v)
 {
-	if (v->mapmask != NULL) {
+	if (v->mapmask != NULL)
 		view_freemask(v);
-	}
+	if (v->maprects != NULL)
+		view_freemaprects(v);
+	if (v->rects != NULL)
+		view_freerects(v);
 	free(v);
 }
 
