@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.116 2003/03/28 01:57:17 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.118 2003/04/14 08:56:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -262,10 +262,10 @@ object_load_data(struct object *ob, struct netbuf *buf)
 	    ob->ops->load(ob, buf) == -1)
 		goto fail;
 
-	pthread_mutex_lock(&ob->lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
-	pthread_mutex_lock(&ob->lock);
+	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
 
