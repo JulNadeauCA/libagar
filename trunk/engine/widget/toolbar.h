@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.h,v 1.1 2004/03/17 04:00:59 vedge Exp $	*/
+/*	$Csoft: toolbar.h,v 1.2 2004/03/28 05:55:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
@@ -32,6 +32,7 @@ void	 	 toolbar_destroy(void *);
 struct button	*toolbar_add_button(struct toolbar *, int, SDL_Surface *, int,
 		                    int, void (*)(int, union evarg *),
 				    const char *, ...);
+void		 toolbar_select_unique(struct toolbar *, struct button *);
 __END_DECLS
 
 #include "close_code.h"
