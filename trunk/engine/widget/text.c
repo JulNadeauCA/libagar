@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.70 2003/06/30 01:12:41 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.71 2003/06/30 04:55:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -64,15 +64,15 @@ static SLIST_HEAD(text_fontq, text_font) text_fonts =	/* Cached fonts */
     SLIST_HEAD_INITIALIZER(&text_fonts);
 pthread_mutex_t text_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/* Load a font. */
+/* Load and cache the named font. */
 static ttf_font *
 text_load_font(const char *name, int size, int style)
 {
-	char *path = NULL;
-	ttf_font *nfont;
+	char path[MAXPATHLEN];
 	struct text_font *fon;
+	ttf_font *nfont;
 
-	if (name == NULL) 		/* Default font */
+	if (name == NULL) 				/* Default font */
 		return (font);
 
 	pthread_mutex_lock(&text_lock);
@@ -80,15 +80,18 @@ text_load_font(const char *name, int size, int style)
 	SLIST_FOREACH(fon, &text_fonts, fonts) {
 		if (strcmp(fon->name, name) == 0 &&
 		    fon->size == size &&
-		    fon->style == style) {
-			nfont = fon->font;
-			goto out;
-		}
+		    fon->style == style)
+			break;
+	}
+	if (fon != NULL) {
+		nfont = fon->font;
+		goto out;
 	}
 
-	if ((path = config_search_file("font-path", name, "ttf")) == NULL) {
+	if (config_search_file("font-path", name, "ttf", path, sizeof(path))
+	    == -1)
 		fatal("%s", error_get());
-	}
+
 	if ((nfont = ttf_open_font(path, size)) == NULL) {
 		fatal("%s: %s", path, error_get());
 	}
@@ -99,11 +102,9 @@ text_load_font(const char *name, int size, int style)
 	fon->size = size;
 	fon->style = style;
 	fon->font = nfont;
-
 	SLIST_INSERT_HEAD(&text_fonts, fon, fonts);		/* Cache */
 out:
 	pthread_mutex_unlock(&text_lock);
-	Free(path);
 	return (nfont);
 }
 
