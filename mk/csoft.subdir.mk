@@ -1,4 +1,4 @@
-# $Csoft: csoft.subdir.mk,v 1.7 2002/01/26 01:20:54 vedge Exp $
+# $Csoft: csoft.subdir.mk,v 1.8 2002/01/26 15:14:19 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -33,26 +33,31 @@ all-subdir:
 	    echo "==> ${REL}$$DIR"; \
 	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/); \
 	done
+
 clean-subdir:
 	@for DIR in ${SUBDIR}; do \
 	    echo "==> ${REL}$$DIR"; \
 	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ clean); \
 	done
+
 depend-subdir:
 	@for DIR in ${SUBDIR}; do \
 	    echo "==> ${REL}$$DIR"; \
 	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ depend); \
 	done
+
 install-subdir:
 	@for DIR in ${SUBDIR}; do \
 	    echo "==> ${REL}$$DIR"; \
 	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ install); \
 	done
+
 deinstall-subdir:
 	@for DIR in ${SUBDIR}; do \
 	    echo "==> ${REL}$$DIR"; \
 	    (cd $$DIR && ${MAKE} REL=${REL}$$DIR/ deinstall); \
 	done
+
 regress-subdir:
 	@for DIR in ${SUBDIR}; do \
 	    echo "==> ${REL}$$DIR"; \
