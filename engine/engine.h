@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.78 2004/02/26 10:34:58 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.79 2004/03/10 16:58:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -58,6 +58,7 @@
 #include <compat/asprintf.h>
 #include <compat/vasprintf.h>
 #include <compat/strsep.h>
+#include <compat/math.h>
 
 #include <engine/loader/netbuf.h>
 #include <engine/loader/integral.h>
