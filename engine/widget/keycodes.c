@@ -68,6 +68,24 @@ const struct keycode textbox_keycodes[] = {
 	{ "i-bckquote",	SDLK_BACKQUOTE,	0,		textbox_insert_ascii },
 	{ "i-uscore",	SDLK_MINUS,	KMOD_SHIFT,	textbox_insert_ascii },
 	{ "i-minus",	SDLK_MINUS,	0,		textbox_insert_ascii },
+	{ "i-plus",	SDLK_EQUALS,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-equal",	SDLK_EQUALS,	0,		textbox_insert_ascii },
+	{ "i-lbraces",	SDLK_LEFTBRACKET, KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-lbrack",	SDLK_LEFTBRACKET, 0,		textbox_insert_ascii },
+	{ "i-rbraces",	SDLK_RIGHTBRACKET, KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-rbrack",	SDLK_RIGHTBRACKET, 0,		textbox_insert_ascii },
+	{ "i-pipe",	SDLK_BACKSLASH,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-bslash",	SDLK_BACKSLASH,	0,		textbox_insert_ascii },
+	{ "i-colon",	SDLK_SEMICOLON,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-scolon",	SDLK_SEMICOLON,	0,		textbox_insert_ascii },
+	{ "i-dquote",	SDLK_QUOTE,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-squote",	SDLK_QUOTE,	0,		textbox_insert_ascii },
+	{ "i-slash",	SDLK_SLASH,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-slash",	SDLK_SLASH,	0,		textbox_insert_ascii },
+	{ "i-less",	SDLK_COMMA,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-comma",	SDLK_COMMA,	0,		textbox_insert_ascii },
+	{ "i-greater",	SDLK_PERIOD,	KMOD_SHIFT,	textbox_insert_ascii },
+	{ "i-period",	SDLK_PERIOD,	0,		textbox_insert_ascii },
 	{ "i-space",	SDLK_SPACE,	0,		textbox_insert_ascii },
 	
 	/* Control characters */
@@ -168,11 +186,47 @@ textbox_insert_ascii(struct textbox *tbox, SDL_Event *ev)
 {
 	if (ev->key.keysym.mod & KMOD_SHIFT) {
 		switch (ev->key.keysym.sym) {
+		case SDLK_SPACE:
+			textbox_insert_char(tbox, ' ');
+			break;
+		case SDLK_COMMA:
+			textbox_insert_char(tbox, '<');
+			break;
+		case SDLK_PERIOD:
+			textbox_insert_char(tbox, '>');
+			break;
 		case SDLK_BACKQUOTE:
 			textbox_insert_char(tbox, '~');
 			break;
 		case SDLK_MINUS:
 			textbox_insert_char(tbox, '_');
+			break;
+		case SDLK_EQUALS:
+			textbox_insert_char(tbox, '+');
+			break;
+		case SDLK_LEFTBRACKET:
+			textbox_insert_char(tbox, '{');
+			break;
+		case SDLK_RIGHTBRACKET:
+			textbox_insert_char(tbox, '}');
+			break;
+		case SDLK_BACKSLASH:
+			textbox_insert_char(tbox, '|');
+			break;
+		case SDLK_SEMICOLON:
+			textbox_insert_char(tbox, ':');
+			break;
+		case SDLK_QUOTE:
+			textbox_insert_char(tbox, '"');
+			break;
+		case SDLK_COLON:
+			textbox_insert_char(tbox, '<');
+			break;
+		case SDLK_SLASH:
+			textbox_insert_char(tbox, '?');
+			break;
+		case SDLK_GREATER:
+			textbox_insert_char(tbox, '>');
 			break;
 		case SDLK_1:
 			textbox_insert_char(tbox, '!');
@@ -247,8 +301,7 @@ textbox_key_end(struct textbox *tbox, SDL_Event *ev)
 static void
 textbox_key_kill(struct textbox *tbox, SDL_Event *ev)
 {
-	tbox->text[0] = '\0';
-	tbox->textpos = 0;
+	tbox->text[tbox->textpos] = '\0';
 }
 
 static void
