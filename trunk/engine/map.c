@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.222 2004/04/10 04:55:14 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.223 2004/04/11 03:29:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1380,7 +1380,7 @@ map_edit(void *p)
 	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 
-	toolbar = toolbar_new(win, TOOLBAR_HORIZ, 2);
+	toolbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
 	toolbar_add_button(toolbar, 0, ICON(NEW_VIEW_ICON), 0, 0,
 	    create_view, "%p, %p", mv, win);
 
@@ -1389,6 +1389,7 @@ map_edit(void *p)
 	statusbar_add_label(statbar, LABEL_STATIC, ".");
 
 	mapview_init(mv, m, flags, toolbar, statbar);
+	mapview_reg_stdtools(mv);
 	mapview_reg_tool(mv, &stamp_tool, m);
 	mapview_reg_tool(mv, &eraser_tool, m);
 	mapview_reg_tool(mv, &magnifier_tool, m);
