@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.173 2003/06/11 22:27:23 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.174 2003/06/11 23:03:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -150,7 +150,6 @@ toolbar_window(struct window *tilesets_win)
 	return (win);
 }
 
-/* Initialize the map editor. */
 void
 mapedit_init(void)
 {
@@ -190,7 +189,6 @@ mapedit_init(void)
 	window_show(objedit_win);
 }
 
-/* Release resources allocated by the map editor. */
 void
 mapedit_destroy(void *p)
 {
@@ -205,7 +203,6 @@ mapedit_destroy(void *p)
 	}
 }
 
-/* Load the current tool states. */
 int
 mapedit_load(void *p, struct netbuf *buf)
 {
@@ -222,7 +219,6 @@ mapedit_load(void *p, struct netbuf *buf)
 	return (0);
 }
 
-/* Save the current tool states. */
 int
 mapedit_save(void *p, struct netbuf *buf)
 {
@@ -249,14 +245,13 @@ new_view(int argc, union evarg *argv)
 
 	win = window_new(NULL);
 	window_set_caption(win, "%s view", OBJECT(m)->name);
-
 	mapview_new(win, m, MAPVIEW_INDEPENDENT);
 	window_show(win);
 }
 
 /* Toggle mapview(3) options. */
 static void
-tog_mvoption(int argc, union evarg *argv)
+set_mapview_opt(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int opt = argv[2].i;
@@ -319,8 +314,8 @@ mapedit_window(struct map *m)
 			{ fileops_save_map,	MAPEDIT_TOOL_SAVE_MAP,	0, 0 },
 			{ fileops_clear_map,	MAPEDIT_TOOL_CLEAR_MAP,	0, 0 },
 			{ new_view,		MAPEDIT_TOOL_NEW_VIEW,	0, 0 },
-			{ tog_mvoption,		MAPEDIT_TOOL_GRID,	1, 1 },
-			{ tog_mvoption,		MAPEDIT_TOOL_PROPS,	1, 1 }
+			{ set_mapview_opt,	MAPEDIT_TOOL_GRID,	1, 1 },
+			{ set_mapview_opt,	MAPEDIT_TOOL_PROPS,	1, 1 }
 		};
 		const int nfileops = sizeof(fileops) / sizeof(fileops[0]);
 		struct button *bu;
@@ -347,7 +342,7 @@ mapedit_window(struct map *m)
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		event_new(bu, "button-pushed", set_mapview_opt, "%p, %i", mv,
 		    MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
 		
@@ -355,7 +350,7 @@ mapedit_window(struct map *m)
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		event_new(bu, "button-pushed", set_mapview_opt, "%p, %i", mv,
 		    MAPEDIT_TOOL_LAYEDIT);
 		mv->layed.trigger = bu;
 

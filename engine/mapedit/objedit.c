@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.8 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.9 2003/06/10 19:13:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -52,10 +52,8 @@ create_obj(int argc, union evarg *argv)
 	void *nobj;
 	int i;
 
-	if ((parent_it = tlist_item_selected(objs_tl)) == NULL) {
-		text_msg("Error", "No parent object selected");
-		return;
-	}
+	if ((parent_it = tlist_item_selected(objs_tl)) == NULL)
+		parent_it = tlist_item_first(objs_tl);
 
 	textbox_copy_string(type_tb, type, sizeof(type));
 	if (type[0] == '\0') {
@@ -99,8 +97,12 @@ edit_objs(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		if (ob->ops->edit != NULL)
+		if (ob->ops->edit != NULL) {
 			ob->ops->edit(ob);
+		} else {
+			text_msg("Error", "%s objects have no edit op",
+			    ob->type);
+		}
 	}
 }
 
@@ -114,7 +116,7 @@ destroy_objs(int argc, union evarg *argv)
 	TAILQ_FOREACH(it, &tl->items, items) {
 		struct object *ob = it->p1;
 
-		if (!it->selected)
+		if (!it->selected || it->p1 == world)
 			continue;
 
 		object_detach(ob->parent, ob);
@@ -153,25 +155,6 @@ poll_objs(int argc, union evarg *argv)
 	unlock_linkage();
 }
 
-/* Enable/disable the operation buttons in response to selection changes. */
-static void
-select_objs(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[1].p;
-	struct button *destroy_bu = argv[2].p;
-	struct tlist_item *it;
-	
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected)
-			break;
-	}
-	if (it == NULL) {
-		button_disable(destroy_bu);
-	} else {
-		button_enable(destroy_bu);
-	}
-}
-
 /* Create the object editor window. */
 struct window *
 objedit_window(void)
@@ -208,16 +191,15 @@ objedit_window(void)
 			create_bu = button_new(hb, "Create");
 			edit_bu = button_new(hb, "Edit");
 			destroy_bu = button_new(hb, "Destroy");
-			button_disable(destroy_bu);
 		}
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
 	
-	event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
-	event_new(objs_tl, "tlist-changed", select_objs, "%p, %p", objs_tl,
-	    destroy_bu);
 	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p", objs_tl,
 	    name_tb, types_com->tbox);
+	event_new(types_com->tbox, "textbox-return", create_obj, "%p, %p, %p",
+	    objs_tl, name_tb, types_com->tbox);
 	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p", objs_tl,
 	    name_tb, types_com->tbox);
 	event_new(edit_bu, "button-pushed", edit_objs, "%p", objs_tl);
