@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.137 2003/01/27 00:34:30 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.138 2003/01/27 02:20:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -52,6 +52,7 @@ static const struct object_ops map_ops = {
 #define DEBUG_NODEREFS	0x02
 
 int	map_debug = DEBUG_STATE;
+int	map_nodesigs = 0;
 #define engine_debug map_debug
 #endif
 
@@ -65,8 +66,6 @@ node_init(struct node *node, int x, int y)
 #endif
 	TAILQ_INIT(&node->nrefs);
 	node->flags = 0;
-	node->v1 = 0;
-	node->nanims = 0;
 }
 
 void
@@ -361,7 +360,8 @@ node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint32 flags)
 	}
 #endif
 	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
-	node->nanims++;					/* Optimization */
+
+	node->flags |= NODE_HAS_ANIM;			/* Optimization */
 	return (nref);
 }
 
@@ -391,6 +391,19 @@ node_add_warp(struct node *node, char *mapname, Uint32 x, Uint32 y, Uint8 dir)
 	return (nref);
 }
 
+/* Check whether a node points to at least one animation. */
+static __inline__ int
+node_has_anim(struct node *node)
+{
+	struct noderef *nref;
+
+	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+		if (nref->type == NODEREF_ANIM)
+			break;
+	}
+	return (nref != NULL ? 1 : 0);
+}
+
 /*
  * Move a node reference from one node to another, at the tail of the queue.
  * The map(s) containing the source/destination nodes must be locked.
@@ -403,8 +416,10 @@ node_move_ref(struct noderef *nref, struct node *src_node,
 	TAILQ_INSERT_TAIL(&dst_node->nrefs, nref, nrefs);
 
 	if (nref->type == NODEREF_ANIM) {		/* Optimization */
-		src_node->nanims--;
-		dst_node->nanims++;
+		if (!node_has_anim(src_node)) {
+			src_node->flags &= ~(NODE_HAS_ANIM);
+		}
+		dst_node->flags |= NODE_HAS_ANIM;
 	}
 }
 
@@ -462,14 +477,14 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
 void
 node_remove_ref(struct node *node, struct noderef *nref)
 {
-	if (nref->type == NODEREF_ANIM) {		/* Optimization */
-		node->nanims--;
-	}
-
 	TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-	
+
 	noderef_destroy(nref);
 	free(nref);
+	
+	if (!node_has_anim(node)) {			/* Optimization */
+		node->flags &= ~(NODE_HAS_ANIM);
+	}
 }
 
 void
@@ -604,7 +619,7 @@ node_load(int fd, struct object_table *deps, struct node *node)
 	
 	/* Load the node properties. */
 	node->flags = read_uint32(fd);
-	node->v1 = read_uint32(fd);
+	read_uint32(fd);			/* Pad: v1 */
 	
 	/* Load the node references. */
 	nrefs = read_uint32(fd);
@@ -749,7 +764,7 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 	
 	/* Save the node properties. */
 	buf_write_uint32(buf, node->flags & ~(NODE_EPHEMERAL));
-	buf_write_uint32(buf, node->v1);
+	buf_write_uint32(buf, 0);			/* Pad: v1 */
 
 	/* Save the node references. */
 	nrefs_offs = buf->offs;
@@ -867,7 +882,7 @@ map_verify(struct map *m)
 #endif	/* DEBUG */
 
 static __inline__ void
-node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
+noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
 {
 	int x, y, dh, dw, sx, sy;
 	Uint8 *src, r1, g1, b1, a1;
@@ -908,49 +923,46 @@ node_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
  * Render a map node.
  * Map must be locked.
  */
-void
-node_draw(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
+__inline__ void
+noderef_draw(struct map *m, struct noderef *nref, Sint16 rx, Sint16 ry)
 {
-	struct noderef *nref;
 	SDL_Rect rd;
 	SDL_Surface *su;
 	
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		switch (nref->type) {
-		case NODEREF_SPRITE:
-			su = SPRITE(nref->pobj, nref->offs);
-			break;
-		case NODEREF_ANIM:
-			{
-				struct art_anim *anim;
+	switch (nref->type) {
+	case NODEREF_SPRITE:
+		su = SPRITE(nref->pobj, nref->offs);
+		break;
+	case NODEREF_ANIM:
+		{
+			struct art_anim *anim;
 			
-				anim = ANIM(nref->pobj, nref->offs);
-				if (anim == NULL) {
-					fatal("bad anim: %s:%d\n",
-					    nref->pobj->name, nref->offs);
-				}
-				su = anim->frames[anim->frame];
-			
-				/* XXX do this somewhere else! */
-				art_anim_tick(anim, nref);
+			anim = ANIM(nref->pobj, nref->offs);
+			if (anim == NULL) {
+				fatal("bad anim\n");
 			}
-			break;
-		default:				/* Not a drawable */
-			continue;
+			su = anim->frames[anim->frame];
+			
+			/* XXX do this somewhere else! */
+			art_anim_tick(anim, nref);
 		}
+		break;
+	default:				/* Not a drawable */
+		return;
+	}
 		
-		if (m->zoom != 100) {
-			rd.x = rx + (nref->xcenter * m->zoom / 100) +
-			    (nref->xmotion * m->zoom / 100);
-			rd.y = ry + (nref->ycenter * m->zoom / 100) +
-			    (nref->ymotion * m->zoom / 100);
-			node_draw_scaled(m, su, rd.x, rd.y);
-		} else {
-			rd.x = rx + nref->xcenter + nref->xmotion;
-			rd.y = ry + nref->ycenter + nref->ymotion;
+	if (m->zoom != 100) {
+		rd.x = rx + (nref->xcenter * m->zoom / 100) +
+		    (nref->xmotion * m->zoom / 100);
+		rd.y = ry + (nref->ycenter * m->zoom / 100) +
+		    (nref->ymotion * m->zoom / 100);
 
-			SDL_BlitSurface(su, NULL, view->v, &rd);
-		}
+		noderef_draw_scaled(m, su, rd.x, rd.y);
+	} else {
+		rd.x = rx + nref->xcenter + nref->xmotion;
+		rd.y = ry + nref->ycenter + nref->ymotion;
+
+		SDL_BlitSurface(su, NULL, view->v, &rd);
 	}
 }
 
