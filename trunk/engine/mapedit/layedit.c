@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.9 2003/05/24 15:49:39 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.10 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -200,9 +200,11 @@ layedit_init(struct mapview *mv)
 	if (win == NULL)
 		return;
 	window_set_caption(win, "%s layers", OBJECT(m)->name);
+	window_set_spacing(win, 2);
 	event_new(win, "window-close", layedit_close_win, "%p", mv);
 	
 	hb = hbox_new(win, HBOX_WFILL);
+	hbox_set_padding(hb, 0);
 	{
 		struct textbox *tb;
 		struct button *bu;
@@ -216,6 +218,7 @@ layedit_init(struct mapview *mv)
 	}
 
 	hb = hbox_new(win, HBOX_WFILL);
+	hbox_set_padding(hb, 0);
 	{
 		struct button *bu;
 
@@ -230,6 +233,7 @@ layedit_init(struct mapview *mv)
 	}
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
+	hbox_set_padding(hb, 0);
 	{
 		struct button *bu;
 
@@ -242,6 +246,7 @@ layedit_init(struct mapview *mv)
 	}
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_DBLCLICK);
+	tlist_prescale(tl, "Layer NN (visible, editing)    ", 5);
 	event_new(tl, "tlist-poll", layedit_poll, "%p", mv);
 	event_new(tl, "tlist-changed", layedit_select, "%p, %p", mv, rename_tb);
 	event_new(tl, "tlist-dblclick", layedit_edit, "%p", mv);
