@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.132 2005/02/03 07:28:51 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.133 2005/02/03 09:09:57 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -163,7 +163,8 @@ save_config(int argc, union evarg *argv)
 	if (object_save(config) == -1)
 		text_msg(MSG_ERROR, "%s", error_get());
 
-	text_msg(MSG_INFO, _("The configuration settings have been saved."));
+	text_tmsg(MSG_INFO, 750,
+	    _("Configuration settings saved successfully."));
 }
 
 void
