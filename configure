@@ -194,12 +194,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -231,12 +232,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -268,12 +270,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -307,12 +310,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -344,12 +348,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -381,12 +386,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -418,12 +424,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -461,12 +468,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -515,12 +523,13 @@ compile="ok"
 echo "$CC -o conftest conftest.c" >> config.log
 $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
-	echo "-> failed: compiler had non-zero exit status" >> config.log
+	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
-	echo "-> failed: compiler did not produce an executable" >> config.log
-	compile="failed"
+else
+    if [ ! -e "conftest" ]; then
+	    echo "-> failed: compiler did not produce an executable" >> config.log
+	    compile="failed"
+    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
