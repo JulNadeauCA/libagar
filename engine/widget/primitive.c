@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.36 2003/03/03 05:15:32 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.37 2003/03/09 03:00:26 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -85,39 +85,37 @@ alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
 static __inline__ void
 put_pixel1(Uint8 *dst, Uint32 color, int x, int y)
 {
-	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y)) {
-		return;
-	}
-
-	switch (view->v->format->BytesPerPixel) {
+	if (VIEW_INSIDE_CLIP_RECT(view->v, x, y)) {
+		switch (view->v->format->BytesPerPixel) {
 #ifdef VIEW_8BPP
-	case 1:
-		*dst = color;
-		break;
+		case 1:
+			*dst = color;
+			break;
 #endif
 #ifdef VIEW_16BPP
-	case 2:
-		*(Uint16 *)dst = color;
-		break;
+		case 2:
+			*(Uint16 *)dst = color;
+			break;
 #endif
 #ifdef VIEW_24BPP
-	case 3:
+		case 3:
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		dst[0] = (color >> 16)	& 0xff;
-		dst[1] = (color >> 8)	& 0xff;
-		dst[2] = color		& 0xff;
+			dst[0] = (color >> 16)	& 0xff;
+			dst[1] = (color >> 8)	& 0xff;
+			dst[2] = color		& 0xff;
 # else
-		dst[0] = color		& 0xff;
-		dst[1] = (color >> 8)	& 0xff;
-		dst[2] = (color >> 16)	& 0xff;
+			dst[0] = color		& 0xff;
+			dst[1] = (color >> 8)	& 0xff;
+			dst[2] = (color >> 16)	& 0xff;
 # endif
-		break;
+			break;
 #endif
 #ifdef VIEW_32BPP
-	case 4:
-		*(Uint32 *)dst = color;
-		break;
+		case 4:
+			*(Uint32 *)dst = color;
+			break;
 #endif
+		}
 	}
 }
 
@@ -126,43 +124,70 @@ static __inline__ void
 put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
     Uint32 color)
 {
-	if (!VIEW_INSIDE_CLIP_RECT(view->v, x1, y1) ||
-	    !VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
-		return;
-	}
-
-	switch (view->v->format->BytesPerPixel) {
+	if (VIEW_INSIDE_CLIP_RECT(view->v, x1, y1)) {
+		switch (view->v->format->BytesPerPixel) {
 #ifdef VIEW_8BPP
-	case 1:
-		*dst1 = color;
-		*dst2 = color;
-		break;
+		case 1:
+			*dst1 = color;
+			break;
 #endif
 #ifdef VIEW_16BPP
-	case 2:
-		*(Uint16 *)dst1 = color;
-		*(Uint16 *)dst2 = color;
-		break;
+		case 2:
+			*(Uint16 *)dst1 = color;
+			break;
 #endif
 #ifdef VIEW_24BPP
-	case 3:
+		case 3:
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		dst1[0] = (color >> 16)	& 0xff;
-		dst1[1] = (color >> 8)	& 0xff;
-		dst1[2] = color		& 0xff;
+			dst1[0] = (color >> 16)	& 0xff;
+			dst1[1] = (color >> 8)	& 0xff;
+			dst1[2] = color		& 0xff;
 # else
-		dst1[0] = color		& 0xff;
-		dst1[1] = (color >> 8)	& 0xff;
-		dst1[2] = (color >> 16)	& 0xff;
+			dst1[0] = color		& 0xff;
+			dst1[1] = (color >> 8)	& 0xff;
+			dst1[2] = (color >> 16)	& 0xff;
 # endif
-		break;
+			break;
 #endif
 #ifdef VIEW_32BPP
-	case 4:
-		*(Uint32 *)dst1 = color;
-		*(Uint32 *)dst2 = color;
-		break;
+		case 4:
+			*(Uint32 *)dst1 = color;
+			break;
 #endif
+		}
+	}
+
+	if (VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
+		switch (view->v->format->BytesPerPixel) {
+#ifdef VIEW_8BPP
+		case 1:
+			*dst2 = color;
+			break;
+#endif
+#ifdef VIEW_16BPP
+		case 2:
+			*(Uint16 *)dst2 = color;
+			break;
+#endif
+#ifdef VIEW_24BPP
+		case 3:
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			dst2[0] = (color >> 16)	& 0xff;
+			dst2[1] = (color >> 8)	& 0xff;
+			dst2[2] = color		& 0xff;
+# else
+			dst2[0] = color		& 0xff;
+			dst2[1] = (color >> 8)	& 0xff;
+			dst2[2] = (color >> 16)	& 0xff;
+# endif
+			break;
+#endif
+#ifdef VIEW_32BPP
+		case 4:
+			*(Uint32 *)dst2 = color;
+			break;
+#endif
+		}
 	}
 }
 
@@ -311,10 +336,11 @@ circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
 static void
 line_bresenham(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
 {
-	int dx, dy, dpr, dpru, p, xyinc;
+	int dx, dy, dpr, dpru, p;
 	int x1, x2, y1, y2;
 	int xinc = view->v->format->BytesPerPixel;
 	int yinc = view->v->pitch;
+	int xyinc = xinc + yinc;
 	Uint8 *fb1, *fb2;
 
 	x1 = px1 + WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
@@ -322,35 +348,25 @@ line_bresenham(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
 	x2 = px2 + WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
 	y2 = py2 + WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
 
+	if (x1 > x2) {		/* Swap inverse X coords */
+		dx = x1;
+		x1 = x2;
+		x2 = dx;
+	}
+	if (y1 > y2) {		/* Swap inverse Y coords */
+		dx = y1;
+		y1 = y2;
+		y2 = dx;
+	}
+	dx = x2 - x1;
+	dy = y2 - y1;
+
 	fb1 = (Uint8 *)view->v->pixels +
 	    y1*view->v->pitch +
 	    x1*view->v->format->BytesPerPixel;
-
 	fb2 = (Uint8 *)view->v->pixels +
 	    y2*view->v->pitch +
 	    x2*view->v->format->BytesPerPixel;
-
-	/* Swap inverse coordinates. */
-	dx = x2 - x1;
-	if (dx < 0) {
-		int ox1 = x1;
-
-		x1 = x2;
-		x2 = ox1;
-		xinc = -view->v->format->BytesPerPixel;
-		dx = -dx;
-	}
-	dy = y2 - y1;
-	if (dy < 0) {
-		int oy1 = y1;
-
-		y1 = y2;
-		y2 = oy1;
-		yinc = -view->v->pitch;
-		dy = -dy;
-	}
-
-	xyinc = xinc + yinc;
 
 	SDL_LockSurface(view->v);
 
@@ -474,13 +490,6 @@ static void
 rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
-
-	if (x > wid->w || y > wid->h)
-		return;
-	if (x+w > wid->w)
-		w = wid->w-x;
-	if (y+h > wid->h)
-		h = wid->h-y;
 
 	primitives.line(wid,		/* Top */
 	    x, y,
