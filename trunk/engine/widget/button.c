@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.3 2002/04/22 04:37:38 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.4 2002/04/23 07:24:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -170,7 +170,7 @@ button_event(void *p, SDL_Event *ev, Uint32 flags)
 		b->flags &= ~(BUTTON_PRESSED);
 		WIDGET(b)->win->redraw++;
 		if (b->push != NULL)
-			b->push(b, ev->button.button);
+			b->push(b);
 		break;
 	}
 }
