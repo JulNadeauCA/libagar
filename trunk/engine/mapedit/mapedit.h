@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.82 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.83 2003/06/18 00:47:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -27,12 +27,30 @@ enum {
 	MAPEDIT_NTOOLS
 };
 
+struct mapedit_tileset {
+	struct object	*obj;		/* Source gfx object */
+	struct map	*map;		/* Tileset mini map */
+	struct window	*win;		/* Tileset window */
+	struct window	*import_win;	/* Graphics import window */
+	struct mapview	*mv;		/* Tileset view */
+	TAILQ_ENTRY(mapedit_tileset) tilesets;
+};
+
+struct mapedit_win {
+	struct object	*obj;		/* Object being edited */
+	struct window	*win;		/* Edition window */
+	TAILQ_ENTRY(mapedit_win) wins;
+};
+
 struct mapedit {
 	struct object	obj;
 	struct tool	*tools[MAPEDIT_NTOOLS];	/* Map edition tools */
 	struct tool	*curtool;		/* Selected tool */
 	struct node	*src_node;		/* Selected source node */
 	struct map	 copybuf;		/* Copy/paste buffer */
+	struct object	*pseudo;		/* Pseudo object (for deps) */
+	TAILQ_HEAD(,mapedit_tileset) tilesets;	/* Tilesets in use */
+	TAILQ_HEAD(,mapedit_map) maps;		/* Maps in use */
 };
 
 /* Bitmaps */
@@ -86,16 +104,11 @@ extern int		mapedition;
 
 __BEGIN_DECLS
 void	 mapedit_init(void);
-void	 mapedit_destroy(void *);
 int	 mapedit_load(void *, struct netbuf *);
 int	 mapedit_save(void *, struct netbuf *);
 
 struct window	*tilesets_window(void);
 struct window	*objedit_window(void);
-void		 fileops_save_map(int, union evarg *);
-void		 fileops_revert_map(int, union evarg *);
-void		 fileops_clear_map(int, union evarg *);
-struct window	*mapedit_window(struct map *);
 __END_DECLS
 
 #include "close_code.h"

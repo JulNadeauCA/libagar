@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.4 2003/06/13 02:50:01 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.5 2003/07/05 12:19:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -110,7 +110,6 @@ box_scale(void *p, int w, int h)
 	int totfixed = 0;
 
 	pthread_mutex_lock(&bo->lock);
-	lock_linkage();
 	
 	/* Count the child widgets. */
 	OBJECT_FOREACH_CHILD(wid, bo, widget) {
@@ -294,7 +293,6 @@ box_scale(void *p, int w, int h)
 		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 	}
 out:
-	unlock_linkage();
 	pthread_mutex_unlock(&bo->lock);
 }
 

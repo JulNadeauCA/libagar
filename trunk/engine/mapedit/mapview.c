@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.125 2003/06/30 06:39:42 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.126 2003/07/01 04:56:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,7 +47,8 @@
 const struct widget_ops mapview_ops = {
 	{
 		NULL,		/* init */
-		widget_destroy,
+		NULL,		/* reinit */
+		mapview_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
@@ -124,8 +125,11 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 {
 	widget_init(mv, "mapview", &mapview_ops,
 	    WIDGET_FOCUSABLE|WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
-	if (gfx_fetch(mv, "/engine/mapedit/mapview/mapview") == -1)
+
+	if (gfx_fetch(mv, "/engine/mapedit/mapview/mapview") == -1) {
 		fatal("%s", error_get());
+	}
+	gfx_wire(OBJECT(mv)->gfx);
 
 	mv->flags = (flags | MAPVIEW_CENTER);
 	mv->mw = 0;					/* Set on scale */
@@ -138,12 +142,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	mv->mouse.centering = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
-
-	mv->constr.x = 0;
-	mv->constr.y = 0;
-	mv->constr.win = NULL;
-	mv->constr.replace = 1;
-	mv->constr.trigger = NULL;
 
 	mv->nodeed.trigger = NULL;
 	mv->layed.trigger = NULL;
@@ -190,7 +188,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	}
 	pthread_mutex_unlock(&m->lock);
 
-	/* The map editor is required for tile maps/edition. */
+	/* The map editor is required for tilesets/edition. */
 	if (!mapedition && (mv->flags & (MAPVIEW_TILESET|MAPVIEW_EDIT)))
 		fatal("no map editor");
 
@@ -212,8 +210,21 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 
-	nodeedit_init(mv);
-	layedit_init(mv);
+	if (mapedition) {
+		nodeedit_init(mv);
+		layedit_init(mv);
+	}
+}
+
+void
+mapview_destroy(void *p)
+{
+	struct mapview *mv = p;
+
+	if (mapedition) {
+		view_detach(mv->nodeed.win);
+		view_detach(mv->layed.win);
+	}
 }
 
 /*
@@ -237,7 +248,7 @@ mapview_map_coords(struct mapview *mv, int *x, int *y)
 		mv->cy = -1;
 }
 
-__inline__ void
+void
 mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
     int mx, int my)
 {
@@ -474,15 +485,6 @@ draw_layer:
 
 			/* Indicate the source node selection. XXX selection? */
 			if ((mv->flags & MAPVIEW_TILESET)) {
-				/* Construction origin. XXX ugly */
-				if (mv->constr.x == mx && mv->constr.y == my) {
-					primitives.frame(mv,
-					    rx + 2,
-					    ry + 2,
-					    mv->map->tilew - 3,
-					    mv->map->tileh - 3,
-					    TSETORIG_COLOR);
-				}
 				/* Source node? XXX use selections */
 				if (node == mapedit.src_node) {
 					primitives.rect_outlined(mv,
@@ -729,13 +731,8 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 		}
 	}
 	if (mv->flags & MAPVIEW_TILESET) {
-		if ((SDL_GetModState() & KMOD_CTRL)) {	/* XXX ugly */
-			mv->constr.x = mv->cx;
-			mv->constr.y = mv->cy;
-		}
-		if (!TAILQ_EMPTY(&curnode->nrefs)) {
+		if (!TAILQ_EMPTY(&curnode->nrefs))
 			mapedit.src_node = curnode;
-		}
 	}
 out:
 	pthread_mutex_unlock(&mv->map->lock);

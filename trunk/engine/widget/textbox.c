@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.66 2003/06/15 21:34:21 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.67 2003/06/25 10:31:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 const struct widget_ops textbox_ops = {
 	{
 		NULL,		/* init */
+		NULL,		/* reinit */
 		textbox_destroy,
 		NULL,		/* load */
 		NULL,		/* save */

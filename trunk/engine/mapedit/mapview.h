@@ -1,25 +1,17 @@
-/*	$Csoft: mapview.h,v 1.44 2003/06/13 22:45:05 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.45 2003/06/18 00:47:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
 #define _AGAR_MAPEDIT_MAPVIEW_H_
 
+#include <engine/map.h>
+
 #include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/button.h>
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
 
 #include "begin_code.h"
-
-/* For construction of source tile maps. */
-struct mapview_constr {
-	int		 x, y;		/* Current position */
-	struct window	*win;		/* Source tiles window */
-	int		 replace;	/* Replace mode? */
-	struct button	*trigger;
-};
 
 struct mapview {
 	struct widget wid;
@@ -74,7 +66,6 @@ struct mapview {
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
 
-	struct mapview_constr	constr;	/* Source tile mapping */
 	struct nodeedit		nodeed;	/* Node editor */
 	struct layedit		layed;	/* Layer editor */
 };

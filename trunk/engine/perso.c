@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.32 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.33 2003/06/21 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -49,6 +49,7 @@ const struct version perso_ver = {
 
 const struct object_ops perso_ops = {
 	perso_init,
+	NULL,
 	perso_destroy,
 	perso_load,
 	perso_save,
@@ -155,16 +156,15 @@ perso_save(void *obj, struct netbuf *buf)
 	return (0);
 }
 
-void
+struct window *
 perso_edit(void *obj)
 {
 	struct perso *pers = obj;
 	struct window *win;
 	struct vbox *vb;
 
-	if ((win = window_new("perso-edit-%s", OBJECT(pers)->name)) == NULL)
-		return;
-	window_set_caption(win, _("%s personage"), OBJECT(pers)->name);
+	win = window_new(NULL);
+	window_set_caption(win, _("%s character"), OBJECT(pers)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
@@ -214,5 +214,5 @@ perso_edit(void *obj)
 			    &pers->maxmp);
 		}
 	}
-	window_show(win);
+	return (win);
 }

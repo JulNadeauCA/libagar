@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.35 2003/06/17 23:30:45 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.36 2003/06/29 11:33:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 const struct tool_ops eraser_ops = {
 	{
 		NULL,		/* init */
+		NULL,		/* reinit */
 		tool_destroy,
 		NULL,		/* load */
 		NULL,		/* save */

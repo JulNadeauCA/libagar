@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.32 2003/06/21 06:50:18 vedge Exp $
+.\"	$Csoft: agar.3,v 1.33 2003/06/25 00:26:13 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,7 +42,7 @@ is a high-level, cross-platform C application framework aimed primarly at
 .Sh OBJECT DESIGN
 .Nm
 games/simulations are built around a tree of
-.Xr object
+.Xr object 3
 structures.
 .Pp
 Generic
@@ -80,7 +80,8 @@ When
 .Fn object_load
 is next invoked on
 .Sq /world/village ,
-those objects will be allocated and initialized from scratch.
+the existing objects will be reinitialized/loaded, and saved objects without
+match are allocated and initialized from scratch.
 .Pp
 In this example, the character,
 .Pa /world/village/jephre ,

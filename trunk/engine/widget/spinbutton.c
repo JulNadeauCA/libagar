@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.2 2003/06/10 07:59:15 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.3 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 static struct widget_ops spinbutton_ops = {
 	{
 		NULL,			/* init */
+		NULL,			/* reinit */
 		spinbutton_destroy,
 		NULL,			/* load */
 		NULL,			/* save */
@@ -168,7 +169,6 @@ spinbutton_destroy(void *p)
 	struct spinbutton *sbu = p;
 
 	pthread_mutex_destroy(&sbu->lock);
-
 	widget_destroy(sbu);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.31 2003/06/09 00:03:02 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.32 2003/06/17 23:30:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 const struct tool_ops magnifier_ops = {
 	{
 		NULL,		/* init */
+		NULL,		/* reinit */
 		tool_destroy,
 		NULL,		/* load */
 		NULL,		/* save */

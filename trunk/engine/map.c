@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.182 2003/06/21 06:50:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.183 2003/06/29 11:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -31,36 +31,31 @@
 #include <engine/config.h>
 #include <engine/view.h>
 
+#ifdef EDITION
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/box.h>
+#include <engine/widget/label.h>
 
 #include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
+#endif
 
 const struct version map_ver = {
 	"agar map",
-	4, 4
+	5, 0
 };
 
 const struct object_ops map_ops = {
 	map_init,
+	map_reinit,
 	map_destroy,
 	map_load,
 	map_save,
+#ifdef EDITION
 	map_edit
+#endif
 };
-
-#ifdef DEBUG
-#define DEBUG_STATE	0x01
-#define DEBUG_NODEREFS	0x02
-#define DEBUG_RESIZE	0x04
-#define DEBUG_SCAN	0x08
-
-int	map_debug = DEBUG_STATE|DEBUG_RESIZE;
-int	map_nodesigs = 1;
-#define engine_debug map_debug
-#endif /* DEBUG */
-
-static void	 map_layer_init(struct map_layer *lay, const char *);
 
 void
 node_init(struct node *node)
@@ -207,8 +202,6 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 	struct map tm;
 	int x, y;
 
-	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
-
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
 		error_set("size exceeds %ux%u", MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
 		return (-1);
@@ -293,6 +286,16 @@ map_new(void *parent, const char *name)
 	return (m);
 }
 
+static void
+map_layer_init(struct map_layer *lay, const char *name)
+{
+	strlcpy(lay->name, name, sizeof(lay->name));
+	lay->visible = 1;
+	lay->xinc = 1;
+	lay->yinc = 1;
+	lay->alpha = SDL_ALPHA_OPAQUE;
+}
+
 void
 map_init(void *obj, const char *name)
 {
@@ -317,16 +320,6 @@ map_init(void *obj, const char *name)
 	m->nlayers = 1;
 	map_layer_init(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
-}
-
-static void
-map_layer_init(struct map_layer *lay, const char *name)
-{
-	strlcpy(lay->name, name, sizeof(lay->name));
-	lay->visible = 1;
-	lay->xinc = 1;
-	lay->yinc = 1;
-	lay->alpha = SDL_ALPHA_OPAQUE;
 }
 
 /* Create a new layer. */
@@ -459,8 +452,8 @@ node_move_ref(struct map *sm, struct node *sn, struct noderef *r,
  * the copy with dlayer (or the original layer, if dlayer is -1).
  */
 void
-node_copy(struct map *sm, struct node *sn, int slayer, struct map *dm,
-    struct node *dn, int dlayer)
+node_copy(struct map *sm, struct node *sn, int slayer,
+    struct map *dm, struct node *dn, int dlayer)
 {
 	struct noderef *sr;
 
@@ -484,7 +477,8 @@ node_copy(struct map *sm, struct node *sn, int slayer, struct map *dm,
  * Both the source and destination maps must be locked.
  */
 struct noderef *
-node_copy_ref(struct noderef *sr, struct map *dm, struct node *dn, int dlayer)
+node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
+    int dlayer)
 {
 	struct transform *trans;
 	struct noderef *dr = NULL;
@@ -617,26 +611,22 @@ node_movehead_ref(struct node *node, struct noderef *r)
 }
 
 void
-map_destroy(void *p)
+map_reinit(void *p)
 {
 	struct map *m = p;
-
+	
 	if (m->map != NULL)
 		map_free_nodes(m);
 	if (m->layers != NULL)
 		map_free_layers(m);
-
-	pthread_mutex_destroy(&m->lock);
 }
 
 void
-map_edit(void *p)
+map_destroy(void *p)
 {
 	struct map *m = p;
-	struct window *win;
 
-	win = mapedit_window(m);
-	window_show(win);
+	pthread_mutex_destroy(&m->lock);
 }
 
 /*
@@ -644,8 +634,8 @@ map_edit(void *p)
  * The map must be locked.
  */
 int
-noderef_load(struct map *m, struct netbuf *buf, struct object_table *deps,
-    struct node *node, struct noderef **r)
+noderef_load(struct map *m, struct netbuf *buf, struct node *node,
+    struct noderef **r)
 {
 	enum noderef_type type;
 	Uint32 ntrans = 0;
@@ -662,66 +652,47 @@ noderef_load(struct map *m, struct netbuf *buf, struct object_table *deps,
 	switch (type) {
 	case NODEREF_SPRITE:
 		{
-			Uint32 obji, offs;
+			Uint32 ind, offs;
 			Sint16 xcenter, ycenter;
+			struct object *pobj;
 
-			obji = read_uint32(buf);		/* Object# */
-			if (obji > deps->nobjs) {
-				error_set("bad sprite obj#");
-				return (-1);
-			}
-			offs = read_uint32(buf);		/* Sprite# */
+			ind = read_uint32(buf);
+			offs = read_uint32(buf);
 			xcenter = read_sint16(buf);
 			ycenter = read_sint16(buf);
 
-			debug(DEBUG_NODEREFS,
-			    "sprite: obj[%u]:%u, center %d,%d\n",
-			    obji, offs, xcenter, ycenter);
-
-			if (deps->objs[obji] != NULL) {
-				*r = node_add_sprite(m, node, deps->objs[obji],
-				    offs);
-				(*r)->flags = flags;
-				(*r)->layer = layer;
-				(*r)->r_gfx.xcenter = xcenter;
-				(*r)->r_gfx.ycenter = ycenter;
-			} else {
-				error_set("missing sprite dep");
+			if ((pobj = object_find_dep(m, ind)) == NULL) {
+				error_set("missing sprite dep %u", ind);
 				return (-1);
 			}
+			*r = node_add_sprite(m, node, pobj, offs);
+			(*r)->flags = flags;
+			(*r)->layer = layer;
+			(*r)->r_gfx.xcenter = xcenter;
+			(*r)->r_gfx.ycenter = ycenter;
 		}
 		break;
 	case NODEREF_ANIM:
 		{
-			Uint32 obji, offs, animflags;
+			Uint32 ind, offs, aflags;
 			Sint16 xcenter, ycenter;
+			struct object *pobj;
 
-			obji = read_uint32(buf);
-			if (obji > deps->nobjs) {
-				error_set("bad anim obj#");
-				return (-1);
-			}
+			ind = read_uint32(buf);
 			offs = read_uint32(buf);
 			xcenter = read_sint16(buf);
 			ycenter = read_sint16(buf);
-			animflags = read_uint32(buf);
-
-			if (deps->objs[obji] != NULL) {
-				debug(DEBUG_NODEREFS,
-				    "anim: %s:%u, center %d,%d, aflags 0x%X\n",
-				    deps->objs[obji]->name, offs,
-				    xcenter, ycenter, animflags);
-
-				*r = node_add_anim(m, node, deps->objs[obji],
-				    offs, animflags);
-				(*r)->flags = flags;
-				(*r)->layer = layer;
-				(*r)->r_gfx.xcenter = xcenter;
-				(*r)->r_gfx.ycenter = ycenter;
-			} else {
-				error_set("missing anim dep");
+			aflags = read_uint32(buf);
+			
+			if ((pobj = object_find_dep(m, ind)) == NULL) {
+				error_set("missing anim dep %u", ind);
 				return (-1);
 			}
+			*r = node_add_anim(m, node, pobj, offs, aflags);
+			(*r)->flags = flags;
+			(*r)->layer = layer;
+			(*r)->r_gfx.xcenter = xcenter;
+			(*r)->r_gfx.ycenter = ycenter;
 		}
 		break;
 	case NODEREF_WARP:
@@ -743,8 +714,6 @@ noderef_load(struct map *m, struct netbuf *buf, struct object_table *deps,
 				return (-1);
 			}
 			dir = read_uint8(buf);
-			debug(DEBUG_NODEREFS, "warp: to %s:%d,%d, dir 0x%x\n",
-			    map_id, ox, oy, dir);
 
 			*r = node_add_warp(m, node, map_id, ox, oy, dir);
 			(*r)->flags = flags;
@@ -782,8 +751,7 @@ fail:
 }
 
 int
-node_load(struct map *m, struct netbuf *buf, struct object_table *deps,
-    struct node *node)
+node_load(struct map *m, struct netbuf *buf, struct node *node)
 {
 	Uint32 nrefs;
 	struct noderef *r;
@@ -794,7 +762,7 @@ node_load(struct map *m, struct netbuf *buf, struct object_table *deps,
 		return (-1);
 	}
 	for (i = 0; i < nrefs; i++) {
-		if (noderef_load(m, buf, deps, node, &r) == -1) {
+		if (noderef_load(m, buf, node, &r) == -1) {
 			node_destroy(m, node);
 			node_init(node);
 			return (-1);
@@ -817,7 +785,6 @@ int
 map_load(void *ob, struct netbuf *buf)
 {
 	struct map *m = ob;
-	struct object_table deps;
 	struct version ver;
 	Uint32 w, h, origin_x, origin_y, tilew, tileh;
 	int i, x, y;
@@ -825,17 +792,9 @@ map_load(void *ob, struct netbuf *buf)
 	if (version_read(buf, &map_ver, &ver) != 0)
 		return (-1);
 
-	object_table_init(&deps);
-
 	pthread_mutex_lock(&m->lock);
 
-	if (m->map != NULL)
-		map_free_nodes(m);
-	if (m->layers != NULL)
-		map_free_layers(m);
-
 	/* Read the map header. */
-	read_uint32(buf);				/* Padding */
 	w = read_uint32(buf);
 	h = read_uint32(buf);
 	origin_x = read_uint32(buf);
@@ -863,7 +822,6 @@ map_load(void *ob, struct netbuf *buf)
 		error_set("too many layers");
 		goto fail;
 	}
-	debug(DEBUG_STATE, "%d layers\n", m->nlayers);
 	m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
 	for (i = 0; i < m->nlayers; i++) {
 		map_layer_load(buf, m, &m->layers[i]);
@@ -871,31 +829,20 @@ map_load(void *ob, struct netbuf *buf)
 	m->cur_layer = (int)read_uint8(buf);
 	m->origin.layer = (int)read_uint8(buf);
 
-	debug(DEBUG_STATE,
-	    "geo %ux%u, origin at [%d,%d,%d], %u%% zoom, %ux%u tiles\n",
-	    m->mapw, m->maph, m->origin.x, m->origin.y, m->origin.layer,
-	    m->zoom, m->tilew, m->tileh);
-
-	/* Read the possible dependencies. */
-	if (object_table_load(&deps, buf, OBJECT(m)->name) == -1)
-		goto fail;
-
 	/* Allocate and load the nodes. */
-	if (map_alloc_nodes(m, m->mapw, m->maph) == -1)
+	if (map_alloc_nodes(m, m->mapw, m->maph) == -1) {
 		goto fail;
-
+	}
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			if (node_load(m, buf, &deps, &m->map[y][x]) == -1)
+			if (node_load(m, buf, &m->map[y][x]) == -1)
 				goto fail;
 		}
 	}
 	pthread_mutex_unlock(&m->lock);
-	object_table_destroy(&deps);
 	return (0);
 fail:
 	pthread_mutex_unlock(&m->lock);
-	object_table_destroy(&deps);
 	return (-1);
 }
 
@@ -904,58 +851,39 @@ fail:
  * The noderef's parent map must be locked.
  */
 void
-noderef_save(struct map *m, struct netbuf *buf, struct object_table *deps,
-    struct noderef *r)
+noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 {
 	off_t ntrans_offs;
-	Uint32 i, ntrans = 0;
+	Uint32 ntrans = 0;
 	struct transform *trans;
 
-	/* Save the type of reference and flags. */
+	/* Save the type of reference, flags and layer information. */
 	write_uint32(buf, (Uint32)r->type);
 	write_uint32(buf, (Uint32)r->flags);
 	write_uint8(buf, r->layer);
 
-	debug(DEBUG_NODEREFS, "type %d, flags 0x%x, layer %u\n", r->type,
-	    r->flags, r->layer);
-
 	/* Save the reference. */
 	switch (r->type) {
 	case NODEREF_SPRITE:
-		for (i = 0; i < deps->nobjs; i++) {
-			if (deps->objs[i] == r->r_sprite.obj)
-				break;
-		}
-		write_uint32(buf, i);
+		write_uint32(buf, object_dep_index(m, r->r_sprite.obj));
 		write_uint32(buf, r->r_sprite.offs);
 		write_sint16(buf, r->r_gfx.xcenter);
 		write_sint16(buf, r->r_gfx.ycenter);
-		debug(DEBUG_NODEREFS, "sprite: obj[%d]:%d, center %d,%d\n", i,
-		    r->r_sprite.offs, r->r_gfx.xcenter, r->r_gfx.ycenter);
 		break;
 	case NODEREF_ANIM:
-		for (i = 0; i < deps->nobjs; i++) {
-			if (deps->objs[i] == r->r_anim.obj)
-				break;
-		}
-		write_uint32(buf, i);
+		write_uint32(buf, object_dep_index(m, r->r_anim.obj));
 		write_uint32(buf, r->r_anim.offs);
 		write_sint16(buf, r->r_gfx.xcenter);
 		write_sint16(buf, r->r_gfx.ycenter);
 		write_uint32(buf, r->r_anim.flags);
-		debug(DEBUG_NODEREFS, "anim: o[%d]:%d, c[%d,%d], flags 0x%x\n",
-		    i, r->r_anim.offs, r->r_gfx.xcenter, r->r_gfx.ycenter,
-		    r->r_anim.flags);
 		break;
 	case NODEREF_WARP:
 		write_string(buf, r->r_warp.map);
 		write_uint32(buf, (Uint32)r->r_warp.x);
 		write_uint32(buf, (Uint32)r->r_warp.y);
 		write_uint8(buf, r->r_warp.dir);
-		debug(DEBUG_NODEREFS, "warp: to %s:[%d,%d], dir 0x%x",
-		    r->r_warp.map, r->r_warp.x, r->r_warp.y, r->r_warp.dir);
 	default:
-		debug(DEBUG_NODEREFS, "not saving %d node\n", r->type);
+		dprintf("not saving %d node\n", r->type);
 		break;
 	}
 
@@ -970,8 +898,7 @@ noderef_save(struct map *m, struct netbuf *buf, struct object_table *deps,
 }
 
 void
-node_save(struct map *m, struct netbuf *buf, struct object_table *deps,
-    struct node *node)
+node_save(struct map *m, struct netbuf *buf, struct node *node)
 {
 	struct noderef *r;
 	off_t nrefs_offs;
@@ -980,14 +907,14 @@ node_save(struct map *m, struct netbuf *buf, struct object_table *deps,
 	nrefs_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-		noderef_save(m, buf, deps, r);
+		noderef_save(m, buf, r);
 		nrefs++;
 	}
 	pwrite_uint32(buf, nrefs, nrefs_offs);
 }
 
 static void
-map_layer_save(struct netbuf *buf, struct map_layer *lay)
+map_layer_save(struct netbuf *buf, const struct map_layer *lay)
 {
 	write_string(buf, lay->name);
 	write_uint8(buf, (Uint8)lay->visible);
@@ -1000,19 +927,13 @@ int
 map_save(void *p, struct netbuf *buf)
 {
 	struct map *m = p;
-	struct object_table deps;
 	int i, x, y;
 	
 	version_write(buf, &map_ver);
 
 	pthread_mutex_lock(&m->lock);
-	debug(DEBUG_STATE,
-	    "geo %ux%u, origin at [%d,%d,%d], %u%% zoom %ux%u tiles\n",
-	    m->mapw, m->maph, m->origin.x, m->origin.y, m->origin.layer,
-	    m->zoom, m->tilew, m->tileh);
 
 	/* Write the map header. */
-	write_uint32(buf, 0);				/* Padding */
 	write_uint32(buf, (Uint32)m->mapw);
 	write_uint32(buf, (Uint32)m->maph);
 	write_uint32(buf, (Uint32)m->origin.x);
@@ -1031,42 +952,13 @@ map_save(void *p, struct netbuf *buf)
 	write_uint8(buf, m->cur_layer);
 	write_uint8(buf, m->origin.layer);
 
-	/* Write the dependencies. */
-	lock_linkage();
-	object_table_init(&deps);
-	for (y = 0; y < m->maph; y++) {
-		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *r;
-
-			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-				switch (r->type) {
-				case NODEREF_SPRITE:
-					object_table_insert(&deps,
-					    r->r_sprite.obj);
-					break;
-				case NODEREF_ANIM:
-					object_table_insert(&deps,
-					    r->r_anim.obj);
-					break;
-				default:
-					break;
-				}
-			}
-		}
-	}
-	unlock_linkage();
-	object_table_save(&deps, buf);
-
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			node_save(m, buf, &deps, &m->map[y][x]);
+			node_save(m, buf, &m->map[y][x]);
 		}
 	}
 	pthread_mutex_unlock(&m->lock);
-
-	object_table_destroy(&deps);
 	return (0);
 }
 
@@ -1274,3 +1166,125 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 	}
 }
 
+#ifdef EDITION
+static void
+map_new_view(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct window *win;
+
+	win = window_new(NULL);
+	window_set_caption(win, _("%s view"), OBJECT(mv->map)->name);
+	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT);
+
+	window_attach(pwin, win);
+	window_show(win);
+}
+
+static void
+map_toggle_grid(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+
+	if (mv->flags & MAPVIEW_GRID) {
+		mv->flags &= ~(MAPVIEW_GRID);
+	} else {
+		mv->flags |= MAPVIEW_GRID;
+	}
+}
+
+static void
+map_toggle_props(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+
+	if (mv->flags & MAPVIEW_PROPS) {
+		mv->flags &= ~(MAPVIEW_PROPS);
+	} else {
+		mv->flags |= MAPVIEW_PROPS;
+	}
+}
+
+static void
+map_toggle_nodeed(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	
+	window_toggle_visibility(mv->nodeed.win);
+}
+
+static void
+map_toggle_layed(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	
+	window_toggle_visibility(mv->layed.win);
+}
+
+struct window *
+map_edit(void *p)
+{
+	struct map *m = p;
+	struct window *win;
+	struct box *bo;
+	struct mapview *mv;
+	
+	win = window_new(NULL);
+	window_set_caption(win, _("%s edition"), OBJECT(m)->name);
+
+	mv = Malloc(sizeof(struct mapview));
+	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|
+	                    MAPVIEW_GRID);
+	window_attach(win, mv->nodeed.win);
+	window_attach(win, mv->layed.win);
+
+	/* Create the map edition toolbar. */
+	bo = box_new(win, BOX_HORIZ, BOX_WFILL);
+	box_set_spacing(bo, 0);
+	{
+		struct button *bu;
+		struct label *lab;
+
+		bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NEW_VIEW));
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", map_new_view, "%p, %p", mv, win);
+
+		bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
+		button_set_focusable(bu, 0);
+		button_set_sticky(bu, 1);
+		widget_set_bool(bu, "state", 1);
+		event_new(bu, "button-pushed", map_toggle_grid, "%p", mv);
+		
+		bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_PROPS));
+		button_set_focusable(bu, 0);
+		button_set_sticky(bu, 1);
+		widget_set_bool(bu, "state", 1);
+		event_new(bu, "button-pushed", map_toggle_props, "%p", mv);
+
+
+		mv->nodeed.trigger = bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
+		button_set_sticky(bu, 1);
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", map_toggle_nodeed, "%p", mv);
+		
+		mv->layed.trigger = bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT));
+		button_set_sticky(bu, 1);
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", map_toggle_layed, "%p", mv);
+
+		/* XXX combo */
+		lab = label_polled_new(bo, NULL, _("  Layer #%d"),
+		    &mv->map->cur_layer);
+	}
+
+	object_attach(win, mv);
+	widget_focus(mv);
+	return (win);
+}
+#endif /* EDITION */

@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.5 2003/06/21 06:50:27 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.6 2003/06/25 06:15:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 const struct widget_ops titlebar_ops = {
 	{
 		NULL,			/* init */
+		NULL,			/* reinit */
 		box_destroy,
 		NULL,			/* load */
 		NULL,			/* save */

@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.40 2003/06/21 06:39:44 vedge Exp $
+.\"	$Csoft: object.3,v 1.41 2003/06/25 06:14:03 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -41,33 +41,32 @@
 The Agar game logic is built upon a tree of
 .Nm
 structures.
-Similar to a filesystem, objects are referenced either by absolute or relative
-path names.
+Similar to a filesystem, objects may be referenced either by absolute or
+relative path names.
+However, objects may also reference each other using pointers, and dependency
+tables are used to keep track of these references.
+An object cannot depend on another object which does not share the same
+root, and objects have an implicit dependency upon their parent.
 .Pp
 The
 .Nm
 layer implements:
 .Bl -bullet -compact
 .It
-Memory management (paging and garbage collection)
+Memory management (paging, garbage collection)
 .It
-Persistence
+Persistence (saving/loading from network format)
 .It
-Linkage
+Linkage and dependencies
 .It
-Graphical/audio data management
-.It
-Position/appearance on maps
-.It
-Dependencies
+Shared graphics/audio management
 .It
 Generic events and properties
 .El
-.Sh INITIALIZATION/LINKAGE
+.Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Ft "struct object *"
-.Fn object_new "void *parent" "const char *type" "const char *name" \
-               "const void *ops"
+.Fn object_new "void *parent" "const char *name"
 .Pp
 .Ft "void"
 .Fn object_init "void *obj" "const char *type" "const char *name" \
@@ -82,32 +81,46 @@ Generic events and properties
 .Ft "void"
 .Fn object_move "void *oldparent" "void *child" "void *newparent"
 .Pp
-.Ft "char *"
-.Fn object_name "void *obj"
+.Ft "void *"
+.Fn object_root "const void *obj"
+.Pp
+.Ft "int"
+.Fn object_copy_name "const void *obj" "char *pathbuf" "size_t pathbuf_len"
 .Pp
 .Ft "void"
 .Fn lock_linkage "void"
 .Pp
 .Ft "void"
 .Fn unlock_linkage "void"
-.Pp
 .nr nS 0
+.Pp
 The
 .Fn object_new
-function allocates, initializes and attaches a new, generic object to a parent
-(if
+function allocates and initializes a new, generic object (object derivates
+usually provide their own constructor functions).
+If
 .Fa parent
-is not NULL).
+is not NULL, the object is attached to a parent.
+Otherwise, the object is considered to be the root of an object tree.
+.Pp
 .Fn object_init
 initializes an object.
+The
 .Fa name
-must not exceed
-.Dv OBJECT_NAME_MAX
-- 1 in length and
+and
 .Fa type
-must not exceed
+are truncated if they exceed
+.Dv OBJECT_NAME_MAX
+and
 .Dv OBJECT_TYPE_MAX
-- 1 in length.
+in length, respectively.
+Instances of
+.Sq /
+characters in
+.Fa name
+are replaced by
+.Sq _ ,
+since slash is the path name separator.
 .Pp
 If
 .Fa ops
@@ -115,10 +128,11 @@ is not NULL, it should point to the following structure:
 .Bd -literal
 struct object_ops {
 	void (*init)(void *obj, const char *name);	/* Initialize */
+	void (*reinit)(void *obj);			/* Reinitialize */
 	void (*destroy)(void *obj);			/* Release */
 	int  (*load)(void *obj, struct netbuf *buf);	/* Load from buf */
 	int  (*save)(void *obj, struct netbuf *buf);	/* Save to buf */
-	void (*edit)(void *obj);			/* Edit object */
+	struct window *(*edit)(void *obj);		/* Edit object */
 };
 .Ed
 .Pp
@@ -150,26 +164,39 @@ and
 events in order.
 .Pp
 The
-.Fn object_name
-function returns a copy of an object's absolute pathname by doing an inverse
-traversal of the object tree, until the root is reached.
-.Fn object_name
-returns a pointer to a newly allocated, NUL-terminated string containing the
-resulting pathname.
-Absolute object pathnames cannot be copied to fixed-size buffers, since object
-trees may have an arbitrary depth.
+.Fn object_root
+function traverses the object's ancestry, until the root is reached.
+A pointer to the object itself is returned, if the object is the root.
+The linkage must remain locked during the execution of
+.Fn object_root .
+.Pp
+The
+.Fn object_copy_name
+function copies an object's absolute pathname to a fixed-size buffer, and
+returns 0 on success and -1 if an error occured, such as the buffer being
+too small to hold the full pathname and the terminating NUL.
 .Pp
 Since
-.Fn object_name
+.Fn object_copy_name
 must traverse the tree backwards and the parents may change, a big lock is
 required in order to protect linkage.
 .Fn lock_linkage
 and
 .Fn unlock_linkage
 acquire and release the linkage lock, respectively.
+.Sh DEPENDENCIES
+.nr nS 1
+.Ft "int"
+.Fn object_used "const void *obj"
+.nr nS 0
+.Pp
+The
+.Fn object_used
+function returns 1 if a given object is referenced from another object
+sharing the same root.
 .Sh GARBAGE COLLECTION
 .nr nS 1
-.Ft "void"
+.Ft "int"
 .Fn object_destroy "void *obj"
 .Pp
 .Ft "void"
@@ -180,16 +207,17 @@ acquire and release the linkage lock, respectively.
 .Pp
 .Ft "void"
 .Fn object_free_childs "struct object *obj"
-.Pp
 .nr nS 0
+.Pp
 The
 .Fn object_destroy
 function is called to free all resources reserved by
 .Fa ob
 and its children.
-To allow static allocation of
-.Nm
-structures,
+.Fn object_destroy
+returns 0 on success or -1 if the given object (or one of its children)
+is currently in use.
+To permit static allocation,
 .Fn object_destroy
 does not call
 .Xr free 3 .
@@ -208,7 +236,7 @@ list, the property table and the attached objects, respectively.
 .Fn object_load "void *obj"
 .Pp
 .Ft "int"
-.Fn object_save "void *obj"
+.Fn object_save "const void *obj"
 .nr nS 0
 .Pp
 The
@@ -217,6 +245,25 @@ function loads the state of an object and its descendents from the first file
 found in the search path (the colon-separated
 .Sq load-path
 config setting).
+.Pp
+.Fn object_load
+invokes the
+.Va reinit
+operation on the object, prior to
+.Va load .
+Saved child objects found in the data file are each compared against the
+currently attached objects.
+If a match is found,
+.Va reinit
+and
+.Va load
+is used.
+If there is no currently attached object matching a saved object, one is
+dynamically allocated and initialized using the type switch (the typesw[]
+array).
+If a currently attached object has no matching saved object, it is destroyed
+(as long as it is not currently in use).
+.Pp
 .Fn object_save
 saves the state of an object and its descendents to files/directories in the
 save directory (the
@@ -255,8 +302,8 @@ motion offsets of its noderefs in response to movement.
 .Pp
 .Ft "void"
 .Fn object_control "void *obj" "const char *input_dev"
-.Pp
 .nr nS 0
+.Pp
 The
 .Fn object_set_submap
 function searches an object's descendents for a map named
@@ -281,66 +328,6 @@ function assigns the input device named
 .Fa input_dev
 to the position associated with
 .Fa obj .
-.Sh DEPENDENCY TABLES
-These functions load/save arrays of structures containing each:
-.Bl -bullet -compact -enum
-.It
-An object name string.
-.It
-An object type string.
-.El
-.Pp
-This allows load/save routines to keep track of an object's dependencies,
-as well as to encode object references using indexes.
-.Pp
-.nr nS 1
-.Ft "void"
-.Fn object_table_init "struct object_table *table"
-.Pp
-.Ft "void"
-.Fn object_table_destroy "struct object_table *table"
-.Pp
-.Ft "void"
-.Fn object_table_insert "struct object_table *table" "struct object *obj"
-.Pp
-.Ft "void"
-.Fn object_table_save "struct object_table *table" "struct netbuf *buf"
-.Pp
-.Ft "int"
-.Fn object_table_load "struct object_table *table" "struct netbuf *buf" \
-                      "const char *objname"
-.Pp
-.nr nS 0
-The
-.Fn object_table_init
-function initializes
-.Fa table
-as a new, empty dependency table.
-.Fn object_table_destroy
-frees the resources allocated by
-.Fa table .
-.Pp
-The
-.Fn object_table_insert
-function inserts
-.Fa obj
-in
-.Fa table ,
-if it is not already there.
-.Pp
-The
-.Fn object_table_save
-function writes
-.Fa table
-to
-.Fa buf .
-The
-.Fn object_table_load
-reads dependencies from
-.Fa buf
-into
-.Fa table ,
-and returns 0 on success or -1 if an error occured.
 .Sh EVENTS
 The
 .Nm
@@ -367,8 +354,6 @@ The linkage lock is held during the execution of the event handler.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
-.Xr fobj 3 ,
-.Xr physics 3 ,
 .Xr prop 3
 .Sh HISTORY
 The

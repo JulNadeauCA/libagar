@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.179 2003/06/25 06:15:37 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.180 2003/07/01 04:56:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -54,12 +54,15 @@
 #include "tool/fill.h"
 #include "tool/flip.h"
 
+static void	mapedit_destroy(void *);
+
 const struct object_ops mapedit_ops = {
 	NULL,			/* init */
+	NULL,			/* reinit */
 	mapedit_destroy,
 	mapedit_load,
 	mapedit_save,
-	NULL
+	NULL			/* edit */
 };
 
 struct mapedit	mapedit;
@@ -107,9 +110,8 @@ mapedit_select_tool(int argc, union evarg *argv)
 
 	mapedit.curtool = newtool;
 
-	if (newtool->win != NULL) {
+	if (newtool->win != NULL)
 		window_show(newtool->win);
-	}
 }
 
 /* Create the toolbar. */
@@ -148,24 +150,34 @@ toolbar_window(struct window *tilesets_win)
 	return (win);
 }
 
+/* Initialize the edition facilities. */
 void
 mapedit_init(void)
 {
 	struct window *toolbar_win, *tilesets_win, *objedit_win;
 	int i;
 	
-	object_init(&mapedit, "map-editor", "map-editor", &mapedit_ops);
+	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
 	OBJECT(&mapedit)->flags |= OBJECT_RELOAD_PROPS;
+	OBJECT(&mapedit)->save_pfx = NULL;
+
 	if (gfx_fetch(&mapedit, "/engine/mapedit/mapedit") == -1) {
 		fatal("%s", error_get());
 	}
 	gfx_wire(OBJECT(&mapedit)->gfx);
 
-	map_init(&mapedit.copybuf, "mapedit-copybuf");
+	map_init(&mapedit.copybuf, "copybuf");
 	mapedit.curtool = NULL;
 	mapedit.src_node = NULL;
-	mapedition = 1;
+	TAILQ_INIT(&mapedit.tilesets);
 
+	/* Attach a pseudo-object for dependency keeping purposes. */
+	mapedit.pseudo = object_new(world, "map-editor");
+	OBJECT(mapedit.pseudo)->flags |= (OBJECT_NON_PERSISTENT|
+	                                  OBJECT_INDESTRUCTIBLE);
+
+	mapedition = 1;
+ 
 	prop_set_uint32(&mapedit, "default-map-width", 64);
 	prop_set_uint32(&mapedit, "default-map-height", 32);
 	prop_set_uint32(&mapedit, "default-brush-width", 5);
@@ -178,7 +190,9 @@ mapedit_init(void)
 		*toolent->p = Malloc(toolent->size);
 		toolent->init(*toolent->p);
 	}
-	object_load(&mapedit);
+	if (object_load(&mapedit) == -1) {
+		dprintf("loading mapedit: %s\n", error_get());
+	}
 
 	tilesets_win = tilesets_window();
 	toolbar_win = toolbar_window(tilesets_win);
@@ -189,7 +203,7 @@ mapedit_init(void)
 	window_show(objedit_win);
 }
 
-void
+static void
 mapedit_destroy(void *p)
 {
 	struct mapedit *med = p;
@@ -233,131 +247,5 @@ mapedit_save(void *p, struct netbuf *buf)
 		}
 	}
 	return (0);
-}
-
-/* Create a new, read-only map view. */
-static void
-new_view(int argc, union evarg *argv)
-{
-	struct mapview *parent = argv[1].p;
-	struct map *m = parent->map;
-	struct window *win;
-
-	win = window_new(NULL);
-	window_set_caption(win, "%s view", OBJECT(m)->name);
-	mapview_new(win, m, MAPVIEW_INDEPENDENT);
-	window_show(win);
-}
-
-/* Toggle mapview(3) options. */
-static void
-set_mapview_opt(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-	int opt = argv[2].i;
-
-	switch (opt) {
-	case MAPEDIT_TOOL_GRID:
-		if (mv->flags & MAPVIEW_GRID) {
-			mv->flags &= ~(MAPVIEW_GRID);
-		} else {
-			mv->flags |= MAPVIEW_GRID;
-		}
-		break;
-	case MAPEDIT_TOOL_PROPS:
-		if (mv->flags & MAPVIEW_PROPS) {
-			mv->flags &= ~(MAPVIEW_PROPS);
-		} else {
-			mv->flags |= MAPVIEW_PROPS;
-		}
-		break;
-	case MAPEDIT_TOOL_NODEEDIT:
-		window_toggle_visibility(mv->nodeed.win);
-		break;
-	case MAPEDIT_TOOL_LAYEDIT:
-		window_toggle_visibility(mv->layed.win);
-		break;
-	}
-}
-
-static void
-mapedit_close(int argc, union evarg *argv)
-{
-	/* todo */
-}
-
-/* Create a new, editable map display. */
-struct window *
-mapedit_window(struct map *m)
-{
-	struct window *win;
-	struct hbox *hb;
-	struct mapview *mv;
-
-	win = window_new(NULL);
-	window_set_caption(win, _("%s edition"), OBJECT(m)->name);
-	event_new(win, "window-close", mapedit_close, NULL);
-
-	mv = Malloc(sizeof(struct mapview));
-	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|
-	    MAPVIEW_GRID);
-
-	/* Create the map edition toolbar. */
-	hb = hbox_new(win, HBOX_WFILL);
-	hbox_set_spacing(hb, 0);
-	{
-		const struct {
-			void	(*func)(int argc, union evarg *argv);
-			int	icon, toggle, def;
-		} fileops[] = {
-			{ new_view,		MAPEDIT_TOOL_NEW_VIEW,	0, 0 },
-			{ set_mapview_opt,	MAPEDIT_TOOL_GRID,	1, 1 },
-			{ set_mapview_opt,	MAPEDIT_TOOL_PROPS,	1, 1 }
-		};
-		const int nfileops = sizeof(fileops) / sizeof(fileops[0]);
-		struct button *bu;
-		struct label *lab;
-		int i;
-
-		for (i = 0; i < nfileops; i++) {
-			bu = button_new(hb, NULL);
-			button_set_label(bu, SPRITE(&mapedit, fileops[i].icon));
-			button_set_sticky(bu, fileops[i].toggle);
-			button_set_focusable(bu, 0);
-
-			if (fileops[i].toggle) {
-				event_new(bu, "button-pushed", fileops[i].func,
-				    "%p, %i", mv, fileops[i].icon);
-			} else {
-				event_new(bu, "button-pushed", fileops[i].func,
-				    "%p", mv);
-			}
-
-			widget_set_bool(bu, "state", fileops[i].def);
-		}
-
-		bu = button_new(hb, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", set_mapview_opt, "%p, %i", mv,
-		    MAPEDIT_TOOL_NODEEDIT);
-		mv->nodeed.trigger = bu;
-		
-		bu = button_new(hb, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LAYEDIT));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", set_mapview_opt, "%p, %i", mv,
-		    MAPEDIT_TOOL_LAYEDIT);
-		mv->layed.trigger = bu;
-
-		lab = label_polled_new(hb, NULL, _("  Layer #%d"),
-		    &mv->map->cur_layer);
-	}
-
-	object_attach(win, mv);
-	widget_focus(mv);
-	return (win);
 }
 
