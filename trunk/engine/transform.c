@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.3 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.4 2003/03/13 08:41:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,144 +33,120 @@
 #include "map.h"
 #include "view.h"
 
-static SDL_Surface	*transform_scale(SDL_Surface *, struct transform *);
-static SDL_Surface	*transform_hflip(SDL_Surface *, struct transform *);
-static SDL_Surface	*transform_vflip(SDL_Surface *, struct transform *);
-static SDL_Surface	*transform_rotate(SDL_Surface *, struct transform *);
-static SDL_Surface	*transform_color(SDL_Surface *, struct transform *);
-static SDL_Surface	*transform_pixelize(SDL_Surface *, struct transform *);
-static SDL_Surface	*transform_randomize(SDL_Surface *, struct transform *);
+static SDL_Surface	*transform_hflip(SDL_Surface *, int, Uint32 *);
+static SDL_Surface	*transform_vflip(SDL_Surface *, int, Uint32 *);
 
 static const struct {
 	enum transform_type	type;
-	SDL_Surface		*(*func)(SDL_Surface *, struct transform *);
+	SDL_Surface		*(*func)(SDL_Surface *, int, Uint32 *);
 } transforms[] = {
-	{	TRANSFORM_SCALE,	transform_scale		},
 	{	TRANSFORM_HFLIP,	transform_hflip		},
-	{	TRANSFORM_VFLIP,	transform_vflip		},
-	{	TRANSFORM_ROTATE,	transform_rotate	},
-	{	TRANSFORM_COLOR,	transform_color		},
-	{	TRANSFORM_PIXELIZE,	transform_pixelize	},
-	{	TRANSFORM_RANDOMIZE,	transform_randomize	}
+	{	TRANSFORM_VFLIP,	transform_vflip		}
 };
 static const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
 
-void
-transform_init(struct transform *tr, enum transform_type type)
+enum {
+	TRANSFORM_MAX_ARGS =	64
+};
+
+int
+transform_init(struct transform *trans, enum transform_type type,
+    int argc, Uint32 *argv)
 {
 	int i;
 
-	memset(tr, 0, sizeof(struct transform));
-	tr->type = type;
-	tr->cached = NULL;
+	dprintf("type %d, %d args\n", type, argc);
+
+	if (argc > TRANSFORM_MAX_ARGS) {
+		error_set("too many args");
+		return (-1);
+	}
+
+	memset(trans, 0, sizeof(struct transform));
+	trans->type = type;
+	trans->func = NULL;
+	trans->nargs = argc;
+	trans->args = emalloc(argc * sizeof(Uint32));
+	memcpy(trans->args, argv, argc * sizeof(Uint32));
+
+	/* Look for a matching algorithm. */
 	for (i = 0; i < ntransforms; i++) {
 		if (transforms[i].type == type) {
-			tr->func = transforms[i].func;
-			return;
+			trans->func = transforms[i].func;
+			break;
 		}
 	}
-	fatal("no such transform: %d", i);
+	if (trans->func == NULL) {
+		error_set("bad transform");
+		return (-1);
+	}
+	return (0);
 }
 
 void
-transform_destroy(struct transform *tr)
+transform_destroy(struct transform *trans)
 {
-	/* No-op */
+	Free(trans->args);
 }
 
 void
 transform_copy(struct transform *src, struct transform *dst)
 {
-	memcpy(dst, src, sizeof(struct transform));
+	dst->type = src->type;
+	dst->func = src->func;
+
+	Free(dst->args);
+	dst->args = emalloc(src->nargs * sizeof(Uint32));
+	memcpy(dst->args, src->args, src->nargs * sizeof(Uint32));
 }
 
-void
+int
 transform_load(int fd, struct transform *trans)
 {
-	int i, found = 0;
+	int i;
 
-	/* Look for a matching transform. */
 	trans->type = read_uint8(fd);
+	trans->func = NULL;
+	trans->nargs = (int)read_uint8(fd);
+	if (trans->nargs > TRANSFORM_MAX_ARGS) {
+		error_set("too many args");
+		return (-1);
+	}
+
+	Free(trans->args);
+	trans->args = emalloc(trans->nargs * sizeof(Uint32));
+	for (i = 0; i < trans->nargs; i++)
+		trans->args[i] = read_uint32(fd);
+
+	/* Look for a matching algorithm. */
 	for (i = 0; i < ntransforms; i++) {
 		if (transforms[i].type == trans->type) {
 			trans->func = transforms[i].func;
-			goto found;
+			break;
 		}
 	}
-	fatal("unknown transform: %d", trans->type);
-found:
-	switch (trans->type) {
-	case TRANSFORM_SCALE:
-		trans->args.scale.w = read_uint16(fd);
-		trans->args.scale.h = read_uint16(fd);
-		break;
-	case TRANSFORM_HFLIP:
-	case TRANSFORM_VFLIP:
-		break;
-	case TRANSFORM_ROTATE:
-		trans->args.rotate.angle = read_uint16(fd);
-		break;
-	case TRANSFORM_COLOR:
-		trans->args.color.r = read_uint8(fd);
-		trans->args.color.g = read_uint8(fd);
-		trans->args.color.b = read_uint8(fd);
-		trans->args.color.a = read_uint8(fd);
-		break;
-	case TRANSFORM_PIXELIZE:
-		trans->args.pixelize.factor = read_uint16(fd);
-		break;
-	case TRANSFORM_RANDOMIZE:
-		trans->args.randomize.nrounds = read_uint8(fd);
-		trans->args.randomize.r_range = read_uint8(fd);
-		trans->args.randomize.g_range = read_uint8(fd);
-		trans->args.randomize.b_range = read_uint8(fd);
-		trans->args.randomize.a_range = read_uint8(fd);
-		break;
-	default:
-		fatal("unknown transform type: %d", trans->type);
+	if (trans->func == NULL) {
+		error_set("bad transform");
+		return (-1);
 	}
+	return (0);
 }
 
 void
 transform_save(void *bufp, struct transform *trans)
 {
 	struct fobj_buf *buf = bufp;
-	Uint8 i;
+	int i;
 
 	buf_write_uint8(buf, trans->type);
+	buf_write_uint8(buf, trans->nargs);
 
-	switch (trans->type) {
-	case TRANSFORM_SCALE:
-		buf_write_uint16(buf, trans->args.scale.w);
-		buf_write_uint16(buf, trans->args.scale.h);
-		break;
-	case TRANSFORM_HFLIP:
-	case TRANSFORM_VFLIP:
-		break;
-	case TRANSFORM_ROTATE:
-		buf_write_uint16(buf, trans->args.rotate.angle);
-		break;
-	case TRANSFORM_COLOR:
-		buf_write_uint8(buf, trans->args.color.r);
-		buf_write_uint8(buf, trans->args.color.g);
-		buf_write_uint8(buf, trans->args.color.b);
-		buf_write_uint8(buf, trans->args.color.a);
-		break;
-	case TRANSFORM_PIXELIZE:
-		buf_write_uint16(buf, trans->args.pixelize.factor);
-		break;
-	case TRANSFORM_RANDOMIZE:
-		buf_write_uint8(buf, trans->args.randomize.nrounds);
-		buf_write_uint8(buf, trans->args.randomize.r_range);
-		buf_write_uint8(buf, trans->args.randomize.g_range);
-		buf_write_uint8(buf, trans->args.randomize.b_range);
-		buf_write_uint8(buf, trans->args.randomize.a_range);
-		break;
-	}
+	for (i = 0; i < trans->nargs; i++)
+		buf_write_uint32(buf, trans->args[i]);
 }
 
 static SDL_Surface *
-transform_scale(SDL_Surface *su, struct transform *tr)
+transform_hflip(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	/* ... */
 	return (SDL_ConvertSurface(su, view->v->format,
@@ -178,49 +154,10 @@ transform_scale(SDL_Surface *su, struct transform *tr)
 }
 
 static SDL_Surface *
-transform_hflip(SDL_Surface *su, struct transform *tr)
+transform_vflip(SDL_Surface *su, int argc, Uint32 *argv)
 {
 	/* ... */
 	return (SDL_ConvertSurface(su, view->v->format,
 	    SDL_SWSURFACE|SDL_SRCALPHA));
 }
 
-static SDL_Surface *
-transform_vflip(SDL_Surface *su, struct transform *tr)
-{
-	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
-}
-
-static SDL_Surface *
-transform_rotate(SDL_Surface *su, struct transform *tr)
-{
-	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
-}
-
-static SDL_Surface *
-transform_color(SDL_Surface *su, struct transform *tr)
-{
-	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
-}
-
-static SDL_Surface *
-transform_pixelize(SDL_Surface *su, struct transform *tr)
-{
-	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
-}
-
-static SDL_Surface *
-transform_randomize(SDL_Surface *su, struct transform *tr)
-{
-	/* ... */
-	return (SDL_ConvertSurface(su, view->v->format,
-	    SDL_SWSURFACE|SDL_SRCALPHA));
-}
