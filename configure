@@ -133,6 +133,7 @@ echo FOBJDIR=$FOBJDIR >> Makefile.config
 INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config
 echo -n "checking for a usable make(1)..."
+echo -n "checking for a usable make(1)..." >> config.log
 echo "checking for a usable make(1)..." >> config.log
 if [ "$MAKE" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
@@ -175,6 +176,7 @@ else
 fi
 rm -f .maketest .maketest2 .maketest3
 echo -n "checking for a usable C compiler..."
+echo -n "checking for a usable C compiler..." >> config.log
 echo "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
@@ -222,6 +224,7 @@ fi
 
 rm -f .cctest .cctest.c
 echo -n "checking for float..."
+echo -n "checking for float..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -258,6 +261,7 @@ else
 	echo "no"
 fi
 echo -n "checking for double..."
+echo -n "checking for double..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -291,6 +295,7 @@ else
 	echo "no"
 fi
 echo -n "checking for long double..."
+echo -n "checking for long double..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -325,6 +330,7 @@ else
 	echo "no"
 fi
 echo -n "checking for a getenv() function..."
+echo -n "checking for a getenv() function..." >> config.log
 echo "checking for a getenv() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
@@ -359,6 +365,7 @@ else
 	echo "no"
 fi
 echo -n "checking for setenv() and unsetenv() functions..."
+echo -n "checking for setenv() and unsetenv() functions..." >> config.log
 echo "checking for setenv() and unsetenv() functions..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
@@ -395,6 +402,7 @@ else
 	echo "no"
 fi
 echo -n "checking for a strsep() function..."
+echo -n "checking for a strsep() function..." >> config.log
 echo "checking for a strsep() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
@@ -429,6 +437,7 @@ else
 	echo "no"
 fi
 echo -n "checking for a strlcat() function..."
+echo -n "checking for a strlcat() function..." >> config.log
 echo "checking for a strlcat() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
@@ -463,6 +472,7 @@ else
 	echo "no"
 fi
 echo -n "checking for a strlcpy() function..."
+echo -n "checking for a strlcpy() function..." >> config.log
 echo "checking for a strlcpy() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
@@ -497,6 +507,7 @@ else
 	echo "no"
 fi
 echo -n "checking for an asprintf() function..."
+echo -n "checking for an asprintf() function..." >> config.log
 echo "checking for an asprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
@@ -537,6 +548,7 @@ else
 	echo "no"
 fi
 echo -n "checking for a vasprintf() function..."
+echo -n "checking for a vasprintf() function..." >> config.log
 echo "checking for a vasprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
@@ -595,6 +607,7 @@ CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
+echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
 echo "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -650,11 +663,13 @@ NONE=1
 fi
 if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
+echo "ok" >> config.log
 else
 echo "Could not find the SDL library. Make sure sdl-config is in $PATH."
 exit 1
 fi
 echo -n "checking whether SDL works..."
+echo -n "checking whether SDL works..." >> config.log
 cat << EOT > conftest.c
 
 #include <stdio.h>
@@ -716,6 +731,7 @@ echo "The SDL test would not compile."
 exit 1
 fi
 echo -n "checking for FreeType (http://www.freetype.org)..."
+echo -n "checking for FreeType (http://www.freetype.org)..." >> config.log
 echo "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -745,11 +761,13 @@ freetype_found=yes
 echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
 echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
 echo "yes"
+echo "yes" >> config.log
 else
 echo "Could not find the FreeType library"
 exit 1
 fi
 echo -n "checking whether FreeType works..."
+echo -n "checking whether FreeType works..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -802,6 +820,7 @@ fi
 if [ "${with_x11}" != "no" ]
  then
 echo -n "checking for X11 (http://www.xfree86.org/)..."
+echo -n "checking for X11 (http://www.xfree86.org/)..." >> config.log
 echo "checking for X11 (http://www.xfree86.org/)..." >> config.log
 if [ -d /usr/X11R6 ]; then
 X11BASE=/usr/X11R6
@@ -826,7 +845,9 @@ NONE=1
 fi
 if [ "${X11BASE}" != "" ]; then
 echo -n "ok"
+echo -n "ok" >> config.log
 echo ", $X11BASE"
+echo ", $X11BASE" >> config.log
 x11_found=yes
 echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
@@ -907,4 +928,5 @@ echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/mcconfig.h
 echo "#define PREFIX \"$PREFIX\"" >> engine/mcconfig.h
 echo "#endif /* PREFIX */" >> engine/mcconfig.h
-echo "Don't forget to run \"make depend\"."
+echo "Don't forget to run \'make depend\'."
+echo "Don't forget to run \'make depend\'." >> config.log
