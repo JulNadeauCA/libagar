@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.16 2002/11/30 02:09:47 vedge Exp $
+.\"	$Csoft: object.3,v 1.17 2002/12/13 12:27:05 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -273,9 +273,9 @@ when referencing particular objects.
 .Fn object_table_load "int fd" "struct object *obj" "struct object ***pobjs" \
                       "Uint32 *nobjs"
 .Pp
-.Ft "void"
+.Ft "struct object **"
 .Fn object_table_save "struct fobj_buf *buf" "struct object *obj" \
-                      "struct object ***pobjs" "Uint32 *nobjs"
+                      "Uint32 *nobjs"
 .nr nS 0
 .Pp
 The

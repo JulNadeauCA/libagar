@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.59 2002/12/01 14:41:02 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.60 2002/12/13 12:27:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -92,7 +92,7 @@ void		 object_move(void *, struct map *, Uint32, Uint32);
 int		 object_vanish(void *);
 void		 object_table_load(int, struct object *, struct object ***,
 		     Uint32 *);
-void		 object_table_save(struct fobj_buf *, struct object *,
-		     struct object ***, Uint32 *);
+struct object  **object_table_save(struct fobj_buf *, struct object *,
+		     Uint32 *);
 
 #endif	/* !_AGAR_OBJECT_H */

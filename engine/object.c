@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.93 2002/12/01 14:41:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.94 2002/12/13 12:27:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -496,12 +496,11 @@ object_table_load(int fd, struct object *obj, struct object ***pobjs,
  * Allocate, initialize and save a list of objects.
  * This is mostly used to save dependency lists.
  */
-void
-object_table_save(struct fobj_buf *buf, struct object *obj,
-    struct object ***pobjs, Uint32 *nobjs)
+struct object **
+object_table_save(struct fobj_buf *buf, struct object *obj, Uint32 *nobjs)
 {
 	size_t solen = 0;
-	struct object *pob;
+	struct object **pobjs, *pob;
 	off_t nobjs_offs;
 
 	nobjs_offs = buf->offs;
@@ -511,7 +510,7 @@ object_table_save(struct fobj_buf *buf, struct object *obj,
 	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
 		solen += sizeof(struct object *);
 	}
-	*pobjs = emalloc(solen);
+	pobjs = emalloc(solen);
 	*nobjs = 0;
 	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
 		debug_n(DEBUG_DEPS, "%s: %s dependency ", obj->name, pob->name);
@@ -522,9 +521,11 @@ object_table_save(struct fobj_buf *buf, struct object *obj,
 		}
 		debug_n(DEBUG_DEPS, "registered\n");
 		buf_write_string(buf, pob->name);
-		*pobjs[(*nobjs)++] = pob;
+		pobjs[(*nobjs)++] = pob;
 	}
 	buf_pwrite_uint32(buf, *nobjs, nobjs_offs);
 	pthread_mutex_unlock(&world->lock);
+
+	return (pobjs);
 }
 
