@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.4 2003/07/26 12:32:29 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.5 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/floating_point.h>
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.44 2003/10/09 22:39:28 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.45 2003/10/14 03:15:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/floating_point.h>
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>
