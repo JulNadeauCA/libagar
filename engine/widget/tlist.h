@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.32 2003/10/15 03:43:08 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.33 2004/02/20 04:18:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -12,10 +12,11 @@
 
 struct tlist_item {
 	int		 selected;		/* Selection flag */
-	SDL_Surface	*label;			/* Label to display */
-	SDL_Surface	*icon;			/* Icon to display */
+	SDL_Surface	*iconsrc;		/* Source icon (or NULL) */
+	SDL_Surface	*icon;			/* Scaled icon (or NULL) */
 	void		*p1;			/* User data */
-	char		 text[TLIST_LABEL_MAX];	/* Label text (XXX remove?) */
+	char		 text[TLIST_LABEL_MAX];	/* Label text */
+	SDL_Surface	*label;			/* Rendered text */
 
 	Uint8	 depth;				/* Depth in tree */
 	Uint8	 flags;
@@ -37,6 +38,8 @@ struct tlist {
 #define TLIST_POLL		0x04	/* Generate tlist-poll events */
 #define TLIST_DBLCLICK		0x08	/* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10	/* Hack to display trees */
+#define TLIST_STATIC_ICONS	0x20	/* Access/scale icon surfaces as items
+					   are being drawn for the first time */
 
 	void	*selected;		/* Default `selected' binding */
 	int	 prew, preh;		/* Prescale hint */
@@ -60,16 +63,15 @@ void	 tlist_scale(void *, int, int);
 void	 tlist_draw(void *);
 void	 tlist_destroy(void *);
 
-void	 tlist_prescale(struct tlist *, const char *, int);
-void	 tlist_set_item_height(struct tlist *, int);
-void	 tlist_set_item_icon(struct tlist *, struct tlist_item *,
-	                     SDL_Surface *);
-void	 tlist_restore_selections(struct tlist *);
-
-__inline__ int	tlist_visible_children(struct tlist *, struct tlist_item *);
+void		 tlist_prescale(struct tlist *, const char *, int);
+void		 tlist_set_item_height(struct tlist *, int);
+__inline__ void	 tlist_set_icon(struct tlist *, struct tlist_item *,
+	                        SDL_Surface *);
+__inline__ int	 tlist_visible_children(struct tlist *, struct tlist_item *);
 
 void			 tlist_remove_item(struct tlist *, struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
+void		 	 tlist_restore_selections(struct tlist *);
 struct tlist_item	*tlist_insert_item(struct tlist *, SDL_Surface *,
 			                   const char *, const void *);
 struct tlist_item	*tlist_insert_item_head(struct tlist *, SDL_Surface *,
