@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.24 2002/12/24 10:28:37 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.25 2002/12/24 14:22:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -19,13 +19,11 @@ extern int engine_debug;
 # ifdef __GNUC__
 #  define dprintf(fmt, args...)						\
 	do {								\
-		if (engine_debug)					\
-			printf("%s: " fmt, __FUNCTION__ , ##args);	\
+		printf("%s: " fmt, __FUNCTION__ , ##args);	\
 	} while (0)
 #  define deprintf(fmt, args...)					\
 	do {								\
-		if (engine_debug)					\
-			fprintf(stderr, fmt, ##args);			\
+		fprintf(stderr, fmt, ##args);			\
 	} while (0)
 #  define debug(mask, fmt, args...)					\
 	do {								\
