@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.134 2003/06/21 06:39:44 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.135 2003/06/25 06:14:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -117,6 +117,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->parent = NULL;
 	ob->flags = 0;
 	ob->gfx = NULL;
+	ob->audio = NULL;
 	ob->pos = NULL;
 	TAILQ_INIT(&ob->childs);
 	TAILQ_INIT(&ob->events);
