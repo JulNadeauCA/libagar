@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.31 2002/05/11 04:05:45 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.32 2002/05/15 07:28:06 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -53,6 +53,7 @@ struct object_audio {
 
 struct object {
 	/* Read-only once consistent. */
+	char	*type;			/* Type of immediate descendent */
 	char	*name;			/* Name string (key) */
 	char	*desc;			/* Optional description */
 	int	 id;			/* Unique identifier at runtime */
@@ -80,11 +81,12 @@ struct object {
 #define ANIM(ob, sp)	OBJECT((ob))->art->anims[(sp)]
 #define SAMPLE(ob, sp)	OBJECT((ob))->audio->samples[(sp)]
 
-struct object	*object_new(char *, char *, int, const void *);
+struct object	*object_new(char *, char *, char *, int, const void *);
 int		 object_load(void *);
 int		 object_save(void *);
 
-void	 object_init(struct object *, char *, char *, int, const void *);
+void	 object_init(struct object *, char *, char *, char *, int,
+	     const void *);
 void	 object_destroy(void *);
 char	*object_name(char *, int);
 int	 object_loadfrom(void *, char *);

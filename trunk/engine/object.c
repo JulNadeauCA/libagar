@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.51 2002/05/14 09:06:59 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.52 2002/05/15 07:28:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -193,12 +193,12 @@ object_name(char *base, int num)
 }
 
 struct object *
-object_new(char *name, char *media, int flags, const void *opsp)
+object_new(char *type, char *name, char *media, int flags, const void *opsp)
 {
 	struct object *ob;
 
 	ob = emalloc(sizeof(struct object));
-	object_init(ob, name, media, flags, opsp);
+	object_init(ob, type, name, media, flags, opsp);
 
 	pthread_mutex_lock(&world->lock);
 	world_attach(world, ob);
@@ -208,12 +208,13 @@ object_new(char *name, char *media, int flags, const void *opsp)
 }
 
 void
-object_init(struct object *ob, char *name, char *media, int flags,
+object_init(struct object *ob, char *type, char *name, char *media, int flags,
     const void *opsp)
 {
 	static int curid = 0;	/* The world has id 0 */
 
 	ob->id = curid++;
+	ob->type = strdup(type);
 	ob->name = strdup(name);
 	ob->desc = NULL;
 	sprintf(ob->saveext, "ag");
@@ -253,6 +254,8 @@ object_destroy(void *p)
 	}
 	if (ob->name != NULL)
 		free(ob->name);
+	if (ob->type != NULL)
+		free(ob->type);
 	if (ob->desc != NULL)
 		free(ob->desc);
 	pthread_mutex_destroy(&ob->pos_lock);
