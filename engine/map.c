@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.41 2002/02/25 11:38:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.42 2002/02/28 12:52:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -381,11 +381,11 @@ map_animate(struct map *m)
 	pthread_mutex_lock(&m->lock);
 
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
-	    (vy < m->view->maph);
+	    (vy < m->view->maph + m->view->mapyoffs);
 	     y++, vy++) {
 
 		for (x = m->view->mapx, vx = m->view->mapxoffs;
-		     vx < m->view->mapw;
+		     vx < m->view->mapw + m->view->mapxoffs;
 		     x++, vx++) {
 			static struct node *node;
 			static struct noderef *nref;
@@ -508,11 +508,11 @@ map_draw(struct map *m)
 	pthread_mutex_lock(&m->lock);
 
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
-	     vy < m->view->maph;
+	     vy < m->view->maph + m->view->mapyoffs;
 	     y++, vy++) {
 
 		for (x = m->view->mapx, vx = m->view->mapxoffs;
-		     vx < m->view->mapw;
+		     vx < m->view->mapw + m->view->mapxoffs;
 		     x++, vx++) {
 			static struct node *node;
 			static struct noderef *nref;
