@@ -1,4 +1,4 @@
-.\"	$Csoft: scrollbar.3,v 1.6 2003/01/01 05:18:41 vedge Exp $
+.\"	$Csoft: palette.3,v 1.1 2003/03/05 18:21:11 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,42 +40,32 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget represents a single value inside a fixed range.
+widget binds to a pixel in order to manipulate its 8-bit RGBA components.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "struct scrollbar *"
-.Fn scrollbar_new "struct region *reg" "int w" "int h" \
-                  "enum scrollbar_orientation orientation"
+.Ft "struct palette *"
+.Fn palette_new "void *parent" "enum palette_type type"
 .Pp
 .Ft void
-.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" \
-                   "enum scrollbar_orientation orientation"
+.Fn palette_init "struct palette *palette" "enum palette_type type"
 .nr nS 0
 .Pp
 The
-.Fn scrollbar_new
+.Fn palette_new
 function allocates, initializes, and attaches a
 .Nm
 widget.
 The
-.Fn scrollbar_init
+.Fn palette_init
 function initializes a
 .Nm
-widget of size
-.Fa w
-x
-.Fa h .
-It is assumed that each visible item (ie. a list item, or a map node) is
-.Fa item_size
-pixels.
-The valid values for
-.Fa orientation
-are:
-.Pp
+widget.
+.Fa type
+may be one of:
 .Bd -literal
-enum scrollbar_orientation {
-	SCROLLBAR_HORIZ,
-	SCROLLBAR_VERT
+enum palette_type {
+	PALETTE_RGB,		/* RGB scrollbars */
+	PALETTE_RGBA		/* RGBA scrollbars */
 };
 .Ed
 .Sh BINDINGS
@@ -83,13 +73,9 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "int *value"
-.It Va int *value
-Current position
-.It Va int *min
-Minimum value
-.It Va int *max
-Maximum value
+.Bl -tag -compact -width "Uint32 *value"
+.It Va Uint32 *color
+Pixel to read from and write to.
 .El
 .Sh EVENTS
 The
@@ -98,25 +84,18 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Jump to an specific position, or start scrolling.
+.It window-mousebuttonup
 .It window-mousemotion
-Scroll.
+Alter the selected RGBA component.
 .El
 .Pp
 The
 .Nm
-widget generates the following events:
-.Pp
-.Bl -tag -compact -width 2n
-.It Fn scrollbar-changed "int new_value"
-The scrollbar's value has changed to
-.Fa new_value .
-.El
+widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm

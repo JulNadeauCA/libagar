@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.23 2003/05/19 02:37:52 vedge Exp $
+.\"	$Csoft: window.3,v 1.24 2003/05/22 08:16:27 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -32,7 +32,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm window
-.Nd agar window structure
+.Nd agar window
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/widget/widget.h>
@@ -41,216 +41,141 @@
 .Sh DESCRIPTION
 The
 .Nm
-structure implements a mobile, resizable window.
+object implements a mobile, resizable container for widgets; it is
+itself derived from the
+.Xr widget 3
+structure and attached to a
+.Xr view 3 .
+Currently there is only one view; multiple views will be supported when
+SDL implements multiple displays.
+.Pp
+The container behavior of a
+.Nm
+is much like a
+.Xr vbox 3
+(without the
+.Dv VBOX_HOMOGENOUS
+flag).
+By default, a
+.Xr titlebar 3
+widget is first attached and borders surround the window.
+.Pp
+Initially, the window's widgets are queried for a default, minimum size, and
+the window is sized accordingly.
+After this initial sizing, widget containers may scale widgets to any size.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct window *"
-.Fn window_new "char *name" "int flags" "int x" "int y" "int w" "int h" "int minwidth, int minheight"
+.Fn window_new "const char *name" "..."
 .Pp
-.Ft "struct window *"
-.Fn window_generic_new "int w" "int h" "const char *name" "..."
+.Ft "void"
+.Fn window_init "struct window *win" "const char *name"
 .Pp
-.Ft void
-.Fn window_init "struct window *win" "char *name" "int flags" "int x" "int y" "int w" "int h, int minwidth, int minheight"
-.Pp
-.Ft void
-.Fn window_destroy "struct window *win"
-.Pp
-.Ft void
+.Ft "void"
 .Fn window_set_caption "struct window *win" "const char *fmt" "..."
 .Pp
-.Ft void
-.Fn window_set_spacing "struct window *win" "Uint8 xsp" "Uint8 ysp"
+.Ft "void"
+.Fn window_set_closure "struct window *win" "enum window_close_mode mode"
 .Pp
-.Ft void
-.Fn window_set_geo "struct window *win" "Uint16 w" "Uint16 h"
+.Ft "void"
+.Fn window_set_spacing "struct window *win" "int spacing"
 .Pp
-.Ft void
-.Fn window_set_position "struct window *win" "Sint16 x" "Sint16 y"
+.Ft "void"
+.Fn window_set_padding "struct window *win" "int padding"
 .Pp
-.Ft void
-.Fn window_set_min_geo "struct window *win" "Uint16 w" "Uint16 h"
-.Pp
-.Ft void
-.Fn window_set_titleh "struct window *win" "Uint8 h"
-.Pp
-.Ft void
-.Fn window_attach "struct window *parent" "struct region *child"
-.Pp
-.Ft void
-.Fn window_detach "struct window *parent" "struct region *child"
+.Ft "void"
+.Fn window_set_position "struct window *win" "enum window_alignment alignment" \
+                        "int cascade"
 .nr nS 0
 .Pp
 The
 .Fn window_new
-function allocates, initializes, and attaches a
-.Nm
-structure.
-.Pp
-The
-.Fn window_generic_new
-function allocates, initializes and attaches a centered
-.Nm
-with a minimum and default geometry of
-.Fa w
-by
-.Fa h
-pixels.
-If
-.Fa name
-is non-NULL, it specifies the name of the window (implying the
-.Dv WINDOW_SAVE_POSITION
-flag) and causes the function to return NULL if such a window exists.
-.Pp
-The
+function allocates, initializes, and attaches a new window.
 .Fn window_init
-function initializes a
+initializes a
 .Nm
 structure.
-If the window is unique (only one instance is allowed and its geometry and
-coordinates are saved),
-.Fa name
-is a string uniquely identifying the window.
 If
 .Fa name
-is NULL, the window is considered generic.
-.Fa x
-and
-.Fa y
-define the initial absolute position of the window in pixels, and are ignored
-with the
-.Dv WINDOW_CENTER
-flag.
-The
-.Fa w
-and
-.Fa h
-arguments define the default window geometry in pixels (or in percentiles
-of the total view size with the
-.Dv WINDOW_SCALE
-flag).
-.Pp
-The
-.Fa flags
-may be modified at run time (assuming the
-.Nm
-is locked), and may include:
-.Pp
-.Bd -literal
-#define WINDOW_TITLEBAR		0x01  /* Draw a title bar */
-#define WINDOW_SCALE		0x02  /* Scale the initial geometry (%) */
-#define WINDOW_CENTER		0x04  /* Center the initial position */
-#define WINDOW_SHOWN		0x10  /* Window is visible */
-#define WINDOW_SAVE_POSITION	0x20  /* Save position/geometry on close */
-#define WINDOW_HIDDEN_BODY	0x40  /* Draw the titlebar only */
-.Ed
-.Pp
-The
-.Fn window_destroy
-function frees resources allocated by a window, assuming it is no longer
-attached to a view.
-.Pp
-The
-.Fn window_attach
-function attaches the region
-.Fa region
-to the window
-.Fa parent .
-The
-.Fn window_detach
-function detaches the region
-.Fa region
-from the window
-.Fa parent .
+is not NULL, it specifies that the window should be unique (position and
+geometry are persistent, only one instance is allowed and the default close
+behavior is
+.Dv WINDOW_HIDE
+instead of
+.Dv WINDOW_DETACH ) .
 .Pp
 The
 .Fn window_set_caption
-function changes the text shown inside the window titlebar, which is initially
-set to
-.Sq Untitled .
+function sets the text displayed by the titlebar (if there is one).
 The string is truncated if its length exceeds
-.Dv WINDOW_CAPTION_MAX
-- 1.
+.Dv LABEL_MAX
+- 1 bytes.
+.Pp
+The
+.Fn window_set_closure
+function installs a default
+.Sq window-close
+event handler:
+.Bd -literal
+enum window_close_mode {
+	WINDOW_HIDE,		/* Hide window on close */
+	WINDOW_DETACH		/* Detach window on close */
+};
+.Ed
 .Pp
 The
 .Fn window_set_spacing
-function sets the spacing between regions inside the window to
-.Fa xsp
-pixels horizontally and
-.Fa ysp
-pixels vertically.
-.Fn window_set_geo ,
-.Fn window_set_min_geo
-and
+function sets the spacing between child widgets to
+.Fa spacing
+pixels.
+.Fn window_set_padding
+sets the padding around child widgets to
+.Fa padding
+pixels.
+.Pp
+The
 .Fn window_set_position
-change the effective geometry, minimal geometry and window coordinates,
-respectively.
-.Fn window_set_titleh
-changes the height of the titlebar to
-.Fa h
-pixels .
+function requests an initial window position, which may be one of:
+.Bd -literal
+enum window_alignment {
+	WINDOW_UPPER_LEFT,
+	WINDOW_MIDDLE_LEFT,
+	WINDOW_LOWER_LEFT,
+	WINDOW_UPPER_RIGHT,
+	WINDOW_MIDDLE_RIGHT,
+	WINDOW_LOWER_RIGHT,
+	WINDOW_CENTER,
+	WINDOW_LOWER_CENTER,
+	WINDOW_UPPER_CENTER
+.Ed
+If the
+.Fa cascade
+argument is 1, the window position is slightly incremented or decremented at
+each call (depending on the preferred alignment).
 .Sh VISIBILITY
 .nr nS 1
-.Ft int
+.Ft void
 .Fn window_show "struct window *win"
 .Pp
-.Ft int
+.Ft void
 .Fn window_hide "struct window *win"
 .Pp
-.Ft void
-.Fn window_resize "struct window *win"
+.Ft int
+.Fn window_toggle_visibility "struct window *win"
 .nr nS 0
 .Pp
 The
 .Fn window_show
-and
+function marks
+.Fa win
+as visible.
 .Fn window_hide
-functions control the visibility of a window, returning 1 if the window was
-previously visible, otherwise 0.
-.Pp
-The
-.Fn window_resize
-function effects a change in window geometry by updating the regions
-and widgets inside the window
+marks
+.Fa win
+as invisible.
+.Fn window_toggle_visibility
+inverts the visibility state of
 .Fa win .
-The window structure
-.Fa win
-must be locked when
-.Fn window_resize
-is called.
-.Sh RENDERING
-.nr nS 1
-.Ft void
-.Fn window_draw "struct window *win"
-.nr nS 0
-.Pp
-The
-.Fn window_draw
-function draws the window
-.Fa win
-to video memory.
-The
-.Fa win
-structure must be locked when
-.Fn window_draw
-is called.
-.Sh EVENT DISPATCHING
-.nr nS 1
-.Ft int
-.Fn window_event "SDL_Event *ev"
-.nr nS 0
-.Pp
-The
-.Fn window_event
-function translates the
-.Xr SDL_Event 3
-pointed to by the
-.Fa ev
-argument and dispatches appropriate events to relevant widgets.
-The view structure must be locked, and the window list must not be
-empty when
-.Fn window_event
-is called.
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void
@@ -258,35 +183,28 @@ is called.
 .Pp
 .Ft void
 .Fn window_generic_hide "int argc" "union evarg *argv"
+.Pp
+.Ft void
+.Fn window_generic_show "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
 .Fn window_generic_detach
 event handler detaches the window given as the first argument, freeing all
 associated resources.
-.Fn window_generic_detach
-is registered as the
-.Sq window-close
-event handler for windows created with
-.Fn window_generic_new .
-The
 .Fn window_generic_hide
-function hides the window given as the first argument, if it is currently
+hides the window given as the first argument, if it is currently
 visible.
+.Fn window_generic_show
+shows the window given as the first argument.
+.Pp
+The
+.Fn window_set_closure
+function is an alternative to assigning these event handlers manually.
 .Sh EVENTS
 The
 .Nm
-object reacts directly to events of type
-.Xr SDL_Event 3 ,
-translates, and dispatches them to relevant
-.Xr widget 3
-structures.
-.Pp
-The
-.Nm
-object delivers the following events to
-.Xr widget 3
-objects:
+widget delivers the following events to its child widgets:
 .Pp
 .Bl -tag -width 2n
 .It Fn window-gainfocus "void"
@@ -339,9 +257,12 @@ This event is generated after the window is no longer visible.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr widget 3 ,
-.Xr region 3
+.Xr widget 3
 .Sh HISTORY
 The
 .Nm
 system first appeared in Agar 1.0.
+.Sh BUGS
+Most of the
+.Sq window-
+prefixed events should be renamed.

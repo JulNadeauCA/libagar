@@ -1,4 +1,4 @@
-.\"	$Csoft: scrollbar.3,v 1.7 2003/02/02 21:16:15 vedge Exp $
+.\"	$Csoft: scrollbar.3,v 1.9 2003/04/17 03:59:17 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,12 +44,10 @@ widget represents a single value inside a fixed range.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct scrollbar *"
-.Fn scrollbar_new "struct region *reg" "int w" "int h" \
-                  "enum scrollbar_orientation orientation"
+.Fn scrollbar_new "void *parent" "enum scrollbar_type type"
 .Pp
 .Ft void
-.Fn scrollbar_init "struct scrollbar *scrollbar" "int w" "int h" \
-                   "enum scrollbar_orientation orientation"
+.Fn scrollbar_init "struct scrollbar *scrollbar" "enum scrollbar_type type"
 .Pp
 .Ft void
 .Fn scrollbar_set_bar_size "struct scrollbar *scrollbar" "int size"
@@ -63,23 +61,12 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
-The
 .Fn scrollbar_init
-function initializes a
+initializes a
 .Nm
-widget of size
-.Fa w
-x
-.Fa h .
-It is assumed that each visible item (ie. a list item, or a map node) is
-.Fa item_size
-pixels.
-The valid values for
-.Fa orientation
-are:
-.Pp
+widget of the given type:
 .Bd -literal
-enum scrollbar_orientation {
+enum scrollbar_type {
 	SCROLLBAR_HORIZ,
 	SCROLLBAR_VERT
 };
@@ -92,7 +79,8 @@ function sets the size of the scrollbar to
 which is usually calculated from the visible area of whatever is being
 scrolled (such as the number of visible items of a
 .Xr tlist 3
-widget).
+widget or the amount nodes in the visible area of a
+.Xr map 3 ) .
 .Fn scrollbar_get_bar_size
 returns the current size of the scrollbar in
 .Fa sizep .
@@ -133,8 +121,7 @@ The scrollbar's value has changed to
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm

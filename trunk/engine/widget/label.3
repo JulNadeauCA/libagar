@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.15 2003/03/13 23:34:50 vedge Exp $
+.\"	$Csoft: label.3,v 1.16 2003/05/16 01:26:55 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,29 +40,24 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget displays a string of text, which can change at runtime.
+widget displays single-line or multi-line text.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct label *"
-.Fn label_new "struct region *reg" "int w" "int h" "const char *fmt" "..."
+.Fn label_new "void *parent" "const char *fmt" "..."
 .Pp
 .Ft "struct label *"
-.Fn label_polled_new "struct region *reg" "int w" "int h" \
-                     "pthread_mutex_t *mutex" "const char *fmt" "..."
+.Fn label_polled_new "void *parent" "pthread_mutex_t *mutex" \
+                     "const char *fmt" "..."
 .nr nS 0
 .Pp
 The
 .Fn label_new
 function allocates, initializes and attaches a
 .Nm
-widget of size
-.Fa w
-x
-.Fa h
-pixels.
-The
+widget.
 .Fa fmt
-argument is a
+is a
 .Xr printf 3
 style format string.
 .Pp
@@ -70,7 +65,7 @@ The
 .Fn label_polled_new
 function allocates, initializes and attaches a
 .Nm
-with contents updated before the widget is redrawn.
+able to dereferences pointers to specific data whenever the label is redrawn.
 The draw operation will attempt to acquire
 .Fa mutex ,
 unless it is
@@ -143,7 +138,6 @@ widget neither reacts to nor generates any event.
 .Xr agar 3 ,
 .Xr widget 3 ,
 .Xr window 3 ,
-.Xr region 3 ,
 .Xr printf 3
 .Sh HISTORY
 The

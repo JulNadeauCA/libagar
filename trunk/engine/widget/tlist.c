@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.62 2003/05/25 08:27:42 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.63 2003/05/26 03:03:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,17 +26,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/strlcpy.h>
-
 #include <engine/engine.h>
 #include <engine/view.h>
 
 #include "tlist.h"
 
-#include <engine/widget/primitive.h>
-#include <engine/widget/text.h>
-#include <engine/widget/region.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 #include <string.h>
 
@@ -49,19 +45,18 @@ static struct widget_ops tlist_ops = {
 		NULL		/* edit */
 	},
 	tlist_draw,
-	NULL			/* size */
+	tlist_scale
 };
 
 enum {
 	TEXT_COLOR,
-	BACKGROUND_COLOR,
+	BG_COLOR,
 	LINE_COLOR,
 	SELECTION_COLOR
 };
 
 enum {
 	SELECTION_MOUSE_BUTTON = 1,
-	DEFAULT_BUTTON_SIZE =	 20,
 	PAGE_INCREMENT =	 4,
 	DBLCLICK_DELAY =	 250,
 	MIN_WIDTH =		 26,
@@ -69,56 +64,46 @@ enum {
 };
 
 static void	tlist_mousebuttondown(int, union evarg *);
-static void	tlist_mousebuttonup(int, union evarg *);
-static void	tlist_mousemotion(int, union evarg *);
 static void	tlist_keydown(int, union evarg *);
-static void	tlist_scaled(int, union evarg *);
-static void	tlist_attached(int, union evarg *);
+static void	tlist_scrolled(int, union evarg *);
 static void	tlist_free_item(struct tlist_item *);
-static void	tlist_adjust_scrollbar(struct tlist *);
+static void	tlist_free_items(struct tlist *);
 
 struct tlist *
-tlist_new(struct region *reg, int rw, int rh, int flags)
+tlist_new(void *parent, int flags)
 {
 	struct tlist *tl;
 
 	tl = Malloc(sizeof(struct tlist));
-	tlist_init(tl, rw, rh, flags);
-	region_attach(reg, tl);
+	tlist_init(tl, flags);
+	object_attach(parent, tl);
 	return (tl);
 }
 
 void
-tlist_init(struct tlist *tl, int rw, int rh, int flags)
+tlist_init(struct tlist *tl, int flags)
 {
-	widget_init(&tl->wid, "tlist", &tlist_ops, rw, rh);
-	WIDGET(tl)->flags |= WIDGET_CLIPPING;
+	widget_init(tl, "tlist", &tlist_ops,
+	    WIDGET_CLIPPING|WIDGET_WFILL|WIDGET_HFILL);
 
-	widget_map_color(tl, BACKGROUND_COLOR, "background", 120, 120, 120);
-	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240);
-	widget_map_color(tl, LINE_COLOR, "line", 50, 50, 50);
-	widget_map_color(tl, SELECTION_COLOR, "selection", 50, 50, 120);
+	widget_map_color(tl, BG_COLOR, "background", 120, 120, 120, 255);
+	widget_map_color(tl, TEXT_COLOR, "text", 240, 240, 240, 255);
+	widget_map_color(tl, LINE_COLOR, "line", 50, 50, 50, 255);
+	widget_map_color(tl, SELECTION_COLOR, "selection", 50, 50, 120, 255);
 
 	tl->flags = flags;
+	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
 	tl->item_h = text_font_height(font) + 2;
-	tl->nitems = 0;
-	tl->nvisitems = 0;
 	tl->dblclicked = NULL;
 	tl->dbltimer = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
-
-	pthread_mutex_init(&tl->lock, &recursive_mutexattr);
-
-	scrollbar_init(&tl->sbar, -1, -1, SCROLLBAR_VERT);
-	WIDGET(&tl->sbar)->flags |= WIDGET_NO_FOCUS;
-
-	event_new(tl, "window-mousemotion", tlist_mousemotion, NULL);
-	event_new(tl, "window-mousebuttonup", tlist_mousebuttonup, NULL);
+	tl->nitems = 0;
+	tl->nvisitems = 0;
+	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
+	event_new(tl->sbar, "scrollbar-scrolled", tlist_scrolled, "%p", tl);
 	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
 	event_new(tl, "window-keydown", tlist_keydown, NULL);
-	event_new(tl, "attached", tlist_attached, NULL);
-	event_new(tl, "widget-scaled", tlist_scaled, NULL);
 }
 
 void
@@ -132,32 +117,27 @@ tlist_destroy(void *p)
 	}
 	pthread_mutex_unlock(&tl->lock);
 
-	tlist_clear_items(tl);
+	tlist_free_items(tl);
 	pthread_mutex_destroy(&tl->lock);
-	object_destroy(&tl->sbar);
 	widget_destroy(tl);
 }
 
-static void
-tlist_attached(int argc, union evarg *argv)
+void
+tlist_scale(void *p, int w, int h)
 {
-	struct tlist *tl = argv[0].p;
-	
-	WIDGET(&tl->sbar)->win = WIDGET(tl)->win;
-}
+	struct tlist *tl = p;
 
-static void
-tlist_scaled(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	struct scrollbar *sb = &tl->sbar;
+	if (w == -1 && h == -1) {
+		WIDGET(tl)->w = 200;		/* XXX more sensible default */
+		WIDGET(tl)->h = 100;
+	}
 
-	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - DEFAULT_BUTTON_SIZE;
-	WIDGET(sb)->y = WIDGET(tl)->y;
- 	WIDGET(sb)->w = DEFAULT_BUTTON_SIZE;
-	WIDGET(sb)->h = WIDGET(tl)->h;
+	WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->button_size;
+	WIDGET(tl->sbar)->y = 0;
 
-	event_post(sb, "widget-scaled", "%i, %i", WIDGET(sb)->w, WIDGET(sb)->h);
+	widget_set_geometry(tl->sbar,
+	    tl->sbar->button_size,
+	    WIDGET(tl)->h);
 }
 
 void
@@ -172,14 +152,14 @@ tlist_draw(void *p)
 		return;
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
-	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
+	    WIDGET_COLOR(tl, BG_COLOR));
 
 	pthread_mutex_lock(&tl->lock);
 
 	if (tl->flags & TLIST_POLL)
 		event_post(tl, "tlist-poll", NULL);
 
-	offset = widget_get_int(&tl->sbar, "value");
+	offset = widget_get_int(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		SDL_Surface *textsu = NULL;
@@ -192,14 +172,11 @@ tlist_draw(void *p)
 			break;
 
 		if (it->selected) {			/* Selection mark */
-			SDL_Rect rd;
-
-			rd.x = x;
-			rd.y = y;
-			rd.w = WIDGET(tl)->w - WIDGET(&tl->sbar)->w;
-			rd.h = tl->item_h;
-
-			primitives.rect_filled(tl, &rd,
+			primitives.rect_filled(tl,
+			    x,
+			    y,
+			    WIDGET(tl)->w - WIDGET(tl->sbar)->w,
+			    tl->item_h,
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
 
@@ -246,7 +223,7 @@ tlist_draw(void *p)
 					    ts-2, ts-2,
 					    WIDGET_COLOR(tl, LINE_COLOR));
 				}
-				goto drawtext;
+				goto drawtext;		/* Skip the icon */
 			}
 		}
 
@@ -270,27 +247,25 @@ drawtext:
 
 	tl->nvisitems = visitems;
 	if (tl->nitems > 0 && visitems > 0 && visitems < tl->nitems) {
-		scrollbar_set_bar_size(&tl->sbar,
-		    visitems*(WIDGET(&tl->sbar)->h - tl->sbar.button_size*2) /
+		scrollbar_set_bar_size(tl->sbar,
+		    visitems*(WIDGET(tl->sbar)->h - tl->sbar->button_size*2) /
 		    tl->nitems);
 	} else {
-		scrollbar_set_bar_size(&tl->sbar, -1);		/* Full range */
+		scrollbar_set_bar_size(tl->sbar, -1);		/* Full range */
 	}
-
-	scrollbar_draw(&tl->sbar);
 	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Adjust the scrollbar offset according to the number of visible items. */
-static void
+static __inline__ void
 tlist_adjust_scrollbar(struct tlist *tl)
 {
 	struct widget_binding *maxb, *offsetb;
 	int *max, *offset;
 	int noffset;
 
-	maxb = widget_binding_get_locked(&tl->sbar, "max", &max);
-	offsetb = widget_binding_get_locked(&tl->sbar, "value", &offset);
+	maxb = widget_binding_get_locked(tl->sbar, "max", &max);
+	offsetb = widget_binding_get_locked(tl->sbar, "value", &offset);
 	noffset = *offset;
 
 	if (noffset > *max - tl->nvisitems)
@@ -309,8 +284,9 @@ tlist_adjust_scrollbar(struct tlist *tl)
 static void
 tlist_free_item(struct tlist_item *it)
 {
-	if (it->icon != NULL)
+	if (it->icon != NULL) {
 		SDL_FreeSurface(it->icon);
+	}
 	free(it);
 }
 
@@ -329,8 +305,8 @@ tlist_remove_item(struct tlist *tl, struct tlist_item *it)
 	tlist_free_item(it);
 
 	/* Update the scrollbar range and offset accordingly. */
-	widget_set_int(&tl->sbar, "max", nitems);
-	offsetb = widget_binding_get_locked(&tl->sbar, "value", &offset);
+	widget_set_int(tl->sbar, "max", nitems);
+	offsetb = widget_binding_get_locked(tl->sbar, "value", &offset);
 	if (*offset > nitems) {
 		*offset = nitems;
 	} else if (nitems > 0 && *offset < nitems) {		/* XXX ugly */
@@ -344,8 +320,32 @@ void
 tlist_scroll(struct tlist *tl, int pos)
 {
 	pthread_mutex_lock(&tl->lock);
-	widget_set_int(&tl->sbar, "value", pos);
+	widget_set_int(tl->sbar, "value", pos);
 	pthread_mutex_unlock(&tl->lock);
+}
+
+/* Release all items. */
+static void
+tlist_free_items(struct tlist *tl)
+{
+	struct tlist_item *it, *nit;
+
+	if (tl->flags & TLIST_POLL) {
+		for (it = TAILQ_FIRST(&tl->selitems);
+		     it != TAILQ_END(&tl->selitems);
+		     it = nit) {
+			nit = TAILQ_NEXT(it, selitems);
+			tlist_free_item(it);
+		}
+		TAILQ_INIT(&tl->selitems);
+	}
+	for (it = TAILQ_FIRST(&tl->items);
+	     it != TAILQ_END(&tl->items);
+	     it = nit) {
+		nit = TAILQ_NEXT(it, items);
+		tlist_free_item(it);
+	}
+	TAILQ_INIT(&tl->items);
 }
 
 /* Clear the items on the list. */
@@ -357,7 +357,6 @@ tlist_clear_items(struct tlist *tl)
 	pthread_mutex_lock(&tl->lock);
 
 	if (tl->flags & TLIST_POLL) {
-		/* Clear the saved selection list. */
 		for (it = TAILQ_FIRST(&tl->selitems);
 		     it != TAILQ_END(&tl->selitems);
 		     it = nit) {
@@ -382,7 +381,7 @@ tlist_clear_items(struct tlist *tl)
 	tl->nitems = 0;
 	
 	/* Preserve the offset value, for polling. */
-	widget_set_int(&tl->sbar, "max", 0);
+	widget_set_int(tl->sbar, "max", 0);
 
 	pthread_mutex_unlock(&tl->lock);
 }
@@ -430,7 +429,8 @@ tlist_visible_childs(struct tlist *tl, struct tlist_item *cit)
 }
 
 static struct tlist_item *
-tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
+tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, const char *text,
+    void *p1)
 {
 	struct tlist_item *it;
 
@@ -450,7 +450,8 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 /* Add an item to the list. */
 struct tlist_item *
-tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
+tlist_insert_item(struct tlist *tl, SDL_Surface *icon, const char *text,
+    void *p1)
 {
 	struct tlist_item *it;
 
@@ -458,7 +459,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 	pthread_mutex_lock(&tl->lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
-	widget_set_int(&tl->sbar, "max", ++tl->nitems);
+	widget_set_int(tl->sbar, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
@@ -466,7 +467,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 }
 
 struct tlist_item *
-tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, char *text,
+tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, const char *text,
     void *p1)
 {
 	struct tlist_item *it;
@@ -475,7 +476,7 @@ tlist_insert_item_head(struct tlist *tl, SDL_Surface *icon, char *text,
 
 	pthread_mutex_lock(&tl->lock);
 	TAILQ_INSERT_HEAD(&tl->items, it, items);
-	widget_set_int(&tl->sbar, "max", ++tl->nitems);
+	widget_set_int(tl->sbar, "max", ++tl->nitems);
 	pthread_mutex_unlock(&tl->lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
@@ -537,23 +538,6 @@ tlist_unselect_all(struct tlist *tl)
 	pthread_mutex_unlock(&tl->lock);
 }
 
-static void
-tlist_mousemotion(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	
-	event_forward(&tl->sbar, "window-mousemotion", argc, argv);
-	tlist_adjust_scrollbar(tl);
-}
-
-static void
-tlist_mousebuttonup(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[0].p;
-	
-	event_forward(&tl->sbar, "window-mousebuttonup", argc, argv);
-}
-
 static Uint32
 tlist_dblclick_expire(Uint32 i, void *arg)
 {
@@ -576,20 +560,14 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	struct tlist_item *ti;
 	int tind;
 	
-	WIDGET_FOCUS(tl);
+	widget_set_focus(tl);
 
-	if (x > WIDGET(tl)->w - WIDGET(&tl->sbar)->w) {	/* Scrollbar click? */
-		event_forward(&tl->sbar, "window-mousebuttondown", argc, argv);
-		tlist_adjust_scrollbar(tl);
-		return;
-	}
-	
 	if (button != SELECTION_MOUSE_BUTTON) 		/* Selection button? */
 		return;
 	
 	pthread_mutex_lock(&tl->lock);
 
-	tind = (widget_get_int(&tl->sbar, "value") + y/tl->item_h) + 1;
+	tind = (widget_get_int(tl->sbar, "value") + y/tl->item_h) + 1;
 	if ((ti = tlist_item_index(tl, tind)) == NULL)
 		goto out;
 
@@ -686,7 +664,7 @@ tlist_keydown(int argc, union evarg *argv)
 	int sel;
 	int *offset;
 
-	offsetb = widget_binding_get_locked(&tl->sbar, "value", &offset);
+	offsetb = widget_binding_get_locked(tl->sbar, "value", &offset);
 
 	pthread_mutex_lock(&tl->lock);
 	switch (keysym) {
@@ -759,6 +737,14 @@ tlist_keydown(int argc, union evarg *argv)
 	pthread_mutex_unlock(&tl->lock);
 }
 
+static void
+tlist_scrolled(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+
+	tlist_adjust_scrollbar(tl);
+}
+
 /* Return the item at the given index. */
 struct tlist_item *
 tlist_item_index(struct tlist *tl, int index)
@@ -811,15 +797,14 @@ tlist_item_text(struct tlist *tl, char *text)
 	return (NULL);
 }
 
-/* If the tlist is attached, its parent window must be locked. */
+/* Set the height to use for item display. */
 void
 tlist_set_item_height(struct tlist *tl, int ih)
 {
 	struct tlist_item *it;
 
-	tl->item_h = ih;
-
 	pthread_mutex_lock(&tl->lock);
+	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != NULL) {
 			SDL_Surface *nicon;

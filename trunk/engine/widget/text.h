@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.16 2003/03/03 05:17:06 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.17 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXT_H_
@@ -18,8 +18,10 @@ extern DECLSPEC int		 text_font_height(ttf_font *);
 extern DECLSPEC int		 text_font_ascent(ttf_font *);
 extern DECLSPEC int		 text_font_descent(ttf_font *);
 extern DECLSPEC int		 text_font_line_skip(ttf_font *);
-extern DECLSPEC SDL_Surface	*text_render(char *, int, Uint32, char *);
-extern DECLSPEC SDL_Surface	*text_render_glyph(char *, int, Uint32, char);
+extern DECLSPEC SDL_Surface	*text_render(const char *, int, Uint32,
+				             const char *);
+extern DECLSPEC SDL_Surface	*text_render_glyph(const char *, int, Uint32,
+				                   char);
 extern DECLSPEC void		 text_msg(const char *, const char *, ...);
 __END_DECLS
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.19 2003/05/20 12:05:20 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.20 2003/05/22 05:43:12 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,10 +45,10 @@ Single or multiple selections of items are allowed.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct tlist *"
-.Fn tlist_new "struct region *reg" "int rw" "int rh" "int flags"
+.Fn tlist_new "void *parent" "int flags"
 .Pp
 .Ft void
-.Fn tlist_init "struct tlist *tlist" "int rw" "int rh" "int flags"
+.Fn tlist_init "struct tlist *tlist" "int flags"
 .Pp
 .Ft void
 .Fn tlist_set_item_height "struct tlist *tl" "int itemh"
@@ -66,18 +66,13 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
-The
 .Fn tlist_init
-function initializes a
+initializes a
 .Nm
-widget of size
-.Fa rw
-x
-.Fa rh
-with no items initially.
+widget.
 The
 .Fa flags
-can be changed at runtime, and may include:
+may include:
 .Pp
 .Bd -literal
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
@@ -110,11 +105,11 @@ function sets the position of the scrollbar to
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "struct tlist_item *"
-.Fn tlist_insert_item "struct tlist *tlist" "SDL_Surface *icon" "char *text" \
-                      "void *p1"
+.Fn tlist_insert_item "struct tlist *tlist" "SDL_Surface *icon" \
+                      "const char *text" "void *p1"
 .Pp
 .Fn tlist_insert_item_head "struct tlist *tlist" "SDL_Surface *icon" \
-                           "char *text" "void *p1"
+                           "const char *text" "void *p1"
 .Pp
 .Ft "void"
 .Fn tlist_remove_item "struct tlist *tlist" "struct tlist_item *item"
@@ -141,7 +136,7 @@ function sets the position of the scrollbar to
 .Fn tlist_item_selected "struct tlist *tlist"
 .Pp
 .Ft "struct tlist_item *"
-.Fn tlist_item_text "struct tlist *tlist" "char *text"
+.Fn tlist_item_text "struct tlist *tlist" "const char *text"
 .nr nS 0
 .Pp
 The
@@ -250,8 +245,7 @@ processed.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm

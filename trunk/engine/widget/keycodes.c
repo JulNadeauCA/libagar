@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.24 2003/03/25 13:48:08 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.25 2003/05/24 15:43:55 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -33,7 +33,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include <engine/widget/text.h>
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
@@ -61,16 +60,16 @@ insert_char(struct textbox *tbox, char c, char *s, size_t buflen)
 	if (len+1 >= buflen)
 		return (NULL);
 
-	if (tbox->text.pos == len) {
+	if (tbox->pos == len) {
 		s[len] = c;
 	} else {
-		char *sp = s + tbox->text.pos;
+		char *sp = s + tbox->pos;
 
-		memcpy(sp+1, sp, len-tbox->text.pos);
-		s[tbox->text.pos] = c;
+		memcpy(sp+1, sp, len-tbox->pos);
+		s[tbox->pos] = c;
 	}
 	s[len+1] = '\0';
-	tbox->text.pos++;
+	tbox->pos++;
 	return (&s[len]);
 }
 
@@ -129,23 +128,23 @@ key_bspace(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	len = strlen(s);
-	if (tbox->text.pos == 0 || len == 0)
+	if (tbox->pos == 0 || len == 0)
 		goto out;
 
-	if (tbox->text.pos == len) {
-		s[--tbox->text.pos] = '\0';
-	} else if (tbox->text.pos > 0) {
+	if (tbox->pos == len) {
+		s[--tbox->pos] = '\0';
+	} else if (tbox->pos > 0) {
 		int i;
 
 		/* XXX use memmove */
-		for (i = tbox->text.pos-1; i < len; i++)
+		for (i = tbox->pos-1; i < len; i++)
 			s[i] = s[i+1];
-		tbox->text.pos--;
+		tbox->pos--;
 	}
 	
-	if (tbox->text.pos == tbox->text.offs) {
-		if ((tbox->text.offs -= 4) < 1)
-			tbox->text.offs = 0;
+	if (tbox->pos == tbox->offs) {
+		if ((tbox->offs -= 4) < 1)
+			tbox->offs = 0;
 	}
 out:
 	widget_binding_modified(stringb);
@@ -162,13 +161,13 @@ key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	stringb = widget_binding_get_locked(tbox, "string", &s);
 	len = strlen(s);
 
-	if (tbox->text.pos == len && len > 0) {
-		s[--tbox->text.pos] = '\0';
-	} else if (tbox->text.pos >= 0) {
+	if (tbox->pos == len && len > 0) {
+		s[--tbox->pos] = '\0';
+	} else if (tbox->pos >= 0) {
 		int i;
 
 		/* XXX use memmove */
-		for (i = tbox->text.pos; i < len; i++)
+		for (i = tbox->pos; i < len; i++)
 			s[i] = s[i+1];
 	}
 	widget_binding_modified(stringb);
@@ -178,10 +177,10 @@ key_delete(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 static void
 key_home(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	tbox->text.pos = 0;
+	tbox->pos = 0;
 
-	if (tbox->text.offs > 0)
-		tbox->text.offs = 0;
+	if (tbox->offs > 0)
+		tbox->offs = 0;
 }
 
 static void
@@ -191,11 +190,11 @@ key_end(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	char *s;
 
 	stringb = widget_binding_get_locked(tbox, "string", &s);
-	tbox->text.pos = strlen(s);
+	tbox->pos = strlen(s);
 	widget_binding_unlock(stringb);
 
 	/* XXX botch */
-	tbox->text.offs = 0;
+	tbox->offs = 0;
 }
 
 static void
@@ -205,7 +204,7 @@ key_kill(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	char *s;
 
 	stringb = widget_binding_get_locked(tbox, "string", &s);
-	s[tbox->text.pos] = '\0';
+	s[tbox->pos] = '\0';
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
 }
@@ -213,12 +212,12 @@ key_kill(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 static void
 key_left(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 {
-	if (--tbox->text.pos < 1)
-		tbox->text.pos = 0;
+	if (--tbox->pos < 1)
+		tbox->pos = 0;
 
-	if (tbox->text.pos == tbox->text.offs) {
-		if (--tbox->text.offs < 0)
-			tbox->text.offs = 0;
+	if (tbox->pos == tbox->offs) {
+		if (--tbox->offs < 0)
+			tbox->offs = 0;
 	}
 }
 
@@ -229,8 +228,8 @@ key_right(struct textbox *tbox, SDLKey keysym, int keymod, char *arg)
 	char *s;
 
 	stringb = widget_binding_get_locked(tbox, "string", &s);
-	if (tbox->text.pos < strlen(s))
-		tbox->text.pos++;
+	if (tbox->pos < strlen(s))
+		tbox->pos++;
 	widget_binding_unlock(stringb);
 }
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: graph.3,v 1.11 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: graph.3,v 1.12 2003/04/12 00:35:02 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,10 +45,10 @@ different values on a dynamic range.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct graph *"
-.Fn graph_new "struct region *reg" "const char *caption" "enum graph_type type" "Uint32 flags" "Sint32 yrange" "int rw" "int rh"
+.Fn graph_new "void *parent" "const char *caption" "enum graph_type type" "int flags" "Sint32 yrange"
 .Pp
 .Ft void
-.Fn graph_init "struct graph *graph" "const char *caption" "enum graph_type type" "Uint32 flags" "Sint32 yrange" "int rw" "int rh"
+.Fn graph_init "struct graph *graph" "const char *caption" "enum graph_type type" "int flags" "Sint32 yrange"
 .nr nS 0
 .Pp
 The
@@ -56,20 +56,20 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
-The
 .Fn graph_init
-function initializes a
+initializes a
 .Nm
-widget of size
-.Fa rw
-x
-.Fa rh .
-The
+widget.
 .Fa caption
-argument is a null-terminated description string.
+is a short description of the graph; it is truncated if its length
+exceeds
+.Dv GRAPH_CAPTION_MAX - 1
+characters.
+.Fa yrange
+is the default range to display.
 The
 .Fa type
-argument defines the type of graph, which is one of:
+argument is one of:
 .Bd -literal
 enum graph_type {
 	GRAPH_POINTS,		/* Dots */
@@ -78,19 +78,18 @@ enum graph_type {
 .Ed
 .Pp
 The
-.Fa yrange
-argument is the value range and may be negative.
 .Fa flags
-can be changed at runtime, and may include:
+may include:
 .Pp
 .Bd -literal
-#define BUTTON_PRESSED	0x01		/* Button is pressed */
-#define BUTTON_STICKY	0x02		/* Button state is static */
+#define GRAPH_SCROLL	0x01	/* Scroll if the end is not visible */
+#define GRAPH_ORIGIN	0x02	/* Visible origin */
 .Ed
 .Sh PLOTTING
 .nr nS 1
 .Ft "struct graph_item *"
-.Fn graph_add_item "struct graph *graph" "char *name" "Uint32 color"
+.Fn graph_add_item "struct graph *graph" "const char *name" \
+                   "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft void
 .Fn graph_plot "struct graph_item *item" "Sint32 val"
@@ -98,8 +97,18 @@ can be changed at runtime, and may include:
 .Pp
 The
 .Fn graph_add_item
-function creates an item identified by the null-terminated string
-.Fa name .
+function inserts a new item into
+.Fa graph .
+If the length of
+.Fa name
+exceeds
+.Dv GRAPH_ITEM_NAME_MAX - 1
+bytes, the string is truncated.
+The
+.Fa r ,
+.Fa g ,
+.Fa b
+triplet composes a color to visually identify the item.
 .Pp
 The
 .Fn graph_plot
@@ -122,8 +131,6 @@ S key saves the graph, L key loads the graph.
 Stop moving.
 .It window-mousebuttondown
 Start moving.
-.It widget-scaled
-Adjust the graph.
 .El
 .Pp
 The
@@ -132,8 +139,7 @@ widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm

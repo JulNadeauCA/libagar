@@ -1,4 +1,4 @@
-.\"	$Csoft: radio.3,v 1.10 2003/02/10 23:06:03 vedge Exp $
+.\"	$Csoft: radio.3,v 1.11 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,7 +44,7 @@ widget implements a group of radio buttons.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct radio *
-.Fn radio_new "struct region *reg" "const char *items[]"
+.Fn radio_new "void *parent" "const char *items[]"
 .Pp
 .Ft void
 .Fn radio_init "struct radio *radio" "const char *items[]"
@@ -102,8 +102,7 @@ binding remains locked throughout the event handler's execution.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
-.Xr region 3
+.Xr window 3
 .Sh HISTORY
 The
 .Nm

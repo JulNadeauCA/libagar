@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.24 2003/05/22 05:43:12 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.25 2003/05/25 08:27:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -26,7 +26,7 @@ struct tlist_item {
 TAILQ_HEAD(tlist_itemq, tlist_item);
 
 struct tlist {
-	struct widget	wid;
+	struct widget wid;
 	
 	int	 flags;
 #define TLIST_MULTI		0x01	/* Ctrl/shift multiple selections */
@@ -36,42 +36,44 @@ struct tlist {
 #define TLIST_DBLCLICK		0x10	/* Generate tlist-dblclick events */
 #define TLIST_TREE		0x20	/* Hack to display trees */
 
-	int	 		 item_h;	/* Item height */
-	struct scrollbar	 sbar;		/* Scrollbar */
-
 	pthread_mutex_t		 lock;
+	int	 		 item_h;	/* Item height */
 	struct tlist_item	*dblclicked;	/* Last clicked on this item */
 	SDL_TimerID		 dbltimer;	/* Double click timer */
 	struct tlist_itemq	 items;		/* Current Items */
 	struct tlist_itemq	 selitems;	/* Saved items */
 	int			 nitems;	/* Current item count */
 	int			 nvisitems;	/* Visible item count */
+	struct scrollbar	*sbar;		/* Vertical scrollbar */
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct tlist	*tlist_new(struct region *, int, int, int);
-extern DECLSPEC void		 tlist_init(struct tlist *, int, int, int);
-extern DECLSPEC void	 	 tlist_draw(void *);
-extern DECLSPEC void	 	 tlist_destroy(void *);
-extern DECLSPEC void		 tlist_set_item_height(struct tlist *, int);
-extern DECLSPEC void		 tlist_set_item_icon(struct tlist *,
-				                     struct tlist_item *,
-						     SDL_Surface *);
-extern DECLSPEC void		 tlist_save_selections(struct tlist *);
-extern DECLSPEC void		 tlist_restore_selections(struct tlist *);
-extern DECLSPEC int		 tlist_visible_childs(struct tlist *,
-				                      struct tlist_item *);
-extern DECLSPEC void		 tlist_scroll(struct tlist *, int);
+extern DECLSPEC struct tlist *tlist_new(void *, int);
+
+extern DECLSPEC void	tlist_init(struct tlist *, int);
+extern DECLSPEC void	tlist_scale(void *, int, int);
+extern DECLSPEC void	tlist_draw(void *);
+extern DECLSPEC void	tlist_destroy(void *);
+extern DECLSPEC void	tlist_set_item_height(struct tlist *, int);
+extern DECLSPEC void	tlist_set_item_icon(struct tlist *, struct tlist_item *,
+			                    SDL_Surface *);
+extern DECLSPEC void	 tlist_save_selections(struct tlist *);
+extern DECLSPEC void	 tlist_restore_selections(struct tlist *);
+extern DECLSPEC int	 tlist_visible_childs(struct tlist *,
+			                      struct tlist_item *);
+extern DECLSPEC void	 tlist_scroll(struct tlist *, int);
 
 extern DECLSPEC void			 tlist_remove_item(struct tlist *,
 					                   struct tlist_item *);
 extern DECLSPEC void			 tlist_clear_items(struct tlist *);
 extern DECLSPEC struct tlist_item	*tlist_insert_item(struct tlist *,
 					                   SDL_Surface *,
-							   char *, void *);
+							   const char *,
+							   void *);
 extern DECLSPEC struct tlist_item	*tlist_insert_item_head(struct tlist *,
 					                        SDL_Surface *,
-								char *, void *);
+								const char *,
+								void *);
 
 extern DECLSPEC int			 tlist_select(struct tlist *,
 					              struct tlist_item *);

@@ -1,4 +1,4 @@
-/*	$Csoft: palette.h,v 1.3 2003/02/02 21:16:15 vedge Exp $	*/
+/*	$Csoft: palette.h,v 1.4 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PALETTE_H_
@@ -8,35 +8,28 @@
 
 #include "begin_code.h"
 
-enum palette_channel {
-	PALETTE_RED,
-	PALETTE_GREEN,
-	PALETTE_BLUE,
-	PALETTE_ALPHA
+enum palette_type {
+	PALETTE_RGB,		/* RGB scrollbars */
+	PALETTE_RGBA		/* RGBA scrollbars */
 };
 
 struct palette {
-	struct widget	wid;
-	int		flags;
-#define PALETTE_RGB		0x01	/* Manipulate the RGB triplet */
-#define PALETTE_ALPHA		0x02	/* Manipulate the alpha channel */
+	struct widget	   wid;
+	Uint32		   color;	/* Pixel binding */
 
-	struct scrollbar	 *cur_sb;	/* Selected scrollbar */
-	struct scrollbar	**bars;
-	int			 nbars;
-	SDL_Rect		  rpreview;
-
-	struct {			/* Default binding */
-		Uint32	color;
-	} def;
+	enum palette_type  type;
+	struct scrollbar   *bars[4];	/* RGB[A] scrollbars */
+	int		   nbars;
+	SDL_Rect	   rpreview;	/* Color preview rectangle */
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct palette	*palette_new(struct region *, int, int, int);
-extern DECLSPEC void		 palette_init(struct palette *, int, int, int);
-extern DECLSPEC void	 	 palette_destroy(void *);
-extern DECLSPEC void		 palette_draw(void *);
-extern DECLSPEC void		 palette_scaled(int, union evarg *);
+extern DECLSPEC struct palette *palette_new(void *, enum palette_type);
+
+extern DECLSPEC void	 palette_init(struct palette *, enum palette_type);
+extern DECLSPEC void	 palette_destroy(void *);
+extern DECLSPEC void	 palette_scale(void *, int, int);
+extern DECLSPEC void	 palette_draw(void *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.19 2003/05/25 08:27:42 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.20 2003/05/26 03:03:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
@@ -6,19 +6,15 @@
 #include "begin_code.h"
 
 struct primitive_ops {
-	void	(*box)(void *p, int xoffs, int yoffs, int w, int h, int z,
-		       Uint32 color);
-	void	(*frame)(void *p, int xoffs, int yoffs, int w, int h,
-		         Uint32 color);
-	void	(*circle)(void *p, int xoffs, int yoffs, int w, int h,
-		         int radius, Uint32 color);
-	void	(*line)(void *p, int x1, int y1, int x2, int y2, Uint32 color);
-	void	(*line2)(void *p, int x1, int y1, int x2, int y2, Uint32 color);
-	void	(*rect_outlined)(void *p, int x, int y, int w, int h,
-		                 Uint32 color);
-	void	(*rect_filled)(void *p, SDL_Rect *rd, Uint32 color);
-	void	(*plus)(void *p, int x, int y, int w, int h, Uint32 color);
-	void	(*minus)(void *p, int x, int y, int w, int h, Uint32 color);
+	void	(*box)(void *, int, int, int, int, int, Uint32);
+	void	(*frame)(void *, int, int, int, int, Uint32);
+	void	(*circle)(void *, int, int, int, int, int, Uint32);
+	void	(*line)(void *, int, int, int, int, Uint32);
+	void	(*line2)(void *, int, int, int, int, Uint32);
+	void	(*rect_outlined)(void *, int, int, int, int, Uint32);
+	void	(*rect_filled)(void *, int, int, int, int, Uint32);
+	void	(*plus)(void *, int, int, int, int, Uint32);
+	void	(*minus)(void *, int, int, int, int, Uint32);
 };
 
 extern struct primitive_ops primitives;
