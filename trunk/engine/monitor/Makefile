@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.7 2002/12/01 10:46:42 vedge Exp $
+#	$Csoft: Makefile,v 1.8 2002/12/01 14:27:41 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -10,7 +10,7 @@ OBJS=	monitor.o object_browser.o level_browser.o widget_browser.o \
 	view_params.o
 
 FOBJS=	monitor.fob
-XCF=	toolbar.xcf
+XCF=	toolbar.xcf monitor.xcf
 
 CFLAGS+=${SDL_CFLAGS}
 
