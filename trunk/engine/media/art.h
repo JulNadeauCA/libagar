@@ -1,5 +1,7 @@
-/*	$Csoft: art.h,v 1.1 2002/12/01 14:41:05 vedge Exp $	*/
+/*	$Csoft: art.h,v 1.2 2002/12/24 10:32:11 vedge Exp $	*/
 /*	Public domain	*/
+
+struct noderef;
 
 struct art_anim {
 	SDL_Surface	**frames;
@@ -18,11 +20,14 @@ struct art {
 	int		 maxsprites;		/* Allocated sprites */
 	int		 nanims;		/* Loaded animations */
 	int		 maxanims;		/* Allocated animations */
-	struct map	*map;			/* Tile map */
-	/* For tile map generation */
-	int		 mx, my;		/* Current coordinates */
-	Uint32		 cursprite;		/* Current sprite */
-	Uint32		 curanim;		/* Current animation */
+
+	/* Tile fragment map, automatically generated. */
+	struct {
+		struct map	*map;
+	} tiles;
+
+	Uint32		 cursprite;		/* Last added sprite# */
+	Uint32		 curanim;		/* Last added anim# */
 	struct object	*pobj;
 
 	/* Read-write, thread-safe */
@@ -48,7 +53,7 @@ void		 art_insert_sprite_tiles(struct art *, SDL_Surface *);
 
 struct art_anim	*art_insert_anim(struct art *, int);
 void		 art_insert_anim_frame(struct art_anim *, SDL_Surface *);
-void		 art_anim_tick(struct art_anim *, void *);
+void		 art_anim_tick(struct art_anim *, struct noderef *);
 
 #ifdef DEBUG
 SDL_Surface	*art_get_sprite(struct object *, int);

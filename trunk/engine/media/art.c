@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.10 2002/12/29 02:13:55 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.11 2002/12/30 06:31:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -65,7 +65,7 @@ int	art_debug = DEBUG_GC|DEBUG_LOADING;
 static void	art_destroy(struct art *);
 static void	art_destroy_anim(struct art_anim *);
 
-/* Insert a sprite of arbitrary size. */
+/* Insert a sprite of arbitrary size, return the assigned sprite index. */
 int
 art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 {
@@ -80,45 +80,15 @@ art_insert_sprite(struct art *art, SDL_Surface *sprite, int map)
 		    art->maxsprites * sizeof(SDL_Surface *));
 	}
 	art->sprites[art->nsprites++] = sprite;
-
-	/* Insert into the tile map for level edition. */
-	if (art->map != NULL && map) {
-		struct node *node;
-		struct noderef *nref;
-		int mw = TILEW, mh = TILEH;
-	
-		if (++art->mx > 2) {	/* XXX pref */
-			art->mx = 0;
-			art->my++;
-		}
-
-		if (sprite->w != TILEW || sprite->h != TILEH) {
-			mw = sprite->w / TILEW;
-			mh = sprite->h / TILEH;
-		}
-		map_adjust(art->map, art->mx + 1, art->my + 1);
-		node = &art->map->map[art->my][art->mx];
-		nref = node_add_sprite(node, art->pobj, art->cursprite);
-		nref->flags |= NODEREF_SAVEABLE;
-
-		/* XXX pref */
-		node->flags = NODE_BLOCK;
-
-		art->mx += mw;
-		art->my += mh;
-	}
-
 	return (art->cursprite++);
 }
 
-/* Break a sprite into tiles and insert/map them. */
+/* Break a sprite into tile-sized fragments. */
 void
 art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 {
 	int x, y, mw, mh;
 	SDL_Rect sd, rd;
-	struct map *m = art->map;
-	struct noderef *nref;
 
 	sd.w = TILEW;
 	sd.h = TILEH;
@@ -127,9 +97,8 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 	mw = sprite->w/TILEW;
 	mh = sprite->h/TILEH;
 
-	art->my++;
-	for (y = 0; y < sprite->h; y += TILEH, art->my++) {
-		for (x = 0, art->mx = 0; x < sprite->w; x += TILEW, art->mx++) {
+	for (y = 0; y < sprite->h; y += TILEH) {
+		for (x = 0; x < sprite->w; x += TILEW) {
 			SDL_Surface *s;
 
 			/* Allocate a surface for the fragment. */
@@ -149,26 +118,6 @@ art_insert_sprite_tiles(struct art *art, SDL_Surface *sprite)
 			art_insert_sprite(art, s, 0);
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
-
-			/*
-			 * Insert the fragment into the tile map for level
-			 * edition.
-			 */
-			if (art->map != NULL) {
-				struct node *n;
-
-				if (art->mx > m->mapw) {	/* XXX pref */
-					art->mx = 0;
-				}
-				map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
-				n = &m->map[art->my][art->mx];
-				nref = node_add_sprite(n, art->pobj,
-				    art->cursprite++);
-				nref->flags |= NODEREF_SAVEABLE;
-
-				/* XXX pref */
-				n->flags = NODE_BLOCK;
-			}
 		}
 	}
 }
@@ -178,7 +127,6 @@ art_unused(struct art *art)
 {
 	pthread_mutex_lock(&art->used_lock);
 	if (--art->used == 0) {
-		debug(DEBUG_GC, "freeing media: `%s'\n", art->name);
 		art_destroy(art);
 	} else if (art->used < 0) {
 		fatal("ref count < 0\n");
@@ -188,36 +136,36 @@ art_unused(struct art *art)
 
 /* Load artwork when an object is initialized. */
 struct art *
-art_fetch(char *media, struct object *ob)
+art_fetch(char *archive, struct object *ob)
 {
 	struct art *art;
 	struct fobj *fob;
-	char *path;
+	char *path, *s;
 	Uint32 i;
 
 	pthread_mutex_lock(&artq_lock);
 
 	TAILQ_FOREACH(art, &artq, arts) {			/* Cached? */
-		if (strcmp(art->name, media) == 0) {
+		if (strcmp(art->name, archive) == 0) {
 			pthread_mutex_unlock(&artq_lock);
 			return (art);
 		}
 	}
 
 	/* Load the data file. */
-	path = object_path(media, "fob");
+	path = object_path(archive, "fob");
 	if (path == NULL) {
 		if (ob->flags & OBJECT_ART_CAN_FAIL) {
 			ob->flags &= ~(OBJECT_ART);
 			pthread_mutex_unlock(&artq_lock);
 			return (NULL);
 		} else {
-			fatal("%s: %s\n", media, error_get());
+			fatal("%s: %s\n", archive, error_get());
 		}
 	}
 
 	art = emalloc(sizeof(struct art));
-	art->name = strdup(media);
+	art->name = Strdup(archive);
 	art->sprites = NULL;
 	art->nsprites = 0;
 	art->maxsprites = 0;
@@ -225,14 +173,10 @@ art_fetch(char *media, struct object *ob)
 	art->nanims = 0;
 	art->maxanims = 0;
 	art->used = 1;
-
-	/* Tile map */
-	art->map = NULL;
-	art->mx = -1;
-	art->my = 0;
 	art->pobj = ob;		/* XXX */
 	art->cursprite = 0;
 	art->curanim = 0;
+	art->tiles.map = NULL;
 
 	pthread_mutex_init(&art->used_lock, NULL);
 
@@ -240,11 +184,11 @@ art_fetch(char *media, struct object *ob)
 	if (prop_get_bool(config, "object.art.map-tiles")) {
 		char *mapname;
 
-		art->map = emalloc(sizeof(struct map));
-		asprintf(&mapname, "t-%s", media);
-		map_init(art->map, MAP_2D, mapname, NULL);
+		art->tiles.map = emalloc(sizeof(struct map));
+		Asprintf(&mapname, "t-%s", archive);
+		map_init(art->tiles.map, MAP_2D, mapname, NULL);
 		free(mapname);
-		map_alloc_nodes(art->map, 1, 1);
+		map_alloc_nodes(art->tiles.map, 1, 1);
 	}
 
 	/* Load images in XCF format. */
@@ -285,9 +229,9 @@ art_destroy(struct art *art)
 	for (i = 0; i < art->nanims; i++) {
 		art_destroy_anim(art->anims[i]);
 	}
-	if (art->map != NULL) {
+	if (art->tiles.map != NULL) {
 		debug(DEBUG_GC, "freeing %s's tile map\n", art->name);
-		object_destroy(art->map);
+		object_destroy(art->tiles.map);
 	}
 			
 	debug(DEBUG_GC, "freed %s (%d sprites, %d anims)\n",
@@ -313,7 +257,6 @@ art_insert_anim_frame(struct art_anim *anim, SDL_Surface *surface)
 		anim->frames = erealloc(anim->frames,
 		    anim->maxframes * sizeof(SDL_Surface *));
 	}
-	
 	anim->frames[anim->nframes++] = surface;
 }
 
@@ -341,25 +284,6 @@ art_insert_anim(struct art *art, int delay)
 		    art->maxanims * sizeof(struct anim *));
 	}
 	art->anims[art->nanims++] = anim;
-
-	/* Insert into the tile map for level edition. */
-	if (art->map != NULL) {
-		struct node *n;
-		struct noderef *nref;
-
-		if (++art->mx > 2) {	/* XXX pref */
-			art->mx = 0;
-			art->my++;
-		}
-		map_adjust(art->map, art->mx, art->my);
-		n = &art->map->map[art->my][art->mx];
-		nref = node_add_anim(n, art->pobj, art->curanim++,
-		    NODEREF_ANIM_AUTO);
-		nref->flags |= NODEREF_SAVEABLE;
-		
-		/* XXX pref */
-		n->flags = NODE_BLOCK;
-	}
 	return (anim);
 }
 
@@ -376,9 +300,8 @@ art_destroy_anim(struct art_anim *anim)
 }
 
 void
-art_anim_tick(struct art_anim *an, void *nrefp)
+art_anim_tick(struct art_anim *an, struct noderef *nref)
 {
-	struct noderef *nref = nrefp;
 	Uint32 ticks;
 	
 	if ((nref->data.anim.flags & NODEREF_ANIM_AUTO) == 0) {
@@ -480,10 +403,7 @@ tl_sprites_poll(int argc, union evarg *argv)
 		SDL_Surface *su = art->sprites[i];
 		char *s;
 
-		asprintf(&s, "%s:%d (%dx%d)", art->name, i, su->w, su->h);
-		if (s == NULL) {
-			fatal("asprintf: %s\n", strerror(errno));
-		}
+		Asprintf(&s, "%s:%d (%dx%d)", art->name, i, su->w, su->h);
 		tlist_insert_item(tl, su, s, su);
 		free(s);
 	}
@@ -513,13 +433,10 @@ tl_anims_poll(int argc, union evarg *argv)
 
 		if (anim->nframes > 0) {
 			su = anim->frames[0];
-			asprintf(&s, "%s:%d (%dx%d)", art->name, i,
+			Asprintf(&s, "%s:%d (%dx%d)", art->name, i,
 			    su->w, su->h);
 		} else {
-			asprintf(&s, "%s:%d", art->name, i);
-		}
-		if (s == NULL) {
-			fatal("asprintf: %s\n", strerror(errno));
+			Asprintf(&s, "%s:%d", art->name, i);
 		}
 		tlist_insert_item(tl, su, s, anim);
 		free(s);
