@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.21 2002/11/27 04:51:19 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.22 2002/12/24 07:18:11 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -33,7 +33,6 @@ LIB_INSTALL=	No
 
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
-ASM_PICFLAGS?=	-DPIC
 
 LIBTOOL?=	libtool
 LTCONFIG?=	./ltconfig
@@ -56,8 +55,10 @@ SHARE?=
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
+
 .cc.o:
 	${CXX} ${CXXFLAGS} -c $<
+
 .c.lo:
 	${LIBTOOL} ${CC} ${CFLAGS} -c $<
 .cc.lo:
@@ -67,25 +68,11 @@ SHARE?=
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
-#
 # Assembly
-#
 .asm.o:
-	@echo "#ifdef __ELF__" > .elftest
-	@echo "IS ELF" >> .elftest
-	@echo "#endif" >> .elftest
-	@if [ "`cat .elftest | cpp -P -`" = "IS ELF" ]; then \
-	    echo "${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASM} -f elf ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
-	else \
-	    echo "${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<"; \
-	    ${ASM} -f aoutb ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
-	fi
-	@rm -f .elftest
+	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
 
-#
 # Lex
-#
 .l:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
@@ -101,9 +88,7 @@ SHARE?=
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
-#
 # Yacc
-#
 .y:
 	${YACC} ${YFLAGS} -b $@ $<
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
