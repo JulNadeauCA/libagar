@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.70 2003/03/08 00:58:13 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.71 2003/03/12 07:59:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -161,6 +161,8 @@ SDL_Surface	*view_copy_surface(SDL_Surface *);
 #ifdef HAVE_OPENGL
 GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
+void		 view_capture(SDL_Surface *);
+
 extern __inline__ void	view_alpha_blend(SDL_Surface *, Sint16, Sint16,
 			    Uint8, Uint8, Uint8, Uint8);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.112 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.113 2003/03/16 02:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,18 +26,34 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/compat/strlcpy.h>
+#include <engine/compat/strlcat.h>
+#include <config/have_jpeg.h>
 
-#include "rootmap.h"
-#include "map.h"
-#include "physics.h"
-#include "config.h"
-#include "view.h"
-#include "world.h"
+#include <engine/engine.h>
 
-#include "widget/widget.h"
-#include "widget/window.h"
-#include "widget/primitive.h"
+#include <engine/rootmap.h>
+#include <engine/map.h>
+#include <engine/physics.h>
+#include <engine/config.h>
+#include <engine/view.h>
+#include <engine/world.h>
+
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+
+#ifdef HAVE_JPEG
+#include <jpeglib.h>
+#endif
 
 static const struct object_ops viewport_ops = {
 	view_destroy,
@@ -548,4 +564,110 @@ view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
 		_VIEW_PUTPIXEL_24(dst, color)
 		_VIEW_PUTPIXEL_32(dst, color)
 	}
+}
+
+void
+view_capture(SDL_Surface *su)
+{
+#ifdef HAVE_JPEG
+	char path[FILENAME_MAX];
+	struct jpeg_error_mgr jerrmgr;
+	struct jpeg_compress_struct jcomp;
+	Uint8 *jcopybuf;
+	FILE *fp;
+	unsigned int seq = 0;
+	int fd;
+	JSAMPROW row[1];
+	int x;
+
+	if (prop_copy_string(config, "path.user_data_dir", path, sizeof(path)) >
+	    sizeof(path))
+		goto toobig;
+	if (strlcat(path, "/screenshot", sizeof(path)) > sizeof(path))
+		goto toobig;
+	if (mkdir(path, 0755) == -1 && errno != EEXIST) {
+		text_msg("Error", "mkdir %s: %s", path, strerror(errno));
+		return;
+	}
+
+	for (;;) {
+		extern const struct engine_proginfo *proginfo;	/* engine.c */
+		char file[FILENAME_MAX];
+		struct stat sb;
+
+		snprintf(file, sizeof(file), "%s/%s%u.jpg", path,
+		    proginfo->prog, seq++);
+		if ((fd = open(file, O_WRONLY|O_CREAT|O_EXCL, 0600)) == -1) {
+			if (errno == EEXIST) {
+				continue;
+			} else {
+				text_msg("Error", "open %s: %s", file,
+				    strerror(errno));
+				return;
+			}
+		}
+		break;
+	}
+
+	if ((fp = fdopen(fd, "wb")) == NULL) {
+		text_msg("Error", "fdopen: %s", strerror(errno));
+		return;
+	}
+
+	jcomp.err = jpeg_std_error(&jerrmgr);
+
+	jpeg_create_compress(&jcomp);
+
+	jcomp.image_width = su->w;
+	jcomp.image_height = su->h;
+	jcomp.input_components = 3;
+	jcomp.in_color_space = JCS_RGB;
+
+	jpeg_set_defaults(&jcomp);
+	jpeg_set_quality(&jcomp, 75, TRUE);
+	jpeg_stdio_dest(&jcomp, fp);
+
+	jcopybuf = emalloc(su->w * 3);
+
+	jpeg_start_compress(&jcomp, TRUE);
+	while (jcomp.next_scanline < jcomp.image_height) {
+		Uint8 *src = (Uint8 *)su->pixels +
+		    jcomp.next_scanline*su->pitch;
+		Uint8 *dst = jcopybuf;
+		Uint8 r, g, b;
+
+		for (x = view->w; x > 0; x--) {
+			switch (su->format->BytesPerPixel) {
+			case 4:
+				SDL_GetRGB(*(Uint32 *)src, su->format,
+				    &r, &g, &b);
+				break;
+			case 3:
+			case 2:
+				SDL_GetRGB(*(Uint16 *)src, su->format,
+				    &r, &g, &b);
+				break;
+			case 1:
+				SDL_GetRGB(*src, su->format,
+				    &r, &g, &b);
+				break;
+			}
+			*dst++ = r;
+			*dst++ = g;
+			*dst++ = b;
+			src += su->format->BytesPerPixel;
+		}
+		row[0] = jcopybuf;
+		jpeg_write_scanlines(&jcomp, row, 1);
+	}
+	jpeg_finish_compress(&jcomp);
+	jpeg_destroy_compress(&jcomp);
+	fclose(fp);
+	close(fd);
+	return;
+toobig:
+	text_msg("Error", "String overflow");
+#else
+	text_msg("Error", "Screenshot feature requires libjpeg");
+#endif
 }
