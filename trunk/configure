@@ -169,6 +169,12 @@ INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config
 INST_PSDIR="$PREFIX/share/agar/ps"
 echo INST_PSDIR=$INST_PSDIR >> Makefile.config
+LOCALEDIR="$PREFIX/share/locale"
+echo LOCALEDIR=$LOCALEDIR >> Makefile.config
+LOCALEDIR="\"$PREFIX/share/locale\""
+echo "#ifndef LOCALEDIR" > config/localedir.h
+echo "#define LOCALEDIR" $LOCALEDIR >> config/localedir.h
+echo "#endif /* LOCALEDIR */" >> config/localedir.h
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
