@@ -1,0 +1,128 @@
+.\"	$Csoft$
+.\"
+.\" Copyright (c) 2001 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistribution in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"	$OpenBSD: mdoc.template,v 1.6 2001/02/03 08:22:44 niklas Exp $
+.\"
+.Dd JANUARY 30, 2002
+.Dt CHAR 3
+.Os
+.Sh NAME
+.Nm char
+.Nd AGAR character implementation
+.Sh SYNOPSIS
+.Fd #include <engine/char.h>
+.Sh DESCRIPTION
+The character structure represents a character occupying a single node
+on one map.
+.Pp
+.Bl -bullet -compact
+.It
+Current level and exp
+.It
+Current anx maximal HP/MP
+.It
+Status ailments (regen, poison, ...)
+.It
+Flags (focused, dash, ...)
+.It
+Directional/speed information
+.El
+.Sh ENGINE
+.nr nS 1
+.Ft "struct char *"
+.Fn char_create "char *name" "char *descr" "int maxhp" "int maxmp" "int flags"
+.Ft "int"
+.Fn char_link "void *obj"
+.Ft "void"
+.Fn char_event "struct object *, SDL_Event *"
+.Ft "void"
+.Fn char_destroy "void *obj"
+.nr nS 0
+.Pp
+.Fn char_create
+allocates a new character structure. 
+Once it is in a consistent state, a call to
+.Fn char_link
+is made so the character can start handling events and time. A
+character is destroyed and unlinked from all maps with a call
+to
+.Fn char_destroy .
+.Fn char_event
+delivers a SDL event to the character layer, it is called either
+directly from the engine or from a particular character implementation.
+Meaningful events include:
+.Pp
+.Bl -bullet -compact
+.It
+SDL_JOYAXISMOTION
+.It
+SDL_JOYBUTTONDOWN
+.It
+SDL_JOYBUTTONUP
+.It
+SDL_KEYDOWN
+.It
+SDL_KEYUP
+.El
+.Sh CHARACTER MOTION
+.nr nS 1
+.Ft "void"
+.Fn char_setspeed "struct character *ch" "Uint32 speed"
+.Ft "void"
+.Fn CHAR_PLOT "struct character *ch" "struct map *map" "int x" "int y" 
+.Ft "void"
+.Fn CHAR_MOVE "struct character *ch" "int nx" "int ny"
+.Ft "void"
+.Fn CHAR_SETSPRITE "struct character *ch" "int soffs"
+.Ft "void"
+.Fn CHAR_SETANIM "struct character *ch" "int aoffs"
+.nr nS 0
+.Pp
+.Fn char_setspeed
+readjusts the character's timer.
+The
+.Fa speed
+argument should be something between 0 and the character's maxspeed.
+The display's refresh rate will be added to this interval.
+.Pp
+.Fn CHAR_PLOT
+positions the character
+.Fa ch
+on
+.Fa map
+at the given coordinates.
+.Fn CHAR_MOVE
+moves the character
+.Fa ch
+to new coordinates on the current map.
+.Fn CHAR_SETSPRITE
+sets the active sprite, and
+.Fn CHAR_SETANIM
+sets the active animation.
+.Sh SEE ALSO
+.Xr agar 3
