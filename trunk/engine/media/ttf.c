@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.2 2003/03/02 01:19:55 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.3 2003/03/02 04:13:13 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -29,12 +29,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/floating_point.h>
 #include <engine/debug.h>
 
-#ifdef FLOATING_POINT
 #include <math.h>
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,12 +55,11 @@
 #define FT_FLOOR(X)	((X & -64) / 64)
 #define FT_CEIL(X)	(((X + 63) & -64) / 64)
 
+struct cached_glyph {
+	int	stored;
 #define CACHED_METRICS	0x10
 #define CACHED_BITMAP	0x01
 #define CACHED_PIXMAP	0x02
-
-struct cached_glyph {
-	int	stored;
 	FT_UInt	index;
 	FT_Bitmap bitmap;
 	FT_Bitmap pixmap;
@@ -71,7 +67,7 @@ struct cached_glyph {
 	int	miny, maxy;
 	int	yoffset;
 	int	advance;
-	FT_UInt	cached;
+	Uint16	cached;
 };
 
 struct _ttf_font {
@@ -84,81 +80,78 @@ struct _ttf_font {
 	int	lineskip;
 	int	style;
 	int	glyph_overhang;
-#ifdef FLOATING_POINT
 	float	glyph_italics;
-#endif
 	int	underline_offset;
 	int	underline_height;
 
 	/* Cache for style-transformed glyphs */
-	struct	 cached_glyph *current;
-	struct	 cached_glyph cache[256];
-	struct	 cached_glyph scratch;
+	struct cached_glyph	*current;
+	struct cached_glyph	 cache[256];
+	struct cached_glyph	 scratch;
 };
 
 /* The FreeType font engine/library */
 static FT_Library library;
 
+static void	ttf_flush_cache(ttf_font *);
+static void	ttf_flush_glyph(struct cached_glyph *);
+static int	ttf_load_glyph(ttf_font *, Uint16, struct cached_glyph *,
+		    int);
+static int	ttf_find_glyph(ttf_font *, Uint16, int);
+
 int
 ttf_init(void)
 {
-	int status;
-	FT_Error error;
-
-	status = 0;
-	error = FT_Init_FreeType(&library);
-	if (error) {
-		error_set("cannot initialize FreeType");
-		status = -1;
+	if (FT_Init_FreeType(&library) != 0) {
+		error_set("font engine init failed");
+		return (-1);
 	}
-	return (status);
+	return (0);
+}
+
+void
+ttf_destroy(void)
+{
+	FT_Done_FreeType(library);
 }
 
 ttf_font *
 ttf_open_font_index(const char *file, int ptsize, long index)
 {
 	ttf_font *font;
-	FT_Error error;
 	FT_Face face;
 	FT_Fixed scale;
 
 	font = emalloc(sizeof(ttf_font));
 	memset(font, 0, sizeof(ttf_font));
 
-	error = FT_New_Face(library, file, 0, &font->face);
-	if (error != 0) {
-		error_set("could not load font \"%s\"", file);
-		free(font);
-		return (NULL);
+	if (FT_New_Face(library, file, 0, &font->face) != 0) {
+		error_set("error loading face `%s'", file);
+		goto fail1;
 	}
 	if (index != 0) {
 		if (font->face->num_faces > index) {
 		  	FT_Done_Face(font->face);
-			error = FT_New_Face(library, file, index, &font->face);
-			if (error) {
-				error_set("could not get font face");
-				free (font);
-				return (NULL);
+			if (FT_New_Face(library, file, index, &font->face)
+			    != 0) {
+				error_set("error getting font face");
+				goto fail1;
 			}
 		} else {
-			error_set("no such font face");
-			free(font);
-			return (NULL);
+			error_set("bad font face");
+			goto fail1;
 		}
 	}
 	face = font->face;
 
 	if (!FT_IS_SCALABLE(face)) {
-		error_set("font face is not scalable");
-		ttf_close_font(font);
-		return (NULL);
+		error_set("non-scalable font face");
+		goto fail2;
 	}
 
-	error = FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0);
-	if (error != 0) {
-		error_set("could not set font size");
-		ttf_close_font(font);
-		return (NULL);
+	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0) != 0) {
+		error_set("error getting char size");
+		goto fail2;
 	}
 
 	/* Get the scalable font metrics for this font */
@@ -178,13 +171,16 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	font->style = TTF_STYLE_NORMAL;
 	font->glyph_overhang = face->size->metrics.y_ppem / 10;
 
-#ifdef FLOATING_POINT
 	/* x offset = cos(((90.0-12)/360)*2*M_PI), or 12 degree angle */
 	font->glyph_italics = 0.207f;
 	font->glyph_italics *= font->height;
-#endif
 
 	return (font);
+fail2:
+	ttf_close_font(font);
+fail1:
+	free(font);
+	return (NULL);
 }
 
 ttf_font *
@@ -193,62 +189,63 @@ ttf_open_font(const char *file, int ptsize)
 	return (ttf_open_font_index(file, ptsize, 0));
 }
 
+void
+ttf_close_font(ttf_font *font)
+{
+	ttf_flush_cache(font);
+	FT_Done_Face(font->face);
+	free(font);
+}
+
 static void
-Flush_Glyph(struct cached_glyph *glyph)
+ttf_flush_glyph(struct cached_glyph *glyph)
 {
 	glyph->stored = 0;
 	glyph->index = 0;
 	if (glyph->bitmap.buffer) {
 		free(glyph->bitmap.buffer);
-		glyph->bitmap.buffer = 0;
+		glyph->bitmap.buffer = NULL;
 	}
 	if (glyph->pixmap.buffer) {
 		free(glyph->pixmap.buffer);
-		glyph->pixmap.buffer = 0;
+		glyph->pixmap.buffer = NULL;
 	}
 	glyph->cached = 0;
 }
 	
 static void
-Flush_Cache(ttf_font *font)
+ttf_flush_cache(ttf_font *font)
 {
-	int size = sizeof(font->cache) / sizeof(font->cache[0]);
-	int i;
+	int i, size = sizeof(font->cache) / sizeof(font->cache[0]);
 
-	for (i = 0; i < size; ++i) {
+	for (i = 0; i < size; i++) {
 		if (font->cache[i].cached) {
-			Flush_Glyph(&font->cache[i]);
+			ttf_flush_glyph(&font->cache[i]);
 		}
 	}
-
 	if (font->scratch.cached) {
-		Flush_Glyph(&font->scratch);
+		ttf_flush_glyph(&font->scratch);
 	}
 }
 
-static FT_Error
-Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
+static int
+ttf_load_glyph(ttf_font *font, Uint16 ch, struct cached_glyph *cached,
+    int want)
 {
 	FT_Face face;
-	FT_Error error;
 	FT_GlyphSlot glyph;
 	FT_Glyph_Metrics *metrics;
 	FT_Outline *outline;
 
 	face = font->face;
-#ifndef FLOATING_POINT
-	if (font->style & TTF_STYLE_ITALIC) {
-		fatal("TTF_STYLE_ITALIC needs FLOATING_POINT\n");
-	}
-#endif
 
 	if (cached->index == 0) {
 		cached->index = FT_Get_Char_Index(face, ch);
 	}
 
-	error = FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT);
-	if (error != 0) {
-		return (error);
+	if (FT_Load_Glyph(face, cached->index, FT_LOAD_DEFAULT) != 0) {
+		error_set("error loading glyph");
+		return (-1);
 	}
 
 	glyph = face->glyph;
@@ -276,11 +273,9 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 		if (font->style & TTF_STYLE_BOLD) {
 			cached->maxx += font->glyph_overhang;
 		}
-#ifdef FLOATING_POINT
 		if (font->style & TTF_STYLE_ITALIC) {
 			cached->maxx += (int)ceil(font->glyph_italics);
 		}
-#endif
 		cached->stored |= CACHED_METRICS;
 	}
 
@@ -289,7 +284,6 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 		int i, mono = (want & CACHED_BITMAP);
 		FT_Bitmap *src, *dst;
 
-#ifdef FLOATING_POINT
 		/* Handle the italic style. */
 		if (font->style & TTF_STYLE_ITALIC) {
 			FT_Matrix shear;
@@ -302,16 +296,19 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 
 			FT_Outline_Transform(outline, &shear);
 		}
-#endif
 
 		/* Render the glyph. */
 		if (mono) {
-			error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+			if (FT_Render_Glyph(glyph, ft_render_mode_mono) != 0) {
+				error_set("error drawing mono glyph");
+				return (-1);
+			}
 		} else {
-			error = FT_Render_Glyph(glyph, ft_render_mode_normal);
-		}
-		if (error) {
-			return (error);
+			if (FT_Render_Glyph(glyph, ft_render_mode_normal)
+			    != 0) {
+				error_set("error rendering normal glyph");
+				return (-1);
+			}
 		}
 
 		/* Copy over information to cache. */
@@ -333,7 +330,6 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 			dst->pitch += bump;
 			dst->width += bump;
 		}
-#ifdef FLOATING_POINT
 		if (font->style & TTF_STYLE_ITALIC) {
 			int bump;
 			
@@ -341,7 +337,6 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 			dst->pitch += bump;
 			dst->width += bump;
 		}
-#endif
 
 #if 0
 		printf("copying: %s font, pitch %d, width %d, rows %d\n",
@@ -353,7 +348,6 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 			dst->buffer = emalloc(dst->pitch * dst->rows);
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
-#if 1
 			for (i = 0; i < src->rows; i++) {
 				int soffset = i * src->pitch;
 				int doffset = i * dst->pitch;
@@ -389,7 +383,6 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 					       src->buffer+soffset, src->pitch);
 				}
 			}
-#endif
 		}
 
 		/* Handle the bold style */
@@ -428,12 +421,11 @@ Load_Glyph(ttf_font *font, FT_UInt ch, struct cached_glyph *cached, int want)
 
 	/* We're done, mark this glyph cached. */
 	cached->cached = ch;
-
 	return (0);
 }
 
-static FT_Error
-Find_Glyph(ttf_font *font, FT_UInt ch, int want)
+static int
+ttf_find_glyph(ttf_font *font, Uint16 ch, int want)
 {
 	int retval = 0;
 
@@ -441,26 +433,18 @@ Find_Glyph(ttf_font *font, FT_UInt ch, int want)
 		font->current = &font->cache[ch];
 	} else {
 		if (font->scratch.cached != ch) {
-			Flush_Glyph(&font->scratch);
+			ttf_flush_glyph(&font->scratch);
 		}
 		font->current = &font->scratch;
 	}
 	if ((font->current->stored & want) != want) {
-		retval = Load_Glyph(font, ch, font->current, want);
+		retval = ttf_load_glyph(font, ch, font->current, want);
 	}
 	return (retval);
 }
 
-void
-ttf_close_font(ttf_font *font)
-{
-	Flush_Cache(font);
-	FT_Done_Face(font->face);
-	free(font);
-}
-
-static __inline__ FT_UInt *
-ASCII_to_UNICODE(FT_UInt *unicode, char *text, int len)
+static __inline__ Uint16 *
+ASCII_to_UNICODE(Uint16 *unicode, char *text, int len)
 {
 	int i;
 
@@ -472,26 +456,26 @@ ASCII_to_UNICODE(FT_UInt *unicode, char *text, int len)
 	return (unicode);
 }
 
-static __inline__ FT_UInt *
-UTF8_to_UNICODE(FT_UInt *unicode, char *utf8, int len)
+static __inline__ Uint16 *
+UTF8_to_UNICODE(Uint16 *unicode, char *utf8, int len)
 {
 	int i, j;
-	FT_UInt ch;
+	Uint16 ch;
 
 	for (i = 0, j = 0; i < len; ++i, ++j) {
 		ch = ((unsigned char *)utf8)[i];
 		if (ch >= 0xF0) {
-			ch  =  (FT_UInt)(utf8[i]&0x07) << 18;
-			ch |=  (FT_UInt)(utf8[++i]&0x3F) << 12;
-			ch |=  (FT_UInt)(utf8[++i]&0x3F) << 6;
-			ch |=  (FT_UInt)(utf8[++i]&0x3F);
+			ch  =  (Uint16)(utf8[i]&0x07) << 18;
+			ch |=  (Uint16)(utf8[++i]&0x3F) << 12;
+			ch |=  (Uint16)(utf8[++i]&0x3F) << 6;
+			ch |=  (Uint16)(utf8[++i]&0x3F);
 		} else if (ch >= 0xE0) {
-			ch  =  (FT_UInt)(utf8[i]&0x3F) << 12;
-			ch |=  (FT_UInt)(utf8[++i]&0x3F) << 6;
-			ch |=  (FT_UInt)(utf8[++i]&0x3F);
+			ch  =  (Uint16)(utf8[i]&0x3F) << 12;
+			ch |=  (Uint16)(utf8[++i]&0x3F) << 6;
+			ch |=  (Uint16)(utf8[++i]&0x3F);
 		} else if (ch >= 0xC0) {
-			ch  =  (FT_UInt)(utf8[i]&0x3F) << 6;
-			ch |=  (FT_UInt)(utf8[++i]&0x3F);
+			ch  =  (Uint16)(utf8[i]&0x3F) << 6;
+			ch |=  (Uint16)(utf8[++i]&0x3F);
 		}
 		unicode[j] = ch;
 	}
@@ -549,40 +533,30 @@ ttf_font_face_style_name(ttf_font *font)
 }
 
 int
-ttf_glyph_metrics(ttf_font *font, unsigned int ch, int *minx,
+ttf_glyph_metrics(ttf_font *font, Uint16 ch, int *minx,
     int *maxx, int *miny, int *maxy, int *advance)
 {
-	FT_Error error;
-
-	error = Find_Glyph(font, ch, CACHED_METRICS);
-	if (error) {
+	if (ttf_find_glyph(font, ch, CACHED_METRICS) != 0) {
 		return (-1);
 	}
-
-	if (minx)
-		*minx = font->current->minx;
-	if (maxx)
-		*maxx = font->current->maxx;
-	if (miny)
-		*miny = font->current->miny;
-	if (maxy)
-		*maxy = font->current->maxy;
-	if (advance)
-		*advance = font->current->advance;
-
+	if (minx)	*minx = font->current->minx;
+	if (maxx)	*maxx = font->current->maxx;
+	if (miny)	*miny = font->current->miny;
+	if (maxy)	*maxy = font->current->maxy;
+	if (advance)	*advance = font->current->advance;
 	return (0);
 }
 
 int
 ttf_size_text(ttf_font *font, char *text, int *w, int *h)
 {
-	FT_UInt *unicode_text;
-	int unicode_len;
+	Uint16 *unicode_text;
+	size_t unicode_len;
 	int status;
 
 	/* Copy the Latin-1 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len+1)*(sizeof *unicode_text));
+	unicode_text = emalloc((unicode_len + 1) * (sizeof *unicode_text));
 	ASCII_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
@@ -595,13 +569,13 @@ ttf_size_text(ttf_font *font, char *text, int *w, int *h)
 int
 ttf_size_utf8(ttf_font *font, char *text, int *w, int *h)
 {
-	FT_UInt *unicode_text;
-	int unicode_len;
+	Uint16 *unicode_text;
+	size_t unicode_len;
 	int status;
 
 	/* Copy the UTF-8 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * sizeof(FT_UInt));
+	unicode_text = emalloc((unicode_len + 1) * sizeof(*unicode_text));
 	UTF8_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
@@ -612,15 +586,14 @@ ttf_size_utf8(ttf_font *font, char *text, int *w, int *h)
 }
 
 int
-ttf_size_unicode(ttf_font *font, unsigned int *text, int *w, int *h)
+ttf_size_unicode(ttf_font *font, Uint16 *text, int *w, int *h)
 {
 	int status;
-	FT_UInt *ch;
+	Uint16 *ch;
 	int x, z;
 	int minx, maxx;
 	int miny, maxy;
 	struct cached_glyph *glyph;
-	FT_Error error;
 
 	status = 0;
 	minx = maxx = 0;
@@ -628,9 +601,8 @@ ttf_size_unicode(ttf_font *font, unsigned int *text, int *w, int *h)
 
 	/* Load each character and sum it's bounding box. */
 	x = 0;
-	for (ch = text; *ch; ch++) {
-		error = Find_Glyph(font, *ch, CACHED_METRICS);
-		if (error) {
+	for (ch = text; *ch != '\0'; ch++) {
+		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
 			return (-1);
 		}
 		glyph = font->current;
@@ -678,79 +650,82 @@ ttf_size_unicode(ttf_font *font, unsigned int *text, int *w, int *h)
 SDL_Surface *
 ttf_render_text_solid(ttf_font *font, char *text, SDL_Color fg)
 {
-	SDL_Surface *textbuf;
-	FT_UInt *unicode_text;
-	int unicode_len;
+	SDL_Surface *textsu;
+	Uint16 *unicode_text;
+	size_t unicode_len;
 
 	/* Copy the Latin-1 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * sizeof(FT_UInt));
+	unicode_text = emalloc((unicode_len + 1) * sizeof(*unicode_text));
 	ASCII_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
-	textbuf = ttf_render_unicode_solid(font, unicode_text, fg);
+	textsu = ttf_render_unicode_solid(font, unicode_text, fg);
 
 	free(unicode_text);
-	return (textbuf);
+	return (textsu);
 }
 
 /* Convert the UTF-8 text to UNICODE and render it. */
 SDL_Surface *
 ttf_render_utf8_solid(ttf_font *font, char *text, SDL_Color fg)
 {
-	SDL_Surface *textbuf;
-	FT_UInt *unicode_text;
-	int unicode_len;
+	SDL_Surface *textsu;
+	Uint16 *unicode_text;
+	size_t unicode_len;
 
 	/* Copy the UTF-8 text to a UNICODE text buffer. */
 	unicode_len = strlen(text);
-	unicode_text = emalloc((unicode_len + 1) * sizeof(FT_UInt));
+	unicode_text = emalloc((unicode_len + 1) * sizeof(*unicode_text));
 	UTF8_to_UNICODE(unicode_text, text, unicode_len);
 
 	/* Render the new text. */
-	textbuf = ttf_render_unicode_solid(font, unicode_text, fg);
+	textsu = ttf_render_unicode_solid(font, unicode_text, fg);
 
 	free(unicode_text);
-	return (textbuf);
+	return (textsu);
 }
 
 SDL_Surface *
-ttf_render_unicode_solid(ttf_font *font, unsigned int *text, SDL_Color fg)
+ttf_render_unicode_solid(ttf_font *font, Uint16 *text, SDL_Color fg)
 {
 	int xstart;
 	int width, height;
-	SDL_Surface *textbuf;
+	SDL_Surface *textsu;
 	SDL_Palette *palette;
-	FT_UInt *ch;
+	Uint16 *ch;
 	Uint8 *src, *dst;
 	int row, col;
 	struct cached_glyph *glyph;
-	FT_Error error;
 
 	/* Get the dimensions of the text surface. */
 	if ((ttf_size_unicode(font, text, &width, NULL) < 0) || !width) {
-		fatal("text has zero width\n");
+		error_set("text has zero width");
 		return (NULL);
 	}
 	height = font->height;
 
 	/* Create the target surface. */
-	textbuf = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height,
-	    8, 0, 0, 0, 0);
-	if (textbuf == NULL) {
-		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE,
+	    width, height, 8,
+	    0, 0, 0, 0);
+	if (textsu == NULL) {
+		error_set("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
 	}
 
 	/* Fill the palette with the foreground color. */
-	palette = textbuf->format->palette;
+	palette = textsu->format->palette;
 	palette->colors[0].r = 255 - fg.r;
 	palette->colors[0].g = 255 - fg.g;
 	palette->colors[0].b = 255 - fg.b;
 	palette->colors[1].r = fg.r;
 	palette->colors[1].g = fg.g;
 	palette->colors[1].b = fg.b;
-	SDL_SetColorKey(textbuf, SDL_SRCCOLORKEY, 0);
+	if (SDL_SetColorKey(textsu, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0) != 0) {
+		error_set("SDL_SetColorKey: %s", SDL_GetError());
+		goto fail1;
+	}
 
 	/* Load and render each character. */
 	xstart = 0;
@@ -758,19 +733,16 @@ ttf_render_unicode_solid(ttf_font *font, unsigned int *text, SDL_Color fg)
 	for (ch = text; *ch; ch++) {
 		FT_Bitmap *current = NULL;
 
-		error = Find_Glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP);
-		if (error) {
-			SDL_FreeSurface(textbuf);
-			/* XXX return an empty surface */
-			fatal("cannot find glyph %d\n", *ch);
-			return (NULL);
+		if (ttf_find_glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP)
+		    != 0) {
+		    	goto fail1;
 		}
 		glyph = font->current;
 
 		current = &glyph->bitmap;
 		for (row = 0; row < current->rows; ++row) {
-			dst = (Uint8 *)textbuf->pixels +
-				(row + glyph->yoffset)*textbuf->pitch +
+			dst = (Uint8 *)textsu->pixels +
+				(row + glyph->yoffset)*textsu->pitch +
 				xstart + glyph->minx;
 			src = current->buffer + row*current->pitch;
 
@@ -788,96 +760,97 @@ ttf_render_unicode_solid(ttf_font *font, unsigned int *text, SDL_Color fg)
 	/* Handle the underline style. */
 	if (font->style & TTF_STYLE_UNDERLINE) {
 		row = font->ascent - font->underline_offset - 1;
-		if (row >= textbuf->h) {
-			row = (textbuf->h-1) - font->underline_height;
+		if (row >= textsu->h) {
+			row = (textsu->h-1) - font->underline_height;
 		}
-		dst = (Uint8 *)textbuf->pixels + row * textbuf->pitch;
+		dst = (Uint8 *)textsu->pixels + row * textsu->pitch;
 		for (row = font->underline_height; row > 0; --row) {
 			/* 1 because 0 is the bg color */
-			memset(dst, 1, textbuf->w);
-			dst += textbuf->pitch;
+			memset(dst, 1, textsu->w);
+			dst += textsu->pitch;
 		}
 	}
-	return (textbuf);
+	return (textsu);
+fail1:
+	SDL_FreeSurface(textsu);
+	return (NULL);
 }
 
 SDL_Surface *
-ttf_render_glyph_solid(ttf_font *font, unsigned int ch, SDL_Color fg)
+ttf_render_glyph_solid(ttf_font *font, Uint16 ch, SDL_Color fg)
 {
-	SDL_Surface *textbuf;
+	SDL_Surface *textsu;
 	SDL_Palette *palette;
 	Uint8 *src, *dst;
 	int row;
-	FT_Error error;
 	struct cached_glyph *glyph;
 
 	/* Get the glyph itself */
-	error = Find_Glyph(font, ch, CACHED_METRICS|CACHED_BITMAP);
-	if (error) {
-		fatal("cannot find glyph %d\n", ch);
+	if (ttf_find_glyph(font, ch, CACHED_METRICS|CACHED_BITMAP) != 0) {
+		fatal("ttf_find_glyph: %s\n", error_get());
 		return (NULL);
 	}
 	glyph = font->current;
 
 	/* Create the target surface */
-	textbuf = SDL_CreateRGBSurface(SDL_SWSURFACE, glyph->pixmap.width,
-	    glyph->pixmap.rows, 8, 0, 0, 0, 0);
-	if (textbuf == NULL) {
+	textsu = SDL_CreateRGBSurface(SDL_SWSURFACE,
+	    glyph->pixmap.width, glyph->pixmap.rows, 8,
+	    0, 0, 0, 0);
+	if (textsu == NULL) {
 		error_set("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (NULL);
 	}
 
 	/* Fill the palette with the foreground color */
-	palette = textbuf->format->palette;
-	palette->colors[0].r = 255-fg.r;
-	palette->colors[0].g = 255-fg.g;
-	palette->colors[0].b = 255-fg.b;
+	palette = textsu->format->palette;
+	palette->colors[0].r = 255 - fg.r;
+	palette->colors[0].g = 255 - fg.g;
+	palette->colors[0].b = 255 - fg.b;
 	palette->colors[1].r = fg.r;
 	palette->colors[1].g = fg.g;
 	palette->colors[1].b = fg.b;
-	SDL_SetColorKey(textbuf, SDL_SRCCOLORKEY, 0);
+	if (SDL_SetColorKey(textsu, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0) != 0) {
+		error_set("SDL_SetColorKey: %s", SDL_GetError());
+		SDL_FreeSurface(textsu);
+		return (NULL);
+	}
+
 
 	/* Copy the character from the pixmap */
 	src = glyph->pixmap.buffer;
-	dst = (Uint8 *)textbuf->pixels;
-	for (row = 0; row < textbuf->h; ++row) {
+	dst = (Uint8 *)textsu->pixels;
+	for (row = 0; row < textsu->h; row++) {
 		memcpy(dst, src, glyph->pixmap.pitch);
 		src += glyph->pixmap.pitch;
-		dst += textbuf->pitch;
+		dst += textsu->pitch;
 	}
 
 	/* Handle the underline style */
 	if (font->style & TTF_STYLE_UNDERLINE) {
 		row = font->ascent - font->underline_offset - 1;
-		if (row >= textbuf->h) {
-			row = (textbuf->h-1) - font->underline_height;
+		if (row >= textsu->h) {
+			row = (textsu->h-1) - font->underline_height;
 		}
-		dst = (Uint8 *)textbuf->pixels + row * textbuf->pitch;
+		dst = (Uint8 *)textsu->pixels + row * textsu->pitch;
 		for (row = font->underline_height; row > 0; --row) {
 			/* 1 because 0 is the bg color */
-			memset(dst, 1, textbuf->w);
-			dst += textbuf->pitch;
+			memset(dst, 1, textsu->w);
+			dst += textsu->pitch;
 		}
 	}
-	return (textbuf);
+	return (textsu);
 }
 
 void
 ttf_set_font_style(ttf_font *font, int style)
 {
 	font->style = style;
-	Flush_Cache(font);
+	ttf_flush_cache(font);
 }
 
 int
 ttf_get_font_style(ttf_font *font)
 {
 	return (font->style);
-}
-
-void
-ttf_destroy(void)
-{
-	FT_Done_FreeType(library);
 }
 
