@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.44 2002/09/01 08:58:24 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.45 2002/09/16 16:03:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -46,6 +46,11 @@ TAILQ_HEAD(noderefq, noderef);
 
 /* Coordinate within a map. */
 struct node {
+#ifdef DEBUG
+	char	magic[16];
+#define NODE_MAGIC "agar map node"
+	int	x, y;
+#endif
 	struct	noderefq nrefsh;
 	Uint32	nnrefs;
 	Uint32	flags;
@@ -65,14 +70,11 @@ struct node {
 
 	Uint32	v1, v2;			/* Extra properties */
 	Uint32	nanims;			/* Animation count */
-#ifdef DEBUG
-	int	x, y;
-#endif
 };
 
 /* Region within the world. */
 struct map {
-	struct	object obj;
+	struct object obj;
 
 	Uint32	flags;
 #define MAP_RLE_COMPRESSION	0x01	/* RLE-compress the nodes */
@@ -84,7 +86,7 @@ struct map {
 	Uint32	mapw, maph;		/* Map geometry */
 	int	shtilex, shtiley;	/* Tile shift (optimization) */
 	Uint32	defx, defy;		/* Map origin */
-	struct	node **map;		/* Array of nodes */
+	struct node **map;		/* Array of nodes */
 
 	pthread_t	draw_th;	/* Map rendering thread */
 	pthread_mutex_t	lock;		/* Recursive lock on all nodes, and all
