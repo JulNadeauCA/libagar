@@ -7,11 +7,17 @@ well as the FreeType library (http://www.freetype.org).
 Options
 -------
 - The experimental GL mode (-g) requires an OpenGL library.
+
 - The video playback option requires the smpeg library, available from
   http://www.icculus.org/smpeg/.
+
 - The screenshot feature (F9) requires the jpeg library, available from
   ftp://ftp.uu.net/graphics/jpeg/.
+
 - Threads support (--enable-threads) requires POSIX threads.
+
+- Network support requires the libqnet library, available from:
+  http://libqnet.csoft.org/.
 
 Installation
 ------------
@@ -55,4 +61,4 @@ versus 33s for the regular method.
    $ make depend && make
    # make install
 
-$Csoft: INSTALL,v 1.17 2004/09/10 04:21:07 vedge Exp $
+$Csoft: INSTALL,v 1.18 2004/09/10 04:34:44 vedge Exp $
