@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.70 2003/06/10 10:24:39 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.71 2003/06/12 00:29:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,9 +101,19 @@ tlist_init(struct tlist *tl, int flags)
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	tl->sbar = scrollbar_new(tl, SCROLLBAR_VERT);
+
+	tlist_prescale(tl, "XXXXXXXXXXXX", 4);
+
 	event_new(tl->sbar, "scrollbar-scrolled", tlist_scrolled, "%p", tl);
 	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
 	event_new(tl, "window-keydown", tlist_keydown, NULL);
+}
+
+void
+tlist_prescale(struct tlist *tl, const char *text, int nitems)
+{
+	text_prescale(text, &tl->prew, NULL);
+	tl->preh = tl->item_h*nitems;
 }
 
 void
@@ -128,8 +138,8 @@ tlist_scale(void *p, int w, int h)
 	struct tlist *tl = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(tl)->w = 200;		/* XXX more sensible default */
-		WIDGET(tl)->h = 80;
+		WIDGET(tl)->w = tl->prew;
+		WIDGET(tl)->h = tl->preh;
 	}
 
 	WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->button_size;

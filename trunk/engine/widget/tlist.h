@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.27 2003/06/09 18:37:11 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.28 2003/06/12 00:29:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -36,6 +36,8 @@ struct tlist {
 #define TLIST_DBLCLICK		0x10	/* Generate tlist-dblclick events */
 #define TLIST_TREE		0x20	/* Hack to display trees */
 
+	int	 prew, preh;		/* Prescale hint */
+
 	pthread_mutex_t		 lock;
 	int	 		 item_h;	/* Item height */
 	struct tlist_item	*dblclicked;	/* Last clicked on this item */
@@ -50,13 +52,16 @@ struct tlist {
 __BEGIN_DECLS
 extern DECLSPEC struct tlist *tlist_new(void *, int);
 
-extern DECLSPEC void	tlist_init(struct tlist *, int);
-extern DECLSPEC void	tlist_scale(void *, int, int);
-extern DECLSPEC void	tlist_draw(void *);
-extern DECLSPEC void	tlist_destroy(void *);
-extern DECLSPEC void	tlist_set_item_height(struct tlist *, int);
-extern DECLSPEC void	tlist_set_item_icon(struct tlist *, struct tlist_item *,
-			                    SDL_Surface *);
+extern DECLSPEC void	 tlist_init(struct tlist *, int);
+extern DECLSPEC void	 tlist_scale(void *, int, int);
+extern DECLSPEC void	 tlist_draw(void *);
+extern DECLSPEC void	 tlist_destroy(void *);
+
+extern DECLSPEC void	 tlist_prescale(struct tlist *, const char *, int);
+extern DECLSPEC void	 tlist_set_item_height(struct tlist *, int);
+extern DECLSPEC void	 tlist_set_item_icon(struct tlist *,
+			                     struct tlist_item *,
+					     SDL_Surface *);
 extern DECLSPEC void	 tlist_save_selections(struct tlist *);
 extern DECLSPEC void	 tlist_restore_selections(struct tlist *);
 extern DECLSPEC int	 tlist_visible_childs(struct tlist *,

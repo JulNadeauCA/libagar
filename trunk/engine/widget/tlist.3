@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.24 2003/06/10 10:24:39 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.25 2003/06/12 00:29:52 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -58,6 +58,9 @@ Single or multiple selections of items are allowed.
                         "SDL_Surface *icon"
 .Pp
 .Ft void
+.Fn tlist_prescale "struct tlist *tl" "const char *text" "int nitems"
+.Pp
+.Ft void
 .Fn tlist_scroll "struct tlist *tl" "int pos"
 .Pp
 .nr nS 0
@@ -97,6 +100,15 @@ scaled to
 by
 .Fa h
 pixels.
+.Pp
+The
+.Fn tlist_prescale
+function arranges for a
+.Nm
+to request enough height to display
+.Fa nitems
+and enough width to display
+.Fa text .
 .Pp
 The
 .Fn tlist_scroll
