@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.96 2002/12/27 02:20:26 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.97 2002/12/29 02:13:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -73,8 +73,8 @@ view_init(gfx_engine_t ge)
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	v->ndirty = 0;
-	v->maxdirty = 0;
-	v->dirty = NULL;
+	v->maxdirty = 4096;
+	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
 	pthread_mutexattr_init(&v->lockattr);
@@ -107,15 +107,11 @@ view_init(gfx_engine_t ge)
 		/* Initialize the map display. */
 		v->rootmap = emalloc(sizeof(struct viewmap));
 		rootmap_init(v->rootmap, v->w / TILEW, v->h / TILEH);
-
-		v->maxdirty = v->w/TILEW * v->h/TILEH;
 		break;
 	case GFX_ENGINE_GUI:
 		dprintf("mode: direct video / gui\n");
 
 		screenflags |= SDL_RESIZABLE;		/* XXX thread unsafe? */
-
-		v->maxdirty = 500;
 		break;
 #ifdef HAVE_OPENGL
 	case GFX_ENGINE_GL:
@@ -137,12 +133,6 @@ view_init(gfx_engine_t ge)
 	if (v->w < 320 || v->h < 240) {
 		error_set("minimum resolution is 320x240");
 		goto fail;
-	}
-
-	/* Allocate the dirty rectangle array. */
-	if (v->maxdirty > 0) {
-		v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
-		v->ndirty = 0;
 	}
 
 	/* Set the video mode. */
