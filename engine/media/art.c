@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.17 2003/01/27 08:05:07 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.18 2003/02/02 21:14:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -337,8 +337,10 @@ art_anim_tick(struct art_anim *an, struct noderef *nref)
 SDL_Surface *
 art_get_sprite(struct object *ob, int i)
 {
-	if ((ob->flags & OBJECT_ART) == 0 || ob->art == NULL)
-		fatal("no art\n");
+	if ((ob->flags & OBJECT_ART) == 0)
+		fatal("%s: no art\n", ob->name);
+	if (ob->art == NULL)
+		fatal("%s: null art\n", ob->name);
 	if (i > ob->art->nsprites)
 		fatal("no sprite at %s:%d\n", ob->name, i);
 
@@ -348,8 +350,10 @@ art_get_sprite(struct object *ob, int i)
 struct art_anim *
 art_get_anim(struct object *ob, int i)
 {
-	if ((ob->flags & OBJECT_ART) == 0 && ob->art != NULL)
-		fatal("no art\n");
+	if ((ob->flags & OBJECT_ART) == 0)
+		fatal("%s: no art\n", ob->name);
+	if (ob->art == NULL)
+		fatal("%s: null art\n", ob->name);
 	if (i > ob->art->nanims)
 		fatal("no anim at %s:%d\n", ob->name, i);
 	return (ob->art->anims[i]);
