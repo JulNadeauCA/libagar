@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.14 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.15 2004/01/22 09:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -80,7 +80,7 @@ combo_collapse(struct combo *com)
 
 	com->saved_h = WIDGET(com->win)->h;
 	window_hide(com->win);
-	object_detach(com->win, com->list);
+	object_detach(com->list);
 	view_detach(com->win);
 	com->win = NULL;
 	
@@ -101,7 +101,7 @@ combo_expand(int argc, union evarg *argv)
 
 		com->win = window_new(NULL);
 		win = WIDGET(com->win);
-		object_detach(com->win, com->win->tbar);
+		object_detach(com->win->tbar);
 		object_destroy(com->win->tbar);
 		free(com->win->tbar);
 
@@ -203,7 +203,7 @@ combo_destroy(void *p)
 
 	if (com->win != NULL) {
 		window_hide(com->win);
-		object_detach(com->win, com->list);
+		object_detach(com->list);
 		view_detach(com->win);
 	}
 	widget_destroy(com);
