@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.31 2002/07/29 05:29:29 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.32 2002/07/30 22:23:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -133,6 +133,5 @@ struct widget {
 #endif
 
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
-void	widget_event(void *, SDL_Event *, int);
 void	widget_map_color(void *, int, char *, Uint8, Uint8, Uint8);
 
