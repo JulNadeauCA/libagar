@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.2 2002/07/06 23:56:39 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.3 2002/07/07 06:28:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -84,7 +84,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	event_new(bu, "button-pushed", 0, fileops_clear_map, "%p", mv);
 
 	/* Tile stack */
-	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 0);
+	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 90);
 	reg->spacing = 1;
 	ts = tilestack_new(reg, TILESTACK_VERT, 100, 100, mv);
 
