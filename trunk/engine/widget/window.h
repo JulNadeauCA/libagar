@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.88 2005/03/11 05:13:23 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.89 2005/04/02 04:30:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -43,6 +43,7 @@ struct window {
 #define WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
 #define WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
 #define WINDOW_MODAL		0x2000	/* Modal window behavior */
+#define WINDOW_INHIBIT_FOCUS	0x4000	/* Prevent widgets from gaining focus */
 
 	char caption[128];
 	int visible;				/* Window is visible */
