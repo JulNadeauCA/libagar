@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.15 2002/02/28 12:54:31 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.16 2002/03/01 02:55:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -35,6 +35,9 @@
 
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
+
+static Uint32	**view_allocmask(Uint32, Uint32);
+static void	view_freemask(struct viewport *);
 
 struct viewport *mainview;
 
@@ -83,7 +86,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	if (caption != NULL) {
 		SDL_WM_SetCaption(caption, "agar");
 	}
-	v->v = SDL_SetVideoMode(v->width + 64, v->height + 64, v->depth, v->flags);
+	v->v = SDL_SetVideoMode(v->width + 64, v->height + 64, v->depth,
+	    v->flags);
 	if (v->v == NULL) {
 		fatal("SDL: %dx%dx%d: %s\n", v->width, v->height, v->depth,
 		    SDL_GetError());
@@ -92,12 +96,59 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	dprintf("fps %d flags %x geo %dx%dx%d on %s at %dx%d\n",
 	    v->fps, v->flags, v->width, v->height, v->depth,
 	    v->map->obj.name, v->mapx, v->mapy);
-	dprintf("mapoffs %dx%d\n", v->mapxoffs, v->mapyoffs);
+
+	if (v->mapmask != NULL) {
+		view_freemask(v);
+	}
+	v->mapmask = view_allocmask(v->mapw, v->maph);
 
 	if (curmapedit != NULL) {
 		SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
 	}
 	return (0);
+}
+
+static Uint32 **
+view_allocmask(Uint32 w, Uint32 h)
+{
+	Uint32 **mask;
+	Uint32 x, y;
+
+	mask = (Uint32 **)emalloc((w * h) * sizeof(Uint32));
+	for (y = 0; y < h; y++) {
+		*(mask + y) = (Uint32 *)emalloc(w * sizeof(Uint32));
+	}
+	
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w-1; x++) {
+			mask[y][x] = 0;
+		}
+	}
+
+	return (mask);
+}
+
+void
+view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 flags)
+{
+	Uint32 x, y;
+
+	for (y = rd->y; y < rd->y + rd->h; y++) {
+		for (x = rd->x; x < rd->x + rd->w; x++) {
+			v->mapmask[y][x] = flags;
+		}
+	}
+}
+
+static void
+view_freemask(struct viewport *v)
+{
+	Uint32 y;
+
+	for (y = 0; y < v->maph; y++) {
+		free(*(v->mapmask + y));
+	}
+	free(v->mapmask);
 }
 
 struct viewport *
@@ -118,6 +169,7 @@ view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 	v->mapy = 0;
 	v->mapxoffs = 0;
 	v->mapyoffs = 0;
+	v->mapmask = NULL;
 
 	return (v);
 }
@@ -125,6 +177,9 @@ view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 void
 view_destroy(struct viewport *v)
 {
+	if (v->mapmask != NULL) {
+		view_freemask(v);
+	}
 	free(v);
 }
 
