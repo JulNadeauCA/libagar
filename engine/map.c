@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.215 2004/03/18 21:27:46 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.216 2004/03/19 08:00:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1043,7 +1043,7 @@ map_save(void *p, struct netbuf *buf)
 /* Render surface s, scaled to rx,ry pixels. */
 /* XXX use something more sophisticated (or cache); fix rleaccel */
 static void
-noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
+draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 {
 	int x, y, dh, dw, sx, sy;
 	Uint8 *src, r1, g1, b1, a1;
@@ -1105,9 +1105,13 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 		SDL_UnlockSurface(view->v);
 }
 
-/* Render a sprite, possibly applying transforms. */
+/*
+ * Return a pointer to the referenced sprite surface.
+ * If there are transforms to apply, return a pointer to a matching
+ * entry in the sprite transformation cache, or allocate a new one.
+ */
 static __inline__ SDL_Surface *
-noderef_draw_sprite(struct noderef *r)
+draw_sprite(struct noderef *r)
 {
 	struct gfx_cached_sprite *csprite;
 	struct gfx_spritecl *spritecl;
@@ -1117,8 +1121,8 @@ noderef_draw_sprite(struct noderef *r)
 		return (origsu);
 
 	/*
-	 * Look for a cached sprite with the same transforms, in the same
-	 * order.
+	 * Look for a cached sprite with the same transforms applied
+	 * in the same order.
 	 */
 	spritecl = &r->r_sprite.obj->gfx->csprites[r->r_sprite.offs];
 	SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
@@ -1137,7 +1141,10 @@ noderef_draw_sprite(struct noderef *r)
 		    tr2 == TAILQ_END(&csprite->transforms))
 			break;
 	}
-	if (csprite == NULL) {
+	if (csprite != NULL) {
+		csprite->last_drawn = SDL_GetTicks();
+		return (csprite->su);
+	} else {
 		struct transform *trans, *ntrans;
 		SDL_Surface *su;
 		Uint32 saflags = origsu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
@@ -1146,7 +1153,6 @@ noderef_draw_sprite(struct noderef *r)
 		Uint32 scolorkey = origsu->format->colorkey;
 		struct gfx_cached_sprite *ncsprite;
 
-		/* Allocate the new sprite surface. */
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE |
 		    (origsu->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
 		     origsu->w, origsu->h, origsu->format->BitsPerPixel,
@@ -1162,18 +1168,15 @@ noderef_draw_sprite(struct noderef *r)
 		ncsprite->last_drawn = SDL_GetTicks();
 		TAILQ_INIT(&ncsprite->transforms);
 
-		/* Copy the sprite as-is. */
 		SDL_SetAlpha(origsu, 0, 0);
 		SDL_SetColorKey(origsu, 0, 0);
 		SDL_BlitSurface(origsu, NULL, su, NULL);
 		SDL_SetColorKey(origsu, scflags, scolorkey);
 		SDL_SetAlpha(origsu, saflags, salpha);
 
-		/* Apply the transformations. */
+		SDL_LockSurface(su);
 		TAILQ_FOREACH(trans, &r->transforms, transforms) {
-			SDL_LockSurface(su);
 			trans->func(&su, trans->nargs, trans->args);
-			SDL_UnlockSurface(su);
 
 			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
 			transform_init(ntrans, trans->type, trans->nargs,
@@ -1181,29 +1184,110 @@ noderef_draw_sprite(struct noderef *r)
 			TAILQ_INSERT_TAIL(&ncsprite->transforms, ntrans,
 			    transforms);
 		}
-
-		/* Cache the result. */
+		SDL_UnlockSurface(su);
 		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
 		return (su);
-	} else {
-		/* Update the timestamp and return the cached version. */
-		csprite->last_drawn = SDL_GetTicks();
-		return (csprite->su);
 	}
 }
 
-/* Render an animation, possibly applying transforms. */
+/*
+ * Return a pointer to the referenced animation frame.
+ * If there are transforms to apply, return a pointer to a matching
+ * entry in the anim transformation cache, or allocate a new one.
+ */
 static __inline__ SDL_Surface *
-noderef_draw_anim(struct noderef *r)
+draw_anim(struct noderef *r)
 {
-	struct gfx_anim *anim = ANIM(r->r_anim.obj, r->r_anim.offs);
+	struct gfx_anim *oanim = ANIM(r->r_anim.obj, r->r_anim.offs);
+	struct gfx_cached_anim *canim;
+	struct gfx_animcl *animcl;
 
-	/* XXX not very sophisticated */
-	if (++anim->frame >= anim->nframes)
-		anim->frame = 0;
+	if (TAILQ_EMPTY(&r->transforms))
+		return (GFX_ANIM_FRAME(r, oanim));
 
-	/* XXX transforms */
-	return (anim->frames[anim->frame]);
+	/*
+	 * Look for a cached animation with the same transforms applied
+	 * in the same order.
+	 */
+	animcl = &r->r_anim.obj->gfx->canims[r->r_anim.offs];
+	SLIST_FOREACH(canim, &animcl->anims, anims) {
+		struct transform *tr1, *tr2;
+				
+		for (tr1 = TAILQ_FIRST(&r->transforms),
+		     tr2 = TAILQ_FIRST(&canim->transforms);
+		     tr1 != TAILQ_END(&r->transforms) &&
+		     tr2 != TAILQ_END(&canim->transforms);
+		     tr1 = TAILQ_NEXT(tr1, transforms),
+		     tr2 = TAILQ_NEXT(tr2, transforms)) {
+			if (!transform_compare(tr1, tr2))
+				break;
+		}
+		if (tr1 == TAILQ_END(&r->transforms) &&
+		    tr2 == TAILQ_END(&canim->transforms))
+			break;
+	}
+	if (canim != NULL) {
+		canim->last_drawn = SDL_GetTicks();
+		return (GFX_ANIM_FRAME(r, canim->anim));
+	} else {
+		struct transform *trans, *ntrans;
+		struct gfx_anim *nanim;
+		struct gfx_cached_anim *ncanim;
+		Uint32 i;
+		
+		ncanim = Malloc(sizeof(struct gfx_cached_anim), M_GFX);
+		ncanim->last_drawn = SDL_GetTicks();
+		TAILQ_INIT(&ncanim->transforms);
+
+		nanim = ncanim->anim = Malloc(sizeof(struct gfx_anim), M_GFX);
+		nanim->frames = Malloc(oanim->nframes*sizeof(SDL_Surface *),
+		    M_GFX);
+		nanim->nframes = oanim->nframes;
+		nanim->maxframes = oanim->nframes;
+		nanim->frame = oanim->frame;
+
+		for (i = 0; i < nanim->nframes; i++) {
+			SDL_Surface *oframe = oanim->frames[i], *nframe;
+			Uint32 saflags = oframe->flags &
+			    (SDL_SRCALPHA|SDL_RLEACCEL);
+			Uint8 salpha = oframe->format->alpha;
+			Uint32 scflags = oframe->flags &
+			    (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+			Uint32 scolorkey = oframe->format->colorkey;
+
+			nframe = nanim->frames[i] =
+			    SDL_CreateRGBSurface(SDL_SWSURFACE |
+			    (oframe->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|
+			                    SDL_RLEACCEL)),
+			     oframe->w, oframe->h, oframe->format->BitsPerPixel,
+			     oframe->format->Rmask, oframe->format->Gmask,
+			     oframe->format->Bmask, oframe->format->Amask);
+			if (nframe == NULL)
+				fatal("SDL_CreateRGBSurface: %s",
+				    SDL_GetError());
+		
+			SDL_SetAlpha(oframe, 0, 0);
+			SDL_SetColorKey(oframe, 0, 0);
+			SDL_BlitSurface(oframe, NULL, nframe, NULL);
+			SDL_SetColorKey(oframe, scflags, scolorkey);
+			SDL_SetAlpha(oframe, saflags, salpha);
+
+			SDL_LockSurface(nframe);
+			TAILQ_FOREACH(trans, &r->transforms, transforms) {
+				trans->func(&nframe, trans->nargs, trans->args);
+			}
+			SDL_UnlockSurface(nframe);
+		}
+		TAILQ_FOREACH(trans, &r->transforms, transforms) {
+			ntrans = Malloc(sizeof(struct transform), M_NODEXFORM);
+			transform_init(ntrans, trans->type, trans->nargs,
+			    trans->args);
+			TAILQ_INSERT_TAIL(&ncanim->transforms, ntrans,
+			    transforms);
+		}
+		SLIST_INSERT_HEAD(&animcl->anims, ncanim, anims);
+		return (GFX_ANIM_FRAME(r, nanim));
+	}
 }
 
 /*
@@ -1225,7 +1309,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 			return;
 		}
 #endif
-		su = noderef_draw_sprite(r);
+		su = draw_sprite(r);
 		break;
 	case NODEREF_ANIM:
 #if defined(DEBUG) || defined(EDITION)
@@ -1236,14 +1320,14 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 			return;
 		}
 #endif
-		su = noderef_draw_anim(r);
+		su = draw_anim(r);
 		break;
 	default:				/* Not a drawable */
 		return;
 	}
 
 	if (m->zoom != 100) {
-		noderef_draw_scaled(m, su,
+		draw_scaled(m, su,
 		    (rx + r->r_gfx.xcenter*m->zoom/100 +
 		     r->r_gfx.xmotion*m->zoom/100),
 		    (ry + r->r_gfx.ycenter*m->zoom/100 +

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.104 2004/03/17 17:30:25 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.105 2004/03/18 21:27:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -71,8 +71,9 @@ struct noderef {
 			Uint32		 offs;		/* Anim index */
 
 			Uint8	flags;
-#define NODEREF_ANIM_AUTO 0x01			/* Auto increment */
-			Uint32	frame;		/* Current frame# */
+#define NODEREF_SHD_FRAME 0x01			/* Use shared frame# */
+#define NODEREF_PVT_FRAME 0x02			/* Use private frame# */
+			Uint32	frame;		/* Private frame# */
 		} anim;
 		struct {
 			char	*map;		/* Map identifier */

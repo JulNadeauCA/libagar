@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.27 2004/03/20 05:01:02 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.28 2004/03/20 07:36:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -56,8 +56,8 @@ enum {
 	NSUBMAPS_GROW =	4
 };
 
-static TAILQ_HEAD(, gfx) gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
-pthread_mutex_t		 gfxq_lock;
+struct gfxq gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
+pthread_mutex_t gfxq_lock;
 
 static void gfx_destroy_anim(struct gfx_anim *);
 
@@ -511,7 +511,7 @@ gfx_get_anim(struct object *ob, Uint32 i)
 }
 
 static void
-gfx_debug_poll(int argc, union evarg *argv)
+poll_gfx(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct gfx *gfx;
@@ -574,6 +574,40 @@ gfx_debug_poll(int argc, union evarg *argv)
 					}
 				}
 			}
+			for (i = 0; i < gfx->nanims; i++) {
+				struct gfx_anim *anim = gfx->anims[i];
+				struct gfx_animcl *acl = &gfx->canims[i];
+				struct gfx_cached_anim *can;
+				struct tlist_item *it;
+
+				snprintf(label, sizeof(label), "frame %u/%u",
+				    anim->frame, anim->nframes);
+
+				it = tlist_insert_item(tl, NULL, label,
+				    gfx->anims[i]);
+				it->depth = 1;
+
+				if (!SLIST_EMPTY(&acl->anims)) {
+					it->flags |= TLIST_HAS_CHILDREN;
+				}
+				if ((it->flags & TLIST_HAS_CHILDREN) &&
+		    		    tlist_visible_children(tl, it)) {
+					SLIST_FOREACH(can, &acl->anims, anims) {
+						struct tlist_item *it;
+
+						snprintf(label, sizeof(label),
+						    "%u ticks\n",
+						    can->last_drawn);
+						transform_print(
+						    &can->transforms,
+						    label, sizeof(label));
+
+						it = tlist_insert_item(tl, NULL,
+						    label, can);
+						it->depth = 2;
+					}
+				}
+			}
 		}
 	}
 
@@ -595,7 +629,7 @@ gfx_debug_window(void)
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	tlist_set_item_height(tl, text_font_height(font)*2 + 5);
-	event_new(tl, "tlist-poll", gfx_debug_poll, NULL);
+	event_new(tl, "tlist-poll", poll_gfx, NULL);
 
 	return (win);
 }
