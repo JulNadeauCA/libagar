@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.12 2004/02/26 10:25:22 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.13 2004/03/02 02:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -200,21 +200,20 @@ position_tool_effect(struct mapview *mv, struct map *m, struct node *dn)
 		text_msg(MSG_ERROR, _("No projection map was selected."));
 		return;
 	}
-
-	if (position_set(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer,
-	    projmap) == -1) {
+	if (position_set(ob, mv->map, mv->cx, mv->cy, mv->map->cur_layer)
+	    == -1) {
 		text_msg(MSG_ERROR, "%s", error_get());
 		return;
 	}
-	ob->pos->input = input_dev;
-	ob->pos->flags = 0;
+	position_set_projmap(ob, projmap);
+	position_set_input(ob, input_dev);
+	position_set_velvec(ob, direction, velocity);
 
+	ob->pos->flags = 0;
 	if (center_view)
 		ob->pos->flags |= POSITION_CENTER_VIEW;
 	if (pass_through)
 		ob->pos->flags |= POSITION_PASS_THROUGH;
-
-	position_set_velvec(ob, direction, velocity);
 }
 
 static int

@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.3 2004/02/26 10:39:55 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.4 2004/02/29 17:34:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -37,13 +37,13 @@
 #ifdef DEBUG
 #define DEBUG_STATE	0x01
 #define DEBUG_POSITION	0x02
-#define DEBUG_CONTROL	0x04
+#define DEBUG_INPUT	0x04
 #define DEBUG_MOVE	0x08
 #define DEBUG_COLLISION	0x10
 #define DEBUG_VELVEC	0x20
-#define DEBUG_PROJECTION 0x40
-int	position_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_CONTROL|DEBUG_MOVE|
-			 DEBUG_COLLISION|DEBUG_VELVEC|DEBUG_PROJECTION;
+#define DEBUG_PROJMAP	0x40
+int	position_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_INPUT|DEBUG_MOVE|
+			 DEBUG_COLLISION|DEBUG_VELVEC|DEBUG_PROJMAP;
 #define engine_debug position_debug
 #endif
 
@@ -51,35 +51,28 @@ void
 position_init(struct position *pos)
 {
 	pos->map = NULL;
-	pos->map_name = NULL;
+	pos->map_name[0] = '\0';
 	pos->x = 0;
 	pos->y = 0;
 	pos->z = 0;
 	pos->projmap = NULL;
-	pos->projmap_name = NULL;
+	pos->projmap_name[0] = '\0';
 	pos->input = NULL;
 	pos->flags = 0;
 	pos->dir = 0;
 	pos->vel = 0;
 }
 
-void
-position_destroy(struct position *pos)
-{
-	position_unproject(pos);
-	Free(pos->map_name);
-	Free(pos->projmap_name);
-}
-
-/* Assign position m:[x,y] to an object and select the projection map. */
+/* Assign a position m[x,y,z] to a given object. */
 int
-position_set(void *p, struct map *m, int x, int y, int z, struct map *projmap)
+position_set(void *p, struct map *m, int x, int y, int z)
 {
+	char path[OBJECT_PATH_MAX];
 	struct object *ob = p;
-	struct position *pos = ob->pos;
 
 	pthread_mutex_lock(&ob->lock);
 	pthread_mutex_lock(&m->lock);
+
 	if (x < 0 || x > m->mapw ||
 	    y < 0 || y > m->maph ||
 	    z < 0 || z > m->nlayers) {
@@ -88,152 +81,148 @@ position_set(void *p, struct map *m, int x, int y, int z, struct map *projmap)
 		goto fail;
 	}
 	
-	if (pos == NULL) {
-		debug(DEBUG_POSITION, "%s: creating position (proj=%s)\n",
-		    ob->name, OBJECT(projmap)->name);
-		pos = ob->pos = Malloc(sizeof(struct position));
-		position_init(pos);
+	if (ob->pos == NULL) {
+		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
+		ob->pos = Malloc(sizeof(struct position));
+		position_init(ob->pos);
 	} else {
 		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
-		position_unproject(pos);
+		position_unproject(ob->pos);
 	}
 	
-	debug(DEBUG_POSITION, "%s: position -> %s:[%d,%d,%d]\n", ob->name,
-	    OBJECT(m)->name, x, y, z);
-	pos->map = m;
-	pos->map_name = Strdup(OBJECT(m)->name);
-	pos->projmap = projmap;
-	pos->projmap_name = Strdup(OBJECT(projmap)->name);
-	pos->x = x;
-	pos->y = y;
-	pos->z = z;
-	position_project(pos);
+	ob->pos->map = m;
+	object_copy_name(m, ob->pos->map_name, sizeof(ob->pos->map_name));
+
+	ob->pos->x = x;
+	ob->pos->y = y;
+	ob->pos->z = z;
+
+	debug(DEBUG_STATE,
+	    "%s: at %s:[%d,%d,%d] projmap `%s' dir %d vel %d flags 0x%x\n",
+	    ob->name, ob->pos->map_name, ob->pos->x, ob->pos->y, ob->pos->z,
+	    ob->pos->projmap_name, ob->pos->dir, ob->pos->vel, ob->pos->flags);
+
+	position_project(ob->pos);
+
 	pthread_mutex_unlock(&m->lock);
 	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
-	position_unset(ob);
 	pthread_mutex_unlock(&m->lock);
 	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
 
-/* Unset an object's position, if there is one. */
+/* Destroy the current position of an object if there is one. */
 void
 position_unset(void *p)
 {
 	struct object *ob = p;
 
 	pthread_mutex_lock(&ob->lock);
-	debug(DEBUG_POSITION, "%s: unset %p\n", ob->name, ob->pos);
 	if (ob->pos != NULL) {
-		position_destroy(ob->pos);
+		dprintf("%s: destroying position\n", ob->name);
+		position_unproject(ob->pos);
 		free(ob->pos);
 		ob->pos = NULL;
+	} else {
+		dprintf("%s: no position\n", ob->name);
 	}
 	pthread_mutex_unlock(&ob->lock);
 }
 
-/* Control an object's position with an input device. */
-int
-position_set_input(void *p, const char *inname)
+/*
+ * Control an object's position with an input device.
+ * A position must exist.
+ */
+void
+position_set_input(void *p, struct input *indev)
 {
 	struct object *ob = p;
-	struct input *in;
-
-	if ((in = input_find(inname)) == NULL) {
-		error_set(_("There is no input device named `%s'."), inname);
-		return (-1);
-	}
 
 	pthread_mutex_lock(&ob->lock);
-
-	if (ob->pos == NULL) {
-		error_set(_("Object `%s' has no position."), ob->name);
-		goto fail;
+	if (indev != NULL) {
+		debug(DEBUG_INPUT, "%s: using %s\n", ob->name,
+		    OBJECT(indev)->name);
 	}
-	debug(DEBUG_CONTROL, "%s: <%s>\n", ob->name, OBJECT(in)->name);
-	ob->pos->input = in;
-
+	ob->pos->input = indev;
 	pthread_mutex_unlock(&ob->lock);
-	return (0);
-fail:
-	pthread_mutex_unlock(&ob->lock);
-	return (-1);
 }
 
-/* Select the projection map of an object by name. */
-int
-position_set_projmap(void *p, const char *name)
+/*
+ * Select the projection map of an object. If one is set, remove its projection.
+ * A position must exist.
+ */
+void
+position_set_projmap(void *p, struct map *projmap)
 {
+	char path[OBJECT_PATH_MAX];
 	struct object *ob = p;
-	struct object *projmap;
 
 	pthread_mutex_lock(&ob->lock);
-	
-	debug(DEBUG_PROJECTION, "%s: %s -> %s\n", ob->name,
-	    ob->pos != NULL ? OBJECT(ob->pos->projmap)->name : "none", name);
+	position_unproject(ob->pos);
 
-	TAILQ_FOREACH(projmap, &ob->children, cobjs) {
-		if (strcmp(projmap->name, name) == 0)
-			break;
-	}
-	if (projmap == NULL) {
-		error_set(_("There is no projmap named `%s'."), name);
-		goto fail;
-	}
-	if (ob->pos != NULL) {
-		position_unproject(ob->pos);
-	}
-	ob->pos->projmap = (struct map *)projmap;
-	ob->pos->projmap_name = Strdup(name);
+	ob->pos->projmap = projmap;
+	object_copy_name(projmap, ob->pos->projmap_name,
+	    sizeof(ob->pos->projmap_name));
 
+	position_project(ob->pos);
 	pthread_mutex_unlock(&ob->lock);
-	return (0);
-fail:
-	pthread_mutex_unlock(&ob->lock);
-	return (-1);
 }
 
-/* Project the object onto a level map. */
+/* Copy the object's projection map onto a level map. */
 void
 position_project(struct position *pos)
 {
 	struct map *sm = pos->projmap;
 	struct map *dm = pos->map;
 	int sx, sy, dx, dy;
+	
+	if (sm == NULL || dm == NULL)
+		return;
 
-	object_add_dep(dm, sm);
 	object_page_in(sm, OBJECT_DATA);
 	object_page_in(dm, OBJECT_DATA);
 
 	for (sy = 0, dy = pos->y;
-	     sy < sm->maph && dy < pos->y+dm->maph;
+	     sy < sm->maph && dy < dm->maph;
 	     sy++, dy++) {
 		for (sx = 0, dx = pos->x;
-		     sx < sm->mapw && dx < pos->x+dm->mapw;
-		     sx++, dx++)
-			node_copy(sm, &sm->map[sy][sx], -1, dm,
-			    &dm->map[dy][dx], pos->z);
+		     sx < sm->mapw && dx < dm->mapw;
+		     sx++, dx++) {
+			struct node *dn = &dm->map[dy][dx];
+
+			node_copy(sm, &sm->map[sy][sx], -1, dm, dn, pos->z);
+		}
 	}
 	
-	object_del_dep(dm, sm);
 	object_page_out(sm, OBJECT_DATA);
 	object_page_out(dm, OBJECT_DATA);
 }
 
-/* Remove a projection from the level map. */
+/* Remove an object's projection from its level map. */
 void
 position_unproject(struct position *pos)
 {
 	int x, y;
-	
+
+	if (pos->map == NULL || pos->projmap == NULL)
+		return;
+
 	object_page_in(pos->map, OBJECT_DATA);
-	for (y = pos->y; y < pos->y+pos->projmap->maph; y++) {
-		for (x = pos->x; x < pos->x+pos->projmap->mapw; x++)
-			node_clear(pos->map, &pos->map->map[y][x], pos->z);
+	object_page_in(pos->projmap, OBJECT_DATA);
+	for (y = 0;
+	     y < pos->projmap->maph && pos->y+y < pos->map->maph;
+	     y++) {
+		for (x = 0;
+		     x < pos->projmap->mapw && pos->x+x < pos->map->mapw;
+		     x++) {
+			node_clear(pos->map, &pos->map->map[pos->y+y][pos->x+x],
+			    pos->z);
+		}
 	}
 	object_page_out(pos->map, OBJECT_DATA);
+	object_page_out(pos->projmap, OBJECT_DATA);
 }
 
 /*
@@ -247,6 +236,7 @@ position_set_velvec(void *p, int dir, int vel)
 	struct position *pos = ob->pos;
 
 	pthread_mutex_lock(&ob->lock);
+
 	if (dir >= 0) {
 		debug(DEBUG_VELVEC, "%s: direction -> %d\n", ob->name, dir);
 		pos->dir = (Uint8)dir;
@@ -255,6 +245,10 @@ position_set_velvec(void *p, int dir, int vel)
 		debug(DEBUG_VELVEC, "%s: velocity -> %d\n", ob->name, vel);
 		pos->vel = (Uint8)vel;
 	}
+
+	position_unproject(ob->pos);
+	position_project(ob->pos);
+
 	pthread_mutex_unlock(&ob->lock);
 }
 
@@ -266,7 +260,6 @@ position_save(struct position *pos, struct netbuf *buf)
 
 	object_copy_name(pos->map, map_id, sizeof(map_id));
 	object_copy_name(pos->projmap, projmap_id, sizeof(projmap_id));
-
 	write_string(buf, map_id);
 	write_string(buf, projmap_id);
 	write_string(buf, (pos->input != NULL) ? OBJECT(pos->input)->name : "");
@@ -282,54 +275,47 @@ position_save(struct position *pos, struct netbuf *buf)
 }
 
 int
-position_load(struct object *ob, struct position *pos, struct netbuf *buf)
+position_load(struct object *ob, struct netbuf *buf)
 {
-	char map_name[OBJECT_PATH_MAX];
-	char projmap_name[OBJECT_PATH_MAX];
 	char input_name[OBJECT_NAME_MAX];
-	struct map *map, *projmap;
-	int x, y, z;
-	int dir, vel, flags;
 
-	if (ob->pos != NULL)
-		position_unset(ob);
+	dprintf("%s\n", ob->name);
 
-	copy_string(map_name, buf, sizeof(map_name));
-	copy_string(projmap_name, buf, sizeof(projmap_name));
+	if (ob->pos == NULL) {
+		debug(DEBUG_POSITION, "%s: creating position\n", ob->name);
+		ob->pos = Malloc(sizeof(struct position));
+		position_init(ob->pos);
+	} else {
+		debug(DEBUG_POSITION, "%s: updating position\n", ob->name);
+	}
+
+	copy_string(ob->pos->map_name, buf, sizeof(ob->pos->map_name));
+	copy_string(ob->pos->projmap_name, buf, sizeof(ob->pos->projmap_name));
 	copy_string(input_name, buf, sizeof(input_name));
 
-	x = (int)read_uint32(buf);
-	y = (int)read_uint32(buf);
-	z = (int)read_uint32(buf);
-	dir = (int)read_uint32(buf);
-	vel = (int)read_uint32(buf);
-	flags = (int)read_uint32(buf);
+	ob->pos->x = (int)read_uint32(buf);
+	ob->pos->y = (int)read_uint32(buf);
+	ob->pos->z = (int)read_uint32(buf);
+	ob->pos->dir = (int)read_uint32(buf);
+	ob->pos->vel = (int)read_uint32(buf);
+	ob->pos->flags = (int)read_uint32(buf);
 		
 	debug(DEBUG_STATE,
-	    "%s: at %s:[%d,%d,%d] proj %s dir %d vel %d flags 0x%x\n",
-	    ob->name, map_name, x, y, z, projmap_name, dir, vel, flags);
+	    "%s: at %s:[%d,%d,%d] projmap `%s' dir %d vel %d flags 0x%x\n",
+	    ob->name, ob->pos->map_name, ob->pos->x, ob->pos->y, ob->pos->z,
+	    ob->pos->projmap_name, ob->pos->dir, ob->pos->vel, ob->pos->flags);
 
-	if ((map = object_find(map_name)) == NULL) {
-		error_set(_("No such level map: `%s'"), map_name);
-		return (-1);
-	}
-	if ((projmap = object_find(projmap_name)) == NULL) {
-		error_set(_("No such projection map: `%s'"), projmap_name);
-		return (-1);
-	}
+	if (input_name[0] != '\0') {
+		struct input *indev;
 
-	pthread_mutex_lock(&map->lock);
-	if (position_set(ob, map, x, y, z, projmap) == -1) {
-		goto fail;
+		if ((indev = input_find(input_name)) == NULL) {
+			goto fail;
+		}
+		position_set_input(ob, indev);
 	}
-	if (input_name != NULL &&
-	    position_set_input(ob, input_name) == -1) {
-		goto fail;
-	}
-	pthread_mutex_unlock(&map->lock);
 	return (0);
 fail:
-	pthread_mutex_unlock(&map->lock);
+	position_unset(ob);
 	return (-1);
 }
 

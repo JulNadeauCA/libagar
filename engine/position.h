@@ -1,4 +1,4 @@
-/*	$Csoft: position.h,v 1.1 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: position.h,v 1.2 2004/02/26 10:14:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_POSITION_H_
@@ -12,9 +12,9 @@ struct input;
 /* Unique object position on a map. */
 struct position {
 	struct map	*map;		/* Map (NULL if unresolved) */
-	char		*map_name;	/* Map reference */
+	char		 map_name[OBJECT_PATH_MAX];
 	struct map	*projmap;	/* Projection map (NULL if invisible) */
-	char		*projmap_name;	/* Projection map reference */
+	char		 projmap_name[OBJECT_PATH_MAX];
 	struct input	*input;		/* Controller (NULL if uncontrolled) */
 	int		 x, y, z;	/* Map coordinates */
 	Uint8		 dir, vel;	/* Velocity vector */
@@ -26,15 +26,15 @@ struct position {
 
 __BEGIN_DECLS
 void	 position_init(struct position *);
-void	 position_destroy(struct position *);
 int	 position_save(struct position *, struct netbuf *);
-int	 position_load(struct object *, struct position *, struct netbuf *);
+int	 position_load(struct object *, struct netbuf *);
+int	 position_resolve(struct object *);
 
-int	 position_set_input(void *, const char *);
-int	 position_set_projmap(void *, const char *);
+void	 position_set_input(void *, struct input *);
+void	 position_set_projmap(void *, struct map *);
 void	 position_set_velvec(void *, int, int);
 
-int	 position_set(void *, struct map *, int, int, int, struct map *);
+int	 position_set(void *, struct map *, int, int, int);
 void	 position_unset(void *);
 void	 position_project(struct position *);
 void	 position_unproject(struct position *);
