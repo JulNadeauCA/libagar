@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.8 2003/12/09 06:29:28 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.9 2003/12/09 07:01:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -275,7 +275,6 @@ const struct unit pressure_units[] = {
 	{ "Mba",		N_("Millibars"),	100,		NULL },
 	{ "kPa",		N_("Kilopascals"),	1000,		NULL },
 	{ "Bar",		N_("Bars"),		100000,		NULL },
-	{ "N/m\xc2\xb2",	N_("Newtons per square meters"), 1,	NULL },
 	{ "Kg-f/m\xc2\xb2",	N_("Kg-force per square meters"), 9.80665,
 	  NULL },
 	{ "Cm H\xc2\xb2O",	N_("Centimeters of water"), 98.0665,	NULL },
