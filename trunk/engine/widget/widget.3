@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.13 2002/09/12 09:54:00 vedge Exp $
+.\"	$Csoft: widget.3,v 1.14 2002/11/07 04:39:54 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -43,21 +43,6 @@ structure.
 Widgets are attached to window
 .Xr region 3
 structures, and their coordinates and geometry are variable.
-.Pp
-Two rendering methods are available to widgets:
-.Bl -tag -width "widget_update"
-.It widget_draw
-The widget draws directly to video memory at every tick, using macros that
-hide window/region coordinate and boundary checking from the widget.
-This method allows the widget to handle surface caching.
-.It widget_update
-The widget draws to memory asynchronously after
-.Fn WIDGET_REDRAW
-is invoked.
-This method hides surface caching from the widget implementation, but requires
-enough memory to hold the surfaces of visible widgets (the cache entry is
-invalidated when the widget is hidden).
-.El
 .Sh LOCKING POLICIES
 Widget initialization and free routines do not need to be concerned about
 locking.
