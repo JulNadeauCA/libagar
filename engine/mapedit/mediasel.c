@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.11 2004/04/11 03:29:19 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.12 2004/04/22 12:36:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <config/edition.h>
+
 #ifdef EDITION
 
 #include <engine/engine.h>
@@ -102,8 +103,8 @@ media_selected(int argc, union evarg *argv)
 static void
 mediasel_refresh(struct mediasel *msel)
 {
-	char den_path[MAXPATHLEN];
-	char *dir, *last;
+	char den_path[MAXPATHLEN], *denp = &den_path[0];
+	char *dir;
 	const char *hint = NULL;
 	
 	switch (msel->type) {
@@ -127,9 +128,9 @@ mediasel_refresh(struct mediasel *msel)
 
 	prop_copy_string(config, "den-path", den_path, sizeof(den_path));
 
-	for (dir = strtok_r(den_path, ":", &last);
+	for (dir = strsep(&denp, ":");
 	     dir != NULL;
-	     dir = strtok_r(NULL, ":", &last)) {
+	     dir = strsep(&denp, ":")) {
 		char cwd[MAXPATHLEN];
 
 		if (getcwd(cwd, sizeof(cwd)) == NULL) {
