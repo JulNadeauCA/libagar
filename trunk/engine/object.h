@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.45 2002/08/18 00:40:57 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.46 2002/08/19 05:33:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -156,11 +156,10 @@ int		 object_save(void *);
 void	 object_init(struct object *, char *, char *, char *, int,
 	     const void *);
 void	 object_destroy(void *);
-char	*object_name(char *, int);
+char	*object_name(const char *, int);
 int	 object_loadfrom(void *, char *);
 void	 object_add_sprite(struct object_art *, SDL_Surface *, Uint32, int);
 void	 object_break_sprite(struct object_art *, SDL_Surface *);
-void	 object_dump(void *);
 char	*object_path(char *, const char *);
 
 void	 object_init_gc(void);

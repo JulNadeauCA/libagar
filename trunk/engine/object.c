@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.75 2002/08/20 09:14:16 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.76 2002/08/21 01:00:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -276,7 +276,7 @@ done:
 }
 
 char *
-object_name(char *base, int num)
+object_name(const char *base, int num)
 {
 	char *name;
 
@@ -571,25 +571,6 @@ object_path(char *obname, const char *suffix)
 
 	error_set("cannot find %s.%s", obname, suffix);
 	return (NULL);
-}
-
-void
-object_dump(void *p)
-{
-	struct object *ob = p;
-
-	printf("--\n%d. %s", ob->id, ob->name);
-	if (ob->desc != NULL) {
-		printf(" (%s)", ob->desc);
-	}
-	printf("\n[ ");
-	if (OBJECT_OPS(ob)->destroy != NULL)
-		printf("destroy ");
-	if (OBJECT_OPS(ob)->load != NULL)
-		printf("load ");
-	if (OBJECT_OPS(ob)->save != NULL)
-		printf("save ");
-	printf("]\n");
 }
 
 /* XXX too intricate */
