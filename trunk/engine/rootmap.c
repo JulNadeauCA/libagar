@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.3 2002/08/28 03:48:41 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.4 2002/09/01 08:58:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -82,12 +82,6 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
-#ifdef DEBUG
-			if (nref->offs > nref->pobj->art->nsprites) {
-				fatal("bad sprite offs: %d > %d\n", nref->offs,
-				    nref->pobj->art->nsprites);
-			}
-#endif
 			src = SPRITE(nref->pobj, nref->offs);
 			rd.w = src->w;
 			rd.h = src->h;
@@ -95,12 +89,6 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 			rd.y = ry + nref->yoffs;
 			SDL_BlitSurface(src, NULL, view->v, &rd);
 		} else if (nref->flags & MAPREF_ANIM) {
-#ifdef DEBUG
-			if (nref->offs > nref->pobj->art->nanims) {
-				fatal("bad anim offs: %d > %d\n", nref->offs,
-				    nref->pobj->art->nanims);
-			}
-#endif
 			anim = ANIM(nref->pobj, nref->offs);
 			frame = anim->frame;
 #ifdef DEBUG
@@ -266,7 +254,7 @@ rootmap_draw(void)
 	struct noderef *nref;
 	Uint32 nsprites;
 	int ri = 0;
-	
+
 	dprintf("offset %d,%d\n", rm->x, rm->y);
 
 	if (rm->y > m->maph - rm->h ||
@@ -291,6 +279,12 @@ rootmap_draw(void)
 			rx = vx << m->shtilex;
 
 			node = &m->map[y][x];
+#ifdef DEBUG
+			if (node->x != x || node->y != y) {
+				fatal("node at %d,%d should be at %d,%d\n",
+				    x, y, node->x, node->y);
+			}
+#endif
 
 			if (node->nanims > 0 || ((node->flags & NODE_ANIM) ||
 			    node->overlap > 0)) {
@@ -307,14 +301,6 @@ rootmap_draw(void)
 					rd.y = ry + nref->yoffs;
 					rd.w = TILEW;
 					rd.h = TILEH;
-#ifdef DEBUG
-					if (nref->offs >
-					    nref->pobj->art->nsprites) {
-						fatal("bad offs: %d > %d\n",
-						    nref->offs,
-						    nref->pobj->art->nsprites);
-					}
-#endif
 					SDL_BlitSurface(
 					    SPRITE(nref->pobj, nref->offs),
 					    NULL, view->v, &rd);
