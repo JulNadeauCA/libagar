@@ -14,27 +14,16 @@ INSTALLATION
 2) Générer les dépendances avec la cible `depend'.
    $ make depend
 
-3) Compiler la librarie, les exécutables ainsi que les pages de manuel
+3) Compiler les libraries, les exécutables ainsi que les pages de manuel
    (si nroff(1) est disponible).
    $ make
 
-4) Installer la librarie, les exécutables, les fichiers de données et la
+4) Installer les libraries, les exécutables, les fichiers de données et la
    documentation.
    # make install
 
-5) Exécuter le jeu ou l'éditeur.
-   $ cave					# Lancer en mode jeux
-   $ cave -e					# Lancer en mode édition
-   $ cave -e -T $HOME/fonts -t myfont,18	# Spécifier la police
-   $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Spécifier le chemin d'accès
-   						# vers les fichiers de données.
-
-6) Faites nous savoir si le programme se compile et s'exécute correctement.
-   Vous pouvez ajouter des commentaires à l'objet, mais assurez vous que
-   votre adresse de retour est valide, afin que nos développeurs aient la
-   possibilité de vous répondre.
+5) Faites connaître vos succès ou échecs aux développeurs.
    $ cat config.log | \
-     mail -s "VAXstation 3100: s'exécute, mais les polices ne s'affichent pas" \
-     report@agar.csoft.org
+     mail -s "compile et s'exécute correctement" report@agar.csoft.org
 
-$Csoft: INSTALL.fr,v 1.2 2003/07/08 01:17:24 vedge Exp $
+$Csoft: INSTALL.fr,v 1.3 2004/01/26 08:54:48 vedge Exp $
