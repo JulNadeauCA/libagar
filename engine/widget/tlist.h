@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.14 2003/01/08 23:10:19 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.15 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -7,9 +7,7 @@
 #include <engine/widget/scrollbar.h>
 
 struct tlist_item {
-	SDL_Surface	*icon;		/* Icon */
-	int		 icon_w;
-	int		 icon_h;
+	SDL_Surface	*icon;		/* Original icon */
 	char		*text;		/* Label */
 	size_t		 text_len;
 	void		*p1;		/* User data */
@@ -49,6 +47,8 @@ void			 tlist_init(struct tlist *, int, int, int);
 void	 		 tlist_draw(void *);
 void	 		 tlist_destroy(void *);
 void			 tlist_set_item_height(struct tlist *, int);
+void			 tlist_set_item_icon(struct tlist *,
+			    struct tlist_item *, SDL_Surface *);
 
 void			 tlist_save_selections(struct tlist *);
 void			 tlist_restore_selections(struct tlist *);

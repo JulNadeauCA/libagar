@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.12 2003/02/02 21:16:15 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.13 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,6 +52,10 @@ Single or multiple selections of items are allowed.
 .Pp
 .Ft void
 .Fn tlist_set_item_height "struct tlist *tl" "int itemh"
+.Pp
+.Ft void
+.Fn tlist_set_item_icon "struct tlist *tl" "struct tlist_item *item" \
+                        "SDL_Surface *icon"
 .nr nS 0
 .Pp
 The
@@ -85,6 +89,16 @@ The
 function sets the height of all items to
 .Fa itemh
 pixels .
+.Pp
+The
+.Fn tlist_set_item_icon
+function updates the icon shown with
+.Fa item ,
+scaled to
+.Fa w
+by
+.Fa h
+pixels.
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "struct tlist_item *"
@@ -232,3 +246,6 @@ processed.
 The
 .Nm
 widget first appeared in Agar 1.0.
+.Sh BUGS
+The polled mode save/restore selections hack does not work for multiple
+items with the same text.
