@@ -153,7 +153,7 @@ if [ ! -e "config" ]; then
 		exit 1
 	fi
 fi
-echo > config.log
+echo "Host: " > config.log
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
@@ -198,7 +198,6 @@ main(int argc, char *argv[])
 }
 EOT
 
-echo "$CC -o .cctest .cctest.c" >>config.log
 $CC -o .cctest .cctest.c 2>>config.log
 if [ $? != 0 -o ! -e .cctest ]; then
     echo "-> failure" >> config.log
@@ -209,11 +208,11 @@ fi
 cc_is_gcc=no
 if ./.cctest; then
     cc_is_gcc=yes
-    echo "-> success: gcc" >> config.log
+    echo "ok (gcc)" >> config.log
     echo "yes"
 else
     echo "yes"
-    echo "-> success" >> config.log
+    echo "ok" >> config.log
 fi
 
 rm -f .cctest .cctest.c
