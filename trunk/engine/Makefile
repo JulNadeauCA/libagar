@@ -28,12 +28,6 @@ OBJS=	engine.o error.o event.o anim.o oldxcf.o ttf.o view.o physics.o \
 OBJS+=	mapedit/mapedit.o \
 	monitor/monitor.o
 
-OBJS+=	compat/setenv.o \
-	compat/strlcat.o \
-	compat/strlcpy.o \
-	compat/strsep.o \
-	compat/vasprintf.o
-
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
 include ${TOP}/libfobj/Makefile.inc
