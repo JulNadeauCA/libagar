@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.5 2002/06/20 16:36:39 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.6 2002/07/06 05:31:29 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -33,103 +33,111 @@
 #include "widget.h"
 #include "primitive.h"
 
-SDL_Surface *
-primitive_box(void *p, int w, int h, int z)
+static void	box_3d(void *, int, int, int, int, int);
+static void	frame_2d(void *, int, int, int);
+static void	bresenham_circle(void *, int, int, int, int);
+
+struct primitive_ops primitives = {
+	box_3d,			/* box */
+	frame_2d,		/* frame */
+	bresenham_circle	/* circle */
+};
+
+static void
+box_3d(void *p, int xoffs, int yoffs, int w, int h, int z)
 {
 	struct widget *wid = p;
-	SDL_Surface *s;
-	int x, y;
 	Uint32 lcol, rcol, bcol;
+	int x, y;
 
-	s = view_surface(SDL_SWSURFACE, w, h);
+	OBJECT_ASSERT(wid, "widget");
 
 	if (z < 0) {
 		z = abs(z);
-		lcol = SDL_MapRGB(s->format, 20, 20, 20);
-		rcol = SDL_MapRGB(s->format, 140, 140, 140);
+		lcol = SDL_MapRGB(view->v->format, 20, 20, 20);
+		rcol = SDL_MapRGB(view->v->format, 140, 140, 140);
 		if (WIDGET_FOCUSED(wid)) {
-			bcol = SDL_MapRGB(s->format, 100, 100, 100);
+			bcol = SDL_MapRGB(view->v->format, 100, 100, 100);
 		} else {
-			bcol = SDL_MapRGB(s->format, 60, 60, 60);
+			bcol = SDL_MapRGB(view->v->format, 60, 60, 60);
 		}
 	} else {
-		lcol = SDL_MapRGB(s->format, 140, 140, 140);
-		rcol = SDL_MapRGB(s->format, 20, 20, 20);
+		lcol = SDL_MapRGB(view->v->format, 140, 140, 140);
+		rcol = SDL_MapRGB(view->v->format, 20, 20, 20);
 		if (WIDGET_FOCUSED(wid)) {
-			bcol = SDL_MapRGB(s->format, 110, 110, 110);
+			bcol = SDL_MapRGB(view->v->format, 110, 110, 110);
 		} else {
-			bcol = SDL_MapRGB(s->format, 90, 90, 90);
+			bcol = SDL_MapRGB(view->v->format, 90, 90, 90);
 		}
 	}
 
 	/* Background */
-	SDL_FillRect(s, NULL, bcol);
+	WIDGET_FILL(wid, xoffs, yoffs, w, h, bcol);
 
+#if 0
 	/* Border */
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {	/* XXX waste */
+	for (y = yoffs; y < yoffs+h; y++) {
+		for (x = xoffs; x < xoffs+w; x++) {	/* XXX waste */
 			if (y < z || x < z) {
-				VIEW_PUT_PIXEL(s, x, y, lcol);
+				WIDGET_PUT_PIXEL(wid, x, y, lcol);
 			} else if (y >= (h - z) || x >= (w - z)) {
-				VIEW_PUT_PIXEL(s, x, y, rcol);
+				WIDGET_PUT_PIXEL(wid, x, y, rcol);
 			}
 		}
 	}
-
-	return (s);
+#endif
 }
 
-SDL_Surface *
-primitive_frame(void *p, int w, int h, int col)
+static void
+frame_2d(void *p, int w, int h, int col)
 {
 	struct widget *wid = p;
-	SDL_Surface *s;
 	Uint32 fcol;
 	int i;
 
-	s = view_surface(SDL_SWSURFACE, w, h);
+	OBJECT_ASSERT(wid, "widget");
+
 	if (col) {
-		fcol = SDL_MapRGB(s->format, 200, 200, 200);
+		fcol = SDL_MapRGB(view->v->format, 200, 200, 200);
 	} else {
-		fcol = SDL_MapRGB(s->format, 150, 150, 150);
+		fcol = SDL_MapRGB(view->v->format, 150, 150, 150);
 	}
 
+	/* XXX unoptimized */
 	for (i = 0; i < h; i++) {
-		VIEW_PUT_PIXEL(s, 0, i, fcol);
-		VIEW_PUT_PIXEL(s, w - 1, i, fcol);
+		WIDGET_PUT_PIXEL(wid, 0, i, fcol);
+		WIDGET_PUT_PIXEL(wid, w - 1, i, fcol);
 	}
 	for (i = 0; i < w; i++) {
-		VIEW_PUT_PIXEL(s, i, 0, fcol);
-		VIEW_PUT_PIXEL(s, i, h - 1, fcol);
+		WIDGET_PUT_PIXEL(wid, i, 0, fcol);
+		WIDGET_PUT_PIXEL(wid, i, h - 1, fcol);
 	}
-
-	return (s);
 }
 
-SDL_Surface *
-primitive_circle(void *p, int w, int h, int radius, int z)
+static void
+bresenham_circle(void *wid, int w, int h, int radius, int z)
 {
-	SDL_Surface *s;
 	int x = 0, y, cx, cy, e = 0, u = 1, v;
 	Uint32 fcol;
+
+	OBJECT_ASSERT(wid, "widget");
 
 	y = radius;
 	cx = w / 2;
 	cy = h / 2;
 	v = 2*radius - 1;
 
-	s = view_surface(SDL_SWSURFACE, w, h);
 	if (z) {
-		fcol = SDL_MapRGB(s->format, 200, 200, 200);
+		fcol = SDL_MapRGB(view->v->format, 200, 200, 200);
 	} else {
-		fcol = SDL_MapRGB(s->format, 150, 150, 150);
+		fcol = SDL_MapRGB(view->v->format, 150, 150, 150);
 	}
 
 	while (x < y) {
-		VIEW_PUT_PIXEL(s, cx + x, cy + y, fcol);
-		VIEW_PUT_PIXEL(s, cx + x, cy - y, fcol);
-		VIEW_PUT_PIXEL(s, cx - x, cy + y, fcol);
-		VIEW_PUT_PIXEL(s, cx - x, cy - y, fcol);
+		WIDGET_PUT_PIXEL(wid, cx + x, cy + y, fcol);
+		WIDGET_PUT_PIXEL(wid, cx + x, cy - y, fcol);
+		WIDGET_PUT_PIXEL(wid, cx - x, cy + y, fcol);
+		WIDGET_PUT_PIXEL(wid, cx - x, cy - y, fcol);
 		x++;
 		e += u;
 		u += 2;
@@ -141,11 +149,10 @@ primitive_circle(void *p, int w, int h, int radius, int z)
 		if (x > y) {
 			break;
 		}
-		VIEW_PUT_PIXEL(s, cx + y, cy + x, fcol);
-		VIEW_PUT_PIXEL(s, cx + y, cy - x, fcol);
-		VIEW_PUT_PIXEL(s, cx - y, cy + x, fcol);
-		VIEW_PUT_PIXEL(s, cx - y, cy - x, fcol);
+		WIDGET_PUT_PIXEL(wid, cx + y, cy + x, fcol);
+		WIDGET_PUT_PIXEL(wid, cx + y, cy - x, fcol);
+		WIDGET_PUT_PIXEL(wid, cx - y, cy + x, fcol);
+		WIDGET_PUT_PIXEL(wid, cx - y, cy - x, fcol);
 	}
-	return (s);
 }
 
