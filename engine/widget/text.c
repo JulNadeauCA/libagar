@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.50 2003/01/04 14:10:33 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.51 2003/01/05 08:41:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <engine/engine.h>
 
 #include <engine/view.h>
+#include <engine/config.h>
 
 #include "widget.h"
 #include "window.h"
@@ -107,7 +108,7 @@ get_font(char *name, int size, int style)
 }
 
 int
-text_engine_init(void)
+text_init(void)
 {
 	if (TTF_Init() < 0) {
 		fatal("TTF_Init: %s\n", SDL_GetError());
@@ -122,7 +123,7 @@ text_engine_init(void)
 }
 
 void
-text_engine_destroy(void)
+text_destroy(void)
 {
 	struct text_font *fon, *nextfon;
 	
@@ -149,11 +150,12 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	int nlines, maxw;
 	char *sd, *sp;
 
-#ifdef DEBUG
-	if (s == NULL || strcmp("", s) == 0) {
-		fatal("empty string\n");
+	if (s == NULL || strcmp("", s) == 0 ||
+	    !prop_get_bool(config, "view.font-engine")) {
+		/* Return an empty surface. */
+		return (view_surface(SDL_SWSURFACE, 0, 0));
 	}
-#endif
+
 	/* Get a font handle. */
 	fon = get_font(fontname, fontsize, 0);
 	
@@ -180,7 +182,9 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	} else {
 		SDL_Surface **lines, **lp;
 		int i;
-	
+
+		/* XXX inefficient */
+
 		/*
 		 * Render the text to an array of surfaces, since we cannot
 		 * predict the width of the final surface.

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.92 2003/02/26 02:04:53 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.93 2003/02/26 03:10:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -174,8 +174,8 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	world_attach(config);
 
 	/* Initialize the font engine. */
-	if (flags & ENGINE_INIT_TEXT &&
-	    text_engine_init() != 0) {
+	if (prop_get_bool(config, "view.font-engine") &&
+	    text_init() != 0) {
 		fatal("cannot initialize font engine\n");
 	}
 
@@ -287,7 +287,9 @@ engine_destroy(void)
 		object_save(&mapedit);
 	}
 	world_destroy(world);
-	text_engine_destroy();
+	if (prop_get_bool(config, "view.font-engine")) {
+		text_destroy();
+	}
 	input_destroy_all();
 
 	object_destroy(view);
