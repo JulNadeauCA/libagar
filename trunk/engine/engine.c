@@ -1,18 +1,15 @@
-/*	$Csoft: engine.c,v 1.64 2002/09/01 08:58:35 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.65 2002/09/02 08:13:14 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -149,15 +146,15 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 			njoy = -1;
 		}
 	}
+	
+	/* Initialize/load engine settings. */
+	config = config_new();
+	object_load(config);
 
 	/* Initialize the world structure. */
 	world = emalloc(sizeof(struct world));
 	world_init(world, gameinfo->prog);
 
-	/* Initialize/load engine settings. */
-	config = config_new();
-	object_load(config);
-	
 	/* Initialize the font engine. */
 	if (text_engine_init() != 0) {
 		return (-1);
@@ -165,11 +162,12 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 
 	/* Overrides */
 	if (fullscreen)
-		config->flags |= CONFIG_FULLSCREEN;
+		prop_set_uint32(config, "flags",
+		    prop_uint32(config, "flags") | CONFIG_FULLSCREEN);
 	if (w > 0)
-		config->view.w = w;
+		prop_set_uint32(config, "view.w", w);
 	if (h > 0)
-		config->view.h = h;
+		prop_set_uint32(config, "view.h", h);
 
 	/* Initialize input devices. */
 	keyboard = input_new(INPUT_KEYBOARD, 0);
@@ -306,11 +304,14 @@ engine_stop(void)
 	}
 }
 
-/* Caller must not hold world->lock. */
+/*
+ * Caller must not hold world->lock.
+ * Only one thread must be running.
+ */
 void
 engine_destroy(void)
 {
-	/* Unlink all objects and add them to the free list. */
+	/* Unlink game objects. */
 	world_destroy(world);
 	
 	/* Force garbage collection of media. */
@@ -335,7 +336,7 @@ engine_destroy(void)
 
 	/* Free the config structure. */
 	object_destroy(config);
-	
+
 	pthread_key_delete(engine_errorkey);
 
 	SDL_Quit();
