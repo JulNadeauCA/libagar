@@ -1,4 +1,4 @@
-.\"	$Csoft: rootmap.3,v 1.4 2003/03/05 18:22:20 vedge Exp $
+.\"	$Csoft: rootmap.3,v 1.5 2003/03/23 11:11:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,9 +45,8 @@ The agar
 interface manages a single tile-based
 .Xr map 3
 display.
-.Pp
 .Nm
-functions must be used only after a call to
+functions are only usable after a call to
 .Xr view_init 3
 with the
 .Dv GFX_ENGINE_TILEBASED
@@ -75,7 +74,9 @@ The
 function updates the animations displayed by the root map.
 The
 .Fn rootmap_draw
-function renders static nodes, it is usually called from the event loop
+function renders static nodes.
+.Fn rootmap_draw
+is usually called from the event loop
 when the
 .Dv redraw
 member of the root
