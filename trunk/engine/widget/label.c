@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.60 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.61 2003/03/27 23:59:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -170,36 +170,26 @@ label_polled_new(struct region *reg, int w, int h, pthread_mutex_t *mutex,
 	return (label);
 }
 
-/* Window must be locked. XXX */
 void
 label_printf(struct label *label, const char *fmt, ...)
 {
 	va_list args;
-	char *buf;
-	size_t sl;
 
 #ifdef DEBUG
 	if (label->type != LABEL_STATIC)
 		fatal("not a static label");
 #endif
-
-	va_start(args, fmt);
-	Vasprintf(&buf, fmt, args);
-	va_end(args);
-
-	sl = strlen(buf);
-
+	
 	pthread_mutex_lock(&label->text.lock);
 
-	/* Update the string. */
-	label->text.caption = Realloc(label->text.caption, sl+1);
-	strlcpy(label->text.caption, buf, sl+1);
-	free(buf);
+	free(label->text.caption);
+	va_start(args, fmt);
+	Vasprintf(&label->text.caption, fmt, args);
+	va_end(args);
 
 	/* Update the static surface. */
-	if (label->text.surface != NULL) {
+	if (label->text.surface != NULL)
 		SDL_FreeSurface(label->text.surface);
-	}
 	if (label->text.caption[0] != '\0') {
 		label->text.surface = text_render(NULL, -1,
 		    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
@@ -210,7 +200,6 @@ label_printf(struct label *label, const char *fmt, ...)
 		WIDGET(label)->w = 0;
 		WIDGET(label)->h = 0;
 	}
-
 	pthread_mutex_unlock(&label->text.lock);
 }
 
