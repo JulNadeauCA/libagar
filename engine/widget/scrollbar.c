@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.33 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.34 2004/01/22 09:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ enum {
 	BUTTON_COLOR
 };
 
-enum button {
+enum button_which {
 	BUTTON_NONE,
 	BUTTON_UP,
 	BUTTON_DOWN,
