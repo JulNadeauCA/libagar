@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.103 2004/02/29 17:34:24 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.104 2004/03/05 15:22:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -50,9 +50,8 @@ struct object {
 #define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
 #define OBJECT_INDESTRUCTIBLE	0x04	/* Not destructible (advisory) */
 #define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
-#define OBJECT_PRESERVE_DEPS	0x10	/* Don't remove a dependency when its
-					   reference count reaches 0. */
-#define OBJECT_STATIC		0x20	/* Don't free() after detach. */
+#define OBJECT_PRESERVE_DEPS	0x10	/* Preserve cnt=0 dependencies */
+#define OBJECT_STATIC		0x20	/* Don't free() after detach */
 #define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
 #define OBJECT_WAS_RESIDENT	0x80	/* Used internally by object_load() */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
@@ -114,8 +113,10 @@ int	 object_copy_filename(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
 
 void		*object_find(const char *);
-__inline__ void	*object_root(void *);
-__inline__ int	 object_used(void *);
+__inline__ void	*object_root(const void *);
+__inline__ void *object_find_parent(void *, const char *, const char *);
+__inline__ int	 object_depended(const void *);
+int		 object_in_use(const void *);
 void		 object_set_type(void *, const char *);
 void		 object_set_name(void *, const char *);
 void		 object_set_ops(void *, const void *);
@@ -124,12 +125,13 @@ void		 object_wire_gfx(void *, const char *);
 void	 object_move_up(void *);
 void	 object_move_down(void *);
 void	*object_duplicate(void *);
-int	 object_destroy(void *);
+void	 object_destroy(void *);
 
-int	 object_free_children(struct object *);
+void	 object_free_children(struct object *);
 void	 object_free_props(struct object *);
 void 	 object_free_events(struct object *);
 void	 object_free_deps(struct object *);
+void	 object_free_zerodeps(struct object *);
 
 int	 object_page_in(void *, enum object_page_item);
 int	 object_page_out(void *, enum object_page_item);

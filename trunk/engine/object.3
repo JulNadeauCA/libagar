@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.58 2004/03/02 08:58:12 vedge Exp $
+.\"	$Csoft: object.3,v 1.59 2004/03/12 03:55:23 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -124,6 +124,9 @@ system to indicate that the object's data currently resides in memory.
 .Ft "void *"
 .Fn object_root "const void *obj"
 .Pp
+.Ft "void *"
+.Fn object_find_parent "const void *obj" "const char *name" "const char *type"
+.Pp
 .Ft "int"
 .Fn object_copy_name "const void *obj" "char *pathbuf" "size_t pathbuf_len"
 .Pp
@@ -203,10 +206,18 @@ events in order.
 .Pp
 The
 .Fn object_root
-function traverses the object's ancestry, until the root is reached.
-A pointer to the object itself is returned, if the object is the root.
-The linkage must remain locked during the execution of
-.Fn object_root .
+function traverses the object's ancestry and return a pointer to the root
+object.
+.Fn object_find_parent
+traverse the ancestry until a parent object matches the non-NULL
+.Fa name
+and
+.Fa type
+arguments.
+The object linkage must remain locked throughout the execution of both
+.Fn object_root
+and
+.Fn object_find_parent .
 .Pp
 The
 .Fn object_copy_name
@@ -225,7 +236,7 @@ acquire and release the world's linkage lock, respectively.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
-.Fn object_used "const void *obj"
+.Fn object_depended "const void *obj"
 .Pp
 .Ft "struct object_dep *"
 .Fn object_add_dep "void *obj" "void *depobj"
@@ -241,9 +252,10 @@ acquire and release the world's linkage lock, respectively.
 .nr nS 0
 .Pp
 The
-.Fn object_used
-function returns 1 if a given object is referenced from another object
-sharing the same root.
+.Fn object_depended
+function returns 1 if the given object
+.Fa obj
+is used by another object (which must be sharing the same root).
 .Pp
 The
 .Fn object_add_dep
@@ -264,7 +276,7 @@ returns the index of a dependency, for purposes of encoding object references
 in network format.
 .Sh GARBAGE COLLECTION
 .nr nS 1
-.Ft "int"
+.Ft "void"
 .Fn object_destroy "void *obj"
 .Pp
 .Ft void
@@ -277,30 +289,44 @@ in network format.
 .Fn object_free_props "struct object *obj"
 .Pp
 .Ft "void"
+.Fn object_free_deps "struct object *obj"
+.Pp
+.Ft "void"
 .Fn object_free_children "struct object *obj"
+.Pp
+.Ft "void"
+.Fn object_free_zerodeps "struct object *obj"
 .nr nS 0
 .Pp
 The
 .Fn object_destroy
-function is called to free all resources reserved by
-.Fa ob
-and its children.
+function is called to free all resources reserved by the given object, including
+its children (assuming that they are not currently in use).
 .Fn object_destroy
 returns 0 on success or -1 if the given object (or one of its children)
 is currently in use.
 To permit static allocation,
 .Fn object_destroy
-does not call
-.Xr free 3 .
+does not invoke
+.Xr free 3
+on the object structure.
 .Pp
+Internally,
 .Fn object_destroy
-calls
+invokes
 .Fn object_free_events ,
-.Fn object_free_props
+.Fn object_free_props ,
+.Fn object_free_deps
 and
 .Fn object_free_children ,
-but these functions may be called directly in order to clear the event handler
-list, the property table and the attached objects, respectively.
+but these functions may be called directly in order to destroy and reinitialize
+the event handler list, the property table and the child objects, respectively.
+.Dv object_free_children
+invokes
+.Xr free 3
+on the given object's children (except those with the
+.Dv OBJECT_STATIC
+flag set), assuming that none of them are in use.
 .Pp
 The
 .Fn object_free_data
@@ -316,6 +342,14 @@ The
 operation of
 .Xr map 3 ,
 for example, frees the contents of all nodes of the map.
+.Pp
+The
+.Fn object_free_zerodeps
+function clears any dependency table entry that has a reference count of zero
+for the given object and its children.
+Dependencies with a reference count of zero only occur in objects that have the
+.Dv OBJECT_PRESERVE_DEPS
+flag set.
 .Sh SHARED MEDIA
 .Pp
 Data that is shared between multiple objects (such as graphics or audio) is

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.163 2004/03/10 04:30:24 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.164 2004/03/12 04:01:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -199,17 +199,41 @@ object_copy_name(const void *obj, char *path, size_t path_len)
 }
 
 /*
- * Return the root of the object tree in which an object resides.
+ * Return the root of a given object's ancestry.
  * The linkage must be locked.
  */
 void *
-object_root(void *obj)
+object_root(const void *p)
+{
+	const struct object *ob = p;
+
+	while (ob != NULL) {
+		if (ob->parent == NULL) {
+			return ((void *)ob);
+		}
+		ob = ob->parent;
+	}
+	return (NULL);
+}
+
+/*
+ * Traverse an object's ancestry looking for a matching parent object.
+ * The linkage must be locked.
+ */
+void *
+object_find_parent(void *obj, const char *name, const char *type)
 {
 	struct object *ob = obj;
 
 	while (ob != NULL) {
-		if (ob->parent == NULL) {
-			return (ob);
+		struct object *po = ob->parent;
+
+		if (po == NULL) {
+			return (NULL);
+		}
+		if ((type == NULL || strcmp(po->type, type) == 0) &&
+		    (name == NULL || strcmp(po->name, name) == 0)) {
+			return (po);
 		}
 		ob = ob->parent;
 	}
@@ -221,7 +245,7 @@ object_root(void *obj)
  * The linkage must be locked.
  */
 static int
-object_used_search(const void *p, const void *robj)
+find_depended(const void *p, const void *robj)
 {
 	const struct object *ob = p, *cob;
 	struct object_dep *dep;
@@ -231,7 +255,7 @@ object_used_search(const void *p, const void *robj)
 			return (1);
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (object_used_search(cob, robj))
+		if (find_depended(cob, robj))
 			return (1);
 	}
 	return (0);
@@ -242,20 +266,39 @@ object_used_search(const void *p, const void *robj)
  * tables of other objects sharing the same root.
  */
 int
-object_used(void *obj)
+object_depended(const void *obj)
 {
 	struct object *root;
-	int used;
+	int rv;
 
 	lock_linkage();
 	root = object_root(obj);
-	used = object_used_search(root, obj);
+	rv = find_depended(root, obj);
 	unlock_linkage();
 
-	if (used) {
+	if (rv) {
 		error_set(_("The `%s' object is in use."), OBJECT(obj)->name);
 	}
-	return (used);
+	return (rv);
+}
+
+/*
+ * Return 1 if the given object or one of its children is being referenced.
+ * The linkage must be locked.
+ */
+int
+object_in_use(const void *p)
+{
+	const struct object *ob = p, *cob;
+
+	if (object_depended(ob)) {
+		return (1);
+	}
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
+		if (object_in_use(cob))
+			return (1);
+	}
+	return (0);
 }
 
 /* Move an object to a different parent. */
@@ -377,17 +420,39 @@ object_free_deps(struct object *ob)
 	TAILQ_INIT(&ob->deps);
 }
 
-/* Detach and free child objects. */
-int
+/*
+ * Remove any dependencies of the object and its children with a reference
+ * count of zero (as used by the load process to resolve object references).
+ */
+void
+object_free_zerodeps(struct object *ob)
+{
+	struct object *cob;
+	struct object_dep *dep, *ndep;
+
+	for (dep = TAILQ_FIRST(&ob->deps);
+	     dep != TAILQ_END(&ob->deps);
+	     dep = ndep) {
+		ndep = TAILQ_NEXT(dep, deps);
+		if (dep->count == 0) {
+			TAILQ_REMOVE(&ob->deps, dep, deps);
+			free(dep);
+		}
+	}
+	TAILQ_FOREACH(cob, &ob->children, cobjs)
+		object_free_zerodeps(cob);
+}
+
+/*
+ * Detach the child objects, and free them, assuming that none of them
+ * are currently in use.
+ */
+void
 object_free_children(struct object *pob)
 {
 	struct object *cob, *ncob;
 
 	pthread_mutex_lock(&pob->lock);
-	TAILQ_FOREACH(cob, &pob->children, cobjs) {
-		if (object_used(cob))
-			goto fail;
-	}
 	for (cob = TAILQ_FIRST(&pob->children);
 	     cob != TAILQ_END(&pob->children);
 	     cob = ncob) {
@@ -399,10 +464,6 @@ object_free_children(struct object *pob)
 	}
 	TAILQ_INIT(&pob->children);
 	pthread_mutex_unlock(&pob->lock);
-	return (0);
-fail:
-	pthread_mutex_unlock(&pob->lock);
-	return (-1);
 }
 
 /* Clear an object's property table. */
@@ -440,19 +501,17 @@ object_free_events(struct object *ob)
 	pthread_mutex_unlock(&ob->lock);
 }
 
-/* Release the resources allocated by an object and its children. */
-/* XXX XXX first verify that none of the children are in use! */
-int
+/*
+ * Release the resources allocated by an object and its children, assuming
+ * that none of them is currently in use.
+ */
+void
 object_destroy(void *p)
 {
 	struct object *ob = p;
 	struct object_dep *dep, *ndep;
 
-	if (object_used(ob))
-		return (-1);
-
-	if (object_free_children(ob) == -1)
-		return (-1);
+	object_free_children(ob);
 	
 	if (ob->pos != NULL)
 		position_unset(ob);
@@ -470,20 +529,17 @@ object_destroy(void *p)
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 
+	Free(ob->gfx_name);
+	Free(ob->audio_name);
 	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
 	}
 	if (ob->audio != NULL) {
 		audio_unused(ob->audio);
 	}
-	Free(ob->gfx_name);
-	Free(ob->audio_name);
-
 	object_free_props(ob);
 	object_free_events(ob);
-
 	pthread_mutex_destroy(&ob->lock);
-	return (0);
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
@@ -742,8 +798,8 @@ object_resolve_deps(void *p)
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj != NULL) {
-			printf("%s: already resolved dep `%s'\n", ob->name,
-			    dep->obj->name);
+			debug(DEBUG_DEPS, "%s: already resolved `%s'\n",
+			    ob->name, dep->obj->name);
 			continue;
 		}
 		dprintf("%s: resolving `%s'\n", ob->name, dep->path);
