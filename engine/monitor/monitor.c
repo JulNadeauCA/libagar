@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.14 2002/11/15 04:18:33 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.15 2002/11/16 00:57:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -80,7 +80,7 @@ monitor_init(struct monitor *mon, char *name)
 	    222, 152, 222, 152);
 	window_set_caption(mon->toolbar, "Debug monitor");
 
-	reg = region_new(mon->toolbar, REGION_HALIGN, 0,  0, 100, 100);
+	reg = region_new(mon->toolbar, 0, 0,  0, 100, 100);
 	reg->spacing = 1;
 
 	tl_tools = tlist_new(reg, 100, 100, 0);
@@ -93,6 +93,9 @@ monitor_init(struct monitor *mon, char *name)
 	tlist_insert_item(tl_tools,
 	    SPRITE(mon, MONITOR_LEVEL_BROWSER), "Level browser",
 	    level_browser_window);
+	tlist_insert_item(tl_tools,
+	    SPRITE(mon, MONITOR_WIDGET_BROWSER), "Widget browser",
+	    widget_browser_window);
 	event_new(tl_tools, "tlist-changed", toolbar_selected_tool, NULL);
 }
 
