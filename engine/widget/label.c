@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.49 2003/01/08 23:10:36 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.50 2003/01/23 02:45:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -83,9 +83,9 @@ label_scaled(int argc, union evarg *argv)
 		pthread_mutex_lock(&lab->text.lock);
 		if (lab->text.surface != NULL) {
 			if (WIDGET(lab)->rw == -1)
-				WIDGET(lab)->rw = lab->text.surface->w;
+				WIDGET(lab)->w = lab->text.surface->w;
 			if (WIDGET(lab)->rh == -1)
-				WIDGET(lab)->rh = lab->text.surface->h;
+				WIDGET(lab)->h = lab->text.surface->h;
 		}
 		pthread_mutex_unlock(&lab->text.lock);
 		break;
