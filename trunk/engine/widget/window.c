@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.41 2002/06/13 01:05:25 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.42 2002/06/25 17:32:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -211,9 +211,10 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 
 	if (win->flags & WINDOW_TITLEBAR) {
 		/* XXX inefficient */
-		if (yo < (win->titleh + win->borderw) && xo > win->borderw &&
+		if (yo < (win->titleh + win->borderw) - 1 &&
+		    xo > win->borderw &&
 		    xo < win->w - win->borderw) {
-			if (yo < win->borderw) {
+			if (yo < win->borderw - 1) {
 				*col = win->border[yo+1];
 			} else if (yo > win->titleh) {
 				*col = win->border[yo-win->titleh];
@@ -224,16 +225,16 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 		}
 	}
 	
-	if (xo > (win->w - win->borderw)) {
+	if (xo > (win->w - win->borderw)) {		/* Right */
 		*col = win->border[win->w - xo];
 		return (1);
-	} else if (yo < win->borderw) {
+	} else if (yo < win->borderw - 1) {		/* Top */
 		*col = win->border[yo+1];
 		return (1);
-	} else if (xo < win->borderw) {
+	} else if (xo < win->borderw - 1) {		/* Left */
 		*col = win->border[xo+1];
 		return (1);
-	} else if (yo > (win->h - win->borderw)) {
+	} else if (yo > (win->h - win->borderw)) {	/* Bottom */
 		*col = win->border[win->h - yo];
 		return (1);
 	}
@@ -777,8 +778,10 @@ window_event_all(SDL_Event *ev)
 					}
 					event_post(wid, "window-mousemotion",
 					    "%i, %i",
-					    (int)ev->motion.x,
-					    (int)ev->motion.y);
+					    (int)ev->motion.x -
+					     (wid->x + wid->win->x),
+					    (int)ev->motion.y -
+					     (wid->y + wid->win->y));
 					goto posted;
 				}
 			}
