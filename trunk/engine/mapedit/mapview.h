@@ -1,7 +1,5 @@
-/*	$Csoft: mapview.h,v 1.17 2003/01/25 06:29:29 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.18 2003/01/27 02:19:09 vedge Exp $	*/
 /*	Public domain	*/
-
-struct mapedit;
 
 struct mapview {
 	struct widget	wid;
@@ -40,7 +38,6 @@ struct mapview {
 	Uint16		zoom;		/* Zoom (%) */
 	int		tilew, tileh;
 
-	struct mapedit	*med;		/* Back pointer to map editor */
 	struct window	*tmap_win;	/* Tile map window */
 	struct button	*tmap_button;
 
@@ -55,10 +52,27 @@ struct mapview {
 	} node;
 };
 
-struct mapview	*mapview_new(struct region *, struct mapedit *, struct map *,
-		     int, int, int);
-void		 mapview_init(struct mapview *, struct mapedit *, struct map *,
-		     int, int, int);
+enum mapview_prop_labels {
+	MAPVIEW_FRAME_0,
+	MAPVIEW_FRAME_1,
+	MAPVIEW_FRAME_2,
+	MAPVIEW_FRAME_3,
+	MAPVIEW_FRAME_4,
+	MAPVIEW_FRAME_5,
+	MAPVIEW_FRAME_6,
+	MAPVIEW_BLOCK,
+	MAPVIEW_ORIGIN,
+	MAPVIEW_WALK,
+	MAPVIEW_CLIMB,
+	MAPVIEW_SLIPPERY,
+	MAPVIEW_BIO,
+	MAPVIEW_REGEN,
+	MAPVIEW_SLOW,
+	MAPVIEW_HASTE
+};
+
+struct mapview	*mapview_new(struct region *, struct map *, int, int, int);
+void		 mapview_init(struct mapview *, struct map *, int, int, int);
 void		 mapview_destroy(void *);
 
 void		 mapview_node_edit_win(struct mapview *);

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.26 2003/01/23 03:17:07 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.27 2003/01/25 06:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -41,12 +41,10 @@
 #include <engine/widget/text.h>
 
 #include "mapedit.h"
-#include "fileops.h"
-#include "mapwin.h"
 #include "mapview.h"
 
 struct window *
-fileops_new_map_window(struct mapedit *med)
+fileops_new_map_window(void)
 {
 	struct window *win;
 	struct region *reg;
@@ -77,11 +75,9 @@ fileops_new_map_window(struct mapedit *med)
 		button = button_new(reg, "Ok", NULL, BUTTON_NOFOCUS,
 		    50, 100);
 		event_new(button, "button-pushed", fileops_new_map,
-		    "%p, %p, %p, %p",
-		    med, name_tbox, w_tbox, h_tbox);
+		    "%p, %p, %p", name_tbox, w_tbox, h_tbox);
 		event_new(name_tbox, "textbox-return", fileops_new_map,
-		    "%p, %p, %p, %p",
-		    med, name_tbox, w_tbox, h_tbox);
+		    "%p, %p, %p", name_tbox, w_tbox, h_tbox);
 		
 		button = button_new(reg, "Cancel", NULL, BUTTON_NOFOCUS,
 		    50, 100);
@@ -93,7 +89,7 @@ fileops_new_map_window(struct mapedit *med)
 }
 
 struct window *
-fileops_load_map_window(struct mapedit *med)
+fileops_load_map_window(void)
 {
 	struct window *win;
 	struct region *reg;
@@ -114,9 +110,9 @@ fileops_load_map_window(struct mapedit *med)
 	{
 		button = button_new(reg, "OK", NULL, BUTTON_NOFOCUS, 50, 100);
 		event_new(button, "button-pushed", fileops_load_map,
-		    "%p, %p", med, name_tbox);
+		    "%p", name_tbox);
 		event_new(name_tbox, "textbox-return", fileops_load_map,
-		    "%p, %p", med, name_tbox);
+		    "%p", name_tbox);
 		
 		button = button_new(reg, "Cancel", NULL, 0, 50, 100);
 		event_new(button, "button-pushed", window_generic_hide,
@@ -131,10 +127,9 @@ void
 fileops_new_map(int argc, union evarg *argv)
 {
 	struct widget *wid = argv[0].p;
-	struct mapedit *med = argv[1].p;
-	struct textbox *name_tbox = argv[2].p;
-	struct textbox *w_tbox = argv[3].p;
-	struct textbox *h_tbox = argv[4].p;
+	struct textbox *name_tbox = argv[1].p;
+	struct textbox *w_tbox = argv[2].p;
+	struct textbox *h_tbox = argv[3].p;
 	struct window *win;
 	struct node *origin;
 	struct map *m;
@@ -166,7 +161,7 @@ fileops_new_map(int argc, union evarg *argv)
 	origin = &m->map[m->defy][m->defx];
 	origin->flags |= NODE_ORIGIN;
 
-	win = mapwin_new(med, m);
+	win = mapwin_new(m);
 	view_attach(win);
 	window_show(win);
 
@@ -190,8 +185,7 @@ void
 fileops_load_map(int argc, union evarg *argv)
 {
 	struct widget *wid = argv[0].p;
-	struct mapedit *med = argv[1].p;
-	struct textbox *name_tbox = argv[2].p;
+	struct textbox *name_tbox = argv[1].p;
 	struct window *win;
 	struct map *m;
 	char *name;
@@ -216,7 +210,7 @@ fileops_load_map(int argc, union evarg *argv)
 
 	object_load(m);
 
-	win = mapwin_new(med, m);
+	win = mapwin_new(m);
 	view_attach(win);
 	window_show(win);
 
@@ -253,7 +247,6 @@ void
 fileops_clear_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
-	struct mapedit *med = mv->med;
 	struct map *m = mv->map;
 	struct editref *eref;
 	Uint32 x, y;

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.135 2003/01/26 06:15:20 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.136 2003/01/27 00:53:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -37,8 +37,6 @@
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
-#include "fileops.h"
-#include "objq.h"
 
 #include "tool/tool.h"
 #include "tool/stamp.h"
@@ -113,7 +111,7 @@ mapedit_init(void)
 
 	prop_set_int(med, "zoom-minimum", 4);
 	prop_set_int(med, "zoom-maximum", 400);
-	prop_set_int(med, "zoom-increment", 2);
+	prop_set_int(med, "zoom-increment", 16);
 	prop_set_int(med, "zoom-speed", 60);
 	prop_set_int(med, "tilemap-item-size", 16);
 	prop_set_bool(med, "tilemap-scroll-x", 0);
@@ -133,9 +131,9 @@ mapedit_init(void)
 	}
 
 	/* Create the dialogs. */
-	med->win.objlist = objq_window(med);
-	med->win.new_map = fileops_new_map_window(med);
-	med->win.load_map = fileops_load_map_window(med);
+	med->win.objlist = objq_window();
+	med->win.new_map = fileops_new_map_window();
+	med->win.load_map = fileops_load_map_window();
 	
 	/* Create the toolbar. */
 	win = med->win.toolbar = window_new("mapedit-toolbar", 0,
