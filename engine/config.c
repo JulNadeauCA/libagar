@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.134 2005/02/03 12:31:46 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.135 2005/02/06 05:40:35 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 4
+	6, 5
 };
 
 const struct object_ops config_ops = {
@@ -86,6 +86,7 @@ const struct object_ops config_ops = {
 
 extern int text_composition;
 extern int text_rightleft;
+extern int text_tab_width;
 extern int window_freescale;
 extern int kbd_unitrans;
 extern int event_idle;
@@ -270,6 +271,8 @@ config_load(void *p, struct netbuf *buf)
 		server_mode = read_uint8(buf);
 	if (rv.minor >= 4)
 		view_screenshot_quality = (int)read_uint8(buf);
+	if (rv.minor >= 5)
+		text_tab_width = (int)read_uint16(buf);
 
 	return (0);
 }
@@ -303,6 +306,7 @@ config_save(void *p, struct netbuf *buf)
 #endif
 	write_uint8(buf, server_mode);
 	write_uint8(buf, (Uint8)view_screenshot_quality);
+	write_uint16(buf, (Uint16)text_tab_width);
 	return (0);
 }
 
@@ -454,6 +458,10 @@ config_window(struct config *con)
 		sbu = spinbutton_new(vb, _("Keyboard repeat interval (ms): "));
 		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
 		spinbutton_set_min(sbu, 1);
+		
+		sbu = spinbutton_new(vb, _("Text tab width (pixels): "));
+		widget_bind(sbu, "value", WIDGET_INT, &text_tab_width);
+		spinbutton_set_min(sbu, 0);
 	}
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
