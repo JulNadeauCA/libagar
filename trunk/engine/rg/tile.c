@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.14 2005/02/16 03:30:31 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.15 2005/02/17 04:47:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -131,7 +131,6 @@ tile_generate(struct tile *t)
 				rd.y = tel->tel_pixmap.y;
 				rd.w = px->su->w;
 				rd.h = px->su->h;
-				SDL_BlitSurface(t->su, &rd, px->bg, &rd);
 				SDL_BlitSurface(px->su, NULL, t->su, &rd);
 			}
 			break;

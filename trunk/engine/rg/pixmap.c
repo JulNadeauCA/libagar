@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.4 2005/02/16 03:30:31 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.5 2005/02/16 14:49:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/hsvpal.h>
+#include <engine/widget/label.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -48,24 +49,32 @@ pixmap_init(struct pixmap *px, struct tileset *ts, int flags)
 	px->flags = flags;
 	px->nrefs = 0;
 	px->su = NULL;
-	px->bg = NULL;
 	px->h = 0.0;
 	px->s = 1.0;
 	px->v = 1.0;
 	px->a = 1.0;
+	px->ublks = Malloc(sizeof(struct pixmap_undoblk), M_RG);
+	px->curblk = 0;
+	px->nublks = 1;
+	pixmap_begin_undoblk(px);
 }
 
 void
 pixmap_destroy(struct pixmap *px)
 {
+	int i;
+
 #ifdef DEBUG
 	if (px->nrefs > 0)
 		dprintf("%s is referenced\n", px->name);
 #endif
 	if (px->su != NULL)
 		SDL_FreeSurface(px->su);
-	if (px->bg != NULL)
-		SDL_FreeSurface(px->bg);
+	
+	for (i = 0; i < px->nublks; i++) {
+		Free(px->ublks[i].umods, M_RG);
+	}
+	Free(px->ublks, M_RG);
 }
 
 /* Resize a pixmap and copy the previous surface at the given offset. */
@@ -104,17 +113,14 @@ pixmap_scale(struct pixmap *px, int w, int h, int xoffs, int yoffs)
 		SDL_FreeSurface(px->su);
 	}
 	px->su = nsu;
+}
 
-	/* Resize the background save surface. */
-	if (px->bg != NULL) {
-		SDL_FreeSurface(px->bg);
-	}
-	px->bg = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h,
-	    ts->fmt->BitsPerPixel,
-	    ts->fmt->Rmask,
-	    ts->fmt->Gmask,
-	    ts->fmt->Bmask,
-	    0);
+static void
+update_tv(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	
+	tv->tile->flags |= TILE_DIRTY;
 }
 
 struct window *
@@ -133,15 +139,23 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 
 	cb = checkbox_new(win, _("Visible"));
 	widget_bind(cb, "state", WIDGET_INT, &tel->visible);
+	event_new(cb, "checkbox-changed", update_tv, "%p", tv);
 
 	msb = mspinbutton_new(win, ",", _("Coordinates: "));
 	widget_bind(msb, "xvalue", WIDGET_INT, &tel->tel_pixmap.x);
 	widget_bind(msb, "yvalue", WIDGET_INT, &tel->tel_pixmap.y);
 	mspinbutton_set_range(msb, 0, TILE_SIZE_MAX-1);
+	event_new(msb, "mspinbutton-changed", update_tv, "%p", tv);
 
 	sb = spinbutton_new(win, _("Transparency: "));
 	widget_bind(sb, "value", WIDGET_INT, &tel->tel_pixmap.alpha);
 	spinbutton_set_range(sb, 0, 255);
+	event_new(sb, "spinbutton-changed", update_tv, "%p", tv);
+
+#ifdef DEBUG
+	label_new(win, LABEL_POLLED, "Undo level: %u/%u", &px->curblk,
+	    &px->nublks);
+#endif
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	{
@@ -177,19 +191,118 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	return (win);
 }
 
+/* Create a new undo block at the current level, destroying higher blocks. */
+void
+pixmap_begin_undoblk(struct pixmap *px)
+{
+	struct pixmap_undoblk *ublk;
+
+	while (px->nublks > px->curblk+1) {
+		ublk = &px->ublks[px->nublks-1];
+		Free(ublk->umods, M_RG);
+		px->nublks--;
+	}
+
+	px->ublks = Realloc(px->ublks, ++px->nublks *
+	                    sizeof(struct pixmap_umod));
+	px->curblk++;
+
+	ublk = &px->ublks[px->curblk];
+	ublk->umods = Malloc(sizeof(struct pixmap_umod), M_RG);
+	ublk->numods = 0;
+}
+
+void
+pixmap_undo(struct tileview *tv, struct tile_element *tel)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	struct pixmap_undoblk *ublk = &px->ublks[px->curblk];
+	int i;
+
+	if (px->curblk-1 <= 0)
+		return;
+
+	if (SDL_MUSTLOCK(tv->scaled)) { SDL_LockSurface(tv->scaled); }
+	for (i = 0; i < ublk->numods; i++) {
+		struct pixmap_umod *umod = &ublk->umods[i];
+
+		prim_put_pixel(px->su, umod->x, umod->y, umod->val);
+#if 0
+		tileview_scaled_pixel(tv,
+		    tel->tel_pixmap.x + umod->x,
+		    tel->tel_pixmap.y + umod->y,
+		    umod->val);
+#endif
+	}
+	if (SDL_MUSTLOCK(tv->scaled)) { SDL_UnlockSurface(tv->scaled); }
+
+	px->curblk--;
+	tv->tile->flags |= TILE_DIRTY;
+}
+
+void
+pixmap_redo(struct tileview *tv, struct tile_element *tel)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	
+	dprintf("redo (curblk=%d )\n", px->curblk);
+}
+
+void
+pixmap_put_pixel(struct tileview *tv, struct tile_element *tel,
+    int x, int y, Uint32 val)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	struct pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
+	struct pixmap_umod *umod;
+	Uint8 *src;
+	int i;
+
+	/* Avoid duplicate undo mods. */
+	for (i = ublk->numods-1; i >= 0; i--) {
+		struct pixmap_umod *um = &ublk->umods[i];
+
+		if (um->x == x && um->y == y)
+			return;
+	}
+	
+	/* Save the current pixel value for undo. */
+	ublk->umods = Realloc(ublk->umods, (ublk->numods+1) *
+			                   sizeof(struct pixmap_umod));
+	umod = &ublk->umods[ublk->numods++];
+	umod->type = PIXMAP_PIXEL_REPLACE;
+	umod->x = (Uint16)x;
+	umod->y = (Uint16)y;
+
+	if (SDL_MUSTLOCK(px->su))
+		SDL_LockSurface(px->su);
+
+	src = (Uint8 *)px->su->pixels + y*px->su->pitch +
+	    x*px->su->format->BytesPerPixel;
+	umod->val = *(Uint32 *)src;
+
+	if (SDL_MUSTLOCK(px->su))
+		SDL_UnlockSurface(px->su);
+
+	/* Plot the pixel on the pixmap and update the scaled display. */
+	prim_put_pixel(px->su, x, y, val);
+	tileview_scaled_pixel(tv,
+	    tel->tel_pixmap.x + x,
+	    tel->tel_pixmap.y + y,
+	    val);
+}
+
 void
 pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     int x, int y, int button)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
 	Uint8 r, g, b;
-	Uint32 pc;
 
 	prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
 
-	pc = SDL_MapRGB(px->su->format, r, g, b);
-	prim_put_pixel(px->su, x, y, pc);
-	tileview_scaled_pixel(tv, tel->tel_pixmap.x+x, tel->tel_pixmap.y+y, pc);
+	pixmap_begin_undoblk(px);
+	pixmap_put_pixel(tv, tel, x, y, SDL_MapRGB(px->su->format, r, g, b));
 }
 
 void
@@ -204,19 +317,11 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 r, g, b;
 
 	if (state & SDL_BUTTON_LEFT) {
-		Uint8 r, g, b;
-		Uint32 pc;
-
-		dprintf("%d,%d %d,%d %d\n", x, y, xrel, yrel, state); 
 		prim_hsv2rgb(px->h/360.0, px->s, px->v, &r, &g, &b);
-
-		pc = SDL_MapRGB(px->su->format, r, g, b);
-		prim_put_pixel(px->su, x, y, pc);
-		tileview_scaled_pixel(tv,
-		    tel->tel_pixmap.x + x,
-		    tel->tel_pixmap.y + y,
-		    pc);
+		pixmap_put_pixel(tv, tel, x, y,
+		    SDL_MapRGB(px->su->format, r, g, b));
 	}
 }
