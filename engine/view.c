@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.168 2005/02/27 05:57:06 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.169 2005/03/05 12:15:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -180,8 +180,12 @@ view_init(enum gfx_engine ge)
 		glDisable(GL_DITHER);
 		glDisable(GL_BLEND);
 		glDisable(GL_TEXTURE_2D);
-	}
+	} else
 #endif /* HAVE_OPENGL */
+	{
+		SDL_FillRect(view->v, NULL, COLOR(BG_COLOR));
+		SDL_UpdateRect(view->v, 0, 0, view->v->w, view->v->h);
+	}
 
 	prop_set_uint16(config, "view.w", view->w);
 	prop_set_uint16(config, "view.h", view->h);

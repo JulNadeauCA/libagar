@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.146 2005/03/03 10:51:41 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.147 2005/03/09 06:39:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -140,6 +140,8 @@ engine_preinit(const char *name)
 		    vinfo->vfmt->Rmask, vinfo->vfmt->Gmask,
 		    vinfo->vfmt->Bmask);
 
+		vfmt = vinfo->vfmt;
+
 		if (vinfo->wm_available) {
 			printf(_("Window manager is available.\n"));
 		} else {
@@ -180,11 +182,12 @@ engine_preinit(const char *name)
 	}
 
 	typesw_init();
+	colors_init();
 
 	config = Malloc(sizeof(struct config), M_OBJECT);
 	config_init(config);
 	object_load(config);
-
+	
 	world = object_new(NULL, "world");
 	world->save_pfx = NULL;
 	inited++;
@@ -218,8 +221,6 @@ engine_init(void)
 
 	primitives_init();
 	cursors_init();
-	colors_init();
-	object_load(config);
 
 	object_init(&engine_icons, "object", "icons", NULL);
 	object_wire_gfx(&engine_icons, "/engine/icons/icons");
