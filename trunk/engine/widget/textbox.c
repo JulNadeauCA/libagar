@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.77 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.78 2004/03/25 06:47:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
 	tbox->writeable = 1;
-	tbox->prew = tbox->xpadding*2 + 50;			/* XXX */
+	tbox->prew = tbox->xpadding*2 + 90;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
 
 	if (label != NULL) {
