@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.71 2003/07/28 04:37:00 vedge Exp $
+# $Csoft: configure.in,v 1.72 2003/08/06 04:11:22 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -152,6 +152,7 @@ if [ "${with_gettext}" != "no" ]; then
 	check(gettext);
 else
 	hundef(HAVE_GETTEXT);
+	mdefine(HAVE_GETTEXT, "no");
 fi
 
 # Native Language Support?
