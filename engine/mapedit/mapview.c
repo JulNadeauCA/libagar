@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.55 2003/02/05 01:09:32 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.56 2003/02/06 02:59:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -732,17 +732,18 @@ mapview_mousemotion(int argc, union evarg *argv)
 
 	if (mv->mouse.scrolling) {
 		mapview_mouse_scroll(mv, xrel, yrel);
-	} else if (mv->flags & MAPVIEW_EDIT) {
+	} else if (mv->flags & MAPVIEW_EDIT &&
+	    mv->cx >= 0 && mv->cy >= 0) {
 		if ((SDL_GetModState() & KMOD_SHIFT) ||
 		    (mouse & SDL_BUTTON(2))) {
-			shift_mouse(mapedit.tools.shift, mv, xrel, yrel);
+			shift_mouse(mapedit.tools[MAPEDIT_SHIFT],
+			    mv, xrel, yrel);
 		} else if (mapedit.curtool != NULL &&
 		    TOOL_OPS(mapedit.curtool)->effect != NULL) {
 			struct tool *tool = mapedit.curtool;
 		    
 			if ((x != mv->mouse.x || y != mv->mouse.y) &&
-			    (mouse & SDL_BUTTON(1)) &&
-			    (mv->cx > 0 && mv->cy > 0)) {
+			    (mouse & SDL_BUTTON(1))) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
 			}
@@ -892,12 +893,13 @@ mapview_keydown(int argc, union evarg *argv)
 		switch (keysym) {
 		case SDLK_INSERT:
 			if (mapedit.src_node != NULL) {
-				stamp_effect(mapedit.tools.stamp, mv,
-				    mv->cur_node);
+				stamp_effect(mapedit.tools[MAPEDIT_STAMP],
+				    mv, mv->cur_node);
 			}
 			break;
 		case SDLK_DELETE:
-			eraser_effect(mapedit.tools.eraser, mv, mv->cur_node);
+			eraser_effect(mapedit.tools[MAPEDIT_ERASER],
+			    mv, mv->cur_node);
 			break;
 		}
 	}
