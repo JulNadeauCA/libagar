@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.12 2002/11/15 04:18:32 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.13 2002/11/22 08:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -151,6 +151,7 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		}
 		break;
 	default:
+		break;
 	}
 }
 
