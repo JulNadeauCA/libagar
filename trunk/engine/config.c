@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.56 2003/01/18 06:18:15 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.57 2003/01/23 02:02:31 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -260,18 +260,18 @@ config_window(struct config *con)
 	}
 
 	/* Buttons */
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
-		button = button_new(reg, "Close", NULL, 0, 33, -1);
+		button = button_new(reg, "Close", NULL, 0, 33, 100);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", CLOSE_BUTTON);
 		win->focus = WIDGET(button);
 
-		button = button_new(reg, "Save", NULL, 0, 34, -1);
+		button = button_new(reg, "Save", NULL, 0, 34, 100);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", SAVE_BUTTON);
 		
-		button = button_new(reg, "Primitives", NULL, 0, 33, -1);
+		button = button_new(reg, "Primitives", NULL, 0, 33, 100);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", PRIMITIVES_BUTTON);
 	}
