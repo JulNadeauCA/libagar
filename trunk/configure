@@ -122,7 +122,7 @@ SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
 HOST="$MACHINE:$RELEASE:$SYSTEM"
 
 echo "Host: $HOST" > config.log
-echo "HOst: $HOST"
+echo "configuring for $HOST"
 
 echo >Makefile.config
 if [ ! -e "config" ]; then
