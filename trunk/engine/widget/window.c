@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.29 2002/05/25 08:48:20 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.30 2002/05/26 00:52:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ static const struct object_ops window_ops = {
 };
 
 /* XXX struct */
-#include "borders/grey10.h"
+#include "borders/grey8.h"
 
 static Uint32 delta = 0, delta2 = 256;
 
