@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.90 2002/05/25 08:56:48 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.91 2002/06/01 02:39:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -668,7 +668,6 @@ map_load(void *ob, int fd)
 	struct map *m = (struct map *)ob;
 	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
-	static int first = 0;
 
 	/* The viewport (and the map mask), might change sizes. */
 	text_destroyall();
@@ -767,10 +766,6 @@ map_load(void *ob, int fd)
 	m->redraw++;
 	free(pobjs);
 
-	if (!first++) {
-		config_window(config);	/* XXX special case */
-	}
-	
 	return (0);
 }
 
