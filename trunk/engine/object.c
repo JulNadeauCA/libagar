@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.70 2002/08/12 05:01:31 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.71 2002/08/18 00:39:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -102,13 +102,16 @@ object_break_sprite(struct object_art *art, SDL_Surface *sprite)
 			    SDL_ALPHA_TRANSPARENT);
 
 			if (mapediting) {
+				struct node *n;
+			
 				if (art->mx > m->mapw) {	/* XXX pref */
 					art->mx = 0;
 				}
 				map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
-				node_addref(&m->map[art->my][art->mx],
-				    art->pobj, art->cursprite++,
+				n = &m->map[art->my][art->mx];
+				node_addref(n, art->pobj, art->cursprite++,
 				    MAPREF_SAVE|MAPREF_SPRITE);
+				n->flags = NODE_BLOCK;
 			}
 		}
 	}
@@ -134,13 +137,16 @@ object_add_sprite(struct object_art *art, SDL_Surface *sprite, Uint32 mflags,
 	art->sprites[art->nsprites++] = sprite;
 
 	if (map_tiles && mapediting) { 
+		struct node *n;
+
 		if (++art->mx > 2) {	/* XXX pref */
 			art->mx = 0;
 			art->my++;
 		}
 		map_adjust(art->map, (Uint32)art->mx, (Uint32)art->my);
-		node_addref(&art->map->map[art->my][art->mx],
-		    art->pobj, art->cursprite++, mflags);
+		n = &art->map->map[art->my][art->mx];
+		node_addref(n, art->pobj, art->cursprite++, mflags);
+		n->flags = NODE_BLOCK;
 	}
 }
 
@@ -164,9 +170,9 @@ object_get_art(char *media, struct object *ob)
 	
 		obpath = object_path(media, "fob");
 		if (obpath == NULL) {
-			if (ob->flags & OBJ_OPTMEDIA) {
+			if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
 				dprintf("%s: %s\n", media, AGAR_GetError());
-				ob->flags &= ~(OBJ_ART);
+				ob->flags &= ~(OBJECT_ART);
 				goto done;
 			} else {
 				fatal("%s: %s\n", media, AGAR_GetError());
@@ -183,7 +189,7 @@ object_get_art(char *media, struct object *ob)
 		art->maxanims = 0;
 		art->used = 1;
 		art->map = NULL;
-		art->mx = 0;
+		art->mx = -1;
 		art->my = 0;
 		art->pobj = ob;		/* XXX */
 		art->cursprite = 0;
@@ -244,9 +250,9 @@ object_get_audio(char *media, struct object *ob)
 
 		obpath = object_path(media, "fob");
 		if (obpath == NULL) {
-			if (ob->flags & OBJ_OPTMEDIA) {
+			if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
 				dprintf("%s: %s\n", media, AGAR_GetError());
-				ob->flags &= ~(OBJ_AUDIO);
+				ob->flags &= ~(OBJECT_AUDIO);
 				goto done;
 			} else {
 				fatal("%s: %s\n", media, AGAR_GetError());
@@ -309,9 +315,9 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	pthread_mutex_init(&ob->pos_lock, NULL);
 	pthread_mutex_init(&ob->events_lock, NULL);
 
-	ob->art = (ob->flags & OBJ_ART) ?
+	ob->art = (ob->flags & OBJECT_ART) ?
 	    object_get_art(media, ob) : NULL;
-	ob->audio = (ob->flags & OBJ_AUDIO) ?
+	ob->audio = (ob->flags & OBJECT_AUDIO) ?
 	    object_get_audio(media, ob) : NULL;
 }
 
@@ -336,7 +342,7 @@ object_destroy(void *p)
 	pthread_mutex_unlock(&ob->events_lock);
 	pthread_mutex_destroy(&ob->events_lock);
 
-	if ((ob->flags & OBJ_KEEPMEDIA) == 0) {
+	if ((ob->flags & OBJECT_KEEP_MEDIA) == 0) {
 		if (ob->art != NULL) {
 			OBJECT_UNUSED(ob, art);
 		}
