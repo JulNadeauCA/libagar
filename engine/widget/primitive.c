@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.29 2002/12/29 03:24:18 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.30 2002/12/30 06:29:28 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -392,6 +392,11 @@ line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
 	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
 	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+	
+	if (!VIEW_INSIDE_CLIP_RECT(view->v, x1, y1) ||
+	    !VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
+		return;
+	}
 	
 	fb1 = (Uint8 *)view->v->pixels +
 	    y1*view->v->pitch +
