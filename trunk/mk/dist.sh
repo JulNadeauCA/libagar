@@ -1,14 +1,25 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.10 2003/05/19 02:14:07 vedge Exp $
+#	$Csoft: dist.sh,v 1.11 2003/06/06 03:27:10 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
+CVSROOT=/home/cvs/CVSROOT
 
 cd ..
 echo "snapshot: agar-${DATE}"
 rm -fr agar-${DATE}
 cp -fRp agar agar-${DATE}
+
+(cd ${CVSROOT} &&
+ mv -f Agar-ChangeLog Agar-ChangeLog-${DATE} &&
+ touch Agar-ChangeLog &&
+ chgrp csoft Agar-ChangeLog &&
+ chmod 666 Agar-ChangeLog)
+
+cp -f ${CVSROOT}/Agar-ChangeLog agar-${DATE}/ChangeLog-${DATE}
+cp -f ${CVSROOT}/Agar-ChangeLog-${DATE} agar-${DATE}.ChangeLog
+
 rm -fR `find agar-${DATE} \( -name CVS \
     -or -name \*~ \
     -or -name \*.o \
@@ -27,8 +38,8 @@ sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 gpg -ab ${DISTFILE}.tar.gz
 
 echo "uploading"
-scp -C ${DISTFILE}.tar.{gz,gz.md5,gz.asc} vedge@resin:www/snap
-ssh vedge@resin "cp -f www/snap/${DISTFILE}.tar.{gz,gz.md5,gz.asc} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.tar.{gz,gz.md5,gz.asc}"
+scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} vedge@resin:www/snap
+ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
 
 echo "notifying agar-announce@"
 sh agar/mk/announce.sh ${DATE}
