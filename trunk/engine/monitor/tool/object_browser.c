@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.1.1.1 2002/09/01 09:03:06 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.2 2002/09/02 04:55:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -98,7 +98,7 @@ object_browser_window(void *p)
 	struct bitmap *bmp;
 
 	win = window_new("Object browser", WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 397, 224, 397, 224);
+	    0, 0, 184, 228, 184, 228);
 
 	/* Input */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 80, 30);
