@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.150 2003/03/02 04:11:20 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.151 2003/03/04 22:50:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -347,7 +347,7 @@ map_layer_destroy(struct map_layer *lay)
 }
 
 int
-map_add_layer(struct map *m, char *name)
+map_push_layer(struct map *m, char *name)
 {
 	if (m->nlayers+1 > 256) {
 		error_set("too many layers");
@@ -371,7 +371,7 @@ map_add_layer(struct map *m, char *name)
 }
 
 void
-map_remove_layer(struct map *m)
+map_pop_layer(struct map *m)
 {
 	if (--m->nlayers < 1) {
 		m->nlayers = 1;
