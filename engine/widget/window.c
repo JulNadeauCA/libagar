@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.190 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.191 2003/06/06 04:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -282,7 +282,8 @@ static void
 window_shown(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
-	
+	int init = (WIDGET(win)->x == -1 && WIDGET(win)->y == -1);
+
 	if (win->flags & WINDOW_SAVE_POSITION) {
 		object_load(win);
 	}
@@ -290,16 +291,20 @@ window_shown(int argc, union evarg *argv)
 	view->focus_win = win;
 	window_focus(win);
 
-	/* First pass: initial sizing. */
-	WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
-
-	/* Second pass: [wh]fill expansion and homogenous box divisions. */
-	if (!prop_get_bool(config, "widget.noinitscale"))
+	if (init) {
+		/* First pass: initial sizing. */
 		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
+
+		/* Second pass: [wh]fill and homogenous box divisions. */
+		if (!prop_get_bool(config, "widget.noinitscale")) {
+			WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
+			    WIDGET(win)->h);
+		}
 	
-	/* Position the window and update the cached widget coordinates. */
-	window_apply_alignment(win);
-	window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
+		/* Position the window and cache the absolute widget coords. */
+		window_apply_alignment(win);
+		window_remap_widgets(win, WIDGET(win)->x, WIDGET(win)->y);
+	}
 }
 
 static void
@@ -541,7 +546,7 @@ window_event(SDL_Event *ev)
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
-		/* Focus on the highest window under mouse coordinates. */
+		/* Focus on the highest overlapping window. */
 		view->focus_win = NULL;
 		TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 			if (!win->visible ||
@@ -574,12 +579,12 @@ window_event(SDL_Event *ev)
 				break;
 			case VIEW_WINOP_MOVE:
 				winop_move(win, &ev->motion);
-				goto posted;
+				goto out;
 			case VIEW_WINOP_LRESIZE:
 			case VIEW_WINOP_RRESIZE:
 			case VIEW_WINOP_HRESIZE:
 				winop_resize(view->winop, win, &ev->motion);
-				goto posted;
+				goto out;
 			}
 			/*
 			 * Forward to all widgets that either hold focus or have
@@ -608,7 +613,7 @@ window_event(SDL_Event *ev)
 			}
 			unlock_linkage();
 			if (focus_changed) {
-				goto posted;
+				goto out;
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
@@ -628,18 +633,18 @@ window_event(SDL_Event *ev)
 				}
 				view->wop_win = win;
 			}
-			/* Forward to the any widget in this area. */
+			/* Forward to overlapping widgets. */
 			lock_linkage();
 			OBJECT_FOREACH_CHILD(wid, win, widget) {
 				if (widget_mousebuttondown(win, wid,
 				    ev->button.button, ev->button.x,
 				    ev->button.y)) {
-					goto posted;
+					goto out;
 				}
 			}
 			unlock_linkage();
 			if (focus_changed) {
-				goto posted;
+				goto out;
 			}
 			break;
 		case SDL_KEYUP:
@@ -670,7 +675,7 @@ window_event(SDL_Event *ev)
 			    ev->type == SDL_KEYUP) {
 				cycle_widgets(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));
-				goto posted;
+				goto out;
 			}
 			if (WIDGET(win)->flags & WIDGET_FOCUSED) {
 				struct widget *fwid;
@@ -696,7 +701,7 @@ next_win:
 		pthread_mutex_unlock(&win->lock);
 	}
 	return (0);
-posted:
+out:
 	pthread_mutex_unlock(&win->lock);
 
 	/*
@@ -749,6 +754,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	int oh = WIDGET(win)->h;
 	int nx = WIDGET(win)->x;
 
+	/* XXX contorted */
 	switch (op) {
 	case VIEW_WINOP_LRESIZE:
 		if (motion->xrel < 0) {
