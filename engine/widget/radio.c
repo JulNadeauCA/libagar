@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.7 2002/07/30 22:23:57 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.8 2002/08/12 06:57:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -119,12 +119,8 @@ radio_init(struct radio *rad, const char **items, int selitem, int flags)
 	WIDGET(rad)->h = rad->nitems * (rad->yspacing + rad->radio.h);
 	WIDGET(rad)->w = rad->radio.w + rad->xspacing + maxw;
 
-	event_new(rad, "window-mousebuttonup", 0,
-	    radio_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(rad, "window-mousebuttondown", 0,
 	    radio_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(rad, "window-keyup", 0,
-	    radio_event, "%i", WINDOW_KEYUP);
 	event_new(rad, "window-keydown", 0,
 	    radio_event, "%i", WINDOW_KEYDOWN);
 }
