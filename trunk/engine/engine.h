@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.54 2003/02/26 02:04:53 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.55 2003/02/26 03:10:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -10,12 +10,6 @@
 #include <config/threads.h>
 #include <config/have_opengl.h>
 
-#if !defined(__OpenBSD__)
-# ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 500	/* XXX recursive mutexes, pread and pwrite */
-# endif
-#endif
-
 #include <sys/types.h>
 
 #include <stdio.h>
@@ -26,6 +20,11 @@
 #include <errno.h>
 
 #ifdef THREADS
+# if !defined(__OpenBSD__)
+#  ifndef _XOPEN_SOURCE
+#  define _XOPEN_SOURCE 500	/* XXX for recursive mutexes */
+#  endif
+# endif
 # include <pthread.h>		/* For pthread types */
 # include <signal.h>		/* For pthread_kill() */
 #else
@@ -78,8 +77,7 @@ enum {
 };
 
 #define ENGINE_INIT_GFX		0x01		/* Graphic engine */
-#define ENGINE_INIT_TEXT	0x02		/* Font engine */
-#define ENGINE_INIT_INPUT	0x04		/* Input devices */
+#define ENGINE_INIT_INPUT	0x02		/* Input devices */
 
 int	 engine_init(int, char **, const struct engine_proginfo *, int);
 void	 engine_stop(void);
