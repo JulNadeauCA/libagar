@@ -1095,7 +1095,7 @@ struct jpeg_compress_struct	jcomp;
 int
 main(int argc, char *argv[])
 {
-	jcomp.jerr = jpeg_std_error(&jerr);
+	jcomp.err = jpeg_std_error(&jerr);
 
 	jpeg_create_compres(&jcomp);
 	jcomp.image_width = 32;
