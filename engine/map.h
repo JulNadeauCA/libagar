@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.14 2002/02/15 05:38:02 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.15 2002/02/15 05:39:23 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -67,7 +67,7 @@ struct map {
 	struct	node map[MAP_WIDTH][MAP_HEIGHT];
 	int	redraw;
 
-	SDL_TimerID timer;		/* Map display timer */
+	pthread_t	draw_th;	/* Map rendering thread */
 	pthread_mutex_t lock;		/* Lock on map entry reference lists */
 	
 	SLIST_ENTRY(map) wmaps;		/* Active maps */
