@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.3 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.4 2004/04/11 03:28:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -126,9 +126,10 @@ __BEGIN_DECLS
 struct vg	*vg_new(void *, int);
 void		 vg_destroy(struct vg *);
 void		 vg_scale(struct vg *, double, double, double);
+void		 vg_clear(struct vg *);
+void		 vg_rasterize(struct vg *);
 __inline__ void	 vg_regen_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
-
 __inline__ void	 vg_vcoords(struct vg *, int, int, int, int, double *,
                             double *);
 __inline__ void  vg_rcoords(struct vg *, double, double, int *, int *);
@@ -144,8 +145,8 @@ struct vg_vertex *vg_vertex4(struct vg *, double, double, double, double);
 void		  vg_vertex_array(struct vg *, const struct vg_vertex *,
 		                  unsigned int);
 
-void	vg_clear(struct vg *);
-void	vg_rasterize(struct vg *);
+void		  vg_undo_element(struct vg *, struct vg_element *);
+void		  vg_undo_vertex(struct vg *);
 __END_DECLS
 
 #include "close_code.h"
