@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.15 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.16 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,7 +50,8 @@ static const struct tool_ops resize_ops = {
 	},
 	resize_window,
 	NULL,			/* cursor */
-	NULL			/* effect */
+	NULL,			/* effect */
+	resize_mouse
 };
 
 static void	resize_effect(int, union evarg *);
@@ -63,6 +64,8 @@ resize_init(void *p)
 	tool_init(&res->tool, "resize", &resize_ops);
 
 	res->mode = RESIZE_GROW;
+	res->cx = -1;
+	res->cy = -1;
 }
 
 struct window *
@@ -124,3 +127,25 @@ resize_effect(int argc, union evarg *argv)
 	}
 }
 
+void
+resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
+{
+	struct resize *res = p;
+	struct map *m = mv->map;
+
+	if ((state & SDL_BUTTON(1)) == 0) {
+		return;
+	}
+
+	if (xrel > 0) {
+		map_grow(m, m->mapw + xrel, m->maph);
+	} else if (xrel < 0 && ((int)m->mapw + xrel) > 2) {
+		map_shrink(m, m->mapw + xrel, m->maph);
+	}
+		
+	if (yrel > 0) {
+		map_grow(m, m->mapw, m->maph + yrel);
+	} else if (yrel < 0 && ((int)m->maph + yrel) > 2) {
+		map_shrink(m, m->mapw, m->maph + yrel);
+	}
+}
