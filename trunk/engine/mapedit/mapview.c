@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.18 2002/08/19 05:33:02 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.19 2002/08/19 11:02:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -336,8 +336,11 @@ mapview_draw(void *p)
 			    my-mv->my == mv->mouse.y &&
 			    mv->mouse.x < mv->mw &&
 			    mv->mouse.y < mv->mh) {
-				struct tool *curtool = med->curtool;
+				struct tool *curtool = NULL;
 
+				if (med != NULL) {
+					curtool = med->curtool;
+				}
 				if (curtool != NULL &&
 				    TOOL_OPS(curtool)->tool_cursor != NULL) {
 					TOOL_OPS(curtool)->tool_cursor(curtool,
