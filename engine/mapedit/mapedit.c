@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.123 2002/11/14 05:59:00 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.124 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -67,6 +67,7 @@ mapedit_init(struct mapedit *med, char *name)
 	med->ref.offs = 0;
 	med->ref.flags = 0;
 	med->node.flags = NODE_WALK;
+	med->curtool = NULL;
 
 	mapedit_init_toolbar(med);
 	
