@@ -1,21 +1,19 @@
-/*	$Csoft: textbox.h,v 1.11 2002/09/07 04:34:14 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.12 2002/12/21 10:26:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
 #define _AGAR_WIDGET_TEXTBOX_H_
 
 struct textbox {
-	struct	 widget wid;
+	struct widget	wid;
 
 	int	 flags;
-#define TEXTBOX_READONLY	0x01	/* Read-only */
-	
-	int	 xmargin;
-	int	 ymargin;
+#define TEXTBOX_READONLY	0x01	/* Text cannot be modified */
+
+	int	 xmargin, ymargin;
 	int	 newx;
 
-	char	*label;
-	SDL_Surface *label_s;
+	SDL_Surface	*label;
 	
 	struct {
 		char	*s;

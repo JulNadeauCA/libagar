@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.42 2003/01/08 23:10:36 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.43 2003/01/16 04:04:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -56,7 +56,9 @@ enum {
 	CURSOR_COLOR2
 };
 
-static void	textbox_mouse(int, union evarg *);
+static void	textbox_scaled(int, union evarg *);
+static void	textbox_mousemotion(int, union evarg *);
+static void	textbox_mousebuttondown(int, union evarg *);
 static void	textbox_key(int, union evarg *);
 
 struct textbox *
@@ -89,8 +91,7 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0);
 
 	tbox->flags = flags;
-	tbox->label = label != NULL ? Strdup(label) : NULL;
-	tbox->label_s = text_render(NULL, -1,
+	tbox->label = text_render(NULL, -1,
 	    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
 	tbox->text.s = Strdup("");
 	tbox->text.pos = -1;
@@ -98,45 +99,23 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	pthread_mutex_init(&tbox->text.lock, NULL);
 	tbox->newx = -1;
 
-#if 0
-	event_new(tbox, "widget-shown", textbox_shown, NULL);
-	event_new(tbox, "widget-hidden", textbox_hidden, NULL);
-#endif
 	event_new(tbox, "window-keydown", textbox_key, NULL);
-	event_new(tbox, "window-mousebuttondown",
-	    textbox_mouse, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(tbox, "window-mousemotion",
-	    textbox_mouse, "%i", WINDOW_MOUSEMOTION);
+	event_new(tbox, "window-mousebuttondown", textbox_mousebuttondown,
+	    NULL);
+	event_new(tbox, "window-mousemotion", textbox_mousemotion, NULL);
+	event_new(tbox, "widget-scaled", textbox_scaled, NULL);
 }
-
-#if 0
-void
-textbox_shown(int argc, union evarg *argv)
-{
-	if (SDL_EnableKeyRepeat(250, 30) != 0) {	/* XXX pref */
-		warning("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
-	}
-}
-
-void
-textbox_hidden(int argc, union evarg *argv)
-{
-	if (SDL_EnableKeyRepeat(0, 0) != 0) {		/* XXX pref */
-		fatal("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
-	}
-}
-#endif
 
 void
 textbox_destroy(void *ob)
 {
-	struct textbox *tb = ob;
+	struct textbox *tbox = ob;
 
-	free(tb->label);
-	free(tb->text.s);
-	pthread_mutex_destroy(&tb->text.lock);
+	SDL_FreeSurface(tbox->label);
+	free(tbox->text.s);
+	pthread_mutex_destroy(&tbox->text.lock);
 
-	widget_destroy(tb);
+	widget_destroy(tbox);
 }
 
 void
@@ -144,13 +123,12 @@ textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
 	int i, j, x, y, tw, lx;
-	SDL_Surface *label_s = tbox->label_s;
 
-	x = label_s->w;
+	x = tbox->label->w;
 	y = tbox->ymargin;
 
 	/* Label */
-	widget_blit(tbox, label_s, 0, y/2);
+	widget_blit(tbox, tbox->label, 0, y/2);
 
 	/* Frame */
 	if (WIDGET_FOCUSED(tbox)) {
@@ -158,8 +136,8 @@ textbox_draw(void *p)
 		y++;
 	}
 	primitives.box(tbox, x, 0,
-	    WIDGET(tbox)->w - tbox->xmargin*2 - label_s->w,
-	    label_s->h + tbox->ymargin*2,
+	    WIDGET(tbox)->w - tbox->xmargin*2 - tbox->label->w,
+	    tbox->label->h + tbox->ymargin*2,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
 	    tbox->flags & TEXTBOX_READONLY ?
 	        WIDGET_COLOR(tbox, FRAME_READONLY_COLOR) :
@@ -177,7 +155,7 @@ textbox_draw(void *p)
 		tbox->text.pos = tw;
 	}
 
-	if (tbox->newx >= 0 && tbox->newx <= tbox->label_s->w) {
+	if (tbox->newx >= 0 && tbox->newx <= tbox->label->w) {
 		tbox->text.pos = tbox->text.offs;
 		tbox->newx = -1;
 	}
@@ -208,7 +186,7 @@ textbox_draw(void *p)
 			c = tbox->text.s[i];
 
 			if (c == '\n') {
-				y += label_s->h + 2;
+				y += tbox->label->h + 2;
 			} else {
 				str[0] = (char)c;
 				str[1] = '\0';
@@ -226,11 +204,11 @@ textbox_draw(void *p)
 		    x < WIDGET(tbox)->w - tbox->xmargin*4) {
 			primitives.line(tbox,
 			    x, y,
-			    x, y+label_s->h-2,
+			    x, y + tbox->label->h - 2,
 			    WIDGET_COLOR(tbox, CURSOR_COLOR1));
 			primitives.line(tbox,
 			    x+1, y,
-			    x+1, y+label_s->h-2,
+			    x+1, y + tbox->label->h - 2,
 			    WIDGET_COLOR(tbox, CURSOR_COLOR2));
 		}
 	}
@@ -242,7 +220,16 @@ textbox_draw(void *p)
 out:
 	pthread_mutex_unlock(&tbox->text.lock);
 }
-	
+
+static void
+textbox_scaled(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+
+	if (WIDGET(tbox)->rh == -1)
+		WIDGET(tbox)->h = tbox->label->h + tbox->ymargin*2;
+}
+
 static void
 textbox_key(int argc, union evarg *argv)
 {
@@ -286,35 +273,28 @@ out:
 }
 
 static void
-textbox_mouse(int argc, union evarg *argv)
+textbox_mousemotion(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
+	int x = argv[1].i;
+	int y = argv[2].i;
+	Uint8 ms;
 
-	OBJECT_ASSERT(argv[0].p, "widget");
-
-	switch (argv[1].i) {
-	case WINDOW_MOUSEBUTTONDOWN:
-		{
-			int button = argv[2].i;
-			int x = argv[3].i;
-	
-			WIDGET(tbox)->win->focus = WIDGET(tbox);
-			tbox->newx = x;
-		}
-		break;
-	case WINDOW_MOUSEMOTION:
-		{
-			int x = argv[2].i;
-			int y = argv[3].i;
-			Uint8 ms;
-
-			ms = SDL_GetMouseState(NULL, NULL);
-			if (ms & SDL_BUTTON_LEFT && x > tbox->label_s->w) {
-				tbox->newx = x;
-			}
-		}
-		break;
+	ms = SDL_GetMouseState(NULL, NULL);
+	if (ms & SDL_BUTTON_LEFT && x > tbox->label->w) {
+		tbox->newx = x;
 	}
+}
+
+static void
+textbox_mousebuttondown(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	int button = argv[1].i;
+	int x = argv[2].i;
+	
+	WIDGET(tbox)->win->focus = WIDGET(tbox);
+	tbox->newx = x;
 }
 
 void
