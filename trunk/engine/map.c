@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.93 2002/06/03 18:36:52 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.94 2002/06/06 10:18:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@
 
 static const struct version map_ver = {
 	"agar map",
-	1, 11
+	1, 12
 };
 
 static const struct object_ops map_ops = {
