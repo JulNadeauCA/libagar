@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.39 2003/02/10 04:46:44 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.40 2003/02/10 06:13:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -89,7 +89,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	widget_map_color(tl, SELECTION_COLOR, "selection", 50, 50, 120);
 
 	tl->flags = flags;
-	tl->item_h = 16;
+	tl->item_h = text_font_height(font) + 2;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
 	TAILQ_INIT(&tl->items);
