@@ -28,8 +28,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unistd.h>
-
 #include <engine/engine.h>
 
 #include "mapedit.h"
@@ -134,12 +132,12 @@ mapedit_fillmap(struct mapedit *med)
 	switch (eref->type) {
 	case EDITREF_SPRITE:
 		map_clean(med->map, med->curobj->pobj, eref->spritei,
-		    med->curflags & ~NODE_ORIGIN,
+		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
 		    MAPREF_SAVE|MAPREF_SPRITE);
 		break;
 	case EDITREF_ANIM:
 		map_clean(med->map, med->curobj->pobj, eref->animi,
-		    med->curflags & ~NODE_ORIGIN,
+		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
 		    MAPREF_SAVE|MAPREF_ANIM);
 		break;
 	}
