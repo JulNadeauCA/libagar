@@ -1,5 +1,4 @@
-#	$Csoft: Makefile,v 1.22 2002/04/18 04:03:50 vedge Exp $
-
+#	$Csoft: Makefile,v 1.23 2002/04/26 04:09:16 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
