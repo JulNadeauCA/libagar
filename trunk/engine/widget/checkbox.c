@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.12 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.13 2002/06/06 10:18:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -93,13 +93,13 @@ checkbox_init(struct checkbox *cbox, char *caption, int flags)
 	cbox->label_s = s;
 	
 	event_new(cbox, "window-mousebuttonup", 0,
-	    checkbox_event, "%i, %i, %i", WINDOW_MOUSEBUTTONUP);
+	    checkbox_event, "%i", WINDOW_MOUSEBUTTONUP);
 	event_new(cbox, "window-mousebuttondown", 0,
-	    checkbox_event, "%i, %i, %i", WINDOW_MOUSEBUTTONDOWN);
+	    checkbox_event, "%i", WINDOW_MOUSEBUTTONDOWN);
 	event_new(cbox, "window-keyup", 0,
-	    checkbox_event, "%i, %i", WINDOW_KEYUP);
+	    checkbox_event, "%i", WINDOW_KEYUP);
 	event_new(cbox, "window-keydown", 0,
-	    checkbox_event, "%i, %i", WINDOW_KEYDOWN);
+	    checkbox_event, "%i", WINDOW_KEYDOWN);
 }
 
 void
@@ -144,6 +144,8 @@ checkbox_event(int argc, union evarg *argv)
 	int button, keysym;
 	int pushed = 0;
 
+	OBJECT_ASSERT(argv[0].p, "widget");
+
 	switch (type) {
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
@@ -169,7 +171,7 @@ checkbox_event(int argc, union evarg *argv)
 		} else {
 			cbox->flags |= CHECKBOX_PRESSED;
 		}
-		event_post(cbox, "checkbox-changed", "%d",
+		event_post(cbox, "checkbox-changed", "%i",
 		    (cbox->flags & CHECKBOX_PRESSED));
 	}
 }
