@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.217 2004/03/20 08:21:55 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.218 2004/03/21 07:04:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -45,7 +45,6 @@
 #include <engine/mapedit/mapview.h>
 #endif
 
-#include <compat/math.h>
 #include <string.h>
 
 const struct version map_ver = {

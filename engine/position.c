@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.5 2004/03/05 15:22:17 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.6 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -31,8 +31,6 @@
 #include <engine/rootmap.h>
 #include <engine/input.h>
 #include <engine/view.h>
-
-#include <compat/math.h>
 
 #ifdef DEBUG
 #define DEBUG_STATE	0x01
