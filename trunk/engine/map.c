@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.124 2002/12/13 12:41:00 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.125 2002/12/14 04:28:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -112,7 +112,7 @@ noderef_destroy(struct noderef *nref)
 	struct transform *trans, *ntrans;
 
 #ifdef DEBUG
-	if (strcmp(NODE_MAGIC, nref->magic) != 0) {
+	if (strcmp(NODEREF_MAGIC, nref->magic) != 0) {
 		fatal("inconsistent node reference\n");
 	}
 	strncpy(nref->magic, "freed", 18);
@@ -170,7 +170,6 @@ map_free_nodes(struct map *m)
 		for (x = 0; x < m->mapw; x++) {
 			node = &m->map[y][x];
 			node_destroy(node, x, y);
-			free(node);
 		}
 		free(*(m->map + y));
 	}
@@ -478,11 +477,11 @@ map_destroy(void *p)
 }
 
 /*
- * Load a noderef structure, translating the object ids using pobjs/nobjs.
+ * Load a noderef structure, translating the object ids using dependencies.
  * The noderef's parent map must be locked.
  */
 void
-noderef_load(int fd, struct object **pobjs, Uint32 nobjs, struct node *node,
+noderef_load(int fd, struct object_table *deps, struct node *node,
     struct noderef **nref)
 {
 	enum noderef_type type;
@@ -502,22 +501,22 @@ noderef_load(int fd, struct object **pobjs, Uint32 nobjs, struct node *node,
 			Sint16 xcenter, ycenter;
 
 			obji = read_uint32(fd);		/* Object# */
-			if (obji > nobjs)
+			if (obji > deps->nobjs) {
 				fatal("bad object table index\n");
+			}
 
 			offs = read_uint32(fd);		/* Sprite# */
 			xcenter = read_sint16(fd);
 			ycenter = read_sint16(fd);
 
-			if (pobjs[obji] != NULL) {
-				*nref = node_add_sprite(node,
-				    pobjs[obji], offs);
+			if (deps->objs[obji] != NULL) {
+				*nref = node_add_sprite(node, deps->objs[obji],
+				    offs);
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
 			} else {
-				debug(DEBUG_STATE,
-				    "null sprite at %d\n", obji);
+				debug(DEBUG_STATE, "null sprite at %d\n", obji);
 			}
 		}
 		break;
@@ -527,16 +526,17 @@ noderef_load(int fd, struct object **pobjs, Uint32 nobjs, struct node *node,
 			Sint16 xcenter, ycenter;
 
 			obji = read_uint32(fd);
-			if (obji > nobjs)
+			if (obji > deps->nobjs) {
 				fatal("bad object table index\n");
+			}
 			offs = read_uint32(fd);
 			xcenter = read_sint16(fd);
 			ycenter = read_sint16(fd);
 			animflags = read_uint32(fd);
 
-			if (pobjs[obji] != NULL) {
-				*nref = node_add_anim(node,
-				    pobjs[obji], offs, animflags);
+			if (deps->objs[obji] != NULL) {
+				*nref = node_add_anim(node, deps->objs[obji],
+				    offs, animflags);
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
@@ -581,7 +581,7 @@ noderef_load(int fd, struct object **pobjs, Uint32 nobjs, struct node *node,
 }
 
 void
-node_load(int fd, struct object **pobjs, Uint32 nobjs, struct node *node)
+node_load(int fd, struct object_table *deps, struct node *node)
 {
 	Uint32 i, nrefs;
 
@@ -599,7 +599,7 @@ node_load(int fd, struct object **pobjs, Uint32 nobjs, struct node *node)
 	for (i = 0; i < nrefs; i++) {
 		struct noderef *nref;
 	
-		noderef_load(fd, pobjs, nobjs, node, &nref);
+		noderef_load(fd, deps, node, &nref);
 	}
 }
 
@@ -607,8 +607,7 @@ int
 map_load(void *ob, int fd)
 {
 	struct map *m = ob;
-	struct object **pobjs;
-	Uint32 nobjs;
+	struct object_table *deps;
 	Uint32 x, y;
 
 	if (version_read(fd, &map_ver) != 0) {
@@ -632,7 +631,7 @@ map_load(void *ob, int fd)
 	    m->zoom);
 
 	/* Read the possible object dependencies. */
-	object_table_load(fd, ob, &pobjs, &nobjs);
+	deps = object_table_load(fd, OBJECT(m)->name);
 
 	/* Allocate and load the nodes. */
 	if (m->map != NULL) {
@@ -641,22 +640,22 @@ map_load(void *ob, int fd)
 	map_alloc_nodes(m, m->mapw, m->maph);
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			node_load(fd, pobjs, nobjs, &m->map[y][x]);
+			node_load(fd, deps, &m->map[y][x]);
 		}
 	}
 
 	pthread_mutex_unlock(&m->lock);
 
-	free(pobjs);
+	object_table_destroy(deps);
 	return (0);
 }
 
 /*
- * Save a noderef structure, encoding the object ids using pobjs/nobjs.
+ * Save a noderef structure, encoding the object ids using dependencies.
  * The noderef's parent map must be locked.
  */
 void
-noderef_save(struct fobj_buf *buf, struct object **pobjs, Uint32 nobjs,
+noderef_save(struct fobj_buf *buf, struct object_table *deps,
     struct noderef *nref)
 {
 	off_t ntrans_offs;
@@ -675,8 +674,8 @@ noderef_save(struct fobj_buf *buf, struct object **pobjs, Uint32 nobjs,
 	/* Save the reference data. */
 	switch (nref->type) {
 	case NODEREF_SPRITE:
-		for (i = 0; i < nobjs; i++) {
-			if (pobjs[i] == nref->pobj)
+		for (i = 0; i < deps->nobjs; i++) {
+			if (deps->objs[i] == nref->pobj)
 				break;
 		}
 		buf_write_uint32(buf, i);		/* Object# */
@@ -685,8 +684,8 @@ noderef_save(struct fobj_buf *buf, struct object **pobjs, Uint32 nobjs,
 		buf_write_sint16(buf, nref->ycenter);
 		break;
 	case NODEREF_ANIM:
-		for (i = 0; i < nobjs; i++) {
-			if (pobjs[i] == nref->pobj)
+		for (i = 0; i < deps->nobjs; i++) {
+			if (deps->objs[i] == nref->pobj)
 				break;
 		}
 		buf_write_uint32(buf, i);		/* Object# */
@@ -715,8 +714,7 @@ noderef_save(struct fobj_buf *buf, struct object **pobjs, Uint32 nobjs,
 }
 
 void
-node_save(struct fobj_buf *buf, struct object **pobjs, Uint32 nobjs,
-    struct node *node)
+node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 {
 	struct noderef *nref;
 	off_t nrefs_offs;
@@ -730,7 +728,7 @@ node_save(struct fobj_buf *buf, struct object **pobjs, Uint32 nobjs,
 	nrefs_offs = buf->offs;
 	buf_write_uint32(buf, 0);			/* Skip */
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		noderef_save(buf, pobjs, nobjs, nref);
+		noderef_save(buf, deps, nref);
 		nrefs++;
 	}
 	buf_pwrite_uint32(buf, nrefs, nrefs_offs);
@@ -741,8 +739,8 @@ map_save(void *p, int fd)
 {
 	struct map *m = p;
 	struct fobj_buf *buf;
-	struct object *pob, **pobjs;
-	Uint32 nobjs;
+	struct object *pob;
+	struct object_table *deps;
 	Uint32 x, y;
 
 	buf = fobj_create_buf(65536, 32767);
@@ -763,21 +761,33 @@ map_save(void *p, int fd)
 	buf_write_uint32(buf, m->tileh);
 	buf_write_uint16(buf, m->zoom);
 
-	/* Save the possible dependencies. */
-	pobjs = object_table_save(buf, OBJECT(m), &nobjs);
+	/* Generate the dependencies. */
+	deps = object_table_new();
+
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
+		if ((pob->flags & OBJECT_ART) == 0 ||		/* XXX */
+		     pob->flags & OBJECT_CANNOT_MAP) {
+			continue;
+		} 
+		object_table_insert(deps, pob);
+	}
+	pthread_mutex_unlock(&world->lock);
+
+	/* Write the dependencies. */
+	object_table_save(buf, deps);
 
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			node_save(buf, pobjs, nobjs, &m->map[y][x]);
+			node_save(buf, deps, &m->map[y][x]);
 		}
 	}
 	pthread_mutex_unlock(&m->lock);
 
 	fobj_flush_buf(buf, fd);
 	fobj_destroy_buf(buf);
-
-	free(pobjs);
+	object_table_destroy(deps);
 	return (0);
 }
 
