@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.52 2003/01/27 08:00:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.53 2003/02/02 21:12:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/text.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -45,6 +46,7 @@
 #include "tool/tool.h"
 #include "tool/shift.h"
 #include "tool/eraser.h"
+#include "tool/stamp.h"
 
 static const struct widget_ops mapview_ops = {
 	{
@@ -67,12 +69,9 @@ enum {
 	BACKGROUND2_COLOR
 };
 
-static SDL_TimerID zoomin_timer, zoomout_timer;
-
 static void	mapview_scaled(int, union evarg *);
 static void	mapview_lostfocus(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
-static void	mapview_stop_zoom(struct mapview *);
 static void	mapview_mousemotion(int, union evarg *);
 static void	mapview_mousebuttondown(int, union evarg *);
 static void	mapview_mousebuttonup(int, union evarg *);
@@ -137,10 +136,10 @@ mapview_node_poll(int argc, union evarg *argv)
 	label_printf(mv->node.node_flags_lab, "Node flags: %s", flags);
 
 	tlist_clear_items(tl);
-	
-	pthread_mutex_lock(&mv->map->lock);
 
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+//	pthread_mutex_lock(&mv->map->lock);
+
+	TAILQ_FOREACH_REVERSE(nref, &node->nrefs, nrefs, noderefq) {
 		SDL_Surface *icon = NULL;
 		struct art_anim *anim;
 		char *text;
@@ -215,7 +214,70 @@ mapview_node_poll(int argc, union evarg *argv)
 		}
 	}
 
-	pthread_mutex_unlock(&mv->map->lock);
+//	pthread_mutex_unlock(&mv->map->lock);
+}
+
+enum {
+	MAPVIEW_NODE_REMOVE,
+	MAPVIEW_NODE_DUP,
+	MAPVIEW_NODE_MOVE_UP,
+	MAPVIEW_NODE_MOVE_DOWN
+};
+
+static void
+mapview_node_op(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	int op = argv[2].i;
+	struct tlist *tl = mv->node.refs_tl;
+	struct tlist_item *it;
+	struct node *node = mv->cur_node;
+	struct noderef *nref;
+
+	if (node == NULL) {
+		text_msg("Error", "No node is selected");
+		return;
+	}
+
+	switch (op) {
+	case MAPVIEW_NODE_REMOVE:
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (it->selected) {
+				nref = it->p1;
+				node_remove_ref(node, nref);
+				it->selected = 0;
+			}
+		}
+		break;
+	case MAPVIEW_NODE_DUP:
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (it->selected) {
+				nref = it->p1;
+				node_copy_ref(nref, node);
+			}
+		}
+		break;
+	case MAPVIEW_NODE_MOVE_UP:
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (it->selected) {
+				nref = it->p1;
+				if (TAILQ_NEXT(nref, nrefs) == NULL)
+					break;
+				node_moveup_ref(node, nref);
+			}
+		}
+		break;
+	case MAPVIEW_NODE_MOVE_DOWN:
+		TAILQ_FOREACH_REVERSE(it, &tl->items, items, tlist_itemq) {
+			if (it->selected) {
+				nref = it->p1;
+				if (TAILQ_PREV(nref, noderefq, nrefs) == NULL)
+					break;
+				node_movedown_ref(node, nref);
+			}
+		}
+		break;
+	}
 }
 
 static void
@@ -250,15 +312,22 @@ mapview_init_node_win(struct mapview *mv)
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
 		struct button *bu;
-		
+
 		bu = button_new(reg, "Remove", NULL, 0, 25, -1);
-		
+		event_new(bu, "button-pushed",
+		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_REMOVE);
+
 		bu = button_new(reg, "Duplicate ", NULL, 0, 25, -1);
+		event_new(bu, "button-pushed",
+		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_DUP);
 		
 		bu = button_new(reg, "Up", NULL, 0, 25, -1);
+		event_new(bu, "button-pushed",
+		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_MOVE_UP);
 
 		bu = button_new(reg, "Down", NULL, 0, 25, -1);
-		
+		event_new(bu, "button-pushed",
+		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_MOVE_DOWN);
 	}
 	
 	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
@@ -312,7 +381,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	}
 	mv->ssx = m->tilew;
 	mv->ssy = m->tileh;
-	
 	pthread_mutex_unlock(&m->lock);
 
 	/* The map editor is required for tile maps/edition. */
@@ -331,6 +399,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 
 	event_new(mv, "widget-scaled", mapview_scaled, NULL);
 	event_new(mv, "widget-lostfocus", mapview_lostfocus, NULL);
+	event_new(mv, "widget-hidden", mapview_lostfocus, NULL);
 	event_new(mv, "window-keyup", mapview_keyup, NULL);
 	event_new(mv, "window-keydown", mapview_keydown, NULL);
 	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
@@ -442,28 +511,16 @@ mapview_draw(void *p)
 	     	     (mx - mv->mx) <= mv->mw && mx < m->mapw;
 		     mx++, rx += mv->map->tilew) {
 			node = &m->map[my][mx];
-#ifdef DEBUG
-			if (map_nodesigs &&
-			    (strcmp(NODE_MAGIC, node->magic) != 0 ||
-			    node->x != mx || node->y != my)) {
-				fatal("bad node\n");
-			}
-#endif
+			MAP_CHECK_NODE(node, mx, my);
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-#ifdef DEBUG
-				if (map_nodesigs &&
-				    (strcmp(NODEREF_MAGIC, node->magic) != 0 ||
-				    node->x != mx || node->y != my)) {
-					fatal("bad noderef\n");
-				}
-#endif
+				MAP_CHECK_NODEREF(nref);
+
 				noderef_draw(m, nref,
 				    WIDGET_ABSX(mv) + rx,
 				    WIDGET_ABSY(mv) + ry);
 			}
 
-			/* Indicate the node properties. */
 			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
 				draw_node_props(mv, node, rx, ry);
 			}
@@ -476,7 +533,8 @@ mapview_draw(void *p)
 				    WIDGET_COLOR(mv, GRID_COLOR));
 			}
 
-			if (!mapedition)
+			if (!mapedition ||
+			    mv->map->tilew < 6 || mv->map->tileh < 6)
 				continue;
 
 			/* Draw the cursor for the current tool. */
@@ -484,15 +542,18 @@ mapview_draw(void *p)
 			    my - mv->my == mv->mouse.y &&
 			    mv->mouse.x < mv->mw &&
 			    mv->mouse.y < mv->mh) {
-				struct tool *curtool = NULL;
+				struct tool *curtool = mapedit.curtool;
+				SDL_Rect rd;
 
-				if (curtool != NULL &&
-				    TOOL_OPS(curtool)->cursor != NULL) {
-					TOOL_OPS(curtool)->cursor(curtool,
-					    mv, mx, my);
-				} else if (mv->map->tilew > 6 &&
-				    mv->map->tileh > 6) {
-					/* XXX cosmetic */
+				rd.x = WIDGET_ABSX(mv) + rx;
+				rd.y = WIDGET_ABSY(mv) + ry;
+				rd.w = mv->map->tilew;
+				rd.h = mv->map->tileh;
+
+				if (curtool == NULL ||
+				    TOOL_OPS(curtool)->cursor == NULL ||
+				    TOOL_OPS(curtool)->cursor(curtool, mv,
+				    &rd) == -1) {
 					primitives.rect_outlined(mv,
 					    rx+1, ry+1,
 					    mv->map->tilew-1, mv->map->tileh-1,
@@ -511,8 +572,7 @@ mapview_draw(void *p)
 				    WIDGET_COLOR(mv, POSITION_CURSOR_COLOR));
 			}
 			/* Indicate the source node selection. */
-			if (node == mapedit.src_node &&
-			    mv->map->tilew > 6 && mv->map->tileh > 6) {
+			if (node == mapedit.src_node) {
 				primitives.rect_outlined(mv,
 				    rx+1, ry+1,
 				    mv->map->tilew-1, mv->map->tileh-1,
@@ -554,7 +614,7 @@ mapview_zoom(struct mapview *mv, int zoom)
 		return;
 	}
 
-	pthread_mutex_lock(&mv->map->lock);
+//	pthread_mutex_lock(&mv->map->lock);
 
 	*mv->zoom = zoom;
 	*mv->tilew = zoom * TILEW / 100;
@@ -569,28 +629,29 @@ mapview_zoom(struct mapview *mv, int zoom)
 	window_set_caption(WIDGET(mv)->win, "%s (%d%%)",
 	    OBJECT(mv->map)->name, *mv->zoom);
 	
-	pthread_mutex_unlock(&mv->map->lock);
+//	pthread_mutex_unlock(&mv->map->lock);
 }
 
 static Uint32
-mapview_zoomin(Uint32 ival, void *p)
+mapview_zoom_tick(Uint32 ival, void *p)
 {
 	struct mapview *mv = p;
-
-	pthread_mutex_lock(&mv->map->lock);
-	mapview_zoom(mv, *mv->zoom + prop_get_int(&mapedit, "zoom-increment"));
-	pthread_mutex_unlock(&mv->map->lock);
-	return (ival);
-}
-
-static Uint32
-mapview_zoomout(Uint32 ival, void *p)
-{
-	struct mapview *mv = p;
+	int incr;
 	
-	pthread_mutex_lock(&mv->map->lock);
-	mapview_zoom(mv, *mv->zoom - prop_get_int(&mapedit, "zoom-increment"));
-	pthread_mutex_unlock(&mv->map->lock);
+//	pthread_mutex_lock(&mv->map->lock);
+	
+	if (mv->flags & MAPVIEW_ZOOMING_IN) {
+ 		incr = mapedition ?
+		    prop_get_int(&mapedit, "zoom-increment") : 8;
+		mapview_zoom(mv, *mv->zoom + incr);
+	} else if (mv->flags & MAPVIEW_ZOOMING_OUT) {
+ 		incr = mapedition ?
+		    prop_get_int(&mapedit, "zoom-increment") : 8;
+		mapview_zoom(mv, *mv->zoom - incr);
+	}
+
+//	pthread_mutex_unlock(&mv->map->lock);
+
 	return (ival);
 }
 
@@ -609,13 +670,10 @@ mapview_map_coords(struct mapview *mv, int *x, int *y)
 	mv->cx = mv->mx + *x;
 	mv->cy = mv->my + *y;
 
-	if (mv->cx < 0 || mv->cx > mv->map->mapw)
+	if (mv->cx < 0 || mv->cx >= mv->map->mapw)
 		mv->cx = -1;
-	if (mv->cy < 0 || mv->cy > mv->map->maph)
+	if (mv->cy < 0 || mv->cy >= mv->map->maph)
 		mv->cy = -1;
-	
-	dprintf("cx = %d (%d+%d)\n", mv->cx, mv->mx, *x);
-	dprintf("cy = %d (%d+%d)\n", mv->cy, mv->my, *y);
 }
 
 static __inline__ void
@@ -694,10 +752,10 @@ mapview_mousemotion(int argc, union evarg *argv)
 		}
 	}
 	if (mv->flags & MAPVIEW_TILEMAP) {
-		if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) &&
+		if ((mouse & SDL_BUTTON(1)) &&
 		    (mv->cx > 0) && (mv->cy > 0)) {
 			struct node *srcnode = &mv->map->map[mv->cy][mv->cx];
-			
+
 			if (!TAILQ_EMPTY(&srcnode->nrefs)) {
 				mapedit.src_node = srcnode;
 			}
@@ -723,10 +781,10 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	pthread_mutex_lock(&mv->map->lock);
 
 	mapview_map_coords(mv, &x, &y);
+
 	if (mv->cx < 0 || mv->cy < 0) {
 		goto out;
 	}
-
 	srcnode = &mv->map->map[mv->cy][mv->cx];
 
 	switch (button) {
@@ -784,10 +842,10 @@ mapview_keyup(int argc, union evarg *argv)
 
 	switch (keysym) {
 	case SDLK_EQUALS:
+		mv->flags &= ~MAPVIEW_ZOOMING_IN;
+		break;
 	case SDLK_MINUS:
-		if (mv->flags & MAPVIEW_ZOOM) {
-			mapview_stop_zoom(mv);
-		}
+		mv->flags &= ~MAPVIEW_ZOOMING_OUT;
 		break;
 	}
 }
@@ -802,26 +860,47 @@ mapview_keydown(int argc, union evarg *argv)
 
 	if (mv->flags & MAPVIEW_ZOOM) {
 		Uint32 ival;
+		int incr;
+		
+		ival = mapedition ? prop_get_int(&mapedit, "zoom-speed") : 60;
+		incr = mapedition ? prop_get_int(&mapedit, "zoom-increment") :
+		    8;
 
 		switch (keysym) {
 		case SDLK_EQUALS:
-			ival = mapedition ?
-			    prop_get_int(&mapedit, "zoom-speed") : 60;
-			zoomin_timer = SDL_AddTimer(ival, mapview_zoomin, mv);
-			mapview_zoom(mv, *mv->zoom +
-			    prop_get_int(&mapedit, "zoom-increment"));
+			mapview_zoom(mv, *mv->zoom + incr);
+			if (mv->zoom_tm == NULL) {
+				mv->zoom_tm = SDL_AddTimer(ival,
+				    mapview_zoom_tick, mv);
+			}
+			mv->flags |= MAPVIEW_ZOOMING_IN;
 			break;
 		case SDLK_MINUS:
-			ival = mapedition ?
-			    prop_get_int(&mapedit, "zoom-speed") : 60;
-			zoomout_timer = SDL_AddTimer(ival, mapview_zoomout, mv);
-			mapview_zoom(mv, *mv->zoom -
-			    prop_get_int(&mapedit, "zoom-increment"));
+			mapview_zoom(mv, *mv->zoom - incr);
+			if (mv->zoom_tm == NULL) {
+				mv->zoom_tm = SDL_AddTimer(ival,
+				    mapview_zoom_tick, mv);
+			}
+			mv->flags |= MAPVIEW_ZOOMING_OUT;
 			break;
 		case SDLK_0:
 		case SDLK_1:
+			mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
 			mapview_zoom(mv, 100);
-			mapview_stop_zoom(mv);
+			break;
+		}
+	}
+	
+	if (mv->flags & MAPVIEW_EDIT && mv->cur_node != NULL) {
+		switch (keysym) {
+		case SDLK_INSERT:
+			if (mapedit.src_node != NULL) {
+				stamp_effect(mapedit.tools.stamp, mv,
+				    mv->cur_node);
+			}
+			break;
+		case SDLK_DELETE:
+			eraser_effect(mapedit.tools.eraser, mv, mv->cur_node);
 			break;
 		}
 	}
@@ -834,11 +913,6 @@ mapview_keydown(int argc, union evarg *argv)
 	case SDLK_l:
 		if (mapedition)
 			object_load(mv->map);
-		break;
-	case SDLK_DELETE:
-		if (mapedition && mv->cur_node != NULL) {
-			eraser_effect(mapedit.tools.eraser, mv, mv->cur_node);
-		}
 		break;
 	}
 
@@ -853,14 +927,14 @@ mapview_scaled(int argc, union evarg *argv)
 	WIDGET(mv)->w = argv[1].i;
 	WIDGET(mv)->h = argv[2].i;
 
-	pthread_mutex_lock(&mv->map->lock);
+//	pthread_mutex_lock(&mv->map->lock);
 
 	mapview_center(mv, mv->map->defx, mv->map->defy);
 
 	mv->mw = WIDGET(mv)->w/(*mv->tilew) + 1;
 	mv->mh = WIDGET(mv)->h/(*mv->tileh) + 1;
 	
-	pthread_mutex_unlock(&mv->map->lock);
+//	pthread_mutex_unlock(&mv->map->lock);
 }
 
 static void
@@ -868,7 +942,11 @@ mapview_lostfocus(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 
-	mapview_stop_zoom(mv);
+	mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
+	if (mv->zoom_tm != NULL) {
+		SDL_RemoveTimer(mv->zoom_tm);
+		mv->zoom_tm = NULL;
+	}
 }
 
 void
@@ -882,26 +960,13 @@ mapview_center(struct mapview *mv, int x, int y)
 	if (mv->my < 0)
 		mv->my = 0;
 	
-	pthread_mutex_lock(&mv->map->lock);
+//	pthread_mutex_lock(&mv->map->lock);
 
 	if (mv->mx >= mv->map->mapw - mv->mw)
 		mv->mx = mv->map->mapw - mv->mw;
 	if (mv->my >= mv->map->maph - mv->mh)
 		mv->my = mv->map->maph - mv->mh;
 
-	pthread_mutex_unlock(&mv->map->lock);
-}
-
-static void
-mapview_stop_zoom(struct mapview *mv)
-{
-	if (zoomin_timer != NULL) {
-		SDL_RemoveTimer(zoomin_timer);
-		zoomin_timer = NULL;
-	}
-	if (zoomout_timer != NULL) {
-		SDL_RemoveTimer(zoomout_timer);
-		zoomout_timer = NULL;
-	}
+//	pthread_mutex_unlock(&mv->map->lock);
 }
 

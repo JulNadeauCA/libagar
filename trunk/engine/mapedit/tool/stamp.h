@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.h,v 1.6 2003/01/29 00:35:29 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.7 2003/02/02 21:14:02 vedge Exp $	*/
 /*	Public domain	*/
 
 enum stamp_mode {
@@ -14,5 +14,6 @@ struct stamp {
 
 void		 stamp_init(void *);
 struct window	*stamp_window(void *);
+int		 stamp_cursor(void *, struct mapview *, SDL_Rect *);
 void		 stamp_effect(void *, struct mapview *, struct node *);
 
