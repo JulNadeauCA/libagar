@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.24 2003/01/26 05:50:36 vedge Exp $
+.\"	$Csoft: object.3,v 1.25 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -299,6 +299,8 @@ The
 .Fn object_table_load
 function allocates and reads the object table from
 .Fa fd .
+.Fn object_table_load
+returns the new object table, or NULL on failure.
 .Sh SEE ALSO
 .Xr agar 3
 .Sh HISTORY

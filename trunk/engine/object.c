@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.109 2003/03/13 08:43:31 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.110 2003/03/14 07:20:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -521,16 +521,25 @@ object_table_load(int fd, char *objname)
 		struct object *pob;
 		char *name, *type;
 
-		name = read_string(fd, NULL);
-		type = read_string(fd, NULL);
-		pob = world_find(name);
-
+		if ((name = read_string(fd, NULL)) == NULL) {
+			error_set("name: %s", fobj_error);
+			goto fail;
+		}
+		if ((type = read_string(fd, NULL)) == NULL) {
+			error_set("type: %s", fobj_error);
+			free(name);
+			goto fail;
+		}
+		
 		debug_n(DEBUG_DEPS, "\t%s: depends on %s...", objname, name);
-		if (pob != NULL) {
+		if ((pob = world_find(name)) != NULL) {
 			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
 			if (strcmp(pob->type, type) != 0) {
-				fatal("%s: expected `%s' to be of type `%s'",
+				error_set("%s: expected %s to be of type %s",
 				    objname, name, type);
+				free(name);
+				free(type);
+				goto fail;
 			}
 		} else {
 			debug_n(DEBUG_DEPS, "missing\n");
@@ -542,5 +551,8 @@ object_table_load(int fd, char *objname)
 	pthread_mutex_unlock(&world->lock);
 
 	return (obt);
+fail:
+	object_table_destroy(obt);
+	return (NULL);
 }
 
