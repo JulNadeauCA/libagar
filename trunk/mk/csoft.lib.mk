@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.28 2003/08/13 03:57:04 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.30 2003/09/28 17:34:24 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -29,32 +29,33 @@ SH?=		sh
 CC?=		cc
 AR?=		ar
 RANLIB?=	ranlib
-
 LIB_INSTALL=	No
-
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
-
 LIBTOOL?=	libtool
 LTCONFIG?=	./ltconfig
 LTMAIN_SH?=	./ltmain.sh
 LTCONFIG_GUESS?=./config.guess
 LTCONFIG_SUB?=	./config.sub
 LTCONFIG_LOG?=	./config.log
-
 BINMODE?=	755
-
 STATIC?=	Yes
 SHARED?=	No
 SOVERSION?=	1:0:0
+CFLAGS+=    ${COPTS}
+SHARE?=
+
+all: all-subdir lib${LIB}.a lib${LIB}.la
+install: install-lib install-subdir
+deinstall: deinstall-lib deinstall-subdir
+clean: clean-lib clean-subdir
+cleandir: cleandir-lib cleandir-subdir
+regress: regress-subdir
+depend: depend-subdir
 
 .SUFFIXES: .o .po .lo .c .cc .asm .l .y
 
-CFLAGS+=    ${COPTS}
-
-SHARE?=
-
-# C
+# Compile C code into an object file
 .c.o:
 	${CC} ${CFLAGS} -c $<
 .c.lo:
@@ -62,7 +63,7 @@ SHARE?=
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
-# C++
+# Compile C++ code into an object file
 .cc.o:
 	${CXX} ${CXXFLAGS} -c $<
 .cc.lo:
@@ -70,11 +71,11 @@ SHARE?=
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
-# Assembly
+# Compile assembly code into an object file
 .asm.o:
 	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $<
 
-# Lex
+# Compile a Lex lexer into an object file
 .l:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
@@ -90,7 +91,7 @@ SHARE?=
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
-# Yacc
+# Compile a Yacc parser into an object file
 .y:
 	${YACC} ${YFLAGS} -b $@ $<
 	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
@@ -106,8 +107,7 @@ SHARE?=
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
-all: all-subdir lib${LIB}.a lib${LIB}.la
-
+# Build the library's object files.
 _lib_objs:
 	@if [ "${LIB}" != "" -a "${OBJS}" = "" ]; then \
 	    for F in ${SRCS}; do \
@@ -118,6 +118,7 @@ _lib_objs:
             done; \
 	fi
 
+# Build PIC versions of the library's object files.
 _lib_shobjs:
 	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" \
 	      -a "${SHARED}" = "Yes" ]; then \
@@ -129,6 +130,7 @@ _lib_shobjs:
             done; \
 	fi
 
+# Build a static version of the library.
 lib${LIB}.a: _lib_objs ${OBJS}
 	@if [ "${LIB}" != "" ]; then \
 	    if [ "${OBJS}" = "" ]; then \
@@ -149,6 +151,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	    (${RANLIB} lib${LIB}.a || exit 0); \
 	fi
 
+# Build a Libtool version of the library.
 lib${LIB}.la: ${LIBTOOL} _lib_shobjs
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
 	    if [ "${SHOBJS}" = "" ]; then \
@@ -173,7 +176,7 @@ lib${LIB}.la: ${LIBTOOL} _lib_shobjs
 	    fi; \
 	fi
 
-clean: clean-subdir
+clean-lib:
 	@if [ "${LIB}" != "" ]; then \
 	    if [ "${OBJS}" = "" ]; then \
                 for F in ${SRCS}; do \
@@ -211,17 +214,17 @@ clean: clean-subdir
 	    rm -f ${CLEANFILES}; \
 	fi
 
-cleandir: clean cleandir-subdir clean-depend
+cleandir-lib:
 	rm -fR .libs
 
-install: install-subdir lib${LIB}.a lib${LIB}.la
+install-lib:
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}"; \
-	    ${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}; \
+	    ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}; \
 	    if [ "${SHARED}" = "Yes" ]; then \
 	        echo "${LIBTOOL} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}"; \
-	        ${LIBTOOL} --mode=install \
+	        ${SUDO} ${LIBTOOL} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
 	    fi; \
 	fi
@@ -229,29 +232,29 @@ install: install-subdir lib${LIB}.a lib${LIB}.la
         if [ "$$_share" != "" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
             fi; \
             for F in $$_share; do \
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
 
-deinstall: deinstall-subdir
+deinstall-lib:
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
 	    echo "${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a"; \
-	    ${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a; \
+	    ${SUDO} ${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a; \
 	    if [ "${SHARED}" == "Yes" ]; then \
 	        echo "${LIBTOOL} --mode=uninstall \
 		    rm -f ${PREFIX}/lib/lib${LIB}.la"; \
-	        ${LIBTOOL} --mode=uninstall \
+	        ${SUDO} ${LIBTOOL} --mode=uninstall \
 		    rm -f ${PREFIX}/lib/lib${LIB}.la; \
 	    fi; \
 	fi
 	@if [ "${SHARE}" != "" ]; then \
 	    for F in ${SHARE}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
-	        ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
+	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
 	fi
 
@@ -263,11 +266,9 @@ ${LIBTOOL}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
-depend: depend-subdir
-
-regress: regress-subdir
-
-.PHONY:	clean cleandir install deinstall depend regress _lib_objs _lib_shobjs
+.PHONY: install deinstall clean cleandir regress depend
+.PHONY: install-lib deinstall-lib clean-lib cleandir-lib
+.PHONY: _lib_objs _lib_shobjs
 
 include ${TOP}/mk/csoft.common.mk
 include ${TOP}/mk/csoft.dep.mk

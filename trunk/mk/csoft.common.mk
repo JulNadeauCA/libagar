@@ -1,4 +1,4 @@
-# $Csoft: csoft.common.mk,v 1.19 2003/03/05 16:13:09 vedge Exp $
+# $Csoft: csoft.common.mk,v 1.20 2003/09/28 17:34:24 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -32,6 +32,8 @@ INST_BINDIR?=	${PREFIX}/bin
 INST_LIBDIR?=	${PREFIX}/lib
 INST_MANDIR?=	${PREFIX}/man
 INST_PSDIR?=	${PREFIX}/man
+
+SUDO?=
 
 INSTALL_PROG=		install -c -m 755
 INSTALL_LIB=		install -c -m 444
