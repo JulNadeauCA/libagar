@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.83 2003/06/14 11:28:01 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.84 2003/06/15 05:08:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -124,7 +124,7 @@ config_prop_modified(int argc, union evarg *argv)
 	} else if (strcmp(prop->key, "view.async-blits") == 0 &&
 	    prop->data.i && config_notify) {
 		text_msg("Warning",
-		    "Save the configuration and restart %s for async blits"
+		    "Save the configuration and restart %s for async blits "
 		    "to take effect",
 		    proginfo->progname);
 	} else if (strcmp(prop->key, "input.unicode") == 0) {
