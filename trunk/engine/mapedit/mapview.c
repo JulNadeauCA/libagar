@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.107 2003/05/07 13:01:59 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.108 2003/05/08 03:29:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -286,13 +286,19 @@ mapview_draw_tool_cursor(struct mapview *mv)
 	struct tool *curtool = mapedit.curtool;
 	SDL_Rect rd;
 
-	if (mv->cx == -1 || mv->cy == -1)
-		return;
-
 	rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + *mv->ssx;
 	rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + *mv->ssy;
 	rd.w = mv->map->tilew;
 	rd.h = mv->map->tileh;
+
+	if (SDL_GetModState() & KMOD_CTRL) {		/* XXX inefficient? */
+		rd.x += WIDGET_ABSX(mv);
+		rd.y += WIDGET_ABSY(mv);
+		SDL_BlitSurface(
+		    SPRITE(mapedit.tools[MAPEDIT_SELECT], TOOL_SELECT_CURSOR),
+		    NULL, view->v, &rd);
+		return;
+	}
 
 	if (curtool == NULL)
 		goto defcurs;
@@ -481,8 +487,8 @@ next_layer:
 
 	/* Draw the cursor for the current tool. */
 	if (mv->flags & MAPVIEW_EDIT &&
-	   (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
-	   (SDL_GetModState() & KMOD_CTRL) == 0) {
+	    (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
+	    (mv->cx != -1 && mv->cy != -1)) {
 		mapview_draw_tool_cursor(mv);
 	}
 #if 0
