@@ -1,0 +1,240 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 21, 2002
+.Dt WINDOW 3
+.Os
+.Sh NAME
+.Nm window
+.Nd agar window structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure implements a mobile, resizable windows containing
+.Xr region 3
+structures, which in turn contain
+.Xr widget 3
+structures.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "struct window *"
+.Fn window_new "char *caption" "int flags" "int x" "int y" "int defw" \
+               "int defh" "int minwidth" "int minheight"
+.Pp
+.Ft void
+.Fn window_init "struct window *win" "int flags" "int x" "int y" "int defw" \
+                "int defh" "int minwidth" "int minheight"
+.Pp
+.Ft void
+.Fn window_titlebar_printf "struct window *win" "const char *fmt" "..."
+.nr nS 0
+.Pp
+The
+.Fn window_new
+function allocates, initializes, and attaches a
+.Nm
+structure.
+The
+.Fn window_init
+function initializes a
+.Nm
+structure.
+The
+.Fa caption
+argument is a pointer to a null-terminated string that will be
+displayed in the title bar (which can be changed at runtime using the
+.Fn window_titlebar_printf
+function).
+The
+.Fa x
+and
+.Fa y
+arguments define the initial absolute position of the window, and are
+ignored with the
+.Dv WINDOW_CENTER
+flag.
+The
+.Fa defw
+and
+.Fa defh
+arguments define the default window geometry in pixels (or in percentiles
+of the total view size with the
+.Dv WINDOW_SCALE
+flag).
+.Pp
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define WINDOW_PLAIN		0x01	/* Solid, no borders */
+#define WINDOW_ANIMATE		0x04	/* Redraw each tick */
+#define WINDOW_TITLEBAR		0x08	/* Draw title bar */
+#define WINDOW_ROUNDEDGES	0x10	/* Round edges */
+#define WINDOW_SCALE		0x20	/* Scale regions/widgets */
+#define WINDOW_SHOWN		0x40	/* Visible */
+#define WINDOW_CENTER		0x80	/* Center window */
+.Ed
+.Sh VISIBILITY
+.nr nS 1
+.Ft int
+.Fn window_show "struct window *win"
+.Pp
+.Ft int
+.Fn window_show_locked "struct window *win"
+.Pp
+.Ft int
+.Fn window_hide "struct window *win"
+.Pp
+.Ft int
+.Fn window_hide_locked "struct window *win"
+.Pp
+.Ft void
+.Fn window_resize "struct window *win"
+.nr nS 0
+.Pp
+The
+.Fn window_show
+function displays an unlocked window.
+The
+.Fn window_show_locked
+function displays a window assuming it is locked.
+.Pp
+The
+.Fn window_hide
+function hides an unlocked window.
+The
+.Fn window_hide_locked
+function hides a window assuming it is locked.
+.Pp
+Those functions return non-zero if the window was previously visible.
+.Pp
+The
+.Fn window_resize
+function effects a change in window geometry by updating the regions
+and widgets inside the window
+.Fa win .
+.Sh RENDERING
+.nr nS 1
+.Ft void
+.Fn window_draw "struct window *win"
+.Pp
+.Ft void
+.Fn window_animate "struct window *win"
+.nr nS 0
+.Pp
+The
+.Fn window_draw
+function renders the window
+.Fa win .
+The
+.Fn window_animate
+function renders the animations inside the window
+.Fa win .
+.Sh EVENT DISPATCHING
+.nr nS 1
+.Ft int
+.Fn window_event_all "SDL_Event *ev"
+.nr nS 0
+.Pp
+The
+.Fn window_event_all
+function translates the
+.Xr SDL_Event 3
+pointed to by the
+.Fa ev
+argument and dispatches appropriate events to relevant widgets.
+
+.Sh EVENTS
+The
+.Nm
+object reacts directly to events of type
+.Xr SDL_Event 3 ,
+translates, and dispatches them to relevant
+.Xr widget 3
+structures.
+.Pp
+The
+.Nm
+object delivers the following events to
+.Xr widget 3
+objects:
+.Pp
+.Bl -tag -width 2n
+.It Fn window-gainfocus "void"
+Window gained focus.
+.It Fn window-lostfocus "void"
+Window no longer focused.
+.It Fn window-mouseout "void"
+The widget has the
+.Dv WIDGET_MOUSEOUT
+flag set and the mouse has moved outside of the widget area.
+.It Fn window-mousemotion "int x" "int y" "int xrel" "int yrel"
+The mouse cursor has moved to widget-relative coordinates
+.Fa x
+and
+.Fa y
+inside the widget area, and the widget currently holds the focus.
+The
+.Fa xrel
+and
+.Fa yrel
+arguments represent the displacement relative to the last position of the
+mouse cursor.
+.It Fn window-mousebuttonup "int button" "int x" "int y"
+The mouse button indexed by
+.Fa button
+was released at widget-relative
+.Fa x ,
+.Fa y
+coordinates.
+.It Fn window-mousebuttondown "int button" "int x" "int y"
+The mouse button indexed by
+.Fa button
+was pressed at widget-relative
+.Fa x ,
+.Fa y
+coordinates.
+.It Fn window-keyup "int keysym" "int keymod"
+The key identified by
+.Fa keysym
+was released, and the widget holds the focus.
+.It Fn window-keydown "int keysym" "int keymod"
+The key identified by
+.Fa keysym
+was pressed, and the widget holds the focus.
+.El
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3
+.Sh HISTORY
+The
+.Nm
+system first appeared in AGAR 1.0.
