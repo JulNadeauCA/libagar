@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.53 2004/05/12 05:34:37 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.54 2004/05/15 02:55:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -41,8 +41,6 @@
 
 #include "monitor.h"
 
-struct monitor monitor;		/* Debug monitor */
-
 static void
 selected_tool(int argc, union evarg *argv)
 {
@@ -55,7 +53,7 @@ selected_tool(int argc, union evarg *argv)
 }
 
 void
-monitor_init(struct monitor *mon, const char *name)
+monitor_init(void)
 {
 	const struct tool_ent {
 		char		*name;
@@ -74,15 +72,14 @@ monitor_init(struct monitor *mon, const char *name)
 	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct tlist *tl_tools;
+	struct window *win;
 	int i;
 
-	object_init(mon, "debug-monitor", name, NULL);
+	win = window_new("monitor-toolbar");
+	window_set_caption(win, _("Debug monitor"));
+	window_set_position(win, WINDOW_LOWER_LEFT, 0);
 
-	mon->toolbar = window_new("monitor-toolbar");
-	window_set_caption(mon->toolbar, _("Debug monitor"));
-	window_set_position(mon->toolbar, WINDOW_LOWER_LEFT, 0);
-
-	tl_tools = tlist_new(mon->toolbar, TLIST_STATIC_ICONS);
+	tl_tools = tlist_new(win, TLIST_STATIC_ICONS);
 	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
 	event_new(tl_tools, "tlist-dblclick", selected_tool, NULL);
 
@@ -90,6 +87,8 @@ monitor_init(struct monitor *mon, const char *name)
 		tlist_insert_item(tl_tools, ICON(OBJ_ICON),
 		    _(tool_ents[i].name), tool_ents[i].window_func);
 	}
+
+	window_show(win);
 }
 
 #endif	/* DEBUG */
