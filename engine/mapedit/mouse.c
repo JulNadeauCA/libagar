@@ -79,22 +79,28 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 
 		ms = SDL_GetMouseState(NULL, NULL);
 		
-		if (ms & (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
+		if (ms & (SDL_BUTTON_LMASK)) {
 			/* Scroll */
 			if (med->mtmapy > omtmapy &&	/* Down */
-			    --med->curoffs < 0) {
-				med->curoffs = med->curobj->nrefs - 1;
+			    --med->tilelist_offs < 0) {
+				med->tilelist_offs = med->curobj->nrefs - 1;
 			}
 			if (med->mtmapy < omtmapy &&	/* Up */
-			    ++med->curoffs > med->curobj->nrefs - 1) {
-				med->curoffs = 0;
+			    ++med->tilelist_offs > med->curobj->nrefs - 1) {
+				med->tilelist_offs = 0;
 			}
 			mapedit_tilelist(med);
-		} else if (ms & (SDL_BUTTON_LMASK)) {
+		} else if (ms & (SDL_BUTTON_RMASK)) {
 			/* Select */
-			med->curoffs -= ((med->tilelist.h / m->tileh) / 2);
-			med->curoffs -= med->mtmapy;
-			mapedit_tilelist(med);
+			if (med->mtmapy < m->view->maph + 1) {
+				med->curoffs = med->tilelist_offs +
+				    (med->mtmapy-1);
+				if (med->curoffs < 0) {
+					/* Wrap */
+					med->curoffs += med->curobj->nrefs;
+				}
+				mapedit_tilelist(med);
+			}
 		}
 		return;
 	}
@@ -146,25 +152,47 @@ void
 mouse_button(struct mapedit *med, SDL_Event *ev)
 {
 	struct map *m = med->map;
-	Uint32 mx, my;
+	Uint32 mx, my, vx, vy;
 	
 	if (med->cursor_dir.current != 0) {
 		return;
 	}
+
+	vx = (ev->button.x / m->tilew);
+	vy = (ev->button.y / m->tileh);
+	mx = (m->view->mapx + vx) - 1;
+	my = (m->view->mapy + vy) - 1;
 	
-	mx = (m->view->mapx + ev->button.x / m->tilew) - 1;
-	my = (m->view->mapy + ev->button.y / m->tileh) - 1;
+	if (vx > m->view->mapw && vy < m->view->maph - 1) {
+		/* XXX pref */
+		switch (ev->button.button) {
+		case 2:
+		case 3:
+			med->curoffs = med->tilelist_offs + vy - 1;
+			if (med->curoffs < 0) {
+				/* Wrap */
+				med->curoffs += med->curobj->nrefs;
+			}
+			mapedit_tilelist(med);
+			break;
+		}
+	}
 
 	if ((mx > 1 && my > 1) &&
 	    (mx < m->mapw && my < m->maph)) {
-		dprintf("move to %dx%d\n", mx, my);
-		mapedit_move(med, mx, my);
-		mapedit_sticky(med);
-		if (ev->button.button == 3) {
+	    	/* XXX prefs */
+	    	switch (ev->button.button) {
+		case 2:
+			mapedit_move(med, mx, my);
+			mapedit_sticky(med);
+			m->redraw++;
+			break;
+		case 3:
 			mapedit_push(med, &m->map[mx][my], med->curoffs,
 			    med->curflags);
+			m->redraw++;
+			break;
 		}
-		m->redraw++;
 	}
 }
 
