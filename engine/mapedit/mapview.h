@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.25 2003/02/15 07:34:07 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.26 2003/02/22 11:42:37 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
@@ -7,7 +7,7 @@ struct mapview {
 	int	flags;
 #define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
 #define MAPVIEW_ZOOM		 0x002	/* Allow zooming */
-#define MAPVIEW_INDEPENDENT_ZOOM 0x004	/* Zoom independent from map's */
+#define MAPVIEW_INDEPENDENT	 0x004	/* Zoom/ss[xy] independent from map's */
 #define MAPVIEW_TILEMAP		 0x008	/* Map of `source' nodes */
 #define MAPVIEW_GRID		 0x010	/* Display a grid */
 #define MAPVIEW_PROPS		 0x020	/* Display node properties */
@@ -33,6 +33,7 @@ struct mapview {
 	} constr;
 	struct map	*map;
 	struct node	*cur_node;
+	Uint8		 cur_layer;
 	int		 mx, my;	/* Display offset (nodes) */
 	int		 mw, mh;	/* Display size (nodes) */
 	Uint16		*zoom;		/* Zoom (%) */
@@ -40,7 +41,7 @@ struct mapview {
 	SDL_TimerID	 zoom_tm;
 	int		*tilew, *tileh;
 	int		 cx, cy;	/* Cursor position (nodes) */
-	struct {		/* For MAPVIEW_INDEPENDENT_ZOOM */
+	struct {		/* For MAPVIEW_INDEPENDENT */
 		Uint16	zoom;
 		Sint16	ssx, ssy;
 		int	tilew, tileh;
