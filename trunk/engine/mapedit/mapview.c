@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.70 2003/02/22 00:09:32 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.71 2003/02/22 11:42:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -762,11 +762,10 @@ mapview_mousemotion(int argc, union evarg *argv)
 		if (state & SDL_BUTTON(2)) {
 			shift_mouse(mapedit.tools[MAPEDIT_SHIFT], mv,
 			    xrel, yrel);
-		} else if (mapedit.curtool != NULL) {
+		} else if (mapedit.curtool != NULL && (state & SDL_BUTTON(1))) {
 			struct tool *tool = mapedit.curtool;
 
-			if ((state & SDL_BUTTON(1)) &&
-			    TOOL_OPS(tool)->effect != NULL &&
+			if (TOOL_OPS(tool)->effect != NULL &&
 			    (x != mv->mouse.x || y != mv->mouse.y)) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
