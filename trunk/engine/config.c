@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.107 2004/03/17 12:48:42 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.108 2004/03/18 21:27:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -48,6 +48,7 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/mspinbutton.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -87,16 +88,6 @@ config_set_path(int argc, union evarg *argv)
 
 	textbox_copy_string(tbox, path, sizeof(path));
 	prop_set_string(config, varname, "%s", path);
-	WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
-}
-
-static void
-config_set_res(int argc, union evarg *argv)
-{
-	struct textbox *tbox = argv[0].p;
-	char *varname = argv[1].s;
-
-	prop_set_int(config, varname, textbox_int(tbox));
 	WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 }
 
@@ -349,19 +340,12 @@ config_window(struct config *con)
 
 	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
 	{
-		/* XXX propose some default resolutions. */
+		struct mspinbutton *msb;
 
-		tbox = textbox_new(hb, _("Width: "));
-		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
-		event_new(tbox, "textbox-return", config_set_res, "%s",
-		    "view.w");
-		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
-
-		tbox = textbox_new(hb, _("Height: "));
-		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
-		event_new(tbox, "textbox-return", config_set_res, "%s",
-		    "view.h");
-		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
+		msb = mspinbutton_new(hb, "x", _("Default resolution: "));
+		widget_bind(msb, "xvalue", WIDGET_PROP, config, "view.w");
+		widget_bind(msb, "yvalue", WIDGET_PROP, config, "view.h");
+		mspinbutton_set_range(msb, 320, 4096);
 	}
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
