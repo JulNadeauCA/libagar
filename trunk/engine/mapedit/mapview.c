@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.81 2003/03/10 03:10:04 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.82 2003/03/10 05:49:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -329,6 +329,8 @@ mapview_draw(void *p)
 	int old_tilew = m->tilew;
 	int old_tileh = m->tileh;
 	int layer = 0;
+	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
+	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
 
 	if (mapedition && prop_get_bool(&mapedit, "tilemap-bg")) {
 		mapview_draw_background(mv);
@@ -387,34 +389,19 @@ draw_layer:
 			/* Indicate the mouse/effective selections. */
 			if (mv->msel.set &&
 			    mv->msel.x == mx && mv->msel.y == my) {
-				primitives.rect_outlined(mv,
-				    rx+1, ry+1,
-				    mv->msel.xoffs*mv->map->tilew-2,
-				    mv->msel.yoffs*mv->map->tileh-2,
-				    WIDGET_COLOR(mv, MOUSE_SEL_COLOR));
+				msel_x = rx + 1;
+				msel_y = ry + 1;
+				msel_w = mv->msel.xoffs*mv->map->tilew - 2;
+				msel_h = mv->msel.yoffs*mv->map->tileh - 2;
 			}
-#if 0
-			if (mv->esel.set &&
-			    mx >= mv->esel.x &&
-			    my >= mv->esel.y &&
-			    mx < mv->esel.x + mv->esel.w &&
-			    my < mv->esel.y + mv->esel.h) {
-				primitives.rect_outlined(mv,
-				    rx-1, ry-1,
-				    mv->map->tilew,
-				    mv->map->tileh,
-				    WIDGET_COLOR(mv, EFFECTIVE_SEL_COLOR));
-			}
-#else
+			
 			if (mv->esel.set &&
 			    mv->esel.x == mx && mv->esel.y == my) {
-				primitives.rect_outlined(mv,
-				    rx-1, ry-1,
-				    mv->map->tilew*mv->esel.w,
-				    mv->map->tileh*mv->esel.h,
-				    WIDGET_COLOR(mv, EFFECTIVE_SEL_COLOR));
+				esel_x = rx - 1;
+				esel_y = ry - 1;
+				esel_w = mv->map->tilew*mv->esel.w;
+				esel_h = mv->map->tileh*mv->esel.h;
 			}
-#endif
 			if (mv->map->tilew < 7 || mv->map->tileh < 7)
 				continue;
 
@@ -450,11 +437,22 @@ next_layer:
 	if (++layer < m->nlayers) {
 		goto draw_layer;			/* Draw next layer */
 	}
-
-	if (mv->flags & MAPVIEW_EDIT && (mv->flags & MAPVIEW_NO_CURSOR) == 0) {
-		mapview_draw_tool_cursor(mv);
+	
+	/* Indicate the selection. */
+	if (esel_x != -1) {
+		primitives.rect_outlined(mv, esel_x, esel_y, esel_w, esel_h,
+		    WIDGET_COLOR(mv, EFFECTIVE_SEL_COLOR));
+	}
+	if (msel_x != -1) {
+		primitives.rect_outlined(mv, msel_x, msel_y, msel_w, msel_h,
+		    WIDGET_COLOR(mv, MOUSE_SEL_COLOR));
 	}
 
+	/* Draw the cursor for the current tool. */
+	if (mv->flags & MAPVIEW_EDIT &&
+	   (mv->flags & MAPVIEW_NO_CURSOR) == 0) {
+		mapview_draw_tool_cursor(mv);
+	}
 #if 0
 	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
 		primitives.rect_outlined(mv,
