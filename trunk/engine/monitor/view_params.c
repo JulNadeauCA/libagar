@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.7 2003/01/01 05:18:40 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.8 2003/01/21 03:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -79,15 +79,15 @@ view_params_window(void)
 			engine = "Tile-based";
 			break;
 		}
-		label_new(reg, 100, 0, "Graphic engine: %s %s", engine,
+		label_new(reg, 100, -1, "Graphic engine: %s %s", engine,
 		    view->opengl ? "(OpenGL)" : "");
-		label_polled_new(reg, 100, 0, &view->lock, "Depth: %dbpp",
+		label_polled_new(reg, 100, -1, &view->lock, "Depth: %dbpp",
 		    &view->depth);
-		label_polled_new(reg, 100, 0, &view->lock, "Geometry: %dx%d",
+		label_polled_new(reg, 100, -1, &view->lock, "Geometry: %dx%d",
 		    &view->w, &view->h);
-		label_polled_new(reg, 100, 0, &view->lock, "Window op: %d (%p)",
-		    &view->winop, &view->wop_win);
-		label_polled_new(reg, 100, 0, NULL,
+		label_polled_new(reg, 100, -1, &view->lock,
+		    "Window op: %d (%p)", &view->winop, &view->wop_win);
+		label_polled_new(reg, 100, -1, NULL,
 		    "Clipping: [%[u16]x%[u16] at %[s16],%[s16]]",
 		    &view->v->clip_rect.w,
 		    &view->v->clip_rect.h,
@@ -97,11 +97,11 @@ view_params_window(void)
 		if (view->rootmap != NULL) {
 			struct viewmap *rm = view->rootmap;
 		
-			label_polled_new(reg, 100, 0, &view->lock,
+			label_polled_new(reg, 100, -1, &view->lock,
 			    "Root map: %p", &rm->map);
-			label_new(reg, 100, 0,
+			label_new(reg, 100, -1,
 			    "Root map geometry: %dx%d", rm->w, rm->h);
-			label_polled_new(reg, 100, 0, &view->lock,
+			label_polled_new(reg, 100, -1, &view->lock,
 			    "Root map offset: %d,%d (soft %d,%d)",
 			    &rm->x, &rm->y, &rm->sx, &rm->sy);
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.19 2003/01/19 11:31:53 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.20 2003/01/19 11:56:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -96,16 +96,16 @@ tl_events_selected(int argc, union evarg *argv)
 	}
 	window_set_caption(win, "%s handler", evh->name);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
-		lab = label_new(reg, 100, 0, "Identifier: \"%s\"", evh->name);
-		lab = label_polled_new(reg, 100, 0, &ob->events_lock,
+		lab = label_new(reg, 100, -1, "Identifier: \"%s\"", evh->name);
+		lab = label_polled_new(reg, 100, -1, &ob->events_lock,
 		    "Flags: 0x%x", &evh->flags);
-		lab = label_polled_new(reg, 100, 0, &ob->events_lock,
+		lab = label_polled_new(reg, 100, -1, &ob->events_lock,
 		    "Handler: %p", &evh->handler);
 	}
 
-	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 30);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
 		bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
 		event_new(bu, "button-pushed", tl_events_trigger,
@@ -355,50 +355,50 @@ tl_objs_selected(int argc, union evarg *argv)
 	window_set_caption(win, "%s object (%s)", ob->name, ob->type);
 
 	/* Show the object's generic properties. */
-	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 40);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 35);
 	{
-		label_new(reg, 100, 0, "Name: %s", ob->name);
-		label_new(reg, 100, 0, "Type: %s", ob->type);
-		label_new(reg, 100, 0, "Flags: 0x%x", ob->flags);
-		label_polled_new(reg, 100, 0, NULL,
+		label_new(reg, 100, -1, "Name: %s", ob->name);
+		label_new(reg, 100, -1, "Type: %s", ob->type);
+		label_new(reg, 100, -1, "Flags: 0x%x", ob->flags);
+		label_polled_new(reg, 100, -1, NULL,
 		    "State: %d", &ob->state);
-		label_polled_new(reg, 100, 0, &ob->pos_lock,
+		label_polled_new(reg, 100, -1, &ob->pos_lock,
 		    "Position: %p", &ob->pos);
 	}
 
 	/* Display the first sprite, if any. */
 	if (ob->art != NULL && ob->art->nsprites > 0) {
-		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 40);
+		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 35);
 		bitmap_new(reg, SPRITE(ob, 0), 100, 100);
 	}
 
 	/* Display the generic properties. */
-	reg = region_new(win, REGION_HALIGN, 0, 40, 50, 40);
+	reg = region_new(win, REGION_HALIGN, 0, 35, 50, 40);
 	{
 		struct tlist *tl_props;
 
 		tl_props = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_props, "tlist-poll", tl_props_poll, "%p", ob);
 
-		reg = region_new(win, REGION_VALIGN, 50, 40, 50, 30);
+		reg = region_new(win, REGION_VALIGN, 50, 35, 50, 20);
 		{
 			struct label *lab_name;
 			struct textbox *tb_set;
 			struct button *bu;
 
 			lab_name = label_new(reg, 100, 30, " ");
-			tb_set = textbox_new(reg, "Value: ", 0, 100, 30);
+			tb_set = textbox_new(reg, "Value: ", 0, 100, -1);
 
 			event_new(tl_props, "tlist-changed", tl_props_selected,
 			    "%p, %p", lab_name, tb_set);
 		
-			reg = region_new(win, REGION_HALIGN, 50, 70, 50, 10);
+			reg = region_new(win, REGION_HALIGN, 50, 60, 50, 10);
 			{
-				bu = button_new(reg, "Apply", NULL, 0, 50, 100);
+				bu = button_new(reg, "Apply", NULL, 0, 50, -1);
 				event_new(bu, "button-pushed", tl_props_apply,
 				    "%p, %p, %p", tl_props, tb_set, ob);
 			
-				bu = button_new(reg, "Remove", NULL, 0, 50, 100);
+				bu = button_new(reg, "Remove", NULL, 0, 50, -1);
 				event_new(bu, "button-pushed", tl_props_remove,
 				    "%p, %p, %p", tl_props, tb_set, ob);
 			}
@@ -406,7 +406,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 
 	/* Display the event handlers. */
-	reg = region_new(win, 0, 0, 80, 100, 20);
+	reg = region_new(win, 0, 0, 80, 100, 16);
 	{
 		struct tlist *tl;
 
