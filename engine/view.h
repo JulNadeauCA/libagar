@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.66 2003/01/18 06:37:39 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.67 2003/01/27 08:02:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -150,6 +150,8 @@ void	 view_detach(void *);
 void	 view_detach_queued(void);
 void	 view_destroy(void *);
 int	 view_set_refresh(int, int);
+
+struct window	*view_window_exists(char *);
 
 SDL_Surface	*view_surface(int, int, int);
 SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
