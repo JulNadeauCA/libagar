@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.80 2003/03/18 03:07:35 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.81 2003/03/18 04:20:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -15,6 +15,7 @@
 #define NODE_MAX_NODEREFS	32767
 #define NODEREF_MAX_TRANSFORMS	16384
 #define NODEREF_MAX_CENTER	65535
+#define MAP_LAYER_NAME_MAX	128
 
 #include <engine/transform.h>
 
