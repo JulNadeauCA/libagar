@@ -1,4 +1,4 @@
-/*	$Csoft: vg_math.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
+/*	$Csoft: vg_math.c,v 1.2 2004/03/30 16:04:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -30,15 +30,33 @@
 
 #include "vg_math.h"
 
+/* Convert radians to degrees. */
 double
 rad2deg(double d)
 {
     return (d/(2.0*M_PI)*360.0);
 }
 
+/* Convert degrees to radians. */
 double
 deg2rad(double d)
 {
     return ((d/360.0)*(2.0*M_PI));
+}
+
+/* Convert Cartesian to polar coordinates. */
+void
+car2pol(double x, double y, double *r, double *theta)
+{
+	*r = sqrt(x*x + y*y);
+	*theta = atan(y/x);
+}
+
+/* Convert polar to Cartesian coordinates. */
+void
+pol2car(double r, double theta, double *x, double *y)
+{
+	*x = r*cos(theta);
+	*y = r*sin(theta);
 }
 
