@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.66 2002/07/20 03:19:10 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.67 2002/07/20 16:11:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -438,10 +438,12 @@ object_start_gc(Uint32 ival, void *p)
 			for (i = 0; i < art->nanims; i++) {
 				anim_destroy(art->anims[i]);
 			}
+#if 0
 			if (art->map != NULL) {
 				map_destroy(art->map);
 				free(art->map);
 			}
+#endif
 			dprintf("freed: %s (%d sprites, %d anims)\n",
 			    art->name, art->nsprites, art->nanims);
 
