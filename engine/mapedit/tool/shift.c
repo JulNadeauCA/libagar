@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.13 2003/03/24 12:08:42 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.14 2003/03/25 13:48:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -85,10 +85,18 @@ void
 shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 {
 	struct shift *sh = p;
-	int selx, sely, x, y, w, h;
+	int selx = mv->mx + mv->mouse.x;
+	int sely = mv->my + mv->mouse.y;
+	int w = 1;
+	int h = 1;
+	int x, y;
 
-	if (!mapview_get_selection(mv, &selx, &sely, &w, &h))
+	if (mapview_get_selection(mv, &selx, &sely, &w, &h) == -1 ||
+	    selx < 0 || selx >= mv->map->mapw ||
+	    sely < 0 || sely >= mv->map->maph) {
+		dprintf("out of range\n");
 		return;
+	}
 
 	for (y = sely; y < sely+h; y++) {
 		for (x = selx; x < selx+w; x++) {
@@ -96,7 +104,7 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 			struct noderef *nref;
 
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != mv->cur_layer)
+				if (nref->layer != mv->map->cur_layer)
 					continue;
 
 				if (nref->xcenter + relx < NODEREF_MAX_CENTER &&

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.37 2003/03/16 04:08:41 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.38 2003/03/25 13:48:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -37,8 +37,9 @@ struct mapview {
 	int	 prop_style;		/* Style of node attributes */
 
 	struct {		/* Mouse scrolling state */
-		int	scrolling;	/* Currently scrolling? */
-		int	x, y;		/* Current mouse position */
+		int	scrolling;
+		int	centering;
+		int	x, y;
 	} mouse;
 	struct {		/* Temporary mouse selection */
 		int	set;
@@ -66,7 +67,6 @@ struct mapview {
 	} izoom;
 
 	struct map	*map;		/* Map to display */
-	Uint8		 cur_layer;	/* Layer being edited */
 	int		 mx, my;	/* Display offset (nodes) */
 	unsigned int	 mw, mh;	/* Display size (nodes) */
 	int		 cx, cy;	/* Cursor position (nodes) */
