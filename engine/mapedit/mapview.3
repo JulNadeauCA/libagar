@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.12 2003/02/06 02:59:06 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.13 2003/02/08 00:31:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -72,12 +72,13 @@ The
 can be changed at runtime, and may include:
 .Pp
 .Bd -literal
-#define MAPVIEW_EDIT		 0x01	/* Mouse/keyboard edition */
-#define MAPVIEW_ZOOM		 0x02	/* Allow zooming */
-#define MAPVIEW_INDEPENDENT_ZOOM 0x04	/* Zoom independent from map's */
-#define MAPVIEW_TILEMAP		 0x08	/* Map of `source' nodes */
-#define MAPVIEW_GRID		 0x10	/* Display a grid */
-#define MAPVIEW_PROPS		 0x20	/* Display node properties */
+#define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
+#define MAPVIEW_ZOOM		 0x002	/* Allow zooming */
+#define MAPVIEW_INDEPENDENT_ZOOM 0x004	/* Zoom independent from map's */
+#define MAPVIEW_TILEMAP		 0x008	/* Map of `source' nodes */
+#define MAPVIEW_GRID		 0x010	/* Display a grid */
+#define MAPVIEW_PROPS		 0x020	/* Display node properties */
+#define MAPVIEW_SAVEABLE	 0x200	/* Load/save keys */
 .Ed
 .Pp
 The
