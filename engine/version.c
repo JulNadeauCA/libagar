@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.26 2003/02/22 11:49:53 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.27 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,15 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "compat/gethostname.h"
-#include "engine.h"
+#include <engine/compat/gethostname.h>
 
-#include <pwd.h>
+#include <engine/engine.h>
+#include <engine/version.h>
+
+#include <errno.h>
 #include <fcntl.h>
-
-#include <libfobj/fobj.h>
-
-#include "version.h"
+#include <pwd.h>
+#include <unistd.h>
+#include <string.h>
 
 #ifdef DEBUG
 int	version_debug = 0;
@@ -76,7 +77,6 @@ version_read(int fd, const struct version *ver, struct version *rver)
 	if (major != ver->major) {
 		error_set("%s: major differs: v%d.%d != %d.%d", ver->name,
 		    major, minor, ver->major, ver->minor);
-		warning("%s\n", error_get());
 		return (-1);
 	}
 	if (minor != ver->minor) {
