@@ -48,6 +48,7 @@ static char	*textbox_insert_char(struct textbox *, char);
 static void	 textbox_key_backspace(struct textbox *, SDL_Event *);
 static void	 textbox_key_home(struct textbox *, SDL_Event *);
 static void	 textbox_key_end(struct textbox *, SDL_Event *);
+static void	 textbox_key_kill(struct textbox *, SDL_Event *);
 static void	 textbox_key_left(struct textbox *, SDL_Event *);
 static void	 textbox_key_right(struct textbox *, SDL_Event *);
 
@@ -70,13 +71,14 @@ const struct keycode textbox_keycodes[] = {
 	{ "i-space",	SDLK_SPACE,	0,		textbox_insert_ascii },
 	
 	/* Control characters */
-	{ "backspace",	SDLK_BACKSPACE, 0,		textbox_key_backspace },
-	{ "home",	SDLK_HOME,	0,		textbox_key_home },
-	{ "end",	SDLK_END,	0,		textbox_key_end },
-	{ "home",	SDLK_a,		KMOD_CTRL,	textbox_key_home },
-	{ "end",	SDLK_e,		KMOD_CTRL,	textbox_key_end },
-	{ "left",	SDLK_LEFT,	0,		textbox_key_left },
-	{ "right",	SDLK_RIGHT,	0,		textbox_key_right },
+	{ "c-bspace",	SDLK_BACKSPACE, 0,		textbox_key_backspace },
+	{ "c-home",	SDLK_HOME,	0,		textbox_key_home },
+	{ "c-end",	SDLK_END,	0,		textbox_key_end },
+	{ "c-home",	SDLK_a,		KMOD_CTRL,	textbox_key_home },
+	{ "c-end",	SDLK_e,		KMOD_CTRL,	textbox_key_end },
+	{ "c-kill",	SDLK_k,		KMOD_CTRL,	textbox_key_kill },
+	{ "c-left",	SDLK_LEFT,	0,		textbox_key_left },
+	{ "c-right",	SDLK_RIGHT,	0,		textbox_key_right },
 
 	/* Alphabetic characters */
 	{ "a",		SDLK_a,		0,		textbox_insert_alpha },
@@ -240,6 +242,13 @@ static void
 textbox_key_end(struct textbox *tbox, SDL_Event *ev)
 {
 	tbox->textpos = strlen(tbox->text);
+}
+
+static void
+textbox_key_kill(struct textbox *tbox, SDL_Event *ev)
+{
+	tbox->text[0] = '\0';
+	tbox->textpos = 0;
 }
 
 static void
