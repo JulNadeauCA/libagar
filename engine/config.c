@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.89 2003/06/22 22:17:47 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.90 2003/06/25 03:54:37 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -318,7 +318,7 @@ config_search_file(const char *path_key, const char *name, const char *ext)
 	free(path);
 
 	path = prop_get_string(config, path_key);
-	error_set("`%s.%s' not in <%s> (%s)", name, ext, path_key, path);
+	error_set("%s.%s is not in %s", name, ext, path_key);
 	free(path);
 	return (NULL);
 }
