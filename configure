@@ -29,7 +29,8 @@
 #
 
 optarg=
-for arg; do
+for arg
+do
 	case "$arg" in
 	-*=*)
 	    optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'`
@@ -98,26 +99,26 @@ fi
 
 if [ "${srcdir}" != "" ]; then
 	echo "concurrent build (source in ${srcdir})"
-	if [ ! -e "${srcdir}" ]; then
-		echo "Cannot find source directory: ${srcdir}"
-		exit 1
-	fi
-	if [ ! -e "${srcdir}/configure.in" ]; then
-		echo "Invalid source directory: ${srcdir}"
-		exit 1
-	fi
-	if [ -e "${srcdir}/config" ]; then
-		echo "Source directory is already configured: ${srcdir}"
-		exit 1
-	fi
+#	if [ ! -e "${srcdir}" ]; then
+#		echo "Cannot find source directory: ${srcdir}"
+#		exit 1
+#	fi
+#	if [ ! -e "${srcdir}/configure.in" ]; then
+#		echo "Invalid source directory: ${srcdir}"
+#		exit 1
+#	fi
+#	if [ -e "${srcdir}/config" ]; then
+#		echo "Source directory is already configured: ${srcdir}"
+#		exit 1
+#	fi
 	SRC=${srcdir}
 
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
 else
-	if [ ! -e "configure.in" ]; then
-		echo "Missing --srcdir argument"
-		exit 1
-	fi
+#	if [ ! -e "configure.in" ]; then
+#		echo "Missing --srcdir argument"
+#		exit 1
+#	fi
 	SRC=`pwd`
 fi
 
@@ -148,12 +149,7 @@ echo "    --help                         Show this message"
 exit 1
 fi
 echo >Makefile.config
-if [ ! -e "config" ]; then
-	mkdir config
-	if [ $? != 0 ]; then
-		exit 1
-	fi
-fi
+mkdir config 1>/dev/null 2>&1
 echo "Host: $HOST" > config.log
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
@@ -227,11 +223,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -264,11 +255,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -301,11 +287,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -341,10 +322,6 @@ EOT
 compile="ok"
 $CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
 	echo "failed" >> config.log
 	compile="failed"
 fi
@@ -385,11 +362,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -423,11 +395,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -459,11 +426,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -495,11 +457,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -531,11 +488,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -573,11 +525,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -626,11 +573,6 @@ $CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
-else
-    if [ ! -e "conftest" ]; then
-	    echo "-> failed: compiler did not produce an executable" >> config.log
-	    compile="failed"
-    fi
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
@@ -745,10 +687,6 @@ if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
 fi
-if [ ! -e "conftest" ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
@@ -829,10 +767,6 @@ EOT
 compile="ok"
 $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
 	echo "failed" >> config.log
 	compile="failed"
 fi
@@ -955,10 +889,6 @@ if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
 fi
-if [ ! -e "conftest" ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
@@ -1010,10 +940,6 @@ EOT
 compile="ok"
 $CC ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
 	echo "failed" >> config.log
 	compile="failed"
 fi
@@ -1085,10 +1011,6 @@ EOT
 compile="ok"
 $CC ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
 if [ $? != 0 ]; then
-	echo "failed" >> config.log
-	compile="failed"
-fi
-if [ ! -e "conftest" ]; then
 	echo "failed" >> config.log
 	compile="failed"
 fi
