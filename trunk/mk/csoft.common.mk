@@ -1,4 +1,4 @@
-# $Csoft: csoft.common.mk,v 1.6 2001/12/04 16:48:07 vedge Exp $
+# $Csoft: csoft.common.mk,v 1.7 2002/01/26 00:19:33 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -28,6 +28,9 @@
 
 VERSION=1.2
 
-INSTALLDATA?=	install -c -m 644
-INSTALLBIN?=	install -c -m 755
+PREFIX?=		/usr/local
+INSTALL_BIN=		install -c -m 755
+INSTALL_DATA=		install -c -m 644
+INSTALL_BIN_DIR=	mkdir -p
+INSTALL_DATA_DIR=	mkdir -p
 
