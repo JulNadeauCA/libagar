@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.203 2003/06/17 23:30:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.204 2003/06/21 06:50:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -144,7 +144,7 @@ window_init(void *p, const char *name)
 	widget_init(win, "window", &window_ops, 0);
 	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
 	widget_map_color(win, BG_COLOR, "background", 0, 0, 0, 255);
-	widget_map_color(win, CAPTION_COLOR, "caption", 250, 245, 250, 255);
+	widget_map_color(win, CAPTION_COLOR, "caption", 245, 245, 245, 255);
 
 	/* XXX special case */
 	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
