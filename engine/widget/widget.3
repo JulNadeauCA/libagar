@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.18 2003/01/01 03:31:15 vedge Exp $
+.\"	$Csoft: widget.3,v 1.19 2003/01/01 05:18:42 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -309,16 +309,9 @@ events, as long as they fit inside
 .Fa w
 by
 .Fa h
-pixels (boundaries are checked by widget macros if
-.Dv DEBUG
-is defined).
+pixels.
 The order of input events and draw operation is undefined if widgets
 overlap.
-Widgets with the
-.Dv WIDGET_STATIC_SCALABLE
-flag set can assume that a
-.Fn widget-scaled
-event will be posted before the surface cache is updated.
 .El
 .Pp
 .Sh SEE ALSO
