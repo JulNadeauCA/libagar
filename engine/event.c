@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.141 2003/03/11 00:12:14 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.142 2003/03/12 23:02:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -452,7 +452,7 @@ event_dispatch(SDL_Event *ev)
 }
 
 #define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
-	if ((eev)->argc == EVENT_MAXARGS) {			\
+	if ((eev)->argc >= EVENT_MAX_ARGS) {			\
 		fatal("too many args");				\
 	}							\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
@@ -503,7 +503,7 @@ event_dispatch(SDL_Event *ev)
  * Arbitrary arguments are pushed onto an argument stack, whose first
  * element is always a pointer to the parent object.
  */
-void
+struct event *
 event_new(void *p, char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
 {
@@ -531,7 +531,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 		newev = 1;
 	}
 	eev->flags = 0;
-	memset(eev->argv, 0, sizeof(union evarg) * EVENT_MAXARGS);
+	memset(eev->argv, 0, sizeof(union evarg) * EVENT_MAX_ARGS);
 	eev->argv[0].p = ob;
 	eev->argc = 1;
 	eev->handler = handler;
@@ -550,6 +550,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 		TAILQ_INSERT_TAIL(&ob->events, eev, events);
 		pthread_mutex_unlock(&ob->events_lock);
 	}
+	return (eev);
 }
 
 static void *
@@ -625,7 +626,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 void
 event_forward(void *child, char *name, int argc, union evarg *argv)
 {
-	union evarg nargv[EVENT_MAXARGS];
+	union evarg nargv[EVENT_MAX_ARGS];
 	struct object *ob = child;
 	struct event *ev;
 
