@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Csoft: mkconcurrent.pl,v 1.15 2003/08/12 23:19:21 vedge Exp $
+# $Csoft: mkconcurrent.pl,v 1.16 2003/08/13 03:57:04 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -65,15 +65,18 @@ sub ConvertMakefile
 		}
 	}
 
+	print DSTMAKEFILE '# $Csoft: mkconcurrent.pl,v 1.16 2003/08/13 03:57:04 vedge Exp $', "\n";
 	print DSTMAKEFILE "SRC=$SRC\n";
 	print DSTMAKEFILE "BUILD=$BUILD\n";
 	print DSTMAKEFILE "\n";
 
 	my @deps = ();
+	my @objs = ();
+	my %catman;
+	my %psman;
 
 	foreach $_ (@lines) {
 		my @srcs = ();
-		my @objs = ();
 
 		if (/^\s*(SRCS|MAN\d|MOS)\s*=\s*(.+)$/) {
 			my $type = $1;
@@ -86,46 +89,38 @@ sub ConvertMakefile
 
 				if ($type eq 'SRCS') {
 					$obj =~ s/\.c$/\.o/;
+					push @objs, $obj;
 				} elsif ($type =~ /MAN(\d)/) {
-					my $section = $1;
-					$obj =~ s/\.cat(\d)$/.\1/;
+					$obj =~ s/\.(\d)$//;
+					$catman{$1} .= " $obj.cat$1";
+					$psman{$1} .= " $obj.ps$1";
 				} elsif ($type =~ /MOS/) {
 					$src =~ s/\.mo$/\.po/g;
 				}
-				push @deps, "$obj: $SRC/$ndir/$src";
 				if ($type eq 'SRCS') {
 					# C/C++/Asm/Lex/Yacc source -> object
 					# XXX C++/Asm/Lex/Yacc
-					push @deps, << 'EOF';
-	@echo "${CC} ${CFLAGS} ${CPPFLAGS}" -c $<
-	@${CC} ${CFLAGS} -I${BUILD} ${CPPFLAGS} -c $<
-EOF
-				} elsif ($type =~ /CATMAN\d/) {
-					# Nroff -> ASCII
-					push @deps, << 'EOF';
-	@echo "${NROFF} -Tascii -mandoc $< > $@"
-	@${NROFF} -Tascii -mandoc $< > $@ || exit 0
-EOF
-				} elsif ($type =~ /PSMAN\d/) {
-					# Nroff -> postscript
-					push @deps, << 'EOF';
-	@echo "${NROFF} -Tps -mandoc $< > $@"
-	@${NROFF} -Tps -mandoc $< > $@ || exit 0
-EOF
+					push @deps, "$obj: $SRC/$ndir/$src";
+				} elsif ($type =~ /MAN(\d)/) {
+					# Nroff -> ASCII/PostScript
+					push @deps,
+					    "$obj.cat$1: $SRC/$ndir/$src";
+					push @deps,
+					    "$obj.ps$1: $SRC/$ndir/$src";
 				} elsif ($type =~ /MOS/) {
 					# Portable object -> machine object
-					push @deps, << 'EOF';
-	@echo "${MSGFMT} -o $@ $<"
-	@${MSGFMT} -o $@ $<
-EOF
+					push @deps, "$obj: $SRC/$ndir/$src";
 				}
 			}
 		}
 		if (/^\s*(SRCS|MAN\d|XCF|TTF|POS)\s*=\s*(.+)$/) {
 			my $type = $1;
-			my $srcs = $2;
-			foreach my $src (split(/\s/, $srcs)) {
-				next unless $src;
+			my $srclist = $2;
+
+			foreach my $src (split(/\s/, $srclist)) {
+				unless ($src) {
+					next;
+				}
 				push @srcs, $src;
 			}
 			my $i = 0;
@@ -135,10 +130,35 @@ EOF
 			}
 			print DSTMAKEFILE $type . '=' . join(' ', @srcs), "\n";
 		} else {
+			# XXX horrible
+			if (/^\s*include\s*(.+)$/) {
+				print DSTMAKEFILE "OBJS=@objs\n";
+				print DSTMAKEFILE "CATMAN1=$catman{1}\n";
+				print DSTMAKEFILE "CATMAN2=$catman{2}\n";
+				print DSTMAKEFILE "CATMAN3=$catman{3}\n";
+				print DSTMAKEFILE "CATMAN4=$catman{4}\n";
+				print DSTMAKEFILE "CATMAN5=$catman{5}\n";
+				print DSTMAKEFILE "CATMAN6=$catman{6}\n";
+				print DSTMAKEFILE "CATMAN7=$catman{7}\n";
+				print DSTMAKEFILE "CATMAN8=$catman{8}\n";
+				print DSTMAKEFILE "CATMAN9=$catman{9}\n";
+				print DSTMAKEFILE "PSMAN1=$psman{1}\n";
+				print DSTMAKEFILE "PSMAN2=$psman{2}\n";
+				print DSTMAKEFILE "PSMAN3=$psman{3}\n";
+				print DSTMAKEFILE "PSMAN4=$psman{4}\n";
+				print DSTMAKEFILE "PSMAN5=$psman{5}\n";
+				print DSTMAKEFILE "PSMAN6=$psman{6}\n";
+				print DSTMAKEFILE "PSMAN7=$psman{7}\n";
+				print DSTMAKEFILE "PSMAN8=$psman{8}\n";
+				print DSTMAKEFILE "PSMAN9=$psman{9}\n";
+			}
 			print DSTMAKEFILE $_, "\n";
 		}
+
 	}
+
 	if (@deps) {
+		print DSTMAKEFILE 'CFLAGS+=-I${BUILD}', "\n";
 		print DSTMAKEFILE "\n", join("\n", @deps), "\n";
 		print DSTMAKEFILE 'include .depend'."\n";
 	}

@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.27 2003/08/12 23:19:21 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.28 2003/08/13 03:57:04 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -109,7 +109,7 @@ SHARE?=
 all: all-subdir lib${LIB}.a lib${LIB}.la
 
 _lib_objs:
-	@if [ "${LIB}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${OBJS}" = "" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
@@ -119,7 +119,8 @@ _lib_objs:
 	fi
 
 _lib_shobjs:
-	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
+	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" \
+	      -a "${SHARED}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.so/'`; \
@@ -128,55 +129,79 @@ _lib_shobjs:
             done; \
 	fi
 
-lib${LIB}.a: _lib_objs
+lib${LIB}.a: _lib_objs ${OBJS}
 	@if [ "${LIB}" != "" ]; then \
-	    export _objs=""; \
-	    for F in ${SRCS}; do \
-	    	F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
-	    	F=`echo $$F | sed 's/.cc$$/.o/'`; \
-	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	_objs="$$_objs $$F"; \
-            done; \
-	    echo "${AR} -cru lib${LIB}.a $$_objs"; \
-	    ${AR} -cru lib${LIB}.a $$_objs; \
+	    if [ "${OBJS}" = "" ]; then \
+	        export _objs=""; \
+	        for F in ${SRCS}; do \
+	    	    F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	    _objs="$$_objs $$F"; \
+                done; \
+	        echo "${AR} -cru lib${LIB}.a $$_objs"; \
+	        ${AR} -cru lib${LIB}.a $$_objs; \
+	    else \
+	        echo "${AR} -cru lib${LIB}.a ${OBJS}"; \
+	        ${AR} -cru lib${LIB}.a ${OBJS}; \
+	    fi; \
 	    echo "${RANLIB} lib${LIB}.a"; \
 	    (${RANLIB} lib${LIB}.a || exit 0); \
 	fi
 
 lib${LIB}.la: ${LIBTOOL} _lib_shobjs
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
-	    export _shobjs=""; \
-	    for F in ${SRCS}; do \
-	    	F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
-	    	F=`echo $$F | sed 's/.cc$$/.so/'`; \
-	    	F=`echo $$F | sed 's/.asm$$/.so/'`; \
-	    	_shobjs="$$_objs $$F"; \
-            done; \
-	    echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	     -shared -version-info ${SOVERSION} ${LDFLAGS} $$_shobjs ${LIBS}"; \
-	    ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		-version-info ${SOVERSION} ${LDFLAGS} $$_shobjs ${LIBS}; \
+	    if [ "${SHOBJS}" = "" ]; then \
+	        export _shobjs=""; \
+	        for F in ${SRCS}; do \
+	    	    F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
+	    	    F=`echo $$F | sed 's/.cc$$/.so/'`; \
+	    	    F=`echo $$F | sed 's/.asm$$/.so/'`; \
+	    	    _shobjs="$$_shobjs $$F"; \
+                done; \
+	        echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
+	            -shared -version-info ${SOVERSION} ${LDFLAGS} $$_shobjs \
+		    ${LIBS}"; \
+	        ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
+		    -version-info ${SOVERSION} ${LDFLAGS} $$_shobjs ${LIBS}; \
+	    else \
+	        echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
+	            -shared -version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} \
+		    ${LIBS}"; \
+	        ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
+		    -version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} ${LIBS}; \
+	    fi; \
 	fi
 
 clean: clean-subdir
 	@if [ "${LIB}" != "" ]; then \
-            for F in ${SRCS}; do \
-	    	F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
-	    	F=`echo $$F | sed 's/.cc$$/.o/'`; \
-	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	echo "rm -f $$F"; \
-	    	rm -f $$F; \
-            done; \
-	    echo "rm -f lib${LIB}.a"; \
-	    rm -f lib${LIB}.a; \
-	    if [ "${SHARED}" = "Yes" ]; then \
+	    if [ "${OBJS}" = "" ]; then \
                 for F in ${SRCS}; do \
-	    	    F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
-	    	    F=`echo $$F | sed 's/.cc$$/.so/'`; \
-	    	    F=`echo $$F | sed 's/.asm$$/.so/'`; \
+	   	    F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    echo "rm -f $$F"; \
 	    	    rm -f $$F; \
                 done; \
+	    else \
+	        echo "rm -f ${OBJS}"; \
+	        rm -f ${OBJS}; \
+	    fi; \
+	    echo "rm -f lib${LIB}.a"; \
+	    rm -f lib${LIB}.a; \
+	    if [ "${SHARED}" = "Yes" ]; then \
+	        if [ "${OBJS}" != "" ]; then \
+                    for F in ${SRCS}; do \
+	    	        F=`echo $$F | sed 's/.[cly]$$/.so/'`; \
+	    	        F=`echo $$F | sed 's/.cc$$/.so/'`; \
+	    	        F=`echo $$F | sed 's/.asm$$/.so/'`; \
+	    	        echo "rm -f $$F"; \
+	    	        rm -f $$F; \
+                    done; \
+		else \
+		    rm -f ${OBJS}; \
+		    echo "rm -f ${OBJS}"; \
+		fi; \
 		echo "rm -f lib${LIB}.la ${LIBTOOL} ${LTCONFIG_LOG}"; \
 		rm -f lib${LIB}.la ${LIBTOOL} ${LTCONFIG_LOG}; \
 	    fi; \
