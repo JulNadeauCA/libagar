@@ -373,6 +373,7 @@ fi
 echo -n "checking for the C math library..."
 echo -n "checking for the C math library..." >> config.log
 echo "checking for the C math library..." >> config.log
+MATH_LIBS=-lm
 cat << EOT > conftest.c
 #include <math.h>
 
@@ -389,8 +390,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${CFLAGS} -o conftest conftest.c -lm >> config.log
-$CC ${CFLAGS} -o conftest conftest.c -lm 2>>config.log
+echo $CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} >> config.log
+$CC ${CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
