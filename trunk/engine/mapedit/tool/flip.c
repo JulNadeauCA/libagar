@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.14 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.15 2003/08/26 07:55:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -115,10 +115,10 @@ flip_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 		}
 
 		/* Same transform already applied? */
-		SLIST_FOREACH(trans, &nref->transforms, transforms) {
+		TAILQ_FOREACH(trans, &nref->transforms, transforms) {
 			if (trans->type == type) {
-				SLIST_REMOVE(&nref->transforms, trans,
-				    transform, transforms);
+				TAILQ_REMOVE(&nref->transforms, trans,
+				    transforms);
 				dprintf("removed duplicate\n");
 				break;
 			}
@@ -132,7 +132,7 @@ flip_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 			text_msg(MSG_ERROR, "%s", error_get());
 			continue;
 		}
-		SLIST_INSERT_HEAD(&nref->transforms, trans, transforms);
+		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
 
 		if (flip->which == FLIP_HIGHEST)
 			break;
