@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.h,v 1.1 2003/03/02 00:45:24 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.2 2003/03/02 04:13:13 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef struct _ttf_font ttf_font;
@@ -27,14 +27,14 @@ int	 ttf_font_face_fixed_width(ttf_font *);
 char	*ttf_font_face_family_name(ttf_font *);
 char	*ttf_font_face_style_name(ttf_font *);
 
-int	 ttf_glyph_metrics(ttf_font *, unsigned int, int *, int *, int *,
+int	 ttf_glyph_metrics(ttf_font *, Uint16, int *, int *, int *,
 	     int *, int *);
 int	 ttf_size_text(ttf_font *, char *, int *, int *);
 int	 ttf_size_utf8(ttf_font *, char *, int *, int *);
-int	 ttf_size_unicode(ttf_font *, unsigned int *, int *, int *);
+int	 ttf_size_unicode(ttf_font *, Uint16 *, int *, int *);
 
 SDL_Surface *ttf_render_text_solid(ttf_font *, char *, SDL_Color);
 SDL_Surface *ttf_render_utf8_solid(ttf_font *, char *, SDL_Color);
-SDL_Surface *ttf_render_unicode_solid(ttf_font *, unsigned int *, SDL_Color);
-SDL_Surface *ttf_render_glyph_solid(ttf_font *, unsigned int, SDL_Color);
+SDL_Surface *ttf_render_unicode_solid(ttf_font *, Uint16 *, SDL_Color);
+SDL_Surface *ttf_render_glyph_solid(ttf_font *, Uint16, SDL_Color);
 
