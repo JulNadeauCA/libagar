@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.53 2003/01/23 01:52:46 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.54 2003/01/25 06:21:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -250,7 +250,7 @@ button_mousebuttondown(int argc, union evarg *argv)
 		*pushed = 1;
 	} else {
 		*pushed = !(*pushed);
-		event_post(b, "button-pushed", NULL);
+		event_post(b, "button-pushed", "%i", *pushed);
 	}
 	widget_binding_modified(stateb);
 	widget_binding_unlock(stateb);
@@ -274,9 +274,9 @@ button_mousebuttonup(int argc, union evarg *argv)
 	    button == 1 &&
 	    (b->flags & BUTTON_STICKY) == 0) {
 	    	*pushed = 0;
-		widget_binding_modified(stateb);
 
-		event_post(b, "button-pushed", NULL);
+		event_post(b, "button-pushed", "%i", *pushed);
+		widget_binding_modified(stateb);
 	}
 	widget_binding_unlock(stateb);
 }
@@ -289,6 +289,7 @@ button_keydown(int argc, union evarg *argv)
 	
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 		widget_set_bool(b, "state", 1);
+		event_post(b, "button-pushed", "%i", 1);
 	}
 }
 
@@ -300,7 +301,7 @@ button_keyup(int argc, union evarg *argv)
 
 	if (keysym == SDLK_RETURN || keysym == SDLK_SPACE) {
 		widget_set_bool(b, "state", 0);
-		event_post(b, "button-pushed", NULL);
+		event_post(b, "button-pushed", "%i", 0);
 	}
 }
 
