@@ -1,4 +1,4 @@
-/*	$Csoft: string.c,v 1.5 2003/07/05 21:08:10 vedge Exp $	*/
+/*	$Csoft: string.c,v 1.6 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -39,22 +39,18 @@
 #include <engine/loader/integral.h>
 #include <engine/loader/string.h>
 
-enum {
-	STRING_MAX = 32767
-};
-
 /* Allocate and read a NUL-terminated, length-encoded string. */
 char *
-read_string(struct netbuf *buf)
+read_string_len(struct netbuf *buf, size_t maxlen)
 {
 	size_t len;
 	char *s;
 
-	if ((len = (size_t)read_uint32(buf)) > STRING_MAX) {
-		error_set("The string is too big.");
+	if ((len = (size_t)read_uint32(buf)) >= maxlen) {
+		error_set("The encoded string is too big.");
 		return (NULL);
 	} else if (len == 0) {
-		error_set("Zero-length string.");
+		error_set("Zero-sized encoded string.");
 		return (NULL);
 	}
 
@@ -65,7 +61,7 @@ read_string(struct netbuf *buf)
 	netbuf_read(s, len, 1, buf);
 
 	if (s[len-1] != '\0') {
-		error_set("The string is not NUL-terminated.");
+		error_set("The encoded string is not NUL-terminated.");
 		free(s);
 		return (NULL);
 	}
@@ -81,9 +77,7 @@ write_string(struct netbuf *buf, const char *s)
 	if (s == NULL) {
 		write_uint32(buf, 0);
 	} else {
-		if ((len = strlen(s)+1) > STRING_MAX) {
-			fatal("string too big");
-		}
+		len = strlen(s)+1;
 		write_uint32(buf, (Uint32)len);
 		netbuf_write(s, len, 1, buf);
 	}
