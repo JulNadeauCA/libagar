@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.3 2002/01/28 05:31:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -40,12 +40,7 @@
 
 #include <libfobj/fobj.h>
 
-#include <engine/debug.h>
-#include <engine/view.h>
-#include <engine/object.h>
-#include <engine/world.h>
-#include <engine/map.h>
-
+#include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
 struct	map *curmap;
@@ -89,13 +84,12 @@ map_create(char *name, char *desc, int flags, int width, int height,
 	em->mapw = (width != -1) ? width : MAP_WIDTH;
 	em->defx = em->mapw / 2;
 	em->defy = em->maph - 1;
-	em->view = view;
+	em->view = (view != NULL) ? view : mainview;
 	em->view->map = em;
 
 	if (pthread_mutex_init(&em->lock, NULL) != 0) {
 		perror(name);
-		object_destroy(em, NULL);
-		return (NULL);
+		goto maperr;
 	}
 
 	/* Initialize the nodes. */
@@ -112,6 +106,10 @@ map_create(char *name, char *desc, int flags, int width, int height,
 	    flags, (int)mapsize / 1024);
 
 	if (path != NULL) {
+		/*
+		 * This will modify the name, description, flags and
+		 * geometry.
+		 */
 		map_load(em, path);
 	}
 
@@ -119,15 +117,17 @@ map_create(char *name, char *desc, int flags, int width, int height,
 	object_link(em);
 
 	/* Synchronize map display. XXX tune */
-	view->mapanimt = NULL;
-	view->mapdrawt = SDL_AddTimer(15, map_draw, em);
-	if (view->mapdrawt == NULL) {
+	em->view->mapanimt = NULL;
+	em->view->mapdrawt = SDL_AddTimer(15, map_draw, em);
+	if (em->view->mapdrawt == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		object_destroy(em, NULL);
-		return (NULL);
+		goto maperr;
 	}
 
 	return (em);
+maperr:
+	object_destroy(em, NULL);
+	return (NULL);
 }
 
 int
@@ -245,32 +245,6 @@ map_entry_delref(struct map_entry *me, struct map_aref *aref)
 	me->objs = g_slist_remove(me->objs, aref);
 	me->nobjs--;
 	free(aref);
-	return (0);
-}
-
-/* Move a reference from one map entry to another. */
-int
-map_entry_moveref(struct map *em, struct object *ob, int offs,
-    int nx, int ny)
-{
-	struct map_entry *oldme, *newme;
-	struct map_aref *aref;
-	int ox, oy, orflags;
-
-	ox = ob->mapx;
-	oy = ob->mapy;
-	oldme = &em->map[ox][oy];
-	newme = &em->map[nx][ny];
-
-	aref = map_entry_arefobj(oldme, ob, offs);
-	orflags = aref->flags;
-
-	map_entry_delref(oldme, aref);
-	map_entry_addref(newme, ob, offs, orflags);
-	
-	ob->mapx = nx;
-	ob->mapy = ny;
-	
 	return (0);
 }
 
@@ -683,7 +657,8 @@ map_entry_aref(struct map_entry *me, int index)
 }
 
 /*
- * Return the map entry reference for the given object pointer and offset.
+ * Return the map entry reference for ob:offs, or the first match
+ * for ob if offs is -1.
  */
 struct map_aref *
 map_entry_arefobj(struct map_entry *me, struct object *ob, int offs)
@@ -695,12 +670,16 @@ map_entry_arefobj(struct map_entry *me, struct object *ob, int offs)
 		struct map_aref *aref;
 
 		aref = g_slist_nth_data(me->objs, i);
-		if (aref->pobj == ob && aref->offs == offs) {
+		if (aref->pobj == ob && (aref->offs == offs || offs < 0)) {
 			return (aref);
 		}
 	}
 
-	dprintf("no reference to %s:%d\n", ob->name, offs);
+#ifdef DEBUG
+	if (offs > -1) {
+		dprintf("no reference to %s:%d\n", ob->name, offs);
+	}
+#endif
 	return (NULL);
 }
 
@@ -748,10 +727,6 @@ map_load(void *ob, char *path)
 	/* Adapt the viewport to this tile geometry. */
 	view_setmode(em->view);
 
-	/*
-	 * Read tile information. We assume that the map contains
-	 * only references to the tiles object.
-	 */
 	for (y = 0; y < em->maph; y++) {
 		for (x = 0; x < em->mapw; x++) {
 			struct map_entry *me = &em->map[x][y];
