@@ -35,6 +35,7 @@
 #include "mouse.h"
 
 static void	mouse_tlsel(struct mapedit *, Uint32);
+static void	mouse_objlsel(struct mapedit *, Uint32);
 
 /*
  * Map editor mouse motion handler.
@@ -43,17 +44,20 @@ static void	mouse_tlsel(struct mapedit *, Uint32);
 void
 mouse_motion(struct mapedit *med, SDL_Event *ev)
 {
-	static Uint32 ommapx, ommapy, omtmapy;
+	static Uint32 ommapx, ommapy;
+	static Uint32 omtmapx, omtmapy;
 	struct map *m = med->map;
 	Uint32 mx, my;
 	Uint8 ms;
 
 	ommapx = med->mmapx;
 	ommapy = med->mmapy;
+	omtmapx = med->mtmapx;
 	omtmapy = med->mtmapy;
 
 	med->mmapx = (ev->motion.x / m->tilew);
 	med->mmapy = (ev->motion.y / m->tileh);
+	med->mtmapx = med->mmapx;
 	med->mtmapy = med->mmapy;
 	mx = (m->view->mapx + med->mmapx) - 1;
 	my = (m->view->mapy + med->mmapy) - 1;
@@ -76,8 +80,20 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	 * Object list. Allow selection/scrolling.
 	 */
 	if (med->mmapy == 0) {
-		if (ms & (SDL_BUTTON_MMASK|SDL_BUTTON_RMASK)) {
-			/* XXX */
+		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
+			/* Scroll */
+			if (med->mtmapx > omtmapx &&	/* Right */
+			    --med->objlist_offs < 0) {
+				med->objlist_offs = med->neobjs - 1;
+			}
+			if (med->mtmapx < omtmapx &&	/* Left */
+			    ++med->objlist_offs > med->neobjs - 1) {
+				med->objlist_offs = 0;
+			}
+			mapedit_objlist(med);
+		} else if (ms & (SDL_BUTTON_RMASK)) {
+			/* Select */
+			mouse_objlsel(med, med->mtmapx);
 		}
 		return;
 	}
@@ -160,11 +176,19 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	vy = (ev->button.y / m->tileh);
 	mx = (m->view->mapx + vx) - 1;
 	my = (m->view->mapy + vy) - 1;
-
-	if (vx > m->view->mapw && vy <= m->view->maph) {
-		/*
-		 * Tile list
-		 */
+	
+	if (med->mmapy == 0) {
+		/* Object list. Allow selection. */
+		switch (ev->button.button) {
+		case 2:
+		case 3:
+			mouse_objlsel(med, vx);
+			mapedit_objlist(med);
+			mapedit_tilelist(med);
+			break;
+		}
+	} else if (vx > m->view->mapw && vy <= m->view->maph) {
+		/* Tile list. Allow selection. */
 		switch (ev->button.button) {
 		case 2:
 		case 3:
@@ -173,9 +197,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 			break;
 		}
 	} else if ((mx > 1 && my > 1) && (mx < m->mapw && my < m->maph)) {
-		/*
-		 * Map view
-		 */
+		/* Map view. Node operations. */
 	    	switch (ev->button.button) {
 		case 2:
 			mapedit_move(med, mx, my);
@@ -202,6 +224,32 @@ mouse_tlsel(struct mapedit *med, Uint32 vy)
 		med->curoffs += med->tilelist_offs + med->curobj->nrefs;
 	} else if (med->curoffs >= med->curobj->nrefs) {
 		med->curoffs -= med->curobj->nrefs;
+	}
+}
+
+
+/* Select a node on the obj list. */
+static void
+mouse_objlsel(struct mapedit *med, Uint32 vx)
+{
+	struct editobj *eob;
+	Uint32 curoffs;
+
+	curoffs = med->objlist_offs + (vx - 1);
+	if (curoffs < 0) {
+		/* Wrap */
+		curoffs += med->tilelist_offs + med->neobjs;
+	} else if (curoffs > med->neobjs) {
+		curoffs -= med->neobjs;
+	}
+	while (curoffs > med->neobjs - 1) {
+		curoffs -= med->neobjs;
+	}
+
+	TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
+	med->curobj = eob;
+	if (med->curoffs > med->curobj->nrefs) {
+		med->curoffs = 0;
 	}
 }
 
