@@ -91,9 +91,6 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 				med->objlist_offs = 0;
 			}
 			mapedit_objlist(med);
-		} else if (ms & (SDL_BUTTON_RMASK)) {
-			/* Select */
-			mouse_objlsel(med, med->mtmapx);
 		}
 		return;
 	}
@@ -113,9 +110,6 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 				med->tilelist_offs = 0;
 			}
 			mapedit_tilelist(med);
-		} else if (ms & (SDL_BUTTON_RMASK)) {
-			/* Select */
-			mouse_tlsel(med, med->mtmapy);
 		}
 		return;
 	}
@@ -167,7 +161,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 {
 	struct map *m = med->map;
 	Uint32 mx, my, vx, vy;
-	
+
 	if (med->cursor_dir.current != 0) {
 		return;
 	}
@@ -225,6 +219,9 @@ mouse_tlsel(struct mapedit *med, Uint32 vy)
 	} else if (med->curoffs >= med->curobj->nrefs) {
 		med->curoffs -= med->curobj->nrefs;
 	}
+	while (med->curoffs > med->curobj->nrefs - 1) {
+		med->curoffs -= med->curobj->nrefs;
+	}
 }
 
 
@@ -248,8 +245,6 @@ mouse_objlsel(struct mapedit *med, Uint32 vx)
 
 	TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
 	med->curobj = eob;
-	if (med->curoffs > med->curobj->nrefs) {
-		med->curoffs = 0;
-	}
+	med->curoffs = 0;
 }
 
