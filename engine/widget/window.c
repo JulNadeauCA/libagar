@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.222 2004/03/28 06:08:14 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.223 2004/04/22 12:36:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -191,9 +191,13 @@ window_init(void *p, const char *name)
 
 	/* Automatically notify children of visibility changes. */
 	ev = event_new(win, "widget-shown", window_shown, NULL);
-	ev->flags |= EVENT_FORWARD_CHILDREN;
+	ev->flags |= EVENT_PROPAGATE;
 	ev = event_new(win, "widget-hidden", window_hidden, NULL);
-	ev->flags |= EVENT_FORWARD_CHILDREN;
+	ev->flags |= EVENT_PROPAGATE;
+
+	/* Notify children prior to destruction. */
+	ev = event_new(win, "detached", NULL, NULL);
+	ev->flags |= EVENT_PROPAGATE;
 }
 
 /* Attach a sub-window. */
