@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.6 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.7 2002/11/26 01:38:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -41,7 +41,10 @@ static const struct version prop_ver = {
 };
 
 #ifdef DEBUG
-int	prop_debug = 0;
+#define DEBUG_STATE	0x01
+#define DEBUG_SET	0x02
+
+int	prop_debug = DEBUG_STATE|DEBUG_SET;
 #define engine_debug prop_debug
 #endif
 
@@ -76,51 +79,60 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	switch (type) {
 	case PROP_INT:
 		nprop->data.i = va_arg(ap, int);
-		dprintf("bool %s: %d\n", nprop->key, nprop->data.i);
+		debug(DEBUG_SET, "bool %s: %d\n", nprop->key, nprop->data.i);
 		break;
 	case PROP_BOOL:
 		nprop->data.i = va_arg(ap, int);
-		dprintf("int %s: %d\n", nprop->key, nprop->data.i);
+		debug(DEBUG_SET, "int %s: %d\n", nprop->key, nprop->data.i);
 		break;
 	case PROP_UINT8:
-		nprop->data.u8 = va_arg(ap, Uint8);
-		dprintf("uint8 %s: %d\n", nprop->key, nprop->data.u8);
+		nprop->data.u8 = (Uint8)va_arg(ap, int);
+		debug(DEBUG_SET, "u8 %s: %d\n", nprop->key, nprop->data.u8);
 		break;
 	case PROP_SINT8:
-		nprop->data.s8 = va_arg(ap, Sint8);
-		dprintf("sint8 %s: %d\n", nprop->key, nprop->data.s8);
+		nprop->data.s8 = (Sint8)va_arg(ap, int);
+		debug(DEBUG_SET, "s8 %s: %d\n", nprop->key, nprop->data.s8);
 		break;
 	case PROP_UINT16:
-		nprop->data.u16 = va_arg(ap, Uint16);
-		dprintf("uint16 %s: %d\n", nprop->key, nprop->data.u16);
+		nprop->data.u16 = (Uint16)va_arg(ap, int);
+		debug(DEBUG_SET, "u16 %s: %d\n", nprop->key, nprop->data.u16);
 		break;
 	case PROP_SINT16:
-		nprop->data.s16 = va_arg(ap, Sint16);
-		dprintf("sint16 %s: %d\n", nprop->key, nprop->data.s16);
+		nprop->data.s16 = (Sint16)va_arg(ap, int);
+		debug(DEBUG_SET, "s16 %s: %d\n", nprop->key, nprop->data.s16);
 		break;
 	case PROP_UINT32:
 		nprop->data.u32 = va_arg(ap, Uint32);
-		dprintf("uint32 %s: %d\n", nprop->key, nprop->data.u32);
+		debug(DEBUG_SET, "u32 %s: %d\n", nprop->key, nprop->data.u32);
 		break;
 	case PROP_SINT32:
 		nprop->data.s32 = va_arg(ap, Sint32);
-		dprintf("sint32 %s: %d\n", nprop->key, nprop->data.s32);
+		debug(DEBUG_SET, "s32 %s: %d\n", nprop->key, nprop->data.s32);
 		break;
+#ifdef SDL_HAS_64BIT_TYPE
 	case PROP_UINT64:
 		nprop->data.u64 = va_arg(ap, Uint64);
-		dprintf("uint64 %s: %ld\n", nprop->key, (long)nprop->data.u64);
+		debug(DEBUG_SET, "u64 %s: %ld\n", nprop->key,
+		    (long)nprop->data.u64);
 		break;
 	case PROP_SINT64:
 		nprop->data.s64 = va_arg(ap, Sint64);
-		dprintf("sint64 %s: %ld\n", nprop->key, (long)nprop->data.s64);
+		debug(DEBUG_SET, "s64 %s: %ld\n", nprop->key,
+		    (long)nprop->data.s64);
 		break;
+#else
+	case PROP_UINT64:
+	case PROP_SINT64:
+		fatal("SDL provides no 64-bit type\n");
+		break;
+#endif
 	case PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
-		dprintf("string %s: %s\n", nprop->key, nprop->data.s);
+		debug(DEBUG_SET, "string %s: %s\n", nprop->key, nprop->data.s);
 		break;
 	case PROP_POINTER:
 		nprop->data.p = va_arg(ap, void *);
-		dprintf("pointer %s: %p\n", nprop->key, nprop->data.p);
+		debug(DEBUG_SET, "pointer %s: %p\n", nprop->key, nprop->data.p);
 		break;
 	}
 	va_end(ap);
@@ -178,13 +190,23 @@ prop_set_sint32(void *ob, char *key, Sint32 i)
 struct prop *
 prop_set_uint64(void *ob, char *key, Uint64 i)
 {
+#ifdef SDL_HAS_64BIT_TYPE
 	return (prop_set(ob, key, PROP_UINT64, i));
+#else
+	fatal("SDL does not provide a 64-bit type\n");
+	return (0);
+#endif
 }
 
 struct prop *
 prop_set_sint64(void *ob, char *key, Sint64 i)
 {
+#ifdef SDL_HAS_64BIT_TYPE
 	return (prop_set(ob, key, PROP_SINT64, i));
+#else
+	fatal("SDL does not provide a 64-bit type\n");
+	return (0);
+#endif
 }
 
 struct prop *
@@ -246,12 +268,19 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			case PROP_SINT32:
 				*(Sint32 *)p = prop->data.s32;
 				break;
+#ifdef SDL_HAS_64BIT_TYPE
 			case PROP_UINT64:
 				*(Uint64 *)p = prop->data.u64;
 				break;
 			case PROP_SINT64:
 				*(Sint64 *)p = prop->data.s64;
 				break;
+#else
+			case PROP_UINT64:
+			case PROP_SINT64:
+				fatal("SDL provides no 64-bit type\n");
+				break;
+#endif
 			case PROP_STRING:
 				*(char **)p = strdup(prop->data.s);
 				break;
@@ -339,21 +368,31 @@ prop_sint32(void *p, char *key)
 Uint64
 prop_uint64(void *p, char *key)
 {
+#ifdef SDL_HAS_64BIT_TYPE
 	struct object *ob = p;
 	Uint64 i;
 
 	prop_get(ob, key, PROP_UINT64, &i);
 	return (i);
+#else
+	fatal("SDL does not provide a 64-bit type\n");
+	return (0);
+#endif
 }
 
 Sint64
 prop_sint64(void *p, char *key)
 {
+#ifdef SDL_HAS_64BIT_TYPE
 	struct object *ob = p;
 	Sint64 i;
 
 	prop_get(ob, key, PROP_SINT64, &i);
 	return (i);
+#else
+	fatal("SDL does not provide a 64-bit type\n");
+	return (0);
+#endif
 }
 
 char *
@@ -397,7 +436,7 @@ prop_load(void *p, int fd)
 		key = read_string(fd);
 		t = read_uint32(fd);
 		
-		dprintf("prop %s (%d)\n", key, t);
+		debug(DEBUG_STATE, "prop %s (%d)\n", key, t);
 	
 		switch (t) {
 		case PROP_BOOL:
@@ -424,12 +463,19 @@ prop_load(void *p, int fd)
 		case PROP_SINT32:
 			prop_set_sint32(ob, key, read_sint32(fd));
 			break;
+#ifdef SDL_HAS_64BIT_TYPE
 		case PROP_UINT64:
 			prop_set_uint64(ob, key, read_uint64(fd));
 			break;
 		case PROP_SINT64:
 			prop_set_sint64(ob, key, read_sint64(fd));
 			break;
+#else
+		case PROP_UINT64:
+		case PROP_SINT64:
+			fatal("SDL provides no 64-bit type\n");
+			break;
+#endif
 		case PROP_STRING:
 			prop_set_string(ob, key, "%s", read_string(fd));
 			break;
@@ -462,7 +508,7 @@ prop_save(void *p, int fd)
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		buf_write_string(buf, (char *)prop->key);
 		buf_write_uint32(buf, prop->type);
-		dprintf("%s -> %s\n", ob->name, prop->key);
+		debug(DEBUG_STATE, "%s -> %s\n", ob->name, prop->key);
 		switch (prop->type) {
 		case PROP_BOOL:
 			c = (prop->data.i == 1) ? 1 : 0;
@@ -486,18 +532,26 @@ prop_save(void *p, int fd)
 		case PROP_SINT32:
 			buf_write_sint32(buf, prop->data.s32);
 			break;
+#ifdef SDL_HAS_64BIT_TYPE
 		case PROP_UINT64:
 			buf_write_uint64(buf, prop->data.u64);
 			break;
 		case PROP_SINT64:
 			buf_write_sint64(buf, prop->data.s64);
 			break;
+#else
+		case PROP_UINT64:
+		case PROP_SINT64:
+			fatal("SDL provides no 64-bit type\n");
+			break;
+#endif
 		case PROP_STRING:
 			buf_write_string(buf, prop->data.s);
 			break;
 		case PROP_INT:
 		case PROP_POINTER:
-			dprintf("ignored property \"%s\"\n", prop->key);
+			debug(DEBUG_STATE, "ignored property \"%s\"\n",
+			    prop->key);
 			break;
 		}
 		nprops++;
