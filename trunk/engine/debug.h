@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.10 2002/05/07 05:21:04 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.11 2002/05/11 04:02:09 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
@@ -20,20 +20,18 @@ extern int engine_debug;
 # else /* !__GNUC__ */
 #  define dprintf	printf
 # endif /* __GNUC__ */
-# define dperror(s)		\
-	do {			\
-		perror(s);	\
-		abort();	\
-	} while (/*CONSTCOND*/0)
 # define dprintrect(name, rect)					\
 	dprintf("%s: %dx%d at [%d,%d]\n", (name),		\
 	    (rect)->w, (rect)->h, (rect)->x, (rect)->y)
 
 #else	/* !DEBUG */
 
-# define dprintf(arg...)	((void)0)
-# define dperror(s)		perror(s)
-# define dprintrect(name, rect)	((void)0)
+# define dprintrect(name, rect)
+# if defined(__GNUC__)
+#  define dprintf(arg...) ((void)0)
+# else
+#  define dprintf	  printf
+# endif
 
 #endif	/* DEBUG */
 
@@ -108,7 +106,7 @@ extern int engine_debug;
 
 #else	/* !LOCKDEBUG */
 
-#define pthread_mutex_assert(mutex)	((void)0)
+# define pthread_mutex_assert(mutex)
 
 #endif	/* LOCKDEBUG */
 
