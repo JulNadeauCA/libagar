@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.19 2005/02/21 09:43:00 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.20 2005/02/22 08:44:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -488,11 +488,11 @@ tile_close_element(struct tileview *tv)
 }
 
 static void
-insert_pixmap(int argc, union evarg *argv)
+create_pixmap(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
-	struct tlist *etl = argv[3].p;
+	struct tlist *tl_feats = argv[3].p;
 	struct tlist_item *eit;
 	struct pixmap *px;
 	struct tile_element *tel;
@@ -523,9 +523,9 @@ tryname:
 	tile_open_element(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
-	event_post(NULL, etl, "tlist-poll", NULL);
-	tlist_unselect_all(etl);
-	TAILQ_FOREACH(eit, &etl->items, items) {
+	event_post(NULL, tl_feats, "tlist-poll", NULL);
+	tlist_unselect_all(tl_feats);
+	TAILQ_FOREACH(eit, &tl_feats->items, items) {
 		struct tile_element *tel;
 
 		if (strcmp(eit->class, "pixmap") != 0) {
@@ -533,10 +533,95 @@ tryname:
 		}
 		tel = eit->p1;
 		if (tel->tel_pixmap.px == px) {
-			tlist_select(etl, eit);
+			tlist_select(tl_feats, eit);
 			break;
 		}
 	}
+}
+
+static void
+attach_pixmap(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct window *win_dlg = argv[3].p;
+	struct tlist *tl_feats = argv[4].p;
+	struct tlist *tl_pixmaps = argv[5].p;
+	struct tlist_item *it;
+	struct tile_element *tel;
+	struct pixmap *px;
+
+	if ((it = tlist_item_selected(tl_pixmaps)) == NULL) {
+		return;
+	}
+	px = it->p1;
+
+	tel = tile_add_pixmap(tv->tile, px, 0, 0);
+	if (tv->edit_mode) {
+		tile_close_element(tv);
+	}
+	tile_open_element(tv, tel, pwin);
+
+	/* Select the newly inserted feature. */
+	event_post(NULL, tl_feats, "tlist-poll", NULL);
+	tlist_unselect_all(tl_feats);
+	TAILQ_FOREACH(it, &tl_feats->items, items) {
+		struct tile_element *tel;
+
+		if (strcmp(it->class, "pixmap") != 0) {
+			continue;
+		}
+		tel = it->p1;
+		if (tel->tel_pixmap.px == px) {
+			tlist_select(tl_feats, it);
+			break;
+		}
+	}
+
+	view_detach(win_dlg);
+}
+
+static void
+attach_pixmap_dlg(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *tl_feats = argv[3].p;
+	struct tlist *tl;
+	struct pixmap *px;
+	struct window *win;
+	struct box *bo;
+
+	win = window_new(WINDOW_MODAL|WINDOW_NO_MINIMIZE, NULL);
+	window_set_caption(win, _("Attach existing pixmap"));
+
+	tl = tlist_new(win, 0);
+	tlist_set_item_height(tl, TILESZ);
+	tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
+
+	TAILQ_FOREACH(px, &tv->ts->pixmaps, pixmaps) {
+		struct tlist_item *it;
+
+		it = tlist_insert(tl, px->su, "%s (%ux%u)", px->name,
+		    px->su->w, px->su->h);
+		it->p1 = px;
+	}
+	
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	{
+		struct button *bu;
+	
+		bu = button_new(bo, _("OK"));
+		event_new(bu, "button-pushed", attach_pixmap, "%p,%p,%p,%p,%p",
+		    tv, pwin, win, tl_feats, tl);
+	
+		bu = button_new(bo, _("Cancel"));
+		event_new(bu, "button-pushed", window_generic_detach, "%p",
+		    win);
+	}
+
+	window_attach(pwin, win);
+	window_show(win);
 }
 
 static void
@@ -544,7 +629,7 @@ insert_fill(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
-	struct tlist *etl = argv[3].p;
+	struct tlist *tl_feats = argv[3].p;
 	struct tlist_item *eit;
 	struct fill *fill;
 	struct tile_element *tel;
@@ -560,9 +645,9 @@ insert_fill(int argc, union evarg *argv)
 	tile_open_element(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
-	event_post(NULL, etl, "tlist-poll", NULL);
-	tlist_unselect_all(etl);
-	TAILQ_FOREACH(eit, &etl->items, items) {
+	event_post(NULL, tl_feats, "tlist-poll", NULL);
+	tlist_unselect_all(tl_feats);
+	TAILQ_FOREACH(eit, &tl_feats->items, items) {
 		struct tile_element *tel;
 
 		if (strcmp(eit->class, "feature") != 0) {
@@ -570,7 +655,7 @@ insert_fill(int argc, union evarg *argv)
 		}
 		tel = eit->p1;
 		if (tel->tel_feature.ft == FEATURE(fill)) {
-			tlist_select(etl, eit);
+			tlist_select(tl_feats, eit);
 			break;
 		}
 	}
@@ -687,12 +772,12 @@ delete_element(int argc, union evarg *argv)
 	struct tileview *tv = argv[1].p;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
-	struct tlist *etl = argv[2].p;
+	struct tlist *tl_feats = argv[2].p;
 	int detach_only = argv[3].i;
 	struct tlist_item *it;
 	struct tile_element *tel;
 
-	if ((it = tlist_item_selected(etl)) == NULL) {
+	if ((it = tlist_item_selected(tl_feats)) == NULL) {
 		return;
 	}
 	tel = it->p1;
@@ -849,7 +934,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	struct AGMenu *m;
 	struct AGMenuItem *item;
 	struct tileview *tv;
-	struct tlist *etl;
+	struct tlist *tl_feats;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
@@ -858,67 +943,67 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
 	tileview_init(tv, ts, t, TILEVIEW_AUTOREGEN);
 	
-	etl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(etl, TLIST_POLL|TLIST_TREE);
-	WIDGET(etl)->flags &= ~(WIDGET_WFILL);
-	tlist_prescale(etl, _("FEATURE #000"), 5);
-	event_new(etl, "tlist-poll", poll_items, "%p,%p", ts, t);
+	tl_feats = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(tl_feats, TLIST_POLL|TLIST_TREE);
+	WIDGET(tl_feats)->flags &= ~(WIDGET_WFILL);
+	tlist_prescale(tl_feats, _("FEATURE #000"), 5);
+	event_new(tl_feats, "tlist-poll", poll_items, "%p,%p", ts, t);
 
-	item = tlist_set_popup(etl, "feature");
+	item = tlist_set_popup(tl_feats, "feature");
 	{
 		ag_menu_action(item, _("Edit feature"), ICON(OBJEDIT_ICON),
 		    SDLK_e, KMOD_CTRL,
-		    edit_element, "%p,%p,%p,%p", tv, etl, win, 1);
+		    edit_element, "%p,%p,%p,%p", tv, tl_feats, win, 1);
 		
 		ag_menu_action(item, _("Detach feature"), ICON(TRASH_ICON),
 		    SDLK_d, KMOD_CTRL,
-		    delete_element, "%p,%p,%i", tv, etl, 1);
+		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
 		
 		ag_menu_action(item, _("Destroy feature"), ICON(TRASH_ICON),
 		    SDLK_x, KMOD_CTRL,
-		    delete_element, "%p,%p,%i", tv, etl, 0);
+		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
 		
 		ag_menu_separator(item);
 		
 		ag_menu_action(item, _("Move up"), ICON(OBJMOVEUP_ICON),
 		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, etl);
+		    move_element_up, "%p,%p", tv, tl_feats);
 
 		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
 		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, etl);
+		    move_element_down, "%p,%p", tv, tl_feats);
 	}
 
-	item = tlist_set_popup(etl, "pixmap");
+	item = tlist_set_popup(tl_feats, "pixmap");
 	{
 		ag_menu_action(item, _("Edit pixmap"), ICON(OBJEDIT_ICON),
 		    SDLK_e, KMOD_CTRL,
-		    edit_element, "%p,%p,%p,%p", tv, etl, win, 1);
+		    edit_element, "%p,%p,%p,%p", tv, tl_feats, win, 1);
 		
 		ag_menu_action(item, _("Detach pixmap"), ICON(TRASH_ICON),
 		    SDLK_d, KMOD_CTRL,
-		    delete_element, "%p,%p,%i", tv, etl, 1);
+		    delete_element, "%p,%p,%i", tv, tl_feats, 1);
 		
 		ag_menu_action(item, _("Destroy pixmap"), ICON(TRASH_ICON),
 		    SDLK_x, KMOD_CTRL,
-		    delete_element, "%p,%p,%i", tv, etl, 0);
+		    delete_element, "%p,%p,%i", tv, tl_feats, 0);
 		
 		ag_menu_separator(item);
 		
 		ag_menu_action(item, _("Move up"), ICON(OBJMOVEUP_ICON),
 		    SDLK_u, KMOD_SHIFT,
-		    move_element_up, "%p,%p", tv, etl);
+		    move_element_up, "%p,%p", tv, tl_feats);
 
 		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
 		    SDLK_d, KMOD_SHIFT,
-		    move_element_down, "%p,%p", tv, etl);
+		    move_element_down, "%p,%p", tv, tl_feats);
 		
 		ag_menu_separator(item);
 
 		ag_menu_action(item, _("Toggle visibility"),
 		    ICON(OBJCREATE_ICON),
 		    SDLK_d, KMOD_SHIFT,
-		    visible_element, "%p,%p", tv, etl);
+		    visible_element, "%p,%p", tv, tl_feats);
 	}
 
 	m = ag_menu_new(win);
@@ -926,7 +1011,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	{
 		ag_menu_action(item, _("Fill"), NULL,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
-		    insert_fill, "%p,%p,%p", tv, win, etl);
+		    insert_fill, "%p,%p,%p", tv, win, tl_feats);
 		    
 		ag_menu_action(item, _("Sketch projection"), NULL,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
@@ -947,10 +1032,15 @@ tile_edit(struct tileset *ts, struct tile *t)
 	
 	item = ag_menu_add_item(m, _("Pixmaps"));
 	{
-		ag_menu_action(item, _("Insert pixmap..."),
+		ag_menu_action(item, _("Create new pixmap..."),
 		    ICON(DRAWING_ICON),
 		    SDLK_p, KMOD_CTRL,
-		    insert_pixmap, "%p,%p,%p", tv, win, etl);
+		    create_pixmap, "%p,%p,%p", tv, win, tl_feats);
+		
+		ag_menu_action(item, _("Attach existing pixmap..."),
+		    ICON(DRAWING_ICON),
+		    SDLK_p, KMOD_CTRL,
+		    attach_pixmap_dlg, "%p,%p,%p", tv, win, tl_feats);
 	}
 
 	item = ag_menu_add_item(m, _("Edit"));
@@ -972,7 +1062,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 		box_set_padding(fbox, 0);
 		box_set_spacing(fbox, 0);
 		{
-			object_attach(fbox, etl);
+			object_attach(fbox, tl_feats);
 	
 			fbu = button_new(fbox, _("Edit"));
 			WIDGET(fbu)->flags |= WIDGET_WFILL;
@@ -980,9 +1070,9 @@ tile_edit(struct tileset *ts, struct tile *t)
 			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
 
 			event_new(fbu, "button-pushed", edit_element,
-			    "%p,%p,%p,%i", tv, etl, win, 0);
-			event_new(etl, "tlist-dblclick", edit_element,
-			    "%p,%p,%p,%i", tv, etl, win, 1);
+			    "%p,%p,%p,%i", tv, tl_feats, win, 0);
+			event_new(tl_feats, "tlist-dblclick", edit_element,
+			    "%p,%p,%p,%i", tv, tl_feats, win, 1);
 		}
 		
 		object_attach(box, tv);
