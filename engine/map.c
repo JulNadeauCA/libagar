@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.146 2003/02/22 01:10:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.147 2003/02/22 11:42:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -278,10 +278,10 @@ map_set_zoom(struct map *m, Uint16 zoom)
 	m->tilew = m->zoom * TILEW / 100;
 	m->tileh = m->zoom * TILEH / 100;
 
-	if (m->tilew > 32767)			/* For soft scrolling */
-		m->tilew = 32767;
-	if (m->tileh > 32767)
-		m->tileh = 32767;
+	if (m->tilew > 16384)			/* For soft scrolling */
+		m->tilew = 16384;
+	if (m->tileh > 16384)
+		m->tileh = 16384;
 
 	pthread_mutex_unlock(&m->lock);
 }
@@ -345,7 +345,7 @@ node_add_sprite(struct node *node, void *pobj, Uint32 offs)
  * The map containing the node must be locked.
  */
 struct noderef *
-node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint32 flags)
+node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
 {
 	struct noderef *nref;
 
@@ -733,8 +733,8 @@ map_load(void *ob, int fd)
 	m->maph = read_uint32(fd);
 	m->defx = read_uint32(fd);
 	m->defy = read_uint32(fd);
-	m->tilew = read_uint32(fd);
-	m->tileh = read_uint32(fd);
+	m->tilew = (int)read_uint32(fd);
+	m->tileh = (int)read_uint32(fd);
 	m->zoom = read_uint16(fd);
 	if (ver.minor >= 1) {
 		m->ssx = read_sint16(fd);
@@ -806,7 +806,7 @@ noderef_save(struct fobj_buf *buf, struct object_table *deps,
 		buf_write_uint32(buf, nref->offs);	/* Anim# */
 		buf_write_sint16(buf, nref->xcenter);
 		buf_write_sint16(buf, nref->ycenter);
-		buf_write_uint32(buf, nref->data.anim.flags);
+		buf_write_uint32(buf, (Uint32)nref->data.anim.flags);
 		debug(DEBUG_NODEREFS,
 		    "anim: obj[%d]:%d, center %d,%d, aflags 0x%x\n",
 		    i, nref->offs, nref->xcenter, nref->ycenter,
@@ -884,8 +884,8 @@ map_save(void *p, int fd)
 	buf_write_uint32(buf, m->maph);
 	buf_write_uint32(buf, m->defx);
 	buf_write_uint32(buf, m->defy);
-	buf_write_uint32(buf, m->tilew);
-	buf_write_uint32(buf, m->tileh);
+	buf_write_uint32(buf, (Uint32)m->tilew);
+	buf_write_uint32(buf, (Uint32)m->tileh);
 	buf_write_uint16(buf, m->zoom);
 	if (map_ver.minor >= 1) {
 		buf_write_sint16(buf, m->ssx);

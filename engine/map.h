@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.61 2003/02/22 01:10:32 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.62 2003/02/22 11:42:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -33,7 +33,7 @@ struct noderef {
 	Sint16		 xmotion, ymotion;	/* Motion offsets */
 	union {
 		struct {
-			Uint32	flags;
+			Uint8	flags;
 #define NODEREF_ANIM_AUTO	0x01		/* Auto increment frame# */
 			Uint32	frame;		/* Current frame# */
 		} anim;
@@ -137,7 +137,7 @@ void		 node_movedown_ref(struct node *, struct noderef *);
 void		 node_movetail_ref(struct node *, struct noderef *);
 void		 node_movehead_ref(struct node *, struct noderef *);
 struct noderef	*node_add_sprite(struct node *, void *, Uint32);
-struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint32);
+struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
 struct noderef	*node_add_warp(struct node *, char *, Uint32, Uint32, Uint8);
 
 extern __inline__ void	 node_init(struct node *, int, int);
