@@ -1,0 +1,43 @@
+    _       _       _     ___  
+  / _ \   / _ \   / _ \  |  _ \ 
+ | |_| | | (_| | | |_| | | |_) |
+ |_| |_|  \__, | |_| |_| |_| |_|
+          |___/                 
+
+What is it?
+-----------
+Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
+becomes gelatinous in water and is primarly used as a culture medium for
+microbiological work. Agar is also a framework for graphical applications
+using SDL or OpenGL.
+
+Agar is most well-known for its GUI toolkit, which is sophisticated enough
+to accomodate applications such as CAD, 3D modeling and game/level edition.
+But Agar is much more than a GUI. The GUI toolkit is only a small part of
+the project. Agar was initially designed as a game engine for our upcoming
+game, "Trek to the Cave", and it implements an object system which allows
+it to function essentially as an interpreter.
+
+That is, an Agar game can be constructed entirely from data files created
+by the the built-in graphical edition facilties. Agar manages memory and
+persistence. Typically, all of the code needed by an Agar game will take
+the form of object implementations, and some simple games which make use
+of the built-in object types will not require any code at all (besides
+the initialization in main(), of course). Agar provides some built-in object
+implementations, such as "map" for tile-based 2D levels, "vgobj" for vector
+drawings and "perso" for simple game characters.
+
+Portability
+-----------
+Thanks to SDL, Agar is portable to many different platforms, including
+FreeBSD, IRIX, Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD and Windows.
+For the list of official ports, see http://agar.csoft.org/portable.html.
+
+License
+-------
+Agar is freely distributable under the terms of a BSD license.
+
+Acknowledgements
+----------------
+Please refer to http://agar.csoft.org/credits.html.
+
