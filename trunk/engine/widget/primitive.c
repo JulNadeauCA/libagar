@@ -1,4 +1,4 @@
-/*	$Csoft$	    */
+/*	$Csoft: primitive.c,v 1.5 2002/06/20 16:36:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -66,7 +66,6 @@ primitive_box(void *p, int w, int h, int z)
 	SDL_FillRect(s, NULL, bcol);
 
 	/* Border */
-	SDL_LockSurface(s);		/* XXX not needed */
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {	/* XXX waste */
 			if (y < z || x < z) {
@@ -76,8 +75,77 @@ primitive_box(void *p, int w, int h, int z)
 			}
 		}
 	}
-	SDL_UnlockSurface(s);
 
+	return (s);
+}
+
+SDL_Surface *
+primitive_frame(void *p, int w, int h, int col)
+{
+	struct widget *wid = p;
+	SDL_Surface *s;
+	Uint32 fcol;
+	int i;
+
+	s = view_surface(SDL_SWSURFACE, w, h);
+	if (col) {
+		fcol = SDL_MapRGB(s->format, 200, 200, 200);
+	} else {
+		fcol = SDL_MapRGB(s->format, 150, 150, 150);
+	}
+
+	for (i = 0; i < h; i++) {
+		VIEW_PUT_PIXEL(s, 0, i, fcol);
+		VIEW_PUT_PIXEL(s, w - 1, i, fcol);
+	}
+	for (i = 0; i < w; i++) {
+		VIEW_PUT_PIXEL(s, i, 0, fcol);
+		VIEW_PUT_PIXEL(s, i, h - 1, fcol);
+	}
+
+	return (s);
+}
+
+SDL_Surface *
+primitive_circle(void *p, int w, int h, int radius, int z)
+{
+	SDL_Surface *s;
+	int x = 0, y, cx, cy, e = 0, u = 1, v;
+	Uint32 fcol;
+
+	y = radius;
+	cx = w / 2;
+	cy = h / 2;
+	v = 2*radius - 1;
+
+	s = view_surface(SDL_SWSURFACE, w, h);
+	if (z) {
+		fcol = SDL_MapRGB(s->format, 200, 200, 200);
+	} else {
+		fcol = SDL_MapRGB(s->format, 150, 150, 150);
+	}
+
+	while (x < y) {
+		VIEW_PUT_PIXEL(s, cx + x, cy + y, fcol);
+		VIEW_PUT_PIXEL(s, cx + x, cy - y, fcol);
+		VIEW_PUT_PIXEL(s, cx - x, cy + y, fcol);
+		VIEW_PUT_PIXEL(s, cx - x, cy - y, fcol);
+		x++;
+		e += u;
+		u += 2;
+		if (v < 2 * e) {
+			y--;
+			e -= v;
+			v -= 2;
+		}
+		if (x > y) {
+			break;
+		}
+		VIEW_PUT_PIXEL(s, cx + y, cy + x, fcol);
+		VIEW_PUT_PIXEL(s, cx + y, cy - x, fcol);
+		VIEW_PUT_PIXEL(s, cx - y, cy + x, fcol);
+		VIEW_PUT_PIXEL(s, cx - y, cy - x, fcol);
+	}
 	return (s);
 }
 
