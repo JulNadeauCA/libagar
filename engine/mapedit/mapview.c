@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.19 2002/08/19 11:02:40 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.20 2002/08/28 03:49:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -231,6 +231,12 @@ mapview_draw(void *p)
 		     mx++, rx += mv->tilew) {
 
 			node = &m->map[my][mx];
+#ifdef DEBUG
+			if (node->x != mx || node->y != my) {
+				fatal("node at %d,%d should be at %d,%d\n",
+				    mx, my, node->x, node->y);
+			}
+#endif
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				/* XXX style */
