@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.7 2002/02/03 11:20:49 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.8 2002/02/05 06:05:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -195,7 +195,7 @@ int
 object_wait(void *obp, int mask)
 {
 	struct object *ob = (struct object *)obp;
-	int i = 30;
+	int i = 300;
 
 	while (i-- > 0) {
 		if (ob->wmask & mask) {
