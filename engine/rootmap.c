@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.12 2002/11/26 05:21:39 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.13 2002/11/28 01:06:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,10 +33,18 @@
 #include "view.h"
 #include "anim.h"
 
+#ifdef DEBUG
+#define DEBUG_FOCUS	0x01
+#define DEBUG_DIAG	0x02
+
+int	rootmap_debug = DEBUG_DIAG|DEBUG_FOCUS;
+#define	engine_debug rootmap_debug
+#endif
+
 /*
  * Render a map node.
  * Inline since this is called from draw functions with many variables.
- * Must be called on a locked map.
+ * The map must be locked.
  */
 static __inline__ void
 rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
@@ -51,8 +59,8 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
 			src = SPRITE(nref->pobj, nref->offs);
-			rd.x = rx + nref->xoffs - view->rootmap->sx;
-			rd.y = ry + nref->yoffs - view->rootmap->sy;
+			rd.x = rx + nref->xoffs - view->rootmap->sx - TILEW;
+			rd.y = ry + nref->yoffs - view->rootmap->sy - TILEH;
 			rd.w = src->w;
 			rd.h = src->h;
 			SDL_BlitSurface(src, NULL, view->v, &rd);
@@ -60,9 +68,9 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 			anim = ANIM(nref->pobj, nref->offs);
 			frame = anim->frame;
 #ifdef DEBUG
-			if (frame > anim->nframes) {
-				fatal("bad anim frame: %d > %d\n", frame,
-				    anim->nframes);
+			if (frame < 0 || frame > anim->nframes) {
+				fatal("bad animation frame#: %d > %d\n",
+				    frame, anim->nframes);
 			}
 #endif
 
@@ -100,13 +108,14 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 #ifdef DEBUG
 				if (src->w < 0 || src->w > 4096 ||
 				    src->h < 0 || src->h > 4096) {
-					fatal("bad frame: j=%d i=%d [%d]\n",
-					     j, i, frame);
+					fatal("bad frame fragment: %d %d %d\n",
+					    j, i, frame);
 				}
 #endif
-				rd.x = rx + nref->xoffs - view->rootmap->sx;
+				rd.x = rx + nref->xoffs -
+				    view->rootmap->sx - TILEW;
 				rd.y = ry + nref->yoffs - (i * TILEH) -
-				    view->rootmap->sy;
+				    view->rootmap->sy - TILEH;
 				rd.w = src->w;
 				rd.h = src->h;
 				SDL_BlitSurface(src, NULL, view->v, &rd);
@@ -122,7 +131,7 @@ rootmap_draw_node(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
  * if there is no animation on the node; nearby nodes with overlap > 0
  * are redrawn first.
  *
- * Map and view must be locked.
+ * The view and the displayed map must be locked.
  */
 void
 rootmap_animate(void)
@@ -216,7 +225,7 @@ rootmap_animate(void)
 
 /*
  * Draw static tiles.
- * Map and view must be locked.
+ * The view and the displayed map must be locked.
  */
 void
 rootmap_draw(void)
@@ -230,7 +239,7 @@ rootmap_draw(void)
 
 	if (rm->y > m->maph - rm->h ||
 	    rm->x > m->mapw - rm->w) {
-		dprintf("exceeds map boundaries\n");
+		debug(DEBUG_DIAG, "exceeds map boundaries\n");
 		return;
 	}
 
@@ -264,8 +273,10 @@ rootmap_draw(void)
 				if (nref->flags & MAPREF_SPRITE) {
 					SDL_Rect rd;
 
-					rd.x = rx + nref->xoffs - rm->sx;
-					rd.y = ry + nref->yoffs - rm->sy;
+					rd.x = rx + nref->xoffs -
+					    rm->sx - TILEW;
+					rd.y = ry + nref->yoffs -
+					    rm->sy - TILEH;
 					rd.w = TILEW;
 					rd.h = TILEH;
 					SDL_BlitSurface(
@@ -280,21 +291,14 @@ rootmap_draw(void)
 	}
 }
 
-/*
- * Change the map being displayed.
- * View must not be locked.
- */
+/* Change the map being displayed. */
 void
 rootmap_focus(struct map *m)
 {
-	dprintf("focusing %s\n", OBJECT(m)->name);
-
 	pthread_mutex_lock(&view->lock);
-#if 0
-	dprintf("%s -> %s\n",
-	    (view->rootmap == NULL) ? "NULL" : OBJECT(view->rootmap->map)->name,
-	    OBJECT(m)->name);
-#endif
+	debug(DEBUG_FOCUS, "%s -> %s\n",
+	    (view->rootmap == NULL || view->rootmap->map == NULL) ? "NULL" :
+	    OBJECT(view->rootmap->map)->name, OBJECT(m)->name);
 	view->rootmap->map = m;
 	pthread_mutex_unlock(&view->lock);
 }
@@ -303,12 +307,13 @@ rootmap_focus(struct map *m)
 void
 rootmap_center(struct map *m, int mapx, int mapy)
 {
-	struct viewport *v = view;
-	struct viewmap *rm = v->rootmap;
+	struct viewmap *rm = view->rootmap;
 	int nx, ny;
 
-	pthread_mutex_lock(&m->lock);
+	debug(DEBUG_FOCUS, "centering on map `%s'\n", OBJECT(m)->name);
 
+	pthread_mutex_lock(&m->lock);
+	
 	nx = mapx - (rm->w / 2);
 	ny = mapy - (rm->h / 2);
 
@@ -328,14 +333,15 @@ rootmap_center(struct map *m, int mapx, int mapy)
 	pthread_mutex_unlock(&m->lock);
 }
 
-/*
- * Scroll the root map view.
- * View must be locked.
- */
+/* Scroll the root map view. */
 void
 rootmap_scroll(struct map *m, int dir, int inc)
 {
-	struct viewmap *rm = view->rootmap;
+	struct viewmap *rm;
+	
+	pthread_mutex_lock(&view->lock);
+
+	rm = view->rootmap;
 
 	switch (dir) {
 	case DIR_UP:
@@ -372,9 +378,11 @@ rootmap_scroll(struct map *m, int dir, int inc)
 		break;
 	}
 	m->redraw++;
+	
+	pthread_mutex_unlock(&view->lock);
 }
 
-/* Precalculate rectangles. This helps saving a few cycles */
+/* Calculate the default coordinates of visible rectangles. */
 SDL_Rect **
 rootmap_alloc_maprects(int w, int h)
 {
@@ -394,17 +402,16 @@ rootmap_alloc_maprects(int w, int h)
 	return (rects);
 }
 
-/*
- * Free a map rectangle array.
- * View must be locked.
- */
+/* Free a map rectangle coordinate array. */
 void
 rootmap_free_maprects(struct viewport *v)
 {
 	int y;
 
+	pthread_mutex_lock(&v->lock);
 	for (y = 0; y < v->rootmap->h; y++) {
 		free(*(v->rootmap->maprects + y));
 	}
+	pthread_mutex_unlock(&v->lock);
 }
 

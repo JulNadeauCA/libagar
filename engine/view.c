@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.85 2002/11/26 01:39:14 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.86 2002/11/27 06:18:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -120,12 +120,7 @@ view_init(gfx_engine_t ge)
 		break;
 	}
 #if 0
-	switch (v->gfx_engine) {
-	case GFX_ENGINE_GUI:
-		screenflags |= SDL_RESIZABLE;
-		break;
-	default:
-	}
+	screenflags |= SDL_RESIZABLE;
 #endif
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
 	if (v->v == NULL) {
@@ -147,12 +142,8 @@ view_init(gfx_engine_t ge)
 		v->rootmap->sx = 0;
 		v->rootmap->sy = 0;
 		
-		/*
-		 * Precalculate node rectangles as well as an array
-		 * able to hold all possible rectangles in a view,
-		 * for optimization purposes.
-		 */
-		v->rootmap->maprects = rootmap_alloc_maprects(mw, mh);
+		/* Calculate the default tile coordinates. */
+		v->rootmap->maprects = rootmap_alloc_maprects(mw + 1, mh + 1);
 
 		dprintf("tile-based mode: %dx%d rectangles (%ld Kb)\n",
 		    mw, mh, (long)(mw*mh * sizeof(SDL_Rect)) / 1024);
