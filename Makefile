@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.40 2004/03/10 16:58:29 vedge Exp $
+#	$Csoft: Makefile,v 1.41 2004/03/18 03:34:57 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -38,15 +38,19 @@ release: cleandir
 
 install-includes:
 	${INSTALL_INCL_DIR} ${INCLDIR}
-	pax -rw -pa -L `find . -follow -type f -name '*.h' -print` ${INCLDIR}
+	${SUDO} pax -rw -pa -L `find . -follow -type f -name '*.h' -print` \
+	    ${INCLDIR}
 	@if [ "${SRC}" != "" ]; then \
-		cd ${SRC} && pax -rw -pa -L \
+		cd ${SRC} && ${SUDO} pax -rw -pa -L \
 		    `find . -follow -type f -name '*.h' -print` \
 		    ${INCLDIR}; \
 	fi
 
 deinstall-includes:
-	rm -fR ${INCLDIR}
+	find . -follow -type f -name '*.h' -print \
+	    | awk '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' | ${SUDO} sh
+	cd ${SRC} && find . -follow -type f -name '*.h' -print \
+	    | awk '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' | ${SUDO} sh
 
 .PHONY: clean cleandir install deinstall depend regress
 .PHONY: prereq configure clean-config release
