@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.133 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.134 2004/02/20 04:20:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -38,6 +38,10 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+
+#ifdef DEBUG
+#include <engine/monitor/monitor.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -86,16 +90,15 @@ view_init(enum gfx_engine ge)
 	TAILQ_INIT(&view->detach);
 	pthread_mutex_init(&view->lock, &recursive_mutexattr);
 
-	/* Obtain the display preferences. */
 	depth = prop_get_uint8(config, "view.depth");
 	view->w = prop_get_uint16(config, "view.w");
 	view->h = prop_get_uint16(config, "view.h");
+
 	if (prop_get_bool(config, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
 	if (prop_get_bool(config, "view.async-blits"))
 		screenflags |= SDL_HWSURFACE|SDL_ASYNCBLIT;
 
-	/* Negotiate the depth. */
 	view->depth = SDL_VideoModeOK(view->w, view->h, depth, screenflags);
 	if (view->depth == 8)
 		screenflags |= SDL_HWPALETTE;
@@ -103,13 +106,8 @@ view_init(enum gfx_engine ge)
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		dprintf("direct video / tile-based\n");
-	
-		/* Adapt resolution to tile geometry. */
 		view->w -= view->w % TILEW;
 		view->h -= view->h % TILEH;
-		dprintf("rounded resolution to %dx%d\n", view->w, view->h);
-
-		/* Initialize the map display. */
 		view->rootmap = Malloc(sizeof(struct viewmap));
 		rootmap_init(view->rootmap, view->w / TILEW, view->h / TILEH);
 		break;
@@ -184,7 +182,18 @@ view_init(enum gfx_engine ge)
 	prop_set_uint16(config, "view.h", view->h);
 	vfmt = view->v->format;
 
+	if (view_set_refresh(prop_get_uint8(config, "view.fps")) == -1) {
+		fprintf(stderr, "%s\n", error_get());
+		goto fail;
+	}
 	primitives_init();
+	config_window(config);
+#ifdef DEBUG
+	if (engine_debug > 0) {
+		monitor_init(&monitor, "debug-monitor");
+		window_show(monitor.toolbar);
+	}
+#endif
 	return (0);
 fail:
 	pthread_mutex_destroy(&view->lock);
@@ -457,19 +466,19 @@ view_set_trans(SDL_Surface *su, Uint8 alpha)
 }
 
 int
-view_set_refresh(int min_delay, int max_delay)
+view_set_refresh(int ms)
 {
-	if (min_delay < 0 || min_delay > 300 ||
-	    max_delay < 0 || max_delay > 300) {
+	int fps = 1000/ms;
+
+	dprintf("%d fps\n", fps);
+	if (fps < 4 || fps > 240) {
 		error_set(_("The refresh rate is out of range."));
 		return (-1);
 	}
-	dprintf("%d fps (%dms)\n", 1000/max_delay, max_delay);
 	pthread_mutex_lock(&view->lock);
 	view->refresh.current = 0;
-	view->refresh.delay = max_delay;
-	view->refresh.max_delay = max_delay;
-	view->refresh.min_delay = min_delay;
+	view->refresh.delay = fps;
+	view->refresh.max_delay = fps;
 	pthread_mutex_unlock(&view->lock);
 	return (0);
 }
@@ -724,3 +733,16 @@ view_update(int x, int y, int w, int h)
 	}
 }
 
+/* Parse a command-line refresh rate specification. */
+void
+view_parse_fpsspec(const char *fpsspec)
+{
+	int fps;
+
+	fps = atoi(fpsspec);
+	if (fps < 4 || fps > 240) {
+		fprintf(stderr, _("Unreasonable refresh rate; ignoring\n"));
+		return;
+	}
+	prop_set_uint8(config, "view.fps", fps);
+}
