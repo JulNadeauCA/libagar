@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.39 2002/05/21 04:36:36 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.40 2002/05/22 01:23:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -422,13 +422,12 @@ view_attach(void *parent, void *child)
 	struct viewport *view = parent;
 	struct window *win = child;
 
-	win->flags |= WINDOW_FOCUS;
-
 	/* Notify the child being attached. */
 	if (OBJECT_OPS(win)->onattach != NULL) {
 		OBJECT_OPS(win)->onattach(view, win);
 	}
 
+	/* Attach and focus this window. */
 	pthread_mutex_lock(&view->lock);
 	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
 	pthread_mutex_unlock(&view->lock);
@@ -488,24 +487,11 @@ view_surface(int flags, int w, int h)
 void
 view_focus(struct viewport *view, struct window *win)
 {
-	struct window *cwin;
-
-	dprintf("focus on %s\n", OBJECT(win)->name);
+	dprintf("on %s\n", OBJECT(win)->name);
 
 	TAILQ_REMOVE(&view->windowsh, win, windows);
 	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
 	
-	TAILQ_FOREACH(cwin, &view->windowsh, windows) {
-		if (cwin == win) {
-			continue;
-		}
-		pthread_mutex_lock(&cwin->lock);
-		cwin->flags &= ~(WINDOW_FOCUS);
-		cwin->redraw++;
-		pthread_mutex_unlock(&cwin->lock);
-	}
-	
-	win->flags |= WINDOW_FOCUS;
 	win->redraw++;
 }
 
