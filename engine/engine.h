@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.88 2005/01/26 02:41:01 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.89 2005/02/06 07:05:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -144,7 +144,6 @@ __BEGIN_DECLS
 int		 engine_preinit(const char *);
 int		 engine_init(void);
 void		 engine_set_gfxmode(enum gfx_engine);
-void		 engine_set_textmode(enum text_engine);
 void		 engine_atexit(void (*)(void));
 void		 engine_destroy(void);
 __inline__ void	 lock_linkage(void);
