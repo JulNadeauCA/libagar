@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.118 2002/12/04 07:02:01 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.119 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -267,24 +267,10 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	pthread_mutex_init(&win->lock, &win->lockattr);
 }
 
-/*
- * Render a window.
- * Window must be locked.
- */
-void
-window_draw(struct window *win)
+static void
+window_draw_frame(struct window *win)
 {
-	SDL_Surface *v = view->v;
-	struct region *reg;
-	struct widget *wid;
 	int i;
-	
-	debug_n(DEBUG_DRAW, "drawing %s (%dx%d):\n", OBJECT(win)->name,
-	    win->rd.w, win->rd.h);
-
-	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
-		SDL_FillRect(v, &win->rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
-	}
 
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
@@ -315,94 +301,118 @@ window_draw(struct window *win)
 			    win->border[i]);
 		}
 	}
+}
 
-	/* Render the title bar. */
-	if (win->flags & WINDOW_TITLEBAR) {
-		int bw = win->borderw + 2;
-		int th = win->titleh - 2;
-		SDL_Surface *caption;
-		SDL_Rect rd, rclip;
+static void
+window_draw_titlebar(struct window *win)
+{
+	int bw = win->borderw + 2;
+	int th = win->titleh - 2;
+	SDL_Surface *caption;
+	SDL_Rect rd, rclip;
+	int i;
 
-		/* XXX yuck */
-		rd.x = win->rd.x + win->borderw;
-		rd.y = win->rd.y + win->borderw;
-		rd.w = win->rd.w - win->borderw*2+1;
-		rd.h = win->titleh - win->borderw/2;
+	/* XXX yuck */
+	rd.x = win->rd.x + win->borderw;
+	rd.y = win->rd.y + win->borderw;
+	rd.w = win->rd.w - win->borderw*2+1;
+	rd.h = win->titleh - win->borderw/2;
 
-		/* Titlebar background */
-		SDL_FillRect(view->v, &rd,
-		    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
-		    TITLEBAR_FOCUSED_COLOR : TITLEBAR_UNFOCUSED_COLOR));
+	/* Titlebar background */
+	SDL_FillRect(view->v, &rd,
+	    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
+	    TITLEBAR_FOCUSED_COLOR : TITLEBAR_UNFOCUSED_COLOR));
 		
-		rd.w = win->rd.w;
-		rd.h = win->rd.h;
+	rd.w = win->rd.w;
+	rd.h = win->rd.h;
 	
-		rclip = rd;
-		rclip.x += th*2;			/* Buttons */
-		SDL_SetClipRect(view->v, &rclip);
+	rclip = rd;
+	rclip.x += th*2;			/* Buttons */
+	SDL_SetClipRect(view->v, &rclip);
 		
-		/* Caption */
-		caption = text_render(NULL, -1,
-		    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
-		    TITLEBAR_TEXT_FOCUSED_COLOR :
-		    TITLEBAR_TEXT_UNFOCUSED_COLOR),
-		    win->caption);
-		rd.x = win->rd.x + (win->rd.w - caption->w - win->borderw);
-		rd.y = win->rd.y + win->borderw;
-		SDL_BlitSurface(caption, NULL, v, &rd);
-		SDL_FreeSurface(caption);
+	/* Caption */
+	caption = text_render(NULL, -1,
+	    WIDGET_COLOR(win, VIEW_FOCUSED(win) ?
+	    TITLEBAR_TEXT_FOCUSED_COLOR :
+	    TITLEBAR_TEXT_UNFOCUSED_COLOR),
+	    win->caption);
+	rd.x = win->rd.x + (win->rd.w - caption->w - win->borderw);
+	rd.y = win->rd.y + win->borderw;
+	SDL_BlitSurface(caption, NULL, view->v, &rd);
+	SDL_FreeSurface(caption);
 		
-		SDL_SetClipRect(view->v, NULL);
+	SDL_SetClipRect(view->v, NULL);
 
-		/* Close */
-		for (i = 2; i < win->borderw - 1; i++) {
-			primitives.line(win,
-			    bw + i, bw,
-			    th + i, th,
-			    win->border[i]);
-			primitives.line(win,
-			    bw + i, th,
-			    th + i, bw,
-			    win->border[i]);
-		}
-		th -= 4;
-
-		/* Minimize */
-		for (i = 2; i < win->borderw - 1; i++) {
-			primitives.line(win,
-			    i + bw + th, bw + 2,
-			    i + bw + th*2, bw + 2,
-			    win->border[i]);
-			primitives.line(win,
-			    i + bw + th, bw + 2,
-			    i + bw + th*2 - th/2, th + 2,
-			    win->border[i]);
-			primitives.line(win,
-			    i + bw + th*2 - th/2, th + 2,
-			    i + bw + th*2, bw + 2,
-			    win->border[i]);
-		}
-
-		/* Border */
+	/* Close */
+	for (i = 2; i < win->borderw - 1; i++) {
 		primitives.line(win,
-		    win->borderw, win->titleh+2,
-		    win->rd.w-win->borderw, win->titleh+2,
-		    win->border[3]);
+		    bw + i, bw,
+		    th + i, th,
+		    win->border[i]);
 		primitives.line(win,
-		    win->borderw, win->titleh+3,
-		    win->rd.w-win->borderw, win->titleh+3,
-		    win->border[1]);
-	
-		if (win->flags & WINDOW_HIDDEN_BODY) {
-			/* Queue the video update. */
-			VIEW_UPDATE(win->rd);
-			return;					/* Done */
-		}
+		    bw + i, th,
+		    th + i, bw,
+		    win->border[i]);
+	}
+	th -= 4;
+
+	/* Minimize */
+	for (i = 2; i < win->borderw - 1; i++) {
+		primitives.line(win,
+		    i + bw + th, bw + 2,
+		    i + bw + th*2, bw + 2,
+		    win->border[i]);
+		primitives.line(win,
+		    i + bw + th, bw + 2,
+		    i + bw + th*2 - th/2, th + 2,
+		    win->border[i]);
+		primitives.line(win,
+		    i + bw + th*2 - th/2, th + 2,
+		    i + bw + th*2, bw + 2,
+		    win->border[i]);
 	}
 
+	/* Border */
+	primitives.line(win,
+	    win->borderw, win->titleh+2,
+	    win->rd.w-win->borderw, win->titleh+2,
+	    win->border[3]);
+	primitives.line(win,
+	    win->borderw, win->titleh+3,
+	    win->rd.w-win->borderw, win->titleh+3,
+	    win->border[1]);
+	
+	if (win->flags & WINDOW_HIDDEN_BODY) {
+		/* Queue the video update. */
+		VIEW_UPDATE(win->rd);
+		return;					/* Done */
+	}
+}
+
+/*
+ * Render a window.
+ * Window must be locked.
+ */
+void
+window_draw(struct window *win)
+{
+	struct region *reg;
+	struct widget *wid;
+	int i;
+	
+	debug_n(DEBUG_DRAW, "drawing %s (%dx%d):\n", OBJECT(win)->name,
+	    win->rd.w, win->rd.h);
+
+	/* Background */
+	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
+		SDL_FillRect(view->v, &win->rd,
+		    WIDGET_COLOR(win, BACKGROUND_COLOR));
+	}
+
+	/* Widgets */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		debug_n(DEBUG_DRAW, " %s(%d,%d)\n", OBJECT(reg)->name,
-		    reg->x, reg->y);
+		debug_n(DEBUG_DRAW, " %s(%d,%d)\n",
+		    OBJECT(reg)->name, reg->x, reg->y);
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			debug_n(DEBUG_DRAW, "  %s(%d,%d)\n", OBJECT(wid)->name,
 			    wid->x, wid->y);
@@ -419,6 +429,12 @@ window_draw(struct window *win)
 		}
 #endif
 	}
+	
+	/* Decorations */
+	if (win->flags & WINDOW_TITLEBAR) {
+		window_draw_titlebar(win);
+	}
+	window_draw_frame(win);
 
 	/* Queue the video update. */
 	VIEW_UPDATE(win->rd);
@@ -898,6 +914,9 @@ scan_wins:
 					}
 					if (view->rootmap != NULL) {
 						view->rootmap->map->redraw++;
+					} else {
+						SDL_FillRect(view->v,
+						    &win->rd, 0);
 					}
 				}
 				view->winop = VIEW_WINOP_MOVE;
