@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.55 2003/03/01 02:38:31 vedge Exp $
+# $Csoft: configure.in,v 1.56 2003/03/01 20:14:57 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -61,6 +61,8 @@ if [ "${with_gl}" != "no" ]; then
 	if [ "${HAVE_OPENGL}" = "yes" ]; then
 		mdefine(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS");
 	fi
+else
+	hundef(HAVE_OPENGL);
 fi
 
 # Compile a static binary?
