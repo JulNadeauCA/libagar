@@ -1,7 +1,4 @@
-/*	$Csoft: map.h,v 1.15 2002/02/15 05:39:23 vedge Exp $	*/
-
-#define MAP_WIDTH	256
-#define MAP_HEIGHT	256
+/*	$Csoft: map.h,v 1.16 2002/02/15 10:49:28 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
@@ -58,32 +55,39 @@ struct node {
 struct map {
 	struct	object obj;
 	struct	viewport *view;
+
 	int 	flags;
 #define MAP_FOCUSED	0x0001		/* Being displayed */
 #define MAP_VARTILEGEO	0x0010		/* Variable tile geometry */
 #define MAP_2D		0x0020		/* Two-dimensional */
-	int	mapw, maph;
-	int	defx, defy;
-	struct	node map[MAP_WIDTH][MAP_HEIGHT];
-	int	redraw;
+
+	int	redraw;			/* Redraw at next tick */
+	int	mapw, maph;		/* Map geometry */
+	int	tilew, tileh;		/* Tile geometry */
+	int	shtilex, shtiley;	/* Tile shift (optimization) */
+	int	defx, defy;		/* Map origin */
+	struct	node **map;		/* Array of nodes */
 
 	pthread_t	draw_th;	/* Map rendering thread */
-	pthread_mutex_t lock;		/* Lock on map entry reference lists */
+	pthread_mutex_t lock;		/* Lock on all nodes */
 	
 	SLIST_ENTRY(map) wmaps;		/* Active maps */
 };
 
 extern struct map *curmap;	/* Currently focused map */
 
-struct map	*map_create(char *, char *, int, int, int);
+struct map	*map_create(char *, char *, int);
 void		 map_destroy(void *);
 int		 map_load(void *, char *);
 int		 map_save(void *, char *);
 int		 map_focus(struct map *);
 int		 map_unfocus(struct map *);
 void		 map_clean(struct map *, struct object *, int, int, int);
+void		 map_allocnodes(struct map *, int, int, int, int);
+void		 map_freenodes(struct map *);
 int		 map_animnode(struct map *, int x, int y);
 int		 map_unanimnode(struct map *, int x, int y);
+void		 map_plot_sprite(struct map *, SDL_Surface *, int, int);
 #ifdef DEBUG
 void		 map_dump(struct map *);
 #endif
