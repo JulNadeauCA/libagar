@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.43 2002/12/17 06:47:57 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.44 2002/12/20 01:01:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -87,6 +87,16 @@ struct widget {
 	_wdrd.y = WIDGET_ABSY((wi)) + (yo);			\
 	_wdrd.w = (wdrw);					\
 	_wdrd.h = (wdrh);					\
+	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, (col));	\
+} while (/*CONSTCOND*/0)
+
+#define WIDGET_FILL_RECT(wi, rd, col) do {			\
+	SDL_Rect _wdrd;						\
+								\
+	_wdrd.x = (rd)->x + WIDGET_ABSX((wi));			\
+	_wdrd.y = (rd)->y + WIDGET_ABSY((wi));			\
+	_wdrd.w = (rd)->w;					\
+	_wdrd.h = (rd)->h;					\
 	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, (col));	\
 } while (/*CONSTCOND*/0)
 
