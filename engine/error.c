@@ -100,12 +100,7 @@ _dprintf_noop(const char *fmt, ...)
 }
 
 void
-_deprintf_noop(const char *fmt, ...)
-{
-}
-
-void
-_debug_noop(int, const char *fmt, ...)
+_debug_noop(int level, const char *fmt, ...)
 {
 }
 
