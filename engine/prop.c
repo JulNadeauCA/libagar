@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.20 2003/02/22 11:49:53 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.21 2003/02/25 01:20:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -117,7 +117,7 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		nprop->data.d = va_arg(ap, double);
 		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 	case PROP_LONG_DOUBLE:
 		nprop->data.ld = va_arg(ap, long double);
 		debug(DEBUG_SET, "long double %s: %Lf\n", key, nprop->data.ld);
@@ -201,7 +201,7 @@ prop_set_double(void *ob, char *key, double d)
 	return (prop_set(ob, key, PROP_DOUBLE, d));
 }
 
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 struct prop *
 prop_set_long_double(void *ob, char *key, long double ld)
 {
@@ -282,7 +282,7 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			case PROP_DOUBLE:
 				*(double *)p = prop->data.d;
 				break;
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 			case PROP_LONG_DOUBLE:
 				*(long double *)p = prop->data.ld;
 				break;
@@ -419,7 +419,7 @@ prop_get_double(void *p, char *key)
 	return (d);
 }
 
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 long double
 prop_get_long_double(void *p, char *key)
 {
@@ -513,7 +513,7 @@ prop_load(void *p, int fd)
 		case PROP_DOUBLE:
 			prop_set_double(ob, key, read_double(fd));
 			break;
-# ifdef HAVE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 		case PROP_LONG_DOUBLE:
 			prop_set_long_double(ob, key, read_long_double(fd));
 			break;
@@ -596,7 +596,7 @@ prop_save(void *p, int fd)
 		case PROP_DOUBLE:
 			buf_write_double(buf, prop->data.d);
 			break;
-# ifdef HAVE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 		case PROP_LONG_DOUBLE:
 			buf_write_long_double(buf, prop->data.ld);
 			break;

@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.8 2003/02/25 01:20:57 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.9 2003/02/25 01:26:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_ieee754.h>
@@ -34,7 +34,7 @@ struct prop {
 		Sint32	 s32;
 		float	 	f;
 		double	 	d;
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 		long double	ld;
 #endif
 		char	*s;
@@ -58,7 +58,7 @@ struct prop	*prop_set_uint32(void *, char *, Uint32);
 struct prop	*prop_set_sint32(void *, char *, Sint32);
 struct prop	*prop_set_float(void *, char *, float);
 struct prop	*prop_set_double(void *, char *, double);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 struct prop	*prop_set_long_double(void *, char *, long double);
 #endif
 struct prop	*prop_set_string(void *, char *, char *, ...);
@@ -75,7 +75,7 @@ Uint32	 	 prop_get_uint32(void *, char *);
 Sint32	 	 prop_get_sint32(void *, char *);
 float		 prop_get_float(void *, char *);
 double		 prop_get_double(void *, char *);
-#ifdef HAVE_LONG_DOUBLE
+#ifdef USE_LONG_DOUBLE
 long double	 prop_get_long_double(void *, char *);
 #endif
 char		*prop_get_string(void *, char *);
