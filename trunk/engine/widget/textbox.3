@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.10 2003/02/10 04:46:23 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.11 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -81,6 +81,9 @@ can be changed at runtime, and may include:
 .Ft "char *"
 .Fn textbox_string "struct textbox *textbox"
 .Pp
+.Ft "size_t"
+.Fn textbox_copy_string "struct textbox *textbox" "char *dst" "size_t dst_size"
+.Pp
 .Ft int
 .Fn textbox_int "struct textbox *textbox"
 .nr nS 0
@@ -97,11 +100,21 @@ The
 .Fn textbox_string
 function returns a copy of the text inside
 .Fa textbox .
-The
+.Fn textbox_copy_string
+copies up to
+.Fa dst_size
+-1 bytes of the text inside
+.Fa textbox ,
+NUL-terminating the result.
+.Fn textbox_copy_string
+returns the number of characters that would have been copied if
+.Fa dst_size
+was unlimited.
+.Pp
 .Fn textbox_int
-function attempts to convert the text inside
+tries to convert the text inside
 .Fa textbox
-to an integer value and returns it.
+to an integer value.
 .Sh EVENTS
 The
 .Nm

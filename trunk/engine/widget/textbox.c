@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.45 2003/02/10 06:13:56 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.46 2003/02/13 11:22:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,16 +27,17 @@
  */
 
 #include <engine/compat/vasprintf.h>
-#include <engine/engine.h>
+#include <engine/compat/strlcpy.h>
 
+#include <engine/engine.h>
 #include <engine/view.h>
 
-#include "primitive.h"
-#include "text.h"
-#include "widget.h"
-#include "window.h"
-#include "textbox.h"
-#include "keycodes.h"
+#include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/keycodes.h>
 
 static const struct widget_ops textbox_ops = {
 	{
@@ -326,6 +327,18 @@ textbox_string(struct textbox *tb)
 	pthread_mutex_unlock(&tb->text.lock);
 
 	return (s);
+}
+
+size_t
+textbox_copy_string(struct textbox *tb, char *dst, size_t dst_size)
+{
+	size_t rv;
+
+	pthread_mutex_lock(&tb->text.lock);
+	rv = strlcpy(dst, tb->text.s, dst_size);
+	pthread_mutex_unlock(&tb->text.lock);
+
+	return (rv);
 }
 
 int
