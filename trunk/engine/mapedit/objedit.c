@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.49 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.50 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -105,6 +105,7 @@ tryname:
 	} else {
 		object_init(nobj, typesw[i].type, name, NULL);
 	}
+	object_unlink_datafiles(nobj);
 	object_attach(pobj, nobj);
 }
 
@@ -340,8 +341,6 @@ objedit_window(void)
 	struct window *win;
 	struct vbox *vb;
 	struct textbox *name_tb;
-	struct button *create_bu, *edit_bu, *oedit_bu, *load_bu, *save_bu,
-	    *destroy_bu, *dup_bu, *mvup_bu, *mvdown_bu;
 	struct combo *types_com;
 	struct tlist *objs_tl;
 	struct toolbar *tbar;
