@@ -95,7 +95,6 @@ depend-subdir:
 	fi)
 
 cleandir-subdir:
-	exit 1
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
