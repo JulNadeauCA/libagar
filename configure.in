@@ -1,7 +1,7 @@
-#	$Csoft: configure.in,v 1.3 2002/01/29 18:53:07 vedge Exp $
+#	$Csoft: configure.in,v 1.4 2002/02/14 06:33:08 vedge Exp $
 
 makeout(Makefile.config);
-inclout(config.h);
+inclout(engine/config.h);
 
 register("--with-smpeg",	"Play videos through the smpeg library [yes]");
 register("--without-smpeg",	"");
