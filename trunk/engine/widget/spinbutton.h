@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.h,v 1.6 2004/03/24 01:42:29 vedge Exp $	*/
+/*	$Csoft: spinbutton.h,v 1.7 2004/03/25 04:23:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SPINBUTTON_H_
@@ -35,7 +35,7 @@ void	spinbutton_destroy(void *);
 void	spinbutton_scale(void *, int, int);
 void	spinbutton_draw(void *);
 
-void	spinbutton_add_value(struct spinbutton *, ...);
+void	spinbutton_add_value(struct spinbutton *, int);
 void	spinbutton_set_value(struct spinbutton *, ...);
 void	spinbutton_set_min(struct spinbutton *, int);
 void	spinbutton_set_max(struct spinbutton *, int);

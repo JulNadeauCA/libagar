@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.h,v 1.7 2004/03/25 04:23:18 vedge Exp $	*/
+/*	$Csoft: mspinbutton.h,v 1.1 2004/03/25 07:16:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MSPINBUTTON_H_
@@ -35,7 +35,7 @@ void	mspinbutton_destroy(void *);
 void	mspinbutton_scale(void *, int, int);
 void	mspinbutton_draw(void *);
 
-void	mspinbutton_add_value(struct mspinbutton *, const char *, ...);
+void	mspinbutton_add_value(struct mspinbutton *, const char *, int);
 void	mspinbutton_set_value(struct mspinbutton *, const char *, ...);
 void	mspinbutton_set_min(struct mspinbutton *, int);
 void	mspinbutton_set_max(struct mspinbutton *, int);
