@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.81 2002/09/13 11:08:29 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.82 2002/09/16 03:29:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -88,6 +88,7 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
+	ob->state = OBJECT_EMBRYONIC;
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->pos_lock, NULL);
