@@ -131,8 +131,8 @@ echo FOBJDIR=$FOBJDIR >> Makefile.config
 INST_MANDIR="$PREFIX/share/agar/man"
 echo INST_MANDIR=$INST_MANDIR >> Makefile.config
 echo -n "checking for a usable C compiler..."
-echo -n "checking for a usable C compiler..." >> /config.log
-echo "checking for a usable C compiler..." >> /config.log
+echo -n "checking for a usable C compiler..." >> $BUILD/config.log
+echo "checking for a usable C compiler..." >> $BUILD/config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
@@ -179,7 +179,7 @@ fi
 
 rm -f .cctest .cctest.c
 echo -n "checking for IEEE 754 floating point..."
-echo -n "checking for IEEE 754 floating point..." >> /config.log
+echo -n "checking for IEEE 754 floating point..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -208,7 +208,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_IEEE754" > engine/config/have_ieee754.h
 echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> engine/config/have_ieee754.h
 echo "#endif /* HAVE_IEEE754 */" >> engine/config/have_ieee754.h
@@ -220,7 +220,7 @@ else
 	echo "no"
 fi
 echo -n "checking for long double..."
-echo -n "checking for long double..." >> /config.log
+echo -n "checking for long double..." >> $BUILD/config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -246,7 +246,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_LONG_DOUBLE" > engine/config/have_long_double.h
 echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> engine/config/have_long_double.h
 echo "#endif /* HAVE_LONG_DOUBLE */" >> engine/config/have_long_double.h
@@ -258,8 +258,8 @@ else
 	echo "no"
 fi
 echo -n "checking for a getenv() function..."
-echo -n "checking for a getenv() function..." >> /config.log
-echo "checking for a getenv() function..." >> /config.log
+echo -n "checking for a getenv() function..." >> $BUILD/config.log
+echo "checking for a getenv() function..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
@@ -284,7 +284,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_GETENV" > engine/config/have_getenv.h
 echo "#define HAVE_GETENV" $HAVE_GETENV >> engine/config/have_getenv.h
 echo "#endif /* HAVE_GETENV */" >> engine/config/have_getenv.h
@@ -296,8 +296,8 @@ else
 	echo "no"
 fi
 echo -n "checking for setenv() and unsetenv() functions..."
-echo -n "checking for setenv() and unsetenv() functions..." >> /config.log
-echo "checking for setenv() and unsetenv() functions..." >> /config.log
+echo -n "checking for setenv() and unsetenv() functions..." >> $BUILD/config.log
+echo "checking for setenv() and unsetenv() functions..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
@@ -324,7 +324,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_SETENV" > engine/config/have_setenv.h
 echo "#define HAVE_SETENV" $HAVE_SETENV >> engine/config/have_setenv.h
 echo "#endif /* HAVE_SETENV */" >> engine/config/have_setenv.h
@@ -336,8 +336,8 @@ else
 	echo "no"
 fi
 echo -n "checking for a strsep() function..."
-echo -n "checking for a strsep() function..." >> /config.log
-echo "checking for a strsep() function..." >> /config.log
+echo -n "checking for a strsep() function..." >> $BUILD/config.log
+echo "checking for a strsep() function..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -362,7 +362,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_STRSEP" > engine/config/have_strsep.h
 echo "#define HAVE_STRSEP" $HAVE_STRSEP >> engine/config/have_strsep.h
 echo "#endif /* HAVE_STRSEP */" >> engine/config/have_strsep.h
@@ -374,8 +374,8 @@ else
 	echo "no"
 fi
 echo -n "checking for a strlcat() function..."
-echo -n "checking for a strlcat() function..." >> /config.log
-echo "checking for a strlcat() function..." >> /config.log
+echo -n "checking for a strlcat() function..." >> $BUILD/config.log
+echo "checking for a strlcat() function..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -400,7 +400,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_STRLCAT" > engine/config/have_strlcat.h
 echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> engine/config/have_strlcat.h
 echo "#endif /* HAVE_STRLCAT */" >> engine/config/have_strlcat.h
@@ -412,8 +412,8 @@ else
 	echo "no"
 fi
 echo -n "checking for a strlcpy() function..."
-echo -n "checking for a strlcpy() function..." >> /config.log
-echo "checking for a strlcpy() function..." >> /config.log
+echo -n "checking for a strlcpy() function..." >> $BUILD/config.log
+echo "checking for a strlcpy() function..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -438,7 +438,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_STRLCPY" > engine/config/have_strlcpy.h
 echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> engine/config/have_strlcpy.h
 echo "#endif /* HAVE_STRLCPY */" >> engine/config/have_strlcpy.h
@@ -450,8 +450,8 @@ else
 	echo "no"
 fi
 echo -n "checking for an asprintf() function..."
-echo -n "checking for an asprintf() function..." >> /config.log
-echo "checking for an asprintf() function..." >> /config.log
+echo -n "checking for an asprintf() function..." >> $BUILD/config.log
+echo "checking for an asprintf() function..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -482,7 +482,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_ASPRINTF" > engine/config/have_asprintf.h
 echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> engine/config/have_asprintf.h
 echo "#endif /* HAVE_ASPRINTF */" >> engine/config/have_asprintf.h
@@ -494,8 +494,8 @@ else
 	echo "no"
 fi
 echo -n "checking for a vasprintf() function..."
-echo -n "checking for a vasprintf() function..." >> /config.log
-echo "checking for a vasprintf() function..." >> /config.log
+echo -n "checking for a vasprintf() function..." >> $BUILD/config.log
+echo "checking for a vasprintf() function..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <stdarg.h>
@@ -537,7 +537,7 @@ else
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_VASPRINTF" > engine/config/have_vasprintf.h
 echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> engine/config/have_vasprintf.h
 echo "#endif /* HAVE_VASPRINTF */" >> engine/config/have_vasprintf.h
@@ -556,8 +556,8 @@ CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused"
 echo CFLAGS=$CFLAGS >> Makefile.config
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
-echo -n "checking for SDL (http://www.libsdl.org)..." >> /config.log
-echo "checking for SDL (http://www.libsdl.org)..." >> /config.log
+echo -n "checking for SDL (http://www.libsdl.org)..." >> $BUILD/config.log
+echo "checking for SDL (http://www.libsdl.org)..." >> $BUILD/config.log
 sdl_version=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
@@ -612,13 +612,13 @@ NONE=1
 fi
 if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
-echo "ok" >> /config.log
+echo "ok" >> $BUILD/config.log
 else
 echo "Could not find the SDL library. Make sure sdl-config is in $PATH."
 exit 1
 fi
 echo -n "checking whether SDL works..."
-echo -n "checking whether SDL works..." >> /config.log
+echo -n "checking whether SDL works..." >> $BUILD/config.log
 cat << EOT > conftest.c
 
 #include <stdio.h>
@@ -650,8 +650,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> /config.log
-$CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>/config.log
+echo $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> $BUILD/config.log
+$CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>$BUILD/config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> $BUILD/config.log
 	compile="failed"
@@ -662,7 +662,7 @@ if [ ! -e "conftest" ]; then
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_SDL" > engine/config/have_sdl.h
 echo "#define HAVE_SDL" $HAVE_SDL >> engine/config/have_sdl.h
 echo "#endif /* HAVE_SDL */" >> engine/config/have_sdl.h
@@ -682,8 +682,8 @@ echo "The SDL test would not compile."
 exit 1
 fi
 echo -n "checking for FreeType (http://www.freetype.org)..."
-echo -n "checking for FreeType (http://www.freetype.org)..." >> /config.log
-echo "checking for FreeType (http://www.freetype.org)..." >> /config.log
+echo -n "checking for FreeType (http://www.freetype.org)..." >> $BUILD/config.log
+echo "checking for FreeType (http://www.freetype.org)..." >> $BUILD/config.log
 FREETYPE_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
@@ -712,13 +712,13 @@ freetype_found=yes
 echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
 echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
 echo "yes"
-echo "yes" >> /config.log
+echo "yes" >> $BUILD/config.log
 else
 echo "Could not find the FreeType library"
 exit 1
 fi
 echo -n "checking whether FreeType works..."
-echo -n "checking whether FreeType works..." >> /config.log
+echo -n "checking whether FreeType works..." >> $BUILD/config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -739,8 +739,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> /config.log
-$CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>/config.log
+echo $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> $BUILD/config.log
+$CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>$BUILD/config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> $BUILD/config.log
 	compile="failed"
@@ -751,7 +751,7 @@ if [ ! -e "conftest" ]; then
 fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-	echo "-> success" >> /config.log
+	echo "-> success" >> $BUILD/config.log
 	echo "#ifndef HAVE_FREETYPE" > engine/config/have_freetype.h
 echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/config/have_freetype.h
 echo "#endif /* HAVE_FREETYPE */" >> engine/config/have_freetype.h
@@ -773,8 +773,8 @@ fi
 if [ "${with_x11}" != "no" ]
  then
 echo -n "checking for X11 (http://www.xfree86.org/)..."
-echo -n "checking for X11 (http://www.xfree86.org/)..." >> /config.log
-echo "checking for X11 (http://www.xfree86.org/)..." >> /config.log
+echo -n "checking for X11 (http://www.xfree86.org/)..." >> $BUILD/config.log
+echo "checking for X11 (http://www.xfree86.org/)..." >> $BUILD/config.log
 if [ -d /usr/X11R6 ]; then
 X11BASE=/usr/X11R6
 X11_CFLAGS=-I/usr/X11R6/include
@@ -798,9 +798,9 @@ NONE=1
 fi
 if [ "${X11BASE}" != "" ]; then
 echo -n "ok"
-echo -n "ok" >> /config.log
+echo -n "ok" >> $BUILD/config.log
 echo ", $X11BASE"
-echo ", $X11BASE" >> /config.log
+echo ", $X11BASE" >> $BUILD/config.log
 x11_found=yes
 echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
@@ -910,4 +910,4 @@ echo "#ifndef PREFIX" > engine/config/prefix.h
 echo "#define PREFIX \"$PREFIX\"" >> engine/config/prefix.h
 echo "#endif /* PREFIX */" >> engine/config/prefix.h
 echo "Don't forget to run \"make depend\"."
-echo "Don't forget to run \"make depend\"." >> /config.log
+echo "Don't forget to run \"make depend\"." >> $BUILD/config.log
