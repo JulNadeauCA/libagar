@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.59 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.60 2005/01/27 05:46:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -63,8 +63,9 @@ static const struct tool_ent {
 static void
 selected_tool(int argc, union evarg *argv)
 {
-    struct tableview_row *row = argv[1].p;
-	struct window *(*win_func)(void) = tool_ents[tableview_row_getID(row)].window_func;
+	struct tableview_row *row = argv[1].p;
+	struct window *(*win_func)(void) =
+	    tool_ents[tableview_row_getID(row)].window_func;
 	struct window *win;
 
 	if ((win = (win_func)()) != NULL)
