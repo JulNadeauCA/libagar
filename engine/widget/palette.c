@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.3 2002/12/30 03:50:22 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.4 2002/12/30 04:11:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -84,6 +84,7 @@ palette_init(struct palette *pal, int rw, int rh, int nbars)
 	for (i = 0; i < pal->nbars; i++) {
 		pal->bars[i] = emalloc(sizeof(struct scrollbar));
 		scrollbar_init(pal->bars[i], -1, -1, SCROLLBAR_HORIZ);
+		WIDGET(pal->bars[i])->flags |= WIDGET_NO_FOCUS;
 		widget_set_int(pal->bars[i], "max", 255);
 		event_new(pal->bars[i], "scrollbar-changed",
 		    palette_changed, "%p, %i", pal, i);
