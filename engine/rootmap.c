@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.21 2003/01/27 08:02:00 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.22 2003/02/04 02:23:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -68,6 +68,7 @@ rootmap_animate(void)
 	struct node *node;
 	struct noderef *nref;
 	int mx, my, rx, ry;
+	int layer = 0;
 
 #ifdef DEBUG
 	/* XXX */
@@ -78,6 +79,10 @@ rootmap_animate(void)
 	}
 #endif
 
+draw_layer:
+	if (!m->layers[layer].visible) {
+		goto next_layer;
+	}
 	for (my = rm->y, ry = rm->sy - m->tileh;	/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
 	     my++, ry += m->tileh) {
@@ -94,9 +99,15 @@ rootmap_animate(void)
 			}
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
-				noderef_draw(m, nref, rx, ry);
+				if (nref->layer == layer) {
+					noderef_draw(m, nref, rx, ry);
+				}
 			}
 		}
+	}
+next_layer:
+	if (++layer < m->nlayers) {
+		goto draw_layer;			/* Draw next layer */
 	}
 }
 
@@ -112,6 +123,7 @@ rootmap_draw(void)
 	struct node *node;
 	struct noderef *nref;
 	int mx, my, rx, ry;
+	int layer = 0;
 
 #ifdef DEBUG
 	/* XXX */
@@ -121,11 +133,15 @@ rootmap_draw(void)
 	}
 #endif
 
-	for (my = rm->y, ry = rm->sy - m->tileh;	/* Downward */
+draw_layer:
+	if (!m->layers[layer].visible) {
+		goto next_layer;
+	}
+	for (my = rm->y, ry = rm->sy - m->tileh;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
 	     my++, ry += m->tileh) {
 
-		for (mx = rm->x, rx = rm->sx - m->tilew; /* Forward */
+		for (mx = rm->x, rx = rm->sx - m->tilew;	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
 		     mx++, rx += m->tilew) {
 			node = &m->map[my][mx];
@@ -137,9 +153,16 @@ rootmap_draw(void)
 			}
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
-				noderef_draw(m, nref, rx, ry);
+
+				if (nref->layer == layer) {
+					noderef_draw(m, nref, rx, ry);
+				}
 			}
 		}
+	}
+next_layer:
+	if (++layer < m->nlayers) {
+		goto draw_layer;			/* Draw next layer */
 	}
 }
 
