@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.80 2002/05/02 10:08:23 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.81 2002/05/06 02:17:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -66,16 +66,15 @@ struct draw {
 	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
 };
 
-static void	 node_reinit(struct node *);
-
-/* Allocate nodes for the given map geometry. */
+/*
+ * Allocate nodes for the given map geometry.
+ * Map must be locked.
+ */
 void
 map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 {
 	Uint32 i, x, y;
 	
-	pthread_mutex_assert(&m->lock);
-
 	m->mapw = w;
 	m->maph = h;
 	m->tilew = tilew;
@@ -90,33 +89,50 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 	m->shtiley = i;
 
 	/* Allocate the two-dimensional node array. */
-	m->map = (struct node **)emalloc((w * h) * sizeof(struct node *));
+	m->map = emalloc((w * h) * sizeof(struct node *));
 	for (i = 0; i < h; i++) {
-		*(m->map + i) = (struct node *)emalloc(w * sizeof(struct node));
+		*(m->map + i) = emalloc(w * sizeof(struct node));
 	}
+
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
 			struct node *node = &m->map[y][x];
-		
+	
+			memset(node, 0, sizeof(struct node));
 			TAILQ_INIT(&node->nrefsh);
-			node_reinit(node);
 		}
 	}
 }
 
-/* Free map nodes. */
+/*
+ * Free map nodes.
+ * Map must be locked.
+ */
 void
 map_freenodes(struct map *m)
 {
 	Uint32 x, y;
 
-	pthread_mutex_assert(&m->lock);
-
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			node_reinit(&m->map[y][x]);	/* Free refs */
+			struct node *node = &m->map[y][x];
+			struct noderef *nref, *nextnref;
+
+#ifdef DEBUG
+			if (node->nnrefs > 256) {
+				dprintnode(m, x, y, "funny node\n");
+				continue;
+			}
+#endif
+
+			for (nref = TAILQ_FIRST(&node->nrefsh);
+			     nref != TAILQ_END(&node->nrefsh);
+			     nref = nextnref) {
+				nextnref = TAILQ_NEXT(nref, nrefs);
+				free(nref);
+			}
+			free(node);
 		}
-		free(*(m->map + y));
 	}
 	free(m->map);
 }
@@ -143,30 +159,47 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	pthread_mutex_init(&m->lock, NULL);
 }
 
-int
+/*
+ * Display a particular map.
+ * This map, the current map and the world must not be locked in this thread.
+ */
+void
 map_focus(struct map *m)
 {
+	pthread_mutex_lock(&world->lock);
+	if (world->curmap != NULL && world->curmap != m) {
+		dprintf("unfocusing %s\n", OBJECT(world->curmap)->name);
+		pthread_mutex_lock(&world->curmap->lock);
+		world->curmap->flags &= ~(MAP_FOCUSED);
+		pthread_mutex_unlock(&world->curmap->lock);
+	}
+	dprintf("focusing %s\n", OBJECT(m)->name);
+	world->curmap = m;
+	pthread_mutex_unlock(&world->lock);
+
+	pthread_mutex_lock(&m->lock);
 	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
-	world->curmap = m;
-
-	/* XXX center view? */
-
-	return (0);
+	pthread_mutex_unlock(&m->lock);
 }
 
-int
+/*
+ * Display a particular map.
+ * Map must be locked, world must not.
+ */
+void
 map_unfocus(struct map *m)
 {
 	m->view->map = NULL;
 	m->flags &= ~(MAP_FOCUSED);	/* Will stop the rendering thread */
+
+	pthread_mutex_lock(&world->lock);
 	world->curmap = NULL;
+	pthread_mutex_unlock(&world->lock);
 
 	if (curmapedit != NULL) {
 		mapedit_unlink(curmapedit);
 	}
-
-	return (0);
 }
 
 /*
@@ -178,7 +211,7 @@ node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 {
 	struct noderef *nref;
 
-	nref = (struct noderef *)emalloc(sizeof(struct noderef));
+	nref = emalloc(sizeof(struct noderef));
 	nref->pobj = (struct object *)ob;
 	nref->offs = offs;
 	nref->flags = flags;
@@ -251,7 +284,24 @@ node_delref(struct node *node, struct noderef *nref)
 		node->nanims--;
 		node->flags &= ~(MAPREF_ANIM);
 	}
-	
+
+#ifdef DEBUG
+	do {
+		struct noderef *fnref;
+		int found = 0;
+
+		TAILQ_FOREACH(fnref, &node->nrefsh, nrefs) {
+			if (fnref == nref) {
+				found++;
+			}
+		}
+		if (!found) {
+			dprintf("noderef %p not in node %p\n", nref, node);
+			return (-1);
+		}
+	} while (0);
+#endif
+
 	TAILQ_REMOVE(&node->nrefsh, nref, nrefs);
 	node->nnrefs--;
 	free(nref);
@@ -260,23 +310,22 @@ node_delref(struct node *node, struct noderef *nref)
 }
 
 /*
- * Reinitialize a map to zero.
+ * Reinitialize all nodes.
  * Must be called on a locked map.
  */
 void
 map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
     Uint32 rflags)
 {
-	Uint32 x = 0, y;
-
-	pthread_mutex_assert(&m->lock);
+	int x = 0, y;
 
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
-		
-			node_reinit(node);
+			
+			memset(node, 0, sizeof(struct node));
+			TAILQ_INIT(&node->nrefsh);
 			node->flags = nflags;
 	
 			if (ob != NULL) {
@@ -297,35 +346,17 @@ map_destroy(void *p)
 	if (m->flags & MAP_FOCUSED) {
 		map_unfocus(m);
 	}
-	map_freenodes(m);
+	if (m->map != NULL) {
+		map_freenodes(m);
+	}
 	pthread_mutex_unlock(&m->lock);
 }
 
 /*
- * Reinitialize a node.
+ * Render a map node.
+ * Inline since this is called from draw functions with many variables.
  * Must be called on a locked map.
  */
-static void
-node_reinit(struct node *node)
-{
-	struct noderef *nref, *nextnref;
-
-	for (nref = TAILQ_FIRST(&node->nrefsh);
-	     nref != TAILQ_END(&node->nrefsh);
-	     nref = nextnref) {
-		nextnref = TAILQ_NEXT(nref, nrefs);
-		free(nref);
-	}
-	TAILQ_INIT(&node->nrefsh);
-
-	node->nnrefs = 0;
-	node->flags = 0;
-	node->v1 = 0;
-	node->v2 = 0;
-	node->nanims = 0;
-}
-
-/* Inline since this is called from draw functions with many variables. */
 static __inline__ void
 map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
@@ -379,6 +410,22 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 	}
 }
 
+#ifdef XDEBUG
+#define XDEBUG_RECTS(view, ri) do {					\
+		int ei;							\
+		for (ei = 0; ei < (ri); ei++) {				\
+			if ((view)->rects[ei].x > (view)->width ||	\
+			    (view)->rects[ei].y > (view)->height) {	\
+				dprintrect("bogus", &(view)->rects[ei]);\
+				dprintf("bogus rectangle %d/%d\n", ei,	\
+				    ri);				\
+			}						\
+		}							\
+	} while (/*CONSTCOND*/0)
+#else
+#define XDEBUG_RECTS(view, ri)
+#endif
+
 /*
  * Render all animations in the map view.
  *
@@ -392,10 +439,8 @@ void
 map_animate(struct map *m)
 {
 	struct viewport *view = m->view;
-	static Uint32 x, y, vx, vy, rx, ry;
-	Uint32 ri = 0;
-
-	pthread_mutex_assert(&m->lock);
+	static int x, y, vx, vy, rx, ry;
+	int ri = 0;
 
 	for (y = view->mapy, vy = view->mapyoffs;
 	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
@@ -431,7 +476,7 @@ map_animate(struct map *m)
 			if (node->flags & NODE_ANIM) {
 				static struct node *nnode;
 
-				/* Draw nearby nodes. */
+				/* Draw nearby nodes. XXX */
 				if (x > 1) {
 					nnode = &m->map[y][x - 1]; /* Left */
 					if (nnode->flags & NODE_OVERLAP &&
@@ -505,6 +550,7 @@ map_animate(struct map *m)
 		}
 	}
 	if (ri > 0) {
+		XDEBUG_RECTS(view, ri);
 		SDL_UpdateRects(view->v, ri, view->rects);
 	}
 }
@@ -516,12 +562,10 @@ map_animate(struct map *m)
 void
 map_draw(struct map *m)
 {
-	Uint32 x, y, vx, vy, rx, ry;
-	Uint32 ri = 0;
+	static int x, y, vx, vy, rx, ry;
 	struct viewport *view = m->view;
+	int ri = 0;
 	
-	pthread_mutex_assert(&m->lock);
-
 	for (y = view->mapy, vy = view->mapyoffs;
 	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
 	     y++, vy++) {
@@ -586,6 +630,7 @@ map_draw(struct map *m)
 	}
 
 	if (ri > 0) {
+		XDEBUG_RECTS(view, ri);
 		SDL_UpdateRects(view->v, ri, view->rects);
 	}
 
@@ -642,7 +687,7 @@ map_load(void *ob, int fd)
 
 	/* Load the object map. */
 	nobjs = fobj_read_uint32(fd);
-	pobjs = (struct object **)emalloc(nobjs * sizeof(struct object *));
+	pobjs = emalloc(nobjs * sizeof(struct object *));
 	for (i = 0; i < nobjs; i++) {
 		char *s;
 		struct object *pob;
@@ -661,10 +706,18 @@ map_load(void *ob, int fd)
 		free(s);
 	}
 
-	/* Read the nodes. */
+	/* Allocate space for the nodes. */
 	pthread_mutex_lock(&m->lock);
+	if (m->map != NULL) {
+		map_freenodes(m);
+		m->map = NULL;
+	}
 	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
+
+	/* Adjust the view. */
 	view_setmode(m->view, m, -1, NULL);
+
+	/* Read the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
@@ -674,6 +727,12 @@ map_load(void *ob, int fd)
 			node->v1 = fobj_read_uint32(fd);
 			node->v2 = fobj_read_uint32(fd);
 			nnrefs = fobj_read_uint32(fd);
+
+#ifdef DEBUG
+			if (nnrefs > 128) {
+				dprintnode(m, x, y, "funny node");
+			}
+#endif
 
 			for (i = 0; i < nnrefs; i++) {
 				struct object *pobj;
@@ -685,6 +744,10 @@ map_load(void *ob, int fd)
 				offs = fobj_read_uint32(fd);
 				frame = fobj_read_uint32(fd);
 				flags = fobj_read_uint32(fd);
+
+				if (offs > 256) {
+					dprintf("bad offs\n");
+				}
 
 				if (pobj != NULL) {
 					nref = node_addref(node, pobj, offs,
@@ -732,10 +795,11 @@ map_save(void *ob, int fd)
 	fobj_bwrite_uint32(buf, 0);
 
 	/* Write the object map. */
+	pthread_mutex_assert(&world->lock);
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
 		solen += sizeof(struct object *);
 	}
-	pobjs = (struct object **)emalloc(solen);
+	pobjs = emalloc(solen);
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
 		if ((pob->flags & OBJ_ART) == 0) {
 			continue;
@@ -793,3 +857,56 @@ map_save(void *ob, int fd)
 	return (0);
 }
 
+#ifdef DEBUG
+
+static void	*map_verify_loop(void *);
+
+/* Verify the integrity of a map, also helps finding races. */
+static void *
+map_verify_loop(void *arg)
+{
+	struct map *m = arg;
+	int x = 0, y;
+	
+	dprintf("%p: testing %s\n", pthread_self(),
+	    OBJECT(m)->name);
+
+	for (;;) {
+		pthread_mutex_lock(&m->lock);
+		for (y = 0; y < m->maph; y++) {
+			for (x = 0; x < m->mapw; x++) {
+				struct node *n = &m->map[y][x];
+				struct noderef *nref;
+
+				if (n->nnrefs > 0xff ||
+				    ((n->flags & NODE_BLOCK) &&
+				     (n->flags & NODE_WALK))) {
+					dprintnode(m, x, y, "funny node");
+					continue;
+				}
+				TAILQ_FOREACH(nref, &n->nrefsh, nrefs) {
+					if (nref->pobj == NULL ||
+					    nref->offs > 0xffff ||
+					    nref->xoffs > 0xff ||
+					    nref->yoffs > 0xff) {
+						fatal("%s:%d,%d: funny ref\n",
+						    OBJECT(m)->name, x, y);
+					}
+				}
+			}
+		}
+		pthread_mutex_unlock(&m->lock);
+		SDL_Delay(1);
+	}
+	return (NULL);
+}
+
+void
+map_verify(struct map *m)
+{
+	pthread_t verify_th;
+
+	pthread_create(&verify_th, NULL, map_verify_loop, m);
+}
+
+#endif
