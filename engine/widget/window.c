@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.196 2003/06/09 23:14:57 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.197 2003/06/10 01:13:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1198,7 +1198,6 @@ window_apply_alignment(struct window *win)
 		if ((window_yoffs += win->borderw)+WIDGET(win)->h > view->h/2) {
 			window_yoffs = 0;
 		}
-		dprintf("cascade %d,%d\n", window_xoffs, window_yoffs);
 		WIDGET(win)->x += window_xoffs;
 		WIDGET(win)->y += window_yoffs;
 		pthread_mutex_unlock(&window_lock);
