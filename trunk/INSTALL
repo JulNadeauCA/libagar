@@ -20,10 +20,10 @@ INSTALLATION
 4) Install the library, binaries, data files and manual pages.
    # make install
 
-6) Execute the game.
-   $ cave						# Game mode
-   $ cave -e						# Edition mode
-   $ cave -e -T $HOME/fonts -t myfont,18		# Override default font
-   $ cave -e -l /tmp/w-agar:/tmp/src-agar:$HOME/.cave	# Override load path
+5) Execute the game.
+   $ cave					# Game mode
+   $ cave -e					# Edition mode
+   $ cave -e -T $HOME/fonts -t myfont,18	# Override default font
+   $ cave -e -l $BUILDDIR:$SRCDIR:$HOME/.cave	# Override load path
 
-$Csoft: INSTALL,v 1.10 2003/06/06 09:42:07 vedge Exp $
+$Csoft: INSTALL,v 1.11 2003/06/16 00:39:33 vedge Exp $
