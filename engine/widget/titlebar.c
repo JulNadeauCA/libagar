@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.14 2004/03/30 16:32:52 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.15 2004/04/22 01:52:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -51,7 +51,8 @@ const struct widget_ops titlebar_ops = {
 
 enum {
 	UNFOCUSED_COLOR,
-	FOCUSED_COLOR
+	FOCUSED_COLOR,
+	CAPTION_COLOR
 };
 
 static void	titlebar_mousebuttondown(int, union evarg *);
@@ -83,12 +84,13 @@ titlebar_init(struct titlebar *tbar, int flags)
 	object_set_ops(tbar, &titlebar_ops);
 	object_wire_gfx(tbar, "/engine/widget/pixmaps");
 
-	box_set_padding(&tbar->hb, 5);
+	box_set_padding(&tbar->hb, 1);
 	box_set_spacing(&tbar->hb, 0);
 
 	widget_set_type(tbar, "titlebar");
 	widget_map_color(tbar, UNFOCUSED_COLOR, "unfocused", 35, 35, 35, 255);
 	widget_map_color(tbar, FOCUSED_COLOR, "focused", 40, 60, 73, 255);
+	widget_map_color(tbar, CAPTION_COLOR, "caption", 245, 245, 245, 255);
 	WIDGET(tbar)->flags |= WIDGET_UNFOCUSED_BUTTONUP;
 
 	tbar->flags = flags;
@@ -175,3 +177,13 @@ titlebar_close_win(int argc, union evarg *argv)
 	event_post(NULL, tbar->win, "window-close", NULL);
 }
 
+void
+titlebar_set_caption(struct titlebar *tbar, const char *caption)
+{
+	SDL_Surface *su;
+
+	/* XXX use widget_blit2 */
+	su = text_render(NULL, -1, WIDGET_COLOR(tbar, CAPTION_COLOR), caption);
+	label_set_surface(tbar->label, su);
+	SDL_FreeSurface(su);
+}

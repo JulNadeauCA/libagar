@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.h,v 1.1 2003/06/06 03:18:15 vedge Exp $	*/
+/*	$Csoft: titlebar.h,v 1.2 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TITLEBAR_H_
@@ -32,6 +32,7 @@ struct titlebar	*titlebar_new(void *, int);
 
 void	 titlebar_init(struct titlebar *, int);
 void	 titlebar_draw(void *);
+void	 titlebar_set_caption(struct titlebar *, const char *);
 __END_DECLS
 
 #include "close_code.h"
