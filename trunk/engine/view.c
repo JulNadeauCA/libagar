@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.38 2002/05/19 14:32:54 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.39 2002/05/21 04:36:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -421,6 +421,8 @@ view_attach(void *parent, void *child)
 {
 	struct viewport *view = parent;
 	struct window *win = child;
+
+	win->flags |= WINDOW_FOCUS;
 
 	/* Notify the child being attached. */
 	if (OBJECT_OPS(win)->onattach != NULL) {
