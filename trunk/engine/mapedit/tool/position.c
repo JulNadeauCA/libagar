@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.8 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.9 2004/01/22 09:58:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,8 @@
 #include <engine/widget/checkbox.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/spinbutton.h>
+
+#include <string.h>
 
 static void position_init(void);
 static int position_cursor(struct mapview *, SDL_Rect *);
