@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: unicode.c,v 1.1 2003/06/14 11:28:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@ unicode_destroy(void)
 {
 }
 
-/* Convert a string of a specific encoding to Unicode. */
+/* Convert a string of a specific encoding to UTF-16. */
 void
 unicode_convert(enum unicode_conv conv, Uint16 *unicode, const char *text,
     size_t len)
@@ -62,18 +62,18 @@ unicode_convert(enum unicode_conv conv, Uint16 *unicode, const char *text,
 		for (i = 0, j = 0; i < len; i++, j++) {
 			Uint16 ch = ((const unsigned char *)text)[i];
 
-			if (ch >= 0xF0) {
-				ch  = (Uint16)(text[i]&0x07) << 18;
-				ch |= (Uint16)(text[++i]&0x3F) << 12;
-				ch |= (Uint16)(text[++i]&0x3F) << 6;
-				ch |= (Uint16)(text[++i]&0x3F);
-			} else if (ch >= 0xE0) {
-				ch  = (Uint16)(text[i]&0x3F) << 12;
-				ch |= (Uint16)(text[++i]&0x3F) << 6;
-				ch |= (Uint16)(text[++i]&0x3F);
-			} else if (ch >= 0xC0) {
-				ch  = (Uint16)(text[i]&0x3F) << 6;
-				ch |= (Uint16)(text[++i]&0x3F);
+			if (ch >= 0xf0) {
+				ch  = (Uint16)(text[i]   & 0x07) << 18;
+				ch |= (Uint16)(text[++i] & 0x3f) << 12;
+				ch |= (Uint16)(text[++i] & 0x3f) << 6;
+				ch |= (Uint16)(text[++i] & 0x3f);
+			} else if (ch >= 0xe0) {
+				ch  = (Uint16)(text[i]   & 0x3f) << 12;
+				ch |= (Uint16)(text[++i] & 0x3f) << 6;
+				ch |= (Uint16)(text[++i] & 0x3f);
+			} else if (ch >= 0xc0) {
+				ch  = (Uint16)(text[i]   & 0x3f) << 6;
+				ch |= (Uint16)(text[++i] & 0x3f);
 			}
 			unicode[j] = ch;
 		}
@@ -82,7 +82,7 @@ unicode_convert(enum unicode_conv conv, Uint16 *unicode, const char *text,
 	}
 }
 
-/* Convert a string of a specific encoding to Unicode. */
+/* Duplicate a string and convert to UTF-16. */
 __inline__ Uint16 *
 unicode_import(enum unicode_conv conv, const char *text)
 {
@@ -123,7 +123,7 @@ ucsdup(const Uint16 *unicode)
 	return (ns);
 }
 
-/* Dump Unicode text, for debugging purposes. */
+#ifdef DEBUG
 void
 ucsdump(const Uint16 *unicode)
 {
@@ -133,4 +133,5 @@ ucsdump(const Uint16 *unicode)
 		fprintf(stderr, "%04x %c\n", *text, (unsigned char)*text);
 	}
 }
+#endif
 
