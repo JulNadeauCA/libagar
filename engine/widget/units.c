@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.23 2004/08/23 01:20:06 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.24 2004/08/23 06:41:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -116,7 +116,6 @@ defunit:
 }
 
 /* Format a number using the unit most suited to its magnitude. */
-/* XXX thread unsafe */
 int
 unit_format(double n, const struct unit ugroup[], char *buf, size_t len)
 {
@@ -138,21 +137,14 @@ unit_abbr(const struct unit *unit)
 double
 unit2base(double n, const struct unit *unit)
 {
-	return (unit->func != NULL ? unit->func(n) : n*unit->divider);
+	return (unit->func != NULL ? unit->func(n, 1) : n*unit->divider);
 }
 
 /* Convert from n in base unit to given unit. */
 double
 base2unit(double n, const struct unit *unit)
 {
-	if (unit->func != NULL) {
-		double rv;
-
-		rv = unit->func(n);
-		return (rv != 0 ? 1/rv : 0);
-	} else {
-		return (n/unit->divider);
-	}
+	return (unit->func != NULL ? unit->func(n, 0) : n/unit->divider);
 }
 
 /* Convert n from one unit system to another. */
@@ -306,19 +298,12 @@ const struct unit current_units[] = {
 	{ NULL, NULL, NULL,				0, NULL }
 };
 
-/* Units of temperature */
-static double degF2K(double degF) { return ((degF-32)/1.8 + 273.15); }
-static double degC2K(double degC) { return (degC+273.15); }
-#ifdef HISTORICAL_UNITS
-static double degRa2K(double degRa) { return ((degRa-32-459.67)/1.8 + 273.15); }
-static double degRe2K(double degR) { return (degR*1.25 + 273.15); }
-#endif
 const struct unit temperature_units[] = {
-	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),	0, degC2K },
-	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"),	0, degF2K },
+	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),   0, unit_celsius },
+	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"), 0, unit_fahrenheit },
 #ifdef HISTORICAL_UNITS
-	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),	0, degRa2K },
-	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),	0, degRe2K },
+	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),  0, unit_rankine },
+	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),  0, unit_reaumur },
 #endif
 	{ "uk", "\xc2\xb5k", "Microkelvins",			1e-6, NULL },
 	{ "mk", "", "Millikelvins",				1e-3, NULL },
