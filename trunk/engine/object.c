@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.14 2002/02/14 05:27:09 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.15 2002/02/14 06:29:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -115,8 +115,10 @@ object_create(struct object *ob, char *name, char *desc, int flags)
 	ob->flags = flags;
 	ob->sprites = NULL;
 	ob->nsprites = 0;
+	ob->maxsprites = 0;
 	ob->anims = NULL;
 	ob->nanims = 0;
+	ob->maxanims = 0;
 	ob->destroy_hook = NULL;
 
 	return (0);
@@ -170,7 +172,6 @@ object_lategc(void)
 	struct gcref *gcr;
 
 	SLIST_FOREACH(gcr, &lategch, gcrefs) {
-		dprintf("%s\n", gcr->ob->name);
 		object_destroy(gcr->ob);
 		free(gcr);
 	}
@@ -250,6 +251,9 @@ object_dump(struct object *ob)
 	if (ob->flags & SAVE_FUNC)
 		printf(" save");
 	printf(" )\n");
+	if (ob->desc != NULL) {
+		printf("                ( %s )\n", ob->desc);
+	}
 }
 
 #endif /* DEBUG */
