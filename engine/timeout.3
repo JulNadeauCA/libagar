@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.6 2004/05/15 06:05:41 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.7 2005/01/05 04:44:03 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -145,7 +145,8 @@ interface remains consistent across different timing schemes.
 .Pp
 The
 .Fn timeout_del
-function removes the given timeout from the queue, assuming that it exists.
+function removes the given timeout from the queue if it is currently scheduled
+for execution.
 .Fn timeout_exists
 returns 1 if the given timeout is currently in the queue.
 .Pp
@@ -197,9 +198,10 @@ always cancels every scheduled timeout.
 With a multithreaded timing scheme, cancelling a timeout might imply waiting
 for the termination of a thread (possibly sending it a signal as well).
 .Sh TROUBLETONS
-It is not clear whether
+The flags
+.Dv TIMEOUT_DETACHABLE
 .Dv TIMEOUT_LOADABLE
-is any useful.
+have confusing names.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr event 3 ,
