@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.14 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.15 2002/05/21 03:21:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -101,29 +101,31 @@ button_draw(void *p)
 	SDL_Rect rd;
 	struct button *b = p;
 	SDL_Surface *s, *bg;
-	Sint16 x = 0, y = 0;
+	int x = 0, y = 0;
 
 	/* Button */
 	bg = view_surface(SDL_SWSURFACE, WIDGET(b)->w, WIDGET(b)->h);
-	SDL_FillRect(bg, NULL, SDL_MapRGBA(bg->format, 128, 128, 128, 128));
 	if (b->flags & BUTTON_PRESSED) {
-		rd.x = 4;
-		rd.y = 4;
-		rd.w = bg->w - 4;
-		rd.h = bg->h - 4;
-		SDL_FillRect(bg, &rd, SDL_MapRGBA(bg->format, 96, 96, 128, 96));
+		rd.x = 2;
+		rd.y = 2;
+		rd.w = bg->w - 2;
+		rd.h = bg->h - 2;
+		SDL_FillRect(bg, NULL,
+		    SDL_MapRGBA(bg->format, 50, 50, 50, 120));
+		SDL_FillRect(bg, &rd,
+		    SDL_MapRGBA(bg->format, 96, 96, 128, 120));
 	} else {
 		rd.x = 1;
 		rd.y = 1;
 		rd.w = bg->w - 1;
 		rd.h = bg->h - 1;
-		SDL_FillRect(bg, &rd, SDL_MapRGBA(bg->format, 96, 96, 128, 96));
+		SDL_FillRect(bg, NULL,
+		    SDL_MapRGBA(bg->format, 180, 180, 180, 120));
+		SDL_FillRect(bg, &rd,
+		    SDL_MapRGBA(bg->format, 96, 96, 128, 120));
 	}
 
 	WIDGET_DRAW(b, bg, 0, 0);
-#if 0
-	bg = SPRITE(b, (b->flags & BUTTON_PRESSED) ? BUTTON_DOWN : BUTTON_UP);
-#endif
 
 	/* Label */
 	s = TTF_RenderText_Solid(font, b->caption, white);
