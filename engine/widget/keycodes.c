@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.34 2003/09/02 02:04:30 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.35 2003/09/17 03:01:22 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -207,21 +207,19 @@ static void
 key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)
 {
+	extern int kbd_unitrans;			/* input/kbd.c */
 	struct widget_binding *stringb;
 	size_t len;
 	Uint32 *ucs;
 	char *utf8;
-	int trans;
 	Uint32 ins[2];
 	int i, nins;
-
-	trans = prop_get_bool(config, "input.unicode");
 
 	stringb = widget_get_binding(tbox, "string", &utf8);
 	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
 	len = ucs4_len(ucs);
 
-	if (trans) {
+	if (kbd_unitrans) {
 		if (uch == 0) {
 			goto skip;
 		}
@@ -238,7 +236,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 
 	if (tbox->pos == len) {
 		/* Append to the end of string */
-		if (trans) {
+		if (kbd_unitrans) {
 			if (uch != 0) {
 				for (i = 0; i < nins; i++)
 					ucs[len+i] = ins[i];
@@ -256,7 +254,7 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 
 		/* Insert at the cursor position in the string. */
 		memcpy(p+nins, p, (len - tbox->pos)*sizeof(Uint32));
-		if (trans) {
+		if (kbd_unitrans) {
 			if (uch != 0) {
 				for (i = 0; i < nins; i++)
 					ucs[tbox->pos+i] = ins[i];
