@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.21 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.22 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -125,6 +125,8 @@ palette_changed(int argc, union evarg *argv)
 	}
 	*color = SDL_MapRGBA(vfmt, r, g, b, a);
 	widget_binding_unlock(colorb);
+
+	event_post(NULL, pal, "palette-changed", NULL);
 }
 
 void
