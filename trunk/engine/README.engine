@@ -1,4 +1,4 @@
-$Csoft: README.engine,v 1.1 2002/04/18 03:58:18 vedge Exp $
+$Csoft: README.engine,v 1.2 2002/04/25 09:21:04 vedge Exp $
 
 Global keys
 -----------
@@ -7,8 +7,12 @@ ESC:		Shut down the engine.
 Ctrl+F:		Toggle fullscreen mode.
 
 F1:		Engine settings window.
+
+Debug mode keys
+---------------
 F2:		Load state (debug).
 F4:		Save state (debug).
+F5:		Spawn a map verification thread.
 Ctrl+W:		Show the active object list (debug).
 
 Environment variables
