@@ -40,10 +40,26 @@ static void	mapedit_setpointer(struct mapedit *, int);
 static void
 mapedit_setpointer(struct mapedit *med, int enable)
 {
+	static int oxoffs = 0, oyoffs = 0;
+	struct map_aref *aref;
+
 	if (enable) {
 		MAP_ADDANIM(med->map, med->x, med->y, (struct object *)med,
 		    MAPEDIT_SELECT);
+		aref = node_arefobj(&med->map->map[med->x][med->y],
+		    (struct object *)med, MAPEDIT_SELECT);
+
+		/* Restore direction state. */
+		aref->xoffs = oxoffs;
+		aref->yoffs = oyoffs;
 	} else {
+		aref = node_arefobj(&med->map->map[med->x][med->y],
+		    (struct object *)med, MAPEDIT_SELECT);
+		
+		/* Save direction state. */
+		oxoffs = aref->xoffs;
+		oyoffs = aref->yoffs;
+
 		MAP_DELREF(med->map, med->x, med->y, (struct object *)med,
 		    MAPEDIT_SELECT);
 	}
