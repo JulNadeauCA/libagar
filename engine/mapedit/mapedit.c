@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.152 2003/03/11 01:57:31 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.153 2003/03/11 02:11:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -51,6 +51,7 @@
 #include "tool/shift.h"
 #include "tool/merge.h"
 #include "tool/fill.h"
+#include "tool/flip.h"
 
 static const struct object_ops mapedit_ops = {
 	NULL,		/* destroy */
@@ -84,6 +85,8 @@ static const struct tools_ent {
 	    merge_init },
 	{ &mapedit.tools[MAPEDIT_FILL], sizeof(struct fill),
 	    fill_init },
+	{ &mapedit.tools[MAPEDIT_FLIP], sizeof(struct flip),
+	    flip_init }
 };
 static const int ntools = sizeof(tools) / sizeof(tools[0]);
 
@@ -119,7 +122,7 @@ mapedit_select_tool(int argc, union evarg *argv)
 void
 mapedit_init(void)
 {
-	const int xdiv = 100, ydiv = 17;
+	const int xdiv = 100, ydiv = 14;
 	struct window *win;
 	struct region *reg;
 	struct button *button;
@@ -136,7 +139,6 @@ mapedit_init(void)
 	prop_set_int(med, "zoom-maximum", 500);
 	prop_set_int(med, "zoom-increment", 1);
 	prop_set_int(med, "zoom-speed", 60);
-	prop_set_int(med, "tilemap-item-size", 16);
 	prop_set_bool(med, "tilemap-bg", 1);
 	prop_set_bool(med, "tilemap-bg-moving", 0);
 	prop_set_int(med, "tilemap-bg-square-size", 16);
@@ -257,6 +259,13 @@ mapedit_init(void)
 		    xdiv, ydiv);
 		event_new(button, "button-pushed", mapedit_select_tool,
 		    "%p", med->tools[MAPEDIT_FILL]);
+		
+		button = med->tools[MAPEDIT_FLIP]->button =
+		    button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_FLIP),
+		    BUTTON_NOFOCUS|BUTTON_STICKY,
+		    xdiv, ydiv);
+		event_new(button, "button-pushed", mapedit_select_tool,
+		    "%p", med->tools[MAPEDIT_FLIP]);
 	}
 	
 	window_show(med->win.toolbar);
@@ -427,8 +436,11 @@ mapedit_win_new(struct map *m)
 		    mapedit_win_option, "%p, %i", mv, MAPEDIT_TOOL_LAYEDIT);
 		mv->layed.trigger = bu;
 
-		lab = label_polled_new(reg, 30, -1, NULL, " Layer: %[u8]",
-		    &mv->cur_layer);
+		lab = label_polled_new(reg, 60, -1, NULL,
+		    " Layer: %[u8], [%ux%u] at [%d,%d]",
+		    &mv->cur_layer,
+		    &mv->esel.w, &mv->esel.h,
+		    &mv->esel.x, &mv->esel.y);
 	}
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
