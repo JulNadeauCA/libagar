@@ -1,9 +1,13 @@
-/*	$Csoft: widget.h,v 1.6 2002/04/23 05:47:01 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.7 2002/04/24 14:08:54 vedge Exp $	*/
+
+struct window;
 
 struct widvec {
 	struct	 obvec obvec;
-	void	 (*draw)(void *);
-	void	 (*event)(void *, SDL_Event *, Uint32);
+	void	 (*widget_draw)(void *);
+	void	 (*widget_event)(void *, SDL_Event *, Uint32);
+	void	 (*widget_link)(void *, struct window *w);
+	void	 (*widget_unlink)(void *);
 };
 
 struct widget {
@@ -52,9 +56,9 @@ enum {
 };
 
 void		 widget_init(struct widget *, char *, void *,
-		     struct window *, Sint16, Sint16, Uint16, Uint16);
-int		 widget_link(void *);
-int		 widget_unlink(void *);
+		     Sint16, Sint16, Uint16, Uint16);
+void		 widget_link(void *, struct window *win);
+void		 widget_unlink(void *);
 
 void		 widget_draw(void *);
 void		 widget_event(void *, SDL_Event *, Uint32);

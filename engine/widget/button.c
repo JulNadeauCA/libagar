@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.7 2002/04/25 09:32:58 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.8 2002/04/25 09:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -50,18 +50,20 @@ static struct widvec button_vec = {
 		button_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		widget_link,
-		widget_unlink
+		NULL,
+		NULL
 	},
 	button_draw,
-	button_event
+	button_event,
+	NULL,		/* widget link */
+	NULL		/* widget unlink */
 };
 
 void
-button_init(struct button *b, struct window *win, char *name, char *caption,
-    Uint32 flags, Sint16 x, Sint16 y)
+button_init(struct button *b, char *name, char *caption, Uint32 flags,
+    Sint16 x, Sint16 y)
 {
-	widget_init(&b->wid, name, &button_vec, win, x, y, 0, 0);
+	widget_init(&b->wid, name, &button_vec, x, y, 0, 0);
 
 	b->caption = strdup(caption);
 	b->flags = flags;

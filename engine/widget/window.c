@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.8 2002/04/24 14:08:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.9 2002/04/26 04:24:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -98,9 +98,8 @@ window_init(struct window *win, struct viewport *view, char *name,
 	win->border[4] = SDL_MapRGB(view->v->format, 50, 50, 50);
 	
 	TAILQ_INIT(&win->widgetsh);
-	win->nwidgets = 0;
 
-	pthread_mutex_init(&win->widgetslock, NULL);
+	pthread_mutex_init(&win->lock, NULL);
 }
 
 void
@@ -113,6 +112,7 @@ window_key(SDL_Event *ev)
 {
 }
 
+/* Must be called when win->lock is held. */
 void
 window_mouse_button(SDL_Event *ev)
 {
@@ -127,59 +127,58 @@ window_mouse_button(SDL_Event *ev)
 
 		dprintf("event to %s\n", OBJECT(win)->name);
 
-		pthread_mutex_lock(&win->widgetslock);
 		TAILQ_FOREACH(w, &win->widgetsh, widgets) {
+			pthread_mutex_lock(&win->lock);
 			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y)) {
 				widget_event(w, ev, 0);
 			}
+			pthread_mutex_unlock(&win->lock);
 		}
-		pthread_mutex_unlock(&win->widgetslock);
-
 		break;
 	}
 	pthread_mutex_unlock(&world->lock);
 }
 
 void
-window_draw(struct window *w)
+window_draw(struct window *win)
 {
-	SDL_Surface *v = w->view->v;
+	SDL_Surface *v = win->view->v;
 	Uint32 xo, yo, col = 0;
 	Uint8 *dst;
 	struct widget *wid;
 
 	/* Render the background. */
-	if (w->flags & WINDOW_PLAIN) {
+	if (win->flags & WINDOW_PLAIN) {
 		SDL_Rect rd;
 
-		rd.x = w->x;
-		rd.y = w->y;
-		rd.w = w->w;
-		rd.h = w->h;
+		rd.x = win->x;
+		rd.y = win->y;
+		rd.w = win->w;
+		rd.h = win->h;
 		
-		SDL_FillRect(v, &rd, w->bgcolor);
+		SDL_FillRect(v, &rd, win->bgcolor);
 	} else {
 		SDL_LockSurface(v);
-		for (yo = 0; yo < w->h; yo++) {
-			for (xo = 0; xo < w->w; xo++) {
-				dst = (Uint8 *)v->pixels + (w->y + yo) *
-				    v->pitch + (w->x+xo) *
+		for (yo = 0; yo < win->h; yo++) {
+			for (xo = 0; xo < win->w; xo++) {
+				dst = (Uint8 *)v->pixels + (win->y + yo) *
+				    v->pitch + (win->x+xo) *
 				    v->format->BytesPerPixel;
 
-				if (xo > w->w - 4) {
-					col = w->border[w->w - xo];
+				if (xo > win->w - 4) {
+					col = win->border[win->w - xo];
 				} else if (yo < 4) {
-					col = w->border[yo+1];
+					col = win->border[yo+1];
 				} else if (xo < 4) {
-					col = w->border[xo+1];
-				} else if (yo > w->h - 4) {
-					col = w->border[w->h - yo];
+					col = win->border[xo+1];
+				} else if (yo > win->h - 4) {
+					col = win->border[win->h - yo];
 				} else {
 					static Uint8 expcom;
 			
-					switch (w->bgtype) {
+					switch (win->bgtype) {
 					case WINDOW_SOLID:
-						col = w->bgcolor;
+						col = win->bgcolor;
 						break;
 					case WINDOW_GRADIENT:
 						col = SDL_MapRGBA(v->format,
@@ -237,24 +236,24 @@ window_draw(struct window *w)
 	}
 
 	/* Render the widgets. */
-	pthread_mutex_lock(&w->widgetslock);
-	TAILQ_FOREACH(wid, &w->widgetsh, widgets) {
+	pthread_mutex_lock(&win->lock);
+	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
 		widget_draw(wid);
 	}
-	pthread_mutex_unlock(&w->widgetslock);
+	pthread_mutex_unlock(&win->lock);
 
-	SDL_UpdateRect(v, w->x, w->y, w->w, w->h);
+	SDL_UpdateRect(v, win->x, win->y, win->w, win->h);
 
-	if (w->flags & WINDOW_ANIMATE) {
+	if (win->flags & WINDOW_ANIMATE) {
 		if (delta++ > 256) {
 			delta = 0;
 		}
 		if (delta2-- < 1) {
 			delta2 = 256;
 		}
-		w->redraw++;
+		win->redraw++;
 	} else {
-		w->redraw = 0;
+		win->redraw = 0;
 	}
 }
 
@@ -290,6 +289,7 @@ window_save(void *p, int fd)
 	return (0);
 }
 
+/* Must be called when win->lock is held. */
 int
 window_link(void *ob)
 {
@@ -306,6 +306,7 @@ window_link(void *ob)
 	return (0);
 }
 
+/* Must be called when win->lock is held. */
 int
 window_unlink(void *ob)
 {
@@ -313,11 +314,9 @@ window_unlink(void *ob)
 	struct widget *wid;
 
 	/* Unlink all widgets implicitely. */
-	pthread_mutex_lock(&win->widgetslock);
 	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
-		object_unlink(wid);
+		widget_unlink(wid);
 	}
-	pthread_mutex_unlock(&win->widgetslock);
 
 	/* Decrement the view mask for this area. */
 	view_maskfill(win->view, &win->vmask, -1);
@@ -334,6 +333,6 @@ window_destroy(void *p)
 	struct window *win = (struct window *)p;
 
 	free(win->caption);
-	pthread_mutex_destroy(&win->widgetslock);
+	pthread_mutex_destroy(&win->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.5 2002/04/22 04:38:07 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.6 2002/04/24 14:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -50,33 +50,23 @@ static struct widvec label_vec = {
 		NULL,
 		NULL,		/* load */
 		NULL,		/* save */
-		label_link,	/* link */
-		label_unlink	/* unlink */
+		NULL,		/* link */
+		NULL		/* unlink */
 	},
 	label_draw,
-	NULL		/* event */
+	NULL,		/* widget event */
+	NULL,		/* widget link */
+	NULL		/* widget unlink */
 };
 
 void
-label_init(struct label *l, struct window *win, char *name, char *caption,
-    Uint32 flags, Sint16 x, Sint16 y)
+label_init(struct label *l, char *name, char *caption, Uint32 flags,
+    Sint16 x, Sint16 y)
 {
 	/* XXX Leave geometry undefined, TTF-dependent. */
-	widget_init(&l->wid, name, &label_vec, win, x, y, 0, 0);
+	widget_init(&l->wid, name, &label_vec, x, y, 0, 0);
 	strcpy(l->caption, caption);
 	l->flags = flags;
-}
-
-int
-label_link(void *p)
-{
-	return (widget_link(p));
-}
-
-int
-label_unlink(void *p)
-{
-	return (widget_unlink(p));
 }
 
 void
