@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.16 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.17 2003/05/06 01:03:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -54,50 +54,53 @@ struct prop {
 };
 
 __BEGIN_DECLS
+extern __inline__ void		 prop_lock(void *);
+extern __inline__ void		 prop_unlock(void *);
 extern DECLSPEC int		 prop_load(void *, struct netbuf *);
 extern DECLSPEC int		 prop_save(void *, struct netbuf *);
 extern DECLSPEC void		 prop_destroy(struct prop *);
-extern DECLSPEC struct prop	*prop_set(void *, char *, enum prop_type, ...);
-extern DECLSPEC struct prop	*prop_set_bool(void *, char *, int);
-extern DECLSPEC struct prop	*prop_set_int(void *, char *, int);
-extern DECLSPEC struct prop	*prop_set_uint8(void *, char *, Uint8);
-extern DECLSPEC struct prop	*prop_set_sint8(void *, char *, Sint8);
-extern DECLSPEC struct prop	*prop_set_uint16(void *, char *, Uint16);
-extern DECLSPEC struct prop	*prop_set_sint16(void *, char *, Sint16);
-extern DECLSPEC struct prop	*prop_set_uint32(void *, char *, Uint32);
-extern DECLSPEC struct prop	*prop_set_sint32(void *, char *, Sint32);
+extern DECLSPEC struct prop	*prop_set(void *, const char *, enum prop_type,
+				          ...);
+extern DECLSPEC struct prop	*prop_set_bool(void *, const char *, int);
+extern DECLSPEC struct prop	*prop_set_int(void *, const char *, int);
+extern DECLSPEC struct prop	*prop_set_uint8(void *, const char *, Uint8);
+extern DECLSPEC struct prop	*prop_set_sint8(void *, const char *, Sint8);
+extern DECLSPEC struct prop	*prop_set_uint16(void *, const char *, Uint16);
+extern DECLSPEC struct prop	*prop_set_sint16(void *, const char *, Sint16);
+extern DECLSPEC struct prop	*prop_set_uint32(void *, const char *, Uint32);
+extern DECLSPEC struct prop	*prop_set_sint32(void *, const char *, Sint32);
 #ifdef FLOATING_POINT
-extern DECLSPEC struct prop	*prop_set_float(void *, char *, float);
-extern DECLSPEC struct prop	*prop_set_double(void *, char *, double);
+extern DECLSPEC struct prop	*prop_set_float(void *, const char *, float);
+extern DECLSPEC struct prop	*prop_set_double(void *, const char *, double);
 # ifdef USE_LONG_DOUBLE
-extern DECLSPEC struct prop	*prop_set_long_double(void *, char *,
+extern DECLSPEC struct prop	*prop_set_long_double(void *, const char *,
 				                      long double);
 # endif
 #endif
-extern DECLSPEC struct prop	*prop_set_string(void *, char *, const char *,
-				                 ...);
-extern DECLSPEC struct prop	*prop_set_pointer(void *, char *, void *);
+extern DECLSPEC struct prop	*prop_set_string(void *, const char *,
+				                 const char *, ...);
+extern DECLSPEC struct prop	*prop_set_pointer(void *, const char *, void *);
 
-extern DECLSPEC struct prop	*prop_get(void *, char *, enum prop_type,
+extern DECLSPEC struct prop	*prop_get(void *, const char *, enum prop_type,
 				          void *);
-extern DECLSPEC int		 prop_get_bool(void *, char *);
-extern DECLSPEC int		 prop_get_int(void *, char *);
-extern DECLSPEC Uint8	 	 prop_get_uint8(void *, char *);
-extern DECLSPEC Sint8	 	 prop_get_sint8(void *, char *);
-extern DECLSPEC Uint16	 	 prop_get_uint16(void *, char *);
-extern DECLSPEC Sint16	 	 prop_get_sint16(void *, char *);
-extern DECLSPEC Uint32	 	 prop_get_uint32(void *, char *);
-extern DECLSPEC Sint32	 	 prop_get_sint32(void *, char *);
+extern DECLSPEC int		 prop_get_bool(void *, const char *);
+extern DECLSPEC int		 prop_get_int(void *, const char *);
+extern DECLSPEC Uint8	 	 prop_get_uint8(void *, const char *);
+extern DECLSPEC Sint8	 	 prop_get_sint8(void *, const char *);
+extern DECLSPEC Uint16	 	 prop_get_uint16(void *, const char *);
+extern DECLSPEC Sint16	 	 prop_get_sint16(void *, const char *);
+extern DECLSPEC Uint32	 	 prop_get_uint32(void *, const char *);
+extern DECLSPEC Sint32	 	 prop_get_sint32(void *, const char *);
 #ifdef FLOATING_POINT
-extern DECLSPEC float		 prop_get_float(void *, char *);
-extern DECLSPEC double		 prop_get_double(void *, char *);
+extern DECLSPEC float		 prop_get_float(void *, const char *);
+extern DECLSPEC double		 prop_get_double(void *, const char *);
 #ifdef USE_LONG_DOUBLE
-extern DECLSPEC long double	 prop_get_long_double(void *, char *);
+extern DECLSPEC long double	 prop_get_long_double(void *, const char *);
 # endif
 #endif
-extern DECLSPEC char	*prop_get_string(void *, char *);
-extern DECLSPEC size_t	 prop_copy_string(void *, char *, char *, size_t);
-extern DECLSPEC void	*prop_get_pointer(void *, char *);
+extern DECLSPEC char	*prop_get_string(void *, const char *);
+extern DECLSPEC size_t	 prop_copy_string(void *, const char *, char *, size_t);
+extern DECLSPEC void	*prop_get_pointer(void *, const char *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.6 2003/04/29 23:05:06 vedge Exp $
+.\"	$Csoft: prop.3,v 1.7 2003/05/06 01:03:40 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -79,49 +79,55 @@ ignores properties of type
 .Sh READING PROPERTIES
 .nr nS 1
 .Ft "struct prop *"
-.Fn prop_get "void *obj" "char *key" "enum prop_type type" "void *dst"
+.Fn prop_get "void *obj" "const char *key" "enum prop_type type" "void *dst"
+.Pp
+.Ft void
+.Fn prop_lock "void *obj"
+.Pp
+.Ft void
+.Fn prop_unlock "void *obj"
 .Pp
 .Ft int
-.Fn prop_get_bool "void *obj" "char *key"
+.Fn prop_get_bool "void *obj" "const char *key"
 .Pp
 .Ft int
-.Fn prop_get_int "void *obj" "char *key"
+.Fn prop_get_int "void *obj" "const char *key"
 .Pp
 .Ft Uint8
-.Fn prop_get_uint8 "void *obj" "char *key"
+.Fn prop_get_uint8 "void *obj" "const char *key"
 .Pp
 .Ft Sint8
-.Fn prop_get_sint8 "void *obj" "char *key"
+.Fn prop_get_sint8 "void *obj" "const char *key"
 .Pp
 .Ft Uint16
-.Fn prop_get_uint16 "void *obj" "char *key"
+.Fn prop_get_uint16 "void *obj" "const char *key"
 .Pp
 .Ft Sint16
-.Fn prop_get_sint16 "void *obj" "char *key"
+.Fn prop_get_sint16 "void *obj" "const char *key"
 .Pp
 .Ft Uint32
-.Fn prop_get_uint32 "void *obj" "char *key"
+.Fn prop_get_uint32 "void *obj" "const char *key"
 .Pp
 .Ft Sint32
-.Fn prop_get_sint32 "void *obj" "char *key"
+.Fn prop_get_sint32 "void *obj" "const char *key"
 .Pp
 .Ft float
-.Fn prop_get_float "void *obj" "char *key"
+.Fn prop_get_float "void *obj" "const char *key"
 .Pp
 .Ft double
-.Fn prop_get_double "void *obj" "char *key"
+.Fn prop_get_double "void *obj" "const char *key"
 .Pp
 .Ft "long double"
-.Fn prop_get_long_double "void *obj" "char *key"
+.Fn prop_get_long_double "void *obj" "const char *key"
 .Pp
 .Ft "char *"
-.Fn prop_get_string "void *obj" "char *key"
+.Fn prop_get_string "void *obj" "const char *key"
 .Pp
 .Ft size_t
-.Fn prop_copy_string "void *obj" "char *key" "char *dst" "size_t dst_size"
+.Fn prop_copy_string "void *obj" "const char *key" "char *dst" "size_t dst_size"
 .Pp
 .Ft "void *"
-.Fn prop_get_pointer "void *obj" "char *key"
+.Fn prop_get_pointer "void *obj" "const char *key"
 .Pp
 .nr nS 0
 The
@@ -140,12 +146,17 @@ returns a pointer to the related
 structure, or NULL if no property matches
 .Fa key .
 .Pp
+The
+.Fn prop_lock
+and
+.Fn prop_unlock
+functions respectively acquire and release the recursive mutex associated with
+an object's properties.
+.Pp
 The other data access functions look for a property named
 .Fa key
-and return its value.
-If the
-.Fa key
-does not match an existing property, a fatal condition is raised.
+and return the associated value, raising a fatal condition if there is no
+match.
 .Pp
 .Fn prop_get_string
 returns a copy of the actual string.
@@ -162,46 +173,46 @@ NUL-terminating the result.
 .Fn prop_set "void *obj" "const char *name" "enum prop_type type" "..."
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_bool "void *obj" "char *key" "int value"
+.Fn prop_set_bool "void *obj" "const char *key" "int value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_int "void *obj" "char *key" "int value"
+.Fn prop_set_int "void *obj" "const char *key" "int value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_uint8 "void *obj" "char *key" "Uint8 value"
+.Fn prop_set_uint8 "void *obj" "const char *key" "Uint8 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_sint8 "void *obj" "char *key" "Sint8 value"
+.Fn prop_set_sint8 "void *obj" "const char *key" "Sint8 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_uint16 "void *obj" "char *key" "Uint16 value"
+.Fn prop_set_uint16 "void *obj" "const char *key" "Uint16 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_sint16 "void *obj" "char *key" "Sint16 value"
+.Fn prop_set_sint16 "void *obj" "const char *key" "Sint16 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_uint32 "void *obj" "char *key" "Uint32 value"
+.Fn prop_set_uint32 "void *obj" "const char *key" "Uint32 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_sint32 "void *obj" "char *key" "Sint32 value"
+.Fn prop_set_sint32 "void *obj" "const char *key" "Sint32 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_sint32 "void *obj" "char *key" "Sint32 value"
+.Fn prop_set_sint32 "void *obj" "const char *key" "Sint32 value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_float "void *obj" "char *key" "float value"
+.Fn prop_set_float "void *obj" "const char *key" "float value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_double "void *obj" "char *key" "double value"
+.Fn prop_set_double "void *obj" "const char *key" "double value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_long_double "void *obj" "char *key" "long double value"
+.Fn prop_set_long_double "void *obj" "const char *key" "long double value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_string "void *obj" "char *key" "const char *fmt" "..."
+.Fn prop_set_string "void *obj" "const char *key" "const char *fmt" "..."
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_pointer "void *obj" "char *key" "void *ptr"
+.Fn prop_set_pointer "void *obj" "const char *key" "void *ptr"
 .Pp
 .nr nS 0
 The
