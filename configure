@@ -1097,7 +1097,7 @@ main(int argc, char *argv[])
 {
 	jcomp.err = jpeg_std_error(&jerr);
 
-	jpeg_create_compres(&jcomp);
+	jpeg_create_compress(&jcomp);
 	jcomp.image_width = 32;
 	jcomp.image_height = 32;
 	jcomp.input_components = 3;
