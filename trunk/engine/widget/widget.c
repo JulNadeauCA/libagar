@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.30 2002/11/28 07:35:15 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.31 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -68,7 +68,7 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 {
 	struct widget *wid = p;
 	struct widget_color *col;
-
+	
 	if (strcmp(OBJECT(wid)->name, "widget") == 0 ||
 	    strcmp(OBJECT(wid)->name, "window") == 0) {
 		fatal("%s is not a widget/window\n", OBJECT(wid)->name);
@@ -90,28 +90,19 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 void
 widget_destroy(void *p)
 {
+	struct widget *wid = p;
+	struct widget_color *color, *next_color;
+
+	OBJECT_ASSERT(wid, "widget");
+
+	free(wid->type);
+
+	for (color = SLIST_FIRST(&wid->colors);
+	     color != SLIST_END(&wid->colors);
+	     color = next_color) {
+		next_color = SLIST_NEXT(color, colors);
+		free(color->name);
+	}
+	SLIST_INIT(&wid->colors);
 }
 
-void
-widget_attach(void *parent, void *child)
-{
-	struct widget *p = parent;
-	struct widget *c = child;
-
-	OBJECT_ASSERT(parent, "widget");
-	OBJECT_ASSERT(child, "widget");
-
-	dprintf("attach %p to %p\n", OBJECT(c)->name, OBJECT(p)->name);
-}
-
-void
-widget_detach(void *parent, void *child)
-{
-	struct widget *p = parent;
-	struct widget *c = child;
-
-	OBJECT_ASSERT(p, "widget");
-	OBJECT_ASSERT(child, "widget");
-
-	dprintf("detach %p from %p\n", OBJECT(c)->name, OBJECT(p)->name);
-}
