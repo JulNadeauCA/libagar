@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.61 2005/01/05 04:44:05 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.62 2005/01/25 01:18:33 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -165,6 +165,50 @@ circle_bresenham(void *p, int wx, int wy, int radius, int ncolor)
 		widget_put_pixel(wid, wx+y, wy-x, color);
 		widget_put_pixel(wid, wx-y, wy+x, color);
 		widget_put_pixel(wid, wx-y, wy-x, color);
+	}
+	widget_put_pixel(wid, wx-radius, wy, color);
+	widget_put_pixel(wid, wx+radius, wy, color);
+	SDL_UnlockSurface(view->v);
+}
+
+static void
+circle2_bresenham(void *p, int wx, int wy, int radius, int ncolor)
+{
+	struct widget *wid = p;
+	Uint32 color = WIDGET_COLOR(wid, ncolor);
+	int v = 2*radius - 1;
+	int e = 0, u = 1;
+	int x = 0, y = radius;
+
+	SDL_LockSurface(view->v);
+	while (x < y) {
+		widget_put_pixel(wid, wx+x, wy+y, color);
+		widget_put_pixel(wid, wx+x+1, wy+y, color);
+		widget_put_pixel(wid, wx+x, wy-y, color);
+		widget_put_pixel(wid, wx+x+1, wy-y, color);
+		widget_put_pixel(wid, wx-x, wy+y, color);
+		widget_put_pixel(wid, wx-x-1, wy+y, color);
+		widget_put_pixel(wid, wx-x, wy-y, color);
+		widget_put_pixel(wid, wx-x-1, wy-y, color);
+
+
+		e += u;
+		u += 2;
+		if (v < 2*e) {
+			y--;
+			e -= v;
+			v -= 2;
+		}
+		x++;
+		
+		widget_put_pixel(wid, wx+y, wy+x, color);
+		widget_put_pixel(wid, wx+y+1, wy+x, color);
+		widget_put_pixel(wid, wx+y, wy-x, color);
+		widget_put_pixel(wid, wx+y+1, wy-x, color);
+		widget_put_pixel(wid, wx-y, wy+x, color);
+		widget_put_pixel(wid, wx-y-1, wy+x, color);
+		widget_put_pixel(wid, wx-y, wy-x, color);
+		widget_put_pixel(wid, wx-y-1, wy-x, color);
 	}
 	widget_put_pixel(wid, wx-radius, wy, color);
 	widget_put_pixel(wid, wx+radius, wy, color);
@@ -419,6 +463,27 @@ circle_opengl(void *p, int x, int y, int radius, int ncolor)
 }
 
 static void
+circle2_opengl(void *p, int x, int y, int radius, int ncolor)
+{
+	struct widget *wid = p;
+	int nedges = radius*2;
+	int i;
+	Uint8 r, g, b;
+	
+	SDL_GetRGB(WIDGET_COLOR(p, ncolor), vfmt, &r, &g, &b);
+
+	glBegin(GL_LINE_LOOP);
+	glColor3ub(r, g, b);
+	for (i = 0; i < nedges; i++) {
+		glVertex2f(wid->cx + x + radius*cos((2*M_PI*i)/nedges),
+		           wid->cy + y + radius*sin((2*M_PI*i)/nedges));
+		glVertex2f(wid->cx + x + (radius+1)*cos((2*M_PI*i)/nedges),
+		           wid->cy + y + (radius+1)*sin((2*M_PI*i)/nedges));
+	}
+	glEnd();
+}
+
+static void
 rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
@@ -472,12 +537,14 @@ primitives_init(void)
 		primitives.line = line_opengl;
 		primitives.rect_filled = rect_opengl;
 		primitives.circle = circle_opengl;
+		primitives.circle2 = circle2_opengl;
 	} else
 #endif
 	{
 		primitives.line = line_bresenham;
 		primitives.rect_filled = rect_filled;
 		primitives.circle = circle_bresenham;
+		primitives.circle2 = circle2_bresenham;
 	}
 }
 

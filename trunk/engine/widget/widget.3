@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.55 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: widget.3,v 1.56 2005/01/05 04:44:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -309,6 +309,10 @@ direct video primitives in OpenGL mode.
 .Pp
 .Ft void
 .Fn primitives.circle "void *widget" "int x" "int y" "int radius" \
+                      "int ncolor"
+.Pp
+.Ft void
+.Fn primitives.circle2 "void *widget" "int x" "int y" "int radius" \
                       "int ncolor"
 .Pp
 .Ft void
