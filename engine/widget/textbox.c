@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.21 2002/08/20 09:17:11 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.22 2002/08/21 23:52:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -69,7 +69,8 @@ enum {
 	CURSOR_COLOR2
 };
 
-static void	textbox_event(int, union evarg *);
+static void	textbox_mouse(int, union evarg *);
+static void	textbox_key(int, union evarg *);
 
 struct textbox *
 textbox_new(struct region *reg, const char *label, int flags, int rw, int rh)
@@ -106,21 +107,21 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	SDL_FreeSurface(s);
 
 	tbox->flags = flags;
-	tbox->flags |= TEXTBOX_CURSOR;
 	tbox->text = strdup("");
 	tbox->label = label != NULL ? strdup(label) : NULL;
 	tbox->label_s = text_render(NULL, -1,
 	    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
+	tbox->newx = -1;
 
 	event_new(tbox, "widget-shown", 0, textbox_shown, NULL);
 	event_new(tbox, "widget-hidden", 0, textbox_hidden, NULL);
-
+	event_new(tbox, "window-keydown", 0, textbox_key, NULL);
 	event_new(tbox, "window-mousebuttondown", 0,
-	    textbox_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(tbox, "window-keydown", 0,
-	    textbox_event, "%i", WINDOW_KEYDOWN);
+	    textbox_mouse, "%i", WINDOW_MOUSEBUTTONDOWN);
+	event_new(tbox, "window-mousemotion", 0,
+	    textbox_mouse, "%i", WINDOW_MOUSEMOTION);
 }
 
 void
@@ -152,7 +153,7 @@ void
 textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
-	int i, j, x, y, tw;
+	int i, j, x, y, tw, lx;
 	SDL_Surface *label_s = tbox->label_s;
 
 	x = label_s->w;
@@ -182,25 +183,31 @@ textbox_draw(void *p)
 		tbox->textpos = tw;
 	}
 
-	for (i = tbox->textoffs; i < (tw + 1); i++) {
+	if (tbox->newx >= 0 && tbox->newx <= tbox->label_s->w) {
+		dprintf("begin\n");
+		tbox->textpos = tbox->textoffs;
+		tbox->newx = -1;
+	}
+
+	for (i = tbox->textoffs, lx = -1; i < (tw + 1); i++) {
 		if (x >= WIDGET(tbox)->w) {
 			if (tbox->textpos >= tw-4) {
 				tbox->textoffs++;	/* Scroll */
 			}
 			return;
 		}
-		if (i == tbox->textpos && tbox->flags & TEXTBOX_CURSOR &&
-		    WIDGET_FOCUSED(tbox) &&
-		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
-			SDL_LockSurface(WIDGET_SURFACE(tbox));
-			for (j = 1; j < label_s->h; j++) {
-				WIDGET_PUT_PIXEL(tbox, x, y+j,
-				    WIDGET_COLOR(tbox, CURSOR_COLOR1));
-				WIDGET_PUT_PIXEL(tbox, x+1, y+j,
-				    WIDGET_COLOR(tbox, CURSOR_COLOR2));
+
+		/* Effect mouse cursor moves. */
+		if (tbox->newx >= 0) {
+			dprintf("newx %d lx %d x %d\n", tbox->newx, lx, x);
+			if (tbox->newx >= lx && tbox->newx < x) {
+				tbox->textpos = i - 1;
+				tbox->newx = -1;
 			}
-			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
 		}
+		lx = x;
+
+		/* Draw the characters. */
 		if (i < tw && tbox->text[i] != '\0' &&
 		    x < WIDGET(tbox)->w - (tbox->xmargin*4)) {
 			SDL_Surface *text_s;
@@ -217,64 +224,97 @@ textbox_draw(void *p)
 				WIDGET_DRAW(tbox, text_s, x, y);
 				x += text_s->w;
 			} else {
-				str[0] = (char)c;
-				str[1] = '\0';
-				text_s = text_render(NULL, -1,
-				    WIDGET_COLOR(tbox, TEXT_COLOR), str);
-				WIDGET_DRAW(tbox, text_s, x, y);
-				x += text_s->w;
-				SDL_FreeSurface(text_s);
+				if (c == '\n') {
+					y += label_s->h + 2;
+				} else {
+					str[0] = (char)c;
+					str[1] = '\0';
+					text_s = text_render(NULL, -1,
+					    WIDGET_COLOR(tbox, TEXT_COLOR),
+					    str);
+					WIDGET_DRAW(tbox, text_s, x, y);
+					x += text_s->w;
+					SDL_FreeSurface(text_s);
+				}
 			}
+		}
+	
+		/* Draw the text cursor. */
+		if (i == tbox->textpos && WIDGET_FOCUSED(tbox) &&
+		    x < WIDGET(tbox)->w - tbox->xmargin*4) {
+			SDL_LockSurface(WIDGET_SURFACE(tbox));
+			for (j = 1; j < label_s->h; j++) {
+				WIDGET_PUT_PIXEL(tbox, x, y+j,
+				    WIDGET_COLOR(tbox, CURSOR_COLOR1));
+				WIDGET_PUT_PIXEL(tbox, x+1, y+j,
+				    WIDGET_COLOR(tbox, CURSOR_COLOR2));
+			}
+			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
+		}
+	}
+
+	if (tbox->newx >= 0) {
+		tbox->textpos = i - 1;
+		tbox->newx = -1;
+	}
+}
+	
+static void
+textbox_key(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	int keysym = argv[1].i;
+	int keymod = argv[2].i;
+	int textlen, i;
+	
+	textlen = strlen(tbox->text);
+
+	if (keysym == SDLK_RETURN) {
+		event_post(tbox, "textbox-return", "%s", tbox->text);
+		return;
+	}
+
+	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
+		const struct keycode *kcode;
+
+		kcode = &keycodes[i];
+		if (kcode->key != (SDLKey)keysym || kcode->callback == NULL) {
+			continue;
+		}
+		if (kcode->modmask == 0 || keymod & kcode->modmask) {
+			keycodes[i].callback(tbox, (SDLKey)keysym,
+			    keymod, keycodes[i].arg);
+			return;
 		}
 	}
 }
 
 static void
-textbox_event(int argc, union evarg *argv)
+textbox_mouse(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
-	int keysym, keymod;
-	int textlen, i;
 
 	OBJECT_ASSERT(argv[0].p, "widget");
 
 	switch (argv[1].i) {
-	case WINDOW_MOUSEBUTTONDOWN:
-		WIDGET(tbox)->win->focus = WIDGET(tbox);
-		WIDGET(tbox)->win->redraw++;
-		/* XXX position cursor.. */
-		break;
-	case WINDOW_KEYDOWN:
-		keysym = argv[2].i;
-		keymod = argv[3].i;
+	case WINDOW_MOUSEBUTTONDOWN: {
+			int button = argv[2].i, x = argv[3].i;
 	
-		textlen = strlen(tbox->text);
-
-		if (keysym == SDLK_RETURN) {
-			event_post(tbox, "textbox-return", "%s", tbox->text);
-			return;
+			WIDGET(tbox)->win->focus = WIDGET(tbox);
+			WIDGET(tbox)->win->redraw++;
+			tbox->newx = x;
+			break;
 		}
+	case WINDOW_MOUSEMOTION: {
+			int x = argv[2].i, y = argv[3].i;
+			Uint8 ms;
 
-		for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
-			const struct keycode *kcode;
-
-			kcode = &keycodes[i];
-			if (kcode->key != (SDLKey)keysym ||
-			    kcode->callback == NULL) {
-				continue;
+			ms = SDL_GetMouseState(NULL, NULL);
+			if (ms & SDL_BUTTON_LEFT && x > tbox->label_s->w) {
+				tbox->newx = x;
 			}
-			if (kcode->modmask == 0 || keymod & kcode->modmask) {
-				keycodes[i].callback(tbox, (SDLKey)keysym,
-				    keymod, keycodes[i].arg);
-				textbox_draw(tbox);
-				SDL_UpdateRect(WIDGET_SURFACE(tbox),
-				    WIDGET(tbox)->x + WIDGET(tbox)->win->x,
-				    WIDGET(tbox)->y + WIDGET(tbox)->win->y,
-				    WIDGET(tbox)->w, WIDGET(tbox)->h);
-				return;
-			}
+			break;
 		}
-		break;
 	}
 }
 
