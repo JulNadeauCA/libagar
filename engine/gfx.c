@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.15 2003/09/04 03:13:38 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.16 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -219,6 +219,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	}
 
 	gfx_insert_submap(gfx, fragmap);
+	return (0);
 }
 
 /* Disable garbage collection. */
