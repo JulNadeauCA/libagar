@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.6 2002/09/14 00:39:35 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.7 2002/11/03 01:37:22 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -31,8 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <freetype2/freetype/freetype.h>
-#include <freetype2/freetype/ftoutln.h>
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
 
 #include <SDL.h>
 
