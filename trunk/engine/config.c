@@ -56,8 +56,6 @@ static const struct object_ops config_ops = {
 	config_destroy,
 	config_load,
 	config_save,
-	NULL,		/* onattach */
-	NULL,		/* ondetach */
 	NULL,		/* attach */
 	NULL		/* detach */
 };
@@ -66,38 +64,12 @@ static const enum {
 	CLOSE_BUTTON,
 	SAVE_BUTTON,
 	FULLSCRN_CBOX,
-	FONTCACHE_CBOX
+	FONTCACHE_CBOX,
+	DEBUG_CBOX
 } widgets;
 
 static struct window	*config_settings_win(struct config *);
 static void		 apply(int, union evarg *);
-
-static void
-apply(int argc, union evarg *argv)
-{
-	switch (argv[1].i) {
-	case CLOSE_BUTTON:
-		window_hide(WIDGET(argv[0].p)->win);
-		break;
-	case SAVE_BUTTON:
-		object_save(config);
-		text_msg(4, TEXT_SLEEP, "Saved settings.\n");
-		break;
-	case FULLSCRN_CBOX:
-		view_fullscreen(mainview, argv[2].i);
-		break;
-	case FONTCACHE_CBOX:
-		pthread_mutex_lock(&config->lock);
-		if (argv[2].i) {
-			config->flags |= CONFIG_FONT_CACHE;
-		} else {
-			config->flags &= ~(CONFIG_FONT_CACHE);
-		}
-		config_apply(config);
-		pthread_mutex_unlock(&config->lock);
-		break;
-	}
-}
 
 struct config *
 config_new(void)
@@ -173,6 +145,9 @@ config_settings_win(struct config *con)
 	struct button *close_button, *save_button;
 	struct checkbox *fullscr_cbox;
 	struct checkbox *fontcache_cbox;
+#ifdef DEBUG
+	struct checkbox *debug_cbox;
+#endif
 	struct textbox *udatadir_tbox, *sysdatadir_tbox;
 
 	/* Settings window */
@@ -185,13 +160,19 @@ config_settings_win(struct config *con)
 
 	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode", 0);
 	event_new(fullscr_cbox, "checkbox-changed", 0, apply,
-	    "%d", FULLSCRN_CBOX);
+	    "%i", FULLSCRN_CBOX);
 	
 	fontcache_cbox = checkbox_new(body_reg, "Font cache",
-	    (con->flags & CONFIG_FONT_CACHE) ?
-	    CHECKBOX_PRESSED : 0);
+	    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
 	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
-	    "%d", FONTCACHE_CBOX);
+	    "%i", FONTCACHE_CBOX);
+
+#ifdef DEBUG
+	debug_cbox = checkbox_new(body_reg, "Debugging enabled",
+	    engine_debug ? CHECKBOX_PRESSED : 0);
+	event_new(debug_cbox, "checkbox-changed", 0, apply,
+	    "%i", DEBUG_CBOX);
+#endif
 
 	udatadir_tbox = textbox_new(body_reg,   "  User datadir: ", 0, 100);
 	sysdatadir_tbox = textbox_new(body_reg, "System datadir: ", 0, 100);
@@ -203,14 +184,44 @@ config_settings_win(struct config *con)
 
 	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
 	event_new(close_button, "button-pushed", 0, apply,
-	    "%d", CLOSE_BUTTON);
+	    "%i", CLOSE_BUTTON);
 
 	save_button = button_new(buttons_reg, "Save", 0, 50, 100);
 	event_new(save_button, "button-pushed", 0, apply,
-	    "%d", SAVE_BUTTON);
+	    "%i", SAVE_BUTTON);
 	
 	win->focus = WIDGET(udatadir_tbox);
 	return (win);
+}
+
+static void
+apply(int argc, union evarg *argv)
+{
+	switch (argv[1].i) {
+	case CLOSE_BUTTON:
+		window_hide(WIDGET(argv[0].p)->win);
+		break;
+	case SAVE_BUTTON:
+		object_save(config);
+		text_msg(5, TEXT_SLEEP, "Saved engine settings.\n");
+		break;
+	case FULLSCRN_CBOX:
+		view_fullscreen(mainview, argv[2].i);
+		break;
+	case FONTCACHE_CBOX:
+		pthread_mutex_lock(&config->lock);
+		if (argv[2].i) {
+			config->flags |= CONFIG_FONT_CACHE;
+		} else {
+			config->flags &= ~(CONFIG_FONT_CACHE);
+		}
+		config_apply(config);
+		pthread_mutex_unlock(&config->lock);
+		break;
+	case DEBUG_CBOX:
+		engine_debug = argv[2].i;	/* XXX unsafe */
+		break;
+	}
 }
 
 /*
