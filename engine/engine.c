@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.45 2002/05/26 04:08:47 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.46 2002/05/28 06:03:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,6 +58,8 @@
 int	engine_debug = 1;	/* Enable debugging */
 #endif
 
+pthread_key_t engine_errorkey;	/* Used by AGAR_{Get,Set}Error() */
+
 struct	world *world;
 struct	gameinfo *gameinfo;
 struct	config *config;
@@ -93,6 +95,8 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 {
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
+
+	pthread_key_create(&engine_errorkey, NULL);
 
 	curmapedit = NULL;
 	gameinfo = gi;
@@ -313,34 +317,10 @@ engine_destroy(void)
 
 	/* Free the config structure. */
 	object_destroy(config);
+	
+	pthread_key_delete(engine_errorkey);
 
 	SDL_Quit();
 	exit(0);
-}
-
-void *
-emalloc(size_t len)
-{
-	void *p;
-
-	p = malloc(len);
-	if (p == NULL) {
-		perror("malloc");
-		engine_destroy();
-	}
-	return (p);
-}
-
-void *
-erealloc(void *ptr, size_t len)
-{
-	void *p;
-
-	p = realloc(ptr, len);
-	if (p == NULL) {
-		perror("realloc");
-		engine_destroy();
-	}
-	return (p);
 }
 
