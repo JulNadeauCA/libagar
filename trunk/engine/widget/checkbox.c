@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.29 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.30 2002/12/24 10:35:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/compat/vasprintf.h>
 
 #include <engine/engine.h>
 
