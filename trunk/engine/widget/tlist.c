@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.83 2004/01/22 09:58:46 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.84 2004/02/20 04:18:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -143,8 +143,8 @@ tlist_destroy(void *p)
 		nit = TAILQ_NEXT(it, items);
 		tlist_free_item(it);
 	}
-
 	pthread_mutex_destroy(&tl->lock);
+
 	widget_destroy(tl);
 }
 
