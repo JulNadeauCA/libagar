@@ -53,7 +53,7 @@ Node property display
 .El
 .Sh INITIALIZATION
 .nr nS 1
-.Ft void
+.Ft struct mapview *
 .Fn mapview_new "struct region *reg" "struct mapedit *med" "struct map *m" "int flags" "int rw" "int rh"
 .Pp
 .Ft void
@@ -90,7 +90,6 @@ can be changed at runtime, and may include:
 .Ed
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr mapview 3 ,
 .Xr objq 3 ,
 .Xr tilestack 3
 .Sh HISTORY
