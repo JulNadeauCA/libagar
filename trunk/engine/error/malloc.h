@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.5 2004/05/12 04:53:51 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.6 2004/06/18 03:11:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -32,6 +32,7 @@ enum {
 	M_CAD,		/* cad applications */
 	M_EDA,		/* eda applications */
 	M_GAME,		/* game applications */
+	M_MATH,		/* math routines */
 	M_LAST
 };
 
