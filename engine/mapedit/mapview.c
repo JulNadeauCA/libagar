@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.63 2003/02/13 11:30:12 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.64 2003/02/15 07:34:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -598,9 +598,9 @@ mapview_draw(void *p)
 			SDL_Rect rd;
 
 			rd.x = WIDGET_ABSX(mv) + mv->mouse.x*mv->map->tilew +
-			    mv->ssx;
+			    mv->ssx - mv->map->tilew/2;
 			rd.y = WIDGET_ABSY(mv) + mv->mouse.y*mv->map->tileh +
-			    mv->ssy;
+			    mv->ssy - mv->map->tileh/2;
 			rd.w = mv->map->tilew;
 			rd.h = mv->map->tileh;
 
