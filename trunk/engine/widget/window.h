@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.19 2002/05/26 06:08:17 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.20 2002/05/28 12:49:52 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -47,6 +47,7 @@ struct window {
 struct window_event {
 	struct	widget *w;
 	int	flags;
+	pthread_mutex_t *lock;		/* Pointer to window mutex */
 	SDL_Event ev;
 };
 
@@ -76,9 +77,9 @@ struct window_event {
 
 #else
 
-# define WINDOW_PUT_PIXEL(win, wrx, wry, c, wa)				\
+# define WINDOW_PUT_PIXEL(win, wrx, wry, c)				\
  	 VIEW_PUT_PIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry),	\
-	    (c), (wa))
+	    (c))
 
 # define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c) \
 	VIEW_PUT_ALPHAPIXEL((win)->view->v, (win)->x+(wrx), (win)->y+(wry), (c))
