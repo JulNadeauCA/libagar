@@ -36,5 +36,7 @@ void			 scrollbar_init(struct scrollbar *, int, int,
 			     enum scrollbar_orientation);
 void		 	 scrollbar_destroy(void *);
 void			 scrollbar_draw(void *);
+__inline__ void		 scrollbar_set_bar_size(struct scrollbar *, int);
+__inline__ void		 scrollbar_get_bar_size(struct scrollbar *, int *);
 
 #endif	/* _AGAR_WIDGET_SCROLLBAR_H_ */
