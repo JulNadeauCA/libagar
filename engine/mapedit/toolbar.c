@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.16 2002/08/18 00:37:43 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.17 2002/08/20 05:58:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -120,7 +120,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	struct textbox *name_tbox, *media_tbox, *w_tbox, *h_tbox;
 	struct button *button;
 	struct objq *oqueue;
-	
+	const int xdiv = 100, ydiv = 25;
+
 	/* Create the tool objects. */
 	init_tools(med);
 
@@ -140,27 +141,27 @@ mapedit_init_toolbar(struct mapedit *med)
 
 	/* New map */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, xdiv, ydiv);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_NEW_MAP);
 	
 	/* Object list */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, xdiv, ydiv);
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_OBJLIST);
 	
 	/* Stamp */
 	med->tools.stamp->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_STAMP), BUTTON_STICKY, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_STAMP), BUTTON_STICKY, xdiv, ydiv);
 	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_STAMP);
 	
 	/* Magnifier */
 	med->tools.magnifier->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), BUTTON_STICKY, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), BUTTON_STICKY, xdiv, ydiv);
 	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_MAGNIFIER);
@@ -173,28 +174,28 @@ mapedit_init_toolbar(struct mapedit *med)
 	
 	/* Load map */
 	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, xdiv, ydiv);
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_LOAD_MAP);
 
 	/* Eraser */
 	med->tools.eraser->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY, xdiv, ydiv);
 	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_ERASER);
 	
 	/* Resize tool */
 	med->tools.resize->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_RESIZE), BUTTON_STICKY, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_RESIZE), BUTTON_STICKY, xdiv, ydiv);
 	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_RESIZE);
 	
 	/* Property edition tool */
 	med->tools.propedit->button = button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_PROPEDIT), BUTTON_STICKY, -1, -1);
+	    SPRITE(med, MAPEDIT_TOOL_PROPEDIT), BUTTON_STICKY, xdiv, ydiv);
 	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_PROPEDIT);
