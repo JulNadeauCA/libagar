@@ -166,7 +166,7 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
 	fi
 	@if [ "${SHARE}" != "" ]; then \
 	    if [ ! -d "${SHAREDIR}" ]; then \
-	        echo "${INSTALL_DATA} ${SHAREDIR}"; \
+	        echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
 	        ${INSTALL_DATA_DIR} ${SHAREDIR}; \
 	    fi; \
 	    for F in ${SHARE}; do \
