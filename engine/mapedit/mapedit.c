@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.86 2002/05/13 06:51:22 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.87 2002/05/13 10:18:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -1005,7 +1005,7 @@ mapedit_update(void *p)
 		pthread_mutex_unlock(&med->lock);
 		pthread_mutex_unlock(&med->map->lock);
 
-		SDL_Delay(100);
+		SDL_Delay(10);
 	}
 
 	return (NULL);
