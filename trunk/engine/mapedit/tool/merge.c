@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.12 2003/02/13 11:30:14 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.13 2003/02/16 23:54:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -669,17 +669,22 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 		if (!it->selected)
 			continue;
 		sm = it->p1;
-		for (sy = 0, dy = rd->y - (sm->maph*mv->map->tileh)/2;
+		for (sy = 0, dy = WIDGET_ABSY(mv) +
+		     rd->y - (sm->maph*mv->map->tileh)/2;
 		     sy < sm->maph;
 		     sy++, dy += mv->map->tileh) {
-			for (sx = 0, dx = rd->x - (sm->mapw*mv->map->tilew)/2;
+			for (sx = 0, dx = WIDGET_ABSX(mv) +
+			     rd->x - (sm->mapw*mv->map->tilew)/2;
 			     sx < sm->mapw;
 			     sx++, dx += mv->map->tilew) {
 				struct node *srcnode = &sm->map[sy][sx];
 
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 					noderef_draw(mv->map, nref, dx, dy);
-					mapview_draw_props(mv, srcnode, dx, dy);
+					if (mv->flags & MAPVIEW_PROPS) {
+						mapview_draw_props(mv,
+						    srcnode, dx, dy);
+					}
 					rv = 0;
 				}
 			}

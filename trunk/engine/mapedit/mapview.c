@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.65 2003/02/15 07:42:27 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.66 2003/02/15 09:58:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -410,6 +410,27 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mapview_init_node_win(mv);
 }
 
+/*
+ * Translate widget coordinates to map coordinates.
+ * The map must be locked.
+ */
+static __inline__ void
+mapview_map_coords(struct mapview *mv, int *x, int *y)
+{
+	*x -= mv->ssx - *mv->tilew;
+	*y -= mv->ssy - *mv->tileh;
+	*x /= *mv->tilew;
+	*y /= *mv->tileh;
+
+	mv->cx = mv->mx + *x;
+	mv->cy = mv->my + *y;
+
+	if (mv->cx < 0 || mv->cx >= mv->map->mapw)
+		mv->cx = -1;
+	if (mv->cy < 0 || mv->cy >= mv->map->maph)
+		mv->cy = -1;
+}
+
 __inline__ void
 mapview_draw_props(struct mapview *mv, struct node *node,
     int rx, int ry)
@@ -450,25 +471,70 @@ mapview_draw_props(struct mapview *mv, struct node *node,
 	}
 }
 
-/*
- * Translate widget coordinates to map coordinates.
- * The map must be locked.
- */
 static __inline__ void
-mapview_map_coords(struct mapview *mv, int *x, int *y)
+mapview_draw_tool_cursor(struct mapview *mv)
 {
-	*x -= mv->ssx - *mv->tilew;
-	*y -= mv->ssy - *mv->tileh;
-	*x /= *mv->tilew;
-	*y /= *mv->tileh;
+	struct tool *curtool = mapedit.curtool;
+	int x = mv->mouse.x;
+	int y = mv->mouse.y;
 
-	mv->cx = mv->mx + *x;
-	mv->cy = mv->my + *y;
+	mapview_map_coords(mv, &x, &y);
 
-	if (mv->cx < 0 || mv->cx >= mv->map->mapw)
-		mv->cx = -1;
-	if (mv->cy < 0 || mv->cy >= mv->map->maph)
-		mv->cy = -1;
+	if (mv->cx != -1 && mv->cy != -1) {
+		SDL_Rect rd;
+
+		rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + mv->ssx;
+		rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + mv->ssy;
+		rd.w = mv->map->tilew;
+		rd.h = mv->map->tileh;
+
+		if ((curtool == NULL ||
+		    TOOL_OPS(curtool)->cursor == NULL ||
+		    TOOL_OPS(curtool)->cursor(curtool, mv, &rd) == -1)) {
+			primitives.rect_outlined(mv,
+			    rd.x+1, rd.y+1,
+			    mv->map->tilew-1, mv->map->tileh-1,
+			    WIDGET_COLOR(mv, CURSOR_COLOR));
+			primitives.rect_outlined(mv,
+			    rd.x+2, rd.y+2,
+			    mv->map->tilew-3, mv->map->tileh-3,
+			    WIDGET_COLOR(mv, CURSOR_COLOR));
+		}
+	}
+}
+
+static __inline__ void
+mapview_draw_background(struct mapview *mv)
+{
+	static int softbg = 0;
+	int ss, alt1 = 0, alt2 = 0;
+	int x, y;
+	SDL_Rect rd;
+
+	ss = prop_get_int(&mapedit, "tilemap-bg-square-size");
+	if (++softbg > ss-1) {
+		softbg = 0;
+	}
+	rd.w = ss;
+	rd.h = ss;
+	for (y = -ss + softbg; y < WIDGET(mv)->h; y += ss) {
+		rd.y = y;
+		for (x = -ss + softbg; x < WIDGET(mv)->w; x += ss) {
+			rd.x = x;
+			if (alt1++ == 1) {
+				primitives.rect_filled(mv, &rd,
+				    WIDGET_COLOR(mv, BACKGROUND1_COLOR));
+				alt1 = 0;
+			} else {
+				primitives.rect_filled(mv, &rd,
+				    WIDGET_COLOR(mv, BACKGROUND2_COLOR));
+			}
+		}
+		if (alt2++ == 1) {
+			alt2 = 0;
+		}
+		alt1 = alt2;
+	}
 }
 
 void
@@ -479,42 +545,13 @@ mapview_draw(void *p)
 	struct node *node;
 	struct noderef *nref;
 	int mx, my, rx, ry, alt = 0;
-	SDL_Rect rd;
 	Uint32 col;
 	Uint16 old_zoom = m->zoom;
 	int old_tilew = m->tilew;
 	int old_tileh = m->tileh;
 
 	if (mapedition && prop_get_bool(&mapedit, "tilemap-bg-moving")) {
-		static int softbg = 0;
-		int ss, alt1 = 0, alt2 = 0;
-
-		/* Draw a moving gimpish background. */
-		ss = prop_get_int(&mapedit, "tilemap-bg-square-size");
-		if (++softbg > ss-1) {
-			softbg = 0;
-		}
-		rd.w = ss;
-		rd.h = ss;
-		for (my = -ss + softbg; my < WIDGET(mv)->h; my += ss) {
-			rd.y = my;
-			for (mx = -ss + softbg; mx < WIDGET(mv)->w; mx += ss) {
-				rd.x = mx;
-				if (alt1++ == 1) {
-					primitives.rect_filled(mv, &rd,
-					    WIDGET_COLOR(mv,
-					    BACKGROUND1_COLOR));
-					alt1 = 0;
-				} else {
-					primitives.rect_filled(mv, &rd,
-					    WIDGET_COLOR(mv,
-					    BACKGROUND2_COLOR));
-				}
-			}
-			if (alt2++ == 1)
-				alt2 = 0;
-			alt1 = alt2;
-		}
+		mapview_draw_background(mv);
 	}
 
 	pthread_mutex_lock(&m->lock);
@@ -585,48 +622,12 @@ mapview_draw(void *p)
 			}
 		}
 	}
-	
-	/* Draw the cursor for the current tool. */
+
 	if (mv->flags & MAPVIEW_EDIT && (mv->flags & MAPVIEW_NO_CURSOR) == 0) {
-		struct tool *curtool = mapedit.curtool;
-		int x = mv->mouse.x;
-		int y = mv->mouse.y;
-
-		mapview_map_coords(mv, &x, &y);
-
-		if (mv->cx != -1 && mv->cy != -1) {
-			SDL_Rect rd;
-
-			/* XXX insanity */
-
-			rd.x = WIDGET_ABSX(mv) + mv->mouse.x*mv->map->tilew +
-			    mv->ssx - mv->map->tilew/2;
-			rd.y = WIDGET_ABSY(mv) + mv->mouse.y*mv->map->tileh +
-			    mv->ssy - mv->map->tileh/2;
-			rd.w = mv->map->tilew;
-			rd.h = mv->map->tileh;
-
-			if ((curtool == NULL ||
-			    TOOL_OPS(curtool)->cursor == NULL ||
-			    TOOL_OPS(curtool)->cursor(curtool, mv, &rd)
-			    == -1)) {
-				rd.x -= WIDGET_ABSX(mv) - mv->map->tilew/2 +
-				    mv->map->tilew;
-				rd.y -= WIDGET_ABSY(mv) - mv->map->tileh/2 +
-				    mv->map->tileh;
-				primitives.rect_outlined(mv,
-				    rd.x+1, rd.y+1,
-				    mv->map->tilew-1, mv->map->tileh-1,
-				    WIDGET_COLOR(mv, CURSOR_COLOR));
-				primitives.rect_outlined(mv,
-				    rd.x+2, rd.y+2,
-				    mv->map->tilew-3, mv->map->tileh-3,
-				    WIDGET_COLOR(mv, CURSOR_COLOR));
-			}
-		}
+		mapview_draw_tool_cursor(mv);
 	}
+
 #if 0
-	/* Highlight if the widget is focused. */
 	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
 		primitives.rect_outlined(mv,
 		    0, 0,
