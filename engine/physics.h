@@ -18,6 +18,8 @@ struct gendir {
 	Uint32	current;	/* Current direction mask (moving) */
 	Uint32	clear;		/* Clear direction mask (stop move) */
 	Uint32	moved;		/* Post direction mask (moved) */
+	Uint32	offs;		/* Timing for repeat */
+	Uint32	noffs;		/* Timing for delay */
 };
 
 /* 2D movement of map references between adjacent map nodes. */
