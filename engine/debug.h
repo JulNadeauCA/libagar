@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.18 2002/11/12 01:58:13 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.19 2002/11/12 02:30:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -98,6 +98,8 @@ extern int engine_debug;
 } while (/*CONSTCOND*/0)
 #endif
 
+#endif	/* LOCKDEBUG */
+
 #define Pthread_create(thread, attr, func, arg) do {			\
 	int _rv;							\
 	if ((_rv = pthread_create((thread), (attr), (func), (arg)))	\
@@ -112,5 +114,4 @@ extern int engine_debug;
 	}								\
 } while (/*CONSTCOND*/0)
 
-#endif	/* LOCKDEBUG */
 #endif	/* _AGAR_ENGINE_DEBUG_H_ */
