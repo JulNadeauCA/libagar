@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.19 2002/06/14 23:13:39 vedge Exp $
+#	$Csoft: Makefile,v 1.20 2002/06/14 23:32:28 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -17,10 +17,10 @@ CFLAGS+=	${SDL_CFLAGS}
 all:	widget.fob widget_offs.h window.fob window_offs.h
 
 widget.fob widget_offs.h: widget.xcf
-	${FOBJCOMP} -o widget.fob ${XCF}
+	${FOBJCOMP} -o widget.fob widget.xcf
 
 window.fob window_offs.h: window.xcf
-	${FOBJCOMP} -o window.fob ${XCF}
+	${FOBJCOMP} -o window.fob window.xcf
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/libfobj/Makefile.inc
