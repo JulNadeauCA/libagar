@@ -1,12 +1,21 @@
-/*	$Csoft: engine.h,v 1.1 2002/01/30 12:30:04 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.2 2002/01/30 17:47:43 vedge Exp $	*/
+
+#include <pthread.h>
+
+#include <SDL.h>
+#include <glib.h> /* XXX temporary */
 
 #include <libfobj/fobj.h>
 
+#include <engine/queue.h>
 #include <engine/debug.h>
-#include <engine/view.h>
+
+#include <engine/anim.h>
 #include <engine/object.h>
-#include <engine/xcf.h>
 #include <engine/world.h>
+
+#include <engine/view.h>
+#include <engine/xcf.h>
 #include <engine/map.h>
 #include <engine/event.h>
 #include <engine/char.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.3 2002/02/01 11:57:21 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.4 2002/02/03 11:21:15 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -17,10 +17,10 @@
 int	engine_debug = 1;
 #endif
 struct	world *world;
-int	mapedit;
 
 static char *mapdesc = NULL, *mapstr = NULL;
 static int mapw, maph;
+static int mapediting;
 
 static SDL_Joystick *joy = NULL;
 
@@ -43,8 +43,11 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
 
+	curmapedit = NULL;
+	curchar = NULL;
+
 	njoy = 0;
-	mapedit = 0;
+	mapediting = 0;
 	w = 640;
 	h = 480;
 	depth = 32;
@@ -78,7 +81,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 			njoy = atoi(optarg);
 			break;
 		case 'e':
-			mapedit++;
+			mapediting++;
 			mapstr = optarg;
 			break;
 		case 'D':
@@ -135,7 +138,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 int
 engine_mapedit(void)
 {
-	if (mapedit) {
+	if (mapediting) {
 		struct mapedit *medit;
 
 		/* Edit a loaded map, or create a new one. */
