@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.44 2004/04/25 02:13:32 vedge Exp $
+#	$Csoft: Makefile,v 1.45 2004/04/25 07:12:21 vedge Exp $
 
 TOP=	.
 include ${TOP}/Makefile.config
@@ -37,6 +37,15 @@ release: cleandir
 	sh mk/dist.sh
 	sh mk/agar-cvs.sh
 
+fastclean:
+	find . -type f -and \( -name \*.o -or -name \*.lo -or \
+	          -name \*.la -or -name \*.a -or \
+	          -name \*.den -or -name libtool -or \
+	          -name .depend -or -name config.log -or \
+	          -name stdout.txt -or -name stderr.txt \) \
+		  -exec rm -f {} \;
+	find . -type d -and -name .libs -exec rm -fR {} \;
+
 install-includes:
 	${INSTALL_INCL_DIR} ${INCLDIR}
 	${SUDO} env \
@@ -67,7 +76,7 @@ deinstall-includes:
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: prereq configure clean-config release
+.PHONY: prereq configure clean-config release fastclean
 .PHONY: install-includes deinstall-includes
 
 include ${TOP}/mk/csoft.common.mk
