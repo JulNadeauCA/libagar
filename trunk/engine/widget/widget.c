@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.18 2002/07/09 09:29:25 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.19 2002/07/21 10:58:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -65,5 +65,29 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 	wid->rh = rh;
 	wid->w = 0;
 	wid->h = 0;
+	wid->ncolors = 0;
+	SLIST_INIT(&wid->colors);
+}
+
+void
+widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b,
+    Uint8 a)
+{
+	struct widget *wid = p;
+	struct widget_color *col;
+	
+	OBJECT_ASSERT(wid, "widget");
+	
+	if (ind > WIDGET_MAXCOLORS)
+		fatal("%d colors > %d\n", ind, WIDGET_MAXCOLORS);
+	if (ind > wid->ncolors)
+		wid->ncolors++;
+
+	wid->color[ind] = SDL_MapRGBA(view->v->format, r, g, b, a);
+
+	col = emalloc(sizeof(struct widget_color));
+	col->name = strdup(name);
+	col->ind = ind;
+	SLIST_INSERT_HEAD(&wid->colors, col, colors);
 }
 
