@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.4 2004/05/15 06:07:11 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.5 2004/05/25 07:25:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -182,4 +182,5 @@ pop:
 		object_unlock(ob);
 	}
 	pthread_mutex_unlock(&timeout_lock);
+	SDL_Delay(1);
 }
