@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.28 2003/02/20 04:57:28 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.29 2003/02/22 11:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -124,7 +124,12 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
 		node_copy_ref(nref, dstnode);
 	}
-	dstnode->flags = srcnode->flags & ~NODE_ORIGIN;
+
+	if (dstnode->flags & NODE_ORIGIN) {
+		dstnode->flags = srcnode->flags & NODE_ORIGIN;
+	} else {
+		dstnode->flags = srcnode->flags;
+	}
 }
 
 int
