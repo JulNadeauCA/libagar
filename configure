@@ -122,6 +122,8 @@ SHAREDIR="\"$PREFIX/share/geggy\""
 echo "#ifndef SHAREDIR" >> engine/mcconfig.h
 echo "#define SHAREDIR $SHAREDIR" >> engine/mcconfig.h
 echo "#endif /* SHAREDIR */" >> engine/mcconfig.h
+MAPDIR="$PREFIX/share/geggy/maps"
+echo MAPDIR=$MAPDIR >> Makefile.config
 echo -n "checking for a usable make(1)..."
 if [ "$MAKE" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
