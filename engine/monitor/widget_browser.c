@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.5 2002/11/22 08:56:54 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.6 2002/11/26 01:42:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -307,7 +307,7 @@ tl_windows_selected(int argc, union evarg *argv)
 	struct tlist *tl_regions, *tl_widgets;
 	int i;
 
-	win = window_generic_new(466, 261,
+	win = window_generic_new(466, 357,
 	    "monitor-widget-browser-%s-win", OBJECT(pwin)->name);
 	if (win == NULL) {
 		return;		/* Exists */
