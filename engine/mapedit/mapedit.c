@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.26 2002/02/13 00:32:46 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.27 2002/02/14 06:32:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -141,8 +141,8 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 
 	curmapedit = med;
 	
-	/* XXX tune */
-	med->timer = SDL_AddTimer(30, mapedit_time, med);
+	/* XXX pref */
+	med->timer = SDL_AddTimer(60, mapedit_time, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		return (NULL);
@@ -200,14 +200,14 @@ mapedit_shadow(struct mapedit *med)
 			med->curoffs = 1;
 		}
 		
-		if (ob->nsprites > 0) {
+		if (eob->nsprites > 0) {
 			int y;
 
-			for (y = 0; y < ob->nsprites; y++) {
+			for (y = 0; y < eob->nsprites; y++) {
 				struct editref *eref;
 		
 				eref = emalloc(sizeof(struct editref));
-				eref->animi = -2;
+				eref->animi = -1;
 				eref->spritei = y;
 				eref->p = ob->sprites[y];
 				eref->type = EDITREF_SPRITE;
@@ -217,10 +217,10 @@ mapedit_shadow(struct mapedit *med)
 			}
 		}
 	
-		if (ob->nanims > 0) {
+		if (eob->nanims > 0) {
 			int z;
 
-			for (z = 0; z < ob->nanims; z++) {
+			for (z = 0; z < eob->nanims; z++) {
 				struct editref *eref;
 
 				eref = emalloc(sizeof(struct editref));
