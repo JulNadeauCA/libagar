@@ -1,4 +1,4 @@
-/*	$Csoft: transform.h,v 1.9 2003/08/26 13:48:19 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.10 2003/08/29 05:06:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TRANSFORM_H_
@@ -11,6 +11,8 @@ enum transform_type {
 	TRANSFORM_HFLIP,
 	TRANSFORM_VFLIP
 };
+
+TAILQ_HEAD(transformq, transform);
 
 struct transform {
 	enum transform_type	  type;
@@ -35,6 +37,7 @@ void		  transform_save(struct netbuf *, const struct transform *);
 void		  transform_destroy(struct transform *);
 __inline__ int	  transform_compare(const struct transform *,
 		                    const struct transform *);
+void		  transform_print(const struct transformq *, char *, size_t);
 __END_DECLS
 
 #include "close_code.h"

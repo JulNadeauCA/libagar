@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.97 2003/07/26 12:30:47 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.98 2003/08/26 13:48:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -79,7 +79,7 @@ struct noderef {
 #define r_sprite	nref.sprite
 #define r_anim		nref.anim
 #define r_warp		nref.warp
-	TAILQ_HEAD(,transform) transforms;	/* Transformations to apply */
+	struct transformq transforms;		/* Transformations to apply */
 	TAILQ_ENTRY(noderef) nrefs;		/* Node's reference stack */
 };
 

@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.12 2003/08/29 05:06:48 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.13 2003/08/31 11:58:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -104,9 +104,9 @@ int
 transform_compare(const struct transform *tr1, const struct transform *tr2)
 {
 	return (tr1->type == tr2->type &&
-	    tr1->nargs == tr2->nargs &&
-	    (tr1->nargs == 0 ||
-	     memcmp(tr1->args, tr2->args, tr1->nargs*sizeof(Uint32))) == 0);
+	        tr1->nargs == tr2->nargs &&
+		(tr1->nargs == 0 ||
+		 memcmp(tr1->args, tr2->args, tr1->nargs*sizeof(Uint32)) == 0));
 }
 
 int
@@ -207,4 +207,36 @@ transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 	}
 	free(rowbuf);
 }
+
+#ifdef DEBUG
+/* Print the transform chain. */
+void
+transform_print(const struct transformq *transq, char *buf, size_t buf_size)
+{
+	extern const struct transform_ent transforms[];
+	extern const int ntransforms;
+	struct transform *tr;
+	int i, j;
+
+	TAILQ_FOREACH(tr, transq, transforms) {
+		for (i = 0; i < ntransforms; i++) {
+			if (transforms[i].type == tr->type)
+				break;
+		}
+		if (i < ntransforms) {
+			strlcat(buf, "+", buf_size);
+			strlcat(buf, transforms[i].name, buf_size);
+			for (j = 0; j < tr->nargs; j++) {
+				char num[32];
+
+				snprintf(num, sizeof(num), "(%lu)",
+				    (unsigned long)tr->args[i]);
+				strlcat(buf, num, buf_size);
+			}
+		}
+	}
+	if (!TAILQ_EMPTY(transq))
+		strlcat(buf, "\n", buf_size);
+}
+#endif
 

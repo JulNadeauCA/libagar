@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.19 2003/07/28 15:29:58 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.20 2003/08/29 04:55:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -71,8 +71,6 @@ nodeedit_poll_refs(int argc, union evarg *argv)
 		SDL_Surface *icon = NULL;
 		struct gfx_anim *anim;
 		char label[TLIST_LABEL_MAX];
-		struct transform *tr;
-		int trfound = 0;
 
 		switch (r->type) {
 		case NODEREF_SPRITE:
@@ -99,24 +97,7 @@ nodeedit_poll_refs(int argc, union evarg *argv)
 			break;
 		}
 
-		TAILQ_FOREACH(tr, &r->transforms, transforms) {
-			extern const struct transform_ent transforms[];
-			extern const int ntransforms;
-			int tri;
-
-			for (tri = 0; tri < ntransforms; tri++) {
-				if (transforms[tri].type == tr->type) {
-					strlcat(label, "+", sizeof(label));
-					strlcat(label, transforms[tri].name,
-					    sizeof(label));
-					break;
-				}
-			}
-			trfound++;
-		}
-		if (trfound)
-			strlcat(label, "\n", sizeof(label));
-
+		transform_print(&r->transforms, label, sizeof(label));
 		tlist_insert_item(tl, icon, label, r);
 		i++;
 	}
