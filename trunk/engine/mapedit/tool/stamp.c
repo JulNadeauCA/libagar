@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.32 2003/03/05 02:16:34 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.33 2003/03/07 03:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -47,18 +47,13 @@
 static const struct tool_ops stamp_ops = {
 	{
 		NULL,		/* destroy */
-		stamp_load,
-		stamp_save
+		NULL,		/* load */
+		NULL		/* save */
 	},
 	stamp_window,
 	stamp_cursor,
 	stamp_effect,
 	NULL			/* mouse */
-};
-
-static const struct version stamp_ver = {
-	"agar stamp tool",
-	1, 0
 };
 
 void
@@ -165,28 +160,3 @@ stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 	return (0);
 }
 
-int
-stamp_load(void *p, int fd)
-{
-	struct stamp *stamp = p;
-
-	if (version_read(fd, &stamp_ver, NULL) == -1) {
-		return (-1);
-	}
-	
-	stamp->mode = (int)read_uint32(fd);
-	stamp->inherit_flags = (int)read_uint32(fd);
-	return (0);
-}
-
-int
-stamp_save(void *p, int fd)
-{
-	struct stamp *stamp = p;
-
-	version_write(fd, &stamp_ver);
-
-	write_uint32(fd, (Uint32)stamp->mode);
-	write_uint32(fd, (Uint32)stamp->inherit_flags);
-	return (0);
-}
