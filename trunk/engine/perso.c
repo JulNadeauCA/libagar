@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.26 2003/05/24 15:53:39 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.27 2003/06/06 02:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -36,6 +36,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/spinbutton.h>
 
 #include <errno.h>
 #include <stdarg.h>
@@ -97,13 +98,13 @@ perso_init(void *obj, const char *name)
 	pthread_mutex_init(&pers->lock, NULL);
 	strlcpy(pers->name, name, sizeof(pers->name));
 	pers->flags = 0;
-	pers->level = 0;
+	pers->level = 1;
 	pers->exp = 0;
-	pers->age = 0;
+	pers->age = 5;
 	pers->seed = 0;			/* TODO arc4random */
-	pers->hp = pers->maxhp = 0;
+	pers->hp = pers->maxhp = 10;
 	pers->mp = pers->maxmp = 0;
-	pers->nzuars = 0;
+	pers->nzuars = 73;
 }
 
 void
@@ -171,13 +172,51 @@ perso_edit(void *obj)
 	window_set_caption(win, "%s personage", OBJECT(pers)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
-	vb = vbox_new(win, 0);
+	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{
 		struct textbox *tb;
+		struct spinbutton *sbu;
+		struct hbox *hb;
 
 		tb = textbox_new(vb, "Name: ");
-		widget_bind(tb, "string", WIDGET_STRING, NULL, pers->name,
-		    sizeof(pers->name));
+		widget_bind(tb, "string", WIDGET_STRING, &pers->lock,
+		    pers->name, sizeof(pers->name));
+
+		sbu = spinbutton_new(vb, "Level: ");
+		widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+		    &pers->level);
+
+		sbu = spinbutton_new(vb, "Experience: ");
+		widget_bind(sbu, "value", WIDGET_INT, &pers->lock, &pers->exp);
+
+		sbu = spinbutton_new(vb, "Age: ");
+		widget_bind(sbu, "value", WIDGET_INT, &pers->lock, &pers->age);
+
+		sbu = spinbutton_new(vb, "Zuars: ");
+		widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+		    &pers->nzuars);
+
+		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
+		{
+			sbu = spinbutton_new(hb, "HP: ");
+			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+			    &pers->hp);
+			
+			sbu = spinbutton_new(hb, " / ");
+			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+			    &pers->maxhp);
+		}
+		
+		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
+		{
+			sbu = spinbutton_new(hb, "MP: ");
+			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+			    &pers->mp);
+			
+			sbu = spinbutton_new(hb, " / ");
+			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
+			    &pers->maxmp);
+		}
 	}
 
 	window_show(win);
