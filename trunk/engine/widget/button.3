@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.18 2003/06/06 03:18:14 vedge Exp $
+.\"	$Csoft: button.3,v 1.19 2003/11/10 22:40:47 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -157,7 +157,15 @@ widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn button-pushed "int new_state"
-Button was pressed.
+The button was pressed.
+The
+.Fa new_state
+argument is useful in conjunction with the
+.Dv BUTTON_STICKY
+flag.
+.It Fn button-mouseoverlap "int overlap"
+The mouse cursor has entered/exited the button area.
+This is typically is used to display tool tips.
 .El
 .Sh BINDINGS
 The
