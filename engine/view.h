@@ -1,10 +1,37 @@
-/*	$Csoft: view.h,v 1.29 2002/06/12 20:38:49 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.30 2002/06/13 09:07:42 vedge Exp $	*/
 /*	Public domain	*/
 
-enum {
-	VIEW_MAPNAV,	/* Map navigation display */
-	VIEW_MAPEDIT,	/* Map edition display */
-	VIEW_FIGHT	/* Battle display */
+typedef enum {
+	/*
+	 * Optimized for a GUI interface. Used by the map editor.
+	 * - Real-time event/motion interpolation.
+	 * - Allow animations inside windows.
+	 * - No root map.
+	 * - XXX Inefficient video updates.
+	 */
+	GFX_ENGINE_GUI,
+	/*
+	 * 2D tile-based map rendering. Used by the games.
+	 * - Real-time event/motion interpolation.
+	 * - Allow animations inside windows.
+	 * - Root map allowing overlapping windows.
+	 * - Efficient video updates.
+	 */
+	GFX_ENGINE_TILEBASED
+} gfx_engine_t;
+
+struct viewmap {
+	/* Read-only */
+	int	w, h;			/* View geometry in nodes */
+	
+	/* Read-write (shares viewport->lock) */
+	struct	map *map;		/* Currently visible map */
+	int	x, y;			/* Offset in map */
+
+	int		**mask;		/* Mask covering the map view */
+	SDL_Rect	**maprects;	/* Rectangles (optimization) */
+	SDL_Rect	*rects;		/* List big enough to hold all
+					   possible rectangles in the view. */
 };
 
 TAILQ_HEAD(windowq, window);
@@ -13,26 +40,15 @@ struct viewport {
 	struct	object obj;
 
 	/* Read-only */
-
-	int	mode;			/* Display mode */
-	int	**mapmask;		/* Mask covering the map view */
-	int	w, h, depth;		/* Viewport geometry */
-
-	SDL_Surface	*v;		/* Screen. XXX unprotected */
-	SDL_Rect	**maprects;	/* Rectangles (optimization) */
-	SDL_Rect	*rects;		/* List big enough to hold all
-					   possible rectangles in a view. */
-	int	mapw, maph;		/* Map view geometry */
-	int	vmapw, vmaph;		/* Map view geometry in tiles */
-	int	mapx, mapy;		/* Map view coordinates */
-	int	mapxoffs, mapyoffs;	/* Map view offsets. XXX */
+	gfx_engine_t gfx_engine;	/* Type of rendering engine */
+	int	w, h, bpp;		/* Viewport geometry */
+	SDL_Surface	*v;		/* Screen. */
+	struct	viewmap *rootmap;	/* Non-NULL in game mode.
+					   (read-only pointer) */
 
 	/* Read-write, thread-safe */
-
-#if 1
-	struct	map *map;		/* Currently visible map. XXX atomic */
-#endif
 	struct	windowq windowsh;	/* Hidden/shown windows */
+	struct	window *focus_win;	/* Give focus to this window */
 	struct	window *wop_win;	/* Window operations */
 	int	wop_mapx, wop_mapy;
 	enum {
@@ -40,11 +56,9 @@ struct viewport {
 		VIEW_WINOP_MOVE,
 		VIEW_WINOP_RESIZE
 	} winop;
+
 	pthread_mutex_t lock;
 };
-
-#define VIEW_MAPMASK(vx, vy)	\
-    (mainview->mapmask[(vy) - mainview->mapyoffs][(vx) - mainview->mapxoffs])
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 # define _PUT_PIXEL_24(dst, c)		\
@@ -127,16 +141,24 @@ struct viewport {
 	}							\
 } while (/*CONSTCOND*/0)
 
-extern struct viewport *mainview;	/* view.c */
+#define VIEW_REDRAW() do {				\
+	SDL_Event rdev;					\
+							\
+	rdev.type = SDL_VIDEOEXPOSE;			\
+	SDL_PushEvent(&rdev);				\
+} while (/*CONSTCOND*/0)
 
-void		 view_init(int, int, int, int, int);
+/* Wrappers for high-level code. */
+
+extern struct viewport	*view;	/* view.c */
+
+void		 view_init(gfx_engine_t);
+
 void		 view_attach(void *);
 void		 view_detach(void *);
 void		 view_destroy(void *);
 
-void		 view_fullscreen(int);
 void		 view_maskfill(SDL_Rect *, int);
-void		 view_redraw(void);
 SDL_Surface	*view_surface(int, int, int);
 void		 view_focus(struct window *);
 #ifdef DEBUG
