@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.20 2002/06/06 10:18:02 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.21 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -52,18 +52,20 @@ static const struct widget_ops button_ops = {
 		NULL,		/* load */
 		NULL		/* save */
 	},
-	button_draw
+	button_draw,
+	NULL		/* animate */
 };
 
 static void	button_event(int, union evarg *);
 
 struct button *
-button_new(struct region *reg, char *caption, int flags, int rw, int rh)
+button_new(struct region *reg, char *caption, SDL_Surface *image, int flags,
+    int rw, int rh)
 {
 	struct button *button;
 
 	button = emalloc(sizeof(struct button));
-	button_init(button, caption, flags, rw, rh);
+	button_init(button, caption, image, flags, rw, rh);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, button);
@@ -73,15 +75,34 @@ button_new(struct region *reg, char *caption, int flags, int rw, int rh)
 }
 
 void
-button_init(struct button *b, char *caption, int flags, int rw, int rh)
+button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
+    int rw, int rh)
 {
+	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
+
 	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
 
-	b->caption = strdup(caption);
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;
 	b->xmargin = 6;
 	b->ymargin = 6;
+
+	if (caption != NULL) {
+		b->caption = strdup(caption);
+		b->label_s = TTF_RenderText_Solid(font, caption, white);
+		if (b->label_s == NULL) {
+			fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+		}
+	} else if (image != NULL) {
+		b->caption = NULL;
+		b->label_s = image;
+	}
+	
+	if (rw == 0)
+		WIDGET(b)->w = b->label_s->w + b->xmargin;
+	if (rh == 0)
+		WIDGET(b)->h = b->label_s->h + b->ymargin;
+
 
 	event_new(b, "window-mousebuttonup", 0,
 	    button_event, "%i", WINDOW_MOUSEBUTTONUP);
@@ -106,45 +127,37 @@ button_destroy(void *p)
 void
 button_draw(void *p)
 {
-	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 	struct button *b = p;
-	SDL_Surface *s, *bg;
+	SDL_Surface *label = b->label_s, *bg;
 	int x = 0, y = 0;
 
 	OBJECT_ASSERT(p, "widget");
 
-	/* Button */
+	/* Button. XXX cache */
 	bg = primitive_box(b, WIDGET(b)->w, WIDGET(b)->h,
 	    (b->flags & BUTTON_PRESSED) ? -1 : 1);
 	WIDGET_DRAW(b, bg, 0, 0);
 
-	/* Label */
-	s = TTF_RenderText_Solid(font, b->caption, white);
-	if (s == NULL) {
-		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-	}
-
 	switch (b->justify) {
 	case BUTTON_LEFT:
 		x = b->xmargin;
-		y = b->ymargin;
 		break;
 	case BUTTON_CENTER:
-		x = ((bg->w - s->w) >> 1) + (b->xmargin>>1);
-		y = ((bg->h - s->h) >> 1);
+		x = ((bg->w - label->w) >> 1) + (b->xmargin>>2);
 		break;
 	case BUTTON_RIGHT:
-		x = bg->w - s->w - b->xmargin;
-		y = bg->h - s->h - b->ymargin;
+		x = bg->w - label->w - b->xmargin;
 		break;
 	}
+	y = ((bg->h - label->h) >> 1) - 1;
+
 	if (b->flags & BUTTON_PRESSED) {
 		x++;
 		y++;
 	}
 
-	WIDGET_DRAW(b, s, x, y);
-	SDL_FreeSurface(s);
+	WIDGET_DRAW(b, b->label_s, x, y);
+	SDL_FreeSurface(bg);
 }
 
 static void
