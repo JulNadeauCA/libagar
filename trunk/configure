@@ -29,77 +29,76 @@
 
 echo > config.log
 
-mc_optarg=
-for mc_arg; do
-	case "$mc_arg" in
+optarg=
+for arg; do
+	case "$arg" in
 	-*=*)
-	    mc_optarg=`echo "$mc_arg" | sed 's/[-_a-zA-Z0-9]*=//'`
+	    optarg=`echo "$arg" | sed 's/[-_a-zA-Z0-9]*=//'`
 	    ;;
 	*)
-	    mc_optarg=
+	    optarg=
 	    ;;
 	esac
-	case "$mc_arg" in
+
+	case "$arg" in
 	--prefix=*)
-	    mc_prefix=$mc_optarg
+	    prefix=$optarg
 	    ;;
 	--enable-*)
-	    mc_option=`echo $mc_arg | sed -e 's/--enable-//' -e 's/=.*//'`
-	    mc_option=`echo $mc_option | sed 's/-/_/g'`
-	    case "$mc_option" in
+	    option=`echo $arg | sed -e 's/--enable-//' -e 's/=.*//'`
+	    option=`echo $option | sed 's/-/_/g'`
+	    case "$option" in
 	        *=*)
-	            eval "enable_${mc_option}='$mc_optarg'"
+	            eval "enable_${option}='$optarg'"
 		    ;;
 		*)
-	            eval "enable_${mc_option}=yes"
+	            eval "enable_${option}=yes"
 		    ;;
 	    esac
 	    ;;
 	--disable-*)
-	    mc_option=`echo $mc_arg | sed -e 's/--disable-//'`;
-	    mc_option=`echo $mc_option | sed 's/-/_/g'`
-	    eval "enable_${mc_option}=no"
+	    option=`echo $arg | sed -e 's/--disable-//'`;
+	    option=`echo $option | sed 's/-/_/g'`
+	    eval "enable_${option}=no"
 	    ;;
 	--with-*)
-	    mc_option=`echo $mc_arg | sed -e 's/--with-//' -e 's/=.*//'`
-	    mc_option=`echo $mc_option | sed 's/-/_/g'`
-	    case "$mc_option" in
+	    option=`echo $arg | sed -e 's/--with-//' -e 's/=.*//'`
+	    option=`echo $option | sed 's/-/_/g'`
+	    case "$option" in
 	        *=*)
-	            eval "with_${mc_option}='$mc_optarg'"
+	            eval "with_${option}='$optarg'"
 		    ;;
 		*)
-	            eval "with_${mc_option}=yes"
+	            eval "with_${option}=yes"
 		    ;;
 	    esac
 	    ;;
 	--without-*)
-	    mc_option=`echo $mc_arg | sed -e 's/--without-//'`;
-	    mc_option=`echo $mc_option | sed 's/-/_/g'`
-	    eval "with_${mc_option}=no"
+	    option=`echo $arg | sed -e 's/--without-//'`;
+	    option=`echo $option | sed 's/-/_/g'`
+	    eval "with_${option}=no"
 	    ;;
 	--help)
 	    help=yes
 	    ;;
-	--version)
-	    version=yes
-	    ;;
 	*)
-	    echo "invalid argument: $mc_arg"
+	    echo "invalid argument: $arg"
 	    echo "try ./configure --help"
 	    exit 1
 	    ;;
 	esac
 done
-if [ "${mc_prefix}" != "" ]; then
-    PREFIX=$mc_prefix
+if [ "${prefix}" != "" ]; then
+    PREFIX=$prefix
 else
     PREFIX=/usr/local
 fi
 S=""
-which="`which pwd`"
-if [ -n "$which" -a -x "$which" ]; then
-	S=`${which} `
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/pwd" ]; then
+		S=`${path}/pwd `
+	fi
 echo >Makefile.config
 echo >engine/mcconfig.h
 if [ "${help}" = "yes" ]
@@ -491,35 +490,41 @@ fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
-which="`which sdl-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl_version=`${which} --version`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/sdl-config" ]; then
+		sdl_version=`${path}/sdl-config --version`
+	fi
 SDL_CFLAGS=""
-which="`which sdl-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	SDL_CFLAGS=`${which} --cflags`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_CFLAGS=`${path}/sdl-config --cflags`
+	fi
 SDL_LIBS=""
-which="`which sdl-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	SDL_LIBS=`${which} --libs`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/sdl-config" ]; then
+		SDL_LIBS=`${path}/sdl-config --libs`
+	fi
 sdl11_version=""
-which="`which sdl11-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl11_version=`${which} --version`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/sdl11-config" ]; then
+		sdl11_version=`${path}/sdl11-config --version`
+	fi
 sdl11_cflags=""
-which="`which sdl11-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl11_cflags=`${which} --cflags`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/sdl11-config" ]; then
+		sdl11_cflags=`${path}/sdl11-config --cflags`
+	fi
 sdl11_libs=""
-which="`which sdl11-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	sdl11_libs=`${which} --libs`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/sdl11-config" ]; then
+		sdl11_libs=`${path}/sdl11-config --libs`
+	fi
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
@@ -606,20 +611,23 @@ fi
 echo -n "checking for FreeType (http://www.freetype.org)..."
 echo "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
-which="`which freetype-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	FREETYPE_VERSION=`${which} --version`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/freetype-config" ]; then
+		FREETYPE_VERSION=`${path}/freetype-config --version`
+	fi
 FREETYPE_CFLAGS=""
-which="`which freetype-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	FREETYPE_CFLAGS=`${which} --cflags`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/freetype-config" ]; then
+		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+	fi
 FREETYPE_LIBS=""
-which="`which freetype-config`"
-if [ -n "$which" -a -x "$which" ]; then
-	FREETYPE_LIBS=`${which} --libs`
-fi
+IFS=:
+for path in $PATH; do
+	if [ -x "${path}/freetype-config" ]; then
+		FREETYPE_LIBS=`${path}/freetype-config --libs`
+	fi
 if [ "${FREETYPE_VERSION}" != "" ]; then
 freetype_found=yes
 echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
