@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.33 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.34 2002/04/26 11:40:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,6 +45,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
+#include <engine/widget/checkbox.h>
 #include <engine/widget/text.h>
 
 #ifdef DEBUG
@@ -64,6 +65,7 @@ struct input *mouse = NULL;
 
 static void	printusage(char *);
 static void	close_button_push(struct button *);
+static void	fullscrn_cbox_push(struct checkbox *);
 
 static void
 printusage(char *progname)
@@ -246,25 +248,28 @@ void
 engine_config(void)
 {
 	struct window *win;
-	struct label *fullscreen_label;
+	struct checkbox *fullscrn_cbox;
 	struct button *close_button;
 
 	/* Settings window */
 	win = emalloc(sizeof(struct window));
 	window_init(win, mainview, "engine-config", "Engine settings", 0,
-	    WINDOW_GRADIENT, 64, 64, 512, 256);
+	    WINDOW_CUBIC, 64, 64, 512, 256);
 	pthread_mutex_lock(&world->lock);
 	object_link(win);
 	pthread_mutex_unlock(&world->lock);
 
-	fullscreen_label = emalloc(sizeof(struct label));
-	label_init(fullscreen_label, "fullscr-label", "Full-screen", 0, 10, 10);
+	fullscrn_cbox = emalloc(sizeof(struct checkbox));
+	checkbox_init(fullscrn_cbox, "fullscr-label", "Full-screen mode", 0,
+	    10, 10);
 	pthread_mutex_lock(&win->lock);
-	widget_link(fullscreen_label, win);
+	fullscrn_cbox->push = fullscrn_cbox_push;
+	widget_link(fullscrn_cbox, win);
 	pthread_mutex_unlock(&win->lock);
 
 	close_button = emalloc(sizeof(struct button));
-	button_init(close_button, "close-button", "Close", 0, 100, 100);
+	button_init(close_button, "close-button", "Close", 0,
+	    (win->w/2)-64, win->h-64);
 	close_button->push = close_button_push;
 	pthread_mutex_lock(&win->lock);
 	widget_link(close_button, win);
@@ -275,5 +280,11 @@ static void
 close_button_push(struct button *b)
 {
 	object_unlink(WIDGET(b)->win);
+}
+
+static void
+fullscrn_cbox_push(struct checkbox *b)
+{
+	view_fullscreen(mainview, b->flags & CHECKBOX_PRESSED);
 }
 
