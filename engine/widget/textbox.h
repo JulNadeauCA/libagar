@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.30 2003/11/10 22:40:17 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.31 2004/02/25 18:09:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -8,7 +8,7 @@
 
 #include "begin_code.h"
 
-#define TEXTBOX_STRING_MAX	256
+#define TEXTBOX_STRING_MAX 1024
 
 struct textbox {
 	struct widget wid;
