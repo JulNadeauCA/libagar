@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.32 2002/05/26 06:08:17 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.33 2002/05/28 06:02:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -60,7 +60,8 @@ static const struct object_ops window_ops = {
 static Uint32 delta = 0, delta2 = 256;
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
-static void	post_widget_ev(void *, void *, void *);
+static void	 postevent(void *, void *, void *);
+static void	*callevent(void *);
 
 /* XXX fucking insane */
 struct window *
@@ -153,25 +154,36 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->vmask.w = (win->w / view->map->tilew);
 	win->vmask.h = (win->h / view->map->tilew);
 
-	SLIST_INIT(&win->regionsh);
+	TAILQ_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, NULL);
 }
 
-/* View must be locked. */
 static void *
-dispatch_widget_event(void *p)
+callevent(void *p)
 {
 	struct window_event *wev = p;
 
+#if 0	/* XXX race */
+	pthread_mutex_lock(&wev->w->win->lock);
+#endif
 	if (WIDGET_OPS(wev->w)->widget_event != NULL) {
 		WIDGET_OPS(wev->w)->widget_event(wev->w, &wev->ev, wev->flags);
 	}
+#if 0	/* XXX race */
+	pthread_mutex_unlock(&wev->w->win->lock);
+#endif
 	free(wev);
 	return (NULL);
 }
 
+/*
+ * Treat widget events asynchronously, otherwise an intricate garbage
+ * collector would have to be used for widgets. This also simplifies locking.
+ *
+ * Window must be locked.
+ */
 static void
-post_widget_ev(void *parent, void *child, void *arg)
+postevent(void *parent, void *child, void *arg)
 {
 	pthread_t cbthread;
 	struct widget *wid = child;
@@ -189,7 +201,8 @@ post_widget_ev(void *parent, void *child, void *arg)
 	wev->flags = 0;
 	wev->ev = *ev;
 
-	pthread_create(&cbthread, NULL, dispatch_widget_event, wev);
+	/* XXX verify serialization */
+	pthread_create(&cbthread, NULL, callevent, wev);
 }
 
 #define WINDOW_CORNER(win, xo, yo) do {				\
@@ -360,7 +373,7 @@ window_draw(struct window *win)
 	}
 
 	/* Render the widgets. */
-	SLIST_FOREACH(reg, &win->regionsh, regions) {
+	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		if (reg->flags & REGION_BORDER) {
 			Uint32 c;
 			int x, y;
@@ -427,18 +440,19 @@ window_ondetach(void *parent, void *child)
 	struct viewport *view = parent;
 	struct window *win = child;
 
-	/* XXX ... */
+	pthread_mutex_lock(&view->lock);
 
-	/* Decrement the view mask for this area. */
 	view_maskfill(view, &win->vmask, -1);
+
+	/* Map may become visible. */
 	if (view->map != NULL) {
 		view->map->redraw++;
 	}
-
 	/* Other windows may become visible. */
-	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH(win, &view->windowsh, windows)
+	TAILQ_FOREACH(win, &view->windowsh, windows) {
 		win->redraw++;
+	}
+
 	pthread_mutex_unlock(&view->lock);
 }
 
@@ -457,7 +471,7 @@ window_attach(void *parent, void *child)
 	
 	reg->win = win;
 
-	SLIST_INSERT_HEAD(&win->regionsh, reg, regions);
+	TAILQ_INSERT_HEAD(&win->regionsh, reg, regions);
 }
 
 /*
@@ -473,19 +487,20 @@ window_detach(void *parent, void *child)
 	OBJECT_ASSERT(parent, "window");
 	OBJECT_ASSERT(child, "window-region");
 
-	SLIST_REMOVE(&win->regionsh, reg, region, regions);
+	TAILQ_REMOVE(&win->regionsh, reg, regions);
 }
 
+/* Window must not be locked/attached. */
 void
 window_destroy(void *p)
 {
 	struct window *win = p;
 	struct region *reg, *nextreg = NULL;
 
-	for (reg = SLIST_FIRST(&win->regionsh);
-	     reg != SLIST_END(&win->regionsh);
+	for (reg = TAILQ_FIRST(&win->regionsh);
+	     reg != TAILQ_END(&win->regionsh);
 	     reg = nextreg) {
-		nextreg = SLIST_NEXT(reg, regions);
+		nextreg = TAILQ_NEXT(reg, regions);
 		window_detach(win, reg);
 		object_destroy(reg);
 	}
@@ -494,14 +509,14 @@ window_destroy(void *p)
 	free(win->border);
 }
 
-/* Window list must be locked. */
+/* View must be locked. */
 void
 window_draw_all(void)
 {
 	struct window *win;
 
 	TAILQ_FOREACH(win, &mainview->windowsh, windows) {
-		pthread_mutex_lock(&win->lock);
+		pthread_mutex_trylock(&win->lock);
 		if (win->redraw) {
 			window_draw(win);
 		}
@@ -510,8 +525,87 @@ window_draw_all(void)
 }
 
 /*
+ * Cycle focus throughout widgets.
+ * Window must be locked.
+ */
+static void
+cycle_widgets(struct window *win, int reverse)
+{
+	struct widget *wid = win->focus;
+	struct region *nreg, *rreg;
+	struct widget *owid, *rwid;
+	struct widget *nwid;
+
+	if (wid == NULL) {
+		dprintf("%s: no focus\n", OBJECT(win)->name);
+		return;
+	}
+
+	if (reverse) {
+		nwid = TAILQ_PREV(wid, widgetsq, widgets);
+	} else {
+		nwid = TAILQ_NEXT(wid, widgets);
+	}
+
+	if (nwid != NULL) {
+		WIDGET_FOCUS(nwid);
+		return;
+	}
+
+	TAILQ_FOREACH(nreg, &win->regionsh, regions) {
+		TAILQ_FOREACH(owid, &nreg->widgetsh, widgets) {
+			if (owid != wid) {
+				continue;
+			}
+			if (reverse) {
+				rreg = TAILQ_PREV(nreg, regionsq, regions);
+				if (rreg != NULL) {
+					rwid = TAILQ_LAST(&rreg->widgetsh,
+					    widgetsq);
+					if (rwid != NULL) {
+						WIDGET_FOCUS(rwid);
+						return;
+					}
+				} else {
+					rreg = TAILQ_LAST(&win->regionsh,
+					    regionsq);
+					if (rreg != NULL) {
+						rwid = TAILQ_LAST(
+						    &rreg->widgetsh,
+						    widgetsq);
+						if (rwid != NULL) {
+							WIDGET_FOCUS(rwid);
+							return;
+						}
+					}
+				}
+			} else {
+				rreg = TAILQ_NEXT(nreg, regions);
+				if (rreg != NULL) {
+					rwid = TAILQ_FIRST(&rreg->widgetsh);
+					if (rwid != NULL) {
+						WIDGET_FOCUS(rwid);
+						return;
+					}
+				} else {
+					rreg = TAILQ_FIRST(&win->regionsh);
+					if (rreg != NULL) {
+						rwid = TAILQ_FIRST(
+						    &rreg->widgetsh);
+						if (rwid != NULL) {
+							WIDGET_FOCUS(rwid);
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+/*
  * Dispatch events to widgets and windows.
- * View must be locked.
+ * View must be locked, window list must not be empty.
  */
 int
 window_event_all(struct viewport *view, SDL_Event *ev)
@@ -523,35 +617,49 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows,
-		    windows_head) {
+		TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
 			pthread_mutex_lock(&win->lock);
 			if (WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
-				SLIST_FOREACH(reg, &win->regionsh, regions) {
+				TAILQ_FOREACH(reg, &win->regionsh, regions) {
 					TAILQ_FOREACH(wid, &reg->widgetsh,
 					    widgets) {
 						if (WIDGET_INSIDE(wid,
 						    ev->button.x,
 						    ev->button.y)) {
-							post_widget_ev(reg,
-							    wid, ev);
+							postevent(reg, wid, ev);
 						}
 					}
 				}
 				pthread_mutex_unlock(&win->lock);
 				return (1);
 			}
-			pthread_mutex_unlock(&win->lock);
 		}
 		break;
 	case SDL_KEYUP:
 	case SDL_KEYDOWN:
-		win = TAILQ_LAST(&view->windowsh, windows_head);
+		switch (ev->key.keysym.sym) {
+		case SDLK_LSHIFT:
+		case SDLK_RSHIFT:
+		case SDLK_LALT:
+		case SDLK_RALT:
+		case SDLK_LCTRL:
+		case SDLK_RCTRL:
+			return (0);
+		default:
+			break;
+		}
+		win = TAILQ_LAST(&view->windowsh, windowq);
 		pthread_mutex_lock(&win->lock);
-		SLIST_FOREACH(reg, &win->regionsh, regions) {
+		if (ev->key.keysym.sym == SDLK_TAB && ev->type == SDL_KEYUP) {
+			cycle_widgets(win, (ev->key.keysym.mod & KMOD_SHIFT));
+			win->redraw++;
+			pthread_mutex_unlock(&win->lock);
+			return (1);
+		}
+		TAILQ_FOREACH(reg, &win->regionsh, regions) {
 			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-				if (wid == win->focus) {
-					post_widget_ev(reg, wid, ev);
+				if (WIDGET_FOCUSED(wid)) {
+					postevent(reg, wid, ev);
 					pthread_mutex_unlock(&win->lock);
 					return (1);
 				}
@@ -568,7 +676,7 @@ window_resize(struct window *win)
 {
 	struct region *reg;
 
-	SLIST_FOREACH(reg, &win->regionsh, regions) {
+	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
 		int x, y;
 		int nwidgets = 0;
