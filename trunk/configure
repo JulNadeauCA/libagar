@@ -39,8 +39,23 @@ done
 if [ "$PREFIX" = "" ]; then
 PREFIX=/usr/local
 fi
+if [ "" = "--version" ]; then
+echo "Manuconf v1.1"
+exit 0
+fi
+S="`pwd`"
 echo >Makefile.config
 echo >engine/config.h
+CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused -g -I$S"
+echo CFLAGS=$CFLAGS >> Makefile.config
+DEBUG=1
+echo "#ifndef DEBUG" >> engine/config.h
+echo "#define DEBUG $DEBUG" >> engine/config.h
+echo "#endif /* DEBUG */" >> engine/config.h
+SHAREDIR="\"$PREFIX/share/geggy\""
+echo "#ifndef SHAREDIR" >> engine/config.h
+echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
+echo "#endif /* SHAREDIR */" >> engine/config.h
 for OPT in $@; do
 if [ "$OPT" = "--with-smpeg" ]; then
 WITH_SMPEG=1
@@ -62,10 +77,6 @@ echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
 echo "    --with-smpeg         Play videos through the smpeg library [yes]"
 echo "    --without-smpeg      "
-exit 1
-fi
-if [ "$1" = "--version" ]; then
-echo "Manuconf v1.1"
 exit 1
 fi
 if [ -x "`which uname`" ]; then
@@ -217,4 +228,3 @@ echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/config.h
 echo "#define PREFIX \"$PREFIX\"" >> engine/config.h
 echo "#endif /* PREFIX */" >> engine/config.h
-echo "Don't forget to run \"make depend\"."
