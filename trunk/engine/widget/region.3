@@ -99,11 +99,13 @@ The
 .Nm
 structure generates the following events:
 .Pp
-.Bl -tag -width 10n -compact
-.It attached
-Widget attached to region.
-.It detached
-Widget detached from region.
+.Bl -tag -width 2n
+.It Fn attached "struct region *parent"
+Widget attached to region
+.Fa parent .
+.It Fn detached "struct region *parent"
+Widget detached from region
+.Fa parent .
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

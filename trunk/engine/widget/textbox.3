@@ -104,11 +104,14 @@ The
 .Nm
 widget generates the following events:
 .Pp
-.Bl -tag -compact -width 25n -indent
-.It textbox-return
-Return was pressed.
-.It textbox-changed
-The string changed.
+.Bl -tag -width 2n
+.It Fn textbox-return "char *s"
+Return was pressed, and the string
+.Fa s
+is currently entered.
+.It Fn textbox-changed "char *s"
+The string changed to
+.Fa s .
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

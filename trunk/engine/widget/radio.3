@@ -94,9 +94,10 @@ The
 .Nm
 widget generates the following events:
 .Pp
-.Bl -tag -compact -width 25n -indent
-.It radio-changed
-Selection changed.
+.Bl -tag -width 2n
+.It Fn radio-changed "char hotkey" "int index"
+Selection changed to item at index
+.Fa index .
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
