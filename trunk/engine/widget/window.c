@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.53 2002/07/21 10:57:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.54 2002/07/22 05:50:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -653,6 +653,9 @@ window_focus(struct window *win)
 	struct widget *wid;
 
 	lastwin = TAILQ_LAST(&view->windowsh, windowq);
+	if (lastwin == win) {
+		return;
+	}
 	if (lastwin != NULL) {
 		event_post(lastwin, "window-lostfocus", NULL);
 
