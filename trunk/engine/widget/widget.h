@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.52 2003/02/25 01:27:04 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.53 2003/03/02 00:35:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -92,46 +92,14 @@ struct widget {
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->rd.x) + WIDGET((wi))->x)
 #define WIDGET_ABSY(wi)	((WIDGET((wi))->win->rd.y) + WIDGET((wi))->y)
 
-#ifdef DEBUG
-
-# define WIDGET_PUT_PIXEL(wid, wdrx, wdry, c) do {			\
-	if ((wdrx) > WIDGET((wid))->w || (wdry) > WIDGET((wid))->h ||	\
-	    (wdrx) < 0 || (wdry) < 0) {					\
-		dprintf("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,	\
-		    (wdrx), (wdry), WIDGET((wid))->w,			\
-		    WIDGET((wid))->h);					\
-	} else {							\
-		WINDOW_PUT_PIXEL(WIDGET((wid))->win,		 	\
-		    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c)); \
-	}								\
-} while (/*CONSTCOND*/0)
-
-# define WIDGET_PUT_ALPHAPIXEL(wid, wdrx, wdry, c, wa) do {		\
-	if ((wdrx) > WIDGET((wid))->w || (wdry) > WIDGET((wid))->h ||	\
-	    (wdrx) < 0 || (wdry) < 0) {					\
-		dprintf("%s: %d,%d > %dx%d\n", OBJECT(wid)->name,	\
-		    (wdrx), (wdry), WIDGET((wid))->w,			\
-		    WIDGET((wid))->h);					\
-	} else {							\
-		WINDOW_PUT_ALPHAPIXEL(WIDGET((wid))->win,		\
-		    WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry),	\
-		    (c), (wa));						\
-	}								\
-} while (/*CONSTCOND*/0)
-
-#else
-
-# define WIDGET_PUT_PIXEL(wid, wdrx, wdry, c)				\
+#define WIDGET_PUT_PIXEL(wid, wdrx, wdry, c)				\
 	 WINDOW_PUT_PIXEL(WIDGET((wid))->win,				\
 	     WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c))
 
-# define WIDGET_PUT_ALPHAPIXEL(wid, wdrx, wdry, c, wa)			\
+#define WIDGET_PUT_ALPHAPIXEL(wid, wdrx, wdry, c, wa)			\
 	 WINDOW_PUT_ALPHAPIXEL(WIDGET((wid))->win,			\
 	     WIDGET((wid))->x+(wdrx), WIDGET((wid))->y+(wdry), (c), (wa))
 
-#endif	/* DEBUG */
-
-#define WIDGET_SURFACE(wid)	(WINDOW_SURFACE(WIDGET((wid))->win))
 #define WIDGET_FOCUSED(wid)	(WIDGET((wid))->win->focus == WIDGET((wid)))
 #define WIDGET_FOCUS(wid)					\
 	if ((WIDGET((wid))->flags & WIDGET_NO_FOCUS) == 0) {	\

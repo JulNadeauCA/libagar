@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.47 2003/03/11 00:13:33 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.48 2003/03/13 08:43:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -764,7 +764,7 @@ widget_blit(void *p, SDL_Surface *srcsu, int xoffs, int yoffs)
 	} else
 #endif
 	{
-		SDL_BlitSurface(srcsu, NULL, WIDGET_SURFACE(wid), &rd);
+		SDL_BlitSurface(srcsu, NULL, view->v, &rd);
 	}
 }
 
