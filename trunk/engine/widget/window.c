@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.74 2002/09/06 01:28:29 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.75 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -105,6 +105,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 {
 	char *wname;
 	int i;
+	int fl = flags;
 
 	if (bg_color == 0) {
 		/* Set the background color. */
@@ -113,7 +114,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	
 	if (name != NULL) {					/* Unique */
 		asprintf(&wname, "win-%s", name);
-		flags |= WINDOW_SAVE_POSITION;
+		fl |= WINDOW_SAVE_POSITION;
 	} else {						/* Generic */
 		static int curwindow = 0;
 		pthread_mutex_t curwindow_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -139,11 +140,12 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		    default_border[i].b);
 	}
 
+	fl |= WINDOW_TITLEBAR;
+
 	win->titleh = font_h + win->borderw;
-	win->flags = flags;
-	win->flags |= WINDOW_TITLEBAR;
-	win->type = (flags & WINDOW_TYPE) == 0 ? WINDOW_DEFAULT_TYPE :
-	    (flags & WINDOW_TYPE);
+	win->flags = fl;
+	win->type = ((fl & WINDOW_TYPE) == 0) ?
+	    WINDOW_DEFAULT_TYPE : (fl & WINDOW_TYPE);
 	win->spacing = 4;
 	win->redraw = 0;
 	win->focus = NULL;
@@ -158,7 +160,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 	/* Set the initial window position/geometry. */
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
-		if (flags & WINDOW_SCALE) {
+		if (win->flags & WINDOW_SCALE) {
 			window_round(win,
 			     rx * view->w / 100,
 			     ry * view->h / 100,
@@ -167,7 +169,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		} else {
 			window_round(win, rx, ry, rw, rh);
 		}
-		if (flags & WINDOW_CENTER) {
+		if (win->flags & WINDOW_CENTER) {
 			window_round(win,
 			    view->w/2 - win->w/2,
 			    view->h/2 - win->h/2,
@@ -177,7 +179,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		window_clamp(win);
 		break;
 	case GFX_ENGINE_GUI:
-		if (flags & WINDOW_SCALE) {
+		if (win->flags & WINDOW_SCALE) {
 			win->x = (rx * view->w / 100);
 			win->y = (ry * view->h / 100);
 			win->w = (rw * view->w / 100);
@@ -188,7 +190,7 @@ window_init(struct window *win, char *name, char *caption, int flags,
 			win->w = rw;
 			win->h = rh;
 		}
-		if (flags & WINDOW_CENTER) {
+		if (win->flags & WINDOW_CENTER) {
 			win->x = view->w/2 - win->w/2;
 			win->y = view->h/2 - win->h/2;
 		}
