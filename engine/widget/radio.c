@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.17 2002/11/28 06:32:13 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.18 2002/12/25 22:07:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -146,7 +146,7 @@ radio_draw(void *p)
 		/* XXX cache */
 		ls = text_render(NULL, -1,
 		    WIDGET_COLOR(rad, TEXT_COLOR), s);
-		WIDGET_DRAW(rad, ls, rad->radio.w, y);
+		widget_blit(rad, ls, rad->radio.w, y);
 		SDL_FreeSurface(ls);
 	}
 }

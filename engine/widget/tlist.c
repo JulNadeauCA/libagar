@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.27 2002/12/26 07:05:25 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.28 2002/12/30 06:30:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -189,8 +189,14 @@ tlist_draw(void *p)
 			goto out;
 		}
 		if (it->selected) {
-			WIDGET_FILL(tl, x, y,
-			    WIDGET(tl)->w - WIDGET(sb)->w, tl->item_h,
+			SDL_Rect rd;
+
+			rd.x = x;
+			rd.y = y;
+			rd.w = WIDGET(tl)->w - WIDGET(sb)->w;
+			rd.h = tl->item_h;
+		
+			primitives.rect_filled(tl, &rd,
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
 
@@ -198,11 +204,12 @@ tlist_draw(void *p)
 		    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
 	
 		if (it->icon != NULL) {
-			WIDGET_DRAW(tl, it->icon, x, y);
+			widget_blit(tl, it->icon, x, y);
 		}
 		x += it->icon_w + 4;
 
-		WIDGET_DRAW(tl, su, x, y);
+		widget_blit(tl, su, x, y);
+
 		y += tl->item_h;
 		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
 		    WIDGET_COLOR(tl, LINE_COLOR));

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.100 2002/12/31 00:55:22 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.101 2002/12/31 05:48:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,8 +25,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_opengl.h>
-
 #include "engine.h"
 
 #include "rootmap.h"
@@ -38,6 +36,7 @@
 
 #include "widget/widget.h"
 #include "widget/window.h"
+#include "widget/primitive.h"
 
 static const struct object_ops viewport_ops = {
 	view_destroy,
@@ -146,7 +145,7 @@ view_init(gfx_engine_t ge)
 
 #ifdef HAVE_OPENGL
 	if (v->opengl) {
-		int red, blue, green, alpha, depth, dbuf, bsize;
+		int red, blue, green, alpha, depth, bsize;
 
 		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
 		SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
@@ -162,17 +161,23 @@ view_init(gfx_engine_t ge)
 		prop_set_int(config, "view.gl.alpha_size", alpha);
 		prop_set_int(config, "view.gl.buffer_size", bsize);
 
-		SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &dbuf);
-		if (!dbuf) {
-			error_set("gl: could not enable double buffering");
-			goto fail;
-		}
+		glViewport(0, 0, v->w, v->h);
+		glOrtho(0, v->w, v->h, 0, -1.0, 1.0);
+		glClearColor(0, 0, 0, 0);
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_BLEND);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
 #endif /* HAVE_OPENGL */
 
 	prop_set_uint16(config, "view.w", v->w);
 	prop_set_uint16(config, "view.h", v->h);
 	view = v;
+
+	primitives_init();
 	return (0);
 fail:
 	pthread_mutex_destroy(&v->lock);
@@ -273,21 +278,20 @@ SDL_Surface *
 view_surface(int flags, int w, int h)
 {
 	SDL_Surface *s;
-	Uint32 rmask, gmask, bmask, amask;
 
+	s = SDL_CreateRGBSurface(flags, w, h, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	rmask = 0xff000000;
-	gmask = 0x00ff0000;
-	bmask = 0x0000ff00;
-	amask = 0x000000ff;
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
 #else
-	rmask = 0x000000ff;
-	gmask = 0x0000ff00;
-	bmask = 0x00ff0000;
-	amask = 0xff000000;
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
 #endif
-
-	s = SDL_CreateRGBSurface(flags, w, h, 32, rmask, gmask, bmask, amask);
+	    );
 	if (s == NULL) {
 		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 	}
@@ -388,4 +392,82 @@ view_set_refresh(int min_delay, int max_delay)
 
 	return (0);
 }
+
+#ifdef HAVE_OPENGL
+
+static __inline__ int
+powof2(int i)
+{
+	int val = 1;
+
+	while (val < i) {
+		val <<= 1;
+	}
+	return (val);
+}
+
+GLuint
+view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
+{
+	SDL_Surface *texsu;
+	GLuint texture;
+	Uint32 sflags;
+	Uint8 salpha;
+	int w, h;
+
+	w = powof2(sourcesu->w);
+	h = powof2(sourcesu->h);
+	texcoord[0] = 0.0f;
+	texcoord[1] = 0.0f;
+	texcoord[2] = (GLfloat)sourcesu->w / w;
+	texcoord[3] = (GLfloat)sourcesu->h / h;
+
+	/* Create a surface with the OpenGL RGBA masks. */
+	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
+#else
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+#endif
+	    );
+	if (texsu == NULL) {
+		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+	}
+
+	/* Disable alpha blending state of the source surface. */
+	sflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCELOK);
+	salpha = sourcesu->format->alpha;
+	if (sflags & SDL_SRCALPHA) {
+		SDL_SetAlpha(sourcesu, 0, 0);
+	}
+
+	/* Copy the source surface into the GL texture surface. */
+	if (SDL_BlitSurface(sourcesu, NULL, texsu, NULL) == -1) {
+		fatal("SDL_BlitSurface: %s\n", SDL_GetError());
+	}
+
+	/* Restore the alpha blending state of the source surface. */
+	if (sflags & SDL_SRCALPHA) {
+		SDL_SetAlpha(sourcesu, sflags, salpha);
+	}
+
+	/* Create the OpenGL texture. */
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+	    GL_UNSIGNED_BYTE, texsu->pixels);
+	SDL_FreeSurface(texsu);
+
+	return (texture);
+}
+
+#endif /* HAVE_OPENGL */
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.16 2002/12/20 01:01:13 vedge Exp $
+.\"	$Csoft: widget.3,v 1.17 2002/12/26 03:24:31 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -225,12 +225,8 @@ are inside the widget area.
 .Sh RENDERING
 .nr nS 1
 .Ft void
-.Fn WIDGET_DRAW "struct widget *wid" "SDL_Surface *surface" "Sint16 x" \
-                "Sint16 y"
-.Pp
-.Ft void
-.Fn WIDGET_FILL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint16 w" \
-                "Uint16 h" "Uint32 color"
+.Fn widget_blit "struct widget *wid" "SDL_Surface *src" "int xoffs" \
+                "int yoffs"
 .Pp
 .Ft void
 .Fn WIDGET_PUT_PIXEL "struct widget *wid" "Sint16 x" "Sint16 y" "Uint32 color"
@@ -247,19 +243,13 @@ are inside the widget area.
 .nr nS 0
 .Pp
 The
-.Fn WIDGET_DRAW
-macro blits the surface
-.Fa surface
-onto the widget at offset
-.Fa x ,
-.Fa y
-with
-.Xr SDL_BlitSurface 3 .
-.Pp
-The
-.Fn WIDGET_FILL
-macro fills a rectangle inside the surface of a widget using
-.Xr SDL_FillRect 3 .
+.Fn widget_blit
+function performs a blit from source surface
+.Fa src
+to the display at
+.Fa xoffs ,
+.Fa yoffs
+relative to the widget's current coordinates.
 .Pp
 The
 .Fn WIDGET_PUT_PIXEL

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.48 2002/12/30 00:08:30 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.49 2002/12/30 03:51:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -88,38 +88,6 @@ struct widget {
 /* Expand to absolute widget coordinates. */
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->rd.x) + WIDGET((wi))->x)
 #define WIDGET_ABSY(wi)	((WIDGET((wi))->win->rd.y) + WIDGET((wi))->y)
-
-/* XXX optimize - move rect to wid structure */
-#define WIDGET_DRAW(wi, s, xo, yo) do {					\
-	SDL_Rect _wdrd;							\
-									\
-	_wdrd.x = WIDGET_ABSX((wi)) + (xo);				\
-	_wdrd.y = WIDGET_ABSY((wi)) + (yo);				\
-	_wdrd.w = (s)->w;						\
-	_wdrd.h = (s)->h;						\
-	SDL_BlitSurface((s), NULL, WIDGET_SURFACE((wi)), &_wdrd);	\
-} while (/*CONSTCOND*/0)
-
-/* XXX optimize - move rect to wid structure */
-#define WIDGET_FILL(wi, xo, yo, wdrw, wdrh, col) do {		\
-	SDL_Rect _wdrd;						\
-								\
-	_wdrd.x = WIDGET_ABSX((wi)) + (xo);			\
-	_wdrd.y = WIDGET_ABSY((wi)) + (yo);			\
-	_wdrd.w = (wdrw);					\
-	_wdrd.h = (wdrh);					\
-	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, (col));	\
-} while (/*CONSTCOND*/0)
-
-#define WIDGET_FILL_RECT(wi, rd, col) do {			\
-	SDL_Rect _wdrd;						\
-								\
-	_wdrd.x = (rd)->x + WIDGET_ABSX((wi));			\
-	_wdrd.y = (rd)->y + WIDGET_ABSY((wi));			\
-	_wdrd.w = (rd)->w;					\
-	_wdrd.h = (rd)->h;					\
-	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, (col));	\
-} while (/*CONSTCOND*/0)
 
 #ifdef DEBUG
 
@@ -223,4 +191,6 @@ void	 widget_set_float(void *, const char *, float);
 void	 widget_set_double(void *, const char *, double);
 void	 widget_set_string(void *, const char *, char *);
 void	 widget_set_pointer(void *, const char *, void *);
+
+void	 widget_blit(void *, SDL_Surface *, int, int);
 

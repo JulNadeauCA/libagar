@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.36 2002/12/30 03:51:36 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.37 2002/12/31 10:32:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -723,5 +723,48 @@ widget_get_geometry(void *p, Uint16 *w, Uint16 *h)
 
 	*w = wid->h;
 	*h = wid->h;
+}
+
+/*
+ * Perform a blit from a source surface to the display, at coordinates
+ * relative to the widget.
+ */
+void
+widget_blit(void *p, SDL_Surface *srcsu, int xoffs, int yoffs)
+{
+	struct widget *wid = p;
+	SDL_Rect rd;
+
+	rd.x = WIDGET_ABSX(wid) + xoffs; /* XXX move rect to widget structure */
+	rd.y = WIDGET_ABSY(wid) + yoffs;
+	rd.w = srcsu->w;
+	rd.h = srcsu->h;
+
+	if (view->opengl) {
+#ifdef HAVE_OPENGL
+		GLuint texture;
+		GLfloat texcoord[4];
+
+		texture = view_surface_texture(srcsu, texcoord);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glBegin(GL_TRIANGLE_STRIP);
+		{
+			glTexCoord2f(texcoord[0],	texcoord[1]);
+			glVertex2i(rd.x,		rd.y);
+			glTexCoord2f(texcoord[2],	texcoord[1]);
+			glVertex2i(rd.x+srcsu->w,	rd.y);
+			glTexCoord2f(texcoord[0],	texcoord[3]);
+			glVertex2i(rd.x,		rd.y+srcsu->h);
+			glTexCoord2f(texcoord[2],	texcoord[3]);
+			glVertex2i(rd.x+srcsu->w,	rd.y+srcsu->h);
+		}
+		glEnd();
+		glDeleteTextures(1, &texture);
+		glBlendFunc(GL_ONE, GL_ZERO);
+#endif
+	} else {
+		SDL_BlitSurface(srcsu, NULL, WIDGET_SURFACE(wid), &rd);
+	}
 }
 
