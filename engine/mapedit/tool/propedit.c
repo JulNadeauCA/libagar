@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.22 2003/03/05 02:16:34 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.23 2003/03/07 03:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@
 
 static const struct tool_ops propedit_ops = {
 	{
-		NULL,		/* destroy */
+		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
 	},

@@ -1,4 +1,4 @@
-.\"	$Csoft: mapedit.3,v 1.5 2003/01/26 06:15:20 vedge Exp $
+.\"	$Csoft: mapedit.3,v 1.6 2003/03/05 18:22:19 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,16 +44,24 @@ library implements level edition.
 .Pp
 When the map editor is running, widgets of type
 .Xr mapview 3
-can be used to display/edit maps.
+can be initialized with the
+.Dv MAPVIEW_EDIT
+flag to enable editing.
+.Pp
 .Sh INITIALIZATION
 .nr nS 1
 .Ft void
 .Fn mapedit_init "void"
+.Pp
+.Ft void
+.Fn mapedit_destroy "void *p"
 .nr nS 0
 .Pp
 The
 .Fn mapedit_init
-function initializes the map editor.
+function initializes the map editor and initializes the edition tools.
+.Fn mapedit_destroy
+frees all resources allocated by the map editor and its tools.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr mapview 3

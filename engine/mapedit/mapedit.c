@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.154 2003/03/13 08:38:27 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.155 2003/03/14 07:13:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@
 #include "tool/flip.h"
 
 static const struct object_ops mapedit_ops = {
-	NULL,		/* destroy */
+	mapedit_destroy,
 	mapedit_load,
 	mapedit_save
 };
@@ -136,13 +136,6 @@ mapedit_init(void)
 	med->src_node = NULL;
 	map_init(&med->copybuf, "mapedit-copybuf", NULL);
 
-	prop_set_int(med, "zoom-minimum", 4);
-	prop_set_int(med, "zoom-maximum", 500);
-	prop_set_int(med, "zoom-increment", 1);
-	prop_set_int(med, "zoom-speed", 60);
-	prop_set_bool(med, "tilemap-bg", 1);
-	prop_set_bool(med, "tilemap-bg-moving", 0);
-	prop_set_int(med, "tilemap-bg-square-size", 16);
 	prop_set_uint32(med, "default-map-width", 64);
 	prop_set_uint32(med, "default-map-height", 32);
 	prop_set_uint32(med, "default-brush-width", 5);
@@ -273,6 +266,19 @@ mapedit_init(void)
 	window_show(med->win.objlist);
 	
 	world_attach(med);
+}
+
+void
+mapedit_destroy(void *p)
+{
+	struct mapedit *med = p;
+	int i;
+
+	map_destroy(&med->copybuf);
+
+	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
+		object_destroy(med->tools[i]);
+	}
 }
 
 int
