@@ -55,19 +55,19 @@ CFLAGS+=    ${COPTS}
 SHARE?=
 
 .c.o:
-	${CC} -I`pwd` ${CFLAGS} -c $<
+	${CC} ${CFLAGS} -c $<
 
 .cc.o:
-	${CXX} -I`pwd` ${CXXFLAGS} -c $<
+	${CXX} ${CXXFLAGS} -c $<
 
 .c.lo:
-	${LIBTOOL} ${CC} -I`pwd` ${CFLAGS} -c $<
+	${LIBTOOL} ${CC} ${CFLAGS} -c $<
 .cc.lo:
-	${LIBTOOL} ${CXX} -I`pwd` ${CXXFLAGS} -c $<
+	${LIBTOOL} ${CXX} ${CXXFLAGS} -c $<
 .c.po:
-	${CC} -pg -DPROF -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
-	${CXX} -pg -DPROF -I`pwd` ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Assembly
 .asm.o:

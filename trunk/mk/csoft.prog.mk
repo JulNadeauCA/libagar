@@ -51,23 +51,23 @@ SHARE?=
 
 # C
 .c.o:
-	${CC} ${CFLAGS} -I`pwd` ${CPPFLAGS} -c $<
+	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
 .cc.o:
-	${CXX} ${CXXFLAGS} -I`pwd` ${CPPFLAGS} -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c $<
 .s.o .S.o:
-	${CC} ${CFLAGS} -I`pwd` ${CPPFLAGS} -c $<
+	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
 .c.so:
-	${CC} ${CC_PICFLAGS} -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} ${CC_PICFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.so:
-	${CXX} ${CC_PICFLAGS} -I`pwd` ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CXX} ${CC_PICFLAGS} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .s.so .S.so:
-	${CC} ${CC_PICFLAGS} -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} ${CC_PICFLAGS} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
-	${CC} -pg -DPROF -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
-	${CXX} -pg -DPROF -I`pwd` ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .s.po .S.po:
-	${CC} -pg -DPROF -I`pwd` ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Assembly
 .asm.o:
