@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.28 2002/12/04 01:50:23 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.29 2002/12/04 04:23:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -116,7 +116,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	struct region *reg;
 	struct mapview *mv;
 	struct button *bu;
-	static int cury = 85;
+	static int cury = 140;
 	char *wname;
 
 	/* Create a new window for the tile map. */
@@ -124,12 +124,12 @@ tl_objs_selected(int argc, union evarg *argv)
 	if (win == NULL) {
 		return;		/* Exists */
 	}
-	win->rd.x = view->w - 170;
+	win->rd.x = view->w - 88;
 	win->rd.y = cury;
 	win->minw = 56;
 	win->minh = 117;
 	if ((cury += 32) + 264 > view->h) {
-		cury = 85;
+		cury = 140;
 	}
 	window_set_caption(win, "%s", ob->name);
 
@@ -198,6 +198,8 @@ objq_window(struct mapedit *med)
 	struct region *reg;
 
 	win = window_generic_new(215, 140, "mapedit-objq");
+	win->rd.x = view->w - 88;
+	win->rd.y = 0;
 	if (win == NULL) {
 		return (NULL);		/* Exists */
 	}
