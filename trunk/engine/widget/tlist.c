@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.96 2004/05/15 02:13:13 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.97 2004/05/15 02:27:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -736,17 +736,18 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 		tlist_unselect_all(tl);
 		ti->selected++;
 	}
+	
+	tlist_select_item(tl, ti);
 
 	if (tl->dblclicked) {
 		event_cancel(tl, "dblclick-expire");
-		event_post(NULL, tl, "tlist-dblclick", "%p", tl->dblclicked);
+		event_post(NULL, tl, "tlist-dblclick", "%p", ti);
 		tl->dblclicked = 0;
 	} else {
 		tl->dblclicked++;
 		event_schedule(NULL, tl, mouse_dblclick_delay,
 		    "dblclick-expire", NULL);
 	}
-	tlist_select_item(tl, ti);
 out:
 	pthread_mutex_unlock(&tl->lock);
 }
