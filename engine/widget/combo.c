@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.9 2003/07/08 00:34:58 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.10 2003/10/13 23:47:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -77,6 +77,7 @@ combo_collapse(struct combo *com)
 	if (com->win == NULL)
 		return;
 
+	com->saved_h = WIDGET(com->win)->h;
 	window_hide(com->win);
 	object_detach(com->win, com->list);
 	view_detach(com->win);
@@ -95,23 +96,27 @@ combo_expand(int argc, union evarg *argv)
 	int expand = argv[2].i;
 
 	if (expand) {						/* Expand */
+		struct widget *win;
+
 		com->win = window_new(NULL);
+		win = WIDGET(com->win);
 		object_detach(com->win, com->win->tbar);
 		object_destroy(com->win->tbar);
 		free(com->win->tbar);
 
 		object_attach(com->win, com->list);
 	
-		WIDGET(com->win)->w = WIDGET(com)->w - WIDGET(com->button)->w;
-		WIDGET(com->win)->h = WIDGET(com)->h*5;
-		WIDGET(com->win)->x = WIDGET(com)->cx;
-		WIDGET(com->win)->y = WIDGET(com)->cy;
-		WIDGET_SCALE(com->win,
-		    WIDGET(com->win)->w,
-		    WIDGET(com->win)->h);
-		window_remap_widgets(com->win,
-		    WIDGET(com->win)->x,
-		    WIDGET(com->win)->y);
+		win->w = WIDGET(com)->w - WIDGET(com->button)->w;
+		win->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
+		win->x = WIDGET(com)->cx;
+		win->y = WIDGET(com)->cy;
+		if (win->x+win->w > view->w)
+			win->w = view->w - win->x;
+		if (win->y+win->h > view->h)
+			win->h = view->h - win->y;
+
+		WIDGET_SCALE(win, win->w, win->h);
+		window_remap_widgets(com->win, win->x, win->y);
 		window_show(com->win);
 	} else {
 		combo_collapse(com);
@@ -167,6 +172,7 @@ combo_init(struct combo *com, const char *label, int flags)
 	    WIDGET_UNFOCUSED_BUTTONUP);
 	com->win = NULL;
 	com->flags = flags;
+	com->saved_h = 0;
 
 	com->tbox = textbox_new(com, label);
 	com->button = button_new(com, " ... ");
@@ -176,10 +182,14 @@ combo_init(struct combo *com, const char *label, int flags)
 	com->list = Malloc(sizeof(struct tlist));
 	tlist_init(com->list, 0);
 	
-	if (flags & COMBO_MULTI)	com->list->flags |= TLIST_MULTI;
-	if (flags & COMBO_MULTI_STICKY)	com->list->flags |= TLIST_MULTI_STICKY;
-	if (flags & COMBO_POLL)		com->list->flags |= TLIST_POLL;
-	if (flags & COMBO_TREE)		com->list->flags |= TLIST_TREE;
+	if (flags & COMBO_MULTI)
+		com->list->flags |= TLIST_MULTI;
+	if (flags & COMBO_MULTI_STICKY)
+		com->list->flags |= TLIST_MULTI_STICKY;
+	if (flags & COMBO_TREE)	
+		com->list->flags |= TLIST_TREE;
+	if (flags & COMBO_POLL)
+		com->list->flags |= TLIST_POLL;
 
 	event_new(com->button, "button-pushed", combo_expand, "%p", com);
 	event_new(com->list, "tlist-changed", combo_select, "%p", com);
