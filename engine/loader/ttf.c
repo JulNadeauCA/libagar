@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.10 2004/05/24 03:28:09 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.11 2004/06/22 04:02:06 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -38,13 +38,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <SDL_endian.h>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
-
-#include <engine/loader/ttf.h>
+#include "ttf.h"
 
 /* FIXME: Right now we assume the gray-scale renderer Freetype is using
    supports 256 shades of gray, but we should instead key off of num_grays
@@ -55,46 +52,11 @@
 #define FT_FLOOR(X)	((X & -64) / 64)
 #define FT_CEIL(X)	(((X + 63) & -64) / 64)
 
-struct ttf_glyph {
-	int	stored;
-#define CACHED_METRICS	0x10
-#define CACHED_BITMAP	0x01
-#define CACHED_PIXMAP	0x02
-	FT_UInt	index;
-	FT_Bitmap bitmap;
-	FT_Bitmap pixmap;
-	int	minx, maxx;
-	int	miny, maxy;
-	int	yoffset;
-	int	advance;
-	Uint32	cached;
-};
-
-struct _ttf_font {
-	FT_Face	face;
-	int	height;
-	int	ascent;
-	int	descent;
-	int	lineskip;
-	int	style;
-	int	glyph_overhang;
-	float	glyph_italics;
-	int	underline_offset;
-	int	underline_height;
-
-	struct ttf_glyph *current;
-	struct ttf_glyph  cache[256];	/* Transform cache */
-	struct ttf_glyph  scratch;
-
-	int	font_size_family;	/* For non-scalable formats */
-};
-
 static FT_Library library;
 
-static void ttf_flush_cache(ttf_font *);
+static void ttf_flush_cache(struct ttf_font *);
 static void ttf_flush_glyph(struct ttf_glyph *);
-static int ttf_load_glyph(ttf_font *, Uint32, struct ttf_glyph *, int);
-static int ttf_find_glyph(ttf_font *, Uint32, int);
+static int ttf_load_glyph(struct ttf_font *, Uint32, struct ttf_glyph *, int);
 
 int
 ttf_init(void)
@@ -112,15 +74,15 @@ ttf_destroy(void)
 	FT_Done_FreeType(library);
 }
 
-ttf_font *
+struct ttf_font *
 ttf_open_font(const char *file, int ptsize)
 {
+	struct ttf_font *font;
 	FT_Face face;
 	FT_Fixed scale;
-	ttf_font *font;
 
-	font = Malloc(sizeof(ttf_font), M_TTF);
-	memset(font, 0, sizeof(ttf_font));
+	font = Malloc(sizeof(struct ttf_font), M_TTF);
+	memset(font, 0, sizeof(struct ttf_font));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
 		error_set(_("Cannot find font face: `%s'."), file);
@@ -199,7 +161,7 @@ fail1:
 }
 
 void
-ttf_close_font(ttf_font *font)
+ttf_close_font(struct ttf_font *font)
 {
 	ttf_flush_cache(font);
 	FT_Done_Face(font->face);
@@ -223,7 +185,7 @@ ttf_flush_glyph(struct ttf_glyph *glyph)
 }
 	
 static void
-ttf_flush_cache(ttf_font *font)
+ttf_flush_cache(struct ttf_font *font)
 {
 	int i, size = sizeof(font->cache) / sizeof(font->cache[0]);
 
@@ -236,7 +198,8 @@ ttf_flush_cache(ttf_font *font)
 }
 
 static int
-ttf_load_glyph(ttf_font *font, Uint32 ch, struct ttf_glyph *cached, int want)
+ttf_load_glyph(struct ttf_font *font, Uint32 ch, struct ttf_glyph *cached,
+    int want)
 {
 	FT_Face face;
 	FT_GlyphSlot glyph;
@@ -259,7 +222,8 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct ttf_glyph *cached, int want)
 	outline = &glyph->outline;
 
 	/* Get the glyph metrics if desired */
-	if ((want & CACHED_METRICS) && !(cached->stored & CACHED_METRICS)) {
+	if ((want & TTF_CACHED_METRICS) &&
+	    !(cached->stored & TTF_CACHED_METRICS)) {
 		if (FT_IS_SCALABLE(face)) {
 			/* Get the bounding box. */
 			cached->minx = FT_FLOOR(metrics->horiBearingX);
@@ -294,12 +258,14 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct ttf_glyph *cached, int want)
 		if (font->style & TTF_STYLE_ITALIC) {
 			cached->maxx += (int)ceil(font->glyph_italics);
 		}
-		cached->stored |= CACHED_METRICS;
+		cached->stored |= TTF_CACHED_METRICS;
 	}
 
-	if (((want & CACHED_BITMAP) && !(cached->stored & CACHED_BITMAP)) ||
-	    ((want & CACHED_PIXMAP) && !(cached->stored & CACHED_PIXMAP))) {
-		int i, mono = (want & CACHED_BITMAP);
+	if (((want & TTF_CACHED_BITMAP) &&
+	    !(cached->stored & TTF_CACHED_BITMAP)) ||
+	    ((want & TTF_CACHED_PIXMAP) &&
+	    !(cached->stored & TTF_CACHED_PIXMAP))) {
+		int i, mono = (want & TTF_CACHED_BITMAP);
 		FT_Bitmap *src, *dst;
 
 		/* Handle the italic style. */
@@ -462,9 +428,9 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct ttf_glyph *cached, int want)
 
 		/* Mark that we rendered this format */
 		if (mono) {
-			cached->stored |= CACHED_BITMAP;
+			cached->stored |= TTF_CACHED_BITMAP;
 		} else {
-			cached->stored |= CACHED_PIXMAP;
+			cached->stored |= TTF_CACHED_PIXMAP;
 		}
 	}
 
@@ -473,8 +439,8 @@ ttf_load_glyph(ttf_font *font, Uint32 ch, struct ttf_glyph *cached, int want)
 	return (0);
 }
 
-static int
-ttf_find_glyph(ttf_font *font, Uint32 ch, int want)
+int
+ttf_find_glyph(struct ttf_font *font, Uint32 ch, int want)
 {
 	int retval = 0;
 
@@ -493,52 +459,52 @@ ttf_find_glyph(ttf_font *font, Uint32 ch, int want)
 }
 
 int
-ttf_font_height(ttf_font *font)
+ttf_font_height(struct ttf_font *font)
 {
 	return (font->height);
 }
 
 int
-ttf_font_ascent(ttf_font *font)
+ttf_font_ascent(struct ttf_font *font)
 {
        return (font->ascent);
 }
 
 int
-ttf_font_descent(ttf_font *font)
+ttf_font_descent(struct ttf_font *font)
 {
 	return (font->descent);
 }
 
 int
-ttf_font_line_skip(ttf_font *font)
+ttf_font_line_skip(struct ttf_font *font)
 {
 	return (font->lineskip);
 }
 
 int
-ttf_font_face_fixed_width(ttf_font *font)
+ttf_font_face_fixed_width(struct ttf_font *font)
 {
 	return (FT_IS_FIXED_WIDTH(font->face));
 }
 
 char *
-ttf_font_face_family(ttf_font *font)
+ttf_font_face_family(struct ttf_font *font)
 {
 	return (font->face->family_name);
 }
 
 char *
-ttf_font_face_style(ttf_font *font)
+ttf_font_face_style(struct ttf_font *font)
 {
 	return (font->face->style_name);
 }
 
 int
-ttf_glyph_metrics(ttf_font *font, Uint32 ch, int *minx, int *maxx, int *miny,
-    int *maxy, int *advance)
+ttf_glyph_metrics(struct ttf_font *font, Uint32 ch, int *minx, int *maxx,
+    int *miny, int *maxy, int *advance)
 {
-	if (ttf_find_glyph(font, ch, CACHED_METRICS) != 0) {
+	if (ttf_find_glyph(font, ch, TTF_CACHED_METRICS) != 0) {
 		return (-1);
 	}
 	if (minx != NULL)
@@ -557,7 +523,7 @@ ttf_glyph_metrics(ttf_font *font, Uint32 ch, int *minx, int *maxx, int *miny,
 
 /* Predict the size of rendered UTF-8 text. */
 int
-ttf_size_text(ttf_font *font, const char *utf8, int *w, int *h)
+ttf_size_text(struct ttf_font *font, const char *utf8, int *w, int *h)
 {
 	Uint32 *ucs;
 	int status;
@@ -570,7 +536,7 @@ ttf_size_text(ttf_font *font, const char *utf8, int *w, int *h)
 
 /* Predict the size of rendered UCS-4 text. */
 int
-ttf_size_unicode(ttf_font *font, const Uint32 *ucs, int *w, int *h)
+ttf_size_unicode(struct ttf_font *font, const Uint32 *ucs, int *w, int *h)
 {
 	struct ttf_glyph *glyph;
 	const Uint32 *ch;
@@ -586,7 +552,7 @@ ttf_size_unicode(ttf_font *font, const Uint32 *ucs, int *w, int *h)
 	/* Load each character and sum it's bounding box. */
 	x = 0;
 	for (ch = ucs; *ch != '\0'; ch++) {
-		if (ttf_find_glyph(font, *ch, CACHED_METRICS) != 0) {
+		if (ttf_find_glyph(font, *ch, TTF_CACHED_METRICS) != 0) {
 			return (-1);
 		}
 		glyph = font->current;
@@ -644,7 +610,7 @@ ttf_size_unicode(ttf_font *font, const Uint32 *ucs, int *w, int *h)
 
 /* Render UTF-8 text to a new surface. */
 SDL_Surface *
-ttf_render_text_solid(ttf_font *font, const char *utf8, SDL_Color fg)
+ttf_render_text_solid(struct ttf_font *font, const char *utf8, SDL_Color fg)
 {
 	SDL_Surface *textsu;
 	Uint32 *ucs;
@@ -657,7 +623,7 @@ ttf_render_text_solid(ttf_font *font, const char *utf8, SDL_Color fg)
 
 /* Render UCS-4 text to a new surface. */
 SDL_Surface *
-ttf_render_unicode_solid(ttf_font *font, const Uint32 *ucs, SDL_Color fg)
+ttf_render_unicode_solid(struct ttf_font *font, const Uint32 *ucs, SDL_Color fg)
 {
 	struct ttf_glyph *glyph;
 	SDL_Surface *textsu;
@@ -694,8 +660,8 @@ ttf_render_unicode_solid(ttf_font *font, const Uint32 *ucs, SDL_Color fg)
 	for (ch = ucs; *ch; ch++) {
 		FT_Bitmap *current = NULL;
 
-		if (ttf_find_glyph(font, *ch, CACHED_METRICS|CACHED_BITMAP)
-		    != 0) {
+		if (ttf_find_glyph(font, *ch,
+		    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
 		    	goto fail1;
 		}
 		glyph = font->current;
@@ -749,14 +715,14 @@ fail1:
 }
 
 void
-ttf_set_font_style(ttf_font *font, int style)
+ttf_set_font_style(struct ttf_font *font, int style)
 {
 	font->style = style;
 	ttf_flush_cache(font);
 }
 
 int
-ttf_get_font_style(ttf_font *font)
+ttf_get_font_style(struct ttf_font *font)
 {
 	return (font->style);
 }
