@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.223 2004/04/22 12:36:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.224 2004/05/06 06:24:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -193,6 +193,8 @@ window_init(void *p, const char *name)
 	ev = event_new(win, "widget-shown", window_shown, NULL);
 	ev->flags |= EVENT_PROPAGATE;
 	ev = event_new(win, "widget-hidden", window_hidden, NULL);
+	ev->flags |= EVENT_PROPAGATE;
+	ev = event_new(win, "widget-lostfocus", NULL, NULL);
 	ev->flags |= EVENT_PROPAGATE;
 
 	/* Notify children prior to destruction. */
@@ -601,22 +603,14 @@ window_focus(struct window *win)
 {
 	struct window *lastwin;
 
-	view->focus_win = NULL;
+	view->focus_win != NULL;
 
 	lastwin = TAILQ_LAST(&view->windows, windowq);
 	if (win != NULL && lastwin == win) 		/* Already focused? */
 		return;
 
-	if (lastwin != NULL) {
-#if 0
-		/* XXX */
-		if (lastwin->focus != NULL) {
-			event_post(NULL, lastwin->focus, "widget-lostfocus",
-			    NULL);
-			lastwin->focus = NULL;
-		}
-#endif
-	}
+	if (lastwin != NULL)
+		event_post(NULL, lastwin, "widget-lostfocus", NULL);
 
 	if (win != NULL) {
 		/*
