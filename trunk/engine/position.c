@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.1 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.2 2004/02/26 10:14:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -278,6 +278,8 @@ position_save(struct position *pos, struct netbuf *buf)
 	write_uint32(buf, (Uint32)pos->dir);
 	write_uint32(buf, (Uint32)pos->vel);
 	write_uint32(buf, (Uint32)pos->flags);
+
+	return (0);
 }
 
 int
