@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.27 2002/12/21 10:25:34 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.28 2002/12/26 07:03:22 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -501,182 +501,6 @@ done:
 }
 
 static void
-line_bresenham_dashed(void *wid, int x1, int y1, int x2, int y2, Uint32 color,
-    int dash)
-{
-	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p, alt = 0;
-	Uint8 *fb1, *fb2;
-
-	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
-	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
-	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
-	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
-
-	fb1 = (Uint8 *)view->v->pixels +
-	    y1*view->v->pitch +
-	    x1*view->v->format->BytesPerPixel;
-
-	fb2 = (Uint8 *)view->v->pixels +
-	    y2*view->v->pitch +
-	    x2*view->v->format->BytesPerPixel;
-	
-	xinc = view->v->format->BytesPerPixel;
-	dx = x2 - x1;
-	if (dx < 0) {
-		dx = -dx;
-		xinc = -view->v->format->BytesPerPixel;
-	}
-
-	yinc = view->v->pitch;
-	dy = y2 - y1;
-	if (dy < 0) {
-		yinc = -view->v->pitch;
-		dy = -dy;
-	}
-
-	xyinc = xinc+yinc;
-
-	SDL_LockSurface(view->v);
-
-	if (dy > dx) {
-		goto y_is_independent;
-	}
-
-/* x_is_independent: */
-	dpr = dy+dy;
-	p = -dx;
-	dpru = p+p;
-	dy = dx>>1;
-
-xloop:
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel2(xinc, fb1, fb2, color);
-	}
-
-	if ((p += dpr) > 0) {
-		goto right_and_up;
-	}
-
-/* up: */
-	fb1 += xinc;
-	fb2 -= xinc;
-	if ((dy=dy-1) >= 0) {
-		goto xloop;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb1, color);
-	}
-	if ((dx & 1) == 0) {
-		goto done;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb2, color);
-	}
-	goto done;
-
-right_and_up:
-	fb1 += xyinc;
-	fb2 -= xyinc;
-	p += dpru;
-	if (--dy >= 0) {
-		goto xloop;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb1, color);
-	}
-	if ((dx & 1) == 0) {
-		goto done;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb2, color);
-	}
-	goto done;
-
-y_is_independent:
-	dpr = dx+dx;
-	p = -dy;
-	dpru = p+p;
-	dx = dy>>1;
-
-yloop:
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel2(xinc, fb1, fb2, color);
-	}
-
-	if ((p += dpr) > 0) {
-		goto right_and_up_2;
-	}
-/* up: */
-	fb1 += yinc;
-	fb2 -= yinc;
-	if ((dx=dx-1) >= 0) {
-		goto yloop;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb2, color);
-	}
-	goto done;
-
-right_and_up_2:
-	fb1 += xyinc;
-	fb2 -= xyinc;
-	p += dpru;
-	if ((dx=dx-1) >= 0) {
-		goto yloop;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb1, color);
-	}
-	if ((dy & 1) == 0) {
-		goto done;
-	}
-	if (++alt > dash) {
-		alt = 0;
-		put_pixel1(xinc, fb2, color);
-	}
-done:
-	SDL_UnlockSurface(view->v);
-}
-
-static void
-line_bresenham_dashed1(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 1);
-}
-
-static void
-line_bresenham_dashed2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 2);
-}
-
-static void
-line_bresenham_dashed3(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 3);
-}
-
-static void
-line_bresenham_dashed4(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 4);
-}
-
-static void
-line_bresenham_dashed5(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 5);
-}
-
-static void
 square_composite(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
@@ -720,63 +544,52 @@ primitive_config_window(void)
 	struct region *reg;
 	struct label *lab;
 	struct tlist *tl;
-	const int ydiv = 25;
 
-	/* Primitive drawing algorithm switch */
-	win = window_new("config-primitive-algorithm-sw", WINDOW_CENTER, -1, -1,
+	win = window_new("widget-primitive-sw", WINDOW_CENTER, -1, -1,
 	    503, 440, 424, 267);
-	window_set_caption(win, "Primitive algorithm switch");
+	window_set_caption(win, "Widget primitives");
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 93);
-	
-	lab = label_new(reg, 100, 5, "Box:");
-	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL,
-	    "2d-style", box_2d);
-	tlist_insert_item_selected(tl, NULL,
-	    "3d-style", box_3d);
-	tlist_insert_item(tl, NULL,
-	    "Dark 3d-style #1", box_3d_dark1);
-	tlist_insert_item(tl, NULL,
-	    "Dark 3d-style #2", box_3d_dark2);
-	tlist_insert_item(tl, NULL,
-	    "Dark 3d-style #3", box_3d_dark3);
-	tlist_insert_item(tl, NULL,
-	    "Dark 3d-style #4", box_3d_dark4);
-	tlist_insert_item(tl, NULL,
-	    "Dark 3d-style #5", box_3d_dark5);
-	event_new(tl, "tlist-changed", apply, "%i", BOX);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 50, 100);
+	{
+		lab = label_new(reg, 100, 5, "Box:");
+		tl = tlist_new(reg, 100, 40, 0);
+		tlist_insert_item(tl, NULL,
+		    "2d-style", box_2d);
+		tlist_insert_item_selected(tl, NULL,
+		    "3d-style", box_3d);
+		tlist_insert_item(tl, NULL,
+		    "Dark 3d-style #1", box_3d_dark1);
+		tlist_insert_item(tl, NULL,
+		    "Dark 3d-style #2", box_3d_dark2);
+		tlist_insert_item(tl, NULL,
+		    "Dark 3d-style #3", box_3d_dark3);
+		tlist_insert_item(tl, NULL,
+		    "Dark 3d-style #4", box_3d_dark4);
+		tlist_insert_item(tl, NULL,
+		    "Dark 3d-style #5", box_3d_dark5);
+		event_new(tl, "tlist-changed", apply, "%i", BOX);
 
-	lab = label_new(reg, 100, 5, "Frame:");
-	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item_selected(tl, NULL,
-	    "3d-style", frame_3d);
-	event_new(tl, "tlist-changed", apply, "%i", FRAME);
+		lab = label_new(reg, 100, 5, "Frame:");
+		tl = tlist_new(reg, 100, 40, 0);
+		tlist_insert_item_selected(tl, NULL,
+		    "3d-style", frame_3d);
+		event_new(tl, "tlist-changed", apply, "%i", FRAME);
+	}
 
-	lab = label_new(reg, 100, 5, "Circle:");
-	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item_selected(tl, NULL,
-	    "Bresenham #1", circle_bresenham);
-	event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
-
-	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 93);
+	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
+	{	
+		lab = label_new(reg, 100, 5, "Line:");
+		tl = tlist_new(reg, 100, 40, 0);
+		tlist_insert_item_selected(tl, NULL,
+		    "Bresenham", line_bresenham);
+		event_new(tl, "tlist-changed", apply, "%i", LINE);
 		
-	lab = label_new(reg, 100, 5, "Line:");
-	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item_selected(tl, NULL,
-	    "Bresenham plain #1", line_bresenham);
-	tlist_insert_item(tl, NULL,
-	    "Bresenham dashed #1", line_bresenham_dashed1);
-	tlist_insert_item(tl, NULL,
-	    "Bresenham dashed #2", line_bresenham_dashed2);
-	tlist_insert_item(tl, NULL,
-	    "Bresenham dashed #3", line_bresenham_dashed3);
-	tlist_insert_item(tl, NULL,
-	    "Bresenham dashed #4", line_bresenham_dashed4);
-	tlist_insert_item(tl, NULL,
-	    "Bresenham dashed #5", line_bresenham_dashed5);
-	event_new(tl, "tlist-changed", apply, "%i", LINE);
-		
+		lab = label_new(reg, 100, 5, "Circle:");
+		tl = tlist_new(reg, 100, 40, 0);
+		tlist_insert_item_selected(tl, NULL,
+		    "Bresenham", circle_bresenham);
+		event_new(tl, "tlist-changed", apply, "%i", CIRCLE);
+	}
 	return (win);
 }
 
@@ -806,64 +619,3 @@ apply(int argc, union evarg *argv)
 	}
 }
 
-/* XXX real time */
-void
-primitive_sequence(struct window *win, enum primitive_seq seq)
-{
-	int i;
-	void (*old_line)(void *, int, int, int, int, Uint32);
-	void (*old_box)(void *, int, int, int, int, int, Uint32);
-#define REDRAW() {						\
-	window_draw(win);					\
-	SDL_UpdateRects(view->v, view->ndirty, view->dirty);	\
-	view->ndirty = 0;					\
-}
-
-	switch (seq) {
-	case PRIMITIVE_SEQ_MATERIALIZE:
-		old_line = primitives.line;
-		primitives.line = line_bresenham_dashed5;
-		REDRAW();
-		SDL_Delay(20);
-		primitives.line = line_bresenham_dashed4;
-		REDRAW();
-		SDL_Delay(17);
-		primitives.line = line_bresenham_dashed3;
-		REDRAW();
-		SDL_Delay(15);
-		primitives.line = line_bresenham_dashed2;
-		REDRAW();
-		SDL_Delay(13);
-		primitives.line = line_bresenham_dashed1;
-		REDRAW();
-		SDL_Delay(10);
-		primitives.line = old_line;
-		break;
-	case PRIMITIVE_SEQ_DEMATERIALIZE:
-		old_line = primitives.line;
-		old_box = primitives.box;
-		primitives.line = line_bresenham_dashed1;
-		primitives.box = box_3d_dark1;
-		REDRAW();
-		SDL_Delay(5);
-		primitives.line = line_bresenham_dashed2;
-		primitives.box = box_3d_dark2;
-		REDRAW();
-		SDL_Delay(8);
-		primitives.line = line_bresenham_dashed3;
-		primitives.box = box_3d_dark3;
-		REDRAW();
-		SDL_Delay(14);
-		primitives.line = line_bresenham_dashed4;
-		primitives.box = box_3d_dark4;
-		REDRAW();
-		SDL_Delay(16);
-		primitives.line = line_bresenham_dashed5;
-		primitives.box = box_3d_dark5;
-		REDRAW();
-		SDL_Delay(18);
-		primitives.line = old_line;
-		primitives.box = old_box;
-		break;
-	}
-}
