@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.12 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.13 2004/01/23 03:55:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -288,5 +288,18 @@ const struct unit pressure_units[] = {
 	{ "E/A",		N_("Earth Atmospheres"), 101325,	NULL },
 	{ "M/A",		N_("Mars Atmospheres"), 1000,		NULL },
 	{ NULL,			NULL,			0,		NULL }
+};
+
+/* Units of metabolic cost of physical activity */
+const struct unit metabolic_cost_units[] = {
+	{ "MET",	N_("Metabolic equivalent"),		1,	NULL },
+	{ "Kcal/min",	N_("Kilokalories per minute"),		1,	NULL },
+	{ "O\xc2/kg",	N_("Ml O\xc2/kg/minute"),		3.5,	NULL },
+	{ "Mess",	N_("Attending church"),			2,	NULL },
+	{ "Walks",	N_("Walking (3mph, level terrain)"),	4.5,	NULL },
+	{ "Treks",	N_("Walking (3-5mph, mountains)"), 	5,	NULL },
+	{ "Bikes",	N_("Biking (5mph, level terrain)"),	7,	NULL },
+	{ "Buttes",	N_("Mountain and rock climbing"),	8,	NULL },
+	{ NULL,		NULL,					0,	NULL }
 };
 
