@@ -1,11 +1,11 @@
-/*	$Csoft: map.h,v 1.109 2004/04/17 00:33:16 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.110 2004/11/21 11:16:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
 #define _AGAR_MAP_H_
 
-#define TILESZ		32
-#define TILESHIFT	5
+#define TILESZ	32			/* Default tile size in pixels */
+#define TILEOUT	2			/* Number of border tiles to clip */
 
 #define MAP_MIN_TILESZ		7
 #define MAP_MAX_TILESZ		16384	/* For soft-scrolling */
@@ -14,8 +14,6 @@
 #define MAP_MAX_LAYERS		256
 #define MAP_LAYER_NAME_MAX	128
 #define NODE_MAX_NODEREFS	32767
-#define NODEREF_MAX_CENTER	32767
-#define NODEREF_MAX_MOTION	32767
 #define NODEREF_MAX_TRANSFORMS	16384
 #define NODEREF_MAX_MASKS	16384
 
@@ -108,10 +106,10 @@ struct map {
 	struct space space;
 
 	pthread_mutex_t	  lock;
-	unsigned int	  mapw, maph;	/* Map geometry */
-	Uint16		  zoom;		/* Zoom (%) */
-	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
-	unsigned int	  tilesz;	/* Tile size */
+	u_int		  mapw, maph;	/* Map geometry */
+	u_int		  zoom;		/* Zoom (%) */
+	int		  ssx, ssy;	/* Soft scrolling offsets */
+	u_int		  tilesz;	/* Tile size */
 	int		  cur_layer;	/* Layer being edited */
 	
 	struct {
@@ -138,13 +136,13 @@ void		 map_destroy(void *);
 struct window	*map_edit(void *);
 #endif
 
-int		 map_alloc_nodes(struct map *, unsigned int, unsigned int);
-void		 map_free_nodes(struct map *);
-int		 map_resize(struct map *, unsigned int, unsigned int);
-void		 map_set_zoom(struct map *, Uint16);
-int		 map_push_layer(struct map *, const char *);
-void		 map_pop_layer(struct map *);
-void		 map_init_layer(struct map_layer *, const char *);
+int	 map_alloc_nodes(struct map *, u_int, u_int);
+void	 map_free_nodes(struct map *);
+int	 map_resize(struct map *, u_int, u_int);
+void	 map_set_zoom(struct map *, u_int);
+int	 map_push_layer(struct map *, const char *);
+void	 map_pop_layer(struct map *);
+void	 map_init_layer(struct map_layer *, const char *);
 
 void		 noderef_init(struct noderef *, enum noderef_type);
 __inline__ void	 noderef_set_center(struct noderef *, int, int);

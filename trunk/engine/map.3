@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.50 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: map.3,v 1.51 2004/11/21 11:15:44 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -104,7 +104,7 @@ A per-element layer attribute also defines the attributed layer.
 .Fn map_new "void *parent" "const char *name"
 .Pp
 .Ft int
-.Fn map_alloc_nodes "struct map *map" "unsigned int w" "unsigned int h"
+.Fn map_alloc_nodes "struct map *map" "u_int w" "u_int h"
 .Pp
 .Ft void
 .Fn map_free_nodes "struct map *map"
@@ -113,7 +113,7 @@ A per-element layer attribute also defines the attributed layer.
 .Fn map_adjust "struct map *map" "int x" "int y"
 .Pp
 .Ft void
-.Fn map_set_zoom "struct map *map" "Uint16 factor"
+.Fn map_set_zoom "struct map *map" "u_int factor"
 .nr nS 0
 .Pp
 .Fn map_init
@@ -156,7 +156,7 @@ returns 0 on sucess or -1 on failure.
 The
 .Fn map_set_zoom
 function sets the zoom factor for a map.
-Unless the factor is 100%, pixmap scaling is performed for graphical elements.
+Geometric entities are displayed to this scale.
 .Pp
 .Sh NODE INITIALIZATION
 .nr nS 1
@@ -223,11 +223,6 @@ The
 function sets the centering offset of a graphical element.
 .Fn noderef_set_motion
 sets the motion offset of a graphical element.
-These offsets must not exceed
-.Dv NODEREF_MAX_CENTER
-and
-.Dv NODEREF_MAX_MOTION
-pixels, respectively.
 .Pp
 The
 .Fn noderef_destroy
