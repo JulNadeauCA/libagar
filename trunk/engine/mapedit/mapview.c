@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.135 2003/09/07 04:17:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.136 2003/09/07 07:59:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -316,7 +316,7 @@ mapview_draw_tool_cursor(struct mapview *mv)
 	rd.w = mv->map->tilew;
 	rd.h = mv->map->tileh;
 
-	if (SDL_GetModState() & KMOD_CTRL) {		/* XXX inefficient? */
+	if (SDL_GetModState() & KMOD_CTRL) {		/* XXX inefficient */
 		SDL_GetMouseState(&msx, &msy);
 		rd.x = msx;
 		rd.y = msy;
@@ -357,6 +357,7 @@ defcurs:
 	    CURSOR_COLOR);
 }
 
+/* XXX inelegant */
 static __inline__ void
 mapview_draw_background(struct mapview *mv)
 {

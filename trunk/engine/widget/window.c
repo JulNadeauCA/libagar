@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.210 2003/07/05 21:20:16 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.211 2003/07/08 00:13:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -91,6 +91,7 @@ int	window_debug = 0;
 pthread_mutex_t	window_lock = PTHREAD_MUTEX_INITIALIZER;
 int		window_xoffs = 0;
 int		window_yoffs = 0;
+int		window_freescale = 0;
 
 struct window *
 window_new(const char *fmt, ...)
@@ -870,12 +871,12 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		break;
 	}
 
-	if (WIDGET(win)->w < win->minw) {
+	if (!window_freescale && WIDGET(win)->w < win->minw) {
 		WIDGET(win)->w = win->minw;
 	} else {
 		WIDGET(win)->x = nx;
 	}
-	if (WIDGET(win)->h < win->minh)
+	if (!window_freescale && WIDGET(win)->h < win->minh)
 		WIDGET(win)->h = win->minh;
 
 	if (WIDGET(win)->x < 0)
