@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.3 2003/06/21 06:39:44 vedge Exp $	*/
+/*	$Csoft: audio.h,v 1.6 2003/06/25 00:31:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -29,11 +29,10 @@ struct audio {
 #endif
 
 __BEGIN_DECLS
-struct audio	*audio_fetch(void *, const char *);
-void		 audio_unused(struct audio *);
-void		 audio_wire(struct audio *);
-Uint32		 audio_insert_sample(struct audio *, SDL_AudioSpec *, Uint8 *,
-		                     size_t);
+int	 audio_fetch(void *, const char *);
+void	 audio_unused(struct audio *);
+void	 audio_wire(struct audio *);
+Uint32	 audio_insert_sample(struct audio *, SDL_AudioSpec *, Uint8 *, size_t);
 #ifdef DEBUG
 struct object;
 __inline__ struct sample *audio_get_sample(struct object *, Uint32);
