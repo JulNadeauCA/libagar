@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.12 2002/02/16 04:52:10 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.13 2002/02/17 07:58:06 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -153,7 +153,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 	}
 
 	/* Initialize the world structure. */
-	world = world_create("world");
+	world = world_create(gameinfo->prog);
 	if (world == NULL) {
 		fatal("world_create\n");
 		return (-1);
