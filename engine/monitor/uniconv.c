@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.11 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.12 2005/01/23 11:55:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 
 static Uint32 unitext[2] = { '\0', '\0' };
 static char utf8text[256] = "";
-static char bytetext[256] = "";
+static char utf8seq[256] = "";
 
 static const struct unicode_range {
 	Uint32 start;
@@ -204,26 +204,22 @@ select_range(int argc, union evarg *argv)
 		snprintf(text[0], sizeof(text[0]), "%s", utf8text);
         
 		/* prep column 1 */
-		snprintf(text[1], sizeof(text[1]), "%04x", i);
-        
-		/* prep column 2 */
-		bytetext[0] = '\0';
+		utf8seq[0] = '\0';
 		for (c = &utf8text[0]; *c != '\0'; c++) {
 			char s[4];
             
 			snprintf(s, sizeof(s), "%x", (unsigned char)*c);
-			strlcat(bytetext, s, sizeof(bytetext));
+			strlcat(utf8seq, s, sizeof(utf8seq));
 		}
-		snprintf(text[2], sizeof(text[2]), "%s", bytetext);
+		snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
         
 		/* prep column 3 */
-		snprintf(text[3], sizeof(text[3]), "%lu", (unsigned long)i);
+		snprintf(text[2], sizeof(text[2]), "%lu", (unsigned long)i);
         
 		tableview_row_add(tv, 0, NULL, i, 
 		    0, text[0],
 		    1, text[1],
-		    2, text[2],
-		    3, text[3]);
+		    2, text[2]);
 	}
 }
 
@@ -249,9 +245,9 @@ uniconv_window(void)
 	tv = tableview_new(win, TABLEVIEW_NOSORT, NULL, NULL);
 	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 0, "Char", NULL);
-	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 1, "Hex", "0000");
-	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 2, "??", "000000");
-	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 3, "Deci", "00000");
+	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE|TABLEVIEW_COL_FILL, 1,
+	    "Hex", "0000");
+	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 1, "Dec", "00000");
 	
 	event_new(com, "combo-selected", select_range, "%p", tv);
 	return (win);
