@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.7 2002/11/12 00:38:09 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.8 2002/11/17 23:11:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -21,6 +21,11 @@
 # define warning	printf
 # define fatal		printf
 #endif
+
+#define Strdup(s) do {					\
+	if (strdup((s)) == NULL)			\
+		fatal("strdup: out of memory\n");	\
+} while (/*CONSTCOND*/0)
 
 #define Free(p) do {		\
 	if ((p) != NULL) {	\
