@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.60 2002/08/22 23:45:30 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.61 2002/08/24 03:06:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,8 +58,8 @@ view_init(gfx_engine_t ge)
 	struct viewport *v;
 	int screenflags = SDL_HWSURFACE;
 	int bpp = config->view.bpp;
-	int w = config->view.w, mw = w / TILEW;
-	int h = config->view.h, mh = h / TILEH;
+	int w = config->view.w, mw = w/TILEW;
+	int h = config->view.h, mh = h/TILEH;
 
 	if (config->flags & CONFIG_FULLSCREEN) {
 		screenflags |= SDL_FULLSCREEN;
@@ -83,8 +83,13 @@ view_init(gfx_engine_t ge)
 	case GFX_ENGINE_TILEBASED:
 		v->w -= v->w % TILEW;
 		v->h -= v->h % TILEH;
+		v->margin.w = TILEW;
+		v->margin.h = TILEH;
 		break;
-	default:
+	case GFX_ENGINE_GUI:
+		v->margin.w = 16;
+		v->margin.h = 16;
+		break;
 	}
 
 	if (v->w < 4*TILEW || v->h < 4*TILEH) {

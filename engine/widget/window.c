@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.67 2002/08/28 03:42:40 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.68 2002/08/28 04:42:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@ Uint32 bg_color = 0;
 
 static void	window_move(struct window *, SDL_MouseMotionEvent *);
 static void	window_update_mask(struct window *);
-static void	window_clamp(struct window *, int, int);
+static void	window_clamp(struct window *);
 static void	window_round(struct window *, int, int, int, int);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 
@@ -158,7 +158,7 @@ window_init(struct window *win, char *caption, int flags,
 			    win->w, win->h);
 		}
 		/* Clamp to view area and leave a margin. */
-		window_clamp(win, TILEW, TILEH);
+		window_clamp(win);
 		break;
 	case GFX_ENGINE_GUI:
 		if (flags & WINDOW_SCALE) {
@@ -176,10 +176,11 @@ window_init(struct window *win, char *caption, int flags,
 			win->x = view->w/2 - win->w/2;
 			win->y = view->h/2 - win->h/2;
 		}
-		/* Clamp to view area and leave a margin. */
-		window_clamp(win, 16, 16);
 		break;
 	}
+	
+	/* Clamp to view area and leave a margin. */
+	window_clamp(win);
 
 	/* Primitive operations will need this. */
 	win->wid.win = win;
@@ -611,25 +612,13 @@ window_update_mask(struct window *win)
 static void
 window_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
-	int moved = 0;
-	int tilew, tileh;
 	SDL_Rect oldpos;
+	int moved = 0;
 
 	oldpos.x = win->x;
 	oldpos.y = win->y;
 	oldpos.w = win->w;
 	oldpos.h = win->h;
-
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
-		tilew = TILEW;
-		tileh = TILEH;
-		break;
-	default:
-		tilew = 16;	/* XXX pref */
-		tileh = 16;
-		break;
-	}
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_GUI:
@@ -644,24 +633,24 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 			static Sint16 oldx = 0, oldy = 0;
 			Sint16 nx, ny;
 
-			nx = motion->x / tilew;
-			ny = motion->y / tileh;
+			nx = motion->x / TILEW;
+			ny = motion->y / TILEH;
 
 			if (oldx != 0 || oldy != 0) {
 				if (nx > oldx) {
-					win->x += tilew;
+					win->x += TILEW;
 					moved++;
 				}
 				if (ny > oldy) {
-					win->y += tileh;
+					win->y += TILEH;
 					moved++;
 				}
 				if (nx < oldx) {
-					win->x -= tilew;
+					win->x -= TILEW;
 					moved++;
 				}
 				if (ny < oldy) {
-					win->y -= tilew;
+					win->y -= TILEW;
 					moved++;
 				}
 			}
@@ -672,7 +661,7 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 	}
 
 	/* Clamp to view area, leave a margin. */
-	window_clamp(win, tilew, tileh);
+	window_clamp(win);
 
 	if (moved) {
 		switch (view->gfx_engine) {
@@ -955,16 +944,16 @@ posted:
 }
 
 static void
-window_clamp(struct window *win, int minw, int minh)
+window_clamp(struct window *win)
 {
-	if (win->x < minw)
-		win->x = minw;
-	if (win->y < minh)
-		win->y = minh;
-	if (win->x+win->w > view->w-minw)
-		win->x = view->w - win->w - minw;
-	if (win->y+win->h > view->h-minh)
-		win->y = view->h - win->h - minh;
+	if (win->x < view->margin.w)
+		win->x = view->margin.w;
+	if (win->y < view->margin.h)
+		win->y = view->margin.h;
+	if (win->x+win->w > view->w - view->margin.w)
+		win->x = view->w - win->w - view->margin.w;
+	if (win->y+win->h > view->h - view->margin.h)
+		win->y = view->h - win->h - view->margin.h;
 }
 
 /*
@@ -1079,7 +1068,7 @@ window_resize(struct window *win)
 	}
 
 	/* Clamp to view area, leave a margin. */
-	window_clamp(win, minw, minh);
+	window_clamp(win);
 
 	win->body.x = win->x + win->borderw;
 	win->body.y = win->y + win->borderw*2 + win->titleh;

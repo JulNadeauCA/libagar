@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.38 2002/07/29 04:20:42 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.39 2002/08/24 04:10:12 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -42,9 +42,11 @@ struct viewport {
 	/* Read-only */
 	gfx_engine_t gfx_engine;	/* Type of rendering engine */
 	int	w, h, bpp;		/* Viewport geometry */
-	SDL_Surface	*v;		/* Screen. */
-	struct	viewmap *rootmap;	/* Non-NULL in game mode.
-					   (read-only pointer) */
+	SDL_Surface	*v;		/* Video surface */
+	struct	viewmap *rootmap;	/* Non-NULL in game mode */
+	struct {
+		int	w, h;		/* Viewport margin in pixels */
+	} margin;
 
 	/* Read-write, thread-safe */
 	struct	windowq windowsh;	/* Hidden/shown windows */
@@ -57,7 +59,6 @@ struct viewport {
 		VIEW_WINOP_RRESIZE,	/* Right resize */
 		VIEW_WINOP_HRESIZE,	/* Height resize */
 	} winop;
-
 	pthread_mutex_t lock;
 };
 
