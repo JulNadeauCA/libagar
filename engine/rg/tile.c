@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.21 2005/02/24 03:08:53 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.22 2005/02/26 06:24:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -933,6 +933,42 @@ visible_element(int argc, union evarg *argv)
 	t->flags |= TILE_DIRTY;
 }
 
+static void
+tile_undo(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+
+	switch (tv->state) {
+	case TILEVIEW_TILE_EDIT:
+		break;
+	case TILEVIEW_FEATURE_EDIT:
+		break;
+	case TILEVIEW_SKETCH_EDIT:
+		break;
+	case TILEVIEW_PIXMAP_EDIT:
+		pixmap_undo(tv, tv->tv_pixmap.tel);
+		break;
+	}
+}
+
+static void
+tile_redo(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+
+	switch (tv->state) {
+	case TILEVIEW_TILE_EDIT:
+		break;
+	case TILEVIEW_FEATURE_EDIT:
+		break;
+	case TILEVIEW_SKETCH_EDIT:
+		break;
+	case TILEVIEW_PIXMAP_EDIT:
+		pixmap_redo(tv, tv->tv_pixmap.tel);
+		break;
+	}
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -1017,6 +1053,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	}
 
 	m = ag_menu_new(win);
+
 	item = ag_menu_add_item(m, _("Features"));
 	{
 		ag_menu_action(item, _("Fill"), NULL,
@@ -1055,6 +1092,14 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	item = ag_menu_add_item(m, _("Edit"));
 	{
+		ag_menu_action(item, _("Undo"), NULL, SDLK_z, KMOD_CTRL,
+		    tile_undo, "%p", tv);
+		
+		ag_menu_action(item, _("Redo"), NULL, SDLK_r, KMOD_CTRL,
+		    tile_redo, "%p", tv);
+
+		ag_menu_separator(item);
+
 		ag_menu_action(item, _("Resize tile..."),
 		    ICON(RESIZE_TOOL_ICON),
 		    SDLK_r, KMOD_CTRL,

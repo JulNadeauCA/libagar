@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.12 2005/02/23 07:37:11 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.13 2005/02/24 05:26:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -859,7 +859,6 @@ void
 pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
     int y, int button)
 {
-	dprintf("%d,%d,%d\n", x, y, button);
 }
 
 void
