@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.4 2003/11/19 00:48:11 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.5 2003/11/19 11:09:26 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -30,12 +30,12 @@ struct fspinbutton {
 };
 
 __BEGIN_DECLS
-struct fspinbutton	*fspinbutton_new(void *, float, const struct unit *,
+struct fspinbutton	*fspinbutton_new(void *, const struct unit *,
 			                 const char *, ...)
-		 	     FORMAT_ATTRIBUTE(printf, 4, 5)
-			     NONNULL_ATTRIBUTE(4);
+		 	     FORMAT_ATTRIBUTE(printf, 3, 4)
+			     NONNULL_ATTRIBUTE(3);
 
-void	fspinbutton_init(struct fspinbutton *, float, const struct unit *,
+void	fspinbutton_init(struct fspinbutton *, const struct unit *,
 	                 const char *);
 void	fspinbutton_destroy(void *);
 void	fspinbutton_scale(void *, int, int);

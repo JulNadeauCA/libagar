@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.4 2003/11/19 00:48:11 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.5 2003/11/19 11:09:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -57,8 +57,7 @@ static struct widget_ops fspinbutton_ops = {
 static void	fspinbutton_unitsel(int, union evarg *);
 
 struct fspinbutton *
-fspinbutton_new(void *parent, float increment, const struct unit *unit,
-    const char *fmt, ...)
+fspinbutton_new(void *parent, const struct unit *unit, const char *fmt, ...)
 {
 	char label[LABEL_MAX];
 	struct fspinbutton *fsu;
@@ -69,7 +68,7 @@ fspinbutton_new(void *parent, float increment, const struct unit *unit,
 	va_end(ap);
 
 	fsu = Malloc(sizeof(struct fspinbutton));
-	fspinbutton_init(fsu, increment, unit, label);
+	fspinbutton_init(fsu, unit, label);
 	object_attach(parent, fsu);
 	return (fsu);
 }
@@ -172,15 +171,15 @@ fspinbutton_unitsel(int argc, union evarg *argv)
 }
 
 void
-fspinbutton_init(struct fspinbutton *fsu, float increment,
-    const struct unit *unit, const char *label)
+fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
+    const char *label)
 {
 	widget_init(fsu, "fspinbutton", &fspinbutton_ops, WIDGET_FOCUSABLE|
 	    WIDGET_WFILL);
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &fsu->value);
 	
 	fsu->value = 0;
-	fsu->incr = increment;
+	fsu->incr = 1;
 	fsu->input = textbox_new(fsu, label);
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
@@ -301,12 +300,12 @@ fspinbutton_add(struct fspinbutton *fsu, double inc)
 	case WIDGET_DOUBLE:
 		if (*(double *)value + inc >= fsu->min &&
 		    *(double *)value + inc <= fsu->max)
-			*(double *)value += inc;
+			*(double *)value += inc * fsu->unit->divider;
 		break;
 	case WIDGET_FLOAT:
 		if (*(float *)value + inc >= fsu->min &&
 		    *(float *)value + inc <= fsu->max)
-			*(float *)value += (float)inc;
+			*(float *)value += (float)inc * fsu->unit->divider;
 		break;
 	default:
 		break;
