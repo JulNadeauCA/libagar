@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.60 2003/02/12 02:05:03 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.61 2003/02/12 04:41:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -358,7 +358,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->tmap_win = NULL;
 	mv->cur_node = NULL;
 	mv->node.button = NULL;
-	
+	mv->zoom_tm = NULL;
+
 	mv->map = m;
 	pthread_mutex_lock(&m->lock);
 	mv->mx = m->defx;
