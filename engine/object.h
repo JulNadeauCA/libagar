@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.26 2002/04/24 13:15:41 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.27 2002/04/26 04:24:49 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -27,7 +27,7 @@ struct object_art {
 
 	char	*name;			/* Parent name copy */
 	int	used;			/* Reference count */
-	SLIST_ENTRY(object_art) arts;	/* Art pool */
+	LIST_ENTRY(object_art) arts;	/* Art pool */
 };
 
 struct object_audio_sample {
@@ -42,7 +42,7 @@ struct object_audio {
 	
 	char	*name;			/* Parent name copy */
 	int	used;			/* Reference count */
-	SLIST_ENTRY(object_audio) audios;	/* Audio pool */
+	LIST_ENTRY(object_audio) audios;	/* Audio pool */
 };
 
 struct object {
