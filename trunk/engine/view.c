@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.53 2002/07/07 10:17:43 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.54 2002/07/08 03:17:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -166,7 +166,7 @@ void
 view_init(gfx_engine_t ge)
 {
 	struct viewport *v;
-	int screenflags = SDL_SWSURFACE;
+	int screenflags = SDL_HWSURFACE;
 	int bpp = config->view.bpp;
 	int w = config->view.w, mw = w / TILEW;
 	int h = config->view.h, mh = h / TILEH;
