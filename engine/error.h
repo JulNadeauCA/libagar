@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.8 2002/11/17 23:11:53 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.9 2002/12/13 07:44:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -22,17 +22,13 @@
 # define fatal		printf
 #endif
 
-#define Strdup(s) do {					\
-	if (strdup((s)) == NULL)			\
-		fatal("strdup: out of memory\n");	\
-} while (/*CONSTCOND*/0)
-
 #define Free(p) do {		\
 	if ((p) != NULL) {	\
 		free((p));	\
 	}			\
 } while (/*CONSTCOND*/0)
 
+char	*Strdup(const char *);
 void	*emalloc(size_t);
 void	*erealloc(void *, size_t);
 

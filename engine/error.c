@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.13 2002/11/27 05:09:59 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.14 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -145,5 +145,16 @@ _debug_n(int mask, const char *fmt, ...)
 		va_end(args);
 	}
 #endif
+}
+
+char *
+Strdup(const char *s)
+{
+	char *sd;
+
+	if ((sd = strdup(s)) == NULL) {
+		fatal("strdup: out of memory\n");
+	}
+	return (sd);
 }
 
