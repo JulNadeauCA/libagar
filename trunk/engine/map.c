@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.232 2004/10/16 09:33:47 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.233 2004/11/19 09:43:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -331,7 +331,7 @@ map_init(void *obj, const char *name)
 {
 	struct map *m = obj;
 
-	object_init(m, "map", name, &map_ops);
+	space_init(m, "map", name, &map_ops);
 	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
@@ -677,6 +677,8 @@ map_reinit(void *p)
 		map_free_nodes(m);
 	if (m->layers != NULL)
 		map_free_layers(m);
+	
+	space_reinit(m);
 }
 
 void
@@ -688,6 +690,8 @@ map_destroy(void *p)
 	pthread_mutex_destroy(&m->lock);
 #endif
 	Free(m->layers, M_MAP);
+
+	space_destroy(m);
 }
 
 /*
@@ -859,8 +863,11 @@ map_load(void *ob, struct netbuf *buf)
 	struct map *m = ob;
 	Uint32 w, h, origin_x, origin_y, tilesz;
 	int i, x, y;
-
+	
 	if (version_read(buf, &map_ver, NULL) != 0)
+		return (-1);
+
+	if (space_load(m, buf) == -1)
 		return (-1);
 
 	pthread_mutex_lock(&m->lock);
@@ -1012,6 +1019,9 @@ map_save(void *p, struct netbuf *buf)
 	int i, x, y;
 	
 	version_write(buf, &map_ver);
+	
+	if (space_save(m, buf) == -1)
+		return (-1);
 
 	pthread_mutex_lock(&m->lock);
 
