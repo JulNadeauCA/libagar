@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.126 2003/01/08 21:27:32 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.127 2003/01/08 21:47:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -232,22 +232,7 @@ event_adjust_refresh(Uint32 ntick)
 	event_update_fps_counter();
 #endif
 	if (view->refresh.current < 1) {
-		view->refresh.current = 30;
-		view->refresh.delay = 15;
-#if 0
-		if (--view->refresh.delay < view->refresh.min_delay) {
-			debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
-			    view->refresh.current, view->refresh.delay);
-			view->refresh.delay = view->refresh.min_delay;
-		}
-#else
-		debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
-		    view->refresh.current, view->refresh.delay);
-#endif
-	} else {
-		if (++view->refresh.delay > view->refresh.max_delay) {
-			view->refresh.delay = view->refresh.max_delay;
-		}
+		view->refresh.current = 1;
 	}
 }
 
