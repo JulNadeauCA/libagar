@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.2 2002/03/03 06:23:14 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.3 2002/03/05 13:53:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -31,21 +31,20 @@
 #include <stdlib.h>
 
 #include <engine/engine.h>
+#include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
 
 static struct obvec input_vec = {
 	input_destroy,
 	input_load,
-	input_save,
-	NULL,
-	NULL,
-	input_dump
+	input_save
 };
 
 static int	keyboard_init(struct input *, int);
 static int	joy_init(struct input *, int);
 static int	mouse_init(struct input *, int);
+static Uint32	input_time(Uint32, void *);
 
 struct input *
 input_create(int type, int index)
@@ -92,6 +91,48 @@ input_create(int type, int index)
 	return (input);
 }
 
+static Uint32
+input_time(Uint32 ival, void *p)
+{
+	struct input *in = (struct input *)p;
+	struct map *m;
+	Uint32 x, y, moved = 0;
+
+	if (in->pos == NULL) {
+		return (ival);
+	}
+
+	m = in->pos->map;
+	x = in->pos->x;
+	y = in->pos->y;
+	
+	pthread_mutex_lock(&m->lock);
+
+	moved = mapdir_move(&in->pos->dir, &x, &y);
+	if (moved != 0) {
+		static struct mappos opos;
+		struct mappos *npos;
+		struct noderef *nref;
+	
+		opos = *in->pos;
+		nref = opos.nref;
+		dprintf("moved %s %dx%d\n", opos.nref->pobj->name, x, y);
+	
+		object_mdel(nref->pobj, nref->offs, nref->flags,
+		    m, opos.x, opos.y);
+		npos = object_madd(nref->pobj, nref->offs, nref->flags,
+		    opos.input, m, x, y);
+		npos->dir = opos.dir;
+
+		mapdir_postmove(&npos->dir, &x, &y, moved);
+
+		m->redraw++;
+	}
+	pthread_mutex_unlock(&m->lock);
+
+	return (ival);
+}
+
 static void
 input_key(struct input *in, SDL_Event *ev)
 {
@@ -106,7 +147,7 @@ input_key(struct input *in, SDL_Event *ev)
 		}
 		break;
 	case SDLK_DOWN:
-		if (in->pos->y < in->pos->map->maph - 1) {
+		if (in->pos->y < in->pos->map->maph - 2) {
 			mapdir_set(&in->pos->dir, DIR_DOWN, set);
 		}
 		break;
@@ -116,7 +157,7 @@ input_key(struct input *in, SDL_Event *ev)
 		}
 		break;
 	case SDLK_RIGHT:
-		if (in->pos->x < in->pos->map->mapw - 1) {
+		if (in->pos->x < in->pos->map->mapw - 2) {
 			mapdir_set(&in->pos->dir, DIR_RIGHT, set);
 		}
 		break;
@@ -194,18 +235,17 @@ input_event(void *p, SDL_Event *ev)
 		return;
 	}
 
-	dprintf("input event: \n");
 	switch (in->type) {
 	case INPUT_KEYBOARD:
-		dprintf(" keyboard\n");
+		dprintf("input: keyboard\n");
 		input_key(in, ev);
 		break;
 	case INPUT_JOY:
-		dprintf(" joy\n");
+		dprintf("input: joy\n");
 		input_joy(in, ev);
 		break;
 	case INPUT_MOUSE:
-		dprintf(" mouse\n");
+		dprintf("input: mouse\n");
 		input_mouse(in, ev);
 		break;
 	}
@@ -228,7 +268,9 @@ input_save(void *p, int fd)
 static int
 keyboard_init(struct input *in, int index)
 {
-	/* XXX ... */
+	/* XXX pref */
+	in->timer = SDL_AddTimer(20, input_time, in);
+
 	return (0);
 }
 
@@ -256,23 +298,3 @@ mouse_init(struct input *in, int index)
 	return (0);
 }
 
-void
-input_dump(void *p)
-{
-	struct input *in = (struct input *)p;
-
-	switch (in->type) {
-	case INPUT_KEYBOARD:
-		printf("keyboard ");
-		break;
-	case INPUT_JOY:
-		printf("joy ");
-		break;
-	case INPUT_MOUSE:
-		printf("mouse ");
-		break;
-	}
-	printf("#%d: position=%s:%d,%d[offs %d]\n", in->index,
-	    in->pos->map->obj.name, in->pos->x, in->pos->y,
-	    in->pos->nref->offs);
-}
