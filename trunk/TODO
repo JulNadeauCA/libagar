@@ -2,11 +2,11 @@
 BUGS
 ----
 map rendering engine:
-- recursive view masking!
 - view geo must exceed map geo.
 - off-by-ones in boundaries checks for mouse edition.
 - recalculate movement interpolation when creating text windows.
 - soft scroll issues with view masking.
+- text windows cannot exceed view dimensions.
 
 TODO
 ----
