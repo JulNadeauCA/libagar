@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.65 2002/07/08 03:16:58 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.66 2002/07/20 03:19:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -83,7 +83,7 @@ object_addanim(struct object_art *art, struct anim *anim)
 
 		newanims = erealloc(art->anims,
 		    (NANIMS_GROW * art->maxanims) * sizeof(struct anim *));
-		art->maxanims *= NANIMS_GROW;
+		art->maxanims += NANIMS_GROW;
 		art->anims = newanims;
 	}
 	art->anims[art->nanims++] = anim;
@@ -172,7 +172,7 @@ object_addsprite(struct object_art *art, SDL_Surface *sprite, int map_tiles)
 
 		newsprites = erealloc(art->sprites,
 		    (NSPRITES_GROW * art->maxsprites) * sizeof(SDL_Surface *));
-		art->maxsprites *= NSPRITES_GROW;
+		art->maxsprites += NSPRITES_GROW;
 		art->sprites = newsprites;
 	}
 	art->sprites[art->nsprites++] = sprite;
