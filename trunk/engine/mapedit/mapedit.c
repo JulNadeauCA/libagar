@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.207 2004/11/25 02:48:41 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.208 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/prop.h>
+#include <engine/objmgr.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -39,7 +40,6 @@
 #include <engine/widget/mspinbutton.h>
 
 #include "mapedit.h"
-#include "objedit.h"
 
 const struct object_ops mapedit_ops = {
 	NULL,				/* init */
@@ -73,10 +73,6 @@ int mapedit_def_brsh = 8;
 void
 mapedit_init(void)
 {
-	struct window *win, *objedit_win;
-	struct box *bo;
-	int i;
-	
 	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
 	OBJECT(&mapedit)->flags |= (OBJECT_RELOAD_PROPS|OBJECT_STATIC);
 	OBJECT(&mapedit)->save_pfx = "/map-editor";
@@ -107,37 +103,16 @@ mapedit_init(void)
 	prop_set_uint32(&mapedit, "default-brush-width", 5);
 	prop_set_uint32(&mapedit, "default-brush-height", 5);
 
-	/* Create the object editor window. */
-	objedit_init();
-	objedit_win = objedit_window();
-	window_show(objedit_win);
-
-#if 0
-	/* Create the toolbar window. */
-	win = window_new(0, "mapedit-toolbar");
-	window_set_caption(win, _("Tools"));
-	window_set_closure(win, 0);
-	window_set_position(win, WINDOW_UPPER_LEFT, 0);
-
-	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL|BOX_HFILL);
-	box_set_spacing(bo, 0);
-	{
-		struct button *bu;
-	
-		bu = button_new(bo, NULL);
-		button_set_label(bu, ICON(OBJECT_EDITOR_ICON));
-		event_new(bu, "button-pushed", window_generic_show, "%p",
-		    objedit_win);
-	}
-	window_show(win);
-#endif
+	/* Initialize the object manager. */
+	objmgr_init();
+	window_show(objmgr_window());
 }
 
 void
 mapedit_destroy(void *p)
 {
 	map_destroy(&mapedit.copybuf);
-	objedit_destroy();
+	objmgr_destroy();
 }
 
 void
