@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.22 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.23 2003/10/09 22:39:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -9,37 +9,30 @@
 #include "begin_code.h"
 
 #define LABEL_MAX		128
-#define LABEL_FORMAT_MAX	64
-#define LABEL_POLL_MAX		32
+#define LABEL_MAX_POLLPTRS	32
 
 enum label_type {
-	LABEL_STATIC,
-	LABEL_POLLED
+	LABEL_STATIC,		/* Static text */
+	LABEL_POLLED,		/* Polling (thread unsafe) */
+	LABEL_POLLED_MT		/* Polling (thread safe) */
 };
 
 struct label {
 	struct widget wid;
-
 	enum label_type	type;
-	
-	pthread_mutex_t	 lock;
-	SDL_Surface	*surface;
-	int		 prew, preh;
-
+	pthread_mutex_t	lock;
+	SDL_Surface *surface;
+	int prew, preh;
 	struct {
-		char		 fmt[LABEL_FORMAT_MAX];
-		void		*ptrs[LABEL_POLL_MAX];
-		int		 nptrs;
+		char fmt[LABEL_MAX];
+		void *ptrs[LABEL_MAX_POLLPTRS];
+		int nptrs;
 		pthread_mutex_t	*lock;
 	} poll;
 };
 
 __BEGIN_DECLS
-struct label	*label_new(void *, const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 2, 3)
-		     NONNULL_ATTRIBUTE(2);
-struct label	*label_polled_new(void *, pthread_mutex_t *, const char *, ...)
-		     NONNULL_ATTRIBUTE(3);
+struct label	*label_new(void *, enum label_type, const char *, ...);
 
 void	 label_init(struct label *, enum label_type, const char *);
 void 	 label_destroy(void *);

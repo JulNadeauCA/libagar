@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.75 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.76 2004/03/30 00:45:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -53,18 +53,53 @@ enum {
 };
 
 struct label *
-label_new(void *parent, const char *fmt, ...)
+label_new(void *parent, enum label_type type, const char *fmt, ...)
 {
 	char buf[LABEL_MAX];
 	struct label *label;
-	va_list args;
-
-	va_start(args, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, args);
-	va_end(args);
-
+	va_list ap;
+	const char *p;
+	
 	label = Malloc(sizeof(struct label), M_OBJECT);
-	label_init(label, LABEL_STATIC, buf);
+
+	va_start(ap, fmt);
+	switch (type) {
+	case LABEL_STATIC:
+		vsnprintf(buf, sizeof(buf), fmt, ap);
+		label_init(label, LABEL_STATIC, buf);
+		break;
+	case LABEL_POLLED:
+		label_init(label, LABEL_POLLED, fmt);
+		label->poll.lock = NULL;
+		break;
+	case LABEL_POLLED_MT:
+		label_init(label, LABEL_POLLED_MT, fmt);
+		label->poll.lock = va_arg(ap, pthread_mutex_t *);
+		break;
+	}
+	if (type == LABEL_POLLED || type == LABEL_POLLED_MT) {
+		for (p = fmt; *p != '\0'; p++) {
+			if (*p == '%' && *(p+1) != '\0') {
+				switch (*(p+1)) {
+				case ' ':
+				case '(':
+				case ')':
+				case '%':
+					break;
+				default:
+					if (label->poll.nptrs+1 <
+					    LABEL_MAX_POLLPTRS) {
+						label->poll.ptrs
+						    [label->poll.nptrs++] =
+						    va_arg(ap, void *);
+					}
+					break;
+				}
+			}
+		}
+	}
+	va_end(ap);
+
 	object_attach(parent, label);
 	return (label);
 }
@@ -84,6 +119,7 @@ label_scale(void *p, int rw, int rh)
 		pthread_mutex_unlock(&lab->lock);
 		break;
 	case LABEL_POLLED:
+	case LABEL_POLLED_MT:
 		if (rh == -1 && rh == -1) {
 			WIDGET(lab)->w = lab->prew;
 			WIDGET(lab)->h = lab->preh;
@@ -97,7 +133,6 @@ label_init(struct label *label, enum label_type type, const char *s)
 {
 	widget_init(label, "label", &label_ops, 0);
 	widget_map_color(label, TEXT_COLOR, "text", 250, 250, 250, 255);
-
 	label->type = type;
 
 	switch (type) {
@@ -111,12 +146,12 @@ label_init(struct label *label, enum label_type type, const char *s)
 		pthread_mutex_init(&label->lock, NULL);
 		break;
 	case LABEL_POLLED:
+	case LABEL_POLLED_MT:
 		label_prescale(label, "XXXXXXXXXXXXXXXXX");
-
 		WIDGET(label)->flags |= WIDGET_WFILL;
 		label->surface = NULL;
 		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
-		memset(label->poll.ptrs, 0, sizeof(void *) * LABEL_POLL_MAX);
+		memset(label->poll.ptrs, 0, sizeof(void *)*LABEL_MAX_POLLPTRS);
 		label->poll.nptrs = 0;
 		break;
 	}
@@ -126,41 +161,6 @@ void
 label_prescale(struct label *lab, const char *text)
 {
 	text_prescale(text, &lab->prew, &lab->preh);
-}
-
-struct label *
-label_polled_new(void *parent, pthread_mutex_t *mutex, const char *fmt, ...)
-{
-	struct label *label;
-	va_list args;
-	const char *p;
-
-	label = Malloc(sizeof(struct label), M_OBJECT);
-	label_init(label, LABEL_POLLED, fmt);
-	label->poll.lock = mutex;
-
-	va_start(args, fmt);
-	for (p = fmt; *p != '\0'; p++) {
-		if (*p == '%' && *(p+1) != '\0') {
-			switch (*(p+1)) {
-			case ' ':
-			case '(':
-			case ')':
-			case '%':
-				break;
-			default:
-				if (label->poll.nptrs+1 < LABEL_POLL_MAX) {
-					label->poll.ptrs[label->poll.nptrs++] =
-					    va_arg(args, void *);
-				}
-				break;
-			}
-		}
-	}
-	va_end(args);
-
-	object_attach(parent, label);
-	return (label);
 }
 
 void
@@ -315,9 +315,6 @@ label_draw_polled(struct label *label)
 	s[0] = '\0';
 	s2[0] = '\0';
 
-	if (label->poll.lock != NULL)
-		pthread_mutex_lock(label->poll.lock);
-
 	for (fmtp = label->poll.fmt; *fmtp != '\0'; fmtp++) {
 		if (*fmtp == '%' && *(fmtp+1) != '\0') {
 			switch (*(fmtp+1)) {
@@ -326,6 +323,20 @@ label_draw_polled(struct label *label)
 				snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));
 				strlcat(s, s2, sizeof(s));
 				ri++;
+				break;
+			case 'D':
+			case 'I':
+				if (LABEL_ARG(int) < 0) {
+					snprintf(s2, sizeof(s2), "%d",
+					    LABEL_ARG(int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+				} else if (LABEL_ARG(int) > 0) {
+					snprintf(s2, sizeof(s2), "+%d",
+					    LABEL_ARG(int));
+					strlcat(s, s2, sizeof(s));
+					ri++;
+				}
 				break;
 			case 'o':
 				snprintf(s2, sizeof(s2), "%o",
@@ -399,9 +410,6 @@ label_draw_polled(struct label *label)
 		}
 	}
 
-	if (label->poll.lock != NULL)
-		pthread_mutex_unlock(label->poll.lock);
-
 	ts = text_render(NULL, -1, WIDGET_COLOR(label, TEXT_COLOR), s);
 	widget_blit(label, ts, 0, 0);
 	SDL_FreeSurface(ts);
@@ -422,6 +430,11 @@ label_draw(void *p)
 		break;
 	case LABEL_POLLED:
 		label_draw_polled(label);
+		break;
+	case LABEL_POLLED_MT:
+		pthread_mutex_lock(label->poll.lock);
+		label_draw_polled(label);
+		pthread_mutex_unlock(label->poll.lock);
 		break;
 	}
 }
