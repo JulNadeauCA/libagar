@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.113 2004/06/18 03:03:43 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.114 2004/08/02 03:17:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -12,7 +12,6 @@
 #include <engine/prop.h>
 #include <engine/gfx.h>
 #include <engine/audio.h>
-#include <engine/position.h>
 
 #include "begin_code.h"
 
@@ -69,7 +68,6 @@ struct object {
 	Uint32		 audio_used;	/* Referenced audio */
 	Uint32		 data_used;	/* Referenced object derivate data */
 
-	struct position		*pos;		/* Unique position (or NULL) */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 	CIRCLEQ_HEAD(,timeout)	 timeouts;	/* Scheduled function calls */
@@ -160,7 +158,6 @@ int	 object_load(void *);
 int	 object_load_generic(void *);
 int	 object_reload_data(void *);
 int	 object_resolve_deps(void *);
-int	 object_resolve_position(void *);
 int	 object_load_data(void *);
 
 void	 object_attach(void *, void *);

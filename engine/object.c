@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.185 2004/09/12 05:57:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.186 2004/09/18 06:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -120,7 +120,6 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->audio_name = NULL;
 	ob->audio_used = 0;
 	ob->data_used = 0;
-	ob->pos = NULL;
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
@@ -551,9 +550,6 @@ object_destroy(void *p)
 	/* Destroy the descendants recursively. */
 	object_free_children(ob);
 	
-	if (ob->pos != NULL)
-		position_unset(ob);
-
 	if (ob->ops->reinit != NULL) {
 		ob->ops->reinit(ob);
 	}
@@ -815,13 +811,6 @@ object_load(void *p)
 	if (object_reload_data(ob) == -1)
 		goto fail;
 
-	/*
-	 * Resolve the position of the object and its children now that the
-	 * object tree is in a consistent state.
-	 */
-	if (object_resolve_position(ob) == -1)
-		goto fail;
-
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
 	return (0);
@@ -885,38 +874,6 @@ object_reload_data(void *p)
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_reload_data(cob) == -1)
-			return (-1);
-	}
-	return (0);
-}
-
-/*
- * Resolve the position of an object and its children.
- * The object and linkage must be locked.
- */
-int
-object_resolve_position(void *p)
-{
-	struct object *ob = p, *cob;
-
-	if (ob->pos != NULL) {
-		struct position *pos = ob->pos;
-		struct map *projmap;
-		
-		if ((pos->map = object_find(pos->map_name)) == NULL) {
-			error_set(_("No such level map: `%s'"), pos->map_name);
-			return (-1);
-		}
-		if ((projmap = object_find(pos->projmap_name)) == NULL) {
-			error_set(_("No such projection map: `%s'"),
-			    pos->projmap_name);
-			return (-1);
-		}
-		position_set_projmap(ob, projmap);
-		return (0);
-	}
-	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (object_resolve_position(cob) == -1)
 			return (-1);
 	}
 	return (0);
@@ -987,9 +944,7 @@ object_load_generic(void *p)
 	if (prop_load(ob, buf) == -1)
 		goto fail;
 
-	/* Decode and restore the position, if there is one. */
-	if (read_uint32(buf) > 0)
-		position_load(ob, buf);
+	read_uint32(buf);				/* Pad (was position) */
 
 	/* Decode shared gfx reference and resolve if graphics are resident. */
 	if ((mname = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
@@ -1266,14 +1221,7 @@ object_save(void *p)
 	if (prop_save(ob, buf) == -1)
 		goto fail;
 	
-	/* Encode the position if there is one. */
-	if (ob->pos != NULL) {
-		write_uint32(buf, 1);
-		if (position_save(ob->pos, buf) == -1)
-			goto fail;
-	} else {
-		write_uint32(buf, 0);
-	}
+	write_uint32(buf, 0);				/* Pad (was position) */
 
 	/* Encode the media references. */
 	write_string(buf, ob->gfx_name);
@@ -1554,10 +1502,8 @@ object_unlink_datafiles(void *p)
 		rmdir(path);
 }
 
-/*
- * Duplicate an object and its children.
- * The position is not duplicated.
- */
+/* Duplicate an object and its children. */
+/* XXX EXPERIMENTAL */
 void *
 object_duplicate(void *p)
 {

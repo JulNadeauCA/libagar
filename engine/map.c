@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.230 2004/08/02 03:17:31 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.231 2004/09/12 05:57:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1372,7 +1372,7 @@ map_edit(void *p)
 {
 	extern const struct tool mediasel_tool, layedit_tool;
 	extern const struct tool stamp_tool, eraser_tool, magnifier_tool,
-	    resize_tool, position_tool, propedit_tool, select_tool,
+	    resize_tool, propedit_tool, select_tool,
 	    shift_tool, merge_tool, fill_tool, flip_tool, invert_tool;
 	struct map *m = p;
 	struct window *win;
@@ -1407,7 +1407,9 @@ map_edit(void *p)
 	mapview_reg_tool(mv, &eraser_tool, m);
 	mapview_reg_tool(mv, &magnifier_tool, m);
 	mapview_reg_tool(mv, &resize_tool, m);
+#if 0
 	mapview_reg_tool(mv, &position_tool, m);
+#endif
 	mapview_reg_tool(mv, &propedit_tool, m);
 	mapview_reg_tool(mv, &select_tool, m);
 	mapview_reg_tool(mv, &shift_tool, m);
