@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.94 2003/03/02 01:20:52 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.95 2003/03/02 04:13:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -176,7 +176,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 	/* Start up the font engine. */
 	if (prop_get_bool(config, "font-engine")) {
 		if (text_init() == -1) {
-			fatal("text_init: %s\n", error_get());
+			fatal("text_init: %s", error_get());
 		}
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.51 2003/02/10 23:07:59 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.52 2003/03/10 02:13:40 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -275,7 +275,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 
 	/* XXX pick the first reference to this object */
 	if (*mapy > m->maph || *mapx > m->mapw) {
-		fatal("bad coordinates\n");
+		fatal("bad coords");
 	}
 
 	node = &m->map[*mapy][*mapx];
@@ -287,7 +287,7 @@ mapdir_move(struct mapdir *dir, int *mapx, int *mapy)
 		}
 	}
 	if (nref == NULL) {
-		fatal("no reference to %s at %s:%d,%d\n", dir->ob->name,
+		fatal("no ref to %s at %s:%d,%d", dir->ob->name,
 		    OBJECT(m)->name, *mapx, *mapy);
 	}
 
@@ -439,7 +439,7 @@ mapdir_postmove(struct mapdir *dir, int *mapx, int *mapy, Uint32 moved)
 	/* XXX pick the first reference to this object */
 #ifdef DEBUG
 	if (*mapy > m->maph || *mapx > m->mapw) {
-		fatal("bad coordinates\n");
+		fatal("bad coords");
 	}
 #endif
 	node = &m->map[*mapy][*mapx];
@@ -451,7 +451,7 @@ mapdir_postmove(struct mapdir *dir, int *mapx, int *mapy, Uint32 moved)
 		}
 	}
 	if (nref == NULL) {
-		fatal("no reference to %s at %s:%d,%d\n", dir->ob->name,
+		fatal("no ref to %s at %s:%d,%d", dir->ob->name,
 		    OBJECT(m)->name, *mapx, *mapy);
 	}
 #if 0

@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.1 2002/12/13 10:40:26 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.2 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ transform_init(struct transform *tr, enum transform_type type)
 			return;
 		}
 	}
-	fatal("no such transform: %d\n", i);
+	fatal("no such transform: %d", i);
 }
 
 void
@@ -99,7 +99,7 @@ transform_load(int fd, struct transform *trans)
 			goto found;
 		}
 	}
-	fatal("unknown transform: %d\n", trans->type);
+	fatal("unknown transform: %d", trans->type);
 found:
 	/* Read the transform arguments. */
 	switch (trans->type) {
@@ -130,8 +130,7 @@ found:
 		trans->args.randomize.a_range = read_uint8(fd);
 		break;
 	default:
-		fatal("unknown transform type: %d\n", trans->type);
-		break;
+		fatal("unknown transform type: %d", trans->type);
 	}
 }
 

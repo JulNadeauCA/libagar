@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.69 2003/03/02 05:13:44 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.70 2003/03/08 00:58:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -136,7 +136,7 @@ case 4:					\
 #define VIEW_UPDATE(rect) do {					\
 	if (!view->opengl) {					\
 		if (view->ndirty + 1 > view->maxdirty) {	\
-			fatal("too many rects\n");		\
+			fatal("too many rects");		\
 		}						\
 		view->dirty[view->ndirty++] = (rect);		\
 	} else {						\

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.66 2003/02/04 02:23:20 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.67 2003/03/10 02:13:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -76,9 +76,9 @@ struct object {
 #ifdef DEBUG
 # define OBJECT_ASSERT(ob, typestr) do {				\
 	if (strcmp(OBJECT((ob))->type, typestr) != 0) {			\
-		fatal("%s is not a %s\n", OBJECT((ob))->name, typestr);	\
+		fatal("%s is not a %s", OBJECT((ob))->name, typestr);	\
 	}								\
-} while (/*CONSTCOND*/0)
+} while (0)
 #else
 # define OBJECT_ASSERT(ob, type)
 #endif

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.110 2003/03/04 00:43:08 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.111 2003/03/08 00:58:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -307,7 +307,7 @@ view_surface(int flags, int w, int h)
 #endif
 	    );
 	if (s == NULL) {
-		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	return (s);
 }
@@ -473,13 +473,13 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 #endif
 	    );
 	if (texsu == NULL) {
-		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 
 	/* Copy the source surface onto the GL texture surface. */
 	SDL_SetAlpha(sourcesu, 0, 0);
 	if (SDL_BlitSurface(sourcesu, NULL, texsu, NULL) == -1) {
-		fatal("SDL_BlitSurface: %s\n", SDL_GetError());
+		fatal("SDL_BlitSurface: %s", SDL_GetError());
 	}
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
@@ -533,7 +533,7 @@ view_alpha_blend(SDL_Surface *s, Sint16 x, Sint16 y, Uint8 r, Uint8 g,
 		dstcolor = *(Uint32 *)dst;
 		break;
 	default:
-		fatal("bad bpp\n");
+		fatal("bad bpp");
 	}
 	SDL_GetRGB(dstcolor, s->format, &dr, &dg, &db);
 

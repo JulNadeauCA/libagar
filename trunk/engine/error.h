@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.13 2003/02/17 11:51:00 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.14 2003/03/02 00:48:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
@@ -39,7 +39,7 @@ void	Asprintf(char **, const char *, ...);
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
 	if (vasprintf((msg), (fmt), (args)) == -1) {		\
-		fatal("vasprintf: %s\n", strerror(errno));	\
+		fatal("vasprintf: %s", strerror(errno));	\
 	}							\
 	va_end((args));						\
 } while (0)

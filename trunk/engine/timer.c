@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.54 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: timer.c,v 1.1 2003/01/19 12:11:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ timer_start(struct timer *timer)
 		timer->id = SDL_AddTimer(timer->ival, timer->callback,
 		    timer->arg);
 		if (timer->id == NULL) {
-		 	fatal("SDL_AddTimer: %s\n", SDL_GetError());
+		 	fatal("SDL_AddTimer: %s", SDL_GetError());
 		}
 		timer->state = TIMER_RUNNING;
 		break;

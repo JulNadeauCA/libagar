@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.40 2003/02/10 06:13:39 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.41 2003/03/03 05:16:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -142,6 +142,10 @@ tlist_scaled(int argc, union evarg *argv)
 	int w = argv[1].i;
 	int h = argv[2].i;
 
+	dprintf("tl: %ux%u at %d,%d\n",
+	    WIDGET(tl)->x, WIDGET(tl)->y,
+	    WIDGET(tl)->w, WIDGET(tl)->h);
+
 	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - 20;
 	WIDGET(sb)->y = WIDGET(tl)->y;
  	WIDGET(sb)->w = 20;
@@ -168,7 +172,7 @@ tlist_draw(void *p)
 		event_post(tl, "tlist-poll", NULL);
 	}
 
-	rclip.x = WIDGET_ABSX(tl);
+	rclip.x = WIDGET_ABSX(tl);		/* XXX use WIDGET_CLIP? */
 	rclip.y = WIDGET_ABSY(tl);
 	rclip.w = WIDGET(tl)->w;
 	rclip.h = WIDGET(tl)->h;
