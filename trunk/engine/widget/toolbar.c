@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.5 2004/04/13 01:21:46 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.6 2005/01/05 04:44:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -52,18 +52,18 @@ static struct widget_ops toolbar_ops = {
 };
 
 struct toolbar *
-toolbar_new(void *parent, enum toolbar_type type, int nrows)
+toolbar_new(void *parent, enum toolbar_type type, int nrows, int flags)
 {
 	struct toolbar *tbar;
 
 	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
-	toolbar_init(tbar, type, nrows);
+	toolbar_init(tbar, type, nrows, flags);
 	object_attach(parent, tbar);
 	return (tbar);
 }
 
 void
-toolbar_init(struct toolbar *tbar, enum toolbar_type type, int nrows)
+toolbar_init(struct toolbar *tbar, enum toolbar_type type, int nrows, int flags)
 {
 	int i;
 	
@@ -82,14 +82,19 @@ toolbar_init(struct toolbar *tbar, enum toolbar_type type, int nrows)
 	tbar->type = type;
 	tbar->nrows = 0;
 	for (i = 0; i < nrows && i < TOOLBAR_MAX_ROWS; i++) {
+		int bflags = 0;
+
+		if (flags & TOOLBAR_HOMOGENOUS) {
+			bflags = BOX_HOMOGENOUS;
+		}
 		switch (type) {
 		case TOOLBAR_HORIZ:
 			tbar->rows[i] = box_new(&tbar->box, BOX_HORIZ,
-			    BOX_WFILL|BOX_HOMOGENOUS);
+			    BOX_WFILL|bflags);
 			break;
 		case TOOLBAR_VERT:
 			tbar->rows[i] = box_new(&tbar->box, BOX_VERT, 
-			    BOX_HFILL|BOX_HOMOGENOUS);
+			    BOX_HFILL|bflags);
 			break;
 		}
 		box_set_padding(tbar->rows[i], 1);
