@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.5 2002/12/16 13:40:04 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.6 2002/12/17 06:48:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -419,7 +419,7 @@ art_get_anim(struct object *ob, int i)
 }
 
 static void
-tl_arts_poll(int argc, union evarg *argv)
+tl_medias_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct art *art;
@@ -435,6 +435,16 @@ tl_arts_poll(int argc, union evarg *argv)
 	pthread_mutex_unlock(&artq_lock);
 
 	tlist_restore_selections(tl);
+}
+
+static void
+tl_medias_selected(int argc, union evarg *argv)
+{
+	struct tlist *tl_sprites = argv[1].p;
+	struct tlist *tl_anims = argv[2].p;
+
+	scrollbar_set_value(tl_sprites->vbar, 0);
+	scrollbar_set_value(tl_anims->vbar, 0);
 }
 
 static void
@@ -535,7 +545,6 @@ art_browser_window(void)
 	struct tlist *tl_medias;
 	struct bitmap *bmp_sprite, *bmp_anim;
 
-
 	if ((win = window_generic_new(251, 259, "monitor-media-browser"))
 	    == NULL) {
 		return (NULL);	/* Exists */
@@ -546,7 +555,7 @@ art_browser_window(void)
 	reg = region_new(win, 0, 0, 0, 30, 100);
 	{
 		tl_medias = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl_medias, "tlist-poll", tl_arts_poll, NULL);
+		event_new(tl_medias, "tlist-poll", tl_medias_poll, NULL);
 	}
 	
 	/* Bitmap display */
@@ -572,6 +581,9 @@ art_browser_window(void)
 		    tl_anims_selected, "%p", bmp_anim);
 		event_new(tl_anims, "tlist-poll",
 		    tl_anims_poll, "%p", tl_medias);
+	
+		event_new(tl_medias, "tlist-changed", tl_medias_selected,
+		    "%p, %p", tl_sprites, tl_anims);
 	}
 
 	return (win);
