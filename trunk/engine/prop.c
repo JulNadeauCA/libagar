@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.17 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.18 2003/01/18 06:37:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -348,10 +348,9 @@ fail:
 int
 prop_get_int(void *p, char *key)
 {
-	struct object *ob = p;
 	int i;
 
-	if (prop_get(ob, key, PROP_INT, &i) == NULL) {
+	if (prop_get(p, key, PROP_INT, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -360,10 +359,9 @@ prop_get_int(void *p, char *key)
 int
 prop_get_bool(void *p, char *key)
 {
-	struct object *ob = p;
 	int i;
 
-	if (prop_get(ob, key, PROP_BOOL, &i) == NULL) {
+	if (prop_get(p, key, PROP_BOOL, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -372,10 +370,9 @@ prop_get_bool(void *p, char *key)
 Uint8
 prop_get_uint8(void *p, char *key)
 {
-	struct object *ob = p;
 	Uint8 i;
 
-	if (prop_get(ob, key, PROP_UINT8, &i) == NULL) {
+	if (prop_get(p, key, PROP_UINT8, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -384,10 +381,9 @@ prop_get_uint8(void *p, char *key)
 Sint8
 prop_get_sint8(void *p, char *key)
 {
-	struct object *ob = p;
 	Sint8 i;
 
-	if (prop_get(ob, key, PROP_SINT8, &i) == NULL) {
+	if (prop_get(p, key, PROP_SINT8, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -396,10 +392,9 @@ prop_get_sint8(void *p, char *key)
 Uint16
 prop_get_uint16(void *p, char *key)
 {
-	struct object *ob = p;
 	Uint16 i;
 
-	if (prop_get(ob, key, PROP_UINT16, &i) == NULL) {
+	if (prop_get(p, key, PROP_UINT16, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -408,10 +403,9 @@ prop_get_uint16(void *p, char *key)
 Sint16
 prop_get_sint16(void *p, char *key)
 {
-	struct object *ob = p;
 	Sint16 i;
 
-	if (prop_get(ob, key, PROP_SINT16, &i) == NULL) {
+	if (prop_get(p, key, PROP_SINT16, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -420,10 +414,9 @@ prop_get_sint16(void *p, char *key)
 Uint32
 prop_get_uint32(void *p, char *key)
 {
-	struct object *ob = p;
 	Uint32 i;
 
-	if (prop_get(ob, key, PROP_UINT32, &i) == NULL) {
+	if (prop_get(p, key, PROP_UINT32, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -432,10 +425,9 @@ prop_get_uint32(void *p, char *key)
 Sint32
 prop_get_sint32(void *p, char *key)
 {
-	struct object *ob = p;
 	Sint32 i;
 
-	if (prop_get(ob, key, PROP_SINT32, &i) == NULL) {
+	if (prop_get(p, key, PROP_SINT32, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -445,10 +437,9 @@ prop_get_sint32(void *p, char *key)
 Uint64
 prop_get_uint64(void *p, char *key)
 {
-	struct object *ob = p;
 	Uint64 i;
 
-	if (prop_get(ob, key, PROP_UINT64, &i) == NULL) {
+	if (prop_get(p, key, PROP_UINT64, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -457,10 +448,9 @@ prop_get_uint64(void *p, char *key)
 Sint64
 prop_get_sint64(void *p, char *key)
 {
-	struct object *ob = p;
 	Sint64 i;
 
-	if (prop_get(ob, key, PROP_SINT64, &i) == NULL) {
+	if (prop_get(p, key, PROP_SINT64, &i) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (i);
@@ -470,10 +460,9 @@ prop_get_sint64(void *p, char *key)
 float
 prop_get_float(void *p, char *key)
 {
-	struct object *ob = p;
 	float f;
 
-	if (prop_get(ob, key, PROP_FLOAT, &f) == NULL) {
+	if (prop_get(p, key, PROP_FLOAT, &f) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (f);
@@ -482,10 +471,9 @@ prop_get_float(void *p, char *key)
 double
 prop_get_double(void *p, char *key)
 {
-	struct object *ob = p;
 	double d;
 
-	if (prop_get(ob, key, PROP_DOUBLE, &d) == NULL) {
+	if (prop_get(p, key, PROP_DOUBLE, &d) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (d);
@@ -495,10 +483,9 @@ prop_get_double(void *p, char *key)
 long double
 prop_get_long_double(void *p, char *key)
 {
-	struct object *ob = p;
-	double ld;
+	long double ld;
 
-	if (prop_get(ob, key, PROP_LONG_DOUBLE, &ld) == NULL) {
+	if (prop_get(p, key, PROP_LONG_DOUBLE, &ld) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (ld);
@@ -508,10 +495,9 @@ prop_get_long_double(void *p, char *key)
 char *
 prop_get_string(void *p, char *key)
 {
-	struct object *ob = p;
 	char *s;
 
-	if (prop_get(ob, key, PROP_STRING, &s) == NULL) {
+	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (s);
@@ -520,10 +506,9 @@ prop_get_string(void *p, char *key)
 void *
 prop_get_pointer(void *p, char *key)
 {
-	struct object *ob = p;
 	void *np;
 
-	if (prop_get(ob, key, PROP_POINTER, &np) == NULL) {
+	if (prop_get(p, key, PROP_POINTER, &np) == NULL) {
 		fatal("%s\n", error_get());
 	}
 	return (np);
