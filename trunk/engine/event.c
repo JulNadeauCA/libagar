@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.170 2004/03/12 02:47:34 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.171 2004/03/17 04:02:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@
 #define DEBUG_VIDEOEXPOSE	0x004
 #define DEBUG_JOY_EV		0x008
 #define DEBUG_KEY_EV		0x010
-#define DEBUG_EVENT_DELIVERY	0x040
+#define DEBUG_EVENTS		0x040
 #define DEBUG_ASYNC		0x080
 
 int	event_debug = DEBUG_UNDERRUNS|DEBUG_VIDEORESIZE|DEBUG_VIDEOEXPOSE|\
@@ -499,7 +499,7 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	struct object *rcvr = rp;
 	struct event *eev, *neev;
 
-	debug(DEBUG_EVENT_DELIVERY, "%s: %s -> %s\n", evname,
+	debug(DEBUG_EVENTS, "%s: %s -> %s\n", evname,
 	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
 
 	pthread_mutex_lock(&rcvr->lock);
@@ -512,44 +512,43 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		if (fmt != NULL) {
 			va_list ap;
 
-			for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
+			va_start(ap, fmt);
+			for (; *fmt != '\0'; fmt++) {
 				EVENT_PUSH_ARG(ap, *fmt, neev);
 			}
 			va_end(ap);
 		}
-		eev->argv[eev->argc].p = sndr;
-
-		if (neev->flags & EVENT_ASYNC) {
+		neev->argv[neev->argc].p = sndr;
 #ifdef THREADS
+		if (neev->flags & EVENT_ASYNC) {
 			pthread_t th;
 
-			/* Will free the event structure when done. */
 			Pthread_create(&th, NULL, event_async, neev);
-#else
-			fatal("EVENT_ASYNC requires THREADS");
-#endif
-		} else {
-			if (neev->flags & EVENT_FORWARD_CHILDREN) {
-				debug(DEBUG_EVENT_DELIVERY,
-				    "%s: forwarding %s to descendents\n",
-				    rcvr->name, evname);
-
-				lock_linkage();
-				event_forward_children(rcvr, neev);
-				unlock_linkage();
-			}
-			if (neev->handler != NULL) {
-				neev->handler(neev->argc, neev->argv);
-			}
-			free(neev);
+			break;
 		}
-		break;
+#endif
+		if (neev->flags & EVENT_FORWARD_CHILDREN) {
+			debug(DEBUG_EVENTS, "%s: forward %s\n", rcvr->name,
+			    evname);
+
+			lock_linkage();
+			event_forward_children(rcvr, neev);
+			unlock_linkage();
+		}
+		if (neev->handler != NULL) {
+			neev->handler(neev->argc, neev->argv);
+		}
+		free(neev);
 	}
 	pthread_mutex_unlock(&rcvr->lock);
 	return (eev != NULL);
 }
 
-/* Forward an event, without modifying the original event structure. */
+/*
+ * Forward an event, without modifying the original event structure, except
+ * for the receiver pointer.
+ */
+/* XXX substitute the sender ptr? */
 void
 event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 {
@@ -557,7 +556,7 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 	struct object *rcvr = rp;
 	struct event *ev;
 
-	debug(DEBUG_EVENT_DELIVERY, "%s event to %s\n", evname, rcvr->name);
+	debug(DEBUG_EVENTS, "%s event to %s\n", evname, rcvr->name);
 
 	pthread_mutex_lock(&rcvr->lock);
 	memcpy(nargv, argv, argc * sizeof(union evarg));
@@ -567,8 +566,8 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 			continue;
 
 		if (ev->flags & EVENT_FORWARD_CHILDREN) {
-			debug(DEBUG_EVENT_DELIVERY, "%s to %s descendents\n",
-			    evname, rcvr->name);
+			debug(DEBUG_EVENTS, "%s to %s descendents\n", evname,
+			    rcvr->name);
 
 			lock_linkage();
 			event_forward_children(rcvr, ev);
