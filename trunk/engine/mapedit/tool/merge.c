@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.3 2003/02/08 00:59:03 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.4 2003/02/10 04:44:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@
 
 static const struct version merge_ver = {
 	"agar merge tool",
-	0, 0
+	2, 0
 };
 
 static const struct tool_ops merge_ops = {
@@ -200,9 +200,8 @@ merge_window(void *p)
 	    175, 222,
 	    151, 151);
 	window_set_caption(win, "Merge");
-	window_set_spacing(win, 2, 8);
-		
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 20);
 	{
 		static const char *mode_items[] = {
 			"Replace",
@@ -213,37 +212,40 @@ merge_window(void *p)
 		struct radio *rad;
 
 		rad = radio_new(reg, mode_items);
+		WIDGET(rad)->w = 100;
+		WIDGET(rad)->h = 100;
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	reg = region_new(win, REGION_HALIGN, 0, 20, 100, 14);
 	{
 		struct button *bu;
-
-		name_tbox = textbox_new(reg, "Name: ", 0, 80, -1);
+		
+		name_tbox = textbox_new(reg, "Name: ", 0, 80, 100);
 		event_new(name_tbox, "textbox-return",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 
-		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 20, -1);
+		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 20, 100);
 		event_new(bu, "button-pushed",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
-	{
-		struct button *bu;
-
-		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 50, -1);
-		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
-		
-		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 50, -1);
-		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
-	}
-
-	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
+	reg = region_new(win, REGION_VALIGN, 0, 35, 100, 50);
 	{
 		mer->brushes_tl = tlist_new(reg, 100, 100, TLIST_MULTI);
 	}
+	
+	reg = region_new(win, REGION_HALIGN, 0, 85, 100, 13);
+	{
+		struct button *bu;
+
+		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 50, 100);
+		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
+
+		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 50, 100);
+		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
+	}
+
 	return (win);
 }
 
@@ -307,6 +309,11 @@ merge_load(void *p, int fd)
 	if (version_read(fd, &merge_ver) != 0) {
 		return (-1);
 	}
+	
+	mer->mode = (Uint32)read_uint32(fd);
+	mer->flags = (Uint32)read_uint32(fd);
+
+	dprintf("mode %d, flags 0x%x\n", mer->mode, mer->flags);
 
 	nbrushes = read_uint32(fd);
 	for (i = 0; i < nbrushes; i++) {
@@ -336,6 +343,9 @@ merge_save(void *p, int fd)
 	off_t count_offs;
 
 	version_write(fd, &merge_ver);
+
+	write_uint32(fd, (Uint32)mer->mode);
+	write_uint32(fd, (Uint32)mer->flags);
 
 	count_offs = lseek(fd, 0, SEEK_CUR);
 	write_uint32(fd, 0);				/* Skip count */
