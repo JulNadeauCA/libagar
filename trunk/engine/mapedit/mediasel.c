@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.1 2004/03/10 04:30:03 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.2 2004/03/12 03:03:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -59,12 +59,14 @@ media_selected(int argc, union evarg *argv)
 {
 	struct mediasel *msel = argv[1].p;
 	struct tlist_item *it = argv[2].p;
+	int was_used = 0;
 
 	switch (msel->type) {
 	case MEDIASEL_GFX:
 		if (msel->obj->gfx != NULL) {
 			gfx_unused(msel->obj->gfx);
 			msel->obj->gfx = NULL;
+			was_used++;
 		}
 		if (it->text[0] == '\0') {
 			return;
@@ -74,14 +76,17 @@ media_selected(int argc, union evarg *argv)
 			    error_get());
 			return;
 		}
-		gfx_unused(msel->obj->gfx);
-		msel->obj->gfx = NULL;
+		if (was_used) {
+			gfx_unused(msel->obj->gfx);
+			msel->obj->gfx = NULL;
+		}
 		msel->obj->gfx_name = Strdup(it->text);
 		break;
 	case MEDIASEL_AUDIO:
 		if (msel->obj->audio_name != NULL) {
 			free(msel->obj->audio_name);
 			msel->obj->audio_name = NULL;
+			was_used++;
 		}
 		if (it->text[0] == '\0') {
 			return;
@@ -91,8 +96,10 @@ media_selected(int argc, union evarg *argv)
 			    error_get());
 			return;
 		}
-		audio_unused(msel->obj->audio);
-		msel->obj->audio = NULL;
+		if (was_used) {
+			audio_unused(msel->obj->audio);
+			msel->obj->audio = NULL;
+		}
 		msel->obj->audio_name = Strdup(it->text);
 		break;
 	}
