@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.8 2002/02/14 06:30:34 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.9 2002/02/15 02:31:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,17 +39,21 @@
 struct viewport *mainview;
 
 int
-view_setmode(struct viewport *v)
+view_setmap(struct viewport *v, struct map *m)
 {
-	v->fps = 30;	/* XXX calibrate */
+	v->fps = 30;	/* XXX pref */
 
+	v->map = m;
+	v->mapw = (v->width / m->tilew);
+	v->maph = (v->height / m->tileh);
+
+#if 1
 	/* XXX make room for edition windows */
-	v->mapw = (v->width / v->tilew);
-	v->maph = (v->height / v->tileh);
 	if (curmapedit != NULL && curmapedit->flags & MAPEDIT_TILELIST) {
 		v->mapw--;
 		v->maph--;
 	}
+#endif
 
 	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {
@@ -62,15 +66,13 @@ view_setmode(struct viewport *v)
 }
 
 struct viewport *
-view_create(int w, int h, int tilew, int tileh, int depth, int flags)
+view_create(int w, int h, int depth, int flags)
 {
 	struct viewport *v;
 
 	v = emalloc(sizeof(struct viewport));
 	v->width = w;
 	v->height = h;
-	v->tilew = tilew;
-	v->tileh = tileh;
 	v->flags = flags;
 	v->depth = SDL_VideoModeOK(v->width, v->height, depth, v->flags);
 	SLIST_INIT(&v->winsh);
@@ -81,11 +83,6 @@ view_create(int w, int h, int tilew, int tileh, int depth, int flags)
 	case 8:
 		v->flags |= SDL_HWPALETTE;
 		break;
-	}
-
-	if (view_setmode(v) < 0) {
-		free(v);
-		return (NULL);
 	}
 
 	return (v);
@@ -145,7 +142,7 @@ view_fullscreen(struct viewport *v, int full)
 		v->flags &= ~(SDL_FULLSCREEN);
 	}
 	
-	view_setmode(v);
+	view_setmap(v, v->map);	/* Change video modes */
 	v->map->redraw++;
 
 	return (0);
