@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.106 2002/12/01 14:28:03 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.107 2002/12/04 04:22:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -138,7 +138,7 @@ event_hotkey(SDL_Event *ev)
 
 #ifdef DEBUG
 #define UPDATE_FPS(delta) do {					\
-	label_printf(fps_label, "%d/100", (delta));		\
+	label_printf(fps_label, "%d/60", (delta));		\
 	graph_plot(fps_item, (delta));				\
 } while (/*CONSTCOND*/0)
 #else
@@ -146,7 +146,7 @@ event_hotkey(SDL_Event *ev)
 #endif
 
 #define COMPUTE_DELTA(delta, ntick) do {			\
-	(delta) = EVENT_MAXFPS - (SDL_GetTicks() - (ntick));	\
+	(delta) = 60 - (SDL_GetTicks() - (ntick));		\
 	UPDATE_FPS((delta));					\
 	if ((delta) < 1) {					\
 		debug(DEBUG_UNDERRUNS, "underrun: %d frames\n",	\
@@ -184,7 +184,7 @@ event_loop(void)
 	}
 #endif
 
-	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_MAXFPS;;) {
+	for (ntick = 0, ltick = SDL_GetTicks(), delta = 60;;) {
 		ntick = SDL_GetTicks();			/* Rendering starts */
 
 		if ((ntick - ltick) >= delta) {
