@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.31 2002/02/16 05:32:45 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.32 2002/02/16 05:51:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -51,8 +51,8 @@ struct draw {
 
 TAILQ_HEAD(, draw) deferdraws;	 /* Deferred rendering */
 
+static void	 node_init(struct node *, int);
 static void	 node_destroy(struct node *);
-static int	 node_init(struct node *, struct object *, int, int, int);
 static void	 map_draw(struct map *);
 static void	 map_animate(struct map *);
 static void	*map_draw_th(void *);
@@ -81,18 +81,14 @@ map_allocnodes(struct map *m, int w, int h, int tilew, int tileh)
 	    ((w * h) * sizeof(struct node)) / 1024,
 	    w, h, sizeof(struct node));
 
-	w++;
-	h++;
 	m->map = (struct node **)emalloc(((w) * (h)) * sizeof(struct node *));
 
-	for (i = 0; i < w * h; i++) {
+	for (i = 0; i < h; i++) {
 		*(m->map + i) = (struct node *)emalloc(w * sizeof(struct node));
 	}
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			struct node *node = &m->map[x][y];
-			memset(node, 0, sizeof(struct node));
-			TAILQ_INIT(&node->nrefsh);
+			node_init(&m->map[x][y], 0);
 		}
 	}
 }
@@ -102,12 +98,14 @@ void
 map_freenodes(struct map *m)
 {
 	int x, y;
-
-	dprintf("enter\n");
-
-	for (x = 0; x < m->mapw; x++)
-		for (y = 0; y < m->maph; y++)
+	
+	for (x = 0; x < m->mapw; x++) {
+		for (y = 0; y < m->maph; y++) {
 			node_destroy(&m->map[x][y]);
+		}
+		free(*(m->map + x));
+	}
+	free(m->map);
 }
 
 struct map *
@@ -186,26 +184,6 @@ map_unfocus(struct map *m)
 		curmapedit->flags = 0;
 	}
 
-	return (0);
-}
-
-/*
- * Initialize a map node.
- * Must be called on a locked map.
- */
-static int
-node_init(struct node *node, struct object *ob, int offs, int nodeflags,
-     int rflags)
-{
-	memset(node, 0, sizeof(struct node));
-
-	TAILQ_INIT(&node->nrefsh);
-
-	/* Used by the map editor to fill new maps. */
-	if (ob != NULL) {
-		node_addref(node, ob, offs, rflags);
-		node->flags |= nodeflags;
-	}
 	return (0);
 }
 
@@ -307,11 +285,12 @@ map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			node_destroy(&m->map[x][y]);
-			if (node_init(&m->map[x][y], ob, offs, flags,
-			    rflags) < 0) {
-				return;
-			}
+			struct node *node = &m->map[x][y];
+		
+			node_destroy(node);
+			node_init(node, flags);
+
+			node_addref(node, ob, offs, rflags);
 		}
 	}
 
@@ -330,6 +309,15 @@ map_destroy(void *p)
 	pthread_mutex_lock(&m->lock);
 	map_freenodes(m);
 	pthread_mutex_unlock(&m->lock);
+}
+
+/* Must be called on a locked map. */
+static void
+node_init(struct node *node, int flags)
+{
+	memset(node, 0, sizeof(struct node));
+	node->flags = flags;
+	TAILQ_INIT(&node->nrefsh);
 }
 
 /* Must be called on a locked map. */
