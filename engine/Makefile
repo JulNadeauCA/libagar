@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.62 2003/05/10 02:38:21 vedge Exp $
+#	$Csoft: Makefile,v 1.63 2003/05/18 00:16:57 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -33,4 +33,3 @@ OBJS+=	mapedit/mapedit.o \
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
-include ${TOP}/libfobj/Makefile.inc
