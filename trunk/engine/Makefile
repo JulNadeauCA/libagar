@@ -1,10 +1,9 @@
-#	$Csoft: Makefile,v 1.73 2003/09/06 05:26:28 vedge Exp $
+#	$Csoft: Makefile,v 1.74 2004/02/20 04:20:33 vedge Exp $
 
 TOP=..
 include ${TOP}/Makefile.config
 
-SUBDIR=	compat \
-	error \
+SUBDIR=	error \
 	mapedit \
 	widget \
 	monitor \
