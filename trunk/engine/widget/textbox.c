@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.82 2005/01/26 02:40:24 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.83 2005/02/07 05:38:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -59,8 +59,9 @@ enum {
 	CURSOR_COLOR
 };
 
-static void textbox_mousebuttondown(int, union evarg *);
-static void textbox_key(int, union evarg *);
+static void mousebuttondown(int, union evarg *);
+static void keydown(int, union evarg *);
+static void keyup(int, union evarg *);
 
 struct textbox *
 textbox_new(void *parent, const char *label)
@@ -71,6 +72,67 @@ textbox_new(void *parent, const char *label)
 	textbox_init(textbox, label);
 	object_attach(parent, textbox);
 	return (textbox);
+}
+
+static int
+process_key(struct textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
+{
+	int i;
+	int rv = 0;
+
+	for (i = 0;; i++) {
+		const struct keycode *kcode = &keycodes[i];
+		
+		if (kcode->key != SDLK_LAST &&
+		   (kcode->key != keysym || kcode->func == NULL))
+			continue;
+		
+		if (kcode->key == SDLK_LAST ||
+		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
+		  	if (kcode->clr_compo) {
+				tb->compose = 0;
+			}
+			event_post(NULL, tb, "textbox-prechg", NULL);
+			rv = kcode->func(tb, keysym, keymod, kcode->arg,
+			    unicode);
+			event_post(NULL, tb, "textbox-postchg", NULL);
+			break;
+		}
+	}
+	return (rv);
+}
+
+static Uint32
+repeat_expire(void *obj, Uint32 ival, void *arg)
+{
+	struct textbox *tb = obj;
+
+	dprintf("repeat %d\n", tb->repeat.key);
+	if (process_key(tb, tb->repeat.key, tb->repeat.mod,
+	    tb->repeat.unicode) == 0) {
+		return (0);
+	}
+	return (kbd_repeat);
+}
+
+static Uint32
+delay_expire(void *obj, Uint32 ival, void *arg)
+{
+	struct textbox *tb = obj;
+
+	timeout_replace(tb, &tb->repeat_to, kbd_repeat);
+	return (0);
+}
+
+static void
+lostfocus(int argc, union evarg *argv)
+{
+	struct textbox *tb = argv[0].p;
+
+	lock_timeout(tb);
+	timeout_del(tb, &tb->delay_to);
+	timeout_del(tb, &tb->repeat_to);
+	unlock_timeout(tb);
 }
 
 void
@@ -104,10 +166,15 @@ textbox_init(struct textbox *tbox, const char *label)
 	} else {
 		tbox->label = NULL;
 	}
+	
+	timeout_set(&tbox->repeat_to, repeat_expire, NULL, 0);
+	timeout_set(&tbox->delay_to, delay_expire, NULL, 0);
 
-	event_new(tbox, "window-keydown", textbox_key, NULL);
-	event_new(tbox, "window-mousebuttondown", textbox_mousebuttondown,
-	    NULL);
+	event_new(tbox, "window-keydown", keydown, NULL);
+	event_new(tbox, "window-keyup", keyup, NULL);
+	event_new(tbox, "window-mousebuttondown", mousebuttondown, NULL);
+	event_new(tbox, "widget-lostfocus", lostfocus, NULL);
+	event_new(tbox, "widget-hidden", lostfocus, NULL);
 }
 
 void
@@ -200,48 +267,63 @@ textbox_scale(void *p, int rw, int rh)
 }
 
 static void
-textbox_key(int argc, union evarg *argv)
+keydown(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 	SDLKey keysym = (SDLKey)argv[1].i;
 	int keymod = argv[2].i;
 	Uint32 unicode = (Uint32)argv[3].i;
-	int i;
 
 	if (!tbox->writeable)
 		return;
 
-	if (keysym == SDLK_TAB) {
+	if (keysym == SDLK_TAB ||
+	    keysym == SDLK_ESCAPE) {
 		return;
 	}
 	if (keysym == SDLK_RETURN) {
+		lock_timeout(tbox);
+		timeout_del(tbox, &tbox->delay_to);
+		timeout_del(tbox, &tbox->repeat_to);
+		unlock_timeout(tbox);
+
 		event_post(NULL, tbox, "textbox-return", NULL);
 		WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 		return;
 	}
 
-	for (i = 0;; i++) {
-		const struct keycode *kcode = &keycodes[i];
-		
-		if (kcode->key != SDLK_LAST &&
-		   (kcode->key != keysym || kcode->func == NULL))
-			continue;
-		
-		if (kcode->key == SDLK_LAST ||
-		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
-		  	if (kcode->clr_compo) {
-				tbox->compose = 0;
-			}
-			event_post(NULL, tbox, "textbox-prechg", NULL);
-			kcode->func(tbox, keysym, keymod, kcode->arg, unicode);
-			event_post(NULL, tbox, "textbox-postchg", NULL);
-			break;
-		}
+	tbox->repeat.key = keysym;
+	tbox->repeat.mod = keymod;
+	tbox->repeat.unicode = unicode;
+
+	lock_timeout(tbox);
+	timeout_del(tbox, &tbox->delay_to);
+	timeout_del(tbox, &tbox->repeat_to);
+	if (process_key(tbox, keysym, keymod, unicode) == 1) {
+		timeout_replace(tbox, &tbox->delay_to, kbd_delay);
+	}
+	unlock_timeout(tbox);
+}
+
+static void
+keyup(int argc, union evarg *argv)
+{
+	struct textbox *tbox = argv[0].p;
+	SDLKey keysym = (SDLKey)argv[1].i;
+	int keymod = argv[2].i;
+	Uint32 unicode = (Uint32)argv[3].i;
+
+	if ((keysym == tbox->repeat.key && unicode == tbox->repeat.unicode) ||
+	    (keysym == SDLK_RETURN)) {
+		lock_timeout(tbox);
+		timeout_del(tbox, &tbox->repeat_to);
+		timeout_del(tbox, &tbox->delay_to);
+		unlock_timeout(tbox);
 	}
 }
 
 static void
-textbox_mousebuttondown(int argc, union evarg *argv)
+mousebuttondown(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 //	int x = argv[2].i;
