@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.242 2005/02/19 10:20:06 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.243 2005/02/22 04:19:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -128,7 +128,7 @@ focus_existing(const char *name)
 		if (strlen(OBJECT(owin)->name) >= 4 &&
 		    strcmp(OBJECT(owin)->name+4, name) == 0) {
 			window_show(owin);
-			window_focus(owin);
+			view->focus_win = owin;
 		    	return (1);
 		}
 	}

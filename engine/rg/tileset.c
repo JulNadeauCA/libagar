@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.12 2005/02/21 09:43:00 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.13 2005/02/22 08:44:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -625,9 +625,10 @@ edit_tiles(int argc, union evarg *argv)
 		    strcmp(it->class, "tile") != 0) {
 			continue;
 		}
-		win = tile_edit(ts, t);
-		window_attach(pwin, win);
-		window_show(win);
+		if ((win = tile_edit(ts, t)) != NULL) {
+			window_attach(pwin, win);
+			window_show(win);
+		}
 	}
 	pthread_mutex_unlock(&ts->lock);
 }
