@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.76 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.77 2002/04/28 11:05:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -328,6 +328,7 @@ node_reinit(struct node *node)
 	node->nanims = 0;
 }
 
+/* Inline since this is called from draw functions with many variables. */
 static __inline__ void
 map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
