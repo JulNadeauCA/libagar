@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.6 2002/07/20 19:10:18 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.7 2002/07/23 23:49:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -41,6 +41,7 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/primitive.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -60,10 +61,15 @@ static void	 objq_scaled(int, union evarg *);
 static void	 objq_event(int, union evarg *);
 
 enum {
-	OBJQ_SELECT_BUTTON =		1,
-	OBJQ_SCROLL_BUTTON_MASK =	(SDL_BUTTON_MMASK|SDL_BUTTON_RMASK),
-	OBJQ_SCROLLUP_KEY =		SDLK_PAGEUP,
-	OBJQ_SCROLLDOWN_KEY =		SDLK_PAGEDOWN
+	SELECTION_COLOR,
+	GRID_COLOR
+};
+
+enum {
+	SELECT_BUTTON =		1,
+	SCROLL_BUTTON_MASK =	(SDL_BUTTON_MMASK|SDL_BUTTON_RMASK),
+	SCROLL_LEFT_KEY =	SDLK_LEFT,
+	SCROLL_RIGHT_KEY =	SDLK_RIGHT
 };
 
 struct objq *
@@ -85,6 +91,9 @@ void
 objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 {
 	widget_init(&oq->wid, "objq", "widget", &objq_ops, rw, rh);
+	widget_map_color(oq, SELECTION_COLOR, "objq-selection", 0, 200, 0);
+	widget_map_color(oq, GRID_COLOR, "objq-grid", 208, 208, 208);
+	
 	oq->med = med;
 	oq->offs = 0;
 	oq->flags = (flags != 0) ? flags : OBJQ_HORIZ;
@@ -161,7 +170,7 @@ objq_event(int argc, union evarg *argv)
 		oq->mouse.x = x;
 
 		ms = SDL_GetMouseState(NULL, NULL);
-		if (ms & OBJQ_SCROLL_BUTTON_MASK) {
+		if (ms & SCROLL_BUTTON_MASK) {
 			if (oq->mouse.x > ox &&		/* Down */
 			    --oq->offs < 0) {
 				oq->offs = med->neobjs - 1;
@@ -176,7 +185,7 @@ objq_event(int argc, union evarg *argv)
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
 		x = argv[3].i;
-		if (button != OBJQ_SELECT_BUTTON) {
+		if (button != SELECT_BUTTON) {
 			break;
 		}
 		curoffs = oq->offs + x/TILEW;
@@ -191,8 +200,6 @@ objq_event(int argc, union evarg *argv)
 		}
 		TAILQ_INDEX(eob, &med->eobjsh, eobjs, curoffs);
 		objq_select(oq, med, eob);
-		break;
-	case WINDOW_KEYDOWN:
 		break;
 	}
 }
@@ -251,9 +258,13 @@ objq_draw(void *p)
 		WIDGET_DRAW(oq, SPRITE(eob->pobj, 0), x, 0);
 
 		if (med->curobj == eob) {
-			WIDGET_DRAW(oq, SPRITE(med, MAPEDIT_CIRQSEL), x, 0);
+			primitives.square(oq, x, 0, TILEW, TILEH,
+			    WIDGET_COLOR(oq, SELECTION_COLOR));
+			primitives.square(oq, x+1, 1, TILEW-1, TILEH-1,
+			    WIDGET_COLOR(oq, SELECTION_COLOR));
 		} else {
-			WIDGET_DRAW(oq, SPRITE(med, MAPEDIT_GRID), x, 0);
+			primitives.square(oq, x, 0, TILEW, TILEH,
+			    WIDGET_COLOR(oq, GRID_COLOR));
 		}
 nextref:
 		if (++sn >= med->neobjs) {
