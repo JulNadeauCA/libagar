@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.84 2004/03/12 02:51:19 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.85 2004/03/17 04:03:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -105,9 +105,9 @@ case 4:					\
 
 #define VIEW_INSIDE_CLIP_RECT(s, ax, ay)		\
 	((ax) >= (s)->clip_rect.x &&			\
-	 (ax) <= (s)->clip_rect.x+(s)->clip_rect.w &&	\
+	 (ax) < (s)->clip_rect.x+(s)->clip_rect.w &&	\
 	 (ay) >= (s)->clip_rect.y &&			\
-	 (ay) <= (s)->clip_rect.y+(s)->clip_rect.h)
+	 (ay) < (s)->clip_rect.y+(s)->clip_rect.h)
 
 /* The surface must be locked if it is a hardware surface. */
 #define VIEW_PUT_PIXEL(s, vx, vy, c) do {				\
