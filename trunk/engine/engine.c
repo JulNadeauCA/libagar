@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.91 2003/02/10 03:59:02 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.92 2003/02/26 02:04:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/serialization.h>
+#include <config/threads.h>
 #include <config/have_x11.h>
 
 #include "compat/setenv.h"

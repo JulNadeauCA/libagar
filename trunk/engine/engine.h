@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.53 2003/02/13 02:12:47 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.54 2003/02/26 02:04:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -7,7 +7,7 @@
 #define ENGINE_VERSION	"1.0-beta"
 
 #include <config/debug.h>
-#include <config/serialization.h>
+#include <config/threads.h>
 #include <config/have_opengl.h>
 
 #if !defined(__OpenBSD__)

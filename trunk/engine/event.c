@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.135 2003/02/04 03:26:47 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.136 2003/02/26 02:04:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/serialization.h>
+#include <config/threads.h>
 
 #include "engine.h"
 #include "map.h"
