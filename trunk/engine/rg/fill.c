@@ -151,17 +151,17 @@ fill_edit(void *p, struct tileview *tv)
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_FRAME);
 	{
 		label_new(box, LABEL_STATIC, _("Solid color:"));
-		pal = palette_new(box, PALETTE_RGBA, tv->tile->su->format);
+		pal = palette_new(box, PALETTE_RGBA, tv->ts->fmt);
 		widget_bind(pal, "color", WIDGET_UINT32, &f->f_solid.c);
 	}
 	
 	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_FRAME);
 	{
 		label_new(box, LABEL_STATIC, _("Gradient colors:"));
-		pal = palette_new(box, PALETTE_RGBA, tv->tile->su->format);
+		pal = palette_new(box, PALETTE_RGBA, tv->ts->fmt);
 		widget_bind(pal, "color", WIDGET_UINT32, &f->f_gradient.c1);
 
-		pal = palette_new(box, PALETTE_RGBA, tv->tile->su->format);
+		pal = palette_new(box, PALETTE_RGBA, tv->ts->fmt);
 		widget_bind(pal, "color", WIDGET_UINT32, &f->f_gradient.c2);
 	}
 	return (win);
@@ -175,8 +175,8 @@ fill_apply(void *p, struct tile *t, int x, int y)
 	Uint8 r1, g1, b1, a1;
 	Uint8 r2, g2, b2, a2;
 	
-	SDL_GetRGBA(fi->f_gradient.c1, su->format, &r1, &g1, &b1, &a1);
-	SDL_GetRGBA(fi->f_gradient.c2, su->format, &r2, &g2, &b2, &a2);
+	SDL_GetRGBA(fi->f_gradient.c1, t->ts->fmt, &r1, &g1, &b1, &a1);
+	SDL_GetRGBA(fi->f_gradient.c2, t->ts->fmt, &r2, &g2, &b2, &a2);
 
 	switch (fi->type) {
 	case FILL_SOLID:
@@ -191,7 +191,7 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				Uint32 c;
 				Uint8 a = (su->h-y)*255/su->h;
 
-				c = SDL_MapRGBA(su->format,
+				c = SDL_MapRGBA(t->ts->fmt,
 				    (((r1 - r2) * a) >> 8) + r2,
 				    (((g1 - g2) * a) >> 8) + g2,
 				    (((b1 - b2) * a) >> 8) + b2,
