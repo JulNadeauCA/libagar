@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.4 2002/01/30 17:51:19 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.5 2002/02/05 05:59:18 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -21,10 +21,11 @@ struct editobj {
 	int	nsprites;
 	int	nanims;
 
-	SLIST_ENTRY(editobj) eobjs;	/* Editable object list */
+	TAILQ_ENTRY(editobj) eobjs;	/* Editable object list */
+	pthread_mutex_t	lock;		/* Lock on object list */
 };
 
-SLIST_HEAD(eobjs_head, editobj);
+TAILQ_HEAD(eobjs_head, editobj);
 
 struct mapedit {
 	struct	object obj;
