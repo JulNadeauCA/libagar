@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.23 2002/09/12 09:35:00 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.24 2002/09/12 09:48:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -108,6 +108,10 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->tileh = TILEH;
 	mv->zoom = 100;
 	mv->prop_style = -1; 
+
+	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
+		fatal("NULL med\n");
+	}
 
 	widget_map_color(mv, BORDER_COLOR, "mapview-border",
 	    200, 200, 200);
