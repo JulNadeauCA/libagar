@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.1 2004/05/10 02:41:03 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.2 2004/05/10 23:49:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -141,19 +141,20 @@ timeout_process(Uint32 t)
 	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
 		object_lock(ob);
 		/*
-		 * Loop checking whether the first element of the queue has
-		 * expired, until we find an element that has not expired.
+		 * Loop comparing the timestamp of the first element with
+		 * the current time for as long as the timestamp is in
+		 * the past.
 		 */
 pop:
 		if (!CIRCLEQ_EMPTY(&ob->timeouts)) {
 			to = CIRCLEQ_FIRST(&ob->timeouts);
 			if ((int)(to->ticks - t) <= 0) {
+				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+				TAILQ_REMOVE(&timeout_objq, ob, tobjs);
 				to->running++;
 				rv = to->fn(ob, to->ival, to->arg);
 				to->running = 0;
-				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-				TAILQ_REMOVE(&timeout_objq, ob, tobjs);
-				if (rv >= 0) {
+				if (rv > 0) {
 					to->ival = rv;
 					timeout_add(ob, to, rv);
 				}
