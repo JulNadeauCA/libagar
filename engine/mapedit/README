@@ -20,7 +20,6 @@ PgDn:		Scroll tile list down.
 'D':		Pop a reference from the node's stack.
 'S':		Save this map to <mapname>.map.
 'L':		Load this map from <mapname>.map.
-'I':		Initialize an empty map.
 'O':		Position the cursor on the map origin.
 'X':		Print the current tile stack.
 
@@ -36,9 +35,7 @@ Shift+'S':	Toggle the 'slow' attribute.
 Shift+'H':	Toggle the 'haste' attribute.
 
 Ctrl+'I':	Fill the map with the current tile.
-Ctrl+'T':	Toggle the tile list window.
-Ctrl+'S':	Toggle the tile stack window.
-Ctrl+'O':	Toggle the object list window.
+Ctrl+'N':	Initialize an empty map.
 Ctrl+'G':	Toggle the map grid.
 Ctrl+'P':	Toggle the node property sprites.
 
