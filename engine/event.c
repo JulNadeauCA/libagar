@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.169 2004/03/10 16:58:31 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.170 2004/03/12 02:47:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -385,52 +385,6 @@ event_dispatch(SDL_Event *ev)
 
 	pthread_mutex_unlock(&view->lock);
 }
-
-#define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
-	if ((eev)->argc >= EVENT_ARGS_MAX-1) {			\
-		fatal("too many evh args");			\
-	}							\
-	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
-} while (0)
-
-#define EVENT_PUSH_ARG(ap, fmt, eev)				\
-	switch ((fmt)) {					\
-	case 'i':						\
-	case 'o':						\
-	case 'u':						\
-	case 'x':						\
-	case 'X':						\
-		EVENT_INSERT_ARG((eev), (ap), i, int);		\
-		break;						\
-	case 'D':						\
-	case 'O':						\
-	case 'U':						\
-		EVENT_INSERT_ARG((eev), (ap), li, long int);	\
-		break;						\
-	case 'e':						\
-	case 'E':						\
-	case 'f':						\
-	case 'g':						\
-	case 'G':						\
-		EVENT_INSERT_ARG((eev), (ap), f, double);	\
-		break;						\
-	case 'c':						\
-		EVENT_INSERT_ARG((eev), (ap), c, int);		\
-		break;						\
-	case 's':						\
-		EVENT_INSERT_ARG((eev), (ap), s, char *);	\
-		break;						\
-	case 'p':						\
-		EVENT_INSERT_ARG((eev), (ap), p, void *);	\
-		break;						\
-	case ' ':						\
-	case ',':						\
-	case ';':						\
-	case '%':						\
-		break;						\
-	default:						\
-		fatal("bad arg");				\
-	}
 
 /* Register a new event handler. */
 struct event *
