@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.4 2002/05/25 09:03:17 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.5 2002/05/26 00:49:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 #include "textbox.h"
 #include "keycodes.h"
 
-extern TTF_Font *font;		/* text */
+extern TTF_Font *font;		/* XXX pref */
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
 static const struct widget_ops textbox_ops = {
@@ -188,24 +188,31 @@ textbox_draw(void *p)
 		}
 		if (i < tw && tbox->text[i] != '\0') {
 			SDL_Surface *text_s;
-			char str[2];
+			char c, str[2];
 
-			str[0] = tbox->text[i];
-			str[1] = '\0';
-#if 0
-	     		dprintf("render '%s'\n", str);
-#endif
+			c = tbox->text[i];
 
-			/* Character */
-			/* XXX cache! */
-			text_s = TTF_RenderText_Solid(font, str, white);
-			if (text_s == NULL) {
-				fatal("TTF_RenderTextSolid: %s\n",
-				    SDL_GetError());
+			if (c >= (char)KEYCODES_CACHE_START &&
+			    c <= (char)KEYCODES_CACHE_END &&
+			    keycodes_cache[(int)c-(int)KEYCODES_CACHE_START]
+			    != NULL) {
+				text_s = keycodes_cache[(int)c -
+				    (int)KEYCODES_CACHE_START];
+				WIDGET_DRAW(tbox, text_s, x, y);
+				x += text_s->w;
+			} else {
+				str[0] = (char)c;
+				str[1] = '\0';
+				text_s = TTF_RenderText_Solid(font, str, white);
+				if (text_s == NULL) {
+					warning("TTF_RenderTextSolid: %s\n",
+					    SDL_GetError());
+				} else {
+					WIDGET_DRAW(tbox, text_s, x, y);
+					x += text_s->w;
+					SDL_FreeSurface(text_s);
+				}
 			}
-			WIDGET_DRAW(tbox, text_s, x, y);
-			x += text_s->w;
-			SDL_FreeSurface(text_s);
 		}
 	}
 }
