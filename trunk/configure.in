@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.49 2002/12/31 05:40:49 vedge Exp $
+# $Csoft: configure.in,v 1.50 2002/12/31 07:31:44 vedge Exp $
 # Public domain
 
 makeout(Makefile.config);
@@ -56,6 +56,9 @@ fi
 # OpenGL support?
 if [ "${with_gl}" != "no" ]; then
 	check(opengl);
+	if [ "${HAVE_OPENGL}" = "yes" ]; then
+		mdefine(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS");
+	fi
 fi
 
 # Debugging?
