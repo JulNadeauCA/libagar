@@ -1,7 +1,8 @@
-/*	$Csoft$	*/
+/*	$Csoft: malloc.h,v 1.1 2004/03/18 21:27:47 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifdef DEBUG
+#ifndef _AGAR_ERROR_MALLOC_H_
+#define _AGAR_ERROR_MALLOC_H_
 #include "begin_code.h"
 
 enum {
@@ -46,4 +47,4 @@ void		 error_free(void *, int);
 __END_DECLS
 
 #include "close_code.h"
-#endif /* DEBUG */
+#endif /* _AGAR_ERROR_MALLOC_H_ */
