@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.23 2002/02/21 02:19:25 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.24 2002/02/25 09:05:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -302,7 +302,7 @@ object_unlink(void *p)
 }
 
 void
-increase(int *variable, int val, int bounds)
+increase_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
 {
 	*variable += val;
 	if (*variable > bounds) {
@@ -311,7 +311,7 @@ increase(int *variable, int val, int bounds)
 }
 
 void
-decrease(int *variable, int val, int bounds)
+decrease_uint32(Uint32 *variable, Uint32 val, Uint32 bounds)
 {
 	*variable -= val;
 	if (*variable < bounds) {
