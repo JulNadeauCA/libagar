@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.71 2002/08/23 05:18:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.72 2002/08/24 04:10:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -234,10 +234,10 @@ event_loop(void)
 				}
 
 				pthread_mutex_lock(&m->lock);
-				rootmap_animate(m);
+				rootmap_animate();
 				if (m->redraw != 0) {
 					dprintf("tile: redraw\n");
-					rootmap_draw(m);
+					rootmap_draw();
 					COMPUTE_DELTA(delta, ntick);
 					m->redraw = 0;
 				}
