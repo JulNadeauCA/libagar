@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.6 2003/06/25 00:31:36 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.7 2003/06/25 03:53:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -94,8 +94,8 @@ audio_unused(struct audio *audio)
 int
 audio_fetch(void *p, const char *key)
 {
+	char path[MAXPATHLEN];
 	struct object *ob = p;
-	char *path = NULL;
 	struct audio *audio = NULL;
 	struct den *den;
 
@@ -112,7 +112,8 @@ audio_fetch(void *p, const char *key)
 		goto out;
 	}
 
-	if ((path = config_search_file("load-path", key, "den")) == NULL)
+	if (config_search_file("load-path", key, "den", path, sizeof(path))
+	    == -1)
 		goto fail;
 
 	audio = Malloc(sizeof(struct audio));
@@ -123,13 +124,16 @@ audio_fetch(void *p, const char *key)
 	audio->used = 1;
 	pthread_mutex_init(&audio->used_lock, NULL);
 
-	if ((den = den_open(path, DEN_READ)) == NULL) {
+	if ((den = den_open(path, DEN_READ)) == NULL)
 		goto fail;
-	}
 #if 0
 	for (i = 0; i < den->nmembers; i++) {
-		if (xcf_load(den->buf, den->members[i].offs, audio) == -1)
-			fatal("loading xcf #%d: %s", i, error_get());
+		if (wav_load(den->buf, den->members[i].offs, audio) == -1)
+			fatal("loading wav #%d: %s", i, error_get());
+	}
+	for (i = 0; i < den->nmembers; i++) {
+		if (ogg_load(den->buf, den->members[i].offs, audio) == -1)
+			fatal("loading ogg #%d: %s", i, error_get());
 	}
 #endif
 	den_close(den);

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.113 2003/07/04 12:33:48 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.114 2003/07/08 00:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -87,13 +87,12 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	error_init();
 
 #ifdef THREADS
-	/* Initialize default recursive mutex attributes. */
 	pthread_mutexattr_init(&recursive_mutexattr);
 	pthread_mutexattr_settype(&recursive_mutexattr,
 	    PTHREAD_MUTEX_RECURSIVE);
 
-	/* Initialize the global linkage lock. */
 	pthread_mutex_init(&linkage_lock, &recursive_mutexattr);
+	pthread_mutex_init(&gfxq_lock, &recursive_mutexattr);
 #endif
 
 #ifdef HAVE_PROGNAME
@@ -232,6 +231,7 @@ engine_destroy(void)
 	object_destroy(config);
 	free(config);
 
+	pthread_mutex_destroy(&gfxq_lock);
 #if 0
 	pthread_mutex_destroy(&linkage_lock);	/* XXX */
 #endif
