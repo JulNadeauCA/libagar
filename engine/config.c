@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.73 2003/05/18 00:16:57 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.74 2003/05/22 05:42:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -222,21 +222,21 @@ config_window(struct config *con)
 	{
 		char *s;
 
-		tbox = textbox_new(reg, "  User datadir: ", 0, 100, -1);
+		tbox = textbox_new(reg, "  User datadir: ");
 		s = prop_get_string(config, "path.user_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.user_data_dir");
 	
-		tbox = textbox_new(reg, "System datadir: ", 0, 100, -1);
+		tbox = textbox_new(reg, "System datadir: ");
 		s = prop_get_string(config, "path.sys_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.sys_data_dir");
 		
-		tbox = textbox_new(reg, "Data file path: ", 0, 100, -1);
+		tbox = textbox_new(reg, "Data file path: ");
 		s = prop_get_string(config, "path.data_path");
 		textbox_printf(tbox, "%s", s);
 		free(s);
@@ -247,12 +247,14 @@ config_window(struct config *con)
 	/* Resolution */
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
-		tbox = textbox_new(reg, "Width : ", 0, 50, -1);
+		tbox = textbox_new(reg, "Width : ");
+		WIDGET(tbox)->rw = 50;
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.w");
 
-		tbox = textbox_new(reg, "Height: ", 0, 50, -1);
+		tbox = textbox_new(reg, "Height: ");
+		WIDGET(tbox)->rw = 50;
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.h");

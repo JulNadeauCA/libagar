@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.7 2003/05/20 12:05:13 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.8 2003/05/22 08:30:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -204,7 +204,8 @@ layedit_init(struct mapview *mv)
 		struct textbox *tb;
 		struct button *bu;
 
-		tb = textbox_new(reg, "New layer: ", 0, 75, -1);
+		tb = textbox_new(reg, "New layer: ");
+		WIDGET(tb)->rw = 75;
 		event_new(tb, "textbox-return", layedit_push, "%p, %p", mv, tb);
 
 		bu = button_new(reg, "Push", NULL, 0, 25, -1);
@@ -216,7 +217,8 @@ layedit_init(struct mapview *mv)
 	{
 		struct button *bu;
 
-		rename_tb = textbox_new(reg, "-> ", 0, 75, -1);
+		rename_tb = textbox_new(reg, "-> ");
+		WIDGET(rename_tb)->rw = 75;
 		event_new(rename_tb, "textbox-return",
 		    layedit_rename, "%p, %p", mv, rename_tb);
 

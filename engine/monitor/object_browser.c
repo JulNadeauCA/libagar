@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.28 2003/04/12 01:40:53 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.29 2003/05/18 00:17:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -149,7 +149,7 @@ props_show(int argc, union evarg *argv)
 			struct button *bu;
 
 			lab_name = label_new(reg, 100, 30, "");
-			tb_set = textbox_new(reg, "Value: ", 0, 100, -1);
+			tb_set = textbox_new(reg, "Value: ");
 
 			event_new(tl, "tlist-changed",
 			    props_update, "%p, %p", lab_name, tb_set);
@@ -291,7 +291,7 @@ props_update(int argc, union evarg *argv)
 	int selected = argv[4].i;
 	struct prop *prop = it->p1;
 	
-	tb_set->flags &= ~(TEXTBOX_READONLY);
+	textbox_set_writeable(tb_set, 1);
 
 	if (selected) {
 		label_printf(lab_name, "%s", prop->key);
@@ -300,19 +300,19 @@ props_update(int argc, union evarg *argv)
 			textbox_printf(tb_set, "%d", prop->data.i);
 			break;
 		case PROP_UINT8:
-			textbox_printf(tb_set, "%d", prop->data.u8);
+			textbox_printf(tb_set, "%u", prop->data.u8);
 			break;
 		case PROP_SINT8:
 			textbox_printf(tb_set, "%d", prop->data.s8);
 			break;
 		case PROP_UINT16:
-			textbox_printf(tb_set, "%d", prop->data.u16);
+			textbox_printf(tb_set, "%u", prop->data.u16);
 			break;
 		case PROP_SINT16:
 			textbox_printf(tb_set, "%d", prop->data.s16);
 			break;
 		case PROP_UINT32:
-			textbox_printf(tb_set, "%d", prop->data.u32);
+			textbox_printf(tb_set, "%u", prop->data.u32);
 			break;
 		case PROP_SINT32:
 			textbox_printf(tb_set, "%d", prop->data.s32);
@@ -330,7 +330,7 @@ props_update(int argc, union evarg *argv)
 			break;
 		case PROP_POINTER:
 			textbox_printf(tb_set, "%p", prop->data.p);
-			tb_set->flags |= TEXTBOX_READONLY;
+			textbox_set_writeable(tb_set, 0);
 			break;
 		case PROP_BOOL:
 			textbox_printf(tb_set, "%s",
@@ -380,6 +380,8 @@ props_change(int argc, union evarg *argv)
 	struct object *ob = argv[3].p;
 	struct tlist_item *it;
 	struct prop *prop;
+	struct widget_binding *stringb;
+	char *s;
 
 	it = tlist_item_selected(propstl);
 	if (it == NULL) {
@@ -389,44 +391,45 @@ props_change(int argc, union evarg *argv)
 	prop = it->p1;
 
 	pthread_mutex_lock(&tb_set->text.lock);
+	stringb = widget_binding_get_locked(tb_set, "string", &s);
 
 	switch (prop->type) {
 	case PROP_INT:
-		prop_set_int(ob, prop->key, atoi(tb_set->text.s));
+		prop_set_int(ob, prop->key, atoi(s));
 		break;
 	case PROP_UINT8:
-		prop_set_uint8(ob, prop->key, (Uint8)atoi(tb_set->text.s));
+		prop_set_uint8(ob, prop->key, (Uint8)atoi(s));
 		break;
 	case PROP_SINT8:
-		prop_set_sint8(ob, prop->key, (Sint8)atoi(tb_set->text.s));
+		prop_set_sint8(ob, prop->key, (Sint8)atoi(s));
 		break;
 	case PROP_UINT16:
-		prop_set_uint16(ob, prop->key, (Uint16)atoi(tb_set->text.s));
+		prop_set_uint16(ob, prop->key, (Uint16)atoi(s));
 		break;
 	case PROP_SINT16:
-		prop_set_sint16(ob, prop->key, (Sint16)atoi(tb_set->text.s));
+		prop_set_sint16(ob, prop->key, (Sint16)atoi(s));
 		break;
 	case PROP_UINT32:
-		prop_set_uint32(ob, prop->key, (Uint32)atoi(tb_set->text.s));
+		prop_set_uint32(ob, prop->key, (Uint32)atoi(s));
 		break;
 	case PROP_SINT32:
-		prop_set_sint32(ob, prop->key, (Sint32)atoi(tb_set->text.s));
+		prop_set_sint32(ob, prop->key, (Sint32)atoi(s));
 		break;
 #ifdef FLOATING_POINT
 	case PROP_FLOAT:
-		prop_set_float(ob, prop->key, (float)atof(tb_set->text.s));
+		prop_set_float(ob, prop->key, (float)atof(s));
 		break;
 	case PROP_DOUBLE:
-		prop_set_double(ob, prop->key, atof(tb_set->text.s));
+		prop_set_double(ob, prop->key, atof(s));
 		break;
 #endif
 	case PROP_STRING:
-		prop_set_string(ob, prop->key, tb_set->text.s);
+		prop_set_string(ob, prop->key, s);
 		break;
 	case PROP_BOOL:
-		if (strcasecmp(tb_set->text.s, "true") == 0) {
+		if (strcasecmp(s, "true") == 0) {
 			prop_set_bool(ob, prop->key, 1);
-		} else if (strcasecmp(tb_set->text.s, "false") == 0) {
+		} else if (strcasecmp(s, "false") == 0) {
 			prop_set_bool(ob, prop->key, 0);
 		} else {
 			text_msg("Error", "Bad boolean string.");
@@ -436,7 +439,8 @@ props_change(int argc, union evarg *argv)
 		text_msg("Error", "Read-only property type.");
 		break;
 	}
-	
+
+	widget_binding_unlock(stringb);
 	pthread_mutex_unlock(&tb_set->text.lock);
 }
 
@@ -446,10 +450,10 @@ object_browser_window(void)
 	struct window *win;
 	struct region *reg;
 
-	if ((win = window_generic_new(251, 259, "monitor")) == NULL) {
+	if ((win = window_generic_new(251, 259, "monitor")) == NULL)
 		return (NULL);
-	}
 	window_set_caption(win, "Objects");
+
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	{
 		struct tlist *tl;
