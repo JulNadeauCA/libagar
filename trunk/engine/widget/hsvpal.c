@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.27 2005/01/25 01:18:57 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.1 2005/02/16 14:47:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -66,6 +66,92 @@ hsvpal_new(void *parent, SDL_PixelFormat *fmt)
 	return (pal);
 }
 
+static __inline__ void
+update_h(struct hsvpal *pal, int x, int y)
+{
+	float h;
+
+	h = atan2((float)y, (float)x);
+	if (h < 0) {
+		h += 2*M_PI;
+	}
+	widget_set_float(pal, "hue", h/(2*M_PI)*360.0);
+}
+
+static void
+update_sv(struct hsvpal *pal, int ax, int ay)
+{
+	float s, v;
+	int x, y;
+
+	y = ay - pal->triangle.y;
+	x = ax - pal->triangle.x;
+	if (x < -y/2) { x = -y/2; }
+	if (x > y) { x = y; }
+
+	s = 1.0 - (float)y/(float)pal->triangle.h;
+	v = 1.0 - (float)(x + y/2)/(float)pal->triangle.h;
+
+	if (s < 0.0) { s = 0.00001; }
+	else if (s > 1.0) { s = 1.0; }
+
+	if (v < 0.0) { v = 0.0001; }
+	else if (v > 1.0) { v = 1.0; }
+
+	widget_set_float(pal, "saturation", s);
+	widget_set_float(pal, "value", v);
+}
+
+static void
+mousebuttondown(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[0].p;
+	int btn = argv[1].i;
+	int x = argv[2].i - pal->circle.x;
+	int y = argv[3].i - pal->circle.y;
+	float r = hypot((float)x, (float)y);
+
+	if (btn == SDL_BUTTON_LEFT) {
+		if (r > (float)pal->circle.rin) {
+			update_h(pal, x, y);
+			pal->state = HSVPAL_SEL_H;
+		} else {
+			update_sv(pal, argv[2].i, argv[3].i);
+			pal->state = HSVPAL_SEL_SV;
+		}
+		widget_focus(pal);
+	}
+}
+
+static void
+mousebuttonup(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[0].p;
+
+	pal->state = HSVPAL_SEL_NONE;
+}
+
+static void
+mousemotion(int argc, union evarg *argv)
+{
+	struct hsvpal *pal = argv[0].p;
+	int x = argv[1].i;
+	int y = argv[2].i;
+
+	switch (pal->state) {
+	case HSVPAL_SEL_NONE:
+		break;
+	case HSVPAL_SEL_H:
+		update_h(pal,
+		    x - pal->circle.x,
+		    y - pal->circle.y);
+		break;
+	case HSVPAL_SEL_SV:
+		update_sv(pal, x, y);
+		break;
+	}
+}
+
 void
 hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 {
@@ -85,6 +171,11 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	pal->v = 0.0;
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
+	pal->state = HSVPAL_SEL_NONE;
+
+	event_new(pal, "window-mousebuttonup", mousebuttonup, NULL);
+	event_new(pal, "window-mousebuttondown", mousebuttondown, NULL);
+	event_new(pal, "window-mousemotion", mousemotion, NULL);
 }
 
 void
@@ -113,27 +204,17 @@ hsvpal_scale(void *p, int w, int h)
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
 	pal->triangle.h = pal->circle.rin*sin((37.0/360.0)*(2*M_PI)) -
 			  pal->circle.rin*sin((270.0/360.0)*(2*M_PI));
-}
-
-static __inline__ void
-car2pol(double x, double y, double *rho, double *theta)
-{
-	*rho = hypot(x, y);
-	*theta = atan2(y, x);
-}
-
-static __inline__ void
-pol2car(double r, double theta, double *x, double *y)
-{
-	*x = r*cos(theta);
-	*y = r*sin(theta);
+	
+	pal->selcircle_r = pal->circle.width/2 - 4;
 }
 
 void
 hsvpal_draw(void *p)
 {
 	struct hsvpal *pal = p;
-	float hv = widget_get_float(pal, "hue")/360.0 * 2*M_PI;
+	float cur_h = widget_get_float(pal, "hue")/360.0 * (2*M_PI);
+	float cur_s = widget_get_float(pal, "saturation");
+	float cur_v = widget_get_float(pal, "value");
 	float h;
 	Uint32 pc;
 	Uint8 r, g, b;
@@ -162,13 +243,13 @@ hsvpal_draw(void *p)
 	for (y = 0; y < pal->triangle.h; y += 2) {
 		float sat = (float)(pal->triangle.h - y) /
 		            (float)(pal->triangle.h);
-		int w = y;
 
-		for (x = 0; x < w; x++) {
-			prim_hsv2rgb(hv/(2*M_PI), sat,
-			    1.0-((float)x/(float)pal->triangle.h),
+		for (x = 0; x < y; x++) {
+			prim_hsv2rgb(cur_h/(2*M_PI), sat,
+			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &r, &g, &b);
 			pc = SDL_MapRGB(vfmt, r, g, b);
+
 			widget_put_pixel(pal,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y,
@@ -182,15 +263,26 @@ hsvpal_draw(void *p)
 
 	SDL_UnlockSurface(view->v);
 
+	/* Indicate the current selection. */
 	primitives.circle(pal,
-	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*cos(hv),
-	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*sin(hv),
-	    pal->circle.width/2 - 4,
+	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*cos(cur_h),
+	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*sin(cur_h),
+	    pal->selcircle_r,
+	    CIRCLE_COLOR);
+	
+	/* The rendering routine uses (v = 1 - x/h), so (x = -v*h + h). */
+	y = (int)((1.0 - cur_s) * (float)pal->triangle.h);
+	x = (int)(-(cur_v*(float)pal->triangle.h - (float)pal->triangle.h));
+	if (x < 0) { x = 0; }
+	if (x > y) { x = y; }
+	primitives.circle(pal,
+	    pal->triangle.x + x - y/2,
+	    pal->triangle.y + y,
+	    pal->selcircle_r,
 	    CIRCLE_COLOR);
 
 	/* Draw the preview rectangle. */
-	prim_hsv2rgb(hv/(2*M_PI), widget_get_float(pal, "saturation"),
-	    widget_get_float(pal, "value"), &r, &g, &b);
+	prim_hsv2rgb(cur_h/(2*M_PI), cur_s, cur_v, &r, &g, &b);
 	WIDGET_COLOR(pal,CUR_COLOR) = SDL_MapRGB(vfmt, r, g, b);
 	primitives.rect_filled(pal,
 	    pal->rpreview.x, pal->rpreview.y,
