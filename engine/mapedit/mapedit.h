@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.24 2002/03/05 13:26:40 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.25 2002/03/07 13:22:50 vedge Exp $	*/
 
 #include <engine/physics.h>
 
@@ -106,7 +106,10 @@ enum {
 	MAPEDIT_INSERT_TXT,
 	MAPEDIT_REPLACE_TXT,
 	MAPEDIT_PROPS_TXT,
-	MAPEDIT_GRID_TXT
+	MAPEDIT_GRID_TXT,
+	MAPEDIT_ANIM_TXT,
+	MAPEDIT_ANIM_INDEPENDENT_TXT,
+	MAPEDIT_ANIM_DELTA_TXT,
 };
 
 #define MAPEDIT_PREDRAW(m, node, vx, vy) do {				\
