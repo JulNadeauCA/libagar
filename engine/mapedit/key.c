@@ -120,33 +120,27 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 		case SDLK_i:
 			if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_fillmap(med);
-			} else {
+			}
+			break;
+		case SDLK_n:
+			if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_clearmap(med);
 			}
 			break;
 		case SDLK_o:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_OBJLIST);
-			} else if (ev->key.keysym.mod & KMOD_SHIFT) {
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_setorigin(med, &mapx, &mapy);
 				mapedit_move(med, mapx, mapy);
 			}
 			break;
-		case SDLK_t:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_TILELIST);
-			}
-			break;
 		case SDLK_l:
-			mapedit_load(med);
+			mapedit_loadmap(med);
 			break;
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_nodeflags(med, node, NODE_SLOW);
-			} else if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_TILESTACK);
 			} else {
-				mapedit_save(med);
+				mapedit_savemap(med);
 			}
 			break;
 		case SDLK_g:
