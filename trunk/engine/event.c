@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.43 2002/05/28 06:04:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.44 2002/05/31 10:48:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -46,7 +46,8 @@
 #include "widget/widget.h"
 #include "widget/text.h"
 
-extern struct gameinfo *gameinfo;
+extern struct gameinfo *gameinfo;	/* script */
+extern struct window *game_menu_win;
 
 #define PUSH_EVENT_ARG(eev, ap, member, type) do {			\
 	if ((eev)->argc == EVENT_MAXARGS) {				\
@@ -56,7 +57,6 @@ extern struct gameinfo *gameinfo;
 } while (/*CONSTCOND*/ 0)
 
 static void	 event_hotkey(SDL_Event *);
-static void	 event_user(SDL_Event *);
 static void	*event_post_async(void *);
 static void	 event_pusharg(va_list, char, struct event *);
 
@@ -88,14 +88,11 @@ event_hotkey(SDL_Event *ev)
 		break;
 #endif
 	case SDLK_F1:
-		config_dialog();
-		break;
-	case SDLK_f:
-		if (ev->key.keysym.mod & KMOD_CTRL) {
-			view_fullscreen(world->curmap->view,
-			    (world->curmap->view->flags & SDL_FULLSCREEN) ?
-			     0 : 1);
-		}
+		pthread_mutex_lock(&mainview->lock);
+		pthread_mutex_lock(&config->settings_win->lock);
+		window_show(config->settings_win);
+		pthread_mutex_unlock(&config->settings_win->lock);
+		pthread_mutex_unlock(&mainview->lock);
 		break;
 	case SDLK_v:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
@@ -106,33 +103,12 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_ESCAPE:
-		pthread_mutex_unlock(&world->lock);
-		engine_destroy();
+		window_show(game_menu_win);
 		break;
 	default:
 		break;
 	}
 	pthread_mutex_unlock(&world->lock);
-}
-
-static void
-event_user(SDL_Event *ev)
-{
-	struct window_event *wev;
-
-	switch (ev->user.code) {
-	case USER_WINDOW_EVENT:
-		wev = ev->user.data1;
-		pthread_mutex_lock(&mainview->lock);
-		pthread_mutex_lock(&wev->w->win->lock);
-		WIDGET_OPS(wev->w)->widget_event(wev->w, &wev->ev, wev->flags);
-		pthread_mutex_unlock(&wev->w->win->lock);
-		pthread_mutex_unlock(&mainview->lock);
-		free(wev);
-		break;
-	default:
-		fatal("unknown user event: %d\n", ev->user.code);
-	}
 }
 
 void *
@@ -153,6 +129,12 @@ event_loop(void *arg)
 		if ((ntick - ltick) >= delta) {
 			/* XXX inefficient locking */
 			pthread_mutex_lock(&world->lock);
+			if (world->curmap == NULL) {
+				dprintf("map vanished\n");
+				pthread_mutex_unlock(&world->lock);
+				engine_destroy();
+				return (NULL);
+			}
 			m = world->curmap;
 			pthread_mutex_lock(&m->lock);	
 			map_animate(m);
@@ -228,11 +210,9 @@ event_loop(void *arg)
 					}
 				}
 				break;
-			case SDL_USEREVENT:
-				event_user(&ev);
-				break;
 			case SDL_QUIT:
-				return (NULL);
+				engine_stop();
+				break;
 			}
 		}
 	}
@@ -315,9 +295,6 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 		va_end(ap);
 	}
 
-	dprintf("%s: register event \"%s\" (%d args)\n",
-	    OBJECT(ob)->name, eev->name, eev->argc);
-
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_INSERT_TAIL(&ob->events, eev, events);
 	pthread_mutex_unlock(&ob->events_lock);
@@ -336,6 +313,11 @@ event_post_async(void *p)
 	return (NULL);
 }
 
+/*
+ * Call an object's event handler, synchronously or asynchronously.
+ * This may be called recursively, as long as the object's event
+ * handler list is not modified.
+ */
 void
 event_post(void *obp, const char *name, const char *fmt, ...)
 {
@@ -364,8 +346,11 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 			pthread_create(&async_event_th, NULL,
 			    event_post_async, neev);
 		} else {
+			/* XXX safe, but sick */
+			pthread_mutex_unlock(&ob->events_lock);
 			neev->handler(neev->argc, neev->argv);
 			free(neev);
+			pthread_mutex_lock(&ob->events_lock);
 		}
 	}
 	pthread_mutex_unlock(&ob->events_lock);
