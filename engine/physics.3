@@ -1,4 +1,4 @@
-.\"	$Csoft: physics.3,v 1.8 2003/03/05 18:22:20 vedge Exp $
+.\"	$Csoft: physics.3,v 1.9 2003/03/10 02:13:40 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,19 +40,18 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-interface implements two-dimensional movement.
+interface manages the movement of objects, usually in reaction to input
+device event.
+The directions are represented by these flags:
 .Bd -literal
-enum {
-	DIR_UP =	0x01,
-	DIR_DOWN =	0x02,
-	DIR_LEFT =	0x04,
-	DIR_RIGHT =	0x08,
-	DIR_ALL =	0xff
-};
+#define DIR_UP		0x01
+#define DIR_DOWN	0x02
+#define DIR_LEFT	0x04
+#define DIR_RIGHT	0x08
+#define DIR_ALL		0xff
 .Ed
 .Sh GENERIC DIRECTIONS
-This interface implements two-dimensional movement of an undefined construct
-inside an undefined area, with a key delay and key repeat.
+These functions implement generic two-dimensional movement.
 .Pp
 .nr nS 1
 .Ft "void"
@@ -105,9 +104,26 @@ argument, to effect a
 .Fn gendir_unset
 operation and increment the necessary counters.
 .Sh MAP DIRECTIONS
-This interface implements two-dimensional movement of map references between
-adjacent map nodes.
-.Pp
+This interface implements movement of objects between adjacent map nodes.
+Game objects are bound to an input device with
+.Fn object_control
+and the
+.Xr input 3
+subsystem calls
+.Fn mapdir_set
+and
+.Fn mapdir_unset
+in reaction to input device events.
+The particular object implementation then calls
+.Fn mapdir_move ,
+usually from a timer callback function.
+If
+.Fn mapdir_move
+returns a non-zero value,
+.Fn object_move
+is then used to effect the movement and
+.Fn mapdir_postmove
+is called to unset directions as necessary.
 .nr nS 1
 .Ft "void"
 .Fn mapdir_init "struct mapdir *dir" "struct object *ob" "struct map *map" \
