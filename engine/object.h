@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.101 2004/01/22 09:58:42 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.102 2004/02/20 04:20:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -44,7 +44,7 @@ struct object {
 	char	 type[OBJECT_TYPE_MAX];		/* Type of object */
 	char	 name[OBJECT_NAME_MAX];		/* Identifier */
 	char	*save_pfx;			/* Save dir prefix */
-	const struct object_ops *ops;		/* Generic operations */
+	const struct object_ops *ops;		/* Generic operation vector */
 	int	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't free props before load */
 #define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */
@@ -55,7 +55,9 @@ struct object {
 #define OBJECT_STATIC		0x20	/* Don't free() after detach. */
 #define OBJECT_READONLY		0x40	/* Disallow edition (advisory) */
 #define OBJECT_WAS_RESIDENT	0x80	/* Used internally by object_load() */
-#define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
+#define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE|\
+				 OBJECT_PRESERVE_DEPS|OBJECT_READONLY)
+#define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT)
 
 	pthread_mutex_t	 lock;
 	struct gfx	*gfx;		/* Associated graphics set */
@@ -121,7 +123,9 @@ void		 object_wire_gfx(void *, const char *);
 
 void	 object_move_up(void *);
 void	 object_move_down(void *);
+void	*object_duplicate(void *);
 int	 object_destroy(void *);
+
 int	 object_free_children(struct object *);
 void	 object_free_props(struct object *);
 void 	 object_free_events(struct object *);
@@ -138,8 +142,8 @@ int	 object_resolve_position(void *);
 int	 object_load_data(void *);
 
 void	 object_attach(void *, void *);
-void	 object_detach(void *, void *);
-void	 object_move(void *, void *, void *);
+void	 object_detach(void *);
+void	 object_move(void *, void *);
 
 struct object_dep	 *object_add_dep(void *, void *);
 __inline__ struct object *object_find_dep(const void *, Uint32);

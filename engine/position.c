@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.2 2004/02/26 10:14:36 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.3 2004/02/26 10:39:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -98,7 +98,6 @@ position_set(void *p, struct map *m, int x, int y, int z, struct map *projmap)
 		position_unproject(pos);
 	}
 	
-
 	debug(DEBUG_POSITION, "%s: position -> %s:[%d,%d,%d]\n", ob->name,
 	    OBJECT(m)->name, x, y, z);
 	pos->map = m;

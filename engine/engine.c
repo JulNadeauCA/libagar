@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.123 2004/02/25 18:09:12 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.124 2004/02/26 10:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -40,6 +40,7 @@
 #include <engine/config.h>
 #include <engine/rootmap.h>
 #include <engine/view.h>
+#include <engine/typesw.h>
 
 #ifdef EDITION
 #include <engine/mapedit/mapedit.h>
@@ -185,6 +186,9 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		}
 	}
 
+	/* Initialize the type switch and register the built-in types. */
+	typesw_init();
+
 	/* Initialize and load the user engine settings. */
 	config = Malloc(sizeof(struct config));
 	config_init(config);
@@ -226,16 +230,13 @@ void
 engine_destroy(void)
 {
 #ifdef EDITION
-	/* Preserve map editor settings. */
 	if (mapedition)
 		object_save(&mapedit);
 #endif
-	view_destroy();				/* Detach windows & viewport */
-	object_destroy(world);			/* Destroy the world */
-	text_destroy();				/* Destroy the text engine */
-	input_destroy();			/* Free the input devices */
-
-	/* Release the engine configuration object. */
+	view_destroy();
+	object_destroy(world);
+	text_destroy();
+	input_destroy();
 	object_destroy(config);
 	free(config);
 
@@ -243,11 +244,8 @@ engine_destroy(void)
 #if 0
 	pthread_mutex_destroy(&linkage_lock);	/* XXX */
 #endif
-
-	/* Release the resources allocated by the error handling subsystem. */
 	error_destroy();
-
-	/* Shut down SDL and exit. */
+	typesw_destroy();
 	SDL_Quit();
 	exit(0);
 }
