@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.51 2003/06/09 18:37:10 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.52 2004/01/03 04:25:13 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -232,7 +232,7 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 	widget_pop_color(wid);
 }
 
-/* Render a circle using a modification Jack E. Bresenham's line algorithm. */
+/* Render a circle using a modified Bresenham line algorithm. */
 /* XXX clipping */
 static void
 circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
