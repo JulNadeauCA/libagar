@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.15 2002/12/13 07:47:33 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.16 2002/12/17 06:43:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -73,7 +73,7 @@ void
 tilestack_init(struct tilestack *ts, int flags, int rw, int rh,
     struct mapview *mv)
 {
-	widget_init(&ts->wid, "tilestack", "widget", &tilestack_ops, rw, rh);
+	widget_init(&ts->wid, "tilestack", &tilestack_ops, rw, rh);
 	widget_map_color(ts, SELECTION_COLOR, "tilestack-selection", 0, 200, 0);
 	widget_map_color(ts, GRID_COLOR, "tilestack-grid", 208, 208, 208);
 

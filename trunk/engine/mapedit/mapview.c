@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.37 2002/12/13 07:47:33 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.38 2002/12/17 06:48:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -90,7 +90,7 @@ void
 mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
 {
-	widget_init(&mv->wid, "mapview", "widget", &mapview_ops, rw, rh);
+	widget_init(&mv->wid, "mapview", &mapview_ops, rw, rh);
 	mv->wid.flags |= WIDGET_CLIPPING;
 
 	mv->flags = flags;
