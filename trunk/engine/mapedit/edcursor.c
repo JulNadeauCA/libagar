@@ -1,4 +1,4 @@
-/*	$Csoft: edcursor.c,v 1.3 2002/09/02 05:27:19 vedge Exp $	*/
+/*	$Csoft: edcursor.c,v 1.4 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -127,17 +127,16 @@ edcursor_update(Uint32 ival, void *p)
 }
 #endif
 
-/*
- * Move the map edition cursor.
- * Map editor and map must be locked.
- */
+/* Move the map edition cursor. */
 void
 edcursor_move(struct edcursor *ed, Uint32 x, Uint32 y)
 {
 	struct node *node;
+	struct noderef *nref;
 
 	node = &ed->map->map[ed->y][ed->x];
-	node_delref(node, node_findref(node, ed, EDCURSOR_SELECT, MAPREF_ANIM));
+	nref = node_findref(node, ed, EDCURSOR_SELECT, MAPREF_ANIM)
+	node_delref(node, nref);
 	node->flags &= ~(NODE_ANIM);
 	
 	node = &ed->map->map[y][x];
@@ -155,7 +154,7 @@ edcursor_key(int argc, union evarg *argv)
 	struct edcursor *ed = argv[0].p;
 	int ev = argv[1].i;
 	SDLKey keysym = (SDLKey)argv[2].i;
-	const int set = (ev == WINDOW_KEYDOWN) ? 1 : 0;
+	int set = (ev == WINDOW_KEYDOWN) ? 1 : 0;
 
 	switch (keysym) {
 	case SDLK_LEFT:
