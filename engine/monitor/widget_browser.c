@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.22 2003/06/13 02:48:27 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.23 2003/06/17 23:30:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -166,13 +166,18 @@ examine_widget(int argc, union evarg *argv)
 	
 	vb = vbox_new(win, VBOX_WFILL);
 	{
+		struct label *lab;
+
 		label_new(vb, "Name: \"%s\"", OBJECT(wid)->name);
 		label_new(vb, "Type: %s", wid->type);
 		label_polled_new(vb, &pwin->lock, "Flags: 0x%x", &wid->flags);
-		label_polled_new(vb, &pwin->lock,
+
+		lab = label_polled_new(vb, &pwin->lock,
 		    "Geo: %dx%d at %d,%d (view %d,%d)",
 		    &wid->w, &wid->h, &wid->x, &wid->y,
 		    &wid->cx, &wid->cy);
+		label_prescale(lab,
+		    "Geo: 0000x0000 at 0000x0000 (view 0000,0000)");
 	}
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
