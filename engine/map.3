@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.28 2003/03/14 07:10:04 vedge Exp $
+.\"	$Csoft: map.3,v 1.29 2003/03/18 01:51:22 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -60,9 +60,9 @@ The motion offset defines the position of the image relative to the node.
 If the tile is scaled to another size, the centering offset is scaled to the
 tile size, but the motion offset is not.
 .Pp
-Graphical node references also provide the renderer with a list of graphical
-transforms that should be applied before the tile is drawn, and a layer number
-defining the order of rendering.
+Graphical noderefs provide the renderer with a list of graphical transforms
+that should be applied before the tile is drawn, and a layer number defining
+the order of rendering.
 .Pp
 .Sh INITIALIZATION
 .nr nS 1
@@ -109,9 +109,10 @@ The
 function reads a map in machine-independent format from
 .Fa fd ,
 after freeing the existing nodes/layers.
-The
+.Fn map_load
+returns 0 on success or -1 on failure.
 .Fn map_save
-function saves a map in machine-independent format to
+saves a map in machine-independent format to
 .Fa fd .
 .Pp
 The
@@ -148,7 +149,7 @@ Unless the factor is 100%, bitmap scaling is performed for graphical noderefs.
 .Ft void
 .Fn node_init "struct node *node"
 .Pp
-.Ft void
+.Ft int
 .Fn node_load "int fd" "struct object_table *deps" "struct node *node"
 .Pp
 .Ft void
@@ -168,10 +169,11 @@ function frees resources allocated by a node (such as the reference stack).
 .Pp
 The
 .Fn node_load
-and
+function loads a node in machine-independent format from
+.Fa fd ,
+returning 0 on success or -1 on failure.
 .Fn node_save
-functions respectively load and save a single node in machine-independent
-format.
+saves a node in machine-independent format.
 .Sh NODE REFERENCES
 .nr nS 1
 .Ft void
@@ -180,7 +182,7 @@ format.
 .Ft void
 .Fn noderef_destroy "struct noderef *nref"
 .Pp
-.Ft void
+.Ft int
 .Fn noderef_load "int fd" "struct object_table *deps" "struct node *node" \
                  "struct noderef **nref"
 .Pp
@@ -194,15 +196,17 @@ The
 function initializes a node reference structure.
 The
 .Fn noderef_destroy
-function frees resources used by a node references (such as the transforms).
+function frees the resources reserved by a noderef (such as the transforms).
 .Pp
 The
 .Fn noderef_load
-and
+function loads a node reference in machine-independent format from
+.Fa fd ,
+returning 0 on success or -1 on failure.
+.Pp
 .Fn noderef_save
-functions respectively load and save a node reference in machine-independent
-format.
-Pointers to objects are encoded using the dependency table
+saves a node reference in machine-independent format, encoding the object
+references using
 .Fa deps .
 .Sh NODE MANIPULATIONS
 .nr nS 1
@@ -242,7 +246,8 @@ The
 function inserts a copy of
 .Fa src_nref
 on top of
-.Fa dst_node .
+.Fa dst_node,
+with the same layer# and transformations.
 .Pp
 The
 .Fn node_remove_ref
