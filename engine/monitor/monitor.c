@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.60 2005/01/27 05:46:24 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.61 2005/02/08 08:25:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ monitor_init(void)
 			return;
 	}
 	window_set_caption(win, _("Debug monitor"));
-	window_set_position(win, WINDOW_LOWER_LEFT, 0);
+	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
 
 	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
 	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZ", ntool_ents);
