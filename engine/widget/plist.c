@@ -1,4 +1,4 @@
-/*	$Csoft: plist.c,v 1.95 2004/05/14 05:19:50 vedge Exp $	*/
+/*	$Csoft: plist.c,v 1.1 2004/05/15 04:05:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -198,7 +198,7 @@ plist_draw(void *p)
 		int ts = pl->item_h/2 + 1;
 		int x = 2;
 
-		if (it->selected) {
+		if (pl->selitems[i]) {
 			primitives.rect_filled(pl, x, y,
 			    WIDGET(pl)->w - WIDGET(pl->sbar)->w, pl->item_h,
 			    SELECTION_COLOR);
@@ -276,14 +276,18 @@ plist_insert(struct plist *pl, SDL_Surface *icon, const char *text, void *p)
 	pthread_mutex_lock(&pl->lock);
 	if ((pl->nitems+1) >= pl->maxitems) {
 		pl->maxitems += 8;
-		pl->items = Realloc(pl->items, sizeof(struct plist_item) *
-		    pl->maxitems, M_WIDGET);
+		pl->items = Realloc(pl->items, pl->maxitems *
+		    sizeof(struct plist_item), M_WIDGET);
+		pl->selitems = Realloc(pl->selitems, pl->maxitems*sizeof(int),
+		    M_WIDGET);
 	}
-	it = &pl->items[pl->nitems++];
+	it = &pl->items[pl->nitems];
+	pl->selitems[pl->nitems] = 0;
+	pl->nitems++;
+
 	it->icon = icon;
 	it->p = p;
 	it->label = NULL;
-	it->selected = 0;
 	strlcpy(it->text, text, sizeof(it->text));
 
 	widget_set_int(pl->sbar, "max", pl->nitems);
@@ -299,7 +303,6 @@ plist_select_item(struct plist *pl, struct plist_item *it)
 
 	selectedb = widget_get_binding(pl, "selected", &selected);
 	*selected = it->p;
-	it->selected++;
 	event_post(NULL, pl, "plist-changed", "%p, %i", it, 1);
 	event_post(NULL, pl, "plist-selected", "%p", it);
 	widget_binding_modified(selectedb);
@@ -314,7 +317,6 @@ plist_unselect_item(struct plist *pl, struct plist_item *it)
 
 	selectedb = widget_get_binding(pl, "selected", &selected);
 	*selected = NULL;
-	it->selected = 0;
 	event_post(NULL, pl, "plist-changed", "%p, %i", it, 0);
 	widget_binding_modified(selectedb);
 	widget_binding_unlock(selectedb);
