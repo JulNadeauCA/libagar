@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.128 2002/12/17 06:47:57 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.129 2002/12/17 09:25:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -55,6 +55,7 @@ static const struct object_ops window_ops = {
 
 enum {
 	BACKGROUND_COLOR,
+	BACKGROUND_FILL_COLOR,
 	TITLEBAR_FOCUSED_COLOR,
 	TITLEBAR_UNFOCUSED_COLOR,
 	TITLEBAR_TEXT_UNFOCUSED_COLOR,
@@ -181,7 +182,9 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
 	    "window-background",
 	    0, 40, 20);
-
+	widget_map_color(&win->wid, BACKGROUND_FILL_COLOR,
+	    "window-background-fill",
+	    0, 0, 0);
 	widget_map_color(&win->wid, TITLEBAR_UNFOCUSED_COLOR,
 	    "window-title-bar-background-unfocused",
 	    0, 60, 40);
@@ -445,7 +448,7 @@ window_draw(struct window *win)
 	/* Fill the background. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		SDL_FillRect(view->v, &win->rd,
-		    WIDGET_COLOR(win, BACKGROUND_COLOR));
+		    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 	}
 	
 	/* Draw the title bar. */
@@ -631,7 +634,7 @@ window_hide(struct window *win)
 	/* Update the background. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
 		SDL_FillRect(view->v, &win->rd,
-		    WIDGET_COLOR(win, BACKGROUND_COLOR));
+		    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 		SDL_UpdateRect(view->v, win->rd.x, win->rd.y,
 		    win->rd.w, win->rd.h);
 	} else {
@@ -758,7 +761,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = newpos.x - oldpos.x;
 			rfill.h = newpos.h;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 		if (newpos.y > oldpos.y) {		/* Downward */
@@ -767,7 +770,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = newpos.w;
 			rfill.h = newpos.y - oldpos.y;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 		if (newpos.x < oldpos.x) {		/* Left */
@@ -776,7 +779,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = oldpos.x - newpos.x;
 			rfill.h = oldpos.h;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 		if (newpos.y < oldpos.y) {		/* Upward */
@@ -785,7 +788,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = oldpos.w;
 			rfill.h = oldpos.y - newpos.y;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 	} else if (view->rootmap != NULL) {
@@ -822,7 +825,7 @@ winop_hide_body(struct window *win)
 			view->rootmap->map->redraw++;
 		} else {
 			SDL_FillRect(view->v, &rtitle,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rtitle);
 		}
 	} else {					/* Hide */
@@ -839,7 +842,7 @@ winop_hide_body(struct window *win)
 			rbody.h -= win->titleh;
 
 			SDL_FillRect(view->v, &rbody,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rbody);
 		}
 	}
@@ -1252,7 +1255,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = win->rd.x - ro.x;
 			rfill.h = win->rd.h;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		} else if (win->rd.w < ro.w) {		/* R-resize */
 			rfill.x = win->rd.x + win->rd.w;
@@ -1260,7 +1263,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = ro.w - win->rd.w;
 			rfill.h = ro.h;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 		if (win->rd.h < ro.h) {			/* H-resize */
@@ -1269,7 +1272,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			rfill.w = ro.w;
 			rfill.h = ro.h - win->rd.h;
 			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 	} else if (view->rootmap != NULL) {
