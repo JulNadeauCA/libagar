@@ -1,16 +1,17 @@
-# $Csoft: configure.in,v 1.54 2003/02/28 14:21:03 vedge Exp $
+# $Csoft: configure.in,v 1.55 2003/03/01 02:38:31 vedge Exp $
 # Public domain
 
-register("--with-smpeg",	"Play videos through smpeg [default: check]");
+register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
-register("--with-gl",		"Support OpenGL operations [default: check]");
+register("--with-gl",		"OpenGL rendering support [default: check]");
 register("--enable-debug",	"Engine debugging [default: yes]");
 register("--enable-threads",	"Thread safety [default: yes]");
-register("--enable-floating-point",	"Floating point operations [default: yes]");
-register("--enable-8bpp",	"Support 8 bpp display [default: yes]");
-register("--enable-16bpp",	"Support 16 bpp display [default: yes]");
-register("--enable-24bpp",	"Support 24 bpp display [default: yes]");
-register("--enable-32bpp",	"Support 32 bpp display [default: yes]");
+register("--enable-floating-point", "Floating point operations [default: yes]");
+register("--enable-static",	"Produce a static binary [default: no]");
+register("--enable-8bpp",	"Support for 8 bpp display [default: yes]");
+register("--enable-16bpp",	"Support for 16 bpp display [default: yes]");
+register("--enable-24bpp",	"Support for 24 bpp display [default: yes]");
+register("--enable-32bpp",	"Support for 32 bpp display [default: yes]");
 register("--help",		"Show this message");
 
 if [ "${help}" = "yes" ]; then
@@ -60,6 +61,11 @@ if [ "${with_gl}" != "no" ]; then
 	if [ "${HAVE_OPENGL}" = "yes" ]; then
 		mdefine(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS");
 	fi
+fi
+
+# Compile a static binary?
+if [ "${enable_static}" = "yes" ]; then
+	mdefine(LDFLAGS, "-static");
 fi
 
 # Debugging?
