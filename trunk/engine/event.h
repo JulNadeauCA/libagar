@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.24 2004/03/17 04:02:04 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.25 2004/05/06 06:20:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -20,12 +20,6 @@ typedef union evarg {
 #define EVENT_NAME_MAX		32
 #define EVENTSEQ_NAME_MAX	16
 
-struct eventseq {
-	char name[EVENTSEQ_NAME_MAX];		/* Sequence identifier */
-	TAILQ_HEAD(, event) events;		/* Ordered event sequence */
-	TAILQ_ENTRY(eventseq) eventseqs;
-};
-
 struct event {
 	char	name[EVENT_NAME_MAX];		/* Event type */
 	int	flags;
@@ -41,13 +35,11 @@ struct event {
 	int		 argc;
 
 	TAILQ_ENTRY(event) events;
-	TAILQ_ENTRY(event) eventseq;
 };
 
 extern int event_idle;		/* Enable idling? */
 
 __BEGIN_DECLS
-struct eventseq *eventseq_new(void *, const char *);
 struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
 		           const char *, ...);
 void		 event_remove(void *, const char *);
