@@ -45,12 +45,90 @@ static const struct tool_ops propedit_ops = {
 	NULL			/* mouse */
 };
 
+static __inline__ void
+propedit_set_edge(struct mapview *mv, Uint32 edge)
+{
+	struct node *node;
+
+	if (mv->cx == -1 || mv->cy == -1) {
+		dprintf("nowhere\n");
+		return;
+	}
+
+	node = &mv->map->map[mv->cy][mv->cx];
+	node->flags &= ~(NODE_EDGE_ANY);
+	node->flags |= edge;
+}
+
+static void
+propedit_edge_nw(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_NW);
+}
+
+static void
+propedit_edge_n(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_N);
+}
+
+static void
+propedit_edge_ne(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_NE);
+}
+
+static void
+propedit_edge_w(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_W);
+}
+
+static void
+propedit_edge_none(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, 0);
+}
+
+static void
+propedit_edge_e(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_E);
+}
+
+static void
+propedit_edge_sw(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_SW);
+}
+
+static void
+propedit_edge_s(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_S);
+}
+
+static void
+propedit_edge_se(void *p, struct mapview *mv)
+{
+	propedit_set_edge(mv, NODE_EDGE_SE);
+}
+
 void
 propedit_init(void *p)
 {
 	struct propedit *pe = p;
 
 	tool_init(&pe->tool, "propedit", &propedit_ops);
+	tool_bind_key(pe, KMOD_NUM, SDLK_7, propedit_edge_nw, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_8, propedit_edge_n, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_9, propedit_edge_ne, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_4, propedit_edge_w, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_5, propedit_edge_none, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_6, propedit_edge_e, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_1, propedit_edge_sw, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_2, propedit_edge_s, 1);
+	tool_bind_key(pe, KMOD_NUM, SDLK_3, propedit_edge_se, 1);
 
 	pe->mode = PROPEDIT_CLEAR;
 	pe->node_mask = 0;
