@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.46 2004/04/24 05:49:25 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.47 2004/04/25 08:20:08 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -40,7 +40,7 @@ LIB_MINOR?=	0
 LIB_ADD?=
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
-LIBTOOL?=	libtool
+LIBTOOL?=	./libtool
 
 # Required files
 LTCONFIG?=	${TOP}/mk/libtool/ltconfig
