@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.113 2003/03/16 02:49:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.114 2003/03/20 03:20:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -55,6 +55,10 @@
 #include <jpeglib.h>
 #endif
 
+enum {
+	VIEW_NDIRTY_RECTS =	4096
+};
+
 static const struct object_ops viewport_ops = {
 	view_destroy,
 	NULL,		/* load */
@@ -83,13 +87,13 @@ view_init(enum gfx_engine ge)
 	}
 
 	v = emalloc(sizeof(struct viewport));
-	object_init(&v->obj, "view-port", "view", NULL, OBJECT_SYSTEM,
-	    &viewport_ops);
+	object_init(&v->obj, "view-port", "view", NULL,
+	    OBJECT_STATIC, &viewport_ops);
 	v->gfx_engine = ge;
 	v->rootmap = NULL;
 	v->winop = VIEW_WINOP_NONE;
 	v->ndirty = 0;
-	v->maxdirty = 4096;
+	v->maxdirty = VIEW_NDIRTY_RECTS;
 	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
 	v->opengl = 0;
 	TAILQ_INIT(&v->windows);
@@ -147,8 +151,9 @@ view_init(enum gfx_engine ge)
 	}
 #endif
 
-	if (v->w < 320 || v->h < 240) {
-		error_set("minimum resolution is 320x240");
+	if (v->w < prop_get_uint16(config, "view.min-w") ||
+	    v->h < prop_get_uint16(config, "view.min-h")) {
+		error_set("resolution less than minimum");
 		goto fail;
 	}
 
