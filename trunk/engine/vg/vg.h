@@ -1,15 +1,14 @@
-/*	$Csoft: vg.h,v 1.10 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.11 2004/04/26 07:03:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
 #include <engine/map.h>
-#define VG_LAYER_NAME_MAX 128
 
 #include "begin_code.h"
-struct vg;
-struct vg_element;
+
+#define VG_LAYER_NAME_MAX 128
 
 enum vg_alignment {
 	VG_ALIGN_TL,
@@ -29,10 +28,17 @@ struct vg_rect {
 	double x, y;
 	double w, h;
 };
+
+struct vg;
+struct vg_element;
+
 #include "close_code.h"
 
 #include <engine/vg/vg_snap.h>
+#include <engine/vg/vg_ortho.h>
 #include <engine/vg/vg_origin.h>
+#include <engine/vg/vg_block.h>
+
 #include <engine/vg/vg_point.h>
 #include <engine/vg/vg_line.h>
 #include <engine/vg/vg_circle.h>
@@ -62,6 +68,7 @@ enum vg_element_type {
 
 struct vg_element_ops {
 	enum vg_element_type type;
+	const char *name;
 	void (*init)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
@@ -73,11 +80,12 @@ struct vg_line_style {
 		VG_STIPPLED
 	} style;
 	enum {
-		VG_SQUARE,
-		VG_BEVELED,
-		VG_ROUNDED,
-		VG_MITERED
+		VG_SQUARE,		/* Square endpoint */
+		VG_BEVELED,		/* Beveled endpoint */
+		VG_ROUNDED,		/* Rounded endpoint (circular) */
+		VG_MITERED		/* Mitered endpoint */
 	} endpoint_style;
+
 	Uint16 stipple;			/* OpenGL-style stipple pattern */
 	Uint8 thickness;		/* Pixels */
 	Uint8 miter_len;		/* Miter length for VG_MITERED */
@@ -85,59 +93,62 @@ struct vg_line_style {
 
 struct vg_fill_style {
 	enum {
-		VG_NOFILL,
-		VG_SOLID,
-		VG_PATTERN
+		VG_NOFILL,		/* Wireframe */
+		VG_SOLID,		/* Solid filling */
+		VG_TEXTURED		/* Textured */
 	} style;
 	struct {
-		struct object *gfx_obj;
-		Uint32 gfx_offs;
-	} pat;
-	Uint32 color;
+		struct object *gfx_obj;	/* Pixmap object */
+		Uint32 gfx_index;	/* Pixmap index */
+	} tex;
+	Uint32 color;			/* Color for VG_SOLID */
 };
 
 struct vg_layer {
-	char name[VG_LAYER_NAME_MAX];
-	int visible;
-	int alpha;
-	Uint32 color;
+	char name[VG_LAYER_NAME_MAX];	/* Layer name */
+	int visible;			/* Flag of visibility */
+	int alpha;			/* Per-layer alpha value */
+	Uint32 color;			/* Per-layer default color */
 };
 
 struct vg_element {
-	enum vg_element_type type;
-	struct vg_element_ops ops;
+	enum vg_element_type type;		/* Class of element */
+	struct vg_element_ops ops;		/* Generic element operations */
+	struct vg_block *block;			/* Back pointer to block */
 
-	int layer;
-	int redraw;				/* Element redraw */
-	int drawn;				/* Avoid overdraw */
-	Uint32 color;
+	int layer;			/* Associated layer */
+	int redraw;			/* Element redraw */
+	int drawn;			/* Avoid overdraw */
+	Uint32 color;			/* Element specific color */
 
-	struct vg_vertex *vtx;
+	struct vg_vertex *vtx;		/* Vertices */
 	unsigned int     nvtx;
 
-	struct vg_line_style line;
-	struct vg_fill_style fill;
+	struct vg_line_style line;	/* Line style */
+	struct vg_fill_style fill;	/* Polygon filling style */
+
 	union {
 		struct {
-			double radius;
+			double radius;		/* Display radius */
 		} vg_point;
 		struct {
-			double radius;
+			double radius;		/* Circle radius */
 		} vg_circle;
 		struct {
 			double w, h;		/* Ellipse geometry */
 			double s, e;		/* Start/end angles (degrees) */
 		} vg_arc;
 		struct {
-			char text[VG_TEXT_MAX];
-			double angle;
-			enum vg_alignment align;
+			char text[VG_TEXT_MAX];		/* Text to display */
+			double angle;			/* Angle of label */
+			enum vg_alignment align;	/* Alignment of text */
 		} vg_text;
 	} vg_args;
 #define vg_point   vg_args.vg_point
 #define vg_circle  vg_args.vg_circle
 #define vg_arc	   vg_args.vg_arc
 #define vg_text	   vg_args.vg_text
+	TAILQ_ENTRY(vg_element) vgbmbs;
 	TAILQ_ENTRY(vg_element) vges;
 };
 
@@ -166,14 +177,17 @@ struct vg {
 	struct vg_layer *layers;		/* Layers */
 	unsigned int	nlayers;
 	int		 cur_layer;		/* Layer selected for edition */
-	
+	struct vg_block	*cur_block;		/* Block being edited */
+
 	struct object *pobj;
 	SDL_Surface *su;		/* Raster surface */
 	struct map *submap;		/* Fragment map */
 	struct map *map;		/* Raster map */
 	enum vg_snap_mode snap_mode;	/* Positional restriction */
+	enum vg_ortho_mode ortho_mode;	/* Orthogonal restriction */
 
-	TAILQ_HEAD(,vg_element) vges;
+	TAILQ_HEAD(,vg_element) vges;		/* Elements in drawing */
+	TAILQ_HEAD(,vg_block) blocks;		/* Blocks in drawing */
 };
 
 extern int vg_cos_tbl[];
