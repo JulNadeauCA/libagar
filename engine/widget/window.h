@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.29 2002/07/18 12:09:33 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.30 2002/07/20 18:57:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -31,7 +31,7 @@ typedef enum {
 TAILQ_HEAD(regionsq, region);
 
 struct window {
-	struct	 object obj;
+	struct	 widget wid;
 
 	/* Read-only once attached */
 	int	 flags;
