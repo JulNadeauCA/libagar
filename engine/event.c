@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.121 2002/12/31 05:48:44 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.122 2003/01/01 00:15:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,7 +25,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_opengl.h>
 #include <config/serialization.h>
 
 #include "engine.h"
