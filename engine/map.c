@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.53 2002/03/05 17:51:02 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.54 2002/03/05 18:53:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -446,46 +446,65 @@ map_animate(struct map *m)
 			if (node->flags & NODE_ANIM) {
 				static struct node *nnode;
 
-				/* XXX boundaries ok? */
+				/* Draw nearby nodes. */
+				if (x > 1) {
+					nnode = &m->map[x - 1][y]; /* Left */
+					if (nnode->flags & NODE_OVERLAP &&
+					    vx > 1) {
+						MAPEDIT_PREDRAW(m, nnode,
+						    vx - 1, vy);
+						map_rendernode(m, nnode,
+						    rx - m->tilew, ry);
+						MAPEDIT_POSTDRAW(m, nnode,
+						    vx - 1, vy);
+						view->rects[ri++] =
+						    view->maprects[vy][vx - 1];
+					}
+				}
+				if (x < m->mapw - 1) {
+					nnode = &m->map[x + 1][y]; /* Right */
+					if (nnode->flags & NODE_OVERLAP &&
+					    vx < view->mapw + view->mapxoffs) {
+						MAPEDIT_PREDRAW(m, nnode,
+						    vx + 1, vy);
+						map_rendernode(m, nnode,
+						    rx + m->tilew, ry);
+						MAPEDIT_POSTDRAW(m, nnode,
+						    vx + 1, vy);
+						view->rects[ri++] =
+						    view->maprects[vy][vx + 1];
+					}
+				}
+				if (y > 1) {
+					nnode = &m->map[x][y - 1]; /* Up */
+					if (nnode->flags & NODE_OVERLAP &&
+					    vy > 1) {
+						MAPEDIT_PREDRAW(m, nnode,
+						    vx, vy - 1);
+						map_rendernode(m, nnode,
+						    rx, ry - m->tileh);
+						MAPEDIT_POSTDRAW(m, nnode,
+						    vx, vy - 1);
+						view->rects[ri++] =
+						    view->maprects[vy - 1][vx];
+					}
+				}
+				if (y < m->maph - 1) {
+					nnode = &m->map[x][y + 1]; /* Down */
+					if (nnode->flags & NODE_OVERLAP &&
+					    vy < view->maph + view->mapyoffs) {
+						MAPEDIT_PREDRAW(m, nnode,
+						    vx, vy + 1);
+						map_rendernode(m, nnode,
+						    rx, ry + m->tileh);
+						MAPEDIT_POSTDRAW(m, nnode,
+						    vx, vy + 1);
+						view->rects[ri++] =
+						    view->maprects[vy + 1][vx];
+					}
+				}
 
-				nnode = &m->map[x - 1][y];	/* Left */
-				if (nnode->flags & NODE_OVERLAP && vx > 1) {
-					MAPEDIT_PREDRAW(m, nnode, vx - 1, vy);
-					map_rendernode(m, nnode,
-					    rx - m->tilew, ry);
-					MAPEDIT_POSTDRAW(m, nnode, vx - 1, vy);
-					view->rects[ri++] =
-					    view->maprects[vy][vx - 1];
-				}
-				nnode = &m->map[x + 1][y];	/* Right */
-				if (nnode->flags & NODE_OVERLAP &&
-				    vx < view->mapw + view->mapxoffs) {
-					MAPEDIT_PREDRAW(m, nnode, vx + 1, vy);
-					map_rendernode(m, nnode,
-					    rx + m->tilew, ry);
-					MAPEDIT_POSTDRAW(m, nnode, vx + 1, vy);
-					view->rects[ri++] =
-					    view->maprects[vy][vx + 1];
-				}
-				nnode = &m->map[x][y - 1];	/* Up */
-				if (nnode->flags & NODE_OVERLAP && vy > 1) {
-					MAPEDIT_PREDRAW(m, nnode, vx, vy - 1);
-					map_rendernode(m, nnode,
-					    rx, ry - m->tileh);
-					MAPEDIT_POSTDRAW(m, nnode, vx, vy - 1);
-					view->rects[ri++] =
-					    view->maprects[vy - 1][vx];
-				}
-				nnode = &m->map[x][y + 1];	/* Down */
-				if (nnode->flags & NODE_OVERLAP &&
-				    vy < view->maph + view->mapyoffs) {
-					MAPEDIT_PREDRAW(m, nnode, vx, vy + 1);
-					map_rendernode(m, nnode,
-					    rx, ry + m->tileh);
-					MAPEDIT_POSTDRAW(m, nnode, vx, vy + 1);
-					view->rects[ri++] =
-					    view->maprects[vy + 1][vx];
-				}
+				/* Draw the node itself. */
 				MAPEDIT_PREDRAW(m, node, vx, vy);
 				map_rendernode(m, node, rx, ry);
 				MAPEDIT_POSTDRAW(m, node, vx, vy);
