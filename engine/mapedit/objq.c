@@ -1,4 +1,4 @@
-/*	$csoft: objq.c,v 1.35 2003/01/01 05:18:37 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.35 2003/01/01 05:18:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
