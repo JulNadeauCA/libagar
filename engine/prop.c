@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.49 2004/01/23 04:04:23 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.50 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -460,18 +460,16 @@ prop_get_double(void *p, const char *key)
 }
 #endif /* FLOATING_POINT */
 
+/* The object must be locked. */
 char *
 prop_get_string(void *p, const char *key)
 {
-	char *s, *sd;
+	char *s;
 
-	prop_lock(p);
 	if (prop_get(p, key, PROP_STRING, &s) == NULL) {
 		fatal("%s", error_get());
 	}
-	sd = Strdup(s);
-	prop_unlock(p);
-	return (sd);
+	return (s);
 }
 
 size_t
