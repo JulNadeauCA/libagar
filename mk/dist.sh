@@ -1,26 +1,26 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.11 2003/06/06 03:27:10 vedge Exp $
+#	$Csoft: dist.sh,v 1.12 2004/03/02 08:56:52 vedge Exp $
 
-DATE=`date +%m%d%Y`
-DISTFILE=agar-${DATE}
+VER=`date +%m%d%Y`
+DISTFILE=agar-${VER}
 CVSROOT=/home/cvs/CVSROOT
 
 cd ..
-echo "snapshot: agar-${DATE}"
-rm -fr agar-${DATE}
-cp -fRp agar agar-${DATE}
+echo "snapshot: agar-${VER}"
+rm -fr agar-${VER}
+cp -fRp agar agar-${VER}
 
 (cd ${CVSROOT} &&
- mv -f Agar-ChangeLog Agar-ChangeLog-${DATE} &&
+ mv -f Agar-ChangeLog Agar-ChangeLog-${VER} &&
  touch Agar-ChangeLog &&
  chgrp csoft Agar-ChangeLog &&
  chmod 666 Agar-ChangeLog)
 
-cp -f ${CVSROOT}/Agar-ChangeLog agar-${DATE}/ChangeLog-${DATE}
-cp -f ${CVSROOT}/Agar-ChangeLog-${DATE} agar-${DATE}.ChangeLog
+cp -f ${CVSROOT}/Agar-ChangeLog agar-${VER}/ChangeLog-${VER}
+cp -f ${CVSROOT}/Agar-ChangeLog-${VER} agar-${VER}.ChangeLog
 
-rm -fR `find agar-${DATE} \( -name CVS \
+rm -fR `find agar-${VER} \( -name CVS \
     -or -name \*~ \
     -or -name \*.o \
     -or -name \*.a \
@@ -30,7 +30,7 @@ rm -fR `find agar-${DATE} \( -name CVS \
     -or -name .xvpics \)`
 
 echo "packaging"
-tar -f ${DISTFILE}.tar -c agar-${DATE}
+tar -f ${DISTFILE}.tar -c agar-${VER}
 gzip -f9 ${DISTFILE}.tar
 md5 ${DISTFILE}.tar.gz > ${DISTFILE}.tar.gz.md5
 rmd160 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
@@ -42,5 +42,29 @@ scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} vedge@resin:www/snap
 ssh vedge@resin "cp -f www/snap/${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,ChangeLog} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.*"
 
 echo "notifying agar-announce@"
-sh agar/mk/announce.sh ${DATE}
+TMP=`mktemp /tmp/agarannounceXXXXXXXX`
+cat > $TMP << EOF
+From: Wilbern Cobb <vedge@csoft.org>
+To: agar-announce@lists.csoft.net
+Subject: New Agar release: $VER
+X-Mailer: announce.sh
+X-PGP-Key: 206C63E6
 
+A new Agar release has been uploaded to beta.csoft.org. This is a beta
+release so please help by testing it thoroughly and letting me know of
+any problems you might run into.
+
+	http://beta.csoft.org/agar/agar-$1.tar.gz
+	http://beta.csoft.org/agar/agar-$1.tar.gz.asc
+	http://beta.csoft.org/agar/agar-$1.tar.gz.md5
+	http://beta.csoft.org/agar/agar-$1.ChangeLog
+
+Below is the summary of changes since the last release. If you wish to
+receive individual e-mails whenever commits are made, send an empty
+e-mail to <source-diff-subscribe@lists.csoft.net> (unified diffs inline),
+or <source-changes-subscribe@lists.csoft.net> (no diffs).
+
+EOF
+cat agar-${VER}.ChangeLog >> $TMP
+cat $TMP | sendmail -t
+rm -f $TMP
