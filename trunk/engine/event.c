@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.104 2002/11/28 06:23:30 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.105 2002/11/29 23:59:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -184,9 +184,6 @@ event_loop(void)
 		window_show(monitor.toolbar);
 	}
 #endif
-
-	/* Start the media garbage collection process. */
-	media_init_gc();
 
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = EVENT_MAXFPS;;) {
 		ntick = SDL_GetTicks();			/* Rendering starts */
