@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.23 2002/06/24 18:43:15 vedge Exp $
+#	$Csoft: Makefile,v 1.24 2002/06/27 03:31:56 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -6,9 +6,9 @@ include ${TOP}/Makefile.config
 SUBDIR=	tool
 
 LIB=	mapedit
-SRCS=	mapedit.c config.c fileops.c toolbar.c mapview.c mapwin.c edcursor.c \
+SRCS=	mapedit.c fileops.c toolbar.c mapview.c mapwin.c edcursor.c \
 	tilestack.c tileq.c objq.c
-OBJS=	mapedit.o config.o fileops.o toolbar.o mapview.o mapwin.o edcursor.o \
+OBJS=	mapedit.o fileops.o toolbar.o mapview.o mapwin.o edcursor.o \
 	tilestack.o tileq.o objq.o
 FOBJS=	mapedit.fob edcursor.fob
 
