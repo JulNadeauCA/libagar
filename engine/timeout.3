@@ -1,4 +1,4 @@
-.\"	$Csoft: timeout.3,v 1.1 2004/05/10 02:41:03 vedge Exp $
+.\"	$Csoft: timeout.3,v 1.2 2004/05/10 05:14:52 vedge Exp $
 .\"
 .\" Copyright (c) 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -72,7 +72,7 @@ rescheduled to occur in t+n ticks.
 .Fn timeout_del "void *obj" "struct timeout *to"
 .Pp
 .Ft "int"
-.Fn timeout_running "void *obj" "struct timeout *to"
+.Fn timeout_scheduled "void *obj" "struct timeout *to"
 .Pp
 .Ft "void"
 .Fn lock_timeout "void *obj"
@@ -133,6 +133,12 @@ and
 .Fn timeout_del
 may be invoked safely from callback functions, but it is more efficient to use
 the callback's return value for rescheduling or cancelling timeouts.
+.Pp
+The
+.Fn timeout_scheduled
+function returns 1 if the given timeout is scheduled for execution, otherwise
+it returns 0.
+.Pp
 The
 .Nm
 interface is thread-safe, but it is important to use
@@ -142,7 +148,7 @@ and
 in constructions such as:
 .Bd -literal
 lock_timeout(obj);
-if (timeout_exists(obj, &timeout)) {
+if (timeout_scheduled(obj, &timeout)) {
 	timeout_del(obj, &timeout);
 }
 unlock_timeout(obj);
