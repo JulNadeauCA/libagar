@@ -189,3 +189,4 @@ echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/config.h
 echo "#define PREFIX \"$PREFIX\"" >> engine/config.h
 echo "#endif /* PREFIX */" >> engine/config.h
+echo "Don't forget to run \"make depend\""
