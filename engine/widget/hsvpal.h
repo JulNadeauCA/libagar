@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.h,v 1.7 2005/01/23 11:49:13 vedge Exp $	*/
+/*	$Csoft: hsvpal.h,v 1.1 2005/02/16 14:47:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_HSVPAL_H_
@@ -13,6 +13,7 @@ struct hsvpal {
 	float		   h, s, v;	/* Default bindings */
 	SDL_PixelFormat	  *format;	/* Target pixel format */
 	SDL_Rect	   rpreview;	/* Color preview rectangle */
+	int		   selcircle_r;	/* Radius of selection circles */
 	struct {
 		int x, y;		/* Origin for circle of hues */
 		int rout, rin;		/* Radii of the circle of hues */
@@ -24,6 +25,11 @@ struct hsvpal {
 		int x, y;		/* Coordinates of triangle */
 		int w, h;		/* Dimensions of triangle */
 	} triangle;
+	enum {
+		HSVPAL_SEL_NONE,
+		HSVPAL_SEL_H,		/* Selecting hue */
+		HSVPAL_SEL_SV		/* Selecting saturation/value */
+	} state;
 };
 
 __BEGIN_DECLS
