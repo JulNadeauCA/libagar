@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.17 2002/02/08 00:19:28 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.18 2002/02/10 03:48:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -466,7 +466,7 @@ map_animate(Uint32 ival, void *p)
 
 			me = &m->map[x][y];
 
-			if (me->nanims < 1) {
+			if (me->nanims < 1 && (me->flags & NODE_ANIM) == 0) {
 				/* map_draw() shall handle this. */
 				continue;
 			}
@@ -571,6 +571,9 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 	if (flags & NODE_HASTE)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_HASTE), vx, vy);
+	if (flags & NODE_ANIM)
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
+		    MAPEDIT_ANIM), vx, vy);
 }
 
 /* Draw all sprites in the map view. */
@@ -621,7 +624,7 @@ map_draw(Uint32 ival, void *p)
 
 			me = &m->map[x][y];
 
-			if (me->nanims > 0) {
+			if (me->nanims > 0 || (me->flags & NODE_ANIM)) {
 				/* map_animate() shall handle this. */
 				continue;
 			}
