@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.18 2002/07/29 05:29:29 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.19 2002/07/30 22:23:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -164,12 +164,16 @@ textbox_draw(void *p)
 	WIDGET_DRAW(tbox, label_s, 0, y/2);
 
 	/* Frame */
+	if (WIDGET_FOCUSED(tbox)) {
+		x++;
+		y++;
+	}
 	primitives.box(tbox, x, 0,
-	    WIDGET(tbox)->w - (tbox->xmargin * 2) - label_s->w,
-	    label_s->h + (tbox->ymargin * 2),
+	    WIDGET(tbox)->w - tbox->xmargin*2 - label_s->w,
+	    label_s->h + tbox->ymargin*2,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
 	    WIDGET_COLOR(tbox, FRAME_COLOR));
-	
+
 	/*
 	 * Text
 	 */
