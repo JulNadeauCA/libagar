@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.121 2004/06/04 19:59:26 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.122 2004/06/22 05:39:39 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -54,6 +54,10 @@
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/spinbutton.h>
 
+#ifdef EDITION
+#include <engine/mapedit/mapedit.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -68,7 +72,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 0
+	6, 1
 };
 
 const struct object_ops config_ops = {
@@ -225,7 +229,9 @@ config_init(struct config *con)
 int
 config_load(void *p, struct netbuf *buf)
 {
-	if (version_read(buf, &config_ver, NULL) != 0)
+	struct version rv;
+
+	if (version_read(buf, &config_ver, &rv) != 0)
 		return (-1);
 
 	kbd_unitrans = read_uint8(buf);
@@ -239,6 +245,11 @@ config_load(void *p, struct netbuf *buf)
 	kbd_delay = (int)read_uint32(buf);
 	kbd_repeat = (int)read_uint32(buf);
 	mouse_dblclick_delay = (int)read_uint32(buf);
+
+#ifdef EDITION
+	if (rv.minor >= 1 && read_uint8(buf) == 1)
+		mapedit_load(buf);
+#endif
 	return (0);
 }
 
@@ -260,6 +271,13 @@ config_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)kbd_delay);
 	write_uint32(buf, (Uint32)kbd_repeat);
 	write_uint32(buf, (Uint32)mouse_dblclick_delay);
+
+#ifdef EDITION
+	write_uint8(buf, 1);
+	mapedit_save(buf);
+#else
+	write_uint8(buf, 0);
+#endif
 	return (0);
 }
 
