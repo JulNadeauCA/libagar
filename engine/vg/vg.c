@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.11 2004/04/23 10:46:05 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.12 2004/04/26 07:03:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -40,12 +40,48 @@
 #include "vg_primitive.h"
 
 static const struct vg_element_ops vge_types[] = {
-    { VG_LINES,		NULL,		vg_draw_line_segments,	 vg_line_bbox },
-    { VG_LINE_STRIP,	NULL,		vg_draw_line_strip,	 vg_line_bbox },
-    { VG_LINE_LOOP,	NULL,		vg_draw_line_loop,	 vg_line_bbox },
-    { VG_POINTS,	vg_point_init,	vg_draw_points,        vg_points_bbox },
-    { VG_CIRCLE,	vg_circle_init,	vg_draw_circle,        vg_circle_bbox },
-    { VG_ELLIPSE,	vg_ellipse_init,vg_draw_ellipse,      vg_ellipse_bbox }
+	{
+		VG_LINES,
+		N_("Line segments"),
+		NULL,
+		vg_draw_line_segments,
+		vg_line_bbox
+	},
+	{
+		VG_LINE_STRIP,
+		N_("Line strip"),
+		NULL,
+		vg_draw_line_strip,
+		vg_line_bbox
+	},
+	{
+		VG_LINE_LOOP,
+		N_("Line loop"),
+		NULL,
+		vg_draw_line_loop,
+		vg_line_bbox
+	},
+	{
+		VG_POINTS,
+		N_("Points"),
+		vg_point_init,
+		vg_draw_points,
+		vg_points_bbox
+	},
+	{
+		VG_CIRCLE,
+		N_("Circle"),
+		vg_circle_init,
+		vg_draw_circle,
+		vg_circle_bbox
+	},
+	{
+		VG_ELLIPSE,
+		N_("Ellipse"),
+		vg_ellipse_init,
+		vg_draw_ellipse,
+		vg_ellipse_bbox
+	}
 };
 const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
@@ -87,10 +123,13 @@ vg_init(struct vg *vg, int flags)
 	vg->layers = Malloc(sizeof(struct vg_layer), M_VG);
 	vg->nlayers = 0;
 	vg->cur_layer = 0;
+	vg->cur_block = NULL;
 	vg_push_layer(vg, _("Layer 0"));
 	vg->snap_mode = VG_GRID;
+	vg->ortho_mode = VG_NO_ORTHO;
 	vg->mask = NULL;
 	TAILQ_INIT(&vg->vges);
+	TAILQ_INIT(&vg->blocks);
 	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
 
 	for (i = 0; i < VG_NORIGINS; i++) {
@@ -121,6 +160,7 @@ void
 vg_destroy(struct vg *vg)
 {
 	struct vg_element *vge, *nvge;
+	struct vg_block *vgb, *nvgb;
 	struct object *ob = vg->pobj;
 	int y;
 
@@ -148,12 +188,21 @@ vg_destroy(struct vg *vg)
 		nvge = TAILQ_NEXT(vge, vges);
 		vg_free_element(vge);
 	}
+	for (vgb = TAILQ_FIRST(&vg->blocks);
+	     vgb != TAILQ_END(&vg->blocks);
+	     vgb = nvgb) {
+		nvgb = TAILQ_NEXT(vgb, vgbs);
+		Free(vgb, M_VG);
+	}
 	pthread_mutex_destroy(&vg->lock);
 }
 
 void
 vg_destroy_element(struct vg *vg, struct vg_element *vge)
 {
+	if (vge->block != NULL)
+		TAILQ_REMOVE(&vge->block->vges, vge, vgbmbs);
+
 	TAILQ_REMOVE(&vg->vges, vge, vges);
 	vg_free_element(vge);
 	vg->redraw = 1;
@@ -328,7 +377,7 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->type = eltype;
-	vge->layer = 0;
+	vge->layer = vg->cur_layer;
 	vge->redraw = 1;
 	vge->drawn = 0;
 	vge->vtx = NULL;
@@ -337,14 +386,23 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->line.stipple = 0x0;
 	vge->line.thickness = 1;
 	vge->fill.style = VG_NOFILL;
-	vge->fill.pat.gfx_obj = NULL;
-	vge->fill.pat.gfx_offs = 0;
+	vge->fill.tex.gfx_obj = NULL;
+	vge->fill.tex.gfx_index = 0;
 	vge->fill.color = SDL_MapRGB(vfmt, 255, 255, 255);
 	vge->color = SDL_MapRGB(vfmt, 255, 255, 255);
+
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
+
+	if (vg->cur_block != NULL) {
+		TAILQ_INSERT_HEAD(&vg->cur_block->vges, vge, vgbmbs);
+		vge->block = vg->cur_block;
+	} else {
+		vge->block = NULL;
+	}
 
 	for (i = 0; i < nvge_types; i++) {
 		if (vge_types[i].type == eltype) {
+			vge->ops.name = vge_types[i].name;
 			vge->ops.init = vge_types[i].init;
 			vge->ops.draw = vge_types[i].draw;
 			vge->ops.bbox = vge_types[i].bbox;
@@ -392,6 +450,7 @@ vg_draw_bboxes(struct vg *vg)
 	}
 }
 
+/* Evaluate collision between two rectangles. */
 int
 vg_collision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2)
 {
@@ -449,7 +508,10 @@ vg_rasterize(struct vg *vg)
 	vg_update_fragments(vg);
 }
 
-/* Translate tile coordinates to relative vg coordinates. */
+/*
+ * Translate tile coordinates to relative vg coordinates, applying
+ * positional and orthogonal restrictions as needed.
+ */
 void
 vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
@@ -461,6 +523,8 @@ vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
 
 	if (vg->snap_mode != VG_FREE_POSITIONING)
 		vg_snap_to(vg, vx, vy);
+	if (vg->ortho_mode != VG_NO_ORTHO)
+		vg_ortho_restrict(vg, vx, vy);
 }
 
 /* Translate tile coordinates to absolute vg coordinates. */
@@ -534,6 +598,7 @@ vg_vertex2(struct vg *vg, double x, double y)
 	vtx->y = y;
 	vtx->z = 0;
 	vtx->w = 1.0;
+	vg_block_offset(vg, vtx);
 	return (vtx);
 }
 
@@ -547,6 +612,7 @@ vg_vertex3(struct vg *vg, double x, double y, double z)
 	vtx->y = y;
 	vtx->z = z;
 	vtx->w = 1.0;
+	vg_block_offset(vg, vtx);
 	return (vtx);
 }
 
@@ -560,6 +626,7 @@ vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 	vtx->y = y;
 	vtx->z = z;
 	vtx->w = w;
+	vg_block_offset(vg, vtx);
 	return (vtx);
 }
 
@@ -574,6 +641,7 @@ vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 
 		vtx = vg_alloc_vertex(vge);
 		memcpy(vtx, &svtx[i], sizeof(struct vg_vertex));
+		vg_block_offset(vg, vtx);
 	}
 }
 

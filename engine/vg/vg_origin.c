@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.2 2004/04/19 02:15:17 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.3 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -50,20 +50,43 @@ void
 vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
 {
 	struct vg_element *vge;
+	struct vg_block *vgb;
 	struct vg_vertex *vtx;
 	int i;
 
 	if (o == 0) {
+		if (vg->cur_block != NULL) {
+			TAILQ_FOREACH(vge, &vg->cur_block->vges, vgbmbs) {
+				for (i = 0; i < vge->nvtx; i++) {
+					struct vg_vertex *vtx = &vge->vtx[i];
+
+					vtx->x -= ox - vg->origin[0].x;
+					vtx->y -= oy - vg->origin[0].y;
+					vtx->z -= oz - vg->origin[0].z;
+				}
+			}
+			vg->cur_block->origin.x = ox;
+			vg->cur_block->origin.y = oy;
+			vg->cur_block->origin.z = oz;
+			return;
+		}
+
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			for (i = 0; i < vge->nvtx; i++) {
 				struct vg_vertex *vtx = &vge->vtx[i];
 
-				vtx->x -= ox - vg->origin[o].x;
-				vtx->y -= oy - vg->origin[o].y;
-				vtx->z -= oz - vg->origin[o].z;
+				vtx->x -= ox - vg->origin[0].x;
+				vtx->y -= oy - vg->origin[0].y;
+				vtx->z -= oz - vg->origin[0].z;
 			}
 		}
+		TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
+			vgb->pos.x -= ox - vg->origin[0].x;
+			vgb->pos.y -= oy - vg->origin[0].y;
+			vgb->pos.z -= oz - vg->origin[0].z;
+		}
 	}
+
 	vg->origin[o].x = ox;
 	vg->origin[o].y = oy;
 	vg->origin[o].z = oz;
