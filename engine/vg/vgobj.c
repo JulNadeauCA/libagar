@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.9 2004/05/03 07:23:43 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.10 2004/05/12 04:53:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ const struct version vgobj_ver = {
 
 const struct object_ops vgobj_ops = {
 	vgobj_init,
-	NULL,
+	vgobj_reinit,
 	vgobj_destroy,
 	vgobj_load,
 	vgobj_save,
@@ -71,6 +71,14 @@ vgobj_init(void *p, const char *name)
 	object_init(vgo, "vgobj", name, &vgobj_ops);
 	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID);
 	vg_scale(vgo->vg, 8.5, 11, 1);
+}
+
+void
+vgobj_reinit(void *p)
+{
+	struct vgobj *vgo = p;
+
+	vg_reinit(vgo->vg);
 }
 
 void
