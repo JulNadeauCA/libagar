@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.20 2003/05/24 13:44:35 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.21 2003/05/26 03:03:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 
 #include "shift.h"
 
+#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
@@ -53,6 +54,7 @@ shift_init(void *p)
 	struct shift *sh = p;
 
 	tool_init(&sh->tool, "shift", &shift_ops);
+	TOOL(sh)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_SHIFT);
 	sh->mode = 0;
 	sh->multi = 0;
 }
@@ -62,15 +64,13 @@ shift_window(void *p)
 {
 	struct shift *sh = p;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
 
-	win = window_new("mapedit-tool-shift", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    180, 168,
-	    180, 168);
+	win = window_new("mapedit-tool-shift");
 	window_set_caption(win, "Shift");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	vb = vbox_new(win, 0);
 	{
 		static const char *modes[] = {
 			"Highest",
@@ -80,10 +80,10 @@ shift_window(void *p)
 		struct radio *rad;
 		struct checkbox *cb;
 
-		rad = radio_new(reg, modes);
+		rad = radio_new(vb, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
-
-		cb = checkbox_new(reg, "Multi");
+		
+		cb = checkbox_new(vb, "Multi");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->multi);
 	}
 	return (win);

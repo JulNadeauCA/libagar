@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.42 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.43 2003/05/26 03:03:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,8 +30,8 @@
 
 #include "stamp.h"
 
+#include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
-#include <engine/widget/text.h>
 #include <engine/widget/checkbox.h>
 
 const struct tool_ops stamp_ops = {
@@ -54,6 +54,7 @@ stamp_init(void *p)
 	struct stamp *stamp = p;
 
 	tool_init(&stamp->tool, "stamp", &stamp_ops);
+	TOOL(stamp)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_STAMP);
 	stamp->mode = STAMP_REPLACE;
 	stamp->inherit_flags = 1;
 }
@@ -61,33 +62,26 @@ stamp_init(void *p)
 struct window *
 stamp_window(void *p)
 {
+	static const char *mode_items[] = {
+		"Replace",
+		"Insert",
+		NULL
+	};
 	struct stamp *st = p;
 	struct window *win;
-	struct region *reg;
+	struct radio *rad;
+	struct checkbox *cb;
 
-	win = window_new("mapedit-tool-stamp", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    197, 167,
-	    197, 167);
+	win = window_new("mapedit-tool-stamp");
 	window_set_caption(win, "Stamp");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, -1, -1);
-	{
-		static const char *mode_items[] = {
-			"Replace",
-			"Insert",
-			NULL
-		};
-		struct radio *rad;
-		struct checkbox *cb;
-
-		rad = radio_new(reg, mode_items);
-		widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
-		win->focus = WIDGET(rad);
+	rad = radio_new(win, mode_items);
+	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
+	widget_set_focus(rad);
 		
-		cb = checkbox_new(reg, "Inherit flags");
-		widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
-	}
+	cb = checkbox_new(win, "Inherit flags");
+	widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
 	return (win);
 }
 
@@ -141,8 +135,8 @@ stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 
 	TAILQ_FOREACH(nref, &mapedit.src_node->nrefs, nrefs) {
 		noderef_draw(mv->map, nref,
-		    rd->x + WIDGET_ABSX(mv),
-		    rd->y + WIDGET_ABSY(mv));
+		    WIDGET(mv)->cx + rd->x,
+		    WIDGET(mv)->cy + rd->y);
 	}
 	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.67 2003/05/18 02:10:28 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.68 2003/05/20 12:05:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,16 +26,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
 #include <engine/engine.h>
-
 #include <engine/map.h>
 #include <engine/view.h>
 
+#include <engine/widget/window.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
-#include <engine/widget/text.h>
-#include <engine/widget/window.h>
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
@@ -79,11 +77,7 @@ tog_mvoption(int argc, union evarg *argv)
 		}
 		break;
 	case MAPEDIT_TOOL_NODEEDIT:
-		if (mv->nodeed.win->flags & WINDOW_SHOWN) {
-			window_hide(mv->nodeed.win);
-		} else {
-			window_show(mv->nodeed.win);
-		}
+		window_toggle_visibility(mv->nodeed.win);
 		break;
 	}
 }
@@ -257,6 +251,73 @@ tog_replace(int argc, union evarg *argv)
 	mv->constr.replace = state;
 }
 
+/* Create the graphic import selection window. */
+static struct window *
+gfx_import_window(struct object *ob, struct mapview *mv)
+{
+	char label[TLIST_LABEL_MAX];
+	struct window *win;
+	struct hbox *hb;
+	struct tlist *tl;
+	Uint32 i;
+
+	if ((win = window_new("mapedit-tss-%s", ob->name)) == NULL) {
+		return (NULL);
+	}
+	window_set_caption(win, "%s", ob->name);
+	window_set_closure(win, WINDOW_HIDE);
+
+	tl = tlist_new(win, TLIST_MULTI);
+	tlist_set_item_height(tl, ttf_font_height(font)*2);
+
+	for (i = 0; i < ob->art->nsubmaps; i++) {
+		struct map *sm = ob->art->submaps[i];
+
+		snprintf(label, sizeof(label), "m%u\n%ux%u nodes\n", i,
+		    sm->mapw, sm->maph);
+		tlist_insert_item(tl, NULL, label, sm);
+	}
+	for (i = 0; i < ob->art->nsprites; i++) {
+		SDL_Surface *sp = ob->art->sprites[i];
+	
+		snprintf(label, sizeof(label),
+		    "s%u\n%ux%u pixels, %ubpp\n", i, sp->w, sp->h,
+		    sp->format->BitsPerPixel);
+		tlist_insert_item(tl, ob->art->sprites[i], label, ob);
+	}
+	for (i = 0; i < ob->art->nanims; i++) {
+		struct art_anim *an = ob->art->anims[i];
+
+		snprintf(label, sizeof(label), "a%u\n%u frames\n", i,
+		    an->nframes);
+		tlist_insert_item(tl, (an->nframes > 0) ?
+		    an->frames[0] : NULL, label, ob);
+	}
+
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
+	{
+		int i;
+		int icons[] = {
+			MAPEDIT_TOOL_LEFT,
+			MAPEDIT_TOOL_RIGHT,
+			MAPEDIT_TOOL_UP,
+			MAPEDIT_TOOL_DOWN
+		};
+		struct button *bu;
+
+		for (i = 0; i < 4; i++) {
+			bu = button_new(hb, NULL);
+			button_set_label(bu, SPRITE(&mapedit, icons[i]));
+			event_new(bu, "button-pushed", import_gfx,
+			    "%p, %p, %i", tl, mv, i);
+		}
+		bu = button_new(hb, "Replace");
+		button_set_sticky(bu, 1);
+		event_new(bu, "button-pushed", tog_replace, "%p", mv);
+	}
+	return (win);
+}
+
 /* Display a tileset. */
 static void
 open_tileset(int argc, union evarg *argv)
@@ -264,75 +325,67 @@ open_tileset(int argc, union evarg *argv)
 	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
 	struct window *win;
-	struct region *reg;
+	struct hbox *hb;
 	struct mapview *mv;
 	struct button *bu;
-	static int cury = 140;
 
-	win = window_generic_new(202, 365, "mapedit-ts-%s", ob->name);
-	if (win == NULL) {
-		return;		/* Exists */
-	}
-	win->rd.x = view->w - 88;
-	win->rd.y = cury;
-	win->minw = 56;
-	win->minh = 117;
-	if ((cury += 32) + 264 > view->h) {
-		cury = 140;
+	if ((win = window_new("mapedit-ts-%s", ob->name)) == NULL) {
+		return;
 	}
 	window_set_caption(win, "%s", ob->name);
-	window_set_spacing(win, 1, 4);
+	window_set_position(win, WINDOW_MIDDLE_RIGHT, 1);
 
 	mv = Malloc(sizeof(struct mapview));
-	mapview_init(mv, ob->art->tile_map, MAPVIEW_TILEMAP|MAPVIEW_PROPS,
-	    100, 100);
+	mapview_init(mv, ob->art->tile_map, MAPVIEW_TILESET|MAPVIEW_PROPS);
 	mapview_set_selection(mv, 0, 0, 1, 1);
 
-	object_load(ob->art->tile_map, NULL);
+	object_load(ob->art->tile_map);
 
 	/* Map operation buttons */
-	reg = region_new(win, REGION_HALIGN|REGION_CLIPPING, 0, 0, 100, -1);
-	region_set_spacing(reg, 1, 1);
+	hb = hbox_new(win, 1);
+	WIDGET(hb)->flags |= WIDGET_CLIPPING;
+	hbox_set_spacing(hb, 0);
 	{
-		bu = button_new(reg, NULL,		/* Load map */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP), 0, -1, -1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP));
+		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
-		bu = button_new(reg, NULL,		/* Save map */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP), 0, -1, -1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP));
+		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 		
-		bu = button_new(reg, NULL,		/* Clear map */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_CLEAR_MAP), 0, -1, -1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_CLEAR_MAP));
+		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
 		
-		bu = button_new(reg, NULL,		/* Toggle grid */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-		event_new(bu, "button-pushed",
-		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
+		button_set_sticky(bu, 1);
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		    MAPEDIT_TOOL_GRID);
 
-		bu = button_new(reg, NULL,		/* Toggle props */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS), BUTTON_STICKY,
-		    -1, -1);
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_PROPS));
+		button_set_sticky(bu, 1);
+		button_set_focusable(bu, 0);
 		widget_set_bool(bu, "state", 1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-		event_new(bu, "button-pushed",
-		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		    MAPEDIT_TOOL_PROPS);
 	
-		bu = button_new(reg, NULL,		/* Toggle map edition */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-		event_new(bu, "button-pushed",
-		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
+		button_set_sticky(bu, 1);
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
+		    MAPEDIT_TOOL_EDIT);
 		
-		bu = button_new(reg, NULL,	       /* Toggle node edition */
-		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY,
-		    -1, -1);
-		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+		bu = button_new(hb, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
+		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed",
 		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
@@ -340,87 +393,11 @@ open_tileset(int argc, union evarg *argv)
 		event_new(win, "window-close", close_tileset, "%p, %p", mv, bu);
 	}
 
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	region_set_spacing(reg, 0, 0);
-	{
-		/* Map view */
-		region_attach(reg, mv);
-	}
+	hb = hbox_new(win, 0);
+	object_attach(hb, mv);
 
+	mv->constr.win = gfx_import_window(ob, mv);
 	window_show(win);
-
-	/* Create the source tile selection window. */
-	win = window_generic_new(152, 287, "mapedit-tss-%s", ob->name);
-	if (win == NULL)
-		return;					/* Exists */
-	mv->constr.win = win;
-	event_new(win, "window-close", window_generic_hide, "%p", win);
-	window_set_caption(win, "%s", ob->name);
-	{
-		struct tlist *tl;
-		struct region *reg_buttons1, *reg_buttons2;
-		Uint32 i;
-		
-		reg_buttons1 = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
-		reg_buttons2 = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
-
-		reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-		{
-			char label[TLIST_LABEL_MAX];
-
-			tl = tlist_new(reg, 100, 0, TLIST_MULTI);
-			tlist_set_item_height(tl, ttf_font_height(font)*2);
-
-			for (i = 0; i < ob->art->nsubmaps; i++) {
-				snprintf(label, sizeof(label),
-				    "m%u\n%ux%u nodes\n", i,
-				    ob->art->submaps[i]->mapw,
-				    ob->art->submaps[i]->maph);
-				tlist_insert_item(tl, NULL,
-				    label, ob->art->submaps[i]);
-			}
-
-			for (i = 0; i < ob->art->nsprites; i++) {
-				snprintf(label, sizeof(label),
-				    "s%u\n%ux%u pixels, %ubpp\n", i,
-				    ob->art->sprites[i]->w,
-				    ob->art->sprites[i]->h,
-				    ob->art->sprites[i]->format->BitsPerPixel);
-				tlist_insert_item(tl, ob->art->sprites[i],
-				    label, ob);
-			}
-			
-			for (i = 0; i < ob->art->nanims; i++) {
-				struct art_anim *an = ob->art->anims[i];
-
-				snprintf(label, sizeof(label),
-				    "a%u\n%u frames\n", i, an->nframes);
-				tlist_insert_item(tl, (an->nframes > 0) ?
-				    an->frames[0] : NULL, label, ob);
-			}
-		}
-		
-		{
-			int i;
-			int icons[] = {
-				MAPEDIT_TOOL_LEFT,
-				MAPEDIT_TOOL_RIGHT,
-				MAPEDIT_TOOL_UP,
-				MAPEDIT_TOOL_DOWN
-			};
-			struct button *bu;
-
-			for (i = 0; i < 4; i++) {
-				bu = button_new(reg_buttons1, NULL,
-				    SPRITE(&mapedit, icons[i]), 0, 26, -1);
-				event_new(bu, "button-pushed", import_gfx,
-				    "%p, %p, %i", tl, mv, i);
-			}
-			bu = button_new(reg_buttons2, "Replace", NULL,
-			    BUTTON_STICKY, 100, -1);
-			event_new(bu, "button-pushed", tog_replace, "%p", mv);
-		}
-	}
 }
 
 /* Recursive function to find objects linked to gfx. */
@@ -443,34 +420,38 @@ find_gfx(struct tlist *tl, struct object *pob)
 	}
 }
 
+static void
+poll_tilesets(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+
+	tlist_clear_items(tl);
+
+	lock_linkage();
+	find_gfx(tl, world);
+	unlock_linkage();
+	
+	tlist_restore_selections(tl);
+}
+
 /* Create the tilesets window . */
 struct window *
 tilesets_window(void)
 {
 	struct window *win;
-	struct region *reg;
+	struct tlist *tl;
 
-	win = window_generic_new(221, 112, "mapedit-tilesets");
-	if (win == NULL)
-		return (NULL);		/* Exists */
-	event_new(win, "window-close", window_generic_hide, "%p", win);
-	win->rd.x = view->w - 88;
-	win->rd.y = 0;
-	window_set_caption(win, "Tilesets");
-
-	reg = region_new(win, 0, 0, 0, 100, 100);
-	{
-		struct tlist *tl;
-
-		tl = tlist_new(reg, 100, 100, 0);
-		tlist_set_item_height(tl, ttf_font_height(font)*2);
-
-		lock_linkage();
-		find_gfx(tl, world);
-		unlock_linkage();
-
-		event_new(tl, "tlist-changed", open_tileset, NULL);
+	if ((win = window_new("mapedit-tilesets")) == NULL) {
+		return (NULL);
 	}
+	window_set_caption(win, "Tilesets");
+	window_set_position(win, WINDOW_UPPER_RIGHT, 0);
+	window_set_closure(win, WINDOW_HIDE);
+
+	tl = tlist_new(win, TLIST_POLL);
+	tlist_set_item_height(tl, ttf_font_height(font)*2);
+	event_new(tl, "tlist-poll", poll_tilesets, NULL);
+	event_new(tl, "tlist-changed", open_tileset, NULL);
 	return (win);
 }
 

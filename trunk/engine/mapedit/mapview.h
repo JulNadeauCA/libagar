@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.40 2003/04/25 09:47:07 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.41 2003/05/08 03:29:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -27,7 +27,7 @@ struct mapview {
 	int	flags;
 #define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
 #define MAPVIEW_INDEPENDENT	 0x002	/* Zoom/ss independent from map's */
-#define MAPVIEW_TILEMAP		 0x004	/* Map of `source' nodes */
+#define MAPVIEW_TILESET		 0x004	/* Map of source nodes */
 #define MAPVIEW_GRID		 0x008	/* Display a grid */
 #define MAPVIEW_PROPS		 0x010	/* Display node properties */
 #define MAPVIEW_ZOOMING_IN	 0x020
@@ -112,15 +112,15 @@ enum mapview_prop_labels {
 struct node;
 
 __BEGIN_DECLS
-extern DECLSPEC struct mapview	*mapview_new(struct region *, struct map *, int,
-				             int, int);
-extern DECLSPEC void		 mapview_init(struct mapview *, struct map *,
-				              int, int, int);
-extern DECLSPEC void		 mapview_destroy(void *);
+extern DECLSPEC struct mapview	*mapview_new(void *, struct map *, int);
+
+extern DECLSPEC void	 mapview_init(struct mapview *, struct map *, int);
+extern DECLSPEC void	 mapview_destroy(void *);
+extern DECLSPEC void	 mapview_draw(void *);
+extern DECLSPEC void	 mapview_scale(void *, int, int);
 
 extern DECLSPEC void	 mapview_node_edit_win(struct mapview *);
-extern DECLSPEC void	 mapview_draw(void *);
-extern DECLSPEC void	 mapview_draw_props(struct mapview *, struct node *,
+extern __inline__ void	 mapview_draw_props(struct mapview *, struct node *,
 			                    int, int, int, int);
 extern DECLSPEC void	 mapview_center(struct mapview *, int, int);
 extern DECLSPEC int	 mapview_zoom(struct mapview *, int);

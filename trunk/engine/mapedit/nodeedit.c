@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.10 2003/03/28 01:57:37 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.11 2003/05/20 12:05:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,21 +26,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/strlcat.h>
-#include <engine/compat/snprintf.h>
 #include <engine/engine.h>
-
 #include <engine/physics.h>
 #include <engine/map.h>
 #include <engine/view.h>
 
-#include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-#include <engine/widget/primitive.h>
+#include <engine/widget/vbox.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
-#include <engine/widget/text.h>
+#include <engine/widget/primitive.h>
 
 #include "mapedit.h"
 #include "mapview.h"
@@ -252,55 +249,48 @@ nodeedit_init(struct mapview *mv)
 {
 	struct map *m = mv->map;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct hbox *hb;
+	struct tlist *tl;
 
-	win = window_generic_new(268, 346, "mapedit-node-%s-%s",
-	    OBJECT(mv)->name, OBJECT(m)->name);
-	if (win == NULL) {
-		return;						/* Exists */
+	if ((win = window_new("mapedit-node-%s-%s", OBJECT(mv)->name,
+	    OBJECT(m)->name)) == NULL) {
+		return;
 	}
 	window_set_caption(win, "%s node", OBJECT(m)->name);
-	window_set_min_geo(win, 175, 160);
 	event_new(win, "window-close", nodeedit_close_win, "%p", mv);
 	
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	reg->flags |= REGION_CLIPPING;
+	vb = vbox_new(win, VBOX_WFILL);
+	WIDGET(vb)->flags |= WIDGET_CLIPPING;
 	{
-		mv->nodeed.node_flags_lab = label_new(reg, 100, -1, " ");
-		mv->nodeed.noderef_type_lab = label_new(reg, 100, -1, " ");
-		mv->nodeed.noderef_flags_lab = label_new(reg, 100, -1, " ");
-		mv->nodeed.noderef_center_lab = label_new(reg, 100, -1, " ");
+		mv->nodeed.node_flags_lab = label_new(vb, "");
+		mv->nodeed.noderef_type_lab = label_new(vb, "");
+		mv->nodeed.noderef_flags_lab = label_new(vb, "");
+		mv->nodeed.noderef_center_lab = label_new(vb, "");
 	}
 
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
 	{
 		struct button *bu;
 
-		bu = button_new(reg, "Remove", NULL, 0, 25, -1);
-		event_new(bu, "button-pushed",
-		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_REMOVE);
-
-		bu = button_new(reg, "Dup", NULL, 0, 25, -1);
-		event_new(bu, "button-pushed",
-		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_DUP);
-		
-		bu = button_new(reg, "Up", NULL, 0, 25, -1);
-		event_new(bu, "button-pushed",
-		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_MOVE_UP);
-
-		bu = button_new(reg, "Down", NULL, 0, 25, -1);
-		event_new(bu, "button-pushed",
-		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_MOVE_DOWN);
+		bu = button_new(hb, "Remove");
+		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		    MAPVIEW_NODE_REMOVE);
+		bu = button_new(hb, "Dup");
+		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		    MAPVIEW_NODE_DUP);
+		bu = button_new(hb, "Move up");
+		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		    MAPVIEW_NODE_MOVE_UP);
+		bu = button_new(hb, "Move down");
+		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
+		    MAPVIEW_NODE_MOVE_DOWN);
 	}
 	
-	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
-	{
-		mv->nodeed.refs_tl = tlist_new(reg, 100, 100,
-		    TLIST_POLL|TLIST_MULTI);
-		tlist_set_item_height(mv->nodeed.refs_tl, TILEH);
-		event_new(mv->nodeed.refs_tl, "tlist-poll",
-		    nodeedit_poll, "%p", mv);
-	}
+	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
+	tlist_set_item_height(tl, TILEH);
+	event_new(mv->nodeed.refs_tl, "tlist-poll", nodeedit_poll, "%p", mv);
 
+	mv->nodeed.refs_tl = tl;
 	mv->nodeed.win = win;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.48 2003/05/24 15:49:26 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.49 2003/05/26 03:03:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -26,165 +26,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
-#include <engine/compat/strlcat.h>
 #include <engine/engine.h>
-
 #include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/prop.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/button.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/text.h>
-
 #include <string.h>
 
 #include "mapedit.h"
 #include "mapview.h"
-
-struct window *
-fileops_new_map_window(void)
-{
-	struct window *win;
-	struct region *reg;
-	struct textbox *name_tbox, *w_tbox, *h_tbox;
-	struct button *button;
-
-	win = window_new("mapedit-new-map-dialog", WINDOW_CENTER,
-	     0, 0,
-	     380, 162,
-	     187, 162);
-	window_set_caption(win, "Create a map");
-	window_set_spacing(win, 0, 10);
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		name_tbox = textbox_new(reg, "Name: ");
-		win->focus = WIDGET(name_tbox);
-	}
-
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
-	{
-		char s[16];
-
-		w_tbox = textbox_new(reg, "W: ");
-		snprintf(s, sizeof(s), "%u",
-		    prop_get_uint32(&mapedit, "default-map-width"));
-		textbox_printf(w_tbox, s);
-
-		h_tbox = textbox_new(reg, "H: ");
-		snprintf(s, sizeof(s), "%u",
-		    prop_get_uint32(&mapedit, "default-map-height"));
-		textbox_printf(h_tbox, s);
-		
-		WIDGET(w_tbox)->rw = 50;
-		WIDGET(h_tbox)->rw = 50;
-	}
-
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	{
-		button = button_new(reg, "Ok", NULL, BUTTON_NOFOCUS,
-		    50, 100);
-		event_new(button, "button-pushed", fileops_new_map,
-		    "%p, %p, %p", name_tbox, w_tbox, h_tbox);
-		event_new(name_tbox, "textbox-return", fileops_new_map,
-		    "%p, %p, %p", name_tbox, w_tbox, h_tbox);
-		
-		button = button_new(reg, "Cancel", NULL, BUTTON_NOFOCUS,
-		    50, 100);
-		event_new(button, "button-pushed", window_generic_hide,
-		    "%p", win);
-	}
-
-	return (win);
-}
-
-struct window *
-fileops_load_map_window(void)
-{
-	struct window *win;
-	struct region *reg;
-	struct textbox *name_tbox;
-	struct button *button;
-
-	win = window_new("mapedit-load-map-dialog", WINDOW_CENTER, -1, -1,
-	    356, 105, 100, 105);
-	window_set_caption(win, "Load a map");
-
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
-	{
-		name_tbox = textbox_new(reg, "Name: ");
-		win->focus = WIDGET(name_tbox);
-	}
-	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	{
-		button = button_new(reg, "OK", NULL, BUTTON_NOFOCUS, 50, 100);
-		event_new(button, "button-pushed", fileops_load_map,
-		    "%p", name_tbox);
-		event_new(name_tbox, "textbox-return", fileops_load_map,
-		    "%p", name_tbox);
-		
-		button = button_new(reg, "Cancel", NULL, 0, 50, 100);
-		event_new(button, "button-pushed", window_generic_hide,
-		    "%p",  win);
-	}
-
-	return (win);
-}
-
-/* Create a new map. */
-void
-fileops_new_map(int argc, union evarg *argv)
-{
-	char path[FILENAME_MAX], name[OBJECT_NAME_MAX];
-	struct widget *wid = argv[0].p;
-	struct textbox *name_tbox = argv[1].p;
-	struct textbox *w_tbox = argv[2].p;
-	struct textbox *h_tbox = argv[3].p;
-	struct window *win;
-	struct map *m;
-	int w, h;
-
-	if (textbox_copy_string(name_tbox, name, sizeof(name)) >=
-	    sizeof(name)) {
-		text_msg("Error", "Map name too big.");
-		return;
-	}
-	if (name[0] == '\0') {
-		text_msg("Error", "No map name given.");
-		return;
-	}
-	if (object_path(name, "map", path, sizeof(path)) == 0) {
-		text_msg("Error", "Existing map (%s).", path);
-		return;
-	}
-	w = textbox_int(w_tbox);
-	h = textbox_int(h_tbox);
-
-	m = Malloc(sizeof(struct map));
-	map_init(m, name);
-	if (map_alloc_nodes(m, (unsigned int)w, (unsigned int)h) == -1) {
-		text_msg("Error allocating nodes", "%s", error_get());
-		object_destroy(m);
-		free(m);
-		return;
-	}
-
-	m->origin.x = w / 2;
-	m->origin.y = h - 2;	/* XXX pref */
-
-	win = mapedit_window(m);
-	view_attach(win);
-	window_show(win);
-
-	textbox_printf(name_tbox, "");
-	window_hide(wid->win);
-}
 
 /* Save the map to the default location. */
 void
@@ -192,51 +43,8 @@ fileops_save_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
-	if (object_save(mv->map, NULL) == -1)
+	if (object_save(mv->map) == -1)
 		text_msg("Error saving", "%s", error_get());
-}
-
-/* Load a map from disk. */
-void
-fileops_load_map(int argc, union evarg *argv)
-{
-	char path[FILENAME_MAX];
-	char name[OBJECT_NAME_MAX];
-	struct widget *wid = argv[0].p;
-	struct textbox *name_tbox = argv[1].p;
-	struct window *win;
-	struct map *m;
-
-	if (textbox_copy_string(name_tbox, name, sizeof(name)) >=
-	    sizeof(name)) {
-		text_msg("Error", "Map name too big.");
-		return;
-	}
-	if (name[0] == '\0') {
-		text_msg("Error", "No map name given.");
-		return;
-	}
-	if (object_path(name, "map", path, sizeof(path)) == -1) {
-		text_msg("Error finding map", "%s", error_get());
-		return;
-	}
-	
-	m = Malloc(sizeof(struct map));
-	map_init(m, name);
-	if (object_load(m, NULL) == -1) {
-		text_msg("Error loading map", "%s", error_get());
-		object_destroy(m);
-		free(m);
-		return;
-	}
-
-	win = mapedit_window(m);
-	view_attach(win);
-	window_show(win);
-
-	textbox_printf(name_tbox, "");
-
-	window_hide(wid->win);
 }
 
 /* Revert to the map on disk. */
@@ -245,27 +53,12 @@ fileops_revert_map(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	struct map *m = mv->map;
-	char path[FILENAME_MAX];
-	char file[FILENAME_MAX];
 
-	/* Always edit the user copy. */
-	if (prop_copy_string(config, "path.user_data_dir", path, sizeof(path)) >
-	    sizeof(path))
-		goto toobig;
-	if (snprintf(file, sizeof(path), "/map/%s.map", OBJECT(m)->name) >
-	    sizeof(path))
-		goto toobig;
-	if (strlcat(path, file, sizeof(path)) > sizeof(path))
-		goto toobig;
-
-	if (object_load(mv->map, path) == 0) {
-		mapview_center(mv, m->origin.x, m->origin.y);
-	} else {
+	if (object_load(mv->map) == -1) {
 		text_msg("Error reverting", "%s", error_get());
+		return;
 	}
-	return;
-toobig:
-	text_msg("Error reverting", "Path too big.");
+	mapview_center(mv, m->origin.x, m->origin.y);
 }
 
 /* Clear all nodes on a map. */

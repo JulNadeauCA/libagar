@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.11 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.12 2003/05/24 15:53:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -30,8 +30,6 @@
 
 #include "select.h"
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
 #include <engine/mapedit/selops.h>
 
 const struct tool_ops select_ops = {
@@ -89,6 +87,7 @@ select_init(void *p)
 	struct select *sel = p;
 
 	tool_init(&sel->tool, "select", &select_ops);
+	TOOL(sel)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_SELECT);
 	TOOL(sel)->cursor = SPRITE(sel, TOOL_SELECT_CURSOR);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_c, select_copy, 0);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_v, select_paste, 1);

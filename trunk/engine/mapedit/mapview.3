@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.23 2003/03/26 04:56:28 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.24 2003/03/29 03:01:58 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -46,13 +46,10 @@ structures.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct mapview *
-.Fn mapview_new "struct region *reg" "struct map *m" "int flags" \
-                "int rw" "int rh"
+.Fn mapview_new "void *parent" "struct map *map" "int flags"
 .Pp
 .Ft void
-.Fn mapview_init "struct mapview *mv" "struct map *m" "int flags" \
-                 "int rw" "int rh"
-.Pp
+.Fn mapview_init "struct mapview *mv" "struct map *map" "int flags"
 .Pp
 .Ft void
 .Fn mapview_center "struct mapview *mv" "int x" "int y"
@@ -70,20 +67,16 @@ The
 .Fn mapview_init
 function initializes a
 .Nm
-widget of size
-.Fa rw
-x
-.Fa rh
-displaying map
-.Fa m .
+widget to display
+.Fa map .
 The
 .Fa flags
-can be changed at runtime, and may include:
+may include:
 .Pp
 .Bd -literal
 #define MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
 #define MAPVIEW_INDEPENDENT	0x002	/* Zoom/ss independent from map */
-#define MAPVIEW_TILEMAP		0x004	/* Map of `source' nodes */
+#define MAPVIEW_TILESET		0x004	/* Map of source nodes */
 #define MAPVIEW_GRID		0x008	/* Display a grid */
 #define MAPVIEW_PROPS		0x010	/* Display node properties */
 #define MAPVIEW_SAVEABLE	0x100	/* Load/save keys */
@@ -93,7 +86,7 @@ can be changed at runtime, and may include:
 The
 .Dv MAPVIEW_EDIT
 flag enables write operations on the map.
-.Dv MAPVIEW_TILEMAP
+.Dv MAPVIEW_TILESET
 allows nodes on this map to be selected as source nodes for level edition
 operations.
 The latter two flags are only available if the level editor,
@@ -158,8 +151,6 @@ The
 widget reacts to the following events:
 .Pp
 .Bl -tag -width 25n
-.It widget-scaled
-Readjust the visible map area.
 .It widget-lostfocus
 Stop any zooming in process.
 .It window-mousebuttondown
@@ -193,7 +184,6 @@ widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr map 3 ,
-.Xr region 3 ,
 .Xr mapedit 3 ,
 .Xr widget 3 ,
 .Xr window 3

@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.36 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.37 2003/05/26 03:03:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,22 +26,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/snprintf.h>
-
 #include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/view.h>
 
 #include "merge.h"
 
+#include <engine/widget/vbox.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
-#include <engine/widget/text.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
-
-#include <libfobj/vector.h>
 
 #include <string.h>
 
@@ -70,6 +67,7 @@ merge_init(void *p)
 	struct merge *merge = p;
 
 	tool_init(&merge->tool, "merge", &merge_ops);
+	TOOL(merge)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_MERGE);
 	merge->mode = MERGE_REPLACE;
 	merge->inherit_flags = 1;
 	merge->random_shift = 0;
@@ -129,7 +127,7 @@ merge_create_brush(int argc, union evarg *argv)
 
 	m = Malloc(sizeof(struct map));
 	map_init(m, m_name);
-	if (object_load(m, NULL) == -1) {
+	if (object_load(m) == -1) {
 		if (map_alloc_nodes(m,
 		    prop_get_uint32(&mapedit, "default-brush-width"),
 		    prop_get_uint32(&mapedit, "default-brush-height")) == -1) {
@@ -153,7 +151,7 @@ merge_edit_brush(int argc, union evarg *argv)
 	struct merge *mer = argv[1].p;
 	struct window *win;
 	struct tlist_item *it;
-	struct region *reg;
+	struct vbox *vb;
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		struct map *brush = it->p1;
@@ -161,18 +159,13 @@ merge_edit_brush(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		win = window_generic_new(169, 242, "mapedit-tool-merge-%s",
-		   OBJECT(brush)->name);
-		if (win == NULL) 		/* Exists */
+		win = window_new("mapedit-tool-merge-%s", OBJECT(brush)->name);
+		if (win == NULL)
 			continue;
-		window_set_min_geo(win, 181, 189);
+		/* XXX close dialog */
 
-		reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-		{
-			mapview_new(reg, brush,
-			    MAPVIEW_EDIT|MAPVIEW_GRID|MAPVIEW_PROPS,
-			    100, 100);
-		}
+		vb = vbox_new(win, 0);
+		mapview_new(vb, brush, MAPVIEW_EDIT|MAPVIEW_GRID|MAPVIEW_PROPS);
 		window_show(win);
 	}
 }
@@ -209,7 +202,7 @@ merge_load_brush_set(int argc, union evarg *argv)
 {
 	struct merge *mer = argv[1].p;
 
-	if (object_load(mer, NULL) == -1)
+	if (object_load(mer) == -1)
 		text_msg("Error loading brush set", "%s", error_get());
 }
 
@@ -218,7 +211,7 @@ merge_save_brush_set(int argc, union evarg *argv)
 {
 	struct merge *mer = argv[1].p;
 	
-	if (object_save(mer, NULL) == -1)
+	if (object_save(mer) == -1)
 		text_msg("Error saving brush set", "%s", error_get());
 }
 
@@ -227,16 +220,15 @@ merge_window(void *p)
 {
 	struct merge *mer = p;
 	struct window *win;
-	struct region *reg;
+	struct vbox *vb;
+	struct hbox *hb;
 	struct textbox *name_tbox;
 
-	win = window_new("mapedit-tool-merge", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    265, 294,
-	    265, 294);
-	window_set_caption(win, "Merge");
+	win = window_new("mapedit-tool-merge");
+	window_set_caption(win, "Merge tool");
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	vb = vbox_new(win, 0);
 	{
 		static const char *mode_items[] = {
 			"Replace",
@@ -245,52 +237,48 @@ merge_window(void *p)
 		struct radio *rad;
 		struct checkbox *cb;
 
-		rad = radio_new(reg, mode_items);
+		rad = radio_new(vb, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
-
-		cb = checkbox_new(reg, "Inherit node flags");
+		cb = checkbox_new(vb, "Inherit node flags");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->inherit_flags);
-		
-		cb = checkbox_new(reg, "Random shift");
+		cb = checkbox_new(vb, "Random shift");
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	hb = hbox_new(win, 0);
 	{
 		struct button *bu;
 		
-		name_tbox = textbox_new(reg, "Name: ");
-		WIDGET(name_tbox)->rw = 75;
-		event_new(name_tbox, "textbox-return",
-		    merge_create_brush, "%p, %p", mer, name_tbox);
+		name_tbox = textbox_new(hb, "Name: ");
+		event_new(name_tbox, "textbox-return", merge_create_brush,
+		    "%p, %p", mer, name_tbox);
 
-		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 25, -1);
-		button_set_padding(bu, 6);
-		event_new(bu, "button-pushed",
-		    merge_create_brush, "%p, %p", mer, name_tbox);
+		bu = button_new(hb, "Create");
+		button_set_padding(bu, 6);			/* Align */
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", merge_create_brush, "%p, %p",
+		    mer, name_tbox);
 	}
 	
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
+	hb = hbox_new(win, 1);
 	{
 		struct button *bu;
 		
-		bu = button_new(reg, "Load set", NULL, BUTTON_NOFOCUS, 25, -1);
+		bu = button_new(hb, "Load set");
 		event_new(bu, "button-pushed", merge_load_brush_set, "%p", mer);
 		
-		bu = button_new(reg, "Save set", NULL, BUTTON_NOFOCUS, 25, -1);
+		bu = button_new(hb, "Save set");
 		event_new(bu, "button-pushed", merge_save_brush_set, "%p", mer);
 
-		bu = button_new(reg, "Edit", NULL, BUTTON_NOFOCUS, 25, -1);
+		bu = button_new(hb, "Edit");
 		event_new(bu, "button-pushed", merge_edit_brush, "%p", mer);
 
-		bu = button_new(reg, "Remove", NULL, BUTTON_NOFOCUS, 25, -1);
+		bu = button_new(hb, "Remove");
 		event_new(bu, "button-pushed", merge_remove_brush, "%p", mer);
 	}
 	
-	reg = region_new(win, REGION_VALIGN, 0, -1, 100, 0);
-	{
-		mer->brushes_tl = tlist_new(reg, 100, 0, TLIST_MULTI);
-	}
+	vb = vbox_new(win, 0);
+	mer->brushes_tl = tlist_new(vb, TLIST_MULTI);
 	
 	return (win);
 }
@@ -722,18 +710,18 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 		if (!it->selected)
 			continue;
 		sm = it->p1;
-		for (sy = 0, dy = WIDGET_ABSY(mv) +
-		     rd->y - (sm->maph*mv->map->tileh)/2;
+		for (sy = 0, dy = rd->y - (sm->maph * mv->map->tileh)/2;
 		     sy < sm->maph;
 		     sy++, dy += mv->map->tileh) {
-			for (sx = 0, dx = WIDGET_ABSX(mv) +
-			     rd->x - (sm->mapw*mv->map->tilew)/2;
+			for (sx = 0, dx = rd->x - (sm->mapw * mv->map->tilew)/2;
 			     sx < sm->mapw;
 			     sx++, dx += mv->map->tilew) {
 				struct node *srcnode = &sm->map[sy][sx];
 
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-					noderef_draw(mv->map, nref, dx, dy);
+					noderef_draw(mv->map, nref,
+					    WIDGET(mv)->cx+dx,
+					    WIDGET(mv)->cy+dy);
 					if (mv->flags & MAPVIEW_PROPS) {
 						mapview_draw_props(mv,
 						    srcnode, dx, dy, -1, -1);
