@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.2 2002/01/25 11:14:30 vedge Exp $	*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -182,6 +182,7 @@ object_wait(void *obp, int mask)
 			ob->wmask &= ~(mask);
 			return (1);
 		}
+		SDL_Delay(1);
 	}
 
 	ob->wmask &= ~(mask);
