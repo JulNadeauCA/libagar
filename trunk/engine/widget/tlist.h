@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.7 2002/10/30 22:24:07 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.8 2002/11/14 02:17:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -31,10 +31,6 @@ struct tlist {
 	int	 xspacing;	/* Horiz spacing */
 	int	 yspacing;	/* Vert spacing */
 	int	 item_h;	/* Item height */
-
-	struct {	/* XXX */
-		void	(*update)(struct tlist *);	/* Before redraw */
-	} ops;
 
 	struct tlist_itemq	 items;
 	int			 nitems;

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.13 2002/11/14 00:49:11 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.14 2002/11/14 02:17:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -101,7 +101,6 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	tl->xspacing = 6;
 	tl->yspacing = 3;
 	tl->item_h = 16;
-	tl->ops.update = NULL;
 	tl->nitems = 0;
 	TAILQ_INIT(&tl->items);
 
@@ -171,10 +170,6 @@ tlist_draw(void *p)
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
-
-	if (tl->ops.update != NULL) {		/* XXX */
-		tl->ops.update(tl);
-	}
 
 	pthread_mutex_lock(&tl->items_lock);
 
