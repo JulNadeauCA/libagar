@@ -29,6 +29,8 @@
  */
 
 #include <engine/engine.h>
+#include <engine/input.h>
+#include <engine/physics.h>
 
 static void	mapdir_change(struct mapdir *, struct noderef *);
 
