@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.87 2002/11/22 08:56:49 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.88 2002/11/22 23:16:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -79,7 +79,6 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 
 	ob->type = strdup(type);
 	ob->name = strdup(name);
-	ob->desc = NULL;
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
@@ -143,8 +142,6 @@ object_destroy(void *p)
 		free(ob->name);
 	if (ob->type != NULL)
 		free(ob->type);
-	if (ob->desc != NULL)
-		free(ob->desc);
 
 	free(ob);
 }
