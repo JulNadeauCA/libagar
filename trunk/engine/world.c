@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.40 2002/07/27 21:30:27 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.41 2002/08/20 00:07:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -36,10 +36,11 @@
 #include <pwd.h>
 #include <errno.h>
 
+#include <libfobj/fobj.h>
+
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/physics.h>
-
 #include <engine/mapedit/mapedit.h>
 
 static const struct object_ops world_ops = {
@@ -127,9 +128,9 @@ world_save(void *p, int fd)
 			/* XXX map editor hack */
 			continue;
 		}
-		fobj_write_uint32(fd, ob->id);
-		fobj_write_string(fd, ob->name);
-		fobj_write_string(fd, (ob->desc != NULL) ? ob->desc : "");
+		write_uint32(fd, ob->id);
+		write_string(fd, ob->name);
+		write_string(fd, (ob->desc != NULL) ? ob->desc : "");
 		object_save(ob);
 	}
 

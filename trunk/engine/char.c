@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.54 2002/06/13 09:07:42 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.55 2002/08/19 05:33:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -32,6 +32,9 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+
+#include <libfobj/fobj.h>
+#include <libfobj/buf.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
@@ -140,36 +143,36 @@ char_load(void *p, int fd)
 	pthread_mutex_lock(&ch->lock);
 
 	/* Read character properties. */
-	free(fobj_read_string(fd));		/* Ignore name */
-	ch->flags = fobj_read_uint32(fd);
-	ch->level = fobj_read_uint32(fd);
-	ch->exp = fobj_read_uint32(fd);
-	ch->age = fobj_read_uint32(fd);
-	ch->seed = fobj_read_uint32(fd);
-	ch->maxspeed = fobj_read_uint32(fd);
+	free(read_string(fd));		/* Ignore name */
+	ch->flags = read_uint32(fd);
+	ch->level = read_uint32(fd);
+	ch->exp = read_uint32(fd);
+	ch->age = read_uint32(fd);
+	ch->seed = read_uint32(fd);
+	ch->maxspeed = read_uint32(fd);
 
-	ch->maxhp = fobj_read_uint32(fd);
-	ch->hp = fobj_read_uint32(fd);
-	ch->maxmp = fobj_read_uint32(fd);
-	ch->mp = fobj_read_uint32(fd);
+	ch->maxhp = read_uint32(fd);
+	ch->hp = read_uint32(fd);
+	ch->maxmp = read_uint32(fd);
+	ch->mp = read_uint32(fd);
 
-	ch->nzuars = fobj_read_uint32(fd);
+	ch->nzuars = read_uint32(fd);
 
 	dprintf("%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d\n",
 	    OBJECT(ch)->name, ch->flags, ch->level, ch->exp, ch->age,
 	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
 
-	if (fobj_read_uint32(fd) > 0) {
+	if (read_uint32(fd) > 0) {
 		char *mname, *minput;
 		Uint32 x, y, offs, flags, speed;
 
-		mname = fobj_read_string(fd);
-		x = fobj_read_uint32(fd);
-		y = fobj_read_uint32(fd);
-		offs = fobj_read_uint32(fd);
-		flags = fobj_read_uint32(fd);
-		speed = fobj_read_uint32(fd);
-		minput = fobj_read_string(fd);
+		mname = read_string(fd);
+		x = read_uint32(fd);
+		y = read_uint32(fd);
+		offs = read_uint32(fd);
+		flags = read_uint32(fd);
+		speed = read_uint32(fd);
+		minput = read_string(fd);
 
 		/* XXX input devices should be linked */
 		if (strcmp(minput, "keyboard0") == 0) {
@@ -228,36 +231,36 @@ char_save(void *p, int fd)
 	pthread_mutex_lock(&ch->lock);
 
 	/* Write character properties. */
-	fobj_bwrite_string(buf, ch->obj.name);
-	fobj_bwrite_uint32(buf, ch->flags & ~(CHAR_DONTSAVE));
-	fobj_bwrite_uint32(buf, ch->level);
-	fobj_bwrite_uint32(buf, ch->exp);
-	fobj_bwrite_uint32(buf, ch->age);
-	fobj_bwrite_uint32(buf, ch->seed);
-	fobj_bwrite_uint32(buf, ch->maxspeed);
+	buf_write_string(buf, ch->obj.name);
+	buf_write_uint32(buf, ch->flags & ~(CHAR_DONTSAVE));
+	buf_write_uint32(buf, ch->level);
+	buf_write_uint32(buf, ch->exp);
+	buf_write_uint32(buf, ch->age);
+	buf_write_uint32(buf, ch->seed);
+	buf_write_uint32(buf, ch->maxspeed);
 
-	fobj_bwrite_uint32(buf, ch->maxhp);
-	fobj_bwrite_uint32(buf, ch->hp);
-	fobj_bwrite_uint32(buf, ch->maxmp);
-	fobj_bwrite_uint32(buf, ch->mp);
+	buf_write_uint32(buf, ch->maxhp);
+	buf_write_uint32(buf, ch->hp);
+	buf_write_uint32(buf, ch->maxmp);
+	buf_write_uint32(buf, ch->mp);
 	
-	fobj_bwrite_uint32(buf, ch->nzuars);
+	buf_write_uint32(buf, ch->nzuars);
 
 	if (pos != NULL) {
-		fobj_bwrite_uint32(buf, 1);
-		fobj_bwrite_string(buf, OBJECT(pos->map)->name);
-		fobj_bwrite_uint32(buf, pos->x);
-		fobj_bwrite_uint32(buf, pos->y);
-		fobj_bwrite_uint32(buf, pos->nref->offs);
-		fobj_bwrite_uint32(buf, pos->nref->flags);
-		fobj_bwrite_uint32(buf, pos->speed);
-		fobj_bwrite_string(buf,
+		buf_write_uint32(buf, 1);
+		buf_write_string(buf, OBJECT(pos->map)->name);
+		buf_write_uint32(buf, pos->x);
+		buf_write_uint32(buf, pos->y);
+		buf_write_uint32(buf, pos->nref->offs);
+		buf_write_uint32(buf, pos->nref->flags);
+		buf_write_uint32(buf, pos->speed);
+		buf_write_string(buf,
 		    (pos->input != NULL) ? OBJECT(pos->input)->name : "");
 		dprintf("%s: reference %s:%d,%d offs=%d flags=0x%x\n",
 		    OBJECT(ch)->name, OBJECT(pos->map)->name, pos->x, pos->y,
 		    pos->nref->offs, pos->nref->flags);
 	} else {
-		fobj_bwrite_uint32(buf, 0);
+		buf_write_uint32(buf, 0);
 	}
 	pthread_mutex_unlock(&ch->lock);
 	fobj_flush_buf(buf, fd);

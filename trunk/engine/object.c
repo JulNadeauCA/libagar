@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.73 2002/08/20 00:09:42 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.75 2002/08/20 09:14:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -38,10 +38,12 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/physics.h>
-#include <engine/input.h>
+#include <libfobj/fobj.h>
+
+#include "engine.h"
+#include "map.h"
+#include "physics.h"
+#include "input.h"
 
 enum {
 	NANIMS_INIT =	4,
@@ -207,8 +209,8 @@ object_get_art(char *media, struct object *ob)
 
 		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {
-			if (xcf_check(fob, i) == 0) {
-				xcf_load(fob, i, art);
+			if (xcf_check(fob->fd, fob->offs[i]) == 0) {
+				xcf_load(fob->fd, (off_t)fob->offs[i], art);
 			} else {
 				dprintf("not a xcf in slot %d\n", i);
 			}

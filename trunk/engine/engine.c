@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.59 2002/08/15 20:50:33 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.60 2002/08/19 05:28:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -79,9 +79,7 @@ static void	engine_xdebug(void);
 static void
 printusage(char *progname, int flags)
 {
-	fprintf(stderr,
-	    "Usage: %s [-efv] [-j joy#]\n",
-	    progname);
+	fprintf(stderr, "Usage: %s [-efv] [-j joy#]\n", progname);
 }
 
 int
