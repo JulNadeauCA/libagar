@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.25 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.26 2005/01/05 04:44:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,9 +42,7 @@ The
 .Nm
 widget binds to a NUL-terminated string and allows the user to edit its
 contents.
-The string may contain Unicode characters in UTF-8 format,
-.Nm
-operates on UCS-4 strings internally.
+The string may contain UTF-8 encoded characters.
 .Sh INHERITANCE HIERARCHY
 .Pp
 .Xr object 3 ->
@@ -79,16 +77,14 @@ widget with the label text set to
 .Pp
 The
 .Fn textbox_set_writeable
-function enables/disables user edition of the string.
-If
-.Fa writeable
-is 0, the string is read-only; if it is 1, the string may be edited (this is the
-default).
+function controls the writeability of the string.
 .Pp
 .Fn textbox_prescale
-arranges for
+requests that the initial geometry of
 .Fa textbox
-to be large enough to display the given string.
+is to be sufficient to display the string
+.Fa text
+in its entirety.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
@@ -166,8 +162,41 @@ The string is about to be modified.
 .It Fn textbox-postchg "void"
 The string was just modified.
 .El
+.Sh EXAMPLES
+The following code fragment binds a
+.Nm
+to a string contained in a fixed-size buffer:
+.Bd -literal -offset indent
+char name[32];
+struct textbox *tb;
+
+tb = textbox_new(parent, "Name: ");
+widget_bind(tb, "string", WIDGET_STRING, name, sizeof(name));
+.Ed
+.Pp
+As is the case with all widgets, a default binding (residing in the widget
+structure) is provided.
+The following code uses
+.Fn textbox_printf
+to set the value of the default binding, and
+.Fn textbox_string
+to retrieve a pointer to it:
+.Bd -literal -offset indent
+struct textbox *tb;
+char *value_ptr;
+
+tb = textbox_new(parent, "Value: ");
+textbox_printf(tb, "Foo");
+value_ptr = textbox_string(tb);
+.Ed
+.Pp
+Note that the default binding is limited to
+.Dv TEXTBOX_STRING_MAX
+bytes in size.
 .Sh SEE ALSO
 .Xr agar 3 ,
+.Xr text 3 ,
+.Xr tlist 3 ,
 .Xr widget 3 ,
 .Xr window 3
 .Sh HISTORY

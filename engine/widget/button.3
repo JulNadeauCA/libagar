@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.22 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: button.3,v 1.23 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -181,6 +181,27 @@ widget provides the following bindings:
 .It Va int *state
 Button state (1=pressed, 0=released)
 .El
+.Sh EXAMPLES
+The following code fragment creates a button and sets a handler function
+for the
+.Sq button-pushed
+event:
+.Bd -literal -offset indent
+void
+hello(int argc, union evarg *argv)
+{
+	char *s = argv[1].s;
+
+	text_msg(MSG_INFO, "Hello, %s!", s);
+}
+ 
+.Li ...
+
+struct button *btn;
+
+btn = button_new(parent, "Hello");
+event_new(btn, "button-pushed", hello, "%s", "world");
+.Ed
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
