@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.11 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.12 2002/09/07 04:35:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -41,12 +41,12 @@
 
 static struct widget_ops radio_ops = {
 	{
-		NULL,		/* destroy */
+		widget_destroy,	/* destroy */
 		NULL,		/* load */
 		NULL		/* save */
 	},
 	radio_draw,
-	NULL		/* animate */
+	NULL		/* update */
 };
 
 enum {
