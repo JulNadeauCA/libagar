@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.1 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.2 2003/02/08 00:33:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -137,10 +137,8 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 					node_copy_ref(nref, dstnode);
 				break;
 			case MERGE_INSERT_HIGHEST:
-				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
 					node_copy_ref(nref, dstnode);
-					node_movehead_ref(dstnode, nref);
-				}
 				break;
 			case MERGE_INSERT_EMPTY:
 				if (!TAILQ_EMPTY(&dstnode->nrefs))
