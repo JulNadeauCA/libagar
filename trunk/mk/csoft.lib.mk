@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.47 2004/04/25 08:20:08 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.48 2004/09/03 10:14:24 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -24,9 +24,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CFLAGS?=	-Wall -O2 -g
-SH?=		sh
 CC?=		cc
+CFLAGS?=	-O2 -g
+OBJCFLAGS?=	${CFLAGS}
+SH?=		sh
 AR?=		ar
 RANLIB?=	ranlib
 
@@ -67,7 +68,7 @@ cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
-.SUFFIXES: .o .po .lo .c .cc .asm .l .y
+.SUFFIXES: .o .po .lo .c .cc .asm .l .y .m
 
 # Compile C code into an object file
 .c.o:
@@ -76,6 +77,14 @@ depend: depend-subdir
 	${LIBTOOL} ${CC} ${CFLAGS} -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
+
+# Compile Objective-C code into an object file
+.m.o:
+	${CC} ${OBJCFLAGS} -c $<
+.m.lo:
+	${LIBTOOL} ${CC} ${OBJCFLAGS} -c $<
+.m.po:
+	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile C++ code into an object file
 .cc.o:
@@ -126,7 +135,7 @@ _lib_objs:
 	@if [ "${LIB}" != "" -a "${OBJS}" = "" \
 	      -a "${LIB_STATIC}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
-	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	        ${MAKE} $$F; \
@@ -142,7 +151,7 @@ _lib_shobjs:
 	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" \
 	      -a "${LIB_SHARED}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
-	        F=`echo $$F | sed 's/.[cly]$$/.lo/'`; \
+	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	        ${MAKE} $$F; \
@@ -159,7 +168,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	    if [ "${OBJS}" = "" ]; then \
 	        export _objs=""; \
 	        for F in ${SRCS}; do \
-	    	    F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    _objs="$$_objs $$F"; \
@@ -180,7 +189,7 @@ lib${LIB}.la: ${LIBTOOL} _lib_shobjs ${SHOBJS}
 	    if [ "${SHOBJS}" = "" ]; then \
 	        export _shobjs=""; \
 	        for F in ${SRCS}; do \
-	    	    F=`echo $$F | sed 's/.[cly]$$/.lo/'`; \
+	    	    F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.lo/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	    	    _shobjs="$$_shobjs $$F"; \
@@ -210,7 +219,7 @@ clean-lib:
 	    if [ "${LIB_STATIC}" = "Yes" ]; then \
 	        if [ "${OBJS}" = "" ]; then \
                     for F in ${SRCS}; do \
-	   	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	   	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	    	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    	echo "rm -f $$F"; \
@@ -226,7 +235,7 @@ clean-lib:
 	    if [ "${LIB_SHARED}" = "Yes" ]; then \
 	        if [ "${SHOBJS}" = "" ]; then \
                     for F in ${SRCS}; do \
-	    	        F=`echo $$F | sed 's/.[cly]$$/.lo/'`; \
+	    	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	    	        echo "rm -f $$F"; \

@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.38 2004/04/24 05:40:31 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.39 2004/09/08 07:01:37 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -24,7 +24,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-NROFF?=	nroff
+NROFF?=nroff
+PAGER?=more
 MAN1?=""
 MAN2?=""
 MAN3?=""
@@ -45,7 +46,6 @@ CATMAN8?=""
 CATMAN9?=""
 MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 NOMAN?=
-PAGER?=more
 
 all: all-subdir preformat-man
 install: install-man-dirs install-man install-subdir
