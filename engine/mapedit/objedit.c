@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.43 2004/05/17 05:05:48 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.44 2004/05/24 03:22:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -113,6 +113,7 @@ enum {
 	OBJEDIT_EDIT_GENERIC,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
+	OBJEDIT_REINIT,
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
 	OBJEDIT_MOVE_DOWN,
@@ -251,6 +252,14 @@ obj_op(int argc, union evarg *argv)
 		case OBJEDIT_MOVE_DOWN:
 			object_move_down(ob);
 			break;
+		case OBJEDIT_REINIT:
+			if (it->p1 == world) {
+				continue;
+			}
+			if (ob->ops->reinit != NULL) {
+				ob->ops->reinit(ob);
+			}
+			break;
 		case OBJEDIT_DESTROY:
 			if (it->p1 == world) {
 				continue;
@@ -383,6 +392,8 @@ objedit_window(void)
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_UP);
 		toolbar_add_button(tbar, 0, ICON(OBJMOVEDOWN_ICON), 0, 0,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_DOWN);
+		toolbar_add_button(tbar, 0, ICON(OBJREINIT_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
 		toolbar_add_button(tbar, 0, ICON(TRASH_ICON), 0, 0,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 	}
