@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.3 2002/12/29 02:13:56 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.4 2002/12/29 03:24:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -37,11 +37,22 @@
 #include <engine/widget/button.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/label.h>
+#include <engine/widget/textbox.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 
 static struct label *cliprect_label;
+
+static void
+apply(int argc, union evarg *argv)
+{
+	struct textbox *mindelay_tbox = argv[1].p;
+	struct textbox *maxdelay_tbox = argv[2].p;
+
+	view_set_refresh(textbox_int(mindelay_tbox),
+	    textbox_int(maxdelay_tbox));
+}
 
 struct window *
 view_params_window(void)
@@ -49,14 +60,16 @@ view_params_window(void)
 	struct window *win;
 	struct region *reg;
 
-	if ((win = window_generic_new(298, 185, "monitor-view-params"))
+	if ((win = window_generic_new(289, 339, "monitor-view-params"))
 	    == NULL) {
 		return (NULL);	/* Exists */
 	}
 	window_set_caption(win, "View parameters");
-
+	
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	{
+		struct textbox *mindelay_tbox, *maxdelay_tbox;
+		struct button *button;
 		char *engine = "???";
 
 		switch (view->gfx_engine) {
@@ -74,7 +87,7 @@ view_params_window(void)
 		}
 		label_new(reg, 100, 0, "Graphic engine: %s", engine);
 		label_polled_new(reg, 100, 0, &view->lock, "Depth: %dbpp",
-		    &view->bpp);
+		    &view->depth);
 		label_polled_new(reg, 100, 0, &view->lock, "Geometry: %dx%d",
 		    &view->w, &view->h);
 		label_polled_new(reg, 100, 0, &view->lock, "Window op: %d (%p)",
@@ -97,6 +110,18 @@ view_params_window(void)
 			    "Root map offset: %d,%d (soft %d,%d)",
 			    &rm->x, &rm->y, &rm->sx, &rm->sy);
 		}
+		
+		mindelay_tbox = textbox_new(reg, "Minimum refresh delay (ms): ",
+		    0, 100, 10);
+		maxdelay_tbox = textbox_new(reg, "Maximum refresh delay (ms): ",
+		    0, 100, 10);
+		
+		textbox_printf(mindelay_tbox, "%d", view->refresh.min_delay);
+		textbox_printf(maxdelay_tbox, "%d", view->refresh.max_delay);
+
+		button = button_new(reg, "Apply", NULL, 0, 100, 10);
+		event_new(button, "button-pushed", apply, "%p, %p",
+		    mindelay_tbox, maxdelay_tbox);
 	}
 	
 	return (win);
