@@ -1,5 +1,8 @@
-/*	$Csoft: ttf.h,v 1.3 2003/03/03 00:00:43 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.4 2003/03/03 01:53:59 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_MEDIA_TTF_H_
+#define _AGAR_MEDIA_TTF_H_
 
 typedef struct _ttf_font ttf_font;
 
@@ -38,3 +41,4 @@ SDL_Surface *ttf_render_utf8_solid(ttf_font *, char *, SDL_Color);
 SDL_Surface *ttf_render_unicode_solid(ttf_font *, Uint16 *, SDL_Color);
 SDL_Surface *ttf_render_glyph_solid(ttf_font *, Uint16, SDL_Color);
 
+#endif /* _AGAR_MEDIA_TTF_H_ */
