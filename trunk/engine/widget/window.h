@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.53 2003/01/20 14:21:45 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.54 2003/01/23 02:00:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -34,9 +34,9 @@ struct window {
 		WINDOW_HIDE_BUTTON
 	} clicked_button;
 	Uint32	*border;		/* Border colors */
-	int	 borderw;		/* Border width */
-	int	 titleh;		/* Titlebar height */
-	int	 minw, minh;		/* Minimum window geometry */
+	Uint8	 borderw;		/* Border width */
+	Uint8	 titleh;		/* Titlebar height */
+	Uint16	 minw, minh;		/* Minimum window geometry */
 	Uint8	 xspacing, yspacing;	/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
 	
@@ -120,8 +120,11 @@ int	 window_event(SDL_Event *);
 void	 window_resize(struct window *);
 void	 window_set_caption(struct window *, const char *, ...);
 void	 window_set_spacing(struct window *, Uint8, Uint8);
+void	 window_set_geo(struct window *, Uint16, Uint16);
+void	 window_set_position(struct window *, Sint16, Sint16);
+void	 window_set_min_geo(struct window *, Uint16, Uint16);
+void	 window_set_titleh(struct window *, Uint8);
 
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
-
 

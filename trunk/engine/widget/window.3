@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.18 2003/01/01 05:18:42 vedge Exp $
+.\"	$Csoft: window.3,v 1.19 2003/01/20 12:08:54 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -56,6 +56,21 @@ structure implements a mobile, resizable window.
 .Pp
 .Ft void
 .Fn window_set_caption "struct window *win" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn window_set_spacing "struct window *win" "Uint8 xsp" "Uint8 ysp"
+.Pp
+.Ft void
+.Fn window_set_geo "struct window *win" "Uint16 w" "Uint16 h"
+.Pp
+.Ft void
+.Fn window_set_position "struct window *win" "Sint16 x" "Sint16 y"
+.Pp
+.Ft void
+.Fn window_set_min_geo "struct window *win" "Uint16 w" "Uint16 h"
+.Pp
+.Ft void
+.Fn window_set_titleh "struct window *win" "Uint8 h"
 .Pp
 .Ft void
 .Fn window_attach "struct window *parent" "struct region *child"
@@ -152,6 +167,24 @@ The
 function sets the text shown inside the window titlebar, which is initially
 set to
 .Sq Untitled .
+.Pp
+The
+.Fn window_set_spacing
+function sets the spacing between regions inside the window to
+.Fa xsp
+pixels horizontally and
+.Fa ysp
+pixels vertically.
+.Fn window_set_geo ,
+.Fn window_set_min_geo
+and
+.Fn window_set_position
+change the effective geometry, minimal geometry and window coordinates,
+respectively.
+.Fn window_set_titleh
+changes the height of the titlebar to
+.Fa h
+pixels .
 .Sh VISIBILITY
 .nr nS 1
 .Ft int
