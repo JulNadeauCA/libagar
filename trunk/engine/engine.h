@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.27 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.28 2002/06/13 09:02:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -22,6 +22,14 @@
 #include <engine/world.h>
 #include <engine/xcf.h>
 #include <engine/view.h>
+
+#if !defined(SERIALIZATION)
+#define pthread_mutex_init(mu, attr)
+#define pthread_mutex_destroy(mu)
+#define pthread_mutex_lock(mu)
+#define pthread_mutex_trylock(mu)
+#define pthread_mutex_unlock(mu)
+#endif
 
 #define ENGINE_VERSION	"1.0-beta"
 
