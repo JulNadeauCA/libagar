@@ -1,4 +1,4 @@
-.\"	$Csoft: Manual.tr,v 1.2 2004/01/12 06:18:39 vedge Exp $
+.\"	$Csoft: Manual.tr,v 1.1 2004/01/23 06:29:08 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -122,7 +122,7 @@
 .Ie 3 "RGBA color selection"
 .so ../../engine/widget/palette.3
 .bp
-.Ie 3 "Bitmap display"
+.Ie 3 "Pixmap display"
 .so ../../engine/widget/bitmap.3
 .bp
 .Ie 3 "Level display"
