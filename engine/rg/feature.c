@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.4 2005/01/31 08:40:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -174,16 +174,15 @@ feature_save(void *p, struct netbuf *buf)
 }
 
 static void
-feature_closed(int argc, union evarg *argv)
+close_feature(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
-	struct window *pwin = argv[2].p;
 
-	feature_close(tv, pwin);
+	feature_close(tv);
 }
 
 struct window *
-feature_edit(struct tileview *tv, struct feature *ft, struct window *pwin)
+feature_edit(struct tileview *tv, struct feature *ft)
 {
 	struct window *win;
 	
@@ -193,11 +192,9 @@ feature_edit(struct tileview *tv, struct feature *ft, struct window *pwin)
 	if (ft->ops->edit != NULL) {
 		win = ft->ops->edit(ft, tv);
 		window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-		window_attach(pwin, win);
 		window_show(win);
 		tv->sargs.feature.edit_win = win;
-		event_new(win, "window-close", feature_closed, "%p,%p",
-		    tv, pwin);
+		event_new(win, "window-close", close_feature, "%p", tv);
 		return (win);
 	} else {
 		tv->sargs.feature.edit_win = NULL;
@@ -206,12 +203,12 @@ feature_edit(struct tileview *tv, struct feature *ft, struct window *pwin)
 }
 
 void
-feature_close(struct tileview *tv, struct window *pwin)
+feature_close(struct tileview *tv)
 {
 	switch (tv->state) {
 	case TILEVIEW_FEATURE_EDIT:
 		if (tv->sargs.feature.edit_win != NULL) {
-			window_detach(pwin, tv->sargs.feature.edit_win);
+			view_detach(tv->sargs.feature.edit_win);
 		}
 		break;
 	default:

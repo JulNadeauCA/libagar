@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.6 2005/01/30 05:41:25 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.7 2005/01/31 08:40:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -244,9 +244,9 @@ insert_fill(int argc, union evarg *argv)
 	tile_generate(t);
 
 	if (tv->edit_mode) {
-		feature_close(tv, pwin);
+		feature_close(tv);
 	}
-	feature_edit(tv, FEATURE(fill), pwin);
+	window_attach(pwin, feature_edit(tv, FEATURE(fill)));
 
 	/* Select the newly inserted feature. */
 	event_post(NULL, feat_tl, "tlist-poll", NULL);
@@ -330,7 +330,7 @@ edit_feature(int argc, union evarg *argv)
 
 	if (replace) {
 		if (tv->edit_mode) {
-			feature_close(tv, pwin);
+			feature_close(tv);
 			tv->edit_mode = 0;
 		}
 		if ((it = tlist_item_selected(tl)) == NULL) {
@@ -342,7 +342,7 @@ edit_feature(int argc, union evarg *argv)
 			tv->edit_mode = !tv->edit_mode;
 
 		if (tv->edit_mode == 0) {
-			feature_close(tv, pwin);
+			feature_close(tv);
 			return;
 		} else {
 			if ((it = tlist_item_selected(tl)) == NULL) {
@@ -355,7 +355,7 @@ edit_feature(int argc, union evarg *argv)
 	if (strcmp(it->class, "feature") == 0) {
 		struct tile_feature *tft = it->p1;
 
-		feature_edit(tv, tft->ft, pwin);
+		window_attach(pwin, feature_edit(tv, tft->ft));
 	} else if (strcmp(it->class, "sketch") == 0) {
 		//
 	} else if (strcmp(it->class, "pixmap") == 0) {
@@ -370,8 +370,7 @@ delete_feature(int argc, union evarg *argv)
 	struct tileset *ts = argv[2].p;
 	struct tile *t = argv[3].p;
 	struct tlist *feat_tl = argv[4].p;
-	struct window *pwin = argv[5].p;
-	int detach_only = argv[6].i;
+	int detach_only = argv[5].i;
 	struct tlist_item *it = tlist_item_selected(feat_tl);
 	struct tile_feature *tft;
 
@@ -397,7 +396,7 @@ delete_feature(int argc, union evarg *argv)
 	}
 	
 	if (tv->edit_mode)
-		feature_close(tv, pwin);
+		feature_close(tv);
 }
 
 static void
@@ -406,7 +405,7 @@ resize_tile(int argc, union evarg *argv)
 	struct tileset *ts = argv[1].p;
 	struct tile *t = argv[2].p;
 	struct mspinbutton *msb = argv[3].p;
-	struct window *pwin = argv[4].p;
+	struct window *dlg_w = argv[4].p;
 	struct checkbox *ckey_cb = argv[5].p;
 	struct checkbox *alpha_cb = argv[6].p;
 	struct tileview *tv = argv[7].p;
@@ -421,7 +420,7 @@ resize_tile(int argc, union evarg *argv)
 
 	tile_scale(ts, t, w, h, flags);
 	tileview_resize(tv, 100);
-	view_detach(pwin);
+	view_detach(dlg_w);
 }
 
 static void
@@ -454,12 +453,12 @@ resize_tile_dlg(int argc, union evarg *argv)
 
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	{
-		b = button_new(box, "OK");
+		b = button_new(box, _("OK"));
 		event_new(b, "button-pushed", resize_tile,
 		    "%p,%p,%p,%p,%p,%p,%p",
 		    ts, t, msb, win, ckey_cb, alpha_cb, tv);
 
-		b = button_new(box, "Cancel");
+		b = button_new(box, _("Cancel"));
 		event_new(b, "button-pushed", window_generic_detach, "%p", win);
 	}
 
@@ -496,12 +495,10 @@ tile_edit(struct tileset *ts, struct tile *t)
 		    edit_feature, "%p,%p,%p,%p", tv, feat_tl, win, 1);
 		
 		ag_menu_action(item, _("Detach feature"), NULL, 0, 0,
-		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl,
-		    win, 1);
+		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl, 1);
 		
 		ag_menu_action(item, _("Destroy feature"), NULL, 0, 0,
-		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl,
-		    win, 0);
+		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl, 0);
 	}
 
 	m = ag_menu_new(win);
