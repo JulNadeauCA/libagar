@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.34 2002/05/28 12:49:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.35 2002/06/01 09:27:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -111,19 +111,19 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	win->focus = NULL;
 
 	if (flags & WINDOW_ABSOLUTE) {
-		for (win->x = 0; win->x < rx; win->x += view->map->tilew) ;;
-		for (win->y = 0; win->y < ry; win->y += view->map->tileh) ;;
-		for (win->w = 0; win->w < rw; win->w += view->map->tilew) ;;
-		for (win->h = 0; win->h < rh; win->h += view->map->tileh) ;;
+		for (win->x = 0; win->x < rx; win->x += TILEW) ;;
+		for (win->y = 0; win->y < ry; win->y += TILEH) ;;
+		for (win->w = 0; win->w < rw; win->w += TILEW) ;;
+		for (win->h = 0; win->h < rh; win->h += TILEH) ;;
 	} else {
 		for (win->x = 0; win->x < (rx * view->w / 100);
-		     win->x += view->map->tilew) ;;
+		     win->x += TILEW) ;;
 		for (win->y = 0; win->y < (ry * view->h / 100);
-		     win->y += view->map->tileh) ;;
+		     win->y += TILEH) ;;
 		for (win->w = 0; win->w < (rw * view->w / 100);
-		     win->w += view->map->tilew) ;;
+		     win->w += TILEW) ;;
 		for (win->h = 0; win->h < (rh * view->h / 100);
-		     win->h += view->map->tileh) ;;
+		     win->h += TILEH) ;;
 	}
 
 	win->body.x = win->x + win->borderw;
@@ -143,11 +143,6 @@ window_init(struct window *win, struct viewport *view, char *caption,
 	/* XXX pref */
 	win->bgcolor = SDL_MapRGBA(view->v->format, 0, 50, 30, 250);
 	win->fgcolor = SDL_MapRGBA(view->v->format, 200, 200, 200, 100);
-
-	win->vmask.x = (win->x / view->map->tilew) - view->mapxoffs;
-	win->vmask.y = (win->y / view->map->tileh) - view->mapyoffs;
-	win->vmask.w = (win->w / view->map->tilew);
-	win->vmask.h = (win->h / view->map->tilew);
 
 	TAILQ_INIT(&win->regionsh);
 	pthread_mutex_init(&win->lock, NULL);
@@ -200,12 +195,21 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 				switch (win->type) {
 				case WINDOW_CUBIC:
 				case WINDOW_CUBIC2:
-					*col = SDL_MapRGB(win->view->v->format,
-					    0, xo>>3, 0);
+					*col = SDL_MapRGB(
+					    win->view->v->format,
+					    0, xo<<3, 0);
 					break;
 				case WINDOW_GRADIENT:
-					*col = SDL_MapRGB(win->view->v->format,
-					    xo>>5, 0, xo>>2);
+					if (win == TAILQ_LAST(
+					     &win->view->windowsh, windowq)) {
+						*col = SDL_MapRGB(
+						    win->view->v->format,
+						    0, 100 + (xo / 4), yo * 3);
+					} else {
+						*col = SDL_MapRGB(
+						    win->view->v->format,
+						    0, xo / 2, yo);
+					}
 					break;
 				case WINDOW_SOLID:
 					break;
@@ -427,6 +431,10 @@ window_destroy(void *p)
 int
 window_show(struct window *win)
 {
+	struct viewport *view = win->view;
+	struct region *reg;
+	struct widget *wid;
+	struct window *owin;
 	int prev;
 
 	prev = (win->flags & WINDOW_SHOW);
@@ -436,37 +444,25 @@ window_show(struct window *win)
 	}
 	
 	win->flags |= WINDOW_SHOW;
-	
-	/* Increment the view mask for this area. */
+
+	/* Calculate and increment the view mask for this area. */
+	win->vmask.x = (win->x / TILEW) - view->mapxoffs;
+	win->vmask.y = (win->y / TILEH) - view->mapyoffs;
+	win->vmask.w = (win->w / TILEW);
+	win->vmask.h = (win->h / TILEW);
 	view_maskfill(win->view, &win->vmask, 1);
-
 	win->redraw++;
-	
-	return (prev);
-}
 
-/* Window/view must be locked. */
-int
-window_hide(struct window *win)
-{
-	struct window *owin;
-	int prev;
+	TAILQ_REMOVE(&view->windowsh, win, windows);
+	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
 	
-	prev = (win->flags & WINDOW_SHOW);
-	if (!prev) {
-		/* Already hidden. */
-		return (prev);
+	TAILQ_FOREACH(reg, &win->regionsh, regions) {
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			event_post(wid, "shown", "%p", win);
+		}
 	}
 	
-	win->flags &= ~(WINDOW_SHOW);
-	view_maskfill(win->view, &win->vmask, -1);
-
-	/* Map may become visible. */
-	if (win->view->map != NULL) {
-		win->view->map->redraw++;
-	}
-
-	/* Other windows may become visible. */
+	/* Other windows titlebars should be redrawn. */
 	TAILQ_FOREACH(owin, &win->view->windowsh, windows) {
 		if (win == owin) {
 			continue;
@@ -476,6 +472,58 @@ window_hide(struct window *win)
 			owin->redraw++;
 		}
 		pthread_mutex_unlock(&owin->lock);
+	}
+
+	return (prev);
+}
+
+/* Window/view must be locked. */
+int
+window_hide(struct window *win)
+{
+	struct window *owin, *newwin;
+	struct viewport *view = win->view;
+	struct region *reg;
+	struct widget *wid;
+	int prev;
+	
+	prev = (win->flags & WINDOW_SHOW);
+	if (!prev) {
+		/* Already hidden. */
+		return (prev);
+	}
+
+	/* Notify child widgets */
+	TAILQ_FOREACH(reg, &win->regionsh, regions) {
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			event_post(wid, "hidden", "%p", win);
+		}
+	}
+	
+	win->flags &= ~(WINDOW_SHOW);
+	view_maskfill(view, &win->vmask, -1);
+
+	/* Map may become visible. */
+	if (view->map != NULL) {
+		view->map->redraw++;
+	}
+
+	/* Other windows may become visible. */
+	newwin = NULL;
+	TAILQ_FOREACH(owin, &view->windowsh, windows) {
+		if (win == owin) {
+			continue;
+		}
+		pthread_mutex_lock(&owin->lock);
+		if (owin->flags & WINDOW_SHOW) {
+			newwin = owin;
+			owin->redraw++;
+		}
+		pthread_mutex_unlock(&owin->lock);
+	}
+	if (newwin != NULL) {
+		TAILQ_REMOVE(&view->windowsh, newwin, windows);
+		TAILQ_INSERT_TAIL(&view->windowsh, newwin, windows);
 	}
 	
 	return (prev);
@@ -593,10 +641,62 @@ window_event_all(struct viewport *view, SDL_Event *ev)
 			goto nextwin;
 		}
 		switch (ev->type) {
+		case SDL_MOUSEMOTION:
+			switch (view->winop) {
+			case VIEW_WINOP_MOVE:
+				view_maskfill(view, &win->vmask, -1);
+				if (MAP_COORD(ev->motion.x, view) <
+				    view->wop_mapx)
+					win->x -= TILEW;
+				else if (MAP_COORD(ev->motion.x, view) >
+				    view->wop_mapx)
+					win->x += TILEW;
+				if (MAP_COORD(ev->motion.y, view) <
+				    view->wop_mapy)
+					win->y -= TILEH;
+				else if (MAP_COORD(ev->motion.y, view) >
+				    view->wop_mapy)
+					win->y += TILEH;
+
+				if ((win->x + win->w) > view->w - 32)
+					win->x = view->w - win->w - 32;
+				if ((win->y + win->h) > view->h - 32)
+					win->y = view->h - win->h - 32;
+				if (win->x < 32)
+					win->x = 32;
+				if (win->y < 32)
+					win->y = 32;
+			
+				win->vmask.x = (win->x / TILEW) -
+				    view->mapxoffs;
+				win->vmask.y = (win->y / TILEH) -
+				    view->mapyoffs;
+				win->vmask.w = (win->w / TILEW);
+				win->vmask.h = (win->h / TILEW);
+				view_maskfill(view, &win->vmask, 1);
+
+				/* XXX incomplete */
+				win->redraw++;
+				
+				view->wop_mapx = MAP_COORD(ev->motion.x, view);
+				view->wop_mapy = MAP_COORD(ev->motion.y, view);
+	
+				goto posted;
+			case VIEW_WINOP_RESIZE:
+			case VIEW_WINOP_NONE:
+				break;
+			}
+			break;
 		case SDL_MOUSEBUTTONUP:
+			view->winop = VIEW_WINOP_NONE;
+			/* FALLTHROUGH */
 		case SDL_MOUSEBUTTONDOWN:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto nextwin;
+			}
+			if (ev->type && SDL_MOUSEBUTTONDOWN &&
+			    ev->button.y - win->y <= win->titleh) {
+				view->winop = VIEW_WINOP_MOVE;
 			}
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
