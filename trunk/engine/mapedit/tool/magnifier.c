@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.1 2002/07/09 09:23:58 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.2 2002/07/18 12:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -100,8 +100,8 @@ magnifier_window(void *p)
 
 	win = window_new("Magnifier", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    110, 188,
-	    110, 188);
+	    109, 171,
+	    109, 171);
 	
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
