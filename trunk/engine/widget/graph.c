@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.41 2003/07/14 03:39:28 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.42 2003/09/07 00:21:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -95,7 +95,6 @@ graph_init(struct graph *graph, const char *caption, enum graph_type type,
 	graph->type = type;
 	graph->flags = flags;
 	graph->xoffs = 0;
-	graph->xinc = 2;
 	graph->yrange = yrange;
 	graph->origin_y = 50;
 	graph->yrange = yrange;
@@ -216,7 +215,7 @@ graph_draw(void *p)
 
 		for (x = 1, i = gra->xoffs;
 		     ++i < gi->nvals && x < WIDGET(gra)->w;
-		     x += gra->xinc) {
+		     x++) {
 
 			oval = gi->vals[i] * WIDGET(gra)->h / gra->yrange;
 			y = origin_y - oval;
@@ -248,7 +247,7 @@ graph_draw(void *p)
 					ncolor = widget_push_color(WIDGET(gra),
 					    gi->color);
 					primitives.line(gra,
-					    x - gra->xinc,
+					    x,
 					    oy,
 					    x,
 					    y,
@@ -284,11 +283,11 @@ graph_plot(struct graph_item *gi, graph_val_t val)
 {
 	gi->vals[gi->nvals] = val;
 
-	if (gi->nvals+1 > gi->limit) {
+	if (gi->nvals+1 >= gi->limit) {
 		memmove(gi->vals, gi->vals+1, gi->nvals*sizeof(graph_val_t));
 		gi->graph->flags &= ~(GRAPH_SCROLL);
 	} else {
-		if (gi->nvals+1 > gi->maxvals) {
+		if (gi->nvals+1 >= gi->maxvals) {
 			gi->vals = Realloc(gi->vals,
 			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t));
 			gi->maxvals += NITEMS_GROW;
