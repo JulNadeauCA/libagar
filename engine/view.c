@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.118 2003/04/12 01:45:31 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.119 2003/04/24 07:04:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -100,9 +100,7 @@ view_init(enum gfx_engine ge)
 	v->opengl = 0;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
-	pthread_mutexattr_init(&v->lockattr);
-	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&v->lock, &v->lockattr);
+	pthread_mutex_init(&v->lock, &recursive_mutexattr);
 
 	/* Obtain the display preferences. */
 	depth = prop_get_uint8(config, "view.depth");
@@ -204,7 +202,6 @@ view_init(enum gfx_engine ge)
 	return (0);
 fail:
 	pthread_mutex_destroy(&v->lock);
-	pthread_mutexattr_destroy(&v->lockattr);
 	free(v);
 	return (-1);
 }
@@ -260,7 +257,6 @@ view_destroy(void *p)
 	pthread_mutex_unlock(&v->lock);
 
 	pthread_mutex_destroy(&v->lock);
-	pthread_mutexattr_destroy(&v->lockattr);
 }
 
 struct window *
