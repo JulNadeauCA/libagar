@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.8 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.9 2005/01/23 11:53:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -69,14 +69,14 @@ ag_menu_new(void *parent)
 	return (m);
 }
 
-void
+struct window *
 ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 {
 	struct AGMenuView *mview;
 	struct window *panel;
 
 	if (item->nsubitems == 0)
-		return;
+		return (NULL);
 
 	panel = window_new(WINDOW_NO_TITLEBAR|WINDOW_NO_DECORATIONS, NULL);
 	window_set_padding(panel, 0, 0);
@@ -92,6 +92,7 @@ ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 	WIDGET_SCALE(panel, -1, -1);
 	widget_update_coords(panel, WIDGET(panel)->x, WIDGET(panel)->y);
 	window_show(panel);
+	return (panel);
 }
 
 void
@@ -177,7 +178,7 @@ mousemotion(int argc, union evarg *argv)
 
 	if (!m->selecting || y < 0 || y >= WIDGET(m)->h-1)
 		return;
-
+	
 	for (i = 0; i < m->nitems; i++) {
 		struct AGMenuItem *mitem = &m->items[i];
 		SDL_Surface *label = WIDGET_SURFACE(m,mitem->label);
@@ -237,7 +238,9 @@ ag_menu_add_item(struct AGMenu *m, const char *text)
 	m->items = Realloc(m->items, (m->nitems+1)*sizeof(struct AGMenuItem));
 	mitem = &m->items[m->nitems++];
 	mitem->text = text;
-	mitem->label = widget_map_surface(m, text_render(NULL, -1, 0, text));
+	mitem->label = (text != NULL) ?
+	               widget_map_surface(m, text_render(NULL, -1, 0, text)) :
+		       -1;
 	mitem->icon = -1;
 	mitem->key_equiv = 0;
 	mitem->key_mod = 0;
