@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.2 2002/04/18 04:03:59 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.3 2002/04/20 06:21:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -152,7 +152,7 @@ void
 window_draw(struct window *w)
 {
 	SDL_Surface *v = w->view->v;
-	Uint32 xo, yo, col;
+	Uint32 xo, yo, col = 0;
 	Uint8 *dst;
 	struct widget *wid;
 
