@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.183 2003/06/29 11:33:41 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.184 2003/07/08 00:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -127,9 +127,11 @@ noderef_destroy(struct map *m, struct noderef *r)
 	switch (r->type) {
 	case NODEREF_SPRITE:
 		object_del_dep(m, r->r_sprite.obj);
+		object_page_out(r->r_sprite.obj, OBJECT_GFX);
 		break;
 	case NODEREF_ANIM:
 		object_del_dep(m, r->r_anim.obj);
+		object_page_out(r->r_anim.obj, OBJECT_GFX);
 		break;
 	case NODEREF_WARP:
 		free(r->r_warp.map);
@@ -147,7 +149,7 @@ map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
 	int x, y;
 	
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set("%ux%u nodes > %ux%u", w, h, MAP_MAX_WIDTH,
+		error_set(_("%ux%u nodes exceed %ux%u."), w, h, MAP_MAX_WIDTH,
 		    MAP_MAX_HEIGHT);
 		return (-1);
 	}
@@ -186,13 +188,13 @@ map_free_nodes(struct map *m)
 	pthread_mutex_unlock(&m->lock);
 }
 
-/* Release the layer array. */
+/* Reinitialize the layer array to the default. */
 static void
 map_free_layers(struct map *m)
 {
-	m->nlayers = 0;
-	free(m->layers);
-	m->layers = NULL;
+	m->layers = Realloc(m->layers, 1 * sizeof(struct map_layer));
+	m->nlayers = 1;
+	map_init_layer(&m->layers[0], _("Layer 0"));
 }
 
 /* Resize a map, initializing new nodes and destroying excess ones. */
@@ -203,7 +205,8 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 	int x, y;
 
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set("size exceeds %ux%u", MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
+		error_set(_("%ux%u nodes exceed %ux%u."), w, h, MAP_MAX_WIDTH,
+		    MAP_MAX_HEIGHT);
 		return (-1);
 	}
 
@@ -286,8 +289,8 @@ map_new(void *parent, const char *name)
 	return (m);
 }
 
-static void
-map_layer_init(struct map_layer *lay, const char *name)
+void
+map_init_layer(struct map_layer *lay, const char *name)
 {
 	strlcpy(lay->name, name, sizeof(lay->name));
 	lay->visible = 1;
@@ -316,9 +319,9 @@ map_init(void *obj, const char *name)
 	m->ssy = TILEH;
 	m->cur_layer = 0;
 
-	m->layers = Malloc(sizeof(struct map_layer));
+	m->layers = Malloc(1 * sizeof(struct map_layer));
 	m->nlayers = 1;
-	map_layer_init(&m->layers[0], _("Layer 0"));
+	map_init_layer(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
 }
 
@@ -335,12 +338,12 @@ map_push_layer(struct map *m, const char *name)
 	}
 
 	if (m->nlayers+1 > MAP_MAX_LAYERS) {
-		error_set("too many layers");
+		error_set(_("Too many layers."));
 		return (-1);
 	}
 	m->layers = Realloc(m->layers,
 	    (m->nlayers+1) * sizeof(struct map_layer));
-	map_layer_init(&m->layers[m->nlayers], layname);
+	map_init_layer(&m->layers[m->nlayers], layname);
 	m->nlayers++;
 	return (0);
 }
@@ -367,7 +370,12 @@ node_add_sprite(struct map *map, struct node *node, void *pobj, Uint32 offs)
 	r->r_sprite.obj = pobj;
 	r->r_sprite.offs = offs;
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
-	object_add_dep(map, pobj);
+
+	if (pobj != NULL) {
+		object_add_dep(map, pobj);
+		if (object_page_in(pobj, OBJECT_GFX) == -1)
+			fatal("paging gfx: %s", error_get());
+	}
 	return (r);
 }
 
@@ -380,6 +388,12 @@ node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs,
     Uint8 flags)
 {
 	struct noderef *r;
+	
+	if (pobj != NULL) {
+		object_add_dep(map, pobj);
+		if (object_page_in(pobj, OBJECT_GFX) == -1)
+			fatal("paging gfx: %s", error_get());
+	}
 
 	r = Malloc(sizeof(struct noderef));
 	noderef_init(r, NODEREF_ANIM);
@@ -388,7 +402,6 @@ node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs,
 	r->r_anim.flags = flags;
 	r->r_anim.frame = 0;
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
-	object_add_dep(map, pobj);
 	return (r);
 }
 
@@ -662,7 +675,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			ycenter = read_sint16(buf);
 
 			if ((pobj = object_find_dep(m, ind)) == NULL) {
-				error_set("missing sprite dep %u", ind);
+				error_set(_("Cannot resolve sprite: %u."), ind);
 				return (-1);
 			}
 			*r = node_add_sprite(m, node, pobj, offs);
@@ -685,7 +698,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			aflags = read_uint32(buf);
 			
 			if ((pobj = object_find_dep(m, ind)) == NULL) {
-				error_set("missing anim dep %u", ind);
+				error_set(_("Cannot resolve anim: %u."), ind);
 				return (-1);
 			}
 			*r = node_add_anim(m, node, pobj, offs, aflags);
@@ -703,14 +716,14 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 
 			if (copy_string(map_id, buf, sizeof(map_id)) >=
 			    sizeof(map_id)) {
-				error_set("map_id too big");
+				error_set(_("Warp map name is too big."));
 				return (-1);
 			}
 			ox = (int)read_uint32(buf);
 			oy = (int)read_uint32(buf);
 			if (ox < 0 || ox > MAP_MAX_WIDTH || 
 			    ox < 0 || oy > MAP_MAX_HEIGHT) {
-				error_set("bad warp coords");
+				error_set(_("Invalid warp coordinates."));
 				return (-1);
 			}
 			dir = read_uint8(buf);
@@ -721,13 +734,13 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 		}
 		break;
 	default:
-		error_set("unknown noderef type");
+		error_set(_("Unknown type of noderef."));
 		return (-1);
 	}
 
 	/* Read the transforms. */
 	if ((ntrans = read_uint32(buf)) > NODEREF_MAX_TRANSFORMS) {
-		error_set("too many transforms");
+		error_set(_("Too many transforms."));
 		goto fail;
 	}
 	for (i = 0; i < ntrans; i++) {
@@ -758,7 +771,7 @@ node_load(struct map *m, struct netbuf *buf, struct node *node)
 	int i;
 	
 	if ((nrefs = read_uint32(buf)) > NODE_MAX_NODEREFS) {
-		error_set("too many nrefs");
+		error_set(_("Too many noderefs."));
 		return (-1);
 	}
 	for (i = 0; i < nrefs; i++) {
@@ -804,7 +817,7 @@ map_load(void *ob, struct netbuf *buf)
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
 	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT ||
 	    tilew > MAP_MAX_WIDTH || tileh > MAP_MAX_HEIGHT) {
-		error_set("bad geo/coords");
+		error_set(_("Invalid map geometry."));
 		goto fail;
 	}
 	m->mapw = (unsigned int)w;
@@ -819,12 +832,15 @@ map_load(void *ob, struct netbuf *buf)
 
 	/* Read the layer information. */
 	if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
-		error_set("too many layers");
+		error_set(_("Too many map layers."));
 		goto fail;
 	}
-	m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
-	for (i = 0; i < m->nlayers; i++) {
-		map_layer_load(buf, m, &m->layers[i]);
+	dprintf("%ux%u nodes, %u layers\n", m->mapw, m->maph, m->nlayers);
+	if (m->layers > 0) {
+		m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
+		for (i = 0; i < m->nlayers; i++) {
+			map_layer_load(buf, m, &m->layers[i]);
+		}
 	}
 	m->cur_layer = (int)read_uint8(buf);
 	m->origin.layer = (int)read_uint8(buf);
@@ -1175,7 +1191,7 @@ map_new_view(int argc, union evarg *argv)
 	struct window *win;
 
 	win = window_new(NULL);
-	window_set_caption(win, _("%s view"), OBJECT(mv->map)->name);
+	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
 	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT);
 
 	window_attach(pwin, win);
@@ -1222,16 +1238,36 @@ map_toggle_layed(int argc, union evarg *argv)
 	window_toggle_visibility(mv->layed.win);
 }
 
+static void
+map_toggle_mimport(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	
+	window_toggle_visibility(mv->mimport.win);
+}
+
+static void
+map_toggle_edition(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+
+	if (mv->flags & MAPVIEW_EDIT) {
+		mv->flags &= ~(MAPVIEW_EDIT);
+	} else {
+		mv->flags |= MAPVIEW_EDIT;
+	}
+}
+
 struct window *
 map_edit(void *p)
 {
 	struct map *m = p;
-	struct window *win;
+	struct window *win, *import_win;
 	struct box *bo;
 	struct mapview *mv;
 	
 	win = window_new(NULL);
-	window_set_caption(win, _("%s edition"), OBJECT(m)->name);
+	window_set_caption(win, _("%s map edition"), OBJECT(m)->name);
 
 	mv = Malloc(sizeof(struct mapview));
 	mapview_init(mv, m, MAPVIEW_EDIT|MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|
@@ -1239,12 +1275,15 @@ map_edit(void *p)
 	window_attach(win, mv->nodeed.win);
 	window_attach(win, mv->layed.win);
 
+	/* Create the media import window. */
+	import_win = objq_import_window(m, mv);
+	window_attach(win, import_win);
+
 	/* Create the map edition toolbar. */
 	bo = box_new(win, BOX_HORIZ, BOX_WFILL);
 	box_set_spacing(bo, 0);
 	{
 		struct button *bu;
-		struct label *lab;
 
 		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NEW_VIEW));
@@ -1265,6 +1304,12 @@ map_edit(void *p)
 		widget_set_bool(bu, "state", 1);
 		event_new(bu, "button-pushed", map_toggle_props, "%p", mv);
 
+		bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
+		button_set_focusable(bu, 0);
+		button_set_sticky(bu, 1);
+		widget_set_bool(bu, "state", 1);
+		event_new(bu, "button-pushed", map_toggle_edition, "%p", mv);
 
 		mv->nodeed.trigger = bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
@@ -1277,12 +1322,18 @@ map_edit(void *p)
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", map_toggle_layed, "%p", mv);
-
+		
+		mv->mimport.trigger = bu = button_new(bo, NULL);
+		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_MIMPORT));
+		button_set_sticky(bu, 1);
+		button_set_focusable(bu, 0);
+		event_new(bu, "button-pushed", map_toggle_mimport, "%p", mv);
+#if 0
 		/* XXX combo */
 		lab = label_polled_new(bo, NULL, _("  Layer #%d"),
-		    &mv->map->cur_layer);
+		    &m->cur_layer);
+#endif
 	}
-
 	object_attach(win, mv);
 	widget_focus(mv);
 	return (win);
