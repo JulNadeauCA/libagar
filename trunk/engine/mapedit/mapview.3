@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.25 2003/06/06 02:47:50 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.26 2003/06/11 23:03:58 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -52,6 +52,9 @@ structures.
 .Fn mapview_init "struct mapview *mv" "struct map *map" "int flags"
 .Pp
 .Ft void
+.Fn mapview_prescale "struct mapview *mv" "int w" "int h"
+.Pp
+.Ft void
 .Fn mapview_center "struct mapview *mv" "int x" "int y"
 .Pp
 .Ft int
@@ -99,6 +102,16 @@ flag enables the use of zoom factors and soft-scroll offsets that are
 independent from the map's, but are not saved with
 .Xr map
 states.
+.Pp
+The
+.Fn mapview_prescale
+function arranges for the
+.Nm
+to reserve enough space to display
+.Fa w
+by
+.Fa h
+nodes at the initial sizing stage.
 .Pp
 The
 .Fn mapview_center

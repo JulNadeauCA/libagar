@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.118 2003/06/08 23:53:16 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.119 2003/06/11 23:03:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,8 +57,6 @@ const struct widget_ops mapview_ops = {
 };
 
 enum {
-	DEFAULT_WIDTH =		10,	/* Default width (nodes) */
-	DEFAULT_HEIGHT =	7,	/* Default height (nodes) */
 	MAPVIEW_ZOOM_MIN =	4,	/* Min zoom factor (%) */
 	MAPVIEW_ZOOM_MAX =	600,	/* Max zoom factor (%) */
 	MAPVIEW_TILE_MAX =	16384,	/* Max tile geometry (pixels) */
@@ -132,6 +130,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags)
 	mv->flags = (flags | MAPVIEW_CENTER);
 	mv->mw = 0;					/* Set on scale */
 	mv->mh = 0;
+	mv->prew = 8;
+	mv->preh = 6;
 
 	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
@@ -500,7 +500,7 @@ next_layer:
 	}
 
 	/* Draw the cursor for the current tool. */
-	if (mv->flags & MAPVIEW_EDIT &&
+	if ((mv->flags & MAPVIEW_EDIT) &&
 	    (mv->flags & MAPVIEW_NO_CURSOR) == 0 &&
 	    (mv->cx != -1 && mv->cy != -1)) {
 		mapview_draw_tool_cursor(mv);
@@ -955,10 +955,10 @@ mapview_scale(void *p, int rw, int rh)
 {
 	struct mapview *mv = p;
 
-	if (rw == -1)
-		WIDGET(mv)->w = TILEW*DEFAULT_WIDTH;
-	if (rh == -1)
-		WIDGET(mv)->h = TILEH*DEFAULT_HEIGHT;
+	if (rw == -1 && rh == -1) {
+		WIDGET(mv)->w = mv->prew * TILEW;
+		WIDGET(mv)->h = mv->preh * TILEH;
+	}
 
 	pthread_mutex_lock(&mv->map->lock);
 	mv->mw = WIDGET(mv)->w/(*mv->tilew) + 1;
@@ -1039,4 +1039,11 @@ mapview_get_selection(struct mapview *mv, int *x, int *y, int *w, int *h)
 	} else {
 		return (0);
 	}
+}
+
+void	
+mapview_prescale(struct mapview *mv, int w, int h)
+{
+	mv->prew = w;
+	mv->preh = h;
 }

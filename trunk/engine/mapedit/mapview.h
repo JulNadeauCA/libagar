@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.42 2003/06/06 02:47:50 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.43 2003/06/11 23:03:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -35,8 +35,10 @@ struct mapview {
 #define MAPVIEW_CENTER		 0x080
 #define MAPVIEW_SAVEABLE	 0x100	/* Load/save keys */
 #define MAPVIEW_NO_CURSOR	 0x200	/* Hide cursor */
+
 	int	 prop_bg;		/* Background of node attributes */
 	int	 prop_style;		/* Style of node attributes */
+	int	 prew, preh;		/* Prescale */
 
 	struct {			/* Mouse scrolling state */
 		int	scrolling;
@@ -116,6 +118,7 @@ extern DECLSPEC void	 mapview_init(struct mapview *, struct map *, int);
 extern DECLSPEC void	 mapview_destroy(void *);
 extern DECLSPEC void	 mapview_draw(void *);
 extern DECLSPEC void	 mapview_scale(void *, int, int);
+extern DECLSPEC void	 mapview_prescale(struct mapview *, int, int);
 
 extern DECLSPEC void	 mapview_node_edit_win(struct mapview *);
 extern __inline__ void	 mapview_draw_props(struct mapview *, struct node *,
