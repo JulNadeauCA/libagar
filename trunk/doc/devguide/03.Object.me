@@ -1,4 +1,4 @@
-.\"	$Csoft: 03.Object.me,v 1.3 2004/02/26 10:18:02 vedge Exp $
+.\"	$Csoft: 03.Object.me,v 1.4 2004/02/29 17:36:18 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -179,16 +179,16 @@ but the object is not positioned until the object tree has been completely
 restored, since the maps must be in a consistent state before the projections
 are made.
 .pp
-The next step is to decode the graphics and audio package references.
-These are resolved only if the object currently references matching
-and resident graphics/audio packages.
-If that is not the case, the references will be resolved later, whenever they
-are needed.
+The next step is to decode the media references (ie. graphics and audio).
+If there is media currently being referenced, these references are resolved
+immediately.
+Otherwise, they will be resolved only when they are requested.
 .pp
 The state of the object's children (their generic part) is then restored.
-If the save contains child objects which do not match with an existing object,
-they are allocated from scratch using the type switch (see section 3.3.2).
-Existing objects which do not have a match in the save are destroyed
+If the save file contains child objects which do not match with an existing
+object, they are allocated from scratch using the type switch
+(see section 3.3.2).
+Existing objects which do not have a match in the save file are destroyed
 (as long as they are not currently referenced).
 .pp
 Finally, the object's dependency table is resolved and the data of the object
