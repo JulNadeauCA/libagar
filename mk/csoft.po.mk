@@ -1,4 +1,4 @@
-# $Csoft: csoft.po.mk,v 1.2 2003/06/21 07:26:19 vedge Exp $
+# $Csoft: csoft.po.mk,v 1.2 2003/07/27 16:33:56 vedge Exp $
 
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -72,17 +72,30 @@ install: ${MOS}
                 ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
             fi; \
             for F in $$_mos; do \
-                echo "${INSTALL_DATA} $$F ${LOCALEDIR}"; \
-                ${INSTALL_DATA} $$F ${LOCALEDIR}; \
+	        _lang=`echo $$F | sed 's,\.mo,,'`; \
+                echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang"; \
+                ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang; \
+                echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
+                ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+		cp -f $$F ${DOMAIN}.mo; \
+                echo "${INSTALL_DATA} ${DOMAIN}.mo \
+		    ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
+                ${INSTALL_DATA} ${DOMAIN}.mo \
+		    ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+		rm -f ${DOMAIN}.mo; \
             done; \
 	fi
 
 deinstall:
-	@if [ "${MOS}" != "" ]; then \
-	    for F in ${MOS}; do \
-	        echo "${DEINSTALL_DATA} ${LOCALEDIR}/$$F"; \
-	        ${DEINSTALL_DATA} ${LOCALEDIR}/$$F; \
-	    done; \
+	@export _mos="${MOS}"; \
+        if [ "$$_mos" != "" ]; then \
+            for F in $$_mos; do \
+	        _lang=`echo $$F | sed 's,\.mo,,'`; \
+                echo "${DEINSTALL_DATA} \
+		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo"; \
+                ${DEINSTALL_DATA} \
+		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo; \
+            done; \
 	fi
 
 .PHONY: ${POTFILES}
