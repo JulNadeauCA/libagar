@@ -1,18 +1,15 @@
-/*	$Csoft: event.c,v 1.76 2002/09/01 08:58:35 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.77 2002/09/02 08:13:59 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -135,7 +132,7 @@ event_hotkey(SDL_Event *ev)
 			struct region *reg;
 			struct mapview *mv;
 
-			win = window_new("Map view", WINDOW_TITLEBAR,
+			win = window_new(NULL, "Map view", WINDOW_TITLEBAR,
 			    -1, -1, 320, 200, 320, 200);
 			reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 			mv = mapview_new(reg, curmapedit, view->rootmap->map,
@@ -193,7 +190,7 @@ event_loop(void)
 	struct graph *fps_graph;
 	struct graph_item *fps_item;
 
-	fps_win = window_new("Frames/second", WINDOW_CENTER,
+	fps_win = window_new("fps-counter", "Frames/second", WINDOW_CENTER,
 	    0, 0, 133, 104, 125, 91);
 	reg = region_new(fps_win, REGION_VALIGN,
 	    0, 0, 100, 100);
