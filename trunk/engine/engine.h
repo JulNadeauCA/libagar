@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.12 2002/03/12 15:51:27 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.13 2002/03/17 09:15:00 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -20,7 +20,7 @@
 #include <engine/xcf.h>
 #include <engine/view.h>
 
-#define ENGINE_VERSION	"0.1"
+#define ENGINE_VERSION	"1.0-beta"
 
 struct gameinfo {
 	char	*prog;
