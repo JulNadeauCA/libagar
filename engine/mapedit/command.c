@@ -103,14 +103,16 @@ mapedit_pop(struct mapedit *med, struct node *node)
 	struct noderef *nref;
 	int i = 0;
 
+	mapedit_setpointer(med, 0);
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		if (i++ == (node->nnrefs - 2)) {
+		if (i++ == (node->nnrefs - 1)) {
 			node_delref(node, nref);
 			med->map->redraw++;
-			return;
+			goto done;
 		}
 	}
-	dprintf("empty node\n");
+done:
+	mapedit_setpointer(med, 1);
 }
 
 /* Fill the map with the current reference. */
@@ -254,7 +256,7 @@ mapedit_editflags(struct mapedit *med, int mask)
 	}
 
 	if (mask & MAPEDIT_TILELIST) {
-		view_setmode(med->map->view);	/* XXX hack */
+		view_setmap(med->map->view, med->map);	/* XXX hack */
 	}
 
 	med->map->redraw++;
