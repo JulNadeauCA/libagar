@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.12 2002/02/10 01:38:07 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.13 2002/02/10 05:32:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,11 +33,14 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <glib.h>
-#include <pthread.h>
-#include <SDL.h>
-
 #include <engine/engine.h>
+
+enum {
+	NANIMS_INIT =	1,
+	NSPRITES_INIT =	1,
+	NANIMS_GROW =	2,
+	NSPRITES_GROW = 2,
+};
 
 static SLIST_HEAD(lategc_head, gcref) lategch =
     SLIST_HEAD_INITIALIZER(&lategch);
@@ -48,6 +51,58 @@ struct gcref {
 
 	SLIST_ENTRY(gcref) gcrefs;
 };
+
+int
+object_addanim(struct object *ob, struct anim *anim)
+{
+	if (ob->anims == NULL) {			/* Initialize */
+		ob->anims = (struct anim **)
+		    emalloc(NANIMS_INIT * sizeof(struct anim *));
+		ob->maxanims = NANIMS_INIT;
+		ob->nanims = 0;
+	} else if (ob->nanims >= ob->maxanims) {	/* Grow */
+		struct anim **newanims;
+
+		newanims = (struct anim **)realloc(ob->anims,
+		    (NANIMS_GROW * ob->maxanims) * sizeof(struct anim *));
+		if (newanims == NULL) {
+			perror("realloc");
+			return (-1);
+		}
+		ob->maxanims *= NANIMS_GROW;
+		ob->anims = newanims;
+	}
+	ob->anims[ob->nanims++] = anim;
+	return (0);
+}
+
+int
+object_addsprite(struct object *ob, SDL_Surface *sprite)
+{
+	if (ob->sprites == NULL) {			/* Initialize */
+		ob->sprites = (SDL_Surface **)
+		    malloc(NSPRITES_INIT * sizeof(SDL_Surface *));
+		if (ob->sprites == NULL) {
+			perror("malloc");
+			return (-1);
+		}
+		ob->maxsprites = NSPRITES_INIT;
+		ob->nsprites = 0;
+	} else if (ob->nsprites >= ob->maxsprites) {	/* Grow */
+		SDL_Surface **newsprites;
+
+		newsprites = (SDL_Surface **)realloc(ob->sprites,
+		    (NSPRITES_GROW * ob->maxsprites) * sizeof(SDL_Surface *));
+		if (newsprites == NULL) {
+			perror("realloc");
+			return (-1);
+		}
+		ob->maxsprites *= NSPRITES_GROW;
+		ob->sprites = newsprites;
+	}
+	ob->sprites[ob->nsprites++] = sprite;
+	return (0);
+}
 
 int
 object_create(struct object *ob, char *name, char *desc, int flags)
@@ -88,7 +143,7 @@ object_destroy(void *arg)
 	}
 	
 	for(i = 0; i < ob->nsprites; i++) {
-		SDL_FreeSurface(g_slist_nth_data(ob->sprites, i));
+		SDL_FreeSurface(ob->sprites[i]);
 	}
 	
 	dprintf("freed %s\n", ob->name);
