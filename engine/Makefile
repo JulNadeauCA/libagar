@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.45 2002/11/14 07:49:05 vedge Exp $
+#	$Csoft: Makefile,v 1.46 2002/11/21 22:44:54 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -19,11 +19,11 @@ LIB=	engine
 
 SRCS=	engine.c error.c event.c anim.c oldxcf.c ttf.c view.c physics.c \
 	input.c object.c media.c audio.c world.c map.c rootmap.c \
-	char.c version.c config.c prop.c
+	perso.c version.c config.c prop.c
 
 OBJS=	engine.o error.o event.o anim.o oldxcf.o ttf.o view.o physics.o \
 	input.o object.o media.o audio.o world.o map.o rootmap.o \
-	char.o version.o config.o prop.o
+	perso.o version.o config.o prop.o
 
 OBJS+=	mapedit/mapedit.o \
 	monitor/monitor.o
