@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.19 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.20 2004/03/02 08:58:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -271,7 +271,7 @@ gfx_fetch(const char *name)
 		goto out;
 	}
 
-	if (config_search_file("load-path", name, "den", path, sizeof(path))
+	if (config_search_file("den-path", name, "den", path, sizeof(path))
 	    == -1)
 		goto fail;
 
