@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.8 2004/05/01 00:53:10 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.9 2004/05/03 07:23:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -169,7 +169,7 @@ struct window *
 vgobj_edit(void *obj)
 {
 	extern const struct tool line_tool, point_tool, origin_tool,
-	    circle_tool, ellipse_tool;
+	    circle_tool, ellipse_tool, text_tool;
 	struct vgobj *vgo = obj;
 	struct vg *vg = vgo->vg;
 	struct window *win;
@@ -181,7 +181,7 @@ vgobj_edit(void *obj)
 	window_set_caption(win, _("Vector graphic: %s"), OBJECT(vgo)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
-	tbar = toolbar_new(win, TOOLBAR_HORIZ, 2);
+	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
 	toolbar_add_button(tbar, 0, ICON(SETTINGS_ICON), 0, 0,
 	    vgobj_settings, "%p, %p", win, vgo);
 
@@ -215,6 +215,7 @@ vgobj_edit(void *obj)
 			mapview_reg_tool(mv, &line_tool, vg);
 			mapview_reg_tool(mv, &circle_tool, vg);
 			mapview_reg_tool(mv, &ellipse_tool, vg);
+			mapview_reg_tool(mv, &text_tool, vg);
 		}
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.13 2004/05/01 00:53:10 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.14 2004/05/06 08:47:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -11,6 +11,11 @@
 #define VG_NAME_MAX		128
 #define VG_LAYER_NAME_MAX	128
 
+/*
+ * T = top	L = left
+ * M = middle	C = center
+ * B = bottom	R = right
+ */
 enum vg_alignment {
 	VG_ALIGN_TL,
 	VG_ALIGN_TC,
@@ -66,13 +71,14 @@ enum vg_element_type {
 	VG_BEZIER_CURVE,	/* Bezier curve */
 	VG_BEZIGON,		/* Bezigon */
 	VG_TEXT,		/* Text string */
-	VG_MASK			/* Polygonal mask */
+	VG_MASK,		/* Polygonal mask */
+	VG_LAST
 };
 
 struct vg_element_ops {
-	enum vg_element_type type;
 	const char *name;
 	void (*init)(struct vg *, struct vg_element *);
+	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);
 	void (*bbox)(struct vg *, struct vg_element *, struct vg_rect *);
 };
@@ -88,7 +94,6 @@ struct vg_line_style {
 		VG_ROUNDED,		/* Rounded endpoint (circular) */
 		VG_MITERED		/* Mitered endpoint */
 	} endpoint_style;
-
 	Uint16 stipple;			/* OpenGL-style stipple pattern */
 	Uint8 thickness;		/* Pixels */
 	Uint8 miter_len;		/* Miter length for VG_MITERED */
@@ -116,7 +121,7 @@ struct vg_layer {
 
 struct vg_element {
 	enum vg_element_type type;		/* Class of element */
-	struct vg_element_ops ops;		/* Generic element operations */
+	const struct vg_element_ops *ops;	/* Generic element operations */
 	struct vg_block *block;			/* Back pointer to block */
 	int flags;
 #define VG_ELEMENT_NOSAVE 0x01		/* Don't save with drawing */
@@ -126,41 +131,20 @@ struct vg_element {
 	Uint32 color;			/* Element specific color */
 	struct vg_line_style line;	/* Line style */
 	struct vg_fill_style fill;	/* Polygon filling style */
-
 	struct vg_vertex *vtx;		/* Vertices */
 	Uint32		 nvtx;
-
 	union {
-		struct {
-			double radius;		/* Circle radius */
-		} vg_circle;
-		struct {
-			double w, h;		/* Ellipse geometry */
-			double s, e;		/* Start/end angles (degrees) */
-		} vg_arc;
-		struct {
-			char text[VG_TEXT_MAX];		/* Text buffer */
-			double angle;			/* Angle of label */
-			enum vg_alignment align;	/* Alignment of text */
-			char face[VG_FONT_FACE_MAX];	/* Font face name */
-			int size;			/* Points */
-			int style;
-#define VG_FONT_BOLD	0x01				/* Bold style */
-#define VG_FONT_ITALIC	0x02				/* Italic style */
-		} vg_text;
-		struct {
-			float scale;			/* Scaling factor */
-			int visible;			/* Display indicator */
-			void *p;
-			void (*mousebutton)(void *p, Uint8 b);
-		} vg_mask;
+		struct vg_circle_args vg_circle;
+		struct vg_ellipse_args vg_arc;
+		struct vg_text_args vg_text;
+		struct vg_mask_args vg_mask;
 	} vg_args;
 #define vg_circle   vg_args.vg_circle
 #define vg_arc	    vg_args.vg_arc
 #define vg_text	    vg_args.vg_text
 #define vg_mask	    vg_args.vg_mask
-	TAILQ_ENTRY(vg_element) vgbmbs;
-	TAILQ_ENTRY(vg_element) vges;
+	TAILQ_ENTRY(vg_element) vgbmbs;	/* Entry in block element list */
+	TAILQ_ENTRY(vg_element) vges;	/* Entry in global element list */
 };
 
 struct vg {
@@ -170,7 +154,7 @@ struct vg {
 #define VG_HWSURFACE	0x02		/* Prefer video memory for fragments */
 #define VG_VISORIGIN	0x04		/* Display the origin points */
 #define VG_VISGRID	0x08		/* Display the grid */
-#define VG_VISBBOXES	0x10		/* Display bounding boxes */
+#define VG_VISBBOXES	0x10		/* Display bounding boxes (debug) */
 
 	pthread_mutex_t lock;
 	int redraw;			/* Global redraw */
@@ -201,6 +185,7 @@ struct vg {
 
 	TAILQ_HEAD(,vg_element) vges;		/* Elements in drawing */
 	TAILQ_HEAD(,vg_block) blocks;		/* Blocks in drawing */
+	TAILQ_HEAD(,vg_text_style) txtstyles;	/* Text styles */
 };
 
 extern int vg_cos_tbl[];
@@ -227,8 +212,6 @@ __inline__ void	 vg_avcoords2(struct vg *, int, int, int, int, double *,
 __inline__ void  vg_rcoords2(struct vg *, double, double, int *, int *);
 __inline__ void	 vg_arcoords2(struct vg *, double, double, int *, int *);
 __inline__ void  vg_rlength(struct vg *, double, int *);
-int		 vg_near_vertex2(struct vg *, const struct vg_vertex *,
-		                 double, double, double);
 void		 vg_pop_vertex(struct vg *);
 
 struct vg_layer *vg_push_layer(struct vg *, const char *);
@@ -236,8 +219,8 @@ __inline__ void	 vg_pop_layer(struct vg *);
 
 struct vg_element *vg_begin_element(struct vg *, enum vg_element_type);
 void		   vg_destroy_element(struct vg *, struct vg_element *);
-__inline__ int	   vg_collision(struct vg *, struct vg_rect *,
-		                struct vg_rect *);
+__inline__ int	   vg_rcollision(struct vg *, struct vg_rect *,
+		                 struct vg_rect *, struct vg_rect *);
  
 __inline__ void	   vg_layer(struct vg *, int);
 __inline__ void	   vg_color(struct vg *, Uint32);

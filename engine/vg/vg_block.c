@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.2 2004/05/02 09:43:58 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.3 2004/05/06 08:47:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -59,12 +59,14 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 	return (vgb);
 }
 
+/* Finish the current block. */
 void
 vg_end_block(struct vg *vg)
 {
 	vg->cur_block = NULL;
 }
 
+/* Look up the named block. */
 struct vg_block *
 vg_get_block(struct vg *vg, const char *name)
 {
@@ -114,6 +116,18 @@ vg_destroy_block(struct vg *vg, struct vg_block *vgb)
 	Free(vgb, M_VG);
 }
 
+/* Generate absolute vg coordinates for a vertex that's part of a block. */
+void
+vg_block_offset(struct vg *vg, struct vg_vertex *vtx)
+{
+	if (vg->cur_block != NULL) {
+		vtx->x += vg->cur_block->pos.x;
+		vtx->y += vg->cur_block->pos.y;
+	}
+}
+
+#ifdef EDITION
+
 static void
 destroy_block(int argc, union evarg *argv)
 {
@@ -125,13 +139,10 @@ destroy_block(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		switch (it->text[0]) {
-		case 'B':
+		if (it->iconsrc == ICON(VGBLOCK_ICON)) {
 			vg_destroy_block(vg, (struct vg_block *)it->p1);
-			break;
-		case 'E':
+		} else if (it->iconsrc == ICON(VGOBJ_ICON)) {
 			vg_destroy_element(vg, (struct vg_element *)it->p1);
-			break;
 		}
 	}
 }
@@ -139,7 +150,6 @@ destroy_block(int argc, union evarg *argv)
 static void
 poll_blocks(int argc, union evarg *argv)
 {
-	char name[TLIST_LABEL_MAX];
 	struct tlist *tl = argv[0].p;
 	struct vg *vg = argv[1].p;
 	struct vg_block *vgb;
@@ -150,30 +160,18 @@ poll_blocks(int argc, union evarg *argv)
 	pthread_mutex_lock(&vg->lock);
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		strlcpy(name, "B ", sizeof(name));
-		strlcat(name, _(vgb->name), sizeof(name));
-		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON), name, vgb);
+		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON),
+		    _(vgb->name), vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
-			strlcpy(name, "E ", sizeof(name));
-			strlcat(name, _(vge->ops.name), sizeof(name));
-			it = tlist_insert_item(tl, ICON(VGOBJ_ICON), name, vge);
+			it = tlist_insert_item(tl, ICON(VGOBJ_ICON),
+			    _(vge->ops->name), vge);
 			it->depth = 1;
 		}
 	}
 
 	pthread_mutex_unlock(&vg->lock);
 	tlist_restore_selections(tl);
-}
-
-/* Generate absolute vg coordinates for a vertex that's part of a block. */
-void
-vg_block_offset(struct vg *vg, struct vg_vertex *vtx)
-{
-	if (vg->cur_block != NULL) {
-		vtx->x += vg->cur_block->pos.x;
-		vtx->y += vg->cur_block->pos.y;
-	}
 }
 
 struct window *
@@ -200,3 +198,4 @@ vg_block_editor(struct vg *vg)
 	}
 	return (win);
 }
+#endif /* EDITION */

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.7 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.8 2004/04/30 12:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -35,6 +35,14 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+
+const struct vg_element_ops vg_points_ops = {
+	N_("Points"),
+	NULL,
+	NULL,
+	vg_draw_points,
+	vg_points_bbox
+};
 
 void
 vg_draw_points(struct vg *vg, struct vg_element *vge)

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.18 2004/05/06 08:47:55 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.19 2004/05/10 05:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -46,58 +46,35 @@ const struct version vg_ver = {
 	0, 0
 };
 
-static const struct vg_element_ops vge_types[] = {
-	{
-		VG_LINES,
-		N_("Line segments"),
-		NULL,
-		vg_draw_line_segments,
-		vg_line_bbox
-	},
-	{
-		VG_LINE_STRIP,
-		N_("Line strip"),
-		NULL,
-		vg_draw_line_strip,
-		vg_line_bbox
-	},
-	{
-		VG_LINE_LOOP,
-		N_("Line loop"),
-		NULL,
-		vg_draw_line_loop,
-		vg_line_bbox
-	},
-	{
-		VG_POINTS,
-		N_("Points"),
-		NULL,
-		vg_draw_points,
-		vg_points_bbox
-	},
-	{
-		VG_CIRCLE,
-		N_("Circle"),
-		vg_circle_init,
-		vg_draw_circle,
-		vg_circle_bbox
-	},
-	{
-		VG_ELLIPSE,
-		N_("Ellipse"),
-		vg_ellipse_init,
-		vg_draw_ellipse,
-		vg_ellipse_bbox
-	},
-	{
-		VG_MASK,
-		N_("Polygonal mask"),
-		vg_mask_init,
-		vg_draw_mask,
-		NULL
-	},
+extern const struct vg_element_ops vg_points_ops;
+extern const struct vg_element_ops vg_lines_ops;
+extern const struct vg_element_ops vg_line_strip_ops;
+extern const struct vg_element_ops vg_line_loop_ops;
+extern const struct vg_element_ops vg_circle_ops;
+extern const struct vg_element_ops vg_arc_ops;
+extern const struct vg_element_ops vg_ellipse_ops;
+extern const struct vg_element_ops vg_text_ops;
+extern const struct vg_element_ops vg_mask_ops;
+
+static const struct vg_element_ops *vge_types[] = {
+	&vg_points_ops,
+	&vg_lines_ops,
+	&vg_line_strip_ops,
+	&vg_line_loop_ops,
+	NULL,			/* triangles */
+	NULL,			/* triangle strip */
+	NULL,			/* triangle fan */
+	NULL,			/* quads */
+	NULL,			/* quad strip */
+	NULL,			/* polygon */
+	&vg_circle_ops,
+	&vg_arc_ops,
+	&vg_ellipse_ops,
+	NULL,			/* Bezier curve */
+	NULL,			/* Bezigon */
+	&vg_text_ops,
+	&vg_mask_ops,
 };
-const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
 struct vg *
 vg_new(void *p, int flags)
@@ -145,6 +122,7 @@ vg_init(struct vg *vg, int flags)
 	vg->mask = NULL;
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
+	TAILQ_INIT(&vg->txtstyles);
 	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
 
 	for (i = 0; i < VG_NORIGINS; i++) {
@@ -199,6 +177,21 @@ vg_destroy_blocks(struct vg *vg)
 	TAILQ_INIT(&vg->blocks);
 }
 
+static void
+vg_destroy_txtstyles(struct vg *vg)
+{
+	struct vg_text_style *ts, *nts;
+
+	for (ts = TAILQ_FIRST(&vg->txtstyles);
+	     ts != TAILQ_END(&vg->txtstyles);
+	     ts = nts) {
+		nts = TAILQ_NEXT(ts, txtstyles);
+		Free(ts, M_VG);
+	}
+	TAILQ_INIT(&vg->txtstyles);
+}
+
+
 void
 vg_destroy(struct vg *vg)
 {
@@ -224,6 +217,7 @@ vg_destroy(struct vg *vg)
 #endif
 	vg_destroy_elements(vg);
 	vg_destroy_blocks(vg);
+	vg_destroy_txtstyles(vg);
 	pthread_mutex_destroy(&vg->lock);
 }
 
@@ -403,6 +397,7 @@ struct vg_element *
 vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 {
 	struct vg_element *vge;
+	struct vg_element_ops *vgops;
 	int i;
 
 	vge = Malloc(sizeof(struct vg_element), M_VG);
@@ -422,8 +417,10 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->fill.color = SDL_MapRGB(vfmt, 255, 255, 255);
 	vge->color = SDL_MapRGB(vfmt, 255, 255, 255);
 
+	pthread_mutex_lock(&vg->lock);
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 
+	/* Insert into the current block if there is any. */
 	if (vg->cur_block != NULL) {
 		TAILQ_INSERT_TAIL(&vg->cur_block->vges, vge, vgbmbs);
 		vge->block = vg->cur_block;
@@ -433,26 +430,21 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 		vge->block = NULL;
 	}
 
-	for (i = 0; i < nvge_types; i++) {
-		if (vge_types[i].type == eltype) {
-			vge->ops.name = vge_types[i].name;
-			vge->ops.init = vge_types[i].init;
-			vge->ops.draw = vge_types[i].draw;
-			vge->ops.bbox = vge_types[i].bbox;
-			break;
-		}
-	}
-	if (i == nvge_types) {
-		fatal("no such element type");
-	}
-	if (vge->ops.init != NULL)
-		vge->ops.init(vg, vge);
+	/* Set up the generic operation vector. */
+	vge->ops = vge_types[eltype];
+	if (vge->ops->init != NULL)
+		vge->ops->init(vg, vge);
 
 	vg->redraw = 1;
+	pthread_mutex_unlock(&vg->lock);
+
 	return (vge);
 }
 
-/* Clear the surface with the filling color. */
+/*
+ * Clear the surface with the filling color.
+ * The vg must be locked.
+ */
 void
 vg_clear(struct vg *vg)
 {
@@ -460,21 +452,20 @@ vg_clear(struct vg *vg)
 	vg->redraw = 1;
 }
 
+#ifdef DEBUG
 static void
 vg_draw_bboxes(struct vg *vg)
 {
 	struct vg_rect bbox;
 	struct vg_element *vge;
+	const struct vg_element_ops *vgops;
 	int x, y, w, h;
 	int i;
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		for (i = 0; i < nvge_types; i++) {
-			if (vge_types[i].type == vge->type &&
-			    vge_types[i].bbox != NULL)
-				vge_types[i].bbox(vg, vge, &bbox);
-		}
-		if (vge_types[i].bbox == NULL) {
+		if (vge->ops->bbox != NULL) {
+			vge->ops->bbox(vg, vge, &bbox);
+		} else {
 			continue;
 		}
 		vg_rcoords2(vg, bbox.x, bbox.y, &x, &y);
@@ -486,17 +477,51 @@ vg_draw_bboxes(struct vg *vg)
 		vg_line_primitive(vg, x+w, y, x+w, y+h, vg->grid_color);
 	}
 }
+#endif /* DEBUG */
 
-/* Evaluate collision between two rectangles. */
+/* Evaluate the intersection between two rectangles. */
 int
-vg_collision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2)
+vg_rcollision(struct vg *vg, struct vg_rect *r1, struct vg_rect *r2,
+    struct vg_rect *ixion)
 {
-	return (1);
+	double r1xmin, r1xmax, r1ymin, r1ymax;
+	double r2xmin, r2xmax, r2ymin, r2ymax;
+	double ixw, ixh;
+
+	r1xmin = r1->x;
+	r1ymin = r1->y;
+	r1xmax = r1->x+r1->w;
+	r1ymax = r1->y+r1->h;
+
+	r2xmin = r2->x;
+	r2ymin = r2->y;
+	r2xmax = r2->x+r2->w;
+	r2ymax = r2->y+r2->h;
+
+	if (r2xmin > r1xmin)
+		r1xmin = r2xmin;
+	if (r2ymin > r1ymin)
+		r1ymin = r2ymin;
+
+	if (r2xmax < r1xmax)
+		r1xmax = r2xmax;
+	if (r2ymax < r1ymax)
+		r1ymax = r2ymax;
+	
+	ixw = r1xmax - (r1xmin > 0 ? r1xmax-r1xmin : 0);
+	ixh = r1ymax - (r1ymin > 0 ? r1ymax-r1ymin : 0);
+	if (ixion != NULL) {
+		ixion->x = r1xmin;
+		ixion->y = r1ymin;
+		ixion->w = ixw;
+		ixion->h = ixh;
+	}
+	return (ixw > 0 && ixh > 0);
 }
 
 /*
- * Rasterize an element and the other elements coming in contact with it,
- * in a recursive fashion.
+ * Rasterize an element as well as other overlapping elements.
+ * The vg must be locked.
  */
 static void
 vg_rasterize_element(struct vg *vg, struct vg_element *vge)
@@ -506,35 +531,37 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 
 	if (!vge->drawn) {
 		vge->drawn = 1;
-		vge->ops.draw(vg, vge);
+		vge->ops->draw(vg, vge);
 	}
-
-	/* Evaluate collisions with other elements. */
-	if (vge->ops.bbox != NULL) {
-		vge->ops.bbox(vg, vge, &r1);
+	if (vge->ops->bbox != NULL) {
+		vge->ops->bbox(vg, vge, &r1);
 		TAILQ_FOREACH(ovge, &vg->vges, vges) {
 			if (ovge->drawn || ovge == vge ||
-			    ovge->ops.bbox == NULL) {
+			    ovge->ops->bbox == NULL) {
 				continue;
 			}
-			ovge->ops.bbox(vg, ovge, &r2);
-			if (vg_collision(vg, &r1, &r2))
+			ovge->ops->bbox(vg, ovge, &r2);
+			if (vg_rcollision(vg, &r1, &r2, NULL))
 				vg_rasterize_element(vg, ovge);
 		}
 	}
 }
 
-/* Rasterize elements marked dirty and update the fragments. */
+/* Rasterize elements marked dirty and update the affected tiles. */
 void
 vg_rasterize(struct vg *vg)
 {
 	struct vg_element *vge;
 	int i;
-	
+
+	pthread_mutex_lock(&vg->lock);
+
 	if (vg->flags & VG_VISGRID)
 		vg_draw_grid(vg);
+#ifdef DEBUG
 	if (vg->flags & VG_VISBBOXES)
 		vg_draw_bboxes(vg);
+#endif
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		vge->drawn = 0;
@@ -547,11 +574,14 @@ vg_rasterize(struct vg *vg)
 		vg_draw_origin(vg);
 
 	vg_update_fragments(vg);
+
+	pthread_mutex_unlock(&vg->lock);
 }
 
 /*
  * Translate tile coordinates to relative vg coordinates, applying
  * positional and orthogonal restrictions as needed.
+ * The vg must be locked.
  */
 void
 vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
@@ -568,7 +598,10 @@ vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
 		vg_ortho_restrict(vg, vx, vy);
 }
 
-/* Translate tile coordinates to absolute vg coordinates. */
+/*
+ * Translate tile coordinates to absolute vg coordinates.
+ * The vg must be locked.
+ */
 void
 vg_avcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
@@ -580,7 +613,10 @@ vg_avcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
 		vg_snap_to(vg, vx, vy);
 }
 
-/* Translate relative vg coordinates to raster coordinates. */
+/*
+ * Translate relative vg coordinates to raster coordinates.
+ * The vg must be locked.
+ */
 void
 vg_rcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
 {
@@ -590,7 +626,10 @@ vg_rcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
 	      (int)(vg->origin[0].y*vg->scale*TILESZ);
 }
 
-/* Translate absolute vg coordinates to raster coordinates. */
+/*
+ * Translate absolute vg coordinates to raster coordinates.
+ * The vg must be locked.
+ */
 void
 vg_arcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
 {
@@ -598,7 +637,10 @@ vg_arcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
 	*ry = (int)(vy*vg->scale*TILESZ);
 }
 
-/* Translate vg length to pixel length. */
+/*
+ * Translate vg length to pixel length.
+ * The vg must be locked.
+ */
 void
 vg_rlength(struct vg *vg, double len, int *rlen)
 {
@@ -617,6 +659,7 @@ vg_alloc_vertex(struct vg_element *vge)
 	return (&vge->vtx[vge->nvtx++]);
 }
 
+/* Pop the highest vertex off the vertex array. */
 void
 vg_pop_vertex(struct vg *vg)
 {
@@ -629,6 +672,7 @@ vg_pop_vertex(struct vg *vg)
 	    M_VG);
 }
 
+/* Push a 2D vertex onto the vertex array. */
 struct vg_vertex *
 vg_vertex2(struct vg *vg, double x, double y)
 {
@@ -643,6 +687,7 @@ vg_vertex2(struct vg *vg, double x, double y)
 	return (vtx);
 }
 
+/* Push a 3D vertex onto the vertex array. */
 struct vg_vertex *
 vg_vertex3(struct vg *vg, double x, double y, double z)
 {
@@ -657,6 +702,7 @@ vg_vertex3(struct vg *vg, double x, double y, double z)
 	return (vtx);
 }
 
+/* Push a homogenized 3D vertex onto the vertex array. */
 struct vg_vertex *
 vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 {
@@ -671,6 +717,7 @@ vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 	return (vtx);
 }
 
+/* Push a series of vertices onto the vertex array. */
 void
 vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 {
@@ -686,14 +733,7 @@ vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 	}
 }
 
-int
-vg_near_vertex2(struct vg *vg, const struct vg_vertex *vtx, double x, double y,
-    double fudge)
-{
-	return (x > vtx->x-fudge && x < vtx->x+fudge &&
-	        y > vtx->y-fudge && y < vtx->y+fudge);
-}
-
+/* Specify the layer# to associate with the current element. */
 void
 vg_layer(struct vg *vg, int layer)
 {
@@ -702,6 +742,7 @@ vg_layer(struct vg *vg, int layer)
 	vge->layer = layer;
 }
 
+/* Specify the color of the current element (format-specific). */
 void
 vg_color(struct vg *vg, Uint32 color)
 {
@@ -710,6 +751,7 @@ vg_color(struct vg *vg, Uint32 color)
 	vge->color = color;
 }
 
+/* Specify the color of the current element (RGB triplet). */
 void
 vg_color3(struct vg *vg, int r, int g, int b)
 {
@@ -718,6 +760,7 @@ vg_color3(struct vg *vg, int r, int g, int b)
 	vge->color = SDL_MapRGB(vfmt, r, g, b);
 }
 
+/* Specify the color of the current element (RGB triplet + alpha). */
 void
 vg_color4(struct vg *vg, int r, int g, int b, int a)
 {
@@ -726,6 +769,7 @@ vg_color4(struct vg *vg, int r, int g, int b, int a)
 	vge->color = SDL_MapRGBA(vfmt, r, g, b, a);
 }
 
+/* Push a new layer onto the layer stack. */
 struct vg_layer *
 vg_push_layer(struct vg *vg, const char *name)
 {
@@ -743,6 +787,7 @@ vg_push_layer(struct vg *vg, const char *name)
 	return (vgl);
 }
 
+/* Pop the highest layer off the layer stack. */
 void
 vg_pop_layer(struct vg *vg)
 {
@@ -835,9 +880,17 @@ vg_save(struct vg *vg, struct netbuf *buf)
 			write_double(buf, vge->vg_arc.e);
 			break;
 		case VG_TEXT:
+			if (vge->vg_text.su != NULL) {
+				SDL_FreeSurface(vge->vg_text.su);
+				vge->vg_text.su = NULL;
+			}
 			write_string(buf, vge->vg_text.text);
 			write_double(buf, vge->vg_text.angle);
 			write_uint32(buf, (Uint32)vge->vg_text.align);
+			write_string(buf, vge->vg_text.style);
+			write_string(buf, vge->vg_text.face);
+			write_uint32(buf, (Uint32)vge->vg_text.size);
+			write_uint32(buf, (Uint32)vge->vg_text.flags);
 			break;
 		case VG_MASK:
 			write_float(buf, vge->vg_mask.scale);
@@ -954,10 +1007,11 @@ vg_load(struct vg *vg, struct netbuf *buf)
 					break;
 			}
 			if (block == NULL) {
-				error_set("bad block reference");
+				error_set("bad block id");
+				Free(block_id, 0);
 				goto fail;
 			}
-			dprintf("el %d: linked with %s\n", type, block->name);
+			Free(block_id, 0);
 		} else {
 			block = NULL;
 		}
@@ -975,21 +1029,42 @@ vg_load(struct vg *vg, struct netbuf *buf)
 
 		switch (vge->type) {
 		case VG_CIRCLE:
+			if (vge->nvtx < 1) {
+				error_set("circle nvtx < 1");
+				vg_destroy_element(vg, vge);
+				goto fail;
+			}
 			vge->vg_circle.radius = read_double(buf);
 			break;
 		case VG_ARC:
 		case VG_ELLIPSE:
+			if (vge->nvtx < 1) {
+				error_set("arc nvtx < 1");
+				vg_destroy_element(vg, vge);
+				goto fail;
+			}
 			vge->vg_arc.w = read_double(buf);
 			vge->vg_arc.h = read_double(buf);
 			vge->vg_arc.s = read_double(buf);
 			vge->vg_arc.e = read_double(buf);
 			break;
 		case VG_TEXT:
+			if (vge->nvtx < 1) {
+				error_set("text nvtx < 1");
+				vg_destroy_element(vg, vge);
+				goto fail;
+			}
 			copy_string(vge->vg_text.text, buf,
 			    sizeof(vge->vg_text.text));
 			vge->vg_text.angle = read_double(buf);
 			vge->vg_text.align = (enum vg_alignment)
 			    read_uint32(buf);
+			copy_string(vge->vg_text.style, buf,
+			    sizeof(vge->vg_text.style));
+			copy_string(vge->vg_text.face, buf,
+			    sizeof(vge->vg_text.face));
+			vge->vg_text.size = (int)read_uint32(buf);
+			vge->vg_text.flags = (int)read_uint32(buf);
 			break;
 		case VG_MASK:
 			vge->vg_mask.scale = read_float(buf);

@@ -1,9 +1,13 @@
-/*	$Csoft: vg_circle.h,v 1.2 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg_circle.h,v 1.3 2004/04/22 12:36:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_CIRCLE_H_
 #define _AGAR_VG_CIRCLE_H_
 #include "begin_code.h"
+		
+struct vg_circle_args {
+	double radius;
+};
 
 __BEGIN_DECLS
 void		vg_circle_init(struct vg *, struct vg_element *);

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.6 2004/04/22 12:36:09 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.7 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,6 +36,14 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
+
+const struct vg_element_ops vg_circle_ops = {
+	N_("Circle"),
+	vg_circle_init,
+	NULL,
+	vg_draw_circle,
+	vg_circle_bbox
+};
 
 void
 vg_circle_init(struct vg *vg, struct vg_element *vge)
