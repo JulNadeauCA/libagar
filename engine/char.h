@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.2 2002/01/30 12:43:40 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.3 2002/01/30 14:29:32 vedge Exp $	*/
 
 /*
  * Data shared by all character types.
@@ -37,11 +37,6 @@ struct character {
 	SDL_TimerID timer;
 };
 
-#define WFLAG_MOVEDUP		0x01
-#define WFLAG_MOVEDDOWN		0x02
-#define WFLAG_MOVEDLEFT		0x04
-#define WFLAG_MOVEDRIGHT	0x08
-
 /* Set the active sprite. */
 #define CHAR_SETSPRITE(chp, soffs)			\
 	do {						\
@@ -57,13 +52,13 @@ struct character {
 	} while (0)
 
 /* Position character obp at m:x,y. */
-#define CHAR_PLOT(chp, pma, mx, my)			\
-	do {						\
-		(chp)->map = (pma);			\
-		(chp)->x = (mx);			\
-		(chp)->y = (my);			\
-		MAP_ADDSPRITE((pma), (mx), (my),	\
-		    &(chp)->obj, (chp)->curoffs);	\
+#define CHAR_PLOT(chp, pma, mx, my)				\
+	do {							\
+		(chp)->map = (pma);				\
+		(chp)->x = (mx);				\
+		(chp)->y = (my);				\
+		MAP_ADDSPRITE((pma), (mx), (my),		\
+		    (struct object *)(chp), (chp)->curoffs);	\
 	} while (0)
 
 /* Move character to a new position. */
@@ -72,10 +67,10 @@ struct character {
 		MAP_DELREF((chp)->map, (chp)->x, (chp)->y,(chp), -1);	\
 		if ((chp)->flags & CHAR_ANIM) {				\
 			MAP_ADDANIM((chp)->map, nx, ny,			\
-			    (chp), (chp)->curoffs); 			\
+			    (struct object *)(chp), (chp)->curoffs);	\
 		} else {						\
 			MAP_ADDSPRITE((chp)->map, nx, ny,		\
-			    (chp), (chp)->curoffs); 			\
+			    (struct object *)(chp), (chp)->curoffs); 	\
 		}							\
 		(chp)->x = nx;						\
 		(chp)->y = ny;						\
