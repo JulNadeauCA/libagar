@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.27 2002/04/18 04:03:50 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.28 2002/04/20 09:15:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/widget.h>
 #include <engine/widget/label.h>
+#include <engine/widget/button.h>
 #include <engine/widget/text.h>
 
 #ifdef DEBUG
@@ -61,7 +62,8 @@ struct input *keyboard = NULL;
 struct input *joy = NULL;
 struct input *mouse = NULL;
 
-static void printusage(char *);
+static void	printusage(char *);
+static void	close_button_push(struct button *, Uint8);
 
 static void
 printusage(char *progname)
@@ -180,11 +182,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		return (-1);
 	}
 	
-	/* Initialize the window subsystem. */
-	if (window_init() != 0) {
-		return (-1);
-	}
-
 	/* Initialize input devices. */
 	keyboard = input_create(INPUT_KEYBOARD, 0);
 	joy = input_create(INPUT_JOY, njoy);
@@ -232,9 +229,6 @@ engine_destroy(void)
 	/* Destroy the font engine. */
 	text_quit();
 	
-	/* Destroy the window subsystem. */
-	window_quit();
-
 	SDL_Quit();
 #endif
 	exit(0);
@@ -256,20 +250,13 @@ emalloc(size_t len)
 void
 engine_config(void)
 {
-	SDL_Rect rd;
-	static Uint32 bg, fg;
 	struct window *w;
 	struct label *fullscreen_label, *audio_label;
+	struct button *close_button;
 	
-	bg = SDL_MapRGBA(mainview->v->format, 0, 50, 30, 250);
-	fg = SDL_MapRGBA(mainview->v->format, 200, 200, 200, 100);
-	rd.x = 64;
-	rd.y = 64;
-	rd.w = 512;
-	rd.h = 256;
-
 	w = window_create(mainview, "engine-config",
-	    "Engine configuration", 0 , WINDOW_CUBIC, rd, &bg, &fg);
+	    "Engine configuration", 0, WINDOW_GRADIENT,
+	    64, 64, 512, 256);
 	object_link(w);
 
 	fullscreen_label = label_create(w, "fullscreen-label", 
@@ -279,5 +266,17 @@ engine_config(void)
 	audio_label = label_create(w, "audio-label", 
 	    "Audio enabled", 0, 10, 40);
 	object_link(audio_label);
+
+	close_button = button_create(w, "close-button",
+	    "Close", 0, 100, 100);
+	close_button->push = close_button_push;
+	object_link(close_button);
+}
+
+static void
+close_button_push(struct button *b, Uint8 button)
+{
+	object_unlink(WIDGET(b)->win);
+	object_destroy(WIDGET(b)->win);
 }
 
