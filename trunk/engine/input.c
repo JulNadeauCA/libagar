@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.15 2002/05/13 10:19:07 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.16 2002/05/19 14:32:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -185,7 +185,7 @@ input_event(void *p, SDL_Event *ev)
 
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
-		dprintf("%s: not controlling anything\n", OBJECT(in)->name);
+		dprintf("%s: unbound input event\n", OBJECT(in)->name);
 		goto done;
 	}
 	switch (in->type) {
@@ -206,8 +206,6 @@ done:
 static int
 keyboard_init(struct input *in, int index)
 {
-	/* XXX ... */
-
 	return (0);
 }
 
@@ -218,7 +216,7 @@ joy_init(struct input *in, int index)
 		return (-1);
 	}
 
-	in->p = (SDL_Joystick *)SDL_JoystickOpen(index);
+	in->p = SDL_JoystickOpen(index);
 	if (joy == NULL) {
 		warning("joy[%d]: %s\n", index, SDL_GetError());
 		return (-1);
@@ -231,7 +229,6 @@ joy_init(struct input *in, int index)
 static int
 mouse_init(struct input *in, int index)
 {
-	/* XXX ... */
 	return (0);
 }
 
