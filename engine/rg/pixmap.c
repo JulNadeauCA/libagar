@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.14 2005/02/27 03:13:57 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.15 2005/02/27 05:55:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -895,6 +895,23 @@ pixmap_fill(struct tileview *tv, struct tile_element *tel, int x, int y)
 	tv->tile->flags |= TILE_DIRTY;
 }
 
+static void
+pixmap_pick(struct tileview *tv, struct tile_element *tel, int x, int y)
+{
+	struct pixmap *px = tel->tel_pixmap.px;
+	Uint8 *pDst = (Uint8 *)px->su->pixels +
+		      y*px->su->pitch +
+		      x*px->su->format->BytesPerPixel;
+	Uint32 cDst = *(Uint32 *)pDst;
+	Uint8 r, g, b, a;
+	float h;
+
+	SDL_GetRGBA(cDst, px->su->format, &r, &g, &b, &a);
+	prim_rgb2hsv(r, g, b, &h, &px->s, &px->v);
+	px->h = h*360.0;
+	px->a = (float)(a/255);
+}
+
 void
 pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     int x, int y, int button)
@@ -902,13 +919,18 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 	struct pixmap *px = tel->tel_pixmap.px;
 	Uint8 *keystate;
 
-	pixmap_begin_undoblk(px);
-	
+	if (button != SDL_BUTTON_LEFT)
+		return;
+
 	keystate = SDL_GetKeyState(NULL);
 	if (keystate[SDLK_f]) {
+		pixmap_begin_undoblk(px);
 		pixmap_fill(tv, tel, x, y);
+	} else if (keystate[SDLK_p]) {
+		pixmap_pick(tv, tel, x, y);
 	} else {
 		tv->tv_pixmap.state = TILEVIEW_PIXMAP_FREEHAND;
+		pixmap_begin_undoblk(px);
 		pixmap_apply(tv, tel, x, y);
 	}
 }
@@ -917,7 +939,8 @@ void
 pixmap_mousebuttonup(struct tileview *tv, struct tile_element *tel, int x,
     int y, int button)
 {
-	tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
+	if (button == SDL_BUTTON_LEFT)
+		tv->tv_pixmap.state = TILEVIEW_PIXMAP_IDLE;
 }
 
 void
@@ -935,6 +958,12 @@ pixmap_keydown(struct tileview *tv, struct tile_element *tel,
 		if (saved_cursor == NULL) {
 			saved_cursor = SDL_GetCursor();
 			SDL_SetCursor(erase_cursor);
+		}
+		break;
+	case SDLK_p:
+		if (saved_cursor == NULL) {
+			saved_cursor = SDL_GetCursor();
+			SDL_SetCursor(pick_cursor);
 		}
 		break;
 	}
@@ -956,6 +985,14 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 {
 	struct pixmap *px = tel->tel_pixmap.px;
 
-	if (tv->tv_pixmap.state == TILEVIEW_PIXMAP_FREEHAND)
+	if (tv->tv_pixmap.state == TILEVIEW_PIXMAP_FREEHAND) {
 		pixmap_apply(tv, tel, x, y);
+		return;
+	}
+	if (state == SDL_BUTTON_LEFT) {
+		Uint8 *keystate = SDL_GetKeyState(NULL);
+
+		if (keystate[SDLK_p])
+			pixmap_pick(tv, tel, x, y);
+	}
 }

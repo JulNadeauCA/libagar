@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: cursors.c,v 1.1 2005/02/27 05:57:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -31,11 +31,12 @@
 #include "cursors.h"
 #include "cursors/fill.xpm"
 #include "cursors/erase.xpm"
+#include "cursors/pick.xpm"
 
 #define CURSOR_MAX_W 32
 #define CURSOR_MAX_H 32
 
-SDL_Cursor *fill_cursor, *erase_cursor;
+SDL_Cursor *fill_cursor, *erase_cursor, *pick_cursor;
 
 static SDL_Cursor *
 create_cursor(char *xpm[], int xHot, int yHot)
@@ -86,6 +87,7 @@ cursors_init(void)
 {
 	fill_cursor = create_cursor(fill_xpm, 23, 25);
 	erase_cursor = create_cursor(erase_xpm, 10, 20);
+	pick_cursor = create_cursor(pick_xpm, 8, 22);
 }
 
 void
@@ -93,4 +95,5 @@ cursors_destroy(void)
 {
 	SDL_FreeCursor(fill_cursor);
 	SDL_FreeCursor(erase_cursor);
+	SDL_FreeCursor(pick_cursor);
 }
