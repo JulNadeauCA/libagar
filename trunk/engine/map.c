@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.25 2002/02/15 05:38:02 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.26 2002/02/15 10:00:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -55,8 +55,9 @@ TAILQ_HEAD(, draw) deferdraws;	 /* Deferred rendering */
 static void	 node_destroy(struct node *);
 static int	 node_init(struct node *, struct object *, int, int, int);
 static void	 mapedit_drawflags(struct map *, int, int, int);
-static Uint32	 map_draw(Uint32, void *);
-static Uint32	 map_animate(Uint32, void *);
+static void	 map_draw(struct map *);
+static void	 map_animate(struct map *);
+static void	*map_draw_th(void *);
 
 struct map *
 map_create(char *name, char *desc, int flags, int width, int height)
@@ -100,6 +101,23 @@ map_create(char *name, char *desc, int flags, int width, int height)
 	return (m);
 }
 
+static void *
+map_draw_th(void *p)
+{
+	struct map *m = (struct map *)p;
+
+	while (m->flags & MAP_FOCUSED) {
+		map_animate(m);
+		if (m->redraw) {
+			m->redraw = 0;
+			map_draw(m);
+		}
+		SDL_Delay(3);
+	}
+
+	return (NULL);
+}
+
 int
 map_focus(struct map *m)
 {
@@ -116,16 +134,9 @@ map_focus(struct map *m)
 	} else {
 		SDL_WM_SetCaption(m->obj.name, "mapedit");
 	}
-	
-	/* XXX fine-tuning */
-	m->view->mapanimt = SDL_AddTimer(m->view->fps * 2, map_animate, m);
-	if (m->view->mapanimt == NULL) {
-		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		return (-1);
-	}
-	m->view->mapdrawt = SDL_AddTimer(m->view->fps, map_draw, m);
-	if (m->view->mapdrawt == NULL) {
-		fatal("SDL_AddTimer: %s\n", SDL_GetError());
+
+	if (pthread_create(&m->draw_th, NULL, map_draw_th, m) != 0) {
+		perror("draw_th");
 		return (-1);
 	}
 
@@ -137,19 +148,11 @@ map_unfocus(struct map *m)
 {
 	dprintf("unfocusing %s\n", m->obj.name);
 	
-	m->flags &= ~(MAP_FOCUSED);
+	m->flags &= ~(MAP_FOCUSED);	/* Will stop the rendering thread */
+
 	curmap = NULL;
 	if (curmapedit != NULL) {
 		curmapedit->flags = 0;
-	}
-
-	if (m->view->mapanimt != NULL) {
-		SDL_RemoveTimer(m->view->mapanimt);
-		m->view->mapanimt = NULL;
-	}
-	if (m->view->mapdrawt != NULL) {
-		SDL_RemoveTimer(m->view->mapdrawt);
-		m->view->mapdrawt = NULL;
 	}
 
 	return (0);
@@ -361,10 +364,9 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
  * Update all animations in the map view, and move references
  * with a nonzero x/y offset value.
  */
-static Uint32
-map_animate(Uint32 ival, void *p)
+static void
+map_animate(struct map *m)
 {
-	struct map *m = (struct map *)p;
 	int x, y;
 	int vx, vy;
 
@@ -422,18 +424,15 @@ map_animate(Uint32 ival, void *p)
 					anim = nref->pobj->anims[nref->offs];
 					src = anim->frames[nref->frame];
 					
-					if (anim->delay > 0 &&
-					    nref->fwait++ > anim->delay) {
+
+					if ((anim->delay < 1) ||
+					    (++nref->fwait > anim->delay)) {
+						nref->fwait = 0;
 						if (nref->frame++ >=
 						    anim->nframes - 1) {
+						    	/* Loop */
 							nref->frame = 0;
 						}
-						nref->fwait = 0;
-						/*
-						 * XXX wait the number of
-						 * ticks a blit usually
-						 * takes.
-						 */
 					}
 				}
 			
@@ -474,77 +473,16 @@ map_animate(Uint32 ival, void *p)
 	pthread_mutex_unlock(&m->lock);
 
 	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
-
-	return (ival);
-}
-
-static void
-mapedit_drawflags(struct map *m, int flags, int vx, int vy)
-{
-	vx <<= TILESHIFT;
-	vy <<= TILESHIFT;
-
-	if (curmapedit->flags & MAPEDIT_DRAWGRID)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_GRID],
-		    vx, vy);
-	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0)
-		return;
-
-	if (flags == 0) {
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BLOCKED],
-		    vx, vy);
-		return;
-	}
-	if (flags & NODE_ORIGIN)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ORIGIN],
-		    vx, vy);
-#if 0
-	if (flags & NODE_WALK)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_WALK],
-		    vx, vy);
-#endif
-	if (flags & NODE_CLIMB)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_CLIMB],
-		    vx, vy);
-	if (flags & NODE_SLIP)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLIP],
-		    vx, vy);
-	if (flags & NODE_BIO)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BIO],
-		    vx, vy);
-	if (flags & NODE_REGEN)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_REGEN],
-		    vx, vy);
-	if (flags & NODE_SLOW)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLOW],
-		    vx, vy);
-	if (flags & NODE_HASTE)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
-		    vx, vy);
-#if 0
-	if (flags & NODE_ANIM)
-		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
-		    vx, vy);
-#endif
 }
 
 /* Draw all sprites in the map view. */
-static Uint32
-map_draw(Uint32 ival, void *p)
+static void
+map_draw(struct map *m)
 {
-	struct map *m = (struct map *)p;
 	int x, y;
 	int vx, vy;
 
-	if (m->redraw == 0) {
-		return (ival);
-	}
-	m->redraw = 0;
-
-	if (pthread_mutex_lock(&m->lock) != 0) {
-		perror(m->obj.name);
-		return (ival);
-	}
+	pthread_mutex_lock(&m->lock);
 
 	for (y = m->view->mapy, vy = 0;
 	     y < m->view->maph + m->view->mapy + 1;
@@ -616,8 +554,56 @@ map_draw(Uint32 ival, void *p)
 	pthread_mutex_unlock(&m->lock);
 
 	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
+}
 
-	return (ival);
+static void
+mapedit_drawflags(struct map *m, int flags, int vx, int vy)
+{
+	vx <<= TILESHIFT;
+	vy <<= TILESHIFT;
+
+	if (curmapedit->flags & MAPEDIT_DRAWGRID)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_GRID],
+		    vx, vy);
+	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0)
+		return;
+
+	if (flags == 0) {
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BLOCKED],
+		    vx, vy);
+		return;
+	}
+	if (flags & NODE_ORIGIN)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ORIGIN],
+		    vx, vy);
+#if 0
+	if (flags & NODE_WALK)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_WALK],
+		    vx, vy);
+#endif
+	if (flags & NODE_CLIMB)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_CLIMB],
+		    vx, vy);
+	if (flags & NODE_SLIP)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLIP],
+		    vx, vy);
+	if (flags & NODE_BIO)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BIO],
+		    vx, vy);
+	if (flags & NODE_REGEN)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_REGEN],
+		    vx, vy);
+	if (flags & NODE_SLOW)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLOW],
+		    vx, vy);
+	if (flags & NODE_HASTE)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
+		    vx, vy);
+#if 0
+	if (flags & NODE_ANIM)
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
+		    vx, vy);
+#endif
 }
 
 /*
