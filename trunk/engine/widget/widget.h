@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.29 2002/07/27 07:01:39 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.30 2002/07/27 19:55:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -42,6 +42,8 @@ struct widget {
 
 #define WIDGET(wi)	((struct widget *)(wi))
 #define WIDGET_OPS(ob)	((struct widget_ops *)OBJECT((ob))->ops)
+
+#define WIDGET_COLOR(wi,ind)	(WIDGET(wi)->color[ind])
 
 /* Expand to absolute widget coordinates. */
 #define WIDGET_ABSX(wi)	((WIDGET((wi))->win->x) + WIDGET((wi))->x)

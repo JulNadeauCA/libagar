@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.4 2002/07/22 05:50:56 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.5 2002/07/27 07:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -53,6 +53,12 @@ static struct widget_ops radio_ops = {
 	NULL		/* animate */
 };
 
+enum {
+	INSIDE_COLOR = 0,
+	OUTSIDE_COLOR,
+	TEXT_COLOR
+};
+
 static void	radio_event(int, union evarg *);
 
 struct radio *
@@ -78,9 +84,9 @@ radio_init(struct radio *rad, const char **items, int selitem, int flags)
 
 	widget_init(&rad->wid, "radio", "widget", &radio_ops, -1, -1);
 
-	widget_map_color(rad, RADIO_INSIDE, "radio-inside", 250, 250, 250);
-	widget_map_color(rad, RADIO_OUTSIDE, "radio-outside", 150, 150, 200);
-	widget_map_color(rad, RADIO_TEXT, "radio-text", 240, 240, 240);
+	widget_map_color(rad, INSIDE_COLOR, "radio-inside", 250, 250, 250);
+	widget_map_color(rad, OUTSIDE_COLOR, "radio-outside", 150, 150, 200);
+	widget_map_color(rad, TEXT_COLOR, "radio-text", 240, 240, 240);
 
 	rad->flags = flags;
 	rad->items = items;
@@ -96,7 +102,7 @@ radio_init(struct radio *rad, const char **items, int selitem, int flags)
 
 		/* XXX */
 		su = text_render(NULL, -1,
-		    WIDGET(rad)->color[RADIO_TEXT], (char *)s);
+		    WIDGET_COLOR(rad, TEXT_COLOR), (char *)s);
 		if (su->w > maxw) {
 			maxw = su->w;
 		}
@@ -144,19 +150,20 @@ radio_draw(void *p)
 
 		/* Radio button */
 		primitives.circle(rad, 0, y,
-		    rad->radio.w, rad->radio.h, 6, WIDGET(rad)->color[0]);
+		    rad->radio.w, rad->radio.h, 6,
+		    WIDGET_COLOR(rad, OUTSIDE_COLOR));
 		if (rad->selitem == i) {
 			primitives.circle(rad, 0, y,
 			    rad->radio.w, rad->radio.h, 3,
-			    WIDGET(rad)->color[0]);
+			    WIDGET_COLOR(rad, INSIDE_COLOR));
 			primitives.circle(rad, 0, y,
 			    rad->radio.w, rad->radio.h, 2,
-			    WIDGET(rad)->color[1]);
+			    WIDGET_COLOR(rad, OUTSIDE_COLOR));
 		}
 
 		/* XXX cache */
-		ls = text_render(NULL, -1, WIDGET(rad)->color[RADIO_TEXT],
-		    (char *)s);
+		ls = text_render(NULL, -1,
+		    WIDGET_COLOR(rad, TEXT_COLOR), (char *)s);
 		WIDGET_DRAW(rad, ls, rad->radio.w, y);
 		SDL_FreeSurface(ls);
 	}
