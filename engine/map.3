@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.15 2003/01/09 00:47:27 vedge Exp $
+.\"	$Csoft: map.3,v 1.16 2003/01/19 12:10:19 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -181,17 +181,14 @@ functions respectively initialize, free, load and save a single map node.
 .Sh NODE OPERATIONS
 .nr nS 1
 .Ft void
-.Fn node_draw "struct map *map" "struct node *node" "Uint32 x" "Uint32 y"
-.Pp
-.Ft void
-.Fn node_move_ref "struct noderef *src_nref" "struct node *dst_node" \
-                  "Uint32 nx" "Uint32 ny"
+.Fn node_move_ref "struct noderef *src_nref" "struct node *src_node" \
+                  "struct node *dst_node"
 .Pp
 .Ft void
 .Fn node_copy_ref "struct noderef *src_nref" "struct node *dst_node"
 .Pp
 .Ft void
-.Fn node_remove_ref "struct noderef *nref" "struct node *node"
+.Fn node_remove_ref "struct node *node" "struct noderef *nref"
 .Pp
 .Ft "struct noderef *"
 .Fn node_add_sprite "struct node *dst_node" "void *obj" "Uint32 index"
@@ -204,21 +201,12 @@ functions respectively initialize, free, load and save a single map node.
 .Fn node_add_warp "struct node *dst_node" "char *new_map" \
                   "Uint32 x" "Uint32 y" "Uint8 dir"
 .nr nS 0
-.Pp
-The
-.Fn node_draw
-function draws
-.Fa node
-at screen coordinates
-.Fa x ,
-.Fa y .
 The
 .Fn node_move_ref ,
 .Fn node_copy_ref
 and
 .Fn node_remove_ref
-functions respectively move, copy and remove specific references on
-.Fa node .
+functions respectively move, copy and remove specific references on a node.
 .Pp
 The
 .Fn node_add_sprite ,
@@ -226,6 +214,6 @@ The
 and
 .Fn node_add_warp
 functions respectively insert sprite references, animation references and
-map warp information.
+warp points.
 .Sh SEE ALSO
 .Xr agar 3
