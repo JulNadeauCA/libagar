@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.3 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.4 2004/03/28 05:55:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -127,3 +127,26 @@ toolbar_add_button(struct toolbar *tbar, int row, SDL_Surface *icon,
 	}
 	return (bu);
 }
+
+void
+toolbar_select_unique(struct toolbar *tbar, struct button *ubu)
+{
+	struct widget_binding *stateb;
+	struct button *bu;
+	int i;
+
+	for (i = 0; i < tbar->nrows; i++) {
+		OBJECT_FOREACH_CHILD(bu, tbar->rows[i], button) {
+			int *state;
+
+			if (bu == ubu) {
+				continue;
+			}
+			stateb = widget_get_binding(bu, "state", &state);
+			*state = 0;
+			widget_binding_modified(stateb);
+			widget_binding_unlock(stateb);
+		}
+	}
+}
+
