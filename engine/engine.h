@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.16 2002/04/23 07:18:49 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.17 2002/04/23 13:36:11 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -33,9 +33,8 @@ struct gameinfo {
 extern int mapediting;
 
 int	engine_init(int, char **, struct gameinfo *, char *);
-int	engine_mapedit(void);
+int	engine_editmap(void);
 void	engine_destroy(void);
-void	engine_editmap(void);
 void	engine_config(void);
 
 void	*emalloc(size_t);
