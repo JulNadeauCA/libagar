@@ -119,7 +119,7 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	/*
 	 * Map view. Node operations.
 	 */
-	if (med->mmapy < m->view->maph && med->mmapy < m->view->mapy) {
+	if (med->mmapy < m->view->maph && med->mmapx < m->view->mapw) {
 		if (ms & SDL_BUTTON_MMASK) {
 			/* Move */
 			mapedit_move(med, mx, my);
