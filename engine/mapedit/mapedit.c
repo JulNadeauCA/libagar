@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.115 2002/08/18 00:37:43 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.116 2002/08/19 05:33:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -64,8 +64,6 @@ static const struct object_ops mapedit_ops = {
 
 struct mapedit *curmapedit = NULL;	/* Map editor */
 
-static void	 mapedit_attached(int, union evarg *);
-static void	 mapedit_detached(int, union evarg *);
 static void	 mapedit_shadow(struct mapedit *, void *);
 
 void
@@ -171,7 +169,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 	}
 }
 
-static void
+void
 mapedit_attached(int argc, union evarg *argv)
 {
 	struct mapedit *med = argv[0].p;
@@ -188,7 +186,7 @@ mapedit_attached(int argc, union evarg *argv)
 	curmapedit = med;	/* XXX obsolete */
 }
 
-static void
+void
 mapedit_detached(int argc, union evarg *argv)
 {
 	struct mapedit *med = argv[0].p;
