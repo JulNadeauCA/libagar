@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.34 2002/08/23 10:26:41 vedge Exp $
+# $Csoft: configure.in,v 1.35 2002/09/19 21:52:59 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -39,6 +39,7 @@ check(setenv);
 check(strsep);
 check(strlcat);
 check(strlcpy);
+check(asprintf);
 check(vasprintf);
 
 mdefine(CFLAGS, "$CFLAGS -g -I$S");
