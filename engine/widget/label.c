@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.65 2003/05/25 08:24:12 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.66 2003/06/06 03:18:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,9 +84,8 @@ label_scale(void *p, int rw, int rh)
 		break;
 	case LABEL_POLLED:
 		if (rh == -1 && rh == -1) {
-			/* Not critical since polled labels are wfill. */
-			WIDGET(lab)->w = 10;
-			WIDGET(lab)->h = text_font_height(font);
+			WIDGET(lab)->w = lab->prew;
+			WIDGET(lab)->h = lab->preh;
 		}
 		break;
 	}
@@ -99,6 +98,7 @@ label_init(struct label *label, enum label_type type, const char *s)
 	widget_map_color(label, TEXT_COLOR, "text", 250, 250, 250, 255);
 
 	label->type = type;
+
 	switch (type) {
 	case LABEL_STATIC:
 		if (s != NULL) {
@@ -110,12 +110,21 @@ label_init(struct label *label, enum label_type type, const char *s)
 		pthread_mutex_init(&label->lock, NULL);
 		break;
 	case LABEL_POLLED:
+		label_prescale(label, "XXXXXXXXXXXXXXXXX");
+
+		WIDGET(label)->flags |= WIDGET_WFILL;
 		label->surface = NULL;
 		strlcpy(label->poll.fmt, s, sizeof(label->poll.fmt));
 		memset(label->poll.ptrs, 0, sizeof(void *) * LABEL_POLL_MAX);
 		label->poll.nptrs = 0;
 		break;
 	}
+}
+
+void
+label_prescale(struct label *lab, const char *text)
+{
+	text_prescale(text, &lab->prew, &lab->preh);
 }
 
 struct label *
@@ -127,7 +136,6 @@ label_polled_new(void *parent, pthread_mutex_t *mutex, const char *fmt, ...)
 
 	label = Malloc(sizeof(struct label));
 	label_init(label, LABEL_POLLED, fmt);
-	WIDGET(label)->flags |= WIDGET_WFILL;
 
 	label->poll.lock = mutex;
 
@@ -163,7 +171,7 @@ label_set_surface(struct label *label, SDL_Surface *su)
 	if (label->surface != NULL) {
 		SDL_FreeSurface(label->surface);
 	}
-	label->surface = su;
+	label->surface = view_copy_surface(su);;
 	pthread_mutex_unlock(&label->lock);
 }
 
@@ -392,7 +400,7 @@ void
 label_draw(void *p)
 {
 	struct label *label = p;
-
+	
 	switch (label->type) {
 	case LABEL_STATIC:
 		pthread_mutex_lock(&label->lock);
@@ -418,5 +426,7 @@ label_destroy(void *p)
 		}
 		pthread_mutex_destroy(&label->lock);
 	}
+
 	widget_destroy(label);
 }
+
