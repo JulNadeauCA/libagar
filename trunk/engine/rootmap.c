@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.37 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.38 2004/04/10 02:35:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -42,9 +42,6 @@ rootmap_init(struct viewmap *rm, int mw, int mh)
 	rm->y = 0;
 	rm->sx = 0;
 	rm->sy = 0;
-	
-	/* Calculate the default tile coordinates. */
-	rm->maprects = rootmap_alloc_maprects(mw, mh);
 }
 
 /*
@@ -218,39 +215,6 @@ rootmap_scroll(struct map *m, int dir, int inc)
 
 	m->redraw++;
 	pthread_mutex_unlock(&view->lock);
-}
-
-SDL_Rect **
-rootmap_alloc_maprects(int w, int h)
-{
-	SDL_Rect **rects;
-	int x, y;
-
-	/* Calculate the default coordinates of visible rectangles. */
-	rects = Malloc(h * sizeof(SDL_Rect *), M_VIEW);
-	for (y = 0; y < h; y++) {
-		rects[y] = Malloc(w * sizeof(SDL_Rect), M_VIEW);
-		for (x = 0; x < w; x++) {
-			rects[y][x].x = x*TILESZ;
-			rects[y][x].y = y*TILESZ;
-			rects[y][x].w = TILESZ;
-			rects[y][x].h = TILESZ;
-		}
-	}
-	return (rects);
-}
-
-void
-rootmap_free_maprects(struct viewport *v)
-{
-	int y;
-
-	pthread_mutex_lock(&v->lock);
-	for (y = 0; y < v->rootmap->h; y++) {
-		Free(v->rootmap->maprects[y], M_VIEW);
-	}
-	Free(v->rootmap->maprects, M_VIEW);
-	pthread_mutex_unlock(&v->lock);
 }
 
 void
