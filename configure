@@ -1117,7 +1117,7 @@ NONE=1
 fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
-SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS bozo"
+SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
 fi
