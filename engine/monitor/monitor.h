@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.15 2003/03/20 01:17:06 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.16 2003/04/25 09:47:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MONITOR_MONITOR_H_
@@ -17,7 +17,7 @@ struct monitor {
 enum {
 	MONITOR_OBJECT_BROWSER,
 	MONITOR_MEDIA_BROWSER,
-	MONITOR_LEVEL_BROWSER,
+	MONITOR_LEVEL_BROWSER,		/* Unused */
 	MONITOR_WIDGET_BROWSER,
 	MONITOR_VIEW_PARAMS,
 	MONITOR_FPS_COUNTER,
@@ -32,7 +32,6 @@ extern DECLSPEC void		 monitor_init(struct monitor *, char *);
 extern DECLSPEC void		 monitor_destroy(void *);
 
 extern DECLSPEC struct window	*object_browser_window(void);
-extern DECLSPEC struct window	*level_browser_window(void);
 extern DECLSPEC struct window	*widget_browser_window(void);
 extern DECLSPEC struct window	*view_params_window(void);
 extern DECLSPEC struct window	*screenshot_window(void);
