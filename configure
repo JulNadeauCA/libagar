@@ -124,7 +124,7 @@ if [ "$WITHOUT_SMPEG" = "" ]; then
 echo -n "checking for x11..."
 if [ -d /usr/X11R6 ]; then
 X11BASE=/usr/X11R6
-CONF_X11FOUND=1
+CONF_X11=1
 X11_CFLAGS=-I/usr/X11R6/include
 X11_LIBS=-L/usr/X11R6/lib
 else
@@ -132,7 +132,7 @@ NONE=1
 fi
 if [ -d /usr/X386 ]; then
 X11BASE=/usr/X386
-CONF_X11FOUND=1
+CONF_X11=1
 X11_CFLAGS=-I/usr/X386/include
 X11_LIBS=-L/usr/X386/lib
 else
@@ -140,9 +140,9 @@ NONE=1
 fi
 if [ "$X11BASE" != "" ]; then
 echo "$X11BASE"
-echo "#ifndef CONF_X11FOUND" >> config.h
-echo "#define CONF_X11FOUND $CONF_X11FOUND" >> config.h
-echo "#endif /* CONF_X11FOUND */" >> config.h
+echo "#ifndef CONF_X11" >> config.h
+echo "#define CONF_X11 $CONF_X11" >> config.h
+echo "#endif /* CONF_X11 */" >> config.h
 echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
@@ -158,6 +158,9 @@ SMPEG_CFLAGS=`smpeg-config --cflags 2>/dev/null`
 SMPEG_LIBS=`smpeg-config --libs 2>/dev/null`
 if [ "$SMPEG_VERSION" != "" ]; then
 echo "ok"
+echo "#ifndef CONF_SMPEG" >> config.h
+echo "#define CONF_SMPEG $CONF_SMPEG" >> config.h
+echo "#endif /* CONF_SMPEG */" >> config.h
 echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
 echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
