@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.72 2003/06/13 01:44:25 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.73 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -117,8 +117,13 @@ button_scale(void *p, int w, int h)
 	struct button *bu = p;
 
 	if (w == -1 && h == -1) {
-		WIDGET(bu)->w = bu->label->w + bu->padding*2;
-		WIDGET(bu)->h = bu->label->h + bu->padding;
+		if (bu->label != NULL) {
+			WIDGET(bu)->w = bu->label->w + bu->padding*2;
+			WIDGET(bu)->h = bu->label->h + bu->padding;
+		} else {
+			WIDGET(bu)->w = 5;
+			WIDGET(bu)->h = 5;
+		}
 	}
 }
 
@@ -319,7 +324,10 @@ button_set_label(struct button *bu, SDL_Surface *su)
 {
 	if (bu->label != NULL) {
 		SDL_FreeSurface(bu->label);
+		bu->label = NULL;
 	}
-	bu->label = view_copy_surface(su);
+	if (su != NULL) {
+		bu->label = view_copy_surface(su);
+	}
 }
 
