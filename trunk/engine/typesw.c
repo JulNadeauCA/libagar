@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: typesw.c,v 1.1 2003/05/18 00:20:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -40,8 +40,9 @@ extern const struct object_ops
 
 const struct object_type typesw[] = {
 	{ "object", "Generic object", sizeof(struct object), &object_ops },
+	{ "generic-gfx", "Generic gfx", sizeof(struct object), &object_ops },
 	{ "map", "Area", sizeof(struct map), &map_ops },
-	{ "perso", "Character", sizeof(struct perso), &perso_ops }
+	{ "perso", "Character", sizeof(struct perso), &perso_ops },
 };
 const int ntypesw = sizeof(typesw) / sizeof(typesw[0]);
 
