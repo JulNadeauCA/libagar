@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.25 2002/02/25 11:12:14 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.26 2002/02/28 12:52:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -281,11 +281,6 @@ object_unlink(void *p)
 	struct object *ob = p;
 	struct map_bref *bref;
 
-	SLIST_FOREACH(bref, &ob->brefsh, brefs) {
-		free(bref);
-	}
-	SLIST_INIT(&ob->brefsh);
-
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 		pthread_mutex_unlock(&world->lock);
@@ -293,6 +288,11 @@ object_unlink(void *p)
 		dperror("world");
 		return (-1);
 	}
+	SLIST_FOREACH(bref, &ob->brefsh, brefs) {
+		free(bref);
+	}
+	SLIST_INIT(&ob->brefsh);
+
 	if (ob->vec->unlink != NULL &&
 	    ob->vec->unlink(ob) != 0) {
 		return (-1);
@@ -344,7 +344,11 @@ object_dump(void *p)
 {
 	struct object *ob = (struct object *)p;
 
-	printf("--\n%d. %s ( ", ob->id, ob->name);
+	printf("--\n%d. %s", ob->id, ob->name);
+	if (ob->desc != NULL) {
+		printf(" (%s)", ob->desc);
+	}
+	printf("\n[ ");
 	if (ob->vec->destroy != NULL)
 		printf("destroy ");
 	if (ob->vec->load != NULL)
@@ -359,14 +363,10 @@ object_dump(void *p)
 		printf("dump ");
 	if (ob->vec->madd != NULL)
 		printf("madd ");
-	printf(")\n");
+	printf("]\n");
 	if (ob->vec->dump != NULL) {
 		ob->vec->dump(ob);
 	}
-	if (ob->desc != NULL) {
-		printf("                (%s)\n", ob->desc);
-	}
-	printf("--\n");
 }
 
 /*
