@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.9 2003/08/05 23:54:39 vedge Exp $
+# $Csoft: fr.po,v 1.10 2003/08/25 05:07:12 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -532,7 +532,7 @@ msgstr "Impossible de sauvegarder une propriété de type 0x%x."
 #: engine/perso.c:167
 #, c-format
 msgid "%s character"
-msgstr "Caractère «%s»"
+msgstr "Personnage «%s»"
 
 #: engine/mapedit/objedit.c:218 engine/mapedit/tool/merge.c:267
 #: engine/perso.c:176
@@ -1142,7 +1142,7 @@ msgstr "Carte"
 
 #: engine/typesw.c:44
 msgid "Character"
-msgstr "Caractère"
+msgstr "Personnage"
 
 #: sumo/session.c:74
 #, c-format
