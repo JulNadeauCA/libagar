@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.19 2005/03/11 05:28:51 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.20 2005/03/11 08:59:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -40,6 +40,7 @@
 #include <engine/widget/mspinbutton.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/menu.h>
+#include <engine/widget/notebook.h>
 
 #include "tileset.h"
 
@@ -740,6 +741,8 @@ tileset_edit(void *p)
 	struct AGMenu *m;
 	struct AGMenuItem *mi;
 	struct button *bu;
+	struct notebook *nb;
+	struct notebook_tab *ntab;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
@@ -747,6 +750,7 @@ tileset_edit(void *p)
 
 	tl_tiles = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl_tiles, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+	tlist_prescale(tl_tiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 	event_new(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
 	
 	tl_art = Malloc(sizeof(struct tlist), M_OBJECT);
@@ -761,50 +765,33 @@ tileset_edit(void *p)
 		    delete_tiles, "%p,%p", tl_tiles, ts);
 	}
 
-	m = menu_new(win);
-	mi = menu_add_item(m, _("Tileset"));
+	nb = notebook_new(win, NOTEBOOK_WFILL|NOTEBOOK_HFILL);
+	ntab = notebook_add_tab(nb, _("Tiles"), BOX_VERT);
+	notebook_select_tab(nb, ntab);
 	{
-		menu_action(mi, _("Insert tile..."), SHIFT_TOOL_ICON,
-		    insert_tile_dlg, "%p,%p", ts, win);
-#if 0
-		menu_action(mi, _("Insert feature..."), -1,
-		    insert_tile_dlg, "%p,%p", ts, win);
-		menu_action(mi, _("Insert sketch..."), -1,
-		    insert_tile_dlg, "%p,%p", ts, win);
-		menu_action(mi, _("Insert pixmap..."), -1,
-		    insert_tile_dlg, "%p,%p", ts, win);
-#endif
-	}
-	
-	hbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL|BOX_HOMOGENOUS);
+		object_attach(ntab, tl_tiles);
 
-	box = box_new(hbox, BOX_VERT, BOX_HFILL);
-	box_set_depth(box, -1);
-	{
-		object_attach(box, tl_tiles);
-
-		bbox = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		bbox = box_new(ntab, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		{
 			bu = button_new(bbox, _("Insert"));
 			event_new(bu, "button-pushed", insert_tile_dlg,
 			    "%p,%p", ts, win);
 
-			bu = button_new(bbox, _("Edit(s)"));
+			bu = button_new(bbox, _("Edit"));
 			event_new(bu, "button-pushed", edit_tiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
-			event_new(tl_tiles, "tlist-dblclick", edit_tiles,
-			    "%p,%p,%p", ts, tl_tiles, win);
+			event_new(tl_tiles, "tlist-dblclick",
+			    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
 
 			bu = button_new(bbox, _("Delete"));
 			event_new(bu, "button-pushed", delete_tiles,
 			    "%p,%p", tl_tiles, ts);
 		}
 	}
-	
-	box = box_new(hbox, BOX_VERT, BOX_HFILL);
-	box_set_depth(box, -1);
+
+	ntab = notebook_add_tab(nb, _("Pixmaps/sketches"), BOX_VERT);
 	{
-		object_attach(box, tl_art);
+		object_attach(ntab, tl_art);
 	
 		mi = tlist_set_popup(tl_art, "pixmap");
 		{
@@ -818,7 +805,7 @@ tileset_edit(void *p)
 			    OBJSAVE_ICON,
 			    export_pixmap, "%p,%p", ts, tl_art);
 		}
-		
+
 		mi = tlist_set_popup(tl_art, "sketch");
 		{
 			menu_action(mi, _("Delete sketch"), TRASH_ICON,
