@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.18 2002/02/18 01:30:09 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.19 2002/02/25 08:55:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@ char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
 	ch->level = 0;
 	ch->exp = 0;
 	ch->age = 0;
-	ch->seed = lrand48();
+	ch->seed = (Uint32)lrand48();
 
 	ch->maxhp = maxhp;
 	ch->maxmp = maxmp;
@@ -90,7 +90,7 @@ char_load(void *p, int fd)
 	ch->level = fobj_read_uint32(fd);
 	ch->exp = fobj_read_uint32(fd);
 	ch->age = fobj_read_uint32(fd);
-	ch->seed = fobj_read_uint64(fd);
+	ch->seed = fobj_read_uint32(fd);
 	ch->maxspeed = fobj_read_uint32(fd);
 
 	ch->maxhp = fobj_read_uint32(fd);
@@ -159,7 +159,7 @@ char_save(void *p, int fd)
 	fobj_bwrite_uint32(buf, ch->level);
 	fobj_bwrite_uint32(buf, ch->exp);
 	fobj_bwrite_uint32(buf, ch->age);
-	fobj_bwrite_uint64(buf, ch->seed);
+	fobj_bwrite_uint32(buf, ch->seed);
 	fobj_bwrite_uint32(buf, ch->maxspeed);
 
 	fobj_bwrite_uint32(buf, ch->maxhp);

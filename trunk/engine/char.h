@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.10 2002/02/18 01:30:18 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.11 2002/02/25 08:55:08 vedge Exp $	*/
 
 struct character {
 	struct	object obj;
@@ -6,7 +6,7 @@ struct character {
 	Uint32	level;		/* Current level */
 	Uint32	exp;		/* Experience */
 	Uint32	age;		/* Age */
-	Uint64	seed;		/* Random seed */
+	Uint32	seed;		/* Random seed */
 	
 	Uint32	flags;
 #define CHAR_DASH	0x0010	/* Boost timer temporarily */
