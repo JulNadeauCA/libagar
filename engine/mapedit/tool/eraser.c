@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.21 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.22 2003/02/12 01:09:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,8 @@ static const struct tool_ops eraser_ops = {
 	},
 	eraser_window,
 	NULL,			/* cursor */
-	eraser_effect
+	eraser_effect,
+	NULL			/* mouse */
 };
 
 void
@@ -144,7 +145,7 @@ eraser_load(void *p, int fd)
 {
 	struct eraser *eraser = p;
 
-	if (version_read(fd, &eraser_ver) == -1)
+	if (version_read(fd, &eraser_ver, NULL) == -1)
 		return (-1);
 
 	eraser->mode = (int)read_uint32(fd);

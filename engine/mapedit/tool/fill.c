@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.1 2003/02/20 04:57:28 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.2 2003/02/20 05:32:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,7 +51,8 @@ static const struct tool_ops fill_ops = {
 	},
 	fill_window,
 	NULL,			/* cursor */
-	fill_effect
+	fill_effect,
+	NULL			/* mouse */
 };
 
 static const struct version fill_ver = {
@@ -145,7 +146,7 @@ fill_load(void *p, int fd)
 {
 	struct fill *fill = p;
 
-	if (version_read(fd, &fill_ver) == -1)
+	if (version_read(fd, &fill_ver, NULL) == -1)
 		return (-1);
 	fill->mode = (int)read_uint32(fd);
 	dprintf("mode 0x%x\n", fill->mode);
