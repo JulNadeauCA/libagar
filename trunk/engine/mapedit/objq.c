@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.11 2002/08/19 05:31:30 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.12 2002/08/20 05:58:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -144,12 +144,20 @@ tilemap_option(int argc, union evarg *argv)
 			mv->flags |= MAPVIEW_SHOW_CURSOR;
 		}
 		break;
+	case MAPEDIT_TOOL_EDIT:
+		if (mv->flags & MAPVIEW_EDIT) {
+			mv->flags &= ~(MAPVIEW_EDIT);
+		} else {
+			mv->flags |= MAPVIEW_EDIT;
+		}
+		break;
 	}
 }
 
 static void
 objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 {
+	static int cury = 85;
 	struct object *ob = eob->pobj;
 	struct objq_tmap *tm;
 	struct window *win;
@@ -166,8 +174,11 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	}
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, ob->name, WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 28 + TILEW*3, 318, 28+TILEW, 45+TILEH);
+	if ((cury += 32) + 264 > view->h) {
+		cury = 85;
+	}
+	window_init(win, ob->name, WINDOW_SOLID,
+	    view->w - 170, cury, 154, 264, 156, 94);
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
@@ -207,6 +218,13 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+	
+	/* Edition */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_EDIT),
+	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	event_new(bu, "button-pushed", 0,
+	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
