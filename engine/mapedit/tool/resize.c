@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.33 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.34 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,35 +27,26 @@
  */
 
 #include <engine/engine.h>
+#include <engine/mapedit/mapedit.h>
 
-#include "resize.h"
+static void resize_mouse(struct mapview *, Sint16, Sint16, Uint8);
 
-static void	resize_mouse(void *, struct mapview *, Sint16, Sint16, Uint8);
-
-const struct tool_ops resize_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
+struct tool resize_tool = {
+	N_("Resize tool"),
+	N_("Resize a map's node array."),
+	MAPEDIT_TOOL_RESIZE,
+	-1,
+	NULL,			/* init */
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL,
 	NULL,			/* cursor */
-	NULL,			/* effect */
 	resize_mouse
 };
 
-void
-resize_init(void *p)
-{
-	struct resize *res = p;
-
-	tool_init(&res->tool, "resize", &resize_ops, MAPEDIT_TOOL_RESIZE);
-}
-
 static void
-resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
+resize_mouse(struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 {
 	struct map *m = mv->map;
 	int w = m->mapw;

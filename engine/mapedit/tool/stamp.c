@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.51 2003/09/07 04:17:37 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.52 2003/10/13 23:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,33 +27,36 @@
  */
 
 #include <engine/engine.h>
-
-#include "stamp.h"
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/radio.h>
 
-static int	 stamp_cursor(void *, struct mapview *, SDL_Rect *);
-static void	 stamp_effect(void *, struct mapview *, struct map *,
-		              struct node *);
+static void stamp_init(void);
+static int stamp_cursor(struct mapview *, SDL_Rect *);
+static void stamp_effect(struct mapview *, struct map *, struct node *);
 
-const struct tool_ops stamp_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	stamp_cursor,
+struct tool stamp_tool = {
+	N_("Stamp"),
+	N_("Insert the contents of the copy/paste buffer."),
+	MAPEDIT_TOOL_STAMP,
+	-1,
+	stamp_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	stamp_effect,
+	stamp_cursor,
 	NULL			/* mouse */
 };
 
-void
-stamp_init(void *p)
+static enum {
+	STAMP_REPLACE,		/* Replace other refs on layer */
+	STAMP_INSERT_HIGHEST	/* Insert on top of the stack */
+} mode = STAMP_REPLACE;
+
+static void
+stamp_init(void)
 {
-	struct stamp *st = p;
 	static const char *mode_items[] = {
 		N_("Replace"),
 		N_("Insert"),
@@ -62,22 +65,15 @@ stamp_init(void *p)
 	struct window *win;
 	struct radio *rad;
 
-	tool_init(&st->tool, "stamp", &stamp_ops, MAPEDIT_TOOL_STAMP);
-	st->mode = STAMP_REPLACE;
-
-	win = TOOL(st)->win = window_new("mapedit-tool-stamp");
-	window_set_caption(win, _("Stamp"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	event_new(win, "window-close", tool_window_close, "%p", st);
+	win = tool_window_new(&stamp_tool, "mapedit-tool-stamp");
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &st->mode);
+	widget_bind(rad, "value", WIDGET_INT, &mode);
 }
 
 static void
-stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+stamp_effect(struct mapview *mv, struct map *m, struct node *node)
 {
-	struct stamp *st = p;
 	struct map *copybuf = &mapedit.copybuf;
 	int sx, sy, dx, dy;
 	
@@ -91,7 +87,7 @@ stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 			struct node *dn = &m->map[dy][dx];
 			struct noderef *r;
 
-			if (st->mode == STAMP_REPLACE)
+			if (mode == STAMP_REPLACE)
 				node_clear(m, dn, m->cur_layer);
 
 			TAILQ_FOREACH(r, &sn->nrefs, nrefs)
@@ -101,7 +97,7 @@ stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 }
 
 static int
-stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
+stamp_cursor(struct mapview *mv, SDL_Rect *rd)
 {
 	struct map *copybuf = &mapedit.copybuf;
 	struct noderef *r;

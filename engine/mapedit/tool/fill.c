@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.28 2003/09/07 04:17:36 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.29 2003/10/13 23:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,32 +27,35 @@
  */
 
 #include <engine/engine.h>
-
-#include "fill.h"
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/radio.h>
 
-static void	 fill_effect(void *, struct mapview *, struct map *,
-		             struct node *);
+static void fill_init(void);
+static void fill_effect(struct mapview *, struct map *, struct node *);
 
-const struct tool_ops fill_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* cursor */
+struct tool fill_tool = {
+	N_("Clear/Fill"),
+	N_("Clear or fill the whole layer/selection."),
+	MAPEDIT_TOOL_FILL,
+	MAPEDIT_FILL_CURSOR,
+	fill_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	fill_effect,
+	NULL,			/* cursor */
 	NULL			/* mouse */
 };
 
-void
-fill_init(void *p)
+static enum fill_mode {
+	FILL_PATTERN,			/* Pattern fill */
+	FILL_CLEAR			/* Erase whole layer */
+} mode = FILL_PATTERN;
+
+static void
+fill_init(void)
 {
-	struct fill *fi = p;
 	static const char *mode_items[] = {
 		N_("Pattern fill"),
 		N_("Clear"),
@@ -61,52 +64,48 @@ fill_init(void *p)
 	struct window *win;
 	struct radio *rad;
 
-	tool_init(&fi->tool, "fill", &fill_ops, MAPEDIT_TOOL_FILL);
-	TOOL(fi)->cursor = SPRITE(fi, TOOL_FILL_CURSOR);
-	fi->mode = FILL_PATTERN;
-
-	win = TOOL(fi)->win = window_new("mapedit-tool-fill");
-	window_set_caption(win, _("Fill"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	event_new(win, "window-close", tool_window_close, "%p", fi);
+	win = tool_window_new(&fill_tool, "mapedit-tool-fill");
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &fi->mode);
+	widget_bind(rad, "value", WIDGET_INT, &mode);
 }
 
 static void
-fill_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+fill_effect(struct mapview *mv, struct map *m, struct node *node)
 {
-	struct fill *fi = p;
 	struct map *copybuf = &mapedit.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
 	int dw = m->mapw, dh = m->maph;
 	int x, y;
 
-	if (copybuf->mapw == 0 || copybuf->maph == 0)
+	if (mode == FILL_PATTERN &&
+	    (copybuf->mapw == 0 || copybuf->maph == 0)) {
+	    	text_msg(MSG_ERROR, _("The copy/paste buffer is empty."));
 		return;
+	}
 
 	mapview_get_selection(mv, &dx, &dy, &dw, &dh);
 
 	for (y = dy; y < dy+dh; y++) {
 		for (x = dx; x < dx+dw; x++) {
-			struct node *sn = &copybuf->map[sy][sx];
 			struct node *dn = &m->map[y][x];
+			struct noderef *r;
 
 			node_clear(m, dn, m->cur_layer);
 
-			if (fi->mode == FILL_PATTERN) {
-				struct noderef *r;
+			if (mode == FILL_PATTERN) {
+				struct node *sn = &copybuf->map[sy][sx];
 
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs)
 					node_copy_ref(r, m, dn, m->cur_layer);
+				if (++sx >= copybuf->mapw)
+					sx = 0;
 			}
-
-			if (++sx >= copybuf->mapw)
-				sx = 0;
 		}
-		if (++sy >= copybuf->maph)
-			sy = 0;
+		if (mode == FILL_PATTERN) {
+			if (++sy >= copybuf->maph)
+				sy = 0;
+		}
 	}
 }
 

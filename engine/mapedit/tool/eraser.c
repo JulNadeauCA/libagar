@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.40 2003/09/07 04:17:36 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.41 2003/10/13 23:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,72 +27,36 @@
  */
 
 #include <engine/engine.h>
+#include <engine/mapedit/mapedit.h>
 
-#include "eraser.h"
+static void eraser_effect(struct mapview *, struct map *, struct node *);
 
-#include <engine/widget/radio.h>
-
-static void	 eraser_effect(void *, struct mapview *, struct map *,
-		               struct node *);
-
-const struct tool_ops eraser_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* cursor */
+struct tool eraser_tool = {
+	N_("Eraser"),
+	N_("Remove the highest node reference."),
+	MAPEDIT_TOOL_ERASER,
+	MAPEDIT_ERASER_CURSOR,
+	NULL,			/* init */
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	eraser_effect,
+	NULL,			/* cursor */
 	NULL			/* mouse */
 };
 
-void
-eraser_init(void *p)
-{
-	struct eraser *er = p;
-	static const char *mode_items[] = {
-		N_("All"),
-		N_("Highest"),
-		NULL
-	};
-	struct window *win;
-	struct radio *rad;
-
-	tool_init(&er->tool, "eraser", &eraser_ops, MAPEDIT_TOOL_ERASER);
-	er->mode = ERASER_ALL;
-
-	win = TOOL(er)->win = window_new("mapedit-tool-eraser");
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	window_set_caption(win, _("Eraser"));
-	event_new(win, "window-close", tool_window_close, "%p", er);
-
-	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &er->mode);
-}
-
 static void
-eraser_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
+eraser_effect(struct mapview *mv, struct map *m, struct node *dn)
 {
-	struct eraser *er = p;
-	struct noderef *nref, *nnref;
+	struct noderef *nref;
 	
-	if (TAILQ_EMPTY(&dn->nrefs))
-		return;
-	
-	for (nref = TAILQ_FIRST(&dn->nrefs);
-	     nref != TAILQ_END(&dn->nrefs);
-	     nref = nnref) {
-		nnref = TAILQ_NEXT(nref, nrefs);
-		if (nref->layer == m->cur_layer) {
-			TAILQ_REMOVE(&dn->nrefs, nref, nrefs);
-			noderef_destroy(m, nref);
+	TAILQ_FOREACH(nref, &dn->nrefs, nrefs) {
+		if (nref->layer != m->cur_layer)
+			continue;
 
-			if (er->mode == ERASER_HIGHEST)
-				break;
-		}
+		TAILQ_REMOVE(&dn->nrefs, nref, nrefs);
+		noderef_destroy(m, nref);
+		break;
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.17 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.18 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -27,26 +27,27 @@
  */
 
 #include <engine/engine.h>
+#include <engine/mapedit/mapedit.h>
 
-#include "select.h"
+static void select_init(void);
 
-const struct tool_ops select_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* cursor */
+struct tool select_tool = {
+	N_("Selection"),
+	N_("Select a rectangle of nodes."),
+	MAPEDIT_TOOL_SELECT,
+	MAPEDIT_SELECT_CURSOR,
+	select_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	NULL,			/* effect */
+	NULL,			/* cursor */
 	NULL			/* mouse */
 };
 
 /* Copy the selection to the copy buffer. */
 static void
-select_copy(void *p, struct mapview *mv)
+select_copy(struct mapview *mv)
 {
 	struct map *copybuf = &mapedit.copybuf;
 	struct map *m = mv->map;
@@ -80,7 +81,7 @@ select_copy(void *p, struct mapview *mv)
 }
 
 static void
-select_paste(void *p, struct mapview *mv)
+select_paste(struct mapview *mv)
 {
 	struct map *copybuf = &mapedit.copybuf;
 	struct map *m = mv->map;
@@ -119,7 +120,7 @@ select_paste(void *p, struct mapview *mv)
 }
 
 static void
-select_kill(void *p, struct mapview *mv)
+select_kill(struct mapview *mv)
 {
 	struct map *m = mv->map;
 	int x, y;
@@ -140,27 +141,22 @@ select_kill(void *p, struct mapview *mv)
 }
 
 static void
-select_cut(void *p, struct mapview *mv)
+select_cut(struct mapview *mv)
 {
 	if (!mv->esel.set) {
 		text_msg(MSG_ERROR, _("There is no selection to cut."));
 		return;
 	}
-	select_copy(p, mv);
-	select_kill(p, mv);
+	select_copy(mv);
+	select_kill(mv);
 }
 
-void
-select_init(void *p)
+static void
+select_init(void)
 {
-	struct select *sel = p;
-
-	tool_init(&sel->tool, "select", &select_ops, MAPEDIT_TOOL_SELECT);
-	TOOL(sel)->cursor = SPRITE(sel, TOOL_SELECT_CURSOR);
-
-	tool_bind_key(sel, KMOD_CTRL, SDLK_c, select_copy, 0);
-	tool_bind_key(sel, KMOD_CTRL, SDLK_v, select_paste, 1);
-	tool_bind_key(sel, KMOD_CTRL, SDLK_x, select_cut, 1);
-	tool_bind_key(sel, KMOD_CTRL, SDLK_k, select_kill, 1);
+	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_c, select_copy, 0);
+	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_v, select_paste, 1);
+	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_x, select_cut, 1);
+	tool_bind_key(&select_tool, KMOD_CTRL, SDLK_k, select_kill, 1);
 }
 

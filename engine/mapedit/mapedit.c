@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.187 2003/09/07 04:17:35 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.188 2003/09/07 07:59:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -31,8 +31,6 @@
 #include <engine/view.h>
 #include <engine/prop.h>
 
-#include <stdlib.h>
-
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
@@ -41,54 +39,60 @@
 #include "mapedit.h"
 #include "mapview.h"
 
-#include "tool/tool.h"
-#include "tool/stamp.h"
-#include "tool/eraser.h"
-#include "tool/magnifier.h"
-#include "tool/resize.h"
-#include "tool/position.h"
-#include "tool/propedit.h"
-#include "tool/select.h"
-#include "tool/shift.h"
-#include "tool/merge.h"
-#include "tool/fill.h"
-#include "tool/flip.h"
+extern struct tool stamp_tool;
+extern struct tool eraser_tool;
+extern struct tool magnifier_tool;
+extern struct tool resize_tool;
+extern struct tool position_tool;
+extern struct tool propedit_tool;
+extern struct tool select_tool;
+extern struct tool shift_tool;
+extern struct tool merge_tool;
+extern struct tool fill_tool;
+extern struct tool flip_tool;
+extern struct tool invert_tool;
 
-static void	mapedit_destroy(void *);
+struct tool *mapedit_tools[] = {
+	&stamp_tool,
+	&eraser_tool,
+	&magnifier_tool,
+	&resize_tool,
+	&position_tool,
+	&propedit_tool,
+	&select_tool,
+	&shift_tool,
+	&merge_tool,
+	&fill_tool,
+	&flip_tool,
+	&invert_tool
+};
+int mapedit_ntools = sizeof(mapedit_tools) / sizeof(mapedit_tools[0]);
+
+const struct version mapedit_ver = {
+	"agar map editor",
+	0, 0
+};
 
 const struct object_ops mapedit_ops = {
-	NULL,			/* init */
-	NULL,			/* reinit */
+	NULL,				/* init */
+	NULL,				/* reinit */
 	mapedit_destroy,
 	mapedit_load,
 	mapedit_save,
-	NULL			/* edit */
+	NULL				/* edit */
 };
 
-struct mapedit	mapedit;
-int		mapedition = 0;
-
-static const struct tools_ent {
-	struct tool	**p;
-	size_t		  size;
-	void		(*init)(void *);
-} tools[] = {
-	{ &mapedit.tools[MAPEDIT_STAMP], sizeof(struct stamp), stamp_init },
-	{ &mapedit.tools[MAPEDIT_ERASER], sizeof(struct eraser), eraser_init },
-	{ &mapedit.tools[MAPEDIT_MAGNIFIER], sizeof(struct magnifier),
-	    magnifier_init },
-	{ &mapedit.tools[MAPEDIT_RESIZE], sizeof(struct resize), resize_init },
-	{ &mapedit.tools[MAPEDIT_PROPEDIT], sizeof(struct propedit),
-	    propedit_init },
-	{ &mapedit.tools[MAPEDIT_SELECT], sizeof(struct select), select_init },
-	{ &mapedit.tools[MAPEDIT_SHIFT], sizeof(struct shift), shift_init },
-	{ &mapedit.tools[MAPEDIT_MERGE], sizeof(struct merge), merge_init },
-	{ &mapedit.tools[MAPEDIT_FILL], sizeof(struct fill), fill_init },
-	{ &mapedit.tools[MAPEDIT_FLIP], sizeof(struct flip), flip_init },
-	{ &mapedit.tools[MAPEDIT_POSITION], sizeof(struct position),
-	    position_init },
+struct mapedit_obj {
+	struct object *obj;			/* Object being edited */
+	struct window *win;			/* Generic edition window */
+	TAILQ_ENTRY(mapedit_obj) objs;
 };
-static const int ntools = sizeof(tools) / sizeof(tools[0]);
+
+static TAILQ_HEAD(,mapedit_obj) dobjs;		/* Data edited objects */
+static TAILQ_HEAD(,mapedit_obj) gobjs;		/* Generic edited objects */
+
+struct mapedit mapedit;
+int mapedition = 0;			/* Start up in edition mode */
 
 /* Select a map edition tool. */
 static void
@@ -103,13 +107,11 @@ mapedit_select_tool(int argc, union evarg *argv)
 		mapedit.curtool = NULL;
 		return;
 	}
-
 	if (mapedit.curtool != NULL) {
-		widget_set_bool(mapedit.curtool->button, "state", 0);
+		widget_set_bool(mapedit.curtool->trigger, "state", 0);
 		if (mapedit.curtool->win != NULL)
 			window_hide(mapedit.curtool->win);
 	}
-
 	mapedit.curtool = newtool;
 
 	if (newtool->win != NULL)
@@ -127,10 +129,10 @@ mapedit_init(void)
 	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
 	object_wire_gfx(&mapedit, "/engine/mapedit/mapedit");
 	OBJECT(&mapedit)->flags |= (OBJECT_RELOAD_PROPS|OBJECT_STATIC);
-	OBJECT(&mapedit)->save_pfx = NULL;
+	OBJECT(&mapedit)->save_pfx = "/map-editor";
 	mapedit.curtool = NULL;
-	TAILQ_INIT(&mapedit.dobjs);
-	TAILQ_INIT(&mapedit.gobjs);
+	TAILQ_INIT(&dobjs);
+	TAILQ_INIT(&gobjs);
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
 	object_init(&mapedit.pseudo, "object", "map-editor", NULL);
@@ -150,23 +152,31 @@ mapedit_init(void)
 	object_attach(&mapedit.pseudo, &mapedit.copybuf);
 
 	mapedition = 1;
- 
+
+	/* Initialize the default tunables. */
 	prop_set_uint32(&mapedit, "default-map-width", 64);
 	prop_set_uint32(&mapedit, "default-map-height", 32);
 	prop_set_uint32(&mapedit, "default-brush-width", 5);
 	prop_set_uint32(&mapedit, "default-brush-height", 5);
 	prop_set_bool(&mapedit, "sel-bounded-edition", 0);
 
-	/* Initialize the tools, try to load saved settings. */
-	for (i = 0; i < ntools; i++) {
-		const struct tools_ent *toolent = &tools[i];
+	/* Initialize the map editor tools. */
+	for (i = 0; i < mapedit_ntools; i++) {
+		struct tool *tool = mapedit_tools[i];
 
-		*toolent->p = Malloc(toolent->size);
-		toolent->init(*toolent->p);
+		tool->win = NULL;
+		tool->cursor_su = tool->cursor_index >= 0 ?
+		    SPRITE(&mapedit, tool->cursor_index) : NULL;
+		SLIST_INIT(&tool->kbindings);
+	
+		if (tool->init != NULL)
+			tool->init();
 	}
-	if (object_load(&mapedit) == -1)
-		dprintf("loading mapedit: %s\n", error_get());
 
+	/* Try to restore the persistent tool states. */
+	object_load(&mapedit);
+
+	/* Create the `object editor' window. */
 	objedit_win = objedit_window();
 	window_show(objedit_win);
 
@@ -188,43 +198,59 @@ mapedit_init(void)
 		event_new(button, "button-pushed", window_generic_show, "%p",
 		    objedit_win);
 
-		for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-			button = mapedit.tools[i]->button =
+		for (i = 0; i < mapedit_ntools; i++) {
+			button = mapedit_tools[i]->trigger =
 			    button_new(bo, NULL);
-			button_set_label(button, mapedit.tools[i]->icon);
+
+			if (mapedit_tools[i]->icon >= 0) {
+				button_set_label(button,
+				    SPRITE(&mapedit, mapedit_tools[i]->icon));
+			} else {
+				button_printf(button, "%s",
+				    _(mapedit_tools[i]->name));
+			}
 			button_set_focusable(button, 0);
 			button_set_sticky(button, 1);
 			event_new(button, "button-pushed", mapedit_select_tool,
-			    "%p", mapedit.tools[i]);
+			    "%p", mapedit_tools[i]);
 		}
 	}
 	window_show(win);
 }
 
-static void
+void
 mapedit_destroy(void *p)
 {
 	struct mapedit_obj *mobj, *nmobj;
 	int i;
 
+	for (i = 0; i < mapedit_ntools; i++) {
+		struct tool *tool = mapedit_tools[i];
+		struct tool_kbinding *kbinding, *nkbinding;
+
+		for (kbinding = SLIST_FIRST(&tool->kbindings);
+		     kbinding != SLIST_END(&tool->kbindings);
+		     kbinding = nkbinding) {
+			nkbinding = SLIST_NEXT(kbinding, kbindings);
+			free(kbinding);
+		}
+		if (tool->destroy != NULL)
+			tool->destroy();
+	}
+
 	map_destroy(&mapedit.copybuf);
 
-	for (mobj = TAILQ_FIRST(&mapedit.dobjs);
-	     mobj != TAILQ_END(&mapedit.dobjs);
+	for (mobj = TAILQ_FIRST(&dobjs);
+	     mobj != TAILQ_END(&dobjs);
 	     mobj = nmobj) {
 		nmobj = TAILQ_NEXT(mobj, objs);
 		free(mobj);
 	}
-	for (mobj = TAILQ_FIRST(&mapedit.gobjs);
-	     mobj != TAILQ_END(&mapedit.gobjs);
+	for (mobj = TAILQ_FIRST(&gobjs);
+	     mobj != TAILQ_END(&gobjs);
 	     mobj = nmobj) {
 		nmobj = TAILQ_NEXT(mobj, objs);
 		free(mobj);
-	}
-
-	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		object_destroy(mapedit.tools[i]);
-		free(mapedit.tools[i]);
 	}
 }
 
@@ -232,12 +258,15 @@ int
 mapedit_load(void *p, struct netbuf *buf)
 {
 	int i;
+	
+	if (version_read(buf, &mapedit_ver, NULL) != 0)
+		return (-1);
 
-	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		struct tool *tool = mapedit.tools[i];
+	for (i = 0; i < mapedit_ntools; i++) {
+		struct tool *tool = mapedit_tools[i];
 
-		if (OBJECT(tool)->ops->load != NULL &&
-		    object_load(tool) == -1)
+		if (tool->load != NULL &&
+		    tool->load(buf) == -1)
 			text_msg(MSG_ERROR, "%s", error_get());
 	}
 	return (0);
@@ -247,37 +276,39 @@ int
 mapedit_save(void *p, struct netbuf *buf)
 {
 	int i;
+	
+	version_write(buf, &mapedit_ver);
 
-	for (i = 0; i < MAPEDIT_NTOOLS; i++) {
-		struct tool *tool = mapedit.tools[i];
+	for (i = 0; i < mapedit_ntools; i++) {
+		struct tool *tool = mapedit_tools[i];
 
-		if (OBJECT(tool)->ops->save != NULL &&
-		    object_save(mapedit.tools[i]) == -1) {
+		if (tool->save != NULL &&
+		    tool->save(buf) == -1)
 			text_msg(MSG_ERROR, "%s", error_get());
-		}
 	}
 	return (0);
 }
 
+/* Close an object derivate data edition window. */
 static void
 mapedit_close_objdata(int argc, union evarg *argv)
 {
 	struct mapedit_obj *mobj = argv[1].p;
 
 	view_detach(mobj->win);
-	TAILQ_REMOVE(&mapedit.dobjs, mobj, objs);
+	TAILQ_REMOVE(&dobjs, mobj, objs);
 	object_page_out(mobj->obj, OBJECT_DATA);
 	object_del_dep(&mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
-/* Edit object derivate data, such as map nodes. */
+/* Create an object derivate data edition window. */
 void
 mapedit_edit_objdata(struct object *ob)
 {
 	struct mapedit_obj *mobj;
 	
-	TAILQ_FOREACH(mobj, &mapedit.dobjs, objs) {
+	TAILQ_FOREACH(mobj, &dobjs, objs) {
 		if (mobj->obj == ob)
 			break;
 	}
@@ -287,7 +318,7 @@ mapedit_edit_objdata(struct object *ob)
 	}
 
 	if (object_page_in(ob, OBJECT_DATA) == -1) {
-		text_msg(MSG_ERROR, "%s", error_get());
+		printf("%s: %s\n", ob->name, error_get());
 		return;
 	}
 	object_add_dep(&mapedit.pseudo, ob);
@@ -295,29 +326,30 @@ mapedit_edit_objdata(struct object *ob)
 	mobj = Malloc(sizeof(struct mapedit_obj));
 	mobj->obj = ob;
 	mobj->win = ob->ops->edit(ob);
-	TAILQ_INSERT_HEAD(&mapedit.dobjs, mobj, objs);
+	TAILQ_INSERT_HEAD(&dobjs, mobj, objs);
 	window_show(mobj->win);
 	event_new(mobj->win, "window-close", mapedit_close_objdata, "%p", mobj);
 }
 
+/* Close an object generic data edition window. */
 static void
 mapedit_close_objgen(int argc, union evarg *argv)
 {
 	struct mapedit_obj *mobj = argv[1].p;
 
 	view_detach(mobj->win);
-	TAILQ_REMOVE(&mapedit.gobjs, mobj, objs);
+	TAILQ_REMOVE(&gobjs, mobj, objs);
 	object_del_dep(&mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
-/* Edit object generic data. */
+/* Create an object generic data edition window. */
 void
 mapedit_edit_objgen(struct object *ob)
 {
 	struct mapedit_obj *mobj;
 	
-	TAILQ_FOREACH(mobj, &mapedit.gobjs, objs) {
+	TAILQ_FOREACH(mobj, &gobjs, objs) {
 		if (mobj->obj == ob)
 			break;
 	}
@@ -331,9 +363,85 @@ mapedit_edit_objgen(struct object *ob)
 	mobj = Malloc(sizeof(struct mapedit_obj));
 	mobj->obj = ob;
 	mobj->win = object_edit(ob);
-	TAILQ_INSERT_HEAD(&mapedit.gobjs, mobj, objs);
+	TAILQ_INSERT_HEAD(&gobjs, mobj, objs);
 	window_show(mobj->win);
 
 	event_new(mobj->win, "window-close", mapedit_close_objgen, "%p", mobj);
+}
+
+/* Close a tool settings window. */
+static void
+tool_window_close(int argc, union evarg *argv)
+{
+	struct tool *tool = argv[1].p;
+
+	widget_set_int(tool->trigger, "state", 0);
+	mapedit.curtool = NULL;
+	window_hide(tool->win);
+}
+
+/* Create a tool settings window. */
+struct window *
+tool_window_new(struct tool *tool, const char *name)
+{
+	struct window *win;
+	
+	win = tool->win = window_new(name);
+	window_set_caption(win, _(tool->name));
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	
+	event_new(win, "window-close", tool_window_close, "%p", tool);
+	return (win);
+}
+
+/* Return the first focused mapview(3) widget found. */
+static struct mapview *
+find_mapview(struct widget *pwid)
+{
+	struct widget *cwid;
+	
+	if (strcmp(pwid->type, "mapview") == 0)
+		return ((struct mapview *)pwid);
+
+	OBJECT_FOREACH_CHILD(cwid, pwid, widget) {
+		struct mapview *mv;
+
+		if (!widget_holds_focus(cwid))
+			continue;
+		if ((mv = find_mapview(cwid)) != NULL)
+			return (mv);
+	}
+	return (NULL);
+}
+
+/* Return the first visible mapview widget. */
+struct mapview *
+tool_mapview(void)
+{
+	struct window *win;
+	struct mapview *mv;
+
+	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
+		if (!win->visible)
+			continue;
+		if ((mv = find_mapview(WIDGET(win))) != NULL)
+			return (mv);
+	}
+	return (NULL);
+}
+
+void
+tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
+    void (*func)(struct mapview *), int edit)
+{
+	struct tool *tool = p;
+	struct tool_kbinding *kbinding;
+
+	kbinding = Malloc(sizeof(struct tool_kbinding));
+	kbinding->key = keysym;
+	kbinding->mod = keymod;
+	kbinding->func = func;
+	kbinding->edit = edit;
+	SLIST_INSERT_HEAD(&tool->kbindings, kbinding, kbindings);
 }
 

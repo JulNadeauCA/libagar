@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.43 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.44 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,33 +28,35 @@
 
 #include <engine/engine.h>
 #include <engine/view.h>
-
-#include "propedit.h"
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/vbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static void	 propedit_effect(void *, struct mapview *, struct map *,
-		                 struct node *);
-static int	 propedit_cursor(void *, struct mapview *, SDL_Rect *);
-static void	 set_node_mode(int, union evarg *);
-static void	 toggle_node_flag(int, union evarg *);
-static void	 toggle_origin(int, union evarg *);
+static void propedit_init(void);
+static void propedit_effect(struct mapview *, struct map *, struct node *);
+static void set_node_mode(int, union evarg *);
+static void toggle_node_flag(int, union evarg *);
+static void toggle_origin(int, union evarg *);
 
-const struct tool_ops propedit_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	propedit_cursor,
+struct tool propedit_tool = {
+	N_("Property editor"),
+	N_("Alter the properties of node references."),
+	MAPEDIT_TOOL_PROPEDIT,
+	-1,	
+	propedit_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	propedit_effect,
+	NULL,
 	NULL			/* mouse */
 };
+
+static Uint32 node_mode = 0;			/* Set the physics mode */
+static Uint32 node_flags = 0;			/* Set the physics flags */
+static int origin = 0;				/* Move point of origin */
 
 static void
 propedit_set_edge(struct mapview *mv, enum noderef_edge edge)
@@ -111,99 +113,90 @@ propedit_clear_flag(struct mapview *mv, Uint32 flag)
 }
 
 static void
-propedit_edge_nw(void *p, struct mapview *mv)
+propedit_edge_nw(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_NW);
 }
 
 static void
-propedit_edge_n(void *p, struct mapview *mv)
+propedit_edge_n(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_N);
 }
 
 static void
-propedit_edge_ne(void *p, struct mapview *mv)
+propedit_edge_ne(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_NE);
 }
 
 static void
-propedit_edge_w(void *p, struct mapview *mv)
+propedit_edge_w(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_W);
 }
 
 static void
-propedit_edge_none(void *p, struct mapview *mv)
+propedit_no_edge(struct mapview *mv)
 {
 	propedit_set_edge(mv, 0);
 }
 
 static void
-propedit_edge_e(void *p, struct mapview *mv)
+propedit_edge_e(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_E);
 }
 
 static void
-propedit_edge_sw(void *p, struct mapview *mv)
+propedit_edge_sw(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_SW);
 }
 
 static void
-propedit_edge_s(void *p, struct mapview *mv)
+propedit_edge_s(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_S);
 }
 
 static void
-propedit_edge_se(void *p, struct mapview *mv)
+propedit_edge_se(struct mapview *mv)
 {
 	propedit_set_edge(mv, NODEREF_EDGE_SE);
 }
 
 static void
-propedit_flag_walk(void *p, struct mapview *mv)
+propedit_flag_walk(struct mapview *mv)
 {
 	propedit_set_flag(mv, NODEREF_WALK);
 }
 
 static void
-propedit_flag_block(void *p, struct mapview *mv)
+propedit_flag_blk(struct mapview *mv)
 {
 	propedit_clear_flag(mv, NODEREF_WALK);
 }
 
-void
-propedit_init(void *p)
+static void
+propedit_init(void)
 {
-	struct propedit *pe = p;
 	struct window *win;
 	struct vbox *vb;
 
-	tool_init(&pe->tool, "propedit", &propedit_ops, MAPEDIT_TOOL_PROPEDIT);
-	pe->node_flags = 0;
-	pe->node_mode = 0;
-	pe->origin = 0;
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP5, propedit_no_edge, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
+	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_b, propedit_flag_blk, 1);
 
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP5, propedit_edge_none, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
-	tool_bind_key(pe, KMOD_NONE, SDLK_b, propedit_flag_block, 1);
-
-	win = TOOL(pe)->win = window_new("mapedit-tool-propedit");
-	window_set_caption(win, _("Node props"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	event_new(win, "window-close", tool_window_close, "%p", pe);
+	win = tool_window_new(&propedit_tool, "mapedit-tool-propedit");
 
 	vb = vbox_new(win, 0);
 	{
@@ -228,15 +221,15 @@ propedit_init(void *p)
 		int i;
 
 		rad = radio_new(vb, node_modes);
-		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
+		event_new(rad, "radio-changed", set_node_mode, NULL);
 
 		cbox = checkbox_new(vb, _("Origin"));
-		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
+		event_new(cbox, "checkbox-changed", toggle_origin, NULL);
 
 		for (i = 0; i < nprops; i++) {
 			cbox = checkbox_new(vb, "%s", _(props[i].name));
 			event_new(cbox, "checkbox-changed", toggle_node_flag,
-			    "%p, %i", pe, props[i].flag);
+			    "%i", props[i].flag);
 		}
 	}
 }
@@ -244,45 +237,35 @@ propedit_init(void *p)
 static void
 set_node_mode(int argc, union evarg *argv)
 {
-	struct propedit *pe = argv[1].p;
-	int index = argv[2].i;
+	int index = argv[1].i;
 	const Uint32 modes[] = {
 		0,
 		NODEREF_WALK,
 		NODEREF_CLIMB
 	};
 
-	pe->node_mode = modes[index];
+	node_mode = modes[index];
 }
 
 static void
 toggle_node_flag(int argc, union evarg *argv)
 {
-	struct propedit *pe = argv[1].p;
-	int flag = argv[2].i;
-	int state = argv[3].i;
+	int flag = argv[1].i;
+	int state = argv[2].i;
 
 	if (state) {
-		pe->node_flags |= flag;
+		node_flags |= flag;
 	} else {
-		pe->node_flags &= ~(flag);
+		node_flags &= ~(flag);
 	}
 }
 
 static void
 toggle_origin(int argc, union evarg *argv)
 {
-	struct propedit *pe = argv[1].p;
-	int state = argv[2].i;
+	int state = argv[1].i;
 
-	pe->origin = state;
-}
-
-static int
-propedit_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
-{
-	/* XXX TODO */
-	return (-1);
+	origin = state;
 }
 
 static void
@@ -299,13 +282,12 @@ set_edge(struct map *m, struct node *node, Uint32 edge)
 }
 
 static void
-propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+propedit_effect(struct mapview *mv, struct map *m, struct node *node)
 {
-	struct propedit *pe = p;
 	struct noderef *r;
 	Uint8 *ks;
 
-	if (pe->origin) {
+	if (origin) {
 		m->origin.x = mv->cx;
 		m->origin.y = mv->cy;
 	}
@@ -316,12 +298,12 @@ propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 
 		r->flags &= ~(NODEREF_BIO|NODEREF_REGEN|NODEREF_SLOW|
 		              NODEREF_HASTE|NODEREF_WALK|NODEREF_CLIMB);
-		r->flags |= pe->node_flags;
+		r->flags |= node_flags;
 	
-		if (pe->node_mode == 0) {
+		if (node_mode == 0) {
 			r->flags &= ~(NODEREF_WALK);
 		} else {
-			r->flags |= pe->node_mode;
+			r->flags |= node_mode;
 		}
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.17 2003/09/07 04:17:37 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.18 2003/10/13 23:49:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -27,107 +27,118 @@
  */
 
 #include <engine/engine.h>
-
-#include "flip.h"
+#include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/radio.h>
+#include <engine/widget/checkbox.h>
 
-static void	flip_effect(void *, struct mapview *, struct map *,
-		            struct node *);
+static void flip_init(void);
+static void flip_effect(struct mapview *, struct map *, struct node *);
 
-const struct tool_ops flip_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		tool_destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* cursor */
+struct tool flip_tool = {
+	N_("Flip Tile"),
+	N_("Apply a flip/mirror transformation on a tile."),
+	MAPEDIT_TOOL_FLIP,
+	-1,
+	flip_init,
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
 	flip_effect,
+	NULL,			/* cursor */
 	NULL			/* mouse */
 };
 
-void
-flip_init(void *p)
+static enum flip_mode {
+	FLIP_HORIZ,		/* Mirror */
+	FLIP_VERT		/* Flip */
+} mode = FLIP_HORIZ;
+
+static int multi = 0;			/* Flip/mirror whole selection */
+static int multi_ind = 0;		/* Apply to tiles individually */
+
+static void
+flip_init(void)
 {
 	static const char *mode_items[] = {
 		N_("Horizontal"),
 		N_("Vertical"),
 		NULL
 	};
-	static const char *which_items[] = {
-		N_("All"),
-		N_("Highest"),
-		NULL
-	};
-	struct flip *flip = p;
 	struct window *win;
 	struct radio *rad;
+	struct checkbox *cb;
 
-	tool_init(&flip->tool, "flip", &flip_ops, MAPEDIT_TOOL_FLIP);
-	flip->mode = FLIP_HORIZ;
-	flip->which = FLIP_ALL;
-	
-	TOOL(flip)->win = win = window_new("mapedit-tool-flip");
-	window_set_caption(win, _("Flip"));
-	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-	event_new(win, "window-close", tool_window_close, "%p", flip);
+	win = tool_window_new(&flip_tool, "mapedit-tool-flip");
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, &flip->mode);
+	widget_bind(rad, "value", WIDGET_INT, &mode);
+	
+	cb = checkbox_new(win, _("Multi"));
+	widget_bind(cb, "state", WIDGET_INT, &multi);
 
-	rad = radio_new(win, which_items);
-	widget_bind(rad, "value", WIDGET_INT, &flip->which);
+	cb = checkbox_new(win, _("Multi (individual)"));
+	widget_bind(cb, "state", WIDGET_INT, &multi_ind);
 }
 
 static void
-flip_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
+flip_effect(struct mapview *mv, struct map *m, struct node *node)
 {
-	struct flip *flip = p;
-	struct noderef *nref;
-	
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		enum transform_type type = TRANSFORM_HFLIP;
-		struct transform *trans;
+	int selx = mv->mx + mv->mouse.x;
+	int sely = mv->my + mv->mouse.y;
+	int w = 1;
+	int h = 1;
+	int x, y;
+
+	if (!multi_ind ||
+	    mapview_get_selection(mv, &selx, &sely, &w, &h) == -1) {
+		if (selx < 0 || selx >= m->mapw ||
+		    sely < 0 || sely >= m->maph)
+			return;
+	}
+
+	for (y = sely; y < sely+h; y++) {
+		for (x = selx; x < selx+w; x++) {
+			struct node *node = &m->map[y][x];
+			struct noderef *nref;
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+				enum transform_type type = TRANSFORM_HFLIP;
+				struct transform *trans;
 		
-		if (nref->layer != m->cur_layer)
-			continue;
+				if (nref->layer != m->cur_layer)
+					continue;
 
-		switch (flip->mode) {
-		case FLIP_HORIZ:
-			type = TRANSFORM_HFLIP;
-			dprintf("horiz\n");
-			break;
-		case FLIP_VERT:
-			type = TRANSFORM_VFLIP;
-			dprintf("vert\n");
-			break;
-		}
+				switch (mode) {
+				case FLIP_HORIZ:
+					type = TRANSFORM_HFLIP;
+					break;
+				case FLIP_VERT:
+					type = TRANSFORM_VFLIP;
+					break;
+				}
 
-		/* Same transform already applied? */
-		TAILQ_FOREACH(trans, &nref->transforms, transforms) {
-			if (trans->type == type) {
-				TAILQ_REMOVE(&nref->transforms, trans,
+				TAILQ_FOREACH(trans, &nref->transforms,
+				    transforms) {
+					if (trans->type == type) {
+						TAILQ_REMOVE(&nref->transforms,
+						    trans, transforms);
+						break;
+					}
+				}
+				if (trans != NULL)
+					continue;
+
+				if ((trans = transform_new(type, 0, NULL))
+				    == NULL) {
+					text_msg(MSG_ERROR, "%s", error_get());
+					continue;
+				}
+				TAILQ_INSERT_TAIL(&nref->transforms, trans,
 				    transforms);
-				dprintf("removed duplicate\n");
 				break;
 			}
 		}
-		if (trans != NULL) {				/* Existing */
-			dprintf("existing transform %d\n", type);
-			continue;
-		}
-
-		if ((trans = transform_new(type, 0, NULL)) == NULL) {
-			text_msg(MSG_ERROR, "%s", error_get());
-			continue;
-		}
-		TAILQ_INSERT_TAIL(&nref->transforms, trans, transforms);
-
-		if (flip->which == FLIP_HIGHEST)
-			break;
 	}
 }
 
