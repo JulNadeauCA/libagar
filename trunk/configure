@@ -106,6 +106,8 @@ if [ "${srcdir}" != "" ]; then
 		exit 1
 	fi
 	SRC=${srcdir}
+
+	perl ${SRC}/mk/mkconcurrent.pl
 else
 	if [ ! -e "configure.in" ]; then
 		echo "Missing --srcdir argument"
