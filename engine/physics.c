@@ -59,10 +59,8 @@ void
 direction_set(struct direction *dir, int direction, int set)
 {
 	if (set) {
-		dprintf("set 0x%x\n", direction);
 		dir->set |= direction;
 	} else {
-		dprintf("clear 0x%x\n", direction);
 		dir->clear |= direction;
 	}
 }
