@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.34 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.35 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,7 +50,6 @@ tool_init(struct tool *tool, const char *name, const void *ops, int icon)
 	object_wire_gfx(tool, "/engine/mapedit/tool/tool");
 	OBJECT(tool)->save_pfx = "/map-editor";
 
-	strlcpy(tool->type, name, sizeof(tool->type));
 	tool->button = NULL;
 	tool->icon = SPRITE(&mapedit, icon);
 	tool->cursor = NULL;

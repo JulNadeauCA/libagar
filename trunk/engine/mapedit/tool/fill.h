@@ -1,7 +1,7 @@
-/*	$Csoft: fill.h,v 1.8 2003/08/29 04:56:18 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.9 2003/09/07 04:17:36 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mapedit/tool.h>
+#include <engine/mapedit/tool/tool.h>
 
 #include "begin_code.h"
 
