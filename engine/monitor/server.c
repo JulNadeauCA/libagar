@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.2 2005/01/28 01:21:03 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.3 2005/01/28 03:11:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -164,9 +164,13 @@ cmd_surface(struct command *cmd, void *p)
 #ifdef HAVE_JPEG
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
+	char tmp[sizeof("/tmp/")+FILENAME_MAX];
 	SDL_Surface *srcsu = p;
 	Uint8 *jcopybuf;
 	int i, nshots = 1;
+	size_t l, len;
+	FILE *ftmp;
+	int fd;
 
 	jcomp.err = jpeg_std_error(&jerrmgr);
 	jerrmgr.error_exit = error_exit;
@@ -180,10 +184,19 @@ cmd_surface(struct command *cmd, void *p)
 
 	jpeg_set_defaults(&jcomp);
 	jpeg_set_quality(&jcomp, jpeg_quality, TRUE);
-	jpeg_stdio_dest(&jcomp, stdout);
+
+	strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
+	if ((fd = mkstemp(tmp)) == -1) {
+		error_set("mkstemp %s: %s", tmp, strerror(errno));
+		return (-1);
+	}
+	if ((ftmp = fdopen(fd, "r+")) == NULL) {
+		error_set("fdopen %s: %s", tmp, strerror(errno));
+		return (-1);
+	}
+	jpeg_stdio_dest(&jcomp, ftmp);
 
 	jcopybuf = Malloc(srcsu->w * 3, M_VIEW);
-
 	if (SDL_MUSTLOCK(srcsu)) {
 		SDL_LockSurface(srcsu);
 	}
@@ -225,10 +238,26 @@ cmd_surface(struct command *cmd, void *p)
 		}
 		jpeg_finish_compress(&jcomp);
 	}
-
-	if (SDL_MUSTLOCK(srcsu)) {
+	if (SDL_MUSTLOCK(srcsu))
 		SDL_UnlockSurface(srcsu);
+
+	/* Send the compressed data now that we know its size. */
+	len = (size_t)ftell(ftmp);
+	rewind(ftmp);
+	server_binary_mode(len);
+	{
+		char sendbuf[BUFSIZ];
+		size_t rv;
+
+		while ((rv = fread(sendbuf, 1, sizeof(sendbuf), ftmp)) > 0) {
+			fwrite(sendbuf, 1, rv, stdout);
+		}
 	}
+	fflush(stdout);
+	server_command_mode();
+	fclose(ftmp);
+	unlink(tmp);
+	
 	Free(jcopybuf, M_VIEW);
 	jpeg_destroy_compress(&jcomp);
 	return (0);
@@ -305,14 +334,15 @@ loop_server(void *p)
 static void
 init_server(void)
 {
-	/* Initialize the server. */
 	server_regauth("password", auth_password, NULL);
 	server_regerr(handle_error);
+
 	server_regcmd("version", cmd_version, NULL);
 	server_regcmd("screen", cmd_surface, view->v);
 	server_regcmd("view-fmt", cmd_view_fmt, NULL);
 	server_regcmd("refresh", cmd_refresh, NULL);
 	server_regcmd("world", cmd_world, NULL);
+
 	server_inited++;
 }
 
