@@ -743,7 +743,7 @@ if [ "${sdl_found}" = "yes" ]; then
 echo "ok"
 echo "ok" >> config.log
 else
-echo "Could not find the SDL library. Make sure sdl-config is in your $PATH.Make sure sdl-config is in $PATH."
+echo "Could not find the SDL library. Make sure sdl-config is in PATH."
 exit 1
 fi
 echo -n "checking whether SDL works..."
