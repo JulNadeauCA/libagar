@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.21 2003/03/02 04:07:03 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.22 2003/03/10 02:13:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -192,7 +192,7 @@ art_fetch(char *archive, struct object *ob)
 
 		art->tiles.map = emalloc(sizeof(struct map));
 		Asprintf(&mapname, "t-%s", archive);
-		map_init(art->tiles.map, MAP_2D, mapname, NULL);
+		map_init(art->tiles.map, mapname, NULL);
 		free(mapname);
 
 		if (map_alloc_nodes(art->tiles.map, 2, 2) == -1) {
