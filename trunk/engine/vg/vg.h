@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.22 2005/01/23 11:54:30 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.23 2005/03/03 10:56:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -233,9 +233,7 @@ void		 vg_save(struct vg *, struct netbuf *);
 int		 vg_load(struct vg *, struct netbuf *);
 
 void		 vg_scale(struct vg *, double, double, double);
-void		 vg_clear(struct vg *);
 void		 vg_rasterize(struct vg *);
-__inline__ void	 vg_redraw_elements(struct vg *);
 __inline__ void	 vg_update_fragments(struct vg *);
 __inline__ void	 vg_destroy_fragments(struct vg *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.3 2005/01/23 11:53:48 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.4 2005/03/03 10:56:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -195,7 +195,7 @@ drawing_edit(void *obj)
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Drawing: %s"), OBJECT(dwg)->name);
 
-	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
+	tbar = toolbar_new(win, TOOLBAR_HORIZ, 1, 0);
 	toolbar_add_button(tbar, 0, ICON(SETTINGS_ICON), 0, 0,
 	    drawing_settings, "%p, %p", win, dwg);
 

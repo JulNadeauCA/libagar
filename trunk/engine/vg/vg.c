@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.40 2005/01/23 11:54:30 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.41 2005/03/03 10:56:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -257,7 +257,7 @@ vg_destroy_element(struct vg *vg, struct vg_element *vge)
 
 	TAILQ_REMOVE(&vg->vges, vge, vges);
 	vg_free_element(vg, vge);
-	vg->redraw = 1;
+	vg->redraw++;
 }
 
 /*
@@ -364,16 +364,6 @@ vg_destroy_fragments(struct vg *vg)
 		map_free_nodes(vg->map);
 }
 
-/* Mark every element as dirty. */
-void
-vg_redraw_elements(struct vg *vg)
-{
-	struct vg_element *vge;
-
-	TAILQ_FOREACH(vge, &vg->vges, vges)
-		vge->redraw = 1;
-}
-
 /* Adjust the vg bounding box and scaling factor. */
 void
 vg_scale(struct vg *vg, double w, double h, double scale)
@@ -413,7 +403,7 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 		if (map_alloc_nodes(vg->map, mw, mh) == -1)
 			fatal("%s", error_get());
 	}
-	vg_redraw_elements(vg);
+	vg->redraw++;
 }
 
 /*
@@ -431,7 +421,6 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	vge->type = eltype;
 	vge->style = NULL;
 	vge->layer = vg->cur_layer;
-	vge->redraw = 1;
 	vge->drawn = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
@@ -463,8 +452,8 @@ vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 	if (vge->ops->init != NULL)
 		vge->ops->init(vg, vge);
 
-	vg->redraw = 1;
 	vg->cur_vge = vge;
+	vg->redraw++;
 	pthread_mutex_unlock(&vg->lock);
 	return (vge);
 }
@@ -487,17 +476,6 @@ void
 vg_select_element(struct vg *vg, struct vg_element *vge)
 {
 	vg->cur_vge = vge;
-}
-
-/*
- * Clear the surface with the filling color.
- * The vg must be locked.
- */
-void
-vg_clear(struct vg *vg)
-{
-	SDL_FillRect(vg->su, NULL, vg->fill_color);
-	vg->redraw = 1;
 }
 
 #ifdef DEBUG
@@ -615,7 +593,7 @@ vg_rasterize(struct vg *vg)
 		return;
 
 	pthread_mutex_lock(&vg->lock);
-	vg_clear(vg);
+	SDL_FillRect(vg->su, NULL, vg->fill_color);
 
 	if (vg->flags & VG_VISGRID)
 		vg_draw_grid(vg);
@@ -628,10 +606,7 @@ vg_rasterize(struct vg *vg)
 		vge->drawn = 0;
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->redraw) {
-			vge->redraw = 0;
-			rasterize_element(vg, vge);
-		}
+		rasterize_element(vg, vge);
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
@@ -748,6 +723,7 @@ vg_pop_vertex(struct vg *vg)
 		fatal("neg nvtx");
 #endif
 	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex));
+	vg->redraw++;
 }
 
 /* Push a 2D vertex onto the vertex array. */
@@ -762,6 +738,7 @@ vg_vertex2(struct vg *vg, double x, double y)
 	vtx->z = 0;
 	vtx->w = 1.0;
 	vg_block_offset(vg, vtx);
+	vg->redraw++;
 	return (vtx);
 }
 
@@ -777,6 +754,7 @@ vg_vertex3(struct vg *vg, double x, double y, double z)
 	vtx->z = z;
 	vtx->w = 1.0;
 	vg_block_offset(vg, vtx);
+	vg->redraw++;
 	return (vtx);
 }
 
@@ -792,6 +770,7 @@ vg_vertex4(struct vg *vg, double x, double y, double z, double w)
 	vtx->z = z;
 	vtx->w = w;
 	vg_block_offset(vg, vtx);
+	vg->redraw++;
 	return (vtx);
 }
 
@@ -809,6 +788,7 @@ vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 		memcpy(vtx, &svtx[i], sizeof(struct vg_vertex));
 		vg_block_offset(vg, vtx);
 	}
+	vg->redraw++;
 }
 
 /* Create a new global style. */
@@ -885,6 +865,7 @@ void
 vg_color(struct vg *vg, Uint32 color)
 {
 	vg->cur_vge->color = color;
+	vg->redraw++;
 }
 
 /* Specify the color of the current element (RGB triplet). */
@@ -892,6 +873,7 @@ void
 vg_color3(struct vg *vg, int r, int g, int b)
 {
 	vg->cur_vge->color = SDL_MapRGB(vg->fmt, r, g, b);
+	vg->redraw++;
 }
 
 /* Specify the color of the current element (RGB triplet + alpha). */
@@ -899,6 +881,7 @@ void
 vg_color4(struct vg *vg, int r, int g, int b, int a)
 {
 	vg->cur_vge->color = SDL_MapRGBA(vg->fmt, r, g, b, a);
+	vg->redraw++;
 }
 
 /* Push a new layer onto the layer stack. */
@@ -916,6 +899,8 @@ vg_push_layer(struct vg *vg, const char *name)
 	vgl->visible = 1;
 	vgl->alpha = 255;
 	vgl->color = SDL_MapRGB(vg->fmt, 255, 255, 255);
+	
+	vg->redraw++;
 	return (vgl);
 }
 
@@ -925,6 +910,8 @@ vg_pop_layer(struct vg *vg)
 {
 	if (--vg->nlayers < 1)
 		vg->nlayers = 1;
+	
+	vg->redraw++;
 }
 
 void
