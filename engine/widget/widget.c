@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.9 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.10 2002/04/30 01:11:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -33,6 +33,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <engine/engine.h>
 #include <engine/queue.h>
@@ -44,6 +45,8 @@
 
 extern TAILQ_HEAD(, widget) uwidgetsh;		/* window.c */
 extern pthread_mutex_t uwidgets_lock;	/* window.c */
+
+static void	*widget_dispatch_event(void *);
 
 void
 widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
@@ -120,16 +123,45 @@ widget_draw(void *p)
 }
 
 /*
- * Dispatch an event to a widget.
+ * Dispatch an event to a widget. The event handler runs in a newly
+ * created thread, to avoid blocking in event context.
  * Parent window's widget list must be locked.
  */
 void
-widget_event(void *p, SDL_Event *ev, Uint32 flags)
+widget_event(void *p, SDL_Event *ev, int flags)
 {
 	struct widget *w = (struct widget *)p;
 
 	if (WIDGET_VEC(w)->widget_event != NULL) {
-		WIDGET_VEC(w)->widget_event(w, ev, flags);
+		pthread_t wevent_th;
+		struct widget_event *wev;
+
+		/* XXX pool */
+		wev = emalloc(sizeof(struct widget_event));
+		wev->widget = w;
+		wev->ev = *ev;		/* Structure copy */
+		wev->flags = flags;
+
+		/*
+		 * Widget events are processed in threads spawned from
+		 * the event thread. A copy of the SDL_Event is passed.
+		 */
+		if (pthread_create(&wevent_th, NULL, widget_dispatch_event,
+		    wev) != 0) {
+			fatal("wevent_th: %s\n", strerror(errno));
+		}
 	}
+}
+
+static void *
+widget_dispatch_event(void *arg)
+{
+	struct widget_event *wev = (struct widget_event *)arg;
+
+	WIDGET_VEC(wev->widget)->widget_event(wev->widget, &wev->ev,
+	    wev->flags);
+
+	free(wev);	/* XXX pool */
+	return (NULL);
 }
 

@@ -1,11 +1,11 @@
-/*	$Csoft: widget.h,v 1.10 2002/04/28 15:04:58 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.11 2002/04/30 00:57:36 vedge Exp $	*/
 
 struct window;
 
 struct widget_ops {
 	struct	 obvec obvec;
 	void	 (*widget_draw)(void *);
-	void	 (*widget_event)(void *, SDL_Event *, Uint32);
+	void	 (*widget_event)(void *, SDL_Event *, int);
 	void	 (*widget_link)(void *, struct window *);
 	void	 (*widget_unlink)(void *);
 };
@@ -13,7 +13,7 @@ struct widget_ops {
 struct widget {
 	struct	 object obj;
 
-	Uint32	 flags;
+	int	 flags;
 #define WIDGET_HIDE		0x01	/* Don't draw widget. */
 #define WIDGET_FOCUS		0x02	/* Catch keys and mouse motion. */
 
@@ -23,6 +23,12 @@ struct widget {
 
 	TAILQ_ENTRY(widget) widgets;	/* Widgets within parent window */
 	TAILQ_ENTRY(widget) uwidgets;	/* Widgets queued for removal */
+};
+
+struct widget_event {
+	struct	widget *widget;
+	SDL_Event ev;
+	int	flags;
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
@@ -64,5 +70,5 @@ void		 widget_link(void *, struct window *win);
 void		 widget_unlink(void *);
 
 void		 widget_draw(void *);
-void		 widget_event(void *, SDL_Event *, Uint32);
+void		 widget_event(void *, SDL_Event *, int);
 
