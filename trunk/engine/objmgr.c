@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.10 2005/03/03 10:59:22 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.11 2005/03/10 09:44:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -645,23 +645,28 @@ objmgr_changed_dlg(void *obj, int then_exit)
 		return;
 	}
 	window_set_caption(win, _("Save changes?"));
+	window_set_spacing(win, 0);
+
 	label_new(win, LABEL_STATIC, _("The state of `%s' has changed."),
 	    OBJECT(obj)->name);
 	
-	
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
+	box_set_spacing(bo, 0);
+	box_set_padding(bo, 0);
 	{
-		b = button_new(bo, _("Save changes"));
+		b = button_new(bo, _("Save"));
 		event_new(b, "button-pushed", save_changes, "%p,%i", obj,
 		    then_exit);
 		widget_focus(b);
 
-		b = button_new(bo, _("Discard changes"));
+		b = button_new(bo, _("Discard"));
 		event_new(b, "button-pushed", discard_changes, "%p,%i", obj,
 		    then_exit);
 	}
 
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
+	box_set_spacing(bo, 0);
+	box_set_padding(bo, 0);
 	{
 		b = button_new(bo, _("Cancel"));
 		event_new(b, "button-pushed", window_generic_detach, "%p", win);

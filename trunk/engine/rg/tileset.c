@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.17 2005/03/03 10:51:01 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.18 2005/03/10 09:44:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -785,17 +785,17 @@ tileset_edit(void *p)
 
 		bbox = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		{
-			bu = button_new(bbox, _("Insert tile"));
+			bu = button_new(bbox, _("Insert"));
 			event_new(bu, "button-pushed", insert_tile_dlg,
 			    "%p,%p", ts, win);
 
-			bu = button_new(bbox, _("Edit tile(s)"));
+			bu = button_new(bbox, _("Edit(s)"));
 			event_new(bu, "button-pushed", edit_tiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
 			event_new(tl_tiles, "tlist-dblclick", edit_tiles,
 			    "%p,%p,%p", ts, tl_tiles, win);
 
-			bu = button_new(bbox, _("Delete tile(s)"));
+			bu = button_new(bbox, _("Delete"));
 			event_new(bu, "button-pushed", delete_tiles,
 			    "%p,%p", tl_tiles, ts);
 		}
