@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.85 2002/11/07 17:54:08 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.86 2002/11/07 18:58:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -746,7 +746,9 @@ window_event(SDL_Event *ev)
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			/* Window mouse motion operation */
+			/*
+			 * Window mouse motion operation
+			 */
 			if (view->winop != VIEW_WINOP_NONE &&
 			    view->wop_win != win) {
 				goto nextwin;
@@ -763,61 +765,84 @@ window_event(SDL_Event *ev)
 				goto posted;
 			case VIEW_WINOP_NONE:
 			}
-
-			/* Widget mouse motion event */
+			/*
+			 * Widget mouse motion event
+			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-					if (!WIDGET_FOCUSED(wid) &&
+					if ((WINDOW_FOCUSED(win) &&
+					     WIDGET_FOCUSED(wid)) ||
 					    (wid->flags &
-					    WIDGET_UNFOCUSED_MOTION) == 0) {
-						continue;
+					     WIDGET_UNFOCUSED_MOTION)) {
+						event_post(wid,
+						    "window-mousemotion",
+						    "%i, %i, %i, %i",
+						    (int)ev->motion.x -
+						     (wid->x + wid->win->x),
+						    (int)ev->motion.y -
+						     (wid->y + wid->win->y),
+						    (int)ev->motion.xrel,
+						    (int)ev->motion.yrel);
 					}
-
-					event_post(wid, "window-mousemotion",
-					    "%i, %i, %i, %i",
-					    (int)ev->motion.x -
-					     (wid->x + wid->win->x),
-					    (int)ev->motion.y -
-					     (wid->y + wid->win->y),
-					    (int)ev->motion.xrel,
-					    (int)ev->motion.yrel);
 				}
 			}
 			break;
-		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
+			/* Cancel window operations. */ 
+			view->winop = VIEW_WINOP_NONE;
+			view->wop_win = NULL;
+			/*
+			 * Widget mouse button up event
+			 */
+			if (!WINDOW_FOCUSED(win)) {
+				goto nextwin;
+			}
+			TAILQ_FOREACH(reg, &win->regionsh, regions) {
+				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+					if (WIDGET_FOCUSED(wid)) {
+						event_post(wid,
+						    "window-mousebuttonup",
+						    "%i, %i, %i",
+						    ev->button.button,
+						    ev->button.x -
+						    (wid->x+wid->win->x),
+						    ev->button.y -
+						    (wid->y+wid->win->y));
+						goto posted;
+					}
+				}
+			}
+			if (focus_changed) {
+				goto posted;
+			}
+			break;
+		case SDL_MOUSEBUTTONDOWN:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto nextwin;
 			}
-
-			/* Window mouse button operation */
-			if (ev->type == SDL_MOUSEBUTTONDOWN) {
-				if (ev->button.y - win->y <= win->titleh) {
-				    	if (ev->button.x - win->x < 20) {
-						window_hide(win);
-						event_post(win, "window-close",
-						    NULL);
-					}
-					view->winop = VIEW_WINOP_MOVE;
-					view->wop_win = win;
-				} else if (ev->button.y - win->y >
-				    win->h - win->borderw) {
-				    	if (ev->button.x - win->x < 17) {
-						view->winop =
-						    VIEW_WINOP_LRESIZE;
-					} else if (ev->button.x - win->x >
-					    win->w - 17) {
-						view->winop =
-						    VIEW_WINOP_RRESIZE;
-					} else {
-						view->winop = 
-						    VIEW_WINOP_HRESIZE;
-					}
-					view->wop_win = win;
-				}	
+			/*
+			 * Window mouse button down operation
+			 */
+			if (ev->button.y - win->y <= win->titleh) {
+			    	if (ev->button.x - win->x < 20) { /* XXX */
+					window_hide(win);
+					event_post(win, "window-close", NULL);
+				}
+				view->winop = VIEW_WINOP_MOVE;
+				view->wop_win = win;
+			} else if (ev->button.y-win->y > win->h-win->borderw) {
+			    	if (ev->button.x-win->x < 17) {
+					view->winop = VIEW_WINOP_LRESIZE;
+				} else if (ev->button.x-win->x > win->w-17) {
+					view->winop = VIEW_WINOP_RRESIZE;
+				} else {
+					view->winop = VIEW_WINOP_HRESIZE;
+				}
+				view->wop_win = win;
 			}
-
-			/* Widget mouse button event */
+			/*
+			 * Widget mouse button down event
+			 */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if (!WIDGET_INSIDE(wid, ev->button.x,
@@ -825,8 +850,6 @@ window_event(SDL_Event *ev)
 						continue;
 					}
 					event_post(wid,
-					    (ev->type == SDL_MOUSEBUTTONUP) ?
-					    "window-mousebuttonup" :
 					    "window-mousebuttondown",
 					    "%i, %i, %i",
 					    ev->button.button,
@@ -837,7 +860,6 @@ window_event(SDL_Event *ev)
 					goto posted;
 				}
 			}
-
 			if (focus_changed) {
 				goto posted;
 			}
@@ -856,7 +878,6 @@ window_event(SDL_Event *ev)
 			default:
 				break;
 			}
-
 			/* Tab cycling */
 			if (ev->key.keysym.sym == SDLK_TAB &&
 			    ev->type == SDL_KEYUP) {
@@ -865,7 +886,6 @@ window_event(SDL_Event *ev)
 				win->redraw++;
 				goto posted;
 			}
-
 			/* Widget event */
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
@@ -1190,6 +1210,8 @@ window_load(void *p, int fd)
 	win->w = read_uint32(fd);
 	win->h = read_uint32(fd);
 
+	/* XXX scale */
+
 	/* Ensure the window fits inside the view area. */
 	window_resize(win);
 
@@ -1218,6 +1240,5 @@ window_detach_generic(int argc, union evarg *argv)
 	OBJECT_ASSERT(win, "window");
 
 	dprintf("detaching %s\n", OBJECT(win)->name);
-
 	view_detach(win);
 }
