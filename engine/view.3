@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.11 2002/12/31 05:45:56 vedge Exp $
+.\"	$Csoft: view.3,v 1.12 2003/01/01 05:18:34 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,7 +42,7 @@ layer manages the video display and maintains a list of windows.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
-.Fn view_init "gfx_engine_t engine"
+.Fn view_init "enum gfx_engine engine"
 .Pp
 .Ft "void"
 .Fn view_destroy "struct viewport *view"
@@ -53,21 +53,84 @@ layer manages the video display and maintains a list of windows.
 .Pp
 The
 .Fn view_init
-function initializes the graphic engine, return 0 on success and -1 on failure.
+function initializes the graphic engine, returning 0 on success and -1 on
+failure.
+The
 .Fa engine
-is one of:
+argument is one of:
 .Bd -literal
-typedef enum {
+enum gfx_engine {
 	GFX_ENGINE_GUI,			/* Direct GUI */
-	GFX_ENGINE_TILEBASED,		/* Direct 2D tile-based */
-	GFX_ENGINE_GL			/* OpenGL (if available) */
-} gfx_engine_t;
+	GFX_ENGINE_TILEBASED		/* Direct 2D tile-based */
+};
 .Ed
 .Pp
 The
+.Fn view_destroy 
+function frees resources allocated by the view structure.
+.Pp
+The
 .Fn view_set_refresh
-functions sets the minimum and maximum display refresh rate, returning 0 on
-success and -1 on failure.
+function sets the minimum and maximum display refresh delay in milliseconds,
+returning 0 on success and -1 on failure.
+.Sh GRAPHIC SURFACES
+.nr nS 1
+.Ft "SDL_Surface *"
+.Fn view_surface "int flags" "int width" "int height"
+.Pp
+.Ft "SDL_Surface *"
+.Fn view_scale_surface "SDL_Surface *sourcesu" "Uint16 width" "Uint16 height"
+.Pp
+.Ft "GLuint"
+.Fn view_surface_texture "SDL_Surface *sourcesu" "GLfloat *texcoord"
+.Pp
+.Ft "void"
+.Fn VIEW_UPDATE "SDL_Rect rd"
+.nr nS 0
+.Pp
+These functions operate on
+.Xr SDL_Surface 3
+structures.
+.Fn view_surface
+allocates a 32bpp surface using one of the following RGBA masks depending
+on host byte order:
+.Bd -literal
+/* Big endian */
+0xff000000
+0x00ff0000
+0x0000ff00
+0x000000ff
+
+/* Little endian */
+0x000000ff
+0x0000ff00
+0x00ff0000
+0xff000000
+.Ed
+.Pp
+The
+.Fn view_scale_surface
+functions performs bitmap scaling of surface
+.Fa sourcesu
+to
+.Fa width
+by
+.Fa height
+pixels.
+If OpenGL support is available,
+.Fn view_surface_texture
+creates an OpenGL texture from
+.Fa sourcesu .
+.Pp
+The
+.Fn VIEW_UPDATE
+macro copies
+.Fa rd
+to the dirty rectangle array the event loop will pass to
+.Xr SDL_UpdateRects 3
+when the display is refreshed.
+.Fn VIEW_UPDATE
+is a no-op if OpenGL is enabled.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
@@ -92,43 +155,6 @@ function detaches the window pointed to by
 from the view by adding it to the detach queue.
 The detachment will be performed later by
 .Fa view_detach_queued .
-.Sh VIDEO SURFACES
-.nr nS 1
-.Ft "SDL_Surface *"
-.Fn view_surface "int flags" "int width" "int height"
-.Pp
-.Ft "SDL_Surface *"
-.Fn view_scale_surface "SDL_Surface *source" "Uint16 w" "Uint16 h"
-.Pp
-.Ft void
-.Fn VIEW_UPDATE "SDL_Rect rd"
-.nr nS 0
-.Pp
-The
-.Fn view_surface
-function returns a newly allocated
-.Xr SDL_Surface 3
-adapted to the current display mode.
-.Pp
-The
-.Fn view_scale_surface
-function returns a pointer to a
-.Xr SDL_Surface 3
-structure which holds a copy of
-.Fa source ,
-bitmap-scaled to
-.Fa w
-by
-.Fa h
-pixels.
-.Pp
-The
-.Fn VIEW_UPDATE
-macro copies
-.Fa rd
-to the dirty rectangle array the event loop will pass to
-.Xr SDL_UpdateRects 3
-when the display is refreshed.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr rootmap 3 ,
