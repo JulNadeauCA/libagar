@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.11 2004/03/20 05:00:38 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.12 2004/03/28 06:09:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <config/have_ieee754.h>
 
 #include <engine/engine.h>
+#include <engine/view.h>
 #include <engine/map.h>			/* For TILESZ */
 #include <engine/loader/xcf.h>
 
@@ -57,7 +58,6 @@ static void		 xcf_read_property(struct netbuf *, struct xcf_prop *);
 #define DEBUG_LAYER_NAMES	0x0400
 #define DEBUG_UNKNOWN_PROPS	0x0800
 #define DEBUG_XCF		0x1000
-#define DEBUG_ALPHA		0x2000
 
 int	xcf_debug = 0;
 #define	engine_debug xcf_debug
@@ -277,43 +277,115 @@ xcf_read_tile(struct xcf_header *head, struct netbuf *buf, Uint32 len, int bpp,
 #define XCF_ALPHA_ALPHA		0x02	/* Contains an alpha pixel */
 #define XCF_ALPHA_OPAQUE	0x04	/* Contains an opaque pixel */
 
-/* 32-bit RGBA */
 static void
-xcf_convert_tile32(int tx, int ox, Uint32 **row, Uint32 **p, int *aflags)
+xcf_convert_level(struct netbuf *buf, Uint32 xcfoffs,
+    struct xcf_hierarchy *hier, struct xcf_header *head,
+    struct xcf_level *level, SDL_Surface *su, int *aflags)
 {
-	int x;
-	Uint8 alpha;
+	int tx = 0, ty = 0;
+	int ox, oy;
+	int j;
+
+	for (j = 0; j < level->ntile_offsets; j++) {
+		Uint8 *tile;
+		Uint32 *src;
+		int y;
+
+		netbuf_seek(buf, xcfoffs + level->tile_offsets[j], SEEK_SET);
+		ox = (tx+64 > level->w) ? (level->w % 64) : 64;
+		oy = (ty+64 > level->h) ? (level->h % 64) : 64;
+
+		if (level->tile_offsets[j+1] != 0) {
+			tile = xcf_read_tile(head, buf,
+			    level->tile_offsets[j+1] - level->tile_offsets[j],
+			    hier->bpp, ox, oy);
+		} else {
+			tile = xcf_read_tile(head, buf, ox*oy*6, hier->bpp,
+			    ox, oy);
+		}
+		if (tile == NULL) {
+			dprintf("tile read error\n");
+			return;
+		}
 	
-	for (x = tx; x < tx + ox; x++) {
+		src = (Uint32 *)tile;
+		for (y = ty; y < ty+oy; y++) {
+			Uint8 *dst = (Uint8 *)su->pixels +
+			    y*su->pitch +
+			    tx*su->format->BytesPerPixel;
+			Uint32 color;
+			Uint8 r, g, b, a;
+			int x;
+
+			for (x = tx; x < tx+ox; x++) {
+				switch (hier->bpp) {
+				case 4:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		**row =
-		    (**p & 0x000000ff) |
-		    (**p & 0x0000ff00) |
-		    (**p & 0x00ff0000) |
-		    (**p & 0xff000000);
-		alpha = **row & 0x000000ff;
+					r = (*src & 0xff000000)>>24;
+					g = (*src & 0x00ff0000)>>16;
+					b = (*src & 0x0000ff00)>>8;
+					a = (*src & 0x000000ff);
 #else
-		**row =
-		    (**p & 0xff000000) |
-		    (**p & 0x00ff0000) |
-		    (**p & 0x0000ff00) |
-		    (**p & 0x000000ff);
-		alpha = (**row & 0xff000000) >> 24;
+					r = (*src & 0x000000ff);
+					g = (*src & 0x0000ff00)>>8;
+					b = (*src & 0x00ff0000)>>16;
+					a = (*src & 0xff000000)>>24;
 #endif
-		switch (alpha) {
-		case 0:
-			*aflags |= XCF_ALPHA_TRANSPARENT;
-			break;
-		case 255:
-			*aflags |= XCF_ALPHA_OPAQUE;
-			break;
-		default:
-			*aflags |= XCF_ALPHA_ALPHA;
-			break;
+					break;
+				default:
+					fatal("unsupported xcf depth");
+				}
+
+				color = SDL_MapRGBA(su->format, r, g, b, a);
+
+				switch (su->format->BytesPerPixel) {
+				case 4:
+					*(Uint32 *)dst = color;
+					break;
+				case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+					dst[0] = (color>>16) & 0xff;
+					dst[1] = (color>>8) & 0xff;
+					dst[2] = color & 0xff;
+#else
+					dst[2] = (color>>16) & 0xff;
+					dst[1] = (color>>8) & 0xff;
+					dst[0] = color & 0xff;
+#endif
+					break;
+				case 2:
+					*(Uint16 *)dst = color;
+					break;
+				case 1:
+					*dst = color;
+					break;
+				}
+				dst += su->format->BytesPerPixel;
+				src++;
+
+				switch (a) {
+				case 0:
+					*aflags |= XCF_ALPHA_TRANSPARENT;
+					break;
+				case 255:
+					*aflags |= XCF_ALPHA_OPAQUE;
+					break;
+				default:
+					*aflags |= XCF_ALPHA_ALPHA;
+					break;
+				}
+			}
 		}
 
-		(*row)++;
-		(*p)++;
+		tx += 64;
+		if (tx >= level->w) {
+			tx = 0;
+			ty += 64;
+		}
+		if (ty >= level->h) {
+			break;
+		}
+		Free(tile, M_XCF);
 	}
 }
 
@@ -322,11 +394,10 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
 {
 	struct xcf_hierarchy *hier;
-	int y, tx, ty, ox, oy, i;
-	Uint32 *p;
-	Uint8 *p8, *tile;
 	SDL_Surface *su;
+	Uint32 *p;
 	int aflags = 0;
+	int i;
 
 	su = SDL_CreateRGBSurface(SDL_SWSURFACE, head->w, head->h, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -347,7 +418,7 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	}
 
 	/* Read the hierarchy. */
-	netbuf_seek(buf, xcfoffs + layer->hierarchy_offset, SEEK_SET);
+	netbuf_seek(buf, xcfoffs+layer->hierarchy_offset, SEEK_SET);
 
 	hier = Malloc(sizeof(struct xcf_hierarchy), M_XCF);
 	hier->w = read_uint32(buf);
@@ -375,7 +446,6 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	/* Read the levels. */
 	for (i = 0; i < hier->nlevel_offsets; i++) {
 		struct xcf_level *level;
-		int j;
 
 		netbuf_seek(buf, xcfoffs + hier->level_offsets[i], SEEK_SET);
 		level = Malloc(sizeof(struct xcf_level), M_XCF);
@@ -400,59 +470,8 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 			}
 			level->ntile_offsets++;
 		}
+		xcf_convert_level(buf, xcfoffs, hier, head, level, su, &aflags);
 
-		ty = 0;
-		tx = 0;
-		for (j = 0; j < level->ntile_offsets; j++) {
-			netbuf_seek(buf, xcfoffs + level->tile_offsets[j],
-			    SEEK_SET);
-			ox = (tx + 64 > level->w) ? (level->w % 64) : 64;
-			oy = (ty + 64 > level->h) ? (level->h % 64) : 64;
-
-			if (level->tile_offsets[j + 1] != 0) {
-				tile = xcf_read_tile(head, buf,
-				    level->tile_offsets[j + 1] -
-				    level->tile_offsets[j],
-				    hier->bpp,
-				    ox, oy);
-			} else {
-				tile = xcf_read_tile(head, buf,
-				    ox * oy * 6,
-				    hier->bpp,
-				    ox, oy);
-			}
-			if (tile == NULL)
-				return (NULL);
-
-			p8 = tile;
-			p = (Uint32 *)p8;
-			for (y = ty; y < ty + oy; y++) {
-				Uint32 *row = (Uint32 *)((Uint8 *)su->pixels +
-				    y*su->pitch + tx*4);
-
-				switch (hier->bpp) {
-				case 4:
-					xcf_convert_tile32(tx, ox, &row, &p,
-					    &aflags);
-					break;
-				case 3:
-				case 2:
-				case 1:
-					dprintf("unsupported depth: %dBpp\n",
-					    hier->bpp);
-					break;
-				}
-			}
-			tx += 64;
-			if (tx >= level->w) {
-				tx = 0;
-				ty += 64;
-			}
-			if (ty >= level->h) {
-				break;
-			}
-			Free(tile, M_XCF);
-		}
 		Free(level->tile_offsets, M_XCF);
 		Free(level, M_XCF);
 	}
@@ -468,26 +487,20 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 
 		SDL_SetAlpha(su, 0, 0);
 		SDL_SetColorKey(su, 0, 0);
-		
+	
 		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT)) {
-			debug(DEBUG_ALPHA, "alpha: %s\n", layer->name);
 			SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
-			/*
-			 * XXX noderef_draw_scaled does not understand
-			 * RLE acceleration!
-			 */
 #if 0
 		/* XXX causes some images to be rendered incorrectly */
+		/*
+		 * XXX the noderef_draw_scaled hack does not understand
+		 * RLE acceleration!
+		 */
 		} else if (aflags & XCF_ALPHA_TRANSPARENT) {
-			debug(DEBUG_ALPHA, "colorkey (%u): %s\n", oldckey,
-			    layer->name);
 			SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
 #endif
-		} else {
-			debug(DEBUG_ALPHA, "opaque: %s\n", layer->name);
 		}
 	}
-
 	return (su);
 }
 
