@@ -183,7 +183,7 @@ void
 mapedit_loadmap(struct mapedit *med)
 {
 	struct map *map = med->map;
-	char *path;
+	char path[FILENAME_MAX];
 	int x, y;
 
 	mapedit_setpointer(med, 0);
