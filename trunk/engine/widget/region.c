@@ -38,7 +38,6 @@
 #include <engine/engine.h>
 #include <engine/queue.h>
 #include <engine/map.h>
-#include <engine/version.h>
 
 #include "text.h"
 #include "widget.h"

@@ -33,6 +33,8 @@
 #include "engine.h"
 #include "error.h"
 
+#include "compat/vasprintf.h"
+
 extern pthread_key_t engine_errorkey;	/* engine.c */
 
 void *
