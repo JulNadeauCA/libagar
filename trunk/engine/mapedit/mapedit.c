@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.107 2002/07/06 23:53:06 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.108 2002/07/07 00:24:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -123,6 +123,9 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		if ((ob->flags & OBJ_ART) == 0 ||
 		   (ob->art->nsprites < 1 && ob->art->nanims < 1)) {
 			dprintf("skipping %s (no art)\n", ob->name);
+			continue;
+		}
+		if (ob == OBJECT(med)) {
 			continue;
 		}
 
