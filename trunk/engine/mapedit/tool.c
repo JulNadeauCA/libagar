@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.2 2004/04/10 04:55:15 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.3 2004/04/10 22:05:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -150,7 +150,7 @@ tool_push_status(struct tool *t, const char *fmt, ...)
 		return;
 
 	va_start(ap, fmt);
-	vasprintf(&t->status[t->nstatus++], fmt, ap);
+	Vasprintf(&t->status[t->nstatus++], fmt, ap);
 	va_end(ap);
 	tool_update_status(t);
 }
