@@ -1,8 +1,5 @@
-# $Csoft: configure.in,v 1.52 2003/01/21 10:13:34 vedge Exp $
+# $Csoft: configure.in,v 1.53 2003/02/26 02:04:52 vedge Exp $
 # Public domain
-
-makeout(Makefile.config);
-inclout(config);
 
 register("--with-smpeg",	"Play videos through smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
@@ -18,6 +15,10 @@ register("--help",		"Show this message");
 if [ "${help}" = "yes" ]; then
 	help();
 fi
+
+makeout(Makefile.config);
+inclout(config);
+logout(config.log);
 
 # Define the data directories.
 mdefine(SHAREDIR, "$PREFIX/share/cave");
