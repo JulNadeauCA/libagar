@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.99 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.100 2005/03/11 08:56:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1009,9 +1009,15 @@ widget_focus(void *p)
 	struct widget *wid = p, *pwid = wid;
 	struct window *pwin;
 
+	if ((wid->flags & WIDGET_FOCUSABLE) == 0)
+		return;
+
 	/* Remove focus from other widgets inside this window. */
 	pwin = widget_parent_window(wid);
 	if (pwin != NULL) {
+		if (pwin->flags & WINDOW_INHIBIT_FOCUS) {
+			return;
+		}
 		widget_unset_focus(pwin);
 	} else {
 		dprintf("%s: no parent window\n", OBJECT(wid)->name);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.249 2005/03/11 08:56:33 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.250 2005/04/02 04:30:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -98,7 +98,9 @@ focus_existing(const char *name)
 		if (strlen(OBJECT(owin)->name) >= 4 &&
 		    strcmp(OBJECT(owin)->name+4, name) == 0) {
 			window_show(owin);
-			view->focus_win = owin;
+			if ((owin->flags & WINDOW_INHIBIT_FOCUS) == 0) {
+				view->focus_win = owin;
+			}
 		    	return (1);
 		}
 	}
@@ -348,9 +350,10 @@ shown(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	int init = (WIDGET(win)->x == -1 && WIDGET(win)->y == -1);
 
-	view->focus_win = win;
-	window_focus(win);
-	
+	if ((win->flags & WINDOW_INHIBIT_FOCUS) == 0) {
+		view->focus_win = win;
+		window_focus(win);
+	}
 	if (win->flags & WINDOW_MODAL)
 		view->modal_win = win;
 
@@ -376,10 +379,11 @@ static void
 hidden(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
-	
-	/* Remove the focus. XXX cycle */
-	view->focus_win = NULL;
-	
+
+	if ((win->flags & WINDOW_INHIBIT_FOCUS) == 0) {
+		/* Remove the focus. XXX cycle */
+		view->focus_win = NULL;
+	}
 	if (win->flags & WINDOW_MODAL)
 		view->modal_win = NULL;
 
@@ -649,11 +653,10 @@ window_event(SDL_Event *ev)
 	struct window *win;
 	struct widget *wid;
 	int focus_changed = 0;
+	struct window *focus_saved = view->focus_win;
 
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:
-//		dprintf("SDL_MOUSEBUTTONDOWN(%d,%d,%d)\n",
-//		    ev->button.button, ev->button.x, ev->button.y);
 		/* Focus on the highest overlapping window. */
 		view->focus_win = NULL;
 		TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
@@ -663,15 +666,17 @@ window_event(SDL_Event *ev)
 				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
-			view->focus_win = win;
+			if (win->flags & WINDOW_INHIBIT_FOCUS) {
+				view->focus_win = focus_saved;
+			} else {
+				view->focus_win = win;
+				focus_changed++;
+			}
 			pthread_mutex_unlock(&win->lock);
 			break;
 		}
-		focus_changed++;
 		break;
 	case SDL_MOUSEBUTTONUP:
-//		dprintf("SDL_MOUSEBUTTONUP(%d,%d,%d)\n",
-//		    ev->button.button, ev->button.x, ev->button.y);
 		view->winop = VIEW_WINOP_NONE;
 		break;
 	}

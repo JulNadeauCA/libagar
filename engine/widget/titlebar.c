@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.21 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.22 2005/03/11 05:13:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -190,6 +190,7 @@ titlebar_mousebuttondown(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&view->lock);
 	view->winop = VIEW_WINOP_MOVE;
+	view->focus_win = tbar->win;
 	view->wop_win = tbar->win;
 	pthread_mutex_unlock(&view->lock);
 }
