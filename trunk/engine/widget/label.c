@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.66 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.67 2003/06/13 01:44:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -171,7 +171,11 @@ label_set_surface(struct label *label, SDL_Surface *su)
 	if (label->surface != NULL) {
 		SDL_FreeSurface(label->surface);
 	}
-	label->surface = view_copy_surface(su);;
+	if (su != NULL) {
+		label->surface = view_copy_surface(su);;
+	} else {
+		label->surface = NULL;
+	}
 	pthread_mutex_unlock(&label->lock);
 }
 
