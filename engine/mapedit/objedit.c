@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.31 2004/03/20 02:44:58 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.32 2004/03/20 07:24:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -61,11 +61,14 @@ create_obj(int argc, union evarg *argv)
 	struct textbox *name_tb = argv[2].p;
 	struct textbox *type_tb = argv[3].p;
 	struct tlist_item *parent_it;
+	struct object *pobj;
 	void *nobj;
 	int i;
 
-	if ((parent_it = tlist_item_selected(objs_tl)) == NULL)
+	if ((parent_it = tlist_item_selected(objs_tl)) == NULL) {
 		parent_it = tlist_item_first(objs_tl);
+	}
+	pobj = parent_it->p1;
 
 	textbox_copy_string(type_tb, type, sizeof(type));
 	if (type[0] == '\0') {
@@ -83,8 +86,18 @@ create_obj(int argc, union evarg *argv)
 
 	textbox_copy_string(name_tb, name, sizeof(name));
 	if (name[0] == '\0') {
-		text_msg(MSG_ERROR, _("No object name was specified."));
-		return;
+		unsigned int nameno = 0;
+		struct object *ch;
+tryname:
+		snprintf(name, sizeof(name), _("New %s #%d"), type, nameno);
+		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
+			if (strcmp(ch->name, name) == 0)
+				break;
+		}
+		if (ch != NULL) {
+			nameno++;
+			goto tryname;
+		}
 	}
 
 	nobj = Malloc(typesw[i].size, M_OBJECT);
@@ -93,7 +106,7 @@ create_obj(int argc, union evarg *argv)
 	} else {
 		object_init(nobj, typesw[i].type, name, NULL);
 	}
-	object_attach(parent_it->p1, nobj);
+	object_attach(pobj, nobj);
 }
 
 enum {
