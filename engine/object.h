@@ -1,38 +1,49 @@
-/*	$Csoft: object.h,v 1.69 2003/03/13 08:43:31 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.70 2003/03/22 04:26:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
 
 #include <engine/prop.h>
+#include <engine/physics.h>
 #include <engine/media/art.h>
 
 struct map;
 struct noderef;
-struct mapdir;
-struct mappos;
 struct input;
 struct event;
 
+/* Generic object operations */
 struct object_ops {
-	void	(*destroy)(void *);		/* Free resources */
-	int	(*load)(void *, int);		/* Load from fd */
-	int	(*save)(void *, int);		/* Save to fd */
+	void	(*destroy)(void *);			/* Free resources */
+	int	(*load)(void *, struct netbuf *);	/* Load from network */
+	int	(*save)(void *, struct netbuf *);	/* Save to network */
 };
 
+/* Object dependency table */
 struct object_table {
 	struct object	**objs;
 	Uint32		 nobjs;
 	int		 *used;
 };
 
-#define OBJECT_TYPE_MAX	128
-#define OBJECT_NAME_MAX	256
+/* Unique position in the world */
+struct object_position {
+	struct map	*map;		/* Map (or NULL) */
+	int		 x, y;		/* Map coordinates */
+	int		 layer;		/* Current layer */
+	int		 center;	/* Center the view around this */
+	struct map	*submap;	/* Current submap */
+	struct input	*input;		/* Controller (or NULL) */
+	struct mapdir	 dir;		/* Map direction (not saved) */
+};
+
+#define OBJECT_TYPE_MAX		128
+#define OBJECT_NAME_MAX		256
 
 struct object {
-	/* Read-only once attached */
-	char			*type;	/* Type of object. */
-	char			*name;	/* Key */
+	char			*type;	/* Type of object */
+	char			*name;	/* Identification string */
 	const struct object_ops	*ops;	/* Generic operations */
 	int			 flags;
 #define OBJECT_ART		0x01	/* Load graphics */
@@ -50,22 +61,19 @@ struct object {
 		OBJECT_DETACHED		/* Inconsistent/Detached */
 	} state;
 	struct art		*art;	/* Graphical data (independent) */
+	SLIST_ENTRY(object)	 wobjs;	/* Parent's list */
 
-	/* Read-write */
-	struct mappos		*pos;		/* Unique position on a map */
-	pthread_mutex_t		 pos_lock;
-	TAILQ_HEAD(, event)	 events;	/* Event handlers */
+	pthread_mutex_t		 lock;
+	struct object_position	*pos;		/* Position on a map */
+	SLIST_HEAD(, object)	 childs;	/* Child objects */
+
 	pthread_mutex_t		 events_lock;
-	pthread_mutexattr_t	 events_lockattr;
-	TAILQ_HEAD(, prop)	 props;		/* Generic properties */
+	TAILQ_HEAD(, event)	 events;	/* Event handlers */
 	pthread_mutex_t		 props_lock;
-	pthread_mutexattr_t	 props_lockattr;
-
-	SLIST_ENTRY(object) wobjs;		/* Parent's list */
+	TAILQ_HEAD(, prop)	 props;		/* Generic properties */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
-#define OBJECT_OPS(ob)	(((struct object *)(ob))->ops)
 
 #ifdef DEBUG
 # define OBJECT_ASSERT(ob, typestr) do {				\
@@ -77,26 +85,33 @@ struct object {
 # define OBJECT_ASSERT(ob, type)
 #endif
 
-struct object	*object_new(char *, char *, char *, int, const void *);
+struct object	*object_new(void *, char *, char *, char *, int, const void *);
 void		 object_init(struct object *, char *, char *, char *,
 		     int, const void *);
-int		 object_load(void *);
-int		 object_load_from(void *, char *);
-int		 object_save(void *);
+void		 object_attach(void *, void *);
+void		 object_detach(void *, void *);
+int		 object_load(void *, char *);
+int		 object_save(void *, char *);
 void		 object_destroy(void *);
+void		 object_free_childs(struct object *);
+void		 object_free_props(struct object *);
+void	 	 object_free_events(struct object *);
 int		 object_path(char *, const char *, char *, size_t);
-void		 object_control(void *, struct input *, int);
-void		 object_set_position(void *, struct noderef *, struct map *,
-		     int, int);
-void		 object_move(void *, struct map *, int, int);
-int		 object_vanish(void *);
 
-struct object_table	*object_table_new(void);
-void			 object_table_destroy(struct object_table *);
-void			 object_table_insert(struct object_table *,
-			     struct object *);
-void			 object_table_save(struct fobj_buf *,
-			     struct object_table *);
-struct object_table	*object_table_load(int, char *);
+int		 object_control(void *, char *);
+void		 object_center(void *);
+void		 object_load_submap(void *, char *);
+int		 object_set_submap(void *, char *);
+
+void		 object_set_position(void *, struct map *, int, int, int);
+void		 object_unset_position(void *);
+void		 object_save_position(void *, struct netbuf *);
+int		 object_load_position(void *, struct netbuf *);
+
+void	 object_table_init(struct object_table *);
+void	 object_table_destroy(struct object_table *);
+void	 object_table_insert(struct object_table *, struct object *);
+void	 object_table_save(struct object_table *, struct netbuf *);
+int	 object_table_load(struct object_table *, struct netbuf *, char *);
 
 #endif	/* _AGAR_OBJECT_H */
