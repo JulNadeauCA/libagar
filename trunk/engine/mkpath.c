@@ -1,4 +1,4 @@
-/*	$Csoft: mkpath.c,v 1.1 2003/06/02 00:10:55 vedge Exp $	*/
+/*	$Csoft: mkpath.c,v 1.2 2003/06/14 00:24:07 vedge Exp $	*/
 /*	$OpenBSD: mkdir.c,v 1.14 2002/07/04 04:26:40 deraadt Exp $	*/
 /*	$NetBSD: mkdir.c,v 1.14 1995/06/25 21:59:21 mycroft Exp $	*/
 
@@ -37,6 +37,8 @@ char mkpath_copyright[] =
 	The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
 
+#include <compat/dir.h>
+
 #include <engine/engine.h>
 
 #include <sys/types.h>
@@ -74,7 +76,7 @@ mkpath(char *path, mode_t mode, mode_t dir_mode)
 
 		if (stat(pathp, &sb)) {
 			if (errno != ENOENT ||
-			    (mkdir(pathp, done ? mode : dir_mode) &&
+			    (compat_mkdir(pathp, done ? mode : dir_mode) &&
 			    errno != EEXIST)) {
 				error_set("%s: %s", pathp, strerror(errno));
 				return (-1);
