@@ -1,4 +1,4 @@
-.\"	$Csoft: world.3,v 1.2 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: world.3,v 1.3 2003/01/16 04:07:05 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,7 +38,7 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-layer manages the list of active objects.
+layer manages the list of active objects in a game.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
@@ -77,9 +77,6 @@ descriptor
 .Ft void
 .Fn world_detach "struct object *child"
 .Pp
-.Ft int
-.Fn world_exists "struct object *obj"
-.Pp
 .Ft void *
 .Fn world_find "char *name"
 .nr nS 0
@@ -96,15 +93,10 @@ function detaches the object
 from the world.
 .Pp
 The
-.Fn world_exists
-function returns non-zero if the object
-.Fa obj
-is attached.
-The
 .Fn world_find
-function looks up the object list for an object named by the null-terminated
-string
-.Fa name .
+function searches the active objects for
+.Fa name ,
+and returns NULL if there is no such object.
 .Sh SEE ALSO
 .Xr agar 3 .
 .Sh HISTORY
