@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.48 2002/06/09 10:27:26 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.49 2002/06/12 20:38:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -136,7 +136,7 @@ view_freemask(struct viewport *v)
 {
 	int y;
 
-	for (y = 0; y < v->maph; y++) {
+	for (y = 0; y < v->vmaph; y++) {
 		free(*(v->mapmask + y));
 	}
 	free(v->mapmask);
@@ -278,10 +278,10 @@ view_fullscreen(int full)
 
 /*
  * Center the view.
- * Map/view must be locked.
+ * Map must be locked.
  */
 void
-view_center(int mapx, int mapy)
+view_center(struct map *m, int mapx, int mapy)
 {
 	struct viewport *v = mainview;
 	int nx, ny;
@@ -293,10 +293,10 @@ view_center(int mapx, int mapy)
 		nx = 0;
 	if (ny <= 0)
 		ny = 0;
-	if (nx > (v->map->mapw - v->mapw))
-		nx = (v->map->mapw - v->mapw);
-	if (ny > (v->map->maph - v->maph))
-		ny = (v->map->maph - v->maph);
+	if (nx >= (m->mapw - v->mapw))
+		nx = (m->mapw - v->mapw);
+	if (ny >= (m->maph - v->maph))
+		ny = (m->maph - v->maph);
 
 	v->mapx = nx;
 	v->mapy = ny;
@@ -304,7 +304,7 @@ view_center(int mapx, int mapy)
 
 /* XXX later */
 void
-scroll(struct map *m, int dir)
+view_scroll(struct map *m, int dir)
 {
 	switch (dir) {
 	case DIR_UP:
