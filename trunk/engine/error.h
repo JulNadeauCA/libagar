@@ -1,20 +1,14 @@
-/*	$Csoft: error.h,v 1.10 2002/12/13 07:51:46 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.11 2002/12/26 07:11:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef __GNUC__
 # define warning(fmt, args...) \
 	printf("%s: " fmt, __FUNCTION__ , ##args)
 # ifdef DEBUG
-#  define fatal(fmt, args...)					\
-	do {							\
-		printf("%s: " fmt, __FUNCTION__ , ##args);	\
-		abort();					\
-	} while (0)
-# else
-#  define fatal(fmt, args...)					\
-	do {							\
-		printf("%s: " fmt, __FUNCTION__ , ##args);	\
-		engine_stop();					\
+#  define fatal(fmt, args...)						\
+	do {								\
+		fprintf(stderr, "%s: " fmt, __FUNCTION__ , ##args);	\
+		abort();						\
 	} while (0)
 # endif
 #else
@@ -42,7 +36,7 @@ void		 error_set(const char *, ...);
 	if (_Read_rv == -1) { 						\
 		fatal("read(%ld): %s\n", (long)size, strerror(errno));	\
 	}								\
-	if (_Read_rv != size) {					\
+	if (_Read_rv != size) {						\
 		fatal("read(%ld): read %ld bytes\n", (long)size,	\
 		    (long)_Read_rv);					\
 	}								\
@@ -51,7 +45,7 @@ void		 error_set(const char *, ...);
 #define Write(fd, buf, size) do {					\
 	ssize_t _Write_rv;						\
 									\
-	_Write_rv = write((fd), (buf), (size));			\
+	_Write_rv = write((fd), (buf), (size));				\
 	if (_Write_rv == -1) {						\
 		fatal("write(%ld): %s\n", (long)size, strerror(errno));	\
 	}								\
