@@ -227,15 +227,15 @@ structure is not locked by the caller thread.
 .Sh GRAPHICS
 .nr nS 1
 .Ft "void"
-.Fn object_add_sprite "struct object_art *art" "SDL_Surface *surface" \
+.Fn media_add_sprite "struct object_art *art" "SDL_Surface *surface" \
                       "Uint32 mflags" "int map_tiles"
 .Pp
 .Ft "void"
-.Fn object_break_sprite "struct object_art *art" "SDL_Surface *surface"
+.Fn media_break_sprite "struct object_art *art" "SDL_Surface *surface"
 .nr nS 0
 .Pp
 The
-.Fn object_add_sprite
+.Fn media_add_sprite
 function adds
 .Fa surface
 to the
@@ -254,7 +254,7 @@ and
 arguments are only relevant when map edition mode is in use.
 .Pp
 The
-.Fn object_break_sprite
+.Fn media_break_sprite
 function divides an arbitrary-size
 .Xr SDL_Surface 3
 into several surfaces of
@@ -264,26 +264,26 @@ by
 and attaches those surfaces to the
 .Fa art
 structure.
-.Sh GARBAGE COLLECTION
+.Sh MEDIA GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"
-.Fn object_init_gc "void"
+.Fn media_init_gc "void"
 .Pp
 .Ft "Uint32"
-.Fn object_start_gc "Uint32 ival" "void *arg"
+.Fn media_start_gc "Uint32 ival" "void *arg"
 .Pp
 .Ft "void"
-.Fn object_destroy_gc "void"
+.Fn media_destroy_gc "void"
 .nr nS 0
 .Pp
 The
-.Fn object_init_gc
-function initializes the garbage collector.
+.Fn media_init_gc
+function initializes the media garbage collector.
 The thread-safe
-.Fn object_start_gc
-function executes garbage collection.
+.Fn media_start_gc
+function frees unused media.
 The
-.Fn object_destroy_gc
+.Fn media_destroy_gc
 function frees resources used by the garbage collector.
 .Sh LOOKUP
 .nr nS 1
