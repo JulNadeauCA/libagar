@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.73 2002/08/24 23:56:57 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.74 2002/08/25 10:59:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -66,43 +66,7 @@ static const struct event_proto {
 } protos[] = {
 	/* Generic */
 	{ "attached", "%p" },				/* object */
-	{ "detached", "%p" },				/* object */
-	
-	/*
-	 * Widget type
-	 */
-	
-	/* Change in visibility */
-	{ "widget-shown", "%p" },			/* window */
-	{ "widget-hidden", "%p" },			/* window */
-	
-	/* Button pushed */
-	{ "button-pushed", NULL },
-	/* Checkbox status changed to i */
-	{ "checkbox-changed", "%i" },    		/* state */
-	/* Text s was entered in textbox */
-	{ "textbox-return", "%s" },			/* text */
-	/* String s was altered */
-	{ "textbox-changed", "%s" },			/* string, char */
-	/* Radio selection changed */
-	{ "radio-changed", "%c, %i" },			/* char, index */
-
-	/*
-	 * Window type
-	 */
-
-	/* Low-level events */
-	{ "window-mousebuttonup", "%i, %i, %i" },	/* button, x, y */
-	{ "window-mousebuttondown", "%i, %i, %i" },	/* button, x, y */
-	{ "window-mousemotion", "%i, %i, %i, %i" },	/* x, y, xrel, yrel */
-	{ "window-mouseout", NULL },
-	{ "window-keyup", "%i, %i" },			/* keysym, keymod */
-	{ "window-keydown", "%i, %i" },			/* keysym, keymod */
-	/* Widget was just scaled */
-	{ "widget-scaled", "%i, %i" },			/* width, height */
-	/* Change in visibility */
-	{ "window-shown", NULL },
-	{ "window-hidden", NULL }
+	{ "detached", "%p" }				/* object */
 };
 
 static struct window *fps_win;
@@ -459,7 +423,7 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 	struct event *eev;
 
 #ifdef DEBUG
-	if (engine_debug)
+	if (event_debug)
 		event_checkproto(ob, name, NULL);
 #endif
 
@@ -510,7 +474,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 	struct event *eev, *neev;
 
 #ifdef DEBUG
-	if (engine_debug)
+	if (event_debug)
 		event_checkproto(ob, name, fmt);
 #endif
 
