@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.2 2003/03/11 03:40:00 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.3 2003/03/24 12:08:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,9 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
+#include <engine/compat/snprintf.h>
 
-#include <engine/physics.h>
+#include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/view.h>
 
@@ -63,13 +63,12 @@ layedit_poll(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	for (i = 0; i < m->nlayers; i++) {
 		struct map_layer *layer = &m->layers[i];
-		char *text;
+		char text[MAP_LAYER_NAME_MAX + 32];
 
-		Asprintf(&text, "%s (%svisible%s)\n",
+		snprintf(text, sizeof(text), "%s (%svisible%s)\n",
 		    layer->name, !layer->visible ? "in" : "",
 		    (i == mv->cur_layer) ? ", editing" : "");
 		tlist_insert_item(tl, NULL, text, layer);
-		free(text);
 	}
 	tlist_restore_selections(tl);
 
