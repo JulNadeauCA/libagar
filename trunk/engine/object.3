@@ -52,7 +52,7 @@ Each object structure holds optional entry points,
 .Pp
 .Bd -literal
 struct obvec {
-	int	(*destroy)(void *ob);		/* called before destroy */
+	void	(*destroy)(void *ob);		/* called before destroy */
 	int	(*load)(void *ob, int fd);	/* load from fd */
 	int	(*save)(void *ob, int fd);	/* save to fd */
 	int	(*link)(void *ob);		/* called before link */
@@ -73,9 +73,9 @@ functions.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn object_init "struct object *ob" "char *name" "int flags" "struct obvec *vec"
+.Fn object_init "struct object *ob" "char *name" "char *arname" "int flags" "struct obvec *vec"
 .Pp
-.Ft "int"
+.Ft "void"
 .Fn object_destroy "struct object *ob"
 .Pp
 .Ft "int"
@@ -87,7 +87,19 @@ functions.
 .Pp
 .Fn object_init
 initializes
-.Fa ob .
+.Fa ob
+and loads data from
+.Fa arname
+into the static media pool, if
+.Fa arname
+is not NULL.
+If
+.Fa flags
+contains
+.Dv OBJ_ART
+or
+.Dv OBJ_AUDIO ,
+graphics and samples are loaded from media.
 .Fn object_destroy
 frees all resources allocated for
 .Fa ob
