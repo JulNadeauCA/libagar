@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.63 2005/01/29 02:49:14 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.64 2005/01/30 05:38:41 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -97,7 +97,7 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 	if (widget_holds_focus(wid)) {
 		bcol = widget_push_color(wid, (z < 0) ?
 		    alter_color(color, -14, -13, -4) :
-		    alter_color(color, 30, 30, 0));
+		    alter_color(color, 20, 20, 20));
 	} else {
 		bcol = widget_push_color(wid, (z < 0) ?
 		    alter_color(color, -20, -20, -20) :
