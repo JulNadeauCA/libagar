@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.3 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.4 2004/04/30 05:24:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -85,11 +85,19 @@ vg_origin3(struct vg *vg, int o, double ox, double oy, double oz)
 			vgb->pos.y -= oy - vg->origin[0].y;
 			vgb->pos.z -= oz - vg->origin[0].z;
 		}
+		for (i = 1; i < vg->norigin; i++) {
+			vg->origin[i].x -= ox - vg->origin[0].x;
+			vg->origin[i].y -= oy - vg->origin[0].y;
+			vg->origin[i].z -= oz - vg->origin[0].z;
+		}
+		vg->origin[0].x = ox;
+		vg->origin[0].y = oy;
+		vg->origin[0].z = oz;
+	} else {
+		vg->origin[o].x = ox - vg->origin[0].x;
+		vg->origin[o].y = oy - vg->origin[0].y;
+		vg->origin[o].z = oz - vg->origin[0].z;
 	}
-
-	vg->origin[o].x = ox;
-	vg->origin[o].y = oy;
-	vg->origin[o].z = oz;
 }
 
 void
