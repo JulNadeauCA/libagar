@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.3 2002/01/28 05:31:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.4 2002/01/30 12:44:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -47,6 +47,7 @@ struct	map *curmap;
 struct	mapedit	*curmapedit;
 int	mapedit;
 
+static int	 map_link(void *);
 static int	 map_load(void *, char *);
 static int	 map_save(void *, char *);
 static void	 map_destroy(struct object *);
@@ -58,8 +59,7 @@ static Uint32	 map_draw(Uint32, void *);
 static Uint32	 map_animate(Uint32, void *);
 
 struct map *
-map_create(char *name, char *desc, int flags, int width, int height,
-    struct viewport *view, char *path)
+map_create(char *name, char *desc, int flags, int width, int height, char *path)
 {
 	size_t mapsize = 0;
 	struct map *em;
@@ -80,11 +80,11 @@ map_create(char *name, char *desc, int flags, int width, int height,
 	em->obj.save = map_save;
 
 	em->flags = flags;
-	em->maph = (height != -1) ? height : MAP_HEIGHT;
-	em->mapw = (width != -1) ? width : MAP_WIDTH;
+	em->maph = height;
+	em->mapw = width;
 	em->defx = em->mapw / 2;
 	em->defy = em->maph - 1;
-	em->view = (view != NULL) ? view : mainview;
+	em->view = mainview;
 	em->view->map = em;
 
 	if (pthread_mutex_init(&em->lock, NULL) != 0) {
@@ -92,26 +92,29 @@ map_create(char *name, char *desc, int flags, int width, int height,
 		goto maperr;
 	}
 
-	/* Initialize the nodes. */
-	for (y = 0; y < height; y++) {
-		for (x = 0; x < width ; x++) {
-			if (map_entry_init(&em->map[x][y], NULL, 0, 0, 0) < 0) {
-				return (NULL);
+	if (path != NULL) {
+		/* Load this map from a file. */
+		map_load(em, path);
+		mapsize = (em->mapw * em->maph) * sizeof(struct map_entry);
+	} else {
+		/* Initialize an empty map. */
+		for (y = 0; y < height; y++) {
+			for (x = 0; x < width; x++) {
+				if (map_entry_init(&em->map[x][y], NULL,
+				    0, 0, 0) < 0) {
+					return (NULL);
+				}
+				mapsize += sizeof(struct map_entry);
 			}
-			mapsize += sizeof(struct map_entry);
 		}
 	}
-
-	dprintf("%s: geo %dx%d flags 0x%x base %dKb\n", name, width, height,
-	    flags, (int)mapsize / 1024);
-
-	if (path != NULL) {
-		/*
-		 * This will modify the name, description, flags and
-		 * geometry.
-		 */
-		map_load(em, path);
-	}
+	
+	dprintf("%s: geo %dx%d flags 0x%x base %dKb\n", em->obj.name,
+	    em->mapw, em->mapw,
+	    em->flags, (int)mapsize / 1024);
+	dprintf("%s: tilegeo %dx%d origin %dx%d\n", em->obj.name,
+	    em->view->tilew, em->view->tileh,
+	    em->defx, em->defy);
 
 	map_link(em);
 	object_link(em);
@@ -134,10 +137,8 @@ int
 map_animset(struct map *em, int tog)
 {
 	if (tog > 0) {
-		em->view->mapanimt = SDL_AddTimer(em->view->fps * 3,
+		em->view->mapanimt = SDL_AddTimer(em->view->fps * 2,
 		    map_animate, em);
-		dprintf("animations enabled\n");
-	
 		if (em->view->mapanimt == NULL) {
 			fatal("SDL_AddTimer: %s\n", SDL_GetError());
 			return (0);
@@ -145,7 +146,6 @@ map_animset(struct map *em, int tog)
 	} else {
 		if (em->view->mapanimt != NULL) {
 			SDL_RemoveTimer(em->view->mapanimt);
-			dprintf("animations disabled\n");
 			em->view->mapanimt = NULL;
 		}
 	}
@@ -159,8 +159,8 @@ map_focus(struct map *em)
 	curmap = em;
 
 	if (mapedit) {
-		char s[1024];
-
+		char s[128];
+		
 		sprintf(s, "%s (edition)", em->obj.name);
 		SDL_WM_SetCaption(s, "mapedit");
 	} else {
@@ -169,7 +169,7 @@ map_focus(struct map *em)
 	return (0);
 }
 
-int
+static int
 map_link(void *objp)
 {
 	if (pthread_mutex_lock(&world->lock) == 0) {
@@ -200,7 +200,6 @@ map_entry_init(struct map_entry *me, struct object *ob, int offs,
 		map_entry_addref(me, ob, offs, rflags);
 		me->flags |= meflags;
 	}
-
 	return (0);
 }
 
@@ -333,6 +332,7 @@ map_plot_sprite(struct map *em, SDL_Surface *s, int mapx, int mapy)
 #ifdef DEBUG
 	if (s == NULL) {
 		fatal("NULL surface\n");
+		abort();
 	}
 #endif
 
@@ -649,10 +649,9 @@ map_entry_aref(struct map_entry *me, int index)
 			return (aref);
 		}
 	}
-#endif
-
+#else
 	return (g_slist_nth_data(me->objs, index));
-
+#endif
 	return (NULL);
 }
 
