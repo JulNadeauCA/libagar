@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.14 2003/01/01 05:18:38 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.15 2003/01/19 12:09:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -78,15 +78,6 @@ magnifier_window(void *p)
 	struct magnifier *mag = p;
 	struct window *win;
 	struct region *reg;
-	struct radio *rad;
-	struct button *button;
-	struct textbox *tbox;
-	static char *mode_items[] = {
-		"Zoom in",
-		"Zoom out",
-		"Center",
-		NULL
-	};
 
 	win = window_new("mapedit-tool-magnifier", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
@@ -94,26 +85,39 @@ magnifier_window(void *p)
 	    109, 171);
 	window_set_caption(win, "Magnifier");
 
-	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
-	rad = radio_new(reg, mode_items, 0);
-	event_new(rad, "radio-changed", magnifier_event,
-	    "%p, %c", mag, 'm');
-	
-	/* Original size button */
+	{
+		struct radio *rad;
+		static const char *mode_items[] = {
+			"Zoom in",
+			"Zoom out",
+			"Center",
+			NULL
+		};
+
+		rad = radio_new(reg, mode_items);
+		widget_bind(rad, "value", WIDGET_INT, NULL, &mag->mode);
+		win->focus = WIDGET(rad);
+	}
+
 	reg = region_new(win, REGION_VALIGN, 0, 50, 97, 20);
-	button = button_new(reg, "0:0", NULL, 0, 100, 100);
-	event_new(button, "button-pushed", magnifier_event,
-	    "%p, %c", mag, 'o');
+	{
+		struct button *button;
 
-	/* Scale textbox */
+		button = button_new(reg, "0:0", NULL, 0, 100, 100);
+		event_new(button, "button-pushed", magnifier_event,
+		    "%p, %c", mag, 'o');
+	}
+
 	reg = region_new(win, REGION_VALIGN, 0, 70, 97, 30);
-	tbox = textbox_new(reg, "%: ", 0, 100, 100);	/* XXX int */
-	event_new(tbox, "textbox-changed", magnifier_event,
-	    "%p, %c", mag, 's');
-	textbox_printf(tbox, "100");
+	{
+		struct textbox *tbox;
 
-	win->focus = WIDGET(rad);
+		tbox = textbox_new(reg, "%: ", 0, 100, 100);	/* XXX int */
+		event_new(tbox, "textbox-changed", magnifier_event,
+		    "%p, %c", mag, 's');
+		textbox_printf(tbox, "100");
+	}
 
 	return (win);
 }
@@ -127,18 +131,13 @@ magnifier_event(int argc, union evarg *argv)
 	OBJECT_ASSERT(mag, "tool");
 
 	switch (argv[2].c) {
-	case 'm':
-		mag->mode = argv[4].i;
-		break;
 	case 'o':
-		mv = tool_mapview();
-		if (mv != NULL) {
+		if ((mv = tool_mapview()) != NULL) {
 			mapview_zoom(mv, 100);
 		}
 		break;
 	case 's':
-		mv = tool_mapview();
-		if (mv != NULL) {
+		if ((mv = tool_mapview()) != NULL) {
 			struct textbox *tbox = argv[0].p;
 			int fac;
 

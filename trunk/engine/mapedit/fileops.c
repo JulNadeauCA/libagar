@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.25 2003/01/18 08:08:09 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.26 2003/01/23 03:17:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -74,7 +74,8 @@ fileops_new_map_window(struct mapedit *med)
 
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
-		button = button_new(reg, "OK", NULL, 0, 50, 100);
+		button = button_new(reg, "Ok", NULL, BUTTON_NOFOCUS,
+		    50, 100);
 		event_new(button, "button-pushed", fileops_new_map,
 		    "%p, %p, %p, %p",
 		    med, name_tbox, w_tbox, h_tbox);
@@ -82,9 +83,10 @@ fileops_new_map_window(struct mapedit *med)
 		    "%p, %p, %p, %p",
 		    med, name_tbox, w_tbox, h_tbox);
 		
-		button = button_new(reg, "Cancel", NULL, 0, 50, 100);
+		button = button_new(reg, "Cancel", NULL, BUTTON_NOFOCUS,
+		    50, 100);
 		event_new(button, "button-pushed", window_generic_hide,
-		    "%p",  win);
+		    "%p", win);
 	}
 
 	return (win);
@@ -110,9 +112,7 @@ fileops_load_map_window(struct mapedit *med)
 	
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 	{
-		button = button_new(reg, "OK", NULL, 0, 50, 100);
-		WIDGET(button)->flags |=
-		    WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+		button = button_new(reg, "OK", NULL, BUTTON_NOFOCUS, 50, 100);
 		event_new(button, "button-pushed", fileops_load_map,
 		    "%p, %p", med, name_tbox);
 		event_new(name_tbox, "textbox-return", fileops_load_map,

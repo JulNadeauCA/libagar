@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.15 2003/01/19 12:09:40 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.16 2003/01/20 12:06:57 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapedit;
@@ -17,8 +17,8 @@ struct mapview {
 	int	 prop_bg;	/* Background of node attributes */
 	int	 prop_style;	/* Style of node attributes */
 
-	struct {		/* For scrolling */
-		int	move;		/* Currently scrolling? */
+	struct {
+		int	scrolling;	/* Currently scrolling? */
 		int	x, y;		/* Current mouse position */
 	} mouse;
 

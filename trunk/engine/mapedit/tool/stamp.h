@@ -1,12 +1,14 @@
-/*	$Csoft: stamp.h,v 1.2 2002/07/09 08:25:21 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.3 2003/01/19 12:09:42 vedge Exp $	*/
 /*	Public domain	*/
+
+enum stamp_mode {
+	STAMP_REPLACE,
+	STAMP_INSERT_HIGHEST
+};
 
 struct stamp {
 	struct tool	tool;
-	enum {
-		STAMP_REPLACE,
-		STAMP_INSERT_HIGHEST,
-	} mode;
+	int		mode;
 };
 
 struct stamp	*stamp_new(void);

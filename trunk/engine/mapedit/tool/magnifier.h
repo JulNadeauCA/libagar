@@ -1,13 +1,15 @@
-/*	$Csoft: magnifier.h,v 1.2 2002/07/18 12:02:55 vedge Exp $	*/
+/*	$Csoft: magnifier.h,v 1.3 2003/01/19 12:09:42 vedge Exp $	*/
 /*	Public domain	*/
+
+enum magnifier_mode {
+	MAGNIFIER_ZOOM_IN,
+	MAGNIFIER_ZOOM_OUT,
+	MAGNIFIER_CENTER
+};
 
 struct magnifier {
 	struct tool	tool;
-	enum {
-		MAGNIFIER_ZOOM_IN,
-		MAGNIFIER_ZOOM_OUT,
-		MAGNIFIER_CENTER
-	} mode;
+	int		mode;
 };
 
 struct magnifier	*magnifier_new(void);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.48 2003/01/23 07:03:53 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.49 2003/01/24 08:26:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 #include "mapview.h"
 
 #include "tool/tool.h"
+#include "tool/shift.h"
 
 static const struct widget_ops mapview_ops = {
 	{
@@ -155,12 +156,43 @@ mapview_node_poll(int argc, union evarg *argv)
 	pthread_mutex_unlock(&m->lock);
 }
 
+static void
+mapview_init_node_win(struct mapview *mv)
+{
+	struct map *m = mv->map;
+	struct window *win;
+	struct region *reg;
+
+	win = window_generic_new(268, 346, "mapedit-node-%s-%s",
+	    OBJECT(mv)->name, OBJECT(m)->name);
+	if (win == NULL) {
+		fatal("node win exists\n");
+	}
+	window_set_caption(win, "%s node", OBJECT(m)->name);
+	window_set_min_geo(win, 185, 170);
+	event_new(win, "window-close", mapview_node_win_close, "%p", mv);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	{
+		struct label *lab;
+		struct tlist *tl;
+
+		lab = label_new(reg, 100, 50, "...");
+	
+		tl = tlist_new(reg, 100, 50, TLIST_POLL|TLIST_MULTI);
+		tlist_set_item_height(tl, TILEH);
+		event_new(tl, "tlist-poll", mapview_node_poll, "%p, %p, %p",
+		    lab, m, mv);
+		mv->node_tlist = tl;
+	}
+
+	mv->node_win = win;
+}
+
 void
 mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
 {
-	struct region *reg;
-
 	widget_init(&mv->wid, "mapview", &mapview_ops, rw, rh);
 	mv->wid.flags |= WIDGET_CLIPPING;
 
@@ -172,7 +204,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
 	mv->prop_style = -1; 
-	mv->mouse.move = 0;
+	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
 	mv->constr.mode = MAPVIEW_CONSTR_VERT;
@@ -203,27 +235,8 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
 	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
 	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
-	
-	/* Create the node edition window. */
-	mv->node_win = window_generic_new(268, 346, "mapedit-node-%s",
-	    OBJECT(m)->name);
-	event_new(mv->node_win, "window-close",
-	    mapview_node_win_close, "%p", mv);
 
-	window_set_caption(mv->node_win, "%s node", OBJECT(m)->name);
-	reg = region_new(mv->node_win, REGION_VALIGN, 0, 0, 100, 100);
-	{
-		struct label *lab;
-		struct tlist *tl;
-
-		lab = label_new(reg, 100, 50, "...");
-	
-		tl = tlist_new(reg, 100, 50, TLIST_POLL|TLIST_MULTI);
-		tlist_set_item_height(tl, TILEH);
-		event_new(tl, "tlist-poll", mapview_node_poll, "%p, %p, %p",
-		    lab, m, mv);
-		mv->node_tlist = tl;
-	}
+	mapview_init_node_win(mv);
 }
 
 static __inline__ void
@@ -525,33 +538,49 @@ mapview_mousemotion(int argc, union evarg *argv)
 	struct mapedit *med = mv->med;
 	int x = argv[1].i / mv->map->tilew;
 	int y = argv[2].i / mv->map->tileh;
+	int xrel = argv[3].i;
+	int yrel = argv[4].i;
+	Uint8 mouse;
+
+	mouse = SDL_GetMouseState(NULL, NULL);
 
 	/* Scroll */
-	if (mv->mouse.move) {
+	if (mv->mouse.scrolling) {
 		mapview_scroll(mv,
 		    (mv->mouse.x < x) ? DIR_LEFT :
 		    (mv->mouse.x > x) ? DIR_RIGHT :
 		    (mv->mouse.y < y) ? DIR_UP :
 		    (mv->mouse.y > y) ? DIR_DOWN : 0);
-	} else if (mv->flags & MAPVIEW_EDIT && med->curtool != NULL &&
-	    TOOL_OPS(med->curtool)->tool_effect != NULL) {
-		if ((x != mv->mouse.x || y != mv->mouse.y) &&
-		    (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(1)) &&
-		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-		    (mv->mx+x < mv->map->mapw && mv->my+y < mv->map->maph)) {
-			TOOL_OPS(med->curtool)->tool_effect(med->curtool,
-			    mv, mv->mx+x, mv->my+y);
+	} else if (mv->flags & MAPVIEW_EDIT) {
+		if ((SDL_GetModState() & KMOD_SHIFT) ||
+		    (mouse & SDL_BUTTON(2))) {
+			shift_mouse(med->tools.shift, mv, xrel, yrel);
+		} else if (med->curtool != NULL &&
+		    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+			if ((x != mv->mouse.x || y != mv->mouse.y) &&
+			    (mouse & SDL_BUTTON(1)) &&
+			    (x >= 0 && y >= 0 &&
+			     x < mv->mw && y < mv->mh) &&
+			    (mv->mx+x < mv->map->mapw &&
+			     mv->my+y < mv->map->maph)) {
+				TOOL_OPS(med->curtool)->tool_effect(
+				    med->curtool, mv, mv->mx+x, mv->my+y);
+			}
 		}
 	}
 	if (mv->flags & MAPVIEW_TILEMAP) {
-		if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK &&
+		if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) &&
 		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
 		    (mv->mx+x < mv->map->mapw) &&
 		    (mv->my+y < mv->map->maph)) {
-			med->src_node = &mv->map->map[mv->my+y][mv->mx+x];
+			struct node *srcnode= &mv->map->map[mv->my+y][mv->mx+x];
+			
+			if (!TAILQ_EMPTY(&srcnode->nrefs)) {
+				med->src_node = srcnode;
+			}
 		}
 	}
-	
+
 	mv->mouse.x = x;
 	mv->mouse.y = y;
 }
@@ -564,10 +593,23 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	int button = argv[1].i;
 	int x = argv[2].i / mv->map->tilew;
 	int y = argv[3].i / mv->map->tileh;
+	struct node *srcnode = NULL;
 	
 	WIDGET_FOCUS(mv);
-	if (button != 1) {
-		mv->mouse.move++;
+
+	if (x >= 0 && mv->mx+x <= mv->map->mapw &&
+	    y >= 0 && mv->my+y <= mv->map->maph) {
+		srcnode = &mv->map->map[mv->my+y][mv->mx+x];
+	} else {
+		return;
+	}
+
+	switch (button) {
+	case 2:
+		mv->cur_node = srcnode;
+		return;
+	case 3:
+		mv->mouse.scrolling++;
 		return;
 	}
 
@@ -579,14 +621,18 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			TOOL_OPS(med->curtool)->tool_effect(med->curtool,
 			    mv, mv->mx+x, mv->my+y);
 		}
-		
-		mv->cur_node = &mv->map->map[mv->my+y][mv->mx+x];
+
 		if (mv->flags & MAPVIEW_TILEMAP) {
 			if ((SDL_GetModState() & KMOD_CTRL)) {
 				mv->constr.x = mv->mx+x;
 				mv->constr.y = mv->my+y;
 			}
-			med->src_node = mv->cur_node;
+
+			if (!TAILQ_EMPTY(&srcnode->nrefs)) {
+				med->src_node = srcnode;
+			}
+		} else {
+			mv->cur_node = &mv->map->map[mv->my+y][mv->mx+x];
 		}
 	}
 }
@@ -597,8 +643,10 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	int button = argv[1].i;
 
-	if (button > 1) {
-		mv->mouse.move = 0;
+	switch (button) {
+	case 3:
+		mv->mouse.scrolling = 0;
+		break;
 	}
 }
 
