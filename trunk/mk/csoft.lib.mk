@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.20 2002/09/19 22:13:08 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.21 2002/11/27 04:51:19 vedge Exp $
 
 # Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
 # All rights reserved.
@@ -178,7 +178,7 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                 ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
-        fi
+	fi
 
 deinstall:	deinstall-subdir
 	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \

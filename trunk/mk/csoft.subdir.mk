@@ -35,6 +35,9 @@ all-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
@@ -48,6 +51,9 @@ clean-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
@@ -61,6 +67,9 @@ install-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ install); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
@@ -75,6 +84,9 @@ deinstall-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
@@ -88,6 +100,9 @@ depend-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ depend); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
@@ -101,6 +116,9 @@ cleandir-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ cleandir); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
@@ -114,6 +132,9 @@ regress-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ regress); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
 		done; \
 	fi)
 
