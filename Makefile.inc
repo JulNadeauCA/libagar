@@ -1,10 +1,13 @@
-#	$Csoft: Makefile.inc,v 1.4 2002/02/18 02:01:01 vedge Exp $
+#	$Csoft: Makefile.inc,v 1.5 2002/02/18 03:53:04 vedge Exp $
+#	ex:syn=make
 
-CFLAGS+=	-I${TOP}
-CFLAGS+=	-Wall -Werror -Wmissing-prototypes -Wunused -g -DDEBUG
+CFLAGS?=
+# XXX gcc
+CFLAGS+=	-Wall -Werror -Wmissing-prototypes -Wunused
+CFLAGS+=	-g -DDEBUG
 
 SHAREDIR=	${PREFIX}/share/geggy
-CFLAGS+=	-DSHAREDIR=\"${SHAREDIR}\"
+CFLAGS+=	-I${TOP} -DSHAREDIR=\"${SHAREDIR}\"
 
 include ${TOP}/libfobj/Makefile.inc
 include ${TOP}/Makefile.config
