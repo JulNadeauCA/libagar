@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.9 2003/07/05 12:20:29 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.10 2003/07/28 15:29:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -52,16 +52,19 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
+#include <engine/widget/spinbutton.h>
 
 #include "monitor.h"
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t xmit_lock = PTHREAD_MUTEX_INITIALIZER;
 static int default_port = 1173;
 static int sock = -1;
+static int aflag = 0;
+static int xmit_delay = 1000;
 
-static struct button *connectbu, *disconnectbu;
 static struct textbox *hosttb, *porttb;
-static struct label *statusl;
+static char status[128];
 
 static struct jpeg_error_mgr		 jerrmgr;
 static struct jpeg_compress_struct	 jcomp;
@@ -110,8 +113,16 @@ screenshot_xmit(int fd)
 	for (;;) {
 		JSAMPROW row[1];
 		int x;
-	
-		label_printf(statusl, _("Status: xmit frame %d."), nframe);
+
+		pthread_mutex_lock(&xmit_lock);
+		if (aflag) {
+			aflag = 0;
+			pthread_mutex_unlock(&xmit_lock);
+			break;
+		}
+
+		snprintf(status, sizeof(status),
+		    _("Transmitting frame %d"), nframe);
 
 		jpeg_start_compress(&jcomp, TRUE);
 
@@ -145,10 +156,11 @@ screenshot_xmit(int fd)
 			row[0] = jcopybuf;
 			jpeg_write_scanlines(&jcomp, row, 1);
 		}
-
 		jpeg_finish_compress(&jcomp);
-		SDL_Delay(1000);
+		SDL_Delay(xmit_delay);
 		nframe++;
+
+		pthread_mutex_unlock(&xmit_lock);
 	}
 	free(jcopybuf);
 	jpeg_destroy_compress(&jcomp);
@@ -158,30 +170,29 @@ screenshot_xmit(int fd)
 static void
 screenshot_connect(int argc, union evarg *argv)
 {
-	char *host, *port;
+	char host[256];
+	char port[32];
 	struct addrinfo hints, *res, *res0;
 	const char *cause = "";
 	int rv;
 	
 	pthread_mutex_lock(&lock);
-	button_disable(connectbu);
-	button_disable(disconnectbu);
 
 	if (sock != -1) {
 		text_msg(MSG_ERROR, _("Already connected to a server."));
 		goto out1;
 	}
 
-	host = textbox_string(hosttb);
-	port = textbox_string(porttb);
+	textbox_copy_string(hosttb, host, sizeof(host));
+	textbox_copy_string(porttb, port, sizeof(port));
 
-	if (strcmp(host, "") == 0 ||
-	    strcmp(port, "") == 0) {
+	if (host[0] == '\0' || port[0] == '\0') {
 		text_msg(MSG_ERROR, _("Missing server hostname/port."));
-		goto out2;
+		goto out1;
 	}
 
-	label_printf(statusl, _("Status: connecting to %s:%s..."), host, port);
+	snprintf(status, sizeof(status),
+	    _("Connecting to %s:%s.."), host, port);
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
@@ -189,7 +200,7 @@ screenshot_connect(int argc, union evarg *argv)
 	if ((rv = getaddrinfo(host, port, &hints, &res0)) != 0) {
 		text_msg(MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
-		label_printf(statusl, _("Status: %s."), gai_strerror(rv));
+		snprintf(status, sizeof(status), "%s", gai_strerror(rv));
 		goto out2;
 	}
 
@@ -210,38 +221,28 @@ screenshot_connect(int argc, union evarg *argv)
 	}
 	if (sock == -1) {
 		text_msg(MSG_ERROR, "%s: %s", host, cause);
-		label_printf(statusl, _("Status: %s: %s."), host, cause);
-		goto out3;
+		snprintf(status, sizeof(status), "%s: %s", host, cause);
+		goto out2;
 	}
 
-	label_printf(statusl, _("Status: connected to %s."), host);
+	snprintf(status, sizeof(status), _("Connected to %s"), host);
 	screenshot_xmit(sock);
-out3:
-	freeaddrinfo(res0);
+	close(sock);
+	sock = -1;
 out2:
-	free(host);
-	free(port);
+	freeaddrinfo(res0);
 out1:
-	button_enable(connectbu);
-	button_enable(disconnectbu);
 	pthread_mutex_unlock(&lock);
 }
 
 static void
 screenshot_disconnect(int argc, union evarg *argv)
 {
-	pthread_mutex_lock(&lock);
-	button_disable(connectbu);
-	button_disable(disconnectbu);
-	if (sock != -1) {
-		close(sock);
-		label_printf(statusl, _("Status: disconnected."));
-	} else {
-		text_msg(MSG_ERROR, _("Not connected."));
-	}
-	button_enable(connectbu);
-	button_enable(disconnectbu);
-	pthread_mutex_unlock(&lock);
+	pthread_mutex_lock(&xmit_lock);
+	aflag++;
+	pthread_mutex_unlock(&xmit_lock);
+
+	snprintf(status, sizeof(status), _("Disconnected"));
 }
 
 struct window *
@@ -250,34 +251,44 @@ screenshot_window(void)
 	struct window *win;
 	struct vbox *vb;
 	struct hbox *hb;
-
+	struct label *lab;
+	struct spinbutton *sbu;
+	
 	if ((win = window_new("monitor-screenshot")) == NULL)
 		return (NULL);
 
 	window_set_caption(win, _("Screenshot"));
 	window_set_closure(win, WINDOW_DETACH);
 
-	vb = vbox_new(win, 0);
-	WIDGET(vb)->flags |= WIDGET_CLIPPING;
+	vb = vbox_new(win, VBOX_WFILL);
 	{
-		statusl = label_new(vb, _("Status: Not connected."));
+		strlcpy(status, _("Idle"), sizeof(status));
+		lab = label_polled_new(vb, NULL, _("Status: %s."), &status);
+		label_prescale(lab, _("Transmitting frame XXXXXXXXXXX"));
+		WIDGET(lab)->flags |= WIDGET_CLIPPING;
+
 		hosttb = textbox_new(vb, _("Host: "));
 		porttb = textbox_new(vb, _("Port: "));
+
+		sbu = spinbutton_new(vb, _("Refresh rate (ms): "));
+		spinbutton_set_min(sbu, 1);
+		widget_bind(sbu, "value", WIDGET_INT, &xmit_lock, &xmit_delay);
+		spinbutton_set_max(sbu, 10000);
 		textbox_printf(porttb, "%i", default_port);
 	}
 
-	hb = hbox_new(win, 01);
+	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
 	{
 		struct event *ev;
+		struct button *bu;
 
-		connectbu = button_new(hb, _("Connect"));
-		ev = event_new(connectbu, "button-pushed", screenshot_connect,
-		    NULL);
+		bu = button_new(hb, _("Connect"));
+		ev = event_new(bu, "button-pushed", screenshot_connect, NULL);
 		ev->flags |= EVENT_ASYNC;
 		
-		disconnectbu = button_new(hb, _("Disconnect"));
-		ev = event_new(disconnectbu, "button-pushed",
-		    screenshot_disconnect, NULL);
+		bu = button_new(hb, _("Disconnect"));
+		ev = event_new(bu, "button-pushed", screenshot_disconnect,
+		    NULL);
 		ev->flags |= EVENT_ASYNC;
 	}
 	return (win);
