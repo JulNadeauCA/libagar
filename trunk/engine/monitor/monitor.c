@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.51 2004/03/12 02:48:17 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.52 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -65,11 +65,12 @@ monitor_init(struct monitor *mon, const char *name)
 #if defined(THREADS) && defined(HAVE_JPEG)
 		{ N_("Screenshot"), screenshot_window },
 #endif
-		{ N_("Widgets"), widget_debug_window },
-		{ N_("Viewport"), view_params_window },
-		{ N_("Resident graphics"), gfx_debug_window },
-		{ N_("Unicode conversion"), uniconv_window },
 		{ N_("Leak detection"), leak_window },
+		{ N_("Resident graphics"), gfx_debug_window },
+		{ N_("Running timers"), timeouts_window },
+		{ N_("Unicode conversion"), uniconv_window },
+		{ N_("Viewport"), view_params_window },
+		{ N_("Widgets"), widget_debug_window },
 	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
 	struct tlist *tl_tools;
@@ -81,13 +82,13 @@ monitor_init(struct monitor *mon, const char *name)
 	window_set_caption(mon->toolbar, _("Debug monitor"));
 	window_set_position(mon->toolbar, WINDOW_LOWER_LEFT, 0);
 
-	tl_tools = tlist_new(mon->toolbar, 0);
+	tl_tools = tlist_new(mon->toolbar, TLIST_STATIC_ICONS);
 	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
 	event_new(tl_tools, "tlist-changed", select_tool, NULL);
 
 	for (i = 0; i < ntool_ents; i++) {
-		tlist_insert_item(tl_tools, NULL, _(tool_ents[i].name),
-		    tool_ents[i].window_func);
+		tlist_insert_item(tl_tools, ICON(OBJ_ICON),
+		    _(tool_ents[i].name), tool_ents[i].window_func);
 	}
 }
 
