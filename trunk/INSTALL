@@ -21,22 +21,22 @@ INSTALLATION
 2) Build dependencies with the depend target.
    $ make depend
 
-3) Compile the library, binaries, archives (and man pages if nroff(1) is there).
+3) Compile the library, binaries, archives and man pages (if nroff(1) is there).
    $ make
 
-4) Install the library, binaries, data files and manual pages. If prefix
-   is /usr/local, /usr/local/share/agar/man should be registered with man(1).
+4) Install the library, binaries, data files and manual pages. People hacking
+   the Agar source tree may skip this step and use -l (see below).
    # make install
-
-   Alternatively, if you are hacking the agar source, invoke the `links'
-   target in the application's directory to create ~/.cave symbolic links
-   to data files inside the source tree.
-   $ cd ./cave && make links
 
 6) Execute the game by running `cave'.
    $ cave
-
+   
    The level editor (if compiled in), is invoked with the -e flag.
    $ cave -e
 
-$Csoft: INSTALL,v 1.8 2002/12/28 06:20:21 vedge Exp $
+   Developers who wish to load data files directly from the source tree may
+   use -l to override the load path (the setting is saved to ~/.cave and thus
+   only needs to be specified once):
+   $ ./cave -e -l /path/to/builddir:/path/to/srcdir
+
+$Csoft: INSTALL,v 1.9 2003/01/02 20:34:45 vedge Exp $
