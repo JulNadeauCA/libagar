@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.17 2002/02/18 11:46:08 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.18 2002/02/19 01:50:51 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -63,9 +63,9 @@ struct mapedit {
 	struct	gendir listw_dir;	/* Tile list window direction */
 	struct	gendir olistw_dir;	/* Obj list window direction */
 	
-	struct	window *tilelist;	/* Tile list (right) */
-	struct	window *tilestack;	/* Tile stack (left) */
-	struct	window *objlist;	/* Object list (top) */
+	SDL_Rect	tilelist;	/* Tile list (right) */
+	SDL_Rect	tilestack;	/* Tile stack (left) */
+	SDL_Rect	objlist;	/* Object list (top) */
 
 	SDL_TimerID timer;
 };
