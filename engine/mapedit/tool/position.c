@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.15 2004/03/30 15:56:53 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.16 2004/04/10 02:43:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -77,7 +77,7 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	if (pob->flags & OBJECT_DATA_RESIDENT) {
 		strlcat(label, _(" (resident)"), sizeof(label));
 	}
-	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
+	it = tlist_insert_item(tl, object_icon(pob), label, pob);
 	it->depth = depth;
 
 	if (!TAILQ_EMPTY(&pob->children)) {
@@ -133,7 +133,7 @@ poll_projmaps(int argc, union evarg *argv)
 	tlist_clear_items(tl);
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
 		if (strcmp(child->type, "map") == 0) {
-			tlist_insert_item(tl, OBJECT_ICON(child), child->name,
+			tlist_insert_item(tl, object_icon(child), child->name,
 			    child);
 		}
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.35 2004/03/31 00:24:09 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.36 2004/04/10 02:43:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -44,15 +44,13 @@
 #include "objedit.h"
 
 struct objent {
-	struct object *obj;			/* Object being edited */
-	struct window *win;			/* Generic edition window */
+	struct object *obj;
+	struct window *win;
 	TAILQ_ENTRY(objent) objs;
 };
+static TAILQ_HEAD(,objent) dobjs;
+static TAILQ_HEAD(,objent) gobjs;
 
-static TAILQ_HEAD(,objent) dobjs;		/* Data edited objects */
-static TAILQ_HEAD(,objent) gobjs;		/* Generic edited objects */
-
-/* Create a new object. */
 static void
 create_obj(int argc, union evarg *argv)
 {
@@ -111,8 +109,8 @@ tryname:
 }
 
 enum {
-	OBJEDIT_EDIT,
-	OBJEDIT_EDIT_OBJ,
+	OBJEDIT_EDIT_DATA,
+	OBJEDIT_EDIT_GENERIC,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
 	OBJEDIT_DESTROY,
@@ -122,7 +120,7 @@ enum {
 };
 
 static void
-close_generic_obj(int argc, union evarg *argv)
+close_obj_generic(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
@@ -133,9 +131,8 @@ close_generic_obj(int argc, union evarg *argv)
 	Free(oent, M_MAPEDIT);
 }
 
-/* Edit the generic part of an object. */
 static void
-open_generic_obj(struct object *ob)
+open_obj_generic(struct object *ob)
 {
 	struct objent *oent;
 	
@@ -156,10 +153,9 @@ open_generic_obj(struct object *ob)
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
 	window_show(oent->win);
 
-	event_new(oent->win, "window-close", close_generic_obj, "%p", oent);
+	event_new(oent->win, "window-close", close_obj_generic, "%p", oent);
 }
 
-/* Close an object derivate data edition window. */
 static void
 close_obj_data(int argc, union evarg *argv)
 {
@@ -173,7 +169,6 @@ close_obj_data(int argc, union evarg *argv)
 	Free(oent, M_MAPEDIT);
 }
 
-/* Edit the data part of an object. */
 static void
 open_obj_data(struct object *ob)
 {
@@ -203,9 +198,8 @@ open_obj_data(struct object *ob)
 	event_new(oent->win, "window-close", close_obj_data, "%p", oent);
 }
 
-/* Execute a generic operation on the selected objects. */
 static void
-invoke_op(int argc, union evarg *argv)
+obj_op(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
@@ -218,13 +212,13 @@ invoke_op(int argc, union evarg *argv)
 			continue;
 
 		switch (op) {
-		case OBJEDIT_EDIT:
+		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
 				open_obj_data(ob);
 			}
 			break;
-		case OBJEDIT_EDIT_OBJ:
-			open_generic_obj(ob);
+		case OBJEDIT_EDIT_GENERIC:
+			open_obj_generic(ob);
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {
@@ -285,12 +279,13 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 	char label[TLIST_LABEL_MAX];
 	struct object *cob;
 	struct tlist_item *it;
+	SDL_Surface *icon;
 
 	strlcpy(label, pob->name, sizeof(label));
 	if (pob->flags & OBJECT_DATA_RESIDENT) {
 		strlcat(label, _(" (resident)"), sizeof(label));
 	}
-	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
+	it = tlist_insert_item(tl, object_icon(pob), label, pob);
 	it->depth = depth;
 
 	if (!TAILQ_EMPTY(&pob->children)) {
@@ -331,6 +326,7 @@ objedit_window(void)
 	    *destroy_bu, *dup_bu, *mvup_bu, *mvdown_bu;
 	struct combo *types_com;
 	struct tlist *objs_tl;
+	struct toolbar *tbar;
 
 	win = window_new("mapedit-objedit");
 	window_set_caption(win, _("Object editor"));
@@ -339,7 +335,6 @@ objedit_window(void)
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
 	{
-		struct hbox *hb;
 		int i;
 
 		name_tb = textbox_new(vb, _("Name: "));
@@ -349,81 +344,45 @@ objedit_window(void)
 			char label[TLIST_LABEL_MAX];
 
 			strlcpy(label, typesw[i].type, sizeof(label));
-			tlist_insert_item(types_com->list, NULL, label,
-			    &typesw[i]);
+			tlist_insert_item(types_com->list,
+			    typesw[i].icon >= 0 ? ICON(typesw[i].icon) : NULL,
+			    label, &typesw[i]);
 		}
-
-		hb = hbox_new(vb, BOX_HOMOGENOUS|HBOX_WFILL);
-		hbox_set_spacing(hb, 1);
-		hbox_set_padding(hb, 1);
-		{
-			create_bu = button_new(hb, NULL);
-			button_set_label(create_bu,
-			    SPRITE(&mapedit,OBJCREATE_ICON));
-
-			edit_bu = button_new(hb, NULL);
-			button_set_label(edit_bu,
-			    SPRITE(&mapedit,OBJEDIT_ICON));
-
-			oedit_bu = button_new(hb, NULL);
-			button_set_label(oedit_bu,
-			    SPRITE(&mapedit,OBJEDIT_GENERIC_ICON));
-
-			load_bu = button_new(hb, NULL);
-			button_set_label(load_bu,
-			    SPRITE(&mapedit,OBJLOAD_ICON));
-
-			save_bu = button_new(hb, NULL);
-			button_set_label(save_bu,
-			    SPRITE(&mapedit,OBJSAVE_ICON));
-
-			dup_bu = button_new(hb, NULL);
-			button_set_label(dup_bu,
-			    SPRITE(&mapedit,OBJDUP_ICON));
-
-			mvup_bu = button_new(hb, NULL);
-			button_set_label(mvup_bu,
-			    SPRITE(&mapedit,OBJMOVEUP_ICON));
-
-			mvdown_bu = button_new(hb, NULL);
-			button_set_label(mvdown_bu,
-			    SPRITE(&mapedit,OBJMOVEDOWN_ICON));
-
-			destroy_bu = button_new(hb, NULL);
-			button_set_label(destroy_bu,
-			    SPRITE(&mapedit,TRASH_ICON));
-		}
+	
+		tbar = toolbar_new(vb, TOOLBAR_HORIZ, 1);
 
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
 		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 6);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
+
+		toolbar_add_button(tbar, 0, ICON(OBJCREATE_ICON), 0, 0,
+		    create_obj, "%p, %p, %p", objs_tl, name_tb,
+		    types_com->tbox);
+
+		toolbar_add_button(tbar, 0, ICON(OBJEDIT_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
+		toolbar_add_button(tbar, 0, ICON(OBJGENEDIT_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
+
+		toolbar_add_button(tbar, 0, ICON(OBJLOAD_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_LOAD);
+		toolbar_add_button(tbar, 0, ICON(OBJSAVE_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_SAVE);
+
+		toolbar_add_button(tbar, 0, ICON(OBJDUP_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
+		toolbar_add_button(tbar, 0, ICON(OBJMOVEUP_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_UP);
+		toolbar_add_button(tbar, 0, ICON(OBJMOVEDOWN_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_DOWN);
+		toolbar_add_button(tbar, 0, ICON(TRASH_ICON), 0, 0,
+		    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 	}
 
 	event_new(name_tb, "textbox-return", create_obj, "%p, %p, %p", objs_tl,
 	    name_tb, types_com->tbox);
 	event_new(types_com->tbox, "textbox-return", create_obj, "%p, %p, %p",
 	    objs_tl, name_tb, types_com->tbox);
-
-	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p", objs_tl,
-	    name_tb, types_com->tbox);
-
-	event_new(edit_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_EDIT);
-	event_new(oedit_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_EDIT_OBJ);
-	event_new(load_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_LOAD);
-	event_new(save_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_SAVE);
-
-	event_new(dup_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_DUP);
-	event_new(mvup_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_MOVE_UP);
-	event_new(mvdown_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_MOVE_DOWN);
-	event_new(destroy_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
-	    OBJEDIT_DESTROY);
 
 	window_show(win);
 	return (win);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.200 2004/03/30 23:44:52 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.201 2004/04/10 02:43:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,7 +70,6 @@ mapedit_init(void)
 	int i;
 	
 	object_init(&mapedit, "object", "map-editor", &mapedit_ops);
-	object_wire_gfx(&mapedit, "/engine/mapedit/mapedit");
 	OBJECT(&mapedit)->flags |= (OBJECT_RELOAD_PROPS|OBJECT_STATIC);
 	OBJECT(&mapedit)->save_pfx = "/map-editor";
 
@@ -118,7 +117,7 @@ mapedit_init(void)
 		struct button *bu;
 	
 		bu = button_new(bo, NULL);
-		button_set_label(bu, SPRITE(&mapedit,OBJECT_EDITOR_ICON));
+		button_set_label(bu, ICON(OBJECT_EDITOR_ICON));
 		event_new(bu, "button-pushed", window_generic_show, "%p",
 		    objedit_win);
 	}

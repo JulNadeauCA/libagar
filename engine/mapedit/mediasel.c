@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.9 2004/03/21 07:01:33 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.10 2004/04/10 02:43:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -188,7 +188,6 @@ mediasel_scan_dens(struct mediasel *msel, const char *hint, const char *spath)
 					*ext = '\0';
 					tlist_insert_item(msel->com->list, NULL,
 					    path, NULL);
-					/* TODO icon */
 				}
 				den_close(den);
 			}
@@ -524,9 +523,10 @@ mediasel_init(struct mapview *mv, struct window *pwin)
 		};
 		struct button *bu;
 
+		/* XXX use toolbar */
 		for (i = 0; i < 4; i++) {
 			bu = button_new(hb, NULL);
-			button_set_label(bu, SPRITE(&mapedit, icons[i]));
+			button_set_label(bu, ICON(icons[i]));
 			event_new(bu, "button-pushed", import_media,
 			    "%p, %p, %i, %p", tl, mv, i, ob);
 		}
