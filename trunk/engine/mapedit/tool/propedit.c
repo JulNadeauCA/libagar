@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.18 2003/02/10 23:13:08 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.19 2003/02/13 11:30:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -106,8 +106,8 @@ propedit_window(void *p)
 
 	win = window_new("mapedit-tool-propedit", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    140, 196,
-	    140, 196);
+	    140, 358,
+	    140, 358);
 	window_set_caption(win, "Node props");
 
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
