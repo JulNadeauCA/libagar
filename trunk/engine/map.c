@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.35 2002/02/17 08:01:14 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.36 2002/02/17 10:39:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include <libfobj/fobj.h>
 
 #include <engine/engine.h>
+#include <engine/version.h>
 #include <engine/mapedit/mapedit.h>
 
 static struct obvec map_vec = {
@@ -155,10 +156,6 @@ map_focus(struct map *m)
 	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
 	world->curmap = m;
-
-	if (curmapedit == NULL) {
-		SDL_WM_SetCaption(m->obj.name, "mapedit");
-	}
 
 	if (pthread_create(&m->draw_th, NULL, map_draw_th, m) != 0) {
 		perror("draw_th");
@@ -377,34 +374,17 @@ map_animate(struct map *m)
 
 	pthread_mutex_lock(&m->lock);
 
-	for (y = m->view->mapy, vy = 0;
-	    (y < m->view->maph + m->view->mapy + 1);
+	for (y = m->view->mapy, vy = m->view->mapyoffs;
+	    (vy < m->view->maph);
 	     y++, vy++) {
 
-		/* XXX */
-		if (curmapedit != NULL &&
-		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
-			vy++;
-		}
-	
-		for (x = m->view->mapx, vx = 0;
-		     x < m->view->mapw + m->view->mapx + 1;
+		for (x = m->view->mapx, vx = m->view->mapxoffs;
+		     vx < m->view->mapw;
 		     x++, vx++) {
 			static struct node *node;
 			static struct noderef *nref;
 			static SDL_Surface *src;
 			static int rx, ry;
-
-			/* XXX */
-			if (curmapedit != NULL) {
-				if (curmapedit != NULL) {
-					if (vx == m->view->mapw - 1) {
-						continue;
-					} else if (vx == 0) {
-						vx++;
-					}
-				}
-			}
 
 			node = &m->map[x][y];
 
@@ -519,30 +499,15 @@ map_draw(struct map *m)
 
 	pthread_mutex_lock(&m->lock);
 
-	for (y = m->view->mapy, vy = 0;
-	     y < m->view->maph + m->view->mapy + 1;
+	for (y = m->view->mapy, vy = m->view->mapyoffs;
+	     vy < m->view->maph;
 	     y++, vy++) {
 
-	     	/* XXX */
-		if (curmapedit != NULL &&
-		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
-			vy++;
-		}
-
-		for (x = m->view->mapx, vx = 0;
-		     x < m->view->mapw + m->view->mapx + 1;
+		for (x = m->view->mapx, vx = m->view->mapxoffs;
+		     vx < m->view->mapw;
 		     x++, vx++) {
 			static struct node *node;
 			static struct noderef *nref;
-
-			if (curmapedit != NULL) {
-				/* XXX */
-				if (vx == 0) {
-					vx++;
-				} else if (vx == m->view->mapw) {
-					continue;
-				}
-			}
 
 			node = &m->map[x][y];
 
@@ -571,16 +536,11 @@ map_draw(struct map *m)
 	}
 
 	if (curmapedit != NULL) {
-		if (curmapedit->flags & MAPEDIT_TILELIST)
-			mapedit_tilelist(curmapedit);
-		if (curmapedit->flags & MAPEDIT_OBJLIST)
-			mapedit_objlist(curmapedit);
-		if (curmapedit->flags & MAPEDIT_TILESTACK)
-			mapedit_tilestack(curmapedit);
+		mapedit_tilestack(curmapedit);
 	}
 	pthread_mutex_unlock(&m->lock);
 
-	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
+	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);	/* XXX waste */
 }
 
 /*
@@ -639,8 +599,8 @@ map_load(void *ob, int fd)
 	    m->obj.name, vermaj, vermin, m->flags, m->mapw, m->maph,
 	    m->tilew, m->tileh);
 
-	/* Reset the video mode. */
-	view_setmap(m->view, m);
+	/* Adapt the viewport to this tile geometry. */
+	view_setmode(m->view, m, -1, NULL);
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
