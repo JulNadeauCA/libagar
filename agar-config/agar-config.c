@@ -1,4 +1,4 @@
-/*	$Csoft: agar-config.c,v 1.5 2004/04/25 07:35:23 vedge Exp $	*/
+/*	$Csoft: agar-config.c,v 1.6 2004/06/24 01:00:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -36,19 +36,36 @@
 #include <config/ttfdir.h>
 #include <config/localedir.h>
 
+#include <config/have_smpeg.h>
+#include <config/have_x11.h>
+#include <config/have_freetype.h>
+#include <config/have_opengl.h>
+#include <config/have_jpeg.h>
+
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
+#include <config/math_libs.h>
+
+#ifdef HAVE_SMPEG
 #include <config/smpeg_libs.h>
 #include <config/smpeg_cflags.h>
+#endif
+#ifdef HAVE_X11
 #include <config/x11_libs.h>
 #include <config/x11_cflags.h>
+#endif
+#ifdef HAVE_FREETYPE
 #include <config/freetype_libs.h>
 #include <config/freetype_cflags.h>
+#endif
+#ifdef HAVE_OPENGL
 #include <config/opengl_libs.h>
 #include <config/opengl_cflags.h>
-#include <config/math_libs.h>
+#endif
+#ifdef HAVE_JPEG
 #include <config/jpeg_libs.h>
 #include <config/jpeg_cflags.h>
+#endif
 
 #include <stdio.h>
 #include <string.h>
