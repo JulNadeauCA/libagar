@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.13 2003/06/18 01:10:15 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.14 2003/06/22 22:18:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -139,8 +139,12 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 
 	it = tlist_insert_item(tl, OBJECT_ICON(pob), pob->name, pob);
 	it->depth = depth;
-	it->haschilds = !TAILQ_EMPTY(&pob->childs);
-	if (it->haschilds && tlist_visible_childs(tl, it)) {
+
+	if (!TAILQ_EMPTY(&pob->childs)) {
+		it->flags |= TLIST_HAS_CHILDREN;
+	}
+	if ((it->flags & TLIST_HAS_CHILDREN) &&
+	    tlist_visible_childs(tl, it)) {
 		TAILQ_FOREACH(cob, &pob->childs, cobjs)
 			find_objs(tl, cob, depth+1);
 	}
@@ -182,7 +186,7 @@ objedit_window(void)
 		struct hbox *hb;
 		int i;
 
-		name_tb = textbox_new(vb, _("New: "));
+		name_tb = textbox_new(vb, _("Name: "));
 		types_com = combo_new(vb, _("Type: "));
 		for (i = 0; i < ntypesw; i++) {
 			char label[TLIST_LABEL_MAX];

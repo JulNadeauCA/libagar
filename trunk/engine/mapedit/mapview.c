@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.123 2003/06/25 06:15:37 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.124 2003/06/29 11:33:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -405,9 +405,8 @@ mapview_draw(void *p)
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
 
-	if (mapview_bg) {
+	if (mapview_bg)
 		mapview_draw_background(mv);
-	}
 
 	pthread_mutex_lock(&m->lock);
 
