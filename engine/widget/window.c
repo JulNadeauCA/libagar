@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.157 2003/01/25 00:38:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.158 2003/01/25 06:22:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -648,7 +648,9 @@ window_hide(struct window *win)
 		}
 		break;
 	case GFX_ENGINE_TILEBASED:
-		view->rootmap->map->redraw++;
+		if (view->rootmap != NULL) {
+			view->rootmap->map->redraw++;
+		}
 		break;
 	}
 
@@ -1377,7 +1379,9 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		}
 		break;
 	case GFX_ENGINE_TILEBASED:
-		view->rootmap->map->redraw++;
+		if (view->rootmap != NULL) {
+			view->rootmap->map->redraw++;
+		}
 		break;
 	}
 }
