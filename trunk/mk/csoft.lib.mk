@@ -31,6 +31,8 @@ AR?=		ar
 RANLIB?=	ranlib
 LIB_INSTALL?=	No
 LIB_SHARED?=	No
+LIB_MAJOR?=	1
+LIB_MINOR?=	0
 LIB_ADD?=
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
@@ -45,7 +47,6 @@ LTMAIN_SH?=	${TOP}/mk/libtool/ltmain.sh
 LTCONFIG_LOG?=	./config.log
 BINMODE?=	755
 STATIC?=	Yes
-SOVERSION?=	1:0:0
 CFLAGS+=    ${COPTS}
 SHARE?=
 LFLAGS?=
@@ -179,17 +180,21 @@ lib${LIB}.la: ${LIBTOOL} _lib_shobjs
 	    	    _shobjs="$$_shobjs $$F"; \
                 done; \
 	        echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	            -shared -version-info ${SOVERSION} ${LDFLAGS} $$_shobjs \
+	            -shared -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		    ${LDFLAGS} $$_shobjs \
 		    ${LIBS} ${LIB_ADD}"; \
 	        ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		    -version-info ${SOVERSION} ${LDFLAGS} $$_shobjs ${LIBS} \
+		    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		    ${LDFLAGS} $$_shobjs ${LIBS} \
 		    ${LIB_ADD}; \
 	    else \
 	        echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	            -shared -version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} \
+	            -shared -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		    ${LDFLAGS} ${SHOBJS} \
 		    ${LIBS} ${LIB_ADD}"; \
 	        ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		    -version-info ${SOVERSION} ${LDFLAGS} ${SHOBJS} ${LIBS} \
+		    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		    ${LDFLAGS} ${SHOBJS} ${LIBS} \
 		    ${LIB_ADD}; \
 	    fi; \
 	fi
