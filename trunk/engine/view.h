@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.73 2003/03/23 07:11:57 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.74 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -54,7 +54,6 @@ struct viewport {
 
 	/* Read-write, thread-safe */
 	pthread_mutex_t		lock;
-	pthread_mutexattr_t	lockattr;
 	struct windowq	 windows;	/* Windows in view */
 	struct windowq	 detach;	/* Windows to free */
 	struct window	*focus_win;	/* Give focus to this window,
