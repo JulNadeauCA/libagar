@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.124 2002/12/14 11:27:15 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.125 2002/12/16 00:58:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -44,7 +44,7 @@
 
 static const struct version window_ver = {
 	"agar window",
-	1, 0
+	2, 0
 };
 
 static const struct object_ops window_ops = {
@@ -65,10 +65,11 @@ enum {
 #include "borders/green1.h"
 
 static void	window_clamp(struct window *);
-static void	window_round(struct window *, int, int, int, int);
 static void	window_focus(struct window *);
 static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
+static void	winop_close(struct window *);
+static void	winop_hide_body(struct window *);
 
 #ifdef DEBUG
 #define DEBUG_STATE		0x01
@@ -94,6 +95,7 @@ window_new(char *name, int flags, int x, int y, int w, int h,
 	return (win);
 }
 
+/* Create a centered window, unique if name_fmt is non-NULL. */
 struct window *
 window_generic_new(int w, int h, const char *name_fmt, ...)
 {
@@ -103,7 +105,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	static pthread_mutex_t genlock = PTHREAD_MUTEX_INITIALIZER;
 	static int genxoffs = -1, genyoffs = -1;
 
-	if (name_fmt != NULL) {
+	if (name_fmt != NULL) {				/* Single instance */
 		va_start(args, name_fmt);
 		if (vasprintf(&name, name_fmt, args) == -1) {
 			fatal("vasprintf: %s\n", strerror(errno));
@@ -116,54 +118,37 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 			    strcmp(OBJECT(win)->name+4, name) == 0) {
 				window_focus(win);
 				pthread_mutex_unlock(&view->lock);
+				error_set("window exists");
 				return (NULL);
 			}
 		}
 		pthread_mutex_unlock(&view->lock);
-	
-	} else {
+	} else {					/* Multiple instances */
 		name = NULL;
 	}
 
 	win = emalloc(sizeof(struct window));
 
+	/* Initialize the window, figure out the initial coordinates. */
 	pthread_mutex_lock(&genlock);
-
 	window_init(win, name, 0,
 	    view->w/2 - w/2 + genxoffs,
 	    view->h/2 - h/2 + genyoffs,
 	    w, h, w, h);
-
 	if ((genxoffs += 3) + w > view->w/2)
 		genxoffs = 0;
 	if ((genyoffs += 3) + h > view->h/2)
 		genyoffs = 0;
-
 	window_clamp(win);
-
 	pthread_mutex_unlock(&genlock);
 	
 	free(name);
 
-	/* Destroy the window instead of hiding it on close. */
-	event_new(win, "window-close",
-	    window_generic_detach, "%p", win);
+	/* Detach by default. */
+	event_new(win, "window-close", window_generic_detach, "%p", win);
 
-	view_attach(win);			/* Attach to view */
+	view_attach(win);
 	return (win);
-}
-
-/*
- * Adjust window to tile granularity.
- * Window must be locked.
- */
-static void
-window_round(struct window *win, int x, int y, int w, int h)
-{
-	win->rd.x = x - (x % TILEW);
-	win->rd.y = y - (y % TILEH);
-	win->rd.w = w - (w % TILEW);
-	win->rd.h = h - (h % TILEH);
 }
 
 void
@@ -247,10 +232,9 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		win->rd.y = view->h/2 - win->rd.h/2;
 	}
 	
-	/* Clamp down to view area and leave a margin. */
-	window_clamp(win);
+	window_clamp(win);			/* Clamp to view area */
 
-	/* For primitive operations on the window. */
+	/* Fictitious widget geometry, for primitive operations and colors. */
 	win->wid.win = win;
 	win->wid.x = 0;
 	win->wid.y = 0;
@@ -263,6 +247,10 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	pthread_mutex_init(&win->lock, &win->lockattr);
 }
 
+/*
+ * Render the window frame and decorations.
+ * The window must be locked.
+ */
 static void
 window_draw_frame(struct window *win)
 {
@@ -271,48 +259,47 @@ window_draw_frame(struct window *win)
 	/* Draw the border. */
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
-		    i, i,
-		    win->rd.w - i, i,
+		    i,			i,
+		    win->rd.w - i,	i,
 		    win->border[i]);
 		if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 			primitives.line(win,		/* Bottom */
-			    i, win->rd.h - i,
-			    win->rd.w - i, win->rd.h - i,
+			    i,			win->rd.h - i,
+			    win->rd.w - i,	win->rd.h - i,
 			    win->border[i]);
 			primitives.line(win,		/* Left */
-			    i, i,
-			    i, win->rd.h - i,
+			    i,			i,
+			    i,			win->rd.h - i,
 			    win->border[i]);
 			primitives.line(win,		/* Right */
-			    win->rd.w - i, i,
-			    win->rd.w - i, win->rd.h - i,
+			    win->rd.w - i,	i,
+			    win->rd.w - i,	win->rd.h - i,
 			    win->border[i]);
 		} else {
 			primitives.line(win,		/* Left */
-			    i, i,
-			    i, win->titleh + win->borderw/2,
+			    i,			i,
+			    i,			win->titleh + win->borderw - i,
 			    win->border[i]);
 			primitives.line(win,		/* Right */
-			    win->rd.w - i, i,
-			    win->rd.w - i, win->titleh + win->borderw/2,
+			    win->rd.w - i,	i,
+			    win->rd.w - i, 	win->titleh + win->borderw - i,
 			    win->border[i]);
-		
 		}
 	}
 	
 	/* Draw the resize decorations. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		primitives.line(win,				/* Lower left */
-		    18, win->rd.h - win->borderw,
-		    18, win->rd.h - 2,
+		    18,			win->rd.h - win->borderw,
+		    18,			win->rd.h - 2,
 		    win->border[0]);
 		primitives.line(win,
-		    19, win->rd.h - win->borderw,
-		    19, win->rd.h - 2,
+		    19,			win->rd.h - win->borderw,
+		    19,			win->rd.h - 2,
 		    win->border[win->borderw/2]);
 		primitives.line(win,
-		    2,		  win->rd.h - 20,
-		    win->borderw, win->rd.h - 20,
+		    2,		  	win->rd.h - 20,
+		    win->borderw,	win->rd.h - 20,
 		    win->border[0]);
 		primitives.line(win,
 		    2,			win->rd.h - 19,
@@ -338,6 +325,10 @@ window_draw_frame(struct window *win)
 	}
 }
 
+/*
+ * Render the window's titlebar.
+ * The window must be locked.
+ */
 static void
 window_draw_titlebar(struct window *win)
 {
@@ -433,17 +424,11 @@ window_draw_titlebar(struct window *win)
 	    win->borderw, win->titleh+3,
 	    win->rd.w-win->borderw, win->titleh+3,
 	    win->border[1]);
-	
-	if (win->flags & WINDOW_HIDDEN_BODY) {
-		/* Queue the video update. */
-		VIEW_UPDATE(win->rd);
-		return;					/* Done */
-	}
 }
 
 /*
  * Render a window.
- * Window must be locked.
+ * The window must be locked.
  */
 void
 window_draw(struct window *win)
@@ -455,18 +440,18 @@ window_draw(struct window *win)
 	debug_n(DEBUG_DRAW, "drawing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 
-	/* Background */
+	/* Fill the background. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		SDL_FillRect(view->v, &win->rd,
 		    WIDGET_COLOR(win, BACKGROUND_COLOR));
 	}
 	
-	/* Title bar */
+	/* Draw the title bar. */
 	if (win->flags & WINDOW_TITLEBAR) {
 		window_draw_titlebar(win);
 	}
 
-	/* Widgets */
+	/* Render the widgets. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
 		TAILQ_FOREACH(reg, &win->regionsh, regions) {
 			debug_n(DEBUG_DRAW, " %s(%d,%d)\n",
@@ -490,7 +475,7 @@ window_draw(struct window *win)
 		}
 	}
 
-	/* Decorations */
+	/* Draw the window border and decorations. */
 	window_draw_frame(win);
 
 	/* Queue the video update. */
@@ -527,6 +512,8 @@ window_detach(void *parent, void *child)
 	pthread_mutex_lock(&win->lock);
 	TAILQ_REMOVE(&win->regionsh, reg, regions);
 	pthread_mutex_unlock(&win->lock);
+
+	object_destroy(reg);
 }
 
 void
@@ -542,7 +529,6 @@ window_destroy(void *p)
 	     reg = nextreg) {
 		nextreg = TAILQ_NEXT(reg, regions);
 		window_detach(win, reg);
-		object_destroy(reg);
 	}
 
 	free(win->caption);
@@ -646,7 +632,7 @@ window_hide(struct window *win)
 
 /*
  * Cycle focus throughout widgets.
- * Window must be locked.
+ * The window must be locked.
  */
 static void
 cycle_widgets(struct window *win, int reverse)
@@ -723,15 +709,17 @@ cycle_widgets(struct window *win, int reverse)
 	}
 }
 
-/* View and window must be locked. */
+/*
+ * Move a window using the mouse.
+ * The view and window must be locked.
+ */
 static void
 winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect oldpos;
+	SDL_Rect oldpos, newpos;
 
-	/* Save the old window position in GUI mode. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		oldpos = win->rd;		/* Structure copy */
+		oldpos = win->rd;
 	}
 
 	/* Update the window coordinates, adjust to view area. */
@@ -740,41 +728,42 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 	window_clamp(win);
 
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
+		SDL_Rect newpos = win->rd;
 		SDL_Rect rfill;
 
 		/* Update the background. */
-		if (win->rd.x > oldpos.x) {			/* Right */
+		if (newpos.x > oldpos.x) {		/* Right */
 			rfill.x = oldpos.x;
 			rfill.y = oldpos.y;
-			rfill.w = win->rd.x - oldpos.x;
-			rfill.h = win->rd.h;
+			rfill.w = newpos.x - oldpos.x;
+			rfill.h = newpos.h;
 			SDL_FillRect(view->v, &rfill,
 			    WIDGET_COLOR(win, BACKGROUND_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		if (win->rd.y > oldpos.y) {			/* Downward */
+		if (newpos.y > oldpos.y) {		/* Downward */
 			rfill.x = oldpos.x;
 			rfill.y = oldpos.y;
-			rfill.w = win->rd.w;
-			rfill.h = win->rd.y - oldpos.y;
+			rfill.w = newpos.w;
+			rfill.h = newpos.y - oldpos.y;
 			SDL_FillRect(view->v, &rfill,
 			    WIDGET_COLOR(win, BACKGROUND_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		if (win->rd.x < oldpos.x) {			/* Left */
-			rfill.x = win->rd.x + win->rd.w;
-			rfill.y = win->rd.y;
-			rfill.w = oldpos.x - win->rd.x;
+		if (newpos.x < oldpos.x) {		/* Left */
+			rfill.x = newpos.x + newpos.w;
+			rfill.y = newpos.y;
+			rfill.w = oldpos.x - newpos.x;
 			rfill.h = oldpos.h;
 			SDL_FillRect(view->v, &rfill,
 			    WIDGET_COLOR(win, BACKGROUND_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		if (win->rd.y < oldpos.y) {			/* Upward */
+		if (newpos.y < oldpos.y) {		/* Upward */
 			rfill.x = oldpos.x;
-			rfill.y = win->rd.y + win->rd.h;
+			rfill.y = newpos.y + newpos.h;
 			rfill.w = oldpos.w;
-			rfill.h = oldpos.y - win->rd.y;
+			rfill.h = oldpos.y - newpos.y;
 			SDL_FillRect(view->v, &rfill,
 			    WIDGET_COLOR(win, BACKGROUND_COLOR));
 			SDL_UpdateRects(view->v, 1, &rfill);
@@ -786,8 +775,61 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 }
 
 /*
+ * React to the close button.
+ * The window must be locked.
+ */
+static void
+winop_close(struct window *win)
+{
+	window_hide(win);
+	event_post(win, "window-close", NULL);
+}
+
+/*
+ * React to the hide button.
+ * The window must be locked.
+ */
+static void
+winop_hide_body(struct window *win)
+{
+	if (win->flags & WINDOW_HIDDEN_BODY) {		/* Restore */
+		SDL_Rect rtitle = win->rd;
+
+		win->flags &= ~(WINDOW_HIDDEN_BODY);
+		win->rd = win->saved_rd;
+		
+		if (view->rootmap != NULL) {
+			view->rootmap->map->redraw++;
+		} else {
+			SDL_FillRect(view->v, &rtitle,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rtitle);
+		}
+	} else {					/* Hide */
+		win->flags |= WINDOW_HIDDEN_BODY;
+		win->saved_rd = win->rd;
+		win->rd.h = win->titleh + win->borderw*2;
+
+		if (view->rootmap != NULL) {
+			view->rootmap->map->redraw++;
+		} else {
+			SDL_Rect rbody = win->saved_rd;
+
+			rbody.y += win->titleh;
+			rbody.h -= win->titleh;
+
+			SDL_FillRect(view->v, &rbody,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rbody);
+		}
+	}
+
+	window_resize(win);				/* Clamp */
+}
+
+/*
  * Give focus to a window.
- * View must be locked.
+ * The view and window must be locked.
  */
 static void
 window_focus(struct window *win)
@@ -831,7 +873,7 @@ window_focus(struct window *win)
 
 /*
  * Dispatch events to widgets and windows.
- * View must be locked, window list must not be empty.
+ * The view must be locked, and the window list must not be empty.
  */
 int
 window_event(SDL_Event *ev)
@@ -958,24 +1000,12 @@ scan_wins:
 				/* Close the window. */
 			    	if (ev->button.x - win->rd.x <
 				    win->titleh + win->borderw) {
-					/* XXX */
-					window_hide(win);
-					event_post(win, "window-close", NULL);
+					winop_close(win);
+					goto next_win;
 				} else if (ev->button.x - win->rd.x <
 				    win->titleh*2 + win->borderw) {
-					if (win->flags & WINDOW_HIDDEN_BODY) {
-				    		win->flags &=
-						    ~WINDOW_HIDDEN_BODY;
-					} else {
-						win->flags |=
-						    WINDOW_HIDDEN_BODY;
-					}
-					if (view->rootmap != NULL) {
-						view->rootmap->map->redraw++;
-					} else {
-						SDL_FillRect(view->v,
-						    &win->rd, 0);
-					}
+					winop_hide_body(win);
+					goto next_win;
 				}
 				view->winop = VIEW_WINOP_MOVE;
 				view->wop_win = win;
@@ -1093,7 +1123,10 @@ posted:
 	return (1);
 }
 
-/* Window must be locked. */
+/*
+ * Clamp the window geometry/coordinates down to the view area.
+ * The window must be locked.
+ */
 static void
 window_clamp(struct window *win)
 {
@@ -1113,7 +1146,7 @@ window_clamp(struct window *win)
 
 /*
  * Resize a window with the mouse.
- * Window must be locked.
+ * The window must be locked.
  */
 static void
 winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
@@ -1225,7 +1258,10 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	}
 }
 
-/* Window must be locked. */
+/*
+ * Effect a change in window geometry.
+ * The window must be locked.
+ */
 void
 window_resize(struct window *win)
 {
@@ -1368,6 +1404,7 @@ window_resize(struct window *win)
 	    win->rd.w, win->rd.h);
 }
 
+/* Update the window's caption. */
 void
 window_set_caption(struct window *win, const char *fmt, ...)
 {
@@ -1395,10 +1432,17 @@ window_load(void *p, int fd)
 		return (-1);
 	}
 
-	win->rd.x = read_uint32(fd);
-	win->rd.y = read_uint32(fd);
-	win->rd.w = read_uint32(fd);
-	win->rd.h = read_uint32(fd);
+	win->flags |= read_uint32(fd);
+
+	win->rd.x = read_sint16(fd);
+	win->rd.y = read_sint16(fd);
+	win->rd.w = read_uint16(fd);
+	win->rd.h = read_uint16(fd);
+	
+	win->saved_rd.x = read_sint16(fd);
+	win->saved_rd.y = read_sint16(fd);
+	win->saved_rd.w = read_uint16(fd);
+	win->saved_rd.h = read_uint16(fd);
 	
 	debug(DEBUG_STATE, "loaded %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
@@ -1420,11 +1464,19 @@ window_save(void *p, int fd)
 	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
 
 	version_write(fd, &window_ver);
-	write_uint32(fd, win->rd.x);
-	write_uint32(fd, win->rd.y);
-	write_uint32(fd, win->rd.w);
-	write_uint32(fd, win->rd.h);
-	
+
+	write_uint32(fd, win->flags & WINDOW_PERSISTENT);
+
+	write_sint16(fd, win->rd.x);
+	write_sint16(fd, win->rd.y);
+	write_uint16(fd, win->rd.w);
+	write_uint16(fd, win->rd.h);
+
+	write_sint16(fd, win->saved_rd.x);
+	write_sint16(fd, win->saved_rd.y);
+	write_uint16(fd, win->saved_rd.w);
+	write_uint16(fd, win->saved_rd.h);
+
 	return (0);
 }
 

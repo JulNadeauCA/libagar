@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.48 2002/11/17 23:02:09 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.49 2002/11/24 03:11:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -31,14 +31,15 @@ struct window {
 #define WINDOW_MATERIALIZE	0x200	/* Materialize effect */
 #define WINDOW_DEMATERIALIZE	0x400	/* Dematerialize effect */
 #define WINDOW_HIDDEN_BODY	0x1000	/* Only the titlebar is shown */
-#define WINDOW_MINIMIZED	0x2000	/* Window is iconified */
+#define WINDOW_PERSISTENT	WINDOW_HIDDEN_BODY
 
 	char	*caption;		/* Titlebar text */
 
 	Uint32	*border;		/* Border colors */
 	int	 borderw;		/* Border width */
 	int	 titleh;		/* Titlebar height */
-	SDL_Rect rd;			/* Coordinates, geometry */
+	SDL_Rect rd;			/* Current geometry */
+	SDL_Rect saved_rd;		/* Original geometry */
 	int	 minw, minh;
 	int	 spacing;		/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
