@@ -1,4 +1,4 @@
-/*	$Csoft: radio.h,v 1.10 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.11 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
@@ -17,7 +17,7 @@ struct radio {
 	int		 nitems;
 	int		 selitem;	/* Index of selected item */
 	int		 max_w;		/* Width of widest label */
-	int		 radius;
+	int		 oversel;	/* Overlapping selection */
 };
 
 __BEGIN_DECLS
