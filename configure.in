@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.29 2002/07/27 06:36:34 vedge Exp $
+# $Csoft: configure.in,v 1.30 2002/07/31 00:28:30 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
@@ -20,11 +20,11 @@ if [ "${help}" = "yes" ]; then
 fi
 
 # System data directory.
-mdefine(SHAREDIR, "$PREFIX/share/geggy");
-hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
+mdefine(SHAREDIR, "$PREFIX/share/cave");
+hdefine(SHAREDIR, "\"$PREFIX/share/cave\"");
 
 # System map directory.
-mdefine(MAPDIR, "$PREFIX/share/geggy/maps");
+mdefine(MAPDIR, "$PREFIX/share/cave/maps");
 
 check(make);
 check(cc);
