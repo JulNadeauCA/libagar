@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.27 2005/03/11 10:46:01 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.28 2005/03/24 04:00:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -511,13 +511,15 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 	case TILEVIEW_RECTANGLE:
 		switch (nhandle) {
 		case 0:
-			tileview_set_int(ctrl, 0, tileview_int(ctrl,0)+dx);
-			tileview_set_int(ctrl, 1, tileview_int(ctrl,1)+dy);
+			tileview_set_int(ctrl, 0,
+			    tileview_int(ctrl,0)+dx);
+			tileview_set_int(ctrl, 1,
+			    tileview_int(ctrl,1)+dy);
 			break;
 		case 1:						/* Top */
 			{
-				int cy = tileview_int(ctrl, 1);
 				int ch = tileview_int(ctrl, 3);
+				int cy = tileview_int(ctrl, 1);
 				int nh = ch-dy;
 
 				tileview_set_int(ctrl, 1, cy+dy);
@@ -526,6 +528,23 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 					yoffs = -dy;
 			}
 			break;
+		case 4:						/* Left */
+			{
+				int cw = tileview_int(ctrl, 2);
+				int cx = tileview_int(ctrl, 0);
+				int nw = cw-dx;
+
+
+				tileview_set_int(ctrl, 0, cx+dx);
+				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
+				if (dx < 0 || dx > 0)
+					xoffs = -dx;
+			}
+			break;
+		}
+		/* FALLTHROUGH */
+	case TILEVIEW_RDIMENSIONS:
+		switch (nhandle) {
 		case 2:						/* Bottom */
 			{
 				int ch = tileview_int(ctrl, 3);
@@ -540,18 +559,6 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				int nw = cw+dx;
 
 				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
-			}
-			break;
-		case 4:						/* Left */
-			{
-				int cx = tileview_int(ctrl, 0);
-				int cw = tileview_int(ctrl, 2);
-				int nw = cw-dx;
-
-				tileview_set_int(ctrl, 0, cx+dx);
-				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
-				if (dx < 0 || dx > 0)
-					xoffs = -dx;
 			}
 			break;
 		case 5:						/* Bot right */
@@ -838,6 +845,7 @@ out:
 		if (ctrl->nvals < 1) goto missingvals;
 		break;
 	case TILEVIEW_RECTANGLE:
+	case TILEVIEW_RDIMENSIONS:
 		ctrl->nhandles = 6;
 		if (ctrl->nvals < 4) goto missingvals;
 		break;
@@ -1208,6 +1216,7 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 
 	switch (ctrl->type) {
 	case TILEVIEW_RECTANGLE:
+	case TILEVIEW_RDIMENSIONS:
 		{
 			int x = tileview_int(ctrl, 0);
 			int y = tileview_int(ctrl, 1);
