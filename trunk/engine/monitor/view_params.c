@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.12 2003/05/18 00:17:04 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.13 2003/06/06 02:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@ view_params_window(void)
 	if ((win = window_new("monitor-view-params")) == NULL) {
 		return (NULL);
 	}
-	window_set_caption(win, "View parameters");
+	window_set_caption(win, _("Viewport"));
 	window_set_closure(win, WINDOW_DETACH);
 	
 	vb = vbox_new(win, 0);

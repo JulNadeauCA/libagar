@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.6 2003/06/06 02:44:04 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.7 2003/06/17 23:30:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -109,7 +109,7 @@ screenshot_xmit(int fd)
 		JSAMPROW row[1];
 		int x;
 	
-		label_printf(statusl, "Status: xmit frame %d", nframe);
+		label_printf(statusl, _("Status: xmit frame %d"), nframe);
 
 		jpeg_start_compress(&jcomp, TRUE);
 
