@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.87 2005/02/19 09:31:43 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.88 2005/02/22 04:18:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,19 +38,6 @@
 #include <engine/widget/label.h>
 
 const struct widget_ops button_ops = {
-	{
-		NULL,		/* init */
-		NULL,		/* reinit */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	button_draw,
-	button_scale
-};
-
-const struct widget_ops button_ops_titlebar = {
 	{
 		NULL,		/* init */
 		NULL,		/* reinit */
