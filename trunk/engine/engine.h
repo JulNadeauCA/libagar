@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.8 2002/02/21 02:18:10 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.9 2002/02/25 08:58:37 vedge Exp $	*/
 
 #include <engine/config.h>
 
@@ -34,7 +34,7 @@ struct gameinfo {
 int	engine_init(int, char **, struct gameinfo *, char *);
 int	engine_mapedit(void);
 void	engine_destroy(void);
-void	engine_start(void);
+void	engine_editmap(void);
 
 void	*emalloc(size_t);
 
