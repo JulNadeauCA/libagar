@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.42 2002/12/24 08:47:12 vedge Exp $
+# $Csoft: configure.in,v 1.43 2002/12/24 10:09:59 vedge Exp $
 
 makeout(Makefile.config);
 inclout(config);
@@ -8,7 +8,6 @@ register("--with-x11",		"X11-specific code [default: check]");
 register("--with-gl",		"Support OpenGL operations [default: no]");
 register("--enable-debug",	"Engine debugging [default: no]");
 register("--enable-xdebug",	"Synchronous X11 events [default: no]");
-register("--enable-map-editor",	"Level edition [default: yes]");
 register("--enable-serialization",	"Thread-safe engine [default: yes]");
 register("--enable-8bpp",	"Support 8 bpp display [default: yes]");
 register("--enable-16bpp",	"Support 16 bpp display [default: yes]");
