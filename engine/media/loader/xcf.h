@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.h,v 1.10 2003/04/12 01:45:46 vedge Exp $	*/
+/*	$Csoft: xcf.h,v 1.11 2003/04/14 08:56:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -6,6 +6,8 @@
 
 #define XCF_SIGNATURE	"gimp xcf "
 #define XCF_MAGIC_LEN	14
+
+#include "begin_code.h"
 
 enum xcf_compression {
 	XCF_COMPRESSION_NONE,
@@ -141,5 +143,8 @@ enum {
 	PROP_USER_UNIT
 };
 
-int	xcf_load(struct netbuf *buf, off_t, struct art *);
+__BEGIN_DECLS
+int	xcf_load(struct netbuf *, off_t, struct art *);
+__END_DECLS
 
+#include "close_code.h"

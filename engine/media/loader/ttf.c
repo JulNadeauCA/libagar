@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.15 2003/06/14 11:25:47 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.16 2003/06/15 05:08:40 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*

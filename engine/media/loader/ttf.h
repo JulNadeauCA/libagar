@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.h,v 1.5 2003/06/06 02:40:10 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.6 2003/06/14 07:15:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MEDIA_TTF_H_

@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.27 2003/04/26 04:45:54 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.28 2003/06/15 05:08:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -88,7 +88,8 @@ xcf_read_property(struct netbuf *buf, struct xcf_prop *prop)
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
 		prop->data.colormap.size = nread_uint32(buf->fd);
 		prop->data.colormap.data = Malloc(prop->data.colormap.size*3);
-		Read(buf->fd, prop->data.colormap.data, prop->data.colormap.size*3);
+		Read(buf->fd, prop->data.colormap.data,
+		    prop->data.colormap.size * 3);
 		debug(DEBUG_COLORMAPS, "%u-entry colormap\n",
 		    prop->data.colormap.size);
 		break;
@@ -405,7 +406,8 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 		ty = 0;
 		tx = 0;
 		for (j = 0; j < level->ntile_offsets; j++) {
-			lseek(buf->fd, xcfoffs + level->tile_offsets[j], SEEK_SET);
+			lseek(buf->fd, xcfoffs + level->tile_offsets[j],
+			    SEEK_SET);
 			ox = (tx + 64 > level->w) ? (level->w % 64) : 64;
 			oy = (ty + 64 > level->h) ? (level->h % 64) : 64;
 
