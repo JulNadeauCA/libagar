@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.13 2005/02/27 05:55:54 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.14 2005/03/03 10:51:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -73,8 +73,8 @@ struct tileview_tool_ops {
 	void		(*init)(void *);
 	void		(*destroy)(void *);
 	struct window  *(*edit)(void *);
-	void		(*keydown)(void *, int, int);
-	void		(*keyup)(void *, int, int);
+	void		(*selected)(void *);
+	void		(*unselected)(void *);
 };
 
 struct tileview_bitmap_tool_ops {
@@ -86,9 +86,13 @@ struct tileview_bitmap_tool_ops {
 
 struct tileview_sketch_tool_ops {
 	struct tileview_tool_ops ops;
-	void (*fmousebuttondown)(void *, double, double, int);
-	void (*fmousebuttonup)(void *, double, double, int);
-	void (*fmousemotion)(void *, double, double, double, double);
+	void (*mousebuttondown)(void *, struct sketch *, double, double, int);
+	void (*mousebuttonup)(void *, struct sketch *, double, double, int);
+	void (*mousemotion)(void *, struct sketch *, double, double, double,
+	    double);
+	void (*mousewheel)(void *, struct sketch *, int);
+	void (*keydown)(void *, struct sketch *, int, int);
+	void (*keyup)(void *, struct sketch *, int, int);
 };
 
 struct tileview_tool {
@@ -99,6 +103,7 @@ struct tileview_tool {
 #define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
 #define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
 #define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
+	struct window *win;
 	TAILQ_ENTRY(tileview_tool) tools;
 };
 
@@ -135,6 +140,7 @@ struct tileview {
 			struct tile_element *tel;
 			struct feature *ft;   
 			struct window *win;
+
 			struct AGMenu *menu;
 			struct AGMenuItem *menu_item;
 			struct window *menu_win;
@@ -144,6 +150,10 @@ struct tileview {
 			struct sketch *sk;
 			struct window *win;
 			struct tileview_ctrl *ctrl;
+
+			struct AGMenu *menu;
+			struct AGMenuItem *menu_item;
+			struct window *menu_win;
 		} sketch;
 		struct {
 			struct tile_element *tel;
@@ -154,6 +164,10 @@ struct tileview {
 				TILEVIEW_PIXMAP_IDLE,
 				TILEVIEW_PIXMAP_FREEHAND
 			} state;
+
+			struct AGMenu *menu;
+			struct AGMenuItem *menu_item;
+			struct window *menu_win;
 		} pixmap;
 	} sargs;
 #define tv_feature sargs.feature
@@ -165,8 +179,11 @@ struct tileview {
 		Uint32 pc;			/* (for binding controls) */
 	} c;
 	TAILQ_HEAD(,tileview_ctrl) ctrls;	/* Binding controls */
-	TAILQ_HEAD(,tileview_tool) tools;
+	TAILQ_HEAD(,tileview_tool) tools;	/* Edition tools */
+	struct tileview_tool *cur_tool;		/* Current tool */
 };
+
+#define TILEVIEW_TOOL(p) ((struct tileview_tool *)p)
 
 __BEGIN_DECLS
 struct tileview	*tileview_new(void *, struct tileset *, struct tile *, int);
@@ -206,6 +223,7 @@ __inline__ void	  tileview_set_double(struct tileview_ctrl *, int, double);
 #define tileview_uint(ctrl,nval)	(u_int)tileview_int((ctrl),(nval))
 #define tileview_set_uint(tv,nval,v)	tileview_set_int((tv),(nval),(u_int)(v))
 
+void tileview_select_tool(struct tileview *, struct tileview_tool *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: sketch.c,v 1.1 2005/03/03 10:51:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -228,39 +228,60 @@ void
 sketch_mousebuttondown(struct tileview *tv, struct tile_element *tel,
     double x, double y, int button)
 {
-	struct sketch *sk = tel->tel_sketch.sk;
-	struct vg *vg = sk->vg;
-	Uint8 r, g, b;
-
-	dprintf("button down %.2f,%.2f\n", x, y);
-	vg_begin_element(vg, VG_LINES);
-	{
-		prim_hsv2rgb(sk->h/360.0, sk->s, sk->v, &r, &g, &b);
-		vg_color4(vg, r, g, b, (int)(sk->a*255.0));
-
-		vg_vertex2(vg, 0.0, 0.0);
-		vg_vertex2(vg, x, y);
+	if (tv->cur_tool != NULL &&
+	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
+		const struct tileview_sketch_tool_ops *ops =
+		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		
+		if (ops->mousebuttondown != NULL)
+			ops->mousebuttondown(tv->cur_tool, tel->tel_sketch.sk,
+			    x, y, button);
 	}
-	
-	vg_rasterize(vg);
-	tv->tile->flags |= TILE_DIRTY;
 }
 
 void
 sketch_mousebuttonup(struct tileview *tv, struct tile_element *tel,
     double x, double y, int button)
 {
+	if (tv->cur_tool != NULL &&
+	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
+		const struct tileview_sketch_tool_ops *ops =
+		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		
+		if (ops->mousebuttonup != NULL)
+			ops->mousebuttonup(tv->cur_tool, tel->tel_sketch.sk,
+			    x, y, button);
+	}
 }
 
 void
 sketch_mousemotion(struct tileview *tv, struct tile_element *tel,
     double x, double y, double xrel, double yrel, int state)
 {
+	if (tv->cur_tool != NULL &&
+	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
+		const struct tileview_sketch_tool_ops *ops =
+		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		
+		if (ops->mousemotion != NULL)
+			ops->mousemotion(tv->cur_tool, tel->tel_sketch.sk,
+			    x, y, xrel, yrel);
+	}
 }
 
 int
 sketch_mousewheel(struct tileview *tv, struct tile_element *tel, int which)
 {
+	if (tv->cur_tool != NULL &&
+	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
+		const struct tileview_sketch_tool_ops *ops =
+		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		
+		if (ops->mousewheel != NULL) {
+			ops->mousewheel(tv->cur_tool, tel->tel_sketch.sk,
+			    which);
+		}
+	}
 	return (0);
 }
 
@@ -268,10 +289,82 @@ void
 sketch_keydown(struct tileview *tv, struct tile_element *tel, int keysym,
     int keymod)
 {
+	if (tv->cur_tool != NULL &&
+	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
+		const struct tileview_sketch_tool_ops *ops =
+		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		
+		if (ops->keydown != NULL)
+			ops->keydown(tv->cur_tool, tel->tel_sketch.sk,
+			    keysym, keymod);
+	}
 }
 
 void
 sketch_keyup(struct tileview *tv, struct tile_element *tel, int keysym,
     int keymod)
 {
+	if (tv->cur_tool != NULL &&
+	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
+		const struct tileview_sketch_tool_ops *ops =
+		    (const struct tileview_sketch_tool_ops *)tv->cur_tool->ops;
+		
+		if (ops->keyup != NULL) {
+			ops->keyup(tv->cur_tool, tel->tel_sketch.sk,
+			    keysym, keymod);
+		}
+	}
+}
+
+static void
+select_tool(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tileview_tool *tvt = argv[2].p;
+
+	tileview_select_tool(tv, tvt);
+}
+
+void
+sketch_open_menu(struct tileview *tv, int x, int y)
+{
+	struct sketch *sk = tv->tv_sketch.sk;
+	struct AGMenu *me;
+	struct AGMenuItem *mi;
+	
+	if (tv->tv_sketch.menu != NULL)
+		sketch_close_menu(tv);
+
+	me = tv->tv_sketch.menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	menu_init(me);
+
+	mi = tv->tv_sketch.menu_item = menu_add_item(me, NULL);
+	{
+		struct tileview_tool *tvt;
+
+		TAILQ_FOREACH(tvt, &tv->tools, tools) {
+			if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
+				continue;
+			}
+			menu_action(mi, _(tvt->ops->name), tvt->ops->icon,
+			    select_tool, "%p,%p", tv, tvt);
+		}
+	}
+	tv->tv_sketch.menu->sel_item = mi;
+	tv->tv_sketch.menu_win = menu_expand(me, mi, x, y);
+}
+
+void
+sketch_close_menu(struct tileview *tv)
+{
+	struct AGMenu *me = tv->tv_sketch.menu;
+	struct AGMenuItem *mi = tv->tv_sketch.menu_item;
+
+	menu_collapse(me, mi);
+	object_destroy(me);
+	Free(me, M_OBJECT);
+
+	tv->tv_sketch.menu = NULL;
+	tv->tv_sketch.menu_item = NULL;
+	tv->tv_sketch.menu_win = NULL;
 }

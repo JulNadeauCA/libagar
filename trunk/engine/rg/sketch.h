@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: sketch.h,v 1.1 2005/03/03 10:51:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_SKETCH_H_
@@ -53,6 +53,9 @@ void sketch_mousemotion(struct tileview *, struct tile_element *, double,
 void sketch_begin_undoblk(struct sketch *);
 void sketch_undo(struct tileview *, struct tile_element *);
 void sketch_redo(struct tileview *, struct tile_element *);
+
+void sketch_open_menu(struct tileview *, int, int);
+void sketch_close_menu(struct tileview *);
 __END_DECLS
 
 #include "close_code.h"
