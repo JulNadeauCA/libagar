@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.46 2003/06/25 00:25:52 vedge Exp $
+#	$Csoft: Makefile,v 1.47 2003/06/25 06:18:56 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -10,7 +10,6 @@ SRCS=	fileops.c layedit.c mapedit.c mapview.c nodeedit.c \
 	objedit.c objq.c selops.c
 OBJS=	fileops.o layedit.o mapedit.o mapview.o nodeedit.o \
 	objedit.o objq.o selops.o
-OBJS+=	tool/*.o
 
 DEN=		mapedit.den
 DEN_DIR=	engine/mapedit
