@@ -1,8 +1,8 @@
-/*	$Csoft: feature.h,v 1.5 2005/02/03 04:59:22 vedge Exp $	*/
+/*	$Csoft: feature.h,v 1.6 2005/02/05 03:23:32 vedge Exp $	*/
 /*	Public domain	*/
 
-#ifndef _AGAR_BG_FEATURE_H_
-#define _AGAR_BG_FEATURE_H_
+#ifndef _AGAR_RG_FEATURE_H_
+#define _AGAR_RG_FEATURE_H_
 #include "begin_code.h"
 
 #define FEATURE_NAME_MAX 32
@@ -64,10 +64,7 @@ void		       feature_remove_sketch(struct feature *, struct sketch *);
 
 struct feature_pixmap *feature_insert_pixmap(struct feature *, struct pixmap *);
 void		       feature_remove_pixmap(struct feature *, struct pixmap *);
-
-struct window	*feature_edit(struct tileview *, struct feature *);
-void		 feature_close(struct tileview *);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_BG_FEATURE_H_ */
+#endif	/* _AGAR_RG_FEATURE_H_ */

@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.5 2005/02/03 04:59:22 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.6 2005/02/05 03:23:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -178,47 +178,6 @@ close_feature(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 
-	feature_close(tv);
-}
-
-struct window *
-feature_edit(struct tileview *tv, struct feature *ft)
-{
-	struct window *win;
-	
-	tv->state = TILEVIEW_FEATURE_EDIT;
-	tv->edit_mode = 1;
-	tv->sargs.feature.ft = ft;
-	
-	if (ft->ops->flags & FEATURE_AUTOREDRAW)
-		tileview_set_autoredraw(tv, 1, 125);
-
-	if (ft->ops->edit != NULL) {
-		win = ft->ops->edit(ft, tv);
-		window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
-		window_show(win);
-		tv->sargs.feature.edit_win = win;
-		event_new(win, "window-close", close_feature, "%p", tv);
-		return (win);
-	} else {
-		tv->sargs.feature.edit_win = NULL;
-		return (NULL);
-	}
-}
-
-void
-feature_close(struct tileview *tv)
-{
-	if (tv->state != TILEVIEW_FEATURE_EDIT)
-		return;
-
-	if (tv->sargs.feature.ft->ops->flags & FEATURE_AUTOREDRAW)
-		tileview_set_autoredraw(tv, 0, 0);
-
-	if (tv->sargs.feature.edit_win != NULL)
-		view_detach(tv->sargs.feature.edit_win);
-
-	tv->state = TILEVIEW_TILE_EDIT;
-	tv->edit_mode = 0;
+	tile_close_element(tv);
 }
 

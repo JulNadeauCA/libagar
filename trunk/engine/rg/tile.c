@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.9 2005/02/05 02:55:29 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.10 2005/02/08 15:50:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -45,13 +45,14 @@
 #include "fill.h"
 
 void
-tile_init(struct tile *t, const char *name)
+tile_init(struct tile *t, struct tileset *ts, const char *name)
 {
 	strlcpy(t->name, name, sizeof(t->name));
 	t->flags = 0;
 	t->used = 0;
 	t->su = NULL;
-	TAILQ_INIT(&t->features);
+	t->ts = ts;
+	TAILQ_INIT(&t->elements);
 }
 
 void
@@ -99,79 +100,175 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 void
 tile_generate(struct tile *t)
 {
-	struct tile_feature *tft;
+	struct tile_element *tel;
+	struct tile_pixmap *tpx;
 	u_int i;
 
+	/* TODO check for opaque fill features first */
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
 
-	TAILQ_FOREACH(tft, &t->features, features) {
-		struct feature *ft = tft->ft;
+	TAILQ_FOREACH(tel, &t->elements, elements) {
+		if (!tel->visible) {
+			continue;
+		}
+		switch (tel->type) {
+		case TILE_FEATURE:
+			{
+				struct feature *ft = tel->tel_feature.ft;
 
-		if (ft->ops->apply != NULL)
-			ft->ops->apply(ft, t, tft->x, tft->y);
+				if (ft->ops->apply != NULL)
+					ft->ops->apply(ft, t,
+					    tel->tel_feature.x,
+					    tel->tel_feature.y);
+			}
+			break;
+		case TILE_PIXMAP:
+			{
+				struct pixmap *px = tel->tel_pixmap.px;
+				SDL_Rect rd;
+
+				rd.x = tel->tel_pixmap.x;
+				rd.y = tel->tel_pixmap.y;
+				SDL_BlitSurface(px->su, NULL, t->su, &rd);
+			}
+			break;
+		}
 	}
 }
 
-struct tile_feature *
-tile_add_feature(struct tile *t, void *ft)
+struct tile_element *
+tile_add_feature(struct tile *t, void *ft, int x, int y)
 {
-	struct tile_feature *tft;
+	struct tile_element *tel;
 
-	tft = Malloc(sizeof(struct tile_feature), M_RG);
-	tft->ft = ft;
-	tft->x = 0;
-	tft->y = 0;
-	tft->visible = 1;
-	TAILQ_INSERT_TAIL(&t->features, tft, features);
-
+	tel = Malloc(sizeof(struct tile_element), M_RG);
+	tel->type = TILE_FEATURE;
+	tel->visible = 1;
+	tel->tel_feature.ft = ft;
+	tel->tel_feature.x = x;
+	tel->tel_feature.y = y;
+	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
 	t->flags |= TILE_DIRTY;
-	return (tft);
+	return (tel);
 }
 
 void
-tile_remove_feature(struct tile *t, void *pft)
+tile_remove_feature(struct tile *t, void *ftp, int destroy)
 {
-	struct tile_feature *tft;
+	struct feature *ft = ftp;
+	struct tile_element *tel;
 
-	TAILQ_FOREACH(tft, &t->features, features) {
-		if (tft->ft == pft)
+	TAILQ_FOREACH(tel, &t->elements, elements) {
+		if (tel->tel_feature.ft == ft)
 			break;
 	}
-	if (tft != NULL) {
-		TAILQ_REMOVE(&t->features, tft, features);
-		Free(tft, M_RG);
+	if (tel != NULL) {
+		TAILQ_REMOVE(&t->elements, tel, elements);
+		Free(tel, M_RG);
+
+		if (--ft->nrefs == 0 && destroy) {
+			text_tmsg(MSG_INFO, 500,
+			    _("Destroying unreferenced feature `%s'."),
+			    ft->name);
+			TAILQ_REMOVE(&t->ts->features, ft, features);
+			feature_destroy(ft);
+			Free(ft, M_RG);
+		}
+	}
+}
+
+struct tile_element *
+tile_add_pixmap(struct tile *t, struct pixmap *px, int x, int y)
+{
+	struct tile_element *tel;
+
+	tel = Malloc(sizeof(struct tile_element), M_RG);
+	tel->type = TILE_PIXMAP;
+	tel->visible = 1;
+	tel->tel_pixmap.px = px;
+	tel->tel_pixmap.x = x;
+	tel->tel_pixmap.y = y;
+	tel->tel_pixmap.alpha = 255;
+	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
+	t->flags |= TILE_DIRTY;
+	return (tel);
+}
+
+void
+tile_remove_pixmap(struct tile *t, struct pixmap *px, int destroy)
+{
+	struct tile_element *tel;
+
+	TAILQ_FOREACH(tel, &t->elements, elements) {
+		if (tel->tel_pixmap.px == px)
+			break;
+	}
+	if (tel != NULL) {
+		TAILQ_REMOVE(&t->elements, tel, elements);
+		Free(tel, M_RG);
+		if (--px->nrefs == 0 && destroy) {
+			text_tmsg(MSG_INFO, 500,
+			    _("Destroying unreferenced pixmap `%s'."),
+			    px->name);
+			TAILQ_REMOVE(&t->ts->pixmaps, px, pixmaps);
+			pixmap_destroy(px);
+			Free(px, M_RG);
+		}
 	}
 }
 
 void
 tile_save(struct tile *t, struct netbuf *buf)
 {
-	Uint32 nfeatures = 0;
-	off_t nfeatures_offs;
-	struct tile_feature *tft;
+	Uint32 nelements = 0;
+	off_t nelements_offs;
+	struct tile_element *tel;
 
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
 	write_uint16(buf, t->su->w);
 	write_uint16(buf, t->su->h);
 
-	nfeatures_offs = netbuf_tell(buf);
+	nelements_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
-	TAILQ_FOREACH(tft, &t->features, features) {
-		dprintf("%s: saving %s feature ref\n", t->name, tft->ft->name);
-		write_string(buf, tft->ft->name);
-		write_sint32(buf, (Sint32)tft->x);
-		write_sint32(buf, (Sint32)tft->y);
-		write_uint8(buf, (Uint8)tft->visible);
-		nfeatures++;
+	TAILQ_FOREACH(tel, &t->elements, elements) {
+		write_uint32(buf, (Uint32)tel->type);
+		write_uint8(buf, (Uint8)tel->visible);
+
+		switch (tel->type) {
+		case TILE_FEATURE:
+			{
+				struct feature *ft = tel->tel_feature.ft;
+
+				dprintf("%s: saving %s feature ref\n", t->name,
+				    ft->name);
+				write_string(buf, ft->name);
+				write_sint32(buf, (Sint32)tel->tel_feature.x);
+				write_sint32(buf, (Sint32)tel->tel_feature.y);
+			}
+			break;
+		case TILE_PIXMAP:
+			{
+				struct pixmap *px = tel->tel_pixmap.px;
+
+				dprintf("%s: saving %s pixmap ref\n", t->name,
+				    px->name);
+				write_string(buf, px->name);
+				write_sint32(buf, (Sint32)tel->tel_pixmap.x);
+				write_sint32(buf, (Sint32)tel->tel_pixmap.y);
+				write_uint8(buf, (Uint8)tel->tel_pixmap.alpha);
+			}
+			break;
+		}
+		nelements++;
 	}
-	pwrite_uint32(buf, nfeatures, nfeatures_offs);
+	pwrite_uint32(buf, nelements, nelements_offs);
 }
 
 int
 tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 {
-	Uint32 i, nfeatures;
+	Uint32 i, nelements;
 	Uint16 w, h;
 	Uint8 flags;
 	
@@ -180,29 +277,71 @@ tile_load(struct tileset *ts, struct tile *t, struct netbuf *buf)
 	h = read_uint16(buf);
 	tile_scale(ts, t, w, h, flags);
 
-	nfeatures = read_uint32(buf);
-	dprintf("%s: %ux%u, %u features\n", t->name, w, h, nfeatures);
-	for (i = 0; i < nfeatures; i++) {
-		char feat_name[FEATURE_NAME_MAX];
-		struct feature *ft;
-		Sint32 x, y;
-		Uint8 visible;
+	nelements = read_uint32(buf);
+	dprintf("%s: %ux%u, %u elements\n", t->name, w, h, nelements);
+	for (i = 0; i < nelements; i++) {
+		enum tile_element_type type;
+		struct tile_element *tel;
+		int visible;
 
-		copy_string(feat_name, buf, sizeof(feat_name));
-		x = read_sint32(buf);
-		y = read_sint32(buf);
-		visible = read_uint8(buf);
-		dprintf("%s: feat %s at %d,%d\n", t->name, feat_name, x, y);
+		type = (enum tile_element_type)read_uint32(buf);
+		visible = (int)read_uint8(buf);
 
-		TAILQ_FOREACH(ft, &ts->features, features) {
-			if (strcmp(ft->name, feat_name) == 0)
-				break;
+		switch (type) {
+		case TILE_FEATURE:
+			{
+				char feat_name[FEATURE_NAME_MAX];
+				struct feature *ft;
+				Sint32 x, y;
+
+				copy_string(feat_name, buf, sizeof(feat_name));
+				x = read_sint32(buf);
+				y = read_sint32(buf);
+				dprintf("%s: feat %s at %d,%d\n", t->name,
+				    feat_name, x, y);
+				TAILQ_FOREACH(ft, &ts->features, features) {
+					if (strcmp(ft->name, feat_name) == 0)
+						break;
+				}
+				if (ft == NULL) {
+					error_set("bad feature: %s", feat_name);
+					return (-1);
+				}
+				tel = tile_add_feature(t, ft, x, y);
+				tel->visible = visible;
+			}
+			break;
+		case TILE_PIXMAP:
+			{
+				char pix_name[PIXMAP_NAME_MAX];
+				struct pixmap *px;
+				Sint32 x, y;
+				int alpha;
+
+				copy_string(pix_name, buf, sizeof(pix_name));
+				x = read_sint32(buf);
+				y = read_sint32(buf);
+				alpha = (int)read_uint8(buf);
+
+				dprintf("%s: pix %s at %d,%d (a=%u)\n", t->name,
+				    pix_name, x, y, alpha);
+				TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
+					if (strcmp(px->name, pix_name) == 0)
+						break;
+				}
+				if (px == NULL) {
+					error_set("bad pixmap: %s", pix_name);
+					return (-1);
+				}
+				tel = tile_add_pixmap(t, px, x, y);
+				tel->tel_pixmap.alpha = alpha;
+				tel->visible = visible;
+			}
+			break;
+		default:
+			dprintf("unimplemented tile element %d\n", type);
+			break;
 		}
-		if (ft == NULL) {
-			error_set("Nonexistent feature: `%s'", feat_name);
-			return (-1);
-		}
-		tile_add_feature(t, ft);
 	}
 	t->flags &= ~TILE_DIRTY;
 	return (0);
@@ -229,87 +368,231 @@ close_tile(int argc, union evarg *argv)
 }
 
 static void
-insert_fill(int argc, union evarg *argv)
+element_closed(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+	struct tileview *tv = argv[1].p;
+
+	if (tv->edit_mode)
+		tile_close_element(tv);
+}
+
+void
+tile_open_element(struct tileview *tv, struct tile_element *tel,
+    struct window *pwin)
+{
+	switch (tel->type) {
+	case TILE_FEATURE:
+		{
+			struct window *win;
+			struct feature *ft = tel->tel_feature.ft;
+
+			tv->state = TILEVIEW_FEATURE_EDIT;
+			tv->tv_feature.ft = ft;
+
+			if (ft->ops->flags & FEATURE_AUTOREDRAW)
+				tileview_set_autoredraw(tv, 1, 125);
+
+			if (ft->ops->edit != NULL) {
+				win = ft->ops->edit(ft, tv);
+				window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+				window_attach(pwin, win);
+				window_show(win);
+				tv->tv_feature.win = win;
+				event_new(win, "window-close", element_closed,
+				    "%p", tv);
+			} else {
+				tv->tv_feature.win = NULL;
+			}
+		}
+		break;
+	case TILE_PIXMAP:
+		{
+			struct window *win;
+			struct pixmap *px = tel->tel_pixmap.px;
+			
+			tv->state = TILEVIEW_PIXMAP_EDIT;
+			tv->tv_pixmap.px = px;
+			tv->tv_pixmap.tel = tel;
+	
+			win = pixmap_edit(tv, tel);
+			window_attach(pwin, win);
+			window_show(win);
+			tv->tv_pixmap.win = win;
+			event_new(win, "window-close", element_closed, "%p",
+			    tv);
+		}
+		break;
+	}
+	tv->edit_mode = 1;
+}
+
+void
+tile_close_element(struct tileview *tv)
+{
+	switch (tv->state) {
+	case TILEVIEW_FEATURE_EDIT:
+		if (tv->tv_feature.ft->ops->flags & FEATURE_AUTOREDRAW) {
+			tileview_set_autoredraw(tv, 0, 0);
+		}
+		if (tv->tv_feature.win != NULL) {
+			view_detach(tv->tv_feature.win);
+			tv->tv_feature.win = NULL;
+		}
+		break;
+	case TILEVIEW_PIXMAP_EDIT:
+		if (tv->tv_pixmap.win != NULL) {
+			view_detach(tv->tv_pixmap.win);
+			tv->tv_pixmap.win = NULL;
+		}
+		break;
+	default:
+		break;
+	}
+	tv->state = TILEVIEW_TILE_EDIT;
+	tv->edit_mode = 0;
+}
+
+static void
+insert_pixmap(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct window *pwin = argv[2].p;
-	struct tlist *feat_tl = argv[3].p;
-	struct tlist_item *feat_it;
-	struct tileset *ts = tv->ts;
-	struct tile *t = tv->tile;
-	struct fill *fill;
+	struct tlist *etl = argv[3].p;
+	struct tlist_item *eit;
+	struct pixmap *px;
+	struct tile_element *tel;
 
-	fill = Malloc(sizeof(struct fill), M_RG);
-	fill_init(fill, ts, 0);
-	TAILQ_INSERT_TAIL(&ts->features, FEATURE(fill), features);
-	tile_add_feature(t, fill);
+	px = Malloc(sizeof(struct pixmap), M_RG);
+	pixmap_init(px, tv->ts, 0);
+	pixmap_scale(px, 32, 32);
+	TAILQ_INSERT_TAIL(&tv->ts->pixmaps, px, pixmaps);
+
+	tel = tile_add_pixmap(tv->tile, px, 0, 0);
 
 	if (tv->edit_mode) {
-		feature_close(tv);
+		tile_close_element(tv);
 	}
-	window_attach(pwin, feature_edit(tv, FEATURE(fill)));
+	tile_open_element(tv, tel, pwin);
 
 	/* Select the newly inserted feature. */
-	event_post(NULL, feat_tl, "tlist-poll", NULL);
-	tlist_unselect_all(feat_tl);
-	TAILQ_FOREACH(feat_it, &feat_tl->items, items) {
-		struct tile_feature *tft;
+	event_post(NULL, etl, "tlist-poll", NULL);
+	tlist_unselect_all(etl);
+	TAILQ_FOREACH(eit, &etl->items, items) {
+		struct tile_element *tel;
 
-		if (strcmp(feat_it->class, "feature") != 0) {
+		if (strcmp(eit->class, "pixmap") != 0) {
 			continue;
 		}
-		tft = feat_it->p1;
-		if (tft->ft == FEATURE(fill)) {
-			tlist_select(feat_tl, feat_it);
+		tel = eit->p1;
+		if (tel->tel_pixmap.px == px) {
+			tlist_select(etl, eit);
 			break;
 		}
 	}
 }
 
 static void
-poll_features(int argc, union evarg *argv)
+insert_fill(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tlist *etl = argv[3].p;
+	struct tlist_item *eit;
+	struct fill *fill;
+	struct tile_element *tel;
+
+	fill = Malloc(sizeof(struct fill), M_RG);
+	fill_init(fill, tv->ts, 0);
+	TAILQ_INSERT_TAIL(&tv->ts->features, FEATURE(fill), features);
+	tel = tile_add_feature(tv->tile, fill, 0, 0);
+
+	if (tv->edit_mode) {
+		tile_close_element(tv);
+	}
+	tile_open_element(tv, tel, pwin);
+
+	/* Select the newly inserted feature. */
+	event_post(NULL, etl, "tlist-poll", NULL);
+	tlist_unselect_all(etl);
+	TAILQ_FOREACH(eit, &etl->items, items) {
+		struct tile_element *tel;
+
+		if (strcmp(eit->class, "feature") != 0) {
+			continue;
+		}
+		tel = eit->p1;
+		if (tel->tel_feature.ft == FEATURE(fill)) {
+			tlist_select(etl, eit);
+			break;
+		}
+	}
+}
+
+static void
+poll_items(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct tileset *ts = argv[1].p;
 	struct tile *t = argv[2].p;
-	struct tile_feature *tft;
+	struct tile_element *tel;
 
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ts->lock);
 
-	TAILQ_FOREACH(tft, &t->features, features) {
+	TAILQ_FOREACH(tel, &t->elements, elements) {
 		char label[TLIST_LABEL_MAX];
-		struct feature_sketch *fsk;
-		struct feature_pixmap *fpx;
 		struct tlist_item *it;
 
-		it = tlist_insert(tl, ICON(OBJ_ICON), "%s (%d,%d) %s",
-		    tft->ft->name, tft->x, tft->y,
-		    tft->visible ? "" : " (invisible)");
-		it->class = "feature";
-		it->p1 = tft;
-		it->depth = 0;
+		if (tel->type == TILE_FEATURE) {
+			struct feature *ft = tel->tel_feature.ft;
+			struct feature_sketch *fsk;
+			struct feature_pixmap *fpx;
+	
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s (%d,%d) %s",
+			    ft->name,
+			    tel->tel_feature.x,
+			    tel->tel_feature.y,
+			    tel->visible ? "" : " (invisible)");
+			it->class = "feature";
+			it->p1 = tel;
+			it->depth = 0;
 
-		if (!TAILQ_EMPTY(&tft->ft->sketches) ||
-		    !TAILQ_EMPTY(&tft->ft->pixmaps)) {
-			it->flags |= TLIST_HAS_CHILDREN;
-		}
-		if (!tlist_visible_children(tl, it))
-			continue;
+			if (!TAILQ_EMPTY(&ft->sketches) ||
+			    !TAILQ_EMPTY(&ft->pixmaps)) {
+				it->flags |= TLIST_HAS_CHILDREN;
+			}
+			if (!tlist_visible_children(tl, it))
+				continue;
 
-		TAILQ_FOREACH(fsk, &tft->ft->sketches, sketches) {
-			it = tlist_insert(tl, ICON(DRAWING_ICON),
-			    "%s (%d,%d) %s", fsk->sk->name, fsk->x, fsk->y,
-			    fsk->visible ? "" : " (invisible)");
-			it->class = "sketch";
-			it->p1 = tft;
-		}
-		TAILQ_FOREACH(fpx, &tft->ft->pixmaps, pixmaps) {
-			it = tlist_insert(tl, ICON(DRAWING_ICON),
-			    "%s (%d,%d) %s", fpx->px->name, fpx->x, fpx->y,
-			    fpx->visible ? "" : " (invisible)");
+			TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
+				it = tlist_insert(tl, ICON(DRAWING_ICON),
+				    "%s (%d,%d) %s", fsk->sk->name,
+				    fsk->x, fsk->y,
+				    fsk->visible ? "" : " (invisible)");
+				it->class = "feature-sketch";
+				it->p1 = fsk;
+			}
+
+			TAILQ_FOREACH(fpx, &ft->pixmaps, pixmaps) {
+				it = tlist_insert(tl, ICON(DRAWING_ICON),
+				    "%s (%d,%d) %s", fpx->px->name,
+				    fpx->x, fpx->y,
+				    fpx->visible ? "" : " (invisible)");
+				it->class = "feature-pixmap";
+				it->p1 = fpx;
+			}
+		} else if (tel->type == TILE_PIXMAP) {
+			struct pixmap *px = tel->tel_pixmap.px;
+
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s (%d,%d) %s",
+			    px->name,
+			    tel->tel_pixmap.x,
+			    tel->tel_pixmap.y,
+			    tel->visible ? "" : " (invisible)");
 			it->class = "pixmap";
-			it->p1 = tft;
+			it->p1 = tel;
+			it->depth = 0;
 		}
 	}
 
@@ -318,7 +601,7 @@ poll_features(int argc, union evarg *argv)
 }
 
 static void
-edit_feature(int argc, union evarg *argv)
+edit_element(int argc, union evarg *argv)
 {
 	struct widget *sndr = argv[0].p;
 	struct tileview *tv = argv[1].p;
@@ -327,77 +610,63 @@ edit_feature(int argc, union evarg *argv)
 	int replace = argv[4].i;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
-	struct tlist_item *it;
+	struct tlist_item *it = NULL;
 
 	if (replace) {
 		if (tv->edit_mode) {
-			feature_close(tv);
-			tv->edit_mode = 0;
+			tile_close_element(tv);
 		}
-		if ((it = tlist_item_selected(tl)) == NULL) {
-			tv->edit_mode = 0;
-			return;
-		}
+		it = tlist_item_selected(tl);
 	} else {
 		if (strcmp(sndr->type, "button") != 0)
 			tv->edit_mode = !tv->edit_mode;
 
-		if (tv->edit_mode == 0) {
-			feature_close(tv);
+		if (!tv->edit_mode) {
+			tile_close_element(tv);
 			return;
 		} else {
-			if ((it = tlist_item_selected(tl)) == NULL) {
-				tv->edit_mode = 0;
-				return;
-			}
+			it = tlist_item_selected(tl);
 		}
 	}
-	
-	if (strcmp(it->class, "feature") == 0) {
-		struct tile_feature *tft = it->p1;
+	if (it == NULL) {
+		tv->edit_mode = 0;
+		return;
+	}
+	if (strcmp(it->class, "feature") == 0 ||
+	    strcmp(it->class, "pixmap") == 0) {
+		struct tile_element *tel = it->p1;
 
-		window_attach(pwin, feature_edit(tv, tft->ft));
-	} else if (strcmp(it->class, "sketch") == 0) {
-		//
-	} else if (strcmp(it->class, "pixmap") == 0) {
-		//
+		tile_open_element(tv, tel, pwin);
 	}
 }
 
 static void
-delete_feature(int argc, union evarg *argv)
+delete_element(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
 	struct tileset *ts = tv->ts;
 	struct tile *t = tv->tile;
-	struct tlist *feat_tl = argv[2].p;
+	struct tlist *etl = argv[2].p;
 	int detach_only = argv[3].i;
-	struct tlist_item *it = tlist_item_selected(feat_tl);
-	struct tile_feature *tft;
+	struct tlist_item *it;
+	struct tile_element *tel;
 
-	if (it == NULL)
+	if ((it = tlist_item_selected(etl)) == NULL) {
 		return;
+	}
+	tel = it->p1;
+
+	/* XXX check that it's the element being deleted */
+	if (tv->edit_mode)
+		tile_close_element(tv);
 	
 	if (strcmp(it->class, "feature") == 0) {
-		struct tile_feature *tft = it->p1;
-		struct feature *ft = tft->ft;
-
-		tile_remove_feature(t, tft->ft);
-		if (ft->nrefs == 0 && !detach_only) {
-			text_tmsg(MSG_INFO, 500, _("Destroying feature `%s'."),
-			    ft->name);
-			feature_destroy(ft);
-			TAILQ_REMOVE(&ts->features, ft, features);
-			Free(ft, M_RG);
-		}
+		tile_remove_feature(t, tel->tel_feature.ft, !detach_only);
+	} else if (strcmp(it->class, "pixmap") == 0) {
+		tile_remove_pixmap(t, tel->tel_pixmap.px, !detach_only);
 	} else if (strcmp(it->class, "sketch") == 0) {
 		//
-	} else if (strcmp(it->class, "pixmap") == 0) {
-		//
 	}
-	
-	if (tv->edit_mode)
-		feature_close(tv);
 }
 
 static void
@@ -466,15 +735,6 @@ resize_tile_dlg(int argc, union evarg *argv)
 	window_show(win);
 }
 
-static void
-insert_pixmap(int argc, union evarg *argv)
-{
-	struct tileview *tv = argv[1].p;
-	struct window *win = argv[2].p;
-
-	dprintf("pixmap\n");
-}
-
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -483,7 +743,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	struct AGMenu *m;
 	struct AGMenuItem *item;
 	struct tileview *tv;
-	struct tlist *feat_tl;
+	struct tlist *etl;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, "%s <%s>", t->name, OBJECT(ts)->name);
@@ -492,25 +752,40 @@ tile_edit(struct tileset *ts, struct tile *t)
 	tv = Malloc(sizeof(struct tileview), M_OBJECT);
 	tileview_init(tv, ts, t, TILEVIEW_AUTOREGEN);
 	
-	feat_tl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(feat_tl, TLIST_POLL|TLIST_TREE);
-	WIDGET(feat_tl)->flags &= ~(WIDGET_WFILL);
-	tlist_prescale(feat_tl, _("Feature #00 (0,0)"), 10);
-	event_new(feat_tl, "tlist-poll", poll_features, "%p,%p", ts, t);
+	etl = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(etl, TLIST_POLL|TLIST_TREE);
+	WIDGET(etl)->flags &= ~(WIDGET_WFILL);
+	tlist_prescale(etl, _("FEATURE #00 (00,00)"), 10);
+	event_new(etl, "tlist-poll", poll_items, "%p,%p", ts, t);
 
-	item = tlist_set_popup(feat_tl, "feature");
+	item = tlist_set_popup(etl, "feature");
 	{
 		ag_menu_action(item, _("Edit feature"), ICON(OBJEDIT_ICON),
 		    SDLK_e, KMOD_CTRL,
-		    edit_feature, "%p,%p,%p,%p", tv, feat_tl, win, 1);
+		    edit_element, "%p,%p,%p,%p", tv, etl, win, 1);
 		
 		ag_menu_action(item, _("Detach feature"), ICON(TRASH_ICON),
 		    SDLK_d, KMOD_CTRL,
-		    delete_feature, "%p,%p,%i", tv, feat_tl, 1);
+		    delete_element, "%p,%p,%i", tv, etl, 1);
 		
 		ag_menu_action(item, _("Destroy feature"), ICON(TRASH_ICON),
 		    SDLK_x, KMOD_CTRL,
-		    delete_feature, "%p,%p,%i", tv, feat_tl, 0);
+		    delete_element, "%p,%p,%i", tv, etl, 0);
+	}
+
+	item = tlist_set_popup(etl, "pixmap");
+	{
+		ag_menu_action(item, _("Edit pixmap"), ICON(OBJEDIT_ICON),
+		    SDLK_e, KMOD_CTRL,
+		    edit_element, "%p,%p,%p,%p", tv, etl, win, 1);
+		
+		ag_menu_action(item, _("Detach pixmap"), ICON(TRASH_ICON),
+		    SDLK_d, KMOD_CTRL,
+		    delete_element, "%p,%p,%i", tv, etl, 1);
+		
+		ag_menu_action(item, _("Destroy pixmap"), ICON(TRASH_ICON),
+		    SDLK_x, KMOD_CTRL,
+		    delete_element, "%p,%p,%i", tv, etl, 0);
 	}
 
 	m = ag_menu_new(win);
@@ -518,7 +793,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	{
 		ag_menu_action(item, _("Fill"), NULL,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
-		    insert_fill, "%p,%p,%p", tv, win, feat_tl);
+		    insert_fill, "%p,%p,%p", tv, win, etl);
 		    
 		ag_menu_action(item, _("Sketch projection"), NULL,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
@@ -542,7 +817,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 		ag_menu_action(item, _("Insert pixmap..."),
 		    ICON(DRAWING_ICON),
 		    SDLK_p, KMOD_CTRL,
-		    insert_pixmap, "%p,%p", tv, win);
+		    insert_pixmap, "%p,%p,%p", tv, win, etl);
 	}
 
 	item = ag_menu_add_item(m, _("Edit"));
@@ -564,17 +839,17 @@ tile_edit(struct tileset *ts, struct tile *t)
 		box_set_padding(fbox, 0);
 		box_set_spacing(fbox, 0);
 		{
-			object_attach(fbox, feat_tl);
+			object_attach(fbox, etl);
 	
 			fbu = button_new(fbox, _("Edit"));
 			WIDGET(fbu)->flags |= WIDGET_WFILL;
 			button_set_sticky(fbu, 1);
 			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
 
-			event_new(fbu, "button-pushed", edit_feature,
-			    "%p,%p,%p,%i", tv, feat_tl, win, 0);
-			event_new(feat_tl, "tlist-dblclick", edit_feature,
-			    "%p,%p,%p,%i", tv, feat_tl, win, 0);
+			event_new(fbu, "button-pushed", edit_element,
+			    "%p,%p,%p,%i", tv, etl, win, 0);
+			event_new(etl, "tlist-dblclick", edit_element,
+			    "%p,%p,%p,%i", tv, etl, win, 1);
 		}
 		
 		object_attach(box, tv);

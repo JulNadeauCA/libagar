@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.5 2005/02/05 06:06:48 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.6 2005/02/08 15:50:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -49,7 +49,9 @@ const struct widget_ops tileview_ops = {
 enum {
 	FRAME_COLOR,
 	TILE1_COLOR,
-	TILE2_COLOR
+	TILE2_COLOR,
+	TEXTFG_COLOR,
+	TEXTBG_COLOR
 };
 
 struct tileview *
@@ -261,6 +263,8 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	widget_map_color(tv, FRAME_COLOR, "frame", 40, 40, 60, 255);
 	widget_map_color(tv, TILE1_COLOR, "tile1", 140, 140, 140, 255);
 	widget_map_color(tv, TILE2_COLOR, "tile2", 80, 80, 80, 255);
+	widget_map_color(tv, TEXTBG_COLOR, "text-bg", 0, 0, 50, 255);
+	widget_map_color(tv, TEXTFG_COLOR, "text-fg", 250, 250, 250, 255);
 
 	tv->ts = ts;
 	tv->tile = tile;
@@ -363,6 +367,34 @@ tileview_scale(void *p, int rw, int rh)
 	}
 }
 
+static void
+draw_status(struct tileview *tv, const char *label)
+{
+	SDL_Surface *su;
+
+	/* XXX pointless colorkey blit */
+	su = text_render(NULL, -1, WIDGET_COLOR(tv, TEXTFG_COLOR), label);
+	if (su->w >= WIDGET(tv)->w) {
+		primitives.rect_filled(tv,
+		    0,
+		    0,
+		    WIDGET(tv)->w,
+		    WIDGET(tv)->h,
+		    TEXTBG_COLOR);
+	} else {
+		primitives.rect_filled(tv,
+		    WIDGET(tv)->w - su->w - 2,
+		    WIDGET(tv)->h - su->h - 2,
+		    WIDGET(tv)->w,
+		    WIDGET(tv)->h,
+		    TEXTBG_COLOR);
+	}
+	widget_blit(tv, su,
+	    WIDGET(tv)->w - su->w - 1,
+	    WIDGET(tv)->h - su->h - 1);
+	SDL_FreeSurface(su);
+}
+
 void
 tileview_draw(void *p)
 {
@@ -443,6 +475,33 @@ tileview_draw(void *p)
 				    x1+dx, y1+dy,
 				    255, 255, 255, 128);
 			}
+		}
+	}
+
+	if (tv->edit_mode) {
+		char status[64];
+
+		switch (tv->state) {
+		case TILEVIEW_FEATURE_EDIT:
+			strlcpy(status, _("Editing feature: "), sizeof(status));
+			strlcat(status, tv->tv_feature.ft->name,
+			    sizeof(status));
+			draw_status(tv, status);
+			break;
+		case TILEVIEW_SKETCH_EDIT:
+			strlcpy(status, _("Editing sketch: "), sizeof(status));
+			strlcat(status, tv->tv_sketch.sk->name,
+			    sizeof(status));
+			draw_status(tv, status);
+			break;
+		case TILEVIEW_PIXMAP_EDIT:
+			strlcpy(status, _("Editing pixmap: "), sizeof(status));
+			strlcat(status, tv->tv_pixmap.px->name,
+			    sizeof(status));
+			draw_status(tv, status);
+			break;
+		default:
+			break;
 		}
 	}
 }

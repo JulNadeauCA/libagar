@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.3 2005/02/05 03:23:32 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.4 2005/02/08 15:50:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -164,7 +164,6 @@ fill_edit(void *p, struct tileview *tv)
 		pal = palette_new(box, PALETTE_RGBA, tv->tile->su->format);
 		widget_bind(pal, "color", WIDGET_UINT32, &f->f_gradient.c2);
 	}
-
 	return (win);
 }
 
