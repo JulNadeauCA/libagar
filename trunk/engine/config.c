@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.113 2004/04/23 10:55:33 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.114 2004/04/23 12:47:19 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -199,7 +199,7 @@ config_init(struct config *con)
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 
 	if (stat(udatadir, &sta) != 0 &&
-	    compat_mkdir(udatadir) != 0)
+	    Mkdir(udatadir) != 0)
 		fatal("%s: %s", udatadir, strerror(errno));
 }
 
