@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.115 2002/09/05 14:28:10 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.116 2002/09/06 01:29:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -180,16 +180,15 @@ map_shrink(struct map *m, Uint32 w, Uint32 h)
 	m->maph = h;
 }
 
-/*
- * Grow a map and initialize new nodes.
- * Map must be locked.
- */
+/* Grow a map and initialize new nodes. */
 void
 map_grow(struct map *m, Uint32 w, Uint32 h)
 {
 	struct node *node;
 	Uint32 x, y;
 	int i;
+
+	pthread_mutex_lock(&m->lock);
 
 	/* Reallocate the two-dimensional node array. */
 	m->map = erealloc(m->map, (w*h) * sizeof(struct node *));
@@ -220,6 +219,8 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 	}
 	m->mapw = w;
 	m->maph = h;
+
+	pthread_mutex_unlock(&m->lock);
 }
 
 void
@@ -239,7 +240,9 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 	m->defx = 0;
 	m->defy = 0;
 	m->map = NULL;
-	pthread_mutex_init(&m->lock, NULL);
+	pthread_mutexattr_init(&m->lockattr);
+	pthread_mutexattr_settype(&m->lockattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&m->lock, &m->lockattr);
 }
 
 /*
@@ -346,15 +349,14 @@ node_delref(struct node *node, struct noderef *nref)
 	return (0);
 }
 
-/*
- * Reinitialize all nodes.
- * Must be called on a locked map.
- */
+/* Reinitialize all nodes, and add a default reference. */
 void
 map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
     Uint32 rflags)
 {
 	int x = 0, y;
+	
+	pthread_mutex_lock(&m->lock);
 
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
@@ -374,8 +376,9 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 			}
 		}
 	}
-
 	m->map[m->defy][m->defx].flags |= NODE_ORIGIN;
+
+	pthread_mutex_unlock(&m->lock);
 }
 
 void
@@ -386,31 +389,34 @@ map_destroy(void *p)
 	if (m->map != NULL) {
 		map_freenodes(m);
 	}
+
+	pthread_mutex_destroy(&m->lock);
+	pthread_mutexattr_destroy(&m->lockattr);
 }
 
 /*
  * Return the map entry reference for ob:offs, or the first match
  * for ob if offs is -1.
- *
- * Must be called on a locked map.
- *
- * XXX should be a macro
  */
 struct noderef *
-node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
+node_findref(struct map *m, struct node *node, void *ob, Sint32 offs,
+    Uint32 flags)
 {
 	struct noderef *nref;
 
+	pthread_mutex_lock(&m->lock);
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if ((nref->pobj == ob && (nref->flags & flags)) &&
 		    (nref->offs == offs || offs < 0)) {
+			pthread_mutex_unlock(&m->lock);
 			return (nref);
 		}
 	}
-
+	pthread_mutex_unlock(&m->lock);
 	return (NULL);
 }
 
+/* Map must be locked. */
 static void
 map_load_flat_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 {
@@ -458,6 +464,7 @@ map_load_flat_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 	}
 }
 
+/* Map must be locked. */
 static void
 map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 {
@@ -548,7 +555,7 @@ map_load_rle_nodes(int fd, struct map *m, struct object **pobjs, Uint32 nobjs)
 int
 map_load(void *ob, int fd)
 {
-	struct map *m = (struct map *)ob;
+	struct map *m = ob;
 	struct object **pobjs;
 	Uint32 i, nobjs, tilew, tileh;
 
@@ -558,6 +565,7 @@ map_load(void *ob, int fd)
 		return (-1);
 	}
 
+	pthread_mutex_lock(&m->lock);
 	m->flags = read_uint32(fd);
 	m->mapw  = read_uint32(fd);
 	m->maph  = read_uint32(fd);
@@ -574,13 +582,15 @@ map_load(void *ob, int fd)
 	/* Load the object map. */
 	nobjs = read_uint32(fd);
 	pobjs = emalloc(nobjs * sizeof(struct object *));
+
+	pthread_mutex_lock(&world->lock);
 	for (i = 0; i < nobjs; i++) {
 		struct object *pob;
 		char *s;
 
 		s = read_string(fd);
 		read_uint32(fd);		/* Unused */
-		pob = object_strfind(s);
+		pob = world_find(s);
 
 		pobjs[i] = pob;
 		if (pob != NULL) {
@@ -593,8 +603,7 @@ map_load(void *ob, int fd)
 		}
 		free(s);
 	}
-
-	pthread_mutex_lock(&m->lock);
+	pthread_mutex_unlock(&world->lock);
 
 	/* Initialize the nodes. */
 	if (m->map != NULL) {
@@ -602,8 +611,6 @@ map_load(void *ob, int fd)
 		m->map = NULL;
 	}
 	map_allocnodes(m, m->mapw, m->maph);
-
-	/* Read/decompress the nodes. */
 	if (m->flags & MAP_RLE_COMPRESSION) {
 		map_load_rle_nodes(fd, m, pobjs, nobjs);
 	} else {
@@ -611,7 +618,6 @@ map_load(void *ob, int fd)
 	}
 
 	pthread_mutex_unlock(&m->lock);
-
 	free(pobjs);
 	return (0);
 }
@@ -652,6 +658,7 @@ nodecmp(struct node *n1, struct node *n2)
 	return (0);
 }
 
+/* Map must be locked. */
 static void
 map_save_flat_nodes(struct fobj_buf *buf, struct map *m,
     struct object **pobjs, Uint32 nobjs)
@@ -701,6 +708,7 @@ map_save_flat_nodes(struct fobj_buf *buf, struct map *m,
 	    savedrefs, totrefs);
 }
 
+/* Map must be locked. */
 static void
 map_save_rle_nodes(struct fobj_buf *buf, struct map *m, struct object **pobjs,
     Uint32 nobjs)
@@ -774,7 +782,6 @@ rle_scan:
 	    totcomp * 100 / (m->mapw * m->maph), totcomp, (m->mapw * m->maph));
 }
 
-/* World must be locked, map must not. */
 int
 map_save(void *p, int fd)
 {
@@ -792,6 +799,8 @@ map_save(void *p, int fd)
 
 	version_write(fd, &map_ver);
 
+	pthread_mutex_lock(&m->lock);
+
 	buf_write_uint32(buf, m->flags);
 	buf_write_uint32(buf, m->mapw);
 	buf_write_uint32(buf, m->maph);
@@ -806,11 +815,12 @@ map_save(void *p, int fd)
 	buf_write_uint32(buf, 0);
 
 	/* Write the object map. */
-	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
 		solen += sizeof(struct object *);
 	}
 	pobjs = emalloc(solen);
-	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
 		if ((pob->flags & OBJECT_ART) == 0 ||
 		     pob->flags & OBJECT_CANNOT_MAP) {
 			continue;
@@ -821,16 +831,14 @@ map_save(void *p, int fd)
 		dprintf("reference %s\n", pob->name);
 	}
 	buf_pwrite_uint32(buf, nobjs, soffs);
+	pthread_mutex_unlock(&world->lock);
 
-	pthread_mutex_lock(&m->lock);
-
-	/* Write the nodes. */
+	/* Write the map nodes. */
 	if (m->flags & MAP_RLE_COMPRESSION) {
 		map_save_rle_nodes(buf, m, pobjs, nobjs);
 	} else {
 		map_save_flat_nodes(buf, m, pobjs, nobjs);
 	}
-	
 	pthread_mutex_unlock(&m->lock);
 
 	fobj_flush_buf(buf, fd);
@@ -840,19 +848,20 @@ map_save(void *p, int fd)
 	return (0);
 }
 
-/*
- * Grow the map to ensure that m:[mx,my] is a valid node.
- * Map must be locked.
- */
+/* Grow the map to ensure that m:[mx,my] is a valid node. */
 void
 map_adjust(struct map *m, Uint32 mx, Uint32 my)
 {
+	pthread_mutex_lock(&m->lock);
+
 	if (mx >= m->mapw) {
 		map_grow(m, m->mapw + mx, m->maph);
 	}
 	if (my >= m->maph) {
 		map_grow(m, m->mapw, m->maph + my);
 	}
+	
+	pthread_mutex_unlock(&m->lock);
 }
 
 #ifdef DEBUG
