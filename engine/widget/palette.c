@@ -1,4 +1,4 @@
-/*	$Csoft: palette.c,v 1.22 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: palette.c,v 1.23 2004/03/24 01:18:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <engine/engine.h>
+#include <engine/config.h>
 #include <engine/view.h>
 
 #include "palette.h"
@@ -177,18 +178,19 @@ palette_scale(void *p, int w, int h)
 void
 palette_draw(void *p)
 {
+	char text[16];
 	struct palette *pal = p;
-	Uint32 color;
+	Uint32 color, label_color;
 	Uint8 r, g, b, a;
+	SDL_Surface *label;
 
-	color = widget_get_uint32(pal, "color");
+	color = WIDGET_COLOR(pal, CURRENT_COLOR) =
+	    widget_get_uint32(pal, "color");
 
-	WIDGET_COLOR(pal, CURRENT_COLOR) = color;
 	primitives.rect_filled(pal,
 	    pal->rpreview.x, pal->rpreview.y,
 	    pal->rpreview.w, pal->rpreview.h,
 	    CURRENT_COLOR);
-
 	primitives.frame(pal,
 	    pal->rpreview.x, pal->rpreview.y,
 	    pal->rpreview.w, pal->rpreview.h,
@@ -200,5 +202,14 @@ palette_draw(void *p)
 	widget_set_int(pal->bars[2], "value", (int)b);
 	if (pal->nbars > 3)
 		widget_set_int(pal->bars[3], "value", (int)a);
+
+	label_color = SDL_MapRGB(vfmt, 255-r, 255-g, 255-b);
+	snprintf(text, sizeof(text), "%u\n%u\n%u\n", r, g, b);
+	label = text_render(prop_get_string(config, "font-engine.default-font"),
+	    10, label_color, text);
+	widget_blit(pal, label,
+	    pal->rpreview.x + pal->rpreview.w/2 - label->w/2,
+	    pal->rpreview.y + pal->rpreview.h/2 - label->h/2);
+	SDL_FreeSurface(label);
 }
 
