@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.36 2002/09/05 03:52:54 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.37 2002/09/11 23:53:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -15,16 +15,9 @@ enum window_event {
 typedef enum {
 	WINDOW_SOLID =		0x100,	/* Plain, no decorations. */
 	WINDOW_GRADIENT =	0x200,	/* Blue/red gradient. */
-	WINDOW_CUBIC =		0x400,	/* Odd algorithm */
-	WINDOW_CUBIC2 =		0x800	/* Odd algorithm */
+#define WINDOW_TYPE		(WINDOW_SOLID | WINDOW_GRADIENT)
 #define WINDOW_DEFAULT_TYPE	(WINDOW_GRADIENT)
 } window_type_t;
-
-#define WINDOW_TYPE		\
-	(WINDOW_SOLID |		\
-	 WINDOW_GRADIENT |	\
-	 WINDOW_CUBIC |		\
-	 WINDOW_CUBIC2)
 
 TAILQ_HEAD(regionsq, region);
 
@@ -34,7 +27,6 @@ struct window {
 	/* Read-only once attached */
 	int	 flags;
 #define WINDOW_PLAIN		0x001	/* Solid, no borders */
-#define WINDOW_ANIMATE		0x004	/* Redraw each tick */
 #define WINDOW_TITLEBAR		0x008	/* Draw title bar */
 #define WINDOW_ROUNDEDGES	0x010	/* Round edges */
 #define WINDOW_SCALE		0x020	/* Scale regions/widgets */
@@ -79,7 +71,6 @@ struct window {
 	TAILQ_INSERT_HEAD(&view->windowsh, (w), windows);	\
 } while (/*CONSTCOND*/0)
 
-
 #ifdef DEBUG
 
 # define WINDOW_PUT_PIXEL(win, wrx, wry, c) do {			\
@@ -118,8 +109,6 @@ struct window {
 	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
 	 (xa) < ((wina)->x+(wina)->w)	&& (ya) < ((wina)->y+(wina)->h))
 
-/* Wrappers for high-level code. */
-
 struct window	*window_new(char *, char *, int, int, int, int, int, int, int);
 void	 	 window_init(struct window *, char *, char *, int, int, int,
 		     int, int, int, int);
@@ -129,10 +118,8 @@ void		 window_destroy(void *);
 void		 window_attach(void *, void *);
 void		 window_detach(void *, void *);
 
-int	 window_show(struct window *);
-int	 window_hide(struct window *);
-int	 window_show_locked(struct window *);
-int	 window_hide_locked(struct window *);
+int	 window_show(struct window *, int, int);
+int	 window_hide(struct window *, int, int);
 void	 window_draw(struct window *);
 int	 window_event_all(SDL_Event *);
 void	 window_resize(struct window *);
