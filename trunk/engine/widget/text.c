@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.52 2003/03/02 01:20:51 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.53 2003/03/02 04:13:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -115,11 +115,13 @@ text_init(void)
 void
 text_set_default_font(char *name, int size, int style)
 {
+#ifdef DEBUG
 	if (font != NULL) {
 		/* Replacing the default font would be thread-unsafe. */
 		fatal("exists\n");
 	}
-	dprintf("setting default font to %s:%d,%d\n",
+#endif
+	dprintf("%s:%d,%d\n",
 	    prop_get_string(config, "font-engine.default-font"),
 	    prop_get_int(config, "font-engine.default-size"),
 	    prop_get_int(config, "font-engine.default-style"));
@@ -151,8 +153,31 @@ text_destroy(void)
 		text_destroy_font(fon);
 		free(fon);
 	}
-
 	ttf_destroy();
+}
+
+int
+text_font_height(ttf_font *fon)
+{
+	return (ttf_font_height((fon != NULL) ? fon : font));
+}
+
+int
+text_font_ascent(ttf_font *fon)
+{
+	return (ttf_font_ascent((fon != NULL) ? fon : font));
+}
+
+int
+text_font_descent(ttf_font *fon)
+{
+	return (ttf_font_descent((fon != NULL) ? fon : font));
+}
+
+int
+text_font_line_skip(ttf_font *fon)
+{
+	return (ttf_font_line_skip((fon != NULL) ? fon : font));
 }
 
 SDL_Surface *
