@@ -1,7 +1,7 @@
-/*	$Csoft: edcursor.c,v 1.2 2002/08/12 06:50:14 vedge Exp $	*/
+/*	$Csoft: edcursor.c,v 1.3 2002/09/02 05:27:19 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

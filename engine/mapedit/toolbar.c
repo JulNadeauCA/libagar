@@ -1,7 +1,7 @@
-/*	$Csoft: toolbar.c,v 1.17 2002/08/20 05:58:30 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.18 2002/08/28 08:51:28 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -128,7 +128,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the toolbar.
 	 */
-	win = window_new("Tool", WINDOW_SOLID,
+	win = window_new("mapedit-toolbar", "Tool", WINDOW_SOLID,
 	    16, 16,
 	    70, 147,
 	    70, 147);
@@ -207,7 +207,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	 */
 
 	/* Object list window */
-	win = window_new("Object", WINDOW_SOLID,
+	win = window_new("mapedit-object-list", "Object", WINDOW_SOLID,
 	    83, 16, view->w-96, TILEH+51, TILEW+42, TILEH+51);
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
@@ -218,7 +218,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the `New map' dialog.
 	 */
-	win = window_new("New map", WINDOW_CENTER,
+	win = window_new("mapedit-new-map-dialog", "New map", WINDOW_CENTER,
 	     0, 0, 320, 200, 258, 198);
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
@@ -246,7 +246,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	/*
 	 * Create the `Load map' dialog.
 	 */
-	win = window_new("Load map", WINDOW_CENTER,
+	win = window_new("mapedit-load-map-dialog", "Load map", WINDOW_CENTER,
 	    0, 0,
 	    320, 120,
 	    100, 105);

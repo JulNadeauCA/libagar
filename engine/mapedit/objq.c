@@ -1,18 +1,15 @@
-/*	$Csoft: objq.c,v 1.14 2002/08/21 04:25:40 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.15 2002/08/25 09:11:29 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -173,7 +170,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	if ((cury += 32) + 264 > view->h) {
 		cury = 85;
 	}
-	window_init(win, ob->name, WINDOW_SOLID,
+	window_init(win, NULL, ob->name, WINDOW_SOLID,
 	    view->w - 170, cury, 154, 264, 156, 94);
 
 	/* Map view */

@@ -1,7 +1,7 @@
-/*	$Csoft: mapwin.c,v 1.13 2002/08/18 00:36:34 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.14 2002/08/19 05:31:54 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ mapwin_new_view(int argc, union evarg *argv)
 	sprintf(caption, "%s view (%dx%d)",
 	    OBJECT(m)->name, m->mapw, m->maph);
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, WINDOW_SOLID,
+	window_init(win, NULL, caption, WINDOW_SOLID,
 	    96, 96, 375, 293, 100, 64);
 
 	/* Map view */
@@ -121,7 +121,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	    OBJECT(m)->name, m->mapw, m->maph);
 
 	win = emalloc(sizeof(struct window));
-	window_init(win, caption, WINDOW_SOLID|WINDOW_CENTER,
+	window_init(win, NULL, caption, WINDOW_SOLID|WINDOW_CENTER,
 	    0, 0, 420, 300, 375, 293);
 
 	/* Map view */

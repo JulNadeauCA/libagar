@@ -1,18 +1,15 @@
-/*	$Csoft: mapedit.c,v 1.117 2002/08/21 02:21:39 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.118 2002/09/04 04:41:26 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -100,7 +97,6 @@ mapedit_shadow(struct mapedit *med, void *parent)
 		
 		if ((ob->flags & OBJECT_ART) == 0 ||
 		   (ob->art->nsprites < 1 && ob->art->nanims < 1)) {
-			dprintf("skipping %s (no art)\n", ob->name);
 			continue;
 		}
 		if (ob == OBJECT(med)) {
