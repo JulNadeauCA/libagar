@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.105 2003/04/25 23:51:37 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.106 2003/05/07 12:16:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -284,28 +284,38 @@ static __inline__ void
 mapview_draw_tool_cursor(struct mapview *mv)
 {
 	struct tool *curtool = mapedit.curtool;
+	SDL_Rect rd;
 
-	if (mv->cx != -1 && mv->cy != -1) {
-		SDL_Rect rd;
+	if (mv->cx == -1 || mv->cy == -1)
+		return;
 
-		rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + *mv->ssx;
-		rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + *mv->ssy;
-		rd.w = mv->map->tilew;
-		rd.h = mv->map->tileh;
+	rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + *mv->ssx;
+	rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + *mv->ssy;
+	rd.w = mv->map->tilew;
+	rd.h = mv->map->tileh;
 
-		if ((curtool == NULL ||
-		    TOOL_OPS(curtool)->cursor == NULL ||
-		    TOOL_OPS(curtool)->cursor(curtool, mv, &rd) == -1)) {
-			primitives.rect_outlined(mv,
-			    rd.x+1, rd.y+1,
-			    mv->map->tilew-1, mv->map->tileh-1,
-			    WIDGET_COLOR(mv, CURSOR_COLOR));
-			primitives.rect_outlined(mv,
-			    rd.x+2, rd.y+2,
-			    mv->map->tilew-3, mv->map->tileh-3,
-			    WIDGET_COLOR(mv, CURSOR_COLOR));
-		}
+	if (curtool == NULL)
+		goto defcurs;
+
+	if (curtool->cursor != NULL) {
+		rd.x += WIDGET_ABSX(mv);
+		rd.y += WIDGET_ABSY(mv);
+		SDL_BlitSurface(curtool->cursor, NULL, view->v, &rd);
+	} else {
+		if (TOOL_OPS(curtool)->cursor == NULL ||
+		    TOOL_OPS(curtool)->cursor(curtool, mv, &rd) == -1)
+			goto defcurs;
 	}
+	return;
+defcurs:
+	primitives.rect_outlined(mv,
+	    rd.x+1, rd.y+1,
+	    mv->map->tilew-1, mv->map->tileh-1,
+	    WIDGET_COLOR(mv, CURSOR_COLOR));
+	primitives.rect_outlined(mv,
+	    rd.x+2, rd.y+2,
+	    mv->map->tilew-3, mv->map->tileh-3,
+	    WIDGET_COLOR(mv, CURSOR_COLOR));
 }
 
 static void

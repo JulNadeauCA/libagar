@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.24 2003/05/06 05:54:02 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.25 2003/05/07 12:18:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,6 +62,7 @@ tool_init(struct tool *tool, char *name, const void *ops)
 	}
 	tool->type = Strdup(name);
 	tool->button = NULL;
+	tool->cursor = NULL;
 	SLIST_INIT(&tool->bindings);
 }
 

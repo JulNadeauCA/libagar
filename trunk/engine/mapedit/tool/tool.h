@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.11 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.12 2003/04/25 09:47:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_TOOL_H_
@@ -37,9 +37,18 @@ struct tool_binding {
 struct tool {
 	struct object	 obj;
 	char		*type;
-	struct window	*win;		/* Tool settings window */
-	struct button	*button;	/* Trigger */
+	struct window	*win;			/* Tool settings window */
+	struct button	*button;		/* Trigger */
+	SDL_Surface	*cursor;		/* Static cursor */
 	SLIST_HEAD(,tool_binding) bindings;
+};
+
+enum {
+	TOOL_FILL_CURSOR,
+	TOOL_MAGNIFIER_CURSOR,
+	TOOL_RESIZE_HORIZ_CURSOR,
+	TOOL_RESIZE_VERT_CURSOR,
+	TOOL_SELECT_CURSOR
 };
 
 #define	TOOL(t)		((struct tool *)(t))
