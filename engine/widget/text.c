@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.7 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.8 2002/05/11 04:07:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,6 +28,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __linux__
+#define GNU_SOURCE	/* for vasprintf() */
+#endif
+
+#include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
