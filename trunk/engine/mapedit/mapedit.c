@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.194 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.195 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -175,7 +175,7 @@ mapedit_init(void)
 	/* Create the toolbar window. */
 	win = window_new("mapedit-toolbar");
 	window_set_caption(win, _("Tools"));
-	window_set_closure(win, WINDOW_HIDE);
+	window_set_closure(win, WINDOW_IGNORE);
 	window_set_position(win, WINDOW_UPPER_LEFT, 0);
 
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL|BOX_HFILL);
