@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.93 2002/05/25 08:56:59 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.94 2002/05/28 06:04:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -80,11 +80,6 @@ static const int stickykeys[] = {	/* Keys applied after each move. */
 	SDLK_w,	/* Walk */
 	SDLK_c,	/* Climb */
 	SDLK_p	/* Slippery */
-};
-
-enum {
-	BG_HORIZONTAL,
-	BG_VERTICAL
 };
 
 static struct window *coords_win = NULL;	/* XXX thread unsafe */
@@ -278,7 +273,7 @@ mapedit_onattach(void *parent, void *child)
 	med->tilestack.y = m->tileh;
 	med->tilestack.w = m->tilew;
 	med->tilestack.h = m->view->h - m->tilew;
-	med->objlist.x = m->tilew;
+	med->objlist.x = 0;
 	med->objlist.y = 0;
 	med->objlist.w = m->view->w - m->tilew;
 	med->objlist.h = m->tileh;
@@ -377,19 +372,17 @@ static void
 mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 {
 	Uint8 *dst = v->pixels;
-	Uint32 x, y, cx, cy;
+	int x, y;
+	Uint32 c, cs[2];
 
-	for (y = rd->y, cy = 0; y < rd->y + rd->h; y++, cy++) {
-		for (x = rd->x, cx = 0; x < rd->x + rd->w; x++, cx++) {
-			static Uint32 c;
-			
-			if (flags & BG_VERTICAL) {
-				c = SDL_MapRGB(v->format, cx, 0, cy >> 2);
-			} else {
-				c = SDL_MapRGB(v->format, cy, 0, cx >> 2);
-			}
+	cs[0] = SDL_MapRGB(v->format, 0x66, 0x66, 0x66);
+	cs[1] = SDL_MapRGB(v->format, 0x99, 0x99, 0x99);
 
-			SDL_LockSurface(v);
+	SDL_LockSurface(v);
+	for (y = rd->y; y < rd->y + rd->h; y++) {
+		for (x = rd->x; x < rd->x + rd->w; x++) {
+			c = cs[((x ^ y) >> 2) & 1];	/* XXX pref */
+
 			switch (v->format->BytesPerPixel) {
 			case 1:
 				dst[x] = c;
@@ -412,10 +405,10 @@ mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 				((Uint32 *)dst)[x] = c;
 				break;
 			}
-			SDL_UnlockSurface(v);
 		}
 		dst += v->pitch;
 	}
+	SDL_UnlockSurface(v);
 }
 
 /*
@@ -425,48 +418,51 @@ mapedit_bg(SDL_Surface *v, SDL_Rect *rd, Uint32 flags)
 static void
 mapedit_state(struct mapedit *med, SDL_Rect *rd)
 {
+	SDL_Surface *v = med->map->view->v;
+	SDL_FillRect(v, rd, SDL_MapRGB(v->format, 10, 10, 10));
+
 	if (med->flags & MAPEDIT_INSERT) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_INSERT_TXT),
-		    NULL, med->map->view->v, rd);
+		    NULL, v, rd);
 	} else {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_REPLACE_TXT),
-		    NULL, med->map->view->v, rd);
+		    NULL, v, rd);
 	}
 	if (med->flags & MAPEDIT_DRAWPROPS)
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_PROPS_TXT),
-		    NULL, med->map->view->v, rd);
+		    NULL, v, rd);
 	if (med->flags & MAPEDIT_DRAWGRID)
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_GRID_TXT),
-		    NULL, med->map->view->v, rd);
+		    NULL, v, rd);
 	if (med->curflags & NODE_BLOCK) {
 		SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_BLOCKED),
-		    NULL, med->map->view->v, rd);
+		    NULL, v, rd);
 	} else {
 		if (med->curflags & NODE_WALK) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_WALK),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		}
 		if (med->curflags & NODE_CLIMB) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_CLIMB),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		}
 		if (med->curflags & NODE_SLIP) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_SLIP),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		}
 		if (med->curflags & NODE_BIO) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_BIO),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		} else if (med->curflags & NODE_REGEN) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_REGEN),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		}
 		if (med->curflags & NODE_SLOW) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_SLOW),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		} else if (med->curflags & NODE_HASTE) {
 			SDL_BlitSurface(SPRITE(curmapedit, MAPEDIT_HASTE),
-			    NULL, med->map->view->v, rd);
+			    NULL, v, rd);
 		}
 	}
 }
@@ -485,7 +481,7 @@ mapedit_tilelist(struct mapedit *med)
 	m = med->map;
 
 	rd = med->tilelist;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
+	mapedit_bg(m->view->v, &rd, 0);
 	rd.h = m->tilew;
 	rd.y = m->tileh;
 	
@@ -574,7 +570,7 @@ mapedit_tilestack(struct mapedit *med)
 	m = med->map;
 
 	rd = med->tilestack;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
+	mapedit_bg(m->view->v, &rd, 0);
 	rd.h = m->tileh;
 
 	i = 0;
@@ -628,7 +624,7 @@ mapedit_objlist(struct mapedit *med)
 	m = med->map;
 
 	rd = med->objlist;	/* Structure copy */
-	mapedit_bg(m->view->v, &rd, BG_HORIZONTAL);
+	mapedit_bg(m->view->v, &rd, 0);
 	rd.w = m->tilew;
 	rd.x = m->tilew;
 
