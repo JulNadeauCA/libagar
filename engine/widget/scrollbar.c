@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.9 2002/11/20 04:09:50 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.10 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -158,8 +158,6 @@ scrollbar_mouse_motion(int argc, union evarg *argv)
 	int y = argv[2].i;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
-
-	WIDGET_ASSERT(sb, "scrollbar");
 
 	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) == 0) {
 		return;
