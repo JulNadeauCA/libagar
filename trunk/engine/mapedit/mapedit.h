@@ -1,14 +1,12 @@
-/*	$Csoft: mapedit.h,v 1.57 2002/09/04 04:41:26 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.58 2002/12/04 04:23:12 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
 	int	spritei;	/* Index into the object's real sprite list */
 	void	*p;
-	enum {
-		EDITREF_SPRITE,	/* SDL_Surface */
-		EDITREF_ANIM	/* struct anim */
-	} type;
+
+	int	 type;
 	
 	SIMPLEQ_ENTRY(editref) erefs;	/* Reference list */
 };
@@ -55,6 +53,7 @@ struct mapedit {
 		struct object	*obj;
 		Uint32		 offs;
 		Uint32		 flags;
+		int		 type;
 	} ref;
 	struct {
 		Uint32	flags;

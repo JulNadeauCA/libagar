@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.16 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.17 2002/12/01 14:41:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -40,11 +40,11 @@
 #include <engine/widget/text.h>
 
 #include "mapedit.h"
-#include "command.h"
 #include "fileops.h"
 #include "mapwin.h"
 #include "mapview.h"
 
+/* Create a new map. */
 void
 fileops_new_map(int argc, union evarg *argv)
 {
@@ -72,7 +72,7 @@ fileops_new_map(int argc, union evarg *argv)
 
 	m = emalloc(sizeof(struct map));
 	map_init(m, name, strcmp(media, "") == 0 ? NULL : media, MAP_2D);
-	map_allocnodes(m, w, h);
+	map_alloc_nodes(m, w, h);
 
 	m->defx = w / 2;
 	m->defy = h - 2;	/* XXX pref */
@@ -93,6 +93,7 @@ out:
 	free(media);
 }
 
+/* Save the map to the default location. */
 void
 fileops_save_map(int argc, union evarg *argv)
 {
@@ -101,6 +102,7 @@ fileops_save_map(int argc, union evarg *argv)
 	object_save(mv->map);
 }
 
+/* Load the map from disk. */
 void
 fileops_load_map(int argc, union evarg *argv)
 {
@@ -134,6 +136,7 @@ out:
 	free(name);
 }
 
+/* Revert to the map on disk. */
 void
 fileops_revert_map(int argc, union evarg *argv)
 {
@@ -153,6 +156,7 @@ fileops_revert_map(int argc, union evarg *argv)
 	free(path);
 }
 
+/* Clear all nodes. */
 void
 fileops_clear_map(int argc, union evarg *argv)
 {
@@ -160,7 +164,32 @@ fileops_clear_map(int argc, union evarg *argv)
 	struct mapedit *med = mv->med;
 	struct map *m = mv->map;
 	struct editref *eref;
+	Uint32 x, y;
+
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *node = &m->map[y][x];
+
+			node_destroy(node, x, y);
+			node_init(node, x, y, med->node.flags & ~(NODE_ORIGIN));
+
+			switch (med->ref.type) {
+			case NODEREF_SPRITE:
+				node_add_sprite(node, med->ref.obj,
+				    med->ref.offs);
+				break;
+			case NODEREF_ANIM:
+				node_add_anim(node, med->ref.obj,
+				    med->ref.offs, NODEREF_ANIM_AUTO);
+				break;
+			default:
+				fatal("bad reference type\n");
+				break;
+			}
+		}
+	}
 	
-	map_clean(m, med->ref.obj, med->ref.offs,
-	    med->node.flags & ~NODE_ORIGIN, med->ref.flags);
+	/* Reset the origin. */
+	m->map[m->defy][m->defx].flags |= NODE_ORIGIN;
 }
+

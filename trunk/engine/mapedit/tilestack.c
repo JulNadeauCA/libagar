@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.13 2002/11/22 08:56:52 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.14 2002/12/01 14:41:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,6 +33,7 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
 
 #include "tilestack.h"
 #include "mapview.h"
@@ -104,6 +105,7 @@ tilestack_draw(void *p)
 	struct mapview *mv = ts->mv;
 	struct node *n;
 	struct noderef *nref;
+	struct art_anim *an;
 	int nx, ny, y = 0;
 
 	nx = mv->mx + mv->mouse.x;
@@ -116,26 +118,33 @@ tilestack_draw(void *p)
 
 	n = &mv->map->map[ny][nx];
 
-	TAILQ_FOREACH(nref, &n->nrefsh, nrefs) {
-		if (nref->flags & MAPREF_SPRITE) {
-			WIDGET_DRAW(ts, SPRITE(nref->pobj, nref->offs), 0, y);
-		} else if (nref->flags & MAPREF_ANIM) {
-			struct art_anim *an;
-			
+	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
+		switch (nref->type) {
+		case NODEREF_SPRITE:
+			WIDGET_DRAW(ts,
+			    SPRITE(nref->pobj, nref->offs), 0, y);
+			break;
+		case NODEREF_ANIM:
 			an = ANIM(nref->pobj, nref->offs);
 			WIDGET_DRAW(ts, an->frames[0], 0, y);
-			
-			if (nref->flags & MAPREF_ANIM_DELTA) {
-				WIDGET_DRAW(ts, SPRITE(mv->med,
-				    MAPEDIT_ANIM_DELTA_TXT),
-				    0, y);
-			} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
-				WIDGET_DRAW(ts, SPRITE(mv->med,
-				    MAPEDIT_ANIM_INDEPENDENT_TXT),
+			if (nref->data.anim.flags & NODEREF_ANIM_AUTO) {
+				WIDGET_DRAW(ts,
+				    SPRITE(mv->med, MAPEDIT_ANIM_DELTA_TXT),
 				    0, y);
 			}
 			WIDGET_DRAW(ts, SPRITE(mv->med, MAPEDIT_ANIM_TXT),
 			    0, y);
+			break;
+		case NODEREF_WARP:
+			{
+				SDL_Surface *su;
+
+				su = text_render(NULL, -1,
+				    SDL_MapRGB(view->v->format, 255, 255, 255),
+				    nref->data.warp.map);
+				WIDGET_DRAW(ts, su, 0, y);
+			}
+			break;
 		}
 
 		primitives.square(ts, 0, y, TILEW, TILEH,

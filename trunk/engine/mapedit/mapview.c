@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.35 2002/12/01 14:41:03 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.36 2002/12/06 01:32:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -243,14 +243,14 @@ mapview_draw(void *p)
 
 			/* Draw the tile map selection cursor. */
 			if ((mv->flags & MAPVIEW_TILEMAP) &&
-			    !TAILQ_EMPTY(&node->nrefsh) &&
+			    !TAILQ_EMPTY(&node->nrefs) &&
 			    mv->map->tilew > 6 && mv->map->tileh > 6) {
 				struct noderef *nref;
 
-				nref = TAILQ_FIRST(&node->nrefsh);
-				if ((nref->pobj == med->ref.obj) &&
-				    nref->offs == med->ref.offs &&
-				    nref->flags == med->ref.flags) {
+				nref = TAILQ_FIRST(&node->nrefs);
+				if (nref->type == med->ref.type &&
+				    nref->pobj == med->ref.obj &&
+				    nref->offs == med->ref.offs) {
 					/* XXX cosmetic */
 					primitives.square(mv,
 					    rx+1, ry+1,
@@ -415,10 +415,10 @@ mapview_mousemotion(int argc, union evarg *argv)
 			struct editobj *eo = NULL;
 
 			n = &mv->map->map[mv->my+y][mv->mx+x];
-			if (!TAILQ_EMPTY(&n->nrefsh)) {
+			if (!TAILQ_EMPTY(&n->nrefs)) {
 				struct noderef *nref;
 					
-				nref = TAILQ_FIRST(&n->nrefsh);
+				nref = TAILQ_FIRST(&n->nrefs);
 				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
 					if (eo->pobj == nref->pobj) {
 						break;
@@ -475,10 +475,10 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			struct editobj *eo = NULL;
 
 			n = &mv->map->map[mv->my+y][mv->mx+x];
-			if (!TAILQ_EMPTY(&n->nrefsh)) {
+			if (!TAILQ_EMPTY(&n->nrefs)) {
 				struct noderef *nref;
 					
-				nref = TAILQ_FIRST(&n->nrefsh);
+				nref = TAILQ_FIRST(&n->nrefs);
 				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
 					if (eo->pobj == nref->pobj) {
 						break;

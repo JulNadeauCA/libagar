@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.13 2002/11/22 08:56:53 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.14 2002/11/28 07:05:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -123,33 +123,34 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 
 	switch (er->mode) {
 	case ERASER_ALL:
-		for (nref = TAILQ_FIRST(&n->nrefsh);
-		     nref != TAILQ_END(&n->nrefsh);
+		for (nref = TAILQ_FIRST(&n->nrefs);
+		     nref != TAILQ_END(&n->nrefs);
 		     nref = nnref) {
 			nnref = TAILQ_NEXT(nref, nrefs);
 			free(nref);
 		}
-		n->nnrefs = 0;
-		TAILQ_INIT(&n->nrefsh);
+		TAILQ_INIT(&n->nrefs);
 		break;
 	case ERASER_HIGHEST:
-		if (!TAILQ_EMPTY(&n->nrefsh)) {
-			node_delref(n, TAILQ_LAST(&n->nrefsh, noderefq));
+		if (!TAILQ_EMPTY(&n->nrefs)) {
+			node_del_ref(n, TAILQ_LAST(&n->nrefs, noderefq));
 		}
 		break;
 	case ERASER_LOWEST:
-		if (!TAILQ_EMPTY(&n->nrefsh)) {
-			node_delref(n, TAILQ_FIRST(&n->nrefsh));
+		if (!TAILQ_EMPTY(&n->nrefs)) {
+			node_del_ref(n, TAILQ_FIRST(&n->nrefs));
 		}
 		break;
+#if 0
 	case ERASER_SELECTIVE:
-		TAILQ_FOREACH(nref, &n->nrefsh, nrefs) {
+		TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 			if (nref->pobj == er->selection.pobj &&
 			    nref->offs == er->selection.offs) {
-				node_delref(n, nref);
+				node_del_ref(n, nref);
 			}
 		}
 		break;
+#endif
 	default:
 		break;
 	}
