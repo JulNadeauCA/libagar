@@ -1,9 +1,12 @@
-/* Public domain	*/
+/*	$Csoft$	*/
+/*	Public domain */
 
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
 #define _AGAR_WIDGET_TABLEVIEW_H_
 
 #include "begin_code.h"
+
+#define TABLEVIEW_LABEL_MAX	128
 
 typedef Uint32 rowID;
 typedef Uint32 colID;
@@ -18,6 +21,98 @@ enum {
 	 
 	tableview_sorted_afirst = 1,
 	tableview_sorted_bfirst = 2
+};
+
+struct tableview_column {
+	colID cid;
+	unsigned int idx;		/* Index into row->cell[] */
+
+	/* Flags */
+	int mousedown :1;
+	int moving :1;
+	int editable :1;
+	int resizable :1;
+	int update :1;
+	int fill :1;
+	int dynamic :1;
+
+	char label[TABLEVIEW_LABEL_MAX];/* Header text */
+	SDL_Surface *label_img;		/* Rendered header text */
+	int w;				/* Column width */
+};
+
+TAILQ_HEAD(tableview_rowq, tableview_row);
+
+struct tableview_row {
+	rowID rid;
+	struct cell {
+		char *text;
+		SDL_Surface *image;
+	} *cell;
+	int selected : 1;
+	int expanded : 1;
+	struct tableview_row *parent;
+	TAILQ_ENTRY(tableview_row) siblings;
+	struct tableview_rowq children;
+};
+
+struct tableview {
+	struct widget wid;
+	
+	/* child widgets */
+	struct scrollbar *sbar_v;		/* Vertical scrollbar */
+	struct scrollbar *sbar_h;		/* Horizontal scrollbar */
+	//struct textbox *editbox;		/* cell edition widget */
+	
+	/* mutex lock required below here */
+	pthread_mutex_t lock;
+	
+	datafunc data_callback;		/* Callback to get cell data */
+	compfunc sort_callback;		/* Callback to compare */
+	
+	/* Flags */
+	int selmulti :1;		/* Allow more than 1 select */
+	int selsingle :1;
+	int selnoclear :1;		/* Keep at least 1 selection */
+	int reordercols :1;		/* Allow column reordering */
+	int header :1;			/* Draw column headings */
+	int sort :1;			/* Do sort procedures */
+	int locked :1;			/* Table format is set */
+
+	int head_height;		/* Header height */
+	int row_height;			/* Per-row height */
+	int dblclicked;			/* Used by double click */
+	/*int keymoved;			Used by key repeat */
+	int prew, preh;			/* Prescale hint */
+	
+	/* columns */
+	unsigned int		 columncount;
+	struct tableview_column *column;
+	char sortMode;			/* Sort mode (a or b) */
+	
+	/*
+	 * Special columns - columns with a unique purpose. ID_INVALID if
+	 * unused.
+	 */
+	colID sortColumn;		/* Column we sort by */
+	colID enterEdit;		/* Column we edit on enter */
+	colID expanderColumn;		/* Column for +/- boxes */
+	
+	/* rows */
+	struct tableview_rowq children;		/* List of rows */
+	int expandedrows;			/* Number of rows visible */
+	
+	/* drawing hints */
+	struct {
+		unsigned int redraw_last;
+		unsigned int redraw_rate;
+		int dirty;
+		unsigned int count;
+		struct rowdocket_item {
+			struct tableview_row *row;
+			unsigned int depth;
+		} *items;
+	} visible;
 };
 
 /* Flags for tableview_col_add() */

@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.8 2004/11/23 12:41:58 phip Exp $	*/
+/*	$Csoft: tableview.c,v 1.9 2004/11/30 11:36:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -32,14 +32,15 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
-#include <engine/widget/tableview.h>
 #include <engine/widget/scrollbar.h>
 /* #include <engine/widget/textbox.h> */
 
 #include <string.h>
 #include <stdarg.h>
 
-#include "tableview_priv.h"
+#include "tableview.h"
+
+#define ID_INVALID ((unsigned int)-1)
 
 static struct widget_ops tableview_ops = {
 	{
@@ -62,6 +63,15 @@ enum {
 	HEAD_COLOR,
 	HEADTEXT_COLOR
 };
+
+/*
+ * Worker function for foreach_visible_column()
+ * arguments: tableview, visible_start, visible_end,
+ * visible_index, and the argument passed to foreach_.
+ * Should return 0 if foreach_ should stop.
+ */
+typedef int (*visible_do)(struct tableview *, int vis_start, int vis_end,
+		          Uint32 vis_index, void *, void *);
 
 static void foreach_visible_column(struct tableview *, visible_do, void *,
                                    void *);
@@ -261,7 +271,7 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
 	if (NULL == label) {
 		label = "";
 	}
-	strncpy(col->label, label, LBL_LEN);
+	strncpy(col->label, label, TABLEVIEW_LABEL_MAX);
 	col->label_img = text_render(NULL, -1, WIDGET_COLOR(tv, HEADTEXT_COLOR),
 	    label);
 	label_w = col->label_img->w;
