@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.84 2002/09/19 20:55:11 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.85 2002/10/30 17:18:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -340,7 +340,6 @@ event_dispatch(SDL_Event *ev)
 	if (!TAILQ_EMPTY(&view->detach)) {
 		view_detach_queued();
 	}
-
 	pthread_mutex_unlock(&view->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.71 2002/09/20 02:41:04 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.72 2002/10/30 17:16:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -185,8 +185,6 @@ view_detach_queued(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 
-		dprintf("detaching %s\n", OBJECT(win)->name);
-
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
 		window_destroy(win);
@@ -204,6 +202,9 @@ view_destroy(void *p)
 
 	TAILQ_FOREACH(win, &v->windows, windows) {
 		view_detach(win);
+	}
+	if (!TAILQ_EMPTY(&view->detach)) {
+		view_detach_queued();
 	}
 
 	if (v->rootmap != NULL) {
