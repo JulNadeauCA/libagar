@@ -1,4 +1,4 @@
-.\"	$Csoft: fspinbutton.3,v 1.6 2004/05/10 05:15:01 vedge Exp $
+.\"	$Csoft: fspinbutton.3,v 1.7 2004/08/22 12:08:15 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -115,14 +115,15 @@ for
 .Dv WIDGET_FLOAT
 bindings).
 .Fn fspinbutton_add_value
-adds the argument to the bound value.
+adds the specified number to the bound value.
+The number is given in selected units instead of base units.
 .Pp
 The
 .Fn fspinbutton_set_min ,
 .Fn fspinbutton_set_max
 and
 .Fn fspinbutton_set_range
-functions define the range of acceptable values.
+functions define the range of acceptable values (in base units).
 Invocations of these functions must always follow
 .Fn widget_bind ,
 since binding to
@@ -131,7 +132,8 @@ automatically selects a range suitable to the new binding type.
 .Pp
 The
 .Fn fspinbutton_set_increment
-function defines the step value for the "+" and "-" buttons.
+function defines the step value (given in selected units) for the
+"+" and "-" buttons.
 .Pp
 .Fn fspinbutton_select_unit
 changes the current conversion unit.
