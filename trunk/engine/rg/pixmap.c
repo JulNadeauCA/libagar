@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: pixmap.c,v 1.1 2005/02/11 04:51:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -87,6 +87,19 @@ pixmap_scale(struct pixmap *px, int w, int h)
 		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
 }
 
+static void
+dimensions_changed(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[0].p;
+	struct tileview_ctrl *ctrl = argv[1].p;
+	int x = tileview_int(ctrl, 0);
+	int y = tileview_int(ctrl, 1);
+	u_int w = tileview_uint(ctrl, 2);
+	u_int h = tileview_uint(ctrl, 3);
+
+	dprintf("changed: %d,%d,%u,%u\n", x, y, w, h);
+}
+
 struct window *
 pixmap_edit(struct tileview *tv, struct tile_element *tel)
 {
@@ -111,7 +124,7 @@ pixmap_edit(struct tileview *tv, struct tile_element *tel)
 	sb = spinbutton_new(win, _("Transparency: "));
 	widget_bind(sb, "value", WIDGET_INT, &tel->tel_pixmap.alpha);
 	spinbutton_set_range(sb, 0, 255);
-
+	
 	return (win);
 }
 
