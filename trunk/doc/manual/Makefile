@@ -1,8 +1,10 @@
-# $Csoft: Makefile,v 1.1 2004/01/23 06:29:07 vedge Exp $
+# $Csoft: Makefile,v 1.2 2004/01/25 05:11:03 vedge Exp $
 
 TOP=	../..
 
-DOC=		agar-manual.ps
+VER=		1.0
+DOCPS=		agar-manual-${VER}.ps
+DOCPDF=		agar-manual-${VER}.pdf
 MACROS=		-mdoc
 DOCSRC=		Cover.tr \
 		Macros.tr \
