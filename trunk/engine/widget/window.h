@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.42 2002/11/09 06:01:27 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.43 2002/11/12 02:25:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -43,8 +43,7 @@ struct window {
 	Uint32	*border;		/* Border colors */
 	int	 borderw;		/* Border width */
 	int	 titleh;		/* Titlebar height */
-	int	 x, y;			/* Absolute coordinates */
-	int	 w, h;			/* Geometry */
+	SDL_Rect rd;			/* Coordinates, geometry */
 	int	 minw, minh;
 	int	 spacing;		/* Spacing between regions */
 	SDL_Rect body;			/* Area reserved for regions */
@@ -73,40 +72,42 @@ struct window {
 #ifdef DEBUG
 
 # define WINDOW_PUT_PIXEL(win, wrx, wry, c) do {			\
-	if ((wrx) > (win)->w || (wry) > (win)->h ||			\
+	if ((wrx) > (win)->rd.w || (wry) > (win)->rd.h ||		\
 	    (wrx) < 0 || (wry) < 0) {					\
 		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
-		    (wrx), (wry), (win)->w, (win)->h);			\
+		    (wrx), (wry), (win)->rd.w, (win)->rd.h);		\
 	}								\
-	VIEW_PUT_PIXEL(view->v, (win)->x+(wrx),	(win)->y+(wry), (c));	\
+	VIEW_PUT_PIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry), (c)); \
 } while (/*CONSTCOND*/0)
 
 # define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) do {		\
-	if ((wrx) > (win)->w || (wry) > (win)->h ||			\
+	if ((wrx) > (win)->rd.w || (wry) > (win)->rd.h ||		\
 	    (wrx) < 0 || (wry) < 0) {					\
 		fatal("%s: %d,%d > %dx%d\n", OBJECT(win)->name,		\
-		    (wrx), (wry), (win)->w, (win)->h);			\
+		    (wrx), (wry), (win)->rd.w, (win)->rd.h);		\
 	}								\
-	VIEW_PUT_ALPHAPIXEL(view->v, (win)->x+(wrx),			\
-	    (win)->y+(wry), (c), (wa));					\
+	VIEW_PUT_ALPHAPIXEL(view->v, (win)->rd.x+(wrx),			\
+	    (win)->rd.y+(wry), (c), (wa));				\
 } while (/*CONSTCOND*/0)
 
 #else	/* !DEBUG */
 
 # define WINDOW_PUT_PIXEL(win, wrx, wry, c)				\
- 	 VIEW_PUT_PIXEL(view->v, (win)->x+(wrx), (win)->y+(wry),	\
+ 	 VIEW_PUT_PIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry),	\
 	    (c))
 
 # define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) \
-	VIEW_PUT_ALPHAPIXEL(view->v, (win)->x+(wrx), (win)->y+(wry), (c), (wa))
+	VIEW_PUT_ALPHAPIXEL(view->v, (win)->rd.x+(wrx), (win)->rd.y+(wry), \
+	    (c), (wa))
 
 #endif	/* DEBUG */
 
 #define WINDOW_SURFACE(win)	(view->v)
 
-#define WINDOW_INSIDE(wina, xa, ya)					\
-	((xa) > (wina)->x		&& (ya) > (wina)->y &&		\
-	 (xa) < ((wina)->x+(wina)->w)	&& (ya) < ((wina)->y+(wina)->h))
+#define WINDOW_INSIDE(wina, xa, ya)				\
+	((xa) > (wina)->rd.x && (ya) > (wina)->rd.y &&		\
+	 (xa) < ((wina)->rd.x+(wina)->rd.w) && 			\
+	 (ya) < ((wina)->rd.y+(wina)->rd.h))
 
 struct window	*window_new(char *, char *, int, int, int, int, int, int, int);
 void	 	 window_init(struct window *, char *, char *, int, int, int,

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.89 2002/11/12 02:25:47 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.90 2002/11/12 05:15:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -152,8 +152,6 @@ event_loop(void)
 	Uint32 ltick, ntick;
 	int rv, delta;
 	struct window *win;
-	SDL_Rect wrects[64];
-	int nwrects = 0;
 #ifdef DEBUG
 	struct region *reg;
 	struct label *fps_label;
@@ -180,6 +178,8 @@ event_loop(void)
 
 		if ((ntick - ltick) >= delta) {
 			pthread_mutex_lock(&view->lock);
+
+			view->ndirty = 0;
 
 			/* Render a the in the background. */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
@@ -208,26 +208,46 @@ event_loop(void)
 			}
 
 			/* Update the windows. */
-			nwrects = 0;
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->flags & WINDOW_SHOWN) {
 					/* XXX use indirect blit & microtiles */
 					window_draw(win);
-					wrects[nwrects].x = win->x;
-					wrects[nwrects].y = win->y;
-					wrects[nwrects].w = win->w;
-					wrects[nwrects].h = win->h;
-					nwrects++;
 				}
 				pthread_mutex_unlock(&win->lock);
 			}
 			pthread_mutex_unlock(&view->lock);
 
 			/* Update the display. */
-			if (nwrects > 0) {
-				SDL_UpdateRects(view->v, nwrects, wrects);
-				nwrects = 0;
+			if (view->ndirty > 0) {
+#if 1
+				int i;
+
+#if 0
+				dprintf("%d dirty rects\n", view->ndirty);
+#endif
+				for (i = 0; i < view->ndirty; i++) {
+#if 1
+#if 0
+					dprintf("dirty rect: %dx%d at %d,%d\n",
+					    view->dirty[i].w,
+					    view->dirty[i].h,
+					    view->dirty[i].x,
+					    view->dirty[i].y);
+#endif
+#endif
+					SDL_UpdateRect(view->v,
+					    view->dirty[i].x,
+					    view->dirty[i].y,
+					    view->dirty[i].w,
+					    view->dirty[i].h);
+				}
+#else
+				SDL_UpdateRects(view->v, view->ndirty,
+				    view->dirty);
+#endif
+				view->ndirty = 0;
+
 				if (view->gfx_engine == GFX_ENGINE_GUI) {
 					/* Event/motion interpolation. */
 					COMPUTE_DELTA(delta, ntick);

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.38 2002/11/07 04:38:58 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.39 2002/11/08 07:35:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -63,8 +63,8 @@ struct widget {
 #define WIDGET_COLOR(wi,ind)	WIDGET(wi)->color[ind]
 
 /* Expand to absolute widget coordinates. */
-#define WIDGET_ABSX(wi)	((WIDGET((wi))->win->x) + WIDGET((wi))->x)
-#define WIDGET_ABSY(wi)	((WIDGET((wi))->win->y) + WIDGET((wi))->y)
+#define WIDGET_ABSX(wi)	((WIDGET((wi))->win->rd.x) + WIDGET((wi))->x)
+#define WIDGET_ABSY(wi)	((WIDGET((wi))->win->rd.y) + WIDGET((wi))->y)
 
 #define WIDGET_REDRAW(wi) do {					\
 	pthread_mutex_lock(&WIDGET((wi))->surface.lock);	\

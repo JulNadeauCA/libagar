@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.45 2002/09/16 16:03:59 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.46 2002/11/12 02:00:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -20,7 +20,12 @@ enum {
 	MAP_MINHEIGHT	= 10
 };
 
+/* XXX use unions */
 struct noderef {
+#ifdef DEBUG
+	char	magic[18];
+#define NODEREF_MAGIC "agar map noderef"
+#endif
 	struct	object *pobj;	/* Object pointer */
 	Uint32	flags;
 #define MAPREF_SAVE		0x0001	/* Saveable reference */
