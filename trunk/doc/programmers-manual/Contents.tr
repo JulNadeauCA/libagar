@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: Contents.tr,v 1.1 2004/01/08 02:19:47 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -25,41 +25,3 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-\fITABLE OF CONTENTS\fP
-.nr % 0
-.br
-.TS H
-tab(@);
-lw(5.9i) lw(.3i).
-@
-_
-
-Object interface@1
-Event system@6
-Generic properties@8
-Graphic engine@11
-Input device interface@14
-Movement interface@15
-Tile-based levels@17
-Widget framework@20
-Window system@27
-Font engine interface@30
-Container widget@32
-Horizontal container widget@33
-Vertical container widget@33
-Label widget@35
-Button widget@37
-Text input widget@39
-Floating-point spin button widget@41
-Checkbox widget@43
-Radio widget@44
-Scroll bar widget@45
-Tree/list widget@47
-Combo widget@50
-Unit combo widget@51
-Graph widget@52
-RGBA color selection widget@54
-Bitmap widget@55
-Level display/edition widget@56
-.TE
-.sp 29
