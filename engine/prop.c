@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.14 2002/12/26 07:12:09 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.15 2002/12/30 02:56:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,7 +46,7 @@ static const struct version prop_ver = {
 #define DEBUG_STATE	0x01
 #define DEBUG_SET	0x02
 
-int	prop_debug = DEBUG_STATE|DEBUG_SET;
+int	prop_debug = 0;
 #define engine_debug prop_debug
 #endif
 
