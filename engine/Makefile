@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.76 2004/03/09 06:16:18 vedge Exp $
+#	$Csoft: Makefile,v 1.77 2004/03/10 04:30:12 vedge Exp $
 
 TOP=..
 include ${TOP}/Makefile.config
@@ -11,7 +11,9 @@ SUBDIR=	error \
 	loader \
 	input
 
-LIB=	engine
+LIB=		engine
+LIB_SHARED=	Yes
+LIB_STATIC=	No
 
 SRCS=	audio.c config.c engine.c event.c gfx.c input.c map.c mkpath.c \
 	object.c perso.c position.c prop.c rootmap.c transform.c \

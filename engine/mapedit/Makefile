@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.58 2003/12/05 01:21:23 vedge Exp $
+#	$Csoft: Makefile,v 1.59 2004/03/10 04:30:12 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -6,7 +6,10 @@ include ${TOP}/Makefile.config
 SUBDIR=	tool \
 	mapview
 
-LIB=	mapedit
+LIB=		mapedit
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
 SRCS=	layedit.c mapedit.c mapview.c mediasel.c nodeedit.c objedit.c
 MAN3=	mapview.3
 

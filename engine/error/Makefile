@@ -1,10 +1,12 @@
-#	$Csoft: Makefile,v 1.1 2003/06/21 02:45:05 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2003/08/13 01:47:35 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
-LIB=	error
-SRCS=	error.c
+LIB=		error
+LIB_SHARED=	Yes
+LIB_STATIC=	Yes
+SRCS=		error.c
 
 CFLAGS+=${SDL_CFLAGS}
 

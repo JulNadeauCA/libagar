@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.167 2004/01/22 09:58:41 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.168 2004/03/10 08:28:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -496,7 +496,10 @@ event_async(void *p)
 	}
 
 	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
-	eev->handler(eev->argc, eev->argv);
+
+	if (eev->handler != NULL)
+		eev->handler(eev->argc, eev->argv);
+
 	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
 	free(eev);
 	return (NULL);
@@ -561,7 +564,9 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				event_forward_children(rcvr, neev);
 				unlock_linkage();
 			}
-			neev->handler(neev->argc, neev->argv);
+			if (neev->handler != NULL) {
+				neev->handler(neev->argc, neev->argv);
+			}
 			free(neev);
 		}
 		break;
@@ -595,7 +600,8 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 			event_forward_children(rcvr, ev);
 			unlock_linkage();
 		}
-		ev->handler(argc, nargv);
+		if (ev->handler != NULL)
+			ev->handler(argc, nargv);
 	}
 	pthread_mutex_unlock(&rcvr->lock);
 }

@@ -1,9 +1,11 @@
-#	$Csoft: Makefile,v 1.5 2003/08/13 01:47:34 vedge Exp $
+#	$Csoft: Makefile,v 1.6 2003/08/31 11:58:08 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
-LIB=	loader
+LIB=		loader
+LIB_SHARED=	Yes
+LIB_STATIC=	Yes
 
 SRCS=	netbuf.c integral.c real.c string.c version.c den.c xcf.c ttf.c
 

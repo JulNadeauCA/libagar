@@ -1,9 +1,12 @@
-#	$Csoft: Makefile,v 1.3 2003/08/06 04:11:31 vedge Exp $
+#	$Csoft: Makefile,v 1.4 2003/08/13 01:47:35 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
-LIB=	unicode
+LIB=		unicode
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
 SRCS=	unicode.c ucslcpy.c ucslcat.c ucssep.c
 
 CFLAGS+=${SDL_CFLAGS}

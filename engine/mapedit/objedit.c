@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.25 2004/02/29 17:34:26 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.26 2004/03/09 06:00:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -118,7 +118,7 @@ invoke_op(int argc, union evarg *argv)
 			}
 			break;
 		case OBJEDIT_EDIT_OBJ:
-			mapedit_edit_objgen(ob);
+			mapedit_edit_genobj(ob);
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {

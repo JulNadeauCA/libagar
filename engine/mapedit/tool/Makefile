@@ -1,9 +1,12 @@
-#	$Csoft: Makefile,v 1.17 2003/09/07 04:17:36 vedge Exp $
+#	$Csoft: Makefile,v 1.18 2003/12/05 01:21:25 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
 
-LIB=	tool
+LIB=		tool
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
 SRCS=	eraser.c fill.c flip.c magnifier.c merge.c position.c propedit.c \
 	resize.c select.c shift.c stamp.c invert.c
 

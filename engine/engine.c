@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.124 2004/02/26 10:34:58 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.125 2004/02/29 17:34:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 #include <config/have_progname.h>
 #include <config/have_setlocale.h>
 #include <config/localedir.h>
+#include <config/version.h>
 
 #include <compat/setenv.h>
 #include <compat/strlcat.h>
@@ -111,7 +112,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	}
 #endif
 
-	printf(_("Agar engine v%s\n"), ENGINE_VERSION);
+	printf("Agar %s\n", VERSION);
 	proginfo = prog;
 
 	/* Initialize the SDL library. */

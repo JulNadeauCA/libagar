@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.215 2004/01/22 09:58:46 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.216 2004/03/10 03:19:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,6 +70,7 @@ enum {
 
 static void	window_shown(int, union evarg *);
 static void	window_hidden(int, union evarg *);
+static void	window_destroy_ev(int, union evarg *);
 
 static void	window_clamp(struct window *);
 static void	window_focus(struct window *);
@@ -97,9 +98,11 @@ struct window *
 window_new(const char *fmt, ...)
 {
 	struct window *win = NULL;
+	struct event *ev;
 
 	pthread_mutex_lock(&view->lock);
 	if (fmt != NULL) {				/* Unique instance */
+		struct event *ev;
 		char name[OBJECT_NAME_MAX];
 		struct window *owin;
 		va_list ap;
@@ -126,11 +129,14 @@ window_new(const char *fmt, ...)
 
 		win = Malloc(sizeof(struct window));
 		window_init(win, name);
-		event_new(win, "window-close", window_generic_hide, "%p", win);
+		ev = event_new(win, "window-close", window_generic_hide, NULL);
+		ev->flags |= EVENT_FORWARD_CHILDREN;
 	} else {						/* Generic */
 		win = Malloc(sizeof(struct window));
 		window_init(win, NULL);
-		event_new(win, "window-close", window_generic_detach,"%p", win);
+		ev = event_new(win, "window-close", window_generic_detach,
+		    NULL);
+		ev->flags |= EVENT_FORWARD_CHILDREN;
 	}
 	view_attach(win);
 out:
@@ -194,6 +200,8 @@ window_init(void *p, const char *name)
 	ev = event_new(win, "widget-shown", window_shown, NULL);
 	ev->flags |= EVENT_FORWARD_CHILDREN;
 	ev = event_new(win, "widget-hidden", window_hidden, NULL);
+	ev->flags |= EVENT_FORWARD_CHILDREN;
+	ev = event_new(win, "window-destroy", window_destroy_ev, NULL);
 	ev->flags |= EVENT_FORWARD_CHILDREN;
 }
 
@@ -384,6 +392,14 @@ window_hidden(int argc, union evarg *argv)
 		object_save(win);
 
 	event_post(NULL, win, "window-hidden", NULL);
+}
+
+static void
+window_destroy_ev(int argc, union evarg *argv)
+{
+	struct window *win = argv[0].p;
+
+	view_detach(win);
 }
 
 /* Toggle the visibility of a window. */
@@ -1153,12 +1169,17 @@ window_set_position(struct window *win, enum window_alignment alignment,
 void
 window_set_closure(struct window *win, enum window_close_mode mode)
 {
+	struct event *ev;
+
 	switch (mode) {
 	case WINDOW_HIDE:
-		event_new(win, "window-close", window_generic_hide, "%p", win);
+		ev = event_new(win, "window-close", window_generic_hide, NULL);
+		ev->flags |= EVENT_FORWARD_CHILDREN;
 		break;
 	case WINDOW_DETACH:
-		event_new(win, "window-close", window_generic_detach,"%p",win);
+		ev = event_new(win, "window-close", window_generic_detach,
+		    NULL);
+		ev->flags |= EVENT_FORWARD_CHILDREN;
 		break;
 	}
 }

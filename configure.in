@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.78 2003/12/31 01:42:04 vedge Exp $
+# $Csoft: configure.in,v 1.79 2004/02/02 01:52:32 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -14,17 +14,20 @@ REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
 
-# System-wide data directory.
-MDEFINE(SHAREDIR, "$PREFIX/share/cave")
-HDEFINE(SHAREDIR, "\"$PREFIX/share/cave\"")
+# Agar version
+HDEFINE(VERSION, "\"1.0-beta\"")
 
-# Where to install fonts included in the distribution.
-MDEFINE(TTFDIR, "$PREFIX/share/cave/fonts")
-HDEFINE(TTFDIR, "\"$PREFIX/share/cave/fonts\"")
-
-# Manual and PostScript installation directories.
-MDEFINE(INST_MANDIR, "$PREFIX/share/agar/man")
-MDEFINE(INST_PSDIR, "$PREFIX/share/agar/ps")
+# Installation directories
+MDEFINE(SHAREDIR, "$PREFIX/share/agar")
+HDEFINE(SHAREDIR, "\"$PREFIX/share/agar\"")
+MDEFINE(TTFDIR, "$PREFIX/share/agar/fonts")
+HDEFINE(TTFDIR, "\"$PREFIX/share/agar/fonts\"")
+MDEFINE(LIBDIR, "$PREFIX/lib/agar")
+HDEFINE(LIBDIR, "\"$PREFIX/lib/agar\"")
+MDEFINE(INCLDIR, "$PREFIX/include/agar")
+HDEFINE(INCLDIR, "\"$PREFIX/include/agar\"")
+MDEFINE(MANDIR, "$PREFIX/share/agar/man")
+MDEFINE(PSDIR, "$PREFIX/share/agar/ps")
 
 CHECK(cc)
 CHECK(progname)
