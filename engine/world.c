@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,13 +37,7 @@
 #include <glib.h>
 #include <SDL.h>
 
-#include <engine/debug.h>
-#include <engine/event.h>
-#include <engine/view.h>
-#include <engine/object.h>
-#include <engine/world.h>
-#include <engine/char.h>
-#include <engine/map.h>
+#include <engine/engine.h>
 
 struct world *
 world_create(char *name)

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.2 2002/01/26 03:38:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,10 +37,7 @@
 #include <glib.h>
 #include <pthread.h>
 
-#include <engine/debug.h>
-#include <engine/object.h>
-#include <engine/map.h>
-#include <engine/view.h>
+#include <engine/engine.h>
 
 struct viewport *mainview;
 
