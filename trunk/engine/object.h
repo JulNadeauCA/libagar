@@ -1,8 +1,12 @@
-/*	$Csoft: object.h,v 1.102 2004/02/20 04:20:33 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.103 2004/02/29 17:34:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
+
+#define OBJECT_TYPE_MAX	32
+#define OBJECT_NAME_MAX	128
+#define OBJECT_PATH_MAX	1024
 
 #include <engine/prop.h>
 #include <engine/gfx.h>
@@ -10,10 +14,6 @@
 #include <engine/position.h>
 
 #include "begin_code.h"
-
-#define OBJECT_TYPE_MAX	32
-#define OBJECT_NAME_MAX	128
-#define OBJECT_PATH_MAX	1024
 
 struct map;
 struct input;

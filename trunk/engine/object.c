@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.159 2004/02/29 17:34:24 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.160 2004/03/02 08:58:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -725,9 +725,11 @@ object_load(void *p)
 	if (object_reload_data(ob) == -1)
 		goto fail;
 
-	/* Resolve the positions now that the object tree is consistent. */
-	if (ob->pos != NULL &&
-	    object_resolve_position(ob) == -1)
+	/*
+	 * Resolve the position of the object and its children now that the
+	 * object tree is in a consistent state.
+	 */
+	if (object_resolve_position(ob) == -1)
 		goto fail;
 
 	pthread_mutex_unlock(&ob->lock);
@@ -773,23 +775,6 @@ object_resolve_deps(void *p)
 }
 
 /*
- * Resolve the encoded position of an object and its children.
- * The object linkage must be locked.
- */
-int
-object_resolve_position(void *p)
-{
-	struct object *ob = p;
-
-	if (ob->pos->map_name == NULL) {
-		error_set(_("No position to resolve."));
-		return (-1);
-	}
-
-	return (0);
-}
-
-/*
  * Reload the data of an object and its children which are currently resident.
  * The object and linkage must be locked.
  */
@@ -799,13 +784,51 @@ object_reload_data(void *p)
 	struct object *ob = p, *cob;
 
 	if (ob->flags & OBJECT_WAS_RESIDENT) {
-		dprintf("`%s' is resident; reloading data\n", ob->name);
+		dprintf("%s: was resident; reloading\n", ob->name);
 		ob->flags &= ~(OBJECT_WAS_RESIDENT);
 		if (object_load_data(p) == -1)
 			return (-1);
+	} else {
+		dprintf("%s: was not resident\n", ob->name);
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (object_reload_data(cob) == -1)
+			return (-1);
+	}
+	return (0);
+}
+
+/*
+ * Resolve the position of an object and its children.
+ * The object and linkage must be locked.
+ */
+int
+object_resolve_position(void *p)
+{
+	struct object *ob = p, *cob;
+
+	if (ob->pos != NULL) {
+		struct position *pos = ob->pos;
+		struct map *projmap;
+		
+		dprintf("%s: has position; reloading\n", ob->name);
+
+		if ((pos->map = object_find(pos->map_name)) == NULL) {
+			error_set(_("No such level map: `%s'"), pos->map_name);
+			return (-1);
+		}
+		if ((projmap = object_find(pos->projmap_name)) == NULL) {
+			error_set(_("No such projection map: `%s'"),
+			    pos->projmap_name);
+			return (-1);
+		}
+		position_set_projmap(ob, projmap);
+		return (0);
+	} else {
+		dprintf("%s: has no position\n", ob->name);
+	}
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
+		if (object_resolve_position(cob) == -1)
 			return (-1);
 	}
 	return (0);
@@ -875,7 +898,7 @@ object_load_generic(void *p)
 
 	/* Decode and restore the position, if there is one. */
 	if (read_uint32(buf) > 0)
-		position_load(ob, ob->pos, buf);
+		position_load(ob, buf);
 
 	/* Decode the gfx reference and resolve if graphics are resident. */
 	Free(ob->gfx_name);
