@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.1 2005/02/03 05:00:26 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.2 2005/02/03 05:31:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -411,7 +411,7 @@ create_obj_dlg(int argc, union evarg *argv)
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
-		cb = checkbox_new(win, _("Open edition window"));
+		cb = checkbox_new(win, _("Edit now"));
 		widget_bind(cb, "state", WIDGET_INT, &edit_on_create);
 	}
 
@@ -450,6 +450,7 @@ objmgr_window(void)
 	win = window_new(0, "objmgr");
 	window_set_caption(win, _("Object manager"));
 	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
+	window_set_spacing(win, 1);
 	
 	objs_tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(objs_tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
@@ -484,8 +485,8 @@ objmgr_window(void)
 	}
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
-	vbox_set_padding(vb, 0);
-	vbox_set_spacing(vb, 0);
+	vbox_set_padding(vb, 1);
+	vbox_set_spacing(vb, 1);
 	{
 		struct AGMenuItem *mi;
 
