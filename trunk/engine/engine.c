@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.38 2002/05/02 09:37:02 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.39 2002/05/03 20:13:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -35,6 +35,10 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
+#ifdef USE_X11
+#include <SDL_syswm.h>
+#endif
+
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
@@ -45,9 +49,6 @@
 
 #ifdef DEBUG
 int	engine_debug = 1;	/* Enable debugging */
-#endif
-#ifdef LOCKDEBUG
-pthread_key_t	lockassert_key;	/* Hack for pthread assertions. */
 #endif
 
 struct	world *world;
@@ -63,6 +64,11 @@ static int mapw = 64, maph = 64;	/* Default map geometry */
 static int tilew = 32, tileh = 32;	/* XXX pref */
 
 static void	printusage(char *);
+#ifdef XDEBUG
+static int	engine_xerror(Display *, XErrorEvent *);
+static int	engine_xioerror(Display *);
+static void	engine_xdebug(void);
+#endif
 
 static void
 printusage(char *progname)
@@ -71,9 +77,7 @@ printusage(char *progname)
 	    "Usage: %s [-vxf] [-w width] [-h height] [-d depth] [-j joy#]\n",
 	    progname);
 	fprintf(stderr,
-	    "                 [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n");
-	fprintf(stderr,
-	    "                 [-W mapw] [-H maph] [-X tilew] [-Y tileh]\n");
+	    "             [-e mapname]\n");
 }
 
 int
@@ -87,19 +91,13 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 
 	njoy = 0;
 	mapediting = 0;
-	w = 640;
+	w = 640;	/* XXX pref */
 	h = 480;
 	depth = 32;
 	flags = SDL_SWSURFACE;
 
-#ifdef LOCKDEBUG
-	if (pthread_key_create(&lockassert_key, NULL) != 0) {
-		fatal("pthread_key_create: %s\n", strerror(errno));
-	}
-#endif
-
 	/* XXX ridiculous */
-	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:X:Y:")) != -1) {
+	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:")) != -1) {
 		switch (c) {
 		case 'x':
 			xcf_debug++;
@@ -138,12 +136,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		case 'H':
 			maph = atoi(optarg);
 			break;
-		case 'X':
-			tilew = atoi(optarg);
-			break;
-		case 'Y':
-			tileh = atoi(optarg);
-			break;
 		default:
 			printusage(argv[0]);
 			exit(255);
@@ -169,14 +161,14 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	 * Create the main viewport. The video mode will be set
 	 * as soon as a map is loaded.
 	 */
-	mainview = view_create(w, h, depth, flags);
+	mainview = view_new(w, h, depth, flags);
 	if (mainview == NULL) {
-		fatal("view_create\n");
+		fatal("could not create main view\n");
 		return (-1);
 	}
 
 	/* Initialize the world structure. */
-	world = (struct world *)emalloc(sizeof(struct world));
+	world = emalloc(sizeof(struct world));
 	world_init(world, gameinfo->prog);
 	
 	/* Initialize the font engine. */
@@ -185,16 +177,70 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	}
 	
 	/* Initialize input devices. */
-	keyboard = (struct input *)emalloc(sizeof(struct input));
-	joy = (struct input *)emalloc(sizeof(struct input));
-	mouse = (struct input *)emalloc(sizeof(struct input));
+	keyboard = emalloc(sizeof(struct input));
+	joy = emalloc(sizeof(struct input));
+	mouse = emalloc(sizeof(struct input));
 	input_init(keyboard, INPUT_KEYBOARD, 0);
 	input_init(joy, INPUT_JOY, njoy);
 	input_init(mouse, INPUT_MOUSE, 0);
-	
+
+#ifdef XDEBUG
+	if (engine_debug > 0) {
+		engine_xdebug();
+	}
+#endif
+
 	return (0);
 }
 
+#ifdef XDEBUG
+
+static int
+engine_xerror(Display *dis, XErrorEvent *xerror)
+{
+	fprintf(stderr, "X error: request 0x%x (minor 0x%x): error %d\n",
+	    xerror->request_code, xerror->minor_code,
+	    xerror->error_code);
+	abort();
+
+	return (-1);
+}
+
+static int
+engine_xioerror(Display *dis)
+{
+	fprintf(stderr, "X I/O error\n");
+	abort();
+
+	return (-1);
+}
+
+static void
+engine_xdebug(void)
+{
+	SDL_SysWMinfo wm;
+
+	SDL_VERSION(&wm.version);
+	if (SDL_GetWMInfo(&wm) != 1) {
+		warning("SDL_GetWMInfo: %s\n", SDL_GetError());
+		return;
+	}
+	if (wm.subsystem == SDL_SYSWM_X11) {
+		wm.info.x11.lock_func();
+		if (XSynchronize(wm.info.x11.display, True) == False) {
+			warning("synchronous X events\n");
+		}
+		wm.info.x11.unlock_func();
+	}
+
+	/* Catch X errors. */
+	XSetErrorHandler((XErrorHandler)engine_xerror);
+	XSetIOErrorHandler((XIOErrorHandler)engine_xioerror);
+}
+
+#endif	/* XDEBUG */
+
+/* Drop into map edition if requested. */
 int
 engine_editmap(void)
 {
@@ -233,12 +279,6 @@ engine_destroy(void)
 	
 	/* Destroy the font engine. */
 	text_engine_destroy();
-
-#ifdef LOCKDEBUG
-	if (pthread_key_delete(lockassert_key) != 0) {
-		fatal("pthread_key_delete: %s\n", strerror(errno));
-	}
-#endif
 
 	SDL_Quit();
 	exit(0);
