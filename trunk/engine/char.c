@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.20 2002/02/25 11:31:30 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.21 2002/02/28 12:50:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -33,6 +33,8 @@
 #include <stdlib.h>
 
 #include <engine/engine.h>
+#include <engine/physics.h>
+#include <engine/input.h>
 #include <engine/version.h>
 
 static struct obvec char_vec = {
@@ -76,9 +78,10 @@ char_create(char *name, char *desc, Uint32 maxhp, Uint32 maxmp, Uint32 flags)
 int
 char_load(void *p, int fd)
 {
-	struct character *ch = (struct character *)p;
-	char *mname;
-	Uint32 i, ncoords;
+	struct object *ob = (struct object *)p;
+	struct character *ch = (struct character *)ob;
+	struct input *input;
+	struct map *m;
 
 	if (version_read(fd, "agar char", 1, 0) != 0) {
 		return (-1);
@@ -98,41 +101,53 @@ char_load(void *p, int fd)
 	ch->maxmp = fobj_read_uint32(fd);
 	ch->mp = fobj_read_uint32(fd);
 
-	dprintf("flags 0x%x level %d exp %d age %d hp %d/%d mp %d/%d",
-	    ch->flags, ch->level, ch->exp, ch->age,
+	text_msg(4000, TEXT_SLEEP|TEXT_DEBUG,
+	    "%s (0x%x)\n"
+	    "Level %d\n"
+	    "Exp %d\n"
+	    "Age %d\n"
+	    "%d/%d hp, %d/%d mp\n",
+	    ob->name, ch->flags, ch->level, ch->exp, ch->age,
 	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
 
-	/* Read single map coordinates. */
-	ncoords = fobj_read_uint32(fd);
-	for (i = 0; i < ncoords; i++) {
-		struct map *m;
+	if (fobj_read_uint32(fd) > 0) {
+		char *mname, *minput;
 		Uint32 x, y, offs, flags, speed;
-		
+
 		mname = fobj_read_string(fd);
 		x = fobj_read_uint32(fd);
 		y = fobj_read_uint32(fd);
 		offs = fobj_read_uint32(fd);
 		flags = fobj_read_uint32(fd);
 		speed = fobj_read_uint32(fd);
+		minput = fobj_read_string(fd);
+		if (strcmp(minput, "") != 0) {
+			input = (struct input *)object_strfind(minput);
+			if (input == NULL) {
+				fatal("no such input: \"%s\"\n", minput);
+				return (-1);
+			}
+		}
 
 		m = (struct map *)object_strfind(mname);
 		if (m != NULL) {
 			struct node *node;
-			struct map_bref *bref;
+			struct mappos *npos;
 
 			pthread_mutex_lock(&m->lock);
 			node = &m->map[x][y];
-			bref = object_madd(ch, offs, flags, m, x, y);
-			bref->speed = speed;
+			npos = object_madd(ch, offs, flags, input, m, x, y);
+			npos->speed = speed;
 			pthread_mutex_unlock(&m->lock);
 
 			dprintf("at %s:%d,%d\n", m->obj.name, x, y);
 		} else {
 			fatal("no such map: \"%s\"\n", mname);
+			return (-1);
 		}
 		free(mname);
+		free(minput);
 	}
-	dprintf("%d coordinates\n", ncoords);
 	
 	return (0);
 }
@@ -142,9 +157,7 @@ char_save(void *p, int fd)
 {
 	struct character *ch = (struct character *)p;
 	struct fobj_buf *buf;
-	struct map_bref *bref;
-	size_t soffs;
-	Uint32 count;
+	struct mappos *pos = ch->obj.pos;
 
 	buf = fobj_create_buf(128, 4);
 	if (buf == NULL) {
@@ -167,24 +180,22 @@ char_save(void *p, int fd)
 	fobj_bwrite_uint32(buf, ch->maxmp);
 	fobj_bwrite_uint32(buf, ch->mp);
 
-	/* Write map back references */
-	soffs = buf->offs;
-	fobj_bwrite_uint32(buf, 0);
-	count = 0;
-	SLIST_FOREACH(bref, &ch->obj.brefsh, brefs) {
+	if (pos != NULL) {
+		fobj_bwrite_uint32(buf, 1);
+		fobj_bwrite_string(buf, pos->map->obj.name);
+		fobj_bwrite_uint32(buf, pos->x);
+		fobj_bwrite_uint32(buf, pos->y);
+		fobj_bwrite_uint32(buf, pos->nref->offs);
+		fobj_bwrite_uint32(buf, pos->nref->flags);
+		fobj_bwrite_uint32(buf, pos->speed);
+		fobj_bwrite_string(buf,
+		    (pos->input != NULL) ? pos->input->obj.name : "");
 		dprintf("%s: reference %s:%d,%d offs=%d flags=0x%x\n",
-		    ch->obj.name, bref->map->obj.name, bref->x, bref->y,
-		    bref->nref->offs, bref->nref->flags);
-		fobj_bwrite_string(buf, bref->map->obj.name);
-		fobj_bwrite_uint32(buf, bref->x);
-		fobj_bwrite_uint32(buf, bref->y);
-		fobj_bwrite_uint32(buf, bref->nref->offs);
-		fobj_bwrite_uint32(buf, bref->nref->flags);
-		fobj_bwrite_uint32(buf, bref->speed);
-		count++;
+		    ch->obj.name, pos->map->obj.name, pos->x, pos->y,
+		    pos->nref->offs, pos->nref->flags);
+	} else {
+		fobj_bwrite_uint32(buf, 0);
 	}
-	fobj_bpwrite_uint32(buf, count, soffs);
-	dprintf("%s: %d back references\n", ch->obj.name, count);
 
 	fobj_flush_buf(buf, fd);
 	return (0);
@@ -273,41 +284,36 @@ static Uint32
 char_time(Uint32 ival, void *obp)
 {
 	struct object *ob = (struct object *)obp;
-	struct map_bref *bref;
-	Uint32 moved = 0;
-	Uint32 x, y;
+	struct mappos *pos = ob->pos;
+	struct map *m;
+	Uint32 x, y, moved = 0;
 
-	SLIST_FOREACH(bref, &ob->brefsh, brefs) {
-		x = bref->x;
-		y = bref->y;
+	if (pos == NULL) {
+		/* Stop the timer. */
+		return (0);
+	}
+	m = pos->map;
+	x = pos->x;
+	y = pos->y;
 
-		/* Move a character. */
-		moved = mapdir_move(&bref->dir, &x, &y);
-		if (moved != 0) {
-			struct mapdir dir;
-			struct map_bref *nbref;
+	moved = mapdir_move(&pos->dir, &x, &y);
+	if (moved != 0) {
+		static struct mappos opos;
+		struct mappos *npos;
 
-			pthread_mutex_lock(&bref->map->lock);
+		pthread_mutex_lock(&m->lock);
 
-			dir = bref->dir;	/* Structure copy */
+		opos = *pos;
+		object_mdel(ob, 0, MAPREF_SPRITE, m, opos.x, opos.y);
+		npos = object_madd(ob, 0, MAPREF_SPRITE, opos.input,
+		    m, opos.x, opos.y);
+		npos->dir = opos.dir;
 
-			/* Remove old back reference. */
-			object_mdel(ob, 0, MAPREF_SPRITE,
-			    bref->map, bref->x, bref->y);
+		mapdir_postmove(&npos->dir, &x, &y, moved);
 
-			/* Insert new back reference. */
-			nbref = object_madd(ob, 0, MAPREF_SPRITE,
-			    bref->map, bref->x, bref->y);
+		pthread_mutex_unlock(&npos->map->lock);
 
-			nbref->dir = dir;	/* Structure copy */
-
-			/* Ensure movement continuation, if needed. */
-			mapdir_postmove(&nbref->dir, &x, &y, moved);
-
-			pthread_mutex_unlock(&bref->map->lock);
-
-			bref->map->redraw++;	/* XXX waste */
-		}
+		m->redraw++;	/* XXX some waste */
 	}
 
 	return (ival);
