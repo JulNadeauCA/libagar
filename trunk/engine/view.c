@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.21 2002/03/12 15:56:49 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.22 2002/03/13 07:51:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -92,8 +92,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	if (caption != NULL) {
 		SDL_WM_SetCaption(caption, "agar");
 	}
-	v->v = SDL_SetVideoMode(v->width + 64, v->height + 64, v->depth,
-	    v->flags);
+	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {
 		fatal("SDL: %dx%dx%d: %s\n", v->width, v->height, v->depth,
 		    SDL_GetError());
