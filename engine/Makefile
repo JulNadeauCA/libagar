@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.52 2002/12/08 01:53:41 vedge Exp $
+#	$Csoft: Makefile,v 1.53 2002/12/17 06:44:28 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -8,8 +8,6 @@ SUBDIR=	compat \
 	widget \
 	monitor \
 	media
-
-SHARE=	README.engine
 
 CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${FREETYPE_CFLAGS} ${X11_CFLAGS}
 
