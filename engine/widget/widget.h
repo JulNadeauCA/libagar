@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.50 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.51 2003/02/02 21:16:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -32,8 +32,6 @@ enum widget_binding_type {
 	WIDGET_SINT16,
 	WIDGET_UINT32,
 	WIDGET_SINT32,
-	WIDGET_UINT64,
-	WIDGET_SINT64,
 	WIDGET_FLOAT,
 	WIDGET_DOUBLE,
 	WIDGET_STRING,

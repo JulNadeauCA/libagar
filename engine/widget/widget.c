@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.42 2003/01/27 08:02:12 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.43 2003/02/02 21:16:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -467,14 +467,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 				    "\tSint32 %s = %d\n",
 				    name, *(Sint32 *)binding->p1);
 				break;
-#ifdef SDL_HAS_64BIT_TYPE
-			case WIDGET_UINT64:
-				*(Uint64 **)res = (Uint64 *)binding->p1;
-				break;
-			case WIDGET_SINT64:
-				*(Sint64 **)res = (Sint64 *)binding->p1;
-				break;
-#endif
 			case WIDGET_FLOAT:
 				*(float **)res = (float *)binding->p1;
 				debug(DEBUG_BINDING_LOOKUPS,
@@ -535,16 +527,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 					*(Sint32 **)res =
 					    (Sint32 *)&prop->data.s32;
 					break;
-#ifdef SDL_HAS_64BIT_TYPE
-				case PROP_UINT64:
-					*(Uint64 **)res =
-					    (Uint64 *)&prop->data.u64;
-					break;
-				case PROP_SINT64:
-					*(Sint64 **)res =
-					    (Sint64 *)&prop->data.s64;
-					break;
-#endif
 				case PROP_FLOAT:
 					*(float **)res =
 					    (float *)&prop->data.f;
