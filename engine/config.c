@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.82 2003/06/13 03:59:50 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.83 2003/06/14 11:28:01 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -37,8 +37,6 @@
 #include <engine/view.h>
 #include <engine/map.h>
 #include <engine/prop.h>
-
-#include <engine/unicode/unicode.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.65 2003/06/10 07:59:29 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.66 2003/06/13 02:49:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -32,17 +32,17 @@ enum widget_binding_type {
 	WIDGET_FLOAT,
 	WIDGET_DOUBLE,
 	WIDGET_STRING,
-	WIDGET_POINTER,
+	WIDGET_UNICODE,
 	WIDGET_PROP
 };
 
 struct widget_binding {
-	enum widget_binding_type	 type;		/* Type of value */
-	char				*name;		/* Identifier */
-	pthread_mutex_t			*mutex;		/* Optional lock */
-	void				*p1, *p2;
-	size_t				 size;
-	SLIST_ENTRY(widget_binding)	 bindings;
+	int		 type;		/* Type of value */
+	char		*name;		/* Identifier */
+	pthread_mutex_t	*mutex;		/* Optional lock */
+	void		*p1, *p2;
+	size_t		 size;
+	SLIST_ENTRY(widget_binding) bindings;
 };
 
 struct widget {
@@ -77,86 +77,72 @@ struct widget {
 #define WIDGET_SCALE(wi, w, h)	WIDGET_OPS(wi)->scale((wi), (w), (h))
 
 __BEGIN_DECLS
-extern DECLSPEC void	 widget_init(void *, const char *, const void *, int);
-extern DECLSPEC void	 widget_destroy(void *);
-extern DECLSPEC void	 widget_draw(void *);
-extern DECLSPEC int	 widget_load(void *, struct netbuf *);
-extern DECLSPEC int	 widget_save(void *, struct netbuf *);
+void	 widget_init(void *, const char *, const void *, int);
+void	 widget_destroy(void *);
+int	 widget_load(void *, struct netbuf *);
+int	 widget_save(void *, struct netbuf *);
+void	 widget_draw(void *);
+void	 widget_scale(void *, int, int);
 
-extern DECLSPEC void	 widget_set_type(void *, const char *);
-extern DECLSPEC void	 widget_scale(void *, int, int);
-extern DECLSPEC void	 widget_focus(void *);
-extern __inline__ int	 widget_holds_focus(void *);
-extern struct widget	*widget_find_focus(void *);
-extern __inline__ int	 widget_relative_area(void *, int, int);
-extern __inline__ int	 widget_area(void *, int, int);
-extern DECLSPEC void	 widget_map_color(void *, int, const char *, Uint8,
-			                  Uint8, Uint8, Uint8);
-extern __inline__ int	 widget_push_color(struct widget *, Uint32);
-extern __inline__ void	 widget_pop_color(struct widget *);
+void		 widget_set_type(void *, const char *);
+void		 widget_focus(void *);
+struct widget	*widget_find_focus(void *);
+__inline__ int	 widget_holds_focus(void *);
+__inline__ int	 widget_relative_area(void *, int, int);
+__inline__ int	 widget_area(void *, int, int);
 
-extern __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
-extern __inline__ void	 widget_put_pixel(void *, int, int, Uint32);
+void  widget_map_color(void *, int, const char *, Uint8, Uint8, Uint8, Uint8);
+int   widget_push_color(struct widget *, Uint32);
+void  widget_pop_color(struct widget *);
 
-extern DECLSPEC void	widget_mousemotion(struct window *, struct widget *,
-			                   int, int, int, int);
-extern DECLSPEC void	widget_mousebuttonup(struct window *, struct widget *,
-			                     int, int, int);
-extern DECLSPEC int	widget_mousebuttondown(struct window *, struct widget *,
-			                       int, int, int);
+__inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
+__inline__ void	 widget_put_pixel(void *, int, int, Uint32);
 
-#define widget_binding_get(widp, name, res) \
-	_widget_binding_get((widp), (name), (res), 0)
-#define	widget_binding_get_locked(widp, name, res) \
-	_widget_binding_get((widp), (name), (res), 1)
+void  widget_mousemotion(struct window *, struct widget *, int, int, int, int);
+void  widget_mousebuttonup(struct window *, struct widget *, int, int, int);
+int   widget_mousebuttondown(struct window *, struct widget *, int, int, int);
 
-#define	widget_get_bool widget_get_int
-#define	widget_set_bool widget_set_int
+struct widget_binding	*widget_bind(void *, const char *,
+			             enum widget_binding_type, ...);
+struct widget_binding	*widget_get_binding(void *, const char *, ...);
+__inline__ void		 widget_binding_lock(struct widget_binding *);
+__inline__ void		 widget_binding_unlock(struct widget_binding *);
+__inline__ void		 widget_binding_modified(struct widget_binding *);
 
-extern DECLSPEC struct widget_binding	*widget_bind(void *, const char *,
-					             enum widget_binding_type,
-						     ...);
-extern DECLSPEC struct widget_binding	*_widget_binding_get(void *,
-					                     const char *,
-							     void *, int);
-
-extern __inline__ void	 widget_binding_lock(struct widget_binding *);
-extern __inline__ void	 widget_binding_unlock(struct widget_binding *);
-extern __inline__ void	 widget_binding_modified(struct widget_binding *);
-
-extern __inline__ unsigned int  widget_get_uint(void *, const char *);
-extern __inline__ int		widget_get_int(void *, const char *);
-
-extern __inline__ Uint8	 widget_get_uint8(void *, const char *);
-extern __inline__ Sint8	 widget_get_sint8(void *, const char *);
-extern __inline__ Uint16 widget_get_uint16(void *, const char *);
-extern __inline__ Sint16 widget_get_sint16(void *, const char *);
-extern __inline__ Uint32 widget_get_uint32(void *, const char *);
-extern __inline__ Sint32 widget_get_sint32(void *, const char *);
+__inline__ unsigned int	 widget_get_uint(void *, const char *);
+__inline__ int		 widget_get_int(void *, const char *);
+#define			 widget_get_bool widget_get_int
+__inline__ Uint8	 widget_get_uint8(void *, const char *);
+__inline__ Sint8	 widget_get_sint8(void *, const char *);
+__inline__ Uint16	 widget_get_uint16(void *, const char *);
+__inline__ Sint16	 widget_get_sint16(void *, const char *);
+__inline__ Uint32	 widget_get_uint32(void *, const char *);
+__inline__ Sint32	 widget_get_sint32(void *, const char *);
 #ifdef FLOATING_POINT
-extern __inline__ float	 widget_get_float(void *, const char *);
-extern __inline__ double widget_get_double(void *, const char *);
+__inline__ float	 widget_get_float(void *, const char *);
+__inline__ double	 widget_get_double(void *, const char *);
 #endif
-extern __inline__ char	*widget_get_string(void *, const char *);
-extern __inline__ size_t widget_copy_string(void *, const char *, char *,
-			                    size_t);
-extern __inline__ void	*widget_get_pointer(void *, const char *);
+__inline__ char		*widget_get_string(void *, const char *);
+__inline__ Uint16	*widget_get_unicode(void *, const char *);
 
-extern __inline__ void	 widget_set_uint(void *, const char *, unsigned int);
-extern __inline__ void	 widget_set_int(void *, const char *, int);
+__inline__ size_t widget_copy_string(void *, const char *, char *, size_t);
+__inline__ size_t widget_copy_unicode(void *, const char *, Uint16 *, size_t);
 
-extern __inline__ void	 widget_set_uint8(void *, const char *, Uint8);
-extern __inline__ void	 widget_set_sint8(void *, const char *, Sint8);
-extern __inline__ void	 widget_set_uint16(void *, const char *, Uint16);
-extern __inline__ void	 widget_set_sint16(void *, const char *, Sint16);
-extern __inline__ void	 widget_set_uint32(void *, const char *, Uint32);
-extern __inline__ void	 widget_set_sint32(void *, const char *, Sint32);
+__inline__ void	 widget_set_uint(void *, const char *, unsigned int);
+__inline__ void	 widget_set_int(void *, const char *, int);
+#define		 widget_set_bool widget_set_int
+__inline__ void	 widget_set_uint8(void *, const char *, Uint8);
+__inline__ void	 widget_set_sint8(void *, const char *, Sint8);
+__inline__ void	 widget_set_uint16(void *, const char *, Uint16);
+__inline__ void	 widget_set_sint16(void *, const char *, Sint16);
+__inline__ void	 widget_set_uint32(void *, const char *, Uint32);
+__inline__ void	 widget_set_sint32(void *, const char *, Sint32);
 #ifdef FLOATING_POINT
-extern __inline__ void	 widget_set_float(void *, const char *, float);
-extern __inline__ void	 widget_set_double(void *, const char *, double);
+__inline__ void	 widget_set_float(void *, const char *, float);
+__inline__ void	 widget_set_double(void *, const char *, double);
 #endif
-extern __inline__ void	 widget_set_string(void *, const char *, char *);
-extern __inline__ void	 widget_set_pointer(void *, const char *, void *);
+__inline__ void	 widget_set_string(void *, const char *, const char *);
+__inline__ void	 widget_set_unicode(void *, const char *, const Uint16 *);
 __END_DECLS
 
 #include "close_code.h"

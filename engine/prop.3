@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.8 2003/06/06 02:51:06 vedge Exp $
+.\"	$Csoft: prop.3,v 1.9 2003/06/10 08:07:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -46,7 +46,7 @@ structure.
 Generic properties can store the following types:
 .Pp
 .Bd -literal
-enum prop_type {		/* Sync monitor/object_browser.c */
+enum prop_type {
 	PROP_UINT,
 	PROP_INT,
 	PROP_UINT8,
@@ -57,29 +57,16 @@ enum prop_type {		/* Sync monitor/object_browser.c */
 	PROP_SINT32,
 	PROP_UINT64,		/* Unused */
 	PROP_SINT64,		/* Unused */
-	PROP_FLOAT,		/* IEEE 754 floating point */
-	PROP_DOUBLE,		/* IEEE 754 floating point */
-	PROP_LONG_DOUBLE,	/* Non-portable */
+	PROP_FLOAT,		/* IEEE 754 encoding */
+	PROP_DOUBLE,		/* IEEE 754 encoding */
+	PROP_LONG_DOUBLE,	/* Unused */
 	PROP_STRING,
-	PROP_POINTER,
+	PROP_POINTER,		/* Not persistent */
 	PROP_BOOL,
+	PROP_UNICODE,		/* Unicode text (UTF-16) */
 	PROP_ANY
 } type;
 .Ed
-.Pp
-The
-.Dv PROP_FLOAT
-and
-.Dv PROP_DOUBLE
-types are unavailable if
-.St -ieee754
-floating point is not available.
-The
-.Dv PROP_LONG_DOUBLE
-type is not available on all architectures and
-.Fn prop_save
-ignores properties of type
-.Dv PROP_POINTER .
 .Sh READING PROPERTIES
 .nr nS 1
 .Ft "struct prop *"
@@ -124,14 +111,18 @@ ignores properties of type
 .Ft double
 .Fn prop_get_double "void *obj" "const char *key"
 .Pp
-.Ft "long double"
-.Fn prop_get_long_double "void *obj" "const char *key"
-.Pp
 .Ft "char *"
 .Fn prop_get_string "void *obj" "const char *key"
 .Pp
+.Ft "Uint16 *"
+.Fn prop_get_unicode "void *obj" "const char *key"
+.Pp
 .Ft size_t
 .Fn prop_copy_string "void *obj" "const char *key" "char *dst" "size_t dst_size"
+.Pp
+.Ft size_t
+.Fn prop_copy_unicode "void *obj" "const char *key" "Uint16 *dst" \
+                      "size_t dst_size"
 .Pp
 .Ft "void *"
 .Fn prop_get_pointer "void *obj" "const char *key"
@@ -157,8 +148,8 @@ The
 .Fn prop_lock
 and
 .Fn prop_unlock
-functions respectively acquire and release the recursive mutex associated with
-an object's properties.
+functions acquire/release the recursive mutex which is associated with an
+object's properties.
 .Pp
 The other data access functions look for a property named
 .Fa key
@@ -166,9 +157,12 @@ and return the associated value, raising a fatal condition if there is no
 match.
 .Pp
 .Fn prop_get_string
-returns a copy of the actual string.
-.Pp
+and
+.Fn prop_get_unicode
+both return a copy of the string.
 .Fn prop_copy_string
+and
+.Fn prop_copy_unicode
 copies up to
 .Fa dst_size
 - 1 characters from the value of a string property to
@@ -216,10 +210,10 @@ NUL-terminating the result.
 .Fn prop_set_double "void *obj" "const char *key" "double value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_long_double "void *obj" "const char *key" "long double value"
+.Fn prop_set_string "void *obj" "const char *key" "const char *fmt" "..."
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_string "void *obj" "const char *key" "const char *fmt" "..."
+.Fn prop_set_unicode "void *obj" "const char *key" "const char *fmt" "..."
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_pointer "void *obj" "const char *key" "void *ptr"
@@ -237,7 +231,7 @@ If the
 .Fa key
 does not match an existing property, a new one is created.
 .Pp
-The other data write functions iook for a property named
+The other data write functions look for a property named
 .Fa key
 and set its value to
 .Fa value ,

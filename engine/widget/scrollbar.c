@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.27 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.28 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -123,7 +123,7 @@ scrollbar_mouse_select(struct scrollbar *sb, int coord, int maxcoord)
 		struct widget_binding *valueb;
 		int *value;
 
-		valueb = widget_binding_get_locked(sb, "value", &value);
+		valueb = widget_get_binding(sb, "value", &value);
 		*value = widget_get_int(sb, "min");
 		widget_binding_unlock(valueb);
 		goto changed;

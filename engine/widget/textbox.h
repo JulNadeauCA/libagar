@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.19 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.20 2003/06/08 23:53:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -8,14 +8,14 @@
 
 #include "begin_code.h"
 
-#define TEXTBOX_DEFAULT_MAX	128
+#define TEXTBOX_STRING_MAX	128
 
 struct textbox {
 	struct widget wid;
 	
 	SDL_Surface	*label;			/* Label (left) */
 
-	char	 string[TEXTBOX_DEFAULT_MAX];	/* Def string binding */
+	char	 string[TEXTBOX_STRING_MAX];	/* Default string binding */
 	int	 writeable;			/* Read/write? */
 	int	 xpadding, ypadding;		/* Text padding */
 	int	 newx;				/* Mouse seek */

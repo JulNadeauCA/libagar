@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.72 2003/06/13 02:48:42 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.73 2003/06/13 04:28:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -291,8 +291,8 @@ tlist_adjust_scrollbar(struct tlist *tl)
 	int *max, *offset;
 	int noffset;
 
-	maxb = widget_binding_get_locked(tl->sbar, "max", &max);
-	offsetb = widget_binding_get_locked(tl->sbar, "value", &offset);
+	maxb = widget_get_binding(tl->sbar, "max", &max);
+	offsetb = widget_get_binding(tl->sbar, "value", &offset);
 	noffset = *offset;
 
 	if (noffset > *max - tl->nvisitems)
@@ -333,7 +333,7 @@ tlist_remove_item(struct tlist *tl, struct tlist_item *it)
 
 	/* Update the scrollbar range and offset accordingly. */
 	widget_set_int(tl->sbar, "max", nitems);
-	offsetb = widget_binding_get_locked(tl->sbar, "value", &offset);
+	offsetb = widget_get_binding(tl->sbar, "value", &offset);
 	if (*offset > nitems) {
 		*offset = nitems;
 	} else if (nitems > 0 && *offset < nitems) {		/* XXX ugly */
@@ -687,7 +687,7 @@ tlist_keydown(int argc, union evarg *argv)
 	int sel;
 	int *offset;
 
-	offsetb = widget_binding_get_locked(tl->sbar, "value", &offset);
+	offsetb = widget_get_binding(tl->sbar, "value", &offset);
 
 	pthread_mutex_lock(&tl->lock);
 	switch (keysym) {

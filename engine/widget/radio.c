@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.33 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.34 2003/06/09 01:31:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -182,8 +182,7 @@ radio_event(int argc, union evarg *argv)
 	int y;
 	int *sel;
 
-	valueb = widget_binding_get_locked(rad, "value", &sel);
-
+	valueb = widget_get_binding(rad, "value", &sel);
 	switch (type) {
 	case MOUSEBUTTONDOWN_EVENT:
 		button = argv[2].i;
@@ -209,9 +208,9 @@ radio_event(int argc, union evarg *argv)
 	default:
 		return;
 	}
-
-	if (*sel >= rad->nitems)
+	if (*sel >= rad->nitems) {
 		*sel = rad->nitems - 1;
+	}
 	event_post(rad, "radio-changed", "%i", *sel);
 	widget_binding_unlock(valueb);
 }

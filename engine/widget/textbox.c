@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.62 2003/06/08 00:21:05 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.63 2003/06/08 23:53:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -140,7 +140,7 @@ textbox_draw(void *p)
 		x = tbox->label->w;
 	}
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	tlen = strlen(s);
 
 	/* Default to the end of the string. */
@@ -324,12 +324,10 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	va_list args;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
-
+	stringb = widget_get_binding(tbox, "string", &s);
 	va_start(args, fmt);
 	vsnprintf(s, stringb->size, fmt, args);
 	va_end(args);
-
 	tbox->pos = 0;
 	tbox->offs = 0;
 	widget_binding_unlock(stringb);
@@ -341,8 +339,14 @@ textbox_string(struct textbox *tbox)
 	struct widget_binding *stringb;
 	char *s, *sd;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
-	sd = Strdup(s);
+	stringb = widget_get_binding(tbox, "string", &s);
+	switch (stringb->type) {
+	case WIDGET_STRING:
+		sd = Strdup(s);
+		break;
+	default:
+		fatal("not a string binding");
+	}
 	widget_binding_unlock(stringb);
 	return (sd);
 }
@@ -354,7 +358,7 @@ textbox_copy_string(struct textbox *tbox, char *dst, size_t dst_size)
 	size_t rv;
 	char *s;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	rv = strlcpy(dst, s, dst_size);
 	widget_binding_unlock(stringb);
 	return (rv);
@@ -367,7 +371,7 @@ textbox_int(struct textbox *tbox)
 	char *s;
 	int i;
 
-	stringb = widget_binding_get_locked(tbox, "string", &s);
+	stringb = widget_get_binding(tbox, "string", &s);
 	i = atoi(s);
 	widget_binding_unlock(stringb);
 	return (i);
