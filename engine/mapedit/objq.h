@@ -1,4 +1,4 @@
-/*	$Csoft: objq.h,v 1.1 2002/06/25 17:27:22 vedge Exp $	*/
+/*	$Csoft: objq.h,v 1.2 2002/07/18 12:02:09 vedge Exp $	*/
 /*	Public domain	*/
 
 struct objq_tmap {
@@ -12,8 +12,8 @@ struct objq {
 	struct	 widget wid;
 
 	int	 flags;
-#define OBJQ_HORIZ	0x01
-#define OBJQ_VERT	0x02
+#define OBJQ_HORIZ		0x01
+#define OBJQ_VERT		0x02
 
 	struct {
 		int	x;
