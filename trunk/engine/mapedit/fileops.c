@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.23 2003/01/01 05:18:37 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.24 2003/01/12 04:08:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc
@@ -239,7 +239,7 @@ fileops_revert_map(int argc, union evarg *argv)
 	udatadir = prop_get_string(config, "path.user_data_dir");
 
 	/* Always edit the user copy. */
-	Asprintf(&path, "%s/maps/%s.map", udatadir, OBJECT(m)->name);
+	Asprintf(&path, "%s/map/%s.map", udatadir, OBJECT(m)->name);
 
 	if (object_load_from(mv->map, path) == 0) {
 		mapview_center(mv, m->defx, m->defy);
@@ -265,24 +265,9 @@ fileops_clear_map(int argc, union evarg *argv)
 
 			node_destroy(node, x, y);
 			node_init(node, x, y);
-			node->flags = med->node.flags & ~(NODE_ORIGIN);
-
-			switch (med->ref.type) {
-			case NODEREF_SPRITE:
-				node_add_sprite(node, med->ref.obj,
-				    med->ref.offs);
-				break;
-			case NODEREF_ANIM:
-				node_add_anim(node, med->ref.obj,
-				    med->ref.offs, NODEREF_ANIM_AUTO);
-				break;
-			default:
-				fatal("bad reference type\n");
-				break;
-			}
 		}
 	}
-	
+
 	/* Reset the origin. */
 	m->map[m->defy][m->defx].flags |= NODE_ORIGIN;
 }
