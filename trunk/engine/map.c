@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.40 2002/02/25 09:01:41 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.41 2002/02/25 11:38:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 
 #include <engine/engine.h>
 #include <engine/version.h>
+#include <engine/text/text.h>
 #include <engine/mapedit/mapedit.h>
 
 static struct obvec map_vec = {
@@ -55,8 +56,6 @@ struct draw {
 
 	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
 };
-
-TAILQ_HEAD(, draw) deferdraws;	 /* Deferred rendering */
 
 static void	 node_init(struct node *, Uint32);
 static void	 node_destroy(struct node *);
@@ -148,6 +147,7 @@ map_draw_th(void *p)
 			m->redraw = 0;
 			map_draw(m);
 		}
+		text_drawall();	/* XXX some waste */
 		SDL_Delay(2);
 	}
 
@@ -162,7 +162,7 @@ map_focus(struct map *m)
 	world->curmap = m;
 
 	if (pthread_create(&m->draw_th, NULL, map_draw_th, m) != 0) {
-		perror("draw_th");
+		dperror("draw_th");
 		return (-1);
 	}
 
@@ -374,9 +374,10 @@ map_animate(struct map *m)
 {
 	static Uint32 x, y;
 	static Uint32 vx, vy;
+	static TAILQ_HEAD(, draw) deferdraws;
 
 	TAILQ_INIT(&deferdraws);
-
+	
 	pthread_mutex_lock(&m->lock);
 
 	for (y = m->view->mapy, vy = m->view->mapyoffs;
@@ -491,7 +492,9 @@ map_animate(struct map *m)
 			    draw->x, draw->y, m->tilew, m->tileh);
 		}
 	}
-	
+
+	/* XXX UpdateRect everything */
+
 	pthread_mutex_unlock(&m->lock);
 }
 
