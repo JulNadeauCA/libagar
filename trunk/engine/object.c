@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.72 2002/08/19 05:28:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.73 2002/08/20 00:09:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -196,7 +196,7 @@ object_get_art(char *media, struct object *ob)
 		art->curflags = 0;
 		pthread_mutex_init(&art->used_lock, NULL);
 
-		if (mapediting) {	/* XXX */
+		if (mapediting) {
 			char s[FILENAME_MAX];
 
 			art->map = emalloc(sizeof(struct map));
@@ -206,9 +206,12 @@ object_get_art(char *media, struct object *ob)
 		}
 
 		fob = fobj_load(obpath);
-		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
-			xcf_load(fob, i, art);
-
+		for (i = 0; i < fob->head.nobjs; i++) {
+			if (xcf_check(fob, i) == 0) {
+				xcf_load(fob, i, art);
+			} else {
+				dprintf("not a xcf in slot %d\n", i);
+			}
 		}
 		fobj_free(fob);
 		
