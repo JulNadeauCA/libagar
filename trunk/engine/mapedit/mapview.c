@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.10 2002/07/20 19:10:18 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.11 2002/07/23 23:49:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -125,37 +125,21 @@ mapview_draw_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
 {
 	int x, y, xfac, yfac;
 	Uint32 col = 0;
-	Uint8 *src, r1, g1, b1;
+	Uint8 *src, r1, g1, b1, a1;
 
 	SDL_LockSurface(view->v);
 	for (y = 0; y < mv->tileh && ry+y < WIDGET(mv)->h; y++) {
 		for (x = 0; x < mv->tilew && rx+x < WIDGET(mv)->w; x++) {
-			/* XXX could be more efficient */
 			src = (Uint8 *)s->pixels +
 			    (y*TILEH/mv->tileh)*s->pitch +
 			    (x*TILEW/mv->tilew)*s->format->BytesPerPixel;
 
-			switch (s->format->BytesPerPixel) {
-			case 1:
-				col = *src;
-				break;
-			case 2:
-				col = *(Uint16 *)src;
-				break;
-			case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				col = src[0]<<16 | src[1]<<8 | src[2];
-#else
-				col = src[0] | src[1]<<8 | src[2]<<16;
-#endif
-				break;
-			case 4:
-				col = *(Uint32 *)src;
-				break;
-			}
-			SDL_GetRGB(col, s->format, &r1, &g1, &b1);
+			SDL_GetRGBA(*(Uint32 *)src, s->format,
+			    &r1, &g1, &b1, &a1);
 			col = SDL_MapRGB(view->v->format, r1, g1, b1);
-			WIDGET_PUT_PIXEL(mv, rx+x, ry+y, col);
+			if (a1 > 200) {
+				WIDGET_PUT_PIXEL(mv, rx+x, ry+y, col);
+			}
 		}
 	}
 	SDL_UnlockSurface(view->v);
