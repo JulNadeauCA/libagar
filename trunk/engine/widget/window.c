@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.14 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.15 2002/04/30 01:11:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -40,6 +40,7 @@
 #include <engine/map.h>
 #include <engine/version.h>
 
+#include "text.h"
 #include "widget.h"
 #include "window.h"
 
@@ -187,13 +188,80 @@ window_mouse_button(SDL_Event *ev)
 	window_unlink_queued();
 }
 
+#define WINDOW_CORNER(xo, yo) do {			\
+	int z;						\
+	z = ((xo) * (yo))/2;				\
+	if (z < 1) {					\
+		return (-1);				\
+	} else {					\
+		*col = win->border[((xo) * (yo))/2];	\
+		return (1);				\
+	}						\
+} while (/*CONSTCOND*/0)
+
+static __inline__ int
+window_decoration(struct window *win, int xo, int yo, Uint32 *col)
+{
+	if (xo < 4 && yo < 4) {
+		/* Upper left */
+		WINDOW_CORNER(xo, yo);
+	} else if (yo < 4 && xo > win->w - 4) {
+		/* Upper right */
+		WINDOW_CORNER(win->w - xo, yo);
+	} else if (xo > win->w - 4 && yo > win->h - 4) {
+		/* Lower right */
+		WINDOW_CORNER(win->w - xo, win->h - yo);
+	} else if (xo < 4 && yo > win->h - 4) {
+		/* Lower left */
+		WINDOW_CORNER(xo, win->h - yo);
+	}
+
+	if (win->flags & WINDOW_TITLEBAR) {
+		if (yo < 24 && xo > 4 && xo < win->w - 4) {
+			if (yo < 4) {
+				*col = win->border[yo+1];
+			} else if (yo > 20) {
+				*col = win->border[yo-20];
+			} else {
+				switch (win->bgtype) {
+				case WINDOW_CUBIC:
+					*col = SDL_MapRGB(win->view->v->format,
+					    0, xo>>3, 0);
+					break;
+				case WINDOW_GRADIENT:
+					*col = SDL_MapRGB(win->view->v->format,
+					    xo>>5, 0, xo>>2);
+					break;
+				}
+			}
+			return (1);
+		}
+	}
+	
+	if (xo > win->w - 4) {
+		*col = win->border[win->w - xo];
+		return (1);
+	} else if (yo < 4) {
+		*col = win->border[yo+1];
+		return (1);
+	} else if (xo < 4) {
+		*col = win->border[xo+1];
+		return (1);
+	} else if (yo > win->h - 4) {
+		*col = win->border[win->h - yo];
+		return (1);
+	}
+	return (0);
+}
+
 void
 window_draw(struct window *win)
 {
 	SDL_Surface *v = win->view->v;
 	Uint32 xo, yo, col = 0;
-	Uint8 *dst;
+	Uint8 *dst, expcom;
 	struct widget *wid;
+	int rv;
 
 	/* Render the background. */
 	if (win->flags & WINDOW_PLAIN) {
@@ -213,17 +281,10 @@ window_draw(struct window *win)
 				    v->pitch + (win->x+xo) *
 				    v->format->BytesPerPixel;
 
-				if (xo > win->w - 4) {
-					col = win->border[win->w - xo];
-				} else if (yo < 4) {
-					col = win->border[yo+1];
-				} else if (xo < 4) {
-					col = win->border[xo+1];
-				} else if (yo > win->h - 4) {
-					col = win->border[win->h - yo];
-				} else {
-					static Uint8 expcom;
-			
+				rv = window_decoration(win, xo, yo, &col);
+				if (rv < 0) {
+					continue;
+				} else if (rv == 0) {
 					switch (win->bgtype) {
 					case WINDOW_SOLID:
 						col = win->bgcolor;
@@ -283,6 +344,25 @@ window_draw(struct window *win)
 		SDL_UnlockSurface(v);
 	}
 
+	/* Render the title bar. */
+	/* XXX ridiculously inefficient with animated windows. */
+	if (win->flags & WINDOW_TITLEBAR) {
+		static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
+		SDL_Surface *s;
+		SDL_Rect rd;
+
+		s = TTF_RenderText_Solid(font, win->caption, white);
+		if (s == NULL) {
+			fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+		}
+		rd.x = win->x + (win->w - s->w - 6); /* XXX border width */
+		rd.y = win->y + 4;
+		rd.w = s->w;
+		rd.h = s->h;
+		SDL_BlitSurface(s, NULL, win->view->v, &rd);
+		SDL_FreeSurface(s);
+	}
+
 	/* Render the widgets. */
 	pthread_mutex_lock(&win->lock);
 	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
@@ -291,7 +371,8 @@ window_draw(struct window *win)
 	pthread_mutex_unlock(&win->lock);
 
 	SDL_UpdateRect(v, win->x, win->y, win->w, win->h);
-
+	
+	/* Always redraw if this is an animated window. */
 	if (win->flags & WINDOW_ANIMATE) {
 		if (delta++ > 256) {
 			delta = 0;
