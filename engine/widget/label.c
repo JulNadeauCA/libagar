@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.32 2002/11/17 23:13:59 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.33 2002/11/19 05:06:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -236,7 +236,6 @@ label_draw(void *p)
 						LABEL_ARG("%p", void *);
 						break;
 					case '[':
-						dprintf("fmtp: %s\n", fmtp+2);
 						if (strncmp("u8", fmtp+2, 2)
 						    == 0) {
 							LABEL_ARG("%d", Uint8);
