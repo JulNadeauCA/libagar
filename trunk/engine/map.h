@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.22 2002/02/25 11:38:26 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.23 2002/03/01 14:45:13 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
@@ -40,7 +40,8 @@ struct node {
 #define NODE_SLOW	0x0040		/* Decrease speed by v1 */
 #define NODE_HASTE	0x0080		/* Increase speed by v1 */
 #define NODE_ANIM	0x0100		/* Always animate node */
-#define NODE_DONTSAVE	(NODE_ANIM)
+#define NODE_OVERLAP	0x0200		/* Moving sprite covers node */
+#define NODE_DONTSAVE	(NODE_ANIM|NODE_OVERLAP)
 	Uint32	v1, v2;			/* Extra properties */
 	Uint32	nanims;			/* Animation count */
 };
