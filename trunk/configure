@@ -89,7 +89,7 @@ main(int argc, char *argv[])
 }
 EOT
 $CC -o .gcctest .gcctest.c
-if ./.test; then
+if ./.gcctest; then
     GCC=Yes
     echo "yes"
 else
