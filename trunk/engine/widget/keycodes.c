@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.29 2003/06/15 21:34:21 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.30 2003/08/30 02:31:08 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -53,12 +53,12 @@ const struct keycode keycodes[] = {
 	{ SDLK_DELETE,		0,		key_delete,	NULL },
 	{ SDLK_HOME,		0,		key_home,	NULL },
 	{ SDLK_END,		0,		key_end,	NULL },
-	{ SDLK_LEFT,		0,		key_left,	NULL },
-	{ SDLK_RIGHT,		0,		key_right,	NULL },
-	{ SDLK_LAST,		0,		key_character,	NULL },
 	{ SDLK_a,		KMOD_CTRL,	key_home,	NULL },
 	{ SDLK_e,		KMOD_CTRL,	key_end,	NULL },
 	{ SDLK_k,		KMOD_CTRL,	key_kill,	NULL },
+	{ SDLK_LEFT,		0,		key_left,	NULL },
+	{ SDLK_RIGHT,		0,		key_right,	NULL },
+	{ SDLK_LAST,		0,		key_character,	NULL },
 };
 
 static void
