@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.45 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.46 2002/12/14 11:21:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,11 +77,11 @@ void
 button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
     int rw, int rh)
 {
-	widget_init(&b->wid, "button", "widget", &button_ops, rw, rh);
+	widget_init(&b->wid, "button", &button_ops, rw, rh);
 	WIDGET(b)->flags |= WIDGET_UNFOCUSED_MOTION;
 
-	widget_map_color(b, FRAME_COLOR, "button-frame", 100, 100, 100);
-	widget_map_color(b, TEXT_COLOR, "button-text", 240, 240, 240);
+	widget_map_color(b, FRAME_COLOR, "frame", 100, 100, 100);
+	widget_map_color(b, TEXT_COLOR, "text", 240, 240, 240);
 
 	b->flags = flags;
 	b->justify = BUTTON_CENTER;

@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.19 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.20 2002/12/17 01:05:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -89,11 +89,11 @@ void
 graph_init(struct graph *graph, const char *caption, enum graph_type t,
     Uint32 flags, Sint32 yrange, int w, int h)
 {
-	widget_init(&graph->wid, "graph", "widget", &graph_ops, w, h);
-	widget_map_color(graph, FRAME_COLOR, "graph-frame", 50, 50, 50);
-	widget_map_color(graph, TEXT_COLOR, "graph-text", 200, 200, 200);
-	widget_map_color(graph, ORIGIN_COLOR1, "graph-origin1", 50, 50, 50);
-	widget_map_color(graph, ORIGIN_COLOR2, "graph-origin2", 150, 150, 150);
+	widget_init(&graph->wid, "graph", &graph_ops, w, h);
+	widget_map_color(graph, FRAME_COLOR, "frame", 50, 50, 50);
+	widget_map_color(graph, TEXT_COLOR, "text", 200, 200, 200);
+	widget_map_color(graph, ORIGIN_COLOR1, "origin1", 50, 50, 50);
+	widget_map_color(graph, ORIGIN_COLOR2, "origin2", 150, 150, 150);
 	
 	graph->type = t;
 	graph->flags = flags;

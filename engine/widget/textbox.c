@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.34 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.35 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -79,13 +79,13 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	tbox->xmargin = 4;
 	tbox->ymargin = 3;
 
-	widget_init(&tbox->wid, "textbox", "widget", &textbox_ops, rw, rh);
+	widget_init(&tbox->wid, "textbox", &textbox_ops, rw, rh);
 	WIDGET(tbox)->h = (s->h * 2) + (tbox->ymargin * 2);
 
-	widget_map_color(tbox, FRAME_COLOR, "textbox-frame", 100, 100, 100);
-	widget_map_color(tbox, TEXT_COLOR, "textbox-text", 250, 250, 250);
-	widget_map_color(tbox, CURSOR_COLOR1, "textbox-cursor1", 50, 50, 50);
-	widget_map_color(tbox, CURSOR_COLOR2, "textbox-cursor2", 0, 0, 0);
+	widget_map_color(tbox, FRAME_COLOR, "frame", 100, 100, 100);
+	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250);
+	widget_map_color(tbox, CURSOR_COLOR1, "cursor1", 50, 50, 50);
+	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0);
 
 	SDL_FreeSurface(s);
 
