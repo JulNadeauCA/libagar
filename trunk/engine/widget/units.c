@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.16 2004/05/06 06:23:38 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.17 2004/05/11 02:29:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -217,14 +217,18 @@ const struct unit current_units[] = {
 };
 
 /* Units of temperature */
+static double degF2K(double degF) { return ((degF-32)/1.8 + 273.15); }
+static double degC2K(double degC) { return (degC + 273.15); }
+static double degRa2K(double degRa) { return ((degRa-32-459.67)/1.8 + 273.15); }
+static double degR2K(double degR) { return (degR*1.25 + 273.15); }
 const struct unit temperature_units[] = {
+	{ "K",		N_("Kelvins"),			1,		NULL },
+	{ "\xc2\xb0\x43", N_("Degrees Celsius"),	0,	      degC2k},
+	{ "\xc2\xb0\x46", N_("Degrees Farenheit"),	0,	      degF2K },
+	{ "\xc2\xb0\x52", N_("Degrees Rankine"),	0            degRa2K },
+	{ "\xc2\xb0\x65", N_("Degrees Reaumur"),	0,            degR2K },
 	{ "\xc2\xb5K",	N_("Microkelvins"),		0.000001,	NULL },
 	{ "mK",		N_("Millikelvins"),		0.001,		NULL },
-	{ "\xc2\xb0\x52", N_("Degrees Rankine"),	0.5555556,	NULL },
-	{ "K",		N_("Kelvins"),			1,		NULL },
-	{ "\xc2\xb0\x46", N_("Degrees Farenheit"),	255.9277778,	NULL },
-	{ "\xc2\xb0\x43", N_("Degrees Celsius"),	274.15,		NULL },
-	{ "\xc2\xb0\x65", N_("Degrees Reaumur"),	274.4,		NULL },
 	{ "kK",		N_("Kilokelvins"),		1000,		NULL },
 	{ "MK",		N_("Megakelvins"),		1000000,	NULL },
 	{ NULL,		NULL,				0,		NULL }
