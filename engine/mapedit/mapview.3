@@ -88,6 +88,40 @@ can be changed at runtime, and may include:
 #define MAPVIEW_PROPS		0x20	/* Display node properties */
 #define MAPVIEW_SHOW_CURSOR	0x40	/* Show mouse cursor */
 .Ed
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n -indent
+.It widget-scaled
+Adjust the map view.
+.It widget-lostfocus
+Stop zoom timers.
+.It window-mousebuttonup
+Stop moving.
+.It window-mousebuttondown
+Right button moves the view, left button invokes the current tool
+if
+.Dv MAPVIEW_EDIT
+is set, or selects a tile if
+.Dv MAPVIEW_TILEMAP
+is set.
+.It window-keyup
+- or + keys stop zooming.
+.It window-keydown
+- or + keys start zooming.
+0 key zooms to 1:1
+.It window-mouseout
+Stop moving.
+Redisplay cursor if
+.Dv MAPVIEW_SHOW_CURSOR
+is not set.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr objq 3 ,
