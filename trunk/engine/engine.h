@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.70 2003/06/23 00:06:02 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.71 2003/06/25 00:26:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -84,6 +84,10 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 # define PTHREAD_MUTEX_RECURSIVE 0
 #endif
 
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
+
 #include "begin_code.h"
 
 struct engine_proginfo {
@@ -103,7 +107,8 @@ enum {
 #define ENGINE_INIT_GFX		0x01		/* Graphic engine */
 #define ENGINE_INIT_INPUT	0x02		/* Input devices */
 
-extern struct object *world;	/* Roots of Evil */
+extern struct object *world;		/* Roots of Evil */
+extern pthread_mutex_t linkage_lock;	/* Protects object linkage */
 
 __BEGIN_DECLS
 int		 engine_init(int, char **, struct engine_proginfo *, int);
