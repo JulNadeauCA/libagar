@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.84 2003/03/11 00:12:48 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.85 2003/03/11 01:57:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -754,9 +754,16 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case 1:
-		if (mv->msel.set) {
-			mapview_effect_selection(mv);
+		if (mapedit.curtool == mapedit.tools[MAPEDIT_SELECT] &&
+		    mv->msel.set &&
+		    (mv->msel.xoffs == 0 || mv->msel.yoffs == 0)) {
+			mv->esel.set = 0;
 			mv->msel.set = 0;
+		} else {
+			if (mv->msel.set) {
+				mapview_effect_selection(mv);
+				mv->msel.set = 0;
+			}
 		}
 		break;
 	case 2:
