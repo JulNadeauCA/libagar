@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.2 2004/04/18 02:18:21 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.3 2004/04/21 00:15:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -29,6 +29,8 @@ enum {
 	M_TEXT,		/* text rendering */
 	M_TYPESW,	/* type switch */
 	M_INPUT,	/* input devices */
+	M_CAD,		/* cad applications */
+	M_EDA,		/* eda applications */
 	M_LAST
 };
 
