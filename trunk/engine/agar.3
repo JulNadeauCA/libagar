@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.27 2003/05/09 02:03:42 vedge Exp $
+.\"	$Csoft: agar.3,v 1.28 2003/05/18 00:16:57 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -224,7 +224,7 @@ Read-write locks
 .El
 .Pp
 In structure definitions for thread-safe interfaces, all members of a
-structure that follow a lock are protected it, unless mentioned otherwise.
+structure that follow a lock are protected by it, unless mentioned otherwise.
 Members that do not follow a lock are read-only once the structure is
 attached (not once the structure is initialized, since derivate structures
 may need to initialize additional data before attach).
