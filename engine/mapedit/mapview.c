@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.103 2003/04/24 04:47:50 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.104 2003/04/24 04:53:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -601,39 +601,37 @@ mapview_mousemotion(int argc, union evarg *argv)
 	pthread_mutex_lock(&mv->map->lock);
 
 	mapview_map_coords(mv, &x, &y);
+	mv->cxrel = x - mv->mouse.x;
+	mv->cyrel = y - mv->mouse.y;
 
-	if (mv->cx != -1 && mv->cy != -1) {
-		mv->cxrel = x - mv->mouse.x;
-		mv->cyrel = y - mv->mouse.y;
-	} else {
-		mv->cxrel = 0;
-		mv->cyrel = 0;
-	}
-
-	if (mv->mouse.scrolling) {
+	if (mv->mouse.scrolling) {				/* Scrolling */
 		mapview_mouse_scroll(mv, xrel, yrel);
-	} else if (mv->msel.set) {
+	} else if (mv->msel.set) {				/* Selection */
 		mv->msel.xoffs += x - mv->mouse.x;
 		mv->msel.yoffs += y - mv->mouse.y;
-	} else if (mv->flags & MAPVIEW_EDIT) {
+	} else if (mv->flags & MAPVIEW_EDIT) {			/* Edition */
 		if (state & SDL_BUTTON(2)) {
+			/* Always invoke the 'shift' tool. */
 			shift_mouse(mapedit.tools[MAPEDIT_SHIFT], mv,
 			    xrel, yrel);
 		} else if (mapedit.curtool != NULL && (state & SDL_BUTTON(1))) {
 			struct tool *tool = mapedit.curtool;
 
+			/* Invoke 'effect' tool operations. */
 			if (TOOL_OPS(tool)->effect != NULL &&
 			    mv->cx != -1 && mv->cy != -1 &&
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    (mapview_selbounded(mv, mv->cx, mv->cy))) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
-			} else if (TOOL_OPS(tool)->mouse != NULL) {
+			}
+			/* Invoke 'mouse' tool operations. */
+			if (TOOL_OPS(tool)->mouse != NULL) {
 				TOOL_OPS(tool)->mouse(tool, mv, xrel, yrel,
 				    state);
 			}
 		}
-	} else if (mv->flags & MAPVIEW_TILEMAP) {	/* Not editing */
+	} else if (mv->flags & MAPVIEW_TILEMAP) {		/* Source */
 		if ((state & SDL_BUTTON(1)) &&
 		    (mv->cx != -1) && (mv->cy != -1)) {
 			struct node *srcnode = &mv->map->map[mv->cy][mv->cx];
