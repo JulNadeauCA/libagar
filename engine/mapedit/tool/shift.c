@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.20 2003/01/19 12:09:42 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.1 2003/01/25 06:29:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -112,30 +112,42 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 	case SHIFT_HIGHEST:
 		if (!TAILQ_EMPTY(&node->nrefs)) {
 			nref = TAILQ_LAST(&node->nrefs, noderefq);
-			nref->xcenter += relx;
-			nref->ycenter += rely;
+			if (nref->xcenter + relx < 65535 &&
+			    nref->ycenter + rely < 65535) {
+				nref->xcenter += relx;
+				nref->ycenter += rely;
+			}
 		}
 		break;
 	case SHIFT_LOWEST:
 		if (!TAILQ_EMPTY(&node->nrefs)) {
 			nref = TAILQ_FIRST(&node->nrefs);
-			nref->xcenter += relx;
-			nref->ycenter += rely;
+			if (nref->xcenter + relx < 65535 &&
+			    nref->ycenter + rely < 65535) {
+				nref->xcenter += relx;
+				nref->ycenter += rely;
+			}
 		}
 		break;
 	case SHIFT_SELECTIVE:
 		TAILQ_FOREACH(it, &mv->node_tlist->items, items) {
 			if (it->selected) {
 				nref = it->p1;
-				nref->xcenter += relx;
-				nref->ycenter += rely;
+				if (nref->xcenter + relx < 65535 &&
+				    nref->ycenter + rely < 65535) {
+					nref->xcenter += relx;
+					nref->ycenter += rely;
+				}
 			}
 		}
 		break;
 	case SHIFT_ALL:
 		TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-			nref->xcenter += relx;
-			nref->ycenter += rely;
+			if (nref->xcenter + relx < 65535 &&
+			    nref->ycenter + rely < 65535) {
+				nref->xcenter += relx;
+				nref->ycenter += rely;
+			}
 		}
 		break;
 	}
