@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.33 2005/01/26 02:40:24 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.34 2005/02/07 13:17:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -22,9 +22,14 @@ struct textbox {
 	int pos;			/* Cursor position */
 	int compose;			/* Input composition */
 	int offs;			/* Display offset */
-	
-	struct timeout delay_to;	/* Pre repeat delay */
-	struct timeout repeat_to;	/* Repeat interval */
+
+	int sel_x1, sel_x2;		/* Selection points */
+	int sel_edit;			/* Point being edited */
+
+	struct timeout delay_to;	/* Pre-repeat delay timer */
+	struct timeout repeat_to;	/* Repeat timer */
+	struct timeout cblink_to;	/* Cursor blink timer */
+	int blink_state;		/* Cursor blink state */
 	struct {
 		SDLKey key;
 		SDLMod mod;
