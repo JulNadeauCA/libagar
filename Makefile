@@ -1,8 +1,7 @@
-#	$Csoft: Makefile,v 1.13 2002/04/24 06:54:11 vedge Exp $
+#	$Csoft: Makefile,v 1.14 2002/04/26 04:17:11 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp fobjdump engine
 SUBDIR+= geggy
-
 
 all: Makefile.config all-subdir
 clean: clean-subdir
