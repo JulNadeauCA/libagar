@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.206 2004/03/10 03:12:35 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.207 2004/03/10 03:20:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -41,8 +41,7 @@
 
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
-
-#include <engine/mediasel.h>
+#include <engine/mapedit/mediasel.h>
 #endif
 
 #include <compat/math.h>
@@ -1594,8 +1593,11 @@ media_window(struct mapview *mv)
 	window_set_caption(win, _("Load media into `%s'"), ob->name);
 	window_set_closure(win, WINDOW_HIDE);
 
-	mediasel_new(win, MEDIASEL_GFX, ob);
-	mediasel_new(win, MEDIASEL_AUDIO, ob);
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	box_set_spacing(bo, 0);
+	box_set_padding(bo, 5);
+	mediasel_new(bo, MEDIASEL_GFX, ob);
+	mediasel_new(bo, MEDIASEL_AUDIO, ob);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 	tlist_set_item_height(tl, ttf_font_height(font)*2);
@@ -1639,6 +1641,7 @@ selected_layer(int argc, union evarg *argv)
 			struct map_layer *lay = it->p1;
 
 			mv->map->cur_layer = i;
+			textbox_printf(com->tbox, "%d. %s", i, lay->name);
 			return;
 		}
 		i++;
@@ -1726,12 +1729,13 @@ map_edit(void *p)
 	}
 
 	com = combo_new(win, COMBO_POLL, _("Layer:"));
+	textbox_printf(com->tbox, "%d. %s", m->cur_layer,
+	    m->layers[m->cur_layer].name);
 	event_new(com->list, "tlist-poll", layedit_poll, "%p", mv);
 	event_new(com, "combo-selected", selected_layer, "%p", mv);
 
 	object_attach(win, mv);
 	widget_focus(mv);
-
 	return (win);
 }
 #endif /* EDITION */
