@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.13 2002/12/01 14:41:04 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.14 2003/01/01 05:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -56,23 +56,20 @@ static const struct tool_ops magnifier_ops = {
 static void	magnifier_event(int, union evarg *);
 
 struct magnifier *
-magnifier_new(struct mapedit *med, int flags)
+magnifier_new(void)
 {
-	struct magnifier *magnifier;
+	struct magnifier *mag;
 
-	magnifier = emalloc(sizeof(struct magnifier));
-	magnifier_init(magnifier, med, flags);
-
-	return (magnifier);
+	mag = emalloc(sizeof(struct magnifier));
+	magnifier_init(mag);
+	return (mag);
 }
 
 void
-magnifier_init(struct magnifier *mag, struct mapedit *med, int flags)
+magnifier_init(struct magnifier *mag)
 {
-	tool_init(&mag->tool, "magnifier", med, &magnifier_ops);
-
-	mag->flags = flags;
-	mag->mode = 0;
+	tool_init(&mag->tool, "magnifier", &magnifier_ops);
+	mag->mode = MAGNIFIER_ZOOM_IN;
 }
 
 struct window *

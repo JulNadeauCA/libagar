@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.10 2002/12/31 00:56:40 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.11 2003/01/01 05:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,7 +27,6 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
 #include <engine/widget/widget.h>
@@ -39,23 +38,21 @@
 #include "tool.h"
 
 void
-tool_init(struct tool *tool, char *name, struct mapedit *med,
-    const void *toolops)
+tool_init(struct tool *tool, char *name, const void *ops)
 {
 	static int toolid = 0;
 	char *toolname;
 
 	toolname = object_name(name, toolid++);
-	object_init(&tool->obj, "tool", toolname, NULL, 0, toolops);
+	object_init(&tool->obj, "tool", toolname, NULL, 0, ops);
 	free(toolname);
 
-	tool->flags = 0;
-	tool->med = med;
 	tool->win = (TOOL_OPS(tool)->tool_window != NULL) ? 
 	    TOOL_OPS(tool)->tool_window(tool) : NULL;
 	tool->type = Strdup(name);
 }
 
+/* Return the first visible mapview widget. */
 struct mapview *
 tool_mapview(void)
 {

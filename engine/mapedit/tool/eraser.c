@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.16 2002/12/30 06:30:52 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.17 2003/01/01 05:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -54,25 +54,23 @@ static const struct tool_ops eraser_ops = {
 static void	eraser_event(int, union evarg *);
 
 struct eraser *
-eraser_new(struct mapedit *med, int flags)
+eraser_new(void)
 {
-	struct eraser *er;
+	struct eraser *eraser;
 
-	er= emalloc(sizeof(struct eraser));
-	eraser_init(er, med, flags);
-
-	return (er);
+	eraser = emalloc(sizeof(struct eraser));
+	eraser_init(eraser);
+	return (eraser);
 }
 
 void
-eraser_init(struct eraser *er, struct mapedit *med, int flags)
+eraser_init(struct eraser *eraser)
 {
-	tool_init(&er->tool, "eraser", med, &eraser_ops);
+	tool_init(&eraser->tool, "eraser", &eraser_ops);
 
-	er->flags = flags;
-	er->mode = 0;
-	er->selection.pobj = NULL;
-	er->selection.offs = -1;
+	eraser->mode = ERASER_ALL;
+	eraser->selection.pobj = NULL;
+	eraser->selection.offs = -1;
 }
 
 struct window *
@@ -90,28 +88,23 @@ eraser_window(void *p)
 		NULL
 	};
 
-	win = window_new("mapedit-tool-eraser", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120, 120, 120);
+	win = window_new("mapedit-tool-eraser", 0, TOOL_DIALOG_X, TOOL_DIALOG_Y,
+	    120, 120, 120, 120);
 	window_set_caption(win, "Eraser");
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0);
-	event_new(rad, "radio-changed", eraser_event, "%p, %c", er, 'm');
+	event_new(rad, "radio-changed", eraser_event, "%p", er);
 	
 	win->focus = WIDGET(rad);
-
 	return (win);
 }
 
 void
 eraser_event(int argc, union evarg *argv)
 {
-	struct eraser *er = argv[1].p;
+	struct eraser *eraser = argv[1].p;
 
-	switch (argv[2].c) {
-	case 'm':
-		er->mode = argv[4].c;
-		break;
-	}
+	eraser->mode = argv[3].c;
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.10 2002/12/24 10:30:12 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.11 2003/01/01 05:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -54,22 +54,20 @@ static const struct tool_ops propedit_ops = {
 static void	propedit_event(int, union evarg *);
 
 struct propedit *
-propedit_new(struct mapedit *med, int flags)
+propedit_new(void)
 {
 	struct propedit *pe;
 
 	pe = emalloc(sizeof(struct propedit));
-	propedit_init(pe, med, flags);
-
+	propedit_init(pe);
 	return (pe);
 }
 
 void
-propedit_init(struct propedit *pe, struct mapedit *med, int flags)
+propedit_init(struct propedit *pe)
 {
-	tool_init(&pe->tool, "propedit", med, &propedit_ops);
+	tool_init(&pe->tool, "propedit", &propedit_ops);
 
-	pe->flags = flags;
 	pe->mode = PROPEDIT_CLEAR;
 	pe->nodeflags = 0;
 }
@@ -142,7 +140,6 @@ propedit_window(void *p)
 	}
 
 	win->focus = WIDGET(rad);
-
 	return (win);
 }
 

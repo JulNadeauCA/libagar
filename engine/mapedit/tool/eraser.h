@@ -1,9 +1,8 @@
-/*	$Csoft: eraser.h,v 1.2 2002/07/09 08:25:21 vedge Exp $	*/
+/*	$Csoft: eraser.h,v 1.3 2002/07/30 22:19:52 vedge Exp $	*/
 /*	Public domain	*/
 
 struct eraser {
-	struct	 tool tool;
-	int	 flags;
+	struct tool	tool;
 	enum {
 		ERASER_ALL,		/* Erase all refs */
 		ERASER_HIGHEST,		/* Erase last ref */
@@ -11,13 +10,13 @@ struct eraser {
 		ERASER_SELECTIVE	/* Erase specified refs */
 	} mode;
 	struct {
-		struct	object *pobj;
-		int	offs;
+		struct object	*pobj;
+		int		 offs;
 	} selection;
 };
 
-struct eraser	*eraser_new(struct mapedit *, int);
-void		 eraser_init(struct eraser *, struct mapedit *, int);
+struct eraser	*eraser_new(void);
+void		 eraser_init(struct eraser *);
 struct window	*eraser_window(void *);
 void		 eraser_effect(void *, struct mapview *, Uint32, Uint32);
 
