@@ -1,4 +1,4 @@
-/*	$Csoft: rwlock.c,v 1.2 2002/09/16 12:59:04 vedge Exp $	*/
+/*	$Csoft: rwlock.c,v 1.3 2002/11/07 17:47:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,7 +25,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__linux__)
+#if !defined(__OpenBSD__)
 #define _XOPEN_SOURCE 500		/* XXX recursive mutexes */
 #endif
 
