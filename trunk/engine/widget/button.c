@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.64 2003/05/18 00:17:05 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.65 2003/05/22 08:03:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,7 +50,8 @@ const struct widget_ops button_ops = {
 
 enum {
 	FRAME_COLOR,
-	TEXT_COLOR
+	TEXT_COLOR,
+	DISABLED_COLOR
 };
 
 static void	button_mousemotion(int, union evarg *);
@@ -84,6 +85,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 
 	widget_map_color(b, FRAME_COLOR, "frame", 100, 100, 100);
 	widget_map_color(b, TEXT_COLOR, "text", 240, 240, 240);
+	widget_map_color(b, DISABLED_COLOR, "disabled", 110, 110, 110);
 
 	widget_bind(b, "state", WIDGET_BOOL, NULL, &b->def.state);
 
@@ -183,10 +185,17 @@ button_draw(void *p)
 	    WIDGET(b)->h < b->padding*2)
 		return;
 
-	pressed = widget_get_bool(b, "state") || (b->flags & BUTTON_DISABLED);
-	primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h, pressed ? -1 : 1,
-	    WIDGET_COLOR(b, FRAME_COLOR));
-	
+	pressed = widget_get_bool(b, "state");
+	if (b->flags & BUTTON_DISABLED) {
+		primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
+		    -1,
+		    WIDGET_COLOR(b, DISABLED_COLOR));
+	} else {
+		primitives.box(b, 0, 0, WIDGET(b)->w, WIDGET(b)->h,
+		    pressed ? -1 : 1,
+		    WIDGET_COLOR(b, FRAME_COLOR));
+	}
+
 	switch (b->justify) {
 	case BUTTON_LEFT:
 		x = xspace;
