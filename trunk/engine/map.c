@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.125 2002/12/14 04:28:09 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.126 2002/12/15 15:06:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -408,7 +408,7 @@ void
 node_copy_ref(struct noderef *src, struct node *dst_node)
 {
 	struct transform *src_trans;
-	struct noderef *dst;
+	struct noderef *dst = NULL;
 
 	/* Allocate a new noderef with the same data. */
 	switch (src->type) {
