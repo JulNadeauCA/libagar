@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.h,v 1.2 2005/02/03 09:19:05 vedge Exp $	*/
+/*	$Csoft: objmgr.h,v 1.3 2005/02/03 11:28:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJMGR_H_
@@ -12,6 +12,7 @@ void		 objmgr_destroy(void);
 void		 objmgr_reopen(struct object *);
 void		 objmgr_open_data(struct object *);
 void		 objmgr_open_generic(struct object *);
+void		 objmgr_changed_dlg(void *, int);
 __END_DECLS
 
 #include "close_code.h"
