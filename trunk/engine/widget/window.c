@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.48 2002/07/08 07:42:20 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.49 2002/07/08 08:39:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 #include <engine/engine.h>
 #include <engine/queue.h>
 #include <engine/map.h>
-#include <engine/version.h>
+#include <engine/config.h>
 
 #include <engine/physics.h>
 #include <engine/mapedit/mapedit.h>
@@ -343,10 +343,13 @@ window_draw(struct window *win)
 
 	/* Render the widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
-		if (reg->flags & REGION_BORDER) {
+		if (reg->flags & REGION_BORDER ||
+		    config->widget_flags & CONFIG_REGION_BORDERS) {
 			Uint32 c;
 			int x, y;
-
+		
+			/* XXX inefficient */
+		
 			SDL_LockSurface(view->v);
 			for (y = 0; y < reg->h; y++) {
 				for (x = 0; x < reg->w; x++) {
