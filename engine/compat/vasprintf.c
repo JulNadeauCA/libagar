@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.3 2002/08/23 09:00:50 vedge Exp $	*/
+/*	$Csoft: vasprintf.c,v 1.4 2002/09/06 00:50:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,7 +25,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <config/have_vasprintf.h>
 
 #ifndef HAVE_VASPRINTF
 

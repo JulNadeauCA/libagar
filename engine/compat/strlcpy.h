@@ -1,7 +1,7 @@
-/*	$Csoft: strlcpy.h,v 1.1 2002/08/23 10:14:35 vedge Exp $	*/
+/*	$Csoft: strlcpy.h,v 1.2 2002/09/06 00:50:43 vedge Exp $	*/
 /*	Public domain	*/
 
-#include <engine/mcconfig.h>
+#include <config/have_strlcpy.h>
 
 #ifndef HAVE_STRLCPY
 #include <sys/types.h>

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: strlcat.c,v 1.1 2002/08/23 10:14:35 vedge Exp $	*/
 /*	$OpenBSD: strlcat.c,v 1.8 2001/05/13 15:40:15 deraadt Exp $	*/
 
 /*
@@ -28,7 +28,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <config/have_strlcat.h>
 
 #ifndef HAVE_STRLCAT
 

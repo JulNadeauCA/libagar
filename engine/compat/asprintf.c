@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.4 2002/09/06 00:50:43 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.1 2002/11/22 23:00:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,7 +25,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <config/have_asprintf.h>
 
 #ifndef HAVE_ASPRINTF
 

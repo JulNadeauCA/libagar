@@ -1,4 +1,4 @@
-/*	$Csoft: setenv.c,v 1.1 2002/08/23 09:00:37 vedge Exp $	*/
+/*	$Csoft: setenv.c,v 1.2 2002/08/23 09:54:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 1987 Regents of the University of California.
@@ -33,7 +33,7 @@
  * SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <config/have_setenv.h>
 
 #ifndef HAVE_SETENV
 

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: strsep.c,v 1.1 2002/08/23 10:14:35 vedge Exp $	*/
 /*	$OpenBSD: strsep.c,v 1.3 1997/08/20 04:28:14 millert Exp $	*/
 
 /*-
@@ -34,7 +34,7 @@
  * SUCH DAMAGE.
  */
 
-#include <engine/mcconfig.h>
+#include <config/have_strsep.h>
 
 #ifndef HAVE_STRSEP
 
