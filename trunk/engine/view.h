@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.35 2002/07/27 06:59:26 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.36 2002/07/27 21:37:35 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -73,7 +73,7 @@ case 1:					\
 #ifdef VIEW_16BPP
 # define _VIEW_PUTPIXEL_16(dst, c)	\
 case 2:					\
-	(dst) = (Uint16)(c);		\
+	*(Uint16 *)(dst) = (c);		\
 	break;
 #else
 # define _VIEW_PUTPIXEL_16(dst, c)
@@ -102,14 +102,11 @@ case 3:					\
 #ifdef VIEW_32BPP
 # define _VIEW_PUTPIXEL_32(dst, c)	\
 case 4:					\
-	(dst) = (Uint32)(c);		\
+	*(Uint32 *)(dst) = (c);		\
 	break;
 #else
 # define _VIEW_PUTPIXEL_32(dst, c)
 #endif
-
-#define _VIEW_PIXEL(s, x, y)	((Uint8 *)(s)->pixels + \
-				(y)*(s)->pitch + (x)*(s)->format->BytesPerPixel)
 
 /* XXX inefficient */
 #define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) do {		\
@@ -118,7 +115,9 @@ case 4:					\
 	Uint8 _view_alpha_rd, _view_alpha_gd, _view_alpha_bd;	\
 	Uint8 *_putpixel_dst;					\
 								\
-	_putpixel_dst = _VIEW_PIXEL((s), (avx), (avy));		\
+	_putpixel_dst = (Uint8 *)(s)->pixels +			\
+	    (avy)*(s)->pitch +					\
+	    (avx)*(s)->format->BytesPerPixel;			\
 								\
 	SDL_GetRGB((c), (s)->format, &_view_alpha_rs,		\
 	    &_view_alpha_gs, &_view_alpha_bs);			\
@@ -136,10 +135,10 @@ case 4:					\
 	    _view_alpha_gd, _view_alpha_bd);			\
 								\
 	switch ((s)->format->BytesPerPixel) {			\
-		_VIEW_PUTPIXEL_8(*_putpixel_dst,  _view_col)	\
-		_VIEW_PUTPIXEL_16(*_putpixel_dst, _view_col)	\
-		_VIEW_PUTPIXEL_24(*_putpixel_dst, _view_col)	\
-		_VIEW_PUTPIXEL_32(*_putpixel_dst, _view_col)	\
+		_VIEW_PUTPIXEL_8(_putpixel_dst,  _view_col)	\
+		_VIEW_PUTPIXEL_16(_putpixel_dst, _view_col)	\
+		_VIEW_PUTPIXEL_24(_putpixel_dst, _view_col)	\
+		_VIEW_PUTPIXEL_32(_putpixel_dst, _view_col)	\
 	}							\
 } while (/*CONSTCOND*/0)
 
@@ -148,11 +147,14 @@ case 4:					\
  * Surface must be locked.
  */
 #define VIEW_PUT_PIXEL(s, vx, vy, c) do {				\
+	Uint8 *_view_dst = (Uint8 *)(s)->pixels +			\
+	    (vy)*(s)->pitch + (vx)*(s)->format->BytesPerPixel;		\
+									\
 	switch ((s)->format->BytesPerPixel) {				\
-		_VIEW_PUTPIXEL_8(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
-		_VIEW_PUTPIXEL_16(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
-		_VIEW_PUTPIXEL_24(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
-		_VIEW_PUTPIXEL_32(*_VIEW_PIXEL((s), (vx), (vy)), (c))	\
+		_VIEW_PUTPIXEL_8(_view_dst,  (c))			\
+		_VIEW_PUTPIXEL_16(_view_dst, (c))			\
+		_VIEW_PUTPIXEL_24(_view_dst, (c))			\
+		_VIEW_PUTPIXEL_32(_view_dst, (c))			\
 	}								\
 } while (/*CONSTCOND*/0)
 
