@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.13 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: agar.3,v 1.14 2003/01/20 12:07:13 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -35,13 +35,60 @@
 .Nd game engine
 .Sh DESCRIPTION
 .Nm
-is a thread-safe, object-oriented graphical game engine.
-.Sh THREAD SAFETY
+is a graphical game engine.
+.Sh SUBSYSTEMS
 The
 .Nm
-engine can work with the pthread calls removed at compile time.
+engine implements the following interfaces:
+.Pp
+.Bl -tag -width "transform(3)" -compact
+.It config
+Generic engine/game configuration settings.
+.It input
+Processing of events from input devices such as keyboards, mice, joysticks
+and network sessions.
+.It Xr map 3
+N-layer tile-based levels.
+.It Xr mapedit 3
+Level edition.
+.It Xr object 3
+Generic object structure.
+.It Xr physics 3
+Movement of objects in levels.
+.It Xr prop 3
+Generic properties.
+.It Xr rootmap 3
+Level display in game mode.
+.It Xr timer 3
+Timers.
+.It Xr transform 3
+Graphical transformations applied to node references.
+.It ttf
+Interface to FreeType library.
+.It Xr version 3
+Signatures and versioning of data.
+.It Xr view 3
+Video display interface.
+.It Xr widget 3
+Widget set framework.
+.It Xr xcf 3
+Loader for
+.Xr xcf 5
+type image files.
+.El
+.Sh THREAD SAFETY
+The following subsystems do not provide thread safety:
+.Pp
+.Bl -tag -width "mapedit(3)" -compact
+.It Xr mapedit 3
+Level edition.
+.El
+.Pp
+The other
 .Nm
-uses the following locking primitives:
+subsystems provide thread-safe interfaces (unless documented otherwise), using
+the following locking primitives:
+.Pp
 .Bl -enum -compact
 .It
 Simple mutexes.
@@ -50,11 +97,6 @@ Recursive mutexes.
 .It
 Read-write locks.
 .El
-.Pp
-Public
-.Nm
-interfaces must hide locking from the calling code, as long as there is
-no relative impact on performance.
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,
