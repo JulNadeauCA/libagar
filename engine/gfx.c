@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.8 2003/07/04 12:35:50 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.9 2003/07/14 03:42:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ pthread_mutex_t		 gfxq_lock;
 static void	gfx_destroy(struct gfx *);
 static void	gfx_destroy_anim(struct gfx_anim *);
 
-/* Attach a surface of arbitrary size. */
+/* Attach a sprite of arbitrary size. */
 Uint32
 gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite, int map)
 {
@@ -150,8 +150,8 @@ gfx_scan_alpha(SDL_Surface *su)
 	}
 }
 
-/* Break a surface into tile-sized fragments and map them. */
-struct map *
+/* Break a surface into tile-sized fragments and map them as NULL refs. */
+int
 gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 {
 	char mapname[OBJECT_NAME_MAX];
@@ -168,18 +168,16 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	mh = sprite->h/TILEH;
 
 	fragmap = Malloc(sizeof(struct map));
-	snprintf(mapname, sizeof(mapname), "frag-%s%u", gfx->name,
-	    gfx->nsubmaps);
+	snprintf(mapname, sizeof(mapname), "f-%s%u", gfx->name, gfx->nsubmaps);
 	map_init(fragmap, mapname);
-	if (map_alloc_nodes(fragmap, mw, mh) == -1) {
-		fatal("map_alloc_nodes: %s", error_get());
-	}
+	if (map_alloc_nodes(fragmap, mw, mh) == -1)
+		return (-1);
 
 	for (y = 0, my = 0; y < sprite->h; y += TILEH, my++) {
 		for (x = 0, mx = 0; x < sprite->w; x += TILEW, mx++) {
 			SDL_Surface *su;
-			Uint32 saflags = sprite->flags &
-			    (SDL_SRCALPHA|SDL_RLEACCEL);
+			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
+			                                  SDL_RLEACCEL);
 			Uint8 salpha = sprite->format->alpha;
 			struct node *node = &fragmap->map[my][mx];
 			Uint32 nsprite;
@@ -194,8 +192,9 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			    sprite->format->Bmask,
 			    sprite->format->Amask);
 			if (su == NULL) {
-				fatal("SDL_CreateRGBSurface: %s",
+				error_set("SDL_CreateRGBSurface: %s",
 				    SDL_GetError());
+				return (-1);
 			}
 			
 			/* Copy the fragment as-is. */
@@ -209,12 +208,12 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			/* Adjust the alpha properties of the fragment. */
 			gfx_scan_alpha(su);
 
-			node_add_sprite(fragmap, node, gfx->pobj, nsprite);
+			/* Map the sprite as a NULL reference. */
+			node_add_sprite(fragmap, node, NULL, nsprite);
 		}
 	}
 
 	gfx_insert_submap(gfx, fragmap);
-	return (fragmap);
 }
 
 /* Disable garbage collection. */
@@ -231,7 +230,7 @@ void
 gfx_unused(struct gfx *gfx)
 {
 	pthread_mutex_lock(&gfx->used_lock);
-	if (gfx->used != GFX_MAX_USED &&		/* Remain resident? */
+	if (gfx->used != GFX_MAX_USED &&
 	    --gfx->used == 0) {
 		pthread_mutex_unlock(&gfx->used_lock);
 		gfx_destroy(gfx);
@@ -268,7 +267,6 @@ gfx_fetch(void *p, const char *key)
 
 	gfx = Malloc(sizeof(struct gfx));
 	gfx->name = Strdup(key);
-	gfx->pobj = ob;				/* XXX For submap refs */
 	gfx->sprites = NULL;
 	gfx->csprites = NULL;
 	gfx->nsprites = 0;
@@ -283,23 +281,6 @@ gfx_fetch(void *p, const char *key)
 	gfx->used = 1;
 	pthread_mutex_init(&gfx->used_lock, NULL);
 
-	if (mapedition) {
-		char map_name[OBJECT_NAME_MAX];
-
-		map_name[0] = 't';
-		map_name[1] = '\0';
-		strlcat(map_name, key, sizeof(map_name));
-
-		gfx->tile_map = Malloc(sizeof(struct map));
-		map_init(gfx->tile_map, map_name);
-		OBJECT(gfx->tile_map)->save_pfx = "/tilesets";
-
-		if (map_alloc_nodes(gfx->tile_map, 4, 4) == -1)
-			goto fail;
-	} else {
-		gfx->tile_map = NULL;
-	}
-
 	if ((den = den_open(path, DEN_READ)) == NULL) {
 		goto fail;
 	}
@@ -310,11 +291,10 @@ gfx_fetch(void *p, const char *key)
 		}
 	}
 	den_close(den);
-
 	TAILQ_INSERT_HEAD(&gfxq, gfx, gfxs);			/* Cache */
 out:
 	pthread_mutex_unlock(&gfxq_lock);
-	if (ob->gfx != NULL) {
+	if (ob->gfx != NULL) {					/* Replace */
 		gfx_unused(ob->gfx);
 	}
 	ob->gfx = gfx;
@@ -322,10 +302,6 @@ out:
 fail:
 	pthread_mutex_unlock(&gfxq_lock);
 	if (gfx != NULL) {
-		if (gfx->tile_map != NULL) {
-			object_destroy(gfx->tile_map);
-			free(gfx->tile_map);
-		}
 		pthread_mutex_destroy(&gfx->used_lock);
 		free(gfx->name);
 		free(gfx);
@@ -333,7 +309,7 @@ fail:
 	return (-1);
 }
 
-/* Release a group of graphics. */
+/* Release a graphics package. */
 static void
 gfx_destroy(struct gfx *gfx)
 {
@@ -395,10 +371,6 @@ gfx_destroy(struct gfx *gfx)
 	Free(gfx->canims);
 
 	/* Release the submaps. */
-	if (gfx->tile_map != NULL) {
-		object_destroy(gfx->tile_map);
-		free(gfx->tile_map);
-	}
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);
 		free(gfx->submaps[i]);
