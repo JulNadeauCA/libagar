@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.39 2002/02/21 02:18:53 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.40 2002/02/25 09:01:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -193,7 +193,7 @@ node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 	struct noderef *nref;
 
 	nref = (struct noderef *)emalloc(sizeof(struct noderef));
-	nref->pobj = ob;
+	nref->pobj = (struct object *)ob;
 	nref->offs = offs;
 	nref->flags = flags;
 	if (flags & MAPREF_ANIM) {
