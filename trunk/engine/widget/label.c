@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.8 2002/04/30 00:57:36 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.9 2002/04/30 01:11:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -42,8 +42,6 @@
 #include "widget.h"
 #include "window.h"
 #include "label.h"
-
-extern TTF_Font *font;		/* text */
 
 static struct widget_ops label_ops = {
 	{

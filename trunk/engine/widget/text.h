@@ -1,4 +1,4 @@
-/*	$Csoft: text.h,v 1.2 2002/04/24 14:08:54 vedge Exp $	*/
+/*	$Csoft: text.h,v 1.3 2002/04/26 04:24:53 vedge Exp $	*/
 
 #ifndef _AGAR_TEXT_TEXT_H_
 #define _AGAR_TEXT_TEXT_H_
@@ -31,6 +31,8 @@ struct text {
 	TAILQ_ENTRY(text) texts;	/* Texts to display */
 };
 
+extern TTF_Font *font;
+
 int	 text_engine_init(void);
 void	 text_engine_destroy(void);
 void	 text_init(struct text *, Sint16, Sint16, Uint16, Uint16, Uint32,
@@ -46,5 +48,6 @@ void	 text_destroyall(void);
 
 void	 text_printf(struct text *, char *, ...);
 void	 text_msg(Uint8, Uint32, char *, ...);
+
 
 #endif	/* _AGAR_TEXT_TEXT_H_ */
