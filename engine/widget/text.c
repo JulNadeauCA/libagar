@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.98 2005/01/31 08:32:48 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.99 2005/02/08 15:45:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -430,7 +430,7 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	va_end(args);
 
 	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|
-	                 WINDOW_NO_DECORATIONS, NULL);
+	                 WINDOW_NO_MAXIMIZE|WINDOW_NO_DECORATIONS, NULL);
 	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
@@ -459,7 +459,7 @@ text_tmsg(enum text_msg_title title, Uint32 expire, const char *format, ...)
 	va_end(args);
 
 	win = window_new(WINDOW_NO_RESIZE|WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|
-	                 WINDOW_NO_DECORATIONS, NULL);
+	                 WINDOW_NO_MAXIMIZE|WINDOW_NO_DECORATIONS, NULL);
 	window_set_caption(win, "%s", _(text_msg_titles[title]));
 	window_set_position(win, WINDOW_CENTER, 1);
 
