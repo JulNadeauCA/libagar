@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.43 2002/07/20 03:19:10 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.44 2002/08/12 05:00:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -169,7 +169,7 @@ void	 object_destroy_gc(void);
 struct object	*object_strfind(char *);
 struct mappos	*object_addpos(void *, Uint32, Uint32, struct input *,
 		    struct map *, Uint32, Uint32);
-struct mappos	*object_movepos(void *, struct map *, int, int);
+struct mappos	*object_movepos(void *, struct map *, Uint32, Uint32);
 void		 object_delpos(void *);
 
 #endif	/* _AGAR_OBJECT_H_ */
