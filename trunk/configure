@@ -1057,6 +1057,7 @@ if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo OPENGL_CFLAGS=$OPENGL_CFLAGS >> Makefile.config
 echo OPENGL_LIBS=$OPENGL_LIBS >> Makefile.config
 else
+NONE=1
 fi
 fi
 if [ "${enable_debug}" = "yes" ]
