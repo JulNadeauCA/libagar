@@ -3,7 +3,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	mapedit widget
+SUBDIR=	compat mapedit widget
 
 SHARE=	README.engine \
 	README.xcf
@@ -22,7 +22,7 @@ SRCS=	engine.c error.c event.c anim.c oldxcf.c view.c physics.c input.c \
 OBJS=	engine.o error.o event.o anim.o oldxcf.o view.o physics.o input.o \
 	object.o audio.o video.o world.o map.o char.o version.o \
 	config.o ailment.o \
-	mapedit/mapedit.o
+	mapedit/mapedit.o compat/vasprintf.o
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
