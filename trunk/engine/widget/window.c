@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.18 2002/05/06 02:21:43 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.19 2002/05/13 07:07:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -162,8 +162,6 @@ window_dispatch_event(void *arg)
 {
 	struct window_event *wev = arg;
 
-	dprintf("thread %p dispatching event for %s\n", pthread_self(),
-	    OBJECT(wev->w)->name);
 	if (WIDGET_VEC(wev->w)->widget_event != NULL) {
 		WIDGET_VEC(wev->w)->widget_event(wev->w, &wev->ev, wev->flags);
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.41 2002/05/11 04:02:42 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.42 2002/05/13 06:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -187,8 +187,6 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 	}
 #endif
 	
-	dprintf("in %p\n", pthread_self());
-
 	return (0);
 }
 
