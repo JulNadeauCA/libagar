@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.53 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.54 2004/04/10 04:55:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -131,7 +131,7 @@ merge_init(struct tool *t)
 		event_new(bu, "button-pushed", merge_save_brush_set, NULL);
 #endif
 		bu = button_new(hb, _("Edit"));
-		event_new(bu, "button-pushed", merge_edit_brush, NULL);
+		event_new(bu, "button-pushed", merge_edit_brush, "%p", win);
 		bu = button_new(hb, _("Remove"));
 		event_new(bu, "button-pushed", merge_remove_brush, NULL);
 	}
@@ -206,6 +206,7 @@ static void
 merge_edit_brush(int argc, union evarg *argv)
 {
 	struct tlist_item *it;
+	struct window *pwin = argv[1].p;
 
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
 		struct map *brush = it->p1;
@@ -222,6 +223,7 @@ merge_edit_brush(int argc, union evarg *argv)
 		tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
 		mapview_new(win, brush, MAPVIEW_EDIT|MAPVIEW_GRID|
 		                        MAPVIEW_PROPS, tbar, NULL);
+		window_attach(pwin, win);
 		window_show(win);
 	}
 }
