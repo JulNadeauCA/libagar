@@ -1,26 +1,35 @@
 
-1) Execute the configure script (see ./configure --help for options):
+1) Execute the configure script (see ./configure --help for options).
+   
    $ ./configure
 
-2) Build dependencies with the depend target:
+2) Build dependencies with the depend target. If you are hacking the
+   code, note that the dependencies are honored only if your make(1)
+   reads `.depend' files (a non-standard BSD extension).
+
    $ make depend
 
-3) Compile the library, binaries, data files and preformat manual pages:
+3) Compile the library, binaries, data files and preformat manual pages.
+
    $ make
 
-4) Install the library, binaries, data files and manual pages:
+4) Install the library, binaries, data files and manual pages. If prefix
+   is /usr/local, /usr/local/share/agar/man may be registered with man(1).
+
    # make install
 
-   Alternatively, to use/modify the data files of the source tree, use
-   the `links' target, symlinks will be made into ~/.cave:
+   Alternatively, if you are hacking the agar source, invoke the `links'
+   target to create ~/.cave symbolic links to data files inside the source
+   tree.
+
    $ cd ./cave && make links
 
-5) Register (prefix)/share/agar/man with your manual page reader
-   (ie. /etc/man.conf).
+6) Execute the game by running `cave'.
 
-6) Execute the game by running `cave':
    $ cave
 
-   The level editor (if compiled in), is invoked with -e:
+   The level editor (if compiled in), is invoked with the -e flag.
+
    $ cave -e
 
+$Csoft$
