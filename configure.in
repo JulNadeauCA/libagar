@@ -1,40 +1,44 @@
-# $Csoft: configure.in,v 1.14 2002/05/05 22:10:54 vedge Exp $
+# $Csoft: configure.in,v 1.15 2002/05/06 01:19:36 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
 
-register("--without-smpeg",	"Don't play videos with the smpeg library");
-register("--enable-debug",	"Build with debugging information");
-register("--enable-lockdebug",	"Build with threads debugging information");
+register("--without-smpeg",	"Never use the smpeg library (for videos)");
+register("--without-x11",	"Never use X11 (for videos and debugging)");
+register("--enable-debug",	"Build with debugging code");
 register("--version",		"Show manuconf version");
 register("--help",		"Show this message");
 
-if ("${version}" == "yes") {
+if [ "${version}" == "yes" ]; then
 	version();
-}
-if ("${help}" == "yes") {
+fi
+
+if [ "${help}" == "yes" ]; then
 	help();
-}
-
-check(cc);
-require(sdl, 1.2.0);
-
-mdefine(CFLAGS, "$CFLAGS -g -I$S");
-if ($cc_is_gcc == "yes") {
-	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused");
-}
+fi
 
 mdefine(SHAREDIR, "$PREFIX/share/geggy");
 hdefine(SHAREDIR, "\"$PREFIX/share/geggy\"");
 
-if ("${with_smpeg}" != "no") {
-	check(smpeg, 0.4.3);
+check(cc);
+
+mdefine(CFLAGS, "$CFLAGS -g -I$S");
+if [ "${cc_is_gcc}" == "yes" ]; then
+	mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused");
+fi
+
+require(sdl, 1.2.0);
+
+if [ "${with_x11}" != "no" ]; then
 	check(x11, /usr/X11R6, /usr/X386, /usr/bin/X11);
-}
-if ("${enable_debug}" == "yes") {
+	if [ "${x11_found}" == "yes" ]; then
+		hdefine(USE_X11, 1);
+	fi
+fi
+
+if [ "${enable_debug}" == "yes" ]; then
 	hdefine(DEBUG, 1);
-}
-if ("${enable_lockdebug}" == "yes") {
 	hdefine(LOCKDEBUG, 1);
-}
+fi
+
 
