@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.2 2002/01/30 12:43:40 vedge Exp $	*/
 
 /*
  * Data shared by all character types.
@@ -69,8 +69,7 @@ struct character {
 /* Move character to a new position. */
 #define CHAR_MOVE(chp, nx, ny)						\
 	do {				    				\
-		MAP_DELREF((chp)->map, (chp)->x, (chp)->y,		\
-		    (chp), (chp)->curoffs);				\
+		MAP_DELREF((chp)->map, (chp)->x, (chp)->y,(chp), -1);	\
 		if ((chp)->flags & CHAR_ANIM) {				\
 			MAP_ADDANIM((chp)->map, nx, ny,			\
 			    (chp), (chp)->curoffs); 			\
