@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.178 2003/06/21 06:50:22 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.179 2003/06/25 06:15:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -310,9 +310,6 @@ mapedit_window(struct map *m)
 			void	(*func)(int argc, union evarg *argv);
 			int	icon, toggle, def;
 		} fileops[] = {
-			{ fileops_revert_map,	MAPEDIT_TOOL_LOAD_MAP,	0, 0 },
-			{ fileops_save_map,	MAPEDIT_TOOL_SAVE_MAP,	0, 0 },
-			{ fileops_clear_map,	MAPEDIT_TOOL_CLEAR_MAP,	0, 0 },
 			{ new_view,		MAPEDIT_TOOL_NEW_VIEW,	0, 0 },
 			{ set_mapview_opt,	MAPEDIT_TOOL_GRID,	1, 1 },
 			{ set_mapview_opt,	MAPEDIT_TOOL_PROPS,	1, 1 }
