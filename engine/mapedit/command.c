@@ -238,10 +238,8 @@ mapedit_savemap(struct mapedit *med)
 {
 	struct map *m = med->map;
 
-	pthread_mutex_lock(&m->lock);
 	object_save(m);
 	text_msg(2000, TEXT_SLEEP, "Saved %s.\n", OBJECT(m)->name);
-	pthread_mutex_unlock(&m->lock);
 }
 
 void
