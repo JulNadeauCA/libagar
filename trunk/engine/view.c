@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.154 2004/08/31 00:51:36 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.155 2004/08/31 00:58:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -85,6 +85,7 @@ view_init(enum gfx_engine ge)
 	depth = prop_get_uint8(config, "view.depth");
 	view->w = prop_get_uint16(config, "view.w");
 	view->h = prop_get_uint16(config, "view.h");
+	dprintf("setting mode %ux%ux%u\n", view->w, view->h, depth);
 
 	if (prop_get_bool(config, "view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
@@ -171,7 +172,7 @@ view_init(enum gfx_engine ge)
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DITHER);
 		glEnable(GL_TEXTURE_2D);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 #endif /* HAVE_OPENGL */
 
@@ -248,8 +249,10 @@ view_videoexpose(void)
 	}
 
 #ifdef HAVE_OPENGL
-	if (view->opengl)
+	if (view->opengl) {
+		dprintf("swapping gl buffers\n");
 		SDL_GL_SwapBuffers();
+	}
 #endif
 }
 
@@ -618,6 +621,7 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
 
+	/* The size of OpenGL surfaces must be a power of two. */
 	w = powof2(sourcesu->w);
 	h = powof2(sourcesu->h);
 	texcoord[0] = 0.0f;
@@ -657,8 +661,8 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
-	SDL_FreeSurface(texsu);
 
+	SDL_FreeSurface(texsu);
 	return (texture);
 }
 
