@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.7 2002/07/23 23:49:36 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.8 2002/07/29 06:33:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -140,7 +140,9 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 	/* Map view */
 	mv = mapview_new(reg, med, ob->art->map,
-	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID, 100, 100);
+	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
+	    MAPVIEW_SHOW_CURSOR,
+	    100, 100);
 	win->focus = WIDGET(mv);
 
 	tm = emalloc(sizeof(struct objq_tmap));
