@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.197 2003/06/10 01:13:27 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.198 2003/06/12 22:28:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -1142,7 +1142,7 @@ window_set_closure(struct window *win, enum window_close_mode mode)
 		event_new(win, "window-close", window_generic_hide, "%p", win);
 		break;
 	case WINDOW_DETACH:
-		event_new(win, "window-detach", window_generic_detach,"%p",win);
+		event_new(win, "window-close", window_generic_detach,"%p",win);
 		break;
 	}
 }
