@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.182 2004/06/11 01:21:03 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.183 2004/08/02 03:17:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -1631,7 +1631,6 @@ object_icon(void *p)
 
 #ifdef EDITION
 
-/* Update the dependencies display. */
 static void
 object_poll_deps(int argc, union evarg *argv)
 {
@@ -1657,23 +1656,19 @@ object_poll_deps(int argc, union evarg *argv)
 	tlist_restore_selections(tl);
 }
 
-/* Object rename pre-hook. */
 static void
-object_name_prechg(int argc, union evarg *argv)
+rename_object(int argc, union evarg *argv)
 {
+	struct widget_binding *stringb;
+	struct textbox *tb = argv[0].p;
 	struct object *ob = argv[1].p;
 
 	object_page_in(ob, OBJECT_DATA);
 	object_unlink_datafiles(ob);
-}
-
-/* Object rename post-hook. */
-static void
-object_name_postchg(int argc, union evarg *argv)
-{
-	struct object *ob = argv[1].p;
-
+	strlcpy(ob->name, tb->string, sizeof(ob->name));
 	object_page_out(ob, OBJECT_DATA);
+
+	event_post(NULL, ob, "renamed", NULL);
 }
 
 struct window *
@@ -1692,11 +1687,8 @@ object_edit(void *p)
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		tbox = textbox_new(bo, _("Name: "));
-		widget_bind(tbox, "string", WIDGET_STRING, ob->name,
-		    sizeof(ob->name));
-		event_new(tbox, "textbox-prechg", object_name_prechg, "%p", ob);
-		event_new(tbox, "textbox-postchg", object_name_postchg, "%p",
-		    ob);
+		textbox_printf(tbox, ob->name);
+		event_new(tbox, "textbox-return", rename_object, "%p", ob);
 	}
 	
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
