@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.77 2004/03/10 04:30:12 vedge Exp $
+#	$Csoft: Makefile,v 1.78 2004/03/10 16:58:31 vedge Exp $
 
 TOP=..
 include ${TOP}/Makefile.config
@@ -9,7 +9,8 @@ SUBDIR=	error \
 	monitor \
 	unicode \
 	loader \
-	input
+	input \
+	vg
 
 LIB=		engine
 LIB_SHARED=	Yes
