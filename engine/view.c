@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.27 2002/05/02 06:28:59 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.28 2002/05/02 10:08:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -36,7 +36,10 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/physics.h>
+
 #include <engine/mapedit/mapedit.h>
+
+#include <engine/widget/window.h>
 
 static int	**view_allocmask(int, int);
 static SDL_Rect	**view_allocmaprects(struct map *, int, int);
@@ -46,7 +49,9 @@ static void	view_freemaprects(struct viewport *);
 static void	view_freerects(struct viewport *);
 
 struct viewport *mainview;
+extern TAILQ_HEAD(windows_head, window) windowsh;	/* window.c */
 
+/* Start displaying the given map inside the given view. */
 int
 view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 {
@@ -66,6 +71,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		v->maph = (v->height / m->tileh);
 		v->mapxoffs = 0;
 		v->mapyoffs = 0;
+		v->vmapw = v->mapw - v->mapxoffs;
+		v->vmaph = v->maph - v->mapyoffs;
 		break;
 	case VIEW_MAPEDIT:
 		dprintf("map edition mode\n");
@@ -78,22 +85,9 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 			v->mapxoffs += (v->mapw - v->map->mapw) / 2;
 		if (v->map->maph < v->maph)
 			v->mapyoffs += (v->maph - v->map->maph) / 2;
+		v->vmapw = v->mapw - v->mapxoffs - 1;	/* Tile list */
+		v->vmaph = v->maph - v->mapyoffs;
 		break;
-	case VIEW_FIGHT:
-		dprintf("off-map fight mode\n");
-		v->map = NULL;
-		v->mapw = -1;
-		v->maph = -1;
-		v->mapxoffs = -1;
-		v->mapyoffs = -1;
-		break;
-	}
-
-	v->vmapw = v->mapw - v->mapxoffs;
-	v->vmaph = v->maph - v->mapyoffs;
-
-	if (v->mode == VIEW_MAPEDIT) {
-		v->vmapw--;		/* Tile list */
 	}
 
 	switch (v->depth) {
@@ -112,19 +106,22 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		return (-1);
 	}
 
-	if (v->mapmask != NULL)
-		view_freemask(v);
-	if (v->maprects != NULL)
-		view_freemaprects(v);
-	if (v->rects != NULL)
-		view_freerects(v);
-	v->mapmask = view_allocmask(v->mapw, v->maph);
-	v->maprects = view_allocmaprects(m, v->mapw, v->maph);
-	v->rects = view_allocrects(m, v->mapw, v->maph);
-
-	if (curmapedit != NULL) {
-		SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
+	/*
+	 * Allocate view masks, precalculate node rectangles, and
+	 * preallocate an array able to hold all possible rectangles
+	 * in a view, for optimization purposes.
+	 */
+	if (v->mapmask == NULL) {
+		v->mapmask = view_allocmask(v->mapw, v->maph);
 	}
+	if (v->maprects == NULL) {
+		v->maprects = view_allocmaprects(m, v->mapw, v->maph);
+	}
+	if (v->rects == NULL) {
+		v->rects = view_allocrects(m, v->mapw, v->maph);
+	}
+
+	SDL_ShowCursor(SDL_ENABLE);
 	
 	pthread_mutex_unlock(&v->lock);
 	return (0);
@@ -312,6 +309,7 @@ view_center(struct viewport *view, int mapx, int mapy)
 	view->mapy = ny;
 }
 
+/* XXX later */
 void
 scroll(struct map *m, int dir)
 {
@@ -330,5 +328,20 @@ scroll(struct map *m, int dir)
 		break;
 	}
 	m->redraw++;
+}
+
+void
+view_redraw(struct viewport *view)
+{
+	if (view->map != NULL) {
+		view->map->redraw++;
+	}
+	if (curmapedit != NULL) {
+		mapedit_tilelist(curmapedit);
+		mapedit_objlist(curmapedit);
+	}
+	if (!TAILQ_EMPTY(&windowsh)) {
+		window_draw_all();
+	}
 }
 
