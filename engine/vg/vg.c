@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.15 2004/05/01 00:53:10 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.16 2004/05/01 00:55:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -514,6 +514,11 @@ vg_rasterize(struct vg *vg)
 {
 	struct vg_element *vge;
 	int i;
+	
+	if (vg->flags & VG_VISGRID)
+		vg_draw_grid(vg);
+	if (vg->flags & VG_VISBBOXES)
+		vg_draw_bboxes(vg);
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		vge->drawn = 0;
@@ -524,10 +529,6 @@ vg_rasterize(struct vg *vg)
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
-	if (vg->flags & VG_VISGRID)
-		vg_draw_grid(vg);
-	if (vg->flags & VG_VISBBOXES)
-		vg_draw_bboxes(vg);
 
 	vg_update_fragments(vg);
 }
