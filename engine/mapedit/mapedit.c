@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.14 2002/02/07 06:48:58 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.15 2002/02/07 08:13:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -472,8 +472,7 @@ mapedit_tilelist(struct mapedit *med)
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
 			if (anim->nframes > 0) {
-				SDL_BlitSurface(g_slist_nth_data(
-				    anim->frames, anim->gframe),
+				SDL_BlitSurface(anim->frames[anim->gframe],
 				    &rs, win->view->v, &rd);
 				if (anim->delay > 0 &&
 				    anim->gframedc++ > anim->delay) {
@@ -548,8 +547,8 @@ mapedit_tilestack(struct mapedit *med)
 
 			/* Only draw the first frame. */
 			anim = g_slist_nth_data(aref->pobj->anims, aref->offs);
-			SDL_BlitSurface(g_slist_nth_data(anim->frames,
-			    0), &rs, win->view->v, &rd);
+			SDL_BlitSurface(anim->frames[0],
+			    &rs, win->view->v, &rd);
 		} else if (aref->flags & MAPREF_SPRITE) {
 			/* Draw this sprite. */
 			SDL_BlitSurface(g_slist_nth_data(aref->pobj->sprites,

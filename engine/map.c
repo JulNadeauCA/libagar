@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.15 2002/02/07 06:49:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.16 2002/02/07 23:34:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -405,7 +405,7 @@ map_plot_anim(struct map *m, struct anim *anim, int frame, int x, int y)
 	}
 #endif
 
-	s = g_slist_nth_data(anim->frames, frame);
+	s = anim->frames[frame];
 
 	rs.w = s->w;
 	rs.h = s->h;
