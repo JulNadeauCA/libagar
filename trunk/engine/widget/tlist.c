@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.87 2004/03/21 07:00:45 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.88 2004/04/22 12:36:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -802,6 +802,24 @@ tlist_item_selected(struct tlist *tl)
 	}
 	pthread_mutex_unlock(&tl->lock);
 	return (NULL);
+}
+
+/* Return the pointer associated with the first selected item. */
+int
+tlist_item_pointer(struct tlist *tl, void **p)
+{
+	struct tlist_item *it;
+
+	pthread_mutex_lock(&tl->lock);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected) {
+			*p = it->p1;
+			pthread_mutex_unlock(&tl->lock);
+			return (0);
+		}
+	}
+	pthread_mutex_unlock(&tl->lock);
+	return (-1);
 }
 
 /* Return the first item matching a text string. */
