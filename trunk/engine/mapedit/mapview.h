@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.4 2002/07/09 09:28:45 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.5 2002/07/18 11:49:46 vedge Exp $	*/
 /*	Public domain	*/
 
 struct edcursor;
@@ -12,6 +12,7 @@ struct mapview {
 #define MAPVIEW_EDIT	0x02	/* Mouse/keyboard edition */
 #define MAPVIEW_ZOOM	0x04	/* Allow zooming */
 #define MAPVIEW_TILEMAP	0x08	/* Tile map */
+#define MAPVIEW_GRID	0x10	/* Display a grid */
 
 	struct {		/* For scrolling */
 		int	move;
@@ -26,6 +27,9 @@ struct mapview {
 	int	mw, mh;		/* Size in nodes */
 	int	tilew, tileh;	/* Tile geometry */
 	int	zoom;		/* Zoom (%) */
+
+	Uint32	grid_color;
+	Uint32	border_color;
 
 	struct	mapedit *med;	/* Back pointer to map editor */
 	struct	mapview *mv;	/* Back pointer to map view widget */
