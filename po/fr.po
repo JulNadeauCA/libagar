@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.8 2003/08/01 22:52:56 vedge Exp $
+# $Csoft: fr.po,v 1.9 2003/08/05 23:54:39 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -160,7 +160,7 @@ msgstr "Répertoire de sauvegarde: "
 
 #: engine/config.c:241
 msgid "Data load path: "
-msgstr "Chemin d'accès sauvegardes: "
+msgstr "Chemin d'accès objets: "
 
 #: engine/config.c:247
 msgid "Font path: "
@@ -194,7 +194,7 @@ msgstr "Le chemin d'accès est trop grand."
 #: engine/config.c:323
 #, c-format
 msgid "Cannot find `%s.%s' in <%s>."
-msgstr "Impossible de trouver `%s.%s' dans <%s>."
+msgstr "Impossible de trouver «%s.%s» dans <%s>."
 
 #: engine/engine.c:113
 #, c-format
@@ -276,66 +276,66 @@ msgstr ""
 #: engine/object.c:182
 #, c-format
 msgid "The path exceeds >= %lu bytes."
-msgstr "Le chemin d'accès dépasse >= %lu octets."
+msgstr "Le chemin d'accès fait >= %lu octets."
 
 #: engine/object.c:273
 #, c-format
 msgid "The `%s' object is in use."
-msgstr "L'objet `%s' est en cours d'utilisation."
+msgstr "L'objet «%s» est en cours d'utilisation."
 
 #: engine/object.c:374
 #, c-format
 msgid "The object `%s' does not exist."
-msgstr "L'objet `%s' n'existe pas."
+msgstr "L'objet «%s» n'existe pas."
 
 #: engine/object.c:514
 #, c-format
 msgid "The %s/%s.%s file is not in load-path."
-msgstr "Le fichier %s/%s.%s est introuvable dans le chemin de chargement."
+msgstr "Le fichier «%s/%s.%s» est introuvable dans le chemin de chargement."
 
 #: engine/object.c:533
 #, c-format
 msgid "The `%s' object contains no graphics."
-msgstr "L'objet `%s' ne contient aucun graphique."
+msgstr "L'objet «%s» ne contient aucun graphique."
 
 #: engine/object.c:549
 #, c-format
 msgid "The `%s' object contains no audio."
-msgstr "L'objet `%s' ne contient aucun son."
+msgstr "L'objet «%s» ne contient aucun son."
 
 #: engine/object.c:662 engine/object.c:912
 #, c-format
 msgid "The `%s' object is non-persistent."
-msgstr "L'objet `%s' n'est pas persistant."
+msgstr "L'objet «%s» n'est pas persistant."
 
 #: engine/object.c:687
 #, c-format
 msgid "The `%s' save has inconsistent flags."
-msgstr "La sauvegarde de `%s' a des flags inconsistents."
+msgstr "La sauvegarde de «%s» contient des flags inconsistents."
 
 #: engine/object.c:784
 #, c-format
 msgid "Unknown object type: `%s'"
-msgstr "Type d'objet inconnu: `%s'"
+msgstr "Type d'objet inconnu: «%s»"
 
 #: engine/object.c:850
 #, c-format
 msgid "The data of `%s' is already resident."
-msgstr "Les données de `%s' sont déjà en mémoire."
+msgstr "Les données de «%s» sont déjà en mémoire."
 
 #: engine/object.c:1045
 #, c-format
 msgid "There is no input device named `%s'."
-msgstr "Il n'y a aucun pilote d'entrée nommé `%s'."
+msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
 
 #: engine/object.c:1051
 msgid "There is no position to control."
-msgstr "Il n'y a aucune position a controller."
+msgstr "Il n'y pas de position a contrôler."
 
 #: engine/object.c:1155
 #, c-format
 msgid "There is no submap named `%s'."
-msgstr "Il n'y a aucune sous-carte nommée `%s'."
+msgstr "Aucune sous-carte n'est nommée «%s»."
 
 #: engine/object.c:1284
 #, c-format
@@ -345,12 +345,12 @@ msgstr "Mauvaises coordonnées: %d,%d,%d"
 #: engine/object.c:1578
 #, c-format
 msgid "%s object"
-msgstr "Objet %s"
+msgstr "Objet «%s»"
 
 #: engine/object.c:1584
 #, c-format
 msgid "Name: %s (%s)"
-msgstr "Nom: %s (%s)"
+msgstr "Nom: «%s» (%s)"
 
 #: engine/monitor/widget_browser.c:172 engine/object.c:1585
 #, c-format
@@ -451,16 +451,16 @@ msgstr "Géométrie de carte invalide."
 
 #: engine/map.c:836
 msgid "Too many map layers."
-msgstr "Trop de couches de carte."
+msgstr "La carte comporte trop de couches."
 
 #: engine/map.c:1197
 #, c-format
 msgid "%s map view"
-msgstr "Vue sur %s"
+msgstr "Vue sur «%s»"
 
 #: engine/map.c:1285
 msgid "There is no active selection."
-msgstr "Il n'y a aucune sélection sur la carte."
+msgstr "La carte ne comporte aucune sélection."
 
 #: engine/map.c:1448
 #, c-format
@@ -475,7 +475,7 @@ msgstr "a%u (%u frames)\n"
 #: engine/map.c:1481
 #, c-format
 msgid "%s graphics"
-msgstr "Graphiques de %s"
+msgstr "Graphiques de «%s»"
 
 #: engine/map.c:1506 engine/mapedit/tool/merge.c:251
 #: engine/mapedit/tool/stamp.c:66
@@ -485,7 +485,7 @@ msgstr "Remplacer"
 #: engine/map.c:1525
 #, c-format
 msgid "%s map edition"
-msgstr "Édition de %s"
+msgstr "Édition de «%s»"
 
 #. XXX combo
 #: engine/map.c:1588
@@ -495,7 +495,7 @@ msgstr "  Couche #%d"
 
 #: engine/prop.c:66 engine/prop.c:74
 msgid "Out of memory for string."
-msgstr "Pas assez de mémoire pour la chaîne."
+msgstr "Mémoire insuffisante pour la chaîne de caractères."
 
 #: engine/prop.c:347
 #, c-format
@@ -505,7 +505,7 @@ msgstr "Type de propriété non supporté: %d."
 #: engine/prop.c:356
 #, c-format
 msgid "%s has no `%s' property (type %d)."
-msgstr "%s n'a aucune propriété `%s' (type %d)."
+msgstr "%s n'a aucune propriété du nom de «%s» (type %d)."
 
 #: engine/prop.c:570
 msgid "The prop key too big."
@@ -532,7 +532,7 @@ msgstr "Impossible de sauvegarder une propriété de type 0x%x."
 #: engine/perso.c:167
 #, c-format
 msgid "%s character"
-msgstr "Caractère %s"
+msgstr "Caractère «%s»"
 
 #: engine/mapedit/objedit.c:218 engine/mapedit/tool/merge.c:267
 #: engine/perso.c:176
@@ -549,7 +549,7 @@ msgstr "Expérience: "
 
 #: engine/perso.c:188
 msgid "Age: "
-msgstr "Age: "
+msgstr "Âge: "
 
 #: engine/perso.c:191
 msgid "Zuars: "
@@ -603,7 +603,7 @@ msgstr "L'initialisation du moteur de polices à échoué."
 #: engine/loader/ttf.c:135
 #, c-format
 msgid "Cannot font face: `%s'."
-msgstr "Mauvaise face de police: `%s'."
+msgstr "Mauvaise face de police: «%s»."
 
 #: engine/loader/ttf.c:143
 msgid "Error getting TTF font face."
@@ -615,7 +615,7 @@ msgstr "Face de police TTF invalide."
 
 #: engine/loader/ttf.c:157
 msgid "Failed to set font size."
-msgstr "Impossible de setter la taille de la police."
+msgstr "Impossible d'attribuer la taille de la police."
 
 #: engine/loader/ttf.c:284
 msgid "Failed to load the TTF glyph."
@@ -672,12 +672,12 @@ msgstr "%s (invisible %s)\n"
 
 #: engine/mapedit/layedit.c:173 engine/mapedit/layedit.c:194
 msgid "No layer is selected."
-msgstr "Aucune couche sélectionnée."
+msgstr "Aucune couche n'est sélectionnée."
 
 #: engine/mapedit/layedit.c:207
 #, c-format
 msgid "%s layers"
-msgstr "Couches de %s"
+msgstr "Couches de «%s»"
 
 #: engine/mapedit/layedit.c:217
 msgid "New layer: "
@@ -693,7 +693,7 @@ msgstr "Renommer"
 
 #: engine/mapedit/layedit.c:245
 msgid "Pop"
-msgstr "Détruire"
+msgstr "Supprimer"
 
 #: engine/mapedit/layedit.c:247 engine/mapedit/objedit.c:231
 #: engine/mapedit/tool/merge.c:286
@@ -715,7 +715,7 @@ msgstr "Aucun noeud n'est sélectionné."
 #: engine/mapedit/nodeedit.c:179
 #, c-format
 msgid "%s node"
-msgstr "Noeud sur %s"
+msgstr "Noeud sur «%s»"
 
 #: engine/mapedit/nodeedit.c:186 engine/mapedit/tool/merge.c:288
 msgid "Remove"
@@ -756,7 +756,7 @@ msgstr "Aucun nom d'objet spécifié."
 #: engine/mapedit/objedit.c:141
 #, c-format
 msgid "The `%s' object is indestructible."
-msgstr "L'objet `%s' est indestructible."
+msgstr "L'objet «%s» est indestructible."
 
 #: engine/mapedit/objedit.c:209
 msgid "Object editor"
@@ -784,7 +784,7 @@ msgstr "Détruire"
 
 #: engine/mapedit/tool/eraser.c:70
 msgid "Eraser"
-msgstr "Gomme a effacer"
+msgstr "Gomme à effacer"
 
 #: engine/mapedit/tool/eraser.c:75 engine/mapedit/tool/flip.c:71
 #: engine/mapedit/tool/shift.c:78
@@ -843,7 +843,7 @@ msgstr "Aucun nom de pinceau n'a été donné."
 #: engine/mapedit/tool/merge.c:141
 #, c-format
 msgid "A `%s' brush exists."
-msgstr "Un pinceau nommé `%s' existe."
+msgstr "Un pinceau du nom de «%s» existe."
 
 #: engine/mapedit/tool/merge.c:245
 msgid "Merge tool"
@@ -907,11 +907,11 @@ msgstr "Le tampon de copie est vide!"
 
 #: engine/mapedit/tool/select.c:129
 msgid "There is no selection to kill."
-msgstr "Il n'y a aucune sélection a tuer."
+msgstr "Il n'y a aucune sélection à supprimer."
 
 #: engine/mapedit/tool/select.c:147
 msgid "There is no selection to cut."
-msgstr "Il n'y a aucune sélection a couper."
+msgstr "Il n'y a aucune sélection à couper."
 
 #: engine/mapedit/tool/shift.c:71
 msgid "Shift"
@@ -984,7 +984,7 @@ msgstr "État: aucune connexion."
 
 #: engine/monitor/screenshot.c:240
 msgid "Not connected."
-msgstr "Pas connecté au serveur."
+msgstr "Aucune connexion."
 
 #: engine/monitor/monitor.c:68 engine/monitor/screenshot.c:257
 msgid "Screenshot"
@@ -1039,7 +1039,7 @@ msgstr "Widget %s"
 #: engine/monitor/widget_browser.c:171 engine/monitor/widget_browser.c:260
 #, c-format
 msgid "Name: \"%s\""
-msgstr "Nom: \"%s\""
+msgstr "Nom: «%s»"
 
 #: engine/monitor/widget_browser.c:173 engine/monitor/widget_browser.c:261
 #, c-format
@@ -1058,7 +1058,7 @@ msgstr "Géo: 0000x0000 sur 0000x0000 (vue 0000,0000)"
 #: engine/monitor/widget_browser.c:257
 #, c-format
 msgid "%s window"
-msgstr "Fenêtre %s"
+msgstr "Fenêtre «%s»"
 
 #: engine/monitor/widget_browser.c:270 engine/monitor/widget_browser.c:298
 msgid "Examine"
@@ -1086,7 +1086,7 @@ msgstr "GUI"
 
 #: engine/monitor/view_params.c:67
 msgid "Tile-based"
-msgstr "Basé-tiles"
+msgstr "Orienté-tile"
 
 #: engine/monitor/view_params.c:70
 #, c-format
@@ -1104,7 +1104,7 @@ msgstr "Opération fenêtre: 000 (0x00000000)"
 
 #: engine/monitor/view_params.c:85
 msgid "Map: %[obj]"
-msgstr "Carte: %[obj]"
+msgstr "Carte: «%[obj]»"
 
 #: engine/monitor/view_params.c:87
 #, c-format
@@ -1291,7 +1291,7 @@ msgstr "Trop de clients."
 #: screenshotd/server.c:168
 #, c-format
 msgid "%s: %s failed"
-msgstr "%s: %s a échoué"
+msgstr "%s: %s à échoué"
 
 #: screenshotd/session.c:106
 msgid "Bad JPEG magic."
