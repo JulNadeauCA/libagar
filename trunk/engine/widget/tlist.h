@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.37 2004/05/14 05:19:50 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.38 2004/05/15 02:27:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -8,7 +8,7 @@
 
 #include "begin_code.h"
 
-#define TLIST_LABEL_MAX	64
+#define TLIST_LABEL_MAX	96
 
 struct tlist_item {
 	int	selected;		/* Effective selection */
