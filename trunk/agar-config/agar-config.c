@@ -1,4 +1,4 @@
-/*	$Csoft: agar-config.c,v 1.4 2004/04/25 07:31:03 vedge Exp $	*/
+/*	$Csoft: agar-config.c,v 1.5 2004/04/25 07:35:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -51,6 +51,7 @@
 #include <config/jpeg_cflags.h>
 
 #include <stdio.h>
+#include <string.h>
 
 int
 main(int argc, char *argv[])
