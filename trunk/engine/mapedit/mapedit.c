@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.121 2002/09/13 11:08:30 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.122 2002/09/16 15:47:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -78,8 +78,8 @@ mapedit_init(struct mapedit *med, char *name)
 
 	mapedit_init_toolbar(med);
 	
-	event_new(med, "attached", 0, mapedit_attached, NULL);
-	event_new(med, "detached", 0, mapedit_detached, NULL);
+	event_new(med, "attached", mapedit_attached, NULL);
+	event_new(med, "detached", mapedit_detached, NULL);
 }
 
 /*

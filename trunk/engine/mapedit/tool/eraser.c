@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.9 2002/09/06 01:26:43 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.10 2002/09/07 04:32:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -99,7 +99,7 @@ eraser_window(void *p)
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120, 120, 120);
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0);
-	event_new(rad, "radio-changed", 0, eraser_event, "%p, %c", er, 'm');
+	event_new(rad, "radio-changed", eraser_event, "%p, %c", er, 'm');
 	
 	win->focus = WIDGET(rad);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.9 2002/09/12 09:35:00 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.10 2002/09/12 09:49:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -87,7 +87,7 @@ tilestack_init(struct tilestack *ts, int flags, int rw, int rh,
 	ts->flags = (flags != 0) ? flags : TILESTACK_VERT;
 	ts->mv = mv;
 
-	event_new(ts, "widget-scaled", 0, tilestack_scaled, NULL);
+	event_new(ts, "widget-scaled", tilestack_scaled, NULL);
 }
 
 static void

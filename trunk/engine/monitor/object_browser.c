@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.9 2002/09/12 09:43:58 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.1 2002/09/16 16:44:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -72,11 +72,28 @@ object_browser_new(struct monitor *mon, int flags)
 }
 
 void
+object_browser_attached(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+	dprintf("add %s\n", ob->name);
+}
+
+void
+object_browser_detached(int argc, union evarg *argv)
+{
+	dprintf("remove\n");
+}
+
+void
 object_browser_init(struct object_browser *object_browser, struct monitor *mon,
     int flags)
 {
 	monitor_tool_init(&object_browser->tool, "object_browser", mon,
 	    &object_browser_ops);
+	event_new(object_browser, "world-attached-object",
+	    object_browser_attached, NULL);
+	event_new(object_browser, "world-detached-object",
+	    object_browser_detached, NULL);
 
 	object_browser->flags = flags;
 }
@@ -120,7 +137,6 @@ object_browser_window(void *p)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 	objlist = tlist_new(reg, 100, 100, 0);
-	objlist->ops.update = update_objlist;
 
 	return (win);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.76 2002/11/12 05:17:16 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.77 2002/11/13 00:22:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -170,16 +170,20 @@ view_detach_queued(void)
 {
 	struct window *win, *nwin;
 
+	deprintf("detaching queued windows:");
 	for (win = TAILQ_FIRST(&view->detach);
 	     win != TAILQ_END(&view->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 
+		deprintf(" %s (%s)", OBJECT(win)->name, win->caption);
+		TAILQ_REMOVE(&view->windows, win, windows);
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
-		window_destroy(win);
+		object_destroy(win);
 	}
 	TAILQ_INIT(&view->detach);
+	deprintf("\n");
 }
 
 void
@@ -189,22 +193,21 @@ view_destroy(void *p)
 	struct window *win;
 	
 	pthread_mutex_lock(&v->lock);
-
-	deprintf("freeing windows: ");
-	TAILQ_FOREACH(win, &v->windows, windows) {
-		deprintf(" %s (\"%s\")", OBJECT(win)->name, win->caption);
-		view_detach(win);
-	}
-	deprintf(".\n");
-
-	if (!TAILQ_EMPTY(&view->detach)) {
-		view_detach_queued();
-	}
-
+	
 	/* Free precalculated map rectangles. */
 	if (v->rootmap != NULL) {
 		rootmap_free_maprects(v);
 		free(v->rootmap);
+		v->rootmap = NULL;
+	}
+
+	/* Free the windows. */
+	TAILQ_FOREACH(win, &v->windows, windows) {
+		win->flags &= ~(WINDOW_MATERIALIZE|WINDOW_DEMATERIALIZE);
+		view_detach(win);
+	}
+	if (!TAILQ_EMPTY(&view->detach)) {
+		view_detach_queued();
 	}
 
 	/* Free the dirty rectangle array. */

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.23 2002/09/12 09:33:25 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.24 2002/11/12 02:45:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -95,13 +95,13 @@ checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 	cbox->justify = CHECKBOX_LEFT;
 	cbox->label_s = s;
 	
-	event_new(cbox, "window-mousebuttonup", 0,
+	event_new(cbox, "window-mousebuttonup",
 	    checkbox_event, "%i", WINDOW_MOUSEBUTTONUP);
-	event_new(cbox, "window-mousebuttondown", 0,
+	event_new(cbox, "window-mousebuttondown",
 	    checkbox_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(cbox, "window-keyup", 0,
+	event_new(cbox, "window-keyup",
 	    checkbox_event, "%i", WINDOW_KEYUP);
-	event_new(cbox, "window-keydown", 0,
+	event_new(cbox, "window-keydown",
 	    checkbox_event, "%i", WINDOW_KEYDOWN);
 }
 

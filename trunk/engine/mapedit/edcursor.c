@@ -1,4 +1,4 @@
-/*	$Csoft: edcursor.c,v 1.4 2002/09/06 01:26:41 vedge Exp $	*/
+/*	$Csoft: edcursor.c,v 1.5 2002/09/16 15:47:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -82,12 +82,9 @@ edcursor_init(struct edcursor *ed, int flags, struct mapview *mv,
 	mapdir_init(&ed->dir, OBJECT(ed), m,
 	    DIR_PASSTHROUGH|DIR_STATIC, 1);
 
-	event_new(ed, "attached", 0,
-	    edcursor_attached, NULL);
-	event_new(ed, "window-keyup", 0,
-	    edcursor_key, "%i", WINDOW_KEYUP);
-	event_new(ed, "window-keydown", 0,
-	    edcursor_key, "%i", WINDOW_KEYDOWN);
+	event_new(ed, "attached", edcursor_attached, NULL);
+	event_new(ed, "window-keyup", edcursor_key, "%i", WINDOW_KEYUP);
+	event_new(ed, "window-keydown", edcursor_key, "%i", WINDOW_KEYDOWN);
 }
 
 static void

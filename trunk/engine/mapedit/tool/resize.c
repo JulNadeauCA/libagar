@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.7 2002/09/06 01:26:43 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.8 2002/09/07 04:32:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -104,8 +104,8 @@ resize_window(void *p)
 	/* Resize button */
 	reg = region_new(win, REGION_HALIGN, 0, 40, 100, 60);
 	button = button_new(reg, "Resize", NULL, 0, 100, 100);
-	event_new(button, "button-pushed", 0, resize_do, "%p, %p, %p", res,
-	    tbox_w, tbox_h);
+	event_new(button, "button-pushed",
+	    resize_do, "%p, %p, %p", res, tbox_w, tbox_h);
 
 	return (win);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.10 2002/09/19 21:00:23 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.11 2002/10/30 17:18:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -94,13 +94,13 @@ toolbar_window(struct monitor *mon)
 	button = button_new(reg, NULL, SPRITE(mon, MONITOR_OBJECT_BROWSER), 0,
 	    xdiv, ydiv);
 	win->focus = WIDGET(button);
-	event_new(button, "button-pushed", 0,
+	event_new(button, "button-pushed",
 	    show_tool, "%p", mon->wins.object_browser);
 
 	/* Sprite browser */
 	button = button_new(reg, NULL, SPRITE(mon, MONITOR_SPRITE_BROWSER), 0,
 	    xdiv, ydiv);
-	event_new(button, "button-pushed", 0,
+	event_new(button, "button-pushed",
 	    show_tool, "%p", mon->wins.sprite_browser);
 	
 	reg = region_new(win, REGION_HALIGN, 0, 50, 100, 50);
@@ -109,7 +109,7 @@ toolbar_window(struct monitor *mon)
 	/* Map view */
 	button = button_new(reg, NULL, SPRITE(mon, MONITOR_MAP_VIEW), 0,
 	    xdiv, ydiv);
-	event_new(button, "button-pushed", 0, map_view_show, "%p", mon);
+	event_new(button, "button-pushed", map_view_show, "%p", mon);
 
 	return (win);
 }
@@ -119,6 +119,9 @@ monitor_init(struct monitor *mon, char *name)
 {
 	object_init(&mon->obj, "debug-monitor", name, "monitor",
 	    OBJECT_ART|OBJECT_CANNOT_MAP, &monitor_ops);
+	event_new(mon, "world-attached-object", object_browser_attached, NULL);
+	event_new(mon, "world-detached-object", object_browser_detached, NULL);
+
 	mon->wins.object_browser = object_browser_window(mon);
 	mon->wins.sprite_browser = sprite_browser_window(mon);
 	mon->wins.toolbar = toolbar_window(mon);

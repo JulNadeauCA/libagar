@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.29 2002/11/10 21:45:53 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.30 2002/11/12 02:31:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -125,14 +125,13 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	widget_map_color(mv, TILE_SELECTION_COLOR, "mapview-tile-selection",
 	    0, 200, 0);
 
-	event_new(mv, "widget-scaled", 0, mapview_scaled, NULL);
-	event_new(mv, "widget-lostfocus", 0, mapview_lostfocus, NULL);
-	event_new(mv, "window-keyup", 0, mapview_keyup, NULL);
-	event_new(mv, "window-keydown", 0, mapview_keydown, NULL);
-	event_new(mv, "window-mousemotion", 0, mapview_mousemotion, NULL);
-	event_new(mv, "window-mousebuttonup", 0, mapview_mousebuttonup, NULL);
-	event_new(mv, "window-mousebuttondown", 0, mapview_mousebuttondown,
-	    NULL);
+	event_new(mv, "widget-scaled", mapview_scaled, NULL);
+	event_new(mv, "widget-lostfocus", mapview_lostfocus, NULL);
+	event_new(mv, "window-keyup", mapview_keyup, NULL);
+	event_new(mv, "window-keydown", mapview_keydown, NULL);
+	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
+	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
+	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
 }
 
 static __inline__ void

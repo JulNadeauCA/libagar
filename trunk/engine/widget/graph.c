@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.13 2002/09/08 03:45:01 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.14 2002/09/12 09:33:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -112,10 +112,10 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	graph->yrange = yrange;
 	TAILQ_INIT(&graph->items);
 
-	event_new(graph, "window-mousemotion", 0, graph_scroll, NULL);
-	event_new(graph, "window-keydown", 0, graph_key, NULL);
-	event_new(graph, "window-mousebuttonup", 0, graph_resume_scroll, NULL);
-	event_new(graph, "window-mousebuttondown", 0, graph_focus, NULL);
+	event_new(graph, "window-mousemotion", graph_scroll, NULL);
+	event_new(graph, "window-keydown", graph_key, NULL);
+	event_new(graph, "window-mousebuttonup", graph_resume_scroll, NULL);
+	event_new(graph, "window-mousebuttondown", graph_focus, NULL);
 }
 
 int

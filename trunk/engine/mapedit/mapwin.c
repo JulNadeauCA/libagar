@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.21 2002/11/10 03:13:10 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.22 2002/11/10 21:45:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -144,32 +144,32 @@ mapwin_new(struct mapedit *med, struct map *m)
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
-	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
+	event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
 	/* Save map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
-	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
+	event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 
 	/* Clear map */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
-	event_new(bu, "button-pushed", 0, fileops_clear_map, "%p", mv);
+	event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
 
 	/* New map view */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW), 0,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
-	event_new(bu, "button-pushed", 0, mapwin_new_view, "%p", mv);
+	event_new(bu, "button-pushed", mapwin_new_view, "%p", mv);
 
 	/* Grid */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
 	    BUTTON_STICKY,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0,
+	event_new(bu, "button-pushed",
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 	/* Props */
@@ -177,7 +177,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	    BUTTON_STICKY|BUTTON_PRESSED,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0,
+	event_new(bu, "button-pushed",
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 
 	/* Show/hide cursor */
@@ -185,7 +185,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	    BUTTON_STICKY|BUTTON_PRESSED,
 	    xdiv, ydiv);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
-	event_new(bu, "button-pushed", 0,
+	event_new(bu, "button-pushed",
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_SHOW_CURSOR);
 
 	/* Tile stack */

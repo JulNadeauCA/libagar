@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.8 2002/09/06 01:26:43 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.9 2002/09/07 04:32:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -104,19 +104,19 @@ magnifier_window(void *p)
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
 	rad = radio_new(reg, mode_items, 0);
-	event_new(rad, "radio-changed", 0, magnifier_event,
+	event_new(rad, "radio-changed", magnifier_event,
 	    "%p, %c", mag, 'm');
 	
 	/* Original size button */
 	reg = region_new(win, REGION_VALIGN, 0, 50, 97, 20);
 	button = button_new(reg, "0:0", NULL, 0, 100, 100);
-	event_new(button, "button-pushed", 0, magnifier_event,
+	event_new(button, "button-pushed", magnifier_event,
 	    "%p, %c", mag, 'o');
 
 	/* Scale textbox */
 	reg = region_new(win, REGION_VALIGN, 0, 70, 97, 30);
 	tbox = textbox_new(reg, "%: ", 0, 100, 100);	/* XXX int */
-	event_new(tbox, "textbox-changed", 0, magnifier_event,
+	event_new(tbox, "textbox-changed", magnifier_event,
 	    "%p, %c", mag, 's');
 	textbox_printf(tbox, "100");
 

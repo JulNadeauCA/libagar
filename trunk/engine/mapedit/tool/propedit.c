@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.5 2002/09/06 01:26:43 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.6 2002/09/07 04:32:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -104,7 +104,7 @@ propedit_window(void *p)
 		};
 
 		rad = radio_new(reg, items, 0);
-		event_new(rad, "radio-changed", 0,
+		event_new(rad, "radio-changed",
 		    propedit_event, "%p, %i", pe, -1);
 	}
 
@@ -118,7 +118,7 @@ propedit_window(void *p)
 		};
 
 		rad = radio_new(reg, items, 0);
-		event_new(rad, "radio-changed", 0,
+		event_new(rad, "radio-changed",
 		    propedit_event, "%p, %i", pe, 0);
 	}
 
@@ -127,19 +127,19 @@ propedit_window(void *p)
 	/* Node flags */
 	{
 		cbox = checkbox_new(reg, "Origin", 15, 0);
-		event_new(cbox, "checkbox-changed", 0,
+		event_new(cbox, "checkbox-changed",
 		    propedit_event, "%p, %i", pe, NODE_ORIGIN);
 		cbox = checkbox_new(reg, "Bio", 15, 0);
-		event_new(cbox, "checkbox-changed", 0,
+		event_new(cbox, "checkbox-changed",
 		    propedit_event, "%p, %i", pe, NODE_BIO);
 		cbox = checkbox_new(reg, "Regen", 15, 0);
-		event_new(cbox, "checkbox-changed", 0,
+		event_new(cbox, "checkbox-changed",
 		    propedit_event, "%p, %i", pe, NODE_REGEN);
 		cbox = checkbox_new(reg, "Slow", 15, 0);
-		event_new(cbox, "checkbox-changed", 0,
+		event_new(cbox, "checkbox-changed",
 		    propedit_event, "%p, %i", pe, NODE_SLOW);
 		cbox = checkbox_new(reg, "Haste", 15, 0);
-		event_new(cbox, "checkbox-changed", 0,
+		event_new(cbox, "checkbox-changed",
 		    propedit_event, "%p, %i", pe, NODE_HASTE);
 	}
 

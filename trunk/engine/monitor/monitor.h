@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.h,v 1.4 2002/09/16 16:44:12 vedge Exp $	*/
+/*	$Csoft: monitor.h,v 1.5 2002/09/19 21:00:23 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -6,9 +6,7 @@ struct mapview;
 
 struct monitor {
 	struct	 object obj;
-
 	int	 flags;
-
 	struct {
 		struct window	*toolbar;
 		struct window	*object_browser;
@@ -18,7 +16,6 @@ struct monitor {
 
 struct monitor_tool_ops {
 	const	 struct object_ops obops;
-
 	struct	 window	*(*tool_window)(void *);
 };
 
@@ -40,7 +37,7 @@ enum {
 #define	MONITOR_TOOL(t)		((struct monitor_tool *)(t))
 #define MONITOR_TOOL_OPS(t)	((struct monitor_tool_ops *)OBJECT((t))->ops)
 
-extern struct monitor monitor;	/* engine.c */
+extern struct monitor monitor;
 
 void		 monitor_init(struct monitor *, char *name);
 void		 monitor_destroy(void *);

@@ -1,4 +1,4 @@
-/*	$Csoft: tileq.c,v 1.7 2002/09/06 01:26:41 vedge Exp $	*/
+/*	$Csoft: tileq.c,v 1.8 2002/09/12 09:35:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -100,17 +100,17 @@ tileq_init(struct tileq *tq, struct mapedit *med, int flags, int rw, int rh)
 	tq->offs = 0;
 	tq->flags = (flags != 0) ? flags : TILEQ_VERT;
 	
-	event_new(tq, "widget-scaled", 0,
+	event_new(tq, "widget-scaled",
 	    tileq_scaled, NULL);
-	event_new(tq, "window-mousemotion", 0,
+	event_new(tq, "window-mousemotion",
 	    tileq_event, "%i", WINDOW_MOUSEMOTION);
-	event_new(tq, "window-mousebuttonup", 0,
+	event_new(tq, "window-mousebuttonup",
 	    tileq_event, "%i", WINDOW_MOUSEBUTTONUP);
-	event_new(tq, "window-mousebuttondown", 0,
+	event_new(tq, "window-mousebuttondown",
 	    tileq_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(tq, "window-keyup", 0,
+	event_new(tq, "window-keyup",
 	    tileq_event, "%i", WINDOW_KEYUP);
-	event_new(tq, "window-keydown", 0,
+	event_new(tq, "window-keydown",
 	    tileq_event, "%i", WINDOW_KEYDOWN);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.5 2002/11/07 04:29:26 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.6 2002/11/08 06:02:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -106,11 +106,11 @@ scrollbar_init(struct scrollbar *sb, int w, int h, int item_size, int flags)
 	sb->curbutton = BUTTON_NONE;
 	pthread_mutex_init(&sb->range.max_lock, NULL);
 
-	event_new(sb, "window-mousebuttondown", 0,
+	event_new(sb, "window-mousebuttondown",
 	    scrollbar_mouse_buttondown, NULL);
-	event_new(sb, "window-mousebuttonup", 0,
+	event_new(sb, "window-mousebuttonup",
 	    scrollbar_mouse_buttonup, NULL);
-	event_new(sb, "window-mousemotion", 0,
+	event_new(sb, "window-mousemotion",
 	    scrollbar_mouse_motion, NULL);
 }
 

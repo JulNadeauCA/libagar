@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.14 2002/11/14 02:17:10 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.15 2002/11/14 02:28:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -112,13 +112,12 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	scrollbar_init(tl->vbar, -1, -1, tl->item_h, SCROLLBAR_VERTICAL);
 	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
-	event_new(tl, "window-mousemotion", 0, tlist_mousemotion, NULL);
-	event_new(tl, "window-mousebuttonup", 0, tlist_mousebuttonup, NULL);
-	event_new(tl, "window-mousebuttondown", 0, tlist_mousebuttondown,
-	    NULL);
-	event_new(tl, "window-keydown", 0, tlist_keydown, NULL);
-	event_new(tl, "attached", 0, tlist_attached, NULL);
-	event_new(tl, "widget-scaled", 0, tlist_scaled, NULL);
+	event_new(tl, "window-mousemotion", tlist_mousemotion, NULL);
+	event_new(tl, "window-mousebuttonup", tlist_mousebuttonup, NULL);
+	event_new(tl, "window-mousebuttondown", tlist_mousebuttondown, NULL);
+	event_new(tl, "window-keydown", tlist_keydown, NULL);
+	event_new(tl, "attached", tlist_attached, NULL);
+	event_new(tl, "widget-scaled", tlist_scaled, NULL);
 }
 
 void
