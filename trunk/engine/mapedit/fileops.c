@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.20 2002/12/14 11:28:56 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.21 2002/12/24 10:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -157,7 +157,7 @@ fileops_new_map(int argc, union evarg *argv)
 	h = (Uint32)textbox_int(h_tbox);
 
 	m = emalloc(sizeof(struct map));
-	map_init(m, name, NULL, MAP_2D);
+	map_init(m, MAP_2D, name, NULL);
 	map_alloc_nodes(m, w, h);
 
 	m->defx = w / 2;
@@ -212,7 +212,7 @@ fileops_load_map(int argc, union evarg *argv)
 	}
 	
 	m = emalloc(sizeof(struct map));
-	map_init(m, name, NULL, MAP_2D);
+	map_init(m, MAP_2D, name, NULL);
 
 	object_load(m);
 
