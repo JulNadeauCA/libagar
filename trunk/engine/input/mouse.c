@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: mouse.c,v 1.1 2003/09/07 00:24:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -85,26 +85,26 @@ mouse_event(void *p, const SDL_Event *ev)
 	switch (ev->jaxis.axis) {
 	case 0:	/* X */
 		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_LEFT;
-			lastdir &= ~(DIR_RIGHT);
-			mapdir_set(&in->pos->dir, DIR_LEFT);
+			lastdir |= DIR_W;
+			lastdir &= ~(DIR_E);
+			mapdir_set(&in->pos->dir, DIR_W);
 		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_RIGHT;
-			lastdir &= ~(DIR_LEFT);
-			mapdir_set(&in->pos->dir, DIR_RIGHT);
+			lastdir |= DIR_E;
+			lastdir &= ~(DIR_W);
+			mapdir_set(&in->pos->dir, DIR_E);
 		} else {
 			mapdir_unset(&in->pos->dir, DIR_ALL);
 		}
 		break;
 	case 1:	/* Y */
 		if (ev->jaxis.value < 0) {
-			lastdir |= DIR_UP;
-			lastdir &= ~(DIR_DOWN);
-			mapdir_set(&in->pos->dir, DIR_UP);
+			lastdir |= DIR_N;
+			lastdir &= ~(DIR_S);
+			mapdir_set(&in->pos->dir, DIR_N);
 		} else if (ev->jaxis.value > 0) {
-			lastdir |= DIR_DOWN;
-			lastdir &= ~(DIR_UP);
-			mapdir_set(&in->pos->dir, DIR_DOWN);
+			lastdir |= DIR_S;
+			lastdir &= ~(DIR_N);
+			mapdir_set(&in->pos->dir, DIR_S);
 		} else {
 			mapdir_unset(&in->pos->dir, DIR_ALL);
 		}
