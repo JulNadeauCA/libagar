@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.64 2002/07/22 05:50:38 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.65 2002/07/22 05:56:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -135,7 +135,7 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_F5:
 		pthread_mutex_lock(&view->lock);
 		if (view->rootmap != NULL) {
-			text_msg(2, TEXT_SLEEP, "Checking %s\n",
+			text_msg("Checking %s\n",
 			    OBJECT(view->rootmap->map)->name);
 			map_verify(view->rootmap->map);
 		}
@@ -150,8 +150,7 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_v:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
-			text_msg(10, TEXT_SLEEP,
-			    "AGAR engine v%s\n%s v%d.%d\n%s\n",
+			text_msg("AGAR engine v%s\n%s v%d.%d\n%s\n",
 			    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
 			    gameinfo->ver[1], gameinfo->copyright);
 		}
