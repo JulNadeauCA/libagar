@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.15 2004/03/25 09:00:33 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.16 2004/03/26 04:57:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -457,7 +457,7 @@ spinbutton_set_range(struct spinbutton *sbu, int nmin, int nmax)
 	minb = widget_get_binding(sbu, "min", &min);
 	maxb = widget_get_binding(sbu, "max", &max);
 	*min = nmin;
-	*max = nmin;
+	*max = nmax;
 	widget_binding_modified(minb);
 	widget_binding_modified(maxb);
 	widget_binding_unlock(minb);
