@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.15 2002/04/02 19:51:42 vedge Exp $	*/
+/*	$Csoft: char.h,v 1.16 2002/04/10 09:23:08 vedge Exp $	*/
 
 struct character {
 	struct	object obj;
@@ -9,6 +9,7 @@ struct character {
 	Uint32	seed;		/* Random seed */
 	
 	Uint32	flags;
+#define CHAR_FOCUS	0x0001	/* Focus on character */
 #define CHAR_DASH	0x0010	/* Boost timer temporarily */
 #define CHAR_REGEN	0x0020	/* HP regeneration */
 #define CHAR_POISON	0x0040	/* HP decay */
@@ -32,6 +33,8 @@ enum {
 	CHAR_UP,
 	CHAR_DOWN
 };
+
+#define CHAR(ob)	((struct character *)(ob))
 
 struct character *char_create(char *, char *, Uint32, Uint32, Uint32);
 int		  char_destroy(void *);
