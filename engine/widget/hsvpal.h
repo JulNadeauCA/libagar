@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.h,v 1.3 2005/02/18 12:04:37 vedge Exp $	*/
+/*	$Csoft: hsvpal.h,v 1.4 2005/03/06 03:49:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_HSVPAL_H_
@@ -10,6 +10,9 @@
 
 struct hsvpal {
 	struct widget	   wid;
+	int flags;
+#define HSVPAL_PIXEL	0x01	/* Edit the pixel binding */ 
+
 	float		   h, s, v, a;	/* Default bindings */
 	Uint32		   pixel;
 	SDL_PixelFormat	  *format;	/* Target pixel format */

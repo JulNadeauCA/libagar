@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.8 2005/03/06 04:30:20 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.9 2005/03/06 06:31:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -50,13 +50,6 @@ const struct widget_ops hsvpal_ops = {
 	hsvpal_scale
 };
 
-enum {
-	CIRCLE_COLOR,
-	TILE1_COLOR,
-	TILE2_COLOR,
-	CUR_COLOR
-};
-
 struct hsvpal *
 hsvpal_new(void *parent, SDL_PixelFormat *fmt)
 {
@@ -69,6 +62,36 @@ hsvpal_new(void *parent, SDL_PixelFormat *fmt)
 }
 
 static __inline__ void
+update_pixel_from_hsv(struct hsvpal *pal)
+{
+	float h, s, v, a;
+	Uint8 r, g, b;
+
+	h = widget_get_float(pal, "hue");
+	s = widget_get_float(pal, "saturation");
+	v = widget_get_float(pal, "value");
+	a = widget_get_float(pal, "alpha");
+
+	prim_hsv2rgb(h, s, v, &r, &g, &b);
+	widget_set_uint32(pal, "pixel",
+	    SDL_MapRGBA(pal->format, r, g, b, (Uint8)(a*255.0)));
+}
+
+static __inline__ void
+update_hsv_from_pixel(struct hsvpal *hsv, Uint32 pixel)
+{
+	Uint8 r, g, b, a;
+	float h, s, v;
+
+	SDL_GetRGBA(pixel, hsv->format, &r, &g, &b, &a);
+	prim_rgb2hsv(r, g, b, &h, &s, &v);
+	widget_set_float(hsv, "hue", h);
+	widget_set_float(hsv, "saturation", s);
+	widget_set_float(hsv, "value", v);
+	widget_set_float(hsv, "alpha", ((float)a)/255.0);
+}
+
+static __inline__ void
 update_h(struct hsvpal *pal, int x, int y)
 {
 	float h;
@@ -78,6 +101,7 @@ update_h(struct hsvpal *pal, int x, int y)
 		h += 2*M_PI;
 	}
 	widget_set_float(pal, "hue", h/(2*M_PI)*360.0);
+	update_pixel_from_hsv(pal);
 }
 
 static void
@@ -102,6 +126,7 @@ update_sv(struct hsvpal *pal, int ax, int ay)
 
 	widget_set_float(pal, "saturation", s);
 	widget_set_float(pal, "value", v);
+	update_pixel_from_hsv(pal);
 }
 
 static void
@@ -162,16 +187,8 @@ binding_changed(int argc, union evarg *argv)
 
 	if (bind->type == WIDGET_UINT32 &&
 	    strcmp(bind->name, "pixel") == 0) {
-		Uint8 r, g, b, a;
-		float h, s, v;
-		Uint32 pixel = *(Uint32 *)bind->p1;
-
-		SDL_GetRGBA(pixel, hsv->format, &r, &g, &b, &a);
-		prim_rgb2hsv(r, g, b, &h, &s, &v);
-		widget_set_float(hsv, "hue", h);
-		widget_set_float(hsv, "saturation", s);
-		widget_set_float(hsv, "value", v);
-		widget_set_float(hsv, "alpha", ((float)a)/255.0);
+		hsv->flags |= HSVPAL_PIXEL;
+		update_hsv_from_pixel(hsv, *(Uint32 *)bind->p1);
 	}
 	
 }
@@ -187,11 +204,6 @@ hsvpal_init(struct hsvpal *pal, SDL_PixelFormat *fmt)
 	widget_bind(pal, "value", WIDGET_FLOAT, &pal->v);
 	widget_bind(pal, "alpha", WIDGET_FLOAT, &pal->a);
 	widget_bind(pal, "pixel", WIDGET_UINT32, &pal->pixel);
-
-	widget_map_color(pal, CIRCLE_COLOR, "circle", 0, 0, 0, 255);
-	widget_map_color(pal, TILE1_COLOR, "tile1", 140, 140, 140, 255);
-	widget_map_color(pal, TILE2_COLOR, "tile2", 80, 80, 80, 255);
-	widget_map_color(pal, CUR_COLOR, "_current", 255, 255, 255, 255);
 
 	pal->format = fmt;
 	pal->h = 0.0;
@@ -243,16 +255,31 @@ void
 hsvpal_draw(void *p)
 {
 	struct hsvpal *pal = p;
-	float cur_h = widget_get_float(pal, "hue")/360.0 * (2*M_PI);
-	float cur_s = widget_get_float(pal, "saturation");
-	float cur_v = widget_get_float(pal, "value");
-	float cur_a = widget_get_float(pal, "alpha");
+	float cur_h, cur_s, cur_v;
 	float h;
 	Uint32 pc;
-	Uint8 r, g, b;
-	Uint8 a = (Uint8)(cur_a*255);
+	Uint8 r, g, b, a;
 	int x, y;
 	int i;
+
+#if 0
+	/* numerically instable */
+	if (pal->flags & HSVPAL_PIXEL) {
+		Uint32 pixel = widget_get_uint32(pal, "pixel");
+
+		SDL_GetRGBA(pixel, pal->format, &r, &g, &b, &a);
+		prim_rgb2hsv(r, g, b, &cur_h, &cur_s, &cur_v);
+	} else
+#else
+	{
+		cur_h = widget_get_float(pal, "hue");
+		cur_s = widget_get_float(pal, "saturation");
+		cur_v = widget_get_float(pal, "value");
+		a = (Uint8)(widget_get_float(pal, "alpha")*255);
+	}
+#endif
+	cur_h /= 360.0;
+	cur_h *= 2*M_PI;
 
 	SDL_LockSurface(view->v);
 	
@@ -301,7 +328,7 @@ hsvpal_draw(void *p)
 	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*cos(cur_h),
 	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*sin(cur_h),
 	    pal->selcircle_r,
-	    CIRCLE_COLOR);
+	    COLOR(HSVPAL_CIRCLE_COLOR));
 	
 	/* The rendering routine uses (v = 1 - x/h), so (x = -v*h + h). */
 	y = (int)((1.0 - cur_s) * (float)pal->triangle.h);
@@ -312,18 +339,19 @@ hsvpal_draw(void *p)
 	    pal->triangle.x + x - y/2,
 	    pal->triangle.y + y,
 	    pal->selcircle_r,
-	    CIRCLE_COLOR);
+	    COLOR(HSVPAL_CIRCLE_COLOR));
 
 	/* Draw the preview rectangle. */
 	prim_hsv2rgb((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
-	WIDGET_COLOR(pal,CUR_COLOR) = SDL_MapRGB(vfmt, r, g, b);
+	pc = SDL_MapRGB(vfmt, r, g, b);
 	if (a < 255) {
 		/* 
-		 * TODO optimize on the basis that the background is
+		 * TODO optimize blending on the basis that the background is
 		 * predictable.
 		 */
 		primitives.tiling(pal, pal->rpreview, 8, 8,
-		    TILE1_COLOR, TILE2_COLOR);
+		    COLOR(HSVPAL_TILE1_COLOR),
+		    COLOR(HSVPAL_TILE2_COLOR));
 		for (y = pal->rpreview.y + 5;
 		     y < pal->rpreview.y + pal->rpreview.h - 5;
 		     y++) {
@@ -340,7 +368,7 @@ hsvpal_draw(void *p)
 		primitives.rect_filled(pal,
 		    pal->rpreview.x, pal->rpreview.y,
 		    pal->rpreview.w, pal->rpreview.h,
-		    CUR_COLOR);
+		    pc);
 	}
 
 	{
@@ -368,8 +396,5 @@ hsvpal_draw(void *p)
 		    pal->rpreview.y + pal->rpreview.h/2 - sText->h/2);
 		SDL_FreeSurface(sText);
 	}
-
-	/* Update the pixel binding (hack). */
-	widget_set_uint32(pal, "pixel", SDL_MapRGBA(pal->format, r, g, b, a));
 }
 
