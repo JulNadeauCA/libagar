@@ -44,6 +44,7 @@ enum {
 
 static void	mapdir_change(struct mapdir *, struct noderef *);
 static void	mapdir_setsprite(struct mapdir *, Uint32, int);
+static int	mapdir_canmove(struct map *, Uint32, Uint32);
 
 void
 gendir_init(struct gendir *dir)
@@ -220,6 +221,18 @@ mapdir_change(struct mapdir *dir, struct noderef *nref)
 	}
 }
 
+static int
+mapdir_canmove(struct map *m, Uint32 x, Uint32 y)
+{
+	struct node *node = &m->map[x][y];
+
+	if (node->flags & NODE_BLOCK) {
+		return (0);
+	}
+
+	return (1);
+}
+
 /*
  * Update a map direction, and return a non-zero value if the map
  * coordinates have changed (so that the caller can move the reference).
@@ -250,6 +263,13 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		if (nref->yoffs < 0) {
 			if (nref->yoffs == -1) {	/* Once */
 				if (*mapy > 1) {
+					if (!mapdir_canmove(map, *mapx,
+					    *mapy - 1)) {
+						nref->yoffs = 0;
+						mapdir_setsprite(dir,
+						    DIR_SPRITE_UP, 0);
+						return (0);
+					}
 					map->map[*mapx][*mapy - 1].flags
 					    |= NODE_OVERLAP;
 				} else {
@@ -280,6 +300,13 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		if (nref->yoffs > 0) {
 			if (nref->yoffs == 1) {		/* Once */
 				if (*mapy + 1 < map->maph - 2) {
+					if (!mapdir_canmove(map, *mapx,
+					    *mapy + 1)) {
+						nref->yoffs = 0;
+						mapdir_setsprite(dir,
+						    DIR_SPRITE_DOWN, 0);
+						return (0);
+					}
 					map->map[*mapx][*mapy + 1].flags
 					    |= NODE_OVERLAP;
 				} else {
@@ -313,6 +340,13 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		if (nref->xoffs < 0) {
 			if (nref->xoffs == -1) {	/* Once */
 				if (*mapx > 1) {
+					if (!mapdir_canmove(map, *mapx - 1,
+					    *mapy)) {
+						nref->xoffs = 0;
+						mapdir_setsprite(dir,
+						    DIR_SPRITE_LEFT, 0);
+						return (0);
+					}
 					map->map[*mapx - 1][*mapy].flags
 					    |= NODE_OVERLAP;
 				} else {
@@ -344,6 +378,13 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		if (nref->xoffs > 0) {
 			if (nref->xoffs == 1) {		/* Once */
 				if (*mapx + 1 < map->mapw - 2) {
+					if (!mapdir_canmove(map, *mapx + 1,
+					    *mapy)) {
+						nref->xoffs = 0;
+						mapdir_setsprite(dir,
+						    DIR_SPRITE_RIGHT, 0);
+						return (0);
+					}
 					map->map[*mapx + 1][*mapy].flags
 					    |= NODE_OVERLAP;
 				} else {
