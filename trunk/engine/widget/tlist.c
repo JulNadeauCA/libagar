@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.2 2002/09/06 08:27:33 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.3 2002/09/07 04:34:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -160,7 +160,7 @@ tlist_draw(void *p)
 		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
 		    WIDGET_COLOR(tl, LINE_COLOR));
 
-		free(su);
+		SDL_FreeSurface(su);
 	}
 out:
 	pthread_mutex_unlock(&tl->items_lock);
