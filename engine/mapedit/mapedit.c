@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.2 2002/01/25 11:17:26 vedge Exp $	*/
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,7 +27,7 @@ static void	mapedit_examine(struct map *, int, int);
 static void	mapedit_pointer(struct object *, struct map_entry *, int);
 
 struct mapedit *
-mapedit_create(struct map *em, struct object *defobj)
+mapedit_create(struct map *em, int x, int y)
 {
 	struct mapedit *med;
 	struct fobj *fob;
@@ -48,7 +48,6 @@ mapedit_create(struct map *em, struct object *defobj)
 	med->obj.mapy = em->defy;
 
 	med->curobj = NULL;
-	med->curoffs = 1;
 	med->curflags = 0;
 	med->listwdir = 0;
 	med->listodir = 0;
@@ -87,7 +86,6 @@ mapedit_create(struct map *em, struct object *defobj)
 		if ((ob->flags & OBJ_EDITABLE) == 0) {
 			continue;
 		}
-		dprintf("add obj %s\n", ob->name);
 
 		eob = malloc(sizeof(struct editobj));
 		if (eob == NULL) {
@@ -101,12 +99,10 @@ mapedit_create(struct map *em, struct object *defobj)
 		eob->nanims = ob->nanims;
 		eob->nrefs = ob->nsprites + ob->nanims;
 
-#if 1
-		/* XXX is this parameter really useful? */
-		if (defobj && ob == defobj) {
+		if (i == 0) {
 			med->curobj = eob;
+			med->curoffs = 1;
 		}
-#endif
 
 		if (ob->nsprites > 0) {
 			int y;
@@ -160,8 +156,8 @@ mapedit_create(struct map *em, struct object *defobj)
 	curmapedit = med;
 
 	/* Position mapedit within its parent map, at the origin. */
-	med->obj.mapx = em->defx;
-	med->obj.mapy = em->defy - 1;
+	med->obj.mapx = x;
+	med->obj.mapy = y;
 
 	if (pthread_mutex_lock(&em->lock) == 0) {
 		struct map_entry *me;
