@@ -1,11 +1,10 @@
-# $Csoft: configure.in,v 1.73 2003/08/07 00:21:05 vedge Exp $
+# $Csoft: configure.in,v 1.74 2003/08/07 22:41:35 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
 REGISTER("--with-x11",		"X11-specific code [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
-REGISTER("--with-gettext",	"Use gettext tools [default: check]")
 REGISTER("--enable-edition",	"Graphical edition [default: yes]")
 REGISTER("--enable-debug",	"Engine debugging [default: yes]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
@@ -15,7 +14,6 @@ REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
-REGISTER("--enable-nls",	"Native Language Support [default: yes]")
 
 # System-wide data directory.
 MDEFINE(SHAREDIR, "$PREFIX/share/cave")
@@ -143,22 +141,5 @@ if [ "${enable_32bpp}" != "no" ]; then
 	HDEFINE(VIEW_32BPP, 1)
 else
 	HUNDEF(VIEW_32BPP)
-fi
-
-# Look for a gettext library (for build only; always use local libintl).
-if [ "${with_gettext}" != "no" ]; then
-	CHECK(gettext)
-else
-	HUNDEF(HAVE_GETTEXT)
-	MDEFINE(HAVE_GETTEXT, "no")
-fi
-
-# Enable multi-language support by default.
-if [ "${enable_nls}" != "no" ]; then
-	MDEFINE(ENABLE_NLS, "yes")
-	HDEFINE(ENABLE_NLS, 1)
-else
-	MDEFINE(ENABLE_NLS, "no")
-	HUNDEF(ENABLE_NLS)
 fi
 
