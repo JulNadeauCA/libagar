@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.12 2002/03/03 06:44:55 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.13 2002/03/05 17:02:24 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -20,6 +20,7 @@ struct viewport {
 	SDL_Rect **maprects;		/* Rectangles (optimization) */
 	SDL_Rect *rects;		/* List big enough to hold all
 					   possible rectangles in a view. */
+	pthread_mutex_t lock;		/* Lock on mask arrays */
 
 	SDL_Surface	*v;		/* Surface */
 };
