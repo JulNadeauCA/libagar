@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.105 2004/02/26 10:34:58 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.106 2004/03/12 02:51:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -178,7 +178,7 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.min-w", 320);
 	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
-	prop_set_uint8(con, "view.fps", 17);
+	prop_set_uint8(con, "view.fps", 15);
 
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
