@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.147 2003/09/14 02:29:52 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.148 2003/09/17 05:31:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -565,7 +565,8 @@ object_page_in(void *p, enum object_page_item item)
 		debug(DEBUG_PAGING, "gfx of %s: %s; used = %u++\n", ob->name,
 		    ob->gfx_name, ob->gfx_used);
 		if (ob->gfx_name == NULL) {
-			error_set(_("The `%s' object contains no graphics."));
+			error_set(_("The `%s' object contains no graphics."),
+			    ob->name);
 			goto fail;
 		}
 		if (gfx_fetch(ob) == -1) {
@@ -580,7 +581,8 @@ object_page_in(void *p, enum object_page_item item)
 		debug(DEBUG_PAGING, "audio of %s: %s; used = %u++\n", ob->name,
 		    ob->audio_name, ob->audio_used);
 		if (ob->gfx_name == NULL) {
-			error_set(_("The `%s' object contains no audio."));
+			error_set(_("The `%s' object contains no audio."),
+			    ob->name);
 			goto fail;
 		}
 		if (audio_fetch(ob) == -1) {
@@ -740,7 +742,8 @@ object_resolve_deps(void *p)
 		}
 		dprintf("%s: resolving `%s'\n", ob->name, dep->path);
 		if ((dep->obj = object_find(dep->path)) == NULL) {
-			error_set(_("%s: Cannot resolve dependency `%s'"));
+			error_set(_("%s: Cannot resolve dependency `%s'"),
+			    ob->name, dep->path);
 			return (-1);
 		}
 		free(dep->path);
