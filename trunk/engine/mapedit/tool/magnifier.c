@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.35 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.36 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,7 +101,7 @@ magnifier_init(void *p)
 	event_new(bu, "button-pushed", magnifier_zoom100, "%p", mag);
 
 	tbox = textbox_new(win, _("Zoom %: "));			/* XXX int */
-	event_new(tbox, "textbox-changed", magnifier_zoomN, "%p", mag);
+	event_new(tbox, "textbox-postchg", magnifier_zoomN, "%p", mag);
 	textbox_printf(tbox, "100");
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.18 2003/07/26 12:34:50 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.19 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -89,7 +89,9 @@ enum {
 	OBJEDIT_EDIT_OBJ,
 	OBJEDIT_LOAD,
 	OBJEDIT_SAVE,
-	OBJEDIT_DESTROY
+	OBJEDIT_DESTROY,
+	OBJEDIT_MOVE_UP,
+	OBJEDIT_MOVE_DOWN
 };
 
 /* Invoke a generic operation on the selected objects. */
@@ -126,6 +128,12 @@ invoke_op(int argc, union evarg *argv)
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
 			}
+			break;
+		case OBJEDIT_MOVE_UP:
+			object_move_up(ob);
+			break;
+		case OBJEDIT_MOVE_DOWN:
+			object_move_down(ob);
 			break;
 		case OBJEDIT_DESTROY:
 			if (it->p1 == world) {
@@ -201,7 +209,7 @@ objedit_window(void)
 	struct vbox *vb;
 	struct textbox *name_tb;
 	struct button *create_bu, *edit_bu, *oedit_bu, *load_bu, *save_bu,
-	    *destroy_bu;
+	    *destroy_bu, *mvup_bu, *mvdown_bu;
 	struct combo *types_com;
 	struct tlist *objs_tl;
 
@@ -217,6 +225,7 @@ objedit_window(void)
 
 		name_tb = textbox_new(vb, _("Name: "));
 		types_com = combo_new(vb, _("Type: "));
+		textbox_printf(types_com->tbox, "object");
 		for (i = 0; i < ntypesw; i++) {
 			char label[TLIST_LABEL_MAX];
 
@@ -224,18 +233,27 @@ objedit_window(void)
 			tlist_insert_item(types_com->list, NULL, label,
 			    &typesw[i]);
 		}
-		
+
 		hb = hbox_new(vb, BOX_HOMOGENOUS|HBOX_WFILL);
+		hbox_set_padding(hb, 1);
 		{
 			create_bu = button_new(hb, _("Create"));
 			edit_bu = button_new(hb, _("Edit"));
 			oedit_bu = button_new(hb, _("Edit obj"));
 			load_bu = button_new(hb, _("Load"));
 			save_bu = button_new(hb, _("Save"));
+		}
+
+		hb = hbox_new(vb, BOX_HOMOGENOUS|HBOX_WFILL);
+		hbox_set_padding(hb, 1);
+		{
+			mvup_bu = button_new(hb, _("Move up"));
+			mvdown_bu = button_new(hb, _("Move down"));
 			destroy_bu = button_new(hb, _("Destroy"));
 		}
+
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);
+		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
 
@@ -255,6 +273,11 @@ objedit_window(void)
 	    OBJEDIT_LOAD);
 	event_new(save_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
 	    OBJEDIT_SAVE);
+
+	event_new(mvup_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_MOVE_UP);
+	event_new(mvdown_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_MOVE_DOWN);
 	event_new(destroy_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
 	    OBJEDIT_DESTROY);
 
