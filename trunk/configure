@@ -68,6 +68,26 @@ if [ "$1" = "--version" ]; then
 echo "Manuconf v1.1"
 exit 1
 fi
+if [ -x "`which uname`" ]; then
+UNAME=`uname `
+else
+UNAME=""
+fi
+if [ "$UNAME" == "IRIX64" ]; then
+ARCH64=yes
+else
+NONE=1
+fi
+if [ -x "`which uname`" ]; then
+UNAME=`uname -m`
+else
+UNAME=""
+fi
+if [ "$UNAME" == "sparc64" ]; then
+ARCH64=yes
+else
+NONE=1
+fi
 echo -n "checking for SDL >= 1.2.0..."
 if [ -x "`which sdl-config`" ]; then
 SDL_VERSION=`sdl-config --version`
@@ -189,4 +209,4 @@ echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/config.h
 echo "#define PREFIX \"$PREFIX\"" >> engine/config.h
 echo "#endif /* PREFIX */" >> engine/config.h
-echo "Don't forget to run \"make depend\""
+echo "Don't forget to run \"make depend\"."
