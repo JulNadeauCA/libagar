@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.246 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.247 2005/03/10 09:43:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -174,6 +174,10 @@ window_init(void *p, const char *name, int flags)
 	win->minw = win->xpadding*2 + 16;
 	win->minh = win->ypadding_top + win->ypadding_bot +
 	            text_font_height + 16;
+	win->savx = -1;
+	win->savy = -1;
+	win->savw = -1;
+	win->savh = -1;
 	TAILQ_INIT(&win->subwins);
 	pthread_mutex_init(&win->lock, &recursive_mutexattr);
 	
@@ -185,7 +189,7 @@ window_init(void *p, const char *name, int flags)
 		titlebar_flags |= TITLEBAR_NO_CLOSE;
 	if (flags & WINDOW_NO_MINIMIZE)
 		titlebar_flags |= TITLEBAR_NO_MINIMIZE;
-	if ((flags & WINDOW_MAXIMIZE) == 0)
+	if (flags & WINDOW_NO_MAXIMIZE)
 		titlebar_flags |= TITLEBAR_NO_MAXIMIZE;
 
 	win->tbar = (flags & WINDOW_NO_TITLEBAR) ? NULL :

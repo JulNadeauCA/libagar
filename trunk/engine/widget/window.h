@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.86 2005/03/09 06:39:21 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.87 2005/03/10 09:43:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -35,13 +35,13 @@ struct window {
 #define WINDOW_HIDE		0x0010	/* Hide on window-close */
 #define WINDOW_DETACH		0x0020	/* Detach on window-close */
 #define WINDOW_MAXIMIZED	0x0040	/* Window is maximized */
-#define WINDOW_MINIMIZED	0x0080	/* Window is minimized */
+#define WINDOW_ICONIFIED	0x0080	/* Window is minimized */
 #define WINDOW_NO_HRESIZE	0x0100	/* Disable horizontal resize */
 #define WINDOW_NO_VRESIZE	0x0200	/* Disable vertical resize */
 #define WINDOW_NO_RESIZE	(WINDOW_NO_HRESIZE|WINDOW_NO_VRESIZE)
 #define WINDOW_NO_CLOSE		0x0400	/* Disable close button */
 #define WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
-#define WINDOW_MAXIMIZE		0x1000	/* Enable maximize button */
+#define WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
 #define WINDOW_MODAL		0x2000	/* Modal window behavior */
 
 #ifdef DEBUG
@@ -56,6 +56,8 @@ struct window {
 	int xpadding;				/* Window padding (px) */
 	int ypadding_top, ypadding_bot;
 	int minw, minh;				/* Minimum geometry (px) */
+	int savx, savy;				/* Saved coordinates (px) */
+	int savw, savh;				/* Saved geometry (px) */
 	
 	TAILQ_HEAD(,window) subwins;		/* Sub-windows */
 	TAILQ_ENTRY(window) windows;		/* Active window list */

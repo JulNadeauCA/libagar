@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.h,v 1.3 2004/09/16 04:07:09 vedge Exp $	*/
+/*	$Csoft: titlebar.h,v 1.4 2004/09/25 01:57:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TITLEBAR_H_
@@ -12,22 +12,22 @@
 
 struct titlebar {
 	struct box hb;
-
-	int	flags;
+	int flags;
 #define TITLEBAR_NO_CLOSE	0x01
 #define TITLEBAR_NO_MINIMIZE	0x02
 #define TITLEBAR_NO_MAXIMIZE	0x04
-	int	pressed;
-
-	struct window	*win;		/* Back pointer to window */
-	struct label	*label;		/* Caption label */
-	struct button	*close_bu;	/* Closure button */
-	struct button	*hide_bu;	/* Iconification button */
+	int pressed;
+	struct window *win;		/* Back pointer to window */
+	struct label *label;
+	struct button *close_btn;
+	struct button *minimize_btn;
+	struct button *maximize_btn;
 };
 
 enum {
 	TITLEBAR_CLOSE_ICON,
-	TITLEBAR_HIDE_ICON
+	TITLEBAR_MINIMIZE_ICON,
+	TITLEBAR_MAXIMIZE_ICON,
 };
 
 __BEGIN_DECLS
