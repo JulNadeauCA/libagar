@@ -1,5 +1,7 @@
-/*	$Csoft: magnifier.h,v 1.7 2003/02/22 11:44:05 vedge Exp $	*/
+/*	$Csoft: magnifier.h,v 1.8 2003/03/16 02:58:20 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 struct magnifier {
 	struct tool	tool;

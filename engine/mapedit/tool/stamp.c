@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.36 2003/03/20 01:17:51 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.37 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,22 +27,12 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/version.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include "stamp.h"
+
 #include <engine/widget/radio.h>
 #include <engine/widget/text.h>
 #include <engine/widget/checkbox.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include <libfobj/fobj.h>
-
-#include "tool.h"
-#include "stamp.h"
 
 static const struct tool_ops stamp_ops = {
 	{
@@ -62,7 +52,6 @@ stamp_init(void *p)
 	struct stamp *stamp = p;
 
 	tool_init(&stamp->tool, "stamp", &stamp_ops);
-
 	stamp->mode = STAMP_REPLACE;
 	stamp->inherit_flags = 1;
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.25 2003/03/13 22:43:53 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.26 2003/03/25 09:37:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 
 #ifdef THREADS
@@ -43,7 +44,7 @@ extern char *engine_errorkey;		/* engine.c */
 #endif
 
 void *
-emalloc(size_t len)
+Malloc(size_t len)
 {
 	void *p;
 
@@ -55,7 +56,7 @@ emalloc(size_t len)
 }
 
 void *
-erealloc(void *ptr, size_t len)
+Realloc(void *ptr, size_t len)
 {
 	void *p;
 
@@ -172,7 +173,7 @@ Strdup(const char *s)
 	char *ns;
 	
 	len = strlen(s) + 1;
-	ns = emalloc(len);
+	ns = Malloc(len);
 	strlcpy(ns, s, len);
 	return (ns);
 }

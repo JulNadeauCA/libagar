@@ -1,4 +1,4 @@
-/*	$Csoft: strlcat.c,v 1.1 2002/08/23 10:14:35 vedge Exp $	*/
+/*	$Csoft: strlcat.c,v 1.2 2002/12/24 10:29:21 vedge Exp $	*/
 /*	$OpenBSD: strlcat.c,v 1.8 2001/05/13 15:40:15 deraadt Exp $	*/
 
 /*
@@ -32,7 +32,6 @@
 
 #ifndef HAVE_STRLCAT
 
-#include <sys/types.h>
 #include <string.h>
 
 #include "strlcat.h"

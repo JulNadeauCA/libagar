@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.28 2003/02/04 02:39:41 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.29 2003/03/13 08:43:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,12 +26,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/snprintf.h>
+
 #include <engine/engine.h>
 #include <engine/view.h>
 
-#include "text.h"
-#include "widget.h"
-#include "window.h"
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
 
 static const struct object_ops region_ops = {
 	region_destroy,
@@ -47,7 +48,7 @@ region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 
 	OBJECT_ASSERT(parent, "window");
 
-	reg = emalloc(sizeof(struct region));
+	reg = Malloc(sizeof(struct region));
 	region_init(reg, flags, rx, ry, rw, rh);
 	window_attach(win, reg);
 	return (reg);
@@ -57,16 +58,15 @@ void
 region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 {
 	static pthread_mutex_t curreg_lock = PTHREAD_MUTEX_INITIALIZER;
-	static unsigned int curreg = 0;
-	char *name;
+	static Uint32 curreg = 0;
+	char name[OBJECT_NAME_MAX];
 
 	pthread_mutex_lock(&curreg_lock);
 	curreg++;
 	pthread_mutex_unlock(&curreg_lock);
 
-	Asprintf(&name, "region%u", curreg);
+	snprintf(name, sizeof(name), "region%u", curreg);
 	object_init(&reg->obj, "window-region", name, NULL, 0, &region_ops);
-	free(name);
 
 	reg->flags = (flags != 0) ? flags : REGION_HALIGN;
 	reg->rx = rx;

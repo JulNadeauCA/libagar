@@ -1,4 +1,4 @@
-/*	$Csoft: timer.c,v 1.1 2003/01/19 12:11:22 vedge Exp $	*/
+/*	$Csoft: timer.c,v 1.2 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -26,10 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "engine.h"
+#include <engine/engine.h>
 
-#include "timer.h"
-#include "world.h"
+#include <engine/timer.h>
+#include <engine/world.h>
 
 #ifdef DEBUG
 #define DEBUG_TIMERS	0x01
@@ -51,7 +51,7 @@ timer_new(const char *name, Uint32 ival, Uint32 (*callback)(Uint32, void *),
 {
 	struct timer *timer;
 
-	timer = emalloc(sizeof(struct timer));
+	timer = Malloc(sizeof(struct timer));
 	timer_init(timer, name, ival, callback, arg);
 
 	world_attach(timer);

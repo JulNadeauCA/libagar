@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.35 2003/01/23 01:52:46 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.36 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,14 +29,19 @@
 #include <engine/compat/vasprintf.h>
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "primitive.h"
-#include "text.h"
-#include "widget.h"
-#include "window.h"
+#include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
+#include <engine/widget/region.h>
+
 #include "checkbox.h"
+
+#include <engine/widget/window.h>
+
+#include <stdarg.h>
+#include <string.h>
+#include <errno.h>
 
 static struct widget_ops checkbox_ops = {
 	{
@@ -67,7 +72,7 @@ checkbox_new(struct region *reg, int rh, const char *caption_fmt, ...)
 	Vasprintf(&caption, caption_fmt, ap);
 	va_end(ap);
 
-	cb = emalloc(sizeof(struct checkbox));
+	cb = Malloc(sizeof(struct checkbox));
 	checkbox_init(cb, rh, caption);
 	region_attach(reg, cb);
 

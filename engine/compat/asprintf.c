@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.c,v 1.2 2002/12/24 10:29:21 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.3 2003/01/01 05:18:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,7 +30,8 @@
 
 #ifndef HAVE_ASPRINTF
 
-#include <unistd.h>
+#include <sys/types.h>
+
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -48,7 +49,7 @@ asprintf(char **ret, const char *fmt, ...)
 
 	/* Make a guess, might save one call. */
 	buflen = strlen(fmt) + 128;
-	buf = emalloc(buflen);
+	buf = Malloc(buflen);
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);
@@ -58,7 +59,7 @@ asprintf(char **ret, const char *fmt, ...)
 	}
 
 	/* Too large. */
-	buf = erealloc(buf, size);
+	buf = Realloc(buf, size);
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);

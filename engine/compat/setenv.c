@@ -1,4 +1,4 @@
-/*	$Csoft: setenv.c,v 1.2 2002/08/23 09:54:37 vedge Exp $	*/
+/*	$Csoft: setenv.c,v 1.3 2002/12/24 10:29:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 1987 Regents of the University of California.
@@ -36,6 +36,8 @@
 #include <config/have_setenv.h>
 
 #ifndef HAVE_SETENV
+
+#include <sys/types.h>
 
 #include "setenv.h"
 

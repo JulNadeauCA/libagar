@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.24 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.25 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,18 +27,11 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
+#include "propedit.h"
+
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include "tool.h"
-#include "propedit.h"
 
 static const struct tool_ops propedit_ops = {
 	{

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.44 2003/03/15 00:45:46 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.45 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,14 +27,16 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "primitive.h"
-#include "text.h"
-#include "widget.h"
-#include "window.h"
 #include "tlist.h"
+
+#include <engine/widget/primitive.h>
+#include <engine/widget/text.h>
+#include <engine/widget/region.h>
+#include <engine/widget/window.h>
+
+#include <string.h>
 
 static struct widget_ops tlist_ops = {
 	{
@@ -70,11 +72,9 @@ tlist_new(struct region *reg, int rw, int rh, int flags)
 {
 	struct tlist *tl;
 
-	tl = emalloc(sizeof(struct tlist));
+	tl = Malloc(sizeof(struct tlist));
 	tlist_init(tl, rw, rh, flags);
-
 	region_attach(reg, tl);
-
 	return (tl);
 }
 
@@ -100,7 +100,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	pthread_mutexattr_settype(&tl->items_lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&tl->items_lock, &tl->items_lockattr);
 
-	tl->vbar = emalloc(sizeof(struct scrollbar));
+	tl->vbar = Malloc(sizeof(struct scrollbar));
 	scrollbar_init(tl->vbar, -1, -1, SCROLLBAR_VERT);
 	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
@@ -324,7 +324,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 {
 	struct tlist_item *it;
 
-	it = emalloc(sizeof(struct tlist_item));
+	it = Malloc(sizeof(struct tlist_item));
 	it->icon = NULL;
 	it->selected = 0;
 	it->text = Strdup(text);

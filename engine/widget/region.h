@@ -1,5 +1,8 @@
-/*	$Csoft: region.h,v 1.9 2003/03/11 00:13:33 vedge Exp $	*/
+/*	$Csoft: region.h,v 1.10 2003/03/23 04:54:32 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_REGION_H_
+#define _AGAR_WIDGET_REGION_H_
 
 TAILQ_HEAD(widgetsq, widget);
 
@@ -41,3 +44,4 @@ void		 region_attach(void *, void *);
 void		 region_detach(void *, void *);
 void		 region_set_spacing(struct region *, Uint8, Uint8);
 
+#endif /* _AGAR_WIDGET_REGION_H_ */

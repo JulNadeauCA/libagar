@@ -1,5 +1,7 @@
-/*	$Csoft: stamp.h,v 1.10 2003/03/05 02:16:34 vedge Exp $	*/
+/*	$Csoft: stamp.h,v 1.11 2003/03/13 00:02:21 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 enum stamp_mode {
 	STAMP_REPLACE,

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.113 2003/03/22 04:26:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.114 2003/03/24 12:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,20 +26,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
+#include <engine/compat/snprintf.h>
 #include <engine/compat/strlcat.h>
-#include <engine/compat/strlcpy.h>
 
 #include <engine/engine.h>
 #include <engine/version.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <fcntl.h>
-
-#include <libfobj/fobj.h>
-
 #include <engine/config.h>
 #include <engine/map.h>
 #include <engine/physics.h>
@@ -47,6 +38,14 @@
 #include <engine/view.h>
 #include <engine/rootmap.h>
 #include <engine/world.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 static const struct object_ops null_ops = {
 	NULL,	/* destroy */
@@ -68,13 +67,12 @@ object_new(char *type, char *name, char *media, int flags, const void *opsp)
 {
 	struct object *ob;
 
-	ob = emalloc(sizeof(struct object));
+	ob = Malloc(sizeof(struct object));
 	object_init(ob, type, name, media, flags, opsp);
 
 	pthread_mutex_lock(&world->lock);
 	world_attach(ob);
 	pthread_mutex_unlock(&world->lock);
-
 	return (ob);
 }
 
@@ -363,7 +361,7 @@ object_set_position(void *p, struct noderef *nref, struct map *m,
 		debug(DEBUG_POSITION,
 		    "%s: new position on %s:%d,%d\n", ob->name,
 		    OBJECT(m)->name, x, y);
-		ob->pos = emalloc(sizeof(struct mappos));
+		ob->pos = Malloc(sizeof(struct mappos));
 		ob->pos->input = NULL;
 		mapdir_init(&ob->pos->dir, ob, m, DIR_SOFTSCROLL, 1);
 	} else {
@@ -449,7 +447,7 @@ object_table_new(void)
 {
 	struct object_table *obt;
 
-	obt = emalloc(sizeof(struct object_table));
+	obt = Malloc(sizeof(struct object_table));
 	obt->objs = NULL;
 	obt->used = NULL;
 	obt->nobjs = 0;
@@ -469,13 +467,13 @@ void
 object_table_insert(struct object_table *obt, struct object *obj)
 {
 	if (obt->objs != NULL) {
-		obt->objs = erealloc(obt->objs, (obt->nobjs + 1) *
+		obt->objs = Realloc(obt->objs, (obt->nobjs + 1) *
 		    sizeof(struct object *));
-		obt->used = erealloc(obt->used, (obt->nobjs + 1) *
+		obt->used = Realloc(obt->used, (obt->nobjs + 1) *
 		    sizeof(int));
 	} else {
-		obt->objs = emalloc(sizeof(struct object *));
-		obt->used = emalloc(sizeof(int));
+		obt->objs = Malloc(sizeof(struct object *));
+		obt->used = Malloc(sizeof(int));
 	}
 	obt->objs[obt->nobjs] = obj;
 	obt->used[obt->nobjs] = 0;

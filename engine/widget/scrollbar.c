@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.17 2003/03/13 03:22:03 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.18 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,13 +27,13 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/view.h>
 
-#include "widget.h"
-#include "window.h"
 #include "scrollbar.h"
-#include "primitive.h"
+
+#include <engine/widget/primitive.h>
+#include <engine/widget/region.h>
+#include <engine/widget/window.h>
 
 static const struct widget_ops scrollbar_ops = {
 	{
@@ -70,11 +70,9 @@ scrollbar_new(struct region *reg, int w, int h,
 {
 	struct scrollbar *sb;
 
-	sb = emalloc(sizeof(struct scrollbar));
+	sb = Malloc(sizeof(struct scrollbar));
 	scrollbar_init(sb, w, h, orient);
-
 	region_attach(reg, sb);
-
 	return (sb);
 }
 

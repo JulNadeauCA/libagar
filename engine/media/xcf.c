@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.20 2003/03/22 04:16:35 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.21 2003/03/24 12:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -34,7 +34,9 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 
-#include <libfobj/fobj.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "xcf.h"
 
@@ -100,7 +102,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	switch (prop->id) {
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
 		prop->data.colormap.size = read_uint32(fd);
-		prop->data.colormap.data = emalloc(prop->data.colormap.size*3);
+		prop->data.colormap.data = Malloc(prop->data.colormap.size*3);
 		Read(fd, prop->data.colormap.data, prop->data.colormap.size*3);
 		debug(DEBUG_COLORMAPS, "%u-entry colormap\n",
 		    prop->data.colormap.size);
@@ -160,7 +162,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		prop->data.parasite.name = read_string(fd, NULL);
 		prop->data.parasite.flags = read_uint32(fd);
 		prop->data.parasite.size = read_uint32(fd);
-		prop->data.parasite.data = emalloc(prop->data.parasite.size);
+		prop->data.parasite.data = Malloc(prop->data.parasite.size);
 		Read(fd, prop->data.parasite.data, prop->data.parasite.size);
 		debug_n(DEBUG_PARASITES, "parasite: %s (flags 0x%X size %u)",
 		    prop->data.parasite.name, prop->data.parasite.flags,
@@ -199,7 +201,7 @@ xcf_read_tile_flat(int fd, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
 
-	load = emalloc(len);
+	load = Malloc(len);
 	Read(fd, load, len);
 	return (load);
 }
@@ -211,7 +213,7 @@ xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 	Uint8 *tilep, *tile, *data;
 	ssize_t rv;
 
-	tilep = tile = emalloc(len);
+	tilep = tile = Malloc(len);
 	rv = read(fd, tile, len);
 	if (rv == -1) {
 		error_set("read(%ld): %s", (long)len, strerror(errno));
@@ -224,7 +226,7 @@ xcf_read_tile_rle(int fd, Uint32 len, int bpp, int x, int y)
 	}
 #endif
 
-	data = emalloc(x * y * bpp);
+	data = Malloc(x * y * bpp);
 	for (i = 0; i < bpp; i++) {
 		Uint8 *d = &data[i];
 	
@@ -363,20 +365,20 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 
 	/* Read the hierarchy. */
 	Lseek(fd, xcfoffs + layer->hierarchy_offset, SEEK_SET);
-	hier = emalloc(sizeof(struct xcf_hierarchy));
+	hier = Malloc(sizeof(struct xcf_hierarchy));
 	hier->w = read_uint32(fd);
 	hier->h = read_uint32(fd);
 	hier->bpp = read_uint32(fd);
 
 	/* Read the level offsets. */
-	hier->level_offsets = emalloc(LEVEL_OFFSETS_INIT * sizeof(Uint32));
+	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT * sizeof(Uint32));
 	hier->maxlevel_offsets = LEVEL_OFFSETS_INIT;
 	hier->nlevel_offsets = 0;
 	i = 0;
 	for (;;) {
 		if (hier->nlevel_offsets+1 >= hier->maxlevel_offsets) {
 			hier->maxlevel_offsets += LEVEL_OFFSETS_GROW;
-			hier->level_offsets = erealloc(hier->level_offsets,
+			hier->level_offsets = Realloc(hier->level_offsets,
 			    hier->maxlevel_offsets * sizeof(Uint32));
 		}
 		if ((hier->level_offsets[hier->nlevel_offsets] =
@@ -392,10 +394,10 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 		int j;
 
 		Lseek(fd, xcfoffs + hier->level_offsets[i], SEEK_SET);
-		level = emalloc(sizeof(struct xcf_level));
+		level = Malloc(sizeof(struct xcf_level));
 		level->w = read_uint32(fd);
 		level->h = read_uint32(fd);
-		level->tile_offsets = emalloc(TILE_OFFSETS_INIT *
+		level->tile_offsets = Malloc(TILE_OFFSETS_INIT *
 		    sizeof(Uint32));
 		level->maxtile_offsets = TILE_OFFSETS_INIT;
 		level->ntile_offsets = 0;
@@ -403,7 +405,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 		for (;;) {
 			if (level->ntile_offsets+1 >= level->maxtile_offsets) {
 				level->maxtile_offsets += TILE_OFFSETS_GROW;
-				level->tile_offsets = erealloc(
+				level->tile_offsets = Realloc(
 				    level->tile_offsets,
 				    level->maxtile_offsets * sizeof(Uint32));
 			}
@@ -560,7 +562,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	Lseek(fd, xcf_offs + XCF_MAGIC_LEN, SEEK_SET);
 
 	/* Read the XCF header. */
-	head = emalloc(sizeof(struct xcf_header));
+	head = Malloc(sizeof(struct xcf_header));
 	head->w = read_uint32(fd);
 	head->h = read_uint32(fd);
 	if (head->w > 65536 || head->h > 65536) {
@@ -595,7 +597,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 			break;
 		case PROP_COLORMAP:
 			head->colormap.size = prop.data.colormap.size;
-			head->colormap.data = emalloc(3 * head->colormap.size);
+			head->colormap.data = Malloc(3 * head->colormap.size);
 			memcpy(head->colormap.data, prop.data.colormap.data,
 			    3 * head->colormap.size);
 			break;
@@ -609,7 +611,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	offsets = 0;
 	for (offsets = 0; (offset = read_uint32(fd)) != 0; offsets++) {
 		/* XXX inefficient */
-		head->layer_offstable = erealloc(head->layer_offstable,
+		head->layer_offstable = Realloc(head->layer_offstable,
 		    sizeof(Uint32) * (offsets + 1));
 		head->layer_offstable[offsets] = offset;
 	}
@@ -621,7 +623,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		SDL_Surface *su;
 
 		Lseek(fd, xcf_offs + head->layer_offstable[i - 1], SEEK_SET);
-		layer = emalloc(sizeof(struct xcf_layer));
+		layer = Malloc(sizeof(struct xcf_layer));
 		layer->w = read_uint32(fd);
 		layer->h = read_uint32(fd);
 		layer->layer_type = read_uint32(fd);

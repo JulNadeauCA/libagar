@@ -1,5 +1,7 @@
-/*	$Csoft: shift.h,v 1.4 2003/03/07 03:24:49 vedge Exp $	*/
+/*	$Csoft: shift.h,v 1.5 2003/03/16 02:39:14 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 enum shift_mode {
 	SHIFT_HIGHEST,

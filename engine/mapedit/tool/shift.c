@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.12 2003/03/18 06:34:50 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.13 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,21 +27,10 @@
  */
 
 #include <engine/engine.h>
-#include <engine/map.h>
 
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/scrollbar.h>
-#include <engine/widget/text.h>
-#include <engine/widget/tlist.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/checkbox.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include "tool.h"
 #include "shift.h"
+
+#include <engine/widget/radio.h>
 
 static const struct tool_ops shift_ops = {
 	{

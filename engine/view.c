@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.115 2003/03/22 04:24:48 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.116 2003/03/24 12:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,18 +26,18 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/strlcpy.h>
-#include <engine/compat/strlcat.h>
 #include <config/have_jpeg.h>
+#include <engine/compat/snprintf.h>
+#include <engine/compat/strlcat.h>
 
 #include <engine/engine.h>
-
 #include <engine/rootmap.h>
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/config.h>
 #include <engine/view.h>
 #include <engine/world.h>
+#include <engine/prop.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
@@ -47,9 +47,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #ifdef HAVE_JPEG
 #include <jpeglib.h>
@@ -86,7 +89,7 @@ view_init(enum gfx_engine ge)
 		return (-1);
 	}
 
-	v = emalloc(sizeof(struct viewport));
+	v = Malloc(sizeof(struct viewport));
 	object_init(&v->obj, "view-port", "view", NULL,
 	    OBJECT_STATIC, &viewport_ops);
 	v->gfx_engine = ge;
@@ -94,7 +97,7 @@ view_init(enum gfx_engine ge)
 	v->winop = VIEW_WINOP_NONE;
 	v->ndirty = 0;
 	v->maxdirty = VIEW_NDIRTY_RECTS;
-	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
+	v->dirty = Malloc(v->maxdirty * sizeof(SDL_Rect *));
 	v->opengl = 0;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
@@ -126,7 +129,7 @@ view_init(enum gfx_engine ge)
 		dprintf("rounded resolution to %dx%d\n", v->w, v->h);
 
 		/* Initialize the map display. */
-		v->rootmap = emalloc(sizeof(struct viewmap));
+		v->rootmap = Malloc(sizeof(struct viewmap));
 		rootmap_init(v->rootmap, v->w / TILEW, v->h / TILEH);
 		break;
 	case GFX_ENGINE_GUI:
@@ -630,7 +633,7 @@ view_capture(SDL_Surface *su)
 	jpeg_set_quality(&jcomp, 75, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = emalloc(su->w * 3);
+	jcopybuf = Malloc(su->w * 3);
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {

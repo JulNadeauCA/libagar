@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.1 2003/03/20 01:17:06 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.2 2003/03/20 03:21:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <jpeglib.h>
 
@@ -104,7 +105,7 @@ screenshot_xmit(int fd)
 	jpeg_set_quality(&jcomp, 75, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = emalloc(srcsu->w * 3);
+	jcopybuf = Malloc(srcsu->w * 3);
 
 	for (;;) {
 		JSAMPROW row[1];

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.172 2003/03/22 04:27:53 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.173 2003/03/24 12:08:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,11 +26,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/asprintf.h>
+#include <engine/compat/snprintf.h>
 #include <engine/compat/vasprintf.h>
 
 #include <engine/engine.h>
-
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/config.h>
@@ -39,12 +38,14 @@
 
 #include <engine/mapedit/mapedit.h>
 
-#include <libfobj/fobj.h>
+#include <engine/widget/text.h>
+#include <engine/widget/primitive.h>
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
 
-#include "text.h"
-#include "widget.h"
-#include "window.h"
-#include "primitive.h"
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
 
 static const struct version window_ver = {
 	"agar window",
@@ -97,10 +98,9 @@ window_new(char *name, int flags, int x, int y, int w, int h,
 {
 	struct window *win;
 
-	win = emalloc(sizeof(struct window));
+	win = Malloc(sizeof(struct window));
 	window_init(win, name, flags, x, y, w, h, minw, minh);
 	window_clamp(win);
-
 	view_attach(win);			/* Attach to view */
 	return (win);
 }
@@ -138,7 +138,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 		name = NULL;
 	}
 
-	win = emalloc(sizeof(struct window));
+	win = Malloc(sizeof(struct window));
 
 	/* Initialize the window, figure out the initial coordinates. */
 	pthread_mutex_lock(&genlock);
@@ -177,7 +177,6 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 		static pthread_mutex_t curwindow_lock =
 		    PTHREAD_MUTEX_INITIALIZER;
 
-		/* XXX ugly */
 		pthread_mutex_lock(&curwindow_lock);
 		curwindow++;
 		pthread_mutex_unlock(&curwindow_lock);
@@ -222,7 +221,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 	/* XXX pref */
 	win->borderw = default_nborder;
-	win->border = emalloc(win->borderw * sizeof(Uint32));
+	win->border = Malloc(win->borderw * sizeof(Uint32));
 	for (i = 0; i < win->borderw; i++) {
 		win->border[i] = SDL_MapRGB(view->v->format,
 		    default_border[i].r, default_border[i].g,

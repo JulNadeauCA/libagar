@@ -1,5 +1,7 @@
-/*	$Csoft: resize.h,v 1.5 2003/02/22 11:44:05 vedge Exp $	*/
+/*	$Csoft: resize.h,v 1.6 2003/03/13 08:27:01 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 struct resize {
 	struct tool	tool;

@@ -1,5 +1,7 @@
-/*	$Csoft: propedit.h,v 1.5 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: propedit.h,v 1.6 2003/02/10 23:05:19 vedge Exp $	*/
 /*	Public domain	*/
+
+#include <engine/mapedit/tool/tool.h>
 
 enum propedit_mode {
 	PROPEDIT_CLEAR,

@@ -1,4 +1,4 @@
-/*	$Csoft: selops.c,v 1.2 2003/03/13 08:38:12 vedge Exp $	*/
+/*	$Csoft: selops.c,v 1.3 2003/03/16 04:08:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -31,9 +31,9 @@
 
 #include <engine/widget/text.h>
 
-#include "mapedit.h"
-#include "mapview.h"
-#include "selops.h"
+#include <engine/mapedit/mapedit.h>
+#include <engine/mapedit/mapview.h>
+#include <engine/mapedit/selops.h>
 
 void
 selops_cut(struct mapview *mv)

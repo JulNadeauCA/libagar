@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.38 2003/03/09 23:34:03 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.39 2003/03/24 12:08:45 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,20 +26,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-
 #include <config/view_8bpp.h>
 #include <config/view_16bpp.h>
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
 
+#include <engine/engine.h>
 #include <engine/view.h>
 
-#include "widget.h"
-#include "window.h"
-#include "label.h"
-#include "tlist.h"
-#include "primitive.h"
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/tlist.h>
+#include <engine/widget/primitive.h>
 
 static void	apply(int, union evarg *);
 

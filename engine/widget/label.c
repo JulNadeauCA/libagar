@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.58 2003/03/22 05:19:43 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.59 2003/03/25 05:18:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,14 +30,18 @@
 #include <engine/compat/vasprintf.h>
 #include <engine/compat/strlcat.h>
 #include <engine/compat/strlcpy.h>
-#include <engine/engine.h>
 
+#include <engine/engine.h>
 #include <engine/view.h>
 
-#include "text.h"
-#include "widget.h"
-#include "window.h"
+#include <engine/widget/text.h>
+#include <engine/widget/region.h>
+
 #include "label.h"
+
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
 
 static const struct widget_ops label_ops = {
 	{
@@ -64,13 +68,10 @@ label_new(struct region *reg, int w, int h, const char *fmt, ...)
 	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
-	label = emalloc(sizeof(struct label));
+	label = Malloc(sizeof(struct label));
 	label_init(label, LABEL_STATIC, buf, w, h);
-
 	free(buf);
-
 	region_attach(reg, label);
-
 	return (label);
 }
 
@@ -141,7 +142,7 @@ label_polled_new(struct region *reg, int w, int h, pthread_mutex_t *mutex,
 	va_list args;
 	const char *p;
 
-	label = emalloc(sizeof(struct label));
+	label = Malloc(sizeof(struct label));
 	label_init(label, LABEL_POLLED, fmt, w, h);
 
 	label->poll.lock = mutex;
@@ -191,7 +192,7 @@ label_printf(struct label *label, const char *fmt, ...)
 	pthread_mutex_lock(&label->text.lock);
 
 	/* Update the string. */
-	label->text.caption = erealloc(label->text.caption, sl);
+	label->text.caption = Realloc(label->text.caption, sl);
 	strlcpy(label->text.caption, buf, sl+1);
 	free(buf);
 

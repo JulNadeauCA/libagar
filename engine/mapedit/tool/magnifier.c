@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.22 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.23 2003/03/24 12:08:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,19 +28,10 @@
 
 #include <engine/engine.h>
 
-#include <engine/map.h>
-
-#include <engine/widget/widget.h>
-#include <engine/widget/window.h>
-#include <engine/widget/textbox.h>
-#include <engine/widget/radio.h>
-#include <engine/widget/button.h>
-
-#include <engine/mapedit/mapedit.h>
-#include <engine/mapedit/mapview.h>
-
-#include "tool.h"
 #include "magnifier.h"
+
+#include <engine/widget/textbox.h>
+#include <engine/widget/button.h>
 
 static const struct tool_ops magnifier_ops = {
 	{

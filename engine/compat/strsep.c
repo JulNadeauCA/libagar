@@ -1,4 +1,4 @@
-/*	$Csoft: strsep.c,v 1.1 2002/08/23 10:14:35 vedge Exp $	*/
+/*	$Csoft: strsep.c,v 1.2 2002/12/24 10:29:21 vedge Exp $	*/
 /*	$OpenBSD: strsep.c,v 1.3 1997/08/20 04:28:14 millert Exp $	*/
 
 /*-
@@ -38,10 +38,9 @@
 
 #ifndef HAVE_STRSEP
 
-#include <string.h>
-#include <stdio.h>
-
 #include "strsep.h"
+
+#include <stdio.h>
 
 /*
  * Get next token from string *stringp, where tokens are possibly-empty
@@ -80,7 +79,6 @@ strsep(char **stringp, const char *delim)
 			}
 		} while (sc != 0);
 	}
-	/* NOTREACHED */
 }
 
 #endif /* !HAVE_STRSEP */

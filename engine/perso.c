@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.17 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.18 2003/03/24 12:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,24 +26,28 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "compat/vasprintf.h"
-#include "engine.h"
+#include <engine/compat/vasprintf.h>
+#include <engine/engine.h>
 
 #include <libfobj/fobj.h>
 
-#include "map.h"
-#include "rootmap.h"
-#include "perso.h"
-#include "physics.h"
-#include "input.h"
-#include "version.h"
-#include "view.h"
-#include "world.h"
+#include <engine/map.h>
+#include <engine/rootmap.h>
+#include <engine/perso.h>
+#include <engine/physics.h>
+#include <engine/input.h>
+#include <engine/version.h>
+#include <engine/view.h>
+#include <engine/world.h>
 
-#include "widget/widget.h"
-#include "widget/window.h"
-#include "widget/label.h"
-#include "widget/button.h"
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+#include <engine/widget/label.h>
+#include <engine/widget/button.h>
+
+#include <errno.h>
+#include <stdarg.h>
+#include <string.h>
 
 enum {
 	DEFAULT_HP	= 10,
@@ -78,7 +82,7 @@ perso_new(char *name, char *media, Uint32 hp, Uint32 mp)
 {
 	struct perso *pers;
 
-	pers = emalloc(sizeof(struct perso));
+	pers = Malloc(sizeof(struct perso));
 	perso_init(pers, name, media, hp, mp);
 
 	world_attach(pers);
