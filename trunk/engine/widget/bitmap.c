@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.1 2002/09/01 08:55:43 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.2 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -34,7 +34,6 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 
 #include "widget.h"
 #include "window.h"
@@ -51,12 +50,12 @@ static const struct widget_ops bitmap_ops = {
 };
 
 struct bitmap *
-bitmap_new(struct region *reg, SDL_Surface *surface, int flags, int w, int h)
+bitmap_new(struct region *reg, SDL_Surface *surface, int w, int h)
 {
 	struct bitmap *bitmap;
 
 	bitmap = emalloc(sizeof(struct bitmap));
-	bitmap_init(bitmap, surface, flags, w, h);
+	bitmap_init(bitmap, surface, w, h);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, bitmap);
@@ -66,12 +65,10 @@ bitmap_new(struct region *reg, SDL_Surface *surface, int flags, int w, int h)
 }
 
 void
-bitmap_init(struct bitmap *bitmap, SDL_Surface *surface, int flags,
-    int w, int h)
+bitmap_init(struct bitmap *bitmap, SDL_Surface *surface, int w, int h)
 {
 	widget_init(&bitmap->wid, "bitmap", "widget", &bitmap_ops, w, h);
 
-	bitmap->flags = flags;
 	bitmap->surface = surface;
 	bitmap->surface_s = NULL;
 
@@ -93,9 +90,8 @@ bitmap_scaled(int argc, union evarg *argv)
 	}
 
 	if (bmp->surface_s != NULL) {
-		SDL_FreeSurface(bmp->surface_s);
+		view_unused_surface(bmp->surface_s);
 	}
-
 	bmp->surface_s = view_scale_surface(bmp->surface, WIDGET(bmp)->w,
 	    WIDGET(bmp)->h);
 }
@@ -117,6 +113,7 @@ bitmap_destroy(void *p)
 	struct bitmap *bmp = p;
 
 	if (bmp->surface_s != NULL) {
-		SDL_FreeSurface(bmp->surface_s);
+		view_unused_surface(bmp->surface_s);
 	}
 }
+
