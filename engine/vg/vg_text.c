@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: vg_text.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -27,23 +27,27 @@
  */
 
 #include <engine/engine.h>
-#include <engine/vg/vg.h>
+
+#include "vg.h"
+#include "vg_text.h"
+
 #include <stdarg.h>
 
 /* Specify text alignment and angle. */
 void
-vg_align(struct vg *vg, float x, float y, enum vg_alignment align, float angle)
+vg_text_align(struct vg *vg, double x, double y, enum vg_alignment align,
+    double angle)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->rasq);
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
 
 	vge->vg_text.align = align;
 	vge->vg_text.angle = angle;
 }
 
 void
-vg_printf(struct vg *vg, const char *fmt, ...)
+vg_text_printf(struct vg *vg, const char *fmt, ...)
 {
-	struct vg_element *vge = TAILQ_FIRST(&vg->rasq);
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
 	va_list args;
 
 	va_start(args, fmt);
