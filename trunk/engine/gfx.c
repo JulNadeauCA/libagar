@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.33 2004/04/22 01:49:43 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.34 2004/05/10 05:17:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -257,11 +257,6 @@ gfx_alloc_pvt(void *p, const char *name)
 	
 	gfx = Malloc(sizeof(struct gfx), M_GFX);
 	gfx_init(gfx, GFX_PRIVATE, name);
-#ifdef DEBUG
-	pthread_mutex_lock(&gfxq_lock);
-	TAILQ_INSERT_TAIL(&gfxq, gfx, gfxs);
-	pthread_mutex_unlock(&gfxq_lock);
-#endif
 	pthread_mutex_lock(&ob->lock);
 	if (ob->gfx != NULL) {
 		gfx_unused(ob->gfx);
