@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.141 2003/07/26 12:28:45 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.142 2003/08/06 04:10:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -76,7 +76,8 @@ const struct object_ops object_ops = {
 #define DEBUG_GC	0x040
 #define DEBUG_PAGING	0x080
 
-int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL;
+int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
+		       DEBUG_PAGING;
 #define engine_debug object_debug
 #endif
 
@@ -133,38 +134,46 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 }
 
 /*
- * Reinitialize the state of an object and ensure that no dependency remains,
- * except for permanent dependencies (which are only released on destroy).
- *
- * This is useful to reset the state of an object before a load operation
- * (freeing the map(3) nodes, for instances).
+ * Reinitialize the state of an object; clear the dependency table (including
+ * wired dependencies) if the free_deps argument is non-zero.
  */
 void
-object_reinit(void *p)
+object_reinit(void *p, int free_deps)
 {
 	struct object *ob = p;
 	struct object_dep *dep, *ndep;
 
-	if (ob->ops->reinit != NULL)
+	if (ob->ops->reinit != NULL) {
+		ob->flags |= OBJECT_PRESERVE_DEPS;
 		ob->ops->reinit(ob);
-
-	for (dep = TAILQ_FIRST(&ob->deps);
-	     dep != TAILQ_END(&ob->deps);
-	     dep = ndep) {
-		ndep = TAILQ_NEXT(dep, deps);
-
-		if (dep->count == OBJECT_DEP_MAX)
-			continue;
-
-		/* Ensure the reinit operation did its job. */
-		if (dep->count > 0) {
-			fatal("%s still depends on %s", ob->name,
-			    dep->obj->name);
-		}
-		TAILQ_REMOVE(&ob->deps, dep, deps);
-		free(dep);
+		ob->flags &= ~(OBJECT_PRESERVE_DEPS);
 	}
 
+	if (free_deps) {
+		for (dep = TAILQ_FIRST(&ob->deps);
+		     dep != TAILQ_END(&ob->deps);
+		     dep = ndep) {
+			ndep = TAILQ_NEXT(dep, deps);
+#ifdef DEBUG
+			if (dep->count < OBJECT_DEP_MAX &&
+			    dep->count > 0)
+				fatal("%u deps upon %s remain", dep->count,
+				    dep->obj->name);
+#endif
+			free(dep);
+		}
+		TAILQ_INIT(&ob->deps);
+	}
+#ifdef DEBUG
+	else {
+		TAILQ_FOREACH(dep, &ob->deps, deps) {
+			if (dep->count < OBJECT_DEP_MAX &&
+			    dep->count > 0)
+				fatal("%u deps upon %s remain", dep->count,
+				    dep->obj->name);
+		}
+	}
+#endif
 	ob->flags &= ~(OBJECT_DATA_RESIDENT);
 }
 
@@ -196,7 +205,10 @@ object_name_search(const void *obj, char *path, size_t path_len)
 	return (rv);
 }
 
-/* Copy the absolute pathname of an object to a fixed-size buffer. */
+/*
+ * Copy the absolute pathname of an object to a fixed-size buffer.
+ * The buffer size must be >2 bytes.
+ */
 int
 object_copy_name(const void *obj, char *path, size_t path_len)
 {
@@ -532,9 +544,8 @@ object_page_in(void *p, enum object_page_item item)
 			error_set(_("The `%s' object contains no graphics."));
 			goto fail;
 		}
-		/* XXX deal with existing gfx */
-		if (ob->gfx == NULL &&
-		    gfx_fetch(ob, ob->gfx_name) == -1) {
+		if (gfx_fetch(ob) == -1) {
+			Free(ob->gfx_name);
 			goto fail;
 		}
 		if (++ob->gfx_used > OBJECT_MAX_USED) {
@@ -548,9 +559,7 @@ object_page_in(void *p, enum object_page_item item)
 			error_set(_("The `%s' object contains no audio."));
 			goto fail;
 		}
-		/* XXX deal with existing audio */
-		if (ob->audio == NULL &&
-		    audio_fetch(ob, ob->audio_name) == -1) {
+		if (audio_fetch(ob) == -1) {
 			goto fail;
 		}
 		if (++ob->audio_used > OBJECT_MAX_USED) {
@@ -565,7 +574,11 @@ object_page_in(void *p, enum object_page_item item)
 				/*
 				 * Assume that this failure means the data has
 				 * never been saved before.
+				 * XXX
 				 */
+				text_msg(MSG_ERROR, "%s", error_get());
+				dprintf("load_data: %s; no previous save?\n",
+				    error_get());
 				ob->flags |= OBJECT_DATA_RESIDENT;
 			}
 		}
@@ -582,8 +595,8 @@ fail:
 }
 
 /*
- * Page out or decrement reference counts on media/data (unless the
- * reference count has reached the maximum).
+ * Decrement the reference count on the data of an object. If the count
+ * reaches 0, save and release the data (preserving the dependency table).
  */
 int
 object_page_out(void *p, enum object_page_item item)
@@ -596,7 +609,7 @@ object_page_out(void *p, enum object_page_item item)
 		debug(DEBUG_PAGING, "%s: -gfx (used=%u)\n", ob->name,
 		    ob->gfx_used);
 #ifdef DEBUG
-		if (((long)ob->gfx_used-1) < 0)
+		if (ob->gfx_used == 0)
 			fatal("neg gfx ref count");
 #endif
 		if (ob->gfx_used != OBJECT_MAX_USED &&
@@ -607,7 +620,7 @@ object_page_out(void *p, enum object_page_item item)
 		break; 
 	case OBJECT_AUDIO:
 #ifdef DEBUG
-		if (((long)ob->audio_used-1) < 0)
+		if (ob->audio_used == 0)
 			fatal("neg audio ref count");
 #endif
 		debug(DEBUG_PAGING, "%s: -audio (used=%u)\n", ob->name,
@@ -622,7 +635,7 @@ object_page_out(void *p, enum object_page_item item)
 		debug(DEBUG_PAGING, "%s: -data (used=%u)\n", ob->name,
 		    ob->data_used);
 #ifdef DEBUG
-		if (((long)ob->data_used-1) < 0)
+		if (ob->data_used == 0)
 			fatal("neg data ref count");
 #endif
 		if (ob->data_used != OBJECT_MAX_USED &&
@@ -630,7 +643,7 @@ object_page_out(void *p, enum object_page_item item)
 			if (object_save(ob) == -1) {
 				goto fail;
 			}
-			object_reinit(ob);
+			object_reinit(ob, 0);
 		}
 		break;
 	}
@@ -650,7 +663,7 @@ object_load(void *p)
 	struct netbuf *buf;
 	Uint32 count, i, flags;
 	int ti, flags_save;
-	
+
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
 
@@ -668,23 +681,21 @@ object_load(void *p)
 		error_set("%s: %s", path, strerror(errno));
 		goto fail_lock;
 	}
-	if (version_read(buf, &object_ver, NULL) == -1) {
+	if (version_read(buf, &object_ver, NULL) == -1)
 		goto fail;
-	}
 
-	/* Reinitialize the state of the object; clear the dependencies. */
-	object_reinit(ob);
+	/* Reinitialize the state of the object; free the dependency table. */
+	object_reinit(ob, 1);
 
 	/* Ignore the data offset, it is only used by object_load_data(). */
 	read_uint32(buf);
 
-	/* Read the object flags. */
+	/* Read and verify the object flags. */
 	flags = read_uint32(buf);
 	if (flags & (OBJECT_NON_PERSISTENT|OBJECT_DATA_RESIDENT)) {
 		error_set(_("The `%s' save has inconsistent flags."), ob->name);
 		goto fail;
 	}
-
 	ob->flags = (int)flags;
 	ob->flags |= (flags_save & OBJECT_DATA_RESIDENT);
 
@@ -705,8 +716,7 @@ object_load(void *p)
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
 		debug(DEBUG_DEPS, "%s: depends on %s (%p)\n", ob->name,
-		    dep_name,
-		    dep->obj);
+		    dep_name, dep->obj);
 	}
 
 	/* Decode the generic properties. */
@@ -721,12 +731,26 @@ object_load(void *p)
 	    object_load_position(ob, buf) == -1)
 		goto fail;
 
-	/* Decode the graphics/audio references (resolved later). */
-	/* XXX deal with existing refs */
+	/*
+	 * Decode the gfx/audio references. Try to resolve them immediately
+	 * only if there is currently resident media.
+	 */
 	Free(ob->gfx_name);
 	Free(ob->audio_name);
 	ob->gfx_name = read_string(buf);
 	ob->audio_name = read_string(buf);
+	if (ob->gfx != NULL &&
+	    gfx_fetch(ob) == -1) {
+		dprintf("%s gfx: %s\n", ob->name, error_get());
+		Free(ob->gfx_name);
+		ob->gfx_name = NULL;
+	}
+	if (ob->audio != NULL &&
+	    audio_fetch(ob) == -1) {
+		dprintf("%s audio: %s\n", ob->name, error_get());
+		Free(ob->audio_name);
+		ob->audio_name = NULL;
+	}
 	dprintf("%s: audio=%s, gfx=%s\n", ob->name, ob->audio_name,
 	    ob->gfx_name);
 
@@ -817,7 +841,7 @@ object_load(void *p)
 	unlock_linkage();
 	return (0);
 fail:
-	object_reinit(ob);
+	object_reinit(ob, 1);
 	netbuf_close(buf);
 fail_lock:
 	pthread_mutex_unlock(&ob->lock);
@@ -860,6 +884,7 @@ object_load_data(void *p)
 
 	/* Seek to the beginning of the data. */
 	data_offs = (off_t)read_uint32(buf);
+	dprintf("seek to %d\n", (int)data_offs);
 	netbuf_seek(buf, data_offs, SEEK_SET);
 
 	/* Read the object data, mark it as resident. */
@@ -899,7 +924,7 @@ object_save(void *p)
 	off_t count_offs, data_offs;
 	Uint32 count;
 	struct object_dep *dep;
-	int resident;
+	int was_resident;
 	
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
@@ -908,7 +933,7 @@ object_save(void *p)
 		error_set(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
-	resident = ob->flags & OBJECT_DATA_RESIDENT;
+	was_resident = ob->flags & OBJECT_DATA_RESIDENT;
 	object_copy_name(ob, obj_name, sizeof(obj_name));
 	
 	/* Create the save directory. */
@@ -925,13 +950,15 @@ object_save(void *p)
 	}
 
 	/* Page in the data unless it is already resident. */
-	if (!resident) {
+	if (!was_resident) {
 		debug(DEBUG_PAGING, "paging in for saving purposes\n");
 		if (object_load_data(ob) == -1) {
 			/*
 			 * Assume that this failure means the data has never
 			 * been saved before.
+			 * XXX
 			 */
+			dprintf("%s: %s\n", ob->name, error_get());
 			ob->flags |= OBJECT_DATA_RESIDENT;
 		}
 	}
@@ -1011,8 +1038,8 @@ object_save(void *p)
 
 	netbuf_flush(buf);
 	netbuf_close(buf);
-	if (!resident) {
-		object_reinit(ob);
+	if (!was_resident) {
+		object_reinit(ob, 0);
 	}
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
@@ -1020,8 +1047,8 @@ object_save(void *p)
 fail:
 	netbuf_close(buf);
 fail_reinit:
-	if (!resident)
-		object_reinit(ob);
+	if (!was_resident)
+		object_reinit(ob, 0);
 fail_lock:
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
@@ -1060,10 +1087,8 @@ object_center(void *p)
 {
 	struct object *ob = p;
 
-	if (view->gfx_engine != GFX_ENGINE_TILEBASED) {
-		dprintf("ignore\n");
+	if (view->gfx_engine != GFX_ENGINE_TILEBASED)
 		return;
-	}
 
 	pthread_mutex_lock(&ob->lock);
 	if (ob->pos != NULL) {
@@ -1331,6 +1356,20 @@ object_set_ops(void *p, const void *ops)
 	OBJECT(p)->ops = ops;
 }
 
+/* Load graphics and leave resident (ie. for widgets). */
+void
+object_wire_gfx(void *p, const char *key)
+{
+	struct object *ob = p;
+
+	Free(ob->gfx_name);
+	ob->gfx_name = Strdup(key);
+	if (gfx_fetch(ob) == -1) {
+		fatal("%s: %s", key, error_get());
+	}
+	gfx_wire(ob->gfx);
+}
+
 /* Add a new dependency or increment the reference count on one. */
 struct object_dep *
 object_add_dep(void *p, void *depobj)
@@ -1411,19 +1450,26 @@ object_del_dep(void *p, const void *depobj)
 		if (dep->obj == depobj)
 			break;
 	}
+#ifdef DEBUG
 	if (dep == NULL)
 		fatal("%s: no such dep", OBJECT(depobj)->name);
-
+#endif
 	if (dep->count == OBJECT_DEP_MAX)			/* Wired */
 		return;
 
 	if ((dep->count-1) == 0) {
-		debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
-		    OBJECT(depobj)->name);
-		TAILQ_REMOVE(&ob->deps, dep, deps);
-		free(dep);
-	} else if ((dep->count-1) < 0) {
+		if ((ob->flags & OBJECT_PRESERVE_DEPS) == 0) {
+			debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
+			    OBJECT(depobj)->name);
+			TAILQ_REMOVE(&ob->deps, dep, deps);
+			free(dep);
+		} else {
+			dep->count = 0;
+		}
+#ifdef DEBUG
+	} else if (dep->count == 0) {
 		fatal("neg ref count");
+#endif
 	} else {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
 		    OBJECT(depobj)->name, dep->count);
@@ -1526,13 +1572,18 @@ select_gfx(int argc, union evarg *argv)
 	
 	Free(ob->gfx_name);
 
-	if (text[0] == '\0' && ob->gfx != NULL) {
-		gfx_unused(ob->gfx);
+	if (text[0] == '\0') {
+		if (ob->gfx != NULL) {
+			gfx_unused(ob->gfx);
+		}
 		ob->gfx = NULL;
 		ob->gfx_name = NULL;
 	} else {
-		if (gfx_fetch(ob, text) == -1) {
-			text_msg(MSG_ERROR, "%s", error_get());
+		ob->gfx_name = Strdup(text);
+		if (gfx_fetch(ob) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", ob->gfx_name,
+			    error_get());
+			free(ob->gfx_name);
 			ob->gfx_name = NULL;
 		} else {
 			ob->gfx_name = Strdup(text);
@@ -1545,14 +1596,21 @@ select_audio(int argc, union evarg *argv)
 {
 	struct object *ob = argv[1].p;
 	char *text = argv[2].s;
+	
+	Free(ob->audio_name);
 
-	if (text[0] == '\0' && ob->audio != NULL) {
-		audio_unused(ob->audio);
+	if (text[0] == '\0') {
+		if (ob->audio != NULL) {
+			audio_unused(ob->audio);
+		}
 		ob->audio = NULL;
 		ob->audio_name = NULL;
 	} else {
-		if (audio_fetch(ob, text) == -1) {
-			text_msg(MSG_ERROR, "%s", error_get());
+		ob->audio_name = Strdup(text);
+		if (audio_fetch(ob) == -1) {
+			text_msg(MSG_ERROR, "%s: %s", ob->audio_name,
+			    error_get());
+			free(ob->audio_name);
 			ob->audio_name = NULL;
 		} else {
 			ob->audio_name = Strdup(text);
