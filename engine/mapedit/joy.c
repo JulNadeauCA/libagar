@@ -80,7 +80,7 @@ joy_button(struct mapedit *med, SDL_Event *ev)
 	/* XXX customize */
 	switch (ev->jbutton.button) {
 	case 1:	/* Push */
-		mapedit_push(med, node);
+		mapedit_push(med, node, med->curoffs, med->curflags);
 		break;
 	case 2: /* Pop */
 		mapedit_pop(med, node);

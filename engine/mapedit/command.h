@@ -1,6 +1,6 @@
-/*	$Csoft: command.h,v 1.1 2002/02/10 01:36:30 vedge Exp $	*/
+/*	$Csoft: command.h,v 1.2 2002/02/16 09:14:15 vedge Exp $	*/
 
-void	mapedit_push(struct mapedit *, struct node *);
+void	mapedit_push(struct mapedit *, struct node *, int, int);
 void	mapedit_pop(struct mapedit *, struct node *);
 void	mapedit_clearmap(struct mapedit *);
 void	mapedit_fillmap(struct mapedit *);
