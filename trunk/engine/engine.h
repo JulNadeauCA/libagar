@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.28 2002/06/13 09:02:55 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.29 2002/06/27 03:08:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -43,10 +43,15 @@ struct gameinfo {
 #define ICON_GAME	0
 #define ICON_MAPEDITION	1
 
+/* engine_start() return value */
 #define ENGINE_START_GAME		0
 #define ENGINE_START_MAP_EDITION	1
 
-int		 engine_init(int, char **, struct gameinfo *, char *);
+/* engine_init() flags. XXX odd */
+#define ENGINE_INIT_GUI		0x01	/* Use only GUI engine */
+#define ENGINE_INIT_MAPEDIT	0x02	/* Add map editor switch (-e) */
+
+int		 engine_init(int, char **, struct gameinfo *, char *, int);
 int		 engine_start(void);
 void		 engine_stop(void);
 void		 engine_destroy(void);
