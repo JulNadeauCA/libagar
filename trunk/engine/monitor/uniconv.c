@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.1 2003/11/17 15:07:10 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.2 2004/01/03 04:25:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -35,14 +35,16 @@
 #include <engine/widget/window.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/textbox.h>
+#include <engine/widget/tlist.h>
 
 #include <engine/unicode/unicode.h>
 
 #include "monitor.h"
 
 static Uint32 unitext[2] = { '\0', '\0' };
-static char utf8text[32] = "";
-static char bytetext[32] = "";
+static char utf8text[256] = "";
+static char bytetext[256] = "";
+static Uint32 unimin = 0, unimax = 0;
 
 static void
 uniconv_update(int argc, union evarg *argv)
@@ -61,11 +63,43 @@ uniconv_update(int argc, union evarg *argv)
 	}
 }
 
+static void
+uniconv_rangeupdate(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[1].p;
+	Uint32 i;
+
+	tlist_clear_items(tl);
+	for (i = unimin; i < unimax; i++) {
+		char text[TLIST_LABEL_MAX];
+		char *c;
+
+		if (i == 10)
+			continue;
+
+		unitext[0] = i;
+		unicode_export(UNICODE_TO_UTF8, utf8text, unitext,
+		    sizeof(unitext));
+
+		bytetext[0] = '\0';
+		for (c = &utf8text[0]; *c != '\0'; c++) {
+			char s[4];
+
+			snprintf(s, sizeof(s), " %x", (unsigned char)*c);
+			strlcat(bytetext, s, sizeof(bytetext));
+		}
+		snprintf(text, sizeof(text), "%s (%s )", utf8text, bytetext);
+		tlist_insert_item(tl, NULL, text, NULL);
+	}
+}
+
 struct window *
 uniconv_window(void)
 {
 	struct window *win;
 	struct spinbutton *sbu;
+	struct tlist *tl;
+	Uint32 i;
 
 	if ((win = window_new("uniconv")) == NULL) {
 		return (NULL);
@@ -80,6 +114,21 @@ uniconv_window(void)
 	spinbutton_set_max(sbu, 65537);
 	widget_bind(sbu, "value", WIDGET_UINT32, &unitext[0]);
 	event_new(sbu, "spinbutton-changed", uniconv_update, NULL);
+	
+	tl = tlist_new(win, 0);
+	
+	sbu = spinbutton_new(win, "Start: ");
+	spinbutton_set_min(sbu, 0);
+	spinbutton_set_max(sbu, 65537);
+	widget_bind(sbu, "value", WIDGET_UINT32, &unimin);
+	event_new(sbu, "spinbutton-changed", uniconv_rangeupdate, "%p", tl);
+	
+	sbu = spinbutton_new(win, "Stop: ");
+	spinbutton_set_min(sbu, 0);
+	spinbutton_set_max(sbu, 65537);
+	widget_bind(sbu, "value", WIDGET_UINT32, &unimax);
+	event_new(sbu, "spinbutton-changed", uniconv_rangeupdate, "%p", tl);
+
 	return (win);
 }
 
