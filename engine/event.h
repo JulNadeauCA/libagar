@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.18 2003/06/06 02:06:18 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.19 2003/06/18 00:46:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -17,12 +17,14 @@ typedef union evarg {
 } *evargs;
 
 #define EVENT_ARGS_MAX	16
+#define EVENT_NAME_MAX	32
 
 struct event {
-	char		*name;
-	int		 flags;
+	char	name[EVENT_NAME_MAX];
+	Uint8	flags;
 #define	EVENT_ASYNC		0x01	/* Event handler runs in own thread */
 #define EVENT_FORWARD_CHILDREN	0x02	/* Forward to all descendents */
+
 	union evarg	 argv[EVENT_ARGS_MAX];
 	int		 argc;
 	void		(*handler)(int, union evarg *);
