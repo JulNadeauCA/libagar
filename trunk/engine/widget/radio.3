@@ -1,4 +1,4 @@
-.\"	$Csoft: radio.3,v 1.6 2002/09/12 09:54:49 vedge Exp $
+.\"	$Csoft: radio.3,v 1.7 2003/01/01 05:18:41 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,10 +43,10 @@ widget implements a group of radio buttons.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft struct radio *
-.Fn radio_new "struct region *reg" "const char *items[]" "int selitem" "int flags"
+.Fn radio_new "struct region *reg" "const char *items[]"
 .Pp
 .Ft void
-.Fn radio_init "struct radio *radio" "const char *items[]" "int selitem" "int flags"
+.Fn radio_init "struct radio *radio" "const char *items[]"
 .nr nS 0
 .Pp
 The
@@ -58,25 +58,19 @@ The
 .Fn radio_init
 function initializes a
 .Nm
-group, with the item at index
-.Fa selitem
-selected.
+group.
 The
 .Fa items
-argument is an array of null-terminated strings terminated by a
-.Dv NULL .
+argument is a null-terminated array of strings.
+.Sh BINDINGS
 The
-.Fa flags
-argument is currently ignored.
-The radio button justification defaults to
-.Dv RADIO_LEFT ,
-and may be one of:
-.Bd -literal
-enum {
-	RADIO_LEFT,	/* Left of label */
-	RADIO_RIGHT	/* Right of label */
-} justify;
-.Ed
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "int *value"
+.It Va int *value
+Index of selected item, or -1 if there is no selection.
+.El
 .Sh EVENTS
 The
 .Nm
@@ -100,6 +94,9 @@ widget generates the following events:
 .It Fn radio-changed "char hotkey" "int index"
 Selection changed to item at index
 .Fa index .
+The
+.Sq value
+binding remains locked throughout the event handler's execution.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,

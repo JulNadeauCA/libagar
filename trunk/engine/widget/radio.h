@@ -1,31 +1,30 @@
-/*	$Csoft: radio.h,v 1.4 2002/09/07 04:35:29 vedge Exp $	*/
+/*	$Csoft: radio.h,v 1.5 2002/12/21 10:26:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_RADIO_H_
 #define _AGAR_WIDGET_RADIO_H_
 
 struct radio {
-	struct	widget wid;
+	struct widget	wid;
 
-	char	**items;
-	int	nitems;
-	int	selitem;	/* Index of selected item */
+	SDL_Surface	**labels;
+	const char	**items;
+	int		 nitems;
+	int		 selitem;	/* Index of selected item */
+	int		 max_w;		/* Width of widest label */
 
-	int	xspacing;	/* Horiz spacing */
-	int	yspacing;	/* Vert spacing */
+	Uint8	 xspacing;
+	Uint8	 yspacing;
+	Uint8	 radius;
 
 	struct {
-		int w, h;	
-	} radio;
-
-	enum {
-		RADIO_LEFT,	/* Left of label */
-		RADIO_RIGHT	/* Right of label */
-	} justify;
+		int	value;
+	} def;
 };
 
-struct radio	*radio_new(struct region *, char *[], int);
-void		 radio_init(struct radio *, char *[], int);
+struct radio	*radio_new(struct region *, const char *[]);
+void		 radio_init(struct radio *, const char *[]);
 void	 	 radio_draw(void *);
+void		 radio_destroy(void *);
 
 #endif /* _AGAR_WIDGET_RADIO_H_ */
