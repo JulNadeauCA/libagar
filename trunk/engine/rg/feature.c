@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: feature.c,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -40,13 +40,14 @@
 #include "tileset.h"
 
 void
-feature_init(struct feature *ft, const char *type, const char *name,
-    const void *ops)
+feature_init(void *p, const char *name, int flags,
+    const struct feature_ops *ops)
 {
+	struct feature *ft = p;
+
 	strlcpy(ft->name, name, sizeof(ft->name));
-	ft->type = type;
+	ft->flags = flags;
 	ft->ops = ops;
-	ft->ops->init(ft);
 	TAILQ_INIT(&ft->sketches);
 }
 
@@ -57,10 +58,10 @@ feature_insert_sketch(struct feature *ft, struct sketch *sk)
 	struct feature_sketch *fsk;
 
 	fsk = Malloc(sizeof(struct feature_sketch), M_OBJECT);
+	fsk->sk = sk;
 	fsk->x = 0;
 	fsk->y = 0;
 	fsk->visible = 1;
-	fsk->suppressed = 0;
 	TAILQ_INSERT_TAIL(&ft->sketches, fsk, sketches);
 	return (fsk);
 }
@@ -83,6 +84,35 @@ feature_remove_sketch(struct feature *ft, struct sketch *sk)
 void
 feature_destroy(struct feature *ft)
 {
+	struct feature_sketch *fsk, *nfsk;
+	
+	if (ft->ops->destroy != NULL)
+		ft->ops->destroy(ft);
 
+	for (fsk = TAILQ_FIRST(&ft->sketches);
+	     fsk != TAILQ_END(&ft->sketches);
+	     fsk = nfsk) {
+		nfsk = TAILQ_NEXT(fsk, sketches);
+		Free(fsk, M_RG);
+	}
 }
 
+int
+feature_load(void *p, struct netbuf *buf)
+{
+	struct feature *ft = p;
+
+	if (ft->ops->load != NULL &&
+	    ft->ops->load(ft, buf) == -1) {
+		return (-1);
+	}
+	return (0);
+}
+
+void
+feature_save(void *p, struct netbuf *buf)
+{
+	struct feature *ft = p;
+
+	ft->ops->save(ft, buf);
+}
