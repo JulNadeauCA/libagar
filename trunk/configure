@@ -174,7 +174,7 @@ echo "    --sharedir                     Share prefix [$PREFIX/share]"
 echo "    --localedir                    Locale prefix [$PREFIX/share/locale]"
 echo "    --srcdir                       Source tree for concurrent build [.]"
 echo "    --help                         Display this message"
-echo "    --enable-nls                   Native Language Support [yes]"
+echo "    --disable-nls                  Native Language Support [no]"
 echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [check]"
 echo "    --with-manpages                Manual pages (-mdoc) [yes]"
 echo "    --with-docs                    Printable docs (-me/tbl/eqn/pic/refer) [no]"
@@ -203,7 +203,7 @@ if [ "${enable_debug}" = "yes" ]; then
 else
 	echo "#undef DEBUG" > config/debug.h
 fi
-if [ "${enable_nls}" != "no" ]; then
+if [ "${enable_nls}" = "yes" ]; then
 	ENABLE_NLS="yes"
 	echo "#ifndef ENABLE_NLS" > config/enable_nls.h
 	echo "#define ENABLE_NLS 1" >> config/enable_nls.h
