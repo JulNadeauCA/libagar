@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.68 2002/08/18 00:39:08 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.69 2002/08/19 05:33:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -281,6 +281,10 @@ event_loop(void)
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			switch (ev.type) {
+			case SDL_VIDEORESIZE:
+				view->w = ev.resize.w;
+				view->h = ev.resize.h;
+				break;
 			case SDL_VIDEOEXPOSE:
 				dprintf("expose\n");
 				pthread_mutex_lock(&view->lock);

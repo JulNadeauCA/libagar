@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.57 2002/07/21 10:58:16 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.58 2002/08/19 05:29:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -197,6 +197,13 @@ view_init(gfx_engine_t ge)
 	case 8:
 		screenflags |= SDL_HWPALETTE;
 		break;
+	}
+
+	switch (v->gfx_engine) {
+	case GFX_ENGINE_GUI:
+		screenflags |= SDL_RESIZABLE;
+		break;
+	default:
 	}
 
 	v->v = SDL_SetVideoMode(v->w, v->h, v->bpp, screenflags);
