@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.87 2002/11/28 07:19:24 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.88 2002/11/28 07:35:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -45,20 +45,6 @@ static const struct object_ops viewport_ops = {
 /* Read-only as long as the engine is running. */
 struct viewport *view;
 
-/* Scaled surface cache. */
-struct cached_surface {
-	SDL_Surface	*source_s;	/* Original surface */
-	SDL_Surface	*scaled_s;	/* Scaled surface */
-	size_t		 size;		/* Size of scaled surface in bytes */
-	int		 nrefs;		/* Reference count */
-
-	TAILQ_ENTRY(cached_surface) surfaces;
-};
-static TAILQ_HEAD(, cached_surface) cached_surfaces;
-static pthread_mutex_t cached_surfaces_lock = PTHREAD_MUTEX_INITIALIZER;
-
-static void	free_cached_surface(struct cached_surface *);
-
 #ifdef DEBUG
 int	view_debug = 1;
 #define engine_debug view_debug
@@ -72,21 +58,28 @@ view_init(gfx_engine_t ge)
 	int screenflags = SDL_HWSURFACE;
 	int bpp, w, h, mw, mh;
 
+	/* Obtain the display settings. */
 	bpp = prop_uint32(config, "view.bpp");
 	w = prop_uint32(config, "view.w");
 	h = prop_uint32(config, "view.h");
 	mw = w / TILEW;
 	mh = h / TILEH;
-
 	if (prop_uint32(config, "flags") & CONFIG_FULLSCREEN)
 		screenflags |= SDL_FULLSCREEN;
 	if (prop_uint32(config, "flags") & CONFIG_ASYNCBLIT)
 		screenflags |= SDL_ASYNCBLIT;
 
+	/* Allocate a structure describing the display. */
 	v = emalloc(sizeof(struct viewport));
 	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
 	v->gfx_engine = ge;
 	v->bpp = SDL_VideoModeOK(w, h, bpp, screenflags);
+	switch (v->bpp) {
+	case 8:
+		dprintf("exclusive palette access\n");
+		screenflags |= SDL_HWPALETTE;
+		break;
+	}
 	v->w = prop_uint32(config, "view.w");
 	v->h = prop_uint32(config, "view.h");
 	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
@@ -104,7 +97,7 @@ view_init(gfx_engine_t ge)
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
 
-	/* Dirty rectangle array */
+	/* Allocate the dirty rectangle array. */
 	v->maxdirty = v->w/TILEW * v->h/TILEH;
 	v->ndirty = 0;
 	v->dirty = emalloc(v->maxdirty * sizeof(SDL_Rect *));
@@ -113,13 +106,8 @@ view_init(gfx_engine_t ge)
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&v->lock, &v->lockattr);
 
-	switch (v->bpp) {
-	case 8:
-		dprintf("exclusive palette access\n");
-		screenflags |= SDL_HWPALETTE;
-		break;
-	}
 #if 0
+	/* XXX thread unsafe */
 	screenflags |= SDL_RESIZABLE;
 #endif
 	v->v = SDL_SetVideoMode(v->w, v->h, 0, screenflags);
@@ -132,10 +120,10 @@ view_init(gfx_engine_t ge)
 
 	switch (v->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
+		/* Allocate a structure describing the root map display. */
 		v->rootmap = emalloc(sizeof(struct viewmap));
 		v->rootmap->w = mw - 1;
 		v->rootmap->h = mh - 1;
-
 		v->rootmap->map = NULL;
 		v->rootmap->x = 0;
 		v->rootmap->y = 0;
@@ -145,8 +133,7 @@ view_init(gfx_engine_t ge)
 		/* Calculate the default tile coordinates. */
 		v->rootmap->maprects = rootmap_alloc_maprects(mw + 1, mh + 1);
 
-		dprintf("tile-based mode: %dx%d rectangles (%ld Kb)\n",
-		    mw, mh, (long)(mw*mh * sizeof(SDL_Rect)) / 1024);
+		dprintf("tile-based mode: %dx%d rectangles\n", mw, mh);
 		break;
 	case GFX_ENGINE_GUI:
 		dprintf("gui mode\n");
@@ -161,7 +148,7 @@ view_init(gfx_engine_t ge)
  * Process all windows on the detach queue. This is executed after
  * window list traversal by the event loop.
  *
- * View must be locked. The detach queue must not be empty.
+ * The view must be locked, the detach queue must not be empty.
  */
 void
 view_detach_queued(void)
@@ -173,7 +160,6 @@ view_detach_queued(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 
-		dprintf("%s\n", OBJECT(win)->name);
 		TAILQ_REMOVE(&view->windows, win, windows);
 		window_hide(win);
 		event_post(win, "detached", "%p", view);
@@ -190,14 +176,12 @@ view_destroy(void *p)
 	
 	pthread_mutex_lock(&v->lock);
 	
-	/* Free precalculated map rectangles. */
 	if (v->rootmap != NULL) {
 		rootmap_free_maprects(v);
 		free(v->rootmap);
 		v->rootmap = NULL;
 	}
 
-	/* Free the windows. */
 	TAILQ_FOREACH(win, &v->windows, windows) {
 		win->flags &= ~(WINDOW_MATERIALIZE|WINDOW_DEMATERIALIZE);
 		view_detach(win);
@@ -206,7 +190,6 @@ view_destroy(void *p)
 		view_detach_queued();
 	}
 
-	/* Free the dirty rectangle array. */
 	free(v->dirty);
 
 	pthread_mutex_unlock(&v->lock);
@@ -284,20 +267,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	SDL_Surface *ds;
 	Uint32 col =0;
 	Uint8 *src, *dst, r1, g1, b1, a1;
-	struct cached_surface *cs;
 	int x, y;
-
-	pthread_mutex_lock(&cached_surfaces_lock);
-
-	/* XXX use a hash table */
-	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
-		if (cs->source_s == ss &&
-		    cs->scaled_s->w == w && cs->scaled_s->h == h) {
-			cs->nrefs++;
-			pthread_mutex_unlock(&cached_surfaces_lock);
-			return (cs->scaled_s);
-		}
-	}
 
 	ds = view_surface(SDL_HWSURFACE, w, h);
 
@@ -353,52 +323,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 		SDL_UnlockSurface(ds);
 	if (SDL_MUSTLOCK(ss))
 		SDL_UnlockSurface(ss);
-
-	/* Read-allocate */
-	cs = emalloc(sizeof(struct cached_surface));
-	cs->source_s = ss;
-	cs->scaled_s = ds;
-	cs->size = (ds->w * ds->h) * ds->format->BytesPerPixel;
-	cs->nrefs = 0;
-	TAILQ_INSERT_HEAD(&cached_surfaces, cs, surfaces);
-	
-	pthread_mutex_unlock(&cached_surfaces_lock);
 	return (ds);
-}
-
-void
-view_unused_surface(SDL_Surface *scaled)
-{
-	struct cached_surface *cs;
-
-	pthread_mutex_lock(&cached_surfaces_lock);
-	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
-		if (cs->scaled_s == scaled) {
-			cs->nrefs--;
-		}
-	}
-	pthread_mutex_unlock(&cached_surfaces_lock);
-}
-
-void
-view_invalidate_surface(SDL_Surface *scaled)
-{
-	struct cached_surface *cs;
-
-	pthread_mutex_lock(&cached_surfaces_lock);
-	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
-		if (cs->scaled_s == scaled) {
-			/* Free the surface immediately. */
-			dprintf("surface %p\n", cs->scaled_s);
-			SDL_FreeSurface(cs->scaled_s);
-			TAILQ_REMOVE(&cached_surfaces, cs, surfaces);
-			free(cs);
-
-			pthread_mutex_unlock(&cached_surfaces_lock);
-			return;
-		}
-	}
-	fatal("not in surface cache: %p\n", scaled);
 }
 
 /* Focus on a window. */
