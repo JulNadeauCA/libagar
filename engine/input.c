@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.22 2002/11/22 23:11:02 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.23 2002/11/22 23:15:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -99,22 +99,38 @@ input_key(struct input *in, SDL_Event *ev)
 	switch (ev->key.keysym.sym) {
 	case SDLK_UP:
 		if (in->pos->y > 1) {
-			mapdir_set(&in->pos->dir, DIR_UP, set);
+			if (set) {
+				mapdir_set(&in->pos->dir, DIR_UP);
+			} else {
+				mapdir_unset(&in->pos->dir, DIR_UP);
+			}
 		}
 		break;
 	case SDLK_DOWN:
 		if (in->pos->y < in->pos->map->maph - 2) {
-			mapdir_set(&in->pos->dir, DIR_DOWN, set);
+			if (set) {
+				mapdir_set(&in->pos->dir, DIR_DOWN);
+			} else {
+				mapdir_unset(&in->pos->dir, DIR_DOWN);
+			}
 		}
 		break;
 	case SDLK_LEFT:
 		if (in->pos->x > 1) {
-			mapdir_set(&in->pos->dir, DIR_LEFT, set);
+			if (set) {
+				mapdir_set(&in->pos->dir, DIR_LEFT);
+			} else {
+				mapdir_unset(&in->pos->dir, DIR_LEFT);
+			}
 		}
 		break;
 	case SDLK_RIGHT:
 		if (in->pos->x < in->pos->map->mapw - 2) {
-			mapdir_set(&in->pos->dir, DIR_RIGHT, set);
+			if (set) {
+				mapdir_set(&in->pos->dir, DIR_RIGHT);
+			} else {
+				mapdir_unset(&in->pos->dir, DIR_RIGHT);
+			}
 		}
 		break;
 	default:
@@ -134,26 +150,26 @@ input_joy(struct input *in, SDL_Event *ev)
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_LEFT;
 			lastdir &= ~(DIR_RIGHT);
-			mapdir_set(&in->pos->dir, DIR_LEFT, 1);
+			mapdir_set(&in->pos->dir, DIR_LEFT);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_RIGHT;
 			lastdir &= ~(DIR_LEFT);
-			mapdir_set(&in->pos->dir, DIR_RIGHT, 1);
+			mapdir_set(&in->pos->dir, DIR_RIGHT);
 		} else {
-			mapdir_set(&in->pos->dir, DIR_ALL, 0);
+			mapdir_unset(&in->pos->dir, DIR_ALL);
 		}
 		break;
 	case 1:	/* Y */
 		if (ev->jaxis.value < 0) {
 			lastdir |= DIR_UP;
 			lastdir &= ~(DIR_DOWN);
-			mapdir_set(&in->pos->dir, DIR_UP, 1);
+			mapdir_set(&in->pos->dir, DIR_UP);
 		} else if (ev->jaxis.value > 0) {
 			lastdir |= DIR_DOWN;
 			lastdir &= ~(DIR_UP);
-			mapdir_set(&in->pos->dir, DIR_DOWN, 1);
+			mapdir_set(&in->pos->dir, DIR_DOWN);
 		} else {
-			mapdir_set(&in->pos->dir, DIR_ALL, 0);
+			mapdir_unset(&in->pos->dir, DIR_ALL);
 		}
 		break;
 	}

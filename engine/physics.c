@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.42 2002/09/16 16:06:16 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.43 2002/11/22 08:56:49 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -57,17 +57,18 @@ gendir_init(struct gendir *dir)
 	dir->noffs = 0;
 }
 
-Uint32
-gendir_set(struct gendir *dir, Uint32 direction, Uint32 set)
+void
+gendir_set(struct gendir *dir, Uint32 direction)
 {
-	if (set) {
-		dir->clear &= ~direction;
-		dir->set   |=  direction;
-	} else {
-		dir->clear |=  direction;
-		dir->set   &= ~direction;
-	}
-	return (0);
+	dir->clear &= ~direction;
+	dir->set   |=  direction;
+}
+
+void
+gendir_unset(struct gendir *dir, Uint32 direction)
+{
+	dir->clear |=  direction;
+	dir->set   &= ~direction;
 }
 
 Uint32
@@ -76,6 +77,7 @@ gendir_move(struct gendir *dir)
 	if (dir->clear != 0) {
 		Uint32 r = dir->current;
 
+		/* Effect a gendir_unset() operation. */
 		dir->current &= ~(dir->clear);
 		dir->clear = 0;
 		dir->noffs = 0;
@@ -111,13 +113,14 @@ gendir_move(struct gendir *dir)
 void
 gendir_postmove(struct gendir *dir, Uint32 moved)
 {
-	/* Clear this direction (eg. key release). */
 	if (dir->clear != 0) {
+		/* Clear this direction (eg. key release). */
 		dir->current &= ~(dir->clear);
 		dir->clear = 0;
 		dir->noffs = 0;
 		dir->offs = 0;
 	} else {
+		/* Increment the key delay counter. */
 		dir->noffs++;
 	}
 }
@@ -136,22 +139,23 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
 	dir->map = map;
 }
 
-/* Set the given map direction if set is non-zero, else clear it. */
 void
-mapdir_set(struct mapdir *dir, Uint32 direction, Uint32 set)
+mapdir_set(struct mapdir *dir, Uint32 direction)
 {
-	if (set) {
-		dir->clear &= ~direction;
-		dir->set   |=  direction;
-	} else {
-		dir->clear |=  direction;
-		dir->set   &= ~direction;
-	}
+	dir->clear &= ~direction;
+	dir->set   |=  direction;
+}
+
+void
+mapdir_unset(struct mapdir *dir, Uint32 direction)
+{
+	dir->clear |=  direction;
+	dir->set   &= ~direction;
 }
 
 /*
  * Set the sprite/animation for a given position.
- * Map must be locked, ob->pos must not.
+ * Map must be locked.
  */
 static void
 mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
@@ -163,12 +167,10 @@ mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
 		return;
 	}
 
-	pthread_mutex_lock(&dir->ob->pos_lock);
-	pos = dir->ob->pos;
-	pthread_mutex_unlock(&dir->ob->pos_lock);
-
+	pos = object_get_pos(dir->ob);
 	nref = pos->nref;
 	nref->offs = sprite;
+
 	if (isanim) {
 		nref->flags |= MAPREF_ANIM;
 		nref->flags &= ~(MAPREF_SPRITE);
@@ -182,7 +184,7 @@ mapdir_setsprite(struct mapdir *dir, Uint32 sprite, int isanim)
  * Change map direction if necessary. X/Y velocity values are
  * mutually exclusive, and so are direction flags.
  *
- * Map must be locked, ob->pos must not.
+ * Map must be locked.
  */
 static void
 mapdir_change(struct mapdir *dir, struct noderef *nref)
@@ -299,7 +301,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					m->map[(*mapy)-2][*mapx].overlap++;
 				} else {
 					nref->yoffs = 0;
-					mapdir_set(dir, DIR_UP, 0);
+					mapdir_unset(dir, DIR_UP);
 				}
 			}
 			if (nref->yoffs <= (-TILEW + dir->speed)) {
@@ -342,7 +344,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					m->map[(*mapy)+1][*mapx].overlap++;
 				} else {
 					nref->yoffs = 0;
-					mapdir_set(dir, DIR_DOWN, 0);
+					mapdir_unset(dir, DIR_DOWN);
 				}
 			}
 			if (nref->yoffs >= TILEW - dir->speed) {
@@ -386,7 +388,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					m->map[(*mapy)-1][(*mapx)-1].overlap++;
 				} else {
 					nref->xoffs = 0;
-					mapdir_set(dir, DIR_LEFT, 0);
+					mapdir_unset(dir, DIR_LEFT);
 				}
 			}
 			if (nref->xoffs <= (-TILEW + dir->speed)) {
@@ -432,7 +434,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					m->map[(*mapy)-1][(*mapx)+1].overlap++;
 				} else {
 					nref->xoffs = 0;
-					mapdir_set(dir, DIR_RIGHT, 0);
+					mapdir_unset(dir, DIR_RIGHT);
 				}
 			}
 			if (nref->xoffs >= (TILEW - dir->speed)) {
