@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.93 2003/09/07 07:59:10 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.94 2003/09/14 02:29:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -58,7 +58,7 @@ struct object_dep {
 };
 
 #define OBJECT_TYPE_MAX	32
-#define OBJECT_NAME_MAX	64
+#define OBJECT_NAME_MAX	128
 #define OBJECT_PATH_MAX	1024
 
 TAILQ_HEAD(objectq, object);
@@ -126,6 +126,7 @@ struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
 void		 object_free_data(void *);
 int		 object_copy_name(const void *, char *, size_t);
+int		 object_copy_dirname(const void *, char *, size_t);
 int		 object_copy_filename(const void *, char *, size_t);
 void		*object_find(const char *);
 __inline__ void	*object_root(void *);
@@ -135,6 +136,8 @@ void		 object_set_name(void *, const char *);
 void		 object_set_ops(void *, const void *);
 void		 object_wire_gfx(void *, const char *);
 
+void	 object_move_up(void *);
+void	 object_move_down(void *);
 int	 object_destroy(void *);
 int	 object_free_childs(struct object *);
 void	 object_free_props(struct object *);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.146 2003/09/07 07:59:10 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.147 2003/09/14 02:29:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,13 +34,16 @@
 #include <engine/rootmap.h>
 #include <engine/typesw.h>
 #include <engine/mkpath.h>
+
 #ifdef EDITION
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/combo.h>
+#include <engine/widget/textbox.h>
 #endif
+
 #include <engine/loader/den.h>
 
 #include <sys/types.h>
@@ -487,6 +490,7 @@ object_destroy(void *p)
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
+/* XXX modifies buffer even on failure */
 int
 object_copy_filename(const void *p, char *path, size_t path_len)
 {
@@ -517,6 +521,35 @@ object_copy_filename(const void *p, char *path, size_t path_len)
 	}
 	error_set(_("The %s/%s.%s file is not in load-path."), obj_name,
 	    ob->name, ob->type);
+	return (-1);
+}
+
+/* Copy the full pathname of an object's data dir to a fixed-size buffer. */
+/* XXX modifies buffer even on failure */
+int
+object_copy_dirname(const void *p, char *path, size_t path_len)
+{
+	char load_path[MAXPATHLEN];
+	char obj_name[OBJECT_PATH_MAX];
+	const struct object *ob = p;
+	struct stat sta;
+	char *dir, *last;
+
+	prop_copy_string(config, "load-path", load_path, sizeof(load_path));
+	object_copy_name(ob, obj_name, sizeof(obj_name));
+
+	for (dir = strtok_r(load_path, ":", &last);
+	     dir != NULL;
+	     dir = strtok_r(NULL, ":", &last)) {
+	     	strlcpy(path, dir, path_len);
+		if (ob->save_pfx != NULL) {
+			strlcat(path, ob->save_pfx, path_len);
+		}
+		strlcat(path, obj_name, path_len);
+		if (stat(path, &sta) == 0)
+			return (0);
+	}
+	error_set(_("The %s directory is not in load-path."), obj_name);
 	return (-1);
 }
 
@@ -850,24 +883,23 @@ object_load_generic(void *p)
 	/*
 	 * Decode the gfx/audio references. Try to resolve them immediately
 	 * only if there is currently resident media.
-	 * XXX enforce OBJECT_PATH_MAX
 	 */
 	Free(ob->gfx_name);
 	Free(ob->audio_name);
-	ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX);
+	if ((ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
+		if (ob->gfx != NULL) {
+			if (gfx_fetch(ob) == -1)
+				goto fail;
+		}
+	} else {
+		if (ob->gfx != NULL) {
+			gfx_unused(ob->gfx);
+			ob->gfx = NULL;
+		}
+	}
+	dprintf("%s: gfx=%s\n", ob->name, ob->gfx_name);
 	ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX);
-	if (ob->gfx != NULL && ob->gfx_name != NULL &&
-	    gfx_fetch(ob) == -1) {
-		dprintf("%s gfx: %s\n", ob->name, error_get());
-		Free(ob->gfx_name);
-		ob->gfx_name = NULL;
-	}
-	if (ob->audio != NULL && ob->audio_name != NULL &&
-	    audio_fetch(ob) == -1) {
-		dprintf("%s audio: %s\n", ob->name, error_get());
-		Free(ob->audio_name);
-		ob->audio_name = NULL;
-	}
+	/* XXX ... */
 
 	/*
 	 * Load the generic part of the child objects.
@@ -1472,6 +1504,57 @@ object_del_dep(void *p, const void *depobj)
 	}
 }
 
+/* Move an object towards the head of its parent's children list. */
+void
+object_move_up(void *p)
+{
+	struct object *ob = p, *prev;
+	struct object *parent = ob->parent;
+
+	if (parent == NULL || ob == TAILQ_FIRST(&parent->childs))
+		return;
+
+	prev = TAILQ_PREV(ob, objectq, cobjs);
+	TAILQ_REMOVE(&parent->childs, ob, cobjs);
+	TAILQ_INSERT_BEFORE(prev, ob, cobjs);
+}
+
+/* Move an object towards the tail of its parent's children list. */
+void
+object_move_down(void *p)
+{
+	struct object *ob = p;
+	struct object *parent = ob->parent;
+	struct object *next = TAILQ_NEXT(ob, cobjs);
+
+	if (parent == NULL || next == NULL)
+		return;
+
+	TAILQ_REMOVE(&parent->childs, ob, cobjs);
+	TAILQ_INSERT_AFTER(&parent->childs, next, ob, cobjs);
+}
+
+/*
+ * Remove the data files of an object and its descendants.
+ * The linkage must be locked.
+ */
+static void
+object_unlink_datafiles(void *p)
+{
+	char path[MAXPATHLEN];
+	struct object *ob = p, *cob;
+
+	if (object_copy_filename(ob, path, sizeof(path)) == 0)
+		unlink(path);
+
+	TAILQ_FOREACH(cob, &ob->childs, cobjs)
+		object_unlink_datafiles(cob);
+
+	if (object_copy_dirname(ob, path, sizeof(path)) == 0)
+		rmdir(path);
+
+}
+
 #ifdef EDITION
 
 /* Update the dependencies display. */
@@ -1613,36 +1696,48 @@ select_audio(int argc, union evarg *argv)
 	}
 }
 
+static void
+object_name_prechg(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+
+	object_page_in(ob, OBJECT_DATA);
+	object_unlink_datafiles(ob);
+}
+
+static void
+object_name_postchg(int argc, union evarg *argv)
+{
+	struct object *ob = argv[1].p;
+
+	object_page_out(ob, OBJECT_DATA);
+}
+
 struct window *
 object_edit(void *p)
 {
-	char obj_name[OBJECT_PATH_MAX];
 	struct object *ob = p;
 	struct window *win;
 	struct box *bo;
+	struct textbox *tbox;
 
 	win = window_new(NULL);
 	window_set_caption(win, _("%s object"), ob->name);
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 0);
 	window_set_closure(win, WINDOW_DETACH);
 
-	/* XXX path subject to change */
-	object_copy_name(ob, obj_name, sizeof(obj_name));
-	label_new(win, _("Name: %s (%s)"), ob->name, obj_name);
-	label_new(win, _("Type: %s"), ob->type);
-	label_polled_new(win, &ob->lock, _("Flags : 0x%x"), &ob->flags);
-
-	label_polled_new(win, &linkage_lock, _("Parent: %[obj]"), &ob->parent);
-	label_polled_new(win, &ob->lock, "Pos: %p", &ob->pos);
-	label_polled_new(win, &ob->lock,
-	    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]",
-	    &ob->gfx_used, &ob->audio_used, &ob->data_used);
-
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		char den_path[MAXPATHLEN];
 		struct combo *gfx_com, *aud_com;
 		char *dir, *last;
+	
+		tbox = textbox_new(bo, _("Name: "));
+		widget_bind(tbox, "string", WIDGET_STRING, NULL, ob->name,
+		    sizeof(ob->name));
+		event_new(tbox, "textbox-prechg", object_name_prechg, "%p", ob);
+		event_new(tbox, "textbox-postchg", object_name_postchg, "%p",
+		    ob);
 
 		gfx_com = combo_new(bo, _("Graphics: "));
 		aud_com = combo_new(bo, _("Audio: "));
@@ -1682,6 +1777,20 @@ object_edit(void *p)
 			}
 		}
 	}
+	
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		label_new(bo, _("Type: %s"), ob->type);
+		label_polled_new(bo, &ob->lock, _("Flags : 0x%x"), &ob->flags);
+
+		label_polled_new(bo, &linkage_lock, _("Parent: %[obj]"),
+		    &ob->parent);
+		label_polled_new(bo, &ob->lock, "Pos: %p", &ob->pos);
+		label_polled_new(bo, &ob->lock,
+		    "Refs: gfx=%[u32], audio=%[u32], data=%[u32]",
+		    &ob->gfx_used, &ob->audio_used, &ob->data_used);
+	}
+
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	box_set_padding(bo, 2);
