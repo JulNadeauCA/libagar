@@ -189,17 +189,19 @@ EOT
 echo "$CC -o .cctest .cctest.c" >>config.log
 $CC -o .cctest .cctest.c 2>>config.log
 if [ $? != 0 -o ! -e .cctest ]; then
+    echo "-> failure" >> config.log
     echo "no"
-    rm -f .cctest .cctest.c
     exit 1
 fi
 
 cc_is_gcc=no
 if ./.cctest; then
     cc_is_gcc=yes
+    echo "-> success (gcc)" >> config.log
     echo "yes, gcc"
 else
     echo "yes"
+    echo "-> success" >> config.log
 fi
 
 rm -f .cctest .cctest.c
