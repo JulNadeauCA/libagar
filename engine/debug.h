@@ -1,11 +1,11 @@
-/*	$Csoft: debug.h,v 1.26 2003/01/16 04:05:34 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.27 2003/02/26 02:04:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
 #define _AGAR_ENGINE_DEBUG_H_
 
 #include <config/lockdebug.h>
-#include <config/serialization.h>
+#include <config/threads.h>
 
 void	_dprintf(const char *, ...);
 void	_debug(int, const char *, ...);
