@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.24 2003/04/25 03:44:15 vedge Exp $
+.\"	$Csoft: agar.3,v 1.25 2003/04/25 22:53:52 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -106,7 +106,7 @@ struct foo {
 };
 .Ed
 .Pp
-If threads support was enabled at compile time,
+If multi-threading support was enabled at compile time,
 .Pa Aq engine/engine.h
 defines error-checking wrappers around
 .Fn pthread_*
@@ -160,6 +160,35 @@ Generic
 .Xr event 3
 handling.
 .El
+.Sh GENERIC ERROR HANDLING
+.nr nS 1
+.Ft void
+.Fn error_set "const char *fmt" "..."
+.Pp
+.Ft char *
+.Fn error_get "void"
+.Pp
+.Ft void
+.Fn error_fatal "const char *fmt" "..."
+.Pp
+.nr nS 0
+The
+.Fn error_set
+function sets the error message string, using a
+.Xr printf 3
+style format string as
+.Fa fmt .
+.Fn error_get
+returns a pointer to the current error message string.
+.Pp
+If multi-threading was enabled at compile time, the error message string is
+accessed using a thread-specific key.
+.Pp
+The
+.Fn error_fatal
+function prints an error message and causes the application to exit, or
+.Xr abort 3
+if debugging is enabled.
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,
