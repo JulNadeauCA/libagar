@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.18 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.19 2002/10/30 17:18:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -31,8 +31,6 @@
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
-
-static int	joy_init(struct input *, int);
 
 static TAILQ_HEAD(, input) inputs;
 static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -67,12 +65,18 @@ input_new(int type, int index)
 
 	switch (type) {
 	case INPUT_JOY:
-		rv = joy_init(input, index);
+		if (index < 0) {
+			error_set("bad index");
+			return (NULL);
+		}
+		input->p = SDL_JoystickOpen(index);
+		if (input->p == NULL) {
+			error_set("joy[%d]: %s", index, SDL_GetError());
+			return (NULL);
+		}
+		SDL_JoystickEventState(SDL_ENABLE);
 		break;
 	default:
-	}
-	if (rv != 0) {
-		return (NULL);
 	}
 
 	pthread_mutex_lock(&inputs_lock);
@@ -225,6 +229,9 @@ input_find_ev(enum input_type type, SDL_Event *ev)
 	struct input *in;
 
 	TAILQ_FOREACH(in, &inputs, inputs) {
+		if (in->type != type) {
+			continue;
+		}
 		switch (type) {
 		case INPUT_KEYBOARD:
 			switch (ev->type) {
@@ -297,6 +304,8 @@ input_event(enum input_type type, SDL_Event *ev)
 		return;
 	}
 
+	dprintf("%s event\n", OBJECT(in)->name);
+
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {
 		dprintf("%s: unbound input event\n", OBJECT(in)->name);
@@ -316,23 +325,5 @@ input_event(enum input_type type, SDL_Event *ev)
 done:
 	pthread_mutex_unlock(&in->lock);
 	pthread_mutex_unlock(&inputs_lock);
-}
-
-static int
-joy_init(struct input *in, int index)
-{
-	if (index < 0) {
-		error_set("bad index");
-		return (-1);
-	}
-
-	in->p = SDL_JoystickOpen(index);
-	if (in->p == NULL) {
-		error_set("joy[%d]: %s", index, SDL_GetError());
-		return (-1);
-	}
-	SDL_JoystickEventState(SDL_ENABLE);
-
-	return (0);
 }
 
