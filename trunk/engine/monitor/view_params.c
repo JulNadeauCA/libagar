@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.4 2002/12/29 03:24:31 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.5 2002/12/31 01:20:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -79,13 +79,9 @@ view_params_window(void)
 		case GFX_ENGINE_TILEBASED:
 			engine = "Tile-based";
 			break;
-#ifdef HAVE_OPENGL
-		case GFX_ENGINE_GL:
-			engine = "OpenGL";
-			break;
-#endif
 		}
-		label_new(reg, 100, 0, "Graphic engine: %s", engine);
+		label_new(reg, 100, 0, "Graphic engine: %s %s", engine,
+		    view->opengl ? "(OpenGL)" : "");
 		label_polled_new(reg, 100, 0, &view->lock, "Depth: %dbpp",
 		    &view->depth);
 		label_polled_new(reg, 100, 0, &view->lock, "Geometry: %dx%d",
