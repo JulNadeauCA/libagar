@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.11 2003/09/17 02:20:35 vedge Exp $
+.\"	$Csoft: text.3,v 1.12 2004/01/08 02:20:10 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,33 +44,68 @@ interface uses an underlying font engine (such as FreeType) to render UTF-8
 text.
 .Sh INITIALIZATION
 .nr nS 1
+.Ft void
+.Fn text_parse_fontspec "const char *fontspec"
+.Pp
 .Ft int
-.Fn text_init "enum text_engine engine"
+.Fn text_init "int flags"
 .Pp
 .Ft void
 .Fn text_destroy "void"
-.Pp
-.Ft void
-.Fn text_set_default_font "char *name" "int size" "int style"
-.Pp
 .nr nS 0
+.Pp
+The
+.Fn text_parse_fontspec
+function parses a font specification of the form
+.Sq face,size,style
+(valid separators include
+.Sq :,./ )
+and assigns the default font.
+This function is typically called prior to
+.Fn text_init ,
+to parse font specifications on the command line.
+.Pp
 The
 .Fn text_init
-function initializes a font engine:
+function initializes the font engine.
+Acceptable
+.Fa flags
+include:
 .Bd -literal
-enum text_engine {
-	TEXT_ENGINE_FREETYPE,	/* Use FreeType */
-	TEXT_ENGINE_BITMAP	/* Use bitmap fonts */
-};
+#define TEXT_TTF	0x01	/* Use FreeType */
+#define TEXT_BITMAP	0x02	/* Use fixed-size bitmap fonts */
 .Ed
+.Pp
+.Fn text_init
+selects the default font settings by looking at the following
+.Xr config 3
+settings:
+.Bl -tag -width "font-engine.default-style "
+.It Va font-engine.default-font
+This specifies the default font face to use.
+With
+.Dv TEXT_TTF ,
+this is the name of the font file (without the
+.Sq .ttf
+extension).
+With
+.Dv TEXT_BITMAP ,
+this is the name of the font bitmap file.
+In both cases, the file should reside in one of the directories specified in
+the
+.Va font-path
+.Xr config 3
+setting.
+.It Va font-engine.default-size
+The default font size in points.
+.It Va font-engine.default-style
+The default font style, or flags, specified in hexadecimal format.
+The meaning of these flags is specific to the font engine being used.
+.El
 .Pp
 The
 .Fn text_destroy
 function frees all resources allocated by the font engine.
-.Pp
-The
-.Fn text_default_font
-function sets the default font when unspecified.
 .Sh FONT INFORMATION
 .nr nS 1
 .Ft int

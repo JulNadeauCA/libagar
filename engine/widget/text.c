@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.75 2003/09/02 02:04:30 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.76 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -110,35 +110,28 @@ out:
 	return (nfont);
 }
 
+/* Initialize the text rendering engine and set the default font. */
 int
-text_init(void)
+text_init(int flags)
 {
-	if (ttf_init() == -1) {
-		error_set("ttf_init: %s", SDL_GetError());
-		/* TODO revert to a bitmap font! */
-		return (-1);
+	if (prop_get_bool(config, "font-engine") == 0)
+		return (0);
+
+	if (flags & TEXT_TTF) {
+		if (ttf_init() == -1) {
+			error_set("ttf_init: %s", SDL_GetError());
+			return (-1);
+		}
+		dprintf("face %s size %d style 0x%x\n",
+		    prop_get_string(config, "font-engine.default-font"),
+		    prop_get_int(config, "font-engine.default-size"),
+		    prop_get_int(config, "font-engine.default-style"));
+		font = text_load_font(
+		    prop_get_string(config, "font-engine.default-font"),
+		    prop_get_int(config, "font-engine.default-size"),
+		    prop_get_int(config, "font-engine.default-style"));
 	}
 	return (0);
-}
-
-/* Set the default font. */
-void
-text_set_default_font(char *name, int size, int style)
-{
-#ifdef DEBUG
-	/* Replacing the default font would be thread-unsafe. */
-	if (font != NULL)
-		fatal("default font already set");
-#endif
-	dprintf("%s:%d,%d\n",
-	    prop_get_string(config, "font-engine.default-font"),
-	    prop_get_int(config, "font-engine.default-size"),
-	    prop_get_int(config, "font-engine.default-style"));
-
-	font = text_load_font(
-	    prop_get_string(config, "font-engine.default-font"),
-	    prop_get_int(config, "font-engine.default-size"),
-	    prop_get_int(config, "font-engine.default-style"));
 }
 
 static void
@@ -361,3 +354,25 @@ text_msg(enum text_msg_title title, const char *format, ...)
 	window_show(win);
 }
 
+/*
+ * Parse a command-line font specification and set the default font.
+ * The format is <face>,<size>,<style>.
+ */
+void
+text_parse_fontspec(char *fontspec)
+{
+	char *s;
+
+	if ((s = strsep(&fontspec, ":,./")) != NULL &&
+	    s[0] != '\0') {
+		prop_set_string(config, "font-engine.default-font", s);
+	}
+	if ((s = strsep(&fontspec, ":,./")) != NULL &&
+	    s[0] != '\0') {
+		prop_set_int(config, "font-engine.default-size", atoi(s));
+	}
+	if ((s = strsep(&fontspec, ":,./")) != NULL &&
+	    s[0] != '\0') {
+		prop_set_int(config, "font-engine.default-style", atoi(s));
+	}
+}
