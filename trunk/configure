@@ -137,6 +137,7 @@ echo "    --with-smpeg                   MPEG playback using smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: check]"
+echo "    --with-gettext                 M17N with gettext library [default: check]"
 echo "    --enable-edition               Graphical edition [default: yes]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
@@ -1222,6 +1223,46 @@ echo "#undef HAVE_SMPEG" > config/have_smpeg.h
 fi
 else
 echo "#undef HAVE_SMPEG" > config/have_smpeg.h
+fi
+if [ "${with_gettext}" != "no" ]
+ then
+echo -n "checking for a gettext library..."
+echo -n "checking for a gettext library..." >> config.log
+cat << EOT > conftest.c
+#include <libintl.h>
+
+int
+main(int argc, char *argv[])
+{
+	gettext("");
+	gettext_noop("");
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC -I/usr/local/include -o conftest conftest.c -L/usr/local/lib -lintl 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_GETTEXT" > config/have_gettext.h
+echo "#define HAVE_GETTEXT" $HAVE_GETTEXT >> config/have_gettext.h
+echo "#endif /* HAVE_GETTEXT */" >> config/have_gettext.h
+
+	HAVE_GETTEXT=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_GETTEXT" > config/have_gettext.h
+
+	echo "no"
+fi
+else
+echo "#undef HAVE_GETTEXT" > config/have_gettext.h
 fi
 if [ "${enable_static}" = "yes" ]
  then
