@@ -1,166 +1,164 @@
-# $Csoft: configure.in,v 1.72 2003/08/06 04:11:22 vedge Exp $
+# $Csoft: configure.in,v 1.73 2003/08/07 00:21:05 vedge Exp $
 # Public domain
 
-register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
-register("--with-x11",		"X11-specific code [default: check]");
-register("--with-gl",		"OpenGL rendering support [default: check]");
-register("--with-jpeg",		"JPEG screenshot support [default: check]");
-register("--with-gettext",	"Use gettext tools [default: check]");
-register("--enable-edition",	"Graphical edition [default: yes]");
-register("--enable-debug",	"Engine debugging [default: yes]");
-register("--enable-threads",	"Thread safety [default: no]");
-register("--enable-floating-point", "Floating point operations [default: yes]");
-register("--enable-static",	"Produce a static binary [default: no]");
-register("--enable-8bpp",	"Support for 8 bpp display [default: yes]");
-register("--enable-16bpp",	"Support for 16 bpp display [default: yes]");
-register("--enable-24bpp",	"Support for 24 bpp display [default: yes]");
-register("--enable-32bpp",	"Support for 32 bpp display [default: yes]");
-register("--enable-nls",	"Native Language Support [default: yes]");
-register("--help",		"Show this message");
+REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
+REGISTER("--with-x11",		"X11-specific code [default: check]")
+REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
+REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
+REGISTER("--with-gettext",	"Use gettext tools [default: check]")
+REGISTER("--enable-edition",	"Graphical edition [default: yes]")
+REGISTER("--enable-debug",	"Engine debugging [default: yes]")
+REGISTER("--enable-threads",	"Thread safety [default: no]")
+REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
+REGISTER("--enable-static",	"Produce a static binary [default: no]")
+REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
+REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
+REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
+REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
+REGISTER("--enable-nls",	"Native Language Support [default: yes]")
 
-if [ "${help}" = "yes" ]; then
-	help();
-fi
+# System-wide data directory.
+MDEFINE(SHAREDIR, "$PREFIX/share/cave")
+HDEFINE(SHAREDIR, "\"$PREFIX/share/cave\"")
 
-makeout(Makefile.config);
-inclout(config);
-logout(config.log);
+# Where to install fonts included in the distribution.
+MDEFINE(TTFDIR, "$PREFIX/share/cave/fonts")
+HDEFINE(TTFDIR, "\"$PREFIX/share/cave/fonts\"")
 
-# Define the data directories.
-mdefine(SHAREDIR, "$PREFIX/share/cave");
-hdefine(SHAREDIR, "\"$PREFIX/share/cave\"");
-mdefine(TTFDIR, "$PREFIX/share/cave/fonts");
-hdefine(TTFDIR, "\"$PREFIX/share/cave/fonts\"");
-mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
-mdefine(INST_PSDIR, "$PREFIX/share/agar/ps");
-mdefine(LOCALEDIR, "$PREFIX/share/locale");
-hdefine(LOCALEDIR, "\"$PREFIX/share/locale\"");
+# Manual and PostScript installation directories.
+MDEFINE(INST_MANDIR, "$PREFIX/share/agar/man")
+MDEFINE(INST_PSDIR, "$PREFIX/share/agar/ps")
 
-check(cc);
-check(progname);
-check(math);
-check(gethostname);
-check(getenv);
-check(setenv);
-check(strsep);
-check(strlcat);
-check(strlcpy);
-check(asprintf);
-check(vasprintf);
-check(snprintf);
-check(vsnprintf);
-check(setlocale);
+# Where to install locales for multi-language support.
+MDEFINE(LOCALEDIR, "$PREFIX/share/locale")
+HDEFINE(LOCALEDIR, "\"$PREFIX/share/locale\"")
 
-mdefine(CFLAGS, "$CFLAGS -I$SRC");
-#mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
-#mdefine(CFLAGS, "$CFLAGS -Wno-missing-headers");
+CHECK(cc)
+CHECK(progname)
+CHECK(math)
+CHECK(gethostname)
+CHECK(getenv)
+CHECK(setenv)
+CHECK(strsep)
+CHECK(strlcat)
+CHECK(strlcpy)
+CHECK(asprintf)
+CHECK(vasprintf)
+CHECK(snprintf)
+CHECK(vsnprintf)
+CHECK(setlocale)
+
+MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
+#MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused")
+#MDEFINE(CFLAGS, "$CFLAGS -Wno-missing-headers")
 
 # Require SDL and FreeType.
-require(sdl, 1.2.0);
-require(freetype, 7.0.1);
+REQUIRE(sdl, 1.2.0)
+REQUIRE(freetype, 7.0.1)
 
 # Include X11-specific code? (only used for debugging)
 if [ "${with_x11}" != "no" ]; then
-	check(x11);
+	CHECK(x11)
 else
-	hundef(HAVE_X11);
+	HUNDEF(HAVE_X11)
 fi
 
-# OpenGL support?
+# Enable OpenGL support if an OpenGL library is found.
 if [ "${with_gl}" != "no" ]; then
-	check(opengl);
+	CHECK(opengl)
 	if [ "${HAVE_OPENGL}" = "yes" ]; then
-		mdefine(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS");
+		MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
 	fi
 else
-	hundef(HAVE_OPENGL);
+	HUNDEF(HAVE_OPENGL)
 fi
 
-# JPEG support?
+# Enable JPEG support if libjpeg is found.
 if [ "${with_jpeg}" != "no" ]; then
-	check(jpeg);
+	CHECK(jpeg)
 else
-	hundef(HAVE_JPEG);
+	HUNDEF(HAVE_JPEG)
 fi
 
-# Look for the smpeg library.
+# Enable MPEG support if the SMPEG library is found.
 if [ "${with_smpeg}" != "no" ]; then
-	check(smpeg, 0.4.4);
+	CHECK(smpeg, 0.4.4)
 else
-	hundef(HAVE_SMPEG);
+	HUNDEF(HAVE_SMPEG)
 fi
 
 # Compile a static binary?
 if [ "${enable_static}" = "yes" ]; then
-	mdefine(LDFLAGS, "-static");
+	MDEFINE(LDFLAGS, "-static")
 fi
 
-# Debugging?
+# Don't enable debugging unless requested explicitely.
 if [ "${enable_debug}" != "no" ]; then
-	hdefine(DEBUG, 1);
-	hdefine(LOCKDEBUG, 1);
+	HDEFINE(DEBUG, 1)
+	HDEFINE(LOCKDEBUG, 1)
 else
-	hundef(DEBUG);
-	hundef(LOCKDEBUG);
+	HUNDEF(DEBUG)
+	HUNDEF(LOCKDEBUG)
 fi
 
-# Thread safety?
+# Don't enable thread safety unless requested explicitely.
 if [ "${enable_threads}" = "yes" ]; then
-	hdefine(THREADS, 1);
+	HDEFINE(THREADS, 1)
 else
-	hundef(THREADS);
+	HUNDEF(THREADS)
 fi
 
-# Floating point operations
+# Enable floating point operations by default.
 if [ "${enable_floating_point}" != "no" ]; then
-	hdefine(FLOATING_POINT, 1);
+	HDEFINE(FLOATING_POINT, 1)
 else
-	hundef(FLOATING_POINT);
+	HUNDEF(FLOATING_POINT)
 fi
 
-# Graphical edition
+# Enable graphical edition by default.
 if [ "${enable_edition}" != "no" ]; then
-	hdefine(EDITION, 1);
+	HDEFINE(EDITION, 1)
 else
-	hundef(EDITION);
+	HUNDEF(EDITION)
 fi
 
-# Reduce code size and gain some cycles by disabling unused modes.
+# Support 8/16/24/32bpp video displays by default.
+# Disable unused modes to reduce code size and gain some cycles.
 if [ "${enable_8bpp}" != "no" ]; then
-	hdefine(VIEW_8BPP, 1);
+	HDEFINE(VIEW_8BPP, 1)
 else
-	hundef(VIEW_8BPP);
+	HUNDEF(VIEW_8BPP)
 fi
 if [ "${enable_16bpp}" != "no" ]; then
-	hdefine(VIEW_16BPP, 1);
+	HDEFINE(VIEW_16BPP, 1)
 else
-	hundef(VIEW_16BPP);
+	HUNDEF(VIEW_16BPP)
 fi
 if [ "${enable_24bpp}" != "no" ]; then
-	hdefine(VIEW_24BPP, 1);
+	HDEFINE(VIEW_24BPP, 1)
 else
-	hundef(VIEW_24BPP);
+	HUNDEF(VIEW_24BPP)
 fi
 if [ "${enable_32bpp}" != "no" ]; then
-	hdefine(VIEW_32BPP, 1);
+	HDEFINE(VIEW_32BPP, 1)
 else
-	hundef(VIEW_32BPP);
+	HUNDEF(VIEW_32BPP)
 fi
 
 # Look for a gettext library (for build only; always use local libintl).
 if [ "${with_gettext}" != "no" ]; then
-	check(gettext);
+	CHECK(gettext)
 else
-	hundef(HAVE_GETTEXT);
-	mdefine(HAVE_GETTEXT, "no");
+	HUNDEF(HAVE_GETTEXT)
+	MDEFINE(HAVE_GETTEXT, "no")
 fi
 
-# Native Language Support?
+# Enable multi-language support by default.
 if [ "${enable_nls}" != "no" ]; then
-	mdefine(ENABLE_NLS, "yes");
-	hdefine(ENABLE_NLS, 1);
+	MDEFINE(ENABLE_NLS, "yes")
+	HDEFINE(ENABLE_NLS, 1)
 else
-	mdefine(ENABLE_NLS, "no");
-	hundef(ENABLE_NLS);
+	MDEFINE(ENABLE_NLS, "no")
+	HUNDEF(ENABLE_NLS)
 fi
 
