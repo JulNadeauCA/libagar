@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.31 2003/05/06 01:03:40 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.32 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,9 +29,6 @@
 #include <config/floating_point.h>
 #include <config/have_ieee754.h>
 
-#include <engine/compat/vasprintf.h>
-#include <engine/compat/strlcpy.h>
-
 #include <engine/engine.h>
 #include <engine/version.h>
 
@@ -55,7 +52,7 @@ int	prop_debug = 0;
 
 /* Modify a property, or create a new one if it does not exist. */
 struct prop *
-prop_set(void *p, char *key, enum prop_type type, ...)
+prop_set(void *p, const char *key, enum prop_type type, ...)
 {
 	struct object *ob = p;
 	struct prop *nprop = NULL, *oprop;
@@ -151,63 +148,63 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 }
 
 struct prop *
-prop_set_int(void *ob, char *key, int i)
+prop_set_int(void *ob, const char *key, int i)
 {
 	return (prop_set(ob, key, PROP_INT, i));
 }
 
 struct prop *
-prop_set_uint8(void *ob, char *key, Uint8 i)
+prop_set_uint8(void *ob, const char *key, Uint8 i)
 {
 	return (prop_set(ob, key, PROP_UINT8, i));
 }
 
 struct prop *
-prop_set_sint8(void *ob, char *key, Sint8 i)
+prop_set_sint8(void *ob, const char *key, Sint8 i)
 {
 	return (prop_set(ob, key, PROP_SINT8, i));
 }
 
 struct prop *
-prop_set_uint16(void *ob, char *key, Uint16 i)
+prop_set_uint16(void *ob, const char *key, Uint16 i)
 {
 	return (prop_set(ob, key, PROP_UINT16, i));
 }
 
 struct prop *
-prop_set_sint16(void *ob, char *key, Sint16 i)
+prop_set_sint16(void *ob, const char *key, Sint16 i)
 {
 	return (prop_set(ob, key, PROP_SINT16, i));
 }
 
 struct prop *
-prop_set_uint32(void *ob, char *key, Uint32 i)
+prop_set_uint32(void *ob, const char *key, Uint32 i)
 {
 	return (prop_set(ob, key, PROP_UINT32, i));
 }
 
 struct prop *
-prop_set_sint32(void *ob, char *key, Sint32 i)
+prop_set_sint32(void *ob, const char *key, Sint32 i)
 {
 	return (prop_set(ob, key, PROP_SINT32, i));
 }
 
 #ifdef FLOATING_POINT
 struct prop *
-prop_set_float(void *ob, char *key, float f)
+prop_set_float(void *ob, const char *key, float f)
 {
 	return (prop_set(ob, key, PROP_FLOAT, f));
 }
 
 struct prop *
-prop_set_double(void *ob, char *key, double d)
+prop_set_double(void *ob, const char *key, double d)
 {
 	return (prop_set(ob, key, PROP_DOUBLE, d));
 }
 
 # ifdef USE_LONG_DOUBLE
 struct prop *
-prop_set_long_double(void *ob, char *key, long double ld)
+prop_set_long_double(void *ob, const char *key, long double ld)
 {
 	return (prop_set(ob, key, PROP_LONG_DOUBLE, ld));
 }
@@ -215,7 +212,7 @@ prop_set_long_double(void *ob, char *key, long double ld)
 #endif /* FLOATING_POINT */
 
 struct prop *
-prop_set_string(void *ob, char *key, const char *fmt, ...)
+prop_set_string(void *ob, const char *key, const char *fmt, ...)
 {
 	va_list ap;
 	char *s;
@@ -228,23 +225,32 @@ prop_set_string(void *ob, char *key, const char *fmt, ...)
 }
 
 struct prop *
-prop_set_pointer(void *ob, char *key, void *p)
+prop_set_pointer(void *ob, const char *key, void *p)
 {
 	return (prop_set(ob, key, PROP_POINTER, p));
 }
 
 struct prop *
-prop_set_bool(void *ob, char *key, int i)
+prop_set_bool(void *ob, const char *key, int i)
 {
 	return (prop_set(ob, key, PROP_BOOL, i));
 }
 
-/*
- * Obtain the value of a property.
- * XXX use a hash table
- */
+__inline__ void
+prop_lock(void *p)
+{
+	pthread_mutex_lock(&OBJECT(p)->props_lock);
+}
+
+__inline__ void
+prop_unlock(void *p)
+{
+	pthread_mutex_unlock(&OBJECT(p)->props_lock);
+}
+
+/* Obtain the value of a property. */
 struct prop *
-prop_get(void *obp, char *key, enum prop_type t, void *p)
+prop_get(void *obp, const char *key, enum prop_type t, void *p)
 {
 	struct object *ob = obp;
 	struct prop *prop;
@@ -294,8 +300,7 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 # endif
 #endif /* FLOATING_POINT */
 			case PROP_STRING:
-				/* Strdup'd for thread safety. */
-				*(char **)p = Strdup(prop->data.s);
+				*(char **)p = prop->data.s;
 				break;
 			case PROP_POINTER:
 				*(void **)p = prop->data.p;
@@ -316,7 +321,7 @@ fail:
 }
 
 int
-prop_get_int(void *p, char *key)
+prop_get_int(void *p, const char *key)
 {
 	int i;
 
@@ -326,7 +331,7 @@ prop_get_int(void *p, char *key)
 }
 
 int
-prop_get_bool(void *p, char *key)
+prop_get_bool(void *p, const char *key)
 {
 	int i;
 
@@ -336,7 +341,7 @@ prop_get_bool(void *p, char *key)
 }
 
 Uint8
-prop_get_uint8(void *p, char *key)
+prop_get_uint8(void *p, const char *key)
 {
 	Uint8 i;
 
@@ -346,7 +351,7 @@ prop_get_uint8(void *p, char *key)
 }
 
 Sint8
-prop_get_sint8(void *p, char *key)
+prop_get_sint8(void *p, const char *key)
 {
 	Sint8 i;
 
@@ -356,7 +361,7 @@ prop_get_sint8(void *p, char *key)
 }
 
 Uint16
-prop_get_uint16(void *p, char *key)
+prop_get_uint16(void *p, const char *key)
 {
 	Uint16 i;
 
@@ -366,7 +371,7 @@ prop_get_uint16(void *p, char *key)
 }
 
 Sint16
-prop_get_sint16(void *p, char *key)
+prop_get_sint16(void *p, const char *key)
 {
 	Sint16 i;
 
@@ -376,7 +381,7 @@ prop_get_sint16(void *p, char *key)
 }
 
 Uint32
-prop_get_uint32(void *p, char *key)
+prop_get_uint32(void *p, const char *key)
 {
 	Uint32 i;
 
@@ -386,7 +391,7 @@ prop_get_uint32(void *p, char *key)
 }
 
 Sint32
-prop_get_sint32(void *p, char *key)
+prop_get_sint32(void *p, const char *key)
 {
 	Sint32 i;
 
@@ -397,7 +402,7 @@ prop_get_sint32(void *p, char *key)
 
 #ifdef FLOATING_POINT
 float
-prop_get_float(void *p, char *key)
+prop_get_float(void *p, const char *key)
 {
 	float f;
 
@@ -407,7 +412,7 @@ prop_get_float(void *p, char *key)
 }
 
 double
-prop_get_double(void *p, char *key)
+prop_get_double(void *p, const char *key)
 {
 	double d;
 
@@ -418,7 +423,7 @@ prop_get_double(void *p, char *key)
 
 # ifdef USE_LONG_DOUBLE
 long double
-prop_get_long_double(void *p, char *key)
+prop_get_long_double(void *p, const char *key)
 {
 	long double ld;
 
@@ -430,30 +435,34 @@ prop_get_long_double(void *p, char *key)
 #endif /* FLOATING_POINT */
 
 char *
-prop_get_string(void *p, char *key)
+prop_get_string(void *p, const char *key)
 {
-	char *s;
+	char *s, *sd;
 
+	prop_lock(p);
 	if (prop_get(p, key, PROP_STRING, &s) == NULL)
 		fatal("%s", error_get());
-	return (s);
+	sd = Strdup(s);
+	prop_unlock(p);
+	return (sd);
 }
 
 size_t
-prop_copy_string(void *p, char *key, char *buf, size_t bufsize)
+prop_copy_string(void *p, const char *key, char *buf, size_t bufsize)
 {
 	size_t sl;
 	char *s;
 
+	prop_lock(p);
 	if (prop_get(p, key, PROP_STRING, &s) == NULL)
 		fatal("%s", error_get());
 	sl = strlcpy(buf, s, bufsize);
-	free(s);
+	prop_unlock(p);
 	return (sl);
 }
 
 void *
-prop_get_pointer(void *p, char *key)
+prop_get_pointer(void *p, const char *key)
 {
 	void *np;
 
