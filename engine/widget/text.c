@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.2 2002/04/20 05:48:05 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.3 2002/04/20 06:11:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 
 #include "text.h"
 
-static struct obvec text_vec = {
+static const struct obvec text_vec = {
 	text_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
@@ -107,8 +107,8 @@ void
 text_quit(void)
 {
 	if (font != NULL) {
-		font = NULL;
 		TTF_CloseFont(font);
+		font = NULL;
 	}
 	TTF_Quit();
 }
@@ -126,7 +126,7 @@ text_create(Uint32 x, Uint32 y, Uint32 w, Uint32 h, Uint32 flags,
 #endif
 
 	te = (struct text *)emalloc(sizeof(struct text));
-	object_init(&te->obj, "text", 0, &text_vec);
+	object_init(&te->obj, "text", NULL, 0, &text_vec);
 	te->flags = flags;
 
 	te->sleepms = sleepms;
