@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.17 2002/09/11 23:55:08 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.18 2002/11/13 00:22:31 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -42,12 +42,19 @@ static void	box_2d(void *, int, int, int, int, int, Uint32);
 static void	frame_3d(void *, int, int, int, int, Uint32);
 static void	circle_bresenham(void *, int, int, int, int, int, Uint32);
 static void	line_bresenham(void *, int, int, int, int, Uint32);
+static void	line_bresenham_dashed(void *, int, int, int, int, Uint32, int);
+static void	line_bresenham_dashed1(void *, int, int, int, int, Uint32);
+static void	line_bresenham_dashed2(void *, int, int, int, int, Uint32);
+static void	line_bresenham_dashed3(void *, int, int, int, int, Uint32);
+static void	line_bresenham_dashed4(void *, int, int, int, int, Uint32);
+static void	line_bresenham_dashed5(void *, int, int, int, int, Uint32);
 static void	square_composite(void *, int, int, int, int, Uint32);
 static void	triangle_composite(void *, int[2], int[2], int[2], Uint32);
 
 static __inline__ void	put_pixel1(Uint8, Uint8 *, Uint32);
 static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
 
+/* Default primitives ops */
 struct primitive_ops primitives = {
 	box_3d,			/* box */
 	frame_3d,		/* frame */
@@ -57,6 +64,7 @@ struct primitive_ops primitives = {
 	triangle_composite	/* triangle */
 };
 
+/* Types of primitives */
 enum {
 	BOX,
 	FRAME,
@@ -130,7 +138,6 @@ box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
 	    xoffs+w-1, yoffs,
 	    xoffs+w-1, yoffs+h-1, color);
 }
-
 
 static void
 box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
@@ -429,6 +436,182 @@ done:
 }
 
 static void
+line_bresenham_dashed1(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 1);
+}
+
+static void
+line_bresenham_dashed2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 2);
+}
+
+static void
+line_bresenham_dashed3(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 3);
+}
+
+static void
+line_bresenham_dashed4(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 4);
+}
+
+static void
+line_bresenham_dashed5(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+{
+	line_bresenham_dashed(wid, x1, y1, x2, y2, color, 5);
+}
+
+static void
+line_bresenham_dashed(void *wid, int x1, int y1, int x2, int y2, Uint32 color,
+    int dash)
+{
+	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p, alt = 0;
+	Uint8 *fb1, *fb2;
+
+	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+
+	fb1 = (Uint8 *)view->v->pixels +
+	    y1*view->v->pitch +
+	    x1*view->v->format->BytesPerPixel;
+
+	fb2 = (Uint8 *)view->v->pixels +
+	    y2*view->v->pitch +
+	    x2*view->v->format->BytesPerPixel;
+	
+	xinc = view->v->format->BytesPerPixel;
+	dx = x2 - x1;
+	if (dx < 0) {
+		dx = -dx;
+		xinc = -view->v->format->BytesPerPixel;
+	}
+
+	yinc = view->v->pitch;
+	dy = y2 - y1;
+	if (dy < 0) {
+		yinc = -view->v->pitch;
+		dy = -dy;
+	}
+
+	xyinc = xinc+yinc;
+
+	SDL_LockSurface(view->v);
+
+	if (dy > dx) {
+		goto y_is_independent;
+	}
+
+/* x_is_independent: */
+	dpr = dy+dy;
+	p = -dx;
+	dpru = p+p;
+	dy = dx>>1;
+
+xloop:
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel2(xinc, fb1, fb2, color);
+	}
+
+	if ((p += dpr) > 0) {
+		goto right_and_up;
+	}
+
+/* up: */
+	fb1 += xinc;
+	fb2 -= xinc;
+	if ((dy=dy-1) >= 0) {
+		goto xloop;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb1, color);
+	}
+	if ((dx & 1) == 0) {
+		goto done;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb2, color);
+	}
+	goto done;
+
+right_and_up:
+	fb1 += xyinc;
+	fb2 -= xyinc;
+	p += dpru;
+	if (--dy >= 0) {
+		goto xloop;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb1, color);
+	}
+	if ((dx & 1) == 0) {
+		goto done;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb2, color);
+	}
+	goto done;
+
+y_is_independent:
+	dpr = dx+dx;
+	p = -dy;
+	dpru = p+p;
+	dx = dy>>1;
+
+yloop:
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel2(xinc, fb1, fb2, color);
+	}
+
+	if ((p += dpr) > 0) {
+		goto right_and_up_2;
+	}
+/* up: */
+	fb1 += yinc;
+	fb2 -= yinc;
+	if ((dx=dx-1) >= 0) {
+		goto yloop;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb2, color);
+	}
+	goto done;
+
+right_and_up_2:
+	fb1 += xyinc;
+	fb2 -= xyinc;
+	p += dpru;
+	if ((dx=dx-1) >= 0) {
+		goto yloop;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb1, color);
+	}
+	if ((dy & 1) == 0) {
+		goto done;
+	}
+	if (++alt > dash) {
+		alt = 0;
+		put_pixel1(xinc, fb2, color);
+	}
+done:
+	SDL_UnlockSurface(view->v);
+}
+
+static void
 square_composite(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
@@ -508,7 +691,18 @@ primitive_config_window(void)
 		
 	lab = label_new(reg, "Line:", 100, 5);
 	tl = tlist_new(reg, 100, 28, 0);
-	tlist_insert_item(tl, NULL, "Bresenham #1", line_bresenham);
+	tlist_insert_item(tl, NULL,
+	    "Bresenham #1", line_bresenham);
+	tlist_insert_item(tl, NULL,
+	    "Bresenham dashed #1", line_bresenham_dashed1);
+	tlist_insert_item(tl, NULL,
+	    "Bresenham dashed #2", line_bresenham_dashed2);
+	tlist_insert_item(tl, NULL,
+	    "Bresenham dashed #3", line_bresenham_dashed3);
+	tlist_insert_item(tl, NULL,
+	    "Bresenham dashed #4", line_bresenham_dashed4);
+	tlist_insert_item(tl, NULL,
+	    "Bresenham dashed #5", line_bresenham_dashed5);
 	event_new(tl, "tlist-changed", 0, apply, "%i", LINE);
 		
 	lab = label_new(reg, "Square:", 100, 5);
