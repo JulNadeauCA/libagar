@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.78 2002/09/06 01:23:24 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.79 2002/09/08 03:45:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -72,8 +72,10 @@ static const struct event_proto {
 
 static struct window *fps_win;
 
-#else
+#else	/* !DEBUG */
+
 #define EVENT_DEBUG
+
 #endif	/* DEBUG */
 
 static void	 event_hotkey(SDL_Event *);
@@ -194,8 +196,7 @@ event_loop(void)
 	    0, 0, 133, 104, 125, 91);
 	reg = region_new(fps_win, REGION_VALIGN,
 	    0, 0, 100, 100);
-	fps_label = label_new(reg, "...", 0);
-	WIDGET(fps_label)->rh = 20;
+	fps_label = label_new(reg, "...", 100, 20);
 	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
 	    100, 80);
@@ -489,7 +490,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 		event_checkproto(ob, name, fmt);
 #endif
 
-	pthread_mutex_lock(&ob->events_lock);		/* XXX inefficient */
+	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
 		if (strcmp(name, eev->name) != 0) {
 			continue;
@@ -511,13 +512,33 @@ event_post(void *obp, char *name, const char *fmt, ...)
 			pthread_create(&async_event_th, NULL,
 			    event_post_async, neev);
 		} else {
-			/* XXX safe, but sick */
+			/* XXX */
 			pthread_mutex_unlock(&ob->events_lock);
 			neev->handler(neev->argc, neev->argv);
 			free(neev);
 			pthread_mutex_lock(&ob->events_lock);
 		}
 		break;
+	}
+	pthread_mutex_unlock(&ob->events_lock);
+}
+
+/* Forward an event, without modifying the original event structure. */
+void
+event_forward(void *child, char *name, int argc, union evarg *argv)
+{
+	struct object *ob = child;
+	struct event *ev;
+
+	pthread_mutex_lock(&ob->events_lock);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(name, ev->name) != 0) {
+			continue;
+		}
+		/* XXX safe, but sick */
+		pthread_mutex_unlock(&ob->events_lock);
+		ev->handler(argc, argv);
+		pthread_mutex_lock(&ob->events_lock);
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 }
