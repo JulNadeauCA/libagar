@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.59 2002/08/19 07:33:05 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.60 2002/08/22 23:45:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "engine.h"
+#include "rootmap.h"
 #include "map.h"
 #include "physics.h"
 #include "config.h"
@@ -50,120 +51,7 @@ static const struct object_ops viewport_ops = {
 /* Read-only as long as the engine is running. */
 struct viewport *view;
 
-static int	**view_allocmask(int, int);
-static SDL_Rect	**view_allocmaprects(int, int);
-static SDL_Rect	 *view_allocrects(int, int);
-static void	  view_freemask(struct viewport *);
-static void	  view_freemaprects(struct viewport *);
-
-/* Allocate a mask of the given size. */
-static int **
-view_allocmask(int w, int h)
-{
-	int **mask, y, x = 0;
-
-	mask = emalloc((w * h) * sizeof(int *));
-	for (y = 0; y < h; y++) {
-		*(mask + y) = emalloc(w * sizeof(int));
-	}
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
-			mask[y][x] = 0;
-		}
-	}
-	return (mask);
-}
-
-/* Precalculate rectangles. */
-static SDL_Rect **
-view_allocmaprects(int w, int h)
-{
-	SDL_Rect **rects;
-	int x, y;
-
-	rects = emalloc((w * h) * sizeof(SDL_Rect *));
-	for (y = 0; y < h; y++) {
-		*(rects + y) = emalloc(w * sizeof(SDL_Rect));
-		for (x = 0; x < w; x++) {
-			rects[y][x].x = x * TILEW;
-			rects[y][x].y = y * TILEH;
-			rects[y][x].w = TILEW;
-			rects[y][x].h = TILEH;
-		}
-	}
-	return (rects);
-}
-
-/*
- * Allocate an array able to hold wxh rectangles,
- * for optimization purposes.
- */
-static SDL_Rect *
-view_allocrects(int w, int h)
-{
-	SDL_Rect *rects;
-	size_t len;
-	
-	len = (w * h) * sizeof(SDL_Rect *);
-	rects = emalloc(len);
-	memset(rects, NULL, len);
-	return (rects);
-}
-
-/*
- * Increment map mask nodes matching rd.
- * View must be locked.
- */
-void
-view_maskfill(SDL_Rect *rd, int n)
-{
-	int x, y;
-
-#ifdef DEBUG
-	if (view->rootmap == NULL) {
-		fatal("NULL rootmap\n");
-	}
-#endif
-
-	for (y = rd->y; y < rd->y+rd->h; y++) {
-		for (x = rd->x; x < rd->x+rd->w; x++) {
-			view->rootmap->mask[y][x] += n;
-		}
-	}
-}
-
-/*
- * Free map mask nodes.
- * View must be locked.
- */
-static void
-view_freemask(struct viewport *v)
-{
-	int y;
-
-	for (y = 0; y < v->rootmap->h; y++) {
-		free(*(v->rootmap->mask + y));
-	}
-	free(v->rootmap->mask);
-	v->rootmap->mask = NULL;
-}
-
-/*
- * Free a map rectangle array.
- * View must be locked.
- */
-static void
-view_freemaprects(struct viewport *v)
-{
-	int y;
-
-	for (y = 0; y < v->rootmap->h; y++) {
-		free(*(v->rootmap->maprects + y));
-	}
-	free(v->rootmap->maprects);
-	v->rootmap->maprects = NULL;
-}
-
+/* Initialize the graphic engine. */
 void
 view_init(gfx_engine_t ge)
 {
@@ -174,11 +62,9 @@ view_init(gfx_engine_t ge)
 	int h = config->view.h, mh = h / TILEH;
 
 	if (config->flags & CONFIG_FULLSCREEN) {
-		dprintf("full-screen mode\n");
 		screenflags |= SDL_FULLSCREEN;
 	}
 	if (config->flags & CONFIG_ASYNCBLIT) {
-		dprintf("async blit\n");
 		screenflags |= SDL_ASYNCBLIT;
 	}
 
@@ -192,7 +78,20 @@ view_init(gfx_engine_t ge)
 	v->winop = VIEW_WINOP_NONE;
 	TAILQ_INIT(&v->windowsh);
 	pthread_mutex_init(&v->lock, NULL);
-	
+
+	switch (v->gfx_engine) {
+	case GFX_ENGINE_TILEBASED:
+		v->w -= v->w % TILEW;
+		v->h -= v->h % TILEH;
+		break;
+	default:
+	}
+
+	if (v->w < 4*TILEW || v->h < 4*TILEH) {
+		fatal("resolution is minimum %dx%d\n",
+		    4*TILEW, 4*TILEH);
+	}
+
 	switch (v->bpp) {
 	case 8:
 		screenflags |= SDL_HWPALETTE;
@@ -231,9 +130,9 @@ view_init(gfx_engine_t ge)
 		 * preallocate an array able to hold all possible rectangles
 		 * in a view, for optimization purposes.
 		 */
-		v->rootmap->mask = view_allocmask(mw, mh);
-		v->rootmap->maprects = view_allocmaprects(mw, mh);
-		v->rootmap->rects = view_allocrects(mw, mh);
+		v->rootmap->mask = rootmap_alloc_mask(mw, mh);
+		v->rootmap->maprects = rootmap_alloc_maprects(mw, mh);
+		v->rootmap->rects = rootmap_alloc_rects(mw, mh);
 	
 		SDL_WM_SetCaption("AGAR (tile-based)", "AGAR");
 		break;
@@ -252,77 +151,10 @@ view_destroy(void *p)
 	struct viewport *v = p;
 
 	if (v->rootmap != NULL) {
-		view_freemask(v);
-		view_freemaprects(v);
+		rootmap_free_mask(v);
+		rootmap_free_maprects(v);
 		free(v->rootmap->rects);
 	}
-}
-
-/*
- * Center the view. Only relevant to game mode.
- * Map must be locked.
- */
-void
-view_center(struct map *m, int mapx, int mapy)
-{
-	struct viewport *v = view;
-	struct viewmap *rm = v->rootmap;
-	int nx, ny;
-
-	nx = mapx - (rm->w / 2);
-	ny = mapy - (rm->h / 2);
-
-	if (nx < 0)
-		nx = 0;
-	if (ny < 0)
-		ny = 0;
-	if (nx >= (m->mapw - rm->w))
-		nx = (m->mapw - rm->w);
-	if (ny >= (m->maph - rm->h))
-		ny = (m->maph - rm->h);
-
-	rm->x = nx;
-	rm->y = ny;
-}
-
-/*
- * Scroll the view. Only relevant to game mode.
- * XXX later
- * View must be locked.
- */
-void
-view_scroll(struct map *m, int dir)
-{
-	struct viewmap *rm = view->rootmap;
-
-	if (view->gfx_engine != GFX_ENGINE_TILEBASED) {
-		dprintf("only relevant to tile mode\n");
-		return;
-	}
-
-	switch (dir) {
-	case DIR_UP:
-		if (--rm->y < 0) {
-			rm->y = 0;
-		}
-		break;
-	case DIR_LEFT:
-		if (--rm->x < 0) {
-			rm->x = 0;
-		}
-		break;
-	case DIR_DOWN:
-		if (++rm->y > (m->maph - rm->h)) {
-			rm->y = (m->maph - rm->h);
-		}
-		break;
-	case DIR_RIGHT:
-		if (++rm->x > (m->mapw - rm->w)) {
-			rm->x = (m->mapw - rm->w);
-		}
-		break;
-	}
-	m->redraw++;
 }
 
 /*
