@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.23 2002/07/27 07:02:55 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.24 2002/07/29 05:29:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -27,10 +27,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#ifdef __linux__
-#define _GNU_SOURCE	/* for vasprintf() */
-#endif
 
 #include <sys/types.h>
 
@@ -86,7 +82,9 @@ label_printf(struct label *label, const char *fmt, ...)
 	char *buf;
 
 	va_start(args, fmt);
-	vasprintf(&buf, fmt, args);
+	if (vasprintf(&buf, fmt, args) == -1) {
+		fatal("vasprintf: %s\n", strerror(errno));
+	}
 	va_end(args);
 
 	label->caption = erealloc(label->caption, strlen(buf));

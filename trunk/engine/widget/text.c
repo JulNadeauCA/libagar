@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.24 2002/07/24 09:26:10 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.25 2002/08/12 06:57:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ get_font(char *name, int size, int style)
 
 	path = object_path(name, "ttf");
 	if (path == NULL) {
-		fatal("%s.ttf: %s\n", name, AGAR_GetError());
+		fatal("%s.ttf: %s\n", name, error_get());
 	}
 	nfont = TTF_OpenFont(path, size);
 	if (nfont == NULL) {
