@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.17 2002/02/17 08:03:10 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.18 2002/02/17 08:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -187,7 +187,8 @@ object_loadfrom(void *p, char *path)
 		return (-1);
 	}
 
-	fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+	/* XXX mmap? */
+	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
 		warning("%s: %s\n", path, strerror(errno));
 		return (-1);
@@ -211,11 +212,12 @@ object_load(void *p)
 		return (-1);
 	}
 
+	/* XXX mmap? */
 	sprintf(path, "%s/%s.o", world->udatadir, ob->name);
-	fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
 		sprintf(path, "%s/%s.o", world->sysdatadir, ob->name);
-		fd = open(path, O_RDONLY|O_CREAT|O_TRUNC, 00600);
+		fd = open(path, O_RDONLY, 00600);
 		if (fd < 0) {
 			perror(path);
 			return (-1);
