@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.5 2003/03/11 02:46:53 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.6 2003/03/13 00:02:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -27,19 +27,21 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/map.h>
+
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
+#include <engine/mapedit/selops.h>
 
 #include "tool.h"
 #include "select.h"
 
 static const struct tool_ops select_ops = {
 	{
-		NULL,		/* destroy */
+		tool_destroy,
 		NULL,		/* load */
 		NULL		/* save */
 	},
@@ -49,11 +51,43 @@ static const struct tool_ops select_ops = {
 	NULL			/* mouse */
 };
 
+static void
+select_copy(void *p, struct mapview *mv)
+{
+	if (mv->esel.set)
+		selops_copy(mv);
+}
+
+static void
+select_paste(void *p, struct mapview *mv)
+{
+	if (mv->esel.set)
+		selops_paste(mv);
+}
+
+static void
+select_cut(void *p, struct mapview *mv)
+{
+	if (mv->esel.set)
+		selops_cut(mv);
+}
+
+static void
+select_kill(void *p, struct mapview *mv)
+{
+	if (mv->esel.set)
+		selops_kill(mv);
+}
+
 void
 select_init(void *p)
 {
 	struct select *sel = p;
 
 	tool_init(&sel->tool, "select", &select_ops);
+	tool_bind_key(sel, KMOD_CTRL, SDLK_c, select_copy, 0);
+	tool_bind_key(sel, KMOD_CTRL, SDLK_v, select_paste, 1);
+	tool_bind_key(sel, KMOD_CTRL, SDLK_x, select_cut, 1);
+	tool_bind_key(sel, KMOD_CTRL, SDLK_k, select_kill, 1);
 }
 
