@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.27 2002/05/24 09:16:05 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.28 2002/05/24 10:24:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -461,7 +461,7 @@ window_detach(void *parent, void *child)
 	struct region *reg = child;
 
 	OBJECT_ASSERT(parent, "window");
-	OBJECT_ASSERT(child, "window-segment");
+	OBJECT_ASSERT(child, "window-region");
 
 	SLIST_REMOVE(&win->regionsh, reg, region, regions);
 }
@@ -470,17 +470,15 @@ void
 window_destroy(void *p)
 {
 	struct window *win = p;
-#if 0
-	struct segment *seg, *nextseg = NULL;
+	struct region *reg, *nextreg = NULL;
 
-	/* Free segments. */
-	for (seg = SLIST_FIRST(&win->winsegsh);
-	     seg != SLIST_END(&win->winsegsh);
-	     seg = nextseg) {
-		nextseg = SLIST_NEXT(seg, winsegs);
-		free(seg);
+	for (reg = SLIST_FIRST(&win->regionsh);
+	     reg != SLIST_END(&win->regionsh);
+	     reg = nextreg) {
+		nextreg = SLIST_NEXT(reg, regions);
+		window_detach(win, reg);
+		object_destroy(reg);
 	}
-#endif
 	pthread_mutex_destroy(&win->lock);
 	free(win->caption);
 	free(win->border);

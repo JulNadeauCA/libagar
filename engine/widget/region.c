@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.4 2002/05/22 02:03:01 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.5 2002/05/24 09:15:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -104,7 +104,16 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 void
 region_destroy(void *p)
 {
-	dprintf("free %s\n", OBJECT(p)->name);
+	struct region *reg = p;
+	struct widget *wid, *nextwid;
+
+	for (wid = TAILQ_FIRST(&reg->widgetsh);
+	     wid != TAILQ_END(&reg->widgetsh);
+	     wid = nextwid) {
+		nextwid = TAILQ_NEXT(wid, widgets);
+		region_detach(reg, wid);
+		object_destroy(wid);
+	}
 }
 
 /*
