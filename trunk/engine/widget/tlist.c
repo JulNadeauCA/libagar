@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.73 2003/06/13 04:28:02 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.74 2003/06/15 05:08:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -114,7 +114,7 @@ tlist_prescale(struct tlist *tl, const char *text, int nitems)
 {
 	text_prescale(text, &tl->prew, NULL);
 	tl->prew += tl->item_h + 5;
-	tl->preh = tl->item_h*nitems;
+	tl->preh = (tl->item_h+2)*nitems;
 }
 
 void
