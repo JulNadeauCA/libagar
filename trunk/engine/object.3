@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.52 2003/11/15 03:58:06 vedge Exp $
+.\"	$Csoft: object.3,v 1.53 2004/01/08 02:20:08 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -466,22 +466,19 @@ The
 interface generates the following events:
 .Pp
 .Bl -tag -width 2n
-.It Fn attached "void *parent"
-The object has been attached to a
-.Fa parent
-object.
+.It Fn attached "void"
+The object has been attached to a parent object.
+This event originates from the parent object.
 The linkage lock is held during the execution of the event handler.
-.It Fn detached "void *parent"
-The object has been detached from its
-.Fa parent
-object.
+.It Fn detached "void"
+The object has been detached from its parent object.
 The linkage lock is held during the execution of the event handler.
-.It Fn moved "void *oldparent" "void *newparent"
-The object has been moved from
-.Fa oldparent
-to
-.Fa newparent .
+This event originates from the parent object.
+.It Fn moved "void *new_parent"
+The object has been moved from its current parent to
+.Fa new_parent .
 The linkage lock is held during the execution of the event handler.
+This event originates from the current parent object.
 .El
 .Sh TROUBLETONS
 If the maximum number of references (0xffffffff-2) is reached, the object

@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.47 2003/11/19 11:36:15 vedge Exp $
+.\"	$Csoft: widget.3,v 1.48 2004/01/08 02:20:10 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -606,7 +606,8 @@ The widget is now visible.
 .It Fn widget-hidden "void"
 The widget is no longer visible.
 .It Fn widget-gainfocus "void"
-The widget now holds focus inside its container.
+The widget now holds focus inside its parent container.
+This event originates from the parent container object.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
 .It Fn widget-bound "struct widget_binding *binding"

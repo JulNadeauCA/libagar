@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.213 2003/11/15 03:53:47 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.214 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -406,7 +406,7 @@ window_show(struct window *win)
 	pthread_mutex_lock(&win->lock);
 	if (!win->visible) {
 		win->visible++;
-		event_post(win, "widget-shown", NULL);
+		event_post(NULL, win, "widget-shown", NULL);
 	}
 	pthread_mutex_unlock(&win->lock);
 }
@@ -418,7 +418,7 @@ window_hide(struct window *win)
 	pthread_mutex_lock(&win->lock);
 	if (win->visible) {
 		win->visible = 0;
-		event_post(win, "widget-hidden", NULL);
+		event_post(NULL, win, "widget-hidden", NULL);
 	}
 	pthread_mutex_unlock(&win->lock);
 }
@@ -602,7 +602,8 @@ window_focus(struct window *win)
 #if 0
 		/* XXX */
 		if (lastwin->focus != NULL) {
-			event_post(lastwin->focus, "widget-lostfocus", NULL);
+			event_post(NULL, lastwin->focus, "widget-lostfocus",
+			    NULL);
 			lastwin->focus = NULL;
 		}
 #endif
@@ -767,7 +768,7 @@ window_event(SDL_Event *ev)
 				struct widget *fwid;
 
 				if ((fwid = widget_find_focus(win)) != NULL) {
-					event_post(fwid,
+					event_post(NULL, fwid,
 					    (ev->type == SDL_KEYUP) ?
 					    "window-keyup" : "window-keydown",
 					    "%i, %i, %i",

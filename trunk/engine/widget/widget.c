@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.76 2003/11/15 03:53:47 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.77 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -145,7 +145,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 			debug_n(DEBUG_BINDINGS, " -> %d(%p,%p)\n",
 			    binding->type, binding->p1, binding->p2);
 
-			event_post(wid, "widget-bound", "%p", binding);
+			event_post(NULL, wid, "widget-bound", "%p", binding);
 			pthread_mutex_unlock(&wid->bindings_lock);
 			return (binding);
 		}
@@ -163,7 +163,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	debug_n(DEBUG_BINDINGS, "%s: bound `%s' to %p (type=%d)\n",
 	    OBJECT(wid)->name, name, p1, type);
 
-	event_post(wid, "widget-bound", "%p", binding);
+	event_post(NULL, wid, "widget-bound", "%p", binding);
 	pthread_mutex_unlock(&wid->bindings_lock);
 	return (binding);
 }
@@ -667,7 +667,7 @@ widget_binding_modified(struct widget_binding *bind)
 		struct prop *prop;
 
 		prop = prop_get(pobj, name, PROP_ANY, NULL);
-		event_post(pobj, "prop-modified", "%p", prop);
+		event_post(NULL, pobj, "prop-modified", "%p", prop);
 	}
 }
 
@@ -769,7 +769,7 @@ widget_clear_focus(void *p)
 
 	if (wid->flags & WIDGET_FOCUSED) {
 		wid->flags &= ~(WIDGET_FOCUSED);
-		event_post(wid, "widget-lostfocus", NULL);
+		event_post(NULL, wid, "widget-lostfocus", NULL);
 	}
 
 	OBJECT_FOREACH_CHILD(cwid, wid, widget)
@@ -819,7 +819,8 @@ widget_focus(void *p)
 		}
 #endif
 		pwid->flags |= WIDGET_FOCUSED;
-		event_post(pwid, "widget-gainfocus", NULL);
+		event_post(OBJECT(pwid)->parent, pwid, "widget-gainfocus",
+		    NULL);
 	} while ((pwid = OBJECT(pwid)->parent) != NULL);
 }
 
@@ -927,7 +928,7 @@ widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
 
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_MOTION)) {
-		event_post(wid,  "window-mousemotion", "%i, %i, %i, %i",
+		event_post(NULL, wid,  "window-mousemotion", "%i, %i, %i, %i",
 		    x - wid->cx,
 		    y - wid->cy,
 		    xrel,
@@ -950,7 +951,7 @@ widget_mousebuttonup(struct window *win, struct widget *wid, int button,
 
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_BUTTONUP)) {
-		event_post(wid,  "window-mousebuttonup", "%i, %i, %i",
+		event_post(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button,
 		    x - wid->cx,
 		    y - wid->cy);
@@ -977,7 +978,8 @@ widget_mousebuttondown(struct window *win, struct widget *wid, int button,
 			return (1);
 	}
 
-	return (event_post(wid, "window-mousebuttondown", "%i, %i, %i", button,
+	return (event_post(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
+	    button,
 	    x - wid->cx,
 	    y - wid->cy));
 }

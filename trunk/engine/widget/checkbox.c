@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.47 2003/10/13 23:49:02 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.48 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -168,7 +168,7 @@ checkbox_toggle(struct checkbox *cbox)
 
 	stateb = widget_get_binding(cbox, "state", &state);
 	*state = !(*state);
-	event_post(cbox, "checkbox-changed", "%i", *state);
+	event_post(NULL, cbox, "checkbox-changed", "%i", *state);
 	widget_binding_modified(stateb);
 	widget_binding_unlock(stateb);
 }
