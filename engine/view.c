@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.148 2004/05/02 09:38:37 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.149 2004/05/06 06:22:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -241,6 +241,7 @@ static void
 detach_window(struct window *win)
 {
 	struct window *subwin, *nsubwin;
+	struct window *owin;
 
 	for (subwin = TAILQ_FIRST(&win->subwins);
 	     subwin != TAILQ_END(&win->subwins);
@@ -254,6 +255,15 @@ detach_window(struct window *win)
 	event_post(view, win, "detached", NULL);
 	TAILQ_REMOVE(&view->windows, win, windows);
 	TAILQ_INSERT_TAIL(&view->detach, win, detach);
+
+	TAILQ_FOREACH(owin, &view->windows, windows) {
+		TAILQ_FOREACH(subwin, &owin->subwins, swins) {
+			if (subwin == win)
+				break;
+		}
+		if (subwin != NULL)
+			TAILQ_REMOVE(&owin->subwins, subwin, swins);
+	}
 }
 
 /* Place a window and its children on the detachment queue. */
