@@ -143,7 +143,6 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 	pthread_mutex_lock(&ob->props_lock);
 	if (!modify) {
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
-		event_post(ob, "prop-registered", "%p", nprop);
 	} else {
 		event_post(ob, "prop-modified", "%p", nprop);
 	}
@@ -474,7 +473,9 @@ prop_load(void *p, struct netbuf *buf)
 
 	pthread_mutex_lock(&ob->props_lock);
 
-	object_free_props(ob);
+	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0)
+		object_free_props(ob);
+
 	nprops = read_uint32(buf);
 
 	for (i = 0; i < nprops; i++) {
