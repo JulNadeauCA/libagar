@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.26 2004/03/18 21:27:46 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.27 2004/03/20 05:01:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -483,7 +483,7 @@ gfx_destroy_anim(struct gfx_anim *anim)
 	for (i = 0; i < anim->nframes; i++) {
 		SDL_FreeSurface(anim->frames[i]);
 	}
-	Free(anim->frames, 0);
+	Free(anim->frames, M_GFX);
 	Free(anim, M_GFX);
 }
 
