@@ -156,28 +156,31 @@ install: install-subdir ${PROG}
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_PROG} ${PROG} ${INST_BINDIR}"; \
 	    ${INSTALL_PROG} ${PROG} ${INST_BINDIR}; \
-	    if [ "${SHARE}" != "" -a \
-	        ! -d "${PROG_SHAREDIR}" ]; then \
-	        echo "${INSTALL_DATA} ${PROG_SHAREDIR}"; \
-	        ${INSTALL_DATA_DIR} ${PROG_SHAREDIR}; \
+	fi
+	@if [ "${SHARE}" != "" ]; then \
+	    if [ ! -d "${SHAREDIR}" ]; then \
+	        echo "${INSTALL_DATA} ${SHAREDIR}"; \
+	        ${INSTALL_DATA_DIR} ${SHAREDIR}; \
 	    fi; \
 	    for F in ${SHARE}; do \
-	        echo "${INSTALL_DATA} $$F ${PROG_SHAREDIR}"; \
-	        ${INSTALL_DATA} $$F ${PROG_SHAREDIR}; \
+	        echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+	        ${INSTALL_DATA} $$F ${SHAREDIR}; \
 	    done; \
-	fi
-	
+	fi \
+
 deinstall: deinstall-subdir
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
 	    echo "${DEINSTALL_PROG} ${INST_BINDIR}"; \
 	    ${DEINSTALL_PROG} ${INST_BINDIR}; \
+	fi
+	@if [ "${SHARE}" != "" ]; then \
 	    for F in ${SHARE}; do \
-	        echo "${DEINSTALL_DATA} ${PROG_SHAREDIR}/$$F"; \
-	        ${DEINSTALL_DATA} ${PROG_SHAREDIR}/$$F; \
+	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
+	        ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
-	    if [ -d "${PROG_SHAREDIR}" ]; then \
-	        echo "rmdir ${PROG_SHAREDIR}"; \
-	        rmdir ${PROG_SHAREDIR}; \
+	    if [ -d "${SHAREDIR}" ]; then \
+	        echo "rmdir ${SHAREDIR}"; \
+	        rmdir ${SHAREDIR}; \
 	    fi; \
 	fi
 

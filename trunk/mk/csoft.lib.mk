@@ -55,6 +55,8 @@ VERSION?=	1:0:0
 
 CFLAGS+=    ${COPTS}
 
+SHARE?=
+
 .c.o:
 	${CC} ${CFLAGS} -c $<
 .cc.o:
@@ -161,14 +163,15 @@ install:	install-subdir lib${LIB}.a lib${LIB}.la
 	        ${LIBTOOL} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
 	    fi; \
-	    if [ "${SHARE}" != "" -a \
-	        ! -d "${LIB_SHAREDIR}" ]; then \
-	        echo "${INSTALL_DATA} ${LIB_SHAREDIR}"; \
-	        ${INSTALL_DATA_DIR} ${LIB_SHAREDIR}; \
+	fi
+	@if [ "${SHARE}" != "" ]; then \
+	    if [ ! -d "${SHAREDIR}" ]; then \
+	        echo "${INSTALL_DATA} ${SHAREDIR}"; \
+	        ${INSTALL_DATA_DIR} ${SHAREDIR}; \
 	    fi; \
 	    for F in ${SHARE}; do \
-	        echo "${INSTALL_DATA} $$F ${LIB_SHAREDIR}"; \
-	        ${INSTALL_DATA} $$F ${LIB_SHAREDIR}; \
+	        echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+	        ${INSTALL_DATA} $$F ${SHAREDIR}; \
 	    done; \
 	fi
 	
@@ -182,15 +185,16 @@ deinstall:	deinstall-subdir
 	        ${LIBTOOL} --mode=uninstall \
 		    rm -f ${PREFIX}/lib/lib${LIB}.la; \
 	    fi; \
-	    for F in ${SHARE}; do \
-	        echo "${DEINSTALL_DATA} ${LIB_SHAREDIR}/$$F"; \
-	        ${DEINSTALL_DATA} ${LIB_SHAREDIR}/$$F; \
-	    done; \
-	    if [ -d "${LIB_SHAREDIR}" ]; then \
-	        echo "rmdir ${LIB_SHAREDIR}"; \
-	        rmdir ${LIB_SHAREDIR}; \
-	    fi; \
 	fi
+	@if [ "${SHARE}" != "" ]; then \
+	    for F in ${SHARE}; do \
+	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
+	        ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
+	    done; \
+	    if [ -d "${SHAREDIR}" ]; then \
+	        echo "rmdir ${SHAREDIR}"; \
+	        rmdir ${SHAREDIR}; \
+	    fi
 
 ${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
