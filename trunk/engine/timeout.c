@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.8 2005/01/22 05:31:30 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.9 2005/01/30 05:23:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@ timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
 /* Schedule the timeout to occur in dt ticks. */
 /* XXX O(n), use a timing wheel instead */
 void
-timeout_add(void *p, struct timeout *to, Uint32 dt)
+timeout_schedule(void *p, struct timeout *to, Uint32 dt, int replace)
 {
 	struct object *ob = p;
 	struct timeout *to2;
@@ -62,6 +62,14 @@ timeout_add(void *p, struct timeout *to, Uint32 dt)
 
 	pthread_mutex_lock(&ob->lock);
 	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
+	if (replace) {
+		CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
+			if (to == to2) {
+				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+				break;
+			}
+		}
+	}
 	CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
 		if (dt < to2->ticks) {
 			CIRCLEQ_INSERT_BEFORE(&ob->timeouts, to2, to, timeouts);
@@ -109,31 +117,26 @@ timeout_scheduled(void *p, struct timeout *to)
 void
 timeout_del(void *p, struct timeout *to)
 {
-	struct object *ob = p;
+	struct object *ob = p, *tob;
 	struct timeout *oto;
 	
 	if (ob == NULL)
 		ob = world;
 	
-	object_lock(ob);
-	if (timeout_scheduled(ob, to)) {
-		CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-		if (CIRCLEQ_EMPTY(&ob->timeouts)) {
-			pthread_mutex_lock(&timeout_lock);
-			TAILQ_REMOVE(&timeout_objq, ob, tobjs);
-			pthread_mutex_unlock(&timeout_lock);
+	lock_timeout(ob);
+	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
+		if (oto == to) {
+			CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+			if (CIRCLEQ_EMPTY(&ob->timeouts)) {
+				TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+			}
+			break;
 		}
 	}
-	object_unlock(ob);
-}
-
-void
-timeout_replace(void *obj, struct timeout *to, Uint32 nival)
-{
-	lock_timeout(obj);
-	timeout_del(obj, to);
-	timeout_add(obj, to, nival);
-	unlock_timeout(obj);
+	if (oto == NULL) {
+		dprintf("%s: %p is not scheduled\n", ob->name, to);
+	}
+	unlock_timeout(ob);
 }
 
 void
@@ -180,7 +183,9 @@ pop:
 			to = CIRCLEQ_FIRST(&ob->timeouts);
 			if ((int)(to->ticks - t) <= 0) {
 				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-				TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+				if (CIRCLEQ_EMPTY(&ob->timeouts)) {
+					TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+				}
 				to->running++;
 				rv = to->fn(ob, to->ival, to->arg);
 				to->running = 0;
