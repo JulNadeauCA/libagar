@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.89 2003/09/06 23:05:51 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.90 2003/09/07 04:17:35 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -9,7 +9,6 @@
 #include "begin_code.h"
 
 struct mapdir;
-struct gendir;
 struct tool;
 
 enum {
