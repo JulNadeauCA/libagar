@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.10 2002/07/24 04:54:28 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.11 2002/07/27 07:01:14 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -188,26 +188,37 @@ static __inline__ void
 put_pixel1(Uint8 bpp, Uint8 *dst, Uint32 color)
 {
 	switch (bpp) {
+#ifdef VIEW_8BPP
 	case 1:
 		*dst = color;
 		break;
+#endif
+
+#ifdef VIEW_16BPP
 	case 2:
 		*(Uint16 *)dst = color;
 		break;
+#endif
+
+#ifdef VIEW_24BPP
 	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
 		dst[0] = (color >> 16)	& 0xff;
 		dst[1] = (color >> 8)	& 0xff;
 		dst[2] = color		& 0xff;
-#else
+# else
 		dst[0] = color		& 0xff;
 		dst[1] = (color >> 8)	& 0xff;
 		dst[2] = (color >> 16)	& 0xff;
-#endif
+# endif
 		break;
+#endif
+
+#ifdef VIEW_32BPP
 	case 4:
 		*(Uint32 *)dst = color;
 		break;
+#endif
 	}
 }
 
@@ -216,29 +227,40 @@ static __inline__ void
 put_pixel2(Uint8 bpp, Uint8 *dst1, Uint8 *dst2, Uint32 color)
 {
 	switch (bpp) {
+#ifdef VIEW_8BPP
 	case 1:
 		*dst1 = color;
 		*dst2 = color;
 		break;
+#endif
+
+#ifdef VIEW_16BPP
 	case 2:
 		*(Uint16 *)dst1 = color;
 		*(Uint16 *)dst2 = color;
 		break;
+#endif
+
+#ifdef VIEW_24BPP
 	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+# if SDL_BYTEORDER == SDL_BIG_ENDIAN
 		dst1[0] = (color >> 16)	& 0xff;
 		dst1[1] = (color >> 8)	& 0xff;
 		dst1[2] = color		& 0xff;
-#else
+# else
 		dst1[0] = color		& 0xff;
 		dst1[1] = (color >> 8)	& 0xff;
 		dst1[2] = (color >> 16)	& 0xff;
-#endif
+# endif
 		break;
+#endif
+
+#ifdef VIEW_32BPP
 	case 4:
 		*(Uint32 *)dst1 = color;
 		*(Uint32 *)dst2 = color;
 		break;
+#endif
 	}
 }
 
