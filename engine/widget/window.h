@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.76 2004/05/22 03:18:18 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.77 2004/09/12 05:48:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -47,16 +47,19 @@ struct window {
 	char	 caption[128];
 #endif
 	int	 visible;		/* Window is visible */
-	Uint32	*border;		/* Border colors */
-	int	 borderw;
 
 	pthread_mutex_t		 lock;
 	struct titlebar		*tbar;		/* Titlebar (or NULL) */
 	enum window_alignment	 alignment;	/* Initial position */
 
-	int	 spacing;		/* Widget spacing */
-	int	 padding;		/* Widget padding */
-	int	 minw, minh;		/* Minimum geometry */
+	Uint32	*h_border;		/* Horizontal border colors */
+	int	 h_border_w;
+	Uint32	*v_border;		/* Vertical border colors */
+	int	 v_border_w;
+
+	int spacing;			/* Default spacing */
+	int xpadding, ypadding;		/* Window padding */
+	int minw, minh;			/* Minimum geometry */
 	
 	TAILQ_HEAD(,window) subwins;		/* Sub-windows */
 	TAILQ_ENTRY(window) windows;		/* Active window list */
@@ -81,9 +84,10 @@ void	 window_set_caption(struct window *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
 void	 window_set_spacing(struct window *, int);
-void	 window_set_padding(struct window *, int);
+void	 window_set_padding(struct window *, int, int);
 void	 window_set_position(struct window *, enum window_alignment, int);
 void	 window_set_closure(struct window *, int);
+void	 window_set_style(struct window *, const struct style *);
 
 void	 window_attach(struct window *, struct window *);
 void	 window_detach(struct window *, struct window *);

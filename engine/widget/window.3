@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.36 2004/08/31 03:40:54 vedge Exp $
+.\"	$Csoft: window.3,v 1.37 2004/09/12 05:49:16 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -77,7 +77,7 @@ After this initial sizing, widget containers may scale widgets to any size.
 .Fn window_set_closure "struct window *win" "int mode"
 .Pp
 .Ft "void"
-.Fn window_set_padding "struct window *win" "int padding"
+.Fn window_set_padding "struct window *win" "int xpadding" "int ypadding"
 .Pp
 .Ft "void"
 .Fn window_set_spacing "struct window *win" "int spacing"
@@ -151,9 +151,6 @@ The
 .Fn window_set_padding
 function defines the space in pixels separating the widgets from the edges
 of the window.
-The default padding value is
-.Va win->borderw
-(the width of the decorative border) + 2 pixels.
 .Pp
 The
 .Fn window_set_spacing
