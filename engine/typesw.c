@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.3 2003/06/06 03:20:36 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.4 2003/06/10 19:12:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -36,12 +36,10 @@
 extern const struct object_ops
 	object_ops,
 	map_ops,
-	perso_ops,
-	gfx_ops;
+	perso_ops;
 
 const struct object_type typesw[] = {
 	{ "object",	"Object",	sizeof(struct object),	&object_ops },
-	{ "gfx",	"Generic gfx",	sizeof(struct object),	&gfx_ops },
 	{ "map",	"Map",		sizeof(struct map),	&map_ops },
 	{ "perso",	"Character",	sizeof(struct perso),	&perso_ops },
 };
