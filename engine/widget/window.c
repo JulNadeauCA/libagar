@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.109 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.110 2002/11/22 23:11:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -136,7 +136,8 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	free(name);
 
 	/* Destroy the window instead of hiding it on close. */
-	event_new(win, "window-close", window_generic_detached, "%p", win);
+	event_new(win, "window-close",
+	    window_generic_detach, "%p", win);
 
 	view_attach(win);			/* Attach to view */
 	return (win);
@@ -244,7 +245,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	/* Clamp down to view area and leave a margin. */
 	window_clamp(win);
 
-	/* Primitive operations will need this. */
+	/* For primitive operations on the window. */
 	win->wid.win = win;
 	win->wid.x = 0;
 	win->wid.y = 0;
@@ -269,29 +270,44 @@ window_draw(struct window *win)
 	struct widget *wid;
 	int i;
 
-	SDL_FillRect(v, &win->rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
+	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
+		SDL_FillRect(v, &win->rd, WIDGET_COLOR(win, BACKGROUND_COLOR));
+	}
 
 	for (i = 1; i < win->borderw; i++) {
 		primitives.line(win,		/* Top */
 		    i, i,
 		    win->rd.w - i, i,
 		    win->border[i]);
-		primitives.line(win,		/* Bottom */
-		    i, win->rd.h - i,
-		    win->rd.w - i, win->rd.h - i,
-		    win->border[i]);
-		primitives.line(win,		/* Left */
-		    i, i,
-		    i, win->rd.h - i,
-		    win->border[i]);
-		primitives.line(win,		/* Right */
-		    win->rd.w - i, i,
-		    win->rd.w - i, win->rd.h - i,
-		    win->border[i]);
+		if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
+			primitives.line(win,		/* Bottom */
+			    i, win->rd.h - i,
+			    win->rd.w - i, win->rd.h - i,
+			    win->border[i]);
+			primitives.line(win,		/* Left */
+			    i, i,
+			    i, win->rd.h - i,
+			    win->border[i]);
+			primitives.line(win,		/* Right */
+			    win->rd.w - i, i,
+			    win->rd.w - i, win->rd.h - i,
+			    win->border[i]);
+		} else {
+			primitives.line(win,		/* Left */
+			    i, i,
+			    i, win->titleh + win->borderw/2,
+			    win->border[i]);
+			primitives.line(win,		/* Right */
+			    win->rd.w - i, i,
+			    win->rd.w - i, win->titleh + win->borderw/2,
+			    win->border[i]);
+		}
 	}
 
 	/* Render the title bar. */
 	if (win->flags & WINDOW_TITLEBAR) {
+		int bw = win->borderw + 2;
+		int th = win->titleh - 2;
 		SDL_Surface *caption;
 		SDL_Rect rd;
 
@@ -320,11 +336,36 @@ window_draw(struct window *win)
 		SDL_BlitSurface(caption, NULL, v, &rd);
 		SDL_FreeSurface(caption);
 
-		/* Close button */
-		rd.x = win->rd.x + win->borderw;
-		rd.y = win->rd.y + win->borderw;
-		SDL_BlitSurface(SPRITE(win, 0), NULL, view->v, &rd);
-		
+		/* Render the close button. */
+		for (i = 2; i < win->borderw - 1; i++) {
+			primitives.line(win,
+			    bw + i, bw,
+			    th + i, th,
+			    win->border[i]);
+			primitives.line(win,
+			    bw + i, th,
+			    th + i, bw,
+			    win->border[i]);
+		}
+	
+		th -= 4;
+
+		/* Render the minimize button. */
+		for (i = 2; i < win->borderw - 1; i++) {
+			primitives.line(win,
+			    i + bw + th, bw + 2,
+			    i + bw + th*2, bw + 2,
+			    win->border[i]);
+			primitives.line(win,
+			    i + bw + th, bw + 2,
+			    i + bw + th*2 - th/2, th + 2,
+			    win->border[i]);
+			primitives.line(win,
+			    i + bw + th*2 - th/2, th + 2,
+			    i + bw + th*2, bw + 2,
+			    win->border[i]);
+		}
+
 		/* Border */
 		primitives.line(win,
 		    win->borderw, win->titleh+2,
@@ -334,6 +375,12 @@ window_draw(struct window *win)
 		    win->borderw, win->titleh+3,
 		    win->rd.w-win->borderw, win->titleh+3,
 		    win->border[1]);
+	
+		if (win->flags & WINDOW_HIDDEN_BODY) {
+			/* Queue the video update. */
+			VIEW_UPDATE(win->rd);
+			return;					/* Done */
+		}
 	}
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
@@ -742,6 +789,10 @@ scan_wins:
 			case VIEW_WINOP_NONE:
 				break;
 			}
+			if (win->flags & WINDOW_HIDDEN_BODY) {
+				/* Don't catch events. */
+				goto next_win;
+			}
 			/*
 			 * Post the mouse motion event to the widget that
 			 * holds the focus inside the focused window, and
@@ -771,6 +822,11 @@ scan_wins:
 			/* Cancel any current window operation. */ 
 			view->winop = VIEW_WINOP_NONE;
 			view->wop_win = NULL;
+			
+			if (win->flags & WINDOW_HIDDEN_BODY) {
+				/* Don't catch events. */
+				goto next_win;
+			}
 			/*
 			 * Send the mouse button release event to the widget
 			 * that holds focus inside the focused window, and
@@ -803,9 +859,23 @@ scan_wins:
 			}
 			if (ev->button.y - win->rd.y <= win->titleh) {
 				/* Close the window. */
-			    	if (ev->button.x - win->rd.x < 20) { /* XXX */
+			    	if (ev->button.x - win->rd.x <
+				    win->titleh + win->borderw) {
+					/* XXX */
 					window_hide(win);
 					event_post(win, "window-close", NULL);
+				} else if (ev->button.x - win->rd.x <
+				    win->titleh*2 + win->borderw) {
+					if (win->flags & WINDOW_HIDDEN_BODY) {
+				    		win->flags &=
+						    ~WINDOW_HIDDEN_BODY;
+					} else {
+						win->flags |=
+						    WINDOW_HIDDEN_BODY;
+					}
+					if (view->rootmap != NULL) {
+						view->rootmap->map->redraw++;
+					}
 				}
 				view->winop = VIEW_WINOP_MOVE;
 				view->wop_win = win;
@@ -826,6 +896,10 @@ scan_wins:
 			 * Send the mouse button press event to the
 			 * widget under the cursor.
 			 */
+			if (win->flags & WINDOW_HIDDEN_BODY) {
+				/* Don't catch events. */
+				goto next_win;
+			}
 			TAILQ_FOREACH(reg, &win->regionsh, regions) {
 				TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 					if (!WIDGET_INSIDE(wid, ev->button.x,
@@ -858,6 +932,10 @@ scan_wins:
 			}
 			/* FALLTHROUGH */
 		case SDL_KEYDOWN:
+			if (win->flags & WINDOW_HIDDEN_BODY) {
+				/* Don't catch events. */
+				goto next_win;
+			}
 			switch (ev->key.keysym.sym) {
 			case SDLK_LSHIFT:
 			case SDLK_RSHIFT:
@@ -1061,7 +1139,7 @@ window_resize(struct window *win)
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)
 			nwidgets++;
 
-		/* Region coordinates */
+		/* Figure the region's coordinates */
 		if (reg->rx > 0) {
 			reg->x = (reg->rx * win->body.w / 100) +
 			    (win->body.x - win->rd.x) + 1;
@@ -1079,7 +1157,7 @@ window_resize(struct window *win)
 			reg->y = abs(reg->ry);
 		}
 
-		/* Region geometry */
+		/* Figure the region's geometry. */
 		if (reg->rw > 0) {
 			reg->w = (reg->rw * win->body.w / 100);
 			if (reg->w > win->rd.w - 16) {
@@ -1090,7 +1168,6 @@ window_resize(struct window *win)
 		} else {
 			reg->w = abs(reg->rw);
 		}
-		
 		if (reg->rh >= 0) {
 			reg->h = (reg->rh * win->body.h / 100) - 4;
 			if (reg->h > win->rd.h - 32) {
@@ -1101,24 +1178,27 @@ window_resize(struct window *win)
 		} else {
 			reg->h = abs(reg->rh);
 		}
-		
+
+		/* Space the regions. */
 		reg->x += reg->spacing / 2;
 		reg->y += reg->spacing / 2;
 		reg->w -= reg->spacing;
 		reg->h -= reg->spacing;
 
+		/* Render the widgets. */
 		x = reg->x;
 		y = reg->y;
-	
+
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			int rw, rh;
 
+			/* Update the widget coordinates. */
 			wid->x = x;
 			wid->y = y;
 
+			/* Figure the widget's requested geometry. */
 			rw = wid->rw;
 			rh = wid->rh;
-
 			if (rw == 0) {
 				rw = (reg->flags & REGION_HALIGN) ?
 				    100 / (nwidgets + 2) : 100;
@@ -1128,20 +1208,19 @@ window_resize(struct window *win)
 				    100 / (nwidgets + 2) : 100;
 			}
 
+			/* Scale the widget. */
 			if (rw >= 0)
-				wid->w = rw * reg->w/100;
+				wid->w = rw * reg->w / 100;
 			if (rh >= 0)
-				wid->h = rh * reg->h/100;
-
+				wid->h = rh * reg->h / 100;
 			if (wid->w > reg->w)
 				wid->w = reg->w;
 			if (wid->h > reg->h)
 				wid->h = reg->h;
-			
 			event_post(wid, "widget-scaled", "%i, %i",
 			    reg->w, reg->h);
 
-			/* Space widgets */
+			/* Space the widgets. */
 			if (reg->flags & REGION_VALIGN) {
 				if (rw > 0) {
 					if (TAILQ_LAST(&reg->widgetsh,
@@ -1166,7 +1245,8 @@ window_resize(struct window *win)
 
 #ifdef DEBUG
 	if (prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE) {
-		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->rd.w, win->rd.h);
+		dprintf("%s: %d, %d\n", OBJECT(win)->name, win->rd.w,
+		    win->rd.h);
 	}
 #endif
 }
@@ -1178,10 +1258,7 @@ window_set_caption(struct window *win, const char *fmt, ...)
 
 	pthread_mutex_lock(&win->lock);
 
-	/* XXX */
-	if (win->caption != NULL) {
-		free(win->caption);
-	}
+	Free(win->caption);
 	va_start(args, fmt);
 	if (vasprintf(&win->caption, fmt, args) == -1) {
 		fatal("vasprintf: %s\n", strerror(errno));
@@ -1228,11 +1305,18 @@ window_save(void *p, int fd)
 }
 
 void
-window_generic_detached(int argc, union evarg *argv)
+window_generic_detach(int argc, union evarg *argv)
 {
 	struct window *win = argv[1].p;
 
 	OBJECT_ASSERT(win, "window");
 
+	dprintf("%s\n", OBJECT(win)->name);
 	view_detach(win);
+}
+
+void
+window_generic_hide(int argc, union evarg *argv)
+{
+	/* Already hidden */
 }

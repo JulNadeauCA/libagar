@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.47 2002/11/15 04:15:31 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.48 2002/11/17 23:02:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -30,6 +30,8 @@ struct window {
 #define WINDOW_SAVE_POSITION	0x100	/* Save window position on hide/exit */
 #define WINDOW_MATERIALIZE	0x200	/* Materialize effect */
 #define WINDOW_DEMATERIALIZE	0x400	/* Dematerialize effect */
+#define WINDOW_HIDDEN_BODY	0x1000	/* Only the titlebar is shown */
+#define WINDOW_MINIMIZED	0x2000	/* Window is iconified */
 
 	char	*caption;		/* Titlebar text */
 
@@ -105,11 +107,12 @@ struct window	*window_new(char *, int, int, int, int, int, int, int);
 struct window	*window_generic_new(int, int, const char *, ...);
 void	 	 window_init(struct window *, char *, int, int, int, int, int,
 		     int, int);
-int		 window_load(void *, int);
-int		 window_save(void *, int);
-void		 window_destroy(void *);
-void		 window_attach(void *, void *);
-void		 window_detach(void *, void *);
+
+int	 window_load(void *, int);
+int	 window_save(void *, int);
+void	 window_destroy(void *);
+void	 window_attach(void *, void *);
+void	 window_detach(void *, void *);
 
 int	 window_show(struct window *);
 int	 window_hide(struct window *);
@@ -118,5 +121,6 @@ int	 window_event(SDL_Event *);
 void	 window_resize(struct window *);
 void	 window_set_caption(struct window *, const char *, ...);
 
-void	 window_generic_detached(int, union evarg *);
+void	 window_generic_detach(int, union evarg *);
+void	 window_generic_hide(int, union evarg *);
 
