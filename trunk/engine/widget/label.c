@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.2 2002/04/18 04:03:59 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.1 2002/04/20 05:47:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -38,9 +38,12 @@
 #include <engine/queue.h>
 #include <engine/version.h>
 
+#include "text.h"
 #include "widget.h"
 #include "window.h"
 #include "label.h"
+
+extern TTF_Font *font;		/* text */
 
 static struct widvec label_vec = {
 	{
@@ -62,8 +65,8 @@ label_create(struct window *win, char *name, char *caption, Uint32 flags,
 
 	rd.x = x;
 	rd.y = y;
-	rd.w = 60;
-	rd.h = 10;
+	rd.w = 0;	/* variable */
+	rd.h = 0;	/* variable */
 
 	l = (struct label *)emalloc(sizeof(struct label));
 	widget_init(&l->wid, name, 0, &label_vec, win, rd);
@@ -99,7 +102,15 @@ label_unlink(void *p)
 void
 label_draw(void *p)
 {
+	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 	struct label *l = (struct label *)p;
+	SDL_Surface *s;
 
-	dprintf("draw %s\n", OBJECT(l)->name);
+	s = TTF_RenderText_Solid(font, l->caption, white);
+	if (s == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+	}
+	WIDGET_DRAW(l, s);
+	SDL_FreeSurface(s);
 }
+
