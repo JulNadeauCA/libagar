@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.9 2002/02/05 05:59:18 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.10 2002/02/05 06:38:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -118,7 +118,7 @@ mapedit_create(char *name, char *desc)
 	 * This is used for distinguishing anim structures from
 	 * sprites, for instance.
 	 */
-	SLIST_INIT(&med->eobjsh);
+	TAILQ_INIT(&med->eobjsh);
 	med->neobjs = 0;
 
 	pthread_mutex_lock(&world->lock);
@@ -136,11 +136,16 @@ mapedit_create(char *name, char *desc)
 			return (NULL);
 		}
 
-		SIMPLEQ_INIT(&eob->erefsh);
 		eob->pobj = ob;
+		SIMPLEQ_INIT(&eob->erefsh);
 		eob->nrefs = 0;
 		eob->nsprites = ob->nsprites;
 		eob->nanims = ob->nanims;
+		if (pthread_mutex_init(&eob->lock, NULL) != 0) {
+			perror("editobj");
+			pthread_mutex_unlock(&world->lock);
+			return (NULL);
+		}
 
 		dprintf("%s has %d sprites, %d anims\n", ob->name,
 		    eob->nsprites, eob->nanims);
@@ -195,7 +200,7 @@ mapedit_create(char *name, char *desc)
 				eob->nrefs++;
 			}
 		}
-		SLIST_INSERT_HEAD(&med->eobjsh, eob, eobjs);
+		TAILQ_INSERT_HEAD(&med->eobjsh, eob, eobjs);
 		med->neobjs++;
 	}
 	pthread_mutex_unlock(&world->lock);
@@ -221,8 +226,8 @@ mapedit_create(char *name, char *desc)
 		object_unlink(med);
 		return (NULL);
 	}
-
-	/* XXX condition wait timeouts if an event occurs too early */
+	
+	view_setmode(em->view);	/* XXX hack */
 
 	return (med);
 }
@@ -235,12 +240,15 @@ mapedit_destroy(struct object *obp)
 
 	SDL_RemoveTimer(med->timer);
 
-	SLIST_FOREACH(eob, &med->eobjsh, eobjs) {
+	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
 		struct editref *eref;
 
+		pthread_mutex_lock(&eob->lock);
 		SIMPLEQ_FOREACH(eref, &eob->erefsh, erefs) {
 			free(eref);
 		}
+		pthread_mutex_unlock(&eob->lock);
+		pthread_mutex_destroy(&eob->lock);
 		free(eob);
 	}
 }
@@ -417,11 +425,19 @@ mapedit_tilelist(struct mapedit *med)
 		 * index is negative, wrap.
 		 */
 		/* XXX array */
+		pthread_mutex_lock(&med->curobj->lock);
 		if (sn > -1) {
 			SIMPLEQ_INDEX(ref, &med->curobj->erefsh, erefs, sn);
 		} else {
 			SIMPLEQ_INDEX(ref, &med->curobj->erefsh, erefs,
 			    sn + med->curobj->nrefs);
+		}
+		pthread_mutex_unlock(&med->curobj->lock);
+
+		if (ref == NULL) {
+			/* XXX should not happen */
+			dprintf("NULL ref\n");
+			continue;
 		}
 
 		/* Plot the icon. */
@@ -551,7 +567,7 @@ mapedit_objlist(struct mapedit *med)
 	mapedit_bg(win->view->v, rd.x, rd.y, rd.w, rd.h);
 	rd.x = tilew;
 
-	SLIST_FOREACH(eob, &med->eobjsh, eobjs) {
+	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
 		SDL_BlitSurface(g_slist_nth_data(eob->pobj->sprites, 0),
 		    &rs, win->view->v, &rd);
 		if (med->curobj == eob) {
@@ -740,12 +756,15 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			 * cursor must be out of the way.
 			 */
 			mapedit_pointer(med, 0);
+			pthread_mutex_lock(&med->curobj->lock);
 			SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs,
 			    med->curoffs);
+			pthread_mutex_unlock(&med->curobj->lock);
 #ifdef DEBUG
 			/* XXX should not happen */
 			if (eref == NULL) {
 				fatal("no editor ref at %d\n", med->curoffs);
+
 			}
 #endif
 
@@ -820,8 +839,10 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			if (ev->key.keysym.mod & KMOD_CTRL) {
 				struct editref *eref;
 
+				pthread_mutex_lock(&med->curobj->lock);
 				SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs,
 				    med->curoffs);
+				pthread_mutex_unlock(&med->curobj->lock);
 
 				switch (eref->type) {
 				case EDITREF_SPRITE:
@@ -975,6 +996,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				med->cursdir |= MAPEDIT_LEFT;
 				med->cursdir &= ~(MAPEDIT_RIGHT);
 			}
+			return;
 		} else if (ev->type == SDL_KEYUP) {
 			if (med->listodir != 0) {
 				med->listodir &= ~(MAPEDIT_CTRLLEFT);
@@ -996,9 +1018,15 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				med->cursdir |= MAPEDIT_RIGHT;
 				med->cursdir &= ~(MAPEDIT_LEFT);
 			}
+			return;
 		} else if (ev->type == SDL_KEYUP) {
-			object_wait(med, MAPEDIT_RIGHT);
-			med->cursdir &= ~(MAPEDIT_RIGHT);
+			if (med->listodir != 0) {
+				med->listodir &= ~(MAPEDIT_CTRLRIGHT);
+				object_wait(med, MAPEDIT_CTRLRIGHT);
+			} else {
+				object_wait(med, MAPEDIT_RIGHT);
+				med->cursdir &= ~(MAPEDIT_RIGHT);
+			}
 		}
 		break;
 	case SDLK_PAGEUP:
@@ -1047,32 +1075,32 @@ mapedit_time(Uint32 ival, void *obp)
 	 */
 	if (med->cursdir != 0) {
 		if (med->cursdir & MAPEDIT_UP) {
+			ob->wmask |= MAPEDIT_UP;
 			decrease(&mapy, 1, 0);
 			if(em->view->mapy - mapy >= 0) {
 				SCROLL_UP(&em);
 			}
-			ob->wmask |= MAPEDIT_UP;
 		} else if (med->cursdir & MAPEDIT_DOWN) {
+			ob->wmask |= MAPEDIT_DOWN;
 			increase(&mapy, 1, em->maph - 1);
 			if (em->view->mapy - mapy <=
 			    -em->view->maph) {
 				SCROLL_DOWN(&em);
 			}
-			ob->wmask |= MAPEDIT_DOWN;
 		}
 		if (med->cursdir & MAPEDIT_LEFT) {
+			ob->wmask |= MAPEDIT_LEFT;
 			decrease(&mapx, 1, 0);
 			if(em->view->mapx - mapx >= 0) {
 				SCROLL_LEFT(&em);
 			}
-			ob->wmask |= MAPEDIT_LEFT;
 		} else if (med->cursdir & MAPEDIT_RIGHT) {
+			ob->wmask |= MAPEDIT_RIGHT;
 			increase(&mapx, 1, em->mapw - 1);
 			if (em->view->mapx - mapx <=
 			    -em->view->mapw) {
 				SCROLL_RIGHT(&em);
 			}
-			ob->wmask |= MAPEDIT_RIGHT;
 		}
 		MAPEDIT_MOVE(med, mapx, mapy);
 		em->redraw++;
@@ -1085,17 +1113,17 @@ mapedit_time(Uint32 ival, void *obp)
 		struct viewport *view;
 
 		if (med->listwdir & MAPEDIT_UP) {
+			ob->wmask |= MAPEDIT_PAGEUP;
 			med->curoffs--;
 			if (med->curoffs < 0) {
 				med->curoffs = med->curobj->nrefs - 1;
 			}
-			ob->wmask |= MAPEDIT_PAGEUP;
 		} else if (med->listwdir & MAPEDIT_DOWN) {
+			ob->wmask |= MAPEDIT_PAGEDOWN;
 			med->curoffs++;
 			if (med->curoffs > med->curobj->nrefs) {
 				med->curoffs = 0;
 			}
-			ob->wmask |= MAPEDIT_PAGEDOWN;
 		}
 		mapedit_tilelist(med);
 		view = em->view;
@@ -1108,34 +1136,33 @@ mapedit_time(Uint32 ival, void *obp)
 	 * Object list window direction.
 	 */
 	if (med->listodir != 0) {
-		struct viewport *view;
-
-		if (med->listodir & MAPEDIT_CTRLLEFT) {
-			static int i;
-			struct editobj *eobj;
-
-			SLIST_FOREACH(eobj, &med->eobjsh, eobjs) {
-				if (eobj == med->curobj)
-					break;
-				i++;
-			}
-
-			dprintf("i = %d..\n", i);
-			if (--i < 0) {
-				i = med->neobjs - 1;
-				dprintf("wrap to %d\n", i);
-			}
-			SLIST_INDEX(med->curobj, &med->eobjsh, eobjs, i);
-			dprintf("curobj is now %s\n", med->curobj->pobj->name);
-			med->curoffs = 1;
-
-			ob->wmask |= MAPEDIT_CTRLLEFT;
-			em->redraw++;
+		if (TAILQ_EMPTY(&med->eobjsh)) {
+			return (ival);
 		}
-		view = em->view;
-		SDL_UpdateRect(view->v,
-		    0, (view->width - em->view->tilew),
-		    view->width, em->view->tileh);
+
+		med->curoffs = 1;
+		if (med->listodir & MAPEDIT_CTRLLEFT) {
+			ob->wmask |= MAPEDIT_CTRLLEFT;
+
+			med->curobj = TAILQ_PREV(med->curobj, eobjs_head,
+			    eobjs);
+			if (med->curobj == NULL) {
+				med->curobj = TAILQ_LAST(&med->eobjsh,
+				    eobjs_head);
+			}
+		}
+		if (med->listodir & MAPEDIT_CTRLRIGHT) {
+			ob->wmask |= MAPEDIT_CTRLRIGHT;
+			
+			med->curobj = TAILQ_NEXT(med->curobj, eobjs);
+			if (med->curobj == NULL) {
+				med->curobj = TAILQ_FIRST(&med->eobjsh);
+			}
+		}
+		mapedit_objlist(med);
+		SDL_UpdateRect(em->view->v,
+		    0, (em->view->width - em->view->tilew),
+		    em->view->width, em->view->tileh);
 	}
 	pthread_mutex_unlock(&em->lock);
 
