@@ -1142,9 +1142,6 @@ echo JPEG_LIBS=$JPEG_LIBS >> Makefile.config
 else
 NONE=1
 fi
-if [ "${HAVE_JPEG}" = "yes" ]; then
-	
-fi
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
