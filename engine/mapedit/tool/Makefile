@@ -1,13 +1,13 @@
-#	$Csoft: Makefile,v 1.11 2003/06/06 02:18:04 vedge Exp $
+#	$Csoft: Makefile,v 1.12 2003/06/21 06:50:24 vedge Exp $
 
 TOP=	../../..
 include ${TOP}/Makefile.config
 
 LIB=	tool
-SRCS=	tool.c stamp.c eraser.c magnifier.c resize.c propedit.c select.c \
-	shift.c merge.c fill.c flip.c
-OBJS=	tool.o stamp.o eraser.o magnifier.o resize.o propedit.o select.o \
-	shift.o merge.o fill.o flip.o
+SRCS=	eraser.c fill.c flip.c magnifier.c merge.c propedit.c \
+	resize.c select.c shift.c stamp.c tool.c
+OBJS=	eraser.o fill.o flip.o magnifier.o merge.o propedit.o \
+	resize.o select.o shift.o stamp.o tool.o
 
 DEN=		tool.den
 DEN_DIR=	engine/mapedit/tool
