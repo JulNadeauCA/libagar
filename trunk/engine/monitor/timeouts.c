@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.3 2004/11/21 02:15:16 phip Exp $	*/
+/*	$Csoft: timeouts.c,v 1.4 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -44,11 +44,10 @@ static struct timeout refresher;
 static Uint32 
 timeouts_refresh(void *obj, Uint32 ival, void *arg)
 {
+	char text[128];
 	extern struct objectq timeout_objq;
 	extern pthread_mutex_t timeout_lock;
 	struct tableview_row *row1;
-    char text[128];
-	
 	struct object *ob;
 	struct timeout *to;
 	int id;
@@ -58,17 +57,17 @@ timeouts_refresh(void *obj, Uint32 ival, void *arg)
 
 	id = 0;
 	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
-	    row1 = tableview_row_add(tv, 0, NULL, id++, 0, ob->name);
-        tableview_row_expand(tv, row1);
-	    CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
-            snprintf(text, sizeof(text), "%u ticks", to->ticks);
-	        tableview_row_add(tv, 0, row1, id++, 0, text);
-	    }
-	}
-	
-	pthread_mutex_unlock(&timeout_lock);
+		row1 = tableview_row_add(tv, 0, NULL, id++, 0, ob->name);
+		tableview_row_expand(tv, row1);
 
-    return 50;
+		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
+			snprintf(text, sizeof(text), "%p: %u ticks", to,
+			    to->ticks);
+			tableview_row_add(tv, 0, row1, id++, 0, text);
+		}
+	}
+	pthread_mutex_unlock(&timeout_lock);
+	return (ival);
 }
 
 
@@ -88,8 +87,7 @@ timeouts_window(void)
 	
 	timeout_set(&refresher, timeouts_refresh, tv, 0);
 	timeout_add(tv, &refresher, 50);
-	
-    return (win);
+	return (win);
 }
 
 #endif	/* DEBUG */
