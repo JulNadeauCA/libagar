@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.32 2003/02/08 00:38:18 vedge Exp $
+#	$Csoft: Makefile,v 1.33 2003/03/13 05:54:20 vedge Exp $
 
 SUBDIR=	 libfobj fobjcomp engine
 SUBDIR+= cave
@@ -26,5 +26,8 @@ clean-config: Makefile.config
 
 snap: cleandir
 	sh mk/dist.sh
+	sh mk/agar-cvs.sh
+
+.PHONY: clean cleandir install deinstall depend regress prereq clean-config snap
 
 include mk/csoft.subdir.mk
