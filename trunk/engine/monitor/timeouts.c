@@ -1,4 +1,4 @@
-/*	$Csoft: timeouts.c,v 1.1 2004/05/12 05:34:13 vedge Exp $	*/
+/*	$Csoft: timeouts.c,v 1.2 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -33,54 +33,63 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
+#include <engine/widget/tableview.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 
-static void
-poll_timeouts(int argc, union evarg *argv)
+static struct tableview *tv = NULL;
+static struct timeout refresher;
+
+static Uint32 
+timeouts_refresh(void *obj, Uint32 ival, void *arg)
 {
 	extern struct objectq timeout_objq;
 	extern pthread_mutex_t timeout_lock;
-	struct tlist *tl = argv[0].p;
-	struct tlist_item *it;
+	struct tableview_row *row1;
+    char text[128];
+	
 	struct object *ob;
 	struct timeout *to;
-	int i;
-
-	tlist_clear_items(tl);
+	int id;
+	
+	tableview_row_del_all(tv);
 	pthread_mutex_lock(&timeout_lock);
-	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
-		it = tlist_insert_item(tl, ICON(OBJ_ICON), ob->name, ob);
-		it->depth = 0;
-		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
-			char label[TLIST_LABEL_MAX];
 
-			snprintf(label, sizeof(label), "%u ticks", to->ticks);
-			it = tlist_insert_item(tl, ICON(EDA_START_SIM_ICON),
-			    label, to);
-			it ->depth = 1;
-		}
+	id = 0;
+	TAILQ_FOREACH(ob, &timeout_objq, tobjs) {
+	    row1 = tableview_row_add(tv, 0, NULL, id++, 0, ob->name);
+        tableview_row_expand(tv, row1);
+	    CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
+            snprintf(text, sizeof(text), "%u ticks", to->ticks);
+	        tableview_row_add(tv, 0, row1, id++, 0, text);
+	    }
 	}
+	
 	pthread_mutex_unlock(&timeout_lock);
-	tlist_restore_selections(tl);
+
+    return 50;
 }
+
 
 struct window *
 timeouts_window(void)
 {
 	struct window *win;
-	struct tlist *tl;
 
 	if ((win = window_new(WINDOW_DETACH, "monitor-timeouts")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Running timers"));
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
-	event_new(tl, "tlist-poll", poll_timeouts, NULL);
-	return (win);
+	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
+	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
+	tableview_col_add(tv, TABLEVIEW_COL_FILL, 0, NULL, NULL);
+	
+	timeout_set(&refresher, timeouts_refresh, tv, 0);
+	timeout_add(tv, &refresher, 50);
+	
+    return (win);
 }
 
 #endif	/* DEBUG */
