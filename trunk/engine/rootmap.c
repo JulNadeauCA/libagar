@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.36 2004/03/17 12:42:02 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.37 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -73,13 +73,13 @@ draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = rm->y, ry = rm->sy - m->scale;		/* Downward */
+	for (my = rm->y, ry = rm->sy - m->tilesz;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
-	     my++, ry += m->scale) {
+	     my++, ry += m->tilesz) {
 
-		for (mx = rm->x, rx = rm->sx - m->scale; 	/* Forward */
+		for (mx = rm->x, rx = rm->sx - m->tilesz; 	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
-		     mx++, rx += m->scale) {
+		     mx++, rx += m->tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type == NODEREF_ANIM &&
@@ -112,13 +112,13 @@ draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = rm->y, ry = rm->sy - m->scale;		/* Downward */
+	for (my = rm->y, ry = rm->sy - m->tilesz;		/* Downward */
 	     (my - rm->y) < m->maph && my < m->maph;
-	     my++, ry += m->scale) {
+	     my++, ry += m->tilesz) {
 
-		for (mx = rm->x, rx = rm->sx - m->scale;	/* Forward */
+		for (mx = rm->x, rx = rm->sx - m->tilesz;	/* Forward */
 		     (mx - rm->x) < m->mapw && mx < m->mapw;
-		     mx++, rx += m->scale) {
+		     mx++, rx += m->tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type == NODEREF_SPRITE &&

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.106 2004/03/20 08:21:55 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.107 2004/03/21 07:04:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -7,8 +7,8 @@
 #define TILESZ		32
 #define TILESHIFT	5
 
-#define MAP_MIN_SCALE		7
-#define MAP_MAX_SCALE		16384	/* For soft-scrolling */
+#define MAP_MIN_TILESZ		7
+#define MAP_MAX_TILESZ		16384	/* For soft-scrolling */
 #define MAP_MAX_WIDTH		32767
 #define MAP_MAX_HEIGHT		32767
 #define MAP_MAX_LAYERS		256
@@ -110,7 +110,7 @@ struct map {
 	unsigned int	  mapw, maph;	/* Map geometry */
 	Uint16		  zoom;		/* Zoom (%) */
 	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
-	unsigned int	  scale;	/* Tile scaling factor */
+	unsigned int	  tilesz;	/* Tile size */
 	int		  cur_layer;	/* Layer being edited */
 	
 	struct {

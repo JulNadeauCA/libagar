@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.219 2004/03/25 07:17:40 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.220 2004/03/30 16:00:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -293,8 +293,8 @@ map_set_zoom(struct map *m, Uint16 zoom)
 {
 	pthread_mutex_lock(&m->lock);
 	m->zoom = zoom;
-	if ((m->scale = m->zoom*TILESZ/100) > MAP_MAX_SCALE) {
-		m->scale = MAP_MAX_SCALE;
+	if ((m->tilesz = m->zoom*TILESZ/100) > MAP_MAX_TILESZ) {
+		m->tilesz = MAP_MAX_TILESZ;
 	}
 	pthread_mutex_unlock(&m->lock);
 }
@@ -336,7 +336,7 @@ map_init(void *obj, const char *name)
 	m->origin.y = 0;
 	m->origin.layer = 0;
 	m->map = NULL;
-	m->scale = TILESZ;
+	m->tilesz = TILESZ;
 	m->zoom = 100;
 	m->ssx = TILESZ;
 	m->ssy = TILESZ;
@@ -847,7 +847,7 @@ int
 map_load(void *ob, struct netbuf *buf)
 {
 	struct map *m = ob;
-	Uint32 w, h, origin_x, origin_y, scale;
+	Uint32 w, h, origin_x, origin_y, tilesz;
 	int i, x, y;
 
 	if (version_read(buf, &map_ver, NULL) != 0)
@@ -858,16 +858,17 @@ map_load(void *ob, struct netbuf *buf)
 	h = read_uint32(buf);
 	origin_x = read_uint32(buf);
 	origin_y = read_uint32(buf);
-	scale = read_uint32(buf);
+	tilesz = read_uint32(buf);
 	read_uint32(buf);
-	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT || scale > MAP_MAX_SCALE ||
+	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT ||
+	    tilesz > MAP_MAX_TILESZ ||
 	    origin_x > MAP_MAX_WIDTH || origin_y > MAP_MAX_HEIGHT) {
 		error_set(_("Invalid map geometry."));
 		goto fail;
 	}
 	m->mapw = (unsigned int)w;
 	m->maph = (unsigned int)h;
-	m->scale = (unsigned int)scale;
+	m->tilesz = (unsigned int)tilesz;
 	m->origin.x = (int)origin_x;
 	m->origin.y = (int)origin_y;
 	m->zoom = read_uint16(buf);
@@ -1010,8 +1011,8 @@ map_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)m->maph);
 	write_uint32(buf, (Uint32)m->origin.x);
 	write_uint32(buf, (Uint32)m->origin.y);
-	write_uint32(buf, (Uint32)m->scale);
-	write_uint32(buf, (Uint32)m->scale);
+	write_uint32(buf, (Uint32)m->tilesz);
+	write_uint32(buf, (Uint32)m->tilesz);
 	write_uint16(buf, m->zoom);
 	write_sint16(buf, m->ssx);
 	write_sint16(buf, m->ssy);
@@ -1054,10 +1055,10 @@ draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 	if (SDL_MUSTLOCK(view->v))
 		SDL_LockSurface(view->v);
 	for (y = 0; y < dh; y++) {
-		if ((sy = y*TILESZ/m->scale) >= s->h)
+		if ((sy = y*TILESZ/m->tilesz) >= s->h)
 			break;
 		for (x = 0; x < dw; x++) {
-			if ((sx = x*TILESZ/m->scale) >= s->w)
+			if ((sx = x*TILESZ/m->tilesz) >= s->w)
 				break;
 			src = (Uint8 *)s->pixels +
 			    sy*s->pitch +
@@ -1379,21 +1380,21 @@ map_edit(void *p)
 	
 	mv = Malloc(sizeof(struct mapview), M_WIDGET);
 	toolbar = toolbar_new(win, TOOLBAR_HORIZ, 2);
-	toolbar_add_button(toolbar, 0, SPRITE(&mapedit, 3), 0, 0, create_view,
-	    "%p, %p", mv, win);
+	toolbar_add_button(toolbar, 0, SPRITE(&mapedit, NEW_VIEW_ICON), 0, 0,
+	    create_view, "%p, %p", mv, win);
 	mapview_init(mv, m, flags, toolbar);
-	mapview_reg_tool(mv, &stamp_tool);
-	mapview_reg_tool(mv, &eraser_tool);
-	mapview_reg_tool(mv, &magnifier_tool);
-	mapview_reg_tool(mv, &resize_tool);
-	mapview_reg_tool(mv, &position_tool);
-	mapview_reg_tool(mv, &propedit_tool);
-	mapview_reg_tool(mv, &select_tool);
-	mapview_reg_tool(mv, &shift_tool);
-	mapview_reg_tool(mv, &merge_tool);
-	mapview_reg_tool(mv, &fill_tool);
-	mapview_reg_tool(mv, &flip_tool);
-	mapview_reg_tool(mv, &invert_tool);
+	mapview_reg_tool(mv, &stamp_tool, m);
+	mapview_reg_tool(mv, &eraser_tool, m);
+	mapview_reg_tool(mv, &magnifier_tool, m);
+	mapview_reg_tool(mv, &resize_tool, m);
+	mapview_reg_tool(mv, &position_tool, m);
+	mapview_reg_tool(mv, &propedit_tool, m);
+	mapview_reg_tool(mv, &select_tool, m);
+	mapview_reg_tool(mv, &shift_tool, m);
+	mapview_reg_tool(mv, &merge_tool, m);
+	mapview_reg_tool(mv, &fill_tool, m);
+	mapview_reg_tool(mv, &flip_tool, m);
+	mapview_reg_tool(mv, &invert_tool, m);
 
 	laysel = combo_new(win, COMBO_POLL, _("Layer:"));
 	textbox_printf(laysel->tbox, "%d. %s", m->cur_layer,
@@ -1403,14 +1404,12 @@ map_edit(void *p)
 	
 	object_attach(win, mv);
 	widget_focus(mv);
-
+	
 	sbar = statusbar_new(win);
+	mapview_bind_statusbar(mv, sbar);
 	statusbar_add_label(sbar, LABEL_POLLED, "%d,%d [%d%D,%d%D]",
 	    &mv->cx, &mv->cy, &mv->msel.x, &mv->msel.xoffs,
 	    &mv->msel.y, &mv->msel.yoffs);
-	statusbar_add_label(sbar, LABEL_POLLED, "[%d%D,%d%D]", 
-	    &mv->esel.x, &mv->esel.w,
-	    &mv->esel.y, &mv->esel.h);
 	return (win);
 }
 #endif /* EDITION */
