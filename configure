@@ -619,9 +619,11 @@ echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
 else
 	echo "no"
 fi
+echo -n "checking whether FreeType2 works..."
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
-NONE=1
+echo "yes"
 else
+echo "no"
 echo "The FreeType2 test would not compile."
 exit 1
 fi
