@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.181 2004/05/24 00:37:07 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.182 2004/06/11 01:21:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -858,6 +858,9 @@ object_resolve_deps(void *p)
 	}
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
+		if (cob->flags & OBJECT_NON_PERSISTENT) {
+			continue;
+		}
 		if (object_resolve_deps(cob) == -1)
 			return (-1);
 	}
@@ -1038,11 +1041,7 @@ object_load_generic(void *p)
 	 * Otherwise, allocate and attach a new object from scratch using
 	 * the type switch.
 	 *
-	 * Try to destroy the attached objects which do not have saved
-	 * states, and are not currently in use.
-	 *
-	 * XXX ensure that there is no duplicate names.
-	 * XXX destroy unmatched objects.
+	 * XXX ensure that there are no duplicate names.
 	 */
 	count = read_uint32(buf);
 	for (i = 0; i < count; i++) {
@@ -1054,7 +1053,7 @@ object_load_generic(void *p)
 		copy_string(ctype, buf, sizeof(ctype));
 
 		OBJECT_FOREACH_CHILD(eob, ob, object) {
-			if (strcmp(eob->name, cname) == 0)
+			if (strcmp(eob->name, cname) == 0) 
 				break;
 		}
 		if (eob != NULL) {
@@ -1066,8 +1065,9 @@ object_load_generic(void *p)
 			if (eob->flags & OBJECT_NON_PERSISTENT) {
 				fatal("existing non-persistent object");
 			}
-			if (object_load_generic(eob) == -1)
+			if (object_load_generic(eob) == -1) {
 				goto fail;
+			}
 		} else {
 		 	for (ti = 0; ti < ntypesw; ti++) {
 				if (strcmp(typesw[ti].type, ctype) == 0)
@@ -1087,9 +1087,38 @@ object_load_generic(void *p)
 				    typesw[ti].ops);
 			}
 			object_attach(ob, child);
-			if (object_load_generic(child) == -1)
+			if (object_load_generic(child) == -1) {
 				goto fail;
+			}
 		}
+#if 0
+		/*
+		 * Destroy any attached object without a match in the
+		 * save (that is not currently in use).
+		 */
+		OBJECT_FOREACH_CHILD(eob, ob, object) {
+			if (eob->flags & OBJECT_IN_SAVE) {
+				continue;
+			}
+			if (!object_in_use(eob)) {
+				dprintf("%s: not in save; destroying\n",
+				    eob->name);
+				object_detach(eob);
+				object_unlink_datafiles(eob);
+				object_destroy(eob);
+				if ((eob->flags & OBJECT_STATIC) == 0)
+					Free(eob, M_OBJECT);
+			} else {
+				/* XXX */
+				dprintf("%s: not in save; detaching\n",
+				    OBJECT(eob)->name);
+				text_msg(MSG_ERROR,
+				    _("Detaching `%s' (not in save)."),
+				    eob->name);
+				object_detach(eob);
+			}
+		}
+#endif
 	}
 
 	netbuf_close(buf);
