@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.19 2002/02/08 02:08:38 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.20 2002/02/10 01:36:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -43,6 +43,7 @@
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
+#include "mouse.h"
 
 static void	mapedit_destroy(void *);
 static int	mapedit_shadow(struct mapedit *);
@@ -99,7 +100,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	med->curobj = NULL;
 	med->curflags = 0;
 
-	direction_init(&med->cursor_dir, DIR_SCROLL, 2);
+	direction_init(&med->cursor_dir, DIR_SCROLL|DIR_ONMAP, 2);
 	direction_init(&med->listw_dir, 0, 2);
 	direction_init(&med->olistw_dir, 0, 2);
 
@@ -513,74 +514,17 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	struct map *em = med->map;
 	int mapx, mapy;
 
-	/*
-	 * Mouse scrolling.
-	 */
-	if (ev->type == SDL_MOUSEMOTION) {
-		static int ommapx, ommapy;
-
-		if (ev->motion.state != SDL_PRESSED) {
-			return;
+	switch (ev->type) {
+	case SDL_MOUSEMOTION:
+		if (ev->motion.state == SDL_PRESSED) {
+			mouse_motion(med, ev);
 		}
-		ommapx = med->mmapx;
-		ommapy = med->mmapy;
-		med->mmapx = ev->motion.x / em->view->tilew;
-		med->mmapy = ev->motion.y / em->view->tileh;
-		if (ommapx < med->mmapx) {
-			if (em->view->mapx > 0) {
-				scroll(med->map, DIR_LEFT);
-			}
-		} else if (med->mmapx < ommapx) {
-			if (em->view->mapx + em->view->mapw < em->mapw) {
-				scroll(med->map, DIR_RIGHT);
-			}
+		break;
+	case SDL_MOUSEBUTTONDOWN:
+		if (ev->button.button != 1) {
+			mouse_button(med, ev);
 		}
-		if (ommapy < med->mmapy) {
-			if (em->view->mapy > 0) {
-				scroll(med->map, DIR_UP);
-			}
-		} else if (med->mmapy < ommapy) {
-			if (em->view->mapy + em->view->maph < em->maph) {
-				scroll(med->map, DIR_DOWN);
-			}
-		}
-		return;
-	}
-
-	/*
-	 * Mouse edition.
-	 */
-	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		if (ev->button.button == 1) {
-			return;
-		}
-		if (pthread_mutex_lock(&em->lock) == 0) {
-			static int mx, my;
-
-			mx = em->view->mapx + ev->button.x / em->view->tilew;
-			my = em->view->mapy + ev->button.y / em->view->tileh;
-			if (med->flags & MAPEDIT_TILESTACK)
-				mx--;
-			if (med->flags & MAPEDIT_OBJLIST)
-				my--;
-
-			MAPEDIT_MOVE(med, mx, my);
-			pthread_mutex_unlock(&em->lock);
-			em->redraw++;
-		} else {
-			perror(em->obj.name);
-			return;
-		}
-		if (ev->button.button == 3) {
-			do {
-				SDL_Event ev;
-				/* Fake the add command. */
-				ev.type = SDL_KEYDOWN;
-				ev.key.keysym.sym = SDLK_a;
-				SDL_PushEvent(&ev);
-			} while (/*CONSTCOND*/0);
-		}
-		return;
+		break;
 	}
 
 #if 0
@@ -690,32 +634,32 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			break;
 		case SDLK_b:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, MAPENTRY_BIO);
+				mapedit_nodeflags(med, me, NODE_BIO);
 			} else {
-				mapedit_nodeflags(med, me, MAPENTRY_BLOCK);
+				mapedit_nodeflags(med, me, NODE_BLOCK);
 			}
 			break;
 		case SDLK_w:
-			mapedit_nodeflags(med, me, MAPENTRY_WALK);
+			mapedit_nodeflags(med, me, NODE_WALK);
 			break;
 		case SDLK_c:
-			mapedit_nodeflags(med, me, MAPENTRY_CLIMB);
+			mapedit_nodeflags(med, me, NODE_CLIMB);
 			break;
 		case SDLK_p:
 			if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_editflags(med, MAPEDIT_DRAWPROPS);
 			} else {
-				mapedit_nodeflags(med, me, MAPENTRY_SLIP);
+				mapedit_nodeflags(med, me, NODE_SLIP);
 			}
 			break;
 		case SDLK_h:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, MAPENTRY_HASTE);
+				mapedit_nodeflags(med, me, NODE_HASTE);
 			}
 			break;
 		case SDLK_r:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, MAPENTRY_REGEN);
+				mapedit_nodeflags(med, me, NODE_REGEN);
 			}
 			break;
 		case SDLK_i:
@@ -723,6 +667,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 				mapedit_fillmap(med);
 			} else {
 				map_clean(med->map, NULL, 0, 0, 0);
+				med->map->redraw++;
 			}
 			break;
 		case SDLK_o:
@@ -743,7 +688,7 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 			break;
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, me, MAPENTRY_SLOW);
+				mapedit_nodeflags(med, me, NODE_SLOW);
 			} else if (ev->key.keysym.mod & KMOD_CTRL) {
 				mapedit_editflags(med, MAPEDIT_TILESTACK);
 			} else {
@@ -817,12 +762,21 @@ mapedit_time(Uint32 ival, void *p)
 		map->redraw++;
 	}
 
-	moved = direction_update(&med->listw_dir, map, &mapx, &mapy);
-	if (moved != 0) {
+	moved = direction_update(&med->listw_dir, NULL, NULL, NULL);
+	if (moved & DIR_UP) {
+		if (med->curoffs-- < 0) {
+			med->curoffs = med->curobj->nrefs - 1;
+		}
+		mapedit_tilelist(med);
+	}
+	if (moved & DIR_DOWN) {
+		if (med->curoffs++ > med->curobj->nrefs - 1) {
+			med->curoffs = 0;
+		}
 		mapedit_tilelist(med);
 	}
 
-	moved = direction_update(&med->olistw_dir, map, &mapx, &mapy);
+	moved = direction_update(&med->olistw_dir, NULL, NULL, NULL);
 	if (moved & DIR_LEFT) {
 		if (!TAILQ_EMPTY(&med->eobjsh)) {
 			med->curobj = TAILQ_PREV(med->curobj, eobjs_head,
@@ -833,7 +787,8 @@ mapedit_time(Uint32 ival, void *p)
 			}
 		}
 		mapedit_objlist(med);
-	} else if (moved & DIR_RIGHT) {
+	}
+	if (moved & DIR_RIGHT) {
 		if (!TAILQ_EMPTY(&med->eobjsh)) {
 			med->curobj = TAILQ_NEXT(med->curobj, eobjs);
 			if (med->curobj == NULL) {
