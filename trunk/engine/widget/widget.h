@@ -1,10 +1,12 @@
-/*	$Csoft: widget.h,v 1.80 2004/05/22 03:18:18 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.81 2004/09/12 05:50:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
 
 #include <config/have_opengl.h>
+
+#include <engine/widget/style.h>
 
 #include "begin_code.h"
 
@@ -70,6 +72,9 @@ struct widget {
 	int	 x, y;			/* Coordinates in container */
 	int	 w, h;			/* Allocated geometry */
 
+	const struct style *style;	/* Style properties (inherited from
+					   parent by default) */
+
 	char	 color_names[WIDGET_COLORS_MAX][WIDGET_COLOR_NAME_MAX];
 	Uint32	 colors[WIDGET_COLORS_MAX];
 	int	ncolors;
@@ -113,8 +118,8 @@ struct window	*widget_parent_window(void *);
 
 void		 widget_map_color(void *, int, const char *, Uint8, Uint8,
 		                  Uint8, Uint8);
-__inline__ int   widget_push_color(struct widget *, Uint32);
-__inline__ void  widget_pop_color(struct widget *);
+__inline__ int   widget_push_color(void *, Uint32);
+__inline__ void  widget_pop_color(void *);
 
 int		 widget_map_surface(void *, SDL_Surface *);
 __inline__ void	 widget_replace_surface(void *, int, SDL_Surface *);

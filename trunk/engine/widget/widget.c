@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.88 2004/09/12 05:50:38 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.89 2004/09/12 08:06:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -40,6 +40,46 @@ const struct version widget_ver = {
 	0, 0
 };
 
+static void
+inherit_style(int argc, union evarg *argv)
+{
+	struct widget *pwid = argv[0].p;
+	struct widget *wid = argv[argc].p;
+	const struct style *style = pwid->style;
+	const struct style_texmod *texmods;
+
+	if (style == NULL)
+		return;
+
+	wid->style = style;
+
+	if (style->wid.colormods != NULL) {
+		const struct style_colormod *mod;
+		int i;
+
+		for (mod = &style->wid.colormods[0];
+		     mod->type != NULL;
+		     mod++) {
+			if (strcmp(OBJECT(wid)->name, mod->type) != 0) {
+				continue;
+			}
+			dprintf("wid=%s, mod=%s\n", OBJECT(wid)->name,
+			    mod->type);
+			for (i = 0; i < wid->ncolors; i++) {
+				if (strcmp(wid->color_names[i],
+				    mod->color_id) == 0) {
+					wid->colors[i] =
+					    SDL_MapRGB(vfmt,
+					        mod->color.r,
+						mod->color.g,
+						mod->color.b);
+					break;
+				}
+			}
+		}
+	}
+}
+
 void
 widget_init(void *p, const char *type, const void *wops, int flags)
 {
@@ -57,6 +97,7 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->w = -1;
 	wid->h = -1;
 	wid->ncolors = 0;
+	wid->style = NULL;
 	SLIST_INIT(&wid->bindings);
 	pthread_mutex_init(&wid->bindings_lock, &recursive_mutexattr);
 
@@ -66,6 +107,12 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->textures = NULL;
 	wid->texcoords = NULL;
 #endif
+
+	/*
+	 * Arrange for immediate children to inherit the style settings
+	 * of the parent on attachment.
+	 */
+	event_new(wid, "child-attached", inherit_style, NULL);
 }
 
 /* Bind a mutex-protected variable to a widget. */
@@ -1164,8 +1211,9 @@ widget_set_type(void *p, const char *name)
 
 /* Push an unnamed entry onto a widget's color stack. */
 int	
-widget_push_color(struct widget *wid, Uint32 color)
+widget_push_color(void *p, Uint32 color)
 {
+	struct widget *wid = p;
 	int ncolor;
 
 #ifdef DEBUG
@@ -1180,9 +1228,9 @@ widget_push_color(struct widget *wid, Uint32 color)
 
 /* Pop the highest color off a widget's color stack. */
 void
-widget_pop_color(struct widget *wid)
+widget_pop_color(void *p)
 {
-	wid->ncolors--;
+	((struct widget *)p)->ncolors--;
 }
 
 /*
