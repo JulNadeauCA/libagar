@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.8 2002/07/20 19:03:05 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.9 2002/07/21 10:56:44 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -34,8 +34,8 @@
 #include "primitive.h"
 
 static void	box_3d(void *, int, int, int, int, int);
-static void	frame_2d(void *, int, int, int, int, int);
-static void	bresenham_circle(void *, int, int, int, int, int, int);
+static void	frame_3d(void *, int, int, int, int, Uint32);
+static void	bresenham_circle(void *, int, int, int, int, int, Uint32);
 static void	bresenham_line(void *, int, int, int, int, Uint32);
 static void	composite_square(void *, int, int, int, int, Uint32);
 
@@ -44,7 +44,7 @@ static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
 
 struct primitive_ops primitives = {
 	box_3d,			/* box */
-	frame_2d,		/* frame */
+	frame_3d,		/* frame */
 	bresenham_circle,	/* circle */
 	bresenham_line,		/* line */
 	composite_square	/* square */
@@ -94,56 +94,42 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z)
 }
 
 static void
-frame_2d(void *p, int xoffs, int yoffs, int w, int h, int col)
+frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint32 fcol;
 	int i;
-
-	if (col) {	/* XXX */
-		fcol = SDL_MapRGB(view->v->format, 200, 200, 200);
-	} else {
-		fcol = SDL_MapRGB(view->v->format, 150, 150, 150);
-	}
 
 	primitives.line(wid,			/* Top */
 	    xoffs, yoffs,
-	    xoffs+w-1, yoffs, fcol);
+	    xoffs+w-1, yoffs, color);
 	primitives.line(wid,			/* Left */
 	    xoffs, yoffs,
-	    xoffs, yoffs+h-1, fcol);
+	    xoffs, yoffs+h-1, color);
 	primitives.line(wid,			/* Bottom */
 	    xoffs, yoffs+h-1,
-	    xoffs+w-1, yoffs+h-1, fcol);
+	    xoffs+w-1, yoffs+h-1, color);
 	primitives.line(wid,			/* Right */
 	    xoffs+w-1, yoffs,
-	    xoffs+w-1, yoffs+h-1, fcol);
+	    xoffs+w-1, yoffs+h-1, color);
 }
 
 static void
 bresenham_circle(void *wid, int xoffs, int yoffs, int w, int h,
-    int radius, int z)
+    int radius, Uint32 color)
 {
 	int x = 0, y, cx, cy, e = 0, u = 1, v;
-	Uint32 fcol;
 
 	y = radius;
-	cx = w / 2 + xoffs;
-	cy = h / 2 + yoffs;
+	cx = w/2 + xoffs;
+	cy = h/2 + yoffs;
 	v = 2*radius - 1;
 
-	if (z) {
-		fcol = SDL_MapRGB(view->v->format, 200, 200, 200);
-	} else {
-		fcol = SDL_MapRGB(view->v->format, 150, 150, 150);
-	}
-	
 	SDL_LockSurface(view->v);
-	while (x < y) {
-		WIDGET_PUT_PIXEL(wid, cx + x, cy + y, fcol);
-		WIDGET_PUT_PIXEL(wid, cx + x, cy - y, fcol);
-		WIDGET_PUT_PIXEL(wid, cx - x, cy + y, fcol);
-		WIDGET_PUT_PIXEL(wid, cx - x, cy - y, fcol);
+	while (x <= y) {
+		WIDGET_PUT_PIXEL(wid, cx + x, cy + y, color);	/* SE */
+		WIDGET_PUT_PIXEL(wid, cx + x, cy - y, color);	/* NE */
+		WIDGET_PUT_PIXEL(wid, cx - x, cy + y, color);	/* SW */
+		WIDGET_PUT_PIXEL(wid, cx - x, cy - y, color);	/* NW */
 		x++;
 		e += u;
 		u += 2;
@@ -155,11 +141,13 @@ bresenham_circle(void *wid, int xoffs, int yoffs, int w, int h,
 		if (x > y) {
 			break;
 		}
-		WIDGET_PUT_PIXEL(wid, cx + y, cy + x, fcol);
-		WIDGET_PUT_PIXEL(wid, cx + y, cy - x, fcol);
-		WIDGET_PUT_PIXEL(wid, cx - y, cy + x, fcol);
-		WIDGET_PUT_PIXEL(wid, cx - y, cy - x, fcol);
+		WIDGET_PUT_PIXEL(wid, cx + y, cy + x, color);	/* SE */
+		WIDGET_PUT_PIXEL(wid, cx + y, cy - x, color);	/* NE */
+		WIDGET_PUT_PIXEL(wid, cx - y, cy + x, color);	/* SW */
+		WIDGET_PUT_PIXEL(wid, cx - y, cy - x, color);	/* NW */
 	}
+	WIDGET_PUT_PIXEL(wid, 2, cy, color);
+	WIDGET_PUT_PIXEL(wid, w-2, cy, color);
 	SDL_UnlockSurface(view->v);
 }
 
@@ -272,15 +260,14 @@ bresenham_line(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 xloop:
 	put_pixel2(xinc, fb1, fb2, color);
 
-	p += dpr;
-	if (p > 0) {
+	if ((p += dpr) > 0) {
 		goto right_and_up;
 	}
 
 /* up: */
 	fb1 += xinc;
 	fb2 -= xinc;
-	if (--dy > 0) {
+	if ((dy=dy-1) >= 0) {
 		goto xloop;
 	}
 	put_pixel1(xinc, fb1, color);
@@ -294,7 +281,7 @@ right_and_up:
 	fb1 += xyinc;
 	fb2 -= xyinc;
 	p += dpru;
-	if (--dy > 0) {
+	if (--dy >= 0) {
 		goto xloop;
 	}
 	put_pixel1(xinc, fb1, color);
@@ -313,14 +300,13 @@ y_is_independent:
 yloop:
 	put_pixel2(xinc, fb1, fb2, color);
 
-	p += dpr;
-	if (p > 0) {
+	if ((p += dpr) > 0) {
 		goto right_and_up_2;
 	}
 /* up: */
 	fb1 += yinc;
 	fb2 -= yinc;
-	if (--dx > 0) {
+	if ((dx=dx-1) >= 0) {
 		goto yloop;
 	}
 	put_pixel1(xinc, fb2, color);
@@ -330,7 +316,7 @@ right_and_up_2:
 	fb1 += xyinc;
 	fb2 -= xyinc;
 	p += dpru;
-	if (--dx > 0) {
+	if ((dx=dx-1) >= 0) {
 		goto yloop;
 	}
 	put_pixel1(xinc, fb1, color);
@@ -347,10 +333,10 @@ composite_square(void *wid, int x, int y, int w, int h, Uint32 color)
 {
 	primitives.line(wid,		/* Top */
 	    x, y,
-	    x + w, y, color);
+	    x + w - 1, y, color);
 	primitives.line(wid,		/* Bottom */
 	    x, y + h - 1,
-	    x + w, y + h - 1, color);
+	    x + w - 1, y + h - 1, color);
 	primitives.line(wid,		/* Left */
 	    x, y,
 	    x, y + h - 1, color);
