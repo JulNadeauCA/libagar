@@ -1,26 +1,30 @@
-/*	$Csoft: input.h,v 1.6 2002/05/11 03:58:19 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.7 2002/06/09 10:08:04 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
 struct mappos;
 
+enum input_type {
+	INPUT_KEYBOARD,		/* Keyboard device */
+	INPUT_JOY,		/* Joystick device */
+	INPUT_MOUSE		/* Mouse device */
+};
+
 /* Input device associated with a map position. */
 struct input {
 	struct	object obj;
-	enum {
-		INPUT_KEYBOARD,		/* Keyboard device */
-		INPUT_JOY,		/* Joystick device */
-		INPUT_MOUSE		/* Mouse device */
-	} type;
+	enum	input_type type;
 	int	index;			/* Device index */
 	void	*p;			/* User data */
 	struct	mappos *pos;		/* Controlled map position */
+	TAILQ_ENTRY(input) inputs;
 	pthread_mutex_t lock;		/* Lock on the whole structure */
 };
 
-extern struct input *keyboard, *joy, *mouse;
-
 struct input	*input_new(int, int);
 void		 input_destroy(void *);
-void		 input_event(void *, SDL_Event *);
+void		 input_destroy_all(void);
+void		 input_event(enum input_type, SDL_Event *);
+struct input	*input_find_ev(enum input_type, SDL_Event *);
+struct input	*input_find_str(char *);
 
