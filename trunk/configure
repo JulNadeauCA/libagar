@@ -567,7 +567,7 @@ fi
 if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_LIBS=$MATH_LIBS" >> Makefile.config
 echo "#ifndef MATH_LIBS" > config/math_libs.h
-echo "#define MATH_LIBS" "$MATH_LIBS" >> config/math_libs.h
+echo "#define MATH_LIBS \"$MATH_LIBS\"" >> config/math_libs.h
 echo "#endif /* MATH_LIBS */" >> config/math_libs.h
 else
 echo "#undef MATH_LIBS" > config/math_libs.h
@@ -1213,10 +1213,10 @@ else
 fi
 if [ "${HAVE_SDL}" = "yes" ]; then
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
-echo "#define SDL_LIBS" "$SDL_LIBS" >> config/sdl_libs.h
+echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif /* SDL_LIBS */" >> config/sdl_libs.h
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#define SDL_CFLAGS" "$SDL_CFLAGS" >> config/sdl_cflags.h
+echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
 echo "#endif /* SDL_CFLAGS */" >> config/sdl_cflags.h
 else
 echo "#undef SDL_LIBS" > config/sdl_libs.h
@@ -1309,10 +1309,10 @@ else
 fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
-echo "#define FREETYPE_LIBS" "$FREETYPE_LIBS" >> config/freetype_libs.h
+echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
 echo "#endif /* FREETYPE_LIBS */" >> config/freetype_libs.h
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
-echo "#define FREETYPE_CFLAGS" "$FREETYPE_CFLAGS" >> config/freetype_cflags.h
+echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
 echo "#endif /* FREETYPE_CFLAGS */" >> config/freetype_cflags.h
 else
 echo "#undef FREETYPE_LIBS" > config/freetype_libs.h
@@ -1437,10 +1437,10 @@ if [ "${HAVE_X11}" != "" ]; then
 echo "X11_CFLAGS=$X11_CFLAGS" >> Makefile.config
 echo "X11_LIBS=$X11_LIBS" >> Makefile.config
 echo "#ifndef X11_LIBS" > config/x11_libs.h
-echo "#define X11_LIBS" "$X11_LIBS" >> config/x11_libs.h
+echo "#define X11_LIBS \"$X11_LIBS\"" >> config/x11_libs.h
 echo "#endif /* X11_LIBS */" >> config/x11_libs.h
 echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
-echo "#define X11_CFLAGS" "$X11_CFLAGS" >> config/x11_cflags.h
+echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
 echo "#endif /* X11_CFLAGS */" >> config/x11_cflags.h
 else
 echo "#undef X11_CFLAGS" > config/x11_cflags.h
@@ -1493,10 +1493,10 @@ if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
 echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
 echo "#ifndef OPENGL_CFLAGS" > config/opengl_cflags.h
-echo "#define OPENGL_CFLAGS" "$OPENGL_CFLAGS" >> config/opengl_cflags.h
+echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >> config/opengl_cflags.h
 echo "#endif /* OPENGL_CFLAGS */" >> config/opengl_cflags.h
 echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
-echo "#define OPENGL_LIBS" "$OPENGL_LIBS" >> config/opengl_libs.h
+echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
 echo "#endif /* OPENGL_LIBS */" >> config/opengl_libs.h
 else
 echo "#undef OPENGL_CFLAGS" > config/opengl_cflags.h
@@ -1571,10 +1571,10 @@ if [ "${HAVE_JPEG}" != "" ]; then
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
 echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
 echo "#ifndef JPEG_CFLAGS" > config/jpeg_cflags.h
-echo "#define JPEG_CFLAGS" "$JPEG_CFLAGS" >> config/jpeg_cflags.h
+echo "#define JPEG_CFLAGS \"$JPEG_CFLAGS\"" >> config/jpeg_cflags.h
 echo "#endif /* JPEG_CFLAGS */" >> config/jpeg_cflags.h
 echo "#ifndef JPEG_LIBS" > config/jpeg_libs.h
-echo "#define JPEG_LIBS" "$JPEG_LIBS" >> config/jpeg_libs.h
+echo "#define JPEG_LIBS \"$JPEG_LIBS\"" >> config/jpeg_libs.h
 echo "#endif /* JPEG_LIBS */" >> config/jpeg_libs.h
 else
 echo "#undef JPEG_CFLAGS" > config/jpeg_cflags.h
@@ -1614,10 +1614,10 @@ echo "#ifndef HAVE_SMPEG" > config/have_smpeg.h
 echo "#define HAVE_SMPEG" $HAVE_SMPEG >> config/have_smpeg.h
 echo "#endif /* HAVE_SMPEG */" >> config/have_smpeg.h
 echo "#ifndef SMPEG_LIBS" > config/smpeg_libs.h
-echo "#define SMPEG_LIBS" "$SMPEG_LIBS" >> config/smpeg_libs.h
+echo "#define SMPEG_LIBS \"$SMPEG_LIBS\"" >> config/smpeg_libs.h
 echo "#endif /* SMPEG_LIBS */" >> config/smpeg_libs.h
 echo "#ifndef SMPEG_CFLAGS" > config/smpeg_cflags.h
-echo "#define SMPEG_CFLAGS" "$SMPEG_CFLAGS" >> config/smpeg_cflags.h
+echo "#define SMPEG_CFLAGS \"$SMPEG_CFLAGS\"" >> config/smpeg_cflags.h
 echo "#endif /* SMPEG_CFLAGS */" >> config/smpeg_cflags.h
 else
 echo "no"
