@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.33 2002/02/16 08:59:25 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.34 2002/02/16 09:13:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,7 +39,14 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-struct	map *curmap;
+static struct obvec map_vec = {
+	map_destroy,
+	NULL,
+	map_load,
+	map_save,
+	NULL,
+	NULL
+};
 
 struct draw {
 	SDL_Surface *s;		/* Source surface */
@@ -75,9 +82,7 @@ map_allocnodes(struct map *m, int w, int h, int tilew, int tileh)
 	    ;;
 	m->shtiley = i;
 
-	dprintf("x shift = %d, y shift = %d\n", m->shtilex, m->shtiley);
-
-	dprintf("%s is %dKb in core (%dx%d, %d bytes nodes)\n", m->obj.name,
+	dprintf("%s is %dKb in core (%dx%d, %d-byte nodes)\n", m->obj.name,
 	    ((w * h) * sizeof(struct node)) / 1024,
 	    w, h, sizeof(struct node));
 
@@ -114,14 +119,11 @@ map_create(char *name, char *desc, int flags)
 	struct map *m;
 
 	m = (struct map *)emalloc(sizeof(struct map));
-	object_create(&m->obj, name, desc,
-	    DESTROY_HOOK|LOAD_FUNC|SAVE_FUNC|OBJ_DEFERGC|OBJ_EDITABLE);
-	m->obj.destroy_hook = map_destroy;
-	m->obj.load = map_load;
-	m->obj.save = map_save;
+	object_init(&m->obj, name, OBJ_DEFERGC|OBJ_EDITABLE, &map_vec);
+	m->obj.desc = (desc != NULL) ? strdup(desc) : NULL;
+
 	m->flags = flags;
 	m->view = mainview;
-	m->view->map = m;
 
 	if (pthread_mutex_init(&m->lock, NULL) != 0) {
 		return (NULL);
@@ -150,10 +152,9 @@ map_draw_th(void *p)
 int
 map_focus(struct map *m)
 {
-	curmap = m;
+	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
-	
-	dprintf("focusing on %s\n", m->obj.name);
+	world->curmap = m;
 
 	if (curmapedit != NULL) {
 		char s[128];
@@ -175,13 +176,12 @@ map_focus(struct map *m)
 int
 map_unfocus(struct map *m)
 {
-	dprintf("unfocusing %s\n", m->obj.name);
-	
+	m->view->map = NULL;
 	m->flags &= ~(MAP_FOCUSED);	/* Will stop the rendering thread */
+	world->curmap = NULL;
 
-	curmap = NULL;
 	if (curmapedit != NULL) {
-		curmapedit->flags = 0;
+		mapedit_unlink(curmapedit);
 	}
 
 	return (0);
@@ -299,7 +299,7 @@ map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 	m->map[m->defx][m->defy].flags |= NODE_ORIGIN;
 }
 
-void
+int
 map_destroy(void *p)
 {
 	struct map *m = (struct map *)p;
@@ -311,6 +311,8 @@ map_destroy(void *p)
 	pthread_mutex_lock(&m->lock);
 	map_freenodes(m);
 	pthread_mutex_unlock(&m->lock);
+
+	return (0);
 }
 
 /* Must be called on a locked map. */
@@ -400,13 +402,12 @@ map_animate(struct map *m)
 
 			/* XXX */
 			if (curmapedit != NULL) {
-				if (vx == m->view->mapw - 1 &&
-				    curmapedit->flags & MAPEDIT_TILELIST) {
-					continue;
-				}
-				if (vx == 0 &&
-				    curmapedit->flags & MAPEDIT_TILESTACK) {
-					vx++;
+				if (curmapedit != NULL) {
+					if (vx == m->view->mapw - 1) {
+						continue;
+					} else if (vx == 0) {
+						vx++;
+					}
 				}
 			}
 
@@ -496,15 +497,18 @@ map_animate(struct map *m)
 	
 		TAILQ_FOREACH(draw, &deferdraws, pdraws) {
 			if (curmapedit != NULL) {
-				mapedit_predraw(m, draw->flags, vx, vy);
+				mapedit_predraw(m, draw->flags,
+				    draw->x, draw->y);
 			}
 			map_plot_sprite(m, draw->s, draw->x, draw->y);
 			if (curmapedit != NULL) {
-				mapedit_postdraw(m, draw->flags, vx, vy);
+				mapedit_postdraw(m, draw->flags,
+				    draw->x, draw->y);
 			}
 			free(draw);
-			SDL_UpdateRect(m->view->v, draw->x, draw->y,
-			    m->tilew, m->tileh);
+			
+			SDL_UpdateRect(m->view->v,
+			    draw->x, draw->y, m->tilew, m->tileh);
 		}
 	}
 	
@@ -536,14 +540,11 @@ map_draw(struct map *m)
 			static struct node *node;
 			static struct noderef *nref;
 
-			/* XXX */
 			if (curmapedit != NULL) {
-				if (vx == 0 &&
-				    curmapedit->flags & MAPEDIT_TILESTACK) {
+				/* XXX */
+				if (vx == 0) {
 					vx++;
-				}
-				if (vx == m->view->mapw &&
-				    curmapedit->flags & MAPEDIT_TILELIST) {
+				} else if (vx == m->view->mapw) {
 					continue;
 				}
 			}
@@ -610,43 +611,37 @@ node_findref(struct node *node, void *ob, int offs)
  * Load a map from file. The map must be already locked.
  */
 int
-map_load(void *ob, char *path)
+map_load(void *ob, int fd)
 {
 	char magic[9];
 	struct map *m = (struct map *)ob;
 	int vermin, vermaj;
-	int f, x, y, refs = 0;
-
-	f = open(path, O_RDONLY);
-	if (f < 0) {
-		perror(path);
-		return (-1);
-	}
+	int x, y, refs = 0;
 
 	/* Verify the signature and version major. */
-	if (read(f, magic, 10) != 10)
+	if (read(fd, magic, 10) != 10)
 		goto badmagic;
 	if (strncmp(magic, MAP_MAGIC, 10) != 0)
 		goto badmagic;
-	vermaj = (int) fobj_read_uint32(f);
-	vermin = (int) fobj_read_uint32(f);
+	vermaj = (int) fobj_read_uint32(fd);
+	vermin = (int) fobj_read_uint32(fd);
 	if (vermaj > MAP_VERMAJ ||
 	    (vermaj == MAP_VERMAJ && vermin > MAP_VERMIN))
 		goto badver;
 
 	/* Read map information. */
-	m->flags = (int) fobj_read_uint32(f);
-	m->mapw  = (int) fobj_read_uint32(f);
-	m->maph  = (int) fobj_read_uint32(f);
-	m->defx  = (int) fobj_read_uint32(f);
-	m->defy  = (int) fobj_read_uint32(f);
-	m->tilew = (int) fobj_read_uint32(f);
-	m->tileh = (int) fobj_read_uint32(f);
+	m->flags = (int) fobj_read_uint32(fd);
+	m->mapw  = (int) fobj_read_uint32(fd);
+	m->maph  = (int) fobj_read_uint32(fd);
+	m->defx  = (int) fobj_read_uint32(fd);
+	m->defy  = (int) fobj_read_uint32(fd);
+	m->tilew = (int) fobj_read_uint32(fd);
+	m->tileh = (int) fobj_read_uint32(fd);
 
 	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
 
 	dprintf("%s: v%d.%d flags 0x%x geo %dx%d tilegeo %dx%d\n",
-	    path, vermaj, vermin, m->flags, m->mapw, m->maph,
+	    m->obj.name, vermaj, vermin, m->flags, m->mapw, m->maph,
 	    m->tilew, m->tileh);
 
 	/* Reset the video mode. */
@@ -658,14 +653,14 @@ map_load(void *ob, char *path)
 			int i, nnrefs;
 			
 			/* Read the map entry flags. */
-			node->flags = fobj_read_uint32(f);
+			node->flags = fobj_read_uint32(fd);
 
 			/* Read the optional integer values. */
-			node->v1 = fobj_read_uint32(f);
-			node->v2 = fobj_read_uint32(f);
+			node->v1 = fobj_read_uint32(fd);
+			node->v2 = fobj_read_uint32(fd);
 
 			/* Read the reference count. */
-			nnrefs = fobj_read_uint32(f);
+			nnrefs = fobj_read_uint32(fd);
 
 			for (i = 0; i < nnrefs; i++) {
 				struct object *pobj;
@@ -674,10 +669,10 @@ map_load(void *ob, char *path)
 				int offs, frame, rflags;
 
 				/* Read object:offset reference. */
-				pobjstr = fobj_read_string(f);
-				offs = fobj_read_uint32(f);
-				frame = fobj_read_uint32(f);
-				rflags = fobj_read_uint32(f);
+				pobjstr = fobj_read_string(fd);
+				offs = fobj_read_uint32(fd);
+				frame = fobj_read_uint32(fd);
+				rflags = fobj_read_uint32(fd);
 				pobj = object_strfind(pobjstr);
 
 				if (pobj == NULL) {
@@ -694,17 +689,15 @@ map_load(void *ob, char *path)
 		}
 	}
 
-	dprintf("%s: %d refs, origin: %dx%d\n", path, refs, m->defx, m->defy);
+	dprintf("%s: %d refs, origin: %dx%d\n", m->obj.name,
+	    refs, m->defx, m->defy);
 	return (0);
-
 badver:
 	fatal("map version %d.%d > %d.%d\n", vermaj, vermin,
 	    MAP_VERMAJ, MAP_VERMIN);
-	close(f);
 	return (-1);
 badmagic:
 	fatal("bad magic\n");
-	close(f);
 	return (-1);
 }
 
@@ -713,17 +706,11 @@ badmagic:
  * Must be called on a locked map.
  */
 int
-map_save(void *ob, char *path)
+map_save(void *ob, int fd)
 {
 	struct map *m = (struct map *)ob;
 	struct fobj_buf *buf;
-	int x = 0, y, f, totrefs = 0;
-
-	f = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
-	if (f < 0) {
-		perror(path);
-		return (-1);
-	}
+	int x = 0, y, totrefs = 0;
 
 	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
 
@@ -775,9 +762,8 @@ map_save(void *ob, char *path)
 		}
 	}
 
-	fobj_flush_buf(buf, f);
-	close(f);
-	dprintf("%s: %dx%d, %d refs\n", path, m->mapw, m->maph, totrefs);
+	fobj_flush_buf(buf, fd);
+	dprintf("%s: %dx%d, %d refs\n", m->obj.name, m->mapw, m->maph, totrefs);
 
 	return (0);
 }
