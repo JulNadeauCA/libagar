@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.15 2002/09/17 02:41:40 vedge Exp $
+.\"	$Csoft: object.3,v 1.16 2002/11/30 02:09:47 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -29,7 +29,7 @@
 .Os
 .Sh NAME
 .Nm object
-.Nd agar object abstraction
+.Nd agar object layer
 .Sh SYNOPSIS
 .Bd -literal
 #include <engine/object.h>
@@ -45,23 +45,26 @@ layer implements:
 .It
 garbage collection.
 .It
-media storage.
+storage of sprite/animations or audio.
 .It
 tile mapping (for map edition).
 .It
-state saving/loading.
+saving states to network format.
+.It
+loading states from network format.
+.It
+positions on maps (back references).
+.It
+dependencies.
 .El
 .Sh SHARED MEDIA
-Objects may be associated with shared
-.Dq media
-(graphics, audio).
-Media is allocated/deallocated by the engine by keeping a list of media
-structures independent from objects and reference counts.
+Graphics/audio is allocated/deallocated by the engine using pools and
+reference counts.
 The reference count is incremented when an newly allocated object references
-the media structure, and decremented when an object is freed (as long as
-unless the object has the
+the media structure by its name, and decremented when an object is freed
+(unless the
 .Dv OBJECT_KEEP_MEDIA
-flag set).
+flag is set).
 When the reference count drops to zero, the media is freed.
 .Sh INITIALIZATION
 .nr nS 1
@@ -114,10 +117,12 @@ The
 argument may contain:
 .Bd -literal
 #define OBJECT_ART		0x01	/* Load graphics */
-#define OBJECT_AUDIO		0x02	/* Load audio */
-#define OBJECT_KEEP_MEDIA	0x04	/* Keep graphics/audio cached */
-#define OBJECT_MEDIA_CAN_FAIL	0x20	/* Media load can fail */
-#define OBJECT_CANNOT_MAP	0x40	/* Never insert into map tables */
+#define OBJECT_ART_CACHE	0x02	/* Keep graphics cached */
+#define OBJECT_ART_CAN_FAIL	0x04	/* Graphic load can fail */
+#define OBJECT_AUDIO		0x08	/* Load audio */
+#define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
+#define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
+#define OBJECT_CANNOT_MAP	0x40	/* Never reference in maps */
 .Ed
 .Pp
 The
@@ -157,7 +162,7 @@ saves the state of
 .Fa ob
 to the user's data directory.
 .Pp
-The thread-safe
+The
 .Fn object_path
 function searches the data directories for a file matching the
 .Fa name
@@ -170,124 +175,126 @@ otherwise a
 pointer is returned and the error message may be retrieved using
 .Xr error_get 3 .
 .Sh MAP OPERATIONS
-.nr nS 1
-.Ft "struct mappos *"
-.Fn object_addpos "void *ob" "Uint32 offs" "Uint32 flags" "struct input *in" "struct map *map" "Uint32 x" "Uint32 y"
-.Pp
-.Ft "void"
-.Fn object_delpos "void *ob" "Uint32 offs" "Uint32 flags" "struct map *map" "Uint32 x" "Uint32 y"
-.Pp
-.Ft "void"
-.Fn object_movepos "void *ob" "struct map *m" "Uint32 x" "Uint32 y"
-.Pp
-.nr nS 0
-The
-.Fn object_addpos
-function adds a reference to
-.Fa ob
-at the given map coordinates, and creates a back reference structure,
-which defines the single position of this object on a map, as well as speed,
-direction and an optional input device associated with the object.
-The
-.Fn object_addpos
-function must be called when the map is locked, and the object's position
-structure is not locked by the caller thread.
-.Pp
-The
-.Fn object_delpos
-function removes a reference to
-.Fa ob
-at the given map coordinates, and destroys the back reference structure.
-The
-.Fn object_delpos
-function must be called when the map is locked.
-.Pp
-The
-.Fn object_movepos
-function moves an object reference from its current node to the
-.Fa x
-and
-.Fa y
-coordinates of the map structure
-.Fa m ,
-and updates the back reference.
-The
-.Fn object_movepos
-function must be called when the map is locked, and the object's position
-structure is not locked by the caller thread.
-.Sh GRAPHICS
-.nr nS 1
-.Ft "void"
-.Fn media_add_sprite "struct object_art *art" "SDL_Surface *surface" \
-                      "Uint32 mflags" "int map_tiles"
-.Pp
-.Ft "void"
-.Fn media_break_sprite "struct object_art *art" "SDL_Surface *surface"
-.nr nS 0
-.Pp
-The
-.Fn media_add_sprite
-function adds
-.Fa surface
-to the
-.Fa art
-structure.
+Agar organizes maps in such a way that an arbitrary amount of node items
+(noderefs) may point to specific data inside specific objects.
+Objects that wish to assume a unique position on a map need a back reference
+to the map.
+This back reference is defined by the
+.Va pos
+member of the object structure.
 If
-.Fa map_tiles
-is non-zero, the sprite is mapped onto the object's tile map,
-and the
-.Fa mflags
-argument are the node flags to be associated with the sprite.
-The
-.Fa map_tiles
-and
-.Fa mflags
-arguments are only relevant when map edition mode is in use.
+.Va pos
+is not
+.Dv NULL ,
+it points to a structure describing the map, the node coordinates and the
+noderef which represents this object.
 .Pp
-The
-.Fn media_break_sprite
-function divides an arbitrary-size
-.Xr SDL_Surface 3
-into several surfaces of
-.Dv TILEW
-by
-.Dv TILEH ,
-and attaches those surfaces to the
-.Fa art
-structure.
-.Sh MEDIA GARBAGE COLLECTION
+The noderef representing the object does not have the
+.Dv NODEREF_SAVEABLE
+flag set, so the noderef will not be included in
+.Xr map 3
+states.
+Instead, the object implementations manually handle creation, loading and
+saving of these noderefs.
+.Pp
 .nr nS 1
 .Ft "void"
-.Fn media_init_gc "void"
-.Pp
-.Ft "Uint32"
-.Fn media_start_gc "Uint32 ival" "void *arg"
+.Fn object_set_position "void *ob" "struct noderef *nref" "struct map *map" \
+                        "Uint32 x" "Uint32 y"
 .Pp
 .Ft "void"
-.Fn media_destroy_gc "void"
+.Fn object_move "void *ob" "struct map *dst_map" "Uint32 dst_x" "Uint32 dst_y"
+.Pp
+.Ft "void"
+.Fn object_control "void *ob" "struct input *in" "int center"
+.Pp
+.Ft "int"
+.Fn object_vanish "void *ob"
 .nr nS 0
 .Pp
 The
-.Fn media_init_gc
-function initializes the media garbage collector.
-The thread-safe
-.Fn media_start_gc
-function frees unused media.
-The
-.Fn media_destroy_gc
-function frees resources used by the garbage collector.
-.Sh LOOKUP
-.nr nS 1
-.Ft "void"
-.Fn OBJECT_ASSERT "struct object *ob" "char *obtype"
-.nr nS 0
+.Fn object_set_position
+function points an object's position to
+.Fa nref
+on the node at the
+.Fa x ,
+.Fa y
+coordinates of
+.Fa map .
+.Fn object_set_position
+does not create any noderef but if there is currently a position, its noderef
+is removed.
+.Fn object_set_position
+is usually called after a new noderef is created (with
+.Fn node_add_sprite
+or
+.Fn node_add_anim ,
+for example), in order to update the object's back reference.
 .Pp
 The
-.Fn OBJECT_ASSERT
-macro causes failure if the object
+.Fn object_move
+function moves
 .Fa ob
-is not of type
-.Fa obtype .
+from its current position to the
+.Fa dst_x
+and
+.Fa dst_y
+coordinates of
+.Fa dst_map .
+.Pp
+The
+.Fn object_control
+function assigns the input device
+.Fa in
+to the position associated with
+.Fa ob ,
+centering the view and enabling soft-scrolling if
+.Fa center
+is non-zero .
+.Pp
+The
+.Fn object_vanish
+function removes the current position associated with
+.Fa ob
+by setting
+.Va pos
+to
+.Dv NULL ,
+as well as removing the associated noderef.
+.Fn object_vanish
+returns 0 on success, -1 on error.
+.Sh OBJECT TABLES
+These functions load and save arrays of object names, which allow load/save
+routines to keep dependency lists, as well as using indexes instead of strings
+when referencing particular objects.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn object_table_load "int fd" "struct object *obj" "struct object ***pobjs" \
+                      "Uint32 *nobjs"
+.Pp
+.Ft "void"
+.Fn object_table_save "struct fobj_buf *buf" "struct object *obj" \
+                      "struct object ***pobjs" "Uint32 *nobjs"
+.nr nS 0
+.Pp
+The
+.Fn object_table_load
+function allocates and reads an object table from
+.Fa fd
+into
+.Fa pobjs ,
+which the caller should free, writes the table size into
+.Fa nobjs
+and translates the object identifiers.
+.Pp
+The
+.Fn object_table_save
+function saves a table containing the list of attached objects.
+The table is also written to
+.Fa pobjs ,
+which the caller should free, and the size is written to
+.Fa nobjs .
 .Sh SEE ALSO
 .Xr agar 3
 .Sh HISTORY
