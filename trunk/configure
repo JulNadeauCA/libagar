@@ -23,9 +23,13 @@ fi
 if [ "$SDL11_VERSION" != "" ]; then
  SDL_FOUND=yes
 
- echo SDL11_CFLAGS=$SDL11_CFLAGS >> Makefile.config
+ SDL_CFLAGS=$SDL11_CFLAGS
 
- echo SDL11_LIBS=$SDL11_LIBS >> Makefile.config
+ SDL_LIBS=$SDL11_LIBS
+
+ echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+
+ echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 
 else
  false
@@ -44,13 +48,38 @@ echo -n "checking for glib >= 1.2.0...";
 GLIB_VERSION=`glib-config --version 2>/dev/null`
 GLIB_CFLAGS=`glib-config --cflags 2>/dev/null`
 GLIB_LIBS=`glib-config --libs 2>/dev/null`
+GLIB12_VERSION=`glib12-config --version 2>/dev/null`
+GLIB12_CFLAGS=`glib12-config --cflags 2>/dev/null`
+GLIB12_LIBS=`glib12-config --libs 2>/dev/null`
 
 if [ "$GLIB_VERSION" != "" ]; then
- echo "ok";
+ GLIB_FOUND=yes
+
  echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
 
  echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
 
+else
+ false
+fi
+
+if [ "$GLIB12_VERSION" != "" ]; then
+ GLIB_FOUND=yes
+
+ GLIB_CFLAGS=$GLIB12_CFLAGS
+
+ GLIB_LIBS=$GLIB12_LIBS
+
+ echo GLIB_CFLAGS=$GLIB_CFLAGS >> Makefile.config
+
+ echo GLIB_LIBS=$GLIB_LIBS >> Makefile.config
+
+else
+ false
+fi
+
+if [ "$GLIB_FOUND" = "yes" ]; then
+ echo "ok";
 else
  echo "missing";
  echo "*** This package requires glib >= 1.2.0";
