@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.8 2005/01/23 11:51:27 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.9 2005/01/31 08:32:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -241,6 +241,8 @@ mousebuttonup(int argc, union evarg *argv)
 	int y = mview->vpadding;
 	int i;
 
+	dprintf("buttonup %d,%d\n", mx, my);
+
 	if (my < 0 || mx < 0) {
 		goto collapse;
 	}
@@ -250,12 +252,15 @@ mousebuttonup(int argc, union evarg *argv)
 		y += m->itemh;
 		if (my < y && mx >= 0 && mx <= WIDGET(mview)->w) {
 			if (mi->onclick != NULL) {
+				dprintf("onclick %s (%d)\n", mi->onclick->name,
+				    y);
 				event_post(NULL, m, mi->onclick->name, NULL);
 			}
 			if (mi->bind_type != MENU_NO_BINDING) {
 				if (mi->bind_lock != NULL)
 					pthread_mutex_lock(mi->bind_lock);
 
+				dprintf("toggle\n");
 				toggle_option(mi);
 
 				if (mi->bind_lock != NULL)
