@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.64 2002/12/24 10:26:00 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.65 2003/01/16 01:06:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -45,9 +45,10 @@ struct object {
 #define OBJECT_SYSTEM		0x80
 
 	enum {
-		OBJECT_EMBRYONIC,	/* Unattached */
+		OBJECT_EMBRYONIC,	/* Inconsistent/Unattached */
 		OBJECT_CONSISTENT,	/* Attached */
-		OBJECT_ZOMBIE		/* Detached */
+		OBJECT_DETACHING,	/* Detach in progress */
+		OBJECT_DETACHED		/* Inconsistent/Detached */
 	} state;
 
 	struct art	*art;		/* Static sprites */
