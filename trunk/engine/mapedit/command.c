@@ -134,8 +134,7 @@ mapedit_pop(struct mapedit *med, struct node *node, int clear)
 		TAILQ_INIT(&node->nrefsh);
 	} else {
 		if (!TAILQ_EMPTY(&node->nrefsh)) {
-			node_delref(node, TAILQ_LAST(&node->nrefsh,
-			    nrefs_head));
+			node_delref(node, TAILQ_LAST(&node->nrefsh, noderefq));
 		}
 	}
 	mapedit_setcursor(med, 1);
