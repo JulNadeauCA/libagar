@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.56 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.57 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -36,16 +36,32 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
+#include <engine/widget/tableview.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
 
+static const struct tool_ent {
+	char		    *name;
+	struct window	*(*window_func)(void);
+} tool_ents[] = {
+	{ N_("Refresh rate"), event_fps_window },
+#if defined(THREADS) && defined(HAVE_JPEG)
+	{ N_("Screenshot"), screenshot_window },
+#endif
+	{ N_("Leak detection"), leak_window },
+	{ N_("Resident graphics"), gfx_debug_window },
+	{ N_("Running timers"), timeouts_window },
+	{ N_("Unicode conversion"), uniconv_window },
+	{ N_("Viewport"), view_params_window },
+	{ N_("Widgets"), widget_debug_window },
+};
+
 static void
 selected_tool(int argc, union evarg *argv)
 {
-	struct tlist_item *it = argv[1].p;
-	struct window *(*win_func)() = it->p1;		/* XXX unsafe */
+    struct tableview_row *row = argv[1].p;
+	struct window *(*win_func)(void) = tool_ents[tableview_row_getID(row)].window_func;
 	struct window *win;
 
 	if ((win = (win_func)()) != NULL)
@@ -55,38 +71,25 @@ selected_tool(int argc, union evarg *argv)
 void
 monitor_init(void)
 {
-	const struct tool_ent {
-		char		*name;
-		struct window	*(*window_func)(void);
-	} tool_ents[] = {
-		{ N_("Refresh rate"), event_fps_window },
-#if defined(THREADS) && defined(HAVE_JPEG)
-		{ N_("Screenshot"), screenshot_window },
-#endif
-		{ N_("Leak detection"), leak_window },
-		{ N_("Resident graphics"), gfx_debug_window },
-		{ N_("Running timers"), timeouts_window },
-		{ N_("Unicode conversion"), uniconv_window },
-		{ N_("Viewport"), view_params_window },
-		{ N_("Widgets"), widget_debug_window },
-	};
 	const int ntool_ents = sizeof(tool_ents) / sizeof(tool_ents[0]);
-	struct tlist *tl_tools;
+	struct tableview *tv;
 	struct window *win;
 	int i;
 
-	win = window_new(0, "monitor-toolbar");
+	if ((win = window_new(WINDOW_NO_RESIZE, "monitor-toolbar")) == NULL) {
+			return;
+	}
 	window_set_caption(win, _("Debug monitor"));
 	window_set_position(win, WINDOW_LOWER_LEFT, 0);
 
-	tl_tools = tlist_new(win, 0);
-	tlist_prescale(tl_tools, "XXXXXXXXXXXXXXXXXXXXXXXXXXX", ntool_ents);
-	event_new(tl_tools, "tlist-dblclick", selected_tool, NULL);
+	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
+	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZ", ntool_ents);
+	tableview_col_add(tv, TABLEVIEW_COL_FILL, 0, NULL, NULL);
+	
+	event_new(tv, "tableview-dblclick", selected_tool, NULL);
 
-	for (i = 0; i < ntool_ents; i++) {
-		tlist_insert_item(tl_tools, ICON(OBJ_ICON),
-		    _(tool_ents[i].name), tool_ents[i].window_func);
-	}
+	for (i = 0; i < ntool_ents; i++)
+	    tableview_row_add(tv, 0, NULL, i, 0, tool_ents[i].name);
 
 	window_show(win);
 }

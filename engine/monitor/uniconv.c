@@ -1,4 +1,4 @@
-/*	$Csoft: uniconv.c,v 1.6 2004/06/02 00:42:16 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.7 2004/09/12 05:57:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -33,9 +33,9 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/spinbutton.h>
 #include <engine/widget/combo.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/tableview.h>
 
 #include <engine/unicode/unicode.h>
 
@@ -168,34 +168,19 @@ static const struct unicode_range {
 	{ 0xFF00, "Halfwidth and Fullwidth Forms" },
 	{ 0xFFF0, "Specials" },
 };
-const int nunicode_ranges = sizeof(unicode_ranges) / sizeof(unicode_ranges[0]);
-
-
-static void
-select_character(int argc, union evarg *argv)
-{
-	int i;
-	char *c;
-
-	unicode_export(UNICODE_TO_UTF8, utf8text, unitext, sizeof(unitext));
-
-	bytetext[0] = '\0';
-	for (c = &utf8text[0]; *c != '\0'; c++) {
-		char s[4];
-
-		snprintf(s, sizeof(s), " %x", (unsigned char)*c);
-		strlcat(bytetext, s, sizeof(bytetext));
-	}
-}
+static const int nunicode_ranges = 
+    sizeof(unicode_ranges) / sizeof(unicode_ranges[0]);
 
 static void
 select_range(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[1].p;
+	struct tableview *tv = argv[1].p;
 	struct tlist_item *it = argv[2].p;
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
-	Uint32 i, end;
+	Uint32 i, j, end;
+    static char text[4][128];
+	char *c;
 
 	for (i = 0; i < nunicode_ranges; i++) {
 		if ((&unicode_ranges[i] == range) &&
@@ -206,28 +191,55 @@ select_range(int argc, union evarg *argv)
 	}
 	end = (next_range != NULL) ? next_range->start-1 : 0xffff;
 
-	tlist_clear_items(tl);
-	for (i = range->start; i < next_range->start-1; i++) {
-		char text[TLIST_LABEL_MAX];
-		char *c;
-
+	tableview_row_del_all(tv);
+	
+    printf("start %i, end %i\n", range->start, end);
+	for (i = range->start; i < end; i++) {
 		if (i == 10)
 			continue;
-
-		unitext[0] = i;
-		unicode_export(UNICODE_TO_UTF8, utf8text, unitext,
-		    sizeof(unitext));
-
-		bytetext[0] = '\0';
-		for (c = &utf8text[0]; *c != '\0'; c++) {
-			char s[4];
-
-			snprintf(s, sizeof(s), " %x", (unsigned char)*c);
-			strlcat(bytetext, s, sizeof(bytetext));
-		}
-		snprintf(text, sizeof(text), "%s ( %04x, %s )", utf8text, i, 
-		    bytetext);
-		tlist_insert_item(tl, NULL, text, NULL);
+        
+        /* prep column 0 */
+        unitext[0] = i;
+        unicode_export(UNICODE_TO_UTF8, utf8text, unitext, sizeof(unitext));
+        snprintf(text[0], sizeof(text[0]), "%s", utf8text);
+        
+        /* prep column 1 */
+        snprintf(text[1], sizeof(text[1]), "%04x", i);
+        
+        /* prep column 2 */
+        bytetext[0] = '\0';
+        for (c = &utf8text[0]; *c != '\0'; c++) {
+            char s[4];
+            
+            snprintf(s, sizeof(s), "%x", (unsigned char)*c);
+            strlcat(bytetext, s, sizeof(bytetext));
+        }
+        snprintf(text[2], sizeof(text[2]), "%s", bytetext);
+        
+        /* prep column 3 */
+        snprintf(text[3], sizeof(text[3]), "%lu", i);
+        
+        printf("%i: ", i);
+        j=0;
+        //for(j=0; j<4; j++)
+        {
+            int k = 0;
+            printf("'");
+            while(1)
+            {
+                if(text[j][k] == 0)
+                    break;
+                printf("%02x", text[j][k]);
+                ++k;
+            }
+            printf("', ");
+        }
+        printf("\n");
+		tableview_row_add(tv, 0, NULL, i, 
+                          0, text[0],
+                          1, text[1],
+                          2, text[2],
+                          3, text[3]);
 	}
 }
 
@@ -235,31 +247,30 @@ struct window *
 uniconv_window(void)
 {
 	struct window *win;
-	struct spinbutton *sbu;
 	struct combo *com;
-	struct tlist *tl;
+	struct tableview *tv;
 	int i;
 
 	if ((win = window_new(WINDOW_DETACH, "uniconv")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Unicode Conversion"));
-	
-	label_new(win, LABEL_POLLED, "%s (%s )", &utf8text, &bytetext);
 
-	sbu = spinbutton_new(win, "Unicode: ");
-	spinbutton_set_min(sbu, 0);
-	spinbutton_set_max(sbu, 65537);
-	widget_bind(sbu, "value", WIDGET_UINT32, &unitext[0]);
-	event_new(sbu, "spinbutton-changed", select_character, NULL);
-	
 	com = combo_new(win, 0, _("Range: "));
 	for (i = 0; i < nunicode_ranges; i++) {
 		tlist_insert_item(com->list, NULL, unicode_ranges[i].name,
 		    &unicode_ranges[i]);
 	}
-	tl = tlist_new(win, 0);
-	event_new(com, "combo-selected", select_range, "%p", tl);
+	
+	tv = tableview_new(win, TABLEVIEW_NOSORT, NULL, NULL);
+	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
+	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 0, "Char", NULL);
+	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 1, "Hex", "0000");
+	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 2, "??", "000000");
+	tableview_col_add(tv, TABLEVIEW_COL_RESIZABLE, 3, "Deci", "00000");
+	
+	event_new(com, "combo-selected", select_range, "%p", tv);
+	
 	return (win);
 }
 

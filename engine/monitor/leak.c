@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.6 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: leak.c,v 1.7 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -33,7 +33,7 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/tlist.h>
+#include <engine/widget/tableview.h>
 #include <engine/mapedit/mapview.h>
 
 #include "monitor.h"
@@ -69,41 +69,41 @@ static const char *mement_names[] = {
 	"math"
 };
 
-static void
-poll_mements(int argc, union evarg *argv)
+static char *
+leak_callback(colID cid, rowID rid)
 {
-	struct tlist *tl = argv[0].p;
-	struct tlist_item *it;
-	struct error_mement *ment;
-	int i;
-
-	tlist_clear_items(tl);
-	for (ment = &error_mements[0], i = 0;
-	     ment < &error_mements[M_LAST];
-	     ment++, i++) {
-		char text[TLIST_LABEL_MAX];
-
-		snprintf(text, sizeof(text), "[%s] - %u buffers (%lu)",
-		    mement_names[i], ment->nallocs - ment->nfrees,
+    static char text[128];
+    struct error_mement *ment = &error_mements[rid];
+    
+    snprintf(text, sizeof(text), "[%s] - %u buffers (%lu)",
+            mement_names[rid], ment->nallocs - ment->nfrees,
 		    (unsigned long)ment->msize);
-		tlist_insert_item(tl, ICON(OBJ_ICON), text, ment);
-	}
-	tlist_restore_selections(tl);
+	
+	return text;
 }
 
 struct window *
 leak_window(void)
 {
+    int i, nleak_ents = sizeof(mement_names) / sizeof(mement_names[0]);
 	struct window *win;
-	struct tlist *tl;
+	struct tableview *tv;
 
 	if ((win = window_new(WINDOW_DETACH, "monitor-leak")) == NULL) {
 		return (NULL);
 	}
 	window_set_caption(win, _("Leak detection"));
+	
+	tv = tableview_new(win, TABLEVIEW_NOHEADER, leak_callback, NULL);
+	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 8);
+	tableview_set_update(tv, 250);
+	tableview_col_add(tv,
+	                  TABLEVIEW_COL_DYNAMIC | TABLEVIEW_COL_FILL |
+	                  TABLEVIEW_COL_UPDATE, 0, NULL, NULL);
+	
+	for (i = 0; i < nleak_ents; i++)
+	    tableview_row_add(tv, 0, NULL, i);
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
-	event_new(tl, "tlist-poll", poll_mements, NULL);
 	return (win);
 }
 
