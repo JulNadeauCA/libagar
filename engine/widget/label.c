@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.48 2003/01/05 08:42:01 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.49 2003/01/08 23:10:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -73,6 +73,29 @@ label_new(struct region *reg, int w, int h, const char *fmt, ...)
 	return (label);
 }
 
+static void
+label_scaled(int argc, union evarg *argv)
+{
+	struct label *lab = argv[0].p;
+
+	switch (lab->type) {
+	case LABEL_STATIC:
+		pthread_mutex_lock(&lab->text.lock);
+		if (lab->text.surface != NULL) {
+			if (WIDGET(lab)->rw == -1)
+				WIDGET(lab)->rw = lab->text.surface->w;
+			if (WIDGET(lab)->rh == -1)
+				WIDGET(lab)->rh = lab->text.surface->h;
+		}
+		pthread_mutex_unlock(&lab->text.lock);
+		break;
+	case LABEL_POLLED:
+		if (WIDGET(lab)->rh == -1)
+			WIDGET(lab)->h = font_h;
+		break;
+	}
+}
+
 void
 label_init(struct label *label, enum label_type type, const char *s,
     int rw, int rh)
@@ -106,6 +129,8 @@ label_init(struct label *label, enum label_type type, const char *s,
 		label->poll.nptrs = 0;
 		break;
 	}
+
+	event_new(label, "widget-scaled", label_scaled, NULL);
 }
 
 struct label *
