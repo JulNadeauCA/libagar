@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.139 2003/01/27 08:04:44 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.140 2003/02/02 21:06:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -51,11 +51,14 @@ static const struct object_ops map_ops = {
 #define DEBUG_STATE	0x01
 #define DEBUG_NODEREFS	0x02
 #define DEBUG_RESIZE	0x04
+#define DEBUG_SCAN	0x08
 
 int	map_debug = DEBUG_STATE|DEBUG_RESIZE;
 int	map_nodesigs = 0;
 #define engine_debug map_debug
 #endif
+
+static void	*map_check(void *);
 
 __inline__ void
 node_init(struct node *node, int x, int y)
@@ -70,17 +73,10 @@ node_init(struct node *node, int x, int y)
 }
 
 void
-node_destroy(struct node *node, int x, int y)
+node_destroy(struct node *node)
 {
 	struct noderef *nref, *nextnref;
 
-#ifdef DEBUG
-	if (strcmp(NODE_MAGIC, node->magic) != 0 ||
-	    node->x != x || node->y != y) {
-		fatal("bad node\n");
-	}
-	strncpy(node->magic, "free", 5);
-#endif
 	for (nref = TAILQ_FIRST(&node->nrefs);
 	     nref != TAILQ_END(&node->nrefs);
 	     nref = nextnref) {
@@ -136,6 +132,7 @@ noderef_destroy(struct noderef *nref)
 	}
 }
 
+/* Allocate the node arrays. */
 void
 map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 {
@@ -146,7 +143,6 @@ map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 	m->mapw = w;
 	m->maph = h;
 
-	/* Allocate the two-dimensional node array. */
 	m->map = emalloc(h * sizeof(struct node *));
 	for (y = 0; y < h; y++) {
 		m->map[y] = emalloc(w * sizeof(struct node));
@@ -159,6 +155,7 @@ map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 	pthread_mutex_unlock(&m->lock);
 }
 
+/* Free the node arrays. */
 void
 map_free_nodes(struct map *m)
 {
@@ -167,11 +164,11 @@ map_free_nodes(struct map *m)
 
 	pthread_mutex_lock(&m->lock);
 
-	/* Free the node array. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			node = &m->map[y][x];
-			node_destroy(node, x, y);
+			MAP_CHECK_NODE(node, x, y);
+			node_destroy(node);
 		}
 		free(m->map[y]);
 	}
@@ -196,7 +193,8 @@ map_shrink(struct map *m, Uint32 w, Uint32 h)
 	for (y = h; y < m->maph; y++) {
 		for (x = w; x < m->mapw; x++) {
 			node = &m->map[y][x];
-			node_destroy(node, x, y);
+			MAP_CHECK_NODE(node, x, y);
+			node_destroy(node);
 			free(node);
 		}
 	}
@@ -231,12 +229,15 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 	for (y = 0; y < h; y++) {
 		if (y >= m->maph) {
 			m->map[y] = emalloc(w * sizeof(struct node));
+			for (x = 0; x < w; x++) {
+				node_init(&m->map[y][x], x, y);
+			}
 		} else if (w >= m->mapw) {
 			m->map[y] = erealloc(m->map[y],
 			    w * sizeof(struct node));
-		}
-		for (x = 0; x < w; x++) {
-			node_init(&m->map[y][x], x, y);
+			for (x = m->mapw - 1; x <= w; x++) {
+				node_init(&m->map[y][x], x, y);
+			}
 		}
 	}
 		
@@ -296,6 +297,14 @@ map_init(struct map *m, enum map_type type, char *name, char *media)
 	pthread_mutexattr_init(&m->lockattr);
 	pthread_mutexattr_settype(&m->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&m->lock, &m->lockattr);
+
+	OBJECT(m)->flags |= OBJECT_CONSISTENT;
+
+#if defined(DEBUG) && defined(SERIALIZATION)
+	if (map_debug & DEBUG_SCAN) {
+		Pthread_create(&m->check_th, NULL, map_check, m);
+	}
+#endif
 }
 
 /*
@@ -473,14 +482,54 @@ node_remove_ref(struct node *node, struct noderef *nref)
 	free(nref);
 }
 
+/*
+ * Move a noderef to the upper layer.
+ * The map containing the node must be locked.
+ */
+void
+node_moveup_ref(struct node *node, struct noderef *nref)
+{
+	struct noderef *next = TAILQ_NEXT(nref, nrefs);
+
+	if (next != NULL) {
+		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
+		TAILQ_INSERT_AFTER(&node->nrefs, next, nref, nrefs);
+	}
+	
+}
+
+/*
+ * Move a noderef to the lower layer.
+ * The map containing the node must be locked.
+ */
+void
+node_movedown_ref(struct node *node, struct noderef *nref)
+{
+	struct noderef *prev = TAILQ_PREV(nref, noderefq, nrefs);
+
+	if (prev != NULL) {
+		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
+		TAILQ_INSERT_BEFORE(prev, nref, nrefs);
+	}
+}
+
 void
 map_destroy(void *p)
 {
 	struct map *m = p;
 
+	pthread_mutex_lock(&m->lock);
+#if defined(DEBUG) && defined(SERIALIZATION)
+	if (map_debug & DEBUG_SCAN) {
+		pthread_kill(m->check_th, SIGKILL);
+	}
+#endif
 	if (m->map != NULL) {
 		map_free_nodes(m);
 	}
+	OBJECT(m)->flags |= OBJECT_DETACHED;
+	pthread_mutex_unlock(&m->lock);
+
 	pthread_mutex_destroy(&m->lock);
 	pthread_mutexattr_destroy(&m->lockattr);
 }
@@ -829,16 +878,14 @@ map_save(void *p, int fd)
 	return (0);
 }
 
-#ifdef DEBUG
-
-static void	*map_verify_loop(void *);
+#if defined(DEBUG) && defined(SERIALIZATION)
 
 /* Verify the integrity of a map. This may also help finding races. */
-static void *
-map_verify_loop(void *arg)
+void *
+map_check(void *arg)
 {
 	struct map *m = arg;
-	struct node *n;
+	struct node *node;
 	struct noderef *nref;
 	int x, y;
 
@@ -846,34 +893,24 @@ map_verify_loop(void *arg)
 		pthread_mutex_lock(&m->lock);
 		for (y = 0; y < m->maph; y++) {
 			for (x = 0; x < m->mapw; x++) {
-				n = &m->map[y][x];
-				if (strcmp(n->magic, NODE_MAGIC) != 0)
-					fatal("bad node magic\n");
-				if (n->x != x || n->y != y)
-					fatal("misplaced node\n");
+				node = &m->map[y][x];
 
-				TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
-					if (strcmp(nref->magic, NODEREF_MAGIC)
-					    != 0)
-						fatal("bad noderef magic\n");
+				MAP_CHECK_NODE(node, x, y);
+				TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+					MAP_CHECK_NODEREF(nref);
 				}
 			}
 		}
 		pthread_mutex_unlock(&m->lock);
-		SDL_Delay(1);
+		SDL_Delay(1000);
+
+		if ((map_debug & DEBUG_SCAN) == 0)
+			return (NULL);
 	}
 	return (NULL);
 }
 
-void
-map_verify(struct map *m)
-{
-	pthread_t verify_th;
-
-	Pthread_create(&verify_th, NULL, map_verify_loop, m);
-}
-
-#endif	/* DEBUG */
+#endif	/* DEBUG && SERIALIZATION */
 
 static __inline__ void
 noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
@@ -887,7 +924,8 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
 
 	/* XXX cache the scaled surfaces. */
 	/* XXX inefficient */
-	SDL_LockSurface(view->v);
+	if (SDL_MUSTLOCK(view->v))
+		SDL_LockSurface(view->v);
 	for (y = 0; y < dh; y++) {
 		if ((sy = y * TILEH / m->tileh) >= s->h)
 			break;
@@ -910,7 +948,8 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)
 			}
 		}
 	}
-	SDL_UnlockSurface(view->v);
+	if (SDL_MUSTLOCK(view->v))
+		SDL_UnlockSurface(view->v);
 }
 
 /*
