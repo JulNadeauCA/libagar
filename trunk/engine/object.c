@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.27 2002/03/01 14:45:43 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.28 2002/03/03 06:24:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 
 #include <engine/engine.h>
 #include <engine/physics.h>
+#include <engine/input.h>
 
 enum {
 	NANIMS_INIT =	1,
@@ -365,7 +366,6 @@ object_dump(void *p)
 
 /*
  * Add a reference to ob:offs(flags) at m:x,y, and a back reference.
- *
  * Must be called on a locked map.
  */
 struct mappos *
@@ -389,6 +389,9 @@ object_madd(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	}
 	mapdir_init(&pos->dir, ob, m, 0, DIR_SCROLLVIEW|DIR_SOFTSCROLL);
 	pos->input = in;
+	if (in != NULL) {
+		in->pos = pos;
+	}
 
 	dprintf("mappos[%s:%d,%d] offs[%d] speed[%d]\n", m->obj.name,
 	    pos->x, pos->y, pos->nref->offs, pos->speed);
