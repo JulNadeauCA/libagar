@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.11 2002/06/09 15:04:29 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.12 2002/06/10 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -36,12 +36,14 @@
 #include "map.h"
 
 enum {
-	NFINIT = 16,	/* Pointers allocated at initialization. */
-	NFGROW = 2	/* Pointers allocated at growth. */
+	FRAMES_INIT = 16,
+	FRAMES_GROW = 2,
+	ANIMS_INIT = 4,
+	ANIMS_GROW = 2
 };
 
 int
-anim_addframe(struct anim *anim, SDL_Surface *surface)
+anim_add_frame(struct anim *anim, SDL_Surface *surface)
 {
 	int i, x, y;
 	SDL_Rect sd, rd;
@@ -54,20 +56,20 @@ anim_addframe(struct anim *anim, SDL_Surface *surface)
 		anim->frames = emalloc(anim->nparts * sizeof(SDL_Surface *));
 		for (i = 0; i < anim->nparts; i++) {
 			*(anim->frames + i) =
-			    emalloc(NFINIT * sizeof(struct SDL_Surface *));
+			    emalloc(FRAMES_INIT * sizeof(struct SDL_Surface *));
 		}
-		anim->maxframes = NFINIT;
+		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
 	} else if (anim->nframes >= anim->maxframes) {	/* Grow */
 		for (i = 0; i < anim->nparts; i++) {
 			SDL_Surface **su;
 
 			su = erealloc(*(anim->frames + i),
-			    NFGROW * anim->maxframes *
+			    (anim->maxframes + FRAMES_GROW) *
 			    sizeof(struct SDL_Surface *));
 			*(anim->frames + i) = su;
 		}
-		anim->maxframes *= NFGROW;
+		anim->maxframes += FRAMES_GROW;
 	}
 	
 	sd.w = TILEW;
@@ -98,6 +100,36 @@ anim_addframe(struct anim *anim, SDL_Surface *surface)
 
 	anim->nframes++;
 	return (0);
+}
+
+void
+anim_insert(struct object_art *art, struct anim *anim, int mflags)
+{
+	extern int mapediting;
+
+	if (art->anims == NULL) {			/* Initialize */
+		art->anims = emalloc(ANIMS_INIT * sizeof(struct anim *));
+		art->maxanims = ANIMS_INIT;
+		art->nanims = 0;
+	} else if (art->nanims >= art->maxanims) {	/* Grow */
+		struct anim **newanims;
+
+		newanims = erealloc(art->anims,
+		    (ANIMS_GROW * art->maxanims) * sizeof(struct anim *));
+		art->maxanims += ANIMS_GROW;
+		art->anims = newanims;
+	}
+	art->anims[art->nanims++] = anim;
+
+	if (mapediting) {
+		if (art->mx++ > art->map->mapw) {
+			art->mx = 0;
+			art->my++;
+		}
+		map_adjust(art->map, art->mx, art->my);
+		node_addref(&art->map->map[art->my][art->mx], art->pobj,
+		    art->curanim++, mflags);
+	}
 }
 
 void
