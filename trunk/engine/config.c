@@ -124,8 +124,8 @@ config_init(struct config *con)
 	struct stat sta;
 	char *udatadir, *sysdatadir;
 
-	object_init(&con->obj, "engine-config", "config", NULL, OBJECT_STATIC,
-	    &config_ops);
+	object_init(&con->obj, "engine-config", "config", NULL,
+	    OBJECT_STATIC|OBJECT_RELOAD_PROPS, &config_ops);
 
 	/* Object settings */
 	prop_set_bool(con, "object.art.map-tiles", 0);
