@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.h,v 1.2 2004/05/10 23:49:15 vedge Exp $	*/
+/*	$Csoft: timeout.h,v 1.3 2004/05/13 10:31:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TIMEOUT_H_
@@ -11,6 +11,10 @@ struct timeout {
 	Uint32 (*fn)(void *p, Uint32 ival, void *arg);
 	void *arg;
 	int running;				/* Callback is executing */
+	int flags;
+#define TIMEOUT_DETACHABLE	0x01	/* Don't cancel in object_detach() */
+#define TIMEOUT_LOADABLE	0x02	/* Don't cancel in object_load() */
+
 	Uint32 ticks;				/* Expiry time in SDL ticks */
 	Uint32 ival;				/* Interval in ticks */
 	CIRCLEQ_ENTRY(timeout) timeouts;	/* Priority queue */
@@ -18,7 +22,7 @@ struct timeout {
 
 __BEGIN_DECLS
 void		timeout_set(struct timeout *,
-	                    Uint32 (*)(void *, Uint32, void *), void *);
+	                    Uint32 (*)(void *, Uint32, void *), void *, int);
 void		timeout_add(void *, struct timeout *, Uint32);
 int		timeout_scheduled(void *, struct timeout *);
 void		timeout_del(void *, struct timeout *);

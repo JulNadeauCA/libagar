@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.181 2004/05/10 11:25:03 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.182 2004/05/15 02:56:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -471,7 +471,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	ev->argc = 1;
 	ev->argc_base = 1;
 	ev->handler = handler;
-	timeout_set(&ev->timeout, event_timeout, ev);
+	timeout_set(&ev->timeout, event_timeout, ev, 0);
 
 	if (fmt != NULL) {
 		va_list ap;
@@ -482,7 +482,6 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 		}
 		va_end(ap);
 	}
-
 	pthread_mutex_unlock(&ob->lock);
 	return (ev);
 }
@@ -766,6 +765,7 @@ event_cancel(void *p, const char *evname)
 		rv++;
 		ev->flags &= ~(EVENT_SCHEDULED);
 	}
+	/* XXX concurrent */
 	pthread_mutex_unlock(&ob->lock);
 	pthread_mutex_unlock(&timeout_lock);
 	return (rv);

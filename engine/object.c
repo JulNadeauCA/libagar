@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.177 2004/05/06 06:20:08 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.178 2004/05/10 02:42:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -334,11 +334,18 @@ object_detach(void *childp)
 	struct object *parent = child->parent;
 
 	lock_linkage();
+	pthread_mutex_lock(&child->lock);
+
+	/* Cancel scheduled non-detachable timeouts. */
+	object_cancel_timeouts(child, TIMEOUT_DETACHABLE);
+
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
 	event_post(parent, child, "detached", NULL);
 	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
 	    parent->name);
+
+	pthread_mutex_unlock(&child->lock);
 	unlock_linkage();
 }
 
@@ -469,7 +476,10 @@ object_free_props(struct object *ob)
 	pthread_mutex_unlock(&ob->lock);
 }
 
-/* Destroy the event handlers and sequences of an object. */
+/*
+ * Destroy the event handlers registered by an object, cancelling
+ * any scheduled execution.
+ */
 void
 object_free_events(struct object *ob)
 {
@@ -480,10 +490,40 @@ object_free_events(struct object *ob)
 	     eev != TAILQ_END(&ob->events);
 	     eev = neev) {
 		neev = TAILQ_NEXT(eev, events);
+	
+		if (eev->flags & EVENT_SCHEDULED) {
+			event_cancel(ob, eev->name);
+		}
 		Free(eev, M_EVENT);
 	}
 	TAILQ_INIT(&ob->events);
 	pthread_mutex_unlock(&ob->lock);
+}
+
+/* Cancel any scheduled timeout(3) event associated with the object. */
+void
+object_cancel_timeouts(struct object *ob, int flags)
+{
+	extern pthread_mutex_t timeout_lock;
+	struct event *ev;
+	struct timeout *to, *nto;
+
+	pthread_mutex_lock(&timeout_lock);
+	pthread_mutex_lock(&ob->lock);
+
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if ((ev->flags & EVENT_SCHEDULED) &&
+		    (ev->timeout.flags & flags) == 0) {
+			dprintf("%s: cancelled scheduled %s\n", ob->name,
+			    ev->name);
+			timeout_del(ob, &ev->timeout);
+			ev->flags &= ~(EVENT_SCHEDULED);
+		}
+	}
+	/* XXX other timeouts ... */
+
+	pthread_mutex_unlock(&ob->lock);
+	pthread_mutex_unlock(&timeout_lock);
 }
 
 /*
@@ -496,6 +536,10 @@ object_destroy(void *p)
 	struct object *ob = p;
 	struct object_dep *dep, *ndep;
 
+	/* Cancel every scheduled timeout event. */
+	object_cancel_timeouts(ob, 0);
+
+	/* Destroy the descendants recursively. */
 	object_free_children(ob);
 	
 	if (ob->pos != NULL)
@@ -735,6 +779,9 @@ object_load(void *p)
 
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
+	
+	/* Cancel scheduled non-loadable timeouts. */
+	object_cancel_timeouts(ob, TIMEOUT_LOADABLE);
 	
 	if (ob->flags & OBJECT_NON_PERSISTENT) {
 		error_set(_("The `%s' object is non-persistent."), ob->name);

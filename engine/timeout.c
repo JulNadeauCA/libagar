@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.c,v 1.2 2004/05/10 23:49:15 vedge Exp $	*/
+/*	$Csoft: timeout.c,v 1.3 2004/05/13 10:32:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -37,12 +37,14 @@ pthread_mutex_t timeout_lock;
 
 /* Initialize a timeout structure. */
 void
-timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg)
+timeout_set(struct timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
+    int flags)
 {
 	to->fn = fn;
 	to->arg = arg;
 	to->ticks = 0;
 	to->running = 0;
+	to->flags = flags;
 }
 
 /* Schedule the timeout to occur in dt ticks. */
@@ -68,6 +70,7 @@ timeout_add(void *p, struct timeout *to, Uint32 dt)
 	}
 	to->ticks = t;
 	to->ival = dt;
+	to->flags = 0;
 	if (was_empty) {
 		pthread_mutex_lock(&timeout_lock);
 		TAILQ_INSERT_TAIL(&timeout_objq, ob, tobjs);
