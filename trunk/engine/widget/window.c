@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.125 2002/12/16 00:58:18 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.126 2002/12/16 02:14:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,7 +77,7 @@ static void	winop_hide_body(struct window *);
 #define DEBUG_DRAW		0x04
 #define DEBUG_RESIZE_GEO	0x08
 
-int	window_debug = DEBUG_RESIZE_GEO;
+int	window_debug = DEBUG_RESIZE_GEO|DEBUG_STATE;
 #define	engine_debug window_debug
 #endif
 
@@ -1270,6 +1270,11 @@ window_resize(struct window *win)
 	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 
+	if (win->rd.w < win->minw)
+		win->rd.w = win->minw;
+	if (win->rd.h < win->minh)
+		win->rd.h = win->minh;
+
 	/* Clamp to view area, leave a margin. */
 	window_clamp(win);
 
@@ -1427,27 +1432,30 @@ int
 window_load(void *p, int fd)
 {
 	struct window *win = p;
+	Uint16 view_w, view_h;
 
 	if (version_read(fd, &window_ver) != 0) {
 		return (-1);
 	}
 
 	win->flags |= read_uint32(fd);
-
-	win->rd.x = read_sint16(fd);
-	win->rd.y = read_sint16(fd);
-	win->rd.w = read_uint16(fd);
-	win->rd.h = read_uint16(fd);
 	
-	win->saved_rd.x = read_sint16(fd);
-	win->saved_rd.y = read_sint16(fd);
-	win->saved_rd.w = read_uint16(fd);
-	win->saved_rd.h = read_uint16(fd);
-	
-	debug(DEBUG_STATE, "loaded %s: %dx%d at [%d,%d]\n", OBJECT(win)->name,
-	    win->rd.w, win->rd.h, win->rd.x, win->rd.y);
+	view_w = read_uint16(fd);
+	view_h = read_uint16(fd);
 
-	/* XXX scale */
+	win->rd.x = read_sint16(fd) * view->v->w / view_w;
+	win->rd.y = read_sint16(fd) * view->v->h / view_h;
+	win->rd.w = read_uint16(fd) * view->v->w / view_w;
+	win->rd.h = read_uint16(fd) * view->v->h / view_h;
+
+	win->saved_rd.x = read_sint16(fd) * view->v->w / view_w;
+	win->saved_rd.y = read_sint16(fd) * view->v->h / view_h;
+	win->saved_rd.w = read_uint16(fd) * view->v->w / view_w;
+	win->saved_rd.h = read_uint16(fd) * view->v->h / view_h;
+	
+	debug(DEBUG_STATE, "%s: %dx%d for %dx%d at [%d,%d]\n",
+	    OBJECT(win)->name, win->rd.w, win->rd.h, view_w, view_h,
+	    win->rd.x, win->rd.y);
 
 	/* Ensure the window fits inside the view area. */
 	window_resize(win);
@@ -1466,6 +1474,9 @@ window_save(void *p, int fd)
 	version_write(fd, &window_ver);
 
 	write_uint32(fd, win->flags & WINDOW_PERSISTENT);
+	
+	write_uint16(fd, view->v->w);
+	write_uint16(fd, view->v->h);
 
 	write_sint16(fd, win->rd.x);
 	write_sint16(fd, win->rd.y);
