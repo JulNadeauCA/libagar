@@ -313,7 +313,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (mainview->mapy - *mapy) <= 0) {
-				    	scroll(m, DIR_UP);
+				    	view_scroll(m, DIR_UP);
 				}
 				m->map[*mapy][*mapx].overlap--;
 				m->map[(*mapy)-1][*mapx].overlap--;
@@ -355,7 +355,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (mainview->mapy - *mapy) <=
 				     -mainview->maph + 2) {
-					scroll(m, DIR_DOWN);
+					view_scroll(m, DIR_DOWN);
 				}
 				m->map[*mapy][*mapx].overlap--;
 			} else {
@@ -399,7 +399,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (mainview->mapx - *mapx) <= 0) {
-					scroll(m, DIR_LEFT);
+					view_scroll(m, DIR_LEFT);
 				}
 				m->map[*mapy][*mapx].overlap--;
 				m->map[(*mapy)-1][*mapx].overlap--;
@@ -442,7 +442,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (mainview->mapx - *mapx) <=
 				     -mainview->mapw + 2) {
-					scroll(m, DIR_RIGHT);
+					view_scroll(m, DIR_RIGHT);
 				}
 				m->map[*mapy][*mapx].overlap--;
 				m->map[(*mapy)-1][*mapx].overlap--;

@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.52 2002/06/09 10:27:26 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.53 2002/06/12 20:40:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -190,7 +190,7 @@ char_load(void *p, int fd)
 			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
 			if (ch->flags & CHAR_FOCUS) {
-				view_center(x, y);
+				view_center(m, x, y);
 			}
 			pthread_mutex_unlock(&m->lock);
 
