@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.4 2003/07/08 00:34:59 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.5 2003/10/13 23:49:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -110,6 +110,9 @@ spinbutton_return(int argc, union evarg *argv)
 	widget_binding_unlock(stringb);
 
 	WIDGET(sbu->tbox)->flags &= ~(WIDGET_FOCUSED);
+
+	event_post(sbu, "spinbutton-return", NULL);
+	event_post(sbu, "spinbutton-changed", NULL);
 }
 
 static void
@@ -120,6 +123,8 @@ spinbutton_up(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	spinbutton_add(sbu, sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
+	
+	event_post(sbu, "spinbutton-changed", NULL);
 }
 
 static void
@@ -130,6 +135,8 @@ spinbutton_down(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	spinbutton_add(sbu, -sbu->incr);
 	pthread_mutex_unlock(&sbu->lock);
+	
+	event_post(sbu, "spinbutton-changed", NULL);
 }
 
 void
