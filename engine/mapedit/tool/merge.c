@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.5 2003/02/10 05:46:53 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.6 2003/02/10 22:51:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,7 +101,7 @@ merge_create_brush(int argc, union evarg *argv)
 		return;
 	}
 	
-	Asprintf(&m_name, "brush-%s", brush_name);
+	Asprintf(&m_name, "brush(%s)", brush_name);
 	if (tlist_item_text(mer->brushes_tl, m_name) != NULL) {
 		text_msg("Error", "%s already exists", m_name);
 		return;
@@ -143,12 +143,11 @@ merge_edit_brush(int argc, union evarg *argv)
 		   OBJECT(brush)->name);
 		if (win == NULL) 		/* Exists */
 			continue;
+		window_set_min_geo(win, 67, 88);
 
 		reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
 		{
-			struct mapview *mv;
-
-			mv = mapview_new(reg, brush,
+			mapview_new(reg, brush,
 			    MAPVIEW_EDIT|MAPVIEW_ZOOM|MAPVIEW_GRID|
 			    MAPVIEW_PROPS,
 			    100, 100);
@@ -202,8 +201,10 @@ merge_window(void *p)
 	{
 		static const char *mode_items[] = {
 			"Replace",
-			"Insert highest",
+			"Insert head",
 			"Insert empty",
+			"Erase all",
+			"Erase head",
 			NULL
 		};
 		struct radio *rad;
@@ -252,6 +253,12 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 	struct merge *mer = p;
 	struct tlist_item *it;
 
+	/* Avoid circular references. */
+	if (strncmp(OBJECT(mv->map)->name, "brush-", 6) == 0) {
+		text_msg("Error", "Circular reference");
+		return;
+	}
+
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		if (it->selected) {
 			merge_apply(p, mv, it->p1);
@@ -291,6 +298,18 @@ merge_apply(struct merge *mer, struct mapview *mv, struct map *sm)
 					continue;
 				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs)
 					node_copy_ref(nref, dstnode);
+				break;
+			case MERGE_ERASE_ALL:
+				if (!TAILQ_EMPTY(&srcnode->nrefs))
+					continue;
+				node_destroy(dstnode);
+				node_init(dstnode, dx, dy);
+				break;
+			case MERGE_ERASE_HIGHEST:
+				if (!TAILQ_EMPTY(&srcnode->nrefs))
+					continue;
+				node_remove_ref(dstnode,
+				    TAILQ_FIRST(&srcnode->nrefs));
 				break;
 			}
 		}

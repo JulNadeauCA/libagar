@@ -1,10 +1,12 @@
-/*	$Csoft: merge.h,v 1.2 2003/02/08 00:33:54 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.3 2003/02/10 04:44:23 vedge Exp $	*/
 /*	Public domain	*/
 
 enum merge_mode {
 	MERGE_REPLACE,
 	MERGE_INSERT_HIGHEST,
-	MERGE_INSERT_EMPTY
+	MERGE_INSERT_EMPTY,
+	MERGE_ERASE_ALL,
+	MERGE_ERASE_HIGHEST
 };
 
 SLIST_HEAD(brushq, object);
