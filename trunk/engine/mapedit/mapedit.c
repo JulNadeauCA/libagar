@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: mapedit.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -635,7 +635,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 				nev.key.keysym.sym = SDLK_RIGHT;
 				SDL_PushEvent(&nev);
 			} else {
-				object_wait((struct object *)med, lastdir);
+				object_wait(med, lastdir);
 				if (lastdir & MAPEDIT_LEFT) {
 					med->cursdir &= ~(MAPEDIT_LEFT);
 				} else if (lastdir & MAPEDIT_RIGHT) {
@@ -657,7 +657,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 				nev.key.keysym.sym = SDLK_DOWN;
 				SDL_PushEvent(&nev);
 			} else {
-				object_wait((struct object *)med, lastdir);
+				object_wait(med, lastdir);
 				if (lastdir & MAPEDIT_UP) {
 					med->cursdir &= ~(MAPEDIT_UP);
 				} else if (lastdir & MAPEDIT_DOWN) {
@@ -913,7 +913,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			med->cursdir |= MAPEDIT_UP;
 			med->cursdir &= ~(MAPEDIT_DOWN);
 		} else if (ev->type == SDL_KEYUP) {
-			object_wait((struct object *)med, MAPEDIT_UP);
+			object_wait(med, MAPEDIT_UP);
 			med->cursdir &= ~(MAPEDIT_UP);
 		}
 		break;
@@ -923,7 +923,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			med->cursdir |= MAPEDIT_DOWN;
 			med->cursdir &= ~(MAPEDIT_UP);
 		} else if (ev->type == SDL_KEYUP) {
-			object_wait((struct object *)med, MAPEDIT_DOWN);
+			object_wait(med, MAPEDIT_DOWN);
 			med->cursdir &= ~(MAPEDIT_DOWN);
 		}
 		break;
@@ -941,10 +941,9 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 		} else if (ev->type == SDL_KEYUP) {
 			if (med->listodir != 0) {
 				med->listodir &= ~(MAPEDIT_CTRLLEFT);
-				object_wait((struct object *)med,
-				    MAPEDIT_CTRLLEFT);
+				object_wait(med, MAPEDIT_CTRLLEFT);
 			} else {
-				object_wait((struct object *)med, MAPEDIT_LEFT);
+				object_wait(med, MAPEDIT_LEFT);
 				med->cursdir &= ~(MAPEDIT_LEFT);
 			}
 		}
@@ -961,7 +960,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 				med->cursdir &= ~(MAPEDIT_LEFT);
 			}
 		} else if (ev->type == SDL_KEYUP) {
-			object_wait((struct object *)med, MAPEDIT_RIGHT);
+			object_wait(med, MAPEDIT_RIGHT);
 			med->cursdir &= ~(MAPEDIT_RIGHT);
 		}
 		break;
@@ -971,7 +970,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			med->listwdir |= MAPEDIT_UP;
 			med->listwdir &= ~(MAPEDIT_DOWN);
 		} else if (ev->type == SDL_KEYUP) {
-			object_wait((struct object *)med, MAPEDIT_PAGEUP);
+			object_wait(med, MAPEDIT_PAGEUP);
 			med->listwdir &= ~(MAPEDIT_UP);
 		}
 		break;
@@ -981,7 +980,7 @@ mapedit_event(struct object *ob, SDL_Event *ev)
 			med->listwdir |= MAPEDIT_DOWN;
 			med->listwdir &= ~(MAPEDIT_UP);
 		} else if (ev->type == SDL_KEYUP) {
-			object_wait((struct object *)med, MAPEDIT_PAGEDOWN);
+			object_wait(med, MAPEDIT_PAGEDOWN);
 			med->listwdir &= ~(MAPEDIT_DOWN);
 		}
 		break;
