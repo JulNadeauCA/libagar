@@ -1,4 +1,4 @@
-/*	$Csoft: mkpath.c,v 1.3 2004/04/23 10:50:54 vedge Exp $	*/
+/*	$Csoft: mkpath.c,v 1.4 2004/04/23 10:55:33 vedge Exp $	*/
 /*	$OpenBSD: mkdir.c,v 1.14 2002/07/04 04:26:40 deraadt Exp $	*/
 /*	$NetBSD: mkdir.c,v 1.14 1995/06/25 21:59:21 mycroft Exp $	*/
 
@@ -73,7 +73,7 @@ mkpath(char *path)
 
 		if (stat(pathp, &sb)) {
 			if (errno != ENOENT ||
-			    (compat_mkdir(pathp) && errno != EEXIST)) {
+			    (Mkdir(pathp) && errno != EEXIST)) {
 				error_set("%s: %s", pathp, strerror(errno));
 				return (-1);
 			}
