@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.21 2002/02/25 11:31:42 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.22 2002/02/25 11:38:26 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
@@ -80,7 +80,7 @@ void		 map_clean(struct map *, struct object *, Uint32, Uint32,
 void		 map_allocnodes(struct map *, Uint32, Uint32, Uint32, Uint32);
 void		 map_freenodes(struct map *);
 void		 map_plot_sprite(struct map *, SDL_Surface *, Uint32, Uint32);
-void		 map_dump(struct map *);
+void		 map_dump(void *);
 
 struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_findref(struct node *, void *, Sint32, Uint32);
