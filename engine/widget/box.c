@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.9 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.10 2005/01/08 03:35:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -184,10 +184,20 @@ box_scale(void *p, int w, int h)
 		if (nwidgets > 0) {
 			switch (bo->type) {
 			case BOX_HORIZ:
-				WIDGET(bo)->w -= bo->spacing;
+				if (bo->homogenous) {
+					WIDGET(bo)->w +=
+					    bo->spacing*(nwidgets+1);
+				} else {
+					WIDGET(bo)->w -= bo->spacing;
+				}
 				break;
 			case BOX_VERT:
-				WIDGET(bo)->h -= bo->spacing;
+				if (bo->homogenous) {
+					WIDGET(bo)->h +=
+					    bo->spacing*(nwidgets+1);
+				} else {
+					WIDGET(bo)->h -= bo->spacing;
+				}
 				break;
 			}
 		}
