@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.22 2002/02/10 04:33:39 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.23 2002/02/10 04:47:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -151,7 +151,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	curmapedit = med;
 	
 	/* XXX tune */
-	med->timer = SDL_AddTimer(5, mapedit_time, med);
+	med->timer = SDL_AddTimer(30, mapedit_time, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		return (NULL);
