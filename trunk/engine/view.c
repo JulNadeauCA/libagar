@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.28 2002/05/02 10:08:23 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.29 2002/05/03 20:18:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -183,10 +183,9 @@ view_allocrects(struct map *m, int w, int h)
 }
 
 void
-view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 n)
+view_maskfill(struct viewport *v, SDL_Rect *rd, int n)
 {
-#if 1
-	Uint32 x, y;
+	int x, y;
 	pthread_mutex_lock(&v->lock);
 	for (y = rd->y; y < rd->y + rd->h; y++) {
 		for (x = rd->x; x < rd->x + rd->w; x++) {
@@ -194,7 +193,6 @@ view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 n)
 		}
 	}
 	pthread_mutex_unlock(&v->lock);
-#endif
 }
 
 static void
@@ -229,7 +227,7 @@ view_freerects(struct viewport *v)
 }
 
 struct viewport *
-view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
+view_create(int w, int h, int depth, int flags)
 {
 	struct viewport *v;
 
@@ -251,11 +249,7 @@ view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 	v->mapmask = NULL;
 	v->maprects = NULL;
 	v->rects = NULL;
-
-	if (pthread_mutex_init(&v->lock, NULL) != 0) {
-		dperror("view");
-		return (NULL);
-	}
+	pthread_mutex_init(&v->lock, NULL);
 
 	return (v);
 }
@@ -344,4 +338,20 @@ view_redraw(struct viewport *view)
 		window_draw_all();
 	}
 }
+
+#ifdef DEBUG
+void
+view_dumpmask(struct viewport *v)
+{
+	int x, y;
+	pthread_mutex_lock(&v->lock);
+	for (y = 0; y < v->maph; y++) {
+		for (x = 0; x < v->mapw; x++) {
+			printf("(%d)", v->mapmask[y][x]);
+		}
+		printf("\n");
+	}
+	pthread_mutex_unlock(&v->lock);
+}
+#endif
 
