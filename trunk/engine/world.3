@@ -1,4 +1,4 @@
-.\"	$Csoft: world.3,v 1.1 2002/09/16 15:55:08 vedge Exp $
+.\"	$Csoft: world.3,v 1.2 2003/01/01 05:18:34 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -72,10 +72,10 @@ descriptor
 .Sh OBJECT LIST
 .nr nS 1
 .Ft void
-.Fn world_attach "struct world *parent" "struct object *child"
+.Fn world_attach "struct object *child"
 .Pp
 .Ft void
-.Fn world_detach "struct world *parent" "struct object *child"
+.Fn world_detach "struct object *child"
 .Pp
 .Ft int
 .Fn world_exists "struct object *obj"
@@ -88,14 +88,12 @@ The
 .Fn world_attach
 function attaches the object
 .Fa child
-to
-.Fa world .
+to the world.
 The
 .Fn world_detach
 function detaches the object
 .Fa child
-from 
-.Fa world .
+from the world.
 .Pp
 The
 .Fn world_exists
