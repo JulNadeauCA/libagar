@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.17 2003/03/08 00:58:13 vedge Exp $
+.\"	$Csoft: view.3,v 1.18 2003/05/18 00:16:57 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,7 +40,7 @@
 .Sh DESCRIPTION
 The Agar
 .Nm
-layer manages the video display and maintains a list of windows.
+layer manages the video display.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
@@ -67,8 +67,8 @@ The
 argument is one of:
 .Bd -literal
 enum gfx_engine {
-	GFX_ENGINE_GUI,			/* Direct, GUI */
-	GFX_ENGINE_TILEBASED		/* Direct, tile-based */
+	GFX_ENGINE_GUI,		/* Direct/OpenGL, GUI */
+	GFX_ENGINE_TILEBASED	/* Direct/OpenGL, tile-based */
 };
 .Ed
 .Pp
@@ -91,17 +91,23 @@ returning 0 on success and -1 on failure.
 .Ft "SDL_Surface *"
 .Fn view_scale_surface "SDL_Surface *src" "Uint16 width" "Uint16 height"
 .Pp
+.Ft "void"
+.Fn view_set_trans "SDL_Surface *su" "Uint8 alpha"
+.Pp
 .Ft "GLuint"
 .Fn view_surface_texture "SDL_Surface *src" "GLfloat *texcoord"
 .Pp
 .Ft "void"
-.Fn VIEW_UPDATE "SDL_Rect rd"
+.Fn view_update "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
 .Fn view_alpha_blend "SDL_Surface *dstsu" "Sint16 x" "Sint16 y" "Uint8 r" \
                      "Uint8 g" "Uint8 b" "Uint8 a"
-.nr nS 0
 .Pp
+.Ft "void"
+.Fn view_capture "SDL_Surface *su"
+.Pp
+.nr nS 0
 These functions operate on
 .Xr SDL_Surface 3
 structures.
@@ -136,14 +142,24 @@ to
 by
 .Fa height
 pixels.
+.Pp
+The
+.Fn view_set_trans
+function sets the alpha value of all pixels with a non-zero alpha component.
+.Pp
 If OpenGL support is available,
 .Fn view_surface_texture
 creates an OpenGL texture from
 .Fa src
 .Pp
 The
-.Fn VIEW_UPDATE
-macro copies
+.Fn view_update
+function queues the update of a video region.
+With direct video rendering mode, this adds a
+.Ft SDL_Rect
+to an array that will be passed to
+.Xr SDL_UpdateRects 3 .
+With the OpenGL rendering mode, the entire display is queued for update.
 .Fa rd
 to the dirty rectangle array the event loop will pass to
 .Xr SDL_UpdateRects 3
@@ -168,6 +184,10 @@ with the alpha value
 expects
 .Fa dstsu
 to be locked.
+.Pp
+The
+.Fn view_capture
+function encode a JPEG image file from the contents of a surface.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
