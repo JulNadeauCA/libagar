@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.24 2002/03/05 17:45:30 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.25 2002/03/12 15:51:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -102,6 +102,7 @@ char_load(void *p, int fd)
 	ch->maxmp = fobj_read_uint32(fd);
 	ch->mp = fobj_read_uint32(fd);
 
+#if 0
 	text_msg(4000, TEXT_SLEEP|TEXT_DEBUG,
 	    "%s (0x%x)\n"
 	    "Level %d\n"
@@ -110,6 +111,7 @@ char_load(void *p, int fd)
 	    "%d/%d hp, %d/%d mp\n",
 	    ob->name, ch->flags, ch->level, ch->exp, ch->age,
 	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
+#endif
 
 	if (fobj_read_uint32(fd) > 0) {
 		char *mname, *minput;
