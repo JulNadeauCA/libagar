@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.67 2003/02/17 02:46:38 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.68 2003/02/20 04:57:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -512,7 +512,8 @@ mapview_draw_background(struct mapview *mv)
 	SDL_Rect rd;
 
 	ss = prop_get_int(&mapedit, "tilemap-bg-square-size");
-	if (++softbg > ss-1) {
+	if (prop_get_bool(&mapedit, "tilemap-bg-moving") &&
+	    ++softbg > ss-1) {
 		softbg = 0;
 	}
 	rd.w = ss;
@@ -550,7 +551,7 @@ mapview_draw(void *p)
 	int old_tilew = m->tilew;
 	int old_tileh = m->tileh;
 
-	if (mapedition && prop_get_bool(&mapedit, "tilemap-bg-moving")) {
+	if (mapedition && prop_get_bool(&mapedit, "tilemap-bg")) {
 		mapview_draw_background(mv);
 	}
 
