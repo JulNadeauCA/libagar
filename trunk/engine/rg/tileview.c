@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.16 2005/02/19 07:22:01 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.17 2005/02/21 09:43:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -193,11 +193,13 @@ tileview_buttondown(int argc, union evarg *argv)
 		sx = (x - tv->xoffs)/tv->pxsz;
 		sy = (y - tv->yoffs)/tv->pxsz;
 		if (tv->state == TILEVIEW_PIXMAP_EDIT) {
-			if (pixmap_coincident(tel, sx, sy))
+			if (pixmap_coincident(tel, sx, sy)) {
 				pixmap_mousebuttondown(tv, tel,
 				    sx - tel->tel_pixmap.x,
 				    sy - tel->tel_pixmap.y,
 				    button);
+				break;
+			}
 		}
 		TAILQ_FOREACH(ctrl, &tv->ctrls, ctrls) {
 			for (i = 0; i < ctrl->nhandles; i++) {
@@ -393,8 +395,8 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 	case TILEVIEW_RECTANGLE:
 		switch (nhandle) {
 		case 0:
-			tileview_set_int(ctrl, 0, x2);
-			tileview_set_int(ctrl, 1, y2);
+			tileview_set_int(ctrl, 0, tileview_int(ctrl,0)+dx);
+			tileview_set_int(ctrl, 1, tileview_int(ctrl,1)+dy);
 			break;
 		case 1:
 			{
@@ -403,7 +405,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				int nh = ch-dy;
 
 				tileview_set_int(ctrl, 1, cy+dy);
-				tileview_set_int(ctrl, 3, nh>=8 ? nh : 8);
+				tileview_set_int(ctrl, 3, nh>=1 ? nh : 1);
 				if (dy < 0 || dy > 0)
 					yoffs = -dy;
 			}
@@ -413,7 +415,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				int ch = tileview_int(ctrl, 3);
 				int nh = ch+dy;
 
-				tileview_set_int(ctrl, 3, nh>=8 ? nh : 8);
+				tileview_set_int(ctrl, 3, nh>=1 ? nh : 1);
 			}
 			break;
 		case 3:
@@ -421,7 +423,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				int cw = tileview_int(ctrl, 2);
 				int nw = cw+dx;
 
-				tileview_set_int(ctrl, 2, nw>=8 ? nw : 8);
+				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
 			}
 			break;
 		case 4:
@@ -431,7 +433,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				int nw = cw-dx;
 
 				tileview_set_int(ctrl, 0, cx+dx);
-				tileview_set_int(ctrl, 2, nw>=8 ? nw : 8);
+				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
 				if (dx < 0 || dx > 0)
 					xoffs = -dx;
 			}
@@ -506,7 +508,7 @@ tileview_mousemotion(int argc, union evarg *argv)
 			    state);
 		}
 	}
-	
+
 	tv->xorig = sx;
 	tv->yorig = sy;
 }
@@ -1010,15 +1012,15 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 
 			tileview_rect2o(tv, x-1, y-1, w+1, h+1);
 
-			ctrl->handles[0].x = x - 1;
-			ctrl->handles[0].y = y - 1;
+			ctrl->handles[0].x = x - 3;
+			ctrl->handles[0].y = y - 3;
 			ctrl->handles[1].x = x + w/2;
-			ctrl->handles[1].y = y - 1;
+			ctrl->handles[1].y = y - 3;
 			ctrl->handles[2].x = x + w/2;
-			ctrl->handles[2].y = y + h;
-			ctrl->handles[3].x = x + w;
+			ctrl->handles[2].y = y + h + 2;
+			ctrl->handles[3].x = x + w + 2;
 			ctrl->handles[3].y = y + h/2;
-			ctrl->handles[4].x = x - 1;
+			ctrl->handles[4].x = x - 3;
 			ctrl->handles[4].y = y + h/2;
 		}
 		break;
