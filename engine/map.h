@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.40 2002/07/20 02:09:31 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.41 2002/08/12 05:00:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -72,7 +72,8 @@ struct map {
 	struct	object obj;
 
 	Uint32	flags;
-#define MAP_2D		0x20		/* Two-dimensional */
+#define MAP_RLE_COMPRESSION	0x01	/* RLE-compress the nodes */
+#define MAP_2D			0x20	/* Two-dimensional */
 
 	int	redraw;			/* Redraw at next tick
 					   (can be inconsistent) */
