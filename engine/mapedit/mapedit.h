@@ -1,13 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
-
-/*
- * The map edition code references sprites and animations in a
- * contiguous list, and interpose a structure for browsing purposes.
- *
- * The engine does not interpose structures, but uses map entries
- * to distinguish sprites from animations. Offsets have different
- * meaning depending on map entry flags.
- */
+/*	$Csoft: mapedit.h,v 1.2 2002/01/25 15:06:52 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -44,11 +35,15 @@ struct mapedit {
 #define MAPEDIT_TILESTACK	0x02	/* Display tile stack window */
 #define MAPEDIT_OBJLIST		0x04	/* Display object list window */
 
-	int	mmapx, mmapy;
-	int	listwdir;
-	int	listsdir;
-	int	listodir;
-	int	cursdir;
+	struct	map *map;		/* Map being edited */
+	int	x, y;			/* Cursor position */
+	int	mmapx, mmapy;		/* Mouse coordinates */
+
+	/* Directions */
+	int	cursdir;		/* Cursor */
+	int	listwdir;		/* Tile list (vert) */
+	int	listsdir;		/* Tile stack (vert) */
+	int	listodir;		/* Object list (horiz) */
 #define MAPEDIT_UP		0x01
 #define MAPEDIT_DOWN		0x02
 #define MAPEDIT_LEFT		0x04
@@ -60,6 +55,27 @@ struct mapedit {
 
 	SDL_TimerID timer;
 };
+
+/* Move mapedit to a new position. */
+#define MAPEDIT_MOVE(medp, nx, ny)					\
+	do {				    				\
+		MAP_DELREF((medp)->map, (medp)->x, (medp)->y,		\
+		    (medp), MAPEDIT_SELECT); 				\
+		MAP_ADDANIM((medp)->map, nx, ny,			\
+		    (medp), MAPEDIT_SELECT);				\
+		(medp)->x = nx;						\
+		(medp)->y = ny;						\
+	} while (0)
+
+/* Position mapedit at m:x,y. */
+#define MAPEDIT_PLOT(med, pma, mx, my)				\
+	do {							\
+		(med)->map = (pma);				\
+		(med)->x = (mx);				\
+		(med)->y = (my);				\
+		MAP_ADDANIM((pma), (mx), (my),			\
+		    &(pma)->obj, MAPEDIT_SELECT);		\
+	} while (0)
 
 /* Editor anims */
 #define MAPEDIT_SELECT	0
@@ -78,7 +94,7 @@ struct mapedit {
 #define MAPEDIT_HASTE	11
 #define MAPEDIT_ANIM	12
 
-struct mapedit *mapedit_create(struct map *, int, int);
+struct mapedit *mapedit_create(char *, char *);
 void		mapedit_tilelist(struct mapedit *);
 void		mapedit_tilestack(struct mapedit *);
 void		mapedit_objlist(struct mapedit *);
