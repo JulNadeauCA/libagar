@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.39 2003/01/03 02:30:23 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.40 2003/01/04 14:10:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,6 +50,7 @@ static const struct widget_ops textbox_ops = {
 
 enum {
 	FRAME_COLOR,
+	FRAME_READONLY_COLOR,
 	TEXT_COLOR,
 	CURSOR_COLOR1,
 	CURSOR_COLOR2
@@ -84,6 +85,8 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	WIDGET(tbox)->h = (s->h * 2) + (tbox->ymargin * 2);
 
 	widget_map_color(tbox, FRAME_COLOR, "frame", 100, 100, 100);
+	widget_map_color(tbox, FRAME_READONLY_COLOR, "frame-readonly",
+	    40, 40, 40);
 	widget_map_color(tbox, TEXT_COLOR, "text", 250, 250, 250);
 	widget_map_color(tbox, CURSOR_COLOR1, "cursor1", 50, 50, 50);
 	widget_map_color(tbox, CURSOR_COLOR2, "cursor2", 0, 0, 0);
@@ -163,7 +166,9 @@ textbox_draw(void *p)
 	    WIDGET(tbox)->w - tbox->xmargin*2 - label_s->w,
 	    label_s->h + tbox->ymargin*2,
 	    WIDGET_FOCUSED(tbox) ? -1 : 1,
-	    WIDGET_COLOR(tbox, FRAME_COLOR));
+	    tbox->flags & TEXTBOX_READONLY ?
+	        WIDGET_COLOR(tbox, FRAME_READONLY_COLOR) :
+		WIDGET_COLOR(tbox, FRAME_COLOR));
 
 	/*
 	 * Text
@@ -251,6 +256,10 @@ textbox_key(int argc, union evarg *argv)
 	int keymod = argv[2].i;
 	size_t textlen;
 	int i, modified = 0;
+
+	if (tbox->flags & TEXTBOX_READONLY) {
+		return;
+	}
 
 	if (keysym == SDLK_RETURN) {
 		event_post(tbox, "textbox-return", NULL);
