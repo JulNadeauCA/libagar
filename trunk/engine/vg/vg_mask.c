@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.8 2004/04/30 12:18:14 vedge Exp $	*/
+/*	$Csoft: vg_mask.c,v 1.1 2004/05/05 16:46:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -31,6 +31,14 @@
 #include "vg.h"
 #include "vg_primitive.h"
 
+const struct vg_element_ops vg_mask_ops = {
+	N_("Polygonal mask"),
+	vg_mask_init,
+	NULL,
+	vg_draw_mask,
+	NULL
+};
+
 void
 vg_mask_init(struct vg *vg, struct vg_element *vge)
 {
@@ -49,6 +57,10 @@ vg_draw_mask(struct vg *vg, struct vg_element *vge)
 	if (!vge->vg_mask.visible)
 		return;
 
+	if (vge->nvtx < 1) {
+		/* TODO particle */
+		return;
+	}
 	vg_rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
 	x0 = x1;
 	y0 = y1;

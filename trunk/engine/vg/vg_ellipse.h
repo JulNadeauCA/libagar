@@ -1,9 +1,14 @@
-/*	$Csoft: vg_ellipse.h,v 1.2 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg_ellipse.h,v 1.3 2004/04/22 12:36:09 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_ELLIPSE_H_
 #define _AGAR_VG_ELLIPSE_H_
 #include "begin_code.h"
+		
+struct vg_ellipse_args {
+	double w, h;		/* Geometry */
+	double s, e;		/* Start/end angles (degrees) */
+};
 
 __BEGIN_DECLS
 void		vg_ellipse_init(struct vg *, struct vg_element *);

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_line.c,v 1.7 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg_line.c,v 1.8 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -38,6 +38,29 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vgobj.h"
+
+const struct vg_element_ops vg_lines_ops = {
+	N_("Line segments"),
+	NULL,				/* init */
+	NULL,				/* destroy */
+	vg_draw_line_segments,
+	vg_line_bbox
+};
+const struct vg_element_ops vg_line_strip_ops = {
+	N_("Line strip"),
+	NULL,				/* init */
+	NULL,				/* destroy */
+	vg_draw_line_strip,
+	vg_line_bbox
+};
+const struct vg_element_ops vg_line_loop_ops = {
+	N_("Line loop"),
+	NULL,				/* init */
+	NULL,				/* destroy */
+	vg_draw_line_loop,
+	vg_line_bbox
+};
+
 
 void
 vg_draw_line_segments(struct vg *vg, struct vg_element *vge)

@@ -1,4 +1,4 @@
-/*	$Csoft: vg_math.c,v 1.3 2004/04/19 02:14:24 vedge Exp $	*/
+/*	$Csoft: vg_math.c,v 1.4 2004/04/30 05:21:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -48,7 +48,7 @@ vg_deg2rad(double theta)
 void
 vg_car2pol(double x, double y, double *r, double *theta)
 {
-	*r = sqrt(x*x + y*y);
+	*r = sqrt(pow(x,2) + pow(y,2));
 	*theta = atan(y/x);
 }
 

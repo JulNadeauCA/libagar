@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.3 2004/04/19 02:09:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -104,7 +104,7 @@ vg_circle_primitive(struct vg *vg, int rx, int ry, int radius, Uint32 color)
 /*
  * Draw a partial ellipse centered around [cx,cy]. Angles a1, a2 are
  * given in degrees. It is assumed that a2 > a1.
- * XXX not optimized
+ * TODO generalize Bresenham
  */
 void
 vg_arc_primitive(struct vg *vg, int cx, int cy, int w, int h, int a1, int a2,

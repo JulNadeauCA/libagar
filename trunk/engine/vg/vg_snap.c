@@ -1,4 +1,4 @@
-/*	$Csoft: vg_snap.c,v 1.3 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vg_snap.c,v 1.4 2004/04/30 06:28:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -88,7 +88,9 @@ snap_to_endpoint(struct vg *vg, double *x, double *y)
 		for (i = 0; i < vge->nvtx; i++) {
 			vtx = &vge->vtx[i];
 
-			if (vg_near_vertex2(vg, vtx, *x, *y, 0.25)) {
+			/* XXX */
+			if (*x > vtx->x - 0.5 && *x < vtx->x + 0.5 &&
+			    *y > vtx->y - 0.5 && *y < vtx->y + 0.5) {
 				*x = vtx->x;
 				*y = vtx->y;
 				break;
