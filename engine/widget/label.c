@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.20 2002/06/09 10:05:35 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.21 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -55,7 +55,8 @@ static const struct widget_ops label_ops = {
 		NULL,	/* load */
 		NULL	/* save */
 	},
-	label_draw
+	label_draw,
+	NULL		/* animate */
 };
 
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
@@ -75,6 +76,7 @@ label_new(struct region *reg, const char *caption, int flags)
 	return (label);
 }
 
+/* Window must be locked. */
 void
 label_printf(struct label *label, const char *fmt, ...)
 {
