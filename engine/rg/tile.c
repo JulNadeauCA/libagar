@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.13 2005/02/14 07:26:32 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.14 2005/02/16 03:30:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -381,7 +381,7 @@ element_closed(int argc, union evarg *argv)
 }
 
 static void
-pixmap_resized(int argc, union evarg *argv)
+pixmap_motion(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[0].p;
 	struct tileview_ctrl *ctrl = argv[1].p;
@@ -394,6 +394,17 @@ pixmap_resized(int argc, union evarg *argv)
 
 	if (w != px->su->w || h != px->su->h) 
 		pixmap_scale(px, w, h, xoffs, yoffs);
+}
+
+static void
+pixmap_buttonup(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[0].p;
+	struct tileview_ctrl *ctrl = argv[1].p;
+	struct pixmap *px = argv[2].p;
+	int xoffs = argv[3].i;
+	int yoffs = argv[4].i;
+	struct tile *t = tv->tile;
 
 	tile_generate(t);
 	view_scale_surface(t->su, tv->scaled->w, tv->scaled->h, &tv->scaled);
@@ -442,8 +453,11 @@ tile_open_element(struct tileview *tv, struct tile_element *tel,
 			    &tel->tel_pixmap.y,
 			    (u_int)tel->tel_pixmap.px->su->w,
 			    (u_int)tel->tel_pixmap.px->su->h);
-			tv->tv_pixmap.ctrl->event =
-			    event_new(tv, NULL, pixmap_resized, "%p,%p",
+			tv->tv_pixmap.ctrl->motion =
+			    event_new(tv, NULL, pixmap_motion, "%p,%p",
+			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
+			tv->tv_pixmap.ctrl->buttonup =
+			    event_new(tv, NULL, pixmap_buttonup, "%p,%p",
 			    tv->tv_pixmap.ctrl, tel->tel_pixmap.px);
 
 			win = pixmap_edit(tv, tel);

@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.11 2005/02/16 03:30:31 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.12 2005/02/16 14:48:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -178,6 +178,11 @@ tileview_buttondown(int argc, union evarg *argv)
 					th->enable = 1;
 					tv->xorig = sx;
 					tv->yorig = sy;
+					if (ctrl->buttondown != NULL) {
+						event_post(NULL, tv,
+						    ctrl->buttondown->name,
+						    "%i,%i", sx, sy);
+					}
 					break;
 				}
 			}
@@ -240,6 +245,10 @@ tileview_buttonup(int argc, union evarg *argv)
 
 				if (th->enable) {
 					th->enable = 0;
+					if (ctrl->buttonup != NULL) {
+						event_post(NULL, tv,
+						    ctrl->buttonup->name, NULL);
+					}
 					break;
 				}
 			}
@@ -414,8 +423,8 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 		break;
 	}
 
-	if (ctrl->event != NULL)
-		event_post(NULL, tv, ctrl->event->name, "%i,%i", xoffs, yoffs);
+	if (ctrl->motion != NULL)
+		event_post(NULL, tv, ctrl->motion->name, "%i,%i", xoffs, yoffs);
 }
 
 static void
@@ -560,7 +569,9 @@ tileview_insert_ctrl(struct tileview *tv, enum tileview_ctrl_type type,
 	ctrl->valtypes = Malloc(sizeof(enum tileview_val_type)*strlen(fmt),
 	    M_WIDGET);
 	ctrl->nvals = 0;
-	ctrl->event = NULL;
+	ctrl->motion = NULL;
+	ctrl->buttondown = NULL;
+	ctrl->buttonup = NULL;
 	TAILQ_INSERT_TAIL(&tv->ctrls, ctrl, ctrls);
 
 	if (fmt == NULL)
