@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.31 2003/01/05 08:42:27 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.32 2003/01/08 23:10:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -194,7 +194,7 @@ tlist_draw(void *p)
 			rd.y = y;
 			rd.w = WIDGET(tl)->w - WIDGET(sb)->w;
 			rd.h = tl->item_h;
-		
+
 			primitives.rect_filled(tl, &rd,
 			    WIDGET_COLOR(tl, SELECTION_COLOR));
 		}
@@ -207,7 +207,7 @@ tlist_draw(void *p)
 		}
 		x += it->icon_w + 4;
 
-		widget_blit(tl, su, x, y);
+		widget_blit(tl, su, x, y + it->icon_w/2 - su->h/2);
 
 		y += tl->item_h;
 		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
