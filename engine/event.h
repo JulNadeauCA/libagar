@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.23 2004/03/12 02:47:34 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.24 2004/03/17 04:02:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -16,27 +16,38 @@ typedef union evarg {
 #endif
 } *evargs;
 
-#define EVENT_ARGS_MAX	16
-#define EVENT_NAME_MAX	32
+#define EVENT_ARGS_MAX		16
+#define EVENT_NAME_MAX		32
+#define EVENTSEQ_NAME_MAX	16
+
+struct eventseq {
+	char name[EVENTSEQ_NAME_MAX];		/* Sequence identifier */
+	TAILQ_HEAD(, event) events;		/* Ordered event sequence */
+	TAILQ_ENTRY(eventseq) eventseqs;
+};
 
 struct event {
-	char	name[EVENT_NAME_MAX];
+	char	name[EVENT_NAME_MAX];		/* Event type */
 	int	flags;
-#define	EVENT_ASYNC		0x01	/* Event handler runs in own thread */
-#define EVENT_FORWARD_CHILDREN	0x02	/* Forward to all descendents */
-#define EVENT_REPEAT		0x04	/* Reschedule automatically */
-	Uint32	offset;			/* Time offset relative to seq start */
+#define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
+#define EVENT_PROPAGATE	0x02	/* Propagate event to descendents */
+#define EVENT_REPEAT	0x04	/* Reschedule after handler execution */
+
+	Uint32	start;		/* Scheduled start time relative to the
+				   sequence start (for real-time events) */
 
 	void		(*handler)(int, union evarg *);
 	union evarg	 argv[EVENT_ARGS_MAX];
 	int		 argc;
 
 	TAILQ_ENTRY(event) events;
+	TAILQ_ENTRY(event) eventseq;
 };
 
 extern int event_idle;		/* Enable idling? */
 
 __BEGIN_DECLS
+struct eventseq *eventseq_new(void *, const char *);
 struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
 		           const char *, ...);
 void		 event_remove(void *, const char *);

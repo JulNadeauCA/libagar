@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.175 2004/04/23 12:47:19 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.176 2004/05/01 12:38:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -124,6 +124,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
+	TAILQ_INIT(&ob->eventseqs);
 	TAILQ_INIT(&ob->props);
 	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
 }
@@ -335,7 +336,7 @@ object_detach(void *childp)
 	lock_linkage();
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
-	event_post(child, parent, "detached", NULL);
+	event_post(parent, child, "detached", NULL);
 	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
 	    parent->name);
 	unlock_linkage();
@@ -468,20 +469,28 @@ object_free_props(struct object *ob)
 	pthread_mutex_unlock(&ob->lock);
 }
 
-/* Clear an object's event handler list. */
+/* Destroy the event handlers and sequences of an object. */
 void
 object_free_events(struct object *ob)
 {
-	struct event *eev, *nexteev;
+	struct event *eev, *neev;
+	struct eventseq *evseq, *nevseq;
 
 	pthread_mutex_lock(&ob->lock);
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
-	     eev = nexteev) {
-		nexteev = TAILQ_NEXT(eev, events);
+	     eev = neev) {
+		neev = TAILQ_NEXT(eev, events);
 		Free(eev, M_EVENT);
 	}
+	for (evseq = TAILQ_FIRST(&ob->eventseqs);
+	     evseq != TAILQ_END(&ob->eventseqs);
+	     evseq = nevseq) {
+		nevseq = TAILQ_NEXT(evseq, eventseqs);
+		Free(evseq, M_EVENT);
+	}
 	TAILQ_INIT(&ob->events);
+	TAILQ_INIT(&ob->eventseqs);
 	pthread_mutex_unlock(&ob->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.108 2004/03/23 02:26:10 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.109 2004/04/11 03:29:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -69,6 +69,7 @@ struct object {
 
 	struct position		*pos;		/* Unique position (or NULL) */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
+	TAILQ_HEAD(,eventseq)	 eventseqs;	/* Event sequences */
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
 
 	/* Uses linkage_lock */

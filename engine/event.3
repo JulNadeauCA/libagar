@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.19 2004/03/28 00:21:18 vedge Exp $
+.\"	$Csoft: event.3,v 1.20 2004/04/10 02:34:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -199,8 +199,8 @@ Acceptable flags for the
 .Nm
 structure include:
 .Bd -literal
-#define	EVENT_ASYNC		0x01	/* Event handler runs in own thread */
-#define EVENT_FORWARD_CHILDREN	0x02	/* Forward to all descendents */
+#define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
+#define EVENT_PROPAGATE	0x02	/* Automatically forward to children */
 .Ed
 .Pp
 .Dv EVENT_ASYNC
@@ -210,9 +210,9 @@ This flag is only available if Agar was compiled with the
 option.
 .Pp
 If the
-.Dv EVENT_FORWARD_CHILDREN
-flag is set, the event is automatically forwarded to each of the receiver's
-children prior to the execution of the event handler.
+.Dv EVENT_PROPAGATE
+flag is set, the event is automatically forwarded to every one of the
+receiver's descendants prior to the execution of the receiver's event handler.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr object 3
