@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.39 2004/01/03 04:13:27 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.40 2004/03/10 13:46:17 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -29,10 +29,14 @@ SH?=		sh
 CC?=		cc
 AR?=		ar
 RANLIB?=	ranlib
+
+LIB?=
 LIB_INSTALL?=	No
 LIB_SHARED?=	No
+LIB_STATIC?=	Yes
 LIB_MAJOR?=	1
 LIB_MINOR?=	0
+
 LIB_ADD?=
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
@@ -52,7 +56,6 @@ SHARE?=
 LFLAGS?=
 YFLAGS?=
 INCL?=
-INCLDIR?=.
 
 all: all-subdir lib${LIB}.a lib${LIB}.la
 install: install-lib install-subdir
@@ -118,7 +121,8 @@ depend: depend-subdir
 
 # Build the library's object files.
 _lib_objs:
-	@if [ "${LIB}" != "" -a "${OBJS}" = "" ]; then \
+	@if [ "${LIB}" != "" -a "${OBJS}" = "" \
+	      -a "${LIB_STATIC}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
@@ -149,7 +153,7 @@ _lib_shobjs:
 
 # Build a static version of the library.
 lib${LIB}.a: _lib_objs ${OBJS}
-	@if [ "${LIB}" != "" ]; then \
+	@if [ "${LIB}" != "" -a "${LIB_STATIC}" = "Yes" ]; then \
 	    if [ "${OBJS}" = "" ]; then \
 	        export _objs=""; \
 	        for F in ${SRCS}; do \
@@ -169,7 +173,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	fi
 
 # Build a Libtool version of the library.
-lib${LIB}.la: ${LIBTOOL} _lib_shobjs
+lib${LIB}.la: ${LIBTOOL} _lib_shobjs ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
 	    if [ "${SHOBJS}" = "" ]; then \
 	        export _shobjs=""; \
@@ -201,20 +205,22 @@ lib${LIB}.la: ${LIBTOOL} _lib_shobjs
 
 clean-lib:
 	@if [ "${LIB}" != "" ]; then \
-	    if [ "${OBJS}" = "" ]; then \
-                for F in ${SRCS}; do \
-	   	    F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
-	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
-	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	    echo "rm -f $$F"; \
-	    	    rm -f $$F; \
-                done; \
-	    else \
-	        echo "rm -f ${OBJS}"; \
-	        rm -f ${OBJS}; \
+	    if [ "${LIB_STATIC}" = "Yes" ]; then \
+	        if [ "${OBJS}" = "" ]; then \
+                    for F in ${SRCS}; do \
+	   	        F=`echo $$F | sed 's/.[cly]$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	    	echo "rm -f $$F"; \
+	    	    	rm -f $$F; \
+                    done; \
+	    	else \
+	            echo "rm -f ${OBJS}"; \
+		    rm -f ${OBJS}; \
+	    	fi; \
+	   	echo "rm -f lib${LIB}.a"; \
+		rm -f lib${LIB}.a; \
 	    fi; \
-	    echo "rm -f lib${LIB}.a"; \
-	    rm -f lib${LIB}.a; \
 	    if [ "${LIB_SHARED}" = "Yes" ]; then \
 	        if [ "${OBJS}" = "" ]; then \
                     for F in ${SRCS}; do \
@@ -228,10 +234,8 @@ clean-lib:
 		    rm -f ${OBJS}; \
 		    echo "rm -f ${OBJS}"; \
 		fi; \
-		echo "rm -f lib${LIB}.la"; \
-		rm -f lib${LIB}.la; \
-		echo "rm -fR .libs"; \
-		rm -fR .libs; \
+		echo "rm -f lib${LIB}.la .libs"; \
+		rm -f lib${LIB}.la .libs; \
 	    fi; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
@@ -244,24 +248,28 @@ cleandir-lib:
 
 install-lib:
 	@if [ "${INCL}" != "" ]; then \
-	    if [ ! -d ${PREFIX}/include/${INCLDIR} ]; then \
-	    	echo "mkdir ${PREFIX}/include/${INCLDIR}"; \
-	    	mkdir ${PREFIX}/include/${INCLDIR}; \
+	    if [ ! -d "${INCLDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${INCLDIR}; \
 	    fi; \
 	    for F in ${INCL}; do \
-	        echo "${INSTALL_DATA} $$F ${PREFIX}/include/${INCLDIR}"; \
-	        ${SUDO} ${INSTALL_DATA} $$F ${PREFIX}/include/${INCLDIR}; \
+	        echo "${INSTALL_DATA} $$F ${INCLDIR}"; \
+	        ${SUDO} ${INSTALL_DATA} $$F ${INCLDIR}; \
 	    done; \
 	fi
-	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
-	    echo "${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}"; \
-	    ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${INST_LIBDIR}; \
-	    if [ "${LIB_SHARED}" = "Yes" ]; then \
-	        echo "${LIBTOOL} --mode=install \
-	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}"; \
-	        ${SUDO} ${LIBTOOL} --mode=install \
-	            ${INSTALL_LIB} lib${LIB}.la ${INST_LIBDIR}; \
+	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
+	    if [ ! -d "${LIBDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${LIBDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${LIBDIR}; \
 	    fi; \
+	    if [ "${LIB_STATIC}" = "Yes" ]; then \
+	        echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
+	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${LIBDIR}; \
+	    fi; \
+	    echo "${LIBTOOL} --mode=install \
+	        ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
+	    ${SUDO} ${LIBTOOL} --mode=install \
+	        ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}; \
 	fi
 	@export _share="${SHARE}"; \
         if [ "$$_share" != "" ]; then \
@@ -276,15 +284,15 @@ install-lib:
 	fi
 
 deinstall-lib:
-	@if [ "${LIB}" != "" -a "${LIB_INSTALL}" != "No" ]; then \
-	    echo "${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a"; \
-	    ${SUDO} ${DEINSTALL_LIB} ${PREFIX}/lib/lib${LIB}.a; \
-	    if [ "${LIB_SHARED}" == "Yes" ]; then \
-	        echo "${LIBTOOL} --mode=uninstall \
-		    rm -f ${PREFIX}/lib/lib${LIB}.la"; \
-	        ${SUDO} ${LIBTOOL} --mode=uninstall \
-		    rm -f ${PREFIX}/lib/lib${LIB}.la; \
+	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
+	    if [ "${LIB_STATIC}" = "Yes" ]; then
+	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
+	        ${SUDO} ${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a; \
 	    fi; \
+	    echo "${LIBTOOL} --mode=uninstall \
+	        rm -f ${LIBDIR}/lib${LIB}.la"; \
+	    ${SUDO} ${LIBTOOL} --mode=uninstall \
+	        rm -f ${LIBDIR}/lib${LIB}.la; \
 	fi
 	@if [ "${SHARE}" != "" ]; then \
 	    for F in ${SHARE}; do \
