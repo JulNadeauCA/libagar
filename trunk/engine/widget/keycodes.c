@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.32 2003/08/31 11:58:10 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.33 2003/09/01 10:34:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -60,24 +60,6 @@ const struct keycode keycodes[] = {
 	{ SDLK_RIGHT,		0,		key_right,	NULL, 1 },
 	{ SDLK_LAST,		0,		key_character,	NULL, 0 },
 };
-
-static __inline__ Uint32
-key_apply_mod(Uint32 key, int kmod)
-{
-	if (kmod & KMOD_CAPS) {
-		if (kmod & KMOD_SHIFT) {
-			return (tolower(key));
-		} else {
-			return (toupper(key));
-		}
-	} else {
-		if (kmod & KMOD_SHIFT) {
-			return (toupper(key));
-		} else {
-			return (key);
-		}
-	}
-}
 
 static struct {
 	Uint32 comp, key, res;
@@ -158,11 +140,37 @@ static struct {
 };
 static const int ncompose = sizeof(compose) / sizeof(compose[0]);
 
+/* Apply modifiers (when not using Unicode keyboard translation). */
+static __inline__ Uint32
+key_apply_mod(Uint32 key, int kmod)
+{
+	if (kmod & KMOD_CAPS) {
+		if (kmod & KMOD_SHIFT) {
+			return (tolower(key));
+		} else {
+			return (toupper(key));
+		}
+	} else {
+		if (kmod & KMOD_SHIFT) {
+			return (toupper(key));
+		} else {
+			return (key);
+		}
+	}
+}
+
+/* Perform simple input composition. */
 static int
 key_compose(struct textbox *tbox, Uint32 key, Uint32 *ins)
 {
+	extern int text_composition;
 	int i;
-		
+
+	if (!text_composition) {
+		ins[0] = key;
+		return (1);
+	}
+
 	if (tbox->compose != 0) {
 		for (i = 0; i < ncompose; i++) {
 			if (compose[i].comp == tbox->compose &&
@@ -194,6 +202,7 @@ key_compose(struct textbox *tbox, Uint32 key, Uint32 *ins)
 	}
 }
 
+/* Insert a character. */
 static void
 key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 uch)

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.73 2003/07/28 15:29:59 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.74 2003/08/31 11:58:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -48,7 +48,9 @@ static const char *text_msg_titles[] = {
 	N_("Information")
 };
 
-ttf_font *font = NULL;		/* Default font */
+ttf_font *font = NULL;			/* Default font */
+int	  text_composition = 1;		/* Built-in input composition */
+int	  text_rightleft = 0;		/* Right-to-left text display */
 
 #define FONT_NAME_MAX	32
 

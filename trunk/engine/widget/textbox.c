@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.69 2003/08/31 11:58:10 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.70 2003/09/01 10:34:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -296,7 +296,7 @@ textbox_key(int argc, union evarg *argv)
 
 		if (kcode->key == SDLK_LAST ||
 		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
-		    	if (kcode->clr_compo) {
+		  	if (kcode->clr_compo) {
 				tbox->compose = 0;
 			}
 			kcode->func(tbox, keysym, keymod, kcode->arg, unicode);
