@@ -1,21 +1,23 @@
-/*	$Csoft: map.h,v 1.24 2002/03/05 11:57:12 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.25 2002/03/05 18:53:57 vedge Exp $	*/
 
 #define MAP_MAGIC	"agar map  "
 #define MAP_VERMAJ	1
-#define MAP_VERMIN	9
+#define MAP_VERMIN	10
 
 struct noderef {
 	struct	object *pobj;	/* Object pointer */
 	Uint32	offs;		/* Sprite/anim within this object */
 	Uint32	flags;
-#define MAPREF_SAVE	0x0001	/* Map dumps must record this reference */
-#define MAPREF_SPRITE	0x0002	/* This is a sprite */
-#define MAPREF_ANIM	0x0004	/* this is sequence of sprites */
-#define MAPREF_WARP	0x0008	/* This is another map */
-#define MAPREF_ANY	0xffff
+#define MAPREF_SAVE		0x0001	/* Saveable reference */
+#define MAPREF_SPRITE		0x0002	/* Sprite */
+#define MAPREF_ANIM		0x0010	/* Sequence of frames */
+#define MAPREF_ANIM_DELTA	0x0020	/* Increment per anim (default), or */
+#define MAPREF_ANIM_INDEPENDENT	0x0040	/* Increment per map reference */
+#define MAPREF_ANIM_STATIC	0x0080	/* Increment manually */
+#define MAPREF_WARP		0x1000	/* Another map */
+#define MAPREF_ANY		0xffff
 
-	Uint32	frame;		/* Animation frame # */
-	Uint32	fwait;		/* Animation delay counter */
+	Uint32	frame, fdelta;		/* For MAPREF_ANIM_INDEPENDENT */
 
 	Sint32	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
 				   used for direction and soft scroll. */
@@ -56,6 +58,7 @@ struct map {
 #define MAP_VARTILEGEO	0x0010		/* Variable tile geometry */
 #define MAP_2D		0x0020		/* Two-dimensional */
 
+	Uint32	fps;			/* Minimum/maximum fps */
 	Uint32	redraw;			/* Redraw at next tick */
 	Uint32	mapw, maph;		/* Map geometry */
 	Uint32	tilew, tileh;		/* Tile geometry */
@@ -74,13 +77,15 @@ int		 map_load(void *, int);
 int		 map_save(void *, int);
 int		 map_destroy(void *);
 
+void		 map_draw(struct map *);
+void		 map_animate(struct map *);
+
 int		 map_focus(struct map *);
 int		 map_unfocus(struct map *);
 void		 map_clean(struct map *, struct object *, Uint32, Uint32,
 		     Uint32);
 void		 map_allocnodes(struct map *, Uint32, Uint32, Uint32, Uint32);
 void		 map_freenodes(struct map *);
-void		 map_plot_sprite(struct map *, SDL_Surface *, Uint32, Uint32);
 void		 map_dump(void *);
 
 struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
