@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.6 2002/04/26 04:24:53 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.7 2002/04/26 11:40:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -50,6 +50,9 @@ static const struct obvec widget_vec = {
 	NULL		/* unlink */
 };
 
+extern TAILQ_HEAD(, widget) uwidgetsh;		/* window.c */
+extern pthread_mutex_t uwidgets_lock;	/* window.c */
+
 void
 widget_init(struct widget *wid, char *name, void *vecp, Sint16 x, Sint16 y,
     Uint16 w, Uint16 h)
@@ -91,21 +94,23 @@ widget_link(void *ob, struct window *win)
 	w->win->redraw++;
 }
 
-/* The window's widget lock must be held. */
+/* The window's lock must be held. */
 void
 widget_unlink(void *ob)
 {
 	struct widget *w = (struct widget *)ob;
-	struct window *win = w->win;
-	
-	TAILQ_REMOVE(&w->win->widgetsh, w, widgets);
-	
-	if (WIDGET_VEC(w)->widget_unlink != NULL) {
-		WIDGET_VEC(w)->widget_unlink(ob);
-	}
-	w->win = NULL;
 
-	win->redraw++;
+	if (WIDGET_VEC(w)->widget_unlink != NULL) {
+		WIDGET_VEC(w)->widget_unlink(w);
+	}
+
+	/*
+	 * Queue the unlink operation, the event loop cannot modify
+	 * a list it might be traversing.
+	 */
+	pthread_mutex_lock(&uwidgets_lock);
+	TAILQ_INSERT_HEAD(&uwidgetsh, w, uwidgets);
+	pthread_mutex_unlock(&uwidgets_lock);
 }
 
 /*
@@ -132,7 +137,6 @@ widget_event(void *p, SDL_Event *ev, Uint32 flags)
 	struct widget *w = (struct widget *)p;
 
 	if (WIDGET_VEC(w)->widget_event != NULL) {
-		dprintf("event to %s\n", OBJECT(w)->name);
 		WIDGET_VEC(w)->widget_event(w, ev, flags);
 	}
 }

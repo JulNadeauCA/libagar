@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.11 2002/04/26 13:04:20 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.12 2002/04/28 11:05:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -54,7 +54,13 @@ static const struct obvec window_vec = {
 /* This list shares world->lock. */
 TAILQ_HEAD(, window) windowsh = TAILQ_HEAD_INITIALIZER(windowsh);
 
+/* Specific garbage collector for widgets. Used by widget.c. */
+TAILQ_HEAD(, widget) uwidgetsh = TAILQ_HEAD_INITIALIZER(uwidgetsh);
+pthread_mutex_t uwidgets_lock = PTHREAD_MUTEX_INITIALIZER;
+
 static Uint32 delta = 0, delta2 = 256;
+
+static void	 window_unlink_queued(void);
 
 /* XXX fucking insane */
 void
@@ -112,6 +118,28 @@ window_key(SDL_Event *ev)
 {
 }
 
+/*
+ * Called by event handlers, once the widget list traversals are
+ * complete and widgets can be freed.
+ */
+static void
+window_unlink_queued(void)
+{
+	struct widget *w, *nextw;
+
+	/* Perform deferred unlink operations. */
+	pthread_mutex_lock(&uwidgets_lock);
+	for (w = TAILQ_FIRST(&uwidgetsh);
+	     w != TAILQ_END(&uwidgetsh);
+	     w = nextw) {
+		nextw = TAILQ_NEXT(w, uwidgets);
+		TAILQ_REMOVE(&uwidgetsh, w, widgets);
+		free(w);
+	}
+	TAILQ_INIT(&uwidgetsh);
+	pthread_mutex_unlock(&uwidgets_lock);
+}
+
 /* Must be called when win->lock is held. */
 void
 window_mouse_button(SDL_Event *ev)
@@ -125,8 +153,6 @@ window_mouse_button(SDL_Event *ev)
 			continue;
 		}
 
-		dprintf("event to %s\n", OBJECT(win)->name);
-
 		TAILQ_FOREACH(w, &win->widgetsh, widgets) {
 			pthread_mutex_lock(&win->lock);
 			if (WIDGET_INSIDE(w, ev->button.x, ev->button.y)) {
@@ -137,6 +163,9 @@ window_mouse_button(SDL_Event *ev)
 		break;
 	}
 	pthread_mutex_unlock(&world->lock);
+
+	/* Garbage collect any unlinked widget. */
+	window_unlink_queued();
 }
 
 void
@@ -274,19 +303,26 @@ window_link(void *ob)
 	return (0);
 }
 
-/* Must be called when win->lock is held. */
+/*
+ * Must be called when win->lock is held.
+ * Assuming we are called in event context, queued unlink
+ * operations will be performed later.
+ */
 int
 window_unlink(void *ob)
 {
 	struct window *win = (struct window *)ob;
 	struct widget *wid;
 
-	/* Unlink all widgets implicitely. */
+	/*
+	 * Unlink widgets, they are not freed until the event loop is
+	 * done traversing the window list.
+	 */
 	TAILQ_FOREACH(wid, &win->widgetsh, widgets) {
 		widget_unlink(wid);
 	}
-	
-	/* Unlink from the window list. */
+
+	/* Remove from the window list. */
 	TAILQ_REMOVE(&windowsh, win, windows);
 	
 	/* Decrement the view mask for this area. */
