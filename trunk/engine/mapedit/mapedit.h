@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.58 2002/12/04 04:23:12 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.59 2002/12/13 07:47:33 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -109,7 +109,11 @@ enum {
 	MAPEDIT_TOOL_PROPS,
 	MAPEDIT_TOOL_PROPEDIT,
 	MAPEDIT_TOOL_SHOW_CURSOR,
-	MAPEDIT_TOOL_EDIT
+	MAPEDIT_TOOL_EDIT,
+	MAPEDIT_TOOL_RIGHT,
+	MAPEDIT_TOOL_LEFT,
+	MAPEDIT_TOOL_UP,
+	MAPEDIT_TOOL_DOWN
 };
 
 void	 mapedit_init(struct mapedit *, char *);

@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.42 2003/01/01 03:31:39 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.43 2003/01/01 05:18:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,9 @@ enum {
 	BORDER_COLOR,
 	GRID_COLOR,
 	CURSOR_COLOR,
-	TILE_SELECTION_COLOR
+	SELTILE_COLOR,
+	BACKGROUND1_COLOR,
+	BACKGROUND2_COLOR
 };
 
 static SDL_TimerID zoomin_timer, zoomout_timer;
@@ -102,19 +104,24 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
 	mv->prop_style = -1; 
+	mv->mouse.move = 0;
+	mv->mouse.x = 0;
+	mv->mouse.y = 0;
+	mv->constr.mode = MAPVIEW_CONSTR_VERT;
+	mv->constr.x = 0;
+	mv->constr.y = 0;
+	mv->constr.nflags = NODEREF_SAVEABLE;
 
 	if (med == NULL && (mv->flags & (MAPVIEW_TILEMAP | MAPVIEW_EDIT))) {
 		fatal("no map editor\n");
 	}
 
-	widget_map_color(mv, BORDER_COLOR, "mapview-border",
-	    200, 200, 200);
-	widget_map_color(mv, GRID_COLOR, "mapview-grid",
-	    100, 100, 100);
-	widget_map_color(mv, CURSOR_COLOR, "mapview-cursor",
-	    100, 100, 100);
-	widget_map_color(mv, TILE_SELECTION_COLOR, "mapview-tile-selection",
-	    0, 200, 0);
+	widget_map_color(mv, BORDER_COLOR, "mapview-border", 200, 200, 200);
+	widget_map_color(mv, GRID_COLOR, "mapview-grid", 100, 100, 100);
+	widget_map_color(mv, CURSOR_COLOR, "mapview-cursor", 100, 100, 100);
+	widget_map_color(mv, SELTILE_COLOR, "mapview-seltile", 200, 200, 200);
+	widget_map_color(mv, BACKGROUND2_COLOR, "mapview-bg2", 175, 175, 175);
+	widget_map_color(mv, BACKGROUND1_COLOR, "mapview-bg1", 114, 114, 114);
 
 	event_new(mv, "widget-scaled", mapview_scaled, NULL);
 	event_new(mv, "widget-lostfocus", mapview_lostfocus, NULL);
@@ -173,14 +180,42 @@ mapview_draw(void *p)
 	struct node *node;
 	struct noderef *nref;
 	struct mapedit *med = mv->med;
-	int mx, my, rx, ry;
+	int mx, my, rx, ry, alt = 0;
+	SDL_Rect rd;
+	Uint32 col;
+	int alt1 = 0, alt2 = 0;
+	static int softbg = 0;
+
+	if (++softbg > TILEW-1)
+		softbg = 0;
+
+	rd.w = TILEW;
+	rd.h = TILEH;
+	for (my = -TILEH + softbg; my < WIDGET(mv)->h; my += TILEH) {
+		rd.y = my;
+		for (mx = -TILEW + softbg; mx < WIDGET(mv)->w; mx += TILEW) {
+			rd.x = mx;
+			if (alt1++ == 1) {
+				primitives.rect_filled(mv, &rd,
+				    WIDGET_COLOR(mv, BACKGROUND1_COLOR));
+				alt1 = 0;
+			} else {
+				primitives.rect_filled(mv, &rd,
+				    WIDGET_COLOR(mv, BACKGROUND2_COLOR));
+			}
+		}
+		if (alt2++ == 1) {
+			alt2 = 0;
+		}
+		alt1 = alt2;
+	}
 
 	/* XXX soft scroll */
 
 	for (my = mv->my, ry = 0;
 	     my-mv->my < mv->mh && my < m->maph;
 	     my++, ry += mv->map->tileh) {
-		
+
 		for (mx = mv->mx, rx = 0;
 	     	     mx-mv->mx < mv->mw && mx < m->mapw;
 		     mx++, rx += mv->map->tilew) {
@@ -201,10 +236,10 @@ mapview_draw(void *p)
 			}
 
 			if (mv->flags & MAPVIEW_GRID) {
-				/* XXX not esthetic */
-				primitives.line(mv,
-				    rx, 0,
-				    rx, WIDGET(mv)->h-1,
+				/* XXX overdraw */
+				primitives.frame(mv,
+				    rx, ry,
+				    mv->map->tilew+1, mv->map->tileh+1,
 				    WIDGET_COLOR(mv, GRID_COLOR));
 			}
 
@@ -250,23 +285,24 @@ mapview_draw(void *p)
 					primitives.rect_outlined(mv,
 					    rx+1, ry+1,
 					    mv->map->tilew-1, mv->map->tileh-1,
-					    WIDGET_COLOR(mv,
-					        TILE_SELECTION_COLOR));
+					    WIDGET_COLOR(mv, SELTILE_COLOR));
 					primitives.rect_outlined(mv,
 					    rx+2, ry+2,
 					    mv->map->tilew-3, mv->map->tileh-3,
-					    WIDGET_COLOR(mv,
-					        TILE_SELECTION_COLOR));
+					    WIDGET_COLOR(mv, SELTILE_COLOR));
 				}
 			}
-		}
-		if (mv->flags & MAPVIEW_GRID) {
-			/* XXX not esthetic */
-			primitives.line(mv, 0, ry, WIDGET(mv)->w-1, ry,
-			   WIDGET_COLOR(mv, GRID_COLOR));
+
+			if ((mv->flags & MAPVIEW_TILEMAP) &&
+			    mv->constr.x == mx && mv->constr.y == my) {
+				primitives.frame(mv,
+				    rx+1, ry+1,
+				    mv->map->tilew-1, mv->map->tileh-1,
+				    WIDGET_COLOR(mv, SELTILE_COLOR));
+			}
 		}
 	}
-
+#if 0
 	/* Highlight if the widget is focused. */
 	if (WIDGET_FOCUSED(mv) && WINDOW_FOCUSED(WIDGET(mv)->win)) {
 		primitives.rect_outlined(mv,
@@ -274,6 +310,7 @@ mapview_draw(void *p)
 		    WIDGET(mv)->w, WIDGET(mv)->h,
 		    WIDGET_COLOR(mv, BORDER_COLOR));
 	}
+#endif
 }
 
 static void
@@ -297,9 +334,13 @@ mapview_scroll(struct mapview *mv, int dir)
 	/* XXX soft scroll */
 	switch (dir) {
 	case DIR_LEFT:
+#if 1
 		if (--mv->mx <= 0) {
 			mv->mx = 0;
 		}
+#else
+		mv->mx--;
+#endif
 		break;
 	case DIR_RIGHT:
 		if (mv->mx + 1 < mv->map->mapw - 1) {
@@ -307,9 +348,13 @@ mapview_scroll(struct mapview *mv, int dir)
 		}
 		break;
 	case DIR_UP:
+#if 1
 		if (--mv->my <= 0) {
 			mv->my = 0;
 		}
+#else
+		mv->my--;
+#endif
 		break;
 	case DIR_DOWN:
 		if (mv->my + 1 < (mv->mh - mv->map->maph)) {
@@ -317,6 +362,7 @@ mapview_scroll(struct mapview *mv, int dir)
 		}
 		break;
 	}
+	dprintf("coords = %d,%d\n", mv->mx, mv->my);
 }
 
 static void
@@ -378,11 +424,8 @@ mapview_mousemotion(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	struct mapedit *med = mv->med;
-	int x = argv[1].i;
-	int y = argv[2].i;
-
-	x /= mv->map->tilew;
-	y /= mv->map->tileh;
+	int x = argv[1].i / mv->map->tilew;
+	int y = argv[2].i / mv->map->tileh;
 
 	/* Scroll */
 	if (mv->mouse.move) {
@@ -391,17 +434,14 @@ mapview_mousemotion(int argc, union evarg *argv)
 		    (mv->mouse.x > x) ? DIR_RIGHT :
 		    (mv->mouse.y < y) ? DIR_UP :
 		    (mv->mouse.y > y) ? DIR_DOWN : 0);
-	} else if (mv->flags & MAPVIEW_EDIT) {
-		if (med->curtool != NULL &&
-		    (x != mv->mouse.x || y != mv->mouse.y) &&
-		    SDL_GetMouseState(NULL, NULL) &
-		    SDL_BUTTON_LMASK &&
+	} else if (mv->flags & MAPVIEW_EDIT && med->curtool != NULL &&
+	    TOOL_OPS(med->curtool)->tool_effect != NULL) {
+		if ((x != mv->mouse.x || y != mv->mouse.y) &&
+		    (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK) &&
 		    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
-		    (mv->mx+x < mv->map->mapw) &&
-		    (mv->my+y < mv->map->maph) &&
-		    TOOL_OPS(med->curtool)->tool_effect != NULL) {
-			TOOL_OPS(med->curtool)->tool_effect(
-			    med->curtool, mv, mv->mx+x, mv->my+y);
+		    (mv->mx+x < mv->map->mapw && mv->my+y < mv->map->maph)) {
+			TOOL_OPS(med->curtool)->tool_effect(med->curtool,
+			    mv, mv->mx+x, mv->my+y);
 		}
 	}
 	if (mv->flags & MAPVIEW_TILEMAP) {
@@ -472,15 +512,21 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			struct node *n;
 			struct editobj *eo = NULL;
 
+			if (SDL_GetModState() & KMOD_CTRL) {
+				mv->constr.x = mv->mx+x;
+				mv->constr.y = mv->my+y;
+				return;
+			}
+
 			n = &mv->map->map[mv->my+y][mv->mx+x];
+
 			if (!TAILQ_EMPTY(&n->nrefs)) {
 				struct noderef *nref;
 					
 				nref = TAILQ_FIRST(&n->nrefs);
 				TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
-					if (eo->pobj == nref->pobj) {
+					if (eo->pobj == nref->pobj)
 						break;
-					}
 				}
 				if (eo != NULL) {
 					med->curobj = eo;
@@ -492,8 +538,6 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 					    med->ref.obj->name,
 					    med->ref.offs,
 					    med->ref.flags);
-				} else {
-					warning("unusable reference\n");
 				}
 			}
 		}

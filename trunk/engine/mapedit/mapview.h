@@ -1,32 +1,43 @@
-/*	$Csoft: mapview.h,v 1.12 2002/12/01 14:41:03 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.13 2002/12/31 01:46:35 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapedit;
 
 struct mapview {
-	struct	 widget wid;
+	struct widget	wid;
 
 	int	flags;
-#define MAPVIEW_CENTER		0x01	/* Center on cursor */
-#define MAPVIEW_EDIT		0x02	/* Mouse/keyboard edition */
-#define MAPVIEW_ZOOM		0x04	/* Allow zooming */
-#define MAPVIEW_TILEMAP		0x08	/* Tile map */
-#define MAPVIEW_GRID		0x10	/* Display a grid */
-#define MAPVIEW_PROPS		0x20	/* Display node properties */
+#define MAPVIEW_CENTER	0x01	/* Center on cursor */
+#define MAPVIEW_EDIT	0x02	/* Mouse/keyboard edition */
+#define MAPVIEW_ZOOM	0x04	/* Allow zooming */
+#define MAPVIEW_TILEMAP	0x08	/* Tile map */
+#define MAPVIEW_GRID	0x10	/* Display a grid */
+#define MAPVIEW_PROPS	0x20	/* Display node properties */
 
-	int	 prop_style;	/* Attribute background (or -1) */
+	int	 prop_bg;	/* Background of node attributes */
+	int	 prop_style;	/* Style of node attributes */
 
 	struct {		/* For scrolling */
-		int	move;
-		Sint16	x;
-		Sint16	y;
+		int	move;		/* Currently scrolling? */
+		int	x, y;		/* Current mouse position */
 	} mouse;
 
-	struct	map *map;
-	int	mx, my;		/* Map offset */
-	int	mw, mh;		/* Size in nodes */
+	struct {		/* For inserting tiles dynamically */
+		enum {
+			MAPVIEW_CONSTR_HORIZ,	/* Horizontally, grow */
+			MAPVIEW_CONSTR_VERT,	/* Vertically, grow */
+			MAPVIEW_CONSTR_FILL	/* Fill available nodes */
+		} mode;
+		int	x, y;		/* Current position */
+		int	nflags;		/* Noderef flags */
+	} constr;
 
-	struct	mapedit *med;	/* Back pointer to map editor */
+	struct map	*map;
+	int		mx, my;		/* Coordinates in map */
+	int		mw, mh;		/* Size in nodes */
+
+	struct mapedit	*med;		/* Back pointer to map editor */
+	struct window	*tmap_win;	/* Tile map window */
 };
 
 struct mapview	*mapview_new(struct region *, struct mapedit *, struct map *,

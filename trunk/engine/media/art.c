@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.13 2003/01/01 00:14:32 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.14 2003/01/01 05:18:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -203,6 +203,7 @@ art_fetch(char *archive, struct object *ob)
 		Asprintf(&mapname, "t-%s", archive);
 		map_init(art->tiles.map, MAP_2D, mapname, NULL);
 		free(mapname);
+
 		map_alloc_nodes(art->tiles.map, 1, 1);
 	}
 
@@ -246,7 +247,10 @@ art_destroy(struct art *art)
 	}
 	if (art->tiles.map != NULL) {
 		debug(DEBUG_GC, "freeing %s's tile map\n", art->name);
+#if 0
+		/* XXX tries to free inconsistent nodes? */
 		object_destroy(art->tiles.map);
+#endif
 	}
 			
 	debug(DEBUG_GC, "freed %s (%d sprites, %d anims)\n",
