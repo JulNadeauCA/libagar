@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.9 2004/01/22 09:58:45 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.10 2004/01/23 08:57:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -38,16 +38,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <compat/math.h>
 #include <limits.h>
-#include <math.h>
-
-#ifndef FLT_MAX
-#define FLT_MAX		3.40282347E+38F	/* (1-b**(-p))*b**emax */
-#endif
-
-#ifndef DBL_MAX
-#define DBL_MAX		1.7976931348623157E+308
-#endif
 
 static struct widget_ops fspinbutton_ops = {
 	{
