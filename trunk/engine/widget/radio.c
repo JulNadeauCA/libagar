@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.39 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.40 2004/01/22 09:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -153,8 +153,10 @@ radio_destroy(void *p)
 	struct radio *rad = p;
 	int i;
 
-	for (i = 0; i < rad->nitems; i++)
+	for (i = 0; i < rad->nitems; i++) {
 		SDL_FreeSurface(rad->labels[i]);
+	}
+	free(rad->labels);
 
 	widget_destroy(rad);
 }
