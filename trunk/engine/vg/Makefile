@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.1 2004/03/17 06:04:59 vedge Exp $
+#	$Csoft: Makefile,v 1.2 2004/03/30 16:05:11 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -8,7 +8,7 @@ LIB_SHARED=	Yes
 LIB_STATIC=	No
 
 SRCS=	vg.c vg_circle.c vg_line.c vg_math.c vg_point.c vg_primitive.c \
-	vg_text.c vg_vertex.c vgedit.c
+	vg_text.c vgedit.c
 
 #MAN3=	vg.3
 
