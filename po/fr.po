@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.5 2003/08/01 04:07:55 vedge Exp $
+# $Csoft: fr.po,v 1.6 2003/08/01 04:39:33 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-08-01 01:29-0300\n"
+"POT-Creation-Date: 2003-08-01 01:43-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <french@csoft.org>\n"
@@ -170,6 +170,7 @@ msgstr "Chemin d'accès polices: "
 msgid "Den path: "
 msgstr "Chemin d'accès den: "
 
+#. XXX propose some default resolutions.
 #: engine/config.c:264
 msgid "Width: "
 msgstr "Largeur: "
@@ -461,32 +462,33 @@ msgstr "Vue sur %s"
 msgid "There is no active selection."
 msgstr "Il n'y a aucune sélection sur la carte."
 
-#: engine/map.c:1453
+#: engine/map.c:1448
 #, c-format
 msgid "m%u (%ux%u nodes)\n"
 msgstr "m%u (%ux%u noeuds)\n"
 
-#: engine/map.c:1468
+#: engine/map.c:1463
 #, c-format
 msgid "a%u (%u frames)\n"
 msgstr "a%u (%u frames)\n"
 
-#: engine/map.c:1486
+#: engine/map.c:1481
 #, c-format
 msgid "%s graphics"
 msgstr "Graphiques de %s"
 
-#: engine/map.c:1511 engine/mapedit/tool/merge.c:251
+#: engine/map.c:1506 engine/mapedit/tool/merge.c:251
 #: engine/mapedit/tool/stamp.c:66
 msgid "Replace"
 msgstr "Remplacer"
 
-#: engine/map.c:1530
+#: engine/map.c:1525
 #, c-format
 msgid "%s map edition"
 msgstr "Édition de %s"
 
-#: engine/map.c:1593
+#. XXX combo
+#: engine/map.c:1588
 #, c-format
 msgid "  Layer #%d"
 msgstr "  Couche #%d"
