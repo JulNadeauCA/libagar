@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.h,v 1.10 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: rootmap.h,v 1.11 2004/02/25 18:12:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ROOTMAP_H_
@@ -23,8 +23,6 @@ void		  rootmap_focus(struct map *);
 void		  rootmap_center(struct map *, int, int);
 void		  rootmap_scroll(struct map *, int, int);
 __inline__ void	  rootmap_redraw(void);
-SDL_Rect	**rootmap_alloc_maprects(int, int);
-void		  rootmap_free_maprects(struct viewport *);
 __END_DECLS
 
 #include "close_code.h"
