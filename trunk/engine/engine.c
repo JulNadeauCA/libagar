@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.68 2002/10/30 17:18:04 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.69 2002/11/07 02:35:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -54,7 +54,6 @@
 #include "widget/widget.h"
 #include "widget/window.h"
 #include "widget/textbox.h"
-#include "widget/keycodes.h"
 
 #ifdef DEBUG
 int	engine_debug = 1;	/* Enable debugging */
@@ -256,17 +255,15 @@ engine_start(void)
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
-		/* Start with a default map. */
+		/* Start with a null map. */
 		m = emalloc(sizeof(struct map));
 		map_init(m, "base", NULL, 0);
-		pthread_mutex_lock(&world->lock);
 		world_attach(world, m);
-		pthread_mutex_unlock(&world->lock);
 		if (object_load(m) != 0) {
 			fatal("cannot load base.m\n");
 		}
 		rootmap_focus(m);
-		return (0);
+		return (ENGINE_START_GAME);
 	case GFX_ENGINE_GUI:
 		break;
 	}
@@ -274,14 +271,9 @@ engine_start(void)
 	if (mapediting) {
 		medit = emalloc(sizeof(struct mapedit));
 		mapedit_init(medit, "mapedit0");
-
-		/* Start map edition. */
-		pthread_mutex_lock(&world->lock);
 		world_attach(world, medit);
-		pthread_mutex_unlock(&world->lock);
 	}
-
-	return (1);
+	return (ENGINE_START_MAP_EDITION);
 }
 
 /* Caller must not hold world->lock. */
@@ -304,7 +296,7 @@ engine_stop(void)
 void
 engine_destroy(void)
 {
-	/* Unlink game objects. */
+	/* Destroy game objects. */
 	world_destroy(world);
 	
 	/* Force garbage collection of media. */
@@ -313,9 +305,6 @@ engine_destroy(void)
 
 	/* Destroy the font engine. */
 	text_engine_destroy();
-
-	/* Free glyph cache. */
-	keycodes_freeglyphs();
 
 	/* Shut down the input devices. */
 	input_destroy_all();
