@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.15 2002/02/17 08:02:05 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.16 2002/02/17 08:27:59 vedge Exp $	*/
 
 struct obvec {
 	int	(*destroy)(void *);
@@ -13,6 +13,7 @@ struct object {
 	char	*name;		/* Name string (key) */
 	char	*desc;		/* Optional description */
 	int	 id;		/* Unique identifier at runtime */
+	char	 saveext[4];	/* File extension for state saves */
 	struct	 obvec *vec;
 
 	int	 flags;

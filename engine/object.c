@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.20 2002/02/17 23:16:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.21 2002/02/18 07:49:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -110,6 +110,7 @@ object_init(struct object *ob, char *name, int flags, struct obvec *vec)
 	ob->name = name;
 	ob->desc = NULL;
 	ob->id = curid++;
+	sprintf(ob->saveext, "ag");
 	ob->flags = flags;
 	ob->vec = vec;
 
@@ -205,14 +206,20 @@ int
 object_load(void *p)
 {
 	struct object *ob = (struct object *)p;
+	char *path;
 	int fd, rv;
 
 	if (ob->vec->load == NULL) {
+		return (0);
+	}
+
+	path = savepath(ob->name, ob->saveext);
+	if (path == NULL) {
 		return (-1);
 	}
 
 	/* XXX mmap? */
-	fd = open(savepath(ob->name, "ag"), O_RDONLY, 00600);
+	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
 		perror(ob->name);
 		return (-1);
@@ -226,23 +233,24 @@ int
 object_save(void *p)
 {
 	struct object *ob = (struct object *)p;
+	char path[FILENAME_MAX];
+	int fd;
 
-	if (ob->vec->save != NULL) {
-		char path[FILENAME_MAX];
-		int fd;
-
-		sprintf(path, "%s/%s.ag", world->udatadir, ob->name);
-		fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
-		if (fd < 0) {
-			perror(path);
-			return (-1);
-		}
-		if (ob->vec->save(ob, fd) != 0) {
-			close(fd);
-			return (-1);
-		}
-		close(fd);
+	if (ob->vec->save == NULL) {
+		return (0);
 	}
+
+	sprintf(path, "%s/%s.%s", world->udatadir, ob->name, ob->saveext);
+	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
+	if (fd < 0) {
+		perror(path);
+		return (-1);
+	}
+	if (ob->vec->save(ob, fd) != 0) {
+		close(fd);
+		return (-1);
+	}
+	close(fd);
 	return (0);
 }
 
