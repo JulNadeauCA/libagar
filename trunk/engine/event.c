@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.129 2003/01/17 02:42:47 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.130 2003/01/19 12:11:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -178,7 +178,7 @@ event_init_fps_counter(void)
 	struct region *reg;
 
 	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
-	    133, 104, 125, 91);
+	    248, 166, 125, 91);
 	window_set_caption(fps_win, "Refresh rate");
 	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 80, 100);
 	{
