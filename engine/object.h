@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.94 2003/09/14 02:29:52 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.95 2003/09/17 05:31:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -125,9 +125,14 @@ __BEGIN_DECLS
 struct object	*object_new(void *, const char *);
 void		 object_init(void *, const char *, const char *, const void *);
 void		 object_free_data(void *);
-int		 object_copy_name(const void *, char *, size_t);
-int		 object_copy_dirname(const void *, char *, size_t);
-int		 object_copy_filename(const void *, char *, size_t);
+
+int	 object_copy_name(const void *, char *, size_t)
+	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+int	 object_copy_dirname(const void *, char *, size_t)
+	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+int	 object_copy_filename(const void *, char *, size_t)
+	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+
 void		*object_find(const char *);
 __inline__ void	*object_root(void *);
 __inline__ int	 object_used(void *);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.71 2003/07/03 07:24:41 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.72 2003/07/08 00:13:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -58,7 +58,8 @@ struct window {
 #define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
 
 __BEGIN_DECLS
-struct window	*window_new(const char *, ...);
+struct window	*window_new(const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 1, 2);
 
 void	 window_init(void *, const char *);
 int	 window_load(void *, struct netbuf *);
@@ -67,7 +68,9 @@ void	 window_destroy(void *);
 void	 window_draw(void *);
 void	 window_scale(void *, int, int);
 
-void	 window_set_caption(struct window *, const char *, ...);
+void	 window_set_caption(struct window *, const char *, ...)
+	     FORMAT_ATTRIBUTE(printf, 2, 3)
+	     NONNULL_ATTRIBUTE(2);
 void	 window_set_spacing(struct window *, int);
 void	 window_set_padding(struct window *, int);
 void	 window_set_position(struct window *, enum window_alignment, int);

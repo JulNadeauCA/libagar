@@ -1,4 +1,4 @@
-/*	$Csoft: transform.h,v 1.10 2003/08/29 05:06:48 vedge Exp $	*/
+/*	$Csoft: transform.h,v 1.11 2003/09/04 03:15:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TRANSFORM_H_
@@ -37,7 +37,8 @@ void		  transform_save(struct netbuf *, const struct transform *);
 void		  transform_destroy(struct transform *);
 __inline__ int	  transform_compare(const struct transform *,
 		                    const struct transform *);
-void		  transform_print(const struct transformq *, char *, size_t);
+void		  transform_print(const struct transformq *, char *, size_t)
+		      BOUNDED_ATTRIBUTE(__string__, 2, 3);
 __END_DECLS
 
 #include "close_code.h"

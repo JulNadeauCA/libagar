@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.1 2003/06/10 19:12:34 vedge Exp $	*/
+/*	$Csoft: combo.h,v 1.2 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
@@ -24,7 +24,9 @@ struct combo {
 };
 
 __BEGIN_DECLS
-struct combo	*combo_new(void *, const char *, ...);
+struct combo	*combo_new(void *, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 2, 3)
+		     NONNULL_ATTRIBUTE(2);
 
 void	 combo_init(struct combo *, const char *);
 void	 combo_scale(void *, int, int);

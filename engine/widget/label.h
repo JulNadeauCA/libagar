@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.21 2003/06/13 01:44:55 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.22 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -35,14 +35,19 @@ struct label {
 };
 
 __BEGIN_DECLS
-struct label	*label_new(void *, const char *, ...);
-struct label	*label_polled_new(void *, pthread_mutex_t *, const char *, ...);
+struct label	*label_new(void *, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 2, 3)
+		     NONNULL_ATTRIBUTE(2);
+struct label	*label_polled_new(void *, pthread_mutex_t *, const char *, ...)
+		     NONNULL_ATTRIBUTE(3);
 
 void	 label_init(struct label *, enum label_type, const char *);
 void 	 label_destroy(void *);
 void	 label_draw(void *);
 void	 label_scale(void *, int, int);
-void	 label_printf(struct label *, const char *, ...);
+void	 label_printf(struct label *, const char *, ...)
+	     FORMAT_ATTRIBUTE(printf, 2, 3)
+	     NONNULL_ATTRIBUTE(2);
 void	 label_set_surface(struct label *, SDL_Surface *);
 void	 label_prescale(struct label *, const char *);
 __END_DECLS

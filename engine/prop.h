@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.22 2003/07/04 12:31:48 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.23 2003/08/31 11:58:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -76,7 +76,9 @@ struct prop	*prop_set_sint32(void *, const char *, Sint32);
 struct prop	*prop_set_float(void *, const char *, float);
 struct prop	*prop_set_double(void *, const char *, double);
 #endif
-struct prop	*prop_set_string(void *, const char *, const char *, ...);
+struct prop	*prop_set_string(void *, const char *, const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 3, 4)
+		     NONNULL_ATTRIBUTE(3);
 struct prop	*prop_set_pointer(void *, const char *, void *);
 
 struct prop	*prop_get(void *, const char *, enum prop_type, void *);
@@ -94,10 +96,12 @@ float		 prop_get_float(void *, const char *);
 double		 prop_get_double(void *, const char *);
 #endif
 char		*prop_get_string(void *, const char *);
-size_t		 prop_copy_string(void *, const char *, char *, size_t);
+size_t		 prop_copy_string(void *, const char *, char *, size_t)
+		     BOUNDED_ATTRIBUTE(__string__, 3, 4);
 void		*prop_get_pointer(void *, const char *);
 
-void		 prop_print_value(char *, size_t, struct prop *);
+void		 prop_print_value(char *, size_t, struct prop *)
+		     BOUNDED_ATTRIBUTE(__string__, 1, 2);
 __END_DECLS
 
 #include "close_code.h"
