@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.61 2002/08/24 03:06:15 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.62 2002/08/28 04:50:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -215,6 +215,76 @@ view_surface(int flags, int w, int h)
 		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 	}
 	return (s);
+}
+
+/*
+ * Allocate a new surface containing a bitmap of ss scaled to wxh.
+ * The source surface must not be locked by the caller thread.
+ */
+SDL_Surface *
+view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
+{
+	SDL_Surface *ds;
+	Uint32 col =0;
+	Uint8 *src, *dst, r1, g1, b1, a1;
+	int x, y;
+
+	ds = view_surface(SDL_HWSURFACE, w, h);
+
+	if (SDL_MUSTLOCK(ss))
+		SDL_LockSurface(ss);
+	if (SDL_MUSTLOCK(ds))
+		SDL_LockSurface(ds);
+
+	for (y = 0; y < ds->h; y++) {
+		for (x = 0; x < ds->w; x++) {
+			src = (Uint8 *)ss->pixels +
+			    (y * ss->h / ds->h) * ss->pitch +
+			    (x * ss->w / ds->w) * ss->format->BytesPerPixel;
+			dst = (Uint8 *)ds->pixels +
+			    y * ds->pitch +
+			    x * ds->format->BytesPerPixel;
+
+			switch (ss->format->BytesPerPixel) {
+			case 1:
+				SDL_GetRGBA(*src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			case 2:
+				SDL_GetRGBA(*(Uint16 *)src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			case 3:
+				SDL_GetRGBA(*(Uint16 *)src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			case 4:
+				SDL_GetRGBA(*(Uint32 *)src, ss->format,
+				    &r1, &g1, &b1, &a1);
+				break;
+			}
+
+			/* Transparency hack for text surfaces. */
+			if (r1 == 15 && g1 == 15 && b1 == 15) {
+				a1 = 0;
+			}
+
+			col = SDL_MapRGBA(ds->format, r1, g1, b1, a1);
+			switch (ds->format->BytesPerPixel) {
+				_VIEW_PUTPIXEL_8(dst, col)
+				_VIEW_PUTPIXEL_16(dst, col)
+				_VIEW_PUTPIXEL_24(dst, col)
+				_VIEW_PUTPIXEL_32(dst, col)
+			}
+		}
+	}
+
+	if (SDL_MUSTLOCK(ds))
+		SDL_UnlockSurface(ds);
+	if (SDL_MUSTLOCK(ss))
+		SDL_UnlockSurface(ss);
+
+	return (ds);
 }
 
 /*
