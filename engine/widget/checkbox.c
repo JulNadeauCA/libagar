@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.14 2002/06/09 10:06:12 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.15 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -49,18 +49,19 @@ static struct widget_ops checkbox_ops = {
 		NULL,		/* load */
 		NULL		/* save */
 	},
-	checkbox_draw
+	checkbox_draw,
+	NULL		/* animate */
 };
 
 static void	checkbox_event(int, union evarg *);
 
 struct checkbox *
-checkbox_new(struct region *reg, char *caption, int flags)
+checkbox_new(struct region *reg, char *caption, int rh, int flags)
 {
 	struct checkbox *cb;
 
 	cb = emalloc(sizeof(struct checkbox));
-	checkbox_init(cb, caption, flags);
+	checkbox_init(cb, caption, rh, flags);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, cb);
@@ -70,7 +71,7 @@ checkbox_new(struct region *reg, char *caption, int flags)
 }
 
 void
-checkbox_init(struct checkbox *cbox, char *caption, int flags)
+checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 {
 	static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 	SDL_Surface *s;
@@ -83,8 +84,9 @@ checkbox_init(struct checkbox *cbox, char *caption, int flags)
 	cbox->cbox_w = 16;	/* XXX */
 	cbox->xspacing = 6;
 
-	widget_init(&cbox->wid, "checkbox", "widget", &checkbox_ops,
-	    cbox->cbox_w + cbox->xspacing + s->w, s->h);
+	widget_init(&cbox->wid, "checkbox", "widget", &checkbox_ops, -1,
+	    rh < 0 ? s->h : rh);
+	WIDGET(cbox)->w = cbox->cbox_w + cbox->xspacing + s->w;
 	cbox->caption = strdup(caption);
 	cbox->flags = flags;
 	cbox->justify = CHECKBOX_LEFT;
