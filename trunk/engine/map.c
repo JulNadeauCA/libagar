@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.216 2004/03/19 08:00:42 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.217 2004/03/20 08:21:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	6, 0
+	6, 1
 };
 
 const struct object_ops map_ops = {
@@ -1326,7 +1326,7 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 		return;
 	}
 
-	if (m->zoom != 100) {
+	if (m->zoom != 100 && ((r->flags & NODEREF_NOSCALE) == 0)) {
 		draw_scaled(m, su,
 		    (rx + r->r_gfx.xcenter*m->zoom/100 +
 		     r->r_gfx.xmotion*m->zoom/100),
