@@ -1,4 +1,4 @@
-/*	$Csoft: notebook.c,v 1.1 2005/03/08 08:39:51 vedge Exp $	*/
+/*	$Csoft: notebook.c,v 1.2 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -154,7 +154,7 @@ notebook_scale(void *p, int w, int h)
 	pthread_mutex_lock(&nb->lock);
 	if (w == -1 || h == -1) {
 		nb->bar_h = text_font_height + SPACING*2;
-		nb->bar_w = 0;
+		nb->bar_w = SPACING*2;
 		nb->cont_w = 0;
 		nb->cont_h = 0;
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
