@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: mapview.c,v 1.1 2002/06/22 20:44:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 #include <engine/widget/window.h>
 
 #include "mapview.h"
+#include "edcursor.h"
 
 static const struct widget_ops mapview_ops = {
 	{
@@ -52,7 +53,7 @@ static const struct widget_ops mapview_ops = {
 		NULL		/* save */
 	},
 	mapview_draw,
-	mapview_animate
+	NULL		/* animate */
 };
 
 static void	mapview_event(int, union evarg *);
@@ -60,13 +61,14 @@ static void	mapview_scaled(int, union evarg *);
 static void	mapview_scroll(struct mapview *, int);
 
 struct mapview *
-mapview_new(struct region *reg, struct map *m, int flags, int rw, int rh)
+mapview_new(struct region *reg, struct mapedit *med, struct map *m,
+    int flags, int rw, int rh)
 {
 	struct mapview *mv;
 
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, m, flags, rw, rh);
-
+	mapview_init(mv, med, m, flags, rw, rh);
+	
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, mv);
 	pthread_mutex_unlock(&reg->win->lock);
@@ -75,16 +77,19 @@ mapview_new(struct region *reg, struct map *m, int flags, int rw, int rh)
 }
 
 void
-mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
+mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
+    int flags, int rw, int rh)
 {
 	widget_init(&mv->wid, "mapview", "widget", &mapview_ops, rw, rh);
 
 	mv->flags = flags;
+	mv->med = med;
 	mv->map = m;
 	mv->mx = m->defx;
 	mv->my = m->defy;
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
+	mv->cursor = edcursor_new(0, mv, m);
 
 	event_new(mv, "window-mousebuttonup", 0,
 	    mapview_event, "%i", WINDOW_MOUSEBUTTONUP);
@@ -110,67 +115,17 @@ mapview_destroy(void *p)
 	/* ... */
 }
 
-/* Map must be locked. XXX special case in event loop. */
-void
-mapview_draw(void *p)
-{
-	struct mapview *mv = p;
-	struct map *m = mv->map;
-	struct node *node;
-	struct noderef *nref;
-	int mx, my, vx, vy, rx, ry;
-	Uint32 nsprites;
-
-	OBJECT_ASSERT(mv, "widget");
-
-	for (my = mv->my, vy = 0;
-	     vy < mv->mh && my < m->maph;
-	     my++, vy++) {
-
-		ry = vy << m->shtiley;
-
-		for (mx = mv->mx, vx = 0;
-	     	     vx < mv->mw && mx < m->mapw;
-		     mx++, vx++) {
-
-			rx = vx << m->shtilex;
-
-			node = &m->map[my][mx];
-
-			if (node->nanims > 0 || ((node->flags & NODE_ANIM) ||
-			    node->overlap > 0)) {
-				/* mapview_animate() shall handle this. */
-				continue;
-			}
-			
-			nsprites = 0;
-			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-				if (nref->flags & MAPREF_SPRITE) {
-					WIDGET_DRAW(mv,
-					    SPRITE(nref->pobj, nref->offs),
-					    rx, ry);
-					nsprites++;
-				}
-			}
-
-			if (nsprites > 0) {
-			/*	MAPEDIT_POSTDRAW(m, node, vx, vy); */
-			}
-		}
-	}
-}
-
 /*
  * Render an animated node.
  * Map must be locked.
  */
 static __inline__ void
-mapview_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
+mapview_rendernode(struct mapview *mv, struct node *node, Uint32 rx, Uint32 ry)
 {
-	SDL_Rect rd;
 	SDL_Surface *src;
 	struct noderef *nref;
 	struct anim *anim;
+	struct map *m = mv->map;
 	int i, j, frame;
 	Uint32 t;
 
@@ -205,106 +160,59 @@ mapview_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 
 		for (i = 0, j = anim->nparts - 1; i < anim->nparts; i++, j--) {
 			src = anim->frames[j][frame];
-#ifdef DEBUG
-			if (src->w < 0 || src->w > 4096 ||
-			    src->h < 0 || src->h > 4096) {
-				fatal("bad frame: j=%d i=%d [%d]\n", j, i,
-				    frame);
-			}
-#endif
-			rd.w = src->w;
-			rd.h = src->h;
-			rd.x = rx + nref->xoffs;
-			rd.y = ry + nref->yoffs - (i * TILEH);
-			/* XXX blit */
-			SDL_BlitSurface(src, NULL, view->v, &rd);
+			WIDGET_DRAW(mv, src,
+			    rx + nref->xoffs,
+			    ry + nref->yoffs - (i * TILEH));
 		}
 	}
 }
 
-/* Update animations. */
 void
-mapview_animate(void *p)
+mapview_draw(void *p)
 {
 	struct mapview *mv = p;
 	struct map *m = mv->map;
-	struct node *node, *nnode;
-	int mx, my, vx, vy, rx, ry, ox, oy;
+	struct node *node;
+	struct noderef *nref;
+	int mx, my, vx, vy, rx, ry;
+	Uint32 nsprites;
 
 	OBJECT_ASSERT(mv, "widget");
 
-	pthread_mutex_lock(&m->lock);
 	for (my = mv->my, vy = 0;
 	     vy < mv->mh && my < m->maph;
 	     my++, vy++) {
 
-		ry = WIDGET(mv)->win->y + (vy << m->shtiley);
+		ry = vy << m->shtiley;
 
 		for (mx = mv->mx, vx = 0;
 	     	     vx < mv->mw && mx < m->mapw;
 		     mx++, vx++) {
 
-			rx = WIDGET(mv)->win->x + (vx << m->shtilex);
+			rx = vx << m->shtilex;
 
 			node = &m->map[my][mx];
 
-#if 0
+			if (node->nanims > 0 || ((node->flags & NODE_ANIM))) {
+				mapview_rendernode(mv, node, rx, ry);
+				continue;
+			}
+			
+			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref->flags & MAPREF_SPRITE) {
 					WIDGET_DRAW(mv,
 					    SPRITE(nref->pobj, nref->offs),
 					    rx, ry);
+					nsprites++;
 				}
 			}
-#endif
-			
-			if (node->flags & NODE_ANIM) {
-				/*
-				 * ooo
-				 * ooo
-				 * oSo
-				 * ooo
-				 */
-				for (oy = -2; oy < 2; oy++) {
-					for (ox = -1; ox < 2; ox++) {
-						if (ox == 0 && oy == 0) {
-							/* Origin */
-							continue;
-						}
-						nnode = &m->map[my+oy][mx+ox];
-						
-						/* XXX bounds, see map */
-						if (nnode->overlap > 0) {
-#if 0
-							MAPEDIT_PREDRAW(m,
-							    nnode,
-							    vx+ox, vy+oy);
-#endif
-							mapview_rendernode(m,
-							    nnode,
-							    rx + (TILEW*ox),
-							    ry + (TILEH*oy));
-#if 0
-							MAPEDIT_POSTDRAW(m,
-							    nnode,
-							    vx+ox, vy+oy);
-							view->rects[ri++] =
-							    view->maprects
-							    [vy+oy][vx+ox];
-#endif
-						}
-					}
-				}
-				mapview_rendernode(m, node, rx, ry);
-			} else if (node->nanims > 0) {
-//				MAPEDIT_PREDRAW(m, node, vx, vy);
-				mapview_rendernode(m, node, rx, ry);
-//				MAPEDIT_POSTDRAW(m, node, vx, vy);
-//				view->rects[ri++] = view->maprects[vy][vx];
+
+			if (nsprites > 0) {
+			/*	MAPEDIT_POSTDRAW(m, node, vx, vy); */
 			}
 		}
 	}
-	pthread_mutex_unlock(&m->lock);
 }
 
 static void
@@ -340,7 +248,6 @@ mapview_event(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	struct map *m = mv->map;
 	int type = argv[1].i;
-	int keysym, keymod;
 	int button, x, y;
 
 	OBJECT_ASSERT(mv, "widget");
@@ -377,42 +284,12 @@ mapview_event(int argc, union evarg *argv)
 		}
 		break;
 	case WINDOW_KEYDOWN:
-		keysym = argv[2].i;
-		keymod = argv[3].i;
-		
-		mapview_scroll(mv,
-		    (keysym == SDLK_LEFT) ? DIR_LEFT :
-		    (keysym == SDLK_RIGHT) ? DIR_RIGHT :
-		    (keysym == SDLK_UP) ? DIR_UP :
-		    (keysym == SDLK_DOWN) ? DIR_DOWN : 0);
-
-		switch ((SDLKey)keysym) {
-		case SDLK_LEFT:
-			if (--mv->mx <= 0) {
-				mv->mx = 0;
-			}
-			break;
-		case SDLK_UP:
-			if (--mv->my <= 0) {
-				mv->my = 0;
-			}
-			break;
-		case SDLK_RIGHT:
-			if (++mv->mx >= (m->mapw - mv->mw)) {
-				mv->mx--;
-			}
-			break;
-		case SDLK_DOWN:
-			if (++mv->my >= (m->maph - mv->mh)) {
-				mv->my--;
-			}
-			break;
-		default:
-			break;
-		}
-		dprintf("move to %d,%d\n", mv->mx, mv->my);
+		event_post(mv->cursor, "window-keydown",
+		    "%i, %i", argv[2].i, argv[3].i);
 		break;
 	case WINDOW_KEYUP:
+		event_post(mv->cursor, "window-keyup",
+		    "%i, %i", argv[2].i, argv[3].i);
 		break;
 	}
 }
@@ -424,18 +301,40 @@ mapview_scaled(int argc, union evarg *argv)
 	int maxw = argv[1].i, maxh = argv[2].i;
 	int w, h;
 
-	for (w = 0; w < WIDGET(mv)->w - 1 && w < maxw; w += TILEW) ;;
-	for (h = 0; h < WIDGET(mv)->h - 1 && h < maxh; h += TILEH) ;;
+	for (w = 0; w < WIDGET(mv)->w-1 && w < maxw; w += TILEW) ;;
+	for (h = 0; h < WIDGET(mv)->h-1 && h < maxh; h += TILEH) ;;
 	
 	WIDGET(mv)->w = w;
 	WIDGET(mv)->h = h;
-	mv->mw = w / TILEW;
-	mv->mh = h / TILEH;
+	mv->mw = w/TILEW - 1;
+	mv->mh = h/TILEH - 1;
 
 	if (w == 0 || h == 0) {
 		dprintf("%s: scaled to zero\n", OBJECT(mv)->name);
 	}
 
 	dprintf("scaled to %dx%d\n", w, h);
+}
+
+void
+mapview_center(struct mapview *mv, Uint32 x, Uint32 y)
+{
+	struct map *m = mv->map;
+	Uint32 nx, ny;
+
+	nx = x - (mv->mw / 2);
+	ny = y - (mv->mh / 2);
+	
+	if (nx <= 0)
+		nx = 0;
+	if (ny <= 0)
+		ny = 0;
+	if (nx >= m->mapw-mv->mw)
+		nx = m->mapw - mv->mw;
+	if (ny >= m->maph-mv->mh)
+		ny = m->maph - mv->mh;
+
+	mv->mx = nx;
+	mv->my = ny;
 }
 
