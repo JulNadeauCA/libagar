@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.34 2003/07/08 00:34:52 vedge Exp $
+.\"	$Csoft: agar.3,v 1.35 2003/09/06 03:26:30 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -43,133 +43,13 @@ is a high-level, cross-platform C application framework aimed primarly at
 .Nm
 games/simulations are built around a tree of
 .Xr object 3
-structures.
-.Pp
-Generic
-.Xr object 3
-operations like
-.Fn object_load ,
-.Fn object_save ,
-and
-.Fn object_destroy
-when applied to the parent also effect the child objects, recursively.
-It is possible to dynamically load and free custom data (like
-.Xr map 3
-nodes), but the contents of the
-.Ft object
-structure remain resident.
-An object tree might look like:
-.Bd -literal
-world --- village -*- house1  *- armor
-                   |          |
-                   *- jephre -*- sword
-                              |
-                              *- potion
-.Ed
-.Pp
-In this example, calling
-.Fn object_save
-on
-.Pa /world/village
-would also save
-.Pa /world/village/house1 ,
-.Pa /world/village/jephre ,
-.Pa /world/village/jephre/armor ,
-and so on.
-When
-.Fn object_load
-is next invoked on
-.Sq /world/village ,
-the existing objects will be reinitialized/loaded, and saved objects without
-match are allocated and initialized from scratch.
-.Pp
-In this example, the character,
-.Pa /world/village/jephre ,
-might have been initialized by the character editor and attached to the
-.Pa /world/village
-map by a level designer, in order to assign a default position and default
-character status and items.
-Fully loading and saving the state of a game may be accomplished by calling
-.Fn object_load
-and
-.Fn object_save
-on the
-.Pa /world
-object.
-.Sh GENERIC ERROR HANDLING
-.nr nS 1
-.Ft void
-.Fn error_set "const char *fmt" "..."
-.Pp
-.Ft char *
-.Fn error_get "void"
-.Pp
-.Ft void
-.Fn error_fatal "const char *fmt" "..."
-.nr nS 0
-.Pp
-The
-.Fn error_set
-function sets the error message string, using a
-.Xr printf 3
-style format string as
-.Fa fmt .
-.Fn error_get
-returns a pointer to the current error message string.
-.Pp
-If multi-threading was enabled at compile time, the error message string is
-accessed using a thread-specific key.
-.Pp
-The
-.Fn error_fatal
-function prints an error message and terminates the application
-(using
-.Xr abort 3
-if debugging is enabled).
-.Sh THREAD SAFETY
-The following subsystems do not provide thread safety:
-.Pp
-.Bl -tag -width "mapedit(3) " -compact
-.It Xr mapedit 3
-Level edition
-.El
-.Pp
-The other
-.Nm
-subsystems provide thread-safe interfaces, using the following locking
-primitives:
-.Pp
-.Bl -bullet -compact
-.It
-Simple mutexes
-.It
-Recursive mutexes
-.It
-Read-write locks
-.El
-.Pp
-In structure definitions for thread-safe interfaces, all members of a
-structure that follow a lock are protected by it, unless mentioned otherwise.
-Members that do not follow a lock are read-only once the structure is
-attached (not once the structure is initialized, since derivate structures
-may need to initialize additional data before attach).
-.Bd -literal
-struct foo {
-	char	*name;		/* RO once attached */
-	int	 type;		/* RO once attached */
-
-	pthread_mutex_t	 pos_lock;
-	struct map	*map;	/* RW (pos_lock) */
-	int		 x, y;	/* RW (pos_lock) */
-};
-.Ed
-.Pp
-If multi-threading support was enabled at compile time,
-.Pa Aq engine/engine.h
-defines error-checking wrappers around
-.Fn pthread_*
-calls (or no-ops with threads disabled).
-.Sh FILES
+structures whose state is persistent.
+For instance, the initial hierarchy of objects of a game is initially built by
+level designers and the state is saved to files which are distributed with
+the game binary (which is essentially an interpreter).
+As the game progresses, the player modifies the objects and they are saved
+to disk.
+.Sh INCLUDE FILES
 The
 .Pa Aq engine/compat/*.h
 and
