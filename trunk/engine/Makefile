@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.35 2002/08/23 10:17:06 vedge Exp $
+#	$Csoft: Makefile,v 1.36 2002/08/24 04:04:35 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -27,7 +27,7 @@ OBJS+=	mapedit/mapedit.o
 OBJS+=	compat/setenv.o \
 	compat/strlcat.o \
 	compat/strlcpy.o \
-	compat/strsep.c \
+	compat/strsep.o \
 	compat/vasprintf.o
 
 include ${TOP}/mk/csoft.lib.mk
