@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.19 2005/03/11 08:59:34 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.20 2005/03/24 04:00:56 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -20,6 +20,7 @@
 enum tileview_ctrl_type {
 	TILEVIEW_POINT,			/* Point (x,y) */
 	TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
+	TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
 	TILEVIEW_CIRCLE			/* Circle (x,y,r) */
 };
 
