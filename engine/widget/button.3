@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.17 2003/03/20 01:19:39 vedge Exp $
+.\"	$Csoft: button.3,v 1.18 2003/06/06 03:18:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -70,6 +70,9 @@ an image.
 .Pp
 .Ft void
 .Fn button_set_label "struct button *button" "SDL_Surface *su"
+.Pp
+.Ft void
+.Fn button_printf "struct button *button" "const char *fmt" "..."
 .nr nS 0
 .Pp
 The
@@ -126,7 +129,9 @@ enum button_justify {
 .Pp
 The
 .Fn button_set_label
-function uses the given surface for the label.
+and
+.Fn button_printf
+functions are used to modify the button label.
 .Sh EVENTS
 The
 .Nm

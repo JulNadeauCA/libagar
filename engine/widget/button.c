@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.75 2003/07/08 00:34:58 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.76 2003/10/13 23:49:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,10 +29,13 @@
 #include <engine/engine.h>
 #include <engine/view.h>
 
+#include <stdarg.h>
+
 #include "button.h"
 
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/label.h>
 
 const struct widget_ops button_ops = {
 	{
@@ -330,5 +333,21 @@ button_set_label(struct button *bu, SDL_Surface *su)
 	if (su != NULL) {
 		bu->label = view_copy_surface(su);
 	}
+}
+
+void
+button_printf(struct button *bu, const char *fmt, ...)
+{
+	char buf[LABEL_MAX];
+	va_list args;
+
+	va_start(args, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+	if (bu->label != NULL) {
+		SDL_FreeSurface(bu->label);
+	}
+	bu->label = text_render(NULL, -1, WIDGET_COLOR(bu, TEXT_COLOR), buf);
 }
 
