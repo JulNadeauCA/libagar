@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.49 2003/11/17 15:07:23 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.50 2004/01/03 04:25:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -61,7 +61,7 @@ monitor_init(struct monitor *mon, const char *name)
 		char		*name;
 		struct window	*(*window_func)(void);
 	} tool_ents[] = {
-		{ N_("Refresh rate"), fps_window },
+		{ N_("Refresh rate"), event_fps_window },
 #if defined(THREADS) && defined(HAVE_JPEG)
 		{ N_("Screenshot"), screenshot_window },
 #endif
