@@ -1188,12 +1188,6 @@ else
 
 	echo "no"
 fi
-if [ "${HAVE_LIBQNET}" = "yes" ]; then
-NONE=1
-else
-echo "The libqnet test application failed to compile."
-exit 1
-fi
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
@@ -1785,12 +1779,6 @@ else
 	echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
 
 	echo "no"
-fi
-if [ "${HAVE_LIBQNET}" = "yes" ]; then
-NONE=1
-else
-echo "The libqnet test application failed to compile."
-exit 1
 fi
 else
 echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
