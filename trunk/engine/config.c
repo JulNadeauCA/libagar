@@ -42,6 +42,7 @@
 #include <engine/widget/label.h>
 #include <engine/widget/button.h>
 #include <engine/widget/checkbox.h>
+#include <engine/widget/textbox.h>
 
 static void	close_button_push(struct button *);
 static void	fullscrn_cbox_push(struct checkbox *);
@@ -57,7 +58,7 @@ fullscrn_cbox_push(struct checkbox *b)
 {
 	pthread_mutex_lock(&world->lock);
 	view_fullscreen(world->curmap->view,
-	    (world->curmap->flags & SDL_FULLSCREEN) ? 0 : 1);
+	    (world->curmap->view->flags & SDL_FULLSCREEN) ? 0 : 1);
 	pthread_mutex_unlock(&world->lock);
 }
 
@@ -72,30 +73,41 @@ engine_config(void)
 {
 	char sharetxt[2048];
 	struct window *win;
-	struct checkbox *fullscr_cbox;
+	struct region *cboxes_reg, *labels_reg, *tboxes_reg, *buttons_reg;
 	struct button *close_button, *color_button;
 	struct label *sharedir_label;
-	struct region *body_reg, *buttons_reg;
+	struct checkbox *fullscr_cbox;
+	struct textbox *udatadir_tbox, *sysdatadir_tbox;
 
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
-	    64, 64, 512, 256);
-	body_reg = region_new(win, REGION_VALIGN|REGION_LEFT,
-	    0,  0, 100, 80);
+	    20, 20,  60, 60);
+
+	cboxes_reg = region_new(win, REGION_VALIGN|REGION_LEFT,
+	    0,   0, 100, 40);
+	labels_reg = region_new(win, REGION_VALIGN|REGION_RIGHT,
+	    0,  40,  50, 40);
+	tboxes_reg = region_new(win, REGION_VALIGN|REGION_RIGHT,
+	    50, 40,  50, 40);
 	buttons_reg = region_new(win, REGION_HALIGN|REGION_CENTER,
-	    0, 80, 100, 20);
+	    0,  80, 100, 20);
 
 	sprintf(sharetxt, "Engine: %d objects, showing \"%s\".", world->nobjs,
 	   OBJECT(world->curmap)->name);
-	sharedir_label = label_new(body_reg, sharetxt, 0);
+	sharedir_label = label_new(cboxes_reg, sharetxt, 0);
 
-	fullscr_cbox = checkbox_new(body_reg, "Full-screen mode", 0);
+	fullscr_cbox = checkbox_new(cboxes_reg, "Full-screen mode", 0);
 	fullscr_cbox->push = fullscrn_cbox_push;
 
-	color_button = button_new(buttons_reg, "Colors", 0, 20, 100);
+	udatadir_tbox = textbox_new(tboxes_reg, "User datadir", 0, 100);
+	sysdatadir_tbox = textbox_new(tboxes_reg, "System datadir", 0, 100);
+
+	color_button = button_new(buttons_reg, "Colors", 0, 50, 100);
 	color_button->push = color_button_push;
 	
-	close_button = button_new(buttons_reg, "Close", 0, 20, 100);
+	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
 	close_button->push = close_button_push;
+
+	win->focus = WIDGET(udatadir_tbox);
 }
 
