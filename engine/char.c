@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.42 2002/04/28 11:05:52 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.43 2002/04/28 14:21:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -61,6 +61,8 @@ static const struct obvec char_vec = {
 	char_link,
 	char_unlink
 };
+
+static Uint32	char_time(Uint32, void *);
 
 
 void
@@ -154,6 +156,7 @@ char_load(void *p, int fd)
 			}
 
 			dprintf("at %s:%d,%d\n", OBJECT(m)->name, x, y);
+			m->redraw++;
 		} else {
 			fatal("no such map: \"%s\"\n", mname);
 		}
@@ -225,6 +228,8 @@ char_link(void *ob)
 	/* Assume world->lock is held */
 	SLIST_INSERT_HEAD(&world->wcharsh, ch, wchars);
 
+	ch->timer = SDL_AddTimer(ch->maxspeed, char_time, ch);
+
 	return (0);
 }
 
@@ -233,9 +238,50 @@ char_unlink(void *ob)
 {
 	struct character *ch = (struct character *)ob;
 
+	SDL_RemoveTimer(ch->timer);
+
 	/* Assume world->lock is held */
 	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
 
 	return (0);
+}
+
+static Uint32
+char_time(Uint32 ival, void *p)
+{
+	struct object *ob = (struct object *)p;
+	struct map *m;
+	Uint32 x, y, moved = 0;
+
+	if (ob->pos == NULL) {
+		return (ival);
+	}
+
+	m = ob->pos->map;
+	x = ob->pos->x;
+	y = ob->pos->y;
+	
+	pthread_mutex_lock(&m->lock);
+
+	moved = mapdir_move(&ob->pos->dir, &x, &y);
+	if (moved != 0) {
+		static struct mappos opos;
+		struct mappos *npos;
+		struct noderef *nref;
+		
+		opos = *ob->pos;
+		nref = opos.nref;
+	
+		object_delpos(nref->pobj);
+		npos = object_addpos(nref->pobj, nref->offs, nref->flags,
+		    opos.input, m, x, y);
+		npos->dir = opos.dir;
+
+		m->redraw++;
+		mapdir_postmove(&npos->dir, &x, &y, moved);
+	}
+	pthread_mutex_unlock(&m->lock);
+
+	return (ival);
 }
 
