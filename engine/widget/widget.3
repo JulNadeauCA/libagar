@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.41 2003/08/31 11:58:10 vedge Exp $
+.\"	$Csoft: widget.3,v 1.42 2003/09/17 02:20:35 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -531,13 +531,13 @@ Object holding the property.
 Property key.
 .El
 .It WIDGET_STRING
-Fixed-size UTF-8 text buffer.
+Fixed-size, NUL-terminated string.
 .Pp
 .Bl -tag -width "pthread_mutex_t *lock " -compact
 .It "pthread_mutex_t *lock"
 Lock to acquire, or NULL.
 .It "char *text"
-Fixed-size UTF-8 text buffer.
+Fixed-size, NUL-terminated string.
 .It "size_t bufsize"
 Total buffer size in bytes.
 .El
