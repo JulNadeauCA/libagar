@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.39 2002/12/31 10:31:36 vedge Exp $
+#	$Csoft: Makefile,v 1.40 2003/01/01 03:31:15 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -21,6 +21,9 @@ MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 \
 CATMAN3=widget.cat3 button.cat3 graph.cat3 checkbox.cat3 label.cat3 radio.cat3 \
 	region.cat3 textbox.cat3 window.cat3 bitmap.cat3 scrollbar.cat3 \
 	tlist.cat3
+PSMAN3=	widget.ps3 button.ps3 graph.ps3 checkbox.ps3 label.ps3 radio.ps3 \
+	region.ps3 textbox.ps3 window.ps3 bitmap.ps3 scrollbar.ps3 \
+	tlist.ps3
 
 CFLAGS+=${SDL_CFLAGS}
 

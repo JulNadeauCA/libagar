@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.37 2003/03/02 04:08:54 vedge Exp $
+#	$Csoft: Makefile,v 1.38 2003/03/05 02:16:31 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -14,6 +14,7 @@ FOFFS=	mapedit_offs.h mapview_offs.h
 
 MAN3=	mapedit.3 mapview.3
 CATMAN3=mapedit.cat3 mapview.cat3
+PSMAN3=	mapedit.ps3 mapview.ps3
 
 CFLAGS+=${SDL_CFLAGS}
 
