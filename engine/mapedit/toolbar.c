@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.5 2002/07/07 06:32:42 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.6 2002/07/07 09:48:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -63,6 +63,9 @@ push(int argc, union evarg *argv)
 	case MAPEDIT_TOOL_NEW_MAP:
 		window_show(med->new_map_win);
 		return;
+	case MAPEDIT_TOOL_LOAD_MAP:
+		window_show(med->load_map_win);
+		return;
 	case MAPEDIT_TOOL_TILEQ:
 		window_show(med->tileq_win);
 		return;
@@ -125,7 +128,7 @@ mapedit_init_toolbar(struct mapedit *med)
 	win->focus = WIDGET(button);
 	event_new(button, "button-pushed", 0, push, "%p %i", med,
 	    MAPEDIT_TOOL_NEW_MAP);
-
+	
 	/* Stamp */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_STAMP), 0, 0, 0);
@@ -140,6 +143,13 @@ mapedit_init_toolbar(struct mapedit *med)
 
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	reg->spacing = 1;
+	
+	/* Load map */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, 0, 0);
+	win->focus = WIDGET(button);
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_LOAD_MAP);
 
 	/* Object list */
 	button = button_new(reg, NULL,
@@ -166,9 +176,9 @@ mapedit_init_toolbar(struct mapedit *med)
 
 	/* Tile list window */
 	win = window_new("Tile", WINDOW_ABSOLUTE|WINDOW_CUBIC,
-	    view->w - 64, 90, 48, view->h - 110);
+	    view->w - 64, 90, 49, view->h - 110);
 	reg = region_new(win, REGION_HALIGN,
-	    0, 0, 100, 100);
+	    -6, 0, 100, 100);
 	tqueue = tileq_new(reg, med, 0, 100, 100);
 	win->focus = WIDGET(tqueue);
 	med->tileq_win = win;
@@ -199,5 +209,25 @@ mapedit_init_toolbar(struct mapedit *med)
 	    med, name_tbox, media_tbox, w_tbox, h_tbox);
 
 	med->new_map_win = win;
+	
+	/*
+	 * Create the `Load map' dialog.
+	 */
+	win = window_new("Load map", WINDOW_ABSOLUTE,
+	    view->w / 2 - 200, view->h / 2 - 50, 400, 100);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	/* Map name */
+	name_tbox = textbox_new(reg, "Name: ", 0, 100, 50);
+	win->focus = WIDGET(name_tbox);
+	/* Button */
+	button = button_new(reg, "Load map", NULL, 0, 100, 50);
+	event_new(button, "button-pushed", 0, fileops_load_map,
+	    "%p, %p", med, name_tbox);
+	event_new(name_tbox, "textbox-return", 0, fileops_load_map,
+	    "%p, %p", med, name_tbox);
+	win->focus = WIDGET(name_tbox);
+
+	med->load_map_win = win;
 }
 
