@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.24 2002/05/22 02:03:23 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.25 2002/05/24 09:17:31 vedge Exp $	*/
 
 enum {
 	VIEW_MAPNAV,	/* Map navigation display */
@@ -6,7 +6,7 @@ enum {
 	VIEW_FIGHT	/* Battle display */
 };
 
-TAILQ_HEAD(windows_head, window);
+TAILQ_HEAD(windowq, window);
 
 struct viewport {
 	struct	object obj;
@@ -29,7 +29,7 @@ struct viewport {
 	SDL_Surface	*v;		/* Surface */
 
 	/* Read-write, thread-safe */
-	struct	 windows_head windowsh;
+	struct	 windowq windowsh;
 	pthread_mutex_t lock;
 };
 
