@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.4 2002/01/30 17:50:52 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.5 2002/02/01 06:00:07 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -100,9 +100,10 @@ struct map_aref	*map_entry_aref(struct map_entry *, int);
 struct map_aref	*map_entry_arefobj(struct map_entry *, struct object *, int);
 int		 map_entry_delref(struct map_entry *, struct map_aref *);
 
-int		 map_focus(struct map *);
-void		 map_clean(struct map *, struct object *, int, int, int);
-int		 map_animset(struct map *, int);
+int	map_focus(struct map *);
+int	map_unfocus(struct map *);
+void	map_clean(struct map *, struct object *, int, int, int);
+int	map_animset(struct map *, int);
 #ifdef DEBUG
 void	map_dump_map(void *, void *);
 #endif
