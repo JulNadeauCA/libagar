@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.4 2003/03/03 00:00:42 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.5 2003/03/03 01:53:59 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -787,8 +787,7 @@ ttf_render_glyph_solid(ttf_font *font, Uint16 ch, SDL_Color fg)
 
 	/* Get the glyph itself */
 	if (ttf_find_glyph(font, ch, CACHED_METRICS|CACHED_BITMAP) != 0) {
-		fatal("ttf_find_glyph: %s\n", error_get());
-		return (NULL);
+		fatal("ttf_find_glyph: %s", error_get());
 	}
 	glyph = font->current;
 

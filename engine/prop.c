@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.23 2003/02/26 13:02:11 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.24 2003/03/02 00:35:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -134,7 +134,7 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		debug(DEBUG_SET, "pointer %s: %p\n", key, nprop->data.p);
 		break;
 	default:
-		fatal("unsupported type: %d\n", type);
+		fatal("unsupported type: %d", type);
 	}
 	va_end(ap);
 

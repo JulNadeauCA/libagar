@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.57 2003/01/26 06:15:19 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.58 2003/02/04 02:35:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -158,7 +158,7 @@ world_detach(void *child)
 
 	pthread_mutex_lock(&world->lock);
 	if (ob->state != OBJECT_CONSISTENT) {
-		fatal("inconsistent: %s\n", ob->name);
+		fatal("inconsistent: %s", ob->name);
 	}
 	
 	event_post(ob, "detached", "%p", world);

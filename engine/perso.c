@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.15 2003/02/22 11:49:53 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.16 2003/03/10 02:13:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -174,13 +174,13 @@ perso_load(void *p, int fd)
 		    OBJECT(perso)->name, map_id, dst_x, dst_y, input_id);
 		dst_map = world_find(map_id);
 		if (dst_map == NULL) {
-			fatal("no such map: `%s'\n", map_id);
+			fatal("no such map: `%s'", map_id);
 		}
 
 		pthread_mutex_lock(&dst_map->lock);
 
 		if (dst_x > dst_map->mapw || dst_y > dst_map->maph) {
-			fatal("%d,%d exceeds map boundaries\n", dst_x, dst_y);
+			fatal("%d,%d exceeds map boundaries", dst_x, dst_y);
 		}
 
 		/*
@@ -207,7 +207,7 @@ perso_load(void *p, int fd)
 			input = input_find(input_id);
 			if (input == NULL) {
 				/* XXX assign a default input device or none. */
-				fatal("no such input device: `%s'\n", input_id);
+				fatal("no such input device: `%s'", input_id);
 			}
 			debug(DEBUG_STATE, "%s: controlling with %s\n",
 			    OBJECT(perso)->name, OBJECT(input)->name);

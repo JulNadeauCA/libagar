@@ -1,4 +1,4 @@
-/*	$Csoft: version.c,v 1.25 2003/02/22 00:09:49 vedge Exp $	*/
+/*	$Csoft: version.c,v 1.26 2003/02/22 11:49:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ version_write(int fd, const struct version *ver)
 	pw = getpwuid(getuid());
 	write_string(fd, pw->pw_name);
 	if (gethostname(host, sizeof(host)) != 0) {
-		fatal("gethostname: %s\n", strerror(errno));
+		fatal("gethostname: %s", strerror(errno));
 	}
 	write_string(fd, host);
 }
@@ -124,7 +124,7 @@ version_buf_write(struct fobj_buf *buf, const struct version *ver)
 	pw = getpwuid(getuid());
 	buf_write_string(buf, pw->pw_name);
 	if (gethostname(host, sizeof(host)) != 0) {
-		fatal("gethostname: %s\n", strerror(errno));
+		fatal("gethostname: %s", strerror(errno));
 	}
 	buf_write_string(buf, host);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.22 2003/02/26 03:10:19 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.23 2003/03/02 00:48:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -168,7 +168,7 @@ Strdup(const char *s)
 	char *sd;
 
 	if ((sd = strdup(s)) == NULL) {
-		fatal("strdup: out of memory\n");
+		fatal("strdup: out of memory");
 	}
 	return (sd);
 }
@@ -189,7 +189,7 @@ Lseek(int fd, off_t off, int whence)
 	off_t rv;
 	
 	if ((rv = lseek(fd, off, whence)) == -1) {
-		fatal("lseek(%ld, %s): %s\n", (long)off,
+		fatal("lseek(%ld, %s): %s", (long)off,
 		    (whence == SEEK_SET) ? "SET" :
 		    (whence == SEEK_CUR) ? "CUR" :
 		    (whence == SEEK_END) ? "END" : "?",
@@ -205,11 +205,11 @@ Read(int fd, void *buf, size_t size)
 	
 	rv = read(fd, buf, size);
 	if (rv == -1) {
-		fatal("read(%lu): %s\n", (unsigned long)size,
+		fatal("read(%lu): %s", (unsigned long)size,
 		    strerror(errno));
 	}
 	if (rv != size) {
-		fatal("short read: %lu/%lu\n", (unsigned long)size,
+		fatal("short read: %lu/%lu", (unsigned long)size,
 		    (unsigned long)rv);
 	}
 	return (rv);
@@ -226,9 +226,9 @@ Pread(int fd, void *buf, size_t size, off_t offs)
 	Lseek(fd, offs, SEEK_SET);
 	rv = read(fd, buf, size);
 	if (rv == -1) {
-		fatal("write(%lu): %s\n", (unsigned long)size, strerror(errno));
+		fatal("write(%lu): %s", (unsigned long)size, strerror(errno));
 	} else if (rv != size) {
-		fatal("short write: %lu/%lu\n", (unsigned long)rv,
+		fatal("short write: %lu/%lu", (unsigned long)rv,
 		    (unsigned long)size);
 	}
 
@@ -243,10 +243,10 @@ Write(int fd, const void *buf, size_t size)
 	
 	rv = write(fd, buf, size);
 	if (rv == -1) {
-		fatal("write(%lu): %s\n", (unsigned long)size,
+		fatal("write(%lu): %s", (unsigned long)size,
 		    strerror(errno));
 	} else if (rv != size) {
-		fatal("short write: %lu/%lu\n", (unsigned long)rv,
+		fatal("short write: %lu/%lu", (unsigned long)rv,
 		    (long)size);
 	}
 	return (rv);
@@ -263,9 +263,9 @@ Pwrite(int fd, const void *buf, size_t size, off_t offs)
 	Lseek(fd, offs, SEEK_SET);
 	rv = write(fd, buf, size);
 	if (rv == -1) {
-		fatal("write(%lu): %s\n", (unsigned long)size, strerror(errno));
+		fatal("write(%lu): %s", (unsigned long)size, strerror(errno));
 	} else if (rv != size) {
-		fatal("short write: %lu/%lu\n", (unsigned long)rv,
+		fatal("short write: %lu/%lu", (unsigned long)rv,
 		    (unsigned long)size);
 	}
 

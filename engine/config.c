@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.61 2003/03/02 01:00:13 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.62 2003/03/02 04:11:30 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -166,7 +166,7 @@ config_init(struct config *con)
 	}
 	if (stat(udatadir, &sta) != 0 && mkdir(udatadir, 00700) != 0) {
 		warning("created %s\n", udatadir);
-		fatal("%s: %s\n", udatadir, strerror(errno));
+		fatal("%s: %s", udatadir, strerror(errno));
 	}
 	prop_set_string(con, "path.data_path", "%s:%s", udatadir, sysdatadir);
 	free(udatadir);

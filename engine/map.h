@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.72 2003/03/10 05:50:54 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.73 2003/03/11 00:11:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -161,13 +161,13 @@ extern int	 map_nodesigs;
 	if (map_nodesigs &&					\
 	    (strncmp(NODE_MAGIC, (node)->magic, 4) != 0 ||	\
 	     (node)->x != (mx) || (node)->y != (my))) {		\
-		fatal("bad node\n");				\
+		fatal("bad node");				\
 	}							\
 } while (0)
 # define MAP_CHECK_NODEREF(nref) do {				\
 	if (map_nodesigs &&					\
 	    strncmp(NODEREF_MAGIC, (nref)->magic, 4) != 0) {	\
-		fatal("bad nref\n");				\
+		fatal("bad nref");				\
 	}							\
 } while (0)
 #else

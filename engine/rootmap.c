@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.23 2003/03/08 03:36:33 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.24 2003/03/10 05:50:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -74,8 +74,7 @@ rootmap_animate(void)
 	/* XXX */
 	if (rm->x < 0 || rm->y < 0 ||
 	    rm->y > m->maph - rm->h || rm->x > m->mapw - rm->w) {
-		fatal("offset exceeds map boundaries\n");
-		return;
+		fatal("bad offs");
 	}
 #endif
 

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.106 2003/02/12 01:18:05 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.107 2003/03/10 02:13:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -244,13 +244,13 @@ object_save(void *p)
 
 	datadir = prop_get_string(config, "path.user_data_dir");
 	if (stat(datadir, &sta) != 0 && mkdir(datadir, 0700) != 0) {
-		fatal("creating %s: %s\n", datadir, strerror(errno));
+		fatal("creating %s: %s", datadir, strerror(errno));
 	}
 	Asprintf(&typedir, "%s/%s", datadir, ob->type);
 	free(datadir);
 
 	if (stat(typedir, &sta) != 0 && mkdir(typedir, 0700) != 0) {
-		fatal("creating %s: %s\n", typedir, strerror(errno));
+		fatal("creating %s: %s", typedir, strerror(errno));
 	}
 	Asprintf(&path, "%s/%s.%s", typedir, ob->name, ob->type);
 	free(typedir);
@@ -259,19 +259,19 @@ object_save(void *p)
 
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	if (fd == -1) {
-		fatal("%s: %s\n", path, strerror(errno));
+		fatal("%s: %s", path, strerror(errno));
 	}
 
 	/* Save generic properties. */
 	if (prop_save(ob, fd) != 0) {
 		close(fd);
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	}
 
 	/* Save object specific data. */
 	if (OBJECT_OPS(ob)->save != NULL && OBJECT_OPS(ob)->save(ob, fd) != 0) {
 		close(fd);
-		fatal("%s\n", error_get());
+		fatal("%s", error_get());
 	}
 
 	free(path);
@@ -279,7 +279,7 @@ object_save(void *p)
 	return (0);
 }
 
-/* Search the data file directories for the given file. */
+/* Search the data file directories. */
 char *
 object_path(char *obname, const char *suffix)
 {
@@ -316,7 +316,7 @@ object_control(void *p, struct input *in, int center)
 
 	if (ob->pos == NULL) {
 		pthread_mutex_unlock(&ob->pos_lock);
-		fatal("%s is nowhere\n", ob->name);
+		fatal("%s is nowhere", ob->name);
 	}
 
 	/* Set the input device. */
@@ -417,7 +417,7 @@ object_move(void *p, struct map *dst_map, int dst_x, int dst_y)
 	
 	pthread_mutex_lock(&ob->pos_lock);
 	if (ob->pos == NULL) {
-		fatal("%s is nowhere\n", ob->name);
+		fatal("%s is nowhere", ob->name);
 	}
 	src_map = ob->pos->map;
 	src_x = ob->pos->x;
@@ -431,7 +431,7 @@ object_move(void *p, struct map *dst_map, int dst_x, int dst_y)
 
 #ifdef DEBUG
 	if (dst_x > dst_map->mapw || dst_y > dst_map->maph) {
-		fatal("%d,%d exceeds map boundaries\n", dst_x, dst_y);
+		fatal("%d,%d exceeds map boundaries", dst_x, dst_y);
 	}
 #endif
 	if (src_map == dst_map && src_x == dst_x && src_y == dst_y) {
@@ -539,7 +539,7 @@ object_table_load(int fd, char *objname)
 		if (pob != NULL) {
 			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
 			if (strcmp(pob->type, type) != 0) {
-				fatal("%s: expected `%s' to be of type `%s'\n",
+				fatal("%s: expected `%s' to be of type `%s'",
 				    objname, name, type);
 			}
 		} else {
