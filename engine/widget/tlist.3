@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.33 2004/03/21 07:00:45 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.34 2004/05/01 06:54:48 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -270,9 +270,11 @@ widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
 .It Fn tlist-changed "struct tlist_item *item" "int state"
-The
 .Fa item
-was selected/unselected.
+was selected or unselected.
+.It Fn tlist-selected "struct tlist_item *item"
+.Fa item
+was selected.
 .It Fn tlist-dblclick "struct tlist_item *item"
 The
 .Dv TLIST_DBLCLICK
@@ -303,6 +305,11 @@ Polled mode handling is inefficient and increases the complexity of the code,
 since selections must be saved/restored according to their user pointer.
 .Pp
 Tree display is a crude hack and should be implemented by another widget.
+.Pp
+The
+.Fn tlist_insert_item
+function should probably be renamed
+.Fn tlist_insert .
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
