@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.20 2003/06/13 02:47:48 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.21 2003/06/15 05:08:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -35,7 +35,7 @@ enum prop_type {
 };
 
 struct prop {
-	char	*key;
+	char	 key[PROP_KEY_MAX];
 	int	 type;
 	union {
 		unsigned u;
@@ -64,6 +64,7 @@ int		 prop_load(void *, struct netbuf *);
 int		 prop_save(void *, struct netbuf *);
 void		 prop_destroy(struct prop *);
 
+struct prop	*prop_copy(const struct prop *);
 struct prop	*prop_set(void *, const char *, enum prop_type, ...);
 struct prop	*prop_set_bool(void *, const char *, int);
 struct prop	*prop_set_uint(void *, const char *, unsigned int);
