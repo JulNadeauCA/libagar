@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.25 2002/07/21 10:58:15 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.26 2002/07/22 05:50:38 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -58,7 +58,7 @@ static const struct object_ops config_ops = {
 	config_save
 };
 
-static const enum {
+enum {
 	CLOSE_BUTTON,
 	SAVE_BUTTON,
 	FULLSCREEN_CBOX,
@@ -71,7 +71,7 @@ static const enum {
 	SYSDATADIR_TBOX,
 	W_TBOX,
 	H_TBOX
-} widgets;
+};
 
 #define CONFIG_DEFAULT_WIDTH 	800
 #define CONFIG_DEFAULT_HEIGHT 	600
@@ -173,8 +173,8 @@ config_settings_win(struct config *con)
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_CENTER,
 	    0, 0,
-	    351, 322,
-	    351, 322);
+	    382, 351,
+	    382, 351);
 
 	/*
 	 * Flags
