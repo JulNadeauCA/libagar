@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.7 2002/07/07 09:42:09 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.8 2002/07/09 09:28:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -80,46 +80,6 @@ mapview_new(struct region *reg, struct mapedit *med, struct map *m,
 	return (mv);
 }
 
-static __inline__ void
-mapview_scale(struct mapview *mv, SDL_Surface *s, int rx, int ry)
-{
-	int x, y, xfac, yfac;
-	Uint32 col = 0;
-	Uint8 *src, r1, g1, b1;
-
-	SDL_LockSurface(view->v);
-	for (y = 0; y < mv->tileh; y++) {
-		for (x = 0; x < mv->tilew; x++) {
-			src = (Uint8 *)s->pixels +
-			    (y*TILEH/mv->tileh)*s->pitch +
-			    (x*TILEW/mv->tilew)*s->format->BytesPerPixel;
-
-			switch (s->format->BytesPerPixel) {
-			case 1:
-				col = *src;
-				break;
-			case 2:
-				col = *(Uint16 *)src;
-				break;
-			case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				col = src[0]<<16 | src[1]<<8 | src[2];
-#else
-				col = src[0] | src[1]<<8 | src[2]<<16;
-#endif
-				break;
-			case 4:
-				col = *(Uint32 *)src;
-				break;
-			}
-			SDL_GetRGB(col, s->format, &r1, &g1, &b1);
-			col = SDL_MapRGB(view->v->format, r1, g1, b1);
-			WIDGET_PUT_PIXEL(mv, rx+x, ry+y, col);
-		}
-	}
-	SDL_UnlockSurface(view->v);
-}
-
 void
 mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
     int flags, int rw, int rh)
@@ -155,6 +115,47 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 	    mapview_scaled, NULL);
 }
 
+static __inline__ void
+mapview_draw_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
+{
+	int x, y, xfac, yfac;
+	Uint32 col = 0;
+	Uint8 *src, r1, g1, b1;
+
+	SDL_LockSurface(view->v);
+	for (y = 0; y < mv->tileh && ry+y < WIDGET(mv)->h; y++) {
+		for (x = 0; x < mv->tilew && rx+x < WIDGET(mv)->w; x++) {
+			/* XXX could be more efficient */
+			src = (Uint8 *)s->pixels +
+			    (y*TILEH/mv->tileh)*s->pitch +
+			    (x*TILEW/mv->tilew)*s->format->BytesPerPixel;
+
+			switch (s->format->BytesPerPixel) {
+			case 1:
+				col = *src;
+				break;
+			case 2:
+				col = *(Uint16 *)src;
+				break;
+			case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+				col = src[0]<<16 | src[1]<<8 | src[2];
+#else
+				col = src[0] | src[1]<<8 | src[2]<<16;
+#endif
+				break;
+			case 4:
+				col = *(Uint32 *)src;
+				break;
+			}
+			SDL_GetRGB(col, s->format, &r1, &g1, &b1);
+			col = SDL_MapRGB(view->v->format, r1, g1, b1);
+			WIDGET_PUT_PIXEL(mv, rx+x, ry+y, col);
+		}
+	}
+	SDL_UnlockSurface(view->v);
+}
+
 void
 mapview_draw(void *p)
 {
@@ -164,31 +165,28 @@ mapview_draw(void *p)
 	struct noderef *nref;
 	int mx, my, rx, ry;
 	int nsprites;
-	int maxth, maxtw;
+	SDL_Rect clip;
 
-	if (mv->zoom > 100 || mv->zoom < 100) {	/* XXX */
-		maxth = mv->tileh*2 + 16;
-		maxtw = mv->tilew*2 + 16;
-	} else {
-		maxth = mv->tileh;
-		maxtw = mv->tilew;
-	}
+	clip.x = WIDGET_ABSX(mv);
+	clip.y = WIDGET_ABSY(mv);
+	clip.w = WIDGET(mv)->w;
+	clip.h = WIDGET(mv)->h;
+	SDL_SetClipRect(view->v, &clip);
 
 	for (my = mv->my, ry = 0;
-	     ry+maxth < WIDGET(mv)->h && my < m->maph;
+	     my-mv->my < mv->mh && my < m->maph;
 	     my++, ry += mv->tileh) {
 
 		for (mx = mv->mx, rx = 0;
-	     	     rx+maxtw < WIDGET(mv)->w && mx < m->mapw;
+	     	     mx-mv->mx < mv->mw && mx < m->mapw;
 		     mx++, rx += mv->tilew) {
 
 			node = &m->map[my][mx];
 			nsprites = 0;
 			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 				if (nref->flags & MAPREF_SPRITE) {
-					if (mv->tilew != TILEW ||
-					    mv->tilew != TILEH) {
-						mapview_scale(mv,
+					if (mv->zoom != 100) {
+						mapview_draw_scaled(mv,
 						    SPRITE(nref->pobj,
 						    nref->offs), rx, ry);
 					} else {
@@ -254,9 +252,8 @@ mapview_draw(void *p)
 					for (i = 0, j = anim->nparts - 1;
 					    i < anim->nparts; i++, j--) {
 						src = anim->frames[j][frame];
-						if (mv->tilew != TILEW ||
-						    mv->tileh != TILEH) {
-							mapview_scale(mv,
+						if (mv->zoom != 100) {
+							mapview_draw_scaled(mv,
 							    src,
 							    rx + nref->xoffs,
 							    ry + nref->yoffs -
@@ -276,6 +273,7 @@ mapview_draw(void *p)
 			}
 		}
 	}
+	SDL_SetClipRect(view->v, NULL);
 }
 
 static void
@@ -309,23 +307,30 @@ static void
 mapview_caption(struct mapview *mv)
 {
 	struct window *win = WIDGET(mv)->win;
-	char cap[4096];
 
-	/* XXX wouache */
-	free(win->caption);
-	sprintf(cap, "@ %s (%d%%)", OBJECT(mv->map)->name, mv->zoom);
-	win->caption = strdup(cap);
+	if (mv->flags & MAPVIEW_TILEMAP) {
+		window_titlebar_printf(win, "%s", OBJECT(mv->map)->name);
+	} else {
+		if ((mv->flags & MAPVIEW_EDIT) == 0) {
+			window_titlebar_printf(win, "@ %s (%d%%)",
+			    OBJECT(mv->map)->name, mv->zoom);
+		} else {
+			window_titlebar_printf(win, "%s (%d%%)",
+			    OBJECT(mv->map)->name, mv->zoom);
+		}
+	}
 }
 
 void
 mapview_zoom(struct mapview *mv, int fac)
 {
 	mv->zoom = fac > 4 ? fac : 4;
+
 	mv->tilew = mv->zoom*TILEW / 100;
 	mv->tileh = mv->zoom*TILEH / 100;
-	
-	mv->mw = WIDGET(mv)->w/mv->tilew - 1;
-	mv->mh = WIDGET(mv)->h/mv->tileh - 1;
+
+	mv->mw = WIDGET(mv)->w/mv->tilew + 1;
+	mv->mh = WIDGET(mv)->h/mv->tileh + 1;
 
 	mapview_caption(mv);
 }
@@ -389,6 +394,34 @@ mapview_event(int argc, union evarg *argv)
 				    edcursor_set(mv->cursor, 1);
 			}
 		}
+		if (mv->flags & MAPVIEW_TILEMAP) {
+			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON_LMASK &&
+			    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+			    (mv->mx+x < mv->map->mapw) &&
+			    (mv->my+y < mv->map->maph)) {
+				struct node *n;
+				struct editobj *eo = NULL;
+
+				n = &mv->map->map[mv->my+y][mv->mx+x];
+				if (!TAILQ_EMPTY(&n->nrefsh)) {
+					struct noderef *nref;
+					
+					nref = TAILQ_FIRST(&n->nrefsh);
+					TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
+						if (eo->pobj == nref->pobj) {
+							break;
+						}
+					}
+					if (eo != NULL) {
+						med->curobj = eo;
+						med->curoffs = nref->offs;
+						med->curflags = nref->flags;
+					} else {
+						warning("unusable reference\n");
+					}
+				}
+			}
+		}
 	
 		mv->mouse.x = x;
 		mv->mouse.y = y;
@@ -411,6 +444,33 @@ mapview_event(int argc, union evarg *argv)
 				TOOL_OPS(med->curtool)->tool_effect(
 				    med->curtool, mv, mv->mx+x, mv->my+y);
 				edcursor_set(mv->cursor, 1);
+			}
+		}
+		if (mv->flags & MAPVIEW_TILEMAP) {
+			if ((x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
+			    (mv->mx+x < mv->map->mapw) &&
+			    (mv->my+y < mv->map->maph)) {
+				struct node *n;
+				struct editobj *eo = NULL;
+
+				n = &mv->map->map[mv->my+y][mv->mx+x];
+				if (!TAILQ_EMPTY(&n->nrefsh)) {
+					struct noderef *nref;
+					
+					nref = TAILQ_FIRST(&n->nrefsh);
+					TAILQ_FOREACH(eo, &med->eobjsh, eobjs) {
+						if (eo->pobj == nref->pobj) {
+							break;
+						}
+					}
+					if (eo != NULL) {
+						med->curobj = eo;
+						med->curoffs = nref->offs;
+						med->curflags = nref->flags;
+					} else {
+						warning("unusable reference\n");
+					}
+				}
 			}
 		}
 		break;
@@ -483,14 +543,9 @@ static void
 mapview_scaled(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
-	int maxw = argv[1].i, maxh = argv[2].i;
-	int w, h;
 
-	for (w = 0; w < WIDGET(mv)->w-1 && w < maxw; w += mv->tilew) ;;
-	for (h = 0; h < WIDGET(mv)->h-1 && h < maxh; h += mv->tileh) ;;
-	
-	WIDGET(mv)->w = w;
-	WIDGET(mv)->h = h;
+	WIDGET(mv)->w = argv[1].i;
+	WIDGET(mv)->h = argv[2].i;
 
 	mapview_zoom(mv, mv->zoom);
 }
