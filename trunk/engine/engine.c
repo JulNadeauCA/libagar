@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.62 2002/08/23 05:16:14 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.63 2002/08/24 04:07:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,6 +48,10 @@
 #include "rootmap.h"
 
 #include "mapedit/mapedit.h"
+
+#ifdef DEBUG
+#include "monitor/monitor.h"
+#endif
 
 #include "widget/text.h"
 #include "widget/widget.h"
@@ -185,8 +189,10 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	}
 
 #ifdef XDEBUG
-	/* Request synchronous X events, and set error handlers. */
-	engine_xdebug();
+	if (engine_debug > 0) {
+		/* Request synchronous X events, and set error handlers. */
+		engine_xdebug();
+	}
 #endif
 	return (0);
 }
@@ -250,6 +256,12 @@ engine_start(void)
 
 	/* Create the configuration settings window. */
 	config_init_wins(config);
+
+#ifdef DEBUG
+	if (engine_debug > 0) {
+		monitor_init(&monitor, "debug-monitor");
+	}
+#endif
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:

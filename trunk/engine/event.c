@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.74 2002/08/25 10:59:41 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.75 2002/08/28 05:10:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,6 +42,10 @@
 #include "rootmap.h"
 
 #include "mapedit/mapedit.h"
+
+#ifdef DEBUG
+#include "monitor/monitor.h"
+#endif
 
 #include "widget/widget.h"
 #include "widget/window.h"
@@ -89,7 +93,9 @@ event_hotkey(SDL_Event *ev)
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
 	case SDLK_r:
-		VIEW_REDRAW();
+		if (ev->key.keysym.mod & KMOD_CTRL) {
+			VIEW_REDRAW();
+		}
 		break;
 	case SDLK_F2:
 		object_save(world);
@@ -109,6 +115,11 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_F6:
 		window_show(fps_win);
 		break;
+	case SDLK_F7:
+		if (engine_debug > 0) {
+			window_show(monitor.wins.toolbar);
+		}
+		break;
 #endif
 	case SDLK_F1:
 		window_show(config->windows.settings);
@@ -116,12 +127,15 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_F3:
 		window_show(config->windows.algorithm_sw);
 		break;
-	case SDLK_v: {
+#ifdef DEBUG
+	case SDLK_v:
+		if (ev->key.keysym.mod & KMOD_CTRL &&
+		    view->rootmap != NULL) {
 			struct window *win;
 			struct region *reg;
 			struct mapview *mv;
 
-			win = window_new("Console", WINDOW_TITLEBAR,
+			win = window_new("Map view", WINDOW_TITLEBAR,
 			    -1, -1, 320, 200, 320, 200);
 			reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
 			mv = mapview_new(reg, curmapedit, view->rootmap->map,
@@ -130,6 +144,7 @@ event_hotkey(SDL_Event *ev)
 			window_show(win);
 		}
 		break;
+#endif
 	case SDLK_t:	/* XXX move */
 		if (curmapedit != NULL) {
 			window_show(curmapedit->toolbar_win);
