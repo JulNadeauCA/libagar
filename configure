@@ -44,6 +44,15 @@ do
 	--prefix=*)
 	    prefix=$optarg
 	    ;;
+	--sysconfdir=*)
+	    sysconfdir=$optarg
+	    ;;
+	--sharedir=*)
+	    sharedir=$optarg
+	    ;;
+	--localedir=*)
+	    localedir=$optarg
+	    ;;
 	--enable-*)
 	    option=`echo $arg | sed -e 's/--enable-//' -e 's/=.*//'`
 	    option=`echo $option | sed 's/-/_/g'`
@@ -91,10 +100,26 @@ do
 	    ;;
 	esac
 done
+
 if [ "${prefix}" != "" ]; then
     PREFIX=$prefix
 else
     PREFIX=/usr/local
+fi
+if [ "${sysconfdir}" != "" ]; then
+    SYSCONFDIR=$sysconfdir
+else
+    SYSCONFDIR=/etc
+fi
+if [ "${sharedir}" != "" ]; then
+    SHAREDIR=$sharedir
+else
+    SHAREDIR=${PREFIX}/share
+fi
+if [ "${localedir}" != "" ]; then
+    LOCALEDIR=$localedir
+else
+    LOCALEDIR=${SHAREDIR}/locale
 fi
 
 if [ "${srcdir}" != "" ]; then
@@ -134,6 +159,9 @@ mkdir config 1>/dev/null 2>&1
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
+echo "    --sysconfdir                   System-wide configuration prefix [/etc]"
+echo "    --sharedir                     Share prefix [$PREFIX/share]"
+echo "    --localedir                    Locale prefix [$PREFIX/locale]"
 echo "    --srcdir                       Source tree for concurrent build [.]"
 echo "    --help                         Display this message"
 echo "    --enable-nls                   Native Language Support [yes]"
@@ -173,16 +201,42 @@ if [ "${enable_nls}" != "no" ]; then
 	done
 	if [ "${msgfmt}" != "" ]; then
 		HAVE_GETTEXT="yes"
+		echo "LOCALEDIR=${LOCALEDIR}" >> Makefile.config
+		echo "#ifndef LOCALEDIR" > config/localedir.h
+		echo "#define LOCALEDIR \"${LOCALEDIR}\"" >> config/localedir.h
+		echo "#endif /* LOCALEDIR */" >> config/localedir.h
 	else
 		HAVE_GETTEXT="no"
+		echo "#undef LOCALEDIR" > config/localedir.h
 	fi
 else
 	ENABLE_NLS="no"
 	HAVE_GETTEXT="no"
 	echo "#undef ENABLE_NLS" > config/enable_nls.h
+	echo "#undef LOCALEDIR" > config/localedir.h
 fi
 echo "ENABLE_NLS=${ENABLE_NLS}" >> Makefile.config
 echo "HAVE_GETTEXT=${HAVE_GETTEXT}" >> Makefile.config
+
+echo "PREFIX=${PREFIX}" >> Makefile.config
+echo "#ifndef PREFIX" > config/prefix.h
+echo "#define PREFIX \"${PREFIX}\"" >> config/prefix.h
+echo "#endif /* PREFIX */" >> config/prefix.h
+
+echo "SHAREDIR=${SHAREDIR}" >> Makefile.config
+echo "#ifndef SHAREDIR" > config/sharedir.h
+echo "#define SHAREDIR \"${SHAREDIR}\"" >> config/sharedir.h
+echo "#endif /* SHAREDIR */" >> config/sharedir.h
+
+echo "SYSCONFDIR=${SYSCONFDIR}" >> Makefile.config
+echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
+echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
+echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
+
+echo "LOCALEDIR=${LOCALEDIR}" >> Makefile.config
+echo "#ifndef LOCALEDIR" > config/localedir.h
+echo "#define LOCALEDIR \"${LOCALEDIR}\"" >> config/localedir.h
+echo "#endif /* LOCALEDIR */" >> config/localedir.h
 SHAREDIR="$PREFIX/share/cave"
 echo "SHAREDIR=$SHAREDIR" >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
@@ -1265,20 +1319,6 @@ if [ "${enable_static}" = "yes" ]
 LDFLAGS="-static"
 echo "LDFLAGS=$LDFLAGS" >> Makefile.config
 fi
-if [ "${enable_debug}" != "no" ]
- then
-DEBUG=1
-echo "#ifndef DEBUG" > config/debug.h
-echo "#define DEBUG" $DEBUG >> config/debug.h
-echo "#endif /* DEBUG */" >> config/debug.h
-LOCKDEBUG=1
-echo "#ifndef LOCKDEBUG" > config/lockdebug.h
-echo "#define LOCKDEBUG" $LOCKDEBUG >> config/lockdebug.h
-echo "#endif /* LOCKDEBUG */" >> config/lockdebug.h
-else
-echo "#undef DEBUG" > config/debug.h
-echo "#undef LOCKDEBUG" > config/lockdebug.h
-fi
 if [ "${enable_threads}" = "yes" ]
  then
 THREADS=1
@@ -1342,9 +1382,5 @@ echo "#endif /* VIEW_32BPP */" >> config/view_32bpp.h
 else
 echo "#undef VIEW_32BPP" > config/view_32bpp.h
 fi
-echo "PREFIX=$PREFIX" >> Makefile.config
-echo "#ifndef PREFIX" > config/prefix.h
-echo "#define PREFIX \"$PREFIX\"" >> config/prefix.h
-echo "#endif /* PREFIX */" >> config/prefix.h
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log
