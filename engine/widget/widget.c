@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.41 2003/01/20 12:08:40 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.42 2003/01/27 08:02:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 
 	widname = object_name(name, widid);
 	object_init(&wid->obj, "widget", widname, name,
-	    OBJECT_ART|OBJECT_ART_CAN_FAIL, wops);
+	    OBJECT_ART|OBJECT_ART_CACHE|OBJECT_ART_CAN_FAIL, wops);
 
 	free(widname);
 
@@ -628,8 +628,8 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 		fatal("%s is not a widget/window\n", OBJECT(wid)->name);
 	}
 	
-	if (ind > WIDGET_MAXCOLORS)
-		fatal("%d colors > %d\n", ind, WIDGET_MAXCOLORS);
+	if (ind > WIDGET_MAX_COLORS)
+		fatal("%d colors > %d\n", ind, WIDGET_MAX_COLORS);
 	if (ind > wid->ncolors)
 		wid->ncolors++;
 

@@ -1,8 +1,10 @@
-/*	$Csoft: label.h,v 1.15 2002/11/19 05:06:32 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.16 2002/12/21 10:26:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
 #define _AGAR_WIDGET_LABEL_H_
+
+#include <engine/widget/widget.h>
 
 #define LABEL_MAX_LENGTH	2048
 #define LABEL_MAX_POLLITEMS	32

@@ -1,8 +1,10 @@
-/*	$Csoft: scrollbar.h,v 1.7 2002/12/26 07:04:36 vedge Exp $	*/
+/*	$Csoft: scrollbar.h,v 1.8 2002/12/30 06:30:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_SCROLLBAR_H_
 #define _AGAR_WIDGET_SCROLLBAR_H_
+
+#include <engine/widget/widget.h>
 
 enum scrollbar_orientation {
 	SCROLLBAR_HORIZ,
@@ -10,7 +12,7 @@ enum scrollbar_orientation {
 };
 
 struct scrollbar {
-	struct widget wid;
+	struct widget	wid;
 
 	/* Read-only once attached. */
 	enum scrollbar_orientation orientation;
@@ -20,11 +22,11 @@ struct scrollbar {
 	int	 curbutton;		/* Button held */
 	int	 bar_size;		/* Scroll bar size */
 
-	/* Default bindings */
+	/* Default binding */
 	struct {
-		int	 value;			/* Current value */
-		int	 min, max;		/* Range */
-		pthread_mutex_t	    lock;	/* Lock on default bindings */
+		int		    value;	/* Current value */
+		int		    min, max;	/* Range */
+		pthread_mutex_t	    lock;
 		pthread_mutexattr_t lockattr;
 	} def;
 };

@@ -1,10 +1,10 @@
-/*	$Csoft: palette.h,v 1.1 2002/12/21 10:25:57 vedge Exp $	*/
+/*	$Csoft: palette.h,v 1.2 2002/12/30 03:50:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PALETTE_H_
 #define _AGAR_WIDGET_PALETTE_H_
 
-#include "scrollbar.h"
+#include <engine/widget/scrollbar.h>
 
 enum palette_channel {
 	PALETTE_RED,

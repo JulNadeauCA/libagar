@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.13 2002/12/21 10:25:06 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.14 2003/01/08 23:10:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -23,7 +23,7 @@ struct tlist_item {
 TAILQ_HEAD(tlist_itemq, tlist_item);
 
 struct tlist {
-	struct widget wid;
+	struct widget	wid;
 	
 	struct scrollbar *vbar;	/* Vertical scrollbar */
 

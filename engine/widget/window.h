@@ -1,5 +1,8 @@
-/*	$Csoft: window.h,v 1.55 2003/01/25 00:38:52 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.56 2003/01/25 06:22:26 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_WIDGET_WINDOW_H_
+#define _AGAR_WIDGET_WINDOW_H_
 
 #include <engine/widget/region.h>
 
@@ -129,3 +132,4 @@ void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
 void	 window_generic_show(int, union evarg *);
 
+#endif /* _AGAR_WIDGET_WINDOW_H_ */
