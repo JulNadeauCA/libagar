@@ -1,6 +1,8 @@
-#	$Csoft: Makefile,v 1.15 2002/02/18 01:33:01 vedge Exp $
+#	$Csoft: Makefile,v 1.16 2002/02/18 03:01:02 vedge Exp $
 
 TOP=	..
+include ${TOP}/Makefile.config
+
 SUBDIR=	mapedit
 
 SHARE=	README
@@ -21,4 +23,4 @@ OBJS=	engine.o event.o anim.o xcf.o view.o physics.o \
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk
-include ${TOP}/Makefile.inc
+include ${TOP}/libfobj/Makefile.inc
