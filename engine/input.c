@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.40 2003/04/24 07:04:42 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.41 2003/05/08 12:27:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -32,13 +32,19 @@
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/input.h>
-#include <engine/world.h>
+
+static const struct object_ops input_ops = {
+	input_destroy,
+	NULL,
+	NULL
+};
 
 static TAILQ_HEAD(, input) inputs;
 pthread_mutex_t		   input_lock = PTHREAD_MUTEX_INITIALIZER;
 
+/* Initialize and attach a new input device. */
 struct input *
-input_new(int type, int index)
+input_new(enum input_type type, int index)
 {
 	char name[OBJECT_NAME_MAX];
 	struct input *input;
@@ -56,7 +62,7 @@ input_new(int type, int index)
 	}
 
 	input = Malloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, 0, NULL);
+	object_init(&input->obj, "input-device", name, 0, &input_ops);
 
 	input->type = type;
 	input->index = index;
@@ -99,14 +105,14 @@ input_new(int type, int index)
 	pthread_mutex_lock(&input_lock);
 	TAILQ_INSERT_HEAD(&inputs, input, inputs);
 	pthread_mutex_unlock(&input_lock);
-
-	/* XXX attach to something else */
-	world_attach(input);
 	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
 	return (input);
 }
 
-/* Input structure must be locked. */
+/*
+ * Process a keyboard event.
+ * The input structure must be locked.
+ */
 static void
 input_key(struct input *in, SDL_Event *ev)
 {
@@ -155,7 +161,10 @@ input_key(struct input *in, SDL_Event *ev)
 	}
 }
 
-/* Input structure must be locked. */
+/*
+ * Process a joystick event.
+ * The input structure must be locked.
+ */
 static void
 input_joy(struct input *in, SDL_Event *ev)
 {
@@ -191,12 +200,14 @@ input_joy(struct input *in, SDL_Event *ev)
 	}
 }	
 
+/* Process a mouse event. */
 static void
 input_mouse(struct input *in, SDL_Event *ev)
 {
 	/* XXX ... */
 }
 
+/* Destroy all attached input device structures. */
 void
 input_destroy_all(void)
 {
@@ -214,6 +225,7 @@ input_destroy_all(void)
 	pthread_mutex_unlock(&input_lock);
 }
 
+/* Release an input device structure. */
 void
 input_destroy(void *p)
 {
@@ -238,21 +250,18 @@ input_find(char *name)
 
 	pthread_mutex_lock(&input_lock);
 	TAILQ_FOREACH(in, &inputs, inputs) {
-		if (strcmp(OBJECT(in)->name, name) == 0) {
-			pthread_mutex_unlock(&input_lock);
-			return (in);
-		}
+		if (strcmp(OBJECT(in)->name, name) == 0)
+			break;
 	}
 	pthread_mutex_unlock(&input_lock);
-	error_set("no such input device: %s", name);
-	return (NULL);
+	return (in);
 }
 
 /*
  * Map an SDL input device event to an input device object.
  * Input device list must be locked.
  */
-struct input *
+static struct input *
 input_find_ev(enum input_type type, SDL_Event *ev)
 {
 	struct input *in;
