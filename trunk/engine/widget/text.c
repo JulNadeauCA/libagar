@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.28 2002/08/22 23:04:36 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.29 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -31,13 +31,8 @@
 #include <string.h>
 
 #include <engine/engine.h>
-#include <engine/map.h>
 
 #include "text.h"
-#include "widget.h"
-#include "window.h"
-#include "textbox.h"
-#include "keycodes.h"
 
 /* XXX prefs */
 #define DEFAULT_FONT_NAME	"larabie"
