@@ -183,6 +183,7 @@ echo "    --with-smpeg                   MPEG playback using smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: check]"
+echo "    --with-libqnet                 Network support [default: check]"
 echo "    --enable-edition               Graphical edition [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-astro-units           Include astronomical units [default: no]"
@@ -1108,6 +1109,91 @@ else
 
 	echo "no"
 fi
+echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
+echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
+libqnet_version=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/qnet-config" ]; then
+		libqnet_version=`${path}/qnet-config --version`
+	fi
+done
+LIBQNET_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/qnet-config" ]; then
+		LIBQNET_CFLAGS=`${path}/qnet-config --cflags`
+	fi
+done
+LIBQNET_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/qnet-config" ]; then
+		LIBQNET_LIBS=`${path}/qnet-config --libs`
+	fi
+done
+if [ "${libqnet_version}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
+echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
+echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
+echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
+echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
+echo "#endif /* LIBQNET_CFLAGS */" >> config/libqnet_cflags.h
+echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
+echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
+echo "#endif /* LIBQNET_LIBS */" >> config/libqnet_libs.h
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
+echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
+fi
+echo -n "checking whether libqnet works..."
+echo -n "checking whether libqnet works..." >> config.log
+cat << EOT > conftest.c
+#include <sys/param.h>
+
+#include <qnet/qnet.h>
+#include <qnet/server.h>
+
+int
+main(int argc, char *argv[])
+{
+	server_regcmd("foo", NULL, NULL);
+	server_listen("foo", "1.0", NULL, NULL);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
+echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+
+	HAVE_LIBQNET=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+
+	echo "no"
+fi
+if [ "${HAVE_LIBQNET}" = "yes" ]; then
+NONE=1
+else
+echo "The libqnet test application failed to compile."
+exit 1
+fi
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
@@ -1618,6 +1704,96 @@ echo "#undef JPEG_LIBS" > config/jpeg_libs.h
 fi
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
+fi
+if [ "${with_libqnet}" != "no" ]
+ then
+echo -n "checking for Libqnet (http://libqnet.csoft.org/)..."
+echo -n "checking for Libqnet (http://libqnet.csoft.org/)..." >> config.log
+libqnet_version=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/qnet-config" ]; then
+		libqnet_version=`${path}/qnet-config --version`
+	fi
+done
+LIBQNET_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/qnet-config" ]; then
+		LIBQNET_CFLAGS=`${path}/qnet-config --cflags`
+	fi
+done
+LIBQNET_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/qnet-config" ]; then
+		LIBQNET_LIBS=`${path}/qnet-config --libs`
+	fi
+done
+if [ "${libqnet_version}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo "LIBQNET_CFLAGS=$LIBQNET_CFLAGS" >> Makefile.config
+echo "LIBQNET_LIBS=$LIBQNET_LIBS" >> Makefile.config
+echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
+echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+echo "#ifndef LIBQNET_CFLAGS" > config/libqnet_cflags.h
+echo "#define LIBQNET_CFLAGS \"$LIBQNET_CFLAGS\"" >> config/libqnet_cflags.h
+echo "#endif /* LIBQNET_CFLAGS */" >> config/libqnet_cflags.h
+echo "#ifndef LIBQNET_LIBS" > config/libqnet_libs.h
+echo "#define LIBQNET_LIBS \"$LIBQNET_LIBS\"" >> config/libqnet_libs.h
+echo "#endif /* LIBQNET_LIBS */" >> config/libqnet_libs.h
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#undef LIBQNET_CFLAGS" > config/libqnet_cflags.h
+echo "#undef LIBQNET_LIBS" > config/libqnet_libs.h
+fi
+echo -n "checking whether libqnet works..."
+echo -n "checking whether libqnet works..." >> config.log
+cat << EOT > conftest.c
+#include <sys/param.h>
+
+#include <qnet/qnet.h>
+#include <qnet/server.h>
+
+int
+main(int argc, char *argv[])
+{
+	server_regcmd("foo", NULL, NULL);
+	server_listen("foo", "1.0", NULL, NULL);
+	return (0);
+}
+
+EOT
+compile="ok"
+$CC ${LIBQNET_CFLAGS} -o conftest conftest.c ${LIBQNET_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "failed" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_LIBQNET" > config/have_libqnet.h
+echo "#define HAVE_LIBQNET" $HAVE_LIBQNET >> config/have_libqnet.h
+echo "#endif /* HAVE_LIBQNET */" >> config/have_libqnet.h
+
+	HAVE_LIBQNET=yes
+
+	echo "yes"
+else
+	echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
+
+	echo "no"
+fi
+if [ "${HAVE_LIBQNET}" = "yes" ]; then
+NONE=1
+else
+echo "The libqnet test application failed to compile."
+exit 1
+fi
+else
+echo "#undef HAVE_LIBQNET" > config/have_libqnet.h
 fi
 if [ "${with_smpeg}" != "no" ]
  then
