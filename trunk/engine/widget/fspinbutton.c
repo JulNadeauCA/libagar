@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.11 2004/02/26 10:33:13 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.12 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -93,8 +93,8 @@ fspinbutton_bound(int argc, union evarg *argv)
 			fsu->max = FLT_MAX-1;
 			break;
 		}
-		textbox_printf(fsu->input, fsu->format, *(double *)binding->p1 /
-		    fsu->unit->divider);
+		textbox_printf(fsu->input, fsu->format,
+		    *(double *)binding->p1/fsu->unit->divider);
 		pthread_mutex_unlock(&fsu->lock);
 	}
 }
@@ -174,12 +174,11 @@ void
 fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
     const char *label)
 {
-	widget_init(fsu, "fspinbutton", &fspinbutton_ops, WIDGET_FOCUSABLE|
-	    WIDGET_WFILL);
+	widget_init(fsu, "fspinbutton", &fspinbutton_ops, WIDGET_FOCUSABLE);
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &fsu->value);
 	
-	fsu->value = 0;
-	fsu->incr = 1;
+	fsu->value = 0.0;
+	fsu->incr = 1.0;
 	fsu->input = textbox_new(fsu, label);
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
@@ -195,8 +194,8 @@ fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
 		fsu->units = NULL;
 	}
 
-	fsu->incbu = button_new(fsu, _("+"));
-	fsu->decbu = button_new(fsu, _("-"));
+	fsu->incbu = button_new(fsu, "+");
+	fsu->decbu = button_new(fsu, "-");
 	button_set_padding(fsu->incbu, 0);
 	button_set_padding(fsu->decbu, 0);
 
@@ -224,6 +223,8 @@ fspinbutton_scale(void *p, int w, int h)
 	struct ucombo *units = fsu->units;
 	struct button *incbu = fsu->incbu;
 	struct button *decbu = fsu->decbu;
+	const int bw = 10;
+	int uw = units != NULL ? 25 : 0;
 	int x = 0, y = 0;
 
 	if (w == -1 && h == -1) {
@@ -244,32 +245,24 @@ fspinbutton_scale(void *p, int w, int h)
 		return;
 	}
 
-	WIDGET(input)->x = x;
-	WIDGET(input)->y = y;
-
-	/* XXX prescale */
-	if (units != NULL) {
-		widget_scale(input, w - 55 - 10, h);
-	} else {
-		widget_scale(input, w - 10, h);
-	}
-	x += WIDGET(input)->w;
-
+	/* TODO right alignment */
+	WIDGET(input)->x = 0;
+	WIDGET(input)->y = 0;
+	widget_scale(input, w-uw-bw-4, h);
+	x += WIDGET(input)->w+2;
 	if (units != NULL) {
 		WIDGET(units)->x = x;
 		WIDGET(units)->y = y;
-		widget_scale(units, 55, h);
-		x += WIDGET(units)->w;
+		widget_scale(units, uw, h);
+		x += WIDGET(units)->w+2;
 	}
-
 	WIDGET(incbu)->x = x;
 	WIDGET(incbu)->y = y;
-	widget_scale(incbu, 10, h/2);
+	widget_scale(incbu, bw, h/2);
 	y += h/2;
-
 	WIDGET(decbu)->x = x;
 	WIDGET(decbu)->y = y;
-	widget_scale(decbu, 10, h/2);
+	widget_scale(decbu, bw, h/2);
 }
 
 void
@@ -357,7 +350,7 @@ fspinbutton_set_max(struct fspinbutton *fsu, double nmax)
 
 /* Set the increment for [+] and [-] buttons. */
 void
-fspinbutton_set_increment(struct fspinbutton *fsu, float incr)
+fspinbutton_set_increment(struct fspinbutton *fsu, double incr)
 {
 	pthread_mutex_lock(&fsu->lock);
 	fsu->incr = incr;
