@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.51 2003/05/04 01:48:38 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.52 2003/05/04 02:05:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -285,6 +285,15 @@ tlist_remove_item(struct tlist_item *it)
 		*offset = 0;
 	}
 	widget_binding_unlock(offsetb);
+}
+
+/* Set the position of the scrollbar. */
+void
+tlist_scroll(struct tlist *tl, int pos)
+{
+	pthread_mutex_lock(&tl->lock);
+	widget_set_int(&tl->sbar, "value", pos);
+	pthread_mutex_unlock(&tl->lock);
 }
 
 /* Clear the items on the list, save selections. */
