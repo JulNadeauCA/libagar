@@ -153,7 +153,7 @@ if [ ! -e "config" ]; then
 		exit 1
 	fi
 fi
-echo "Host: " > config.log
+echo "Host: $HOST" > config.log
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
