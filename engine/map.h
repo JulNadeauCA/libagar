@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.50 2002/12/13 11:14:17 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.51 2002/12/15 15:06:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -7,9 +7,6 @@
 #define TILEH_SHIFT	5
 
 #include <engine/transform.h>
-
-#define MAP_MINWIDTH	10	/* XXX */
-#define MAP_MINHEIGHT	8
 
 enum noderef_type {
 	NODEREF_SPRITE,
@@ -78,28 +75,28 @@ struct node {
 	Uint32	 nanims;		/* Animation count (optimization) */
 };
 
-/* Region within the world. */
-struct map {
-	struct object	  obj;
-
-	/* Read-only once attached */
-	Uint32		  flags;
-#define MAP_RLE_COMPRESSION	0x01	/* RLE-compress the nodes */
-#define MAP_2D			0x20	/* Two-dimensional */
-
-	/* Read-write, thread-safe */
-	int		  redraw;	/* Redraw at next tick. XXX */
-	Uint32		  mapw, maph;	/* Map geometry */
-	int		  tilew, tileh;	/* Tile geometry */
-	Uint16		  zoom;		/* Zoom (%) */
-	Uint32		  defx, defy;	/* Map origin */
-	struct node	**map;		/* Array of nodes */
-
-	pthread_mutex_t		lock;	/* Recursive lock on the map. */
-	pthread_mutexattr_t	lockattr;
+enum map_type {
+	MAP_2D,
+	MAP_3D
 };
 
-void		 map_init(struct map *, char *, char *, Uint32);
+/* Region within the world. */
+struct map {
+	struct object	 obj;
+	enum map_type	 type;
+	
+	pthread_mutex_t		lock;
+	pthread_mutexattr_t	lockattr;
+	
+	int	  redraw;	/* Redraw at next tick. XXX */
+	Uint32	  mapw, maph;	/* Map geometry */
+	int	  tilew, tileh;	/* Tile geometry */
+	Uint16	  zoom;		/* Zoom (%) */
+	Uint32	  defx, defy;	/* Map origin */
+	struct node	**map;	/* Array of nodes */
+};
+
+void		 map_init(struct map *, enum map_type, char *, char *);
 int		 map_load(void *, int);
 int		 map_save(void *, int);
 void		 map_destroy(void *);
@@ -125,11 +122,12 @@ void		 node_load(int, struct object_table *, struct node *);
 void		 node_save(struct fobj_buf *, struct object_table *,
 		     struct node *);
 void		 node_destroy(struct node *, int, int);
+void		 node_draw(struct map *, struct node *, Uint32, Uint32);
+
+void		 node_move_ref(struct noderef *, struct node *, struct node *);
+void		 node_copy_ref(struct noderef *, struct node *);
+void		 node_remove_ref(struct node *, struct noderef *);
 struct noderef	*node_add_sprite(struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_add_warp(struct node *, char *, Uint32, Uint32, Uint8);
-void		 node_move_ref(struct noderef *, struct node *, struct node *);
-void		 node_copy_ref(struct noderef *, struct node *);
-void		 node_del_ref(struct node *, struct noderef *);
-void		 node_draw(struct map *, struct node *, Uint32, Uint32);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.126 2002/12/15 15:06:21 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.127 2002/12/28 02:58:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -135,11 +135,12 @@ noderef_destroy(struct noderef *nref)
 	}
 }
 
-/* Map must be locked. */
 void
 map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 {
 	Uint32 i, x, y;
+
+	pthread_mutex_lock(&m->lock);
 
 	m->mapw = w;
 	m->maph = h;
@@ -156,14 +157,17 @@ map_alloc_nodes(struct map *m, Uint32 w, Uint32 h)
 			node_init(&m->map[y][x], x, y);
 		}
 	}
+
+	pthread_mutex_unlock(&m->lock);
 }
 
-/* Map must be locked. */
 void
 map_free_nodes(struct map *m)
 {
 	Uint32 x, y;
 	struct node *node;
+
+	pthread_mutex_lock(&m->lock);
 
 	/* Free the node array. */
 	for (y = 0; y < m->maph; y++) {
@@ -175,6 +179,8 @@ map_free_nodes(struct map *m)
 	}
 	free(m->map);
 	m->map = NULL;
+	
+	pthread_mutex_unlock(&m->lock);
 }
 
 /* Shrink a map, freeing the excess nodes. */
@@ -287,11 +293,11 @@ map_set_zoom(struct map *m, Uint16 zoom)
 }
 
 void
-map_init(struct map *m, char *name, char *media, Uint32 flags)
+map_init(struct map *m, enum map_type type, char *name, char *media)
 {
 	object_init(&m->obj, "map", name, media,
 	    (media != NULL) ? OBJECT_ART|OBJECT_ART_CAN_FAIL: 0, &map_ops);
-	m->flags = (flags != 0) ? flags : MAP_2D;
+	m->type = type;
 	m->redraw = 0;
 	m->mapw = 0;
 	m->maph = 0;
@@ -452,7 +458,7 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
  * The map containing the node must be locked.
  */
 void
-node_del_ref(struct node *node, struct noderef *nref)
+node_remove_ref(struct node *node, struct noderef *nref)
 {
 	if (nref->type == NODEREF_ANIM) {		/* Optimization */
 		node->nanims--;
@@ -616,7 +622,7 @@ map_load(void *ob, int fd)
 
 	pthread_mutex_lock(&m->lock);
 
-	m->flags = read_uint32(fd);
+	m->type = (enum map_type)read_uint32(fd);
 	m->mapw = read_uint32(fd);
 	m->maph = read_uint32(fd);
 	m->defx = read_uint32(fd);
@@ -626,8 +632,9 @@ map_load(void *ob, int fd)
 	m->zoom = read_uint16(fd);
 
 	debug(DEBUG_STATE,
-	    "flags 0x%x, geo %dx%d, origin at %d,%d, %dx%d tiles, %d%% zoom\n",
-	    m->flags, m->mapw, m->maph, m->defx, m->defy, m->tilew, m->tileh,
+	    "type %s, geo %dx%d, origin at %d,%d, %dx%d tiles, %d%% zoom\n",
+	    m->type==MAP_2D ? "2d" : m->type==MAP_3D ? "3d" : "???",
+	    m->mapw, m->maph, m->defx, m->defy, m->tilew, m->tileh,
 	    m->zoom);
 
 	/* Read the possible object dependencies. */
@@ -749,10 +756,11 @@ map_save(void *p, int fd)
 	pthread_mutex_lock(&m->lock);
 
 	debug(DEBUG_STATE,
-	    "flags 0x%x, geo %dx%d, origin at %d,%d, %dx%d tiles\n",
-	    m->flags, m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
+	    "type %s, geo %dx%d, origin at %d,%d, %dx%d tiles\n",
+	    m->type==MAP_2D ? "2d" : m->type==MAP_3D ? "3d" : "???",
+	    m->mapw, m->maph, m->defx, m->defy, TILEW, TILEH);
 
-	buf_write_uint32(buf, m->flags);
+	buf_write_uint32(buf, (Uint32)m->type);
 	buf_write_uint32(buf, m->mapw);
 	buf_write_uint32(buf, m->maph);
 	buf_write_uint32(buf, m->defx);
