@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.35 2003/01/23 01:52:58 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.36 2003/03/03 05:15:32 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -43,9 +43,6 @@
 
 static void	apply(int, union evarg *);
 
-static __inline__ void	put_pixel1(Uint8, Uint8 *, Uint32);
-static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
-
 enum {
 	BOX,
 	FRAME,
@@ -86,9 +83,13 @@ alter_color(Uint32 col, Sint8 r, Sint8 g, Sint8 b)
 
 /* Surface must be locked. */
 static __inline__ void
-put_pixel1(Uint8 bpp, Uint8 *dst, Uint32 color)
+put_pixel1(Uint8 *dst, Uint32 color, int x, int y)
 {
-	switch (bpp) {
+	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y)) {
+		return;
+	}
+
+	switch (view->v->format->BytesPerPixel) {
 #ifdef VIEW_8BPP
 	case 1:
 		*dst = color;
@@ -122,9 +123,15 @@ put_pixel1(Uint8 bpp, Uint8 *dst, Uint32 color)
 
 /* Surface must be locked. */
 static __inline__ void
-put_pixel2(Uint8 bpp, Uint8 *dst1, Uint8 *dst2, Uint32 color)
+put_pixel2(Uint8 *dst1, int x1, int y1, Uint8 *dst2, int x2, int y2,
+    Uint32 color)
 {
-	switch (bpp) {
+	if (!VIEW_INSIDE_CLIP_RECT(view->v, x1, y1) ||
+	    !VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
+		return;
+	}
+
+	switch (view->v->format->BytesPerPixel) {
 #ifdef VIEW_8BPP
 	case 1:
 		*dst1 = color;
@@ -302,21 +309,19 @@ circle_bresenham(void *wid, int xoffs, int yoffs, int w, int h, int radius,
 }
 
 static void
-line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+line_bresenham(void *wid, int px1, int py1, int px2, int py2, Uint32 color)
 {
-	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p;
+	int dx, dy, dpr, dpru, p, xyinc;
+	int x1, x2, y1, y2;
+	int xinc = view->v->format->BytesPerPixel;
+	int yinc = view->v->pitch;
 	Uint8 *fb1, *fb2;
 
-	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
-	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
-	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
-	y2 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
-	
-	if (!VIEW_INSIDE_CLIP_RECT(view->v, x1, y1) ||
-	    !VIEW_INSIDE_CLIP_RECT(view->v, x2, y2)) {
-		return;
-	}
-	
+	x1 = px1 + WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y1 = py1 + WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+	x2 = px2 + WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
+	y2 = py2 + WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
+
 	fb1 = (Uint8 *)view->v->pixels +
 	    y1*view->v->pitch +
 	    x1*view->v->format->BytesPerPixel;
@@ -324,102 +329,120 @@ line_bresenham(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 	fb2 = (Uint8 *)view->v->pixels +
 	    y2*view->v->pitch +
 	    x2*view->v->format->BytesPerPixel;
-	
-	xinc = view->v->format->BytesPerPixel;
+
+	/* Swap inverse coordinates. */
 	dx = x2 - x1;
 	if (dx < 0) {
-		dx = -dx;
-		xinc = -view->v->format->BytesPerPixel;
-	}
+		int ox1 = x1;
 
-	yinc = view->v->pitch;
+		x1 = x2;
+		x2 = ox1;
+		xinc = -view->v->format->BytesPerPixel;
+		dx = -dx;
+	}
 	dy = y2 - y1;
 	if (dy < 0) {
+		int oy1 = y1;
+
+		y1 = y2;
+		y2 = oy1;
 		yinc = -view->v->pitch;
 		dy = -dy;
 	}
 
-	xyinc = xinc+yinc;
+	xyinc = xinc + yinc;
 
 	SDL_LockSurface(view->v);
 
 	if (dy > dx) {
-		goto y_is_independent;
+		goto indep_y;
 	}
 
-/* x_is_independent: */
-	dpr = dy+dy;
+/* indep_x: */
+	dpr = dy + dy;
 	p = -dx;
-	dpru = p+p;
-	dy = dx>>1;
+	dpru = p + p;
+	dy = dx >> 1;
 
 xloop:
-	put_pixel2(xinc, fb1, fb2, color);
+	put_pixel2(fb1, x1, y1, fb2, x2, y2, color);
 
 	if ((p += dpr) > 0) {
 		goto right_and_up;
 	}
 
 /* up: */
+	x1++;
+	x2--;
 	fb1 += xinc;
 	fb2 -= xinc;
-	if ((dy=dy-1) >= 0) {
+	if ((dy = dy - 1) >= 0) {
 		goto xloop;
 	}
-	put_pixel1(xinc, fb1, color);
+	put_pixel1(fb1, color, x1, y1);
 	if ((dx & 1) == 0) {
 		goto done;
 	}
-	put_pixel1(xinc, fb2, color);
+	put_pixel1(fb2, color, x2, y2);
 	goto done;
 
 right_and_up:
+	x1++;
+	y1++;
+	x2--;
+	y2--;
 	fb1 += xyinc;
 	fb2 -= xyinc;
 	p += dpru;
 	if (--dy >= 0) {
 		goto xloop;
 	}
-	put_pixel1(xinc, fb1, color);
+	put_pixel1(fb1, color, x1, y1);
 	if ((dx & 1) == 0) {
 		goto done;
 	}
-	put_pixel1(xinc, fb2, color);
+	put_pixel1(fb2, color, x2, y2);
 	goto done;
 
-y_is_independent:
+indep_y:
 	dpr = dx+dx;
 	p = -dy;
 	dpru = p+p;
 	dx = dy>>1;
 
 yloop:
-	put_pixel2(xinc, fb1, fb2, color);
+	put_pixel2(fb1, x1, y1, fb2, x2, y2, color);
 
 	if ((p += dpr) > 0) {
 		goto right_and_up_2;
 	}
 /* up: */
+	y1++;
+	y2--;
 	fb1 += yinc;
 	fb2 -= yinc;
-	if ((dx=dx-1) >= 0) {
+	if ((dx = dx - 1) >= 0) {
 		goto yloop;
 	}
-	put_pixel1(xinc, fb2, color);
+	put_pixel1(fb2, color, x2, y2);
 	goto done;
 
 right_and_up_2:
+	x1++;
+	y1++;
+	x2--;
+	y2--;
 	fb1 += xyinc;
 	fb2 -= xyinc;
 	p += dpru;
-	if ((dx=dx-1) >= 0) {
+	if ((dx = dx - 1) >= 0) {
 		goto yloop;
 	}
-	put_pixel1(xinc, fb1, color);
+	put_pixel1(fb1, color, x1, y1);
 	if ((dy & 1) == 0) {
 		goto done;
 	}
-	put_pixel1(xinc, fb2, color);
+	put_pixel1(fb2, color, x2, y2);
 done:
 	SDL_UnlockSurface(view->v);
 }
