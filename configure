@@ -613,7 +613,7 @@ if [ "${compile}" = "ok" ]; then
 echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/mcconfig.h
 echo "#endif /* HAVE_FREETYPE */" >> engine/mcconfig.h
 
-	HAVE_FREETYPE=1
+	HAVE_FREETYPE=yes
 
 	echo "yes"
 else
