@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.16 2003/01/01 05:18:40 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.17 2003/01/05 08:24:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -151,61 +151,10 @@ tl_props_poll(int argc, union evarg *argv)
 
 	pthread_mutex_lock(&ob->props_lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		char *s;
 		SDL_Surface *su;
 
-		switch (prop->type) {
-		case PROP_INT:
-			asprintf(&s, "%s = %d", prop->key, prop->data.i);
-			break;
-		case PROP_UINT8:
-			asprintf(&s, "%s = %u", prop->key, prop->data.u8);
-			break;
-		case PROP_SINT8:
-			asprintf(&s, "%s = %d", prop->key, prop->data.s8);
-			break;
-		case PROP_UINT16:
-			asprintf(&s, "%s = %u", prop->key, prop->data.u16);
-			break;
-		case PROP_SINT16:
-			asprintf(&s, "%s = %d", prop->key, prop->data.s16);
-			break;
-		case PROP_UINT32:
-			asprintf(&s, "%s = %u", prop->key, prop->data.u32);
-			break;
-		case PROP_SINT32:
-			asprintf(&s, "%s = %d", prop->key, prop->data.s32);
-			break;
-		case PROP_FLOAT:
-			asprintf(&s, "%s = %f", prop->key, prop->data.f);
-			break;
-		case PROP_DOUBLE:
-			asprintf(&s, "%s = %f", prop->key, prop->data.d);
-			break;
-#ifdef HAVE_LONG_DOUBLE
-		case PROP_LONG_DOUBLE:
-			asprintf(&s, "%s = %Lf", prop->key, prop->data.ld);
-			break;
-#endif
-		case PROP_STRING:
-			asprintf(&s, "%s = \"%s\"", prop->key, prop->data.s);
-			break;
-		case PROP_POINTER:
-			asprintf(&s, "%s = %p", prop->key, prop->data.p);
-			break;
-		case PROP_BOOL:
-			asprintf(&s, "%s = %s", prop->key,
-			    prop->data.i ? "true" : "false");
-			break;
-		default:
-			prop->type = PROP_ANY;
-			asprintf(&s, "%s = ???", prop->key);
-			break;
-		}
-
 		su = SPRITE(&monitor, MONITOR_PROPS_BASE+1+prop->type);
-		tlist_insert_item(tl, su, s, prop);
-		free(s);
+		tlist_insert_item(tl, su, prop->key, prop);
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 
@@ -244,6 +193,8 @@ tl_props_selected(int argc, union evarg *argv)
 	struct tlist_item *it = argv[3].p;
 	int selected = argv[4].i;
 	struct prop *prop = it->p1;
+	
+	tb_set->flags &= ~(TEXTBOX_READONLY);
 
 	if (selected) {
 		label_printf(lab_name, "%s", prop->key);
@@ -275,11 +226,18 @@ tl_props_selected(int argc, union evarg *argv)
 		case PROP_DOUBLE:
 			textbox_printf(tb_set, "%f", prop->data.d);
 			break;
+#ifdef HAVE_LONG_DOUBLE
+		case PROP_LONG_DOUBLE:
+			textbox_printf(tb_set, "%Lf", prop->data.ld);
+			tb_set->flags |= TEXTBOX_READONLY;	/* XXX */
+			break;
+#endif
 		case PROP_STRING:
 			textbox_printf(tb_set, "%s", prop->data.s);
 			break;
 		case PROP_POINTER:
 			textbox_printf(tb_set, "%p", prop->data.p);
+			tb_set->flags |= TEXTBOX_READONLY;
 			break;
 		case PROP_BOOL:
 			textbox_printf(tb_set, "%s",
@@ -396,21 +354,21 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 
 	/* Display the generic properties. */
-	reg = region_new(win, REGION_HALIGN, 0, 40, 70, 30);
+	reg = region_new(win, REGION_HALIGN, 0, 40, 40, 30);
 	{
 		struct tlist *tl_props;
 
 		tl_props = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_props, "tlist-poll", tl_props_poll, "%p", ob);
 
-		reg = region_new(win, REGION_VALIGN, 70, 40, 30, 30);
+		reg = region_new(win, REGION_VALIGN, 42, 40, 54, 30);
 		{
 			struct label *lab_name;
 			struct textbox *tb_set;
 			struct button *bu;
 
 			lab_name = label_new(reg, 100, 30, " ");
-			tb_set = textbox_new(reg, " ", 0, 100, 30);
+			tb_set = textbox_new(reg, "Value: ", 0, 100, 30);
 
 			event_new(tl_props, "tlist-changed", tl_props_selected,
 			    "%p, %p", lab_name, tb_set);
