@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.23 2003/02/25 01:27:04 vedge Exp $
+.\"	$Csoft: widget.3,v 1.24 2003/03/05 18:22:18 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -382,7 +382,7 @@ If
 is
 .Dv WIDGET_PROP ,
 the following arguments are:
-.Bl -tag -width "struct object *" -compact
+.Bl -tag -width "struct object * " -compact
 .It struct object *
 The object that holds the property.
 .It char *
@@ -390,7 +390,7 @@ The property identifier.
 .El
 .Pp
 Otherwise, the following arguments are:
-.Bl -tag -width "pthread_mutex_t *" -compact
+.Bl -tag -width "pthread_mutex_t * " -compact
 .It pthread_mutex_t *
 A lock to acquire when manipulating the data.
 .It void *
