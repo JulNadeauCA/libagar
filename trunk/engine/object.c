@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.132 2003/06/15 22:42:03 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.133 2003/06/17 23:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -29,7 +29,6 @@
 #include <engine/compat/asprintf.h>
 
 #include <engine/engine.h>
-#include <engine/version.h>
 #include <engine/config.h>
 #include <engine/map.h>
 #include <engine/input.h>
@@ -109,7 +108,7 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	ob->ops = (opsp != NULL) ? opsp : &object_ops;
 	ob->parent = NULL;
 	ob->flags = 0;
-	ob->art = NULL;
+	ob->gfx = NULL;
 	ob->pos = NULL;
 	TAILQ_INIT(&ob->childs);
 	TAILQ_INIT(&ob->events);
@@ -318,21 +317,6 @@ object_free_events(struct object *ob)
 	pthread_mutex_unlock(&ob->events_lock);
 }
 
-/* Import graphical data into an object. */
-int
-object_load_art(void *p, const char *key, int wired)
-{
-	struct object *ob = p;
-
-	if ((ob->art = art_fetch(ob, key)) == NULL)
-		return (-1);
-
-	if (wired) {
-		art_wire(ob->art);
-	}
-	return (0);
-}
-
 /* Release the resources allocated by an object and its child objects. */
 void
 object_destroy(void *p)
@@ -346,8 +330,8 @@ object_destroy(void *p)
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 	
-	if (ob->art != NULL)
-		art_unused(ob->art);
+	if (ob->gfx != NULL)
+		gfx_unused(ob->gfx);
 
 	pthread_mutex_destroy(&ob->lock);
 	pthread_mutex_destroy(&ob->events_lock);
@@ -387,44 +371,44 @@ object_load(void *p)
 {
 	struct object *ob = p;
 	char *path;
-	struct netbuf buf;
-	int fd;
+	struct netbuf *buf;
 	Uint32 i, nchilds;
 
 	if ((path = object_file(ob)) == NULL) {
-		dprintf("%s\n", error_get());
+		dprintf("%s: %s\n", ob->name, error_get());
 		return (-1);
 	}
 
 	debug(DEBUG_STATE, "loading `%s' from `%s'\n", ob->name, path);
-	if ((fd = open(path, O_RDONLY)) == -1) {
+	buf = netbuf_open(path, "rb", NETBUF_BIG_ENDIAN);
+	if (buf == NULL) {
 		error_set("%s: %s", path, strerror(errno));
 		free(path);
 		return (-1);
 	}
 	free(path);
 
-	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);	
-	if (version_read(&buf, &object_ver, NULL) == -1) {
-		netbuf_destroy(&buf);
-		close(fd);
+	if (version_read(buf, &object_ver, NULL) == -1) {
+		netbuf_close(buf);
 		return (-1);
 	}
 
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
-	if (prop_load(ob, &buf) == -1)
+	if (prop_load(ob, buf) == -1) {
 		goto fail;
-	if (read_uint32(&buf) > 0 &&
-	    object_load_position(ob, &buf) == -1)
+	}
+	if (read_uint32(buf) > 0 &&
+	    object_load_position(ob, buf) == -1) {
 		goto fail;
+	}
 	if (ob->flags & OBJECT_RELOAD_CHILDS) {
 		fatal("not yet");
 	} else {
 		object_free_childs(ob);
 
 		/* Load the descendants. */
-		nchilds = read_uint32(&buf);
+		nchilds = read_uint32(buf);
 		for (i = 0; i < nchilds; i++) {
 			char cname[OBJECT_NAME_MAX];
 			char ctype[OBJECT_TYPE_MAX];
@@ -433,17 +417,17 @@ object_load(void *p)
 			const struct object_type *type;
 			int ti;
 
-			if (copy_string(cname, &buf, sizeof(cname)) >=
+			if (copy_string(cname, buf, sizeof(cname)) >=
 			    sizeof(cname)) {
 				error_set("child name too big");
 				goto fail;
 			}
-			if (copy_string(ctype, &buf, sizeof(ctype)) >=
+			if (copy_string(ctype, buf, sizeof(ctype)) >=
 			    sizeof(ctype)) {
 				error_set("child type too big");
 				goto fail;
 			}
-			cflags = read_uint32(&buf);
+			cflags = read_uint32(buf);
 
 			/*
 			 * Find out how much memory to allocate and which
@@ -476,19 +460,17 @@ object_load(void *p)
 		}
 	}
 	if (ob->ops->load != NULL &&
-	    ob->ops->load(ob, &buf) == -1) {
+	    ob->ops->load(ob, buf) == -1) {
 		goto fail;
 	}
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
-	netbuf_destroy(&buf);
-	close(fd);
+	netbuf_close(buf);
 	return (0);
 fail:
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
-	netbuf_destroy(&buf);
-	close(fd);
+	netbuf_close(buf);
 	return (-1);
 }
 
@@ -500,11 +482,10 @@ object_save(void *p)
 	char *s, *savepath, *savedir, *file;
 	struct object *ob = p;
 	struct stat sta;
-	struct netbuf buf;
+	struct netbuf *buf;
 	struct object *child;
 	off_t nchilds_offs;
 	Uint32 nchilds = 0;
-	int fd;
 
 	savepath = prop_get_string(config, "save-path");
 	s = object_name(ob);
@@ -522,57 +503,55 @@ object_save(void *p)
 	free(savedir);
 
 	debug(DEBUG_STATE, "saving `%s' to `%s'\n", ob->name, file);
-	if ((fd = open(file, O_WRONLY|O_CREAT|O_TRUNC, 0600)) == -1) {
+	buf = netbuf_open(file, "wb", NETBUF_BIG_ENDIAN);
+	if (buf == NULL) {
 		error_set("%s: %s", file, strerror(errno));
 		free(file);
 		return (-1);
 	}
 	free(file);
 
-	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);
-	version_write(&buf, &object_ver);
+	version_write(buf, &object_ver);
 
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
-	if (prop_save(ob, &buf) == -1) {
+	if (prop_save(ob, buf) == -1) {
 		goto fail;
 	}
 	if (ob->pos != NULL) {
-		write_uint32(&buf, 1);
-		object_save_position(ob, &buf);
+		write_uint32(buf, 1);
+		object_save_position(ob, buf);
 	} else {
-		write_uint32(&buf, 0);
+		write_uint32(buf, 0);
 	}
 
-	nchilds_offs = buf.offs;
-	write_uint32(&buf, 0);				/* Skip count */
+	nchilds_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);				/* Skip count */
 	TAILQ_FOREACH(child, &ob->childs, cobjs) {	/* Save descendents */
-		write_string(&buf, child->name);
-		write_string(&buf, child->type);
-		write_uint32(&buf, child->flags);
+		write_string(buf, child->name);
+		write_string(buf, child->type);
+		write_uint32(buf, child->flags);
 
 		if (object_save(child) == -1)
 			goto fail;
 
 		nchilds++;
 	}
-	pwrite_uint32(&buf, nchilds, nchilds_offs);	/* Write count */
+	pwrite_uint32(buf, nchilds, nchilds_offs);	/* Write count */
 	if (ob->ops->save != NULL &&			/* Save custom data */
-	    ob->ops->save(ob, &buf) == -1) {
+	    ob->ops->save(ob, buf) == -1) {
 		goto fail;
 	}
 
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
-	netbuf_flush(&buf);
-	netbuf_destroy(&buf);
-	close(fd);
+	netbuf_flush(buf);
+	netbuf_close(buf);
 	return (0);
 fail:
 	pthread_mutex_unlock(&ob->lock);
 	unlock_linkage();
-	netbuf_destroy(&buf);
-	close(fd);
+	netbuf_close(buf);
 	return (-1);
 }
 
@@ -903,7 +882,7 @@ object_table_save(struct object_table *obt, struct netbuf *buf)
 	struct object *pob;
 	Uint32 i;
 
-	nobjs_offs = buf->offs;
+	nobjs_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);				/* Skip */
 	for (i = 0; i < obt->nobjs; i++) {
 		char *name;

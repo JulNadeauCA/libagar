@@ -1,0 +1,531 @@
+/*	$Csoft: gfx.c,v 1.40 2003/06/18 01:10:16 vedge Exp $	*/
+
+/*
+ * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * <http://www.csoft.org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <engine/engine.h>
+#include <engine/map.h>
+#include <engine/config.h>
+
+#include <engine/mapedit/mapedit.h>
+
+#include <engine/widget/window.h>
+#include <engine/widget/vbox.h>
+#include <engine/widget/tlist.h>
+#include <engine/widget/button.h>
+
+#include <engine/loader/den.h>
+#include <engine/loader/xcf.h>
+
+enum {
+	NANIMS_INIT =	1,
+	NANIMS_GROW =	4,
+	NSPRITES_INIT =	1,
+	NSPRITES_GROW = 4,
+	FRAMES_INIT =	2,
+	FRAMES_GROW =	8,
+	NSUBMAPS_INIT =	1,
+	NSUBMAPS_GROW =	4
+};
+
+static TAILQ_HEAD(, gfx) gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
+pthread_mutex_t		 gfxq_lock = PTHREAD_MUTEX_INITIALIZER;
+
+#ifdef DEBUG
+#define DEBUG_GC	0x01
+#define DEBUG_LOADING	0x02
+
+int	gfx_debug = DEBUG_GC|DEBUG_LOADING;
+#define engine_debug	gfx_debug
+#endif
+
+static void	gfx_destroy(struct gfx *);
+static void	gfx_destroy_anim(struct gfx_anim *);
+
+/* Attach a surface of arbitrary size. */
+Uint32
+gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite, int map)
+{
+	struct gfx_spritecl *spritecl;
+
+	if (gfx->sprites == NULL) {			/* Initialize */
+		gfx->sprites = Malloc(NSPRITES_INIT * sizeof(SDL_Surface *));
+		gfx->csprites = Malloc(NSPRITES_INIT *
+		    sizeof(struct gfx_spritecl));
+		gfx->maxsprites = NSPRITES_INIT;
+		gfx->nsprites = 0;
+	} else if (gfx->nsprites+1 > gfx->maxsprites) {	/* Grow */
+		gfx->maxsprites += NSPRITES_GROW;
+		gfx->sprites = Realloc(gfx->sprites,
+		    gfx->maxsprites * sizeof(SDL_Surface *));
+		gfx->csprites = Realloc(gfx->csprites,
+		    gfx->maxsprites * sizeof(struct gfx_spritecl));
+	}
+	gfx->sprites[gfx->nsprites] = sprite;			/* Original */
+
+	spritecl = &gfx->csprites[gfx->nsprites];		/* Cache line */
+	SLIST_INIT(&spritecl->sprites);
+	return (gfx->nsprites++);
+}
+
+/*
+ * Scan for alpha pixels on a surface and choose an optimal
+ * alpha/colorkey setting.
+ */
+void
+gfx_scan_alpha(SDL_Surface *su)
+{
+	enum {
+		ART_ALPHA_TRANSPARENT = 0x01,
+		ART_ALPHA_OPAQUE =	0x02,
+		ART_ALPHA_ALPHA =	0x04
+	} aflags = 0;
+	Uint8 oldalpha = su->format->alpha;
+#if 0
+	Uint8 oldckey = su->format->colorkey;
+#endif
+	int x, y;
+
+	if (SDL_MUSTLOCK(su))
+		SDL_LockSurface(su);
+	for (y = 0; y < su->h; y++) {
+		for (x = 0; x < su->w; x++) {
+			Uint8 *pixel = (Uint8 *)su->pixels +
+			    y*su->pitch + x*su->format->BytesPerPixel;
+			Uint8 r, g, b, a;
+
+			switch (su->format->BytesPerPixel) {
+			case 4:
+				SDL_GetRGBA(*(Uint32 *)pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			case 3:
+			case 2:
+				SDL_GetRGBA(*(Uint16 *)pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			case 1:
+				SDL_GetRGBA(*pixel, su->format,
+				    &r, &g, &b, &a);
+				break;
+			}
+
+			switch (a) {
+			case SDL_ALPHA_TRANSPARENT:
+				aflags |= ART_ALPHA_TRANSPARENT;
+				break;
+			case SDL_ALPHA_OPAQUE:
+				aflags |= ART_ALPHA_OPAQUE;
+				break;
+			default:
+				aflags |= ART_ALPHA_ALPHA;
+				break;
+			}
+		}
+	}
+	if (SDL_MUSTLOCK(su))
+		SDL_UnlockSurface(su);
+
+	/* XXX use rleaccel */
+	SDL_SetAlpha(su, 0, 0);
+	SDL_SetColorKey(su, 0, 0);
+	if (aflags & (ART_ALPHA_ALPHA|ART_ALPHA_TRANSPARENT)) {
+		SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
+#if 0
+	/* XXX causes some images to be rendered incorrectly. */
+	} else if (aflags & ART_ALPHA_TRANSPARENT) {
+		dprintf("colorkey %u\n", oldckey);
+		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
+#endif
+	}
+}
+
+/* Break a surface into tile-sized fragments and map them. */
+struct map *
+gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
+{
+	char mapname[OBJECT_NAME_MAX];
+	int x, y, mx, my;
+	unsigned int mw, mh;
+	SDL_Rect sd, rd;
+	struct map *fragmap;
+
+	sd.w = TILEW;
+	sd.h = TILEH;
+	rd.x = 0;
+	rd.y = 0;
+	mw = sprite->w/TILEW;
+	mh = sprite->h/TILEH;
+
+	fragmap = Malloc(sizeof(struct map));
+	snprintf(mapname, sizeof(mapname), "frag-%s%u", gfx->name,
+	    gfx->nsubmaps);
+	map_init(fragmap, mapname);
+	if (map_alloc_nodes(fragmap, mw, mh) == -1) {
+		fatal("map_alloc_nodes: %s", error_get());
+	}
+
+	for (y = 0, my = 0; y < sprite->h; y += TILEH, my++) {
+		for (x = 0, mx = 0; x < sprite->w; x += TILEW, mx++) {
+			SDL_Surface *su;
+			Uint32 saflags = sprite->flags &
+			    (SDL_SRCALPHA|SDL_RLEACCEL);
+			Uint8 salpha = sprite->format->alpha;
+			struct node *node = &fragmap->map[my][mx];
+			Uint32 nsprite;
+
+			/* Allocate a surface for the fragment. */
+			su = SDL_CreateRGBSurface(SDL_SWSURFACE |
+			    (sprite->flags &
+			    (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+			    TILEW, TILEH, sprite->format->BitsPerPixel,
+			    sprite->format->Rmask,
+			    sprite->format->Gmask,
+			    sprite->format->Bmask,
+			    sprite->format->Amask);
+			if (su == NULL) {
+				fatal("SDL_CreateRGBSurface: %s",
+				    SDL_GetError());
+			}
+			
+			/* Copy the fragment as-is. */
+			SDL_SetAlpha(sprite, 0, 0);
+			sd.x = x;
+			sd.y = y;
+			SDL_BlitSurface(sprite, &sd, su, &rd);
+			nsprite = gfx_insert_sprite(gfx, su, 0);
+			SDL_SetAlpha(sprite, saflags, salpha);
+
+			/* Adjust the alpha properties of the fragment. */
+			gfx_scan_alpha(su);
+
+			node_add_sprite(node, gfx->pobj, nsprite);
+		}
+	}
+
+	gfx_insert_submap(gfx, fragmap);
+	return (fragmap);
+}
+
+/* Disable garbage collection for a group of graphics. */
+void
+gfx_wire(struct gfx *gfx)
+{
+	pthread_mutex_lock(&gfx->used_lock);
+	gfx->used = ART_MAX_USED;
+	pthread_mutex_unlock(&gfx->used_lock);
+}
+
+/* Decrement the reference count on a group of graphics. */
+void
+gfx_unused(struct gfx *gfx)
+{
+	pthread_mutex_lock(&gfx->used_lock);
+	if (gfx->used != ART_MAX_USED &&		/* Remain resident? */
+	    --gfx->used == 0) {
+		gfx_destroy(gfx);
+	}
+	pthread_mutex_unlock(&gfx->used_lock);
+}
+
+/* Load the named graphics package. */
+struct gfx *
+gfx_fetch(void *p, const char *key)
+{
+	struct object *ob = p;
+	char *path = NULL;
+	struct gfx *gfx = NULL;
+	struct den *den;
+	Uint32 i;
+
+	pthread_mutex_lock(&gfxq_lock);
+
+	TAILQ_FOREACH(gfx, &gfxq, gfxs) {
+		if (strcmp(gfx->name, key) == 0)
+			break;
+	}
+	if (gfx != NULL) {				/* Cached? */
+		if (++gfx->used > ART_MAX_USED) {
+			gfx->used = ART_MAX_USED; 	/* Remain resident */
+		}
+		goto out;
+	}
+
+	if ((path = config_search_file("load-path", key, "den")) == NULL)
+		fatal("searching %s: %s", key, error_get());
+
+	gfx = Malloc(sizeof(struct gfx));
+	gfx->name = Strdup(key);
+	gfx->pobj = ob;				/* For submap refs */
+	gfx->sprites = NULL;
+	gfx->csprites = NULL;
+	gfx->nsprites = 0;
+	gfx->maxsprites = 0;
+	gfx->anims = NULL;
+	gfx->canims = NULL;
+	gfx->nanims = 0;
+	gfx->maxanims = 0;
+	gfx->submaps = NULL;
+	gfx->nsubmaps = 0;
+	gfx->maxsubmaps = 0;
+	gfx->used = 1;
+	pthread_mutex_init(&gfx->used_lock, NULL);
+
+	if (mapedition) {				/* Map the tileset */
+		char mapname[OBJECT_NAME_MAX];
+
+		gfx->tile_map = Malloc(sizeof(struct map));
+		snprintf(mapname, sizeof(mapname), "t-%s", key);
+		map_init(gfx->tile_map, mapname);
+		if (map_alloc_nodes(gfx->tile_map, 2, 2) == -1)
+			fatal("allocating nodes: %s", error_get());
+	} else {
+		gfx->tile_map = NULL;
+	}
+
+	/* Load images in XCF format. */
+	if ((den = den_open(path, DEN_READ)) == NULL) {
+		fatal("loading %s: %s", path, error_get());
+	}
+	for (i = 0; i < den->nmembers; i++) {
+		if (xcf_load(den->buf, den->members[i].offs, gfx) == -1)
+			fatal("loading xcf #%d: %s", i, error_get());
+	}
+	den_close(den);
+
+	TAILQ_INSERT_HEAD(&gfxq, gfx, gfxs);			/* Cache */
+out:
+	pthread_mutex_unlock(&gfxq_lock);
+	Free(path);
+	return (gfx);
+}
+
+/* Release a group of graphics. */
+static void
+gfx_destroy(struct gfx *gfx)
+{
+	Uint32 i;
+
+	pthread_mutex_lock(&gfxq_lock);
+	TAILQ_REMOVE(&gfxq, gfx, gfxs);
+	pthread_mutex_unlock(&gfxq_lock);
+
+	/* Release the sprites. */
+	for (i = 0; i < gfx->nsprites; i++) {
+		struct gfx_spritecl *spritecl = &gfx->csprites[i];
+		struct gfx_cached_sprite *csprite, *ncsprite;
+		struct transform *trans, *ntrans;
+		
+		SDL_FreeSurface(gfx->sprites[i]);
+
+		/* Free the sprite transform cache. */
+		for (csprite = SLIST_FIRST(&spritecl->sprites);
+		     csprite != SLIST_END(&spritecl->sprites);
+		     csprite = ncsprite) {
+			ncsprite = SLIST_NEXT(csprite, sprites);
+			for (trans = SLIST_FIRST(&csprite->transforms);
+			     trans != SLIST_END(&csprite->transforms);
+			     trans = ntrans) {
+				ntrans = SLIST_NEXT(trans, transforms);
+				transform_destroy(trans);
+				free(trans);
+			}
+			SDL_FreeSurface(csprite->su);
+			free(csprite);
+		}
+	}
+	Free(gfx->sprites);
+	Free(gfx->csprites);
+
+	/* Release the animations. */
+	for (i = 0; i < gfx->nanims; i++) {
+		struct gfx_animcl *animcl = &gfx->canims[i];
+		struct gfx_cached_anim *canim, *ncanim;
+		struct transform *trans, *ntrans;
+
+		/* Free the anim transform cache. */
+		for (canim = SLIST_FIRST(&animcl->anims);
+		     canim != SLIST_END(&animcl->anims);
+		     canim = ncanim) {
+			ncanim = SLIST_NEXT(canim, anims);
+			for (trans = SLIST_FIRST(&canim->transforms);
+			     trans != SLIST_END(&canim->transforms);
+			     trans = ntrans) {
+				ntrans = SLIST_NEXT(trans, transforms);
+				transform_destroy(trans);
+				free(trans);
+			}
+			gfx_destroy_anim(canim->anim);
+			free(canim);
+		}
+		gfx_destroy_anim(gfx->anims[i]);
+	}
+	Free(gfx->anims);
+	Free(gfx->canims);
+
+	/* Release the submaps. */
+	if (gfx->tile_map != NULL) {
+		object_destroy(gfx->tile_map);
+		free(gfx->tile_map);
+	}
+	for (i = 0; i < gfx->nsubmaps; i++) {
+		object_destroy(gfx->submaps[i]);
+		free(gfx->submaps[i]);
+	}
+	Free(gfx->submaps);
+
+	debug(DEBUG_GC, "freed %s (%d sprites, %d anims)\n",
+	    gfx->name, gfx->nsprites, gfx->nanims);
+
+	free(gfx->name);
+	free(gfx);
+}
+
+/* Insert a frame into an animation. */
+Uint32
+gfx_insert_anim_frame(struct gfx_anim *anim, SDL_Surface *surface)
+{
+	if (anim->frames == NULL) {			/* Initialize */
+		anim->frames = Malloc(FRAMES_INIT * sizeof(SDL_Surface *));
+		anim->maxframes = FRAMES_INIT;
+		anim->nframes = 0;
+	} else if (anim->nframes+1 > anim->maxframes) {	/* Grow */
+		anim->maxframes += FRAMES_GROW;
+		anim->frames = Realloc(anim->frames,
+		    anim->maxframes * sizeof(SDL_Surface *));
+	}
+	anim->frames[anim->nframes++] = surface;
+	return (anim->nframes);
+}
+
+/* Insert a new submap. */
+Uint32
+gfx_insert_submap(struct gfx *gfx, struct map *m)
+{
+	if (gfx->submaps == NULL) {			/* Initialize */
+		gfx->maxsubmaps = NSUBMAPS_INIT;
+		gfx->submaps = Malloc(gfx->maxsubmaps * sizeof(struct map *));
+		gfx->nsubmaps = 0;
+	} else if (gfx->nsubmaps+1 > gfx->maxsubmaps) {	/* Grow */
+		gfx->maxsubmaps += NSUBMAPS_GROW;
+		gfx->submaps = Realloc(gfx->submaps,
+		    gfx->maxsubmaps * sizeof(struct map *));
+	}
+	gfx->submaps[gfx->nsubmaps] = m;
+	return (gfx->nsubmaps++);
+}
+
+/* Insert a new animation. */
+struct gfx_anim *
+gfx_insert_anim(struct gfx *gfx, int delay)
+{
+	struct gfx_anim *anim;
+	struct gfx_animcl *animcl;
+
+	anim = Malloc(sizeof(struct gfx_anim));
+	anim->frames = NULL;
+	anim->maxframes = 0;
+	anim->frame = 0;
+	anim->nframes = 0;
+	anim->delta = 0;
+	anim->delay = delay;
+
+	if (gfx->anims == NULL) {			/* Initialize */
+		gfx->anims = Malloc(NANIMS_INIT * sizeof(struct anim *));
+		gfx->canims = Malloc(NANIMS_INIT * sizeof(struct gfx_animcl));
+		gfx->maxanims = NANIMS_INIT;
+		gfx->nanims = 0;
+	} else if (gfx->nanims >= gfx->maxanims) {	/* Grow */
+		gfx->maxanims += NANIMS_GROW;
+		gfx->anims = Realloc(gfx->anims,
+		    gfx->maxanims * sizeof(struct gfx_anim *));
+		gfx->canims = Realloc(gfx->canims,
+		    gfx->maxanims * sizeof(struct gfx_animcl));
+	}
+	gfx->anims[gfx->nanims] = anim;				/* Original */
+
+	animcl = &gfx->canims[gfx->nanims];			/* Cache line */
+	SLIST_INIT(&animcl->anims);
+	gfx->nanims++;
+	return (anim);
+}
+
+/* Release an animation. */
+static void
+gfx_destroy_anim(struct gfx_anim *anim)
+{
+	Uint32 i;
+
+	for (i = 0; i < anim->nframes; i++) {
+		SDL_FreeSurface(anim->frames[i]);
+	}
+	Free(anim->frames);
+	free(anim);
+}
+
+/* Update the current frame# on an animation. */
+void
+gfx_anim_tick(struct gfx_anim *an, struct noderef *nref)
+{
+	Uint32 ticks;
+	
+	if ((nref->data.anim.flags & NODEREF_ANIM_AUTO) == 0) {
+		return;
+	}
+	
+	ticks = SDL_GetTicks();
+	if ((ticks - an->delta) >= an->delay) {		/* XXX */
+		an->delta = ticks;
+		if (++an->frame > an->nframes - 1) {
+			/* Loop */
+			an->frame = 0;
+		}
+	}
+}
+
+#ifdef DEBUG
+SDL_Surface *
+gfx_get_sprite(struct object *ob, Uint32 i)
+{
+	if (ob->gfx == NULL)
+		fatal("no gfx in %s", ob->name);
+	if (i > ob->gfx->nsprites)
+		fatal("no sprite at %s:%d", ob->name, i);
+
+	return (ob->gfx->sprites[i]);
+}
+
+struct gfx_anim *
+gfx_get_anim(struct object *ob, Uint32 i)
+{
+	if (ob->gfx == NULL)
+		fatal("no gfx in %s", ob->name);
+	if (i > ob->gfx->nanims)
+		fatal("no anim at %s:%d", ob->name, i);
+	return (ob->gfx->anims[i]);
+}
+#endif /* DEBUG */
+

@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.38 2003/05/24 15:53:39 vedge Exp $
+.\"	$Csoft: object.3,v 1.39 2003/06/06 02:39:56 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -73,9 +73,6 @@ Generic events and properties
 .Fn object_init "void *obj" "const char *type" "const char *name" \
                 "const void *ops"
 .Pp
-.Ft int
-.Fn object_load_art "void *obj" "const char *key" "int wired"
-.Pp
 .Ft "void"
 .Fn object_attach "void *parent" "void *child"
 .Pp
@@ -124,22 +121,6 @@ struct object_ops {
 	void (*edit)(void *obj);			/* Edit object */
 };
 .Ed
-.Pp
-The
-.Fn object_load_art
-function searches for an archive named
-.Fa key
-(with the
-.Sq .fob
-extension) and loads graphics from it.
-.Fa key
-identifies a group of graphics which multiple objects can share.
-These groups of graphics contain a reference count.
-When this count reaches zero, the graphics are freed (they stay resident if the
-.Fa wire
-argument is 1).
-.Fn object_load_art
-returns 0 on success or -1 if an error occured.
 .Pp
 The
 .Fn object_attach
