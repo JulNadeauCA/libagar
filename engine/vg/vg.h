@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.21 2004/10/06 04:37:09 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.22 2005/01/23 11:54:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -194,8 +194,7 @@ struct vg {
 
 	pthread_mutex_t lock;
 	int redraw;			/* Global redraw */
-	int **mask;			/* Fragment mask */
-	double w, h;			/* Calculated bounding box */
+	double w, h;			/* Bounding box */
 	double scale;			/* Scaling factor */
 	Uint32 fill_color, grid_color;
 	double grid_gap;
@@ -204,8 +203,10 @@ struct vg {
 	float		 *origin_radius; /* Origin point radii */
 	Uint32		 *origin_color;	/* Origin point colors */
 	Uint32		 norigin;
+
 	struct vg_layer *layers;
 	Uint32		nlayers;
+
 	int		 cur_layer;	/* Layer selected for edition */
 	struct vg_block	*cur_block;	/* Block selected for edition */
 	struct vg_element *cur_vge;	/* Element selected for edition */
@@ -215,8 +216,9 @@ struct vg {
 
 	struct object *pobj;		/* Tied object */
 	SDL_Surface *su;		/* Raster surface */
-	struct map *map;		/* Raster map */
-
+	SDL_PixelFormat *fmt;		/* Raster pixel format */
+	struct map *map;		/* Raster map (optional) */
+	
 	TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
 	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
 	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */

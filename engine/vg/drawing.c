@@ -1,4 +1,4 @@
-/*	$Csoft: drawing.c,v 1.2 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: drawing.c,v 1.3 2005/01/23 11:53:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -150,12 +150,12 @@ drawing_settings(int argc, union evarg *argv)
 	event_new(fsu, "fspinbutton-changed", vg_geo_changed, "%p", vg);
 		
 	label_new(win, LABEL_STATIC, _("Background color: "));
-	pal = palette_new(win, PALETTE_RGB, vfmt);
+	pal = palette_new(win, PALETTE_RGB, vg->fmt);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->fill_color);
 	event_new(pal, "palette-changed", vg_changed, "%p", vg);
 	
 	label_new(win, LABEL_STATIC, _("Grid color: "));
-	pal = palette_new(win, PALETTE_RGB, vfmt);
+	pal = palette_new(win, PALETTE_RGB, vg->fmt);
 	widget_bind(pal, "color", WIDGET_UINT32, &vg->grid_color);
 	event_new(pal, "palette-changed", vg_changed, "%p", vg);
 
@@ -170,7 +170,6 @@ rasterize_drawing(struct mapview *mv, void *p)
 
 	if (vg->redraw) {
 		vg->redraw = 0;
-		vg_clear(vg);
 		vg_rasterize(vg);
 	}
 }

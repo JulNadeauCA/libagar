@@ -1,4 +1,4 @@
-/*	$Csoft: vg_primitive.c,v 1.6 2004/05/31 07:15:58 vedge Exp $	*/
+/*	$Csoft: vg_primitive.c,v 1.7 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -42,9 +42,9 @@ vg_put_pixel(struct vg *vg, int x, int y, Uint32 c)
 		return;
 
 	d = (Uint8 *)vg->su->pixels +
-	    y*vg->su->pitch + x*vg->su->format->BytesPerPixel;
+	    y*vg->su->pitch + x*vg->fmt->BytesPerPixel;
 
-	switch (vg->su->format->BytesPerPixel) {
+	switch (vg->fmt->BytesPerPixel) {
 	case 4:
 		*(Uint32 *)d = c;
 		break;
