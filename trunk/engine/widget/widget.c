@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.46 2003/03/04 00:43:11 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.47 2003/03/11 00:13:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,18 +47,17 @@ int	widget_debug = 0;
 void
 widget_init(struct widget *wid, char *name, const void *wops, int rw, int rh)
 {
-	static Uint32 widid = 0;
-	static pthread_mutex_t widid_lock = PTHREAD_MUTEX_INITIALIZER;
+	static pthread_mutex_t curwidget_lock = PTHREAD_MUTEX_INITIALIZER;
+	static unsigned int curwidget = 0;
 	char *widname;
 
-	pthread_mutex_lock(&widid_lock);
-	widid++;
-	pthread_mutex_unlock(&widid_lock);
+	pthread_mutex_lock(&curwidget_lock);
+	curwidget++;
+	pthread_mutex_unlock(&curwidget_lock);
 
-	widname = object_name(name, widid);
+	Asprintf(&widname, "%s%u", name, curwidget);
 	object_init(&wid->obj, "widget", widname, name,
 	    OBJECT_ART|OBJECT_ART_CACHE|OBJECT_ART_CAN_FAIL, wops);
-
 	free(widname);
 
 	wid->type = Strdup(name);

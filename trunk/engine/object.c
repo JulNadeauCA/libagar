@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.107 2003/03/10 02:13:39 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.108 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include "compat/asprintf.h"
+#include "compat/strlcat.h"
 #include "engine.h"
 
 #include "version.h"
@@ -59,16 +60,6 @@ static const struct object_ops null_ops = {
 int	object_debug = DEBUG_STATE|DEBUG_POSITION;
 #define engine_debug object_debug
 #endif
-
-char *
-object_name(const char *base, int num)
-{
-	char *name;
-
-	name = emalloc(strlen(base)+16);
-	sprintf(name, "%s%d", base, num);
-	return (name);
-}
 
 struct object *
 object_new(char *type, char *name, char *media, int flags, const void *opsp)
@@ -168,28 +159,23 @@ object_load_from(void *p, char *path)
 
 	debug(DEBUG_STATE, "loading %s from %s\n", ob->name, path);
 
-	fd = open(path, O_RDONLY, 00600);
-	if (fd == -1) {
+	if ((fd = open(path, O_RDONLY, 00600)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
 		return (-1);
 	}
-	
-	/* Load generic properties. */
-	if (prop_load(ob, fd) != 0) {
-		close(fd);
-		return (-1);
-	}
 
-	/* Load object specific data. */
-	if (OBJECT_OPS(ob)->load != NULL) {
-		if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
-			close(fd);
-			return (-1);
-		}
-	}
+	if (prop_load(ob, fd) != 0)
+		goto fail;
+
+	if (OBJECT_OPS(ob)->load != NULL &&
+	    OBJECT_OPS(ob)->load(ob, fd) != 0)
+		goto fail;
 
 	close(fd);
 	return (0);
+fail:
+	close(fd);
+	return (-1);
 }
 
 int
@@ -197,84 +183,87 @@ object_load(void *p)
 {
 	struct object *ob = p;
 	char *path;
-	int fd, rv = 0;
+	int fd;
 	
 	debug(DEBUG_STATE, "loading %s\n", ob->name);
 
-	path = object_path(ob->name, ob->type);
-	if (path == NULL) {
+	if ((path = object_path(ob->name, ob->type)) == NULL)
 		return (-1);
-	}
 
-	fd = open(path, O_RDONLY, 00600);
-	if (fd == -1) {
+	if ((fd = open(path, O_RDONLY, 00600)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
-		free(path);
-		return (-1);
+		goto fail;
 	}
 
-	/* Load generic properties. */
-	if (prop_load(ob, fd) != 0) {
-		free(path);
-		close(fd);
-		return (-1);
-	}
+	if (prop_load(ob, fd) != 0)
+		goto fail;
 
-	/* Load object specific data. */
-	if (OBJECT_OPS(ob)->load != NULL) {
-		if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
-			free(path);
-			close(fd);
-			return (-1);
-		}
-	}
+	if (OBJECT_OPS(ob)->load != NULL &&
+	    OBJECT_OPS(ob)->load(ob, fd) != 0)
+		goto fail;
 
 	free(path);
 	close(fd);
-	return (rv);
+	return (0);
+fail:
+	free(path);
+	close(fd);
+	return (-1);
 }
 
 int
 object_save(void *p)
 {
+	char path[FILENAME_MAX];
 	struct object *ob = p;
-	char *path, *datadir, *typedir;
 	struct stat sta;
 	int fd;
 
-	datadir = prop_get_string(config, "path.user_data_dir");
-	if (stat(datadir, &sta) != 0 && mkdir(datadir, 0700) != 0) {
-		fatal("creating %s: %s", datadir, strerror(errno));
+	if (prop_copy_string(config, "path.user_data_dir",
+	    path, sizeof(path)) > sizeof(path)) {
+		error_set("path too big");
+		return (-1);
 	}
-	Asprintf(&typedir, "%s/%s", datadir, ob->type);
-	free(datadir);
+	if (stat(path, &sta) != 0 &&
+	    mkdir(path, 0700) != 0) {
+		error_set("creating %s: %s", path, strerror(errno));
+		return (-1);
+	}
+	if (strlcat(path, "/", sizeof(path)) > sizeof(path) ||
+	    strlcat(path, ob->type, sizeof(path) > sizeof(path))) {
+		error_set("path too big");
+		return (-1);
+	}
+	if (stat(path, &sta) != 0 &&
+	    mkdir(path, 0700) != 0) {
+		error_set("creating %s: %s", path, strerror(errno));
+		return (-1);
+	}
+	if (strlcat(path, "/", sizeof(path))      > sizeof(path) ||
+	    strlcat(path, ob->name, sizeof(path)) > sizeof(path) ||
+	    strlcat(path, ".", sizeof(path))      > sizeof(path) ||
+	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
+		error_set("path too big");
+		return (-1);
+	}
 
-	if (stat(typedir, &sta) != 0 && mkdir(typedir, 0700) != 0) {
-		fatal("creating %s: %s", typedir, strerror(errno));
+	if ((fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600)) == -1) {
+		error_set("%s: %s", path, strerror(errno));
+		return (-1);
 	}
-	Asprintf(&path, "%s/%s.%s", typedir, ob->name, ob->type);
-	free(typedir);
 	
 	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, path);
 
-	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600);
-	if (fd == -1) {
-		fatal("%s: %s", path, strerror(errno));
-	}
-
-	/* Save generic properties. */
 	if (prop_save(ob, fd) != 0) {
 		close(fd);
-		fatal("%s", error_get());
+		return (-1);
 	}
-
-	/* Save object specific data. */
-	if (OBJECT_OPS(ob)->save != NULL && OBJECT_OPS(ob)->save(ob, fd) != 0) {
+	if (OBJECT_OPS(ob)->save != NULL &&
+	    OBJECT_OPS(ob)->save(ob, fd) != 0) {
 		close(fd);
-		fatal("%s", error_get());
+		return (-1);
 	}
 
-	free(path);
 	close(fd);
 	return (0);
 }
@@ -287,13 +276,14 @@ object_path(char *obname, const char *suffix)
 	char *p, *last;
 	char *datapath, *datapathp, *path;
 
-	path = emalloc((size_t)FILENAME_MAX);
+	path = emalloc(FILENAME_MAX);
 	datapathp = datapath = prop_get_string(config, "path.data_path");
 
 	for (p = strtok_r(datapath, ":", &last);
 	     p != NULL;
 	     p = strtok_r(NULL, ":", &last)) {
-		sprintf(path, "%s/%s/%s.%s", p, suffix, obname, suffix);
+		snprintf(path, FILENAME_MAX, "%s/%s/%s.%s", p, suffix,
+		    obname, suffix);
 		if (stat(path, &sta) == 0) {
 			free(datapathp);
 			return (path);
@@ -302,7 +292,7 @@ object_path(char *obname, const char *suffix)
 	free(datapathp);
 	free(path);
 
-	error_set("Cannot find %s.%s", obname, suffix);
+	error_set("cannot find %s.%s", obname, suffix);
 	return (NULL);
 }
 
