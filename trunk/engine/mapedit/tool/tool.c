@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.17 2003/02/02 21:14:02 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.18 2003/03/16 03:57:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -74,9 +74,6 @@ tool_destroy(void *p)
 	struct tool *tool = p;
 	struct tool_binding *binding, *nbinding;
 
-	if (tool->win != NULL) {
-		view_detach(tool->win);
-	}
 	free(tool->type);
 	
 	for (binding = SLIST_FIRST(&tool->bindings);
