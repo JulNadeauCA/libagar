@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.31 2002/06/27 00:17:39 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.32 2002/07/07 10:17:43 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -54,7 +54,9 @@ struct viewport {
 	enum {
 		VIEW_WINOP_NONE,
 		VIEW_WINOP_MOVE,
-		VIEW_WINOP_RESIZE
+		VIEW_WINOP_LRESIZE,	/* Left resize */
+		VIEW_WINOP_RRESIZE,	/* Right resize */
+		VIEW_WINOP_HRESIZE,	/* Height resize */
 	} winop;
 
 	pthread_mutex_t lock;
