@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.10 2003/07/05 12:20:56 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.11 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -36,18 +36,11 @@
 static void	transform_hflip(SDL_Surface **, int, Uint32 *);
 static void	transform_vflip(SDL_Surface **, int, Uint32 *);
 
-static const struct {
-	enum transform_type	type;
-	void			(*func)(SDL_Surface **, int, Uint32 *);
-} transforms[] = {
-	{	TRANSFORM_HFLIP,	transform_hflip		},
-	{	TRANSFORM_VFLIP,	transform_vflip		}
+const struct transform_ent transforms[] = {
+	{ "h-flip",	TRANSFORM_HFLIP,	transform_hflip },
+	{ "v-flip",	TRANSFORM_VFLIP,	transform_vflip }
 };
-static const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
-
-enum {
-	TRANSFORM_MAX_ARGS =	64
-};
+const int ntransforms = sizeof(transforms) / sizeof(transforms[0]);
 
 struct transform *
 transform_new(enum transform_type type, int nargs, Uint32 *args)
