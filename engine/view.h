@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.36 2002/07/27 21:37:35 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.37 2002/07/29 01:09:23 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -64,7 +64,7 @@ struct viewport {
 #ifdef VIEW_8BPP
 # define _VIEW_PUTPIXEL_8(dst, c)	\
 case 1:					\
-	(dst) = (c);			\
+	*(dst) = (c);			\
 	break;
 #else
 # define _VIEW_PUTPIXEL_8(dst, c)
@@ -85,12 +85,12 @@ case 2:					\
 case 3:					\
 	(dst)[0] = ((c)>>16) & 0xff;	\
 	(dst)[1] = ((c)>>8) & 0xff;	\
-	(dst)[2] =  (c) & 0xff;		\
+	(dst)[2] =  (c) & 0xff;	\
 	break;
 # else
 #  define _VIEW_PUTPIXEL_24(dst, c)	\
 case 3:					\
-	(dst)[0] =  (c) & 0xff;		\
+	(dst)[0] =  (c) & 0xff;	\
 	(dst)[1] = ((c)>>8) & 0xff;	\
 	(dst)[2] = ((c)>>16) & 0xff;	\
 	break;
@@ -109,6 +109,7 @@ case 4:					\
 #endif
 
 /* XXX inefficient */
+
 #define VIEW_PUT_ALPHAPIXEL(s, avx, avy, c, a) do {		\
 	Uint32 _view_col;					\
 	Uint8 _view_alpha_rs, _view_alpha_gs, _view_alpha_bs;	\
