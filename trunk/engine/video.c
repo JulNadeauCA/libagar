@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.6 2002/01/27 12:10:59 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.7 2002/01/28 05:08:23 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -42,10 +42,6 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <glib.h>
-
-#ifdef CONF_SMPEG
-#include <smpeg.h>
-#endif
 
 #include <engine/debug.h>
 #include <engine/video.h>
