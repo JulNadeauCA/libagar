@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.3 2002/02/07 05:14:31 vedge Exp $
+.\"	$Csoft: map.3,v 1.4 2002/02/13 00:30:57 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -59,18 +59,6 @@ Extra animation data (frame#, delay).
 .Ft void
 .Fn map_destroy "struct map *map"
 .Pp
-.Ft void
-.Fn map_load "struct map *map" "char *path"
-.Pp
-.Ft void
-.Fn map_save "struct map *map" "char *path"
-.Pp
-.Ft void
-.Fn map_link "struct map *map"
-.Pp
-.Ft void
-.Fn map_unlink "struct map *map"
-.Pp
 .Ft "int"
 .Fn map_focus "struct map *map"
 .Pp
@@ -87,14 +75,6 @@ Extra animation data (frame#, delay).
 allocates a map, and
 .Fn map_destroy
 frees a map.
-.Fn map_load
-initialize a map's contents from a file, and
-.Fn map_save
-dumps a map's contents to a file.
-.Fn map_link
-marks a map as consistent, and
-.Fn map_unlink
-does the opposite.
 .Fn map_focus
 and
 .Fn map_unfocus
@@ -103,67 +83,43 @@ toggles the visibility of the map's sprites and animations.
 initializes the entire map.
 .Sh MANIPULATING REFERENCES
 .nr nS 1
-.Ft "void"
-.Fn MAP_ADDSPRITE "struct map *map" "int x" "int y" "struct object *obj" \
-"int offs"
-.Pp
-.Ft "void"
-.Fn MAP_ADDANIM "struct map *map" "int x" "int y" "struct object *obj" \
-"int offs"
-.Pp
-.Ft "void"
-.Fn MAP_DELREF "struct map *map" "int x" "int y" "struct object *obj" \
-"int offs"
 .Pp
 .Ft "struct map_aref *"
-.Fn node_addref "struct node *me" "struct object *obj" \
+.Fn node_addref "struct node *node" "struct object *obj" \
 "int offs" "int rflags"
 .Pp
 .Ft "int"
-.Fn node_delref "struct node *me" "struct object *obj" "int offs"
+.Fn node_delref "struct node *node" "struct object *obj" "int offs"
 .Pp
 .Ft "struct map_aref *"
-.Fn node_aref "struct node *me" "struct object *obj" "int offs"
+.Fn node_aref "struct node *node" "struct object *obj" "int offs"
 .Pp
 .Ft "struct map_aref *"
-.Fn node_arefobj "struct node *me" "struct object *obj" "int offs"
+.Fn node_arefobj "struct node *node" "struct object *obj" "int offs"
 .Pp
 .nr nS 0
 .Pp
-The
-.Fn MAP_ADDSPRITE
-and
-.Fn MAP_ADDANIM
-macros add an animation reference for
-.Fa offs
-in
-.Fa obj
-to the map entry at the given
-.Fa x
-and
-.Fa y
-coordinates within the
-.Fa map .
-.Fn MAP_DELREF
-removes any reference to
-.Fa offs
-in
-.Fa obj
-within the
-.Fa map ,
-or any reference to
-.Fa obj
-if
-.Fa offs
-is negative.
-.Pp
 .Fn node_addref
-and
+adds a reference to
+.Fa node
+for the element
+.Fa offs
+of the
+.Fa obj
+structure.
 .Fn node_delref
-manipulate the reference stack on a given map entry.
-.Fn node_aref
-returns the referece at a given layer, and
+removes any reference to the element
+.Fa offs
+of the
+.Fa obj
+structure on
+.Fa node .
 .Fn node_arefobj
-returns the reference matching an object:offset pair.
+returns any reference to the element
+.Fa offs
+of the
+.Fa obj
+structure on
+.Fa node .
 .Sh SEE ALSO
 .Xr agar 3
