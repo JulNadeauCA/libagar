@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.76 2003/05/25 02:53:43 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.77 2003/05/25 03:59:07 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -217,7 +217,7 @@ config_window(struct config *con)
 	{
 		char *s;
 
-		tbox = textbox_new(reg, "  User datadir: ");
+		tbox = textbox_new(reg, "User datadir: ");
 		s = prop_get_string(config, "path.user_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
