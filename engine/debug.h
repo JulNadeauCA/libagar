@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.5 2002/02/28 12:50:14 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.6 2002/03/12 15:50:22 vedge Exp $	*/
 
 #ifdef DEBUG
 extern int engine_debug;
@@ -52,12 +52,14 @@ extern int engine_debug;
 #define pthread_mutex_lock(mutex)					\
 	do {								\
 		if (pthread_mutex_lock((mutex)) != 0) {			\
+			perror("mutex");				\
 			abort();					\
 		}							\
 	} while (0)
 #define pthread_mutex_unlock(mutex) 					\
 	do {								\
 		if (pthread_mutex_unlock((mutex)) != 0) {		\
+			perror("mutex");				\
 			abort();					\
 		}							\
 	} while (/*CONSTCOND*/0)
