@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.16 2002/03/01 02:55:55 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.17 2002/03/03 06:25:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -129,13 +129,13 @@ view_allocmask(Uint32 w, Uint32 h)
 }
 
 void
-view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 flags)
+view_maskfill(struct viewport *v, SDL_Rect *rd, Uint32 n)
 {
 	Uint32 x, y;
 
 	for (y = rd->y; y < rd->y + rd->h; y++) {
 		for (x = rd->x; x < rd->x + rd->w; x++) {
-			v->mapmask[y][x] = flags;
+			v->mapmask[y][x] += n;
 		}
 	}
 }
