@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.15 2004/03/25 07:17:04 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.16 2004/03/26 04:57:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -172,7 +172,7 @@ fspinbutton_init(struct fspinbutton *fsu, const struct unit *unit,
 	fsu->inc = 1.0;
 	fsu->input = textbox_new(fsu, label);
 	fsu->writeable = 1;
-	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
+	strlcpy(fsu->format, "%.2f", sizeof(fsu->format));
 	pthread_mutex_init(&fsu->lock, NULL);
 	
 	if (unit != NULL) {
