@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.93 2003/03/16 04:08:41 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.94 2003/03/16 23:15:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -139,7 +139,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->constr.x = 0;
 	mv->constr.y = 0;
 	mv->constr.win = NULL;
-	mv->constr.replace = 0;
+	mv->constr.replace = 1;
 	mv->constr.trigger = NULL;
 
 	mv->cur_layer = 0;
