@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.8 2004/03/24 06:23:25 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.9 2004/03/25 04:35:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -16,17 +16,17 @@ struct fspinbutton {
 	struct widget wid;
 
 	pthread_mutex_t	lock;
-	double value;			/* Value binding */
-	double min, max;		/* Value boundaries */
-	char format[8];			/* Format for printf (for precision) */
-	double incr;			/* Increment for [+]/[-] buttons */
-	const struct unit *unit;	/* Conversion unit (or NULL) */
-	int writeable;
+	double value;			/* Default value binding */
+	double min, max;		/* Default range bindings */
+	double inc;			/* Increment for buttons */
+	char format[32];		/* Printing format */
+	const struct unit *unit;	/* Conversion unit */
+	int writeable;			/* 0 = read-only */
 
-	struct textbox *input;		/* Text input */
-	struct ucombo *units;		/* Unit selection */
-	struct button *incbu;		/* [+] button */
-	struct button *decbu;		/* [-] button */
+	struct textbox *input;
+	struct ucombo *units;
+	struct button *incbu;
+	struct button *decbu;
 };
 
 __BEGIN_DECLS

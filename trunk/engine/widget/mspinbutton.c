@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.1 2004/03/25 07:16:05 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.2 2004/03/25 09:00:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -147,25 +147,21 @@ mspinbutton_return(int argc, union evarg *argv)
 	char text[TEXTBOX_STRING_MAX];
 	struct mspinbutton *sbu = argv[1].p;
 	struct widget_binding *stringb;
-	char *tp, *s;
-	int nx = 0, ny = 0;
+	char *tp = &text[0], *s;
 
 	stringb = widget_get_binding(sbu->input, "string", &s);
 	strlcpy(text, s, sizeof(text));
-	tp = &text[0];
 
 	if ((s = strsep(&tp, sbu->sep)) != NULL) {
 		mspinbutton_set_value(sbu, "xvalue", atoi(s));
-		event_post(NULL, sbu, "mspinbutton-changed", "%s", "xvalue");
 	}
 	if ((s = strsep(&tp, sbu->sep)) != NULL) {
 		mspinbutton_set_value(sbu, "yvalue", atoi(s));
-		event_post(NULL, sbu, "mspinbutton-changed", "%s", "yvalue");
 	}
 	widget_binding_unlock(stringb);
 
-	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
 	event_post(NULL, sbu, "mspinbutton-return", NULL);
+	WIDGET(sbu->input)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
@@ -176,8 +172,6 @@ mspinbutton_up(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	mspinbutton_add_value(sbu, "yvalue", -sbu->inc);
 	pthread_mutex_unlock(&sbu->lock);
-	
-	event_post(NULL, sbu, "mspinbutton-changed", "%s", "yvalue");
 }
 
 static void
@@ -188,8 +182,6 @@ mspinbutton_down(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	mspinbutton_add_value(sbu, "yvalue", sbu->inc);
 	pthread_mutex_unlock(&sbu->lock);
-	
-	event_post(NULL, sbu, "mspinbutton-changed", "%s", "yvalue");
 }
 
 static void
@@ -200,8 +192,6 @@ mspinbutton_left(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	mspinbutton_add_value(sbu, "xvalue", -sbu->inc);
 	pthread_mutex_unlock(&sbu->lock);
-	
-	event_post(NULL, sbu, "mspinbutton-changed", "%s", "xvalue");
 }
 
 static void
@@ -212,8 +202,6 @@ mspinbutton_right(int argc, union evarg *argv)
 	pthread_mutex_lock(&sbu->lock);
 	mspinbutton_add_value(sbu, "xvalue", sbu->inc);
 	pthread_mutex_unlock(&sbu->lock);
-	
-	event_post(NULL, sbu, "mspinbutton-changed", "%s", "xvalue");
 }
 
 void
@@ -221,7 +209,11 @@ mspinbutton_init(struct mspinbutton *sbu, const char *sep, const char *label)
 {
 	widget_init(sbu, "mspinbutton", &mspinbutton_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
-	
+	widget_bind(sbu, "xvalue", WIDGET_INT, &sbu->xvalue);
+	widget_bind(sbu, "yvalue", WIDGET_INT, &sbu->yvalue);
+	widget_bind(sbu, "min", WIDGET_INT, &sbu->min);
+	widget_bind(sbu, "max", WIDGET_INT, &sbu->max);
+
 	sbu->xvalue = 0;
 	sbu->yvalue = 0;
 	sbu->min = 0;
@@ -233,11 +225,6 @@ mspinbutton_init(struct mspinbutton *sbu, const char *sep, const char *label)
 	
 	sbu->input = textbox_new(sbu, label);
 	event_new(sbu->input, "textbox-return", mspinbutton_return, "%p", sbu);
-
-	widget_bind(sbu, "xvalue", WIDGET_INT, &sbu->xvalue);
-	widget_bind(sbu, "yvalue", WIDGET_INT, &sbu->yvalue);
-	widget_bind(sbu, "min", WIDGET_INT, &sbu->min);
-	widget_bind(sbu, "max", WIDGET_INT, &sbu->max);
 
 	sbu->xdecbu = button_new(sbu, "-");
 	button_set_padding(sbu->xdecbu, 0);
@@ -386,7 +373,7 @@ mspinbutton_add_value(struct mspinbutton *sbu, const char *which, int inc)
 		break;
 	}
 
-	event_post(NULL, sbu, "mspinbutton-changed", NULL);
+	event_post(NULL, sbu, "mspinbutton-changed", "%s", which);
 	widget_binding_modified(valueb);
 
 	widget_binding_unlock(maxb);
@@ -517,7 +504,7 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 	}
 	va_end(ap);
 
-	event_post(NULL, sbu, "mspinbutton-changed", NULL);
+	event_post(NULL, sbu, "mspinbutton-changed", "%s", which);
 	widget_binding_modified(valueb);
 
 	widget_binding_unlock(valueb);

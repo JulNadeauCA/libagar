@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.h,v 1.1 2004/03/25 07:16:05 vedge Exp $	*/
+/*	$Csoft: mspinbutton.h,v 1.2 2004/03/25 09:00:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MSPINBUTTON_H_
@@ -12,17 +12,15 @@
 
 struct mspinbutton {
 	struct widget wid;
-	const char *sep;
-	int xvalue, yvalue;
-	int min, max;
+	const char *sep;			/* x/y value separator */
+	int xvalue, yvalue;			/* Default x/y bindings */
+	int min, max;				/* Default range bindings */
 	pthread_mutex_t	lock;
-	int inc;
-	int writeable;
+	int inc;				/* Increment for buttons */
+	int writeable;				/* 0 = read-only */
 	struct textbox *input;
-	struct button *xincbu;
-	struct button *xdecbu;
-	struct button *yincbu;
-	struct button *ydecbu;
+	struct button *xincbu, *xdecbu;
+	struct button *yincbu, *ydecbu;
 };
 
 __BEGIN_DECLS
