@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.27 2003/03/24 12:08:39 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.28 2003/03/25 13:48:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -464,66 +464,66 @@ prop_get_pointer(void *p, char *key)
 }
 
 int
-prop_load(void *p, int fd)
+prop_load(void *p, struct netbuf *buf)
 {
 	struct object *ob = p;
-	Uint32 nprops, i, t;
-	char *key;
-	Uint8 c;
-	Sint8 sc;
+	Uint32 i, nprops;
 
-	if (version_read(fd, &prop_ver, NULL) == -1) {
+	if (version_read(buf, &prop_ver, NULL) == -1)
 		return (-1);
-	}
 
 	pthread_mutex_lock(&ob->props_lock);
-	nprops = read_uint32(fd);
+
+	object_free_props(ob);
+	nprops = read_uint32(buf);
 
 	for (i = 0; i < nprops; i++) {
-		key = read_string(fd, NULL);
-		t = read_uint32(fd);
+		char key[PROP_KEY_MAX];
+		Uint32 t;
+
+		if (copy_string(key, buf, sizeof(key)) >= sizeof(key)) {
+			error_set("key too big");
+			goto fail;
+		}
+		t = read_uint32(buf);
 		
 		debug(DEBUG_STATE, "prop %s (%d)\n", key, t);
 	
 		switch (t) {
 		case PROP_BOOL:
-			Read(fd, &c, 1);
-			prop_set_bool(ob, key, (int)c);
+			prop_set_bool(ob, key, (int)read_uint8(buf));
 			break;
 		case PROP_UINT8:
-			Read(fd, &c, 1);
-			prop_set_uint8(ob, key, c);
+			prop_set_bool(ob, key, read_uint8(buf));
 			break;
 		case PROP_SINT8:
-			Read(fd, &sc, 1);
-			prop_set_sint8(ob, key, sc);
+			prop_set_bool(ob, key, read_sint8(buf));
 			break;
 		case PROP_UINT16:
-			prop_set_uint16(ob, key, read_uint16(fd));
+			prop_set_uint16(ob, key, read_uint16(buf));
 			break;
 		case PROP_SINT16:
-			prop_set_sint16(ob, key, read_sint16(fd));
+			prop_set_sint16(ob, key, read_sint16(buf));
 			break;
 		case PROP_UINT32:
-			prop_set_uint32(ob, key, read_uint32(fd));
+			prop_set_uint32(ob, key, read_uint32(buf));
 			break;
 		case PROP_SINT32:
-			prop_set_sint32(ob, key, read_sint32(fd));
+			prop_set_sint32(ob, key, read_sint32(buf));
 			break;
 		case PROP_INT:
-			prop_set_int(ob, key, (int)read_sint32(fd));
+			prop_set_int(ob, key, (int)read_sint32(buf));
 			break;
-		/* XXX vax floating point */
 #if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 		case PROP_FLOAT:
-			prop_set_float(ob, key, read_float(fd));
+			prop_set_float(ob, key, read_float(buf));
 			break;
 		case PROP_DOUBLE:
-			prop_set_double(ob, key, read_double(fd));
+			prop_set_double(ob, key, read_double(buf));
 			break;
 # ifdef USE_LONG_DOUBLE
 		case PROP_LONG_DOUBLE:
-			prop_set_long_double(ob, key, read_long_double(fd));
+			prop_set_long_double(ob, key, read_long_double(buf));
 			break;
 # endif
 #endif /* FLOATING_POINT and HAVE_IEEE754 */
@@ -531,84 +531,89 @@ prop_load(void *p, int fd)
 			{
 				char *sd;
 
-				sd = read_string(fd, NULL);
+				sd = read_string(buf, NULL);
+				if (strlen(sd) > PROP_STRING_MAX) {
+					error_set("string too big");
+					free(sd);
+					goto fail;
+				}
 				prop_set_string(ob, key, "%s", sd);
 				free(sd);
 			}
 			break;
 		default:
-			fatal("cannot load prop of type %d", t);
-			break;
+			error_set("cannot load prop of type %d", t);
+			goto fail;
 		}
-		free(key);
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 	return (0);
+fail:
+	pthread_mutex_unlock(&ob->props_lock);
+	return (-1);
 }
 
 int
-prop_save(void *p, int fd)
+prop_save(void *p, struct netbuf *buf)
 {
 	struct object *ob = p;
 	off_t count_offs;
-	struct fobj_buf *buf;
 	Uint32 nprops = 0;
 	struct prop *prop;
 	Uint8 c;
 	
+	version_write(buf, &prop_ver);
+	
 	pthread_mutex_lock(&ob->props_lock);
 
-	buf = fobj_create_buf(64, 128);
-
 	count_offs = buf->offs;				/* Skip count */
-	buf_write_uint32(buf, 0);
+	write_uint32(buf, 0);
 
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		buf_write_string(buf, (char *)prop->key);
-		buf_write_uint32(buf, prop->type);
+		write_string(buf, (char *)prop->key);
+		write_uint32(buf, prop->type);
 		debug(DEBUG_STATE, "%s -> %s\n", ob->name, prop->key);
 		switch (prop->type) {
 		case PROP_BOOL:
 			c = (prop->data.i == 1) ? 1 : 0;
-			buf_write(buf, &c, 1);
+			write_uint8(buf, c);
 			break;
 		case PROP_UINT8:
-			buf_write(buf, &prop->data.u8, 1);
+			write_uint8(buf, prop->data.u8);
 			break;
 		case PROP_SINT8:
-			buf_write(buf, &prop->data.s8, 1);
+			write_sint8(buf, prop->data.s8);
 			break;
 		case PROP_UINT16:
-			buf_write_uint16(buf, prop->data.u16);
+			write_uint16(buf, prop->data.u16);
 			break;
 		case PROP_SINT16:
-			buf_write_sint16(buf, prop->data.s16);
+			write_sint16(buf, prop->data.s16);
 			break;
 		case PROP_UINT32:
-			buf_write_uint32(buf, prop->data.u32);
+			write_uint32(buf, prop->data.u32);
 			break;
 		case PROP_SINT32:
-			buf_write_sint32(buf, prop->data.s32);
+			write_sint32(buf, prop->data.s32);
 			break;
 		case PROP_INT:
-			buf_write_sint32(buf, (Sint32)prop->data.i);
+			write_sint32(buf, (Sint32)prop->data.i);
 			break;
-		/* XXX vax floating point */
 #if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 		case PROP_FLOAT:
-			buf_write_float(buf, prop->data.f);
+			write_float(buf, prop->data.f);
 			break;
 		case PROP_DOUBLE:
-			buf_write_double(buf, prop->data.d);
+			write_double(buf, prop->data.d);
 			break;
 # ifdef USE_LONG_DOUBLE
 		case PROP_LONG_DOUBLE:
-			buf_write_long_double(buf, prop->data.ld);
+			write_long_double(buf, prop->data.ld);
 			break;
 # endif
-#endif /* FLOATING_POINT and HAVE_IEEE754 */
+#endif
 		case PROP_STRING:
-			buf_write_string(buf, prop->data.s);
+			write_string(buf, prop->data.s);
 			break;
 		case PROP_POINTER:
 			debug(DEBUG_STATE,
@@ -621,13 +626,8 @@ prop_save(void *p, int fd)
 		nprops++;
 	}
 	pthread_mutex_unlock(&ob->props_lock);
-	
-	buf_pwrite_uint32(buf, nprops, count_offs);	/* Write count */
 
-	version_write(fd, &prop_ver);
-	fobj_flush_buf(buf, fd);
-
-	fobj_destroy_buf(buf);
+	pwrite_uint32(buf, nprops, count_offs);		/* Write count */
 	return (0);
 }
 
@@ -642,5 +642,4 @@ prop_destroy(struct prop *prop)
 		break;
 	}
 	free(prop->key);
-	free(prop);
 }
