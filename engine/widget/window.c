@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.232 2004/09/27 03:58:03 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.233 2004/09/29 05:48:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -223,7 +223,7 @@ window_init(void *p, const char *name, int flags)
 		titlebar_flags |= TITLEBAR_NO_CLOSE;
 	if (flags & WINDOW_NO_MINIMIZE)
 		titlebar_flags |= TITLEBAR_NO_MINIMIZE;
-	if (flags & WINDOW_NO_MAXIMIZE)
+	if ((flags & WINDOW_MAXIMIZE) == 0)
 		titlebar_flags |= TITLEBAR_NO_MAXIMIZE;
 
 	win->tbar = (flags & WINDOW_NO_TITLEBAR) ? NULL :
@@ -281,7 +281,7 @@ window_set_style(struct window *win, const struct style *style)
 	
 	win->xpadding = win->h_border_w+4;
 	win->ypadding = win->v_border_w+4;
-	win->minh = win->ypadding*2 + text_font_height(NULL);
+	win->minh = win->ypadding*2 + text_font_height;
 	win->minw = win->xpadding*2;
 }
 
@@ -1295,7 +1295,7 @@ apply_alignment(struct window *win)
 	}
 	if (win->flags & WINDOW_CASCADE) {
 		pthread_mutex_lock(&window_lock);
-		if ((window_xoffs += text_font_height(NULL))+WIDGET(win)->w >
+		if ((window_xoffs += text_font_height)+WIDGET(win)->w >
 		    view->w/2) {
 			window_xoffs = 0;
 		}

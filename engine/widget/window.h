@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.79 2004/09/25 01:57:09 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.80 2004/09/27 03:58:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -41,7 +41,7 @@ struct window {
 #define WINDOW_NO_RESIZE	(WINDOW_NO_HRESIZE|WINDOW_NO_VRESIZE)
 #define WINDOW_NO_CLOSE		0x0400	/* Disable close button */
 #define WINDOW_NO_MINIMIZE	0x0800	/* Disable minimize button */
-#define WINDOW_NO_MAXIMIZE	0x1000	/* Disable maximize button */
+#define WINDOW_MAXIMIZE		0x1000	/* Enable maximize button */
 
 #ifdef DEBUG
 	char	 caption[128];
