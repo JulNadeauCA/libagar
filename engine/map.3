@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.11 2002/09/16 16:04:36 vedge Exp $
+.\"	$Csoft: map.3,v 1.12 2002/12/28 02:58:04 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -35,48 +35,82 @@
 .Sh SYNOPSIS
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
-An agar map is an array of node structures.
-Each node may contain a stack of noderef structures.
+Agar levels are described by arrays of nodes.
+Each node contains a stack of references and other data specific to the tile.
+The node references also contain centering/motion offsets and a list of
+transforms to apply.
 .Pp
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct map *"
-.Fn map_init "struct map *m" "char *name" "char *archive" "Uint32 flags"
+.Fn map_init "struct map *map" "enum map_type type" "char *name" "char *archive"
 .Pp
 .Ft void
-.Fn map_destroy "struct map *map"
+.Fn map_destroy "void *map"
 .Pp
 .Ft int
-.Fn map_load "struct map *map" "int fd"
+.Fn map_load "void *map" "int fd"
 .Pp
 .Ft int
-.Fn map_save "struct map *map" "int fd"
+.Fn map_save "void *map" "int fd"
 .Pp
 .Ft void
-.Fn map_clean "struct map *map" "struct object *ob" "Uint32 offs" \
-              "Uint32 nflags" "Uint32 rflags"
+.Fn map_alloc_nodes "struct map *map" "Uint32 w" "Uint32 h"
 .Pp
 .Ft void
-.Fn map_allocnodes "struct map *map" "Uint32 w" "Uint32 h"
+.Fn map_free_nodes "struct map *map"
 .Pp
 .Ft void
-.Fn map_freenodes "struct map *map"
+.Fn map_set_zoom "struct map *map" "Uint16 factor"
+.Pp
+.Ft void
+.Fn noderef_init "struct noderef *nref"
+.Pp
+.Ft void
+.Fn noderef_destroy "struct noderef *nref"
+.Pp
+.Ft void
+.Fn noderef_load "int fd" "struct object_table *table" "struct node *node" \
+                 "struct noderef **nref"
+.Pp
+.Ft void
+.Fn noderef_save "struct fobj_buf *savebuf" "struct object_table *table" \
+                 "struct noderef *nref"
+.Pp
+.Ft void
+.Fn node_init "struct node *node" "int x" "int y"
+.Pp
+.Ft void
+.Fn node_load "int fd" "struct object_table *table" "struct node *node"
+.Pp
+.Ft void
+.Fn node_save "struct fobj_buf *savebuf" "struct object_table *table" \
+              "struct node *node"
+.Pp
+.Ft void
+.Fn node_destroy "struct node *node" "int x" "int y"
 .nr nS 0
 .Pp
 The
 .Fn map_init
 function initializes a map identified by the string
 .Fa name .
-Data is loaded from the
+Data is loaded from
 .Fa archive
-argument if it is not NULL.
+if it is not NULL.
 The
-.Fa flags
-argument is currently ignored.
+.Fa type
+argument accepts:
+.Bd -literal
+enum map_type {
+	MAP_2D,
+	MAP_3D
+};
+.Ed
 .Pp
 The
 .Fn map_destroy
-function frees resources allocated by a map.
+function frees all resources allocated by a map.
 .Pp
 The
 .Fn map_load
@@ -88,28 +122,99 @@ function saves a map to file descriptor
 .Fa fd .
 .Pp
 The
-.Fn map_clean
-function reinitializes all nodes on
-.Fa map
-and add a reference to offset
-.Fa offs
-of object
-.Fa ob
-with the node flags set to
-.Fa nflags
-and the node reference flags set to
-.Fa rflags .
-.Pp
-The
-.Fn map_allocnodes
+.Fn map_alloc_nodes
 function allocates
 .Fa w
 x
 .Fa h
 nodes.
 The
-.Fn map_freenodes
+.Fn map_free_nodes
 function releases nodes allocated for map
 .Fa map .
+The
+.Fn map_grow
+and
+.Fn map_shrink
+functions reallocates
+.Fa w
+x
+.Fa h
+nodes.
+The
+.Fn map_adjust
+function grows the map to make sure the node at
+.Fa x ,
+.Fa y
+is initialized.
+.Pp
+The
+.Fn map_set_zoom
+function sets the zoom factor for a map.
+Unless the factor is 100%, bitmap scaling is done as the map is drawn.
+.Pp
+The
+.Fn noderef_init ,
+.Fn noderef_destroy ,
+.Fn noderef_load
+and
+.Fn noderef_save
+functions respectively initialize, free, load and save a single node reference.
+.Pp
+The
+.Fn node_init ,
+.Fn node_destroy ,
+.Fn node_load
+and
+.Fn node_save
+functions respectively initialize, free, load and save a single map node.
+.Sh NODE OPERATIONS
+.nr nS 1
+.Ft void
+.Fn node_draw "struct map *map" "struct node *node" "Uint32 x" "Uint32 y"
+.Pp
+.Ft void
+.Fn node_move_ref "struct noderef *nref" "struct node *node" "Uint32 nx" \
+                  "Uint32 ny"
+.Pp
+.Ft void
+.Fn node_copy_ref "struct noderef *nref" "struct node *node"
+.Pp
+.Ft void
+.Fn node_remove_ref "struct noderef *nref" "struct node *node"
+.Pp
+.Ft "struct noderef *"
+.Fn node_add_sprite "struct node *node" "void *obj" "Uint32 index"
+.Pp
+.Ft "struct noderef *"
+.Fn node_add_anim "struct node *node" "void *obj" "Uint32 index" "Uint32 flags"
+.Pp
+.Ft "struct noderef *"
+.Fn node_add_warp "struct node *node" "char *new_map" "Uint32 x" "Uint32 y" \
+                  "Uint8 dir"
+.nr nS 0
+.Pp
+The
+.Fn node_draw
+function draws
+.Fa node
+at screen coordinates
+.Fa x ,
+.Fa y .
+The
+.Fn node_move_ref ,
+.Fn node_copy_ref
+and
+.Fn node_remove_ref
+functions respectively move, copy and remove specific references on
+.Fa node .
+.Pp
+The
+.Fn node_add_sprite ,
+.Fn node_add_anim
+and
+.Fn node_add_warp
+respectively insert sprite references, animation references and map warp
+information.
 .Sh SEE ALSO
 .Xr agar 3
