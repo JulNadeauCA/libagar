@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.26 2002/11/17 23:13:59 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.27 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -102,12 +102,12 @@ checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 void
 checkbox_destroy(void *p)
 {
-	struct checkbox *b = p;
+	struct checkbox *cb = p;
 
-	SDL_FreeSurface(b->label_s);
-	free(b->caption);
+	SDL_FreeSurface(cb->label_s);
+	free(cb->caption);
 
-	widget_destroy(b);
+	widget_destroy(cb);
 }
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.22 2002/11/28 06:32:13 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.23 2002/12/02 04:15:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -218,7 +218,7 @@ static void
 tlist_free_item(struct tlist_item *it)
 {
 	if (it->icon != NULL) {
-		view_unused_surface(it->icon);
+		SDL_FreeSurface(it->icon);
 	}
 	free(it->text);
 	free(it);

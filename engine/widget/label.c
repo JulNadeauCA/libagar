@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.39 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.40 2002/11/28 07:40:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -342,4 +342,6 @@ label_destroy(void *p)
 		free(label->poll.fmt);
 		break;
 	}
+
+	widget_destroy(label);
 }

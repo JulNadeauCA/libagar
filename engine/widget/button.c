@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.42 2002/11/17 23:13:59 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.43 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -129,10 +129,8 @@ button_destroy(void *p)
 
 	free(b->caption);
 	if (b->slabel_s != NULL) {
-		/* Decrement the reference count. */
-		view_unused_surface(b->slabel_s);
+		SDL_FreeSurface(b->label_s);
 	}
-	SDL_FreeSurface(b->label_s);
 
 	widget_destroy(b);
 }
@@ -156,8 +154,7 @@ button_scaled(int argc, union evarg *argv)
 	}
 
 	if (b->slabel_s != NULL) {
-		/* Decrement the reference count. */
-		view_unused_surface(b->slabel_s);
+		SDL_FreeSurface(b->slabel_s);
 	}
 	b->slabel_s = view_scale_surface(b->label_s, nw - 6, WIDGET(b)->h - 6);
 }
