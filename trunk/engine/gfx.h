@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.h,v 1.19 2004/04/22 01:49:43 vedge Exp $	*/
+/*	$Csoft: gfx.h,v 1.20 2004/05/10 05:17:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/transform.h>
@@ -63,13 +63,8 @@ struct gfx {
 	TAILQ_ENTRY(gfx) gfxs;			/* Art pool */
 };
 
-#ifdef DEBUG
-#define SPRITE(ob, i)	gfx_get_sprite((struct object *)(ob), (i))
-#define ANIM(ob, i)	gfx_get_anim((struct object *)(ob), (i))
-#else
 #define SPRITE(ob, i)	((struct object *)(ob))->gfx->sprites[(i)]
 #define ANIM(ob, i)	((struct object *)(ob))->gfx->anims[(i)]
-#endif
 
 #define GFX_ANIM_FRAME(r, an) \
     (an)->frames[((r)->r_anim.flags & NODEREF_PVT_FRAME) ? \
@@ -95,9 +90,7 @@ struct gfx_anim	*gfx_insert_anim(struct gfx *);
 Uint32		 gfx_insert_anim_frame(struct gfx_anim *, SDL_Surface *);
 
 #ifdef DEBUG
-__inline__ SDL_Surface		*gfx_get_sprite(struct object *, Uint32);
-__inline__ struct gfx_anim	*gfx_get_anim(struct object *, Uint32);
-struct window			*gfx_debug_window(void);
+struct window	*gfx_debug_window(void);
 #endif
 __END_DECLS
 
