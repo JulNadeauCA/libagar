@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.4 2002/08/12 06:56:26 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.5 2002/09/06 01:26:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,7 +33,6 @@
 #include <errno.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>

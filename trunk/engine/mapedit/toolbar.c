@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.18 2002/08/28 08:51:28 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.19 2002/09/06 01:26:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -63,18 +63,18 @@ push(int argc, union evarg *argv)
 	
 	switch (argv[2].i) {
 	case MAPEDIT_TOOL_NEW_MAP:
-		window_show(med->new_map_win);
+		window_show(med->new_map_win, 0, 0);
 		return;
 	case MAPEDIT_TOOL_LOAD_MAP:
-		window_show(med->load_map_win);
+		window_show(med->load_map_win, 0, 0);
 		return;
 	case MAPEDIT_TOOL_OBJLIST:
-		window_show(med->objlist_win);
+		window_show(med->objlist_win, 0, 0);
 		return;
 	}
 
 	if (med->curtool != NULL && med->curtool->win != NULL) {
-		window_hide(med->curtool->win);
+		window_hide(med->curtool->win, 0, 0);
 		med->curtool->button->flags &= ~(BUTTON_PRESSED);
 	}
 
@@ -97,7 +97,7 @@ push(int argc, union evarg *argv)
 	}
 	
 	if (med->curtool->win != NULL) {
-		window_show(med->curtool->win);
+		window_show(med->curtool->win, 0, 0);
 	}
 	WIDGET_FOCUS(wid);
 }

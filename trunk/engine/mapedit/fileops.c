@@ -1,4 +1,4 @@
-/*	$Csoft: fileops.c,v 1.8 2002/09/06 01:26:41 vedge Exp $	*/
+/*	$Csoft: fileops.c,v 1.9 2002/09/07 04:32:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
@@ -83,12 +83,12 @@ fileops_new_map(int argc, union evarg *argv)
 
 	win = mapwin_new(med, m);
 	view_attach(win);
-	window_show(win);
+	window_show(win, 0, 0);
 
 	textbox_printf(name_tbox, "");
 	textbox_printf(media_tbox, "");
 
-	window_hide_locked(wid->win);
+	window_hide(wid->win, 0, 0);
 out:
 	free(name);
 	free(media);
@@ -126,11 +126,11 @@ fileops_load_map(int argc, union evarg *argv)
 
 	win = mapwin_new(med, m);
 	view_attach(win);
-	window_show(win);
+	window_show(win, 0, 0);
 
 	textbox_printf(name_tbox, "");
 
-	window_hide_locked(wid->win);
+	window_hide(wid->win, 0, 0);
 out:
 	free(name);
 }
