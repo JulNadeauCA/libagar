@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.7 2004/05/31 04:54:59 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.8 2004/05/31 07:16:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,10 +52,6 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 	vgb->origin.x = 0;
 	vgb->origin.y = 0;
 	vgb->origin.z = 0;
-	vgb->extent.x = 0;
-	vgb->extent.y = 0;
-	vgb->extent.w = 0;
-	vgb->extent.h = 0;
 	vgb->theta = 0;
 	TAILQ_INIT(&vgb->vges);
 
@@ -149,13 +145,13 @@ vg_rotate_block(struct vg *vg, struct vg_block *vgb, double theta)
 	vg->redraw++;
 }
 
-/* Calculate a block's bounding box. */
+/* Calculate the collective extent of the elements in a block. */
 void
 vg_block_extent(struct vg *vg, struct vg_block *vgb, struct vg_rect *ext)
 {
-	struct vg_element *vge;
 	double xmin = vgb->pos.x, xmax = vgb->pos.x;
 	double ymin = vgb->pos.y, ymax = vgb->pos.y;
+	struct vg_element *vge;
 	struct vg_rect r;
 
 	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
