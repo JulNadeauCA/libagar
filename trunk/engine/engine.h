@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.21 2002/05/19 14:31:30 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.22 2002/05/26 04:08:47 vedge Exp $	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
@@ -13,6 +13,7 @@
 #include <libfobj/fobj.h>
 
 #include <engine/queue.h>
+#include <engine/error.h>
 #include <engine/debug.h>
 #include <engine/event.h>
 #include <engine/anim.h>
@@ -30,14 +31,11 @@ struct gameinfo {
 	int	 ver[2];
 };
 
-
 #define ICON_GAME	0
 #define ICON_MAPEDITION	1
 
 int		 engine_init(int, char **, struct gameinfo *, char *);
 int		 engine_editmap(void);
-void		*emalloc(size_t);
-void		*erealloc(void *, size_t);
 void		 engine_destroy(void);
 
 #endif	/* _AGAR_ENGINE_H_ */
