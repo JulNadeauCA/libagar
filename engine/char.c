@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.30 2002/04/07 02:23:11 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.31 2002/04/10 09:22:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -123,6 +123,8 @@ char_load(void *p, int fd)
 		flags = fobj_read_uint32(fd);
 		speed = fobj_read_uint32(fd);
 		minput = fobj_read_string(fd);
+
+		/* XXX input devices should be linked */
 		if (strcmp(minput, "keyboard0") == 0) {
 			input = keyboard;
 		} else if (strcmp(minput, "joy0") == 0) {
@@ -148,7 +150,11 @@ char_load(void *p, int fd)
 			npos->speed = speed;
 			pthread_mutex_unlock(&m->lock);
 
-			dprintf("at %s:%d,%d\n", m->obj.name, x, y);
+			if (ch->flags & CHAR_FOCUS) {
+				view_center(m->view, x, y);
+			}
+
+			dprintf("at %s:%d,%d\n", OBJECT(m)->name, x, y);
 		} else {
 			fatal("no such map: \"%s\"\n", mname);
 		}
