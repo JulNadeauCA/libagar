@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.36 2004/04/10 02:43:43 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.37 2004/04/11 03:29:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -340,7 +340,7 @@ objedit_window(void)
 		name_tb = textbox_new(vb, _("Name: "));
 		types_com = combo_new(vb, 0, _("Type: "));
 		textbox_printf(types_com->tbox, "object");
-		for (i = 0; i < ntypesw; i++) {
+		for (i = ntypesw-1; i >= 0; i--) {
 			char label[TLIST_LABEL_MAX];
 
 			strlcpy(label, typesw[i].type, sizeof(label));
