@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.25 2003/04/25 22:53:52 vedge Exp $
+.\"	$Csoft: agar.3,v 1.26 2003/05/07 00:46:44 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -37,13 +37,15 @@
 .Nd graphical game engine
 .Sh DESCRIPTION
 .Nm
-is a graphical engine implementing the following subsystems:
+is a high-level game/simulation engine.
+.Nm
+currently implements the following subsystems:
 .Bl -tag -width "transform(3) " -compact
 .It config
 Generic engine/game configuration settings
 .It Xr event 3
 Generic event processing
-.It Xr input
+.It Xr input 3
 Processing of events from input devices
 .It Xr map 3
 2D multilayered, tile-based levels
