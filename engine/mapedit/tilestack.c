@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.1 2002/07/07 00:23:01 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.2 2002/07/07 06:28:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -113,7 +113,6 @@ tilestack_draw(void *p)
 
 	if (nx >= mv->map->mapw - 1 || ny >= mv->map->maph ||
 	    nx < 0 || ny < 0) {
-		dprintf("non\n");
 		return;
 	}
 

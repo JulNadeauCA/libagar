@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: tool.h,v 1.1 2002/07/07 00:23:50 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -21,6 +21,9 @@ struct tool {
 
 #define	TOOL(t)		((struct tool *)(t))
 #define TOOL_OPS(t)	((struct tool_ops *)OBJECT((t))->ops)
+
+#define TOOL_DIALOG_X	16
+#define TOOL_DIALOG_Y	160	/* XXX */
 
 void	tool_init(struct tool *, char *, struct mapedit *, const void *);
 

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: eraser.c,v 1.1 2002/07/07 00:23:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -76,7 +76,7 @@ eraser_init(struct eraser *er, struct mapedit *med, int flags)
 	tool_init(&er->tool, "eraser", med, &eraser_ops);
 
 	er->flags = flags;
-	er->mode = ERASER_ALL;
+	er->mode = 0;
 	er->selection.pobj = NULL;
 	er->selection.offs = -1;
 }
@@ -97,10 +97,12 @@ eraser_window(void *p)
 	};
 
 	win = window_new("Eraser", WINDOW_SOLID|WINDOW_ABSOLUTE,
-	    16, 128, 120, 120);
+	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120);
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	rad = radio_new(reg, mode_items, 0, 0);
 	event_new(rad, "radio-changed", 0, eraser_event, "%p, %c", er, 'm');
+	
+	win->focus = WIDGET(rad);
 
 	return (win);
 }
@@ -123,14 +125,19 @@ eraser_effect(void *p, struct map *m, Uint32 x, Uint32 y)
 	struct eraser *er = p;
 	struct mapedit *med = TOOL(er)->med;
 	struct node *n = &m->map[y][x];
-	struct noderef *nref;
+	struct noderef *nref, *nnref;
 	struct editref *eref;
 
 	switch (er->mode) {
 	case ERASER_ALL:
-		TAILQ_FOREACH(nref, &n->nrefsh, nrefs) {
-			node_delref(n, nref);
+		for (nref = TAILQ_FIRST(&n->nrefsh);
+		     nref != TAILQ_END(&n->nrefsh);
+		     nref = nnref) {
+			nnref = TAILQ_NEXT(nref, nrefs);
+			free(nref);
 		}
+		n->nnrefs = 0;
+		TAILQ_INIT(&n->nrefsh);
 		break;
 	case ERASER_HIGHEST:
 		if (!TAILQ_EMPTY(&n->nrefsh)) {
