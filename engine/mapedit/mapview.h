@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.57 2004/05/11 01:59:44 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.58 2004/05/13 02:48:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -74,6 +74,7 @@ struct mapview {
 	unsigned int	 mw, mh;	/* Display size (nodes) */
 	int		 cx, cy;	/* Cursor position (nodes) */
 	int		 cxrel, cyrel;	/* Displacement from last position */
+	int		 dblclicked;
 
 	struct toolbar *toolbar;	/* Optional toolbar */
 	struct statusbar *statusbar;	/* Optional status bar */

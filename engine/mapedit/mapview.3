@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.35 2004/05/10 05:15:10 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.36 2004/05/30 23:30:10 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -302,7 +302,12 @@ Stop any zooming in progress
 .Pp
 The
 .Nm
-widget does not generate any event.
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn mapview-dblclick "int button" "int x" "int y" "int xoff" "int yoff"
+The user double clicked over the given tile.
+.El
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr map 3 ,
