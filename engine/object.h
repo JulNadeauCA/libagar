@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.60 2002/12/13 12:27:05 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.61 2002/12/14 04:27:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -18,6 +18,12 @@ struct object_ops {
 	void	(*destroy)(void *);		/* Free resources */
 	int	(*load)(void *, int);		/* Load from fd */
 	int	(*save)(void *, int);		/* Save to fd */
+};
+
+struct object_table {
+	struct object	**objs;
+	Uint32		 nobjs;
+	int		 *used;
 };
 
 struct object {
@@ -90,9 +96,13 @@ void		 object_set_position(void *, struct noderef *, struct map *,
 		     Uint32, Uint32);
 void		 object_move(void *, struct map *, Uint32, Uint32);
 int		 object_vanish(void *);
-void		 object_table_load(int, struct object *, struct object ***,
-		     Uint32 *);
-struct object  **object_table_save(struct fobj_buf *, struct object *,
-		     Uint32 *);
+
+struct object_table	*object_table_new(void);
+void			 object_table_destroy(struct object_table *);
+void			 object_table_insert(struct object_table *,
+			     struct object *);
+void			 object_table_save(struct fobj_buf *,
+			     struct object_table *);
+struct object_table	*object_table_load(int, char *);
 
 #endif	/* !_AGAR_OBJECT_H */

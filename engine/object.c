@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.95 2002/12/14 04:27:47 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.96 2002/12/14 11:06:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -458,74 +458,99 @@ object_move(void *p, struct map *dst_map, Uint32 dst_x, Uint32 dst_y)
 	pthread_mutex_unlock(&ob->pos_lock);
 }
 
-/*
- * Allocate, read and translate a list of objects.
- * This is mostly used to read dependency lists.
- */
-void
-object_table_load(int fd, struct object *obj, struct object ***pobjs,
-    Uint32 *nobjs)
+struct object_table *
+object_table_new(void)
 {
-	Uint32 i;
-	
-	/* Allocate the table. */
-	*nobjs = read_uint32(fd);
-	*pobjs = emalloc(*nobjs * sizeof(struct object *));
-	
-	/* Read the table. */
-	pthread_mutex_lock(&world->lock);
-	for (i = 0; i < *nobjs; i++) {
-		struct object *pob;
-		char *s;
+	struct object_table *obt;
 
-		s = read_string(fd, NULL);
-		pob = world_find(s);
-		debug_n(DEBUG_DEPS, "%s: depends on `%s'...", obj->name, s);
-		if (pob == NULL) {
-			debug_n(DEBUG_DEPS, "missing\n");
-			fatal("%s: missing dependency on `%s'\n", obj->name, s);
-		}
-		*pobjs[i] = pob;
-		debug_n(DEBUG_DEPS, "%p\n", pob);
-		free(s);
-	}
-	pthread_mutex_unlock(&world->lock);
+	obt = emalloc(sizeof(struct object_table));
+	obt->objs = NULL;
+	obt->used = NULL;
+	obt->nobjs = 0;
+
+	return (obt);
 }
 
-/*
- * Allocate, initialize and save a list of objects.
- * This is mostly used to save dependency lists.
- */
-struct object **
-object_table_save(struct fobj_buf *buf, struct object *obj, Uint32 *nobjs)
+void
+object_table_destroy(struct object_table *obt)
+{
+	Free(obt->objs);
+	Free(obt->used);
+	free(obt);
+}
+
+void
+object_table_insert(struct object_table *obt, struct object *obj)
+{
+	if (obt->objs != NULL) {
+		obt->objs = erealloc(obt->objs, (obt->nobjs + 1) *
+		    sizeof(struct object *));
+		obt->used = erealloc(obt->used, (obt->nobjs + 1) *
+		    sizeof(int));
+	} else {
+		obt->objs = emalloc(sizeof(struct object *));
+		obt->used = emalloc(sizeof(int));
+	}
+	obt->objs[obt->nobjs] = obj;
+	obt->used[obt->nobjs] = 0;
+	obt->nobjs++;
+}
+
+void
+object_table_save(struct fobj_buf *buf, struct object_table *obt)
 {
 	size_t solen = 0;
-	struct object **pobjs, *pob;
 	off_t nobjs_offs;
+	struct object *pob;
+	Uint32 i;
 
 	nobjs_offs = buf->offs;
-	buf_write_uint32(buf, 0);		/* Skip */
+	buf_write_uint32(buf, 0);				/* Skip */
+	for (i = 0; i < obt->nobjs; i++) {
+		pob = obt->objs[i];
+		buf_write_string(buf, pob->name);
+		buf_write_string(buf, pob->type);
+	}
+	buf_pwrite_uint32(buf, obt->nobjs, nobjs_offs);
+}
+
+struct object_table *
+object_table_load(int fd, char *objname)
+{
+	struct object_table *obt;
+	Uint32 i, nobjs;
+
+	obt = object_table_new();
+
+	nobjs = read_uint32(fd);
 
 	pthread_mutex_lock(&world->lock);
-	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
-		solen += sizeof(struct object *);
-	}
-	pobjs = emalloc(solen);
-	*nobjs = 0;
-	SLIST_FOREACH(pob, &world->wobjs, wobjs) {
-		debug_n(DEBUG_DEPS, "%s: %s dependency ", obj->name, pob->name);
-		if ((pob->flags & OBJECT_ART) == 0 ||
-		     pob->flags & OBJECT_CANNOT_MAP) {
-		     	debug_n(DEBUG_DEPS, "skipped\n");
-			continue;
+	for (i = 0; i < nobjs; i++) {
+		struct object *pob;
+		char *name, *type;
+
+		name = read_string(fd, NULL);
+		type = read_string(fd, NULL);
+		pob = world_find(name);
+
+		debug_n(DEBUG_DEPS, "%s: depends on %s...", objname, name);
+		if (pob == NULL) {
+			fatal("%s: missing dependency on `%s' (type `%s')\n",
+			    objname, name, type);
 		}
-		debug_n(DEBUG_DEPS, "registered\n");
-		buf_write_string(buf, pob->name);
-		pobjs[(*nobjs)++] = pob;
+		if (strcmp(pob->type, type) != 0) {
+			fatal("%s: expected `%s' to be of type `%s'\n",
+			    objname, name, type);
+		}
+		debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
+
+		object_table_insert(obt, pob);
+
+		free(name);
+		free(type);
 	}
-	buf_pwrite_uint32(buf, *nobjs, nobjs_offs);
 	pthread_mutex_unlock(&world->lock);
 
-	return (pobjs);
+	return (obt);
 }
 
