@@ -382,7 +382,8 @@ main(int argc, char *argv[])
 	float f = 1.0;
 	double d = 1.0;
 
-	abs(0);
+	d = fabs(d);
+	f = fabsf(f);
 	return (0);
 }
 
