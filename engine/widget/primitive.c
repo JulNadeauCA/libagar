@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.54 2004/04/09 08:05:43 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.55 2004/04/09 08:14:54 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -75,95 +75,7 @@ alter_color(Uint32 pixel, Sint8 r, Sint8 g, Sint8 b)
 	return (rv);
 }
 
-static __inline__ void
-clip_pixel(SDL_Surface *su, Uint8 **p)
-{
-	Uint8 *end = (Uint8 *)su->pixels + su->h*su->pitch - su->format->BytesPerPixel;
-
-	if (*p > end)
-		*p = end;
-}
-
-/*
- * Write to a pixel to absolute view coordinates x,y.
- * The display surface must be locked; clipping is done.
- */
-static __inline__ void
-put_pixel1(Uint8 *dst, Uint32 color)
-{
-	Uint8 *d = dst;
-
-	clip_pixel(view->v, &d);
-
-	switch (vfmt->BytesPerPixel) {
-	case 4:
-		*(Uint32 *)d = color;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		d[0] = (color>>16) & 0xff;
-		d[1] = (color>>8) & 0xff;
-		d[2] = color & 0xff;
-#else
-		d[0] = color & 0xff;
-		d[1] = (color>>8) & 0xff;
-		d[2] = (color>>16) & 0xff;
-#endif
-		break;
-	case 2:
-		*(Uint16 *)d = color;
-		break;
-	case 1:
-		*d = color;
-		break;
-	}
-}
-
-/*
- * Write two pixels to absolute view coordinates x1,y1 and x2,y2.
- * The display surface must be locked; clipping is done.
- */
-static __inline__ void
-put_pixel2(Uint8 *dst1, Uint8 *dst2, Uint32 color)
-{
-	Uint8 *d1 = dst1;
-	Uint8 *d2 = dst2;
-
-	clip_pixel(view->v, &d1);
-	clip_pixel(view->v, &d2);
-
-	switch (vfmt->BytesPerPixel) {
-	case 4:
-		*(Uint32 *)d1 = color;
-		*(Uint32 *)d2 = color;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		d2[0] = d1[0] = (color>>16) & 0xff;
-		d2[1] = d1[1] = (color>>8) & 0xff;
-		d2[2] = d1[2] = color & 0xff;
-#else
-		d2[0] = d1[0] = color & 0xff;
-		d2[1] = d1[1] = (color>>8) & 0xff;
-		d2[2] = d1[2] = (color>>16) & 0xff;
-#endif
-		break;
-	case 2:
-		*(Uint16 *)d1 = color;
-		*(Uint16 *)d2 = color;
-		break;
-	case 1:
-		*d1 = color;
-		*d2 = color;
-		break;
-	}
-}
-
-/*
- * Render a 3D-style box with a RGB difference of -60,-60,-60 and 60,60,60
- * between the two border lines. Offset the background color and swap the
- * border colors depending on the z value.
- */
+/* Draw a 3D-style box. */
 static void
 box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 {
@@ -191,47 +103,18 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, int ncolor)
 		    alter_color(color, 10, 10, 10));
 	}
 
-	primitives.rect_filled(wid,
-	    xoffs,
-	    yoffs,
-	    w,
-	    h,
-	    bcol);
-
-	primitives.line(wid,			/* Top */
-	    xoffs,
-	    yoffs,
-	    xoffs + w - 1,
-	    yoffs,
-	    lcol);
-	primitives.line(wid,			/* Left */
-	    xoffs,
-	    yoffs,
-	    xoffs,
-	    yoffs + h - 1,
-	    lcol);
-	primitives.line(wid,			/* Bottom */
-	    xoffs,
-	    yoffs + h - 1,
-	    xoffs + w - 1,
-	    yoffs + h - 1,
-	    rcol);
-	primitives.line(wid,			/* Right */
-	    xoffs + w - 1,
-	    yoffs,
-	    xoffs + w - 1,
-	    yoffs + h - 1,
-	    rcol);
+	primitives.rect_filled(wid, xoffs, yoffs, w, h, bcol);
+	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, lcol);
+	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, lcol);
+	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, rcol);
+	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, rcol);
 
 	widget_pop_color(wid);
 	widget_pop_color(wid);
 	widget_pop_color(wid);
 }
 
-/*
- * Render a 3D-style frame with a RGB difference of -80,-80,-80 and 80,80,80
- * between the two border lines.
- */
+/* Draw a 3D-style frame. */
 static void
 frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 {
@@ -242,30 +125,10 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 	lcol = widget_push_color(wid, alter_color(color, 80, 80, 80));
 	rcol = widget_push_color(wid, alter_color(color, -80, -80, -80));
 
-	primitives.line(wid,			/* Top */
-	    xoffs,
-	    yoffs,
-	    xoffs + w - 1,
-	    yoffs,
-	    lcol);
-	primitives.line(wid,			/* Left */
-	    xoffs,
-	    yoffs,
-	    xoffs,
-	    yoffs + h - 1,
-	    lcol);
-	primitives.line(wid,			/* Bottom */
-	    xoffs,
-	    yoffs + h - 1,
-	    xoffs + w - 1,
-	    yoffs + h - 1,
-	    rcol);
-	primitives.line(wid,			/* Right */
-	    xoffs + w - 1,
-	    yoffs,
-	    xoffs + w - 1,
-	    yoffs + h - 1,
-	    rcol);
+	primitives.line(wid, xoffs, yoffs, xoffs+w-1, yoffs, lcol);
+	primitives.line(wid, xoffs, yoffs, xoffs, yoffs+h-1, lcol);
+	primitives.line(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1, rcol);
+	primitives.line(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1, rcol);
 
 	widget_pop_color(wid);
 	widget_pop_color(wid);
@@ -273,70 +136,20 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int ncolor)
 
 /* Render a circle using a modified Bresenham line algorithm. */
 static void
-circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
+circle_bresenham(void *p, int wx, int wy, int radius, int ncolor)
 {
 	struct widget *wid = p;
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int cx = wid->cx + xoffs;
-	int cy = wid->cy + yoffs;
 	int v = 2*radius - 1;
 	int e = 0, u = 1;
 	int x = 0, y = radius;
-	Uint8 *pixel1, *pixel2, *pixel3, *pixel4;
 
 	SDL_LockSurface(view->v);
 	while (x < y) {
-		pixel1 = (Uint8 *)view->v->pixels + (cy+y)*view->v->pitch +
-		    (cx+x)*vfmt->BytesPerPixel;
-		pixel2 = (Uint8 *)view->v->pixels + (cy-y)*view->v->pitch +
-		    (cx+x)*vfmt->BytesPerPixel;
-		pixel3 = (Uint8 *)view->v->pixels + (cy+y)*view->v->pitch +
-		    (cx-x)*vfmt->BytesPerPixel;
-		pixel4 = (Uint8 *)view->v->pixels + (cy-y)*view->v->pitch +
-		    (cx-x)*vfmt->BytesPerPixel;
-
-		clip_pixel(view->v, &pixel1);
-		clip_pixel(view->v, &pixel2);
-		clip_pixel(view->v, &pixel3);
-		clip_pixel(view->v, &pixel4);
-
-		switch (vfmt->BytesPerPixel) {
-		case 4:
-			*(Uint32 *)pixel1 = color;
-			*(Uint32 *)pixel2 = color;
-			*(Uint32 *)pixel3 = color;
-			*(Uint32 *)pixel4 = color;
-			break;
-		case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pixel1[0] = pixel2[0] = (color>>16)&0xff;
-			pixel3[0] = pixel4[0] = pixel1[0];
-			pixel2[1] = pixel1[1] = (color>>8)&0xff;
-			pixel3[1] = pixel4[1] = pixel1[1];
-			pixel1[2] = pixel2[2] = color&0xff;
-			pixel3[2] = pixel4[2] = pixel1[2];
-#else
-			pixel1[0] = pixel2[0] = color&0xff;
-			pixel3[0] = pixel4[0] = pixel1[0];
-			pixel2[1] = pixel1[1] = (color>>8)&0xff;
-			pixel3[1] = pixel4[1] = pixel1[1];
-			pixel1[2] = pixel2[2] = (color>>16)&0xff;
-			pixel3[2] = pixel4[2] = pixel1[2];
-#endif /* SDL_BYTEORDER */
-			break;
-		case 2:
-			*(Uint16 *)pixel1 = color;
-			*(Uint16 *)pixel2 = color;
-			*(Uint16 *)pixel3 = color;
-			*(Uint16 *)pixel4 = color;
-			break;
-		case 1:
-			*pixel1 = color;
-			*pixel2 = color;
-			*pixel3 = color;
-			*pixel4 = color;
-			break;
-		}
+		widget_put_pixel(wid, wx+x, wy+y, color);
+		widget_put_pixel(wid, wx+x, wy-y, color);
+		widget_put_pixel(wid, wx-x, wy+y, color);
+		widget_put_pixel(wid, wx-x, wy-y, color);
 
 		e += u;
 		u += 2;
@@ -346,90 +159,14 @@ circle_bresenham(void *p, int xoffs, int yoffs, int radius, int ncolor)
 			v -= 2;
 		}
 		x++;
-
-		pixel1 = (Uint8 *)view->v->pixels + (cy+x)*view->v->pitch +
-		    (cx+y)*vfmt->BytesPerPixel;
-		pixel2 = (Uint8 *)view->v->pixels + (cy-x)*view->v->pitch +
-		    (cx+y)*vfmt->BytesPerPixel;
-		pixel3 = (Uint8 *)view->v->pixels + (cy+x)*view->v->pitch +
-		    (cx-y)*vfmt->BytesPerPixel;
-		pixel4 = (Uint8 *)view->v->pixels + (cy-x)*view->v->pitch +
-		    (cx-y)*vfmt->BytesPerPixel;
-		clip_pixel(view->v, &pixel1);
-		clip_pixel(view->v, &pixel2);
-		clip_pixel(view->v, &pixel3);
-		clip_pixel(view->v, &pixel4);
-
-		switch (vfmt->BytesPerPixel) {
-		case 4:
-			*(Uint32 *)pixel1 = color;
-			*(Uint32 *)pixel2 = color;
-			*(Uint32 *)pixel3 = color;
-			*(Uint32 *)pixel4 = color;
-			break;
-		case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-			pixel1[0] = pixel2[0] = (color>>16)&0xff;
-			pixel3[0] = pixel4[0] = pixel1[0];
-			pixel2[1] = pixel1[1] = (color>>8)&0xff;
-			pixel3[1] = pixel4[1] = pixel1[1];
-			pixel1[2] = pixel2[2] = color&0xff;
-			pixel3[2] = pixel4[2] = pixel1[2];
-#else
-			pixel1[0] = pixel2[0] = color&0xff;
-			pixel3[0] = pixel4[0] = pixel1[0];
-			pixel2[1] = pixel1[1] = (color>>8)&0xff;
-			pixel3[1] = pixel4[1] = pixel1[1];
-			pixel1[2] = pixel2[2] = (color>>16)&0xff;
-			pixel3[2] = pixel4[2] = pixel1[2];
-#endif /* SDL_BYTEORDER */
-			break;
-		case 2:
-			*(Uint16 *)pixel1 = color;
-			*(Uint16 *)pixel2 = color;
-			*(Uint16 *)pixel3 = color;
-			*(Uint16 *)pixel4 = color;
-			break;
-		case 1:
-			*pixel1 = color;
-			*pixel2 = color;
-			*pixel3 = color;
-			*pixel4 = color;
-			break;
-		}
+		
+		widget_put_pixel(wid, wx+y, wy+x, color);
+		widget_put_pixel(wid, wx+y, wy-x, color);
+		widget_put_pixel(wid, wx-y, wy+x, color);
+		widget_put_pixel(wid, wx-y, wy-x, color);
 	}
-	pixel1 = (Uint8 *)view->v->pixels + cy*view->v->pitch +
-	    (cx-radius)*vfmt->BytesPerPixel;
-	pixel2 = (Uint8 *)view->v->pixels + cy*view->v->pitch +
-	    (cx+radius)*vfmt->BytesPerPixel;
-	clip_pixel(view->v, &pixel1);
-	clip_pixel(view->v, &pixel2);
-	
-	switch (vfmt->BytesPerPixel) {
-	case 4:
-		*(Uint32 *)pixel1 = color;
-		*(Uint32 *)pixel2 = color;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		pixel2[0] = pixel1[0] = color&0xff;
-		pixel2[1] = pixel1[1] = (color>>8)&0xff;
-		pixel2[2] = pixel1[2] = (color>>16)&0xff;
-#else
-		pixel2[0] = pixel1[0] = color&0xff;
-		pixel2[1] = pixel1[1] = (color>>8)&0xff;
-		pixel2[2] = pixel1[2] = (color>>16)&0xff;
-#endif
-		break;
-	case 2:
-		*(Uint16 *)pixel1 = color;
-		*(Uint16 *)pixel2 = color;
-		break;
-	case 1:
-		*pixel1 = color;
-		*pixel2 = color;
-		break;
-	}
+	widget_put_pixel(wid, wx-radius, wy, color);
+	widget_put_pixel(wid, wx+radius, wy, color);
 	SDL_UnlockSurface(view->v);
 }
 
@@ -448,134 +185,108 @@ line2(void *wid, int x1, int y1, int x2, int y2, int ncolor)
 }
 
 /*
- * Render a straight line between x1,y1 to x2,y2 using a derivate of the
- * line algorithm developed by Jack E. Bresenham.
+ * Draw a line segment between two points using the Bresenham algorithm
+ * presented by Foley & Van Dam [1990].
  */
 static void
-line_bresenham(void *widget, int px1, int py1, int px2, int py2, int ncolor)
+line_bresenham(void *widget, int x1, int y1, int x2, int y2, int ncolor)
 {
 	struct widget *wid = widget;
-	int dx, dy, dpr, dpru, p;
-	int yinc = view->v->pitch;
-	int xyinc = vfmt->BytesPerPixel + yinc;
-	Uint8 *fb1, *fb2;
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
-	int x1 = wid->cx + px1, y1 = wid->cy + py1;	/* Left endpoint */
-	int x2 = wid->cx + px2, y2 = wid->cy + py2;	/* Right endpoint */
+	int dx, dy;
+	int inc1, inc2;
+	int d, x, y;
+	int xend, yend;
+	int xdir, ydir;
 
-	if (x1 > x2) {		/* Swap inverse X coords */
-		dx = x1;
-		x1 = x2;
-		x2 = dx;
-	}
-	if (y1 > y2) {		/* Swap inverse Y coords */
-		dx = y1;
-		y1 = y2;
-		y2 = dx;
-	}
-	dx = x2 - x1;
-	dy = y2 - y1;
-
-	fb1 = (Uint8 *)view->v->pixels +
-	    y1*view->v->pitch +
-	    x1*view->v->format->BytesPerPixel;
-	fb2 = (Uint8 *)view->v->pixels +
-	    y2*view->v->pitch +
-	    x2*view->v->format->BytesPerPixel;
+	dx = abs(x2-x1);
+	dy = abs(y2-y1);
 
 	SDL_LockSurface(view->v);
 
-	if (dy > dx) {
-		goto indep_y;
-	}
+	if (dy <= dx) {
+		d = dy*2 - dx;
+		inc1 = dy*2;
+		inc2 = (dy-dx)*2;
+		if (x1 > x2) {
+			x = x2;
+			y = y2;
+			ydir = -1;
+			xend = x1;
+		} else {
+			x = x1;
+			y = y1;
+			ydir = 1;
+			xend = x2;
+		}
+		widget_put_pixel(wid, x, y, color);
 
-/* indep_x: */
-	dpr = dy + dy;
-	p = -dx;
-	dpru = p + p;
-	dy = dx >> 1;
+		if (((y2-y1)*ydir) > 0) {
+			while (x < xend) {
+				x++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					y++;
+					d += inc2;
+				}
+				widget_put_pixel(wid, x, y, color);
+			}
+		} else {
+			while (x < xend) {
+				x++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					y--;
+					d += inc2;
+				}
+				widget_put_pixel(wid, x, y, color);
+			}
+		}		
+	} else {
+		d = dx*2 - dy;
+		inc1 = dx*2;
+		inc2 = (dx-dy)*2;
+		if (y1 > y2) {
+			y = y2;
+			x = x2;
+			yend = y1;
+			xdir = -1;
+		} else {
+			y = y1;
+			x = x1;
+			yend = y2;
+			xdir = 1;
+		}
+		widget_put_pixel(wid, x, y, color);
 
-xloop:
-	put_pixel2(fb1, fb2, color);
-
-	if ((p += dpr) > 0) {
-		goto right_and_up;
+		if (((x2-x1)*xdir) > 0) {
+			while (y < yend) {
+				y++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					x++;
+					d += inc2;
+				}
+				widget_put_pixel(wid, x, y, color);
+			}
+		} else {
+			while (y < yend) {
+				y++;
+				if (d < 0) {
+					d += inc1;
+				} else {
+					x--;
+					d += inc2;
+				}
+				widget_put_pixel(wid, x, y, color);
+			}
+		}
 	}
-
-/* up: */
-	x1++;
-	x2--;
-	fb1 += vfmt->BytesPerPixel;
-	fb2 -= vfmt->BytesPerPixel;
-	if ((dy = dy - 1) >= 0) {
-		goto xloop;
-	}
-	put_pixel1(fb1, color);
-	if ((dx & 1) == 0) {
-		goto done;
-	}
-	put_pixel1(fb2, color);
-	goto done;
-
-right_and_up:
-	x1++;
-	y1++;
-	x2--;
-	y2--;
-	fb1 += xyinc;
-	fb2 -= xyinc;
-	p += dpru;
-	if (--dy >= 0) {
-		goto xloop;
-	}
-	put_pixel1(fb1, color);
-	if ((dx & 1) == 0) {
-		goto done;
-	}
-	put_pixel1(fb2, color);
-	goto done;
-
-indep_y:
-	dpr = dx+dx;
-	p = -dy;
-	dpru = p+p;
-	dx = dy>>1;
-
-yloop:
-	put_pixel2(fb1, fb2, color);
-
-	if ((p += dpr) > 0) {
-		goto right_and_up_2;
-	}
-/* up: */
-	y1++;
-	y2--;
-	fb1 += yinc;
-	fb2 -= yinc;
-	if ((dx = dx - 1) >= 0) {
-		goto yloop;
-	}
-	put_pixel1(fb2, color);
-	goto done;
-
-right_and_up_2:
-	x1++;
-	y1++;
-	x2--;
-	y2--;
-	fb1 += xyinc;
-	fb2 -= xyinc;
-	p += dpru;
-	if ((dx = dx - 1) >= 0) {
-		goto yloop;
-	}
-	put_pixel1(fb1, color);
-	if ((dy & 1) == 0) {
-		goto done;
-	}
-	put_pixel1(fb2, color);
-done:
 	SDL_UnlockSurface(view->v);
+
 }
 
 /* Render an outlined rectangle. */
@@ -584,30 +295,10 @@ rect_outlined(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
 
-	primitives.line(wid, 		/* Top */
-	    x,
-	    y,
-	    x + w - 1,
-	    y,
-	    ncolor);
-	primitives.line(wid, 		/* Bottom */
-	    x,
-	    y + h - 1,
-	    x + w - 1,
-	    y + h - 1,
-	    ncolor);
-	primitives.line(wid, 		/* Left */
-	    x,
-	    y,
-	    x,
-	    y + h - 1,
-	    ncolor);
-	primitives.line(wid, 		/* Right */
-	    x + w - 1,
-	    y,
-	    x + w - 1,
-	    y + h - 1,
-	    ncolor);
+	primitives.line(wid, x, y, x+w-1, y, ncolor);
+	primitives.line(wid, x, y+h-1, x+w-1, y+h-1, ncolor);
+	primitives.line(wid, x, y, x, y+h-1, ncolor);
+	primitives.line(wid, x+w-1, y, x+w-1, y+h-1, ncolor);
 }
 
 /* Render a filled rectangle. */
@@ -618,52 +309,35 @@ rect_filled(void *p, int x, int y, int w, int h, int ncolor)
 	Uint32 color = WIDGET_COLOR(wid, ncolor);
 	SDL_Rect rd;
 
-	rd.x = wid->cx + x;
-	rd.y = wid->cy + y;
+	rd.x = wid->cx+x;
+	rd.y = wid->cy+y;
 	rd.w = w;
 	rd.h = h;
 	SDL_FillRect(view->v, &rd, color);
 }
 
-/* Render a [+] sign scaled to a w,h box (for trees). */
+/* Draw a [+] sign. */
 static void
 plus(void *p, int x, int y, int w, int h, int ncolor)
 {
-	int xcenter = x + w/2;
-	int ycenter = y + h/2;
+	int xcen = x + w/2;
+	int ycen = y + h/2;
 
-	primitives.line2(p,
-	    xcenter,
-	    y,
-	    xcenter,
-	    y + h,
-	    ncolor);
-	primitives.line2(p,
-	    x,
-	    ycenter,
-	    x + w,
-	    ycenter,
-	    ncolor);
+	primitives.line2(p, xcen, y, xcen, y+h, ncolor);
+	primitives.line2(p, x, ycen, x+w, ycen, ncolor);
 }
 
-/* Render a [-] sign scaled to a w,h box (for trees). */
+/* Draw a [-] sign. */
 static void
 minus(void *p, int x, int y, int w, int h, int ncolor)
 {
 	struct widget *wid = p;
-	int ycenter = y+h/2;
+	int ycen = y+h/2;
 
-	primitives.line2(wid,
-	    x,
-	    ycenter,
-	    x + w,
-	    ycenter,
-	    ncolor);
+	primitives.line2(wid, x, ycen, x+w, ycen, ncolor);
 }
 
 #ifdef HAVE_OPENGL
-
-/* Render a line using OpenGL. */
 static void
 line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 {
@@ -683,7 +357,6 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, int ncolor)
 	glEnd();
 }
 
-/* Render a filled rectangle using OpenGL. */
 static void
 rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 {
@@ -699,7 +372,6 @@ rect_opengl(void *p, int x, int y, int w, int h, int ncolor)
 	    wid->cx + x + w,
 	    wid->cy + y + h);
 }
-
 #endif /* HAVE_OPENGL */
 
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.75 2004/03/28 06:08:14 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.76 2004/03/31 02:30:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -92,9 +92,10 @@ __inline__ int	 widget_relative_area(void *, int, int);
 __inline__ int	 widget_area(void *, int, int);
 void		 widget_update_coords(void *, int, int);
 
-void  widget_map_color(void *, int, const char *, Uint8, Uint8, Uint8, Uint8);
-int   widget_push_color(struct widget *, Uint32);
-void  widget_pop_color(struct widget *);
+void		 widget_map_color(void *, int, const char *, Uint8, Uint8,
+		                  Uint8, Uint8);
+__inline__ int   widget_push_color(struct widget *, Uint32);
+__inline__ void  widget_pop_color(struct widget *);
 
 __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
 __inline__ void	 widget_put_pixel(void *, int, int, Uint32);

@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.84 2004/03/28 06:08:14 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.85 2004/03/31 02:30:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -912,24 +912,26 @@ widget_scale(void *p, int w, int h)
 }
 
 /*
- * Write to the pixel at widget-relative x,y coordinates; clipping is done.
- * The display surface must be locked.
+ * Write to the pixel at widget-relative x,y coordinates.
+ * The display surface must be locked; clipping is done.
  */
 void
-widget_put_pixel(void *p, int x, int y, Uint32 color)
+widget_put_pixel(void *p, int wx, int wy, Uint32 color)
 {
 	struct widget *wid = p;
-	Uint8 *pixel = (Uint8 *)view->v->pixels + y*view->v->pitch +
-	    x*vfmt->BytesPerPixel;
+	int x = wid->cx+wx;
+	int y = wid->cy+wy;
+	Uint8 *d;
 
-	if (!VIEW_INSIDE_CLIP_RECT(view->v, wid->cx+x, wid->cy+y))
+	if (!VIEW_INSIDE_CLIP_RECT(view->v, x, y))
 		return;
 
+	d = (Uint8 *)view->v->pixels + y*view->v->pitch + x*vfmt->BytesPerPixel;
 	switch (vfmt->BytesPerPixel) {
-		_VIEW_PUTPIXEL_32(pixel, color);
-		_VIEW_PUTPIXEL_24(pixel, color);
-		_VIEW_PUTPIXEL_16(pixel, color);
-		_VIEW_PUTPIXEL_8(pixel, color);
+		_VIEW_PUTPIXEL_32(d, color);
+		_VIEW_PUTPIXEL_24(d, color);
+		_VIEW_PUTPIXEL_16(d, color);
+		_VIEW_PUTPIXEL_8(d, color);
 	}
 }
 
@@ -941,8 +943,8 @@ widget_area(void *p, int x, int y)
 
 	return (x > wid->cx &&
 	        y > wid->cy &&
-	        x < wid->cx + wid->w &&
-		y < wid->cy + wid->h);
+	        x < wid->cx+wid->w &&
+		y < wid->cy+wid->h);
 }
 
 /* Evaluate to true if widget coords x,y are inside the widget area. */
@@ -970,14 +972,9 @@ widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_MOTION)) {
 		event_post(NULL, wid, "window-mousemotion",
-		    "%i, %i, %i, %i, %i",
-		    x - wid->cx,
-		    y - wid->cy,
-		    xrel,
-		    yrel,
-		    state);
+		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
+		    xrel, yrel, state);
 	}
-
 	OBJECT_FOREACH_CHILD(cwid, wid, widget)
 		widget_mousemotion(win, cwid, x, y, xrel, yrel, state);
 }
@@ -995,11 +992,8 @@ widget_mousebuttonup(struct window *win, struct widget *wid, int button,
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_BUTTONUP)) {
 		event_post(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
-		    button,
-		    x - wid->cx,
-		    y - wid->cy);
+		    button, x-wid->cx, y-wid->cy);
 	}
-
 	OBJECT_FOREACH_CHILD(cwid, wid, widget)
 		widget_mousebuttonup(win, cwid, button, x, y);
 }
@@ -1020,11 +1014,8 @@ widget_mousebuttondown(struct window *win, struct widget *wid, int button,
 		if (widget_mousebuttondown(win, cwid, button, x, y))
 			return (1);
 	}
-
 	return (event_post(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
-	    button,
-	    x - wid->cx,
-	    y - wid->cy));
+	    button, x-wid->cx, y-wid->cy));
 }
 
 /* Search for a focused widget inside a window. */
@@ -1043,7 +1034,6 @@ widget_find_focus(void *p)
 		if ((fwid = widget_find_focus(cwid)) != NULL)
 			return (fwid);
 	}
-
 	return (wid);
 }
 
@@ -1091,10 +1081,7 @@ widget_update_coords(void *parent, int x, int y)
 	pwid->cx = x;
 	pwid->cy = y;
 
-	OBJECT_FOREACH_CHILD(cwid, pwid, widget) {
-		widget_update_coords(cwid,
-		    pwid->cx + cwid->x,
-		    pwid->cy + cwid->y);
-	}
+	OBJECT_FOREACH_CHILD(cwid, pwid, widget)
+		widget_update_coords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
 }
 
