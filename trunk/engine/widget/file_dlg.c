@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.c,v 1.24 2005/03/17 03:10:26 vedge Exp $	*/
+/*	$Csoft: file_dlg.c,v 1.1 2005/03/27 03:10:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -52,12 +52,12 @@ static struct widget_ops file_dlg_ops = {
 };
 
 struct AGFileDlg *
-file_dlg_new(void *parent, int flags, const char *cwd)
+file_dlg_new(void *parent, int flags, const char *cwd, const char *file)
 {
 	struct AGFileDlg *fdg;
 
 	fdg = Malloc(sizeof(struct AGFileDlg), M_OBJECT);
-	file_dlg_init(fdg, flags, cwd);
+	file_dlg_init(fdg, flags, cwd, file);
 	object_attach(parent, fdg);
 	return (fdg);
 }
@@ -172,7 +172,8 @@ cancel(int argc, union evarg *argv)
 }
 
 void
-file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd)
+file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd,
+    const char *file)
 {
 	widget_init(fdg, "file-dlg", &file_dlg_ops, WIDGET_WFILL|WIDGET_HFILL);
 	    
@@ -190,7 +191,10 @@ file_dlg_init(struct AGFileDlg *fdg, int flags, const char *cwd)
 	fdg->tl_dirs = tlist_new(fdg, 0);
 	fdg->tl_files = tlist_new(fdg, (flags&FILEDLG_MULTI) ? TLIST_MULTI : 0);
 	fdg->tb_file = textbox_new(fdg, _("File: "));
-	
+	widget_focus(fdg->tb_file);
+	if (file != NULL)
+		textbox_printf(fdg->tb_file, "%s", file);
+
 	tlist_prescale(fdg->tl_dirs, "XXXXXXXXXXXXXX", 8);
 	tlist_prescale(fdg->tl_files, "XXXXXXXXXXXXXXXXXX", 8);
 

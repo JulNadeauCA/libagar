@@ -1,4 +1,4 @@
-/*	$Csoft: file_dlg.h,v 1.9 2005/03/17 03:10:26 vedge Exp $	*/
+/*	$Csoft: file_dlg.h,v 1.1 2005/03/27 03:10:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FILE_DLG_H_
@@ -29,8 +29,8 @@ struct AGFileDlg {
 };
 
 __BEGIN_DECLS
-struct AGFileDlg *file_dlg_new(void *, int, const char *);
-void file_dlg_init(struct AGFileDlg *, int, const char *);
+struct AGFileDlg *file_dlg_new(void *, int, const char *, const char *);
+void file_dlg_init(struct AGFileDlg *, int, const char *, const char *);
 void file_dlg_scale(void *, int, int);
 void file_dlg_destroy(void *);
 __END_DECLS
