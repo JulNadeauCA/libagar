@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.6 2003/11/19 11:20:45 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.7 2003/11/20 04:47:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -245,6 +245,26 @@ const struct unit capacitance_units[] = {
 	{ "F",			N_("Farads"),		1,		NULL },
 	{ "kF",			N_("Kilofarads"),	1000,		NULL },
 	{ "MF",			N_("Megafarads"),	1000000,	NULL },
+	{ NULL,			NULL,			0,		NULL }
+};
+
+/* Units of electrical inductance */
+const struct unit inductance_units[] = {
+	{ "\xc2\xb5\x48",	N_("Microhenries"),	0.000001,	NULL },
+	{ "mH"	,		N_("Millihenries"),	0.001,		NULL },
+	{ "H",			N_("Henries"),		1,		NULL },
+	{ "kH",			N_("Kilohenries"),	1000,		NULL },
+	{ NULL,			NULL,			0,		NULL }
+};
+
+/* Units of frequency */
+const struct unit frequency_units[] = {
+	{ "\xc2\xb5Hz",		N_("Microhertz"),	0.000001,	NULL },
+	{ "mHz"	,		N_("Millihertz"),	0.001,		NULL },
+	{ "Hz",			N_("Hertz"),		1,		NULL },
+	{ "kHz",		N_("Kilohertz"),	1000,		NULL },
+	{ "MHz",		N_("Megahertz"),	1000000,	NULL },
+	{ "GHz",		N_("Gigahertz"),	1000000000,	NULL },
 	{ NULL,			NULL,			0,		NULL }
 };
 
