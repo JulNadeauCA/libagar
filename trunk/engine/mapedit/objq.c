@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.17 2002/09/12 09:35:00 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.18 2002/09/13 11:08:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -156,6 +156,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	struct region *reg;
 	struct mapview *mv;
 	struct button *bu;
+	char *wname;
 
 	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
 		if (tm->ob == eob->pobj) {
@@ -169,8 +170,11 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	if ((cury += 32) + 264 > view->h) {
 		cury = 85;
 	}
-	window_init(win, NULL, ob->name, WINDOW_SOLID,
+
+	asprintf(&wname, "t-win-%s", OBJECT(ob->art->map)->name);
+	window_init(win, wname, ob->name, WINDOW_SOLID,
 	    view->w - 170, cury, 154, 264, 156, 94);
+	free(wname);
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
