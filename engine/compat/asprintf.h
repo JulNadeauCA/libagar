@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.h,v 1.1 2002/11/07 17:51:17 vedge Exp $	*/
+/*	$Csoft: asprintf.h,v 1.2 2002/11/07 18:25:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mcconfig.h>
@@ -12,4 +12,6 @@
 #endif
 
 #include <stdio.h>
+
+#undef _GNU_SOURCE
 
