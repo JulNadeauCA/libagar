@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.127 2002/12/16 13:38:14 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.128 2002/12/17 06:47:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -1290,10 +1290,13 @@ window_resize(struct window *win)
 	debug_n(DEBUG_RESIZE, "resizing %s (%dx%d):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
 
-	if (win->rd.w < win->minw)
-		win->rd.w = win->minw;
-	if (win->rd.h < win->minh)
-		win->rd.h = win->minh;
+	if ((prop_uint32(config, "widgets.flags") & CONFIG_WINDOW_ANYSIZE)
+	    == 0) {
+		if (win->rd.w < win->minw)
+			win->rd.w = win->minw;
+		if (win->rd.h < win->minh)
+			win->rd.h = win->minh;
+	}
 
 	/* Clamp to view area, leave a margin. */
 	window_clamp(win);
