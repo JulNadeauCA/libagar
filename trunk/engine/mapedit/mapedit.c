@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.174 2003/06/11 23:03:58 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.175 2003/06/12 00:30:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -319,6 +319,7 @@ mapedit_window(struct map *m)
 		};
 		const int nfileops = sizeof(fileops) / sizeof(fileops[0]);
 		struct button *bu;
+		struct label *lab;
 		int i;
 
 		for (i = 0; i < nfileops; i++) {
@@ -354,11 +355,8 @@ mapedit_window(struct map *m)
 		    MAPEDIT_TOOL_LAYEDIT);
 		mv->layed.trigger = bu;
 
-		label_polled_new(hb, NULL,
-		    " Layer: %d, [%ux%u] at [%d,%d]",
-		    &mv->map->cur_layer,
-		    &mv->esel.w, &mv->esel.h,
-		    &mv->esel.x, &mv->esel.y);
+		lab = label_polled_new(hb, NULL, "  Layer #%d",
+		    &mv->map->cur_layer);
 	}
 
 	object_attach(win, mv);
