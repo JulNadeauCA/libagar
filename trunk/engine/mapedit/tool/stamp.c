@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.17 2002/12/13 07:47:35 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.18 2003/01/01 05:18:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -139,16 +139,17 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 	case STAMP_REPLACE:
 		switch (med->ref.type) {
 		case NODEREF_SPRITE:
-			node_add_sprite(n, med->ref.obj, med->ref.offs);
+			nref = node_add_sprite(n, med->ref.obj, med->ref.offs);
 			break;
 		case NODEREF_ANIM:
-			node_add_anim(n, med->ref.obj, med->ref.offs,
+			nref = node_add_anim(n, med->ref.obj, med->ref.offs,
 			    med->ref.flags);
 			break;
 		default:
 			fatal("bad noderef type\n");
 			break;
 		}
+		nref->flags |= NODEREF_SAVEABLE;
 		break;
 	}
 
