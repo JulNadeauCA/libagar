@@ -1,9 +1,12 @@
-#	$Csoft: Makefile,v 1.2 2003/08/06 04:08:16 vedge Exp $
+#	$Csoft: Makefile,v 1.3 2003/08/13 01:47:35 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-LIB=	intl
+LIB=		intl
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
 SRCS=	gettext.c textdomain.c
 MAN3=	gettext.3
 

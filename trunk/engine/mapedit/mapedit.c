@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.191 2004/01/23 03:52:04 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.192 2004/01/23 06:24:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -293,18 +293,20 @@ mapedit_save(void *p, struct netbuf *buf)
 
 /* Close an object derivate data edition window. */
 static void
-mapedit_close_objdata(int argc, union evarg *argv)
+objdata_close(int argc, union evarg *argv)
 {
+	struct window *win = argv[0].p;
 	struct mapedit_obj *mobj = argv[1].p;
+	
+	event_post(NULL, win, "window-destroy", NULL);
 
-	view_detach(mobj->win);
 	TAILQ_REMOVE(&dobjs, mobj, objs);
 	object_page_out(mobj->obj, OBJECT_DATA);
 	object_del_dep(&mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
-/* Create an object derivate data edition window. */
+/* Edit the data part of an object. */
 void
 mapedit_edit_objdata(struct object *ob)
 {
@@ -330,24 +332,26 @@ mapedit_edit_objdata(struct object *ob)
 	mobj->win = ob->ops->edit(ob);
 	TAILQ_INSERT_HEAD(&dobjs, mobj, objs);
 	window_show(mobj->win);
-	event_new(mobj->win, "window-close", mapedit_close_objdata, "%p", mobj);
+
+	event_new(mobj->win, "window-close", objdata_close, "%p", mobj);
 }
 
-/* Close an object generic data edition window. */
 static void
-mapedit_close_objgen(int argc, union evarg *argv)
+genobj_close(int argc, union evarg *argv)
 {
+	struct window *win = argv[0].p;
 	struct mapedit_obj *mobj = argv[1].p;
 
-	view_detach(mobj->win);
+	event_post(NULL, win, "window-destroy", NULL);
+
 	TAILQ_REMOVE(&gobjs, mobj, objs);
 	object_del_dep(&mapedit.pseudo, mobj->obj);
 	free(mobj);
 }
 
-/* Create an object generic data edition window. */
+/* Edit the generic part of an object. */
 void
-mapedit_edit_objgen(struct object *ob)
+mapedit_edit_genobj(struct object *ob)
 {
 	struct mapedit_obj *mobj;
 	
@@ -368,12 +372,11 @@ mapedit_edit_objgen(struct object *ob)
 	TAILQ_INSERT_HEAD(&gobjs, mobj, objs);
 	window_show(mobj->win);
 
-	event_new(mobj->win, "window-close", mapedit_close_objgen, "%p", mobj);
+	event_new(mobj->win, "window-close", genobj_close, "%p", mobj);
 }
 
-/* Close a tool settings window. */
 static void
-tool_window_close(int argc, union evarg *argv)
+close_tool_window(int argc, union evarg *argv)
 {
 	struct tool *tool = argv[1].p;
 
@@ -392,7 +395,7 @@ tool_window_new(struct tool *tool, const char *name)
 	window_set_caption(win, _(tool->name));
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	
-	event_new(win, "window-close", tool_window_close, "%p", tool);
+	event_new(win, "window-close", close_tool_window, "%p", tool);
 	return (win);
 }
 
@@ -432,6 +435,7 @@ tool_mapview(void)
 	return (NULL);
 }
 
+/* Create a new key binding for purposes of map edition. */
 void
 tool_bind_key(void *p, SDLMod keymod, SDLKey keysym,
     void (*func)(struct mapview *), int edit)

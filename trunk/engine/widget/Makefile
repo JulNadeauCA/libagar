@@ -1,11 +1,14 @@
-#	$Csoft: Makefile,v 1.58 2003/11/20 09:53:46 vedge Exp $
+#	$Csoft: Makefile,v 1.59 2004/01/03 04:15:39 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
 
 SUBDIR=	fonts
 
-LIB=	widget
+LIB=		widget
+LIB_SHARED=	Yes
+LIB_STATIC=	No
+
 SRCS=	widget.c window.c box.c text.c label.c button.c checkbox.c \
 	textbox.c keycodes.c primitive.c radio.c graph.c bitmap.c tlist.c \
 	scrollbar.c palette.c titlebar.c spinbutton.c fspinbutton.c combo.c \

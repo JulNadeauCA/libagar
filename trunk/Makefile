@@ -1,16 +1,19 @@
-#	$Csoft: Makefile,v 1.38 2003/08/07 22:41:46 vedge Exp $
+#	$Csoft: Makefile,v 1.39 2004/02/26 10:34:53 vedge Exp $
 
-SUBDIR=	 dencomp \
+TOP=	.
+include ${TOP}/Makefile.config
+
+SUBDIR=	 agar-config \
+	 dencomp \
 	 denex \
 	 engine \
 	 libintl \
-	 cave \
 	 po
-	
-all: Makefile.config all-subdir
+
+all: all-subdir
 clean: clean-subdir
-cleandir: clean-config cleandir-subdir
-install: install-subdir
+cleandir: cleandir-config cleandir-subdir
+install: install-subdir install-includes
 deinstall: deinstall-subdir
 depend: prereq depend-subdir
 regress: regress-subdir
@@ -26,13 +29,24 @@ configure:
 	chmod 755 configure
 	cvs commit -m "sync; rien" configure
 
-clean-config: Makefile.config
+cleandir-config:
 	rm -fr config config.log
 
-snap: cleandir
+release: cleandir
 	sh mk/dist.sh
 	sh mk/agar-cvs.sh
 
-.PHONY: clean cleandir install deinstall depend regress prereq clean-config snap configure
+install-includes:
+	${INSTALL_INCL_DIR} ${INCLDIR}
+	pax -rw -pa -L `find . -follow -type f -name '*.h' -print` ${INCLDIR}
+	@if [ "${SRC}" != "" ]; then \
+		cd ${SRC} && pax -rw -pa -L \
+		    `find . -follow -type f -name '*.h' -print` \
+		    ${INCLDIR}; \
+	fi
 
-include mk/csoft.subdir.mk
+.PHONY: clean cleandir install deinstall depend regress
+.PHONY: prereq configure clean-config release install-includes
+
+include ${TOP}/mk/csoft.common.mk
+include ${TOP}/mk/csoft.subdir.mk

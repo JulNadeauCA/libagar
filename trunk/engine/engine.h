@@ -1,10 +1,8 @@
-/*	$Csoft: engine.h,v 1.77 2003/12/05 00:44:13 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.78 2004/02/26 10:34:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
 #define _AGAR_ENGINE_H_
-
-#define ENGINE_VERSION	"1.0-beta"
 
 #include <config/have_opengl.h>
 #include <config/enable_nls.h>
