@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.39 2004/05/14 05:08:59 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.40 2004/05/15 02:13:13 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -82,7 +82,6 @@ may include:
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
 #define TLIST_POLL		0x04  /* Generate tlist-poll events */
-#define TLIST_DBLCLICK		0x08  /* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10  /* Hack to display trees */
 #define TLIST_STATIC_ICONS	0x20  /* Icon surfaces may be accessed
 				         at any time (avoids scale/copy) */
@@ -294,9 +293,7 @@ was selected or unselected.
 .Fa item
 was selected.
 .It Fn tlist-dblclick "struct tlist_item *item"
-The
-.Dv TLIST_DBLCLICK
-flag is set and the user double-clicked on
+The user just double-clicked
 .Fa item .
 .It Fn tlist-poll "void"
 The
@@ -336,6 +333,10 @@ function should probably be renamed
 and take a
 .Xr printf 3
 format string.
+.Pp
+It is possible to generate a double click by quickly clicking on two different
+items; comparing with the previously clicked item is not an option since it
+may have been destroyed.
 .Sh EFFICIENCY
 Item insertion and removal are O(1) operations.
 For n items, lookup and mouse selection handling is O(n), which becomes

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.36 2004/05/14 05:08:59 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.37 2004/05/14 05:19:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -38,7 +38,6 @@ struct tlist {
 #define TLIST_MULTI		0x01	/* Multiple selections (ctrl/shift) */
 #define TLIST_MULTI_STICKY	0x02	/* Multiple sticky selections */
 #define TLIST_POLL		0x04	/* Generate tlist-poll events */
-#define TLIST_DBLCLICK		0x08	/* Generate tlist-dblclick events */
 #define TLIST_TREE		0x10	/* Hack to display trees */
 #define TLIST_STATIC_ICONS	0x20	/* Icon surfaces may be accessed
 					   at any time (avoids scale/copy) */
