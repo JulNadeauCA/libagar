@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.167 2005/02/16 03:31:37 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.168 2005/02/27 05:57:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -216,10 +216,7 @@ view_resize(int w, int h)
 	TAILQ_FOREACH(win, &view->windows, windows) {
 		pthread_mutex_lock(&win->lock);
 		if (!win->visible) {
-			WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
-			    WIDGET(win)->h);
-			widget_update_coords(win, WIDGET(win)->x,
-			    WIDGET(win)->y);
+			WINDOW_UPDATE(win);
 		}
 		pthread_mutex_unlock(&win->lock);
 	}
@@ -240,15 +237,11 @@ view_resize(int w, int h)
 
 	TAILQ_FOREACH(win, &view->windows, windows) {
 		pthread_mutex_lock(&win->lock);
-
 		WIDGET(win)->x = WIDGET(win)->x*w/ow;
 		WIDGET(win)->y = WIDGET(win)->y*h/oh;
 		WIDGET(win)->w = WIDGET(win)->w*w/ow;
 		WIDGET(win)->h = WIDGET(win)->h*h/oh;
-
-		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
-		widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
-
+		WINDOW_UPDATE(win);
 		pthread_mutex_unlock(&win->lock);
 	}
 	return (0);

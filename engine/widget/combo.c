@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.21 2004/09/12 05:52:26 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.22 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -97,25 +97,25 @@ combo_expand(int argc, union evarg *argv)
 	int expand = argv[2].i;
 
 	if (expand) {						/* Expand */
-		struct widget *pan;
+		struct widget *panel;
 
 		com->panel = window_new(WINDOW_NO_TITLEBAR|
 				        WINDOW_NO_DECORATIONS, NULL);
-		pan = WIDGET(com->panel);
+		panel = WIDGET(com->panel);
 		object_attach(com->panel, com->list);
-	
-		pan->w = WIDGET(com)->w - WIDGET(com->button)->w;
-		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		pan->x = WIDGET(com)->cx;
-		pan->y = WIDGET(com)->cy;
-		if (pan->x+pan->w > view->w)
-			pan->w = view->w - pan->x;
-		if (pan->y+pan->h > view->h)
-			pan->h = view->h - pan->y;
 
-		WIDGET_SCALE(pan, pan->w, pan->h);
-		widget_update_coords(pan, pan->x, pan->y);
+		panel->w = WIDGET(com)->w - WIDGET(com->button)->w;
+		panel->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
+		panel->x = WIDGET(com)->cx;
+		panel->y = WIDGET(com)->cy;
+		
+		/* XXX redundant? */
+		if (panel->x+panel->w > view->w)
+			panel->w = view->w - panel->x;
+		if (panel->y+panel->h > view->h)
+			panel->h = view->h - panel->y;
 
+		WINDOW_UPDATE(panel);
 		window_show(com->panel);
 	} else {
 		combo_collapse(com);

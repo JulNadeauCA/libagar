@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.243 2005/02/22 04:19:02 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.244 2005/02/26 06:24:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -969,8 +969,7 @@ window_set_geometry(struct window *win, int x, int y, int w, int h)
 	}
 
 	/* Effect the possible changes in geometry. */
-	WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
-	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
+	WINDOW_UPDATE(win);
 
 	/* Update the background. */
 	switch (view->gfx_engine) {
@@ -1100,8 +1099,7 @@ window_load(void *p, struct netbuf *buf)
 		WIDGET(win)->w = win->minh;
 
 	/* Effect the possible changes in geometry. */
-	WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
-	widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
+	WINDOW_UPDATE(win);
 	return (0);
 }
 

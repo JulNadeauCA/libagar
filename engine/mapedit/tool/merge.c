@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.59 2004/12/17 03:19:41 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.60 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -221,7 +221,7 @@ merge_edit_brush(int argc, union evarg *argv)
 		    OBJECT(brush)->name)) == NULL)
 			continue;
 
-		tbar = toolbar_new(win, TOOLBAR_HORIZ, 1);
+		tbar = toolbar_new(win, TOOLBAR_HORIZ, 1, 0);
 		mapview_new(win, brush, MAPVIEW_EDIT|MAPVIEW_GRID|
 		                        MAPVIEW_PROPS, tbar, NULL);
 		window_attach(pwin, win);

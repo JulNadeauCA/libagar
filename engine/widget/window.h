@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.83 2005/02/01 03:14:52 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.84 2005/02/19 10:20:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -69,6 +69,11 @@ struct window {
 };
 
 #define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
+#define WINDOW_UPDATE(win) \
+	do { \
+		WIDGET_OPS(win)->scale((win), WIDGET(win)->w, WIDGET(win)->h); \
+		widget_update_coords((win), WIDGET(win)->x, WIDGET(win)->y); \
+	} while (/*CONSTCOND*/0)
 
 __BEGIN_DECLS
 struct window	*window_new(int, const char *, ...)
