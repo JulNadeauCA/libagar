@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.33 2002/03/25 12:59:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.34 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -350,11 +350,13 @@ object_dump(void *p)
 }
 
 /*
- * Add a reference to ob:offs(flags) at m:x,y, and a back reference.
+ * Add a reference to ob:offs(flags) at m:x,y, and a back
+ * reference (mappos) structure.
+ *
  * Must be called on a locked map.
  */
 struct mappos *
-object_madd(void *p, Uint32 offs, Uint32 flags, struct input *in,
+object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
     struct map *m, Uint32 x, Uint32 y)
 {
 	struct object *ob = (struct object *)p;
@@ -378,23 +380,31 @@ object_madd(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	if (in != NULL) {
 		in->pos = pos;
 	}
+	ob->pos = pos;
 
 	return (pos);
 }
 
 /*
- * Remove a reference to ob:offs(flags) on m:x,y.
+ * Destroy the mappos structure associated with an object.
+ * Must be called on a locked map.
  */
 void
-object_mdel(void *obp, Uint32 offs, Uint32 flags, struct map *m,
-    Uint32 x, Uint32 y)
+object_delpos(void *obp)
 {
-	struct node *node = &m->map[x][y];
-	struct noderef *nref;
+	struct object *ob = (struct object *)obp;
+	struct mappos *pos = ob->pos;
 
-	nref = node_findref(node, obp, offs, flags);
-	if (nref != NULL) {
-		node_delref(node, nref);
+	if (pos == NULL) {
+		dprintf("%s has no position\n", ob->name);
+		return;
 	}
+
+	if (pos->map != NULL) {
+		node_delref(&pos->map->map[pos->x][pos->y], pos->nref);
+	}
+
+	free(pos);
+	ob->pos = NULL;
 }
 
