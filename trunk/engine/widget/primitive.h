@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.5 2002/07/20 16:15:29 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.6 2002/07/20 19:03:19 vedge Exp $	*/
 /*	Public domain	*/
 
 struct primitive_ops {
@@ -6,6 +6,7 @@ struct primitive_ops {
 	void	(*frame)(void *, int, int, int, int, int);
 	void	(*circle)(void *, int, int, int, int, int, int);
 	void	(*line)(void *, int, int, int, int, Uint32);
+	void	(*square)(void *, int, int, int, int, Uint32);
 };
 
 extern struct primitive_ops primitives;
