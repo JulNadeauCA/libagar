@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.17 2003/01/05 08:24:43 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.18 2003/01/05 08:42:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -28,8 +28,6 @@
 
 #include <config/have_ieee754.h>
 #include <config/have_long_double.h>
-
-#include <engine/compat/asprintf.h>
 
 #include <engine/engine.h>
 
@@ -328,7 +326,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	struct region *reg;
 	struct event *evh;
 
-	win = window_generic_new(368, 362,
+	win = window_generic_new(432, 362,
 	    "monitor-object-browser-obj-%s", ob->name);
 	if (win == NULL) {
 		return;		/* Exists */
@@ -354,14 +352,14 @@ tl_objs_selected(int argc, union evarg *argv)
 	}
 
 	/* Display the generic properties. */
-	reg = region_new(win, REGION_HALIGN, 0, 40, 40, 30);
+	reg = region_new(win, REGION_HALIGN, 0, 40, 50, 30);
 	{
 		struct tlist *tl_props;
 
 		tl_props = tlist_new(reg, 100, 100, TLIST_POLL);
 		event_new(tl_props, "tlist-poll", tl_props_poll, "%p", ob);
 
-		reg = region_new(win, REGION_VALIGN, 42, 40, 54, 30);
+		reg = region_new(win, REGION_VALIGN, 50, 40, 50, 30);
 		{
 			struct label *lab_name;
 			struct textbox *tb_set;
