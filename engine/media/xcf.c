@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.3 2002/12/22 11:37:45 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.4 2002/12/23 03:05:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/have_ieee754.h>
 
 #include <engine/engine.h>
 #include <engine/map.h>
