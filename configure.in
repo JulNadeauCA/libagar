@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.74 2003/08/07 22:41:35 vedge Exp $
+# $Csoft: configure.in,v 1.75 2003/08/07 23:28:57 vedge Exp $
 # Public domain
 
 REGISTER("--with-smpeg",	"MPEG playback using smpeg [default: check]")
@@ -6,7 +6,6 @@ REGISTER("--with-x11",		"X11-specific code [default: check]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--enable-edition",	"Graphical edition [default: yes]")
-REGISTER("--enable-debug",	"Engine debugging [default: yes]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-floating-point", "Floating point operations [default: yes]")
 REGISTER("--enable-static",	"Produce a static binary [default: no]")
@@ -88,15 +87,6 @@ fi
 # Compile a static binary?
 if [ "${enable_static}" = "yes" ]; then
 	MDEFINE(LDFLAGS, "-static")
-fi
-
-# Don't enable debugging unless requested explicitely.
-if [ "${enable_debug}" != "no" ]; then
-	HDEFINE(DEBUG, 1)
-	HDEFINE(LOCKDEBUG, 1)
-else
-	HUNDEF(DEBUG)
-	HUNDEF(LOCKDEBUG)
 fi
 
 # Don't enable thread safety unless requested explicitely.
