@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.95 2003/07/28 15:29:58 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.96 2003/09/02 02:04:28 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <engine/view.h>
 #include <engine/map.h>
 #include <engine/prop.h>
+#include <engine/input.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -181,6 +182,24 @@ config_init(struct config *con)
 	free(udatadir);
 }
 
+/* Poll the available input devices. */
+static void
+config_poll_input(int argc, union evarg *argv)
+{
+	extern struct input_devq input_devs;
+	extern pthread_mutex_t input_lock;
+	struct tlist *tl = argv[0].p;
+	struct input *in;
+
+	pthread_mutex_lock(&input_lock);
+	tlist_clear_items(tl);
+	SLIST_FOREACH(in, &input_devs, inputs) {
+		tlist_insert_item(tl, NULL, in->name, in);
+	}
+	tlist_restore_selections(tl);
+	pthread_mutex_unlock(&input_lock);
+}
+
 void
 config_window(struct config *con)
 {
@@ -195,9 +214,9 @@ config_window(struct config *con)
 	window_set_caption(win, _("Engine settings"));
 	window_set_closure(win, WINDOW_HIDE);
 
-	vb = vbox_new(win, 0);
+	hb = hbox_new(win, 0);
+	vb = vbox_new(hb, 0);
 	vbox_set_spacing(vb, 2);
-	vbox_set_padding(vb, 20);
 	{
 		const struct {
 			char *name;
@@ -223,7 +242,8 @@ config_window(struct config *con)
 		cbox = checkbox_new(vb, _("Input composition"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &text_composition);
 
-		cbox = checkbox_new(vb, _("Right->left (Arabic, Hebrew, ...)"));
+		cbox = checkbox_new(vb,
+		    _("Right->left (Arabic, Hebrew, ...)"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &text_rightleft);
 #ifdef DEBUG
 		/* Thread unsafe, but not very dangerous. */
@@ -233,7 +253,16 @@ config_window(struct config *con)
 		cbox = checkbox_new(vb, _("Idle time prediction"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
 	}
-	
+	vb = vbox_new(hb, 0);
+	vbox_set_spacing(vb, 2);
+	{
+		struct tlist *tl;
+
+		label_new(vb, _("Input devices:"));
+		tl = tlist_new(vb, TLIST_POLL);
+		event_new(tl, "tlist-poll", config_poll_input, NULL);
+	}
+
 	vb = vbox_new(win, VBOX_WFILL);
 	{
 		char path[MAXPATHLEN];

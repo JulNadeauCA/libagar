@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.48 2003/07/08 00:34:52 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.49 2003/09/07 00:24:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -31,8 +31,8 @@
 #include <engine/physics.h>
 #include <engine/input.h>
 
-static SLIST_HEAD(, input) inputs;
-pthread_mutex_t		   input_lock = PTHREAD_MUTEX_INITIALIZER;
+struct input_devq input_devs;
+pthread_mutex_t	  input_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /* Initialize and attach an input device. */
 void
@@ -47,7 +47,7 @@ input_register(void *p, enum input_type type, const char *name,
 	in->pos = NULL;
 
 	pthread_mutex_lock(&input_lock);
-	SLIST_INSERT_HEAD(&inputs, in, inputs);
+	SLIST_INSERT_HEAD(&input_devs, in, inputs);
 	pthread_mutex_unlock(&input_lock);
 
 	dprintf("registered %s (%s)\n", in->name, in->drv->name);
@@ -63,7 +63,7 @@ input_deregister(void *p)
 		in->drv->in_close(in);
 
 	pthread_mutex_lock(&input_lock);
-	SLIST_REMOVE(&inputs, in, input, inputs);
+	SLIST_REMOVE(&input_devs, in, input, inputs);
 	pthread_mutex_unlock(&input_lock);
 
 	free(in);
@@ -76,8 +76,8 @@ input_destroy(void)
 	struct input *in, *nin;
 
 	pthread_mutex_lock(&input_lock);
-	for (in = SLIST_FIRST(&inputs);
-	     in != SLIST_END(&inputs);
+	for (in = SLIST_FIRST(&input_devs);
+	     in != SLIST_END(&input_devs);
 	     in = nin) {
 		nin = SLIST_NEXT(in, inputs);
 
@@ -86,7 +86,7 @@ input_destroy(void)
 		}
 		free(in);
 	}
-	SLIST_INIT(&inputs);
+	SLIST_INIT(&input_devs);
 	pthread_mutex_unlock(&input_lock);
 }
 
@@ -97,7 +97,7 @@ input_find(const char *name)
 	struct input *in;
 
 	pthread_mutex_lock(&input_lock);
-	SLIST_FOREACH(in, &inputs, inputs) {
+	SLIST_FOREACH(in, &input_devs, inputs) {
 		if (strcmp(in->name, name) == 0)
 			break;
 	}
@@ -112,7 +112,7 @@ input_event(enum input_type type, const SDL_Event *ev)
 	struct input *in;
 
 	pthread_mutex_lock(&input_lock);
-	SLIST_FOREACH(in, &inputs, inputs) {
+	SLIST_FOREACH(in, &input_devs, inputs) {
 		if (in->type == type &&
 		    in->drv->in_match(in, ev))
 			break;
