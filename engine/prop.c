@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.33 2003/06/06 02:51:07 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.34 2003/06/10 08:07:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -682,3 +682,52 @@ prop_destroy(struct prop *prop)
 	}
 	free(prop->key);
 }
+
+void
+prop_print_value(char *s, size_t len, struct prop *prop)
+{
+	switch (prop->type) {
+	case PROP_UINT:
+		snprintf(s, len, "%u", prop->data.u);
+		break;
+	case PROP_INT:
+		snprintf(s, len, "%d", prop->data.i);
+		break;
+	case PROP_UINT8:
+		snprintf(s, len, "%u", prop->data.u8);
+		break;
+	case PROP_SINT8:
+		snprintf(s, len, "%d", prop->data.s8);
+		break;
+	case PROP_UINT16:
+		snprintf(s, len, "%u", prop->data.u16);
+		break;
+	case PROP_SINT16:
+		snprintf(s, len, "%d", prop->data.s16);
+		break;
+	case PROP_UINT32:
+		snprintf(s, len, "%u", prop->data.u32);
+		break;
+	case PROP_SINT32:
+		snprintf(s, len, "%d", prop->data.s32);
+		break;
+	case PROP_FLOAT:
+		snprintf(s, len, "%f", prop->data.f);
+		break;
+	case PROP_DOUBLE:
+		snprintf(s, len, "%f", prop->data.d);
+		break;
+	case PROP_STRING:
+		snprintf(s, len, "%s", prop->data.s);
+		break;
+	case PROP_POINTER:
+		snprintf(s, len, "%p", prop->data.p);
+		break;
+	case PROP_BOOL:
+		snprintf(s, len, "%s", prop->data.i ? "true" : "false");
+		break;
+	default:
+		break;
+	}
+}
+
