@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.17 2002/05/11 03:24:26 vedge Exp $
+# $Csoft: configure.in,v 1.18 2002/05/13 06:53:20 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/config.h);
@@ -7,6 +7,7 @@ register("--without-smpeg",	"Never use the smpeg library (for videos)");
 register("--without-x11",	"Never use X11 (for videos and debugging)");
 register("--enable-debug",	"Build with debugging code");
 register("--enable-xdebug",	"Force synchronous X11 events (very slow)");
+register("--enable-wdebug",	"Debug widgets");
 register("--version",		"Show manuconf version");
 register("--help",		"Show this message");
 
@@ -35,9 +36,10 @@ if [ "${with_x11}" != "no" ]; then
 	if [ "${x11_found}" = "yes" ]; then
 		hdefine(USE_X11, 1);
 	fi
-	if [ "${enable_debug}" = "yes" ]; then
-		hdefine(XDEBUG, 1);
-	fi
+fi
+
+if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]; then
+	hdefine(XDEBUG, 1);
 fi
 
 if [ "${enable_debug}" = "yes" ]; then
@@ -45,4 +47,6 @@ if [ "${enable_debug}" = "yes" ]; then
 	hdefine(LOCKDEBUG, 1);
 fi
 
-
+if [ "${enable_wdebug}" = "yes" ]; then
+	hdefine(WIDGET_DEBUG, 1);
+fi
