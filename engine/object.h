@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.11 2002/02/10 01:38:07 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.12 2002/02/10 05:32:00 vedge Exp $	*/
 
 #ifndef _ENGINE_OBJECT_H_
 #define _ENGINE_OBJECT_H_
@@ -17,10 +17,12 @@ struct object {
 #define LOAD_FUNC	0x0100	/* Load routine */
 #define SAVE_FUNC	0x0200	/* Save routine */
 
-	GSList	*anims;		/* Animation structures */
-	int	 nanims;	/* Animation count */
-	GSList	*sprites;	/* Sprite surfaces */
-	int	 nsprites;	/* Sprite count */
+	struct	 anim **anims;	/* Pointers to animation structures. */
+	int	 nanims;	/* Anims */
+	int	 maxanims;	/* Allocated anims */
+	SDL_Surface **sprites;	/* Pointers to sprites */
+	int	 nsprites;	/* Sprites */
+	int	 maxsprites;	/* Allocated sprites */
 
 	void	 (*destroy_hook)(void *);
 	int	 (*load)(void *, char *);
@@ -37,6 +39,8 @@ struct object {
 #define WMASK_ZOUT	0x20	/* Z axis + */
 
 int	 object_create(struct object *, char *, char *, int);
+int	 object_addanim(struct object *, struct anim *);
+int	 object_addsprite(struct object *, SDL_Surface *);
 int	 object_destroy(void *);
 void	 object_lategc(void);
 int	 object_init(void);

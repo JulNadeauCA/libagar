@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.13 2002/02/10 05:32:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.14 2002/02/14 05:27:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -129,8 +129,9 @@ object_destroy(void *arg)
 	int i;
 
 	if (ob->flags & OBJ_DEFERGC) {
-		struct gcref *or = malloc(sizeof(struct gcref));
-
+		struct gcref *or;
+		
+		or = emalloc(sizeof(struct gcref));
 		or->ob = ob;
 		SLIST_INSERT_HEAD(&lategch, or, gcrefs);
 		dprintf("%s: deferred\n", ob->name);
@@ -142,9 +143,12 @@ object_destroy(void *arg)
 		ob->destroy_hook(ob);
 	}
 	
-	for(i = 0; i < ob->nsprites; i++) {
+	for(i = 0; i < ob->nsprites; i++)
 		SDL_FreeSurface(ob->sprites[i]);
-	}
+	for(i = 0; i < ob->nanims; i++)
+		anim_destroy(ob->anims[i]);
+	free(ob->sprites);
+	free(ob->anims);
 	
 	dprintf("freed %s\n", ob->name);
 
