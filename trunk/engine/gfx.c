@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.22 2004/03/12 04:00:56 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.23 2004/03/13 02:35:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -54,7 +54,6 @@ enum {
 static TAILQ_HEAD(, gfx) gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
 pthread_mutex_t		 gfxq_lock;
 
-static void	gfx_destroy(struct gfx *);
 static void	gfx_destroy_anim(struct gfx_anim *);
 
 /* Attach a sprite of arbitrary size. */
@@ -165,12 +164,12 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	SDL_Rect sd, rd;
 	struct map *fragmap;
 
-	sd.w = TILEW;
-	sd.h = TILEH;
+	sd.w = TILESZ;
+	sd.h = TILESZ;
 	rd.x = 0;
 	rd.y = 0;
-	mw = sprite->w/TILEW;
-	mh = sprite->h/TILEH;
+	mw = sprite->w/TILESZ;
+	mh = sprite->h/TILESZ;
 
 	fragmap = Malloc(sizeof(struct map));
 	snprintf(mapname, sizeof(mapname), "f-%s%u", gfx->name, gfx->nsubmaps);
@@ -178,8 +177,8 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	if (map_alloc_nodes(fragmap, mw, mh) == -1)
 		return (-1);
 
-	for (y = 0, my = 0; y < sprite->h; y += TILEH, my++) {
-		for (x = 0, mx = 0; x < sprite->w; x += TILEW, mx++) {
+	for (y = 0, my = 0; y < sprite->h; y += TILESZ, my++) {
+		for (x = 0, mx = 0; x < sprite->w; x += TILESZ, mx++) {
 			SDL_Surface *su;
 			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
 			                                  SDL_RLEACCEL);
@@ -191,7 +190,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			su = SDL_CreateRGBSurface(SDL_SWSURFACE |
 			    (sprite->flags &
 			    (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
-			    TILEW, TILEH, sprite->format->BitsPerPixel,
+			    TILESZ, TILESZ, sprite->format->BitsPerPixel,
 			    sprite->format->Rmask,
 			    sprite->format->Gmask,
 			    sprite->format->Bmask,
@@ -245,6 +244,25 @@ gfx_unused(struct gfx *gfx)
 	pthread_mutex_unlock(&gfx->used_lock);
 }
 
+void
+gfx_init(struct gfx *gfx, const char *name)
+{
+	gfx->name = Strdup(name);
+	gfx->sprites = NULL;
+	gfx->csprites = NULL;
+	gfx->nsprites = 0;
+	gfx->maxsprites = 0;
+	gfx->anims = NULL;
+	gfx->canims = NULL;
+	gfx->nanims = 0;
+	gfx->maxanims = 0;
+	gfx->submaps = NULL;
+	gfx->nsubmaps = 0;
+	gfx->maxsubmaps = 0;
+	gfx->used = 1;
+	pthread_mutex_init(&gfx->used_lock, NULL);
+}
+
 /*
  * Return a pointer to the named graphics package.
  * If the package is resident, increment the shared reference count.
@@ -276,20 +294,7 @@ gfx_fetch(const char *name)
 		goto fail;
 
 	gfx = Malloc(sizeof(struct gfx));
-	gfx->name = Strdup(name);
-	gfx->sprites = NULL;
-	gfx->csprites = NULL;
-	gfx->nsprites = 0;
-	gfx->maxsprites = 0;
-	gfx->anims = NULL;
-	gfx->canims = NULL;
-	gfx->nanims = 0;
-	gfx->maxanims = 0;
-	gfx->submaps = NULL;
-	gfx->nsubmaps = 0;
-	gfx->maxsubmaps = 0;
-	gfx->used = 1;
-	pthread_mutex_init(&gfx->used_lock, NULL);
+	gfx_init(gfx, name);
 
 	if ((den = den_open(path, DEN_READ)) == NULL) {
 		goto fail;
@@ -458,7 +463,6 @@ gfx_insert_anim(struct gfx *gfx)
 	return (anim);
 }
 
-/* Release an animation. */
 static void
 gfx_destroy_anim(struct gfx_anim *anim)
 {
