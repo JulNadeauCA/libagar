@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.117 2004/04/26 03:21:17 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.118 2004/05/01 12:38:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -51,6 +51,7 @@
 #include <engine/widget/keycodes.h>
 #include <engine/widget/tlist.h>
 #include <engine/widget/mspinbutton.h>
+#include <engine/widget/spinbutton.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -66,7 +67,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	5, 0
+	6, 0
 };
 
 const struct object_ops config_ops = {
@@ -82,6 +83,8 @@ extern int text_composition;
 extern int text_rightleft;
 extern int window_freescale;
 extern int kbd_unitrans;
+extern int kbd_delay;
+extern int kbd_repeat;
 
 static void
 config_set_path(int argc, union evarg *argv)
@@ -233,6 +236,8 @@ config_load(void *p, struct netbuf *buf)
 #ifdef DEBUG
 	engine_debug = read_uint8(buf);
 #endif
+	kbd_delay = (int)read_uint32(buf);
+	kbd_repeat = (int)read_uint32(buf);
 	return (0);
 }
 
@@ -251,6 +256,8 @@ config_save(void *p, struct netbuf *buf)
 #else
 	write_uint8(buf, 0);
 #endif
+	write_uint32(buf, (Uint32)kbd_delay);
+	write_uint32(buf, (Uint32)kbd_repeat);
 	return (0);
 }
 
@@ -369,6 +376,17 @@ config_window(struct config *con)
 		widget_bind(msb, "xvalue", WIDGET_PROP, config, "view.w");
 		widget_bind(msb, "yvalue", WIDGET_PROP, config, "view.h");
 		mspinbutton_set_range(msb, 320, 4096);
+	}
+
+	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
+	{
+		struct spinbutton *sbu;
+
+		sbu = spinbutton_new(hb, _(" Key delay (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &kbd_delay);
+		
+		sbu = spinbutton_new(hb, _(" Key repeat (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
 	}
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
