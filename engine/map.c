@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.242 2005/04/04 01:06:57 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.243 2005/04/04 10:28:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -165,6 +165,10 @@ noderef_destroy(struct map *m, struct noderef *r)
 	switch (r->type) {
 	case NODEREF_SPRITE:
 		if (r->r_sprite.obj != NULL) {
+			if (r->r_sprite.obj->gfx != NULL &&
+			    r->r_sprite.obj->gfx->type == GFX_PRIVATE) {
+				object_page_out(r->r_sprite.obj, OBJECT_DATA);
+			}
 			object_del_dep(m, r->r_sprite.obj);
 			object_page_out(r->r_sprite.obj, OBJECT_GFX);
 		}
@@ -411,8 +415,9 @@ map_pop_layer(struct map *m)
  * The map must be locked.
  */
 struct noderef *
-node_add_sprite(struct map *map, struct node *node, void *pobj, Uint32 offs)
+node_add_sprite(struct map *map, struct node *node, void *p, Uint32 offs)
 {
+	struct object *pobj = p;
 	struct noderef *r;
 
 	r = Malloc(sizeof(struct noderef), M_MAP_NODEREF);
@@ -423,8 +428,12 @@ node_add_sprite(struct map *map, struct node *node, void *pobj, Uint32 offs)
 
 	if (pobj != NULL) {
 		object_add_dep(map, pobj);
-		if (object_page_in(pobj, OBJECT_GFX) == -1)
+		if (object_page_in(pobj, OBJECT_GFX) == -1) {
 			fatal("paging gfx: %s", error_get());
+		}
+		if (pobj->gfx->type == GFX_PRIVATE &&
+		    object_page_in(pobj, OBJECT_DATA) == -1)
+			fatal("paging data: %s", error_get());
 	}
 	return (r);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.194 2005/03/11 08:59:30 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.195 2005/04/02 03:13:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -75,7 +75,6 @@ const struct object_ops object_ops = {
 #define DEBUG_DEPRESV	0x08
 #define DEBUG_LINKAGE	0x10
 #define DEBUG_GC	0x20
-#define DEBUG_PAGING	0x40
 
 int	object_debug = DEBUG_STATE|DEBUG_DEPRESV;
 #define engine_debug object_debug
@@ -657,8 +656,6 @@ object_page_in(void *p, enum object_page_item item)
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
-		debug(DEBUG_PAGING, "%s gfx: %s; used = %u++\n", ob->name,
-		    ob->gfx_name, ob->gfx_used);
 		if (ob->gfx == NULL) {
 			if (ob->gfx_name != NULL &&
 			   (ob->gfx = gfx_fetch_shd(ob->gfx_name)) == NULL) {
@@ -671,8 +668,6 @@ object_page_in(void *p, enum object_page_item item)
 		}
 		break;
 	case OBJECT_AUDIO:
-		debug(DEBUG_PAGING, "%s audio: %s; used = %u++\n", ob->name,
-		    ob->audio_name, ob->audio_used);
 		if (ob->audio == NULL) {
 			if (ob->audio_name != NULL &&
 			   (ob->audio = audio_fetch(ob->audio_name)) == NULL) {
@@ -685,11 +680,7 @@ object_page_in(void *p, enum object_page_item item)
 		}
 		break;
 	case OBJECT_DATA:
-		debug(DEBUG_PAGING, "data of %s; used = %u++\n", ob->name,
-		    ob->data_used);
 		if (ob->flags & OBJECT_NON_PERSISTENT) {
-			debug(DEBUG_PAGING, "%s: non-persistent; ignoring\n",
-			    ob->name);
 			goto out;
 		}
 		if (ob->data_used == 0) {
@@ -725,8 +716,6 @@ object_page_out(void *p, enum object_page_item item)
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
-		debug(DEBUG_PAGING, "%s: -gfx (used=%u)\n", ob->name,
-		    ob->gfx_used);
 #ifdef DEBUG
 		if (ob->gfx_used == 0)
 			fatal("neg gfx ref count");
@@ -739,8 +728,6 @@ object_page_out(void *p, enum object_page_item item)
 		}
 		break; 
 	case OBJECT_AUDIO:
-		debug(DEBUG_PAGING, "%s: -audio (used=%u)\n", ob->name,
-		    ob->audio_used);
 #ifdef DEBUG
 		if (ob->audio_used == 0)
 			fatal("neg audio ref count");
@@ -753,13 +740,8 @@ object_page_out(void *p, enum object_page_item item)
 		}
 		break;
 	case OBJECT_DATA:
-		debug(DEBUG_PAGING, "%s: -data (used=%u)\n", ob->name,
-		    ob->data_used);
-		if (ob->flags & OBJECT_NON_PERSISTENT) {
-			debug(DEBUG_PAGING, "%s: non-persistent; skipping\n",
-			    ob->name);
+		if (ob->flags & OBJECT_NON_PERSISTENT)
 			goto done;
-		}
 #ifdef DEBUG
 		if (ob->data_used == 0)
 			fatal("neg data ref count");
@@ -1187,7 +1169,6 @@ object_save(void *p)
 
 	/* Page in the data unless it is already resident. */
 	if (!was_resident) {
-		debug(DEBUG_PAGING, "paging `%s' data for save\n", ob->name);
 		if (object_load_data(ob) == -1) {
 			/*
 			 * Assume that this failure means the data has never
