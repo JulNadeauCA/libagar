@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.70 2002/03/31 04:40:57 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.71 2002/04/07 02:23:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -774,13 +774,17 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 			}
 			break;
 		case SDLK_l:
+			pthread_mutex_unlock(&med->map->lock);
 			mapedit_loadmap(med);
+			pthread_mutex_lock(&med->map->lock);
 			break;
 		case SDLK_s:
 			if (ev->key.keysym.mod & KMOD_SHIFT) {
 				mapedit_nodeflags(med, node, NODE_SLOW);
 			} else {
+				pthread_mutex_unlock(&med->map->lock);
 				mapedit_savemap(med);
+				pthread_mutex_lock(&med->map->lock);
 			}
 			break;
 		case SDLK_g:
