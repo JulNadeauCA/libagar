@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.8 2002/10/30 22:24:07 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.9 2002/11/04 08:34:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -60,7 +60,8 @@ enum {
 	SELECTION_MOUSE_BUTTON = 1
 };
 
-static void	tlist_mouse_button(int, union evarg *);
+static void	tlist_mouse_button_down(int, union evarg *);
+static void	tlist_mouse_button_up(int, union evarg *);
 static void	tlist_mouse_motion(int, union evarg *);
 static void	tlist_keydown(int, union evarg *);
 static void	tlist_scaled(int, union evarg *);
@@ -113,7 +114,9 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
 	event_new(tl, "window-mousemotion", 0, tlist_mouse_motion, NULL);
-	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button, NULL);
+	event_new(tl, "window-mousebuttonup", 0, tlist_mouse_button_up, NULL);
+	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button_down,
+	    NULL);
 	event_new(tl, "window-keydown", 0, tlist_keydown, NULL);
 	event_new(tl, "attached", 0, tlist_attached, NULL);
 	event_new(tl, "widget-scaled", 0, tlist_scaled, NULL);
@@ -313,7 +316,7 @@ tlist_mouse_motion(int argc, union evarg *argv)
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
 	Uint8 ms;
-	
+
 	event_forward(sb, "window-mousemotion", argc, argv);
 
 #if 0
@@ -339,7 +342,15 @@ tlist_mouse_motion(int argc, union evarg *argv)
 }
 
 static void
-tlist_mouse_button(int argc, union evarg *argv)
+tlist_mouse_button_up(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	
+	event_forward(tl->vbar, "window-mousebuttonup", argc, argv);
+}
+
+static void
+tlist_mouse_button_down(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct scrollbar *sb = tl->vbar;
