@@ -1,4 +1,4 @@
-.\"	$Csoft: graph.3,v 1.15 2003/07/03 06:43:50 vedge Exp $
+.\"	$Csoft: graph.3,v 1.16 2003/07/14 03:29:12 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -45,10 +45,10 @@ different values on a dynamic range.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct graph *"
-.Fn graph_new "void *parent" "const char *caption" "enum graph_type type" "int flags" "Sint16 yrange"
+.Fn graph_new "void *parent" "const char *caption" "enum graph_type type" "int flags" "graph_val_t yrange"
 .Pp
 .Ft void
-.Fn graph_init "struct graph *graph" "const char *caption" "enum graph_type type" "int flags" "Sint16 yrange"
+.Fn graph_init "struct graph *graph" "const char *caption" "enum graph_type type" "int flags" "graph_val_t yrange"
 .nr nS 0
 .Pp
 The
@@ -92,7 +92,7 @@ may include:
                    "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
 .Ft void
-.Fn graph_plot "struct graph_item *item" "Sint16 val"
+.Fn graph_plot "struct graph_item *item" "graph_val_t val"
 .nr nS 0
 .Pp
 The
