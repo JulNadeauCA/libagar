@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.57 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.58 2004/04/10 21:24:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -117,10 +117,10 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 	if (mv->map == copybuf)
 		return (-1);
 
-	for (sy = 0, dy = rd->y - (copybuf->maph*mv->map->tilesz)/2;
+	for (sy = 0, dy = rd->y;
 	     sy < copybuf->maph;
 	     sy++, dy += mv->map->tilesz) {
-		for (sx = 0, dx = rd->x - (copybuf->mapw*mv->map->tilesz)/2;
+		for (sx = 0, dx = rd->x;
 		     sx < copybuf->mapw;
 		     sx++, dx += mv->map->tilesz) {
 			struct node *sn = &copybuf->map[sy][sx];
