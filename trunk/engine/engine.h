@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.83 2004/05/01 12:38:37 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.84 2004/05/02 09:37:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -117,14 +117,7 @@ extern pthread_mutexattr_t	recursive_mutexattr;
 
 #include "begin_code.h"
 
-struct engine_proginfo {
-	char	*progname;	/* Name of the executable */
-	char	*name;		/* Name of the game */
-	char	*copyright;	/* Copyright notice */
-	char	*version;	/* Version of the game */
-};
-
-extern struct engine_proginfo *proginfo; /* engine.c */
+extern const char *progname;		/* engine.c */
 extern struct object *world;		/* engine.c */
 extern pthread_mutex_t linkage_lock;	/* engine.c */
 
@@ -134,7 +127,7 @@ enum gfx_engine {
 };
 
 __BEGIN_DECLS
-int		 engine_preinit(struct engine_proginfo *, int);
+int		 engine_preinit(const char *);
 int		 engine_init(enum gfx_engine, enum text_engine);
 void		 engine_atexit(void (*)(void));
 void		 engine_destroy(void);

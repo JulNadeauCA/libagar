@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.122 2004/06/22 05:39:39 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.123 2004/07/24 02:02:10 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -128,7 +128,7 @@ config_set_opengl(int argc, union evarg *argv)
 		text_msg(MSG_WARNING,
 		    _("Save the configuration and restart %s for OpenGL mode "
 		      "to take effect"),
-		    proginfo->progname);
+		    progname);
 }
 
 static void
@@ -140,7 +140,7 @@ config_set_async_blits(int argc, union evarg *argv)
 		text_msg(MSG_WARNING,
 		    _("Save the configuration and restart %s for async blits "
 		      "to take effect"),
-		    proginfo->progname);
+		    progname);
 }
 
 static void
@@ -191,10 +191,10 @@ config_init(struct config *con)
 	pwd = getpwuid(getuid());
 	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
 	strlcat(udatadir, "/.", sizeof(udatadir));
-	strlcat(udatadir, proginfo->progname, sizeof(udatadir));
+	strlcat(udatadir, progname, sizeof(udatadir));
 #else
 	udatadir[0] = '.';
-	strlcpy(&udatadir[1], proginfo->progname, sizeof(udatadir)-1);
+	strlcpy(&udatadir[1], progname, sizeof(udatadir)-1);
 #endif
 	if (stat(udatadir, &sta) != 0 &&
 	    Mkdir(udatadir) != 0) {

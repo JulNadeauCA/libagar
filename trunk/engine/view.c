@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.151 2004/05/10 02:43:14 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.152 2004/06/18 03:11:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -682,8 +682,8 @@ view_capture(SDL_Surface *su)
 	for (;;) {
 		char file[MAXPATHLEN];
 
-		snprintf(file, sizeof(file), "%s/%s%u.jpg", path,
-		    proginfo->progname, seq++);
+		snprintf(file, sizeof(file), "%s/%s%u.jpg", path, progname,
+		    seq++);
 		if ((fd = open(file, O_WRONLY|O_CREAT|O_EXCL, 0600)) == -1) {
 			if (errno == EEXIST) {
 				continue;
