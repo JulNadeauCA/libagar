@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.6 2004/04/22 12:36:09 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.7 2004/04/23 03:29:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -35,28 +35,6 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
-
-void
-vg_point_init(struct vg *vg, struct vg_element *vge)
-{
-	vge->vg_point.radius = 0.05;
-}
-
-void
-vg_point_radius(struct vg *vg, double radius)
-{
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_point.radius = radius;
-}
-
-void
-vg_point_diameter(struct vg *vg, double diameter)
-{
-	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
-
-	vge->vg_point.radius = diameter/2;
-}
 
 void
 vg_draw_points(struct vg *vg, struct vg_element *vge)
