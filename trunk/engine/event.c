@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.19 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.20 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -39,6 +39,9 @@
 #include <engine/input.h>
 
 #include <engine/mapedit/mapedit.h>
+#include <engine/text/text.h>
+
+extern struct gameinfo *gameinfo;
 
 static void	event_hotkey(SDL_Event *);
 
@@ -72,7 +75,15 @@ event_hotkey(SDL_Event *ev)
 	case SDLK_F4:
 		object_load(world);
 		break;
+	case SDLK_t:
+		text_msg(5, TEXT_SLEEP, "%d ticks\n", SDL_GetTicks());
+		break;
 #endif
+	case SDLK_v:
+		text_msg(10, TEXT_SLEEP, "AGAR engine v%s\n%s v%d.%d\n%s\n",
+		    ENGINE_VERSION, gameinfo->name, gameinfo->ver[0],
+		    gameinfo->ver[1], gameinfo->copyright);
+		break;
 	case SDLK_ESCAPE:
 		engine_destroy();
 		break;
@@ -109,6 +120,7 @@ event_loop(void)
 					dprintf("overrun (delta=%d)\n", delta);
 					delta = 1;
 				}
+				text_drawall();
 			}
 			pthread_mutex_unlock(&m->lock);
 			ltick = SDL_GetTicks();
