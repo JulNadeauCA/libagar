@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.12 2002/08/21 23:51:39 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.13 2002/09/11 23:54:37 vedge Exp $	*/
 /*	Public domain	*/
 
 struct label {
@@ -21,7 +21,7 @@ struct label {
 	} justify;
 };
 
-struct label	*label_new(struct region *, const char *, int, int);
+struct label	*label_new(struct region *, int, int, const char *, ...);
 void		 label_init(struct label *, const char *, int, int);
 void	 	 label_destroy(void *);
 void		 label_draw(void *);

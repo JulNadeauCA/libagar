@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.29 2002/09/11 23:54:37 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.30 2002/09/19 22:07:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -57,17 +57,27 @@ enum {
 };
 
 struct label *
-label_new(struct region *reg, const char *caption, int w, int h)
+label_new(struct region *reg, int w, int h, const char *fmt, ...)
 {
 	struct label *label;
+	va_list args;
+	char *buf;
+
+	va_start(args, fmt);
+	if (vasprintf(&buf, fmt, args) == -1) {
+		fatal("vasprintf: %s\n", strerror(errno));
+	}
+	va_end(args);
 
 	label = emalloc(sizeof(struct label));
-	label_init(label, caption, w, h);
+	label_init(label, buf, w, h);
+
+	free(buf);
 
 	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, label);
 	pthread_mutex_unlock(&reg->win->lock);
-
+	
 	return (label);
 }
 
