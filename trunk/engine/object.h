@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.36 2002/05/28 06:03:47 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.37 2002/05/31 10:41:15 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -9,16 +9,12 @@ struct mapdir;
 struct mappos;
 struct input;
 struct anim;
+struct event;
 
 struct object_ops {
 	void	(*destroy)(void *);		/* Free resources */
 	int	(*load)(void *, int);		/* Load from fd */
 	int	(*save)(void *, int);		/* Save to fd */
-
-	/* Called when the container is locked, order is irrelevant. */
-	/* XXX event */
-	void	(*onattach)(void *, void *);	/* On attach to container */
-	void	(*ondetach)(void *, void *);	/* On detach to container */
 
 	/* Container functions. */
 	void	(*attach)(void *, void *);	/* Attach child */

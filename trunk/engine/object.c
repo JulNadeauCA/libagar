@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.55 2002/05/28 06:03:47 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.56 2002/05/31 10:41:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -59,8 +59,6 @@ static const struct object_ops null_ops = {
 	NULL,	/* destroy */
 	NULL,	/* load */
 	NULL,	/* save */
-	NULL,	/* onattach */
-	NULL,	/* ondetach */
 	NULL,	/* attach */
 	NULL	/* detach */
 };
@@ -498,10 +496,6 @@ object_dump(void *p)
 		printf("load ");
 	if (OBJECT_OPS(ob)->save != NULL)
 		printf("save ");
-	if (OBJECT_OPS(ob)->onattach != NULL)
-		printf("on-attach ");
-	if (OBJECT_OPS(ob)->ondetach != NULL)
-		printf("on-detach ");
 	if (OBJECT_OPS(ob)->attach != NULL)
 		printf("attach ");
 	if (OBJECT_OPS(ob)->detach != NULL)
