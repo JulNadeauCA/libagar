@@ -152,22 +152,27 @@ echo "    --enable-32bpp                 Support for 32 bpp display [default: ye
 echo "    --enable-nls                   Native Language Support [default: yes]"
 exit 1
 SHAREDIR="$PREFIX/share/cave"
+echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
-echo "#ifndef SHAREDIR" > /sharedir.h
-echo "#define SHAREDIR" $SHAREDIR >> /sharedir.h
-echo "#endif /* SHAREDIR */" >> /sharedir.h
+echo "#ifndef SHAREDIR" > config/sharedir.h
+echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
+echo "#endif /* SHAREDIR */" >> config/sharedir.h
 TTFDIR="$PREFIX/share/cave/fonts"
+echo TTFDIR=$TTFDIR >> Makefile.config
 TTFDIR="\"$PREFIX/share/cave/fonts\""
-echo "#ifndef TTFDIR" > /ttfdir.h
-echo "#define TTFDIR" $TTFDIR >> /ttfdir.h
-echo "#endif /* TTFDIR */" >> /ttfdir.h
+echo "#ifndef TTFDIR" > config/ttfdir.h
+echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
+echo "#endif /* TTFDIR */" >> config/ttfdir.h
 INST_MANDIR="$PREFIX/share/agar/man"
+echo INST_MANDIR=$INST_MANDIR >> Makefile.config
 INST_PSDIR="$PREFIX/share/agar/ps"
+echo INST_PSDIR=$INST_PSDIR >> Makefile.config
 LOCALEDIR="$PREFIX/share/locale"
+echo LOCALEDIR=$LOCALEDIR >> Makefile.config
 LOCALEDIR="\"$PREFIX/share/locale\""
-echo "#ifndef LOCALEDIR" > /localedir.h
-echo "#define LOCALEDIR" $LOCALEDIR >> /localedir.h
-echo "#endif /* LOCALEDIR */" >> /localedir.h
+echo "#ifndef LOCALEDIR" > config/localedir.h
+echo "#define LOCALEDIR" $LOCALEDIR >> config/localedir.h
+echo "#endif /* LOCALEDIR */" >> config/localedir.h
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
@@ -228,13 +233,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_IEEE754" > /have_ieee754.h
-echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> /have_ieee754.h
-echo "#endif /* HAVE_IEEE754 */" >> /have_ieee754.h
+	echo "#ifndef HAVE_IEEE754" > config/have_ieee754.h
+echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> config/have_ieee754.h
+echo "#endif /* HAVE_IEEE754 */" >> config/have_ieee754.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_IEEE754" > /have_ieee754.h
+    echo "#undef HAVE_IEEE754" > config/have_ieee754.h
 
 	echo "no"
 fi
@@ -260,13 +265,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_LONG_DOUBLE" > /have_long_double.h
-echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> /have_long_double.h
-echo "#endif /* HAVE_LONG_DOUBLE */" >> /have_long_double.h
+	echo "#ifndef HAVE_LONG_DOUBLE" > config/have_long_double.h
+echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> config/have_long_double.h
+echo "#endif /* HAVE_LONG_DOUBLE */" >> config/have_long_double.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_LONG_DOUBLE" > /have_long_double.h
+    echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
 
 	echo "no"
 fi
@@ -292,13 +297,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_PROGNAME" > /have_progname.h
-echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> /have_progname.h
-echo "#endif /* HAVE_PROGNAME */" >> /have_progname.h
+	echo "#ifndef HAVE_PROGNAME" > config/have_progname.h
+echo "#define HAVE_PROGNAME" $HAVE_PROGNAME >> config/have_progname.h
+echo "#endif /* HAVE_PROGNAME */" >> config/have_progname.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_PROGNAME" > /have_progname.h
+    echo "#undef HAVE_PROGNAME" > config/have_progname.h
 
 	echo "no"
 fi
@@ -329,19 +334,20 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_MATH" > /have_math.h
-echo "#define HAVE_MATH" $HAVE_MATH >> /have_math.h
-echo "#endif /* HAVE_MATH */" >> /have_math.h
+	echo "#ifndef HAVE_MATH" > config/have_math.h
+echo "#define HAVE_MATH" $HAVE_MATH >> config/have_math.h
+echo "#endif /* HAVE_MATH */" >> config/have_math.h
 
 	HAVE_MATH=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_MATH" > /have_math.h
+	echo "#undef HAVE_MATH" > config/have_math.h
 
 	echo "no"
 fi
 if [ "${HAVE_MATH}" = "yes" ]; then
+echo MATH_LIBS=$MATH_LIBS >> Makefile.config
 else
 NONE=1
 fi
@@ -371,13 +377,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_GETHOSTNAME" > /have_gethostname.h
-echo "#define HAVE_GETHOSTNAME" $HAVE_GETHOSTNAME >> /have_gethostname.h
-echo "#endif /* HAVE_GETHOSTNAME */" >> /have_gethostname.h
+	echo "#ifndef HAVE_GETHOSTNAME" > config/have_gethostname.h
+echo "#define HAVE_GETHOSTNAME" $HAVE_GETHOSTNAME >> config/have_gethostname.h
+echo "#endif /* HAVE_GETHOSTNAME */" >> config/have_gethostname.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_GETHOSTNAME" > /have_gethostname.h
+    echo "#undef HAVE_GETHOSTNAME" > config/have_gethostname.h
 
 	echo "no"
 fi
@@ -402,13 +408,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_GETENV" > /have_getenv.h
-echo "#define HAVE_GETENV" $HAVE_GETENV >> /have_getenv.h
-echo "#endif /* HAVE_GETENV */" >> /have_getenv.h
+	echo "#ifndef HAVE_GETENV" > config/have_getenv.h
+echo "#define HAVE_GETENV" $HAVE_GETENV >> config/have_getenv.h
+echo "#endif /* HAVE_GETENV */" >> config/have_getenv.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_GETENV" > /have_getenv.h
+    echo "#undef HAVE_GETENV" > config/have_getenv.h
 
 	echo "no"
 fi
@@ -435,13 +441,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SETENV" > /have_setenv.h
-echo "#define HAVE_SETENV" $HAVE_SETENV >> /have_setenv.h
-echo "#endif /* HAVE_SETENV */" >> /have_setenv.h
+	echo "#ifndef HAVE_SETENV" > config/have_setenv.h
+echo "#define HAVE_SETENV" $HAVE_SETENV >> config/have_setenv.h
+echo "#endif /* HAVE_SETENV */" >> config/have_setenv.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_SETENV" > /have_setenv.h
+    echo "#undef HAVE_SETENV" > config/have_setenv.h
 
 	echo "no"
 fi
@@ -466,13 +472,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_STRSEP" > /have_strsep.h
-echo "#define HAVE_STRSEP" $HAVE_STRSEP >> /have_strsep.h
-echo "#endif /* HAVE_STRSEP */" >> /have_strsep.h
+	echo "#ifndef HAVE_STRSEP" > config/have_strsep.h
+echo "#define HAVE_STRSEP" $HAVE_STRSEP >> config/have_strsep.h
+echo "#endif /* HAVE_STRSEP */" >> config/have_strsep.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_STRSEP" > /have_strsep.h
+    echo "#undef HAVE_STRSEP" > config/have_strsep.h
 
 	echo "no"
 fi
@@ -497,13 +503,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_STRLCAT" > /have_strlcat.h
-echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> /have_strlcat.h
-echo "#endif /* HAVE_STRLCAT */" >> /have_strlcat.h
+	echo "#ifndef HAVE_STRLCAT" > config/have_strlcat.h
+echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> config/have_strlcat.h
+echo "#endif /* HAVE_STRLCAT */" >> config/have_strlcat.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_STRLCAT" > /have_strlcat.h
+    echo "#undef HAVE_STRLCAT" > config/have_strlcat.h
 
 	echo "no"
 fi
@@ -528,13 +534,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_STRLCPY" > /have_strlcpy.h
-echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> /have_strlcpy.h
-echo "#endif /* HAVE_STRLCPY */" >> /have_strlcpy.h
+	echo "#ifndef HAVE_STRLCPY" > config/have_strlcpy.h
+echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> config/have_strlcpy.h
+echo "#endif /* HAVE_STRLCPY */" >> config/have_strlcpy.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_STRLCPY" > /have_strlcpy.h
+    echo "#undef HAVE_STRLCPY" > config/have_strlcpy.h
 
 	echo "no"
 fi
@@ -565,13 +571,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_ASPRINTF" > /have_asprintf.h
-echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> /have_asprintf.h
-echo "#endif /* HAVE_ASPRINTF */" >> /have_asprintf.h
+	echo "#ifndef HAVE_ASPRINTF" > config/have_asprintf.h
+echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> config/have_asprintf.h
+echo "#endif /* HAVE_ASPRINTF */" >> config/have_asprintf.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_ASPRINTF" > /have_asprintf.h
+    echo "#undef HAVE_ASPRINTF" > config/have_asprintf.h
 
 	echo "no"
 fi
@@ -613,13 +619,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_VASPRINTF" > /have_vasprintf.h
-echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> /have_vasprintf.h
-echo "#endif /* HAVE_VASPRINTF */" >> /have_vasprintf.h
+	echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
+echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> config/have_vasprintf.h
+echo "#endif /* HAVE_VASPRINTF */" >> config/have_vasprintf.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_VASPRINTF" > /have_vasprintf.h
+    echo "#undef HAVE_VASPRINTF" > config/have_vasprintf.h
 
 	echo "no"
 fi
@@ -647,13 +653,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SNPRINTF" > /have_snprintf.h
-echo "#define HAVE_SNPRINTF" $HAVE_SNPRINTF >> /have_snprintf.h
-echo "#endif /* HAVE_SNPRINTF */" >> /have_snprintf.h
+	echo "#ifndef HAVE_SNPRINTF" > config/have_snprintf.h
+echo "#define HAVE_SNPRINTF" $HAVE_SNPRINTF >> config/have_snprintf.h
+echo "#endif /* HAVE_SNPRINTF */" >> config/have_snprintf.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_SNPRINTF" > /have_snprintf.h
+    echo "#undef HAVE_SNPRINTF" > config/have_snprintf.h
 
 	echo "no"
 fi
@@ -691,13 +697,13 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_VSNPRINTF" > /have_vsnprintf.h
-echo "#define HAVE_VSNPRINTF" $HAVE_VSNPRINTF >> /have_vsnprintf.h
-echo "#endif /* HAVE_VSNPRINTF */" >> /have_vsnprintf.h
+	echo "#ifndef HAVE_VSNPRINTF" > config/have_vsnprintf.h
+echo "#define HAVE_VSNPRINTF" $HAVE_VSNPRINTF >> config/have_vsnprintf.h
+echo "#endif /* HAVE_VSNPRINTF */" >> config/have_vsnprintf.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_VSNPRINTF" > /have_vsnprintf.h
+    echo "#undef HAVE_VSNPRINTF" > config/have_vsnprintf.h
 
 	echo "no"
 fi
@@ -723,17 +729,18 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SETLOCALE" > /have_setlocale.h
-echo "#define HAVE_SETLOCALE" $HAVE_SETLOCALE >> /have_setlocale.h
-echo "#endif /* HAVE_SETLOCALE */" >> /have_setlocale.h
+	echo "#ifndef HAVE_SETLOCALE" > config/have_setlocale.h
+echo "#define HAVE_SETLOCALE" $HAVE_SETLOCALE >> config/have_setlocale.h
+echo "#endif /* HAVE_SETLOCALE */" >> config/have_setlocale.h
 
 	echo "yes"
 else
-    echo "#undef HAVE_SETLOCALE" > /have_setlocale.h
+    echo "#undef HAVE_SETLOCALE" > config/have_setlocale.h
 
 	echo "no"
 fi
 CFLAGS="$CFLAGS -I$SRC"
+echo CFLAGS=$CFLAGS >> Makefile.config
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
 sdl_version=""
@@ -774,6 +781,8 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 done
 if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
+echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
 NONE=1
 fi
@@ -781,6 +790,8 @@ if [ "${sdl11_version}" != "" ]; then
 sdl_found=yes
 SDL_CFLAGS=$sdl11_cflags
 SDL_LIBS=$sdl11_libs
+echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
+echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
 NONE=1
 fi
@@ -831,15 +842,15 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SDL" > /have_sdl.h
-echo "#define HAVE_SDL" $HAVE_SDL >> /have_sdl.h
-echo "#endif /* HAVE_SDL */" >> /have_sdl.h
+	echo "#ifndef HAVE_SDL" > config/have_sdl.h
+echo "#define HAVE_SDL" $HAVE_SDL >> config/have_sdl.h
+echo "#endif /* HAVE_SDL */" >> config/have_sdl.h
 
 	HAVE_SDL=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_SDL" > /have_sdl.h
+	echo "#undef HAVE_SDL" > config/have_sdl.h
 
 	echo "no"
 fi
@@ -876,6 +887,8 @@ NONE=1
 fi
 if [ "${FREETYPE_VERSION}" != "" ]; then
 freetype_found=yes
+echo FREETYPE_CFLAGS=$FREETYPE_CFLAGS >> Makefile.config
+echo FREETYPE_LIBS=$FREETYPE_LIBS >> Makefile.config
 echo "yes"
 echo "yes" >> config.log
 else
@@ -912,15 +925,15 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_FREETYPE" > /have_freetype.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> /have_freetype.h
-echo "#endif /* HAVE_FREETYPE */" >> /have_freetype.h
+	echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
+echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> config/have_freetype.h
+echo "#endif /* HAVE_FREETYPE */" >> config/have_freetype.h
 
 	HAVE_FREETYPE=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_FREETYPE" > /have_freetype.h
+	echo "#undef HAVE_FREETYPE" > config/have_freetype.h
 
 	echo "no"
 fi
@@ -1031,29 +1044,31 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_X11" > /have_x11.h
-echo "#define HAVE_X11" $HAVE_X11 >> /have_x11.h
-echo "#endif /* HAVE_X11 */" >> /have_x11.h
+	echo "#ifndef HAVE_X11" > config/have_x11.h
+echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
+echo "#endif /* HAVE_X11 */" >> config/have_x11.h
 
 	HAVE_X11=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_X11" > /have_x11.h
+	echo "#undef HAVE_X11" > config/have_x11.h
 
 	echo "no"
 fi
 if [ "${HAVE_X11}" != "" ]; then
 x11_found=yes
-echo "#ifndef HAVE_X11" > /have_x11.h
-echo "#define HAVE_X11" $HAVE_X11 >> /have_x11.h
-echo "#endif /* HAVE_X11 */" >> /have_x11.h
+echo "#ifndef HAVE_X11" > config/have_x11.h
+echo "#define HAVE_X11" $HAVE_X11 >> config/have_x11.h
+echo "#endif /* HAVE_X11 */" >> config/have_x11.h
+echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
+echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
 x11_found=no
-echo "#undef HAVE_X11" > /have_x11.h
+echo "#undef HAVE_X11" > config/have_x11.h
 fi
 else
-echo "#undef HAVE_X11" > /have_x11.h
+echo "#undef HAVE_X11" > config/have_x11.h
 fi
 if [ "${with_gl}" != "no" ]
  then
@@ -1083,28 +1098,31 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_OPENGL" > /have_opengl.h
-echo "#define HAVE_OPENGL" $HAVE_OPENGL >> /have_opengl.h
-echo "#endif /* HAVE_OPENGL */" >> /have_opengl.h
+	echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
+echo "#define HAVE_OPENGL" $HAVE_OPENGL >> config/have_opengl.h
+echo "#endif /* HAVE_OPENGL */" >> config/have_opengl.h
 
 	HAVE_OPENGL=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_OPENGL" > /have_opengl.h
+	echo "#undef HAVE_OPENGL" > config/have_opengl.h
 
 	echo "no"
 fi
 if [ "${HAVE_OPENGL}" = "yes" ]; then
+echo OPENGL_CFLAGS=$OPENGL_CFLAGS >> Makefile.config
+echo OPENGL_LIBS=$OPENGL_LIBS >> Makefile.config
 else
 NONE=1
 fi
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
+echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
 else
-echo "#undef HAVE_OPENGL" > /have_opengl.h
+echo "#undef HAVE_OPENGL" > config/have_opengl.h
 fi
 if [ "${with_jpeg}" != "no" ]
  then
@@ -1151,24 +1169,26 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_JPEG" > /have_jpeg.h
-echo "#define HAVE_JPEG" $HAVE_JPEG >> /have_jpeg.h
-echo "#endif /* HAVE_JPEG */" >> /have_jpeg.h
+	echo "#ifndef HAVE_JPEG" > config/have_jpeg.h
+echo "#define HAVE_JPEG" $HAVE_JPEG >> config/have_jpeg.h
+echo "#endif /* HAVE_JPEG */" >> config/have_jpeg.h
 
 	HAVE_JPEG=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_JPEG" > /have_jpeg.h
+	echo "#undef HAVE_JPEG" > config/have_jpeg.h
 
 	echo "no"
 fi
 if [ "${HAVE_JPEG}" != "" ]; then
+echo JPEG_CFLAGS=$JPEG_CFLAGS >> Makefile.config
+echo JPEG_LIBS=$JPEG_LIBS >> Makefile.config
 else
 NONE=1
 fi
 else
-echo "#undef HAVE_JPEG" > /have_jpeg.h
+echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
 if [ "${with_smpeg}" != "no" ]
  then
@@ -1195,97 +1215,100 @@ done
 if [ "${smpeg_version}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
-echo "#ifndef HAVE_SMPEG" > /have_smpeg.h
-echo "#define HAVE_SMPEG" $HAVE_SMPEG >> /have_smpeg.h
-echo "#endif /* HAVE_SMPEG */" >> /have_smpeg.h
+echo "#ifndef HAVE_SMPEG" > config/have_smpeg.h
+echo "#define HAVE_SMPEG" $HAVE_SMPEG >> config/have_smpeg.h
+echo "#endif /* HAVE_SMPEG */" >> config/have_smpeg.h
+echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
+echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
 else
 echo "no"
 echo "no" >> config.log
-echo "#undef HAVE_SMPEG" > /have_smpeg.h
+echo "#undef HAVE_SMPEG" > config/have_smpeg.h
 fi
 else
-echo "#undef HAVE_SMPEG" > /have_smpeg.h
+echo "#undef HAVE_SMPEG" > config/have_smpeg.h
 fi
 if [ "${enable_static}" = "yes" ]
  then
 LDFLAGS="-static"
+echo LDFLAGS=$LDFLAGS >> Makefile.config
 fi
 if [ "${enable_debug}" != "no" ]
  then
 DEBUG=1
-echo "#ifndef DEBUG" > /debug.h
-echo "#define DEBUG" $DEBUG >> /debug.h
-echo "#endif /* DEBUG */" >> /debug.h
+echo "#ifndef DEBUG" > config/debug.h
+echo "#define DEBUG" $DEBUG >> config/debug.h
+echo "#endif /* DEBUG */" >> config/debug.h
 LOCKDEBUG=1
-echo "#ifndef LOCKDEBUG" > /lockdebug.h
-echo "#define LOCKDEBUG" $LOCKDEBUG >> /lockdebug.h
-echo "#endif /* LOCKDEBUG */" >> /lockdebug.h
+echo "#ifndef LOCKDEBUG" > config/lockdebug.h
+echo "#define LOCKDEBUG" $LOCKDEBUG >> config/lockdebug.h
+echo "#endif /* LOCKDEBUG */" >> config/lockdebug.h
 else
-echo "#undef DEBUG" > /debug.h
-echo "#undef LOCKDEBUG" > /lockdebug.h
+echo "#undef DEBUG" > config/debug.h
+echo "#undef LOCKDEBUG" > config/lockdebug.h
 fi
 if [ "${enable_threads}" = "yes" ]
  then
 THREADS=1
-echo "#ifndef THREADS" > /threads.h
-echo "#define THREADS" $THREADS >> /threads.h
-echo "#endif /* THREADS */" >> /threads.h
+echo "#ifndef THREADS" > config/threads.h
+echo "#define THREADS" $THREADS >> config/threads.h
+echo "#endif /* THREADS */" >> config/threads.h
 else
-echo "#undef THREADS" > /threads.h
+echo "#undef THREADS" > config/threads.h
 fi
 if [ "${enable_floating_point}" != "no" ]
  then
 FLOATING_POINT=1
-echo "#ifndef FLOATING_POINT" > /floating_point.h
-echo "#define FLOATING_POINT" $FLOATING_POINT >> /floating_point.h
-echo "#endif /* FLOATING_POINT */" >> /floating_point.h
+echo "#ifndef FLOATING_POINT" > config/floating_point.h
+echo "#define FLOATING_POINT" $FLOATING_POINT >> config/floating_point.h
+echo "#endif /* FLOATING_POINT */" >> config/floating_point.h
 else
-echo "#undef FLOATING_POINT" > /floating_point.h
+echo "#undef FLOATING_POINT" > config/floating_point.h
 fi
 if [ "${enable_edition}" != "no" ]
  then
 EDITION=1
-echo "#ifndef EDITION" > /edition.h
-echo "#define EDITION" $EDITION >> /edition.h
-echo "#endif /* EDITION */" >> /edition.h
+echo "#ifndef EDITION" > config/edition.h
+echo "#define EDITION" $EDITION >> config/edition.h
+echo "#endif /* EDITION */" >> config/edition.h
 else
-echo "#undef EDITION" > /edition.h
+echo "#undef EDITION" > config/edition.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
 VIEW_8BPP=1
-echo "#ifndef VIEW_8BPP" > /view_8bpp.h
-echo "#define VIEW_8BPP" $VIEW_8BPP >> /view_8bpp.h
-echo "#endif /* VIEW_8BPP */" >> /view_8bpp.h
+echo "#ifndef VIEW_8BPP" > config/view_8bpp.h
+echo "#define VIEW_8BPP" $VIEW_8BPP >> config/view_8bpp.h
+echo "#endif /* VIEW_8BPP */" >> config/view_8bpp.h
 else
-echo "#undef VIEW_8BPP" > /view_8bpp.h
+echo "#undef VIEW_8BPP" > config/view_8bpp.h
 fi
 if [ "${enable_16bpp}" != "no" ]
  then
 VIEW_16BPP=1
-echo "#ifndef VIEW_16BPP" > /view_16bpp.h
-echo "#define VIEW_16BPP" $VIEW_16BPP >> /view_16bpp.h
-echo "#endif /* VIEW_16BPP */" >> /view_16bpp.h
+echo "#ifndef VIEW_16BPP" > config/view_16bpp.h
+echo "#define VIEW_16BPP" $VIEW_16BPP >> config/view_16bpp.h
+echo "#endif /* VIEW_16BPP */" >> config/view_16bpp.h
 else
-echo "#undef VIEW_16BPP" > /view_16bpp.h
+echo "#undef VIEW_16BPP" > config/view_16bpp.h
 fi
 if [ "${enable_24bpp}" != "no" ]
  then
 VIEW_24BPP=1
-echo "#ifndef VIEW_24BPP" > /view_24bpp.h
-echo "#define VIEW_24BPP" $VIEW_24BPP >> /view_24bpp.h
-echo "#endif /* VIEW_24BPP */" >> /view_24bpp.h
+echo "#ifndef VIEW_24BPP" > config/view_24bpp.h
+echo "#define VIEW_24BPP" $VIEW_24BPP >> config/view_24bpp.h
+echo "#endif /* VIEW_24BPP */" >> config/view_24bpp.h
 else
-echo "#undef VIEW_24BPP" > /view_24bpp.h
+echo "#undef VIEW_24BPP" > config/view_24bpp.h
 fi
 if [ "${enable_32bpp}" != "no" ]
  then
 VIEW_32BPP=1
-echo "#ifndef VIEW_32BPP" > /view_32bpp.h
-echo "#define VIEW_32BPP" $VIEW_32BPP >> /view_32bpp.h
-echo "#endif /* VIEW_32BPP */" >> /view_32bpp.h
+echo "#ifndef VIEW_32BPP" > config/view_32bpp.h
+echo "#define VIEW_32BPP" $VIEW_32BPP >> config/view_32bpp.h
+echo "#endif /* VIEW_32BPP */" >> config/view_32bpp.h
 else
-echo "#undef VIEW_32BPP" > /view_32bpp.h
+echo "#undef VIEW_32BPP" > config/view_32bpp.h
 fi
 if [ "${with_gettext}" != "no" ]
  then
@@ -1317,39 +1340,46 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_GETTEXT" > /have_gettext.h
-echo "#define HAVE_GETTEXT" $HAVE_GETTEXT >> /have_gettext.h
-echo "#endif /* HAVE_GETTEXT */" >> /have_gettext.h
+	echo "#ifndef HAVE_GETTEXT" > config/have_gettext.h
+echo "#define HAVE_GETTEXT" $HAVE_GETTEXT >> config/have_gettext.h
+echo "#endif /* HAVE_GETTEXT */" >> config/have_gettext.h
 
 	HAVE_GETTEXT=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_GETTEXT" > /have_gettext.h
+	echo "#undef HAVE_GETTEXT" > config/have_gettext.h
 
 	echo "no"
 fi
 if [ "${HAVE_GETTEXT}" != "" ]; then
+echo GETTEXT_CFLAGS=$GETTEXT_CFLAGS >> Makefile.config
+echo GETTEXT_LIBS=$GETTEXT_LIBS >> Makefile.config
+echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
 else
 NONE=1
 fi
 else
-echo "#undef HAVE_GETTEXT" > /have_gettext.h
+echo "#undef HAVE_GETTEXT" > config/have_gettext.h
 HAVE_GETTEXT="no"
+echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
 fi
 if [ "${enable_nls}" != "no" ]
  then
 ENABLE_NLS="yes"
+echo ENABLE_NLS=$ENABLE_NLS >> Makefile.config
 ENABLE_NLS=1
-echo "#ifndef ENABLE_NLS" > /enable_nls.h
-echo "#define ENABLE_NLS" $ENABLE_NLS >> /enable_nls.h
-echo "#endif /* ENABLE_NLS */" >> /enable_nls.h
+echo "#ifndef ENABLE_NLS" > config/enable_nls.h
+echo "#define ENABLE_NLS" $ENABLE_NLS >> config/enable_nls.h
+echo "#endif /* ENABLE_NLS */" >> config/enable_nls.h
 else
 ENABLE_NLS="no"
-echo "#undef ENABLE_NLS" > /enable_nls.h
+echo ENABLE_NLS=$ENABLE_NLS >> Makefile.config
+echo "#undef ENABLE_NLS" > config/enable_nls.h
 fi
-echo "#ifndef PREFIX" > /prefix.h
-echo "#define PREFIX \"$PREFIX\"" >> /prefix.h
-echo "#endif /* PREFIX */" >> /prefix.h
+echo PREFIX=$PREFIX >> Makefile.config
+echo "#ifndef PREFIX" > config/prefix.h
+echo "#define PREFIX \"$PREFIX\"" >> config/prefix.h
+echo "#endif /* PREFIX */" >> config/prefix.h
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log
