@@ -1,4 +1,4 @@
-/*	$Csoft: menu.h,v 1.1 2004/09/12 05:51:10 vedge Exp $	*/
+/*	$Csoft: menu.h,v 1.2 2004/09/29 05:49:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_MENU_H_
@@ -18,12 +18,26 @@ struct AGMenuItem {
 	SDLKey key_equiv;		/* Key shortcut */
 	SDLMod key_mod;
 	int x, y;			/* Position in parent view */
-
 	struct AGMenuItem *subitems;	/* Child items */
 	unsigned int nsubitems;
+	
+	struct event *onclick;		/* Event to raise on selection */
+
+	enum menu_binding {
+		MENU_NO_BINDING,
+		MENU_INT_BOOL,
+		MENU_INT8_BOOL,
+		MENU_INT_FLAGS,
+		MENU_INT8_FLAGS,
+		MENU_INT16_FLAGS,
+		MENU_INT32_FLAGS
+	} bind_type;
+	void		*bind_p;
+	Uint32		 bind_flags;
+	int		 bind_invert;
+	pthread_mutex_t	*bind_lock;
 
 	struct AGMenuView *view;	/* Back pointer to view (subitems) */
-	struct event *event;		/* Event to raise */
 	struct AGMenu *pmenu;		/* Parent menu */
 	struct AGMenuItem *pitem;	/* Parent item (NULL for top items) */
 	struct AGMenuItem *sel_subitem;	/* Selected subitem */
@@ -44,7 +58,7 @@ struct AGMenuView {
 	struct window *panel;
 	struct AGMenu *pmenu;
 	struct AGMenuItem *pitem;
-	int hspace, vspace;		/* Spacing */
+	int hspace, vpadding;
 	struct timeout submenu_to;
 };
 
@@ -54,16 +68,37 @@ void		   ag_menu_init(struct AGMenu *);
 void	 	   ag_menu_scale(void *, int, int);
 void		   ag_menu_draw(void *);
 void	 	   ag_menu_destroy(void *);
+
 struct AGMenuItem *ag_menu_add_item(struct AGMenu *, const char *);
-struct AGMenuItem *ag_menu_add_subitem(struct AGMenuItem *,
-		                       const char *, SDL_Surface *, SDLKey,
-				       SDLMod, void (*)(int, union evarg *),
-				       const char *, ...);
 void		   ag_menu_free_items(struct AGMenu *);
 void		   ag_menu_free_subitems(struct AGMenuItem *);
 void   		   ag_menu_collapse(struct AGMenu *, struct AGMenuItem *);
 void		   ag_menu_expand(struct AGMenu *, struct AGMenuItem *, int,
 		                  int);
+
+struct AGMenuItem *ag_menu_action(struct AGMenuItem *,
+		                  const char *, SDL_Surface *, SDLKey,
+				  SDLMod, void (*)(int, union evarg *),
+				  const char *, ...);
+struct AGMenuItem *ag_menu_int_bool(struct AGMenuItem *, const char *,
+			            SDL_Surface *, SDLKey, SDLMod, int *,
+				    pthread_mutex_t *, int);
+struct AGMenuItem *ag_menu_int8_bool(struct AGMenuItem *, const char *,
+			            SDL_Surface *, SDLKey, SDLMod, Uint8 *,
+				    pthread_mutex_t *, int);
+struct AGMenuItem *ag_menu_int_flags(struct AGMenuItem *, const char *,
+			            SDL_Surface *, SDLKey, SDLMod, int *,
+				    int, pthread_mutex_t *, int);
+struct AGMenuItem *ag_menu_int8_flags(struct AGMenuItem *, const char *,
+			            SDL_Surface *, SDLKey, SDLMod, Uint8 *,
+				    Uint8, pthread_mutex_t *, int);
+struct AGMenuItem *ag_menu_int16_flags(struct AGMenuItem *, const char *,
+			            SDL_Surface *, SDLKey, SDLMod, Uint16 *,
+				    Uint16, pthread_mutex_t *, int);
+struct AGMenuItem *ag_menu_int32_flags(struct AGMenuItem *, const char *,
+			            SDL_Surface *, SDLKey, SDLMod, Uint32 *,
+				    Uint32, pthread_mutex_t *, int);
+struct AGMenuItem *ag_menu_separator(struct AGMenuItem *);
 
 void   ag_menu_view_init(void *, struct window *, struct AGMenu *,
 	                 struct AGMenuItem *);
