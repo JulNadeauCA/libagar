@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.10 2002/07/29 02:16:45 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.11 2002/07/29 06:30:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -97,6 +97,13 @@ mapwin_option(int argc, union evarg *argv)
 			mv->flags |= MAPVIEW_PROPS;
 		}
 		break;
+	case MAPEDIT_TOOL_SHOW_CURSOR:
+		if (mv->flags & MAPVIEW_SHOW_CURSOR) {
+			mv->flags &= ~(MAPVIEW_SHOW_CURSOR);
+		} else {
+			mv->flags |= MAPVIEW_SHOW_CURSOR;
+		}
+		break;
 	}
 }
 
@@ -118,7 +125,8 @@ mapwin_new(struct mapedit *med, struct map *m)
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, med, m, MAPVIEW_CENTER|MAPVIEW_EDIT|MAPVIEW_ZOOM,
+	mapview_init(mv, med, m,
+	    MAPVIEW_CENTER|MAPVIEW_EDIT|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
 
 	/*
@@ -164,6 +172,14 @@ mapwin_new(struct mapedit *med, struct map *m)
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+
+	/* Show/hide cursor */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SHOW_CURSOR),
+	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	event_new(bu, "button-pushed", 0,
+	    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_SHOW_CURSOR);
+
 
 	/* Tile stack */
 	reg = region_new(win, REGION_VALIGN, 0, 10, -TILEW, 90);
