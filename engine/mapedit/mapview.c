@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.101 2003/04/17 08:33:34 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.102 2003/04/18 07:21:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -738,15 +738,12 @@ mapview_effect_selection(struct mapview *mv)
 	}
 
 	if ((excess = (mv->esel.x + mv->esel.w) - mv->map->mapw) > 0) {
-		if (excess < mv->esel.w) {
+		if (excess < mv->esel.w)
 			mv->esel.w -= excess;
-		}
 	}
-	
 	if ((excess = (mv->esel.y + mv->esel.h) - mv->map->maph) > 0) {
-		if (excess < mv->esel.h) {
+		if (excess < mv->esel.h)
 			mv->esel.h -= excess;
-		}
 	}
 
 	if (mv->esel.x < 0) {
@@ -863,6 +860,10 @@ mapview_keydown(int argc, union evarg *argv)
 	case SDLK_9:
 		mapview_zoom(mv, 150);
 		break;
+	case SDLK_o:
+		mapview_center(mv,
+		    mv->map->origin.x, mv->map->origin.y);
+		break;
 	}
 
 	if (mapedition) {
@@ -969,6 +970,8 @@ mapview_lostfocus(int argc, union evarg *argv)
 void
 mapview_center(struct mapview *mv, int x, int y)
 {
+	*mv->ssx = 0;
+	*mv->ssy = 0;
 	mv->mx = x - mv->mw/2;
 	mv->my = y - mv->mh/2;
 
