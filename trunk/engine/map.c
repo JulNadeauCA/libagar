@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.16 2002/02/07 23:34:09 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.17 2002/02/08 00:19:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -303,7 +303,7 @@ map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 		}
 	}
 
-	m->map[m->defx][m->defy].flags |= MAPENTRY_ORIGIN;
+	m->map[m->defx][m->defy].flags |= NODE_ORIGIN;
 }
 
 void
@@ -488,9 +488,11 @@ map_animate(Uint32 ival, void *p)
 			
 					anim = g_slist_nth_data(
 					    aref->pobj->anims, aref->offs);
+#ifdef DEBUG
 					if (anim == NULL) {
 						fatal("NULL anim!\n");
 					}
+#endif
 					map_plot_anim(m,
 					    g_slist_nth_data(
 					    aref->pobj->anims, aref->offs),
@@ -543,30 +545,30 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 		    MAPEDIT_BLOCKED), vx, vy);
 		return;
 	}
-	if (flags & MAPENTRY_ORIGIN)
+	if (flags & NODE_ORIGIN)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_ORIGIN), vx, vy);
 #if 0
-	if (flags & MAPENTRY_WALK)
+	if (flags & NODE_WALK)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_WALK), vx, vy);
 #endif
-	if (flags & MAPENTRY_CLIMB)
+	if (flags & NODE_CLIMB)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_CLIMB), vx, vy);
-	if (flags & MAPENTRY_SLIP)
+	if (flags & NODE_SLIP)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_SLIP), vx, vy);
-	if (flags & MAPENTRY_BIO)
+	if (flags & NODE_BIO)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_BIO), vx, vy);
-	if (flags & MAPENTRY_REGEN)
+	if (flags & NODE_REGEN)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_REGEN), vx, vy);
-	if (flags & MAPENTRY_SLOW)
+	if (flags & NODE_SLOW)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_SLOW), vx, vy);
-	if (flags & MAPENTRY_HASTE)
+	if (flags & NODE_HASTE)
 		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_HASTE), vx, vy);
 }

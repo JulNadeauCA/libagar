@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.8 2002/02/05 06:01:21 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.9 2002/02/07 05:15:14 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -38,15 +38,15 @@ struct node {
 	struct	map_arefs_head arefsh;
 	int	narefs;
 	int	flags;
-#define MAPENTRY_BLOCK	0x0000		/* Cannot walk through */
-#define MAPENTRY_ORIGIN	0x0001		/* Origin of this map */
-#define MAPENTRY_WALK	0x0002		/* Can walk through */
-#define MAPENTRY_CLIMB	0x0004		/* Can climb (eg. ladder) */
-#define MAPENTRY_SLIP	0x0008		/* Slippery */
-#define MAPENTRY_BIO	0x0010		/* Cause Poison */
-#define MAPENTRY_REGEN	0x0020		/* Cause HP Regeneration */
-#define MAPENTRY_SLOW	0x0040		/* Decrease speed by v1 */
-#define MAPENTRY_HASTE	0x0080		/* Increase speed by v1 */
+#define NODE_BLOCK	0x0000		/* Cannot walk through */
+#define NODE_ORIGIN	0x0001		/* Origin of this map */
+#define NODE_WALK	0x0002		/* Can walk through */
+#define NODE_CLIMB	0x0004		/* Can climb (eg. ladder) */
+#define NODE_SLIP	0x0008		/* Slippery */
+#define NODE_BIO	0x0010		/* Cause Poison */
+#define NODE_REGEN	0x0020		/* Cause HP Regeneration */
+#define NODE_SLOW	0x0040		/* Decrease speed by v1 */
+#define NODE_HASTE	0x0080		/* Increase speed by v1 */
 	int	v1;			/* Extra property */
 	int	nanims;			/* Animation count */
 };
