@@ -1,4 +1,4 @@
-/*	$Csoft: string.c,v 1.8 2004/01/03 04:25:08 vedge Exp $	*/
+/*	$Csoft: color.c,v 1.1 2004/04/30 07:00:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -26,14 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/error/error.h>
-
-#include <sys/types.h>
-#include <SDL_types.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <engine/engine.h>
 
 #include "netbuf.h"
 #include "integral.h"
