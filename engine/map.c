@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.11 2002/02/05 06:04:59 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.12 2002/02/05 14:54:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -43,10 +43,6 @@
 
 struct	map *curmap;
 
-static int	 map_link(void *);
-static int	 map_load(void *, char *);
-static int	 map_save(void *, char *);
-static void	 map_destroy(struct object *);
 static void	 node_destroy(struct node *);
 static int	 node_init(struct node *, struct object *, int, int, int);
 static void	 mapedit_drawflags(struct map *, int, int, int);
@@ -54,20 +50,19 @@ static Uint32	 map_draw(Uint32, void *);
 static Uint32	 map_animate(Uint32, void *);
 
 struct map *
-map_create(char *name, char *desc, int flags, int width, int height, char *path)
+map_create(char *name, char *desc, int flags, int width, int height)
 {
 	struct map *m;
 	int x = 0, y = 0;
 
 	m = (struct map *)malloc(sizeof(struct map));
 	if (m == NULL) {
-		perror("map");
 		return (NULL);
 	}
 
 	/* Initialize the map structure. */
 	object_create(&m->obj, name, desc,
-	    DESTROY_HOOK|LOAD_FUNC|SAVE_FUNC|OBJ_DEFERGC);
+	    DESTROY_HOOK|LOAD_FUNC|SAVE_FUNC|OBJ_DEFERGC|OBJ_EDITABLE);
 	m->obj.destroy_hook = map_destroy;
 
 	m->obj.load = map_load;
@@ -80,10 +75,8 @@ map_create(char *name, char *desc, int flags, int width, int height, char *path)
 	m->defy = m->maph - 1;
 	m->view = mainview;
 	m->view->map = m;
-
 	if (pthread_mutex_init(&m->lock, NULL) != 0) {
-		perror(name);
-		goto maperr;
+		return (NULL);
 	}
 
 	/* Initialize an empty map. */
@@ -95,58 +88,20 @@ map_create(char *name, char *desc, int flags, int width, int height, char *path)
 		}
 	}
 	
-	if (path != NULL) {
-		map_load(m, path);
-	}
-	
-	dprintf("%s: geo %dx%d flags 0x%x\n", m->obj.name,
-	    m->mapw, m->mapw, m->flags);
+	dprintf("%s: geo %dx%d flags 0x%x\n", m->obj.name, m->mapw, m->mapw,
+	    m->flags);
 	dprintf("%s: tilegeo %dx%d origin %dx%d\n", m->obj.name,
 	    m->view->tilew, m->view->tileh,
 	    m->defx, m->defy);
-
-	map_link(m);
-	object_link(m);
-
-	/* Synchronize map display. XXX tune */
-	m->view->mapanimt = NULL;
-	m->view->mapdrawt = SDL_AddTimer(15, map_draw, m);
-	if (m->view->mapdrawt == NULL) {
-		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		goto maperr;
-	}
-
 	return (m);
-maperr:
-	object_destroy(m);
-	return (NULL);
-}
-
-int
-map_animset(struct map *m, int tog)
-{
-	if (tog > 0) {
-		m->view->mapanimt = SDL_AddTimer(m->view->fps * 2,
-		    map_animate, m);
-		if (m->view->mapanimt == NULL) {
-			fatal("SDL_AddTimer: %s\n", SDL_GetError());
-			return (0);
-		}
-	} else {
-		if (m->view->mapanimt != NULL) {
-			SDL_RemoveTimer(m->view->mapanimt);
-			m->view->mapanimt = NULL;
-		}
-	}
-
-	return (0);
 }
 
 int
 map_focus(struct map *m)
 {
 	curmap = m;
-
+	m->flags |= MAP_FOCUSED;
+	
 	dprintf("focusing on %s\n", m->obj.name);
 
 	if (curmapedit != NULL) {
@@ -158,7 +113,18 @@ map_focus(struct map *m)
 		SDL_WM_SetCaption(m->obj.name, "mapedit");
 	}
 	
-	map_animset(m, 1);
+	/* XXX fine-tuning */
+	m->view->mapanimt = SDL_AddTimer(m->view->fps * 2, map_animate, m);
+	if (m->view->mapanimt == NULL) {
+		fatal("SDL_AddTimer: %s\n", SDL_GetError());
+		return (-1);
+	}
+	m->view->mapdrawt = SDL_AddTimer(m->view->fps, map_draw, m);
+	if (m->view->mapdrawt == NULL) {
+		fatal("SDL_AddTimer: %s\n", SDL_GetError());
+		return (-1);
+	}
+
 	return (0);
 }
 
@@ -167,29 +133,45 @@ map_unfocus(struct map *m)
 {
 	dprintf("unfocusing %s\n", m->obj.name);
 	
+	m->flags &= ~(MAP_FOCUSED);
+	curmap = NULL;
 	if (curmapedit != NULL) {
 		curmapedit->flags = 0;
 	}
-	pthread_mutex_lock(&m->lock);
-	map_animset(m, 0);
-	curmap = NULL;
-	pthread_mutex_unlock(&m->lock);
+
+	if (m->view->mapanimt != NULL) {
+		SDL_RemoveTimer(m->view->mapanimt);
+		m->view->mapanimt = NULL;
+	}
+	if (m->view->mapdrawt != NULL) {
+		SDL_RemoveTimer(m->view->mapdrawt);
+		m->view->mapdrawt = NULL;
+	}
 
 	return (0);
 }
 
-static int
+int
 map_link(void *ob)
 {
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_INSERT_HEAD(&world->wmapsh, (struct map *)ob, wmaps);
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		perror("world");
-		return (-1);
-	}
+	pthread_mutex_lock(&world->lock);
+	SLIST_INSERT_HEAD(&world->wmapsh, (struct map *)ob, wmaps);
+	pthread_mutex_unlock(&world->lock);
+	object_link(ob);
+	
 	return (0);
 }
+
+int
+map_unlink(void *ob)
+{
+	pthread_mutex_lock(&world->lock);
+	SLIST_REMOVE(&world->wmapsh, ob, map, wmaps);
+	pthread_mutex_unlock(&world->lock);
+
+	return (0);
+}
+
 
 /*
  * Initialize a map node.
@@ -324,16 +306,15 @@ map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 	m->map[m->defx][m->defy].flags |= MAPENTRY_ORIGIN;
 }
 
-static void
-map_destroy(struct object *ob)
+void
+map_destroy(void *p)
 {
-	struct map *m = (struct map *)ob;
+	struct map *m = (struct map *)p;
 	int x = 0, y;
 
-	map_animset(m, 0);
-
-	SDL_RemoveTimer(m->view->mapdrawt);
-	m->view->mapdrawt = NULL;
+	if (m->flags & MAP_FOCUSED) {
+		map_unfocus(m);
+	}
 
 	/* Unlink the map from the active map list. */
 	if (pthread_mutex_lock(&world->lock) == 0) {
@@ -375,6 +356,13 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 {
 	static SDL_Rect rs, rd;
 
+#ifdef DEBUG
+	if (s == NULL) {
+		dprintf("null sprite on %s:%d,%d\n", m->obj.name, x, y);
+		return;
+	}
+#endif
+
 	rs.w = s->w;
 	rs.h = s->h;
 	rs.x = 0;
@@ -409,6 +397,13 @@ map_plot_anim(struct map *m, struct anim *anim, int frame, int x, int y)
 {
 	static SDL_Rect rs, rd;
 	static SDL_Surface *s;
+
+#ifdef DEBUG
+	if (anim == NULL) {
+		dprintf("null anim on %s:%d,%d\n", m->obj.name, x, y);
+		return;
+	}
+#endif
 
 	s = g_slist_nth_data(anim->frames, frame);
 
@@ -723,7 +718,7 @@ node_arefobj(struct node *me, struct object *ob, int offs)
 /*
  * Load a map from file. The map must be already locked.
  */
-static int
+int
 map_load(void *ob, char *path)
 {
 	char magic[9];

@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.1 2002/01/30 17:48:14 vedge Exp $
+.\"	$Csoft: map.3,v 1.2 2002/02/01 11:58:04 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -56,6 +56,21 @@ Extra animation data (frame#, delay).
 .Fn map_create "char *name" "char *descr" "int flags" "int width" "int height" \
 "char *path"
 .Pp
+.Ft void
+.Fn map_destroy "struct map *map"
+.Pp
+.Ft void
+.Fn map_load "struct map *map" "char *path"
+.Pp
+.Ft void
+.Fn map_save "struct map *map" "char *path"
+.Pp
+.Ft void
+.Fn map_link "struct map *map"
+.Pp
+.Ft void
+.Fn map_unlink "struct map *map"
+.Pp
 .Ft "int"
 .Fn map_focus "struct map *map"
 .Pp
@@ -69,17 +84,23 @@ Extra animation data (frame#, delay).
 .nr nS 0
 .Pp
 .Fn map_create
-allocates, and optionally initializes a map with contents from a file.
-If
-.Fa path
-is non-NULL, the description, flags and geometry arguments can be NULL
-or -1.
+allocates a map, and
+.Fn map_destroy
+frees a map.
+.Fn map_load
+initialize a map's contents from a file, and
+.Fn map_save
+dumps a map's contents to a file.
+.Fn map_link
+marks a map as consistent, and
+.Fn map_unlink
+does the opposite.
 .Fn map_focus
-displays a map and start animations.
+and
 .Fn map_unfocus
-disables animations.
+toggles the visibility of the map's sprites and animations.
 .Fn map_clean
-initializes the entire map with an arbitrary reference.
+initializes the entire map.
 .Sh MANIPULATING REFERENCES
 .nr nS 1
 .Ft "void"
