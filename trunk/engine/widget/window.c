@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.138 2003/01/01 05:18:42 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.139 2003/01/03 02:30:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -816,24 +816,28 @@ winop_hide_body(struct window *win)
 		win->flags &= ~(WINDOW_HIDDEN_BODY);
 		win->rd = win->saved_rd;
 	} else {					/* Hide */
+		int titleh = win->titleh + win->borderw;
+
 		win->flags |= WINDOW_HIDDEN_BODY;
 		win->saved_rd = win->rd;
-		win->rd.h = win->titleh + win->borderw*2;
+		win->rd.h = titleh;
 
+		/* Update the background. */
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_GUI:
 			{
 				SDL_Rect rbody = win->saved_rd;
 
 				rbody.x = 0;
-				rbody.y = 0;
-				rbody.y += win->titleh;
-				rbody.h -= win->titleh;
+				rbody.y = titleh;
+				rbody.h -= titleh;
 
 				primitives.rect_filled(win, &rbody,
 				    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 
 				if (!view->opengl) {
+					rbody.x = win->saved_rd.x;
+					rbody.y = win->saved_rd.y + titleh;
 					SDL_UpdateRects(view->v, 1, &rbody);
 				}
 			}
