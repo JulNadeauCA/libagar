@@ -1,4 +1,4 @@
-.\"	$Csoft: physics.3,v 1.10 2003/03/23 11:35:49 vedge Exp $
+.\"	$Csoft: physics.3,v 1.11 2003/04/12 00:35:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,74 +40,24 @@
 .Sh DESCRIPTION
 The agar
 .Nm
-interface manages movement of objects, usually in reaction to input device
+interface manages movement of object positions in reaction to input device
 events.
-The directions are represented by these flags:
+The direction of the object is determined by the following bits:
 .Bd -literal
-#define DIR_UP		0x01
-#define DIR_DOWN	0x02
-#define DIR_LEFT	0x04
-#define DIR_RIGHT	0x08
-#define DIR_ALL		0xff
+#define DIR_N	0x01
+#define DIR_S	0x02
+#define DIR_W	0x04
+#define DIR_E	0x08
+#define DIR_NW	(DIR_N|DIR_W)
+#define DIR_NE	(DIR_N|DIR_E)
+#define DIR_SW	(DIR_S|DIR_W)
+#define DIR_SE	(DIR_S|DIR_E)
 .Ed
-.Pp
-.Sh GENERIC DIRECTIONS
-These functions implement generic two-dimensional movement.
-.Pp
-.nr nS 1
-.Ft "void"
-.Fn gendir_init "struct gendir *dir"
-.Pp
-.Ft "void"
-.Fn gendir_set "struct gendir *dir" "int direction"
-.Pp
-.Ft "void"
-.Fn gendir_unset "struct gendir *dir" "int direction"
-.Pp
-.Ft "int"
-.Fn gendir_move "struct gendir *dir"
-.Pp
-.Ft "void"
-.Fn gendir_postmove "struct gendir *dir" "int moved"
-.nr nS 0
-.Pp
-The
-.Fn gendir_init
-function initializes a generic direction.
-.Pp
-The
-.Fn gendir_set
-function sets the direction of
-.Fa dir
-to
-.Fa direction .
-The
-.Fn gendir_unset
-requests
-.Fa dir
-to no longer move in
-.Fa direction .
-.Pp
-The
-.Fn gendir_move
-function is usually called from a timer callback to update the direction
-.Fa dir ,
-returning the direction towards which the object should move, or 0 if it
-should remain in its current position.
-.Pp
-If the timer callback has moved object, it should call
-.Fn gendir_postmove
-with the return value of
-.Fn gendir_move
-as the
-.Fa moved
-argument, to effect a
-.Fn gendir_unset
-operation and increment the necessary counters.
 .Sh MAP DIRECTIONS
-This interface implements movement of objects between adjacent map nodes.
+This interface implements movement of unique object positions between adjacent
+map nodes.
 Game objects are bound to an input device with
-.Fn object_control
+.Fn object_set_input
 and the
 .Xr input 3
 subsystem calls
@@ -115,9 +65,10 @@ subsystem calls
 and
 .Fn mapdir_unset
 in reaction to input device events.
-The particular object implementation then calls
+The
 .Fn mapdir_move
-(usually from a timer callback function) in order to effect movement.
+function is invoked periodically (from a timer callback function, for instance),
+in order to update the position.
 .nr nS 1
 .Ft "void"
 .Fn mapdir_init "struct mapdir *dir" "struct object *ob" "struct map *map" \
@@ -148,10 +99,9 @@ The
 may contain:
 .Pp
 .Bd -literal
-#define DIR_SCROLLVIEW	0x01	/* Scroll view if we reach boundaries. */
-#define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
-#define DIR_STATIC	0x04	/* Don't change sprites with directions. */
-#define DIR_PASSTHROUGH	0x08	/* Pass through map nodes. */
+#define DIR_CENTER_VIEW  0x01	/* Center view around object and scroll. */
+#define DIR_SOFT_MOTION  0x02	/* Animate node->node displacements. */
+#define DIR_PASS_THROUGH 0x04	/* Ignore node surface settings. */
 .Ed
 .Pp
 The
