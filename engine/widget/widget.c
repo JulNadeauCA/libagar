@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.7 2002/04/26 11:40:48 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.8 2002/04/28 14:11:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,14 +41,6 @@
 
 #include "window.h"
 #include "widget.h"
-
-static const struct obvec widget_vec = {
-	NULL,		/* destroy */
-	NULL,		/* load */
-	NULL,		/* save */
-	NULL,		/* link */
-	NULL		/* unlink */
-};
 
 extern TAILQ_HEAD(, widget) uwidgetsh;		/* window.c */
 extern pthread_mutex_t uwidgets_lock;	/* window.c */

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.12 2002/04/28 11:05:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.13 2002/04/28 14:11:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 #include "widget.h"
 #include "window.h"
 
-static const struct obvec window_vec = {
+static const struct obvec window_ops = {
 	window_destroy,
 	NULL,
 	NULL,
@@ -63,12 +63,26 @@ static Uint32 delta = 0, delta2 = 256;
 static void	 window_unlink_queued(void);
 
 /* XXX fucking insane */
+struct window *
+window_new(struct viewport *view, char *caption, Uint32 flags, Uint32 bgtype,
+    Sint16 x, Sint16 y, Uint16 w, Uint16 h) {
+	struct window *win;
+
+	win = emalloc(sizeof(struct window));
+	window_init(win, view, caption, flags, bgtype, x, y, w, h);
+
+	pthread_mutex_lock(&world->lock);
+	object_link(win);
+	pthread_mutex_unlock(&world->lock);
+	return (win);
+}
+
+/* XXX fucking insane */
 void
-window_init(struct window *win, struct viewport *view, char *name,
-    char *caption, Uint32 flags, Uint32 bgtype, Sint16 x, Sint16 y,
-    Uint16 w, Uint16 h)
+window_init(struct window *win, struct viewport *view, char *caption,
+    Uint32 flags, Uint32 bgtype, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
 {
-	object_init(&win->obj, name, NULL, 0, &window_vec);
+	object_init(&win->obj, "window", NULL, 0, &window_ops);
 
 	win->caption = strdup(caption);
 	win->view = view;

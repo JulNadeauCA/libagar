@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.5 2002/04/24 14:08:54 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.6 2002/04/26 04:24:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -37,7 +37,7 @@
 
 #include "text.h"
 
-static const struct obvec text_vec = {
+static const struct obvec text_ops = {
 	text_destroy,
 	NULL,		/* load */
 	NULL,		/* save */
@@ -127,7 +127,7 @@ text_init(struct text *te, Sint16 x, Sint16 y, Uint16 w, Uint16 h,
 #endif
 
 	sprintf(textname, "text%d\n", textid++);
-	object_init(&te->obj, textname, NULL, 0, &text_vec);
+	object_init(&te->obj, textname, NULL, 0, &text_ops);
 	te->flags = flags;
 
 	te->sleepms = sleepms;

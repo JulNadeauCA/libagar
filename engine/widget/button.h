@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.6 2002/04/24 14:08:54 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.7 2002/04/26 11:40:48 vedge Exp $	*/
 
 struct button {
 	struct	 widget wid;
@@ -19,8 +19,9 @@ struct button {
 	void	(*push)(struct button *);
 };
 
-void	 button_init(struct button *, char *, char *, Uint32, Sint16, Sint16);
-void	 button_destroy(void *);
+struct button	*button_new(struct window *, char *, Uint32, Sint16, Sint16);
+void		 button_init(struct button *, char *, Uint32, Sint16, Sint16);
+void		 button_destroy(void *);
 
 void	 button_draw(void *);
 void	 button_event(void *, SDL_Event *, Uint32);
