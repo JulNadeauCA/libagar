@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.69 2003/06/15 20:58:16 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.70 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -44,9 +44,7 @@ struct window {
 	enum window_alignment	 alignment;	/* Initial position */
 	int			 spacing;	/* Widget spacing */
 	int			 padding;	/* Widget padding */
-
-	int	 minw, minh;			/* Minimum geometry */
-	int	 saved_w, saved_h;		/* Saved geometry */
+	int	 		 minw, minh;	/* Minimum geometry */
 
 	TAILQ_ENTRY(window)	 windows;	/* Active windows */
 	TAILQ_ENTRY(window)	 detach;	/* Zombie windows */

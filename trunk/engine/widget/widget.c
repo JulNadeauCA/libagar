@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.67 2003/06/21 06:50:27 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.68 2003/06/30 01:11:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -57,6 +57,8 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	struct widget *wid = p;
 
 	object_init(wid, "widget", type, wops);
+	OBJECT(wid)->flags |= OBJECT_RELOAD;
+	OBJECT(wid)->save_pfx = "/widgets";
 
 	strlcpy(wid->type, type, sizeof(wid->type));
 	wid->flags = flags;
