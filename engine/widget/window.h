@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.51 2002/12/31 03:17:07 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.52 2003/01/04 14:10:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -15,22 +15,17 @@ enum window_event {
 TAILQ_HEAD(regionsq, region);
 
 struct window {
-	struct	 widget wid;		/* For primitives and color scheme */
+	struct widget	wid;		/* For primitives and color schemes */
 
-	/*
-	 * Read-only once attached
-	 */
-	int	 flags;
-#define WINDOW_PLAIN		0x001	/* Solid, no borders */
-#define WINDOW_TITLEBAR		0x008	/* Draw title bar */
-#define WINDOW_ROUNDEDGES	0x010	/* Round edges */
-#define WINDOW_SCALE		0x020	/* Scale regions/widgets */
-#define WINDOW_SHOWN		0x040	/* Visible */
-#define WINDOW_CENTER		0x080	/* Center window */
-#define WINDOW_SAVE_POSITION	0x100	/* Save window position on hide/exit */
-#define WINDOW_MATERIALIZE	0x200	/* Materialize effect */
-#define WINDOW_DEMATERIALIZE	0x400	/* Dematerialize effect */
-#define WINDOW_HIDDEN_BODY	0x1000	/* Only the titlebar is shown */
+	/* Read-only once attached */
+
+	int	flags;
+#define WINDOW_TITLEBAR		0x01	/* Draw a title bar */
+#define WINDOW_SCALE		0x02	/* Scale the initial geometry (%) */
+#define WINDOW_CENTER		0x04	/* Center the initial position */
+#define WINDOW_SHOWN		0x10	/* Window is visible */
+#define WINDOW_SAVE_POSITION	0x20	/* Save position/geometry on close */
+#define WINDOW_HIDDEN_BODY	0x40	/* Draw the titlebar only */
 #define WINDOW_PERSISTENT	WINDOW_HIDDEN_BODY
 
 	enum {
@@ -38,29 +33,22 @@ struct window {
 		WINDOW_CLOSE_BUTTON,
 		WINDOW_HIDE_BUTTON
 	} clicked_button;
-
-	char	*caption;		/* Titlebar text */
-
 	Uint32	*border;		/* Border colors */
 	int	 borderw;		/* Border width */
 	int	 titleh;		/* Titlebar height */
-	SDL_Rect rd;			/* Current geometry */
-	SDL_Rect saved_rd;		/* Original geometry */
-	int	 minw, minh;
-	int	 spacing;		/* Spacing between regions */
+	int	 minw, minh;		/* Minimum window geometry */
 	SDL_Rect body;			/* Area reserved for regions */
 	
-	/*
-	 * Read-write, thread-safe
-	 */
-	struct	 widget *focus;		/* Focused widget */
-
-	struct	 regionsq regionsh;
-	TAILQ_ENTRY(window) windows;	/* Windows in view */
-	TAILQ_ENTRY(window) detach;	/* Windows to free */
-
+	/* Read-write, thread-safe */
 	pthread_mutex_t		lock;
 	pthread_mutexattr_t	lockattr;
+	SDL_Rect		 rd;		/* Current geometry */
+	SDL_Rect		 saved_rd;	/* Original geometry */
+	char			*caption;	/* Titlebar text */
+	struct widget		*focus;		/* Focused widget */
+	struct regionsq		 regionsh;	/* Regions */
+	TAILQ_ENTRY(window)	 windows;	/* Windows in view */
+	TAILQ_ENTRY(window)	 detach;	/* Windows to free */
 };
 
 #define WINDOW(w)	((struct window *)(w))
