@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.17 2005/02/18 09:59:36 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.18 2005/02/19 07:22:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -192,6 +192,8 @@ tile_add_pixmap(struct tile *t, struct pixmap *px, int x, int y)
 	tel->tel_pixmap.y = y;
 	tel->tel_pixmap.alpha = 255;
 	TAILQ_INSERT_TAIL(&t->elements, tel, elements);
+	px->nrefs++;
+
 	t->flags |= TILE_DIRTY;
 	return (tel);
 }
@@ -610,10 +612,8 @@ poll_items(int argc, union evarg *argv)
 			struct feature_sketch *fsk;
 			struct feature_pixmap *fpx;
 	
-			it = tlist_insert(tl, ICON(OBJ_ICON), "%s (%d,%d) %s",
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s",
 			    ft->name,
-			    tel->tel_feature.x,
-			    tel->tel_feature.y,
 			    tel->visible ? "" : " (invisible)");
 			it->class = "feature";
 			it->p1 = tel;
@@ -628,8 +628,7 @@ poll_items(int argc, union evarg *argv)
 
 			TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
 				it = tlist_insert(tl, ICON(DRAWING_ICON),
-				    "%s (%d,%d) %s", fsk->sk->name,
-				    fsk->x, fsk->y,
+				    "%s%s", fsk->sk->name,
 				    fsk->visible ? "" : " (invisible)");
 				it->class = "feature-sketch";
 				it->p1 = fsk;
@@ -646,10 +645,7 @@ poll_items(int argc, union evarg *argv)
 		} else if (tel->type == TILE_PIXMAP) {
 			struct pixmap *px = tel->tel_pixmap.px;
 
-			it = tlist_insert(tl, ICON(OBJ_ICON), "%s (%d,%d) %s",
-			    px->name,
-			    tel->tel_pixmap.x,
-			    tel->tel_pixmap.y,
+			it = tlist_insert(tl, ICON(OBJ_ICON), "%s%s", px->name,
 			    tel->visible ? "" : " (invisible)");
 			it->class = "pixmap";
 			it->p1 = tel;
@@ -881,7 +877,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	etl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(etl, TLIST_POLL|TLIST_TREE);
 	WIDGET(etl)->flags &= ~(WIDGET_WFILL);
-	tlist_prescale(etl, _("FEATURE #00 (00,00)"), 10);
+	tlist_prescale(etl, _("FEATURE #000"), 5);
 	event_new(etl, "tlist-poll", poll_items, "%p,%p", ts, t);
 
 	item = tlist_set_popup(etl, "feature");
@@ -1010,6 +1006,11 @@ tile_edit(struct tileset *ts, struct tile *t)
 	}
 
 	t->used++;
+
+	window_scale(win, -1, -1);
+	window_set_geometry(win,
+	    view->w/4, view->h/4,
+	    view->w/2, view->h/2);
 	return (win);
 }
 

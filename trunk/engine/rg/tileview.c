@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.15 2005/02/18 04:14:10 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.16 2005/02/19 07:22:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@ zoomin_tick(void *obj, Uint32 ival, void *arg)
 {
 	struct tileview *tv = obj;
 
-	if (tv->zoom > 1000) {
+	if (tv->zoom > 1600) {
 		return (0);
 	}
 	tileview_set_zoom(tv, tv->zoom+20, 1);
@@ -709,7 +709,7 @@ tileview_set_zoom(struct tileview *tv, int z2, int adj_offs)
 	int pxsz1 = tv->pxsz;
 
 	if (z2 < 100 ||
-	    z2 > 1000)
+	    z2 > 1600)
 		return;
 
 	tv->zoom = z2;
