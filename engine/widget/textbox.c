@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.37 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.38 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -234,14 +234,14 @@ textbox_draw(void *p)
 		/* Draw the text cursor. */
 		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox) &&
 		    x < WIDGET(tbox)->w - tbox->xmargin*4) {
-			SDL_LockSurface(WIDGET_SURFACE(tbox));
-			for (j = 1; j < label_s->h; j++) {
-				WIDGET_PUT_PIXEL(tbox, x, y+j,
-				    WIDGET_COLOR(tbox, CURSOR_COLOR1));
-				WIDGET_PUT_PIXEL(tbox, x+1, y+j,
-				    WIDGET_COLOR(tbox, CURSOR_COLOR2));
-			}
-			SDL_UnlockSurface(WIDGET_SURFACE(tbox));
+			primitives.line(tbox,
+			    x, y,
+			    x, y+label_s->h-2,
+			    WIDGET_COLOR(tbox, CURSOR_COLOR1));
+			primitives.line(tbox,
+			    x+1, y,
+			    x+1, y+label_s->h-2,
+			    WIDGET_COLOR(tbox, CURSOR_COLOR2));
 		}
 	}
 
@@ -299,7 +299,8 @@ textbox_mouse(int argc, union evarg *argv)
 	OBJECT_ASSERT(argv[0].p, "widget");
 
 	switch (argv[1].i) {
-	case WINDOW_MOUSEBUTTONDOWN: {
+	case WINDOW_MOUSEBUTTONDOWN:
+		{
 			int button = argv[2].i;
 			int x = argv[3].i;
 	
@@ -307,7 +308,8 @@ textbox_mouse(int argc, union evarg *argv)
 			tbox->newx = x;
 		}
 		break;
-	case WINDOW_MOUSEMOTION: {
+	case WINDOW_MOUSEMOTION:
+		{
 			int x = argv[2].i;
 			int y = argv[3].i;
 			Uint8 ms;
