@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.126 2003/05/24 15:53:39 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.127 2003/06/06 02:39:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -392,8 +392,10 @@ object_load(void *p)
 	debug(DEBUG_STATE, "loading `%s' from `%s'\n", ob->name, path);
 	if ((fd = open(path, O_RDONLY)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
+		free(path);
 		return (-1);
 	}
+	free(path);
 
 	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);	
 	if (version_read(&buf, &object_ver, NULL) == -1) {
