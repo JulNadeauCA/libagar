@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.10 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.11 2004/01/23 06:24:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -92,19 +92,22 @@ audio_unused(struct audio *audio)
 	pthread_mutex_unlock(&audio->used_lock);
 }
 
-/* Load the named audio package. */
-int
-audio_fetch(void *p)
+/*
+ * Return a pointer to the named audio package.
+ * If the package is resident, increment the reference count.
+ * Otherwise, load the package from disk.
+ */
+struct audio *
+audio_fetch(const char *name)
 {
 	char path[MAXPATHLEN];
-	struct object *ob = p;
 	struct audio *audio = NULL;
 	struct den *den;
 
 	pthread_mutex_lock(&audioq_lock);
 
 	TAILQ_FOREACH(audio, &audioq, audios) {
-		if (strcmp(audio->name, ob->audio_name) == 0)
+		if (strcmp(audio->name, name) == 0)
 			break;
 	}
 	if (audio != NULL) {
@@ -114,12 +117,12 @@ audio_fetch(void *p)
 		goto out;
 	}
 
-	if (config_search_file("load-path", ob->audio_name, "den", path,
-	    sizeof(path)) == -1)
+	if (config_search_file("load-path", name, "den", path, sizeof(path))
+	    == -1)
 		goto fail;
 
 	audio = Malloc(sizeof(struct audio));
-	audio->name = Strdup(ob->audio_name);
+	audio->name = Strdup(name);
 	audio->samples = NULL;
 	audio->nsamples = 0;
 	audio->maxsamples = 0;
@@ -143,12 +146,7 @@ audio_fetch(void *p)
 	TAILQ_INSERT_HEAD(&audioq, audio, audios);		/* Cache */
 out:
 	pthread_mutex_unlock(&audioq_lock);
-	if (ob->audio != NULL) {
-		audio_unused(ob->audio);
-	}
-	ob->audio = audio;
-	Free(path);
-	return (0);
+	return (audio);
 fail:
 	pthread_mutex_unlock(&audioq_lock);
 	if (audio != NULL) {
@@ -156,11 +154,10 @@ fail:
 		free(audio->name);
 		free(audio);
 	}
-	Free(path);
-	return (-1);
+	return (NULL);
 }
 
-/* Release a group of audio samples. */
+/* Release an audio package that is no longer in use. */
 static void
 audio_destroy(struct audio *audio)
 {

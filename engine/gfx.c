@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.18 2004/01/23 06:24:41 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.19 2004/02/20 04:20:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -245,12 +245,15 @@ gfx_unused(struct gfx *gfx)
 	pthread_mutex_unlock(&gfx->used_lock);
 }
 
-/* Load the named graphics package. */
-int
-gfx_fetch(void *p)
+/*
+ * Return a pointer to the named graphics package.
+ * If the package is resident, increment the reference count.
+ * Otherwise, load the package from disk.
+ */
+struct gfx *
+gfx_fetch(const char *name)
 {
 	char path[MAXPATHLEN];
-	struct object *ob = p;
 	struct gfx *gfx = NULL;
 	struct den *den;
 	Uint32 i;
@@ -258,7 +261,7 @@ gfx_fetch(void *p)
 	pthread_mutex_lock(&gfxq_lock);
 
 	TAILQ_FOREACH(gfx, &gfxq, gfxs) {
-		if (strcmp(gfx->name, ob->gfx_name) == 0)
+		if (strcmp(gfx->name, name) == 0)
 			break;
 	}
 	if (gfx != NULL) {
@@ -268,12 +271,12 @@ gfx_fetch(void *p)
 		goto out;
 	}
 
-	if (config_search_file("load-path", ob->gfx_name, "den", path,
-	    sizeof(path)) == -1)
+	if (config_search_file("load-path", name, "den", path, sizeof(path))
+	    == -1)
 		goto fail;
 
 	gfx = Malloc(sizeof(struct gfx));
-	gfx->name = Strdup(ob->gfx_name);
+	gfx->name = Strdup(name);
 	gfx->sprites = NULL;
 	gfx->csprites = NULL;
 	gfx->nsprites = 0;
@@ -301,11 +304,7 @@ gfx_fetch(void *p)
 	TAILQ_INSERT_HEAD(&gfxq, gfx, gfxs);			/* Cache */
 out:
 	pthread_mutex_unlock(&gfxq_lock);
-	if (ob->gfx != NULL) {					/* Replace */
-		gfx_unused(ob->gfx);
-	}
-	ob->gfx = gfx;
-	return (0);
+	return (gfx);
 fail:
 	pthread_mutex_unlock(&gfxq_lock);
 	if (gfx != NULL) {
@@ -313,11 +312,10 @@ fail:
 		free(gfx->name);
 		free(gfx);
 	}
-	ob->gfx = NULL;
-	return (-1);
+	return (NULL);
 }
 
-/* Release a graphics package. */
+/* Release a graphics package that is no longer in use. */
 static void
 gfx_destroy(struct gfx *gfx)
 {
