@@ -1,5 +1,8 @@
-/*	$Csoft: mapview.h,v 1.29 2003/03/02 07:29:53 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.30 2003/03/05 02:16:32 vedge Exp $	*/
 /*	Public domain	*/
+
+#ifndef _AGAR_MAPEDIT_MAPVIEW_H_
+#define _AGAR_MAPEDIT_MAPVIEW_H_
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
@@ -19,13 +22,18 @@ struct mapview {
 #define MAPVIEW_CENTER		 0x100
 #define MAPVIEW_SAVEABLE	 0x200	/* Load/save keys */
 #define MAPVIEW_NO_CURSOR	 0x400	/* Hide cursor */
-	int	 prop_bg;	/* Background of node attributes */
-	int	 prop_style;	/* Style of node attributes */
+
+	int	 prop_bg;		/* Background of node attributes */
+	int	 prop_style;		/* Style of node attributes */
+
+	/* Mouse scrolling state */
 	struct {
 		int	scrolling;	/* Currently scrolling? */
 		int	x, y;		/* Current mouse position */
 	} mouse;
-	struct {		/* For inserting tiles dynamically */
+
+	/* Tile mapping parameters */
+	struct {
 		enum {
 			MAPVIEW_CONSTR_HORIZ,	/* Horizontally, grow */
 			MAPVIEW_CONSTR_VERT,	/* Vertically, grow */
@@ -34,25 +42,41 @@ struct mapview {
 		int	x, y;		/* Current position */
 		int	nflags;		/* Noderef flags */
 	} constr;
-	struct map	*map;
-	struct node	*cur_node;
-	Uint8		 cur_layer;
-	int		 mx, my;	/* Display offset (nodes) */
-	int		 mw, mh;	/* Display size (nodes) */
+
+	/* Selections */
+	struct {
+		int	set;
+		Uint32	x, y;		/* Selection origin */
+		int	xoffs, yoffs;	/* Displacement from origin */
+	} msel;
+	struct {
+		int	set;
+		Uint32	x, y;		/* Selection origin */
+		Uint32	w, h;		/* Displacement from origin */
+	} esel;
+
+	/* Zoom and soft-scroll offsets. */
 	Uint16		*zoom;		/* Zoom (%) */
 	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
-	SDL_TimerID	 zoom_tm;
 	int		*tilew, *tileh;
-	int		 cx, cy;	/* Cursor position (nodes) */
-	int		 cw, ch;	/* Cursor geometry (nodes) */
-	struct {		/* For MAPVIEW_INDEPENDENT */
+	SDL_TimerID	 zoom_tm;
+	struct {
 		Uint16	zoom;
 		Sint16	ssx, ssy;
 		int	tilew, tileh;
 	} izoom;
-	struct nodeedit	 nodeed;
-	struct layedit	 layed;
-	struct window	*tmap_win;	/* Tile map window */
+
+	struct map	*map;		/* Map to display */
+	Uint8		 cur_layer;	/* Layer being edited */
+	int		 mx, my;	/* Display offset (nodes). XXX u32? */
+	int		 mw, mh;	/* Display size (nodes) */
+	
+	int		 cx, cy;	/* Cursor position (nodes) */
+	struct node	*cur_node;
+
+	struct nodeedit	 nodeed;	/* Node editor */
+	struct layedit	 layed;		/* Layer editor */
+	struct window	*tmap_win;	/* Tile map window. XXX */
 	int		 tmap_insert;	/* Insert mode? */
 	struct button	*tmap_button;
 };
@@ -97,3 +121,5 @@ void		 mapview_zoom(struct mapview *, int);
 
 extern __inline__ void	mapview_draw_props(struct mapview *, struct node *,
 			    int, int, int, int);
+
+#endif /* _AGAR_MAPEDIT_MAPVIEW_H_ */
