@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.13 2004/01/23 03:55:45 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.14 2004/02/24 12:24:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -295,11 +295,26 @@ const struct unit metabolic_cost_units[] = {
 	{ "MET",	N_("Metabolic equivalent"),		1,	NULL },
 	{ "Kcal/min",	N_("Kilokalories per minute"),		1,	NULL },
 	{ "O\xc2/kg",	N_("Ml O\xc2/kg/minute"),		3.5,	NULL },
-	{ "Mess",	N_("Attending church"),			2,	NULL },
-	{ "Walks",	N_("Walking (3mph, level terrain)"),	4.5,	NULL },
+	{ "Mess",	N_("Attending church"),			2.5,	NULL },
+	{ "Slo-mos",	N_("Very slow walking (<2.0mph)"),	2,	NULL },
+	{ "Slomarches",	N_("Slow walking (2.0mph)"),		2.5,	NULL },
+	{ "Minimarches", N_("Walking (2.5mph)"),		3,	NULL },
+	{ "Marches",	N_("Moderate walking (3.0mph)"),	3.5,	NULL },
+	{ "Supermarches", N_("Walking - brisk (3.5mph)"),	4,	NULL },
+	{ "Hypermarches", N_("Walking - very brisk (4.5mph)"),	4.5,	NULL },
 	{ "Treks",	N_("Walking (3-5mph, mountains)"), 	5,	NULL },
-	{ "Bikes",	N_("Biking (5mph, level terrain)"),	7,	NULL },
+	{ "Uptreks",	N_("Uphill walking (3.5mph)"),		6,	NULL },
+	{ "Minibikes",	N_("Light biking (10-11.9mph)"),	6,	NULL },
+	{ "Bikes",	N_("Moderate biking (12-13.9mph)"),	8,	NULL },
+	{ "Superbikes",	N_("Vigorous biking (14-15.9mph)"),	10,	NULL },
+	{ "Megabikes",	N_("Race biking (16-19mph)"),		12,	NULL },
+	{ "Gigabikes",	N_("Race biking (>20mph)"),		16,	NULL },
 	{ "Buttes",	N_("Mountain and rock climbing"),	8,	NULL },
+	{ "Yogas",	N_("Stretching, yoga"),			4,	NULL },
+	{ "Jogs",	N_("Jogging"),				7,	NULL },
+	{ "Skis",	N_("General/cross-country skiing"),	7,	NULL },
+	{ "Superskis",	N_("Cross-country/moderate skiing"),	8,	NULL },
+	{ "Gigaskis",	N_("Cross-country/vigorous skiing"),	14,	NULL },
 	{ NULL,		NULL,					0,	NULL }
 };
 
