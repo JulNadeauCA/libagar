@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.33 2004/02/20 04:18:54 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.34 2004/03/21 07:00:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -82,6 +82,7 @@ void			 tlist_select_all(struct tlist *);
 void			 tlist_unselect_all(struct tlist *);
 struct tlist_item	*tlist_item_index(struct tlist *, int);
 struct tlist_item	*tlist_item_selected(struct tlist *);
+void			*tlist_item_pointer(struct tlist *);
 struct tlist_item	*tlist_item_text(struct tlist *, const char *);
 struct tlist_item	*tlist_item_first(struct tlist *);
 struct tlist_item	*tlist_item_last(struct tlist *);
