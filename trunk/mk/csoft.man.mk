@@ -1,4 +1,4 @@
-# $Csoft: csoft.man.mk,v 1.8 2002/01/26 01:31:28 vedge Exp $
+# $Csoft: csoft.man.mk,v 1.10 2002/01/26 15:13:59 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -183,4 +183,3 @@ deinstall-man:
 	fi
 
 include ${TOP}/mk/csoft.common.mk
-include ${TOP}/mk/csoft.subdir.mk
