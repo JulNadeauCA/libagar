@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.12 2003/05/24 15:53:42 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.13 2003/06/06 02:47:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -30,8 +30,6 @@
 
 #include "select.h"
 
-#include <engine/mapedit/selops.h>
-
 const struct tool_ops select_ops = {
 	{
 		NULL,		/* init */
@@ -46,23 +44,97 @@ const struct tool_ops select_ops = {
 	NULL			/* mouse */
 };
 
+/* Copy the selection to the copy buffer. */
 static void
 select_copy(void *p, struct mapview *mv)
 {
-	if (mv->esel.set)
-		selops_copy(mv);
+	struct map *copybuf = &mapedit.copybuf;
+	struct map *m = mv->map;
+	int sx, sy, dx, dy;
+
+	if (!mv->esel.set) {
+		text_msg(MSG_ERROR, _("There is no selection to copy"));
+		return;
+	}
+
+	dprintf("copy [%d,%d]+[%dx%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
+	    mv->esel.h);
+
+	if (copybuf->map != NULL)
+		map_free_nodes(copybuf);
+	if (map_alloc_nodes(copybuf, mv->esel.w, mv->esel.h) == -1) {
+		text_msg(MSG_ERROR, "%s", error_get());
+		return;
+	}
+
+	for (sy = mv->esel.y, dy = 0;
+	     sy < mv->esel.y + mv->esel.h;
+	     sy++, dy++) {
+		for (sx = mv->esel.x, dx = 0;
+		     sx < mv->esel.x + mv->esel.w;
+		     sx++, dx++) {
+			node_copy(m, &m->map[sy][sx], m->cur_layer, copybuf,
+			    &copybuf->map[dy][dx], 0);
+		}
+	}
 }
 
 static void
 select_paste(void *p, struct mapview *mv)
 {
+	struct map *copybuf = &mapedit.copybuf;
+	struct map *m = mv->map;
+	int sx, sy, dx, dy;
+	
+	if (copybuf->map == NULL) {
+		text_msg(MSG_ERROR, _("The copy buffer is empty"));
+		return;
+	}
+
 	if (mv->esel.set) {
-		selops_paste(mv, mv->esel.x, mv->esel.y);
+		dx = mv->esel.x;
+		dy = mv->esel.y;
 	} else {
 		if (mv->cx != -1 && mv->cy != -1) {
-			selops_paste(mv, mv->cx, mv->cy);
+			dx = mv->cx;
+			dy = mv->cy;
 		} else {
-			selops_paste(mv, 0, 0);
+			dx = 0;
+			dy = 0;
+		}
+	}
+
+	dprintf("[%dx%d] at [%d,%d]\n", copybuf->mapw, copybuf->maph, dx, dy);
+
+	for (sy = 0, dy = mv->esel.y;
+	     sy < copybuf->maph && dy < m->maph;
+	     sy++, dy++) {
+		for (sx = 0, dx = mv->esel.x;
+		     sx < copybuf->mapw && dx < m->mapw;
+		     sx++, dx++) {
+			node_copy(copybuf, &copybuf->map[sy][sx], 0,
+			    m, &m->map[dy][dx], m->cur_layer);
+		}
+	}
+}
+
+static void
+select_kill(void *p, struct mapview *mv)
+{
+	struct map *m = mv->map;
+	int x, y;
+
+	if (!mv->esel.set) {
+		text_msg(MSG_ERROR, _("There is no selection to kill"));
+		return;
+	}
+	
+	dprintf("[%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
+	    mv->esel.h);
+
+	for (y = mv->esel.y; y < mv->esel.y + mv->esel.h; y++) {
+		for (x = mv->esel.x; x < mv->esel.x + mv->esel.w; x++) {
+			node_clear(m, &m->map[y][x], m->cur_layer);
 		}
 	}
 }
@@ -70,15 +142,12 @@ select_paste(void *p, struct mapview *mv)
 static void
 select_cut(void *p, struct mapview *mv)
 {
-	if (mv->esel.set)
-		selops_cut(mv);
-}
-
-static void
-select_kill(void *p, struct mapview *mv)
-{
-	if (mv->esel.set)
-		selops_kill(mv);
+	if (!mv->esel.set) {
+		text_msg(MSG_ERROR, _("There is no selection to cut"));
+		return;
+	}
+	select_copy(p, mv);
+	select_kill(p, mv);
 }
 
 void
@@ -88,7 +157,8 @@ select_init(void *p)
 
 	tool_init(&sel->tool, "select", &select_ops);
 	TOOL(sel)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_SELECT);
-	TOOL(sel)->cursor = SPRITE(sel, TOOL_SELECT_CURSOR);
+	TOOL(sel)->cursor = SPRITE(sel, TOOL_FILL_CURSOR);
+
 	tool_bind_key(sel, KMOD_CTRL, SDLK_c, select_copy, 0);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_v, select_paste, 1);
 	tool_bind_key(sel, KMOD_CTRL, SDLK_x, select_cut, 1);
