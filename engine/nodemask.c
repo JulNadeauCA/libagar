@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.2 2004/03/18 01:42:44 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.3 2004/03/18 21:27:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -55,7 +55,6 @@ nodemask_init(struct nodemask *mask, enum nodemask_type type)
 		mask->nm_bitmap.offs = 0;
 		break;
 	case NODEMASK_POLYGON:
-	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
 		mask->nm_poly.vertices = NULL;
 		mask->nm_poly.nvertices = 0;
@@ -73,7 +72,6 @@ nodemask_destroy(struct map *m, struct nodemask *mask)
 			object_page_out(mask->nm_bitmap.obj, OBJECT_GFX);
 		}
 		break;
-	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
 	case NODEMASK_POLYGON:
 		Free(mask->nm_poly.vertices, M_NODEMASK);
@@ -103,7 +101,6 @@ nodemask_load(struct map *m, struct netbuf *buf, struct nodemask *mask)
 		nodemask_bitmap(m, mask, pobj, offs);
 		break;
 	case NODEMASK_POLYGON:
-	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
 		Free(mask->nm_poly.vertices, M_NODEMASK);
 		mask->nm_poly.nvertices = read_uint32(buf);
@@ -131,7 +128,6 @@ nodemask_save(struct map *m, struct netbuf *buf, const struct nodemask *mask)
 		write_uint32(buf, mask->nm_bitmap.offs);
 		break;
 	case NODEMASK_POLYGON:
-	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
 		write_uint32(buf, mask->nm_poly.nvertices);
 		for (i = 0; i < mask->nm_poly.nvertices; i++) {
@@ -154,7 +150,6 @@ nodemask_copy(const struct nodemask *smask, struct map *m,
 		    smask->nm_bitmap.offs);
 		break;
 	case NODEMASK_POLYGON:
-	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
 		Free(dmask->nm_poly.vertices, M_NODEMASK);
 		if (smask->nm_poly.vertices != NULL) {

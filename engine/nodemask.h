@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.h,v 1.1 2004/03/17 17:30:25 vedge Exp $	*/
+/*	$Csoft: nodemask.h,v 1.2 2004/03/18 01:42:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_NODEMASK_H_
@@ -7,7 +7,6 @@
 enum nodemask_type {
 	NODEMASK_BITMAP,		/* Bitmap (pixel-perfect at 1:1) */
 	NODEMASK_POLYGON,		/* Simple polygon */
-	NODEMASK_TRIANGLE,		/* Triangular region */
 	NODEMASK_RECTANGLE		/* Rectangular region */
 };
 
