@@ -1,4 +1,4 @@
-/*	$Csoft$	    */
+/*	$Csoft: config.c,v 1.19 2002/06/22 16:05:37 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -66,8 +66,8 @@ static const enum {
 	DEBUG_BUTTON
 } widgets;
 
-#define CONFIG_DEFAULT_WIDTH 	640
-#define CONFIG_DEFAULT_HEIGHT 	480
+#define CONFIG_DEFAULT_WIDTH 	800
+#define CONFIG_DEFAULT_HEIGHT 	600
 #define CONFIG_DEFAULT_BPP 	32
 #define CONFIG_DEFAULT_FLAGS	(CONFIG_FONT_CACHE)
 
