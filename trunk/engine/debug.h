@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.14 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.15 2002/09/13 04:39:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_DEBUG_H_
@@ -36,7 +36,9 @@ extern int engine_debug;
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#if 0
 #include <semaphore.h>
+#endif
 
 #define pthread_mutex_lock(mutex) do {					\
 	int _rv;							\
@@ -63,6 +65,7 @@ extern int engine_debug;
 	}								\
 } while (/*CONSTCOND*/0)
 
+#if 0
 #define sem_init(wsem, pshared, value) do {				\
 	int _rv;							\
 	if ((_rv = sem_init((wsem), (pshared), (value))) != 0) {	\
@@ -87,6 +90,7 @@ extern int engine_debug;
 		fatal("sem_post(%p): %s\n", (wsem), strerror(_rv));	\
 	}								\
 } while (/*CONSTCOND*/0)
+#endif
 
 #define pthread_create(thread, attr, func, arg) do {			\
 	int _rv;							\
