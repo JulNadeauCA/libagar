@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.29 2002/06/27 03:08:42 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.30 2002/08/15 20:50:33 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -20,7 +20,7 @@
 #include <engine/event.h>
 #include <engine/anim.h>
 #include <engine/world.h>
-#include <engine/xcf.h>
+#include <engine/oldxcf.h>
 #include <engine/view.h>
 
 #if !defined(SERIALIZATION)
