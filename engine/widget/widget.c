@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.44 2003/02/25 01:27:04 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.45 2003/03/02 00:35:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -742,21 +742,26 @@ widget_blit(void *p, SDL_Surface *srcsu, int xoffs, int yoffs)
 
 		texture = view_surface_texture(srcsu, texcoord);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		if (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY)) {
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		}
 		glBegin(GL_TRIANGLE_STRIP);
 		{
-			glTexCoord2f(texcoord[0],	texcoord[1]);
-			glVertex2i(rd.x,		rd.y);
-			glTexCoord2f(texcoord[2],	texcoord[1]);
-			glVertex2i(rd.x+srcsu->w,	rd.y);
-			glTexCoord2f(texcoord[0],	texcoord[3]);
-			glVertex2i(rd.x,		rd.y+srcsu->h);
-			glTexCoord2f(texcoord[2],	texcoord[3]);
-			glVertex2i(rd.x+srcsu->w,	rd.y+srcsu->h);
+			glTexCoord2f(texcoord[0], texcoord[1]);
+			glVertex2i(rd.x, rd.y);
+			glTexCoord2f(texcoord[2], texcoord[1]);
+			glVertex2i(rd.x+srcsu->w, rd.y);
+			glTexCoord2f(texcoord[0], texcoord[3]);
+			glVertex2i(rd.x, rd.y+srcsu->h);
+			glTexCoord2f(texcoord[2], texcoord[3]);
+			glVertex2i(rd.x+srcsu->w, rd.y+srcsu->h);
 		}
 		glEnd();
 		glDeleteTextures(1, &texture);
-		glBlendFunc(GL_ONE, GL_ZERO);
+		if (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY)) {
+			glDisable(GL_BLEND);
+		}
 	} else
 #endif
 	{
