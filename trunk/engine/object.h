@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.83 2003/06/18 00:46:58 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.84 2003/06/21 06:39:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -7,6 +7,7 @@
 #include <engine/prop.h>
 #include <engine/physics.h>
 #include <engine/gfx.h>
+#include <engine/audio.h>
 
 #include "begin_code.h"
 
@@ -25,7 +26,7 @@ struct object_ops {
 struct object_table {
 	struct object	**objs;
 	Uint32		 nobjs;
-	int		 *used;
+	Uint32		*used;
 };
 
 struct object_position {
@@ -54,7 +55,8 @@ struct object {
 #define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
 #define OBJECT_STATIC		0x04	/* Parent should not call free(3) */
 
-	struct gfx		*gfx;	/* Associated graphics package */
+	struct gfx		*gfx;	/* Associated graphics */
+	struct audio		*audio;	/* Associated audio samples */
 	TAILQ_ENTRY(object)	 cobjs;	/* Child objects */
 
 	pthread_mutex_t		 lock;
@@ -97,7 +99,9 @@ void	*object_find(void *, const char *);
 int	 object_load(void *);
 int	 object_save(void *);
 void	 object_destroy(void *);
+#ifdef EDITION
 void	 object_edit(void *);
+#endif
 
 void	 object_free_childs(struct object *);
 void	 object_free_props(struct object *);
