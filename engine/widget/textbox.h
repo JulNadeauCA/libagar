@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.24 2003/06/25 10:31:45 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.25 2003/08/31 11:58:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -13,7 +13,9 @@
 struct textbox {
 	struct widget wid;
 	
-	char		 string[TEXTBOX_STRING_MAX];
+	char	string[TEXTBOX_STRING_MAX];	/* UTF-8 text buffer */
+	Uint32	compose;			/* Input composition */
+
 	SDL_Surface	*label;
 
 	int	 prew, preh;			/* Prescale */

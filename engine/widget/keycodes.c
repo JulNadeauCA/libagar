@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.31 2003/08/30 02:32:48 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.32 2003/08/31 11:58:10 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,17 +49,150 @@ static void key_right(struct textbox *, SDLKey, int, const char *, Uint32);
 static void key_character(struct textbox *, SDLKey, int, const char *, Uint32);
 
 const struct keycode keycodes[] = {
-	{ SDLK_BACKSPACE,	0,		key_bspace,	NULL },
-	{ SDLK_DELETE,		0,		key_delete,	NULL },
-	{ SDLK_HOME,		0,		key_home,	NULL },
-	{ SDLK_END,		0,		key_end,	NULL },
-	{ SDLK_a,		KMOD_CTRL,	key_home,	NULL },
-	{ SDLK_e,		KMOD_CTRL,	key_end,	NULL },
-	{ SDLK_k,		KMOD_CTRL,	key_kill,	NULL },
-	{ SDLK_LEFT,		0,		key_left,	NULL },
-	{ SDLK_RIGHT,		0,		key_right,	NULL },
-	{ SDLK_LAST,		0,		key_character,	NULL },
+	{ SDLK_BACKSPACE,	0,		key_bspace,	NULL, 1 },
+	{ SDLK_DELETE,		0,		key_delete,	NULL, 1 },
+	{ SDLK_HOME,		0,		key_home,	NULL, 1 },
+	{ SDLK_END,		0,		key_end,	NULL, 1 },
+	{ SDLK_a,		KMOD_CTRL,	key_home,	NULL, 1 },
+	{ SDLK_e,		KMOD_CTRL,	key_end,	NULL, 1 },
+	{ SDLK_k,		KMOD_CTRL,	key_kill,	NULL, 1 },
+	{ SDLK_LEFT,		0,		key_left,	NULL, 1 },
+	{ SDLK_RIGHT,		0,		key_right,	NULL, 1 },
+	{ SDLK_LAST,		0,		key_character,	NULL, 0 },
 };
+
+static __inline__ Uint32
+key_apply_mod(Uint32 key, int kmod)
+{
+	if (kmod & KMOD_CAPS) {
+		if (kmod & KMOD_SHIFT) {
+			return (tolower(key));
+		} else {
+			return (toupper(key));
+		}
+	} else {
+		if (kmod & KMOD_SHIFT) {
+			return (toupper(key));
+		} else {
+			return (key);
+		}
+	}
+}
+
+static struct {
+	Uint32 comp, key, res;
+} compose[] = {
+	{ 0x0060, 0x0020, 0x0060 },  /* GRAVE ACCENT */
+	{ 0x0060, 0x0061, 0x00e0 },  /* LATIN SMALL LETTER A */
+	{ 0x0060, 0x0041, 0x00c0 },  /* LATIN CAPITAL LETTER A */
+	{ 0x0060, 0x0065, 0x00e8 },  /* LATIN SMALL LETTER E */
+	{ 0x0060, 0x0045, 0x00c8 },  /* LATIN CAPITAL LETTER E */
+	{ 0x0060, 0x0069, 0x00ec },  /* LATIN SMALL LETTER I */
+	{ 0x0060, 0x0049, 0x00cc },  /* LATIN CAPITAL LETTER I */
+	{ 0x0060, 0x006f, 0x00f2 },  /* LATIN SMALL LETTER O */
+	{ 0x0060, 0x004f, 0x00d2 },  /* LATIN CAPITAL LETTER O */
+	{ 0x0060, 0x0075, 0x00f9 },  /* LATIN SMALL LETTER U */
+	{ 0x0060, 0x0055, 0x00d9 },  /* LATIN CAPITAL LETTER U */
+	
+	{ 0x00b4, 0x0020, 0x0060 },  /* ACUTE ACCENT */
+	{ 0x00b4, 0x0065, 0x00e9 },  /* LATIN SMALL LETTER E */
+	{ 0x00b4, 0x0045, 0x00c9 },  /* LATIN CAPITAL LETTER E */
+	
+	{ 0x02db, 0x0020, 0x02db },  /* OGONEK */
+	{ 0x02db, 0x0061, 0x0105 },  /* LATIN SMALL LETTER C */
+	{ 0x02db, 0x0041, 0x0104 },  /* LATIN CAPITAL LETTER C */
+	{ 0x02db, 0x0075, 0x0173 },  /* LATIN SMALL LETTER U */
+	{ 0x02db, 0x0055, 0x0172 },  /* LATIN CAPITAL LETTER U */
+
+	{ 0x00b8, 0x0020, 0x00b8 },  /* CEDILLA */
+	{ 0x00b8, 0x0063, 0x00e7 },  /* LATIN SMALL LETTER C */
+	{ 0x00b8, 0x0043, 0x00c7 },  /* LATIN CAPITAL LETTER C */
+	{ 0x00b8, 0x0067, 0x0123 },  /* LATIN SMALL LETTER G */
+	{ 0x00b8, 0x0047, 0x0122 },  /* LATIN CAPITAL LETTER G */
+	{ 0x00b8, 0x006e, 0x0146 },  /* LATIN SMALL LETTER N */
+	{ 0x00b8, 0x004e, 0x0145 },  /* LATIN CAPITAL LETTER N */
+	{ 0x00b8, 0x006b, 0x0137 },  /* LATIN SMALL LETTER K */
+	{ 0x00b8, 0x004b, 0x0136 },  /* LATIN CAPITAL LETTER K */
+	{ 0x00b8, 0x0072, 0x0157 },  /* LATIN SMALL LETTER R */
+	{ 0x00b8, 0x0052, 0x0156 },  /* LATIN CAPITAL LETTER R */
+	{ 0x00b8, 0x0074, 0x0163 },  /* LATIN SMALL LETTER T */
+	{ 0x00b8, 0x0054, 0x0162 },  /* LATIN CAPITAL LETTER T */
+	{ 0x00b8, 0x0073, 0x015f },  /* LATIN SMALL LETTER S */
+	{ 0x00b8, 0x0053, 0x015e },  /* LATIN CAPITAL LETTER S */
+	
+	{ 0x00a8, 0x0020, 0x00a8 },  /* DIAERESIS */
+	{ 0x00a8, 0x0061, 0x00e4 },  /* LATIN SMALL LETTER A */
+	{ 0x00a8, 0x0041, 0x00c4 },  /* LATIN CAPITAL LETTER A */
+	{ 0x00a8, 0x0065, 0x00eb },  /* LATIN SMALL LETTER E */
+	{ 0x00a8, 0x0045, 0x00cb },  /* LATIN CAPITAL LETTER E */
+	{ 0x00a8, 0x0069, 0x00ef },  /* LATIN SMALL LETTER I */
+	{ 0x00a8, 0x0049, 0x00cf },  /* LATIN CAPITAL LETTER I */
+	{ 0x00a8, 0x006f, 0x00f6 },  /* LATIN SMALL LETTER O */
+	{ 0x00a8, 0x004f, 0x00d6 },  /* LATIN CAPITAL LETTER O */
+	{ 0x00a8, 0x0079, 0x00ff },  /* LATIN SMALL LETTER Y */
+	{ 0x00a8, 0x0059, 0x0178 },  /* LATIN CAPITAL LETTER Y */
+	{ 0x00a8, 0x0075, 0x00fc },  /* LATIN SMALL LETTER U */
+	{ 0x00a8, 0x0055, 0x00dc },  /* LATIN CAPITAL LETTER U */
+	
+	{ 0x005e, 0x0020, 0x005e },  /* CIRCUMFLEX ACCENT */
+	{ 0x005e, 0x0061, 0x00e2 },  /* LATIN SMALL LETTER A */
+	{ 0x005e, 0x0041, 0x00c2 },  /* LATIN CAPITAL LETTER A */
+	{ 0x005e, 0x0063, 0x0109 },  /* LATIN SMALL LETTER C */
+	{ 0x005e, 0x0043, 0x0108 },  /* LATIN CAPITAL LETTER C */
+	{ 0x005e, 0x0065, 0x00ea },  /* LATIN SMALL LETTER E */
+	{ 0x005e, 0x0045, 0x00ca },  /* LATIN CAPITAL LETTER E */
+	{ 0x005e, 0x0067, 0x011d },  /* LATIN SMALL LETTER G */
+	{ 0x005e, 0x0047, 0x011c },  /* LATIN CAPITAL LETTER G */
+	{ 0x005e, 0x0069, 0x00ee },  /* LATIN SMALL LETTER I */
+	{ 0x005e, 0x0049, 0x00ce },  /* LATIN CAPITAL LETTER I */
+	{ 0x005e, 0x006f, 0x00f4 },  /* LATIN SMALL LETTER O */
+	{ 0x005e, 0x004f, 0x00d4 },  /* LATIN CAPITAL LETTER O */
+	{ 0x005e, 0x0073, 0x015d },  /* LATIN SMALL LETTER S */
+	{ 0x005e, 0x0053, 0x015c },  /* LATIN CAPITAL LETTER S */
+	{ 0x005e, 0x0079, 0x0177 },  /* LATIN SMALL LETTER Y */
+	{ 0x005e, 0x0059, 0x0176 },  /* LATIN CAPITAL LETTER Y */
+	{ 0x005e, 0x0075, 0x00fb },  /* LATIN SMALL LETTER U */
+	{ 0x005e, 0x0055, 0x00db },  /* LATIN CAPITAL LETTER U */
+	{ 0x005e, 0x0077, 0x0175 },  /* LATIN SMALL LETTER W */
+	{ 0x005e, 0x0057, 0x0174 },  /* LATIN CAPITAL LETTER W */
+};
+static const int ncompose = sizeof(compose) / sizeof(compose[0]);
+
+static int
+key_compose(struct textbox *tbox, Uint32 key, Uint32 *ins)
+{
+	int i;
+		
+	if (tbox->compose != 0) {
+		for (i = 0; i < ncompose; i++) {
+			if (compose[i].comp == tbox->compose &&
+			    compose[i].key == key)
+				break;
+		}
+		if (i < ncompose) {
+			ins[0] = compose[i].res;
+			tbox->compose = 0;
+			return (1);
+		} else {
+			ins[0] = tbox->compose;
+			ins[1] = key;
+			tbox->compose = 0;
+			return (2);
+		}
+	} else {
+		for (i = 0; i < ncompose; i++) {
+			if (compose[i].comp == key)
+				break;
+		}
+		if (i < ncompose) {
+			tbox->compose = key;
+			return (0);
+		} else {
+			ins[0] = key;
+			return (1);
+		}
+	}
+}
 
 static void
 key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
@@ -70,6 +203,8 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	Uint32 *ucs;
 	char *utf8;
 	int trans;
+	Uint32 ins[2];
+	int i, nins;
 
 	trans = prop_get_bool(config, "input.unicode");
 
@@ -77,44 +212,59 @@ key_character(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
 	len = ucs4_len(ucs);
 
-	/* Ensure the new character fits inside the buffer. */
-	if (len+1 >= stringb->size/sizeof(Uint32))
-		goto out;
+	if (trans) {
+		if (uch == 0) {
+			goto skip;
+		}
+		nins = key_compose(tbox, uch, ins);
+	} else {
+		ins[0] = key_apply_mod((Uint32)keysym, keymod);
+		nins = 1;
+	}
+
+	/* Ensure the new character(s) fit inside the buffer. */
+	if (len+nins >= stringb->size/sizeof(Uint32))
+		goto skip;
 
 	if (tbox->pos == len) {
 		/* Append to the end of string */
 		if (trans) {
 			if (uch != 0) {
-				ucs[len] = uch;
+				for (i = 0; i < nins; i++)
+					ucs[len+i] = ins[i];
 			} else {
 				goto out;
 			}
 		} else if (keysym != 0) {
-			ucs[len] = (Uint32)keysym;
+			for (i = 0; i < nins; i++)
+				ucs[len+i] = ins[i];
 		} else {
-			goto out;
+			goto skip;
 		}
 	} else {
 		Uint32 *p = ucs + tbox->pos;
 
 		/* Insert at the cursor position in the string. */
-		memcpy(p+1, p, (len - tbox->pos)*sizeof(Uint32));
+		memcpy(p+nins, p, (len - tbox->pos)*sizeof(Uint32));
 		if (trans) {
 			if (uch != 0) {
-				ucs[tbox->pos] = uch;
+				for (i = 0; i < nins; i++)
+					ucs[tbox->pos+i] = ins[i];
 			} else {
 				goto out;
 			}
 		} else if (keysym != 0) {
-			ucs[tbox->pos] = (Uint32)keysym;
+			for (i = 0; i < nins; i++)
+				ucs[len+i] = ins[i];
 		} else {
-			goto out;
+			goto skip;
 		}
 	}
-	ucs[len+1] = '\0';
-	tbox->pos++;
-	unicode_export(UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
 out:
+	ucs[len+nins] = '\0';
+	tbox->pos += nins;
+	unicode_export(UNICODE_TO_UTF8, stringb->p1, ucs, stringb->size);
+skip:
 	widget_binding_modified(stringb);
 	widget_binding_unlock(stringb);
 	free(ucs);
@@ -168,7 +318,7 @@ key_delete(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	Uint32 *ucs;
 	char *utf8;
 	int i;
-
+	
 	stringb = widget_get_binding(tbox, "string", &utf8);
 	ucs = unicode_import(UNICODE_FROM_UTF8, utf8);
 	len = ucs4_len(ucs);
