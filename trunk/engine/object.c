@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.71 2002/08/18 00:39:58 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.72 2002/08/19 05:28:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -171,11 +171,10 @@ object_get_art(char *media, struct object *ob)
 		obpath = object_path(media, "fob");
 		if (obpath == NULL) {
 			if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
-				dprintf("%s: %s\n", media, AGAR_GetError());
 				ob->flags &= ~(OBJECT_ART);
 				goto done;
 			} else {
-				fatal("%s: %s\n", media, AGAR_GetError());
+				fatal("%s: %s\n", media, error_get());
 			}
 		}
 
@@ -251,11 +250,10 @@ object_get_audio(char *media, struct object *ob)
 		obpath = object_path(media, "fob");
 		if (obpath == NULL) {
 			if (ob->flags & OBJECT_MEDIA_CAN_FAIL) {
-				dprintf("%s: %s\n", media, AGAR_GetError());
 				ob->flags &= ~(OBJECT_AUDIO);
 				goto done;
 			} else {
-				fatal("%s: %s\n", media, AGAR_GetError());
+				fatal("%s: %s\n", media, error_get());
 			}
 		}
 
@@ -472,7 +470,7 @@ object_load(void *p)
 
 	path = object_path(ob->name, ob->saveext);
 	if (path == NULL) {
-		dprintf("%s.%s: %s\n", ob->name, ob->saveext, AGAR_GetError());
+		dprintf("%s.%s: %s\n", ob->name, ob->saveext, error_get());
 		return (-1);
 	}
 
@@ -566,7 +564,7 @@ object_path(char *obname, const char *suffix)
 	free(datapathp);
 	free(path);
 
-	AGAR_SetError("cannot find data file");
+	error_set("cannot find %s.%s", obname, suffix);
 	return (NULL);
 }
 

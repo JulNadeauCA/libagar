@@ -1,10 +1,5 @@
-/*	$Csoft: error.h,v 1.3 2002/06/09 10:08:04 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.4 2002/08/13 00:01:24 vedge Exp $	*/
 /*	Public domain	*/
-
-#define AGAR_GetError()    ((char *)pthread_getspecific(engine_errorkey))
-#define AGAR_SetError(msg) pthread_setspecific(engine_errorkey, (char *)(msg))
-
-extern pthread_key_t engine_errorkey;	/* engine.c */
 
 #ifdef __GNUC__
 # define warning(fmt, args...) \
@@ -29,6 +24,9 @@ extern pthread_key_t engine_errorkey;	/* engine.c */
 
 void	*emalloc(size_t);
 void	*erealloc(void *, size_t);
+
+const char	*error_get(void);
+void		 error_set(const char *, ...);
 
 #define eread(fd, buf, size) do {					\
 	ssize_t _eread_rv;						\
