@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.71 2003/06/21 06:50:22 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.72 2003/06/25 06:15:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -336,10 +336,11 @@ open_tileset(int argc, union evarg *argv)
 	window_set_position(win, WINDOW_MIDDLE_RIGHT, 1);
 
 	mv = Malloc(sizeof(struct mapview));
-	mapview_init(mv, ob->gfx->tile_map, MAPVIEW_TILESET|MAPVIEW_PROPS);
+	mapview_init(mv, ob->gfx->tile_map,
+	    MAPVIEW_TILESET|MAPVIEW_PROPS|MAPVIEW_GRID);
 	mapview_set_selection(mv, 0, 0, 1, 1);
 
-	object_load(&ob->gfx->tile_map);
+	object_load(ob->gfx->tile_map);
 
 	/* Map operation buttons */
 	hb = hbox_new(win, 1);
@@ -365,6 +366,7 @@ open_tileset(int argc, union evarg *argv)
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
+		widget_set_bool(bu, "state", 1);
 		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
 		    MAPEDIT_TOOL_GRID);
 

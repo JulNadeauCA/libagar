@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.110 2003/06/21 06:50:18 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.111 2003/06/23 14:14:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -197,8 +197,6 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 
 	/* Create the world. */
 	world = object_new(NULL, "world", "world", NULL);
-	object_load(world);
-
 	inited++;
 	return (0);
 }
