@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.29 2003/03/13 08:43:33 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.30 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -40,6 +40,9 @@ static const struct object_ops region_ops = {
 	NULL		/* save */
 };
 
+pthread_mutex_t region_lock = PTHREAD_MUTEX_INITIALIZER;
+Uint32		region_count = 0;
+
 struct region *
 region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 {
@@ -57,15 +60,13 @@ region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 void
 region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 {
-	static pthread_mutex_t curreg_lock = PTHREAD_MUTEX_INITIALIZER;
-	static Uint32 curreg = 0;
 	char name[OBJECT_NAME_MAX];
 
-	pthread_mutex_lock(&curreg_lock);
-	curreg++;
-	pthread_mutex_unlock(&curreg_lock);
+	pthread_mutex_lock(&region_lock);
+	region_count++;
+	pthread_mutex_unlock(&region_lock);
 
-	snprintf(name, sizeof(name), "region%u", curreg);
+	snprintf(name, sizeof(name), "region%u", region_count);
 	object_init(&reg->obj, "window-region", name, NULL, 0, &region_ops);
 
 	reg->flags = (flags != 0) ? flags : REGION_HALIGN;
@@ -96,6 +97,7 @@ region_destroy(void *p)
 		nextwid = TAILQ_NEXT(wid, widgets);
 		event_post(wid, "detached", p);		/* Notify */
 		object_destroy(wid);			/* Free */
+		free(wid);
 	}
 	TAILQ_INIT(&reg->widgets);
 }
@@ -143,6 +145,7 @@ region_detach(void *parent, void *child)
 
 	OBJECT(wid)->state = OBJECT_DETACHED;
 	object_destroy(wid);
+	free(wid);
 }
 
 /* Change the spacing between widgets. */
