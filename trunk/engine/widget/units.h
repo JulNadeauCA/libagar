@@ -1,4 +1,4 @@
-/*	$Csoft: units.h,v 1.9 2004/05/11 02:29:01 vedge Exp $	*/
+/*	$Csoft: units.h,v 1.10 2004/08/22 11:33:19 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_UNITS_H_
@@ -15,11 +15,13 @@ struct unit {
 
 __BEGIN_DECLS
 const struct unit *unit_find(const char *);
-__inline__ double unit2base(double, const struct unit *);
-double base2unit(double, const struct unit *);
-__inline__ double unit2unit(double, const struct unit *, const struct unit *);
+__inline__ double  unit2base(double, const struct unit *);
+double		   base2unit(double, const struct unit *);
+__inline__ double  unit2unit(double, const struct unit *, const struct unit *);
+
 const struct unit *unit_best(const struct unit[], double);
-__inline__ const char *unit_abbr(const struct unit *);
+const char	  *unit_abbr(const struct unit *);
+__inline__ int	   unit_format(double, const struct unit[], char *, size_t);
 
 #define	unit2basef(n, u) ((float)unit2base((float)(n), (u)))
 #define	base2unitf(n, u) ((float)base2unit((float)(n), (u)))
