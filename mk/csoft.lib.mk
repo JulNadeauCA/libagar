@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.24 2003/03/05 16:13:09 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.25 2003/06/21 07:30:03 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -71,7 +71,7 @@ SHARE?=
 
 # Assembly
 .asm.o:
-	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $<; \
+	${ASM} ${ASMFLAGS} ${CPPFLAGS} -o $@ $<
 
 # Lex
 .l:
@@ -112,10 +112,8 @@ lib${LIB}.a:	${OBJS}
 	@if [ "${LIB}" != "" ]; then \
 		echo "${AR} -cru lib${LIB}.a ${OBJS}"; \
 		${AR} -cru lib${LIB}.a ${OBJS}; \
-		if [ -x "`which ${RANLIB} 2>/dev/null`" ]; then \
-		    echo "${RANLIB} lib${LIB}.a"; \
-		    ${RANLIB} lib${LIB}.a; \
-		fi \
+		echo "${RANLIB} lib${LIB}.a"; \
+		(${RANLIB} lib${LIB}.a || exit 0); \
 	fi
 
 lib${LIB}.la:	${LIBTOOL} ${SHOBJS}
