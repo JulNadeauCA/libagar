@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.41 2002/04/26 00:42:08 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.42 2002/04/26 04:24:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -47,17 +47,17 @@ enum {
 	NSPRITES_GROW = 2,
 };
 
-static SLIST_HEAD(, object_art) artsh =	SLIST_HEAD_INITIALIZER(&artsh);
-static SLIST_HEAD(, object_audio) audiosh = SLIST_HEAD_INITIALIZER(&audiosh);
+static LIST_HEAD(, object_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
+static LIST_HEAD(, object_audio) audiosh = LIST_HEAD_INITIALIZER(&audiosh);
 
 static SDL_TimerID gctimer;
 
 struct gc {
 	struct	object *ob;
-	SLIST_ENTRY(gc) gcs;
+	LIST_ENTRY(gc) gcs;
 };
 
-static SLIST_HEAD(, gc) gcsh = SLIST_HEAD_INITIALIZER(&gcsh);
+static LIST_HEAD(, gc) gcsh = LIST_HEAD_INITIALIZER(&gcsh);
 static pthread_mutex_t gc_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static const struct obvec null_obvec = {
@@ -125,7 +125,7 @@ object_get_art(char *media)
 	struct object_art *art = NULL, *eart;
 
 	pthread_mutex_lock(&gc_lock);
-	SLIST_FOREACH(eart, &artsh, arts) {
+	LIST_FOREACH(eart, &artsh, arts) {
 		if (strcmp(eart->name, media) == 0) {
 			art = eart;	/* Already in pool */
 		}
@@ -151,7 +151,7 @@ object_get_art(char *media)
 		}
 		fobj_free(fob);
 		
-		SLIST_INSERT_HEAD(&artsh, art, arts);
+		LIST_INSERT_HEAD(&artsh, art, arts);
 	}
 	pthread_mutex_unlock(&gc_lock);
 
@@ -165,7 +165,7 @@ object_get_audio(char *media)
 
 	pthread_mutex_lock(&gc_lock);
 
-	SLIST_FOREACH(eaudio, &audiosh, audios) {
+	LIST_FOREACH(eaudio, &audiosh, audios) {
 		if (strcmp(eaudio->name, media) == 0) {
 			audio = eaudio;	/* Already in pool */
 		}
@@ -189,7 +189,7 @@ object_get_audio(char *media)
 		}
 		fobj_free(fob);
 		
-		SLIST_INSERT_HEAD(&audiosh, audio, audios);
+		LIST_INSERT_HEAD(&audiosh, audio, audios);
 	}
 
 	pthread_mutex_unlock(&gc_lock);
@@ -234,18 +234,23 @@ object_start_gc(Uint32 ival, void *p)
 	struct gc *gc, *nextgc;
 	struct object_audio *audio;
 	struct object_art *art;
-	
+
+#if 0
+	return (0);
+#endif
+
 	pthread_mutex_lock(&gc_lock);
 
 	/* Object pool */
-	for (gc = SLIST_FIRST(&gcsh);
-	     gc != SLIST_END(&gcsh);
+	for (gc = LIST_FIRST(&gcsh);
+	     gc != LIST_END(&gcsh);
 	     gc = nextgc) {
 	     	struct object *ob = gc->ob;
 	
-		nextgc = SLIST_NEXT(gc, gcs);
+		nextgc = LIST_NEXT(gc, gcs);
+		LIST_REMOVE(gc, gcs);
 
-		dprintf("free %s", ob->name);
+		dprintf("free %s\n", ob->name);
 		if (ob->vec->destroy != NULL) {
 			ob->vec->destroy(ob);
 		}
@@ -256,10 +261,10 @@ object_start_gc(Uint32 ival, void *p)
 		free(ob);
 		free(gc);
 	}
-	SLIST_INIT(&gcsh);
+	LIST_INIT(&gcsh);
 
 	/* Art pool */
-	SLIST_FOREACH(art, &artsh, arts) {
+	LIST_FOREACH(art, &artsh, arts) {
 		if (art->used < 1) {
 			/* gc */
 			dprintf("gc art\n");
@@ -267,7 +272,7 @@ object_start_gc(Uint32 ival, void *p)
 	}
 
 	/* Audio pool */
-	SLIST_FOREACH(audio, &audiosh, audios) {
+	LIST_FOREACH(audio, &audiosh, audios) {
 		if (audio->used < 1) {
 			/* gc */
 			dprintf("gc audio\n");
@@ -410,7 +415,7 @@ object_queue_gc(struct object *ob)
 	ngc = emalloc(sizeof(struct gc));
 	ngc->ob = ob;
 	pthread_mutex_lock(&gc_lock);
-	SLIST_INSERT_HEAD(&gcsh, ngc, gcs);
+	LIST_INSERT_HEAD(&gcsh, ngc, gcs);
 	pthread_mutex_unlock(&gc_lock);
 }
 
