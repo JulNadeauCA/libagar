@@ -1,18 +1,15 @@
-/*	$Csoft: button.c,v 1.31 2002/08/29 07:15:43 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.32 2002/09/03 01:45:35 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistribution of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. Redistribution in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of CubeSoft Communications, nor the names of its
+ * 2. Neither the name of CubeSoft Communications, nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
  * 
@@ -148,14 +145,12 @@ button_scaled(int argc, union evarg *argv)
 		return;
 	}
 
-	if (b->slabel_s != NULL) {
-		SDL_FreeSurface(b->slabel_s);
-	}
-
 	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
 	if (nw > WIDGET(b)->w) {
 		nw = WIDGET(b)->w;
 	}
+
+	/* The old scaled surface, if any, will be freed later. */
 	b->slabel_s = view_scale_surface(b->label_s, nw - 6, WIDGET(b)->h - 6);
 }
 
