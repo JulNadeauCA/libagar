@@ -50,7 +50,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 		}
 		break;
 	case SDLK_DOWN:
-		if (med->y < med->map->maph - 1) {
+		if (med->y < med->map->maph - 2) {
 			mapdir_set(&med->cursor_dir, DIR_DOWN, set);
 		}
 		break;
@@ -60,7 +60,7 @@ mapedit_key(struct mapedit *med, SDL_Event *ev)
 		}
 		break;
 	case SDLK_RIGHT:
-		if (med->x < med->map->mapw - 1) {
+		if (med->x < med->map->mapw - 2) {
 			mapdir_set(&med->cursor_dir, DIR_RIGHT, set);
 		}
 		break;
