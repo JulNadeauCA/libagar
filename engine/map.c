@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.151 2003/03/04 22:50:13 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.152 2003/03/04 23:19:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 
 static const struct version map_ver = {
 	"agar map",
-	4, 1
+	4, 2
 };
 
 static const struct object_ops map_ops = {
@@ -186,6 +186,19 @@ map_free_nodes(struct map *m)
 	m->map = NULL;
 	
 	pthread_mutex_unlock(&m->lock);
+}
+
+static void
+map_free_layers(struct map *m)
+{
+	int i;
+	
+	m->nlayers = 0;
+	for (i = 0; i < m->nlayers; i++) {
+		map_layer_destroy(&m->layers[i]);
+	}
+	free(m->layers);
+	m->layers = NULL;
 }
 
 /* Shrink a map, freeing the excess nodes. */
@@ -492,7 +505,7 @@ node_move_ref(struct noderef *nref, struct node *src_node,
  * Copy a node reference from one node to another.
  * The map(s) containing the source/destination nodes must be locked.
  */
-void
+struct noderef *
 node_copy_ref(struct noderef *src, struct node *dst_node)
 {
 	struct transform *src_trans;
@@ -533,6 +546,7 @@ node_copy_ref(struct noderef *src, struct node *dst_node)
 		transform_copy(src_trans, dst_trans);
 		SLIST_INSERT_HEAD(&dst->transforms, dst_trans, transforms);
 	}
+	return (dst);
 }
 
 /*
@@ -621,14 +635,10 @@ map_destroy(void *p)
 		pthread_kill(m->check_th, SIGKILL);
 	}
 #endif
-	if (m->map != NULL) {
+	if (m->map != NULL)
 		map_free_nodes(m);
-	}
-
-	for (i = 0; i < m->nlayers; i++) {
-		map_layer_destroy(&m->layers[i]);
-	}
-	free(m->layers);
+	if (m->layers != NULL)
+		map_free_layers(m);
 
 	pthread_mutex_destroy(&m->lock);
 	pthread_mutexattr_destroy(&m->lockattr);
@@ -752,6 +762,7 @@ noderef_load(int fd, struct object_table *deps, struct node *node,
 	}
 }
 
+/* Load a node. */
 void
 node_load(int fd, struct object_table *deps, struct node *node)
 {
@@ -760,6 +771,7 @@ node_load(int fd, struct object_table *deps, struct node *node)
 	
 	/* Load the node properties. */
 	node->flags = read_uint32(fd);
+	node->flags &= ~(NODE_EPHEMERAL);
 	read_uint32(fd);			/* Pad: v1 */
 	
 	/* Load the node references. */
@@ -772,6 +784,16 @@ node_load(int fd, struct object_table *deps, struct node *node)
 	for (i = 0; i < nrefs; i++) {
 		noderef_load(fd, deps, node, &nref);
 	}
+}
+
+static void
+map_layer_load(int fd, struct map *m, struct map_layer *lay)
+{
+	lay->name = read_string(fd, NULL);
+	lay->visible = (int)read_uint8(fd);
+	lay->xinc = read_sint16(fd);
+	lay->yinc = read_sint16(fd);
+	lay->alpha = read_uint8(fd);
 }
 
 int
@@ -788,10 +810,10 @@ map_load(void *ob, int fd)
 
 	pthread_mutex_lock(&m->lock);
 
-	if (m->map != NULL) {
-		/* Reinitialize the map. */
+	if (m->map != NULL)
 		map_free_nodes(m);
-	}
+	if (m->layers != NULL)
+		map_free_layers(m);
 
 	m->type = (enum map_type)read_uint32(fd);
 	m->mapw = read_uint32(fd);
@@ -801,9 +823,19 @@ map_load(void *ob, int fd)
 	m->tilew = (int)read_uint32(fd);
 	m->tileh = (int)read_uint32(fd);
 	m->zoom = read_uint16(fd);
-	if (ver.minor >= 1) {
+	if (ver.minor >= 1) {				/* Soft-scroll offs */
 		m->ssx = read_sint16(fd);
 		m->ssy = read_sint16(fd);
+	}
+	if (ver.minor >= 2) {				/* Multilayering */
+		int i;
+
+		m->nlayers = read_uint32(fd);
+		debug(DEBUG_STATE, "%d layers\n", m->nlayers);
+		m->layers = emalloc(m->nlayers * sizeof(struct map_layer));
+		for (i = 0; i < m->nlayers; i++) {
+			map_layer_load(fd, m, &m->layers[i]);
+		}
 	}
 
 	debug(DEBUG_STATE,
@@ -924,6 +956,16 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 	buf_pwrite_uint32(buf, nrefs, nrefs_offs);
 }
 
+static void
+map_layer_save(struct fobj_buf *buf, struct map_layer *lay)
+{
+	buf_write_string(buf, lay->name);
+	buf_write_uint8(buf, (Uint8)lay->visible);
+	buf_write_sint16(buf, lay->xinc);
+	buf_write_sint16(buf, lay->yinc);
+	buf_write_uint8(buf, lay->alpha);
+}
+
 int
 map_save(void *p, int fd)
 {
@@ -952,9 +994,17 @@ map_save(void *p, int fd)
 	buf_write_uint32(buf, (Uint32)m->tilew);
 	buf_write_uint32(buf, (Uint32)m->tileh);
 	buf_write_uint16(buf, m->zoom);
-	if (map_ver.minor >= 1) {
+	if (map_ver.minor >= 1) {			/* Soft-scroll offs */
 		buf_write_sint16(buf, m->ssx);
 		buf_write_sint16(buf, m->ssy);
+	}
+	if (map_ver.minor >= 2) {			/* Multilayering */
+		int i;
+
+		buf_write_uint32(buf, m->nlayers);
+		for (i = 0; i < m->nlayers; i++) {
+			map_layer_save(buf, &m->layers[i]);
+		}
 	}
 
 	/* Write the dependencies. */

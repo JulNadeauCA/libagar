@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.66 2003/03/04 22:50:14 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.67 2003/03/04 23:19:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -56,7 +56,7 @@ struct node {
 #endif
 	struct noderefq	 nrefs;		/* Items on this node */
 	Uint32		 flags;
-#define NODE_ORIGIN	0x00001		/* Origin of this map */
+#define NODE_ORIGIN	0x00001		/* Origin (unused) */
 #define NODE_WALK	0x00002		/* Can walk through */
 #define NODE_CLIMB	0x00004		/* Can climb (eg. ladder) */
 #define NODE_SLIP	0x00008		/* Slippery */
@@ -75,7 +75,7 @@ struct node {
 #define NODE_EDGE_ANY	(NODE_EDGE_N|NODE_EDGE_S|NODE_EDGE_W|NODE_EDGE_E| \
 			 NODE_EDGE_NW|NODE_EDGE_NE|NODE_EDGE_SW|NODE_EDGE_SE)
 #define NODE_HAS_ANIM	0x10000		/* Contains an anim? (optimization) */
-#define NODE_EPHEMERAL	NODE_HAS_ANIM
+#define NODE_EPHEMERAL	(NODE_HAS_ANIM|NODE_ORIGIN)
 };
 
 enum map_type {
@@ -86,7 +86,7 @@ enum map_type {
 struct map_layer {
 	char	*name;		/* Identifier */
 	int	 visible;	/* Layer is visible? */
-	int	 xinc, yinc;	/* X/Y increments for rendering */
+	Sint16	 xinc, yinc;	/* X/Y increments for rendering */
 	Uint8	 alpha;		/* Transparency */
 };
 
@@ -106,7 +106,7 @@ struct map {
 	int		  redraw;	/* Redraw (for tile-based mode) */
 
 	struct map_layer *layers;	/* Layer descriptions */
-	int		 nlayers;
+	Uint32		 nlayers;
 
 #if defined(DEBUG) && defined(THREADS)
 	pthread_t	  check_th;	/* Verify map integrity */
@@ -139,7 +139,7 @@ void		 node_save(struct fobj_buf *, struct object_table *,
 void		 node_destroy(struct node *);
 
 void		 node_move_ref(struct noderef *, struct node *, struct node *);
-void		 node_copy_ref(struct noderef *, struct node *);
+struct noderef	*node_copy_ref(struct noderef *, struct node *);
 void		 node_remove_ref(struct node *, struct noderef *);
 void		 node_moveup_ref(struct node *, struct noderef *);
 void		 node_movedown_ref(struct node *, struct noderef *);
