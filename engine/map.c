@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.63 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.64 2002/03/17 11:58:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -178,6 +178,7 @@ node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 			nref->frame = 0;
 			nref->fdelta = 0;
 		}
+		node->flags |= NODE_ANIM;
 		node->nanims++;
 	}
 	nref->xoffs = 0;
