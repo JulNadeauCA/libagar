@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.8 2002/04/10 09:23:36 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.9 2002/04/10 09:52:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -38,7 +38,9 @@
 static struct obvec input_vec = {
 	input_destroy,
 	input_load,
-	input_save
+	input_save,
+	NULL,		/* link */
+	NULL		/* unlink */
 };
 
 static int	keyboard_init(struct input *, int);
