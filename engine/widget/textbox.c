@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.56 2003/05/25 03:58:29 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.57 2003/05/25 03:59:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -58,6 +58,7 @@ const struct widget_ops textbox_ops = {
 
 enum {
 	MOUSE_SCROLL_INCR =	4,
+	KBD_SCROLL_INCR =	4,
 	FRAME_COLOR,
 	FRAME_READONLY_COLOR,
 	TEXT_COLOR,
@@ -135,29 +136,16 @@ textbox_draw(void *p)
 {
 	struct textbox *tbox = p;
 	struct widget_binding *stringb;
-	int i, lx, th, cursdrawn = 0;
-	int x = 0;
-	int y = tbox->ypadding;
+	int i, lx, cursdrawn = 0;
+	int x = 0, y;
 	size_t tlen;
 	char *s;
-	
+
 	if (tbox->label != NULL) {
-		widget_blit(tbox, tbox->label,
-		    0,
+		widget_blit(tbox, tbox->label, 0,
 		    WIDGET(tbox)->h/2 - tbox->label->h/2);
-		x += tbox->label->w;
+		x = tbox->label->w;
 	}
-	if (WIDGET_FOCUSED(tbox)) {
-		x++;
-		y++;
-	}
-	primitives.box(tbox, x, 0,
-	    WIDGET(tbox)->w - x,
-	    WIDGET(tbox)->h,
-	    WIDGET_FOCUSED(tbox) ? -1 : 1,
-	    !tbox->writeable ? WIDGET_COLOR(tbox, FRAME_READONLY_COLOR) :
-		WIDGET_COLOR(tbox, FRAME_COLOR));
-	th = text_font_height(font);
 
 	pthread_mutex_lock(&tbox->text.lock);
 	stringb = widget_binding_get_locked(tbox, "string", &s);
@@ -176,8 +164,20 @@ textbox_draw(void *p)
 		tbox->text.pos = tbox->text.offs;
 		tbox->newx = -1;
 	}
-
-	x += tbox->xpadding;
+drawtext:
+	x = tbox->label->w + tbox->xpadding;
+	y = tbox->ypadding;
+	primitives.box(tbox, x, 0,
+	    WIDGET(tbox)->w - x - 1,
+	    WIDGET(tbox)->h,
+	    WIDGET_FOCUSED(tbox) ? -1 : 1,
+	    tbox->writeable ?
+	        WIDGET_COLOR(tbox, FRAME_COLOR) :
+		WIDGET_COLOR(tbox, FRAME_READONLY_COLOR));
+	if (WIDGET_FOCUSED(tbox)) {
+		x++;
+		y++;
+	}
 	for (i = tbox->text.offs, lx = -1;
 	     i <= tlen;
 	     i++) {
@@ -224,7 +224,8 @@ textbox_draw(void *p)
 	}
 	if (WIDGET_FOCUSED(tbox) && !cursdrawn) {
 		if (tbox->text.pos > i)
-			tbox->text.offs++;
+			tbox->text.offs += KBD_SCROLL_INCR;
+		goto drawtext;
 	}
 
 	/* Move beyond the visible end of the string? */
