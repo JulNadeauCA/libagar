@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.38 2002/02/19 00:48:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.39 2002/02/21 02:18:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -42,7 +42,6 @@
 
 static struct obvec map_vec = {
 	map_destroy,
-	NULL,
 	map_load,
 	map_save,
 	NULL,
@@ -51,24 +50,24 @@ static struct obvec map_vec = {
 
 struct draw {
 	SDL_Surface *s;		/* Source surface */
-	int	x, y;		/* View coordinates */
-	int	flags;		/* Node flags (for map editor) */
+	Uint32	x, y;		/* View coordinates */
+	Uint32	flags;		/* Node flags (for map editor) */
 
 	TAILQ_ENTRY(draw) pdraws; /* Deferred rendering */
 };
 
 TAILQ_HEAD(, draw) deferdraws;	 /* Deferred rendering */
 
-static void	 node_init(struct node *, int);
+static void	 node_init(struct node *, Uint32);
 static void	 node_destroy(struct node *);
 static void	 map_draw(struct map *);
 static void	 map_animate(struct map *);
 static void	*map_draw_th(void *);
 
 void
-map_allocnodes(struct map *m, int w, int h, int tilew, int tileh)
+map_allocnodes(struct map *m, Uint32 w, Uint32 h, Uint32 tilew, Uint32 tileh)
 {
-	int i, x, y;
+	Uint32 i, x, y;
 
 	m->mapw = w;
 	m->maph = h;
@@ -103,7 +102,7 @@ map_allocnodes(struct map *m, int w, int h, int tilew, int tileh)
 void
 map_freenodes(struct map *m)
 {
-	int x, y;
+	Uint32 x, y;
 
 	dprintf("freeing %dx%d nodes from %s\n",
 	    m->mapw, m->maph, m->obj.name);
@@ -118,7 +117,7 @@ map_freenodes(struct map *m)
 }
 
 struct map *
-map_create(char *name, char *desc, int flags)
+map_create(char *name, char *desc, Uint32 flags)
 {
 	struct map *m;
 
@@ -189,15 +188,15 @@ map_unfocus(struct map *m)
  * Must be called on a locked map.
  */
 struct noderef *
-node_addref(struct node *node, void *ob, int offs, int rflags)
+node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 {
 	struct noderef *nref;
 
 	nref = (struct noderef *)emalloc(sizeof(struct noderef));
 	nref->pobj = ob;
 	nref->offs = offs;
-	nref->flags = rflags;
-	if (rflags & MAPREF_ANIM) {
+	nref->flags = flags;
+	if (flags & MAPREF_ANIM) {
 		nref->frame = 0;
 		nref->fwait = 0;
 		node->nanims++;
@@ -275,9 +274,10 @@ node_delref(struct node *node, struct noderef *nref)
  * Must be called on a locked map.
  */
 void
-map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
+map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
+    Uint32 rflags)
 {
-	int x = 0, y;
+	Uint32 x = 0, y;
 
 	/* Initialize the nodes. */
 	for (y = 0; y < m->maph; y++) {
@@ -285,7 +285,7 @@ map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 			struct node *node = &m->map[x][y];
 		
 			node_destroy(node);
-			node_init(node, flags);
+			node_init(node, nflags);
 	
 			if (ob != NULL) {
 				node_addref(node, ob, offs, rflags);
@@ -314,7 +314,7 @@ map_destroy(void *p)
 
 /* Must be called on a locked map. */
 static void
-node_init(struct node *node, int flags)
+node_init(struct node *node, Uint32 flags)
 {
 	memset(node, 0, sizeof(struct node));
 	node->flags = flags;
@@ -338,7 +338,7 @@ node_destroy(struct node *node)
 
 /* Draw a sprite at any given location. */
 void
-map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
+map_plot_sprite(struct map *m, SDL_Surface *s, Uint32 x, Uint32 y)
 {
 	static SDL_Rect rs, rd;
 
@@ -372,8 +372,8 @@ map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 static void
 map_animate(struct map *m)
 {
-	int x, y;
-	int vx, vy;
+	static Uint32 x, y;
+	static Uint32 vx, vy;
 
 	TAILQ_INIT(&deferdraws);
 
@@ -389,7 +389,7 @@ map_animate(struct map *m)
 			static struct node *node;
 			static struct noderef *nref;
 			static SDL_Surface *src;
-			static int rx, ry;
+			static Uint32 rx, ry;
 
 			node = &m->map[x][y];
 
@@ -499,8 +499,8 @@ map_animate(struct map *m)
 static void
 map_draw(struct map *m)
 {
-	int x, y;
-	int vx, vy;
+	static Uint32 x, y;
+	static Uint32 vx, vy;
 
 	pthread_mutex_lock(&m->lock);
 
@@ -551,15 +551,17 @@ map_draw(struct map *m)
 /*
  * Return the map entry reference for ob:offs, or the first match
  * for ob if offs is -1.
+ *
+ * Must be called on a locked map.
  */
 struct noderef *
-node_findref(struct node *node, void *ob, int offs)
+node_findref(struct node *node, void *ob, Sint32 offs, Uint32 flags)
 {
 	struct noderef *nref;
 
-	/* XXX bsearch */
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
-		if (nref->pobj == ob && (nref->offs == offs || offs < 0)) {
+		if ((nref->pobj == ob && (nref->flags & flags)) &&
+		    (nref->offs == offs || offs < 0)) {
 			return (nref);
 		}
 	}
@@ -575,8 +577,8 @@ map_load(void *ob, int fd)
 {
 	char magic[9];
 	struct map *m = (struct map *)ob;
-	int vermin, vermaj;
-	int x, y, refs = 0;
+	Uint32 vermin, vermaj;
+	Uint32 x, y, refs = 0;
 
 	/* Verify the signature and version major. */
 	if (read(fd, magic, 10) != 10)
@@ -610,7 +612,7 @@ map_load(void *ob, int fd)
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[x][y];
-			int i, nnrefs;
+			Uint32 i, nnrefs;
 			
 			/* Read the map entry flags. */
 			node->flags = fobj_read_uint32(fd);
@@ -626,13 +628,13 @@ map_load(void *ob, int fd)
 				struct object *pobj;
 				struct noderef *nref;
 				char *pobjstr;
-				int offs, frame, rflags;
+				Uint32 offs, frame, flags;
 
 				/* Read object:offset reference. */
 				pobjstr = fobj_read_string(fd);
 				offs = fobj_read_uint32(fd);
 				frame = fobj_read_uint32(fd);
-				rflags = fobj_read_uint32(fd);
+				flags = fobj_read_uint32(fd);
 				pobj = object_strfind(pobjstr);
 
 				if (pobj == NULL) {
@@ -641,7 +643,7 @@ map_load(void *ob, int fd)
 				}
 				free(pobjstr);
 
-				nref = node_addref(node, pobj, offs, rflags);
+				nref = node_addref(node, pobj, offs, flags);
 				nref->frame = frame;
 
 				refs++;
@@ -670,7 +672,7 @@ map_save(void *ob, int fd)
 {
 	struct map *m = (struct map *)ob;
 	struct fobj_buf *buf;
-	int x = 0, y, totrefs = 0;
+	Uint32 x = 0, y, totrefs = 0;
 
 	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
 
@@ -691,7 +693,7 @@ map_save(void *ob, int fd)
 			off_t soffs;
 			struct node *node = &m->map[x][y];
 			struct noderef *nref;
-			int nrefs = 0;
+			Uint32 nrefs = 0;
 			
 			/* Write the node flags. */
 			fobj_bwrite_uint32(buf, node->flags & ~(NODE_DONTSAVE));
