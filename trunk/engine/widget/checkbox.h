@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.h,v 1.6 2002/06/01 09:29:28 vedge Exp $	*/
+/*	$Csoft: checkbox.h,v 1.7 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct checkbox {
@@ -19,8 +19,8 @@ struct checkbox {
 	} justify;
 };
 
-struct checkbox	*checkbox_new(struct region *, char *, int);
-void		 checkbox_init(struct checkbox *, char *, int);
+struct checkbox	*checkbox_new(struct region *, char *, int, int);
+void		 checkbox_init(struct checkbox *, char *, int, int);
 void		 checkbox_destroy(void *);
 
 void	 checkbox_draw(void *);
