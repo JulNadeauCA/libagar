@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.16 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.17 2002/11/28 06:32:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -72,11 +72,11 @@ radio_init(struct radio *rad, char **items, int selitem)
 	char *s;
 	int maxw;
 
-	widget_init(&rad->wid, "radio", "widget", &radio_ops, -1, -1);
+	widget_init(&rad->wid, "radio", &radio_ops, -1, -1);
 
-	widget_map_color(rad, INSIDE_COLOR, "radio-inside", 250, 250, 250);
-	widget_map_color(rad, OUTSIDE_COLOR, "radio-outside", 150, 150, 200);
-	widget_map_color(rad, TEXT_COLOR, "radio-text", 240, 240, 240);
+	widget_map_color(rad, INSIDE_COLOR, "inside", 250, 250, 250);
+	widget_map_color(rad, OUTSIDE_COLOR, "outside", 150, 150, 200);
+	widget_map_color(rad, TEXT_COLOR, "text", 240, 240, 240);
 
 	rad->items = items;
 	rad->selitem = 0;

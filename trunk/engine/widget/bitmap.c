@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.7 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.8 2002/12/03 04:09:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -59,7 +59,7 @@ bitmap_new(struct region *reg, SDL_Surface *surface, int w, int h)
 void
 bitmap_init(struct bitmap *bitmap, SDL_Surface *surface, int w, int h)
 {
-	widget_init(&bitmap->wid, "bitmap", "widget", &bitmap_ops, w, h);
+	widget_init(&bitmap->wid, "bitmap", &bitmap_ops, w, h);
 
 	bitmap->surface = surface;
 	bitmap->surface_s = NULL;
