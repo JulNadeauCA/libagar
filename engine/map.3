@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.7 2002/02/17 07:46:29 vedge Exp $
+.\"	$Csoft: map.3,v 1.8 2002/03/31 04:40:57 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\"
@@ -33,74 +33,103 @@
 .Os
 .Sh NAME
 .Nm map
-.Nd AGAR map implementation
+.Nd agar map
 .Sh SYNOPSIS
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
 An agar map is an array of node structures.
 Each node may contain a stack of node reference structures,
 which point to arbitrary structures and an offset within them.
+Flags may alter the meaning of the offset.
 .Pp
-.Sh ENGINE
+.Sh INITIALIZATION
 .nr nS 1
 .Ft "struct map *"
-.Fn map_create "char *name" "char *descr" "int flags" "int width" "int height"
+.Fn map_init "struct map *m" "char *name" "char *media" "Uint32 flags"
 .Pp
 .Ft void
 .Fn map_destroy "struct map *map"
 .Pp
-.Ft "int"
-.Fn map_focus "struct map *map"
+.Ft int
+.Fn map_load "struct map *map" "int fd"
 .Pp
-.Ft "int"
-.Fn map_unfocus "struct map *map"
+.Ft int
+.Fn map_save "struct map *map" "int fd"
 .Pp
+.Ft void
+.Fn map_clean "struct map *map" "struct object *ob" "Uint32 offs" \
+              "Uint32 nflags" "Uint32 rflags"
+.Pp
+.Ft void
+.Fn map_allocnodes "struct map *map" "Uint32 w" "Uint32 h"
+.Pp
+.Ft void
+.Fn map_freenodes "struct map *map"
 .nr nS 0
 .Pp
-.Fn map_create
-allocates a map, and
+The
+.Fn map_init
+function initializes a map identified by the string
+.Fa name .
+The
+.Fa media
+argument, if non-null, specifies an archive from which to load audio and
+video data.
+The
+.Fa flags
+argument is currently ignored.
+.Pp
+The
 .Fn map_destroy
-frees a map.
-.Fn map_focus
+function frees resources allocated by a map.
+.Pp
+The
+.Fn map_load
+function loads a map from file descriptor
+.Fa fd .
+The
+.Fn map_save
+function saves a map to file descriptor
+.Fa fd .
+The world must be locked, and the map must not be locked by the caller thread
+when
+.Fn map_load
 and
-.Fn map_unfocus
-toggles the visibility of the map's sprites and animations.
-.Sh MANIPULATING REFERENCES
-.nr nS 1
+.Fn map_save
+are called.
 .Pp
-.Ft "struct noderef *"
-.Fn node_addref "struct node *node" "struct object *obj" \
-"int offs" "int rflags"
-.Pp
-.Ft "int"
-.Fn node_delref "struct node *node" "struct object *obj" "int offs"
-.Pp
-.Ft "struct noderef *"
-.Fn node_findref "struct node *node" "struct object *obj" "int offs"
-.Pp
-.nr nS 0
-.Pp
-.Fn node_addref
-adds a reference to
-.Fa node
-for the element
+The
+.Fn map_clean
+function reinitializes all nodes on
+.Fa map
+and add a reference to offset
 .Fa offs
-of the
-.Fa obj
-structure.
-.Fn node_delref
-removes any reference to the element
-.Fa offs
-of the
-.Fa obj
-structure on
-.Fa node .
-.Fn node_findref
-returns any reference to the element
-.Fa offs
-of the
-.Fa obj
-structure on
-.Fa node .
+of object
+.Fa ob
+with the node flags set to
+.Fa nflags
+and the node reference flags set to
+.Fa rflags .
+.Fn map_clean
+must be called when the map
+.Fa m
+is locked.
+.Pp
+The
+.Fn map_allocnodes
+function allocates
+.Fa w
+x
+.Fa h
+nodes.
+The
+.Fn map_freenodes
+function releases nodes allocated for map
+.Fa map .
+The map must be locked when
+.Fn map_allocnodes
+or
+.Fn map_freenodes
+is called.
 .Sh SEE ALSO
 .Xr agar 3
