@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.12 2005/03/11 05:28:41 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.13 2005/03/11 08:59:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 #include <engine/widget/menu.h>
 #include <engine/widget/bitmap.h>
 #include <engine/widget/label.h>
+#include <engine/widget/separator.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -59,6 +60,8 @@ static TAILQ_HEAD(,objent) dobjs;
 static TAILQ_HEAD(,objent) gobjs;
 static int edit_on_create = 1;
 static void *current_pobj = NULL;
+
+int objmgr_exiting = 0;
 
 static void
 create_obj(int argc, union evarg *argv)
@@ -591,7 +594,7 @@ save_changes(int argc, union evarg *argv)
 	struct window *dlg_win = widget_parent_window(argv[0].p);
 	struct object *obj = argv[1].p;
 	int then_exit = argv[2].i;
-
+	
 	if (object_save(obj) == -1) {
 		text_msg(MSG_ERROR, "%s: %s", obj->name, error_get());
 		return;
@@ -602,6 +605,7 @@ save_changes(int argc, union evarg *argv)
 	if (then_exit) {
 		SDL_Event nev;
 
+		objmgr_exiting = 0;
 		nev.type = SDL_USEREVENT;
 		SDL_PushEvent(&nev);
 	} else {
@@ -620,12 +624,25 @@ discard_changes(int argc, union evarg *argv)
 	if (then_exit) {
 		SDL_Event nev;
 
+		objmgr_exiting = 0;
 		nev.type = SDL_USEREVENT;
 		SDL_PushEvent(&nev);
 	} else {
 		text_tmsg(MSG_INFO, 500, _("Ignoring modifications to `%s'."),
 		    obj->name);
 	}
+}
+
+static void
+cancel_exit(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+	int then_exit = argv[2].i;
+
+	if (then_exit) {
+		objmgr_exiting = 0;
+	}
+	view_detach(win);
 }
 
 /*
@@ -645,11 +662,11 @@ objmgr_changed_dlg(void *obj, int then_exit)
 		return;
 	}
 	window_set_caption(win, _("Save changes?"));
-	window_set_spacing(win, 0);
 
 	label_new(win, LABEL_STATIC, _("The state of `%s' has changed."),
 	    OBJECT(obj)->name);
-	
+	separator_new(win, SEPARATOR_HORIZ);
+
 	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
 	box_set_spacing(bo, 0);
 	box_set_padding(bo, 0);
@@ -669,7 +686,8 @@ objmgr_changed_dlg(void *obj, int then_exit)
 	box_set_padding(bo, 0);
 	{
 		b = button_new(bo, _("Cancel"));
-		event_new(b, "button-pushed", window_generic_detach, "%p", win);
+		event_new(b, "button-pushed", cancel_exit, "%p,%i", win,
+		    then_exit);
 		WIDGET(b)->flags |= WIDGET_WFILL;
 	}
 
