@@ -1,4 +1,4 @@
-.\"	$Csoft: world.3,v 1.1 2002/09/16 15:55:08 vedge Exp $
+.\"	$Csoft: event.3,v 1.1 2002/09/19 22:07:13 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -57,7 +57,7 @@ typedef union evarg {
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "void"
-.Fn event_new "void *obj" "char *event" "int flags" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
+.Fn event_new "void *obj" "char *event" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn event_post "void *obj" "char *event" "const char *fmt" "..."
@@ -83,12 +83,6 @@ argument is a
 style format string.
 The following arguments will be inserted at the start of the evarg
 array.
-.Fa flags
-may include:
-.Pp
-.Bd -literal
-#define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
-.Ed
 .Pp
 The
 .Fn event_post
@@ -96,12 +90,6 @@ function invokes the event handler matching the event identified by the
 null-terminated
 .Fa event
 string, if any.
-If the event handler has the
-.Dv EVENT_ASYNC
-flag set, a new thread is created.
-Such asynchronous event handlers should ensure that the object in question
-still exists after having acquired
-.Va world->lock .
 The
 .Fa fmt
 argument is a
