@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: units.c,v 1.1 2003/11/15 02:03:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -29,6 +29,9 @@
 #include <engine/engine.h>
 
 #include "units.h"
+
+/* Default unit */
+const struct unit identity_unit = { "", "", 1 };
 
 /* Units of length/distance */
 const struct unit length_units[] = {
