@@ -1,4 +1,4 @@
-# $Csoft: csoft.lib.mk,v 1.42 2004/03/17 03:42:09 vedge Exp $
+# $Csoft: csoft.lib.mk,v 1.43 2004/03/17 03:45:57 vedge Exp $
 
 # Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -287,7 +287,7 @@ install-lib:
 
 deinstall-lib:
 	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
-	    if [ "${LIB_STATIC}" = "Yes" ]; then
+	    if [ "${LIB_STATIC}" = "Yes" ]; then \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
 	        ${SUDO} ${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a; \
 	    fi; \
