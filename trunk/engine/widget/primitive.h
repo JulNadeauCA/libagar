@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.h,v 1.8 2002/07/24 04:54:53 vedge Exp $	*/
+/*	$Csoft: primitive.h,v 1.9 2002/07/27 07:01:14 vedge Exp $	*/
 /*	Public domain	*/
 
 struct primitive_ops {
@@ -13,4 +13,10 @@ struct primitive_ops {
 };
 
 extern struct primitive_ops primitives;
+
+extern const char *primitive_box_sw[];
+extern const char *primitive_frame_sw[];
+extern const char *primitive_circle_sw[];
+extern const char *primitive_line_sw[];
+extern const char *primitive_square_sw[];
 
