@@ -1,4 +1,4 @@
-.\"	$Csoft: textbox.3,v 1.21 2003/09/17 05:31:47 vedge Exp $
+.\"	$Csoft: textbox.3,v 1.22 2003/10/11 03:32:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -104,6 +104,9 @@ The
 function uses
 .Xr vsnprintf 3
 to overwrite the contents of the text buffer.
+If the
+.Fa fmt
+argument is NULL, a NUL string is assigned instead.
 .Pp
 The
 .Fn textbox_string
