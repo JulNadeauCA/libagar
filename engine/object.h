@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.111 2004/05/10 02:42:46 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.112 2004/05/15 06:07:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -87,6 +87,18 @@ enum object_page_item {
 	OBJECT_AUDIO,		/* Shared audio samples */
 	OBJECT_DATA		/* Object data */
 };
+
+#define OBJECT_INITIALIZER(ob, type, name, ops) {		\
+		(type), (name), "/world", (ops), 0,		\
+		PTHREAD_MUTEX_INITIALIZER,			\
+		NULL, NULL, NULL, 0, NULL, NULL, 0, 0, NULL,	\
+		TAILQ_HEAD_INITIALIZER((ob)->events),		\
+		TAILQ_HEAD_INITIALIZER((ob)->props),		\
+		CIRCLEQ_HEAD_INITIALIZER((ob)->timeouts),	\
+		TAILQ_HEAD_INITIALIZER((ob)->deps),		\
+		TAILQ_HEAD_INITIALIZER((ob)->children),		\
+		NULL						\
+	}
 
 #define OBJECT(ob)		((struct object *)(ob))
 #define OBJECT_TYPE(ob, t)	(strcmp(OBJECT(ob)->type, (t)) == 0)
