@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.20 2002/11/13 23:13:32 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.21 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,7 +32,7 @@
 #include "input.h"
 
 static TAILQ_HEAD(, input) inputs;
-static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t inputs_lock = { PTHREAD_MUTEX_INITIALIZER };
 
 struct input *
 input_new(int type, int index)

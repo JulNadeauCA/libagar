@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.108 2002/11/22 05:41:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.109 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -92,7 +92,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 	struct window *win;
 	va_list args;
 	char *name;
-	static pthread_mutex_t genlock = PTHREAD_MUTEX_INITIALIZER;
+	static pthread_mutex_t genlock = { PTHREAD_MUTEX_INITIALIZER };
 	static int genxoffs = -1, genyoffs = -1;
 
 	if (name_fmt != NULL) {
@@ -174,7 +174,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	} else {						/* Generic */
 		static int curwindow = 0;
 		static pthread_mutex_t curwindow_lock =
-		    PTHREAD_MUTEX_INITIALIZER;
+		    { PTHREAD_MUTEX_INITIALIZER };
 
 		pthread_mutex_lock(&curwindow_lock);
 		curwindow++;

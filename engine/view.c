@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.81 2002/11/15 01:59:52 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.82 2002/11/22 08:56:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -55,7 +55,7 @@ struct cached_surface {
 	TAILQ_ENTRY(cached_surface) surfaces;
 };
 static TAILQ_HEAD(, cached_surface) cached_surfaces;
-static pthread_mutex_t cached_surfaces_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t cached_surfaces_lock = { PTHREAD_MUTEX_INITIALIZER };
 
 static void	free_cached_surface(struct cached_surface *);
 

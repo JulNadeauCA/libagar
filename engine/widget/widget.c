@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.27 2002/11/19 08:38:49 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.28 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -37,7 +37,7 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
     int rw, int rh)
 {
 	static Uint32 widid = 0;
-	static pthread_mutex_t widid_lock = PTHREAD_MUTEX_INITIALIZER;
+	static pthread_mutex_t widid_lock = { PTHREAD_MUTEX_INITIALIZER };
 	char *widname;
 
 	pthread_mutex_lock(&widid_lock);
