@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.9 2002/02/18 07:50:32 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.11 2002/02/19 01:46:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -195,7 +195,6 @@ world_destroy(void *p)
 	free(wo->datapath);
 	free(wo->udatadir);
 	free(wo->sysdatadir);
-	free(wo);
 	
 	return (0);
 }
