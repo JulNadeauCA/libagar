@@ -1,6 +1,7 @@
-/*	$Csoft: prop.h,v 1.9 2003/02/25 01:26:30 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.10 2003/02/25 03:58:07 vedge Exp $	*/
 /*	Public domain	*/
 
+#include <config/floating_point.h>
 #include <config/have_ieee754.h>
 #include <config/have_long_double.h>
 
@@ -32,8 +33,10 @@ struct prop {
 		Sint16	 s16;
 		Uint32	 u32;
 		Sint32	 s32;
+#ifdef FLOATING_POINT
 		float	 	f;
 		double	 	d;
+#endif
 #ifdef USE_LONG_DOUBLE
 		long double	ld;
 #endif
@@ -56,8 +59,10 @@ struct prop	*prop_set_uint16(void *, char *, Uint16);
 struct prop	*prop_set_sint16(void *, char *, Sint16);
 struct prop	*prop_set_uint32(void *, char *, Uint32);
 struct prop	*prop_set_sint32(void *, char *, Sint32);
+#ifdef FLOATING_POINT
 struct prop	*prop_set_float(void *, char *, float);
 struct prop	*prop_set_double(void *, char *, double);
+#endif
 #ifdef USE_LONG_DOUBLE
 struct prop	*prop_set_long_double(void *, char *, long double);
 #endif
@@ -73,8 +78,10 @@ Uint16	 	 prop_get_uint16(void *, char *);
 Sint16	 	 prop_get_sint16(void *, char *);
 Uint32	 	 prop_get_uint32(void *, char *);
 Sint32	 	 prop_get_sint32(void *, char *);
+#ifdef FLOATING_POINT
 float		 prop_get_float(void *, char *);
 double		 prop_get_double(void *, char *);
+#endif
 #ifdef USE_LONG_DOUBLE
 long double	 prop_get_long_double(void *, char *);
 #endif

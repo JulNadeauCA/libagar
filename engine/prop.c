@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.22 2003/02/25 03:58:07 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.23 2003/02/26 13:02:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -26,6 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/floating_point.h>
 #include <config/have_ieee754.h>
 
 #include "compat/vasprintf.h"
@@ -108,6 +109,7 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		nprop->data.s32 = va_arg(ap, Sint32);
 		debug(DEBUG_SET, "s32 %s: %d\n", key, nprop->data.s32);
 		break;
+#ifdef FLOATING_POINT
 	case PROP_FLOAT:
 		nprop->data.f = (float)va_arg(ap, double);	/* Promoted */
 		debug(DEBUG_SET, "float %s: %f\n", key, nprop->data.f);
@@ -116,12 +118,13 @@ prop_set(void *p, char *key, enum prop_type type, ...)
 		nprop->data.d = va_arg(ap, double);
 		debug(DEBUG_SET, "double %s: %f\n", key, nprop->data.d);
 		break;
-#ifdef USE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 	case PROP_LONG_DOUBLE:
 		nprop->data.ld = va_arg(ap, long double);
 		debug(DEBUG_SET, "long double %s: %Lf\n", key, nprop->data.ld);
 		break;
-#endif
+# endif
+#endif /* FLOATING_POINT */
 	case PROP_STRING:
 		nprop->data.s = va_arg(ap, char *);
 		debug(DEBUG_SET, "string %s: %s\n", key, nprop->data.s);
@@ -188,6 +191,7 @@ prop_set_sint32(void *ob, char *key, Sint32 i)
 	return (prop_set(ob, key, PROP_SINT32, i));
 }
 
+#ifdef FLOATING_POINT
 struct prop *
 prop_set_float(void *ob, char *key, float f)
 {
@@ -200,13 +204,14 @@ prop_set_double(void *ob, char *key, double d)
 	return (prop_set(ob, key, PROP_DOUBLE, d));
 }
 
-#ifdef USE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 struct prop *
 prop_set_long_double(void *ob, char *key, long double ld)
 {
 	return (prop_set(ob, key, PROP_LONG_DOUBLE, ld));
 }
-#endif
+# endif
+#endif /* FLOATING_POINT */
 
 struct prop *
 prop_set_string(void *ob, char *key, char *fmt, ...)
@@ -275,17 +280,19 @@ prop_get(void *obp, char *key, enum prop_type t, void *p)
 			case PROP_SINT32:
 				*(Sint32 *)p = prop->data.s32;
 				break;
+#ifdef FLOATING_POINT
 			case PROP_FLOAT:
 				*(float *)p = prop->data.f;
 				break;
 			case PROP_DOUBLE:
 				*(double *)p = prop->data.d;
 				break;
-#ifdef USE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 			case PROP_LONG_DOUBLE:
 				*(long double *)p = prop->data.ld;
 				break;
-#endif
+# endif
+#endif /* FLOATING_POINT */
 			case PROP_STRING:
 				/* Strdup'd for thread safety. */
 				*(char **)p = Strdup(prop->data.s);
@@ -396,6 +403,7 @@ prop_get_sint32(void *p, char *key)
 	return (i);
 }
 
+#ifdef FLOATING_POINT
 float
 prop_get_float(void *p, char *key)
 {
@@ -418,7 +426,7 @@ prop_get_double(void *p, char *key)
 	return (d);
 }
 
-#ifdef USE_LONG_DOUBLE
+# ifdef USE_LONG_DOUBLE
 long double
 prop_get_long_double(void *p, char *key)
 {
@@ -429,7 +437,8 @@ prop_get_long_double(void *p, char *key)
 	}
 	return (ld);
 }
-#endif
+# endif
+#endif /* FLOATING_POINT */
 
 char *
 prop_get_string(void *p, char *key)
@@ -505,7 +514,7 @@ prop_load(void *p, int fd)
 			prop_set_int(ob, key, (int)read_sint32(fd));
 			break;
 		/* XXX vax floating point */
-#ifdef HAVE_IEEE754
+#if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 		case PROP_FLOAT:
 			prop_set_float(ob, key, read_float(fd));
 			break;
@@ -517,7 +526,7 @@ prop_load(void *p, int fd)
 			prop_set_long_double(ob, key, read_long_double(fd));
 			break;
 # endif
-#endif
+#endif /* FLOATING_POINT and HAVE_IEEE754 */
 		case PROP_STRING:
 			{
 				char *sd;
@@ -588,7 +597,7 @@ prop_save(void *p, int fd)
 			buf_write_sint32(buf, (Sint32)prop->data.i);
 			break;
 		/* XXX vax floating point */
-#ifdef HAVE_IEEE754
+#if defined(FLOATING_POINT) && defined(HAVE_IEEE754)
 		case PROP_FLOAT:
 			buf_write_float(buf, prop->data.f);
 			break;
@@ -600,7 +609,7 @@ prop_save(void *p, int fd)
 			buf_write_long_double(buf, prop->data.ld);
 			break;
 # endif
-#endif
+#endif /* FLOATING_POINT and HAVE_IEEE754 */
 		case PROP_STRING:
 			buf_write_string(buf, prop->data.s);
 			break;
