@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.4 2004/04/26 07:04:06 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.5 2004/04/27 01:29:13 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -60,7 +60,7 @@ enum {
 	VGTRIANGLES_ICON,
 	VGCIRCLES_ICON,
 	VGBEZIER_CURVE_ICON,
-	VGRGB_ICON,
+	VGBLOCK_ICON,
 
 	SNAP_FREE_ICON,
 	SNAP_RINT_ICON,
