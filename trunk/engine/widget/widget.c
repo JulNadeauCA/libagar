@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.90 2004/09/16 04:06:10 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.91 2004/09/18 06:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -763,6 +763,30 @@ widget_map_color(void *p, int ind, const char *name, Uint8 r, Uint8 g, Uint8 b,
 		wid->ncolors = ind+1;
 }
 
+void
+widget_inherit_color(void *dp, int di, const char *name, void *sp)
+{
+	struct widget *sw = sp;
+	struct widget *dw = dp;
+	int si;
+
+#ifdef DEBUG
+	if (di >= WIDGET_COLORS_MAX)
+		fatal("color stack overflow");
+#endif
+	for (si = 0; si < sw->ncolors; si++) {
+		if (strcmp(sw->color_names[si], name) == 0) {
+			dw->colors[di] = sw->colors[si];
+			strlcpy(dw->color_names[di], sw->color_names[si],
+			    sizeof(dw->color_names[di]));
+			if (di >= dw->ncolors) {
+				dw->ncolors = di+1;
+			}
+			break;
+		}
+	}
+}
+
 /*
  * Register a surface with the given widget. In OpenGL mode, generate
  * a texture as well. The surface is freed as the widget is destroyed.
@@ -913,10 +937,11 @@ widget_blit(void *p, SDL_Surface *srcsu, int x, int y)
  * at coordinates relative to the widget; clipping is done.
  */
 void
-widget_blit2(void *p, int name, int x, int y)
+widget_blit_from(void *p, void *srcp, int name, int x, int y)
 {
 	struct widget *wid = p;
-	SDL_Surface *su = wid->surfaces[name];
+	struct widget *srcwid = srcp;
+	SDL_Surface *su = srcwid->surfaces[name];
 	SDL_Rect rd;
 
 	if (name == -1 || su == NULL)
@@ -929,8 +954,8 @@ widget_blit2(void *p, int name, int x, int y)
 
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
-		GLuint texture = wid->textures[name];
-		GLfloat *texcoord = &wid->texcoords[name*4];
+		GLuint texture = srcwid->textures[name];
+		GLfloat *texcoord = &srcwid->texcoords[name*4];
 		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
 
 #ifdef DEBUG
@@ -1043,6 +1068,31 @@ widget_focus(void *p)
 	} while ((pwid = OBJECT(pwid)->parent) != NULL);
 }
 
+/* Evaluate whether a given widget is at least partially visible. */
+/* TODO optimize on a per window basis; partial occlusion. */
+static __inline__ int
+widget_occulted(struct widget *wid)
+{
+	struct window *owin;
+	struct window *wwin;
+
+	if ((wwin = object_find_parent(wid, NULL, "window")) == NULL ||
+	    (owin = TAILQ_NEXT(wwin, windows)) == NULL) {
+		return (0);
+	}
+	for (; owin != TAILQ_END(&view->windows);
+	     owin = TAILQ_NEXT(owin, windows)) {
+		if (owin->visible &&
+		    wid->cx > WIDGET(owin)->x &&
+		    wid->cy > WIDGET(owin)->y &&
+		    wid->cx+wid->w < WIDGET(owin)->x+WIDGET(owin)->w &&
+		    wid->cy+wid->h < WIDGET(owin)->y+WIDGET(owin)->h) {
+			return (1);
+		}
+	}
+	return (0);
+}
+
 /*
  * Render a widget and its descendents, recursively.
  * The view must be locked.
@@ -1053,7 +1103,8 @@ widget_draw(void *p)
 	struct widget *wid = p;
 	struct widget *cwid;
 
-	if (WIDGET_OPS(wid)->draw != NULL) {
+	if (WIDGET_OPS(wid)->draw != NULL &&
+	    !widget_occulted(wid)) {
 		SDL_Rect clip_save;
 
 		if (wid->flags & WIDGET_CLIPPING) {
