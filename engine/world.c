@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.32 2002/05/19 14:32:54 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.33 2002/05/28 06:03:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -52,31 +52,6 @@ static const struct object_ops world_ops = {
 	world_detach
 };
 
-char *
-savepath(char *obname, const char *suffix)
-{
-	struct stat sta;
-	char *p, *last;
-	char *datapath, *datapathp, *path;
-
-	path = emalloc((size_t)FILENAME_MAX);
-	datapathp = datapath = strdup(world->datapath);
-
-	for (p = strtok_r(datapath, ":;", &last);
-	     p != NULL;
-	     p = strtok_r(NULL, ":;", &last)) {
-		sprintf(path, "%s/%s.%s", p, obname, suffix);
-		if (stat(path, &sta) == 0) {
-			free(datapathp);
-			return (path);
-		}
-	}
-	free(datapathp);
-	free(path);
-	dprintf("%s.%s not in %s\n", obname, suffix, world->datapath);
-	return (NULL);
-}
-
 void
 world_init(struct world *wo, char *name)
 {
@@ -110,6 +85,7 @@ world_init(struct world *wo, char *name)
 	
 	object_init(&wo->obj, "world", name, name, OBJ_ART, &world_ops);
 	wo->curmap = NULL;
+	wo->curview = NULL;
 	wo->nobjs = 0;
 	SLIST_INIT(&wo->wobjsh);
 	pthread_mutex_init(&wo->lock, NULL);
