@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.54 2002/03/05 18:53:24 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.55 2002/03/06 13:32:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -60,9 +60,6 @@ struct draw {
 
 static void	 node_init(struct node *, Uint32);
 static void	 node_destroy(struct node *);
-static void	 map_draw(struct map *);
-static void	 map_animate(struct map *);
-static void	*map_draw_th(void *);
 
 /*
  * Allocate nodes for the given map geometry.
@@ -128,32 +125,12 @@ map_create(char *name, char *desc, Uint32 flags)
 	sprintf(m->obj.saveext, "m");
 	m->flags = flags;
 	m->view = mainview;
+	m->fps = 100;
 	if (pthread_mutex_init(&m->lock, NULL) != 0) {
 		return (NULL);
 	}
 
 	return (m);
-}
-
-static void *
-map_draw_th(void *p)
-{
-	struct map *m = (struct map *)p;
-
-	map_draw(m);
-
-	for (map_draw(m); (m->flags & MAP_FOCUSED); SDL_Delay(2)) {
-		if (pthread_mutex_trylock(&m->lock) == 0) {
-			map_animate(m);
-			if (m->redraw) {
-				m->redraw = 0;
-				map_draw(m);
-			}
-			pthread_mutex_unlock(&m->lock);
-		}
-	}
-
-	return (NULL);
 }
 
 int
@@ -162,11 +139,6 @@ map_focus(struct map *m)
 	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
 	world->curmap = m;
-
-	if (pthread_create(&m->draw_th, NULL, map_draw_th, m) != 0) {
-		dperror("draw_th");
-		return (-1);
-	}
 
 	return (0);
 }
@@ -198,9 +170,12 @@ node_addref(struct node *node, void *ob, Uint32 offs, Uint32 flags)
 	nref->pobj = (struct object *)ob;
 	nref->offs = offs;
 	nref->flags = flags;
+
 	if (flags & MAPREF_ANIM) {
-		nref->frame = 0;
-		nref->fwait = 0;
+		if (flags & MAPREF_ANIM_INDEPENDENT) {
+			nref->frame = 0;
+			nref->fdelta = 0;
+		}
 		node->nanims++;
 	}
 	nref->xoffs = 0;
@@ -346,30 +321,6 @@ node_destroy(struct node *node)
 	TAILQ_INIT(&node->nrefsh);
 }
 
-/* Draw a sprite at any given location. */
-void
-map_plot_sprite(struct map *m, SDL_Surface *s, Uint32 x, Uint32 y)
-{
-	static SDL_Rect rd;
-
-	rd.w = s->w;
-	rd.h = s->h;
-	if (m->flags & MAP_VARTILEGEO) {
-		/* The sprite size should be a multiple of the tile size. */
-		/* XXX math */
-		if (rd.w > m->tilew) {
-			x -= (s->w / m->tilew) / 2;
-		}
-		if (rd.h > m->tileh) {
-			y -= (s->h / m->tileh) / 2;
-		}
-	}
-	rd.x = x;
-	rd.y = y;
-
-	SDL_BlitSurface(s, NULL, m->view->v, &rd);
-}
-
 static __inline__ void
 map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 {
@@ -384,14 +335,34 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 			static struct anim *anim;
 
 			anim = nref->pobj->anims[nref->offs];
-			src = anim->frames[nref->frame];
-				
-			if ((anim->delay < 1) ||
-			    (++nref->fwait > anim->delay)) {
-				nref->fwait = 0;
-				if (nref->frame++ >= anim->nframes - 1) {
-					/* Loop */
-					nref->frame = 0;
+		
+			if (nref->flags & MAPREF_ANIM_DELTA &&
+			   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
+				Uint32 t;
+				src = anim->frames[anim->frame];
+
+				t = SDL_GetTicks();
+				if ((t - anim->delta) >= anim->delay) {
+					anim->delta = t;
+					if (++anim->frame >
+					    anim->nframes - 1) {
+						/* Loop */
+						anim->frame = 0;
+					}
+				}
+			} else if (nref->flags & MAPREF_ANIM_INDEPENDENT) {
+				src = anim->frames[nref->frame];
+
+				if ((nref->flags & MAPREF_ANIM_STATIC) == 0) {
+					if ((anim->delay < 1) ||
+					    (++nref->fdelta > anim->delay+1)) {
+						nref->fdelta = 0;
+						if (++nref->frame >
+						    anim->nframes - 1) {
+							/* Loop */
+							nref->frame = 0;
+						}
+					}
 				}
 			}
 		}
@@ -412,7 +383,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
  *
  * Must be called on a locked map.
  */
-static void
+void
 map_animate(struct map *m)
 {
 	struct viewport *view = m->view;
@@ -528,7 +499,7 @@ map_animate(struct map *m)
  * Draw all sprites in the map view.
  * Must be called on a locked map.
  */
-static void
+void
 map_draw(struct map *m)
 {
 	Uint32 x, y, vx, vy, rx, ry;
@@ -663,14 +634,9 @@ map_load(void *ob, int fd)
 			struct node *node = &m->map[x][y];
 			Uint32 i, nnrefs;
 			
-			/* Read the map entry flags. */
 			node->flags = fobj_read_uint32(fd);
-
-			/* Read the optional integer values. */
 			node->v1 = fobj_read_uint32(fd);
 			node->v2 = fobj_read_uint32(fd);
-
-			/* Read the reference count. */
 			nnrefs = fobj_read_uint32(fd);
 
 			for (i = 0; i < nnrefs; i++) {
@@ -679,7 +645,6 @@ map_load(void *ob, int fd)
 				char *pobjstr;
 				Uint32 offs, frame, flags;
 
-				/* Read object:offset reference. */
 				pobjstr = fobj_read_string(fd);
 				offs = fobj_read_uint32(fd);
 				frame = fobj_read_uint32(fd);
@@ -742,14 +707,9 @@ map_save(void *ob, int fd)
 			struct noderef *nref;
 			Uint32 nrefs = 0;
 			
-			/* Write the node flags. */
 			fobj_bwrite_uint32(buf, node->flags & ~(NODE_DONTSAVE));
-			
-			/* Write the optional integer values. */
 			fobj_bwrite_uint32(buf, node->v1);
 			fobj_bwrite_uint32(buf, node->v2);
-
-			/* We do not know the reference count yet. */
 			soffs = buf->offs;
 			fobj_bwrite_uint32(buf, 0);
 
