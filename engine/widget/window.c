@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.238 2005/02/01 03:31:40 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.239 2005/02/01 08:24:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -299,7 +299,6 @@ window_detach(struct window *win, struct window *subwin)
 {
 	pthread_mutex_lock(&view->lock);
 	TAILQ_REMOVE(&win->subwins, subwin, swins);
-	view_detach(subwin);
 	pthread_mutex_unlock(&view->lock);
 }
 
