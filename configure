@@ -377,8 +377,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
+ -Werror -o conftest conftest.c 2>>config.log
+if [ 0 != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
 fi
@@ -418,8 +418,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
+ -Werror -o conftest conftest.c 2>>config.log
+if [ 0 != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
 fi
@@ -456,8 +456,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC -o conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
+ -Werror -o conftest conftest.c 2>>config.log
+if [ 0 != 0 ]; then
 	echo "-> failed: non-zero exit status" >> config.log
 	compile="failed"
 fi
