@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.9 2002/05/28 12:50:14 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.10 2002/06/01 09:29:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -31,7 +31,9 @@
 #include <sys/types.h>
 
 #include <unistd.h>
+#include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -54,8 +56,8 @@ static const struct widget_ops textbox_ops = {
 		textbox_destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-		textbox_onattach, /* onattach */
-		textbox_ondetach, /* ondetach */
+		NULL,		/* onattach */
+		NULL,		/* ondetach */
 		NULL,		/* attach */
 		NULL		/* detach */
 	},
@@ -107,6 +109,9 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
 	tbox->textpos = -1;
 	tbox->textoffs = 0;
 
+	event_new(tbox, "shown", 0, textbox_shown, NULL);
+	event_new(tbox, "hidden", 0, textbox_hidden, NULL);
+
 	event_new(tbox, "window-mousebuttonup", 0,
 	    textbox_event, "%d", WINDOW_MOUSEBUTTONUP);
 	event_new(tbox, "window-mousebuttondown", 0,
@@ -118,7 +123,7 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw)
 }
 
 void
-textbox_onattach(void *parent, void *child)
+textbox_shown(int argc, union evarg *argv)
 {
 	if (SDL_EnableKeyRepeat(250, 30) != 0) {	/* XXX pref */
 		warning("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
@@ -126,7 +131,7 @@ textbox_onattach(void *parent, void *child)
 }
 
 void
-textbox_ondetach(void *parent, void *child)
+textbox_hidden(int argc, union evarg *argv)
 {
 	if (SDL_EnableKeyRepeat(0, 0) != 0) {		/* XXX pref */
 		fatal("SDL_EnableKeyRepeat: %s\n", SDL_GetError());
@@ -221,9 +226,11 @@ textbox_draw(void *p)
 		}
 	}
 after:
+#if 0
 	if (!cursdrawn) {
-		tbox->textoffs = tbox->textpos;
+		tbox->textoffs = tbox->textpos / 2;
 	}
+#endif
 }
 
 static void
@@ -234,10 +241,6 @@ textbox_event(int argc, union evarg *argv)
 	int textlen, i;
 
 	OBJECT_ASSERT(argv[0].p, "widget");
-
-	for (i = 1; i < argc; i++) {
-		dprintf("argv[%d] = %d\n", i, argv[i].i);
-	}
 
 	switch (argv[1].i) {
 	case WINDOW_MOUSEBUTTONDOWN:
@@ -250,8 +253,6 @@ textbox_event(int argc, union evarg *argv)
 		keymod = argv[3].i;
 	
 		textlen = strlen(tbox->text);
-
-		dprintf("handle '%c' keysym (mod=%d)\n", keysym, keymod);
 
 		if (keysym == SDLK_RETURN) {
 			event_post(tbox, "textbox-return", "%s", tbox->text);
@@ -279,5 +280,24 @@ textbox_event(int argc, union evarg *argv)
 		}
 		break;
 	}
+}
+
+/* Window must be locked */
+void
+textbox_printf(struct textbox *tbox, char *fmt, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start(args, fmt);
+	vasprintf(&buf, fmt, args);
+	va_end(args);
+
+	free(tbox->text);
+	tbox->text = buf;
+
+	WIDGET(tbox)->win->redraw++;
+	tbox->textpos = 0;
+	tbox->textoffs = 0;
 }
 
