@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.86 2004/05/24 00:36:09 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.87 2004/08/20 01:31:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -436,7 +436,7 @@ text_edit_float(double *fp, double min, double max, const struct unit *unit,
 	va_end(args);
 
 	win = window_new(NULL);
-	window_set_caption(win, "%s", _(text_float_titles[type]));
+	window_set_caption(win, "%s", _("Enter real number"));
 	window_set_position(win, WINDOW_CENTER, 1);
 
 	vb = vbox_new(win, VBOX_WFILL);
