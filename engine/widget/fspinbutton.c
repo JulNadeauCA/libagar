@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.19 2004/05/06 06:23:38 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.20 2004/05/17 07:08:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -475,6 +475,6 @@ fspinbutton_set_range(struct fspinbutton *fsu, double min, double max)
 {
 	pthread_mutex_lock(&fsu->lock);
 	fspinbutton_set_min(fsu, min);
-	fspinbutton_set_max(fsu, min);
+	fspinbutton_set_max(fsu, max);
 	pthread_mutex_unlock(&fsu->lock);
 }
