@@ -386,6 +386,46 @@ echo "#endif /* HAVE_STRLCPY */" >> engine/mcconfig.h
 else
 	echo "no"
 fi
+echo -n "checking for an asprintf() function..."
+echo "checking for an asprintf() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	char *buf;
+
+	if (asprintf(&buf, "foo %s", "bar") == 0) {
+		free(buf);
+	    return (0);
+	}
+	return (1);
+}
+
+EOT
+compile="ok"
+echo "cc -o conftest conftest.c" >> config.log
+cc -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed: compiler had non-zero exit status" >> config.log
+	compile="failed"
+fi
+if [ ! -e "conftest" ]; then
+	echo "-> failed: compiler did not produce an executable" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "-> success" >> config.log
+	echo "#ifndef HAVE_ASPRINTF" >> engine/mcconfig.h
+echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> engine/mcconfig.h
+echo "#endif /* HAVE_ASPRINTF */" >> engine/mcconfig.h
+
+	echo "yes"
+else
+	echo "no"
+fi
 echo -n "checking for a vasprintf() function..."
 echo "checking for a vasprintf() function..." >> config.log
 cat << EOT > conftest.c
