@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.97 2002/06/09 10:27:26 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.98 2002/06/09 15:04:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -356,7 +356,7 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 	SDL_Surface *src;
 	SDL_Rect rd;
 	Uint32 t;
-	int i, frame;
+	int i, j, frame;
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
@@ -397,8 +397,17 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 				}
 			}
 			
-			for (i = 0; i < anim->nparts; i++) {
-				src = anim->frames[anim->nparts - i - 1][frame];
+			for (i = 0, j = anim->nparts - 1;
+			     i < anim->nparts;
+			     i++, j--) {
+				src = anim->frames[j][frame];
+#ifdef DEBUG
+				if (src->w < 0 || src->w > 4096 ||
+				    src->h < 0 || src->h > 4096) {
+					fatal("bad frame: j=%d i=%d [%d]\n",
+					     j, i, frame);
+				}
+#endif
 				rd.w = src->w;
 				rd.h = src->h;
 				rd.x = rx + nref->xoffs;
@@ -429,8 +438,8 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
  * Render all animations in the map view.
  *
  * Nodes with the NODE_ANIM flag set are rendered by the animator, even
- * if there is no animation on the node; nearby nodes with the NODE_OVERLAP
- * flag are redrawn first.
+ * if there is no animation on the node; nearby nodes with overlap > 0
+ * are redrawn first.
  *
  * Must be called on a locked map.
  */
@@ -466,7 +475,7 @@ map_animate(struct map *m)
 			}
 
 			node = &m->map[y][x];
-			if (node->flags & NODE_OVERLAP) {
+			if (node->overlap > 0) {
 				/* Will later draw in a synchronized fashion. */
 				continue;
 			}
@@ -487,8 +496,7 @@ map_animate(struct map *m)
 							continue;
 						}
 						nnode = &m->map[y + oy][x + ox];
-						if ((nnode->flags &
-						    NODE_OVERLAP) &&
+						if (nnode->overlap > 0 &&
 						    vx > 1 && vy > 1 &&
 						    (vx < view->mapw + /* XXX */
 						    view->mapxoffs) &&
@@ -571,8 +579,8 @@ map_draw(struct map *m)
 
 			node = &m->map[y][x];
 
-			if (node->nanims > 0 || (node->flags &
-			   (NODE_ANIM|NODE_OVERLAP))) {
+			if (node->nanims > 0 || ((node->flags & NODE_ANIM) ||
+			    node->overlap > 0)) {
 				/* map_animate() shall handle this. */
 				continue;
 			}
