@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.26 2002/07/20 18:56:31 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.27 2002/07/27 07:02:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -178,18 +178,29 @@ button_event(int argc, union evarg *argv)
 
 	switch (type) {
 	case WINDOW_MOUSEOUT:
-		b->flags &= ~(BUTTON_PRESSED);
+		if ((b->flags & BUTTON_STICKY) == 0) {
+			b->flags &= ~(BUTTON_PRESSED);
+		}
 		break;
 	case WINDOW_MOUSEBUTTONDOWN:
 		button = argv[2].i;
 		WIDGET_FOCUS(b);
 		if (button == 1) {
-			b->flags |= BUTTON_PRESSED;
+			if ((b->flags & BUTTON_STICKY) == 0) {
+				b->flags |= BUTTON_PRESSED;
+			} else {
+				if (b->flags & BUTTON_PRESSED) {
+					b->flags &= ~(BUTTON_PRESSED);
+				} else {
+					b->flags |= BUTTON_PRESSED;
+				}
+				pushed++;
+			}
 		}
 		break;
 	case WINDOW_MOUSEBUTTONUP:
 		button = argv[2].i;
-		if (button == 1) {
+		if (button == 1 && (b->flags & BUTTON_STICKY) == 0) {
 			b->flags &= ~(BUTTON_PRESSED);
 			pushed++;
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.12 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.13 2002/06/20 16:35:47 vedge Exp $	*/
 /*	Public domain	*/
 
 struct button {
@@ -6,6 +6,7 @@ struct button {
 
 	int	flags;
 #define BUTTON_PRESSED	0x01
+#define BUTTON_STICKY	0x02
 
 	char	*caption;		/* String, or NULL */
 	SDL_Surface	*label_s;	/* Label (or image) */
