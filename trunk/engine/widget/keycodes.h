@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.h,v 1.6 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: keycodes.h,v 1.7 2002/09/07 04:34:14 vedge Exp $	*/
 /*	Public domain	*/
 
 struct keycode {
@@ -21,13 +21,7 @@ struct keycode {
 #define KEYCODES_KEYMAP		KEYMAP_US
 #endif
 
-#define KEYCODES_CACHE_START	0x20	/* sp */
-#define KEYCODES_CACHE_END	0x7e	/* ~ */
-
 extern const struct keycode keycodes[];		/* keymap */
-extern SDL_Surface *keycodes_cache[];		/* keymap */
 
 void	keycodes_init(void);
-void	keycodes_loadglyphs(void);
-void	keycodes_freeglyphs(void);
 

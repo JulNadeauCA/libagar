@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.50 2002/12/16 02:14:26 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.51 2002/12/31 03:17:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -32,6 +32,12 @@ struct window {
 #define WINDOW_DEMATERIALIZE	0x400	/* Dematerialize effect */
 #define WINDOW_HIDDEN_BODY	0x1000	/* Only the titlebar is shown */
 #define WINDOW_PERSISTENT	WINDOW_HIDDEN_BODY
+
+	enum {
+		WINDOW_NO_BUTTON,
+		WINDOW_CLOSE_BUTTON,
+		WINDOW_HIDE_BUTTON
+	} clicked_button;
 
 	char	*caption;		/* Titlebar text */
 

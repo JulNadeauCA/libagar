@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.140 2003/01/03 23:01:36 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.141 2003/01/03 23:06:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -386,9 +386,14 @@ window_draw_titlebar(struct window *win)
 	bcolor = WINDOW_FOCUSED(win) ?
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_FOCUSED_COLOR) :
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_UNFOCUSED_COLOR);
-	primitives.box(win, bw-1, bw-1, th-1, th-4, 1, bcolor);
+	primitives.box(win, bw-1, bw-1, th-1, th-4,		/* Close */
+	    (win->clicked_button == WINDOW_CLOSE_BUTTON) ? -1 : 1,
+	    bcolor);
 	widget_blit(win, SPRITE(win, 0), bw, bw-1);
-	primitives.box(win, th+bw-1, bw-1, th-1, th-4, 1, bcolor);
+
+	primitives.box(win, th+bw-1, bw-1, th-1, th-4,		/* Hide */
+	    (win->clicked_button == WINDOW_HIDE_BUTTON) ? -1 : 1,
+	    bcolor);
 	widget_blit(win, SPRITE(win, (win->flags & WINDOW_HIDDEN_BODY) ? 1 : 2),
 	    th+bw, bw-1);
 
@@ -1000,7 +1005,18 @@ scan_wins:
 			/* Cancel any current window operation. */ 
 			view->winop = VIEW_WINOP_NONE;
 			view->wop_win = NULL;
-			
+
+			switch (win->clicked_button) {
+			case WINDOW_NO_BUTTON:
+				break;
+			case WINDOW_CLOSE_BUTTON:
+				winop_close(win);
+				break;
+			case WINDOW_HIDE_BUTTON:
+				winop_hide_body(win);
+				break;
+			}
+
 			if (win->flags & WINDOW_HIDDEN_BODY) {
 				/* Don't catch events. */
 				goto next_win;
@@ -1031,18 +1047,20 @@ scan_wins:
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
+			win->clicked_button = WINDOW_NO_BUTTON;
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto next_win;
 			}
 			if (ev->button.y - win->rd.y <= win->titleh) {
-				/* Close the window. */
 			    	if (ev->button.x - win->rd.x <
 				    win->titleh + win->borderw) {
-					winop_close(win);
+					win->clicked_button =
+					    WINDOW_CLOSE_BUTTON;
 					goto next_win;
 				} else if (ev->button.x - win->rd.x <
 				    win->titleh*2 + win->borderw) {
-					winop_hide_body(win);
+					win->clicked_button =
+					    WINDOW_HIDE_BUTTON;
 					goto next_win;
 				}
 				view->winop = VIEW_WINOP_MOVE;

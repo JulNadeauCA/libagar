@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.20 2002/12/30 02:58:34 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.21 2003/01/01 05:18:41 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -198,8 +198,6 @@ keycodes_init(void)
 {
 	struct input *kbd;
 
-	memset(keycodes_cache, (int)NULL, sizeof(*keycodes_cache));
-
 	kbd = input_find("keyboard0");
 	if (kbd != NULL) {
 		int i = 1;
@@ -211,51 +209,6 @@ keycodes_init(void)
 				break;
 			}
 			prop_set_uint16(kbd, kcode->name, (Uint16)kcode->key);
-		}
-	}
-}
-
-void
-keycodes_loadglyphs(void)
-{
-	static SDL_Color white = { 255, 255, 255 };	/* XXX pref */
-	char c[2];
-	unsigned char an;
-	int i;
-
-	for (i = (int)KEYCODES_CACHE_START,
-	     an = (unsigned char)KEYCODES_CACHE_START;
-	     i <= (int)KEYCODES_CACHE_END; i++) {
-		SDL_Surface *s;
-	
-		s = keycodes_cache[i-KEYCODES_CACHE_START];
-		if (s != NULL) {
-			SDL_FreeSurface(s);
-		}
-
-		c[0] = an++;
-		c[1] = '\0';
-		s = TTF_RenderText_Solid(font, c, white);
-		if (s == NULL) {
-			warning("TTF_RenderText_Solid: %s\n", SDL_GetError());
-			keycodes_cache[i-KEYCODES_CACHE_START] = NULL;
-		} else {
-			keycodes_cache[i-KEYCODES_CACHE_START] = s;
-		}
-	}
-}
-
-void
-keycodes_freeglyphs(void)
-{
-	int i;
-	SDL_Surface *s;
-
-	for (i = KEYCODES_CACHE_START; i <= KEYCODES_CACHE_END; i++) {
-		s = keycodes_cache[i-KEYCODES_CACHE_START];
-		if (s != NULL) {
-			SDL_FreeSurface(s);
-			keycodes_cache[i-KEYCODES_CACHE_START] = NULL;
 		}
 	}
 }

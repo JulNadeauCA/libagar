@@ -1,4 +1,4 @@
-/*	$Csoft: utu.h,v 1.2 2002/07/07 00:25:24 vedge Exp $	    */
+/*	$Csoft: utu.h,v 1.3 2003/01/04 13:57:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -25,8 +25,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-SDL_Surface *keycodes_cache[(KEYCODES_CACHE_END - KEYCODES_CACHE_START) + 1];
 
 const struct keycode keycodes[] = {
 	/* Non-alphanumeric characters */

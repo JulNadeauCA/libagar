@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.52 2003/01/01 03:25:17 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.53 2003/01/01 05:18:34 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -97,13 +97,7 @@ config_prop_modified(int argc, union evarg *argv)
 	struct config *con = argv[0].p;
 	struct prop *prop = argv[1].p;
 
-	if (strcmp(prop->key, "view.font-cache") == 0) {
-		if (prop_get_bool(con, "view.font-cache")) {
-			keycodes_loadglyphs();
-		} else {
-			keycodes_freeglyphs();
-		}
-	} else if (strcmp(prop->key, "view.full-screen") == 0) {
+	if (strcmp(prop->key, "view.full-screen") == 0) {
 		if (view != NULL) {
 			SDL_Event vexp;
 
@@ -131,7 +125,6 @@ config_init(struct config *con)
 	prop_set_bool(con,   "object.art.map-tiles", 0);
 
 	/* Visual settings */
-	prop_set_bool(con,   "view.font-cache", 1);
 	prop_set_bool(con,   "view.full-screen", 0);
 	prop_set_bool(con,   "view.async-blits", 0);
 #ifdef HAVE_X11
@@ -193,7 +186,6 @@ config_window(struct config *con)
 			char *name;
 			char *descr;
 		} settings[] = {
-			{ "view.font-cache", "Font cache" },
 			{ "view.full-screen", "Full screen" },
 			{ "view.async-blits", "Asynchronous blits (restart)" },
 #ifdef DEBUG
