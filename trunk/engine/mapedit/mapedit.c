@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.66 2002/03/14 05:08:20 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.67 2002/03/14 08:57:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -35,6 +35,8 @@
 
 #include <engine/engine.h>
 #include <engine/version.h>
+#include <engine/map.h>
+#include <engine/physics.h>
 #include <engine/text/text.h>
 
 #include "mapedit.h"
@@ -80,6 +82,7 @@ static Uint32	mapedit_cursor_tick(Uint32, void *);
 static Uint32	mapedit_lists_tick(Uint32, void *);
 static void	mapedit_bg(SDL_Surface *, SDL_Rect *, Uint32);
 static void	mapedit_state(struct mapedit *, SDL_Rect *);
+static void	mapedit_key(struct mapedit *, SDL_Event *);
 
 struct mapedit *
 mapedit_create(char *name)
@@ -660,6 +663,139 @@ nextref:
 	    med->objlist.x, med->objlist.y,
 	    med->objlist.w, med->objlist.h);
 }
+
+/*
+ * Process a map editor keystroke.
+ * Must be called on a locked map.
+ */
+static void
+mapedit_key(struct mapedit *med, SDL_Event *ev)
+{
+	const int set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
+
+	switch (ev->key.keysym.sym) {
+	case SDLK_UP:
+		if (med->y > 1) {
+			mapdir_set(&med->cursor_dir, DIR_UP, set);
+		}
+		break;
+	case SDLK_DOWN:
+		if (med->y < med->map->maph - 2) {
+			mapdir_set(&med->cursor_dir, DIR_DOWN, set);
+		}
+		break;
+	case SDLK_LEFT:
+		if (med->x > 1) {
+			mapdir_set(&med->cursor_dir, DIR_LEFT, set);
+		}
+		break;
+	case SDLK_RIGHT:
+		if (med->x < med->map->mapw - 2) {
+			mapdir_set(&med->cursor_dir, DIR_RIGHT, set);
+		}
+		break;
+	case SDLK_PAGEUP:
+		gendir_set(&med->listw_dir, DIR_UP, set);
+		break;
+	case SDLK_PAGEDOWN:
+		gendir_set(&med->listw_dir, DIR_DOWN, set);
+		break;
+	case SDLK_DELETE:
+		gendir_set(&med->olistw_dir, DIR_LEFT, set);
+		break;
+	case SDLK_END:
+		gendir_set(&med->olistw_dir, DIR_RIGHT, set);
+		break;
+	default:
+		break;
+	}
+
+	if (ev->type == SDL_KEYDOWN) {
+		struct node *node;
+		int mapx, mapy;
+
+		mapx = med->x;
+		mapy = med->y;
+		node = &med->map->map[mapx][mapy];
+
+		switch (ev->key.keysym.sym) {
+		case SDLK_INSERT:
+			mapedit_editflags(med, MAPEDIT_INSERT);
+			break;
+		case SDLK_a:
+			mapedit_push(med, node, med->curoffs, med->curflags);
+			break;
+		case SDLK_d:
+			mapedit_pop(med, node);
+			break;
+		case SDLK_b:
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
+				mapedit_nodeflags(med, node, NODE_BIO);
+			} else {
+				mapedit_nodeflags(med, node, NODE_BLOCK);
+			}
+			break;
+		case SDLK_w:
+			mapedit_nodeflags(med, node, NODE_WALK);
+			break;
+		case SDLK_c:
+			mapedit_nodeflags(med, node, NODE_CLIMB);
+			break;
+		case SDLK_p:
+			if (ev->key.keysym.mod & KMOD_CTRL) {
+				mapedit_editflags(med, MAPEDIT_DRAWPROPS);
+			} else {
+				mapedit_nodeflags(med, node, NODE_SLIP);
+			}
+			break;
+		case SDLK_h:
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
+				mapedit_nodeflags(med, node, NODE_HASTE);
+			}
+			break;
+		case SDLK_r:
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
+				mapedit_nodeflags(med, node, NODE_REGEN);
+			}
+			break;
+		case SDLK_i:
+			if (ev->key.keysym.mod & KMOD_CTRL) {
+				mapedit_fillmap(med);
+			}
+			break;
+		case SDLK_n:
+			if (ev->key.keysym.mod & KMOD_CTRL) {
+				mapedit_clearmap(med);
+			}
+			break;
+		case SDLK_o:
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
+				mapedit_setorigin(med, &mapx, &mapy);
+				mapedit_move(med, mapx, mapy);
+			}
+			break;
+		case SDLK_l:
+			mapedit_loadmap(med);
+			break;
+		case SDLK_s:
+			if (ev->key.keysym.mod & KMOD_SHIFT) {
+				mapedit_nodeflags(med, node, NODE_SLOW);
+			} else {
+				mapedit_savemap(med);
+			}
+			break;
+		case SDLK_g:
+			mapedit_editflags(med, MAPEDIT_DRAWGRID);
+			break;
+		case SDLK_x:
+			mapedit_examine(med->map, mapx, mapy);
+			break;
+		default:
+			break;
+		}
+	}
+}
+
 
 void
 mapedit_event(void *ob, SDL_Event *ev)
