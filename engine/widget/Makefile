@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.16 2002/05/26 00:51:08 vedge Exp $
+#	$Csoft: Makefile,v 1.17 2002/05/26 05:46:46 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -7,9 +7,9 @@ SUBDIR=	fonts
 
 LIB=	widget
 SRCS=	widget.c window.c region.c text.c label.c button.c checkbox.c \
-	textbox.c keycodes.c primitive.c
+	textbox.c keycodes.c primitive.c mapview.c
 OBJS=	widget.o window.o region.o text.o label.o button.o checkbox.o \
-	textbox.o keycodes.o primitive.o
+	textbox.o keycodes.o primitive.o mapview.o
 FOBJS=	widget.fob
 XCF=	widget.xcf
 
