@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.23 2002/04/20 09:15:31 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.24 2002/04/21 13:31:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -41,9 +41,10 @@
 #include <engine/mapedit/mapedit.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/text.h>	/* XXX window */
+#include <engine/widget/text.h>
 
 extern struct gameinfo *gameinfo;
+extern Uint32 nwindows;			/* window.c */
 
 static void	event_hotkey(SDL_Event *);
 
@@ -102,10 +103,13 @@ event_hotkey(SDL_Event *ev)
 void
 event_loop(void)
 {
+	extern TAILQ_HEAD(, window) windowsh;
+	extern pthread_mutex_t windowslock;
+	Uint32 ltick, ntick;
+	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = world->curmap;
-	static Uint32 ltick, ntick;
-	static Sint32 delta;
+	struct window *win;
 
 	if (m == NULL) {
 		fatal("no map\n");
@@ -118,7 +122,9 @@ event_loop(void)
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
 			pthread_mutex_lock(&m->lock);
+
 			map_animate(m);
+
 			if (m->redraw) {
 				m->redraw = 0;
 				map_draw(m);
@@ -128,9 +134,18 @@ event_loop(void)
 					delta = 1;
 				}
 				text_drawall();		/* XXX window */
-				window_drawall();
 			}
 			pthread_mutex_unlock(&m->lock);
+
+			if (nwindows > 0) {
+				pthread_mutex_lock(&windowslock);
+				TAILQ_FOREACH(win, &windowsh, windows) {
+					if (win->redraw) {
+						window_draw(win);
+					}
+				}
+				pthread_mutex_unlock(&windowslock);
+			}
 			ltick = SDL_GetTicks();
 		} else if (SDL_PollEvent(&ev)) {
 			if (ev.type == SDL_KEYDOWN) {
@@ -148,14 +163,18 @@ event_loop(void)
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				window_event(&ev, WINDOW_FOCUS);
+				if (nwindows > 0) {
+					window_mouse_motion(&ev);
+				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				if (curmapedit != NULL) {	/* XXX */
 					mapedit_event(curmapedit, &ev);
 				}
-				window_event(&ev, 0);
+				if (nwindows > 0) {
+					window_mouse_button(&ev);
+				}
 				break;
 			case SDL_JOYAXISMOTION:
 			case SDL_JOYBUTTONDOWN:
@@ -175,7 +194,9 @@ event_loop(void)
 				} else {
 					input_event(keyboard, &ev);
 				}
-				window_event(&ev, WINDOW_FOCUS);
+				if (nwindows > 0) {
+					window_key(&ev);
+				}
 				break;
 			case SDL_QUIT:
 				return;
