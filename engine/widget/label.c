@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.26 2002/08/20 09:17:11 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.27 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -34,8 +34,6 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
-#include <engine/version.h>
 
 #include <engine/compat/vasprintf.h>
 

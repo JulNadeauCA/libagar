@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.14 2002/08/25 09:10:58 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.15 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -33,8 +33,6 @@
 #include <math.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
-#include <engine/map.h>
 
 #include "text.h"
 #include "widget.h"

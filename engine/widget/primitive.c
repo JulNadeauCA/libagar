@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.14 2002/08/12 06:57:54 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.15 2002/08/18 00:42:57 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -50,23 +50,23 @@ struct primitive_ops primitives = {
 	composite_square	/* square */
 };
 
-const char *primitive_box_sw [] = {
+char *primitive_box_sw [] = {
 	"box_3d",
 	NULL
 };
-const char *primitive_frame_sw[] = {
+char *primitive_frame_sw[] = {
 	"frame_3d",
 	NULL
 };
-const char *primitive_circle_sw[] = {
+char *primitive_circle_sw[] = {
 	"bresenham_circle",
 	NULL
 };
-const char *primitive_line_sw[] = {
+char *primitive_line_sw[] = {
 	"bresenham_line",
 	NULL
 };
-const char *primitive_square_sw[] = {
+char *primitive_square_sw[] = {
 	"composite_square",
 	NULL
 };

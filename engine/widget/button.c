@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.32 2002/09/03 01:45:35 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.33 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,8 +32,6 @@
 #include <string.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
-#include <engine/version.h>
 
 #include "primitive.h"
 #include "text.h"
@@ -130,6 +128,11 @@ button_destroy(void *p)
 	OBJECT_ASSERT(p, "widget");
 
 	free(b->caption);
+	if (b->slabel_s != NULL) {
+		/* Decrement the reference count. */
+		view_unused_surface(b->slabel_s);
+	}
+	SDL_FreeSurface(b->label_s);
 }
 
 static void
@@ -150,7 +153,10 @@ button_scaled(int argc, union evarg *argv)
 		nw = WIDGET(b)->w;
 	}
 
-	/* The old scaled surface, if any, will be freed later. */
+	if (b->slabel_s != NULL) {
+		/* Decrement the reference count. */
+		view_unused_surface(b->slabel_s);
+	}
 	b->slabel_s = view_scale_surface(b->label_s, nw - 6, WIDGET(b)->h - 6);
 }
 

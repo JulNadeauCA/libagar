@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.73 2002/09/05 03:52:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.74 2002/09/06 01:28:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -497,7 +497,6 @@ window_show_locked(struct window *win)
 /*
  * Window must be locked.
  * View must be locked in tile-based mode XXX
- * World must not be locked by the caller thread.
  */
 int
 window_hide_locked(struct window *win)

@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.10 2002/08/21 01:00:58 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.11 2002/09/06 01:28:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -34,7 +34,6 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 #include <engine/version.h>
 
 #include <libfobj/fobj.h>
