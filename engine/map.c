@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.153 2003/03/05 02:15:43 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.154 2003/03/07 00:40:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -561,6 +561,24 @@ node_remove_ref(struct node *node, struct noderef *nref)
 
 	noderef_destroy(nref);
 	free(nref);
+}
+
+/* Remove all references on a specific layer. */
+void
+node_clear_layer(struct node *node, Uint8 layer)
+{
+	struct noderef *nref, *nnref;
+
+	for (nref = TAILQ_FIRST(&node->nrefs);
+	     nref != TAILQ_END(&node->nrefs);
+	     nref = nnref) {
+		nnref = TAILQ_NEXT(nref, nrefs);
+		if (nref->layer == layer) {
+			TAILQ_REMOVE(&node->nrefs, nref, nrefs);
+			noderef_destroy(nref);
+			free(nref);
+		}
+	}
 }
 
 /*
@@ -1154,4 +1172,5 @@ noderef_draw(struct map *m, struct noderef *nref, Sint16 rx, Sint16 ry)
 		SDL_BlitSurface(su, NULL, view->v, &rd);
 	}
 }
+
 
