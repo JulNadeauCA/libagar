@@ -41,27 +41,25 @@ static void
 mapedit_setpointer(struct mapedit *med, int enable)
 {
 	static int oxoffs = 0, oyoffs = 0;
-	struct map_aref *aref;
+	struct noderef *nref;
 	struct node *node = &med->map->map[med->x][med->y];
 
 	if (enable) {
-		aref = node_addref(node,
-		    (struct object *)med, MAPEDIT_SELECT, MAPREF_ANIM);
+		nref = node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
 		node->flags |= NODE_ANIM;
 
 		/* Restore direction state. */
-		aref->xoffs = oxoffs;
-		aref->yoffs = oyoffs;
+		nref->xoffs = oxoffs;
+		nref->yoffs = oyoffs;
 	} else {
-		aref = node_arefobj(node,
-		    (struct object *)med, MAPEDIT_SELECT);
+		nref = node_findref(node, med, MAPEDIT_SELECT);
 		node->flags &= ~(NODE_ANIM);
 	
 		/* Save direction state. */
-		oxoffs = aref->xoffs;
-		oyoffs = aref->yoffs;
+		oxoffs = nref->xoffs;
+		oyoffs = nref->yoffs;
 
-		node_delref(node, aref);
+		node_delref(node, nref);
 	}
 }
 
@@ -104,16 +102,21 @@ mapedit_push(struct mapedit *med, struct node *node)
 void
 mapedit_pop(struct mapedit *med, struct node *node)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
+	int i;
 
-	if (node->narefs < 2) {
+	if (node->nnrefs < 2) {
 		dprintf("empty node\n");
 		return;
 	}
 
-	aref = node_arefindex(node, node->narefs - 2);
-	node_delref(node, aref);
-	med->map->redraw++;
+	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+		if (i++ == (node->nnrefs - 2)) {
+			node_delref(node, nref);
+			med->map->redraw++;
+			return;
+		}
+	}
 }
 
 /* Fill the map with the current reference. */
@@ -199,7 +202,7 @@ void
 mapedit_examine(struct map *em, int x, int y)
 {
 	int i;
-	struct map_aref *aref;
+	struct noderef *nref;
 	struct node *node;
 
 	node = &em->map[x][y];
@@ -232,15 +235,17 @@ mapedit_examine(struct map *em, int x, int y)
 	printf(">\n");
 
 	i = 0;
-	TAILQ_FOREACH(aref, &node->arefsh, marefs) {
+	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		printf("\t[%2d] ", i++);
-		printf("%s:%d ", aref->pobj->name, aref->offs);
-		if (aref->flags & MAPREF_SAVE)
+		printf("%s:%d ", nref->pobj->name, nref->offs);
+		if (nref->flags & MAPREF_SAVE)
 			printf("saveable ");
-		if (aref->flags & MAPREF_SPRITE)
+		if (nref->flags & MAPREF_SPRITE)
 			printf("sprite ");
-		if (aref->flags & MAPREF_ANIM)
+		if (nref->flags & MAPREF_ANIM)
 			printf("anim ");
+		if (nref->flags & MAPREF_WARP)
+			printf("warp ");
 		printf("\n");
 	}
 }
@@ -265,7 +270,7 @@ mapedit_editflags(struct mapedit *med, int mask)
 void
 mapedit_nodeflags(struct mapedit *med, struct node *me, int flag)
 {
-	if (me->narefs < 2) {
+	if (me->nnrefs < 2) {
 		dprintf("empty tile\n");
 		return;
 	}

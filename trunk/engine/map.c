@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.23 2002/02/15 02:31:32 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.24 2002/02/15 04:24:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -165,7 +165,7 @@ node_init(struct node *node, struct object *ob, int offs, int nodeflags,
 {
 	memset(node, 0, sizeof(struct node));
 
-	TAILQ_INIT(&node->arefsh);
+	TAILQ_INIT(&node->nrefsh);
 
 	/* Used by the map editor to fill new maps. */
 	if (ob != NULL) {
@@ -179,51 +179,51 @@ node_init(struct node *node, struct object *ob, int offs, int nodeflags,
  * Allocate and link a map node.
  * Must be called on a locked map.
  */
-struct map_aref *
-node_addref(struct node *node, struct object *ob, int offs, int rflags)
+struct noderef *
+node_addref(struct node *node, void *ob, int offs, int rflags)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
 
-	aref = (struct map_aref *)emalloc(sizeof(struct map_aref));
-	aref->pobj = ob;
-	aref->offs = offs;
-	aref->flags = rflags;
+	nref = (struct noderef *)emalloc(sizeof(struct noderef));
+	nref->pobj = ob;
+	nref->offs = offs;
+	nref->flags = rflags;
 	if (rflags & MAPREF_ANIM) {
-		aref->frame = 0;
-		aref->fwait = 0;
+		nref->frame = 0;
+		nref->fwait = 0;
 		node->nanims++;
 	}
-	aref->xoffs = 0;
-	aref->yoffs = 0;
+	nref->xoffs = 0;
+	nref->yoffs = 0;
 
-	TAILQ_INSERT_TAIL(&node->arefsh, aref, marefs);
-	node->narefs++;
+	TAILQ_INSERT_TAIL(&node->nrefsh, nref, nrefs);
+	node->nnrefs++;
 
-	return (aref);
+	return (nref);
 }
 
 /*
  * Pop a reference off the stack and return it.
  * Must be called on a locked map.
  */
-struct map_aref *
+struct noderef *
 node_popref(struct node *node)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
 
-	if (TAILQ_EMPTY(&node->arefsh)) {
+	if (TAILQ_EMPTY(&node->nrefsh)) {
 		return (NULL);
 	}
 		
-	aref = TAILQ_FIRST(&node->arefsh);
-	TAILQ_REMOVE(&node->arefsh, aref, marefs);
-	node->narefs--;
+	nref = TAILQ_FIRST(&node->nrefsh);
+	TAILQ_REMOVE(&node->nrefsh, nref, nrefs);
+	node->nnrefs--;
 
-	if (aref->flags & MAPREF_ANIM) {
+	if (nref->flags & MAPREF_ANIM) {
 		node->nanims--;
 	}
 
-	return (aref);
+	return (nref);
 }
 
 /*
@@ -231,12 +231,12 @@ node_popref(struct node *node)
  * Must be called on a locked map.
  */
 int
-node_pushref(struct node *node, struct map_aref *aref)
+node_pushref(struct node *node, struct noderef *nref)
 {
-	TAILQ_INSERT_HEAD(&node->arefsh, aref, marefs);
-	node->narefs++;
+	TAILQ_INSERT_HEAD(&node->nrefsh, nref, nrefs);
+	node->nnrefs++;
 	
-	if (aref->flags & MAPREF_ANIM) {
+	if (nref->flags & MAPREF_ANIM) {
 		node->nanims++;
 	}
 
@@ -248,15 +248,15 @@ node_pushref(struct node *node, struct map_aref *aref)
  * Must be called on a locked map.
  */
 int
-node_delref(struct node *node, struct map_aref *aref)
+node_delref(struct node *node, struct noderef *nref)
 {
-	if (aref->flags & MAPREF_ANIM) {
+	if (nref->flags & MAPREF_ANIM) {
 		node->nanims--;
 	}
 	
-	TAILQ_REMOVE(&node->arefsh, aref, marefs);
-	node->narefs--;
-	free(aref);
+	TAILQ_REMOVE(&node->nrefsh, nref, nrefs);
+	node->nnrefs--;
+	free(nref);
 
 	return (0);
 }
@@ -311,15 +311,15 @@ map_destroy(void *p)
 static void
 node_destroy(struct node *node)
 {
-	struct map_aref *aref1, *aref2;
+	struct noderef *nref1, *nref2;
 
-	aref1 = TAILQ_FIRST(&node->arefsh);
-	while (aref1 != NULL) {
-		aref2 = TAILQ_NEXT(aref1, marefs);
-		free(aref1);
-		aref1 = aref2;
+	nref1 = TAILQ_FIRST(&node->nrefsh);
+	while (nref1 != NULL) {
+		nref2 = TAILQ_NEXT(nref1, nrefs);
+		free(nref1);
+		nref1 = nref2;
 	}
-	TAILQ_INIT(&node->arefsh);
+	TAILQ_INIT(&node->nrefsh);
 }
 
 /* Draw a sprite at any given location. */
@@ -386,7 +386,7 @@ map_animate(Uint32 ival, void *p)
 		     x < m->view->mapw + m->view->mapx + 1;
 		     x++, vx++) {
 			static struct node *node;
-			static struct map_aref *aref;
+			static struct noderef *nref;
 			static SDL_Surface *src;
 			static int rx, ry;
 
@@ -410,25 +410,25 @@ map_animate(Uint32 ival, void *p)
 				continue;
 			}
 
-			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
-				rx = (vx << TILESHIFT) + aref->xoffs;
-				ry = (vy << TILESHIFT) + aref->yoffs;
+			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+				rx = (vx << TILESHIFT) + nref->xoffs;
+				ry = (vy << TILESHIFT) + nref->yoffs;
 
-				if (aref->flags & MAPREF_SPRITE) {
-					src = aref->pobj->sprites[aref->offs];
-				} else if (aref->flags & MAPREF_ANIM) {
+				if (nref->flags & MAPREF_SPRITE) {
+					src = nref->pobj->sprites[nref->offs];
+				} else if (nref->flags & MAPREF_ANIM) {
 					static struct anim *anim;
 
-					anim = aref->pobj->anims[aref->offs];
-					src = anim->frames[aref->frame];
+					anim = nref->pobj->anims[nref->offs];
+					src = anim->frames[nref->frame];
 					
 					if (anim->delay > 0 &&
-					    aref->fwait++ > anim->delay) {
-						if (aref->frame++ >=
+					    nref->fwait++ > anim->delay) {
+						if (nref->frame++ >=
 						    anim->nframes - 1) {
-							aref->frame = 0;
+							nref->frame = 0;
 						}
-						aref->fwait = 0;
+						nref->fwait = 0;
 						/*
 						 * XXX wait the number of
 						 * ticks a blit usually
@@ -438,7 +438,7 @@ map_animate(Uint32 ival, void *p)
 				}
 			
 				if (node->flags & NODE_ANIM &&
-				    aref->flags & MAPREF_ANIM) {
+				    nref->flags & MAPREF_ANIM) {
 					struct draw *ndraw;
 
 					ndraw = (struct draw *)
@@ -558,7 +558,7 @@ map_draw(Uint32 ival, void *p)
 		     x < m->view->mapw + m->view->mapx + 1;
 		     x++, vx++) {
 			static struct node *node;
-			static struct map_aref *aref;
+			static struct noderef *nref;
 
 			/* XXX */
 			if (curmapedit != NULL) {
@@ -590,12 +590,12 @@ map_draw(Uint32 ival, void *p)
 				SDL_FillRect(m->view->v, &erd, 0);
 			}
 
-			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
-				if (aref->flags & MAPREF_SPRITE) {
+			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+				if (nref->flags & MAPREF_SPRITE) {
 					map_plot_sprite(m,
-					    aref->pobj->sprites[aref->offs],
-					    (vx << TILESHIFT) + aref->xoffs,
-					    (vy << TILESHIFT) + aref->yoffs);
+					    nref->pobj->sprites[nref->offs],
+					    (vx << TILESHIFT) + nref->xoffs,
+					    (vy << TILESHIFT) + nref->yoffs);
 				}
 			}
 
@@ -619,47 +619,21 @@ map_draw(Uint32 ival, void *p)
 }
 
 /*
- * Return the map entry reference for the given index.
- */
-struct map_aref *
-node_arefindex(struct node *node, int index)
-{
-	static int i;
-	struct map_aref *aref;
-
-	/* XXX bsearch */
-	i = 0;
-	TAILQ_FOREACH(aref, &node->arefsh, marefs) {
-		if (i++ == index) {
-			return (aref);
-		}
-	}
-
-#ifdef DEBUG
-	fatal("nothing at %d\n", index);
-#endif
-	return (NULL);
-}
-
-/*
  * Return the map entry reference for ob:offs, or the first match
  * for ob if offs is -1.
  */
-struct map_aref *
-node_arefobj(struct node *node, struct object *ob, int offs)
+struct noderef *
+node_findref(struct node *node, void *ob, int offs)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
 
 	/* XXX bsearch */
-	TAILQ_FOREACH(aref, &node->arefsh, marefs) {
-		if (aref->pobj == ob && (aref->offs == offs || offs < 0)) {
-			return (aref);
+	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+		if (nref->pobj == ob && (nref->offs == offs || offs < 0)) {
+			return (nref);
 		}
 	}
 
-#if 0
-	dprintf("no reference to %s:%d\n", ob->name, offs);
-#endif
 	return (NULL);
 }
 
@@ -710,7 +684,7 @@ map_load(void *ob, char *path)
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[x][y];
-			int i, narefs;
+			int i, nnrefs;
 			
 			/* Read the map entry flags. */
 			node->flags = fobj_read_uint32(f);
@@ -720,11 +694,11 @@ map_load(void *ob, char *path)
 			node->v2 = fobj_read_uint32(f);
 
 			/* Read the reference count. */
-			narefs = fobj_read_uint32(f);
+			nnrefs = fobj_read_uint32(f);
 
-			for (i = 0; i < narefs; i++) {
+			for (i = 0; i < nnrefs; i++) {
 				struct object *pobj;
-				struct map_aref *naref;
+				struct noderef *nref;
 				char *pobjstr;
 				int offs, frame, rflags;
 
@@ -741,11 +715,8 @@ map_load(void *ob, char *path)
 				}
 				free(pobjstr);
 
-				naref = node_addref(node, pobj, offs, rflags);
-				if (naref == NULL) {
-					return (-1);
-				}
-				naref->frame = frame;
+				nref = node_addref(node, pobj, offs, rflags);
+				nref->frame = frame;
 
 				refs++;
 			}
@@ -797,7 +768,7 @@ map_save(void *ob, char *path)
 		for (x = 0; x < m->mapw; x++) {
 			off_t soffs;
 			struct node *node = &m->map[x][y];
-			struct map_aref *aref;
+			struct noderef *nref;
 			int nrefs = 0;
 			
 			/* Write the node flags. */
@@ -811,12 +782,12 @@ map_save(void *ob, char *path)
 			soffs = lseek(f, 0, SEEK_CUR);
 			lseek(f, sizeof(Uint32), SEEK_CUR);
 
-			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
-				if (aref != NULL && aref->flags & MAPREF_SAVE) {
-					fobj_write_string(f, aref->pobj->name);
-					fobj_write_uint32(f, aref->offs);
-					fobj_write_uint32(f, aref->frame);
-					fobj_write_uint32(f, aref->flags);
+			TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
+				if (nref != NULL && nref->flags & MAPREF_SAVE) {
+					fobj_write_string(f, nref->pobj->name);
+					fobj_write_uint32(f, nref->offs);
+					fobj_write_uint32(f, nref->frame);
+					fobj_write_uint32(f, nref->flags);
 
 					nrefs++;
 				}

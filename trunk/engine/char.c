@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.14 2002/02/15 02:31:32 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.15 2002/02/15 03:52:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -117,21 +117,20 @@ char_destroy(struct object *ob)
 		char_unfocus(ch);
 	}
 
-	if (pthread_mutex_lock(&ch->map->lock) == 0) {
-		if (ch->map != NULL) {
-			MAP_DELREF(ch->map, ch->x, ch->y, ob, -1);
-		}
-		pthread_mutex_unlock(&ch->map->lock);
-	} else {
-		perror(ch->map->obj.name);
-	}
+	pthread_mutex_lock(&ch->map->lock);
+	if (ch->map != NULL) {
+		struct node *node = &ch->map->map[ch->x][ch->y];
+		struct noderef *nref;
 
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
-		pthread_mutex_unlock(&world->lock);
-	} else {
-		perror(world->obj.name);
+		while ((nref = node_findref(node, ch, -1))) {
+			node_delref(node, nref);
+		}
 	}
+	pthread_mutex_unlock(&ch->map->lock);
+
+	pthread_mutex_lock(&world->lock);
+	SLIST_REMOVE(&world->wcharsh, ch, character, wchars);
+	pthread_mutex_unlock(&world->lock);
 }
 
 /* See if ch can move to nx:ny in its map. */
@@ -164,16 +163,11 @@ char_event(struct character *ch, SDL_Event *ev)
 int
 char_setsprite(struct character *ch, int soffs)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
 
-	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, ch->curoffs);
-
-	node_delref(&ch->map->map[ch->x][ch->y],
-	    node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, ch->curoffs));
-	node_addref(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, soffs, MAPREF_SPRITE);
+	nref = node_findref(&ch->map->map[ch->x][ch->y], ch, ch->curoffs);
+	node_delref(&ch->map->map[ch->x][ch->y], nref);
+	node_addref(&ch->map->map[ch->x][ch->y], ch, soffs, MAPREF_SPRITE);
 
 	ch->flags &= ~(CHAR_ANIM);
 	ch->curoffs = soffs;
@@ -185,16 +179,11 @@ char_setsprite(struct character *ch, int soffs)
 int
 char_setanim(struct character *ch, int aoffs)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
 	
-	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, ch->curoffs);
-
-	node_delref(&ch->map->map[ch->x][ch->y],
-	    node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, ch->curoffs));
-	node_addref(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, aoffs, MAPREF_ANIM);
+	nref = node_findref(&ch->map->map[ch->x][ch->y], ch, ch->curoffs);
+	node_delref(&ch->map->map[ch->x][ch->y], nref);
+	node_addref(&ch->map->map[ch->x][ch->y], ch, aoffs, MAPREF_ANIM);
 
 	ch->flags |= CHAR_ANIM;
 	ch->curoffs = aoffs;
@@ -226,9 +215,9 @@ int
 char_add(struct character *ch, struct map *m, int x, int y)
 {
 	if (ch->flags & CHAR_ANIM) {
-		MAP_ADDANIM(m, x, y, (struct object *)ch, ch->curoffs);
+		node_addref(&m->map[x][y], ch, ch->curoffs, MAPREF_ANIM);
 	} else {
-		MAP_ADDSPRITE(m, x, y, (struct object *)ch, ch->curoffs);
+		node_addref(&m->map[x][y], ch, ch->curoffs, MAPREF_SPRITE);
 	}
 
 	ch->map = m;
@@ -248,9 +237,12 @@ char_add(struct character *ch, struct map *m, int x, int y)
 int
 char_del(struct character *ch, struct map *m, int x, int y)
 {
-	MAP_DELREF(m, x, y, (struct object *)ch, -1);
+	struct node *node = &m->map[x][y];
+	struct noderef *nref;
 
-	/* Map reference (m:x,y) is now undefined. */
+	while ((nref = node_findref(node, ch, -1))) {
+		node_delref(node, nref);
+	}
 
 	return (0);
 }
@@ -259,23 +251,21 @@ char_del(struct character *ch, struct map *m, int x, int y)
 int
 char_move(struct character *ch, int nx, int ny)
 {
-	struct map_aref *aref;
+	struct noderef *nref;
 	int oxoffs, oyoffs;
 
 	/* XXX recurse */
-	aref = node_arefobj(&ch->map->map[ch->x][ch->y],
-	    (struct object *)ch, -1);
-	oxoffs = aref->xoffs;
-	oyoffs = aref->yoffs;
+	nref = node_findref(&ch->map->map[ch->x][ch->y], ch, -1);
+	oxoffs = nref->xoffs;
+	oyoffs = nref->yoffs;
 
 	char_del(ch, ch->map, ch->x, ch->y);
 	char_add(ch, ch->map, nx, ny);
 
 	/* XXX recurse */
-	aref = node_arefobj(&ch->map->map[nx][ny],
-	    (struct object *)ch, -1);
-	aref->xoffs = oxoffs;
-	aref->yoffs = oyoffs;
+	nref = node_findref(&ch->map->map[nx][ny], ch, -1);
+	nref->xoffs = oxoffs;
+	nref->yoffs = oyoffs;
 
 	ch->x = nx;
 	ch->y = ny;

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.12 2002/02/14 05:26:49 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.13 2002/02/15 04:23:40 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -7,7 +7,7 @@
 #define MAP_VERMAJ	1
 #define MAP_VERMIN	8
 
-struct map_aref {
+struct noderef {
 	struct	object *pobj;	/* Object pointer */
 	int	offs;		/* Sprite/anim within this object */
 	int	flags;
@@ -22,7 +22,7 @@ struct map_aref {
 	int	xoffs, yoffs;	/* Incremented if > 0, decremented if < 0,
 				   used for direction and soft scroll. */
 
-	TAILQ_ENTRY(map_aref) marefs;	/* Map entry reference list */
+	TAILQ_ENTRY(noderef) nrefs;	/* Node reference list */
 };
 
 /* Back reference to map:x,y coordinate. */
@@ -31,12 +31,12 @@ struct map_bref {
 	int	x, y;		/* X:Y coordinate */
 };
 
-TAILQ_HEAD(map_arefs_head, map_aref);
+TAILQ_HEAD(noderefs_head, noderef);
 
 /* Coordinate within a map. */
 struct node {
-	struct	map_arefs_head arefsh;
-	int	narefs;
+	struct	noderefs_head nrefsh;
+	int	nnrefs;
 	int	flags;
 #define NODE_BLOCK	0x0000		/* Cannot walk through */
 #define NODE_ORIGIN	0x0001		/* Origin of this map */
@@ -75,50 +75,23 @@ struct map {
 
 extern struct map *curmap;	/* Currently focused map */
 
-/* Add a sprite reference to ob:offs at m:x,y */
-#define MAP_ADDSPRITE(m, x, y, ob, soffs)			\
-	node_addref(&(m)->map[(x)][(y)],			\
-	    (ob), (soffs), MAPREF_SPRITE);			\
-
-/* Add an animation reference to ob:offs at m:x,y */
-#define MAP_ADDANIM(m, x, y, ob, aoffs)				\
-	node_addref(&(m)->map[(x)][(y)],			\
-	    (ob), (aoffs), MAPREF_ANIM);			\
-
-/*
- * Drop an animation/sprite reference to ob:offs at m:x,y. If offs is
- * negative, drop all references to ob:*.
- */
-#define MAP_DELREF(m, x, y, ob, offs)				\
-	do {							\
-		struct node *me = &(m)->map[(x)][(y)];	\
-		struct map_aref *maref;				\
-								\
-		while ((maref = node_arefobj((me),		\
-		    (ob), (offs)))) {				\
-			node_delref((me), (maref));		\
-		}						\
-	} while (/*CONSTCOND*/ 0)
-
-struct map *map_create(char *, char *, int, int, int);
-
-void	map_destroy(void *);
-int	map_load(void *, char *);
-int	map_save(void *, char *);
-int	map_focus(struct map *);
-int	map_unfocus(struct map *);
-void	map_clean(struct map *, struct object *, int, int, int);
-int	map_animnode(struct map *, int x, int y);
-int	map_unanimnode(struct map *, int x, int y);
+struct map	*map_create(char *, char *, int, int, int);
+void		 map_destroy(void *);
+int		 map_load(void *, char *);
+int		 map_save(void *, char *);
+int		 map_focus(struct map *);
+int		 map_unfocus(struct map *);
+void		 map_clean(struct map *, struct object *, int, int, int);
+int		 map_animnode(struct map *, int x, int y);
+int		 map_unanimnode(struct map *, int x, int y);
 #ifdef DEBUG
-void	map_dump(struct map *);
+void		 map_dump(struct map *);
 #endif
 
-struct map_aref *node_addref(struct node *, struct object *, int, int);
-struct map_aref	*node_arefindex(struct node *, int);
-struct map_aref	*node_arefobj(struct node *, struct object *, int);
-int		 node_delref(struct node *, struct map_aref *);
+struct noderef	*node_addref(struct node *, void *, int, int);
+struct noderef	*node_findref(struct node *, void *, int);
+int		 node_delref(struct node *, struct noderef *);
 
-struct map_aref *node_popref(struct node *);
-int		 node_pushref(struct node *, struct map_aref *);
+struct noderef	*node_popref(struct node *);
+int		 node_pushref(struct node *, struct noderef *);
 

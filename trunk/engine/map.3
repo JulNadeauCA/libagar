@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.4 2002/02/13 00:30:57 vedge Exp $
+.\"	$Csoft: map.3,v 1.5 2002/02/15 04:49:04 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -37,24 +37,15 @@
 .Sh SYNOPSIS
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
-The map structure maintains a set of tiles, each containing various
-flags and a linked list of references. Those references contain:
+An agar map is an array of node structures.
+Each node may contain a stack of node reference structures,
+which point to arbitrary structures and an offset within them.
 .Pp
-.Bl -bullet -compact
-.It
-A pointer to an object.
-.It
-An offset within this object.
-.It
-Flags (saveable, sprite, anim, warp).
-.It
-Extra animation data (frame#, delay).
 .El
 .Sh ENGINE
 .nr nS 1
 .Ft "struct map *"
-.Fn map_create "char *name" "char *descr" "int flags" "int width" "int height" \
-"char *path"
+.Fn map_create "char *name" "char *descr" "int flags" "int width" "int height"
 .Pp
 .Ft void
 .Fn map_destroy "struct map *map"
@@ -64,10 +55,6 @@ Extra animation data (frame#, delay).
 .Pp
 .Ft "int"
 .Fn map_unfocus "struct map *map"
-.Pp
-.Ft "int"
-.Fn map_clean "struct map *map" "struct object *obj" "int offs" "int flags" \
-"int rflags"
 .Pp
 .nr nS 0
 .Pp
@@ -79,23 +66,18 @@ frees a map.
 and
 .Fn map_unfocus
 toggles the visibility of the map's sprites and animations.
-.Fn map_clean
-initializes the entire map.
 .Sh MANIPULATING REFERENCES
 .nr nS 1
 .Pp
-.Ft "struct map_aref *"
+.Ft "struct noderef *"
 .Fn node_addref "struct node *node" "struct object *obj" \
 "int offs" "int rflags"
 .Pp
 .Ft "int"
 .Fn node_delref "struct node *node" "struct object *obj" "int offs"
 .Pp
-.Ft "struct map_aref *"
-.Fn node_aref "struct node *node" "struct object *obj" "int offs"
-.Pp
-.Ft "struct map_aref *"
-.Fn node_arefobj "struct node *node" "struct object *obj" "int offs"
+.Ft "struct noderef *"
+.Fn node_findref "struct node *node" "struct object *obj" "int offs"
 .Pp
 .nr nS 0
 .Pp
@@ -114,7 +96,7 @@ of the
 .Fa obj
 structure on
 .Fa node .
-.Fn node_arefobj
+.Fn node_findref
 returns any reference to the element
 .Fa offs
 of the
