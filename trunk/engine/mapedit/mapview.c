@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.77 2003/03/02 07:29:53 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.78 2003/03/05 02:16:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -317,6 +317,7 @@ mapview_draw(void *p)
 	Uint16 old_zoom = m->zoom;
 	int old_tilew = m->tilew;
 	int old_tileh = m->tileh;
+	int layer = 0;
 
 	if (mapedition && prop_get_bool(&mapedit, "tilemap-bg")) {
 		mapview_draw_background(mv);
@@ -329,7 +330,11 @@ mapview_draw(void *p)
 		m->tilew = *mv->tilew;
 		m->tileh = *mv->tileh;
 	}
-	
+
+draw_layer:
+	if (!m->layers[layer].visible) {
+		goto next_layer;
+	}
 	for (my = mv->my, ry = *mv->ssy - mv->map->tileh;
 	     (my - mv->my) < mv->mh+2 && my < m->maph;
 	     my++, ry += mv->map->tileh) {
@@ -344,9 +349,11 @@ mapview_draw(void *p)
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				MAP_CHECK_NODEREF(nref);
 
-				noderef_draw(m, nref,
-				    WIDGET_ABSX(mv) + rx,
-				    WIDGET_ABSY(mv) + ry);
+				if (nref->layer == layer) {
+					noderef_draw(m, nref,
+					    WIDGET_ABSX(mv) + rx,
+					    WIDGET_ABSY(mv) + ry);
+				}
 			}
 
 			if (mv->flags & MAPVIEW_PROPS && mv->map->zoom >= 60) {
@@ -391,6 +398,10 @@ mapview_draw(void *p)
 				    WIDGET_COLOR(mv, CONSTR_ORIGIN_COLOR));
 			}
 		}
+	}
+next_layer:
+	if (++layer < m->nlayers) {
+		goto draw_layer;			/* Draw next layer */
 	}
 
 	if (mv->flags & MAPVIEW_EDIT && (mv->flags & MAPVIEW_NO_CURSOR) == 0) {
