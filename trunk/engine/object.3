@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.50 2003/10/11 04:24:53 vedge Exp $
+.\"	$Csoft: object.3,v 1.51 2003/10/14 03:15:24 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -458,7 +458,7 @@ motion offsets of its noderefs in response to movement.
 .Fn object_unset_position "void *obj"
 .Pp
 .Ft "void"
-.Fn object_control "void *obj" "const char *input_dev"
+.Fn object_set_input "void *obj" "const char *input_dev"
 .nr nS 0
 .Pp
 The
@@ -477,7 +477,7 @@ function sets the object's unique position to the given coordinates of
 causes an object to vanish from its current position, if there is any.
 .Pp
 The
-.Fn object_control
+.Fn object_set_input
 function assigns the input device named
 .Fa input_dev
 to the position associated with
