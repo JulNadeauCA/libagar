@@ -1,0 +1,95 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) 2002 CubeSoft Communications, Inc.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistribution of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Neither the name of CubeSoft Communications, nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 21, 2002
+.Dt LABEL 3
+.Os
+.Sh NAME
+.Nm label
+.Nd agar label widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/widget/widget.h>
+#include <engine/widget/label.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays a string of text, which can change at runtime.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft struct label *
+.Fn label_new "struct region *reg" "char *caption" "int flags"
+.Pp
+.Ft void
+.Fn label_init "struct label *label" "char *caption" "int flags"
+.nr nS 0
+.Pp
+The
+.Fn label_new
+function allocates, initializes, and attaches a
+.Nm
+widget.
+The
+.Fn label_init
+function initializes a
+.Nm
+widget.
+The
+.Fa caption
+argument is a pointer to a null-terminated string that will be
+displayed initially.
+The
+.Fa flags
+can be changed at runtime, and may include:
+.Pp
+.Bd -literal
+#define LABEL_BOLD	0x01		/* Bold text */
+#define LABEL_ITALIC	0x02		/* Italic text */
+.Ed
+.Pp
+The
+justification defaults to
+.Dv LABEL_LEFT ,
+and may be one of:
+.Bd -literal
+enum {
+	LABEL_LEFT,
+	LABEL_CENTER,
+	LABEL_RIGHT
+} justify;
+.Ed
+.Sh EVENTS
+The
+.Nm
+widget does not react to, or generate any event.
+.Pp
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr widget 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in AGAR 1.0.
