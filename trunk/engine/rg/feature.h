@@ -1,4 +1,4 @@
-/*	$Csoft: feature.h,v 1.4 2005/01/31 08:40:35 vedge Exp $	*/
+/*	$Csoft: feature.h,v 1.5 2005/02/03 04:59:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_FEATURE_H_
@@ -14,6 +14,8 @@ struct feature_ops {
 	const char *type;
 	size_t len;
 	const char *desc;
+	int flags;
+#define FEATURE_AUTOREDRAW	0x01	/* Redraw tile periodically on edit */
 
 	void (*init)(void *, struct tileset *, int);
 	int  (*load)(void *, struct netbuf *);
