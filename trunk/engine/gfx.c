@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.20 2004/03/02 08:58:59 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.21 2004/03/12 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -231,7 +231,7 @@ gfx_wire(struct gfx *gfx)
 	pthread_mutex_unlock(&gfx->used_lock);
 }
 
-/* Decrement the reference count. */
+/* Decrement the shared reference count. */
 void
 gfx_unused(struct gfx *gfx)
 {
@@ -247,7 +247,7 @@ gfx_unused(struct gfx *gfx)
 
 /*
  * Return a pointer to the named graphics package.
- * If the package is resident, increment the reference count.
+ * If the package is resident, increment the shared reference count.
  * Otherwise, load the package from disk.
  */
 struct gfx *
