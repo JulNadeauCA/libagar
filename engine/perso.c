@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.21 2003/04/18 04:03:56 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.22 2003/04/24 07:04:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -77,14 +77,13 @@ int	perso_debug = DEBUG_STATE|DEBUG_POSITION;
 #endif
 
 struct perso *
-perso_new(char *name, int hp, int mp)
+perso_new(struct map *map, char *name, int hp, int mp)
 {
 	struct perso *pers;
 
 	pers = Malloc(sizeof(struct perso));
 	perso_init(pers, name, hp, mp);
-
-	world_attach(pers);
+	object_attach(map, pers);
 	return (pers);
 }
 

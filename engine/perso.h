@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.5 2003/04/24 07:04:42 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.6 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -26,7 +26,7 @@ struct perso {
 #define PERSO(ob)	((struct perso *)(ob))
 
 __BEGIN_DECLS
-extern DECLSPEC struct perso	*perso_new(char *, int, int);
+extern DECLSPEC struct perso	*perso_new(struct map *, char *, int, int);
 extern DECLSPEC void		 perso_init(struct perso *, char *, int, int);
 extern DECLSPEC void		 perso_destroy(void *);
 extern DECLSPEC void		 perso_destroy(void *);
