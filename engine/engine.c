@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.28 2002/04/20 09:15:10 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.29 2002/04/23 07:18:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ struct input *joy = NULL;
 struct input *mouse = NULL;
 
 static void	printusage(char *);
-static void	close_button_push(struct button *, Uint8);
+static void	close_button_push(struct button *);
 
 static void
 printusage(char *progname)
@@ -195,13 +195,6 @@ engine_editmap(void)
 {
 	struct mapedit *medit;
 
-	if (!mapediting) {
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-		SDL_EventState(SDL_MOUSEBUTTONDOWN, SDL_IGNORE);
-		SDL_EventState(SDL_MOUSEBUTTONUP, SDL_IGNORE);
-		return;
-	}
-
 	medit = mapedit_create("mapedit0");
 	if (medit == NULL) {
 		return;
@@ -274,7 +267,7 @@ engine_config(void)
 }
 
 static void
-close_button_push(struct button *b, Uint8 button)
+close_button_push(struct button *b)
 {
 	object_unlink(WIDGET(b)->win);
 	object_destroy(WIDGET(b)->win);
