@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.53 2002/05/16 21:13:35 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.54 2002/05/25 08:21:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -340,7 +340,7 @@ object_loadfrom(void *p, char *path)
 	/* XXX mmap? */
 	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
-		warning("%s: %s\n", path, strerror(errno));
+		dprintf("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
 
@@ -375,7 +375,7 @@ object_load(void *p)
 	/* XXX mmap? */
 	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
-		fatal("%s: %s\n", path, strerror(errno));
+		dprintf("%s: %s\n", path, strerror(errno));
 		return (-1);
 	}
 	rv = OBJECT_OPS(ob)->load(ob, fd);

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.44 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.45 2002/05/26 04:08:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,24 +28,31 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mcconfig.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <engine/engine.h>
 #ifdef USE_X11
 #include <SDL_syswm.h>
 #endif
 
-#include <engine/map.h>
-#include <engine/physics.h>
-#include <engine/input.h>
+#include "engine.h"
+#include "map.h"
+#include "physics.h"
+#include "input.h"
+#include "config.h"
 
-#include <engine/mapedit/mapedit.h>
+#include "mapedit/mapedit.h"
 
-#include <engine/widget/text.h>
+#include "widget/text.h"
+#include "widget/window.h"
+#include "widget/widget.h"
+#include "widget/textbox.h"
+#include "widget/keycodes.h"
 
 #ifdef DEBUG
 int	engine_debug = 1;	/* Enable debugging */
@@ -179,6 +186,12 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 
 	/* Initialize/load engine settings. */
 	config = config_new();
+	object_load(config);
+	
+	if (config->flags & CONFIG_FONT_CACHE) {
+		/* Cache common glyphs */
+		keycodes_loadglyphs();
+	}
 
 	/* Initialize input devices. */
 	keyboard = input_new(INPUT_KEYBOARD, 0);
@@ -273,27 +286,33 @@ engine_editmap(void)
 void
 engine_destroy(void)
 {
+#if 0
 	/* Unlink all objects and add them to the free list. */
 	world_destroy(world);
-
+	
 	/* Force garbage collection. */
 	object_start_gc(0, NULL);
 	object_destroy_gc();
-	
+#endif
+
 	/* Destroy the font engine. */
 	text_engine_destroy();
+
+#if 0
+	/* Free glyph cache. */
+	keycodes_freeglyphs();
+#endif
 
 	/* Shut down the input devices. XXX link */
 	input_destroy(keyboard);
 	input_destroy(mouse);
 	input_destroy(joy);
 
-	/* Destroy the views. XXX */
-	view_destroy(mainview);
-	free(mainview);
+	/* Destroy the views. */
+	object_destroy(mainview);
 
 	/* Free the config structure. */
-	config_destroy(config);
+	object_destroy(config);
 
 	SDL_Quit();
 	exit(0);
