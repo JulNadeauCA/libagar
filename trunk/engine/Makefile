@@ -1,9 +1,9 @@
-#	$Csoft: Makefile,v 1.36 2002/08/24 04:04:35 vedge Exp $
+#	$Csoft: Makefile,v 1.37 2002/08/24 05:51:52 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	compat mapedit widget
+SUBDIR=	compat mapedit widget monitor
 
 SHARE=	README.engine \
 	README.xcf
@@ -23,7 +23,9 @@ OBJS=	engine.o error.o event.o anim.o oldxcf.o ttf.o view.o physics.o \
 	input.o object.o audio.o video.o world.o map.o rootmap.o char.o \
 	version.o config.o ailment.o
 
-OBJS+=	mapedit/mapedit.o
+OBJS+=	mapedit/mapedit.o \
+	monitor/monitor.o
+
 OBJS+=	compat/setenv.o \
 	compat/strlcat.o \
 	compat/strlcpy.o \
