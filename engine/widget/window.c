@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.62 2002/08/23 08:10:12 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.63 2002/08/24 04:10:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -600,16 +600,16 @@ static void
 window_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	int moved = 0;
-	int tilew = TILEW, tileh = TILEH;
+	int tilew, tileh;
 
 	switch (view->gfx_engine) {
-	case GFX_ENGINE_GUI:
-		tilew = 16;	/* XXX pref */
-		tileh = 16;
-		break;
 	case GFX_ENGINE_TILEBASED:
 		tilew = TILEW;
 		tileh = TILEH;
+		break;
+	default:
+		tilew = 16;	/* XXX pref */
+		tileh = 16;
 		break;
 	}
 
@@ -736,6 +736,7 @@ window_event_all(SDL_Event *ev)
 	struct region *reg;
 	struct window *win;
 	struct widget *wid;
+	static int ox = 0, oy = 0;
 	int nx, ny;
 
 	switch (ev->type) {
@@ -992,10 +993,10 @@ window_clamp(struct window *win, int minw, int minh)
 		win->x = minw;
 	if (win->y < minh)
 		win->y = minh;
-	if (win->x+win->w > view->w)
-		win->w = view->w - win->x - minw;
-	if (win->y+win->h > view->h)
-		win->h = view->h - win->y - minh;
+	if (win->x+win->w > view->w-minw)
+		win->x = view->w - win->w - minw;
+	if (win->y+win->h > view->h-minh)
+		win->y = view->h - win->h - minh;
 }
 
 /* Window must be locked. */
