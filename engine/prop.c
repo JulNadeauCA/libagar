@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.37 2003/06/15 08:54:18 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.38 2003/06/21 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,6 +49,38 @@ int	prop_debug = 0;
 #define engine_debug prop_debug
 #endif
 
+/* Return the copy of a property. */
+struct prop *
+prop_copy(const struct prop *prop)
+{
+	struct prop *nprop;
+
+	nprop = Malloc(sizeof(struct prop));
+	memcpy(nprop, prop, sizeof(struct prop));
+
+	switch (prop->type) {
+	case PROP_STRING:
+		nprop->data.s = strdup(prop->data.s);
+		if (nprop->data.s == NULL) {
+			free(nprop);
+			error_set("out of memory");
+			return (NULL);
+		}
+		break;
+	case PROP_UNICODE:
+		nprop->data.ucs = ucsdup(prop->data.ucs);
+		if (nprop->data.ucs == NULL) {
+			free(nprop);
+			error_set("out of memory");
+			return (NULL);
+		}
+		break;
+	default:
+		break;
+	}
+	return (0);
+}
+
 /* Modify a property, or create a new one if it does not exist. */
 struct prop *
 prop_set(void *p, const char *key, enum prop_type type, ...)
@@ -67,7 +99,7 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 	}
 	if (nprop == NULL) {
 		nprop = Malloc(sizeof(struct prop));
-		nprop->key = Strdup(key);
+		strlcpy(nprop->key, key, sizeof(nprop->key));
 		nprop->type = type;
 	} else {
 		modify++;
@@ -528,9 +560,6 @@ prop_load(void *p, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&ob->props_lock);
-	if ((ob->flags & OBJECT_RELOAD_PROPS) == 0) {
-		object_free_props(ob);
-	}
 	nprops = read_uint32(buf);
 	for (i = 0; i < nprops; i++) {
 		char key[PROP_KEY_MAX];
@@ -713,7 +742,6 @@ prop_destroy(struct prop *prop)
 		Free(prop->data.s);
 		break;
 	}
-	free(prop->key);
 }
 
 /* XXX unicode */
@@ -752,13 +780,13 @@ prop_print_value(char *s, size_t len, struct prop *prop)
 		snprintf(s, len, "%f", prop->data.d);
 		break;
 	case PROP_STRING:
-		snprintf(s, len, "%s", prop->data.s);
+		strlcpy(s, prop->data.s, len);
 		break;
 	case PROP_POINTER:
 		snprintf(s, len, "%p", prop->data.p);
 		break;
 	case PROP_BOOL:
-		snprintf(s, len, "%s", prop->data.i ? "true" : "false");
+		strlcpy(s, prop->data.i ? "true" : "false", len);
 		break;
 	default:
 		snprintf(s, len, "<???>");

@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.9 2003/06/10 08:07:16 vedge Exp $
+.\"	$Csoft: prop.3,v 1.10 2003/06/15 05:08:39 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -72,6 +72,9 @@ enum prop_type {
 .Ft "struct prop *"
 .Fn prop_get "void *obj" "const char *key" "enum prop_type type" "void *dst"
 .Pp
+.Ft "struct prop *"
+.Fn prop_copy "const struct prop *prop"
+.Pp
 .Ft void
 .Fn prop_lock "void *obj"
 .Pp
@@ -143,6 +146,11 @@ returns a pointer to the related
 .Nm
 structure, or NULL if no property matches
 .Fa key .
+.Pp
+The
+.Fn prop_copy
+function returns a copy of
+.Fa prop .
 .Pp
 The
 .Fn prop_lock
