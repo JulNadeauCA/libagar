@@ -1,13 +1,16 @@
-/*	$Csoft: world.h,v 1.20 2002/06/25 17:59:51 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.21 2002/09/02 08:12:14 vedge Exp $	*/
 /*	Public domain	*/
 
 struct world {
 	struct	object obj;
 
 	/* Read-write, thread-safe */
-	SLIST_HEAD(, object) wobjsh;	/* Game objects */
-	int	nobjs;
-	pthread_mutex_t lock;
+	SLIST_HEAD(, object)	wobjs;	/* Game objects */
+	int			nobjs;
+
+	/* Lock on the object list. */
+	pthread_mutex_t		lock;
+	pthread_mutexattr_t	lockattr;
 };
 
 extern struct world *world;	/* Consistent while running */
@@ -18,4 +21,7 @@ int	 world_load(void *, int);
 int	 world_save(void *, int);
 void	 world_attach(void *, void *);
 void	 world_detach(void *, void *);
+
+int	 world_exists(void *);
+void	*world_find(char *);
 
