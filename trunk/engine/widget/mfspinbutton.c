@@ -1,4 +1,4 @@
-/*	$Csoft: mfspinbutton.c,v 1.2 2004/08/22 12:08:16 vedge Exp $	*/
+/*	$Csoft: mfspinbutton.c,v 1.3 2004/08/24 02:43:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -260,9 +260,9 @@ mfspinbutton_init(struct mfspinbutton *fsu, const char *unit,
 	fsu->sep = sep;
 	pthread_mutex_init(&fsu->lock, NULL);
 
-	strlcpy(fsu->format, "%.10g", sizeof(fsu->format));
+	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	strlcat(fsu->format, sep, sizeof(fsu->format));
-	strlcat(fsu->format, "%.10g", sizeof(fsu->format));
+	strlcat(fsu->format, "%g", sizeof(fsu->format));
 	
 	if (unit != NULL) {
 		fsu->units = ucombo_new(fsu);
