@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.22 2002/06/25 17:32:47 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.1 2002/07/20 18:55:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 #include "widget.h"
 #include "window.h"
 #include "graph.h"
+#include "primitive.h"
 
 static const struct widget_ops graph_ops = {
 	{
@@ -89,6 +90,7 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	graph->flags = flags;
 	graph->caption = strdup(caption);
 	graph->xoffs = 0;
+	graph->xinc = 2;
 	TAILQ_INIT(&graph->items);
 
 	event_new(graph, "window-mousemotion", 0, graph_scroll, NULL);
@@ -132,7 +134,7 @@ graph_draw(void *p)
 {
 	struct graph *gra = p;
 	struct graph_item *gi;
-	int x, y, orig_y, i;
+	int x, y, oy, orig_y, i;
 	Sint32 *val;
 
 	orig_y = WIDGET(gra)->h / 2;
@@ -141,7 +143,7 @@ graph_draw(void *p)
 		if (gra->xoffs > gi->nvals) {
 			continue;
 		}
-		for (x = 0, i = gra->xoffs; ++i < gi->nvals; x++) {
+		for (x = 1, i = gra->xoffs; ++i < gi->nvals; x += gra->xinc) {
 			if (x > WIDGET(gra)->w) {
 				if (gra->flags & GRAPH_SCROLL) {
 					gra->xoffs++;
@@ -152,7 +154,20 @@ graph_draw(void *p)
 			}
 			y = orig_y - gi->vals[i];
 			if (y > 0 && y < WIDGET(gra)->h) {
-				WIDGET_PUT_PIXEL(gra, x, y, gi->color);
+				switch (gra->type) {
+				case GRAPH_POINTS:
+					WIDGET_PUT_PIXEL(gra, x, y, gi->color);
+					break;
+				case GRAPH_LINES:
+					if (i > 1) {
+						oy = orig_y - gi->vals[i-1];
+					} else {
+						oy = orig_y;
+					}
+					primitives.line(gra,
+					    x - gra->xinc, oy, x, y, gi->color);
+					break;
+				}
 			}
 		}
 	}
@@ -199,7 +214,6 @@ graph_destroy(void *p)
 	struct graph_item *git, *nextgit;
 
 	free(gra->caption);
-	SDL_FreeSurface(gra->surface);
 
 	for (git = TAILQ_FIRST(&gra->items);
 	     git != TAILQ_LAST(&gra->items, itemq);

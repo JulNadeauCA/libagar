@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.11 2002/06/09 10:08:08 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.1 2002/07/20 18:55:59 vedge Exp $	*/
 /*	Public domain	*/
 
 struct graph_item {
@@ -23,12 +23,11 @@ struct graph {
 
 	int	 flags;
 #define GRAPH_SCROLL	0x01	/* Scroll when a point is past visible area */
-
-	int	 xoffs;
-	char	 *caption;
-	SDL_Surface *surface;
-
-	struct	 itemq items;
+	
+	int	 xinc;		/* X increment */
+	int	 xoffs;		/* Display offset */
+	char	 *caption;	/* Graph description */
+	struct	 itemq items;	/* Lists of values */
 };
 
 struct graph	*graph_new(struct region *, const char *, enum graph_type,
