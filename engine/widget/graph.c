@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.40 2003/07/14 03:29:12 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.41 2003/07/14 03:39:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -262,16 +262,19 @@ graph_draw(void *p)
 }
 
 struct graph_item *
-graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b)
+graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b,
+    Uint32 limit)
 {
 	struct graph_item *gi;
 
  	gi = Malloc(sizeof(struct graph_item));
 	strlcpy(gi->name, name, sizeof(gi->name));
 	gi->color = SDL_MapRGB(vfmt, r, g, b);
-	gi->vals = NULL;
+	gi->vals = Malloc(NITEMS_INIT * sizeof(graph_val_t));
+	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;
 	gi->graph = gra;
+	gi->limit = limit>0 ? limit : (0xffffffff-1);
 	TAILQ_INSERT_HEAD(&gra->items, gi, items);
 	return (gi);
 }
@@ -279,19 +282,19 @@ graph_add_item(struct graph *gra, const char *name, Uint8 r, Uint8 g, Uint8 b)
 void
 graph_plot(struct graph_item *gi, graph_val_t val)
 {
-	if (gi->vals == NULL) {				/* Initialize */
-		gi->vals = Malloc(NITEMS_INIT * sizeof(graph_val_t));
-		gi->maxvals = NITEMS_INIT;
-		gi->nvals = 0;
-	} else if (gi->nvals >= gi->maxvals) {		/* Grow */
-		graph_val_t *newvals;
+	gi->vals[gi->nvals] = val;
 
-		newvals = Realloc(gi->vals,
-		    (NITEMS_GROW * gi->maxvals) * sizeof(graph_val_t));
-		gi->maxvals += NITEMS_GROW;
-		gi->vals = newvals;
+	if (gi->nvals+1 > gi->limit) {
+		memmove(gi->vals, gi->vals+1, gi->nvals*sizeof(graph_val_t));
+		gi->graph->flags &= ~(GRAPH_SCROLL);
+	} else {
+		if (gi->nvals+1 > gi->maxvals) {
+			gi->vals = Realloc(gi->vals,
+			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t));
+			gi->maxvals += NITEMS_GROW;
+		}
+		gi->nvals++;
 	}
-	gi->vals[gi->nvals++] = val;
 }
 
 void
@@ -310,6 +313,7 @@ graph_free_items(struct graph *gra)
 	     git != TAILQ_LAST(&gra->items, itemq);
 	     git = nextgit) {
 		nextgit = TAILQ_NEXT(git, items);
+		free(git->vals);
 		free(git);
 	}
 	TAILQ_INIT(&gra->items);
