@@ -105,6 +105,10 @@ _prog_objs:
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	        ${MAKE} $$F; \
+		if [ $$? != 0 ]; then \
+			echo "${MAKE}: failure"; \
+			exit 1; \
+		fi; \
 	    done; \
 	fi
 
@@ -116,6 +120,10 @@ _prog_pobjs:
 	        F=`echo $$F | sed 's/.cc$$/.po/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.po/'`; \
 	        ${MAKE} $$F; \
+		if [ $$? != 0 ]; then \
+			echo "${MAKE}: failure"; \
+			exit 1; \
+		fi; \
 	    done; \
 	fi
 
