@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.54 2003/01/23 02:00:57 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.55 2003/01/25 00:38:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -127,4 +127,5 @@ void	 window_set_titleh(struct window *, Uint8);
 
 void	 window_generic_detach(int, union evarg *);
 void	 window_generic_hide(int, union evarg *);
+void	 window_generic_show(int, union evarg *);
 
