@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.24 2003/12/05 01:26:34 vedge Exp $
+# $Csoft: fr.po,v 1.25 2003/12/09 23:20:46 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -659,13 +659,13 @@ msgid "Clear"
 msgstr "Effacer"
 
 msgid "The copy/paste buffer is empty."
-msgstr "Le tampon de copie est vide!"
+msgstr "Le tampon est vide!"
 
 msgid "Flip Tile"
-msgstr "Retourner Tuile"
+msgstr "Mirror"
 
 msgid "Apply a flip/mirror transformation on a tile."
-msgstr "Retourner une tuile horizontalement ou verticalement."
+msgstr "Appliquer un effet mirroir."
 
 msgid "Horizontal"
 msgstr "Horizontal"
@@ -718,13 +718,13 @@ msgid "Stamp"
 msgstr "Étampe"
 
 msgid "Insert the contents of the copy/paste buffer."
-msgstr "Insérer le contenu du tampon de copie."
+msgstr "Insérer le contenu du tampon."
 
 msgid "Insert"
 msgstr "Insérer"
 
 msgid "Shift tool"
-msgstr "Outil déplacement"
+msgstr "Déplacement"
 
 msgid "Displace a tile with the mouse."
 msgstr "Déplacer une tuile à l'aide de la souris."
@@ -799,7 +799,7 @@ msgid "There is no selection to copy."
 msgstr "Il n'y a aucune sélection a copier."
 
 msgid "The copy buffer is empty!"
-msgstr "Le tampon de copie est vide!"
+msgstr "Le tampon est vide!"
 
 msgid "There is no selection to kill."
 msgstr "Il n'y a aucune sélection à supprimer."
