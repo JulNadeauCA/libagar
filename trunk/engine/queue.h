@@ -1,4 +1,4 @@
-/*	$Csoft: queue.h,v 1.1 2002/01/30 08:14:39 vedge Exp $	*/
+/*	$Csoft: queue.h,v 1.2 2002/02/03 11:15:27 vedge Exp $	*/
 /*	$OpenBSD: queue.h,v 1.22 2001/06/23 04:39:35 angelos Exp $	*/
 /*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
 
@@ -111,23 +111,6 @@ struct {								\
 #define	SLIST_EMPTY(head)	(SLIST_FIRST(head) == SLIST_END(head))
 #define	SLIST_NEXT(elm, field)	((elm)->field.sle_next)
 
-#define	SLIST_COUNT(var, head, field, ip) do {				\
-	(ip) = 0;							\
-	SLIST_FOREACH(var, head, field)					\
-		(ip)++;							\
-} while (0)
-
-#define SLIST_INDEX(var, head, field, index) do {			\
-	static int cindex;						\
-	var = NULL;							\
-	cindex = 0;							\
-	SLIST_FOREACH(var, head, field) {				\
-		if (cindex++ == (index)) {				\
-			break;						\
-		}							\
-	}								\
-} while (0)
-
 #define	SLIST_FOREACH(var, head, field)					\
 	for((var) = SLIST_FIRST(head);					\
 	    (var) != SLIST_END(head);					\
@@ -166,6 +149,24 @@ struct {								\
 		    curelm->field.sle_next->field.sle_next;		\
 	}								\
 } while (0)
+
+#define	SLIST_COUNT(var, head, field, ip) do {				\
+	(ip) = 0;							\
+	SLIST_FOREACH(var, head, field)					\
+		(ip)++;							\
+} while (0)
+
+#define SLIST_INDEX(var, head, field, index) do {			\
+	static int cindex;						\
+	var = NULL;							\
+	cindex = 0;							\
+	SLIST_FOREACH(var, head, field) {				\
+		if (cindex++ == (index)) {				\
+			break;						\
+		}							\
+	}								\
+} while (0)
+
 
 /*
  * List definitions.
@@ -241,6 +242,24 @@ struct {								\
 	*(elm2)->field.le_prev = (elm2);				\
 } while (0)
 
+#define	LIST_COUNT(var, head, field, ip) do {				\
+	(ip) = 0;							\
+	LIST_FOREACH(var, head, field)					\
+		(ip)++;							\
+} while (0)
+
+#define LIST_INDEX(var, head, field, index) do {			\
+	static int cindex;						\
+	var = NULL;							\
+	cindex = 0;							\
+	LIST_FOREACH(var, head, field) {				\
+		if (cindex++ == (index)) {				\
+			break;						\
+		}							\
+	}								\
+} while (0)
+
+
 /*
  * Simple queue definitions.
  */
@@ -301,6 +320,24 @@ struct {								\
 	if (((head)->sqh_first = (elm)->field.sqe_next) == NULL)	\
 		(head)->sqh_last = &(head)->sqh_first;			\
 } while (0)
+
+#define SIMPLEQ_COUNT(var, head, field, ip) do {			\
+	(ip) = 0;							\
+	SIMPLEQ_FOREACH(var, head, field)				\
+		(ip)++;							\
+} while (0)
+
+#define SIMPLEQ_INDEX(var, head, field, index) do {			\
+	static int cindex;						\
+	var = NULL;							\
+	cindex = 0;							\
+	SIMPLEQ_FOREACH(var, head, field) {				\
+		if (cindex++ == (index)) {				\
+			break;						\
+		}							\
+	}								\
+} while (0)
+
 
 /*
  * Tail queue definitions.
@@ -403,6 +440,23 @@ struct {								\
 		(head)->tqh_last = &(elm2)->field.tqe_next;		\
 	(elm2)->field.tqe_prev = (elm)->field.tqe_prev;			\
 	*(elm2)->field.tqe_prev = (elm2);				\
+} while (0)
+
+#define TAILQ_COUNT(var, head, field, ip) do {				\
+	(ip) = 0;							\
+	TAILQ_FOREACH(var, head, field)					\
+		(ip)++;							\
+} while (0)
+
+#define TAILQ_INDEX(var, head, field, index) do {			\
+	static int cindex;						\
+	var = NULL;							\
+	cindex = 0;							\
+	TAILQ_FOREACH(var, head, field) {				\
+		if (cindex++ == (index)) {				\
+			break;						\
+		}							\
+	}								\
 } while (0)
 
 /*
@@ -517,5 +571,23 @@ struct {								\
 	else								\
 		(elm2)->field.cqe_prev->field.cqe_next = (elm2);	\
 } while (0)
+
+#define CIRCLEQ_COUNT(var, head, field, ip) do {			\
+	(ip) = 0;							\
+	CIRCLEQ_FOREACH(var, head, field)				\
+		(ip)++;							\
+} while (0)
+
+#define CIRCLEQ_INDEX(var, head, field, index) do {			\
+	static int cindex;						\
+	var = NULL;							\
+	cindex = 0;							\
+	CIRCLEQ_FOREACH(var, head, field) {				\
+		if (cindex++ == (index)) {				\
+			break;						\
+		}							\
+	}								\
+} while (0)
+
 
 #endif	/* !_SYS_QUEUE_H_ */
