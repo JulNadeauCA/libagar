@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.19 2003/12/05 01:21:26 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.20 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -32,10 +32,10 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static void flip_init(void);
-static void flip_effect(struct mapview *, struct map *, struct node *);
+static void flip_init(void *);
+static void flip_effect(void *, struct mapview *, struct map *, struct node *);
 
-struct tool flip_tool = {
+const struct tool flip_tool = {
 	N_("Flip Tile"),
 	N_("Apply a flip/mirror transformation on a tile."),
 	MAPEDIT_TOOL_FLIP,
@@ -58,7 +58,7 @@ static int multi = 0;			/* Flip/mirror whole selection */
 static int multi_ind = 0;		/* Apply to tiles individually */
 
 static void
-flip_init(void)
+flip_init(void *p)
 {
 	static const char *mode_items[] = {
 		N_("Horizontal"),
@@ -69,7 +69,7 @@ flip_init(void)
 	struct radio *rad;
 	struct checkbox *cb;
 
-	win = tool_window_new(&flip_tool, "mapedit-tool-flip");
+	win = tool_window(p, "mapedit-tool-flip");
 
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, &mode);
@@ -82,7 +82,7 @@ flip_init(void)
 }
 
 static void
-flip_effect(struct mapview *mv, struct map *m, struct node *node)
+flip_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	int selx = mv->mx + mv->mouse.x;
 	int sely = mv->my + mv->mouse.y;

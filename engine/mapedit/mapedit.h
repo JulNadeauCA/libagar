@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.94 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.95 2004/03/24 08:43:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -11,43 +11,11 @@
 
 #include "begin_code.h"
 
-struct tool_kbinding {
-	const char *name;			/* Description */
-	SDLMod mod;				/* Key modifier */
-	SDLKey key;				/* Key */
-	int edit;				/* Require edition mode */
-	void (*func)(struct mapview *);		/* Callback function */
-	SLIST_ENTRY(tool_kbinding) kbindings;
-};
-
-struct tool {
-	const char *name;			/* Name of the tool */
-	const char *desc;			/* Short description */
-	int icon;				/* Icon (-1 = none) */
-	int cursor_index;			/* Cursor (-1 = none) */
-
-	void (*init)(void);
-	void (*destroy)(void);
-	int  (*load)(struct netbuf *);
-	int  (*save)(struct netbuf *);
-	void (*effect)(struct mapview *, struct map *, struct node *);
-	int  (*cursor)(struct mapview *, SDL_Rect *);
-	void (*mouse)(struct mapview *, Sint16, Sint16, Uint8);
-
-	struct window *win;			/* Tool settings window */
-	struct button *trigger;
-	SDL_Surface *cursor_su;			/* Static cursor surface */
-	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
-};
-
 struct mapedit {
 	struct object obj;
-	struct tool *curtool;		/* Selected tool */
 	struct map copybuf;		/* Copy/paste buffer */
 	struct object pseudo;		/* Pseudo-object (for depkeeping) */
 };
-
-#define	TOOL(t)	((struct tool *)(t))
 
 enum {
 	/* Tool icons */
@@ -87,8 +55,6 @@ enum {
 
 extern struct mapedit mapedit;
 extern int mapedition;
-extern struct tool *mapedit_tools[];
-extern const int mapedit_ntools;
 
 __BEGIN_DECLS
 void		 mapedit_init(void);
@@ -100,11 +66,6 @@ struct window	*mapedit_settings(void *);
 struct window	*objedit_window(void);
 void		 objedit_init(void);
 void		 objedit_destroy(void);
-
-struct mapview	*tool_mapview(void);
-struct window	*tool_window_new(struct tool *, const char *);
-void		 tool_bind_key(void *, SDLMod, SDLKey,
-		               void (*)(struct mapview *), int);
 __END_DECLS
 
 #include "close_code.h"

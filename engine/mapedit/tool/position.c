@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.13 2004/03/02 02:39:21 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.14 2004/03/05 15:22:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -37,11 +37,12 @@
 
 #include <string.h>
 
-static void position_tool_init(void);
-static int position_tool_cursor(struct mapview *, SDL_Rect *);
-static void position_tool_effect(struct mapview *, struct map *, struct node *);
+static void position_tool_init(void *);
+static int position_tool_cursor(void *, struct mapview *, SDL_Rect *);
+static void position_tool_effect(void *, struct mapview *, struct map *,
+	                         struct node *);
 
-struct tool position_tool = {
+const struct tool position_tool = {
 	N_("Position"),
 	N_("Assign unique object positions."),
 	MAPEDIT_TOOL_POSITION,
@@ -138,13 +139,13 @@ poll_projmaps(int argc, union evarg *argv)
 }
 
 static void
-position_tool_init(void)
+position_tool_init(void *p)
 {
 	struct window *win;
 	struct box *bo;
 	struct tlist *tl;
 
-	win = tool_window_new(&position_tool, "mapedit-tool-position");
+	win = tool_window(p, "mapedit-tool-position");
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl)->flags |= WIDGET_HFILL;
@@ -187,7 +188,8 @@ position_tool_init(void)
 }
 
 static void
-position_tool_effect(struct mapview *mv, struct map *m, struct node *dn)
+position_tool_effect(void *p, struct mapview *mv, struct map *m,
+    struct node *dn)
 {
 	struct object *ob = obj;
 	int posflags = 0;
@@ -217,7 +219,7 @@ position_tool_effect(struct mapview *mv, struct map *m, struct node *dn)
 }
 
 static int
-position_tool_cursor(struct mapview *mv, SDL_Rect *rd)
+position_tool_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	return (-1);
 }

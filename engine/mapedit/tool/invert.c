@@ -1,4 +1,4 @@
-/*	$Csoft: invert.c,v 1.1 2003/12/04 03:26:58 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.2 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -31,9 +31,10 @@
 
 #include <engine/widget/radio.h>
 
-static void invert_effect(struct mapview *, struct map *, struct node *);
+static void invert_effect(void *, struct mapview *, struct map *,
+                          struct node *);
 
-struct tool invert_tool = {
+const struct tool invert_tool = {
 	N_("Color Inversion"),
 	N_("Invert the color of a tile."),
 	MAPEDIT_TOOL_INVERT,
@@ -48,7 +49,7 @@ struct tool invert_tool = {
 };
 
 static void
-invert_effect(struct mapview *mv, struct map *m, struct node *node)
+invert_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct noderef *nref;
 	struct transform *trans;

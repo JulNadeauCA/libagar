@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.42 2003/12/05 01:21:25 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.43 2004/01/03 04:25:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,9 +29,10 @@
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
 
-static void eraser_effect(struct mapview *, struct map *, struct node *);
+static void eraser_effect(void *, struct mapview *, struct map *,
+                          struct node *);
 
-struct tool eraser_tool = {
+const struct tool eraser_tool = {
 	N_("Eraser"),
 	N_("Remove the highest node reference."),
 	MAPEDIT_TOOL_ERASER,
@@ -46,7 +47,7 @@ struct tool eraser_tool = {
 };
 
 static void
-eraser_effect(struct mapview *mv, struct map *m, struct node *dn)
+eraser_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
 {
 	struct noderef *nref;
 	

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.46 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.47 2004/02/20 04:18:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,13 +34,14 @@
 #include <engine/widget/radio.h>
 #include <engine/widget/checkbox.h>
 
-static void propedit_init(void);
-static void propedit_effect(struct mapview *, struct map *, struct node *);
+static void propedit_init(void *p);
+static void propedit_effect(void *p, struct mapview *, struct map *,
+                            struct node *);
 static void set_node_mode(int, union evarg *);
 static void toggle_node_flag(int, union evarg *);
 static void toggle_origin(int, union evarg *);
 
-struct tool propedit_tool = {
+const struct tool propedit_tool = {
 	N_("Property editor"),
 	N_("Alter the properties of node references."),
 	MAPEDIT_TOOL_PROPEDIT,
@@ -179,24 +180,24 @@ propedit_flag_blk(struct mapview *mv)
 }
 
 static void
-propedit_init(void)
+propedit_init(void *p)
 {
 	struct window *win;
 	struct vbox *vb;
 
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP5, propedit_no_edge, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
-	tool_bind_key(&propedit_tool, KMOD_NONE, SDLK_b, propedit_flag_blk, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP5, propedit_no_edge, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_w, propedit_flag_walk, 1);
+	tool_bind_key(p, KMOD_NONE, SDLK_b, propedit_flag_blk, 1);
 
-	win = tool_window_new(&propedit_tool, "mapedit-tool-propedit");
+	win = tool_window(p, "mapedit-tool-propedit");
 
 	vb = vbox_new(win, 0);
 	{
@@ -280,7 +281,7 @@ set_edge(struct map *m, struct node *node, Uint32 edge)
 }
 
 static void
-propedit_effect(struct mapview *mv, struct map *m, struct node *node)
+propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct noderef *r;
 	Uint8 *ks;
