@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.59 2002/12/26 05:07:11 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.60 2002/12/29 02:13:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -154,7 +154,7 @@ case 4:					\
 		_VIEW_PUTPIXEL_24(_putpixel_dst, _view_col)	\
 		_VIEW_PUTPIXEL_32(_putpixel_dst, _view_col)	\
 	}							\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 /*
  * Set the pixel at x,y to c inside surface s.
@@ -170,7 +170,7 @@ case 4:					\
 		_VIEW_PUTPIXEL_24(_view_dst, (c))			\
 		_VIEW_PUTPIXEL_32(_view_dst, (c))			\
 	}								\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 #define VIEW_PUT_PIXEL_CLIPPED(s, vx, vy, c) do {			\
 	if ((vx) >= view->v->clip_rect.x &&				\
@@ -186,25 +186,23 @@ case 4:					\
 			_VIEW_PUTPIXEL_32(_view_dst, (c))		\
 		}							\
 	}								\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 #define VIEW_REDRAW() do {		\
 	SDL_Event rdev;			\
 					\
 	rdev.type = SDL_VIDEOEXPOSE;	\
 	SDL_PushEvent(&rdev);		\
-} while (/*CONSTCOND*/0)
+} while (0)
 
 #define VIEW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
 
-#define VIEW_UPDATE(rect) do {						\
-	if (view->ndirty+2 > view->maxdirty) {				\
-		view->maxdirty += 2;					\
-		view->dirty = erealloc(view->dirty,			\
-		    view->maxdirty * sizeof(SDL_Rect *));		\
-	}								\
-	view->dirty[view->ndirty++] = (rect);				\
-} while (/*CONSTCOND*/0)
+#define VIEW_UPDATE(rect) do {				\
+	if (view->ndirty + 1 > view->maxdirty) {	\
+		fatal("too many rects\n");		\
+	}						\
+	view->dirty[view->ndirty++] = (rect);		\
+} while (0)
 
 extern struct viewport *view;	/* view.c */
 

@@ -1,4 +1,4 @@
-/*	$Csoft: view_params.c,v 1.2 2002/12/26 07:12:28 vedge Exp $	*/
+/*	$Csoft: view_params.c,v 1.3 2002/12/29 02:13:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -77,8 +77,6 @@ view_params_window(void)
 		    &view->bpp);
 		label_polled_new(reg, 100, 0, &view->lock, "Geometry: %dx%d",
 		    &view->w, &view->h);
-		label_polled_new(reg, 100, 0, &view->lock, "Dirty rects: %d",
-		    &view->maxdirty);
 		label_polled_new(reg, 100, 0, &view->lock, "Window op: %d (%p)",
 		    &view->winop, &view->wop_win);
 		label_polled_new(reg, 100, 0, NULL,
