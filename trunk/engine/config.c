@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.118 2004/05/01 12:38:00 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.119 2004/05/13 10:31:40 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -30,6 +30,7 @@
 #include <config/ttfdir.h>
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
+#include <config/have_freetype.h>
 
 #include <compat/dir.h>
 
@@ -83,8 +84,6 @@ extern int text_composition;
 extern int text_rightleft;
 extern int window_freescale;
 extern int kbd_unitrans;
-extern int kbd_delay;
-extern int kbd_repeat;
 
 static void
 config_set_path(int argc, union evarg *argv)
@@ -238,6 +237,7 @@ config_load(void *p, struct netbuf *buf)
 #endif
 	kbd_delay = (int)read_uint32(buf);
 	kbd_repeat = (int)read_uint32(buf);
+	mouse_dblclick_delay = (int)read_uint32(buf);
 	return (0);
 }
 
@@ -258,6 +258,7 @@ config_save(void *p, struct netbuf *buf)
 #endif
 	write_uint32(buf, (Uint32)kbd_delay);
 	write_uint32(buf, (Uint32)kbd_repeat);
+	write_uint32(buf, (Uint32)mouse_dblclick_delay);
 	return (0);
 }
 
@@ -378,14 +379,17 @@ config_window(struct config *con)
 		mspinbutton_set_range(msb, 320, 4096);
 	}
 
-	hb = hbox_new(win, HBOX_WFILL|HBOX_HOMOGENOUS);
+	vb = vbox_new(win, VBOX_WFILL);
 	{
 		struct spinbutton *sbu;
+		
+		sbu = spinbutton_new(vb, _("Mouse double click delay (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &mouse_dblclick_delay);
 
-		sbu = spinbutton_new(hb, _(" Key delay (ms): "));
+		sbu = spinbutton_new(vb, _("Keyboard repeat delay (ms): "));
 		widget_bind(sbu, "value", WIDGET_INT, &kbd_delay);
 		
-		sbu = spinbutton_new(hb, _(" Key repeat (ms): "));
+		sbu = spinbutton_new(vb, _("Keyboard repeat interval (ms): "));
 		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
 	}
 
