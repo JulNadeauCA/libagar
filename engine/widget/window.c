@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.52 2002/07/20 18:57:12 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.53 2002/07/21 10:57:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -1041,10 +1041,10 @@ window_resize(struct window *win)
 			}
 
 			if (rw >= 0)
-				wid->w = rw * reg->w / 100;
+				wid->w = rw * reg->w/100;
 			if (rh >= 0)
-				wid->h = rh * reg->h / 100;
-			
+				wid->h = rh * reg->h/100;
+
 			if (wid->w > reg->w)
 				wid->w = reg->w;
 			if (wid->h > reg->h)
@@ -1052,18 +1052,26 @@ window_resize(struct window *win)
 
 			event_post(wid, "widget-scaled", "%i, %i",
 			    reg->w, reg->h);
-
+			
 			/* Space widgets */
 			if (reg->flags & REGION_VALIGN) {
-				y += wid->h + reg->spacing;
 				if (rw > 0) {
+					if (TAILQ_LAST(&reg->widgetsh,
+					    widgetsq) == wid) {
+						wid->h -= reg->spacing/2;
+					}
 					wid->h -= reg->spacing/nwidgets;
 				}
-			} else if (reg->flags & REGION_HALIGN) {
-				x += wid->w + reg->spacing;
+				y += wid->h + reg->spacing;
+			} else {
 				if (rw > 0) {
+					if (TAILQ_LAST(&reg->widgetsh,
+					    widgetsq) == wid) {
+						wid->w -= reg->spacing/2;
+					}
 					wid->w -= reg->spacing/nwidgets;
 				}
+				x += wid->w + reg->spacing;
 			}
 		}
 	}
@@ -1080,8 +1088,10 @@ window_titlebar_printf(struct window *win, char *fmt, ...)
 {
 	va_list args;
 
+	/* XXX */
 	if (win->caption != NULL) {
 		free(win->caption);
+		win->caption = NULL;
 	}
 	va_start(args, fmt);
 	vasprintf(&win->caption, fmt, args);

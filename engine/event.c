@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.62 2002/07/20 16:11:13 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.63 2002/07/21 10:58:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -210,10 +210,11 @@ event_loop(void *arg)
 	    0, 0, 100, 100);
 	fps_label = label_new(reg, "...", 0);
 	WIDGET(fps_label)->rh = 20;
-	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES, GRAPH_SCROLL,
-	    96, 80);
+	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
+	    GRAPH_SCROLL|GRAPH_ORIGIN,
+	    90, 100, 80);
 	fps_graph_item = graph_add_item(fps_graph, "fps",
-	    SDL_MapRGB(view->v->format, 255, 255, 255));
+	    SDL_MapRGB(view->v->format, 0, 160, 0));
 #endif
 
 	/* Start the garbage collection process. */

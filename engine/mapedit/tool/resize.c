@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.1 2002/07/18 12:02:35 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.2 2002/07/21 10:58:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -100,8 +100,8 @@ resize_window(void *p)
 
 	win = window_new("Resize map", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    160, 188,
-	    160, 188);
+	    174, 110,
+	    174, 110);
 	
 	/* Scale textboxes */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
@@ -112,7 +112,7 @@ resize_window(void *p)
 	textbox_printf(tbox_h, "0");
 
 	/* Resize button */
-	reg = region_new(win, REGION_VALIGN, 40, 0, 100, 60);
+	reg = region_new(win, REGION_HALIGN, 0, 40, 100, 60);
 	button = button_new(reg, "Resize", NULL, 0, 100, 100);
 	event_new(button, "button-pushed", 0, resize_do, "%p, %p, %p", res,
 	    tbox_w, tbox_h);
@@ -131,8 +131,10 @@ resize_do(int argc, union evarg *argv)
 	Uint32 w, h;
 
 	mv = tool_mapview();
-	if (mv == NULL)
+	if (mv == NULL) {
 		warning("no view\n");
+		return;
+	}
 	m = mv->map;
 
 	w = (Uint32)atoi(tbox_w->text);
