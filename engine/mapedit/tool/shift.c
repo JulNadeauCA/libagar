@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.24 2003/06/29 11:33:45 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.25 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -54,8 +54,7 @@ shift_init(void *p)
 {
 	struct shift *sh = p;
 
-	tool_init(&sh->tool, "shift", &shift_ops);
-	TOOL(sh)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_SHIFT);
+	tool_init(&sh->tool, "shift", &shift_ops, MAPEDIT_TOOL_SHIFT);
 	sh->mode = 0;
 	sh->multi = 0;
 }

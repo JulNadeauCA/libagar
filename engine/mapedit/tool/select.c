@@ -1,4 +1,4 @@
-/*	$Csoft: select.c,v 1.15 2003/07/06 02:43:57 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.16 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -156,8 +156,7 @@ select_init(void *p)
 {
 	struct select *sel = p;
 
-	tool_init(&sel->tool, "select", &select_ops);
-	TOOL(sel)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_SELECT);
+	tool_init(&sel->tool, "select", &select_ops, MAPEDIT_TOOL_SELECT);
 	TOOL(sel)->cursor = SPRITE(sel, TOOL_SELECT_CURSOR);
 
 	tool_bind_key(sel, KMOD_CTRL, SDLK_c, select_copy, 0);

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.11 2003/08/11 22:26:02 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.12 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -296,7 +296,6 @@ gfx_fetch(void *p)
 out:
 	pthread_mutex_unlock(&gfxq_lock);
 	if (ob->gfx != NULL) {					/* Replace */
-		dprintf("replacing `%s' gfx\n", ob->gfx->name);
 		gfx_unused(ob->gfx);
 	}
 	ob->gfx = gfx;

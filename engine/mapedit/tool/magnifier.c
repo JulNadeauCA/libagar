@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.33 2003/07/08 00:34:55 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.34 2003/07/28 15:29:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -82,8 +82,8 @@ magnifier_init(void *p)
 {
 	struct magnifier *mag = p;
 
-	tool_init(&mag->tool, "magnifier", &magnifier_ops);
-	TOOL(mag)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_MAGNIFIER);
+	tool_init(&mag->tool, "magnifier", &magnifier_ops,
+	    MAPEDIT_TOOL_MAGNIFIER);
 	TOOL(mag)->cursor = SPRITE(mag, TOOL_MAGNIFIER_CURSOR);
 	mag->increment = 30;
 }

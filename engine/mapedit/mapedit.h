@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.85 2003/07/08 04:43:39 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.86 2003/07/26 12:34:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -39,7 +39,7 @@ struct mapedit {
 	struct tool	*curtool;		/* Selected tool */
 	struct node	*src_node;		/* Selected source node */
 	struct map	 copybuf;		/* Copy/paste buffer */
-	struct object	*pseudo;		/* Pseudo object (for deps) */
+	struct object	 pseudo;		/* Pseudo-object (for deps) */
 	TAILQ_HEAD(,mapedit_obj) dobjs;
 	TAILQ_HEAD(,mapedit_obj) gobjs;
 };

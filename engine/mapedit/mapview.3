@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.27 2003/06/13 22:45:05 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.28 2003/07/14 03:40:40 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -77,21 +77,15 @@ The
 may include:
 .Pp
 .Bd -literal
-#define MAPVIEW_EDIT		0x001	/* Mouse/keyboard edition */
-#define MAPVIEW_INDEPENDENT	0x002	/* Zoom/ss independent from map */
-#define MAPVIEW_TILESET		0x004	/* Map of source nodes */
-#define MAPVIEW_GRID		0x008	/* Display a grid */
-#define MAPVIEW_PROPS		0x010	/* Display node properties */
-#define MAPVIEW_NO_CURSOR	0x100	/* Hide cursor */
+#define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
+#define MAPVIEW_INDEPENDENT	 0x002	/* Zoom/ss independent from map's */
+#define MAPVIEW_GRID		 0x004	/* Display a grid */
+#define MAPVIEW_PROPS		 0x008	/* Display node properties */
 .Ed
 .Pp
 The
 .Dv MAPVIEW_EDIT
-flag enables write operations on the map.
-.Dv MAPVIEW_TILESET
-allows nodes on this map to be selected as source nodes for level edition
-operations.
-The latter two flags are only available if the level editor,
+flag enables write operations on the map, assuming the level editor,
 .Xr mapedit 3 ,
 is initialized.
 .Pp
@@ -99,7 +93,7 @@ The
 .Dv MAPVIEW_INDEPENDENT
 flag enables the use of zoom factors and soft-scroll offsets that are
 independent from the map's, but are not saved with
-.Xr map
+.Xr map 3
 states.
 .Pp
 The
@@ -199,6 +193,8 @@ Stop any zooming in progress
 The
 .Nm
 widget does not generate any event.
+.Sh BUGS
+The zoom uses unsafe SDL timers.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr map 3 ,
@@ -209,5 +205,3 @@ widget does not generate any event.
 The
 .Nm
 widget first appeared in Agar 1.0.
-.Sh BUGS
-The zoom uses unsafe SDL timers.

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.89 2003/07/26 12:28:45 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.90 2003/08/21 04:26:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -81,6 +81,8 @@ struct object {
 #define OBJECT_DATA_RESIDENT	0x08	/* Object data is resident */
 #define OBJECT_PRESERVE_DEPS	0x10	/* Don't remove a dependency when its
 					   reference count reaches 0. */
+#define OBJECT_STATIC		0x20	/* Don't free() after detach. */
+#define OBJECT_READONLY		0x40	/* Don't allow edition (advisory) */
 #define OBJECT_SAVED_FLAGS	(OBJECT_RELOAD_PROPS|OBJECT_INDESTRUCTIBLE)
 
 	pthread_mutex_t	 lock;

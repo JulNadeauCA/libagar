@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.31 2003/06/13 04:22:22 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.32 2003/07/08 00:34:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,8 +55,7 @@ resize_init(void *p)
 {
 	struct resize *res = p;
 
-	tool_init(&res->tool, "resize", &resize_ops);
-	TOOL(res)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_RESIZE);
+	tool_init(&res->tool, "resize", &resize_ops, MAPEDIT_TOOL_RESIZE);
 	res->mode = RESIZE_GROW;
 }
 

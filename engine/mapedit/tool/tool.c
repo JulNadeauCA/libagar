@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.32 2003/07/06 02:54:21 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.33 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@ tool_window_close(int argc, union evarg *argv)
 }
 
 void
-tool_init(struct tool *tool, const char *name, const void *ops)
+tool_init(struct tool *tool, const char *name, const void *ops, int icon)
 {
 	object_init(tool, "tool", name, ops);
 	object_wire_gfx(tool, "/engine/mapedit/tool/tool");
@@ -53,7 +53,7 @@ tool_init(struct tool *tool, const char *name, const void *ops)
 
 	strlcpy(tool->type, name, sizeof(tool->type));
 	tool->button = NULL;
-	tool->icon = NULL;
+	tool->icon = SPRITE(&mapedit, icon);
 	tool->cursor = NULL;
 	tool->win = (TOOL_OPS(tool)->window != NULL) ? 
 	    TOOL_OPS(tool)->window(tool) : NULL;
