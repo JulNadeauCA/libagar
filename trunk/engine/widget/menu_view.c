@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.9 2005/01/31 08:32:48 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.10 2005/02/01 03:27:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -107,9 +107,8 @@ mousemotion(int argc, union evarg *argv)
 
 	if (my < 0)
 		return;
-	if (mx < 0) {
+	if (mx < 0)
 		goto selnone;
-	}
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		struct AGMenuItem *subitem = &pitem->subitems[i];
@@ -240,8 +239,6 @@ mousebuttonup(int argc, union evarg *argv)
 	int my = argv[3].i;
 	int y = mview->vpadding;
 	int i;
-
-	dprintf("buttonup %d,%d\n", mx, my);
 
 	if (my < 0 || mx < 0) {
 		goto collapse;
