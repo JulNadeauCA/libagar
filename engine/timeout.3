@@ -1,0 +1,170 @@
+.\"	$Csoft: input.3,v 1.3 2004/01/08 02:20:08 vedge Exp $
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 9, 2004
+.Dt TIMEOUT 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
+.Sh NAME
+.Nm timeout
+.Nd agar timer facility
+.Sh SYNOPSIS
+.Bd -literal
+#include <engine/timeout.h>
+.Ed
+.Sh DESCRIPTION
+The agar
+.Nm
+subsystem manages the scheduling and execution of specific callback functions
+at specific points in real-time or simulated real-time.
+A callback function has the prototype:
+.Pp
+.nr nS 1
+.Ft "Uint32"
+.Fn fn "void *obj" "Uint32 ival" "void *arg"
+.nr nS 0
+.Pp
+Where
+.Fa obj
+is a pointer to the object managing the timeout (or NULL),
+.Fa ival
+is the delay in ticks before the next invocation, and
+.Fa arg
+is the user-supplied pointer passed to
+.Fn timer_add .
+If the callback function returns nonzero, the timeout is automatically
+rescheduled to occur in t+n ticks.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "void"
+.Fn timeout_set "struct timeout *to" \
+                "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg"
+.Pp
+.Ft "void"
+.Fn timeout_add "void *obj" "struct timeout *to" "Uint32 ival"
+.Pp
+.Ft "void"
+.Fn timeout_del "void *obj" "struct timeout *to"
+.Pp
+.Ft "int"
+.Fn timeout_running "void *obj" "struct timeout *to"
+.Pp
+.Ft "void"
+.Fn lock_timeout "void *obj"
+.Pp
+.Ft "void"
+.Fn unlock_timeout "void *obj"
+.nr nS 0
+.Pp
+The
+.Fn timeout_set
+function initializes a pre-allocated
+.Nm
+structure using the specified callback function and argument.
+.Pp
+The
+.Fn timeout_add
+function schedules the previously specified callback function for execution in
+t+ival ticks.
+The
+.Fa obj
+argument specifies the
+.Xr object 3
+which is responsible for the scheduling and execution of the given callback
+function.
+Whenever an object is detached,
+.Fn object_detach
+waits for the termination of any callback function that may be executing, and
+cancels any future timeouts associated with the object being detached.
+.Pp
+Different types of objects may implement different timing schemes involving
+either real-time or simulated real-time.
+If the
+.Fa obj
+argument is NULL, the callback is not associated with any object and a
+default timing scheme is used.
+.Pp
+With the default timing scheme, a
+.Dq tick
+is considered to be equivalent to 1 millisecond (as obtained from
+.Xr SDL_GetTicks 3 ) .
+Different timing schemes may assign different meanings to one tick, for
+example a digital simulation could define one tick to be equivalent to
+one nanosecond, and the timing scheme could be made to allow single-stepping.
+On a multiprocessor system, one might consider a multithreaded timing scheme.
+The
+.Nm
+interface remains consistent across different timing schemes.
+.Pp
+The
+.Fn timeout_del
+function removes the given timeout from the queue, assuming that it exists.
+.Fn timeout_exists
+returns 1 if the given timeout is currently in the queue.
+.Pp
+Both
+.Fn timeout_add
+and
+.Fn timeout_del
+may be invoked safely from callback functions, but it is more efficient to use
+the callback's return value for rescheduling or cancelling timeouts.
+The
+.Nm
+interface is thread-safe, but it is important to use
+.Fn lock_timeout
+and
+.Fn unlock_timeout
+in constructions such as:
+.Bd -literal
+lock_timeout(obj);
+if (timeout_exists(obj, &timeout)) {
+	timeout_del(obj, &timeout);
+}
+unlock_timeout(obj);
+.Ed
+.Sh SEE ALSO
+.Xr agar 3 ,
+.Xr event 3 ,
+.Xr object 3 ,
+.Xr SDL_GetTicks 3
+.Rs
+.%T "Hashed and Hierarchical Timing Wheels: Efficient Data Structures for Implementing a Timer Facility"
+.%A "George Varghese"
+.%A "Tony Lauck"
+.%D "February 14, 1996"
+.Re
+.Sh HISTORY
+The
+.Nm
+facility first appeared in Agar 1.0.
+The interface was inspired by the OpenBSD
+.Xr timeout 9
+API designed by Artur Grabowski and Thomas Nordin.
+The prototype for callbacks is inspired from SDL by Sam Lantinga.
+The implementation uses the algorithms presented by George Varghese and
+Tony Lauck.
