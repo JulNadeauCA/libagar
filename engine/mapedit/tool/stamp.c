@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.34 2003/03/13 00:01:57 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.35 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -113,7 +113,7 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 		return;
 	}
 	if (srcnode == dstnode) {
-		text_msg("Error", "Circular reference");
+		/* Circular reference */
 		return;
 	}
 	
