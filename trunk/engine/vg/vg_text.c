@@ -1,4 +1,4 @@
-/*	$Csoft: vg_text.c,v 1.2 2004/03/30 16:04:26 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.3 2004/04/22 12:36:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -41,10 +41,9 @@ vg_text_init(struct vg *vg, struct vg_element *vge)
 	vge->vg_text.align = VG_ALIGN_MC;
 }
 
-/* Specify text alignment and angle. */
+/* Specify text alignment and angle relative to the central vertex. */
 void
-vg_text_align(struct vg *vg, double x, double y, enum vg_alignment align,
-    double angle)
+vg_text_align(struct vg *vg, enum vg_alignment align, double angle)
 {
 	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
 
@@ -52,6 +51,23 @@ vg_text_align(struct vg *vg, double x, double y, enum vg_alignment align,
 	vge->vg_text.angle = angle;
 }
 
+/* Specify the font to use. */
+int
+vg_text_font(struct vg *vg, const char *face, int size, int style)
+{
+	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
+
+	if (size < VG_FONT_SIZE_MIN || size > VG_FONT_SIZE_MAX) {
+		error_set(_("Illegal font size."));
+		return (-1);
+	}
+	strlcpy(vge->vg_text.face, face, sizeof(vge->vg_text.face));
+	vge->vg_text.size = size;
+	vge->vg_text.style = style;
+	return (0);
+}
+
+/* Specify the text to display. */
 void
 vg_text_printf(struct vg *vg, const char *fmt, ...)
 {
