@@ -94,7 +94,6 @@ else
     PREFIX=/usr/local
 fi
 echo >Makefile.config
-echo >engine/confdefs
 if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
