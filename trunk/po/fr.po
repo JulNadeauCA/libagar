@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.10 2003/08/25 05:07:12 vedge Exp $
+# $Csoft: fr.po,v 1.11 2003/08/25 05:27:23 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-08-01 01:43-0300\n"
+"POT-Creation-Date: 2003-08-26 00:44-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <french@csoft.org>\n"
@@ -106,10 +106,6 @@ msgstr "chemin-sauvegarde"
 #: cave/main.c:216
 msgid "font-path"
 msgstr "chemin-polices"
-
-#: cave/di/di.c:42
-msgid "Mental raide!\n"
-msgstr "Mental raide!\n"
 
 #: engine/config.c:121
 #, c-format
@@ -273,108 +269,108 @@ msgstr ""
 "Opérations non-accélérées:\n"
 "%s"
 
-#: engine/object.c:182
+#: engine/object.c:192
 #, c-format
 msgid "The path exceeds >= %lu bytes."
 msgstr "Le chemin d'accès fait >= %lu octets."
 
-#: engine/object.c:273
+#: engine/object.c:286
 #, c-format
 msgid "The `%s' object is in use."
 msgstr "L'objet «%s» est en cours d'utilisation."
 
-#: engine/object.c:374
+#: engine/object.c:387
 #, c-format
 msgid "The object `%s' does not exist."
 msgstr "L'objet «%s» n'existe pas."
 
-#: engine/object.c:514
+#: engine/object.c:527
 #, c-format
 msgid "The %s/%s.%s file is not in load-path."
 msgstr "Le fichier «%s/%s.%s» est introuvable dans le chemin de chargement."
 
-#: engine/object.c:533
+#: engine/object.c:544
 #, c-format
 msgid "The `%s' object contains no graphics."
 msgstr "L'objet «%s» ne contient aucun graphique."
 
-#: engine/object.c:549
+#: engine/object.c:559
 #, c-format
 msgid "The `%s' object contains no audio."
 msgstr "L'objet «%s» ne contient aucun son."
 
-#: engine/object.c:662 engine/object.c:912
+#: engine/object.c:672 engine/object.c:933
 #, c-format
 msgid "The `%s' object is non-persistent."
 msgstr "L'objet «%s» n'est pas persistant."
 
-#: engine/object.c:687
+#: engine/object.c:696
 #, c-format
 msgid "The `%s' save has inconsistent flags."
 msgstr "La sauvegarde de «%s» contient des flags inconsistents."
 
-#: engine/object.c:784
+#: engine/object.c:806
 #, c-format
 msgid "Unknown object type: `%s'"
 msgstr "Type d'objet inconnu: «%s»"
 
-#: engine/object.c:850
+#: engine/object.c:870
 #, c-format
 msgid "The data of `%s' is already resident."
 msgstr "Les données de «%s» sont déjà en mémoire."
 
-#: engine/object.c:1045
+#: engine/object.c:1066
 #, c-format
 msgid "There is no input device named `%s'."
 msgstr "Il n'y a aucun pilote d'entrée sous le nom de «%s»."
 
-#: engine/object.c:1051
+#: engine/object.c:1072
 msgid "There is no position to control."
 msgstr "Il n'y pas de position a contrôler."
 
-#: engine/object.c:1155
+#: engine/object.c:1174
 #, c-format
 msgid "There is no submap named `%s'."
 msgstr "Aucune sous-carte n'est nommée «%s»."
 
-#: engine/object.c:1284
+#: engine/object.c:1303
 #, c-format
 msgid "Bad coordinates: %d,%d,%d"
 msgstr "Mauvaises coordonnées: %d,%d,%d"
 
-#: engine/object.c:1578
+#: engine/object.c:1630
 #, c-format
 msgid "%s object"
 msgstr "Objet «%s»"
 
-#: engine/object.c:1584
+#: engine/object.c:1636
 #, c-format
 msgid "Name: %s (%s)"
 msgstr "Nom: «%s» (%s)"
 
-#: engine/monitor/widget_browser.c:172 engine/object.c:1585
+#: engine/monitor/widget_browser.c:172 engine/object.c:1637
 #, c-format
 msgid "Type: %s"
 msgstr "Type: %s"
 
-#: engine/object.c:1586
+#: engine/object.c:1638
 #, c-format
 msgid "Flags : 0x%x"
 msgstr "Flags : 0x%x"
 
-#: engine/object.c:1588
+#: engine/object.c:1640
 msgid "Parent: %[obj]"
 msgstr "Parent: %[obj]"
 
-#: engine/object.c:1600
+#: engine/object.c:1652
 msgid "Graphics: "
 msgstr "Graphiques: "
 
-#: engine/object.c:1601
+#: engine/object.c:1653
 msgid "Audio: "
 msgstr "Son: "
 
-#: engine/object.c:1644
+#: engine/object.c:1696
 msgid "Dependencies:"
 msgstr "Dépendances:"
 
@@ -397,98 +393,103 @@ msgstr "joy%d"
 msgid "mouse%d"
 msgstr "souris%d"
 
-#: engine/map.c:153 engine/map.c:209
+#: engine/map.c:157 engine/map.c:213
 #, c-format
 msgid "%ux%u nodes exceed %ux%u."
 msgstr "%ux%u noeuds dépassent la limite de %ux%u."
 
-#: engine/map.c:198 engine/map.c:325
+#: engine/map.c:202 engine/map.c:329
 msgid "Layer 0"
 msgstr "Couche 0"
 
-#: engine/map.c:338
+#: engine/map.c:342
 #, c-format
 msgid "Layer %u"
 msgstr "Couche %u"
 
-#: engine/map.c:342
+#: engine/map.c:346
 msgid "Too many layers."
 msgstr "Trop de couches."
 
-#: engine/map.c:679
+#: engine/map.c:685
 #, c-format
 msgid "Cannot resolve sprite: %u."
 msgstr "Impossible de résoudre le sprite: %u."
 
-#: engine/map.c:702
+#: engine/map.c:708
 #, c-format
 msgid "Cannot resolve anim: %u."
 msgstr "Impossible de résoudre l'animation: %u."
 
-#: engine/map.c:720
+#: engine/map.c:726
 msgid "Warp map name is too big."
 msgstr "Le nom de carte de téléportation est trop grand."
 
-#: engine/map.c:727
+#: engine/map.c:733
 msgid "Invalid warp coordinates."
 msgstr "Coordonnées de téléportation invalides."
 
-#: engine/map.c:738
+#: engine/map.c:744
 msgid "Unknown type of noderef."
 msgstr "Type de référence de noeud inconnu."
 
-#: engine/map.c:744
+#: engine/map.c:750
 msgid "Too many transforms."
 msgstr "Trop de transformations."
 
-#: engine/map.c:775
+#: engine/map.c:781
 msgid "Too many noderefs."
 msgstr "Trop de références de noeud."
 
-#: engine/map.c:821
+#: engine/map.c:827
 msgid "Invalid map geometry."
 msgstr "Géométrie de carte invalide."
 
-#: engine/map.c:836
+#: engine/map.c:842
 msgid "Too many map layers."
 msgstr "La carte comporte trop de couches."
 
-#: engine/map.c:1197
+#: engine/map.c:1217
 #, c-format
 msgid "%s map view"
 msgstr "Vue sur «%s»"
 
-#: engine/map.c:1285
+#: engine/map.c:1308
 msgid "There is no active selection."
 msgstr "La carte ne comporte aucune sélection."
 
-#: engine/map.c:1448
+#: engine/map.c:1491
 #, c-format
 msgid "m%u (%ux%u nodes)\n"
 msgstr "m%u (%ux%u noeuds)\n"
 
-#: engine/map.c:1463
+#: engine/map.c:1498
+#, c-format
+msgid "s%u (%ux%u pixels, %ubpp)\n"
+msgstr "s%u (%ux%u pixels, %ubpp)\n"
+
+#: engine/map.c:1506
 #, c-format
 msgid "a%u (%u frames)\n"
 msgstr "a%u (%u frames)\n"
 
-#: engine/map.c:1481
+#: engine/map.c:1524
 #, c-format
 msgid "%s graphics"
 msgstr "Graphiques de «%s»"
 
-#: engine/map.c:1506 engine/mapedit/tool/merge.c:251
-#: engine/mapedit/tool/stamp.c:66
+#: engine/map.c:1549 engine/mapedit/tool/merge.c:250
+#: engine/mapedit/tool/stamp.c:56
 msgid "Replace"
 msgstr "Remplacer"
 
-#: engine/map.c:1525
+#: engine/map.c:1568
 #, c-format
 msgid "%s map edition"
 msgstr "Édition de «%s»"
 
 #. XXX combo
-#: engine/map.c:1588
+#: engine/map.c:1632
 #, c-format
 msgid "  Layer #%d"
 msgstr "  Couche #%d"
@@ -534,7 +535,7 @@ msgstr "Impossible de sauvegarder une propriété de type 0x%x."
 msgid "%s character"
 msgstr "Personnage «%s»"
 
-#: engine/mapedit/objedit.c:218 engine/mapedit/tool/merge.c:267
+#: engine/mapedit/objedit.c:218 engine/mapedit/tool/merge.c:266
 #: engine/perso.c:176
 msgid "Name: "
 msgstr "Nom: "
@@ -696,7 +697,7 @@ msgid "Pop"
 msgstr "Supprimer"
 
 #: engine/mapedit/layedit.c:247 engine/mapedit/objedit.c:231
-#: engine/mapedit/tool/merge.c:286
+#: engine/mapedit/tool/merge.c:285
 msgid "Edit"
 msgstr "Éditer"
 
@@ -717,7 +718,7 @@ msgstr "Aucun noeud n'est sélectionné."
 msgid "%s node"
 msgstr "Noeud sur «%s»"
 
-#: engine/mapedit/nodeedit.c:186 engine/mapedit/tool/merge.c:288
+#: engine/mapedit/nodeedit.c:186 engine/mapedit/tool/merge.c:287
 msgid "Remove"
 msgstr "Enlever"
 
@@ -733,11 +734,11 @@ msgstr "Haut"
 msgid "Down"
 msgstr "Bas"
 
-#: engine/mapedit/mapedit.c:167
+#: engine/mapedit/mapedit.c:166
 msgid "Tools"
 msgstr "Outils"
 
-#: engine/mapedit/mapview.c:542
+#: engine/mapedit/mapview.c:525
 msgid "The zoom is out of range."
 msgstr "La fréquence de rafraîchissement est hors limite."
 
@@ -758,6 +759,10 @@ msgstr "Aucun nom d'objet spécifié."
 msgid "The `%s' object is indestructible."
 msgstr "L'objet «%s» est indestructible."
 
+#: engine/mapedit/objedit.c:166
+msgid " (resident)"
+msgstr " (en mémoire)"
+
 #: engine/mapedit/objedit.c:209
 msgid "Object editor"
 msgstr "Éditeur d'objet"
@@ -766,7 +771,7 @@ msgstr "Éditeur d'objet"
 msgid "Type: "
 msgstr "Type: "
 
-#: engine/mapedit/objedit.c:230 engine/mapedit/tool/merge.c:271
+#: engine/mapedit/objedit.c:230 engine/mapedit/tool/merge.c:270
 msgid "Create"
 msgstr "Créer"
 
@@ -782,41 +787,41 @@ msgstr "Charger"
 msgid "Destroy"
 msgstr "Détruire"
 
-#: engine/mapedit/tool/eraser.c:70
+#: engine/mapedit/tool/eraser.c:69
 msgid "Eraser"
 msgstr "Gomme à effacer"
 
-#: engine/mapedit/tool/eraser.c:75 engine/mapedit/tool/flip.c:71
-#: engine/mapedit/tool/shift.c:78
+#: engine/mapedit/tool/eraser.c:74 engine/mapedit/tool/flip.c:70
+#: engine/mapedit/tool/shift.c:77
 msgid "All"
 msgstr "Tout"
 
-#: engine/mapedit/tool/eraser.c:76 engine/mapedit/tool/flip.c:72
-#: engine/mapedit/tool/shift.c:77
+#: engine/mapedit/tool/eraser.c:75 engine/mapedit/tool/flip.c:71
+#: engine/mapedit/tool/shift.c:76
 msgid "Highest"
 msgstr "Plus haut"
 
-#: engine/mapedit/tool/fill.c:66 engine/mapedit/tool/fill.c:76
+#: engine/mapedit/tool/fill.c:65 engine/mapedit/tool/fill.c:75
 msgid "Fill"
 msgstr "Remplir"
 
-#: engine/mapedit/tool/fill.c:67
+#: engine/mapedit/tool/fill.c:66
 msgid "Clear"
 msgstr "Vider"
 
-#: engine/mapedit/tool/fill.c:94
+#: engine/mapedit/tool/fill.c:93
 msgid "No source node."
 msgstr "Aucun noeud source."
 
-#: engine/mapedit/tool/flip.c:66
+#: engine/mapedit/tool/flip.c:65
 msgid "Horizontal"
 msgstr "Horizontal"
 
-#: engine/mapedit/tool/flip.c:67
+#: engine/mapedit/tool/flip.c:66
 msgid "Vertical"
 msgstr "Vertical"
 
-#: engine/mapedit/tool/flip.c:81
+#: engine/mapedit/tool/flip.c:80
 msgid "Flip"
 msgstr "Retourner"
 
@@ -836,64 +841,64 @@ msgstr "Zoom 1:1"
 msgid "Zoom %: "
 msgstr "Zoom %: "
 
-#: engine/mapedit/tool/merge.c:135
+#: engine/mapedit/tool/merge.c:134
 msgid "No brush name was given."
 msgstr "Aucun nom de pinceau n'a été donné."
 
-#: engine/mapedit/tool/merge.c:141
+#: engine/mapedit/tool/merge.c:140
 #, c-format
 msgid "A `%s' brush exists."
 msgstr "Un pinceau du nom de «%s» existe."
 
-#: engine/mapedit/tool/merge.c:245
+#: engine/mapedit/tool/merge.c:244
 msgid "Merge tool"
 msgstr "Fusion"
 
-#: engine/mapedit/tool/merge.c:259
+#: engine/mapedit/tool/merge.c:258
 msgid "Random shift"
 msgstr "Déplacement au hazard"
 
-#: engine/mapedit/tool/merge.c:282
+#: engine/mapedit/tool/merge.c:281
 msgid "Load set"
 msgstr "Charger"
 
-#: engine/mapedit/tool/merge.c:284
+#: engine/mapedit/tool/merge.c:283
 msgid "Save set"
 msgstr "Sauvegarder"
 
-#: engine/mapedit/tool/propedit.c:244
+#: engine/mapedit/tool/propedit.c:243
 msgid "Node props"
 msgstr "Propriétés de noeud"
 
-#: engine/mapedit/tool/propedit.c:250
+#: engine/mapedit/tool/propedit.c:249
 msgid "Block"
 msgstr "Bloquer"
 
-#: engine/mapedit/tool/propedit.c:251
+#: engine/mapedit/tool/propedit.c:250
 msgid "Walk"
 msgstr "Marcher"
 
-#: engine/mapedit/tool/propedit.c:252
+#: engine/mapedit/tool/propedit.c:251
 msgid "Climb"
 msgstr "Grimper"
 
-#: engine/mapedit/tool/propedit.c:259
+#: engine/mapedit/tool/propedit.c:258
 msgid "Bio"
 msgstr "Bio"
 
-#: engine/mapedit/tool/propedit.c:260
+#: engine/mapedit/tool/propedit.c:259
 msgid "Regen"
 msgstr "Régénérer"
 
-#: engine/mapedit/tool/propedit.c:261
+#: engine/mapedit/tool/propedit.c:260
 msgid "Slow"
 msgstr "Lent"
 
-#: engine/mapedit/tool/propedit.c:262
+#: engine/mapedit/tool/propedit.c:261
 msgid "Haste"
 msgstr "Rapide"
 
-#: engine/mapedit/tool/propedit.c:271
+#: engine/mapedit/tool/propedit.c:270
 msgid "Origin"
 msgstr "Origine"
 
@@ -913,25 +918,21 @@ msgstr "Il n'y a aucune sélection à supprimer."
 msgid "There is no selection to cut."
 msgstr "Il n'y a aucune sélection à couper."
 
-#: engine/mapedit/tool/shift.c:71
+#: engine/mapedit/tool/shift.c:70
 msgid "Shift"
 msgstr "Déplacement"
 
-#: engine/mapedit/tool/shift.c:87
+#: engine/mapedit/tool/shift.c:86
 msgid "Multi"
 msgstr "Multiple"
 
-#: engine/mapedit/tool/stamp.c:67
+#: engine/mapedit/tool/stamp.c:57
 msgid "Insert"
 msgstr "Insérer"
 
-#: engine/mapedit/tool/stamp.c:75
+#: engine/mapedit/tool/stamp.c:70
 msgid "Stamp"
 msgstr "Étampe"
-
-#: engine/mapedit/tool/stamp.c:91
-msgid "No source node is selected."
-msgstr "Aucun noeud source n'est sélectionné."
 
 #: engine/monitor/screenshot.c:72
 msgid "A JPEG error has occured."
@@ -1018,7 +1019,7 @@ msgstr "Widgets"
 msgid "Viewport"
 msgstr "Vue"
 
-#: engine/monitor/monitor.c:85
+#: engine/monitor/monitor.c:84
 msgid "Debug monitor"
 msgstr "Moniteur de déboguage"
 
@@ -1296,3 +1297,9 @@ msgstr "%s: %s à échoué"
 #: screenshotd/session.c:106
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
+
+#~ msgid "Mental raide!\n"
+#~ msgstr "Mental raide!\n"
+
+#~ msgid "No source node is selected."
+#~ msgstr "Aucun noeud source n'est sélectionné."
