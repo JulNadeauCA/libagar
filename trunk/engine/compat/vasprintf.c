@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.1 2002/08/20 09:16:51 vedge Exp $	*/
+/*	$Csoft: vasprintf.c,v 1.2 2002/08/20 09:36:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -27,6 +27,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <engine/mcconfig.h>
+
+#ifndef HAVE_VASPRINTF
 
 #include <unistd.h>
 #include <stdio.h>
@@ -58,4 +62,6 @@ vasprintf(char **ret, const char *fmt, va_list ap)
 	*ret = buf;
 	return (size);
 }
+
+#endif	/* !HAVE_VASPRINTF */
 
