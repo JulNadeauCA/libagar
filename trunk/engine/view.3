@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.15 2003/02/10 04:45:40 vedge Exp $
+.\"	$Csoft: view.3,v 1.16 2003/03/05 18:22:20 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -86,10 +86,13 @@ returning 0 on success and -1 on failure.
 .Fn view_surface "int flags" "int width" "int height"
 .Pp
 .Ft "SDL_Surface *"
-.Fn view_scale_surface "SDL_Surface *sourcesu" "Uint16 width" "Uint16 height"
+.Fn view_copy_surface "SDL_Surface *src"
+.Pp
+.Ft "SDL_Surface *"
+.Fn view_scale_surface "SDL_Surface *src" "Uint16 width" "Uint16 height"
 .Pp
 .Ft "GLuint"
-.Fn view_surface_texture "SDL_Surface *sourcesu" "GLfloat *texcoord"
+.Fn view_surface_texture "SDL_Surface *src" "GLfloat *texcoord"
 .Pp
 .Ft "void"
 .Fn VIEW_UPDATE "SDL_Rect rd"
@@ -120,9 +123,14 @@ on host byte order:
 .Ed
 .Pp
 The
+.Fn view_copy_surface
+returns a newly allocated surface containing a copy of
+.Fa src .
+.Pp
+The
 .Fn view_scale_surface
 functions performs bitmap scaling of surface
-.Fa sourcesu
+.Fa src
 to
 .Fa width
 by
@@ -131,7 +139,7 @@ pixels.
 If OpenGL support is available,
 .Fn view_surface_texture
 creates an OpenGL texture from
-.Fa sourcesu .
+.Fa src
 .Pp
 The
 .Fn VIEW_UPDATE

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.109 2003/03/02 04:11:59 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.110 2003/03/04 00:43:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -310,6 +310,22 @@ view_surface(int flags, int w, int h)
 		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 	}
 	return (s);
+}
+
+/* Return a newly allocated surface containing a copy of ss. */
+SDL_Surface *
+view_copy_surface(SDL_Surface *ss)
+{
+	SDL_Surface *rs;
+
+	rs = SDL_ConvertSurface(ss, ss->format,
+	    SDL_SWSURFACE |
+	    (ss->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL)));
+	if (rs == NULL) {
+		error_set("SDL_ConvertSurface: %s", SDL_GetError());
+		return (NULL);
+	}
+	return (rs);
 }
 
 /*
