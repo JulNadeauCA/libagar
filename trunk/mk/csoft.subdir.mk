@@ -1,4 +1,4 @@
-# $Csoft: csoft.subdir.mk,v 1.11 2002/01/27 12:29:48 vedge Exp $
+# $Csoft: csoft.subdir.mk,v 1.12 2002/01/28 00:30:12 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -78,6 +78,19 @@ deinstall-subdir:
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
+		done; \
+	fi)
+
+depend-subdir:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    echo "==> ${REL}$$F"; \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ depend); \
 		done; \
 	fi)
 
