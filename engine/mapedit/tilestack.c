@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.14 2002/12/01 14:41:03 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.15 2002/12/13 07:47:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -107,6 +107,7 @@ tilestack_draw(void *p)
 	struct noderef *nref;
 	struct art_anim *an;
 	int nx, ny, y = 0;
+	SDL_Surface *su;
 
 	nx = mv->mx + mv->mouse.x;
 	ny = mv->my + mv->mouse.y;
@@ -121,12 +122,18 @@ tilestack_draw(void *p)
 	TAILQ_FOREACH(nref, &n->nrefs, nrefs) {
 		switch (nref->type) {
 		case NODEREF_SPRITE:
-			WIDGET_DRAW(ts,
-			    SPRITE(nref->pobj, nref->offs), 0, y);
+			su = view_scale_surface(SPRITE(nref->pobj, nref->offs),
+			    WIDGET(ts)->w, WIDGET(ts)->w);
+			WIDGET_DRAW(ts, su, 0, y);
+			SDL_FreeSurface(su);
 			break;
 		case NODEREF_ANIM:
 			an = ANIM(nref->pobj, nref->offs);
-			WIDGET_DRAW(ts, an->frames[0], 0, y);
+			su = view_scale_surface(an->frames[0],
+			    WIDGET(ts)->w, WIDGET(ts)->w);
+			WIDGET_DRAW(ts, su, 0, y);
+			SDL_FreeSurface(su);
+
 			if (nref->data.anim.flags & NODEREF_ANIM_AUTO) {
 				WIDGET_DRAW(ts,
 				    SPRITE(mv->med, MAPEDIT_ANIM_DELTA_TXT),
@@ -136,14 +143,11 @@ tilestack_draw(void *p)
 			    0, y);
 			break;
 		case NODEREF_WARP:
-			{
-				SDL_Surface *su;
-
-				su = text_render(NULL, -1,
-				    SDL_MapRGB(view->v->format, 255, 255, 255),
-				    nref->data.warp.map);
-				WIDGET_DRAW(ts, su, 0, y);
-			}
+			su = text_render(NULL, -1,
+			    SDL_MapRGB(view->v->format, 255, 255, 255),
+			    nref->data.warp.map);
+			WIDGET_DRAW(ts, su, 0, y);
+			SDL_FreeSurface(su);
 			break;
 		}
 
