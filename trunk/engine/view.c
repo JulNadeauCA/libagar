@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.24 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.25 2002/03/31 04:40:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -70,10 +70,14 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	case VIEW_MAPEDIT:
 		dprintf("map edition mode\n");
 		v->map = m;
-		v->mapw = (v->width / m->tilew) - 2;
-		v->maph = (v->height / m->tileh) - 1;
+		v->mapw = (v->width / m->tilew);
+		v->maph = (v->height / m->tileh);
 		v->mapxoffs = 1;
 		v->mapyoffs = 1;
+		if (v->map->mapw < v->mapw)
+			v->mapxoffs += (v->mapw - v->map->mapw) / 2;
+		if (v->map->maph < v->maph)
+			v->mapyoffs += (v->maph - v->map->maph) / 2;
 		break;
 	case VIEW_FIGHT:
 		dprintf("off-map fight mode\n");
@@ -83,6 +87,13 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		v->mapxoffs = -1;
 		v->mapyoffs = -1;
 		break;
+	}
+
+	v->vmapw = v->mapw - v->mapxoffs;
+	v->vmaph = v->maph - v->mapyoffs;
+
+	if (v->mode == VIEW_MAPEDIT) {
+		v->vmapw--;		/* Tile list */
 	}
 
 	switch (v->depth) {
@@ -100,9 +111,6 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		    SDL_GetError());
 		return (-1);
 	}
-	dprintf("fps %d flags %x geo %dx%dx%d on %s at %dx%d\n",
-	    v->fps, v->flags, v->width, v->height, v->depth,
-	    v->map->obj.name, v->mapx, v->mapy);
 
 	if (v->mapmask != NULL)
 		view_freemask(v);
@@ -243,6 +251,8 @@ view_create(Uint32 w, Uint32 h, Uint32 depth, Uint32 flags)
 	v->mapy = 0;
 	v->mapxoffs = 0;
 	v->mapyoffs = 0;
+	v->vmapw = 0;
+	v->vmaph = 0;
 	v->mapmask = NULL;
 	v->maprects = NULL;
 	v->rects = NULL;
