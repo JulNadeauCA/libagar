@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.4 2002/08/19 07:41:39 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.5 2002/09/06 01:26:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -96,28 +96,28 @@ propedit_window(void *p)
 
 	/* Mode */
 	{
-		static const char *items[] = {
+		static char *items[] = {
 			"Clear",
 			"Set",
 			"Unset",
 			NULL
 		};
 
-		rad = radio_new(reg, items, 0, 0);
+		rad = radio_new(reg, items, 0);
 		event_new(rad, "radio-changed", 0,
 		    propedit_event, "%p, %i", pe, -1);
 	}
 
 	/* Block/walk/climb */
 	{
-		static const char *items[] = {
+		static char *items[] = {
 			"Block",
 			"Walk",
 			"Climb",
 			NULL
 		};
 
-		rad = radio_new(reg, items, 0, 0);
+		rad = radio_new(reg, items, 0);
 		event_new(rad, "radio-changed", 0,
 		    propedit_event, "%p, %i", pe, 0);
 	}

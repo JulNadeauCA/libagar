@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.6 2002/08/18 00:37:44 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.7 2002/09/06 01:26:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -95,9 +95,9 @@ resize_window(void *p)
 	
 	/* Scale textboxes */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 40);
-	tbox_w = textbox_new(reg, "W: ", 0, 50, 100);
+	tbox_w = textbox_new(reg, "W: ", 0, 50, 100);	/* XXX int */
 	win->focus = WIDGET(tbox_w);
-	tbox_h = textbox_new(reg, "H: ", 0, 50, 100);
+	tbox_h = textbox_new(reg, "H: ", 0, 50, 100);	/* XXX int */
 	textbox_printf(tbox_w, "0");
 	textbox_printf(tbox_h, "0");
 
@@ -126,8 +126,8 @@ resize_do(int argc, union evarg *argv)
 	}
 	m = mv->map;
 
-	w = (Uint32)atoi(tbox_w->text);
-	h = (Uint32)atoi(tbox_h->text);
+	w = (Uint32)textbox_int(tbox_w);
+	h = (Uint32)textbox_int(tbox_h);
 
 	switch (res->mode) {
 	case RESIZE_GROW:

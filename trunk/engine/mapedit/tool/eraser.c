@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.8 2002/08/12 06:56:26 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.9 2002/09/06 01:26:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -87,7 +87,7 @@ eraser_window(void *p)
 	struct window *win;
 	struct region *reg;
 	struct radio *rad;
-	static const char *mode_items[] = {
+	static char *mode_items[] = {
 		"All",
 		"Highest",
 		"Lowest",
@@ -98,7 +98,7 @@ eraser_window(void *p)
 	win = window_new("mapedit-tool-eraser", "Eraser", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y, 120, 120, 120, 120);
 	reg = region_new(win, 0, 0, 0, 100, 100);
-	rad = radio_new(reg, mode_items, 0, 0);
+	rad = radio_new(reg, mode_items, 0);
 	event_new(rad, "radio-changed", 0, eraser_event, "%p, %c", er, 'm');
 	
 	win->focus = WIDGET(rad);

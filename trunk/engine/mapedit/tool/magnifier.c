@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.7 2002/08/19 05:30:09 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.8 2002/09/06 01:26:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -89,7 +89,7 @@ magnifier_window(void *p)
 	struct radio *rad;
 	struct button *button;
 	struct textbox *tbox;
-	static const char *mode_items[] = {
+	static char *mode_items[] = {
 		"Zoom in",
 		"Zoom out",
 		"Center",
@@ -103,7 +103,7 @@ magnifier_window(void *p)
 	
 	/* Mode */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 50);
-	rad = radio_new(reg, mode_items, 0, 0);
+	rad = radio_new(reg, mode_items, 0);
 	event_new(rad, "radio-changed", 0, magnifier_event,
 	    "%p, %c", mag, 'm');
 	
@@ -115,7 +115,7 @@ magnifier_window(void *p)
 
 	/* Scale textbox */
 	reg = region_new(win, REGION_VALIGN, 0, 70, 97, 30);
-	tbox = textbox_new(reg, "%: ", 0, 100, 100);
+	tbox = textbox_new(reg, "%: ", 0, 100, 100);	/* XXX int */
 	event_new(tbox, "textbox-changed", 0, magnifier_event,
 	    "%p, %c", mag, 's');
 	textbox_printf(tbox, "100");
@@ -149,7 +149,7 @@ magnifier_event(int argc, union evarg *argv)
 			struct textbox *tbox = argv[0].p;
 			int fac;
 
-			fac = atoi(tbox->text);
+			fac = textbox_int(tbox);
 			if (fac < -32767) {
 				fac = -32767;
 			} else if (fac > 32767) {
