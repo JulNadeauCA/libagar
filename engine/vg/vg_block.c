@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.5 2004/05/24 03:32:22 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.6 2004/05/29 05:33:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,6 +52,7 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 	vgb->origin.x = 0;
 	vgb->origin.y = 0;
 	vgb->origin.z = 0;
+	vgb->theta = 0;
 	TAILQ_INIT(&vgb->vges);
 
 	vg->cur_block = vgb;
@@ -109,9 +110,14 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 	vg->redraw = 1;
 }
 
-/* Rotate a block around its vertex. */
 void
-vg_rotate_block(struct vg *vg, struct vg_block *vgb, double delta)
+vg_block_theta(struct vg *vg, struct vg_block *vgb, double theta)
+{
+	vgb->theta = theta;
+}
+
+void
+vg_rotate_block(struct vg *vg, struct vg_block *vgb, double theta)
 {
 	struct vg_block *block_save;
 	struct vg_element *vge;
@@ -127,15 +133,14 @@ vg_rotate_block(struct vg *vg, struct vg_block *vgb, double delta)
 
 			vg_abs2rel(vg, &vge->vtx[i], &x, &y);
 			vg_car2pol(vg, x, y, &r, &theta);
-			theta += delta;
+			theta += vgb->theta;
 			vg_pol2car(vg, r, theta, &x, &y);
 			vg_rel2abs(vg, x, y, &vge->vtx[i]);
 		}
 		vge->redraw = 1;
 	}
-
 	vg_select_block(vg, block_save);
-	vg->redraw = 1;
+	vg->redraw++;
 }
 
 /* Convert absolute coordinates to block relative coordinates. */
@@ -245,8 +250,8 @@ poll_blocks(int argc, union evarg *argv)
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		char name[VG_BLOCK_NAME_MAX];
 
-		snprintf(name, sizeof(name), "%s (%.2f,%.2f)", vgb->name,
-		    vgb->pos.x, vgb->pos.y);
+		snprintf(name, sizeof(name), "%s (%.2f,%.2f; \xce\xb8=%.2f)",
+		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta);
 		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON), name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
