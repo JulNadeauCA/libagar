@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.44 2002/02/18 03:54:43 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.45 2002/02/18 09:56:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -80,7 +80,6 @@ mapedit_create(char *name)
 {
 	struct mapedit *med;
 	struct fobj *fob;
-	char fobpath[FILENAME_MAX];
 
 	med = (struct mapedit *)emalloc(sizeof(struct mapedit));
 	object_init(&med->obj, strdup(name), 0, &mapedit_vec);
@@ -100,7 +99,6 @@ mapedit_create(char *name)
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
 
-	sprintf(fobpath, "%s/mapedit.fob", SHAREDIR);
 	fob = fobj_load(savepath(name, "fob"));
 	if (fob == NULL) {
 		return (NULL);
@@ -201,24 +199,38 @@ fail:
 	return (-1);
 }
 
+void
+mapedit_setcaption(struct mapedit *med, char *path)
+{
+	static char caption[FILENAME_MAX];
+	struct map *m = med->map;
+
+	if (object_strfind(med->margs.name) == NULL) {
+		sprintf(caption, "%s [unknown] (%s)", m->obj.name, path);
+		object_link(m);
+	} else {
+		sprintf(caption, "%s [%d] (%s)", m->obj.name, m->obj.id, path);
+	}
+	SDL_WM_SetCaption(caption, "agar");
+}
+
 int
 mapedit_link(void *p)
 {
 	char path[FILENAME_MAX];
-	char caption[FILENAME_MAX];
 	struct mapedit *med = (struct mapedit *)p;
 	struct map *m = med->map;
 	struct node *node;
 	int fd, new = 0;
 	
 	/* Users must copy maps to udatadir in order to edit them. */
-	sprintf(path, "%s/%s.o", world->udatadir, med->margs.name);
+	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
 
 	/* XXX specify a view in arguments? */
 	/* XXX do this in mapedit_link()? */
 	if ((fd = open(path, O_RDONLY, 0)) > 0) {
 		close(fd);
-	
+
 		m = map_create(med->margs.name, NULL, 0);
 		object_loadfrom(m, path);
 	} else {
@@ -233,7 +245,6 @@ mapedit_link(void *p)
 		m->defy = med->margs.maph - 2;
 		origin = &m->map[m->defx][m->defy];
 		origin->flags |= NODE_ORIGIN;
-
 		new++;
 	}
 
@@ -255,18 +266,9 @@ mapedit_link(void *p)
 	    m->view->width - m->tilew, m->tileh,
 	    "Object list");
 
-	if (object_strfind(med->margs.name) == NULL) {
-		sprintf(caption, "%s [unknown] (%s)",
-		    m->obj.name, new ? "new" : path);
-		object_link(m);
-	} else {
-		sprintf(caption, "%s [%d] (%s)",
-		    m->obj.name, m->obj.id,
-		    new ? "new" : path);
-	}
-
-	view_setmode(m->view, m, VIEW_MAPEDIT, caption);
+	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
 	view_center(m->view, m->defx, m->defy);
+	mapedit_setcaption(med, new ? "new" : path);
 
 	/* Create the structures defining what is editable. */
 	mapedit_shadow(med);
@@ -672,9 +674,8 @@ mapedit_cursor_tick(Uint32 ival, void *p)
 	if (moved != 0) {
 		mapedit_move(med, x, y);
 		mapdir_postmove(&med->cursor_dir, &x, &y, moved);
-		med->map->redraw++;
-
 		mapedit_sticky(med);
+		med->map->redraw++;
 	}
 
 	pthread_mutex_unlock(&med->map->lock);
