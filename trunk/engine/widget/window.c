@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.43 2002/07/05 01:12:46 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.44 2002/07/07 06:34:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -776,6 +776,8 @@ window_event_all(SDL_Event *ev)
 				window_move(win, ev->motion.x, ev->motion.y);
 				goto posted;
 			case VIEW_WINOP_RESIZE:
+				dprintf("resize\n");
+				break;
 			case VIEW_WINOP_NONE:
 				break;
 			}
@@ -829,13 +831,18 @@ window_event_all(SDL_Event *ev)
 			/*
 			 * Window operation.
 			 */
-			if (ev->type == SDL_MOUSEBUTTONDOWN &&
-			    ev->button.y - win->y <= win->titleh) {
-			    	if (ev->button.x - win->x < 20) {
-					window_hide_locked(win);
-				}
-				view->winop = VIEW_WINOP_MOVE;
-				view->wop_win = win;
+			if (ev->type == SDL_MOUSEBUTTONDOWN) {
+				if (ev->button.y - win->y <= win->titleh) {
+				    	if (ev->button.x - win->x < 20) {
+						window_hide_locked(win);
+					}
+					view->winop = VIEW_WINOP_MOVE;
+					view->wop_win = win;
+				} else if (ev->button.y - win->y >
+				    win->h - win->borderw) {
+					view->winop = VIEW_WINOP_RESIZE;
+					view->wop_win = win;
+				}	
 			}
 			/*
 			 * Widget event.

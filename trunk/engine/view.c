@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.52 2002/07/06 23:49:43 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.53 2002/07/07 10:17:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -231,7 +231,6 @@ view_init(gfx_engine_t ge)
 		SDL_Delay(100);
 		break;
 	case GFX_ENGINE_GUI:
-		dprintf("GFX_ENGINE_GUI\n");
 		SDL_WM_SetCaption("AGAR (GUI)", "AGAR");
 		SDL_ShowCursor(SDL_ENABLE);
 		break;
