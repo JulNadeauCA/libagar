@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.9 2002/09/16 15:56:32 vedge Exp $
+.\"	$Csoft: agar.3,v 1.10 2002/11/04 08:33:14 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -36,32 +36,16 @@
 .Nm
 is an object-oriented graphical game engine.
 .Sh LOCKING CONSTRAINTS
-The engine defines macros around pthread locking calls, to catch errors.
+The engine defines macros around pthread locking calls, to catch errors,
+or to nullify them if thread safety has been disabled at compile-time.
 .Pp
 Locking constraints must be clearly commented at the beginning of each
-function, whether it is assumed that a lock is held, or whether the
-calling thread must not hold a lock.
-Recursive mutex locks are not worth mentioning.
+function, whether it is assumed that a non-recursive lock is held, or
+whether the calling thread must not hold a non-recursive lock.
 .Pp
 Every subsystem must hide locking constraints from the other subsystems
 by providing a well-defined interface.
-.Sh OBJECT EXISTENCE PROTECTION
-.Bl -bullet -width 4n
-The global, recursive mutex
-.Va world->lock ,
-protects the game object list.
-.It
-Since the rendering routines must frequently lock the object list when
-resolving
-.Xr map 3
-node references, the object list
-.Va world->wobjs
-and the object count
-.Va world->nobjs
-are visible to high-level code, and protected by the
-.Va world->lock
-mutex.
-.It
+.Pp
 The
 .Va world->lock
 mutex protects the existence of objects.
@@ -75,10 +59,9 @@ in the
 list once the
 .Va world->lock
 mutex is acquired.
-.El
 .Sh SEE ALSO
 .Xr fobj 3 ,
 .Xr object 3 ,
 .Xr map 3 ,
 .Xr widget 3 ,
-.Xr window 3 ,
+.Xr window 3
