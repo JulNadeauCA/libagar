@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.46 2002/02/19 01:50:51 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.47 2002/02/21 02:24:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -45,7 +45,6 @@
 
 static struct obvec mapedit_vec = {
 	mapedit_destroy,
-	mapedit_event,
 	mapedit_load,
 	mapedit_save,
 	mapedit_link,
@@ -153,7 +152,7 @@ mapedit_shadow(struct mapedit *med)
 		}
 		
 		if (eob->nsprites > 0) {
-			int y;
+			Uint32 y;
 
 			for (y = 0; y < eob->nsprites; y++) {
 				struct editref *eref;
@@ -170,7 +169,7 @@ mapedit_shadow(struct mapedit *med)
 		}
 	
 		if (eob->nanims > 0) {
-			int z;
+			Uint32 z;
 
 			for (z = 0; z < eob->nanims; z++) {
 				struct editref *eref;
@@ -323,7 +322,7 @@ mapedit_unlink(void *p)
 
 	pthread_mutex_lock(&m->lock);
 	node = &m->map[med->x][med->y];
-	nref = node_findref(node, med, MAPEDIT_SELECT);
+	nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
 	if (nref != NULL) {
 		node_delref(node, nref);
 		node->flags &= ~(NODE_ANIM);
@@ -361,7 +360,7 @@ mapedit_bg(SDL_Surface *v, SDL_Rect *rd)
 {
 	static Uint32 col[2];
 	Uint8 *dst = v->pixels;
-	int x, y;
+	Uint32 x, y;
 
 	col[0] = SDL_MapRGB(v->format, 0x66, 0x66, 0x66);
 	col[1] = SDL_MapRGB(v->format, 0x99, 0x99, 0x99);
@@ -406,7 +405,8 @@ mapedit_tilelist(struct mapedit *med)
 {
 	struct map *m = med->map;
 	static SDL_Rect rs, rd;
-	int i, sn;
+	Uint32 i;
+	int sn;
 
 	rs.w = m->tilew;
 	rs.h = m->tileh;
@@ -489,7 +489,7 @@ mapedit_tilestack(struct mapedit *med)
 	static SDL_Rect rs, rd;
 	struct map *m = med->map;
 	struct noderef *nref;
-	int i;
+	Uint32 i;
 
 	rs.w = m->tilew;
 	rs.h = m->tileh;
@@ -628,13 +628,13 @@ mapedit_save(void *p, int fd)
  * Must be called on a locked map.
  */
 void
-mapedit_move(struct mapedit *med, int x, int y)
+mapedit_move(struct mapedit *med, Uint32 x, Uint32 y)
 {
 	struct node *node;
 	
 	node = &med->map->map[med->x][med->y];
 	node->flags &= ~(NODE_ANIM);
-	node_delref(node, node_findref(node, med, MAPEDIT_SELECT));
+	node_delref(node, node_findref(node, med, MAPEDIT_SELECT, MAPREF_ANIM));
 	
 	node = &med->map->map[x][y];
 	node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
@@ -648,7 +648,7 @@ static Uint32
 mapedit_cursor_tick(Uint32 ival, void *p)
 {
 	struct mapedit *med = (struct mapedit *)p;
-	int x, y, moved;
+	Uint32 x, y, moved;
 
 	if (curmapedit == NULL) {
 		return (0);
@@ -677,8 +677,8 @@ mapedit_cursor_tick(Uint32 ival, void *p)
 void
 mapedit_sticky(struct mapedit *med)
 {
-	int i, nkeys;
 	static SDL_Event nev;
+	int i, nkeys;
 
 	for (i = 0; i < sizeof(stickykeys) / sizeof(int); i++) {
 		if ((SDL_GetKeyState(&nkeys))[stickykeys[i]]) {
@@ -694,7 +694,7 @@ static Uint32
 mapedit_listw_tick(Uint32 ival, void *p)
 {
 	struct mapedit *med = (struct mapedit *)p;
-	int moved;
+	Uint32 moved;
 
 	if (curmapedit == NULL) {
 		return (0);
@@ -746,7 +746,7 @@ mapedit_listw_tick(Uint32 ival, void *p)
 }
 
 void
-mapedit_predraw(struct map *m, int flags, int vx, int vy)
+mapedit_predraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 {
 	SDL_Rect rd;
 
@@ -758,7 +758,7 @@ mapedit_predraw(struct map *m, int flags, int vx, int vy)
 }
 
 void
-mapedit_postdraw(struct map *m, int flags, int vx, int vy)
+mapedit_postdraw(struct map *m, Uint32 flags, Uint32 vx, Uint32 vy)
 {
 	vx <<= m->shtilex;
 	vy <<= m->shtiley;

@@ -55,7 +55,7 @@ mapedit_setpointer(struct mapedit *med, int enable)
 		nref->xoffs = oxoffs;
 		nref->yoffs = oyoffs;
 	} else {
-		nref = node_findref(node, med, MAPEDIT_SELECT);
+		nref = node_findref(node, med, MAPEDIT_SELECT, MAPREF_SPRITE);
 		node->flags &= ~(NODE_ANIM);
 	
 		/* Save direction state. */
