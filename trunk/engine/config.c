@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.128 2005/01/05 04:44:03 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.129 2005/01/27 05:46:23 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -72,7 +72,7 @@
 
 const struct version config_ver = {
 	"agar config",
-	6, 2
+	6, 3
 };
 
 const struct object_ops config_ops = {
@@ -255,7 +255,10 @@ config_load(void *p, struct netbuf *buf)
 	kbd_delay = (int)read_uint32(buf);
 	kbd_repeat = (int)read_uint32(buf);
 	mouse_dblclick_delay = (int)read_uint32(buf);
-
+	if (rv.minor >= 3) {
+		mouse_spin_delay = (int)read_uint16(buf);
+		mouse_spin_ival = (int)read_uint16(buf);
+	}
 #ifdef EDITION
 	if (rv.minor >= 1 && read_uint8(buf) == 1)
 		mapedit_load(buf);
@@ -284,6 +287,8 @@ config_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)kbd_delay);
 	write_uint32(buf, (Uint32)kbd_repeat);
 	write_uint32(buf, (Uint32)mouse_dblclick_delay);
+	write_uint16(buf, (Uint16)mouse_spin_delay);
+	write_uint16(buf, (Uint16)mouse_spin_ival);
 
 #ifdef EDITION
 	write_uint8(buf, 1);

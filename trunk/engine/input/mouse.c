@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.7 2004/05/14 04:10:36 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.8 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -40,7 +40,9 @@ const struct input_driver mouse_driver = {
 	mouse_event
 };
 
-int mouse_dblclick_delay = 250;			/* Mouse double-click delay */
+int mouse_dblclick_delay = 250;		/* Mouse double-click delay */
+int mouse_spin_delay = 250;		/* Spinbutton repeat delay */
+int mouse_spin_ival = 50;		/* Spinbutton repeat interval */
 
 struct mouse *
 mouse_new(int index)
