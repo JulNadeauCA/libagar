@@ -1,4 +1,4 @@
-/*	$Csoft	    */
+/*	$Csoft$	    */
 
 struct noderef;
 struct input;
