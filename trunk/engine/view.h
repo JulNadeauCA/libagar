@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.44 2002/09/13 11:08:29 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.45 2002/09/19 20:56:44 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -50,7 +50,7 @@ struct viewport {
 	} margin;
 
 	/* Read-write, thread-safe */
-	struct	windowq windowsh;	/* Windows in view */
+	struct	windowq windows;	/* Windows in view */
 	struct	windowdetachq detach;	/* Windows to free */
 
 	struct	window *focus_win;	/* Give focus to this window */

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.39 2002/09/13 11:08:32 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.40 2002/09/19 21:13:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -69,12 +69,12 @@ struct window {
 
 #define WINDOW(w)	((struct window *)(w))
 
-#define WINDOW_FOCUSED(w) (TAILQ_LAST(&view->windowsh, \
+#define WINDOW_FOCUSED(w) (TAILQ_LAST(&view->windows, \
 			   windowq) == (w))
 
 #define WINDOW_CYCLE(w)	 do {					\
-	TAILQ_REMOVE(&view->windowsh, (w), windows);		\
-	TAILQ_INSERT_HEAD(&view->windowsh, (w), windows);	\
+	TAILQ_REMOVE(&view->windows, (w), windows);		\
+	TAILQ_INSERT_HEAD(&view->windows, (w), windows);	\
 } while (/*CONSTCOND*/0)
 
 #ifdef DEBUG
