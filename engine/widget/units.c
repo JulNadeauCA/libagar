@@ -1,4 +1,4 @@
-/*	$Csoft: units.c,v 1.1 2003/11/15 02:03:33 vedge Exp $	*/
+/*	$Csoft: units.c,v 1.2 2003/11/15 03:53:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -219,5 +219,15 @@ const struct unit emf_units[] = {
 	{ "kV",		N_("Kilovolts"),	1000 },
 	{ "MV",		N_("Megavolts"),	1000000 },
 	{ NULL,		NULL,			0 }
+};
+
+/* Units of electrical resistance */
+const struct unit resistance_units[] = {
+	{ "\xc2\xb5\xce\xa9",	N_("Microohms"),	0.000001 },
+	{ "m\xce\xa9",		N_("Milliohms"),	0.001 },
+	{ "\xce\xa9",		N_("Ohms"),		1 },
+	{ "k\xce\xa9",		N_("Kilohms"),		1000 },
+	{ "M\xce\xa9",		N_("Megohms"),		1000000 },
+	{ NULL,			NULL,			0 }
 };
 
