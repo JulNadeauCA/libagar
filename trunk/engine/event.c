@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.44 2002/05/31 10:48:34 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.45 2002/06/01 02:36:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,7 +58,6 @@ extern struct window *game_menu_win;
 
 static void	 event_hotkey(SDL_Event *);
 static void	*event_post_async(void *);
-static void	 event_pusharg(va_list, char, struct event *);
 
 static void
 event_hotkey(SDL_Event *ev)
@@ -103,6 +102,15 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_ESCAPE:
+		pthread_mutex_lock(&game_menu_win->lock);
+		if (game_menu_win->flags & WINDOW_SHOW) {	/* XXX gross */
+			pthread_mutex_unlock(&game_menu_win->lock);
+			pthread_mutex_unlock(&world->lock);
+			engine_stop();
+			pthread_mutex_lock(&world->lock);
+			pthread_mutex_lock(&game_menu_win->lock);
+		}
+		pthread_mutex_unlock(&game_menu_win->lock);
 		window_show(game_menu_win);
 		break;
 	default:
@@ -221,48 +229,46 @@ event_loop(void *arg)
 	return (NULL);
 }
 
-static void
-event_pusharg(va_list ap, char fmt, struct event *eev)
-{
-	switch (fmt) {
-	case 'd':
-	case 'i':
-	case 'o':
-	case 'u':
-	case 'x':
-	case 'X':
-		PUSH_EVENT_ARG(eev, ap, i, int);
-		break;
-	case 'D':
-	case 'O':
-	case 'U':
-		PUSH_EVENT_ARG(eev, ap, li, long int);
-		break;
-	case 'e':
-	case 'E':
-	case 'f':
-	case 'g':
-	case 'G':
-		PUSH_EVENT_ARG(eev, ap, f, double);
-		break;
-	case 'c':
-		PUSH_EVENT_ARG(eev, ap, c, char);
-		break;
-	case 's':
-		PUSH_EVENT_ARG(eev, ap, s, char *);
-		break;
-	case 'p':
-		PUSH_EVENT_ARG(eev, ap, p, void *);
-		break;
-	case ' ':
-	case ',':
-	case ';':
-	case '%':
-		break;
-	default:
-		fatal("unknown argument type\n");
+#define EVENT_PUSHARG(ap, fmt, eev)				\
+	switch ((fmt)) {					\
+	case 'd':						\
+	case 'i':						\
+	case 'o':						\
+	case 'u':						\
+	case 'x':						\
+	case 'X':						\
+		PUSH_EVENT_ARG((eev), (ap), i, int);		\
+		break;						\
+	case 'D':						\
+	case 'O':						\
+	case 'U':						\
+		PUSH_EVENT_ARG((eev), (ap), li, long int);	\
+		break;						\
+	case 'e':						\
+	case 'E':						\
+	case 'f':						\
+	case 'g':						\
+	case 'G':						\
+		PUSH_EVENT_ARG((eev), (ap), f, double);		\
+		break;						\
+	case 'c':						\
+		PUSH_EVENT_ARG((eev), (ap), c, char);		\
+		break;						\
+	case 's':						\
+		PUSH_EVENT_ARG((eev), (ap), s, char *);		\
+		break;						\
+	case 'p':						\
+		PUSH_EVENT_ARG((eev), (ap), p, void *);		\
+		break;						\
+	case ' ':						\
+	case ',':						\
+	case ';':						\
+	case '%':						\
+		break;						\
+	default:						\
+		fatal("unknown argument type\n");		\
 	}
-}
+
 
 /*
  * Register an event handler.
@@ -290,7 +296,7 @@ event_new(void *p, char *name, int flags, void (*handler)(int, union evarg *),
 		va_list ap;
 
 		for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
-			event_pusharg(ap, *fmt, eev);
+			EVENT_PUSHARG(ap, *fmt, eev);
 		}
 		va_end(ap);
 	}
@@ -324,6 +330,8 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 	struct object *ob = obp;
 	struct event *eev, *neev;
 
+	dprintf("post %s to %s\n", name, ob->name);
+
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
 		if (strcmp(name, eev->name) != 0) {
@@ -335,7 +343,7 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 			va_list ap;
 
 			for (va_start(ap, fmt); *fmt != '\0'; fmt++) {
-				event_pusharg(ap, *fmt, neev);
+				EVENT_PUSHARG(ap, *fmt, neev);
 			}
 			va_end(ap);
 		}
@@ -352,6 +360,7 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 			free(neev);
 			pthread_mutex_lock(&ob->events_lock);
 		}
+		break;
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 }
