@@ -29,6 +29,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+for D in $@; do
+LPREFIX="`echo $D | awk -F= '{ print $1 }'`"
+RPREFIX="`echo $D | awk -F= '{ print $2 }'`"
+if [ "$LPREFIX" = "--prefix" ]; then
+PREFIX=$RPREFIX
+fi
+done
+if [ "$PREFIX" = "" ]; then
+PREFIX=/usr/local
+fi
 echo >Makefile.config
 echo >config.h
 for OPT in $@; do
@@ -49,6 +59,7 @@ fi
 done
 if [ "$1" == "--help" ]; then
 echo "Usage: ./configure [args]"
+echo "    --prefix             Installation prefix [/usr/local]"
 echo "    --with-smpeg         Play videos through the smpeg library [yes]"
 echo "    --without-smpeg      "
 exit 1
@@ -170,3 +181,7 @@ echo "ERROR: smpeg >= 0.4.3 is missing"
 exit 1
 fi
 fi
+echo PREFIX=$PREFIX >> Makefile.config
+echo "#ifndef PREFIX" >> config.h
+echo "#define PREFIX \"$PREFIX\"" >> config.h
+echo "#endif /* PREFIX */" >> config.h
