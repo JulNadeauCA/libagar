@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.36 2002/09/12 09:33:25 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.37 2002/11/07 04:40:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -210,14 +210,9 @@ button_mousemotion(int argc, union evarg *argv)
 	int x = argv[1].i;
 	int y = argv[2].i;
 
-	if (b->flags & BUTTON_PRESSED) {
-		dprintf("relative: %d,%d widget at %d,%d (geo %d,%d)\n",
-		    x, y, WIDGET(b)->x, WIDGET(b)->y, WIDGET(b)->w,
-		    WIDGET(b)->h);
-	}
-
 	if ((!WIDGET_INSIDE_RELATIVE(b, x, y)) &&
-	    (b->flags & BUTTON_PRESSED)) {
+	    (b->flags & BUTTON_PRESSED) &&
+	    (b->flags & BUTTON_STICKY) == 0) {
 		b->flags &= ~(BUTTON_PRESSED);
 	}
 }
