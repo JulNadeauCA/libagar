@@ -95,6 +95,7 @@ depend-subdir:
 	fi)
 
 cleandir-subdir:
+	exit 1
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
@@ -106,7 +107,6 @@ cleandir-subdir:
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ cleandir); \
 		done; \
 	fi)
-
 
 regress-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
