@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.114 2004/04/23 12:47:19 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.115 2004/04/24 04:33:33 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -189,6 +189,9 @@ config_init(struct config *con)
 	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
 	strlcat(udatadir, "/.", sizeof(udatadir));
 	strlcat(udatadir, proginfo->progname, sizeof(udatadir));
+	if (stat(udatadir, &sta) != 0 &&
+	    Mkdir(udatadir) != 0)
+		fatal("%s: %s", udatadir, strerror(errno));
 #else
 	udatadir[0] = '\0';
 #endif
@@ -197,10 +200,6 @@ config_init(struct config *con)
 	prop_set_string(con, "den-path", "%s", SHAREDIR);
 	prop_set_string(con, "load-path", "%s:%s", udatadir, SHAREDIR);
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
-
-	if (stat(udatadir, &sta) != 0 &&
-	    Mkdir(udatadir) != 0)
-		fatal("%s: %s", udatadir, strerror(errno));
 }
 
 int
