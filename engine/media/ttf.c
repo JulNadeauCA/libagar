@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.5 2003/03/03 01:53:59 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.6 2003/03/12 07:59:02 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -29,7 +29,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/debug.h>
+#include <engine/engine.h>
 
 #include <math.h>
 
@@ -41,8 +41,6 @@
 #include <freetype/ftoutln.h>
 
 #include <SDL.h>
-
-#include <engine/error.h>
 
 #include "ttf.h"
 
