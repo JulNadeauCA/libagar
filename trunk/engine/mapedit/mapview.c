@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.5 2002/07/07 06:27:44 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.6 2002/07/07 09:41:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -273,7 +273,7 @@ mapview_event(int argc, union evarg *argv)
 			    (x != mv->mouse.x || y != mv->mouse.y) &&
 			    SDL_GetMouseState(NULL, NULL) &
 			    SDL_BUTTON_LMASK &&
-			    (x > 0 && y > 0 && x < mv->mw && y < mv->mh)) {
+			    (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh)) {
 				if (TOOL_OPS(med->curtool)->tool_effect
 				    != NULL) {
 				    	edcursor_set(mv->cursor, 0);
@@ -297,7 +297,7 @@ mapview_event(int argc, union evarg *argv)
 			mv->mouse.move++;
 		} else {
 			if (med->curtool != NULL &&
-			   (x > 0 && y > 0 && x < mv->mw && y < mv->mh) &&
+			   (x >= 0 && y >= 0 && x < mv->mw && y < mv->mh) &&
 			    TOOL_OPS(med->curtool)->tool_effect != NULL) {
 				edcursor_set(mv->cursor, 0);
 				TOOL_OPS(med->curtool)->tool_effect(
