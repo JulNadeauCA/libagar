@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.5 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.6 2004/04/22 12:36:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -113,7 +113,7 @@ circle_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	}
 	if (cur_circle != NULL) {
 		cur_circle->redraw++;
-		vg_rasterize(vg);
+		vg->redraw++;
 	}
 	vg->origin[1].x = x;
 	vg->origin[1].y = y;
@@ -129,7 +129,7 @@ circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	switch (b) {
 	case 1:
 		if (seq++ == 0) {
-			cur_circle = vg_begin(vg, VG_CIRCLE);
+			cur_circle = vg_begin_element(vg, VG_CIRCLE);
 			vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 			vg_vertex2(vg, vx, vy);
 			cur_radius = vg_vertex2(vg, vx, vy);
@@ -141,9 +141,7 @@ circle_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 		break;
 	default:
 		if (cur_circle != NULL) {
-			vg_undo_element(vg, cur_circle);
-			cur_circle->redraw++;
-			vg_rasterize(vg);
+			vg_destroy_element(vg, cur_circle);
 		}
 		goto finish;
 	}

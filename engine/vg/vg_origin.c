@@ -1,4 +1,4 @@
-/*	$Csoft: vg_origin.c,v 1.1 2004/04/17 00:43:39 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.2 2004/04/19 02:15:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -120,7 +120,7 @@ origin_mousebuttondown(struct tool *t, int tx, int ty, int txoff,
 	if (b == 1) {
 		vg_avcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
 		vg_origin2(vg, norigin, x, y);
-		vg_rasterize(vg);
+		vg->redraw++;
 	}
 }
 
@@ -134,7 +134,7 @@ origin_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
 	if (b & SDL_BUTTON(1)) {
 		vg_avcoords2(vg, tx, ty, txoff, tyoff, &x, &y);
 		vg_origin2(vg, norigin, x, y);
-		vg_rasterize(vg);
+		vg->redraw++;
 	}
 }
 

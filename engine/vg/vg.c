@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.8 2004/04/22 01:45:46 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.9 2004/04/22 12:36:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -65,6 +65,7 @@ vg_init(struct vg *vg, int flags)
 	int i, x, y;
 
 	vg->flags = flags;
+	vg->redraw = 1;
 	vg->w = 0;
 	vg->h = 0;
 	vg->scale = 1;
@@ -103,6 +104,13 @@ vg_init(struct vg *vg, int flags)
 	vg->norigin = VG_NORIGINS;
 }
 
+static void
+vg_free_element(struct vg_element *vge)
+{
+	Free(vge->vtx, M_VG);
+	Free(vge, M_VG);
+}
+
 void
 vg_destroy(struct vg *vg)
 {
@@ -120,7 +128,6 @@ vg_destroy(struct vg *vg)
 		ob->gfx = NULL;
 	}
 	Free(vg->layers, M_VG);
-
 #if 0
 	if (vg->mask != NULL) {
 		for (y = 0; y < vg->map->maph; y++) {
@@ -131,28 +138,26 @@ vg_destroy(struct vg *vg)
 	object_destroy(vg->map);
 	Free(vg->map, M_OBJECT);
 #endif
-
 	for (vge = TAILQ_FIRST(&vg->vges);
 	     vge != TAILQ_END(&vg->vges);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vges);
-		Free(vge->vtx, M_VG);
-		Free(vge, M_VG);
+		vg_free_element(vge);
 	}
 	pthread_mutex_destroy(&vg->lock);
 }
 
 void
-vg_undo_element(struct vg *vg, struct vg_element *vge)
+vg_destroy_element(struct vg *vg, struct vg_element *vge)
 {
 	TAILQ_REMOVE(&vg->vges, vge, vges);
-	Free(vge->vtx, M_VG);
-	Free(vge, M_VG);
+	vg_free_element(vge);
+	vg->redraw = 1;
 }
 
-/* Regenerate fragments of the raster surface that must be redrawn. */
+/* Generate tile-sized fragments of the raster surface. */
 void
-vg_regen_fragments(struct vg *vg)
+vg_update_fragments(struct vg *vg)
 {
 	struct map *rmap = vg->map;
 	struct object *pobj = vg->pobj;
@@ -248,6 +253,16 @@ vg_destroy_fragments(struct vg *vg)
 	gfx->nsubmaps = 0;
 }
 
+/* Mark every element as dirty. */
+void
+vg_redraw_elements(struct vg *vg)
+{
+	struct vg_element *vge;
+
+	TAILQ_FOREACH(vge, &vg->vges, vges)
+		vge->redraw = 1;
+}
+
 /* Adjust the vg bounding box and scaling factor. */
 void
 vg_scale(struct vg *vg, double w, double h, double scale)
@@ -256,7 +271,6 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 	int ph = (int)(h*scale*TILESZ);
 	int mw, mh;
 	Uint32 suflags;
-	struct vg_element *vge;
 	int y;
 
 	if (scale < 0)
@@ -298,13 +312,12 @@ vg_scale(struct vg *vg, double w, double h, double scale)
 		memset(vg->mask[y], 0, mw*sizeof(int));
 	}
 #endif
-	TAILQ_FOREACH(vge, &vg->vges, vges)
-		vge->redraw++;
+	vg_redraw_elements(vg);
 }
 
 /* Allocate the given type of element and begin its parametrization. */
 struct vg_element *
-vg_begin(struct vg *vg, enum vg_element_type eltype)
+vg_begin_element(struct vg *vg, enum vg_element_type eltype)
 {
 	struct vg_element *vge;
 	int i;
@@ -327,10 +340,20 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	TAILQ_INSERT_HEAD(&vg->vges, vge, vges);
 
 	for (i = 0; i < nvge_types; i++) {
-		if (vge_types[i].type == eltype &&
-		    vge_types[i].init != NULL)
-			vge_types[i].init(vg, vge);
+		if (vge_types[i].type == eltype) {
+			vge->ops.init = vge_types[i].init;
+			vge->ops.draw = vge_types[i].draw;
+			vge->ops.bbox = vge_types[i].bbox;
+			break;
+		}
 	}
+	if (i == nvge_types) {
+		fatal("no such element type");
+	}
+	if (vge->ops.init != NULL)
+		vge->ops.init(vg, vge);
+
+	vg->redraw = 1;
 	return (vge);
 }
 
@@ -339,6 +362,7 @@ void
 vg_clear(struct vg *vg)
 {
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
+	vg->redraw = 1;
 }
 
 static void
@@ -379,37 +403,31 @@ vg_rasterize_element(struct vg *vg, struct vg_element *vge)
 {
 	struct vg_element *ovge;
 	struct vg_rect r1, r2;
-	int i;
-	
-	for (i = 0; i < nvge_types; i++) {
-		if (vge_types[i].type == vge->type)
-			break;
-	}
+
 	if (!vge->drawn) {
-		vge_types[i].draw(vg, vge);
 		vge->drawn = 1;
+		vge->ops.draw(vg, vge);
 	}
 
 	/* Evaluate collisions with other elements. */
-	vge_types[i].bbox(vg, vge, &r1);
+	vge->ops.bbox(vg, vge, &r1);
 	TAILQ_FOREACH(ovge, &vg->vges, vges) {
 		if (ovge->drawn || ovge == vge) {
 			continue;
 		}
-		vge_types[i].bbox(vg, ovge, &r2);
+		ovge->ops.bbox(vg, ovge, &r2);
 		if (vg_collision(vg, &r1, &r2))
 			vg_rasterize_element(vg, ovge);
 	}
 }
 
+/* Rasterize elements marked dirty and update the fragments. */
 void
 vg_rasterize(struct vg *vg)
 {
 	struct vg_element *vge;
 	int i;
 
-	vg_clear(vg);
-	
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		vge->drawn = 0;
 	}
@@ -424,7 +442,7 @@ vg_rasterize(struct vg *vg)
 	if (vg->flags & VG_VISBBOXES)
 		vg_draw_bboxes(vg);
 
-	vg_regen_fragments(vg);
+	vg_update_fragments(vg);
 }
 
 /* Translate tile coordinates to relative vg coordinates. */
