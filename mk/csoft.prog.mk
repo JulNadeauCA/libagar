@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.17 2002/02/18 02:51:21 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.18 2002/02/18 03:05:43 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -166,7 +166,7 @@ install: install-subdir ${PROG}
 	        echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
 	        ${INSTALL_DATA} $$F ${SHAREDIR}; \
 	    done; \
-	fi \
+	fi
 
 deinstall: deinstall-subdir
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
