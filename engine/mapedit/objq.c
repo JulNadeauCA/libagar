@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.75 2003/06/30 06:39:43 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.76 2003/07/01 03:28:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -205,16 +205,6 @@ close_tileset(int argc, union evarg *argv)
 	window_hide(win);
 }
 
-/* Set insert/replace mode. */
-static void
-tog_replace(int argc, union evarg *argv)
-{
-	struct mapview *mv = argv[1].p;
-	int state = argv[2].i;
-
-	mv->constr.replace = state;
-}
-
 /* Create the graphic import selection window. */
 static struct window *
 gfx_import_window(struct object *ob, struct mapview *mv)
@@ -277,7 +267,7 @@ gfx_import_window(struct object *ob, struct mapview *mv)
 		}
 		bu = button_new(hb, _("Replace"));
 		button_set_sticky(bu, 1);
-		event_new(bu, "button-pushed", tog_replace, "%p", mv);
+		widget_bind(bu, "state", WIDGET_INT, NULL, &mv->constr.replace);
 	}
 	return (win);
 }
