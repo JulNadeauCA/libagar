@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.173 2004/03/18 03:47:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.174 2004/03/18 21:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -191,6 +191,7 @@ event_loop(void)
 	SDL_Event ev;
 	Uint32 ltick, t = 0;
 	struct window *win;
+	struct gfx *gfx;
 
 #ifdef DEBUG
 	init_fps_counter();
@@ -204,6 +205,11 @@ event_loop(void)
 			pthread_mutex_lock(&view->lock);
 			view->ndirty = 0;
 
+			/*
+			 * In tile-based mode, draw tiles containing
+			 * animations separate from entirely static
+			 * tiles.
+			 */
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
 				struct map *m = view->rootmap->map;
 				
@@ -212,7 +218,6 @@ event_loop(void)
 					pthread_mutex_unlock(&view->lock);
 					break;
 				}
-
 				pthread_mutex_lock(&m->lock);
 				rootmap_animate();
 				if (m->redraw != 0) {
@@ -220,10 +225,10 @@ event_loop(void)
 					rootmap_draw();
 				}
 				pthread_mutex_unlock(&m->lock);
-
 				view_update(0, 0, 0, 0);
 			}
 
+			/* Render the visible windows. */
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
 				if (win->visible) {
@@ -235,6 +240,7 @@ event_loop(void)
 				pthread_mutex_unlock(&win->lock);
 			}
 
+			/* Update the display and calibrate the refresh rate. */
 			if (view->ndirty > 0) {
 #ifdef HAVE_OPENGL
 				if (view->opengl) {
@@ -249,6 +255,21 @@ event_loop(void)
 				adjust_refresh_rate(t);
 			}
 			pthread_mutex_unlock(&view->lock);
+
+			/* Update the shared animation frame numbers. */
+			pthread_mutex_lock(&gfxq_lock);
+			TAILQ_FOREACH(gfx, &gfxq, gfxs) {
+				Uint32 i;
+
+				for (i = 0; i < gfx->nanims; i++) {
+					struct gfx_anim *anim = gfx->anims[i];
+
+					if (++anim->frame >= anim->nframes)
+						anim->frame = 0;
+				}
+			}
+			pthread_mutex_unlock(&gfxq_lock);
+
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
