@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.80 2002/09/06 01:25:04 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.81 2002/09/13 11:08:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -155,19 +155,14 @@ object_destroy(void *p)
 
 /* Load an object from an alternate file. */
 int
-object_loadfrom(void *p, char *path)
+object_load_from(void *p, char *path)
 {
 	struct object *ob = p;
 	int fd;
 
-	if (OBJECT_OPS(ob)->load == NULL) {
-		return (-1);
-	}
-
-	/* XXX mmap? */
 	fd = open(path, O_RDONLY, 00600);
-	if (fd < 0) {
-		dprintf("%s: %s\n", path, strerror(errno));
+	if (fd == -1) {
+		error_set("%s: %s", path, strerror(errno));
 		return (-1);
 	}
 	
@@ -178,10 +173,13 @@ object_loadfrom(void *p, char *path)
 	}
 
 	/* Load object specific data. */
-	if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
-		close(fd);
-		return (-1);
+	if (OBJECT_OPS(ob)->load != NULL) {
+		if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
+			close(fd);
+			return (-1);
+		}
 	}
+
 	close(fd);
 	return (0);
 }
@@ -196,28 +194,33 @@ object_load(void *p)
 
 	path = object_path(ob->name, ob->saveext);
 	if (path == NULL) {
-		dprintf("%s.%s: %s\n", ob->name, ob->saveext, error_get());
 		return (-1);
 	}
 
-	/* XXX mmap? */
 	fd = open(path, O_RDONLY, 00600);
-	if (fd < 0) {
-		dprintf("%s: %s\n", path, strerror(errno));
+	if (fd == -1) {
+		error_set("%s: %s", path, strerror(errno));
+		free(path);
 		return (-1);
 	}
 
 	/* Load generic properties. */
 	if (prop_load(ob, fd) != 0) {
+		free(path);
 		close(fd);
 		return (-1);
 	}
 
+	/* Load object specific data. */
 	if (OBJECT_OPS(ob)->load != NULL) {
-		/* Load object specific data. */
-		rv = OBJECT_OPS(ob)->load(ob, fd);
+		if (OBJECT_OPS(ob)->load(ob, fd) != 0) {
+			free(path);
+			close(fd);
+			return (-1);
+		}
 	}
 
+	free(path);
 	close(fd);
 	return (rv);
 }
@@ -227,59 +230,43 @@ int
 object_save(void *p)
 {
 	struct object *ob = p;
-	char path[FILENAME_MAX];
+	char *path, *s;
 	int fd;
 
 	/* Save maps inside the maps subdirectory. XXX */
+	s = prop_string(config, "path.user_data_dir");
 	if (strcmp(ob->saveext, "m") == 0) {
-		sprintf(path, "%s/maps/%s.m",
-		    prop_string(config, "path.user_data_dir"),
-		    ob->name);
+		asprintf(&path, "%s/maps/%s.m", s, ob->name);
 	} else {
-		sprintf(path, "%s/%s.%s",
-		    prop_string(config, "path.user_data_dir"),
-		    ob->name, ob->saveext);
+		asprintf(&path, "%s/%s.%s", s, ob->name, ob->saveext);
 	}
+	free(s);
 
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
 	if (fd == -1) {
+		free(path);
 		fatal("%s: %s\n", path, strerror(errno));
-		return (-1);
 	}
 
 	/* Save generic properties. */
 	if (prop_save(ob, fd) != 0) {
+		free(path);
 		close(fd);
-		return (-1);
+		fatal("%s\n", error_get());
 	}
 
 	if (OBJECT_OPS(ob)->save != NULL) {
 		/* Save object specific data. */
 		if (OBJECT_OPS(ob)->save(ob, fd) != 0) {
+			free(path);
 			close(fd);
-			return (-1);
+			fatal("%s\n", error_get());
 		}
 	}
+
+	free(path);
 	close(fd);
 	return (0);
-}
-
-/*
- * Search for an object matching the given string.
- * The world must be locked.
- * XXX hash
- */
-struct object *
-object_strfind(char *s)
-{
-	struct object *ob;
-
-	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
-		if (strcmp(ob->name, s) == 0) {
-			return (ob);
-		}
-	}
-	return (NULL);
 }
 
 /* Search the data file directories for the given file. */
