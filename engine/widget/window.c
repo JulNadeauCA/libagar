@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.61 2002/08/22 04:50:29 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.62 2002/08/23 08:10:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -37,12 +37,11 @@
 #include <math.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 #include <engine/map.h>
+#include <engine/rootmap.h>
 #include <engine/config.h>
-#include <engine/physics.h>
-#include <engine/compat/vasprintf.h>
 
+#include <engine/compat/vasprintf.h>
 #include <engine/mapedit/mapedit.h>
 
 #include "text.h"
@@ -487,7 +486,7 @@ window_hide_locked(struct window *win)
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
-		view_maskfill(&win->vmask, -1);
+		rootmap_maskfill(&win->vmask, -1);
 		break;
 	case GFX_ENGINE_GUI:
 		{ 
@@ -593,7 +592,7 @@ window_update_mask(struct window *win)
 	win->vmask.y = (win->y / TILEH);
 	win->vmask.w = (win->w / TILEW);
 	win->vmask.h = (win->h / TILEW);
-	view_maskfill(&win->vmask, 1);
+	rootmap_maskfill(&win->vmask, 1);
 }
 
 /* View and window must be locked. */
@@ -661,7 +660,7 @@ window_move(struct window *win, SDL_MouseMotionEvent *motion)
 		switch (view->gfx_engine) {
 		case GFX_ENGINE_TILEBASED:
 			/* Move the tile mask over to the new position. */
-			view_maskfill(&win->vmask, -1);
+			rootmap_maskfill(&win->vmask, -1);
 			window_update_mask(win);
 			break;
 		case GFX_ENGINE_GUI:
@@ -1010,7 +1009,7 @@ window_resize(struct window *win)
 	case GFX_ENGINE_TILEBASED:
 		minw = TILEW;
 		minh = TILEH;
-		view_maskfill(&win->vmask, -1);
+		rootmap_maskfill(&win->vmask, -1);
 		break;
 	default:
 		minw = 16;

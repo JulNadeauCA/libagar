@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.70 2002/08/19 07:33:05 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.71 2002/08/23 05:18:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -39,6 +39,7 @@
 #include "physics.h"
 #include "input.h"
 #include "config.h"
+#include "rootmap.h"
 
 #include "mapedit/mapedit.h"
 
