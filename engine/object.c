@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.37 2002/04/16 08:44:30 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.38 2002/04/20 09:15:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -47,8 +47,13 @@ enum {
 	NSPRITES_GROW = 2,
 };
 
-static SLIST_HEAD(lategc_head, gcref) lategch =
-    SLIST_HEAD_INITIALIZER(&lategch);
+static SLIST_HEAD(, object_art) artsh =	SLIST_HEAD_INITIALIZER(&artsh);
+static pthread_mutex_t arts_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static SLIST_HEAD(, object_audio) audiosh = SLIST_HEAD_INITIALIZER(&audiosh);
+static pthread_mutex_t audios_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static SDL_TimerID gctimer;
 
 struct gcref {
 	struct	object *ob;
@@ -57,56 +62,189 @@ struct gcref {
 	SLIST_ENTRY(gcref) gcrefs;
 };
 
+static SLIST_HEAD(lategc_head, gcref) lategch =
+    SLIST_HEAD_INITIALIZER(&lategch);
+
+static const struct obvec null_obvec = {
+	NULL,	/* destroy */
+	NULL,	/* load */
+	NULL,	/* save */
+	NULL,	/* link */
+	NULL	/* unlink */
+};
+
+static Uint32			 object_mediapool_gc(Uint32 , void *);
+static struct object_art	*object_get_art(char *);
+static struct object_audio	*object_get_audio(char *);
+
 int
-object_addanim(struct object *ob, struct anim *anim)
+object_addanim(struct object_art *art, struct anim *anim)
 {
-	if (ob->anims == NULL) {			/* Initialize */
-		ob->anims = (struct anim **)
+	if (art->anims == NULL) {			/* Initialize */
+		art->anims = (struct anim **)
 		    emalloc(NANIMS_INIT * sizeof(struct anim *));
-		ob->maxanims = NANIMS_INIT;
-		ob->nanims = 0;
-	} else if (ob->nanims >= ob->maxanims) {	/* Grow */
+		art->maxanims = NANIMS_INIT;
+		art->nanims = 0;
+	} else if (art->nanims >= art->maxanims) {	/* Grow */
 		struct anim **newanims;
 
-		newanims = (struct anim **)realloc(ob->anims,
-		    (NANIMS_GROW * ob->maxanims) * sizeof(struct anim *));
+		newanims = (struct anim **)realloc(art->anims,
+		    (NANIMS_GROW * art->maxanims) * sizeof(struct anim *));
 		if (newanims == NULL) {
 			dperror("realloc");
 			return (-1);
 		}
-		ob->maxanims *= NANIMS_GROW;
-		ob->anims = newanims;
+		art->maxanims *= NANIMS_GROW;
+		art->anims = newanims;
 	}
-	ob->anims[ob->nanims++] = anim;
+	art->anims[art->nanims++] = anim;
 	return (0);
 }
 
 int
-object_addsprite(struct object *ob, SDL_Surface *sprite)
+object_addsprite(struct object_art *art, SDL_Surface *sprite)
 {
-	if (ob->sprites == NULL) {			/* Initialize */
-		ob->sprites = (SDL_Surface **)
+	if (art->sprites == NULL) {			/* Initialize */
+		art->sprites = (SDL_Surface **)
 		    emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
-		ob->maxsprites = NSPRITES_INIT;
-		ob->nsprites = 0;
-	} else if (ob->nsprites >= ob->maxsprites) {	/* Grow */
+		art->maxsprites = NSPRITES_INIT;
+		art->nsprites = 0;
+	} else if (art->nsprites >= art->maxsprites) {	/* Grow */
 		SDL_Surface **newsprites;
 
-		newsprites = (SDL_Surface **)realloc(ob->sprites,
-		    (NSPRITES_GROW * ob->maxsprites) * sizeof(SDL_Surface *));
+		newsprites = (SDL_Surface **)realloc(art->sprites,
+		    (NSPRITES_GROW * art->maxsprites) * sizeof(SDL_Surface *));
 		if (newsprites == NULL) {
 			dperror("realloc");
 			return (-1);
 		}
-		ob->maxsprites *= NSPRITES_GROW;
-		ob->sprites = newsprites;
+		art->maxsprites *= NSPRITES_GROW;
+		art->sprites = newsprites;
 	}
-	ob->sprites[ob->nsprites++] = sprite;
+	art->sprites[art->nsprites++] = sprite;
 	return (0);
 }
 
+static struct object_art *
+object_get_art(char *media)
+{
+	struct object_art *art = NULL, *eart;
+
+	pthread_mutex_lock(&arts_lock);
+
+	SLIST_FOREACH(eart, &artsh, arts) {
+		if (strcmp(eart->name, media) == 0) {
+			art = eart;	/* Already in pool */
+		}
+	}
+
+	if (art == NULL) {
+		struct fobj *fob;
+		Uint32 i;
+
+		art = (struct object_art *)emalloc(sizeof(struct object_art));
+		art->name = strdup(media);
+		art->sprites = NULL;
+		art->nsprites = 0;
+		art->maxsprites = 0;
+		art->anims = NULL;
+		art->nanims = 0;
+		art->maxanims = 0;
+		art->used = 0;
+
+		fob = fobj_load(savepath(media, "fob"));
+		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
+			xcf_load(fob, i, art);
+		}
+		fobj_free(fob);
+		
+		SLIST_INSERT_HEAD(&artsh, art, arts);
+	}
+
+	pthread_mutex_unlock(&arts_lock);
+	return (art);
+}
+
+static struct object_audio *
+object_get_audio(char *media)
+{
+	struct object_audio *audio = NULL, *eaudio;
+
+	pthread_mutex_lock(&audios_lock);
+
+	SLIST_FOREACH(eaudio, &audiosh, audios) {
+		if (strcmp(eaudio->name, media) == 0) {
+			audio = eaudio;	/* Already in pool */
+		}
+	}
+
+	if (audio == NULL) {
+		struct fobj *fob;
+		Uint32 i;
+
+		audio = (struct object_audio *)
+		    emalloc(sizeof(struct object_audio));
+		audio->name = strdup(media);
+		/* XXX todo */
+		audio->samples = NULL;
+		audio->nsamples = 0;
+		audio->maxsamples = 0;
+
+		fob = fobj_load(savepath(media, "fob"));
+		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX todo */
+			/* ... */
+		}
+		fobj_free(fob);
+		
+		SLIST_INSERT_HEAD(&audiosh, audio, audios);
+	}
+
+	pthread_mutex_unlock(&audios_lock);
+	return (audio);
+}
+
 void
-object_init(struct object *ob, char *name, int flags, void *vecp)
+object_mediapool_init(void)
+{
+	gctimer = SDL_AddTimer(1000, object_mediapool_gc, NULL);
+}
+
+void
+object_mediapool_quit(void)
+{
+	SDL_RemoveTimer(gctimer);
+}
+
+static Uint32
+object_mediapool_gc(Uint32 ival, void *p)
+{
+	struct object_audio *audio;
+	struct object_art *art;
+	
+	pthread_mutex_lock(&arts_lock);
+	SLIST_FOREACH(art, &artsh, arts) {
+		if (art->used < 1) {
+			/* gc */
+			dprintf("gc art\n");
+		}
+	}
+	pthread_mutex_unlock(&arts_lock);
+
+	pthread_mutex_lock(&audios_lock);
+	SLIST_FOREACH(audio, &audiosh, audios) {
+		if (audio->used < 1) {
+			/* gc */
+			dprintf("gc audio\n");
+		}
+	}
+	pthread_mutex_unlock(&audios_lock);
+
+	return (ival);
+}
+
+void
+object_init(struct object *ob, char *name, char *media, int flags,
+    const void *vecp)
 {
 	static int curid = 0;	/* The world has id 0 */
 
@@ -115,23 +253,30 @@ object_init(struct object *ob, char *name, int flags, void *vecp)
 	ob->desc = NULL;
 	sprintf(ob->saveext, "ag");
 	ob->flags = flags;
-	ob->vec = vecp;
-
-	ob->sprites = NULL;
-	ob->nsprites = 0;
-	ob->maxsprites = 0;
-	ob->anims = NULL;
-	ob->nanims = 0;
-	ob->maxanims = 0;
+	if (vecp != NULL) {
+		ob->vec = vecp;
+	} else {
+		ob->vec = &null_obvec;
+	}
 
 	ob->pos = NULL;
+	ob->art = NULL;
+	ob->audio = NULL;
+
+	if (ob->flags & OBJ_ART) {
+		ob->art = object_get_art(media);
+		ob->art->used++;
+	}
+	if (ob->flags & OBJ_AUDIO) {
+		ob->audio = object_get_audio(media);
+		ob->art->used++;
+	}
 }
 
-int
+void
 object_destroy(void *arg)
 {
 	struct object *ob = (struct object *)arg;
-	int i;
 
 	if (ob->flags & OBJ_DEFERGC) {
 		struct gcref *or;
@@ -140,30 +285,35 @@ object_destroy(void *arg)
 		or->ob = ob;
 		SLIST_INSERT_HEAD(&lategch, or, gcrefs);
 		ob->flags &= ~(OBJ_DEFERGC);
-		return (0);
+		return;
 	}
 
-	if (ob->vec->destroy != NULL &&
-	    ob->vec->destroy(ob) != 0) {
-		return (-1);
+	if (ob->vec->destroy != NULL) {
+		ob->vec->destroy(ob);
 	}
 
-	for(i = 0; i < ob->nsprites; i++)
-		SDL_FreeSurface(ob->sprites[i]);
-	if (ob->sprites != NULL)
-		free(ob->sprites);
+	/* Decrement the usage count. */
+	if (ob->art != NULL) {
+		ob->art->used--;
+	}
 
-	for(i = 0; i < ob->nanims; i++)
-		anim_destroy(ob->anims[i]);
+	/* XXX gc */
+#if 0
+	for(i = 0; i < ob->art->nsprites; i++)
+		SDL_FreeSurface(SPRITE(ob, i));
+	if (ob->art->sprites != NULL)
+		free(ob->art->sprites);
+	for (i = 0; i < ob->nanims; i++)
+		anim_destroy(ANIM(ob, i));
 	if (ob->anims != NULL)
 		free(ob->anims);
+#endif
 	
 	if (ob->name != NULL)
 		free(ob->name);
 	if (ob->desc != NULL)
 		free(ob->desc);
 	free(ob);
-	return (0);
 }
 
 /* Perform deferred garbage collection. */
@@ -268,6 +418,7 @@ object_link(void *p)
 	pthread_mutex_lock(&world->lock);
 	SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
 	pthread_mutex_unlock(&world->lock);
+	world->nobjs++;
 	return (0);
 }
 
@@ -277,6 +428,7 @@ object_unlink(void *p)
 {
 	struct object *ob = p;
 
+	world->nobjs--;
 	pthread_mutex_lock(&world->lock);
 	SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 	pthread_mutex_unlock(&world->lock);
