@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.33 2003/01/19 11:58:48 vedge Exp $
+#	$Csoft: Makefile,v 1.34 2003/01/24 08:27:02 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -6,23 +6,29 @@ include ${TOP}/Makefile.config
 SUBDIR=	tool
 
 LIB=	mapedit
-SRCS=	mapedit.c fileops.c mapview.c mapwin.c tilestack.c objq.c
-OBJS=	mapedit.o fileops.o mapview.o mapwin.o tilestack.o objq.o
-FOBJS=	mapedit.fob
+SRCS=	mapedit.c fileops.c mapview.c mapwin.c objq.c
+OBJS=	mapedit.o fileops.o mapview.o mapwin.o objq.o
 
-MAN3=	mapedit.3 mapview.3 tilestack.3
-CATMAN3=mapedit.cat3 mapview.cat3 tilestack.cat3
+FOBJS=	mapedit.fob mapview.fob
+FOFFS=	mapedit_offs.h mapview_offs.h
 
-CFLAGS+=	${SDL_CFLAGS}
+MAN3=	mapedit.3 mapview.3
+CATMAN3=mapedit.cat3 mapview.cat3
 
-XCF=	mapedit.xcf props.xcf toolbar.xcf
+CFLAGS+=${SDL_CFLAGS}
 
-all:	mapedit.fob mapedit_offs.h
+XCF0=	mapedit.xcf toolbar.xcf
+XCF1=	props.xcf
 
-depend:	mapedit.fob
+all:	${FOBJS} ${FOFFS}
 
-mapedit.fob mapedit_offs.h: ${XCF}
-	${FOBJCOMP} -o mapedit.fob ${XCF}
+depend:	mapedit.fob mapview.fob
+
+mapedit.fob mapedit_offs.h: ${XCF0}
+	${FOBJCOMP} -o mapedit.fob ${XCF0}
+
+mapview.fob mapview_offs.h: ${XCF1}
+	${FOBJCOMP} -o mapview.fob ${XCF1}
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/mk/csoft.man.mk

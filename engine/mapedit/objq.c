@@ -43,8 +43,6 @@
 
 #include "mapedit.h"
 #include "mapview.h"
-#include "objq.h"
-#include "fileops.h"
 
 enum {
 	OBJQ_INSERT_LEFT,
@@ -57,7 +55,6 @@ static void
 tl_objs_poll(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct mapedit *med = argv[1].p;
 	struct object *ob;
 
 	tlist_clear_items(tl);
@@ -218,8 +215,7 @@ static void
 tl_objs_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	struct mapedit *med = argv[1].p;
-	struct tlist_item *eob_item = argv[2].p;
+	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
 	struct window *win;
 	struct region *reg;
@@ -244,7 +240,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	window_set_spacing(win, 1, 4);
 
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, med, ob->art->tiles.map,
+	mapview_init(mv, ob->art->tiles.map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
 	    MAPVIEW_PROPS,
 	    100, 100);
@@ -258,42 +254,44 @@ tl_objs_selected(int argc, union evarg *argv)
 	region_set_spacing(reg, 1, 1);
 	{
 		bu = button_new(reg, NULL,		/* Load map */
-		    SPRITE(med, MAPEDIT_TOOL_LOAD_MAP), 0, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP), 0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
 		bu = button_new(reg, NULL,		/* Save map */
-		    SPRITE(med, MAPEDIT_TOOL_SAVE_MAP), 0, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP), 0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 		
 		bu = button_new(reg, NULL,		/* Clear map */
-		    SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP), 0, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_CLEAR_MAP), 0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
 		
 		bu = button_new(reg, NULL,		/* Toggle grid */
-		    SPRITE(med, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		bu = button_new(reg, NULL,		/* Toggle props */
-		    SPRITE(med, MAPEDIT_TOOL_PROPS), BUTTON_STICKY, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS), BUTTON_STICKY,
+		    -1, -1);
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 		bu = button_new(reg, NULL,		/* Toggle map edition */
-		    SPRITE(med, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 		
 		bu = button_new(reg, NULL,	       /* Toggle node edition */
-		    SPRITE(med, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY, -1, -1);
+		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY,
+		    -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
@@ -331,7 +329,7 @@ tl_objs_selected(int argc, union evarg *argv)
 
 			tl = tlist_new(reg, 100, 100, TLIST_MULTI);
 			tlist_set_item_height(tl,
-			    prop_get_int(med, "tilemap-item-size"));
+			    prop_get_int(&mapedit, "tilemap-item-size"));
 
 			for (i = 0; i < ob->art->nsprites; i++) {
 				snprintf(s, 8, "s%d", i);
@@ -360,7 +358,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		
 			for (i = 0; i < 4; i++) {
 				button = button_new(reg, NULL,
-				    SPRITE(med, icons[i]), 0, 100/4, 100);
+				    SPRITE(&mapedit, icons[i]), 0, 100/4, 100);
 				event_new(button, "button-pushed",
 				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
 			}
@@ -369,7 +367,7 @@ tl_objs_selected(int argc, union evarg *argv)
 }
 
 struct window *
-objq_window(struct mapedit *med)
+objq_window(void)
 {
 	struct window *win;
 	struct region *reg;
@@ -387,8 +385,8 @@ objq_window(struct mapedit *med)
 		struct tlist *tl;
 
 		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		event_new(tl, "tlist-poll", tl_objs_poll, "%p", med);
-		event_new(tl, "tlist-changed", tl_objs_selected, "%p", med);
+		event_new(tl, "tlist-poll", tl_objs_poll, NULL);
+		event_new(tl, "tlist-changed", tl_objs_selected, NULL);
 	}
 	return (win);
 }

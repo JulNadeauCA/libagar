@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.64 2003/01/25 06:29:29 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.65 2003/01/26 06:15:20 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
@@ -39,23 +39,6 @@ enum {
 	MAPEDIT_ANIM_TXT,
 	MAPEDIT_ANIM_INDEPENDENT_TXT,
 	MAPEDIT_ANIM_DELTA_TXT,
-	/* Props */
-	MAPEDIT_FRAME_0,
-	MAPEDIT_FRAME_1,
-	MAPEDIT_FRAME_2,
-	MAPEDIT_FRAME_3,
-	MAPEDIT_FRAME_4,
-	MAPEDIT_FRAME_5,
-	MAPEDIT_FRAME_6,
-	MAPEDIT_BLOCK,
-	MAPEDIT_ORIGIN,
-	MAPEDIT_WALK,
-	MAPEDIT_CLIMB,
-	MAPEDIT_SLIPPERY,
-	MAPEDIT_BIO,
-	MAPEDIT_REGEN,
-	MAPEDIT_SLOW,
-	MAPEDIT_HASTE,
 	/* Toolbar */
 	MAPEDIT_TOOL_MAP,
 	MAPEDIT_TOOL_NEW_MAP,
@@ -85,7 +68,16 @@ enum {
 	MAPEDIT_TOOL_SHIFT
 };
 
-void	 mapedit_init(void);
+void		 mapedit_init(void);
+struct window	*objq_window(void);
+void		 fileops_new_map(int, union evarg *);
+struct window	*fileops_new_map_window(void);
+void		 fileops_load_map(int, union evarg *);
+struct window	*fileops_load_map_window(void);
+void		 fileops_save_map(int, union evarg *);
+void		 fileops_revert_map(int, union evarg *);
+void		 fileops_clear_map(int, union evarg *);
+struct window	*mapwin_new(struct map *);
 
 extern struct mapedit	mapedit;
 extern int		mapedition;

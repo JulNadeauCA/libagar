@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.37 2003/01/25 06:29:29 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.38 2003/01/27 02:19:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -37,9 +37,7 @@
 #include <engine/widget/text.h>
 
 #include "mapedit.h"
-#include "mapwin.h"
 #include "mapview.h"
-#include "fileops.h"
 
 static void	mapwin_new_view(int, union evarg *);
 static void	mapwin_option(int, union evarg *);
@@ -48,7 +46,6 @@ static void
 mapwin_new_view(int argc, union evarg *argv)
 {
 	struct mapview *mv, *parent = argv[1].p;
-	struct mapedit *med = parent->med;
 	struct map *m = parent->map;
 	struct window *win;
 	struct region *reg;
@@ -60,8 +57,7 @@ mapwin_new_view(int argc, union evarg *argv)
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-	mv = mapview_new(reg, med, m,
-	    MAPVIEW_CENTER|MAPVIEW_ZOOM, 100, 100);
+	mv = mapview_new(reg, m, MAPVIEW_CENTER|MAPVIEW_ZOOM, 100, 100);
 
 	win->focus = WIDGET(mv);
 
@@ -103,7 +99,7 @@ mapwin_option(int argc, union evarg *argv)
 }
 
 struct window *
-mapwin_new(struct mapedit *med, struct map *m)
+mapwin_new(struct map *m)
 {
 	struct window *win;
 	struct region *reg;
@@ -116,7 +112,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 
 	/* Map view */
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, med, m,
+	mapview_init(mv, m,
 	    MAPVIEW_CENTER|MAPVIEW_EDIT|MAPVIEW_ZOOM|MAPVIEW_PROPS,
 	    100, 100);
 
@@ -127,38 +123,44 @@ mapwin_new(struct mapedit *med, struct map *m)
 		struct button *bu;
 
 		/* Load map */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP),
 		    0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
 		/* Save map */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP),
 		    0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 
 		/* Clear map */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_CLEAR_MAP),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_CLEAR_MAP),
 		    0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
 
 		/* New map view */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NEW_VIEW),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_NEW_VIEW),
 		    0, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
 		event_new(bu, "button-pushed", mapwin_new_view, "%p", mv);
 
 		/* Toggle mapview grid */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID),
 		    BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
 		    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		/* Toggle node props */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS),
 		    BUTTON_STICKY, -1, -1);
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
@@ -166,7 +168,8 @@ mapwin_new(struct mapedit *med, struct map *m)
 		    mapwin_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 		
 		/* Toggle node edition */
-		bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_NODEEDIT),
+		bu = button_new(reg, NULL,
+		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT),
 		    BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
