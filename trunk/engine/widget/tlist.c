@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.24 2002/12/03 04:09:00 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.25 2002/12/13 07:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -96,6 +96,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	tl->yspacing = 3;
 	tl->item_h = 16;
 	tl->nitems = 0;
+	tl->nvisitems = 0;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 
@@ -104,7 +105,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	pthread_mutex_init(&tl->items_lock, &tl->items_lockattr);
 
 	tl->vbar = emalloc(sizeof(struct scrollbar));
-	scrollbar_init(tl->vbar, -1, -1, tl->item_h, SCROLLBAR_VERTICAL);
+	scrollbar_init(tl->vbar, -1, -1, SCROLLBAR_VERTICAL);
 	WIDGET(tl->vbar)->flags |= WIDGET_NO_FOCUS;
 
 	event_new(tl, "window-mousemotion", tlist_mousemotion, NULL);
@@ -148,8 +149,10 @@ tlist_scaled(int argc, union evarg *argv)
 
 	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - 20;
 	WIDGET(sb)->y = WIDGET(tl)->y;
-	WIDGET(sb)->w = 20;
+ 	WIDGET(sb)->w = 20;
 	WIDGET(sb)->h = WIDGET(tl)->h;
+
+	event_post(sb, "widget-scaled", "%i, %i", WIDGET(sb)->w, WIDGET(sb)->h);
 }
 
 void
@@ -160,7 +163,8 @@ tlist_draw(void *p)
 	struct tlist_item *it;
 	struct scrollbar *sb = tl->vbar;
 	int item_h;
-	int y, i = 0;
+	int y = 0, i = 0;
+	int val = 0, visitems = 0;
 
 	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
@@ -175,13 +179,14 @@ tlist_draw(void *p)
 	rclip.w = WIDGET(tl)->w;
 	rclip.h = WIDGET(tl)->h;
 
-	y = sb->range.soft_start;
+	scrollbar_get_value(sb, &val);
+
 	SDL_SetClipRect(view->v, &rclip);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		SDL_Surface *su;
 		int x = 2;
 
-		if (i++ < sb->range.start) {
+		if (i++ < val) {
 			continue;
 		}
 		if (y > WIDGET(tl)->h - it->icon_h) {
@@ -207,9 +212,20 @@ tlist_draw(void *p)
 		    WIDGET_COLOR(tl, LINE_COLOR));
 
 		SDL_FreeSurface(su);
+
+		visitems++;
 	}
 out:
 	SDL_SetClipRect(view->v, NULL);
+
+	tl->nvisitems = visitems;
+	if (tl->nitems > 0 && visitems > 0 && visitems < tl->nitems) {
+		sb->bar_size = visitems *
+		    (WIDGET(sb)->h - sb->button_size*2) / tl->nitems;
+	} else {
+		sb->bar_size = -1;
+	}
+
 	scrollbar_draw(sb);
 	pthread_mutex_unlock(&tl->items_lock);
 }
@@ -232,7 +248,7 @@ tlist_remove_item(struct tlist_item *it)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_REMOVE(&tl->items, it, items);
-	scrollbar_set_range(sb, --tl->nitems);
+	scrollbar_set_range(sb, 0, --tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
 
 	tlist_free_item(it);
@@ -270,7 +286,7 @@ tlist_clear_items(struct tlist *tl)
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
 	
-	scrollbar_set_range(sb, 0);
+	scrollbar_set_range(sb, 0, 0);
 	
 	pthread_mutex_unlock(&tl->items_lock);
 }
@@ -279,9 +295,12 @@ static __inline__ int
 tlist_item_compare(struct tlist_item *it1, struct tlist_item *it2)
 {
 	if (it1->text_len == it2->text_len &&		/* Optimization */
+	    strcmp(it1->text, it2->text) == 0) {	/* Same text? */
+#if 0
 	    strcmp(it1->text, it2->text) == 0 &&	/* Same text? */
 	    it1->icon == it2->icon &&			/* Same icon? */
 	    it1->p1 == it2->p1) {			/* Same user pointer? */
+#endif
 		return (1);
 	}
 	return (0);
@@ -325,7 +344,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_INSERT_TAIL(&tl->items, it, items);
-	scrollbar_set_range(sb, ++tl->nitems);
+	scrollbar_set_range(sb, 0, ++tl->nitems);
 	pthread_mutex_unlock(&tl->items_lock);
 
 	event_post(tl, "tlist-inserted-item", "%p", it);
@@ -399,45 +418,18 @@ tlist_mousemotion(int argc, union evarg *argv)
 	int yrel = argv[4].i;
 	Uint8 ms;
 	
-	if (tl->flags & TLIST_POLL) {			/* Update the list */
-		event_post(tl, "tlist-poll", NULL);
-	}
+	event_forward(sb, "window-mousemotion", argc, argv);
 
-	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar motion? */
-		event_forward(sb, "window-mousemotion", argc, argv);
-		return;
+	if (sb->value >= sb->max) {
+		/* Don't scroll past the end. */
+		sb->value = sb->max - tl->nvisitems - 1;
 	}
-
-#if 0
-	ms = SDL_GetMouseState(NULL, NULL);
-	if (ms & SDL_BUTTON_RMASK) {
-		/* Scroll down */
-		if (yrel < 0 && (sb->range.soft_start += yrel) < 0) {
-			sb->range.soft_start = tl->item_h;
-			if (++sb->range.start > tl->nitems) {
-				sb->range.start = tl->nitems;
-			}
-		}
-		/* Scroll up */
-		if (yrel > 0 && sb->range.start > 0 &&
-		    (sb->range.soft_start += yrel) > tl->item_h) {
-			sb->range.soft_start = 0;
-			if (--sb->range.start < 0) {
-				sb->range.start = 0;
-			}
-		}
-	}
-#endif
 }
 
 static void
 tlist_mousebuttonup(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	
-	if (tl->flags & TLIST_POLL) {			/* Update the list */
-		event_post(tl, "tlist-poll", NULL);
-	}
 	
 	event_forward(tl->vbar, "window-mousebuttonup", argc, argv);
 }
@@ -451,28 +443,26 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	int x = argv[2].i;
 	int y = argv[3].i;
 	struct tlist_item *ti;
-	int index;
-	
-	if (tl->flags & TLIST_POLL) {			/* Update the list */
-		event_post(tl, "tlist-poll", NULL);
-	}
 	
 	WIDGET_FOCUS(tl);
 
 	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar click? */
 		event_forward(sb, "window-mousebuttondown", argc, argv);
+	
+		if (sb->value >= sb->max) {
+			/* Don't scroll past the end. */
+			sb->value = sb->max - tl->nvisitems - 1;
+		}
 		return;
 	}
-
+	
 	if (button != SELECTION_MOUSE_BUTTON) {		/* Selection button? */
 		return;
 	}
 	
 	pthread_mutex_lock(&tl->items_lock);
-	index = sb->range.start + (y - sb->range.soft_start) / tl->item_h;
-	dprintf("range.start = %d, y = %d, soft = %d, item_h = %d\n",
-	    sb->range.start, y, sb->range.soft_start, tl->item_h);
-	ti = tlist_item_index(tl, index + 1);
+	ti = tlist_item_index(tl,
+	    (sb->value + y / tl->item_h) + 1);
 	if (ti != NULL) {
 		if (tl->flags & TLIST_MULTI_STICKY ||
 		   ((tl->flags & TLIST_MULTI) &&
@@ -487,8 +477,6 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 			ti->selected++;
 		}
 		event_post(tl, "tlist-changed", "%p, %i", ti, 1);
-	} else {
-		dprintf("no item at index %d\n", index);
 	}
 	pthread_mutex_unlock(&tl->items_lock);
 }
@@ -502,16 +490,11 @@ tlist_keydown(int argc, union evarg *argv)
 	int keysym = argv[1].i;
 	int sel;
 	
-	if (tl->flags & TLIST_POLL) {			/* Update the list */
-		event_post(tl, "tlist-poll", NULL);
-	}
-
 	pthread_mutex_lock(&tl->items_lock);
 	switch (keysym) {
 	case SDLK_UP:
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected) {
-				dprintf("to previous\n");
 				pit = TAILQ_PREV(it, tlist_itemq, items);
 				if (pit != NULL) {
 					/* Unselect current */
@@ -524,8 +507,6 @@ tlist_keydown(int argc, union evarg *argv)
 					event_post(tl, "tlist-changed",
 					    "%p, %i", pit, 1);
 					break;
-				} else {
-					dprintf("no previous item\n");
 				}
 			}
 		}
@@ -550,23 +531,23 @@ tlist_keydown(int argc, union evarg *argv)
 		}
 		break;
 	case SDLK_LEFT:
-		if (--sb->range.start < 0) {
-			sb->range.start = 0;
+		if (--sb->value < 0) {
+			sb->value = 0;
 		}
 		break;
 	case SDLK_RIGHT:
-		if (++sb->range.start > tl->nitems) {
-			sb->range.start = tl->nitems;
+		if (++sb->value > tl->nitems) {		/* XXX */
+			sb->value = tl->nitems;
 		}
 		break;
 	case SDLK_PAGEUP:
-		if ((sb->range.start -= 4) < 0) {
-			sb->range.start = 0;
+		if ((sb->value -= 4) < 0) {
+			sb->value = 0;
 		}
 		break;
 	case SDLK_PAGEDOWN:
-		if ((sb->range.start += 4) > tl->nitems) {
-			sb->range.start = tl->nitems;
+		if ((sb->value += 4) > tl->nitems - tl->nvisitems) { /* XXX */
+			sb->value = tl->nitems - tl->nvisitems;
 		}
 		break;
 	default:
