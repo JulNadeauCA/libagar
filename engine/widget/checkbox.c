@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.24 2002/11/12 02:45:33 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.25 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -64,9 +64,7 @@ checkbox_new(struct region *reg, char *caption, int rh, int flags)
 	cb = emalloc(sizeof(struct checkbox));
 	checkbox_init(cb, caption, rh, flags);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, cb);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (cb);
 }

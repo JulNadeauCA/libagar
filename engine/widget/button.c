@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.40 2002/11/09 06:01:27 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.41 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -72,9 +72,7 @@ button_new(struct region *reg, char *caption, SDL_Surface *image, int flags,
 	button = emalloc(sizeof(struct button));
 	button_init(button, caption, image, flags, rw, rh);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, button);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (button);
 }

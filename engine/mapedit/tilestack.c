@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.10 2002/09/12 09:49:09 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.11 2002/11/14 05:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -68,9 +68,7 @@ tilestack_new(struct region *reg, int flags, int rw, int rh, struct mapview *mv)
 	tilestack = emalloc(sizeof(struct tilestack));
 	tilestack_init(tilestack, flags, rw, rh, mv);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, tilestack);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (tilestack);
 }

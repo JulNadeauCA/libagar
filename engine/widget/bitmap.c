@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.4 2002/09/12 09:33:25 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.5 2002/11/14 05:59:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -57,9 +57,7 @@ bitmap_new(struct region *reg, SDL_Surface *surface, int w, int h)
 	bitmap = emalloc(sizeof(struct bitmap));
 	bitmap_init(bitmap, surface, w, h);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, bitmap);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (bitmap);
 }

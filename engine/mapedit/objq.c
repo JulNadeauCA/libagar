@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.23 2002/11/14 05:59:00 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.24 2002/11/15 04:18:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -81,9 +81,7 @@ objq_new(struct region *reg, struct mapedit *med, int flags, int rw, int rh)
 	objq = emalloc(sizeof(struct objq));
 	objq_init(objq, med, flags, rw, rh);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, objq);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (objq);
 }
