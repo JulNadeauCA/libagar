@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.7 2002/05/19 14:30:24 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.8 2002/05/22 02:03:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -35,9 +35,9 @@
 #include <string.h>
 
 #include <engine/engine.h>
-#include <engine/queue.h>
 #include <engine/version.h>
 
+#include "primitive.h"
 #include "text.h"
 #include "widget.h"
 #include "window.h"
@@ -107,35 +107,14 @@ void
 checkbox_draw(void *p)
 {
 	struct checkbox *cbox = p;
-	SDL_Rect rd;
 	SDL_Surface *box_s;
 	int x = 0, y = 0;
 
 	/* Checkbox */
-	/* Checkbox */
-	box_s = view_surface(SDL_SWSURFACE, cbox->cbox_w, cbox->label_s->h);
-	SDL_FillRect(box_s, NULL, SDL_MapRGBA(box_s->format,
-	    255, 255, 255, 255));
-	if (cbox->flags & CHECKBOX_PRESSED) {
-		rd.x = 2;
-		rd.y = 2;
-		rd.w = box_s->w - 2;
-		rd.h = box_s->h - 2;
-		SDL_FillRect(box_s, NULL,
-		    SDL_MapRGBA(box_s->format, 50, 50, 50, 120));
-		SDL_FillRect(box_s, &rd,
-		    SDL_MapRGBA(box_s->format, 96, 96, 128, 120));
-	} else {
-		rd.x = 1;
-		rd.y = 1;
-		rd.w = box_s->w - 1;
-		rd.h = box_s->h - 1;
-		SDL_FillRect(box_s, NULL,
-		    SDL_MapRGBA(box_s->format, 180, 180, 180, 120));
-		SDL_FillRect(box_s, &rd,
-		    SDL_MapRGBA(box_s->format, 96, 96, 128, 120));
-	}
+	box_s = primitive_box(cbox->cbox_w, cbox->label_s->h,
+	    (cbox->flags & CHECKBOX_PRESSED) ? -1 : 1);
 
+	/* Label (cached) */
 	switch (cbox->justify) {
 	case CHECKBOX_LEFT:
 	case CHECKBOX_RIGHT:
@@ -159,15 +138,15 @@ checkbox_event(void *p, SDL_Event *ev, int flags)
 	}
 
 	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:
-		cbox->flags |= CHECKBOX_PRESSED;
-		WIDGET(cbox)->win->redraw++;
+	case SDL_MOUSEBUTTONUP:
+		if (cbox->flags & CHECKBOX_PRESSED) {
+			cbox->flags &= ~(CHECKBOX_PRESSED);
+		} else {
+			cbox->flags |= CHECKBOX_PRESSED;
+		}
 		if (cbox->push != NULL) {
 			cbox->push(cbox);
 		}
-		break;
-	case SDL_MOUSEBUTTONUP:
-		cbox->flags &= ~(CHECKBOX_PRESSED);
 		WIDGET(cbox)->win->redraw++;
 		break;
 	}
