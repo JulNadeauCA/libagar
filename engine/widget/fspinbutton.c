@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.25 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.26 2005/01/23 11:48:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -230,9 +230,12 @@ fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 	}
 
 	fsu->incbu = button_new(fsu, "+");
-	fsu->decbu = button_new(fsu, "-");
 	button_set_padding(fsu->incbu, 0);
+	button_set_repeat(fsu->incbu, 1);
+
+	fsu->decbu = button_new(fsu, "-");
 	button_set_padding(fsu->decbu, 0);
+	button_set_repeat(fsu->decbu, 1);
 
 	event_new(fsu, "widget-bound", binding_changed, NULL);
 	event_new(fsu, "window-keydown", key_pressed, NULL);

@@ -1,4 +1,4 @@
-.\"	$Csoft: button.3,v 1.23 2005/01/05 04:44:05 vedge Exp $
+.\"	$Csoft: button.3,v 1.24 2005/01/11 07:41:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -77,6 +77,9 @@ an image.
 .Fn button_set_label "struct button *button" "SDL_Surface *su"
 .Pp
 .Ft void
+.Fn button_set_repeat "struct button *button" "int repeat_flag"
+.Pp
+.Ft void
 .Fn button_printf "struct button *button" "const char *fmt" "..."
 .nr nS 0
 .Pp
@@ -137,6 +140,15 @@ The
 and
 .Fn button_printf
 functions are used to modify the button label.
+.Pp
+The
+.Fn button_set_repeat
+flag enables or disables repeat mode.
+Repeat mode causes multiple
+.Sq button-pushed
+events to be posted periodically for as long as the button is triggered.
+Repeat mode is useful for things like
+.Xr spinbutton 3 .
 .Sh EVENTS
 The
 .Nm

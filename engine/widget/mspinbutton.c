@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.4 2004/09/04 15:49:03 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.5 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -228,16 +228,22 @@ mspinbutton_init(struct mspinbutton *sbu, const char *sep, const char *label)
 
 	sbu->xdecbu = button_new(sbu, "-");
 	button_set_padding(sbu->xdecbu, 0);
+	button_set_repeat(sbu->xdecbu, 1);
 	event_new(sbu->xdecbu, "button-pushed", mspinbutton_left, "%p", sbu);
+
 	sbu->xincbu = button_new(sbu, "+");
 	button_set_padding(sbu->xincbu, 0);
+	button_set_repeat(sbu->xincbu, 1);
 	event_new(sbu->xincbu, "button-pushed", mspinbutton_right, "%p", sbu);
 	
 	sbu->ydecbu = button_new(sbu, "-");
 	button_set_padding(sbu->ydecbu, 0);
+	button_set_repeat(sbu->ydecbu, 1);
 	event_new(sbu->ydecbu, "button-pushed", mspinbutton_up, "%p", sbu);
+
 	sbu->yincbu = button_new(sbu, "+");
 	button_set_padding(sbu->yincbu, 0);
+	button_set_repeat(sbu->yincbu, 1);
 	event_new(sbu->yincbu, "button-pushed", mspinbutton_down, "%p", sbu);
 
 	event_new(sbu, "widget-bound", mspinbutton_bound, NULL);

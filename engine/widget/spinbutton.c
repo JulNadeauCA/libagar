@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.19 2004/09/04 15:49:03 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.20 2005/01/05 04:44:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -150,7 +150,7 @@ spinbutton_return(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_up(int argc, union evarg *argv)
+spinbutton_inc(int argc, union evarg *argv)
 {
 	struct spinbutton *sbu = argv[1].p;
 
@@ -162,7 +162,7 @@ spinbutton_up(int argc, union evarg *argv)
 }
 
 static void
-spinbutton_down(int argc, union evarg *argv)
+spinbutton_dec(int argc, union evarg *argv)
 {
 	struct spinbutton *sbu = argv[1].p;
 	
@@ -194,13 +194,16 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	event_new(sbu, "window-keydown", spinbutton_keydown, NULL);
 
 	sbu->incbu = button_new(sbu, "+");
-	sbu->decbu = button_new(sbu, "-");
 	button_set_padding(sbu->incbu, 0);
+	button_set_repeat(sbu->incbu, 1);
+
+	sbu->decbu = button_new(sbu, "-");
 	button_set_padding(sbu->decbu, 0);
+	button_set_repeat(sbu->decbu, 1);
 	
 	event_new(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
-	event_new(sbu->incbu, "button-pushed", spinbutton_up, "%p", sbu);
-	event_new(sbu->decbu, "button-pushed", spinbutton_down, "%p", sbu);
+	event_new(sbu->incbu, "button-pushed", spinbutton_inc, "%p", sbu);
+	event_new(sbu->decbu, "button-pushed", spinbutton_dec, "%p", sbu);
 }
 
 void
