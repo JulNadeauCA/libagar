@@ -1,7 +1,7 @@
-/*	$Csoft: engine.c,v 1.22 2002/03/07 13:12:42 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.23 2002/03/17 09:15:00 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without

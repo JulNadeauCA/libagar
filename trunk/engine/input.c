@@ -1,7 +1,7 @@
-/*	$Csoft: input.c,v 1.5 2002/03/17 11:58:59 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.6 2002/03/25 12:58:40 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  *
  * Redistribution and use in source and binary forms, with or without
