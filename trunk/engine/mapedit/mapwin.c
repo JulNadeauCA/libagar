@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.11 2002/07/29 06:30:51 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.12 2002/07/30 22:21:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -59,21 +59,21 @@ mapwin_new_view(int argc, union evarg *argv)
 	struct window *win;
 	struct region *reg;
 
-	sprintf(caption, "@ %s (%dx%d)", OBJECT(m)->name, m->mapw, m->maph);
+	sprintf(caption, "%s view (%dx%d)",
+	    OBJECT(m)->name, m->mapw, m->maph);
 	win = emalloc(sizeof(struct window));
 	window_init(win, caption, WINDOW_SOLID,
-	    96, 96, 375, 293, 375, 293);
+	    96, 96, 375, 293, 100, 64);
 
 	/* Map view */
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
-	mv = mapview_new(reg, med, m, MAPVIEW_CENTER|MAPVIEW_ZOOM, 100, 100);
-	
+	mv = mapview_new(reg, med, m,
+	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR, 100, 100);
+
 	win->focus = WIDGET(mv);
 
 	view_attach(win);
-	pthread_mutex_lock(&win->lock);
 	window_show_locked(win);
-	pthread_mutex_unlock(&win->lock);
 }
 
 static void
@@ -117,7 +117,8 @@ mapwin_new(struct mapedit *med, struct map *m)
 	struct button *bu;
 	struct tilestack *ts;
 
-	sprintf(caption, "%s (%dx%d)", OBJECT(m)->name, m->mapw, m->maph);
+	sprintf(caption, "%s edition (%dx%d)",
+	    OBJECT(m)->name, m->mapw, m->maph);
 
 	win = emalloc(sizeof(struct window));
 	window_init(win, caption, WINDOW_SOLID|WINDOW_CENTER,
@@ -190,9 +191,7 @@ mapwin_new(struct mapedit *med, struct map *m)
 	 * Map view
 	 */
 	reg = region_new(win, REGION_HALIGN, 10, 10, 90, 90);
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, mv);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	win->focus = WIDGET(mv);
 
