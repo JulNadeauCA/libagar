@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.11 2003/05/20 12:05:13 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.12 2003/06/06 02:47:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -289,7 +289,7 @@ nodeedit_init(struct mapview *mv)
 	
 	tl = tlist_new(win, TLIST_POLL|TLIST_MULTI);
 	tlist_set_item_height(tl, TILEH);
-	event_new(mv->nodeed.refs_tl, "tlist-poll", nodeedit_poll, "%p", mv);
+	event_new(tl, "tlist-poll", nodeedit_poll, "%p", mv);
 
 	mv->nodeed.refs_tl = tl;
 	mv->nodeed.win = win;
