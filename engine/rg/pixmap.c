@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.9 2005/02/21 09:43:00 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.10 2005/02/22 08:44:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -689,13 +689,24 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 
 void
 pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
-    int x0, int y0, Uint32 pxmono)
+    int x0, int y0, Uint32 specPx)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
 	struct pixmap_brush *br = px->curbrush;
 	SDL_Surface *brsu = br->px->su;
-	int x, y;
 	Uint8 *src = brsu->pixels;
+	Uint8 r, g, b, specA;
+	int x, y;
+	
+	if (brsu->format->Amask != 0) {
+		u_int v = (specPx & brsu->format->Amask) >>
+		          brsu->format->Ashift;
+				
+		specA = (v << brsu->format->Aloss) +
+		        (v >> (8 - (brsu->format->Aloss << 1)));
+	} else {
+		specA = 255;
+	}
 
 	if (SDL_MUSTLOCK(brsu)) {
 		SDL_LockSurface(brsu);
@@ -705,42 +716,38 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 			break;
 		}
 		for (x = 0; x < brsu->w; x++) {
-			Uint32 pixel;
-			Uint8 a;
+			Uint32 Px, brPx;
+			Uint8 brA;
 
 			if (x0+x >= px->su->w)
 				break;
 
-			pixel = *(Uint32 *)src;
+			brPx = *(Uint32 *)src;
 			src += sizeof(Uint32);
 
 			if (brsu->format->Amask != 0) {
-				u_int v = (pxmono & brsu->format->Amask) >>
+				u_int v = (brPx & brsu->format->Amask) >>
 				          brsu->format->Ashift;
 				
-				a = (v << brsu->format->Aloss) +
-				    (v >> (8 - (brsu->format->Aloss << 1)));
+				brA = (v << brsu->format->Aloss) +
+				      (v >> (8 - (brsu->format->Aloss << 1)));
 			} else {
-				a = 255;
+				brA = 255;
 			}
 
 			switch (br->type) {
 			case PIXMAP_BRUSH_MONO:
-				{
-					Uint8 r, g, b;
-
-					SDL_GetRGB(pxmono, brsu->format,
-					    &r, &g, &b);
-					pixel = SDL_MapRGBA(brsu->format,
-					    r, g, b, a);
-				}
+				SDL_GetRGB(specPx, brsu->format, &r, &g, &b);
 				break;
 			case PIXMAP_BRUSH_RGB:
+				SDL_GetRGB(brPx, brsu->format, &r, &g, &b);
 				break;
 			}
+			Px = SDL_MapRGBA(brsu->format, r, g, b,
+			    (specA + brA)/2);
 
-			if (a != 0)
-				pixmap_put_pixel(tv, tel, x0+x, y0+y, pixel);
+			if (brA != 0)
+				pixmap_put_pixel(tv, tel, x0+x, y0+y, Px);
 		}
 	}
 	if (SDL_MUSTLOCK(brsu))
