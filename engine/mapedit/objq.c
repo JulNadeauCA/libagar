@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.10 2002/08/18 00:37:43 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.11 2002/08/19 05:31:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -173,7 +173,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, ob->art->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
-	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR,
+	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR|MAPVIEW_EDIT,
 	    100, 100);
 	
 	/*
