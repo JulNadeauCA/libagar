@@ -1,4 +1,4 @@
-/*	$Csoft: mapwin.c,v 1.25 2002/11/17 23:13:58 vedge Exp $	*/
+/*	$Csoft: mapwin.c,v 1.26 2002/11/22 08:56:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -66,6 +66,8 @@ mapwin_new_view(int argc, union evarg *argv)
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_SHOW_CURSOR, 100, 100);
 
 	win->focus = WIDGET(mv);
+
+	event_new(win, "window-close", window_generic_detach, "%p", win);
 
 	view_attach(win);
 	window_show(win);
