@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.94 2002/06/06 10:18:19 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.95 2002/06/06 22:50:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -423,8 +423,8 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
  * Render all animations in the map view.
  *
  * Nodes with the NODE_ANIM flag set are rendered by the animator, even
- * if there is no animation on the node (used for soft-scrolling); nearby
- * nodes with the NODE_OVERLAP are redrawn first.
+ * if there is no animation on the node; nearby nodes with the NODE_OVERLAP
+ * flag are redrawn first.
  *
  * Must be called on a locked map.
  */
@@ -435,15 +435,15 @@ map_animate(struct map *m)
 	static int x, y, vx, vy, rx, ry;
 	int ri = 0;
 
-	for (y = view->mapy, vy = view->mapyoffs;
-	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
-	     y++, vy++) {
+	for (y = (view->mapy + view->vmaph) - 1,
+	     vy = (view->vmaph + view->mapyoffs) - 1;
+	     vy > 0; y--, vy--) {
 
 		ry = vy << m->shtiley;
 	
-		for (x = view->mapx, vx = view->mapxoffs;
-		     vx < (view->vmapw + view->mapxoffs) && x < m->mapw;
-		     x++, vx++) {
+		for (x = (view->mapx + view->vmapw) - 1,
+		     vx = (view->vmapw + view->mapxoffs) - 1;
+		     vx > 0; x--, vx--) {
 			static struct node *node;
 #ifdef DEBUG
 			int i;
@@ -558,16 +558,16 @@ map_draw(struct map *m)
 	static int x, y, vx, vy, rx, ry;
 	struct viewport *view = m->view;
 	int ri = 0;
-	
-	for (y = view->mapy, vy = view->mapyoffs;
-	     vy < (view->vmaph + view->mapyoffs) && y < m->maph;
-	     y++, vy++) {
+		
+	for (y = (view->mapy + view->vmaph) - 1,
+	     vy = (view->vmaph + view->mapyoffs) - 1;
+	     vy > 0; y--, vy--) {
 
 		ry = vy << m->shtilex;
 
-		for (x = view->mapx, vx = view->mapxoffs;
-		     vx < (view->vmapw + view->mapxoffs) && x < m->mapw;
-		     x++, vx++) {
+		for (x = (view->mapx + view->vmapw) - 1,
+		     vx = (view->vmapw + view->mapxoffs) - 1;
+		     vx > 0; x--, vx--) {
 			static struct node *node;
 			static struct noderef *nref;
 			static Uint32 nsprites;
