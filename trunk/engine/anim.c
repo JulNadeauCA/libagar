@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.1 2002/02/05 05:47:17 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.2 2002/02/08 00:18:01 vedge Exp $	*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -52,8 +52,6 @@ anim_create(int delay)
 	anim->frames = NULL;
 	anim->nframes = 0;
 	anim->delay = delay;
-	anim->gframe = 0;
-	anim->gframedc = 0;
 
 	return (anim);
 }
