@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.12 2002/07/20 02:03:28 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.13 2002/07/22 05:50:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -54,6 +54,7 @@
 #include "tool/eraser.h"
 #include "tool/magnifier.h"
 #include "tool/resize.h"
+#include "tool/propedit.h"
 
 static void
 push(int argc, union evarg *argv)
@@ -78,6 +79,7 @@ push(int argc, union evarg *argv)
 
 	if (med->curtool != NULL && med->curtool->win != NULL) {
 		window_hide(med->curtool->win);
+		med->curtool->button->flags &= ~(BUTTON_PRESSED);
 	}
 
 	switch (argv[2].i) {
@@ -92,6 +94,9 @@ push(int argc, union evarg *argv)
 		break;
 	case MAPEDIT_TOOL_RESIZE:
 		med->curtool = med->tools.resize;
+		break;
+	case MAPEDIT_TOOL_PROPEDIT:
+		med->curtool = med->tools.propedit;
 		break;
 	}
 	
@@ -108,6 +113,7 @@ init_tools(struct mapedit *med)
 	med->tools.eraser = TOOL(eraser_new(med, 0));
 	med->tools.magnifier = TOOL(magnifier_new(med, 0));
 	med->tools.resize = TOOL(resize_new(med, 0));
+	med->tools.propedit = TOOL(propedit_new(med, 0));
 }
 
 void
@@ -129,8 +135,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	 */
 	win = window_new("Tool", WINDOW_SOLID,
 	    16, 16,
-	    68, 146,
-	    68, 146);
+	    70, 174,
+	    70, 174);
 
 	/*
 	 * Left side of toolbar.
@@ -152,14 +158,16 @@ mapedit_init_toolbar(struct mapedit *med)
 	    MAPEDIT_TOOL_OBJLIST);
 	
 	/* Stamp */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_STAMP), 0, -1, -1);
+	med->tools.stamp->button = button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_STAMP), BUTTON_STICKY, -1, -1);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_STAMP);
 	
 	/* Magnifier */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), 0, -1, -1);
+	med->tools.magnifier->button = button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_MAGNIFIER), BUTTON_STICKY, -1, -1);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_MAGNIFIER);
 	
@@ -179,20 +187,30 @@ mapedit_init_toolbar(struct mapedit *med)
 	/* Tile list */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, -1, -1);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_TILEQ);
 	
 	/* Eraser */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, -1, -1);
+	med->tools.eraser->button = button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_ERASER), BUTTON_STICKY, -1, -1);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_ERASER);
 	
 	/* Resize tool */
-	button = button_new(reg, NULL,
-	    SPRITE(med, MAPEDIT_TOOL_RESIZE), 0, -1, -1);
+	med->tools.resize->button = button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_RESIZE), BUTTON_STICKY, -1, -1);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
 	event_new(button, "button-pushed", 0, push, "%p, %i", med,
 	    MAPEDIT_TOOL_RESIZE);
+	
+	/* Property edition tool */
+	med->tools.propedit->button = button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_PROPEDIT), BUTTON_STICKY, -1, -1);
+	WIDGET(button)->flags |= WIDGET_NO_FOCUS;
+	event_new(button, "button-pushed", 0, push, "%p, %i", med,
+	    MAPEDIT_TOOL_PROPEDIT);
 	
 	med->toolbar_win = win;
 
