@@ -260,8 +260,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	window_set_spacing(win, 1, 4);
 
 	mv = emalloc(sizeof(struct mapview));
-	mapview_init(mv, ob->art->tiles.map,
-	    MAPVIEW_TILEMAP|MAPVIEW_PROPS|MAPVIEW_ZOOM,
+	mapview_init(mv, ob->art->tiles.map, MAPVIEW_TILEMAP|MAPVIEW_PROPS,
 	    100, 100);
 	
 	object_load(ob->art->tiles.map);

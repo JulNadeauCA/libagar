@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.83 2003/03/10 06:02:52 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.84 2003/03/11 00:12:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -81,6 +81,16 @@ static void	mapview_keyup(int, union evarg *);
 static void	mapview_keydown(int, union evarg *);
 static void	mapview_begin_selection(struct mapview *);
 static void	mapview_effect_selection(struct mapview *);
+
+static __inline__ int
+mapview_selbounded(struct mapview *mv, int x, int y)
+{
+	return (!mv->esel.set ||
+	    (x >= mv->esel.x &&
+	     y >= mv->esel.y &&
+	     x <  mv->esel.x + mv->esel.w &&
+	     y <  mv->esel.y + mv->esel.h));
+}
 
 struct mapview *
 mapview_new(struct region *reg, struct map *m, int flags, int rw, int rh)
@@ -600,7 +610,8 @@ mapview_mousemotion(int argc, union evarg *argv)
 
 			if (TOOL_OPS(tool)->effect != NULL &&
 			    mv->cx != -1 && mv->cy != -1 &&
-			    (x != mv->mouse.x || y != mv->mouse.y)) {
+			    (x != mv->mouse.x || y != mv->mouse.y) &&
+			    mapview_selbounded(mv, mv->cx, mv->cy)) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
 			} else if (TOOL_OPS(tool)->mouse != NULL) {
@@ -660,7 +671,8 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	}
 
 	if (mv->flags & MAPVIEW_EDIT && mapedit.curtool != NULL &&
-	    TOOL_OPS(mapedit.curtool)->effect != NULL) {
+	    TOOL_OPS(mapedit.curtool)->effect != NULL &&
+	    mapview_selbounded(mv, mv->cx, mv->cy)) {
 		TOOL_OPS(mapedit.curtool)->effect(mapedit.curtool, mv, curnode);
 	}
 
@@ -713,14 +725,12 @@ mapview_effect_selection(struct mapview *mv)
 	
 	if ((excess = (mv->esel.x + mv->esel.w) - mv->map->mapw) > 0) {
 		if (excess < mv->esel.w) {
-			dprintf("x excess = %d\n", excess);
 			mv->esel.w -= excess;
 		}
 	}
 	
 	if ((excess = (mv->esel.y + mv->esel.h) - mv->map->maph) > 0) {
 		if (excess < mv->esel.h) {
-			dprintf("y excess = %d\n", excess);
 			mv->esel.h -= excess;
 		}
 	}
@@ -780,43 +790,37 @@ mapview_keydown(int argc, union evarg *argv)
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
+	int incr;
+	Uint32 ival;
 
 	pthread_mutex_lock(&mv->map->lock);
 
 	/* Zoom keys */
-	if (mv->flags & MAPVIEW_ZOOM) {
-		Uint32 ival;
-		int incr;
-		
-		ival = mapedition ? prop_get_int(&mapedit, "zoom-speed") : 60;
-		incr = mapedition ? prop_get_int(&mapedit, "zoom-increment") :
-		    8;
+	ival = mapedition ? prop_get_int(&mapedit, "zoom-speed") : 60;
+	incr = mapedition ? prop_get_int(&mapedit, "zoom-increment") : 8;
 
-		switch (keysym) {
-		case SDLK_EQUALS:
-			mapview_zoom(mv, *mv->zoom + incr);
-			if (mv->zoom_tm == NULL) {
-				mv->zoom_tm = SDL_AddTimer(ival,
-				    mapview_zoom_tick, mv);
-			}
-			mv->flags |= MAPVIEW_ZOOMING_IN;
-			break;
-		case SDLK_MINUS:
-			mapview_zoom(mv, *mv->zoom - incr);
-			if (mv->zoom_tm == NULL) {
-				mv->zoom_tm = SDL_AddTimer(ival,
-				    mapview_zoom_tick, mv);
-			}
-			mv->flags |= MAPVIEW_ZOOMING_OUT;
-			break;
-		case SDLK_0:
-		case SDLK_1:
-			mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
-			mapview_zoom(mv, 100);
-			break;
+	switch (keysym) {
+	case SDLK_EQUALS:
+		mapview_zoom(mv, *mv->zoom + incr);
+		if (mv->zoom_tm == NULL) {
+			mv->zoom_tm = SDL_AddTimer(ival, mapview_zoom_tick, mv);
 		}
+		mv->flags |= MAPVIEW_ZOOMING_IN;
+		break;
+	case SDLK_MINUS:
+		mapview_zoom(mv, *mv->zoom - incr);
+		if (mv->zoom_tm == NULL) {
+			mv->zoom_tm = SDL_AddTimer(ival, mapview_zoom_tick, mv);
+		}
+		mv->flags |= MAPVIEW_ZOOMING_OUT;
+		break;
+	case SDLK_0:
+	case SDLK_1:
+		mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
+		mapview_zoom(mv, 100);
+		break;
 	}
-	
+
 	/* Edition keys */
 	if (mv->flags & MAPVIEW_EDIT) {
 		switch (keysym) {
