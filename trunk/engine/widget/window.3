@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.5 2002/09/05 02:51:02 vedge Exp $
+.\"	$Csoft: window.3,v 1.6 2002/09/07 04:30:24 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -149,16 +149,10 @@ is called.
 .Sh VISIBILITY
 .nr nS 1
 .Ft int
-.Fn window_show "struct window *win"
+.Fn window_show "struct window *win" "int lock_view" "int lock_win"
 .Pp
 .Ft int
-.Fn window_show_locked "struct window *win"
-.Pp
-.Ft int
-.Fn window_hide "struct window *win"
-.Pp
-.Ft int
-.Fn window_hide_locked "struct window *win"
+.Fn window_hide "struct window *win" "int lock_view" "int lock_win"
 .Pp
 .Ft void
 .Fn window_resize "struct window *win"
@@ -167,26 +161,22 @@ is called.
 The
 .Fn window_show
 and
-.Fn window_show_locked
-functions display a window.
-The
 .Fn window_hide
+functions control the visibility of a window, trying to lock the view if
+.Fa lock_view
+is non-zero and the window if
+.Fa lock_win
+is non-zero.
+In widget event context,
+.Fa lock_view
 and
-.Fn window_hide_locked
-functions hide a window.
-.Pp
-The window structure must not be locked by the caller thread when
+.Fa lock_win
+must be zero, since the event loop acquires a lock on the view and window
+before invoking the event handler.
 .Fn window_show
-or
+and
 .Fn window_hide
-is called.
-The window structure must be locked when
-.Fn window_show_locked
-or
-.Fn window_hide_locked
-is called.
-.Pp
-Those functions return non-zero if the window was previously visible.
+return 1 if the window was previously visible, otherwise 0.
 .Pp
 The
 .Fn window_resize
@@ -202,25 +192,17 @@ is called.
 .nr nS 1
 .Ft void
 .Fn window_draw "struct window *win"
-.Pp
-.Ft void
-.Fn window_animate "struct window *win"
 .nr nS 0
 .Pp
 The
 .Fn window_draw
-function renders the window
-.Fa win .
-The
-.Fn window_animate
-function renders the animations inside the window
-.Fa win .
-The window structure
+function draws the window
 .Fa win
-must be locked when
+to video memory.
+The
+.Fa win
+structure must be locked when
 .Fn window_draw
-or
-.Fn window_animate
 is called.
 .Sh EVENT DISPATCHING
 .nr nS 1
@@ -298,8 +280,6 @@ The key identified by
 .Fa keysym
 was pressed, and the widget holds the focus.
 .El
-.Sh BUGS
-The locking policies for show/hide functions must be revised.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
