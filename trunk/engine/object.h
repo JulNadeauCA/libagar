@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.51 2002/09/16 16:05:17 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.52 2002/11/07 18:52:48 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -107,8 +107,10 @@ struct object {
 #ifdef DEBUG
 # define OBJECT_ASSERT(ob, typestr) do {				\
 	if (strcmp(OBJECT((ob))->type, typestr) != 0) {			\
-		fprintf(stderr, "%s:%d: %s is not a %s\n", __FILE__,	\
-		    __LINE__, OBJECT((ob))->name, typestr);		\
+		fprintf(stderr, "%s:%d: %s (%s) is not a %s\n",		\
+		    __FILE__,						\
+		    __LINE__, OBJECT((ob))->name, OBJECT((ob))->type,	\
+		    typestr);						\
 		abort();						\
 	}								\
 } while (/*CONSTCOND*/0)
@@ -132,5 +134,6 @@ struct mappos  *object_addpos(void *, Uint32, Uint32, struct input *,
 		    struct map *, Uint32, Uint32);
 struct mappos  *object_movepos(void *, struct map *, Uint32, Uint32);
 void		object_delpos(void *);
+struct mappos  *object_get_pos(void *);
 
 #endif	/* !_AGAR_OBJECT_H */

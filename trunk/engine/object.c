@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.82 2002/09/16 03:29:52 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.83 2002/09/16 16:05:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -417,5 +417,19 @@ object_movepos(void *obp, struct map *m, Uint32 x, Uint32 y)
 	m->redraw++;
 
 	return (newpos);
+}
+
+/* Return current map position of an object. XXX */
+struct mappos *
+object_get_pos(void *obp)
+{
+	struct object *ob = obp;
+	struct mappos *pos;
+
+	pthread_mutex_lock(&ob->pos_lock);
+	pos = ob->pos;
+	pthread_mutex_unlock(&ob->pos_lock);
+
+	return (pos);
 }
 
