@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.24 2002/02/25 09:05:12 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.25 2002/02/25 11:12:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -68,7 +68,7 @@ object_addanim(struct object *ob, struct anim *anim)
 		newanims = (struct anim **)realloc(ob->anims,
 		    (NANIMS_GROW * ob->maxanims) * sizeof(struct anim *));
 		if (newanims == NULL) {
-			perror("realloc");
+			dperror("realloc");
 			return (-1);
 		}
 		ob->maxanims *= NANIMS_GROW;
@@ -92,7 +92,7 @@ object_addsprite(struct object *ob, SDL_Surface *sprite)
 		newsprites = (SDL_Surface **)realloc(ob->sprites,
 		    (NSPRITES_GROW * ob->maxsprites) * sizeof(SDL_Surface *));
 		if (newsprites == NULL) {
-			perror("realloc");
+			dperror("realloc");
 			return (-1);
 		}
 		ob->maxsprites *= NSPRITES_GROW;
@@ -218,7 +218,7 @@ object_load(void *p)
 	/* XXX mmap? */
 	fd = open(path, O_RDONLY, 00600);
 	if (fd < 0) {
-		perror(ob->name);
+		dperror(ob->name);
 		return (-1);
 	}
 	rv = ob->vec->load(ob, fd);
@@ -240,7 +240,7 @@ object_save(void *p)
 	sprintf(path, "%s/%s.%s", world->udatadir, ob->name, ob->saveext);
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
 	if (fd < 0) {
-		perror(path);
+		dperror(path);
 		return (-1);
 	}
 	if (ob->vec->save(ob, fd) != 0) {
@@ -255,7 +255,7 @@ object_save(void *p)
 int
 object_link(void *p)
 {
-	struct object *ob = p;
+	struct object *ob = (struct object *)p;
 	
 	SLIST_INIT(&ob->brefsh);
 
@@ -268,7 +268,7 @@ object_link(void *p)
 		SLIST_INSERT_HEAD(&world->wobjsh, ob, wobjs);
 		pthread_mutex_unlock(&world->lock);
 	} else {
-		perror("world");
+		dperror("world");
 		return (-1);
 	}
 	return (0);
@@ -290,7 +290,7 @@ object_unlink(void *p)
 		SLIST_REMOVE(&world->wobjsh, ob, object, wobjs);
 		pthread_mutex_unlock(&world->lock);
 	} else {
-		perror("world");
+		dperror("world");
 		return (-1);
 	}
 	if (ob->vec->unlink != NULL &&
@@ -327,11 +327,13 @@ object_strfind(char *s)
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 			if (strcmp(ob->name, s) == 0) {
+				pthread_mutex_unlock(&world->lock);
 				return (ob);
 			}
 		}
+		pthread_mutex_unlock(&world->lock);
 	} else {
-		perror("world");
+		dperror("world");
 	}
 
 	return (NULL);
@@ -342,7 +344,7 @@ object_dump(void *p)
 {
 	struct object *ob = (struct object *)p;
 
-	printf("%3d. %10s ( ", ob->id, ob->name);
+	printf("--\n%d. %s ( ", ob->id, ob->name);
 	if (ob->vec->destroy != NULL)
 		printf("destroy ");
 	if (ob->vec->load != NULL)
@@ -364,7 +366,7 @@ object_dump(void *p)
 	if (ob->desc != NULL) {
 		printf("                (%s)\n", ob->desc);
 	}
-	printf(" --\n");
+	printf("--\n");
 }
 
 /*
