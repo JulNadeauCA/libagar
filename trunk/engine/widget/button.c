@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.55 2003/02/25 03:57:14 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.56 2003/03/02 04:13:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -98,11 +98,10 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	} else if (image != NULL) {
 		SDL_Surface *is;
 
-		/* Copy the original surface. XXX */
-		is = SDL_ConvertSurface(image, image->format,
-		    SDL_SWSURFACE|SDL_SRCALPHA);
+		/* Copy the original surface. */
+		is = view_copy_surface(image);
 		if (is == NULL) {
-			fatal("SDL_ConvertSurface: %s\n", SDL_GetError());
+			fatal("view_copy_surface: %s\n", error_get());
 		}
 		b->caption = NULL;
 		b->label_s = is;
@@ -143,21 +142,18 @@ button_scaled(int argc, union evarg *argv)
 	Uint32 col = 0;
 	Uint8 *src, *dst, r1, g1, b1, a1;
 
-	/* Auto-size the button. */
 	if (WIDGET(b)->rw == -1)
 		WIDGET(b)->w = b->label_s->w;
 	if (WIDGET(b)->rh == -1)
 		WIDGET(b)->h = b->label_s->h;
 
-	/* Scale the label. */
+	/* Scale the label to a reasonable size. */
 	nw = b->label_s->w * WIDGET(b)->h / b->label_s->h;
 	if (nw > WIDGET(b)->w - 6)
 		nw = WIDGET(b)->w - 6;
 	nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
 	if (nh > WIDGET(b)->h - 6)
 		nh = WIDGET(b)->h - 6;
-
-	/* Limit to a reasonable size. */
 	if (nw > b->label_s->w*2)
 		nw = b->label_s->w*2;
 	else if (nw < b->label_s->w)
@@ -167,10 +163,16 @@ button_scaled(int argc, union evarg *argv)
 	else if (nh < b->label_s->h)
 		nh = WIDGET(b)->h;
 
+	/* Update the surface. */
 	if (b->slabel_s != NULL) {
 		SDL_FreeSurface(b->slabel_s);
+		b->slabel_s = NULL;
 	}
-	b->slabel_s = view_scale_surface(b->label_s, nw, nh);
+	if (nw < 4 || nh < 4) {					/* Null */
+		b->slabel_s = view_surface(SDL_SWSURFACE, 0, 0);
+	} else {						/* Scaled */
+		b->slabel_s = view_scale_surface(b->label_s, nw, nh);
+	}
 }
 
 void
