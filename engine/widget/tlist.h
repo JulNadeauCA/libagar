@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.10 2002/11/15 00:51:35 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.11 2002/11/17 23:11:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/scrollbar.h>
@@ -61,5 +61,6 @@ int			 tlist_select(struct tlist_item *);
 int			 tlist_unselect(struct tlist_item *);
 void			 tlist_unselect_all(struct tlist *);
 struct tlist_item	*tlist_item_index(struct tlist *, int);
+struct tlist_item	*tlist_item_selected(struct tlist *);
 struct tlist_item	*tlist_item_text(struct tlist *, char *);
 

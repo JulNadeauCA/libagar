@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.3 2002/11/15 00:51:35 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.4 2002/11/17 23:11:38 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -155,6 +155,9 @@ function clears the selected flag on all items attached to
 .Fn tlist_item_index "struct tlist *tlist" "int index"
 .Pp
 .Ft "struct tlist_item *"
+.Fn tlist_item_selected "struct tlist *tlist"
+.Pp
+.Ft "struct tlist_item *"
 .Fn tlist_item_text "struct tlist *tlist" "char *text"
 .nr nS 0
 .Pp
@@ -163,6 +166,11 @@ The
 function returns the item at
 .Fa index ,
 or NULL if there is no such item.
+The
+.Fn tlist_item_selected
+function returns the first selected item, or
+.Dv NULL
+if there are none.
 The
 .Fn tlist_item_text
 function searches

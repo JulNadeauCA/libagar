@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.18 2002/11/15 00:51:35 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.19 2002/11/17 23:11:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -581,6 +581,24 @@ tlist_item_index(struct tlist *tl, int index)
 	pthread_mutex_lock(&tl->items_lock);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (++i == index) {
+			pthread_mutex_unlock(&tl->items_lock);
+			return (it);
+		}
+	}
+	pthread_mutex_unlock(&tl->items_lock);
+	return (NULL);
+}
+
+/* Return the first selected item. */
+struct tlist_item *
+tlist_item_selected(struct tlist *tl)
+{
+	struct tlist_item *it;
+	int i = 0;
+
+	pthread_mutex_lock(&tl->items_lock);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected) {
 			pthread_mutex_unlock(&tl->items_lock);
 			return (it);
 		}
