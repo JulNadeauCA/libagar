@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.66 2003/06/13 02:49:21 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.67 2003/06/15 05:08:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -79,8 +79,6 @@ struct widget {
 __BEGIN_DECLS
 void	 widget_init(void *, const char *, const void *, int);
 void	 widget_destroy(void *);
-int	 widget_load(void *, struct netbuf *);
-int	 widget_save(void *, struct netbuf *);
 void	 widget_draw(void *);
 void	 widget_scale(void *, int, int);
 
