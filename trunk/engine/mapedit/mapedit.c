@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.108 2002/07/07 00:24:02 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.109 2002/07/07 10:14:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -95,11 +95,9 @@ mapedit_init(struct mapedit *med, char *name)
 	/* XXX messy */
 	mapedit_init_toolbar(med);
 	med->settings_win = mapedit_config_win(med);
-	med->coords_win = window_new("Coordinates",
-	    WINDOW_SOLID|WINDOW_ABSOLUTE,
+	med->coords_win = window_new("Coordinates", WINDOW_SOLID,
 	    32, 32, 320, 64);
-	coords_reg = region_new(med->coords_win,
-	    REGION_HALIGN|REGION_CENTER,
+	coords_reg = region_new(med->coords_win, REGION_HALIGN|REGION_CENTER,
 	    0,   0, 100, 100);
 	med->coords_label = label_new(coords_reg, "...", 0);
 	
