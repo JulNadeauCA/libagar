@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.159 2004/06/25 10:44:07 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.160 2004/07/24 02:08:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -79,18 +79,14 @@ int	mapview_bg_moving = 1;		/* Background tiles scroll */
 int	mapview_bg_sqsize = 16;		/* Background tile size */
 int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
 
-static void mapview_lostfocus(int, union evarg *);
-static void mapview_mousemotion(int, union evarg *);
-static void mapview_mousebuttondown(int, union evarg *);
-static void mapview_mousebuttonup(int, union evarg *);
-static void mapview_keyup(int, union evarg *);
-static void mapview_keydown(int, union evarg *);
-static void mapview_begin_selection(struct mapview *);
-static void mapview_effect_selection(struct mapview *);
-
-extern struct tool select_tool;
-extern void shift_mouse(void *, struct mapview *, Sint16, Sint16);
-extern int mapedition;
+static void lost_focus(int, union evarg *);
+static void mouse_motion(int, union evarg *);
+static void mouse_buttondown(int, union evarg *);
+static void mouse_buttonup(int, union evarg *);
+static void key_up(int, union evarg *);
+static void key_down(int, union evarg *);
+static void begin_selection(struct mapview *);
+static void effect_selection(struct mapview *);
 
 static __inline__ int
 selbounded(struct mapview *mv, int x, int y)
@@ -105,6 +101,8 @@ selbounded(struct mapview *mv, int x, int y)
 static __inline__ int
 selecting(struct mapview *mv)
 {
+	extern struct tool select_tool;
+
 	return (mv->curtool == &select_tool ||
 	    (SDL_GetModState() & KMOD_CTRL));
 }
@@ -296,6 +294,14 @@ mapview_detached(int argc, union evarg *argv)
 	mv->curtool = NULL;
 }
 
+static void
+dblclick_expired(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[0].p;
+
+	mv->dblclicked = 0;
+}
+
 void
 mapview_init(struct mapview *mv, struct map *m, int flags,
     struct toolbar *toolbar, struct statusbar *statbar)
@@ -318,6 +324,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->zoom_ival = MAPVIEW_ZOOM_IVAL;
 	mv->zoom_tm = NULL;
 	mv->map = m;
+	mv->dblclicked = 0;
 	mv->toolbar = toolbar;
 	mv->statusbar = statbar;
 	mv->status = (statbar != NULL) ?
@@ -367,14 +374,15 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	widget_map_color(mv, MSEL_COLOR, "mouse-sel", 150, 150, 150, 255);
 	widget_map_color(mv, ESEL_COLOR, "effective-sel", 180, 180, 180, 255);
 
-	event_new(mv, "widget-lostfocus", mapview_lostfocus, NULL);
-	event_new(mv, "widget-hidden", mapview_lostfocus, NULL);
-	event_new(mv, "window-keyup", mapview_keyup, NULL);
-	event_new(mv, "window-keydown", mapview_keydown, NULL);
-	event_new(mv, "window-mousemotion", mapview_mousemotion, NULL);
-	event_new(mv, "window-mousebuttondown", mapview_mousebuttondown, NULL);
-	event_new(mv, "window-mousebuttonup", mapview_mousebuttonup, NULL);
+	event_new(mv, "widget-lostfocus", lost_focus, NULL);
+	event_new(mv, "widget-hidden", lost_focus, NULL);
+	event_new(mv, "window-keyup", key_up, NULL);
+	event_new(mv, "window-keydown", key_down, NULL);
+	event_new(mv, "window-mousemotion", mouse_motion, NULL);
+	event_new(mv, "window-mousebuttondown", mouse_buttondown, NULL);
+	event_new(mv, "window-mousebuttonup", mouse_buttonup, NULL);
 	event_new(mv, "detached", mapview_detached, NULL);
+	event_new(mv, "dblclick-expire", dblclick_expired, NULL);
 }
 
 /* Register standard map-level edition tools. XXX */
@@ -565,6 +573,9 @@ draw_background(struct mapview *mv)
 void
 mapview_draw(void *p)
 {
+#ifdef EDITION
+	extern int mapedition;
+#endif
 	struct mapview *mv = p;
 	struct mapview_draw_cb *dcb;
 	struct map *m = mv->map;
@@ -749,7 +760,7 @@ mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
 }
 
 static void
-mapview_mousemotion(int argc, union evarg *argv)
+mouse_motion(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int x = argv[1].i;
@@ -794,7 +805,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 }
 
 static void
-mapview_mousebuttondown(int argc, union evarg *argv)
+mouse_buttondown(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int button = argv[1].i;
@@ -813,7 +824,7 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 	switch (button) {
 	case 1:						/* Select/edit */
 		if (selecting(mv)) {
-			mapview_begin_selection(mv);
+			begin_selection(mv);
 		}
 		break;
 	case 2:						/* Adjust centering */
@@ -836,12 +847,23 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			mv->curtool->mousebuttondown(mv->curtool,
 			    mv->cx, mv->cy, xoff, yoff, button);
 	}
+
+	if (mv->dblclicked) {
+		event_cancel(mv, "dblclick-expire");
+		event_post(NULL, mv, "mapview-dblclick", "%i, %i, %i, %i, %i",
+		    button, x, y, xoff, yoff);
+		mv->dblclicked = 0;
+	} else {
+		mv->dblclicked++;
+		event_schedule(NULL, mv, mouse_dblclick_delay,
+		    "dblclick-expire", NULL);
+	}
 out:
 	pthread_mutex_unlock(&mv->map->lock);
 }
 
 static void
-mapview_mousebuttonup(int argc, union evarg *argv)
+mouse_buttonup(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int button = argv[1].i;
@@ -864,7 +886,7 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 			mv->msel.set = 0;
 		} else {
 			if (mv->msel.set) {
-				mapview_effect_selection(mv);
+				effect_selection(mv);
 				mv->msel.set = 0;
 			}
 		}
@@ -889,7 +911,7 @@ out:
 
 /* Begin a mouse selection. */
 static void
-mapview_begin_selection(struct mapview *mv)
+begin_selection(struct mapview *mv)
 {
 	mv->msel.set = 1;
 	mv->msel.x = mv->cx;
@@ -900,7 +922,7 @@ mapview_begin_selection(struct mapview *mv)
 
 /* Effect a mouse selection. */
 static void
-mapview_effect_selection(struct mapview *mv)
+effect_selection(struct mapview *mv)
 {
 	int excess;
 
@@ -943,7 +965,7 @@ mapview_effect_selection(struct mapview *mv)
 }
 
 static void
-mapview_keyup(int argc, union evarg *argv)
+key_up(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
@@ -975,7 +997,7 @@ mapview_keyup(int argc, union evarg *argv)
 }
 
 static void
-mapview_keydown(int argc, union evarg *argv)
+key_down(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 	int keysym = argv[1].i;
@@ -1049,11 +1071,13 @@ mapview_scale(void *p, int rw, int rh)
 }
 
 static void
-mapview_lostfocus(int argc, union evarg *argv)
+lost_focus(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
 
 	mv->flags &= ~(MAPVIEW_ZOOMING_IN|MAPVIEW_ZOOMING_OUT);
+	
+	event_cancel(mv, "dblclick-expire");
 }
 
 void
