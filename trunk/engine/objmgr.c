@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.5 2005/02/03 11:28:44 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.6 2005/02/05 14:39:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -447,7 +447,9 @@ objmgr_window(void)
 	struct textbox *name_tb;
 	struct combo *types_com;
 	struct tlist *objs_tl;
+#if 0
 	struct toolbar *tbar;
+#endif
 	struct AGMenu *m;
 	struct AGMenuItem *mi, *mj;
 
@@ -458,7 +460,7 @@ objmgr_window(void)
 	
 	objs_tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(objs_tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-	tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 12);
+	tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	event_new(objs_tl, "tlist-poll", poll_objs, "%p,%p", world, NULL);
 	event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT_DATA);
@@ -493,14 +495,14 @@ objmgr_window(void)
 	vbox_set_spacing(vb, 1);
 	{
 		struct AGMenuItem *mi;
-
+#if 0
 		tbar = toolbar_new(vb, TOOLBAR_HORIZ, 1);
-
+#endif
 		object_attach(vb, objs_tl);
 
 		mi = tlist_set_popup(objs_tl, "object");
 		{
-			ag_menu_action(mi, _("Edit data..."),
+			ag_menu_action(mi, _("Edit object..."),
 			    ICON(OBJEDIT_ICON), SDLK_e, KMOD_CTRL,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
 			ag_menu_action(mi, _("Edit generic information..."),
@@ -541,7 +543,7 @@ objmgr_window(void)
 			    ICON(TRASH_ICON), SDLK_x, KMOD_CTRL,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 		}
-
+#if 0
 		toolbar_add_button(tbar, 0, ICON(OBJEDIT_ICON), 0, 0,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
 		toolbar_add_button(tbar, 0, ICON(OBJGENEDIT_ICON), 0, 0,
@@ -562,6 +564,7 @@ objmgr_window(void)
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
 		toolbar_add_button(tbar, 0, ICON(TRASH_ICON), 0, 0,
 		    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
+#endif
 	}
 	
 	window_show(win);
