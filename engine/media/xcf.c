@@ -1,4 +1,4 @@
-/*	$Csoft: oldxcf.c,v 1.18 2002/12/13 11:18:36 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.1 2002/12/17 06:48:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -32,79 +32,10 @@
 
 #include "xcf.h"
 
-struct xcf_prop {
-	Uint32	id;
-	Uint32	length;
-	union {
-		struct {
-			Uint32	 num;
-			char	*cmap;
-		} color_map;
-		struct {
-			Uint32	drawable_offset;
-		} floating_sel;
-		Sint32	opacity;
-		Sint32	mode;
-		int	visible;
-		int	linked;
-		int	preserve_transparency;
-		int	apply_mask;
-		int	show_mask;
-		struct {
-			Sint32	x;
-			Sint32	y;
-		} offset;
-		Uint8	 color[3];
-		Uint8	 compression;
-		struct {
-			Sint32	x;
-			Sint32	y;
-		} resolution;
-		struct {
-			char	*name;
-			Uint32	 flags;
-			Uint32	 size;
-			char	*data;
-		} parasite;
-	} data;
-};
-
-struct xcf_header {
-	Uint32	 	 w;
-	Uint32	 	 h;
-	Sint32	 	 image_type;
-	struct xcf_prop	*props;
-	Uint32		*layeroffs;
-	Uint32		*channeloffs;
-	Uint8		 compression;
-	Uint32		 cm_num;
-	Uint8		*cm_map;
-};
-
-struct xcf_layer {
-	char		*name;
-	Uint32		 w, h;
-	Sint32		 layer_type;
-	Uint32		 hierarchy_file_offset;
-	Uint32		 layer_mask_offset;
-	Uint32		 offset_x, offset_y;
-	struct xcf_prop	*properties;
-};
-
-struct xcf_hierarchy {
-	Uint32	 w, h, bpp;
-	Uint32	*level_file_offsets;
-};
-
-struct xcf_level {
-	Uint32	 w, h;
-	Uint32	*tile_file_offsets;
-};
-
 static SDL_Surface	*xcf_convert_layer(int, Uint32, struct xcf_header *,
 			     struct xcf_layer *);
 static void		 xcf_insert_surface(struct art *, SDL_Surface *,
-			     char *);
+			     char *, struct art_anim **);
 static Uint8		*xcf_read_tile(struct xcf_header *, int, Uint32, int,
 			    int, int);
 static Uint8		*xcf_read_tile_flat(int, Uint32, int, int, int);
@@ -117,53 +48,12 @@ extern ssize_t	pread(int, void *, size_t, off64_t);
 extern ssize_t	pwrite(int, const void *, size_t, off64_t);
 #endif
 
-#define XCF_SIGNATURE	"gimp xcf "
-#define XCF_SIG_LEN	9
-#define XCF_MAGIC_LEN	14
+#ifdef DEBUG
+#define DEBUG_PROPS	0x01
 
-/* Tile compression algorithm */
-enum {
-	NO_COMPRESSION,
-	RLE_COMPRESSION,
-	ZLIB_COMPRESSION,
-	FRACTAL_COMPRESSION
-};
-
-/* XCF property */
-enum {
-	PROP_END,
-	PROP_COLORMAP,
-	PROP_ACTIVE_LAYER,
-	PROP_ACTIVE_CHANNEL,
-	PROP_SELECTION,
-	PROP_FLOATING_SELECTION,
-	PROP_OPACITY,
-	PROP_MODE,
-	PROP_VISIBLE,
-	PROP_LINKED,
-	PROP_PRESERVE_TRANSPARENCY,
-	PROP_APPLY_MASK,
-	PROP_EDIT_MASK,
-	PROP_SHOW_MASK,
-	PROP_SHOW_MASKED,
-	PROP_OFFSETS,
-	PROP_COLOR,
-	PROP_COMPRESSION,
-	PROP_GUIDES,
-	PROP_RESOLUTION,
-	PROP_TATTOO,
-	PROP_PARASITES,
-	PROP_UNIT,
-	PROP_PATHS,
-	PROP_USER_UNIT
-};
-
-/* XCF Image type */
-enum {
-	IMAGE_RGB,
-	IMAGE_GREYSCALE,
-	IMAGE_INDEXED
-};
+int	xcf_debug = 0;
+#define	engine_debug xcf_debug
+#endif
 
 int 
 xcf_check(int fd, off_t xcf_offs)
@@ -171,7 +61,7 @@ xcf_check(int fd, off_t xcf_offs)
 	char magic[XCF_MAGIC_LEN];
 
 	if ((pread(fd, magic, XCF_MAGIC_LEN, xcf_offs) == XCF_MAGIC_LEN)) {
-		if (strncmp(magic, XCF_SIGNATURE, XCF_SIG_LEN) == 0) {
+		if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) == 0) {
 			return (0);
 		}
 	}
@@ -184,23 +74,42 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	prop->id = read_uint32(fd);
 	prop->length = read_uint32(fd);
 
+	debug(DEBUG_PROPS, "id %d len %d\n", prop->id, prop->length);
+
 	switch (prop->id) {
 	case PROP_COLORMAP:
 		prop->data.color_map.num = read_uint32(fd);
 		prop->data.color_map.cmap =
 		    emalloc(sizeof(char) * prop->data.color_map.num*3);
 		Read(fd, prop->data.color_map.cmap, prop->data.color_map.num*3);
+		debug(DEBUG_PROPS, "%d-entry colormap\n",
+		    prop->data.color_map.num);
 		break;
 	case PROP_OFFSETS:
 		prop->data.offset.x = read_uint32(fd);
 		prop->data.offset.y = read_uint32(fd);
+		debug(DEBUG_PROPS, "offsets %d,%d\n", prop->data.offset.x,
+		    prop->data.offset.y);
 		break;
 	case PROP_OPACITY:
 		prop->data.opacity = read_uint32(fd);
+		debug(DEBUG_PROPS, "opacity %d\n", prop->data.opacity);
 		break;
 	case PROP_COMPRESSION:
+		Read(fd, &prop->data.compression, 1);
+		debug(DEBUG_PROPS, "compression %s\n",
+		    prop->data.compression == NO_COMPRESSION ? "none" :
+		    prop->data.compression == RLE_COMPRESSION ? "rle" :
+		    prop->data.compression == ZLIB_COMPRESSION ? "zlib" :
+		    prop->data.compression == FRACTAL_COMPRESSION ? "fractal" :
+		    "???");
+		break;
 	case PROP_COLOR:
-		Read(fd, &prop->data, prop->length);
+		Read(fd, &prop->data.color, 3);
+		debug(DEBUG_PROPS, "color %d,%d,%d\n",
+		    prop->data.color[0],
+		    prop->data.color[1],
+		    prop->data.color[2]);
 		break;
 	default:
 		/* Skip this property. */
@@ -414,13 +323,13 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 					case IMAGE_INDEXED:
 						for (x = tx; x < tx + ox; x++) {
 							*row = ((Uint32)
-							    (head->cm_map[
+							    (head->cmap[
 							     *p8 * 3])<<16);
 							*row |= ((Uint32)
-							    (head->cm_map[
+							    (head->cmap[
 							     *p8 * 3 + 1])<<8);
 							*row |= ((Uint32)
-							    (head->cm_map[
+							    (head->cmap[
 							     *p8++ * 3+2])<<0);
 							*row |= ((Uint32)
 							     *p8++<<24);
@@ -454,13 +363,13 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 						for (x = tx; x < tx + ox; x++) {
 							*row++ = 0xFF000000
 						 	    | ((Uint32)
-							       (head->cm_map[
+							       (head->cmap[
 							        *p8 * 3])<<16)
 							    | ((Uint32)
-							       (head->cm_map[
+							       (head->cmap[
 							        *p8 * 3+1])<<8)
 							    | ((Uint32)
-							       (head->cm_map[
+							       (head->cmap[
 							       *p8 * 3+2])<<0);
 							p8++;
 						}
@@ -504,21 +413,18 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 }
 
 static void
-xcf_insert_surface(struct art *art, SDL_Surface *su, char *name)
+xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
+    struct art_anim **anim)
 {
-	struct art_anim *nanim = NULL;
-
-	if (strstr(name, "ms)") != NULL) {
+	if (strstr(name, "ms)") != NULL) {		/* XXX ugly */
 		char *aname, *anamep;
 		int adelay = 0;
 	
-		aname = Strdup(name);
-		anamep = aname;
+		anamep = aname = Strdup(name);
 		if ((aname = strchr(aname, '(')) != NULL) {
 			char *sd;
 
 			aname++;
-
 			if ((sd = strchr(aname, 'm')) == NULL) {
 				adelay = 0;
 			} else {
@@ -529,15 +435,15 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name)
 		free(anamep);
 
 		/* Allocate a new animation. */
-		nanim = art_insert_anim(art, adelay);
+		*anim = art_insert_anim(art, adelay);
 	} else {
-		if (nanim != NULL && name[0] == '+') {
+		if (*anim != NULL && name[0] == '+') {
 			/* Insert animation frame */
-			art_insert_anim_frame(nanim, su);
+			art_insert_anim_frame(*anim, su);
 		} else {
 			int offs;
 			
-			nanim = NULL;
+			*anim = NULL;
 				
 			/* Original size */
 		   	offs = art_insert_sprite(art, su);
@@ -559,9 +465,10 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	int i, offsets;
 	Uint32 offset;
 	struct xcf_prop prop;
-	
+	struct art_anim *curanim = NULL;
+
 	/* Skip the signature. */
-	elseek(fd, xcf_offs + 14, SEEK_SET);
+	elseek(fd, xcf_offs + XCF_MAGIC_LEN, SEEK_SET);
 
 	/* Read the XCF header. */
 	head = emalloc(sizeof(struct xcf_header));
@@ -570,8 +477,8 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	head->image_type = read_uint32(fd);
 	head->props = NULL;
 	head->compression = NO_COMPRESSION;
-	head->cm_num = 0;
-	head->cm_map = NULL;
+	head->cmap_count = 0;
+	head->cmap = NULL;
 	do {
 		xcf_read_property(fd, &prop);
 
@@ -580,22 +487,23 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 			head->compression = prop.data.compression;
 			break;
 		case PROP_COLORMAP:
-			head->cm_num = prop.data.color_map.num;
-			head->cm_map = emalloc(sizeof(char) * 3 * head->cm_num);
-			memcpy(head->cm_map, prop.data.color_map.cmap,
-			    3 * sizeof(char) * head->cm_num);
+			head->cmap_count = prop.data.color_map.num;
+			head->cmap = emalloc(sizeof(char) * 3 *
+			    head->cmap_count);
+			memcpy(head->cmap, prop.data.color_map.cmap,
+			    3 * sizeof(char) * head->cmap_count);
 			break;
 		}
 	} while (prop.id != PROP_END);
 
 	/* Reader the layer offsets. */
-	head->layeroffs = NULL;
+	head->layer_offstable = NULL;
 	offsets = 0;
 	for (offsets = 0; (offset = read_uint32(fd)) != 0; offsets++) {
 		/* XXX inefficient */
-		head->layeroffs = erealloc(head->layeroffs,
+		head->layer_offstable = erealloc(head->layer_offstable,
 		    sizeof(Uint32) * (offsets + 1));
-		head->layeroffs[offsets] = offset;
+		head->layer_offstable[offsets] = offset;
 	}
 
 	/* Read the XCF layers. */
@@ -605,7 +513,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		SDL_Surface *su;
 
 		/* Read this layer. */
-		elseek(fd, xcf_offs + head->layeroffs[i - 1], SEEK_SET);
+		elseek(fd, xcf_offs + head->layer_offstable[i - 1], SEEK_SET);
 		layer = emalloc(sizeof(struct xcf_layer));
 		layer->w = read_uint32(fd);
 		layer->h = read_uint32(fd);
@@ -627,24 +535,20 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		/* Convert this layer to a SDL surface. */
 		su = xcf_convert_layer(fd, xcf_offs, head, layer);
 		if (su == NULL) {
-			free(layer->name);
-			free(layer);
-			free(head->layeroffs);
-			free(head);
 			return (-1);
 		}
 
 		/* Register this image. */
-		xcf_insert_surface(art, su, layer->name);
+		xcf_insert_surface(art, su, layer->name, &curanim);
 
 		free(layer->name);
 		free(layer);
 	}
 
-	if (head->cm_num > 0) {
-		free(head->cm_map);
+	if (head->cmap_count > 0) {
+		free(head->cmap);
 	}
-	free(head->layeroffs);
+	free(head->layer_offstable);
 	free(head);
 	return (0);
 }
