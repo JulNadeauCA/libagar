@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.3 2002/01/25 15:02:23 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.4 2002/01/26 03:38:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -28,12 +28,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * These functions maintain character structures, they are called by
- * the actual character implementation. Characters are moved inside
- * the map with a controller.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,69 +37,53 @@
 #include <glib.h>
 #include <SDL.h>
 
-#include <engine/debug.h>
-#include <engine/view.h>
-#include <engine/object.h>
-#include <engine/world.h>
-#include <engine/char.h>
-#include <engine/map.h>
+#include <engine/engine.h>
 
 static Uint32	char_time(Uint32, void *);
 
 struct character *
-char_create(char *name, char *desc, int maxhp, int maxmp, struct map *fm,
-    int flags)
+char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 {
-	struct character *nb;
+	struct character *ch;
 	
-	nb = (struct character *) malloc(sizeof(struct character));
-	if (nb == NULL) {
+	ch = (struct character *) malloc(sizeof(struct character));
+	if (ch == NULL) {
 		return (NULL);
 	}
 
-	object_create(&nb->obj, name, desc, EVENT_HOOK|flags);
-	nb->obj.event_hook = char_event;
-	nb->obj.map = fm;
-	nb->obj.mapx = 0;
-	nb->obj.mapy = 0;
+	object_create(&ch->obj, name, desc, EVENT_HOOK|flags);
+	ch->obj.event_hook = char_event;
+	ch->map = NULL;
+	ch->x = -1;
+	ch->y = -1;
 
-	nb->flags = CHAR_ACTIVE;
-	nb->curspeed = 1;
-	nb->maxspeed = 50;
-	nb->level = 0;
-	nb->exp = 0;
-	nb->age = 0;
-	nb->maxhp = maxhp;
-	nb->maxmp = maxmp;
-	nb->hp = maxhp;
-	nb->mp = maxmp;
-	nb->seed = lrand48();
-	nb->effect = 0;
-	nb->direction = 0;
+	ch->flags = 0;
+	ch->curspeed = 1;
+	ch->maxspeed = 50;
+	ch->level = 0;
+	ch->exp = 0;
+	ch->age = 0;
+	ch->maxhp = maxhp;
+	ch->maxmp = maxmp;
+	ch->hp = maxhp;
+	ch->mp = maxmp;
+	ch->seed = lrand48();
+	ch->effect = 0;
+	ch->direction = 0;
+
+	CHAR_SETSPRITE(ch, 2);	 /* XXX */
 
 	dprintf("%s: hp %d/%d mp%d/%d seed 0x%lx\n",
-	    nb->obj.name, nb->hp, nb->maxhp, nb->mp, nb->maxmp, nb->seed);
+	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp, ch->seed);
 
-	/*
-	 * Synchronize with both display and input.
-	 */
-
-	/* XXX avoid possible race with upper layer? */
-	SDL_Delay(500);
-	nb->timer = SDL_AddTimer(fm->view->fps + (nb->maxspeed - nb->curspeed),
-	    char_time, nb);
-	if (nb->timer == NULL) {
-		fatal("SDL_AddTimer: %s\n", SDL_GetError());
-		free(nb);
-		return (NULL);
-	}
-
-	return (nb);
+	return (ch);
 }
 
 int
 char_link(void *objp)
 {
+	struct character *ch = (struct character *)objp;
+	
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		world->chars = g_slist_append(world->chars, objp);
 		world->nchars++;
@@ -118,6 +96,13 @@ char_link(void *objp)
 	if (object_link(objp) < 0) {
 		return (-1);
 	}
+	
+	ch->timer = SDL_AddTimer(30 + (ch->maxspeed - ch->curspeed),
+	    char_time, ch);
+	if (ch->timer == NULL) {
+		fatal("SDL_AddTimer: %s\n", SDL_GetError());
+		return (-1);
+	}
 
 	return (0);
 }
@@ -125,43 +110,27 @@ char_link(void *objp)
 void
 char_destroy(struct object *ob)
 {
-	struct character *eb = (struct character *)ob;
-	struct map *em = eb->obj.map;
-	int x, y = 0;
+	struct character *ch = (struct character *)ob;
 
-	SDL_RemoveTimer(eb->timer);
+	SDL_RemoveTimer(ch->timer);
 	
-	eb->flags = CHAR_ZOMBIE;
+	ch->flags &= ~CHAR_FOCUS;
 
-	/*
-	 * XXX should optimize by using back references.
-	 */
-	if (pthread_mutex_lock(&em->lock) != 0) {
-		perror(em->obj.name);
-	}
-	for (x = 0; x < em->mapw; x++) {
-		for (y = 0; y < em->maph; y++) {
-			struct map_aref *aref;
-			struct map_entry *me;
-			int i;
-
-			me = &em->map[x][y];
-			for (i = 0; i < me->nobjs; i++) {
-				aref = map_entry_aref(me, i);
-				if (aref != NULL && aref->pobj == ob) {
-					map_entry_delref(me, aref);
-				}
-			}
+	if (pthread_mutex_lock(&ch->map->lock) == 0) {
+		if (ch->map != NULL) {
+			MAP_DELREF(ch->map, ch->x, ch->y, ob, -1);
 		}
+		pthread_mutex_unlock(&ch->map->lock);
+	} else {
+		perror(ch->map->obj.name);
 	}
-	pthread_mutex_unlock(&em->lock);
 
 	if (pthread_mutex_lock(&world->lock) == 0) {
 		world->chars = g_slist_remove(world->chars, (void *)ob);
 		world->nchars--;
 		pthread_mutex_unlock(&world->lock);
 	} else {
-		perror("world");
+		perror(world->obj.name);
 	}
 }
 
@@ -311,7 +280,7 @@ char_setspeed(struct character *ch, Uint32 speed)
 	}
 	if (SDL_RemoveTimer(ch->timer)) {
 		ch->timer = SDL_AddTimer(
-		    ch->obj.map->view->fps + (ch->maxspeed - ch->curspeed),
+		    ch->map->view->fps + (ch->maxspeed - ch->curspeed),
 		    char_time, ch);
 	}
 }
@@ -321,15 +290,17 @@ char_time(Uint32 ival, void *obp)
 {
 	struct object *ob = (struct object *)obp;
 	struct character *ch = (struct character *)ob;
-	int mapx, mapy;
+	static int mapx, mapy;
 
-	mapx = ob->mapx;
-	mapy = ob->mapy;
+	mapx = ch->x;
+	mapy = ch->y;
 
 	if (ch->effect & EFFECT_REGEN) {
+		/* XXX rate? */
 		increase(&ch->hp, 1, ch->hp);
 	}
 	if (ch->effect & EFFECT_POISON) {
+		/* XXX rate? */
 		decrease(&ch->hp, 1, 0);
 	}
 
@@ -339,67 +310,67 @@ char_time(Uint32 ival, void *obp)
 	}
 
 	if (ch->direction & CHAR_UP) {
+		CHAR_SETSPRITE(ch, 2);
 		decrease(&mapy, 1, 1);
-		if(ob->map->view->mapy - mapy >= 0) {
-			SCROLL_UP(&ob->map);
+		if(ch->map->view->mapy - mapy >= 0) {
+			SCROLL_UP(&ch->map);
 		}
 		ob->wmask |= CHAR_UP;
 	} else if (ch->direction & CHAR_DOWN) {
-		increase(&mapy, 1, ob->map->mapw - 1);
-		if (ob->map->view->mapy - mapy <=
-		    -ob->map->view->maph + 1) {
-			SCROLL_DOWN(&ob->map);
+		CHAR_SETSPRITE(ch, 1);
+		increase(&mapy, 1, ch->map->mapw - 1);
+		if (ch->map->view->mapy - mapy <=
+		    -ch->map->view->maph + 1) {
+			SCROLL_DOWN(&ch->map);
 		}
 		ob->wmask |= CHAR_DOWN;
 	}
 		
 	if (ch->direction & CHAR_LEFT) {
+		CHAR_SETSPRITE(ch, 3);
 		decrease(&mapx, 1, 1);
-		if(ob->map->view->mapx - mapx >= 0) {
-			SCROLL_LEFT(&ob->map);
+		if(ch->map->view->mapx - mapx >= 0) {
+			SCROLL_LEFT(&ch->map);
 		}
 		ob->wmask |= CHAR_LEFT;
 	} else if (ch->direction & CHAR_RIGHT) {
-		increase(&mapx, 1, ob->map->mapw - 1);
-		if (ob->map->view->mapx - mapx <=
-		    -ob->map->view->mapw + 1) {
-			SCROLL_RIGHT(&ob->map);
+		CHAR_SETSPRITE(ch, 4);
+		increase(&mapx, 1, ch->map->mapw - 1);
+		if (ch->map->view->mapx - mapx <=
+		    -ch->map->view->mapw + 1) {
+			SCROLL_RIGHT(&ch->map);
 		}
 		ob->wmask |= CHAR_RIGHT;
 	}
 
-	if (mapx != ob->mapx || mapy != ob->mapy) {
-		struct map_entry *nme = &ob->map->map[mapx][mapy];
+	if (mapx != ch->x || mapy != ch->y) {
+		struct map_entry *nme = &ch->map->map[mapx][mapy];
 			
-		/* Verify the destination tile. */
+		/* Walk on the destination tile, if possible. */
 		if (nme->flags & MAPENTRY_WALK) {
-			map_entry_moveref(ob->map, ob, 1, mapx, mapy);
-			ob->map->redraw++;
+			CHAR_MOVE(ch, mapx, mapy);
+			ch->map->redraw++;
 		}
 
 		/* Assume various conditions. */
 		if (nme->flags & MAPENTRY_BIO) {
 			decrease(&ch->hp, 1, 1);
-			dprintf("bio. hp = %d/%d\n",
-			    ch->hp, ch->maxhp);
+			dprintf("bio. hp = %d/%d\n", ch->hp, ch->maxhp);
 		} else if (nme->flags & MAPENTRY_REGEN) {
 			increase(&ch->hp, 1, ch->maxhp);
-			dprintf("regen. hp = %d/%d\n",
-			    ch->hp, ch->maxhp);
+			dprintf("regen. hp = %d/%d\n", ch->hp, ch->maxhp);
 		}
 
 		if (nme->flags & MAPENTRY_SLOW) {
-			/* XXX revisit later */
+			/* XXX rate */
 			nme->v1 = -10;
 			char_setspeed(ch, ch->curspeed + nme->v1);
-			dprintf("slow. speed = %d\n",
-			    ch->curspeed);
+			dprintf("slow. speed = %d\n", ch->curspeed);
 		} else if (nme->flags & MAPENTRY_HASTE) {
-			/* XXX revisit later */
+			/* XXX rate */
 			nme->v1 = 10;
 			char_setspeed(ch, ch->curspeed + nme->v1);
-			dprintf("haste. speed = %d\n",
-			    ch->curspeed);
+			dprintf("haste. speed = %d\n", ch->curspeed);
 		}
 	}
 	
@@ -413,18 +384,14 @@ char_dump_char(void *ob, void *p)
 {
 	struct character *fc = (struct character *)ob;
 
-	printf("%3d. %10s lvl %d hp %d/%d mp %d/%d flags 0x%x\n",
+	printf("%3d. %10s lvl %d hp %d/%d mp %d/%d flags 0x%x at %s:%dx%d\n",
 	    fc->obj.id, fc->obj.name, fc->level, fc->hp, fc->maxhp, fc->mp,
-	    fc->maxmp, fc->flags);
+	    fc->maxmp, fc->flags, fc->map->obj.name, fc->x, fc->y);
 	printf("\t\texp %.2f age %.2f effect 0x%x\n", fc->exp,
 	    fc->age, fc->effect);
 	printf("\t\t< ");
 	if (fc->flags & CHAR_FOCUS)
 		printf("focused ");
-	if (fc->flags & CHAR_ACTIVE)
-		printf("active ");
-	if (fc->flags & CHAR_SMOTION)
-		printf("sticky-motion ");
 	if (fc->direction & CHAR_UP)
 		printf("going-up ");
 	if (fc->direction & CHAR_DOWN)
