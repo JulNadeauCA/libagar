@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.37 2002/07/29 01:09:23 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.38 2002/07/29 04:20:42 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -166,20 +166,13 @@ case 4:					\
 	SDL_PushEvent(&rdev);				\
 } while (/*CONSTCOND*/0)
 
-/* Wrappers for high-level code. */
+extern struct viewport *view;	/* view.c */
 
-extern struct viewport	*view;	/* view.c */
+void	 view_init(gfx_engine_t);
+void	 view_attach(void *);
+void	 view_detach(void *);
+void	 view_destroy(void *);
 
-void		 view_init(gfx_engine_t);
-
-void		 view_attach(void *);
-void		 view_detach(void *);
-void		 view_destroy(void *);
-
-void		 view_maskfill(SDL_Rect *, int);
 SDL_Surface	*view_surface(int, int, int);
 void		 view_focus(struct window *);
-
-void		 view_center(struct map *, int, int);
-void		 view_scroll(struct map *, int);
 

@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.37 2002/06/25 17:43:14 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.38 2002/08/19 05:33:00 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -28,10 +28,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/engine.h>
-#include <engine/map.h>
-#include <engine/input.h>
-#include <engine/physics.h>
+#include "engine.h"
+#include "map.h"
+#include "rootmap.h"
+#include "input.h"
+#include "physics.h"
 
 /*
  * These timings have a granularity proportional to the
@@ -311,10 +312,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					*mapy = 1;
 				}
 
-				if ((dir->flags & DIR_SCROLLVIEW) &&
+				if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
+				    (dir->flags & DIR_SCROLLVIEW) &&
 				    (view->rootmap != NULL) &&
 				    (view->rootmap->y - *mapy) <= 0) {
-				    	view_scroll(m, DIR_UP);
+				    	rootmap_scroll(m, DIR_UP);
 				}
 				m->map[*mapy][*mapx].overlap--;
 				m->map[(*mapy)-1][*mapx].overlap--;
@@ -353,11 +355,12 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (++(*mapy) > m->maph - 1) {
 					*mapy = m->maph - 1;
 				}
-				if ((dir->flags & DIR_SCROLLVIEW) &&
+				if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
+				    (dir->flags & DIR_SCROLLVIEW) &&
 				    (view->rootmap != NULL) &&
 				    (view->rootmap->y - *mapy) <=
 				     -view->rootmap->h + 2) {
-					view_scroll(m, DIR_DOWN);
+					rootmap_scroll(m, DIR_DOWN);
 				}
 				m->map[*mapy][*mapx].overlap--;
 			} else {
@@ -399,10 +402,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					*mapx = 1;
 				}
 
-				if ((dir->flags & DIR_SCROLLVIEW) &&
+				if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
+				    (dir->flags & DIR_SCROLLVIEW) &&
 				    (view->rootmap != NULL) &&
 				    (view->rootmap->x - *mapx) <= 0) {
-					view_scroll(m, DIR_LEFT);
+					rootmap_scroll(m, DIR_LEFT);
 				}
 				m->map[*mapy][*mapx].overlap--;
 				m->map[(*mapy)-1][*mapx].overlap--;
@@ -442,11 +446,12 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				if (++(*mapx) > m->mapw-1) {
 					*mapx = m->mapw-1;
 				}
-				if ((dir->flags & DIR_SCROLLVIEW) &&
+				if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
+				    (dir->flags & DIR_SCROLLVIEW) &&
 				    (view->rootmap != NULL) &&
 				    (view->rootmap->x - *mapx) <=
 				     -view->rootmap->w + 2) {
-					view_scroll(m, DIR_RIGHT);
+					rootmap_scroll(m, DIR_RIGHT);
 				}
 				m->map[*mapy][*mapx].overlap--;
 				m->map[(*mapy)-1][*mapx].overlap--;
