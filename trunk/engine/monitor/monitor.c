@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.58 2004/11/21 02:15:16 phip Exp $	*/
+/*	$Csoft: monitor.c,v 1.59 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -26,9 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_jpeg.h>
-
 #include <engine/engine.h>
+#include <config/have_jpeg.h>
+#include <config/have_libqnet.h>
 
 #ifdef DEBUG
 
@@ -48,6 +48,9 @@ static const struct tool_ent {
 	{ N_("Refresh rate"), event_fps_window },
 #if defined(THREADS) && defined(HAVE_JPEG)
 	{ N_("Screenshot"), screenshot_window },
+#endif
+#if defined(THREADS) && defined(HAVE_LIBQNET)
+	{ N_("Server"), server_window },
 #endif
 	{ N_("Leak detection"), leak_window },
 	{ N_("Resident graphics"), gfx_debug_window },
