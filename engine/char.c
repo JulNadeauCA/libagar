@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.59 2002/09/06 01:29:12 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.60 2002/09/16 16:04:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -170,15 +170,11 @@ char_load(void *p, int fd)
 		speed = read_uint32(fd);
 		minput = read_string(fd);
 
-		/* XXX input devices should be linked */
-		if (strcmp(minput, "keyboard0") == 0) {
-			input = keyboard;
-		} else if (strcmp(minput, "joy0") == 0) {
-			input = joy;
-		} else if (strcmp(minput, "mouse0") == 0) {
-			input = mouse;
+		input = input_find_str(minput);
+		if (input != NULL) {
+			dprintf("%s is controlled by %s\n",
+			    OBJECT(ch)->name, OBJECT(input)->name);
 		}
-		
 		dprintf("%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
 		    OBJECT(ch)->name, mname, x, y, offs, flags, speed);
 
