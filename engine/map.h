@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.59 2003/02/13 11:30:10 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.60 2003/02/20 03:25:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -148,14 +148,14 @@ extern int	 map_nodesigs;
 
 # define MAP_CHECK_NODE(node, mx, my) do {			\
 	if (map_nodesigs &&					\
-	    (strcmp(NODE_MAGIC, (node)->magic) != 0 ||		\
+	    (strncmp(NODE_MAGIC, (node)->magic, 4) != 0 ||	\
 	     (node)->x != (mx) || (node)->y != (my))) {		\
 		fatal("bad node\n");				\
 	}							\
 } while (0)
 # define MAP_CHECK_NODEREF(nref) do {				\
 	if (map_nodesigs &&					\
-	    strcmp(NODEREF_MAGIC, (node)->magic) != 0) {	\
+	    strncmp(NODEREF_MAGIC, (nref)->magic, 4) != 0) {	\
 		fatal("bad nref\n");				\
 	}							\
 } while (0)

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.144 2003/02/10 04:01:51 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.145 2003/02/20 03:25:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -54,7 +54,7 @@ static const struct object_ops map_ops = {
 #define DEBUG_SCAN	0x08
 
 int	map_debug = DEBUG_STATE|DEBUG_RESIZE;
-int	map_nodesigs = 0;
+int	map_nodesigs = 1;
 #define engine_debug map_debug
 #endif
 
@@ -77,6 +77,11 @@ node_destroy(struct node *node)
 {
 	struct noderef *nref, *nextnref;
 
+#ifdef DEBUG
+	if (strcmp(NODE_MAGIC, node->magic) != 0)
+		fatal("bad node\n");
+	strncpy(node->magic, "free", 5);
+#endif
 	for (nref = TAILQ_FIRST(&node->nrefs);
 	     nref != TAILQ_END(&node->nrefs);
 	     nref = nextnref) {
@@ -227,16 +232,18 @@ map_grow(struct map *m, Uint32 w, Uint32 h)
 	/* Reallocate the node arrays. */
 	m->map = erealloc(m->map, h * sizeof(struct node *));
 	for (y = 0; y < h; y++) {
-		if (y >= m->maph) {
+		if (y > m->maph-1) {			/* New row */
 			m->map[y] = emalloc(w * sizeof(struct node));
 			for (x = 0; x < w; x++) {
 				node_init(&m->map[y][x], x, y);
 			}
-		} else if (w >= m->mapw) {
-			m->map[y] = erealloc(m->map[y],
-			    w * sizeof(struct node));
-			for (x = m->mapw - 1; x < w; x++) {
-				node_init(&m->map[y][x], x, y);
+		} else {				/* Existing row */
+			if (w > m->mapw) {
+				m->map[y] = erealloc(m->map[y],
+				    w * sizeof(struct node));
+				for (x = m->mapw-1; x < w; x++) {
+					node_init(&m->map[y][x], x, y);
+				}
 			}
 		}
 	}
