@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.57 2003/06/29 11:33:41 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.58 2003/09/07 00:24:07 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,15 +34,6 @@
 #include <engine/physics.h>
 #include <engine/view.h>
 
-/*
- * These timings have a granularity proportional to the
- * interval of the timer calling gendir_move().
- */
-enum {
-	GENDIR_REPEAT_DELAY =	30,	/* Repeat delay */
-	GENDIR_REPEAT_IVAL =	10	/* Repeat interval */
-};
-
 #ifdef DEBUG
 #define DEBUG_MOVE	0x01
 #define DEBUG_BLOCKS	0x02
@@ -52,87 +43,7 @@ int	physics_debug = DEBUG_MOVE|DEBUG_BLOCKS;
 #endif
 
 void
-gendir_init(struct gendir *dir)
-{
-	dir->set = 0;
-	dir->current = 0;
-	dir->clear = 0;
-	dir->moved = 0;
-	dir->offs = 0;
-	dir->noffs = 0;
-}
-
-void
-gendir_set(struct gendir *dir, int direction)
-{
-	dir->clear &= ~direction;
-	dir->set   |=  direction;
-}
-
-void
-gendir_unset(struct gendir *dir, int direction)
-{
-	dir->clear |=  direction;
-	dir->set   &= ~direction;
-}
-
-int
-gendir_move(struct gendir *dir)
-{
-	if (dir->clear != 0) {
-		int r = dir->current;
-
-		/* Effect a gendir_unset() operation. */
-		dir->current &= ~(dir->clear);
-		dir->clear = 0;
-		dir->noffs = 0;
-		dir->offs = 0;
-		return (r);
-	}
-
-	if (dir->current != 0) {
-		/* Keyboard repeat delay */
-		if (dir->noffs > 0) {
-			if (dir->noffs++ > GENDIR_REPEAT_DELAY) {
-				/* chain */
-				return (dir->current);
-			}
-		}
-
-		/* Repeat interval */
-		if (dir->offs++ > GENDIR_REPEAT_IVAL) {
-			dir->offs = 0;
-			return (dir->current);
-		} else {
-			return (0);
-		}
-	} else {
-		if (dir->set != 0) {
-			dir->current |= dir->set;
-			dir->set = 0;
-		}
-	}
-	return (0);
-}
-
-void
-gendir_postmove(struct gendir *dir, int moved)
-{
-	if (dir->clear != 0) {
-		/* Clear this direction (eg. key release). */
-		dir->current &= ~(dir->clear);
-		dir->clear = 0;
-		dir->noffs = 0;
-		dir->offs = 0;
-	} else {
-		/* Increment the key delay counter. */
-		dir->noffs++;
-	}
-}
-
-void
-mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
-    int flags, int speed)
+mapdir_init(struct mapdir *dir, struct object *ob, int flags, int speed)
 {
 	dir->set = 0;
 	dir->current = 0;
@@ -141,7 +52,6 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
 	dir->flags = flags;
 	dir->speed = speed;
 	dir->ob = ob;
-	dir->map = map;
 }
 
 void
@@ -209,29 +119,29 @@ mapdir_update_idle(struct mapdir *dir)
 	if (dir->set == 0)
 		return;
 
-	if (dir->set & DIR_UP) {
+	if (dir->set & DIR_N) {
 		object_set_submap(dir->ob, "n-move");
 		mapdir_set_motion(dir, 0, -1);
-		dir->current |= DIR_UP;
-		dir->current &= ~(DIR_DOWN|DIR_LEFT|DIR_RIGHT);
+		dir->current |= DIR_N;
+		dir->current &= ~(DIR_S|DIR_W|DIR_W);
 	}
-	if (dir->set & DIR_DOWN) {
+	if (dir->set & DIR_S) {
 		object_set_submap(dir->ob, "s-move");
 		mapdir_set_motion(dir, 0, 1);
-		dir->current |= DIR_DOWN;
-		dir->current &= ~(DIR_UP|DIR_LEFT|DIR_RIGHT);
+		dir->current |= DIR_S;
+		dir->current &= ~(DIR_N|DIR_W|DIR_W);
 	}
-	if (dir->set & DIR_LEFT) {
+	if (dir->set & DIR_W) {
 		object_set_submap(dir->ob, "w-move");
 		mapdir_set_motion(dir, -1, 0);
-		dir->current |= DIR_LEFT;
-		dir->current &= ~(DIR_RIGHT|DIR_UP|DIR_DOWN);
+		dir->current |= DIR_W;
+		dir->current &= ~(DIR_W|DIR_N|DIR_S);
 	}
-	if (dir->set & DIR_RIGHT) {
+	if (dir->set & DIR_E) {
 		object_set_submap(dir->ob, "e-move");
 		mapdir_set_motion(dir, 1, 0);
-		dir->current |= DIR_RIGHT;
-		dir->current &= ~(DIR_LEFT|DIR_UP|DIR_DOWN);
+		dir->current |= DIR_W;
+		dir->current &= ~(DIR_W|DIR_N|DIR_S);
 	}
 	dir->set = 0;
 }
@@ -252,11 +162,10 @@ mapdir_can_move(struct mapdir *dir, struct map *dstmap, int x, int y)
 		return (0);
 	}
 
-	if (dir->flags & DIR_PASSTHROUGH) {
+	if (dir->flags & DIR_PASS_THROUGH) {
 		return (1);
 	}
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
-		/* Give block precedence over walk. */
 		if (ob->pos->z == r->layer &&
 		   ((r->flags & NODEREF_WALK)) == 0) {
 			error_set("nref block");
@@ -271,79 +180,82 @@ mapdir_update_moving(struct mapdir *dir, int xmotion, int ymotion)
 {
 	struct object *ob = dir->ob;
 	struct object_position *pos = ob->pos;
-	struct map *map = dir->map;
+	struct map *map = pos->map;
 	int moved = 0;
 	
-	debug(DEBUG_MOVE, "%s: vel %d,%d\n", ob->name, xmotion, ymotion);
+	debug(DEBUG_MOVE, "%s: motion %d,%d\n", ob->name, xmotion, ymotion);
 
 	if (!mapdir_can_move(dir, map, pos->x+xmotion, pos->y+ymotion)) {
-		debug(DEBUG_BLOCKS, "%s: blocked (%s)\n", ob->name,
-		    error_get());
+		debug(DEBUG_BLOCKS, "%s: block (%s)\n", ob->name, error_get());
 		mapdir_set_motion(dir, 0, 0);
 		mapdir_unset(dir, DIR_ALL);
 		return;
 	}
 
 	if (ymotion < 0) {						/* Up */
-		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL))
-		    	rootmap_scroll(map, DIR_UP, dir->speed);
+		if ((dir->flags & DIR_CENTER_VIEW) && (view->rootmap != NULL))
+		    	rootmap_scroll(map, DIR_N, dir->speed);
 		if (ymotion <= -TILEW+dir->speed) {
-			dir->moved |= DIR_UP;
-			moved |= DIR_UP;
+			dir->moved |= DIR_N;
+			moved |= DIR_N;
 			if (--pos->y < 0)
 				pos->y = 0;
 		} else {
-			if (dir->flags & DIR_SOFTSCROLL)
+			if (dir->flags & DIR_SOFT_MOTION) {
 				mapdir_add_motion(dir, 0, -dir->speed);
-			else
+			} else {
 				mapdir_set_motion(dir, 0, -TILEH);
+			}
 		}
 	} else if (ymotion > 0) {				     /* Down */
-		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL))
-		    	rootmap_scroll(map, DIR_DOWN, dir->speed);
+		if ((dir->flags & DIR_CENTER_VIEW) && (view->rootmap != NULL))
+		    	rootmap_scroll(map, DIR_S, dir->speed);
 		if (ymotion >= TILEW-dir->speed) {
 			mapdir_set_motion(dir, 0, 1);
-			dir->moved |= DIR_DOWN;
-			moved |= DIR_DOWN;
+			dir->moved |= DIR_S;
+			moved |= DIR_S;
 			if (++pos->y >= map->maph)
 				pos->y = map->maph-1;
 		} else {
-			if (dir->flags & DIR_SOFTSCROLL)
+			if (dir->flags & DIR_SOFT_MOTION) {
 				mapdir_add_motion(dir, 0, dir->speed);
-			else
+			} else {
 				mapdir_set_motion(dir, 0, TILEH);
+			}
 		}
 	}
 
 	if (xmotion < 0) {					    /* Left */
-		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL))
-		    	rootmap_scroll(map, DIR_LEFT, dir->speed);
+		if ((dir->flags & DIR_CENTER_VIEW) && (view->rootmap != NULL))
+		    	rootmap_scroll(map, DIR_W, dir->speed);
 		if (xmotion <= -TILEW+dir->speed) {
 			mapdir_set_motion(dir, -1, 0);
-			dir->moved |= DIR_LEFT;
-			moved |= DIR_LEFT;
+			dir->moved |= DIR_W;
+			moved |= DIR_W;
 			if (--pos->x < 0)
 				pos->x = 0;
 		} else {
-			if (dir->flags & DIR_SOFTSCROLL)
+			if (dir->flags & DIR_SOFT_MOTION) {
 				mapdir_add_motion(dir, -dir->speed, 0);
-			else
+			} else {
 				mapdir_set_motion(dir, -TILEW, 0);
+			}
 		}
 	} else if (xmotion > 0) {				   /* Right */
-		if ((dir->flags & DIR_SCROLLVIEW) && (view->rootmap != NULL))
-		    	rootmap_scroll(map, DIR_RIGHT, dir->speed);
+		if ((dir->flags & DIR_CENTER_VIEW) && (view->rootmap != NULL))
+		    	rootmap_scroll(map, DIR_W, dir->speed);
 		if (xmotion >= TILEW-dir->speed) {
 			mapdir_set_motion(dir, 1, 0);
-			dir->moved |= DIR_RIGHT;
-			moved |= DIR_RIGHT;
+			dir->moved |= DIR_W;
+			moved |= DIR_W;
 			if (++pos->x >= map->mapw)
 				pos->x = map->mapw-1;
 		} else {
-			if (dir->flags & DIR_SOFTSCROLL)
+			if (dir->flags & DIR_SOFT_MOTION) {
 				mapdir_add_motion(dir, dir->speed, 0);
-			else
+			} else {
 				mapdir_set_motion(dir, TILEW, 0);
+			}
 		}
 	}
 }
@@ -417,20 +329,20 @@ fail:
 void
 mapdir_postmove(struct mapdir *dir, int *mapx, int *mapy, int moved)
 {
-	if (dir->clear & DIR_UP) {
-		dir->current &= ~DIR_UP;
+	if (dir->clear & DIR_N) {
+		dir->current &= ~DIR_N;
 		object_set_submap(dir->ob, "n-idle");
 	}
-	if (dir->clear & DIR_DOWN) {
-		dir->current &= ~DIR_DOWN;
+	if (dir->clear & DIR_S) {
+		dir->current &= ~DIR_S;
 		object_set_submap(dir->ob, "s-idle");
 	}
-	if (dir->clear & DIR_LEFT) {
-		dir->current &= ~DIR_LEFT;
+	if (dir->clear & DIR_W) {
+		dir->current &= ~DIR_W;
 		object_set_submap(dir->ob, "w-idle");
 	}
-	if (dir->clear & DIR_RIGHT) {
-		dir->current &= ~DIR_RIGHT;
+	if (dir->clear & DIR_W) {
+		dir->current &= ~DIR_W;
 		object_set_submap(dir->ob, "e-idle");
 	}
 	dir->clear = 0;
