@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.8 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.9 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,8 @@ const struct tool_ops flip_ops = {
 		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	flip_window,
 	NULL,

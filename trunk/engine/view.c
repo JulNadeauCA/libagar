@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.122 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.123 2003/05/22 05:45:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -65,7 +65,8 @@ const struct object_ops viewport_ops = {
 	NULL,		/* init */
 	view_destroy,
 	NULL,		/* load */
-	NULL		/* save */
+	NULL,		/* save */
+	NULL		/* edit */
 };
 
 /* Read-only as long as the engine is running. */

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.166 2003/05/18 02:10:27 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.167 2003/05/20 11:26:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -60,7 +60,8 @@ const struct object_ops mapedit_ops = {
 	NULL,			/* init */
 	mapedit_destroy,
 	mapedit_load,
-	mapedit_save
+	mapedit_save,
+	NULL
 };
 
 struct mapedit	mapedit;

@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.24 2003/05/09 01:59:47 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.25 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -27,6 +27,7 @@
  */
 
 #include <engine/compat/vasprintf.h>
+#include <engine/compat/strlcpy.h>
 #include <engine/engine.h>
 
 #include <libfobj/fobj.h>
@@ -39,18 +40,11 @@
 
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
-#include <engine/widget/label.h>
-#include <engine/widget/button.h>
+#include <engine/widget/textbox.h>
 
 #include <errno.h>
 #include <stdarg.h>
 #include <string.h>
-
-enum {
-	DEFAULT_HP	= 10,
-	DEFAULT_MP	= 0,
-	DEFAULT_NZUARS	= 0
-};
 
 const struct version perso_ver = {
 	"agar personage",
@@ -61,7 +55,8 @@ const struct object_ops perso_ops = {
 	perso_init,
 	perso_destroy,
 	perso_load,
-	perso_save
+	perso_save,
+	perso_edit
 };
 
 #ifdef DEBUG
@@ -90,6 +85,7 @@ perso_init(void *obj, char *name)
 
 	object_init(pers, "perso", name, &perso_ops);
 	object_load_art(pers, name, 0);
+#if 0
 	object_load_submap(pers, "n-idle");
 	object_load_submap(pers, "s-idle");
 	object_load_submap(pers, "w-idle");
@@ -98,25 +94,24 @@ perso_init(void *obj, char *name)
 	object_load_submap(pers, "s-move");
 	object_load_submap(pers, "w-move");
 	object_load_submap(pers, "e-move");
+#endif
 
 	pthread_mutex_init(&pers->lock, NULL);
-	pers->name = Strdup(name);
+	strlcpy(pers->name, name, sizeof(pers->name));
 	pers->flags = 0;
 	pers->level = 0;
 	pers->exp = 0;
 	pers->age = 0;
 	pers->seed = 0;			/* TODO arc4random */
-	pers->hp = pers->maxhp = DEFAULT_HP;
-	pers->mp = pers->maxmp = DEFAULT_MP;
-	pers->nzuars = DEFAULT_NZUARS;
+	pers->hp = pers->maxhp = 0;
+	pers->mp = pers->maxmp = 0;
+	pers->nzuars = 0;
 }
 
 void
 perso_destroy(void *obj)
 {
-	struct perso *perso = obj;
-
-	free(perso->name);
+	/* nothing yet */
 }
 
 int
@@ -128,7 +123,7 @@ perso_load(void *obj, struct netbuf *buf)
 		return (-1);
 
 	pthread_mutex_lock(&perso->lock);
-	perso->name = read_string(buf, perso->name);
+	copy_string(perso->name, buf, sizeof(perso->name));
 	perso->flags = read_uint32(buf);
 	perso->level = read_uint32(buf);
 	perso->exp = (int)read_uint32(buf);
@@ -138,7 +133,7 @@ perso_load(void *obj, struct netbuf *buf)
 	perso->hp = (int)read_uint32(buf);
 	perso->maxmp = (int)read_uint32(buf);
 	perso->mp = (int)read_uint32(buf);
-	perso->nzuars = read_uint32(buf);
+	perso->nzuars = (unsigned int)read_uint32(buf);
 	pthread_mutex_unlock(&perso->lock);
 	return (0);
 }
@@ -161,8 +156,31 @@ perso_save(void *obj, struct netbuf *buf)
 	write_uint32(buf, (Uint32)perso->hp);
 	write_uint32(buf, (Uint32)perso->maxmp);
 	write_uint32(buf, (Uint32)perso->mp);
-	write_uint32(buf, perso->nzuars);
+	write_uint32(buf, (Uint32)perso->nzuars);
 	pthread_mutex_unlock(&perso->lock);
 	return (0);
 }
 
+void
+perso_edit(void *obj)
+{
+	struct perso *pers = obj;
+	struct window *win;
+	struct region *reg;
+
+	win = window_generic_new(320, 200, "perso-edit-%s", OBJECT(pers)->name);
+	if (win == NULL)
+		return;
+	window_set_caption(win, "%s personage", OBJECT(pers)->name);
+
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
+	{
+		struct textbox *tb;
+
+		tb = textbox_new(reg, "Name: ");
+		widget_bind(tb, "string", WIDGET_STRING, NULL, pers->name,
+		    sizeof(pers->name));
+	}
+
+	window_show(win);
+}

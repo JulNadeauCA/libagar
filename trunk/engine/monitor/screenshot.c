@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.3 2003/03/25 13:48:07 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.4 2003/05/18 00:17:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -256,8 +256,8 @@ screenshot_window(void)
 	reg = region_new(win, REGION_VALIGN|REGION_CLIPPING, 0, 0, 100, -1);
 	{
 		statusl = label_new(reg, 100, -1, "Status: Not connected");
-		hosttb = textbox_new(reg, "Host: ", 0, 100, -1);
-		porttb = textbox_new(reg, "Port: ", 0, 100, -1);
+		hosttb = textbox_new(reg, "Host: ");
+		porttb = textbox_new(reg, "Port: ");
 		textbox_printf(porttb, "%i", default_port);
 	}
 	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);

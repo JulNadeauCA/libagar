@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.34 2003/05/20 12:05:18 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.35 2003/05/22 08:30:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,7 +55,8 @@ const struct tool_ops merge_ops = {
 		NULL,		/* init */
 		merge_destroy,
 		merge_load,
-		merge_save
+		merge_save,
+		NULL		/* edit */
 	},
 	merge_window,
 	merge_cursor,
@@ -258,7 +259,8 @@ merge_window(void *p)
 	{
 		struct button *bu;
 		
-		name_tbox = textbox_new(reg, "Name: ", 0, 75, -1);
+		name_tbox = textbox_new(reg, "Name: ");
+		WIDGET(name_tbox)->rw = 75;
 		event_new(name_tbox, "textbox-return",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 

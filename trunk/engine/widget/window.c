@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.186 2003/05/22 08:48:25 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.187 2003/05/24 07:36:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -58,7 +58,8 @@ const struct object_ops window_ops = {
 	NULL,			/* init */
 	window_destroy,
 	window_load,
-	window_save
+	window_save,
+	NULL			/* edit */
 };
 
 enum {

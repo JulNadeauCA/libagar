@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.124 2003/05/19 01:15:56 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.125 2003/05/20 11:30:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,7 +34,6 @@
 #include <engine/version.h>
 #include <engine/config.h>
 #include <engine/map.h>
-#include <engine/physics.h>
 #include <engine/input.h>
 #include <engine/view.h>
 #include <engine/rootmap.h>
@@ -57,7 +56,8 @@ const struct object_ops object_ops = {
 	NULL,	/* init */
 	NULL,	/* destroy */
 	NULL,	/* load */
-	NULL	/* save */
+	NULL,	/* save */
+	NULL	/* edit */
 };
 
 #ifdef DEBUG
@@ -212,24 +212,48 @@ object_detach(void *parentp, void *childp)
 	unlock_linkage();
 }
 
+/* Traverse the object tree using a pathname. */
+static void *
+object_find_child(struct object *parent, char *name)
+{
+	char cname[OBJECT_NAME_MAX], *s;
+	struct object *child;
+
+	dprintf("%s\n", name);
+	TAILQ_FOREACH(child, &parent->childs, cobjs) {
+		if (strcmp(child->name, name) != 0)
+			continue;
+
+		if ((s = strchr(cname, '/')) != NULL) {
+			strlcpy(cname, s, sizeof(cname));
+			if ((s = strchr(cname, '/')) != NULL) {
+				*s = '\0';
+			}
+			return (object_find_child(child, cname));
+		}
+	}
+	return (NULL);
+}
+
 /* Search for the named object. The name is relative to the parent. */
 void *
 object_find(void *parentp, char *name)
 {
+	char cname[OBJECT_NAME_MAX], *s;
 	struct object *parent = parentp;
-	struct object *child = NULL;
+	void *rv;
 
 	if (parent == NULL)
 		parent = world;
 
-	/* XXX TODO recurse! */
+	strlcpy(cname, name, sizeof(cname));
+	if ((s = strchr(cname, '/')) != NULL)
+		*s = '\0';
+
 	lock_linkage();
-	TAILQ_FOREACH(child, &parent->childs, cobjs) {
-		if (strcmp(child->name, name) == 0)
-			break;
-	}
+	rv = object_find_child(parent, cname);
 	unlock_linkage();
-	return (child);
+	return (rv);
 }
 
 /* Detach and free child objects. */

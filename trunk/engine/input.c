@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.43 2003/05/09 02:01:09 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.44 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -37,7 +37,8 @@ const struct object_ops input_ops = {
 	NULL,		/* init */
 	input_destroy,
 	NULL,		/* load */
-	NULL		/* save */
+	NULL,		/* save */
+	NULL		/* edit */
 };
 
 static TAILQ_HEAD(, input) inputs;

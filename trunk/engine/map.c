@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.176 2003/05/20 11:30:34 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.177 2003/05/22 05:45:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,13 +28,17 @@
 
 #include <engine/compat/snprintf.h>
 #include <engine/engine.h>
-
-#include <libfobj/fobj.h>
-
 #include <engine/map.h>
 #include <engine/version.h>
 #include <engine/config.h>
 #include <engine/view.h>
+
+#include <engine/widget/widget.h>
+#include <engine/widget/window.h>
+
+#include <engine/mapedit/mapedit.h>
+
+#include <libfobj/fobj.h>
 
 const struct version map_ver = {
 	"agar map",
@@ -45,7 +49,8 @@ const struct object_ops map_ops = {
 	map_init,
 	map_destroy,
 	map_load,
-	map_save
+	map_save,
+	map_edit
 };
 
 #ifdef DEBUG
@@ -660,6 +665,17 @@ map_destroy(void *p)
 		map_free_layers(m);
 
 	pthread_mutex_destroy(&m->lock);
+}
+
+void
+map_edit(void *p)
+{
+	struct map *m = p;
+	struct window *win;
+
+	win = mapedit_window(m);
+	view_attach(win);
+	window_show(win);
 }
 
 /*

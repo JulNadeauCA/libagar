@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.13 2003/04/12 01:41:31 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.14 2003/05/17 23:58:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,8 @@ const struct widget_ops bitmap_ops = {
 		NULL,		/* init */
 		bitmap_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	bitmap_draw,
 	NULL		/* update */

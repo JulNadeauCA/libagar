@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.40 2003/04/24 07:01:46 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.41 2003/05/18 00:17:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -39,7 +39,8 @@ const struct tool_ops stamp_ops = {
 		NULL,		/* init */
 		tool_destroy,
 		NULL,		/* load */
-		NULL		/* save */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	stamp_window,
 	stamp_cursor,

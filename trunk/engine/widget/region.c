@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.32 2003/04/24 07:04:48 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.33 2003/05/18 00:17:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,8 @@ const struct object_ops region_ops = {
 	NULL,		/* init */
 	region_destroy,
 	NULL,		/* load */
-	NULL		/* save */
+	NULL,		/* save */
+	NULL		/* edit */
 };
 
 pthread_mutex_t region_lock = PTHREAD_MUTEX_INITIALIZER;
