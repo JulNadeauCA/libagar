@@ -113,8 +113,8 @@ fi
 echo > config.log
 
 echo >Makefile.config
-if [ ! -e "engine/config" ]; then
-	mkdir "engine/config"
+if [ ! -e "config" ]; then
+	mkdir "config"
 	if [ $? != 0 ]; then
 		exit 1
 	fi
@@ -141,9 +141,6 @@ fi
 SHAREDIR="$PREFIX/share/cave"
 echo SHAREDIR=$SHAREDIR >> Makefile.config
 SHAREDIR="\"$PREFIX/share/cave\""
-echo "#ifndef SHAREDIR" > engine/config/sharedir.h
-echo "#define SHAREDIR" $SHAREDIR >> engine/config/sharedir.h
-echo "#endif /* SHAREDIR */" >> engine/config/sharedir.h
 MAPDIR="$PREFIX/share/cave/map"
 echo MAPDIR=$MAPDIR >> Makefile.config
 TTFDIR="$PREFIX/share/cave/ttf"
@@ -231,14 +228,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_IEEE754" > engine/config/have_ieee754.h
-echo "#define HAVE_IEEE754" $HAVE_IEEE754 >> engine/config/have_ieee754.h
-echo "#endif /* HAVE_IEEE754 */" >> engine/config/have_ieee754.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_IEEE754" > engine/config/have_ieee754.h
-
+    
 	echo "no"
 fi
 echo -n "checking for long double..."
@@ -269,14 +262,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_LONG_DOUBLE" > engine/config/have_long_double.h
-echo "#define HAVE_LONG_DOUBLE" $HAVE_LONG_DOUBLE >> engine/config/have_long_double.h
-echo "#endif /* HAVE_LONG_DOUBLE */" >> engine/config/have_long_double.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_LONG_DOUBLE" > engine/config/have_long_double.h
-
+    
 	echo "no"
 fi
 echo -n "checking for a getenv() function..."
@@ -307,14 +296,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_GETENV" > engine/config/have_getenv.h
-echo "#define HAVE_GETENV" $HAVE_GETENV >> engine/config/have_getenv.h
-echo "#endif /* HAVE_GETENV */" >> engine/config/have_getenv.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_GETENV" > engine/config/have_getenv.h
-
+    
 	echo "no"
 fi
 echo -n "checking for setenv() and unsetenv() functions..."
@@ -347,14 +332,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_SETENV" > engine/config/have_setenv.h
-echo "#define HAVE_SETENV" $HAVE_SETENV >> engine/config/have_setenv.h
-echo "#endif /* HAVE_SETENV */" >> engine/config/have_setenv.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_SETENV" > engine/config/have_setenv.h
-
+    
 	echo "no"
 fi
 echo -n "checking for a strsep() function..."
@@ -385,14 +366,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_STRSEP" > engine/config/have_strsep.h
-echo "#define HAVE_STRSEP" $HAVE_STRSEP >> engine/config/have_strsep.h
-echo "#endif /* HAVE_STRSEP */" >> engine/config/have_strsep.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_STRSEP" > engine/config/have_strsep.h
-
+    
 	echo "no"
 fi
 echo -n "checking for a strlcat() function..."
@@ -423,14 +400,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_STRLCAT" > engine/config/have_strlcat.h
-echo "#define HAVE_STRLCAT" $HAVE_STRLCAT >> engine/config/have_strlcat.h
-echo "#endif /* HAVE_STRLCAT */" >> engine/config/have_strlcat.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_STRLCAT" > engine/config/have_strlcat.h
-
+    
 	echo "no"
 fi
 echo -n "checking for a strlcpy() function..."
@@ -461,14 +434,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_STRLCPY" > engine/config/have_strlcpy.h
-echo "#define HAVE_STRLCPY" $HAVE_STRLCPY >> engine/config/have_strlcpy.h
-echo "#endif /* HAVE_STRLCPY */" >> engine/config/have_strlcpy.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_STRLCPY" > engine/config/have_strlcpy.h
-
+    
 	echo "no"
 fi
 echo -n "checking for an asprintf() function..."
@@ -505,14 +474,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_ASPRINTF" > engine/config/have_asprintf.h
-echo "#define HAVE_ASPRINTF" $HAVE_ASPRINTF >> engine/config/have_asprintf.h
-echo "#endif /* HAVE_ASPRINTF */" >> engine/config/have_asprintf.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_ASPRINTF" > engine/config/have_asprintf.h
-
+    
 	echo "no"
 fi
 echo -n "checking for a vasprintf() function..."
@@ -560,14 +525,10 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_VASPRINTF" > engine/config/have_vasprintf.h
-echo "#define HAVE_VASPRINTF" $HAVE_VASPRINTF >> engine/config/have_vasprintf.h
-echo "#endif /* HAVE_VASPRINTF */" >> engine/config/have_vasprintf.h
-
+	
 	echo "yes"
 else
-    echo "#undef HAVE_VASPRINTF" > engine/config/have_vasprintf.h
-
+    
 	echo "no"
 fi
 CFLAGS="$CFLAGS -g -I$SRC -I$SRC/engine"
@@ -685,16 +646,12 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_SDL" > engine/config/have_sdl.h
-echo "#define HAVE_SDL" $HAVE_SDL >> engine/config/have_sdl.h
-echo "#endif /* HAVE_SDL */" >> engine/config/have_sdl.h
-
+	
 	HAVE_SDL=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_SDL" > engine/config/have_sdl.h
-
+	
 	echo "no"
 fi
 if [ "${HAVE_SDL}" = "yes" ]; then
@@ -774,16 +731,12 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "-> success" >> config.log
-	echo "#ifndef HAVE_FREETYPE" > engine/config/have_freetype.h
-echo "#define HAVE_FREETYPE" $HAVE_FREETYPE >> engine/config/have_freetype.h
-echo "#endif /* HAVE_FREETYPE */" >> engine/config/have_freetype.h
-
+	
 	HAVE_FREETYPE=yes
 
 	echo "yes"
 else
-	echo "#undef HAVE_FREETYPE" > engine/config/have_freetype.h
-
+	
 	echo "no"
 fi
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
@@ -834,102 +787,55 @@ fi
 	if [ "${x11_found}" = "yes" ]
  then
 USE_X11=1
-echo "#ifndef USE_X11" > engine/config/use_x11.h
-echo "#define USE_X11" $USE_X11 >> engine/config/use_x11.h
-echo "#endif /* USE_X11 */" >> engine/config/use_x11.h
 	else
-echo "#undef USE_X11" > engine/config/use_x11.h
 	fi
 fi
 if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]
  then
 XDEBUG=1
-echo "#ifndef XDEBUG" > engine/config/xdebug.h
-echo "#define XDEBUG" $XDEBUG >> engine/config/xdebug.h
-echo "#endif /* XDEBUG */" >> engine/config/xdebug.h
 else
-echo "#undef XDEBUG" > engine/config/xdebug.h
 fi
 if [ "${with_gl}" = "yes" ]
  then
 HAVE_OPENGL=1
-echo "#ifndef HAVE_OPENGL" > engine/config/have_opengl.h
-echo "#define HAVE_OPENGL" $HAVE_OPENGL >> engine/config/have_opengl.h
-echo "#endif /* HAVE_OPENGL */" >> engine/config/have_opengl.h
 else
-echo "#undef HAVE_OPENGL" > engine/config/have_opengl.h
 fi
 if [ "${enable_debug}" = "yes" ]
  then
 DEBUG=1
-echo "#ifndef DEBUG" > engine/config/debug.h
-echo "#define DEBUG" $DEBUG >> engine/config/debug.h
-echo "#endif /* DEBUG */" >> engine/config/debug.h
 LOCKDEBUG=1
-echo "#ifndef LOCKDEBUG" > engine/config/lockdebug.h
-echo "#define LOCKDEBUG" $LOCKDEBUG >> engine/config/lockdebug.h
-echo "#endif /* LOCKDEBUG */" >> engine/config/lockdebug.h
 else
-echo "#undef DEBUG" > engine/config/debug.h
-echo "#undef LOCKDEBUG" > engine/config/lockdebug.h
 fi
 if [ "${enable_map_editor}" != "no" ]
  then
 MAP_EDITOR=1
-echo "#ifndef MAP_EDITOR" > engine/config/map_editor.h
-echo "#define MAP_EDITOR" $MAP_EDITOR >> engine/config/map_editor.h
-echo "#endif /* MAP_EDITOR */" >> engine/config/map_editor.h
 else
-echo "#undef MAP_EDITOR" > engine/config/map_editor.h
 fi
 if [ "${enable_serialization}" != "no" ]
  then
 SERIALIZATION=1
-echo "#ifndef SERIALIZATION" > engine/config/serialization.h
-echo "#define SERIALIZATION" $SERIALIZATION >> engine/config/serialization.h
-echo "#endif /* SERIALIZATION */" >> engine/config/serialization.h
 else
-echo "#undef SERIALIZATION" > engine/config/serialization.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
 VIEW_8BPP=1
-echo "#ifndef VIEW_8BPP" > engine/config/view_8bpp.h
-echo "#define VIEW_8BPP" $VIEW_8BPP >> engine/config/view_8bpp.h
-echo "#endif /* VIEW_8BPP */" >> engine/config/view_8bpp.h
 else
-echo "#undef VIEW_8BPP" > engine/config/view_8bpp.h
 fi
 if [ "${enable_16bpp}" != "no" ]
  then
 VIEW_16BPP=1
-echo "#ifndef VIEW_16BPP" > engine/config/view_16bpp.h
-echo "#define VIEW_16BPP" $VIEW_16BPP >> engine/config/view_16bpp.h
-echo "#endif /* VIEW_16BPP */" >> engine/config/view_16bpp.h
 else
-echo "#undef VIEW_16BPP" > engine/config/view_16bpp.h
 fi
 if [ "${enable_24bpp}" != "no" ]
  then
 VIEW_24BPP=1
-echo "#ifndef VIEW_24BPP" > engine/config/view_24bpp.h
-echo "#define VIEW_24BPP" $VIEW_24BPP >> engine/config/view_24bpp.h
-echo "#endif /* VIEW_24BPP */" >> engine/config/view_24bpp.h
 else
-echo "#undef VIEW_24BPP" > engine/config/view_24bpp.h
 fi
 if [ "${enable_32bpp}" != "no" ]
  then
 VIEW_32BPP=1
-echo "#ifndef VIEW_32BPP" > engine/config/view_32bpp.h
-echo "#define VIEW_32BPP" $VIEW_32BPP >> engine/config/view_32bpp.h
-echo "#endif /* VIEW_32BPP */" >> engine/config/view_32bpp.h
 else
-echo "#undef VIEW_32BPP" > engine/config/view_32bpp.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
-echo "#ifndef PREFIX" > engine/config/prefix.h
-echo "#define PREFIX \"$PREFIX\"" >> engine/config/prefix.h
-echo "#endif /* PREFIX */" >> engine/config/prefix.h
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log
