@@ -68,14 +68,14 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 		/* Nothing to do. */
 		return;
 	}
-
+	
 	ms = SDL_GetMouseState(NULL, NULL);
 
 	/* Tile stack. No functionality. */
 	if (med->mmapx == 0) {
 		return;
 	}
-
+	
 	/* Object list. Allow selection/scrolling. */
 	if (med->mmapy == 0) {
 		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
@@ -94,8 +94,8 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 	}
 	
 	/* Tile list. Allow selection/scrolling. */
-	if (med->mmapx >= m->view->mapw - 1 &&	/* XXX? */
-	    med->mtmapy < m->view->maph + 1) {
+	if (med->mmapx == m->view->mapw - 1 &&	/* XXX */
+	    med->mtmapy <= m->view->maph) {
 		if (ms & (SDL_BUTTON_LMASK|SDL_BUTTON_MMASK)) {
 			/* Scroll */
 			if (med->mtmapy > omtmapy &&	/* Down */
@@ -113,9 +113,9 @@ mouse_motion(struct mapedit *med, SDL_Event *ev)
 
 	/* Map view. Node operations. */
 	if (med->mmapy + m->view->mapyoffs < m->view->maph &&
-	    med->mmapx + m->view->mapxoffs < m->view->mapw &&
-	    med->mmapx > m->view->mapxoffs &&
-	    med->mmapy > m->view->mapyoffs) {
+	    med->mmapx + m->view->mapxoffs < m->view->mapw + 2 &&
+	    med->mmapx >= m->view->mapxoffs &&
+	    med->mmapy >= m->view->mapyoffs) {
 		if (ms & SDL_BUTTON_MMASK) {
 			/* Move */
 			mapedit_move(med, mx, my);
@@ -169,8 +169,9 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 	vy = (ev->button.y / m->tileh);
 	mx = (m->view->mapx + vx) - m->view->mapxoffs;
 	my = (m->view->mapy + vy) - m->view->mapyoffs;
-	
-	if (med->mmapy == 0) {
+
+	/* XXX redundant */
+	if (vy == 0) {
 		/* Object list. Allow selection. */
 		switch (ev->button.button) {
 		case 2:
@@ -189,7 +190,10 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 			mapedit_tilelist(med);
 			break;
 		}
-	} else if ((mx > 1 && my > 1) && (mx < m->mapw && my < m->maph)) {
+	} else if (m->view->mapxoffs+vx <= m->view->mapw+1 &&
+	    m->view->mapyoffs+vy < m->view->maph &&
+	    vx >= m->view->mapxoffs &&
+	    vy >= m->view->mapyoffs) {
 		/* Map view. Node operations. */
 	    	switch (ev->button.button) {
 		case 2:
