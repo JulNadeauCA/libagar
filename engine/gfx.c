@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.34 2004/05/10 05:17:34 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.35 2004/05/13 01:02:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -635,11 +635,7 @@ gfx_debug_window(void)
 	window_set_closure(win, WINDOW_DETACH);
 
 	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
-#if 0
-	tlist_set_item_height(tl, text_font_height(font)*2 + 5);
-#else
 	tlist_set_item_height(tl, TILESZ);
-#endif
 	event_new(tl, "tlist-poll", poll_gfx, NULL);
 
 	return (win);
