@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.9 2002/08/21 23:52:14 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.1 2002/09/06 01:27:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -50,12 +50,19 @@ static struct widget_ops tlist_ops = {
 };
 
 enum {
-	INSIDE_COLOR,
-	OUTSIDE_COLOR,
-	TEXT_COLOR
+	TEXT_COLOR,
+	BACKGROUND_COLOR,
+	LINE_COLOR,
+	SELECTION_COLOR
 };
 
-static void	tlist_event(int, union evarg *);
+enum {
+	SELECTION_MOUSE_BUTTON = 1
+};
+
+static void	tlist_mouse_button(int, union evarg *);
+static void	tlist_mouse_motion(int, union evarg *);
+static void	tlist_keydown(int, union evarg *);
 
 struct tlist *
 tlist_new(struct region *reg, int rw, int rh, int flags)
@@ -77,83 +84,246 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 {
 	widget_init(&tl->wid, "tlist", "widget", &tlist_ops, rw, rh);
 
-	widget_map_color(tl, INSIDE_COLOR, "tlist-inside", 250, 250, 250);
-	widget_map_color(tl, OUTSIDE_COLOR, "tlist-outside", 150, 150, 200);
-	widget_map_color(tl, TEXT_COLOR, "tlist-text", 240, 240, 240);
+	widget_map_color(tl, TEXT_COLOR, "tlist-text",
+	    240, 240, 240);
+	widget_map_color(tl, BACKGROUND_COLOR, "tlist-background",
+	    120, 120, 120);
+	widget_map_color(tl, LINE_COLOR, "tlist-line",
+	    50, 50, 50);
+	widget_map_color(tl, SELECTION_COLOR, "tlist-selection",
+	    50, 50, 120);
 
 	tl->flags = flags;
 	tl->xspacing = 6;
 	tl->yspacing = 3;
+	tl->item_h = 16;
 	tl->ops.update = NULL;
+	tl->offs.start = 0;
+	tl->offs.soft_start = 0;
+	tl->offs.sel = -1;
+	tl->nitems = 0;
 	TAILQ_INIT(&tl->items);
+	pthread_mutex_init(&tl->items_lock, NULL);
 
-	event_new(tl, "window-mousebuttondown", 0,
-	    tlist_event, "%i", WINDOW_MOUSEBUTTONDOWN);
-	event_new(tl, "window-keydown", 0,
-	    tlist_event, "%i", WINDOW_KEYDOWN);
+	event_new(tl, "window-mousemotion", 0, tlist_mouse_motion, NULL);
+	event_new(tl, "window-mousebuttondown", 0, tlist_mouse_button, NULL);
+	event_new(tl, "window-keydown", 0, tlist_keydown, NULL);
 }
 
 void
 tlist_draw(void *p)
 {
+	SDL_Rect rd;
 	struct tlist *tl = p;
-	int y, i;
+	struct tlist_item *it;
+	int y, i = 0;
 
-	primitives.frame(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h,
-	    WIDGET_FOCUSED(tl) ? 1 : 0);
-	
-	if (tl->ops.update != NULL) {
+	primitives.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
+	    WIDGET_COLOR(tl, BACKGROUND_COLOR));
+
+	if (tl->ops.update != NULL) {		/* XXX */
 		tl->ops.update(tl);
 	}
 
-#if 0
-	for (i = 0, y = 0;
-	     i < tl->nitems;
-	     i++, y += rad->item_h) {
-		const char *s;
-		SDL_Surface *ls;
-	
-		s = rad->items[i];
+	pthread_mutex_lock(&tl->items_lock);
 
-		/* Radio button */
-		primitives.circle(rad, 0, y,
-		    rad->tlist.w, rad->tlist.h, 6,
-		    WIDGET_COLOR(rad, OUTSIDE_COLOR));
-		if (rad->selitem == i) {
-			primitives.circle(rad, 0, y,
-			    rad->tlist.w, rad->tlist.h, 3,
-			    WIDGET_COLOR(rad, INSIDE_COLOR));
-			primitives.circle(rad, 0, y,
-			    rad->tlist.w, rad->tlist.h, 2,
-			    WIDGET_COLOR(rad, OUTSIDE_COLOR));
+	y = tl->offs.soft_start;
+	TAILQ_FOREACH(it, &tl->items, items) {
+		int x = 2;
+		SDL_Surface *su;
+
+		if (i++ < tl->offs.start) {
+			continue;
 		}
 
-		/* XXX cache */
-		ls = text_render(NULL, -1,
-		    WIDGET_COLOR(rad, TEXT_COLOR), (char *)s);
-		WIDGET_DRAW(rad, ls, rad->tlist.w, y);
-		SDL_FreeSurface(ls);
+		if (y > WIDGET(tl)->h - it->icon_w) {
+			goto out;
+		}
+
+		if (i - 1 == tl->offs.sel) {
+			WIDGET_FILL(tl, x, y, WIDGET(tl)->w, tl->item_h,
+			    WIDGET_COLOR(tl, SELECTION_COLOR));
+		}
+
+		su = text_render(NULL, -1,
+		    WIDGET_COLOR(tl, TEXT_COLOR), it->text);
+	
+		if (it->icon != NULL) {
+			WIDGET_DRAW(tl, it->icon, x, y);
+		}
+		x += it->icon_w + 4;
+
+		WIDGET_DRAW(tl, su, x, y);
+		y += tl->item_h;
+		primitives.line(tl, 0, y, WIDGET(tl)->w, y,
+		    WIDGET_COLOR(tl, LINE_COLOR));
+
+		free(su);
 	}
-#endif
+out:
+	pthread_mutex_unlock(&tl->items_lock);
+}
+
+void
+tlist_remove_item(struct tlist_item *it)
+{
+	pthread_mutex_lock(&it->tl_bp->items_lock);
+	TAILQ_REMOVE(&it->tl_bp->items, it, items);
+	it->tl_bp->nitems--;
+	pthread_mutex_unlock(&it->tl_bp->items_lock);
+
+	free(it->text);
+	free(it);
+}
+
+void
+tlist_clear_items(struct tlist *tl)
+{
+	struct tlist_item *it;
+	
+	pthread_mutex_lock(&tl->items_lock);
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		free(it->text);
+		free(it);
+	}
+	TAILQ_INIT(&tl->items);
+	tl->nitems = 0;
+
+	pthread_mutex_unlock(&tl->items_lock);
+}
+
+struct tlist_item *
+tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
+{
+	struct tlist_item *it;
+
+	it = emalloc(sizeof(struct tlist_item));
+	it->icon_w = 16;
+	it->icon_h = 16;
+	if (icon != NULL) {
+		it->icon = view_scale_surface(icon, it->icon_w, it->icon_h);
+	} else {
+		it->icon = NULL;
+	}
+	it->text = strdup(text);
+	it->text_len = strlen(text);
+	it->p1 = p1;
+	it->tl_bp = tl;
+
+	pthread_mutex_lock(&tl->items_lock);
+	TAILQ_INSERT_HEAD(&tl->items, it, items);
+	tl->nitems++;
+	pthread_mutex_unlock(&tl->items_lock);
+
+	event_post(tl, "tlist-inserted-item", "%p", it);
+
+	return (it);
 }
 
 static void
-tlist_event(int argc, union evarg *argv)
+tlist_mouse_motion(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
-	int evtype = argv[1].i;
+	int x = argv[1].i;
+	int y = argv[2].i;
+	int xrel = argv[3].i;
+	int yrel = argv[4].i;
+	int sy = y / tl->item_h;
+	Uint8 ms;
 
-	switch (evtype) {
-	case WINDOW_MOUSEBUTTONDOWN:
-		break;
-	case WINDOW_KEYDOWN:
-		break;
-	default:
+	ms = SDL_GetMouseState(NULL, NULL);
+
+	if (ms & SDL_BUTTON_RMASK) {
+		if (yrel < 0 && (tl->offs.soft_start += yrel) < 0) {
+			tl->offs.soft_start = tl->item_h;
+			if (++tl->offs.start > tl->nitems) {
+				tl->offs.start = tl->nitems;
+			}
+		}
+		if (yrel > 0 && tl->offs.start > 0 &&
+		    (tl->offs.soft_start += yrel) > tl->item_h) {
+			tl->offs.soft_start = 0;
+			if (--tl->offs.start < 0) {
+				tl->offs.start = 0;
+			}
+		}
+	}
+}
+
+static void
+tlist_mouse_button(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	int button = argv[1].i;
+	int x = argv[2].i;
+	int y = argv[3].i;
+	int sy;
+
+	y -= tl->offs.soft_start;
+
+	WIDGET_FOCUS(tl);
+
+	if (button != SELECTION_MOUSE_BUTTON) {
 		return;
 	}
 
-#if 0
-	event_post(tl, "tlist-changed", "%c, %i", '*', sel);
-#endif
+	sy = tl->offs.start + y/tl->item_h;
+	if ((tl->offs.sel = sy) > tl->nitems - 1) {
+		tl->offs.sel = tl->nitems - 1;
+	}
+
+	event_post(tl, "tlist-selection-changed", "%i", sy);
+}
+
+static void
+tlist_keydown(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	int keysym = argv[1].i;
+
+	pthread_mutex_lock(&tl->items_lock);
+	switch (keysym) {
+	case SDLK_UP:
+		if (--tl->offs.sel < 0) {
+			tl->offs.sel = 0;
+		}
+		if (tl->offs.sel <= tl->offs.start) {
+			if (--tl->offs.start < 0) {
+				tl->offs.start = 0;
+			}
+		}
+		event_post(tl, "tlist-selection-changed", "%i", tl->offs.sel);
+		break;
+	case SDLK_DOWN:
+		if (++tl->offs.sel > tl->nitems) {
+			tl->offs.sel = tl->nitems;
+		}
+		event_post(tl, "tlist-selection-changed", "%i", tl->offs.sel);
+		break;
+	case SDLK_LEFT:
+		if (--tl->offs.start < 0) {
+			tl->offs.start = 0;
+		}
+		break;
+	case SDLK_RIGHT:
+		if (++tl->offs.start > tl->nitems) {
+			tl->offs.start = tl->nitems;
+		}
+		break;
+	case SDLK_PAGEUP:
+		if ((tl->offs.start -= 4) < 0) {
+			tl->offs.start = 0;
+		}
+		break;
+	case SDLK_PAGEDOWN:
+		if ((tl->offs.start += 4) > tl->nitems) {
+			tl->offs.start = tl->nitems;
+		}
+		break;
+	default:
+	}
+	
+	pthread_mutex_unlock(&tl->items_lock);
 }
 
