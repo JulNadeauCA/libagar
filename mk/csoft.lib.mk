@@ -55,7 +55,9 @@ CFLAGS+=    ${COPTS}
 SHARE?=
 LFLAGS?=
 YFLAGS?=
-INCL?=
+
+INCL?=""
+INCLDIR?=""
 
 all: all-subdir lib${LIB}.a lib${LIB}.la
 install: install-lib install-subdir
