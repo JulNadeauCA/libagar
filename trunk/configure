@@ -567,7 +567,7 @@ else
 NONE=1
 fi
 if [ "${freetype_found}" = "yes" ]; then
-NONE=1
+echo -n "found, "
 else
 echo "Cannot find FreeType library"
 exit 1
