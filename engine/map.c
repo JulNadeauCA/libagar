@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.5 2002/01/30 17:53:37 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.6 2002/01/30 18:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -27,6 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#define TILESHIFT	5	/* 32x32 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -190,10 +192,7 @@ static int
 map_entry_init(struct map_entry *me, struct object *ob, int offs,
     int meflags, int rflags)
 {
-	me->objs = NULL;
-	me->nobjs = 0;
-	me->flags = 0;
-	me->nanims = 0;
+	memset(me, NULL, sizeof(struct map_entry));
 
 	/* Used by the map editor to fill new maps. */
 	if (ob != NULL) {
@@ -218,6 +217,8 @@ map_entry_addref(struct map_entry *me, struct object *ob, int offs, int rflags)
 	naref->pobj = ob;
 	naref->offs = offs;
 	naref->flags = rflags;
+	naref->xoffs = 0;
+	naref->yoffs = 0;
 
 	if (rflags & MAPREF_ANIM) {
 		naref->frame = 0;
@@ -324,8 +325,8 @@ map_entry_destroy(struct map_entry *me)
 }
 
 /* Draw a sprite at any given location. */
-static __inline void
-map_plot_sprite(struct map *em, SDL_Surface *s, int mapx, int mapy)
+static __inline__ void
+map_plot_sprite(struct map *em, SDL_Surface *s, int x, int y)
 {
 	static SDL_Rect rs, rd;
 
@@ -350,23 +351,23 @@ map_plot_sprite(struct map *em, SDL_Surface *s, int mapx, int mapy)
 		 * XXX optimize math.
 		 */
 		if (rd.w > em->view->tilew) {
-			mapx -= (rs.w / em->view->tilew) / 2;
+			x -= (rs.w / em->view->tilew) / 2;
 		}
 		if (rd.h > em->view->tileh) {
-			mapy -= (rs.h / em->view->tileh) / 2;
+			y -= (rs.h / em->view->tileh) / 2;
 		}
 	}
 
 	/* XXX pre-compute map/view coordinate pairs. */
-	rd.x = mapx * em->view->tilew;
-	rd.y = mapy * em->view->tileh;
+	rd.x = x;
+	rd.y = y;
 
 	SDL_BlitSurface(s, &rs, em->view->v, &rd);
 }
 
 /* Draw an animation's current frame. */
-static __inline void
-map_plot_anim(struct map *em, struct anim *anim, int frame, int mapx, int mapy)
+static __inline__ void
+map_plot_anim(struct map *em, struct anim *anim, int frame, int x, int y)
 {
 	static SDL_Rect rs, rd;
 	static SDL_Surface *s;
@@ -387,27 +388,16 @@ map_plot_anim(struct map *em, struct anim *anim, int frame, int mapx, int mapy)
 	rd.w = s->w;
 	rd.h = s->h;
 
-	/*
-	 * XXX don't bother, animations must be tile-sized for now.
-	 */
-#if 0
-	if (em->flags & MAP_VARTILEGEO) {
-		if (rd.w > em->view->tilew) {
-			mapx -= (rs.w / em->view->tilew) / 2;
-		}
-		if (rd.h > em->view->tileh) {
-			mapy -= (rs.h / em->view->tileh) / 2;
-		}
-	}
-#endif
-
-	rd.x = mapx * em->view->tilew;
-	rd.y = mapy * em->view->tileh;
+	rd.x = x;
+	rd.y = y;
 
 	SDL_BlitSurface(s, &rs, em->view->v, &rd);
 }
 
-/* Update all animations in the map view. */
+/*
+ * Update all animations in the map view, and move references
+ * with a nonzero x/y offset value.
+ */
 static Uint32
 map_animate(Uint32 ival, void *p)
 {
@@ -464,14 +454,15 @@ map_animate(Uint32 ival, void *p)
 					continue;
 				}
 				/*
-				 * We must also redraw underlying sprites.
-				 * XXX save a mask instead?
+				 * The map rendering routine does not
+				 * bother drawing sprites on tiles
+				 * containing animations.
 				 */
 				if (taref->flags & MAPREF_SPRITE) {
 					map_plot_sprite(em,
 					    g_slist_nth_data(
 					    taref->pobj->sprites, taref->offs),
-					    vx, vy);
+					    vx << TILESHIFT, vy << TILESHIFT);
 				} else if (taref->flags & MAPREF_ANIM) {
 					struct anim *anim;
 
@@ -481,7 +472,7 @@ map_animate(Uint32 ival, void *p)
 					    g_slist_nth_data(
 					    taref->pobj->anims, taref->offs),
 					    taref->frame,
-					    vx, vy);
+					    vx << TILESHIFT, vy << TILESHIFT);
 					
 					if (anim->delay > 0 &&
 					    taref->fwait++ > anim->delay) {
@@ -513,6 +504,9 @@ map_animate(Uint32 ival, void *p)
 static void
 mapedit_drawflags(struct map *em, int flags, int vx, int vy)
 {
+	vx <<= TILESHIFT;
+	vy <<= TILESHIFT;
+
 	if (flags == 0)	{
 		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_BLOCKED), vx, vy);
@@ -588,12 +582,14 @@ map_draw(Uint32 ival, void *p)
 			me = &em->map[x][y];
 
 			if (me->nanims > 0) {
+				/* map_animate() shall handle this. */
 				continue;
 			}
 	
 			if (mapedit) {
-				SDL_Rect erd;
+				static SDL_Rect erd;
 
+				/* XXX draw a background on view area. */
 				erd.w = em->view->tilew;
 				erd.h = em->view->tileh;
 				erd.x = vx * erd.w;
@@ -604,13 +600,11 @@ map_draw(Uint32 ival, void *p)
 			/* XXX inefficient */
 			for (i = 0; i < me->nobjs; i++) {
 				taref = g_slist_nth_data(me->objs, i);
-
 				if (taref->flags & MAPREF_SPRITE) {
-					struct object *ob = taref->pobj;
-
 					map_plot_sprite(em,
-					    g_slist_nth_data(ob->sprites,
-					    taref->offs), vx, vy);
+					    g_slist_nth_data(
+					    taref->pobj->sprites, taref->offs),
+					    vx << TILESHIFT, vy << TILESHIFT);
 				}
 			}
 
@@ -619,6 +613,7 @@ map_draw(Uint32 ival, void *p)
 			}
 		}
 	}
+
 	if (mapedit) {
 		if (curmapedit->flags & MAPEDIT_TILELIST)
 			mapedit_tilelist(curmapedit);
