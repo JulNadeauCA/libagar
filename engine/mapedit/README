@@ -1,26 +1,41 @@
+$Csoft$
 
 The map editor manipulates map nodes and their properties.
 
-The editor has 3 `windows'. The tile stack (left) displays the stack of
+The editor has 3 lists. The tile stack (left) displays the stack of
 references for the map entry under the cursor. The tile list (right)
 shows a circular queue of available sprites/animations for the current
 object. The object list (top) shows the icons for all objects known by
-the map editor.
+the map editor. Both the tile and object lists allow scrolling (left
+mouse button), and selection (right mouse button).
+
+A status icon displays the current node modes (walk, block, etc), as
+well as the map edition mode (insert/replace) and flags (props/grid).
+
+While moving the cursor, pressed keyboard keys are checked and relevant
+commands (A, D, B, W, C and P) are issued for each node the cursor moves
+over. The B flag is exclusive of W, C and P.
+
+MOUSE
+=====
+
+Left button:	Scroll the map.
+Middle button:	Move the cursor (sticky keys apply).
+Right button:	Add a reference.
 
 KEYBOARD
 ========
 
-Directional:	Move the cursor on the map.
-Ctrl+Left:	Scroll object list left.
-Ctrl+Right:	Scroll object list right.
+Directional:	Move the cursor on the map (sticky keys apply).
+Delete:		Scroll object list left.
+End:		Scroll object list right.
 PgUp:		Scroll tile list up.
 PgDn:		Scroll tile list down.
 
 'A':		Push a reference onto the node's stack.
 'D':		Pop a reference from the node's stack.
-'S':		Save this map to <mapname>.map.
-'L':		Load this map from <mapname>.map.
-'O':		Position the cursor on the map origin.
+'S':		Save this map.
+'L':		Load this map.
 'X':		Print the current tile stack.
 
 'B':		Mark the node as blocked, or:
@@ -38,11 +53,5 @@ Ctrl+'I':	Fill the map with the current tile.
 Ctrl+'N':	Initialize an empty map.
 Ctrl+'G':	Toggle the map grid.
 Ctrl+'P':	Toggle the node property sprites.
-
-MOUSE
-=====
-Holding the mouse's left button, the map is scrolled. The middle (or
-right) button positions the edit cursor at the cursor's position,
-and the third button, if present, adds a new tile reference.
 
 
