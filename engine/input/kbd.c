@@ -1,4 +1,4 @@
-/*	$Csoft: kbd.c,v 1.1 2003/09/07 00:24:09 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.2 2003/10/11 04:31:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -84,36 +84,36 @@ kbd_event(void *p, const SDL_Event *ev)
 	case SDLK_UP:
 		if (in->pos->y > 1) {
 			if (set) {
-				mapdir_set(&in->pos->dir, DIR_UP);
+				mapdir_set(&in->pos->dir, DIR_N);
 			} else {
-				mapdir_unset(&in->pos->dir, DIR_UP);
+				mapdir_unset(&in->pos->dir, DIR_N);
 			}
 		}
 		break;
 	case SDLK_DOWN:
 		if (in->pos->y < in->pos->map->maph - 2) {
 			if (set) {
-				mapdir_set(&in->pos->dir, DIR_DOWN);
+				mapdir_set(&in->pos->dir, DIR_S);
 			} else {
-				mapdir_unset(&in->pos->dir, DIR_DOWN);
+				mapdir_unset(&in->pos->dir, DIR_S);
 			}
 		}
 		break;
 	case SDLK_LEFT:
 		if (in->pos->x > 1) {
 			if (set) {
-				mapdir_set(&in->pos->dir, DIR_LEFT);
+				mapdir_set(&in->pos->dir, DIR_W);
 			} else {
-				mapdir_unset(&in->pos->dir, DIR_LEFT);
+				mapdir_unset(&in->pos->dir, DIR_W);
 			}
 		}
 		break;
 	case SDLK_RIGHT:
 		if (in->pos->x < in->pos->map->mapw - 2) {
 			if (set) {
-				mapdir_set(&in->pos->dir, DIR_RIGHT);
+				mapdir_set(&in->pos->dir, DIR_E);
 			} else {
-				mapdir_unset(&in->pos->dir, DIR_RIGHT);
+				mapdir_unset(&in->pos->dir, DIR_E);
 			}
 		}
 		break;
