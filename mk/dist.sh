@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft: dist.sh,v 1.9 2003/03/25 10:45:17 vedge Exp $
+#	$Csoft: dist.sh,v 1.10 2003/05/19 02:14:07 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
@@ -31,5 +31,5 @@ scp -C ${DISTFILE}.tar.{gz,gz.md5,gz.asc} vedge@resin:www/snap
 ssh vedge@resin "cp -f www/snap/${DISTFILE}.tar.{gz,gz.md5,gz.asc} www/beta.csoft.org/agar && ls -l www/beta.csoft.org/agar/${DISTFILE}.tar.{gz,gz.md5,gz.asc}"
 
 echo "notifying agar-announce@"
-sh mk/announce.sh ${DATE}
+sh agar/mk/announce.sh ${DATE}
 
