@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.60 2003/03/14 22:39:39 vedge Exp $
+# $Csoft: configure.in,v 1.61 2003/03/19 05:14:56 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -33,7 +33,6 @@ mdefine(INST_MANDIR, "$PREFIX/share/agar/man");
 mdefine(INST_PSDIR, "$PREFIX/share/agar/ps");
 
 check(cc);
-
 check(progname);
 check(math);
 check(getenv);
@@ -45,12 +44,8 @@ check(asprintf);
 check(vasprintf);
 
 mdefine(CFLAGS, "$CFLAGS -I$SRC");
-if [ "${cc_is_gcc}" = "yes" ]; then
-    mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
-fi
-if [ "${cc_is_gcc3}" = "yes" ]; then
-    mdefine(CFLAGS, "$CFLAGS -Wno-missing-headers");
-fi
+#mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
+#mdefine(CFLAGS, "$CFLAGS -Wno-missing-headers");
 
 require(sdl, 1.2.0);
 require(freetype, 7.0.1);
@@ -78,7 +73,6 @@ if [ "${with_jpeg}" != "no" ]; then
 else
 	hundef(HAVE_JPEG);
 fi
-
 
 # Compile a static binary?
 if [ "${enable_static}" = "yes" ]; then
