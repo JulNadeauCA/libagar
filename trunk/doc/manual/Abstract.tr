@@ -1,0 +1,59 @@
+.\"	$Csoft: Abstract.tr,v 1.2 2004/01/12 06:18:39 vedge Exp $
+.\"
+.\" Copyright (c) 2003 CubeSoft Communications, Inc.
+.\" <http://www.csoft.org>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.sp
+.ce
+.ps 16
+\fIABSTRACT\fP
+.ps
+.sp
+.ti 3
+\fBAgar\fP is a cross-platform toolkit for creating graphical applications
+in C and C++.
+Agar includes a comprehensive set of widgets, as well as a complete framework
+for creating sophisticated games and simulations.
+.sp
+.ti 3
+The logic of Agar applications is built around a tree of persistent 
+\fBobjects\fP.
+In a game, for instance, these objects will be created by a level designer,
+and will typically include maps, characters and monsters.
+.sp
+.ti 3
+Agar provides generic interfaces for managing these objects and handles
+all intricate memory management, persistance and dependency issues.
+The goal of this approach is to allow complex applications (such as massive
+role-playing games with hundreds of maps) to utilize memory efficiently,
+without having to be concerned with memory management.
+In the case of a single player game, only the current map (and all of the
+graphics and sounds it references) has to remain in memory - thanks to
+persistence, everything else is just written to disk and loaded on demand.
+The same principle can be applied to a variety of other problems.
+.sp
+.ti 3
+This manual presents the programmatic interfaces provided by Agar, and
+will not focus on the implementation details of the Agar engine.
+.sp 4
