@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.10 2002/02/14 05:25:47 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.11 2002/02/15 02:31:32 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -16,6 +16,7 @@ struct	world *world;
 
 static char *mapdesc = NULL, *mapstr = NULL;
 static int mapw = 64, maph = 64;
+static int tilew = 32, tileh = 32;
 static int mapediting;
 
 static SDL_Joystick *joy = NULL;
@@ -33,6 +34,9 @@ printusage(char *progname)
 	    progname);
 	fprintf(stderr,
 	    "Usage: %s        [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n",
+	    progname);
+	fprintf(stderr,
+	    "Usage: %s        [-W mapw] [-H maph] [-X tilew] [-Y tileh]\n",
 	    progname);
 }
 
@@ -54,8 +58,9 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 	depth = 32;
 	flags = SDL_SWSURFACE;
 	curmap = NULL;
-	
-	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:")) != -1) {
+
+	/* XXX ridiculous */
+	while ((c = getopt(argc, argv, "xvfl:n:w:h:d:j:e:D:W:H:X:Y:")) != -1) {
 		switch (c) {
 		case 'x':
 			xcf_debug++;
@@ -102,6 +107,12 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 		case 'H':
 			maph = atoi(optarg);
 			break;
+		case 'X':
+			tilew = atoi(optarg);
+			break;
+		case 'Y':
+			tileh = atoi(optarg);
+			break;
 		default:
 			printusage(argv[0]);
 			exit(255);
@@ -132,13 +143,16 @@ engine_init(int argc, char *argv[], struct gameinfo *gameinfo, int *scriptflags,
 		SDL_Delay(1000);
 	}
 	
-	/* Create the main viewport for 32x32 tiles. */
-	mainview = view_create(w, h, 32, 32, depth, flags);
+	/*
+	 * Create the main viewport. The video mode will be set
+	 * as soon as a map is loaded.
+	 */
+	mainview = view_create(w, h, depth, flags);
 	if (mainview == NULL) {
 		fatal("view_create\n");
 		return (-1);
 	}
-	
+
 	/* Initialize the world structure. */
 	world = world_create("world");
 	if (world == NULL) {
@@ -156,7 +170,8 @@ engine_mapedit(void)
 		struct mapedit *medit;
 
 		/* Edit a loaded map, or create a new one. */
-		medit = mapedit_create(mapstr, mapdesc, mapw, maph);
+		medit = mapedit_create(mapstr, mapdesc, mapw, maph,
+		    tilew, tileh);
 		if (medit == NULL) {
 			fatal("mapedit_create\n");
 			return (1);
