@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.47 2002/07/08 08:39:41 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.48 2002/07/09 09:24:25 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -49,6 +49,7 @@ struct mapedit {
 		struct	tool *stamp;
 		struct	tool *eraser;
 		struct	tool *magnifier;
+		struct	tool *resize;
 	} tools;
 
 	struct	 eobjs_head eobjsh;	/* Shadow object tree */
@@ -102,17 +103,13 @@ enum {
 	MAPEDIT_TOOL_MAPOPS,
 	MAPEDIT_TOOL_CLEAR_MAP,
 	MAPEDIT_TOOL_NEW_VIEW,
-	MAPEDIT_TOOL_MAGNIFIER
+	MAPEDIT_TOOL_MAGNIFIER,
+	MAPEDIT_TOOL_RESIZE
 };
 
 void	mapedit_init(struct mapedit *, char *);
 int	mapedit_load(void *, int);
 int	mapedit_save(void *, int);
-
-void	mapedit_key(struct mapedit *, SDL_Event *);
-void	mapedit_move(struct mapedit *, Uint32, Uint32);
-
-void	mapedit_sticky(struct mapedit *);
 
 extern struct mapedit *curmapedit;	/* Controlled map editor */
 
