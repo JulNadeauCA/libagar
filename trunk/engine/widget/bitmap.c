@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.6 2002/11/17 23:13:59 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.7 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -73,6 +73,13 @@ bitmap_init(struct bitmap *bitmap, SDL_Surface *surface, int w, int h)
 }
 
 void
+bitmap_set_surface(struct bitmap *bmp, SDL_Surface *su)
+{
+	bmp->surface = su;
+	event_post(bmp, "widget-scaled", NULL);
+}
+
+void
 bitmap_scaled(int argc, union evarg *argv)
 {
 	struct bitmap *bmp = argv[0].p;
@@ -80,9 +87,8 @@ bitmap_scaled(int argc, union evarg *argv)
 	if (bmp->surface == NULL) {
 		return;
 	}
-
 	if (bmp->surface_s != NULL) {
-		view_unused_surface(bmp->surface_s);
+		SDL_FreeSurface(bmp->surface_s);
 	}
 	bmp->surface_s = view_scale_surface(bmp->surface, WIDGET(bmp)->w,
 	    WIDGET(bmp)->h);
@@ -93,10 +99,9 @@ bitmap_draw(void *p)
 {
 	struct bitmap *bmp = p;
 	
-	if (bmp->surface == NULL) {
-		return;
+	if (bmp->surface != NULL) {
+		WIDGET_DRAW(bmp, bmp->surface_s, 0, 0);
 	}
-	WIDGET_DRAW(bmp, bmp->surface_s, 0, 0);
 }
 
 void
@@ -105,8 +110,9 @@ bitmap_destroy(void *p)
 	struct bitmap *bmp = p;
 
 	if (bmp->surface_s != NULL) {
-		view_unused_surface(bmp->surface_s);
+		SDL_FreeSurface(bmp->surface_s);
 	}
+
 	widget_destroy(bmp);
 }
 
