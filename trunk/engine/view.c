@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.88 2002/11/28 07:35:13 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.89 2002/12/03 04:00:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -324,19 +324,5 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	if (SDL_MUSTLOCK(ss))
 		SDL_UnlockSurface(ss);
 	return (ds);
-}
-
-/* Focus on a window. */
-void
-view_focus(struct window *win)
-{
-	/*
-	 * The window at the tail of the list holds focus (drawn last,
-	 * but receives events first).
-	 */
-	pthread_mutex_lock(&view->lock);
-	TAILQ_REMOVE(&view->windows, win, windows);
-	TAILQ_INSERT_TAIL(&view->windows, win, windows);
-	pthread_mutex_unlock(&view->lock);
 }
 

@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.7 2002/11/12 05:17:16 vedge Exp $
+.\"	$Csoft: view.3,v 1.8 2002/11/29 23:58:48 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -86,9 +86,6 @@ is used.
 .Ft void
 .Fn view_detach_queued "void"
 .Pp
-.Ft "void"
-.Fn view_focus "struct window *window"
-.Pp
 .Ft "bool"
 .Fn VIEW_FOCUSED "struct window *window"
 .nr nS 0
@@ -106,12 +103,6 @@ from the view by adding it to the detach queue.
 The detachment will be performed later by
 .Fa view_detach_queued .
 .Pp
-The
-.Fn view_focus
-function places the given
-.Fa window
-at the tail of the window list (so it is drawn last, at the top of
-other windows).
 The
 .Fn VIEW_FOCUSED
 macro evaluates to true if

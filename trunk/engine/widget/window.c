@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.115 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.116 2002/11/28 07:35:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -115,7 +115,7 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			if (strlen(OBJECT(win)->name) > 4 &&
 			    strcmp(OBJECT(win)->name+4, name) == 0) {
-				view_focus(win);
+				window_focus(win);
 				pthread_mutex_unlock(&view->lock);
 				return (NULL);
 			}
@@ -717,6 +717,8 @@ window_focus(struct window *win)
 	struct region *reg;
 	struct widget *wid;
 
+	view->focus_win = NULL;
+
 	lastwin = TAILQ_LAST(&view->windows, windowq);
 	if (win != NULL && lastwin == win) {		/* Already focused? */
 		return;
@@ -1005,7 +1007,6 @@ posted:
 	if (focus_changed || view->focus_win != NULL) {
 		/* Reorder the window list. */
 		window_focus(view->focus_win);
-		view->focus_win = NULL;
 	}
 	return (1);
 }
