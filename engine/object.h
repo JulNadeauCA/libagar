@@ -1,12 +1,9 @@
-/*	$Csoft: object.h,v 1.12 2002/02/10 05:32:00 vedge Exp $	*/
-
-#ifndef _ENGINE_OBJECT_H_
-#define _ENGINE_OBJECT_H_
+/*	$Csoft: object.h,v 1.13 2002/02/14 06:29:50 vedge Exp $	*/
 
 struct object {
-	char	*name;		/* Optional name */
+	char	*name;		/* Name string (key) */
 	char	*desc;		/* Optional description */
-	int	 id;		/* Equivalent of a PID */
+	int	 id;		/* Unique identifier at runtime */
 
 	int	 flags;
 #define OBJ_INVISIBLE	0x0001	/* Object is not visible on the map */
@@ -17,12 +14,12 @@ struct object {
 #define LOAD_FUNC	0x0100	/* Load routine */
 #define SAVE_FUNC	0x0200	/* Save routine */
 
-	struct	 anim **anims;	/* Pointers to animation structures. */
-	int	 nanims;	/* Anims */
-	int	 maxanims;	/* Allocated anims */
-	SDL_Surface **sprites;	/* Pointers to sprites */
-	int	 nsprites;	/* Sprites */
-	int	 maxsprites;	/* Allocated sprites */
+	struct	 anim **anims;	/* Animation structures */
+	int	 nanims;
+	int	 maxanims;
+	SDL_Surface **sprites;	/* Single surfaces */
+	int	 nsprites;
+	int	 maxsprites;
 
 	void	 (*destroy_hook)(void *);
 	int	 (*load)(void *, char *);
@@ -30,13 +27,6 @@ struct object {
 
 	SLIST_ENTRY(object) wobjs;	/* All objects */
 };
-
-#define WMASK_DOWN	0x01	/* Y axis - */
-#define WMASK_UP	0x02	/* Y axis + */
-#define WMASK_LEFT	0x04	/* X axis - */
-#define WMASK_RIGHT	0x08	/* X axis + */
-#define WMASK_ZIN	0x10	/* Z axis - */
-#define WMASK_ZOUT	0x20	/* Z axis + */
 
 int	 object_create(struct object *, char *, char *, int);
 int	 object_addanim(struct object *, struct anim *);
@@ -54,4 +44,3 @@ void	 object_dump(struct object *);
 
 struct object	*object_strfind(char *);
 
-#endif /* !_ENGINE_OBJECT_H_ */
