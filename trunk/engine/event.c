@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.185 2004/06/08 00:59:25 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.186 2004/08/24 03:43:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -47,8 +47,6 @@
 
 #ifdef DEBUG
 #define DEBUG_UNDERRUNS		0x001
-#define DEBUG_VIDEORESIZE	0x002
-#define DEBUG_VIDEOEXPOSE	0x004
 #define DEBUG_JOY_EV		0x008
 #define DEBUG_KEY_EV		0x010
 #define DEBUG_EVENTS		0x040
@@ -56,8 +54,7 @@
 #define DEBUG_PROPAGATION	0x100
 #define DEBUG_SCHED		0x200
 
-int	event_debug = DEBUG_UNDERRUNS|DEBUG_VIDEORESIZE|DEBUG_VIDEOEXPOSE|\
-	              DEBUG_ASYNC;
+int	event_debug = DEBUG_UNDERRUNS|DEBUG_ASYNC;
 #define	engine_debug event_debug
 int	event_count = 0;
 
@@ -306,65 +303,21 @@ event_dispatch(SDL_Event *ev)
 
 	switch (ev->type) {
 	case SDL_VIDEORESIZE:
-		{
-			int ow, oh;
-
-			debug(DEBUG_VIDEORESIZE, "SDL_VIDEORESIZE: w=%d h=%d\n",
-			    ev->resize.w, ev->resize.h);
-
-			/* XXX set a minimum! */
-			SDL_SetVideoMode(ev->resize.w, ev->resize.h, 0,
-			    view->v->flags);
-			if (view->v == NULL) {
-				fatal("resizing to %ux%u: %s", ev->resize.w,
-				    ev->resize.h, SDL_GetError());
-			}
-			ow = view->w;
-			oh = view->h;
-			view->w = ev->resize.w;
-			view->h = ev->resize.h;
-			prop_set_uint16(config, "view.w", view->w);
-			prop_set_uint16(config, "view.h", view->h);
-			TAILQ_FOREACH(win, &view->windows, windows) {
-				pthread_mutex_lock(&win->lock);
-				WIDGET(win)->x = WIDGET(win)->x*ev->resize.w/ow;
-				WIDGET(win)->y = WIDGET(win)->y*ev->resize.h/oh;
-				WIDGET(win)->w = WIDGET(win)->w*ev->resize.w/ow;
-				WIDGET(win)->h = WIDGET(win)->h*ev->resize.h/oh;
-
-				WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
-				    WIDGET(win)->h);
-				widget_update_coords(win, WIDGET(win)->x,
-				    WIDGET(win)->y);
-				pthread_mutex_unlock(&win->lock);
-			}
-		}
+		view_resize(ev->resize.w, ev->resize.h);
 		break;
 	case SDL_VIDEOEXPOSE:
-		debug(DEBUG_VIDEOEXPOSE, "SDL_VIDEOEXPOSE\n");
-		if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
-			rootmap_redraw();
-		}
-		TAILQ_FOREACH(win, &view->windows, windows) {
-			pthread_mutex_lock(&win->lock);
-			if (win->visible) {
-				widget_draw(win);
-			}
-			pthread_mutex_unlock(&win->lock);
-		}
-#ifdef HAVE_OPENGL
-		if (view->opengl)
-			SDL_GL_SwapBuffers();
-#endif
+		view_videoexpose();
 		break;
 	case SDL_MOUSEMOTION:
-		if (!TAILQ_EMPTY(&view->windows))
+		if (!TAILQ_EMPTY(&view->windows)) {
 			window_event(ev);
+		}
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
-		if (!TAILQ_EMPTY(&view->windows))
+		if (!TAILQ_EMPTY(&view->windows)) {
 			window_event(ev);
+		}
 		break;
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
@@ -407,7 +360,7 @@ event_dispatch(SDL_Event *ev)
 		}
 		break;
 	}
-
+out:
 	/* Perform deferred window garbage collection. */
 	view_detach_queued();
 

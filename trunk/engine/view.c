@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.152 2004/06/18 03:11:24 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.153 2004/08/27 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -188,6 +188,65 @@ fail:
 	Free(view, M_VIEW);
 	view = NULL;
 	return (-1);
+}
+
+int
+view_resize(int w, int h)
+{
+	struct window *win;
+	SDL_Surface *su;
+	int ow, oh;
+
+	/* XXX set a minimum! */
+	if ((su = SDL_SetVideoMode(w, h, 0, view->v->flags)) == NULL) {
+		dprintf("resizing to %ux%u: %s", w, h, SDL_GetError());
+		return (-1);
+	}
+	ow = view->w;
+	oh = view->h;
+
+	view->v = su;
+	view->w = w;
+	view->h = h;
+	prop_set_uint16(config, "view.w", w);
+	prop_set_uint16(config, "view.h", h);
+
+	TAILQ_FOREACH(win, &view->windows, windows) {
+		pthread_mutex_lock(&win->lock);
+
+		WIDGET(win)->x = WIDGET(win)->x*w/ow;
+		WIDGET(win)->y = WIDGET(win)->y*h/oh;
+		WIDGET(win)->w = WIDGET(win)->w*w/ow;
+		WIDGET(win)->h = WIDGET(win)->h*h/oh;
+
+		WIDGET_OPS(win)->scale(win, WIDGET(win)->w, WIDGET(win)->h);
+		widget_update_coords(win, WIDGET(win)->x, WIDGET(win)->y);
+
+		pthread_mutex_unlock(&win->lock);
+	}
+	return (0);
+}
+
+void
+view_videoexpose(void)
+{
+	struct window *win;
+
+	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
+		rootmap_redraw();
+
+	TAILQ_FOREACH(win, &view->windows, windows) {
+		pthread_mutex_lock(&win->lock);
+		if (win->visible) {
+			widget_draw(win);
+		}
+		pthread_mutex_unlock(&win->lock);
+	}
+
+#ifdef HAVE_OPENGL
+	if (view->opengl)
+		SDL_GL_SwapBuffers();
+#endif
 }
 
 void
