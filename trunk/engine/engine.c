@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.18 2002/02/25 08:55:27 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.19 2002/02/28 12:51:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -35,6 +35,7 @@
 #include <unistd.h>
 
 #include <engine/engine.h>
+#include <engine/input.h>
 #include <engine/mapedit/mapedit.h>
 #include <engine/text/text.h>
 
@@ -205,12 +206,14 @@ engine_editmap(void)
 void
 engine_destroy(void)
 {
+#if 0
 	object_destroy(world);
 	
 	/* Destroy the font engine. */
 	text_quit();
 
 	SDL_Quit();
+#endif
 	exit(0);
 }
 
