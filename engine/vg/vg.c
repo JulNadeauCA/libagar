@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.20 2004/05/12 04:53:13 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.21 2004/05/13 02:50:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -587,6 +587,16 @@ vg_rasterize(struct vg *vg)
 }
 
 /*
+ * Translate a length in pixel to a vg vector magnitude.
+ * The vg must be locked.
+ */
+void
+vg_vlength(struct vg *vg, int len, double *vlen)
+{
+	*vlen = (double)(len/vg->scale/TILESZ);
+}
+
+/*
  * Translate tile coordinates to relative vg coordinates, applying
  * positional and orthogonal restrictions as needed.
  * The vg must be locked.
@@ -646,7 +656,7 @@ vg_arcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
 }
 
 /*
- * Translate vg length to pixel length.
+ * Translate the magnitude of a vg vector to the raster equivalent in pixels.
  * The vg must be locked.
  */
 void
