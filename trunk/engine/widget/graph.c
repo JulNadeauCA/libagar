@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.44 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.45 2004/01/23 06:24:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -311,7 +311,7 @@ graph_free_items(struct graph *gra)
 	struct graph_item *git, *nextgit;
 	
 	for (git = TAILQ_FIRST(&gra->items);
-	     git != TAILQ_LAST(&gra->items, itemq);
+	     git != TAILQ_END(&gra->items);
 	     git = nextgit) {
 		nextgit = TAILQ_NEXT(git, items);
 		free(git->vals);
