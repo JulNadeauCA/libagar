@@ -1,7 +1,7 @@
-/*	$Csoft: box.c,v 1.5 2003/07/05 12:19:00 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.6 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

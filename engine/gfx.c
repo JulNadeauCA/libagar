@@ -1,7 +1,7 @@
-/*	$Csoft: gfx.c,v 1.14 2003/08/26 13:48:19 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.15 2003/09/04 03:13:38 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

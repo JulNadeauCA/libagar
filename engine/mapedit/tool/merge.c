@@ -1,7 +1,7 @@
-/*	$Csoft: merge.c,v 1.47 2003/10/09 22:39:32 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.48 2003/12/05 01:21:26 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: ucombo.c,v 1.2 2003/11/15 02:04:01 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.3 2003/11/15 03:53:47 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: physics.c,v 1.58 2003/09/07 00:24:07 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.59 2003/11/15 03:54:35 vedge Exp $	    */
 
 /*
- * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: objedit.c,v 1.20 2003/09/17 05:31:20 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.21 2003/10/13 23:48:59 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: audio.c,v 1.8 2003/07/14 03:42:52 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.9 2003/08/21 04:27:03 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

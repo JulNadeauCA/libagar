@@ -1,7 +1,7 @@
-/*	$Csoft: unicode.c,v 1.5 2003/09/01 07:42:34 vedge Exp $	*/
+/*	$Csoft: unicode.c,v 1.6 2003/09/05 20:57:43 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: tlist.c,v 1.80 2003/10/13 23:49:03 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.81 2003/10/15 03:43:08 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

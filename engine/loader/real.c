@@ -1,7 +1,7 @@
-/*	$Csoft: real.c,v 1.2 2003/06/21 06:50:20 vedge Exp $	*/
+/*	$Csoft: real.c,v 1.3 2003/06/21 07:14:19 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

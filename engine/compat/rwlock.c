@@ -1,7 +1,7 @@
-/*	$Csoft: rwlock.c,v 1.6 2003/03/25 13:43:12 vedge Exp $	*/
+/*	$Csoft: rwlock.c,v 1.7 2003/07/05 02:04:26 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

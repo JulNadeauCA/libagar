@@ -1,7 +1,7 @@
-/*	$Csoft: mouse.c,v 1.1 2003/09/07 00:24:09 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.2 2003/11/15 03:56:41 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

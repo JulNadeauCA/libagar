@@ -1,7 +1,7 @@
-/*	$Csoft: graph.c,v 1.42 2003/09/07 00:21:18 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.43 2003/09/07 07:58:37 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

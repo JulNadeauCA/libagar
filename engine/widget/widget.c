@@ -1,7 +1,7 @@
-/*	$Csoft: widget.c,v 1.75 2003/10/15 03:43:24 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.76 2003/11/15 03:53:47 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

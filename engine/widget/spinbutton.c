@@ -1,7 +1,7 @@
-/*	$Csoft: spinbutton.c,v 1.6 2003/11/09 10:55:43 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.7 2003/11/09 13:13:40 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

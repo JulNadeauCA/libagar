@@ -1,7 +1,7 @@
-/*	$Csoft: view_params.c,v 1.16 2003/07/28 15:29:59 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.1 2003/11/17 15:07:10 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

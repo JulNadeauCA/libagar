@@ -1,7 +1,7 @@
-/*	$Csoft: bitmap.c,v 1.16 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.17 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

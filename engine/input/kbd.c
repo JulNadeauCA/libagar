@@ -1,7 +1,7 @@
-/*	$Csoft: kbd.c,v 1.2 2003/10/11 04:31:35 vedge Exp $	*/
+/*	$Csoft: kbd.c,v 1.3 2003/11/15 03:56:41 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

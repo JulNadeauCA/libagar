@@ -1,7 +1,7 @@
-/*	$Csoft: prop.c,v 1.45 2003/10/14 03:15:24 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.46 2003/12/05 00:44:13 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

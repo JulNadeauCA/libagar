@@ -1,7 +1,7 @@
-/*	$Csoft: invert.c,v 1.18 2003/10/13 23:49:00 vedge Exp $	*/
+/*	$Csoft: invert.c,v 1.1 2003/12/04 03:26:58 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: screenshot.c,v 1.11 2003/09/17 04:54:10 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.12 2003/10/13 23:49:01 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

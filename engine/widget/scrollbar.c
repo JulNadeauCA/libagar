@@ -1,7 +1,7 @@
-/*	$Csoft: scrollbar.c,v 1.31 2003/07/08 00:34:59 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.32 2003/10/13 23:49:03 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: gethostname.c,v 1.1 2003/03/25 11:39:02 vedge Exp $	*/
+/*	$Csoft: gethostname.c,v 1.2 2003/12/05 01:25:35 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: transform.c,v 1.15 2003/09/14 02:26:21 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.16 2003/12/04 03:26:57 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
