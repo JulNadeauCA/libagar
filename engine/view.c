@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.127 2003/06/17 23:30:43 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.128 2003/07/04 12:30:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -205,12 +205,7 @@ view_destroy(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
 		dprintf("freeing: %s (attached)\n", OBJECT(win)->name);
-		window_hide(win);
-		event_post(win, "detached", "%p", view);
-#if 0
-		/* XXX lock */
 		object_destroy(win);
-#endif
 		free(win);
 	}
 	TAILQ_INIT(&view->windows);
@@ -248,27 +243,56 @@ view_attach(void *child)
 	struct window *win = child;
 	
 	pthread_mutex_lock(&view->lock);
-
 	view->focus_win = NULL;
-	event_post(child, "attached", "%p", view);
 	TAILQ_INSERT_TAIL(&view->windows, win, windows);
-
 	pthread_mutex_unlock(&view->lock);
 }
 
-/* Detach a window from a view. */
+/*
+ * Queue the detachment a window from a view.
+ * Garbage collection is done once event processing is complete.
+ */
 void
-view_detach(void *child)
+view_detach(struct window *win)
 {
-	struct window *win = child;
-	
-	/*
-	 * Allow windows to detach themselves only after event processing
-	 * is complete.
-	 */
 	pthread_mutex_lock(&view->lock);
-	TAILQ_INSERT_HEAD(&view->detach, win, detach);
+	dprintf("%s (%s)\n", OBJECT(win)->name, win->caption);
+	window_hide(win);
+	TAILQ_INSERT_TAIL(&view->detach, win, detach);
 	pthread_mutex_unlock(&view->lock);
+}
+
+static void
+view_detach_window_queued(struct window *win)
+{
+	struct window *subwin, *nsubwin;
+
+	for (subwin = TAILQ_FIRST(&win->subwins);
+	     subwin != TAILQ_END(&win->subwins);
+	     subwin = nsubwin) {
+		nsubwin = TAILQ_NEXT(subwin, swins);
+		view_detach_window_queued(subwin);
+	}
+
+	window_hide(win);
+	TAILQ_REMOVE(&view->windows, win, windows);
+	object_destroy(win);
+	free(win);
+}
+
+/* Perform deferred window garbage collection. */
+void
+view_detach_queued(void)
+{
+	struct window *win, *nwin;
+
+	for (win = TAILQ_FIRST(&view->detach);
+	     win != TAILQ_END(&view->detach);
+	     win = nwin) {
+		nwin = TAILQ_NEXT(win, detach);
+		view_detach_window_queued(win);
+	}
+	TAILQ_INIT(&view->detach);
 }
 
 /* Allocate a 32bpp surface with native masks. */

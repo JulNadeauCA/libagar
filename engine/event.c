@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.158 2003/07/02 09:19:29 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.159 2003/07/04 11:50:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -226,13 +226,12 @@ event_loop(void)
 
 			TAILQ_FOREACH(win, &view->windows, windows) {
 				pthread_mutex_lock(&win->lock);
-				if (!win->visible) {
-					continue;
+				if (win->visible) {
+					widget_draw(win);
+					view_update(
+					    WIDGET(win)->x, WIDGET(win)->y,
+					    WIDGET(win)->w, WIDGET(win)->h);
 				}
-				widget_draw(win);
-				view_update(
-				    WIDGET(win)->x, WIDGET(win)->y,
-				    WIDGET(win)->w, WIDGET(win)->h);
 				pthread_mutex_unlock(&win->lock);
 			}
 
@@ -250,7 +249,6 @@ event_loop(void)
 				event_adjust_refresh(t);
 			}
 			pthread_mutex_unlock(&view->lock);
-
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
 			event_dispatch(&ev);
@@ -276,7 +274,7 @@ event_loop(void)
 static void
 event_dispatch(SDL_Event *ev)
 {
-	struct window *win, *nwin;
+	struct window *win;
 
 	pthread_mutex_lock(&view->lock);
 
@@ -287,6 +285,7 @@ event_dispatch(SDL_Event *ev)
 
 			debug(DEBUG_VIDEORESIZE, "SDL_VIDEORESIZE: w=%d h=%d\n",
 			    ev->resize.w, ev->resize.h);
+
 			/* XXX set a minimum! */
 			SDL_SetVideoMode(ev->resize.w, ev->resize.h, 0,
 			    view->v->flags);
@@ -299,6 +298,7 @@ event_dispatch(SDL_Event *ev)
 			view->w = ev->resize.w;
 			view->h = ev->resize.h;
 			TAILQ_FOREACH(win, &view->windows, windows) {
+				pthread_mutex_lock(&win->lock);
 				WIDGET(win)->x = WIDGET(win)->x*ev->resize.w/ow;
 				WIDGET(win)->y = WIDGET(win)->y*ev->resize.h/oh;
 				WIDGET(win)->w = WIDGET(win)->w*ev->resize.w/ow;
@@ -308,6 +308,7 @@ event_dispatch(SDL_Event *ev)
 				    WIDGET(win)->h);
 				window_remap_widgets(win, WIDGET(win)->x,
 				    WIDGET(win)->y);
+				pthread_mutex_unlock(&win->lock);
 			}
 		}
 		break;
@@ -379,19 +380,8 @@ event_dispatch(SDL_Event *ev)
 	}
 
 	/* Perform deferred window garbage collection. */
-	for (win = TAILQ_FIRST(&view->detach);
-	     win != TAILQ_END(&view->detach);
-	     win = nwin) {
-		nwin = TAILQ_NEXT(win, detach);
+	view_detach_queued();
 
-		window_hide(win);
-		TAILQ_REMOVE(&view->windows, win, windows);
-		event_post(win, "detached", "%p", view);
-
-		object_destroy(win);
-		free(win);
-	}
-	TAILQ_INIT(&view->detach);
 	pthread_mutex_unlock(&view->lock);
 }
 
