@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.180 2004/05/16 05:05:25 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.181 2004/05/24 00:37:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -505,6 +505,7 @@ void
 object_cancel_timeouts(struct object *ob, int flags)
 {
 	extern pthread_mutex_t timeout_lock;
+	extern struct objectq timeout_objq;
 	struct event *ev;
 	struct timeout *to, *nto;
 
@@ -514,13 +515,17 @@ object_cancel_timeouts(struct object *ob, int flags)
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & EVENT_SCHEDULED) &&
 		    (ev->timeout.flags & flags) == 0) {
-			dprintf("%s: cancelled scheduled %s\n", ob->name,
+			dprintf("%s: cancelling scheduled `%s' ev\n", ob->name,
 			    ev->name);
 			timeout_del(ob, &ev->timeout);
 			ev->flags &= ~(EVENT_SCHEDULED);
 		}
 	}
-	/* XXX other timeouts ... */
+	CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
+		dprintf("%s: cancelling scheduled timeout\n", ob->name);
+		TAILQ_REMOVE(&timeout_objq, ob, tobjs);
+	}
+	CIRCLEQ_INIT(&ob->timeouts);
 
 	pthread_mutex_unlock(&ob->lock);
 	pthread_mutex_unlock(&timeout_lock);
