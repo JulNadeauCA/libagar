@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.78 2002/09/12 09:15:53 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.79 2002/09/13 11:08:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -119,7 +119,8 @@ window_init(struct window *win, char *name, char *caption, int flags,
 		fl |= WINDOW_SAVE_POSITION;
 	} else {						/* Generic */
 		static int curwindow = 0;
-		pthread_mutex_t curwindow_lock = PTHREAD_MUTEX_INITIALIZER;
+		static pthread_mutex_t curwindow_lock =
+		    PTHREAD_MUTEX_INITIALIZER;
 
 		pthread_mutex_lock(&curwindow_lock);
 		curwindow++;
