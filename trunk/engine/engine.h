@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.59 2003/04/12 01:32:36 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.60 2003/04/25 09:47:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -11,6 +11,16 @@
 #include <config/have_opengl.h>
 
 #include <sys/types.h>
+
+#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+# if defined(__cplusplus)
+#  define __BEGIN_DECLS	extern "C" {
+#  define __END_DECLS	}
+# else
+#  define __BEGIN_DECLS
+#  define __END_DECLS
+# endif
+#endif
 
 #ifdef THREADS
 # if !defined(__OpenBSD__)
@@ -77,7 +87,7 @@ enum {
 #define ENGINE_INIT_INPUT	0x02		/* Input devices */
 
 __BEGIN_DECLS
-extern DECLSPEC int	engine_init(int, char **,
+extern DECLSPEC int	 engine_init(int, char **,
 			    const struct engine_proginfo *, int);
 extern DECLSPEC void	 engine_stop(void);
 extern DECLSPEC void	 engine_destroy(void);
