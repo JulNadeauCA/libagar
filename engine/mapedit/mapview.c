@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.88 2003/03/12 06:20:25 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.89 2003/03/13 06:22:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -136,6 +136,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->my = m->defy;
 	mv->cx = -1;
 	mv->cy = -1;
+	mv->cxrel = 0;
+	mv->cyrel = 0;
 	mv->msel.set = 0;
 	mv->msel.x = 0;
 	mv->msel.y = 0;
@@ -597,6 +599,15 @@ mapview_mousemotion(int argc, union evarg *argv)
 
 	mapview_map_coords(mv, &x, &y);
 
+	if (mv->cx != -1 && mv->cy != -1) {
+		mv->cxrel = x - mv->mouse.x;
+		mv->cyrel = y - mv->mouse.y;
+		dprintf("rel %d,%d\n", mv->cxrel, mv->cyrel);
+	} else {
+		mv->cxrel = 0;
+		mv->cyrel = 0;
+	}
+
 	if (mv->mouse.scrolling) {
 		mapview_mouse_scroll(mv, xrel, yrel);
 	} else if (mv->msel.set) {
@@ -981,3 +992,14 @@ mapview_set_selection(struct mapview *mv, int x, int y,
 	mv->esel.h = h;
 }
 
+int
+mapview_get_selection(struct mapview *mv, int *x, int *y,
+    unsigned int *w, unsigned int *h)
+{
+	if (x != NULL)	*x = mv->esel.x;
+	if (y != NULL)	*y = mv->esel.y;
+	if (w != NULL)	*w = mv->esel.w;
+	if (h != NULL)	*h = mv->esel.h;
+
+	return (mv->esel.set);
+}

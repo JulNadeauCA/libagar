@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.33 2003/03/10 05:49:10 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.34 2003/03/11 01:57:31 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -8,6 +8,14 @@
 
 #include <engine/mapedit/nodeedit.h>
 #include <engine/mapedit/layedit.h>
+
+/* Construction of source tile maps */
+struct mapview_constr {
+	int		 x, y;		/* Current position */
+	struct window	*win;		/* Source tiles window */
+	int		 replace;	/* Replace mode? */
+	struct button	*trigger;
+};
 
 struct mapview {
 	struct widget	wid;
@@ -32,17 +40,6 @@ struct mapview {
 		int	scrolling;	/* Currently scrolling? */
 		int	x, y;		/* Current mouse position */
 	} mouse;
-
-	/* Tile mapping parameters */
-	struct {
-		enum {
-			MAPVIEW_CONSTR_HORIZ,	/* Horizontally, grow */
-			MAPVIEW_CONSTR_VERT,	/* Vertically, grow */
-			MAPVIEW_CONSTR_FILL	/* Fill available nodes */
-		} mode;
-		int	x, y;		/* Current position */
-		int	nflags;		/* Noderef flags */
-	} constr;
 
 	/* Selections */
 	struct {
@@ -73,13 +70,12 @@ struct mapview {
 	unsigned int	 mw, mh;	/* Display size (nodes) */
 	
 	int		 cx, cy;	/* Cursor position (nodes) */
+	int		 cxrel, cyrel;
 	struct node	*cur_node;
 
-	struct nodeedit	 nodeed;	/* Node editor */
-	struct layedit	 layed;		/* Layer editor */
-	struct window	*tmap_win;	/* Tile map window. XXX */
-	int		 tmap_insert;	/* Insert mode? */
-	struct button	*tmap_button;
+	struct mapview_constr	constr;	/* Source tile mapping */
+	struct nodeedit		nodeed;	/* Node editor */
+	struct layedit		layed;	/* Layer editor */
 };
 
 enum mapview_prop_labels {
@@ -117,11 +113,14 @@ void		 mapview_destroy(void *);
 
 void		 mapview_node_edit_win(struct mapview *);
 void		 mapview_draw(void *);
+void		 mapview_draw_props(struct mapview *, struct node *, int, int,
+		     int, int);
 void		 mapview_center(struct mapview *, int, int);
 void		 mapview_zoom(struct mapview *, int);
 void		 mapview_map_coords(struct mapview *, int *, int *);
-
-extern __inline__ void	mapview_draw_props(struct mapview *, struct node *,
-			    int, int, int, int);
+void		 mapview_set_selection(struct mapview *, int, int,
+		     unsigned int, unsigned int);
+int		 mapview_get_selection(struct mapview *, int *, int *,
+		     unsigned int *, unsigned int *);
 
 #endif /* _AGAR_MAPEDIT_MAPVIEW_H_ */
