@@ -78,7 +78,7 @@ mouse_button(struct mapedit *med, SDL_Event *ev)
 		mx--;
 	if (med->flags & MAPEDIT_OBJLIST)	/* XXX hack */
 		my--;
-	MAPEDIT_MOVE(med, mx, my);
+	mapedit_move(med, mx, my);
 	pthread_mutex_unlock(&map->lock);
 	map->redraw++;
 
