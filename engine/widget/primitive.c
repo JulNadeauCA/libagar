@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.7 2002/07/20 16:15:29 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.8 2002/07/20 19:03:05 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -29,14 +29,15 @@
 
 #include <engine/engine.h>
 
-#include "window.h"
 #include "widget.h"
+#include "window.h"
 #include "primitive.h"
 
 static void	box_3d(void *, int, int, int, int, int);
 static void	frame_2d(void *, int, int, int, int, int);
 static void	bresenham_circle(void *, int, int, int, int, int, int);
 static void	bresenham_line(void *, int, int, int, int, Uint32);
+static void	composite_square(void *, int, int, int, int, Uint32);
 
 static __inline__ void	put_pixel1(Uint8, Uint8 *, Uint32);
 static __inline__ void	put_pixel2(Uint8, Uint8 *, Uint8 *, Uint32);
@@ -45,7 +46,8 @@ struct primitive_ops primitives = {
 	box_3d,			/* box */
 	frame_2d,		/* frame */
 	bresenham_circle,	/* circle */
-	bresenham_line		/* line */
+	bresenham_line,		/* line */
+	composite_square	/* square */
 };
 
 static void
@@ -54,8 +56,6 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z)
 	struct widget *wid = p;
 	Uint32 lcol, rcol, bcol;
 	int x, y;
-
-	OBJECT_ASSERT(wid, "widget");
 
 	if (z < 0) {
 		z = abs(z);
@@ -100,8 +100,6 @@ frame_2d(void *p, int xoffs, int yoffs, int w, int h, int col)
 	Uint32 fcol;
 	int i;
 
-	OBJECT_ASSERT(wid, "widget");
-
 	if (col) {	/* XXX */
 		fcol = SDL_MapRGB(view->v->format, 200, 200, 200);
 	} else {
@@ -128,8 +126,6 @@ bresenham_circle(void *wid, int xoffs, int yoffs, int w, int h,
 {
 	int x = 0, y, cx, cy, e = 0, u = 1, v;
 	Uint32 fcol;
-
-	OBJECT_ASSERT(wid, "widget");
 
 	y = radius;
 	cx = w / 2 + xoffs;
@@ -231,7 +227,7 @@ bresenham_line(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	int dx, dy, xinc, yinc, xyinc, dpr, dpru, p;
 	Uint8 *fb1, *fb2;
-
+	
 	x1 += WIDGET(wid)->win->x + WIDGET(wid)->x;
 	y1 += WIDGET(wid)->win->y + WIDGET(wid)->y;
 	x2 += WIDGET(wid)->win->x + WIDGET(wid)->x;
@@ -245,8 +241,6 @@ bresenham_line(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 	    y2*view->v->pitch +
 	    x2*view->v->format->BytesPerPixel;
 	
-	OBJECT_ASSERT(wid, "widget");
-
 	xinc = view->v->format->BytesPerPixel;
 	dx = x2 - x1;
 	if (dx < 0) {
@@ -319,7 +313,8 @@ y_is_independent:
 yloop:
 	put_pixel2(xinc, fb1, fb2, color);
 
-	if ((p += dpr) > 0) {
+	p += dpr;
+	if (p > 0) {
 		goto right_and_up_2;
 	}
 /* up: */
@@ -345,5 +340,22 @@ right_and_up_2:
 	put_pixel1(xinc, fb2, color);
 done:
 	SDL_UnlockSurface(view->v);
+}
+
+static void
+composite_square(void *wid, int x, int y, int w, int h, Uint32 color)
+{
+	primitives.line(wid,		/* Top */
+	    x, y,
+	    x + w, y, color);
+	primitives.line(wid,		/* Bottom */
+	    x, y + h - 1,
+	    x + w, y + h - 1, color);
+	primitives.line(wid,		/* Left */
+	    x, y,
+	    x, y + h - 1, color);
+	primitives.line(wid,		/* Right */
+	    x+w - 1, y,
+	    x+w - 1, y + h - 1, color);
 }
 
