@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.219 2004/03/18 02:35:22 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.220 2004/03/18 03:04:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -122,11 +122,11 @@ window_new(const char *fmt, ...)
 			goto out;
 		}
 
-		win = Malloc(sizeof(struct window));
+		win = Malloc(sizeof(struct window), M_OBJECT);
 		window_init(win, name);
 		event_new(win, "window-close", window_generic_hide, "%p", win);
 	} else {						/* Generic */
-		win = Malloc(sizeof(struct window));
+		win = Malloc(sizeof(struct window), M_OBJECT);
 		window_init(win, NULL);
 		event_new(win, "window-close", window_generic_detach, "%p",
 		    win);
@@ -164,7 +164,7 @@ window_init(void *p, const char *name)
 	win->visible = 0;
 
 	win->borderw = default_nborder;
-	win->border = Malloc(win->borderw * sizeof(Uint32));
+	win->border = Malloc(win->borderw * sizeof(Uint32), M_WIDGET);
 	for (i = 0; i < win->borderw; i++) {
 		win->border[i] = SDL_MapRGB(vfmt,
 		    default_border[i].r,
@@ -320,7 +320,7 @@ window_destroy(void *p)
 {
 	struct window *win = p;
 
-	free(win->border);
+	Free(win->border, M_WIDGET);
 	pthread_mutex_destroy(&win->lock);
 	/* view_detach_queued() frees the subwindow list. */
 
@@ -470,7 +470,7 @@ cycle_focus(struct window *win, int reverse)
 	}
 
 	count_widgets(WIDGET(win), &nwidgets);
-	widgets = Malloc(nwidgets * sizeof(struct widget *));
+	widgets = Malloc(nwidgets * sizeof(struct widget *), M_WIDGET);
 	map_widgets(WIDGET(win), widgets, &i);
 
 	for (i = 0; i < nwidgets; i++) {
@@ -491,7 +491,7 @@ cycle_focus(struct window *win, int reverse)
 			break;
 		}
 	}
-	free(widgets);
+	Free(widgets, M_WIDGET);
 }
 
 /*

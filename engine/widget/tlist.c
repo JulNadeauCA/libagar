@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.84 2004/02/20 04:18:54 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.85 2004/03/18 03:03:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -74,7 +74,7 @@ tlist_new(void *parent, int flags)
 {
 	struct tlist *tl;
 
-	tl = Malloc(sizeof(struct tlist));
+	tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl, flags);
 	object_attach(parent, tl);
 	return (tl);
@@ -323,7 +323,7 @@ tlist_free_item(struct tlist_item *it)
 	if (it->icon != NULL)
 		SDL_FreeSurface(it->icon);
 
-	free(it);
+	Free(it, M_WIDGET);
 }
 
 void
@@ -438,7 +438,7 @@ tlist_alloc_item(struct tlist *tl, SDL_Surface *icon, const char *text,
 {
 	struct tlist_item *it;
 
-	it = Malloc(sizeof(struct tlist_item));
+	it = Malloc(sizeof(struct tlist_item), M_WIDGET);
 	it->selected = 0;
 	it->label = text_render(NULL, -1, WIDGET_COLOR(tl, TEXT_COLOR), text);
 	it->icon = NULL;

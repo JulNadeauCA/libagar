@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.16 2003/12/04 03:26:57 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.17 2004/01/03 04:25:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -27,15 +27,14 @@
  */
 
 #include <engine/engine.h>
-
 #include <engine/map.h>
 #include <engine/view.h>
 
 #include <string.h>
 
-static void	transform_hflip(SDL_Surface **, int, Uint32 *);
-static void	transform_vflip(SDL_Surface **, int, Uint32 *);
-static void	transform_invert(SDL_Surface **, int, Uint32 *);
+static void transform_hflip(SDL_Surface **, int, Uint32 *);
+static void transform_vflip(SDL_Surface **, int, Uint32 *);
+static void transform_invert(SDL_Surface **, int, Uint32 *);
 
 const struct transform_ent transforms[] = {
 	{ "h-flip",	TRANSFORM_HFLIP,	transform_hflip },
@@ -49,7 +48,7 @@ transform_new(enum transform_type type, int nargs, Uint32 *args)
 {
 	struct transform *trans;
 
-	trans = Malloc(sizeof(struct transform));
+	trans = Malloc(sizeof(struct transform), M_NODEXFORM);
 	if (transform_init(trans, type, nargs, args) == -1) {
 		free(trans);
 		return (NULL);
@@ -73,7 +72,7 @@ transform_init(struct transform *trans, enum transform_type type,
 	trans->func = NULL;
 	trans->nargs = nargs;
 	if (nargs > 0) {
-		trans->args = Malloc(nargs * sizeof(Uint32));
+		trans->args = Malloc(nargs * sizeof(Uint32), M_NODEXFORM);
 		memcpy(trans->args, args, nargs * sizeof(Uint32));
 	} else {
 		trans->args = NULL;
@@ -91,8 +90,8 @@ transform_init(struct transform *trans, enum transform_type type,
 void
 transform_destroy(struct transform *trans)
 {
-	Free(trans->args);
-	free(trans);
+	Free(trans->args, M_NODEXFORM);
+	Free(trans, M_NODEXFORM);
 }
 
 int
@@ -117,8 +116,8 @@ transform_load(struct netbuf *buf, struct transform *trans)
 		return (-1);
 	}
 
-	Free(trans->args);
-	trans->args = Malloc(trans->nargs * sizeof(Uint32));
+	Free(trans->args, M_NODEXFORM);
+	trans->args = Malloc(trans->nargs * sizeof(Uint32), M_NODEXFORM);
 	for (i = 0; i < trans->nargs; i++)
 		trans->args[i] = read_uint32(buf);
 
@@ -157,8 +156,7 @@ transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 	Uint8 *fb = su->pixels;
 	int x, y;
 
-	row = Malloc(su->pitch);
-
+	row = Malloc(su->pitch, M_NODEXFORM);
 	for (y = 0; y < su->h; y++) {
 		memcpy(row, fb, su->pitch);
 		rowp = row + su->pitch - su->format->BytesPerPixel;
@@ -179,7 +177,7 @@ transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 			rowp -= su->format->BytesPerPixel;
 		}
 	}
-	free(row);
+	Free(row, M_NODEXFORM);
 }
 
 /* Flip a surface vertically. */
@@ -192,7 +190,7 @@ transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 	Uint8 *fb = su->pixels;
 	int y;
 
-	rowbuf = Malloc(totsize);
+	rowbuf = Malloc(totsize, M_NODEXFORM);
 	memcpy(rowbuf, fb, totsize);
 	row = rowbuf + totsize - su->pitch;
 	for (y = 0; y < su->h; y++) {
@@ -200,7 +198,7 @@ transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 		row -= su->pitch;
 		fb += su->pitch;
 	}
-	free(rowbuf);
+	Free(rowbuf, M_NODEXFORM);
 }
 
 #ifdef DEBUG

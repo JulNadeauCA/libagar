@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.28 2004/03/17 12:42:06 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.29 2004/03/18 03:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ create_obj(int argc, union evarg *argv)
 		return;
 	}
 
-	nobj = Malloc(typesw[i].size);
+	nobj = Malloc(typesw[i].size, M_OBJECT);
 	if (typesw[i].ops->init != NULL) {
 		typesw[i].ops->init(nobj, name);
 	} else {
@@ -116,7 +116,7 @@ close_generic_obj(int argc, union evarg *argv)
 	view_detach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
 	object_del_dep(&mapedit.pseudo, oent->obj);
-	free(oent);
+	Free(oent, M_MAPEDIT);
 }
 
 /* Edit the generic part of an object. */
@@ -136,7 +136,7 @@ open_generic_obj(struct object *ob)
 	
 	object_add_dep(&mapedit.pseudo, ob);
 	
-	oent = Malloc(sizeof(struct objent));
+	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
 	oent->win = object_edit(ob);
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
@@ -156,7 +156,7 @@ close_obj_data(int argc, union evarg *argv)
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
 	object_del_dep(&mapedit.pseudo, oent->obj);
-	free(oent);
+	Free(oent, M_MAPEDIT);
 }
 
 /* Edit the data part of an object. */
@@ -180,7 +180,7 @@ open_obj_data(struct object *ob)
 	}
 	object_add_dep(&mapedit.pseudo, ob);
 	
-	oent = Malloc(sizeof(struct objent));
+	oent = Malloc(sizeof(struct objent), M_MAPEDIT);
 	oent->obj = ob;
 	oent->win = ob->ops->edit(ob);
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
@@ -256,8 +256,9 @@ invoke_op(int argc, union evarg *argv)
 			}
 			object_detach(ob);
 			object_destroy(ob);
-			if ((ob->flags & OBJECT_STATIC) == 0)
-				free(ob);
+			if ((ob->flags & OBJECT_STATIC) == 0) {
+				Free(ob, M_OBJECT);
+			}
 			break;
 		}
 	}
@@ -406,13 +407,13 @@ objedit_destroy(void)
 	     oent != TAILQ_END(&dobjs);
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
-		free(oent);
+		Free(oent, M_MAPEDIT);
 	}
 	for (oent = TAILQ_FIRST(&gobjs);
 	     oent != TAILQ_END(&gobjs);
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
-		free(oent);
+		Free(oent, M_MAPEDIT);
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.16 2004/02/29 17:34:40 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.17 2004/03/18 03:03:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ combo_new(void *parent, int flags, const char *fmt, ...)
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	com = Malloc(sizeof(struct combo));
+	com = Malloc(sizeof(struct combo), M_OBJECT);
 	combo_init(com, label, flags);
 	object_attach(parent, com);
 	return (com);
@@ -103,7 +103,7 @@ combo_expand(int argc, union evarg *argv)
 		win = WIDGET(com->win);
 		object_detach(com->win->tbar);
 		object_destroy(com->win->tbar);
-		free(com->win->tbar);
+		Free(com->win->tbar, M_OBJECT);
 
 		object_attach(com->win, com->list);
 	
@@ -180,7 +180,7 @@ combo_init(struct combo *com, const char *label, int flags)
 	button_set_sticky(com->button, 1);
 	button_set_padding(com->button, 1);
 
-	com->list = Malloc(sizeof(struct tlist));
+	com->list = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(com->list, 0);
 	
 	if (flags & COMBO_TREE)	
@@ -205,7 +205,7 @@ combo_destroy(void *p)
 		window_hide(com->win);
 		object_detach(com->list);
 		object_destroy(com->list);
-		free(com->list);
+		Free(com->list, M_OBJECT);
 		view_detach(com->win);
 	}
 	widget_destroy(com);

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.76 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.77 2004/03/12 02:50:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -99,7 +99,7 @@ text_load_font(const char *name, int size, int style)
 	}
 	ttf_set_font_style(nfont, style);
 
-	fon = Malloc(sizeof(struct text_font));
+	fon = Malloc(sizeof(struct text_font), M_TEXT);
 	strlcpy(fon->name, name, sizeof(fon->name));
 	fon->size = size;
 	fon->style = style;
@@ -134,12 +134,6 @@ text_init(int flags)
 	return (0);
 }
 
-static void
-text_destroy_font(struct text_font *fon)
-{
-	ttf_close_font(fon->font);
-}
-
 void
 text_destroy(void)
 {
@@ -149,8 +143,8 @@ text_destroy(void)
 	     fon != SLIST_END(&text_fonts);
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
-		text_destroy_font(fon);
-		free(fon);
+		ttf_close_font(fon->font);
+		Free(fon, M_TEXT);
 	}
 	ttf_destroy();
 }
@@ -230,9 +224,8 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 	int nlines, maxw, fon_h;
 	Uint8 r, g, b;
 
-	if (text == NULL || text[0] == '\0') {
+	if (text == NULL || text[0] == '\0')
 		return (view_surface(SDL_SWSURFACE, 0, 0));
-	}
 
 	fon = text_load_font(fontname, fontsize,
 	    prop_get_int(config, "font-engine.default-style"));
@@ -266,7 +259,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 		 * predict the width of the final surface.
 		 */
 		lineskip = ttf_font_line_skip(fon);
-		lines = Malloc(sizeof(SDL_Surface *) * nlines);
+		lines = Malloc(sizeof(SDL_Surface *) * nlines, M_TEXT);
 		for (i = 0, maxw = 0;
 		    (ucsp = ucs4_sep(&ucs, sep)) != NULL && ucsp[0] != '\0';
 		    i++) {
@@ -293,7 +286,7 @@ text_render_unicode(const char *fontname, int fontsize, Uint32 color,
 			SDL_BlitSurface(lines[i], NULL, su, &rd);
 			SDL_FreeSurface(lines[i]);
 		}
-		free(lines);
+		Free(lines, M_TEXT);
 	}
 
 	free(ucsd);

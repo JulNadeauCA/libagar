@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.48 2004/01/03 04:25:13 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.49 2004/01/22 09:58:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -74,7 +74,7 @@ checkbox_new(void *parent, const char *fmt, ...)
 	vsnprintf(caption, sizeof(caption), fmt, ap);
 	va_end(ap);
 
-	cb = Malloc(sizeof(struct checkbox));
+	cb = Malloc(sizeof(struct checkbox), M_OBJECT);
 	checkbox_init(cb, caption);
 	object_attach(parent, cb);
 	return (cb);

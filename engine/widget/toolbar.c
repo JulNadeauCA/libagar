@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.1 2004/03/17 04:00:59 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.2 2004/03/18 03:12:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ toolbar_new(void *parent, enum toolbar_type type)
 {
 	struct toolbar *tbar;
 
-	tbar = Malloc(sizeof(struct toolbar));
+	tbar = Malloc(sizeof(struct toolbar), M_OBJECT);
 	toolbar_init(tbar, type);
 	object_attach(parent, tbar);
 	return (tbar);

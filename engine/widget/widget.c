@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.80 2004/03/18 03:03:58 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.81 2004/03/18 04:02:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -151,7 +151,7 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		}
 	}
 
-	binding = Malloc(sizeof(struct widget_binding));
+	binding = Malloc(sizeof(struct widget_binding), M_WIDGET);
 	strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
 	binding->p1 = p1;
@@ -698,7 +698,7 @@ widget_destroy(void *p)
 	     bind != SLIST_END(&wid->bindings);
 	     bind = nbind) {
 		nbind = SLIST_NEXT(bind, bindings);
-		free(bind);
+		Free(bind, M_WIDGET);
 	}
 	pthread_mutex_destroy(&wid->bindings_lock);
 }

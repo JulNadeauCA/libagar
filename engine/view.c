@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.137 2004/03/18 03:06:51 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.138 2004/03/18 03:15:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -75,13 +75,13 @@ view_init(enum gfx_engine ge)
 		return (-1);
 	}
 
-	view = Malloc(sizeof(struct viewport));
+	view = Malloc(sizeof(struct viewport), M_VIEW);
 	view->gfx_engine = ge;
 	view->rootmap = NULL;
 	view->winop = VIEW_WINOP_NONE;
 	view->ndirty = 0;
 	view->maxdirty = 4;
-	view->dirty = Malloc(view->maxdirty * sizeof(SDL_Rect));
+	view->dirty = Malloc(view->maxdirty * sizeof(SDL_Rect), M_VIEW);
 	view->opengl = 0;
 	TAILQ_INIT(&view->windows);
 	TAILQ_INIT(&view->detach);
@@ -105,7 +105,7 @@ view_init(enum gfx_engine ge)
 		dprintf("direct video / tile-based\n");
 		view->w -= view->w % TILESZ;
 		view->h -= view->h % TILESZ;
-		view->rootmap = Malloc(sizeof(struct viewmap));
+		view->rootmap = Malloc(sizeof(struct viewmap), M_VIEW);
 		rootmap_init(view->rootmap, view->w/TILESZ, view->h/TILESZ);
 		break;
 	case GFX_ENGINE_GUI:
@@ -194,7 +194,7 @@ view_init(enum gfx_engine ge)
 	return (0);
 fail:
 	pthread_mutex_destroy(&view->lock);
-	free(view);
+	Free(view, M_VIEW);
 	view = NULL;
 	return (-1);
 }
@@ -211,18 +211,18 @@ view_destroy(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
 		object_destroy(win);
-		free(win);
+		Free(win, M_OBJECT);
 	}
 
 	/* Free the rectangle caches. */
 	if (view->rootmap != NULL) {
 		rootmap_free_maprects(view);
-		free(view->rootmap);
+		Free(view->rootmap, M_VIEW);
 	}
-	free(view->dirty);
+	Free(view->dirty, M_VIEW);
 
 	pthread_mutex_destroy(&view->lock);
-	free(view);
+	Free(view, M_VIEW);
 	view = NULL;
 }
 
@@ -282,7 +282,7 @@ destroy_window(struct window *win)
 	window_hide(win);
 	TAILQ_REMOVE(&view->windows, win, windows);
 	object_destroy(win);
-	free(win);
+	Free(win, M_OBJECT);
 }
 
 /* Perform deferred window garbage collection. */
@@ -662,7 +662,7 @@ view_capture(SDL_Surface *su)
 	jpeg_set_quality(&jcomp, 75, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(su->w * 3);
+	jcopybuf = Malloc(su->w * 3, M_VIEW);
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {
@@ -699,6 +699,7 @@ view_capture(SDL_Surface *su)
 	jpeg_destroy_compress(&jcomp);
 	fclose(fp);
 	close(fd);
+	Free(jcopybuf, M_VIEW);
 	return;
 toobig:
 	text_msg(MSG_ERROR, "Screenshot path is too big");
@@ -720,8 +721,7 @@ view_update(int x, int y, int w, int h)
 		if (view->ndirty+1 > view->maxdirty) {
 			view->maxdirty *= 2;
 			view->dirty = Realloc(view->dirty, view->maxdirty *
-			    sizeof(SDL_Rect));
-			dprintf("%d maxdirty\n", view->maxdirty);
+			    sizeof(SDL_Rect), M_VIEW);
 		}
 		view->dirty[view->ndirty].x = x;
 		view->dirty[view->ndirty].y = y;

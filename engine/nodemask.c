@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.1 2004/03/17 17:30:25 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.2 2004/03/18 01:42:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@ nodemask_new(enum nodemask_type type)
 {
 	struct nodemask *mask;
 
-	mask = Malloc(sizeof(struct nodemask));
+	mask = Malloc(sizeof(struct nodemask), M_NODEMASK);
 	nodemask_init(mask, type);
 	return (mask);
 }
@@ -76,10 +76,10 @@ nodemask_destroy(struct map *m, struct nodemask *mask)
 	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
 	case NODEMASK_POLYGON:
-		Free(mask->nm_poly.vertices);
+		Free(mask->nm_poly.vertices, M_NODEMASK);
 		break;
 	}
-	free(mask);
+	Free(mask, M_NODEMASK);
 }
 
 int
@@ -105,10 +105,10 @@ nodemask_load(struct map *m, struct netbuf *buf, struct nodemask *mask)
 	case NODEMASK_POLYGON:
 	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
-		Free(mask->nm_poly.vertices);
+		Free(mask->nm_poly.vertices, M_NODEMASK);
 		mask->nm_poly.nvertices = read_uint32(buf);
 		mask->nm_poly.vertices = Malloc(mask->nm_poly.nvertices *
-		    sizeof(int));
+		    sizeof(int), M_NODEMASK);
 		for (i = 0; i < mask->nm_poly.nvertices; i++) {
 			mask->nm_poly.vertices[i] = read_uint32(buf);
 		}
@@ -156,11 +156,12 @@ nodemask_copy(const struct nodemask *smask, struct map *m,
 	case NODEMASK_POLYGON:
 	case NODEMASK_TRIANGLE:
 	case NODEMASK_RECTANGLE:
-		Free(dmask->nm_poly.vertices);
+		Free(dmask->nm_poly.vertices, M_NODEMASK);
 		if (smask->nm_poly.vertices != NULL) {
 			dmask->nm_poly.nvertices = smask->nm_poly.nvertices;
 			dmask->nm_poly.vertices = Malloc(
-			    smask->nm_poly.nvertices * sizeof(Uint32));
+			    smask->nm_poly.nvertices * sizeof(Uint32),
+			    M_NODEMASK);
 			memcpy(dmask->nm_poly.vertices, smask->nm_poly.vertices,
 			    smask->nm_poly.nvertices * sizeof(Uint32));
 		} else {
@@ -187,11 +188,11 @@ nodemask_vertex(struct nodemask *mask, Uint32 x, Uint32 y)
 	dprintf("%u,%u\n", x, y);
 
 	if (mask->nm_poly.vertices == NULL) {
-		mask->nm_poly.vertices = Malloc(2*sizeof(Uint32));
+		mask->nm_poly.vertices = Malloc(2*sizeof(Uint32), M_NODEMASK);
 		mask->nm_poly.nvertices = 0;
 	} else {
 		mask->nm_poly.vertices = Realloc(mask->nm_poly.vertices,
-		    (mask->nm_poly.nvertices+2)*sizeof(Uint32));
+		    (mask->nm_poly.nvertices+2)*sizeof(Uint32), M_NODEMASK);
 	}
 
 	mask->nm_poly.vertices[mask->nm_poly.nvertices++] = x;

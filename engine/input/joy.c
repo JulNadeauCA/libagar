@@ -1,4 +1,4 @@
-/*	$Csoft: joy.c,v 1.4 2004/02/20 04:20:35 vedge Exp $	*/
+/*	$Csoft: joy.c,v 1.5 2004/02/26 10:18:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -47,7 +47,7 @@ joy_new(int index)
 	char name[INPUT_NAME_MAX];
 	struct joy *joy;
 
-	joy = Malloc(sizeof(struct joy));
+	joy = Malloc(sizeof(struct joy), M_INPUT);
 	joy->index = index;
 	snprintf(name, sizeof(name), "joy%d", index);
 

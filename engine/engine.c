@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.126 2004/03/10 16:58:31 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.127 2004/03/12 02:51:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -191,7 +191,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	typesw_init();
 
 	/* Initialize and load the user engine settings. */
-	config = Malloc(sizeof(struct config));
+	config = Malloc(sizeof(struct config), M_OBJECT);
 	config_init(config);
 	object_load(config);
 
@@ -232,8 +232,9 @@ engine_destroy(void)
 	object_destroy(world);
 	text_destroy();
 	input_destroy();
+
 	object_destroy(config);
-	free(config);
+	Free(config, M_OBJECT);
 
 	pthread_mutex_destroy(&gfxq_lock);
 #if 0

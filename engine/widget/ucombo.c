@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.5 2004/01/22 09:58:46 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.6 2004/02/29 17:34:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -51,7 +51,7 @@ ucombo_new(void *parent)
 {
 	struct ucombo *com;
 
-	com = Malloc(sizeof(struct ucombo));
+	com = Malloc(sizeof(struct ucombo), M_OBJECT);
 	ucombo_init(com);
 	object_attach(parent, com);
 	return (com);
@@ -94,7 +94,7 @@ ucombo_expand(int argc, union evarg *argv)
 		win = WIDGET(com->win);
 		object_detach(com->win->tbar);
 		object_destroy(com->win->tbar);
-		free(com->win->tbar);
+		Free(com->win->tbar, M_OBJECT);
 
 		object_attach(com->win, com->list);
 	
@@ -146,7 +146,7 @@ ucombo_init(struct ucombo *com)
 	button_set_padding(com->button, 1);
 	event_new(com->button, "button-pushed", ucombo_expand, "%p", com);
 	
-	com->list = Malloc(sizeof(struct tlist));
+	com->list = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(com->list, 0);
 	event_new(com->list, "tlist-changed", ucombo_selected, "%p", com);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.11 2004/01/23 06:24:44 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.12 2004/03/17 04:01:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -69,7 +69,7 @@ titlebar_new(void *parent, int flags)
 		fatal("titlebars only attach to windows");
 #endif
 
-	tbar = Malloc(sizeof(struct titlebar));
+	tbar = Malloc(sizeof(struct titlebar), M_OBJECT);
 	titlebar_init(tbar, flags);
 	object_attach(parent, tbar);
 	tbar->win = (struct window *)parent;

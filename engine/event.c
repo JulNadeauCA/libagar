@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.172 2004/03/18 02:35:08 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.173 2004/03/18 03:47:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -401,7 +401,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 			break;
 	}
 	if (ev == NULL) {
-		ev = Malloc(sizeof(struct event));
+		ev = Malloc(sizeof(struct event), M_EVENT);
 		strlcpy(ev->name, name, sizeof(ev->name));
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	}
@@ -438,7 +438,7 @@ event_remove(void *p, const char *name)
 	}
 	if (ev != NULL) {
 		TAILQ_REMOVE(&ob->events, ev, events);
-		free(ev);
+		Free(ev, M_EVENT);
 	}
 	pthread_mutex_unlock(&ob->lock);
 }
@@ -475,7 +475,7 @@ event_async(void *p)
 		eev->handler(eev->argc, eev->argv);
 
 	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
-	free(eev);
+	Free(eev, M_EVENT);
 	return (NULL);
 }
 #endif /* THREADS */
@@ -507,7 +507,7 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		if (strcmp(evname, eev->name) != 0)
 			continue;
 
-		neev = Malloc(sizeof(struct event));
+		neev = Malloc(sizeof(struct event), M_EVENT);
 		memcpy(neev, eev, sizeof(struct event));
 		if (fmt != NULL) {
 			va_list ap;
@@ -538,7 +538,7 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 		if (neev->handler != NULL) {
 			neev->handler(neev->argc, neev->argv);
 		}
-		free(neev);
+		Free(neev, M_EVENT);
 		break;
 	}
 	pthread_mutex_unlock(&rcvr->lock);

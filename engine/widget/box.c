@@ -1,4 +1,4 @@
-/*	$Csoft: box.c,v 1.6 2003/07/08 00:34:58 vedge Exp $	*/
+/*	$Csoft: box.c,v 1.7 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ box_new(void *parent, enum box_type type, int flags)
 {
 	struct box *bo;
 
-	bo = Malloc(sizeof(struct box));
+	bo = Malloc(sizeof(struct box), M_OBJECT);
 	box_init(bo, type, flags);
 	object_attach(parent, bo);
 	return (bo);

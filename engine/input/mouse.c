@@ -1,4 +1,4 @@
-/*	$Csoft: mouse.c,v 1.4 2004/02/20 04:20:35 vedge Exp $	*/
+/*	$Csoft: mouse.c,v 1.5 2004/02/26 10:18:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@ mouse_new(int index)
 	char name[INPUT_NAME_MAX];
 	struct mouse *ms;
 
-	ms = Malloc(sizeof(struct mouse));
+	ms = Malloc(sizeof(struct mouse), M_INPUT);
 	ms->index = index;
 	snprintf(name, sizeof(name), "mouse%d", index);
 	input_register(ms, INPUT_MOUSE, name, &mouse_driver);

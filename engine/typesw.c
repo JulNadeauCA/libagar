@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.8 2004/01/03 04:25:04 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.9 2004/02/29 17:34:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@ typesw_init(void)
 {
 	extern const struct object_ops object_ops, map_ops, perso_ops;
 
-	typesw = Malloc(sizeof(struct object_type));
+	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
 
 	typesw_register("object", sizeof(struct object), &object_ops);
 	typesw_register("map", sizeof(struct map), &map_ops);
@@ -52,7 +52,7 @@ typesw_init(void)
 void
 typesw_destroy(void)
 {
-	free(typesw);
+	Free(typesw, M_TYPESW);
 }
 
 /* Register an object type. */
@@ -61,7 +61,8 @@ typesw_register(const char *type, size_t size, const struct object_ops *ops)
 {
 	struct object_type *ntype;
 
-	typesw = Realloc(typesw, (ntypesw+1) * sizeof(struct object_type));
+	typesw = Realloc(typesw, (ntypesw+1) * sizeof(struct object_type),
+	    M_TYPESW);
 	ntype = &typesw[ntypesw++];
 	strlcpy(ntype->type, type, sizeof(ntype->type));
 	ntype->size = size;

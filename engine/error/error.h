@@ -1,8 +1,10 @@
-/*	$Csoft: error.h,v 1.6 2004/01/23 06:24:42 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.7 2004/02/26 10:10:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_ERROR_ERROR_H_
 #define _AGAR_ENGINE_ERROR_ERROR_H_
+
+#include <compat/queue.h>
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -51,9 +53,14 @@
 #define fatal error_fatal
 #endif
 
-#define Malloc(len)	error_malloc(len)
-#define Realloc(p, len)	error_realloc((p), (len))
-#define Free(p)		if ((p) != NULL) free((p))
+#define Malloc(len, t)		error_malloc((len), (t))
+#define Realloc(p, len, t)	error_realloc((p), (len), (t))
+#ifdef DEBUG
+#define Free(p, t)		error_free((p), (t))
+#else
+#define Free(p, t)		if ((p) != NULL) free((p))
+#endif
+
 #define Strdup(s)	error_strdup(s)
 #define Vasprintf(msg, fmt, args) do {				\
 	va_start((args), (fmt));				\
@@ -61,6 +68,8 @@
 		fatal("vasprintf");				\
 	va_end((args));						\
 } while (0)
+
+#include <engine/error/malloc.h>
 
 #include "begin_code.h"
 
@@ -71,8 +80,6 @@ extern int engine_debug;
 __BEGIN_DECLS
 void		 error_init(void);
 void		 error_destroy(void);
-__inline__ void	*error_malloc(size_t);
-__inline__ void	*error_realloc(void *, size_t);
 __inline__ char	*error_strdup(const char *);
 const char	*error_get(void);
 void		 error_set(const char *, ...)

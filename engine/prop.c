@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.48 2004/01/22 09:58:42 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.49 2004/01/23 04:04:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -54,14 +54,14 @@ prop_copy(const struct prop *prop)
 {
 	struct prop *nprop;
 
-	nprop = Malloc(sizeof(struct prop));
+	nprop = Malloc(sizeof(struct prop), M_PROP);
 	memcpy(nprop, prop, sizeof(struct prop));
 
 	switch (prop->type) {
 	case PROP_STRING:
 		nprop->data.s = strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
-			free(nprop);
+			Free(nprop, M_PROP);
 			error_set(_("Out of memory for string."));
 			return (NULL);
 		}
@@ -89,7 +89,7 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 		}
 	}
 	if (nprop == NULL) {
-		nprop = Malloc(sizeof(struct prop));
+		nprop = Malloc(sizeof(struct prop), M_PROP);
 		strlcpy(nprop->key, key, sizeof(nprop->key));
 		nprop->type = type;
 	} else {
@@ -570,11 +570,11 @@ prop_load(void *p, struct netbuf *buf)
 				s = read_string(buf);
 				if (strlen(s) >= PROP_STRING_MAX) {
 					error_set(_("String too big."));
-					free(s);
+					Free(s, 0);
 					goto fail;
 				}
 				prop_set_string(ob, key, "%s", s);
-				free(s);
+				Free(s, 0);
 			}
 			break;
 		default:
@@ -674,7 +674,7 @@ prop_destroy(struct prop *prop)
 {
 	switch (prop->type) {
 	case PROP_STRING:
-		Free(prop->data.s);
+		Free(prop->data.s, 0);
 		break;
 	}
 }

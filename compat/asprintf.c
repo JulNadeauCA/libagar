@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.c,v 1.9 2004/01/03 04:25:05 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.1 2004/02/26 09:19:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@ asprintf(char **ret, const char *fmt, ...)
 	va_list ap;
 
 	buflen = strlen(fmt) + 64;		/* Guess */
-	buf = Malloc(buflen);
+	buf = Malloc(buflen, 0);
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);
@@ -54,7 +54,7 @@ asprintf(char **ret, const char *fmt, ...)
 		return (size);
 	}
 
-	buf = Realloc(buf, size+1);		/* Too large */
+	buf = Realloc(buf, size+1, 0);		/* Too large */
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);

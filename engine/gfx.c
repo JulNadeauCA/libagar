@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.24 2004/03/17 04:03:19 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.25 2004/03/17 06:03:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -59,7 +59,7 @@ enum {
 static TAILQ_HEAD(, gfx) gfxq = TAILQ_HEAD_INITIALIZER(gfxq);
 pthread_mutex_t		 gfxq_lock;
 
-static void	gfx_destroy_anim(struct gfx_anim *);
+static void gfx_destroy_anim(struct gfx_anim *);
 
 /* Attach a sprite of arbitrary size. */
 Uint32
@@ -67,22 +67,22 @@ gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite, int map)
 {
 	struct gfx_spritecl *spritecl;
 
-	if (gfx->sprites == NULL) {			/* Initialize */
-		gfx->sprites = Malloc(NSPRITES_INIT * sizeof(SDL_Surface *));
-		gfx->csprites = Malloc(NSPRITES_INIT *
-		    sizeof(struct gfx_spritecl));
+	if (gfx->sprites == NULL) {
+		gfx->sprites = Malloc(
+		    NSPRITES_INIT * sizeof(SDL_Surface *), M_GFX);
+		gfx->csprites = Malloc(
+		    NSPRITES_INIT * sizeof(struct gfx_spritecl), M_GFX);
 		gfx->maxsprites = NSPRITES_INIT;
 		gfx->nsprites = 0;
-	} else if (gfx->nsprites+1 > gfx->maxsprites) {	/* Grow */
+	} else if (gfx->nsprites+1 > gfx->maxsprites) {
 		gfx->maxsprites += NSPRITES_GROW;
 		gfx->sprites = Realloc(gfx->sprites,
-		    gfx->maxsprites * sizeof(SDL_Surface *));
+		    gfx->maxsprites * sizeof(SDL_Surface *), M_GFX);
 		gfx->csprites = Realloc(gfx->csprites,
-		    gfx->maxsprites * sizeof(struct gfx_spritecl));
+		    gfx->maxsprites * sizeof(struct gfx_spritecl), M_GFX);
 	}
-	gfx->sprites[gfx->nsprites] = sprite;			/* Original */
-
-	spritecl = &gfx->csprites[gfx->nsprites];		/* Cache line */
+	gfx->sprites[gfx->nsprites] = sprite;
+	spritecl = &gfx->csprites[gfx->nsprites];
 	SLIST_INIT(&spritecl->sprites);
 	return (gfx->nsprites++);
 }
@@ -105,8 +105,9 @@ gfx_scan_alpha(SDL_Surface *su)
 #endif
 	int x, y;
 
-	if (SDL_MUSTLOCK(su))
+	if (SDL_MUSTLOCK(su)) {
 		SDL_LockSurface(su);
+	}
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
 			Uint8 *pixel = (Uint8 *)su->pixels +
@@ -179,7 +180,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 	mw = sprite->w/TILESZ;
 	mh = sprite->h/TILESZ;
 
-	fragmap = Malloc(sizeof(struct map));
+	fragmap = Malloc(sizeof(struct map), M_OBJECT);
 	snprintf(mapname, sizeof(mapname), "f-%s%u", gfx->name, gfx->nsubmaps);
 	map_init(fragmap, mapname);
 	if (map_alloc_nodes(fragmap, mw, mh) == -1)
@@ -301,7 +302,7 @@ gfx_fetch(const char *name)
 	    == -1)
 		goto fail;
 
-	gfx = Malloc(sizeof(struct gfx));
+	gfx = Malloc(sizeof(struct gfx), M_GFX);
 	gfx_init(gfx, name);
 
 	if ((den = den_open(path, DEN_READ)) == NULL) {
@@ -322,8 +323,8 @@ fail:
 	pthread_mutex_unlock(&gfxq_lock);
 	if (gfx != NULL) {
 		pthread_mutex_destroy(&gfx->used_lock);
-		free(gfx->name);
-		free(gfx);
+		Free(gfx->name, 0);
+		Free(gfx, M_GFX);
 	}
 	return (NULL);
 }
@@ -358,11 +359,11 @@ gfx_destroy(struct gfx *gfx)
 				transform_destroy(trans);
 			}
 			SDL_FreeSurface(csprite->su);
-			free(csprite);
+			Free(csprite, M_GFX);
 		}
 	}
-	Free(gfx->sprites);
-	Free(gfx->csprites);
+	Free(gfx->sprites, M_GFX);
+	Free(gfx->csprites, M_GFX);
 
 	/* Release the animations. */
 	for (i = 0; i < gfx->nanims; i++) {
@@ -382,26 +383,26 @@ gfx_destroy(struct gfx *gfx)
 				transform_destroy(trans);
 			}
 			gfx_destroy_anim(canim->anim);
-			free(canim);
+			Free(canim, 0);
 		}
 		gfx_destroy_anim(gfx->anims[i]);
 	}
-	Free(gfx->anims);
-	Free(gfx->canims);
+	Free(gfx->anims, M_GFX);
+	Free(gfx->canims, M_GFX);
 
 	/* Release the submaps. */
 	for (i = 0; i < gfx->nsubmaps; i++) {
 		object_destroy(gfx->submaps[i]);
-		free(gfx->submaps[i]);
+		Free(gfx->submaps[i], M_OBJECT);
 	}
-	Free(gfx->submaps);
+	Free(gfx->submaps, M_GFX);
 
 	debug(DEBUG_GC, "freed %s (%d sprites, %d anims, %d maps)\n", gfx->name,
 	    gfx->nsprites, gfx->nanims, gfx->nsubmaps);
 
 	pthread_mutex_destroy(&gfx->used_lock);
-	free(gfx->name);
-	free(gfx);
+	Free(gfx->name, 0);
+	Free(gfx, M_GFX);
 }
 
 /* Insert a frame into an animation. */
@@ -409,13 +410,14 @@ Uint32
 gfx_insert_anim_frame(struct gfx_anim *anim, SDL_Surface *surface)
 {
 	if (anim->frames == NULL) {			/* Initialize */
-		anim->frames = Malloc(FRAMES_INIT * sizeof(SDL_Surface *));
+		anim->frames = Malloc(FRAMES_INIT * sizeof(SDL_Surface *),
+		    M_GFX);
 		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
 	} else if (anim->nframes+1 > anim->maxframes) {	/* Grow */
 		anim->maxframes += FRAMES_GROW;
 		anim->frames = Realloc(anim->frames,
-		    anim->maxframes * sizeof(SDL_Surface *));
+		    anim->maxframes * sizeof(SDL_Surface *), M_GFX);
 	}
 	anim->frames[anim->nframes++] = surface;
 	return (anim->nframes);
@@ -425,14 +427,15 @@ gfx_insert_anim_frame(struct gfx_anim *anim, SDL_Surface *surface)
 Uint32
 gfx_insert_submap(struct gfx *gfx, struct map *m)
 {
-	if (gfx->submaps == NULL) {			/* Initialize */
+	if (gfx->submaps == NULL) {
 		gfx->maxsubmaps = NSUBMAPS_INIT;
-		gfx->submaps = Malloc(gfx->maxsubmaps * sizeof(struct map *));
+		gfx->submaps = Malloc(
+		    gfx->maxsubmaps * sizeof(struct map *), M_GFX);
 		gfx->nsubmaps = 0;
-	} else if (gfx->nsubmaps+1 > gfx->maxsubmaps) {	/* Grow */
+	} else if (gfx->nsubmaps+1 > gfx->maxsubmaps) {
 		gfx->maxsubmaps += NSUBMAPS_GROW;
 		gfx->submaps = Realloc(gfx->submaps,
-		    gfx->maxsubmaps * sizeof(struct map *));
+		    gfx->maxsubmaps * sizeof(struct map *), M_GFX);
 	}
 	gfx->submaps[gfx->nsubmaps] = m;
 	return (gfx->nsubmaps++);
@@ -445,27 +448,28 @@ gfx_insert_anim(struct gfx *gfx)
 	struct gfx_anim *anim;
 	struct gfx_animcl *animcl;
 
-	anim = Malloc(sizeof(struct gfx_anim));
+	anim = Malloc(sizeof(struct gfx_anim), M_GFX);
 	anim->frames = NULL;
 	anim->maxframes = 0;
 	anim->frame = 0;
 	anim->nframes = 0;
 
-	if (gfx->anims == NULL) {			/* Initialize */
-		gfx->anims = Malloc(NANIMS_INIT * sizeof(struct anim *));
-		gfx->canims = Malloc(NANIMS_INIT * sizeof(struct gfx_animcl));
+	if (gfx->anims == NULL) {
+		gfx->anims = Malloc(
+		    NANIMS_INIT * sizeof(struct anim *), M_GFX);
+		gfx->canims = Malloc(
+		    NANIMS_INIT * sizeof(struct gfx_animcl), M_GFX);
 		gfx->maxanims = NANIMS_INIT;
 		gfx->nanims = 0;
-	} else if (gfx->nanims >= gfx->maxanims) {	/* Grow */
+	} else if (gfx->nanims >= gfx->maxanims) {
 		gfx->maxanims += NANIMS_GROW;
 		gfx->anims = Realloc(gfx->anims,
-		    gfx->maxanims * sizeof(struct gfx_anim *));
+		    gfx->maxanims * sizeof(struct gfx_anim *), M_GFX);
 		gfx->canims = Realloc(gfx->canims,
-		    gfx->maxanims * sizeof(struct gfx_animcl));
+		    gfx->maxanims * sizeof(struct gfx_animcl), M_GFX);
 	}
-	gfx->anims[gfx->nanims] = anim;				/* Original */
-
-	animcl = &gfx->canims[gfx->nanims];			/* Cache line */
+	gfx->anims[gfx->nanims] = anim;
+	animcl = &gfx->canims[gfx->nanims];
 	SLIST_INIT(&animcl->anims);
 	gfx->nanims++;
 	return (anim);
@@ -479,8 +483,8 @@ gfx_destroy_anim(struct gfx_anim *anim)
 	for (i = 0; i < anim->nframes; i++) {
 		SDL_FreeSurface(anim->frames[i]);
 	}
-	Free(anim->frames);
-	free(anim);
+	Free(anim->frames, 0);
+	Free(anim, M_GFX);
 }
 
 #ifdef DEBUG
@@ -502,6 +506,7 @@ gfx_get_anim(struct object *ob, Uint32 i)
 		fatal("no gfx in %s", ob->name);
 	if (i > ob->gfx->nanims)
 		fatal("no anim at %s:%d", ob->name, i);
+
 	return (ob->gfx->anims[i]);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.11 2004/01/23 06:24:41 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.12 2004/03/02 08:58:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -52,14 +52,15 @@ audio_insert_sample(struct audio *audio, SDL_AudioSpec *spec, Uint8 *data,
 {
 	struct sample *nsamp;
 
-	if (audio->samples == NULL) {				/* Initialize */
-		audio->samples = Malloc(NSAMPLES_INIT * sizeof(struct sample));
+	if (audio->samples == NULL) {
+		audio->samples = Malloc(
+		    NSAMPLES_INIT*sizeof(struct sample), M_AUDIO);
 		audio->maxsamples = NSAMPLES_INIT;
 		audio->nsamples = 0;
-	} else if (audio->nsamples+1 > audio->maxsamples) {	/* Grow */
+	} else if (audio->nsamples+1 > audio->maxsamples) {
 		audio->maxsamples += NSAMPLES_GROW;
 		audio->samples = Realloc(audio->samples,
-		    audio->maxsamples * sizeof(struct sample));
+		    audio->maxsamples*sizeof(struct sample), M_AUDIO);
 	}
 
 	nsamp = &audio->samples[audio->nsamples];
@@ -121,7 +122,7 @@ audio_fetch(const char *name)
 	    == -1)
 		goto fail;
 
-	audio = Malloc(sizeof(struct audio));
+	audio = Malloc(sizeof(struct audio), M_AUDIO);
 	audio->name = Strdup(name);
 	audio->samples = NULL;
 	audio->nsamples = 0;
@@ -143,7 +144,7 @@ audio_fetch(const char *name)
 #endif
 	den_close(den);
 
-	TAILQ_INSERT_HEAD(&audioq, audio, audios);		/* Cache */
+	TAILQ_INSERT_HEAD(&audioq, audio, audios);
 out:
 	pthread_mutex_unlock(&audioq_lock);
 	return (audio);
@@ -151,8 +152,8 @@ fail:
 	pthread_mutex_unlock(&audioq_lock);
 	if (audio != NULL) {
 		pthread_mutex_destroy(&audio->used_lock);
-		free(audio->name);
-		free(audio);
+		Free(audio->name, 0);
+		Free(audio, M_AUDIO);
 	}
 	return (NULL);
 }
@@ -167,23 +168,19 @@ audio_destroy(struct audio *audio)
 	TAILQ_REMOVE(&audioq, audio, audios);
 	pthread_mutex_unlock(&audioq_lock);
 
-	/* Release the samples. */
-	for (i = 0; i < audio->nsamples; i++) {
+	for (i = 0; i < audio->nsamples; i++)
 		audio_destroy_sample(&audio->samples[i]);
-	}
-	Free(audio->samples);
-
-	dprintf("freed %s (%d samples)\n", audio->name, audio->nsamples);
 
 	pthread_mutex_destroy(&audio->used_lock);
-	free(audio->name);
-	free(audio);
+	Free(audio->name, 0);
+	Free(audio->samples, M_AUDIO);
+	Free(audio, M_AUDIO);
 }
 
 static void
 audio_destroy_sample(struct sample *samp)
 {
-	free(samp->data);
+	Free(samp->data, M_AUDIO);
 }
 
 #ifdef DEBUG

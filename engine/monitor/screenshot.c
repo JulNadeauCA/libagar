@@ -1,4 +1,4 @@
-/*	$Csoft: screenshot.c,v 1.12 2003/10/13 23:49:01 vedge Exp $	*/
+/*	$Csoft: screenshot.c,v 1.13 2004/01/03 04:25:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -108,7 +108,7 @@ screenshot_xmit(int fd)
 	jpeg_set_quality(&jcomp, 75, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(srcsu->w * 3);
+	jcopybuf = Malloc(srcsu->w * 3, M_VIEW);
 
 	for (;;) {
 		JSAMPROW row[1];
@@ -162,7 +162,7 @@ screenshot_xmit(int fd)
 
 		pthread_mutex_unlock(&xmit_lock);
 	}
-	free(jcopybuf);
+	Free(jcopybuf, M_VIEW);
 	jpeg_destroy_compress(&jcomp);
 	fclose(fp);
 }

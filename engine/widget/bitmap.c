@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.17 2003/07/08 00:34:58 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.18 2004/01/03 04:25:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -49,7 +49,7 @@ bitmap_new(void *parent)
 {
 	struct bitmap *bitmap;
 
-	bitmap = Malloc(sizeof(struct bitmap));
+	bitmap = Malloc(sizeof(struct bitmap), M_OBJECT);
 	bitmap_init(bitmap);
 	object_attach(parent, bitmap);
 	return (bitmap);

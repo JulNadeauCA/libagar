@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.49 2004/01/03 04:25:10 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.50 2004/03/17 12:42:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -143,7 +143,7 @@ merge_free_brushes(void)
 	     ob = nob) {
 		nob = TAILQ_NEXT(ob, cobjs);
 		object_destroy(ob);
-		free(ob);
+		Free(ob, M_OBJECT);
 	}
 	TAILQ_INIT(&brushes);
 }
@@ -175,8 +175,7 @@ merge_create_brush(int argc, union evarg *argv)
 		return;
 	}
 
-	m = Malloc(sizeof(struct map));
-	map_init(m, m_name);
+	m = map_new(NULL, m_name);
 	if (object_load(m) == -1) {
 		if (map_alloc_nodes(m,
 		    prop_get_uint32(&mapedit, "default-brush-width"),
@@ -193,8 +192,8 @@ merge_create_brush(int argc, union evarg *argv)
 	textbox_printf(name_tbox, " ");
 	return;
 fail:
-	map_destroy(m);
-	free(m);
+	object_destroy(m);
+	Free(m, M_OBJECT);
 }
 
 static void
@@ -244,7 +243,7 @@ merge_remove_brush(int argc, union evarg *argv)
 			TAILQ_REMOVE(&brushes, brush, cobjs);
 			tlist_remove_item(brushes_tl, it);
 			object_destroy(brush);
-			free(brush);
+			Free(brush, M_OBJECT);
 		}
 	}
 }
@@ -363,7 +362,7 @@ merge_load(struct netbuf *buf)
 		struct map *nbrush;
 
 		copy_string(m_name, buf, sizeof(m_name));
-		nbrush = Malloc(sizeof(struct map));
+		nbrush = Malloc(sizeof(struct map), M_OBJECT);
 		map_init(nbrush, m_name);
 		map_load(nbrush, buf);
 

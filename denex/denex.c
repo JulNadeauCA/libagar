@@ -1,4 +1,4 @@
-/*	$Csoft: denex.c,v 1.2 2004/01/03 04:25:03 vedge Exp $	*/
+/*	$Csoft: denex.c,v 1.3 2004/02/26 10:34:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -143,7 +143,7 @@ main(int argc, char *argv[])
 			goto fail;
 		}
 		
-		buf = Malloc(memb->size);
+		buf = Malloc(memb->size, 0);
 		netbuf_seek(den->buf, memb->offs, SEEK_SET);
 		rv = netbuf_eread(buf, 1, memb->size, den->buf);
 		if (rv > 0) {
@@ -154,7 +154,7 @@ main(int argc, char *argv[])
 			}
 		}
 		fclose(f);
-		free(buf);
+		Free(buf, 0);
 	}
 out:
 	den_close(den);

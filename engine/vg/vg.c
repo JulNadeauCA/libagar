@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: vg.c,v 1.1 2004/03/17 06:04:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@ vg_new(void *p, int flags, float w, float h, float scale, const char *name)
 	SDL_Surface *su;
 	Uint32 suflags = SDL_SWSURFACE;
 
-	vg = Malloc(sizeof(struct vg));
+	vg = Malloc(sizeof(struct vg), M_VG);
 	vg->w = w;
 	vg->h = h;
 	suflags |= (flags & VG_ANTIALIAS) ? SDL_SRCALPHA : SDL_SRCCOLORKEY;
@@ -73,7 +73,7 @@ vg_new(void *p, int flags, float w, float h, float scale, const char *name)
 	vg->fill_color = SDL_MapRGB(su->format, 0, 0, 0);
 
 	/* Allocate a private gfx structure and map to hold the fragments. */
-	ob->gfx = Malloc(sizeof(struct gfx));
+	ob->gfx = Malloc(sizeof(struct gfx), M_GFX);
 	gfx_init(ob->gfx, name);
 	vg->map = map_new(ob, name);
 	vg_scale(vg, scale);
@@ -105,14 +105,14 @@ vg_destroy(struct vg *vg)
 	     vge != TAILQ_END(&vg->rasq);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, rasq);
-		Free(vge->vertices);
-		free(vge);
+		Free(vge->vertices, M_VG);
+		Free(vge, M_VG);
 	}
 
 	pthread_mutex_destroy(&vg->lock);
 	SDL_FreeSurface(vg->su);
 	map_destroy(vg->map);
-	free(vg->map);
+	Free(vg->map, M_OBJECT);
 }
 
 /* Begin drawing the specified type of element. */
@@ -121,7 +121,7 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 {
 	struct vg_element *vge;
 
-	vge = Malloc(sizeof(struct vg_element));
+	vge = Malloc(sizeof(struct vg_element), M_VG);
 	vge->type = eltype;
 	vge->vertices = NULL;
 	vge->nvertices = 0;
@@ -136,10 +136,10 @@ vg_vertex(struct vg *vg, float x, float y)
 	struct vg_element *vge = TAILQ_FIRST(&vg->rasq);
 
 	if (vge->vertices == NULL) {
-		vge->vertices = Malloc(2*sizeof(float));
+		vge->vertices = Malloc(2*sizeof(float), M_VG);
 	} else {
 		vge->vertices = Realloc(vge->vertices, (vge->nvertices+2) *
-		    sizeof(float));
+		    sizeof(float), M_VG);
 	}
 	vge->vertices[vge->nvertices++] = x;
 	vge->vertices[vge->nvertices++] = y;

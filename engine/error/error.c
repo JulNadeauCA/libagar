@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.4 2004/01/03 04:25:06 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.5 2004/02/26 10:10:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -29,6 +29,7 @@
 #include <config/threads.h>
 
 #include <compat/vasprintf.h>
+#include <compat/queue.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -43,18 +44,26 @@
 #include <engine/error/error.h>
 
 #ifdef THREADS
-pthread_key_t	 error_key;		/* Thread-safe error code */
+pthread_key_t error_key;
 #else
-char		*error_key;		/* Thread-unsafe error code */
+char *error_key;
 #endif
 
 #ifdef DEBUG
-int		 engine_debug = 1;	/* Default debug level */
+int engine_debug = 1;				/* Default debug level */
+struct error_mement error_mements[M_LAST];
 #endif
 
 void
 error_init(void)
 {
+#ifdef DEBUG
+	int i;
+
+	for (i = 0; i < M_LAST; i++)
+		memset(&error_mements[i], 0, sizeof(struct error_mement));
+#endif
+
 #ifdef THREADS
 	pthread_key_create(&error_key, NULL);
 #else
@@ -108,29 +117,49 @@ error_get(void)
 }
 
 void *
-error_malloc(size_t len)
+error_malloc(size_t len, int type)
 {
 	void *p;
-
-	p = malloc(len);
-	if (p == NULL) {
-		fatal("malloc failed");
+	
+	if ((p = malloc(len)) == NULL)
+		fatal("malloc");
+#ifdef DEBUG
+	if (type > 0) {
+		error_mements[type].nallocs++;
+		error_mements[type].msize += len;
 	}
+#endif
 	return (p);
 }
 
 void *
-error_realloc(void *ptr, size_t len)
+error_realloc(void *oldp, size_t len, int type)
 {
-	void *p;
-
-	p = realloc(ptr, len);
-	if (p == NULL) {
-		fatal("realloc failed");
+	void *newp;
+	
+	if ((newp = realloc(oldp, len)) == NULL)
+		fatal("realloc");
+#ifdef DEBUG
+	if (type > 0) {
+		error_mements[type].nreallocs++;
+		error_mements[type].rsize += len;
 	}
-	return (p);
+#endif
+	return (newp);
 }
 
+void
+error_free(void *p, int type)
+{
+	/* XXX redundant on some systems */
+	if (p == NULL)
+		return;
+#ifdef DEBUG
+	if (type > 0)
+		error_mements[type].nfrees++;
+#endif
+	free(p);
+}
 
 void
 error_dprintf(const char *fmt, ...)
@@ -206,7 +235,7 @@ error_strdup(const char *s)
 	char *ns;
 	
 	buflen = strlen(s)+1;
-	ns = Malloc(buflen);
+	ns = Malloc(buflen, 0);
 	memcpy(ns, s, buflen);
 	return (ns);
 }
