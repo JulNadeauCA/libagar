@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.39 2004/02/20 04:20:33 vedge Exp $
+.\"	$Csoft: agar.3,v 1.40 2004/02/26 10:34:58 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -39,83 +39,6 @@
 .Nm
 is a high-level, cross-platform C application framework aimed primarly at
 graphical games and simulations.
-.Sh OBJECT DESIGN
-.Nm
-applications are built around a tree of
-.Xr object 3
-structures whose state is persistent.
-.Pp
-For instance, in a game, the initial hierarchy of objects is created by
-level designers and their state is saved to files which are distributed with
-the game binary (which is essentially an interpreter).
-As the game progresses, the player modifies the objects and the world remains
-persistent.
-.Sh INCLUDE FILES
-The
-.Pa Aq compat/*.h
-and
-.Pa Aq config/*.h
-includes should come first, followed by
-.Pa Aq engine/engine.h ,
-which itself includes:
-.Pp
-.Bl -tag -width "<engine/loader/integral.h> " -compact
-.It Pa Aq pthread.h
-POSIX threads, if available.
-.It Pa Aq SDL.h
-Software DirectMedia Layer.
-.It Pa Aq GL/GL.h
-OpenGL interface, if available.
-.It Pa Aq compat/queue.h
-4.4BSD
-.Xr queue 3
-definitions.
-.It Pa Aq compat/strlcpy.h
-For
-.Xr strlcpy 3 .
-.It Pa Aq compat/strlcat.h
-For
-.Xr strlcat 3 .
-.It Pa Aq compat/snprintf.h
-For
-.Xr snprintf 3 .
-.It Pa Aq compat/vsnprintf.h
-For
-.Xr vsnprintf 3 .
-.It Pa Aq compat/vasprintf.h
-For
-.Xr vasprintf 3 .
-.It Pa Aq compat/asprintf.h
-For
-.Xr asprintf 3 .
-.It Pa Aq compat/strsep.h
-For
-.Xr strsep 3 .
-.It Pa Aq engine/loader/netbuf.h
-For the
-.Ft struct netbuf
-definition, required by load/save function prototypes.
-.It Pa Aq engine/loader/integral.h
-For saving integers.
-.It Pa Aq engine/loader/real.h
-For saving real numbers.
-.It Pa Aq engine/loader/string.h
-For saving text.
-.It Pa Aq engine/loader/version.h
-For versioning.
-.It Pa Aq engine/error/error.h
-Generic error handling.
-.It Pa Aq engine/object.h
-Generic
-.Xr object 3
-types and operations.
-.It Pa Aq engine/event.h
-For the
-.Ft union evarg
-definition and generic
-.Xr event 3
-handling.
-.El
 .Sh SEE ALSO
 .Xr event 3 ,
 .Xr map 3 ,
