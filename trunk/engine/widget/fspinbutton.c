@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.c,v 1.26 2005/01/23 11:48:04 vedge Exp $	*/
+/*	$Csoft: fspinbutton.c,v 1.27 2005/01/30 05:39:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -208,6 +208,8 @@ fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 {
 	widget_init(fsu, "fspinbutton", &fspinbutton_ops,
 	    WIDGET_FOCUSABLE|WIDGET_WFILL);
+	widget_map_color(fsu, 0, "frame", 100, 100, 100, 255);
+
 	widget_bind(fsu, "value", WIDGET_DOUBLE, &fsu->value);
 	widget_bind(fsu, "min", WIDGET_DOUBLE, &fsu->min);
 	widget_bind(fsu, "max", WIDGET_DOUBLE, &fsu->max);
@@ -245,6 +247,12 @@ fspinbutton_init(struct fspinbutton *fsu, const char *unit, const char *label)
 }
 
 void
+fspinbutton_prescale(struct fspinbutton *fsu, const char *text)
+{
+	textbox_prescale(fsu->input, text);
+}
+
+void
 fspinbutton_destroy(void *p)
 {
 	struct fspinbutton *fsu = p;
@@ -274,10 +282,11 @@ fspinbutton_scale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		WIDGET_SCALE(input, -1, -1);
-		WIDGET(fsu)->w = WIDGET(input)->w;
+		WIDGET(fsu)->w = WIDGET(input)->w + input->xpadding*2;
 		WIDGET(fsu)->h = WIDGET(input)->h;
-		x += WIDGET(fsu)->w;
 
+		x += WIDGET(fsu)->w;
+		
 		if (units != NULL) {
 			WIDGET_SCALE(units, -1, -1);
 			WIDGET(fsu)->w += WIDGET(units)->w;

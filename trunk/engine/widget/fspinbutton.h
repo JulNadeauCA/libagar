@@ -1,4 +1,4 @@
-/*	$Csoft: fspinbutton.h,v 1.10 2004/03/26 04:57:43 vedge Exp $	*/
+/*	$Csoft: fspinbutton.h,v 1.11 2004/08/22 12:08:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_FSPINBUTTON_H_
@@ -35,6 +35,7 @@ struct fspinbutton *fspinbutton_new(void *, const char *, const char *, ...)
 
 void	fspinbutton_init(struct fspinbutton *, const char *, const char *);
 void	fspinbutton_destroy(void *);
+void	fspinbutton_prescale(struct fspinbutton *, const char *);
 void	fspinbutton_scale(void *, int, int);
 void	fspinbutton_draw(void *);
 
