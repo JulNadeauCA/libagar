@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.2 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.3 2003/03/18 06:34:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -97,11 +97,11 @@ void
 flip_effect(void *p, struct mapview *mv, struct node *node)
 {
 	struct flip *flip = p;
-	struct map *m = mv->map;
 	struct transform *trans;
 	enum transform_type type;
 	struct noderef *nref;
-	
+	int added = 0;
+
 	trans = emalloc(sizeof(struct transform));
 	type = (flip->mode == FLIP_HORIZ) ? TRANSFORM_HFLIP : TRANSFORM_VFLIP;
 	if (transform_init(trans, type, 0, NULL) == -1) {
@@ -117,6 +117,10 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 		if (nref->layer != mv->cur_layer)
 			continue;
 		SLIST_INSERT_HEAD(&nref->transforms, trans, transforms);
+		added++;
 	}
+
+	if (!added)
+		free(trans);
 }
 
