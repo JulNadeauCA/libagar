@@ -1,4 +1,4 @@
-/*	$Csoft: agar-config.c,v 1.9 2004/12/29 15:49:45 vedge Exp $	*/
+/*	$Csoft: agar-config.c,v 1.10 2005/01/05 04:44:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
 			printf("-lengine -linput -lerror -lmonitor -lmapedit "
-			       "-ltool -lvg -lwidget -lunicode -lloader "
+			       "-ltool -lvg -lbg -lwidget -lunicode -lloader "
 			       "-lcompat -lmat ");
 #if defined(ENABLE_NLS) && !defined(__linux__) /* XXX */
 			printf("-lbsd_intl ");
