@@ -1,4 +1,4 @@
-/*	$Csoft: vg_block.c,v 1.6 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg_block.c,v 1.7 2004/05/31 04:54:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,6 +52,10 @@ vg_begin_block(struct vg *vg, const char *name, int flags)
 	vgb->origin.x = 0;
 	vgb->origin.y = 0;
 	vgb->origin.z = 0;
+	vgb->extent.x = 0;
+	vgb->extent.y = 0;
+	vgb->extent.w = 0;
+	vgb->extent.h = 0;
 	vgb->theta = 0;
 	TAILQ_INIT(&vgb->vges);
 
@@ -110,12 +114,14 @@ vg_move_block(struct vg *vg, struct vg_block *vgb, double x, double y,
 	vg->redraw = 1;
 }
 
+/* Modify a block's angle of rotation. */
 void
 vg_block_theta(struct vg *vg, struct vg_block *vgb, double theta)
 {
 	vgb->theta = theta;
 }
 
+/* Apply a rotation transformation on a block. */
 void
 vg_rotate_block(struct vg *vg, struct vg_block *vgb, double theta)
 {
@@ -141,6 +147,36 @@ vg_rotate_block(struct vg *vg, struct vg_block *vgb, double theta)
 	}
 	vg_select_block(vg, block_save);
 	vg->redraw++;
+}
+
+/* Calculate a block's bounding box. */
+void
+vg_block_extent(struct vg *vg, struct vg_block *vgb, struct vg_rect *ext)
+{
+	struct vg_element *vge;
+	double xmin = vgb->pos.x, xmax = vgb->pos.x;
+	double ymin = vgb->pos.y, ymax = vgb->pos.y;
+	struct vg_rect r;
+
+	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
+		if (vge->ops->bbox == NULL)
+			continue;
+
+		vge->ops->bbox(vg, vge, &r);
+
+		if (r.x < xmin)
+			xmin = r.x;
+		if (r.y < ymin)
+			ymin = r.y;
+		if (r.x+r.w > xmax)
+			xmax = r.x+r.w;
+		if (r.y+r.h > ymax)
+			ymax = r.y+r.h;
+	}
+	ext->x = xmin;
+	ext->y = ymin;
+	ext->w = xmax-xmin;
+	ext->h = ymax-ymin;
 }
 
 /* Convert absolute coordinates to block relative coordinates. */
@@ -249,9 +285,13 @@ poll_blocks(int argc, union evarg *argv)
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		char name[VG_BLOCK_NAME_MAX];
+		struct vg_rect rext;
 
-		snprintf(name, sizeof(name), "%s (%.2f,%.2f; \xce\xb8=%.2f)",
-		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta);
+		vg_block_extent(vg, vgb, &rext);
+		snprintf(name, sizeof(name),
+		    "%s (%.2f,%.2f; \xce\xb8=%.2f; ext=%.2f,%.2f %.2fx%.2f)",
+		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta,
+		    rext.x, rext.y, rext.w, rext.h);
 		it = tlist_insert_item(tl, ICON(VGBLOCK_ICON), name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
