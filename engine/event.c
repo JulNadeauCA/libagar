@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.54 2002/06/27 00:38:46 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.55 2002/06/27 00:50:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -74,6 +74,8 @@ static const struct event_proto {
 	{ "textbox-return", "%s" },			/* text */
 	/* Character c was inserted in string s */
 	{ "textbox-changed", "%s, %c" },		/* string, char */
+	/* Radio selection changed */
+	{ "radio-changed", "%c, %i" },			/* char, index */
 
 	/*
 	 * Window type
