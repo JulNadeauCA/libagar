@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.43 2002/05/31 10:49:33 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.44 2002/06/01 02:38:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -401,7 +401,9 @@ view_redraw(struct viewport *view)
 	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH(win, &mainview->windowsh, windows) {
 		pthread_mutex_lock(&win->lock);
-		window_draw(win);
+		if (win->flags & WINDOW_SHOW) {
+			window_draw(win);
+		}
 		pthread_mutex_unlock(&win->lock);
 	}
 	pthread_mutex_unlock(&view->lock);
