@@ -1,4 +1,4 @@
-/*	$Csoft: merge.h,v 1.5 2003/02/12 02:01:46 vedge Exp $	*/
+/*	$Csoft: merge.h,v 1.6 2003/02/12 02:47:19 vedge Exp $	*/
 /*	Public domain	*/
 
 enum merge_mode {
@@ -14,11 +14,10 @@ SLIST_HEAD(brushq, object);
 struct merge {
 	struct tool	 tool;
 	int		 mode;
-	int		 flags;
-#define MERGE_RANDOMIZE_SHIFT	0x01
-
 	struct tlist	*brushes_tl;
 	struct brushq	 brushes;
+	int		 inherit_flags;		/* Inherit node flags */
+	int		 random_shift;		/* Random noderef shifts */
 };
 
 void		 merge_init(void *);

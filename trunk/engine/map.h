@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.57 2003/02/08 00:34:26 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.58 2003/02/10 23:07:59 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -60,15 +60,25 @@ struct node {
 #endif
 	struct noderefq	 nrefs;		/* Items on this node */
 	Uint32		 flags;
-#define NODE_ORIGIN	0x0001		/* Origin of this map */
-#define NODE_WALK	0x0002		/* Can walk through */
-#define NODE_CLIMB	0x0004		/* Can climb (eg. ladder) */
-#define NODE_SLIP	0x0008		/* Slippery */
-#define NODE_BIO	0x0010		/* Cause Poison */
-#define NODE_REGEN	0x0020		/* Cause HP Regeneration */
-#define NODE_SLOW	0x0040		/* Decrease speed */
-#define NODE_HASTE	0x0080		/* Increase speed */
-#define NODE_HAS_ANIM	0x0100		/* Contains an anim? (optimization) */
+#define NODE_ORIGIN	0x00001		/* Origin of this map */
+#define NODE_WALK	0x00002		/* Can walk through */
+#define NODE_CLIMB	0x00004		/* Can climb (eg. ladder) */
+#define NODE_SLIP	0x00008		/* Slippery */
+#define NODE_BIO	0x00010		/* Cause Poison */
+#define NODE_REGEN	0x00020		/* Cause HP Regeneration */
+#define NODE_SLOW	0x00040		/* Decrease speed */
+#define NODE_HASTE	0x00080		/* Increase speed */
+#define NODE_EDGE_N	0x00100		/* Terrain edges (for map edition) */
+#define NODE_EDGE_S	0x00200
+#define NODE_EDGE_W	0x00400
+#define NODE_EDGE_E	0x00800
+#define NODE_EDGE_NW	0x01000
+#define NODE_EDGE_NE	0x02000
+#define NODE_EDGE_SW	0x04000
+#define NODE_EDGE_SE	0x08000
+#define NODE_EDGE_ANY	(NODE_EDGE_N|NODE_EDGE_S|NODE_EDGE_W|NODE_EDGE_E| \
+			 NODE_EDGE_NW|NODE_EDGE_NE|NODE_EDGE_SW|NODE_EDGE_SE)
+#define NODE_HAS_ANIM	0x10000		/* Contains an anim? (optimization) */
 #define NODE_EPHEMERAL	NODE_HAS_ANIM
 };
 

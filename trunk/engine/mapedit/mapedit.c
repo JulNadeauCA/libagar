@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.139 2003/02/04 02:22:12 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.140 2003/02/10 04:46:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -134,8 +134,8 @@ mapedit_init(void)
 	prop_set_int(med, "tilemap-bg-square-size", 16);
 	prop_set_uint32(med, "default-map-width", 64);
 	prop_set_uint32(med, "default-map-height", 32);
-	prop_set_uint32(med, "default-brush-width", 3);
-	prop_set_uint32(med, "default-brush-height", 3);
+	prop_set_uint32(med, "default-brush-width", 4);
+	prop_set_uint32(med, "default-brush-height", 4);
 
 	mapedition = 1;
 
