@@ -110,12 +110,12 @@ S=""
 fi
 echo >Makefile.config
 echo >engine/config.h
-if [ "${version}" == "yes" ]
+if [ "${version}" = "yes" ]
  then
 echo "Manuconf v1.2"
 exit 1
 fi
-if [ "${help}" == "yes" ]
+if [ "${help}" = "yes" ]
  then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
@@ -173,7 +173,7 @@ fi
 rm -f .cctest .cctest.c
 CFLAGS="$CFLAGS -g -I$S"
 echo CFLAGS=$CFLAGS >> Makefile.config
-if [ "${cc_is_gcc}" == "yes" ]
+if [ "${cc_is_gcc}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused"
 echo CFLAGS=$CFLAGS >> Makefile.config
@@ -264,14 +264,14 @@ echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
 NONE=1
 fi
-	if [ "${x11_found}" == "yes" ]
+	if [ "${x11_found}" = "yes" ]
  then
 USE_X11=1
 echo "#ifndef USE_X11" >> engine/config.h
 echo "#define USE_X11 $USE_X11" >> engine/config.h
 echo "#endif /* USE_X11 */" >> engine/config.h
 	fi
-	if [ "${enable_debug}" == "yes" ]
+	if [ "${enable_debug}" = "yes" ]
  then
 XDEBUG=1
 echo "#ifndef XDEBUG" >> engine/config.h
@@ -279,7 +279,7 @@ echo "#define XDEBUG $XDEBUG" >> engine/config.h
 echo "#endif /* XDEBUG */" >> engine/config.h
 	fi
 fi
-if [ "${enable_debug}" == "yes" ]
+if [ "${enable_debug}" = "yes" ]
  then
 DEBUG=1
 echo "#ifndef DEBUG" >> engine/config.h
