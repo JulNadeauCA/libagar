@@ -1,4 +1,4 @@
-/*	$Csoft: physics.c,v 1.54 2003/03/25 13:48:00 vedge Exp $	    */
+/*	$Csoft: physics.c,v 1.56 2003/04/18 04:07:19 vedge Exp $	    */
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -167,13 +167,14 @@ mapdir_set_motion(struct mapdir *dir, int xmotion, int ymotion)
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
 			struct node *node = &pos->map->map[y][x];
-			struct noderef *nref;
+			struct noderef *r;
 
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != pos->layer)
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				if (r->layer != pos->layer) {
 					continue;
-				nref->xmotion = xmotion;
-				nref->ymotion = ymotion;
+				}
+				r->r_gfx.xmotion = xmotion;
+				r->r_gfx.ymotion = ymotion;
 			}
 		}
 	}
@@ -188,13 +189,14 @@ mapdir_add_motion(struct mapdir *dir, int xmotion, int ymotion)
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
 			struct node *node = &pos->map->map[y][x];
-			struct noderef *nref;
+			struct noderef *r;
 
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != pos->layer)
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				if (r->layer != pos->layer) {
 					continue;
-				nref->xmotion += xmotion;
-				nref->ymotion += ymotion;
+				}
+				r->r_gfx.xmotion += xmotion;
+				r->r_gfx.ymotion += ymotion;
 			}
 		}
 	}
@@ -241,23 +243,22 @@ mapdir_can_move(struct mapdir *dir, struct map *dstmap, int x, int y)
 	struct object *ob = dir->ob;
 	struct map *submap = ob->pos->submap;
 	struct node *node = &dstmap->map[y][x];
-	struct noderef *nref;
+	struct noderef *r;
 
 	if (x < 0 || y < 0 ||
-	    x+submap->mapw >= dstmap->mapw || y+submap->maph >= dstmap->maph) {
+	    x+submap->mapw >= dstmap->mapw ||
+	    y+submap->maph >= dstmap->maph) {
 		error_set("map boundary");
 		return (0);
 	}
 
-	if (dir->flags & DIR_PASSTHROUGH)
+	if (dir->flags & DIR_PASSTHROUGH) {
 		return (1);
-	if ((node->flags & NODE_WALK) == 0) {
-		error_set("node block");
-		return (0);
 	}
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		if (ob->pos->layer == nref->layer &&
-		   (nref->flags & NODEREF_BLOCK)) {
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		/* Give block precedence over walk. */
+		if (ob->pos->layer == r->layer &&
+		   ((r->flags & NODEREF_WALK)) == 0) {
 			error_set("nref block");
 			return (0);
 		}
@@ -375,19 +376,19 @@ mapdir_move(struct mapdir *dir)
 	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
 		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
 			struct node *node = &pos->map->map[y][x];
-			struct noderef *nref;
+			struct noderef *r;
 			
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->layer != pos->layer)
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				if (r->layer != pos->layer)
 					continue;
 
-				if (nref->ymotion == 0 && nref->xmotion == 0) {
-					/* Effect changes in direction. */
+				if (r->r_gfx.ymotion == 0 &&
+				    r->r_gfx.xmotion == 0) {
 					mapdir_update_idle(dir);
 				} else {
-					/* Update the direction. */
-					mapdir_update_moving(dir, nref->xmotion,
-					    nref->ymotion);
+					mapdir_update_moving(dir,
+					    r->r_gfx.xmotion,
+					    r->r_gfx.ymotion);
 				}
 				/*
 				 * Other nrefs in this rectangle/layer are

@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.5 2003/06/25 03:53:56 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.6 2003/06/26 02:34:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -209,7 +209,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			/* Adjust the alpha properties of the fragment. */
 			gfx_scan_alpha(su);
 
-			node_add_sprite(node, gfx->pobj, nsprite);
+			node_add_sprite(fragmap, node, gfx->pobj, nsprite);
 		}
 	}
 
@@ -362,7 +362,6 @@ gfx_destroy(struct gfx *gfx)
 			     trans = ntrans) {
 				ntrans = SLIST_NEXT(trans, transforms);
 				transform_destroy(trans);
-				free(trans);
 			}
 			SDL_FreeSurface(csprite->su);
 			free(csprite);
@@ -387,7 +386,6 @@ gfx_destroy(struct gfx *gfx)
 			     trans = ntrans) {
 				ntrans = SLIST_NEXT(trans, transforms);
 				transform_destroy(trans);
-				free(trans);
 			}
 			gfx_destroy_anim(canim->anim);
 			free(canim);
@@ -498,18 +496,17 @@ gfx_destroy_anim(struct gfx_anim *anim)
 	free(anim);
 }
 
-/* Update the current frame# on an animation. */
+/* Update the current frame# on an animation. XXX */
 void
-gfx_anim_tick(struct gfx_anim *an, struct noderef *nref)
+gfx_anim_tick(struct gfx_anim *an, struct noderef *r)
 {
 	Uint32 ticks;
 	
-	if ((nref->data.anim.flags & NODEREF_ANIM_AUTO) == 0) {
+	if ((r->r_anim.flags & NODEREF_ANIM_AUTO) == 0)
 		return;
-	}
 	
 	ticks = SDL_GetTicks();
-	if ((ticks - an->delta) >= an->delay) {		/* XXX */
+	if ((ticks - an->delta) >= an->delay) {
 		an->delta = ticks;
 		if (++an->frame > an->nframes - 1) {
 			/* Loop */

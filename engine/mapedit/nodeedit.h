@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.h,v 1.4 2003/04/25 09:47:07 vedge Exp $	*/
+/*	$Csoft: nodeedit.h,v 1.5 2003/06/18 00:47:00 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -8,10 +8,7 @@ struct mapview;
 struct nodeedit {
 	struct window	*win;
 	struct button	*trigger;
-	struct label	*node_flags_lab;
-	struct label	*noderef_type_lab, *noderef_flags_lab;
-	struct label	*noderef_center_lab;
-	struct tlist	*refs_tl, *transforms_tl;
+	struct tlist	*refs_tl;
 };
 
 __BEGIN_DECLS

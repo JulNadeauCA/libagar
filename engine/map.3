@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.39 2003/06/06 02:37:43 vedge Exp $
+.\"	$Csoft: map.3,v 1.40 2003/06/19 01:24:37 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -39,10 +39,10 @@
 .Fd #include <engine/map.h>
 .Sh DESCRIPTION
 Agar levels are described by a two-dimensional array of nodes; each node holds
-a stack of generic
+a stack of
 .Sq noderef
-structures, which are references to specific data (such as sprites or
-animations).
+structures, which are references to data, such as sprites, animations or audio
+samples.
 .Pp
 For example, the rendering of a
 .Nm
@@ -77,7 +77,7 @@ Graphical noderefs provide the map renderer with two individual displacements
 in pixels of the image from the tile origin, one for centering and the other
 for sprite motion.
 .Pp
-The centering offset is usually set by the level editor.
+The centering offset is usually set by the level designer.
 The motion offset defines the position of the image relative to the node.
 If the tile is scaled to another size, the centering offset is scaled to the
 tile size, but the motion offset is not.
@@ -180,15 +180,15 @@ Unless the factor is 100%, bitmap scaling is performed for graphical noderefs.
 .Fn node_init "struct node *node"
 .Pp
 .Ft int
-.Fn node_load "struct netbuf *buf" "struct object_table *deps" \
-              "struct node *node"
+.Fn node_load "struct map *map" "struct netbuf *buf" \
+              "struct object_table *deps" "struct node *node"
 .Pp
 .Ft void
-.Fn node_save "struct netbuf *buf" "struct object_table *deps" \
-              "struct node *node"
+.Fn node_save "struct map *map" "struct netbuf *buf" \
+              "struct object_table *deps" "struct node *node"
 .Pp
 .Ft void
-.Fn node_destroy "struct node *node"
+.Fn node_destroy "struct map *map" "struct node *node"
 .nr nS 0
 .Pp
 The
@@ -211,51 +211,43 @@ saves a node to
 .Ft void
 .Fn noderef_init "struct noderef *nref"
 .Pp
-.Ft int
+.Ft void
 .Fn noderef_set_center "struct noderef *nref" "int xcenter" "int ycenter"
 .Pp
-.Ft int
+.Ft void
 .Fn noderef_set_motion "struct noderef *nref" "int xmotion" "int ymotion"
 .Pp
 .Ft void
-.Fn noderef_destroy "struct noderef *nref"
+.Fn noderef_destroy "struct map *map" "struct noderef *nref"
 .Pp
 .Ft int
-.Fn noderef_load "struct netbuf *buf" "struct object_table *deps" \
-                 "struct node *node" "struct noderef **nref"
+.Fn noderef_load "struct map *map" "struct netbuf *buf" \
+                 "struct object_table *deps" "struct node *node" \
+                 "struct noderef **nref"
 .Pp
 .Ft void
-.Fn noderef_save "struct netbuf *savebuf" "struct object_table *deps" \
-                 "struct noderef *nref"
-.Pp
+.Fn noderef_save "struct map *map" "struct netbuf *savebuf" \
+                 "struct object_table *deps" "struct noderef *nref"
 .nr nS 0
+.Pp
 The
 .Fn noderef_init
 function initializes a node reference structure.
 .Pp
 The
 .Fn noderef_set_center
-function sets the centering offsets of
-.Fa nref
-to
-.Fa xcenter
-and
-.Fa ycenter ,
-returning 0 on success or -1 if the offsets exceed
-.Dv NODEREF_MAX_CENTER .
+function sets the centering offsets of a graphical reference.
 .Fn noderef_set_motion
-function sets the motion offsets of
-.Fa nref
-to
-.Fa xmotion
+sets the motion offsets of a graphical reference.
+These offsets must not exceed
+.Dv NODEREF_MAX_CENTER
 and
-.Fa ymotion
-returning 0 on success or -1 if the offsets exceed
-.Dv NODEREF_MAX_MOTION .
+.Dv NODEREF_MAX_MOTION
+pixels, respectively.
 .Pp
 The
 .Fn noderef_destroy
-function frees the resources reserved by a noderef (such as the transforms).
+function frees the resources reserved by a noderef.
 .Pp
 The
 .Fn noderef_load
@@ -269,32 +261,31 @@ encoding object references using
 .Fa deps .
 .Sh NODE MANIPULATIONS
 .nr nS 1
-.Ft int
-.Fn node_move_ref "struct noderef *src_nref" "struct node *src_node" \
-                  "struct map *dmap" "int dx" "int dy"
+.Ft void
+.Fn node_move_ref "struct map *src_map" "struct node *src_node" \
+                  "struct noderef *src_nref" "struct map *dst_map" \
+                  "struct node *dst_node" "int dst_layer"
+.Pp
+.Ft "struct noderef *"
+.Fn node_copy_ref "struct noderef *src_nref" "struct map *dst_map" \
+                  "struct node *dst_node" "int dst_layer"
 .Pp
 .Ft void
-.Fn node_move_ref_direct "struct noderef *src_nref" "struct node *src_node" \
-                         "struct node *dst_node"
+.Fn node_remove_ref "struct map *map" "struct node *node" "struct noderef *nref"
 .Pp
 .Ft "struct noderef *"
-.Fn node_copy_ref "struct noderef *src_nref" "struct node *dst_node"
-.Pp
-.Ft void
-.Fn node_remove_ref "struct node *node" "struct noderef *nref"
+.Fn node_add_sprite "struct map *map" "struct node *node" "void *obj" \
+                    "Uint32 index"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_sprite "struct node *dst_node" "void *obj" "Uint32 index"
+.Fn node_add_anim "struct map *map" "struct node *node" "void *obj" \
+                  "Uint32 index" "Uint32 flags"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_anim "struct node *dst_node" "void *obj" "Uint32 index" \
-                  "Uint32 flags"
-.Pp
-.Ft "struct noderef *"
-.Fn node_add_warp "struct node *dst_node" "const char *new_map" \
-                  "int x" "int y" "Uint8 dir"
-.Pp
+.Fn node_add_warp "struct map *map" "struct node *dst_node" \
+                  "const char *new_map" "int x" "int y" "Uint8 dir"
 .nr nS 0
+.Pp
 The
 .Fn node_move_ref
 function moves
@@ -303,10 +294,10 @@ from
 .Fa src_node
 to the node at specific map coordinates and returns 0, or -1 if
 the coordinates are outside of
-.Fa dmap .
-The
-.Fn node_move_ref_direct
-variant moves a reference across two known nodes.
+.Fa dst_map .
+The reference is associated with
+.Fa dlayer ,
+unless it is -1.
 .Pp
 The
 .Fn node_copy_ref
@@ -314,7 +305,9 @@ function inserts a copy of
 .Fa src_nref
 on top of
 .Fa dst_node,
-with the same layer# and transformations.
+and associate with
+.Fa dst_layer
+(unless it is -1).
 .Pp
 The
 .Fn node_remove_ref
@@ -329,8 +322,8 @@ The
 .Fn node_add_anim
 and
 .Fn node_add_warp
-functions respectively insert sprite references, animation references and
-warp points.
+functions create sprite references, animation references and
+warp points, respectively.
 The
 .Fn new_map
 argument of

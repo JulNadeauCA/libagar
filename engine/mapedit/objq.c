@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.72 2003/06/25 06:15:37 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.73 2003/06/26 02:34:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -45,40 +45,17 @@ enum {
 	OBJQ_INSERT_DOWN
 };
 
-/* Toggle mapview options. */
 static void
-tog_mvoption(int argc, union evarg *argv)
+toggle_edition(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
-	int opt = argv[2].i;
 
-	switch (opt) {
-	case MAPEDIT_TOOL_GRID:
-		if (mv->flags & MAPVIEW_GRID) {
-			mv->flags &= ~(MAPVIEW_GRID);
-		} else {
-			mv->flags |= MAPVIEW_GRID;
-		}
-		break;
-	case MAPEDIT_TOOL_PROPS:
-		if (mv->flags & MAPVIEW_PROPS) {
-			mv->flags &= ~(MAPVIEW_PROPS);
-		} else {
-			mv->flags |= MAPVIEW_PROPS;
-		}
-		break;
-	case MAPEDIT_TOOL_EDIT:
-		if (mv->flags & MAPVIEW_EDIT) {
-			mv->flags &= ~(MAPVIEW_EDIT);
-			window_hide(mv->constr.win);
-		} else {
-			mv->flags |= MAPVIEW_EDIT;
-			window_show(mv->constr.win);
-		}
-		break;
-	case MAPEDIT_TOOL_NODEEDIT:
-		window_toggle_visibility(mv->nodeed.win);
-		break;
+	if (mv->flags & MAPVIEW_EDIT) {
+		mv->flags &= ~(MAPVIEW_EDIT);
+		window_hide(mv->constr.win);
+	} else {
+		mv->flags |= MAPVIEW_EDIT;
+		window_show(mv->constr.win);
 	}
 }
 
@@ -104,7 +81,6 @@ import_gfx(int argc, union evarg *argv)
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		struct node *node;
-		struct noderef *nref, *nnref;
 		struct object *pobj = it->p1;
 		struct map *submap = it->p1;
 		int t, xinc, yinc;
@@ -162,8 +138,7 @@ import_gfx(int argc, union evarg *argv)
 				node_init(node);
 			}
 			dprintf("+sprite: %s:%d\n", pobj->name, ind);
-			nref = node_add_sprite(node, pobj, ind);
-			nref->flags |= NODEREF_SAVEABLE;
+			node_add_sprite(m, node, pobj, ind);
 			break;
 		case NODEREF_ANIM:
 			node = &m->map[con->y][con->x];
@@ -171,9 +146,7 @@ import_gfx(int argc, union evarg *argv)
 				node_init(node);
 			}
 			dprintf("+anim: %s:%d\n", pobj->name, ind);
-			nref = node_add_anim(node, pobj, ind,
-			    NODEREF_ANIM_AUTO);
-			nref->flags |= NODEREF_SAVEABLE;
+			node_add_anim(m, node, pobj, ind, NODEREF_ANIM_AUTO);
 			break;
 		case -1:					/* Submap */
 			dprintf("+submap %u,%u\n", submap->mapw, submap->maph);
@@ -183,21 +156,13 @@ import_gfx(int argc, union evarg *argv)
 				for (sx = 0, dx = con->x;
 				     sx < submap->mapw && dx < m->mapw;
 				     sx++, dx++) {
-					struct node *srcnode =
-					    &submap->map[sy][sx];
-					struct node *dstnode = &m->map[dy][dx];
+					struct node *sn = &submap->map[sy][sx];
+					struct node *dn = &m->map[dy][dx];
 
 					if (con->replace) {
-						node_init(dstnode);
+						node_init(dn);
 					}
-					TAILQ_FOREACH(nref, &srcnode->nrefs,
-					    nrefs) {
-						nnref = node_copy_ref(nref,
-						    dstnode);
-						nnref->flags |=
-						    NODEREF_SAVEABLE;
-					}
-					dstnode->flags = srcnode->flags;
+					node_copy(submap, sn, -1, m, dn, -1);
 				}
 			}
 			break;
@@ -230,15 +195,11 @@ close_tileset(int argc, union evarg *argv)
 {
 	struct window *win = argv[0].p;
 	struct mapview *mv = argv[1].p;
-	struct button *nodeedit_button = argv[2].p;
 
 	if (mv->constr.win != NULL) {
 		window_hide(mv->constr.win);
 	}
-	window_hide(mv->nodeed.win);
 	window_hide(win);
-
-	widget_set_int(nodeedit_button, "state", 0);
 }
 
 /* Set insert/replace mode. */
@@ -325,7 +286,7 @@ open_tileset(int argc, union evarg *argv)
 	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
 	struct window *win;
-	struct hbox *hb;
+	struct box *bo;
 	struct mapview *mv;
 	struct button *bu;
 
@@ -339,64 +300,33 @@ open_tileset(int argc, union evarg *argv)
 	mapview_init(mv, ob->gfx->tile_map,
 	    MAPVIEW_TILESET|MAPVIEW_PROPS|MAPVIEW_GRID);
 	mapview_set_selection(mv, 0, 0, 1, 1);
+	mapview_prescale(mv, 1, 4);
 
 	object_load(ob->gfx->tile_map);
 
 	/* Map operation buttons */
-	hb = hbox_new(win, 1);
-	WIDGET(hb)->flags |= WIDGET_CLIPPING;
-	hbox_set_spacing(hb, 0);
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
+	WIDGET(bo)->flags |= WIDGET_CLIPPING;
+	box_set_spacing(bo, 0);
 	{
-		bu = button_new(hb, NULL);
+		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_LOAD_MAP));
 		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", fileops_revert_map, "%p", mv);
 
-		bu = button_new(hb, NULL);
+		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_SAVE_MAP));
 		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", fileops_save_map, "%p", mv);
 		
-		bu = button_new(hb, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_CLEAR_MAP));
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", fileops_clear_map, "%p", mv);
-		
-		bu = button_new(hb, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		widget_set_bool(bu, "state", 1);
-		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
-		    MAPEDIT_TOOL_GRID);
-
-		bu = button_new(hb, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_PROPS));
-		button_set_sticky(bu, 1);
-		button_set_focusable(bu, 0);
-		widget_set_bool(bu, "state", 1);
-		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
-		    MAPEDIT_TOOL_PROPS);
-	
-		bu = button_new(hb, NULL);
+		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_EDIT));
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed", tog_mvoption, "%p, %i", mv,
-		    MAPEDIT_TOOL_EDIT);
-		
-		bu = button_new(hb, NULL);
-		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT));
-		button_set_focusable(bu, 0);
-		event_new(bu, "button-pushed",
-		    tog_mvoption, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
-		mv->nodeed.trigger = bu;
-
-		event_new(win, "window-close", close_tileset, "%p, %p", mv, bu);
+		event_new(bu, "button-pushed", toggle_edition, "%p", mv);
 	}
-
-	hb = hbox_new(win, 0);
-	object_attach(hb, mv);
+	object_attach(win, mv);
+	event_new(win, "window-close", close_tileset, "%p", mv);
 
 	mv->constr.win = gfx_import_window(ob, mv);
 	window_show(win);

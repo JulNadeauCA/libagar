@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.7 2003/03/25 13:28:46 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.8 2003/04/12 01:45:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -104,6 +104,7 @@ void
 transform_destroy(struct transform *trans)
 {
 	Free(trans->args);
+	free(trans);
 }
 
 __inline__ int

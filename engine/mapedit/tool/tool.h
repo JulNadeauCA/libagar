@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.14 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.15 2003/06/18 00:47:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_TOOL_H_
@@ -20,7 +20,8 @@ struct tool_ops {
 
 	struct window	*(*window)(void *);
 	int		 (*cursor)(void *, struct mapview *, SDL_Rect *);
-	void		 (*effect)(void *, struct mapview *, struct node *);
+	void		 (*effect)(void *, struct mapview *, struct map *,
+			           struct node *);
 	void		 (*mouse)(void *, struct mapview *, Sint16, Sint16,
 			          Uint8);
 };

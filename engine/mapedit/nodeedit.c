@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.c,v 1.14 2003/06/17 23:30:44 vedge Exp $	*/
+/*	$Csoft: nodeedit.c,v 1.15 2003/06/21 06:50:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -32,8 +32,7 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
-#include <engine/widget/vbox.h>
-#include <engine/widget/hbox.h>
+#include <engine/widget/box.h>
 #include <engine/widget/button.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
@@ -53,131 +52,49 @@ nodeedit_close_win(int argc, union evarg *argv)
 static void
 nodeedit_poll(int argc, union evarg *argv)
 {
-	static char flags[96];
 	struct tlist *tl = argv[0].p;
 	struct mapview *mv = argv[1].p;
 	struct node *node;
-	struct tlist_item *it;
-	struct noderef *nref;
+	struct noderef *r;
 	Uint32 i = 0;
 	int sx, sy;
 	
-	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
-		label_printf(mv->nodeed.node_flags_lab, "");
+	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL))
 		return;
-	}
+
 	node = &mv->map->map[sy][sx];
 	
-	flags[0] = '\0';
-	if (node->flags & NODE_WALK) {				/* Movement */
-		strlcat(flags, _("walk "), sizeof(flags));
-	} else if (node->flags & NODE_CLIMB) {
-		strlcat(flags, _("climb "), sizeof(flags));
-	} else {
-		strlcat(flags, _("block "), sizeof(flags));
-	}
-	if (node->flags & NODE_SLIP)
-		strlcat(flags, _("slip "), sizeof(flags));
-
-	if (node->flags & NODE_BIO) {				/* Health mod */
-		strlcat(flags, _("bio "), sizeof(flags));
-	} else if (node->flags & NODE_REGEN) {
-		strlcat(flags, _("regen "), sizeof(flags));
-	}
-	if (node->flags & NODE_SLOW) {				/* Speed mod */
-		strlcat(flags, _("slow "), sizeof(flags));
-	} else if (node->flags & NODE_HASTE) {
-		strlcat(flags, _("haste "), sizeof(flags));
-	}
-
-	if (node->flags & (NODE_EDGE_NW)) {			/* Edges */
-		strlcat(flags, _("NW-edge "), sizeof(flags));
-	} else if (node->flags & (NODE_EDGE_NE)) {
-		strlcat(flags, _("NE-edge "), sizeof(flags));
-	} else if (node->flags & (NODE_EDGE_SW)) {
-		strlcat(flags, _("SW-edge "), sizeof(flags));
-	} else if (node->flags & (NODE_EDGE_SE)) {
-		strlcat(flags, _("SE-edge "), sizeof(flags));
-	} else if (node->flags & NODE_EDGE_N) {
-		strlcat(flags, _("N-edge "), sizeof(flags));
-	} else if (node->flags & NODE_EDGE_S) {
-		strlcat(flags, _("S-edge "), sizeof(flags));
-	}
-
-	label_printf(mv->nodeed.node_flags_lab, _("Node flags: [ %s]"), flags);
-
 	tlist_clear_items(tl);
-
-	TAILQ_FOREACH_REVERSE(nref, &node->nrefs, nrefs, noderefq) {
+	TAILQ_FOREACH_REVERSE(r, &node->nrefs, nrefs, noderefq) {
 		SDL_Surface *icon = NULL;
 		struct gfx_anim *anim;
 		char label[TLIST_LABEL_MAX];
 
-		switch (nref->type) {
+		switch (r->type) {
 		case NODEREF_SPRITE:
 			snprintf(label, sizeof(label), "%u. [%u] s(%s:%u)",
-			    i, nref->layer, nref->pobj->name, nref->offs);
-			icon = nref->pobj->gfx->sprites[nref->offs];
+			    i, r->layer, r->r_sprite.obj->name,
+			    r->r_sprite.offs);
+			icon = r->r_sprite.obj->gfx->sprites[r->r_sprite.offs];
 			break;
 		case NODEREF_ANIM:
 			snprintf(label, sizeof(label), "%u. [%u] a(%s:%u)",
-			    i, nref->layer, nref->pobj->name, nref->offs);
-			anim = nref->pobj->gfx->anims[nref->offs];
+			    i, r->layer, r->r_anim.obj->name, r->r_anim.offs);
+			anim = r->r_anim.obj->gfx->anims[r->r_anim.offs];
 			if (anim->nframes > 0) {
 				icon = anim->frames[0];
 			}
 			break;
 		case NODEREF_WARP:
 			snprintf(label, sizeof(label), "%u. [%u]. w(%s:%d,%d)",
-			    i, nref->layer, nref->data.warp.map,
-			    nref->data.warp.x, nref->data.warp.y);
+			    i, r->layer, r->r_warp.map, r->r_warp.x,
+			    r->r_warp.y);
 			break;
 		}
-		tlist_insert_item(tl, icon, label, nref);
+		tlist_insert_item(tl, icon, label, r);
 		i++;
 	}
-
 	tlist_restore_selections(tl);
-	
-	label_printf(mv->nodeed.noderef_type_lab, "");
-	label_printf(mv->nodeed.noderef_flags_lab, "");
-	label_printf(mv->nodeed.noderef_center_lab, "");
-
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected) {
-			struct noderef *nref = it->p1;
-			char nrflags[32];
-			char *type = "";
-
-			switch (nref->type) {
-			case NODEREF_SPRITE:
-				type = _("sprite");
-				break;
-			case NODEREF_ANIM:
-				type = _("animation");
-				break;
-			case NODEREF_WARP:
-				type = _("warp");
-				break;
-			}
-			
-			nrflags[0] = '\0';
-			if (nref->flags & NODEREF_SAVEABLE)
-				strlcat(nrflags, _("saveable "),
-				    sizeof(nrflags));
-			if (nref->flags & NODEREF_BLOCK)
-				strlcat(nrflags, _("block "), sizeof(nrflags));
-
-			label_printf(mv->nodeed.noderef_type_lab,
-			    _("Noderef type: %s"), type);
-			label_printf(mv->nodeed.noderef_flags_lab,
-			    _("Noderef flags: [ %s]"), nrflags);
-			label_printf(mv->nodeed.noderef_center_lab,
-			    _("Noderef centering: %d,%d"),
-			    nref->xcenter, nref->ycenter);
-			break;
-		}
-	}
 }
 
 enum {
@@ -195,7 +112,7 @@ mapview_node_op(int argc, union evarg *argv)
 	struct tlist *tl = mv->nodeed.refs_tl;
 	struct tlist_item *it;
 	struct node *node;
-	struct noderef *nref;
+	struct noderef *r;
 	int sx, sy;
 
 	if (!mapview_get_selection(mv, &sx, &sy, NULL, NULL)) {
@@ -208,8 +125,8 @@ mapview_node_op(int argc, union evarg *argv)
 	case MAPVIEW_NODE_REMOVE:
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected) {
-				nref = it->p1;
-				node_remove_ref(node, nref);
+				r = it->p1;
+				node_remove_ref(mv->map, node, r);
 				it->selected = 0;
 			}
 		}
@@ -217,28 +134,31 @@ mapview_node_op(int argc, union evarg *argv)
 	case MAPVIEW_NODE_DUP:
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected) {
-				nref = it->p1;
-				node_copy_ref(nref, node);
+				r = it->p1;
+				node_copy_ref(r, mv->map, node,
+				    mv->map->cur_layer);
 			}
 		}
 		break;
 	case MAPVIEW_NODE_MOVE_UP:
 		TAILQ_FOREACH(it, &tl->items, items) {
 			if (it->selected) {
-				nref = it->p1;
-				if (TAILQ_NEXT(nref, nrefs) == NULL)
+				r = it->p1;
+				if (TAILQ_NEXT(r, nrefs) == NULL) {
 					break;
-				node_moveup_ref(node, nref);
+				}
+				node_moveup_ref(node, r);
 			}
 		}
 		break;
 	case MAPVIEW_NODE_MOVE_DOWN:
 		TAILQ_FOREACH_REVERSE(it, &tl->items, items, tlist_itemq) {
 			if (it->selected) {
-				nref = it->p1;
-				if (TAILQ_PREV(nref, noderefq, nrefs) == NULL)
+				r = it->p1;
+				if (TAILQ_PREV(r, noderefq, nrefs) == NULL) {
 					break;
-				node_movedown_ref(node, nref);
+				}
+				node_movedown_ref(node, r);
 			}
 		}
 		break;
@@ -250,8 +170,7 @@ nodeedit_init(struct mapview *mv)
 {
 	struct map *m = mv->map;
 	struct window *win;
-	struct vbox *vb;
-	struct hbox *hb;
+	struct box *bo;
 	struct tlist *tl;
 
 	if ((win = window_new("mapedit-node-%s-%s", OBJECT(mv)->name,
@@ -261,29 +180,20 @@ nodeedit_init(struct mapview *mv)
 	window_set_caption(win, _("%s node"), OBJECT(m)->name);
 	event_new(win, "window-close", nodeedit_close_win, "%p", mv);
 	
-	vb = vbox_new(win, VBOX_WFILL);
-	WIDGET(vb)->flags |= WIDGET_CLIPPING;
-	{
-		mv->nodeed.node_flags_lab = label_new(vb, "");
-		mv->nodeed.noderef_type_lab = label_new(vb, "");
-		mv->nodeed.noderef_flags_lab = label_new(vb, "");
-		mv->nodeed.noderef_center_lab = label_new(vb, "");
-	}
-
-	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL);
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|BOX_WFILL);
 	{
 		struct button *bu;
 
-		bu = button_new(hb, _("Remove"));
+		bu = button_new(bo, _("Remove"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_REMOVE);
-		bu = button_new(hb, _("Dup"));
+		bu = button_new(bo, _("Dup"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_DUP);
-		bu = button_new(hb, _("Move up"));
+		bu = button_new(bo, _("Move up"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_UP);
-		bu = button_new(hb, _("Move down"));
+		bu = button_new(bo, _("Move down"));
 		event_new(bu, "button-pushed", mapview_node_op, "%p, %i", mv,
 		    MAPVIEW_NODE_MOVE_DOWN);
 	}

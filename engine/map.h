@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.93 2003/06/06 02:37:43 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.94 2003/06/18 00:46:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -14,8 +14,8 @@
 #define MAP_MAX_LAYERS		256
 #define NODE_MAX_NODEREFS	32767
 #define NODEREF_MAX_TRANSFORMS	16384
-#define NODEREF_MAX_CENTER	65535
-#define NODEREF_MAX_MOTION	65535
+#define NODEREF_MAX_CENTER	32767
+#define NODEREF_MAX_MOTION	32767
 #define MAP_LAYER_NAME_MAX	128
 
 #include <engine/transform.h>
@@ -23,30 +23,51 @@
 #include "begin_code.h"
 
 enum noderef_type {
-	NODEREF_SPRITE,
-	NODEREF_ANIM,
-	NODEREF_WARP
+	NODEREF_SPRITE,			/* Reference to a sprite */
+	NODEREF_ANIM,			/* Reference to an animation */
+	NODEREF_WARP			/* Reference to another map */
+};
+
+enum noderef_edge {
+	NODEREF_EDGE_NONE,
+	NODEREF_EDGE_NW,
+	NODEREF_EDGE_N,
+	NODEREF_EDGE_NE,
+	NODEREF_EDGE_W,
+	NODEREF_EDGE_FILL,
+	NODEREF_EDGE_E,
+	NODEREF_EDGE_SW,
+	NODEREF_EDGE_S,
+	NODEREF_EDGE_SE
 };
 
 struct noderef {
-#ifdef DEBUG
-	int	magic;
-#define NODEREF_MAGIC 0x1ad
-#endif
-	enum noderef_type type;			/* Type of reference */
-	Uint8		  flags;
-#define NODEREF_SAVEABLE	0x01		/* Saveable reference */
-#define NODEREF_BLOCK		0x04		/* Similar to NODE_BLOCK */
-
-	Uint8		 layer;			/* Layer# */
-	struct object	*pobj;			/* Object pointer */
-	Uint32		 offs;			/* Sprite/anim array offset */
-	Sint16		 xcenter, ycenter;	/* Gfx centering displacement */
-	Sint16		 xmotion, ymotion;	/* Gfx motion displacement */
+	enum noderef_type type;		/* Type of reference */
+	Uint16	flags;
+#define NODEREF_WALK	0x01		/* Surface is walkable */
+#define NODEREF_CLIMB	0x02		/* Surface is climbable */
+#define NODEREF_SLIP	0x04		/* Surface is slippery */
+#define NODEREF_BIO	0x08		/* Contact induces Poison */
+#define NODEREF_REGEN	0x10		/* Contact induces Regen */
+#define NODEREF_SLOW	0x20		/* Increase velocity */
+#define NODEREF_HASTE	0x40		/* Decrease velocity */
+	Uint8	layer;			/* Associated layer# */
+	struct {
+		Sint16	xcenter, ycenter;	/* Centering offsets */
+		Sint16	xmotion, ymotion;	/* Motion offsets */
+		Uint8	edge;			/* Edge (for edition) */
+	} r_gfx;
 	union {
 		struct {
+			struct object	*obj;		/* Gfx object */
+			Uint32		 offs;		/* Sprite index */
+		} sprite;
+		struct {
+			struct object	*obj;		/* Gfx object */
+			Uint32		 offs;		/* Anim index */
+
 			Uint8	flags;
-#define NODEREF_ANIM_AUTO	0x01		/* Auto increment frame# */
+#define NODEREF_ANIM_AUTO 0x01			/* Auto increment */
 			Uint32	frame;		/* Current frame# */
 		} anim;
 		struct {
@@ -54,46 +75,25 @@ struct noderef {
 			int	 x, y;		/* Origin override */
 			Uint8	 dir;		/* Default direction */
 		} warp;
-	} data;
-	SLIST_HEAD(, transform) transforms;	/* Run-time tile transforms */
-	TAILQ_ENTRY(noderef) nrefs;		/* Node reference list */
+	} nref;
+#define r_sprite	nref.sprite
+#define r_anim		nref.anim
+#define r_warp		nref.warp
+	SLIST_HEAD(,transform) transforms;	/* Transformations to apply */
+	TAILQ_ENTRY(noderef) nrefs;		/* Node's reference stack */
 };
 
 TAILQ_HEAD(noderefq, noderef);
 
 struct node {
-#ifdef DEBUG
-	int	magic;
-#define NODE_MAGIC 0x60cd
-#endif
-	struct noderefq	 nrefs;		/* Items on this node */
-	Uint32		 flags;
-#define NODE_ORIGIN	0x00001		/* Origin (unused) */
-#define NODE_WALK	0x00002		/* Can walk through */
-#define NODE_CLIMB	0x00004		/* Can climb (eg. ladder) */
-#define NODE_SLIP	0x00008		/* Slippery */
-#define NODE_BIO	0x00010		/* Cause Poison */
-#define NODE_REGEN	0x00020		/* Cause HP Regeneration */
-#define NODE_SLOW	0x00040		/* Decrease speed */
-#define NODE_HASTE	0x00080		/* Increase speed */
-#define NODE_EDGE_N	0x00100		/* Terrain edges (for map edition) */
-#define NODE_EDGE_S	0x00200
-#define NODE_EDGE_W	0x00400
-#define NODE_EDGE_E	0x00800
-#define NODE_EDGE_NW	0x01000
-#define NODE_EDGE_NE	0x02000
-#define NODE_EDGE_SW	0x04000
-#define NODE_EDGE_SE	0x08000
-#define NODE_EDGE_ANY	(NODE_EDGE_N|NODE_EDGE_S|NODE_EDGE_W|NODE_EDGE_E| \
-			 NODE_EDGE_NW|NODE_EDGE_NE|NODE_EDGE_SW|NODE_EDGE_SE)
-#define NODE_EPHEMERAL	(NODE_ORIGIN)
+	struct noderefq	 nrefs;			/* Items on this node */
 };
 
 struct map_layer {
-	char	*name;		/* Identifier */
-	int	 visible;	/* Layer is visible? */
-	Sint16	 xinc, yinc;	/* X/Y increments for rendering */
-	Uint8	 alpha;		/* Transparency */
+	char	 name[MAP_LAYER_NAME_MAX];	/* Identifier */
+	int	 visible;			/* Layer is visible? */
+	Sint16	 xinc, yinc;			/* Rendering direction */
+	Uint8	 alpha;				/* Transparency */
 };
 
 struct map {
@@ -116,19 +116,15 @@ struct map {
 
 	struct map_layer *layers;	/* Layer descriptions */
 	Uint32		 nlayers;
-#if defined(DEBUG) && defined(THREADS)
-	pthread_t	  check_th;	/* Verify map integrity */
-#endif
 };
 
 __BEGIN_DECLS
-struct map	*map_new(void *, const char *);
-
-void	 map_init(void *, const char *);
-int	 map_load(void *, struct netbuf *);
-int	 map_save(void *, struct netbuf *);
-void	 map_destroy(void *);
-void	 map_edit(void *);
+struct map *map_new(void *, const char *);
+void	    map_init(void *, const char *);
+int	    map_load(void *, struct netbuf *);
+int	    map_save(void *, struct netbuf *);
+void	    map_destroy(void *);
+void	    map_edit(void *);
 
 int	 map_alloc_nodes(struct map *, unsigned int, unsigned int);
 void	 map_free_nodes(struct map *);
@@ -136,49 +132,44 @@ int	 map_resize(struct map *, unsigned int, unsigned int);
 void	 map_set_zoom(struct map *, Uint16);
 int	 map_push_layer(struct map *, const char *);
 void	 map_pop_layer(struct map *);
-void	 noderef_init(struct noderef *);
-int	 noderef_set_center(struct noderef *, int, int);
-int	 noderef_set_motion(struct noderef *, int, int);
-void	 noderef_destroy(struct noderef *);
-int	 noderef_load(struct netbuf *, struct object_table *, struct node *,
-	              struct noderef **);
-void	 noderef_save(struct netbuf *, struct object_table *, struct noderef *);
 
+void		 noderef_init(struct noderef *, enum noderef_type);
+__inline__ void	 noderef_set_center(struct noderef *, int, int);
+__inline__ void	 noderef_set_motion(struct noderef *, int, int);
+void	 	 noderef_destroy(struct map *, struct noderef *);
+int		 noderef_load(struct map *, struct netbuf *,
+		              struct object_table *, struct node *,
+			      struct noderef **);
+void	 	 noderef_save(struct map *, struct netbuf *,
+		              struct object_table *, struct noderef *);
 __inline__ void	 noderef_draw(struct map *, struct noderef *, int, int);
 
-void	 node_init(struct node *);
-int	 node_load(struct netbuf *, struct object_table *, struct node *);
-void	 node_save(struct netbuf *, struct object_table *, struct node *);
-void	 node_destroy(struct node *);
-void	 node_clear_layer(struct node *, Uint8);
+void		 node_init(struct node *);
+int		 node_load(struct map *, struct netbuf *, struct object_table *,
+		           struct node *);
+void		 node_save(struct map *, struct netbuf *, struct object_table *,
+		           struct node *);
+void		 node_destroy(struct map *, struct node *);
+void		 node_clear(struct map *, struct node *, int);
 
-int	 node_move_ref(struct noderef *, struct node *, struct map *, int, int);
-void	 node_move_ref_direct(struct noderef *, struct node *, struct node *);
+__inline__ void	 node_copy(struct map *, struct node *, int, struct map *,
+		           struct node *, int);
+void		 node_move_ref(struct map *, struct node *, struct noderef *,
+		               struct map *, struct node *, int);
+struct noderef	*node_copy_ref(struct noderef *, struct map *, struct node *,
+		               int);
+void		 node_moveup_ref(struct node *, struct noderef *);
+void		 node_movedown_ref(struct node *, struct noderef *);
+void		 node_movetail_ref(struct node *, struct noderef *);
+void		 node_movehead_ref(struct node *, struct noderef *);
+void		 node_remove_ref(struct map *, struct node *, struct noderef *);
 
-void	 node_moveup_ref(struct node *, struct noderef *);
-void	 node_movedown_ref(struct node *, struct noderef *);
-void	 node_movetail_ref(struct node *, struct noderef *);
-void	 node_movehead_ref(struct node *, struct noderef *);
-void	 node_remove_ref(struct node *, struct noderef *);
-
-struct noderef	*node_copy_ref(struct noderef *, struct node *);
-struct noderef	*node_add_sprite(struct node *, void *, Uint32);
-struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
-struct noderef	*node_add_warp(struct node *, const char *, int, int, Uint8);
+struct noderef	*node_add_sprite(struct map *, struct node *, void *, Uint32);
+struct noderef	*node_add_anim(struct map *, struct node *, void *, Uint32,
+		               Uint8);
+struct noderef	*node_add_warp(struct map *, struct node *, const char *, int,
+		               int, Uint8);
 __END_DECLS
-
-#ifdef DEBUG
-extern int map_nodesigs;
-# define MAP_CHECK_NODE(node)					\
-	if (map_nodesigs && (node)->magic != NODE_MAGIC)	\
-		fatal("bad node");
-# define MAP_CHECK_NODEREF(nref)				\
-	if (map_nodesigs && (nref)->magic != NODEREF_MAGIC)	\
-		fatal("bad nref");
-#else
-# define MAP_CHECK_NODE(node)
-# define MAP_CHECK_NODEREF(nref)
-#endif /* DEBUG */
 
 #include "close_code.h"
 #endif /* _AGAR_MAP_H_ */

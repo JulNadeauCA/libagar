@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.45 2003/06/06 09:03:57 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.46 2003/06/17 23:30:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -56,7 +56,6 @@ stamp_init(void *p)
 	tool_init(&stamp->tool, "stamp", &stamp_ops);
 	TOOL(stamp)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_STAMP);
 	stamp->mode = STAMP_REPLACE;
-	stamp->inherit_flags = 1;
 }
 
 struct window *
@@ -70,7 +69,6 @@ stamp_window(void *p)
 	struct stamp *st = p;
 	struct window *win;
 	struct radio *rad;
-	struct checkbox *cb;
 
 	win = window_new("mapedit-tool-stamp");
 	window_set_caption(win, _("Stamp"));
@@ -79,62 +77,39 @@ stamp_window(void *p)
 	rad = radio_new(win, mode_items);
 	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
 	widget_focus(rad);
-		
-	cb = checkbox_new(win, _("Inherit flags"));
-	widget_bind(cb, "state", WIDGET_INT, NULL, &st->inherit_flags);
 	return (win);
 }
 
 void
-stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
+stamp_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
-	struct stamp *st = p;
-	struct node *srcnode = mapedit.src_node;
-	struct noderef *nref, *nnref;
+	struct node *sn = mapedit.src_node;
+	struct noderef *r;
 
-	if (srcnode == NULL) {
+	if (sn == NULL) {
 		text_msg(MSG_ERROR, _("No source node is selected"));
 		return;
 	}
-	if (srcnode == dstnode) {
-		/* Circular reference */
+	if (sn == node)					/* Circular reference */
 		return;
-	}
-	
-	/* Remove existing refs on this layer. */
-	if (st->mode == STAMP_REPLACE) {
-		for (nref = TAILQ_FIRST(&dstnode->nrefs);
-		     nref != TAILQ_END(&dstnode->nrefs);
-		     nref = nnref) {
-			nnref = TAILQ_NEXT(nref, nrefs);
-			if (nref->layer == mv->map->cur_layer) {
-				TAILQ_REMOVE(&dstnode->nrefs, nref, nrefs);
-				noderef_destroy(nref);
-				free(nref);
-			}
-		}
-	}
 
-	/* Copy the refs from the source node. */
-	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		nref = node_copy_ref(nref, dstnode);
-		nref->layer = mv->map->cur_layer;
-	}
+	node_clear(m, node, m->cur_layer);
 
-	if (st->inherit_flags)
-		dstnode->flags = srcnode->flags;
+	TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
+		node_copy_ref(r, m, node, m->cur_layer);
+	}
 }
 
 int
 stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
-	struct noderef *nref;
+	struct noderef *r;
 
 	if (mapedit.src_node == NULL)
 		return (-1);
 
-	TAILQ_FOREACH(nref, &mapedit.src_node->nrefs, nrefs) {
-		noderef_draw(mv->map, nref,
+	TAILQ_FOREACH(r, &mapedit.src_node->nrefs, nrefs) {
+		noderef_draw(mv->map, r,
 		    WIDGET(mv)->cx + rd->x,
 		    WIDGET(mv)->cy + rd->y);
 	}

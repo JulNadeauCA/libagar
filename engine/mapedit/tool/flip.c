@@ -1,4 +1,4 @@
-/*	$Csoft: flip.c,v 1.11 2003/06/06 02:47:52 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.12 2003/06/17 23:30:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -91,7 +91,7 @@ flip_window(void *p)
 }
 
 void
-flip_effect(void *p, struct mapview *mv, struct node *node)
+flip_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct flip *flip = p;
 	struct noderef *nref;
@@ -100,7 +100,7 @@ flip_effect(void *p, struct mapview *mv, struct node *node)
 		enum transform_type type = TRANSFORM_HFLIP;
 		struct transform *trans;
 		
-		if (nref->layer != mv->map->cur_layer)
+		if (nref->layer != m->cur_layer)
 			continue;
 
 		switch (flip->mode) {

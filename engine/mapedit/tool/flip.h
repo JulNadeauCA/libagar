@@ -1,4 +1,4 @@
-/*	$Csoft: flip.h,v 1.3 2003/04/25 09:47:08 vedge Exp $	*/
+/*	$Csoft: flip.h,v 1.4 2003/06/18 00:47:01 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -24,7 +24,8 @@ struct flip {
 __BEGIN_DECLS
 void		 flip_init(void *);
 struct window	*flip_window(void *);
-void		 flip_effect(void *, struct mapview *, struct node *);
+void		 flip_effect(void *, struct mapview *, struct map *,
+		             struct node *);
 __END_DECLS
 
 #include "close_code.h"

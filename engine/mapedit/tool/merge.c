@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.40 2003/06/17 23:30:45 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.41 2003/06/21 06:50:24 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 
 const struct version merge_ver = {
 	"agar merge tool",
-	4, 0
+	5, 0
 };
 
 const struct tool_ops merge_ops = {
@@ -60,6 +60,27 @@ const struct tool_ops merge_ops = {
 	NULL			/* mouse */
 };
 
+enum {
+	NODE, FILL,
+	EDNW, EDNO, EDNE,
+	EDWE, EDEA,
+	EDSW, EDSO, EDSE
+};
+
+static const int
+merge_table[9][9] = {
+       /* nw    n     ne    w     fill  e     sw    s     se */
+	{ EDNW, EDNO, EDNO, EDWE, NODE, FILL, FILL, FILL, FILL }, /* nw */
+	{ EDNO, EDNO, EDNO, FILL, NODE, FILL, FILL, FILL, FILL }, /* n */
+	{ EDNO, EDNO, NODE, 0   , NODE, EDEA, FILL, FILL, EDEA }, /* ne */
+	{ EDWE, FILL, FILL, EDWE, NODE, FILL, EDWE, FILL, FILL }, /* w */
+	{ FILL, FILL, FILL, FILL, NODE, FILL, FILL, FILL, FILL }, /* fill */
+	{ FILL, FILL, EDEA, FILL, NODE, EDEA, FILL, FILL, EDEA }, /* e */
+	{ EDWE, 0,    EDEA, EDWE, NODE, 0,    EDSW, EDSO, EDSO }, /* sw */
+	{ FILL, FILL, FILL, FILL, NODE, FILL, EDSO, EDSO, EDSO }, /* s */
+	{ EDWE, 0,    EDEA, EDNO, NODE, EDNO, EDSO, EDSO, EDSE }  /* se */
+};
+
 void
 merge_init(void *p)
 {
@@ -68,7 +89,6 @@ merge_init(void *p)
 	tool_init(&merge->tool, "merge", &merge_ops);
 	TOOL(merge)->icon = SPRITE(&mapedit, MAPEDIT_TOOL_MERGE);
 	merge->mode = MERGE_REPLACE;
-	merge->inherit_flags = 1;
 	merge->random_shift = 0;
 	merge->layer = 0;
 	TAILQ_INIT(&merge->brushes);
@@ -108,11 +128,8 @@ merge_create_brush(int argc, union evarg *argv)
 	char m_name[OBJECT_NAME_MAX];
 	struct map *m;
 
-	if (textbox_copy_string(name_tbox, brush_name, sizeof(brush_name) - 8)
-	    > sizeof(brush_name) - 8) {
-		text_msg(MSG_ERROR, _("Brush name is too big"));
-		return;
-	}
+	textbox_copy_string(name_tbox, brush_name,
+	    sizeof(brush_name) - sizeof("brush()"));
 	if (brush_name[0] == '\0') {
 		text_msg(MSG_ERROR, _("No brush name was given"));
 		return;
@@ -238,8 +255,6 @@ merge_window(void *p)
 
 		rad = radio_new(vb, mode_items);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &mer->mode);
-		cb = checkbox_new(vb, _("Inherit node flags"));
-		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->inherit_flags);
 		cb = checkbox_new(vb, _("Random shift"));
 		widget_bind(cb, "state", WIDGET_INT, NULL, &mer->random_shift);
 	}
@@ -278,16 +293,76 @@ merge_window(void *p)
 	return (win);
 }
 
+static void
+merge_interpolate(struct merge *mer, struct map *sm, struct node *sn,
+    struct noderef *sr, struct map *dm, struct node *dn, struct noderef *dr)
+{
+	int sedge = sr->r_gfx.edge;
+	int dedge = dr->r_gfx.edge;
+	int op = merge_table[sedge][dedge];
+	struct noderef *r;
+	int x, y;
+
+	dprintf("interp %d <-> %d\n", sedge, dedge);
+
+	switch (op) {
+	case NODE:
+		node_copy_ref(sr, dm, dn, mer->layer);
+		break;
+	case FILL:
+		for (y = 0; y < sm->maph; y++) {
+			for (x = 0; x < sm->mapw; x++) {
+				struct node *fn = &sm->map[y][x];
+			
+				/* XXX randomize/increment */
+				TAILQ_FOREACH(r, &fn->nrefs, nrefs) {
+					if (r->r_gfx.edge != 0) {
+						continue;
+					}
+					node_copy_ref(r, dm, dn, mer->layer);
+				}
+				return;
+			}
+		}
+		break;
+	case EDNW:
+	case EDNO:
+	case EDNE:
+	case EDWE:
+	case EDEA:
+	case EDSW:
+	case EDSO:
+	case EDSE:
+		/* Copy the first edge with the requested orientation. */
+		for (y = 0; y < sm->maph; y++) {
+			for (x = 0; x < sm->mapw; x++) {
+				struct node *en = &sm->map[y][x];
+
+				/* XXX randomize/increment */
+				TAILQ_FOREACH(r, &en->nrefs, nrefs) {
+					if (r->r_gfx.edge != op) {
+						continue;
+					}
+					node_copy_ref(r, dm, dn, mer->layer);
+				}
+				return;
+			}
+		}
+		break;
+	}
+}
+
 void
-merge_effect(void *p, struct mapview *mv, struct node *dst_node)
+merge_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct merge *mer = p;
 	struct tlist_item *it;
-	struct map *dm = mv->map;
-
+	
 	/* Avoid circular references. XXX ugly */
-	if (strncmp(OBJECT(dm)->name, "brush(", 6) == 0)
+	if (strncmp(OBJECT(m)->name, "brush(", 6) == 0)
 		return;
+	
+	mer->layer = m->cur_layer;
 
 	TAILQ_FOREACH(it, &mer->brushes_tl->items, items) {
 		struct map *sm;
@@ -297,327 +372,24 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 			continue;
 
 		sm = it->p1;
-
 		for (sy = 0, dy = mv->cy - sm->maph/2;
-		     sy < sm->maph && dy < dm->maph;
+		     sy < sm->maph && dy < m->maph;
 		     sy++, dy++) {
 			for (sx = 0, dx = mv->cx - sm->mapw/2;
-			     sx < sm->mapw && dx < dm->mapw;
+			     sx < sm->mapw && dx < m->mapw;
 			     sx++, dx++) {
-				merge_interpolate(mer, sm,
-				    &sm->map[sy][sx],
-				    &dm->map[dy][dx],
-				    dx, dy, mv);
+				struct node *sn = &sm->map[sy][sx];
+				struct node *dn = &m->map[dy][dx];
+				struct noderef *sr, *dr;
+
+				TAILQ_FOREACH(sr, &sn->nrefs, nrefs) {
+					TAILQ_FOREACH(dr, &dn->nrefs, nrefs) {
+						merge_interpolate(mer, sm, sn,
+						    sr, m, dn, dr);
+					}
+				}
 			}
 		}
-	}
-}
-
-static void
-merge_copy_node(struct merge *mer, struct node *srcnode, struct node *dstnode,
-    int dx, int dy)
-{
-	struct noderef *nref, *nnref;
-
-	TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-		nnref = node_copy_ref(nref, dstnode);
-		nnref->layer = mer->layer;
-	}
-
-	if (mer->inherit_flags) {
-		dstnode->flags = srcnode->flags;
-	}
-}
-
-static void
-merge_copy_edge(struct merge *mer, struct map *sm, struct node *dstnode,
-    Uint32 nedge)
-{
-	int sx, sy;
-
-	/* Copy the first edge with the requested orientation. */
-	for (sy = 0; sy < sm->maph; sy++) {
-		for (sx = 0; sx < sm->mapw; sx++) {
-			struct node *srcnode = &sm->map[sy][sx];
-			struct noderef *nref, *nnref;
-
-			if (TAILQ_EMPTY(&srcnode->nrefs) ||
-			   (srcnode->flags & nedge) == 0)
-				continue;
-
-			/* XXX randomize/increment */
-			dprintf("edge\n");
-			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-				nnref = node_copy_ref(nref, dstnode);
-				nnref->layer = mer->layer;
-			}
-			if (mer->inherit_flags) {
-				dstnode->flags = srcnode->flags;
-			}
-			dstnode->flags &= ~(NODE_EDGE_ANY);
-			dstnode->flags |= nedge;
-			return;
-		}
-	}
-}
-
-static void
-merge_copy_filling(struct merge *mer, struct map *sm, struct node *dstnode)
-{
-	int sx, sy;
-
-	/* Copy the first node with the requested orientation (0=filling). */
-	for (sy = 0; sy < sm->maph; sy++) {
-		for (sx = 0; sx < sm->mapw; sx++) {
-			struct node *srcnode = &sm->map[sy][sx];
-			struct noderef *nref, *nnref;
-			
-			if (TAILQ_EMPTY(&srcnode->nrefs) ||
-			   (srcnode->flags & NODE_EDGE_ANY))
-				continue;
-
-			dprintf("filling\n");
-
-			/* XXX randomize/increment */
-			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-				nnref = node_copy_ref(nref, dstnode);
-				nnref->layer = mer->layer;
-			}
-			if (mer->inherit_flags) {
-				dstnode->flags = srcnode->flags;
-			}
-			return;
-		}
-	}
-}
-
-#define NODE_EDGE_FILLING 0
-
-void
-merge_interpolate(struct merge *mer, struct map *sm, struct node *srcnode,
-    struct node *dstnode, int dx, int dy, struct mapview *mv)
-{
-	Uint32 srcedge = srcnode->flags & NODE_EDGE_ANY;
-	Uint32 dstedge = dstnode->flags & NODE_EDGE_ANY;
-	struct noderef *nref, *nnref;
-	int other = 0;
-
-	mer->layer = mv->map->cur_layer;
-
-	if (TAILQ_EMPTY(&srcnode->nrefs))
-		return;
-
-	/* Remove other noderefs on this layer. */
-	for (nref = TAILQ_FIRST(&dstnode->nrefs);
-	     nref != TAILQ_END(&dstnode->nrefs);
-	     nref = nnref) {
-		nnref = TAILQ_NEXT(nref, nrefs);
-		if (nref->layer == mer->layer) {
-			TAILQ_REMOVE(&dstnode->nrefs, nref, nrefs);
-			noderef_destroy(nref);
-			free(nref);
-
-			other++;
-		}
-	}
-	if (!other) {					/* Empty */
-		merge_copy_node(mer, srcnode, dstnode, dx, dy);
-		return;
-	}
-
-	switch (dstedge) {
-	case NODE_EDGE_FILLING:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		default:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		}
-		break;
-	case NODE_EDGE_NW:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_NW:				/* Same */
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_NW);
-			break;
-		case NODE_EDGE_N:
-		case NODE_EDGE_NE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_N);
-			break;
-		case NODE_EDGE_SW:
-		case NODE_EDGE_S:
-		case NODE_EDGE_SE:
-		case NODE_EDGE_E:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		case NODE_EDGE_W:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_W);
-			break;
-		}
-		break;
-	case NODE_EDGE_N:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_N:				/* Same */
-		case NODE_EDGE_NW:
-		case NODE_EDGE_NE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_N);
-			break;
-		case NODE_EDGE_S:
-		case NODE_EDGE_SW:
-		case NODE_EDGE_SE:
-		case NODE_EDGE_W:
-		case NODE_EDGE_E:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		}
-		break;
-	case NODE_EDGE_NE:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_NE:				/* Same */
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_NW:
-		case NODE_EDGE_N:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_N);
-			break;
-		case NODE_EDGE_SW:
-		case NODE_EDGE_S:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		case NODE_EDGE_SE:
-		case NODE_EDGE_E:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_E);
-			break;
-		}
-		break;
-	case NODE_EDGE_S:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_S:				/* Same */
-		case NODE_EDGE_SW:
-		case NODE_EDGE_SE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_S);
-			break;
-		case NODE_EDGE_N:
-		case NODE_EDGE_NW:
-		case NODE_EDGE_NE:
-		case NODE_EDGE_W:
-		case NODE_EDGE_E:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		}
-		break;
-	case NODE_EDGE_SW:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_NW:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_W);
-			break;
-		case NODE_EDGE_N:
-			/* XXX ... */
-			break;
-		case NODE_EDGE_NE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_E);
-			break;
-		case NODE_EDGE_SW:				/* Same */
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_SW);
-			break;
-		case NODE_EDGE_S:
-		case NODE_EDGE_SE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_S);
-			break;
-		case NODE_EDGE_W:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_W);
-			break;
-		case NODE_EDGE_E:
-			/* XXX */
-			break;
-		}
-		break;
-	case NODE_EDGE_SE:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_NW:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_W);
-			break;
-		case NODE_EDGE_N:
-			/* XXX ... */
-		case NODE_EDGE_NE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_E);
-			break;
-		case NODE_EDGE_SW:
-		case NODE_EDGE_S:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_S);
-			break;
-		case NODE_EDGE_SE:				/* Same */
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_SE);
-			break;
-		case NODE_EDGE_W:
-		case NODE_EDGE_E:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_N);
-			break;
-		}
-		break;
-	case NODE_EDGE_W:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_S:
-		case NODE_EDGE_SE:
-		case NODE_EDGE_N:
-		case NODE_EDGE_NE:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		case NODE_EDGE_W:				/* Same */
-		case NODE_EDGE_NW:
-		case NODE_EDGE_SW:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_W);
-			break;
-		case NODE_EDGE_E:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		}
-		break;
-	case NODE_EDGE_E:
-		switch (srcedge) {
-		case NODE_EDGE_FILLING:
-			merge_copy_node(mer, srcnode, dstnode, dx, dy);
-			break;
-		case NODE_EDGE_S:
-		case NODE_EDGE_SW:
-		case NODE_EDGE_N:
-		case NODE_EDGE_NW:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		case NODE_EDGE_NE:
-		case NODE_EDGE_SE:
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_E);
-			break;
-		case NODE_EDGE_W:
-			merge_copy_filling(mer, sm, dstnode);
-			break;
-		case NODE_EDGE_E:				/* Same */
-			merge_copy_edge(mer, sm, dstnode, NODE_EDGE_E);
-			break;
-		}
-		break;
 	}
 }
 
@@ -631,7 +403,6 @@ merge_load(void *p, struct netbuf *buf)
 		return (-1);
 
 	mer->mode = (Uint32)read_uint32(buf);
-	mer->inherit_flags = (Uint32)read_uint32(buf);
 	mer->random_shift = (Uint32)read_uint32(buf);
 
 	tlist_clear_items(mer->brushes_tl);
@@ -642,13 +413,7 @@ merge_load(void *p, struct netbuf *buf)
 		struct map *nbrush;
 		char m_name[OBJECT_NAME_MAX];
 
-		if (copy_string(m_name, buf, sizeof(m_name)) >=
-		    sizeof(m_name)) {
-			text_msg(MSG_ERROR, "Brush name is too big");
-			continue;
-		}
-		dprintf("loading brush: %s\n", m_name);
-
+		copy_string(m_name, buf, sizeof(m_name));
 		nbrush = Malloc(sizeof(struct map));
 		map_init(nbrush, m_name);
 		map_load(nbrush, buf);
@@ -670,7 +435,6 @@ merge_save(void *p, struct netbuf *buf)
 	version_write(buf, &merge_ver);
 
 	write_uint32(buf, (Uint32)mer->mode);
-	write_uint32(buf, (Uint32)mer->inherit_flags);
 	write_uint32(buf, (Uint32)mer->random_shift);
 
 	count_offs = netbuf_tell(buf);				/* Skip count */
@@ -690,7 +454,7 @@ int
 merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
 	struct merge *mer = p;
-	struct noderef *nref;
+	struct noderef *r;
 	struct map *sm;
 	int sx, sy, dx, dy;
 	struct tlist_item *it;
@@ -711,17 +475,17 @@ merge_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 			for (sx = 0, dx = rd->x - (sm->mapw * mv->map->tilew)/2;
 			     sx < sm->mapw;
 			     sx++, dx += mv->map->tilew) {
-				struct node *srcnode = &sm->map[sy][sx];
+				struct node *sn = &sm->map[sy][sx];
 
-				TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-					noderef_draw(mv->map, nref,
+				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
+					noderef_draw(mv->map, r,
 					    WIDGET(mv)->cx+dx,
 					    WIDGET(mv)->cy+dy);
-					if (mv->flags & MAPVIEW_PROPS) {
-						mapview_draw_props(mv,
-						    srcnode, dx, dy, -1, -1);
-					}
 					rv = 0;
+				}
+				if (mv->flags & MAPVIEW_PROPS) {
+					mapview_draw_props(mv, sn, dx, dy,
+					    -1, -1);
 				}
 			}
 		}

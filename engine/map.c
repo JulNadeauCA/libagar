@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.181 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.182 2003/06/21 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -58,157 +58,120 @@ const struct object_ops map_ops = {
 int	map_debug = DEBUG_STATE|DEBUG_RESIZE;
 int	map_nodesigs = 1;
 #define engine_debug map_debug
-
-# ifdef THREADS
-static void	*map_check(void *);
-# endif
 #endif /* DEBUG */
 
 static void	 map_layer_init(struct map_layer *lay, const char *);
-static void	 map_layer_destroy(struct map_layer *);
 
 void
 node_init(struct node *node)
 {
-#ifdef DEBUG
-	node->magic = NODE_MAGIC;
-#endif
 	TAILQ_INIT(&node->nrefs);
-	node->flags = 0;
 }
 
 void
-node_destroy(struct node *node)
+node_destroy(struct map *m, struct node *node)
 {
-	struct noderef *nref, *nextnref;
+	struct noderef *r, *nr;
 
-#ifdef DEBUG
-	if (node->magic != NODE_MAGIC)
-		fatal("bad node");
-	node->magic = 0;
-#endif
-	for (nref = TAILQ_FIRST(&node->nrefs);
-	     nref != TAILQ_END(&node->nrefs);
-	     nref = nextnref) {
-		nextnref = TAILQ_NEXT(nref, nrefs);
-		noderef_destroy(nref);
-		free(nref);
+	for (r = TAILQ_FIRST(&node->nrefs);
+	     r != TAILQ_END(&node->nrefs);
+	     r = nr) {
+		nr = TAILQ_NEXT(r, nrefs);
+		noderef_destroy(m, r);
 	}
 }
 
 void
-noderef_init(struct noderef *nref)
+noderef_init(struct noderef *r, enum noderef_type type)
 {
-#ifdef DEBUG
-	nref->magic = NODEREF_MAGIC;
-#endif
-	nref->type = 0;
-	nref->flags = 0;
-	nref->pobj = NULL;
-	nref->offs = 0;
-	nref->xcenter = 0;
-	nref->ycenter = 0;
-	nref->xmotion = 0;
-	nref->ymotion = 0;
-	nref->layer = 0;
-	SLIST_INIT(&nref->transforms);
+	r->type = type;
+	r->flags = 0;
+	r->layer = 0;
+	r->r_gfx.xcenter = 0;
+	r->r_gfx.ycenter = 0;
+	r->r_gfx.xmotion = 0;
+	r->r_gfx.ymotion = 0;
+	r->r_gfx.edge = 0;
+	SLIST_INIT(&r->transforms);
 }
 
 /*
  * Adjust noderef centering offsets.
  * The parent map, if any, must be locked.
  */
-int
-noderef_set_center(struct noderef *nref, int xcenter, int ycenter)
+void
+noderef_set_center(struct noderef *r, int xcenter, int ycenter)
 {
-	if (xcenter > -NODEREF_MAX_CENTER &&
-	    xcenter < NODEREF_MAX_CENTER &&
-	    ycenter > -NODEREF_MAX_CENTER &&
-	    ycenter < NODEREF_MAX_CENTER) {
-		nref->xcenter = (Sint16)xcenter;
-		nref->ycenter = (Sint16)ycenter;
-		return (0);
-	} else {
-		return (-1);
-	}
+	r->r_gfx.xcenter = (Sint16)xcenter;
+	r->r_gfx.ycenter = (Sint16)ycenter;
 }
 
 /*
  * Adjust noderef motion offsets.
  * The parent map, if any, must be locked.
  */
-int
-noderef_set_motion(struct noderef *nref, int xmotion, int ymotion)
+void
+noderef_set_motion(struct noderef *r, int xmotion, int ymotion)
 {
-	if (xmotion > -NODEREF_MAX_CENTER &&
-	    xmotion < NODEREF_MAX_CENTER &&
-	    ymotion > -NODEREF_MAX_CENTER &&
-	    ymotion < NODEREF_MAX_CENTER) {
-		nref->xmotion = (Sint16)xmotion;
-		nref->ymotion = (Sint16)ymotion;
-		return (0);
-	} else {
-		return (-1);
-	}
+	r->r_gfx.xmotion = (Sint16)xmotion;
+	r->r_gfx.ymotion = (Sint16)ymotion;
 }
 
 void
-noderef_destroy(struct noderef *nref)
+noderef_destroy(struct map *m, struct noderef *r)
 {
 	struct transform *trans, *ntrans;
 
-#ifdef DEBUG
-	if (nref->magic != NODEREF_MAGIC)
-		fatal("bad nref");
-	nref->magic = 0;
-#endif
-
-	for (trans = SLIST_FIRST(&nref->transforms);
-	     trans != SLIST_END(&nref->transforms);
+	for (trans = SLIST_FIRST(&r->transforms);
+	     trans != SLIST_END(&r->transforms);
 	     trans = ntrans) {
 		ntrans = SLIST_NEXT(trans, transforms);
 		transform_destroy(trans);
-		free(trans);
 	}
 
-	switch (nref->type) {
+	switch (r->type) {
+	case NODEREF_SPRITE:
+		object_del_dep(m, r->r_sprite.obj);
+		break;
+	case NODEREF_ANIM:
+		object_del_dep(m, r->r_anim.obj);
+		break;
 	case NODEREF_WARP:
-		free(nref->data.warp.map);
+		free(r->r_warp.map);
 		break;
 	default:
 		break;
 	}
+	free(r);
 }
 
+/* Allocate and initialize the node arrays. */
 int
 map_alloc_nodes(struct map *m, unsigned int w, unsigned int h)
 {
 	int x, y;
 	
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set("%ux%u nodes > %ux%u", w, h,
-		    MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
+		error_set("%ux%u nodes > %ux%u", w, h, MAP_MAX_WIDTH,
+		    MAP_MAX_HEIGHT);
 		return (-1);
 	}
 
 	pthread_mutex_lock(&m->lock);
-
 	m->mapw = w;
 	m->maph = h;
-
 	m->map = Malloc(h * sizeof(struct node *));
 	for (y = 0; y < h; y++) {
 		m->map[y] = Malloc(w * sizeof(struct node));
-
 		for (x = 0; x < w; x++) {
 			node_init(&m->map[y][x]);
 		}
 	}
-
 	pthread_mutex_unlock(&m->lock);
 	return (0);
 }
 
+/* Release the node arrays. */
 void
 map_free_nodes(struct map *m)
 {
@@ -216,88 +179,86 @@ map_free_nodes(struct map *m)
 	struct node *node;
 
 	pthread_mutex_lock(&m->lock);
-
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			node = &m->map[y][x];
-			MAP_CHECK_NODE(node);
-			node_destroy(node);
+			node_destroy(m, node);
 		}
 		free(m->map[y]);
 	}
 	free(m->map);
 	m->map = NULL;
-	
 	pthread_mutex_unlock(&m->lock);
 }
 
+/* Release the layer array. */
 static void
 map_free_layers(struct map *m)
 {
-	int i;
-	
 	m->nlayers = 0;
-	for (i = 0; i < m->nlayers; i++) {
-		map_layer_destroy(&m->layers[i]);
-	}
 	free(m->layers);
 	m->layers = NULL;
 }
 
+/* Resize a map, initializing new nodes and destroying excess ones. */
 int
 map_resize(struct map *m, unsigned int w, unsigned int h)
 {
-	int sx, sy, dx, dy;
-	struct noderef *nref, *nnref;
-	struct node **nmap;
+	struct map tm;
+	int x, y;
 
 	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
 
 	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set(_("map geometry is too big"));
+		error_set("size exceeds %ux%u", MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
 		return (-1);
 	}
 
 	pthread_mutex_lock(&m->lock);
 
-	/* Allocate and initialize new node arrays. */
-	nmap = Malloc(h * sizeof(struct node *));
-	for (dy = 0; dy < h; dy++) {
-		nmap[dy] = Malloc(w * sizeof(struct node));
-		for (dx = 0; dx < w; dx++) {
-			node_init(&nmap[dy][dx]);
+	/* Save the nodes to a temporary map, to preserve dependencies. */
+	map_init(&tm, "t");
+	if (map_alloc_nodes(&tm, m->mapw, m->maph) == -1) {
+		goto fail;
+	}
+	for (y = 0;
+	     y < m->maph && y < h;
+	     y++) {
+		for (x = 0;
+		     x < m->mapw && x < w;
+		     x++) {
+			node_copy(m, &m->map[y][x], -1, &tm, &tm.map[y][x], -1);
 		}
 	}
 
-	/* Copy the nodes over. */
-	for (sy = 0, dy = 0;
-	     sy < m->maph && dy < h;
-	     sy++, dy++) {
-		for (sx = 0, dx = 0;
-		     sx < m->mapw && dx < w;
-		     sx++, dx++) {
-			struct node *srcnode = &m->map[sy][sx];
-			struct node *dstnode = &nmap[dy][dx];
-		
-			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
-				nnref = node_copy_ref(nref, dstnode);
-				nnref->layer = nref->layer;
-			}
-			dstnode->flags = srcnode->flags;
-		}
-	}
-
+	/* Resize the map, restore the original nodes. */
 	map_free_nodes(m);
-	m->map = nmap;
-	m->mapw = w;
-	m->maph = h;
+	if (map_alloc_nodes(m, w, h) == -1) {
+		goto fail;
+	}
+	for (y = 0;
+	     y < tm.maph && y < m->maph;
+	     y++) {
+		for (x = 0;
+		     x < tm.mapw && x < m->mapw;
+		     x++) {
+			node_copy(&tm, &tm.map[y][x], -1, m, &m->map[y][x], -1);
+		}
+	}
+
+	/* Make sure the origin remains inside the map. */
 	if (m->origin.x >= w)
 		m->origin.x = w-1;
 	if (m->origin.y >= h)
 		m->origin.y = h-1;
 
 	pthread_mutex_unlock(&m->lock);
+	object_destroy(&tm);
 	return (0);
+fail:
+	pthread_mutex_unlock(&m->lock);
+	object_destroy(&tm);
+	return (-1);
 }
 
 /* Modify the zoom factor. */
@@ -356,28 +317,16 @@ map_init(void *obj, const char *name)
 	m->nlayers = 1;
 	map_layer_init(&m->layers[0], _("Layer 0"));
 	pthread_mutex_init(&m->lock, &recursive_mutexattr);
-
-#if defined(DEBUG) && defined(THREADS)
-	if (map_debug & DEBUG_SCAN) {
-		Pthread_create(&m->check_th, NULL, map_check, m);
-	}
-#endif
 }
 
 static void
 map_layer_init(struct map_layer *lay, const char *name)
 {
-	lay->name = Strdup(name);
+	strlcpy(lay->name, name, sizeof(lay->name));
 	lay->visible = 1;
 	lay->xinc = 1;
 	lay->yinc = 1;
 	lay->alpha = SDL_ALPHA_OPAQUE;
-}
-
-static void
-map_layer_destroy(struct map_layer *lay)
-{
-	free(lay->name);
 }
 
 /* Create a new layer. */
@@ -413,176 +362,202 @@ map_pop_layer(struct map *m)
 
 /*
  * Insert a reference to a sprite at pobj:offs.
- * The map containing the node must be locked.
+ * The map must be locked.
  */
 struct noderef *
-node_add_sprite(struct node *node, void *pobj, Uint32 offs)
+node_add_sprite(struct map *map, struct node *node, void *pobj, Uint32 offs)
 {
-	struct noderef *nref;
+	struct noderef *r;
 
-	nref = Malloc(sizeof(struct noderef));
-	noderef_init(nref);
-	nref->type = NODEREF_SPRITE;
-	nref->pobj = pobj;
-	nref->offs = offs;
-	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
-	return (nref);
+	r = Malloc(sizeof(struct noderef));
+	noderef_init(r, NODEREF_SPRITE);
+	r->r_sprite.obj = pobj;
+	r->r_sprite.offs = offs;
+	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
+	object_add_dep(map, pobj);
+	return (r);
 }
 
 /*
  * Insert a reference to an animation at pobj:offs.
- * The map containing the node must be locked.
+ * The map must be locked.
  */
 struct noderef *
-node_add_anim(struct node *node, void *pobj, Uint32 offs, Uint8 flags)
+node_add_anim(struct map *map, struct node *node, void *pobj, Uint32 offs,
+    Uint8 flags)
 {
-	struct noderef *nref;
+	struct noderef *r;
 
-	nref = Malloc(sizeof(struct noderef));
-	noderef_init(nref);
-	nref->type = NODEREF_ANIM;
-	nref->pobj = pobj;
-	nref->offs = offs;
-	nref->data.anim.flags = flags;
-	nref->data.anim.frame = 0;
-	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
-	return (nref);
+	r = Malloc(sizeof(struct noderef));
+	noderef_init(r, NODEREF_ANIM);
+	r->r_anim.obj = pobj;
+	r->r_anim.offs = offs;
+	r->r_anim.flags = flags;
+	r->r_anim.frame = 0;
+	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
+	object_add_dep(map, pobj);
+	return (r);
 }
 
 /*
- * Insert a warp point. The destination map name is resolved at runtime.
- * The map containing the node must be locked.
+ * Insert a warp point.
+ * The map must be locked.
  */
 struct noderef *
-node_add_warp(struct node *node, const char *mapname, int x, int y, Uint8 dir)
+node_add_warp(struct map *map, struct node *node, const char *mapname,
+    int x, int y, Uint8 dir)
 {
-	struct noderef *nref;
+	struct noderef *r;
 
-	if (x > MAP_MAX_WIDTH || y > MAP_MAX_HEIGHT)
-		fatal("bad warp coords");
-
-	nref = Malloc(sizeof(struct noderef));
-	noderef_init(nref);
-	nref->type = NODEREF_WARP;
-	nref->data.warp.map = Strdup(mapname);
-	nref->data.warp.x = x;
-	nref->data.warp.y = y;
-	nref->data.warp.dir = dir;
-	TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
-	return (nref);
+	r = Malloc(sizeof(struct noderef));
+	noderef_init(r, NODEREF_WARP);
+	r->r_warp.map = Strdup(mapname);
+	r->r_warp.x = x;
+	r->r_warp.y = y;
+	r->r_warp.dir = dir;
+	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
+	return (r);
 }
 
 /*
- * Move a node reference from one node to another, at the tail of the queue.
- * The map(s) containing the source/destination nodes must be locked.
+ * Move a reference to dm:dn and associate with dlayer.
+ * Both source and destination maps must be locked.
  */
 void
-node_move_ref_direct(struct noderef *nref, struct node *src_node,
-    struct node *dst_node)
+node_move_ref(struct map *sm, struct node *sn, struct noderef *r,
+    struct map *dm, struct node *dn, int dlayer)
 {
-	TAILQ_REMOVE(&src_node->nrefs, nref, nrefs);
-	TAILQ_INSERT_TAIL(&dst_node->nrefs, nref, nrefs);
+	pthread_mutex_lock(&sm->lock);
+	pthread_mutex_lock(&dm->lock);
+
+	TAILQ_REMOVE(&sn->nrefs, r, nrefs);
+	TAILQ_INSERT_TAIL(&dn->nrefs, r, nrefs);
+
+	if (dlayer != -1)
+		r->layer = dlayer;
+
+	switch (r->type) {
+	case NODEREF_SPRITE:
+		object_del_dep(sm, r->r_sprite.obj);
+		object_add_dep(dm, r->r_sprite.obj);
+		break;
+	case NODEREF_ANIM:
+		object_del_dep(sm, r->r_anim.obj);
+		object_add_dep(dm, r->r_anim.obj);
+		break;
+	default:
+		break;
+	}
+	
+	pthread_mutex_unlock(&dm->lock);
+	pthread_mutex_unlock(&sm->lock);
 }
 
 /*
- * Move a node reference from one node to dmap:dx,dy, at the tail of the queue.
- * The map(s) containing the source/destination nodes must be locked.
+ * Copy references from source node sn which are associated with slayer (or
+ * all references if slayer is -1) to destination node dn, and associate
+ * the copy with dlayer (or the original layer, if dlayer is -1).
  */
-int
-node_move_ref(struct noderef *nref, struct node *src_node,
-    struct map *dmap, int dx, int dy)
+void
+node_copy(struct map *sm, struct node *sn, int slayer, struct map *dm,
+    struct node *dn, int dlayer)
 {
-	struct node *dst_node;
+	struct noderef *sr;
 
-	if (dx < 0 || dy < 0 ||
-	    dx >= dmap->mapw || dy >= dmap->maph) {
-		error_set("exceeds boundaries");
-		return (-1);
+	pthread_mutex_lock(&sm->lock);
+	pthread_mutex_lock(&dm->lock);
+
+	TAILQ_FOREACH(sr, &sn->nrefs, nrefs) {
+		if (slayer != -1 &&
+		    sr->layer != slayer) {
+			continue;
+		}
+		node_copy_ref(sr, dm, dn, dlayer);
 	}
-
-	dst_node = &dmap->map[dy][dx];
-	TAILQ_REMOVE(&src_node->nrefs, nref, nrefs);
-	TAILQ_INSERT_TAIL(&dst_node->nrefs, nref, nrefs);
-	return (0);
+	
+	pthread_mutex_unlock(&dm->lock);
+	pthread_mutex_unlock(&sm->lock);
 }
 
 /*
  * Copy a node reference from one node to another.
- * The map(s) containing the source/destination nodes must be locked.
+ * Both the source and destination maps must be locked.
  */
 struct noderef *
-node_copy_ref(struct noderef *src, struct node *dst_node)
+node_copy_ref(struct noderef *sr, struct map *dm, struct node *dn, int dlayer)
 {
 	struct transform *trans;
-	struct noderef *dst = NULL;
+	struct noderef *dr = NULL;
 
 	/* Allocate a new noderef with the same data. */
-	switch (src->type) {
+	switch (sr->type) {
 	case NODEREF_SPRITE:
-		dst = node_add_sprite(dst_node, src->pobj, src->offs);
-		dst->xcenter = src->xcenter;
-		dst->ycenter = src->ycenter;
-		dst->xmotion = src->xmotion;
-		dst->ymotion = src->ymotion;
+		dr = node_add_sprite(dm, dn, sr->r_sprite.obj,
+		    sr->r_sprite.offs);
+		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
+		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
+		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
+		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
 		break;
 	case NODEREF_ANIM:
-		dst = node_add_anim(dst_node, src->pobj, src->offs,
-		    src->data.anim.flags);
-		dst->xcenter = src->xcenter;
-		dst->ycenter = src->ycenter;
-		dst->xmotion = src->xmotion;
-		dst->ymotion = src->ymotion;
+		dr = node_add_anim(dm, dn, sr->r_anim.obj, sr->r_anim.offs,
+		    sr->r_anim.flags);
+		dr->r_gfx.xcenter = sr->r_gfx.xcenter;
+		dr->r_gfx.ycenter = sr->r_gfx.ycenter;
+		dr->r_gfx.xmotion = sr->r_gfx.xmotion;
+		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
 		break;
 	case NODEREF_WARP:
-		dst = node_add_warp(dst_node, src->data.warp.map,
-		    src->data.warp.x, src->data.warp.y, src->data.warp.dir);
-		break;
-	default:
-		fatal("bad nref type");
+		dr = node_add_warp(dm, dn, sr->r_warp.map, sr->r_warp.x,
+		    sr->r_warp.y, sr->r_warp.dir);
 		break;
 	}
-	dst->flags = src->flags;
-	dst->layer = src->layer;
+	dr->flags = sr->flags;
+	dr->layer = (dlayer == -1) ? sr->layer : dlayer;
 
 	/* Inherit the transformations. */
-	SLIST_FOREACH(trans, &src->transforms, transforms) {
+	SLIST_FOREACH(trans, &sr->transforms, transforms) {
 		struct transform *ntrans;
 
 		ntrans = Malloc(sizeof(struct transform));
 		transform_init(ntrans, trans->type, trans->nargs, trans->args);
-		SLIST_INSERT_HEAD(&dst->transforms, ntrans, transforms);
+		SLIST_INSERT_HEAD(&dr->transforms, ntrans, transforms);
 	}
-	return (dst);
+	return (dr);
 }
 
-/*
- * Remove a noderef from a node and free it.
- * The map containing the node must be locked.
- */
+/* Remove a noderef from a node and free it. */
 void
-node_remove_ref(struct node *node, struct noderef *nref)
+node_remove_ref(struct map *m, struct node *node, struct noderef *r)
 {
-	TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-	noderef_destroy(nref);
-	free(nref);
+	pthread_mutex_lock(&m->lock);
+
+	TAILQ_REMOVE(&node->nrefs, r, nrefs);
+	noderef_destroy(m, r);
+
+	pthread_mutex_unlock(&m->lock);
 }
 
-/* Remove all references on a specific layer. */
+/* Remove all references associated with the given layer. */
 void
-node_clear_layer(struct node *node, Uint8 layer)
+node_clear(struct map *m, struct node *node, int layer)
 {
-	struct noderef *nref, *nnref;
+	struct noderef *r, *nr;
 
-	for (nref = TAILQ_FIRST(&node->nrefs);
-	     nref != TAILQ_END(&node->nrefs);
-	     nref = nnref) {
-		nnref = TAILQ_NEXT(nref, nrefs);
-		if (nref->layer == layer) {
-			TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-			noderef_destroy(nref);
-			free(nref);
+	pthread_mutex_lock(&m->lock);
+
+	for (r = TAILQ_FIRST(&node->nrefs);
+	     r != TAILQ_END(&node->nrefs);
+	     r = nr) {
+		nr = TAILQ_NEXT(r, nrefs);
+		if (r->layer != layer) {
+			continue;
 		}
+		TAILQ_REMOVE(&node->nrefs, r, nrefs);
+		noderef_destroy(m, r);
 	}
+
+	pthread_mutex_unlock(&m->lock);
 }
 
 /*
@@ -590,15 +565,14 @@ node_clear_layer(struct node *node, Uint8 layer)
  * The map containing the node must be locked.
  */
 void
-node_moveup_ref(struct node *node, struct noderef *nref)
+node_moveup_ref(struct node *node, struct noderef *r)
 {
-	struct noderef *next = TAILQ_NEXT(nref, nrefs);
+	struct noderef *next = TAILQ_NEXT(r, nrefs);
 
 	if (next != NULL) {
-		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-		TAILQ_INSERT_AFTER(&node->nrefs, next, nref, nrefs);
+		TAILQ_REMOVE(&node->nrefs, r, nrefs);
+		TAILQ_INSERT_AFTER(&node->nrefs, next, r, nrefs);
 	}
-	
 }
 
 /*
@@ -606,13 +580,13 @@ node_moveup_ref(struct node *node, struct noderef *nref)
  * The map containing the node must be locked.
  */
 void
-node_movedown_ref(struct node *node, struct noderef *nref)
+node_movedown_ref(struct node *node, struct noderef *r)
 {
-	struct noderef *prev = TAILQ_PREV(nref, noderefq, nrefs);
+	struct noderef *prev = TAILQ_PREV(r, noderefq, nrefs);
 
 	if (prev != NULL) {
-		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-		TAILQ_INSERT_BEFORE(prev, nref, nrefs);
+		TAILQ_REMOVE(&node->nrefs, r, nrefs);
+		TAILQ_INSERT_BEFORE(prev, r, nrefs);
 	}
 }
 
@@ -621,11 +595,11 @@ node_movedown_ref(struct node *node, struct noderef *nref)
  * The map containing the node must be locked.
  */
 void
-node_movetail_ref(struct node *node, struct noderef *nref)
+node_movetail_ref(struct node *node, struct noderef *r)
 {
-	if (nref != TAILQ_LAST(&node->nrefs, noderefq)) {
-		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-		TAILQ_INSERT_TAIL(&node->nrefs, nref, nrefs);
+	if (r != TAILQ_LAST(&node->nrefs, noderefq)) {
+		TAILQ_REMOVE(&node->nrefs, r, nrefs);
+		TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
 	}
 }
 
@@ -634,11 +608,11 @@ node_movetail_ref(struct node *node, struct noderef *nref)
  * The map containing the node must be locked.
  */
 void
-node_movehead_ref(struct node *node, struct noderef *nref)
+node_movehead_ref(struct node *node, struct noderef *r)
 {
-	if (nref != TAILQ_FIRST(&node->nrefs)) {
-		TAILQ_REMOVE(&node->nrefs, nref, nrefs);
-		TAILQ_INSERT_HEAD(&node->nrefs, nref, nrefs);
+	if (r != TAILQ_FIRST(&node->nrefs)) {
+		TAILQ_REMOVE(&node->nrefs, r, nrefs);
+		TAILQ_INSERT_HEAD(&node->nrefs, r, nrefs);
 	}
 }
 
@@ -647,11 +621,6 @@ map_destroy(void *p)
 {
 	struct map *m = p;
 
-#if defined(DEBUG) && defined(THREADS)
-	if (map_debug & DEBUG_SCAN) {
-		pthread_kill(m->check_th, SIGKILL);
-	}
-#endif
 	if (m->map != NULL)
 		map_free_nodes(m);
 	if (m->layers != NULL)
@@ -671,12 +640,12 @@ map_edit(void *p)
 }
 
 /*
- * Load a noderef structure.
- * The noderef's parent map must be locked.
+ * Load a node reference.
+ * The map must be locked.
  */
 int
-noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
-    struct noderef **nref)
+noderef_load(struct map *m, struct netbuf *buf, struct object_table *deps,
+    struct node *node, struct noderef **r)
 {
 	enum noderef_type type;
 	Uint32 ntrans = 0;
@@ -685,7 +654,7 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 	int i;
 
 	/* Read the type of reference, flags and the layer#. */
-	type = read_uint32(buf);
+	type = (enum noderef_type)read_uint32(buf);
 	flags = (Uint8)read_uint32(buf);
 	layer = read_uint8(buf);
 
@@ -710,14 +679,12 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 			    obji, offs, xcenter, ycenter);
 
 			if (deps->objs[obji] != NULL) {
-				*nref = node_add_sprite(node, deps->objs[obji],
+				*r = node_add_sprite(m, node, deps->objs[obji],
 				    offs);
-				if (*nref == NULL)
-					return (-1);
-				(*nref)->flags = flags;
-				(*nref)->xcenter = xcenter;
-				(*nref)->ycenter = ycenter;
-				(*nref)->layer = layer;
+				(*r)->flags = flags;
+				(*r)->layer = layer;
+				(*r)->r_gfx.xcenter = xcenter;
+				(*r)->r_gfx.ycenter = ycenter;
 			} else {
 				error_set("missing sprite dep");
 				return (-1);
@@ -745,14 +712,12 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 				    deps->objs[obji]->name, offs,
 				    xcenter, ycenter, animflags);
 
-				*nref = node_add_anim(node, deps->objs[obji],
+				*r = node_add_anim(m, node, deps->objs[obji],
 				    offs, animflags);
-				if (*nref == NULL)
-					return (-1);
-				(*nref)->flags = flags;
-				(*nref)->xcenter = xcenter;
-				(*nref)->ycenter = ycenter;
-				(*nref)->layer = layer;
+				(*r)->flags = flags;
+				(*r)->layer = layer;
+				(*r)->r_gfx.xcenter = xcenter;
+				(*r)->r_gfx.ycenter = ycenter;
 			} else {
 				error_set("missing anim dep");
 				return (-1);
@@ -781,12 +746,9 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 			debug(DEBUG_NODEREFS, "warp: to %s:%d,%d, dir 0x%x\n",
 			    map_id, ox, oy, dir);
 
-			if ((*nref = node_add_warp(node, map_id, ox, oy, dir))
-			    == NULL) {
-				return (-1);
-			}
-			(*nref)->flags = flags;
-			(*nref)->layer = layer;
+			*r = node_add_warp(m, node, map_id, ox, oy, dir);
+			(*r)->flags = flags;
+			(*r)->layer = layer;
 		}
 		break;
 	default:
@@ -808,36 +770,32 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 			free(trans);
 			goto fail;
 		}
-		SLIST_INSERT_HEAD(&(*nref)->transforms, trans, transforms);
+		SLIST_INSERT_HEAD(&(*r)->transforms, trans, transforms);
 	}
 	return (0);
 fail:
-	if (*nref != NULL) {
-		noderef_destroy(*nref);
-		*nref = NULL;
+	if (*r != NULL) {
+		noderef_destroy(m, *r);
+		*r = NULL;
 	}
 	return (-1);
 }
 
 int
-node_load(struct netbuf *buf, struct object_table *deps, struct node *node)
+node_load(struct map *m, struct netbuf *buf, struct object_table *deps,
+    struct node *node)
 {
 	Uint32 nrefs;
-	struct noderef *nref;
+	struct noderef *r;
 	int i;
 	
-	/* Load the node properties. */
-	node->flags = read_uint32(buf);
-	read_uint32(buf);			/* Pad: v1 */
-	
-	/* Load the node references. */
 	if ((nrefs = read_uint32(buf)) > NODE_MAX_NODEREFS) {
 		error_set("too many nrefs");
 		return (-1);
 	}
 	for (i = 0; i < nrefs; i++) {
-		if (noderef_load(buf, deps, node, &nref) == -1) {
-			node_destroy(node);
+		if (noderef_load(m, buf, deps, node, &r) == -1) {
+			node_destroy(m, node);
 			node_init(node);
 			return (-1);
 		}
@@ -848,7 +806,7 @@ node_load(struct netbuf *buf, struct object_table *deps, struct node *node)
 static void
 map_layer_load(struct netbuf *buf, struct map *m, struct map_layer *lay)
 {
-	lay->name = read_string(buf);
+	copy_string(lay->name, buf, sizeof(lay->name));
 	lay->visible = (int)read_uint8(buf);
 	lay->xinc = read_sint16(buf);
 	lay->yinc = read_sint16(buf);
@@ -862,7 +820,7 @@ map_load(void *ob, struct netbuf *buf)
 	struct object_table deps;
 	struct version ver;
 	Uint32 w, h, origin_x, origin_y, tilew, tileh;
-	int x, y;
+	int i, x, y;
 
 	if (version_read(buf, &map_ver, &ver) != 0)
 		return (-1);
@@ -873,12 +831,11 @@ map_load(void *ob, struct netbuf *buf)
 
 	if (m->map != NULL)
 		map_free_nodes(m);
-	if (ver.minor >= 2) {				/* Multilayering */
-		if (m->layers != NULL)
-			map_free_layers(m);
-	}
+	if (m->layers != NULL)
+		map_free_layers(m);
 
-	read_uint32(buf);				/* Always 0 */
+	/* Read the map header. */
+	read_uint32(buf);				/* Padding */
 	w = read_uint32(buf);
 	h = read_uint32(buf);
 	origin_x = read_uint32(buf);
@@ -897,29 +854,22 @@ map_load(void *ob, struct netbuf *buf)
 	m->tileh = (unsigned int)tileh;
 	m->origin.x = (int)origin_x;
 	m->origin.y = (int)origin_y;
-
 	m->zoom = read_uint16(buf);
-	if (ver.minor >= 1) {				/* Soft-scroll offs */
-		m->ssx = read_sint16(buf);
-		m->ssy = read_sint16(buf);
-	}
-	if (ver.minor >= 2) {				/* Multilayering */
-		int i;
+	m->ssx = read_sint16(buf);
+	m->ssy = read_sint16(buf);
 
-		if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
-			error_set("too many layers");
-			goto fail;
-		}
-		debug(DEBUG_STATE, "%d layers\n", m->nlayers);
-		m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
-		for (i = 0; i < m->nlayers; i++) {
-			map_layer_load(buf, m, &m->layers[i]);
-		}
+	/* Read the layer information. */
+	if ((m->nlayers = read_uint32(buf)) > MAP_MAX_LAYERS) {
+		error_set("too many layers");
+		goto fail;
 	}
-	if (ver.minor >= 3) 				/* Edited layer */
-		m->cur_layer = (int)read_uint8(buf);
-	if (ver.minor >= 4) 				/* Origin layer */
-		m->origin.layer = (int)read_uint8(buf);
+	debug(DEBUG_STATE, "%d layers\n", m->nlayers);
+	m->layers = Malloc(m->nlayers * sizeof(struct map_layer));
+	for (i = 0; i < m->nlayers; i++) {
+		map_layer_load(buf, m, &m->layers[i]);
+	}
+	m->cur_layer = (int)read_uint8(buf);
+	m->origin.layer = (int)read_uint8(buf);
 
 	debug(DEBUG_STATE,
 	    "geo %ux%u, origin at [%d,%d,%d], %u%% zoom, %ux%u tiles\n",
@@ -936,7 +886,7 @@ map_load(void *ob, struct netbuf *buf)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			if (node_load(buf, &deps, &m->map[y][x]) == -1)
+			if (node_load(m, buf, &deps, &m->map[y][x]) == -1)
 				goto fail;
 		}
 	}
@@ -954,92 +904,83 @@ fail:
  * The noderef's parent map must be locked.
  */
 void
-noderef_save(struct netbuf *buf, struct object_table *deps,
-    struct noderef *nref)
+noderef_save(struct map *m, struct netbuf *buf, struct object_table *deps,
+    struct noderef *r)
 {
 	off_t ntrans_offs;
 	Uint32 i, ntrans = 0;
 	struct transform *trans;
 
 	/* Save the type of reference and flags. */
-	write_uint32(buf, nref->type);
-	write_uint32(buf, (Uint32)nref->flags);
-	write_uint8(buf, nref->layer);
+	write_uint32(buf, (Uint32)r->type);
+	write_uint32(buf, (Uint32)r->flags);
+	write_uint8(buf, r->layer);
 
-	debug(DEBUG_NODEREFS, "type %d, flags 0x%x, layer %d\n",
-	    nref->type, nref->flags, nref->layer);
+	debug(DEBUG_NODEREFS, "type %d, flags 0x%x, layer %u\n", r->type,
+	    r->flags, r->layer);
 
-	/* Save the reference data. */
-	switch (nref->type) {
+	/* Save the reference. */
+	switch (r->type) {
 	case NODEREF_SPRITE:
 		for (i = 0; i < deps->nobjs; i++) {
-			if (deps->objs[i] == nref->pobj)
+			if (deps->objs[i] == r->r_sprite.obj)
 				break;
 		}
-		write_uint32(buf, i);			/* Object# */
-		write_uint32(buf, nref->offs);		/* Sprite# */
-		write_sint16(buf, nref->xcenter);
-		write_sint16(buf, nref->ycenter);
-		debug(DEBUG_NODEREFS, "sprite: obj[%d]:%d, center %d,%d\n",
-		    i, nref->offs, nref->xcenter, nref->ycenter);
+		write_uint32(buf, i);
+		write_uint32(buf, r->r_sprite.offs);
+		write_sint16(buf, r->r_gfx.xcenter);
+		write_sint16(buf, r->r_gfx.ycenter);
+		debug(DEBUG_NODEREFS, "sprite: obj[%d]:%d, center %d,%d\n", i,
+		    r->r_sprite.offs, r->r_gfx.xcenter, r->r_gfx.ycenter);
 		break;
 	case NODEREF_ANIM:
 		for (i = 0; i < deps->nobjs; i++) {
-			if (deps->objs[i] == nref->pobj)
+			if (deps->objs[i] == r->r_anim.obj)
 				break;
 		}
-		write_uint32(buf, i);			/* Object# */
-		write_uint32(buf, nref->offs);		/* Anim# */
-		write_sint16(buf, nref->xcenter);
-		write_sint16(buf, nref->ycenter);
-		write_uint32(buf, (Uint32)nref->data.anim.flags);
-		debug(DEBUG_NODEREFS,
-		    "anim: obj[%d]:%d, center %d,%d, aflags 0x%x\n",
-		    i, nref->offs, nref->xcenter, nref->ycenter,
-		    nref->data.anim.flags);
+		write_uint32(buf, i);
+		write_uint32(buf, r->r_anim.offs);
+		write_sint16(buf, r->r_gfx.xcenter);
+		write_sint16(buf, r->r_gfx.ycenter);
+		write_uint32(buf, r->r_anim.flags);
+		debug(DEBUG_NODEREFS, "anim: o[%d]:%d, c[%d,%d], flags 0x%x\n",
+		    i, r->r_anim.offs, r->r_gfx.xcenter, r->r_gfx.ycenter,
+		    r->r_anim.flags);
 		break;
 	case NODEREF_WARP:
-		write_string(buf, nref->data.warp.map);
-		write_uint32(buf, nref->data.warp.x);
-		write_uint32(buf, nref->data.warp.y);
-		write_uint8(buf, nref->data.warp.dir);
+		write_string(buf, r->r_warp.map);
+		write_uint32(buf, (Uint32)r->r_warp.x);
+		write_uint32(buf, (Uint32)r->r_warp.y);
+		write_uint8(buf, r->r_warp.dir);
 		debug(DEBUG_NODEREFS, "warp: to %s:[%d,%d], dir 0x%x",
-		    nref->data.warp.map, nref->data.warp.x, nref->data.warp.y,
-		    nref->data.warp.dir);
+		    r->r_warp.map, r->r_warp.x, r->r_warp.y, r->r_warp.dir);
 	default:
-		debug(DEBUG_NODEREFS, "not saving %d node\n", nref->type);
+		debug(DEBUG_NODEREFS, "not saving %d node\n", r->type);
 		break;
 	}
 
 	/* Save the transforms. */
 	ntrans_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);					/* Skip count */
-	SLIST_FOREACH(trans, &nref->transforms, transforms) {
+	write_uint32(buf, 0);
+	SLIST_FOREACH(trans, &r->transforms, transforms) {
 		transform_save(buf, trans);
 		ntrans++;
 	}
-	pwrite_uint32(buf, ntrans, ntrans_offs);		/* Save count */
+	pwrite_uint32(buf, ntrans, ntrans_offs);
 }
 
 void
-node_save(struct netbuf *buf, struct object_table *deps, struct node *node)
+node_save(struct map *m, struct netbuf *buf, struct object_table *deps,
+    struct node *node)
 {
-	struct noderef *nref;
+	struct noderef *r;
 	off_t nrefs_offs;
 	Uint32 nrefs = 0;
 
-	/* Save the node properties. */
-	write_uint32(buf, node->flags & ~(NODE_EPHEMERAL));
-	write_uint32(buf, 0);				/* Pad: v1 */
-
-	/* Save the node references. */
 	nrefs_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);				/* Skip */
-	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-		MAP_CHECK_NODEREF(nref);
-		if ((nref->flags & NODEREF_SAVEABLE) == 0)
-			continue;
-		noderef_save(buf, deps, nref);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		noderef_save(m, buf, deps, r);
 		nrefs++;
 	}
 	pwrite_uint32(buf, nrefs, nrefs_offs);
@@ -1060,7 +1001,7 @@ map_save(void *p, struct netbuf *buf)
 {
 	struct map *m = p;
 	struct object_table deps;
-	int x, y;
+	int i, x, y;
 	
 	version_write(buf, &map_ver);
 
@@ -1070,7 +1011,8 @@ map_save(void *p, struct netbuf *buf)
 	    m->mapw, m->maph, m->origin.x, m->origin.y, m->origin.layer,
 	    m->zoom, m->tilew, m->tileh);
 
-	write_uint32(buf, 0);				/* Always 0 */
+	/* Write the map header. */
+	write_uint32(buf, 0);				/* Padding */
 	write_uint32(buf, (Uint32)m->mapw);
 	write_uint32(buf, (Uint32)m->maph);
 	write_uint32(buf, (Uint32)m->origin.x);
@@ -1078,21 +1020,16 @@ map_save(void *p, struct netbuf *buf)
 	write_uint32(buf, (Uint32)m->tilew);
 	write_uint32(buf, (Uint32)m->tileh);
 	write_uint16(buf, m->zoom);
-	if (map_ver.minor >= 1) {			/* Soft-scroll offs */
-		write_sint16(buf, m->ssx);
-		write_sint16(buf, m->ssy);
-	}
-	if (map_ver.minor >= 2) {			/* Multilayering */
-		int i;
+	write_sint16(buf, m->ssx);
+	write_sint16(buf, m->ssy);
 
-		write_uint32(buf, m->nlayers);
-		for (i = 0; i < m->nlayers; i++)
-			map_layer_save(buf, &m->layers[i]);
+	/* Write the layer information. */
+	write_uint32(buf, m->nlayers);
+	for (i = 0; i < m->nlayers; i++) {
+		map_layer_save(buf, &m->layers[i]);
 	}
-	if (map_ver.minor >= 3) 			/* Edited layer */
-		write_uint8(buf, m->cur_layer);
-	if (map_ver.minor >= 4) 			/* Origin layer */
-		write_uint8(buf, m->origin.layer);
+	write_uint8(buf, m->cur_layer);
+	write_uint8(buf, m->origin.layer);
 
 	/* Write the dependencies. */
 	lock_linkage();
@@ -1100,12 +1037,21 @@ map_save(void *p, struct netbuf *buf)
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
 			struct node *node = &m->map[y][x];
-			struct noderef *nref;
+			struct noderef *r;
 
-			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->pobj == NULL)
-					continue;
-				object_table_insert(&deps, nref->pobj);
+			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+				switch (r->type) {
+				case NODEREF_SPRITE:
+					object_table_insert(&deps,
+					    r->r_sprite.obj);
+					break;
+				case NODEREF_ANIM:
+					object_table_insert(&deps,
+					    r->r_anim.obj);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
@@ -1115,8 +1061,7 @@ map_save(void *p, struct netbuf *buf)
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			MAP_CHECK_NODE(&m->map[y][x]);
-			node_save(buf, &deps, &m->map[y][x]);
+			node_save(m, buf, &deps, &m->map[y][x]);
 		}
 	}
 	pthread_mutex_unlock(&m->lock);
@@ -1125,39 +1070,8 @@ map_save(void *p, struct netbuf *buf)
 	return (0);
 }
 
-#if defined(DEBUG) && defined(THREADS)
-
-/* Verify the integrity of a map. This may also help finding races. */
-void *
-map_check(void *arg)
-{
-	struct map *m = arg;
-	struct node *node;
-	struct noderef *nref;
-	int x, y;
-
-	for (;;) {
-		pthread_mutex_lock(&m->lock);
-		for (y = 0; y < m->maph; y++) {
-			for (x = 0; x < m->mapw; x++) {
-				node = &m->map[y][x];
-				MAP_CHECK_NODE(node);
-				TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-					MAP_CHECK_NODEREF(nref);
-				}
-			}
-		}
-		pthread_mutex_unlock(&m->lock);
-		SDL_Delay(1000);
-
-		if ((map_debug & DEBUG_SCAN) == 0)
-			return (NULL);
-	}
-	return (NULL);
-}
-
-#endif	/* DEBUG && THREADS */
-
+/* Render surface s, scaled to rx,ry pixels. */
+/* XXX use something more sophisticated (or cache); fix rleaccel */
 static void
 noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 {
@@ -1166,10 +1080,6 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 
 	dw = s->w * m->zoom / 100;
 	dh = s->h * m->zoom / 100;
-
-	/* XXX cache the scaled surfaces. */
-	/* XXX inefficient */
-	/* XXX no support for SDL_RLEACCEL! */
 
 	if (SDL_MUSTLOCK(view->v))
 		SDL_LockSurface(view->v);
@@ -1225,37 +1135,40 @@ noderef_draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 		SDL_UnlockSurface(view->v);
 }
 
+/* Render a sprite, possibly applying transforms. */
 static __inline__ SDL_Surface *
-noderef_draw_sprite(struct noderef *nref)
+noderef_draw_sprite(struct noderef *r)
 {
 	struct gfx_cached_sprite *csprite;
 	struct gfx_spritecl *spritecl;
-	SDL_Surface *origsu = SPRITE(nref->pobj, nref->offs);
+	SDL_Surface *origsu = SPRITE(r->r_sprite.obj, r->r_sprite.offs);
 
-	if (SLIST_EMPTY(&nref->transforms)) {
+	if (SLIST_EMPTY(&r->transforms)) {
 		return (origsu);
 	}
 
-	spritecl = &nref->pobj->gfx->csprites[nref->offs];
-
-	/* Look for a sprite with the same transforms, in the same order. */
+	/*
+	 * Look for a cached sprite with the same transforms, in the same
+	 * order.
+	 */
+	spritecl = &r->r_sprite.obj->gfx->csprites[r->r_sprite.offs];
 	SLIST_FOREACH(csprite, &spritecl->sprites, sprites) {
 		struct transform *tr1, *tr2;
 				
-		for (tr1 = SLIST_FIRST(&nref->transforms),
+		for (tr1 = SLIST_FIRST(&r->transforms),
 		     tr2 = SLIST_FIRST(&csprite->transforms);
-		     tr1 != SLIST_END(&nref->transforms) &&
+		     tr1 != SLIST_END(&r->transforms) &&
 		     tr2 != SLIST_END(&csprite->transforms);
 		     tr1 = SLIST_NEXT(tr1, transforms),
 		     tr2 = SLIST_NEXT(tr2, transforms)) {
 			if (transform_compare(tr1, tr2) != 0)
 				break;
 		}
-		if (tr1 == SLIST_END(&nref->transforms) &&
+		if (tr1 == SLIST_END(&r->transforms) &&
 		    tr2 == SLIST_END(&csprite->transforms))
 			break;
 	}
-	if (csprite == NULL) {					/* Cache miss */
+	if (csprite == NULL) {
 		struct transform *trans, *ntrans;
 		SDL_Surface *su;
 		Uint32 saflags = origsu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
@@ -1264,7 +1177,7 @@ noderef_draw_sprite(struct noderef *nref)
 		Uint32 scolorkey = origsu->format->colorkey;
 		struct gfx_cached_sprite *ncsprite;
 
-		dprintf("cache miss\n");
+		dprintf("transform cache miss\n");
 
 		/* Allocate the new sprite surface. */
 		su = SDL_CreateRGBSurface(SDL_SWSURFACE |
@@ -1291,7 +1204,7 @@ noderef_draw_sprite(struct noderef *nref)
 		SDL_SetAlpha(origsu, saflags, salpha);
 
 		/* Apply the transformations. */
-		SLIST_FOREACH(trans, &nref->transforms, transforms) {
+		SLIST_FOREACH(trans, &r->transforms, transforms) {
 			SDL_LockSurface(su);
 			trans->func(&su, trans->nargs, trans->args);
 			SDL_UnlockSurface(su);
@@ -1306,58 +1219,57 @@ noderef_draw_sprite(struct noderef *nref)
 		/* Cache the result. */
 		SLIST_INSERT_HEAD(&spritecl->sprites, ncsprite, sprites);
 		return (su);
-	} else {						/* Cache hit */
+	} else {
+		/* Update the timestamp and return the cached version. */
 		csprite->last_drawn = SDL_GetTicks();
 		return (csprite->su);
 	}
 }
 
+/* Render an animation, possibly applying transforms. */
 static __inline__ SDL_Surface *
-noderef_draw_anim(struct noderef *nref)
+noderef_draw_anim(struct noderef *r)
 {
-	struct gfx_anim *anim = ANIM(nref->pobj, nref->offs);
+	struct gfx_anim *anim = ANIM(r->r_anim.obj, r->r_anim.offs);
 
 	/* XXX do this somewhere else! */
-	gfx_anim_tick(anim, nref);
+	gfx_anim_tick(anim, r);
 
+	/* XXX transforms */
 	return (anim->frames[anim->frame]);
 }
 
 /*
- * Render a map node.
- * The node's parent map, if any, must be locked.
- *
- * XXX cache scaled nodes; doing this in real time is very expensive.
- * XXX opengl support and texture mgmt.
+ * Render a graphical noderef to absolute view coordinates rx,ry.
+ * The map must be locked.
  */
 __inline__ void
-noderef_draw(struct map *m, struct noderef *nref, int rx, int ry)
+noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 {
-	SDL_Rect rd;
 	SDL_Surface *su;
 
-	switch (nref->type) {
+	switch (r->type) {
 	case NODEREF_SPRITE:
-		su = noderef_draw_sprite(nref);
+		su = noderef_draw_sprite(r);
 		break;
 	case NODEREF_ANIM:
-		su = noderef_draw_anim(nref);
+		su = noderef_draw_anim(r);
 		break;
 	default:				/* Not a drawable */
 		return;
 	}
 
 	if (m->zoom != 100) {
-		rd.x = rx +
-		    (nref->xcenter * m->zoom / 100) +
-		    (nref->xmotion * m->zoom / 100);
-		rd.y = ry +
-		    (nref->ycenter * m->zoom / 100) +
-		    (nref->ymotion * m->zoom / 100);
-		noderef_draw_scaled(m, su, rd.x, rd.y);
+		noderef_draw_scaled(m, su,
+		    (rx + r->r_gfx.xcenter*m->zoom/100 +
+		     r->r_gfx.xmotion*m->zoom/100),
+		    (ry + r->r_gfx.ycenter*m->zoom/100 +
+		     r->r_gfx.ymotion*m->zoom/100));
 	} else {
-		rd.x = rx + nref->xcenter + nref->xmotion;
-		rd.y = ry + nref->ycenter + nref->ymotion;
+		SDL_Rect rd;
+
+		rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion;
+		rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
 		SDL_BlitSurface(su, NULL, view->v, &rd);
 	}
 }

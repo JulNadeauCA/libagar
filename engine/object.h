@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.85 2003/06/25 06:14:03 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.86 2003/06/26 02:42:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -39,32 +39,44 @@ struct object_position {
 	struct mapdir	 dir;		/* Map direction (not saved) */
 };
 
+struct object_dep {
+	struct object	*obj;		/* Object */
+	unsigned long	 count;		/* Reference count */
+#define OBJECT_DEP_MAX	(ULONG_MAX-1)	/* Remain resident if reached */
+	SLIST_ENTRY(object_dep)	 deps;
+};
+
 #define OBJECT_TYPE_MAX		32
 #define OBJECT_NAME_MAX		64
 
 TAILQ_HEAD(objectq, object);
 
 struct object {
-	char	 type[OBJECT_TYPE_MAX];	/* Type of object */
-	char	 name[OBJECT_NAME_MAX];	/* Identifier */
-	const struct object_ops	*ops;	/* Generic operations */
-	void	*parent;		/* Parent object (linkage_lock) */
+	char	 type[OBJECT_TYPE_MAX];		/* Type of object */
+	char	 name[OBJECT_NAME_MAX];		/* Identifier */
 
-	Uint32	 flags;
+	const struct object_ops	*ops;		/* Generic operations */
+
+	int	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't remove props before load */
 #define OBJECT_RELOAD_CHILDS	0x02	/* Don't remove childs before load */
 
-	struct gfx		*gfx;	/* Associated graphics */
-	struct audio		*audio;	/* Associated audio samples */
-	TAILQ_ENTRY(object)	 cobjs;	/* Child objects */
+	struct gfx	*gfx;		/* Associated graphics */
+	struct audio	*audio;		/* Associated audio samples */
 
 	pthread_mutex_t		 lock;
 	struct object_position	*pos;		/* Position on a map */
-	struct objectq		 childs;	/* Descendants (linkage_lock) */
+
 	pthread_mutex_t		 events_lock;
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
 	pthread_mutex_t		 props_lock;
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
+
+	/* Uses linkage_lock */
+	SLIST_HEAD(,object_dep)	 deps;		/* Object dependencies */
+	struct objectq		 childs;	/* Descendants */
+	void			*parent;	/* Parent object */
+	TAILQ_ENTRY(object)	 cobjs;		/* Child objects */
 };
 
 #define OBJECT(ob)	((struct object *)(ob))
@@ -123,6 +135,9 @@ void	 object_table_insert(struct object_table *, struct object *);
 void	 object_table_save(struct object_table *, struct netbuf *);
 int	 object_table_load(struct object_table *, struct netbuf *,
 	                   const char *);
+
+void	 object_add_dep(void *, void *);
+void	 object_del_dep(void *, void *);
 __END_DECLS
 
 #include "close_code.h"

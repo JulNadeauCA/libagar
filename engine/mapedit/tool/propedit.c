@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.38 2003/06/06 09:03:57 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.39 2003/06/17 23:30:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -50,61 +50,81 @@ const struct tool_ops propedit_ops = {
 };
 
 static void
-propedit_set_edge(struct mapview *mv, Uint32 edge)
+propedit_set_edge(struct mapview *mv, enum noderef_edge edge)
 {
 	struct node *node;
+	struct noderef *r;
 
 	if (mv->cx == -1 || mv->cy == -1)
 		return;
+
 	node = &mv->map->map[mv->cy][mv->cx];
-	node->flags &= ~(NODE_EDGE_ANY);
-	node->flags |= edge;
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != mv->map->cur_layer) {
+			continue;
+		}
+		r->r_gfx.edge = (Uint8)edge;
+	}
 }
 
 static void
 propedit_set_flag(struct mapview *mv, Uint32 flag)
 {
 	struct node *node;
+	struct noderef *r;
 
 	if (mv->cx == -1 || mv->cy == -1)
 		return;
+
 	node = &mv->map->map[mv->cy][mv->cx];
-	node->flags |= flag;
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != mv->map->cur_layer) {
+			continue;
+		}
+		r->flags |= flag;
+	}
 }
 
 static void
 propedit_clear_flag(struct mapview *mv, Uint32 flag)
 {
 	struct node *node;
+	struct noderef *r;
 
 	if (mv->cx == -1 || mv->cy == -1)
 		return;
+
 	node = &mv->map->map[mv->cy][mv->cx];
-	node->flags &= ~flag;
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != mv->map->cur_layer) {
+			continue;
+		}
+		r->flags &= ~flag;
+	}
 }
 
 static void
 propedit_edge_nw(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_NW);
+	propedit_set_edge(mv, NODEREF_EDGE_NW);
 }
 
 static void
 propedit_edge_n(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_N);
+	propedit_set_edge(mv, NODEREF_EDGE_N);
 }
 
 static void
 propedit_edge_ne(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_NE);
+	propedit_set_edge(mv, NODEREF_EDGE_NE);
 }
 
 static void
 propedit_edge_w(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_W);
+	propedit_set_edge(mv, NODEREF_EDGE_W);
 }
 
 static void
@@ -116,37 +136,37 @@ propedit_edge_none(void *p, struct mapview *mv)
 static void
 propedit_edge_e(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_E);
+	propedit_set_edge(mv, NODEREF_EDGE_E);
 }
 
 static void
 propedit_edge_sw(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_SW);
+	propedit_set_edge(mv, NODEREF_EDGE_SW);
 }
 
 static void
 propedit_edge_s(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_S);
+	propedit_set_edge(mv, NODEREF_EDGE_S);
 }
 
 static void
 propedit_edge_se(void *p, struct mapview *mv)
 {
-	propedit_set_edge(mv, NODE_EDGE_SE);
+	propedit_set_edge(mv, NODEREF_EDGE_SE);
 }
 
 static void
 propedit_flag_walk(void *p, struct mapview *mv)
 {
-	propedit_set_flag(mv, NODE_WALK);
+	propedit_set_flag(mv, NODEREF_WALK);
 }
 
 static void
 propedit_flag_block(void *p, struct mapview *mv)
 {
-	propedit_clear_flag(mv, NODE_WALK);
+	propedit_clear_flag(mv, NODEREF_WALK);
 }
 
 void
@@ -180,8 +200,8 @@ set_node_mode(int argc, union evarg *argv)
 	int index = argv[2].i;
 	const Uint32 modes[] = {
 		0,
-		NODE_WALK,
-		NODE_CLIMB
+		NODEREF_WALK,
+		NODEREF_CLIMB
 	};
 
 	pe->node_mode = modes[index];
@@ -235,10 +255,10 @@ propedit_window(void *p)
 			Uint32	flag;
 			char	*name;
 		} props[] = {
-			{ NODE_BIO,	N_("Bio")	 },
-			{ NODE_REGEN,	N_("Regen")	 },
-			{ NODE_SLOW,	N_("Slow")	 },
-			{ NODE_HASTE,	N_("Haste")	 },
+			{ NODEREF_BIO,		N_("Bio")	 },
+			{ NODEREF_REGEN,	N_("Regen")	 },
+			{ NODEREF_SLOW,		N_("Slow")	 },
+			{ NODEREF_HASTE,	N_("Haste")	 },
 		};
 		const int nprops = sizeof(props) / sizeof(props[0]);
 		int i;
@@ -267,17 +287,23 @@ propedit_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 }
 
 static void
-set_edge(struct node *node, Uint32 edge)
+set_edge(struct map *m, struct node *node, Uint32 edge)
 {
-	node->flags &= ~NODE_EDGE_ANY;
-	node->flags |= edge;
+	struct noderef *r;
+
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != m->cur_layer) {
+			continue;
+		}
+		r->r_gfx.edge = edge;
+	}
 }
 
 void
-propedit_effect(void *p, struct mapview *mv, struct node *node)
+propedit_effect(void *p, struct mapview *mv, struct map *m, struct node *node)
 {
 	struct propedit *pe = p;
-	struct map *m = mv->map;
+	struct noderef *r;
 	Uint8 *ks;
 
 	if (pe->origin) {
@@ -285,29 +311,47 @@ propedit_effect(void *p, struct mapview *mv, struct node *node)
 		m->origin.y = mv->cy;
 	}
 
-	/* Set the bio/regen and slow/haste flags. */
-	node->flags &= ~(NODE_BIO|NODE_REGEN|NODE_SLOW|NODE_HASTE);
-	node->flags |= pe->node_flags;
+	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+		if (r->layer != m->cur_layer)
+			continue;
 
-	node->flags &= ~(NODE_WALK|NODE_CLIMB);
-	if (pe->node_mode == 0) {
-		node->flags &= ~(NODE_WALK);
-	} else {
-		node->flags |= pe->node_mode;
-	}
+		r->flags &= ~(NODEREF_BIO|NODEREF_REGEN|NODEREF_SLOW|
+		              NODEREF_HASTE|NODEREF_WALK|NODEREF_CLIMB);
+		r->flags |= pe->node_flags;
 	
-	ks = SDL_GetKeyState(NULL);
-	if (ks[SDLK_KP7]) set_edge(node, NODE_EDGE_NW);
-	if (ks[SDLK_KP8]) set_edge(node, NODE_EDGE_N);
-	if (ks[SDLK_KP9]) set_edge(node, NODE_EDGE_NE);
-	if (ks[SDLK_KP4]) set_edge(node, NODE_EDGE_W);
-	if (ks[SDLK_KP5]) set_edge(node, 0);
-	if (ks[SDLK_KP6]) set_edge(node, NODE_EDGE_E);
-	if (ks[SDLK_KP1]) set_edge(node, NODE_EDGE_SW);
-	if (ks[SDLK_KP2]) set_edge(node, NODE_EDGE_S);
-	if (ks[SDLK_KP3]) set_edge(node, NODE_EDGE_SE);
+		if (pe->node_mode == 0) {
+			r->flags &= ~(NODEREF_WALK);
+		} else {
+			r->flags |= pe->node_mode;
+		}
+	}
 
-	if (ks[SDLK_w])	node->flags |= NODE_WALK;
-	if (ks[SDLK_b]) node->flags &= ~NODE_WALK;
+	ks = SDL_GetKeyState(NULL);
+	if (ks[SDLK_KP7]) set_edge(m, node, NODEREF_EDGE_NW);
+	if (ks[SDLK_KP8]) set_edge(m, node, NODEREF_EDGE_N);
+	if (ks[SDLK_KP9]) set_edge(m, node, NODEREF_EDGE_NE);
+	if (ks[SDLK_KP4]) set_edge(m, node, NODEREF_EDGE_W);
+	if (ks[SDLK_KP5]) set_edge(m, node, NODEREF_EDGE_FILL);
+	if (ks[SDLK_KP6]) set_edge(m, node, NODEREF_EDGE_E);
+	if (ks[SDLK_KP1]) set_edge(m, node, NODEREF_EDGE_SW);
+	if (ks[SDLK_KP2]) set_edge(m, node, NODEREF_EDGE_S);
+	if (ks[SDLK_KP3]) set_edge(m, node, NODEREF_EDGE_SE);
+
+	if (ks[SDLK_w])	{
+		TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+			if (r->layer != m->cur_layer) {
+				continue;
+			}
+			r->flags |= NODEREF_WALK;
+		}
+	}
+	if (ks[SDLK_b]) {
+		TAILQ_FOREACH(r, &node->nrefs, nrefs) {
+			if (r->layer != m->cur_layer) {
+				continue;
+			}
+			r->flags &= ~(NODEREF_WALK);
+		}
+	}
 }
 
