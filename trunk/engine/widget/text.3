@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.5 2003/06/06 03:18:14 vedge Exp $
+.\"	$Csoft: text.3,v 1.6 2003/06/13 01:45:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,16 +40,17 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface uses an underlying font engine to render multi-line strings and
-characters into
-.Xr SDL_Surface 3 's.
-.Pp
-If support for the FreeType library was enabled at compile time, FreeType is
-used as the underlying font engine, otherwise simple bitmap fonts are used.
+interface uses an underlying font engine (such as FreeType) to render Unicode
+or ISO/IEC 8859-1
+.Po
+.Dq Latin-1
+.Pc
+text into
+.Xr SDL_Surface 3 's .
 .Sh INITIALIZATION
 .nr nS 1
 .Ft int
-.Fn text_init "void"
+.Fn text_init "enum text_engine engine"
 .Pp
 .Ft void
 .Fn text_destroy "void"
@@ -60,9 +61,17 @@ used as the underlying font engine, otherwise simple bitmap fonts are used.
 .nr nS 0
 The
 .Fn text_init
-function initializes the font engine.
+function initializes a font engine:
+.Bd -literal
+enum text_engine {
+	TEXT_ENGINE_FREETYPE,	/* Use FreeType */
+	TEXT_ENGINE_BITMAP	/* Use bitmap fonts */
+};
+.Ed
+.Pp
+The
 .Fn text_destroy
-frees all resources allocated by the font engine.
+function frees all resources allocated by the font engine.
 .Pp
 The
 .Fn text_default_font
@@ -94,52 +103,66 @@ returns the recommended spacing in pixels between lines of text.
 .Sh RENDERING
 .nr nS 1
 .Ft "SDL_Surface *"
-.Fn text_render "const char *fontname" "int font_size" "Uint32 color" "char *s"
+.Fn text_render_unicode "const char *font_name" "int font_size" "Uint32 color" \
+                "const Uint16 *utf16"
 .Pp
 .Ft "SDL_Surface *"
-.Fn text_render_glyph "const char *fontname" "int font_size" "Uint32 color" \
-                      "char ch"
+.Fn text_render_utf8 "const char *font_name" "int font_size" "Uint32 color" \
+                "const char *utf8"
+.Pp
+.Ft "SDL_Surface *"
+.Fn text_render "const char *font_name" "int font_size" "Uint32 color" \
+                "const char *text"
+.Pp
+.Ft "SDL_Surface *"
+.Fn text_render_glyph "const char *font_name" "int font_size" "Uint32 color" \
+                      "Uint16 ch"
+.Pp
+.Ft "void"
+.Fn text_prescale_unicode "const Uint16 *utf16" "int *w" "int *h"
+.Pp
+.Ft "void"
+.Fn text_prescale_utf8 "const char *utf8" "int *w" "int *h"
 .Pp
 .Ft "void"
 .Fn text_prescale "const char *text" "int *w" "int *h"
 .nr nS 0
 .Pp
 The
-.Fn text_render
-function renders the (possibly multi-line) string
-.Fa s
-to a new surface.
-.Fn text_render_glyph
-renders the character
-.Fa ch
-to a new surface.
-For both functions, the
-.Fa font
-argument may be NULL and the
-.Fa font_size
-argument may be -1 to indicate that the defaults should be used.
-.Fn text_render
+.Fn text_render ,
+.Fn text_render_unicode
 and
+.Fn text_render_utf8
+functions render text to a newly allocated surface.
 .Fn text_render_glyph
-both raise a fatal condition if an error occured.
+renders an Unicode character onto a new surface.
+A
+.Fa font_name
+argument of NULL or a
+.Fa font_size
+argument of -1 indicates that the defaults should be used.
 .Pp
 The
-.Fn text_prescale
-function stores the expected size of the text surface in non-NULL
-.Fa w
+.Fn text_prescale ,
+.Fn text_prescale_unicode
 and
-.Fa h
-arguments.
+.Fn text_prescale_utf8
+functions return the expected surface dimensions for the given text.
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr widget 3 ,
-.Xr window 3 ,
+.Xr button 3 ,
+.Xr combo 3 ,
 .Xr label 3 ,
-.Xr textbox 3
-.Xr tlist 3
+.Xr radio 3 ,
+.Xr spinbutton 3 ,
+.Xr textbox 3 ,
+.Xr titlebar 3 ,
+.Xr tlist 3 ,
+.Xr widget 3
 .Pp
 .Bd -literal
 The FreeType project - http://www.freetype.org/
+Unicode home page - http://www.unicode.org/
 .Ed
 .Sh HISTORY
 The
