@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.25 2002/07/09 09:29:25 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.26 2002/07/18 12:05:20 vedge Exp $	*/
 /*	Public domain	*/
 
 struct window;
@@ -33,13 +33,23 @@ struct widget {
 #define WIDGET_ABSY(wi)	((WIDGET((wi))->win->y) + WIDGET((wi))->y)
 
 #define WIDGET_DRAW(wi, s, xo, yo) do {					\
-	static SDL_Rect wdrd;						\
+	static SDL_Rect _wdrd;						\
 									\
-	wdrd.x = WIDGET_ABSX((wi)) + (xo);				\
-	wdrd.y = WIDGET_ABSY((wi)) + (yo);				\
-	wdrd.w = (s)->w;						\
-	wdrd.h = (s)->h;						\
-	SDL_BlitSurface((s), NULL, WIDGET_SURFACE((wi)), &wdrd);	\
+	_wdrd.x = WIDGET_ABSX((wi)) + (xo);				\
+	_wdrd.y = WIDGET_ABSY((wi)) + (yo);				\
+	_wdrd.w = (s)->w;						\
+	_wdrd.h = (s)->h;						\
+	SDL_BlitSurface((s), NULL, WIDGET_SURFACE((wi)), &_wdrd);	\
+} while (/*CONSTCOND*/0)
+
+#define WIDGET_FILL(wi, xo, yo, w, h, col) do {				\
+	static SDL_Rect _wdrd;						\
+									\
+	_wdrd.x = WIDGET_ABSX((wi)) + (xo);				\
+	_wdrd.y = WIDGET_ABSY((wi)) + (yo);				\
+	_wdrd.w = (w);							\
+	_wdrd.h = (h);							\
+	SDL_FillRect(WIDGET_SURFACE((wi)), &_wdrd, col);		\
 } while (/*CONSTCOND*/0)
 
 /* XXX inconsistent, should be region-relative */
