@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.110 2002/08/20 00:06:45 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.111 2002/08/21 01:00:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -861,7 +861,9 @@ map_load(void *ob, int fd)
 
 		pobjs[i] = pob;
 		if (pob != NULL) {
+#if 0
 			dprintf("%s: uses %s\n", OBJECT(m)->name, pob->name);
+#endif
 		} else {
 			warning("%s: cannot translate \"%s\"\n",
 			    OBJECT(m)->name, s);
