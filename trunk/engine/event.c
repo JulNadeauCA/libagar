@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.179 2004/05/08 02:36:11 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.180 2004/05/10 02:41:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -406,7 +406,11 @@ event_dispatch(SDL_Event *ev)
 	pthread_mutex_unlock(&view->lock);
 }
 
-/* Register an event handling function. */
+/*
+ * Register an event handler function for events of the given type.
+ * If another event handler is registered for events of the same type,
+ * replace it.
+ */
 struct event *
 event_new(void *p, const char *name, void (*handler)(int, union evarg *),
     const char *fmt, ...)
@@ -424,7 +428,7 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 		strlcpy(ev->name, name, sizeof(ev->name));
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	}
-	memset(ev->argv, 0, sizeof(union evarg) * EVENT_ARGS_MAX);
+	memset(ev->argv, 0, sizeof(union evarg)*EVENT_ARGS_MAX);
 	ev->flags = 0;
 	ev->argv[0].p = ob;
 	ev->argc = 1;
@@ -474,13 +478,14 @@ event_propagate(void *p, struct event *ev)
 }
 
 #ifdef THREADS
-/* Invoke an asynchronous event handler routine. */
+/* Invoke an event handler routine asynchronously. */
 static void *
 event_async(void *p)
 {
 	struct event *eev = p;
 	struct object *rcvr = eev->argv[0].p;
 
+	/* Propagate event to children. */
 	if (eev->flags & EVENT_PROPAGATE) {
 		struct object *cobj;
 
@@ -493,12 +498,13 @@ event_async(void *p)
 		unlock_linkage();
 	}
 
+	/* Invoke the event handler function. */
 	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
-
-	if (eev->handler != NULL)
+	if (eev->handler != NULL) {
 		eev->handler(eev->argc, eev->argv);
-
+	}
 	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
+
 	Free(eev, M_EVENT);
 	return (NULL);
 }
@@ -521,56 +527,79 @@ event_post(void *sp, void *rp, const char *evname, const char *fmt, ...)
 {
 	struct object *sndr = sp;
 	struct object *rcvr = rp;
-	struct event *eev, *neev;
+	struct event *ev;
 
 	debug(DEBUG_EVENTS, "%s: %s -> %s\n", evname,
 	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
 
 	pthread_mutex_lock(&rcvr->lock);
-	TAILQ_FOREACH(eev, &rcvr->events, events) {
-		if (strcmp(evname, eev->name) != 0)
-			continue;
+	TAILQ_FOREACH(ev, &rcvr->events, events) {
+		if (strcmp(evname, ev->name) == 0)
+			break;
+	}
+	if (ev == NULL)
+		goto fail;
 
-		neev = Malloc(sizeof(struct event), M_EVENT);
-		memcpy(neev, eev, sizeof(struct event));
+#ifdef THREADS
+	if (ev->flags & EVENT_ASYNC) {
+		pthread_t th;
+		va_list ap;
+		struct event *nev;
+
+		/* Construct the argument vector. */
+		nev = Malloc(sizeof(struct event), M_EVENT);
+		memcpy(nev, ev, sizeof(struct event));
 		if (fmt != NULL) {
-			va_list ap;
-
 			va_start(ap, fmt);
 			for (; *fmt != '\0'; fmt++) {
-				EVENT_PUSH_ARG(ap, *fmt, neev);
+				EVENT_PUSH_ARG(ap, *fmt, nev);
 			}
 			va_end(ap);
 		}
-		neev->argv[neev->argc].p = sndr;
-#ifdef THREADS
-		if (neev->flags & EVENT_ASYNC) {
-			pthread_t th;
+		nev->argv[nev->argc].p = sndr;
 
-			Pthread_create(&th, NULL, event_async, neev);
-			break;
+		/* Create the event handler function thread. */
+		Pthread_create(&th, NULL, event_async, nev);
+	} else
+#endif /* THREADS */
+	{
+		struct event tmpev;
+		va_list ap;
+
+		/* Construct the argument vector. */
+		memcpy(&tmpev, ev, sizeof(struct event));
+		if (fmt != NULL) {
+			va_start(ap, fmt);
+			for (; *fmt != '\0'; fmt++) {
+				EVENT_PUSH_ARG(ap, *fmt, &tmpev);
+			}
+			va_end(ap);
 		}
-#endif
-		if (neev->flags & EVENT_PROPAGATE) {
-			struct object *cobj;
+		tmpev.argv[tmpev.argc].p = sndr;
 
+		/* Propagate event to children. */
+		if (tmpev.flags & EVENT_PROPAGATE) {
+			struct object *cobj;
+			
 			debug(DEBUG_PROPAGATION, "%s: propagate %s (post)\n",
 			    rcvr->name, evname);
-
 			lock_linkage();
 			OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
-				event_propagate(cobj, neev);
+				event_propagate(cobj, &tmpev);
 			}
 			unlock_linkage();
 		}
-		if (neev->handler != NULL) {
-			neev->handler(neev->argc, neev->argv);
-		}
-		Free(neev, M_EVENT);
-		break;
+
+		/* Invoke the event handler function. */
+		if (tmpev.handler != NULL)
+			tmpev.handler(tmpev.argc, tmpev.argv);
 	}
+
 	pthread_mutex_unlock(&rcvr->lock);
-	return (eev != NULL);
+	return (1);
+fail:
+	pthread_mutex_unlock(&rcvr->lock);
+	return (0);
 }
 
 /*
@@ -588,27 +617,31 @@ event_forward(void *rp, const char *evname, int argc, union evarg *argv)
 	debug(DEBUG_EVENTS, "%s event to %s\n", evname, rcvr->name);
 
 	pthread_mutex_lock(&rcvr->lock);
-	memcpy(nargv, argv, argc * sizeof(union evarg));
+	memcpy(nargv, argv, argc*sizeof(union evarg));
 	nargv[0].p = rcvr;
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
-		if (strcmp(evname, ev->name) != 0)
-			continue;
-
-		if (ev->flags & EVENT_PROPAGATE) {
-			struct object *cobj;
-
-			debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
-			    rcvr->name, evname);
-
-			lock_linkage();
-			OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
-				event_propagate(cobj, ev);
-			}
-			unlock_linkage();
-		}
-		if (ev->handler != NULL)
-			ev->handler(argc, nargv);
+		if (strcmp(evname, ev->name) == 0)
+			break;
 	}
+	if (ev == NULL)
+		goto out;
+
+	/* Propagate event to children. */
+	if (ev->flags & EVENT_PROPAGATE) {
+		struct object *cobj;
+
+		debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
+		    rcvr->name, evname);
+		lock_linkage();
+		OBJECT_FOREACH_CHILD(cobj, rcvr, object) {
+			event_propagate(cobj, ev);
+		}
+		unlock_linkage();
+	}
+	/* XXX EVENT_ASYNC.. */
+	if (ev->handler != NULL)
+		ev->handler(argc, nargv);
+out:
 	pthread_mutex_unlock(&rcvr->lock);
 }
 

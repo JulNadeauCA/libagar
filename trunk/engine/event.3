@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.21 2004/05/06 06:20:08 vedge Exp $
+.\"	$Csoft: event.3,v 1.22 2004/05/10 05:14:52 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -179,7 +179,8 @@ in the
 .Fa evarg
 array.
 .Fn event_post
-returns 1 if an event handler was invoked, otherwise 0.
+returns 1 if an event handler was invoked, or 0 if there is no registered
+event handler for the given event type.
 .Pp
 The
 .Fn event_forward

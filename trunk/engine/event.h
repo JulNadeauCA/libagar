@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.25 2004/05/06 06:20:08 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.26 2004/05/08 02:36:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -25,7 +25,6 @@ struct event {
 	int	flags;
 #define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
 #define EVENT_PROPAGATE	0x02	/* Propagate event to descendents */
-#define EVENT_REPEAT	0x04	/* Reschedule after handler execution */
 
 	Uint32	start;		/* Scheduled start time relative to the
 				   sequence start (for real-time events) */
@@ -51,12 +50,18 @@ struct window	*event_fps_window(void);
 #endif
 __END_DECLS
 
+#ifdef DEBUG
 #define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
 	if ((eev)->argc >= EVENT_ARGS_MAX-1) {			\
 		fatal("excess evargs");				\
 	}							\
 	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
 } while (0)
+#else
+#define EVENT_INSERT_ARG(eev, ap, member, type) do {		\
+	(eev)->argv[(eev)->argc++].member = va_arg((ap), type);	\
+} while (0)
+#endif /* DEBUG */
 
 #define EVENT_PUSH_ARG(ap, fmt, eev)				\
 	switch ((fmt)) {					\
