@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.49 2002/06/03 18:33:04 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.50 2002/06/06 10:18:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -55,7 +55,7 @@ static const struct version char_ver = {
 };
 
 static const struct object_ops char_ops = {
-	NULL,		/* destroy */
+	char_destroy,	/* destroy */
 	char_load,
 	char_save,
 	NULL,		/* attach */
@@ -82,6 +82,8 @@ char_new(char *name, char *media)
 void
 char_init(struct character *ch, char *name, char *media)
 {
+	struct ailment_alive *alive;
+
 	object_init(&ch->obj, "character", name, media, OBJ_ART|OBJ_BLOCK,
 	    &char_ops);
 
@@ -98,17 +100,38 @@ char_init(struct character *ch, char *name, char *media)
 	ch->maxspeed = DEFAULT_SPEED;
 	ch->nzuars = DEFAULT_ZUARS;
 
+	TAILQ_INIT(&ch->ailments);
+
+	alive = emalloc(sizeof(struct ailment_alive));
+	ailment_init(&alive->ail, AILMENT_ALIVE, NULL, AILMENT_SAVE);
+	alive->ticks = 0;
+	TAILQ_INSERT_HEAD(&ch->ailments, AILMENT(alive), ailments);
+
 	pthread_mutex_init(&ch->lock, NULL);
 
 	event_new(ch, "attach", 0, char_onattach, NULL);
 	event_new(ch, "detach", 0, char_ondetach, NULL);
 }
 
+void
+char_destroy(void *p)
+{
+	struct character *ch = p;
+	struct ailment *ail, *nail;
+
+	for (ail = TAILQ_FIRST(&ch->ailments);
+	     ail != TAILQ_END(&ch->ailments);
+	     ail = nail) {
+		nail = TAILQ_NEXT(ail, ailments);
+		free(ail);
+	}
+}
+
 int
 char_load(void *p, int fd)
 {
-	struct object *ob = (struct object *)p;
-	struct character *ch = (struct character *)ob;
+	struct object *ob = p;
+	struct character *ch = p;
 	struct input *input = NULL;
 	struct map *m;
 
