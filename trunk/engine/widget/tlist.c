@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.17 2002/11/14 07:52:29 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.18 2002/11/15 00:51:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -76,9 +76,7 @@ tlist_new(struct region *reg, int rw, int rh, int flags)
 	tl = emalloc(sizeof(struct tlist));
 	tlist_init(tl, rw, rh, flags);
 
-	pthread_mutex_lock(&reg->win->lock);
 	region_attach(reg, tl);
-	pthread_mutex_unlock(&reg->win->lock);
 
 	return (tl);
 }
@@ -103,6 +101,7 @@ tlist_init(struct tlist *tl, int rw, int rh, int flags)
 	tl->item_h = 16;
 	tl->nitems = 0;
 	TAILQ_INIT(&tl->items);
+	TAILQ_INIT(&tl->selitems);
 
 	pthread_mutexattr_init(&tl->items_lockattr);
 	pthread_mutexattr_settype(&tl->items_lockattr, PTHREAD_MUTEX_RECURSIVE);
@@ -154,7 +153,7 @@ tlist_scaled(int argc, union evarg *argv)
 	WIDGET(sb)->x = WIDGET(tl)->x + WIDGET(tl)->w - 20;
 	WIDGET(sb)->y = WIDGET(tl)->y;
 	WIDGET(sb)->w = 20;
-	WIDGET(sb)->h = WIDGET(tl)->h - 7;
+	WIDGET(sb)->h = WIDGET(tl)->h;
 }
 
 void
@@ -236,6 +235,7 @@ tlist_remove_item(struct tlist_item *it)
 	tlist_free_item(it);
 }
 
+/* Clear the items on the list, save selections. */
 void
 tlist_clear_items(struct tlist *tl)
 {
@@ -243,12 +243,26 @@ tlist_clear_items(struct tlist *tl)
 	struct scrollbar *sb = tl->vbar;
 	
 	pthread_mutex_lock(&tl->items_lock);
+	
+	/* Free the saved selection list. */
+	for (it = TAILQ_FIRST(&tl->selitems);
+	     it != TAILQ_END(&tl->selitems);
+	     it = nit) {
+		nit = TAILQ_NEXT(it, selitems);
+		tlist_free_item(it);
+	}
+	TAILQ_INIT(&tl->selitems);
 
+	/* Clear items, saving the selections. */
 	for (it = TAILQ_FIRST(&tl->items);
 	     it != TAILQ_END(&tl->items);
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
-		tlist_free_item(it);
+		if (it->selected) {
+			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
+		} else {
+			tlist_free_item(it);
+		}
 	}
 	TAILQ_INIT(&tl->items);
 	tl->nitems = 0;
@@ -256,6 +270,33 @@ tlist_clear_items(struct tlist *tl)
 	scrollbar_set_range(sb, 0);
 	
 	pthread_mutex_unlock(&tl->items_lock);
+}
+
+static __inline__ int
+tlist_item_compare(struct tlist_item *it1, struct tlist_item *it2)
+{
+	if (it1->text_len == it2->text_len &&		/* Optimization */
+	    strcmp(it1->text, it2->text) == 0 &&	/* Same text? */
+	    it1->icon == it2->icon &&			/* Same icon? */
+	    it1->p1 == it2->p1) {			/* Same user pointer? */
+		return (1);
+	}
+	return (0);
+}
+
+/* Restore previous item selections. */
+void
+tlist_restore_selections(struct tlist *tl)
+{
+	struct tlist_item *sit, *cit;
+
+	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
+		TAILQ_FOREACH(cit, &tl->items, items) {
+			if (tlist_item_compare(sit, cit)) {
+				cit->selected++;
+			}
+		}
+	}
 }
 
 /* Add an item to the list. */
