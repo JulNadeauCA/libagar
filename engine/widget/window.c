@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.17 2002/05/02 06:26:29 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.18 2002/05/06 02:21:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -528,17 +528,16 @@ winseg_destroy(struct winseg *seg)
 	free(seg);
 }
 
+/* Window list must be locked. */
 void
 window_draw_all(void)
 {
 	struct window *win;
 
-	pthread_mutex_lock(&windows_lock);
 	TAILQ_FOREACH_REVERSE(win, &windowsh, windows, windows_head) {
 		if (win->redraw) {
 			window_draw(win);
 		}
 	}
-	pthread_mutex_unlock(&windows_lock);
 }
 
