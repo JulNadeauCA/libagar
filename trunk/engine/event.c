@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.196 2005/02/20 06:23:11 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.197 2005/03/09 06:37:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include <engine/timeout.h>
 
 #include <engine/widget/window.h>
+#include <engine/widget/menu.h>
 #ifdef DEBUG
 #include <engine/widget/label.h>
 #include <engine/widget/graph.h>
@@ -311,6 +312,19 @@ event_loop(void)
 }
 
 static void
+unminimize_window(int argc, union evarg *argv)
+{
+	struct window *win = argv[1].p;
+
+	if (!win->visible) {
+		window_show(win);
+		win->flags &= ~(WINDOW_ICONIFIED);
+	} else {
+		window_focus(win);
+	}
+}
+
+static void
 event_dispatch(SDL_Event *ev)
 {
 	struct window *win;
@@ -337,12 +351,41 @@ event_dispatch(SDL_Event *ev)
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
+		{
+			int rv = 1;
+
 #if defined(__APPLE__) && defined(HAVE_OPENGL)
-		if (view->opengl)
-			ev->button.y = view->h - ev->button.y;
+			if (view->opengl)
+				ev->button.y = view->h - ev->button.y;
 #endif
-		if (!TAILQ_EMPTY(&view->windows)) {
-			window_event(ev);
+			if (!TAILQ_EMPTY(&view->windows)) {
+				rv = window_event(ev);
+			}
+			if (rv == 0 && ev->type == SDL_MOUSEBUTTONDOWN &&
+			    (ev->button.button == SDL_BUTTON_MIDDLE ||
+			     ev->button.button == SDL_BUTTON_RIGHT)) {
+				struct AGMenu *me;
+				struct AGMenuItem *mi;
+				struct window *win;
+				int x, y;
+
+				me = Malloc(sizeof(struct AGMenu), M_OBJECT);
+				menu_init(me);
+				mi = me->sel_item = menu_add_item(me, NULL);
+
+				TAILQ_FOREACH_REVERSE(win, &view->windows,
+				    windows, windowq) {
+					if (strcmp(win->caption, "win-popup")
+					    == 0) {
+						continue;
+					}
+					menu_action(mi, win->caption, OBJ_ICON,
+					    unminimize_window, "%p", win);
+				}
+				
+				SDL_GetMouseState(&x, &y);
+				menu_expand(me, mi, x+4, y+4);
+			}
 		}
 		break;
 	case SDL_JOYAXISMOTION:
