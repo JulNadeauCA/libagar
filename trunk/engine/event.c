@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.156 2003/06/15 08:54:18 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.157 2003/06/17 23:30:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -450,18 +450,14 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(ev->name, name) == 0) {
-			debug(DEBUG_EVENT_NEW,
-			    "replacing %s's existing `%s' handler\n",
-			    ob->name, ev->name);
+		if (strcmp(ev->name, name) == 0)
 			break;
-		}
 	}
 	pthread_mutex_unlock(&ob->events_lock);
 
 	if (ev == NULL) {
 		ev = Malloc(sizeof(struct event));
-		ev->name = Strdup(name);
+		strlcpy(ev->name, name, sizeof(ev->name));
 		newev = 1;
 	}
 	ev->flags = 0;
@@ -493,9 +489,8 @@ event_forward_children(void *p, struct event *ev)
 {
 	struct object *ob = p, *cob;
 
-	OBJECT_FOREACH_CHILD(cob, ob, object) {
+	OBJECT_FOREACH_CHILD(cob, ob, object)
 		event_forward(cob, ev->name, ev->argc, ev->argv);
-	}
 }
 
 #ifdef THREADS
@@ -541,9 +536,9 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
-		if (strcmp(evname, eev->name) != 0) {
+		if (strcmp(evname, eev->name) != 0)
 			continue;
-		}
+
 		neev = Malloc(sizeof(struct event));
 		memcpy(neev, eev, sizeof(struct event));
 		if (fmt != NULL) {
@@ -581,7 +576,7 @@ event_post(void *p, const char *evname, const char *fmt, ...)
 		break;
 	}
 	pthread_mutex_unlock(&ob->events_lock);
-	return ((eev == NULL) ? 0 : 1);
+	return (eev != NULL);
 }
 
 /* Forward an event, without modifying the original event structure. */
@@ -598,9 +593,9 @@ event_forward(void *p, const char *evname, int argc, union evarg *argv)
 	memcpy(nargv, argv, argc * sizeof(union evarg));
 	nargv[0].p = ob;
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(evname, ev->name) != 0) {
+		if (strcmp(evname, ev->name) != 0)
 			continue;
-		}
+
 		ev->handler(argc, nargv);
 
 		if (ev->flags & EVENT_FORWARD_CHILDREN) {
