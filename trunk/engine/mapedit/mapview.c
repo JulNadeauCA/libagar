@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.28 2002/11/09 06:06:27 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.29 2002/11/10 21:45:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -405,20 +405,22 @@ static void
 mapview_scroll(struct mapview *mv, int dir)
 {
 	switch (dir) {
-#if 0
 	case DIR_LEFT:
+		if (mv->flags & MAPVIEW_TILEMAP) {	/* XXX hack */
+			return;
+		}
 		if (--mv->mx <= 0) {
 			mv->mx = 0;
 		}
 		break;
 	case DIR_RIGHT:
-		dprintf("mv->mx(%d) + 1 >= mv->map->mapw(%d) - mv->mw(%d)\n",
-		    mv->mx, mv->map->mapw, mv->mw);
+		if (mv->flags & MAPVIEW_TILEMAP) {	/* XXX hack */
+			return;
+		}
 		if (mv->mx + 1 < mv->map->mapw - 1) {
 			mv->mx++;
 		}
 		break;
-#endif
 	case DIR_UP:
 		if (--mv->my <= 0) {
 			mv->my = 0;
