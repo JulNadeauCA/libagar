@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.32 2002/07/24 09:29:42 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.33 2002/07/27 06:59:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -44,6 +44,7 @@ struct window {
 	window_type_t	type;
 
 	char	*caption;		/* Titlebar text */
+	Uint32	 caption_color;
 	SDL_Surface *caption_s;
 
 	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
