@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.41 2002/06/09 10:27:26 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.42 2002/07/08 03:16:58 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -24,8 +24,14 @@ struct object_art {
 	struct	anim **anims;		/* Animations */
 	int	nsprites, maxsprites;
 	int	nanims, maxanims;
+	
+	struct	 map *map;		/* Tile map (for edition purposes) */
+	int	 mx, my;		/* Current position */
+	Uint32	 cursprite, curanim,
+		 curflags;
 
 	char	*name;			/* Parent name copy */
+	struct	 object *pobj;		/* Parent (for map edition only) */
 	LIST_ENTRY(object_art) arts;	/* Art pool */
 
 	/* Read-write, thread-safe */
@@ -103,8 +109,6 @@ struct object {
 	struct	 object_audio *audio;	/* Static samples */
 
 	/* Read-write */
-	struct	 obmap **maps;		/* Array of maps */
-	pthread_mutex_t	maps_lock;
 #if 1
 	struct	 mappos *pos;		/* Position on the map. XXX array */
 	pthread_mutex_t	pos_lock;
@@ -154,7 +158,7 @@ void	 object_destroy(void *);
 char	*object_name(char *, int);
 int	 object_loadfrom(void *, char *);
 int	 object_addanim(struct object_art *, struct anim *);
-int	 object_addsprite(struct object_art *, SDL_Surface *);
+int	 object_addsprite(struct object_art *, SDL_Surface *, int);
 int	 object_breaksprite(struct object_art *, SDL_Surface *);
 void	 object_dump(void *);
 char	*object_path(char *, const char *);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.64 2002/06/25 17:42:30 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.65 2002/07/08 03:16:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -48,12 +48,18 @@ enum {
 	NSPRITES_INIT =	4,
 	NANIMS_GROW =	2,
 	NSPRITES_GROW = 2,
+	MAPW_INIT =	3,
+	MAPH_INIT =	16,
+	MAPW_GROW =	1,
+	MAPH_GROW =	8
 };
 
 static LIST_HEAD(, object_art) artsh =	LIST_HEAD_INITIALIZER(&artsh);
 static LIST_HEAD(, object_audio) audiosh = LIST_HEAD_INITIALIZER(&audiosh);
 static pthread_mutex_t media_lock = PTHREAD_MUTEX_INITIALIZER;
 static SDL_TimerID gctimer;
+
+extern int mapediting;
 
 static const struct object_ops null_ops = {
 	NULL,	/* destroy */
@@ -63,6 +69,7 @@ static const struct object_ops null_ops = {
 
 static struct object_art	*object_get_art(char *, struct object *);
 static struct object_audio	*object_get_audio(char *, struct object *);
+static __inline__ void		 adjust_map(struct object_art *);
 
 int
 object_addanim(struct object_art *art, struct anim *anim)
@@ -80,22 +87,49 @@ object_addanim(struct object_art *art, struct anim *anim)
 		art->anims = newanims;
 	}
 	art->anims[art->nanims++] = anim;
+	
+	if (art->mx++ > art->map->mapw) {
+		art->mx = 0;
+	}
+	adjust_map(art);
+	node_addref(&art->map->map[art->my][art->mx], art->pobj,
+	    art->curanim++,
+	    MAPREF_ANIM|MAPREF_ANIM_DELTA);
 	return (0);
+}
+
+static __inline__ void
+adjust_map(struct object_art *art)
+{
+	if (art->mx >= art->map->mapw) {
+		map_grow(art->map,
+		    art->map->mapw+MAPW_GROW,
+		    art->map->maph);
+	}
+	if (art->my >= art->map->maph) {
+		map_grow(art->map,
+		    art->map->mapw,
+		    art->map->maph+MAPH_GROW);
+	}
 }
 
 int
 object_breaksprite(struct object_art *art, SDL_Surface *sprite)
 {
-	int x, y;
+	int x, y, mw, mh;
 	SDL_Rect sd, rd;
+	struct map *m = art->map;
 
 	sd.w = TILEW;
 	sd.h = TILEH;
 	rd.x = 0;
 	rd.y = 0;
+	mw = sprite->w/TILEW;
+	mh = sprite->h/TILEH;
 
-	for (y = 0; y < sprite->h; y += TILEH) {
-		for (x = 0; x < sprite->w; x += TILEW) {
+	art->my++;
+	for (y = 0; y < sprite->h; y += TILEH, art->my++) {
+		for (x = 0, art->mx = 0; x < sprite->w; x += TILEW, art->mx++) {
 			SDL_Surface *s;
 
 			s = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
@@ -109,9 +143,16 @@ object_breaksprite(struct object_art *art, SDL_Surface *sprite)
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, s, &rd);
-			object_addsprite(art, s);
+			object_addsprite(art, s, 0);
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
+
+			if (art->mx > art->map->mapw) {
+				art->mx = 0;
+			}
+			adjust_map(art);
+			node_addref(&art->map->map[art->my][art->mx], art->pobj,
+			    art->cursprite++, MAPREF_SPRITE);
 		}
 	}
 	SDL_FreeSurface(sprite);
@@ -120,7 +161,7 @@ object_breaksprite(struct object_art *art, SDL_Surface *sprite)
 }
 
 int
-object_addsprite(struct object_art *art, SDL_Surface *sprite)
+object_addsprite(struct object_art *art, SDL_Surface *sprite, int map_tiles)
 {
 	if (art->sprites == NULL) {			/* Initialize */
 		art->sprites = emalloc(NSPRITES_INIT * sizeof(SDL_Surface *));
@@ -135,6 +176,28 @@ object_addsprite(struct object_art *art, SDL_Surface *sprite)
 		art->sprites = newsprites;
 	}
 	art->sprites[art->nsprites++] = sprite;
+
+	if (map_tiles) { 
+		if (++art->mx >= art->map->mapw) {
+			art->mx = 0;
+			if (++art->my >= art->map->maph) {
+				map_grow(art->map,
+				    art->map->mapw,
+				    art->map->maph+MAPH_GROW);
+			}
+		}
+		
+		if (art->mx >= art->map->mapw)
+			map_grow(art->map,
+			    art->map->mapw+MAPW_GROW,
+			    art->map->maph);
+		if (art->my >= art->map->maph)
+			map_grow(art->map,
+			    art->map->mapw,
+			    art->map->maph+MAPH_GROW);
+		node_addref(&art->map->map[art->my][art->mx],
+		    art->pobj, art->cursprite++, MAPREF_SPRITE);
+	}
 	return (0);
 }
 
@@ -155,7 +218,7 @@ object_get_art(char *media, struct object *ob)
 		struct fobj *fob;
 		char *obpath;
 		Uint32 i;
-		
+	
 		obpath = object_path(media, "fob");
 		if (obpath == NULL) {
 			if (ob->flags & OBJ_OPTMEDIA) {
@@ -176,11 +239,27 @@ object_get_art(char *media, struct object *ob)
 		art->nanims = 0;
 		art->maxanims = 0;
 		art->used = 1;
+		art->map = NULL;
+		art->mx = 0;
+		art->my = 0;
+		art->pobj = ob;		/* XXX */
+		art->cursprite = 0;
+		art->curanim = 0;
+		art->curflags = 0;
 		pthread_mutex_init(&art->used_lock, NULL);
+
+		if (mapediting) {	/* XXX */
+			char s[FILENAME_MAX];
+
+			art->map = emalloc(sizeof(struct map));
+			sprintf(s, "t-%s", media);
+			map_init(art->map, s, NULL, 0);
+			map_allocnodes(art->map, MAPW_INIT, MAPH_INIT);
+		}
 
 		fob = fobj_load(obpath);
 		for (i = 0; i < fob->head.nobjs; i++) {	/* XXX broken */
-			xcf_load(fob, i, art);
+			xcf_load(fob, i, art, ob);
 
 		}
 		fobj_free(fob);
@@ -249,7 +328,7 @@ object_name(char *base, int num)
 {
 	char *name;
 
-	name = emalloc(strlen(base) + 16);
+	name = emalloc(strlen(base)+16);
 	sprintf(name, "%s%d", base, num);
 	return (name);
 }
@@ -283,11 +362,9 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	ob->ops = (opsp != NULL) ? opsp : &null_ops;
 	ob->flags = flags;
 	ob->pos = NULL;
-	ob->maps = NULL;
 	TAILQ_INIT(&ob->events);
 	pthread_mutex_init(&ob->pos_lock, NULL);
 	pthread_mutex_init(&ob->events_lock, NULL);
-	pthread_mutex_init(&ob->maps_lock, NULL);
 
 	ob->art = (ob->flags & OBJ_ART) ?
 	    object_get_art(media, ob) : NULL;
@@ -324,11 +401,9 @@ object_destroy(void *p)
 			OBJECT_UNUSED(ob, audio);
 		}
 	}
-	
+
 	ob->pos = NULL;
-	ob->maps = NULL;
 	pthread_mutex_destroy(&ob->pos_lock);
-	pthread_mutex_destroy(&ob->maps_lock);
 
 	if (ob->name != NULL)
 		free(ob->name);
@@ -363,10 +438,12 @@ object_start_gc(Uint32 ival, void *p)
 			for (i = 0; i < art->nanims; i++) {
 				anim_destroy(art->anims[i]);
 			}
-#if 0
+			if (art->map != NULL) {
+				map_destroy(art->map);
+				free(art->map);
+			}
 			dprintf("freed: %s (%d sprites, %d anims)\n",
 			    art->name, art->nsprites, art->nanims);
-#endif
 
 			free(art->name);
 			free(art);
