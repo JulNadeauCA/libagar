@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.60 2002/03/15 22:12:06 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.61 2002/03/15 22:12:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -46,8 +46,7 @@ static struct obvec map_vec = {
 	map_load,
 	map_save,
 	NULL,		/* link */
-	NULL,		/* unlink */
-	map_dump
+	NULL		/* unlink */
 };
 
 struct draw {
@@ -603,6 +602,9 @@ map_load(void *ob, int fd)
 	struct object **pobjs;
 	Uint32 x, y, refs = 0, i, nobjs;
 	
+	/* The viewport (and the map mask), might change sizes. */
+	text_destroyall();
+	
 	if (version_read(fd, "agar map", 1, 11) != 0) {
 		return (-1);
 	}
@@ -767,14 +769,5 @@ map_save(void *ob, int fd)
 	free(pobjs);
 
 	return (0);
-}
-
-void
-map_dump(void *p)
-{
-	struct map *m = (struct map *)p;
-
-	printf("flags 0x%x geo %dx%d tilegeo %dx%d origin at %dx%d\n",
-	    m->flags, m->mapw, m->maph, m->tilew, m->tileh, m->defx, m->defy);
 }
 
