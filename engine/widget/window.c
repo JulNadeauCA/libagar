@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.177 2003/04/24 07:04:48 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.178 2003/04/24 07:43:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -214,8 +214,10 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	
 	/* Prescale the titlebar icons. */
 	pthread_mutex_lock(&window_lock);
-	if (!icons_inited++)
+	if (!icons_inited) {
 		window_init_icons(win);
+		icons_inited = 0;
+	}
 	pthread_mutex_unlock(&window_lock);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
