@@ -117,10 +117,6 @@ _lib_objs:
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	        ${MAKE} $$F; \
-		if [ $$? != 0 ]; then \
-			echo "${MAKE}: failure"; \
-			exit 1; \
-		fi; \
             done; \
 	fi
 
@@ -133,10 +129,6 @@ _lib_shobjs:
 	        F=`echo $$F | sed 's/.cc$$/.so/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.so/'`; \
 	        ${MAKE} $$F; \
-		if [ $$? != 0 ]; then \
-			echo "${MAKE}: failure"; \
-			exit 1; \
-		fi; \
             done; \
 	fi
 
