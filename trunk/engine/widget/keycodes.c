@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.38 2005/01/05 04:44:05 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.39 2005/02/07 13:17:16 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -342,14 +342,10 @@ key_char_ascii(struct textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		goto skip;
 
 	if (tbox->pos == len) {		       			/* Append */
-		dprintf("append `%c' at %d\n", c, tbox->pos);
 		s[len] = c;
 	} else {						/* Insert */
 		char *p = &s[tbox->pos];
 		
-		dprintf("insert `%c' at %d (move %d chars)\n", c, tbox->pos,
-		    (len - tbox->pos));
-
 		memcpy(&p[1], &p[0], (len - tbox->pos));
 		*p = c;
 	}
