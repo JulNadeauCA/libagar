@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.13 2002/12/30 03:18:48 vedge Exp $
+.\"	$Csoft: map.3,v 1.14 2003/01/01 05:18:34 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -60,6 +60,15 @@ transforms to apply.
 .Pp
 .Ft void
 .Fn map_free_nodes "struct map *map"
+.Pp
+.Ft void
+.Fn map_grow "struct map *map" "Uint32 w" "Uint32 h"
+.Pp
+.Ft void
+.Fn map_shrink "struct map *map" "Uint32 w" "Uint32 h"
+.Pp
+.Ft void
+.Fn map_adjust "struct map *map" "Uint32 x" "Uint32 y"
 .Pp
 .Ft void
 .Fn map_set_zoom "struct map *map" "Uint16 factor"
@@ -137,14 +146,14 @@ The
 .Fn map_grow
 and
 .Fn map_shrink
-functions reallocates
+functions reallocate
 .Fa w
 x
 .Fa h
 nodes.
 The
 .Fn map_adjust
-function grows the map to make sure the node at
+function grows the map so the node at
 .Fa x ,
 .Fa y
 is initialized.
