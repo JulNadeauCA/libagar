@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.96 2003/09/02 02:04:28 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.97 2003/09/07 04:15:05 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -230,7 +230,7 @@ config_window(struct config *con)
 			{ "input.unicode", N_("Unicode keyboard translation") }
 		};
 		const int nsettings = sizeof(settings) / sizeof(settings[0]);
-		extern int text_composition, text_rightleft;
+		extern int text_composition, text_rightleft, window_freescale;
 		int i;
 
 		for (i = 0; i < nsettings; i++) {
@@ -241,6 +241,9 @@ config_window(struct config *con)
 
 		cbox = checkbox_new(vb, _("Input composition"));
 		widget_bind(cbox, "state", WIDGET_INT, NULL, &text_composition);
+		
+		cbox = checkbox_new(vb, _("Unrestricted window resize"));
+		widget_bind(cbox, "state", WIDGET_INT, NULL, &window_freescale);
 
 		cbox = checkbox_new(vb,
 		    _("Right->left (Arabic, Hebrew, ...)"));
