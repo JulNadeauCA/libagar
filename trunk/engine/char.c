@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.44 2002/05/02 06:25:09 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.45 2002/05/11 04:01:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -151,11 +151,10 @@ char_load(void *p, int fd)
 			pthread_mutex_lock(&m->lock);
 			npos = object_addpos(ch, offs, flags, input, m, x, y);
 			npos->speed = speed;
-			pthread_mutex_unlock(&m->lock);
-
 			if (ch->flags & CHAR_FOCUS) {
 				view_center(m->view, x, y);
 			}
+			pthread_mutex_unlock(&m->lock);
 
 			dprintf("at %s:%d,%d\n", OBJECT(m)->name, x, y);
 			m->redraw++;

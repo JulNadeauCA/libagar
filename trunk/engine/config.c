@@ -55,12 +55,10 @@ close_button_push(struct button *b)
 static void
 fullscrn_cbox_push(struct checkbox *b)
 {
-	SDL_Event nev;
-
-	view_fullscreen(mainview,
-	    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-	nev.type = SDL_VIDEOEXPOSE;
-	SDL_PushEvent(&nev);
+	pthread_mutex_lock(&world->lock);
+	view_fullscreen(world->curmap->view,
+	    (world->curmap->flags & SDL_FULLSCREEN) ? 0 : 1);
+	pthread_mutex_unlock(&world->lock);
 }
 
 static void

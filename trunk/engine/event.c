@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.34 2002/05/11 04:03:47 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.35 2002/05/11 05:54:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,30 +53,26 @@ event_hotkey(SDL_Event *ev)
 {
 	struct object *ob;
 
+	pthread_mutex_lock(&world->lock);
+
 	switch (ev->key.keysym.sym) {
 #ifdef DEBUG
 	case SDLK_m:
-		view_dumpmask(mainview);
+		view_dumpmask(world->curview);
 		break;
 	case SDLK_w:
-		pthread_mutex_lock(&world->lock);
 		SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 			object_dump(ob);
 		}
-		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_r:
 		world->curmap->redraw++;
 		break;
 	case SDLK_F2:
-		pthread_mutex_lock(&world->lock);
 		object_save(world);
-		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_F4:
-		pthread_mutex_lock(&world->lock);
 		object_load(world);
-		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_F5:
 		map_verify(world->curmap);
@@ -90,9 +86,9 @@ event_hotkey(SDL_Event *ev)
 		break;
 	case SDLK_f:
 		if (ev->key.keysym.mod & KMOD_CTRL) {
-			view_fullscreen(mainview,
-			    (mainview->flags & SDL_FULLSCREEN) ? 0 : 1);
-			view_redraw(mainview);
+			view_fullscreen(world->curmap->view,
+			    (world->curmap->view->flags & SDL_FULLSCREEN) ?
+			     0 : 1);
 		}
 		break;
 	case SDLK_v:
@@ -101,11 +97,14 @@ event_hotkey(SDL_Event *ev)
 		    gameinfo->ver[1], gameinfo->copyright);
 		break;
 	case SDLK_ESCAPE:
+		pthread_mutex_unlock(&world->lock);
 		engine_destroy();
 		break;
 	default:
 		break;
 	}
+
+	pthread_mutex_unlock(&world->lock);
 }
 
 void *
@@ -115,7 +114,7 @@ event_loop(void *arg)
 	Sint32 delta;
 	SDL_Event ev;
 	struct map *m = NULL;
-
+	
 	/* Start the garbage collection process. */
 	object_init_gc();
 
@@ -123,14 +122,12 @@ event_loop(void *arg)
 	for (ntick = 0, ltick = SDL_GetTicks(), delta = 100;;) {
 		ntick = SDL_GetTicks();
 		if ((ntick - ltick) >= delta) {
-			/* XXX inefficient */
+			/* XXX inefficient locking */
 			pthread_mutex_lock(&world->lock);
 			m = world->curmap;
-			pthread_mutex_unlock(&world->lock);
-
 			pthread_mutex_lock(&m->lock);
 			map_animate(m);
-			if (m->redraw) {
+			if (m->redraw != 0) {
 				m->redraw = 0;
 				map_draw(m);
 				delta = m->fps - (SDL_GetTicks() - ntick);
@@ -141,6 +138,7 @@ event_loop(void *arg)
 				text_drawall();		/* XXX window */
 			}
 			pthread_mutex_unlock(&m->lock);
+			pthread_mutex_unlock(&world->lock);
 
 			if (!TAILQ_EMPTY(&windowsh)) {
 				window_draw_all();
@@ -152,7 +150,9 @@ event_loop(void *arg)
 			}
 			switch (ev.type) {
 			case SDL_VIDEOEXPOSE:
-				view_redraw(mainview);
+				pthread_mutex_lock(&world->lock);
+				view_redraw(world->curview);
+				pthread_mutex_unlock(&world->lock);
 				break;
 			case SDL_MOUSEMOTION:
 				if (curmapedit != NULL) {	/* XXX */

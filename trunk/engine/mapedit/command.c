@@ -40,24 +40,23 @@
 #include "mapedit.h"
 #include "command.h"
 
-static void	 mapedit_setpointer(struct mapedit *, int);
+static void	 mapedit_setcursor(struct mapedit *, int);
 static void	*mapedit_do_loadmap(void *);
 static void	*mapedit_do_savemap(void *);
 
 
 /*
  * All the following operations must be performed
- * on a locked map.
+ * on a locked map editor and map.
  */
 
+/* Toggle the map edition cursor on the map. */
 static void
-mapedit_setpointer(struct mapedit *med, int enable)
+mapedit_setcursor(struct mapedit *med, int enable)
 {
 	static int oxoffs = 0, oyoffs = 0;
 	struct noderef *nref;
 	struct node *node = &med->map->map[med->y][med->x];
-
-	pthread_mutex_assert(&med->map->lock);
 
 	if (enable) {
 		nref = node_addref(node, med, MAPEDIT_SELECT,
@@ -89,9 +88,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 	struct editref *eref;
 	struct noderef *nref;
 	
-	pthread_mutex_assert(&med->map->lock);
-
-	mapedit_setpointer(med, 0);
+	mapedit_setcursor(med, 0);
 
 	if ((med->flags & MAPEDIT_INSERT) == 0) {	/* Replace */
 		TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
@@ -99,7 +96,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 		}
 	}
 
-	/* XXX inefficent */
+	/* XXX inefficient */
 	pthread_mutex_lock(&med->curobj->lock);
 	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, refn);
 	pthread_mutex_unlock(&med->curobj->lock);
@@ -116,7 +113,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 	}
 
 	node->flags = nflags &= ~(NODE_ORIGIN|NODE_ANIM);
-	mapedit_setpointer(med, 1);
+	mapedit_setcursor(med, 1);
 	med->map->redraw++;
 }
 
@@ -124,9 +121,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 void
 mapedit_pop(struct mapedit *med, struct node *node, int clear)
 {
-	pthread_mutex_assert(&med->map->lock);
-
-	mapedit_setpointer(med, 0);
+	mapedit_setcursor(med, 0);
 	if (clear) {
 		struct noderef *nref, *nextnref;
 
@@ -143,22 +138,18 @@ mapedit_pop(struct mapedit *med, struct node *node, int clear)
 			    nrefs_head));
 		}
 	}
-	mapedit_setpointer(med, 1);
+	mapedit_setcursor(med, 1);
 }
 
 /* Reinitialize the map. */
 void
 mapedit_clearmap(struct mapedit *med)
 {
-	pthread_mutex_assert(&med->map->lock);
-
-	mapedit_setpointer(med, 0);
+	mapedit_setcursor(med, 0);
 	map_clean(med->map, NULL, 0, 0, 0);
-	mapedit_setpointer(med, 1);
+	mapedit_setcursor(med, 1);
 
-	med->map->redraw++;
-	mapedit_objlist(med);
-	mapedit_tilelist(med);
+	med->redraw++;
 
 	text_msg(2, TEXT_SLEEP,
 	    "New %dx%d map.\n", med->map->mapw, med->map->maph);
@@ -170,9 +161,7 @@ mapedit_fillmap(struct mapedit *med)
 {
 	struct editref *eref;
 
-	pthread_mutex_assert(&med->map->lock);
-
-	mapedit_setpointer(med, 0);
+	mapedit_setcursor(med, 0);
 
 	pthread_mutex_lock(&med->curobj->lock);
 	SIMPLEQ_INDEX(eref, &med->curobj->erefsh, erefs, med->curoffs);
@@ -191,22 +180,19 @@ mapedit_fillmap(struct mapedit *med)
 		break;
 	}
 
-	mapedit_setpointer(med, 1);
-	med->map->redraw++;
-	mapedit_objlist(med);
-	mapedit_tilelist(med);
+	mapedit_setcursor(med, 1);
+	med->redraw++;
 	
 	text_msg(2, TEXT_SLEEP,
 	    "Initialized %dx%d map.\n", med->map->mapw, med->map->maph);
 }
 
+/* Move the origin of the map to x,y. */
 void
 mapedit_setorigin(struct mapedit *med, int *x, int *y)
 {
 	struct map *map = med->map;
 	
-	pthread_mutex_assert(&med->map->lock);
-
 	map->map[map->defy][map->defx].flags &= ~(NODE_ORIGIN);
 	map->defx = *x;
 	map->defy = *y;
@@ -220,6 +206,7 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 	text_msg(2, TEXT_SLEEP, "Set origin at %dx%d.\n", *x, *y);
 }
 
+/* Load map from file for edition purposes. */
 static void *
 mapedit_do_loadmap(void *arg)
 {
@@ -228,7 +215,7 @@ mapedit_do_loadmap(void *arg)
 	char path[FILENAME_MAX];
 	Uint32 x, y;
 	
-	mapedit_setpointer(med, 0);
+	mapedit_setcursor(med, 0);
 
 	/* Users must copy maps to udatadir in order to edit them. */
 	/* XXX redundant */
@@ -247,11 +234,22 @@ mapedit_do_loadmap(void *arg)
 	}
 	pthread_mutex_unlock(&world->lock);
 
-	mapedit_setpointer(med, 1);
+	mapedit_setcursor(med, 1);
 
 	text_msg(2, TEXT_SLEEP, "Loaded %s.\n", OBJECT(m)->name);
-	
+
 	view_redraw(m->view);
+	return (NULL);
+}
+
+/* Save map to file. */
+static void *
+mapedit_do_savemap(void *arg)
+{
+	struct mapedit *med = arg;
+
+	object_save(med->map);
+	text_msg(2, TEXT_SLEEP, "Saved %s.\n", OBJECT(med->map)->name);
 	return (NULL);
 }
 
@@ -263,36 +261,22 @@ mapedit_loadmap(struct mapedit *med)
 	pthread_create(&loadmap_th, NULL, mapedit_do_loadmap, med);
 }
 
-static void *
-mapedit_do_savemap(void *arg)
-{
-	struct mapedit *med = arg;
-
-	object_save(med->map);
-	return (NULL);
-}
-
 void
 mapedit_savemap(struct mapedit *med)
 {
-	struct map *m = med->map;
 	pthread_t savemap_th;
 
 	pthread_create(&savemap_th, NULL, mapedit_do_savemap, med);
-
-	text_msg(2, TEXT_SLEEP, "Saved %s.\n", OBJECT(m)->name);
 }
 
 void
 mapedit_examine(struct map *em, int x, int y)
 {
-	static char ss[1024], *s = ss;
+	char ss[1024], *s = ss;
 	struct noderef *nref;
 	struct node *node;
 	int i;
 	
-	pthread_mutex_assert(&em->lock);
-
 	node = &em->map[y][x];
 
 	sprintf(s, "<%dx%d>", x, y);
@@ -300,7 +284,7 @@ mapedit_examine(struct map *em, int x, int y)
 	/* Keep in sync with map.h */
 	if (node->flags == NODE_BLOCK) {
 		s = strcat(s, " block");
-	} else {
+	} else {	/* XXX ugly */
 		if (node->flags & NODE_ORIGIN)
 			s = strcat(s, " origin");
 		if (node->flags & NODE_WALK)
@@ -330,7 +314,7 @@ mapedit_examine(struct map *em, int x, int y)
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		char *obs;
 
-		obs = emalloc(128);
+		obs = emalloc(256);	/* XXX */
 		sprintf(obs, "[%2d] %s:%d ", i++, nref->pobj->name, nref->offs);
 		if (nref->flags & MAPREF_SAVE)
 			obs = strcat(obs, "saveable ");
@@ -348,6 +332,7 @@ mapedit_examine(struct map *em, int x, int y)
 	text_msg(8, TEXT_SLEEP, "%s", s);
 }
 
+/* Toggle map editor flags. */
 void
 mapedit_editflags(struct mapedit *med, int mask)
 {
@@ -356,16 +341,13 @@ mapedit_editflags(struct mapedit *med, int mask)
 	} else {
 		med->flags |= mask;
 	}
-
-	med->map->redraw++;
-
-	mapedit_tilelist(med);	/* Update the states display */
+	med->redraw++;	/* Update the states display */
 }
 
+/* Toggle node flags. */
 void
 mapedit_nodeflags(struct mapedit *med, struct node *node, Uint32 flag)
 {
-	pthread_mutex_assert(&med->map->lock);
 	if (flag == 0) {
 		node->flags &= NODE_DONTSAVE;
 	} else if (flag == NODE_WALK) {
@@ -381,9 +363,7 @@ mapedit_nodeflags(struct mapedit *med, struct node *node, Uint32 flag)
 			node->flags |= flag;
 		}
 	}
-	/* XXX pref */
 	med->curflags = node->flags;
-
-	mapedit_tilelist(med);	/* Update the states display */
+	med->redraw++;	/* Update the states display */
 }
 

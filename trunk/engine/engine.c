@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.40 2002/05/11 03:24:12 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.41 2002/05/11 04:02:42 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -85,7 +85,7 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 {
 	int c, w, h, depth, njoy, flags;
 	extern int xcf_debug;
-	
+
 	curmapedit = NULL;
 	gameinfo = gi;
 
@@ -186,6 +186,8 @@ engine_init(int argc, char *argv[], struct gameinfo *gi, char *path)
 		engine_xdebug();
 	}
 #endif
+	
+	dprintf("in %p\n", pthread_self());
 
 	return (0);
 }
@@ -224,9 +226,8 @@ engine_xdebug(void)
 	}
 	if (wm.subsystem == SDL_SYSWM_X11) {
 		wm.info.x11.lock_func();
-		if (XSynchronize(wm.info.x11.display, True) == False) {
-			warning("synchronous X events\n");
-		}
+		warning("synchronous X events\n");
+		XSynchronize(wm.info.x11.display, True);
 		wm.info.x11.unlock_func();
 	}
 
@@ -264,6 +265,7 @@ engine_editmap(void)
 	return (1);
 }
 
+/* Caller must not hold world->lock. */
 void
 engine_destroy(void)
 {
@@ -281,6 +283,9 @@ engine_destroy(void)
 	input_destroy(keyboard);
 	input_destroy(mouse);
 	input_destroy(joy);
+
+	/* Destroy the views. XXX */
+	view_destroy(mainview);
 
 	SDL_Quit();
 	exit(0);

@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.32 2002/04/28 11:05:52 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.33 2002/05/11 03:57:40 vedge Exp $	*/
 
 enum {
 	MAP_MINWIDTH	= 10,
@@ -59,7 +59,8 @@ struct map {
 #define MAP_VARTILEGEO	0x0010		/* Variable tile geometry */
 #define MAP_2D		0x0020		/* Two-dimensional */
 
-	int	redraw;			/* Redraw at next tick */
+	int	redraw;			/* Redraw at next tick
+					   (can be inconsistent) */
 	Uint32	fps;			/* Minimum/maximum fps */
 	Uint32	mapw, maph;		/* Map geometry */
 	Uint32	tilew, tileh;		/* Tile geometry */
@@ -95,5 +96,5 @@ struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_findref(struct node *, void *, Sint32, Uint32);
 int		 node_delref(struct node *, struct noderef *);
 struct noderef	*node_popref(struct node *);
-int		 node_pushref(struct node *, struct noderef *);
+void		 node_pushref(struct node *, struct noderef *);
 

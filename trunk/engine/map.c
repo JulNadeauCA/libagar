@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.83 2002/05/11 04:01:14 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.84 2002/05/11 05:55:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -161,7 +161,9 @@ map_init(struct map *m, char *name, char *media, Uint32 flags)
 
 /*
  * Display a particular map.
- * This map, the current map and the world must not be locked in this thread.
+ *
+ * This map, the current map and the world must not be locked by the
+ * caller thread.
  */
 void
 map_focus(struct map *m)
@@ -175,13 +177,12 @@ map_focus(struct map *m)
 	}
 	dprintf("focusing %s\n", OBJECT(m)->name);
 	world->curmap = m;
+	world->curview = m->view;
 	pthread_mutex_unlock(&world->lock);
 
 	pthread_mutex_lock(&m->lock);
-	pthread_mutex_lock(&m->view->lock);
 	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
-	pthread_mutex_unlock(&m->view->lock);
 	pthread_mutex_unlock(&m->lock);
 }
 
@@ -262,7 +263,7 @@ node_popref(struct node *node)
  * Push a reference onto the stack.
  * Must be called on a locked map.
  */
-int
+void
 node_pushref(struct node *node, struct noderef *nref)
 {
 	TAILQ_INSERT_HEAD(&node->nrefsh, nref, nrefs);
@@ -271,8 +272,6 @@ node_pushref(struct node *node, struct noderef *nref)
 	if (nref->flags & MAPREF_ANIM) {
 		node->nanims++;
 	}
-
-	return (0);
 }
 
 /*
@@ -342,7 +341,7 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 void
 map_destroy(void *p)
 {
-	struct map *m = (struct map *)p;
+	struct map *m = p;
 
 	pthread_mutex_lock(&m->lock);
 	if (m->flags & MAP_FOCUSED) {
@@ -636,9 +635,9 @@ map_draw(struct map *m)
 		SDL_UpdateRects(view->v, ri, view->rects);
 	}
 
-	/* XXX does not belong here */
+	/* XXX thread unsafe */
 	if (curmapedit != NULL) {
-		mapedit_tilestack(curmapedit);
+		curmapedit->redraw++;
 	}
 }
 
