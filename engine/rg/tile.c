@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.15 2005/02/17 04:47:18 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.16 2005/02/18 03:31:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -798,6 +798,51 @@ resize_tile_dlg(int argc, union evarg *argv)
 	window_show(win);
 }
 
+static void
+move_element_up(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tlist *tl = argv[2].p;
+	struct tile *t = tv->tile;
+	struct tlist_item *it;
+	struct tile_element *tel, *ptel;
+
+	if ((it = tlist_item_selected(tl)) == NULL ||
+	    (strcmp(it->class, "feature") != 0 &&
+	     strcmp(it->class, "pixmap") != 0)) {
+		return;
+	}
+	tel = it->p1;
+	if (tel != TAILQ_FIRST(&t->elements)) {
+		ptel = TAILQ_PREV(tel, tile_elementq, elements);
+		TAILQ_REMOVE(&t->elements, tel, elements);
+		TAILQ_INSERT_BEFORE(ptel, tel, elements);
+	}
+	t->flags |= TILE_DIRTY;
+}
+
+static void
+move_element_down(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct tlist *tl = argv[2].p;
+	struct tile *t = tv->tile;
+	struct tlist_item *it;
+	struct tile_element *tel, *ntel;
+
+	if ((it = tlist_item_selected(tl)) == NULL ||
+	    (strcmp(it->class, "feature") != 0 &&
+	     strcmp(it->class, "pixmap") != 0)) {
+		return;
+	}
+	tel = it->p1;
+	if ((ntel = TAILQ_NEXT(tel, elements)) != NULL) {
+		TAILQ_REMOVE(&t->elements, tel, elements);
+		TAILQ_INSERT_AFTER(&t->elements, ntel, tel, elements);
+	}
+	t->flags |= TILE_DIRTY;
+}
+
 struct window *
 tile_edit(struct tileset *ts, struct tile *t)
 {
@@ -834,6 +879,16 @@ tile_edit(struct tileset *ts, struct tile *t)
 		ag_menu_action(item, _("Destroy feature"), ICON(TRASH_ICON),
 		    SDLK_x, KMOD_CTRL,
 		    delete_element, "%p,%p,%i", tv, etl, 0);
+		
+		ag_menu_separator(item);
+		
+		ag_menu_action(item, _("Move up"), ICON(OBJMOVEUP_ICON),
+		    SDLK_u, KMOD_SHIFT,
+		    move_element_up, "%p,%p", tv, etl);
+
+		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
+		    SDLK_d, KMOD_SHIFT,
+		    move_element_down, "%p,%p", tv, etl);
 	}
 
 	item = tlist_set_popup(etl, "pixmap");
@@ -849,6 +904,16 @@ tile_edit(struct tileset *ts, struct tile *t)
 		ag_menu_action(item, _("Destroy pixmap"), ICON(TRASH_ICON),
 		    SDLK_x, KMOD_CTRL,
 		    delete_element, "%p,%p,%i", tv, etl, 0);
+		
+		ag_menu_separator(item);
+		
+		ag_menu_action(item, _("Move up"), ICON(OBJMOVEUP_ICON),
+		    SDLK_u, KMOD_SHIFT,
+		    move_element_up, "%p,%p", tv, etl);
+
+		ag_menu_action(item, _("Move down"), ICON(OBJMOVEDOWN_ICON),
+		    SDLK_d, KMOD_SHIFT,
+		    move_element_down, "%p,%p", tv, etl);
 	}
 
 	m = ag_menu_new(win);

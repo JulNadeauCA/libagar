@@ -1,4 +1,4 @@
-/*	$Csoft: tile.h,v 1.7 2005/02/08 15:50:29 vedge Exp $	*/
+/*	$Csoft: tile.h,v 1.8 2005/02/11 04:50:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILE_H_
@@ -33,6 +33,8 @@ struct tile_element {
 	TAILQ_ENTRY(tile_element) elements;
 };
 
+TAILQ_HEAD(tile_elementq, tile_element);
+
 struct tile {
 	char name[TILE_NAME_MAX];
 	struct tileset *ts;
@@ -52,7 +54,7 @@ struct tile {
 			TILE_ROUNDED_ENDPOINT
 		} endpoint;
 	} line;
-	TAILQ_HEAD(,tile_element) elements;
+	struct tile_elementq elements;
 	TAILQ_ENTRY(tile) tiles;
 };
 
