@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.172 2005/01/05 04:44:04 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.173 2005/01/05 10:50:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ enum {
 
 int	mapview_bg = 1;			/* Background tiles enable */
 int	mapview_bg_moving = 1;		/* Background tiles moving */
-int	mapview_bg_sqsize = 16;		/* Background tile size */
+int	mapview_bg_sqsize = 8;		/* Background tile size */
 int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
 
 static void lost_focus(int, union evarg *);
@@ -335,8 +335,6 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 	mv->esel.h = 0;
 	mv->zoom = 100;
 	mv->tilesz = TILESZ;
-	mv->ssx = 0;
-	mv->ssy = 0;
 	mv->xoffs = 0;
 	mv->yoffs = 0;
 	
@@ -347,8 +345,8 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 
 	widget_map_color(mv, GRID_COLOR, "grid", 100, 100, 100, 255);
 	widget_map_color(mv, CURSOR_COLOR, "cursor", 100, 100, 100, 255);
-	widget_map_color(mv, BG1_COLOR, "background-1", 33, 52, 24, 255);
-	widget_map_color(mv, BG2_COLOR, "background-2", 16, 77, 24, 255);
+	widget_map_color(mv, BG1_COLOR, "bg1", 55, 60, 55, 255);
+	widget_map_color(mv, BG2_COLOR, "bg2", 40, 45, 40, 255);
 	widget_map_color(mv, MSEL_COLOR, "mouse-sel", 150, 150, 150, 255);
 	widget_map_color(mv, ESEL_COLOR, "effective-sel", 180, 180, 180, 255);
 
@@ -370,15 +368,15 @@ mapview_init(struct mapview *mv, struct map *m, int flags,
 void
 mapview_ncoords(struct mapview *mv, int *x, int *y, int *xoff, int *yoff)
 {
-	*x -= mv->ssx;
-	*y -= mv->ssy;
+	*x -= (mv->xoffs+mv->map->ssx);
+	*y -= (mv->yoffs+mv->map->ssy);
 
 	*xoff = *x % mv->tilesz;
 	*yoff = *y % mv->tilesz;
 
-	*x /= mv->tilesz;
-	*y /= mv->tilesz;
-	
+	*x = ((*x)-(*xoff))/mv->tilesz;
+	*y = ((*y)-(*yoff))/mv->tilesz;
+
 	mv->cx = mv->mx + *x;
 	mv->cy = mv->my + *y;
 
@@ -466,8 +464,8 @@ draw_cursor(struct mapview *mv)
 		return;
 	}
 	
-	rd.x = mv->mouse.x*mv->tilesz - mv->ssx;
-	rd.y = mv->mouse.y*mv->tilesz - mv->ssy;
+	rd.x = mv->mouse.x*mv->tilesz - (mv->xoffs+mv->map->ssx);
+	rd.y = mv->mouse.y*mv->tilesz - (mv->yoffs+mv->map->ssy);
 
 	if (mv->curtool == NULL)
 		return;
@@ -498,41 +496,6 @@ defcurs:
 	    CURSOR_COLOR);
 }
 
-/* XXX very, very inelegant */
-static void
-draw_background(struct mapview *mv)
-{
-	static int softbg = 0;
-	int alt1 = 0, alt2 = 0;
-	int x, y;
-
-	if (mapview_bg_moving && ++softbg > mapview_bg_sqsize-1) {
-		softbg = 0;
-	}
-	for (y = -mapview_bg_sqsize+softbg;
-	     y < WIDGET(mv)->h;
-	     y += mapview_bg_sqsize) {
-		for (x = -mapview_bg_sqsize+softbg;
-		     x < WIDGET(mv)->w;
-		     x += mapview_bg_sqsize) {
-			if (alt1++ == 1) {
-				primitives.rect_filled(mv, x, y,
-				    mapview_bg_sqsize, mapview_bg_sqsize,
-				    BG1_COLOR);
-				alt1 = 0;
-			} else {
-				primitives.rect_filled(mv, x, y,
-				    mapview_bg_sqsize, mapview_bg_sqsize,
-				    BG2_COLOR);
-			}
-		}
-		if (alt2++ == 1) {
-			alt2 = 0;
-		}
-		alt1 = alt2;
-	}
-}
-
 void
 mapview_draw(void *p)
 {
@@ -552,8 +515,16 @@ mapview_draw(void *p)
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
 
-	if (mapview_bg)
-		draw_background(mv);
+	if (mapview_bg) {
+		SDL_Rect rtiling;
+
+		rtiling.x = 0;
+		rtiling.y = 0;
+		rtiling.w = WIDGET(mv)->w;
+		rtiling.h = WIDGET(mv)->h;
+		primitives.tiling(mv, rtiling, mapview_bg_sqsize, 0,
+		    BG1_COLOR, BG2_COLOR);
+	}
 	
 	pthread_mutex_lock(&m->lock);
 	if (m->map == NULL)
@@ -563,12 +534,12 @@ draw_layer:
 	if (!m->layers[layer].visible) {
 		goto next_layer;
 	}
-	for (my = mv->my, ry = mv->yoffs + mv->ssy;
+	for (my = mv->my, ry = mv->yoffs+mv->map->ssy;
 //	     ((my - mv->my - TILEOUT) < mv->mh) &&
 	     (my < m->maph);
 	     my++, ry += mv->tilesz) {
 
-		for (mx = mv->mx, rx = mv->xoffs + mv->ssx;
+		for (mx = mv->mx, rx = mv->xoffs+mv->map->ssx;
 //	     	     ((mx - mv->mx - TILEOUT) < mv->mw) &&
 		     (mx < m->mapw);
 		     mx++, rx += mv->tilesz) {
@@ -653,6 +624,8 @@ void
 mapview_set_scale(struct mapview *mv, u_int zoom)
 {
 	extern int magnifier_zoom_toval;
+	int old_tilesz = mv->tilesz;
+	int dxy;
 
 	if (zoom < ZOOM_MIN)
 		zoom = ZOOM_MIN;
@@ -661,13 +634,12 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 
 	mv->zoom = zoom;
 	mv->tilesz = zoom*TILESZ/100;
-	if (mv->tilesz > MAP_MAX_TILESZ) {
+	mv->pxsz = zoom/100;
+	if (mv->tilesz > MAP_MAX_TILESZ)
 		mv->tilesz = MAP_MAX_TILESZ;
-	}
-	mv->ssx = 0;
-	mv->ssy = 0;
-	mv->xoffs = 0;
-	mv->yoffs = 0;
+	if (mv->pxsz < 1)
+		mv->pxsz = 1;
+
 	mv->mw = WIDGET(mv)->w/mv->tilesz + 1;
 	mv->mh = WIDGET(mv)->h/mv->tilesz + 1;
 	mv->wmod = mv->mw - WIDGET(mv)->w % mv->tilesz;
@@ -675,16 +647,11 @@ mapview_set_scale(struct mapview *mv, u_int zoom)
 	mv->wfit = (mv->map->mapw*mv->tilesz <= WIDGET(mv)->w);
 	mv->hfit = (mv->map->maph*mv->tilesz <= WIDGET(mv)->h);
 
+	dxy = (old_tilesz - mv->tilesz)/2;
+	mv->xoffs += dxy;
+	mv->yoffs += dxy;
+
 	magnifier_zoom_toval = zoom;
-}
-
-static void
-mapview_scroll(struct mapview *mv, int xrel, int yrel)
-{
-	struct map *m = mv->map;
-
-	mv->xoffs += xrel;
-	mv->yoffs += yrel;
 }
 
 static void
@@ -705,7 +672,8 @@ mouse_motion(int argc, union evarg *argv)
 	mv->cyrel = y - mv->mouse.y;
 
 	if (mv->mouse.scrolling) {
-		mapview_scroll(mv, xrel, yrel);
+		mv->xoffs += xrel;
+		mv->yoffs += yrel;
 	} else if (mv->msel.set) {
 		mv->msel.xoffs += x - mv->mouse.x;
 		mv->msel.yoffs += y - mv->mouse.y;
@@ -777,9 +745,11 @@ mouse_buttondown(int argc, union evarg *argv)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
+#if 0
 		mv->flags |= MAPVIEW_NO_CURSOR;
 		mv->mouse.centering++;
 		break;
+#endif
 	case SDL_BUTTON_MIDDLE:
 		mv->mouse.scrolling++;
 		break;
@@ -871,9 +841,11 @@ mouse_buttonup(int argc, union evarg *argv)
 		}
 		break;
 	case SDL_BUTTON_RIGHT:
+#if 0
 		mv->flags &= ~(MAPVIEW_NO_CURSOR);
 		mv->mouse.centering = 0;
 		break;
+#endif
 	case SDL_BUTTON_MIDDLE:
 		mv->mouse.scrolling = 0;
 		break;
@@ -1075,8 +1047,6 @@ mapview_center(struct mapview *mv, int x, int y)
 	if (mv->my >= mv->map->maph - mv->mh)
 		mv->my = mv->map->maph - mv->mh;
 
-	mv->ssx = 0;
-	mv->ssy = 0;
 	mv->xoffs = 0;
 	mv->yoffs = 0;
 	pthread_mutex_unlock(&mv->map->lock);
