@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.6 2002/02/10 04:33:13 vedge Exp $
+#	$Csoft: Makefile,v 1.7 2002/02/15 06:46:14 vedge Exp $
 
 TOP=	../..
 
@@ -7,7 +7,7 @@ SRCS=	mapedit.c command.c key.c mouse.c joy.c
 OBJS=	mapedit.o command.o key.o mouse.o joy.o
 FOBJS=	mapedit.fob
 
-CFLAGS+=	${SDL_CFLAGS} ${GLIB_CFLAGS}
+CFLAGS+=	${SDL_CFLAGS} -DDATADIR=\"${PREFIX}/share\"
 
 all:	mapedit.fob mapedit_offs.h
 
