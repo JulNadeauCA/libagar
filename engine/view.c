@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.31 2002/05/08 09:44:41 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.32 2002/05/11 04:06:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -126,6 +126,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	return (0);
 }
 
+/* View must be locked. */
 static int **
 view_allocmask(int w, int h)
 {
@@ -135,7 +136,6 @@ view_allocmask(int w, int h)
 	for (y = 0; y < h; y++) {
 		*(mask + y) = emalloc(w * sizeof(int));
 	}
-
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
 			mask[y][x] = 0;
@@ -145,15 +145,16 @@ view_allocmask(int w, int h)
 	return (mask);
 }
 
+/* View must be locked. */
 static SDL_Rect **
 view_allocmaprects(struct map *m, int w, int h)
 {
 	SDL_Rect **rects;
 	int x, y;
-	
-	rects = (SDL_Rect **)emalloc((w * h) * sizeof(SDL_Rect *));
+
+	rects = emalloc((w * h) * sizeof(SDL_Rect *));
 	for (y = 0; y < h; y++) {
-		*(rects + y) = (SDL_Rect *)emalloc(w * sizeof(SDL_Rect));
+		*(rects + y) = emalloc(w * sizeof(SDL_Rect));
 	}
 	
 	for (y = 0; y < h; y++) {
@@ -168,6 +169,7 @@ view_allocmaprects(struct map *m, int w, int h)
 	return (rects);
 }
 
+/* View must be locked. */
 static SDL_Rect *
 view_allocrects(struct map *m, int w, int h)
 {
@@ -175,7 +177,7 @@ view_allocrects(struct map *m, int w, int h)
 	size_t len;
 	
 	len = (w * h) * sizeof(SDL_Rect *);
-	rects = (SDL_Rect *)emalloc(len);
+	rects = emalloc(len);
 	memset(rects, NULL, len);
 	
 	return (rects);
@@ -185,6 +187,7 @@ void
 view_maskfill(struct viewport *v, SDL_Rect *rd, int n)
 {
 	int x, y;
+
 	pthread_mutex_lock(&v->lock);
 	for (y = rd->y; y < rd->y + rd->h; y++) {
 		for (x = rd->x; x < rd->x + rd->w; x++) {
@@ -194,11 +197,12 @@ view_maskfill(struct viewport *v, SDL_Rect *rd, int n)
 	pthread_mutex_unlock(&v->lock);
 }
 
+/* View must be locked. */
 static void
 view_freemask(struct viewport *v)
 {
 	int y;
-	
+
 	for (y = 0; y < v->maph; y++) {
 		free(*(v->mapmask + y));
 	}
@@ -206,6 +210,7 @@ view_freemask(struct viewport *v)
 	v->mapmask = NULL;
 }
 
+/* View must be locked. */
 static void
 view_freemaprects(struct viewport *v)
 {
@@ -249,6 +254,8 @@ view_new(int w, int h, int depth, int flags)
 void
 view_destroy(struct viewport *v)
 {
+	pthread_mutex_lock(&v->lock);
+
 	if (v->mapmask != NULL) {
 		view_freemask(v);
 	}
@@ -259,6 +266,7 @@ view_destroy(struct viewport *v)
 		free(v->rects);
 		v->rects = NULL;
 	}
+	pthread_mutex_unlock(&v->lock);
 	pthread_mutex_destroy(&v->lock);
 	free(v);
 }
