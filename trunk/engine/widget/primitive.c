@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.31 2002/12/31 05:47:58 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.32 2002/12/31 10:31:54 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -27,15 +27,10 @@
 
 #include <engine/engine.h>
 
-#include <config/have_opengl.h>
 #include <config/view_8bpp.h>
 #include <config/view_16bpp.h>
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
-
-#ifdef HAVE_OPENGL
-#include <GL/gl.h>
-#endif
 
 #include <engine/view.h>
 
@@ -177,13 +172,19 @@ box_2d(void *p, int xoffs, int yoffs, int w, int h, int z,
 {
 	struct widget *wid = p;
 	Uint32 bgcolor;
+	SDL_Rect rd;
 
 	bgcolor = (z < 0) ? alter_color(color, -20, -20, -20) : color;
 	if (WIDGET_FOCUSED(wid)) {
 		bgcolor = alter_color(bgcolor, 6, 6, 15);
 	}
+
 	/* Background */
-	WIDGET_FILL(wid, xoffs, yoffs, w, h, bgcolor);
+	rd.x = xoffs;
+	rd.y = yoffs;
+	rd.w = w;
+	rd.h = h;
+	primitives.rect_filled(wid, &rd, bgcolor);
 
 	primitives.line(wid,			/* Top */
 	    xoffs, yoffs,
@@ -204,6 +205,7 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 {
 	struct widget *wid = p;
 	Uint32 lcol, rcol, bcol;
+	SDL_Rect rd;
 
 	lcol = (z < 0) ?
 	    alter_color(color, -60, -60, -60) :
@@ -219,7 +221,11 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 		bcol = alter_color(bcol, 6, 6, 15);
 	}
 	/* Background */
-	WIDGET_FILL(wid, xoffs, yoffs, w, h, bcol);
+	rd.x = xoffs;
+	rd.y = yoffs;
+	rd.w = w;
+	rd.h = h;
+	primitives.rect_filled(wid, &rd, bcol);
 
 	primitives.line(wid,			/* Top */
 	    xoffs, yoffs,
@@ -432,6 +438,10 @@ done:
 static void
 line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
+	Uint8 r, g, b;
+	
+	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+
 	x1 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
 	y1 += WIDGET(wid)->win->rd.y + WIDGET(wid)->y;
 	x2 += WIDGET(wid)->win->rd.x + WIDGET(wid)->x;
@@ -439,9 +449,6 @@ line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 
 	glBegin(GL_LINES);
 	{
-		Uint8 r, g, b;
-
-		SDL_GetRGB(color, view->v->format, &r, &g, &b);
 		glColor3ub(r, g, b);
 		glVertex2s(x1, y1);
 		glVertex2s(x2, y2);
@@ -451,7 +458,7 @@ line_opengl(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 #endif /* HAVE_OPENGL */
 
 static void
-rectangle_outlined(void *p, int x, int y, int w, int h, Uint32 color)
+rect_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
 
@@ -477,10 +484,31 @@ rectangle_outlined(void *p, int x, int y, int w, int h, Uint32 color)
 }
 
 static void
-rectangle_filled(void *p, SDL_Rect *rd, Uint32 color)
+rect_filled(void *p, SDL_Rect *rd, Uint32 color)
 {
-	SDL_FillRect(view->v, rd, color);
+	SDL_Rect nrd = *rd;
+
+	nrd.x += WIDGET(p)->win->rd.x + WIDGET(p)->x;
+	nrd.y += WIDGET(p)->win->rd.y + WIDGET(p)->y;
+
+	SDL_FillRect(view->v, &nrd, color);
 }
+
+#ifdef HAVE_OPENGL
+static void
+rect_opengl(void *p, SDL_Rect *rd, Uint32 color)
+{
+	SDL_Rect nrd = *rd;
+	Uint8 r, g, b;
+
+	nrd.x += WIDGET(p)->win->rd.x + WIDGET(p)->x;
+	nrd.y += WIDGET(p)->win->rd.y + WIDGET(p)->y;
+
+	SDL_GetRGB(color, view->v->format, &r, &g, &b);
+	glColor3ub(r, g, b);
+	glRecti(nrd.x, nrd.y, nrd.x+nrd.w, nrd.y+nrd.h);
+}
+#endif
 
 /* Default primitives ops */
 struct primitive_ops primitives = {
@@ -490,8 +518,8 @@ struct primitive_ops primitives = {
 	frame_rect,		/* frame (SDL_Rect) */
 	circle_bresenham,	/* circle */
 	line_bresenham,		/* line */
-	rectangle_outlined,	/* outlined rectangle */
-	rectangle_filled	/* filled rectangle */
+	rect_outlined,		/* outlined rectangle */
+	rect_filled		/* filled rectangle */
 };
 
 void
@@ -500,6 +528,7 @@ primitives_init(void)
 #ifdef HAVE_OPENGL
 	if (view->opengl) {
 		primitives.line = line_opengl;
+		primitives.rect_filled = rect_opengl;
 	}
 #endif
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.62 2002/12/31 00:55:22 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.63 2002/12/31 05:46:37 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -77,7 +77,6 @@ case 1:					\
 #else
 # define _VIEW_PUTPIXEL_8(dst, c)
 #endif
-
 #ifdef VIEW_16BPP
 # define _VIEW_PUTPIXEL_16(dst, c)	\
 case 2:					\
@@ -86,7 +85,6 @@ case 2:					\
 #else
 # define _VIEW_PUTPIXEL_16(dst, c)
 #endif
-
 #ifdef VIEW_24BPP
 # if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #  define _VIEW_PUTPIXEL_24(dst, c)	\
@@ -106,7 +104,6 @@ case 3:					\
 #else
 # define _VIEW_PUTPIXEL_24(dst, c)
 #endif
-
 #ifdef VIEW_32BPP
 # define _VIEW_PUTPIXEL_32(dst, c)	\
 case 4:					\
@@ -189,4 +186,7 @@ int	 view_set_refresh(int, int);
 
 SDL_Surface	*view_surface(int, int, int);
 SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
+#ifdef HAVE_OPENGL
+GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
+#endif
 

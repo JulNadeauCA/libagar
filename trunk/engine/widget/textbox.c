@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.35 2002/12/13 07:48:04 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.36 2002/12/25 22:07:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -151,7 +151,7 @@ textbox_draw(void *p)
 	y = tbox->ymargin;
 
 	/* Label */
-	WIDGET_DRAW(tbox, label_s, 0, y/2);
+	widget_blit(tbox, label_s, 0, y/2);
 
 	/* Frame */
 	if (WIDGET_FOCUSED(tbox)) {
@@ -212,7 +212,7 @@ textbox_draw(void *p)
 			    != NULL) {
 				text_s = keycodes_cache[(int)c -
 				    (int)KEYCODES_CACHE_START];
-				WIDGET_DRAW(tbox, text_s, x, y);
+				widget_blit(tbox, text_s, x, y);
 				x += text_s->w;
 			} else {
 				if (c == '\n') {
@@ -223,7 +223,7 @@ textbox_draw(void *p)
 					text_s = text_render(NULL, -1,
 					    WIDGET_COLOR(tbox, TEXT_COLOR),
 					    str);
-					WIDGET_DRAW(tbox, text_s, x, y);
+					widget_blit(tbox, text_s, x, y);
 					x += text_s->w;
 					SDL_FreeSurface(text_s);
 				}

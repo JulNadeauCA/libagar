@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.c,v 1.8 2002/12/03 04:09:00 vedge Exp $	*/
+/*	$Csoft: bitmap.c,v 1.9 2002/12/25 22:07:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -100,7 +100,7 @@ bitmap_draw(void *p)
 	struct bitmap *bmp = p;
 	
 	if (bmp->surface != NULL) {
-		WIDGET_DRAW(bmp, bmp->surface_s, 0, 0);
+		widget_blit(bmp, bmp->surface_s, 0, 0);
 	}
 }
 

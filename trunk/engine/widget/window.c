@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.135 2002/12/31 03:16:52 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.136 2002/12/31 07:03:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -27,7 +27,9 @@
 
 #include <engine/compat/asprintf.h>
 #include <engine/compat/vasprintf.h>
+
 #include <engine/engine.h>
+
 #include <engine/map.h>
 #include <engine/rootmap.h>
 #include <engine/config.h>
@@ -350,44 +352,43 @@ window_draw_titlebar(struct window *win)
 	int i;
 
 	/* XXX yuck */
-	rd.x = win->rd.x + win->borderw;
-	rd.y = win->rd.y + win->borderw;
+	rd.x = win->borderw;
+	rd.y = win->borderw;
 	rd.w = win->rd.w - win->borderw*2+1;
 	rd.h = win->titleh - win->borderw/2;
 
-	/* Titlebar background */
-	SDL_FillRect(view->v, &rd,
+	/* Draw the titlebar background. */
+	primitives.rect_filled(win, &rd,
 	    WIDGET_COLOR(win, WINDOW_FOCUSED(win) ?
 	    TITLEBAR_FOCUSED_COLOR : TITLEBAR_UNFOCUSED_COLOR));
-		
+
+	rd.x += win->rd.x;
+	rd.y += win->rd.y;
 	rd.w = win->rd.w;
 	rd.h = win->rd.h;
 	
+	/* Draw the window caption. XXX inefficient */
 	rclip = rd;
 	rclip.x += th*2;			/* Buttons */
-
-	SDL_GetClipRect(view->v, &rclip_save);
+	SDL_GetClipRect(view->v, &rclip_save);	/* Save clipping rectangle */
 	SDL_SetClipRect(view->v, &rclip);
-		
-	/* Caption */
 	caption = text_render(NULL, -1, WINDOW_FOCUSED(win) ?
 	    WIDGET_COLOR(win, TITLEBAR_TEXT_FOCUSED_COLOR) :
 	    WIDGET_COLOR(win, TITLEBAR_TEXT_UNFOCUSED_COLOR), win->caption);
-	rd.x = win->rd.x + (win->rd.w - caption->w - win->borderw);
-	rd.y = win->rd.y + win->borderw;
-	SDL_BlitSurface(caption, NULL, view->v, &rd);
+	widget_blit(win, caption,
+	    win->rd.w - caption->w - win->borderw,
+	    win->borderw);
 	SDL_FreeSurface(caption);
-		
-	SDL_SetClipRect(view->v, &rclip_save);
+	SDL_SetClipRect(view->v, &rclip_save);	/* Restore clipping rectangle */
 
 	/* Buttons */
 	bcolor = WINDOW_FOCUSED(win) ?
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_FOCUSED_COLOR) :
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_UNFOCUSED_COLOR);
 	primitives.box(win, bw-1, bw-1, th-1, th-4, 1, bcolor);
-	WIDGET_DRAW(win, SPRITE(win, 0), bw, bw-1);
+	widget_blit(win, SPRITE(win, 0), bw, bw-1);
 	primitives.box(win, th+bw-1, bw-1, th-1, th-4, 1, bcolor);
-	WIDGET_DRAW(win, SPRITE(win, (win->flags & WINDOW_HIDDEN_BODY) ? 1 : 2),
+	widget_blit(win, SPRITE(win, (win->flags & WINDOW_HIDDEN_BODY) ? 1 : 2),
 	    th+bw, bw-1);
 
 	/* Border */
@@ -410,6 +411,7 @@ window_draw(struct window *win)
 {
 	struct region *reg;
 	struct widget *wid;
+	SDL_Rect rd = win->rd;
 	int i;
 	
 	debug_n(DEBUG_DRAW, "drawing %s (%dx%d):\n", OBJECT(win)->name,
@@ -417,7 +419,9 @@ window_draw(struct window *win)
 
 	/* Fill the background. */
 	if ((win->flags & WINDOW_HIDDEN_BODY) == 0) {
-		SDL_FillRect(view->v, &win->rd,
+		rd.x = 0;
+		rd.y = 0;
+		primitives.rect_filled(win, &rd,
 		    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
 	}
 	
@@ -458,7 +462,7 @@ window_draw(struct window *win)
 
 #ifdef DEBUG
 			if (prop_get_bool(config, "widget.reg-borders")) {
-				primitives.square(win,
+				primitives.rect_outlined(win,
 				    reg->x, reg->y,
 				    reg->w, reg->h,
 				    SDL_MapRGB(view->v->format, 255, 255, 255));
@@ -584,6 +588,7 @@ window_hide(struct window *win)
 	/* XXX cycle focus */
 	view->focus_win = NULL;
 
+	/* Notify the widgets. */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
 			event_post(wid, "widget-hidden", "%p", win);
@@ -593,19 +598,29 @@ window_hide(struct window *win)
 	win->flags &= ~(WINDOW_SHOWN);
 
 	/* Update the background. */
-	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		SDL_FillRect(view->v, &win->rd,
-		    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-		SDL_UpdateRect(view->v, win->rd.x, win->rd.y,
-		    win->rd.w, win->rd.h);
-	} else {
-		if (view->rootmap != NULL) {		/* Redraw the map. */
-			view->rootmap->map->redraw++;
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_GUI:
+		{
+			SDL_Rect rfill = win->rd;
+
+			rfill.x = 0;
+			rfill.y = 0;
+			primitives.rect_filled(win, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
+		
+			if (!view->opengl) {
+				SDL_UpdateRect(view->v, win->rd.x, win->rd.y,
+				    win->rd.w, win->rd.h);
+			}
 		}
+		break;
+	case GFX_ENGINE_TILEBASED:
+		view->rootmap->map->redraw++;
+		break;
 	}
 
+	/* Save the window position and geometry. */
 	if (win->flags & WINDOW_SAVE_POSITION) {
-		/* Save the window position and geometry. */
 		object_save(win);
 	}
 
@@ -700,7 +715,8 @@ cycle_widgets(struct window *win, int reverse)
 static void
 winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect oldpos, newpos;
+	SDL_Rect oldpos, newpos, rfill1, rfill2;
+	Uint32 fillcolor = WIDGET_COLOR(win, BACKGROUND_FILL_COLOR);
 
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
 		oldpos = win->rd;
@@ -711,50 +727,66 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 	win->rd.y += motion->yrel;
 	window_clamp(win);
 
-	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		SDL_Rect newpos = win->rd;
-		SDL_Rect rfill;
-
-		/* Update the background. */
+	/* Update the background. */
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_GUI:
+		newpos = win->rd;
+		rfill1.w = 0;
+		rfill2.w = 0;
 		if (newpos.x > oldpos.x) {		/* Right */
-			rfill.x = oldpos.x;
-			rfill.y = oldpos.y;
-			rfill.w = newpos.x - oldpos.x;
-			rfill.h = newpos.h;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
+			rfill1.x = oldpos.x;
+			rfill1.y = oldpos.y;
+			rfill1.w = newpos.x - oldpos.x;
+			rfill1.h = newpos.h;
+		} else if (newpos.x < oldpos.x) {	/* Left */
+			rfill1.x = newpos.x + newpos.w;
+			rfill1.y = newpos.y;
+			rfill1.w = oldpos.x - newpos.x;
+			rfill1.h = oldpos.h;
 		}
 		if (newpos.y > oldpos.y) {		/* Downward */
-			rfill.x = oldpos.x;
-			rfill.y = oldpos.y;
-			rfill.w = newpos.w;
-			rfill.h = newpos.y - oldpos.y;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
+			rfill2.x = oldpos.x;
+			rfill2.y = oldpos.y;
+			rfill2.w = newpos.w;
+			rfill2.h = newpos.y - oldpos.y;
+		} else if (newpos.y < oldpos.y) {	/* Upward */
+			rfill2.x = oldpos.x;
+			rfill2.y = newpos.y + newpos.h;
+			rfill2.w = oldpos.w;
+			rfill2.h = oldpos.y - newpos.y;
 		}
-		if (newpos.x < oldpos.x) {		/* Left */
-			rfill.x = newpos.x + newpos.w;
-			rfill.y = newpos.y;
-			rfill.w = oldpos.x - newpos.x;
-			rfill.h = oldpos.h;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
+		if (view->opengl) {
+#ifdef HAVE_OPENGL
+			Uint8 r, g, b;
+
+			SDL_GetRGB(fillcolor, view->v->format, &r, &g, &b);
+			glColor3ub(r, g, b);
+
+			if (rfill1.w > 0) {
+				glRecti(rfill1.x, rfill1.y,
+				    rfill1.x + rfill1.w,
+				    rfill1.y + rfill1.h);
+			}
+			if (rfill2.w > 0) {
+				glRecti(rfill2.x, rfill2.y,
+				    rfill2.x + rfill2.w,
+				    rfill2.y + rfill2.h);
+			}
+#endif
+		} else {
+			if (rfill1.w > 0) {
+				SDL_FillRect(view->v, &rfill1, fillcolor);
+				SDL_UpdateRects(view->v, 1, &rfill1);
+			}
+			if (rfill2.w > 0) {
+				SDL_FillRect(view->v, &rfill2, fillcolor);
+				SDL_UpdateRects(view->v, 1, &rfill2);
+			}
 		}
-		if (newpos.y < oldpos.y) {		/* Upward */
-			rfill.x = oldpos.x;
-			rfill.y = newpos.y + newpos.h;
-			rfill.w = oldpos.w;
-			rfill.h = oldpos.y - newpos.y;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
-		}
-	} else if (view->rootmap != NULL) {
-		/* Redraw the map. */
+		break;
+	case GFX_ENGINE_TILEBASED:
 		view->rootmap->map->redraw++;
+		break;
 	}
 }
 
@@ -778,33 +810,36 @@ winop_hide_body(struct window *win)
 {
 	if (win->flags & WINDOW_HIDDEN_BODY) {		/* Restore */
 		SDL_Rect rtitle = win->rd;
+		SDL_Rect rfill = win->rd;
 
 		win->flags &= ~(WINDOW_HIDDEN_BODY);
 		win->rd = win->saved_rd;
-		
-		if (view->rootmap != NULL) {
-			view->rootmap->map->redraw++;
-		} else {
-			SDL_FillRect(view->v, &rtitle,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rtitle);
-		}
 	} else {					/* Hide */
 		win->flags |= WINDOW_HIDDEN_BODY;
 		win->saved_rd = win->rd;
 		win->rd.h = win->titleh + win->borderw*2;
 
-		if (view->rootmap != NULL) {
+		switch (view->gfx_engine) {
+		case GFX_ENGINE_GUI:
+			{
+				SDL_Rect rbody = win->saved_rd;
+
+				rbody.x = 0;
+				rbody.y = 0;
+				rbody.y += win->titleh;
+				rbody.h -= win->titleh;
+
+				primitives.rect_filled(win, &rbody,
+				    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
+
+				if (!view->opengl) {
+					SDL_UpdateRects(view->v, 1, &rbody);
+				}
+			}
+			break;
+		case GFX_ENGINE_TILEBASED:
 			view->rootmap->map->redraw++;
-		} else {
-			SDL_Rect rbody = win->saved_rd;
-
-			rbody.y += win->titleh;
-			rbody.h -= win->titleh;
-
-			SDL_FillRect(view->v, &rbody,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rbody);
+			break;
 		}
 	}
 
@@ -1164,7 +1199,8 @@ window_clamp(struct window *win)
 static void
 winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect ro;
+	Uint32 fillcolor = WIDGET_COLOR(win, BACKGROUND_FILL_COLOR);
+	SDL_Rect ro, rfill1, rfill2;
 	int nx, ny;
 
 	ro = win->rd;
@@ -1233,39 +1269,61 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	/* Effect the change. */
 	window_resize(win);
 
-	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		SDL_Rect rfill;
+	/* Update the background. */
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_GUI:
+		rfill1.w = 0;
+		rfill2.w = 0;
 
-		/* Update the background. */
 		if (win->rd.x > ro.x) {			/* L-resize */
-			rfill.x = ro.x;
-			rfill.y = ro.y;
-			rfill.w = win->rd.x - ro.x;
-			rfill.h = win->rd.h;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
+			rfill1.x = ro.x;
+			rfill1.y = ro.y;
+			rfill1.w = win->rd.x - ro.x;
+			rfill1.h = win->rd.h;
 		} else if (win->rd.w < ro.w) {		/* R-resize */
-			rfill.x = win->rd.x + win->rd.w;
-			rfill.y = win->rd.y;
-			rfill.w = ro.w - win->rd.w;
-			rfill.h = ro.h;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
+			rfill1.x = win->rd.x + win->rd.w;
+			rfill1.y = win->rd.y;
+			rfill1.w = ro.w - win->rd.w;
+			rfill1.h = ro.h;
 		}
 		if (win->rd.h < ro.h) {			/* H-resize */
-			rfill.x = ro.x;
-			rfill.y = win->rd.y + win->rd.h;
-			rfill.w = ro.w;
-			rfill.h = ro.h - win->rd.h;
-			SDL_FillRect(view->v, &rfill,
-			    WIDGET_COLOR(win, BACKGROUND_FILL_COLOR));
-			SDL_UpdateRects(view->v, 1, &rfill);
+			rfill2.x = ro.x;
+			rfill2.y = win->rd.y + win->rd.h;
+			rfill2.w = ro.w;
+			rfill2.h = ro.h - win->rd.h;
 		}
-	} else if (view->rootmap != NULL) {
-		/* Redraw the map. */
+		if (view->opengl) {
+#ifdef HAVE_OPENGL
+			Uint8 r, g, b;
+
+			SDL_GetRGB(fillcolor, view->v->format, &r, &g, &b);
+			glColor3ub(r, g, b);
+
+			if (rfill1.w > 0) {
+				glRecti(rfill1.x, rfill1.y,
+				    rfill1.x + rfill1.w,
+				    rfill1.y + rfill1.h);
+			}
+			if (rfill2.w > 0) {
+				glRecti(rfill2.x, rfill2.y,
+				    rfill2.x + rfill2.w,
+				    rfill2.y + rfill2.h);
+			}
+#endif
+		} else {
+			if (rfill1.w > 0) {
+				SDL_FillRect(view->v, &rfill1, fillcolor);
+				SDL_UpdateRects(view->v, 1, &rfill1);
+			}
+			if (rfill2.w > 0) {
+				SDL_FillRect(view->v, &rfill2, fillcolor);
+				SDL_UpdateRects(view->v, 1, &rfill2);
+			}
+		}
+		break;
+	case GFX_ENGINE_TILEBASED:
 		view->rootmap->map->redraw++;
+		break;
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.31 2002/12/24 14:21:54 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.32 2002/12/26 07:06:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -127,7 +127,7 @@ checkbox_draw(void *p)
 	    WIDGET_COLOR(cbox, BOX_COLOR));
 
 	/* Draw the label. */
-	WIDGET_DRAW(cbox, cbox->label_s, cbox->cbox_w + 6 + x, y);
+	widget_blit(cbox, cbox->label_s, cbox->cbox_w + 6 + x, y);
 }
 
 static void
