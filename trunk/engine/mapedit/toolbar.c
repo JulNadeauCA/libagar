@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.1 2002/06/22 20:49:17 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.2 2002/06/25 17:30:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -49,25 +49,55 @@
 #include "tileq.h"
 #include "objq.h"
 
+#include "tool/tool.h"
+#include "tool/stamp.h"
+#include "tool/eraser.h"
+
 static void
 push(int argc, union evarg *argv)
 {
+	struct widget *wid = argv[0].p;
 	struct mapedit *med = argv[1].p;
+	
+	switch (argv[2].i) {
+	case MAPEDIT_TOOL_NEW_MAP:
+		window_show(med->new_map_win);
+		return;
+	case MAPEDIT_TOOL_TILEQ:
+		window_show(med->tileq_win);
+		return;
+	case MAPEDIT_TOOL_TILESTACK:
+		window_show(med->tilestack_win);
+		return;
+	case MAPEDIT_TOOL_OBJLIST:
+		window_show(med->objlist_win);
+		return;
+	}
 
-	switch (argv[2].c) {
-	case 'n':
-		window_show_locked(med->new_map_win);
+	if (med->curtool != NULL && med->curtool->win != NULL) {
+		window_hide(med->curtool->win);
+	}
+
+	switch (argv[2].i) {
+	case MAPEDIT_TOOL_STAMP:
+		med->curtool = med->tools.stamp;
 		break;
-	case 'o':
-		window_show_locked(med->objlist_win);
-		break;
-	case 'q':
-		window_show_locked(med->tileq_win);
-		break;
-	case 's':
-		window_show_locked(med->tilestack_win);
+	case MAPEDIT_TOOL_ERASER:
+		med->curtool = med->tools.eraser;
 		break;
 	}
+	
+	if (med->curtool->win != NULL) {
+		window_show(med->curtool->win);
+	}
+	WIDGET_FOCUS(wid);
+}
+
+static void
+init_tools(struct mapedit *med)
+{
+	med->tools.stamp = TOOL(stamp_new(med, 0));
+	med->tools.eraser = TOOL(eraser_new(med, 0));
 }
 
 void
@@ -80,11 +110,14 @@ mapedit_init_toolbar(struct mapedit *med)
 	struct tilestack *tstack;
 	struct tileq *tqueue;
 	struct objq *oqueue;
+	
+	/* Create the tool objects. */
+	init_tools(med);
 
 	/*
 	 * Create the toolbar.
 	 */
-	win = window_new("Tool", WINDOW_ABSOLUTE, 16, 16, 63, 128);
+	win = window_new("Tool", WINDOW_ABSOLUTE, 16, 16, 63, 116);
 
 	reg = region_new(win, REGION_VALIGN, 0,  0, 50, 100);
 	reg->spacing = 1;
@@ -93,7 +126,21 @@ mapedit_init_toolbar(struct mapedit *med)
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_NEW_MAP), 0, 0, 0);
 	win->focus = WIDGET(button);
-	event_new(button, "button-pushed", 0, push, "%p %c", med, 'n');
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_NEW_MAP);
+	
+	/* Stamp */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_STAMP), 0, 0, 0);
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_STAMP);
+	
+	/* Eraser */
+	button = button_new(reg, NULL,
+	    SPRITE(med, MAPEDIT_TOOL_ERASER), 0, 0, 0);
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_ERASER);
+
 	
 	reg = region_new(win, REGION_VALIGN, 50, 0, 50, 100);
 	reg->spacing = 1;
@@ -101,22 +148,25 @@ mapedit_init_toolbar(struct mapedit *med)
 	/* Object list */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_OBJLIST), 0, 0, 0);
-	event_new(button, "button-pushed", 0, push, "%p %c", med, 'o');
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_OBJLIST);
 
 	/* Tile list */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_TILEQ), 0, 0, 0);
-	event_new(button, "button-pushed", 0, push, "%p %c", med, 'q');
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_TILEQ);
 
 	/* Tile stack */
 	button = button_new(reg, NULL,
 	    SPRITE(med, MAPEDIT_TOOL_TILESTACK), 0, 0, 0);
-	event_new(button, "button-pushed", 0, push, "%p %c", med, 's');
+	event_new(button, "button-pushed", 0, push, "%p %i", med,
+	    MAPEDIT_TOOL_TILESTACK);
 
 	med->toolbar_win = win;
 
 	/* Object list window */
-	win = window_new("Object", WINDOW_ABSOLUTE|WINDOW_SOLID,
+	win = window_new("Object", WINDOW_ABSOLUTE|WINDOW_CUBIC,
 	    80, 16, view->w - 96, 74);
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
@@ -125,8 +175,8 @@ mapedit_init_toolbar(struct mapedit *med)
 	med->objlist_win = win;
 
 	/* Tile list window */
-	win = window_new("Tile", WINDOW_ABSOLUTE|WINDOW_SOLID,
-	    view->w - 80, 80, 48, view->h - 110);
+	win = window_new("Tile", WINDOW_ABSOLUTE|WINDOW_CUBIC,
+	    view->w - 64, 88, 48, view->h - 110);
 	reg = region_new(win, REGION_HALIGN,
 	    0, 0, 100, 100);
 	tqueue = tileq_new(reg, med, 0, 100, 100);
