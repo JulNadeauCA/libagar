@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.170 2003/04/18 04:02:49 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.171 2003/04/24 01:03:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -252,9 +252,11 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 
 	debug(DEBUG_RESIZE, "%ux%u -> %ux%u\n", m->mapw, m->maph, w, h);
 
-	if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
-		error_set("%ux%u nodes > %ux%u", w, h,
-		    MAP_MAX_WIDTH, MAP_MAX_HEIGHT);
+	if (w < MAP_MIN_WIDTH || h < MAP_MIN_HEIGHT) {
+		error_set("too small");
+		return (-1);
+	} else if (w > MAP_MAX_WIDTH || h > MAP_MAX_HEIGHT) {
+		error_set("too big");
 		return (-1);
 	}
 
@@ -291,8 +293,12 @@ map_resize(struct map *m, unsigned int w, unsigned int h)
 	m->map = nmap;
 	m->mapw = w;
 	m->maph = h;
-	pthread_mutex_unlock(&m->lock);
+	if (m->origin.x >= w)
+		m->origin.x = w-1;
+	if (m->origin.y >= h)
+		m->origin.y = h-1;
 
+	pthread_mutex_unlock(&m->lock);
 	return (0);
 }
 
@@ -481,8 +487,10 @@ node_move_ref(struct noderef *nref, struct node *src_node,
 	struct node *dst_node;
 
 	if (dx < 0 || dy < 0 ||
-	    dx >= dmap->mapw || dy >= dmap->maph)
+	    dx >= dmap->mapw || dy >= dmap->maph) {
+		error_set("exceeds boundaries");
 		return (-1);
+	}
 
 	dst_node = &dmap->map[dy][dx];
 	TAILQ_REMOVE(&src_node->nrefs, nref, nrefs);
@@ -686,9 +694,8 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 			if (deps->objs[obji] != NULL) {
 				*nref = node_add_sprite(node, deps->objs[obji],
 				    offs);
-				if (*nref == NULL) {
+				if (*nref == NULL)
 					return (-1);
-				}
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
@@ -719,11 +726,11 @@ noderef_load(struct netbuf *buf, struct object_table *deps, struct node *node,
 				    "anim: %s:%u, center %d,%d, aflags 0x%X\n",
 				    deps->objs[obji]->name, offs,
 				    xcenter, ycenter, animflags);
+
 				*nref = node_add_anim(node, deps->objs[obji],
 				    offs, animflags);
-				if (*nref == NULL) {
+				if (*nref == NULL)
 					return (-1);
-				}
 				(*nref)->flags = flags;
 				(*nref)->xcenter = xcenter;
 				(*nref)->ycenter = ycenter;
