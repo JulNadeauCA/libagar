@@ -1,13 +1,19 @@
-/*	$Csoft: view.h,v 1.4 2002/02/15 10:49:55 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.5 2002/02/16 04:55:21 vedge Exp $	*/
 
 struct viewport {
-	int	fps;				  /* Refresh rate in FPS */
-	int	width, height, depth;		  /* Viewport geometry */
-	struct	map *map;			  /* Currently visible map */
-	int	mapw, maph;			  /* Map coordinates */
-	int	mapx, mapy;			  /* Map coordinates */
-	int	flags;				  /* SDL surface flags */
-	SLIST_HEAD(, window) winsh;		  /* Viewport sub-surfaces */
+	enum {
+		VIEW_MAPNAV,	/* Map navigation display */
+		VIEW_MAPEDIT,	/* Map edition display */
+		VIEW_FIGHT	/* Battle display */
+	} mode;
+	int	flags;
+	int	fps;			/* Refresh rate in FPS */
+	int	width, height, depth;	/* Viewport geometry */
+	struct	map *map;		/* Currently visible map */
+	int	mapw, maph;		/* Map coordinates */
+	int	mapx, mapy;		/* Map coordinates */
+	int	mapxoffs, mapyoffs;	/* Map display offset */
+	SLIST_HEAD(, window) winsh;	/* Viewport sub-surfaces */
 	SDL_Surface *v;
 };
 
@@ -23,12 +29,12 @@ struct window {
 extern struct viewport *mainview;	/* view.c */
 
 struct viewport *view_create(int, int, int, int);
-int		 view_setmap(struct viewport *, struct map *);
+int		 view_setmode(struct viewport *, struct map *, int, char *);
 void		 view_destroy(struct viewport *);
 int		 view_fullscreen(struct viewport *, int);
 void		 view_center(struct viewport *, int, int);
 struct window	*window_create(struct viewport *, int, int, int, int, char *);
-void		 window_destroy(void *, void *);
+void		 window_destroy(void *);
 void		 window_draw(struct window *);
 
 void		 scroll(struct map *, int);
