@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.134 2003/01/25 06:29:29 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.135 2003/01/26 06:15:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -107,7 +107,7 @@ mapedit_init(void)
 	int i;
 
 	object_init(&med->obj, "map-editor", "map-editor", "mapedit",
-	    OBJECT_ART|OBJECT_CANNOT_MAP, NULL);
+	    OBJECT_ART|OBJECT_CANNOT_MAP|OBJECT_SYSTEM, NULL);
 	med->curtool = NULL;
 	med->src_node = NULL;
 
