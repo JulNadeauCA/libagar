@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.c,v 1.24 2005/03/06 10:40:32 vedge Exp $	*/
+/*	$Csoft: tileview.c,v 1.25 2005/03/09 06:39:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -514,7 +514,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 			tileview_set_int(ctrl, 0, tileview_int(ctrl,0)+dx);
 			tileview_set_int(ctrl, 1, tileview_int(ctrl,1)+dy);
 			break;
-		case 1:
+		case 1:						/* Top */
 			{
 				int cy = tileview_int(ctrl, 1);
 				int ch = tileview_int(ctrl, 3);
@@ -526,7 +526,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 					yoffs = -dy;
 			}
 			break;
-		case 2:
+		case 2:						/* Bottom */
 			{
 				int ch = tileview_int(ctrl, 3);
 				int nh = ch+dy;
@@ -534,7 +534,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				tileview_set_int(ctrl, 3, nh>=1 ? nh : 1);
 			}
 			break;
-		case 3:
+		case 3:						/* Right */
 			{
 				int cw = tileview_int(ctrl, 2);
 				int nw = cw+dx;
@@ -542,7 +542,7 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
 			}
 			break;
-		case 4:
+		case 4:						/* Left */
 			{
 				int cx = tileview_int(ctrl, 0);
 				int cw = tileview_int(ctrl, 2);
@@ -552,6 +552,17 @@ move_handle(struct tileview *tv, struct tileview_ctrl *ctrl, int nhandle,
 				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
 				if (dx < 0 || dx > 0)
 					xoffs = -dx;
+			}
+			break;
+		case 5:						/* Bot right */
+			{
+				int cw = tileview_int(ctrl, 2);
+				int ch = tileview_int(ctrl, 3);
+				int nw = cw+dx;
+				int nh = ch+dy;
+
+				tileview_set_int(ctrl, 2, nw>=1 ? nw : 1);
+				tileview_set_int(ctrl, 3, nh>=1 ? nh : 1);
 			}
 			break;
 		}
@@ -704,6 +715,7 @@ tileview_init(struct tileview *tv, struct tileset *ts, struct tile *tile,
 	tv->scrolling = 0;
 	tv->flags = flags;
 	tv->state = TILEVIEW_TILE_EDIT;
+	tv->tv_tile.ctrl = NULL;
 	tv->edit_mode = 0;
 	tv->c.r = 255;
 	tv->c.g = 255;
@@ -809,18 +821,15 @@ out:
 	switch (ctrl->type) {
 	case TILEVIEW_POINT:
 		ctrl->nhandles = 1;
-		if (ctrl->nvals < 1)
-			fatal("incomplete");
+		if (ctrl->nvals < 1) goto missingvals;
 		break;
 	case TILEVIEW_RECTANGLE:
-		ctrl->nhandles = 5;
-		if (ctrl->nvals < 4)
-			fatal("incomplete");
+		ctrl->nhandles = 6;
+		if (ctrl->nvals < 4) goto missingvals;
 		break;
 	case TILEVIEW_CIRCLE:
 		ctrl->nhandles = 2;
-		if (ctrl->nvals < 2)
-			fatal("incomplete");
+		if (ctrl->nvals < 2) goto missingvals;
 		break;
 	default:
 		ctrl->nhandles = 0;
@@ -838,6 +847,9 @@ out:
 		th->enable = 0;
 	}
 	return (ctrl);
+missingvals:
+	fatal("missing values");
+	return (NULL);
 }
 
 static void
@@ -1185,16 +1197,18 @@ draw_control(struct tileview *tv, struct tileview_ctrl *ctrl)
 
 			tileview_rect2o(tv, x-1, y-1, w+1, h+1);
 
-			ctrl->handles[0].x = x - 3;
+			ctrl->handles[0].x = x - 3;		/* Position */
 			ctrl->handles[0].y = y - 3;
-			ctrl->handles[1].x = x + w/2;
+			ctrl->handles[1].x = x + w/2;		/* Top */
 			ctrl->handles[1].y = y - 3;
-			ctrl->handles[2].x = x + w/2;
+			ctrl->handles[2].x = x + w/2;		/* Bottom */
 			ctrl->handles[2].y = y + h + 2;
-			ctrl->handles[3].x = x + w + 2;
+			ctrl->handles[3].x = x + w + 2;		/* Right */
 			ctrl->handles[3].y = y + h/2;
-			ctrl->handles[4].x = x - 3;
+			ctrl->handles[4].x = x - 3;		/* Left */
 			ctrl->handles[4].y = y + h/2;
+			ctrl->handles[5].x = x + w + 2;		/* Bot right */
+			ctrl->handles[5].y = y + h + 2;
 		}
 		break;
 	case TILEVIEW_POINT:

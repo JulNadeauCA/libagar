@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.27 2005/03/05 12:13:49 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.28 2005/03/06 04:53:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -466,6 +466,27 @@ close_tile(int argc, union evarg *argv)
 }
 
 static void
+tile_ctrl_buttonup(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[0].p;
+	struct tileview_ctrl *ctrl = argv[1].p;
+	struct tileset *ts = tv->ts;
+	struct tile *t = tv->tile;
+	int w = tileview_int(ctrl, 2);
+	int h = tileview_int(ctrl, 3);
+	
+	if (w != t->su->w || h != t->su->h)  {
+		int flags = 0;
+
+		if (t->su->flags & SDL_SRCALPHA)    flags |= SDL_SRCALPHA;
+		if (t->su->flags & SDL_SRCCOLORKEY) flags |= SDL_SRCCOLORKEY;
+
+		tile_scale(ts, t, w, h, flags);
+		tileview_set_zoom(tv, tv->zoom, 0);
+	}
+}
+
+static void
 close_element(struct tileview *tv)
 {
 	switch (tv->state) {
@@ -500,8 +521,20 @@ close_element(struct tileview *tv)
 	default:
 		break;
 	}
+	
+	if (tv->state == TILEVIEW_TILE_EDIT &&
+	    tv->tv_tile.ctrl != NULL) {
+		tileview_remove_ctrl(tv, tv->tv_tile.ctrl);
+	}
 	tv->state = TILEVIEW_TILE_EDIT;
 	tv->edit_mode = 0;
+
+	tv->tv_tile.ctrl = tileview_insert_ctrl(tv, TILEVIEW_RECTANGLE,
+	    "%i,%i,%u,%u", 0, 0,
+	    (u_int)tv->tile->su->w,
+	    (u_int)tv->tile->su->h);
+	tv->tv_tile.ctrl->buttonup = event_new(tv, NULL, tile_ctrl_buttonup,
+	    "%p", tv->tv_tile.ctrl);
 
 	if (tv->tel_tbar != NULL) {
 		struct window *pwin = widget_parent_window(tv->tel_tbar);
@@ -565,6 +598,11 @@ static void
 open_element(struct tileview *tv, struct tile_element *tel,
     struct window *pwin)
 {
+	if (tv->state == TILEVIEW_TILE_EDIT) {
+		tileview_remove_ctrl(tv, tv->tv_tile.ctrl);
+		tv->tv_tile.ctrl = NULL;
+	}
+
 	switch (tel->type) {
 	case TILE_FEATURE:
 		{
@@ -1564,6 +1602,7 @@ tile_edit(struct tileset *ts, struct tile *t)
 	}
 
 	t->used++;
+	close_element(tv);
 
 	window_scale(win, -1, -1);
 	window_set_geometry(win,
