@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.63 2002/12/31 05:46:37 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.64 2003/01/01 03:31:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/view_8bpp.h>
@@ -6,10 +6,10 @@
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
 
-typedef enum {
+enum gfx_engine {
 	GFX_ENGINE_GUI,		/* Direct rendering, solid background */
 	GFX_ENGINE_TILEBASED	/* Direct rendering, map background */
-} gfx_engine_t;
+};
 
 /* Map display */
 struct viewmap {
@@ -31,7 +31,7 @@ struct viewport {
 	struct	object obj;
 
 	/* Read-only */
-	gfx_engine_t	 gfx_engine;	/* Rendering method */
+	enum gfx_engine gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	int		 w, h;		/* Display geometry */
@@ -168,16 +168,18 @@ if (VIEW_INSIDE_CLIP_RECT((s), (avx), (avy))) {			\
 	}								\
 } while (0)
 
-#define VIEW_UPDATE(rect) do {				\
-	if (view->ndirty + 1 > view->maxdirty) {	\
-		fatal("too many rects\n");		\
-	}						\
-	view->dirty[view->ndirty++] = (rect);		\
+#define VIEW_UPDATE(rect) do {					\
+	if (!view->opengl) {					\
+		if (view->ndirty + 1 > view->maxdirty) {	\
+			fatal("too many rects\n");		\
+		}						\
+		view->dirty[view->ndirty++] = (rect);		\
+	}							\
 } while (0)
 
 extern struct viewport *view;	/* view.c */
 
-int	 view_init(gfx_engine_t);
+int	 view_init(enum gfx_engine);
 void	 view_attach(void *);
 void	 view_detach(void *);
 void	 view_detach_queued(void);
