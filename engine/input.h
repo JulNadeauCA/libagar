@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.8 2002/10/30 17:18:04 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.9 2002/12/13 07:38:15 vedge Exp $	*/
 /*	Public domain	*/
 
 struct object;
@@ -12,13 +12,15 @@ enum input_type {
 
 /* Input device associated with a map position. */
 struct input {
-	struct	object obj;
-	enum	input_type type;
-	int	index;			/* Device index */
-	void	*p;			/* User data */
-	struct	mappos *pos;		/* Controlled map position */
+	struct object	 obj;
+	
+	enum input_type	 type;
+	int		 index;			/* Device index */
+	void		*p;			/* User data */
+	
+	pthread_mutex_t  lock;
+	struct mappos	*pos;			/* Controlled map position */
 	TAILQ_ENTRY(input) inputs;
-	pthread_mutex_t lock;		/* Lock on the whole structure */
 };
 
 struct input	*input_new(int, int);
