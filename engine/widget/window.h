@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.70 2003/06/18 00:47:04 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.71 2003/07/03 07:24:41 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_WINDOW_H_
@@ -35,6 +35,9 @@ struct window {
 #define WINDOW_PERSISTENT	0x01	/* Persistent position/geometry */
 #define WINDOW_CASCADE		0x02	/* Increment position slightly */
 
+#ifdef DEBUG
+	char	 caption[128];
+#endif
 	int	 visible;		/* Window is visible */
 	Uint32	*border;		/* Border colors */
 	int	 borderw;
@@ -45,9 +48,11 @@ struct window {
 	int			 spacing;	/* Widget spacing */
 	int			 padding;	/* Widget padding */
 	int	 		 minw, minh;	/* Minimum geometry */
-
-	TAILQ_ENTRY(window)	 windows;	/* Active windows */
-	TAILQ_ENTRY(window)	 detach;	/* Zombie windows */
+	
+	TAILQ_HEAD(,window)	 subwins;	/* Sub-windows */
+	TAILQ_ENTRY(window)	 windows;	/* Active window list */
+	TAILQ_ENTRY(window)	 swins;		/* Sub-window list */
+	TAILQ_ENTRY(window)	 detach;	/* Zombie window list */
 };
 
 #define WINDOW_FOCUSED(w)	(TAILQ_LAST(&view->windows, windowq) == (w))
@@ -68,8 +73,8 @@ void	 window_set_padding(struct window *, int);
 void	 window_set_position(struct window *, enum window_alignment, int);
 void	 window_set_closure(struct window *, enum window_close_mode);
 
-void	 window_attach(void *, void *);
-void	 window_detach(void *, void *);
+void	 window_attach(struct window *, struct window *);
+void	 window_detach(struct window *, struct window *);
 void	 window_show(struct window *);
 void	 window_hide(struct window *);
 int	 window_toggle_visibility(struct window *);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.209 2003/07/05 01:55:41 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.210 2003/07/05 21:20:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -140,30 +140,21 @@ out:
 void
 window_init(void *p, const char *name)
 {
-	struct window *win = p;
 	char wname[OBJECT_NAME_MAX];
+	struct window *win = p;
 	struct event *ev;
 	int i;
-	char *c;
 
-	snprintf(wname, sizeof(wname), "win-%s",
-	    (name != NULL) ? name : "generic");
-
-	/* XXX special case */
-	for (c = wname; *c != '\0'; c++) {
-		if (*c == '/')			/* Pathname separator */
-			*c = '_';
-	}
+	strlcpy(wname, "win-", sizeof(wname));
+	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
 
 	widget_init(win, "window", &window_ops, 0);
+	object_set_type(win, "window");
+	object_set_name(win, wname);
+
 	widget_map_color(win, BGFILL_COLOR, "background-filling", 0, 0, 0, 255);
 	widget_map_color(win, BG_COLOR, "background", 0, 0, 0, 255);
 	widget_map_color(win, CAPTION_COLOR, "caption", 245, 245, 245, 255);
-
-	/* XXX special case */
-	strlcpy(OBJECT(win)->name, wname, sizeof(OBJECT(win)->name));
-	strlcpy(OBJECT(win)->type, "window", sizeof(OBJECT(win)->type));
-
 #if 0
 	/* XXX issues */
 	win->flags = (name != NULL) ? WINDOW_PERSISTENT : 0;
@@ -196,12 +187,31 @@ window_init(void *p, const char *name)
 	win->minw = 0;
 	win->minh = 0;
 	win->tbar = titlebar_new(win, 0);
+	TAILQ_INIT(&win->subwins);
 
 	/* Automatically notify children of visibility changes. */
 	ev = event_new(win, "widget-shown", window_shown, NULL);
 	ev->flags |= EVENT_FORWARD_CHILDREN;
 	ev = event_new(win, "widget-hidden", window_hidden, NULL);
 	ev->flags |= EVENT_FORWARD_CHILDREN;
+}
+
+/* Attach a sub-window. */
+void
+window_attach(struct window *win, struct window *subwin)
+{
+	pthread_mutex_lock(&view->lock);
+	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
+	pthread_mutex_unlock(&view->lock);
+}
+
+/* Detach a sub-window. */
+void
+window_detach(struct window *win, struct window *subwin)
+{
+	pthread_mutex_lock(&view->lock);
+	TAILQ_REMOVE(&win->subwins, subwin, swins);
+	pthread_mutex_unlock(&view->lock);
 }
 
 void
@@ -377,18 +387,14 @@ window_toggle_visibility(struct window *win)
 {
 	int oldvis;
 
-	pthread_mutex_lock(&view->lock);
 	pthread_mutex_lock(&win->lock);
 	oldvis = win->visible;
-
 	if (win->visible) {
 		window_hide(win);
 	} else {
 		window_show(win);
 	}
-
 	pthread_mutex_unlock(&win->lock);
-	pthread_mutex_unlock(&view->lock);
 	return (oldvis);
 }
 
@@ -396,32 +402,24 @@ window_toggle_visibility(struct window *win)
 void
 window_show(struct window *win)
 {
-	pthread_mutex_lock(&view->lock);
 	pthread_mutex_lock(&win->lock);
-
 	if (!win->visible) {
 		win->visible++;
 		event_post(win, "widget-shown", NULL);
 	}
-	
 	pthread_mutex_unlock(&win->lock);
-	pthread_mutex_unlock(&view->lock);
 }
 
 /* Clear the visibility bit of a window. */
 void
 window_hide(struct window *win)
 {
-	pthread_mutex_lock(&view->lock);
 	pthread_mutex_lock(&win->lock);
-
 	if (win->visible) {
 		win->visible = 0;
 		event_post(win, "widget-hidden", NULL);
 	}
-
 	pthread_mutex_unlock(&win->lock);
-	pthread_mutex_unlock(&view->lock);
 }
 
 static void
@@ -637,11 +635,14 @@ window_event(SDL_Event *ev)
 		/* Focus on the highest overlapping window. */
 		view->focus_win = NULL;
 		TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
+			pthread_mutex_lock(&win->lock);
 			if (!win->visible ||
 			    !widget_area(win, ev->button.x, ev->button.y)) {
+				pthread_mutex_unlock(&win->lock);
 				continue;
 			}
 			view->focus_win = win;
+			pthread_mutex_unlock(&win->lock);
 			break;
 		}
 		focus_changed++;
@@ -654,13 +655,15 @@ window_event(SDL_Event *ev)
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		pthread_mutex_lock(&win->lock);
 		if (!win->visible) {
-			goto next_win;
+			pthread_mutex_unlock(&win->lock);
+			continue;
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
 			if (view->winop != VIEW_WINOP_NONE &&
 			    view->wop_win != win) {
-				goto next_win;
+				pthread_mutex_unlock(&win->lock);
+				continue;
 			}
 			switch (view->winop) {
 			case VIEW_WINOP_NONE:
@@ -678,13 +681,11 @@ window_event(SDL_Event *ev)
 			 * Forward to all widgets that either hold focus or have
 			 * the WIDGET_UNFOCUSED_MOTION flag set.
 			 */
-			lock_linkage();
 			OBJECT_FOREACH_CHILD(wid, win, widget) {
 				widget_mousemotion(win, wid,
 				    ev->motion.x, ev->motion.y,
 				    ev->motion.xrel, ev->motion.yrel);
 			}
-			unlock_linkage();
 			break;
 		case SDL_MOUSEBUTTONUP:
 			view->winop = VIEW_WINOP_NONE;
@@ -693,20 +694,19 @@ window_event(SDL_Event *ev)
 			 * Forward to all widgets that either hold focus or have
 			 * the WIDGET_UNFOCUSED_BUTTONUP flag set.
 			 */
-			lock_linkage();
 			OBJECT_FOREACH_CHILD(wid, win, widget) {
 				widget_mousebuttonup(win, wid,
 				    ev->button.button,
 				    ev->button.x, ev->button.y);
 			}
-			unlock_linkage();
 			if (focus_changed) {
 				goto out;
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			if (!widget_area(win, ev->button.x, ev->button.y)) {
-				goto next_win;
+				pthread_mutex_unlock(&win->lock);
+				continue;
 			}
 			if ((ev->button.y - WIDGET(win)->y) >
 			    (WIDGET(win)->h - win->borderw)) {
@@ -722,7 +722,6 @@ window_event(SDL_Event *ev)
 				view->wop_win = win;
 			}
 			/* Forward to overlapping widgets. */
-			lock_linkage();
 			OBJECT_FOREACH_CHILD(wid, win, widget) {
 				if (widget_mousebuttondown(win, wid,
 				    ev->button.button, ev->button.x,
@@ -730,7 +729,6 @@ window_event(SDL_Event *ev)
 					goto out;
 				}
 			}
-			unlock_linkage();
 			if (focus_changed) {
 				goto out;
 			}
@@ -789,7 +787,6 @@ window_event(SDL_Event *ev)
 				}
 			}
 		}
-next_win:
 		pthread_mutex_unlock(&win->lock);
 	}
 	return (0);
@@ -1039,7 +1036,6 @@ window_scale(void *p, int w, int h)
 	int x = win->padding;
 	int y = win->padding;
 
-	lock_linkage();
 	pthread_mutex_lock(&win->lock);
 
 	if (w == -1 && h == -1) {
@@ -1115,7 +1111,6 @@ window_scale(void *p, int w, int h)
 	WIDGET(win->tbar)->w = WIDGET(win)->w - 2;
 out:
 	pthread_mutex_unlock(&win->lock);
-	unlock_linkage();
 }
 
 /* Change the spacing between child widgets. */
@@ -1165,7 +1160,10 @@ window_set_closure(struct window *win, enum window_close_mode mode)
 	}
 }
 
-/* Set the position of a window assuming its size is known. */
+/*
+ * Set the position of a window assuming its size is known.
+ * The window must be locked.
+ */
 static void
 window_apply_alignment(struct window *win)
 {
@@ -1223,7 +1221,10 @@ window_apply_alignment(struct window *win)
 	window_clamp(win);
 }
 
-/* Cache the absolute view coordinates of a widget and its descendents. */
+/*
+ * Cache the absolute view coordinates of a widget and its descendents.
+ * The view must be locked.
+ */
 void
 window_remap_widgets(void *parent, int x, int y)
 {
@@ -1232,15 +1233,14 @@ window_remap_widgets(void *parent, int x, int y)
 	pwid->cx = x;
 	pwid->cy = y;
 
-	lock_linkage();
 	OBJECT_FOREACH_CHILD(cwid, pwid, widget) {
 		window_remap_widgets(cwid,
 		    pwid->cx + cwid->x,
 		    pwid->cy + cwid->y);
 	}
-	unlock_linkage();
 }
 
+/* Set the text to show inside a window's titlebar. */
 void
 window_set_caption(struct window *win, const char *fmt, ...)
 {
@@ -1255,6 +1255,9 @@ window_set_caption(struct window *win, const char *fmt, ...)
 	vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
 
+#ifdef DEBUG
+	strlcpy(win->caption, s, sizeof(win->caption));
+#endif
 	su = text_render(NULL, -1, WIDGET_COLOR(win, CAPTION_COLOR), s);
 	label_set_surface(win->tbar->label, su);
 }
