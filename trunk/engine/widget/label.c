@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.46 2003/01/01 03:31:15 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.47 2003/01/01 05:18:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -87,9 +87,15 @@ label_init(struct label *label, enum label_type type, const char *s,
 	label->type = type;
 	switch (type) {
 	case LABEL_STATIC:
-		label->text.caption = Strdup(s);
-		label->text.surface = text_render(NULL, -1,
-		    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
+		if (s != NULL) {
+			label->text.caption = Strdup(s);
+			label->text.surface = text_render(NULL, -1,
+			    WIDGET_COLOR(label, TEXT_COLOR),
+			    label->text.caption);
+		} else {
+			label->text.caption = NULL;
+			label->text.surface = NULL;
+		}
 		pthread_mutex_init(&label->text.lock, NULL);
 		break;
 	case LABEL_POLLED:
@@ -154,23 +160,30 @@ label_printf(struct label *label, const char *fmt, ...)
 #endif
 
 	va_start(args, fmt);
-	if (vasprintf(&buf, fmt, args) == -1) {
-		fatal("vasprintf: %s\n", strerror(errno));
-	}
+	Vasprintf(&buf, fmt, args);
 	va_end(args);
 
 	pthread_mutex_lock(&label->text.lock);
 
+	/* Update the string. */
 	label->text.caption = erealloc(label->text.caption, strlen(buf));
 	sprintf(label->text.caption, buf);
 	free(buf);
 
-	SDL_FreeSurface(label->text.surface);
-	label->text.surface = text_render(NULL, -1,
-	    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
-
-	WIDGET(label)->w = label->text.surface->w;
-	WIDGET(label)->h = label->text.surface->h;
+	/* Update the static surface. */
+	if (label->text.surface != NULL) {
+		SDL_FreeSurface(label->text.surface);
+	}
+	if (strcmp(label->text.caption, "") != 0) {
+		label->text.surface = text_render(NULL, -1,
+		    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
+		WIDGET(label)->w = label->text.surface->w;
+		WIDGET(label)->h = label->text.surface->h;
+	} else {
+		label->text.surface = NULL;
+		WIDGET(label)->w = 0;
+		WIDGET(label)->h = 0;
+	}
 
 	pthread_mutex_unlock(&label->text.lock);
 }
@@ -185,7 +198,9 @@ label_draw(void *p)
 	switch (label->type) {
 	case LABEL_STATIC:
 		pthread_mutex_lock(&label->text.lock);
-		widget_blit(label, label->text.surface, 0, 0);
+		if (label->text.surface != NULL) {
+			widget_blit(label, label->text.surface, 0, 0);
+		}
 		pthread_mutex_unlock(&label->text.lock);
 		break;
 	case LABEL_POLLED:
@@ -338,7 +353,9 @@ label_destroy(void *p)
 	switch (label->type) {
 	case LABEL_STATIC:
 		free(label->text.caption);
-		SDL_FreeSurface(label->text.surface);
+		if (label->text.surface != NULL) {
+			SDL_FreeSurface(label->text.surface);
+		}
 		pthread_mutex_destroy(&label->text.lock);
 		break;
 	case LABEL_POLLED:
