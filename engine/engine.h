@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.32 2002/08/21 01:00:58 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.33 2002/08/23 05:16:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -11,7 +11,8 @@
 
 #include <SDL.h>
 
-#include <engine/queue.h>
+#include <engine/compat/queue.h>
+
 #include <engine/error.h>
 #include <engine/debug.h>
 #include <engine/object.h>
