@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: selops.c,v 1.1 2003/03/10 05:49:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -91,9 +91,8 @@ selops_copy(struct mapview *mv)
 				if (nref->layer != mv->cur_layer)
 					continue;
 				nnref = node_copy_ref(nref, dstnode);
-				nnref->layer = mv->cur_layer;
+				nnref->layer = 0;
 			}
-
 			dstnode->flags = srcnode->flags;
 		}
 	}
