@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.27 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.28 2002/12/03 04:09:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -84,7 +84,7 @@ checkbox_init(struct checkbox *cbox, char *caption, int rh, int flags)
 	}
 	WIDGET(cbox)->w = cbox->cbox_w + cbox->xspacing + s->w;
 
-	cbox->caption = strdup(caption);
+	cbox->caption = Strdup(caption);
 	cbox->flags = flags;
 	cbox->justify = CHECKBOX_LEFT;
 	cbox->label_s = s;

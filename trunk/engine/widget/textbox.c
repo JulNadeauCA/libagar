@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.33 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.34 2002/11/28 07:19:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -90,10 +90,10 @@ textbox_init(struct textbox *tbox, const char *label, int flags, int rw, int rh)
 	SDL_FreeSurface(s);
 
 	tbox->flags = flags;
-	tbox->label = label != NULL ? strdup(label) : NULL;
+	tbox->label = label != NULL ? Strdup(label) : NULL;
 	tbox->label_s = text_render(NULL, -1,
 	    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
-	tbox->text.s = strdup("");
+	tbox->text.s = Strdup("");
 	tbox->text.pos = -1;
 	tbox->text.offs = 0;
 	pthread_mutex_init(&tbox->text.lock, NULL);
@@ -344,7 +344,7 @@ textbox_string(struct textbox *tb)
 	char *s;
 
 	pthread_mutex_lock(&tb->text.lock);
-	s = strdup(tb->text.s);
+	s = Strdup(tb->text.s);
 	pthread_mutex_unlock(&tb->text.lock);
 
 	return (s);

@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.23 2002/12/02 04:15:45 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.24 2002/12/03 04:09:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -318,7 +318,7 @@ tlist_insert_item(struct tlist *tl, SDL_Surface *icon, char *text, void *p1)
 	} else {
 		it->icon = NULL;
 	}
-	it->text = strdup(text);
+	it->text = Strdup(text);
 	it->text_len = strlen(text);
 	it->p1 = p1;
 	it->tl_bp = tl;

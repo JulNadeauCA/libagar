@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.40 2002/11/28 07:40:50 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.41 2002/12/03 04:09:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -84,7 +84,7 @@ label_init(struct label *label, enum label_type type, const char *s,
 	label->type = type;
 	switch (type) {
 	case LABEL_STATIC:
-		label->text.caption = strdup(s);
+		label->text.caption = Strdup(s);
 		label->text.surface = text_render(NULL, -1,
 		    WIDGET_COLOR(label, TEXT_COLOR), label->text.caption);
 		pthread_mutex_init(&label->text.lock, NULL);
@@ -92,7 +92,7 @@ label_init(struct label *label, enum label_type type, const char *s,
 	case LABEL_POLLED:
 		label->text.caption = NULL;
 		label->text.surface = NULL;
-		label->poll.fmt = strdup(s);
+		label->poll.fmt = Strdup(s);
 
 		memset(label->poll.ptrs, 0,
 		    sizeof(void *) * LABEL_MAX_POLLITEMS);
