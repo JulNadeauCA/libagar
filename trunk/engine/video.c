@@ -1,4 +1,4 @@
-/*	$Csoft: video.c,v 1.16 2002/04/24 13:15:54 vedge Exp $	 */
+/*	$Csoft: video.c,v 1.17 2002/05/03 20:16:26 vedge Exp $	 */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,7 +42,7 @@
 #include <pthread.h>
 
 #include <SDL.h>
-#ifdef CONF_X11
+#ifdef USE_X11
 #include <SDL_syswm.h>
 #endif
 
@@ -108,6 +108,7 @@ video_init(struct video *v, char *path, SDL_Surface *s)
 	char *errmsg, **exts;
 	int i, xvideo = 0, nexts = 0;
 
+#ifdef USE_X11
 	/*
 	 * Work around smpeg not returning an error code when the
 	 * XVideo extension is missing. We must obtain a pointer to
@@ -132,6 +133,7 @@ video_init(struct video *v, char *path, SDL_Surface *s)
 		warning("XVideo extension missing.\n");
 		return;
 	}
+#endif
 
 	object_init(&v->obj, "video", NULL, 0, &video_ops);
 
