@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.204 2004/03/09 06:16:18 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.205 2004/03/09 06:28:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -30,14 +30,18 @@
 #include <engine/map.h>
 #include <engine/config.h>
 #include <engine/view.h>
+
 #ifdef EDITION
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/box.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
+#include <engine/widget/combo.h>
+
 #include <engine/mapedit/mapedit.h>
 #include <engine/mapedit/mapview.h>
+
 #include <engine/mediasel.h>
 #endif
 
@@ -1621,12 +1625,34 @@ media_window(struct mapview *mv)
 	return (win);
 }
 
+static void
+selected_layer(int argc, union evarg *argv)
+{
+	struct combo *com = argv[0].p;
+	struct mapview *mv = argv[1].p;
+	struct tlist_item *it = argv[2].p;
+	struct tlist *tl = com->list;
+	int i = 0;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected) {
+			struct map_layer *lay = it->p1;
+
+			mv->map->cur_layer = i;
+			return;
+		}
+		i++;
+	}
+	text_msg(MSG_ERROR, _("No layer is selected."));
+}
+
 struct window *
 map_edit(void *p)
 {
 	struct map *m = p;
 	struct window *win;
 	struct box *bo;
+	struct combo *com;
 	struct mapview *mv;
 	int ro = OBJECT(m)->flags & OBJECT_READONLY;
 	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
@@ -1648,8 +1674,9 @@ map_edit(void *p)
 
 	/* Create the map edition toolbar. */
 	/* XXX toolbar widget */
-	bo = box_new(win, BOX_HORIZ, BOX_WFILL);
+	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 	box_set_spacing(bo, 0);
+	box_set_padding(bo, 0);
 	{
 		struct button *bu;
 
@@ -1658,7 +1685,6 @@ map_edit(void *p)
 		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", create_new_view, "%p, %p", mv,
 		    win);
-
 		bu = button_new(bo, NULL);
 		button_set_label(bu, SPRITE(&mapedit, MAPEDIT_TOOL_GRID));
 		button_set_focusable(bu, 0);
@@ -1697,12 +1723,12 @@ map_edit(void *p)
 		button_set_sticky(bu, 1);
 		button_set_focusable(bu, 0);
 		event_new(bu, "button-pushed", toggle_media, "%p", mv);
-#if 0
-		/* XXX combo */
-		lab = label_polled_new(bo, NULL, _("  Layer #%d"),
-		    &m->cur_layer);
-#endif
 	}
+
+	com = combo_new(win, COMBO_POLL, _("Layer:"));
+	event_new(com->list, "tlist-poll", layedit_poll, "%p", mv);
+	event_new(com, "combo-selected", selected_layer, "%p", mv);
+
 	object_attach(win, mv);
 	widget_focus(mv);
 
