@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.11 2002/02/10 04:51:32 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.12 2002/02/14 05:26:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -74,7 +74,7 @@ event_loop(void)
 		}
 		switch (ev.type) {
 		case SDL_VIDEOEXPOSE:
-			curmap->redraw++;
+			world->curmap->redraw++;
 			continue;
 		case SDL_MOUSEMOTION:
 		case SDL_MOUSEBUTTONDOWN:
@@ -85,9 +85,14 @@ event_loop(void)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
 			if (curchar != NULL) {
-				curchar->event_hook(curchar, &ev);
+				if (curchar->obj.vec->event != NULL) {
+					curchar->obj.vec->event(curchar, &ev);
+				}
 			} else if (curmapedit != NULL) {
-				curmapedit->event_hook(curmapedit, &ev);
+				if (curmapedit->obj.vec->event != NULL) {
+					curmapedit->obj.vec->event(curmapedit,
+					    &ev);
+				}
 			}
 			break;
 		case SDL_QUIT:
