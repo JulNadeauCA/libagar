@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Do not edit!
-# File generated from configure.in by manuconf v1.1.
+# File generated from configure.in by manuconf v1.2.
 #
 # Copyright (c) 2001, 2002, CubeSoft Communications, Inc.
 # All rights reserved.
@@ -98,13 +98,11 @@ for mc_arg; do
 	    ;;
 	esac
 done
-if [ "$mc_prefix" != "" ]; then
+if [ "${mc_prefix}" != "" ]; then
     PREFIX=$mc_prefix
 else
     PREFIX=/usr/local
 fi
-trap 'if [ -e config.log ]; then ls -l config.log; fi; exit 1' 1 2 15
-exec 3>config.log
 if [ -x "`which pwd`" ]; then
 S=`pwd `
 else
@@ -112,20 +110,29 @@ S=""
 fi
 echo >Makefile.config
 echo >engine/config.h
-if [ "${version}" == "yes" ]; then
-echo "Manuconf v1.1"
+if [ "${version}" == "yes" ]
+ then
+echo "Manuconf v1.2"
 exit 1
 fi
-if [ "${help}" == "yes" ]; then
+if [ "${help}" == "yes" ]
+ then
 echo "Usage: ./configure [args]"
 echo "    --prefix             Installation prefix [/usr/local]"
-echo "    --without-smpeg      Don't play videos with the smpeg library"
-echo "    --enable-debug       Build with debugging information"
-echo "    --enable-lockdebug   Build with threads debugging information"
+echo "    --without-smpeg      Never use the smpeg library (for videos)"
+echo "    --without-x11        Never use X11 (for videos and debugging)"
+echo "    --enable-debug       Build with debugging code"
+echo "    --enable-xdebug      Force synchronous X11 events (very slow)"
 echo "    --version            Show manuconf version"
 echo "    --help               Show this message"
 exit 1
 fi
+SHAREDIR="$PREFIX/share/geggy"
+echo SHAREDIR=$SHAREDIR >> Makefile.config
+SHAREDIR="\"$PREFIX/share/geggy\""
+echo "#ifndef SHAREDIR" >> engine/config.h
+echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
+echo "#endif /* SHAREDIR */" >> engine/config.h
 echo -n "checking for a usable C compiler..."
 if [ "$CC" = "" ]; then
     if [ -x "`which cc`" ]; then
@@ -164,11 +171,18 @@ else
 fi
 
 rm -f .cctest .cctest.c
+CFLAGS="$CFLAGS -g -I$S"
+echo CFLAGS=$CFLAGS >> Makefile.config
+if [ "${cc_is_gcc}" == "yes" ]
+ then
+CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused"
+echo CFLAGS=$CFLAGS >> Makefile.config
+fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 if [ -x "`which sdl-config`" ]; then
-SDL_VERSION=`sdl-config --version`
+sdl_version=`sdl-config --version`
 else
-SDL_VERSION=""
+sdl_version=""
 fi
 if [ -x "`which sdl-config`" ]; then
 SDL_CFLAGS=`sdl-config --cflags`
@@ -195,14 +209,14 @@ sdl11_libs=`sdl11-config --libs`
 else
 sdl11_libs=""
 fi
-if [ "$SDL_VERSION" != "" ]; then
+if [ "${sdl_version}" != "" ]; then
 sdl_found=yes
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 echo SDL_LIBS=$SDL_LIBS >> Makefile.config
 else
 NONE=1
 fi
-if [ "$sdl11_version" != "" ]; then
+if [ "${sdl11_version}" != "" ]; then
 sdl_found=yes
 SDL_CFLAGS=$sdl11_cflags
 SDL_LIBS=$sdl11_libs
@@ -216,49 +230,11 @@ echo "ok"
 else
 NONE=1
 fi
-CFLAGS="$CFLAGS -g -I$S"
-echo CFLAGS=$CFLAGS >> Makefile.config
-if [ $cc_is_gcc == "yes" ]; then
-CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes -Wunused"
-echo CFLAGS=$CFLAGS >> Makefile.config
-fi
-SHAREDIR="$PREFIX/share/geggy"
-echo SHAREDIR=$SHAREDIR >> Makefile.config
-SHAREDIR="\"$PREFIX/share/geggy\""
-echo "#ifndef SHAREDIR" >> engine/config.h
-echo "#define SHAREDIR $SHAREDIR" >> engine/config.h
-echo "#endif /* SHAREDIR */" >> engine/config.h
-if [ "${with_smpeg}" != "no" ]; then
-echo -n "checking for smpeg (http://www.lokigames.com/)..."
-if [ -x "`which smpeg-config`" ]; then
-smpeg_version=`smpeg-config --version`
-else
-smpeg_version=""
-fi
-if [ -x "`which smpeg-config`" ]; then
-SMPEG_CFLAGS=`smpeg-config --cflags`
-else
-SMPEG_CFLAGS=""
-fi
-if [ -x "`which smpeg-config`" ]; then
-SMPEG_LIBS=`smpeg-config --libs`
-else
-SMPEG_LIBS=""
-fi
-if [ "$smpeg_version" != "" ]; then
-echo "ok"
-echo "#ifndef CONF_SMPEG" >> engine/config.h
-echo "#define CONF_SMPEG $CONF_SMPEG" >> engine/config.h
-echo "#endif /* CONF_SMPEG */" >> engine/config.h
-echo SMPEG_CFLAGS=$SMPEG_CFLAGS >> Makefile.config
-echo SMPEG_LIBS=$SMPEG_LIBS >> Makefile.config
-else
-NONE=1
-fi
+if [ "${with_x11}" != "no" ]
+ then
 echo -n "checking for X11 (http://www.xfree86.org/)..."
 if [ -d /usr/X11R6 ]; then
 X11BASE=/usr/X11R6
-CONF_X11=1
 X11_CFLAGS=-I/usr/X11R6/include
 X11_LIBS=-L/usr/X11R6/lib
 else
@@ -266,7 +242,6 @@ NONE=1
 fi
 if [ -d /usr/X386 ]; then
 X11BASE=/usr/X386
-CONF_X11=1
 X11_CFLAGS=-I/usr/X386/include
 X11_LIBS=-L/usr/X386/lib
 else
@@ -274,7 +249,6 @@ NONE=1
 fi
 if [ -d /usr/bin/X11 ]; then
 X11BASE=/usr/bin/X11
-CONF_X11=1
 X11_CFLAGS=-I/usr/bin/X11/include
 X11_LIBS=-L/usr/bin/X11/lib
 else
@@ -282,24 +256,35 @@ NONE=1
 fi
 if [ "${X11BASE}" != "" ]; then
 echo -n "ok"
-echo "$X11BASE"
-echo "#ifndef CONF_X11" >> engine/config.h
-echo "#define CONF_X11 $CONF_X11" >> engine/config.h
-echo "#endif /* CONF_X11 */" >> engine/config.h
+echo ", $X11BASE"
+x11_found=yes
 echo X11BASE=$X11BASE >> Makefile.config
 echo X11_CFLAGS=$X11_CFLAGS >> Makefile.config
 echo X11_LIBS=$X11_LIBS >> Makefile.config
 else
 NONE=1
 fi
+	if [ "${x11_found}" == "yes" ]
+ then
+USE_X11=1
+echo "#ifndef USE_X11" >> engine/config.h
+echo "#define USE_X11 $USE_X11" >> engine/config.h
+echo "#endif /* USE_X11 */" >> engine/config.h
+	fi
+	if [ "${enable_debug}" == "yes" ]
+ then
+XDEBUG=1
+echo "#ifndef XDEBUG" >> engine/config.h
+echo "#define XDEBUG $XDEBUG" >> engine/config.h
+echo "#endif /* XDEBUG */" >> engine/config.h
+	fi
 fi
-if [ "${enable_debug}" == "yes" ]; then
+if [ "${enable_debug}" == "yes" ]
+ then
 DEBUG=1
 echo "#ifndef DEBUG" >> engine/config.h
 echo "#define DEBUG $DEBUG" >> engine/config.h
 echo "#endif /* DEBUG */" >> engine/config.h
-fi
-if [ "${enable_lockdebug}" == "yes" ]; then
 LOCKDEBUG=1
 echo "#ifndef LOCKDEBUG" >> engine/config.h
 echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
