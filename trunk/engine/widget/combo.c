@@ -1,4 +1,4 @@
-/*	$Csoft: combo.c,v 1.44 2003/06/08 23:53:17 vedge Exp $	*/
+/*	$Csoft: combo.c,v 1.1 2003/06/10 19:12:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -122,14 +122,8 @@ combo_select(int argc, union evarg *argv)
 	struct tlist_item *ti;
 
 	if ((ti = tlist_item_selected(tl)) != NULL) {
-		struct widget_binding *stringb;
-		char *s;
-
-		stringb = widget_binding_get_locked(com->tbox, "string", &s);
-		strlcpy(s, ti->text, stringb->size);
-		widget_binding_unlock(stringb);
+		textbox_printf(com->tbox, "%s", ti->text);
 	}
-
 	combo_collapse(com);
 }
 
