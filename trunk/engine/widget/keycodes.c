@@ -1,4 +1,4 @@
-/*	$Csoft: keycodes.c,v 1.21 2003/01/01 05:18:41 vedge Exp $	    */
+/*	$Csoft: keycodes.c,v 1.22 2003/01/04 14:10:33 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,8 +49,6 @@ static void	 key_end(struct textbox *, SDLKey, int, char *);
 static void	 key_kill(struct textbox *, SDLKey, int, char *);
 static void	 key_left(struct textbox *, SDLKey, int, char *);
 static void	 key_right(struct textbox *, SDLKey, int, char *);
-
-extern TTF_Font *font;		/* XXX pref */
 
 #if KEYCODES_KEYMAP == KEYMAP_US
 # include "keymaps/us.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.51 2003/01/05 08:41:43 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.52 2003/03/02 01:20:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -41,36 +41,30 @@
 #include "textbox.h"
 #include "keycodes.h"
 
-/* XXX prefs */
-#define DEFAULT_FONT_NAME	"larabie"
-#define DEFAULT_FONT_SIZE	16
+ttf_font *font = NULL;		/* Default font */
 
-TTF_Font *font;		/* Default font */
-int font_h;		/* Default font height */
-
+/* Cached fonts */
 struct text_font {
 	char	 *name;
 	int	 size;
 	int	 style;
-	TTF_Font *font;
+	ttf_font *font;
 	SLIST_ENTRY(text_font) fonts;
 };
-
 static SLIST_HEAD(text_fontq, text_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
 static pthread_mutex_t fonts_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static TTF_Font *
-get_font(char *name, int size, int style)
+static ttf_font *
+text_load_font(char *name, int size, int style)
 {
 	char *path;
-	TTF_Font *nfont;
+	ttf_font *nfont;
 	struct text_font *fon;
 
-	if (name == NULL) {
-		/* Default font */
+	if (name == NULL) {		/* Default font */
 		return (font);
 	}
-	
+
 	pthread_mutex_lock(&fonts_lock);
 
 	SLIST_FOREACH(fon, &fonts, fonts) {
@@ -86,13 +80,13 @@ get_font(char *name, int size, int style)
 	if (path == NULL) {
 		fatal("%s.ttf: %s\n", name, error_get());
 	}
-	nfont = TTF_OpenFont(path, size);
+	nfont = ttf_open_font(path, size);
 	if (nfont == NULL) {
 		fatal("%s: %s\n", path, error_get());
 	}
 	free(path);
 
-	TTF_SetFontStyle(nfont, style);
+	ttf_set_font_style(nfont, style);
 
 	fon = emalloc(sizeof(struct text_font));
 	fon->name = Strdup(name);
@@ -110,16 +104,39 @@ get_font(char *name, int size, int style)
 int
 text_init(void)
 {
-	if (TTF_Init() < 0) {
-		fatal("TTF_Init: %s\n", SDL_GetError());
+	if (ttf_init() == -1) {
+		error_set("ttf_init: %s", SDL_GetError());
+		/* TODO revert to a bitmap font! */
 		return (-1);
 	}
-
-	/* Load the default font. */
-	font = get_font(DEFAULT_FONT_NAME, DEFAULT_FONT_SIZE, 0);
-	font_h = TTF_FontHeight(font);
-
 	return (0);
+}
+
+void
+text_set_default_font(char *name, int size, int style)
+{
+	if (font != NULL) {
+		/* Replacing the default font would be thread-unsafe. */
+		fatal("exists\n");
+	}
+	dprintf("setting default font to %s:%d,%d\n",
+	    prop_get_string(config, "font-engine.default-font"),
+	    prop_get_int(config, "font-engine.default-size"),
+	    prop_get_int(config, "font-engine.default-style"));
+
+	font = text_load_font(
+	    prop_get_string(config, "font-engine.default-font"),
+	    prop_get_int(config, "font-engine.default-size"),
+	    prop_get_int(config, "font-engine.default-style"));
+}
+
+static void
+text_destroy_font(struct text_font *fon)
+{
+	dprintf("freeing font %s\n", fon->name);
+
+	free(fon->name);
+	ttf_close_font(fon->font);
 }
 
 void
@@ -127,16 +144,15 @@ text_destroy(void)
 {
 	struct text_font *fon, *nextfon;
 	
-	/* Close the opened fonts. */
 	for (fon = SLIST_FIRST(&fonts);
 	     fon != SLIST_END(&fonts);
 	     fon = nextfon) {
 		nextfon = SLIST_NEXT(fon, fonts);
-		free(fon->name);
-		TTF_CloseFont(fon->font);
-		free(nextfon);
+		text_destroy_font(fon);
+		free(fon);
 	}
-	TTF_Quit();
+
+	ttf_destroy();
 }
 
 SDL_Surface *
@@ -145,19 +161,21 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	SDL_Surface *su;
 	SDL_Color col;
 	Uint8 r, g, b;
-	TTF_Font *fon;
+	ttf_font *fon;
 	SDL_Rect rd;
 	int nlines, maxw;
 	char *sd, *sp;
 
 	if (s == NULL || strcmp("", s) == 0 ||
-	    !prop_get_bool(config, "view.font-engine")) {
+	    !prop_get_bool(config, "font-engine")) {
 		/* Return an empty surface. */
+		dprintf("empty surface\n");
 		return (view_surface(SDL_SWSURFACE, 0, 0));
 	}
 
 	/* Get a font handle. */
-	fon = get_font(fontname, fontsize, 0);
+	fon = text_load_font(fontname, fontsize,
+	    prop_get_int(config, "font-engine.default-style"));
 	
 	/* Decompose the color. */
 	SDL_GetRGB(color, view->v->format, &r, &g, &b);
@@ -175,9 +193,9 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 
 	if (nlines == 0) {
 		/* Render a single line. */
-		su = TTF_RenderText_Solid(fon, sd, col);
+		su = ttf_render_text_solid(fon, sd, col);
 		if (su == NULL) {
-			fatal("TTF_RenderText_Solid: %s\n", error_get());
+			fatal("ttf_render_text_solid: %s\n", error_get());
 		}
 	} else {
 		SDL_Surface **lines, **lp;
@@ -197,9 +215,9 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 				*lp = NULL;
 				continue;
 			}
-			*lp = TTF_RenderText_Solid(fon, sp, col);
+			*lp = ttf_render_text_solid(fon, sp, col);
 			if (*lp == NULL) {
-				fatal("TTF_RenderText_Solid: %s\n",
+				fatal("ttf_render_text_solid: %s\n",
 				    error_get());
 			}
 			if ((*lp)->w > maxw) {
@@ -210,13 +228,13 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 		rd.x = 0;
 		rd.y = 0;
 		rd.w = 0;
-		rd.h = TTF_FontHeight(fon);
+		rd.h = ttf_font_height(fon);
 
 		/* Render the final surface. */
 		su = view_surface(SDL_SWSURFACE, maxw, rd.h * nlines);
 		for (i = 0;
 		     i < nlines;
-		     i++, rd.y += rd.h) {
+		     i++, rd.y += rd.h) {	/* XXX respect line skip */
 			if (lines[i] == NULL) {
 				continue;
 			}
