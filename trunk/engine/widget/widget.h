@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.17 2002/05/21 03:21:32 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.18 2002/05/24 09:15:31 vedge Exp $	*/
 
 struct window;
 
@@ -78,6 +78,8 @@ struct widget {
 #endif	/* DEBUG */
 
 #define WIDGET_SURFACE(wid)	(WINDOW_SURFACE(WIDGET((wid))->win))
+
+#define WIDGET_FOCUSED(wid)	(WIDGET(wid)->win->focus == WIDGET(wid))
 
 /* Test whether absolute coordinates match the widget area. */
 #define WIDGET_INSIDE(wida, xa, ya)				\
