@@ -1,4 +1,4 @@
-/*	$Csoft: feature.c,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
+/*	$Csoft: feature.c,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -38,26 +38,39 @@
 #include <engine/widget/menu.h>
 
 #include "tileset.h"
+#include "tileview.h"
 
 void
-feature_init(void *p, const char *name, int flags,
+feature_init(void *p, struct tileset *ts, int flags,
     const struct feature_ops *ops)
 {
 	struct feature *ft = p;
-
-	strlcpy(ft->name, name, sizeof(ft->name));
+	struct feature *oft;
+	unsigned int featno = 0;
+	
+tryname:
+	snprintf(ft->name, sizeof(ft->name), "%s #%d", ops->type, featno);
+	TAILQ_FOREACH(oft, &ts->features, features) {
+		if (strcmp(oft->name, ft->name) == 0)
+			break;
+	}
+	if (oft != NULL) {
+		featno++;
+		goto tryname;
+	}
+	ft->ts = ts;
 	ft->flags = flags;
 	ft->ops = ops;
 	TAILQ_INIT(&ft->sketches);
+	TAILQ_INIT(&ft->pixmaps);
 }
 
-/* Associate a sketch with the feature. */
 struct feature_sketch *
 feature_insert_sketch(struct feature *ft, struct sketch *sk)
 {
 	struct feature_sketch *fsk;
 
-	fsk = Malloc(sizeof(struct feature_sketch), M_OBJECT);
+	fsk = Malloc(sizeof(struct feature_sketch), M_RG);
 	fsk->sk = sk;
 	fsk->x = 0;
 	fsk->y = 0;
@@ -81,10 +94,40 @@ feature_remove_sketch(struct feature *ft, struct sketch *sk)
 	}
 }
 
+struct feature_pixmap *
+feature_insert_pixmap(struct feature *ft, struct pixmap *px)
+{
+	struct feature_pixmap *fpx;
+
+	fpx = Malloc(sizeof(struct feature_pixmap), M_RG);
+	fpx->px = px;
+	fpx->x = 0;
+	fpx->y = 0;
+	fpx->visible = 1;
+	TAILQ_INSERT_TAIL(&ft->pixmaps, fpx, pixmaps);
+	return (fpx);
+}
+
+void
+feature_remove_pixmap(struct feature *ft, struct pixmap *px)
+{
+	struct feature_pixmap *fpx;
+
+	TAILQ_FOREACH(fpx, &ft->pixmaps, pixmaps) {
+		if (fpx->px == px)
+			break;
+	}
+	if (fpx != NULL) {
+		TAILQ_REMOVE(&ft->pixmaps, fpx, pixmaps);
+		Free(fpx, M_RG);
+	}
+}
+
 void
 feature_destroy(struct feature *ft)
 {
 	struct feature_sketch *fsk, *nfsk;
+	struct feature_pixmap *fpx, *nfpx;
 	
 	if (ft->ops->destroy != NULL)
 		ft->ops->destroy(ft);
@@ -94,6 +137,13 @@ feature_destroy(struct feature *ft)
 	     fsk = nfsk) {
 		nfsk = TAILQ_NEXT(fsk, sketches);
 		Free(fsk, M_RG);
+	}
+	
+	for (fpx = TAILQ_FIRST(&ft->pixmaps);
+	     fpx != TAILQ_END(&ft->pixmaps);
+	     fpx = nfpx) {
+		nfpx = TAILQ_NEXT(fpx, pixmaps);
+		Free(fpx, M_RG);
 	}
 }
 
@@ -116,3 +166,52 @@ feature_save(void *p, struct netbuf *buf)
 
 	ft->ops->save(ft, buf);
 }
+
+static void
+feature_closed(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+
+	feature_close(tv, pwin);
+}
+
+struct window *
+feature_edit(struct tileview *tv, struct feature *ft, struct window *pwin)
+{
+	struct window *win;
+	
+	tv->state = TILEVIEW_FEATURE_EDIT;
+	tv->edit_mode = 1;
+
+	if (ft->ops->edit != NULL) {
+		win = ft->ops->edit(ft, tv);
+		window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+		window_attach(pwin, win);
+		window_show(win);
+		tv->sargs.feature.edit_win = win;
+		event_new(win, "window-close", feature_closed, "%p,%p",
+		    tv, pwin);
+		return (win);
+	} else {
+		tv->sargs.feature.edit_win = NULL;
+		return (NULL);
+	}
+}
+
+void
+feature_close(struct tileview *tv, struct window *pwin)
+{
+	switch (tv->state) {
+	case TILEVIEW_FEATURE_EDIT:
+		if (tv->sargs.feature.edit_win != NULL) {
+			window_detach(pwin, tv->sargs.feature.edit_win);
+		}
+		break;
+	default:
+		break;
+	}
+	tv->state = TILEVIEW_TILE_EDIT;
+	tv->edit_mode = 0;
+}
+

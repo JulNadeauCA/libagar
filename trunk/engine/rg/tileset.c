@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -29,6 +29,8 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/view.h>
+
+#include <engine/loader/surface.h>
 
 #include <ctype.h>
 
@@ -75,7 +77,27 @@ tileset_init(void *obj, const char *name)
 	pthread_mutex_init(&ts->lock, NULL);
 	TAILQ_INIT(&ts->tiles);
 	TAILQ_INIT(&ts->sketches);
+	TAILQ_INIT(&ts->pixmaps);
 	TAILQ_INIT(&ts->features);
+
+	ts->icon = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+	    32, 32, 32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+ 	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
+#else
+	    0xff000000,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff
+#endif
+	);
+	if (ts->icon == NULL) {
+		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+	}
+	ts->fmt = ts->icon->format;
 }
 
 void
@@ -84,6 +106,7 @@ tileset_reinit(void *obj)
 	struct tileset *ts = obj;
 	struct tile *t, *nt;
 	struct sketch *sk, *nsk;
+	struct pixmap *px, *npx;
 	struct feature *ft, *nft;
 
 	pthread_mutex_lock(&ts->lock);
@@ -95,6 +118,8 @@ tileset_reinit(void *obj)
 		tile_destroy(t);
 		Free(t, M_RG);
 	}
+	TAILQ_INIT(&ts->tiles);
+
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
@@ -103,6 +128,17 @@ tileset_reinit(void *obj)
 		vg_destroy(sk->vg);
 		Free(sk, M_RG);
 	}
+	TAILQ_INIT(&ts->sketches);
+
+	for (px = TAILQ_FIRST(&ts->pixmaps);
+	     px != TAILQ_END(&ts->pixmaps);
+	     px = npx) {
+		npx = TAILQ_NEXT(px, pixmaps);
+		SDL_FreeSurface(px->su);
+		Free(px, M_RG);
+	}
+	TAILQ_INIT(&ts->pixmaps);
+
 	for (ft = TAILQ_FIRST(&ts->features);
 	     ft != TAILQ_END(&ts->features);
 	     ft = nft) {
@@ -110,10 +146,8 @@ tileset_reinit(void *obj)
 		feature_destroy(ft);
 		Free(ft, M_RG);
 	}
-	
-	TAILQ_INIT(&ts->tiles);
-	TAILQ_INIT(&ts->sketches);
 	TAILQ_INIT(&ts->features);
+
 	pthread_mutex_unlock(&ts->lock);
 }
 
@@ -121,20 +155,60 @@ void
 tileset_destroy(void *obj)
 {
 	struct tileset *ts = obj;
-	
+
 	pthread_mutex_destroy(&ts->lock);
+	SDL_FreeSurface(ts->icon);
 }
 
 int
 tileset_load(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
-	Uint32 i, ntiles, nfeatures;
+	Uint32 nsketches, npixmaps, nfeatures, ntiles;
+	Uint32 i;
 
 	if (version_read(buf, &tileset_ver, NULL) != 0)
 		return (-1);
 
 	pthread_mutex_lock(&ts->lock);
+
+	/* Load the vectorial sketches. */
+	nsketches = read_uint32(buf);
+	for (i = 0; i < nsketches; i++) {
+		struct sketch *sk;
+		int vgflags;
+
+		sk = Malloc(sizeof(struct sketch), M_RG);
+		copy_string(sk->name, buf, sizeof(sk->name));
+		vgflags = (int)read_uint32(buf);
+
+		sk->vg = Malloc(sizeof(struct vg), M_VG);
+		vg_init(sk->vg, vgflags);
+		if (vg_load(sk->vg, buf) == -1) {
+			vg_destroy(sk->vg);
+			Free(sk->vg, M_VG);
+			Free(sk, M_RG);
+			goto fail;
+		}
+		TAILQ_INSERT_TAIL(&ts->sketches, sk, sketches);
+		dprintf("%s: added sketch `%s'\n", OBJECT(ts)->name, sk->name);
+	}
+
+	/* Load the pixmaps. */
+	npixmaps = read_uint32(buf);
+	for (i = 0; i < npixmaps; i++) {
+		struct pixmap *px;
+		Uint8 type;
+
+		px = Malloc(sizeof(struct pixmap), M_RG);
+		copy_string(px->name, buf, sizeof(px->name));
+		px->flags = (int)read_uint32(buf);
+		px->su = read_surface(buf, vfmt);
+		if (px->su == NULL) {
+			Free(px, M_RG);
+			goto fail;
+		}
+	}
 
 	/* Load the features. */
 	nfeatures = read_uint32(buf);
@@ -150,22 +224,19 @@ tileset_load(void *obj, struct netbuf *buf)
 		copy_string(type, buf, sizeof(type));
 		flags = (int)read_uint32(buf);
 
-		for (ftops = feature_tbl[0];
-		     ftops != NULL;
-		     ftops++) {
-			dprintf("ft tbl: %s (%u)\n", ftops->type, ftops->len);
+		for (ftops = feature_tbl[0]; ftops != NULL; ftops++) {
 			if (strcmp(ftops->type, type) == 0)
 				break;
 		}
 		if (ftops == NULL) {
-			/* TODO ignore */
+			/* XXX ignore? */
 			error_set("%s: unknown feature type `%s'", name, type);
 			goto fail;
 		}
 
 		ft = Malloc(ftops->len, M_RG);
 		ft->ops = ftops;
-		ft->ops->init(ft, name, flags);
+		ft->ops->init(ft, ts, flags);
 
 		if (feature_load(ft, buf) == -1) {
 			feature_destroy(ft);
@@ -203,8 +274,10 @@ int
 tileset_save(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
-	Uint32 ntiles = 0, nfeatures = 0;
-	off_t ntiles_offs, nfeatures_offs;
+	Uint32 nsketches = 0, npixmaps = 0, ntiles = 0, nfeatures = 0;
+	off_t nsketches_offs, npixmaps_offs, ntiles_offs, nfeatures_offs;
+	struct sketch *sk;
+	struct pixmap *px;
 	struct tile *t;
 	struct feature *ft;
 
@@ -212,8 +285,31 @@ tileset_save(void *obj, struct netbuf *buf)
 
 	pthread_mutex_lock(&ts->lock);
 
+	/* Save the vectorial sketches. */
+	nsketches_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
+		dprintf("%s: saving sketch %s\n", OBJECT(ts)->name, sk->name);
+		write_string(buf, sk->name);
+		write_uint32(buf, (Uint32)sk->vg->flags);
+		vg_save(sk->vg, buf);
+		nsketches++;
+	}
+	pwrite_uint32(buf, nsketches, nsketches_offs);
+
+	/* Save the pixmaps. */
+	npixmaps_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
+		dprintf("%s: saving pixmap %s\n", OBJECT(ts)->name, px->name);
+		write_string(buf, px->name);
+		write_uint32(buf, (Uint32)px->flags);
+		write_surface(buf, px->su);
+		npixmaps++;
+	}
+	pwrite_uint32(buf, npixmaps, npixmaps_offs);
+
 	/* Save the features. */
-	dprintf("%s: saving features\n", OBJECT(ts)->name);
 	nfeatures_offs = netbuf_tell(buf);
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(ft, &ts->features, features) {
@@ -311,8 +407,8 @@ insert_tile(int argc, union evarg *argv)
 	struct tile *t;
 	int flags = 0;
 
-	if (ins_tile_alpha)	flags |= TILE_BLENDING;
-	if (ins_tile_ckeying)	flags |= TILE_CKEYING;
+	if (ins_tile_alpha)	flags |= TILE_SRCALPHA;
+	if (ins_tile_ckeying)	flags |= TILE_SRCCOLORKEY;
 
 	if (ins_tile_name[0] == '\0') {
 		unsigned int nameno = 0;
@@ -359,7 +455,7 @@ tryname2:
 
 	t = Malloc(sizeof(struct tile), M_RG);
 	tile_init(t, ins_tile_name);
-	tile_scale(t, ins_tile_w, ins_tile_h, flags);
+	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
 	ins_tile_name[0] = '\0';
@@ -367,7 +463,7 @@ tryname2:
 }
 
 static void
-ins_tile_dlg(int argc, union evarg *argv)
+insert_tile_dlg(int argc, union evarg *argv)
 {
 	struct tileset *ts = argv[1].p;
 	struct window *pwin = argv[2].p;
@@ -472,6 +568,7 @@ tileset_edit(void *p)
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
+	window_set_position(win, WINDOW_LOWER_CENTER, 0);
 
 	tl = Malloc(sizeof(struct tlist), M_OBJECT);
 	tlist_init(tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
@@ -490,8 +587,8 @@ tileset_edit(void *p)
 		btnbox = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		{
 			btn = button_new(btnbox, _("Insert tile"));
-			event_new(btn, "button-pushed", ins_tile_dlg, "%p,%p",
-			    ts, win);
+			event_new(btn, "button-pushed", insert_tile_dlg,
+			    "%p,%p", ts, win);
 
 			btn = button_new(btnbox, _("Edit tiles"));
 			event_new(btn, "button-pushed", edit_tiles, "%p,%p,%p",

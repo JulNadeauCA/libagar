@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.h,v 1.1 2005/01/05 10:51:24 vedge Exp $	*/
+/*	$Csoft: tileset.h,v 1.1 2005/01/13 02:30:23 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILESET_H_
@@ -7,6 +7,7 @@
 struct tileset;
 struct tile;
 struct sketch;
+struct pixmap;
 struct feature;
 
 #include <engine/vg/vg.h>
@@ -16,6 +17,7 @@ struct feature;
 #include "begin_code.h"
 
 #define SKETCH_NAME_MAX 32
+#define PIXMAP_NAME_MAX	32
 
 struct sketch {
 	char name[SKETCH_NAME_MAX];
@@ -23,11 +25,21 @@ struct sketch {
 	TAILQ_ENTRY(sketch) sketches;
 };
 
+struct pixmap {
+	char name[PIXMAP_NAME_MAX];
+	int flags;
+	SDL_Surface *su;
+	TAILQ_ENTRY(pixmap) pixmaps;
+};
+
 struct tileset {
 	struct object obj;
 	pthread_mutex_t	lock;
+	SDL_PixelFormat *fmt;
+	SDL_Surface *icon;
 	TAILQ_HEAD(, tile) tiles;
 	TAILQ_HEAD(, sketch) sketches;
+	TAILQ_HEAD(, pixmap) pixmaps;
 	TAILQ_HEAD(, feature) features;
 };
 
