@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.71 2003/02/22 11:42:37 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.72 2003/02/22 11:48:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -314,7 +314,7 @@ mapview_init_node_win(struct mapview *mv)
 		event_new(bu, "button-pushed",
 		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_REMOVE);
 
-		bu = button_new(reg, "Duplicate ", NULL, 0, 25, -1);
+		bu = button_new(reg, "Dup", NULL, 0, 25, -1);
 		event_new(bu, "button-pushed",
 		    mapview_node_op, "%p, %i", mv, MAPVIEW_NODE_DUP);
 		
@@ -359,6 +359,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->constr.nflags = NODEREF_SAVEABLE;
 	mv->tmap_win = NULL;
 	mv->cur_node = NULL;
+	mv->cur_layer = 0;
 	mv->node.button = NULL;
 	mv->zoom_tm = NULL;
 	
@@ -371,7 +372,7 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->cx = -1;
 	mv->cy = -1;
 
-	if (mv->flags & MAPVIEW_INDEPENDENT_ZOOM) {
+	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		mv->izoom.zoom = 100;
 		mv->izoom.tilew = TILEW;
 		mv->izoom.tileh = TILEH;
@@ -562,7 +563,7 @@ mapview_draw(void *p)
 
 	pthread_mutex_lock(&m->lock);
 
-	if (mv->flags & MAPVIEW_INDEPENDENT_ZOOM) {
+	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		m->zoom = *mv->zoom;
 		m->tilew = *mv->tilew;
 		m->tileh = *mv->tileh;
@@ -641,7 +642,7 @@ mapview_draw(void *p)
 		    WIDGET_COLOR(mv, BORDER_COLOR));
 	}
 #endif
-	if (mv->flags & MAPVIEW_INDEPENDENT_ZOOM) {
+	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		m->zoom = old_zoom;			/* Restore zoom */
 		m->tilew = old_tilew;
 		m->tileh = old_tileh;
@@ -766,6 +767,7 @@ mapview_mousemotion(int argc, union evarg *argv)
 			struct tool *tool = mapedit.curtool;
 
 			if (TOOL_OPS(tool)->effect != NULL &&
+			    mv->cx != -1 && mv->cy != -1 &&
 			    (x != mv->mouse.x || y != mv->mouse.y)) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
@@ -774,9 +776,9 @@ mapview_mousemotion(int argc, union evarg *argv)
 				    state);
 			}
 		}
-	} else if (mv->flags & MAPVIEW_TILEMAP) {
+	} else if (mv->flags & MAPVIEW_TILEMAP) {	/* Not editing */
 		if ((state & SDL_BUTTON(1)) &&
-		    (mv->cx >= 0) && (mv->cy >= 0)) {
+		    (mv->cx != -1) && (mv->cy != -1)) {
 			struct node *srcnode = &mv->map->map[mv->cy][mv->cx];
 
 			if (!TAILQ_EMPTY(&srcnode->nrefs)) {

@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.14 2003/02/12 01:17:50 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.15 2003/02/22 11:42:37 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -74,7 +74,7 @@ can be changed at runtime, and may include:
 .Bd -literal
 #define MAPVIEW_EDIT		 0x001	/* Mouse/keyboard edition */
 #define MAPVIEW_ZOOM		 0x002	/* Allow zooming */
-#define MAPVIEW_INDEPENDENT_ZOOM 0x004	/* Zoom independent from map's */
+#define MAPVIEW_INDEPENDENT	 0x004	/* Zoom/ss[xy] independent from map's */
 #define MAPVIEW_TILEMAP		 0x008	/* Map of `source' nodes */
 #define MAPVIEW_GRID		 0x010	/* Display a grid */
 #define MAPVIEW_PROPS		 0x020	/* Display node properties */
@@ -87,8 +87,11 @@ and
 .Dv MAPVIEW_TILEMAP
 flags are only available in level edition mode.
 The
-.Dv MAPVIEW_INDEPENDENT_ZOOM
-flag enables zoom/soft-scroll offsets independent from the map's.
+.Dv MAPVIEW_INDEPENDENT
+flag enables the use of zoom factors and soft-scroll offsets that are
+independent from the map's, but are not saved with
+.Xr map
+states .
 .Sh EVENTS
 The
 .Nm

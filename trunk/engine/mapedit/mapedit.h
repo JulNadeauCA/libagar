@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.71 2003/02/20 04:57:25 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.72 2003/02/24 04:06:37 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapdir;
@@ -27,7 +27,7 @@ struct mapedit {
 		struct window	*new_map;
 		struct window	*load_map;
 	} win;
-	struct tool	*tools[MAPEDIT_NTOOLS];
+	struct tool	*tools[MAPEDIT_NTOOLS];	/* Map edition tools */
 	struct tool	*curtool;		/* Selected tool */
 	struct node	*src_node;		/* Selected source node */
 };
