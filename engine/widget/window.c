@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.123 2002/12/14 09:46:04 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.124 2002/12/14 11:27:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -391,20 +391,37 @@ window_draw_titlebar(struct window *win)
 	}
 	th -= 4;
 
-	/* Minimize */
-	for (i = 2; i < 5; i++) {
-		primitives.line(win,
-		    i + bw + th, bw + 2,
-		    i + bw + th*2, bw + 2,
-		    win->border[i]);
-		primitives.line(win,
-		    i + bw + th, bw + 2,
-		    i + bw + th*2 - th/2, th + 2,
-		    win->border[i]);
-		primitives.line(win,
-		    i + bw + th*2 - th/2, th + 2,
-		    i + bw + th*2, bw + 2,
-		    win->border[i]);
+	/* Hide body */
+	if (win->flags & WINDOW_HIDDEN_BODY) {
+		for (i = 2; i < 5; i++) {
+			primitives.line(win,
+			    i + bw + th,	  bw + 2,
+			    i + bw + th*2,	  bw + 2,
+			    win->border[i]);
+			primitives.line(win,
+			    i + bw + th,	  bw + 2,
+			    i + bw + th*2 - th/2, th + 2,
+			    win->border[i]);
+			primitives.line(win,
+			    i + bw + th*2 - th/2, th + 2,
+			    i + bw + th*2,	  bw + 2,
+			    win->border[i]);
+		}
+	} else {
+		for (i = 2; i < 5; i++) {
+			primitives.line(win,
+			    i + bw + th,	  th + 2,
+			    i + bw + th*2,	  th + 2,
+			    win->border[i]);
+			primitives.line(win,
+			    i + bw + th,	  th + 2,
+			    i + bw + th*2 - th/2, bw + 2,
+			    win->border[i]);
+			primitives.line(win,
+			    i + bw + th*2 - th/2, bw + 2,
+			    i + bw + th*2,	  th + 2,
+			    win->border[i]);
+		}
 	}
 
 	/* Border */
