@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.16 2002/02/17 08:27:59 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.17 2002/02/19 00:49:18 vedge Exp $	*/
 
 struct obvec {
 	int	(*destroy)(void *);
@@ -7,6 +7,7 @@ struct obvec {
 	int	(*save)(void *, int);
 	int	(*link)(void *);
 	int	(*unlink)(void *);
+	void	(*dump)(void *);
 };
 
 struct object {
