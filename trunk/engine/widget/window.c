@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.60 2002/08/20 09:17:11 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.61 2002/08/22 04:50:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -59,8 +59,10 @@ static const struct object_ops window_ops = {
 /* XXX struct */
 #include "borders/grey8.h"
 
-static void	window_move(struct window *, Sint16, Sint16);
+static void	window_move(struct window *, SDL_MouseMotionEvent *);
 static void	window_update_mask(struct window *);
+static void	window_clamp(struct window *, int, int);
+static void	window_round(struct window *, int, int, int, int);
 
 struct window *
 window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
@@ -77,6 +79,15 @@ window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
 	pthread_mutex_unlock(&view->lock);
 
 	return (win);
+}
+
+static void
+window_round(struct window *win, int x, int y, int w, int h)
+{
+	win->x = x - (x % TILEW);
+	win->y = y - (y % TILEH);
+	win->w = w - (w % TILEW);
+	win->h = h - (h % TILEH);
 }
 
 void
@@ -114,6 +125,8 @@ window_init(struct window *win, char *caption, int flags,
 	win->caption = NULL;
 	win->caption_s = NULL;
 	win->caption_color = SDL_MapRGB(view->v->format, 255, 255, 255);
+	win->minw = minw;
+	win->minh = minh;
 
 	window_titlebar_printf(win, "%s", caption);
 
@@ -121,19 +134,19 @@ window_init(struct window *win, char *caption, int flags,
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		if (flags & WINDOW_SCALE) {
-			for (win->x = 0; win->x < (rx * view->w / 100);
-			     win->x += TILEW) ;;
-			for (win->y = 0; win->y < (ry * view->h / 100);
-			     win->y += TILEH) ;;
-			for (win->w = 0; win->w < (rw * view->w / 100);
-			     win->w += TILEW) ;;
-			for (win->h = 0; win->h < (rh * view->h / 100);
-			     win->h += TILEH) ;;
+			window_round(win,
+			     rx * view->w / 100,
+			     ry * view->h / 100,
+			     rw * view->w / 100,
+			     rh * view->h / 100);
 		} else {
-			for (win->x = 0; win->x < rx; win->x += TILEW) ;;
-			for (win->y = 0; win->y < ry; win->y += TILEH) ;;
-			for (win->w = 0; win->w < rw; win->w += TILEW) ;;
-			for (win->h = 0; win->h < rh; win->h += TILEH) ;;
+			window_round(win, rx, ry, rw, rh);
+		}
+		if (flags & WINDOW_CENTER) {
+			window_round(win,
+			    view->w/2 - win->w/2,
+			    view->h/2 - win->h/2,
+			    win->w, win->h);
 		}
 		break;
 	case GFX_ENGINE_GUI:
@@ -148,20 +161,16 @@ window_init(struct window *win, char *caption, int flags,
 			win->w = rw;
 			win->h = rh;
 		}
+		if (flags & WINDOW_CENTER) {
+			win->x = view->w/2 - win->w/2;
+			win->y = view->h/2 - win->h/2;
+		}
 		break;
 	}
-	if (flags & WINDOW_CENTER) {
-		win->x = view->w/2 - win->w/2;
-		win->y = view->h/2 - win->h/2;
-	} else {
-		win->x = (win->x < view->w) ? win->x : 0;
-		win->y = (win->y < view->h) ? win->y : 0;
-	}
-	win->w = (win->x + win->w < view->w) ? win->w : view->w;
-	win->h = (win->y + win->h < view->h) ? win->h : view->h;
-	win->minw = minw;
-	win->minh = minh;
 
+	/* Clamp to view area and leave a margin. */
+	window_clamp(win, TILEW, TILEH);
+	
 	/* Primitive operations will need this. */
 	win->wid.win = win;
 	win->wid.x = 0;
@@ -589,7 +598,7 @@ window_update_mask(struct window *win)
 
 /* View and window must be locked. */
 static void
-window_move(struct window *win, Sint16 xrel, Sint16 yrel)
+window_move(struct window *win, SDL_MouseMotionEvent *motion)
 {
 	int moved = 0;
 	int tilew = TILEW, tileh = TILEH;
@@ -605,20 +614,48 @@ window_move(struct window *win, Sint16 xrel, Sint16 yrel)
 		break;
 	}
 
-	if (xrel != 0 || yrel != 0) {
-		win->x += xrel;
-		win->y += yrel;
-		moved++;
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_GUI:
+		if (motion->xrel != 0 || motion->yrel != 0) {
+			win->x += motion->xrel;
+			win->y += motion->yrel;
+			moved++;
+		}
+		break;
+	case GFX_ENGINE_TILEBASED:
+		{
+			static Sint16 oldx = 0, oldy = 0;
+			Sint16 nx, ny;
+
+			nx = motion->x / tilew;
+			ny = motion->y / tileh;
+
+			if (oldx != 0 || oldy != 0) {
+				if (nx > oldx) {
+					win->x += tilew;
+					moved++;
+				}
+				if (ny > oldy) {
+					win->y += tileh;
+					moved++;
+				}
+				if (nx < oldx) {
+					win->x -= tilew;
+					moved++;
+				}
+				if (ny < oldy) {
+					win->y -= tilew;
+					moved++;
+				}
+			}
+			oldx = nx;
+			oldy = ny;
+		}
+		break;
 	}
 
-	if (win->x < tilew)
-		win->x = tilew;
-	if (win->y < tileh)
-		win->y = tileh;
-	if (win->x+win->w > view->w - tilew)
-		win->x = view->w - win->w - tilew;
-	if (win->y+win->h > view->h - tileh)
-		win->y = view->h - win->h - tileh;
+	/* Clamp to view area, leave a margin. */
+	window_clamp(win, tilew, tileh);
 
 	if (moved) {
 		switch (view->gfx_engine) {
@@ -724,25 +761,29 @@ window_event_all(SDL_Event *ev)
 				if (view->wop_win != win) {
 					goto nextwin;
 				}
-				window_move(win, ev->motion.xrel,
-				    ev->motion.yrel);
+				window_move(win, &ev->motion);
 				goto posted;
 			case VIEW_WINOP_LRESIZE:
 			case VIEW_WINOP_RRESIZE:
 			case VIEW_WINOP_HRESIZE:
-				do {
+				if (view->wop_win != win) {
+					goto nextwin;
+				}
+				/* Redraw the background. XXX inefficient */
+				if (view->gfx_engine == GFX_ENGINE_GUI) {
 					SDL_Rect rd;
+
 					rd.x = win->x;
 					rd.y = win->y;
 					rd.w = win->w;
 					rd.h = win->h;
 					SDL_FillRect(view->v, &rd, 0);
 				} while (/*CONSTCOND*/ 0);
-				if (view->wop_win != win) {
-					goto nextwin;
-				}
+
 				nx = win->x;
 				ny = win->y;
+
+				/* Resize the window accordingly. */
 				switch (view->winop) {
 				case VIEW_WINOP_LRESIZE:
 					if (ev->motion.xrel < 0) {
@@ -774,6 +815,8 @@ window_event_all(SDL_Event *ev)
 					}
 				default:
 				}
+
+				/* Clamp to minimum window geometry. */
 				pthread_mutex_lock(&config->lock);
 				if (win->w < win->minw &&
 				    (config->widget_flags &
@@ -790,6 +833,8 @@ window_event_all(SDL_Event *ev)
 					win->y = ny;
 				}
 				pthread_mutex_unlock(&config->lock);
+
+				/* Resize the window regions/widgets. */
 				window_resize(win);
 				goto posted;
 			case VIEW_WINOP_NONE:
@@ -941,28 +986,40 @@ posted:
 	return (1);
 }
 
+static void
+window_clamp(struct window *win, int minw, int minh)
+{
+	if (win->x < minw)
+		win->x = minw;
+	if (win->y < minh)
+		win->y = minh;
+	if (win->x+win->w > view->w)
+		win->w = view->w - win->x - minw;
+	if (win->y+win->h > view->h)
+		win->h = view->h - win->y - minh;
+}
+
 /* Window must be locked. */
 void
 window_resize(struct window *win)
 {
 	struct region *reg;
-	int minw = 16, minh = 16;
+	int minw, minh;
 
-	if (view->gfx_engine == GFX_ENGINE_TILEBASED) {
+	switch (view->gfx_engine) {
+	case GFX_ENGINE_TILEBASED:
 		minw = TILEW;
 		minh = TILEH;
 		view_maskfill(&win->vmask, -1);
+		break;
+	default:
+		minw = 16;
+		minh = 16;
+		break;
 	}
-	
-	if (win->x < minw)
-		win->x = minw;
-	if (win->y < minh)
-		win->y = minh;
 
-	if (win->x+win->w > view->w)
-		win->w = view->w - win->x - minw;
-	if (win->y+win->h > view->h)
-		win->h = view->h - win->y - minh;
+	/* Clamp to view area, leave a margin. */
+	window_clamp(win, minw, minh);
 
 	win->body.x = win->x + win->borderw;
 	win->body.y = win->y + win->borderw*2 + win->titleh;
