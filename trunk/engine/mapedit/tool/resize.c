@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.3 2002/07/22 05:50:18 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.4 2002/07/30 22:19:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -89,15 +89,8 @@ resize_window(void *p)
 	struct resize *res = p;
 	struct window *win;
 	struct region *reg;
-	struct radio *rad;
 	struct button *button;
 	struct textbox *tbox_w, *tbox_h;
-	static const char *mode_items[] = {
-		"Grow",
-		"Shrink",
-		"Center",
-		NULL
-	};
 
 	win = window_new("Resize map", WINDOW_SOLID,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
@@ -126,7 +119,6 @@ resize_do(int argc, union evarg *argv)
 {
 	struct resize *res = argv[1].p;
 	struct textbox *tbox_w = argv[2].p, *tbox_h = argv[3].p;
-	struct mapedit *med = TOOL(res)->med;
 	struct mapview *mv = tool_mapview();
 	struct map *m = mv->map;
 	Uint32 w, h;

@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: edcursor.c,v 1.1 2002/07/07 00:22:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -51,7 +51,9 @@ static const struct object_ops edcursor_ops = {
 static void	edcursor_key(int, union evarg *);
 static void	edcursor_push(struct edcursor *, struct node *, int, int);
 static void	edcursor_attached(int, union evarg *);
+#if 0
 static Uint32	edcursor_update(Uint32, void *);
+#endif
 
 struct edcursor *
 edcursor_new(int flags, struct mapview *mv, struct map *m)
@@ -106,6 +108,7 @@ edcursor_attached(int argc, union evarg *argv)
 #endif
 }
 
+#if 0
 static Uint32
 edcursor_update(Uint32 ival, void *p)
 {
@@ -120,12 +123,12 @@ edcursor_update(Uint32 ival, void *p)
 	if (moved != 0) {
 		edcursor_move(ed, x, y);
 		mapdir_postmove(&ed->dir, &x, &y, moved);
-//		edcursor_sticky(ed);
 		WIDGET(ed)->win->redraw++;
 	}
 
 	return (ival);
 }
+#endif
 
 /*
  * Move the map edition cursor.
@@ -155,7 +158,6 @@ edcursor_key(int argc, union evarg *argv)
 	struct edcursor *ed = argv[0].p;
 	int ev = argv[1].i;
 	SDLKey keysym = (SDLKey)argv[2].i;
-	int keymod = argv[3].i;
 	const int set = (ev == WINDOW_KEYDOWN) ? 1 : 0;
 
 	switch (keysym) {
@@ -235,7 +237,6 @@ edcursor_push(struct edcursor *ed, struct node *node, int refn, int nflags)
 {
 	struct mapedit *med = ed->med;
 	struct editref *eref;
-	struct noderef *nref;
 	
 	edcursor_set(ed, 0);
 

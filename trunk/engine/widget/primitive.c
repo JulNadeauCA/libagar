@@ -1,4 +1,4 @@
-/*	$Csoft: primitive.c,v 1.12 2002/07/27 08:49:59 vedge Exp $	    */
+/*	$Csoft: primitive.c,v 1.13 2002/08/02 10:53:36 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -90,7 +90,6 @@ box_3d(void *p, int xoffs, int yoffs, int w, int h, int z,
 {
 	struct widget *wid = p;
 	Uint32 lcol, rcol, bcol;
-	int x, y;
 
 	lcol = (z < 0) ?
 	    alter_color(color, -60, -60, -60) :
@@ -129,7 +128,6 @@ static void
 frame_3d(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
 {
 	struct widget *wid = p;
-	int i;
 
 	primitives.line(wid,			/* Top */
 	    xoffs, yoffs,

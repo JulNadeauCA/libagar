@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.6 2002/07/21 10:58:17 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.7 2002/07/30 22:19:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -126,10 +126,8 @@ eraser_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 {
 	struct eraser *er = p;
 	struct map *m = mv->map;
-	struct mapedit *med = TOOL(er)->med;
 	struct node *n = &m->map[y][x];
 	struct noderef *nref, *nnref;
-	struct editref *eref;
 
 	switch (er->mode) {
 	case ERASER_ALL:

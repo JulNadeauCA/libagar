@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.6 2002/07/29 05:29:29 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.7 2002/07/30 22:23:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -133,8 +133,7 @@ void
 radio_draw(void *p)
 {
 	struct radio *rad = p;
-	SDL_Surface *su;
-	int x = 0, y, i;
+	int y, i;
 
 #if 0
 	primitives.frame(rad, 0, 0, WIDGET(rad)->w, WIDGET(rad)->h,
@@ -175,7 +174,7 @@ radio_event(int argc, union evarg *argv)
 	struct radio *rad = argv[0].p;
 	int type = argv[1].i;
 	int button, keysym;
-	int x, y, sel = rad->selitem;
+	int y, sel = rad->selitem;
 
 	OBJECT_ASSERT(argv[0].p, "widget");
 

@@ -1,4 +1,4 @@
-/*	$Csoft: toolbar.c,v 1.13 2002/07/22 05:50:17 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.14 2002/07/30 22:22:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -123,7 +123,6 @@ mapedit_init_toolbar(struct mapedit *med)
 	struct region *reg;
 	struct textbox *name_tbox, *media_tbox, *w_tbox, *h_tbox;
 	struct button *button;
-	struct tilestack *tstack;
 	struct tileq *tqueue;
 	struct objq *oqueue;
 	

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.6 2002/07/21 10:58:17 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.1 2002/07/30 22:19:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -193,7 +193,6 @@ propedit_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 {
 	struct propedit *pe = p;
 	struct map *m = mv->map;
-	struct mapedit *med = TOOL(pe)->med;
 	struct node *n = &m->map[y][x];
 
 	switch (pe->mode) {
