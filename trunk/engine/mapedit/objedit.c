@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.1 2003/05/20 11:25:56 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.2 2003/05/22 05:41:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -105,9 +105,13 @@ find_objs(struct tlist *tl, struct object *pob, int depth)
 			if (strcmp(typesw[i].type, cob->type) == 0)
 				break;
 		}
+#if 0
 		snprintf(label, sizeof(label), "%s %s\n%s %s\n", dind,
-		    object_name(cob),
+		    cob->name,
 		    dind, i == ntypesw ? cob->type : typesw[i].desc);
+#else
+		snprintf(label, sizeof(label), "%s %s\n", dind, cob->name);
+#endif
 		it = tlist_insert_item(tl, OBJECT_ICON(cob), label, cob);
 
 		if (!TAILQ_EMPTY(&cob->childs)) {
@@ -151,6 +155,7 @@ objedit_window(void)
 	{
 		name_tb = textbox_new(reg, "New: ", 0, 75, -1);
 		create_bu = button_new(reg, "Create", NULL, 0, 23, -1);
+		button_set_padding(create_bu, 6);
 	}
 	
 	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
@@ -163,7 +168,9 @@ objedit_window(void)
 	{
 		objs_tl = tlist_new(reg, 100, 100,
 		    TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+#if 0
 		tlist_set_item_height(objs_tl, ttf_font_height(font)*2);
+#endif
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
 	
@@ -171,7 +178,6 @@ objedit_window(void)
 	    name_tb, type_tb, objs_tl);
 	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p",
 	    name_tb, type_tb, objs_tl);
-	
 
 	window_show(win);
 	return (win);

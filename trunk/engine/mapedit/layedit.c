@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.6 2003/05/07 00:47:54 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.7 2003/05/20 12:05:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -208,6 +208,7 @@ layedit_init(struct mapview *mv)
 		event_new(tb, "textbox-return", layedit_push, "%p, %p", mv, tb);
 
 		bu = button_new(reg, "Push", NULL, 0, 25, -1);
+		button_set_padding(bu, 6);
 		event_new(bu, "button-pushed", layedit_push, "%p, %p", mv, tb);
 	}
 	
@@ -220,6 +221,7 @@ layedit_init(struct mapview *mv)
 		    layedit_rename, "%p, %p", mv, rename_tb);
 
 		bu = button_new(reg, "Rename", NULL, 0, 25, -1);
+		button_set_padding(bu, 6);
 		event_new(bu, "button-pushed",
 		    layedit_rename, "%p, %p", mv, rename_tb);
 	}
