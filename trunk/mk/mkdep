@@ -64,6 +64,15 @@ while :
 	esac
 done
 
+ccargs=""
+for arg; do
+	case "${arg}" in
+	-I*|-D*|*.c*)
+		ccargs="${ccargs} ${arg}"
+		;;
+	esac
+done
+
 if [ $# = 0 ] ; then
 	echo 'usage: mkdep [-p] [-f depend_file] [cc_flags] file ...'
 	exit 1
@@ -83,14 +92,16 @@ umask $um
 trap 'rm -rf $DTMP ; trap 2 ; kill -2 $$' 1 2 3 13 15
 
 if [ x$pflag = x ]; then
-	${CC:-cc} -M "$@" > $OTMP
+#	echo "${CC:-cc} -M ${ccargs}"
+	${CC:-cc} -M ${ccargs} > $OTMP
 	if [ $? != 0 ]; then
 		rm -rf $DTMP
 		exit 1
 	fi
 	cat $OTMP | sed -e 's; \./; ;g' > $TMP
 else
-	${CC:-cc} -M "$@" > $OTMP
+#	echo "${CC:-cc} -M ${ccargs}"
+	${CC:-cc} -M ${ccargs} > $OTMP
 	if [ $? != 0 ]; then
 		rm -rf $DTMP
 		exit 1
