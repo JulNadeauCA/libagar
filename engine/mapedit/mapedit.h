@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.40 2002/06/23 02:41:59 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.41 2002/06/25 17:28:59 vedge Exp $	*/
 /*	Public domain	*/
 
 struct editref {
@@ -30,6 +30,7 @@ TAILQ_HEAD(eobjs_head, editobj);
 
 struct mapdir;
 struct gendir;
+struct tool;
 
 struct mapedit {
 	struct	 object obj;
@@ -44,11 +45,17 @@ struct mapedit {
 	struct	 window *settings_win;
 	struct	 window *coords_win;
 	struct	 label *coords_label;
-	
-	struct	 eobjs_head eobjsh;	/* Shadow objects */
+
+	struct	 tool *curtool;
+	struct {
+		struct	tool *stamp;
+		struct	tool *eraser;
+	} tools;
+
+	struct	 eobjs_head eobjsh;	/* Shadow object tree */
 	int	 neobjs;
 
-	struct	 editobj *curobj;	/* Selected object */
+	struct	 editobj *curobj;
 	int	 curoffs;
 	int	 curflags;
 
@@ -93,6 +100,8 @@ enum {
 	MAPEDIT_TOOL_TILEQ,
 	MAPEDIT_TOOL_TILESTACK,
 	MAPEDIT_TOOL_OBJLIST,
+	MAPEDIT_TOOL_STAMP,
+	MAPEDIT_TOOL_ERASER,
 };
 
 void	mapedit_init(struct mapedit *, char *);
