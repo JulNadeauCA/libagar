@@ -1,4 +1,4 @@
-.\"	$Csoft: bitmap.3,v 1.7 2003/03/05 18:22:18 vedge Exp $
+.\"	$Csoft: bitmap.3,v 1.8 2003/06/06 03:18:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -40,7 +40,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget displays a bitmap scaled to the widget's geometry.
+widget displays a pixmap scaled to the widget's geometry.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct bitmap *"
@@ -75,6 +75,10 @@ The
 .Nm
 widget neither reacts to nor generates any event.
 .Pp
+.Sh TROUBLETONS
+The term
+.Sq bitmap
+suggests 1bpp display.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr widget 3 ,
