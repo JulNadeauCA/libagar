@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.39 2002/06/25 17:59:51 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.40 2002/07/27 21:30:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -57,17 +57,18 @@ world_init(struct world *wo, char *name)
 
 	pwd = getpwuid(getuid());
 
-	wo->udatadir = (char *)emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
-	wo->sysdatadir = (char *)emalloc(strlen(SHAREDIR) + strlen(name) + 4);
+	wo->udatadir = emalloc(strlen(pwd->pw_dir) + strlen(name) + 4);
 	sprintf(wo->udatadir, "%s/.%s", pwd->pw_dir, name);
+
+	wo->sysdatadir = emalloc(strlen(SHAREDIR) + strlen(name) + 4);
 	sprintf(wo->sysdatadir, SHAREDIR);
 
 	pathenv = getenv("AGAR_STATE_PATH");
 	if (pathenv != NULL) {
 		wo->datapath = strdup(pathenv);
 	} else {
-		wo->datapath = (char *)
-		    emalloc(strlen(wo->udatadir) + strlen(wo->sysdatadir) + 4);
+		wo->datapath = emalloc(strlen(wo->udatadir) +
+		    strlen(wo->sysdatadir) + 4);
 		sprintf(wo->datapath, "%s:%s", wo->udatadir, wo->sysdatadir);
 	}
 
@@ -136,9 +137,7 @@ world_save(void *p, int fd)
 	return (0);
 }
 
-/*
- * Destroy the world!
- */
+/* Destroy the world! */
 void
 world_destroy(void *p)
 {
