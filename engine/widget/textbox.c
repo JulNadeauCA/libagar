@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.65 2003/06/15 08:54:19 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.66 2003/06/15 21:34:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -95,9 +95,14 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
 	tbox->writeable = 1;
+	tbox->prew = tbox->xpadding*2 + 50;
+	tbox->preh = tbox->ypadding*2;
+
 	if (label != NULL) {
 		tbox->label = text_render(NULL, -1,
 		    WIDGET_COLOR(tbox, TEXT_COLOR), (char *)label);
+		tbox->prew += tbox->label->w;
+		tbox->preh += tbox->label->h;
 	} else {
 		tbox->label = NULL;
 	}
@@ -258,14 +263,20 @@ drawtext:
 }
 
 void
+textbox_prescale(struct textbox *tbox, const char *text)
+{
+	text_prescale(text, &tbox->prew, NULL);
+	tbox->prew += tbox->label->w + tbox->xpadding*2;
+}
+
+void
 textbox_scale(void *p, int rw, int rh)
 {
 	struct textbox *tbox = p;
 
 	if (rw == -1 && rh == -1) {
-		/* XXX more sensible default */
-		WIDGET(tbox)->w = tbox->label->w + tbox->xpadding*2 + 50;
-		WIDGET(tbox)->h = tbox->label->h + tbox->ypadding*2;
+		WIDGET(tbox)->w = tbox->prew;
+		WIDGET(tbox)->h = tbox->preh;
 	}
 }
 

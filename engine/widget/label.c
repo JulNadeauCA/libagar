@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.67 2003/06/13 01:44:55 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.68 2003/06/13 04:06:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -247,7 +247,7 @@ label_obj(struct label *label, char *s, size_t len, int ri)
 {
 	struct object *ob = LABEL_ARG(struct object *);
 
-	snprintf(s, len, "%s", ob->name);
+	snprintf(s, len, "%s", ob != NULL ? ob->name : "(null)");
 }
 
 static void
