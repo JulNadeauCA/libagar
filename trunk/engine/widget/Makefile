@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.30 2002/09/01 08:55:49 vedge Exp $
+#	$Csoft: Makefile,v 1.31 2002/09/06 01:27:39 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -9,9 +9,11 @@ SHARE=	README.graph
 
 LIB=	widget
 SRCS=	widget.c window.c region.c text.c label.c button.c checkbox.c \
-	textbox.c keycodes.c primitive.c radio.c graph.c bitmap.c tlist.c
+	textbox.c keycodes.c primitive.c radio.c graph.c bitmap.c tlist.c \
+	scrollbar.c
 OBJS=	widget.o window.o region.o text.o label.o button.o checkbox.o \
-	textbox.o keycodes.o primitive.o radio.o graph.o bitmap.o tlist.o
+	textbox.o keycodes.o primitive.o radio.o graph.o bitmap.o tlist.o \
+	scrollbar.o
 FOBJS=	widget.fob window.fob
 
 MAN3=	widget.3 button.3 graph.3 checkbox.3 label.3 radio.3 \
