@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.51 2002/06/12 20:40:06 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.52 2002/06/25 17:35:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -224,8 +224,6 @@ engine_start(void)
 	 * Set the video mode.
 	 * Initialize the masks and rectangles in game mode.
 	 */
-	dprintf("mode: %dx%dx%d\n", config->view.h, config->view.w,
-	    config->view.bpp);
 	view_init(ge);
 
 	/* Create the configuration settings window. */

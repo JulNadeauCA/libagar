@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.57 2002/07/07 06:27:43 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.58 2002/07/07 10:17:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -223,7 +223,6 @@ event_loop(void *arg)
 					m->redraw = 0;
 				}
 				pthread_mutex_unlock(&m->lock);
-				pthread_mutex_unlock(&world->lock); /* XXX */
 			}
 
 			/* Update the windows. */

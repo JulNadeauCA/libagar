@@ -1,4 +1,4 @@
-/*	$Csoft$	    */
+/*	$Csoft: keycodes.c,v 1.13 2002/07/07 00:24:32 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -237,7 +237,6 @@ keycodes_loadglyphs(void)
 			keycodes_cache[i-KEYCODES_CACHE_START] = s;
 		}
 	}
-	dprintf("cached %d glyphs\n", i);
 }
 
 void
@@ -253,6 +252,5 @@ keycodes_freeglyphs(void)
 			keycodes_cache[i-KEYCODES_CACHE_START] = NULL;
 		}
 	}
-	dprintf("freed %d glyphs\n", i);
 }
 
