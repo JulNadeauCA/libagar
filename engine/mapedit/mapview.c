@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.126 2003/07/01 04:56:07 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.127 2003/07/08 00:34:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -475,8 +475,8 @@ draw_layer:
 			
 			if (mv->esel.set &&
 			    mv->esel.x == mx && mv->esel.y == my) {
-				esel_x = rx - 1;
-				esel_y = ry - 1;
+				esel_x = rx;
+				esel_y = ry;
 				esel_w = mv->map->tilew*mv->esel.w;
 				esel_h = mv->map->tileh*mv->esel.h;
 			}
