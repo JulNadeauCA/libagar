@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.3 2003/06/21 07:14:18 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.4 2004/01/03 04:25:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -26,8 +26,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <engine/compat/vasprintf.h>
 #include <config/threads.h>
+
+#include <compat/vasprintf.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -208,15 +209,5 @@ error_strdup(const char *s)
 	ns = Malloc(buflen);
 	memcpy(ns, s, buflen);
 	return (ns);
-}
-
-void
-Asprintf(char **ret, const char *format, ...)
-{
-	va_list ap;
-
-	va_start(ap, format);
-	Vasprintf(ret, format, ap);
-	va_end(ap);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.5 2003/10/09 22:39:30 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.6 2004/01/23 06:24:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_ERROR_ERROR_H_
@@ -81,9 +81,6 @@ void		 error_set(const char *, ...)
 void		 error_fatal(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 Asprintf(char **, const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 2, 3)
-		     NONNULL_ATTRIBUTE(2);
 void		 error_dprintf(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
