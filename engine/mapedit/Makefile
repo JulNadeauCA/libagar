@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.13 2002/06/06 10:15:25 vedge Exp $
+#	$Csoft: Makefile,v 1.14 2002/06/20 00:40:14 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
@@ -17,8 +17,8 @@ all:	mapedit.fob mapedit_offs.h
 
 depend:	mapedit.fob
 
-mapedit.fob mapedit_offs.h: mapedit.xcf
-	${FOBJCOMP} -o mapedit.fob mapedit.xcf
+mapedit.fob mapedit_offs.h: mapedit.xcf toolbar.xcf
+	${FOBJCOMP} -o mapedit.fob mapedit.xcf toolbar.xcf
 
 include ${TOP}/mk/csoft.lib.mk
 include ${TOP}/libfobj/Makefile.inc
