@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.41 2002/08/20 00:07:08 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.42 2002/08/21 01:00:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,6 +42,7 @@
 #include <engine/map.h>
 #include <engine/physics.h>
 #include <engine/mapedit/mapedit.h>
+#include <engine/compat/getenv.h>
 
 static const struct object_ops world_ops = {
 	NULL,
