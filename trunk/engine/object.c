@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: object.c,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -172,9 +172,9 @@ object_strfind(char *s)
 }
 
 int
-object_wait(struct object *ob, int mask)
+object_wait(void *obp, int mask)
 {
-
+	struct object *ob = (struct object *)obp;
 	int i = 30;
 
 	while (i-- > 0) {
@@ -182,7 +182,6 @@ object_wait(struct object *ob, int mask)
 			ob->wmask &= ~(mask);
 			return (1);
 		}
-		SDL_Delay(1);
 	}
 
 	ob->wmask &= ~(mask);
