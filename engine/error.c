@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.9 2002/11/14 08:02:33 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.12 2002/11/26 05:03:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -107,6 +107,7 @@ _debug_noop(int level, const char *fmt, ...)
 void
 _dprintf(const char *fmt, ...)
 {
+#ifdef DEBUG
 	if (engine_debug > 0) {
 		va_list args;
 
@@ -114,11 +115,13 @@ _dprintf(const char *fmt, ...)
 		printf(fmt, args);
 		va_end(args);
 	}
+#endif
 }
 
 void
 _debug(int mask, const char *fmt, ...)
 {
+#ifdef DEBUG
 	if (engine_debug & mask) {
 		va_list args;
 
@@ -127,11 +130,13 @@ _debug(int mask, const char *fmt, ...)
 		printf("\n");
 		va_end(args);
 	}
+#endif
 }
 
 void
 _debug_n(int mask, const char *fmt, ...)
 {
+#ifdef DEBUG
 	if (engine_debug & mask) {
 		va_list args;
 
@@ -139,5 +144,6 @@ _debug_n(int mask, const char *fmt, ...)
 		fprintf(stderr, fmt, args);
 		va_end(args);
 	}
+#endif
 }
 
