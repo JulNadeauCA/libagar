@@ -1,11 +1,13 @@
-/*	$Csoft: view.h,v 1.6 2002/02/18 07:48:47 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.7 2002/02/21 02:20:14 vedge Exp $	*/
+
+enum {
+	VIEW_MAPNAV,	/* Map navigation display */
+	VIEW_MAPEDIT,	/* Map edition display */
+	VIEW_FIGHT	/* Battle display */
+};
 
 struct viewport {
-	enum {
-		VIEW_MAPNAV,	/* Map navigation display */
-		VIEW_MAPEDIT,	/* Map edition display */
-		VIEW_FIGHT	/* Battle display */
-	} mode;
+	int	mode;			/* Display mode */
 	int	flags;
 	int	fps;			/* Refresh rate in FPS */
 	int	width, height, depth;	/* Viewport geometry */
