@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.87 2004/05/22 03:18:18 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.88 2004/09/12 05:50:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -783,8 +783,8 @@ widget_destroy(void *p)
 #ifdef HAVE_OPENGL
 		if (wid->textures[i] != 0)
 			glDeleteTextures(1, &wid->textures[i]);
-	}
 #endif
+	}
 	Free(wid->surfaces, M_WIDGET);
 #ifdef HAVE_OPENGL
 	Free(wid->textures, M_WIDGET);
