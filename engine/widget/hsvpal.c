@@ -1,4 +1,4 @@
-/*	$Csoft: hsvpal.c,v 1.1 2005/02/16 14:47:45 vedge Exp $	*/
+/*	$Csoft: hsvpal.c,v 1.2 2005/02/17 02:02:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -87,7 +87,7 @@ update_sv(struct hsvpal *pal, int ax, int ay)
 	y = ay - pal->triangle.y;
 	x = ax - pal->triangle.x;
 	if (x < -y/2) { x = -y/2; }
-	if (x > y) { x = y; }
+	if (x > y/2) { x = y/2; }
 
 	s = 1.0 - (float)y/(float)pal->triangle.h;
 	v = 1.0 - (float)(x + y/2)/(float)pal->triangle.h;
