@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.30 2002/07/27 19:55:42 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.31 2002/07/29 05:29:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -23,7 +23,7 @@ struct region;
 struct widget {
 	struct	 object obj;
 	int	 flags;
-#define WIDGET_HIDE		0x01	/* Don't draw widget */
+#define WIDGET_NO_FOCUS		0x01	/* Cannot gain focus */
 #define WIDGET_MOUSEOUT		0x02	/* Receive window-mouseout events */
 	
 	char	*type;			/* Widget type identifier */
@@ -107,9 +107,10 @@ struct widget {
 
 #define WIDGET_FOCUSED(wid)	(WIDGET(wid)->win->focus == WIDGET(wid))
 
-#define WIDGET_FOCUS(wid) do {			\
-	WIDGET(wid)->win->focus = WIDGET(wid);	\
-	WIDGET(wid)->win->redraw++;		\
+#define WIDGET_FOCUS(wid) do {					\
+	if ((WIDGET(wid)->flags & WIDGET_NO_FOCUS) == 0) {	\
+		WIDGET(wid)->win->focus = WIDGET(wid);		\
+	}							\
 } while (/*CONSTCOND*/0)
 
 /* Test whether absolute coordinates match the widget area. */
