@@ -1,7 +1,7 @@
-/*	$Csoft: monitor.c,v 1.3 2002/09/04 03:21:00 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.4 2002/09/06 01:29:16 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
