@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.10 2005/02/11 04:50:41 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.11 2005/02/14 07:26:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -29,8 +29,6 @@
 #include <engine/engine.h>
 #include <engine/map.h>
 #include <engine/view.h>
-
-#include <engine/loader/surface.h>
 
 #include <ctype.h>
 
@@ -140,11 +138,7 @@ tileset_reinit(void *obj)
 	     px != TAILQ_END(&ts->pixmaps);
 	     px = npx) {
 		npx = TAILQ_NEXT(px, pixmaps);
-#ifdef DEBUG
-		if (px->nrefs > 0)
-			dprintf("pixmap %s nrefs > 0\n", px->name);
-#endif
-		SDL_FreeSurface(px->su);
+		pixmap_destroy(px);
 		Free(px, M_RG);
 	}
 	TAILQ_INIT(&ts->pixmaps);
@@ -174,6 +168,7 @@ int
 tileset_load(void *obj, struct netbuf *buf)
 {
 	struct tileset *ts = obj;
+	struct pixmap *px;
 	Uint32 nsketches, npixmaps, nfeatures, ntiles;
 	Uint32 i;
 
@@ -208,14 +203,10 @@ tileset_load(void *obj, struct netbuf *buf)
 	npixmaps = read_uint32(buf);
 	for (i = 0; i < npixmaps; i++) {
 		struct pixmap *px;
-		Uint8 type;
 
 		px = Malloc(sizeof(struct pixmap), M_RG);
 		pixmap_init(px, ts, 0);
-
-		copy_string(px->name, buf, sizeof(px->name));
-		px->flags = (int)read_uint32(buf);
-		if ((px->su = read_surface(buf, vfmt)) == NULL) {
+		if (pixmap_load(px, buf) == -1) {
 			Free(px, M_RG);
 			goto fail;
 		}
@@ -276,6 +267,27 @@ tileset_load(void *obj, struct netbuf *buf)
 		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	}
 
+	/* Resolve the pixmap brush references. */
+	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
+		struct pixmap_brush *pbr;
+		struct pixmap *ppx;
+
+		TAILQ_FOREACH(pbr, &px->brushes, brushes) {
+			if (pbr->px != NULL) {
+				continue;
+			}
+			TAILQ_FOREACH(ppx, &ts->pixmaps, pixmaps) {
+				if (strcmp(pbr->px_name, ppx->name) == 0) {
+					pbr->px = ppx;
+					pbr->px->nrefs++;
+					break;
+				}
+			}
+			if (ppx == NULL) {
+				fatal("%s: bad pixmap ref", pbr->px_name);
+			}
+		}
+	}
 	pthread_mutex_unlock(&ts->lock);
 	return (0);
 fail:
@@ -315,9 +327,7 @@ tileset_save(void *obj, struct netbuf *buf)
 	write_uint32(buf, 0);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		dprintf("%s: saving pixmap %s\n", OBJECT(ts)->name, px->name);
-		write_string(buf, px->name);
-		write_uint32(buf, (Uint32)px->flags);
-		write_surface(buf, px->su);
+		pixmap_save(px, buf);
 		npixmaps++;
 	}
 	pwrite_uint32(buf, npixmaps, npixmaps_offs);
@@ -351,19 +361,42 @@ tileset_save(void *obj, struct netbuf *buf)
 }
 
 static void
-poll_tileset(int argc, union evarg *argv)
+poll_pixmaps(int argc, union evarg *argv)
 {
+	char label[TLIST_LABEL_MAX];
+	struct tlist *tl = argv[0].p;
+	struct tileset *ts = argv[1].p;
+	struct pixmap *px;
+	struct tlist_item *it;
+
+	tlist_clear_items(tl);
+	pthread_mutex_lock(&ts->lock);
+
+	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
+		snprintf(label, sizeof(label), "%s (%ux%u) [#%u]",
+		    px->name, px->su->w, px->su->h, px->nrefs);
+
+		it = tlist_insert_item(tl, px->su, label, px);
+		it->class = "pixmap";
+	}
+
+	pthread_mutex_unlock(&ts->lock);
+	tlist_restore_selections(tl);
+}
+
+static void
+poll_tiles(int argc, union evarg *argv)
+{
+	char label[TLIST_LABEL_MAX];
 	struct tlist *tl = argv[0].p;
 	struct tileset *ts = argv[1].p;
 	struct tile *t;
+	struct tlist_item *it;
+	struct tile_element *tel;
 
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ts->lock);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
-		char label[TLIST_LABEL_MAX];
-		struct tlist_item *it;
-		struct tile_element *tel;
-	
 		snprintf(label, sizeof(label), "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
 		it = tlist_insert_item(tl, t->su, label, t);
@@ -398,11 +431,11 @@ poll_tileset(int argc, union evarg *argv)
 					TAILQ_FOREACH(fts, &ft->sketches,
 					    sketches) {
 						snprintf(label, sizeof(label),
-						    "%s [at %d,%d] %s",
+						    "%s [at %d,%d]%s",
 						    fts->sk->name,
 						    fts->x, fts->y,
-						    (fts->visible ? "" :
-						    "(invisible)"));
+						    fts->visible ? "" :
+						    "(invisible)");
 
 						it = tlist_insert_item(tl,
 						    ICON(DRAWING_ICON), label,
@@ -417,14 +450,13 @@ poll_tileset(int argc, union evarg *argv)
 					struct pixmap *px = tel->tel_pixmap.px;
 
 					snprintf(label, sizeof(label),
-					    "%s(%u) [%d,%d] %s", px->name,
-					    px->nrefs,
-					    tel->tel_pixmap.x,
-					    tel->tel_pixmap.y,
+					    "%s (%d,%d)%s", px->name,
+					    tel->tel_pixmap.px->su->w,
+					    tel->tel_pixmap.px->su->h,
 					    tel->visible ? "" : "(invisible)");
 
-					it = tlist_insert_item(tl,
-					    ICON(OBJ_ICON), label, tel);
+					it = tlist_insert_item(tl, px->su,
+					    label, tel);
 					it->depth = 1;
 					it->class = "tile-pixmap";
 				}
@@ -605,27 +637,32 @@ tileset_edit(void *p)
 {
 	struct tileset *ts = p;
 	struct window *win;
-	struct tlist *tl;
-	struct box *box;
+	struct tlist *tl_tiles, *tl_pixmaps;
+	struct box *box, *hbox, *bbox;
 	struct textbox *tb;
 	struct mspinbutton *msb;
 	struct AGMenu *m;
 	struct AGMenuItem *mi;
+	struct button *bu;
 
 	win = window_new(WINDOW_DETACH, NULL);
 	window_set_caption(win, _("Tile set: %s"), OBJECT(ts)->name);
 	window_set_position(win, WINDOW_LOWER_CENTER, 0);
 
-	tl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
-	event_new(tl, "tlist-poll", poll_tileset, "%p", ts);
+	tl_tiles = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(tl_tiles, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+	event_new(tl_tiles, "tlist-poll", poll_tiles, "%p", ts);
+	
+	tl_pixmaps = Malloc(sizeof(struct tlist), M_OBJECT);
+	tlist_init(tl_pixmaps, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+	event_new(tl_pixmaps, "tlist-poll", poll_pixmaps, "%p", ts);
 
-	mi = tlist_set_popup(tl, "tile");
+	mi = tlist_set_popup(tl_tiles, "tile");
 	{
 		ag_menu_action(mi, _("Edit tile..."), ICON(OBJEDIT_ICON), 0, 0,
-		    edit_tiles, "%p,%p,%p", ts, tl, win);
+		    edit_tiles, "%p,%p,%p", ts, tl_tiles, win);
 		ag_menu_action(mi, _("Delete tile"), ICON(TRASH_ICON), 0, 0,
-		    delete_tiles, "%p,%p", tl, ts);
+		    delete_tiles, "%p,%p", tl_tiles, ts);
 	}
 
 	m = ag_menu_new(win);
@@ -643,34 +680,36 @@ tileset_edit(void *p)
 		    insert_tile_dlg, "%p,%p", ts, win);
 #endif
 	}
+	
+	hbox = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL|BOX_HOMOGENOUS);
 
-	box = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
-	box_set_padding(box, 1);
-	box_set_spacing(box, 1);
+	box = box_new(hbox, BOX_VERT, BOX_HFILL);
 	box_set_depth(box, -1);
 	{
-		struct box *btnbox;
-		struct button *btn;
+		object_attach(box, tl_tiles);
 
-		object_attach(box, tl);
-
-		btnbox = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
+		bbox = box_new(box, BOX_HORIZ, BOX_WFILL|BOX_HOMOGENOUS);
 		{
-			btn = button_new(btnbox, _("Insert tile"));
-			event_new(btn, "button-pushed", insert_tile_dlg,
+			bu = button_new(bbox, _("Insert tile"));
+			event_new(bu, "button-pushed", insert_tile_dlg,
 			    "%p,%p", ts, win);
 
-			btn = button_new(btnbox, _("Edit tile(s)"));
-			event_new(btn, "button-pushed", edit_tiles, "%p,%p,%p",
-			    ts, tl, win);
-			event_new(tl, "tlist-dblclick", edit_tiles, "%p,%p,%p",
-			    ts, tl, win);
+			bu = button_new(bbox, _("Edit tile(s)"));
+			event_new(bu, "button-pushed", edit_tiles,
+			    "%p,%p,%p", ts, tl_tiles, win);
+			event_new(tl_tiles, "tlist-dblclick", edit_tiles,
+			    "%p,%p,%p", ts, tl_tiles, win);
 
-			btn = button_new(btnbox, _("Delete tile(s)"));
-			event_new(btn, "button-pushed", delete_tiles, "%p,%p",
-			    tl, ts);
+			bu = button_new(bbox, _("Delete tile(s)"));
+			event_new(bu, "button-pushed", delete_tiles,
+			    "%p,%p", tl_tiles, ts);
 		}
 	}
-
+	
+	box = box_new(hbox, BOX_VERT, BOX_HFILL);
+	box_set_depth(box, -1);
+	{
+		object_attach(box, tl_pixmaps);
+	}
 	return (win);
 }
