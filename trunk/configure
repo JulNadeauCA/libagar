@@ -112,6 +112,7 @@ echo "    --with-smpeg         Play videos through smpeg [default: check]"
 echo "    --with-x11           X11-specific code [default: check]"
 echo "    --enable-debug       Engine debugging [default: no]"
 echo "    --enable-xdebug      Synchronous X11 events [default: no]"
+echo "    --enable-map-editor  Level edition [default: yes]"
 echo "    --help               Show this message"
 exit 1
 fi
@@ -328,6 +329,13 @@ LOCKDEBUG=1
 echo "#ifndef LOCKDEBUG" >> engine/mcconfig.h
 echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/mcconfig.h
 echo "#endif /* LOCKDEBUG */" >> engine/mcconfig.h
+fi
+if [ "${enable_map_editor}" = "yes" ]
+ then
+MAPEDIT=1
+echo "#ifndef MAPEDIT" >> engine/mcconfig.h
+echo "#define MAPEDIT $MAPEDIT" >> engine/mcconfig.h
+echo "#endif /* MAPEDIT */" >> engine/mcconfig.h
 fi
 echo PREFIX=$PREFIX >> Makefile.config
 echo "#ifndef PREFIX" >> engine/mcconfig.h
