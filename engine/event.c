@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.45 2002/06/01 02:36:22 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.46 2002/06/01 09:24:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -102,16 +102,9 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_ESCAPE:
-		pthread_mutex_lock(&game_menu_win->lock);
-		if (game_menu_win->flags & WINDOW_SHOW) {	/* XXX gross */
-			pthread_mutex_unlock(&game_menu_win->lock);
-			pthread_mutex_unlock(&world->lock);
-			engine_stop();
-			pthread_mutex_lock(&world->lock);
-			pthread_mutex_lock(&game_menu_win->lock);
-		}
-		pthread_mutex_unlock(&game_menu_win->lock);
-		window_show(game_menu_win);
+		pthread_mutex_unlock(&world->lock);
+		engine_stop();
+		return;
 		break;
 	default:
 		break;
@@ -329,8 +322,6 @@ event_post(void *obp, const char *name, const char *fmt, ...)
 {
 	struct object *ob = obp;
 	struct event *eev, *neev;
-
-	dprintf("post %s to %s\n", name, ob->name);
 
 	pthread_mutex_lock(&ob->events_lock);
 	TAILQ_FOREACH(eev, &ob->events, events) {
