@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.35 2002/09/06 01:22:52 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.36 2002/09/07 04:31:46 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -52,6 +52,7 @@
 #include "widget/textbox.h"
 #include "widget/keycodes.h"
 #include "widget/primitive.h"
+#include "widget/tlist.h"
 
 static const struct version config_ver = {
 	"agar config",
@@ -77,12 +78,7 @@ enum {
 	SYSDATADIR_TBOX,
 	DATAPATH_TBOX,
 	W_TBOX,
-	H_TBOX,
-	AL_BOX_RADIO,
-	AL_FRAME_RADIO,
-	AL_CIRCLE_RADIO,
-	AL_LINE_RADIO,
-	AL_SQUARE_RADIO
+	H_TBOX
 };
 
 static struct config_prop	*config_get_prop(const char *);
@@ -162,6 +158,8 @@ config_init_wins(struct config *con)
 	struct textbox *tbox;
 	struct checkbox *cbox;
 	struct radio *rad;
+	struct tlist *tl;
+	struct label *lab;
 
 	/*
 	 * Engine settings window
@@ -269,35 +267,7 @@ config_init_wins(struct config *con)
 		    config_apply, "%i", SAVE_BUTTON);
 	}
 
-	/* Primitive drawing algorithm switch */
-	win = window_new("config-primitive-algorithm-sw",
-	    "Primitive algorithm switch", WINDOW_CENTER,
-	    0, 0,
-	    247, 180,
-	    247, 180);
-	con->windows.algorithm_sw = win;
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
-	{
-		rad = radio_new(reg, primitive_box_sw, 0);
-		event_new(rad, "radio-changed", 0, config_apply,
-		    "%i", AL_BOX_RADIO);
-		
-		rad = radio_new(reg, primitive_frame_sw, 0);
-		event_new(rad, "radio-changed", 0, config_apply,
-		    "%i", AL_FRAME_RADIO);
-		
-		rad = radio_new(reg, primitive_circle_sw, 0);
-		event_new(rad, "radio-changed", 0, config_apply,
-		    "%i", AL_CIRCLE_RADIO);
-		
-		rad = radio_new(reg, primitive_line_sw, 0);
-		event_new(rad, "radio-changed", 0, config_apply,
-		    "%i", AL_LINE_RADIO);
-		
-		rad = radio_new(reg, primitive_square_sw, 0);
-		event_new(rad, "radio-changed", 0, config_apply,
-		    "%i", AL_SQUARE_RADIO);
-	}
+	con->windows.algorithm_sw = primitive_config_window();
 }
 
 #define CONFIG_SET_FLAG(con, var, flag, val) do {		\
@@ -342,7 +312,7 @@ config_apply(int argc, union evarg *argv)
 
 	switch (argv[1].i) {
 	case CLOSE_BUTTON:
-		window_hide_locked(wid->win);
+		window_hide(wid->win, 0, 0);
 		return;
 	case SAVE_BUTTON:
 		object_save(config);
@@ -395,13 +365,6 @@ config_apply(int argc, union evarg *argv)
 		    argv[2].i);
 		break;
 #endif
-	case AL_BOX_RADIO:
-	case AL_FRAME_RADIO:
-	case AL_CIRCLE_RADIO:
-	case AL_LINE_RADIO:
-	case AL_SQUARE_RADIO:
-		/* TODO */
-		break;
 	}
 }
 
