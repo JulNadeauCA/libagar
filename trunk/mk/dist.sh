@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	$Csoft$
+#	$Csoft: dist.sh,v 1.1 2002/08/23 07:15:54 vedge Exp $
 
 DATE=`date +%m%d%Y`
 DISTFILE=agar-${DATE}
@@ -10,8 +10,16 @@ echo "copying agar onto agar-${DATE}"
 rm -fr agar-${DATE}
 cp -fRp agar agar-${DATE}
 rm -fR `find agar-${DATE} \( -name CVS \
-    -or -name \*~ -or -name \*.o -or -name \*.core \
-    -or -name ttf.c -or -name ttf.h -or -name oldxcf.c -or -name oldxcf.h \)`
+    -or -name \*~ \
+    -or -name \*.o \
+    -or -name \*.a \
+    -or -name \*.core \
+    -or -name ttf.c \
+    -or -name ttf.h \
+    -or -name oldxcf.c \
+    -or -name oldxcf.h \
+    -or -name \*.ttf \
+    -or -name LICENSE.ttf \)`
 
 echo "packaging"
 tar -f ${DISTFILE}.tar -c agar-${DATE}
