@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.53 2003/01/01 05:18:34 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.54 2003/01/04 14:10:31 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -175,7 +175,7 @@ config_window(struct config *con)
 	struct tlist *tl;
 	struct label *lab;
 
-	win = window_generic_new(267, 319, "config-engine-settings");
+	win = window_generic_new(364, 427, "config-engine-settings");
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	window_set_caption(win, "Engine settings");
 
