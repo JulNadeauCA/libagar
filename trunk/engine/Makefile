@@ -1,4 +1,4 @@
-#	$Csoft: Makefile,v 1.56 2003/01/19 12:11:27 vedge Exp $
+#	$Csoft: Makefile,v 1.57 2003/01/20 05:41:29 vedge Exp $
 
 TOP=	..
 include ${TOP}/Makefile.config
@@ -9,7 +9,7 @@ SUBDIR=	compat \
 	monitor \
 	media
 
-CFLAGS+=	${SDL_CFLAGS} ${SMPEG_CFLAGS} ${FREETYPE_CFLAGS} ${X11_CFLAGS}
+CFLAGS+=${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
 
 MAN3=	agar.3 map.3 object.3 view.3 version.3 rootmap.3 \
 	world.3 event.3 physics.3 prop.3
@@ -18,11 +18,11 @@ CATMAN3=agar.cat3 map.cat3 object.cat3 view.cat3 version.cat3 rootmap.cat3 \
 
 LIB=	engine
 
-SRCS=	engine.c error.c event.c ttf.c view.c physics.c \
+SRCS=	engine.c error.c event.c view.c physics.c \
 	input.c object.c world.c map.c rootmap.c perso.c \
 	version.c config.c prop.c transform.c timer.c
 
-OBJS=	engine.o error.o event.o ttf.o view.o physics.o \
+OBJS=	engine.o error.o event.o view.o physics.o \
 	input.o object.o world.o map.o rootmap.o perso.o \
 	version.o config.o prop.o transform.o timer.o
 
