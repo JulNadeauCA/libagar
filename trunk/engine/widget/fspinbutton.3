@@ -1,4 +1,4 @@
-.\"	$Csoft: fspinbutton.3,v 1.2 2004/01/08 02:20:10 vedge Exp $
+.\"	$Csoft: fspinbutton.3,v 1.3 2004/03/24 06:23:25 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -67,6 +67,9 @@ widgets to increment and decrement the value.
 .Fn fspinbutton_set_value "struct fspinbutton *fsu" "double value"
 .Pp
 .Ft void
+.Fn fspinbutton_add_value "struct fspinbutton *fsu" "double value"
+.Pp
+.Ft void
 .Fn fspinbutton_set_min "struct fspinbutton *fsu" "double min_value"
 .Pp
 .Ft void
@@ -108,24 +111,29 @@ argument defines the unit system to use (if NULL, no conversion is done).
 .Pp
 The
 .Fn fspinbutton_set_value
-modifies the bound value (converting to
+function modifies the bound value (converting to
 .Ft float
 for
 .Dv WIDGET_FLOAT
 bindings).
+.Fn fspinbutton_add_value
+adds the argument to the bound value.
+.Pp
 The
 .Fn fspinbutton_set_min ,
 .Fn fspinbutton_set_max
 and
 .Fn fspinbutton_set_range
 functions define the range of acceptable values.
-Associating a variable to the
+Invocations of these functions must always follow
+.Fn widget_bind ,
+since binding to
 .Sq value
-binding has the effect of setting limits defined by the data type.
+automatically selects a range suitable to the new binding type.
 .Pp
 The
 .Fn fspinbutton_set_increment
-function defines the increment for "+" and "-" buttons.
+function defines the step value for the "+" and "-" buttons.
 .Pp
 The
 .Fn fspinbutton_set_units
@@ -135,10 +143,12 @@ selects the default conversion by prefix.
 .Pp
 The
 .Fn fspinbutton_set_precision
-function sets the floating-point precision.
+function selects the preferred printing mode and precision.
+The default is
+.Sq %.10g .
 .Pp
 .Fn fspinbutton_set_writeable
-defines whether the value is modifiable or not.
+sets the writeability flag.
 .Sh EVENTS
 The
 .Nm
