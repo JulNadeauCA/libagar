@@ -1,4 +1,4 @@
-# $Csoft: fr.po,v 1.15 2003/08/28 05:33:04 vedge Exp $
+# $Csoft: fr.po,v 1.16 2003/08/31 10:58:04 vedge Exp $
 #
 # Copyright (c) 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -27,7 +27,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: agar 1.0\n"
-"POT-Creation-Date: 2003-08-26 03:08-0300\n"
+"POT-Creation-Date: 2003-09-01 22:29-0300\n"
 "PO-Revision-Date: 2003-07-27 10:23-0300\n"
 "Last-Translator: Wilbern Cobb <vedge@csoft.org>\n"
 "Language-Team: French <french@csoft.org>\n"
@@ -116,6 +116,12 @@ msgstr "Contexte de rendu OpenGL"
 
 msgid "Unicode keyboard translation"
 msgstr "Saisie de clavier Unicode"
+
+msgid "Input composition"
+msgstr "Composition d'entrée"
+
+msgid "Right->left (Arabic, Hebrew, ...)"
+msgstr "Droit->gauche (Arabe, Hébreu, ...)"
 
 #. Thread unsafe, but not very dangerous.
 msgid "Debugging"
@@ -414,9 +420,6 @@ msgstr "Le chemin d'accès est trop grand."
 msgid "String too big."
 msgstr "La chaîne de caractères est trop grande."
 
-msgid "Unicode string too big."
-msgstr "La chaîne de caractères Unicode est trop grande."
-
 #, c-format
 msgid "Cannot load prop of type 0x%x."
 msgstr "Impossible de charger une propriété du type 0x%x."
@@ -619,23 +622,23 @@ msgstr "Charger"
 msgid "Destroy"
 msgstr "Détruire"
 
-msgid "Eraser"
-msgstr "Gomme à effacer"
-
 msgid "All"
 msgstr "Tout"
 
 msgid "Highest"
 msgstr "Plus haut"
 
-msgid "Fill"
-msgstr "Remplissage"
+msgid "Eraser"
+msgstr "Gomme à effacer"
+
+msgid "Pattern fill"
+msgstr "Motif"
 
 msgid "Clear"
 msgstr "Effacer"
 
-msgid "No source node."
-msgstr "Aucun noeud source."
+msgid "Fill"
+msgstr "Remplissage"
 
 msgid "Horizontal"
 msgstr "Horizontal"
@@ -1005,6 +1008,12 @@ msgstr "%s: %s à échoué"
 
 msgid "Bad JPEG magic."
 msgstr "Mauvaise signature JPEG."
+
+#~ msgid "Unicode string too big."
+#~ msgstr "La chaîne de caractères Unicode est trop grande."
+
+#~ msgid "No source node."
+#~ msgstr "Aucun noeud source."
 
 #~ msgid "Mental raide!\n"
 #~ msgstr "Mental raide!\n"
