@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.125 2002/12/04 03:45:35 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.126 2002/12/04 04:23:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -36,7 +36,6 @@
 
 #include "mapedit.h"
 #include "mapedit_offs.h"
-#include "command.h"
 #include "toolbar.h"
 #include "fileops.h"
 
@@ -65,6 +64,7 @@ mapedit_init(struct mapedit *med, char *name)
 	med->ref.obj = NULL;
 	med->ref.offs = 0;
 	med->ref.flags = 0;
+	med->ref.type = 0;
 	med->node.flags = NODE_WALK;
 	med->curtool = NULL;
 
@@ -121,7 +121,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 				eref->animi = -1;
 				eref->spritei = y;
 				eref->p = SPRITE(ob, y);
-				eref->type = EDITREF_SPRITE;
+				eref->type = NODEREF_SPRITE;
 				SIMPLEQ_INSERT_TAIL(&eob->erefs, eref, erefs);
 				eob->nrefs++;
 			}
@@ -138,7 +138,7 @@ mapedit_shadow(struct mapedit *med, void *parent)
 				eref->animi = z;
 				eref->spritei = -1;
 				eref->p = ANIM(ob, z);
-				eref->type = EDITREF_ANIM;
+				eref->type = NODEREF_ANIM;
 				SIMPLEQ_INSERT_TAIL(&eob->erefs, eref, erefs);
 				eob->nrefs++;
 			}

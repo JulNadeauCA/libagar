@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.15 2002/11/22 08:56:53 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.16 2002/12/01 14:41:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -119,14 +119,13 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 
 	switch (st->mode) {
 	case STAMP_REPLACE:
-		for (nref = TAILQ_FIRST(&n->nrefsh);
-		     nref != TAILQ_END(&n->nrefsh);
+		for (nref = TAILQ_FIRST(&n->nrefs);
+		     nref != TAILQ_END(&n->nrefs);
 		     nref = nnref) {
 			nnref = TAILQ_NEXT(nref, nrefs);
 			free(nref);
 		}
-		n->nnrefs = 0;
-		TAILQ_INIT(&n->nrefsh);
+		TAILQ_INIT(&n->nrefs);
 		break;
 	default:
 		break;
@@ -137,14 +136,17 @@ stamp_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 		break;
 	case STAMP_INSERT_HIGHEST:
 	case STAMP_REPLACE:
-		if (med->ref.flags & MAPREF_SPRITE) {
-			node_addref(n, med->ref.obj, med->ref.offs,
+		switch (med->ref.type) {
+		case NODEREF_SPRITE:
+			node_add_sprite(n, med->ref.obj, med->ref.offs);
+			break;
+		case NODEREF_ANIM:
+			node_add_anim(n, med->ref.obj, med->ref.offs,
 			    med->ref.flags);
-		} else if (med->ref.flags & MAPREF_ANIM) {
-			node_addref(n, med->ref.obj, med->ref.offs,
-			    med->ref.flags);
-		} else {
-			fatal("unknown ref type\n");
+			break;
+		default:
+			fatal("bad noderef type\n");
+			break;
 		}
 		break;
 	}
