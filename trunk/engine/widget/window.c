@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.145 2003/01/08 21:23:05 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.146 2003/01/20 03:40:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -121,6 +121,9 @@ window_generic_new(int w, int h, const char *name_fmt, ...)
 		TAILQ_FOREACH(win, &view->windows, windows) {
 			if (strlen(OBJECT(win)->name) > 4 &&
 			    strcmp(OBJECT(win)->name+4, name) == 0) {
+			    	if ((win->flags & WINDOW_SHOWN) == 0) {
+					window_show(win);
+				}
 				window_focus(win);
 				pthread_mutex_unlock(&view->lock);
 				error_set("window exists");
@@ -222,7 +225,6 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 
 	win->titleh = font_h + win->borderw;
 	win->flags = fl;
-	win->spacing = 4;
 	win->focus = NULL;
 	win->caption = Strdup("Untitled");
 	win->minw = minw;
@@ -390,7 +392,7 @@ window_draw_titlebar(struct window *win)
 	bcolor = WINDOW_FOCUSED(win) ?
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_FOCUSED_COLOR) :
 	    WIDGET_COLOR(win, TITLEBAR_BUTTONS_UNFOCUSED_COLOR);
-	primitives.box(win, bw-1, bw-1, th-1, th-4,		/* Close */
+	primitives.box(win, bw-1, bw-1, th-1, th-4,	/* Close */
 	    (win->clicked_button == WINDOW_CLOSE_BUTTON) ? -1 : 1,
 	    bcolor);
 	widget_blit(win, SPRITE(win, 0), bw, bw-1);
