@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.1 2002/12/17 06:48:49 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.2 2002/12/20 08:57:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -49,9 +49,20 @@ extern ssize_t	pwrite(int, const void *, size_t, off64_t);
 #endif
 
 #ifdef DEBUG
-#define DEBUG_PROPS	0x01
+#define DEBUG_COLORMAPS		0x001
+#define DEBUG_LAYER_OFFSETS	0x002
+#define DEBUG_LAYER_OPACITY	0x004
+#define DEBUG_LAYER_MODE	0x008
+#define DEBUG_IMAGE_COMPRESSION	0x010
+#define DEBUG_CHANNELS		0x020
+#define DEBUG_GUIDES		0x040
+#define DEBUG_RESOLUTIONS	0x080
+#define DEBUG_PARASITES		0x100
+#define DEBUG_UNITS		0x200
+#define DEBUG_LAYER_NAMES	0x400
+#define DEBUG_UNKNOWN_PROPS	0x800
 
-int	xcf_debug = 0;
+int	xcf_debug = DEBUG_CHANNELS|DEBUG_PARASITES;
 #define	engine_debug xcf_debug
 #endif
 
@@ -71,48 +82,110 @@ xcf_check(int fd, off_t xcf_offs)
 static void 
 xcf_read_property(int fd, struct xcf_prop *prop)
 {
+	Uint32 i;
+	Uint8 c;
+
 	prop->id = read_uint32(fd);
 	prop->length = read_uint32(fd);
 
-	debug(DEBUG_PROPS, "id %d len %d\n", prop->id, prop->length);
-
 	switch (prop->id) {
-	case PROP_COLORMAP:
-		prop->data.color_map.num = read_uint32(fd);
-		prop->data.color_map.cmap =
-		    emalloc(sizeof(char) * prop->data.color_map.num*3);
-		Read(fd, prop->data.color_map.cmap, prop->data.color_map.num*3);
-		debug(DEBUG_PROPS, "%d-entry colormap\n",
-		    prop->data.color_map.num);
+	case PROP_COLORMAP:		      /* Colormap for indexed images */
+		prop->data.colormap.size = read_uint32(fd);
+		prop->data.colormap.data = emalloc(prop->data.colormap.size*3);
+		Read(fd, prop->data.colormap.data, prop->data.colormap.size*3);
+		debug(DEBUG_COLORMAPS, "%d-entry colormap\n",
+		    prop->data.colormap.size);
 		break;
-	case PROP_OFFSETS:
-		prop->data.offset.x = read_uint32(fd);
-		prop->data.offset.y = read_uint32(fd);
-		debug(DEBUG_PROPS, "offsets %d,%d\n", prop->data.offset.x,
-		    prop->data.offset.y);
+	case PROP_OFFSETS:		         /* Offset of layer in image */
+		prop->data.offset.x = read_sint32(fd);
+		prop->data.offset.y = read_sint32(fd);
+		debug(DEBUG_LAYER_OFFSETS, "offsets %d,%d\n",
+		    prop->data.offset.x, prop->data.offset.y);
 		break;
-	case PROP_OPACITY:
+	case PROP_OPACITY:				    /* Layer opacity */
 		prop->data.opacity = read_uint32(fd);
-		debug(DEBUG_PROPS, "opacity %d\n", prop->data.opacity);
+		debug(DEBUG_LAYER_OPACITY, "opacity %d\n",
+		    prop->data.opacity);
 		break;
-	case PROP_COMPRESSION:
-		Read(fd, &prop->data.compression, 1);
-		debug(DEBUG_PROPS, "compression %s\n",
-		    prop->data.compression == NO_COMPRESSION ? "none" :
-		    prop->data.compression == RLE_COMPRESSION ? "rle" :
-		    prop->data.compression == ZLIB_COMPRESSION ? "zlib" :
-		    prop->data.compression == FRACTAL_COMPRESSION ? "fractal" :
+	case PROP_MODE:					 /* Application mode */
+		prop->data.mode = read_uint32(fd);
+		debug(DEBUG_LAYER_MODE, "mode %d\n", prop->data.mode);
+		break;
+	case PROP_COMPRESSION:			    /* Tile compression mode */
+		Read(fd, &c, 1);
+		prop->data.compression = (enum xcf_compression)c;
+		debug(DEBUG_IMAGE_COMPRESSION, "compression %s\n",
+		    prop->data.compression == XCF_COMPRESSION_NONE ? "none" :
+		    prop->data.compression == XCF_COMPRESSION_RLE ? "rle" :
 		    "???");
 		break;
-	case PROP_COLOR:
+	case PROP_COLOR:			       /* Color of a channel */
 		Read(fd, &prop->data.color, 3);
-		debug(DEBUG_PROPS, "color %d,%d,%d\n",
+		debug(DEBUG_CHANNELS, "color %d,%d,%d\n",
 		    prop->data.color[0],
 		    prop->data.color[1],
 		    prop->data.color[2]);
 		break;
+	case PROP_GUIDES:			                  /* Guides */
+		for (i = 0; i < prop->length / 5; i++) {
+			prop->data.guide.position = read_sint32(fd);
+			prop->data.guide.orientation = read_sint8(fd);
+			debug(DEBUG_GUIDES,
+			    "guide: position %d, orientation %d\n",
+			    prop->data.guide.position,
+			    prop->data.guide.orientation);
+		}
+		break;
+	case PROP_RESOLUTION:				 /* Image resolution */
+#ifdef HAVE_IEEE754
+		prop->data.resolution.x = read_float(fd);
+		prop->data.resolution.y = read_float(fd);
+		debug(DEBUG_RESOLUTIONS, "resolution %f x %f\n",
+		    prop->data.resolution.x, prop->data.resolution.y);
+#else
+		prop->data.resolution.x = read_uint32(fd);
+		prop->data.resolution.y = read_uint32(fd);
+		debug(DEBUG_RESOLUTIONS, "resolution %d x %d\n",
+		    prop->data.resolution.x, prop->data.resolution.y);
+#endif
+		break;
+	case PROP_TATTOO:					/* Tattoo */
+		prop->data.tattoo_state = read_uint32(fd);
+		break;
+	case PROP_PARASITE:					/* Parasite */
+		prop->data.parasite.name = read_string(fd, NULL);
+		prop->data.parasite.flags = read_uint32(fd);
+		prop->data.parasite.size = read_uint32(fd);
+		prop->data.parasite.data = emalloc(prop->data.parasite.size);
+		Read(fd, prop->data.parasite.data, prop->data.parasite.size);
+		debug_n(DEBUG_PARASITES, "parasite: %s (flags 0x%x size %d)",
+		    prop->data.parasite.name, prop->data.parasite.flags,
+		    prop->data.parasite.size);
+		if (strcmp(prop->data.parasite.name, "gimp-comment") == 0) {
+			if (prop->data.parasite.size > 1 &&
+			    prop->data.parasite.data[prop->data.parasite.size-2]
+			    == '\n')  {
+				/* Chop trailing newline. */
+				prop->data.parasite.data
+				    [prop->data.parasite.size-2] = '\0';
+			}
+			debug_n(DEBUG_PARASITES, " `%s'",
+			    prop->data.parasite.data);
+		}
+		debug_n(DEBUG_PARASITES, "\n");
+		free(prop->data.parasite.name);
+		break;
+	case PROP_UNIT:
+		prop->data.unit = read_uint32(fd);
+		debug(DEBUG_UNITS, "unit: %d\n", prop->data.unit);
+		break;
+	case PROP_USER_UNIT:
+	case PROP_PATHS:
+		/* XXX ... */
+		break;
 	default:
-		/* Skip this property. */
+		debug(DEBUG_UNKNOWN_PROPS, "unknown: id %d len %d\n",
+		    prop->id, prop->length);
 		elseek(fd, prop->length, SEEK_CUR);
 	}
 }
@@ -198,9 +271,9 @@ xcf_read_tile(struct xcf_header *head, int fd, Uint32 len, int bpp,
     int x, int y)
 {
 	switch (head->compression) {
-	case NO_COMPRESSION:
+	case XCF_COMPRESSION_NONE:
 		return (xcf_read_tile_flat(fd, len, bpp, x, y));
-	case RLE_COMPRESSION:
+	case XCF_COMPRESSION_RLE:
 		return (xcf_read_tile_rle(fd, len, bpp, x, y));
 	}
 	error_set("unknown compression: %d", head->compression);
@@ -292,9 +365,8 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 			p16 = (Uint16 *) p8;
 			p = (Uint32 *) p8;
 			for (y = ty; y < ty + oy; y++) {
-				row = (Uint32 *)
-				    ((Uint8 *)su->pixels + y *
-				    su->pitch + (tx << 2));
+				row = (Uint32 *)((Uint8 *)su->pixels +
+				    y*su->pitch + (tx << 2));
 				switch (hier->bpp) {
 				case 4:
 					for (x = tx; x < tx + ox; x++) {
@@ -319,24 +391,24 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 					/*
 					 * Indexed/Greyscale + Alpha.
 					 */
-					switch (head->image_type) {
-					case IMAGE_INDEXED:
+					switch (head->base_type) {
+					case XCF_IMAGE_INDEXED:
 						for (x = tx; x < tx + ox; x++) {
 							*row = ((Uint32)
-							    (head->cmap[
+							   (head->colormap.data[
 							     *p8 * 3])<<16);
 							*row |= ((Uint32)
-							    (head->cmap[
+							   (head->colormap.data[
 							     *p8 * 3 + 1])<<8);
 							*row |= ((Uint32)
-							    (head->cmap[
+							   (head->colormap.data[
 							     *p8++ * 3+2])<<0);
 							*row |= ((Uint32)
 							     *p8++<<24);
 							row++;
 						}
 						break;
-					case IMAGE_GREYSCALE:
+					case XCF_IMAGE_GREYSCALE:
 						for (x = tx; x < tx + ox; x++) {
 							*row = ((Uint32)
 							    *p8 << 16);
@@ -358,23 +430,23 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 				 * Indexed/Greyscale.
 				 */
 				case 1:
-					switch (head->image_type) {
-					case IMAGE_INDEXED:
+					switch (head->base_type) {
+					case XCF_IMAGE_INDEXED:
 						for (x = tx; x < tx + ox; x++) {
-							*row++ = 0xFF000000
-						 	    | ((Uint32)
-							       (head->cmap[
-							        *p8 * 3])<<16)
-							    | ((Uint32)
-							       (head->cmap[
-							        *p8 * 3+1])<<8)
-							    | ((Uint32)
-							       (head->cmap[
-							       *p8 * 3+2])<<0);
+							*row++ = 0xFF000000 |
+							  ((Uint32)
+							   (head->colormap.data[
+							      *p8 * 3])<<16) |
+							  ((Uint32)
+							   (head->colormap.data[
+							      *p8 * 3+1])<<8) |
+							      ((Uint32)
+							   (head->colormap.data[
+							     *p8 * 3+2])<<0);
 							p8++;
 						}
 						break;
-					case IMAGE_GREYSCALE:
+					case XCF_IMAGE_GREYSCALE:
 						for (x = tx; x < tx + ox; x++) {
 							*row++ = 0xFF000000
 							    | (((Uint32)
@@ -474,11 +546,27 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	head = emalloc(sizeof(struct xcf_header));
 	head->w = read_uint32(fd);
 	head->h = read_uint32(fd);
-	head->image_type = read_uint32(fd);
-	head->props = NULL;
-	head->compression = NO_COMPRESSION;
-	head->cmap_count = 0;
-	head->cmap = NULL;
+	if (head->w > 65536 || head->h > 65536) {
+		error_set("nonsense geometry: %dx%d", head->w, head->h);
+		free(head);
+		return (-1);
+	}
+	head->base_type = read_uint32(fd);
+	switch (head->base_type) {
+	case XCF_IMAGE_RGB:
+	case XCF_IMAGE_GREYSCALE:
+	case XCF_IMAGE_INDEXED:
+		break;
+	default:
+		error_set("unknown base image type: %d", head->base_type);
+		free(head);
+		return (-1);
+	}
+	head->compression = XCF_COMPRESSION_NONE;
+	head->colormap.size = 0;
+	head->colormap.data = NULL;
+
+	/* Read the image properties. */
 	do {
 		xcf_read_property(fd, &prop);
 
@@ -487,11 +575,12 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 			head->compression = prop.data.compression;
 			break;
 		case PROP_COLORMAP:
-			head->cmap_count = prop.data.color_map.num;
-			head->cmap = emalloc(sizeof(char) * 3 *
-			    head->cmap_count);
-			memcpy(head->cmap, prop.data.color_map.cmap,
-			    3 * sizeof(char) * head->cmap_count);
+			head->colormap.size = prop.data.colormap.size;
+			head->colormap.data = emalloc(3 * head->colormap.size);
+			memcpy(head->colormap.data, prop.data.colormap.data,
+			    3 * head->colormap.size);
+			break;
+		case PROP_RESOLUTION:
 			break;
 		}
 	} while (prop.id != PROP_END);
@@ -512,13 +601,17 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		struct xcf_prop prop;
 		SDL_Surface *su;
 
-		/* Read this layer. */
 		elseek(fd, xcf_offs + head->layer_offstable[i - 1], SEEK_SET);
 		layer = emalloc(sizeof(struct xcf_layer));
 		layer->w = read_uint32(fd);
 		layer->h = read_uint32(fd);
 		layer->layer_type = read_uint32(fd);
 		layer->name = read_string(fd, NULL);
+
+		debug(DEBUG_LAYER_NAMES, "%s: %dx%d\n", layer->name,
+		    layer->w, layer->h);
+
+		/* Read the layer properties. */
 		do {
 			xcf_read_property(fd, &prop);
 
@@ -527,14 +620,24 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 				layer->offset_x = prop.data.offset.x;
 				layer->offset_y = prop.data.offset.y;
 				break;
+			case PROP_OPACITY:
+				layer->opacity = prop.data.opacity;
+				break;
+			case PROP_MODE:
+				layer->mode = prop.data.mode;
+				break;
 			}
 		} while (prop.id != PROP_END);
+
 		layer->hierarchy_file_offset = read_uint32(fd);
 		layer->layer_mask_offset = read_uint32(fd);
 
 		/* Convert this layer to a SDL surface. */
 		su = xcf_convert_layer(fd, xcf_offs, head, layer);
 		if (su == NULL) {
+			free(layer->name);
+			free(layer);
+			free(head);
 			return (-1);
 		}
 
@@ -545,9 +648,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		free(layer);
 	}
 
-	if (head->cmap_count > 0) {
-		free(head->cmap);
-	}
+	Free(head->colormap.data);
 	free(head->layer_offstable);
 	free(head);
 	return (0);
