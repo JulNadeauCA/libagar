@@ -1,7 +1,7 @@
-/*	$Csoft$	*/
+/*	$Csoft: prop.c,v 1.1 2002/09/05 12:16:04 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002 CubeSoft Communications, Inc <http://www.csoft.org>
+ * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,20 +25,33 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <libfobj/fobj.h>
+#include <libfobj/buf.h>
 
 #include "compat/vasprintf.h"
 #include "engine.h"
+#include "version.h"
+
+static const struct version prop_ver = {
+	"agar property map",
+	1, 0
+};
 
 /*
  * Modify a property, or create a new one if it does not exist.
  * The property list must not be locked by the caller thread.
  */
 struct prop *
-prop_set(void *p, const char *key, enum prop_type type, ...)
+prop_set(void *p, char *key, enum prop_type type, ...)
 {
 	struct object *ob = p;
 	struct prop *nprop = NULL, *oprop;
@@ -118,66 +131,65 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 		TAILQ_INSERT_HEAD(&ob->props, nprop, props);
 		pthread_mutex_unlock(&ob->props_lock);
 	}
-
 	return (nprop);
 }
 
 struct prop *
-prop_set_int(void *ob, const char *key, int i)
+prop_set_int(void *ob, char *key, int i)
 {
 	return (prop_set(ob, key, PROP_INT, i));
 }
 
 struct prop *
-prop_set_uint8(void *ob, const char *key, Uint8 i)
+prop_set_uint8(void *ob, char *key, Uint8 i)
 {
 	return (prop_set(ob, key, PROP_UINT8, i));
 }
 
 struct prop *
-prop_set_sint8(void *ob, const char *key, Sint8 i)
+prop_set_sint8(void *ob, char *key, Sint8 i)
 {
 	return (prop_set(ob, key, PROP_SINT8, i));
 }
 
 struct prop *
-prop_set_uint16(void *ob, const char *key, Uint16 i)
+prop_set_uint16(void *ob, char *key, Uint16 i)
 {
 	return (prop_set(ob, key, PROP_UINT16, i));
 }
 
 struct prop *
-prop_set_sint16(void *ob, const char *key, Sint16 i)
+prop_set_sint16(void *ob, char *key, Sint16 i)
 {
 	return (prop_set(ob, key, PROP_SINT16, i));
 }
 
 struct prop *
-prop_set_uint32(void *ob, const char *key, Uint32 i)
+prop_set_uint32(void *ob, char *key, Uint32 i)
 {
 	return (prop_set(ob, key, PROP_UINT32, i));
 }
 
 struct prop *
-prop_set_sint32(void *ob, const char *key, Sint32 i)
+prop_set_sint32(void *ob, char *key, Sint32 i)
 {
 	return (prop_set(ob, key, PROP_SINT32, i));
 }
 
 struct prop *
-prop_set_uint64(void *ob, const char *key, Uint64 i)
+prop_set_uint64(void *ob, char *key, Uint64 i)
 {
 	return (prop_set(ob, key, PROP_UINT64, i));
 }
 
 struct prop *
-prop_set_sint64(void *ob, const char *key, Sint64 i)
+prop_set_sint64(void *ob, char *key, Sint64 i)
 {
 	return (prop_set(ob, key, PROP_SINT64, i));
 }
 
 struct prop *
-prop_set_string(void *ob, const char *key, char *fmt, ...)
+prop_set_string(void *ob, char *key, char *fmt, ...)
 {
 	va_list ap;
 	char *s;
@@ -192,19 +204,19 @@ prop_set_string(void *ob, const char *key, char *fmt, ...)
 }
 
 struct prop *
-prop_set_pointer(void *ob, const char *key, void *p)
+prop_set_pointer(void *ob, char *key, void *p)
 {
 	return (prop_set(ob, key, PROP_POINTER, p));
 }
 
 struct prop *
-prop_set_bool(void *ob, const char *key, int i)
+prop_set_bool(void *ob, char *key, int i)
 {
 	return (prop_set(ob, key, PROP_BOOL, i));
 }
 
 void
-prop_get(void *obp, const char *key, enum prop_type t, void *p)
+prop_get(void *obp, char *key, enum prop_type t, void *p)
 {
 	struct object *ob = obp;
 	struct prop *prop;
@@ -256,7 +268,7 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 }
 
 int
-prop_int(void *p, const char *key)
+prop_int(void *p, char *key)
 {
 	struct object *ob = p;
 	int i;
@@ -266,7 +278,7 @@ prop_int(void *p, const char *key)
 }
 
 Uint8
-prop_uint8(void *p, const char *key)
+prop_uint8(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint8 i;
@@ -276,7 +288,7 @@ prop_uint8(void *p, const char *key)
 }
 
 Sint8
-prop_sint8(void *p, const char *key)
+prop_sint8(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint8 i;
@@ -286,7 +298,7 @@ prop_sint8(void *p, const char *key)
 }
 
 Uint16
-prop_uint16(void *p, const char *key)
+prop_uint16(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint16 i;
@@ -296,7 +308,7 @@ prop_uint16(void *p, const char *key)
 }
 
 Sint16
-prop_sint16(void *p, const char *key)
+prop_sint16(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint16 i;
@@ -306,7 +318,7 @@ prop_sint16(void *p, const char *key)
 }
 
 Uint32
-prop_uint32(void *p, const char *key)
+prop_uint32(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint32 i;
@@ -316,7 +328,7 @@ prop_uint32(void *p, const char *key)
 }
 
 Sint32
-prop_sint32(void *p, const char *key)
+prop_sint32(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint32 i;
@@ -326,7 +338,7 @@ prop_sint32(void *p, const char *key)
 }
 
 Uint64
-prop_uint64(void *p, const char *key)
+prop_uint64(void *p, char *key)
 {
 	struct object *ob = p;
 	Uint64 i;
@@ -336,7 +348,7 @@ prop_uint64(void *p, const char *key)
 }
 
 Sint64
-prop_sint64(void *p, const char *key)
+prop_sint64(void *p, char *key)
 {
 	struct object *ob = p;
 	Sint64 i;
@@ -346,7 +358,7 @@ prop_sint64(void *p, const char *key)
 }
 
 char *
-prop_string(void *p, const char *key)
+prop_string(void *p, char *key)
 {
 	struct object *ob = p;
 	char *s;
@@ -356,12 +368,149 @@ prop_string(void *p, const char *key)
 }
 
 void *
-prop_pointer(void *p, const char *key)
+prop_pointer(void *p, char *key)
 {
 	struct object *ob = p;
 	void *np;
 
 	prop_get(ob, key, PROP_POINTER, &np);
 	return (np);
+}
+
+int
+prop_load(void *p, int fd)
+{
+	struct object *ob = p;
+	struct prop *prop;
+	Uint32 nprops, i, t;
+	char *key;
+	Uint8 c;
+	Sint8 sc;
+
+	if (version_read(fd, &prop_ver) == -1) {
+		return (-1);
+	}
+
+	pthread_mutex_lock(&ob->props_lock);
+	nprops = read_uint32(fd);
+
+	for (i = 0; i < nprops; i++) {
+		key = read_string(fd);
+		t = read_uint32(fd);
+		
+		dprintf("prop %s (%d)\n", key, t);
+	
+		switch (t) {
+		case PROP_BOOL:
+			eread(fd, &c, 1);
+			prop_set_bool(ob, key, (int)c);
+			break;
+		case PROP_UINT8:
+			eread(fd, &c, 1);
+			prop_set_uint8(ob, key, c);
+			break;
+		case PROP_SINT8:
+			eread(fd, &sc, 1);
+			prop_set_sint8(ob, key, sc);
+			break;
+		case PROP_UINT16:
+			prop_set_uint16(ob, key, read_uint16(fd));
+			break;
+		case PROP_SINT16:
+			prop_set_sint16(ob, key, read_sint16(fd));
+			break;
+		case PROP_UINT32:
+			prop_set_uint32(ob, key, read_uint32(fd));
+			break;
+		case PROP_SINT32:
+			prop_set_sint32(ob, key, read_sint32(fd));
+			break;
+		case PROP_UINT64:
+			prop_set_uint64(ob, key, read_uint64(fd));
+			break;
+		case PROP_SINT64:
+			prop_set_sint64(ob, key, read_sint64(fd));
+			break;
+		case PROP_STRING:
+			prop_set_string(ob, key, "%s", read_string(fd));
+			break;
+		default:
+			fatal("unknown property type: 0x%x\n", t);
+		}
+	}
+	pthread_mutex_unlock(&ob->props_lock);
+
+	return (0);
+}
+
+int
+prop_save(void *p, int fd)
+{
+	struct object *ob = p;
+	off_t count_offs;
+	struct fobj_buf *buf;
+	Uint32 nprops = 0;
+	struct prop *prop;
+	Uint8 c;
+	
+	pthread_mutex_lock(&ob->props_lock);
+
+	buf = fobj_create_buf(64, 128);
+
+	count_offs = buf->offs;		/* Skip */
+	buf_write_uint32(buf, 0);
+
+	dprintf("saving %s properties:\n", ob->name);
+	TAILQ_FOREACH(prop, &ob->props, props) {
+		buf_write_string(buf, (char *)prop->key);
+		buf_write_uint32(buf, prop->type);
+		dprintf("-> %s\n", prop->key);
+		switch (prop->type) {
+		case PROP_BOOL:
+			c = (prop->data.i == 1) ? 1 : 0;
+			buf_write(buf, &c, 1);
+			break;
+		case PROP_UINT8:
+			buf_write(buf, &prop->data.u8, 1);
+			break;
+		case PROP_SINT8:
+			buf_write(buf, &prop->data.s8, 1);
+			break;
+		case PROP_UINT16:
+			buf_write_uint16(buf, prop->data.u16);
+			break;
+		case PROP_SINT16:
+			buf_write_sint16(buf, prop->data.s16);
+			break;
+		case PROP_UINT32:
+			buf_write_uint32(buf, prop->data.u32);
+			break;
+		case PROP_SINT32:
+			buf_write_sint32(buf, prop->data.s32);
+			break;
+		case PROP_UINT64:
+			buf_write_uint64(buf, prop->data.u64);
+			break;
+		case PROP_SINT64:
+			buf_write_sint64(buf, prop->data.s64);
+			break;
+		case PROP_STRING:
+			buf_write_string(buf, prop->data.s);
+			break;
+		case PROP_INT:
+		case PROP_POINTER:
+			dprintf("ignored property \"%s\"\n", prop->key);
+			break;
+		}
+		nprops++;
+	}
+	pthread_mutex_unlock(&ob->props_lock);
+	
+	buf_pwrite_uint32(buf, nprops, count_offs);
+
+	version_write(fd, &prop_ver);
+	fobj_flush_buf(buf, fd);
+	fobj_destroy_buf(buf);
+	return (0);
 }
 
