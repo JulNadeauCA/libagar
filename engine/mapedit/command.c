@@ -52,7 +52,8 @@ mapedit_setpointer(struct mapedit *med, int enable)
 	struct node *node = &med->map->map[med->x][med->y];
 
 	if (enable) {
-		nref = node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
+		nref = node_addref(node, med, MAPEDIT_SELECT,
+		    MAPREF_ANIM|MAPREF_ANIM_INDEPENDENT);
 		node->flags |= NODE_ANIM;
 
 		/* Restore direction state. */
@@ -100,7 +101,7 @@ mapedit_push(struct mapedit *med, struct node *node, int refn, int nflags)
 		break;
 	case EDITREF_ANIM:
 		node_addref(node, med->curobj->pobj, eref->animi,
-		    MAPREF_ANIM|MAPREF_SAVE);
+		    MAPREF_ANIM|MAPREF_SAVE|MAPREF_ANIM_DELTA);
 		break;
 	}
 
@@ -164,7 +165,7 @@ mapedit_fillmap(struct mapedit *med)
 	case EDITREF_ANIM:
 		map_clean(med->map, med->curobj->pobj, eref->animi,
 		    med->curflags & ~(NODE_ORIGIN|NODE_ANIM),
-		    MAPREF_SAVE|MAPREF_ANIM);
+		    MAPREF_SAVE|MAPREF_ANIM|MAPREF_ANIM_DELTA);
 		break;
 	}
 
