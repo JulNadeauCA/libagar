@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.10 2002/05/28 12:45:49 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.11 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct label {
@@ -8,8 +8,8 @@ struct label {
 	SDL_Surface *label_s;
 
 	int	 flags;
-#define LABEL_BOLD	0x01
-#define LABEL_ITALIC	0x02
+#define LABEL_BOLD	0x01		/* Bold text */
+#define LABEL_ITALIC	0x02		/* Italic text */
 
 	enum {
 		LABEL_LEFT,
