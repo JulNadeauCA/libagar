@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.32 2004/03/17 12:35:01 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.33 2004/03/30 16:32:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -45,26 +45,37 @@
 
 #include "monitor.h"
 
+static void
+poll_subwindows(struct tlist *tl, struct window *win, int depth)
+{
+	char text[TLIST_LABEL_MAX];
+	struct window *subwin;
+	struct tlist_item *it;
+	
+	strlcpy(text, OBJECT(win)->name, sizeof(text));
+	strlcat(text, " (", sizeof(text));
+	strlcat(text, win->caption, sizeof(text));
+	strlcat(text, ")", sizeof(text));
+	it = tlist_insert_item(tl, NULL, text, win);
+	it->depth = depth;
+
+	TAILQ_FOREACH(subwin, &win->subwins, swins)
+		poll_subwindows(tl, subwin, depth+1);
+}
+
 /* Update the window list display. */
 static void
 poll_windows(int argc, union evarg *argv)
 {
-	char text[TLIST_LABEL_MAX];
 	struct tlist *tl = argv[0].p;
 	struct window *win;
 
 	tlist_clear_items(tl);
-
 	pthread_mutex_lock(&view->lock);
 	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
-		strlcpy(text, OBJECT(win)->name, sizeof(text));
-		strlcat(text, " (", sizeof(text));
-		strlcat(text, win->caption, sizeof(text));
-		strlcat(text, ")", sizeof(text));
-		tlist_insert_item(tl, NULL, text, win);
+		poll_subwindows(tl, win, 0);
 	}
 	pthread_mutex_unlock(&view->lock);
-
 	tlist_restore_selections(tl);
 }
 
