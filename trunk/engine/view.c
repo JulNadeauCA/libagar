@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.150 2004/05/06 08:27:20 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.151 2004/05/10 02:43:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -773,7 +773,7 @@ view_update(int x, int y, int w, int h)
 		if (view->ndirty+1 > view->maxdirty) {
 			view->maxdirty *= 2;
 			view->dirty = Realloc(view->dirty, view->maxdirty *
-			    sizeof(SDL_Rect), M_VIEW);
+			                                   sizeof(SDL_Rect));
 		}
 		view->dirty[view->ndirty].x = x;
 		view->dirty[view->ndirty].y = y;

@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.4 2004/05/07 01:42:27 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.5 2004/05/12 04:53:51 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -43,7 +43,7 @@ struct error_mement {
 
 __BEGIN_DECLS
 __inline__ void	*error_malloc(size_t, int);
-__inline__ void	*error_realloc(void *, size_t, int);
+__inline__ void	*error_realloc(void *, size_t);
 void		 error_free(void *, int);
 __END_DECLS
 

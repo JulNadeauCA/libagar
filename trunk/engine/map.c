@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.226 2004/05/13 02:48:48 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.227 2004/05/24 03:27:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -225,7 +225,7 @@ map_free_nodes(struct map *m)
 static void
 map_free_layers(struct map *m)
 {
-	m->layers = Realloc(m->layers, 1 * sizeof(struct map_layer), M_MAP);
+	m->layers = Realloc(m->layers, 1*sizeof(struct map_layer));
 	m->nlayers = 1;
 	map_init_layer(&m->layers[0], _("Layer 0"));
 }
@@ -375,8 +375,7 @@ map_push_layer(struct map *m, const char *name)
 		error_set(_("Too many layers."));
 		return (-1);
 	}
-	m->layers = Realloc(m->layers,
-	    (m->nlayers+1) * sizeof(struct map_layer), M_MAP);
+	m->layers = Realloc(m->layers, (m->nlayers+1)*sizeof(struct map_layer));
 	map_init_layer(&m->layers[m->nlayers], layname);
 	m->nlayers++;
 	return (0);
@@ -895,8 +894,7 @@ map_load(void *ob, struct netbuf *buf)
 		error_set(_("Missing layer zero."));
 		goto fail;
 	}
-	m->layers = Realloc(m->layers, m->nlayers*sizeof(struct map_layer),
-	    M_MAP);
+	m->layers = Realloc(m->layers, m->nlayers*sizeof(struct map_layer));
 	for (i = 0; i < m->nlayers; i++) {
 		struct map_layer *lay = &m->layers[i];
 

@@ -1,4 +1,4 @@
-/*	$Csoft: audio.c,v 1.12 2004/03/02 08:58:59 vedge Exp $	*/
+/*	$Csoft: audio.c,v 1.13 2004/03/18 21:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -59,8 +59,8 @@ audio_insert_sample(struct audio *audio, SDL_AudioSpec *spec, Uint8 *data,
 		audio->nsamples = 0;
 	} else if (audio->nsamples+1 > audio->maxsamples) {
 		audio->maxsamples += NSAMPLES_GROW;
-		audio->samples = Realloc(audio->samples,
-		    audio->maxsamples*sizeof(struct sample), M_AUDIO);
+		audio->samples = Realloc(audio->samples, audio->maxsamples *
+		                                         sizeof(struct sample));
 	}
 
 	nsamp = &audio->samples[audio->nsamples];

@@ -1,4 +1,4 @@
-/*	$Csoft: nodemask.c,v 1.3 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: nodemask.c,v 1.4 2004/04/30 05:10:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -187,7 +187,7 @@ nodemask_vertex(struct nodemask *mask, Uint32 x, Uint32 y)
 		mask->nm_poly.nvertices = 0;
 	} else {
 		mask->nm_poly.vertices = Realloc(mask->nm_poly.vertices,
-		    (mask->nm_poly.nvertices+2)*sizeof(Uint32), M_NODEMASK);
+		    (mask->nm_poly.nvertices+2)*sizeof(Uint32));
 	}
 
 	mask->nm_poly.vertices[mask->nm_poly.nvertices++] = x;

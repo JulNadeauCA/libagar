@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.12 2004/03/28 06:09:45 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.13 2004/04/20 09:14:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -434,7 +434,7 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 		if (hier->nlevel_offsets+1 >= hier->maxlevel_offsets) {
 			hier->maxlevel_offsets += LEVEL_OFFSETS_GROW;
 			hier->level_offsets = Realloc(hier->level_offsets,
-			    hier->maxlevel_offsets * sizeof(Uint32), M_XCF);
+			    hier->maxlevel_offsets*sizeof(Uint32));
 		}
 		if ((hier->level_offsets[hier->nlevel_offsets] =
 		    read_uint32(buf)) == 0) {
@@ -461,8 +461,7 @@ xcf_convert_layer(struct netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 				level->maxtile_offsets += TILE_OFFSETS_GROW;
 				level->tile_offsets = Realloc(
 				    level->tile_offsets,
-				    level->maxtile_offsets * sizeof(Uint32),
-				    M_XCF);
+				    level->maxtile_offsets*sizeof(Uint32));
 			}
 			if ((level->tile_offsets[level->ntile_offsets] =
 			    read_uint32(buf)) == 0) {
@@ -600,7 +599,7 @@ xcf_load(struct netbuf *buf, off_t xcf_offs, struct gfx *gfx)
 	for (offsets = 0; (offset = read_uint32(buf)) != 0; offsets++) {
 		/* XXX inefficient */
 		head->layer_offstable = Realloc(head->layer_offstable,
-		    sizeof(Uint32)*(offsets+1), M_XCF);
+		    (offsets+1)*sizeof(Uint32));
 		head->layer_offstable[offsets] = offset;
 	}
 

@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.7 2004/04/18 02:18:21 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.8 2004/05/12 04:53:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -133,7 +133,7 @@ error_malloc(size_t len, int type)
 }
 
 void *
-error_realloc(void *oldp, size_t len, int type)
+error_realloc(void *oldp, size_t len)
 {
 	void *newp;
 	

@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.3 2004/02/26 09:19:38 vedge Exp $	*/
+/*	$Csoft: vasprintf.c,v 1.4 2004/03/18 21:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -44,7 +44,6 @@ vasprintf(char **ret, const char *fmt, va_list ap)
 	int size;
 	size_t buflen;
 
-	/* Make a guess, might save one call. */
 	buflen = strlen(fmt) + 128;
 	buf = Malloc(buflen, 0);
 	size = vsprintf(buf, fmt, ap);
@@ -53,8 +52,7 @@ vasprintf(char **ret, const char *fmt, va_list ap)
 		return (size);
 	}
 
-	/* Too large. */
-	buf = Realloc(buf, size+1, 0);
+	buf = Realloc(buf, size+1);
 	size = vsprintf(buf, fmt, ap);
 	*ret = buf;
 	return (size);

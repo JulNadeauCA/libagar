@@ -1,4 +1,4 @@
-/*	$Csoft: plist.c,v 1.1 2004/05/15 04:05:12 vedge Exp $	*/
+/*	$Csoft: plist.c,v 1.2 2004/05/24 00:33:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -277,9 +277,8 @@ plist_insert(struct plist *pl, SDL_Surface *icon, const char *text, void *p)
 	if ((pl->nitems+1) >= pl->maxitems) {
 		pl->maxitems += 8;
 		pl->items = Realloc(pl->items, pl->maxitems *
-		    sizeof(struct plist_item), M_WIDGET);
-		pl->selitems = Realloc(pl->selitems, pl->maxitems*sizeof(int),
-		    M_WIDGET);
+		                               sizeof(struct plist_item));
+		pl->selitems = Realloc(pl->selitems, pl->maxitems*sizeof(int));
 	}
 	it = &pl->items[pl->nitems];
 	pl->selitems[pl->nitems] = 0;
