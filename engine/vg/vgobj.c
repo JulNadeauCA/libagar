@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.7 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.8 2004/05/01 00:53:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -113,9 +113,11 @@ vgobj_settings(int argc, union evarg *argv)
 	struct fspinbutton *fsu;
 	struct palette *pal;
 	
-	win = window_new(NULL);
+	if ((win = window_new("%s-settings", OBJECT(vgo)->name)) == NULL)
+		return;
+
 	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(vgo)->name);
-	window_set_closure(win, WINDOW_DETACH);
+	window_set_closure(win, WINDOW_HIDE);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	mfsu = mfspinbutton_new(win, NULL, "x", _("Geometry: "));
