@@ -61,7 +61,7 @@ sub ConvertMakefile
 				push @deps, "$obj: $SRC/$ndir/$objsrc";
 			}
 		}
-		if (/^\s*(SRCS|MAN\d|XCF)\s*=\s*(.+)$/) {
+		if (/^\s*(SRCS|MAN\d|XCF|TTF)\s*=\s*(.+)$/) {
 			my $type = $1;
 			my $srcs = $2;
 			foreach my $src (split(/\s/, $srcs)) {
