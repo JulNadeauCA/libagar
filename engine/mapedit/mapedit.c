@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.41 2002/02/17 08:33:42 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.42 2002/02/17 10:39:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -34,14 +34,16 @@
 #include <fcntl.h>
 
 #include <engine/engine.h>
+#include <engine/version.h>
 
+#include "pathnames.h"
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
 #include "key.h"
 #include "mouse.h"
 #include "joy.h"
-	
+
 static struct obvec mapedit_vec = {
 	mapedit_destroy,
 	mapedit_event,
@@ -49,6 +51,11 @@ static struct obvec mapedit_vec = {
 	mapedit_save,
 	mapedit_link,
 	mapedit_unlink
+};
+
+enum {
+	DEFAULT_CURSOR_SPEED = 50,	/* Cursor speed in ms */
+	DEFAULT_LISTW_SPEED = 40	/* List scrolling speed in ms */
 };
 
 struct mapedit *curmapedit;		/* Map editor currently controlled. */
@@ -70,91 +77,33 @@ static Uint32	mapedit_listw_tick(Uint32, void *);
 static void	mapedit_bg(SDL_Surface *, int, int, int, int);
 
 struct mapedit *
-mapedit_create(char *name, char *desc, int mapw, int maph, int tilew, int tileh)
+mapedit_create(char *name)
 {
-	char path[FILENAME_MAX];
-	char caption[FILENAME_MAX];
 	struct mapedit *med;
-	struct map *map;
 	struct fobj *fob;
-	int fd, new = 0;
-
-	/* Users must copy maps to udatadir in order to edit them. */
-	sprintf(path, "%s/%s.o", world->udatadir, name);
-
-	/* XXX specify a view in arguments? */
-	if ((fd = open(path, O_RDONLY, 0)) > 0) {
-		close(fd);
-	
-		map = map_create(name, NULL, 0);
-		object_loadfrom(map, path);
-	} else {
-		struct node *origin;
-		
-		/* Create a new map of the specified geometry. */
-		map = map_create(name, desc, MAP_2D);
-		map_allocnodes(map, mapw, maph, tilew, tileh);
-		map->defx = mapw / 2;
-		map->defy = maph - 1;
-
-		origin = &map->map[map->defx][map->defy];
-		origin->flags |= NODE_ORIGIN;
-		new++;
-	}
-	if (object_strfind(name) == NULL) {
-		dprintf("%s is not in core\n", name);
-		object_link(map);
-	} else {
-		dprintf("%s is in core\n", name);
-	}
-
-	if (new) {
-		sprintf(caption, "%s (new)", name);
-		SDL_WM_SetCaption(caption, "agar");
-	} else {
-		sprintf(caption, "%s (%s)", name, path);
-		SDL_WM_SetCaption(caption, "agar");
-	}
-
-
-	/* Set a good video mode and center the view. */
-	view_setmap(map->view, map);
-	view_center(map->view, map->defx, map->defy);
+	char fobpath[FILENAME_MAX];
 
 	med = (struct mapedit *)emalloc(sizeof(struct mapedit));
-	object_init(&med->obj, "mapedit", 0, &mapedit_vec);
+	object_init(&med->obj, strdup(name), 0, &mapedit_vec);
 	med->obj.desc = strdup("map editor");
 	med->flags = MAPEDIT_TILELIST|MAPEDIT_TILESTACK|MAPEDIT_OBJLIST|
 	    MAPEDIT_DRAWPROPS;
-	med->map = map;
-	med->x = map->defx;
-	med->y = map->defy;
-	med->cursor_speed = 40;
-	med->listw_speed = 60;
-
+	med->map = NULL;
+	med->x = -1;
+	med->y = -1;
+	med->cursor_speed = DEFAULT_CURSOR_SPEED;
+	med->listw_speed = DEFAULT_LISTW_SPEED;
+	
 	med->curobj = NULL;
 	med->curoffs = 0;
 	med->curflags = 0;
 
-	mapdir_init(&med->cursor_dir, (struct object *)med, med->map,
-	    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
+	mapdir_init(&med->cursor_dir, (struct object *)med, NULL, -1, -1);
 	gendir_init(&med->listw_dir);
 	gendir_init(&med->olistw_dir);
 
-	med->tilelist = window_create(map->view,
-	    (map->view->width - map->tilew), map->tileh,
-	    map->tilew, map->view->height + map->tileh,
-	    "Tile list");
-	med->tilestack = window_create(map->view,
-	    0, map->tileh,
-	    map->tilew, map->view->height + map->tileh,
-	    "Tile stack");
-	med->objlist = window_create(map->view,
-	    map->tilew, 0,
-	    map->view->width - map->tilew, map->tileh,
-	    "Object list");
-
-	fob = fobj_load("../engine/mapedit/mapedit.fob");
+	sprintf(fobpath, MAPEDIT_FOB_PATH, PREFIX);
+	fob = fobj_load(fobpath);
 	xcf_load(fob, MAPEDIT_XCF, (struct object *)med);
 	fobj_free(fob);
 
@@ -256,21 +205,83 @@ fail:
 int
 mapedit_link(void *p)
 {
+	char path[FILENAME_MAX];
+	char caption[FILENAME_MAX];
 	struct mapedit *med = (struct mapedit *)p;
 	struct map *m = med->map;
 	struct node *node;
+	int fd, new = 0;
 	
+	/* Users must copy maps to udatadir in order to edit them. */
+	sprintf(path, "%s/%s.o", world->udatadir, med->margs.name);
+
+	/* XXX specify a view in arguments? */
+	/* XXX do this in mapedit_link()? */
+	if ((fd = open(path, O_RDONLY, 0)) > 0) {
+		close(fd);
+	
+		m = map_create(med->margs.name, NULL, 0);
+		object_loadfrom(m, path);
+	} else {
+		struct node *origin;
+		
+		/* Create a new map of the specified geometry. */
+		m = map_create(med->margs.name, med->margs.desc, MAP_2D);
+		map_allocnodes(m, med->margs.mapw, med->margs.maph,
+		    med->margs.tilew, med->margs.tileh);
+
+		m->defx = med->margs.mapw / 2;
+		m->defy = med->margs.maph - 1;
+		origin = &m->map[m->defx][m->defy];
+		origin->flags |= NODE_ORIGIN;
+
+		new++;
+	}
+
+	med->map = m;
+	med->x = m->defx;
+	med->y = m->defy;
+	mapdir_init(&med->cursor_dir, (struct object *)med, m,
+	    DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
+	med->tilelist = window_create(m->view,
+	    (m->view->width - m->tilew), m->tileh,
+	    m->tilew, m->view->height + m->tileh,
+	    "Tile list");
+	med->tilestack = window_create(m->view,
+	    0, m->tileh,
+	    m->tilew, m->view->height + m->tileh,
+	    "Tile stack");
+	med->objlist = window_create(m->view,
+	    m->tilew, 0,
+	    m->view->width - m->tilew, m->tileh,
+	    "Object list");
+
+	if (object_strfind(med->margs.name) == NULL) {
+		sprintf(caption, "[unknown]: %s (%s)",
+		    m->obj.name, new ? "new" : path);
+		object_link(m);
+	} else {
+		sprintf(caption, "[%s(%d)]: %s (%s)",
+		    m->obj.name, m->obj.id, m->obj.name,
+		    new ? "new" : path);
+	}
+
+	view_setmode(m->view, m, VIEW_MAPEDIT, caption);
+	view_center(m->view, m->defx, m->defy);
+
+	/* Create the structures defining what is editable. */
 	mapedit_shadow(med);
-	dprintf("%s: editing %d object(s)\n", med->obj.name, med->neobjs);
 
 	pthread_mutex_lock(&m->lock);
 	node = &m->map[m->defx][m->defy];
 	node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
 	node->flags |= (NODE_ANIM|NODE_ORIGIN);
 	pthread_mutex_unlock(&m->lock);
-
-	curmapedit = med;
 	
+	/* Map is now in a consistent state. */
+	map_focus(m);
+	m->redraw++;
+
 	med->timer = SDL_AddTimer(med->cursor_speed, mapedit_cursor_tick, med);
 	if (med->timer == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
@@ -282,7 +293,8 @@ mapedit_link(void *p)
 		return (-1);
 	}
 
-	m->redraw++;
+	curmapedit = med;
+	dprintf("editing %d object(s)\n", med->neobjs);
 	return (0);
 }
 
@@ -301,9 +313,15 @@ mapedit_unlink(void *p)
 	pthread_mutex_lock(&m->lock);
 	node = &m->map[med->x][med->y];
 	nref = node_findref(node, med, MAPEDIT_SELECT);
-	node_delref(node, nref);
-	node->flags &= ~(NODE_ANIM);
+	if (nref != NULL) {
+		node_delref(node, nref);
+		node->flags &= ~(NODE_ANIM);
+	}
 	pthread_mutex_unlock(&m->lock);
+
+	window_destroy(med->tilelist);
+	window_destroy(med->tilestack);
+	window_destroy(med->objlist);
 
 	m->redraw++;
 	return (0);
@@ -590,11 +608,12 @@ mapedit_load(void *p, int fd)
 {
 	struct mapedit *med = (struct mapedit *)p;
 
+	if (version_read(fd, "mapedit", 1, 0) != 0) {
+		return (-1);
+	}
+	med->flags = fobj_read_uint32(fd);
 	med->cursor_speed = fobj_read_uint32(fd);
 	med->listw_speed = fobj_read_uint32(fd);
-	dprintf("cursor speed = %d listw speed = %d\n",
-	    med->cursor_speed, med->listw_speed);
-	dprintf("loaded %s\n", med->obj.name);
 
 	return (0);
 }
@@ -604,10 +623,10 @@ mapedit_save(void *p, int fd)
 {
 	struct mapedit *med = (struct mapedit *)p;
 
+	version_write(fd, "mapedit", 1, 0);
+	fobj_write_uint32(fd, med->flags);
 	fobj_write_uint32(fd, med->cursor_speed);
 	fobj_write_uint32(fd, med->listw_speed);
-
-	dprintf("saved %s\n", med->obj.name);
 
 	return (0);
 }
