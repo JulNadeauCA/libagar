@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.52 2002/05/15 07:28:06 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.53 2002/05/16 21:13:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -243,10 +243,12 @@ object_destroy(void *p)
 	struct object *ob = p;
 
 	/* Decrement usage counts for the media pool. */
-	if (ob->art != NULL)
-		ob->art->used--;
-	if (ob->audio != NULL)
-		ob->audio->used--;
+	if ((ob->flags & OBJ_KEEPMEDIA) == 0) {
+		if (ob->art != NULL)
+			ob->art->used--;
+		if (ob->audio != NULL)
+			ob->audio->used--;
+	}
 
 	/* Free allocated resources. */
 	if (OBJECT_OPS(ob)->destroy != NULL) {

@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.33 2002/05/16 21:13:35 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.34 2002/05/17 06:33:05 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -63,7 +63,8 @@ struct object {
 	int	 flags;
 #define OBJ_ART		0x01		/* Load graphics */
 #define OBJ_AUDIO	0x02		/* Load audio */
-#define OBJ_BLOCK	0x04		/* Cannot go through object */
+#define OBJ_KEEPMEDIA	0x04		/* Keep graphics/audio cached */
+#define OBJ_BLOCK	0x10		/* Cannot walk through */
 
 	struct	 object_art *art;	/* Static sprites */
 	struct	 object_audio *audio;	/* Static samples */
