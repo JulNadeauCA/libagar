@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.55 2003/02/26 03:10:19 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.56 2003/03/02 01:20:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -62,6 +62,7 @@
 # define Pthread_create(th, attr, func, arg)
 # define Pthread_join(th, ptr)
 # define PTHREAD_MUTEX_INITIALIZER 0
+# define PTHREAD_MUTEX_RECURSIVE 0
 #endif
 
 struct engine_proginfo {
