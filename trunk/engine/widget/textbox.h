@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.15 2003/03/22 04:22:45 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.16 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
@@ -12,7 +12,7 @@ struct textbox {
 	struct widget	 wid;
 	int		 flags;
 #define TEXTBOX_READONLY	0x01	/* Text cannot be modified */
-	int		 xmargin, ymargin;
+	int		 xpadding, ypadding;
 	int		 newx;
 	SDL_Surface	*label;
 	struct {
