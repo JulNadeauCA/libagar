@@ -1,0 +1,9 @@
+#	$Csoft$
+
+makeout(Makefile.config)
+
+require(SDL, 1.2.0);
+require(glib, 1.2.0);
+require(smpeg, 0.4.3);
+require(x11, /usr/X11R6, /usr/X386)
+
