@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.3 2005/02/03 05:43:20 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.4 2005/02/03 09:19:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -58,9 +58,6 @@ static TAILQ_HEAD(,objent) gobjs;
 static int edit_on_create = 1;
 static void *current_pobj = NULL;
 
-static void open_obj_data(struct object *);
-static void open_obj_generic(struct object *);
-
 static void
 create_obj(int argc, union evarg *argv)
 {
@@ -107,7 +104,7 @@ tryname:
 	
 	if (edit_on_create &&
 	    t->ops->edit != NULL)
-		open_obj_data(nobj);
+		objmgr_open_data(nobj);
 }
 
 enum {
@@ -134,8 +131,8 @@ close_obj_generic(int argc, union evarg *argv)
 	Free(oent, M_MAPEDIT);
 }
 
-static void
-open_obj_generic(struct object *ob)
+void
+objmgr_open_generic(struct object *ob)
 {
 	struct objent *oent;
 	
@@ -174,8 +171,8 @@ close_obj_data(int argc, union evarg *argv)
 	Free(oent, M_MAPEDIT);
 }
 
-static void
-open_obj_data(struct object *ob)
+void
+objmgr_open_data(struct object *ob)
 {
 	struct objent *oent;
 	
@@ -221,7 +218,7 @@ obj_op(int argc, union evarg *argv)
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
 			if (ob->ops->edit != NULL) {
-				open_obj_data(ob);
+				objmgr_open_data(ob);
 			} else {
 				text_tmsg(MSG_ERROR, 750,
 				    _("Object `%s' has no edit operation."),
@@ -229,7 +226,7 @@ obj_op(int argc, union evarg *argv)
 			}
 			break;
 		case OBJEDIT_EDIT_GENERIC:
-			open_obj_generic(ob);
+			objmgr_open_generic(ob);
 			break;
 		case OBJEDIT_LOAD:
 			if (object_load(ob) == -1) {
