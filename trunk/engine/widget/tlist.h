@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.39 2004/05/31 20:44:01 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.40 2004/09/18 06:37:43 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -17,6 +17,7 @@ struct tlist_item {
 	SDL_Surface	*iconsrc;		/* Source icon (or NULL) */
 	int		 icon;			/* Cached icon surface */
 	void		*p1;			/* User-supplied pointer */
+	const char	*class;			/* User-supplied class */
 	char		 text[TLIST_LABEL_MAX];	/* Label text */
 	int		 label;			/* Cached label surface */
 
@@ -79,10 +80,12 @@ __inline__ int	 tlist_visible_children(struct tlist *, struct tlist_item *);
 void			 tlist_remove_item(struct tlist *, struct tlist_item *);
 void			 tlist_clear_items(struct tlist *);
 void		 	 tlist_restore_selections(struct tlist *);
+struct tlist_item	*tlist_insert(struct tlist *, SDL_Surface *,
+			              const char *, ...);
 struct tlist_item	*tlist_insert_item(struct tlist *, SDL_Surface *,
-			                   const char *, const void *);
+			                   const char *, void *);
 struct tlist_item	*tlist_insert_item_head(struct tlist *, SDL_Surface *,
-			                        const char *, const void *);
+			                        const char *, void *);
 void			 tlist_select(struct tlist *, struct tlist_item *);
 void			 tlist_unselect(struct tlist *, struct tlist_item *);
 void			 tlist_select_all(struct tlist *);
