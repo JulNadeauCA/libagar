@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.25 2004/03/17 06:03:09 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.26 2004/03/18 21:27:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -63,7 +63,7 @@ static void gfx_destroy_anim(struct gfx_anim *);
 
 /* Attach a sprite of arbitrary size. */
 Uint32
-gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite, int map)
+gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite)
 {
 	struct gfx_spritecl *spritecl;
 
@@ -215,7 +215,7 @@ gfx_insert_fragments(struct gfx *gfx, SDL_Surface *sprite)
 			sd.x = x;
 			sd.y = y;
 			SDL_BlitSurface(sprite, &sd, su, &rd);
-			nsprite = gfx_insert_sprite(gfx, su, 0);
+			nsprite = gfx_insert_sprite(gfx, su);
 			SDL_SetAlpha(sprite, saflags, salpha);
 
 			/* Adjust the alpha properties of the fragment. */
