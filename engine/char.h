@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: char.h,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $	*/
 
 /*
  * Data shared by all character types.
@@ -16,6 +16,10 @@ struct character {
 #define EFFECT_POISON		0x0002
 #define EFFECT_DOOM		0x0004
 
+	struct	map *map;
+	int	x, y;
+
+	int	curoffs;	/* Current sprite or anim */
 	int	curspeed;	/* Current speed */
 	int	maxspeed;	/* Max. speed in ms */
 
@@ -27,10 +31,8 @@ struct character {
 
 	int	flags;		/* Current state */
 #define CHAR_FOCUS	0x0001	/* Being controlled/viewed */
-#define CHAR_ZOMBIE	0x0002	/* Zombie character */
-#define CHAR_ACTIVE	0x0004	/* Active character */
-#define CHAR_SMOTION	0x0008	/* Sticky motion */
-#define CHAR_DASH	0x0010	/* Boost timer */
+#define CHAR_ANIM	0x0002	/* Animation in progress */
+#define CHAR_DASH	0x0010	/* Boost timer temporarily */
 	
 	SDL_TimerID timer;
 };
@@ -40,7 +42,47 @@ struct character {
 #define WFLAG_MOVEDLEFT		0x04
 #define WFLAG_MOVEDRIGHT	0x08
 
-struct character *char_create(char *, char *, int, int, struct map *, int);
+/* Set the active sprite. */
+#define CHAR_SETSPRITE(chp, soffs)			\
+	do {						\
+		(chp)->flags &= ~(CHAR_ANIM);		\
+		(chp)->curoffs = (soffs);		\
+	} while (0)
+
+/* Set the active anim. */
+#define CHAR_SETANIM(chp, aoffs)			\
+	do {						\
+		(chp)->flags |= CHAR_ANIM;		\
+		(chp)->curoffs = (aoffs);		\
+	} while (0)
+
+/* Position character obp at m:x,y. */
+#define CHAR_PLOT(chp, pma, mx, my)			\
+	do {						\
+		(chp)->map = (pma);			\
+		(chp)->x = (mx);			\
+		(chp)->y = (my);			\
+		MAP_ADDSPRITE((pma), (mx), (my),	\
+		    &(chp)->obj, (chp)->curoffs);	\
+	} while (0)
+
+/* Move character to a new position. */
+#define CHAR_MOVE(chp, nx, ny)						\
+	do {				    				\
+		MAP_DELREF((chp)->map, (chp)->x, (chp)->y,		\
+		    (chp), (chp)->curoffs);				\
+		if ((chp)->flags & CHAR_ANIM) {				\
+			MAP_ADDANIM((chp)->map, nx, ny,			\
+			    (chp), (chp)->curoffs); 			\
+		} else {						\
+			MAP_ADDSPRITE((chp)->map, nx, ny,		\
+			    (chp), (chp)->curoffs); 			\
+		}							\
+		(chp)->x = nx;						\
+		(chp)->y = ny;						\
+	} while (0)
+
+struct character *char_create(char *, char *, int, int, int);
 
 void	 char_destroy(struct object *);
 int	 char_link(void *);
