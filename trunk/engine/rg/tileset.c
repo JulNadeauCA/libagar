@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.7 2005/02/02 01:49:07 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.8 2005/02/03 09:19:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -591,16 +591,17 @@ tileset_edit(void *p)
 
 	mi = tlist_set_popup(tl, "tile");
 	{
-		ag_menu_action(mi, _("Edit tile..."), NULL, 0, 0,
+		ag_menu_action(mi, _("Edit tile..."), ICON(OBJEDIT_ICON), 0, 0,
 		    edit_tiles, "%p,%p,%p", ts, tl, win);
-		ag_menu_action(mi, _("Delete tile"), NULL, 0, 0,
+		ag_menu_action(mi, _("Delete tile"), ICON(TRASH_ICON), 0, 0,
 		    delete_tiles, "%p,%p", tl, ts);
 	}
 
 	m = ag_menu_new(win);
 	mi = ag_menu_add_item(m, _("Tileset"));
 	{
-		ag_menu_action(mi, _("Insert tile..."), NULL, 0, 0,
+		ag_menu_action(mi, _("Insert tile..."), ICON(SHIFT_TOOL_ICON),
+		    0, 0,
 		    insert_tile_dlg, "%p,%p", ts, win);
 #if 0
 		ag_menu_action(mi, _("Insert feature..."), NULL, 0, 0,

@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.2 2005/01/26 02:43:03 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.3 2005/02/05 03:23:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -168,45 +168,6 @@ fill_edit(void *p, struct tileview *tv)
 	return (win);
 }
 
-static void
-circle2(struct tile *t, int wx, int wy, int radius, Uint32 color)
-{
-	int v = 2*radius - 1;
-	int e = 0, u = 1;
-	int x = 0, y = radius;
-
-	while (x < y) {
-		tile_put_pixel(t, wx+x, wy+y, color);
-		tile_put_pixel(t, wx+x+1, wy+y, color);
-		tile_put_pixel(t, wx+x, wy-y, color);
-		tile_put_pixel(t, wx+x+1, wy-y, color);
-		tile_put_pixel(t, wx-x, wy+y, color);
-		tile_put_pixel(t, wx-x-1, wy+y, color);
-		tile_put_pixel(t, wx-x, wy-y, color);
-		tile_put_pixel(t, wx-x-1, wy-y, color);
-
-		e += u;
-		u += 2;
-		if (v < 2*e) {
-			y--;
-			e -= v;
-			v -= 2;
-		}
-		x++;
-		
-		tile_put_pixel(t, wx+y, wy+x, color);
-		tile_put_pixel(t, wx+y+1, wy+x, color);
-		tile_put_pixel(t, wx+y, wy-x, color);
-		tile_put_pixel(t, wx+y+1, wy-x, color);
-		tile_put_pixel(t, wx-y, wy+x, color);
-		tile_put_pixel(t, wx-y-1, wy+x, color);
-		tile_put_pixel(t, wx-y, wy-x, color);
-		tile_put_pixel(t, wx-y-1, wy-x, color);
-	}
-	tile_put_pixel(t, wx-radius, wy, color);
-	tile_put_pixel(t, wx+radius, wy, color);
-}
-
 void
 fill_apply(void *p, struct tile *t, int x, int y)
 {
@@ -238,8 +199,8 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				    (((a1 - a2) * a) >> 8) + a2);
 
 				for (x = 0; x < su->w; x++) {
-					tile_blend_rgb(t, x, y,
-					    TILE_BLEND_SRCALPHA,
+					prim_blend_rgb(t, x, y,
+					    PRIM_BLEND_SRCALPHA,
 					    (((r1 - r2) * a) >> 8) + r2,
 					    (((g1 - g2) * a) >> 8) + g2,
 					    (((b1 - b2) * a) >> 8) + b2,
@@ -258,8 +219,8 @@ fill_apply(void *p, struct tile *t, int x, int y)
 				for (x = 0; x < su->w; x++) {
 					Uint8 a = (su->h-x)*255/su->h;
 				
-					tile_blend_rgb(t, x, y,
-					    TILE_BLEND_SRCALPHA,
+					prim_blend_rgb(t, x, y,
+					    PRIM_BLEND_SRCALPHA,
 					    (((r1 - r2) * a) >> 8) + r2,
 					    (((g1 - g2) * a) >> 8) + g2,
 					    (((b1 - b2) * a) >> 8) + b2,
@@ -278,14 +239,13 @@ fill_apply(void *p, struct tile *t, int x, int y)
 			SDL_LockSurface(su);
 			for (i = 0; i < r; i++) {
 				Uint8 a = (r-i)*255/r;
-				Uint32 c;
 			
-				c = SDL_MapRGBA(su->format,
+				prim_color_rgba(t,
 				    (((r1 - r2) * a) >> 8) + r2,
 				    (((g1 - g2) * a) >> 8) + g2,
 				    (((b1 - b2) * a) >> 8) + b2,
 				    (((a1 - a2) * a) >> 8) + a2);
-				circle2(t, x, y, i, c);
+				prim_circle2(t, x, y, i);
 			}
 			SDL_UnlockSurface(su);
 		}

@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.8 2005/02/03 04:59:22 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.9 2005/02/05 02:55:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -368,10 +368,10 @@ static void
 delete_feature(int argc, union evarg *argv)
 {
 	struct tileview *tv = argv[1].p;
-	struct tileset *ts = argv[2].p;
-	struct tile *t = argv[3].p;
-	struct tlist *feat_tl = argv[4].p;
-	int detach_only = argv[5].i;
+	struct tileset *ts = tv->ts;
+	struct tile *t = tv->tile;
+	struct tlist *feat_tl = argv[2].p;
+	int detach_only = argv[3].i;
 	struct tlist_item *it = tlist_item_selected(feat_tl);
 	struct tile_feature *tft;
 
@@ -384,8 +384,8 @@ delete_feature(int argc, union evarg *argv)
 
 		tile_remove_feature(t, tft->ft);
 		if (ft->nrefs == 0 && !detach_only) {
-			text_tmsg(MSG_INFO, 500,
-			    _("Destroying feature \"%s\""), ft->name);
+			text_tmsg(MSG_INFO, 500, _("Destroying feature `%s'."),
+			    ft->name);
 			feature_destroy(ft);
 			TAILQ_REMOVE(&ts->features, ft, features);
 			Free(ft, M_RG);
@@ -403,13 +403,13 @@ delete_feature(int argc, union evarg *argv)
 static void
 resize_tile(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tile *t = argv[2].p;
-	struct mspinbutton *msb = argv[3].p;
-	struct window *dlg_w = argv[4].p;
-	struct checkbox *ckey_cb = argv[5].p;
-	struct checkbox *alpha_cb = argv[6].p;
-	struct tileview *tv = argv[7].p;
+	struct tileview *tv = argv[1].p;
+	struct mspinbutton *msb = argv[2].p;
+	struct window *dlg_w = argv[3].p;
+	struct checkbox *ckey_cb = argv[4].p;
+	struct checkbox *alpha_cb = argv[5].p;
+	struct tileset *ts = tv->ts;
+	struct tile *t = tv->tile;
 	int w = widget_get_int(msb, "xvalue");
 	int h = widget_get_int(msb, "yvalue");
 	int flags = 0;
@@ -427,10 +427,10 @@ resize_tile(int argc, union evarg *argv)
 static void
 resize_tile_dlg(int argc, union evarg *argv)
 {
-	struct tileset *ts = argv[1].p;
-	struct tile *t = argv[2].p;
-	struct window *pwin = argv[3].p;
-	struct tileview *tv = argv[4].p;
+	struct tileview *tv = argv[1].p;
+	struct window *pwin = argv[2].p;
+	struct tileset *ts = tv->ts;
+	struct tile *t = tv->tile;
 	struct window *win;
 	struct mspinbutton *msb;
 	struct box *box;
@@ -456,8 +456,7 @@ resize_tile_dlg(int argc, union evarg *argv)
 	{
 		b = button_new(box, _("OK"));
 		event_new(b, "button-pushed", resize_tile,
-		    "%p,%p,%p,%p,%p,%p,%p",
-		    ts, t, msb, win, ckey_cb, alpha_cb, tv);
+		    "%p,%p,%p,%p,%p", tv, msb, win, ckey_cb, alpha_cb);
 
 		b = button_new(box, _("Cancel"));
 		event_new(b, "button-pushed", window_generic_detach, "%p", win);
@@ -465,6 +464,15 @@ resize_tile_dlg(int argc, union evarg *argv)
 
 	window_attach(pwin, win);
 	window_show(win);
+}
+
+static void
+insert_pixmap(int argc, union evarg *argv)
+{
+	struct tileview *tv = argv[1].p;
+	struct window *win = argv[2].p;
+
+	dprintf("pixmap\n");
 }
 
 struct window *
@@ -492,40 +500,57 @@ tile_edit(struct tileset *ts, struct tile *t)
 
 	item = tlist_set_popup(feat_tl, "feature");
 	{
-		ag_menu_action(item, _("Edit feature"), NULL, 0, 0,
+		ag_menu_action(item, _("Edit feature"), ICON(OBJEDIT_ICON),
+		    SDLK_e, KMOD_CTRL,
 		    edit_feature, "%p,%p,%p,%p", tv, feat_tl, win, 1);
 		
-		ag_menu_action(item, _("Detach feature"), NULL, 0, 0,
-		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl, 1);
+		ag_menu_action(item, _("Detach feature"), ICON(TRASH_ICON),
+		    SDLK_d, KMOD_CTRL,
+		    delete_feature, "%p,%p,%i", tv, feat_tl, 1);
 		
-		ag_menu_action(item, _("Destroy feature"), NULL, 0, 0,
-		    delete_feature, "%p,%p,%p,%p,%p,%i", tv, ts, t, feat_tl, 0);
+		ag_menu_action(item, _("Destroy feature"), ICON(TRASH_ICON),
+		    SDLK_x, KMOD_CTRL,
+		    delete_feature, "%p,%p,%i", tv, feat_tl, 0);
 	}
 
 	m = ag_menu_new(win);
 	item = ag_menu_add_item(m, _("Features"));
 	{
 		ag_menu_action(item, _("Fill"), NULL,
-		    SDLK_f, KMOD_CTRL, insert_fill, "%p,%p,%p", tv, win,
-		    feat_tl);
+		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
+		    insert_fill, "%p,%p,%p", tv, win, feat_tl);
 		    
 		ag_menu_action(item, _("Sketch projection"), NULL,
-		    SDLK_s, KMOD_CTRL, NULL, "%p,%p", ts, t);
+		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
+		    NULL, "%p,%p", ts, t);
 		
 		ag_menu_action(item, _("Polygon"), NULL,
-		    SDLK_p, KMOD_CTRL, NULL, "%p,%p", ts, t);
+		    SDLK_p, KMOD_CTRL|KMOD_SHIFT,
+		    NULL, "%p,%p", ts, t);
 		
 		ag_menu_action(item, _("Extruded base"), NULL,
-		    SDLK_e, KMOD_CTRL, NULL, "%p,%p", ts, t);
+		    SDLK_e, KMOD_CTRL|KMOD_SHIFT,
+		    NULL, "%p,%p", ts, t);
 		
-		ag_menu_action(item, _("Revolved base"), NULL,
-		    SDLK_r, KMOD_CTRL, NULL, "%p,%p", ts, t);
+		ag_menu_action(item, _("Solid of revolution"), NULL,
+		    SDLK_r, KMOD_CTRL|KMOD_SHIFT,
+		    NULL, "%p,%p", ts, t);
+	}
+	
+	item = ag_menu_add_item(m, _("Pixmaps"));
+	{
+		ag_menu_action(item, _("Insert pixmap..."),
+		    ICON(DRAWING_ICON),
+		    SDLK_p, KMOD_CTRL,
+		    insert_pixmap, "%p,%p", tv, win);
 	}
 
 	item = ag_menu_add_item(m, _("Edit"));
 	{
-		ag_menu_action(item, _("Resize tile..."), NULL,
-		    0, 0, resize_tile_dlg, "%p,%p,%p,%p", ts, t, win, tv);
+		ag_menu_action(item, _("Resize tile..."),
+		    ICON(RESIZE_TOOL_ICON),
+		    SDLK_r, KMOD_CTRL,
+		    resize_tile_dlg, "%p,%p", tv, win);
 	}
 
 	box = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL|BOX_FRAME);
@@ -560,44 +585,3 @@ tile_edit(struct tileset *ts, struct tile *t)
 	return (win);
 }
 
-void
-tile_put_pixel(struct tile *t, int x, int y, Uint32 color)
-{
-	Uint8 *dst = (Uint8 *)t->su->pixels + y*t->su->pitch +
-	    x*t->su->format->BytesPerPixel;
-
-	if (x < 0 || y < 0 ||
-	    x >= t->su->w || y >= t->su->h)
-		return;
-
-	*(Uint32 *)dst = color;
-}
-
-void
-tile_blend_rgb(struct tile *t, int x, int y, enum tile_blend_mode mode,
-    Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	Uint8 dr, dg, db, da, ba;
-	Uint8 *dst;
-
-	if (x < 0 || y < 0 ||
-	    x > t->su->w || y > t->su->h)
-		return;
-
-	dst = (Uint8 *)t->su->pixels + y*t->su->pitch +
-	    x*t->su->format->BytesPerPixel;
-	SDL_GetRGBA(*(Uint32 *)dst, t->su->format, &dr, &dg, &db, &da);
-
-	if (mode == TILE_BLEND_SRCALPHA) {
-		ba = a;
-	} else if (mode == TILE_BLEND_DSTALPHA) {
-		ba = da;
-	} else {
-		ba = (Uint8)(da+a)/2;
-	}
-
-	*(Uint32 *)dst = SDL_MapRGB(t->su->format,
-	    (((r - dr) * ba) >> 8) + dr,
-	    (((g - dg) * ba) >> 8) + dg,
-	    (((b - db) * ba) >> 8) + db);
-}
