@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.6 2002/06/03 02:30:59 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.7 2002/06/09 10:08:08 vedge Exp $	*/
 /*	Public domain	*/
 
 struct textbox {
@@ -17,8 +17,8 @@ struct textbox {
 	SDL_Surface	*label_s;
 };
 
-struct textbox	*textbox_new(struct region *, const char *, int, int);
-void		 textbox_init(struct textbox *, const char *, int, int);
+struct textbox	*textbox_new(struct region *, const char *, int, int, int);
+void		 textbox_init(struct textbox *, const char *, int, int, int);
 void		 textbox_destroy(void *);
 
 void		 textbox_shown(int argc, union evarg *argv);
