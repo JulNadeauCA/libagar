@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.31 2002/02/15 04:30:18 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.32 2002/02/15 05:38:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -38,17 +38,12 @@
 #include "mapedit.h"
 #include "mapedit_offs.h"
 #include "command.h"
+#include "key.h"
 #include "mouse.h"
 #include "joy.h"
 
-static void	mapedit_destroy(void *);
-static int	mapedit_shadow(struct mapedit *);
-static Uint32	mapedit_cursor_tick(Uint32, void *);
-static Uint32	mapedit_listw_tick(Uint32, void *);
-static void	mapedit_event(struct mapedit *, SDL_Event *);
-static void	mapedit_bg(SDL_Surface *, int, int, int, int);
-
-static const int stickykeys[] = {
+struct mapedit *curmapedit;		/* Map editor currently controlled. */
+static const int stickykeys[] = {	/* Keys applied after each move. */
 	SDLK_a,	/* Add */
 	SDLK_d,	/* Del */
 	SDLK_b,	/* Block */
@@ -57,7 +52,15 @@ static const int stickykeys[] = {
 	SDLK_p	/* Slippery */
 };
 
-struct mapedit *curmapedit;
+static pthread_mutex_t keyslock =	/* Keys can be processed. */
+    PTHREAD_MUTEX_INITIALIZER;
+
+static void	mapedit_destroy(void *);
+static int	mapedit_shadow(struct mapedit *);
+static Uint32	mapedit_cursor_tick(Uint32, void *);
+static Uint32	mapedit_listw_tick(Uint32, void *);
+static void	mapedit_event(struct mapedit *, SDL_Event *);
+static void	mapedit_bg(SDL_Surface *, int, int, int, int);
 
 struct mapedit *
 mapedit_create(char *name, char *desc, int mapw, int maph)
@@ -510,157 +513,35 @@ mapedit_objlist(struct mapedit *med)
 static void
 mapedit_event(struct mapedit *med, SDL_Event *ev)
 {
-	struct map *map = med->map;
-	struct node *node;
-	int mapx, mapy;
+	pthread_mutex_lock(&keyslock);
+	pthread_mutex_lock(&med->map->lock);
 	
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
 		if (ev->motion.state == SDL_PRESSED) {
 			mouse_motion(med, ev);
 		}
-		return;
+		break;
 	case SDL_MOUSEBUTTONDOWN:
 		if (ev->button.button != 1) {
 			mouse_button(med, ev);
 		}
-		return;
+		break;
 	case SDL_JOYAXISMOTION:
 		joy_axismotion(med, ev);
-		return;
-	case SDL_JOYBUTTONUP:
+		break;
 	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
 		joy_button(med, ev);
-		return;
+		break;
+	case SDL_KEYDOWN:
+	case SDL_KEYUP:
+		mapedit_key(med, ev);
+		break;
 	}
 
-	mapx = med->x;
-	mapy = med->y;
-
-	pthread_mutex_lock(&map->lock);
-
-	node = &map->map[mapx][mapy];
-
-	/*
-	 * Editor hotkeys.
-	 */
-	if (ev->type == SDL_KEYDOWN) {
-		switch (ev->key.keysym.sym) {
-		case SDLK_a:
-			mapedit_push(med, node);
-			break;
-		case SDLK_d:
-			mapedit_pop(med, node);
-			break;
-		case SDLK_b:
-			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, node, NODE_BIO);
-			} else {
-				mapedit_nodeflags(med, node, NODE_BLOCK);
-			}
-			break;
-		case SDLK_w:
-			mapedit_nodeflags(med, node, NODE_WALK);
-			break;
-		case SDLK_c:
-			mapedit_nodeflags(med, node, NODE_CLIMB);
-			break;
-		case SDLK_p:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_DRAWPROPS);
-			} else {
-				mapedit_nodeflags(med, node, NODE_SLIP);
-			}
-			break;
-		case SDLK_h:
-			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, node, NODE_HASTE);
-			}
-			break;
-		case SDLK_r:
-			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, node, NODE_REGEN);
-			}
-			break;
-		case SDLK_i:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_fillmap(med);
-			} else {
-				map_clean(med->map, NULL, 0, 0, 0);
-				med->map->redraw++;
-			}
-			break;
-		case SDLK_o:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_OBJLIST);
-			} else if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_setorigin(med, &mapx, &mapy);
-				mapedit_move(med, mapx, mapy);
-			}
-			break;
-		case SDLK_t:
-			if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_TILELIST);
-			}
-			break;
-		case SDLK_l:
-			mapedit_load(med);
-			break;
-		case SDLK_s:
-			if (ev->key.keysym.mod & KMOD_SHIFT) {
-				mapedit_nodeflags(med, node, NODE_SLOW);
-			} else if (ev->key.keysym.mod & KMOD_CTRL) {
-				mapedit_editflags(med, MAPEDIT_TILESTACK);
-			} else {
-				mapedit_save(med);
-			}
-			break;
-		case SDLK_g:
-			mapedit_editflags(med, MAPEDIT_DRAWGRID);
-			break;
-		case SDLK_x:
-			mapedit_examine(map, mapx, mapy);
-			break;
-		default:
-			break;
-		}
-	}
-
-	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
-		int set;
-
-		set = (ev->type == SDL_KEYDOWN) ? 1 : 0;
-
-		switch (ev->key.keysym.sym) {
-		case SDLK_UP:
-			mapdir_set(&med->cursor_dir, DIR_UP, set);
-			break;
-		case SDLK_DOWN:
-			mapdir_set(&med->cursor_dir, DIR_DOWN, set);
-			break;
-		case SDLK_LEFT:
-			mapdir_set(&med->cursor_dir, DIR_LEFT, set);
-			break;
-		case SDLK_RIGHT:
-			mapdir_set(&med->cursor_dir, DIR_RIGHT, set);
-			break;
-		case SDLK_PAGEUP:
-			gendir_set(&med->listw_dir, DIR_UP, set);
-			break;
-		case SDLK_PAGEDOWN:
-			gendir_set(&med->listw_dir, DIR_DOWN, set);
-			break;
-		case SDLK_DELETE:
-			gendir_set(&med->olistw_dir, DIR_LEFT, set);
-			break;
-		case SDLK_END:
-			gendir_set(&med->olistw_dir, DIR_RIGHT, set);
-			break;
-		default:
-			break;
-		}
-	}
-	pthread_mutex_unlock(&map->lock);
+	pthread_mutex_unlock(&med->map->lock);
+	pthread_mutex_lock(&keyslock);
 }
 
 /*
@@ -693,6 +574,7 @@ mapedit_cursor_tick(Uint32 ival, void *p)
 	x = med->x;
 	y = med->y;
 	
+	pthread_mutex_lock(&keyslock);
 	pthread_mutex_lock(&med->map->lock);
 
 	moved = mapdir_move(&med->cursor_dir, &x, &y);
@@ -714,6 +596,7 @@ mapedit_cursor_tick(Uint32 ival, void *p)
 	}
 
 	pthread_mutex_unlock(&med->map->lock);
+	pthread_mutex_unlock(&keyslock);
 
 	return (ival);
 }
@@ -724,6 +607,7 @@ mapedit_listw_tick(Uint32 ival, void *p)
 	struct mapedit *med = (struct mapedit *)p;
 	int moved;
 	
+	pthread_mutex_lock(&keyslock);
 	pthread_mutex_lock(&med->map->lock);
 
 	moved = gendir_move(&med->listw_dir);
@@ -762,7 +646,9 @@ mapedit_listw_tick(Uint32 ival, void *p)
 		mapedit_objlist(med);
 		gendir_postmove(&med->olistw_dir, moved);
 	}
+
 	pthread_mutex_unlock(&med->map->lock);
+	pthread_mutex_unlock(&keyslock);
 
 	return (ival);
 }
