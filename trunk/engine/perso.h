@@ -1,4 +1,4 @@
-/*	$Csoft: char.h,v 1.25 2002/06/09 15:00:52 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.1 2002/11/21 22:55:34 vedge Exp $	*/
 /*	Public domain	*/
 
 struct perso {
@@ -26,11 +26,13 @@ struct perso {
 
 #define PERSO(ob)	((struct perso *)(ob))
 
-struct perso	*perso_new(char *, char *);
-void		 perso_init(struct perso *, char *, char *);
+struct perso	*perso_new(char *, char *, Uint32, Uint32);
+void		 perso_init(struct perso *, char *, char *, Uint32, Uint32);
 void		 perso_destroy(void *);
 int		 perso_load(void *, int);
 int		 perso_save(void *, int);
 void		 perso_attached(int, union evarg *);
 void		 perso_detached(int, union evarg *);
+
+void		 perso_say(struct perso *, const char *, ...);
 

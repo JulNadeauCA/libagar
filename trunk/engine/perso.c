@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.62 2002/11/14 05:58:59 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.1 2002/11/21 22:55:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,10 +25,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <engine/compat/vasprintf.h>
+
 #include <sys/types.h>
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <errno.h>
 
 #include <libfobj/fobj.h>
 #include <libfobj/buf.h>
@@ -40,6 +44,11 @@
 #include "physics.h"
 #include "input.h"
 #include "version.h"
+
+#include "widget/widget.h"
+#include "widget/window.h"
+#include "widget/label.h"
+#include "widget/button.h"
 
 enum {
 	DEFAULT_HP	= 10,
@@ -62,46 +71,44 @@ static const struct object_ops perso_ops = {
 static Uint32	perso_time(Uint32, void *);
 
 struct perso *
-perso_new(char *name, char *media)
+perso_new(char *name, char *media, Uint32 hp, Uint32 mp)
 {
-	struct perso *ch;
+	struct perso *pers;
 
-	ch = emalloc(sizeof(struct perso));
-	perso_init(ch, name, media);
+	pers = emalloc(sizeof(struct perso));
+	perso_init(pers, name, media, hp, mp);
 
-	world_attach(world, ch);
-	return (ch);
+	world_attach(world, pers);
+	return (pers);
 }
 
 void
-perso_init(struct perso *ch, char *name, char *media)
+perso_init(struct perso *pers, char *name, char *media, Uint32 hp, Uint32 mp)
 {
-	object_init(&ch->obj, "perso", name, media, OBJECT_ART|OBJECT_BLOCK,
+	object_init(&pers->obj, "perso", name, media, OBJECT_ART|OBJECT_BLOCK,
 	    &perso_ops);
 
-	ch->flags = 0;
-	ch->level = 0;
-	ch->exp = 0;
-	ch->age = 0;
-	ch->seed = (Uint32)lrand48();
+	pers->flags = 0;
+	pers->level = 0;
+	pers->exp = 0;
+	pers->age = 0;
+	pers->seed = (Uint32)lrand48();
 
-	ch->maxhp = DEFAULT_HP;
-	ch->maxmp = DEFAULT_MP;
-	ch->hp = ch->maxhp;
-	ch->mp = ch->maxmp;
-	ch->maxspeed = DEFAULT_SPEED;
-	ch->nzuars = DEFAULT_ZUARS;
+	pers->hp = pers->maxhp = hp;
+	pers->mp = pers->maxmp = mp;
+	pers->maxspeed = DEFAULT_SPEED;
+	pers->nzuars = DEFAULT_ZUARS;
 
-	pthread_mutex_init(&ch->lock, NULL);
+	pthread_mutex_init(&pers->lock, NULL);
 
-	event_new(ch, "attached", perso_attached, NULL);
-	event_new(ch, "detached", perso_detached, NULL);
+	event_new(pers, "attached", perso_attached, NULL);
+	event_new(pers, "detached", perso_detached, NULL);
 }
 
 int
 perso_load(void *p, int fd)
 {
-	struct perso *ch = p;
+	struct perso *pers = p;
 	struct input *input = NULL;
 	struct map *m;
 
@@ -109,27 +116,27 @@ perso_load(void *p, int fd)
 		return (-1);
 	}
 
-	pthread_mutex_lock(&ch->lock);
+	pthread_mutex_lock(&pers->lock);
 
 	/* Read perso properties. */
 	free(read_string(fd));		/* Ignore name */
-	ch->flags = read_uint32(fd);
-	ch->level = read_uint32(fd);
-	ch->exp = read_uint32(fd);
-	ch->age = read_uint32(fd);
-	ch->seed = read_uint32(fd);
-	ch->maxspeed = read_uint32(fd);
+	pers->flags = read_uint32(fd);
+	pers->level = read_uint32(fd);
+	pers->exp = read_uint32(fd);
+	pers->age = read_uint32(fd);
+	pers->seed = read_uint32(fd);
+	pers->maxspeed = read_uint32(fd);
 
-	ch->maxhp = read_uint32(fd);
-	ch->hp = read_uint32(fd);
-	ch->maxmp = read_uint32(fd);
-	ch->mp = read_uint32(fd);
+	pers->maxhp = read_uint32(fd);
+	pers->hp = read_uint32(fd);
+	pers->maxmp = read_uint32(fd);
+	pers->mp = read_uint32(fd);
 
-	ch->nzuars = read_uint32(fd);
+	pers->nzuars = read_uint32(fd);
 
 	dprintf("%s (0x%x) lvl=%d exp=%d age=%d hp=%d/%d mp=%d/%d\n",
-	    OBJECT(ch)->name, ch->flags, ch->level, ch->exp, ch->age,
-	    ch->hp, ch->maxhp, ch->mp, ch->maxhp);
+	    OBJECT(pers)->name, pers->flags, pers->level, pers->exp, pers->age,
+	    pers->hp, pers->maxhp, pers->mp, pers->maxhp);
 
 	if (read_uint32(fd) > 0) {
 		char *mname, *minput;
@@ -146,20 +153,20 @@ perso_load(void *p, int fd)
 		input = input_find_str(minput);
 		if (input != NULL) {
 			dprintf("%s is controlled by %s\n",
-			    OBJECT(ch)->name, OBJECT(input)->name);
+			    OBJECT(pers)->name, OBJECT(input)->name);
 		}
 		dprintf("%s is at %s:%d,%d[%d] (flags 0x%x, speed %d).\n",
-		    OBJECT(ch)->name, mname, x, y, offs, flags, speed);
+		    OBJECT(pers)->name, mname, x, y, offs, flags, speed);
 
 		m = (struct map *)world_find(mname);
 		if (m != NULL) {
 			struct mappos *npos;
 
 			pthread_mutex_lock(&m->lock);
-			npos = object_addpos(ch, offs, flags, input, m, x, y);
+			npos = object_addpos(pers, offs, flags, input, m, x, y);
 			npos->speed = speed;
 			if (view->gfx_engine == GFX_ENGINE_TILEBASED &&
-			    ch->flags & PERSO_FOCUSED) {
+			    pers->flags & PERSO_FOCUSED) {
 				rootmap_center(m, x, y);
 			}
 			pthread_mutex_unlock(&m->lock);
@@ -172,10 +179,10 @@ perso_load(void *p, int fd)
 		free(mname);
 		free(minput);
 	} else {
-		dprintf("%s is nowhere.\n", OBJECT(ch)->name);
+		dprintf("%s is nowhere.\n", OBJECT(pers)->name);
 	}
 	
-	pthread_mutex_unlock(&ch->lock);
+	pthread_mutex_unlock(&pers->lock);
 	
 	return (0);
 }
@@ -183,9 +190,9 @@ perso_load(void *p, int fd)
 int
 perso_save(void *p, int fd)
 {
-	struct perso *ch = (struct perso *)p;
+	struct perso *pers = p;
 	struct fobj_buf *buf;
-	struct mappos *pos = OBJECT(ch)->pos;
+	struct mappos *pos = OBJECT(pers)->pos;
 
 	buf = fobj_create_buf(128, 4);
 	if (buf == NULL) {
@@ -194,23 +201,23 @@ perso_save(void *p, int fd)
 
 	version_write(fd, &perso_ver);
 	
-	pthread_mutex_lock(&ch->lock);
+	pthread_mutex_lock(&pers->lock);
 
 	/* Write perso properties. */
-	buf_write_string(buf, ch->obj.name);
-	buf_write_uint32(buf, ch->flags & ~(PERSO_DONTSAVE));
-	buf_write_uint32(buf, ch->level);
-	buf_write_uint32(buf, ch->exp);
-	buf_write_uint32(buf, ch->age);
-	buf_write_uint32(buf, ch->seed);
-	buf_write_uint32(buf, ch->maxspeed);
+	buf_write_string(buf, pers->obj.name);
+	buf_write_uint32(buf, pers->flags & ~(PERSO_DONTSAVE));
+	buf_write_uint32(buf, pers->level);
+	buf_write_uint32(buf, pers->exp);
+	buf_write_uint32(buf, pers->age);
+	buf_write_uint32(buf, pers->seed);
+	buf_write_uint32(buf, pers->maxspeed);
 
-	buf_write_uint32(buf, ch->maxhp);
-	buf_write_uint32(buf, ch->hp);
-	buf_write_uint32(buf, ch->maxmp);
-	buf_write_uint32(buf, ch->mp);
+	buf_write_uint32(buf, pers->maxhp);
+	buf_write_uint32(buf, pers->hp);
+	buf_write_uint32(buf, pers->maxmp);
+	buf_write_uint32(buf, pers->mp);
 	
-	buf_write_uint32(buf, ch->nzuars);
+	buf_write_uint32(buf, pers->nzuars);
 
 	if (pos != NULL) {
 		buf_write_uint32(buf, 1);
@@ -223,12 +230,12 @@ perso_save(void *p, int fd)
 		buf_write_string(buf,
 		    (pos->input != NULL) ? OBJECT(pos->input)->name : "");
 		dprintf("%s: reference %s:%d,%d offs=%d flags=0x%x\n",
-		    OBJECT(ch)->name, OBJECT(pos->map)->name, pos->x, pos->y,
+		    OBJECT(pers)->name, OBJECT(pos->map)->name, pos->x, pos->y,
 		    pos->nref->offs, pos->nref->flags);
 	} else {
 		buf_write_uint32(buf, 0);
 	}
-	pthread_mutex_unlock(&ch->lock);
+	pthread_mutex_unlock(&pers->lock);
 	fobj_flush_buf(buf, fd);
 	fobj_destroy_buf(buf);
 	return (0);
@@ -237,21 +244,21 @@ perso_save(void *p, int fd)
 void
 perso_attached(int argc, union evarg *argv)
 {
-	struct perso *ch = argv[0].p;
+	struct perso *pers = argv[0].p;
 
-	pthread_mutex_lock(&ch->lock);
-	ch->timer = SDL_AddTimer(ch->maxspeed, perso_time, ch);
-	pthread_mutex_unlock(&ch->lock);
+	pthread_mutex_lock(&pers->lock);
+	pers->timer = SDL_AddTimer(pers->maxspeed, perso_time, pers);
+	pthread_mutex_unlock(&pers->lock);
 }
 
 void
 perso_detached(int argc, union evarg *argv)
 {
-	struct perso *ch = argv[0].p;
+	struct perso *pers = argv[0].p;
 
-	pthread_mutex_lock(&ch->lock);
-	SDL_RemoveTimer(ch->timer);
-	pthread_mutex_unlock(&ch->lock);
+	pthread_mutex_lock(&pers->lock);
+	SDL_RemoveTimer(pers->timer);
+	pthread_mutex_unlock(&pers->lock);
 }
 
 static Uint32
@@ -284,5 +291,37 @@ perso_time(Uint32 ival, void *p)
 	pthread_mutex_unlock(&m->lock);
 
 	return (ival);
+}
+
+void
+perso_say(struct perso *pers, const char *fmt, ...)
+{
+	struct window *win;
+	struct region *reg;
+	struct label *lab;
+	struct button *button;
+	va_list args;
+	char *msg;
+
+	win = window_generic_new(253, 140, NULL);
+	if (win == NULL) {
+		return;
+	}
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	
+	va_start(args, fmt);
+	if (vasprintf(&msg, fmt, args) == -1) {
+		fatal("vasprintf: %s\n", strerror(errno));
+	}
+	va_end(args);
+
+	lab = label_new(reg, 100, 60, msg);
+	button = button_new(reg, "Ok", NULL, 0, 99, 40);
+	WIDGET_FOCUS(button);
+
+	event_new(button, "button-pushed", window_generic_detached, "%p", win);
+	window_show(win);
+
+	free(msg);
 }
 
