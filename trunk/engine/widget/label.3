@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.18 2003/06/13 01:44:55 vedge Exp $
+.\"	$Csoft: label.3,v 1.19 2003/11/09 13:13:59 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -47,8 +47,8 @@ widget displays single-line or multi-line text.
 .Fn label_new "void *parent" "const char *fmt" "..."
 .Pp
 .Ft "struct label *"
-.Fn label_polled_new "void *parent" "pthread_mutex_t *mutex" \
-                     "const char *fmt" "..."
+.Fn label_polled_new "void *parent, pthread_mutex_t *mutex" \
+                     "const char *fmt, ..."
 .Pp
 .Ft "void"
 .Fn label_init "struct label *label" "enum label_type type" "const char *text"

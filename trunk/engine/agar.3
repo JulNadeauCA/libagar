@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.36 2003/10/10 04:06:27 vedge Exp $
+.\"	$Csoft: agar.3,v 1.37 2004/01/03 04:13:45 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,17 +38,18 @@
 .Sh DESCRIPTION
 .Nm
 is a high-level, cross-platform C application framework aimed primarly at
-2D/3D games and simulations.
+graphical games and simulations.
 .Sh OBJECT DESIGN
 .Nm
-games/simulations are built around a tree of
+applications are built around a tree of
 .Xr object 3
 structures whose state is persistent.
-For instance, the initial hierarchy of objects of a game is initially built by
-level designers and the state is saved to files which are distributed with
+.Pp
+For instance, in a game, the initial hierarchy of objects is created by
+level designers and their state is saved to files which are distributed with
 the game binary (which is essentially an interpreter).
-As the game progresses, the player modifies the objects and they are saved
-to disk.
+As the game progresses, the player modifies the objects and the world remains
+persistent.
 .Sh INCLUDE FILES
 The
 .Pa Aq engine/compat/*.h

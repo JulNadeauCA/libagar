@@ -1,4 +1,4 @@
-.\"	$Csoft: map.3,v 1.43 2003/07/25 22:03:33 vedge Exp $
+.\"	$Csoft: map.3,v 1.44 2003/08/29 05:06:29 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -158,7 +158,7 @@ Unless the factor is 100%, bitmap scaling is performed for graphical noderefs.
 .Fn node_load "struct map *map" "struct netbuf *buf" "struct node *node"
 .Pp
 .Ft void
-.Fn node_save "const struct map *map" "struct netbuf *buf" \
+.Fn node_save "const struct map *map, struct netbuf *buf" \
               "const struct node *node"
 .Pp
 .Ft void
@@ -197,11 +197,11 @@ saves a node to
 .Fn noderef_destroy "struct map *map" "struct noderef *nref"
 .Pp
 .Ft int
-.Fn noderef_load "struct map *map" "struct netbuf *buf" \
-                 "struct node *node" "struct noderef **nref"
+.Fn noderef_load "struct map *map, struct netbuf *buf, struct node *node" \
+                 "struct noderef **nref"
 .Pp
 .Ft void
-.Fn noderef_save "const struct map *map" "struct netbuf *buf" \
+.Fn noderef_save "const struct map *map, struct netbuf *buf" \
                  "const struct noderef *nref"
 .nr nS 0
 .Pp
@@ -237,28 +237,28 @@ returns 0 on success or -1 on failure.
 .Sh NODE MANIPULATIONS
 .nr nS 1
 .Ft void
-.Fn node_move_ref "struct map *src_map" "struct node *src_node" \
-                  "struct noderef *src_nref" "struct map *dst_map" \
-                  "struct node *dst_node" "int dst_layer"
+.Fn node_move_ref "struct map *src_map, struct node *src_node" \
+                  "struct noderef *src_nref, struct map *dst_map" \
+                  "struct node *dst_node, int dst_layer"
 .Pp
 .Ft "struct noderef *"
-.Fn node_copy_ref "const struct noderef *src_nref" "struct map *dst_map" \
-                  "struct node *dst_node" "int dst_layer"
+.Fn node_copy_ref "const struct noderef *src_nref, struct map *dst_map" \
+                  "struct node *dst_node, int dst_layer"
 .Pp
 .Ft void
-.Fn node_remove_ref "struct map *map" "struct node *node" "struct noderef *nref"
+.Fn node_remove_ref "struct map *map, struct node *node, struct noderef *nref"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_sprite "struct map *map" "struct node *node" "const void *obj" \
+.Fn node_add_sprite "struct map *map, struct node *node, const void *obj" \
                     "Uint32 index"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_anim "struct map *map" "struct node *node" "const void *obj" \
-                  "Uint32 index" "Uint32 flags"
+.Fn node_add_anim "struct map *map, struct node *node, const void *obj" \
+                  "Uint32 index, Uint32 flags"
 .Pp
 .Ft "struct noderef *"
-.Fn node_add_warp "struct map *map" "struct node *dst_node" \
-                  "const char *new_map" "int x" "int y" "Uint8 dir"
+.Fn node_add_warp "struct map *map, struct node *dst_node" \
+                  "const char *new_map, int x, int y, Uint8 dir"
 .nr nS 0
 .Pp
 The
@@ -322,6 +322,9 @@ arguments describe the initial position and direction of warped objects.
 .Sh TROUBLETONS
 The node operation functions should probably use a state variable instead of
 arguments for the layer number.
+.Pp
+.Dv NODEREF_WARP
+could probably be replaced by a "warp" object.
 .Sh SEE ALSO
 .Xr agar 3 ,
 .Xr object 3

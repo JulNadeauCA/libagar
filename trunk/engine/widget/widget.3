@@ -1,4 +1,4 @@
-.\"	$Csoft: widget.3,v 1.46 2003/10/15 03:43:24 vedge Exp $
+.\"	$Csoft: widget.3,v 1.47 2003/11/19 11:36:15 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -75,7 +75,7 @@ The behavior is undefined if one attempts to attach children to such widgets.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn widget_init "void *widget" "const char *type" "const void *widget_ops" \
+.Fn widget_init "void *widget, const char *type, const void *widget_ops" \
                 "int flags"
 .nr nS 0
 .Pp
@@ -89,13 +89,13 @@ Acceptable
 include:
 .Pp
 .Bd -literal
-#define WIDGET_FOCUSABLE	  0x01	/* Can grab focus */
-#define WIDGET_FOCUSED		  0x02	/* Holds focus (optimization) */
-#define WIDGET_UNFOCUSED_MOTION	  0x04	/* Unfocused mousemotion */
-#define WIDGET_UNFOCUSED_BUTTONUP 0x08	/* Unfocused mousebuttonup */
-#define WIDGET_CLIPPING		  0x10	/* Enable clipping */
-#define WIDGET_WFILL		  0x20	/* Fill available width */
-#define WIDGET_HFILL		  0x40	/* Fill available height */
+#define WIDGET_FOCUSABLE          0x01  /* Able to grab focus */
+#define WIDGET_FOCUSED            0x02  /* Holds focus (optimization) */
+#define WIDGET_UNFOCUSED_MOTION   0x04  /* Unfocused mousemotion */
+#define WIDGET_UNFOCUSED_BUTTONUP 0x08  /* Unfocused mousebuttonup */
+#define WIDGET_CLIPPING           0x10  /* Enable clipping */
+#define WIDGET_WFILL              0x20  /* Fill available width */
+#define WIDGET_HFILL              0x40  /* Fill available height */
 .Ed
 .Pp
 Only widgets with the
@@ -132,9 +132,9 @@ argument to
 is a pointer to the following structure:
 .Bd -literal
 struct widget_ops {
-	const struct object_ops	obops;		/* Generic object(3) ops */
-	void (*draw)(void *p);			/* Rendering routine */
-	void (*scale)(void *p, int w, int h);	/* Size request routine */
+	const struct object_ops obops;          /* Generic object(3) ops */
+	void (*draw)(void *p);                  /* Rendering routine */
+	void (*scale)(void *p, int w, int h);   /* Size request routine */
 };
 .Ed
 .Sh GEOMETRY MANAGEMENT
@@ -292,7 +292,7 @@ Note that this operation is automatically invoked on children.
                     "int ncolor"
 .Pp
 .Ft void
-.Fn primitives.rect_outlined "void *widget" "int x" "int y" "int w" "int h" \
+.Fn primitives.rect_outlined "void *widget, int x, int y, int w, int h" \
                              "int ncolor"
 .Pp
 .Ft void
@@ -403,8 +403,8 @@ initialized by the widget itself.
 is called to override those default bindings.
 .nr nS 1
 .Ft "struct widget_binding *"
-.Fn widget_bind "void *widget" "const char *binding" \
-                "enum widget_binding_type type" "..."
+.Fn widget_bind "void *widget, const char *binding" \
+                "enum widget_binding_type type, ..."
 .Pp
 .Ft "struct widget_binding *"
 .Fn widget_get_binding "void *widget" "const char *binding" "void *res"
@@ -452,7 +452,7 @@ is called to override those default bindings.
 .Fn widget_get_string "void *widget" "const char *binding"
 .Pp
 .Ft size_t
-.Fn widget_copy_string "void *widget" "const char *binding" "char *dst" \
+.Fn widget_copy_string "void *widget, const char *binding, char *dst" \
                        "size_t dst_size"
 .Pp
 .Ft void
