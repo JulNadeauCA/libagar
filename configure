@@ -1026,8 +1026,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo $CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} >> config.log
-$CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} 2>>config.log
+echo $CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 >> config.log
+$CC ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
