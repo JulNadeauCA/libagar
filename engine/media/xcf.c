@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.7 2003/01/01 05:18:39 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.8 2003/01/18 08:24:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -520,15 +520,14 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
 			
 			*anim = NULL;
 				
-			/* Original size */
-		   	art_insert_sprite(art, su, 0);
-
-#if 0
-			if (su->h > TILEH || su->w > TILEW) {
+			if ((su->h > TILEH || su->w > TILEW) &&
+			    strstr(name, "(break)") != NULL) {
 				/* Break down into tiles. */
 				art_insert_sprite_tiles(art, su);
+			} else {
+				/* Original size */
+		   		art_insert_sprite(art, su, 0);
 			}
-#endif
 		}
 	}
 }
