@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.20 2003/01/19 11:56:46 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.21 2003/01/23 03:33:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -25,6 +25,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <string.h>
 
 #include <config/have_ieee754.h>
 #include <config/have_long_double.h>
