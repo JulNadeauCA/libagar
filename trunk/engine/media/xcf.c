@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.8 2003/01/18 08:24:43 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.9 2003/02/13 11:22:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -189,7 +189,7 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 	default:
 		debug(DEBUG_UNKNOWN_PROPS, "unknown: id %d len %d\n",
 		    prop->id, prop->length);
-		elseek(fd, prop->length, SEEK_CUR);
+		Lseek(fd, prop->length, SEEK_CUR);
 	}
 }
 
@@ -305,7 +305,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	}
 
 	/* Read the hierarchy. */
-	elseek(fd, xcfoffs + layer->hierarchy_offset, SEEK_SET);
+	Lseek(fd, xcfoffs + layer->hierarchy_offset, SEEK_SET);
 	hier = emalloc(sizeof(struct xcf_hierarchy));
 	hier->w = read_uint32(fd);
 	hier->h = read_uint32(fd);
@@ -326,7 +326,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 	for (i = 0; hier->level_offsets[i]; i++) {
 		struct xcf_level *l;
 
-		elseek(fd, xcfoffs + hier->level_offsets[i], SEEK_SET);
+		Lseek(fd, xcfoffs + hier->level_offsets[i], SEEK_SET);
 		level = emalloc(sizeof(struct xcf_level));
 		level->w = read_uint32(fd);
 		level->h = read_uint32(fd);
@@ -343,7 +343,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
 		ty = 0;
 		tx = 0;
 		for (j = 0; level->tile_offsets[j] != 0; j++) {
-			elseek(fd, xcfoffs + level->tile_offsets[j],
+			Lseek(fd, xcfoffs + level->tile_offsets[j],
 			    SEEK_SET);
 			ox = (tx + 64 > level->w) ? (level->w % 64) : 64;
 			oy = (ty + 64 > level->h) ? (level->h % 64) : 64;
@@ -542,7 +542,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 	struct art_anim *curanim = NULL;
 
 	/* Skip the signature. */
-	elseek(fd, xcf_offs + XCF_MAGIC_LEN, SEEK_SET);
+	Lseek(fd, xcf_offs + XCF_MAGIC_LEN, SEEK_SET);
 
 	/* Read the XCF header. */
 	head = emalloc(sizeof(struct xcf_header));
@@ -603,7 +603,7 @@ xcf_load(int fd, off_t xcf_offs, struct art *art)
 		struct xcf_prop prop;
 		SDL_Surface *su;
 
-		elseek(fd, xcf_offs + head->layer_offstable[i - 1], SEEK_SET);
+		Lseek(fd, xcf_offs + head->layer_offstable[i - 1], SEEK_SET);
 		layer = emalloc(sizeof(struct xcf_layer));
 		layer->w = read_uint32(fd);
 		layer->h = read_uint32(fd);

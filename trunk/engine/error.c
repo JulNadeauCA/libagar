@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.18 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.19 2003/01/12 04:07:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -146,6 +146,20 @@ _debug_n(int mask, const char *fmt, ...)
 		va_end(args);
 	}
 #endif
+}
+
+void
+error_fatal(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	fprintf(stderr, "fatal: ");
+	fprintf(stderr, fmt, args);
+	fprintf(stderr, "\n");
+	va_end(args);
+
+	abort();
 }
 
 char *
