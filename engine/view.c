@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.166 2005/02/12 09:56:39 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.167 2005/02/16 03:31:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -897,3 +897,4 @@ view_parse_fpsspec(const char *fpsspec)
 	}
 	prop_set_uint8(config, "view.fps", fps);
 }
+

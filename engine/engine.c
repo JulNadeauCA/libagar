@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.143 2005/02/06 07:05:03 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.144 2005/02/08 15:46:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -55,6 +55,7 @@
 #include <engine/widget/textbox.h>
 #include <engine/widget/keycodes.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/cursors.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -216,6 +217,7 @@ engine_init(void)
 	}
 
 	primitives_init();
+	cursors_init();
 
 	object_init(&engine_icons, "object", "icons", NULL);
 	object_wire_gfx(&engine_icons, "/engine/icons/icons");
@@ -259,6 +261,8 @@ engine_destroy(void)
 	object_destroy(world);
 	text_destroy();
 	input_destroy();
+	
+	cursors_destroy();
 
 	object_destroy(config);
 	Free(config, M_OBJECT);
