@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.17 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.18 2002/12/13 06:47:27 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -97,7 +97,7 @@ graph_init(struct graph *graph, const char *caption, enum graph_type t,
 	
 	graph->type = t;
 	graph->flags = flags;
-	graph->caption = strdup(caption);
+	graph->caption = Strdup(caption);
 	graph->xoffs = 0;
 	graph->xinc = 2;
 	graph->yrange = yrange;
@@ -124,7 +124,7 @@ graph_load(void *p, int fd)
 	gra->xinc = read_uint8(fd);
 	gra->yrange = read_sint32(fd);
 	gra->xoffs = read_uint32(fd);
-	gra->caption = read_string(fd);
+	gra->caption = read_string(fd, gra->caption);
 	
 	nitems = read_uint32(fd);
 	for (i = 0; i < nitems; i++) {
@@ -132,10 +132,9 @@ graph_load(void *p, int fd)
 		Uint32 vi, color, nvals;
 		char *s;
 
-		s = read_string(fd);
+		s = read_string(fd, NULL);
 		color = read_uint32(fd);
 		nvals = read_uint32(fd);
-
 		nitem = graph_add_item(gra, s, color);
 		free(s);
 
@@ -325,7 +324,7 @@ graph_add_item(struct graph *gra, char *name, Uint32 color)
 	struct graph_item *gi;
 
  	gi = emalloc(sizeof(struct graph_item));
-	gi->name = strdup(name);
+	gi->name = Strdup(name);
 	gi->color = color;
 	gi->vals = NULL;
 	gi->nvals = 0;

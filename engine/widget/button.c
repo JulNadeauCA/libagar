@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.43 2002/11/22 08:56:55 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.44 2002/12/03 04:09:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -89,7 +89,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	b->ymargin = 6;
 
 	if (caption != NULL) {
-		b->caption = strdup(caption);
+		b->caption = Strdup(caption);
 		b->label_s = text_render(NULL, -1,
 		    WIDGET_COLOR(b, TEXT_COLOR), caption);
 	} else if (image != NULL) {

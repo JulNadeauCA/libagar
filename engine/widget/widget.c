@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.29 2002/11/22 23:11:03 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.30 2002/11/28 07:35:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -46,11 +46,11 @@ widget_init(struct widget *wid, char *name, char *style, const void *wops,
 
 	widname = object_name(name, widid);
 	object_init(&wid->obj, "widget", widname, style,
-	    OBJECT_ART|OBJECT_KEEP_MEDIA, wops);
+	    OBJECT_ART|OBJECT_ART_CACHE, wops);
 
 	free(widname);
 
-	wid->type = strdup(name);
+	wid->type = Strdup(name);
 	wid->flags = 0;
 	wid->win = NULL;
 	wid->x = 0;
@@ -82,7 +82,7 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 	wid->color[ind] = SDL_MapRGB(view->v->format, r, g, b);
 
 	col = emalloc(sizeof(struct widget_color));
-	col->name = strdup(name);
+	col->name = Strdup(name);
 	col->ind = ind;
 	SLIST_INSERT_HEAD(&wid->colors, col, colors);
 }

@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.44 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.45 2002/11/28 07:35:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -93,7 +93,7 @@ get_font(char *name, int size, int style)
 	TTF_SetFontStyle(nfont, style);
 
 	fon = emalloc(sizeof(struct text_font));
-	fon->name = strdup(name);
+	fon->name = Strdup(name);
 	fon->size = size;
 	fon->style = style;
 	fon->font = nfont;
@@ -166,7 +166,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 	col.b = b;
 
 	/* Find out the line count. */
-	sd = strdup(s);
+	sd = Strdup(s);
 	for (sp = sd, nlines = 0; *sp != '\0'; sp++) {
 		if (*sp == '\n') {
 			nlines++;

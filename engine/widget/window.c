@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.117 2002/12/04 04:22:42 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.118 2002/12/04 07:02:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -194,7 +194,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	}
 
 	object_init(&win->wid.obj, "window", wname, "window",
-	    OBJECT_ART|OBJECT_KEEP_MEDIA, &window_ops);
+	    OBJECT_ART|OBJECT_ART_CACHE, &window_ops);
 	free(wname);
 	
 	widget_map_color(&win->wid, BACKGROUND_COLOR,
@@ -230,7 +230,7 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	win->flags = fl;
 	win->spacing = 4;
 	win->focus = NULL;
-	win->caption = strdup("Untitled");
+	win->caption = Strdup("Untitled");
 	win->minw = minw;
 	win->minh = minh;
 
