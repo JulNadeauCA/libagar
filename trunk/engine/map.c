@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.50 2002/03/05 17:01:30 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.51 2002/03/05 17:11:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -763,7 +763,6 @@ map_dump(void *p)
 	struct map *m = (struct map *)p;
 
 	printf("flags 0x%x geo %dx%d tilegeo %dx%d origin at %dx%d\n",
-	    m->flags, m->mapw, m->maph, m->tilew, m->tileh, m->defx, m->defy,
-	    m->defx, m->defy);
+	    m->flags, m->mapw, m->maph, m->tilew, m->tileh, m->defx, m->defy);
 }
 
