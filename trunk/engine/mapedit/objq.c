@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.63 2003/04/25 22:36:40 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.64 2003/05/07 12:15:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -446,6 +446,8 @@ objq_window(void)
 		tlist_set_item_height(tl, TILEH);
 		pthread_mutex_lock(&world->lock);
 		SLIST_FOREACH(ob, &world->wobjs, wobjs) {
+			SDL_Surface *icon = NULL;
+
 			if (ob->art == NULL)
 				continue;
 			snprintf(s, sizeof(s), "%s\n%ua | %us | %um\n",
@@ -453,9 +455,14 @@ objq_window(void)
 			    ob->art->nanims,
 			    ob->art->nsprites,
 			    ob->art->nsubmaps);
-			tlist_insert_item(tl,
-			    ob->art->nsprites > 0 ? ob->art->sprites[0] : NULL,
-			    s, ob);
+
+			if (ob->art->nsprites > 0) {
+				icon = ob->art->sprites[0];
+			} else if (ob->art->nanims > 0 &&
+			    ob->art->anims[0]->nframes > 0) {
+				icon = ob->art->anims[0]->frames[0];
+			}
+			tlist_insert_item(tl, icon, s, ob);
 		}
 		pthread_mutex_unlock(&world->lock);
 		event_new(tl, "tlist-changed", tl_objs_selected, NULL);
