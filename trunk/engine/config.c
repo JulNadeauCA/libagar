@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.100 2003/10/11 04:43:03 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.101 2003/10/13 23:48:58 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -179,7 +179,7 @@ config_init(struct config *con)
 	prop_set_uint8(con, "view.depth", 32);
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
-	prop_set_int(con, "font-engine.default-size", 12);
+	prop_set_int(con, "font-engine.default-size", 14);
 	prop_set_int(con, "font-engine.default-style", 0);
 	prop_set_bool(con, "input.joysticks", 1);
 
