@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.22 2004/05/13 02:48:00 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.23 2004/05/15 02:24:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -234,7 +234,7 @@ layedit_init(struct tool *t)
 	window_set_spacing(win, 2);
 	
 	tl = Malloc(sizeof(struct tlist), M_OBJECT);
-	tlist_init(tl, TLIST_POLL|TLIST_DBLCLICK);
+	tlist_init(tl, TLIST_POLL);
 	tlist_prescale(tl, _("Layer NN (visible, editing)    "), 5);
 	event_new(tl, "tlist-poll", layedit_poll, "%p", m);
 	event_new(tl, "tlist-dblclick", edit_layer, "%p, %p", m, tl);
