@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.137 2003/02/26 03:10:19 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.138 2003/03/02 01:00:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -241,9 +241,6 @@ event_loop(void)
 
 	event_init_fps_counter();
 #endif
- 	if (view_set_refresh(10, 65) == -1) {
-		fatal("setting refresh rate: %s\n", error_get());
-	}
 
 	ltick = SDL_GetTicks();
 	for (;;) {
