@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.9 2003/06/10 19:13:03 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.10 2003/06/12 00:30:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -84,12 +84,19 @@ create_obj(int argc, union evarg *argv)
 	object_attach(parent_it->p1, nobj);
 }
 
-/* Edit the selected objects. */
+enum {
+	OBJEDIT_EDIT,
+	OBJEDIT_LOAD,
+	OBJEDIT_SAVE,
+	OBJEDIT_DESTROY
+};
+
 static void
-edit_objs(int argc, union evarg *argv)
+invoke_op(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[1].p;
 	struct tlist_item *it;
+	int op = argv[2].i;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		struct object *ob = it->p1;
@@ -97,30 +104,29 @@ edit_objs(int argc, union evarg *argv)
 		if (!it->selected)
 			continue;
 
-		if (ob->ops->edit != NULL) {
-			ob->ops->edit(ob);
-		} else {
-			text_msg("Error", "%s objects have no edit op",
-			    ob->type);
+		switch (op) {
+		case OBJEDIT_EDIT:
+			object_edit(ob);
+			break;
+		case OBJEDIT_LOAD:
+			if (object_load(ob) == -1) {
+				text_msg("Error loading", "%s: %s", ob->name,
+				    error_get());
+			}
+			break;
+		case OBJEDIT_SAVE:
+			if (object_save(ob) == -1) {
+				text_msg("Error saving", "%s: %s", ob->name,
+				    error_get());
+			}
+			break;
+		case OBJEDIT_DESTROY:
+			if (it->p1 != world) {
+				object_detach(ob->parent, ob);
+				object_destroy(ob);
+			}
+			break;
 		}
-	}
-}
-
-/* Detach and the selected objects. */
-static void
-destroy_objs(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[1].p;
-	struct tlist_item *it;
-
-	TAILQ_FOREACH(it, &tl->items, items) {
-		struct object *ob = it->p1;
-
-		if (!it->selected || it->p1 == world)
-			continue;
-
-		object_detach(ob->parent, ob);
-		object_destroy(ob);
 	}
 }
 
@@ -162,7 +168,7 @@ objedit_window(void)
 	struct window *win;
 	struct vbox *vb;
 	struct textbox *name_tb;
-	struct button *create_bu, *edit_bu, *destroy_bu;
+	struct button *create_bu, *edit_bu, *load_bu, *save_bu, *destroy_bu;
 	struct combo *types_com;
 	struct tlist *objs_tl;
 
@@ -186,13 +192,16 @@ objedit_window(void)
 			    &typesw[i]);
 		}
 		
-		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
+		hb = hbox_new(vb, BOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			create_bu = button_new(hb, "Create");
 			edit_bu = button_new(hb, "Edit");
+			load_bu = button_new(hb, "Load");
+			save_bu = button_new(hb, "Save");
 			destroy_bu = button_new(hb, "Destroy");
 		}
 		objs_tl = tlist_new(vb, TLIST_POLL|TLIST_MULTI|TLIST_TREE);
+		tlist_prescale(objs_tl, "XXXXXXXXXXXXXXXX", 5);
 		event_new(objs_tl, "tlist-poll", poll_objs, "%p", world);
 	}
 	
@@ -200,10 +209,18 @@ objedit_window(void)
 	    name_tb, types_com->tbox);
 	event_new(types_com->tbox, "textbox-return", create_obj, "%p, %p, %p",
 	    objs_tl, name_tb, types_com->tbox);
+
 	event_new(create_bu, "button-pushed", create_obj, "%p, %p, %p", objs_tl,
 	    name_tb, types_com->tbox);
-	event_new(edit_bu, "button-pushed", edit_objs, "%p", objs_tl);
-	event_new(destroy_bu, "button-pushed", destroy_objs, "%p", objs_tl);
+
+	event_new(edit_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_EDIT);
+	event_new(load_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_LOAD);
+	event_new(save_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_SAVE);
+	event_new(destroy_bu, "button-pushed", invoke_op, "%p, %i", objs_tl,
+	    OBJEDIT_DESTROY);
 
 	window_show(win);
 	return (win);
