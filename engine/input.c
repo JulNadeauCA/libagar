@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.32 2003/01/01 05:18:34 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.33 2003/01/12 04:07:16 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -88,7 +88,7 @@ input_new(int type, int index)
 	TAILQ_INSERT_HEAD(&inputs, input, inputs);
 	pthread_mutex_unlock(&inputs_lock);
 
-	world_attach(world, input);
+	world_attach(input);
 	dprintf("registered %s (#%i)\n", OBJECT(input)->name, index);
 	return (input);
 }
