@@ -136,10 +136,7 @@ mapdir_init(struct mapdir *dir, struct object *ob, struct map *map,
 	dir->map = map;
 }
 
-/*
- * Set the given map direction if set is non-zero, otherwise
- * clear it (asynchronously).
- */
+/* Set the given map direction if set is non-zero, else clear it. */
 void
 mapdir_set(struct mapdir *dir, Uint32 direction, Uint32 set)
 {
@@ -257,7 +254,6 @@ mapdir_canmove(struct mapdir *dir, struct map *m, Uint32 x, Uint32 y)
 			return (0);
 		}
 	}
-
 	return (1);
 }
 
@@ -292,13 +288,13 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 			if (nref->yoffs == -1) {	/* Once */
 				if (*mapy > 1) {
 					if (!mapdir_canmove(dir, map, *mapx,
-					    *mapy - 1)) {
+					    (*mapy)-1)) {
 						nref->yoffs = 0;
 						mapdir_setsprite(dir,
 						    DIR_SPRITE_UP, 0);
 						return (0);
 					}
-					map->map[*mapy - 1][*mapx].flags
+					map->map[(*mapy)-1][*mapx].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->yoffs = 0;
@@ -309,7 +305,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_UP;
 				moved |= DIR_UP;
-				decrease_uint32(mapy, 1, 1);
+
+				if ((*mapy)-- < 1) {
+					*mapy = 1;
+				}
+
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapy - *mapy) <= 0) {
 				    	scroll(map, DIR_UP);
@@ -327,15 +327,15 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		/* Down */
 		if (nref->yoffs > 0) {
 			if (nref->yoffs == 1) {		/* Once */
-				if (*mapy + 1 < map->maph - 2) {
+				if ((*mapy)+1 < map->maph - 2) {
 					if (!mapdir_canmove(dir, map, *mapx,
-					    *mapy + 1)) {
+					    (*mapy)+1)) {
 						nref->yoffs = 0;
 						mapdir_setsprite(dir,
 						    DIR_SPRITE_DOWN, 0);
 						return (0);
 					}
-					map->map[*mapy + 1][*mapx].flags
+					map->map[(*mapy)+1][*mapx].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->yoffs = 0;
@@ -347,7 +347,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_DOWN;
 				moved |= DIR_DOWN;
-				increase_uint32(mapy, 1, map->maph - 1);
+				if (++(*mapy) > map->maph - 1) {
+					*mapy = map->maph - 1;
+				}
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapy - *mapy) <=
 				     -map->view->maph + 2) {
@@ -368,14 +370,14 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		if (nref->xoffs < 0) {
 			if (nref->xoffs == -1) {	/* Once */
 				if (*mapx > 1) {
-					if (!mapdir_canmove(dir, map, *mapx - 1,
+					if (!mapdir_canmove(dir, map, (*mapx)-1,
 					    *mapy)) {
 						nref->xoffs = 0;
 						mapdir_setsprite(dir,
 						    DIR_SPRITE_LEFT, 0);
 						return (0);
 					}
-					map->map[*mapy][*mapx - 1].flags
+					map->map[*mapy][(*mapx)-1].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->xoffs = 0;
@@ -387,7 +389,11 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_LEFT;
 				moved |= DIR_LEFT;
-				decrease_uint32(mapx, 1, 1);
+
+				if ((*mapx)-- < 1) {
+					*mapx = 1;
+				}
+
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapx - *mapx) <= 0) {
 					scroll(map, DIR_LEFT);
@@ -405,15 +411,15 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 		/* Right */
 		if (nref->xoffs > 0) {
 			if (nref->xoffs == 1) {		/* Once */
-				if (*mapx + 1 < map->mapw - 2) {
-					if (!mapdir_canmove(dir, map, *mapx + 1,
+				if ((*mapx)+1 < map->mapw-2) {
+					if (!mapdir_canmove(dir, map, (*mapx)+1,
 					    *mapy)) {
 						nref->xoffs = 0;
 						mapdir_setsprite(dir,
 						    DIR_SPRITE_RIGHT, 0);
 						return (0);
 					}
-					map->map[*mapy][*mapx + 1].flags
+					map->map[*mapy][(*mapx)+1].flags
 					    |= NODE_OVERLAP;
 				} else {
 					nref->xoffs = 0;
@@ -425,7 +431,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				node->flags &= ~(NODE_ANIM);
 				dir->moved |= DIR_RIGHT;
 				moved |= DIR_RIGHT;
-				increase_uint32(mapx, 1, map->mapw - 1);
+				if (++(*mapx) > map->mapw-1) {
+					*mapx = map->mapw-1;
+				}
 				if ((dir->flags & DIR_SCROLLVIEW) &&
 				    (map->view->mapx - *mapx) <=
 				     -map->view->mapw + 2) {
