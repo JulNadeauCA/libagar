@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.12 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.13 2002/12/22 12:08:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -25,7 +25,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_ieee754.h>
+#include <config/have_long_double.h>
+
 #include <engine/compat/asprintf.h>
+
 #include <engine/engine.h>
 
 #ifdef DEBUG
@@ -84,7 +88,7 @@ tl_events_selected(int argc, union evarg *argv)
 	struct button *bu;
 	int i;
 
-	win = window_generic_new(215, 140,
+	win = window_generic_new(368, 362,
 	    "monitor-object-browser-%s-evh-%s", ob->name, evh->name);
 	if (win == NULL) {
 		return;		/* Exists */
@@ -141,6 +145,7 @@ tl_props_poll(int argc, union evarg *argv)
 	pthread_mutex_lock(&ob->props_lock);
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		char *s;
+		SDL_Surface *su;
 
 		switch (prop->type) {
 		case PROP_INT:
@@ -188,10 +193,13 @@ tl_props_poll(int argc, union evarg *argv)
 			    prop->data.i ? "true" : "false");
 			break;
 		default:
+			prop->type = PROP_ANY;
 			asprintf(&s, "%s = ???", prop->key);
 			break;
 		}
-		tlist_insert_item(tl, NULL, s, prop);
+
+		su = SPRITE(&monitor, MONITOR_PROPS_BASE+1+prop->type);
+		tlist_insert_item(tl, su, s, prop);
 		free(s);
 	}
 	pthread_mutex_unlock(&ob->props_lock);
@@ -233,7 +241,7 @@ tl_objs_selected(int argc, union evarg *argv)
 	struct region *reg;
 	struct event *evh;
 
-	win = window_generic_new(296, 251,
+	win = window_generic_new(368, 362,
 	    "monitor-object-browser-obj-%s", ob->name);
 	if (win == NULL) {
 		return;		/* Exists */
