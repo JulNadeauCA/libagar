@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.60 2003/02/20 03:25:38 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.61 2003/02/22 01:10:32 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -96,6 +96,7 @@ struct map {
 	
 	Uint32		  mapw, maph;	/* Map geometry */
 	Uint16		  zoom;		/* Zoom (%) */
+	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
 	int		  tilew, tileh;	/* Tile geometry */
 	Uint32		  defx, defy;	/* Map origin */
 	struct node	**map;		/* Arrays of nodes */

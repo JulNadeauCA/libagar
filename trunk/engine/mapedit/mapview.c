@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.69 2003/02/20 05:37:27 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.70 2003/02/22 00:09:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -85,9 +85,7 @@ mapview_new(struct region *reg, struct map *m, int flags, int rw, int rh)
 
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, m, flags, rw, rh);
-	
 	region_attach(reg, mv);
-
 	return (mv);
 }
 
@@ -347,10 +345,10 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	widget_init(&mv->wid, "mapview", &mapview_ops, rw, rh);
 	mv->wid.flags |= WIDGET_CLIPPING;
 
-	mv->flags = flags;
-	mv->flags |= MAPVIEW_CENTER;
+	mv->flags = flags | MAPVIEW_CENTER;
 	mv->mw = 0;		/* Set on scale */
 	mv->mh = 0;
+
 	mv->prop_style = 0;
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
@@ -363,11 +361,16 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 	mv->cur_node = NULL;
 	mv->node.button = NULL;
 	mv->zoom_tm = NULL;
-
+	
 	mv->map = m;
+
 	pthread_mutex_lock(&m->lock);
+
 	mv->mx = m->defx;
 	mv->my = m->defy;
+	mv->cx = -1;
+	mv->cy = -1;
+
 	if (mv->flags & MAPVIEW_INDEPENDENT_ZOOM) {
 		mv->izoom.zoom = 100;
 		mv->izoom.tilew = TILEW;
@@ -375,13 +378,15 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 		mv->zoom = &mv->izoom.zoom;
 		mv->tilew = &mv->izoom.tilew;
 		mv->tileh = &mv->izoom.tileh;
+		mv->ssx = &mv->izoom.ssx;
+		mv->ssy = &mv->izoom.ssy;
 	} else {
 		mv->zoom = &m->zoom;
 		mv->tilew = &m->tilew;
 		mv->tileh = &m->tileh;
+		mv->ssx = &m->ssx;
+		mv->ssy = &m->ssy;
 	}
-	mv->ssx = m->tilew;
-	mv->ssy = m->tileh;
 	pthread_mutex_unlock(&m->lock);
 
 	/* The map editor is required for tile maps/edition. */
@@ -417,11 +422,11 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 static __inline__ void
 mapview_map_coords(struct mapview *mv, int *x, int *y)
 {
-	*x -= mv->ssx - *mv->tilew;
-	*y -= mv->ssy - *mv->tileh;
+	*x -= *mv->ssx - *mv->tilew;
+	*y -= *mv->ssy - *mv->tileh;
 	*x /= *mv->tilew;
 	*y /= *mv->tileh;
-
+	
 	mv->cx = mv->mx + *x;
 	mv->cy = mv->my + *y;
 
@@ -483,8 +488,8 @@ mapview_draw_tool_cursor(struct mapview *mv)
 	if (mv->cx != -1 && mv->cy != -1) {
 		SDL_Rect rd;
 
-		rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + mv->ssx;
-		rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + mv->ssy;
+		rd.x = mv->mouse.x*mv->map->tilew - mv->map->tilew + *mv->ssx;
+		rd.y = mv->mouse.y*mv->map->tileh - mv->map->tileh + *mv->ssy;
 		rd.w = mv->map->tilew;
 		rd.h = mv->map->tileh;
 
@@ -563,11 +568,11 @@ mapview_draw(void *p)
 		m->tileh = *mv->tileh;
 	}
 	
-	for (my = mv->my, ry = mv->ssy - mv->map->tileh;
+	for (my = mv->my, ry = *mv->ssy - mv->map->tileh;
 	     (my - mv->my) < mv->mh+2 && my < m->maph;
 	     my++, ry += mv->map->tileh) {
 
-		for (mx = mv->mx, rx = mv->ssx - mv->map->tilew;
+		for (mx = mv->mx, rx = *mv->ssx - mv->map->tilew;
 	     	     (mx - mv->mx) < mv->mw+2 && mx < m->mapw;
 		     mx++, rx += mv->map->tilew) {
 			node = &m->map[my][mx];
@@ -697,39 +702,39 @@ mapview_zoom_tick(Uint32 ival, void *p)
 static __inline__ void
 mapview_mouse_scroll(struct mapview *mv, int xrel, int yrel)
 {
-	if (xrel > 0 && (mv->ssx += xrel) >= *mv->tilew) {
+	if (xrel > 0 && (*mv->ssx += xrel) >= *mv->tilew) {
 		if (--mv->mx < 0) {
 			mv->mx = 0;
 			if (mv->mw < mv->map->mapw)
-				mv->ssx = *mv->tilew;
+				*mv->ssx = *mv->tilew;
 		} else {
-			mv->ssx = 0;
+			*mv->ssx = 0;
 		}
-	} else if (xrel < 0 && (mv->ssx += xrel) <= -(*mv->tilew)) {
+	} else if (xrel < 0 && ((*mv->ssx) += xrel) <= -(*mv->tilew)) {
 		if (mv->mw < mv->map->mapw) {
 			if (++mv->mx > mv->map->mapw - mv->mw - 1) {
 				mv->mx = mv->map->mapw - mv->mw - 1;
-				mv->ssx = -(*mv->tilew);
+				*mv->ssx = -(*mv->tilew);
 			} else {
-				mv->ssx = 0;
+				*mv->ssx = 0;
 			}
 		}
 	}
-	if (yrel > 0 && (mv->ssy += yrel) >= *mv->tileh) {
+	if (yrel > 0 && ((*mv->ssy) += yrel) >= *mv->tileh) {
 		if (--mv->my < 0) {
 			mv->my = 0;
 			if (mv->mh < mv->map->maph)
-				mv->ssy = *mv->tileh;
+				*mv->ssy = *mv->tileh;
 		} else {
-			mv->ssy = 0;
+			*mv->ssy = 0;
 		}
-	} else if (yrel < 0 && (mv->ssy += yrel) <= -(*mv->tileh)) {
+	} else if (yrel < 0 && (*mv->ssy += yrel) <= -(*mv->tileh)) {
 		if (mv->mh < mv->map->maph) {
 			if (++mv->my > mv->map->maph - mv->mh - 1) {
 				mv->my = mv->map->maph - mv->mh - 1;
-				mv->ssy = -(*mv->tileh);
+				*mv->ssy = -(*mv->tileh);
 			} else {
-				mv->ssy = 0;
+				*mv->ssy = 0;
 			}
 		}
 	}
@@ -743,9 +748,9 @@ mapview_mousemotion(int argc, union evarg *argv)
 	int y = argv[2].i;
 	int xrel = argv[3].i;
 	int yrel = argv[4].i;
-	Uint8 mouse;
+	Uint8 state;
 	
-	mouse = SDL_GetMouseState(NULL, NULL);
+	state = SDL_GetMouseState(NULL, NULL);
 
 	pthread_mutex_lock(&mv->map->lock);
 
@@ -753,25 +758,25 @@ mapview_mousemotion(int argc, union evarg *argv)
 
 	if (mv->mouse.scrolling) {
 		mapview_mouse_scroll(mv, xrel, yrel);
-	} else if (mv->flags & MAPVIEW_EDIT &&
-	    mv->cx >= 0 && mv->cy >= 0) {
-		if ((SDL_GetModState() & KMOD_SHIFT) ||
-		    (mouse & SDL_BUTTON(2))) {
-			shift_mouse(mapedit.tools[MAPEDIT_SHIFT],
-			    mv, xrel, yrel);
-		} else if (mapedit.curtool != NULL &&
-		    TOOL_OPS(mapedit.curtool)->effect != NULL) {
+	} else if (mv->flags & MAPVIEW_EDIT) {
+		if (state & SDL_BUTTON(2)) {
+			shift_mouse(mapedit.tools[MAPEDIT_SHIFT], mv,
+			    xrel, yrel);
+		} else if (mapedit.curtool != NULL) {
 			struct tool *tool = mapedit.curtool;
-		    
-			if ((x != mv->mouse.x || y != mv->mouse.y) &&
-			    (mouse & SDL_BUTTON(1))) {
+
+			if ((state & SDL_BUTTON(1)) &&
+			    TOOL_OPS(tool)->effect != NULL &&
+			    (x != mv->mouse.x || y != mv->mouse.y)) {
 				TOOL_OPS(tool)->effect(tool, mv,
 				    &mv->map->map[mv->cy][mv->cx]);
+			} else if (TOOL_OPS(tool)->mouse != NULL) {
+				TOOL_OPS(tool)->mouse(tool, mv, xrel, yrel,
+				    state);
 			}
 		}
-	}
-	if (mv->flags & MAPVIEW_TILEMAP) {
-		if ((mouse & SDL_BUTTON(1)) &&
+	} else if (mv->flags & MAPVIEW_TILEMAP) {
+		if ((state & SDL_BUTTON(1)) &&
 		    (mv->cx >= 0) && (mv->cy >= 0)) {
 			struct node *srcnode = &mv->map->map[mv->cy][mv->cx];
 
