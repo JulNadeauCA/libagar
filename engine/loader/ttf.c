@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.7 2004/03/28 06:09:32 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.8 2004/04/22 12:15:38 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -135,7 +135,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 	memset(font, 0, sizeof(ttf_font));
 
 	if (FT_New_Face(library, file, 0, &font->face) != 0) {
-		error_set(_("Cannot font face: `%s'."), file);
+		error_set(_("Cannot find font face: `%s'."), file);
 		goto fail1;
 	}
 	if (index != 0) {
@@ -147,7 +147,7 @@ ttf_open_font_index(const char *file, int ptsize, long index)
 				goto fail1;
 			}
 		} else {
-			error_set(_("Bad TTF font face."));
+			error_set("num_faces > index");
 			goto fail1;
 		}
 	}
