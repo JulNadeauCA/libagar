@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.28 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: eraser.c,v 1.29 2003/03/26 10:04:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,8 +63,8 @@ eraser_window(void *p)
 
 	win = window_new("mapedit-tool-eraser", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    91, 71,
-	    91, 71);
+	    162, 127,
+	    162, 127);
 	window_set_caption(win, "Eraser");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);

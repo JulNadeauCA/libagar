@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.14 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.15 2003/03/26 10:04:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,8 +63,8 @@ fill_window(void *p)
 
 	win = window_new("mapedit-tool-fill", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    75, 75,
-	    71, 71);
+	    126, 128,
+	    126, 128);
 	window_set_caption(win, "Fill");
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
