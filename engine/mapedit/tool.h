@@ -1,4 +1,4 @@
-/*	$Csoft: tool.h,v 1.3 2004/04/10 04:55:15 vedge Exp $	*/
+/*	$Csoft: tool.h,v 1.4 2004/05/25 07:27:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
@@ -9,6 +9,7 @@
 
 struct mapview;
 struct tool_kbinding;
+struct tool_mbinding;
 
 struct tool {
 	const char *name;
@@ -36,20 +37,30 @@ struct tool {
 	struct mapview *mv;			/* Associated mapview */
 	void *p;				/* User-supplied pointer */
 	SDL_Surface *cursor_su;			/* Static cursor surface */
+
 	SLIST_HEAD(,tool_kbinding) kbindings;	/* Keyboard bindings */
+	SLIST_HEAD(,tool_mbinding) mbindings;	/* Mouse button bindings */
 
 	struct window *win;
 	struct button *trigger;
+
 	TAILQ_ENTRY(tool) tools;
 };
 
 struct tool_kbinding {
-	const char *name;
 	SDLMod mod;
 	SDLKey key;
 	int edit;				/* Require edition mode */
 	void (*func)(struct tool *, int);
 	SLIST_ENTRY(tool_kbinding) kbindings;
+};
+
+struct tool_mbinding {
+	int button;
+	int edit;				/* Require edition mode */
+	int override;				/* Override defaults */
+	void (*func)(struct tool *, int);
+	SLIST_ENTRY(tool_mbinding) mbindings;
 };
 
 __BEGIN_DECLS
@@ -58,6 +69,8 @@ void		 tool_destroy(struct tool *);
 struct window	*tool_window(void *, const char *);
 void		 tool_bind_key(void *, SDLMod, SDLKey,
 		               void (*)(struct tool *, int), int);
+void		 tool_bind_mousebutton(void *, int, int,
+		                       void (*)(struct tool *, int), int);
 void		 tool_unbind_key(void *, SDLMod, SDLKey);
 void		 tool_push_status(struct tool *, const char *, ...);
 void		 tool_pop_status(struct tool *);

@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.12 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.13 2004/11/26 10:32:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -50,6 +50,7 @@ tool_init(struct tool *tool, struct mapview *mv)
 	tool->mv = mv;
 	tool->nstatus = 0;
 	SLIST_INIT(&tool->kbindings);
+	SLIST_INIT(&tool->mbindings);
 
 	if (tool->init != NULL)
 		tool->init(tool);
@@ -59,6 +60,7 @@ void
 tool_destroy(struct tool *tool)
 {
 	struct tool_kbinding *kbinding, *nkbinding;
+	struct tool_mbinding *mbinding, *nmbinding;
 	int i;
 	
 	if (tool->win != NULL)
@@ -72,6 +74,12 @@ tool_destroy(struct tool *tool)
 	     kbinding = nkbinding) {
 		nkbinding = SLIST_NEXT(kbinding, kbindings);
 		Free(kbinding, M_MAPEDIT);
+	}
+	for (mbinding = SLIST_FIRST(&tool->mbindings);
+	     mbinding != SLIST_END(&tool->mbindings);
+	     mbinding = nmbinding) {
+		nmbinding = SLIST_NEXT(mbinding, mbindings);
+		Free(mbinding, M_MAPEDIT);
 	}
 	if (tool->destroy != NULL)
 		tool->destroy(tool);
@@ -100,6 +108,21 @@ tool_window(void *p, const char *name)
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 	event_new(win, "window-close", close_tool_window, "%p", tool);
 	return (win);
+}
+
+void
+tool_bind_mousebutton(void *p, int button, int override,
+    void (*func)(struct tool *, int), int edit)
+{
+	struct tool *tool = p;
+	struct tool_mbinding *mb;
+	
+	mb = Malloc(sizeof(struct tool_mbinding), M_MAPEDIT);
+	mb->button = button;
+	mb->func = func;
+	mb->edit = edit;
+	mb->override = override;
+	SLIST_INSERT_HEAD(&tool->mbindings, mb, mbindings);
 }
 
 void
