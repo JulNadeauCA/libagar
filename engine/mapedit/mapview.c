@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.109 2003/05/08 05:16:16 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.110 2003/05/08 07:20:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -244,8 +244,7 @@ mapview_draw_props(struct mapview *mv, struct node *node,
 	const struct {
 		Uint32		flag;
 		Uint32		sprite;
-	} sprites[] = {
-		{ NODE_ORIGIN,	MAPVIEW_ORIGIN },
+	} flags[] = {
 		{ NODE_WALK,	MAPVIEW_WALK },
 		{ NODE_CLIMB,	MAPVIEW_CLIMB },
 		{ NODE_BIO,	MAPVIEW_BIO },
@@ -261,22 +260,24 @@ mapview_draw_props(struct mapview *mv, struct node *node,
 		{ NODE_EDGE_SW,	MAPVIEW_EDGE_SW },
 		{ NODE_EDGE_SE,	MAPVIEW_EDGE_SE }
 	};
-	const int nsprites = sizeof(sprites) / sizeof(sprites[0]);
+	const int nflags = sizeof(flags) / sizeof(flags[0]);
 	int i;
 	int x = rx - WIDGET_ABSX(mv);
 	int y = ry - WIDGET_ABSY(mv);
 
-	if (mv->prop_style > 0) {
+	if (mv->prop_style > 0)
 		widget_blit(mv, SPRITE(&mapedit, mv->prop_style), x, y);
+
+	if (mx == mv->map->origin.x &&
+	    my == mv->map->origin.y) {
+		widget_blit(mv, SPRITE(mv,MAPVIEW_ORIGIN), x, y);
+		x += SPRITE(mv,MAPVIEW_ORIGIN)->w;
 	}
-	for (i = 0; i < nsprites; i++) {
-		if ((node->flags & sprites[i].flag) ||
-		    (sprites[i].flag == NODE_ORIGIN &&
-		     mx != -1 && mx == mv->map->origin.x &&
-		     my != -1 && my == mv->map->origin.y)) {
-			widget_blit(mv, SPRITE(mv, sprites[i].sprite), x, y);
-			x += SPRITE(mv, sprites[i].sprite)->w;
-		}
+	for (i = 0; i < nflags; i++) {
+		if ((node->flags & flags[i].flag) == 0)
+			continue;
+		widget_blit(mv, SPRITE(mv, flags[i].sprite), x, y);
+		x += SPRITE(mv,flags[i].sprite)->w;
 	}
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.31 2003/04/24 07:10:38 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.32 2003/05/08 05:17:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -166,6 +166,7 @@ propedit_init(void *p)
 
 	pe->node_flags = 0;
 	pe->node_mode = 0;
+	pe->origin = 0;
 }
 
 static void
@@ -196,6 +197,15 @@ toggle_node_flag(int argc, union evarg *argv)
 	}
 }
 
+static void
+toggle_origin(int argc, union evarg *argv)
+{
+	struct propedit *pe = argv[1].p;
+	int state = argv[2].i;
+
+	pe->origin = state;
+}
+
 struct window *
 propedit_window(void *p)
 {
@@ -223,7 +233,6 @@ propedit_window(void *p)
 			Uint32	flag;
 			char	*name;
 		} props[] = {
-			{ NODE_ORIGIN,	"Origin" },
 			{ NODE_BIO,	"Bio"	 },
 			{ NODE_REGEN,	"Regen"	 },
 			{ NODE_SLOW,	"Slow"	 },
@@ -234,6 +243,9 @@ propedit_window(void *p)
 
 		rad = radio_new(reg, node_modes);
 		event_new(rad, "radio-changed", set_node_mode, "%p", pe);
+
+		cbox = checkbox_new(reg, -1, "Origin");
+		event_new(cbox, "checkbox-changed", toggle_origin, "%p", pe);
 
 		for (i = 0; i < nprops; i++) {
 			cbox = checkbox_new(reg, -1, props[i].name);
@@ -267,14 +279,14 @@ propedit_effect(void *p, struct mapview *mv, struct node *node)
 	struct map *m = mv->map;
 	Uint8 *ks;
 
-	if (pe->node_flags & NODE_ORIGIN) {
+	if (pe->origin) {
 		m->origin.x = mv->cx;
 		m->origin.y = mv->cy;
 	}
 
 	/* Set the bio/regen and slow/haste flags. */
 	node->flags &= ~(NODE_BIO|NODE_REGEN|NODE_SLOW|NODE_HASTE);
-	node->flags |= (pe->node_flags & ~NODE_ORIGIN);
+	node->flags |= pe->node_flags;
 
 	node->flags &= ~(NODE_WALK|NODE_CLIMB);
 	if (pe->node_mode == 0) {
