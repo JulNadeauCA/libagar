@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.18 2003/02/22 11:48:26 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.19 2003/03/10 02:13:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -48,13 +48,11 @@ static const struct tool_ops resize_ops = {
 		NULL,		/* load */
 		NULL		/* save */
 	},
-	resize_window,
+	NULL,			/* window */
 	NULL,			/* cursor */
 	NULL,			/* effect */
 	resize_mouse
 };
-
-static void	resize_effect(int, union evarg *);
 
 void
 resize_init(void *p)
@@ -64,66 +62,6 @@ resize_init(void *p)
 	tool_init(&res->tool, "resize", &resize_ops);
 
 	res->mode = RESIZE_GROW;
-	res->cx = -1;
-	res->cy = -1;
-}
-
-struct window *
-resize_window(void *p)
-{
-	struct resize *res = p;
-	struct window *win;
-	struct region *reg;
-	struct button *button;
-	struct textbox *tbox_w, *tbox_h;
-
-	win = window_new("window-tool-resize", 0,
-	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
-	    164, 78,
-	    164, 78);
-	window_set_caption(win, "Resize map");
-
-	/* Scale textboxes */
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -1);
-	tbox_w = textbox_new(reg, "W: ", 0, 50, -1);	/* XXX int */
-	win->focus = WIDGET(tbox_w);
-	tbox_h = textbox_new(reg, "H: ", 0, 50, -1);	/* XXX int */
-	textbox_printf(tbox_w, "0");
-	textbox_printf(tbox_h, "0");
-
-	/* Resize button */
-	reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
-	button = button_new(reg, "Resize", NULL, 0, 100, 100);
-	event_new(button, "button-pushed",
-	    resize_effect, "%p, %p, %p", res, tbox_w, tbox_h);
-
-	return (win);
-}
-
-static void
-resize_effect(int argc, union evarg *argv)
-{
-	struct resize *res = argv[1].p;
-	struct textbox *tbox_w = argv[2].p, *tbox_h = argv[3].p;
-	struct mapview *mv;
-	struct map *m;
-	int w, h;
-
-	if ((mv = tool_mapview()) == NULL)
-		return;				/* No selection */
-
-	m = mv->map;
-	w = textbox_int(tbox_w);
-	h = textbox_int(tbox_h);
-
-	switch (res->mode) {
-	case RESIZE_GROW:
-		map_grow(m, (unsigned int)w, (unsigned int)h);
-		break;
-	case RESIZE_SHRINK:
-		map_shrink(m, (unsigned int)w, (unsigned int)h);
-		break;
-	}
 }
 
 void
@@ -132,15 +70,16 @@ resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 	struct resize *res = p;
 	struct map *m = mv->map;
 
-	if (xrel > 0) {
-		map_grow(m, m->mapw + xrel, m->maph);
-	} else if (xrel < 0 && ((int)m->mapw + xrel) > 2) {
-		map_shrink(m, m->mapw + xrel, m->maph);
+	dprintf("nxrel = %d, nyrel = %d\n", mv->cxrel, mv->cyrel);
+
+	if (mv->cxrel < 0 && m->mapw > 1) {
+		map_shrink(m, m->mapw - 1, m->maph);
+	} else if (mv->cxrel > 0) {
+		map_grow(m,   m->mapw + 1, m->maph);
 	}
-		
-	if (yrel > 0) {
-		map_grow(m, m->mapw, m->maph + yrel);
-	} else if (yrel < 0 && ((int)m->maph + yrel) > 2) {
-		map_shrink(m, m->mapw, m->maph + yrel);
+	if (mv->cyrel < 0 && m->maph > 1) {
+		map_shrink(m, m->mapw, m->maph - 1);
+	} else if (mv->cyrel > 0) {
+		map_grow(m,   m->mapw, m->maph + 1);
 	}
 }
