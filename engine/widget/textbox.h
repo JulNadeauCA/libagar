@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.h,v 1.1 2002/05/24 09:17:01 vedge Exp $	*/
+/*	$Csoft: textbox.h,v 1.2 2002/05/25 08:48:36 vedge Exp $	*/
 
 struct textbox {
 	struct	 widget wid;
@@ -10,6 +10,7 @@ struct textbox {
 	char	*label;
 	char	*text;
 	int	 textpos;
+	int	 textoffs;
 	int	 xmargin, ymargin;
 
 	void	(*typed)(struct textbox *, char);

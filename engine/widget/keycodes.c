@@ -125,6 +125,12 @@ key_bspace(struct textbox *tbox, SDL_Event *ev, char *arg)
 		}
 		tbox->textpos--;
 	}
+	
+	if (tbox->textpos == tbox->textoffs) {
+		tbox->textoffs -= 4;
+		if (tbox->textoffs < 1)
+			tbox->textoffs = 0;
+	}
 }
 
 static void
@@ -139,11 +145,9 @@ key_delete(struct textbox *tbox, SDL_Event *ev, char *arg)
 	} else if (tbox->textpos > 0) {
 		int i;
 
-		for (i = tbox->textpos-1; i < textlen; i++) {
-			tbox->text[i] =
-			tbox->text[i+1];
+		for (i = tbox->textpos; i < textlen; i++) {
+			tbox->text[i] = tbox->text[i+1];
 		}
-		tbox->textpos--;
 	}
 }
 
@@ -151,12 +155,21 @@ static void
 key_home(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	tbox->textpos = 0;
+	if (tbox->textoffs > 0) {
+		tbox->textoffs = 0;
+	}
 }
 
 static void
 key_end(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	tbox->textpos = strlen(tbox->text);
+
+	/* XXX botch */
+	tbox->textoffs = tbox->textpos - 10;
+	if (tbox->textoffs < 0) {
+		tbox->textoffs = tbox->textpos;
+	}
 }
 
 static void
@@ -170,6 +183,9 @@ key_left(struct textbox *tbox, SDL_Event *ev, char *arg)
 {
 	if (--tbox->textpos < 1) {
 		tbox->textpos = 0;
+	}
+	if (tbox->textpos == tbox->textoffs) {
+		tbox->textoffs--;
 	}
 }
 
