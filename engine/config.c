@@ -70,32 +70,32 @@ color_button_push(struct button *b)
 void
 engine_config(void)
 {
+	char sharetxt[2048];
 	struct window *win;
 	struct checkbox *fullscr_cbox;
 	struct button *close_button, *color_button;
 	struct label *sharedir_label;
-	struct winseg *upper_seg, *lower_seg;
-	char sharetxt[2048];
+	struct segment *body_seg, *buttons_seg;
 
 	/* Settings window */
 	win = window_new("Engine settings", WINDOW_TITLEBAR, WINDOW_GRADIENT,
 	    64, 64, 512, 256);
-	pthread_mutex_lock(&win->lock);
-	upper_seg = SLIST_FIRST(&win->winsegsh);
-	pthread_mutex_unlock(&win->lock);
-	lower_seg = winseg_new(win, upper_seg, WINSEG_HORIZ, 20);
+	body_seg = segment_new(win, SEGMENT_HORIZ, 80);
+	buttons_seg = segment_new(win, SEGMENT_HORIZ, 10);
 
 	sprintf(sharetxt, "Engine: %d objects, showing \"%s\".", world->nobjs,
 	   OBJECT(world->curmap)->name);
-	sharedir_label = label_new(win, sharetxt, 0, 10, 35);
+	sharedir_label = label_new(body_seg, sharetxt, 0, 10, 35);
 
-	fullscr_cbox = checkbox_new(win, "Full-screen mode", 0, 10, 60);
+	fullscr_cbox = checkbox_new(body_seg, "Full-screen mode", 0, 10, 60);
 	fullscr_cbox->push = fullscrn_cbox_push;
 
-	color_button = button_new(win, "Colors", 0, (win->w)/3-64, win->h-64);
+	color_button = button_new(buttons_seg, "Colors", 0,
+	    (win->w)/3-64, win->h-64);
 	color_button->push = color_button_push;
 	
-	close_button = button_new(win, "Close", 0, (win->w)/2-64, win->h-64);
+	close_button = button_new(buttons_seg, "Close", 0,
+	    (win->w)/2-64, win->h-64);
 	close_button->push = close_button_push;
 }
 
