@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.101 2003/05/20 11:30:34 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.102 2003/05/24 15:53:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,12 +38,8 @@
 #include <engine/rootmap.h>
 #include <engine/view.h>
 
-#ifdef DEBUG
-#include <engine/monitor/monitor.h>
-#endif
 #include <engine/mapedit/mapedit.h>
 
-#include <engine/widget/text.h>
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
@@ -172,7 +168,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	}
 
 	config = config_new();
-	object_load(config, NULL);
+	object_load(config);
 
 	if (prop_get_bool(config, "font-engine") &&
 	    text_init() == -1) {
@@ -194,7 +190,7 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 	}
 
 	world = object_new(NULL, "world", "world", NULL);
-	object_load(world, NULL);
+	object_load(world);
 	inited++;
 	return (0);
 }
@@ -225,8 +221,9 @@ engine_destroy(void)
 {
 	object_destroy(world);
 
-	if (mapedition)
-		object_save(&mapedit, NULL);
+	if (mapedition) {
+		object_save(&mapedit);
+	}
 
 	text_destroy();
 	input_destroy_all();

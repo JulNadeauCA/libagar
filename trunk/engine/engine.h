@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.62 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.63 2003/05/20 11:30:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -24,8 +24,8 @@
 
 #ifdef THREADS
 # define _XOPEN_SOURCE 500	/* Require recursive mutexes */
-# include <pthread.h>		/* For pthread types */
-# include <signal.h>		/* For pthread_kill() */
+# include <pthread.h>
+# include <signal.h>
 # undef _XOPEN_SOURCE
 #else
 # define pthread_mutex_t	int
@@ -33,17 +33,29 @@
 # define pthread_t		int
 #endif
 
-#include <SDL.h>		 /* For SDL types */
+#include <SDL.h>
+
 #ifdef HAVE_OPENGL
-#include <GL/gl.h>		 /* For OpenGL types */
+#include <GL/gl.h>
 #endif
 
-#include <engine/compat/queue.h> /* For queue(3) definitions */
-#include <libfobj/fobj.h>	 /* For struct netbuf */
-#include <engine/error.h>	 /* Wrappers and error messages */
-#include <engine/debug.h>	 /* Debugging macros */
-#include <engine/object.h> 	 /* Most structures are derived from this */
-#include <engine/event.h>	 /* For event handler prototypes */
+#include <engine/compat/queue.h>
+#include <engine/compat/strlcpy.h>
+#include <engine/compat/strlcat.h>
+#include <engine/compat/snprintf.h>
+#include <engine/compat/vsnprintf.h>
+#include <engine/compat/vasprintf.h>
+#include <engine/compat/strsep.h>
+
+#include <libfobj/fobj.h>
+#include <libfobj/vector.h>
+
+#include <engine/error.h>
+#include <engine/debug.h>
+#include <engine/object.h>
+#include <engine/event.h>
+
+#include <engine/widget/text.h>
 
 #ifdef THREADS
 extern pthread_mutexattr_t	recursive_mutexattr;
@@ -74,6 +86,7 @@ struct engine_proginfo {
 	char	*copyright;	/* Copyright notice */
 	char	*version;	/* Version of the game */
 };
+
 extern struct engine_proginfo *proginfo;	/* engine.c */
 
 enum {
