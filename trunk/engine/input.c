@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.36 2003/03/22 04:26:17 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.37 2003/03/24 12:08:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -26,13 +26,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "compat/asprintf.h"
-#include "engine.h"
+#include <engine/compat/snprintf.h>
+#include <engine/engine.h>
 
-#include "map.h"
-#include "physics.h"
-#include "input.h"
-#include "world.h"
+#include <engine/map.h>
+#include <engine/physics.h>
+#include <engine/input.h>
+#include <engine/world.h>
 
 static TAILQ_HEAD(, input) inputs;
 static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -40,25 +40,24 @@ static pthread_mutex_t inputs_lock = PTHREAD_MUTEX_INITIALIZER;
 struct input *
 input_new(int type, int index)
 {
-	char *name;
+	char name[OBJECT_NAME_MAX];
 	struct input *input;
 
 	switch (type) {
 	case INPUT_KEYBOARD:
-		Asprintf(&name, "keyboard%d", index);
+		snprintf(name, sizeof(name), "keyboard%d", index);
 		break;
 	case INPUT_JOY:
-		Asprintf(&name, "joy%d", index);
+		snprintf(name, sizeof(name), "joy%d", index);
 		break;
 	case INPUT_MOUSE:
-		Asprintf(&name, "mouse%d", index);
+		snprintf(name, sizeof(name), "mouse%d", index);
 		break;
 	}
 
-	input = emalloc(sizeof(struct input));
-	object_init(&input->obj, "input-device", name, NULL,
-	    OBJECT_STATIC, NULL);
-	free(name);
+	input = Malloc(sizeof(struct input));
+	object_init(&input->obj, "input-device", name, NULL, OBJECT_STATIC,
+	    NULL);
 
 	input->type = type;
 	input->index = index;
@@ -69,7 +68,6 @@ input_new(int type, int index)
 #ifdef DEBUG
 	prop_set_int(input, "events", 0);
 #endif
-
 	switch (type) {
 	case INPUT_JOY:
 		{
@@ -205,17 +203,12 @@ input_destroy_all(void)
 	struct input *in, *nin;
 
 	pthread_mutex_lock(&inputs_lock);
-	printf("freed input devices:");
 	for (in = TAILQ_FIRST(&inputs);
 	     in != TAILQ_END(&inputs);
 	     in = nin) {
 		nin = TAILQ_NEXT(in, inputs);
-
-		printf(" %s", OBJECT(in)->name);
-		fflush(stdout);
 		object_destroy(in);
 	}
-	printf("\n");
 	TAILQ_INIT(&inputs);
 	pthread_mutex_unlock(&inputs_lock);
 }
