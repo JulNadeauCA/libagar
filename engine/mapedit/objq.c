@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.62 2003/04/24 07:04:43 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.63 2003/04/25 22:36:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -49,28 +49,7 @@ enum {
 };
 
 static void
-objq_update(struct tlist *tl)
-{
-	struct object *ob;
-
-	tlist_clear_items(tl);
-	pthread_mutex_lock(&world->lock);
-	SLIST_FOREACH(ob, &world->wobjs, wobjs) {
-		SDL_Surface *icon = NULL;
-
-		if (ob->art == NULL)
-			continue;
-
-		if (ob->art != NULL && ob->art->nsprites > 0)
-			icon = ob->art->sprites[0];
-		tlist_insert_item(tl, icon, ob->name, ob);
-	}
-	pthread_mutex_unlock(&world->lock);
-	tlist_restore_selections(tl);
-}
-
-static void
-objq_tmap_option(int argc, union evarg *argv)
+objq_option(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 	int opt = argv[2].i;
@@ -276,15 +255,6 @@ tl_objs_toggle_replace(int argc, union evarg *argv)
 }
 
 static void
-tl_objs_toggle_big(int argc, union evarg *argv)
-{
-	struct tlist *tl = argv[1].p;
-	int big = argv[2].i;
-
-	tlist_set_item_height(tl, big ? TILEH : text_font_height(font));
-}
-
-static void
 tl_objs_selected(int argc, union evarg *argv)
 {
 	struct tlist_item *eob_item = argv[1].p;
@@ -340,7 +310,7 @@ tl_objs_selected(int argc, union evarg *argv)
 		    SPRITE(&mapedit, MAPEDIT_TOOL_GRID), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
 
 		bu = button_new(reg, NULL,		/* Toggle props */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_PROPS), BUTTON_STICKY,
@@ -348,20 +318,20 @@ tl_objs_selected(int argc, union evarg *argv)
 		widget_set_bool(bu, "state", 1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
 	
 		bu = button_new(reg, NULL,		/* Toggle map edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_EDIT), BUTTON_STICKY, -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
+		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
 		
 		bu = button_new(reg, NULL,	       /* Toggle node edition */
 		    SPRITE(&mapedit, MAPEDIT_TOOL_NODEEDIT), BUTTON_STICKY,
 		    -1, -1);
 		WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 		event_new(bu, "button-pushed",
-		    objq_tmap_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
+		    objq_option, "%p, %i", mv, MAPEDIT_TOOL_NODEEDIT);
 		mv->nodeed.trigger = bu;
 
 		event_new(win, "window-close", objq_close_tmap,
@@ -394,31 +364,37 @@ tl_objs_selected(int argc, union evarg *argv)
 
 		reg = region_new(win, REGION_HALIGN, 0, -1, 100, 0);
 		{
-			char *s;
+			char s[128];
 
 			tl = tlist_new(reg, 100, 0, TLIST_MULTI);
+			tlist_set_item_height(tl, TILEH);
 
 			for (i = 0; i < ob->art->nsubmaps; i++) {
-				Asprintf(&s, "m%d", i);
+				snprintf(s, sizeof(s),
+				    "m%u\n%ux%u nodes\n", i,
+				    ob->art->submaps[i]->mapw,
+				    ob->art->submaps[i]->maph);
 				tlist_insert_item(tl, NULL, s,
 				    ob->art->submaps[i]);
-				free(s);
 			}
 
 			for (i = 0; i < ob->art->nsprites; i++) {
-				Asprintf(&s, "s%d", i);
+				snprintf(s, sizeof(s),
+				    "s%u\n%ux%u pixels, %ubpp\n", i,
+				    ob->art->sprites[i]->w,
+				    ob->art->sprites[i]->h,
+				    ob->art->sprites[i]->format->BitsPerPixel);
 				tlist_insert_item(tl, ob->art->sprites[i],
 				    s, ob);
-				free(s);
 			}
 			
 			for (i = 0; i < ob->art->nanims; i++) {
 				struct art_anim *an = ob->art->anims[i];
-			
-				Asprintf(&s, "a%d", i);
+
+				snprintf(s, sizeof(s), "s%u\n%u frames\n", i,
+				    an->nframes);
 				tlist_insert_item(tl, (an->nframes > 0) ?
 				    an->frames[0] : NULL, s, ob);
-				free(s);
 			}
 		}
 		
@@ -439,13 +415,9 @@ tl_objs_selected(int argc, union evarg *argv)
 				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
 			}
 			bu = button_new(reg_buttons2, "Replace", NULL,
-			    BUTTON_STICKY, 50, -1);
+			    BUTTON_STICKY, 100, -1);
 			event_new(bu, "button-pushed",
 			    tl_objs_toggle_replace, "%p", mv);
-			bu = button_new(reg_buttons2, "Big", NULL,
-			    BUTTON_STICKY, 50, -1);
-			event_new(bu, "button-pushed",
-			    tl_objs_toggle_big, "%p", tl);
 		}
 	}
 }
@@ -462,14 +434,30 @@ objq_window(void)
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	win->rd.x = view->w - 88;
 	win->rd.y = 0;
-	window_set_caption(win, "Objects");
+	window_set_caption(win, "Tilesets");
 
 	reg = region_new(win, 0, 0, 0, 100, 100);
 	{
+		char s[128];
 		struct tlist *tl;
+		struct object *ob;
 
-		tl = tlist_new(reg, 100, 100, TLIST_POLL);
-		objq_update(tl);
+		tl = tlist_new(reg, 100, 100, 0);
+		tlist_set_item_height(tl, TILEH);
+		pthread_mutex_lock(&world->lock);
+		SLIST_FOREACH(ob, &world->wobjs, wobjs) {
+			if (ob->art == NULL)
+				continue;
+			snprintf(s, sizeof(s), "%s\n%ua | %us | %um\n",
+			    ob->name,
+			    ob->art->nanims,
+			    ob->art->nsprites,
+			    ob->art->nsubmaps);
+			tlist_insert_item(tl,
+			    ob->art->nsprites > 0 ? ob->art->sprites[0] : NULL,
+			    s, ob);
+		}
+		pthread_mutex_unlock(&world->lock);
 		event_new(tl, "tlist-changed", tl_objs_selected, NULL);
 	}
 	return (win);
