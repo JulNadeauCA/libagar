@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: nodemask.h,v 1.1 2004/03/17 17:30:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_NODEMASK_H_
@@ -40,6 +40,9 @@ void	 nodemask_save(struct map *, struct netbuf *, const struct nodemask *);
 void	 nodemask_destroy(struct map *, struct nodemask *);
 void	 nodemask_copy(const struct nodemask *, struct map *,
 	               struct nodemask *);
+
+void	 nodemask_bitmap(struct map *, struct nodemask *, void *, Uint32);
+void	 nodemask_vertex(struct nodemask *, Uint32, Uint32);
 int	 nodemask_intersect(const struct nodemask *, const struct nodemask *);
 __END_DECLS
 
