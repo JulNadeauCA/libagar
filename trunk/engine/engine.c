@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.54 2002/07/09 05:54:05 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.55 2002/07/21 10:58:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -274,9 +274,6 @@ engine_stop(void)
 void
 engine_destroy(void)
 {
-#if 1
-	exit(0);
-#endif
 	/* Unlink all objects and add them to the free list. */
 	world_destroy(world);
 	
