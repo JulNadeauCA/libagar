@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.60 2002/06/09 10:27:26 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.61 2002/06/09 15:04:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -566,10 +566,7 @@ object_addpos(void *p, Uint32 offs, Uint32 flags, struct input *in,
 	/* Display smooth transitions from one node to another. */
 	node->flags |= NODE_ANIM;
 	if (y > 1) {
-		struct node *onode;
-
-		onode = &m->map[y - 1][x];
-		onode->flags |= NODE_OVERLAP;
+		m->map[y - 1][x].overlap++;
 	}
 	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, 3);
 
@@ -607,10 +604,7 @@ object_delpos(void *obp)	/* XXX will change */
 			node_delref(node, pos->nref);
 			node->flags &= ~(NODE_ANIM);
 			if (pos->y > 1) {
-				struct node *onode;
-
-				onode = &pos->map->map[pos->y - 1][pos->x];
-				onode->flags &= ~(NODE_OVERLAP);
+				pos->map->map[pos->y - 1][pos->x].overlap--;
 			}
 		}
 		free(pos);

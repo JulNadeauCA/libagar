@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.35 2002/06/03 18:36:52 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.36 2002/06/09 10:02:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -58,8 +58,10 @@ struct node {
 #define NODE_SLOW	0x0400		/* Decrease speed by v1 */
 #define NODE_HASTE	0x0800		/* Increase speed by v1 */
 #define NODE_ANIM	0x1000		/* Always animate node */
-#define NODE_OVERLAP	0x2000		/* Moving sprite covers node */
-#define NODE_DONTSAVE	(NODE_ANIM|NODE_OVERLAP)
+#define NODE_DONTSAVE	(NODE_ANIM)
+
+	int	overlap;		/* Count of overlapping animations */
+
 	Uint32	v1, v2;			/* Extra properties */
 	Uint32	nanims;			/* Animation count */
 };
