@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.155 2004/05/24 03:26:44 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.156 2004/05/25 07:27:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -39,7 +39,6 @@
 #include <engine/widget/combo.h>
 #include <engine/widget/textbox.h>
 
-#include "mapedit.h"
 #include "mapview.h"
 
 #include <stdarg.h>
@@ -74,9 +73,10 @@ enum {
 	ESEL_COLOR
 };
 
-int	mapview_bg = 1;				/* Background tiles enable */
-int	mapview_bg_moving = 1;			/* Background tiles scroll */
-int	mapview_bg_squaresize = 16;		/* Background tile size */
+int	mapview_bg = 1;			/* Background tiles enable */
+int	mapview_bg_moving = 1;		/* Background tiles scroll */
+int	mapview_bg_squaresize = 16;	/* Background tile size */
+int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
 
 static void mapview_lostfocus(int, union evarg *);
 static void mapview_mousemotion(int, union evarg *);
@@ -89,12 +89,12 @@ static void mapview_effect_selection(struct mapview *);
 
 extern struct tool select_tool;
 extern void shift_mouse(void *, struct mapview *, Sint16, Sint16);
+extern int mapedition;
 
 static __inline__ int
 selbounded(struct mapview *mv, int x, int y)
 {
-	return (!prop_get_bool(&mapedit, "sel-bounded-edition") ||
-	    !mv->esel.set ||
+	return (!mapview_sel_bounded || !mv->esel.set ||
 	    (x >= mv->esel.x &&
 	     y >= mv->esel.y &&
 	     x <  mv->esel.x + mv->esel.w &&
@@ -835,10 +835,9 @@ mapview_mousebuttondown(int argc, union evarg *argv)
 			mv->curtool->effect(mv->curtool,
 			    &mv->map->map[mv->cy][mv->cx]);
 		}
-		if (mv->curtool->mousebuttondown != NULL) {
+		if (mv->curtool->mousebuttondown != NULL)
 			mv->curtool->mousebuttondown(mv->curtool,
 			    mv->cx, mv->cy, xoff, yoff, button);
-		}
 	}
 out:
 	pthread_mutex_unlock(&mv->map->lock);
@@ -883,10 +882,9 @@ mapview_mousebuttonup(int argc, union evarg *argv)
 	}
 	
 	if (mv->flags & MAPVIEW_EDIT && mv->curtool != NULL) {
-		if (mv->curtool->mousebuttonup != NULL) {
+		if (mv->curtool->mousebuttonup != NULL)
 			mv->curtool->mousebuttonup(mv->curtool, mv->cx, mv->cy,
 			    xoff, yoff, button);
-		}
 	}
 out:
 	pthread_mutex_unlock(&mv->map->lock);
