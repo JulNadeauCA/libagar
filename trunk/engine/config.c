@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.27 2002/07/27 07:03:10 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.28 2002/08/12 06:34:52 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -43,9 +43,11 @@
 #include "widget/window.h"
 #include "widget/label.h"
 #include "widget/button.h"
+#include "widget/radio.h"
 #include "widget/checkbox.h"
 #include "widget/textbox.h"
 #include "widget/keycodes.h"
+#include "widget/primitive.h"
 
 static const struct version config_ver = {
 	"agar config",
@@ -70,16 +72,18 @@ enum {
 	UDATADIR_TBOX,
 	SYSDATADIR_TBOX,
 	W_TBOX,
-	H_TBOX
+	H_TBOX,
+	AL_BOX_RADIO,
+	AL_FRAME_RADIO,
+	AL_CIRCLE_RADIO,
+	AL_LINE_RADIO,
+	AL_SQUARE_RADIO
 };
 
 #define CONFIG_DEFAULT_WIDTH 	800
 #define CONFIG_DEFAULT_HEIGHT 	600
 #define CONFIG_DEFAULT_BPP 	32
 #define CONFIG_DEFAULT_FLAGS	(CONFIG_FONT_CACHE)
-
-static struct window	*config_settings_win(struct config *);
-static void		 apply(int, union evarg *);
 
 struct config *
 config_new(void)
@@ -102,12 +106,6 @@ config_init(struct config *con)
 	con->view.bpp = CONFIG_DEFAULT_BPP;
 	con->widget_flags = 0;
 	pthread_mutex_init(&con->lock, NULL);
-}
-
-void
-config_window(struct config *con)
-{
-	con->settings_win = config_settings_win(con);
 }
 
 void
@@ -157,109 +155,140 @@ config_save(void *p, int fd)
 	return (0);
 }
 
-static struct window *
-config_settings_win(struct config *con)
+/*
+ * The config_init() function is called too early in initialization
+ * to create the configure settings windows.
+ *
+ * Non thread safe.
+ */
+void
+config_init_wins(struct config *con)
 {
 	struct window *win;
 	struct region *reg;
-	struct button *close_button, *save_button;
-	struct textbox *udatadir_tbox, *sysdatadir_tbox, *w_tbox, *h_tbox;
-	struct checkbox *fontcache_cbox, *visregions_cbox, *fullscreen_cbox,
-	    *showres_cbox;
-#ifdef DEBUG
-	struct checkbox *debug_cbox;
-#endif
+	struct button *button;
+	struct textbox *tbox;
+	struct checkbox *cbox;
+	struct radio *rad;
 
-	/* Settings window */
+	/*
+	 * Engine settings window
+	 */
 	win = window_new("Engine settings", WINDOW_CENTER,
 	    0, 0,
 	    382, 351,
 	    382, 351);
+	con->windows.settings = win;
 
-	/*
-	 * Flags
-	 */
+	/* Flags */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
+	{
+		cbox = checkbox_new(reg, "Asynchronous blits (restart)", 0,
+		    (con->flags & CONFIG_ASYNCBLIT) ? CHECKBOX_PRESSED : 0);
+		event_new(cbox, "checkbox-changed", 0, config_apply,
+		    "%i", ASYNCBLIT_CBOX);
 
-	/* Async blit */
-	fontcache_cbox = checkbox_new(reg, "Asynchronous blits (restart)", 0,
-	    (con->flags & CONFIG_ASYNCBLIT) ? CHECKBOX_PRESSED : 0);
-	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
-	    "%i", ASYNCBLIT_CBOX);
-	/* Full screen */
-	fullscreen_cbox = checkbox_new(reg, "Full screen", 0,
-	    (con->flags & CONFIG_FULLSCREEN) ? CHECKBOX_PRESSED : 0);
-	event_new(fullscreen_cbox, "checkbox-changed", 0, apply,
-	    "%i", FULLSCREEN_CBOX);
-	/* Font cache */
-	fontcache_cbox = checkbox_new(reg, "Font cache", 0,
-	    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
-	event_new(fontcache_cbox, "checkbox-changed", 0, apply,
-	    "%i", FONTCACHE_CBOX);
-	/* Debugging */
+		cbox = checkbox_new(reg, "Full screen", 0,
+		    (con->flags & CONFIG_FULLSCREEN) ? CHECKBOX_PRESSED : 0);
+		event_new(cbox, "checkbox-changed", 0, config_apply,
+		    "%i", FULLSCREEN_CBOX);
+		
+		cbox = checkbox_new(reg, "Font cache", 0,
+		    (con->flags & CONFIG_FONT_CACHE) ? CHECKBOX_PRESSED : 0);
+		event_new(cbox, "checkbox-changed", 0, config_apply,
+		    "%i", FONTCACHE_CBOX);
+
 #ifdef DEBUG
-	debug_cbox = checkbox_new(reg, "Debugging enabled", 0,
-	    engine_debug ? CHECKBOX_PRESSED : 0);
-	event_new(debug_cbox, "checkbox-changed", 0, apply,
-	    "%i", DEBUG_CBOX);
-	visregions_cbox = checkbox_new(reg, "Visible regions", 0,
-	    (con->widget_flags & CONFIG_REGION_BORDERS) ? CHECKBOX_PRESSED : 0);
-	event_new(visregions_cbox, "checkbox-changed", 0, apply,
-	    "%i", VISREGIONS_CBOX);
-	showres_cbox = checkbox_new(reg, "Arbitrary window sizes", 0,
-	    (con->widget_flags & CONFIG_WINDOW_ANYSIZE) ? CHECKBOX_PRESSED : 0);
-	event_new(showres_cbox, "checkbox-changed", 0, apply,
-	    "%i", ANYSIZE_CBOX);
+		cbox = checkbox_new(reg, "Debugging enabled", 0,
+		    engine_debug ? CHECKBOX_PRESSED : 0);
+		event_new(cbox, "checkbox-changed", 0, config_apply,
+		    "%i", DEBUG_CBOX);
+
+		cbox = checkbox_new(reg, "Visible regions", 0,
+		    (con->widget_flags & CONFIG_REGION_BORDERS) ?
+		     CHECKBOX_PRESSED : 0);
+		event_new(cbox, "checkbox-changed", 0, config_apply,
+		    "%i", VISREGIONS_CBOX);
+
+		cbox = checkbox_new(reg, "Arbitrary window sizes", 0,
+		    (con->widget_flags & CONFIG_WINDOW_ANYSIZE) ?
+		     CHECKBOX_PRESSED : 0);
+		event_new(cbox, "checkbox-changed", 0, config_apply,
+		    "%i", ANYSIZE_CBOX);
 #endif
+	}
 
-	/*
-	 * Directories
-	 */
+	/* Directories */
 	reg = region_new(win, REGION_VALIGN,  0, 45, 100, 18);
+	{
+		tbox = textbox_new(reg, "  User datadir: ",
+		    0, 100, 50);
+		textbox_printf(tbox, "%s", world->udatadir);
+		event_new(tbox, "textbox-changed", 0,
+		    config_apply, "%i", UDATADIR_TBOX);
 
-	/* Data directories */
-	udatadir_tbox = textbox_new(reg, "  User datadir: ", 0, 100, 50);
-	event_new(udatadir_tbox, "textbox-changed", 0, apply,
-	    "%i", UDATADIR_TBOX);
-	sysdatadir_tbox = textbox_new(reg, "System datadir: ", 0, 100, 50);
-	event_new(sysdatadir_tbox, "textbox-changed", 0, apply,
-	    "%i", SYSDATADIR_TBOX);
-	
-	/*
-	 * Resolution
-	 */
+		tbox = textbox_new(reg, "System datadir: ",
+		    0, 100, 50);
+		textbox_printf(tbox, "%s", world->sysdatadir);
+		event_new(tbox, "textbox-changed", 0,
+		    config_apply, "%i", SYSDATADIR_TBOX);
+	}
+
+	/* Resolution */
 	reg = region_new(win, REGION_HALIGN,  0, 70, 100, 10);
+	{
+		tbox = textbox_new(reg, "Width : ", 0, 50, 100);
+		textbox_printf(tbox, "%d", con->view.w);
+		event_new(tbox, "textbox-changed", 0,
+		    config_apply, "%i", W_TBOX);
 
-	w_tbox = textbox_new(reg, "Width : ", 0, 50, 100);
-	event_new(w_tbox, "textbox-changed", 0, apply,
-	    "%i", W_TBOX);
-	h_tbox = textbox_new(reg, "Height: ", 0, 50, 100);
-	event_new(h_tbox, "textbox-changed", 0, apply,
-	    "%i", H_TBOX);
-	
-	/*
-	 * Buttons
-	 */
+		tbox = textbox_new(reg, "Height: ", 0, 50, 100);
+		textbox_printf(tbox, "%d", con->view.h);
+		event_new(tbox, "textbox-changed", 0,
+		    config_apply, "%i", H_TBOX);
+	}
+
+	/* Buttons */
 	reg = region_new(win, REGION_HALIGN, 0,  90, 100, 10);
+	{
+		button = button_new(reg, "Close", NULL, 0, 50, 90);
+		event_new(button, "button-pushed", 0,
+		    config_apply, "%i", CLOSE_BUTTON);
+		win->focus = WIDGET(button);
 
-	/* Close button */
-	close_button = button_new(reg, "Close", NULL, 0, 50, 90);
-	event_new(close_button, "button-pushed", 0, apply,
-	    "%i", CLOSE_BUTTON);
-	/* Save button */
-	save_button = button_new(reg, "Save", NULL, 0, 50, 90);
-	event_new(save_button, "button-pushed", 0, apply,
-	    "%i", SAVE_BUTTON);
-	win->focus = WIDGET(close_button);
-	
-	pthread_mutex_lock(&win->lock);
-	textbox_printf(udatadir_tbox, "%s", world->udatadir);
-	textbox_printf(sysdatadir_tbox, "%s", world->sysdatadir);
-	textbox_printf(w_tbox, "%d", con->view.w);
-	textbox_printf(h_tbox, "%d", con->view.h);
-	pthread_mutex_unlock(&win->lock);
+		button = button_new(reg, "Save", NULL, 0, 50, 90);
+		event_new(button, "button-pushed", 0,
+		    config_apply, "%i", SAVE_BUTTON);
+	}
 
-	return (win);
+	/* Primitive drawing algorithm switch */
+	win = window_new("Primitive algorithm switch", WINDOW_CENTER,
+	    0, 0,
+	    247, 180,
+	    247, 180);
+	con->windows.algorithm_sw = win;
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 100);
+	{
+		rad = radio_new(reg, primitive_box_sw, 0, 0);
+		event_new(rad, "radio-changed", 0, config_apply,
+		    "%i", AL_BOX_RADIO);
+		
+		rad = radio_new(reg, primitive_frame_sw, 0, 0);
+		event_new(rad, "radio-changed", 0, config_apply,
+		    "%i", AL_FRAME_RADIO);
+		
+		rad = radio_new(reg, primitive_circle_sw, 0, 0);
+		event_new(rad, "radio-changed", 0, config_apply,
+		    "%i", AL_CIRCLE_RADIO);
+		
+		rad = radio_new(reg, primitive_line_sw, 0, 0);
+		event_new(rad, "radio-changed", 0, config_apply,
+		    "%i", AL_LINE_RADIO);
+		
+		rad = radio_new(reg, primitive_square_sw, 0, 0);
+		event_new(rad, "radio-changed", 0, config_apply,
+		    "%i", AL_SQUARE_RADIO);
+	}
 }
 
 #define CONFIG_SETFLAG(con, _field, flag, val) do {	\
@@ -272,8 +301,8 @@ config_settings_win(struct config *con)
 	pthread_mutex_unlock(&(con)->lock);		\
 } while (/*CONSTCOND*/ 0)
 
-static void
-apply(int argc, union evarg *argv)
+void
+config_apply(int argc, union evarg *argv)
 {
 	struct textbox *tbox;
 	struct widget *wid = argv[0].p;
@@ -330,6 +359,12 @@ apply(int argc, union evarg *argv)
 		    argv[2].i);
 		break;
 #endif
+	case AL_BOX_RADIO:
+	case AL_FRAME_RADIO:
+	case AL_CIRCLE_RADIO:
+	case AL_LINE_RADIO:
+	case AL_SQUARE_RADIO:
+		break;
 	}
 }
 

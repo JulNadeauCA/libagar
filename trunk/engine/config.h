@@ -1,11 +1,14 @@
-/*	$Csoft: config.h,v 1.5 2002/07/09 05:54:52 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.6 2002/07/16 04:22:50 vedge Exp $	*/
 /*	Public domain	*/
 
 struct config {
 	struct	 object obj;
 
 	/* Read-only */
-	struct	 window *settings_win;	/* Settings window */
+	struct {
+		struct	window *settings;
+		struct	window *algorithm_sw;
+	} windows;
 
 	/* Read-write, thread-safe */
 	Uint32	 flags;	
@@ -33,6 +36,6 @@ int		 config_load(void *, int);
 int		 config_save(void *, int);
 void		 config_destroy(void *);
 
-void		 config_window(struct config *);
-void		 config_apply(struct config *);
+void		 config_init_wins(struct config *);
+void		 config_apply(int, union evarg *);
 
