@@ -55,7 +55,7 @@ version_read(int fd, char *osig, int overmin, int overmaj)
 {
 	char sig[64];
 	int siglen;
-	int vermin, vermaj;
+	Uint32 vermin, vermaj;
 	char *user, *host;
 
 	siglen = strlen(osig);
