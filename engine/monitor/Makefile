@@ -1,7 +1,9 @@
-#	$Csoft: Makefile,v 1.22 2004/03/18 21:27:48 vedge Exp $
+#	$Csoft: Makefile,v 1.23 2004/04/22 01:52:24 vedge Exp $
 
 TOP=	../..
 include ${TOP}/Makefile.config
+
+SUBDIR=	pixmaps
 
 LIB=		monitor
 LIB_SHARED=	Yes
