@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.63 2003/03/25 12:30:31 vedge Exp $
+# $Csoft: configure.in,v 1.64 2003/05/19 13:06:57 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -50,7 +50,6 @@ mdefine(CFLAGS, "$CFLAGS -I$SRC");
 #mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
 #mdefine(CFLAGS, "$CFLAGS -Wno-missing-headers");
 
-check(smpeg, 0.4.4);
 require(sdl, 1.2.0);
 require(freetype, 7.0.1);
 
@@ -76,6 +75,13 @@ if [ "${with_jpeg}" != "no" ]; then
 	check(jpeg);
 else
 	hundef(HAVE_JPEG);
+fi
+
+# Look for the smpeg library.
+if [ "${with_smpeg}" != "no" ]; then
+	check(smpeg, 0.4.4);
+else
+	hundef(HAVE_SMPEG);
 fi
 
 # Compile a static binary?
