@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: units.3,v 1.1 2004/05/11 01:42:25 vedge Exp $
 .\"
 .\" Copyright (c) 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -97,6 +97,10 @@ Units of metabolic cost of physical activities
 .Pp
 .Ft "double"
 .Fn base2unit "double n" "const struct unit *unit"
+.Pp
+.Ft "double"
+.Fn unit2unit "double n" "const struct unit *unit_from" \
+              "const struct unit *unit_to"
 .nr nS 0
 .Pp
 The
@@ -128,14 +132,13 @@ double secs = 5;
 printf("%f seconds = %f milliseconds", secs, base2unit(secs, ms));
 .Ed
 .Pp
-The following code fragment obtains the equivalent of 27 degrees Celsius in
-kilo-Kelvins:
+The following code fragment prints the equivalent of 27 degrees Celsius,
+in kilo Kelvins:
 .Bd -literal -offset indent
 const struct unit *degC = unit(temperature_units, "degC");
 const struct unit *kK = unit(temperature_units, "kK");
-double Tnom;
 
-Tnom = base2unit(unit2base(27, degC), kK);
+printf("27C = %fkK", unit2unit(27, degC, kK));
 .Ed
 .Sh SEE ALSO
 .Xr agar 3 ,
