@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.26 2003/06/13 01:44:25 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.27 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -42,6 +42,9 @@ void	 button_set_focusable(struct button *, int);
 void	 button_set_sticky(struct button *, int);
 void	 button_set_justify(struct button *, enum button_justify);
 void	 button_set_label(struct button *, SDL_Surface *);
+void	 button_printf(struct button *, const char *, ...)
+	     FORMAT_ATTRIBUTE(printf, 2, 3)
+	     NONNULL_ATTRIBUTE(2);
 __END_DECLS
 
 #include "close_code.h"
