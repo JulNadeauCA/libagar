@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.24 2002/11/23 22:40:46 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.25 2002/11/24 03:10:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -317,8 +317,6 @@ input_event(enum input_type type, SDL_Event *ev)
 		dprintf("unrecognized event %d\n", ev->type);
 		return;
 	}
-
-	dprintf("%s event\n", OBJECT(in)->name);
 
 	pthread_mutex_lock(&in->lock);
 	if (in->pos == NULL) {

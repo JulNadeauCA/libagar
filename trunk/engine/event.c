@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.101 2002/11/26 05:21:32 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.102 2002/11/26 06:00:01 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -64,9 +64,9 @@ extern struct window *game_menu_win;
 #define DEBUG_EVENT_DELIVERY	0x400
 #define DEBUG_ASYNC_EVENTS	0x800
 
-int	event_debug =	DEBUG_UNDERRUNS|
-			DEBUG_VIDEOEXPOSE_EV|DEBUG_MOUSEBUTTON_EV|
-			DEBUG_JOY_EV|DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
+int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
+			DEBUG_MOUSEBUTTON_EV|DEBUG_JOY_EV|
+			DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
 
 static struct window *fps_win;
@@ -123,7 +123,6 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_ESCAPE:
-		dprintf("shutting down (escape)\n");
 		{
 			SDL_Event nev;
 
