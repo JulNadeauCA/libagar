@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.72 2002/04/16 08:44:10 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.73 2002/04/18 04:03:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -45,7 +45,7 @@
 
 #include <engine/widget/text.h>
 
-static struct obvec map_vec = {
+static const struct obvec map_vec = {
 	map_destroy,
 	map_load,
 	map_save,
@@ -116,24 +116,23 @@ map_freenodes(struct map *m)
 	free(m->map);
 }
 
-struct map *
-map_create(char *name, char *desc, Uint32 flags)
+void
+map_init(struct map *m, char *name, char *media, Uint32 flags)
 {
-	struct map *m;
+	int mflags;
 
-	m = (struct map *)emalloc(sizeof(struct map));
+	mflags = OBJ_DEFERGC;
+	if (media != NULL) {
+		mflags |= OBJ_ART;
+	}
+
 	memset(m, 0, sizeof(struct map));
-	object_init(&m->obj, name, OBJ_DEFERGC|OBJ_EDITABLE, &map_vec);
-	m->obj.desc = (desc != NULL) ? strdup(desc) : NULL;
+	object_init(&m->obj, name, media, mflags, &map_vec);
 	sprintf(m->obj.saveext, "m");
 	m->flags = flags;
 	m->view = mainview;
 	m->fps = 100;
-	if (pthread_mutex_init(&m->lock, NULL) != 0) {
-		return (NULL);
-	}
-
-	return (m);
+	pthread_mutex_init(&m->lock, NULL);
 }
 
 int
@@ -142,6 +141,8 @@ map_focus(struct map *m)
 	m->view->map = m;
 	m->flags |= MAP_FOCUSED;
 	world->curmap = m;
+
+	/* XXX center view? */
 
 	return (0);
 }
@@ -277,7 +278,7 @@ map_clean(struct map *m, struct object *ob, Uint32 offs, Uint32 nflags,
 	m->map[m->defy][m->defx].flags |= NODE_ORIGIN;
 }
 
-int
+void
 map_destroy(void *p)
 {
 	struct map *m = (struct map *)p;
@@ -291,8 +292,6 @@ map_destroy(void *p)
 	map_freenodes(m);
 
 	pthread_mutex_unlock(&m->lock);
-
-	return (0);
 }
 
 /*
@@ -334,11 +333,11 @@ map_rendernode(struct map *m, struct node *node, Uint32 rx, Uint32 ry)
 
 	TAILQ_FOREACH(nref, &node->nrefsh, nrefs) {
 		if (nref->flags & MAPREF_SPRITE) {
-			src = nref->pobj->sprites[nref->offs];
+			src = SPRITE(nref->pobj, nref->offs);
 		} else if (nref->flags & MAPREF_ANIM) {
 			static struct anim *anim;
 
-			anim = nref->pobj->anims[nref->offs];
+			anim = ANIM(nref->pobj, nref->offs);
 		
 			if (nref->flags & MAPREF_ANIM_DELTA &&
 			   (nref->flags & MAPREF_ANIM_STATIC) == 0) {
@@ -550,7 +549,7 @@ map_draw(struct map *m)
 					rd.w = m->tilew;
 					rd.h = m->tileh;
 					SDL_BlitSurface(
-					    nref->pobj->sprites[nref->offs],
+					    SPRITE(nref->pobj, nref->offs),
 					    NULL, view->v, &rd);
 					view->rects[ri++] =
 					    view->maprects[vy][vx];
@@ -729,7 +728,7 @@ map_save(void *ob, int fd)
 	}
 	pobjs = (struct object **)emalloc(solen);
 	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
-		if ((pob->flags & OBJ_EDITABLE) == 0)
+		if ((pob->flags & OBJ_ART) == 0)
 			continue;
 		fobj_bwrite_string(buf, pob->name);
 		fobj_bwrite_uint32(buf, 0);

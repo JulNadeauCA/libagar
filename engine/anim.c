@@ -1,4 +1,4 @@
-/*	$Csoft: anim.c,v 1.6 2002/03/12 13:58:11 vedge Exp $	*/
+/*	$Csoft: anim.c,v 1.7 2002/04/02 19:55:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -63,20 +63,15 @@ anim_addframe(struct anim *anim, SDL_Surface *surface)
 	return (0);
 }
 
-struct anim *
-anim_create(int delay)
+void
+anim_init(struct anim *anim, int delay)
 {
-	struct anim *anim;
-
-	anim = emalloc(sizeof(struct anim));
 	anim->frames = NULL;
 	anim->maxframes = 0;
 	anim->frame = 0;
 	anim->nframes = 0;
 	anim->delta = 0;
 	anim->delay = delay;
-
-	return (anim);
 }
 
 void

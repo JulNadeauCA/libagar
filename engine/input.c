@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.9 2002/04/10 09:52:12 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.10 2002/04/23 07:19:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -35,7 +35,7 @@
 #include <engine/physics.h>
 #include <engine/input.h>
 
-static struct obvec input_vec = {
+static const struct obvec input_vec = {
 	input_destroy,
 	input_load,
 	input_save,
@@ -48,10 +48,9 @@ static int	joy_init(struct input *, int);
 static int	mouse_init(struct input *, int);
 static Uint32	input_time(Uint32, void *);
 
-struct input *
-input_create(int type, int index)
+void
+input_init(struct input *input, int type, int index)
 {
-	struct input *input;
 	int rv = 0;
 	char name[64];
 	
@@ -67,13 +66,13 @@ input_create(int type, int index)
 		break;
 	}
 
-	input = emalloc(sizeof(struct input));
-	object_init(&input->obj, name, OBJ_DEFERGC, &input_vec);
+	object_init(&input->obj, name, NULL, OBJ_DEFERGC, &input_vec);
 	input->type = type;
 	input->index = index;
 	input->p = NULL;
 	input->pos = NULL;
 
+	/* XXX link */
 	switch (type) {
 	case INPUT_KEYBOARD:
 		rv = keyboard_init(input, index);
@@ -85,13 +84,6 @@ input_create(int type, int index)
 		rv = mouse_init(input, index);
 		break;
 	}
-
-	if (rv != 0) {
-		free(input);
-		return (NULL);
-	}
-
-	return (input);
 }
 
 static Uint32
@@ -208,7 +200,7 @@ input_mouse(struct input *in, SDL_Event *ev)
 	/* XXX ... */
 }
 
-int
+void
 input_destroy(void *p)
 {
 	struct input *in = (struct input *)p;
@@ -222,7 +214,6 @@ input_destroy(void *p)
 		in->p = NULL;
 		break;
 	}
-	return (0);
 }
 
 void

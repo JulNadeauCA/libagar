@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.29 2002/04/14 04:34:04 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.30 2002/04/23 07:19:40 vedge Exp $	*/
 
 enum {
 	MAP_MINWIDTH	= 10,
@@ -73,25 +73,24 @@ struct map {
 	SLIST_ENTRY(map) wmaps;		/* Active maps */
 };
 
-struct map	*map_create(char *, char *, Uint32);
-int		 map_load(void *, int);
-int		 map_save(void *, int);
-int		 map_destroy(void *);
+void	map_init(struct map *, char *, char *, Uint32);
+int	map_load(void *, int);
+int	map_save(void *, int);
+void	map_destroy(void *);
 
-void		 map_draw(struct map *);
-void		 map_animate(struct map *);
+void	map_draw(struct map *);
+void	map_animate(struct map *);
 
-int		 map_focus(struct map *);
-int		 map_unfocus(struct map *);
-void		 map_clean(struct map *, struct object *, Uint32, Uint32,
-		     Uint32);
-void		 map_allocnodes(struct map *, Uint32, Uint32, Uint32, Uint32);
-void		 map_freenodes(struct map *);
+int	map_focus(struct map *);
+int	map_unfocus(struct map *);
+void	map_clean(struct map *, struct object *, Uint32, Uint32,
+	    Uint32);
+void	map_allocnodes(struct map *, Uint32, Uint32, Uint32, Uint32);
+void	map_freenodes(struct map *);
 
 struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_findref(struct node *, void *, Sint32, Uint32);
 int		 node_delref(struct node *, struct noderef *);
-
 struct noderef	*node_popref(struct node *);
 int		 node_pushref(struct node *, struct noderef *);
 
