@@ -1,4 +1,4 @@
-/*	$Csoft: plist.h,v 1.36 2004/05/14 05:08:59 vedge Exp $	*/
+/*	$Csoft: plist.h,v 1.1 2004/05/15 04:05:12 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PLIST_H_
@@ -15,12 +15,11 @@ struct plist_item {
 	void		*p;			/* User-supplied pointer */
 	SDL_Surface	*label;			/* Rasterized text */
 	char		 text[PLIST_LABEL_MAX];	/* Label text */
-	int		 selected;		/* Selection flag */
 };
 
 struct plist {
 	struct widget wid;
-	
+
 	int	 flags;
 #define PLIST_DBLCLICK		0x01	/* Generate plist-dblclick events */
 
@@ -34,6 +33,7 @@ struct plist {
 	int	keymoved;		/* Used by key repeat */
 
 	struct plist_item *items;	/* Item array */
+	int	       *selitems;	/* Selected item array */
 	unsigned int	  nitems;	/* Current items */
 	unsigned int	maxitems;	/* Allocated items */
 	unsigned int   nvisitems;	/* Visible items */
