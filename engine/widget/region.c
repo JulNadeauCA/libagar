@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.9 2002/06/06 10:18:02 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.10 2002/06/09 10:27:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -92,7 +92,7 @@ region_init(struct region *reg, int flags, int rx, int ry, int rw, int rh)
 	reg->y = 0;
 	reg->w = 0;
 	reg->h = 0;
-	reg->spacing = 10;
+	reg->spacing = 5;
 	reg->win = NULL;
 	TAILQ_INIT(&reg->widgetsh);
 }
