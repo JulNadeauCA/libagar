@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: snprintf.c,v 1.1 2003/03/25 13:36:50 vedge Exp $	*/
 
 /*
  * Copyright Patrick Powell 1995
@@ -63,13 +63,12 @@
 
 #if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
 
-#include <sys/types.h>
+#include <engine/engine.h>
+#include "snprintf.h"
+#include "vsnprintf.h"
 
 #include <ctype.h>
 #include <stdarg.h>
-
-#include "snprintf.h"
-#include "vsnprintf.h"
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))

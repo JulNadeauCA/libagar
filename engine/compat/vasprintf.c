@@ -1,4 +1,4 @@
-/*	$Csoft: vasprintf.c,v 1.8 2003/03/28 00:23:20 vedge Exp $	*/
+/*	$Csoft: vasprintf.c,v 1.9 2003/06/21 06:50:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,15 +30,12 @@
 
 #ifndef HAVE_VASPRINTF
 
-#include <sys/types.h>
+#include <engine/engine.h>
+#include "vasprintf.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-
-#include <engine/error/error.h>
-
-#include "vasprintf.h"
 
 int
 vasprintf(char **ret, const char *fmt, va_list ap)

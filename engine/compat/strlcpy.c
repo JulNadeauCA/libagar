@@ -1,4 +1,4 @@
-/*	$Csoft: strlcpy.c,v 1.3 2003/03/25 13:48:01 vedge Exp $	*/
+/*	$Csoft: strlcpy.c,v 1.4 2003/06/14 00:17:31 vedge Exp $	*/
 /*	$OpenBSD: strlcpy.c,v 1.5 2001/05/13 15:40:16 deraadt Exp $	*/
 
 /*
@@ -21,6 +21,7 @@
 
 #ifndef HAVE_STRLCPY
 
+#include <engine/engine.h>
 #include "strlcpy.h"
 
 /*
