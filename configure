@@ -185,7 +185,7 @@ if [ "$CC" = "" ]; then
 		fi
 	done
 	if [ "$CC" = "" ]; then
-		echo "Could not find a compiler."
+		echo "Could not find a C compiler, try setting CC."
 		exit 1
 	fi
 fi
@@ -583,8 +583,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo  ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> config.log
- ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
+echo $CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} >> config.log
+$CC ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
@@ -670,8 +670,8 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo  ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> config.log
- ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+echo $CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} >> config.log
+$CC ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed: compiler had non-zero exit status" >> config.log
 	compile="failed"
