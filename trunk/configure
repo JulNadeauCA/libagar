@@ -139,6 +139,9 @@ if [ "${srcdir}" != "" ]; then
 	SRC=${srcdir}
 
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
+	if [ $? != 0 ]; then
+		exit 1;
+	fi
 else
 #	if [ ! -e "configure.in" ]; then
 #		echo "Missing --srcdir argument"
@@ -237,22 +240,26 @@ echo "LOCALEDIR=${LOCALEDIR}" >> Makefile.config
 echo "#ifndef LOCALEDIR" > config/localedir.h
 echo "#define LOCALEDIR \"${LOCALEDIR}\"" >> config/localedir.h
 echo "#endif /* LOCALEDIR */" >> config/localedir.h
-SHAREDIR="$PREFIX/share/cave"
-echo "SHAREDIR=$SHAREDIR" >> Makefile.config
-SHAREDIR="\"$PREFIX/share/cave\""
-echo "#ifndef SHAREDIR" > config/sharedir.h
-echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
-echo "#endif /* SHAREDIR */" >> config/sharedir.h
 TTFDIR="$PREFIX/share/cave/fonts"
 echo "TTFDIR=$TTFDIR" >> Makefile.config
 TTFDIR="\"$PREFIX/share/cave/fonts\""
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR" $TTFDIR >> config/ttfdir.h
 echo "#endif /* TTFDIR */" >> config/ttfdir.h
-INST_MANDIR="$PREFIX/share/agar/man"
-echo "INST_MANDIR=$INST_MANDIR" >> Makefile.config
-INST_PSDIR="$PREFIX/share/agar/ps"
-echo "INST_PSDIR=$INST_PSDIR" >> Makefile.config
+SHAREDIR="$PREFIX/share/cave"
+echo "SHAREDIR=$SHAREDIR" >> Makefile.config
+SHAREDIR="\"$PREFIX/share/cave\""
+echo "#ifndef SHAREDIR" > config/sharedir.h
+echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
+echo "#endif /* SHAREDIR */" >> config/sharedir.h
+MANDIR="$PREFIX/share/agar/man"
+echo "MANDIR=$MANDIR" >> Makefile.config
+PSDIR="$PREFIX/share/agar/ps"
+echo "PSDIR=$PSDIR" >> Makefile.config
+LIBDIR="$PREFIX/lib/agar"
+echo "LIBDIR=$LIBDIR" >> Makefile.config
+INCLDIR="$PREFIX/include/agar"
+echo "INCLDIR=$INCLDIR" >> Makefile.config
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
