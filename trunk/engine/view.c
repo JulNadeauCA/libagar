@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.6 2002/02/10 01:38:40 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.7 2002/02/10 03:44:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -32,10 +32,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
-#include <SDL.h>
-#include <glib.h>
-#include <pthread.h>
 
 #include <engine/engine.h>
 #include <engine/mapedit/mapedit.h>
