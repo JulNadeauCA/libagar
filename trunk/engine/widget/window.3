@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.14 2002/11/15 00:51:05 vedge Exp $
+.\"	$Csoft: window.3,v 1.15 2002/11/15 04:15:31 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -287,6 +287,7 @@ The key identified by
 was pressed, and the widget holds the focus.
 .It Fn window-close "void"
 The window's titlebar close button was pressed.
+This event is generated after the window is no longer visible.
 .El
 .Sh SEE ALSO
 .Xr agar 3 ,
