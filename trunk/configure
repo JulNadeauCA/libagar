@@ -1364,6 +1364,8 @@ NONE=1
 fi
 else
 echo "#undef HAVE_GETTEXT" > config/have_gettext.h
+HAVE_GETTEXT="no"
+echo HAVE_GETTEXT=$HAVE_GETTEXT >> Makefile.config
 fi
 if [ "${enable_nls}" != "no" ]
  then
