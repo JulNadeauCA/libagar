@@ -1116,7 +1116,7 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-$CC {JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
+$CC ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "failed" >> config.log
 	compile="failed"
