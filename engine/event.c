@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.112 2002/12/17 00:06:19 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.113 2002/12/17 00:20:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -67,11 +67,12 @@ extern struct window *game_menu_win;
 int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
 			DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
+int	event_count, event_overhead;
 
 static struct window *fps_win;
 static struct label *fps_label;
 static struct graph *fps_graph;
-static struct graph_item *fps_item;
+static struct graph_item *fps_cur_fps, *fps_event_count, *fps_event_overhead;
 #endif
 
 static void	 event_hotkey(SDL_Event *);
@@ -143,9 +144,46 @@ event_hotkey(SDL_Event *ev)
 static __inline__ void
 event_update_fps_counter(void)
 {
-	label_printf(fps_label, "%d/%d ticks", view->cur_fps_ticks,
-	    view->max_fps_ticks);
-	graph_plot(fps_item, view->cur_fps_ticks);
+	static int einc = 0;
+
+	label_printf(fps_label, "%d/%d ticks, %d events (%dms overhead)",
+	    view->cur_fps_ticks, view->max_fps_ticks, event_count,
+	    event_overhead);
+	graph_plot(fps_cur_fps, view->cur_fps_ticks);
+	graph_plot(fps_event_count, event_count * 30 / 10);
+	graph_plot(fps_event_overhead, event_overhead * 2 / 15);
+	graph_scroll(fps_graph, 1);
+
+	if (++einc == 2) {
+		event_count = 0;
+		event_overhead = 0;
+		einc = 0;
+	}
+}
+
+static void
+event_init_fps_counter(void)
+{
+	struct region *reg;
+
+	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
+	    133, 104, 125, 91);
+	window_set_caption(fps_win, "Frames/second");
+	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, 100);
+	fps_label = label_new(reg, 100, 20, "...");
+	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
+	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
+	    100, 80);
+	fps_cur_fps = graph_add_item(fps_graph, "cur-fps",
+	    SDL_MapRGB(view->v->format, 0, 160, 0));
+	fps_event_count = graph_add_item(fps_graph, "event-rate",
+	    SDL_MapRGB(view->v->format, 0, 0, 180));
+	fps_event_overhead = graph_add_item(fps_graph, "event-overhead",
+	    SDL_MapRGB(view->v->format, 150, 40, 50));
+
+	if (engine_debug > 0) {
+		window_show(monitor.toolbar);
+	}
 }
 #endif
 
@@ -170,24 +208,10 @@ event_loop(void)
 	Uint32 ltick, ntick = 0;
 	struct window *win;
 #ifdef DEBUG
-	struct region *reg;
+	Uint32 eltick;
 
-	fps_win = window_new("fps-counter", WINDOW_CENTER, -1, -1,
-	    133, 104, 125, 91);
-	window_set_caption(fps_win, "Frames/second");
-	reg = region_new(fps_win, REGION_VALIGN, 0, 0, 100, 100);
-	fps_label = label_new(reg, 100, 20, "...");
-	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES,
-	    GRAPH_SCROLL|GRAPH_ORIGIN, 200,
-	    100, 80);
-	fps_item = graph_add_item(fps_graph, "fps",
-	    SDL_MapRGB(view->v->format, 0, 160, 0));
-		
-	if (engine_debug > 0) {
-		window_show(monitor.toolbar);
-	}
+	event_init_fps_counter();
 #endif
-
 	view_set_speed(15);
 
 	ltick = SDL_GetTicks();
@@ -263,7 +287,14 @@ event_loop(void)
 			}
 			ltick = SDL_GetTicks();		/* Rendering ends */
 		} else if (SDL_PollEvent(&ev) != 0) {
+#ifdef DEBUG
+			eltick = SDL_GetTicks();
+#endif
 			event_dispatch(&ev);
+#ifdef DEBUG
+			event_count++;
+			event_overhead = SDL_GetTicks() - eltick;
+#endif
 		} else if (view->gfx_engine == GFX_ENGINE_GUI) {
 			SDL_Delay(10);
 		}
