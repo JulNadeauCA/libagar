@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.61 2004/11/30 11:49:45 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.62 2004/12/17 03:19:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -55,12 +55,12 @@ struct mapview {
 	} esel;
 
 	u_int	zoom;			/* Zoom factor (%) */
-	int	ssx, ssy;		/* Display offset */
-	int	tilesz;			/* Current tile size */
+	int	tilesz;			/* Display tile size (pixels) */
+	int	pxsz;			/* Scaled pixel size (pixels) */
 	
 	struct map	*map;		/* Map to display/edit */
-	int	 	 mx, my;	/* Display offset (in nodes) */
-	int		 xoffs, yoffs;	/* Absolute display coordinates */
+	int	 	 mx, my;	/* Display offset (nodes) */
+	int		 xoffs, yoffs;	/* Display offset (pixels) */
 	u_int	 	 mw, mh;	/* Display size (nodes) */
 	int		 wfit, hfit;	/* Dimension fits into display? */
 	int		 wmod, hmod;	/* Remainders */
