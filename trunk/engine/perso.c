@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.27 2003/06/06 02:49:00 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.28 2003/06/08 22:48:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
+#include <engine/widget/hbox.h>
 #include <engine/widget/vbox.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/spinbutton.h>
