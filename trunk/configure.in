@@ -1,10 +1,11 @@
-# $Csoft: configure.in,v 1.39 2002/11/10 01:29:06 vedge Exp $
+# $Csoft: configure.in,v 1.40 2002/12/16 03:50:57 vedge Exp $
 
 makeout(Makefile.config);
 inclout(engine/mcconfig.h);
 
 register("--with-smpeg",	"Play videos through smpeg [default: check]");
 register("--with-x11",		"X11-specific code [default: check]");
+register("--with-gl",		"Support OpenGL operations [default: no]");
 register("--enable-debug",	"Engine debugging [default: no]");
 register("--enable-xdebug",	"Synchronous X11 events [default: no]");
 register("--enable-map-editor",	"Level edition [default: yes]");
@@ -63,6 +64,11 @@ fi
 # Request synchronous X events (slow).
 if [ "${enable_xdebug}" = "yes" -a "${x11_found}" = "yes" ]; then
 	hdefine(XDEBUG, 1);
+fi
+
+# OpenGL support.
+if [ "${with_gl}" = "yes" ]; then
+	hdefine(HAVE_OPENGL, 1);
 fi
 
 # Debug code. Debug level can change at runtime.
