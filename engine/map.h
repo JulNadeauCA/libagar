@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.107 2004/03/21 07:04:25 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.108 2004/04/10 02:35:50 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAP_H_
@@ -44,7 +44,7 @@ enum noderef_edge {
 };
 
 struct noderef {
-	enum noderef_type type;		/* Type of reference */
+	enum noderef_type type;		/* Type of element */
 	Uint8	flags;
 #define NODEREF_WALK	0x01		/* Surface is walkable */
 #define NODEREF_CLIMB	0x02		/* Surface is climbable */
@@ -52,7 +52,7 @@ struct noderef {
 #define NODEREF_BIO	0x08		/* Contact induces Poison */
 #define NODEREF_REGEN	0x10		/* Contact induces Regen */
 #define NODEREF_NOSAVE	0x20		/* Non persistent */
-#define NODEREF_NOSCALE	0x40		/* Don't scale bitmaps (ie. vg) */
+#define NODEREF_NOSCALE	0x40		/* Don't scale pixmaps (ie. vg) */
 
 	Sint8	friction;		/* Coefficient of friction (if n>0),
 					   or acceleration (if n<0) */
