@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.15 2003/02/15 06:28:27 vedge Exp $
+.\"	$Csoft: agar.3,v 1.16 2003/02/15 06:38:07 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -29,10 +29,11 @@
 .\"
 .Dd NOVEMBER 26, 2001
 .Dt AGAR 3
-.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.0
 .Sh NAME
 .Nm agar
-.Nd game engine
+.Nd graphical game engine
 .Sh DESCRIPTION
 .Nm
 is a graphical game engine.
@@ -45,12 +46,12 @@ engine implements the following interfaces:
 .It config
 Generic engine/game configuration settings.
 .It Xr event 3
-Event processing.
+Generic event processing.
 .It input
 Processing of events from input devices such as keyboards, mice, joysticks
 and network sessions.
 .It Xr map 3
-N-layer tile-based levels.
+2D multilayered, tile-based levels.
 .It Xr mapedit 3
 Level edition.
 .It Xr object 3
@@ -58,13 +59,11 @@ Generic object structure.
 .It perso
 Game characters.
 .It Xr physics 3
-Movement of objects in levels.
+Movement of objects inside levels.
 .It Xr prop 3
 Generic properties.
 .It Xr rootmap 3
 Level display in game mode.
-.It Xr timer 3
-Timers.
 .It Xr transform 3
 Graphical transformations applied to node references.
 .It ttf
