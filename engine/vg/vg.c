@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.14 2004/04/30 06:27:32 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.15 2004/05/01 00:53:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -806,6 +806,7 @@ vg_save(struct vg *vg, struct netbuf *buf)
 			write_double(buf, vge->vg_circle.radius);
 			break;
 		case VG_ARC:
+		case VG_ELLIPSE:
 			write_double(buf, vge->vg_arc.w);
 			write_double(buf, vge->vg_arc.h);
 			write_double(buf, vge->vg_arc.s);
@@ -928,6 +929,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 			vge->vg_circle.radius = read_double(buf);
 			break;
 		case VG_ARC:
+		case VG_ELLIPSE:
 			vge->vg_arc.w = read_double(buf);
 			vge->vg_arc.h = read_double(buf);
 			vge->vg_arc.s = read_double(buf);
