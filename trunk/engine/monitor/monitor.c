@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.61 2005/02/08 08:25:56 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.62 2005/03/04 06:05:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -80,20 +80,20 @@ monitor_init(void)
 	struct window *win;
 	int i;
 
-	if ((win = window_new(WINDOW_NO_RESIZE, "monitor-toolbar")) == NULL) {
+	if ((win = window_new(WINDOW_NO_HRESIZE, "monitor-toolbar")) == NULL) {
 			return;
 	}
 	window_set_caption(win, _("Debug monitor"));
-	window_set_position(win, WINDOW_LOWER_RIGHT, 0);
+	window_set_position(win, WINDOW_LOWER_LEFT, 0);
 
 	tv = tableview_new(win, TABLEVIEW_NOHEADER, NULL, NULL);
-	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZ", ntool_ents);
+	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZ", ntool_ents);
 	tableview_col_add(tv, TABLEVIEW_COL_FILL, 0, NULL, NULL);
 	
 	event_new(tv, "tableview-dblclick", selected_tool, NULL);
 
 	for (i = 0; i < ntool_ents; i++)
-	    tableview_row_add(tv, 0, NULL, i, 0, tool_ents[i].name);
+		tableview_row_add(tv, 0, NULL, i, 0, tool_ents[i].name);
 
 	window_show(win);
 }
