@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.24 2003/02/13 11:30:12 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.25 2003/02/15 07:34:07 vedge Exp $	*/
 /*	Public domain	*/
 
 struct mapview {
@@ -35,13 +35,14 @@ struct mapview {
 	struct node	*cur_node;
 	int		 mx, my;	/* Display offset (nodes) */
 	int		 mw, mh;	/* Display size (nodes) */
-	Sint16		 ssx, ssy;	/* Soft scrolling offsets */
 	Uint16		*zoom;		/* Zoom (%) */
+	Sint16		*ssx, *ssy;	/* Soft scroll offsets */
 	SDL_TimerID	 zoom_tm;
 	int		*tilew, *tileh;
 	int		 cx, cy;	/* Cursor position (nodes) */
 	struct {		/* For MAPVIEW_INDEPENDENT_ZOOM */
 		Uint16	zoom;
+		Sint16	ssx, ssy;
 		int	tilew, tileh;
 	} izoom;
 	struct {		/* For node edition */

@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.145 2003/02/20 03:25:38 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.146 2003/02/22 01:10:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -38,7 +38,7 @@
 
 static const struct version map_ver = {
 	"agar map",
-	4, 0
+	4, 1
 };
 
 static const struct object_ops map_ops = {
@@ -301,6 +301,8 @@ map_init(struct map *m, enum map_type type, char *name, char *media)
 	m->tilew = TILEW;
 	m->tileh = TILEH;
 	m->zoom = 100;
+	m->ssx = TILEW;
+	m->ssy = TILEH;
 	pthread_mutexattr_init(&m->lockattr);
 	pthread_mutexattr_settype(&m->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&m->lock, &m->lockattr);
@@ -712,9 +714,10 @@ map_load(void *ob, int fd)
 {
 	struct map *m = ob;
 	struct object_table *deps;
+	struct version ver;
 	Uint32 x, y;
 
-	if (version_read(fd, &map_ver) != 0) {
+	if (version_read(fd, &map_ver, &ver) != 0) {
 		return (-1);
 	}
 
@@ -733,6 +736,10 @@ map_load(void *ob, int fd)
 	m->tilew = read_uint32(fd);
 	m->tileh = read_uint32(fd);
 	m->zoom = read_uint16(fd);
+	if (ver.minor >= 1) {
+		m->ssx = read_sint16(fd);
+		m->ssy = read_sint16(fd);
+	}
 
 	debug(DEBUG_STATE,
 	    "type %s, geo %dx%d, origin at %d,%d, %dx%d tiles, %d%% zoom\n",
@@ -880,6 +887,10 @@ map_save(void *p, int fd)
 	buf_write_uint32(buf, m->tilew);
 	buf_write_uint32(buf, m->tileh);
 	buf_write_uint16(buf, m->zoom);
+	if (map_ver.minor >= 1) {
+		buf_write_sint16(buf, m->ssx);
+		buf_write_sint16(buf, m->ssy);
+	}
 
 	/* Write the dependencies. */
 	deps = object_table_new();
