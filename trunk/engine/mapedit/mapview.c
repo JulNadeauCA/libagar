@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.72 2003/02/22 11:48:25 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.73 2003/02/24 06:43:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -376,6 +376,9 @@ mapview_init(struct mapview *mv, struct map *m, int flags, int rw, int rh)
 		mv->izoom.zoom = 100;
 		mv->izoom.tilew = TILEW;
 		mv->izoom.tileh = TILEH;
+		mv->izoom.ssx = TILEW;
+		mv->izoom.ssy = TILEH;
+
 		mv->zoom = &mv->izoom.zoom;
 		mv->tilew = &mv->izoom.tilew;
 		mv->tileh = &mv->izoom.tileh;
@@ -664,10 +667,10 @@ mapview_zoom(struct mapview *mv, int zoom)
 	*mv->zoom = zoom;
 	*mv->tilew = zoom * TILEW / 100;
 	*mv->tileh = zoom * TILEH / 100;
-	if (*mv->tilew > 32767)			/* For soft scrolling */
-		*mv->tilew = 32767;
-	if (*mv->tileh > 32767)
-		*mv->tileh = 32767;
+	if (*mv->tilew > 16384)			/* For soft scrolling */
+		*mv->tilew = 16384;
+	if (*mv->tileh > 16384)
+		*mv->tileh = 16384;
 	mv->mw = WIDGET(mv)->w/(*mv->tilew) + 1;
 	mv->mh = WIDGET(mv)->h/(*mv->tileh) + 1;
 
