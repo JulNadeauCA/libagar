@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.193 2003/06/06 09:03:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.194 2003/06/08 00:21:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -414,14 +414,70 @@ window_hide(struct window *win)
 	pthread_mutex_unlock(&view->lock);
 }
 
+static void
+count_widgets(struct widget *wid, unsigned int *nwidgets)
+{
+	struct widget *cwid;
+
+	if (wid->flags & WIDGET_FOCUSABLE)
+		(*nwidgets)++;
+
+	OBJECT_FOREACH_CHILD(cwid, wid, widget)
+		count_widgets(cwid, nwidgets);
+}
+
+static void
+map_widgets(struct widget *wid, struct widget **widgets, unsigned int *i)
+{
+	struct widget *cwid;
+
+	if (wid->flags & WIDGET_FOCUSABLE)
+		widgets[(*i)++] = wid;
+
+	OBJECT_FOREACH_CHILD(cwid, wid, widget)
+		map_widgets(cwid, widgets, i);
+}
+
 /*
- * Cycle focus throughout widgets.
+ * Move the widget focus inside a window.
  * The window must be locked.
  */
 static void
-cycle_widgets(struct window *win, int reverse)
+cycle_focus(struct window *win, int reverse)
 {
-	/* todo */
+	struct widget **widgets;
+	struct widget *olfocus;
+	unsigned int nwidgets = 0;
+	int i = 0;
+
+	if ((olfocus = widget_find_focus(win)) == NULL) {
+		dprintf("no focus!\n");
+		return;
+	}
+
+	count_widgets(WIDGET(win), &nwidgets);
+	widgets = Malloc(nwidgets * sizeof(struct widget *));
+	map_widgets(WIDGET(win), widgets, &i);
+
+	for (i = 0; i < nwidgets; i++) {
+		if (widgets[i] == olfocus) {
+			if (reverse) {
+				if (i-1 >= 0) {
+					widget_focus(widgets[i-1]);
+				} else if (i-1 < 0) {
+					widget_focus(widgets[nwidgets-1]);
+				}
+			} else {
+				if (i+1 < nwidgets) {
+					widget_focus(widgets[i+1]);
+				} else if (i+1 == nwidgets) {
+					widget_focus(widgets[0]);
+				}
+			}
+			break;
+		}
+	}
+	free(widgets);
 }
 
 /*
@@ -695,7 +751,7 @@ window_event(SDL_Event *ev)
 			}
 			if (ev->key.keysym.sym == SDLK_TAB &&	/* Move focus */
 			    ev->type == SDL_KEYUP) {
-				cycle_widgets(win,
+				cycle_focus(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));
 				goto out;
 			}
