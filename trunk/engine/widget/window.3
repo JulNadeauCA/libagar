@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.42 2005/01/05 04:44:06 vedge Exp $
+.\"	$Csoft: window.3,v 1.43 2005/02/03 04:58:04 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -89,6 +89,9 @@ After this initial sizing, widget containers may scale widgets to any size.
 .Ft "void"
 .Fn window_set_position "struct window *win, enum window_alignment alignment" \
                         "int cascade"
+.Pp
+.Ft "void"
+.Fn window_set_geometry "struct window *win" "int x" "int y" "int w" "int h"
 .Pp
 .Ft void
 .Fn window_attach "struct window *win" "struct window *subwin"
@@ -194,6 +197,13 @@ If the
 .Fa cascade
 argument is 1, the window position is slightly incremented or decremented at
 each call (depending on the preferred alignment).
+.Pp
+The
+.Fn window_set_geometry
+function allows manual modification of a window's position and size in terms
+of pixels.
+It should be invoked after the window's child widgets are created, otherwise
+no minimum geometry will be enforced when the window is later resized.
 .Pp
 Finally, the
 .Fn window_attach

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.240 2005/02/03 04:58:04 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.241 2005/02/03 05:32:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -937,79 +937,35 @@ window_clamp(struct window *win)
 	}
 }
 
-/*
- * Resize a window with the mouse.
- * The window must be locked.
- */
-static void
-resize_window(int op, struct window *win, SDL_MouseMotionEvent *motion)
+/* Set the window coordinates and geometry. The window must be locked. */
+void
+window_set_geometry(struct window *win, int x, int y, int w, int h)
 {
-	Uint32 fillcolor = WIDGET_COLOR(win, BGFILL_COLOR);
 	SDL_Rect rfill1, rfill2;
 	int ox = WIDGET(win)->x;
 	int oy = WIDGET(win)->y;
 	int ow = WIDGET(win)->w;
 	int oh = WIDGET(win)->h;
-	int nx = WIDGET(win)->x;
-
-	/* XXX contorted */
-	switch (op) {
-	case VIEW_WINOP_LRESIZE:
-		if (!(win->flags & WINDOW_NO_HRESIZE)) {
-			if (motion->xrel < 0) {
-				WIDGET(win)->w -= motion->xrel;
-				nx += motion->xrel;
-			} else if (motion->xrel > 0) {
-				WIDGET(win)->w -= motion->xrel;
-				nx += motion->xrel;
-			}
-		}
-		if (!(win->flags & WINDOW_NO_VRESIZE)) {
-			if (motion->yrel < 0 || motion->yrel > 0)
-				WIDGET(win)->h += motion->yrel;
-		}
-		break;
-	case VIEW_WINOP_RRESIZE:
-		if (!(win->flags & WINDOW_NO_HRESIZE)) {
-			if (motion->xrel < 0 || motion->xrel > 0)
-				WIDGET(win)->w += motion->xrel;
-		}
-		if (!(win->flags & WINDOW_NO_VRESIZE)) {
-			if (motion->yrel < 0 || motion->yrel > 0)
-				WIDGET(win)->h += motion->yrel;
-		}
-		break;
-	case VIEW_WINOP_HRESIZE:
-		if (!(win->flags & WINDOW_NO_HRESIZE)) {
-			if (motion->yrel < 0 || motion->yrel > 0)
-				WIDGET(win)->h += motion->yrel;
-		}
-		break;
-	default:
-		break;
+	
+	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
+		/* Find the minimum geometry. */
+		window_scale(win, -1, -1);
 	}
 
-	/* XXX check minimum */
-	if (!window_freescale && WIDGET(win)->w < win->minw) {
-		WIDGET(win)->w = win->minw;
-	} else {
-		WIDGET(win)->x = nx;
-	}
-	if (!window_freescale && WIDGET(win)->h < win->minh)
-		WIDGET(win)->h = win->minh;
-
-	if (WIDGET(win)->x < 0)
-		WIDGET(win)->x = 0;
-	if (WIDGET(win)->y < 0)
-		WIDGET(win)->y = 0;
-
-	if ((WIDGET(win)->x + WIDGET(win)->w) > view->w) {
+	/* Limit the window within the view boundaries. */
+	if (x+w > view->w) {
 		WIDGET(win)->x = ox;
 		WIDGET(win)->w = ow;
+	} else {
+		WIDGET(win)->x = x >= 0 ? x : 0;
+		WIDGET(win)->w = w < win->minw ? win->minw : w;
 	}
-	if ((WIDGET(win)->y + WIDGET(win)->h) > view->h) {
+	if (y+h > view->h) {
 		WIDGET(win)->y = oy;
 		WIDGET(win)->h = oh;
+	} else {
+		WIDGET(win)->y = y >= 0 ? y : 0;
+		WIDGET(win)->h = h < win->minh ? win->minh : h;
 	}
 
 	/* Effect the possible changes in geometry. */
@@ -1040,12 +996,14 @@ resize_window(int op, struct window *win, SDL_MouseMotionEvent *motion)
 			rfill2.h = oh - WIDGET(win)->h;
 		}
 		if (!view->opengl) {
+			Uint32 fc = WIDGET_COLOR(win, BGFILL_COLOR);
+
 			if (rfill1.w > 0) {
-				SDL_FillRect(view->v, &rfill1, fillcolor);
+				SDL_FillRect(view->v, &rfill1, fc);
 				SDL_UpdateRects(view->v, 1, &rfill1);
 			}
 			if (rfill2.w > 0) {
-				SDL_FillRect(view->v, &rfill2, fillcolor);
+				SDL_FillRect(view->v, &rfill2, fc);
 				SDL_UpdateRects(view->v, 1, &rfill2);
 			}
 		}
@@ -1054,6 +1012,67 @@ resize_window(int op, struct window *win, SDL_MouseMotionEvent *motion)
 		rootmap_redraw();
 		break;
 	}
+}
+
+/*
+ * Resize a window with the mouse.
+ * The window must be locked.
+ */
+static void
+resize_window(int op, struct window *win, SDL_MouseMotionEvent *motion)
+{
+	int x = WIDGET(win)->x;
+	int y = WIDGET(win)->y;
+	int w = WIDGET(win)->w;
+	int h = WIDGET(win)->h;
+
+	switch (op) {
+	case VIEW_WINOP_LRESIZE:
+		if (!(win->flags & WINDOW_NO_HRESIZE)) {
+			if (motion->xrel < 0) {
+				w -= motion->xrel;
+				x += motion->xrel;
+			} else if (motion->xrel > 0) {
+				w -= motion->xrel;
+				x += motion->xrel;
+			}
+		}
+		if (!(win->flags & WINDOW_NO_VRESIZE)) {
+			if (motion->yrel < 0 || motion->yrel > 0)
+				h += motion->yrel;
+		}
+		break;
+	case VIEW_WINOP_RRESIZE:
+		if (!(win->flags & WINDOW_NO_HRESIZE)) {
+			if (motion->xrel < 0 || motion->xrel > 0)
+				w += motion->xrel;
+		}
+		if (!(win->flags & WINDOW_NO_VRESIZE)) {
+			if (motion->yrel < 0 || motion->yrel > 0)
+				h += motion->yrel;
+		}
+		break;
+	case VIEW_WINOP_HRESIZE:
+		if (!(win->flags & WINDOW_NO_HRESIZE)) {
+			if (motion->yrel < 0 || motion->yrel > 0)
+				h += motion->yrel;
+		}
+		break;
+	default:
+		break;
+	}
+
+#if 0
+	if (!window_freescale) {
+		if (w < win->minw)
+			w = win->minw;
+		if (h < win->minh)
+			h = win->minh;
+	}
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+#endif
+	window_set_geometry(win, x, y, w, h);
 }
 
 int
