@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.5 2003/05/25 02:53:44 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.6 2003/05/25 08:27:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -51,9 +51,13 @@ create_obj(int argc, union evarg *argv)
 	void *nobj;
 	int i;
 
+	if ((it = tlist_item_selected(objs_tl)) == NULL) {
+		text_msg("Error", "No parent selected");
+		return;
+	}
+
 	textbox_copy_string(name_tb, name, sizeof(name));
 	textbox_copy_string(type_tb, type, sizeof(type));
-
 	if (name[0] == '\0') {
 		text_msg("Error", "No object name specified");
 		return;
@@ -80,7 +84,6 @@ create_obj(int argc, union evarg *argv)
 		object_init(nobj, type, name, NULL);
 	}
 
-	it = tlist_item_selected(objs_tl);
 	object_attach((it != NULL) ? it->p1 : world, nobj);
 }
 
