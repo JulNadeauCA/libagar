@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.2 2002/01/30 08:20:43 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.3 2002/01/30 12:45:50 vedge Exp $	*/
 
 #define MAP_WIDTH	256
 #define MAP_HEIGHT	256
@@ -64,44 +64,41 @@ struct map {
 extern struct map *curmap;	/* Currently focused map */
 extern int mapedit;		/* Map edition in progress */
 
-/* Add an animation reference to ob:offs at m:x,y */
-#define MAP_ADDANIM(m, x, y, ob, offs)				\
-	map_entry_addref(&(m)->map[(x)][(y)],			\
-	    (struct object *)(ob), (offs), MAPREF_ANIM);	\
-
 /* Add a sprite reference to ob:offs at m:x,y */
-#define MAP_ADDSPRITE(m, x, y, ob, offs)			\
+#define MAP_ADDSPRITE(m, x, y, ob, soffs)			\
 	map_entry_addref(&(m)->map[(x)][(y)],			\
-	    (struct object *)(ob), (offs), MAPREF_SPRITE);	\
+	    (ob), (soffs), MAPREF_SPRITE);			\
+
+/* Add an animation reference to ob:offs at m:x,y */
+#define MAP_ADDANIM(m, x, y, ob, aoffs)				\
+	map_entry_addref(&(m)->map[(x)][(y)],			\
+	    (ob), (aoffs), MAPREF_ANIM);			\
 
 /*
  * Drop an animation/sprite reference to ob:offs at m:x,y. If offs is
  * negative, drop all references to ob:*.
  */
-#define MAP_DELREF(m, x, y, ob, offs)					\
-	do {								\
-		struct map_entry *me = &(m)->map[(x)][(y)];		\
-		struct map_aref *maref;					\
-									\
-		while ((maref = map_entry_arefobj((me),			\
-		    (struct object *)(ob), (offs)))) {			\
-			map_entry_delref((me), (maref));		\
-		}							\
+#define MAP_DELREF(m, x, y, ob, offs)				\
+	do {							\
+		struct map_entry *me = &(m)->map[(x)][(y)];	\
+		struct map_aref *maref;				\
+								\
+		while ((maref = map_entry_arefobj((me),		\
+		    (struct object *)(ob), (offs)))) {		\
+			map_entry_delref((me), (maref));	\
+		}						\
 	} while (/*CONSTCOND*/ 0)
 
-struct map	*map_create(char *, char *, int, int, int,
-		     struct viewport *, char *);
-struct map_aref *map_entry_addref(struct map_entry *, struct object *,
-		     int, int);
+struct map	*map_create(char *, char *, int, int, int, char *);
+struct map_aref *map_entry_addref(struct map_entry *, struct object *, int,
+		     int);
 struct map_aref	*map_entry_aref(struct map_entry *, int);
-struct map_aref	*map_entry_arefobj(struct map_entry *,
-		     struct object *, int);
+struct map_aref	*map_entry_arefobj(struct map_entry *, struct object *, int);
+int		 map_entry_delref(struct map_entry *, struct map_aref *);
 
-int	map_focus(struct map *);
-int	map_link(void *);
-int	map_entry_delref(struct map_entry *, struct map_aref *);
-void	map_clean(struct map *, struct object *, int, int, int);
-int	map_animset(struct map *, int);
+int		 map_focus(struct map *);
+void		 map_clean(struct map *, struct object *, int, int, int);
+int		 map_animset(struct map *, int);
 #ifdef DEBUG
 void	map_dump_map(void *, void *);
 #endif
