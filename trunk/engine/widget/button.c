@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.1 2002/04/20 11:23:52 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.2 2002/04/21 13:35:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -60,19 +60,13 @@ static struct widvec button_vec = {
 
 struct button *
 button_create(struct window *win, char *name, char *caption, Uint32 flags,
-    Uint32 x, Uint32 y, Uint32 w, Uint32 h)
+    Sint16 x, Sint16 y)
 {
 	struct button *b;
 	struct fobj *fob;
-	SDL_Rect rd;
-
-	rd.x = x;
-	rd.y = y;
-	rd.w = w;	/* variable */
-	rd.h = h;	/* variable */
 
 	b = (struct button *)emalloc(sizeof(struct button));
-	widget_init(&b->wid, name, 0, &button_vec, win, rd);
+	widget_init(&b->wid, name, 0, &button_vec, win, x, y, 0, 0);
 
 	b->caption = strdup(caption);
 	b->flags = flags;
@@ -99,12 +93,14 @@ button_destroy(void *ob)
 	return (0);
 }
 
+/* XXX */
 int
 button_link(void *p)
 {
 	return (widget_link(p));
 }
 
+/* XXX */
 int
 button_unlink(void *p)
 {
@@ -122,6 +118,10 @@ button_draw(void *p)
 	/* Button */
 	bg = SPRITE(b, (b->flags & BUTTON_PRESSED) ? BUTTON_DOWN : BUTTON_UP);
 	WIDGET_DRAW(b, bg, 0, 0);
+
+	/* Define button geometry accordingly. */
+	WIDGET(b)->w = bg->w;
+	WIDGET(b)->h = bg->h;
 
 	/* Label */
 	s = TTF_RenderText_Solid(font, b->caption, white);
@@ -155,6 +155,20 @@ button_draw(void *p)
 void
 button_event(void *p, SDL_Event *ev, Uint32 flags)
 {
-	dprintf("button event\n");
+	struct button *b = (struct button *)p;
+
+	switch (ev->type) {
+	case SDL_MOUSEBUTTONDOWN:
+		b->flags |= BUTTON_PRESSED;
+		WIDGET(b)->win->redraw++;
+		break;
+	case SDL_MOUSEBUTTONUP:
+		b->flags &= ~(BUTTON_PRESSED);
+		WIDGET(b)->win->redraw++;
+		if (b->push != NULL) {
+			b->push(b);
+		}
+		break;
+	}
 }
 
