@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.29 2003/10/13 23:49:01 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.30 2004/01/03 04:25:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -203,12 +203,12 @@ find_widgets(struct widget *wid, struct tlist *widtl, int depth)
 	it = tlist_insert_item(widtl, NULL, OBJECT(wid)->name, wid);
 	it->depth = depth;
 	
-	if (!TAILQ_EMPTY(&OBJECT(wid)->childs)) {
+	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= TLIST_HAS_CHILDREN;
 	}
 
 	if ((it->flags & TLIST_HAS_CHILDREN) &&
-	    tlist_visible_childs(widtl, it)) {
+	    tlist_visible_children(widtl, it)) {
 		struct widget *cwid;
 
 		OBJECT_FOREACH_CHILD(cwid, wid, widget)
