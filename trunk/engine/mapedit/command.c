@@ -139,7 +139,7 @@ mapedit_clearmap(struct mapedit *med)
 	mapedit_objlist(med);
 	mapedit_tilelist(med);
 
-	text_msg(5000, TEXT_SLEEP,
+	text_msg(2000, TEXT_SLEEP,
 	    "New %dx%d map.\n", med->map->mapw, med->map->maph);
 }
 
@@ -173,7 +173,7 @@ mapedit_fillmap(struct mapedit *med)
 	mapedit_objlist(med);
 	mapedit_tilelist(med);
 	
-	text_msg(5000, TEXT_SLEEP,
+	text_msg(2000, TEXT_SLEEP,
 	    "Initialized %dx%d map.\n", med->map->mapw, med->map->maph);
 }
 
@@ -192,7 +192,7 @@ mapedit_setorigin(struct mapedit *med, int *x, int *y)
 	*y = map->defy;
 	map->redraw++;
 	
-	text_msg(5000, TEXT_SLEEP, "Set origin at %dx%d.\n", *x, *y);
+	text_msg(2000, TEXT_SLEEP, "Set origin at %dx%d.\n", *x, *y);
 }
 
 void
@@ -234,6 +234,7 @@ void
 mapedit_savemap(struct mapedit *med)
 {
 	object_save(med->map);
+	text_msg(2000, TEXT_SLEEP, "Saved %s.\n", med->map->obj.name);
 }
 
 void
