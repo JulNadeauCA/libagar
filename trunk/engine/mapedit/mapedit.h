@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.2 2002/01/25 15:06:52 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.3 2002/01/30 12:51:11 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -60,9 +60,9 @@ struct mapedit {
 #define MAPEDIT_MOVE(medp, nx, ny)					\
 	do {				    				\
 		MAP_DELREF((medp)->map, (medp)->x, (medp)->y,		\
-		    (medp), MAPEDIT_SELECT); 				\
+		    (struct object *)(medp), MAPEDIT_SELECT);		\
 		MAP_ADDANIM((medp)->map, nx, ny,			\
-		    (medp), MAPEDIT_SELECT);				\
+		    (struct object *)(medp), MAPEDIT_SELECT);		\
 		(medp)->x = nx;						\
 		(medp)->y = ny;						\
 	} while (0)
@@ -74,7 +74,7 @@ struct mapedit {
 		(med)->x = (mx);				\
 		(med)->y = (my);				\
 		MAP_ADDANIM((pma), (mx), (my),			\
-		    &(pma)->obj, MAPEDIT_SELECT);		\
+		    (struct object *)(med), MAPEDIT_SELECT);	\
 	} while (0)
 
 /* Editor anims */
