@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.28 2002/04/28 11:03:28 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.29 2002/04/30 01:11:33 vedge Exp $	*/
 
 #ifndef _AGAR_OBJECT_H_
 #define _AGAR_OBJECT_H_
@@ -69,15 +69,17 @@ struct object {
 #define ANIM(ob, sp)	OBJECT((ob))->art->anims[(sp)]
 #define SAMPLE(ob, sp)	OBJECT((ob))->audio->samples[(sp)]
 
+struct object	*object_new(char *, char *, int, const void *);
+int	 	 object_link(void *);
+int		 object_unlink(void *);
+int		 object_load(void *);
+int		 object_save(void *);
+
 char	*object_name(char *, int);
 void	 object_init(struct object *, char *, char *, int, const void *);
+int	 object_loadfrom(void *, char *);
 int	 object_addanim(struct object_art *, struct anim *);
 int	 object_addsprite(struct object_art *, SDL_Surface *);
-int	 object_link(void *);
-int	 object_unlink(void *);
-int	 object_load(void *);
-int	 object_loadfrom(void *, char *);
-int	 object_save(void *);
 void	 increase_uint32(Uint32 *, Uint32, Uint32);
 void	 decrease_uint32(Uint32 *, Uint32, Uint32);
 void	 object_dump(void *);
