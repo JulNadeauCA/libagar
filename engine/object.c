@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.57 2002/06/06 10:18:19 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.58 2002/06/08 08:05:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -69,15 +69,16 @@ static struct object_audio	*object_get_audio(char *);
 int
 object_addanim(struct object_art *art, struct anim *anim)
 {
+	
+
 	if (art->anims == NULL) {			/* Initialize */
-		art->anims = (struct anim **)
-		    emalloc(NANIMS_INIT * sizeof(struct anim *));
+		art->anims = emalloc(NANIMS_INIT * sizeof(struct anim *));
 		art->maxanims = NANIMS_INIT;
 		art->nanims = 0;
 	} else if (art->nanims >= art->maxanims) {	/* Grow */
 		struct anim **newanims;
 
-		newanims = (struct anim **)erealloc(art->anims,
+		newanims = erealloc(art->anims,
 		    (NANIMS_GROW * art->maxanims) * sizeof(struct anim *));
 		art->maxanims *= NANIMS_GROW;
 		art->anims = newanims;
