@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.61 2002/06/09 15:04:29 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.62 2002/06/10 04:27:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -44,8 +44,8 @@
 #include <engine/input.h>
 
 enum {
-	NANIMS_INIT =	1,
-	NSPRITES_INIT =	1,
+	NANIMS_INIT =	4,
+	NSPRITES_INIT =	4,
 	NANIMS_GROW =	2,
 	NSPRITES_GROW = 2,
 };
@@ -458,7 +458,13 @@ object_save(void *p)
 		return (0);
 	}
 
-	sprintf(path, "%s/%s.%s", world->udatadir, ob->name, ob->saveext);
+	if (strcmp(ob->saveext, "m") == 0) {
+		sprintf(path, "%s/maps/%s.m", world->udatadir, ob->name);
+	} else {
+		sprintf(path, "%s/%s.%s", world->udatadir, ob->name,
+		    ob->saveext);
+	}
+
 	fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
 	if (fd < 0) {
 		fatal("%s: %s\n", path, strerror(errno));
@@ -503,7 +509,11 @@ object_path(char *obname, const char *suffix)
 	for (p = strtok_r(datapath, ":;", &last);
 	     p != NULL;
 	     p = strtok_r(NULL, ":;", &last)) {
-		sprintf(path, "%s/%s.%s", p, obname, suffix);
+	     	if (strcmp(suffix, ".m") == 0) {
+			sprintf(path, "%s/maps/%s.m", p, obname);
+		} else {
+			sprintf(path, "%s/%s.%s", p, obname, suffix);
+		}
 		if (stat(path, &sta) == 0) {
 			free(datapathp);
 			return (path);
