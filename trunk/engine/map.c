@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.211 2004/03/13 02:35:21 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.212 2004/03/17 12:42:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -50,7 +50,7 @@
 
 const struct version map_ver = {
 	"agar map",
-	5, 1
+	6, 0
 };
 
 const struct object_ops map_ops = {
@@ -96,6 +96,7 @@ noderef_init(struct noderef *r, enum noderef_type type)
 	r->r_gfx.ymotion = 0;
 	r->r_gfx.edge = 0;
 	TAILQ_INIT(&r->transforms);
+	TAILQ_INIT(&r->masks);
 }
 
 /*
@@ -134,12 +135,19 @@ void
 noderef_destroy(struct map *m, struct noderef *r)
 {
 	struct transform *trans, *ntrans;
+	struct nodemask *mask, *nmask;
 
 	for (trans = TAILQ_FIRST(&r->transforms);
 	     trans != TAILQ_END(&r->transforms);
 	     trans = ntrans) {
 		ntrans = TAILQ_NEXT(trans, transforms);
 		transform_destroy(trans);
+	}
+	for (mask = TAILQ_FIRST(&r->masks);
+	     mask != TAILQ_END(&r->masks);
+	     mask = nmask) {
+		nmask = TAILQ_NEXT(mask, masks);
+		nodemask_destroy(m, mask);
 	}
 
 	switch (r->type) {
@@ -509,6 +517,7 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
     int dlayer)
 {
 	struct transform *trans;
+	struct nodemask *mask;
 	struct noderef *dr = NULL;
 
 	/* Allocate a new noderef with the same data. */
@@ -545,6 +554,16 @@ node_copy_ref(const struct noderef *sr, struct map *dm, struct node *dn,
 		ntrans = Malloc(sizeof(struct transform));
 		transform_init(ntrans, trans->type, trans->nargs, trans->args);
 		TAILQ_INSERT_TAIL(&dr->transforms, ntrans, transforms);
+	}
+	
+	/* Inherit the node masks. */
+	TAILQ_FOREACH(mask, &sr->masks, masks) {
+		struct nodemask *nmask;
+
+		nmask = Malloc(sizeof(struct nodemask));
+		nodemask_init(nmask, mask->type);
+		nodemask_copy(mask, dm, nmask);
+		TAILQ_INSERT_TAIL(&dr->masks, nmask, masks);
 	}
 	return (dr);
 }
@@ -684,7 +703,7 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
     struct noderef **r)
 {
 	enum noderef_type type;
-	Uint32 ntrans = 0;
+	Uint32 ntrans = 0, nmasks = 0;
 	Uint8 flags;
 	Uint8 layer;
 	Sint8 friction;
@@ -700,17 +719,17 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 	switch (type) {
 	case NODEREF_SPRITE:
 		{
-			Uint32 ind, offs;
+			Uint32 ref, offs;
 			Sint16 xcenter, ycenter;
 			struct object *pobj;
 
-			ind = read_uint32(buf);
+			ref = read_uint32(buf);
 			offs = read_uint32(buf);
 			xcenter = read_sint16(buf);
 			ycenter = read_sint16(buf);
 
-			if ((pobj = object_find_dep(m, ind)) == NULL) {
-				error_set(_("Cannot resolve sprite: %u."), ind);
+			if ((pobj = object_find_dep(m, ref)) == NULL) {
+				error_set(_("Cannot resolve object: %u."), ref);
 				return (-1);
 			}
 			*r = node_add_sprite(m, node, pobj, offs);
@@ -723,18 +742,18 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 		break;
 	case NODEREF_ANIM:
 		{
-			Uint32 ind, offs, aflags;
+			Uint32 ref, offs, aflags;
 			Sint16 xcenter, ycenter;
 			struct object *pobj;
 
-			ind = read_uint32(buf);
+			ref = read_uint32(buf);
 			offs = read_uint32(buf);
 			xcenter = read_sint16(buf);
 			ycenter = read_sint16(buf);
 			aflags = read_uint32(buf);
 			
-			if ((pobj = object_find_dep(m, ind)) == NULL) {
-				error_set(_("Cannot resolve anim: %u."), ind);
+			if ((pobj = object_find_dep(m, ref)) == NULL) {
+				error_set(_("Cannot resolve object: %u."), ref);
 				return (-1);
 			}
 			*r = node_add_anim(m, node, pobj, offs, aflags);
@@ -764,7 +783,6 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 				return (-1);
 			}
 			dir = read_uint8(buf);
-
 			*r = node_add_warp(m, node, map_id, ox, oy, dir);
 			(*r)->flags = flags;
 			(*r)->layer = layer;
@@ -791,6 +809,23 @@ noderef_load(struct map *m, struct netbuf *buf, struct node *node,
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&(*r)->transforms, trans, transforms);
+	}
+	
+	/* Read the node masks. */
+	if ((nmasks = read_uint32(buf)) > NODEREF_MAX_MASKS) {
+		error_set(_("Too many node masks."));
+		goto fail;
+	}
+	for (i = 0; i < nmasks; i++) {
+		struct nodemask *mask;
+
+		mask = Malloc(sizeof(struct nodemask));
+		nodemask_init(mask, 0);
+		if (nodemask_load(m, buf, mask) == -1) {
+			free(mask);
+			goto fail;
+		}
+		TAILQ_INSERT_TAIL(&(*r)->masks, mask, masks);
 	}
 	return (0);
 fail:
@@ -898,9 +933,10 @@ fail:
 void
 noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 {
-	off_t ntrans_offs;
-	Uint32 ntrans = 0;
+	off_t ntrans_offs, nmasks_offs;
+	Uint32 ntrans = 0, nmasks = 0;
 	struct transform *trans;
+	struct nodemask *mask;
 
 	/* Save the type of reference, flags and layer information. */
 	write_uint32(buf, (Uint32)r->type);
@@ -941,6 +977,15 @@ noderef_save(struct map *m, struct netbuf *buf, struct noderef *r)
 		ntrans++;
 	}
 	pwrite_uint32(buf, ntrans, ntrans_offs);
+	
+	/* Save the masks. */
+	nmasks_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(mask, &r->masks, masks) {
+		nodemask_save(m, buf, mask);
+		nmasks++;
+	}
+	pwrite_uint32(buf, nmasks, nmasks_offs);
 }
 
 void
