@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.109 2003/06/17 23:30:42 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.110 2003/06/21 06:50:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -28,6 +28,8 @@
 
 #include <config/have_x11.h>
 #include <config/have_progname.h>
+#include <config/have_setlocale.h>
+
 #include <engine/compat/setenv.h>
 #include <engine/compat/strlcat.h>
 
@@ -46,7 +48,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#ifdef HAVE_SETLOCALE
+#include <locale.h>
+#endif
 #ifdef HAVE_X11
 #include <SDL_syswm.h>
 #endif
@@ -71,6 +75,10 @@ engine_init(int argc, char *argv[], struct engine_proginfo *prog, int flags)
 		error_set("engine already initialized");
 		return (-1);
 	}
+
+#ifdef HAVE_SETLOCALE
+	setlocale(LC_ALL, "");
+#endif
 
 	/* Initialize the error handling facility. */
 	error_init();

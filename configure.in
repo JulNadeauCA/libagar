@@ -1,4 +1,4 @@
-# $Csoft: configure.in,v 1.67 2003/06/13 03:59:48 vedge Exp $
+# $Csoft: configure.in,v 1.68 2003/06/23 00:05:01 vedge Exp $
 # Public domain
 
 register("--with-smpeg",	"MPEG playback using smpeg [default: check]");
@@ -45,6 +45,7 @@ check(asprintf);
 check(vasprintf);
 check(snprintf);
 check(vsnprintf);
+check(setlocale);
 
 mdefine(CFLAGS, "$CFLAGS -I$SRC");
 #mdefine(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes -Wno-unused");
