@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.29 2002/07/29 05:29:29 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.30 2002/07/30 22:23:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -61,6 +61,7 @@ enum {
 	TEXT_COLOR
 };
 
+static void	button_scaled(int, union evarg *);
 static void	button_event(int, union evarg *);
 
 struct button *
@@ -103,6 +104,7 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 		b->caption = NULL;
 		b->label_s = image;
 	}
+	b->slabel_s = NULL;
 	
 	if (rw == -1)
 		WIDGET(b)->w = b->label_s->w + b->xmargin;
@@ -119,6 +121,8 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 	    button_event, "%i", WINDOW_KEYDOWN);
 	event_new(b, "window-mouseout", 0,
 	    button_event, "%i", WINDOW_MOUSEOUT);
+	
+	event_new(b, "widget-scaled", 0, button_scaled, NULL);
 }
 
 void
@@ -131,11 +135,31 @@ button_destroy(void *p)
 	free(b->caption);
 }
 
+static void
+button_scaled(int argc, union evarg *argv)
+{
+	struct button *b = argv[0].p;
+	int x, y;
+	Uint32 col = 0;
+	Uint8 *src, *dst, r1, g1, b1, a1;
+	
+	if (WIDGET(b)->w < 6 || WIDGET(b)->h < 6) {
+		return;
+	}
+
+	if (b->slabel_s != NULL) {
+		SDL_FreeSurface(b->slabel_s);
+	}
+
+	b->slabel_s = view_scale_surface(b->label_s,
+	    WIDGET(b)->w - 6, WIDGET(b)->h - 6);
+}
+
 void
 button_draw(void *p)
 {
 	struct button *b = p;
-	SDL_Surface *label = b->label_s;
+	SDL_Surface *label = b->slabel_s;
 	int x = 0, y = 0;
 
 	OBJECT_ASSERT(p, "widget");
@@ -163,7 +187,7 @@ button_draw(void *p)
 		x++;
 		y++;
 	}
-	WIDGET_DRAW(b, b->label_s, x, y);
+	WIDGET_DRAW(b, label, x, y);
 }
 
 static void
