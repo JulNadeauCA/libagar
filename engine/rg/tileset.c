@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.8 2005/02/03 09:19:06 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.9 2005/02/08 15:50:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -218,6 +218,8 @@ tileset_load(void *obj, struct netbuf *buf)
 			Free(px, M_RG);
 			goto fail;
 		}
+		TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
+		dprintf("%s: added pixmap `%s'\n", OBJECT(ts)->name, px->name);
 	}
 
 	/* Load the features. */
@@ -264,7 +266,7 @@ tileset_load(void *obj, struct netbuf *buf)
 		
 		t = Malloc(sizeof(struct tile), M_RG);
 		copy_string(name, buf, sizeof(name));
-		tile_init(t, name);
+		tile_init(t, ts, name);
 		if (tile_load(ts, t, buf) == -1) {
 			tile_destroy(t);
 			Free(t, M_RG);
@@ -359,8 +361,7 @@ poll_tileset(int argc, union evarg *argv)
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		char label[TLIST_LABEL_MAX];
 		struct tlist_item *it;
-		struct tile_feature *tft;
-		struct feature *ft;
+		struct tile_element *tel;
 	
 		snprintf(label, sizeof(label), "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
@@ -368,36 +369,64 @@ poll_tileset(int argc, union evarg *argv)
 		it->depth = 0;
 		it->class = "tile";
 
-		if (!TAILQ_EMPTY(&t->features)) {
+		if (!TAILQ_EMPTY(&t->elements)) {
 			it->flags |= TLIST_HAS_CHILDREN;
 			if (!tlist_visible_children(tl, it))
 				continue;
 		}
 	
-		TAILQ_FOREACH(tft, &t->features, features) {
-			struct feature *ft = tft->ft;
-			struct feature_sketch *fts;
+		TAILQ_FOREACH(tel, &t->elements, elements) {
+			switch (tel->type) {
+			case TILE_FEATURE:
+				{
+					struct feature *ft =
+					    tel->tel_feature.ft;
+					struct feature_sketch *fts;
 
-			snprintf(label, sizeof(label), "%s [%d,%d] %s",
-			    ft->name, tft->x, tft->y,
-			    tft->visible ? "" : "(invisible)");
+					snprintf(label, sizeof(label),
+					    "%s [%d,%d] %s", ft->name,
+					    tel->tel_feature.x,
+					    tel->tel_feature.y,
+					    tel->visible ? "" : "(invisible)");
 
-			it = tlist_insert_item(tl, ICON(OBJ_ICON), label, ft);
-			it->depth = 1;
-			it->class = "feature";
+					it = tlist_insert_item(tl,
+					    ICON(OBJ_ICON), label, tel);
+					it->depth = 1;
+					it->class = "tile-feature";
 
-			TAILQ_FOREACH(fts, &ft->sketches, sketches) {
-				snprintf(label, sizeof(label),
-				    "%s [at %d,%d] %s (vg %fx%f)",
-				    fts->sk->name,
-				    fts->x, fts->y,
-				    (fts->visible ? "" : "(invisible)"),
-				    fts->sk->vg->w, fts->sk->vg->h);
+					TAILQ_FOREACH(fts, &ft->sketches,
+					    sketches) {
+						snprintf(label, sizeof(label),
+						    "%s [at %d,%d] %s",
+						    fts->sk->name,
+						    fts->x, fts->y,
+						    (fts->visible ? "" :
+						    "(invisible)"));
 
-				it = tlist_insert_item(tl, ICON(DRAWING_ICON),
-				    label, fts);
-				it->depth = 2;
-				it->class = "sketch";
+						it = tlist_insert_item(tl,
+						    ICON(DRAWING_ICON), label,
+						    fts);
+						it->depth = 2;
+						it->class = "feature-sketch";
+					}
+				}
+				break;
+			case TILE_PIXMAP:
+				{
+					struct pixmap *px = tel->tel_pixmap.px;
+
+					snprintf(label, sizeof(label),
+					    "%s [%d,%d] %s", px->name,
+					    tel->tel_pixmap.x,
+					    tel->tel_pixmap.y,
+					    tel->visible ? "" : "(invisible)");
+
+					it = tlist_insert_item(tl,
+					    ICON(OBJ_ICON), label, tel);
+					it->depth = 1;
+					it->class = "tile-pixmap";
+				}
+				break;
 			}
 		}
 	}
@@ -466,7 +495,7 @@ tryname2:
 	}
 
 	t = Malloc(sizeof(struct tile), M_RG);
-	tile_init(t, ins_tile_name);
+	tile_init(t, ts, ins_tile_name);
 	tile_scale(ts, t, ins_tile_w, ins_tile_h, flags);
 	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 
