@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.3 2002/03/31 04:40:57 vedge Exp $
+.\"	$Csoft: agar.3,v 1.4 2002/04/10 00:12:20 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\"
@@ -33,33 +33,14 @@
 .Os
 .Sh NAME
 .Nm agar
-.Nd tile-based game engine
+.Nd game engine
 .Sh DESCRIPTION
 .Nm
-is a graphical, object-oriented map engine implementing:
-.Pp
-.Bl -tag -width speaker -compact -offset indent
-.It engine
-Bootstrapping, engine configuration.
-.It world
-Hierarchy, garbage collection, active objects list.
-.It object
-Sprites, state saving/loading, back references.
-.It event
-Event/motion interpolation, event dispatching.
-.It map
-Maps and associated rendering.
-.It char
-Generic character routines.
-.It audio
-Audio subsystem.
-.It video
-Video playback (optional).
-.It xcf
-Loading sprites and animations.
-.It view
-Viewports, view masking, scrolling
+is an object-oriented graphical game engine.
 .El
 .Sh SEE ALSO
 .Xr fobj 3 ,
-.Xr char 3
+.Xr object 3 ,
+.Xr map 3 ,
+.Xr widget 3 ,
+.Xr window 3 ,
