@@ -1,4 +1,4 @@
-/*	$Csoft: timeout.h,v 1.3 2004/05/13 10:31:56 vedge Exp $	*/
+/*	$Csoft: timeout.h,v 1.4 2004/05/15 06:07:11 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TIMEOUT_H_
@@ -26,6 +26,7 @@ void		timeout_set(struct timeout *,
 void		timeout_add(void *, struct timeout *, Uint32);
 int		timeout_scheduled(void *, struct timeout *);
 void		timeout_del(void *, struct timeout *);
+__inline__ void	timeout_replace(void *, struct timeout *, Uint32);
 __inline__ void timeout_process(Uint32);
 __inline__ void lock_timeout(void *);
 __inline__ void unlock_timeout(void *);
