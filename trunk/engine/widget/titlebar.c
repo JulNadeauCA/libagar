@@ -1,4 +1,4 @@
-/*	$Csoft: titlebar.c,v 1.10 2004/01/22 09:58:46 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.11 2004/01/23 06:24:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -163,7 +163,8 @@ titlebar_hide_win(int argc, union evarg *argv)
 {
 	struct titlebar *tbar = argv[1].p;
 
-	tbar->win->visible = 0;
+	/* TODO */
+//	tbar->win->visible = 0;
 }
 
 static void
