@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.115 2003/03/25 13:48:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.116 2003/03/28 01:57:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -47,6 +47,11 @@
 #include <string.h>
 #include <unistd.h>
 
+static const struct version object_ver = {
+	"agar object",
+	1, 0
+};
+
 static const struct object_ops null_ops = {
 	NULL,	/* destroy */
 	NULL,	/* load */
@@ -54,25 +59,31 @@ static const struct object_ops null_ops = {
 };
 
 #ifdef DEBUG
-#define DEBUG_STATE	0x01
-#define DEBUG_POSITION	0x02
-#define DEBUG_DEPS	0x04
+#define DEBUG_STATE	0x001
+#define DEBUG_POSITION	0x002
+#define DEBUG_DEPS	0x004
+#define DEBUG_SUBMAPS	0x008
+#define DEBUG_CONTROL	0x010
+#define DEBUG_ATTACH	0x020
+#define DEBUG_GC	0x040
 
-int	object_debug = DEBUG_STATE|DEBUG_POSITION;
+int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL|
+	               DEBUG_ATTACH|DEBUG_GC;
 #define engine_debug object_debug
 #endif
 
 struct object *
-object_new(char *type, char *name, char *media, int flags, const void *opsp)
+object_new(void *parent, char *type, char *name, char *media, int flags,
+    const void *opsp)
 {
 	struct object *ob;
 
 	ob = Malloc(sizeof(struct object));
 	object_init(ob, type, name, media, flags, opsp);
 
-	pthread_mutex_lock(&world->lock);
-	world_attach(ob);
-	pthread_mutex_unlock(&world->lock);
+	if (parent != NULL) {
+		object_attach(parent, ob);
+	}
 	return (ob);
 }
 
@@ -80,8 +91,8 @@ void
 object_init(struct object *ob, char *type, char *name, char *media, int flags,
     const void *opsp)
 {
-	if (strlen(type) > OBJECT_TYPE_MAX ||
-	    strlen(name) > OBJECT_NAME_MAX) {
+	if (strlen(type) >= OBJECT_TYPE_MAX ||
+	    strlen(name) >= OBJECT_NAME_MAX) {
 		fatal("name/type too big");
 	}
 	ob->type = Strdup(type);
@@ -91,170 +102,299 @@ object_init(struct object *ob, char *type, char *name, char *media, int flags,
 	ob->flags = flags;
 	ob->pos = NULL;
 	ob->state = OBJECT_EMBRYONIC;
+	SLIST_INIT(&ob->childs);
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
-	pthread_mutex_init(&ob->pos_lock, NULL);
-	
-	pthread_mutexattr_init(&ob->props_lockattr);
-	pthread_mutexattr_settype(&ob->props_lockattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&ob->props_lock, &ob->props_lockattr);
-
-	pthread_mutexattr_init(&ob->events_lockattr);
-	pthread_mutexattr_settype(&ob->events_lockattr,PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&ob->events_lock, &ob->events_lockattr);
+	pthread_mutex_init(&ob->lock, NULL);
+	pthread_mutex_init(&ob->props_lock, &recursive_mutexattr);
+	pthread_mutex_init(&ob->events_lock, &recursive_mutexattr);
 
 	ob->art = (ob->flags & OBJECT_ART) ? art_fetch(media, ob) : NULL;
 }
 
+/* Attach a child object to a parent object. */
 void
-object_destroy(void *p)
+object_attach(void *parentp, void *childp)
 {
-	struct object *ob = p;
-	struct event *eev, *nexteev;
+	struct object *parent = parentp;
+	struct object *child = childp;
+
+	pthread_mutex_lock(&parent->lock);
+	SLIST_INSERT_HEAD(&parent->childs, child, wobjs);
+	debug(DEBUG_ATTACH, "%s: attached %s\n", parent->name, child->name);
+	pthread_mutex_unlock(&parent->lock);
+}
+
+/* Detach a child object from its parent. */
+void
+object_detach(void *parentp, void *childp)
+{
+	struct object *parent = parentp;
+	struct object *child = childp;
+
+	pthread_mutex_lock(&parent->lock);
+	SLIST_REMOVE(&parent->childs, child, object, wobjs);
+	debug(DEBUG_ATTACH, "%s: detached %s\n", parent->name, child->name);
+	pthread_mutex_unlock(&parent->lock);
+}
+
+/* Detach and free child objects. */
+void
+object_free_childs(struct object *ob)
+{
+	struct object *cob, *ncob;
+
+	pthread_mutex_lock(&ob->lock);
+	for (cob = SLIST_FIRST(&ob->childs);
+	     cob != SLIST_END(&ob->childs);
+	     cob = ncob) {
+		ncob = SLIST_NEXT(ob, wobjs);
+		if (cob->flags & OBJECT_STATIC)
+			continue;
+		debug(DEBUG_GC, "%s: freeing %s\n", ob->name, cob->name);
+		object_destroy(cob);
+		free(cob);
+	}
+	SLIST_INIT(&ob->childs);
+	pthread_mutex_unlock(&ob->lock);
+}
+
+/* Clear an object's property table. */
+void
+object_free_props(struct object *ob)
+{
 	struct prop *prop, *nextprop;
+
+	pthread_mutex_lock(&ob->props_lock);
+	for (prop = TAILQ_FIRST(&ob->props);
+	     prop != TAILQ_END(&ob->props);
+	     prop = nextprop) {
+		nextprop = TAILQ_NEXT(prop, props);
+		prop_destroy(prop);
+		free(prop);
+	}
+	TAILQ_INIT(&ob->props);
+	pthread_mutex_unlock(&ob->props_lock);
+}
 	
-	if (OBJECT_OPS(ob)->destroy != NULL)
-		OBJECT_OPS(ob)->destroy(ob);
+/* Clear an object's event handler list. */
+void
+object_free_events(struct object *ob)
+{
+	struct event *eev, *nexteev;
 
-	if ((ob->flags & OBJECT_ART_CACHE) == 0 && ob->art != NULL)
-		art_unused(ob->art);
-
+	pthread_mutex_lock(&ob->events_lock);
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
 	     eev = nexteev) {
 		nexteev = TAILQ_NEXT(eev, events);
 		free(eev);
 	}
+	TAILQ_INIT(&ob->events);
+	pthread_mutex_unlock(&ob->events_lock);
+}
 
-	for (prop = TAILQ_FIRST(&ob->props);
-	     prop != TAILQ_END(&ob->props);
-	     prop = nextprop) {
-		nextprop = TAILQ_NEXT(prop, props);
-		prop_destroy(prop);
-	}
+void
+object_destroy(void *p)
+{
+	struct object *ob = p;
+	
+	if (ob->ops->destroy != NULL)
+		ob->ops->destroy(ob);
 
-	pthread_mutex_destroy(&ob->pos_lock);
+	if ((ob->flags & OBJECT_ART_CACHE) == 0 && ob->art != NULL)
+		art_unused(ob->art);
+
+	object_free_events(ob);
+	object_free_props(ob);
+	object_free_childs(ob);
+
+	pthread_mutex_destroy(&ob->lock);
 	pthread_mutex_destroy(&ob->events_lock);
 	pthread_mutex_destroy(&ob->props_lock);
-	pthread_mutexattr_destroy(&ob->events_lockattr);
 
-	Free(ob->name);
-	Free(ob->type);
-	free(ob);
+	free(ob->name);
+	free(ob->type);
 }
 
-int
-object_load_from(void *p, char *path)
+static int
+object_load_data(struct object *ob, struct netbuf *buf)
 {
-	struct object *ob = p;
-	int fd;
+	Uint32 i, nchilds;
 
-	debug(DEBUG_STATE, "loading %s from %s\n", ob->name, path);
-
-	if ((fd = open(path, O_RDONLY)) == -1) {
-		error_set("%s: %s", path, strerror(errno));
+	if (version_read(buf, &object_ver, NULL) == -1)
 		return (-1);
+
+	pthread_mutex_lock(&ob->lock);
+
+	if (prop_load(ob, buf) == -1)
+		goto fail;
+	if (read_uint32(buf) > 0 &&
+	    object_load_position(ob, buf) == -1)
+		goto fail;
+
+	nchilds = read_uint32(buf);
+	for (i = 0; i < nchilds; i++) {
+		char childname[OBJECT_NAME_MAX];
+		struct object *child;
+
+		if (copy_string(childname, buf, sizeof(childname)) >=
+		    sizeof(childname)) {
+			error_set("child object name too big");
+			goto fail;
+		}
+		SLIST_FOREACH(child, &ob->childs, wobjs) {
+			if (strcmp(child->name, childname) == 0)
+				break;
+		}
+		if (child != NULL) {
+			dprintf("%s: loading child: %s\n", ob->name,
+			    child->name);
+			if (object_load_data(child, buf) == -1)
+				goto fail;
+		} else {
+			dprintf("%s: no child matches `%s'\n", ob->name,
+			    childname);
+		}
 	}
 
-	if (prop_load(ob, fd) != 0)
+	if (ob->ops->load != NULL &&
+	    ob->ops->load(ob, buf) == -1)
 		goto fail;
 
-	if (OBJECT_OPS(ob)->load != NULL &&
-	    OBJECT_OPS(ob)->load(ob, fd) != 0)
-		goto fail;
-
-	close(fd);
+	pthread_mutex_lock(&ob->lock);
 	return (0);
 fail:
-	close(fd);
+	pthread_mutex_lock(&ob->lock);
 	return (-1);
 }
 
 int
-object_load(void *p)
+object_load(void *p, char *opath)
 {
-	struct object *ob = p;
 	char path[FILENAME_MAX];
-	int fd;
-	
+	struct object *ob = p;
+	struct netbuf buf;
+	int fd, rv = 0;
+
 	debug(DEBUG_STATE, "loading %s\n", ob->name);
 
-	if (object_path(ob->name, ob->type, path, sizeof(path)) == -1)
-		return (-1);
-
+	if (opath == NULL) {
+		if (object_path(ob->name, ob->type, path, sizeof(path)) == -1)
+			return (-1);
+	} else {
+		if (strlcpy(path, opath, sizeof(path)) >= sizeof(path)) {
+			error_set("path too big");
+			return (-1);
+		}
+	}	
+	
 	if ((fd = open(path, O_RDONLY)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
-		goto fail;
+		return (-1);
 	}
 
-	if (prop_load(ob, fd) != 0)
-		goto fail;
-
-	if (OBJECT_OPS(ob)->load != NULL &&
-	    OBJECT_OPS(ob)->load(ob, fd) != 0)
-		goto fail;
-
+	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);	
+	rv = object_load_data(ob, &buf);
+	netbuf_flush(&buf);
+	netbuf_destroy(&buf);
 	close(fd);
+	return (rv);
+}
+
+static int
+object_save_data(struct object *ob, struct netbuf *buf)
+{
+	struct object *child;
+	off_t nchilds_offs;
+	Uint32 nchilds = 0;
+
+	version_write(buf, &object_ver);
+
+	pthread_mutex_lock(&ob->lock);
+
+	if (prop_save(ob, buf) == -1)
+		goto fail;
+	if (ob->pos != NULL) {
+		write_uint32(buf, 1);
+		object_save_position(ob, buf);
+	} else {
+		write_uint32(buf, 0);
+	}
+
+	nchilds_offs = buf->offs;
+	write_uint32(buf, 0);				/* Skip count */
+	SLIST_FOREACH(child, &ob->childs, wobjs) {
+		write_string(buf, child->name);
+		if (object_save_data(child, buf) == -1)
+			goto fail;
+		nchilds++;
+	}
+	pwrite_uint32(buf, nchilds, nchilds_offs);
+
+	if (ob->ops->save != NULL &&			/* Save custom data */
+	    ob->ops->save(ob, buf) == -1)
+		goto fail;
+
+	pthread_mutex_unlock(&ob->lock);
 	return (0);
 fail:
-	close(fd);
+	pthread_mutex_unlock(&ob->lock);
 	return (-1);
 }
 
 int
-object_save(void *p)
+object_save(void *p, char *opath)
 {
 	char path[FILENAME_MAX];
 	struct object *ob = p;
 	struct stat sta;
-	int fd;
+	struct netbuf buf;
+	int fd, rv;
 
-	if (prop_copy_string(config, "path.user_data_dir",
-	    path, sizeof(path)) > sizeof(path)) {
-		goto toobig;
+	if (opath != NULL) {
+		if (strlcpy(path, opath, sizeof(path)) >= sizeof(path))
+			goto toobig;
+	} else {
+		if (prop_copy_string(config, "path.user_data_dir",
+		    path, sizeof(path)) >= sizeof(path))
+			goto toobig;
+
+		if (stat(path, &sta) == -1 &&
+		    mkdir(path, 0700) == -1) {
+			error_set("creating %s: %s", path, strerror(errno));
+			return (-1);
+		}
+		if (strlcat(path, "/", sizeof(path)) >= sizeof(path) ||
+		    strlcat(path, ob->type, sizeof(path)) >= sizeof(path))
+			goto toobig;
+
+		if (stat(path, &sta) == -1 &&
+		    mkdir(path, 0700) == -1) {
+			error_set("creating %s: %s", path, strerror(errno));
+			return (-1);
+		}
+		if (strlcat(path, "/", sizeof(path)) >= sizeof(path) ||
+		    strlcat(path, ob->name, sizeof(path)) >= sizeof(path) ||
+		    strlcat(path, ".", sizeof(path)) >= sizeof(path) ||
+		    strlcat(path, ob->type, sizeof(path)) >= sizeof(path))
+			goto toobig;
 	}
-	if (stat(path, &sta) != 0 &&
-	    mkdir(path, 0700) != 0) {
-		error_set("creating %s: %s", path, strerror(errno));
-		return (-1);
-	}
-	if (strlcat(path, "/", sizeof(path)) > sizeof(path) ||
-	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
-		goto toobig;
-	}
-	if (stat(path, &sta) != 0 &&
-	    mkdir(path, 0700) != 0) {
-		error_set("creating %s: %s", path, strerror(errno));
-		return (-1);
-	}
-	if (strlcat(path, "/", sizeof(path))      > sizeof(path) ||
-	    strlcat(path, ob->name, sizeof(path)) > sizeof(path) ||
-	    strlcat(path, ".", sizeof(path))      > sizeof(path) ||
-	    strlcat(path, ob->type, sizeof(path)) > sizeof(path)) {
-		goto toobig;
-	}
+	
+	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, path);
 
 	if ((fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, 0600)) == -1) {
 		error_set("%s: %s", path, strerror(errno));
 		return (-1);
 	}
-	
-	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, path);
-
-	if (prop_save(ob, fd) != 0) {
-		close(fd);
-		return (-1);
-	}
-	if (OBJECT_OPS(ob)->save != NULL &&
-	    OBJECT_OPS(ob)->save(ob, fd) != 0) {
-		close(fd);
-		return (-1);
-	}
-
+	netbuf_init(&buf, fd, NETBUF_BIG_ENDIAN);
+	rv = object_save_data(ob, &buf);
+	netbuf_flush(&buf);
+	netbuf_destroy(&buf);
 	close(fd);
-	return (0);
+	return (rv);
 toobig:
-	error_set("path too big");
+	error_set("path is too big");
 	return (-1);
 }
 
@@ -262,9 +402,9 @@ toobig:
 int
 object_path(char *obname, const char *suffix, char *dst, size_t dst_size)
 {
+	char datapath[FILENAME_MAX];
 	struct stat sta;
 	char *p, *last;
-	char datapath[FILENAME_MAX];
 
 	prop_copy_string(config, "path.data_path", datapath, sizeof(datapath));
 
@@ -272,7 +412,7 @@ object_path(char *obname, const char *suffix, char *dst, size_t dst_size)
 	     p != NULL;
 	     p = strtok_r(NULL, ":", &last)) {
 		if (snprintf(dst, dst_size, "%s/%s/%s.%s", p, suffix, obname,
-		    suffix) > dst_size) {
+		    suffix) >= dst_size) {
 			error_set("path too big");
 			return (-1);
 		}
@@ -284,175 +424,277 @@ object_path(char *obname, const char *suffix, char *dst, size_t dst_size)
 }
 
 /* Control an object's position with an input device. */
+int
+object_control(void *p, char *inname)
+{
+	struct object *ob = p;
+	struct input *in;
+
+	if ((in = input_find(inname)) == NULL)
+		return (-1);
+
+	pthread_mutex_lock(&ob->lock);
+	if (ob->pos == NULL) {
+		error_set("%s is nowhere\n", ob->name);
+		goto fail;
+	}
+	debug(DEBUG_CONTROL, "%s: control with <%s>\n", ob->name,
+	    OBJECT(in)->name);
+	ob->pos->input = in;
+	pthread_mutex_unlock(&ob->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	return (-1);
+}
+
 void
-object_control(void *p, struct input *in, int center)
+object_center(void *p)
 {
 	struct object *ob = p;
 
-	pthread_mutex_lock(&ob->pos_lock);
-
-	if (ob->pos == NULL) {
-		pthread_mutex_unlock(&ob->pos_lock);
-		fatal("%s is nowhere", ob->name);
-	}
-
-	/* Set the input device. */
-	ob->pos->input = in;
-
-	if (center && view->gfx_engine == GFX_ENGINE_TILEBASED) {
-		/* Center on the object and enable soft-scrolling. */
+	pthread_mutex_lock(&ob->lock);
+	if (ob->pos != NULL && view->gfx_engine == GFX_ENGINE_TILEBASED) {
+		dprintf("%s: centering\n", ob->name);
 		ob->pos->dir.flags |= DIR_SCROLLVIEW;
 		rootmap_center(ob->pos->map, ob->pos->x, ob->pos->y);
 	}
-	pthread_mutex_unlock(&ob->pos_lock);
+	pthread_mutex_unlock(&ob->lock);
+}
+
+/* Copy the current submap to the level map. */
+static void
+object_blit_submap(struct object_position *pos)
+{
+	int x, y;
+
+	dprintf("blit: [%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer,
+	    pos->submap->mapw, pos->submap->maph);
+
+	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
+		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
+			struct node *srcnode = &pos->submap->map[y][x];
+			struct node *dstnode = &pos->map->map[y][x];
+			struct noderef *nref, *nnref;
+
+			TAILQ_FOREACH(nref, &srcnode->nrefs, nrefs) {
+				nnref = node_copy_ref(nref, dstnode);
+				nnref->layer = pos->layer;
+			}
+		}
+	}
+}
+
+/* Clear the copy of the current submap from the level map. */
+static void
+object_unblit_submap(struct object_position *pos)
+{
+	int x, y;
+	
+	dprintf("unblit: [%d,%d,%d]+%dx%d\n", pos->x, pos->y, pos->layer,
+	    pos->submap->mapw, pos->submap->maph);
+
+	for (y = pos->y; y < pos->y+pos->submap->maph; y++) {
+		for (x = pos->x; x < pos->x+pos->submap->mapw; x++) {
+			node_clear_layer(&pos->map->map[y][x], pos->layer);
+		}
+	}
+}
+
+void
+object_load_submap(void *p, char *name)
+{
+	struct object *ob = p;
+	struct map *sm;
+
+	sm = Malloc(sizeof(struct map));
+	map_init(sm, name, ob->name);
+	if (object_load(sm, NULL) == 0) {
+		object_attach(ob, sm);
+	} else {
+		fatal("loading %s: %s", name, error_get());
+	}
+}
+
+/* Change the current submap of an object. */
+int
+object_set_submap(void *p, char *name)
+{
+	struct object *ob = p;
+	struct object *submap;
+
+	pthread_mutex_lock(&ob->lock);
+	
+	debug(DEBUG_SUBMAPS, "%s: %s -> %s\n", ob->name,
+	    ob->pos != NULL ? OBJECT(ob->pos->submap)->name : "none", name);
+
+	SLIST_FOREACH(submap, &ob->childs, wobjs) {
+		if (strcmp(submap->name, name) == 0)
+			break;
+	}
+	if (submap == NULL) {
+		error_set("no such submap");
+		goto fail;
+	}
+	if (ob->pos != NULL) {
+		object_unblit_submap(ob->pos);
+		ob->pos->submap = (struct map *)submap;
+	}
+
+	pthread_mutex_unlock(&ob->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	return (-1);
+}
+
+/* Set the position of an object inside a map. */
+void
+object_set_position(void *p, struct map *dstmap, int x, int y, int layer)
+{
+	struct object *ob = p;
+
+	pthread_mutex_lock(&ob->lock);
+	
+	debug(DEBUG_POSITION, "%s: position -> %s:[%d,%d,%d]\n",
+	    ob->name, OBJECT(dstmap)->name, x, y, layer);
+
+	if (ob->pos == NULL) {
+		ob->pos = Malloc(sizeof(struct object_position));
+		ob->pos->map = NULL;
+		ob->pos->x = 0;
+		ob->pos->y = 0;
+		ob->pos->layer = 0;
+		ob->pos->center = 0;
+		ob->pos->submap = NULL;
+		ob->pos->input = NULL;
+		mapdir_init(&ob->pos->dir, ob, dstmap, DIR_SOFTSCROLL, 1);
+	} else {
+		object_unblit_submap(ob->pos);
+	}
+
+	pthread_mutex_lock(&dstmap->lock);
+	if (ob->pos->x >= 0 && ob->pos->x < dstmap->mapw &&
+	    ob->pos->y >= 0 && ob->pos->y < dstmap->maph &&
+	    layer >= 0 && layer < dstmap->nlayers) {
+		ob->pos->map = dstmap;
+		ob->pos->x = x;
+		ob->pos->y = y;
+		ob->pos->layer = layer;
+		object_blit_submap(ob->pos);
+	} else {
+		debug(DEBUG_POSITION, "%s: bad coords %s:[%d,%d,%d]\n",
+		    ob->name, OBJECT(dstmap)->name, x, y, layer);
+		free(ob->pos);
+		ob->pos = NULL;
+	}
+	pthread_mutex_unlock(&dstmap->lock);
+
+	pthread_mutex_unlock(&ob->lock);
+}
+
+void
+object_unset_position(void *p)
+{
+	struct object *ob = p;
+
+	pthread_mutex_lock(&ob->lock);
+	debug(DEBUG_POSITION, "%s: unset %p\n", ob->name, ob->pos);
+	if (ob->pos != NULL) {
+		object_unblit_submap(ob->pos);
+		free(ob->pos);
+		ob->pos = NULL;
+	}
+	pthread_mutex_unlock(&ob->lock);
+}
+
+void
+object_save_position(void *p, struct netbuf *buf)
+{
+	struct object *ob = p;
+	struct object_position *pos = ob->pos;
+		
+	write_string(buf, OBJECT(pos->map)->name);
+	write_uint32(buf, (Uint32)pos->x);
+	write_uint32(buf, (Uint32)pos->y);
+	write_uint8(buf, (Uint8)pos->layer);
+	write_uint8(buf, (Uint8)pos->center);
+	write_string(buf, (pos->submap != NULL) ?
+	    OBJECT(pos->submap)->name : "");
+	write_string(buf, (pos->input != NULL) ?
+	    OBJECT(pos->input)->name : "");
 }
 
 int
-object_vanish(void *p)
+object_load_position(void *p, struct netbuf *buf)
 {
-	struct object *ob = p;
-	struct map *m;
-	struct node *node;
-
-	pthread_mutex_lock(&ob->pos_lock);
-	if (ob->pos == NULL) {
-		pthread_mutex_unlock(&ob->pos_lock);
-		error_set("%s is nowhere\n", ob);
-		return (-1);
-	}
-
-	m = ob->pos->map;
-	node = &m->map[ob->pos->y][ob->pos->x];
-
-	debug(DEBUG_POSITION, "%s vanishing from %s:%d,%d\n", ob->name,
-	    OBJECT(m)->name, ob->pos->x, ob->pos->y);
-
-	/* XXX multiple noderefs! */
-	node_remove_ref(&m->map[ob->pos->y][ob->pos->x], ob->pos->nref);
-
-	free(ob->pos);
-	ob->pos = NULL;
-
-	pthread_mutex_unlock(&ob->pos_lock);
-	return (0);
-}
-
-/*
- * Update an object's map position.
- *
- * This is usually called after a new noderef is created to update the
- * object's back reference to it.
- *
- * If there is a current noderef, it is removed. No noderef is added,
- * the code should use the node_add_* functions to create new noderefs
- * since there are various types of noderefs with different arguments.
- *
- * XXX multiple noderefs!
- */
-void
-object_set_position(void *p, struct noderef *nref, struct map *m,
-    int x, int y)
-{
+	char map_id[OBJECT_NAME_MAX];
+	char submap_id[OBJECT_NAME_MAX];
+	char input_id[OBJECT_NAME_MAX];
+	int x, y, layer, center;
+	struct map *dst_map;
 	struct object *ob = p;
 
-	pthread_mutex_lock(&ob->pos_lock);
+	pthread_mutex_lock(&ob->lock);
 
-	if (ob->pos == NULL) {				/* Allocate position */
-		debug(DEBUG_POSITION,
-		    "%s: new position on %s:%d,%d\n", ob->name,
-		    OBJECT(m)->name, x, y);
-		ob->pos = Malloc(sizeof(struct mappos));
-		ob->pos->input = NULL;
-		mapdir_init(&ob->pos->dir, ob, m, DIR_SOFTSCROLL, 1);
-	} else {
-		debug(DEBUG_POSITION,
-		    "%s: position change from %s:%d,%d to %s:%d,%d\n", ob->name,
-		    OBJECT(ob->pos->map)->name, ob->pos->x, ob->pos->y,
-		    OBJECT(m)->name, x, y);
-
-		/* Remove the old noderef. */
-		debug(DEBUG_POSITION, "%s: removing old noderef\n", ob->name);
-		node_remove_ref(&ob->pos->map->map[ob->pos->y][ob->pos->x],
-		    nref);
+	if (copy_string(map_id, buf, sizeof(map_id)) >= sizeof(map_id)) {
+		error_set("map_id too big");
+		goto fail;
 	}
-	ob->pos->map = m;				/* Update position */
-	ob->pos->x = x;
-	ob->pos->y = y;
-	ob->pos->nref = nref;
+	x = (int)read_uint32(buf);
+	y = (int)read_uint32(buf);
+	layer = (int)read_uint8(buf);
+	center = (int)read_uint8(buf);
 
-	pthread_mutex_unlock(&ob->pos_lock);
-}
-
-/*
- * Move the object from its current position to dst_map:dst_x,dst_y.
- * The current noderef is moved from the current node to the new position.
- * XXX multiple noderefs!
- * XXX allow failure?
- */
-void
-object_move(void *p, struct map *dst_map, int dst_x, int dst_y)
-{
-	struct object *ob = p;
-	struct map *src_map;
-	struct node *src_node, *dst_node;
-	int src_x, src_y;
-	
-	pthread_mutex_lock(&ob->pos_lock);
-	if (ob->pos == NULL) {
-		fatal("%s is nowhere", ob->name);
+	if (copy_string(submap_id, buf, sizeof(submap_id)) >=
+	    sizeof(submap_id)) {
+		error_set("submap_id too big");
+		goto fail;
 	}
-	src_map = ob->pos->map;
-	src_x = ob->pos->x;
-	src_y = ob->pos->y;
-
-	pthread_mutex_lock(&src_map->lock);
-	src_node = &src_map->map[src_y][src_x];
+	if (copy_string(input_id, buf, sizeof(input_id)) >= sizeof(input_id)) {
+		error_set("input_id too big");
+		goto fail;
+	}
+	if ((dst_map = world_find(map_id)) == NULL)
+		goto fail;
+	debug(DEBUG_STATE, "%s: at %s:[%d,%d,%d]%s\n", ob->name,
+	    OBJECT(dst_map)->name, x, y, layer, center ? ", centered" : "");
 
 	pthread_mutex_lock(&dst_map->lock);
-	dst_node = &dst_map->map[dst_y][dst_x];
-
-#ifdef DEBUG
-	if (dst_x > dst_map->mapw || dst_y > dst_map->maph) {
-		fatal("%d,%d exceeds map boundaries", dst_x, dst_y);
-	}
-#endif
-	if (src_map == dst_map && src_x == dst_x && src_y == dst_y) {
+	if (x < 0 || x >= dst_map->mapw ||
+	    y < 0 || y >= dst_map->maph ||
+	    layer < 0 || layer >= dst_map->nlayers) {
+		error_set("bad coords: %d,%d,%d", x, y, layer);
 		pthread_mutex_unlock(&dst_map->lock);
-		pthread_mutex_unlock(&src_map->lock);
-		pthread_mutex_unlock(&ob->pos_lock);
-		debug(DEBUG_POSITION, "%s is already at %s:%d,%d\n", ob->name,
-		    OBJECT(dst_map)->name, dst_x, dst_y);
-		return;					/* Nothing to do */
+		goto fail;
+	}
+	if (object_set_submap(ob, submap_id) == -1) {
+		pthread_mutex_unlock(&dst_map->lock);
+		goto fail;
+	}
+	object_set_position(ob, dst_map, x, y, layer);
+	pthread_mutex_unlock(&dst_map->lock);
+
+	if (input_id[0] != '\0') {
+		if (object_control(ob, input_id) == -1)
+			debug(DEBUG_STATE, "%s: %s\n", ob->name, error_get());
+	} else {
+		debug(DEBUG_STATE, "%s: no controller\n", ob->name);
 	}
 	
-	debug(DEBUG_POSITION, "moving %s from %s:%d,%d to %s:%d,%d\n", ob->name,
-	     OBJECT(src_map)->name, src_x, src_y,
-	     OBJECT(dst_map)->name, dst_x, dst_y);
-
-	/* Move the noderef to the new node. */
-	node_move_ref(ob->pos->nref, src_node, dst_node);
-	
-	/* Update the object's back reference. */
-	ob->pos->map = dst_map;
-	ob->pos->x = dst_x;
-	ob->pos->y = dst_y;
-
-	pthread_mutex_unlock(&dst_map->lock);
-	pthread_mutex_unlock(&src_map->lock);
-	pthread_mutex_unlock(&ob->pos_lock);
+	pthread_mutex_unlock(&ob->lock);
+	return (0);
+fail:
+	pthread_mutex_unlock(&ob->lock);
+	return (-1);
 }
 
-struct object_table *
-object_table_new(void)
+void
+object_table_init(struct object_table *obt)
 {
-	struct object_table *obt;
-
-	obt = Malloc(sizeof(struct object_table));
 	obt->objs = NULL;
 	obt->used = NULL;
 	obt->nobjs = 0;
-
-	return (obt);
 }
 
 void
@@ -460,7 +702,6 @@ object_table_destroy(struct object_table *obt)
 {
 	Free(obt->objs);
 	Free(obt->used);
-	free(obt);
 }
 
 void
@@ -481,69 +722,59 @@ object_table_insert(struct object_table *obt, struct object *obj)
 }
 
 void
-object_table_save(struct fobj_buf *buf, struct object_table *obt)
+object_table_save(struct object_table *obt, struct netbuf *buf)
 {
 	off_t nobjs_offs;
 	struct object *pob;
 	Uint32 i;
 
 	nobjs_offs = buf->offs;
-	buf_write_uint32(buf, 0);				/* Skip */
+	write_uint32(buf, 0);				/* Skip */
 	for (i = 0; i < obt->nobjs; i++) {
 		pob = obt->objs[i];
-		buf_write_string(buf, pob->name);
-		buf_write_string(buf, pob->type);
+		write_string(buf, pob->name);
+		write_string(buf, pob->type);
 	}
-	buf_pwrite_uint32(buf, obt->nobjs, nobjs_offs);
+	pwrite_uint32(buf, obt->nobjs, nobjs_offs);
 }
 
-struct object_table *
-object_table_load(int fd, char *objname)
+int
+object_table_load(struct object_table *obt, struct netbuf *buf, char *objname)
 {
-	struct object_table *obt;
+	char name[OBJECT_NAME_MAX];
+	char type[OBJECT_TYPE_MAX];
+	struct object *pob;
 	Uint32 i, nobjs;
 
-	obt = object_table_new();
-
-	nobjs = read_uint32(fd);
+	nobjs = read_uint32(buf);
 
 	pthread_mutex_lock(&world->lock);
 	for (i = 0; i < nobjs; i++) {
-		struct object *pob;
-		char *name, *type;
-
-		if ((name = read_string(fd, NULL)) == NULL) {
-			error_set("name: %s", fobj_error);
+		if (copy_string(name, buf, sizeof(name)) >= sizeof(name)) {
+			error_set("object name too big");
 			goto fail;
 		}
-		if ((type = read_string(fd, NULL)) == NULL) {
-			error_set("type: %s", fobj_error);
-			free(name);
+		if (copy_string(type, buf, sizeof(type)) >= sizeof(type)) {
+			error_set("object type too big");
 			goto fail;
 		}
-		
 		debug_n(DEBUG_DEPS, "\t%s: depends on %s...", objname, name);
 		if ((pob = world_find(name)) != NULL) {
 			debug_n(DEBUG_DEPS, "%p (%s)\n", pob, type);
 			if (strcmp(pob->type, type) != 0) {
 				error_set("%s: expected %s to be of type %s",
 				    objname, name, type);
-				free(name);
-				free(type);
 				goto fail;
 			}
 		} else {
 			debug_n(DEBUG_DEPS, "missing\n");
 		}
 		object_table_insert(obt, pob);
-		free(name);
-		free(type);
 	}
 	pthread_mutex_unlock(&world->lock);
-	return (obt);
+	return (0);
 fail:
 	pthread_mutex_unlock(&world->lock);
-	object_table_destroy(obt);
-	return (NULL);
+	return (-1);
 }
 
