@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Do not edit!
-# File generated from configure.in by csoft-mk 1.7.
+# File generated from configure.in by csoft-mk 1.8.
 #
 # Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -136,8 +136,9 @@ echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
 echo "    --srcdir                       Source tree for concurrent build [.]"
 echo "    --help                         Display this message"
-echo "    --enable-nls                   Native Language Support"
-echo "    --with-gettext                 Gettext tools (xgettext, msgmerge, msgfmt)"
+echo "    --enable-nls                   Native Language Support [yes]"
+echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [check]"
+echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-smpeg                   MPEG playback using smpeg [default: check]"
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
@@ -153,12 +154,18 @@ echo "    --enable-24bpp                 Support for 24 bpp display [default: ye
 echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
 exit 1
 fi
+if [ "${enable_debug}" = "yes" ]; then
+	echo "#ifndef DEBUG" > config/debug.h
+	echo "#define DEBUG 1" >> config/debug.h
+	echo "#endif /* DEBUG */" >> config/debug.h
+else
+	echo "#undef DEBUG" > config/debug.h
+fi
 if [ "${enable_nls}" != "no" ]; then
 	ENABLE_NLS="yes"
 	echo "#ifndef ENABLE_NLS" > config/enable_nls.h
 	echo "#define ENABLE_NLS 1" >> config/enable_nls.h
 	echo "#endif /* ENABLE_NLS */" >> config/enable_nls.h
-
 	msgfmt=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/msgfmt" ]; then
