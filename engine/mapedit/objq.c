@@ -348,7 +348,7 @@ tl_objs_selected(int argc, union evarg *argv)
 			}
 		}
 		
-		reg = region_new(win, REGION_HALIGN, 0, 85, 100, 15);
+		reg = region_new(win, REGION_HALIGN, 0, 85, 100, 10);
 		{
 			int i;
 			int icons[] = {
@@ -358,12 +358,9 @@ tl_objs_selected(int argc, union evarg *argv)
 				MAPEDIT_TOOL_DOWN
 			};
 		
-			lab = label_polled_new(reg, 26, 100, NULL,
-			    "%i,%i", &mv->constr.x, &mv->constr.y);
-	
 			for (i = 0; i < 4; i++) {
 				button = button_new(reg, NULL,
-				    SPRITE(med, icons[i]), 0, 14, 90);
+				    SPRITE(med, icons[i]), 0, 100/4, 100);
 				event_new(button, "button-pushed",
 				    objq_insert_tiles, "%p, %p, %i", tl, mv, i);
 			}
