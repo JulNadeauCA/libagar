@@ -1,4 +1,4 @@
-/*	$Csoft: object_browser.c,v 1.6 2002/11/16 00:57:40 vedge Exp $	*/
+/*	$Csoft: object_browser.c,v 1.7 2002/11/17 23:12:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -97,8 +97,10 @@ tl_events_selected(int argc, union evarg *argv)
 
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 70);
 	lab = label_new(reg, 100, 0, "Identifier: \"%s\"", evh->name);
-	lab = label_new(reg, 100, 0, "Flags: 0x%x", evh->flags);
-	lab = label_new(reg, 100, 0, "Handler: %p", evh->handler);
+	lab = label_polled_new(reg, 100, 0, &ob->events_lock,
+	    "Flags: 0x%x", &evh->flags);
+	lab = label_polled_new(reg, 100, 0, &ob->events_lock,
+	    "Handler: %p", &evh->handler);
 
 	reg = region_new(win, REGION_HALIGN, 0, 70, 100, 30);
 	bu = button_new(reg, "Trigger", NULL, 0, 50, 100);
@@ -126,6 +128,64 @@ tl_events_poll(int argc, union evarg *argv)
 		tlist_insert_item(tl, NULL, evh->name, evh);
 	}
 	pthread_mutex_unlock(&ob->events_lock);
+
+	tlist_restore_selections(tl);
+}
+
+/* Update the property list. */
+static void
+tl_props_poll(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *ob = argv[1].p;
+	struct prop *prop;
+
+	tlist_clear_items(tl);
+
+	pthread_mutex_lock(&ob->props_lock);
+	TAILQ_FOREACH(prop, &ob->props, props) {
+		char *s;
+
+		switch (prop->type) {
+		case PROP_INT:
+			asprintf(&s, "%s = %d", prop->key, prop->data.i);
+			break;
+		case PROP_UINT8:
+			asprintf(&s, "%s = %u", prop->key, prop->data.u8);
+			break;
+		case PROP_SINT8:
+			asprintf(&s, "%s = %d", prop->key, prop->data.s8);
+			break;
+		case PROP_UINT16:
+			asprintf(&s, "%s = %u", prop->key, prop->data.u16);
+			break;
+		case PROP_SINT16:
+			asprintf(&s, "%s = %d", prop->key, prop->data.s16);
+			break;
+		case PROP_UINT32:
+			asprintf(&s, "%s = %u", prop->key, prop->data.u32);
+			break;
+		case PROP_SINT32:
+			asprintf(&s, "%s = %d", prop->key, prop->data.s32);
+			break;
+		case PROP_STRING:
+			asprintf(&s, "%s = \"%s\"", prop->key, prop->data.s);
+			break;
+		case PROP_POINTER:
+			asprintf(&s, "%s = %p", prop->key, prop->data.p);
+			break;
+		case PROP_BOOL:
+			asprintf(&s, "%s = %s", prop->key,
+			    prop->data.i ? "true" : "false");
+			break;
+		default:
+			asprintf(&s, "%s = ???", prop->key);
+			break;
+		}
+		tlist_insert_item(tl, NULL, s, prop);
+		free(s);
+	}
+	pthread_mutex_unlock(&ob->props_lock);
 
 	tlist_restore_selections(tl);
 }
@@ -162,8 +222,6 @@ tl_objs_selected(int argc, union evarg *argv)
 	struct object *ob = it->p1;
 	struct window *win;
 	struct region *reg;
-	struct label *lab;
-	struct tlist *etl;
 	struct event *evh;
 
 	win = window_generic_new(296, 251,
@@ -175,26 +233,38 @@ tl_objs_selected(int argc, union evarg *argv)
 
 	/* Show the object's generic properties. */
 	reg = region_new(win, REGION_VALIGN, 0, 0, 60, 40);
-	lab = label_new(reg, 100, 0, "Name: %s", ob->name);
-	lab = label_new(reg, 100, 0, "Type: %s", ob->type);
-	lab = label_new(reg, 100, 0, "Flags: 0x%x", ob->flags);
-	lab = label_new(reg, 100, 0, "State: %s",
-	    ob->state == OBJECT_EMBRYONIC ?	"EMBRYONIC" :
-	    ob->state == OBJECT_CONSISTENT ?	"CONSISTENT" :
-	    ob->state == OBJECT_ZOMBIE ?	"ZOMBIE" :
-	    					"???");
+	{
+		label_new(reg, 100, 0, "Name: %s", ob->name);
+		label_new(reg, 100, 0, "Type: %s", ob->type);
+		label_new(reg, 100, 0, "Flags: 0x%x", ob->flags);
+		label_polled_new(reg, 100, 0, NULL,
+		    "State: %d", &ob->state);
+		label_polled_new(reg, 100, 0, &ob->pos_lock,
+		    "Position: %p", &ob->pos);
+	}
 
 	/* Display the first sprite, if any. */
 	if (ob->art != NULL && ob->art->nsprites > 0) {
 		reg = region_new(win, REGION_VALIGN, 60, 0, 40, 40);
 		bitmap_new(reg, SPRITE(ob, 0), 100, 100);
 	}
+	
+	reg = region_new(win, 0, 0, 40, 100, 60);
+	{
+		struct tlist *tl;
 
-	/* Display a polling list of event handlers. */
-	reg = region_new(win, REGION_VALIGN, 60, 40, 40, 60);
-	etl = tlist_new(reg, 100, 100, TLIST_POLL);
-	event_new(etl, "tlist-poll", tl_events_poll, "%p", ob);
-	event_new(etl, "tlist-changed", tl_events_selected, "%p", ob);
+		/* Generic properties. */
+		tl = tlist_new(reg, 60, 100, TLIST_POLL);
+		event_new(tl, "tlist-poll", tl_props_poll, "%p", ob);
+#if 0
+		event_new(tl, "tlist-changed", tl_props_selected, "%p", ob);
+#endif
+	
+		/* Events handlers */
+		tl = tlist_new(reg, 40, 100, TLIST_POLL);
+		event_new(tl, "tlist-poll", tl_events_poll, "%p", ob);
+		event_new(tl, "tlist-changed", tl_events_selected, "%p", ob);
+	}
 
 	window_show(win);
 }
