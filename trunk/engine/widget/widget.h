@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.28 2002/07/24 09:30:44 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.29 2002/07/27 07:01:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #define WIDGET_MAXCOLORS	16
@@ -128,12 +128,6 @@ struct widget {
 #else
 #define WIDGET_ASSERT(wid, name)
 #endif
-
-/* Sprites. All widgets share the same art. */
-enum {
-	CHECKBOX_UP,
-	CHECKBOX_DOWN
-};
 
 void	widget_init(struct widget *, char *, char *, const void *, int, int);
 void	widget_event(void *, SDL_Event *, int);
