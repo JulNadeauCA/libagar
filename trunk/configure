@@ -1085,7 +1085,7 @@ SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo SDL_CFLAGS=$SDL_CFLAGS >> Makefile.config
 	fi
 fi
-if [ "${enable_static}" != "no" ]
+if [ "${enable_static}" = "yes" ]
  then
 LDFLAGS="-static"
 echo LDFLAGS=$LDFLAGS >> Makefile.config
