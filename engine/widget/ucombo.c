@@ -1,4 +1,4 @@
-/*	$Csoft: ucombo.c,v 1.11 2003/10/14 02:16:29 vedge Exp $	*/
+/*	$Csoft: ucombo.c,v 1.1 2003/11/10 22:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -57,6 +57,7 @@ ucombo_new(void *parent)
 	return (com);
 }
 
+/* Hide the item selection window. */
 static void
 ucombo_collapse(struct ucombo *com)
 {
@@ -66,6 +67,7 @@ ucombo_collapse(struct ucombo *com)
 	if (com->win == NULL)
 		return;
 
+	com->saved_w = WIDGET(com->win)->w;
 	com->saved_h = WIDGET(com->win)->h;
 	window_hide(com->win);
 	object_detach(com->win, com->list);
@@ -78,6 +80,7 @@ ucombo_collapse(struct ucombo *com)
 	widget_binding_unlock(stateb);
 }
 
+/* Display the item selection window. */
 static void
 ucombo_expand(int argc, union evarg *argv)
 {
@@ -95,7 +98,7 @@ ucombo_expand(int argc, union evarg *argv)
 
 		object_attach(com->win, com->list);
 	
-		win->w = WIDGET(com)->w * 3;
+		win->w = com->saved_w > 0 ? com->saved_w : WIDGET(com)->w*4;
 		win->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
 		win->x = WIDGET(com)->cx;
 		win->y = WIDGET(com)->cy;
@@ -112,17 +115,18 @@ ucombo_expand(int argc, union evarg *argv)
 	}
 }
 
+/* Effect a user item selection. */
 static void
-ucombo_select(int argc, union evarg *argv)
+ucombo_selected(int argc, union evarg *argv)
 {
 	struct tlist *tl = argv[0].p;
 	struct ucombo *com = argv[1].p;
-	struct tlist_item *ti;
+	struct tlist_item *it;
 
 	pthread_mutex_lock(&tl->lock);
-	if ((ti = tlist_item_selected(tl)) != NULL) {
-		button_printf(com->button, ti->text);
-		event_post(com, "ucombo-selected", "%p", ti);
+	if ((it = tlist_item_selected(tl)) != NULL) {
+		it->selected++;
+		event_post(com, "ucombo-selected", "%p", it);
 	}
 	pthread_mutex_unlock(&tl->lock);
 	ucombo_collapse(com);
@@ -143,7 +147,7 @@ ucombo_init(struct ucombo *com)
 	
 	com->list = Malloc(sizeof(struct tlist));
 	tlist_init(com->list, 0);
-	event_new(com->list, "tlist-changed", ucombo_select, "%p", com);
+	event_new(com->list, "tlist-changed", ucombo_selected, "%p", com);
 }
 
 void

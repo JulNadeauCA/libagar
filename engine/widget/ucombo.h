@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.5 2003/10/14 02:16:29 vedge Exp $	*/
+/*	$Csoft: ucombo.h,v 1.1 2003/11/10 22:39:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_UCOMBO_H_
@@ -13,19 +13,17 @@
 
 struct ucombo {
 	struct widget wid;
-
 	struct button *button;		/* Selection button */
 	struct tlist *list;		/* Item list */
 	struct window *win;		/* Pop-up window */
-	int saved_h;			/* Saved pop-up window height */
+	int saved_w, saved_h;		/* Saved pop-up window geometry */
 };
 
 __BEGIN_DECLS
 struct ucombo	*ucombo_new(void *);
-
-void	 ucombo_init(struct ucombo *);
-void	 ucombo_scale(void *, int, int);
-void	 ucombo_destroy(void *);
+void		 ucombo_init(struct ucombo *);
+void		 ucombo_scale(void *, int, int);
+void		 ucombo_destroy(void *);
 __END_DECLS
 
 #include "close_code.h"
