@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.52 2003/01/21 03:41:22 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.53 2003/01/23 01:52:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -80,6 +80,9 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 {
 	widget_init(&b->wid, "button", &button_ops, rw, rh);
 	WIDGET(b)->flags |= WIDGET_UNFOCUSED_MOTION;
+	if (flags & BUTTON_NOFOCUS) {
+		WIDGET(b)->flags |= WIDGET_NO_FOCUS|WIDGET_UNFOCUSED_BUTTONUP;
+	}
 
 	widget_map_color(b, FRAME_COLOR, "frame", 100, 100, 100);
 	widget_map_color(b, TEXT_COLOR, "text", 240, 240, 240);
