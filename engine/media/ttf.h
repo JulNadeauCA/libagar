@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.h,v 1.3 2002/08/20 09:33:28 vedge Exp $	*/
+/*	$Csoft: ttf.h,v 1.4 2002/11/04 08:33:14 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef struct _TTF_Font TTF_Font;
@@ -24,16 +24,16 @@ int	 TTF_FontFaceIsFixedWidth(TTF_Font *);
 char	*TTF_FontFaceFamilyName(TTF_Font *);
 char	*TTF_FontFaceStyleName(TTF_Font *);
 
-int	 TTF_GlyphMetrics(TTF_Font *, Uint16, int *, int *, int *, int *,
+int	 TTF_GlyphMetrics(TTF_Font *, unsigned int, int *, int *, int *, int *,
 	     int *);
-int	 TTF_SizeText(TTF_Font *, const char *, int *, int *);
-int	 TTF_SizeUTF8(TTF_Font *, const char *, int *, int *);
-int	 TTF_SizeUNICODE(TTF_Font *, const Uint16 *, int *, int *);
+int	 TTF_SizeText(TTF_Font *, char *, int *, int *);
+int	 TTF_SizeUTF8(TTF_Font *, char *, int *, int *);
+int	 TTF_SizeUNICODE(TTF_Font *, unsigned int *, int *, int *);
 
-SDL_Surface	*TTF_RenderText_Solid(TTF_Font *, const char *, SDL_Color);
-SDL_Surface	*TTF_RenderUTF8_Solid(TTF_Font *, const char *, SDL_Color);
-SDL_Surface	*TTF_RenderUNICODE_Solid(TTF_Font *, const Uint16 *, SDL_Color);
-SDL_Surface	*TTF_RenderGlyph_Solid(TTF_Font *, Uint16, SDL_Color);
+SDL_Surface	*TTF_RenderText_Solid(TTF_Font *, char *, SDL_Color);
+SDL_Surface	*TTF_RenderUTF8_Solid(TTF_Font *, char *, SDL_Color);
+SDL_Surface	*TTF_RenderUNICODE_Solid(TTF_Font *, unsigned int *, SDL_Color);
+SDL_Surface	*TTF_RenderGlyph_Solid(TTF_Font *, unsigned int, SDL_Color);
 
 void	 TTF_CloseFont(TTF_Font *);
 void	 TTF_Quit(void);
