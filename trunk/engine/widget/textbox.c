@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.2 2002/05/24 10:23:43 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.3 2002/05/25 08:47:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -236,7 +236,11 @@ textbox_event(void *p, SDL_Event *ev, int flags)
 			if (kcode->modmask == 0 ||
 			    (int)ev->key.keysym.mod & kcode->modmask) {
 				textbox_keycodes[i].callback(tbox, ev);
-				WIDGET(tbox)->win->redraw++;
+				textbox_draw(tbox);
+				SDL_UpdateRect(WIDGET_SURFACE(tbox),
+				    WIDGET(tbox)->x + WIDGET(tbox)->win->x,
+				    WIDGET(tbox)->y + WIDGET(tbox)->win->y,
+				    WIDGET(tbox)->w, WIDGET(tbox)->h);
 				return;
 			}
 		}
