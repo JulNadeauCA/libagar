@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.8 2003/04/12 01:45:31 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.9 2003/06/29 11:33:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -108,7 +108,7 @@ transform_destroy(struct transform *trans)
 }
 
 __inline__ int
-transform_compare(struct transform *tr1, struct transform *tr2)
+transform_compare(const struct transform *tr1, const struct transform *tr2)
 {
 	return (tr1->type == tr2->type && tr1->nargs == tr2->nargs &&
 	    (tr1->nargs == 0 ||
@@ -148,7 +148,7 @@ transform_load(struct netbuf *buf, struct transform *trans)
 }
 
 void
-transform_save(struct netbuf *buf, struct transform *trans)
+transform_save(struct netbuf *buf, const struct transform *trans)
 {
 	int i;
 
@@ -159,6 +159,7 @@ transform_save(struct netbuf *buf, struct transform *trans)
 		write_uint32(buf, trans->args[i]);
 }
 
+/* Flip a surface horizontally. */
 static void
 transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 {
@@ -192,6 +193,7 @@ transform_hflip(SDL_Surface **sup, int argc, Uint32 *argv)
 	free(row);
 }
 
+/* Flip a surface vertically. */
 static void
 transform_vflip(SDL_Surface **sup, int argc, Uint32 *argv)
 {
