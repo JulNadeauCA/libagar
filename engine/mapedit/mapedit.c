@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.17 2002/02/08 00:37:40 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.18 2002/02/08 01:13:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -44,6 +44,7 @@
 #include "mapedit_offs.h"
 
 static void	mapedit_destroy(void *);
+static int	mapedit_shadow(struct mapedit *);
 static Uint32	mapedit_time(Uint32, void *);
 static void	mapedit_event(struct mapedit *, SDL_Event *);
 static void	mapedit_setflag(struct mapedit *, struct node *, int);
@@ -59,7 +60,6 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	struct mapedit *med;
 	struct map *map;
 	struct fobj *fob;
-	struct object *ob;
 	int fd;
 	int tilew, tileh;
 
@@ -125,110 +125,7 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	xcf_load(fob, MAPEDIT_XCF, (struct object *)med);
 	fobj_free(fob);
 
-	/*
-	 * Create mapedit's internal representation of objects.
-	 * This is used for distinguishing anim structures from
-	 * sprites, for instance.
-	 */
-	TAILQ_INIT(&med->eobjsh);
-	med->neobjs = 0;
-
-	med->curobj = NULL;
-
-	pthread_mutex_lock(&world->lock);
-	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
-		struct editobj *eob;
-		
-		dprintf("shadow \"%s\"\n", ob->name);
-
-		if ((ob->flags & OBJ_EDITABLE) == 0) {
-			dprintf("skipping %s (non-editable)\n", ob->name);
-			continue;
-		}
-		if (ob->nsprites < 1 || ob->nanims < 1) {
-			dprintf("skipping %s (no sprite/anim)\n", ob->name);
-			continue;
-		}
-
-		eob = malloc(sizeof(struct editobj));
-		if (eob == NULL) {
-			pthread_mutex_unlock(&world->lock);
-			return (NULL);
-		}
-
-		eob->pobj = ob;
-		SIMPLEQ_INIT(&eob->erefsh);
-		eob->nrefs = 0;
-		eob->nsprites = ob->nsprites;
-		eob->nanims = ob->nanims;
-		if (pthread_mutex_init(&eob->lock, NULL) != 0) {
-			perror("editobj");
-			pthread_mutex_unlock(&world->lock);
-			return (NULL);
-		}
-
-		dprintf("%s has %d sprites, %d anims\n", ob->name,
-		    eob->nsprites, eob->nanims);
-
-		/* XXX for now */
-		if (eob->nsprites > 0) {
-			med->curobj = eob;
-			med->curoffs = 1;
-		}
-		
-		if (ob->nsprites > 0) {
-			int y;
-
-			for (y = 0; y < ob->nsprites; y++) {
-				struct editref *eref;
-		
-				eref = malloc(sizeof(struct editref));
-				if (eref == NULL) {
-					perror("editref");
-					pthread_mutex_unlock(&world->lock);
-					return (NULL);
-				}
-				eref->animi = -2;
-				eref->spritei = y;
-				eref->p = g_slist_nth_data(ob->sprites, y);
-				eref->type = EDITREF_SPRITE;
-
-				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
-				eob->nrefs++;
-			}
-		}
-	
-		if (ob->nanims > 0) {
-			int z;
-
-			for (z = 0; z < ob->nanims; z++) {
-				struct editref *eref;
-
-				eref = malloc(sizeof(struct editref));
-				if (eref == NULL) {
-					perror("editref");
-					pthread_mutex_unlock(&world->lock);
-					return (NULL);
-				}
-				
-				eref->animi = z;
-				eref->spritei = -1;
-				eref->p = g_slist_nth_data(ob->anims, z);
-				eref->type = EDITREF_ANIM;
-
-				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
-				eob->nrefs++;
-			}
-		}
-		TAILQ_INSERT_HEAD(&med->eobjsh, eob, eobjs);
-		med->neobjs++;
-	}
-	pthread_mutex_unlock(&world->lock);
-
-	if (med->curobj == NULL) {
-		fatal("%s: nothing to edit!\n", med->obj.name);
-	}
-
+	mapedit_shadow(med);
 	dprintf("%s: editing %d object(s)\n", med->obj.name, med->neobjs);
 
 	object_link(med);
@@ -254,6 +151,108 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 	map->redraw++;
 	
 	return (med);
+}
+
+static int
+mapedit_shadow(struct mapedit *med)
+{
+	struct object *ob;
+
+	TAILQ_INIT(&med->eobjsh);
+	med->neobjs = 0;
+
+	med->curobj = NULL;
+
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
+		struct editobj *eob;
+		
+		dprintf("shadow \"%s\"\n", ob->name);
+
+		if ((ob->flags & OBJ_EDITABLE) == 0) {
+			dprintf("skipping %s (non-editable)\n", ob->name);
+			continue;
+		}
+		if (ob->nsprites < 1 || ob->nanims < 1) {
+			dprintf("skipping %s (no sprite/anim)\n", ob->name);
+			continue;
+		}
+
+		eob = malloc(sizeof(struct editobj));
+		if (eob == NULL) {
+			goto fail;
+		}
+
+		eob->pobj = ob;
+		SIMPLEQ_INIT(&eob->erefsh);
+		eob->nrefs = 0;
+		eob->nsprites = ob->nsprites;
+		eob->nanims = ob->nanims;
+		if (pthread_mutex_init(&eob->lock, NULL) != 0) {
+			goto fail;
+		}
+
+		dprintf("%s has %d sprites, %d anims\n", ob->name,
+		    eob->nsprites, eob->nanims);
+
+		/* XXX for now */
+		if (eob->nsprites > 0) {
+			med->curobj = eob;
+			med->curoffs = 1;
+		}
+		
+		if (ob->nsprites > 0) {
+			int y;
+
+			for (y = 0; y < ob->nsprites; y++) {
+				struct editref *eref;
+		
+				eref = malloc(sizeof(struct editref));
+				if (eref == NULL) {
+					goto fail;
+				}
+				eref->animi = -2;
+				eref->spritei = y;
+				eref->p = g_slist_nth_data(ob->sprites, y);
+				eref->type = EDITREF_SPRITE;
+
+				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
+				eob->nrefs++;
+			}
+		}
+	
+		if (ob->nanims > 0) {
+			int z;
+
+			for (z = 0; z < ob->nanims; z++) {
+				struct editref *eref;
+
+				eref = malloc(sizeof(struct editref));
+				if (eref == NULL) {
+					goto fail;
+				}
+				
+				eref->animi = z;
+				eref->spritei = -1;
+				eref->p = g_slist_nth_data(ob->anims, z);
+				eref->type = EDITREF_ANIM;
+
+				SIMPLEQ_INSERT_TAIL(&eob->erefsh, eref, erefs);
+				eob->nrefs++;
+			}
+		}
+		TAILQ_INSERT_HEAD(&med->eobjsh, eob, eobjs);
+		med->neobjs++;
+	}
+	pthread_mutex_unlock(&world->lock);
+
+	if (med->curobj == NULL) {
+		fatal("%s: nothing to edit!\n", med->obj.name);
+		return (-1);
+	}
+fail:
+	pthread_mutex_unlock(&world->lock);
+	return (-1);
 }
 
 static void
@@ -640,7 +639,6 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	 * Mouse edition.
 	 */
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		dprintf("mousebuttondown\n");
 		if (ev->button.button == 1) {
 			return;
 		}
@@ -679,8 +677,6 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	if (ev->type == SDL_JOYAXISMOTION) {
 		static SDL_Event nev;
 		static int lastdir = 0;
-
-		dprintf("joyaxis\n");
 
 		switch (ev->jaxis.axis) {
 		case 0:	/* X */
@@ -732,8 +728,6 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 	}
 	if (ev->type == SDL_JOYBUTTONDOWN || ev->type == SDL_JOYBUTTONUP) {
 		static SDL_Event nev;
-
-		dprintf("joybutton %d\n", ev->jbutton.button);
 
 		nev.type = (ev->type == SDL_JOYBUTTONUP) ?
 		    SDL_KEYUP : SDL_KEYDOWN;
@@ -985,7 +979,9 @@ mapedit_event(struct mapedit *med, SDL_Event *ev)
 		}
 
 		pthread_mutex_unlock(&em->lock);
-
+	}
+	
+	if (ev->type == SDL_KEYDOWN || ev->type == SDL_KEYUP) {
 		/*
 		 * Directional keys.
 		 */
@@ -1162,14 +1158,13 @@ mapedit_time(Uint32 ival, void *obp)
 	 * Object list window direction.
 	 */
 	if (med->listodir != 0) {
-		if (TAILQ_EMPTY(&med->eobjsh)) {
-			return (ival);
-		}
-
 		med->curoffs = 1;
 		if (med->listodir & MAPEDIT_CTRLLEFT) {
 			ob->wmask |= MAPEDIT_CTRLLEFT;
 
+			if (TAILQ_EMPTY(&med->eobjsh)) {
+				return (ival);
+			}
 			med->curobj = TAILQ_PREV(med->curobj, eobjs_head,
 			    eobjs);
 			if (med->curobj == NULL) {
@@ -1180,6 +1175,9 @@ mapedit_time(Uint32 ival, void *obp)
 		if (med->listodir & MAPEDIT_CTRLRIGHT) {
 			ob->wmask |= MAPEDIT_CTRLRIGHT;
 			
+			if (TAILQ_EMPTY(&med->eobjsh)) {
+				return (ival);
+			}
 			med->curobj = TAILQ_NEXT(med->curobj, eobjs);
 			if (med->curobj == NULL) {
 				med->curobj = TAILQ_FIRST(&med->eobjsh);
