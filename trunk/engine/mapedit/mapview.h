@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.1 2002/06/22 20:44:01 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.2 2002/06/23 02:38:21 vedge Exp $	*/
 /*	Public domain	*/
 
 struct edcursor;
@@ -8,6 +8,7 @@ struct mapview {
 	struct	 widget wid;
 
 	int	flags;
+#define MAPVIEW_CENTER	0x01	/* Center on cursor */
 
 	struct {		/* For scrolling */
 		int	move;
@@ -32,5 +33,5 @@ void		 mapview_init(struct mapview *, struct mapedit *, struct map *,
 void		 mapview_destroy(void *);
 
 void	 mapview_draw(void *);
-void	 mapview_center(struct mapview *, Uint32, Uint32);
+void	 mapview_center(struct mapview *, int, int);
 
