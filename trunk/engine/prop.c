@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.25 2003/03/12 07:59:00 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.26 2003/03/13 08:43:32 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -466,7 +466,6 @@ int
 prop_load(void *p, int fd)
 {
 	struct object *ob = p;
-	struct prop *prop;
 	Uint32 nprops, i, t;
 	char *key;
 	Uint8 c;
@@ -544,9 +543,6 @@ prop_load(void *p, int fd)
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 	return (0);
-fail:
-	pthread_mutex_unlock(&ob->props_lock);
-	return (-1);
 }
 
 int

@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.60 2003/03/20 04:09:30 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.61 2003/03/20 04:27:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -139,7 +139,7 @@ button_scaled(int argc, union evarg *argv)
 {
 	const int xspace = 2, yspace = 1;
 	struct button *b = argv[0].p;
-	int x, y, nw, nh;
+	int nw, nh;
 
 	if (WIDGET(b)->rw == -1)
 		WIDGET(b)->w = b->label_s->w;

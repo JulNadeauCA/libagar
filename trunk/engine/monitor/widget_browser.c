@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.13 2003/01/23 03:17:19 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.14 2003/03/16 02:46:56 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -181,7 +181,6 @@ tl_widgets_detach(int argc, union evarg *argv)
 {
 	struct tlist *tl_widgets = argv[1].p;
 	struct tlist *tl_regions = argv[2].p;
-	struct window *win = argv[3].p;
 	struct tlist_item *it;
 	struct region *reg;
 	struct widget *wid;
@@ -224,7 +223,6 @@ tl_colors_poll(int argc, union evarg *argv)
 static void
 tl_colors_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl_colors = argv[0].p;
 	struct widget *wid = argv[1].p;
 	struct palette *pal = argv[2].p;
 	struct tlist_item *it = argv[3].p;
@@ -242,7 +240,6 @@ tl_widgets_examine(int argc, union evarg *argv)
 	struct widget *wid;
 	struct window *win, *pwin;
 	struct region *reg;
-	int i;
 
 	it = tlist_item_selected(tl);
 	if (it== NULL) {
@@ -311,7 +308,6 @@ tl_windows_examine(int argc, union evarg *argv)
 	struct window *pwin, *win;
 	struct region *reg;
 	struct tlist *tl_regions, *tl_widgets;
-	int i;
 
 	it = tlist_item_selected(tl);
 	if (it == NULL) {

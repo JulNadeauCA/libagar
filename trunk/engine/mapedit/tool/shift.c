@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.11 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.12 2003/03/18 06:34:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -70,7 +70,6 @@ shift_window(void *p)
 	struct shift *sh = p;
 	struct window *win;
 	struct region *reg;
-	struct scrollbar *xsb, *ysb;
 
 	win = window_new("mapedit-tool-shift", 0,
 	    TOOL_DIALOG_X, TOOL_DIALOG_Y,
@@ -86,7 +85,6 @@ shift_window(void *p)
 			NULL
 		};
 		struct radio *rad;
-		struct checkbox *cb;
 
 		rad = radio_new(reg, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
@@ -98,7 +96,6 @@ void
 shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 {
 	struct shift *sh = p;
-	struct tlist_item *it;
 	int selx, sely, x, y, w, h;
 
 	if (!mapview_get_selection(mv, &selx, &sely, &w, &h))

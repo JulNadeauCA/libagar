@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.19 2003/03/13 22:43:55 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.20 2003/03/22 04:16:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -77,7 +77,6 @@ int
 xcf_check(int fd, off_t xcf_offs)
 {
 	char magic[XCF_MAGIC_LEN];
-	ssize_t rv;
 
 	if ((Pread(fd, magic, XCF_MAGIC_LEN, xcf_offs) == XCF_MAGIC_LEN)) {
 		if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) == 0) {
@@ -335,7 +334,7 @@ xcf_convert_layer(int fd, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
 {
 	struct xcf_hierarchy *hier;
-	int x, y, tx, ty, ox, oy, i;
+	int y, tx, ty, ox, oy, i;
 	Uint32 *p;
 	Uint8 *p8, *tile;
 	SDL_Surface *su;
@@ -534,8 +533,6 @@ xcf_insert_surface(struct art *art, SDL_Surface *su, char *name,
 			/* Insert animation frame */
 			art_insert_anim_frame(*anim, su);
 		} else {
-			int offs;
-			
 			*anim = NULL;
 				
 			if ((su->h > TILEH || su->w > TILEW) &&

@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.23 2003/03/07 03:24:49 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.24 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -52,8 +52,6 @@ static const struct tool_ops propedit_ops = {
 	NULL			/* mouse */
 };
 
-static void	propedit_event(int, union evarg *);
-
 void
 propedit_init(void *p)
 {
@@ -69,7 +67,6 @@ propedit_init(void *p)
 static void
 propedit_set_node_mode(int argc, union evarg *argv)
 {
-	struct radio *rad = argv[0].p;
 	struct propedit *pe = argv[1].p;
 	int index = argv[2].i;
 	const Uint32 modes[] = {
@@ -84,7 +81,6 @@ propedit_set_node_mode(int argc, union evarg *argv)
 static void
 propedit_set_node_flags(int argc, union evarg *argv)
 {
-	struct checkbox *cbox = argv[0].p;
 	struct propedit *pe = argv[1].p;
 	int flag = argv[2].i;
 	int state = argv[3].i;

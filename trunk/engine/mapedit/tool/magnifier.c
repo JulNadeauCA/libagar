@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.21 2003/03/16 02:58:20 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.22 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -102,7 +102,6 @@ magnifier_window(void *p)
 static void
 magnifier_event(int argc, union evarg *argv)
 {
-	struct magnifier *mag = argv[1].p;
 	struct mapview *mv;
 	
 	if ((mv = tool_mapview()) == NULL)
@@ -122,8 +121,6 @@ void
 magnifier_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel,
     Uint8 state)
 {
-	struct magnifier *mag = p;
-
 	mapview_zoom(mv, *mv->zoom + xrel);
 }
 

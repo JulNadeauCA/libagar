@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.143 2003/03/20 01:17:33 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.144 2003/03/20 03:20:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -231,9 +231,8 @@ event_loop(void)
 	SDL_Event ev;
 	Uint32 ltick, t = 0;
 	struct window *win;
-#ifdef DEBUG
-	Uint32 eltick;
 
+#ifdef DEBUG
 	event_init_fps_counter();
 #endif
 

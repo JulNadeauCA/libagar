@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.34 2003/01/01 05:18:41 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.35 2003/01/23 01:52:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -159,7 +159,6 @@ checkbox_scaled(int argc, union evarg *argv)
 {
 	struct checkbox *cb = argv[0].p;
 	int w = argv[1].i;
-	int h = argv[2].i;
 
 	if (WIDGET(cb)->rw == -1)
 		WIDGET(cb)->w = w;

@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.16 2003/03/10 02:13:39 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.17 2003/03/12 07:59:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -152,8 +152,6 @@ perso_load(void *p, int fd)
 	} else {					/* One position */
 		char *map_id, *input_id;
 		int dst_x, dst_y;
-		struct mappos *npos;
-		struct node *dst_node;
 		struct noderef *old_nref;
 		struct map *dst_map;
 		struct object_table *deps;
@@ -343,9 +341,8 @@ static Uint32
 perso_time(Uint32 ival, void *p)
 {
 	struct object *ob = p;
-	struct map *m;
 	struct mappos *pos;
-	int x, y, moved = 0;
+	int moved = 0;
 
 	/* XXX thread unsafe */
 

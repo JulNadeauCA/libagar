@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.56 2003/03/13 08:37:53 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.57 2003/03/14 07:11:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -295,7 +295,6 @@ tl_objs_toggle_big(int argc, union evarg *argv)
 static void
 tl_objs_selected(int argc, union evarg *argv)
 {
-	struct tlist *tl = argv[0].p;
 	struct tlist_item *eob_item = argv[1].p;
 	struct object *ob = eob_item->p1;
 	struct window *win;
@@ -303,7 +302,6 @@ tl_objs_selected(int argc, union evarg *argv)
 	struct mapview *mv;
 	struct button *bu;
 	static int cury = 140;
-	char *wname;
 
 	/* Create the tile map window. */
 	win = window_generic_new(202, 365, "mapedit-tmap-%s", ob->name);
@@ -394,8 +392,6 @@ tl_objs_selected(int argc, union evarg *argv)
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	window_set_caption(win, "%s", ob->name);
 	{
-		struct button *button;
-		struct label *lab;
 		struct tlist *tl;
 		struct region *reg_buttons1, *reg_buttons2;
 		Uint32 i;

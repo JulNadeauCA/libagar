@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.65 2003/03/16 02:47:39 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.66 2003/03/22 04:24:48 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -94,7 +94,6 @@ config_new(void)
 static void
 config_prop_modified(int argc, union evarg *argv)
 {
-	struct config *con = argv[0].p;
 	struct prop *prop = argv[1].p;
 
 	if (strcmp(prop->key, "view.full-screen") == 0) {
@@ -119,7 +118,6 @@ config_init(struct config *con)
 	extern const struct engine_proginfo *proginfo;		/* engine.c */
 	struct passwd *pwd;
 	struct stat sta;
-	char *spath;
 	char *udatadir, *sysdatadir;
 
 	object_init(&con->obj, "engine-config", "config", NULL, OBJECT_STATIC,
@@ -186,9 +184,6 @@ config_window(struct config *con)
 	struct button *button;
 	struct textbox *tbox;
 	struct checkbox *cbox;
-	struct radio *rad;
-	struct tlist *tl;
-	struct label *lab;
 
 	win = window_generic_new(388, 362, "config-engine-settings");
 	event_new(win, "window-close", window_generic_hide, "%p", win);

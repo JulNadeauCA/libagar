@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.35 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.36 2003/03/20 01:17:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -104,7 +104,6 @@ void
 stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 {
 	struct stamp *st = p;
-	struct map *m = mv->map;
 	struct node *srcnode = mapedit.src_node;
 	struct noderef *nref, *nnref;
 
@@ -144,8 +143,6 @@ stamp_effect(void *p, struct mapview *mv, struct node *dstnode)
 int
 stamp_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
-	struct stamp *st = p;
-	SDL_Surface *srcsu;
 	struct noderef *nref;
 
 	if (mapedit.src_node == NULL) {

@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.156 2003/03/16 04:00:35 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.157 2003/03/22 04:27:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -94,7 +94,6 @@ static const int ntools = sizeof(tools) / sizeof(tools[0]);
 static void
 mapedit_select_tool(int argc, union evarg *argv)
 {
-	struct widget *wid = argv[0].p;
 	struct tool *newtool = argv[1].p;
 
 	if (mapedit.curtool == newtool) {

@@ -1,4 +1,4 @@
-/*	$Csoft: art.c,v 1.28 2003/03/20 01:18:13 vedge Exp $	*/
+/*	$Csoft: art.c,v 1.29 2003/03/22 04:21:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -101,7 +101,9 @@ art_scan_alpha(SDL_Surface *su)
 		ART_ALPHA_ALPHA =	0x04
 	} aflags = 0;
 	Uint8 oldalpha = su->format->alpha;
+#if 0
 	Uint8 oldckey = su->format->colorkey;
+#endif
 	int x, y;
 
 	if (SDL_MUSTLOCK(su))
@@ -167,7 +169,6 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 	unsigned int mw, mh;
 	SDL_Rect sd, rd;
 	struct map *fragmap;
-	char *name;
 
 	sd.w = TILEW;
 	sd.h = TILEH;
@@ -207,7 +208,7 @@ art_insert_fragments(struct art *art, SDL_Surface *sprite)
 				    SDL_GetError());
 			}
 			
-			/* Copy the fragment as is. */
+			/* Copy the fragment as-is. */
 			SDL_SetAlpha(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;

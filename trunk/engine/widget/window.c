@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.171 2003/03/16 23:57:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.172 2003/03/22 04:27:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -77,7 +77,9 @@ static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
 static void	winop_close(struct window *);
 static void	winop_hide_body(struct window *);
+#if 0
 static void	resize_reg(int, struct window *, struct region *);
+#endif
 
 #ifdef DEBUG
 #define DEBUG_STATE		0x01
@@ -164,7 +166,6 @@ void
 window_init(struct window *win, char *name, int flags, int rx, int ry,
     int rw, int rh, int minw, int minh)
 {
-	size_t namelen;
 	char wname[OBJECT_NAME_MAX];
 	int i, fl = flags;
 
@@ -366,7 +367,6 @@ window_draw_titlebar(struct window *win)
 	SDL_Surface *caption;
 	SDL_Rect rd, rclip, rclip_save;
 	Uint32 bcolor;
-	int i;
 
 	/* XXX yuck */
 	rd.x = win->borderw;
@@ -434,7 +434,6 @@ window_draw(struct window *win)
 	struct region *reg;
 	struct widget *wid;
 	SDL_Rect rd = win->rd;
-	int i;
 	
 	debug_n(DEBUG_DRAW, "drawing %s (%ux%u):\n", OBJECT(win)->name,
 	    win->rd.w, win->rd.h);
@@ -859,9 +858,6 @@ static void
 winop_hide_body(struct window *win)
 {
 	if (win->flags & WINDOW_HIDDEN_BODY) {		/* Restore */
-		SDL_Rect rtitle = win->rd;
-		SDL_Rect rfill = win->rd;
-
 		win->flags &= ~(WINDOW_HIDDEN_BODY);
 		win->rd.w = win->saved_rd.w;
 		win->rd.h = win->saved_rd.h;
@@ -908,9 +904,7 @@ winop_hide_body(struct window *win)
 static void
 window_focus(struct window *win)
 {
-	struct window *lastwin, *ow;
-	struct region *reg;
-	struct widget *wid;
+	struct window *lastwin;
 
 	view->focus_win = NULL;
 
@@ -954,8 +948,6 @@ window_event(SDL_Event *ev)
 	struct region *reg;
 	struct window *win;
 	struct widget *wid;
-	static int ox = 0, oy = 0;
-	int nx, ny;
 	int focus_changed = 0;
 	static struct window *keydown_win = NULL;	/* XXX hack */
 
@@ -1398,6 +1390,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	}
 }
 
+#if 0
 /*
  * Resize a region with the mouse.
  * The window must be locked.
@@ -1412,6 +1405,7 @@ resize_reg(int op, struct window *win, struct region *reg)
 	view->wop_win = win;
 	reg->flags |= REGION_RESIZING;
 }
+#endif
 
 /* Update the window's caption. */
 void

@@ -1,4 +1,4 @@
-/*	$Csoft: resize.c,v 1.21 2003/03/14 07:11:55 vedge Exp $	*/
+/*	$Csoft: resize.c,v 1.22 2003/03/16 04:00:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -67,7 +67,6 @@ resize_init(void *p)
 void
 resize_mouse(void *p, struct mapview *mv, Sint16 xrel, Sint16 yrel, Uint8 state)
 {
-	struct resize *res = p;
 	struct map *m = mv->map;
 
 	if (mv->cxrel != 0 && mv->cyrel != 0)
