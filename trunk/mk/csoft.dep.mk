@@ -1,4 +1,4 @@
-# $Csoft: csoft.dep.mk,v 1.1 2002/02/01 03:37:05 vedge Exp $
+# $Csoft: csoft.dep.mk,v 1.2 2002/02/01 03:52:50 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -28,7 +28,7 @@
 
 MKDEP=	${TOP}/mk/mkdep
 
-depend:	${FOBJS} depend-subdir
+depend:	${DPADD} depend-subdir
 	rm -f .depend
 	@files="${SRCS}"; \
 	 if [ "$$files" != "" ]; then \

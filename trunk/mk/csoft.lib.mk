@@ -127,8 +127,10 @@ lib${LIB}.a:	${OBJS}
 	@if [ "${LIB}" != "" ]; then \
 		echo "${AR} -cru lib${LIB}.a ${OBJS}"; \
 		${AR} -cru lib${LIB}.a ${OBJS}; \
-		echo "${RANLIB} lib${LIB}.a"; \
-		${RANLIB} lib${LIB}.a; \
+		if [ -x "`which ${RANLIB} 2>/dev/null`" ]; then \
+		    echo "${RANLIB} lib${LIB}.a"; \
+		    ${RANLIB} lib${LIB}.a; \
+		fi \
 	fi
 
 lib${LIB}.la:	${LIBTOOL} ${SHOBJS}
