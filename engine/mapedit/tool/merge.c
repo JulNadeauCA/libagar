@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.54 2004/04/10 04:55:16 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.55 2004/05/17 05:04:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -183,9 +183,10 @@ merge_create_brush(int argc, union evarg *argv)
 
 	m = map_new(NULL, m_name);
 	if (object_load(m) == -1) {
-		if (map_alloc_nodes(m,
-		    prop_get_uint32(&mapedit, "default-brush-width"),
-		    prop_get_uint32(&mapedit, "default-brush-height")) == -1) {
+		extern int mapedit_def_brsw, mapedit_def_brsh;
+
+		if (map_alloc_nodes(m, mapedit_def_brsw, mapedit_def_brsh)
+		    == -1) {
 			text_msg(MSG_ERROR, "map_alloc_nodes: %s", error_get());
 			goto fail;
 		}
@@ -195,7 +196,7 @@ merge_create_brush(int argc, union evarg *argv)
 	tlist_unselect_all(brushes_tl);
 	tlist_select(brushes_tl, tlist_insert_item_head(brushes_tl, NULL,
 	    m_name, m));
-	textbox_printf(name_tbox, " ");
+	textbox_printf(name_tbox, NULL);
 	return;
 fail:
 	object_destroy(m);

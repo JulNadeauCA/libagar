@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.158 2004/06/19 04:01:57 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.159 2004/06/25 10:44:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -76,7 +76,7 @@ enum {
 
 int	mapview_bg = 1;			/* Background tiles enable */
 int	mapview_bg_moving = 1;		/* Background tiles scroll */
-int	mapview_bg_squaresize = 16;	/* Background tile size */
+int	mapview_bg_sqsize = 16;		/* Background tile size */
 int	mapview_sel_bounded = 0;	/* Restrict edition to selection */
 
 static void mapview_lostfocus(int, union evarg *);
@@ -535,27 +535,23 @@ draw_background(struct mapview *mv)
 	int alt1 = 0, alt2 = 0;
 	int x, y;
 
-	if (mapview_bg_moving && ++softbg > mapview_bg_squaresize-1) {
+	if (mapview_bg_moving && ++softbg > mapview_bg_sqsize-1) {
 		softbg = 0;
 	}
-	for (y = -mapview_bg_squaresize + softbg;
+	for (y = -mapview_bg_sqsize+softbg;
 	     y < WIDGET(mv)->h;
-	     y += mapview_bg_squaresize) {
-		for (x = -mapview_bg_squaresize + softbg;
+	     y += mapview_bg_sqsize) {
+		for (x = -mapview_bg_sqsize+softbg;
 		     x < WIDGET(mv)->w;
-		     x += mapview_bg_squaresize) {
+		     x += mapview_bg_sqsize) {
 			if (alt1++ == 1) {
-				primitives.rect_filled(mv,
-				    x, y,
-				    mapview_bg_squaresize,
-				    mapview_bg_squaresize,
+				primitives.rect_filled(mv, x, y,
+				    mapview_bg_sqsize, mapview_bg_sqsize,
 				    BG1_COLOR);
 				alt1 = 0;
 			} else {
-				primitives.rect_filled(mv,
-				    x, y,
-				    mapview_bg_squaresize,
-				    mapview_bg_squaresize,
+				primitives.rect_filled(mv, x, y,
+				    mapview_bg_sqsize, mapview_bg_sqsize,
 				    BG2_COLOR);
 			}
 		}
