@@ -137,6 +137,7 @@ echo "    --with-smpeg                   MPEG playback using smpeg [default: che
 echo "    --with-x11                     X11-specific code [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: check]"
+echo "    --enable-edition               Graphical edition [default: yes]"
 echo "    --enable-debug                 Engine debugging [default: yes]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-floating-point        Floating point operations [default: yes]"
@@ -1226,6 +1227,15 @@ echo "#define FLOATING_POINT" $FLOATING_POINT >> config/floating_point.h
 echo "#endif /* FLOATING_POINT */" >> config/floating_point.h
 else
 echo "#undef FLOATING_POINT" > config/floating_point.h
+fi
+if [ "${enable_edition}" != "no" ]
+ then
+EDITION=1
+echo "#ifndef EDITION" > config/edition.h
+echo "#define EDITION" $EDITION >> config/edition.h
+echo "#endif /* EDITION */" >> config/edition.h
+else
+echo "#undef EDITION" > config/edition.h
 fi
 if [ "${enable_8bpp}" != "no" ]
  then
