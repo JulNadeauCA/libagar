@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.68 2002/07/27 07:03:53 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.69 2002/08/12 05:00:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -102,12 +102,14 @@ object_break_sprite(struct object_art *art, SDL_Surface *sprite)
 			SDL_SetAlpha(sprite, SDL_SRCALPHA,
 			    SDL_ALPHA_TRANSPARENT);
 
-			if (art->mx > m->mapw) {
-				art->mx = 0;
+			if (mapediting) {
+				if (art->mx > m->mapw) {
+					art->mx = 0;
+				}
+				map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
+				node_addref(&m->map[art->my][art->mx],
+				    art->pobj, art->cursprite++, MAPREF_SPRITE);
 			}
-			map_adjust(m, (Uint32)art->mx, (Uint32)art->my);
-			node_addref(&m->map[art->my][art->mx], art->pobj,
-			    art->cursprite++, MAPREF_SPRITE);
 		}
 	}
 	SDL_FreeSurface(sprite);
