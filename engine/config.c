@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.68 2003/03/25 13:48:00 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.70 2003/04/17 08:18:32 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -124,7 +124,7 @@ config_init(struct config *con)
 	struct stat sta;
 	char *udatadir, *sysdatadir;
 
-	object_init(&con->obj, "engine-config", "config", NULL,
+	object_init(&con->obj, "engine-config", "config",
 	    OBJECT_STATIC|OBJECT_RELOAD_PROPS, &config_ops);
 
 	/* Object settings */
@@ -147,8 +147,8 @@ config_init(struct config *con)
 
 	/* Font engine settings */
 	prop_set_bool(con, "font-engine", 1);
-	prop_set_string(con, "font-engine.default-font", "larabie");
-	prop_set_int(con, "font-engine.default-size", 14);
+	prop_set_string(con, "font-engine.default-font", "zekton");
+	prop_set_int(con, "font-engine.default-size", 11);
 	prop_set_int(con, "font-engine.default-style", 0);
 
 	/* Widget settings */
