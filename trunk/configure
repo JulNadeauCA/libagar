@@ -884,9 +884,9 @@ exit 1
 fi
 if [ "${with_x11}" != "no" ]
  then
-echo -n "checking for X11..."
-echo -n "checking for X11..." >> config.log
-echo "checking for X11..." >> config.log
+echo -n "checking for the X window system..."
+echo -n "checking for the X window system..." >> config.log
+echo "checking for the X window system..." >> config.log
 if [ -d /usr/X11R6/include/X11 ]; then
 X11_CFLAGS=-I/usr/X11R6/include
 else
