@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.65 2002/09/02 08:13:14 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.66 2002/09/06 01:23:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -139,7 +139,6 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|
 	    SDL_INIT_NOPARACHUTE) != 0) {
 		fatal("SDL_Init: %s\n", SDL_GetError());
-		return (-1);
 	}
 	if (njoy != -1) {	/* XXX default */
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
@@ -157,7 +156,7 @@ engine_init(int argc, char *argv[], const struct gameinfo *gi,
 
 	/* Initialize the font engine. */
 	if (text_engine_init() != 0) {
-		return (-1);
+		fatal("cannot initialize font engine\n");
 	}
 
 	/* Overrides */
