@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.44 2002/07/07 06:34:25 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.45 2002/07/08 03:17:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -81,7 +81,6 @@ window_init(struct window *win, char *caption, int flags,
     int rx, int ry, int rw, int rh)
 {
 	static int nwindow = 0;
-	SDL_Surface *s;
 	char *name;
 	int i;
 
@@ -100,9 +99,7 @@ window_init(struct window *win, char *caption, int flags,
 		    default_border[i].b);
 	}
 
-	s = TTF_RenderText_Solid(font, "ABC1234", white);
-	win->titleh = s->h + win->borderw;	/* XXX ridiculous */
-	SDL_FreeSurface(s);
+	win->titleh = font_h + win->borderw;
 
 	win->caption = strdup(caption);
 	win->flags = flags;
@@ -116,12 +113,7 @@ window_init(struct window *win, char *caption, int flags,
 
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
-		if (flags & WINDOW_ABSOLUTE) {
-			for (win->x = 0; win->x < rx; win->x += TILEW) ;;
-			for (win->y = 0; win->y < ry; win->y += TILEH) ;;
-			for (win->w = 0; win->w < rw; win->w += TILEW) ;;
-			for (win->h = 0; win->h < rh; win->h += TILEH) ;;
-		} else {
+		if (flags & WINDOW_SCALE) {
 			for (win->x = 0; win->x < (rx * view->w / 100);
 			     win->x += TILEW) ;;
 			for (win->y = 0; win->y < (ry * view->h / 100);
@@ -130,25 +122,35 @@ window_init(struct window *win, char *caption, int flags,
 			     win->w += TILEW) ;;
 			for (win->h = 0; win->h < (rh * view->h / 100);
 			     win->h += TILEH) ;;
+		} else {
+			for (win->x = 0; win->x < rx; win->x += TILEW) ;;
+			for (win->y = 0; win->y < ry; win->y += TILEH) ;;
+			for (win->w = 0; win->w < rw; win->w += TILEW) ;;
+			for (win->h = 0; win->h < rh; win->h += TILEH) ;;
 		}
 		break;
 	case GFX_ENGINE_GUI:
-		if (flags & WINDOW_ABSOLUTE) {
-			win->x = rx;
-			win->y = ry;
-			win->w = rw;
-			win->h = rh;
-		} else {
+		if (flags & WINDOW_SCALE) {
 			win->x = (rx * view->w / 100);
 			win->y = (ry * view->h / 100);
 			win->w = (rw * view->w / 100);
 			win->h = (rh * view->h / 100);
+		} else {
+			win->x = rx;
+			win->y = ry;
+			win->w = rw;
+			win->h = rh;
 		}
 		break;
 	}
 
-	win->x = (win->x < view->w) ? win->x : 0;
-	win->y = (win->y < view->h) ? win->y : 0;
+	if (flags & WINDOW_CENTER) {
+		win->x = view->w/2 - win->w/2;
+		win->y = view->h/2 - win->h/2;
+	} else {
+		win->x = (win->x < view->w) ? win->x : 0;
+		win->y = (win->y < view->h) ? win->y : 0;
+	}
 	win->w = (win->x + win->w < view->w) ? win->w : view->w;
 	win->h = (win->y + win->h < view->h) ? win->h : view->h;
 
@@ -235,7 +237,11 @@ window_decoration(struct window *win, int xo, int yo, Uint32 *col)
 		*col = win->border[xo+1];
 		return (1);
 	} else if (yo > (win->h - win->borderw)) {	/* Bottom */
-		*col = win->border[win->h - yo];
+		if (xo == (win->w - 16)) {
+			*col = SDL_MapRGB(view->v->format, 0, 0, 0);
+		} else {
+			*col = win->border[win->h - yo];
+		}
 		return (1);
 	}
 	return (0);
@@ -935,7 +941,7 @@ window_resize(struct window *win)
 
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		struct widget *wid;
-		int x = win->borderw, y = win->titleh + win->borderw; 
+		int x = win->borderw + 4, y = win->titleh + win->borderw + 4; 
 		int nwidgets = 0;
 
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets)

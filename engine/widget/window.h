@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.25 2002/06/25 17:32:24 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.26 2002/07/07 06:34:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -37,8 +37,9 @@ struct window {
 #define WINDOW_ANIMATE		0x04	/* Redraw each tick */
 #define WINDOW_TITLEBAR		0x08	/* Draw title bar */
 #define WINDOW_ROUNDEDGES	0x10	/* Round edges */
-#define WINDOW_ABSOLUTE		0x20	/* Don't scale */
+#define WINDOW_SCALE		0x20	/* Scale regions/widgets */
 #define WINDOW_SHOWN		0x40	/* Visible */
+#define WINDOW_CENTER		0x80	/* Center window */
 
 	window_type_t	type;
 
