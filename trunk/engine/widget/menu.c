@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.12 2005/02/03 04:59:00 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.13 2005/02/22 04:19:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -37,17 +37,17 @@
 #include <stdarg.h>
 #include <string.h>
 
-static struct widget_ops ag_menu_ops = {
+static struct widget_ops menu_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
-		ag_menu_destroy,
+		menu_destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	ag_menu_draw,
-	ag_menu_scale
+	menu_draw,
+	menu_scale
 };
 
 enum {
@@ -59,18 +59,18 @@ enum {
 };
 
 struct AGMenu *
-ag_menu_new(void *parent)
+menu_new(void *parent)
 {
 	struct AGMenu *m;
 
 	m = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	ag_menu_init(m);
+	menu_init(m);
 	object_attach(parent, m);
 	return (m);
 }
 
 struct window *
-ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
+menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 {
 	struct AGMenuView *mview;
 	struct window *panel;
@@ -86,7 +86,7 @@ ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 	WIDGET(panel)->y = y;
 
 	mview = Malloc(sizeof(struct AGMenuView), M_OBJECT);
-	ag_menu_view_init(mview, panel, m, item);
+	menu_view_init(mview, panel, m, item);
 	object_attach(panel, mview);
 	item->view = mview;
 	
@@ -97,13 +97,13 @@ ag_menu_expand(struct AGMenu *m, struct AGMenuItem *item, int x, int y)
 }
 
 void
-ag_menu_collapse(struct AGMenu *m, struct AGMenuItem *item)
+menu_collapse(struct AGMenu *m, struct AGMenuItem *item)
 {
 	int i;
 
 	for (i = 0; i < item->nsubitems; i++) {
 		if (item->subitems[i].nsubitems > 0)
-			ag_menu_collapse(m, &item->subitems[i]);
+			menu_collapse(m, &item->subitems[i]);
 	}
 	item->sel_subitem = NULL;
 	if (item->view != NULL &&
@@ -131,15 +131,15 @@ mousebuttondown(int argc, union evarg *argv)
 		    y >= mitem->y &&
 		    y < (mitem->y + m->itemh)) {
 		    	if (m->sel_item == mitem) {
-				ag_menu_collapse(m, mitem);
+				menu_collapse(m, mitem);
 				m->sel_item = NULL;
 				m->selecting = 0;
 			} else {
 				if (m->sel_item != NULL) {
-					ag_menu_collapse(m, m->sel_item);
+					menu_collapse(m, m->sel_item);
 				}
 				m->sel_item = mitem;
-				ag_menu_expand(m, mitem,
+				menu_expand(m, mitem,
 				    WIDGET(m)->cx+mitem->x,
 				    WIDGET(m)->cy+mitem->y+1+label->h);
 				m->selecting = 1;
@@ -181,7 +181,7 @@ mousemotion(int argc, union evarg *argv)
 		return;
 
 	if (x < 0 && m->sel_item != NULL) {
-		ag_menu_collapse(m, m->sel_item);
+		menu_collapse(m, m->sel_item);
 		m->sel_item = NULL;
 		return;
 	}
@@ -196,10 +196,10 @@ mousemotion(int argc, union evarg *argv)
 		    y < (mitem->y + m->itemh)) {
 		    	if (mitem != m->sel_item) {
 				if (m->sel_item != NULL) {
-					ag_menu_collapse(m, m->sel_item);
+					menu_collapse(m, m->sel_item);
 				}
 				m->sel_item = mitem;
-				ag_menu_expand(m, mitem,
+				menu_expand(m, mitem,
 				    WIDGET(m)->cx+mitem->x,
 				    WIDGET(m)->cy+mitem->y+1+label->h);
 			}
@@ -208,16 +208,16 @@ mousemotion(int argc, union evarg *argv)
 	}
 #if 0
 	if (i == m->nitems && m->sel_item != NULL) {
-		ag_menu_collapse(m, m->sel_item);
+		menu_collapse(m, m->sel_item);
 		m->sel_item = NULL;
 	}
 #endif
 }
 
 void
-ag_menu_init(struct AGMenu *m)
+menu_init(struct AGMenu *m)
 {
-	widget_init(m, "AGMenu", &ag_menu_ops, WIDGET_WFILL|
+	widget_init(m, "AGMenu", &menu_ops, WIDGET_WFILL|
 					       WIDGET_UNFOCUSED_MOTION|
 	                                       WIDGET_UNFOCUSED_BUTTONUP);
 	widget_map_color(m, UNZEL_COLOR, "unzelected", 100, 100, 100, 255);
@@ -242,7 +242,7 @@ ag_menu_init(struct AGMenu *m)
 }
 
 struct AGMenuItem *
-ag_menu_add_item(struct AGMenu *m, const char *text)
+menu_add_item(struct AGMenu *m, const char *text)
 {
 	struct AGMenuItem *mitem;
 	
@@ -265,43 +265,6 @@ ag_menu_add_item(struct AGMenu *m, const char *text)
 	return (mitem);
 }
 
-static void
-init_menuitem(struct AGMenuItem *mi, const char *text, SDL_Surface *icon,
-    SDLKey key_equiv, SDLKey key_mod)
-{
-	struct AGMenu *m = mi->pmenu;
-
-	mi->text = text;
-	mi->label = (text != NULL) ?
-	    widget_map_surface(m, text_render(NULL, -1, 0, text)) : -1;
-
-	if (icon != NULL) {
-		SDL_Surface *sicon = NULL;
-
-		view_scale_surface(icon, m->itemh-1, m->itemh-1, &sicon);
-		mi->icon = widget_map_surface(m, sicon);
-	} else {
-		mi->icon = -1;
-	}
-	mi->key_equiv = key_equiv;
-	mi->key_mod = key_mod;
-	mi->subitems = NULL;
-	mi->nsubitems = 0;
-	mi->view = NULL;
-	mi->pmenu = m;
-	mi->sel_subitem = NULL;
-	mi->pitem = NULL;
-	mi->y = 0;
-	mi->key_equiv = key_equiv;
-	mi->key_mod = key_mod;
-	mi->onclick = NULL;
-
-	mi->bind_type = MENU_NO_BINDING;
-	mi->bind_flags = 0;
-	mi->bind_invert = 0;
-	mi->bind_lock = NULL;
-}
-
 static __inline__ struct AGMenuItem *
 add_subitem(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
     SDLKey key_equiv, SDLKey key_mod)
@@ -319,27 +282,45 @@ add_subitem(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 	mi->pitem = pitem;
 	mi->pmenu = m;
 	mi->y = pitem->nsubitems*m->itemh - m->itemh;
-	init_menuitem(mi, text, icon, key_equiv, key_mod);
+	mi->key_equiv = key_equiv;
+	mi->key_mod = key_mod;
+	mi->subitems = NULL;
+	mi->nsubitems = 0;
+	mi->view = NULL;
+	mi->pmenu = m;
+	mi->sel_subitem = NULL;
+	mi->pitem = NULL;
+	mi->y = 0;
+	mi->key_equiv = key_equiv;
+	mi->key_mod = key_mod;
+	mi->onclick = NULL;
+	mi->bind_type = MENU_NO_BINDING;
+	mi->bind_flags = 0;
+	mi->bind_invert = 0;
+	mi->bind_lock = NULL;
+	mi->text = text;
+	mi->icon = (icon != NULL) ?
+	    widget_map_surface(m, view_copy_surface(icon)) : -1;
+	mi->label = (text != NULL) ?
+	    widget_map_surface(m, text_render(NULL, -1, 0, text)) : -1;
 	return (mi);
-
 }
 
 struct AGMenuItem *
-ag_menu_separator(struct AGMenuItem *pitem)
+menu_separator(struct AGMenuItem *pitem)
 {
 	return (add_subitem(pitem, NULL, NULL, 0, 0));
 }
 
 struct AGMenuItem *
-ag_menu_action(struct AGMenuItem *pitem, const char *text,
-    SDL_Surface *icon, SDLKey key_equiv, SDLMod key_mod,
+menu_action(struct AGMenuItem *pitem, const char *text, int nicon,
     void (*fn)(int, union evarg *), const char *fmt, ...)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 	va_list ap;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->onclick = event_new(m, NULL, fn, NULL);
 	if (fmt != NULL) {
 		va_start(ap, fmt);
@@ -352,14 +333,35 @@ ag_menu_action(struct AGMenuItem *pitem, const char *text,
 }
 
 struct AGMenuItem *
-ag_menu_int_bool(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
-    SDLKey key_equiv, SDLMod key_mod,
+menu_action_kb(struct AGMenuItem *pitem, const char *text,
+    int nicon, SDLKey key_equiv, SDLMod key_mod,
+    void (*fn)(int, union evarg *), const char *fmt, ...)
+{
+	struct AGMenu *m = pitem->pmenu;
+	struct AGMenuItem *mi;
+	va_list ap;
+
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL,
+	    key_equiv, key_mod);
+	mi->onclick = event_new(m, NULL, fn, NULL);
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		for (; *fmt != '\0'; fmt++) {
+			EVENT_PUSH_ARG(ap, *fmt, mi->onclick);
+		}
+		va_end(ap);
+	}
+	return (mi);
+}
+
+struct AGMenuItem *
+menu_int_bool(struct AGMenuItem *pitem, const char *text, int nicon,
     int *boolp, pthread_mutex_t *lock, int inv)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->bind_type = MENU_INT_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
@@ -368,14 +370,13 @@ ag_menu_int_bool(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 struct AGMenuItem *
-ag_menu_int8_bool(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
-    SDLKey key_equiv, SDLMod key_mod,
+menu_int8_bool(struct AGMenuItem *pitem, const char *text, int nicon,
     Uint8 *boolp, pthread_mutex_t *lock, int inv)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->bind_type = MENU_INT8_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
@@ -384,14 +385,13 @@ ag_menu_int8_bool(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 struct AGMenuItem *
-ag_menu_int_flags(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
-    SDLKey key_equiv, SDLMod key_mod,
+menu_int_flags(struct AGMenuItem *pitem, const char *text, int nicon,
     int *flagsp, int flags, pthread_mutex_t *lock, int inv)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->bind_type = MENU_INT_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -401,14 +401,13 @@ ag_menu_int_flags(struct AGMenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 struct AGMenuItem *
-ag_menu_int8_flags(struct AGMenuItem *pitem, const char *text,
-    SDL_Surface *icon, SDLKey key_equiv, SDLMod key_mod,
+menu_int8_flags(struct AGMenuItem *pitem, const char *text, int nicon, 
     Uint8 *flagsp, Uint8 flags, pthread_mutex_t *lock, int inv)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->bind_type = MENU_INT8_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -418,14 +417,13 @@ ag_menu_int8_flags(struct AGMenuItem *pitem, const char *text,
 }
 
 struct AGMenuItem *
-ag_menu_int16_flags(struct AGMenuItem *pitem, const char *text,
-    SDL_Surface *icon, SDLKey key_equiv, SDLMod key_mod,
+menu_int16_flags(struct AGMenuItem *pitem, const char *text, int nicon,
     Uint16 *flagsp, Uint16 flags, pthread_mutex_t *lock, int inv)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->bind_type = MENU_INT16_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -435,14 +433,13 @@ ag_menu_int16_flags(struct AGMenuItem *pitem, const char *text,
 }
 
 struct AGMenuItem *
-ag_menu_int32_flags(struct AGMenuItem *pitem, const char *text,
-    SDL_Surface *icon, SDLKey key_equiv, SDLMod key_mod,
+menu_int32_flags(struct AGMenuItem *pitem, const char *text, int nicon, 
     Uint32 *flagsp, Uint32 flags, pthread_mutex_t *lock, int inv)
 {
 	struct AGMenu *m = pitem->pmenu;
 	struct AGMenuItem *mi;
 
-	mi = add_subitem(pitem, text, icon, key_equiv, key_mod);
+	mi = add_subitem(pitem, text, nicon >= 0 ? ICON(nicon) : NULL, 0, 0);
 	mi->bind_type = MENU_INT32_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -452,7 +449,7 @@ ag_menu_int32_flags(struct AGMenuItem *pitem, const char *text,
 }
 
 void
-ag_menu_free_subitems(struct AGMenuItem *mit)
+menu_free_subitems(struct AGMenuItem *mit)
 {
 	int i;
 
@@ -465,7 +462,7 @@ ag_menu_free_subitems(struct AGMenuItem *mit)
 		mit->icon = -1;
 	}
 	for (i = 0; i < mit->nsubitems; i++)
-		ag_menu_free_subitems(&mit->subitems[i]);
+		menu_free_subitems(&mit->subitems[i]);
 
 	Free(mit->subitems, M_WIDGET);
 	mit->subitems = NULL;
@@ -473,28 +470,28 @@ ag_menu_free_subitems(struct AGMenuItem *mit)
 }
 
 void
-ag_menu_free_items(struct AGMenu *m)
+menu_free_items(struct AGMenu *m)
 {
 	int i;
 
 	for (i = 0; i < m->nitems; i++) {
-		ag_menu_free_subitems(&m->items[i]);
+		menu_free_subitems(&m->items[i]);
 	}
 	m->nitems = 0;
 }
 
 void
-ag_menu_destroy(void *p)
+menu_destroy(void *p)
 {
 	struct AGMenu *m = p;
 
-	ag_menu_free_items(m);
+	menu_free_items(m);
 	Free(m->items, M_WIDGET);
 	widget_destroy(m);
 }
 
 void
-ag_menu_draw(void *p)
+menu_draw(void *p)
 {
 	struct AGMenu *m = p;
 	int i;
@@ -524,7 +521,7 @@ ag_menu_draw(void *p)
 }
 
 void
-ag_menu_scale(void *p, int w, int h)
+menu_scale(void *p, int w, int h)
 {
 	struct AGMenu *m = p;
 

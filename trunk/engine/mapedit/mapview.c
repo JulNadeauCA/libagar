@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.173 2005/01/05 10:50:51 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.174 2005/02/08 15:52:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -103,7 +103,7 @@ selecting(struct mapview *mv)
 	extern struct tool select_tool;
 
 	return ((mv->curtool != NULL &&
-	    mv->curtool->cursor_index == SELECT_CURSOR) || /* XXX hack */
+	    mv->curtool->cursor_index == SELECT_CURSORBMP) || /* XXX hack */
 	    (SDL_GetModState() & KMOD_CTRL));
 }
 
@@ -460,7 +460,7 @@ draw_cursor(struct mapview *mv)
 		SDL_GetMouseState(&msx, &msy);
 		rd.x = msx;
 		rd.y = msy;
-		SDL_BlitSurface(ICON(SELECT_CURSOR), NULL, view->v, &rd);
+		SDL_BlitSurface(ICON(SELECT_CURSORBMP), NULL, view->v, &rd);
 		return;
 	}
 	

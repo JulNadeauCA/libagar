@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.14 2005/02/05 02:52:05 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.15 2005/02/26 06:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -34,7 +34,7 @@
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
 
-static struct widget_ops ag_menu_view_ops = {
+static struct widget_ops menu_view_ops = {
 	{
 		NULL,			/* init */
 		NULL,			/* reinit */
@@ -43,8 +43,8 @@ static struct widget_ops ag_menu_view_ops = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	ag_menu_view_draw,
-	ag_menu_view_scale
+	menu_view_draw,
+	menu_view_scale
 };
 
 enum {
@@ -63,7 +63,7 @@ select_subitem(struct AGMenuItem *pitem, struct AGMenuItem *subitem)
 
 	if (pitem->sel_subitem != NULL &&
 	    pitem->sel_subitem->view != NULL) {
-		ag_menu_collapse(m, pitem->sel_subitem);
+		menu_collapse(m, pitem->sel_subitem);
 	}
 	pitem->sel_subitem = subitem;
 
@@ -88,7 +88,7 @@ submenu_timeout(void *obj, Uint32 ival, void *arg)
 	if (item != mview->pitem->sel_subitem)
 		fatal("subitem");
 #endif
-	ag_menu_expand(m, item,
+	menu_expand(m, item,
 	    WIDGET(mview)->cx + WIDGET(mview)->w,
 	    WIDGET(mview)->cy + item->y);
 
@@ -268,19 +268,19 @@ mousebuttonup(int argc, union evarg *argv)
 	}
 	return;
 collapse:
-	ag_menu_collapse(m, pitem);
+	menu_collapse(m, pitem);
 	select_subitem(pitem, NULL);
 	m->sel_item = NULL;
 	m->selecting = 0;
 }
 
 void
-ag_menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
+menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
     struct AGMenuItem *pitem)
 {
 	struct AGMenuView *mview = p;
 
-	widget_init(mview, "AGMenuView", &ag_menu_view_ops,
+	widget_init(mview, "AGMenuView", &menu_view_ops,
 	    WIDGET_UNFOCUSED_MOTION|WIDGET_UNFOCUSED_BUTTONUP);
 	object_wire_gfx(mview, "/engine/widget/pixmaps");
 
@@ -308,7 +308,7 @@ ag_menu_view_init(void *p, struct window *panel, struct AGMenu *pmenu,
 #define MIDDLE_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 - 1)
 
 void
-ag_menu_view_draw(void *p)
+menu_view_draw(void *p)
 {
 	struct AGMenuView *mview = p;
 	struct AGMenuItem *pitem = mview->pitem;
@@ -379,7 +379,7 @@ ag_menu_view_draw(void *p)
 }
 
 void
-ag_menu_view_scale(void *p, int w, int h)
+menu_view_scale(void *p, int w, int h)
 {
 	struct AGMenuView *mview = p;
 	struct AGMenuItem *pitem = mview->pitem;

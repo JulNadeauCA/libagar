@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.8 2005/02/06 07:05:03 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.9 2005/02/22 04:42:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -471,11 +471,8 @@ objmgr_window(void)
 	struct textbox *name_tb;
 	struct combo *types_com;
 	struct tlist *objs_tl;
-#if 0
-	struct toolbar *tbar;
-#endif
-	struct AGMenu *m;
-	struct AGMenuItem *mi, *mj;
+	struct AGMenu *me;
+	struct AGMenuItem *mi, *mi_objs;
 
 	win = window_new(0, "objmgr");
 	window_set_caption(win, _("Object manager"));
@@ -489,29 +486,28 @@ objmgr_window(void)
 	event_new(objs_tl, "tlist-dblclick", obj_op, "%p, %i", objs_tl,
 	    OBJEDIT_EDIT_DATA);
 
-	m = ag_menu_new(win);
-	mi = ag_menu_add_item(m, _("Objects"));
+	me = menu_new(win);
+	mi = menu_add_item(me, _("Objects"));
 	{
-		mj = ag_menu_action(mi, _("Create object"),
-		    ICON(OBJCREATE_ICON), 0, 0, NULL, NULL);
-		{
-			int i;
+		int i;
 
-			for (i = ntypesw-1; i >= 0; i--) {
-				char label[32];
-				struct object_type *t = &typesw[i];
+		mi_objs = menu_action(mi, _("Create object"), OBJCREATE_ICON,
+		    NULL, NULL);
+		for (i = ntypesw-1; i >= 0; i--) {
+			char label[32];
+			struct object_type *t = &typesw[i];
 
-				strlcpy(label, t->type, sizeof(label));
-				label[0] = (char)toupper((int)label[0]);
-				ag_menu_action(mj, label, ICON(t->icon), 0, 0,
-				    create_obj_dlg, "%p,%p", t, win);
-			}
+			strlcpy(label, t->type, sizeof(label));
+			label[0] = (char)toupper((int)label[0]);
+			menu_action(mi_objs, label, t->icon,
+			    create_obj_dlg, "%p,%p", t, win);
 		}
-		ag_menu_separator(mi);
-		ag_menu_action(mi, _("Load state"), ICON(OBJLOAD_ICON), 0, 0,
-		    load_object, "%p", world);
-		ag_menu_action(mi, _("Save state"), ICON(OBJSAVE_ICON), 0, 0,
-		    save_object, "%p", world);
+
+		menu_separator(mi);
+		menu_action(mi, _("Load state"), OBJLOAD_ICON, load_object,
+		    "%p", world);
+		menu_action(mi, _("Save state"), OBJSAVE_ICON, save_object,
+		    "%p", world);
 	}
 
 	vb = vbox_new(win, VBOX_WFILL|VBOX_HFILL);
@@ -519,52 +515,40 @@ objmgr_window(void)
 	vbox_set_spacing(vb, 1);
 	{
 		struct AGMenuItem *mi;
-#if 0
-		tbar = toolbar_new(vb, TOOLBAR_HORIZ, 1);
-#endif
+
 		object_attach(vb, objs_tl);
 
 		mi = tlist_set_popup(objs_tl, "object");
 		{
-			ag_menu_action(mi, _("Edit object..."),
-			    ICON(OBJEDIT_ICON), SDLK_e, KMOD_CTRL,
+			menu_action(mi, _("Edit object..."), OBJEDIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_DATA);
-			ag_menu_action(mi, _("Edit generic information..."),
-			    ICON(OBJGENEDIT_ICON), SDLK_g, KMOD_CTRL,
+			menu_action(mi, _("Edit generic information..."),
+			    OBJGENEDIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_EDIT_GENERIC);
 
-			ag_menu_separator(mi);
+			menu_separator(mi);
 			
-			ag_menu_action(mi, _("Load"),
-			    ICON(OBJLOAD_ICON), SDLK_l, KMOD_CTRL,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_LOAD);
+			menu_action(mi, _("Load"), OBJLOAD_ICON, obj_op,
+			    "%p, %i", objs_tl, OBJEDIT_LOAD);
+			menu_action(mi, _("Save"), OBJSAVE_ICON, obj_op,
+			    "%p, %i", objs_tl, OBJEDIT_SAVE);
 			
-			ag_menu_action(mi, _("Save"),
-			    ICON(OBJSAVE_ICON), SDLK_s, KMOD_CTRL,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_SAVE);
+			menu_separator(mi);
 			
-			ag_menu_separator(mi);
-			
-			ag_menu_action(mi, _("Duplicate"),
-			    ICON(OBJDUP_ICON), SDLK_d, KMOD_CTRL,
+			menu_action(mi, _("Duplicate"), OBJDUP_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DUP);
+			menu_action_kb(mi, _("Move up"), OBJMOVEUP_ICON,
+			    SDLK_u, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+			    OBJEDIT_MOVE_UP);
+			menu_action_kb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+			    SDLK_d, KMOD_SHIFT, obj_op, "%p, %i", objs_tl,
+			    OBJEDIT_MOVE_DOWN);
 			
-			ag_menu_action(mi, _("Move up"),
-			    ICON(OBJMOVEUP_ICON), SDLK_u, KMOD_SHIFT,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_UP);
+			menu_separator(mi);
 			
-			ag_menu_action(mi, _("Move down"),
-			    ICON(OBJMOVEDOWN_ICON), SDLK_d, KMOD_SHIFT,
-			    obj_op, "%p, %i", objs_tl, OBJEDIT_MOVE_DOWN);
-			
-			ag_menu_separator(mi);
-			
-			ag_menu_action(mi, _("Reinitialize"),
-			    ICON(OBJREINIT_ICON), 0, 0,
+			menu_action(mi, _("Reinitialize"), OBJREINIT_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_REINIT);
-			
-			ag_menu_action(mi, _("Destroy"),
-			    ICON(TRASH_ICON), SDLK_x, KMOD_CTRL,
+			menu_action(mi, _("Destroy"), TRASH_ICON,
 			    obj_op, "%p, %i", objs_tl, OBJEDIT_DESTROY);
 		}
 #if 0

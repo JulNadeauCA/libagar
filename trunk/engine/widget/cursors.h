@@ -1,11 +1,18 @@
-/*	$Csoft: cursors.h,v 1.1 2005/02/27 05:57:07 vedge Exp $	*/
+/*	$Csoft: cursors.h,v 1.2 2005/02/27 06:52:02 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_CURSORS_H_
 #define _AGAR_WIDGET_CURSORS_H_
 #include "begin_code.h"
 
-extern SDL_Cursor *fill_cursor, *erase_cursor, *pick_cursor;
+enum {
+	FILL_CURSOR,
+	ERASE_CURSOR,
+	PICK_CURSOR,
+	LAST_CURSOR
+};
+
+extern SDL_Cursor *cursors[];
 
 __BEGIN_DECLS
 void cursors_init(void);

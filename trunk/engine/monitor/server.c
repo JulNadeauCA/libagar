@@ -1,4 +1,4 @@
-/*	$Csoft: server.c,v 1.3 2005/01/28 03:11:36 vedge Exp $	*/
+/*	$Csoft: server.c,v 1.4 2005/01/28 12:50:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -377,7 +377,7 @@ struct window *
 server_window(void)
 {
 	struct window *win;
-	struct AGMenu *m;
+	struct AGMenu *me;
 	struct AGMenuItem *mi;
 	struct tlist *tl;
 	struct box *bo;
@@ -390,14 +390,10 @@ server_window(void)
 	tlist_init(tl, TLIST_POLL);
 	event_new(tl, "tlist-poll", poll_clients, NULL);
 	
-	m = ag_menu_new(win);
-	mi = ag_menu_add_item(m, _("Server"));
-	{
-		ag_menu_action(mi, _("Start server"), NULL, 0, 0,
-		    start_server, "%p", tl);
-		ag_menu_action(mi, _("Stop server"), NULL, 0, 0,
-		    stop_server, "%p", tl);
-	}
+	me = menu_new(win);
+	mi = menu_add_item(me, _("Server"));
+	menu_action(mi, _("Start server"), -1, start_server, "%p", tl);
+	menu_action(mi, _("Stop server"), -1, stop_server, "%p", tl);
 
 	object_attach(win, tl);
 	return (win);

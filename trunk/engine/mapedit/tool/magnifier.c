@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.47 2004/12/17 03:19:41 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.48 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -106,7 +106,7 @@ const struct tool magnifier_tool = {
 	N_("Magnifier"),
 	N_("Zoom to specific areas on the map."),
 	MAGNIFIER_TOOL_ICON,
-	MAGNIFIER_CURSOR,
+	MAGNIFIER_CURSORBMP,
 	magnifier_init,
 	NULL,				/* load */
 	NULL,				/* save */
