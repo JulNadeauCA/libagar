@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.14 2002/05/11 03:58:19 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.15 2002/05/13 10:19:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -60,7 +60,7 @@ input_new(int type, int index)
 		break;
 	}
 
-	object_init(&input->obj, name, NULL, 0, NULL);
+	object_init(&input->obj, "input-device", name, NULL, 0, NULL);
 	input->type = type;
 	input->index = index;
 	input->p = NULL;
