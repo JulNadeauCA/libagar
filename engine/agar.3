@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: agar.3,v 1.1.1.1 2002/01/25 09:50:02 vedge Exp $
 .\"
 .\" Copyright (c) 2001 CubeSoft Communications, Inc.
 .\"
@@ -35,8 +35,31 @@
 .Nm agar
 .Nd tile-based game engine
 .Sh DESCRIPTION
-The
 .Nm
-engine implements graphical tile-based game routines.
+is a graphical, object-oriented map engine implementing:
+.Pp
+.Bl -tag -width speaker -compact -offset indent
+.It engine
+Bootstrapping, engine configuration.
+.It world
+Hierarchy, garbage collection, state saving.
+.It object
+Identification, condition waits, entry points.
+.It event
+Generic event handling and dispatching.
+.It map
+Maps and associated rendering.
+.It char
+Characters and associated rendering.
+.It audio
+Audio subsystem.
+.It video
+Video playback (optional).
+.It xcf
+Loading sprites and animations.
+.It view
+Viewports and internal windows.
+.El
 .Sh SEE ALSO
-.Xr fobj 3
+.Xr fobj 3 ,
+.Xr char 3
