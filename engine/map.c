@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.20 2002/02/11 23:30:40 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.21 2002/02/13 00:31:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -157,28 +157,6 @@ map_unfocus(struct map *m)
 	return (0);
 }
 
-int
-map_link(void *ob)
-{
-	pthread_mutex_lock(&world->lock);
-	SLIST_INSERT_HEAD(&world->wmapsh, (struct map *)ob, wmaps);
-	pthread_mutex_unlock(&world->lock);
-	object_link(ob);
-	
-	return (0);
-}
-
-int
-map_unlink(void *ob)
-{
-	pthread_mutex_lock(&world->lock);
-	SLIST_REMOVE(&world->wmapsh, ob, map, wmaps);
-	pthread_mutex_unlock(&world->lock);
-
-	return (0);
-}
-
-
 /*
  * Initialize a map node.
  * Must be called on a locked map.
@@ -319,12 +297,6 @@ map_destroy(void *p)
 		map_unfocus(m);
 	}
 
-	/* Unlink the map from the active map list. */
-	if (pthread_mutex_lock(&world->lock) == 0) {
-		SLIST_REMOVE(&world->wmapsh, m, map, wmaps);
-		pthread_mutex_unlock(&world->lock);
-	}
-
 	if (pthread_mutex_lock(&m->lock) == 0) {
 		for (y = 0; y < m->maph; y++) {
 			for (x = 0; x < m->mapw; x++) {
@@ -446,13 +418,11 @@ map_animate(Uint32 ival, void *p)
 				ry = (vy << TILESHIFT) + aref->yoffs;
 
 				if (aref->flags & MAPREF_SPRITE) {
-					src = g_slist_nth_data(
-					    aref->pobj->sprites, aref->offs);
+					src = aref->pobj->sprites[aref->offs];
 				} else if (aref->flags & MAPREF_ANIM) {
 					static struct anim *anim;
 
-					anim = g_slist_nth_data(
-					    aref->pobj->anims, aref->offs);
+					anim = aref->pobj->anims[aref->offs];
 					src = anim->frames[aref->frame];
 					
 					if (anim->delay > 0 &&
@@ -518,45 +488,45 @@ mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 	vy <<= TILESHIFT;
 
 	if (curmapedit->flags & MAPEDIT_DRAWGRID)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_GRID), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_GRID],
+		    vx, vy);
 	if ((curmapedit->flags & MAPEDIT_DRAWPROPS) == 0)
 		return;
 
 	if (flags == 0) {
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_BLOCKED), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BLOCKED],
+		    vx, vy);
 		return;
 	}
 	if (flags & NODE_ORIGIN)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_ORIGIN), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ORIGIN],
+		    vx, vy);
 #if 0
 	if (flags & NODE_WALK)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_WALK), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_WALK],
+		    vx, vy);
 #endif
 	if (flags & NODE_CLIMB)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_CLIMB), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_CLIMB],
+		    vx, vy);
 	if (flags & NODE_SLIP)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_SLIP), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLIP],
+		    vx, vy);
 	if (flags & NODE_BIO)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_BIO), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_BIO],
+		    vx, vy);
 	if (flags & NODE_REGEN)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_REGEN), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_REGEN],
+		    vx, vy);
 	if (flags & NODE_SLOW)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_SLOW), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_SLOW],
+		    vx, vy);
 	if (flags & NODE_HASTE)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_HASTE), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_HASTE],
+		    vx, vy);
 	if (flags & NODE_ANIM)
-		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
-		    MAPEDIT_ANIM), vx, vy);
+		map_plot_sprite(m, curmapedit->obj.sprites[MAPEDIT_ANIM],
+		    vx, vy);
 }
 
 /* Draw all sprites in the map view. */
@@ -626,8 +596,7 @@ map_draw(Uint32 ival, void *p)
 			TAILQ_FOREACH(aref, &node->arefsh, marefs) {
 				if (aref->flags & MAPREF_SPRITE) {
 					map_plot_sprite(m,
-					    g_slist_nth_data(
-					    aref->pobj->sprites, aref->offs),
+					    aref->pobj->sprites[aref->offs],
 					    (vx << TILESHIFT) + aref->xoffs,
 					    (vy << TILESHIFT) + aref->yoffs);
 				}
