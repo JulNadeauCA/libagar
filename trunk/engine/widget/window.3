@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.8 2002/09/13 11:08:32 vedge Exp $
+.\"	$Csoft: window.3,v 1.9 2002/09/17 21:20:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -46,12 +46,10 @@ structures.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct window *"
-.Fn window_new "char *caption" "int flags" "int x" "int y" "int defw" \
-               "int defh" "int minwidth, int minheight"
+.Fn window_new "char *name" "char *caption" "int flags" "int x" "int y" "int defw" "int defh" "int minwidth, int minheight"
 .Pp
 .Ft void
-.Fn window_init "struct window *win" "int flags" "int x" "int y" "int defw" \
-                "int defh" "int minwidth" "int minheight"
+.Fn window_init "struct window *win" "char *name" "char *caption" "int flags" "int x" "int y" "int defw" "int defh, int minwidth, int minheight"
 .Pp
 .Ft void
 .Fn window_destroy "struct window *win"
@@ -72,23 +70,21 @@ function allocates, initializes, and attaches a
 .Nm
 structure.
 The
-.Fn window_new
-function must not be called when the view is locked by the caller thread.
-The
 .Fn window_init
 function initializes a
 .Nm
 structure.
 .Pp
 The
-.Fn window_destroy
-function frees resources allocated by a window, assuming it is no longer
-attached to a view.
-.Pp
+.Fa name
+argument points to a null-terminated string to identify the window, if it is
+unique (so the window coordinates and geometry can be saved to disk), or
+.Dv NULL
+if more than one instance of this window will be created.
 The
 .Fa caption
-argument is a pointer to a null-terminated string that will be
-displayed in the title bar (which can be changed at runtime using the
+argument points to a null-terminated string that will be displayed in the
+title bar (which can be changed at runtime using the
 .Fn window_titlebar_printf
 function).
 The
@@ -119,8 +115,13 @@ can be changed at runtime, and may include:
 #define WINDOW_SCALE		0x020	/* Scale regions/widgets */
 #define WINDOW_SHOWN		0x040	/* Visible */
 #define WINDOW_CENTER		0x080	/* Center window */
-#define WINDOW_SAVE_POSITION	0x100	/* Save window position on hide/exit */
+#define WINDOW_SAVE_POSITION	0x100	/* Save window position on disk */
 .Ed
+.Pp
+The
+.Fn window_destroy
+function frees resources allocated by a window, assuming it is no longer
+attached to a view.
 .Pp
 The
 .Fn window_attach
