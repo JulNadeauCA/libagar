@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.19 2002/12/15 15:56:45 vedge Exp $
+.\"	$Csoft: object.3,v 1.20 2002/12/26 07:11:41 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -57,29 +57,17 @@ positions on maps (back references).
 .It
 dependencies.
 .El
-.Sh SHARED MEDIA
-Graphics/audio is allocated/deallocated by the engine using pools and
-reference counts.
-The reference count is incremented when an newly allocated object references
-the media structure by its name, and decremented when an object is freed
-(unless the
-.Dv OBJECT_KEEP_MEDIA
-flag is set).
-When the reference count drops to zero, the media is freed.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
-.Fn object_new "char *type" "char *name" "char *media" "int flags" \
+.Fn object_new "char *type" "char *name" "char *archive" "int flags" \
                "const void *ops"
 .Ft "void"
-.Fn object_init "struct object *ob" "char *type" "char *name" "char *media" \
+.Fn object_init "struct object *ob" "char *type" "char *name" "char *archive" \
                 "int flags" "const void *ops"
 .Pp
 .Ft "void"
 .Fn object_destroy "void *ob"
-.Pp
-.Ft "char *"
-.Fn object_name "char *base" "int num"
 .nr nS 0
 .Pp
 The
@@ -95,17 +83,15 @@ as an object of type
 (an arbitrary string identifier describing the type of structure)
 .Pp
 If
-.Fa media
-is not null, a
+.Fa archive
+is not null, it identifies a
 .Xr fobj 3
-archive with the
+(with the
 .Sq .fob
-suffix is looked up in the data directories (the
+suffix) to be looked up in the data directories (the
 .Sq path.data_path
-setting).
-and loads data from
-.Fa media
-into the static media pool, if the latter is not NULL.
+setting) and loaded.
+.Pp
 .Fn object_destroy
 is called to free all resources associated with
 .Fa ob .
@@ -124,22 +110,13 @@ The
 .Fa flags
 argument may contain:
 .Bd -literal
-#define OBJECT_ART		0x01	/* Load graphics */
-#define OBJECT_ART_CACHE	0x02	/* Keep graphics cached */
+#define OBJECT_ART		0x01	/* Load graphics from archive */
+#define OBJECT_ART_CACHE	0x02	/* Never decrement the ref count */
 #define OBJECT_ART_CAN_FAIL	0x04	/* Graphic load can fail */
-#define OBJECT_AUDIO		0x08	/* Load audio */
-#define OBJECT_AUDIO_CACHE	0x10	/* Keep audio cached */
+#define OBJECT_AUDIO		0x08	/* Load audio from archive */
+#define OBJECT_AUDIO_CACHE	0x10	/* Never decrement the ref count */
 #define OBJECT_AUDIO_CAN_FAIL	0x20	/* Audio load can fail */
-#define OBJECT_CANNOT_MAP	0x40	/* Never reference in maps */
 .Ed
-.Pp
-The
-.Fn object_name
-function returns a string containing the
-.Fa name
-string followed by the
-.Fa num
-integer.
 .Sh SAVING STATES
 .nr nS 1
 .Ft "int"
