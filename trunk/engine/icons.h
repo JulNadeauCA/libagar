@@ -1,4 +1,4 @@
-/*	$Csoft: icons.h,v 1.2 2004/04/17 00:31:13 vedge Exp $	*/
+/*	$Csoft: icons.h,v 1.3 2004/04/20 09:15:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONS_H_
@@ -71,7 +71,9 @@ enum {
 	SNAP_CENTERPT_ICON,
 	SNAP_MIDDLEPT_ICON,
 	SNAP_INTSECT_AUTO_ICON,
-	SNAP_INTSECT_MANUAL_ICON
+	SNAP_INTSECT_MANUAL_ICON,
+
+	EDA_CIRCUIT_ICON
 };
 
 extern struct object engine_icons;			/* engine.c */
