@@ -1,4 +1,4 @@
-.\"	$Csoft$
+.\"	$Csoft: Cover.tr,v 1.1 2004/01/08 02:19:47 vedge Exp $
 .\"
 .\" Copyright (c) 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -24,31 +24,24 @@
 .\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
-.ps 18
-.vs 22
-.sp 2.75i
-.ft B
-.ce 2
+.sp 23
+.ps 24
+.ce
 Agar Programmer's Manual
-.ps 14
-.vs 16
-.sp |4i
-.ce 2
-Agar 1.0-BETA
-.sp |5.75i
-.ft R
-.vs 16
+.sp
+.ps 16
 .ce
-By Julien Nadeau Carrière
+by
+.sp
 .ce
-.ps 12
-January, 2004
-.ps
-.sp |8.2i
-.ce 5
-CubeSoft Communications, Inc
-Îles de la Madeleine, Québec
-G0B 1B0
+Julien Nadeau Carrière
+.ps 10
+.sp
+.ce
+CubeSoft Communications, Inc.
+.sp
+.ce
+\fBAgar 1.0-BETA\fP
 .bp
 .nr % 0
 \&
@@ -57,6 +50,7 @@ G0B 1B0
 .ps 10
 .vs 12p
 .ps 14
+.ce
 Agar Programmer's Manual
 .ps
 .sp 1c
@@ -65,7 +59,7 @@ Agar Programmer's Manual
 By Julien Nadeau Carrière
 .sp
 .ce
-Copyright 2001, 2002, 2003, 2004 CubeSoft Communications, Inc. All rights reserved.
+Copyright \(co 2001, 2002, 2003, 2004 CubeSoft Communications, Inc. All rights reserved.
 .sp 2
 Redistribution and use of this manual in source and binary forms,
 with or without modification, are permitted provided that the
@@ -83,7 +77,7 @@ the following disclaimer in the documentation and/or other materials
 provided with the distribution.
 .in -0.2i
 .sp
-\fB\s-1THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+\fB\s-1THIS MANUAL IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
@@ -92,7 +86,7 @@ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
 OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
 HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+OUT OF THE USE OF THIS MANUAL , EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.\s+1\fP
 .sp 2
 The views and conclusions contained in this manual are those of the
