@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.c,v 1.10 2005/02/22 08:44:15 vedge Exp $	*/
+/*	$Csoft: pixmap.c,v 1.11 2005/02/22 08:56:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -286,7 +286,8 @@ insert_brush(int argc, union evarg *argv)
 	struct textbox *tb = argv[3].p;
 	struct radio *rad_types = argv[4].p;
 	struct mspinbutton *msb_origin = argv[5].p;
-	struct window *dlg_win = argv[6].p;
+	struct checkbox *cb_oneshot = argv[6].p;
+	struct window *dlg_win = argv[7].p;
 	enum pixmap_brush_type btype;
 	struct pixmap *spx;
 	struct pixmap_brush *pbr;
@@ -305,6 +306,8 @@ insert_brush(int argc, union evarg *argv)
 	}
 	pbr->xorig = widget_get_int(msb_origin, "xvalue");
 	pbr->yorig = widget_get_int(msb_origin, "yvalue");
+	if (widget_get_int(cb_oneshot, "state"))
+		pbr->flags |= PIXMAP_BRUSH_ONESHOT;
 
 	view_detach(dlg_win);
 }
@@ -339,6 +342,7 @@ insert_brush_dlg(int argc, union evarg *argv)
 	struct button *bu;
 	struct radio *rad_types;
 	struct mspinbutton *msb_origin;
+	struct checkbox *cb_oneshot;
 	static const char *types[] = {
 		_("Monochromatic"),
 		_("Source RGB"),
@@ -355,6 +359,9 @@ insert_brush_dlg(int argc, union evarg *argv)
 	msb_origin = Malloc(sizeof(struct mspinbutton), M_OBJECT);
 	mspinbutton_init(msb_origin, ",", _("Origin: "));
 	mspinbutton_set_range(msb_origin, 0, TILE_SIZE_MAX-1);
+
+	cb_oneshot = Malloc(sizeof(struct checkbox), M_OBJECT);
+	checkbox_init(cb_oneshot, _("One-shot"));
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL|BOX_HFILL);
 	box_set_padding(bo, 0);
@@ -377,6 +384,7 @@ insert_brush_dlg(int argc, union evarg *argv)
 		widget_set_int(rad_types, "value", 0);
 		object_attach(bo, tb_name);
 		object_attach(bo, msb_origin);
+		object_attach(bo, cb_oneshot);
 	}
 
 	separator_new(win, SEPARATOR_HORIZ);
@@ -385,8 +393,8 @@ insert_brush_dlg(int argc, union evarg *argv)
 	{
 		bu = button_new(bo, _("OK"));
 		event_new(bu, "button-pushed", insert_brush,
-		    "%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
-		    msb_origin, win);
+		    "%p,%p,%p,%p,%p,%p,%p", px, tl, tb_name, rad_types,
+		    msb_origin, cb_oneshot, win);
 	
 		bu = button_new(bo, _("Cancel"));
 		event_new(bu, "button-pushed", window_generic_detach, "%p",
@@ -579,7 +587,7 @@ pixmap_redo(struct tileview *tv, struct tile_element *tel)
 
 void
 pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
-    Uint32 pixel)
+    Uint32 pixel, int once)
 {
 	struct pixmap *px = tel->tel_pixmap.px;
 	struct pixmap_undoblk *ublk = &px->ublks[px->nublks-1];
@@ -592,31 +600,29 @@ pixmap_put_pixel(struct tileview *tv, struct tile_element *tel, int x, int y,
 	          (v >> (8 - (px->su->format->Aloss << 1)));
 	int i;
 			
-	/* Avoid duplicate modifications to the same pixel in this block. */
+	/* Look for an existing mod to this pixel in this block. */
 	for (i = ublk->numods-1; i >= 0; i--) {
-		struct pixmap_umod *um = &ublk->umods[i];
-
-		if (um->x == x && um->y == y)
-			return;
+		umod = &ublk->umods[i];
+		if (umod->x == x && umod->y == y)
+			break;
 	}
+	if (i >= 0) {
+		if (once)
+			return;
+	} else {
+		ublk->umods = Realloc(ublk->umods, (ublk->numods+1) *
+				                   sizeof(struct pixmap_umod));
+		umod = &ublk->umods[ublk->numods++];
+		umod->type = PIXMAP_PIXEL_REPLACE;
+		umod->x = (Uint16)x;
+		umod->y = (Uint16)y;
 	
-	/* Save the current pixel value for undo. */
-	ublk->umods = Realloc(ublk->umods, (ublk->numods+1) *
-			                   sizeof(struct pixmap_umod));
-	umod = &ublk->umods[ublk->numods++];
-	umod->type = PIXMAP_PIXEL_REPLACE;
-	umod->x = (Uint16)x;
-	umod->y = (Uint16)y;
-
-	if (SDL_MUSTLOCK(px->su))
-		SDL_LockSurface(px->su);
-
-	src = (Uint8 *)px->su->pixels + y*px->su->pitch +
-	                                x*px->su->format->BytesPerPixel;
-	umod->val = *(Uint32 *)src;
-
-	if (SDL_MUSTLOCK(px->su))
-		SDL_UnlockSurface(px->su);
+		if (SDL_MUSTLOCK(px->su)) { SDL_LockSurface(px->su); }
+		src = (Uint8 *)px->su->pixels + y*px->su->pitch +
+		                                x*px->su->format->BytesPerPixel;
+		umod->val = *(Uint32 *)src;
+		if (SDL_MUSTLOCK(px->su)) { SDL_UnlockSurface(px->su); }
+	}
 
 	/* Plot the pixel on the pixmap and update the scaled display. */
 	/* XXX use background caching to avoid regen for alpha pixels */
@@ -747,7 +753,8 @@ pixmap_apply_brush(struct tileview *tv, struct tile_element *tel,
 			    (specA + brA)/2);
 
 			if (brA != 0)
-				pixmap_put_pixel(tv, tel, x0+x, y0+y, Px);
+				pixmap_put_pixel(tv, tel, x0+x, y0+y, Px,
+				br->flags & PIXMAP_BRUSH_ONESHOT);
 		}
 	}
 	if (SDL_MUSTLOCK(brsu))
@@ -804,7 +811,8 @@ pixmap_mousebuttondown(struct tileview *tv, struct tile_element *tel,
 		    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)));
 	} else {
 		pixmap_put_pixel(tv, tel, x, y,
-		    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)));
+		    SDL_MapRGBA(px->su->format, r, g, b, (Uint8)(px->a*255)),
+		    1);
 	}
 }
 
@@ -832,7 +840,7 @@ pixmap_mousemotion(struct tileview *tv, struct tile_element *tel, int x, int y,
 		} else {
 			pixmap_put_pixel(tv, tel, x, y,
 			    SDL_MapRGBA(px->su->format, r, g, b,
-			    (Uint8)(px->a*255)));
+			    (Uint8)(px->a*255)), 1);
 		}
 	}
 }

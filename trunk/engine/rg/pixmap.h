@@ -1,4 +1,4 @@
-/*	$Csoft: pixmap.h,v 1.7 2005/02/21 09:43:00 vedge Exp $	*/
+/*	$Csoft: pixmap.h,v 1.8 2005/02/22 08:44:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_RG_PIXMAP_H_
@@ -38,9 +38,11 @@ struct pixmap_brush {
 	char name[PIXMAP_NAME_MAX];
 	enum pixmap_brush_type type;
 	int flags;
-	int xorig, yorig;			/* Origin of brush */
-	char px_name[PIXMAP_NAME_MAX];		/* Pixmap reference */
-	struct pixmap *px;			/* Resolved pixmap */
+#define PIXMAP_BRUSH_ONESHOT 0x01	/* Don't mod the same pixel twice
+					   in the same pass */
+	int xorig, yorig;		/* Origin point */
+	char px_name[PIXMAP_NAME_MAX];	/* Pixmap reference */
+	struct pixmap *px;		/* Resolved pixmap */
 	TAILQ_ENTRY(pixmap_brush) brushes;
 };
 
@@ -84,7 +86,7 @@ void pixmap_redo(struct tileview *, struct tile_element *);
 void pixmap_register_umod(struct pixmap *, enum pixmap_umod_type, Uint16,
                           Uint16, Uint32);
 void pixmap_put_pixel(struct tileview *, struct tile_element *, int, int,
-                      Uint32);
+                      Uint32, int);
 void pixmap_apply_brush(struct tileview *, struct tile_element *, int, int,
 			Uint32);
 
