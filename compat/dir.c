@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: dir.c,v 1.1 2004/04/23 10:50:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -52,7 +52,7 @@ int
 compat_rmdir(const char *dir)
 {
 #ifdef WIN32
-	if (RemoveDirectory(dir, NULL)) {
+	if (RemoveDirectory(dir)) {
 		return (0);
 	} else {
 		return (-1);
