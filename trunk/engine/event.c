@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.168 2004/03/10 08:28:14 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.169 2004/03/10 16:58:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -36,14 +36,13 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
+#ifdef DEBUG
 #include <engine/widget/label.h>
 #include <engine/widget/graph.h>
+#endif
 
 #include <string.h>
 #include <stdarg.h>
-
-extern struct gameinfo *gameinfo;	/* script */
-extern struct window *game_menu_win;
 
 #ifdef DEBUG
 #define DEBUG_UNDERRUNS		0x001
@@ -57,7 +56,7 @@ extern struct window *game_menu_win;
 int	event_debug = DEBUG_UNDERRUNS|DEBUG_VIDEORESIZE|DEBUG_VIDEOEXPOSE|\
 	              DEBUG_ASYNC;
 #define	engine_debug event_debug
-int	event_count;
+int	event_count = 0;
 
 static struct window *fps_win;
 static struct label *fps_label;
@@ -89,12 +88,14 @@ event_hotkey(SDL_Event *ev)
 		}
 		break;
 	case SDLK_F2:
-		if (object_save(world) == -1)
+		if (object_save(world) == -1) {
 			text_msg(MSG_ERROR, "saving world: %s", error_get());
+		}
 		break;
 	case SDLK_F4:
-		if (object_load(world) == -1)
+		if (object_load(world) == -1) {
 			text_msg(MSG_ERROR, "loading world: %s", error_get());
+		}
 		break;
 	case SDLK_F6:
 		window_show(fps_win);
@@ -128,14 +129,14 @@ event_hotkey(SDL_Event *ev)
 
 #ifdef DEBUG
 struct window *
-fps_window(void)
+event_fps_window(void)
 {
 	window_show(fps_win);
 	return (fps_win);
 }
 
 static __inline__ void
-event_update_fps_counter(void)
+update_fps_counter(void)
 {
 	static int einc = 0;
 
@@ -153,7 +154,7 @@ event_update_fps_counter(void)
 }
 
 static void
-event_init_fps_counter(void)
+init_fps_counter(void)
 {
 	fps_win = window_new("fps-counter");
 	window_set_caption(fps_win, _("Refresh rate"));
@@ -172,12 +173,12 @@ event_init_fps_counter(void)
 
 /* Adjust the refresh rate. */
 static __inline__ void
-event_adjust_refresh(Uint32 ntick)
+adjust_refresh_rate(Uint32 ntick)
 {
 	view->refresh.current = view->refresh.delay - (SDL_GetTicks() - ntick);
 #ifdef DEBUG
 	if (fps_win->visible)
-		event_update_fps_counter();
+		update_fps_counter();
 #endif
 	if (view->refresh.current < 1)
 		view->refresh.current = 1;
@@ -192,7 +193,7 @@ event_loop(void)
 	struct window *win;
 
 #ifdef DEBUG
-	event_init_fps_counter();
+	init_fps_counter();
 #endif
 
 	ltick = SDL_GetTicks();
@@ -245,7 +246,7 @@ event_loop(void)
 					    view->dirty);
 				}
 				view->ndirty = 0;
-				event_adjust_refresh(t);
+				adjust_refresh_rate(t);
 			}
 			pthread_mutex_unlock(&view->lock);
 			ltick = SDL_GetTicks();		/* Rendering ends */
@@ -467,6 +468,25 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 
 	pthread_mutex_unlock(&ob->lock);
 	return (ev);
+}
+
+/* Remove the named event handler. */
+void
+event_remove(void *p, const char *name)
+{
+	struct object *ob = p;
+	struct event *ev;
+
+	pthread_mutex_lock(&ob->lock);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(name, ev->name) == 0)
+			break;
+	}
+	if (ev != NULL) {
+		TAILQ_REMOVE(&ob->events, ev, events);
+		free(ev);
+	}
+	pthread_mutex_unlock(&ob->lock);
 }
 
 /* Forward an event to an object's descendents. */

@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.21 2003/09/04 03:14:26 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.22 2004/01/22 09:58:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -36,11 +36,12 @@ extern int event_idle;		/* Enable idling? */
 __BEGIN_DECLS
 struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
 		           const char *, ...);
+void		 event_remove(void *, const char *);
 void		 event_loop(void);
 int		 event_post(void *, void *, const char *, const char *, ...);
 void		 event_forward(void *, const char *, int, union evarg *);
 #ifdef DEBUG
-struct window	*fps_window(void);
+struct window	*event_fps_window(void);
 #endif
 __END_DECLS
 
