@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.20 2002/05/28 12:49:52 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.21 2002/05/29 21:43:43 vedge Exp $	*/
 
 #include <engine/widget/region.h>
 
@@ -7,6 +7,13 @@ enum window_type {
 	WINDOW_GRADIENT,	/* Blue/red gradient. */
 	WINDOW_CUBIC,		/* Weird algorithm #1 */
 	WINDOW_CUBIC2		/* Weird algorithm #2 */
+};
+
+enum window_event {
+	WINDOW_MOUSEBUTTONUP,
+	WINDOW_MOUSEBUTTONDOWN,
+	WINDOW_KEYUP,
+	WINDOW_KEYDOWN
 };
 
 TAILQ_HEAD(regionsq, region);
@@ -22,6 +29,7 @@ struct window {
 #define WINDOW_ROUNDEDGES	0x10	/* Round edges */
 #define WINDOW_ABSOLUTE		0x20	/* Requested coordinates/geometry
 					   is absolute (scaled otherwise) */
+#define WINDOW_SHOW		0x40	/* Visible */
 	enum	 window_type type;
 	char	*caption;		/* Titlebar text */
 	Uint32	 bgcolor, fgcolor;	/* Gradient colors, if applicable */
@@ -42,13 +50,6 @@ struct window {
 	struct	 regionsq regionsh;
 	TAILQ_ENTRY(window) windows;	/* Windows in view */
 	pthread_mutex_t	lock;
-};
-
-struct window_event {
-	struct	widget *w;
-	int	flags;
-	pthread_mutex_t *lock;		/* Pointer to window mutex */
-	SDL_Event ev;
 };
 
 #define WINDOW(w)	((struct window *)(w))
@@ -97,11 +98,11 @@ void	 	 window_init(struct window *, struct viewport *, char *,
 		     int, enum window_type, int, int, int, int);
 
 void	 window_destroy(void *);
-void	 window_onattach(void *, void *);
-void	 window_ondetach(void *, void *);
 void	 window_attach(void *, void *);
 void	 window_detach(void *, void *);
 
+int	 window_show(struct window *);
+int	 window_hide(struct window *);
 void	 window_draw(struct window *);
 void	 window_draw_all(void);
 int	 window_event_all(struct viewport *, SDL_Event *);
