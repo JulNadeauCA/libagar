@@ -189,7 +189,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				moved |= DIR_UP;
 				decrease_uint32(mapy, 1, 1);
 				if ((dir->flags & DIR_SCROLLVIEW) &&
-				    (map->view->mapy - *mapy) >= 0) {
+				    (map->view->mapy - *mapy) <= 0) {
 				    	scroll(map, DIR_UP);
 				}
 			} else {
@@ -237,7 +237,7 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				moved |= DIR_LEFT;
 				decrease_uint32(mapx, 1, 1);
 				if ((dir->flags & DIR_SCROLLVIEW) &&
-				    (map->view->mapx - *mapx) >= 0) {
+				    (map->view->mapx - *mapx) <= 0) {
 					scroll(map, DIR_LEFT);
 				}
 			} else {
