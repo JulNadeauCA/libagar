@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.55 2003/05/24 15:43:55 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.56 2003/05/25 03:58:29 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -193,7 +193,6 @@ textbox_draw(void *p)
 		lx = x;
 
 		if (i == tbox->text.pos && WIDGET_FOCUSED(tbox)) {
-			dprintf("curs at %d\n", (int)i);
 			primitives.line(tbox,
 			    x, y,
 			    x, y + tbox->label->h - 2,
@@ -224,11 +223,8 @@ textbox_draw(void *p)
 		}
 	}
 	if (WIDGET_FOCUSED(tbox) && !cursdrawn) {
-		dprintf("offs=%d, pos=%d, i=%d\n", (int)tbox->text.offs,
-		    (int)tbox->text.pos, i);
-		if (tbox->text.pos > i) {
+		if (tbox->text.pos > i)
 			tbox->text.offs++;
-		}
 	}
 
 	/* Move beyond the visible end of the string? */
