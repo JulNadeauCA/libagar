@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.15 2003/01/26 06:15:21 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.16 2003/02/02 21:14:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,6 +62,7 @@ propedit_init(void *p)
 
 	pe->mode = PROPEDIT_CLEAR;
 	pe->node_mask = 0;
+	pe->node_mode = 0;
 }
 
 static void
@@ -69,14 +70,13 @@ propedit_set_node_mode(int argc, union evarg *argv)
 {
 	struct radio *rad = argv[0].p;
 	struct propedit *pe = argv[1].p;
-	const int flags[] = {
-		NODE_BLOCK,
+	int index = argv[2].i;
+	const Uint32 modes[] = {
 		NODE_WALK,
 		NODE_CLIMB
 	};
-		
-	pe->node_mask &= ~(NODE_BLOCK|NODE_WALK|NODE_CLIMB);
-	pe->node_mask |= flags[rad->selitem];
+
+	pe->node_mode = modes[index];
 }
 
 static void
@@ -118,7 +118,6 @@ propedit_window(void *p)
 			NULL
 		};
 		static const char *node_modes[] = {
-			"Block",
 			"Walk",
 			"Climb",
 			NULL
@@ -135,7 +134,7 @@ propedit_window(void *p)
 	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		const struct {
-			int	 flag;
+			Uint32	flag;
 			char	*name;
 		} props[] = {
 			{ NODE_ORIGIN,	"Origin" },
@@ -188,5 +187,8 @@ propedit_effect(void *p, struct mapview *mv, struct node *node)
 		node->flags &= ~(pe->node_mask);
 		break;
 	}
+	
+	node->flags &= ~(NODE_WALK|NODE_CLIMB);
+	node->flags |= pe->node_mode;
 }
 
