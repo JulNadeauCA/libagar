@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.22 2002/03/03 06:21:56 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.23 2002/03/03 06:44:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ char_load(void *p, int fd)
 {
 	struct object *ob = (struct object *)p;
 	struct character *ch = (struct character *)ob;
-	struct input *input;
+	struct input *input = NULL;
 	struct map *m;
 
 	if (version_read(fd, "agar char", 1, 0) != 0) {
