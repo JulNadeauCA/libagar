@@ -1,23 +1,27 @@
-/*	$Csoft: world.h,v 1.3 2002/02/07 05:17:21 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.4 2002/02/14 06:30:51 vedge Exp $	*/
 
 SLIST_HEAD(objs_head, object);
 SLIST_HEAD(chars_head, character);
 
 struct world {
 	struct	object obj;
-	float	agef;			/* Global ageing factor */
+
+	char	*udatadir;		/* User data directory path */
+	char	*sysdatadir;		/* System-wide data directory path */
+	struct	map *curmap;		/* Map being displayed */
 
 	struct	objs_head wobjsh;	/* Active objects */
 	struct	chars_head wcharsh;	/* Active characters */
-	
-	pthread_mutex_t lock;		/* R/W lock on object lists */
+	pthread_mutex_t lock;		/* R/W lock on lists */
 };
 
 extern struct world *world;
 
-extern struct world *world_create(char *);
-extern void	     quit(void);
+struct world	*world_create(char *);
+int		 world_load(void *, int);
+int		 world_save(void *, int);
+int		 world_destroy(void *);
 #ifdef DEBUG
-extern void	     world_dump(struct world *);
+void		 world_dump(struct world *);
 #endif
 
