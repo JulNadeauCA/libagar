@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.49 2002/07/08 08:39:45 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.50 2002/07/09 09:29:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include <unistd.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -59,7 +60,7 @@ static const struct object_ops window_ops = {
 static Uint32 delta = 0, delta2 = 256;
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
-static void	window_move(struct window *, Uint16, Uint16);
+static void	window_move(struct window *, Sint16, Sint16);
 
 struct window *
 window_new(char *caption, int flags, int x, int y, int w, int h, int minw,
@@ -86,6 +87,7 @@ window_init(struct window *win, char *caption, int flags,
 	char *name;
 	int i;
 
+	/* XXX pref */
 	flags |= WINDOW_TITLEBAR|WINDOW_ROUNDEDGES;
 
 	name = object_name("window", nwindow++);
@@ -102,17 +104,18 @@ window_init(struct window *win, char *caption, int flags,
 	}
 
 	win->titleh = font_h + win->borderw;
-
-	win->caption = strdup(caption);
 	win->flags = flags;
-	win->type = flags & WINDOW_TYPE;
-	if (win->type == 0) {
-		win->type = WINDOW_DEFAULT_TYPE;
-	}
+	win->type = (flags & WINDOW_TYPE) == 0 ? WINDOW_DEFAULT_TYPE :
+	    (flags & WINDOW_TYPE);
 	win->spacing = 4;
 	win->redraw = 0;
 	win->focus = NULL;
+	win->caption = NULL;
+	win->caption_s = NULL;
 
+	window_titlebar_printf(win, "%s", caption);
+
+	/* Set the initial window position/geometry. */
 	switch (view->gfx_engine) {
 	case GFX_ENGINE_TILEBASED:
 		if (flags & WINDOW_SCALE) {
@@ -145,7 +148,6 @@ window_init(struct window *win, char *caption, int flags,
 		}
 		break;
 	}
-
 	if (flags & WINDOW_CENTER) {
 		win->x = view->w/2 - win->w/2;
 		win->y = view->h/2 - win->h/2;
@@ -158,6 +160,7 @@ window_init(struct window *win, char *caption, int flags,
 	win->minw = minw;
 	win->minh = minh;
 
+	/* Force animation for relevant backgrounds. */
 	switch (win->type) {
 	case WINDOW_CUBIC:
 	case WINDOW_CUBIC2:
@@ -320,22 +323,15 @@ window_draw(struct window *win)
 	}
 
 	/* Render the title bar. */
-	/* XXX ridiculously inefficient with animated windows. */
 	if (win->flags & WINDOW_TITLEBAR) {
-		SDL_Surface *s;
 		SDL_Rect rd;
 
-		s = TTF_RenderText_Solid(font, win->caption, white);
-		if (s == NULL) {
-			fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
-		}
-		rd.x = win->x + (win->w - s->w - win->borderw);
+		/* Caption */
+		rd.x = win->x + (win->w - win->caption_s->w - win->borderw);
 		rd.y = win->y + win->borderw;
-		rd.w = s->w;
-		rd.h = s->h;
-		SDL_BlitSurface(s, NULL, v, &rd);
-		SDL_FreeSurface(s);
+		SDL_BlitSurface(win->caption_s, NULL, v, &rd);
 
+		/* Close button */
 		rd.x = win->x + win->borderw;
 		rd.y = win->y + win->borderw;
 		SDL_BlitSurface(SPRITE(win, 0), NULL, view->v, &rd);
@@ -491,6 +487,7 @@ window_show(struct window *win)
 
 	pthread_mutex_lock(&win->lock);
 	rv = window_show_locked(win);
+	window_resize(win);
 	pthread_mutex_unlock(&win->lock);
 
 	if (view->gfx_engine == GFX_ENGINE_TILEBASED)
@@ -554,10 +551,6 @@ window_show_locked(struct window *win)
 			event_post(wid, "shown", "%p", win);
 		}
 	}
-
-#if 0
-	VIEW_REDRAW();
-#endif
 	return (prev);
 }
 
@@ -696,7 +689,7 @@ cycle_widgets(struct window *win, int reverse)
 
 /* View and window must be locked. */
 static void
-window_move(struct window *win, Uint16 x, Uint16 y)
+window_move(struct window *win, Sint16 xrel, Sint16 yrel)
 {
 	int moved = 0;
 	int tilew = TILEW, tileh = TILEH;
@@ -710,21 +703,23 @@ window_move(struct window *win, Uint16 x, Uint16 y)
 		break;
 	}
 
-	if (x/tilew < view->wop_mapx && win->x > tilew) {
-		win->x -= tilew;
-		moved++;
-	} else if (x/tilew > view->wop_mapx &&
-	    (win->x + win->w) < (view->w - tilew)) {
-		win->x += tilew;
+	if (xrel != 0 || yrel != 0) {
+		win->x += xrel;
+		win->y += yrel;
 		moved++;
 	}
-	if (y/tilew < view->wop_mapy && win->y > tileh) {
-		win->y -= tileh;
-		moved++;
-	} else if (y/tileh > view->wop_mapy &&
-	    (win->y + win->h) < (view->h - tileh)) {
-		win->y += tileh;
-		moved++;
+
+	if (win->x < 16) {
+		win->x = 16;
+	}
+	if (win->y < 16) {
+		win->y = 16;
+	}
+	if (win->x+win->w > view->w - 16) {
+		win->x = view->w - win->w - 16;
+	}
+	if (win->y+win->h > view->h - 16) {
+		win->y = view->h - win->h - 16;
 	}
 
 	if (moved) {
@@ -745,9 +740,36 @@ window_move(struct window *win, Uint16 x, Uint16 y)
 			break;
 		}
 	}
+}
 
-	view->wop_mapx = x / tilew;
-	view->wop_mapy = y / tileh;
+/* View must be locked. */
+static void
+cycle_windows(void)
+{
+	struct window *win;
+
+	win = view->focus_win;
+	TAILQ_REMOVE(&view->windowsh, win, windows);
+	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
+	view->focus_win = NULL;
+}
+
+/*
+ * Focus windows if necessary.
+ * View must be locked, window list must not be empty.
+ */
+static int
+window_mousefocus(Uint16 x, Uint16 y)
+{
+	struct window *win;
+
+	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+		if (WINDOW_INSIDE(win, x, y) && win->flags & WINDOW_SHOWN) {
+			view->focus_win = win;
+			return (1);
+		}
+	}
+	return (0);
 }
 
 /*
@@ -760,12 +782,15 @@ window_event_all(SDL_Event *ev)
 	struct region *reg;
 	struct window *win;
 	struct widget *wid;
-	int gavefocus = 0;
 	int nx, ny;
 
-	if (ev->type == SDL_MOUSEBUTTONUP && view->winop != VIEW_WINOP_NONE) {
+	switch (ev->type) {
+	case SDL_MOUSEBUTTONDOWN:
+		window_mousefocus(ev->button.x, ev->button.y);
+		break;
+	case SDL_MOUSEBUTTONUP:
 		view->winop = VIEW_WINOP_NONE;
-		return (1);
+		break;
 	}
 
 	/* Dispatch relevant events to relevant windows. */
@@ -784,7 +809,8 @@ window_event_all(SDL_Event *ev)
 				if (view->wop_win != win) {
 					goto nextwin;
 				}
-				window_move(win, ev->motion.x, ev->motion.y);
+				window_move(win, ev->motion.xrel,
+				    ev->motion.yrel);
 				goto posted;
 			case VIEW_WINOP_LRESIZE:
 			case VIEW_WINOP_RRESIZE:
@@ -811,44 +837,46 @@ window_event_all(SDL_Event *ev)
 						win->w -= ev->motion.xrel;
 						nx = win->x + ev->motion.xrel;
 					}
-					if (ev->motion.yrel < 0) {
-						win->h += ev->motion.yrel;
-					} else if (ev->motion.yrel > 0) {
+					if (ev->motion.yrel < 0 ||
+					    ev->motion.yrel > 0) {
 						win->h += ev->motion.yrel;
 					}
 					break;
 				case VIEW_WINOP_RRESIZE:
-					if (ev->motion.xrel < 0) {
-						win->w += ev->motion.xrel;
-					} else if (ev->motion.xrel > 0) {
+					if (ev->motion.xrel < 0 ||
+					    ev->motion.xrel > 0) {
 						win->w += ev->motion.xrel;
 					}
-					if (ev->motion.yrel < 0) {
-						win->h += ev->motion.yrel;
-					} else if (ev->motion.yrel > 0) {
+					if (ev->motion.yrel < 0 ||
+					    ev->motion.yrel > 0) {
 						win->h += ev->motion.yrel;
 					}
 					break;
 				case VIEW_WINOP_HRESIZE:
-					if (ev->motion.yrel < 0) {
-						win->h += ev->motion.yrel;
-					} else if (ev->motion.yrel > 0) {
+					if (ev->motion.yrel < 0 ||
+					    ev->motion.yrel > 0) {
 						win->h += ev->motion.yrel;
 					}
 				default:
 				}
-				if (win->w < win->minw) {
+				pthread_mutex_lock(&config->lock);
+				if (win->w < win->minw &&
+				    (config->widget_flags &
+				    CONFIG_WINDOW_ANYSIZE) == 0) {
 					win->w = win->minw;
 				} else {
 					win->x = nx;
 				}
-				if (win->h < win->minh) {
+				if (win->h < win->minh &&
+				    (config->widget_flags &
+				    CONFIG_WINDOW_ANYSIZE) == 0) {
 					win->h = win->minh;
 				} else {
 					win->y = ny;
 				}
+				pthread_mutex_unlock(&config->lock);
 				window_resize(win);
-				break;
+				goto posted;
 			case VIEW_WINOP_NONE:
 				break;
 			}
@@ -887,14 +915,6 @@ window_event_all(SDL_Event *ev)
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
-				goto nextwin;
-			}
-			if (!WINDOW_FOCUSED(win)) {
-				view->focus_win = win;
-				gavefocus++;
-			}
-			/* FALLTHROUGH */
 		case SDL_MOUSEBUTTONUP:
 			if (!WINDOW_INSIDE(win, ev->button.x, ev->button.y)) {
 				goto nextwin;
@@ -915,7 +935,7 @@ window_event_all(SDL_Event *ev)
 						view->winop =
 						    VIEW_WINOP_LRESIZE;
 					} else if (ev->button.x - win->x >
-					    win->h - 17) {
+					    win->w - 17) {
 						view->winop =
 						    VIEW_WINOP_RRESIZE;
 					} else {
@@ -947,7 +967,7 @@ window_event_all(SDL_Event *ev)
 					goto posted;
 				}
 			}
-			if (gavefocus) {
+			if (view->focus_win != NULL) {
 				goto posted;
 			}
 			break;
@@ -1003,8 +1023,7 @@ posted:
 
 	/* If the focus was given to another window, update the list. */
 	if (view->focus_win != NULL) {
-		dprintf("gave focus to %s\n", OBJECT(view->focus_win)->name);
-		WINDOW_FOCUS(view->focus_win);
+		cycle_windows();
 	}
 	return (1);
 }
@@ -1081,14 +1100,28 @@ window_resize(struct window *win)
 		y = reg->y;
 	
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			int rw, rh;
+
 			wid->x = x;
 			wid->y = y;
 
-			if (wid->rw > 0)
-				wid->w = wid->rw * reg->w / 100;
-			if (wid->rh > 0)
-				wid->h = wid->rh * reg->h / 100;
+			rw = wid->rw;
+			rh = wid->rh;
 
+			if (rw == 0) {
+				rw = (reg->flags & REGION_HALIGN) ?
+				    100 / (nwidgets + 2) : 100;
+			}
+			if (rh == 0) {
+				rh = (reg->flags & REGION_VALIGN) ?
+				    100 / (nwidgets + 2) : 100;
+			}
+
+			if (rw >= 0)
+				wid->w = rw * reg->w / 100;
+			if (rh >= 0)
+				wid->h = rh * reg->h / 100;
+			
 			if (wid->w > reg->w)
 				wid->w = reg->w;
 			if (wid->h > reg->h)
@@ -1097,24 +1130,45 @@ window_resize(struct window *win)
 			event_post(wid, "window-widget-scaled", "%i, %i",
 			    reg->w, reg->h);
 
-#if 0
-			dprintf("%s: %dx%d at %d,%d\n", OBJECT(wid)->name,
-			    wid->w, wid->h, wid->x, wid->y);
-#endif
-
 			/* Space widgets */
 			if (reg->flags & REGION_VALIGN) {
 				y += wid->h + reg->spacing;
-				if (wid->rw > 0) {
-					wid->h -= reg->spacing / nwidgets;
+				if (rw > 0) {
+					wid->h -= reg->spacing/nwidgets;
 				}
 			} else if (reg->flags & REGION_HALIGN) {
 				x += wid->w + reg->spacing;
-				if (wid->rw > 0) {
-					wid->w -= reg->spacing / nwidgets;
+				if (rw > 0) {
+					wid->w -= reg->spacing/nwidgets;
 				}
 			}
 		}
 	}
+#ifdef DEBUG
+	if (config->widget_flags & CONFIG_WINDOW_ANYSIZE) {
+		dprintf("%d, %d\n", win->w, win->h);
+	}
+#endif
 }
 
+/* Window must be locked. */
+void
+window_titlebar_printf(struct window *win, char *fmt, ...)
+{
+	va_list args;
+
+	if (win->caption != NULL) {
+		free(win->caption);
+	}
+	va_start(args, fmt);
+	vasprintf(&win->caption, fmt, args);
+	va_end(args);
+
+	if (win->caption_s != NULL) {
+		SDL_FreeSurface(win->caption_s);
+	}
+	win->caption_s = TTF_RenderText_Solid(font, win->caption, white);
+	if (win->caption_s == NULL) {
+		fatal("TTF_RenderTextSolid: %s\n", SDL_GetError());
+	}
+}
