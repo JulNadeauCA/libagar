@@ -240,6 +240,10 @@ echo "LOCALEDIR=${LOCALEDIR}" >> Makefile.config
 echo "#ifndef LOCALEDIR" > config/localedir.h
 echo "#define LOCALEDIR \"${LOCALEDIR}\"" >> config/localedir.h
 echo "#endif /* LOCALEDIR */" >> config/localedir.h
+VERSION="\"1.0-beta\""
+echo "#ifndef VERSION" > config/version.h
+echo "#define VERSION" $VERSION >> config/version.h
+echo "#endif /* VERSION */" >> config/version.h
 TTFDIR="$PREFIX/share/cave/fonts"
 echo "TTFDIR=$TTFDIR" >> Makefile.config
 TTFDIR="\"$PREFIX/share/cave/fonts\""
@@ -252,14 +256,22 @@ SHAREDIR="\"$PREFIX/share/cave\""
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR" $SHAREDIR >> config/sharedir.h
 echo "#endif /* SHAREDIR */" >> config/sharedir.h
+LIBDIR="$PREFIX/lib/agar"
+echo "LIBDIR=$LIBDIR" >> Makefile.config
+LIBDIR="\"$PREFIX/lib/agar\""
+echo "#ifndef LIBDIR" > config/libdir.h
+echo "#define LIBDIR" $LIBDIR >> config/libdir.h
+echo "#endif /* LIBDIR */" >> config/libdir.h
+INCLDIR="$PREFIX/include/agar"
+echo "INCLDIR=$INCLDIR" >> Makefile.config
+INCLDIR="\"$PREFIX/include/agar\""
+echo "#ifndef INCLDIR" > config/incldir.h
+echo "#define INCLDIR" $INCLDIR >> config/incldir.h
+echo "#endif /* INCLDIR */" >> config/incldir.h
 MANDIR="$PREFIX/share/agar/man"
 echo "MANDIR=$MANDIR" >> Makefile.config
 PSDIR="$PREFIX/share/agar/ps"
 echo "PSDIR=$PSDIR" >> Makefile.config
-LIBDIR="$PREFIX/lib/agar"
-echo "LIBDIR=$LIBDIR" >> Makefile.config
-INCLDIR="$PREFIX/include/agar"
-echo "INCLDIR=$INCLDIR" >> Makefile.config
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
