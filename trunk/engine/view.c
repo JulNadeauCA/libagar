@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.108 2003/03/02 03:54:00 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.109 2003/03/02 04:11:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -169,7 +169,6 @@ view_init(enum gfx_engine ge)
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_BLEND);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
 #endif /* HAVE_OPENGL */
