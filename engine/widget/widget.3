@@ -215,6 +215,20 @@ macro returns a widget surface.
 The
 .Fn WIDGET_FOCUS
 macro gives focus to a widget.
+.Sh EVENTS
+The
+.Nm
+structure generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn widget-shown "struct window *win"
+Widget is now visible inside window
+.Fa win .
+.It Fn widget-hidden "struct window *win"
+Widget is no longer visible inside window
+.Fa win .
+.El
+.Pp
 .Sh SEE ALSO
 .Xr agar 3 .
 .Sh HISTORY
