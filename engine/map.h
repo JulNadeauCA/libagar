@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.68 2003/03/05 02:15:43 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.69 2003/03/07 03:25:49 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -133,6 +133,7 @@ void		 noderef_load(int, struct object_table *, struct node *,
 void		 noderef_save(struct fobj_buf *, struct object_table *,
 		     struct noderef *);
 
+void		 node_init(struct node *, int, int);
 void		 node_load(int, struct object_table *, struct node *);
 void		 node_save(struct fobj_buf *, struct object_table *,
 		     struct node *);
@@ -150,7 +151,6 @@ struct noderef	*node_add_sprite(struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint8);
 struct noderef	*node_add_warp(struct node *, char *, Uint32, Uint32, Uint8);
 
-extern __inline__ void	 node_init(struct node *, int, int);
 extern __inline__ void	 noderef_draw(struct map *, struct noderef *,
 			     Sint16, Sint16);
 
