@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.4 2002/04/21 13:33:44 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.5 2002/04/22 04:39:59 vedge Exp $	*/
 
 struct widvec {
 	struct	 obvec obvec;
@@ -40,7 +40,8 @@ struct widget {
 
 /* Test whether absolute coordinates match the widget area. */
 #define WIDGET_INSIDE(wida, xa, ya)				\
-    ((xa) > WIDGET_ABSX((wida))	&& (ya) > WIDGET((wida))->y &&	\
+    ((xa) > WIDGET_ABSX((wida))	&&				\
+     (ya) > WIDGET_ABSY((wida)) &&				\
      (xa) < (WIDGET_ABSX((wida)) + WIDGET((wida))->w) &&	\
      (ya) < (WIDGET_ABSY((wida)) + WIDGET((wida))->h))
 
