@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.55 2003/01/16 04:06:40 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.56 2003/01/18 06:18:15 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -179,12 +179,13 @@ config_window(struct config *con)
 	struct tlist *tl;
 	struct label *lab;
 
-	win = window_generic_new(364, 427, "config-engine-settings");
+	win = window_generic_new(349, 334, "config-engine-settings");
 	event_new(win, "window-close", window_generic_hide, "%p", win);
 	window_set_caption(win, "Engine settings");
+	window_set_spacing(win, 2, 8);
 
 	/* Flags */
-	reg = region_new(win, REGION_VALIGN, 0, 0, 100, 40);
+	reg = region_new(win, REGION_VALIGN, 0, 0, 100, -1);
 	{
 		const struct {
 			char *name;
@@ -205,38 +206,38 @@ config_window(struct config *con)
 		int i;
 
 		for (i = 0; i < nsettings; i++) {
-			cbox = checkbox_new(reg, 0, "%s", settings[i].descr);
+			cbox = checkbox_new(reg, -1, "%s", settings[i].descr);
 			widget_bind(cbox, "state", WIDGET_PROP,
 			    config, settings[i].name);
 		}
 
 #ifdef DEBUG
 		/* XXX thread unsafe */
-		cbox = checkbox_new(reg, 0, "Debugging");
+		cbox = checkbox_new(reg, -1, "Debugging");
 		widget_bind(cbox, "state", WIDGET_BOOL, NULL, &engine_debug);
 #endif
 	}
-
+	
 	/* Directories */
-	reg = region_new(win, REGION_VALIGN,  0, 41, 100, 34);
+	reg = region_new(win, REGION_VALIGN, 0, -1, 100, -1);
 	{
 		char *s;
 
-		tbox = textbox_new(reg, "  User datadir: ", 0, 100, 33);
+		tbox = textbox_new(reg, "  User datadir: ", 0, 100, -1);
 		s = prop_get_string(config, "path.user_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.user_data_dir");
 	
-		tbox = textbox_new(reg, "System datadir: ", 0, 100, 33);
+		tbox = textbox_new(reg, "System datadir: ", 0, 100, -1);
 		s = prop_get_string(config, "path.sys_data_dir");
 		textbox_printf(tbox, "%s", s);
 		free(s);
 		event_new(tbox, "textbox-changed",
 		    config_apply_string, "%s", "path.sys_data_dir");
 		
-		tbox = textbox_new(reg, "Data file path: ", 0, 100, 33);
+		tbox = textbox_new(reg, "Data file path: ", 0, 100, -1);
 		s = prop_get_string(config, "path.data_path");
 		textbox_printf(tbox, "%s", s);
 		free(s);
@@ -245,32 +246,32 @@ config_window(struct config *con)
 	}
 
 	/* Resolution */
-	reg = region_new(win, REGION_HALIGN,  0, 75, 100, 12);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
-		tbox = textbox_new(reg, "Width : ", 0, 50, 100);
+		tbox = textbox_new(reg, "Width : ", 0, 50, -1);
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.w");
 
-		tbox = textbox_new(reg, "Height: ", 0, 50, 100);
+		tbox = textbox_new(reg, "Height: ", 0, 50, -1);
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
 		event_new(tbox, "textbox-changed",
 		    config_apply_int, "%s", "view.h");
 	}
 
 	/* Buttons */
-	reg = region_new(win, REGION_HALIGN, 0,  87, 100, 13);
+	reg = region_new(win, REGION_HALIGN, 0, -1, 100, -1);
 	{
-		button = button_new(reg, "Close", NULL, 0, 33, 90);
+		button = button_new(reg, "Close", NULL, 0, 33, -1);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", CLOSE_BUTTON);
 		win->focus = WIDGET(button);
 
-		button = button_new(reg, "Save", NULL, 0, 33, 90);
+		button = button_new(reg, "Save", NULL, 0, 34, -1);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", SAVE_BUTTON);
 		
-		button = button_new(reg, "Primitives", NULL, 0, 33, 90);
+		button = button_new(reg, "Primitives", NULL, 0, 33, -1);
 		event_new(button, "button-pushed",
 		    config_apply, "%i", PRIMITIVES_BUTTON);
 	}
