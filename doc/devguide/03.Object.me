@@ -1,4 +1,4 @@
-.\"	$Csoft: 03.Object.me,v 1.5 2004/03/02 08:53:24 vedge Exp $
+.\"	$Csoft: 03.Object.me,v 1.6 2004/04/17 00:30:47 vedge Exp $
 .\"
 .\" Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -332,8 +332,7 @@ for operating systems without one.
 .)f
 We register an event handler function,
 .Fn door_open ,
-for the "door-open" event, and we initially display the projection map
-"Closed".
+for the "door-open" event, and we initially display the projection "Closed".
 .lp
 An artist could come up with a door pixmap containing three layers:
 .(l
@@ -347,9 +346,13 @@ by importing the background on the two, the closed door layer for the
 "Closed" map and the opened door layer for the "Open" map.
 The level designer then creates copies of the model door, for subsequent
 doors in the game.
-Of course, the level designer will probably want to use more than one door
-model, either using Agar map transformations or different door pixmaps
-altogether.
+The level designer will probably want to use more than one door model, either
+using map transformations or different door pixmaps altogether.
+.lp
+It is also possible to generate the door's projection from a vector graphics
+model using the
+.Xr vg 3
+interface.
 .Bd -code "Initialization of the \fBdoor\fP object"
 void
 door_init(void *obj, const char *name)
@@ -438,20 +441,27 @@ door_open(int argc, union evarg *argv)
 	object_set_projmap(door, "Open");
 }
 .Ed
-.c3 "Submaps"
+.c3 "Projection maps"
 .lp
 In Agar games, the \fBmap\fP object is used to represent not only levels, but
 also the appearance of certain objects inside those levels.
-For instance, the appearance of a character will be defined by a set of maps,
-which could be named "Moving North", "Moving South", "Idle North",
+For instance, the appearance of a tile-based character could be defined by a
+set of maps, such as "Moving North", "Moving South", "Idle North",
 "Idle South", and so on.
 .lp
 This method can accomodate very large dynamic objects, and it also allows the
 game designer to apply transforms, such as \fBmirror\fP, so that the artist
 does not have to come up with separate "Moving West" and "Moving East" sprites,
 for instance.
-For a pseudo-3D game (such as \fIDiablo\fP\(dg), an object's set of projection
-maps could be automatically generated from a 3D model.
+.lp
+The
+.Xr vg 3
+library is able to rasterize vector graphics into projection maps at
+interactive speeds.
+This mechanism is useful for 2D vector graphics, but can also be extended to
+3D graphics, to accomodate
+.Sq pseudo-3D
+games such as \fIDiablo\fP\(dg.
 .(f
 \(dg \fIDiablo\fP is a trademark of Blizzard Entertainment.
 .)f
