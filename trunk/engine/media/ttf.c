@@ -1,4 +1,4 @@
-/*	$Csoft: ttf.c,v 1.3 2003/03/02 04:13:13 vedge Exp $	*/
+/*	$Csoft: ttf.c,v 1.4 2003/03/03 00:00:42 vedge Exp $	*/
 /*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
 
 /*
@@ -521,13 +521,13 @@ ttf_font_face_fixed_width(ttf_font *font)
 }
 
 char *
-ttf_font_face_family_name(ttf_font *font)
+ttf_font_face_family(ttf_font *font)
 {
 	return (font->face->family_name);
 }
 
 char *
-ttf_font_face_style_name(ttf_font *font)
+ttf_font_face_style(ttf_font *font)
 {
 	return (font->face->style_name);
 }
