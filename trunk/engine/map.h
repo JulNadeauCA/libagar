@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.54 2003/01/27 08:04:44 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.55 2003/02/02 21:06:46 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -93,6 +93,9 @@ struct map {
 	Uint32		  defx, defy;	/* Map origin */
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
+#if defined(DEBUG) && defined(SERIALIZATION)
+	pthread_t	  check_th;	/* Verify map integrity */
+#endif
 };
 
 void		 map_init(struct map *, enum map_type, char *, char *);
@@ -116,11 +119,13 @@ void		 noderef_save(struct fobj_buf *, struct object_table *,
 void		 node_load(int, struct object_table *, struct node *);
 void		 node_save(struct fobj_buf *, struct object_table *,
 		     struct node *);
-void		 node_destroy(struct node *, int, int);
+void		 node_destroy(struct node *);
 
 void		 node_move_ref(struct noderef *, struct node *, struct node *);
 void		 node_copy_ref(struct noderef *, struct node *);
 void		 node_remove_ref(struct node *, struct noderef *);
+void		 node_moveup_ref(struct node *, struct noderef *);
+void		 node_movedown_ref(struct node *, struct noderef *);
 struct noderef	*node_add_sprite(struct node *, void *, Uint32);
 struct noderef	*node_add_anim(struct node *, void *, Uint32, Uint32);
 struct noderef	*node_add_warp(struct node *, char *, Uint32, Uint32, Uint8);
@@ -130,7 +135,23 @@ extern __inline__ void	 noderef_draw(struct map *, struct noderef *,
 			     Sint16, Sint16);
 
 #ifdef DEBUG
-void		 map_verify(struct map *);
 extern int	 map_nodesigs;
+
+# define MAP_CHECK_NODE(node, mx, my) do {			\
+	if (map_nodesigs &&					\
+	    (strcmp(NODE_MAGIC, (node)->magic) != 0 ||		\
+	     (node)->x != (mx) || (node)->y != (my))) {		\
+		fatal("bad node\n");				\
+	}							\
+} while (0)
+# define MAP_CHECK_NODEREF(nref) do {				\
+	if (map_nodesigs &&					\
+	    strcmp(NODEREF_MAGIC, (node)->magic) != 0) {	\
+		fatal("bad nref\n");				\
+	}							\
+} while (0)
+#else
+# define MAP_CHECK_NODE(node, mx, my)
+# define MAP_CHECK_NODEREF(nref, mx, my)
 #endif /* DEBUG */
 
