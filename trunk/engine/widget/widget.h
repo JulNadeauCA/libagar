@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.55 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.56 2003/04/25 09:47:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -172,7 +172,7 @@ extern DECLSPEC void	 widget_set_double(void *, const char *, double);
 extern DECLSPEC void	 widget_set_string(void *, const char *, char *);
 extern DECLSPEC void	 widget_set_pointer(void *, const char *, void *);
 
-extern DECLSPEC void	 widget_blit(void *, SDL_Surface *, int, int);
+extern __inline__ void	 widget_blit(void *, SDL_Surface *, int, int);
 __END_DECLS
 
 #include "close_code.h"
