@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.189 2004/09/17 00:41:35 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.190 2004/09/18 06:14:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -429,13 +429,25 @@ event_new(void *p, const char *name, void (*handler)(int, union evarg *),
 	struct event *ev;
 
 	pthread_mutex_lock(&ob->lock);
-	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (strcmp(ev->name, name) == 0)
-			break;
+	if (name != NULL) {
+		TAILQ_FOREACH(ev, &ob->events, events) {
+			if (strcmp(ev->name, name) == 0)
+				break;
+		}
+	} else {
+		ev = NULL;
 	}
+
 	if (ev == NULL) {
 		ev = Malloc(sizeof(struct event), M_EVENT);
-		strlcpy(ev->name, name, sizeof(ev->name));
+		if (name != NULL) {
+			strlcpy(ev->name, name, sizeof(ev->name));
+		} else {
+			static Uint32 nevent = 0;
+
+			snprintf(ev->name, sizeof(ev->name), "@anon%u",
+			    nevent++);
+		}
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	}
 	memset(ev->argv, 0, sizeof(union evarg)*EVENT_ARGS_MAX);

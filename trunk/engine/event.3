@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.23 2004/05/10 11:25:03 vedge Exp $
+.\"	$Csoft: event.3,v 1.24 2004/05/15 02:56:35 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -151,6 +151,12 @@ function registers a new event handler to service events of type
 .Fa name .
 If an event handler is already registered for the given event type, it
 is replaced.
+.Pp
+If
+.Fa name
+is NULL, the event handler is not assigned a type, but may be referenced
+by the pointer returned by
+.Fa event_new .
 The
 .Fa handler
 argument specifies the event handler function.
