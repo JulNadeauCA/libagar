@@ -1,4 +1,4 @@
-/*	$Csoft: leak.c,v 1.8 2004/11/21 02:15:16 phip Exp $	*/
+/*	$Csoft: leak.c,v 1.9 2004/11/22 03:57:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -72,14 +72,23 @@ static const char *mement_names[] = {
 static char *
 leak_callback(colID cid, rowID rid)
 {
-	static char text[128];
+	static char text[32];
 	struct error_mement *ment = &error_mements[rid];
-    
-	snprintf(text, sizeof(text), "[%s] - %u buffers (%lu)",
-	    mement_names[rid], ment->nallocs - ment->nfrees,
-	    (unsigned long)ment->msize);
-	
-	return (text);
+  
+  	switch (cid) {
+	case 0:
+		return ((char *)mement_names[rid]);
+	case 1:
+		snprintf(text, sizeof(text), "%lu", (unsigned long)
+		    (ment->nallocs-ment->nfrees));
+		return (text);
+	case 2:
+		snprintf(text, sizeof(text), "%lu", (unsigned long)ment->msize);
+		return (text);
+	default:
+		break;
+	}
+	return (NULL);
 }
 
 struct window *
@@ -94,11 +103,18 @@ leak_window(void)
 	}
 	window_set_caption(win, _("Leak detection"));
 	
-	tv = tableview_new(win, TABLEVIEW_NOHEADER, leak_callback, NULL);
+	tv = tableview_new(win, 0, leak_callback, NULL);
 	tableview_prescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 8);
 	tableview_set_update(tv, 250);
 	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_FILL|
-			      TABLEVIEW_COL_UPDATE, 0, NULL, NULL);
+			      TABLEVIEW_COL_UPDATE, 0,
+			      _("Subsystem"), "map_noderef");
+	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_FILL|
+			      TABLEVIEW_COL_UPDATE, 1,
+			      _("Buffers"), "XXXXXXXXXX");
+	tableview_col_add(tv, TABLEVIEW_COL_DYNAMIC|TABLEVIEW_COL_FILL|
+			      TABLEVIEW_COL_UPDATE, 2,
+			      _("Requests"), "XXXXXXXXX");
 	
 	for (i = 0; i < nleak_ents; i++)
 		tableview_row_add(tv, 0, NULL, i);
