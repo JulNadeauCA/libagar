@@ -1,27 +1,14 @@
-/*	$Csoft: physics.h,v 1.16 2002/06/09 15:04:29 vedge Exp $	    */
+/*	$Csoft: physics.h,v 1.17 2002/11/23 22:40:46 vedge Exp $	    */
 /*	Public domain	*/
 
 struct noderef;
 struct input;
 
-enum {
-	DIR_UP =	0x01,
-	DIR_DOWN =	0x02,
-	DIR_LEFT =	0x04,
-	DIR_RIGHT =	0x08,
-	DIR_ALL =	0xff
-};
-
-enum {
-	DIR_ANIM_IDLEUP,
-	DIR_ANIM_IDLEDOWN,
-	DIR_ANIM_IDLELEFT,
-	DIR_ANIM_IDLERIGHT,
-	DIR_ANIM_MOVEUP,
-	DIR_ANIM_MOVEDOWN,
-	DIR_ANIM_MOVELEFT,
-	DIR_ANIM_MOVERIGHT
-};
+#define DIR_UP		0x01
+#define DIR_DOWN	0x02
+#define DIR_LEFT	0x04
+#define DIR_RIGHT	0x08
+#define DIR_ALL		0xff
 
 /* 2D movement of undefined constructs in an infinite area. */
 struct gendir {
@@ -37,8 +24,8 @@ struct gendir {
 struct mapdir {
 	Uint32	speed;		/* Soft-scroll increments */
 
-	struct	object *ob;	/* Object back pointer */
-	struct	map *map;	/* Map back pointer */
+	struct object	*ob;	/* Object back pointer */
+	struct map	*map;	/* Map back pointer */
 
 	Uint32	set;		/* Set direction mask (move) */
 	Uint32	current;	/* Current direction mask (moving) */
@@ -46,19 +33,18 @@ struct mapdir {
 	Uint32	moved;		/* Post direction mask (moved) */
 
 	Uint32	flags;
-#define DIR_SCROLLVIEW	0x01	/* Scroll the view if we reach boundaries. */
-#define DIR_SOFTSCROLL	0x02	/* Animate move from node to node. */
-#define DIR_STATIC	0x04	/* Don't change sprites with directions. */
-#define DIR_PASSTHROUGH	0x08	/* Pass through map nodes. */
+#define DIR_SCROLLVIEW	0x01	/* Perform centering/soft-scrolling. */
+#define DIR_SOFTSCROLL	0x02	/* Animate all node->node displacements. */
+#define DIR_PASSTHROUGH	0x08	/* Pass through all nodes. */
 };
 
+/* Position on a map. */
 struct mappos {
-	struct	map *map;	/* Map (or NULL) */
-	Uint32	x, y;		/* Map coordinates */
-	Uint32	speed;		/* Speed in ms */
-	struct	noderef *nref;	/* Node reference */
-	struct	mapdir dir;	/* Map direction (not saved) */
-	struct	input *input;	/* Controller (or NULL) */
+	struct map	*map;	/* Map (or NULL) */
+	Uint32		 x, y;	/* Map coordinates */
+	struct noderef	*nref;	/* Node reference */
+	struct mapdir	 dir;	/* Map direction (not saved) */
+	struct input	*input;	/* Controller (or NULL) */
 };
 
 void	gendir_init(struct gendir *);
