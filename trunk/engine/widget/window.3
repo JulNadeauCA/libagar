@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.41 2004/09/25 01:57:09 vedge Exp $
+.\"	$Csoft: window.3,v 1.42 2005/01/05 04:44:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -197,10 +197,23 @@ each call (depending on the preferred alignment).
 .Pp
 Finally, the
 .Fn window_attach
-and
+function arranges for
+.Fa pwin
+to be the parent window of
+.Fa win ,
+such that
+.Fa win
+is automatically destroyed when
+.Fa pwin
+is detached (through
+.Xr view_detach 3 ) .
+.Pp
+The
 .Fn window_detach
-functions attach and detach windows which are to be destroyed on detach of
-their parent.
+function removes
+.Fa win
+from its parent window
+.Fa pwin .
 .Sh VISIBILITY
 .nr nS 1
 .Ft void
