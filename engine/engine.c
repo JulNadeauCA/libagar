@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.90 2003/02/04 02:22:11 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.91 2003/02/10 03:59:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -61,7 +61,7 @@
 int	engine_debug = 1;		/* Enable debugging */
 #endif
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 pthread_key_t engine_errorkey;		/* Multi-threaded error code */
 #else
 char *engine_errorkey;			/* Single-threaded error code */
@@ -89,7 +89,7 @@ engine_init(int argc, char *argv[], const struct engine_proginfo *prog,
 		return (-1);
 	}
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 	/* Create a thread-specific key for errno style error messages. */
 	pthread_key_create(&engine_errorkey, NULL);
 #else
@@ -292,7 +292,7 @@ engine_destroy(void)
 
 	object_destroy(view);
 	object_destroy(config);
-#ifdef SERIALIZATION
+#ifdef THREADS
 	pthread_key_delete(engine_errorkey);
 #else
 	Free(engine_errorkey);

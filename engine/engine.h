@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.52 2003/01/01 01:43:42 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.53 2003/02/13 02:12:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 # include <pthread.h>		/* For pthread types */
 # include <signal.h>		/* For pthread_kill() */
 #else
@@ -46,7 +46,7 @@
 #include <engine/object.h> 	 /* Most structures are derived from this */
 #include <engine/event.h>	 /* For event handler prototypes */
 
-#ifdef SERIALIZATION
+#ifdef THREADS
 # ifdef _SGI_SOURCE
 #  undef PTHREAD_MUTEX_INITIALIZER
 #  define PTHREAD_MUTEX_INITIALIZER { { 0 } }

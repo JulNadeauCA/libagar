@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.62 2003/02/22 11:42:38 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.63 2003/02/24 06:42:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #define TILEW		32
@@ -14,7 +14,6 @@ enum noderef_type {
 	NODEREF_WARP
 };
 
-/* Reference within a node. */
 struct noderef {
 #ifdef DEBUG
 	char	magic[5];
@@ -49,7 +48,6 @@ struct noderef {
 
 TAILQ_HEAD(noderefq, noderef);
 
-/* Coordinate within a map. */
 struct node {
 #ifdef DEBUG
 	char	magic[5];
@@ -85,15 +83,13 @@ enum map_type {
 	MAP_3D
 };
 
-/* Region within the world. */
 struct map {
-	struct object	 obj;
+	struct object	  obj;
+	enum map_type	  type;
 
-	enum map_type	 type;
-	
 	pthread_mutex_t		lock;
 	pthread_mutexattr_t	lockattr;
-	
+
 	Uint32		  mapw, maph;	/* Map geometry */
 	Uint16		  zoom;		/* Zoom (%) */
 	Sint16		  ssx, ssy;	/* Soft scrolling offsets */
@@ -101,7 +97,7 @@ struct map {
 	Uint32		  defx, defy;	/* Map origin */
 	struct node	**map;		/* Arrays of nodes */
 	int		  redraw;	/* Redraw (for tile-based mode) */
-#if defined(DEBUG) && defined(SERIALIZATION)
+#if defined(DEBUG) && defined(THREADS)
 	pthread_t	  check_th;	/* Verify map integrity */
 #endif
 };

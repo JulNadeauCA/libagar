@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.147 2003/02/22 11:42:38 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.148 2003/02/24 06:42:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -309,7 +309,7 @@ map_init(struct map *m, enum map_type type, char *name, char *media)
 
 	OBJECT(m)->flags |= OBJECT_CONSISTENT;
 
-#if defined(DEBUG) && defined(SERIALIZATION)
+#if defined(DEBUG) && defined(THREADS)
 	if (map_debug & DEBUG_SCAN) {
 		Pthread_create(&m->check_th, NULL, map_check, m);
 	}
@@ -554,7 +554,7 @@ map_destroy(void *p)
 	struct map *m = p;
 
 	pthread_mutex_lock(&m->lock);
-#if defined(DEBUG) && defined(SERIALIZATION)
+#if defined(DEBUG) && defined(THREADS)
 	if (map_debug & DEBUG_SCAN) {
 		pthread_kill(m->check_th, SIGKILL);
 	}
@@ -921,7 +921,7 @@ map_save(void *p, int fd)
 	return (0);
 }
 
-#if defined(DEBUG) && defined(SERIALIZATION)
+#if defined(DEBUG) && defined(THREADS)
 
 /* Verify the integrity of a map. This may also help finding races. */
 void *
@@ -953,7 +953,7 @@ map_check(void *arg)
 	return (NULL);
 }
 
-#endif	/* DEBUG && SERIALIZATION */
+#endif	/* DEBUG && THREADS */
 
 static __inline__ void
 noderef_draw_scaled(struct map *m, SDL_Surface *s, Sint16 rx, Sint16 ry)

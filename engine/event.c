@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.134 2003/02/04 02:22:30 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.135 2003/02/04 03:26:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -563,7 +563,7 @@ event_new(void *p, char *name, void (*handler)(int, union evarg *),
 static void *
 event_post_async(void *p)
 {
-#ifdef SERIALIZATION
+#ifdef THREADS
 	struct event *eev = p;
 
 	debug(DEBUG_ASYNC_EVENTS, "%p: async event start\n",
@@ -612,7 +612,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 		}
 
 		if (neev->flags & EVENT_ASYNC) {
-#ifdef SERIALIZATION
+#ifdef THREADS
 			pthread_t async_event_th;
 
 			Pthread_create(&async_event_th, NULL,
