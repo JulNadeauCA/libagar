@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.51 2003/04/12 01:45:49 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.52 2003/04/24 07:04:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -723,7 +723,7 @@ widget_get_geometry(void *p, Uint16 *w, Uint16 *h)
  * Perform a blit from a source surface to the display, at coordinates
  * relative to the widget.
  */
-void
+__inline__ void
 widget_blit(void *p, SDL_Surface *srcsu, int xoffs, int yoffs)
 {
 	struct widget *wid = p;
