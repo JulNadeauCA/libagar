@@ -1,4 +1,4 @@
-/*	$Csoft: monitor.c,v 1.9 2002/09/16 16:44:12 vedge Exp $	*/
+/*	$Csoft: monitor.c,v 1.10 2002/09/19 21:00:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -163,7 +163,7 @@ monitor_tool_mapview(void)
 	struct widget *wid;
 
 	pthread_mutex_lock(&view->lock);
-	TAILQ_FOREACH_REVERSE(win, &view->windowsh, windows, windowq) {
+	TAILQ_FOREACH_REVERSE(win, &view->windows, windows, windowq) {
 		pthread_mutex_lock(&win->lock);
 		if ((win->flags & WINDOW_SHOWN) == 0) {
 			continue;
