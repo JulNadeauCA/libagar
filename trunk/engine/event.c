@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.161 2003/09/04 03:14:26 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.162 2003/09/07 00:15:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -162,11 +162,11 @@ event_init_fps_counter(void)
 
 	fps_label = label_new(fps_win, "...");
 	fps_graph = graph_new(fps_win, "Refresh rate", GRAPH_LINES,
-	    GRAPH_SCROLL|GRAPH_ORIGIN, 200);
+	    GRAPH_ORIGIN, 100);
 
-	fps_refresh = graph_add_item(fps_graph, "refresh", 0, 160, 0, 16384);
-	fps_events = graph_add_item(fps_graph, "event", 0, 0, 180, 16384);
-	fps_idle = graph_add_item(fps_graph, "idle", 200, 200, 200, 16384);
+	fps_refresh = graph_add_item(fps_graph, "refresh", 0, 160, 0, 140);
+	fps_events = graph_add_item(fps_graph, "event", 0, 0, 180, 140);
+	fps_idle = graph_add_item(fps_graph, "idle", 180, 180, 180, 140);
 }
 #endif /* DEBUG */
 
