@@ -1,4 +1,4 @@
-/*	$Csoft: prop.h,v 1.17 2003/05/06 01:03:40 vedge Exp $	*/
+/*	$Csoft: prop.h,v 1.18 2003/06/06 02:51:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_
@@ -15,6 +15,7 @@
 struct prop {
 	char *key;
 	enum prop_type {		/* Sync monitor/object_browser.c */
+		PROP_UINT,
 		PROP_INT,
 		PROP_UINT8,
 		PROP_SINT8,
@@ -22,29 +23,30 @@ struct prop {
 		PROP_SINT16,
 		PROP_UINT32,
 		PROP_SINT32,
-		PROP_UINT64_UNUSED,
-		PROP_SINT64_UNUSED,
-		PROP_FLOAT,
-		PROP_DOUBLE,
-		PROP_LONG_DOUBLE,
+		PROP_UINT64,		/* Unused */
+		PROP_SINT64,		/* Unused */
+		PROP_FLOAT,		/* IEEE 754 floating point */
+		PROP_DOUBLE,		/* IEEE 754 floating point */
+		PROP_LONG_DOUBLE,	/* Non-portable */
 		PROP_STRING,
 		PROP_POINTER,
 		PROP_BOOL,
 		PROP_ANY
 	} type;
 	union {
-		int	 i;
-		Uint8	 u8;
-		Sint8	 s8;
-		Uint16	 u16;
-		Sint16	 s16;
-		Uint32	 u32;
-		Sint32	 s32;
+		unsigned int	 u;
+		int		 i;
+		Uint8		 u8;
+		Sint8		 s8;
+		Uint16		 u16;
+		Sint16		 s16;
+		Uint32		 u32;
+		Sint32		 s32;
 #ifdef FLOATING_POINT
-		float	 	f;
-		double	 	d;
+		float	 	 f;
+		double	 	 d;
 # ifdef USE_LONG_DOUBLE
-		long double	ld;
+		long double	 ld;
 # endif
 #endif
 		char	*s;
@@ -61,7 +63,10 @@ extern DECLSPEC int		 prop_save(void *, struct netbuf *);
 extern DECLSPEC void		 prop_destroy(struct prop *);
 extern DECLSPEC struct prop	*prop_set(void *, const char *, enum prop_type,
 				          ...);
+
 extern DECLSPEC struct prop	*prop_set_bool(void *, const char *, int);
+extern DECLSPEC struct prop	*prop_set_uint(void *, const char *,
+				               unsigned int);
 extern DECLSPEC struct prop	*prop_set_int(void *, const char *, int);
 extern DECLSPEC struct prop	*prop_set_uint8(void *, const char *, Uint8);
 extern DECLSPEC struct prop	*prop_set_sint8(void *, const char *, Sint8);
@@ -84,6 +89,7 @@ extern DECLSPEC struct prop	*prop_set_pointer(void *, const char *, void *);
 extern DECLSPEC struct prop	*prop_get(void *, const char *, enum prop_type,
 				          void *);
 extern DECLSPEC int		 prop_get_bool(void *, const char *);
+extern DECLSPEC unsigned int	 prop_get_uint(void *, const char *);
 extern DECLSPEC int		 prop_get_int(void *, const char *);
 extern DECLSPEC Uint8	 	 prop_get_uint8(void *, const char *);
 extern DECLSPEC Sint8	 	 prop_get_sint8(void *, const char *);

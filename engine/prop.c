@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.32 2003/05/18 00:16:57 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.33 2003/06/06 02:51:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -39,7 +39,7 @@
 
 const struct version prop_ver = {
 	"agar property map",
-	1, 0
+	2, 0
 };
 
 #ifdef DEBUG
@@ -76,6 +76,10 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 
 	va_start(ap, type);
 	switch (type) {
+	case PROP_UINT:
+		nprop->data.u = va_arg(ap, unsigned int);
+		debug(DEBUG_SET, "uint %s: %d\n", key, nprop->data.u);
+		break;
 	case PROP_INT:
 		nprop->data.i = va_arg(ap, int);
 		debug(DEBUG_SET, "int %s: %d\n", key, nprop->data.i);
@@ -145,6 +149,12 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 	}
 	pthread_mutex_unlock(&ob->props_lock);
 	return (nprop);
+}
+
+struct prop *
+prop_set_uint(void *ob, const char *key, unsigned int i)
+{
+	return (prop_set(ob, key, PROP_UINT, i));
 }
 
 struct prop *
@@ -268,6 +278,9 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 			case PROP_BOOL:
 				*(int *)p = prop->data.i;
 				break;
+			case PROP_UINT:
+				*(unsigned int *)p = prop->data.u;
+				break;
 			case PROP_UINT8:
 				*(Uint8 *)p = prop->data.u8;
 				break;
@@ -318,6 +331,16 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 fail:
 	pthread_mutex_unlock(&ob->props_lock);
 	return (NULL);
+}
+
+unsigned int
+prop_get_uint(void *p, const char *key)
+{
+	unsigned int i;
+
+	if (prop_get(p, key, PROP_UINT, &i) == NULL)
+		fatal("%s", error_get());
+	return (i);
 }
 
 int
@@ -521,6 +544,9 @@ prop_load(void *p, struct netbuf *buf)
 		case PROP_SINT32:
 			prop_set_sint32(ob, key, read_sint32(buf));
 			break;
+		case PROP_UINT:
+			prop_set_uint(ob, key, (unsigned int)read_uint32(buf));
+			break;
 		case PROP_INT:
 			prop_set_int(ob, key, (int)read_sint32(buf));
 			break;
@@ -605,6 +631,9 @@ prop_save(void *p, struct netbuf *buf)
 			break;
 		case PROP_SINT32:
 			write_sint32(buf, prop->data.s32);
+			break;
+		case PROP_UINT:
+			write_uint32(buf, (Uint32)prop->data.u);
 			break;
 		case PROP_INT:
 			write_sint32(buf, (Sint32)prop->data.i);

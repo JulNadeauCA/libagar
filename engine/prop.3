@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.7 2003/05/06 01:03:40 vedge Exp $
+.\"	$Csoft: prop.3,v 1.8 2003/06/06 02:51:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -46,8 +46,8 @@ structure.
 Generic properties can store the following types:
 .Pp
 .Bd -literal
-enum prop_type {
-	PROP_BOOL,
+enum prop_type {		/* Sync monitor/object_browser.c */
+	PROP_UINT,
 	PROP_INT,
 	PROP_UINT8,
 	PROP_SINT8,
@@ -55,12 +55,16 @@ enum prop_type {
 	PROP_SINT16,
 	PROP_UINT32,
 	PROP_SINT32,
+	PROP_UINT64,		/* Unused */
+	PROP_SINT64,		/* Unused */
 	PROP_FLOAT,		/* IEEE 754 floating point */
 	PROP_DOUBLE,		/* IEEE 754 floating point */
 	PROP_LONG_DOUBLE,	/* Non-portable */
 	PROP_STRING,
-	PROP_POINTER		/* Non-portable */
-};
+	PROP_POINTER,
+	PROP_BOOL,
+	PROP_ANY
+} type;
 .Ed
 .Pp
 The
@@ -89,6 +93,9 @@ ignores properties of type
 .Pp
 .Ft int
 .Fn prop_get_bool "void *obj" "const char *key"
+.Pp
+.Ft "unsigned int"
+.Fn prop_get_uint "void *obj" "const char *key"
 .Pp
 .Ft int
 .Fn prop_get_int "void *obj" "const char *key"
@@ -174,6 +181,9 @@ NUL-terminating the result.
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_bool "void *obj" "const char *key" "int value"
+.Pp
+.Ft "struct prop *"
+.Fn prop_set_uint "void *obj" "const char *key" "unsigned int value"
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_int "void *obj" "const char *key" "int value"
