@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.h,v 1.60 2004/10/01 03:09:31 vedge Exp $	*/
+/*	$Csoft: mapview.h,v 1.61 2004/11/30 11:49:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
@@ -28,12 +28,11 @@ struct mapview {
 	struct widget wid;
 
 	int flags;
-#define MAPVIEW_EDIT		0x0001	/* Mouse/keyboard edition */
-#define MAPVIEW_INDEPENDENT	0x0002	/* Independent zoom/scroll */
-#define MAPVIEW_GRID		0x0004	/* Display the grid */
-#define MAPVIEW_PROPS		0x0008	/* Display node properties */
-#define MAPVIEW_CENTER		0x0040	/* Request initial centering */
-#define MAPVIEW_NO_CURSOR	0x0080	/* Disable the cursor */
+#define MAPVIEW_EDIT		0x01	/* Mouse/keyboard edition */
+#define MAPVIEW_GRID		0x02	/* Display the grid */
+#define MAPVIEW_PROPS		0x04	/* Display node properties */
+#define MAPVIEW_CENTER		0x08	/* Request initial centering */
+#define MAPVIEW_NO_CURSOR	0x10	/* Disable the cursor */
 
 	int prop_bg;			/* Background attributes style */
 	int prop_style;			/* Foreground attributes style */
@@ -55,17 +54,13 @@ struct mapview {
 		int w, h;
 	} esel;
 
-	u_int	*zoom;			/* Zoom factor (%) */
-	int	*ssx, *ssy;		/* Soft scroll offsets */
-	int	*tilesz;		/* Current tile size */
-	struct {
-		u_int	 zoom;
-		int	 ssx, ssy;
-		int	 tilesz;
-	} izoom;
-
+	u_int	zoom;			/* Zoom factor (%) */
+	int	ssx, ssy;		/* Display offset */
+	int	tilesz;			/* Current tile size */
+	
 	struct map	*map;		/* Map to display/edit */
-	int	 	 mx, my;	/* Display offset (nodes) */
+	int	 	 mx, my;	/* Display offset (in nodes) */
+	int		 xoffs, yoffs;	/* Absolute display coordinates */
 	u_int	 	 mw, mh;	/* Display size (nodes) */
 	int		 wfit, hfit;	/* Dimension fits into display? */
 	int		 wmod, hmod;	/* Remainders */
@@ -130,8 +125,7 @@ void	 mapview_set_scale(struct mapview *, u_int);
 void	 mapview_set_selection(struct mapview *, int, int, int, int);
 int	 mapview_get_selection(struct mapview *, int *, int *, int *, int *);
 
-__inline__ void	 mapview_map_coords(struct mapview *, int *, int *, int *,
-		                    int *);
+__inline__ void	 mapview_ncoords(struct mapview *, int *, int *, int *, int *);
 void	 	 mapview_reg_draw_cb(struct mapview *,
 				     void (*)(struct mapview *, void *),
 				     void *);

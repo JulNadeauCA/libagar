@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.45 2004/05/25 07:27:04 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.46 2004/11/30 11:40:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@ zoom_to_value(int argc, union evarg *argv)
 	struct mapview *mv = argv[1].p;
 
 	mapview_set_scale(mv, magnifier_zoom_toval);
-	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+	mapview_status(mv, _("%d%% magnification"), mv->zoom);
 }
 
 static void
@@ -52,7 +52,7 @@ zoom_100pct(struct tool *t, int state)
 	struct mapview *mv = t->mv;
 
 	mapview_set_scale(mv, 100);
-	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+	mapview_status(mv, _("%d%% magnification"), mv->zoom);
 }
 
 static void
@@ -60,8 +60,8 @@ zoom_in(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
-	mapview_set_scale(mv, (*mv->zoom)+magnifier_zoom_inc);
-	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+	mapview_set_scale(mv, mv->zoom + magnifier_zoom_inc);
+	mapview_status(mv, _("%d%% magnification"), mv->zoom);
 }
 
 static void
@@ -69,8 +69,8 @@ zoom_out(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
-	mapview_set_scale(mv, (*mv->zoom)-magnifier_zoom_inc);
-	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
+	mapview_set_scale(mv, mv->zoom - magnifier_zoom_inc);
+	mapview_status(mv, _("%d%% magnification"), mv->zoom);
 }
 
 static void

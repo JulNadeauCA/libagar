@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.59 2004/11/25 02:48:18 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.60 2004/11/30 11:40:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -119,16 +119,17 @@ stamp_cursor(struct tool *t, SDL_Rect *rd)
 
 	for (sy = 0, dy = rd->y;
 	     sy < copybuf->maph;
-	     sy++, dy += mv->map->tilesz) {
+	     sy++, dy += mv->tilesz) {
 		for (sx = 0, dx = rd->x;
 		     sx < copybuf->mapw;
-		     sx++, dx += mv->map->tilesz) {
+		     sx++, dx += mv->tilesz) {
 			struct node *sn = &copybuf->map[sy][sx];
 
 			TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 				noderef_draw(mv->map, r,
 				    WIDGET(mv)->cx+dx,
-				    WIDGET(mv)->cy+dy);
+				    WIDGET(mv)->cy+dy,
+				    mv->tilesz);
 				rv = 0;
 			}
 			if (mv->flags & MAPVIEW_PROPS)

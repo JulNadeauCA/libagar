@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.57 2004/09/12 05:57:24 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.58 2004/11/30 11:40:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -336,10 +336,10 @@ merge_effect(struct tool *t, struct node *n)
 			continue;
 
 		sm = it->p1;
-		for (sy = 0, dy = mv->cy - sm->maph/2;
+		for (sy = 0, dy = mv->cy;
 		     sy < sm->maph && dy < m->maph;
 		     sy++, dy++) {
-			for (sx = 0, dx = mv->cx - sm->mapw/2;
+			for (sx = 0, dx = mv->cx;
 			     sx < sm->mapw && dx < m->mapw;
 			     sx++, dx++) {
 				struct node *sn = &sm->map[sy][sx];
@@ -424,18 +424,19 @@ merge_cursor(struct tool *t, SDL_Rect *rd)
 			continue;
 		}
 		sm = it->p1;
-		for (sy = 0, dy = rd->y - (sm->maph*mv->map->tilesz)/2;
+		for (sy = 0, dy = rd->y;
 		     sy < sm->maph;
-		     sy++, dy += mv->map->tilesz) {
-			for (sx = 0, dx = rd->x - (sm->mapw*mv->map->tilesz)/2;
+		     sy++, dy += mv->tilesz) {
+			for (sx = 0, dx = rd->x;
 			     sx < sm->mapw;
-			     sx++, dx += mv->map->tilesz) {
+			     sx++, dx += mv->tilesz) {
 				struct node *sn = &sm->map[sy][sx];
 
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					noderef_draw(mv->map, r,
-					    WIDGET(mv)->cx+dx,
-					    WIDGET(mv)->cy+dy);
+					    WIDGET(mv)->cx + dx,
+					    WIDGET(mv)->cy + dy,
+					    mv->tilesz);
 					rv = 0;
 				}
 				if (mv->flags & MAPVIEW_PROPS) {

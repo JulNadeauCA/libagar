@@ -1,4 +1,4 @@
-/*	$Csoft: rootmap.c,v 1.38 2004/04/10 02:35:50 vedge Exp $	*/
+/*	$Csoft: rootmap.c,v 1.39 2004/05/06 06:22:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -79,10 +79,11 @@ draw_layer:
 		     mx++, rx += m->tilesz) {
 			node = &m->map[my][mx];
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-				if (nref->type == NODEREF_ANIM &&
-				    nref->layer == layer) {
-					noderef_draw(m, nref, rx, ry);
+				if (nref->type != NODEREF_ANIM ||
+				    nref->layer != layer) {
+					continue;
 				}
+				noderef_draw(m, nref, rx, ry, m->tilesz);
 			}
 		}
 	}
@@ -120,7 +121,8 @@ draw_layer:
 			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
 				if (nref->type == NODEREF_SPRITE &&
 				    nref->layer == layer) {
-					noderef_draw(m, nref, rx, ry);
+					noderef_draw(m, nref, rx, ry,
+					    m->tilesz);
 				}
 			}
 		}

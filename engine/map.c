@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.234 2004/11/21 11:15:44 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.235 2004/11/30 11:30:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,6 +34,7 @@
 #ifdef EDITION
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
+#include <engine/widget/checkbox.h>
 #include <engine/widget/box.h>
 #include <engine/widget/label.h>
 #include <engine/widget/tlist.h>
@@ -67,6 +68,9 @@ const struct object_ops map_ops = {
 	map_edit
 #endif
 };
+
+int map_smooth_scaling = 0;
+int map_smooth_lvl = 10;
 
 void
 node_init(struct node *node)
@@ -1064,24 +1068,27 @@ map_save(void *p, struct netbuf *buf)
 }
 
 /* Render surface s, scaled to rx,ry pixels. */
-/* XXX use something more sophisticated (or cache); fix rleaccel */
+/* XXX use something more sophisticated / cache */
+/* XXX breaks rle accel */
 static void
-draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
+draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
 {
-	int x, y, dh, dw, sx, sy;
+	int x, y, sx, sy;
 	Uint8 *src, r1, g1, b1, a1;
-
-	dw = s->w * m->zoom / 100;
-	dh = s->h * m->zoom / 100;
+	int dw = s->w*tilesz/TILESZ;
+	int dh = s->h*tilesz/TILESZ;
 
 	if (SDL_MUSTLOCK(view->v))
 		SDL_LockSurface(view->v);
+
 	for (y = 0; y < dh; y++) {
-		if ((sy = y*TILESZ/m->tilesz) >= s->h)
+		if ((sy = y*TILESZ/tilesz) >= s->h) {
 			break;
+		}
 		for (x = 0; x < dw; x++) {
-			if ((sx = x*TILESZ/m->tilesz) >= s->w)
+			if ((sx = x*TILESZ/tilesz) >= s->w) {
 				break;
+			}
 			src = (Uint8 *)s->pixels +
 			    sy*s->pitch +
 			    sx*s->format->BytesPerPixel;
@@ -1121,6 +1128,97 @@ draw_scaled(struct map *m, SDL_Surface *s, int rx, int ry)
 				}
 				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
 				    SDL_MapRGB(vfmt, r1, g1, b1));
+			}
+		}
+	}
+	if (SDL_MUSTLOCK(view->v))
+		SDL_UnlockSurface(view->v);
+}
+					
+static __inline__ void
+blend_orthopixels(SDL_PixelFormat *fmt, Uint8 **srcs, Uint8 *pR, Uint8 *pG,
+    Uint8 *pB, Uint8 *pA)
+{
+	Uint32 r = 0, g = 0, b = 0, a = 0;
+	Uint8 rx, gx, bx, ax;
+	int i;
+	
+	for (i = 0; i < 5; i++) {
+		switch (fmt->BytesPerPixel) {
+		case 4:
+			SDL_GetRGBA(*((Uint32 *)srcs[i]), fmt, &rx, &gx, &bx,
+			    &ax);
+			break;
+		case 3:
+		case 2:
+			SDL_GetRGBA(*((Uint16 *)srcs[i]), fmt, &rx, &gx, &bx,
+			    &ax);
+			break;
+		case 1:
+			SDL_GetRGBA(*((Uint8 *)srcs[i]), fmt, &rx, &gx, &bx,
+			    &ax);
+			break;
+		}
+		r += rx*(i == 0 ? map_smooth_lvl : 1);
+		g += gx*(i == 0 ? map_smooth_lvl : 1);
+		b += bx*(i == 0 ? map_smooth_lvl : 1);
+		a += ax*(i == 0 ? map_smooth_lvl : 1);
+	}
+	*pR = r/(5+map_smooth_lvl);
+	*pG = g/(5+map_smooth_lvl);
+	*pB = b/(5+map_smooth_lvl);
+	if (pA != NULL)
+		*pA = a/(5+map_smooth_lvl);
+}
+
+static void
+draw_scaled_smooth(struct map *m, SDL_Surface *s, int rx, int ry, int tilesz)
+{
+	Uint8 *srcs[5];
+	Uint8 r, g, b, a;
+	int x, y, sx, sy;
+	int dw = s->w*tilesz/TILESZ;
+	int dh = s->h*tilesz/TILESZ;
+
+	if (SDL_MUSTLOCK(view->v))
+		SDL_LockSurface(view->v);
+
+	for (y = 0; y < dh; y++) {
+		sy = y*TILESZ/tilesz;
+		if (sy >= s->h)
+			break;
+
+		for (x = 0; x < dw; x++) {
+			sx = x*TILESZ/tilesz;
+			if (sx >= s->w)
+				break;
+
+			srcs[0] = (Uint8 *)s->pixels +
+			    sy*s->pitch +
+			    sx*s->format->BytesPerPixel;
+			srcs[1] = (Uint8 *)s->pixels +
+			    (sy+1)*s->pitch +
+			    (sx)*s->format->BytesPerPixel;
+			srcs[2] = (Uint8 *)s->pixels +
+			    (sy)*s->pitch +
+			    (sx+1)*s->format->BytesPerPixel;
+			srcs[3] = (sx > 0) ? (Uint8 *)s->pixels +
+			    (sy)*s->pitch +
+			    (sx-1)*s->format->BytesPerPixel : srcs[0];
+			srcs[4] = (sy > 0) ? (Uint8 *)s->pixels +
+			    (sy-1)*s->pitch +
+			    (sx)*s->format->BytesPerPixel : srcs[0];
+
+			if (s->flags & SDL_SRCALPHA) {
+				blend_orthopixels(s->format, srcs,
+				    &r, &g, &b, &a);
+				view_alpha_blend(view->v, rx+x, ry+y,
+				    r, g, b, a);
+			} else {
+				blend_orthopixels(s->format, srcs,
+				    &r, &g, &b, NULL);
+				VIEW_PUT_PIXEL(view->v, rx+x, ry+y,
+				    SDL_MapRGB(vfmt, r, g, b));
 			}
 		}
 	}
@@ -1318,18 +1416,25 @@ draw_anim(struct noderef *r)
  * The map must be locked.
  */
 void
-noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
+noderef_draw(struct map *m, struct noderef *r, int rx, int ry, int tilesz)
 {
 	SDL_Surface *su;
+#if defined(DEBUG) || defined(EDITION)
+	int freesu = 0;
+#endif
 
 	switch (r->type) {
 	case NODEREF_SPRITE:
 #if defined(DEBUG) || defined(EDITION)
 		if (r->r_sprite.obj->gfx == NULL ||
 		    r->r_sprite.offs >= r->r_sprite.obj->gfx->nsprites) {
-			dprintf("bad sprite offs %d\n", (int)r->r_sprite.offs);
-			/* XXX render a number */
-			return;
+			char num[16];
+
+			snprintf(num, sizeof(num), "s%u", r->r_sprite.offs);
+			su = text_render(NULL, -1,
+			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
+			freesu++;
+			goto draw;
 		}
 #endif
 		su = draw_sprite(r);
@@ -1338,9 +1443,13 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 #if defined(DEBUG) || defined(EDITION)
 		if (r->r_anim.obj->gfx == NULL ||
 		    r->r_anim.offs >= r->r_anim.obj->gfx->nanims) {
-			dprintf("bad anim offs %d\n", (int)r->r_anim.offs);
-			/* XXX render a number */
-			return;
+			char num[16];
+
+			snprintf(num, sizeof(num), "a%u", r->r_anim.offs);
+			su = text_render(NULL, -1,
+			    SDL_MapRGBA(vfmt, 250, 250, 50, 150), num);
+			freesu++;
+			goto draw;
 		}
 #endif
 		su = draw_anim(r);
@@ -1349,12 +1458,18 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 		return;
 	}
 
-	if (m->zoom != 100 && ((r->flags & NODEREF_NOSCALE) == 0)) {
-		draw_scaled(m, su,
-		    (rx + r->r_gfx.xcenter*m->zoom/100 +
-		     r->r_gfx.xmotion*m->zoom/100),
-		    (ry + r->r_gfx.ycenter*m->zoom/100 +
-		     r->r_gfx.ymotion*m->zoom/100));
+draw:
+	if (tilesz != TILESZ && ((r->flags & NODEREF_NOSCALE) == 0)) {
+		int dx = rx + r->r_gfx.xcenter*tilesz/TILESZ +
+		         r->r_gfx.xmotion*tilesz/TILESZ;
+		int dy = ry + r->r_gfx.ycenter*tilesz/TILESZ +
+		         r->r_gfx.ymotion*tilesz/TILESZ;
+
+		if (map_smooth_scaling) {
+			draw_scaled_smooth(m, su, rx, ry, tilesz);
+		} else {
+			draw_scaled(m, su, rx, ry, tilesz);
+		}
 	} else {
 		SDL_Rect rd;
 
@@ -1362,6 +1477,11 @@ noderef_draw(struct map *m, struct noderef *r, int rx, int ry)
 		rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion;
 		SDL_BlitSurface(su, NULL, view->v, &rd);
 	}
+
+#if defined(DEBUG) || defined(EDITION)
+	if (freesu)
+		SDL_FreeSurface(su);
+#endif
 }
 
 #ifdef EDITION
@@ -1375,7 +1495,7 @@ create_view(int argc, union evarg *argv)
 
 	win = window_new(0, NULL);
 	window_set_caption(win, _("%s map view"), OBJECT(mv->map)->name);
-	mapview_new(win, mv->map, MAPVIEW_INDEPENDENT, NULL, NULL);
+	mapview_new(win, mv->map, 0, NULL, NULL);
 	window_attach(pwin, win);
 	window_show(win);
 }
@@ -1444,13 +1564,24 @@ edit_properties(int argc, union evarg *argv)
 	struct map *m = mv->map;
 	struct window *pwin = argv[2].p;
 	struct window *win;
+	struct box *bo;
 	struct mspinbutton *msb;
 	struct spinbutton *sb;
-	struct box *bo;
+	struct checkbox *cbox;
 
 	win = window_new(WINDOW_NO_RESIZE, NULL);
 	window_set_caption(win, _("Properties of \"%s\""), OBJECT(m)->name);
 	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
+	
+	bo = box_new(win, BOX_VERT, 0);
+	{
+		cbox = checkbox_new(bo, _("Smooth scaling"));
+		widget_bind(cbox, "state", WIDGET_INT, &map_smooth_scaling);
+		
+		sb = spinbutton_new(bo, _("Inverse smoothing factor: "));
+		widget_bind(sb, "value", WIDGET_INT, &map_smooth_lvl);
+		spinbutton_set_min(sb, -4);
+	}
 
 	bo = box_new(win, BOX_VERT, 0);
 	{
@@ -1466,8 +1597,8 @@ edit_properties(int argc, union evarg *argv)
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 	
 		msb = mspinbutton_new(bo, "x", _("Scrolling offset: "));
-		widget_bind(msb, "xvalue", WIDGET_INT, mv->ssx);
-		widget_bind(msb, "yvalue", WIDGET_INT, mv->ssy);
+		widget_bind(msb, "xvalue", WIDGET_INT, &mv->ssx);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mv->ssy);
 		mspinbutton_set_range(msb, 1, MAP_MAX_TILESZ);
 	
 		msb = mspinbutton_new(bo, "x", _("Display area: "));
@@ -1475,12 +1606,10 @@ edit_properties(int argc, union evarg *argv)
 		widget_bind(msb, "yvalue", WIDGET_INT, &mv->mh);
 		mspinbutton_set_range(msb, 1, MAP_MAX_WIDTH);
 		
-		label_new(bo, LABEL_POLLED,
-		    _("Fit width=%[ibool] height=%[ibool]"),
+		label_new(bo, LABEL_POLLED, _("Fit w=%[ibool] h=%[ibool]"),
 		    &mv->wfit, &mv->hfit);
 		
-		label_new(bo, LABEL_POLLED,
-		    _("Modulo width=%i height=%i"),
+		label_new(bo, LABEL_POLLED, _("Modulo w=%i h=%i"),
 		    &mv->wmod, &mv->hmod);
 	}
 
@@ -1488,10 +1617,10 @@ edit_properties(int argc, union evarg *argv)
 	{
 		label_new(bo, LABEL_POLLED_MT,
 		    _("Zoom factor: %i%% (map=%i%%)"), &m->lock,
-		    mv->zoom, &m->zoom);
+		    &mv->zoom, &m->zoom);
 		label_new(bo, LABEL_POLLED_MT,
 		    _("Tile size : %ux%u (map=%ux%u)"), &m->lock,
-		    mv->tilesz, mv->tilesz, &m->tilesz, &m->tilesz);
+		    &mv->tilesz, &mv->tilesz, &m->tilesz, &m->tilesz);
 		label_new(bo, LABEL_POLLED_MT, _("Edited layer: %i"), &m->lock,
 		    &m->cur_layer);
 	}
@@ -1545,7 +1674,7 @@ map_edit(void *p)
 	struct mapview *mv;
 	struct AGMenu *menu;
 	struct AGMenuItem *pitem;
-	int flags = MAPVIEW_PROPS|MAPVIEW_INDEPENDENT|MAPVIEW_GRID;
+	int flags = MAPVIEW_PROPS|MAPVIEW_GRID;
 
 	if ((OBJECT(m)->flags & OBJECT_READONLY) == 0)
 		flags |= MAPVIEW_EDIT;

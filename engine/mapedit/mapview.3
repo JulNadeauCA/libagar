@@ -1,4 +1,4 @@
-.\"	$Csoft: mapview.3,v 1.37 2004/08/26 07:33:59 vedge Exp $
+.\"	$Csoft: mapview.3,v 1.38 2004/11/30 11:49:45 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -90,10 +90,11 @@ The
 .Fa flags
 may include:
 .Bd -literal
-#define MAPVIEW_EDIT        0x01  /* Mouse/keyboard edition */
-#define MAPVIEW_INDEPENDENT 0x02  /* Zoom/scroll independent from map's */
-#define MAPVIEW_GRID        0x04  /* Display a grid */
-#define MAPVIEW_PROPS       0x08  /* Display node properties */
+#define MAPVIEW_EDIT	  0x01	/* Mouse/keyboard edition */
+#define MAPVIEW_GRID	  0x02	/* Display the grid */
+#define MAPVIEW_PROPS	  0x04	/* Display node properties */
+#define MAPVIEW_CENTER	  0x08	/* Request initial centering */
+#define MAPVIEW_NO_CURSOR 0x10	/* Disable the cursor */
 .Ed
 .Pp
 If
@@ -108,11 +109,6 @@ The
 flag enables write operations on the map, assuming the level editor,
 .Xr mapedit 3 ,
 is initialized.
-.Pp
-The
-.Dv MAPVIEW_INDEPENDENT
-flag enables the use of a zoom factor and a soft-scroll offset that is
-independent from the map's global setting.
 .Pp
 The
 .Fn mapview_prescale
