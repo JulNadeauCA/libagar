@@ -1,12 +1,14 @@
-/*	$Csoft: debug.h,v 1.2 2002/01/26 06:37:18 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.3 2002/02/03 11:08:08 vedge Exp $	*/
 
 #ifdef DEBUG
 extern int engine_debug;
 
 # ifdef __GNUC__
-#  define dprintf(fmt, args...)					\
-	if (engine_debug)					\
-		printf("%s: " fmt, __FUNCTION__ , ##args) 
+#  define dprintf(fmt, args...)						\
+	do {								\
+		if (engine_debug)					\
+			printf("%s: " fmt, __FUNCTION__ , ##args);	\
+	} while (0)
 #  define fatal(fmt, args...)					\
 	do {							\
 		printf("%s: " fmt, __FUNCTION__ , ##args);	\
@@ -20,10 +22,10 @@ extern int engine_debug;
 #else /* !DEBUG */
 
 # ifdef __GNUC__
-#  define dprintf(arg...)		((void)0)
+#  define dprintf(arg...)	((void)0)
 #  define fatal(fmt, args...)	printf("%s: " fmt, __FUNCTION__ , ##args)
 # else
-#  define dprintf			((void)0)
+#  define dprintf		((void)0)
 #  define fatal			printf
 # endif /* __GNUC__ */
 
