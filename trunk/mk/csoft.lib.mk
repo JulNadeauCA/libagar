@@ -194,7 +194,8 @@ deinstall:	deinstall-subdir
 	    if [ -d "${SHAREDIR}" ]; then \
 	        echo "rmdir ${SHAREDIR}"; \
 	        rmdir ${SHAREDIR}; \
-	    fi
+	    fi; \
+	fi
 
 ${LIBTOOL}:	${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	@if [ "${LIB}" != "" -a "${SHARED}" = "Yes" ]; then \
