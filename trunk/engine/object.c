@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.104 2003/01/24 08:26:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.105 2003/02/10 06:14:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -56,7 +56,7 @@ static const struct object_ops null_ops = {
 #define DEBUG_POSITION	0x02
 #define DEBUG_DEPS	0x04
 
-int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_DEPS;
+int	object_debug = DEBUG_STATE|DEBUG_POSITION;
 #define engine_debug object_debug
 #endif
 
