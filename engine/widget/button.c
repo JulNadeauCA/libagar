@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.58 2003/03/11 00:13:33 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.59 2003/03/20 01:19:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -154,14 +154,11 @@ button_scaled(int argc, union evarg *argv)
 	nh = b->label_s->h * WIDGET(b)->w / b->label_s->h;
 	if (nh > WIDGET(b)->h - 6)
 		nh = WIDGET(b)->h - 6;
+
 	if (nw > b->label_s->w*2)
 		nw = b->label_s->w*2;
-	else if (nw < b->label_s->w)
-		nw = WIDGET(b)->w;
 	if (nh > b->label_s->h*2)
 		nh = b->label_s->h*2;
-	else if (nh < b->label_s->h)
-		nh = WIDGET(b)->h;
 
 	/* Update the surface. */
 	if (b->slabel_s != NULL) {
