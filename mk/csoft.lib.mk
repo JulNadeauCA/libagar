@@ -222,7 +222,7 @@ clean-lib:
 		rm -f lib${LIB}.a; \
 	    fi; \
 	    if [ "${LIB_SHARED}" = "Yes" ]; then \
-	        if [ "${OBJS}" = "" ]; then \
+	        if [ "${SHOBJS}" = "" ]; then \
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[cly]$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
@@ -231,8 +231,8 @@ clean-lib:
 	    	        rm -f $$F; \
                     done; \
 		else \
-		    rm -f ${OBJS}; \
-		    echo "rm -f ${OBJS}"; \
+		    rm -f ${SHOBJS}; \
+		    echo "rm -f ${SHOBJS}"; \
 		fi; \
 		echo "rm -fR lib${LIB}.la .libs"; \
 		rm -fR lib${LIB}.la .libs; \
