@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.17 2002/05/25 08:21:53 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.18 2002/07/09 09:29:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -40,8 +40,8 @@
 #include <engine/map.h>
 #include <engine/version.h>
 
-#include "window.h"
 #include "widget.h"
+#include "window.h"
 
 void
 widget_init(struct widget *wid, char *name, char *style, const void *wops,

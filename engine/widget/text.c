@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.21 2002/06/25 17:32:24 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.22 2002/07/05 01:13:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -39,8 +39,8 @@
 #include <engine/map.h>
 
 #include "text.h"
-#include "window.h"
 #include "widget.h"
+#include "window.h"
 #include "textbox.h"
 #include "keycodes.h"
 

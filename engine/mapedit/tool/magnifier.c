@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.2 2002/07/18 12:02:55 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.3 2002/07/20 19:10:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -38,8 +38,8 @@
 #include <engine/map.h>
 #include <engine/version.h>
 
-#include <engine/widget/window.h>
 #include <engine/widget/widget.h>
+#include <engine/widget/window.h>
 #include <engine/widget/textbox.h>
 #include <engine/widget/radio.h>
 #include <engine/widget/button.h>

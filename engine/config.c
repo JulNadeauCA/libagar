@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.23 2002/07/09 05:54:47 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.24 2002/07/16 04:22:50 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -39,8 +39,8 @@
 #include "config.h"
 
 #include "widget/text.h"
-#include "widget/window.h"
 #include "widget/widget.h"
+#include "widget/window.h"
 #include "widget/label.h"
 #include "widget/button.h"
 #include "widget/checkbox.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.61 2002/07/08 08:39:40 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.62 2002/07/20 16:11:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -42,8 +42,8 @@
 
 #include "mapedit/mapedit.h"
 
-#include "widget/window.h"
 #include "widget/widget.h"
+#include "widget/window.h"
 #include "widget/label.h"
 #include "widget/text.h"
 #include "widget/graph.h"
@@ -210,7 +210,7 @@ event_loop(void *arg)
 	    0, 0, 100, 100);
 	fps_label = label_new(reg, "...", 0);
 	WIDGET(fps_label)->rh = 20;
-	fps_graph = graph_new(reg, "Frames/sec", GRAPH_POINTS, GRAPH_SCROLL,
+	fps_graph = graph_new(reg, "Frames/sec", GRAPH_LINES, GRAPH_SCROLL,
 	    96, 80);
 	fps_graph_item = graph_add_item(fps_graph, "fps",
 	    SDL_MapRGB(view->v->format, 255, 255, 255));

@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.14 2002/06/20 16:34:31 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.15 2002/07/20 18:56:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -43,8 +43,8 @@
 
 #include "primitive.h"
 #include "text.h"
-#include "window.h"
 #include "widget.h"
+#include "window.h"
 #include "textbox.h"
 #include "keycodes.h"
 
