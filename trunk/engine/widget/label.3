@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.20 2004/01/08 02:20:10 vedge Exp $
+.\"	$Csoft: label.3,v 1.21 2004/03/30 00:46:11 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -44,11 +44,7 @@ widget displays single-line or multi-line text.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "struct label *"
-.Fn label_new "void *parent" "const char *fmt" "..."
-.Pp
-.Ft "struct label *"
-.Fn label_polled_new "void *parent, pthread_mutex_t *mutex" \
-                     "const char *fmt, ..."
+.Fn label_new "void *parent" "enum label_type type" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn label_init "struct label *label" "enum label_type type" "const char *text"
@@ -59,28 +55,34 @@ The
 function allocates, initializes and attaches a
 .Nm
 widget.
+.Fa type
+is one of:
+.Bd -literal
+enum label_type {
+	LABEL_STATIC,		/* Static text */
+	LABEL_POLLED,		/* Polling (thread unsafe) */
+	LABEL_POLLED_MT		/* Polling (thread safe) */
+};
+.Ed
+.Pp
+For
+.Dv LABEL_STATIC
+labels,
 .Fa fmt
 is a
 .Xr printf 3
 style format string.
-.Pp
-The
-.Fn label_polled_new
-function allocates, initializes and attaches a
-.Nm
-able to dereferences pointers to specific data whenever the label is redrawn.
-The draw operation will attempt to acquire
-.Fa mutex ,
-unless it is
-.Dv NULL .
+For labels of type
+.Dv LABEL_POLLED ,
 .Fa fmt
-is a
-.Xr printf 3
-like format string, except that each subsequent argument is a pointer to a
-value.
-The following sequences in the
+is a format string and the subsequent arguments are pointers to the polled
+values.
+For
+.Dv LABEL_POLLED_MT ,
+the first argument following
 .Fa fmt
-string are substituted by a value dereferenced before the widget is redrawn.
+should be a
+.Ft pthread_mutex_t * .
 .Pp
 .Bl -tag -compact -width "%o, %u, %x, %X "
 .It %d, %i
@@ -113,23 +115,7 @@ SDL_Rect *
 SDL_Rect *
 .It %[rect]
 SDL_Rect *
-.It %[obj]
-struct object *
-.It %[objt]
-struct object *
 .El
-.Pp
-The
-.Fn label_init
-function initializes
-.Fa label
-as a label of type:
-.Bd -literal
-enum label_type {
-	LABEL_STATIC,
-	LABEL_POLLED
-};
-.Ed
 .Sh LABELS
 .nr nS 1
 .Ft void
