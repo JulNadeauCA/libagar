@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.106 2004/03/17 17:26:55 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.107 2004/03/19 14:50:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -59,12 +59,12 @@ struct object {
 #define OBJECT_DUPED_FLAGS	(OBJECT_SAVED_FLAGS|OBJECT_NON_PERSISTENT)
 
 	pthread_mutex_t	 lock;
-	struct gfx	*gfx;		/* Associated graphics set */
-	char		*gfx_name;	/* Graphics set to fetch */
-	Uint32		 gfx_used;	/* Referenced sprites/animations */
-	struct audio	*audio;		/* Associated audio samples */
-	char		*audio_name;	/* Audio sample set to fetch */
-	Uint32		 audio_used;	/* Referenced samples */
+	struct gfx	*gfx;		/* Associated graphics package */
+	char		*gfx_name;	/* Shared graphics reference */
+	Uint32		 gfx_used;	/* Referenced graphics */
+	struct audio	*audio;		/* Associated audio package */
+	char		*audio_name;	/* Shared audio reference */
+	Uint32		 audio_used;	/* Referenced audio */
 	Uint32		 data_used;	/* Referenced object derivate data */
 
 	struct position		*pos;		/* Unique position (or NULL) */

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.168 2004/03/19 14:50:28 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.169 2004/03/20 02:44:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -604,10 +604,11 @@ object_page_in(void *p, enum object_page_item item)
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
-		debug(DEBUG_PAGING, "gfx of %s: %s; used = %u++\n", ob->name,
+		debug(DEBUG_PAGING, "%s gfx: %s; used = %u++\n", ob->name,
 		    ob->gfx_name, ob->gfx_used);
 		if (ob->gfx == NULL) {
-			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
+			if (ob->gfx_name != NULL &&
+			   (ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
 				goto fail;
 			}
 			ob->gfx_used = 1;
@@ -617,10 +618,11 @@ object_page_in(void *p, enum object_page_item item)
 		}
 		break;
 	case OBJECT_AUDIO:
-		debug(DEBUG_PAGING, "audio of %s: %s; used = %u++\n", ob->name,
+		debug(DEBUG_PAGING, "%s audio: %s; used = %u++\n", ob->name,
 		    ob->audio_name, ob->audio_used);
 		if (ob->audio == NULL) {
-			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
+			if (ob->audio_name != NULL &&
+			   (ob->audio = audio_fetch(ob->audio_name)) == NULL) {
 				goto fail;
 			}
 			ob->audio_used = 1;
@@ -676,7 +678,8 @@ object_page_out(void *p, enum object_page_item item)
 		if (ob->gfx_used == 0)
 			fatal("neg gfx ref count");
 #endif
-		if (ob->gfx_used != OBJECT_DEP_MAX &&
+		if (ob->gfx != NULL &&
+		    ob->gfx_used != OBJECT_DEP_MAX &&
 		    --ob->gfx_used == 0) {
 			gfx_unused(ob->gfx);
 			ob->gfx = NULL;
@@ -689,7 +692,8 @@ object_page_out(void *p, enum object_page_item item)
 		if (ob->audio_used == 0)
 			fatal("neg audio ref count");
 #endif
-		if (ob->audio_used != OBJECT_DEP_MAX &&
+		if (ob->audio != NULL &&
+		    ob->audio_used != OBJECT_DEP_MAX &&
 		    --ob->audio_used == 0) {
 			audio_unused(ob->audio);
 			ob->audio = NULL;
@@ -876,6 +880,7 @@ object_load_generic(void *p)
 	struct netbuf *buf;
 	Uint32 count, i;
 	int ti, flags, flags_save;
+	char *mname;
 
 	if (object_copy_filename(ob, path, sizeof(path)) == -1)
 		return (-1);
@@ -930,10 +935,10 @@ object_load_generic(void *p)
 	if (read_uint32(buf) > 0)
 		position_load(ob, buf);
 
-	/* Decode the gfx reference and resolve if graphics are resident. */
-	Free(ob->gfx_name, 0);
-	if ((ob->gfx_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
-		dprintf("%s: gfx=%s\n", ob->name, ob->gfx_name);
+	/* Decode shared gfx reference and resolve if graphics are resident. */
+	if ((mname = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
+		Free(ob->gfx_name, 0);
+		ob->gfx_name = mname;
 		if (ob->gfx != NULL) {
 			gfx_unused(ob->gfx);
 			if ((ob->gfx = gfx_fetch(ob->gfx_name)) == NULL) {
@@ -943,16 +948,19 @@ object_load_generic(void *p)
 			}
 		}
 	} else {
-		if (ob->gfx != NULL) {
-			gfx_unused(ob->gfx);
-			ob->gfx = NULL;
+		if (ob->gfx_name != NULL) {
+			Free(ob->gfx_name, 0);
+			if (ob->gfx != NULL) {
+				gfx_unused(ob->gfx);
+				ob->gfx = NULL;
+			}
 		}
 	}
 
-	/* Decode the audio reference and resolve if audio is resident. */
-	Free(ob->audio_name, 0);
-	if ((ob->audio_name = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
-		dprintf("%s: audio=%s\n", ob->name, ob->audio_name);
+	/* Decode shared audio reference and resolve if audio is resident. */
+	if ((mname = read_string_len(buf, OBJECT_PATH_MAX)) != NULL) {
+		Free(ob->audio_name, 0);
+		ob->audio_name = mname;
 		if (ob->audio != NULL) {
 			audio_unused(ob->audio);
 			if ((ob->audio = audio_fetch(ob->audio_name)) == NULL) {
@@ -962,9 +970,12 @@ object_load_generic(void *p)
 			}
 		}
 	} else {
-		if (ob->audio != NULL) {
-			audio_unused(ob->audio);
-			ob->audio = NULL;
+		if (ob->audio_name != NULL) {
+			Free(ob->audio_name, 0);
+			if (ob->audio != NULL) {
+				audio_unused(ob->audio);
+				ob->audio = NULL;
+			}
 		}
 	}
 
@@ -1263,7 +1274,7 @@ object_set_ops(void *p, const void *ops)
 	OBJECT(p)->ops = ops;
 }
 
-/* Load graphics and leave resident (ie. for widgets). */
+/* Associate shared graphics and prevent any pageout. */
 void
 object_wire_gfx(void *p, const char *key)
 {
