@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.160 2003/07/08 00:05:04 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.161 2003/09/04 03:14:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -62,8 +62,7 @@ int	event_count;
 static struct window *fps_win;
 static struct label *fps_label;
 static struct graph *fps_graph;
-static struct graph_item *fps_refresh_current, *fps_event_count,
-    *fps_event_idletime;
+static struct graph_item *fps_refresh, *fps_events, *fps_idle;
 #endif	/* DEBUG */
 
 int	event_idle = 1;		/* Delay at full frame rate */
@@ -142,9 +141,9 @@ event_update_fps_counter(void)
 
 	label_printf(fps_label, "%dms/%dms",
 	    view->refresh.current, view->refresh.delay);
-	graph_plot(fps_refresh_current, view->refresh.current);
-	graph_plot(fps_event_count, event_count * 30 / 10);
-	graph_plot(fps_event_idletime, event_idletime);
+	graph_plot(fps_refresh, view->refresh.current);
+	graph_plot(fps_events, event_count * 30 / 10);
+	graph_plot(fps_idle, event_idletime);
 	graph_scroll(fps_graph, 1);
 
 	if (++einc == 1) {
@@ -165,9 +164,9 @@ event_init_fps_counter(void)
 	fps_graph = graph_new(fps_win, "Refresh rate", GRAPH_LINES,
 	    GRAPH_SCROLL|GRAPH_ORIGIN, 200);
 
-	fps_refresh_current = graph_add_item(fps_graph, "refresh", 0, 160, 0);
-	fps_event_count = graph_add_item(fps_graph, "event", 0, 0, 180);
-	fps_event_idletime = graph_add_item(fps_graph, "idle", 200, 200, 200);
+	fps_refresh = graph_add_item(fps_graph, "refresh", 0, 160, 0, 16384);
+	fps_events = graph_add_item(fps_graph, "event", 0, 0, 180, 16384);
+	fps_idle = graph_add_item(fps_graph, "idle", 200, 200, 200, 16384);
 }
 #endif /* DEBUG */
 
@@ -358,8 +357,9 @@ event_dispatch(SDL_Event *ev)
 		{
 			int rv = 0;
 
-			if (!TAILQ_EMPTY(&view->windows))
+			if (!TAILQ_EMPTY(&view->windows)) {
 				rv = window_event(ev);
+			}
 			if (rv == 0)
 				input_event(INPUT_KEYBOARD, ev);
 		}
