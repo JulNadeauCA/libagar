@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.184 2004/08/25 05:43:35 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.185 2004/09/12 05:57:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -322,6 +322,7 @@ object_attach(void *parentp, void *childp)
 	TAILQ_INSERT_TAIL(&parent->children, child, cobjs);
 	child->parent = parent;
 	event_post(parent, child, "attached", NULL);
+	event_post(child, parent, "child-attached", NULL);
 	debug(DEBUG_LINKAGE, "%s: parent = %s\n", child->name, parent->name);
 	unlock_linkage();
 }
@@ -342,6 +343,7 @@ object_detach(void *childp)
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
 	event_post(parent, child, "detached", NULL);
+	event_post(child, parent, "child-detached", NULL);
 	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
 	    parent->name);
 

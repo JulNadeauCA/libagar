@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.66 2004/08/25 05:43:35 vedge Exp $
+.\"	$Csoft: object.3,v 1.67 2004/09/08 07:03:37 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -607,6 +607,14 @@ The linkage lock is held during the execution of the event handler.
 The object has been detached from its parent object.
 The linkage lock is held during the execution of the event handler.
 This event originates from the parent object.
+.It Fn child-attached "void"
+Same as
+.Fn attached ,
+except that the event is sent from the child object to the parent.
+.It Fn child-detached "void"
+Same as
+.Fn detached ,
+except that the event is sent from the child object to the parent.
 .It Fn moved "void *new_parent"
 The object has been moved from its current parent to
 .Fa new_parent .
