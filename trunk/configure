@@ -1110,7 +1110,7 @@ else
 fi
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
-if [ "${enable_warnings}" != "no" ]
+if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wall -Werror -Wmissing-prototypes"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
