@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.203 2004/05/24 03:24:53 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.204 2004/05/30 23:30:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -59,8 +59,16 @@ const struct object_ops mapedit_pseudo_ops = {
 	mapedit_settings	/* edit */
 };
 
+extern int mapview_bg, mapview_bg_moving, mapview_bg_sqsize;
+extern int mapview_sel_bounded;
+
 struct mapedit mapedit;
+
 int mapedition = 0;			/* Start up in edition mode */
+int mapedit_def_mapw = 8;		/* Default map geometry */
+int mapedit_def_maph = 8;
+int mapedit_def_brsw = 8;		/* Default brush geometry */
+int mapedit_def_brsh = 8;
 
 void
 mapedit_init(void)
@@ -104,6 +112,7 @@ mapedit_init(void)
 	objedit_win = objedit_window();
 	window_show(objedit_win);
 
+#if 0
 	/* Create the toolbar window. */
 	win = window_new("mapedit-toolbar");
 	window_set_caption(win, _("Tools"));
@@ -121,6 +130,7 @@ mapedit_init(void)
 		    objedit_win);
 	}
 	window_show(win);
+#endif
 }
 
 void
@@ -130,11 +140,37 @@ mapedit_destroy(void *p)
 	objedit_destroy();
 }
 
+void
+mapedit_save(struct netbuf *buf)
+{
+	write_uint8(buf, (Uint8)mapview_bg);
+	write_uint8(buf, (Uint8)mapview_bg_moving);
+	write_uint16(buf, (Uint16)mapview_bg_sqsize);
+	write_uint8(buf, (Uint8)mapview_sel_bounded);
+
+	write_uint16(buf, (Uint16)mapedit_def_mapw);
+	write_uint16(buf, (Uint16)mapedit_def_maph);
+	write_uint16(buf, (Uint16)mapedit_def_brsw);
+	write_uint16(buf, (Uint16)mapedit_def_brsh);
+}
+
+void
+mapedit_load(struct netbuf *buf)
+{
+	mapview_bg = (int)read_uint8(buf);
+	mapview_bg_moving = (int)read_uint8(buf);
+	mapview_bg_sqsize = (int)read_uint16(buf);
+	mapview_sel_bounded = (int)read_uint8(buf);
+
+	mapedit_def_mapw = (int)read_uint16(buf);
+	mapedit_def_maph = (int)read_uint16(buf);
+	mapedit_def_brsw = (int)read_uint16(buf);
+	mapedit_def_brsh = (int)read_uint16(buf);
+}
+
 struct window *
 mapedit_settings(void *p)
 {
-	extern int mapview_bg, mapview_bg_moving, mapview_bg_squaresize;
-	extern int mapview_sel_bounded;
 	struct window *win;
 	struct checkbox *cb;
 	struct spinbutton *sb;
@@ -154,7 +190,7 @@ mapedit_settings(void *p)
 		widget_bind(cb, "state", WIDGET_INT, &mapview_bg_moving);
 
 		sb = spinbutton_new(bo, _("Tile size: "));
-		widget_bind(sb, "value", WIDGET_INT, &mapview_bg_squaresize);
+		widget_bind(sb, "value", WIDGET_INT, &mapview_bg_sqsize);
 		spinbutton_set_min(sb, 2);
 		spinbutton_set_max(sb, 16384);
 	}
@@ -168,18 +204,14 @@ mapedit_settings(void *p)
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		msb = mspinbutton_new(bo, "x", _("Default map geometry: "));
-		widget_bind(msb, "xvalue", WIDGET_PROP, &mapedit,
-		    "default-map-width");
-		widget_bind(msb, "yvalue", WIDGET_PROP, &mapedit,
-		    "default-map-height");
+		widget_bind(msb, "xvalue", WIDGET_INT, &mapedit_def_mapw);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mapedit_def_maph);
 		mspinbutton_set_min(msb, 1);
 		mspinbutton_set_max(msb, MAP_MAX_WIDTH);
 		
 		msb = mspinbutton_new(bo, "x", _("Default brush geometry: "));
-		widget_bind(msb, "xvalue", WIDGET_PROP, &mapedit,
-		    "default-brush-width");
-		widget_bind(msb, "yvalue", WIDGET_PROP, &mapedit,
-		    "default-brush-height");
+		widget_bind(msb, "xvalue", WIDGET_INT, &mapedit_def_brsw);
+		widget_bind(msb, "yvalue", WIDGET_INT, &mapedit_def_brsh);
 		mspinbutton_set_min(msb, 1);
 		mspinbutton_set_max(msb, MAP_MAX_WIDTH);
 	}
