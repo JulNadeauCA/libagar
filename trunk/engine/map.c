@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.37 2002/02/18 07:49:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.38 2002/02/19 00:48:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -104,7 +104,10 @@ void
 map_freenodes(struct map *m)
 {
 	int x, y;
-	
+
+	dprintf("freeing %dx%d nodes from %s\n",
+	    m->mapw, m->maph, m->obj.name);
+
 	for (x = 0; x < m->mapw; x++) {
 		for (y = 0; y < m->maph; y++) {
 			node_destroy(&m->map[x][y]);
@@ -120,6 +123,7 @@ map_create(char *name, char *desc, int flags)
 	struct map *m;
 
 	m = (struct map *)emalloc(sizeof(struct map));
+	memset(m, 0, sizeof(struct map));
 	object_init(&m->obj, name, OBJ_DEFERGC|OBJ_EDITABLE, &map_vec);
 	m->obj.desc = (desc != NULL) ? strdup(desc) : NULL;
 	sprintf(m->obj.saveext, "m");
