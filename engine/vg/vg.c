@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.27 2004/05/31 04:54:59 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.28 2004/05/31 07:16:30 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -712,8 +712,8 @@ vg_alloc_vertex(struct vg_element *vge)
 	if (vge->vtx == NULL) {
 		vge->vtx = Malloc(sizeof(struct vg_vertex), M_VG);
 	} else {
-		vge->vtx = Realloc(vge->vtx,
-		    (vge->nvtx+1)*sizeof(struct vg_vertex), M_VG);
+		vge->vtx = Realloc(vge->vtx, (vge->nvtx+1) *
+		                             sizeof(struct vg_vertex));
 	}
 	return (&vge->vtx[vge->nvtx++]);
 }
@@ -730,8 +730,7 @@ vg_pop_vertex(struct vg *vg)
 	if (vge->nvtx-1 < 0)
 		fatal("neg nvtx");
 #endif
-	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex),
-	    M_VG);
+	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(struct vg_vertex));
 }
 
 /* Push a 2D vertex onto the vertex array. */
@@ -892,7 +891,7 @@ vg_push_layer(struct vg *vg, const char *name)
 	struct vg_layer *vgl;
 
 	vg->layers = Realloc(vg->layers, (vg->nlayers+1) *
-	                                 sizeof(struct vg_layer), M_VG);
+	                                 sizeof(struct vg_layer));
 	vgl = &vg->layers[vg->nlayers];
 	vg->nlayers++;
 
@@ -1097,12 +1096,9 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		error_set("norigin < 1");
 		goto fail;
 	}
-	vg->origin = Realloc(vg->origin, norigin*sizeof(struct vg_vertex),
-	    M_VG);
-	vg->origin_radius = Realloc(vg->origin_radius, norigin*sizeof(float),
-	    M_VG);
-	vg->origin_color = Realloc(vg->origin_color, norigin*sizeof(Uint32),
-	    M_VG);
+	vg->origin = Realloc(vg->origin, norigin*sizeof(struct vg_vertex));
+	vg->origin_radius = Realloc(vg->origin_radius, norigin*sizeof(float));
+	vg->origin_color = Realloc(vg->origin_color, norigin*sizeof(Uint32));
 	vg->norigin = norigin;
 	for (i = 0; i < vg->norigin; i++) {
 		read_vertex(buf, &vg->origin[i]);
@@ -1116,8 +1112,7 @@ vg_load(struct vg *vg, struct netbuf *buf)
 		error_set("nlayers < 1");
 		goto fail;
 	}
-	vg->layers = Realloc(vg->layers, nlayers*sizeof(struct vg_layer),
-	    M_VG);
+	vg->layers = Realloc(vg->layers, nlayers*sizeof(struct vg_layer));
 	for (i = 0; i < nlayers; i++) {
 		struct vg_layer *layer = &vg->layers[i];
 

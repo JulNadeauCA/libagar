@@ -1,4 +1,4 @@
-/*	$Csoft: error.h,v 1.8 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: error.h,v 1.9 2004/04/18 02:18:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_ERROR_H_
@@ -56,7 +56,7 @@
 #endif
 
 #define Malloc(len, t)		error_malloc((len), (t))
-#define Realloc(p, len, t)	error_realloc((p), (len), (t))
+#define Realloc(p, len)		error_realloc((p), (len))
 #ifdef DEBUG
 #define Free(p, t)		error_free((p), (t))
 #else

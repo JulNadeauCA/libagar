@@ -1,4 +1,4 @@
-/*	$Csoft: gfx.c,v 1.35 2004/05/13 01:02:29 vedge Exp $	*/
+/*	$Csoft: gfx.c,v 1.36 2004/05/24 00:36:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -70,9 +70,9 @@ gfx_insert_sprite(struct gfx *gfx, SDL_Surface *sprite)
 	} else if (gfx->nsprites+1 > gfx->maxsprites) {
 		gfx->maxsprites += NSPRITES_GROW;
 		gfx->sprites = Realloc(gfx->sprites,
-		    gfx->maxsprites * sizeof(SDL_Surface *), M_GFX);
+		    gfx->maxsprites * sizeof(SDL_Surface *));
 		gfx->csprites = Realloc(gfx->csprites,
-		    gfx->maxsprites * sizeof(struct gfx_spritecl), M_GFX);
+		    gfx->maxsprites * sizeof(struct gfx_spritecl));
 	}
 	gfx->sprites[gfx->nsprites] = sprite;
 	spritecl = &gfx->csprites[gfx->nsprites];
@@ -434,7 +434,7 @@ gfx_insert_anim_frame(struct gfx_anim *anim, SDL_Surface *surface)
 	} else if (anim->nframes+1 > anim->maxframes) {
 		anim->maxframes += FRAMES_GROW;
 		anim->frames = Realloc(anim->frames,
-		    anim->maxframes*sizeof(SDL_Surface *), M_GFX);
+		    anim->maxframes*sizeof(SDL_Surface *));
 	}
 	anim->frames[anim->nframes++] = surface;
 	return (anim->nframes);
@@ -452,7 +452,7 @@ gfx_insert_submap(struct gfx *gfx, struct map *m)
 	} else if (gfx->nsubmaps+1 > gfx->maxsubmaps) {
 		gfx->maxsubmaps += NSUBMAPS_GROW;
 		gfx->submaps = Realloc(gfx->submaps,
-		    gfx->maxsubmaps*sizeof(struct map *), M_GFX);
+		    gfx->maxsubmaps*sizeof(struct map *));
 	}
 	gfx->submaps[gfx->nsubmaps] = m;
 	return (gfx->nsubmaps++);
@@ -480,9 +480,9 @@ gfx_insert_anim(struct gfx *gfx)
 	} else if (gfx->nanims >= gfx->maxanims) {
 		gfx->maxanims += NANIMS_GROW;
 		gfx->anims = Realloc(gfx->anims,
-		    gfx->maxanims*sizeof(struct gfx_anim *), M_GFX);
+		    gfx->maxanims*sizeof(struct gfx_anim *));
 		gfx->canims = Realloc(gfx->canims,
-		    gfx->maxanims*sizeof(struct gfx_animcl), M_GFX);
+		    gfx->maxanims*sizeof(struct gfx_animcl));
 	}
 	gfx->anims[gfx->nanims] = anim;
 	animcl = &gfx->canims[gfx->nanims];

@@ -1,4 +1,4 @@
-/*	$Csoft: typesw.c,v 1.11 2004/03/30 16:02:05 vedge Exp $	*/
+/*	$Csoft: typesw.c,v 1.12 2004/04/11 03:28:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -66,8 +66,7 @@ typesw_register(const char *type, size_t size, const struct object_ops *ops,
 {
 	struct object_type *ntype;
 
-	typesw = Realloc(typesw, (ntypesw+1) * sizeof(struct object_type),
-	    M_TYPESW);
+	typesw = Realloc(typesw, (ntypesw+1)*sizeof(struct object_type));
 	ntype = &typesw[ntypesw++];
 	strlcpy(ntype->type, type, sizeof(ntype->type));
 	ntype->size = size;

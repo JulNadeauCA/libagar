@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.47 2004/03/18 21:27:48 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.48 2004/03/28 06:08:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -292,8 +292,7 @@ graph_plot(struct graph_item *gi, graph_val_t val)
 	} else {
 		if (gi->nvals+1 >= gi->maxvals) {
 			gi->vals = Realloc(gi->vals,
-			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t),
-			    M_WIDGET);
+			    (gi->maxvals+NITEMS_GROW) * sizeof(graph_val_t));
 			gi->maxvals += NITEMS_GROW;
 		}
 		gi->nvals++;
