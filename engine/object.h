@@ -1,22 +1,14 @@
-/*	$Csoft: object.h,v 1.19 2002/02/25 09:05:12 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.20 2002/02/25 11:12:14 vedge Exp $	*/
 
-#include <engine/physics.h>
+#ifndef _AGAR_OBJECT_H_
+#define _AGAR_OBJECT_H_
 
-/*
- * Back reference to map entry. This holds additional information
- * for structures which move on the map.
- */
-struct map_bref {
-	struct	map *map;	/* Map */
-	Uint32	x, y;		/* Map coordinates */
-	struct	noderef *nref;	/* Node reference */
-
-	struct	mapdir dir;	/* Direction */
-	Uint32	speed;		/* Current speed in ms */
-	struct	input *input;	/* Controller (or NULL) */
-
-	SLIST_ENTRY(map_bref) brefs;	/* Map back references */
-};
+struct map;
+struct noderef;
+struct mapdir;
+struct mappos;
+struct input;
+struct anim;
 
 struct obvec {
 	int	(*destroy)(void *);
@@ -25,31 +17,27 @@ struct obvec {
 	int	(*link)(void *);
 	int	(*unlink)(void *);
 	void	(*dump)(void *);
-	int	(*madd)(void *, struct map_bref *);
-	int	(*mmove)(void *, struct map_bref *);
-	int	(*mdel)(void *, struct map_bref *);
 };
 
 struct object {
-	char	*name;		/* Name string (key) */
-	char	*desc;		/* Optional description */
-	int	 id;		/* Unique identifier at runtime */
-	char	 saveext[4];	/* File extension for state saves */
+	char	*name;			/* Name string (key) */
+	char	*desc;			/* Optional description */
+	int	 id;			/* Unique identifier at runtime */
+	char	 saveext[4];		/* File extension for state saves */
 	struct	 obvec *vec;
 
 	int	 flags;
-#define OBJ_DEFERGC	0x0001	/* Defer garbage collection */
-#define OBJ_EDITABLE	0x0002	/* The map editor might use this object */
+#define OBJ_DEFERGC	0x0001		/* Defer garbage collection */
+#define OBJ_EDITABLE	0x0002		/* Allow map edition */
 
-	struct	 anim **anims;	/* Animation structures */
-	int	 nanims;
-	int	 maxanims;
-	SDL_Surface **sprites;	/* Single surfaces */
-	int	 nsprites;
-	int	 maxsprites;
+	struct	 anim **anims;		/* Animation structures */
+	SDL_Surface **sprites;		/* Single surfaces */
+	int	 nanims, maxanims;
+	int	 nsprites, maxsprites;
+	
+	struct	 mappos *pos;		/* Position on the map */
 
-	SLIST_HEAD(, map_bref) brefsh;	/* Map back references */
-	SLIST_ENTRY(object) wobjs;	/* All objects */
+	SLIST_ENTRY(object) wobjs;	/* Linked objects */
 };
 
 int	 object_init(struct object *, char *, int, struct obvec *vec);
@@ -67,8 +55,9 @@ void	 decrease_uint32(Uint32 *, Uint32, Uint32);
 void	 object_dump(void *);
 
 struct object	*object_strfind(char *);
-struct map_bref	*object_madd(void *, Uint32, Uint32, struct map *, Uint32,
-		     Uint32);
+struct mappos	*object_madd(void *, Uint32, Uint32, struct input *,
+		    struct map *, Uint32, Uint32);
 void		 object_mdel(void *, Uint32, Uint32, struct map *, Uint32,
 		     Uint32);
 
+#endif	/* _AGAR_OBJECT_H_ */
