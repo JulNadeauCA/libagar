@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.140 2003/03/02 07:28:42 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.141 2003/03/11 00:12:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -70,7 +70,7 @@ extern struct window *game_menu_win;
 int	event_debug =	DEBUG_UNDERRUNS|DEBUG_VIDEOEXPOSE_EV|
 			DEBUG_QUIT_EV|DEBUG_ASYNC_EVENTS;
 #define	engine_debug event_debug
-int	event_count, event_idletime = -1;
+int	event_count;
 
 static struct window *fps_win;
 static struct label *fps_label;
@@ -80,6 +80,7 @@ static struct graph_item *fps_refresh_current, *fps_event_count,
 #endif	/* DEBUG */
 
 int	event_idle = 1;			/* Delay at full frame rate */
+int	event_idletime = -1;		/* SDL_Delay() granularity */
 
 static void	 event_hotkey(SDL_Event *);
 static void	 event_dispatch(SDL_Event *);
