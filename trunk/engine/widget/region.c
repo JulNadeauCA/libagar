@@ -1,4 +1,4 @@
-/*	$Csoft: region.c,v 1.18 2002/09/17 21:20:23 vedge Exp $	*/
+/*	$Csoft: region.c,v 1.19 2002/11/07 19:11:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -47,18 +47,14 @@ static const struct object_ops region_ops = {
 struct region *
 region_new(void *parent, int flags, int rx, int ry, int rw, int rh)
 {
-	struct region *reg;
 	struct window *win = parent;
+	struct region *reg;
 
 	OBJECT_ASSERT(parent, "window");
 
 	reg = emalloc(sizeof(struct region));
 	region_init(reg, flags, rx, ry, rw, rh);
-
-	pthread_mutex_lock(&win->lock);
 	window_attach(win, reg);
-	pthread_mutex_unlock(&win->lock);
-
 	return (reg);
 }
 
@@ -97,15 +93,13 @@ region_destroy(void *p)
 	     wid != TAILQ_END(&reg->widgetsh);
 	     wid = nextwid) {
 		nextwid = TAILQ_NEXT(wid, widgets);
-		event_post(wid, "detached", p);
-		object_destroy(wid);
+		event_post(wid, "detached", p);		/* Notify */
+		object_destroy(wid);			/* Free */
 	}
+	TAILQ_INIT(&reg->widgetsh);
 }
 
-/*
- * Attach a widget to this region.
- * Window must be locked.
- */
+/* Attach a widget to this region. */
 void
 region_attach(void *parent, void *child)
 {
@@ -118,16 +112,14 @@ region_attach(void *parent, void *child)
 	wid->win = reg->win;
 	wid->reg = reg;
 
-	event_post(child, "attached", "%p", parent);
-
-	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);
-	OBJECT(wid)->state = OBJECT_CONSISTENT;
+	pthread_mutex_lock(&reg->lock);
+	TAILQ_INSERT_TAIL(&reg->widgetsh, wid, widgets);	/* Attach */
+	pthread_mutex_unlock(&reg->lock);
+	
+	event_post(child, "attached", "%p", parent);		/* Notify */
 }
 
-/*
- * Detach a widget from this region.
- * Window must be locked.
- */
+/* Detach a widget from this region. */
 void
 region_detach(void *parent, void *child)
 {
@@ -137,10 +129,11 @@ region_detach(void *parent, void *child)
 	OBJECT_ASSERT(parent, "window-region");
 	OBJECT_ASSERT(child, "widget");
 
-	event_post(child, "detached", parent);
-
-	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);
-	OBJECT(wid)->state = OBJECT_ZOMBIE;
+	pthread_mutex_lock(&reg->lock);
+	TAILQ_REMOVE(&reg->widgetsh, wid, widgets);		/* Detach */
+	pthread_mutex_unlock(&reg->lock);
+	
+	event_post(child, "detached", parent);			/* Notify */
 
 	object_destroy(wid);
 }
