@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.196 2004/03/21 05:37:39 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.197 2004/03/24 08:43:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -37,6 +37,7 @@
 #include <engine/widget/button.h>
 #include <engine/widget/checkbox.h>
 #include <engine/widget/spinbutton.h>
+#include <engine/widget/mspinbutton.h>
 
 #include <string.h>
 
@@ -363,6 +364,7 @@ mapedit_settings(void *p)
 	struct window *win;
 	struct checkbox *cb;
 	struct spinbutton *sb;
+	struct mspinbutton *msb;
 	struct box *bo;
 
 	win = window_new(NULL);
@@ -392,29 +394,21 @@ mapedit_settings(void *p)
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
-		sb = spinbutton_new(bo, _("Default map width: "));
-		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		msb = mspinbutton_new(bo, "x", _("Default map geometry: "));
+		widget_bind(msb, "xvalue", WIDGET_PROP, &mapedit,
 		    "default-map-width");
-		spinbutton_set_min(sb, 1);
-		spinbutton_set_max(sb, MAP_MAX_WIDTH);
-
-		sb = spinbutton_new(bo, _("Default map height: "));
-		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		widget_bind(msb, "yvalue", WIDGET_PROP, &mapedit,
 		    "default-map-height");
-		spinbutton_set_min(sb, 1);
-		spinbutton_set_max(sb, MAP_MAX_HEIGHT);
-
-		sb = spinbutton_new(bo, _("Default brush width: "));
-		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		mspinbutton_set_min(msb, 1);
+		mspinbutton_set_max(msb, MAP_MAX_WIDTH);
+		
+		msb = mspinbutton_new(bo, "x", _("Default brush geometry: "));
+		widget_bind(msb, "xvalue", WIDGET_PROP, &mapedit,
 		    "default-brush-width");
-		spinbutton_set_min(sb, 1);
-		spinbutton_set_max(sb, MAP_MAX_WIDTH);
-
-		sb = spinbutton_new(bo, _("Default brush height: "));
-		widget_bind(sb, "value", WIDGET_PROP, &mapedit,
+		widget_bind(msb, "yvalue", WIDGET_PROP, &mapedit,
 		    "default-brush-height");
-		spinbutton_set_min(sb, 1);
-		spinbutton_set_max(sb, MAP_MAX_HEIGHT);
+		mspinbutton_set_min(msb, 1);
+		mspinbutton_set_max(msb, MAP_MAX_WIDTH);
 	}
 	return (win);
 }
