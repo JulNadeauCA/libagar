@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.h,v 1.4 2002/11/22 23:00:53 vedge Exp $	*/
+/*	$Csoft: asprintf.h,v 1.5 2002/12/24 10:29:21 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/have_asprintf.h>
@@ -9,6 +9,6 @@
 # endif
 # include <stdio.h>
 #else
-extern int asprintf(char **, const char *, ...);
+int	asprintf(char **, const char *, ...);
 #endif
 

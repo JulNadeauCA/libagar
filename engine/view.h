@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.78 2003/05/25 08:00:48 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.79 2003/06/06 02:54:57 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VIEW_H_
@@ -30,7 +30,7 @@ struct viewmap {
 TAILQ_HEAD(windowq, window);
 
 struct viewport {
-	struct object	 obj;
+	struct object obj;
 
 	enum gfx_engine  gfx_engine;	/* Rendering method */
 	SDL_Surface	*v;		/* Video surface */
@@ -131,24 +131,23 @@ extern struct viewport *view;	/* view.c */
 extern SDL_PixelFormat *vfmt;	/* view.c */
 
 __BEGIN_DECLS
-extern DECLSPEC int		 view_init(enum gfx_engine);
-extern DECLSPEC void		 view_attach(void *);
-extern DECLSPEC void		 view_detach(void *);
-extern DECLSPEC void		 view_detach_queued(void);
-extern DECLSPEC void		 view_destroy(void *);
-extern DECLSPEC int		 view_set_refresh(int, int);
-extern DECLSPEC struct window	*view_window_exists(char *);
-extern DECLSPEC SDL_Surface	*view_surface(Uint32, int, int);
-extern DECLSPEC SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16,
-				                    Uint16);
-extern DECLSPEC void		 view_set_trans(SDL_Surface *, Uint8);
-extern DECLSPEC SDL_Surface	*view_copy_surface(SDL_Surface *);
-extern DECLSPEC void		 view_capture(SDL_Surface *);
-extern __inline__ void		 view_alpha_blend(SDL_Surface *, Sint16, Sint16,
-				                   Uint8, Uint8, Uint8, Uint8);
-extern __inline__ void		 view_update(int, int, int, int);
+int		 view_init(enum gfx_engine);
+void		 view_attach(void *);
+void		 view_detach(void *);
+void		 view_detach_queued(void);
+void		 view_destroy(void *);
+int		 view_set_refresh(int, int);
+struct window	*view_window_exists(char *);
+SDL_Surface	*view_surface(Uint32, int, int);
+SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
+void		 view_set_trans(SDL_Surface *, Uint8);
+SDL_Surface	*view_copy_surface(SDL_Surface *);
+void		 view_capture(SDL_Surface *);
+__inline__ void	 view_alpha_blend(SDL_Surface *, Sint16, Sint16, Uint8, Uint8,
+		                  Uint8, Uint8);
+__inline__ void	 view_update(int, int, int, int);
 #ifdef HAVE_OPENGL
-extern DECLSPEC GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
+GLuint		 view_surface_texture(SDL_Surface *, GLfloat *);
 #endif
 __END_DECLS
 

@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.66 2003/06/15 05:04:22 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.67 2003/06/17 23:30:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -110,11 +110,10 @@ enum {
 extern struct object *world;	/* Roots of Evil */
 
 __BEGIN_DECLS
-extern DECLSPEC int	 engine_init(int, char **, struct engine_proginfo *,
-			             int);
-extern DECLSPEC void	 engine_destroy(void);
-extern __inline__ void	 lock_linkage(void);
-extern __inline__ void	 unlock_linkage(void);
+int		 engine_init(int, char **, struct engine_proginfo *, int);
+void		 engine_destroy(void);
+__inline__ void	 lock_linkage(void);
+__inline__ void	 unlock_linkage(void);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: bitmap.h,v 1.7 2003/05/17 23:58:19 vedge Exp $	*/
+/*	$Csoft: bitmap.h,v 1.8 2003/06/06 03:18:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BITMAP_H_
@@ -9,19 +9,20 @@
 #include "begin_code.h"
 
 struct bitmap {
-	struct widget	wid;
+	struct widget wid;
+
 	SDL_Surface	*surface;		/* Original */
 	SDL_Surface	*surface_s;		/* Scaled */
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct bitmap	*bitmap_new(void *);
+struct bitmap	*bitmap_new(void *);
 
-extern DECLSPEC void	 bitmap_init(struct bitmap *);
-extern DECLSPEC void	 bitmap_destroy(void *);
-extern DECLSPEC void	 bitmap_draw(void *);
-extern DECLSPEC void	 bitmap_scale(void *, int, int);
-extern DECLSPEC void	 bitmap_set_surface(struct bitmap *, SDL_Surface *);
+void	 bitmap_init(struct bitmap *);
+void	 bitmap_destroy(void *);
+void	 bitmap_draw(void *);
+void	 bitmap_scale(void *, int, int);
+void	 bitmap_set_surface(struct bitmap *, SDL_Surface *);
 __END_DECLS
 
 #include "close_code.h"

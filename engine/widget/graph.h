@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.10 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.11 2003/06/06 02:16:42 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
@@ -32,7 +32,8 @@ enum graph_type {
 };
 
 struct graph {
-	struct widget	 wid;
+	struct widget wid;
+
 	enum graph_type	 type;
 	char		 caption[GRAPH_CAPTION_MAX];
 	int		 flags;
@@ -47,22 +48,21 @@ struct graph {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct graph	  *graph_new(void *, const char *,
-				             enum graph_type, int, Sint32);
-extern DECLSPEC struct graph_item *graph_add_item(struct graph *, const char *,
-				                  Uint8, Uint8, Uint8);
+struct graph *graph_new(void *, const char *, enum graph_type, int, Sint32);
 
-extern DECLSPEC void	 graph_init(struct graph *, const char *,
-			            enum graph_type, int, Sint32);
-extern DECLSPEC void	 graph_destroy(void *);
-extern DECLSPEC int	 graph_load(void *, struct netbuf *);
-extern DECLSPEC int	 graph_save(void *, struct netbuf *);
-extern DECLSPEC void	 graph_draw(void *);
-extern DECLSPEC void	 graph_scale(void *, int, int);
+struct graph_item	*graph_add_item(struct graph *, const char *, Uint8,
+			                Uint8, Uint8);
+void			 graph_free_items(struct graph *);
 
-extern DECLSPEC void	 graph_plot(struct graph_item *, Sint32);
-extern __inline__ void	 graph_scroll(struct graph *, int);
-extern DECLSPEC void	 graph_free_items(struct graph *);
+void	 graph_init(struct graph *, const char *, enum graph_type, int, Sint32);
+void	 graph_destroy(void *);
+int	 graph_load(void *, struct netbuf *);
+int	 graph_save(void *, struct netbuf *);
+void	 graph_draw(void *);
+void	 graph_scale(void *, int, int);
+
+void		 graph_plot(struct graph_item *, Sint32);
+__inline__ void	 graph_scroll(struct graph *, int);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: palette.h,v 1.4 2003/04/25 09:47:10 vedge Exp $	*/
+/*	$Csoft: palette.h,v 1.5 2003/06/06 03:18:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_PALETTE_H_
@@ -24,12 +24,12 @@ struct palette {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct palette *palette_new(void *, enum palette_type);
+struct palette *palette_new(void *, enum palette_type);
 
-extern DECLSPEC void	 palette_init(struct palette *, enum palette_type);
-extern DECLSPEC void	 palette_destroy(void *);
-extern DECLSPEC void	 palette_scale(void *, int, int);
-extern DECLSPEC void	 palette_draw(void *);
+void	 palette_init(struct palette *, enum palette_type);
+void	 palette_destroy(void *);
+void	 palette_scale(void *, int, int);
+void	 palette_draw(void *);
 __END_DECLS
 
 #include "close_code.h"

@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.20 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.21 2003/06/13 01:44:55 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -35,18 +35,16 @@ struct label {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct label	*label_new(void *, const char *, ...);
-extern DECLSPEC struct label	*label_polled_new(void *, pthread_mutex_t *,
-						  const char *, ...);
+struct label	*label_new(void *, const char *, ...);
+struct label	*label_polled_new(void *, pthread_mutex_t *, const char *, ...);
 
-extern DECLSPEC void	 label_init(struct label *, enum label_type,
-			            const char *);
-extern DECLSPEC void 	 label_destroy(void *);
-extern DECLSPEC void	 label_draw(void *);
-extern DECLSPEC void	 label_scale(void *, int, int);
-extern DECLSPEC void	 label_printf(struct label *, const char *, ...);
-extern DECLSPEC void	 label_set_surface(struct label *, SDL_Surface *);
-extern DECLSPEC void	 label_prescale(struct label *, const char *);
+void	 label_init(struct label *, enum label_type, const char *);
+void 	 label_destroy(void *);
+void	 label_draw(void *);
+void	 label_scale(void *, int, int);
+void	 label_printf(struct label *, const char *, ...);
+void	 label_set_surface(struct label *, SDL_Surface *);
+void	 label_prescale(struct label *, const char *);
 __END_DECLS
 
 #include "close_code.h"

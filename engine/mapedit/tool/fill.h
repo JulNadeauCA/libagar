@@ -1,4 +1,4 @@
-/*	$Csoft: fill.h,v 1.3 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: fill.h,v 1.4 2003/04/25 09:47:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -16,12 +16,11 @@ struct fill {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC void		 fill_init(void *);
-extern DECLSPEC struct window	*fill_window(void *);
-extern DECLSPEC void		 fill_effect(void *, struct mapview *,
-				             struct node *);
-extern DECLSPEC int		 fill_load(void *, int);
-extern DECLSPEC int		 fill_save(void *, int);
+void		 fill_init(void *);
+struct window	*fill_window(void *);
+void		 fill_effect(void *, struct mapview *, struct node *);
+int		 fill_load(void *, int);
+int		 fill_save(void *, int);
 __END_DECLS
 
 #include "close_code.h"

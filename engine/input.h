@@ -1,4 +1,4 @@
-/*	$Csoft: input.h,v 1.13 2003/05/09 01:59:47 vedge Exp $	*/
+/*	$Csoft: input.h,v 1.14 2003/06/06 02:41:52 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_INPUT_H_
@@ -29,11 +29,11 @@ struct input {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct input	*input_new(enum input_type, int);
-extern DECLSPEC void		 input_destroy(void *);
-extern DECLSPEC void		 input_destroy_all(void);
-extern DECLSPEC void		 input_event(enum input_type, SDL_Event *);
-extern DECLSPEC struct input	*input_find(const char *);
+struct input	*input_new(enum input_type, int);
+void		 input_destroy(void *);
+void		 input_destroy_all(void);
+void		 input_event(enum input_type, SDL_Event *);
+struct input	*input_find(const char *);
 __END_DECLS
 
 #include "close_code.h"

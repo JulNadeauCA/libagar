@@ -1,4 +1,4 @@
-/*	$Csoft: combo.h,v 1.15 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: combo.h,v 1.1 2003/06/10 19:12:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_COMBO_H_
@@ -19,16 +19,16 @@ struct combo {
 
 	struct textbox	*tbox;
 	struct button	*button;
-	
 	struct window	*win;
 	struct tlist	*list;
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct combo	*combo_new(void *, const char *, ...);
-extern DECLSPEC void		 combo_init(struct combo *, const char *);
-extern DECLSPEC void		 combo_scale(void *, int, int);
-extern DECLSPEC void		 combo_destroy(void *);
+struct combo	*combo_new(void *, const char *, ...);
+
+void	 combo_init(struct combo *, const char *);
+void	 combo_scale(void *, int, int);
+void	 combo_destroy(void *);
 __END_DECLS
 
 #include "close_code.h"

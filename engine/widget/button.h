@@ -1,4 +1,4 @@
-/*	$Csoft: button.h,v 1.25 2003/06/06 03:18:14 vedge Exp $	*/
+/*	$Csoft: button.h,v 1.26 2003/06/13 01:44:25 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_BUTTON_H_
@@ -17,31 +17,31 @@ enum button_justify {
 struct button {
 	struct widget wid;
 
-	int			 state;		/* Default state binding */
-	SDL_Surface		*label;		/* Label */
+	int		 state;		/* Default state binding */
+	SDL_Surface	*label;		/* Label */
 
-	int			 sensitive;	/* Service events? */
-	int			 sticky;	/* Sticky behavior? */
-	int			 padding;	/* Padding in pixels */
-	enum button_justify	 justify;	/* Label justification */
+	int	 sensitive;		/* Service events? */
+	int	 sticky;		/* Sticky behavior? */
+	int	 padding;		/* Padding in pixels */
+
+	enum button_justify justify;	/* Label justification */
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct button	*button_new(void *, const char *);
+struct button	*button_new(void *, const char *);
 
-extern DECLSPEC void	 button_init(struct button *, const char *);
-extern DECLSPEC void	 button_destroy(void *);
-extern DECLSPEC void	 button_draw(void *);
-extern DECLSPEC void	 button_scale(void *, int, int);
+void	 button_init(struct button *, const char *);
+void	 button_destroy(void *);
+void	 button_draw(void *);
+void	 button_scale(void *, int, int);
 
-extern DECLSPEC void	 button_enable(struct button *);
-extern DECLSPEC void	 button_disable(struct button *);
-extern DECLSPEC void	 button_set_padding(struct button *, int);
-extern DECLSPEC void	 button_set_focusable(struct button *, int);
-extern DECLSPEC void	 button_set_sticky(struct button *, int);
-extern DECLSPEC void	 button_set_justify(struct button *,
-			                    enum button_justify);
-extern DECLSPEC void	 button_set_label(struct button *, SDL_Surface *);
+void	 button_enable(struct button *);
+void	 button_disable(struct button *);
+void	 button_set_padding(struct button *, int);
+void	 button_set_focusable(struct button *, int);
+void	 button_set_sticky(struct button *, int);
+void	 button_set_justify(struct button *, enum button_justify);
+void	 button_set_label(struct button *, SDL_Surface *);
 __END_DECLS
 
 #include "close_code.h"

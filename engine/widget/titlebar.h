@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.19 2003/05/16 01:26:55 vedge Exp $	*/
+/*	$Csoft: titlebar.h,v 1.1 2003/06/06 03:18:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TITLEBAR_H_
@@ -28,9 +28,10 @@ enum {
 };
 
 __BEGIN_DECLS
-extern DECLSPEC struct titlebar	*titlebar_new(void *, int);
-extern DECLSPEC void	 titlebar_init(struct titlebar *, int);
-extern DECLSPEC void	 titlebar_draw(void *);
+struct titlebar	*titlebar_new(void *, int);
+
+void	 titlebar_init(struct titlebar *, int);
+void	 titlebar_draw(void *);
 __END_DECLS
 
 #include "close_code.h"
