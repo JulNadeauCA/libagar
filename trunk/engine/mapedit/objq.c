@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.9 2002/07/30 22:21:57 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.10 2002/08/18 00:37:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -42,10 +42,12 @@
 #include <engine/widget/widget.h>
 #include <engine/widget/window.h>
 #include <engine/widget/primitive.h>
+#include <engine/widget/button.h>
 
 #include "mapedit.h"
 #include "mapview.h"
 #include "objq.h"
+#include "fileops.h"
 
 static const struct widget_ops objq_ops = {
 	{
@@ -59,6 +61,7 @@ static const struct widget_ops objq_ops = {
 
 static void	 objq_scaled(int, union evarg *);
 static void	 objq_event(int, union evarg *);
+static void	 tilemap_option(int, union evarg *);
 
 enum {
 	SELECTION_COLOR,
@@ -114,6 +117,37 @@ objq_init(struct objq *oq, struct mapedit *med, int flags, int rw, int rh)
 }
 
 static void
+tilemap_option(int argc, union evarg *argv)
+{
+	struct mapview *mv = argv[1].p;
+	int opt = argv[2].i;
+
+	switch (opt) {
+	case MAPEDIT_TOOL_GRID:
+		if (mv->flags & MAPVIEW_GRID) {
+			mv->flags &= ~(MAPVIEW_GRID);
+		} else {
+			mv->flags |= MAPVIEW_GRID;
+		}
+		break;
+	case MAPEDIT_TOOL_PROPS:
+		if (mv->flags & MAPVIEW_PROPS) {
+			mv->flags &= ~(MAPVIEW_PROPS);
+		} else {
+			mv->flags |= MAPVIEW_PROPS;
+		}
+		break;
+	case MAPEDIT_TOOL_SHOW_CURSOR:
+		if (mv->flags & MAPVIEW_SHOW_CURSOR) {
+			mv->flags &= ~(MAPVIEW_SHOW_CURSOR);
+		} else {
+			mv->flags |= MAPVIEW_SHOW_CURSOR;
+		}
+		break;
+	}
+}
+
+static void
 objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 {
 	struct object *ob = eob->pobj;
@@ -121,37 +155,70 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	struct window *win;
 	struct region *reg;
 	struct mapview *mv;
+	struct button *bu;
 
 	SLIST_FOREACH(tm, &oq->tmaps, tmaps) {
 		if (tm->ob == eob->pobj) {
 			window_show(tm->win);
-			pthread_mutex_lock(&tm->win->lock);
 			view_focus(tm->win);
-			pthread_mutex_unlock(&tm->win->lock);
 			return;
 		}
 	}
 
 	win = emalloc(sizeof(struct window));
 	window_init(win, ob->name, WINDOW_SOLID|WINDOW_CENTER,
-	    0, 0, 19 + TILEW*3, 318, 19+TILEW, 45+TILEH);
-	reg = region_new(win, REGION_HALIGN, 0, 0, 100, 100);
+	    0, 0, 28 + TILEW*3, 318, 28+TILEW, 45+TILEH);
+
 	/* Map view */
-	mv = mapview_new(reg, med, ob->art->map,
+	mv = emalloc(sizeof(struct mapview));
+	mapview_init(mv, med, ob->art->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
-	    MAPVIEW_SHOW_CURSOR,
+	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
-	win->focus = WIDGET(mv);
+	
+	/*
+	 * Tools
+	 */
+	reg = region_new(win, REGION_HALIGN, 0, 0, 100, -25);
+	reg->spacing = 1;
+
+	/* Load map */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_LOAD_MAP),
+	    0, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	event_new(bu, "button-pushed", 0, fileops_revert_map, "%p", mv);
+
+	/* Save map */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_SAVE_MAP),
+	    0, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	event_new(bu, "button-pushed", 0, fileops_save_map, "%p", mv);
+
+	/* Grid */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_GRID),
+	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	event_new(bu, "button-pushed", 0,
+	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_GRID);
+
+	/* Props */
+	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_PROPS),
+	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
+	event_new(bu, "button-pushed", 0,
+	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_PROPS);
+
+	/* Map view */
+	reg = region_new(win, REGION_HALIGN, 0, 10, 100, 90);
+	region_attach(reg, mv);
 
 	tm = emalloc(sizeof(struct objq_tmap));
 	tm->win = win;
 	tm->ob = ob;
 	SLIST_INSERT_HEAD(&oq->tmaps, tm, tmaps);
 
-	pthread_mutex_lock(&win->lock);
 	view_attach(win);
 	window_show_locked(win);
-	pthread_mutex_unlock(&win->lock);
 }
 
 static void
