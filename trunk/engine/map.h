@@ -1,4 +1,4 @@
-/*	$Csoft: map.h,v 1.43 2002/08/24 04:09:00 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.44 2002/09/01 08:58:24 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef TILEW
@@ -87,10 +87,9 @@ struct map {
 	struct	node **map;		/* Array of nodes */
 
 	pthread_t	draw_th;	/* Map rendering thread */
-	pthread_mutex_t lock;		/* Lock on all nodes, and all
+	pthread_mutex_t	lock;		/* Recursive lock on all nodes, and all
 					   references inside them */
-	
-	SLIST_ENTRY(map) wmaps;		/* Active maps */
+	pthread_mutexattr_t lockattr;
 };
 
 #define MAP_COORD(x)	((x) / TILEW)
@@ -114,7 +113,8 @@ void	map_verify(struct map *);
 #endif
 
 struct noderef	*node_addref(struct node *, void *, Uint32, Uint32);
-struct noderef	*node_findref(struct node *, void *, Sint32, Uint32);
+struct noderef	*node_findref(struct map *, struct node *, void *, Sint32,
+		     Uint32);
 int		 node_delref(struct node *, struct noderef *);
 struct noderef	*node_popref(struct node *);
 void		 node_pushref(struct node *, struct noderef *);
