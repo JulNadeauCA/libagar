@@ -1,4 +1,9 @@
-/*	$Csoft: map.h,v 1.27 2002/03/15 22:12:06 vedge Exp $	*/
+/*	$Csoft: map.h,v 1.28 2002/03/17 09:15:00 vedge Exp $	*/
+
+enum {
+	MAP_MINWIDTH	= 10,
+	MAP_MINHEIGHT	= 10
+};
 
 struct noderef {
 	struct	object *pobj;	/* Object pointer */

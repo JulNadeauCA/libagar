@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.73 2002/04/11 05:39:57 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.74 2002/04/14 01:35:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -235,6 +235,12 @@ mapedit_link(void *p)
 	struct map *m = med->map;
 	struct node *node;
 	int fd, new = 0;
+
+	if (med->margs.mapw < MAP_MINWIDTH || med->margs.maph < MAP_MINHEIGHT) {
+		fatal("minimum map size is %dx%d\n", MAP_MINWIDTH,
+		    MAP_MINHEIGHT);
+	}
+
 	
 	/* Users must copy maps to udatadir in order to edit them. */
 	sprintf(path, "%s/%s.m", world->udatadir, med->margs.name);
