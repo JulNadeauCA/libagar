@@ -29,11 +29,12 @@ struct keycode {
 	char	*name;
 	SDLKey	 key;
 	int	 modmask;	/* Checked if non-zero */
-	void	(*callback)(struct textbox *, SDL_Event *, char *);
+	void	(*callback)(struct textbox *, SDLKey, int, char *);
 	char	*arg;
 };
 
 #define KEYMAP_US		0x01
+#define KEYMAP_UTU		0x02
 
 #ifndef KEYCODES_KEYMAP
 #define KEYCODES_KEYMAP		KEYMAP_US
