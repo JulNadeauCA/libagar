@@ -1,4 +1,4 @@
-.\"	$Csoft: view.3,v 1.12 2003/01/01 05:18:34 vedge Exp $
+.\"	$Csoft: view.3,v 1.13 2003/01/03 23:30:08 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -55,13 +55,18 @@ The
 .Fn view_init
 function initializes the graphic engine, returning 0 on success and -1 on
 failure.
+If the
+.Sq view.opengl
+property is set,
+.Fn view_init
+will attempt to create an OpenGL rendering context.
 The
 .Fa engine
 argument is one of:
 .Bd -literal
 enum gfx_engine {
-	GFX_ENGINE_GUI,			/* Direct GUI */
-	GFX_ENGINE_TILEBASED		/* Direct 2D tile-based */
+	GFX_ENGINE_GUI,			/* Direct, GUI */
+	GFX_ENGINE_TILEBASED		/* Direct, tile-based */
 };
 .Ed
 .Pp
@@ -86,6 +91,10 @@ returning 0 on success and -1 on failure.
 .Pp
 .Ft "void"
 .Fn VIEW_UPDATE "SDL_Rect rd"
+.Pp
+.Ft "void"
+.Fn view_alpha_blend "SDL_Surface *dstsu" "Sint16 x" "Sint16 y" "Uint8 r" \
+                     "Uint8 g" "Uint8 b" "Uint8 a"
 .nr nS 0
 .Pp
 These functions operate on
@@ -131,6 +140,24 @@ to the dirty rectangle array the event loop will pass to
 when the display is refreshed.
 .Fn VIEW_UPDATE
 is a no-op if OpenGL is enabled.
+.Pp
+The
+.Fn view_alpha_blend
+function performs software alpha blending between the pixel at
+.Fa x ,
+.Fa y
+coordinates of
+.Fa dstsu
+and a pixel composed by
+.Fa r ,
+.Fa g ,
+.Fa b
+with the alpha value
+.Fa a .
+.Fn view_alpha_blend
+expects
+.Fa dstsu
+to be locked.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
