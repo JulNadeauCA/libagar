@@ -1,4 +1,4 @@
-/*	$Csoft: input.c,v 1.27 2002/11/28 07:19:45 vedge Exp $	*/
+/*	$Csoft: input.c,v 1.28 2002/11/28 07:35:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -218,7 +218,7 @@ input_destroy(void *p)
 
 /* Look for an input device of the given name. */
 struct input *
-input_find_str(char *name)
+input_find(char *name)
 {
 	struct input *in;
 
