@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.116 2002/12/20 08:55:15 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.117 2002/12/23 03:04:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -24,6 +24,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/have_opengl.h>
+#include <config/serialization.h>
 
 #include "engine.h"
 #include "map.h"
@@ -115,10 +118,7 @@ event_hotkey(SDL_Event *ev)
 		break;
 #endif /* DEBUG */
 	case SDLK_F1:
-		window_show(config->windows.settings);
-		break;
-	case SDLK_F3:
-		window_show(config->windows.algorithm_sw);
+		window_show(config->settings);
 		break;
 	case SDLK_t:
 		if (curmapedit != NULL) {
@@ -281,7 +281,9 @@ event_loop(void)
 				SDL_UpdateRects(view->v, view->ndirty,
 				    view->dirty);
 #ifdef HAVE_OPENGL
-				SDL_GL_SwapBuffers();
+				if (prop_get_bool(config, "view.opengl")) {
+					SDL_GL_SwapBuffers();
+				}
 #endif
 				view->ndirty = 0;
 
@@ -364,7 +366,9 @@ event_dispatch(SDL_Event *ev)
 			    SDL_MapRGB(view->v->format, 0, 0, 0));
 			SDL_UpdateRect(view->v, 0, 0, 0 ,0);
 #ifdef HAVE_OPENGL
-			SDL_GL_SwapBuffers();
+			if (prop_get_bool(config, "view.opengl")) {
+				SDL_GL_SwapBuffers();
+			}
 #endif
 			break;
 		}
