@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.87 2003/06/17 23:30:42 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.88 2003/06/21 06:50:18 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -314,57 +314,5 @@ config_search_file(const char *path_key, const char *name, const char *ext)
 	error_set("`%s.%s' not in <%s> (%s)", name, ext, path_key, path);
 	free(path);
 	return (NULL);
-}
-
-/* XXX thread unsafe */
-static void
-config_find_files(const char *dirname, const char *ext, char ***files,
-    int *nfiles)
-{
-	struct dirent *dent;
-	DIR *dir;
-
-	if ((dir = opendir(dirname)) == NULL) {
-		dprintf("%s: %s\n", dirname, strerror(errno));
-		return;
-	}
-	while ((dent = readdir(dir)) != NULL) {
-		char *dext;
-
-		if (strcmp(dent->d_name, ".") == 0 ||
-		    strcmp(dent->d_name, "..") == 0)
-			continue;
-		if ((dext = strrchr(dent->d_name, '.')) != NULL &&
-		    strcmp(dext, ext) == 0) {
-			char **filesp;
-
-			dprintf("add: `%s'\n", dent->d_name);
-			filesp = *files = Realloc(*files,
-			    (*nfiles+1) * FILENAME_MAX);
-			strlcpy(filesp[*nfiles], dent->d_name, FILENAME_MAX);
-			(*nfiles)++;
-		}
-	}
-	closedir(dir);
-}
-
-/* Return a NUL-terminated array of files with the given extension. */
-char **
-config_search_files(const char *path_key, const char *ext)
-{
-	char *path, *dir, *last;
-	char **files;
-	int nfiles = 0;
-
-	files = Malloc(FILENAME_MAX);
-	path = prop_get_string(config, path_key);
-	for (dir = strtok_r(path, ":", &last);
-	     dir != NULL;
-	     dir = strtok_r(NULL, ":", &last)) {
-		dprintf("search in %s\n", dir);
-		config_find_files(dir, ext, &files, &nfiles);
-	}
-	free(path);
-	return (files);
 }
 
