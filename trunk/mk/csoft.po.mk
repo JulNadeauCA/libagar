@@ -26,6 +26,7 @@
 
 XGETTEXT?=	xgettext
 MSGMERGE?=	msgmerge
+MSGMERGE_FLAGS?=--no-location
 MSGFMT?=	msgfmt
 DOMAIN?=	untitled
 POTFILES?=	POTFILES
@@ -41,8 +42,8 @@ all: ${DOMAIN}.pot ${MOS}
 	@if [ "${ENABLE_NLS}" = "yes" -a "${HAVE_GETTEXT}" = "yes" ]; then \
 		echo "${MAKE} ${DOMAIN}.pot"; \
 		${MAKE} ${DOMAIN}.pot; \
-		echo "${MSGMERGE} $< ${DOMAIN}.pot -o $@"; \
-		${MSGMERGE} $< ${DOMAIN}.pot -o $@; \
+		echo "${MSGMERGE} ${MSGMERGE_FLAGS} $< ${DOMAIN}.pot -o $@"; \
+		${MSGMERGE} ${MSGMERGE_FLAGS} $< ${DOMAIN}.pot -o $@; \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
