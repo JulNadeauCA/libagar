@@ -1,4 +1,4 @@
-/*	$Csoft: vg_point.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vg_point.c,v 1.3 2004/04/10 04:55:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -59,16 +59,27 @@ vg_draw_points(struct vg *vg, struct vg_element *vge)
 	int rx, ry;
 
 	for (vtx = &vge->vtx[0]; vtx < &vge->vtx[vge->nvtx]; vtx++) {
-		vg_rcoords(vg, vtx->x, vtx->y, &rx, &ry);
+		vg_rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
 		vg_put_pixel(vg, rx, ry, vge->color);
 	}
 }
 
 #ifdef EDITION
 static void
-point_init(struct tool *t)
+point_tool_init(struct tool *t)
 {
 	tool_push_status(t, _("Specify point.\n"));
+}
+
+static void
+point_mousemotion(struct tool *t, int tx, int ty, int txrel, int tyrel,
+    int txoff, int tyoff, int txorel, int tyorel, int b)
+{
+	struct vg *vg = t->p;
+	
+	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vg->origin[1].x,
+	    &vg->origin[1].y);
+	vg_rasterize(vg);
 }
 
 static void
@@ -79,13 +90,9 @@ point_mousebuttondown(struct tool *t, int tx, int ty, int txoff, int tyoff,
 	double vx, vy;
 
 	vg_begin(vg, VG_POINTS);
-	vg_vcoords(vg, tx, ty, txoff, tyoff, &vx, &vy);
+	vg_vcoords2(vg, tx, ty, txoff, tyoff, &vx, &vy);
 	vg_vertex2(vg, vx, vy);
-	vg_end(vg);
 	vg_rasterize(vg);
-	
-	mapview_status(t->mv, "%d+%d,%d+%d -> %.2f,%.2f", tx, ty, txoff, tyoff,
-	    vx, vy);
 }
 
 const struct tool point_tool = {
@@ -93,13 +100,13 @@ const struct tool point_tool = {
 	N_("Trace individual points."),
 	VGPOINTS_ICON,
 	-1,
-	point_init,
+	point_tool_init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
 	NULL,			/* cursor */
 	NULL,			/* effect */
-	NULL,			/* mousemotion */
+	point_mousemotion,
 	point_mousebuttondown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */

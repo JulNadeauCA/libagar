@@ -1,4 +1,4 @@
-/*	$Csoft: vgobj.c,v 1.3 2004/04/10 04:55:17 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.1 2004/04/11 03:27:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
+#include <engine/widget/box.h>
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/fspinbutton.h>
 #include <engine/widget/mfspinbutton.h>
@@ -67,9 +68,8 @@ vgobj_init(void *p, const char *name)
 	struct vgobj *vgo = p;
 
 	object_init(vgo, "vgobj", name, &vgobj_ops);
-	vgo->vg = vg_new(vgo, VG_VISORIGIN);
-	vg_scale(vgo->vg, 8, 4, 1);
-	vg_origin(vgo->vg, 0, 0);
+	vgo->vg = vg_new(vgo, VG_VISORIGIN|VG_VISGRID);
+	vg_scale(vgo->vg, 4, 4, 1);
 	vg_rasterize(vgo->vg);
 }
 
@@ -123,6 +123,7 @@ vgobj_settings(int argc, union evarg *argv)
 {
 	struct window *pwin = argv[1].p;
 	struct vgobj *vgo = argv[2].p;
+	struct vg *vg = vgo->vg;
 	struct window *win;
 	struct mfspinbutton *mfsu;
 	struct fspinbutton *fsu;
@@ -131,48 +132,86 @@ vgobj_settings(int argc, union evarg *argv)
 	win = window_new(NULL);
 	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(vgo)->name);
 	window_set_closure(win, WINDOW_DETACH);
+	window_set_position(win, WINDOW_MIDDLE_LEFT, 0);
 
 	mfsu = mfspinbutton_new(win, NULL, "x", _("Geometry: "));
-	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vgo->vg->w);
-	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vgo->vg->h);
+	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vg->w);
+	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vg->h);
 	mfspinbutton_set_min(mfsu, 1.0);
 	mfspinbutton_set_increment(mfsu, 0.1);
 	event_new(mfsu, "mfspinbutton-changed", geochg, "%p", vgo);
 
+	fsu = fspinbutton_new(win, NULL, _("First origin point radius: "));
+	widget_bind(fsu, "value", WIDGET_FLOAT, &vg->origin_radius[0]);
+	fspinbutton_set_min(fsu, 0.1);
+	fspinbutton_set_increment(fsu, 0.1);
+	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vgo);
+	
+	fsu = fspinbutton_new(win, NULL, _("Second origin point radius: "));
+	widget_bind(fsu, "value", WIDGET_FLOAT, &vg->origin_radius[1]);
+	fspinbutton_set_min(fsu, 0.1);
+	fspinbutton_set_increment(fsu, 0.1);
+	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vgo);
+	
+	fsu = fspinbutton_new(win, NULL, _("Grid interval: "));
+	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->grid_gap);
+	fspinbutton_set_min(fsu, 0.0625);
+	fspinbutton_set_increment(fsu, 0.0625);
+	event_new(fsu, "fspinbutton-changed", vgchg, "%p", vgo);
+	
 	fsu = fspinbutton_new(win, NULL, _("Scaling factor: "));
-	widget_bind(fsu, "value", WIDGET_DOUBLE, &vgo->vg->scale);
+	widget_bind(fsu, "value", WIDGET_DOUBLE, &vg->scale);
 	fspinbutton_set_min(fsu, 0.1);
 	fspinbutton_set_increment(fsu, 0.1);
 	event_new(fsu, "fspinbutton-changed", geochg, "%p", vgo);
 		
-	mfsu = mfspinbutton_new(win, NULL, ",", _("Point of origin: "));
-	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vgo->vg->ox);
-	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vgo->vg->oy);
-	mfspinbutton_set_min(mfsu, 0.0);
-	mfspinbutton_set_increment(mfsu, 0.1);
-	mfspinbutton_set_precision(mfsu, "f", 2);
-	event_new(mfsu, "mfspinbutton-changed", vgchg, "%p", vgo);
-	
 	label_new(win, LABEL_STATIC, _("Background color: "));
 	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "color", WIDGET_UINT32, &vgo->vg->fill_color);
+	widget_bind(pal, "color", WIDGET_UINT32, &vg->fill_color);
 	event_new(pal, "palette-changed", vgchg, "%p", vgo);
 	
-	label_new(win, LABEL_STATIC, _("Origin color: "));
+	label_new(win, LABEL_STATIC, _("Grid color: "));
 	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "color", WIDGET_UINT32, &vgo->vg->origin_color);
+	widget_bind(pal, "color", WIDGET_UINT32, &vg->grid_color);
+	event_new(pal, "palette-changed", vgchg, "%p", vgo);
+
+	label_new(win, LABEL_STATIC, _("First origin color: "));
+	pal = palette_new(win, PALETTE_RGB);
+	widget_bind(pal, "color", WIDGET_UINT32, &vg->origin_color[0]);
+	event_new(pal, "palette-changed", vgchg, "%p", vgo);
+	
+	label_new(win, LABEL_STATIC, _("Second origin color: "));
+	pal = palette_new(win, PALETTE_RGB);
+	widget_bind(pal, "color", WIDGET_UINT32, &vg->origin_color[1]);
 	event_new(pal, "palette-changed", vgchg, "%p", vgo);
 
 	window_attach(pwin, win);
 	window_show(win);
 }
 
+static void
+snap_to(int argc, union evarg *argv)
+{
+	struct button *bu = argv[0].p;
+	struct toolbar *tbar = argv[1].p;
+	struct vg *vg = argv[2].p;
+	int snap_mode = argv[3].i;
+
+	dprintf("snap mode %d\n", snap_mode);
+
+	toolbar_select_unique(tbar, bu);
+	vg_snap_mode(vg, snap_mode);
+}
+
 struct window *
 vgobj_edit(void *obj)
 {
-	extern const struct tool line_tool, point_tool;
+	extern const struct tool line_tool, point_tool, origin_tool,
+	    circle_tool;
 	struct vgobj *vgo = obj;
+	struct vg *vg = vgo->vg;
 	struct window *win;
+	struct box *bo;
 	struct mapview *mv;
 	struct toolbar *tbar;
 	struct statusbar *statbar;
@@ -189,11 +228,45 @@ vgobj_edit(void *obj)
 	statusbar_init(statbar);
 	statusbar_add_label(statbar, LABEL_STATIC, ".");
 
-	mv = mapview_new(win, vgo->vg->map, MAPVIEW_EDIT|MAPVIEW_INDEPENDENT,
-	    tbar, statbar);
-	mapview_prescale(mv, 4, 4);
-	mapview_reg_tool(mv, &line_tool, vgo->vg);
-	mapview_reg_tool(mv, &point_tool, vgo->vg);
+	bo = box_new(win, BOX_HORIZ, BOX_WFILL|BOX_HFILL);
+	box_set_spacing(bo, 0);
+	box_set_padding(bo, 0);
+	{
+		struct toolbar *snbar;
+
+		snbar = toolbar_new(bo, TOOLBAR_VERT, 1);
+		toolbar_add_button(snbar, 0, ICON(SNAP_FREE_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
+		toolbar_add_button(snbar, 0, ICON(SNAP_RINT_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
+		toolbar_add_button(snbar, 0, ICON(SNAP_GRID_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
+		toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
+		toolbar_add_button(snbar, 0, ICON(SNAP_ENDPOINT_D_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
+
+		toolbar_add_button(snbar, 0, ICON(SNAP_CLOSEST_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
+		toolbar_add_button(snbar, 0, ICON(SNAP_CENTERPT_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
+		toolbar_add_button(snbar, 0, ICON(SNAP_MIDDLEPT_ICON), 1, 0,
+		    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
+		toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_AUTO_ICON),
+		    1, 0, snap_to, "%p,%p,%i", snbar, vg,
+		    VG_INTERSECTIONS_AUTO);
+		toolbar_add_button(snbar, 0, ICON(SNAP_INTSECT_MANUAL_ICON),
+		    1, 0, snap_to, "%p,%p,%i", snbar, vg,
+		    VG_INTERSECTIONS_MANUAL);
+
+		mv = mapview_new(bo, vg->map,
+		    MAPVIEW_EDIT|MAPVIEW_INDEPENDENT, tbar, statbar);
+		mapview_prescale(mv, 12, 6);
+		mapview_reg_tool(mv, &origin_tool, vg);
+		mapview_reg_tool(mv, &point_tool, vg);
+		mapview_reg_tool(mv, &line_tool, vg);
+		mapview_reg_tool(mv, &circle_tool, vg);
+	}
 
 	object_attach(win, statbar);
 	return (win);

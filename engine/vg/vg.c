@@ -1,4 +1,4 @@
-/*	$Csoft: vg.c,v 1.4 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.5 2004/04/12 03:38:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -44,7 +44,6 @@ static const struct {
 };
 const int nvge_types = sizeof(vge_types) / sizeof(vge_types[0]);
 
-/* Create a new vector drawing. */
 struct vg *
 vg_new(void *p, int flags)
 {
@@ -53,19 +52,8 @@ vg_new(void *p, int flags)
 	struct vg *vg;
 	
 	vg = Malloc(sizeof(struct vg), M_VG);
-	vg->flags = flags;
-	vg->w = 0;
-	vg->h = 0;
-	vg->scale = 1;
-	vg->fill_color = SDL_MapRGB(vfmt, 0, 0, 0);
-	vg->origin_color = SDL_MapRGB(vfmt, 200, 200, 255);
-	vg->su = NULL;
+	vg_init(vg, flags);
 	vg->pobj = ob;
-	vg->ox = 0.5;
-	vg->oy = 0.5;
-	TAILQ_INIT(&vg->vges);
-	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
-
 	gfx_new_pvt(ob);
 	vg->map = map_new(ob, "raster");
 	OBJECT(vg->map)->flags |= OBJECT_NON_PERSISTENT|OBJECT_INDESTRUCTIBLE;
@@ -73,10 +61,48 @@ vg_new(void *p, int flags)
 }
 
 void
+vg_init(struct vg *vg, int flags)
+{
+	int i;
+
+	vg->flags = flags;
+	vg->w = 0;
+	vg->h = 0;
+	vg->scale = 1;
+	vg->su = NULL;
+	vg->fill_color = SDL_MapRGB(vfmt, 0, 0, 0);
+	vg->grid_color = SDL_MapRGB(vfmt, 128, 128, 128);
+	vg->grid_gap = 0.5;
+	vg->origin = Malloc(sizeof(struct vg_vertex)*2, M_VG);
+	vg->origin_radius = Malloc(sizeof(float)*2, M_VG);
+	vg->origin_color = Malloc(sizeof(Uint32)*2, M_VG);
+	vg->pobj = NULL;
+	vg->map = NULL;
+	TAILQ_INIT(&vg->vges);
+	pthread_mutex_init(&vg->lock, &recursive_mutexattr);
+
+	for (i = 0; i < 2; i++) {
+		vg->origin[i].x = 0;
+		vg->origin[i].y = 0;
+		vg->origin[i].z = 0;
+		vg->origin[i].w = 1.0;
+	}
+	vg->origin_radius[0] = 0.25;
+	vg->origin_radius[1] = 0.125;
+	vg->origin_color[0] = SDL_MapRGB(vfmt, 0, 200, 0);
+	vg->origin_color[1] = SDL_MapRGB(vfmt, 0, 150, 0);
+	vg->norigin = 2;
+}
+
+void
 vg_destroy(struct vg *vg)
 {
 	struct vg_element *vge, *nvge;
 	struct object *ob = vg->pobj;
+
+	Free(vg->origin, M_VG);
+	Free(vg->origin_radius, M_VG);
+	Free(vg->origin_color, M_VG);
 
 	if (ob->gfx != NULL) {
 		vg_destroy_fragments(vg);
@@ -232,25 +258,11 @@ vg_begin(struct vg *vg, enum vg_element_type eltype)
 	return (vge);
 }
 
-
-
 /* Clear the surface with the filling color. */
 void
 vg_clear(struct vg *vg)
 {
 	SDL_FillRect(vg->su, NULL, vg->fill_color);
-}
-
-static __inline__ void
-vg_draw_origin(struct vg *vg)
-{
-	int rx, ry, radius;
-
-	vg_rcoords(vg, vg->ox, vg->oy, &rx, &ry);
-	vg_rlength(vg, 0.325, &radius);
-	vg_circle_primitive(vg, rx, ry, radius, vg->origin_color);
-	vg_line_primitive(vg, rx, ry, rx+radius, ry, vg->origin_color);
-	vg_line_primitive(vg, rx, ry, rx, ry+radius, vg->origin_color);
 }
 
 void
@@ -269,38 +281,54 @@ vg_rasterize(struct vg *vg)
 	}
 	if (vg->flags & VG_VISORIGIN)
 		vg_draw_origin(vg);
+	if (vg->flags & VG_VISGRID)
+		vg_draw_grid(vg);
 
 	vg_regen_fragments(vg);
 }
 
+/* Translate tile coordinates to relative vg coordinates. */
 void
-vg_origin(struct vg *vg, double x, double y)
-{
-	vg->ox = x;
-	vg->oy = y;
-}
-
-/* Translate tile coordinates to vg coordinates. */
-void
-vg_vcoords(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
+vg_vcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
     double *vy)
 {
 	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/TILESZ -
-	    vg->ox/vg->scale;
+	    vg->origin[0].x/vg->scale;
 	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/TILESZ -
-	    vg->oy/vg->scale;
+	    vg->origin[0].y/vg->scale;
+
+	if (vg->snap_mode != VG_FREE_POSITIONING)
+		vg_snap_to(vg, vx, vy);
 }
 
-/* Translate vg coordinates to raster coordinates. */
+/* Translate tile coordinates to absolute vg coordinates. */
 void
-vg_rcoords(struct vg *vg, double vx, double vy, int *rx, int *ry)
+vg_avcoords2(struct vg *vg, int rx, int ry, int xoff, int yoff, double *vx,
+    double *vy)
 {
-	*rx = (int)(vx*vg->scale*TILESZ) + (int)(vg->ox*vg->scale*TILESZ);
-	*ry = (int)(vy*vg->scale*TILESZ) + (int)(vg->oy*vg->scale*TILESZ);
-#ifdef DEBUG
-	if (*rx > vg->su->w || *ry > vg->su->h)
-		dprintf("%d,%d > %ux%u\n", *rx, *ry, vg->su->w, vg->su->h);
-#endif
+	*vx = (double)rx/vg->scale + (double)xoff/vg->scale/TILESZ;
+	*vy = (double)ry/vg->scale + (double)yoff/vg->scale/TILESZ;
+
+	if (vg->snap_mode != VG_FREE_POSITIONING)
+		vg_snap_to(vg, vx, vy);
+}
+
+/* Translate relative vg coordinates to raster coordinates. */
+void
+vg_rcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
+{
+	*rx = (int)(vx*vg->scale*TILESZ) +
+	      (int)(vg->origin[0].x*vg->scale*TILESZ);
+	*ry = (int)(vy*vg->scale*TILESZ) +
+	      (int)(vg->origin[0].y*vg->scale*TILESZ);
+}
+
+/* Translate absolute vg coordinates to raster coordinates. */
+void
+vg_arcoords2(struct vg *vg, double vx, double vy, int *rx, int *ry)
+{
+	*rx = (int)(vx*vg->scale*TILESZ);
+	*ry = (int)(vy*vg->scale*TILESZ);
 }
 
 /* Translate vg length to pixel length. */
@@ -323,7 +351,7 @@ vg_alloc_vertex(struct vg_element *vge)
 }
 
 void
-vg_undo_vertex(struct vg *vg)
+vg_pop_vertex(struct vg *vg)
 {
 	struct vg_element *vge = TAILQ_FIRST(&vg->vges);
 
@@ -387,3 +415,10 @@ vg_vertex_array(struct vg *vg, const struct vg_vertex *svtx, unsigned int nsvtx)
 	}
 }
 
+int
+vg_near_vertex2(struct vg *vg, const struct vg_vertex *vtx, double x, double y,
+    double fudge)
+{
+	return (x > vtx->x-fudge && x < vtx->x+fudge &&
+	        y > vtx->y-fudge && y < vtx->y+fudge);
+}
