@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.78 2003/05/20 11:30:34 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.79 2003/05/24 15:53:39 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -41,6 +41,8 @@ struct object_position {
 #define OBJECT_TYPE_MAX		32
 #define OBJECT_NAME_MAX		64
 
+TAILQ_HEAD(objectq, object);
+
 struct object {
 	char	 type[OBJECT_TYPE_MAX];	/* Type of object */
 	char	 name[OBJECT_NAME_MAX];	/* Identifier */
@@ -57,7 +59,7 @@ struct object {
 
 	pthread_mutex_t		 lock;
 	struct object_position	*pos;		/* Position on a map */
-	TAILQ_HEAD(,object)	 childs;	/* Descendants (linkage_lock) */
+	struct objectq		 childs;	/* Descendants (linkage_lock) */
 	pthread_mutex_t		 events_lock;	/* XXX use lock? */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
 	pthread_mutex_t		 props_lock;	/* XXX use lock? */
