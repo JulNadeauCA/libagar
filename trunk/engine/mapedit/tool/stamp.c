@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.27 2003/02/17 02:46:39 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.28 2003/02/20 04:57:28 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -51,7 +51,8 @@ static const struct tool_ops stamp_ops = {
 	},
 	stamp_window,
 	stamp_cursor,
-	stamp_effect
+	stamp_effect,
+	NULL			/* mouse */
 };
 
 static const struct version stamp_ver = {
@@ -150,7 +151,7 @@ stamp_load(void *p, int fd)
 {
 	struct stamp *stamp = p;
 
-	if (version_read(fd, &stamp_ver) == -1) {
+	if (version_read(fd, &stamp_ver, NULL) == -1) {
 		return (-1);
 	}
 	

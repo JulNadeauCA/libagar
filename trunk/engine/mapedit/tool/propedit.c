@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.19 2003/02/13 11:30:14 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.20 2003/02/16 23:52:31 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -48,7 +48,8 @@ static const struct tool_ops propedit_ops = {
 	},
 	propedit_window,
 	NULL,			/* cursor */
-	propedit_effect
+	propedit_effect,
+	NULL			/* mouse */
 };
 
 static void	propedit_event(int, union evarg *);

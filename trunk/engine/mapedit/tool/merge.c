@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.14 2003/02/17 02:46:39 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.15 2003/02/20 03:25:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,7 +62,8 @@ static const struct tool_ops merge_ops = {
 	},
 	merge_window,
 	merge_cursor,
-	merge_effect
+	merge_effect,
+	NULL			/* mouse */
 };
 
 void
@@ -594,7 +595,7 @@ merge_load(void *p, int fd)
 	struct merge *mer = p;
 	Uint32 i, nbrushes;
 	
-	if (version_read(fd, &merge_ver) != 0) {
+	if (version_read(fd, &merge_ver, NULL) != 0) {
 		return (-1);
 	}
 	
