@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.129 2005/01/27 05:46:23 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.130 2005/01/30 05:21:48 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -425,12 +425,23 @@ config_window(struct config *con)
 		
 		sbu = spinbutton_new(vb, _("Mouse double click delay (ms): "));
 		widget_bind(sbu, "value", WIDGET_INT, &mouse_dblclick_delay);
+		spinbutton_set_min(sbu, 1);
+		
+		sbu = spinbutton_new(vb, _("Mouse spin delay (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_delay);
+		spinbutton_set_min(sbu, 1);
+
+		sbu = spinbutton_new(vb, _("Mouse spin interval (ms): "));
+		widget_bind(sbu, "value", WIDGET_INT, &mouse_spin_ival);
+		spinbutton_set_min(sbu, 1);
 
 		sbu = spinbutton_new(vb, _("Keyboard repeat delay (ms): "));
 		widget_bind(sbu, "value", WIDGET_INT, &kbd_delay);
+		spinbutton_set_min(sbu, 1);
 		
 		sbu = spinbutton_new(vb, _("Keyboard repeat interval (ms): "));
 		widget_bind(sbu, "value", WIDGET_INT, &kbd_repeat);
+		spinbutton_set_min(sbu, 1);
 	}
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
