@@ -949,26 +949,8 @@ x11_found_includes=yes
 else
 NONE=1
 fi
-if [ -d /usr/X11R6/lib ]; then
-X11_LIBS="-L/usr/X11R6/lib -lX11"
-x11_found_libs=yes
-else
-NONE=1
-fi
-if [ -d /usr/X11/lib ]; then
-X11_LIBS="-L/usr/X11/lib -lX11"
-x11_found_libs=yes
-else
-NONE=1
-fi
-if [ -d /usr/local/X11R6/lib ]; then
-X11_LIBS="-L/usr/local/X11R6/lib -lX11"
-x11_found_libs=yes
-else
-NONE=1
-fi
-if [ -d /usr/local/X11/lib ]; then
-X11_LIBS="-L/usr/local/X11/lib -lX11"
+if [ -d /usr/lib ]; then
+X11_LIBS="-L/usr/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
@@ -979,8 +961,26 @@ x11_found_libs=yes
 else
 NONE=1
 fi
-if [ -d /usr/lib ]; then
-X11_LIBS="-L/usr/lib -lX11"
+if [ -d /usr/local/X11/lib ]; then
+X11_LIBS="-L/usr/local/X11/lib -lX11"
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ -d /usr/local/X11R6/lib ]; then
+X11_LIBS="-L/usr/local/X11R6/lib -lX11"
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ -d /usr/X11/lib ]; then
+X11_LIBS="-L/usr/X11/lib -lX11"
+x11_found_libs=yes
+else
+NONE=1
+fi
+if [ -d /usr/X11R6/lib ]; then
+X11_LIBS="-L/usr/X11R6/lib -lX11"
 x11_found_libs=yes
 else
 NONE=1
