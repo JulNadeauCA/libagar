@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.34 2004/05/10 05:15:02 vedge Exp $
+.\"	$Csoft: window.3,v 1.35 2004/08/31 03:03:37 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -132,12 +132,18 @@ enum window_close_mode {
 .Pp
 The
 .Fn window_set_padding
-function defines the space in pixels separating the window's border
-from the widgets.
+function defines the space in pixels separating the widgets from the edges
+of the window.
+The default padding value is
+.Va win->borderw
+(the width of the decorative border) + 2 pixels.
 .Pp
 The
 .Fn window_set_spacing
 function defines the space separating the widgets from each other.
+The default is 2 pixels.
+.Pp
+Note that
 .fn window_set_spacing
 only affects the widgets which are directly attached to the window.
 For widgets that are attached to container widgets, it is the container
@@ -290,7 +296,3 @@ The window is no longer visible.
 The
 .Nm
 system first appeared in Agar 1.0.
-.Sh BUGS
-Most of the
-.Sq window-
-prefixed events should be renamed.
