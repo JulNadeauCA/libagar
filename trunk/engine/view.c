@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.107 2003/02/10 04:45:40 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.108 2003/03/02 03:54:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -326,8 +326,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	int x, y;
 
 	ds = view_surface(SDL_SWSURFACE |
-	    (ss->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
-	    w, h);
+	    (ss->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)), w, h);
 
 	/* Original size; inefficient. */
 	if (ss->w == w && ss->h == h) {
@@ -433,8 +432,8 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 {
 	SDL_Surface *texsu;
 	GLuint texture;
-	Uint32 sflags;
-	Uint8 salpha;
+	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
+	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
 
 	w = powof2(sourcesu->w);
@@ -462,22 +461,12 @@ view_surface_texture(SDL_Surface *sourcesu, GLfloat *texcoord)
 		fatal("SDL_CreateRGBSurface: %s\n", SDL_GetError());
 	}
 
-	/* Disable alpha blending state of the source surface. */
-	sflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
-	salpha = sourcesu->format->alpha;
-	if (sflags & SDL_SRCALPHA) {
-		SDL_SetAlpha(sourcesu, 0, 0);
-	}
-
-	/* Copy the source surface into the GL texture surface. */
+	/* Copy the source surface onto the GL texture surface. */
+	SDL_SetAlpha(sourcesu, 0, 0);
 	if (SDL_BlitSurface(sourcesu, NULL, texsu, NULL) == -1) {
 		fatal("SDL_BlitSurface: %s\n", SDL_GetError());
 	}
-
-	/* Restore the alpha blending state of the source surface. */
-	if (sflags & SDL_SRCALPHA) {
-		SDL_SetAlpha(sourcesu, sflags, salpha);
-	}
+	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
 	glGenTextures(1, &texture);
