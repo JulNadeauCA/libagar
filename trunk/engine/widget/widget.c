@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.79 2004/03/18 02:38:52 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.80 2004/03/18 03:03:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -929,7 +929,7 @@ widget_mousemotion(struct window *win, struct widget *wid, int x, int y,
 
 	if ((WINDOW_FOCUSED(win) && widget_holds_focus(wid)) ||
 	    (wid->flags & WIDGET_UNFOCUSED_MOTION)) {
-		event_post(NULL, wid,  "window-mousemotion", "%i, %i, %i, %i",
+		event_post(NULL, wid, "window-mousemotion", "%i, %i, %i, %i",
 		    x - wid->cx,
 		    y - wid->cy,
 		    xrel,
