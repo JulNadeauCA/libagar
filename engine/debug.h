@@ -1,4 +1,4 @@
-/*	$Csoft: debug.h,v 1.4 2002/02/25 09:20:06 vedge Exp $	*/
+/*	$Csoft: debug.h,v 1.5 2002/02/28 12:50:14 vedge Exp $	*/
 
 #ifdef DEBUG
 extern int engine_debug;
@@ -43,5 +43,23 @@ extern int engine_debug;
 #define warning(fmt, args...)	printf("%s: " fmt, __FUNCTION__ , ##args)
 #else
 #define warning			printf
+#endif
+
+#ifdef LOCKDEBUG
+
+#include <stdlib.h>
+
+#define pthread_mutex_lock(mutex)					\
+	do {								\
+		if (pthread_mutex_lock((mutex)) != 0) {			\
+			abort();					\
+		}							\
+	} while (0)
+#define pthread_mutex_unlock(mutex) 					\
+	do {								\
+		if (pthread_mutex_unlock((mutex)) != 0) {		\
+			abort();					\
+		}							\
+	} while (/*CONSTCOND*/0)
 #endif
 
