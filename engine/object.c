@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.140 2003/07/08 00:34:52 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.141 2003/07/26 12:28:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -74,6 +74,7 @@ const struct object_ops object_ops = {
 #define DEBUG_CONTROL	0x010
 #define DEBUG_LINKAGE	0x020
 #define DEBUG_GC	0x040
+#define DEBUG_PAGING	0x080
 
 int	object_debug = DEBUG_STATE|DEBUG_POSITION|DEBUG_SUBMAPS|DEBUG_CONTROL;
 #define engine_debug object_debug
@@ -522,13 +523,11 @@ object_page_in(void *p, enum object_page_item item)
 {
 	struct object *ob = p;
 
-	dprintf("%s\n", ob->name);
-
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
-		dprintf("gfx of %s: %s; used = %u++\n", ob->name, ob->gfx_name,
-		    ob->gfx_used);
+		debug(DEBUG_PAGING, "gfx of %s: %s; used = %u++\n", ob->name,
+		    ob->gfx_name, ob->gfx_used);
 		if (ob->gfx_name == NULL) {
 			error_set(_("The `%s' object contains no graphics."));
 			goto fail;
@@ -543,7 +542,7 @@ object_page_in(void *p, enum object_page_item item)
 		}
 		break;
 	case OBJECT_AUDIO:
-		dprintf("audio of %s: %s; used = %u++\n", ob->name,
+		debug(DEBUG_PAGING, "audio of %s: %s; used = %u++\n", ob->name,
 		    ob->audio_name, ob->audio_used);
 		if (ob->gfx_name == NULL) {
 			error_set(_("The `%s' object contains no audio."));
@@ -559,10 +558,10 @@ object_page_in(void *p, enum object_page_item item)
 		}
 		break;
 	case OBJECT_DATA:
-		dprintf("data of %s; used = %u++\n", ob->name, ob->data_used);
+		debug(DEBUG_PAGING, "data of %s; used = %u++\n", ob->name,
+		    ob->data_used);
 		if (ob->data_used == 0) {
 			if (object_load_data(ob) == -1) {
-				dprintf("%s: %s\n", ob->name, error_get());
 				/*
 				 * Assume that this failure means the data has
 				 * never been saved before.
@@ -590,20 +589,18 @@ int
 object_page_out(void *p, enum object_page_item item)
 {
 	struct object *ob = p;
-
-	dprintf("%s\n", ob->name);
-
+	
 	pthread_mutex_lock(&ob->lock);
 	switch (item) {
 	case OBJECT_GFX:
-		dprintf("%s: -gfx (used=%u)\n", ob->name, ob->gfx_used);
+		debug(DEBUG_PAGING, "%s: -gfx (used=%u)\n", ob->name,
+		    ob->gfx_used);
 #ifdef DEBUG
 		if (((long)ob->gfx_used-1) < 0)
 			fatal("neg gfx ref count");
 #endif
 		if (ob->gfx_used != OBJECT_MAX_USED &&
 		    --ob->gfx_used == 0) {
-			dprintf("%s: gc gfx\n", ob->name);
 			gfx_unused(ob->gfx);
 			ob->gfx = NULL;
 		}
@@ -613,23 +610,23 @@ object_page_out(void *p, enum object_page_item item)
 		if (((long)ob->audio_used-1) < 0)
 			fatal("neg audio ref count");
 #endif
-		dprintf("%s: -audio (used=%u)\n", ob->name, ob->audio_used);
+		debug(DEBUG_PAGING, "%s: -audio (used=%u)\n", ob->name,
+		    ob->audio_used);
 		if (ob->audio_used != OBJECT_MAX_USED &&
 		    --ob->audio_used == 0) {
-			dprintf("%s: gc audio\n", ob->name);
 			audio_unused(ob->audio);
 			ob->audio = NULL;
 		}
 		break;
 	case OBJECT_DATA:
-		dprintf("%s: -data (used=%u)\n", ob->name, ob->data_used);
+		debug(DEBUG_PAGING, "%s: -data (used=%u)\n", ob->name,
+		    ob->data_used);
 #ifdef DEBUG
 		if (((long)ob->data_used-1) < 0)
 			fatal("neg data ref count");
 #endif
 		if (ob->data_used != OBJECT_MAX_USED &&
 		    --ob->data_used == 0) {
-			dprintf("gc data\n");
 			if (object_save(ob) == -1) {
 				goto fail;
 			}
@@ -707,7 +704,8 @@ object_load(void *p)
 		dep->obj = dep_obj;
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-		dprintf("%s: depends on %s (%p)\n", ob->name, dep_name,
+		debug(DEBUG_DEPS, "%s: depends on %s (%p)\n", ob->name,
+		    dep_name,
 		    dep->obj);
 	}
 
@@ -844,8 +842,6 @@ object_load_data(void *p)
 	lock_linkage();
 	pthread_mutex_lock(&ob->lock);
 
-	dprintf("%s\n", ob->name);
-
 	if (ob->flags & OBJECT_DATA_RESIDENT) {
 		error_set(_("The data of `%s' is already resident."), ob->name);
 		goto fail_lock;
@@ -930,7 +926,7 @@ object_save(void *p)
 
 	/* Page in the data unless it is already resident. */
 	if (!resident) {
-		dprintf("paging in for saving purposes\n");
+		debug(DEBUG_PAGING, "paging in for saving purposes\n");
 		if (object_load_data(ob) == -1) {
 			/*
 			 * Assume that this failure means the data has never
@@ -968,7 +964,6 @@ object_save(void *p)
 		char dep_name[OBJECT_PATH_MAX];
 		
 		object_copy_name(dep->obj, dep_name, sizeof(dep_name));
-		dprintf("saving dep: `%s'\n", dep_name);
 		write_string(buf, dep_name);
 	}
 	pwrite_uint32(buf, count, count_offs);
@@ -1007,7 +1002,6 @@ object_save(void *p)
 	pwrite_uint32(buf, count, count_offs);
 
 	/* Write the data offset. */
-	dprintf("doffs = 0x%lx\n", (unsigned long)netbuf_tell(buf));
 	pwrite_uint32(buf, netbuf_tell(buf), data_offs);
 
 	/* Save the object derivate data. */
