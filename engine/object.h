@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.109 2004/04/11 03:29:16 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.110 2004/05/06 06:20:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -8,6 +8,7 @@
 #define OBJECT_NAME_MAX	128
 #define OBJECT_PATH_MAX	1024
 
+#include <engine/timeout.h>
 #include <engine/prop.h>
 #include <engine/gfx.h>
 #include <engine/audio.h>
@@ -69,14 +70,16 @@ struct object {
 
 	struct position		*pos;		/* Unique position (or NULL) */
 	TAILQ_HEAD(,event)	 events;	/* Event handlers */
-	TAILQ_HEAD(,eventseq)	 eventseqs;	/* Event sequences */
 	TAILQ_HEAD(,prop)	 props;		/* Generic properties */
+	CIRCLEQ_HEAD(,timeout)	 timeouts;	/* Scheduled function calls */
 
 	/* Uses linkage_lock */
 	TAILQ_HEAD(,object_dep)	 deps;		/* Object dependencies */
 	struct objectq		 children;	/* Child objects */
 	void			*parent;	/* Parent object */
-	TAILQ_ENTRY(object)	 cobjs;
+
+	TAILQ_ENTRY(object) cobjs;	/* Entry in child object queue */
+	TAILQ_ENTRY(object) tobjs;	/* Entry in timed object queue */
 };
 
 enum object_page_item {
@@ -97,6 +100,9 @@ enum object_page_item {
 	for((var) = (struct type *)TAILQ_LAST(&OBJECT(ob)->children, objectq);\
 	    (var) != (struct type *)TAILQ_END(&OBJECT(ob)->children);	\
 	    (var) = (struct type *)TAILQ_PREV(OBJECT(var), objectq, cobjs))
+
+#define object_lock(ob) pthread_mutex_lock(&(ob)->lock)
+#define object_unlock(ob) pthread_mutex_unlock(&(ob)->lock)
 
 __BEGIN_DECLS
 struct object	*object_new(void *, const char *);

@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.176 2004/05/01 12:38:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.177 2004/05/06 06:20:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -124,8 +124,8 @@ object_init(void *p, const char *type, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
-	TAILQ_INIT(&ob->eventseqs);
 	TAILQ_INIT(&ob->props);
+	CIRCLEQ_INIT(&ob->timeouts);
 	pthread_mutex_init(&ob->lock, &recursive_mutexattr);
 }
 
@@ -474,7 +474,6 @@ void
 object_free_events(struct object *ob)
 {
 	struct event *eev, *neev;
-	struct eventseq *evseq, *nevseq;
 
 	pthread_mutex_lock(&ob->lock);
 	for (eev = TAILQ_FIRST(&ob->events);
@@ -483,14 +482,7 @@ object_free_events(struct object *ob)
 		neev = TAILQ_NEXT(eev, events);
 		Free(eev, M_EVENT);
 	}
-	for (evseq = TAILQ_FIRST(&ob->eventseqs);
-	     evseq != TAILQ_END(&ob->eventseqs);
-	     evseq = nevseq) {
-		nevseq = TAILQ_NEXT(evseq, eventseqs);
-		Free(evseq, M_EVENT);
-	}
 	TAILQ_INIT(&ob->events);
-	TAILQ_INIT(&ob->eventseqs);
 	pthread_mutex_unlock(&ob->lock);
 }
 
