@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.3 2002/01/30 12:47:11 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.4 2002/02/05 06:08:12 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -46,12 +46,14 @@ int
 view_setmode(struct viewport *v)
 {
 	v->fps = 30;	/* XXX calibrate */
-	v->mapx = 0;
-	v->mapy = 0;
 
 	/* XXX make room for edition windows */
-	v->mapw = (v->width / v->tilew) - ((curmapedit == NULL) ? 1 : 0);
-	v->maph = (v->height / v->tileh) - ((curmapedit == NULL) ? 1 : 0);
+	v->mapw = (v->width / v->tilew);
+	v->maph = (v->height / v->tileh);
+	if (curmapedit != NULL && curmapedit->flags & MAPEDIT_TILELIST) {
+		v->mapw--;
+		v->maph--;
+	}
 
 	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {
@@ -59,7 +61,7 @@ view_setmode(struct viewport *v)
 		    v->depth, SDL_GetError());
 		return (-1);
 	}
-	SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0: 1);
+	SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
 	return (0);
 }
 
@@ -79,6 +81,8 @@ view_create(int w, int h, int tilew, int tileh, int depth, int flags)
 	v->flags = flags;
 	v->depth = SDL_VideoModeOK(v->width, v->height, depth, v->flags);
 	v->wins = NULL;
+	v->mapx = 0;
+	v->mapy = 0;
 
 	switch (v->depth) {
 	case 8:
