@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.106 2005/02/01 08:24:30 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.107 2005/02/03 05:32:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -196,9 +196,6 @@ tlist_init(struct tlist *tl, int flags)
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 	
-	tl->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
-	ag_menu_init(tl->menu);
-
 	tlist_prescale(tl, "XXXXXXXXXXXXXXXXXXXXXXX", 4);
 
 	event_new(tl->sbar, "scrollbar-changed", tlist_scrolled, "%p", tl);
@@ -242,9 +239,10 @@ tlist_destroy(void *p)
 	     tp != TAILQ_END(&tl->popups);
 	     tp = ntp) {
 		ntp = TAILQ_NEXT(tp, popups);
+		object_destroy(tp->menu);
+		Free(tp->menu, M_OBJECT);
 		Free(tp, M_WIDGET);
 	}
-	object_destroy(tl->menu);
 
 	pthread_mutex_destroy(&tl->lock);
 	widget_destroy(tl);
@@ -803,10 +801,11 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 					break;
 			}
 			if (tp != NULL) {
+				dprintf("popup (%s)\n", tp->iclass);
 				show_popup(tl, tp);
 				goto out;
 			} else {
-				dprintf("no popup for `%s' class\n", ti->class);
+				dprintf("no popup for %s class\n", ti->class);
 			}
 		}
 		break;
@@ -992,7 +991,13 @@ tlist_set_popup(struct tlist *tl, const char *iclass)
 
 	tp = Malloc(sizeof(struct tlist_popup), M_WIDGET);
 	tp->iclass = iclass;
-	tp->item = ag_menu_add_item(tl->menu, NULL);
+	tp->panel = NULL;
+
+	tp->menu = Malloc(sizeof(struct AGMenu), M_OBJECT);
+	ag_menu_init(tp->menu);
+
+	tp->item = ag_menu_add_item(tp->menu, iclass);
+
 	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
 	return (tp->item);
 }
@@ -1000,10 +1005,13 @@ tlist_set_popup(struct tlist *tl, const char *iclass)
 static void
 show_popup(struct tlist *tl, struct tlist_popup *tp)
 {
-	struct AGMenu *m = tl->menu;
+	struct AGMenu *m = tp->menu;
 	int x, y;
 
-#ifdef DEBUG
+	dprintf("popup %s (item `%s' menu %p)\n", tp->iclass, tp->item->text,
+	    m);
+
+#if 0
 	if (widget_parent_window(tl) == NULL)
 		fatal("%s is unattached", OBJECT(tl)->name);
 #endif
@@ -1013,9 +1021,11 @@ show_popup(struct tlist *tl, struct tlist_popup *tp)
 		ag_menu_collapse(m, tp->item);
 		tp->panel = NULL;
 	}
+#if 0
 	if (m->sel_item != NULL) {
 		ag_menu_collapse(m, m->sel_item);
 	}
+#endif
 	m->sel_item = tp->item;
 	tp->panel = ag_menu_expand(m, tp->item, x+4, y+4);
 }

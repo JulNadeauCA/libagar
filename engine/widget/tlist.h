@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.h,v 1.42 2005/01/31 08:19:30 vedge Exp $	*/
+/*	$Csoft: tlist.h,v 1.43 2005/02/01 08:24:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_TLIST_H_
@@ -13,6 +13,7 @@
 
 struct tlist_popup {
 	const char *iclass;		/* Apply to items of this class */
+	struct AGMenu *menu;
 	struct AGMenuItem *item;
 	struct window *panel;
 	TAILQ_ENTRY(tlist_popup) popups;
@@ -62,7 +63,6 @@ struct tlist {
 	int			 nitems;	/* Current item count */
 	int			 nvisitems;	/* Visible item count */
 	struct scrollbar	*sbar;		/* Vertical scrollbar */
-	struct AGMenu		*menu;		/* Menu (for popups) */
 	TAILQ_HEAD(,tlist_popup) popups;	/* Popup menus */
 };
 
