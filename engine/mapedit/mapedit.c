@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.30 2002/02/15 04:25:07 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.31 2002/02/15 04:30:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -419,7 +419,7 @@ mapedit_tilestack(struct mapedit *med)
 	static SDL_Rect rs, rd;
 	struct window *win = med->tilestack;
 	struct node *me;
-	struct map_aref *aref;
+	struct noderef *nref;
 	static int tilew, tileh;
 	int i;
 
@@ -440,18 +440,18 @@ mapedit_tilestack(struct mapedit *med)
 	rd.h = tileh;
 
 	i = 0;
-	TAILQ_FOREACH(aref, &me->arefsh, marefs) {
+	TAILQ_FOREACH(nref, &me->nrefsh, nrefs) {
 		if (++i > (win->height / tileh) - 1) {
 			return;
 		}
-		if (aref->flags & MAPREF_ANIM) {
+		if (nref->flags & MAPREF_ANIM) {
 			static struct anim *anim;
 
-			anim = aref->pobj->anims[aref->offs];
+			anim = nref->pobj->anims[nref->offs];
 			SDL_BlitSurface(anim->frames[0],
 			    &rs, win->view->v, &rd);
-		} else if (aref->flags & MAPREF_SPRITE) {
-			SDL_BlitSurface(aref->pobj->sprites[aref->offs],
+		} else if (nref->flags & MAPREF_SPRITE) {
+			SDL_BlitSurface(nref->pobj->sprites[nref->offs],
 			    &rs, win->view->v, &rd);
 		}
 
@@ -674,12 +674,10 @@ mapedit_move(struct mapedit *med, int x, int y)
 	
 	node = &med->map->map[med->x][med->y];
 	node->flags &= ~(NODE_ANIM);
-	node_delref(node, node_arefobj(node,
-	    (struct object *)med, MAPEDIT_SELECT));
+	node_delref(node, node_findref(node, med, MAPEDIT_SELECT));
 	
 	node = &med->map->map[x][y];
-	node_addref(node,
-	    (struct object *)med, MAPEDIT_SELECT, MAPREF_ANIM);
+	node_addref(node, med, MAPEDIT_SELECT, MAPREF_ANIM);
 	node->flags |= NODE_ANIM;
 
 	med->x = x;
