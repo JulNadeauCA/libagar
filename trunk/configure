@@ -116,6 +116,11 @@ else
 	SRC=`pwd`
 fi
 
+MACHINE=`uname -m 2>/dev/null` || MACHINE=unknown
+RELEASE=`uname -r 2>/dev/null` || RELEASE=unknown
+SYSTEM=`uname -s 2>/dev/null` || SYSTEM=unknown
+HOST="$MACHINE:$RELEASE:$SYSTEM"
+
 echo > config.log
 
 echo >Makefile.config
