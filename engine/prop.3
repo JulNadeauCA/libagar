@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.4 2003/03/21 01:46:47 vedge Exp $
+.\"	$Csoft: prop.3,v 1.5 2003/04/12 00:35:06 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -62,18 +62,20 @@ enum prop_type {
 	PROP_POINTER		/* Non-portable */
 };
 .Ed
-Types
+.Pp
+The
 .Dv PROP_FLOAT
+and
 .Dv PROP_DOUBLE
-are unavailable if the compiler does not provide these formats.
+types are unavailable if
+.St -ieee754
+floating point is not available.
 The
 .Dv PROP_LONG_DOUBLE
-type is not available on all architectures.
-.Dn prop_save
+type is not available on all architectures and
+.Fn prop_save
 ignores properties of type
-.Dv PROP_POINTER
-and
-.Dv PROP_INT .
+.Dv PROP_POINTER .
 .Sh READING PROPERTIES
 .nr nS 1
 .Ft "struct prop *"
