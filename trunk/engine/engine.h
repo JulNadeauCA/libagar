@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.50 2002/12/24 14:23:30 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.51 2002/12/29 02:13:53 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -8,6 +8,7 @@
 
 #include <config/debug.h>
 #include <config/serialization.h>
+#include <config/have_opengl.h>
 
 #if !defined(__OpenBSD__)
 # ifndef _XOPEN_SOURCE
@@ -33,11 +34,12 @@
 #endif
 
 #include <SDL.h>		 /* For SDL types */
+#ifdef HAVE_OPENGL
+#include <GL/gl.h>		 /* For OpenGL types */
+#endif
 
 #include <engine/compat/queue.h> /* For queue(3) definitions */
-
 #include <libfobj/buf.h>	 /* For the fobj_buf type */
-
 #include <engine/error.h>	 /* Wrappers and error messages */
 #include <engine/debug.h>	 /* Debugging macros */
 #include <engine/object.h> 	 /* Most structures are derived from this */
@@ -45,7 +47,6 @@
 
 #ifdef SERIALIZATION
 # ifdef _SGI_SOURCE
-/* Irix <pthread.h> defines PTHREAD_MUTEX_INITIALIZER as { 0 }. */
 #  undef PTHREAD_MUTEX_INITIALIZER
 #  define PTHREAD_MUTEX_INITIALIZER { { 0 } }
 # endif
