@@ -1,4 +1,4 @@
-.\"	$Csoft: label.3,v 1.16 2003/05/16 01:26:55 vedge Exp $
+.\"	$Csoft: label.3,v 1.17 2003/06/06 03:18:14 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -49,6 +49,9 @@ widget displays single-line or multi-line text.
 .Ft "struct label *"
 .Fn label_polled_new "void *parent" "pthread_mutex_t *mutex" \
                      "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn label_init "struct label *label" "enum label_type type" "const char *text"
 .nr nS 0
 .Pp
 The
@@ -79,7 +82,7 @@ The following sequences in the
 .Fa fmt
 string are substituted by a value dereferenced before the widget is redrawn.
 .Pp
-.Bl -tag -compact -width "%d, %i, %x"
+.Bl -tag -compact -width "%o, %u, %x, %X "
 .It %d, %i
 int
 .It %o, %u, %x, %X
@@ -113,22 +116,45 @@ struct object *
 .It %[objt]
 struct object *
 .El
-.Sh TEXT CHANGES
+.Pp
+The
+.Fn label_init
+function initializes
+.Fa label
+as a label of type:
+.Bd -literal
+enum label_type {
+	LABEL_STATIC,
+	LABEL_POLLED
+};
+.Ed
+.Sh LABELS
 .nr nS 1
 .Ft void
 .Fn label_printf "struct label *label" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn label_set_surface "struct label *label" "SDL_Surface *su"
+.Pp
+.Ft void
+.Fn label_prescale "struct label *label" "const char *text"
 .nr nS 0
 .Pp
 The
 .Fn label_printf
-function changes the string being displayed by
-.Fa label ,
-which must be of type
-.Dv LABEL_STATIC .
-.Fa fmt
-is a
-.Xr printf 3
-style format string.
+function sets the label to a string of text (for
+.Dv LABEL_STATIC
+labels only).
+.Pp
+The
+.Fn label_set_surface
+function uses a copy of the given surface as the label.
+.Pp
+The
+.Fn label_prescale
+function arranges for a
+.Dv LABEL_POLLED
+type label to be large enough to hold a given string of text.
 .Sh EVENTS
 The
 .Nm

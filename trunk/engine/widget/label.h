@@ -1,4 +1,4 @@
-/*	$Csoft: label.h,v 1.19 2003/05/16 01:26:55 vedge Exp $	*/
+/*	$Csoft: label.h,v 1.20 2003/06/06 03:18:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_LABEL_H_
@@ -24,6 +24,7 @@ struct label {
 	
 	pthread_mutex_t	 lock;
 	SDL_Surface	*surface;
+	int		 prew, preh;
 
 	struct {
 		char		 fmt[LABEL_FORMAT_MAX];
@@ -45,6 +46,7 @@ extern DECLSPEC void	 label_draw(void *);
 extern DECLSPEC void	 label_scale(void *, int, int);
 extern DECLSPEC void	 label_printf(struct label *, const char *, ...);
 extern DECLSPEC void	 label_set_surface(struct label *, SDL_Surface *);
+extern DECLSPEC void	 label_prescale(struct label *, const char *);
 __END_DECLS
 
 #include "close_code.h"
