@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.57 2003/05/08 11:59:55 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.58 2003/05/22 08:03:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_H_
@@ -12,8 +12,8 @@
 
 struct widget_ops {
 	const struct object_ops	obops;
-	void			(*widget_draw)(void *);
-	void			(*widget_update)(void *, SDL_Surface *);
+	void			(*draw)(void *);
+	void			(*size)(void *, int *, int *);
 };
 
 struct widget_color {

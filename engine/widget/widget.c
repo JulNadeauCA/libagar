@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.54 2003/05/18 00:17:05 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.55 2003/05/22 05:45:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -119,8 +119,6 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 		break;
 	}
 	va_end(ap);
-
-	OBJECT_ASSERT(wid, "widget");
 
 	pthread_mutex_lock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {	/* Modify */
@@ -418,8 +416,6 @@ _widget_binding_get(void *widp, const char *name, void *res, int return_locked)
 	struct widget_binding *binding;
 	struct prop *prop;
 
-	OBJECT_ASSERT(wid, "widget");
-
 	debug(DEBUG_BINDING_LOOKUPS, "look up `%s' in %s, return in %p%s.\n",
 	    name, OBJECT(wid)->name, res,
 	    return_locked ? ", return locked" : "");
@@ -616,11 +612,6 @@ widget_map_color(void *p, int ind, char *name, Uint8 r, Uint8 g, Uint8 b)
 	struct widget *wid = p;
 	struct widget_color *col;
 	
-	if (strcmp(OBJECT(wid)->name, "widget") == 0 ||
-	    strcmp(OBJECT(wid)->name, "window") == 0) {
-		fatal("%s is not a widget/window", OBJECT(wid)->name);
-	}
-	
 	if (ind > WIDGET_MAX_COLORS)
 		fatal("%d colors > %d", ind, WIDGET_MAX_COLORS);
 	if (ind > wid->ncolors)
@@ -640,8 +631,6 @@ widget_destroy(void *p)
 	struct widget *wid = p;
 	struct widget_color *color, *next_color;
 	struct widget_binding *bind, *next_bind;
-
-	OBJECT_ASSERT(wid, "widget");
 
 	free(wid->type);
 
