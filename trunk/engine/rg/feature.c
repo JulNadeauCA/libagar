@@ -1,7 +1,7 @@
-/*	$Csoft: typesw.c,v 1.16 2005/01/05 10:51:24 vedge Exp $	*/
+/*	$Csoft$	*/
 
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
+ * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
@@ -27,54 +27,62 @@
  */
 
 #include <engine/engine.h>
-#include <engine/typesw.h>
-#include <engine/mapedit/mapedit.h>
-
-#include <engine/object.h>
 #include <engine/map.h>
-#include <engine/perso.h>
-#include <engine/vg/drawing.h>
-#include <engine/rg/tileset.h>
+#include <engine/view.h>
 
-struct object_type *typesw = NULL;
-int ntypesw = 0;
+#include <engine/widget/window.h>
+#include <engine/widget/box.h>
+#include <engine/widget/tlist.h>
+#include <engine/widget/button.h>
+#include <engine/widget/textbox.h>
+#include <engine/widget/menu.h>
 
-/* Initialize the type switch and register the built-in types. */
+#include "tileset.h"
+
 void
-typesw_init(void)
+feature_init(struct feature *ft, const char *type, const char *name,
+    const void *ops)
 {
-	extern const struct object_ops object_ops, map_ops, perso_ops,
-	    drawing_ops, tileset_ops;
+	strlcpy(ft->name, name, sizeof(ft->name));
+	ft->type = type;
+	ft->ops = ops;
+	ft->ops->init(ft);
+	TAILQ_INIT(&ft->sketches);
+}
 
-	typesw = Malloc(sizeof(struct object_type), M_TYPESW);
+/* Associate a sketch with the feature. */
+struct feature_sketch *
+feature_insert_sketch(struct feature *ft, struct sketch *sk)
+{
+	struct feature_sketch *fsk;
 
-	typesw_register("object", sizeof(struct object), &object_ops, OBJ_ICON);
-	typesw_register("map", sizeof(struct map), &map_ops, MAP_ICON);
-	typesw_register("perso", sizeof(struct perso), &perso_ops, PERSO_ICON);
-	typesw_register("drawing", sizeof(struct drawing), &drawing_ops,
-	    DRAWING_ICON);
-	typesw_register("tileset", sizeof(struct tileset), &tileset_ops,
-	    DRAWING_ICON);
+	fsk = Malloc(sizeof(struct feature_sketch), M_OBJECT);
+	fsk->x = 0;
+	fsk->y = 0;
+	fsk->visible = 1;
+	fsk->suppressed = 0;
+	TAILQ_INSERT_TAIL(&ft->sketches, fsk, sketches);
+	return (fsk);
 }
 
 void
-typesw_destroy(void)
+feature_remove_sketch(struct feature *ft, struct sketch *sk)
 {
-	Free(typesw, M_TYPESW);
+	struct feature_sketch *fsk;
+
+	TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
+		if (fsk->sk == sk)
+			break;
+	}
+	if (fsk != NULL) {
+		TAILQ_REMOVE(&ft->sketches, fsk, sketches);
+		Free(fsk, M_RG);
+	}
 }
 
-/* Register an object type. */
 void
-typesw_register(const char *type, size_t size, const struct object_ops *ops,
-    int icon)
+feature_destroy(struct feature *ft)
 {
-	struct object_type *ntype;
 
-	typesw = Realloc(typesw, (ntypesw+1)*sizeof(struct object_type));
-	ntype = &typesw[ntypesw++];
-	strlcpy(ntype->type, type, sizeof(ntype->type));
-	ntype->size = size;
-	ntype->ops = ops;
-	ntype->icon = icon;
 }
 
