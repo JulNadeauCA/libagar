@@ -152,7 +152,7 @@ clean: clean-subdir
 	    rm -f ${PROG} ${GMONOUT} ${OBJS}; \
 	fi
 
-cleandir:	cleandir-subdir clean-depend
+cleandir:	clean cleandir-subdir clean-depend
 	rm -f *.core *~
 
 install: install-subdir ${PROG}
