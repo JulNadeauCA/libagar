@@ -1,4 +1,4 @@
-/*	$Csoft: char.c,v 1.5 2002/01/30 12:40:06 vedge Exp $	*/
+/*	$Csoft: char.c,v 1.6 2002/01/30 14:08:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -46,7 +46,7 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 {
 	struct character *ch;
 	
-	ch = (struct character *) malloc(sizeof(struct character));
+	ch = (struct character *)malloc(sizeof(struct character));
 	if (ch == NULL) {
 		return (NULL);
 	}
@@ -73,7 +73,7 @@ char_create(char *name, char *desc, int maxhp, int maxmp, int flags)
 
 	CHAR_SETSPRITE(ch, 2);	 /* XXX */
 
-	dprintf("%s: hp %d/%d mp%d/%d seed 0x%lx\n",
+	dprintf("%s: hp %d/%d mp %d/%d seed 0x%lx\n",
 	    ch->obj.name, ch->hp, ch->maxhp, ch->mp, ch->maxmp, ch->seed);
 
 	return (ch);
@@ -382,23 +382,21 @@ char_time(Uint32 ival, void *obp)
 void
 char_dump_char(void *ob, void *p)
 {
-	struct character *fc = (struct character *)ob;
+	struct character *ch= (struct character *)ob;
 
-	printf("%3d. %10s lvl %d hp %d/%d mp %d/%d flags 0x%x at %s:%dx%d\n",
-	    fc->obj.id, fc->obj.name, fc->level, fc->hp, fc->maxhp, fc->mp,
-	    fc->maxmp, fc->flags, fc->map->obj.name, fc->x, fc->y);
-	printf("\t\texp %.2f age %.2f effect 0x%x\n", fc->exp,
-	    fc->age, fc->effect);
+	printf("%3d. %10s lvl %d (ex %.2f) hp %d/%d mp %d/%d at %s:%dx%d\n",
+	    ch->obj.id, ch->obj.name, ch->level, ch->exp, ch->hp, ch->maxhp,
+	    ch->mp, ch->maxmp, ch->map->obj.name, ch->x, ch->y);
 	printf("\t\t< ");
-	if (fc->flags & CHAR_FOCUS)
+	if (ch->flags & CHAR_FOCUS)
 		printf("focused ");
-	if (fc->direction & CHAR_UP)
+	if (ch->direction & CHAR_UP)
 		printf("going-up ");
-	if (fc->direction & CHAR_DOWN)
+	if (ch->direction & CHAR_DOWN)
 		printf("going-down ");
-	if (fc->direction & CHAR_LEFT)
+	if (ch->direction & CHAR_LEFT)
 		printf("going-left ");
-	if (fc->direction & CHAR_RIGHT)
+	if (ch->direction & CHAR_RIGHT)
 		printf("going-right ");
 	printf(">");
 }
