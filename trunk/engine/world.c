@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.13 2002/02/21 02:22:20 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.14 2002/02/25 09:07:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -62,7 +62,7 @@ savepath(char *obname, const char *suffix)
 	datapathp = datapath;
 
 	for (ap = pathv;
-	    (*ap = strsep(&datapath, ":;")) != NULL;) {
+	    (*ap = strtok(datapath, ":;")) != NULL;) {
 		sprintf(path, "%s/%s.%s", *ap, obname, suffix);
 		if (stat(path, &sta) == 0) {
 			dprintf("loading %s\n", path);
