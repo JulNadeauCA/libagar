@@ -1,4 +1,4 @@
-/*	$Csoft: label.c,v 1.1 2002/04/20 05:47:10 vedge Exp $	*/
+/*	$Csoft: label.c,v 1.2 2002/04/20 06:21:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -58,7 +58,7 @@ static struct widvec label_vec = {
 
 struct label *
 label_create(struct window *win, char *name, char *caption, Uint32 flags,
-    Uint32 x, Uint32 y)
+    Sint16 x, Sint16 y)
 {
 	struct label *l;
 	SDL_Rect rd;
