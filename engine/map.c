@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.32 2002/02/16 05:51:15 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.33 2002/02/16 08:59:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -289,8 +289,10 @@ map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 		
 			node_destroy(node);
 			node_init(node, flags);
-
-			node_addref(node, ob, offs, rflags);
+	
+			if (ob != NULL) {
+				node_addref(node, ob, offs, rflags);
+			}
 		}
 	}
 
