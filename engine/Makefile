@@ -1,9 +1,9 @@
-#	$Csoft: Makefile,v 1.4 2002/01/26 20:17:34 vedge Exp $
+#	$Csoft: Makefile,v 1.5 2002/01/27 12:47:10 vedge Exp $
 
 TOP=	..
 SUBDIR=	mapedit
 
-CFLAGS+=	${GLIB_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
+CFLAGS+=	${GLIB_CFLAGS} ${SDL_CFLAGS} ${SMPEG_CFLAGS} ${X11_CFLAGS}
 
 LIB=	engine
 SRCS=	event.c object.c char.c world.c map.c xcf.c view.c audio.c video.c
