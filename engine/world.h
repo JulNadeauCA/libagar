@@ -1,7 +1,4 @@
-/*	$Csoft: world.h,v 1.7 2002/02/19 01:46:18 vedge Exp $	*/
-
-SLIST_HEAD(objs_head, object);
-SLIST_HEAD(chars_head, character);
+/*	$Csoft: world.h,v 1.8 2002/02/25 09:07:53 vedge Exp $	*/
 
 struct world {
 	struct	object obj;
@@ -11,8 +8,8 @@ struct world {
 	char	*sysdatadir;		/* System-wide data directory path */
 	struct	map *curmap;		/* Map being displayed */
 
-	struct	objs_head wobjsh;	/* Active objects */
-	struct	chars_head wcharsh;	/* Active characters */
+	SLIST_HEAD(, object) wobjsh;	/* Active objects */
+	SLIST_HEAD(, character) wcharsh; /* Active characters */
 	pthread_mutex_t lock;		/* R/W lock on lists */
 };
 
