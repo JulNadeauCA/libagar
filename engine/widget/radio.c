@@ -1,4 +1,4 @@
-/*	$Csoft: radio.c,v 1.15 2002/11/17 23:13:59 vedge Exp $	*/
+/*	$Csoft: radio.c,v 1.16 2002/11/22 08:56:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -184,6 +184,7 @@ radio_event(int argc, union evarg *argv)
 			}
 			break;
 		default:
+			break;
 		}
 		break;
 	default:
