@@ -1,4 +1,4 @@
-/*	$Csoft: scrollbar.c,v 1.30 2003/06/30 01:12:41 vedge Exp $	*/
+/*	$Csoft: scrollbar.c,v 1.31 2003/07/08 00:34:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -79,9 +79,9 @@ scrollbar_init(struct scrollbar *sb, enum scrollbar_type type)
 {
 	widget_init(sb, "scrollbar", &scrollbar_ops,
 	    WIDGET_FOCUSABLE|WIDGET_UNFOCUSED_BUTTONUP);
-	widget_bind(sb, "value", WIDGET_INT, NULL, &sb->value);
-	widget_bind(sb, "min", WIDGET_INT, NULL, &sb->min);
-	widget_bind(sb, "max", WIDGET_INT, NULL, &sb->max);
+	widget_bind(sb, "value", WIDGET_INT, &sb->value);
+	widget_bind(sb, "min", WIDGET_INT, &sb->min);
+	widget_bind(sb, "max", WIDGET_INT, &sb->max);
 
 	widget_map_color(sb, BG_COLOR, "background", 120, 120, 120, 255);
 	widget_map_color(sb, BUTTON_COLOR, "button", 140, 140, 140, 255);

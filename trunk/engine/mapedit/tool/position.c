@@ -1,4 +1,4 @@
-/*	$Csoft: position.c,v 1.1 2003/09/07 08:03:14 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.2 2003/10/11 04:31:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -136,7 +136,7 @@ position_init(void *p)
 	window_set_caption(win, _("Position"));
 	event_new(win, "window-close", tool_window_close, "%p", po);
 
-	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
+	tl = po->objs_tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
 	WIDGET(tl)->flags |= WIDGET_HFILL;
 	tlist_prescale(tl, "XXXXXXXXXXXXXXXX", 5);
 	event_new(tl, "tlist-poll", poll_objs, "%p", world);
@@ -144,18 +144,18 @@ position_init(void *p)
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		struct checkbox *cb;
-		struct combo *submap_com, *input_com;
+		struct combo *com;
 
-		cb = checkbox_new(bo, _("Centered"));
+		com = combo_new(bo, COMBO_POLL, _("Submap: "));
+		po->submaps_tl = com->list;
+		event_new(com, "combo-poll", poll_submaps, "%p", tl);
 
-		submap_com = combo_new(bo, _("Submap: "));
-		submap_com->list->flags |= TLIST_POLL;
-		event_new(submap_com->list, "tlist-poll", poll_submaps, "%p",
-		    tl);
-
-		input_com = combo_new(bo, _("Input device: "));
-		input_com->list->flags |= TLIST_POLL;
-		event_new(input_com->list, "tlist-poll", poll_input_devs, NULL);
+		com = combo_new(bo, COMBO_POLL, _("Input device: "));
+		po->inputs_tl = com->list;
+		event_new(com, "tlist-poll", poll_input_devs, NULL);
+		
+		cb = checkbox_new(bo, _("Center view"));
+		widget_bind(cb, "state", WIDGET_BOOL, &po->center_view);
 	}
 }
 
@@ -164,6 +164,7 @@ position_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
 {
 //	struct position *po = p;
 
+	
 }
 
 static int

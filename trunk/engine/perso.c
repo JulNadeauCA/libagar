@@ -1,4 +1,4 @@
-/*	$Csoft: perso.c,v 1.35 2003/08/31 11:58:07 vedge Exp $	*/
+/*	$Csoft: perso.c,v 1.36 2003/09/14 02:26:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -164,44 +164,37 @@ perso_edit(void *obj)
 		struct hbox *hb;
 
 		tb = textbox_new(vb, _("Name: "));
-		widget_bind(tb, "string", WIDGET_STRING, &pers->lock,
-		    pers->name, sizeof(pers->name));
+		widget_bind(tb, "string", WIDGET_STRING, pers->name,
+		    sizeof(pers->name));
 
 		sbu = spinbutton_new(vb, _("Level: "));
-		widget_bind(sbu, "value", WIDGET_SINT32, &pers->lock,
-		    &pers->level);
+		widget_bind(sbu, "value", WIDGET_SINT32, &pers->level);
 
 		sbu = spinbutton_new(vb, _("Experience: "));
-		widget_bind(sbu, "value", WIDGET_UINT32, &pers->lock,
-		    &pers->exp);
+		widget_bind(sbu, "value", WIDGET_UINT32, &pers->exp);
 
 		sbu = spinbutton_new(vb, _("Age: "));
-		widget_bind(sbu, "value", WIDGET_INT, &pers->lock, &pers->age);
+		widget_bind(sbu, "value", WIDGET_INT, &pers->age);
 
 		sbu = spinbutton_new(vb, _("Zuars: "));
-		widget_bind(sbu, "value", WIDGET_UINT32, &pers->lock,
-		    &pers->nzuars);
+		widget_bind(sbu, "value", WIDGET_UINT32, &pers->nzuars);
 
 		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			sbu = spinbutton_new(hb, _("HP: "));
-			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
-			    &pers->hp);
+			widget_bind(sbu, "value", WIDGET_INT, &pers->hp);
 			
 			sbu = spinbutton_new(hb, " / ");
-			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
-			    &pers->maxhp);
+			widget_bind(sbu, "value", WIDGET_INT, &pers->maxhp);
 		}
 		
 		hb = hbox_new(vb, HBOX_HOMOGENOUS|HBOX_WFILL);
 		{
 			sbu = spinbutton_new(hb, _("MP: "));
-			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
-			    &pers->mp);
+			widget_bind(sbu, "value", WIDGET_INT, &pers->mp);
 			
 			sbu = spinbutton_new(hb, " / ");
-			widget_bind(sbu, "value", WIDGET_INT, &pers->lock,
-			    &pers->maxmp);
+			widget_bind(sbu, "value", WIDGET_INT, &pers->maxmp);
 		}
 	}
 	return (win);

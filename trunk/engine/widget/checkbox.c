@@ -1,4 +1,4 @@
-/*	$Csoft: checkbox.c,v 1.45 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: checkbox.c,v 1.46 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -84,7 +84,7 @@ void
 checkbox_init(struct checkbox *cbox, char *caption)
 {
 	widget_init(cbox, "checkbox", &checkbox_ops, WIDGET_FOCUSABLE);
-	widget_bind(cbox, "state", WIDGET_BOOL, NULL, &cbox->state);
+	widget_bind(cbox, "state", WIDGET_BOOL, &cbox->state);
 
 	widget_map_color(cbox, TEXT_COLOR, "text", 250, 250, 250, 255);
 	widget_map_color(cbox, BOX_COLOR, "box", 100, 100, 100, 255);

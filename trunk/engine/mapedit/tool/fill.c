@@ -1,4 +1,4 @@
-/*	$Csoft: fill.c,v 1.27 2003/08/29 04:56:18 vedge Exp $	*/
+/*	$Csoft: fill.c,v 1.28 2003/09/07 04:17:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ fill_init(void *p)
 	event_new(win, "window-close", tool_window_close, "%p", fi);
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, NULL, &fi->mode);
+	widget_bind(rad, "value", WIDGET_INT, &fi->mode);
 }
 
 static void

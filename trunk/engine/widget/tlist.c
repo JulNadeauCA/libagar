@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.78 2003/06/30 06:39:21 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.79 2003/07/08 00:34:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -520,6 +520,7 @@ tlist_select_all(struct tlist *tl)
 	pthread_mutex_unlock(&tl->lock);
 }
 
+/* Unset the selection flag on all items. */
 void
 tlist_unselect_all(struct tlist *tl)
 {

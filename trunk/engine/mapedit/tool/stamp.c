@@ -1,4 +1,4 @@
-/*	$Csoft: stamp.c,v 1.50 2003/08/26 07:55:02 vedge Exp $	*/
+/*	$Csoft: stamp.c,v 1.51 2003/09/07 04:17:37 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -71,7 +71,7 @@ stamp_init(void *p)
 	event_new(win, "window-close", tool_window_close, "%p", st);
 
 	rad = radio_new(win, mode_items);
-	widget_bind(rad, "value", WIDGET_INT, NULL, &st->mode);
+	widget_bind(rad, "value", WIDGET_INT, &st->mode);
 }
 
 static void

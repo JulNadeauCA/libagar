@@ -1,4 +1,4 @@
-.\"	$Csoft: tlist.3,v 1.28 2003/09/07 04:17:51 vedge Exp $
+.\"	$Csoft: tlist.3,v 1.29 2003/10/11 03:32:53 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -80,9 +80,9 @@ may include:
 .Bd -literal
 #define TLIST_MULTI		0x01  /* Ctrl/shift multiple selections */
 #define TLIST_MULTI_STICKY	0x02  /* Sticky multiple selections */
-#define TLIST_DROPDOWN		0x04  /* Drop-down menu */
-#define TLIST_POLL		0x08  /* Generate tlist-poll events */
-#define TLIST_DBLCLICK		0x10  /* Generate tlist-dblclick events */
+#define TLIST_POLL		0x04  /* Generate tlist-poll events */
+#define TLIST_DBLCLICK		0x08  /* Generate tlist-dblclick events */
+#define TLIST_TREE		0x10  /* Hack to display trees */
 .Ed
 .Pp
 The

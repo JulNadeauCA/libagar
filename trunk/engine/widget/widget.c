@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.72 2003/08/31 11:58:10 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.73 2003/09/17 02:20:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -67,7 +67,40 @@ widget_init(void *p, const char *type, const void *wops, int flags)
 	wid->h = -1;
 	wid->ncolors = 0;
 	SLIST_INIT(&wid->bindings);
-	pthread_mutex_init(&wid->bindings_lock, NULL);
+	pthread_mutex_init(&wid->bindings_lock, &recursive_mutexattr);
+}
+
+/* Bind a protected variable to a widget. */
+struct widget_binding *
+widget_bind_protected(void *widp, const char *name, pthread_mutex_t *mutex,
+    enum widget_binding_type type, ...)
+{
+	struct widget *wid = widp;
+	struct widget_binding *b;
+	va_list ap;
+	
+	pthread_mutex_lock(&wid->bindings_lock);
+	va_start(ap, type);
+	switch (type) {
+	case WIDGET_PROP:
+		b = widget_bind(wid, name, type,
+		    va_arg(ap, void *),
+		    va_arg(ap, char *));
+		break;
+	case WIDGET_STRING:
+		b = widget_bind(wid, name, type,
+		    va_arg(ap, char *),
+		    va_arg(ap, size_t));
+		break;
+	default:
+		b = widget_bind(wid, name, type,
+		    va_arg(ap, void *));
+		break;
+	}
+	va_end(ap);
+	b->mutex = mutex;
+	pthread_mutex_unlock(&wid->bindings_lock);
+	return (b);
 }
 
 /* Bind a variable to a widget. */
@@ -76,7 +109,6 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 {
 	struct widget *wid = widp;
 	struct widget_binding *binding;
-	pthread_mutex_t *mu = NULL;
 	void *p1, *p2 = NULL;
 	size_t size = 0;
 	va_list ap;
@@ -84,38 +116,34 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	va_start(ap, type);
 	switch (type) {
 	case WIDGET_PROP:
-		p1 = va_arg(ap, void *);		/* Object */
-		p2 = va_arg(ap, char *);		/* Property name */
+		p1 = va_arg(ap, void *);
+		p2 = va_arg(ap, char *);
 		break;
 	case WIDGET_STRING:
-		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
-		p1 = va_arg(ap, char *);		/* UTF-8 text */
-		size = va_arg(ap, size_t);		/* Size of buffer */
+		p1 = va_arg(ap, char *);
+		size = va_arg(ap, size_t);
 		break;
 	default:
-		mu = va_arg(ap, pthread_mutex_t *);	/* Optional mutex */
-		p1 = va_arg(ap, void *);		/* Data */
+		p1 = va_arg(ap, void *);
 		break;
 	}
 	va_end(ap);
 
 	pthread_mutex_lock(&wid->bindings_lock);
-	SLIST_FOREACH(binding, &wid->bindings, bindings) {	/* Modify */
+	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) == 0) {
 			debug_n(DEBUG_BINDINGS,
-			    "%s: modified binding `%s': %d(%p,%p,%p)",
+			    "%s: modified binding `%s': %d(%p,%p)",
 			    OBJECT(wid)->name, name, binding->type,
-			    binding->p1, binding->p2, binding->mutex);
+			    binding->p1, binding->p2);
 
 			binding->type = type;
 			binding->p1 = p1;
 			binding->p2 = p2;
 			binding->size = size;
-			binding->mutex = mu;
 
-			debug_n(DEBUG_BINDINGS, " -> %d(%p,%p,%p)\n",
-			    binding->type, binding->p1, binding->p2,
-			    binding->mutex);
+			debug_n(DEBUG_BINDINGS, " -> %d(%p,%p)\n",
+			    binding->type, binding->p1, binding->p2);
 
 			event_post(wid, "widget-bound", "%p", binding);
 			pthread_mutex_unlock(&wid->bindings_lock);
@@ -124,17 +152,16 @@ widget_bind(void *widp, const char *name, enum widget_binding_type type, ...)
 	}
 
 	binding = Malloc(sizeof(struct widget_binding));	/* Create */
+	strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
-	binding->name = Strdup(name);
 	binding->p1 = p1;
 	binding->p2 = p2;
 	binding->size = size;
-	binding->mutex = mu;
+	binding->mutex = NULL;
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 
-	debug_n(DEBUG_BINDINGS,
-	    "%s: bound `%s' to %p (type=%d p2=%p mutex=%p)\n",
-	    OBJECT(wid)->name, name, p1, type, p2, mu);
+	debug_n(DEBUG_BINDINGS, "%s: bound `%s' to %p (type=%d)\n",
+	    OBJECT(wid)->name, name, p1, type);
 
 	event_post(wid, "widget-bound", "%p", binding);
 	pthread_mutex_unlock(&wid->bindings_lock);
@@ -244,13 +271,13 @@ widget_get_binding(void *widp, const char *name, ...)
 				*(char ***)res = (char **)&prop->data.s;
 				break;
 			default:
-				error_set("prop translation failed");
+				error_set("Failed to translate property.");
 				binding = NULL;
 				goto out;
 			}
 			break;
 		default:
-			error_set("unknown binding type");
+			error_set("Unknown type of widget binding.");
 			binding = NULL;
 			goto out;
 		}
@@ -638,10 +665,8 @@ widget_destroy(void *p)
 	     bind != SLIST_END(&wid->bindings);
 	     bind = nbind) {
 		nbind = SLIST_NEXT(bind, bindings);
-		free(bind->name);
 		free(bind);
 	}
-	SLIST_INIT(&wid->bindings);
 }
 
 /*

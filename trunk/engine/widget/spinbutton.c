@@ -1,4 +1,4 @@
-/*	$Csoft: spinbutton.c,v 1.3 2003/06/15 05:08:43 vedge Exp $	*/
+/*	$Csoft: spinbutton.c,v 1.4 2003/07/08 00:34:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -149,9 +149,9 @@ spinbutton_init(struct spinbutton *sbu, const char *label)
 	event_new(sbu, "widget-bound", spinbutton_bound, NULL);
 	event_new(sbu, "window-keydown", spinbutton_keydown, NULL);
 
-	widget_bind(sbu, "value", WIDGET_INT, NULL, &sbu->value);
-	widget_bind(sbu, "min", WIDGET_INT, NULL, &sbu->min);
-	widget_bind(sbu, "max", WIDGET_INT, NULL, &sbu->max);
+	widget_bind(sbu, "value", WIDGET_INT, &sbu->value);
+	widget_bind(sbu, "min", WIDGET_INT, &sbu->min);
+	widget_bind(sbu, "max", WIDGET_INT, &sbu->max);
 
 	sbu->incbu = button_new(sbu, "+");
 	sbu->decbu = button_new(sbu, "-");

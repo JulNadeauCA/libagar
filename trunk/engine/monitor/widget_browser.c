@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.27 2003/07/28 15:29:59 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.28 2003/09/04 03:13:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -141,7 +141,7 @@ select_color(int argc, union evarg *argv)
 	struct tlist_item *it = argv[3].p;
 	Uint32 *col = it->p1;
 
-	widget_bind(pal, "color", WIDGET_UINT32, NULL, col);
+	widget_bind(pal, "color", WIDGET_UINT32, col);
 }
 
 /* Display widget information. */

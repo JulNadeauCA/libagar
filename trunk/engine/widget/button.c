@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.74 2003/07/03 06:43:33 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.75 2003/07/08 00:34:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -75,7 +75,7 @@ button_init(struct button *bu, const char *caption)
 {
 	widget_init(bu, "button", &button_ops, WIDGET_FOCUSABLE |
 	    WIDGET_UNFOCUSED_MOTION);
-	widget_bind(bu, "state", WIDGET_BOOL, NULL, &bu->state);
+	widget_bind(bu, "state", WIDGET_BOOL, &bu->state);
 
 	widget_map_color(bu, FRAME_COLOR, "frame", 100, 100, 100, 255);
 	widget_map_color(bu, TEXT_COLOR, "text", 240, 240, 240, 255);

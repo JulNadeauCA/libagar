@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.h,v 1.17 2003/08/29 04:56:06 vedge Exp $	*/
+/*	$Csoft: position.h,v 1.1 2003/09/07 08:03:14 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/mapedit/tool/tool.h>
@@ -8,10 +8,10 @@
 struct position {
 	struct tool tool;
 
-	struct object	*obj;			/* Object to position */
-	int		 dir;			/* Initial direction */
-	int		 center;		/* Centering flag */
-	struct input	*input;			/* Input device (or NULL) */
+	int		 center_view;
+	struct tlist	*objs_tl;
+	struct tlist	*submaps_tl;
+	struct tlist	*inputs_tl;
 };
 
 __BEGIN_DECLS

@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.99 2003/10/11 04:31:34 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.100 2003/10/11 04:43:03 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -281,23 +281,23 @@ config_window(struct config *con)
 	event_new(cbox, "checkbox-changed", config_set_opengl, NULL);
 
 	cbox = checkbox_new(vb, _("Unicode keyboard translation"));
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &kbd_unitrans);
+	widget_bind(cbox, "state", WIDGET_INT, &kbd_unitrans);
 	event_new(cbox, "checkbox-changed", config_set_unitrans, NULL);
 
 	cbox = checkbox_new(vb, _("Input composition"));
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &text_composition);
+	widget_bind(cbox, "state", WIDGET_INT, &text_composition);
 
 	cbox = checkbox_new(vb, _("Unrestricted window resize"));
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &window_freescale);
+	widget_bind(cbox, "state", WIDGET_INT, &window_freescale);
 
 	cbox = checkbox_new(vb, _("Right->left (Arabic, Hebrew, ...)"));
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &text_rightleft);
+	widget_bind(cbox, "state", WIDGET_INT, &text_rightleft);
 
 	cbox = checkbox_new(vb, _("Idle time prediction"));
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
+	widget_bind(cbox, "state", WIDGET_INT, &event_idle);
 #ifdef DEBUG
 	cbox = checkbox_new(vb, _("Debugging"));
-	widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
+	widget_bind(cbox, "state", WIDGET_INT, &engine_debug);
 #endif
 
 	vb = vbox_new(hb, 0);
@@ -358,17 +358,10 @@ config_window(struct config *con)
 	}
 
 	hb = hbox_new(win, HBOX_HOMOGENOUS|HBOX_WFILL|HBOX_HFILL);
-	hbox_set_spacing(hb, 0);
-	hbox_set_padding(hb, 0);
-	{
-		button = button_new(hb, _("Close"));
-		event_new(button, "button-pushed", window_generic_hide, 
-		    "%p", win);
-		widget_focus(button);
-
-		button = button_new(hb, _("Save"));
-		event_new(button, "button-pushed", save_config, NULL);
-	}
+	button = button_new(hb, _("Close"));
+	event_new(button, "button-pushed", window_generic_hide,  "%p", win);
+	button = button_new(hb, _("Save"));
+	event_new(button, "button-pushed", save_config, NULL);
 	config->settings = win;
 }
 
