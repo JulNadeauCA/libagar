@@ -1,4 +1,4 @@
-/*	$Csoft: config.h,v 1.13 2003/04/25 09:47:05 vedge Exp $	*/
+/*	$Csoft: config.h,v 1.14 2003/06/06 03:20:29 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -13,7 +13,6 @@ struct config {
 extern struct config *config;
 
 __BEGIN_DECLS
-extern DECLSPEC struct config	*config_new(void);
 extern DECLSPEC void		 config_init(struct config *);
 extern DECLSPEC void		 config_destroy(void *);
 extern DECLSPEC void		 config_window(struct config *);
