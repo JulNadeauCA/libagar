@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.56 2002/03/12 14:00:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.57 2002/03/14 03:33:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -602,28 +602,46 @@ map_load(void *ob, int fd)
 	char magic[9];
 	struct map *m = (struct map *)ob;
 	Uint32 vermin, vermaj;
-	Uint32 x, y, refs = 0;
+	Uint32 x, y, refs = 0, i, nobjs;
 
 	/* Verify the signature and version major. */
 	if (read(fd, magic, 10) != 10)
 		goto badmagic;
 	if (strncmp(magic, MAP_MAGIC, 10) != 0)
 		goto badmagic;
-	vermaj = (int) fobj_read_uint32(fd);
-	vermin = (int) fobj_read_uint32(fd);
+	vermaj = fobj_read_uint32(fd);
+	vermin = fobj_read_uint32(fd);
 	if (vermaj > MAP_VERMAJ ||
 	    (vermaj == MAP_VERMAJ && vermin > MAP_VERMIN))
 		goto badver;
 
-	/* Read map information. */
-	m->flags = (int) fobj_read_uint32(fd);
-	m->mapw  = (int) fobj_read_uint32(fd);
-	m->maph  = (int) fobj_read_uint32(fd);
-	m->defx  = (int) fobj_read_uint32(fd);
-	m->defy  = (int) fobj_read_uint32(fd);
-	m->tilew = (int) fobj_read_uint32(fd);
-	m->tileh = (int) fobj_read_uint32(fd);
+	m->flags = fobj_read_uint32(fd);
+	m->mapw  = fobj_read_uint32(fd);
+	m->maph  = fobj_read_uint32(fd);
+	m->defx  = fobj_read_uint32(fd);
+	m->defy  = fobj_read_uint32(fd);
+	m->tilew = fobj_read_uint32(fd);
+	m->tileh = fobj_read_uint32(fd);
 
+	nobjs = fobj_read_uint32(fd);
+	dprintf("%d objects on map\n", nobjs);
+	for (i = 0; i < nobjs; i++) {
+		char *s;
+		struct object *pob;
+
+		s = fobj_read_string(fd);
+		fobj_read_uint32(fd);		/* Unused */
+		pob = object_strfind(s);
+
+		if (pob != NULL) {
+			dprintf("%s uses: %s\n", OBJECT(m)->name, pob->name);
+		} else {
+			warning("cannot translate \"%s\"\n", s);
+		}
+		
+		free(s);
+	}
+	
 	map_allocnodes(m, m->mapw, m->maph, m->tilew, m->tileh);
 
 	/* Adapt the viewport to this tile geometry. */
@@ -688,7 +706,10 @@ map_save(void *ob, int fd)
 {
 	struct map *m = (struct map *)ob;
 	struct fobj_buf *buf;
-	Uint32 x = 0, y, totrefs = 0;
+	struct object *pob, **pobjs;
+	Uint32 x = 0, y, totrefs = 0, nobjs = 0;
+	size_t solen = 0;
+	off_t soffs;
 
 	buf = fobj_create_buf(65536, 32767);	/* XXX tune */
 
@@ -703,10 +724,28 @@ map_save(void *ob, int fd)
 	fobj_bwrite_uint32(buf, m->defy);
 	fobj_bwrite_uint32(buf, m->tilew);
 	fobj_bwrite_uint32(buf, m->tileh);
+	
+	soffs = buf->offs;
+	fobj_bwrite_uint32(buf, 0);
+
+	pthread_mutex_lock(&world->lock);
+	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+		solen += sizeof(struct object *);
+	}
+
+	pobjs = (struct object **)emalloc(solen);
+	
+	SLIST_FOREACH(pob, &world->wobjsh, wobjs) {
+		fobj_bwrite_string(buf, pob->name);
+		fobj_bwrite_uint32(buf, 0);
+		pobjs[nobjs++] = pob;
+	}
+	pthread_mutex_unlock(&world->lock);
+
+	fobj_bpwrite_uint32(buf, nobjs, soffs);
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			off_t soffs;
 			struct node *node = &m->map[x][y];
 			struct noderef *nref;
 			Uint32 nrefs = 0;
