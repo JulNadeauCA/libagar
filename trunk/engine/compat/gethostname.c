@@ -1,4 +1,4 @@
-/*	$Csoft: setenv.c,v 1.3 2002/12/24 10:29:21 vedge Exp $	*/
+/*	$Csoft: gethostname.c,v 1.1 2003/03/25 11:39:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -30,8 +30,8 @@
 
 #ifndef HAVE_GETHOSTNAME
 
+#include <engine/engine.h>
 #include "gethostname.h"
-#include "strlcpy.h"
 
 int
 gethostname(char *name, size_t namelen)

@@ -1,4 +1,4 @@
-/*	$Csoft: strsep.c,v 1.3 2003/03/25 13:48:01 vedge Exp $	*/
+/*	$Csoft: strsep.c,v 1.4 2003/06/14 00:24:08 vedge Exp $	*/
 /*	$OpenBSD: strsep.c,v 1.3 1997/08/20 04:28:14 millert Exp $	*/
 
 /*-
@@ -34,6 +34,7 @@
 
 #ifndef HAVE_STRSEP
 
+#include <engine/engine.h>
 #include "strsep.h"
 
 #include <stdio.h>

@@ -1,4 +1,4 @@
-/*	$Csoft: asprintf.c,v 1.6 2003/06/14 00:18:33 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.7 2003/06/21 06:50:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -30,14 +30,11 @@
 
 #ifndef HAVE_ASPRINTF
 
-#include <sys/types.h>
+#include <engine/engine.h>
+#include "asprintf.h"
 
 #include <stdio.h>
 #include <stdarg.h>
-
-#include <engine/error/error.h>
-
-#include "asprintf.h"
 
 int
 asprintf(char **ret, const char *fmt, ...)

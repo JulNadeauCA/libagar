@@ -1,4 +1,4 @@
-/*	$Csoft: strlcat.c,v 1.3 2003/03/25 13:48:01 vedge Exp $	*/
+/*	$Csoft: strlcat.c,v 1.4 2003/06/14 00:17:31 vedge Exp $	*/
 /*	$OpenBSD: strlcat.c,v 1.8 2001/05/13 15:40:15 deraadt Exp $	*/
 
 /*
@@ -21,9 +21,10 @@
 
 #ifndef HAVE_STRLCAT
 
-#include <string.h>
-
+#include <engine/engine.h>
 #include "strlcat.h"
+
+#include <string.h>
 
 /*
  * Appends src to string dst of size siz (unlike strncat, siz is the
