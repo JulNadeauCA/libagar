@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.121 2002/12/14 04:46:50 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.122 2002/12/14 09:15:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -60,8 +60,6 @@ enum {
 	TITLEBAR_TEXT_UNFOCUSED_COLOR,
 	TITLEBAR_TEXT_FOCUSED_COLOR
 };
-
-static Uint32 bg_color = 0;
 
 /* XXX struct */
 #include "borders/green1.h"
@@ -173,11 +171,6 @@ window_init(struct window *win, char *name, int flags, int rx, int ry,
 	int i;
 	int fl = flags;
 
-	if (bg_color == 0) {
-		/* Set the background color. */
-		bg_color = SDL_MapRGB(view->v->format, 0, 0, 0);
-	}
-	
 	if (name != NULL) {					/* Unique */
 		asprintf(&wname, "win-%s", name);
 		fl |= WINDOW_SAVE_POSITION;
@@ -611,7 +604,8 @@ window_hide(struct window *win)
 
 	/* Update the background. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		SDL_FillRect(view->v, &win->rd, bg_color);
+		SDL_FillRect(view->v, &win->rd,
+		    WIDGET_COLOR(win, BACKGROUND_COLOR));
 		SDL_UpdateRect(view->v, win->rd.x, win->rd.y,
 		    win->rd.w, win->rd.h);
 	} else {
@@ -725,47 +719,47 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
 	win->rd.y += motion->yrel;
 	window_clamp(win);
 
-	/* Update around the window in GUI mode. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		SDL_Rect nrd;
+		SDL_Rect rfill;
 
-		if (win->rd.x > oldpos.x) {	/* Right */
-			nrd.x = oldpos.x;
-			nrd.y = oldpos.y;
-			nrd.w = win->rd.x - oldpos.x;
-			nrd.h = win->rd.h;
-			SDL_FillRect(view->v, &nrd, bg_color);
-			SDL_UpdateRect(view->v, nrd.x,
-			    nrd.y, nrd.w, nrd.h);
+		/* Update the background. */
+		if (win->rd.x > oldpos.x) {			/* Right */
+			rfill.x = oldpos.x;
+			rfill.y = oldpos.y;
+			rfill.w = win->rd.x - oldpos.x;
+			rfill.h = win->rd.h;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		if (win->rd.y > oldpos.y) {	/* Down */
-			nrd.x = oldpos.x;
-			nrd.y = oldpos.y;
-			nrd.w = win->rd.w;
-			nrd.h = win->rd.y - oldpos.y;
-			SDL_FillRect(view->v, &nrd, bg_color);
-			SDL_UpdateRect(view->v, nrd.x,
-			    nrd.y, nrd.w, nrd.h);
+		if (win->rd.y > oldpos.y) {			/* Downward */
+			rfill.x = oldpos.x;
+			rfill.y = oldpos.y;
+			rfill.w = win->rd.w;
+			rfill.h = win->rd.y - oldpos.y;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		if (win->rd.x < oldpos.x) {	/* Left */
-			nrd.x = win->rd.x + win->rd.w;
-			nrd.y = win->rd.y;
-			nrd.w = oldpos.x - win->rd.x;
-			nrd.h = oldpos.h;
-			SDL_FillRect(view->v, &nrd, bg_color);
-			SDL_UpdateRect(view->v, nrd.x,
-			    nrd.y, nrd.w, nrd.h);
+		if (win->rd.x < oldpos.x) {			/* Left */
+			rfill.x = win->rd.x + win->rd.w;
+			rfill.y = win->rd.y;
+			rfill.w = oldpos.x - win->rd.x;
+			rfill.h = oldpos.h;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		if (win->rd.y < oldpos.y) {	/* Up */
-			nrd.x = oldpos.x;
-			nrd.y = win->rd.y + win->rd.h;
-			nrd.w = oldpos.w;
-			nrd.h = oldpos.y - win->rd.y;
-			SDL_FillRect(view->v, &nrd, bg_color);
-			SDL_UpdateRect(view->v, nrd.x,
-			    nrd.y, nrd.w, nrd.h);
+		if (win->rd.y < oldpos.y) {			/* Upward */
+			rfill.x = oldpos.x;
+			rfill.y = win->rd.y + win->rd.h;
+			rfill.w = oldpos.w;
+			rfill.h = oldpos.y - win->rd.y;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-	} else if (view->rootmap != NULL) {		/* Tile-based */
+	} else if (view->rootmap != NULL) {
 		/* Redraw the map. */
 		view->rootmap->map->redraw++;
 	}
@@ -1103,8 +1097,7 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	SDL_Rect ro;
 	int nx, ny;
 
-	ro = win->rd;		/* Structure copy */
-
+	ro = win->rd;
 	nx = win->rd.x;
 	ny = win->rd.y;
 
@@ -1172,25 +1165,35 @@ winop_resize(int op, struct window *win, SDL_MouseMotionEvent *motion)
 	/* Effect the change. */
 	window_resize(win);
 
-	/* Update the background. */
 	if (view->gfx_engine == GFX_ENGINE_GUI) {
-		/* Rectangle at the left (lresize operation). */
-		if (win->rd.x > ro.x) {
-			SDL_UpdateRect(view->v,
-			    ro.x, ro.y,
-			    win->rd.x-ro.x, win->rd.h);
+		SDL_Rect rfill;
+
+		/* Update the background. */
+		if (win->rd.x > ro.x) {			/* L-resize */
+			rfill.x = ro.x;
+			rfill.y = ro.y;
+			rfill.w = win->rd.x - ro.x;
+			rfill.h = win->rd.h;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
+		} else if (win->rd.w < ro.w) {		/* R-resize */
+			rfill.x = win->rd.x + win->rd.w;
+			rfill.y = win->rd.y;
+			rfill.w = ro.w - win->rd.w;
+			rfill.h = ro.h;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
 		}
-		/* Rectangle at the right (rresize and hresize ops). */
-		if (win->rd.w < ro.w) {
-			SDL_UpdateRect(view->v,
-			    win->rd.x + win->rd.w, win->rd.y,
-			    ro.w - win->rd.w, ro.h);
-		}
-		/* Rectangle at the bottom (rresize and hresize ops). */
-		if (win->rd.h < ro.h) {
-			SDL_UpdateRect(view->v,
-			    win->rd.x, win->rd.y + win->rd.h,
-			    ro.w, ro.h - win->rd.h);
+		if (win->rd.h < ro.h) {			/* H-resize */
+			rfill.x = ro.x;
+			rfill.y = win->rd.y + win->rd.h;
+			rfill.w = ro.w;
+			rfill.h = ro.h - win->rd.h;
+			SDL_FillRect(view->v, &rfill,
+			    WIDGET_COLOR(win, BACKGROUND_COLOR));
+			SDL_UpdateRects(view->v, 1, &rfill);
 		}
 	} else if (view->rootmap != NULL) {
 		/* Redraw the map. */
