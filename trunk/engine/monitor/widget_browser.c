@@ -1,4 +1,4 @@
-/*	$Csoft: widget_browser.c,v 1.10 2002/12/30 04:10:15 vedge Exp $	*/
+/*	$Csoft: widget_browser.c,v 1.11 2003/01/01 05:18:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -348,10 +348,6 @@ tl_windows_examine(int argc, union evarg *argv)
 		    &pwin->rd,
 		    &pwin->minw, &pwin->minh,
 		    &pwin->rd);
-
-		label_polled_new(reg, 100, 0, &pwin->lock,
-		    "Region spacing: %d pixels",
-		    &pwin->spacing);
 
 		label_polled_new(reg, 100, 0, &pwin->lock,
 		    "Body: %[rect]", &pwin->body);
