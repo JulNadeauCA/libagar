@@ -1,4 +1,4 @@
-# $Csoft: csoft.prog.mk,v 1.12 2002/01/26 01:36:28 vedge Exp $
+# $Csoft: csoft.prog.mk,v 1.13 2002/01/26 01:46:40 vedge Exp $
 
 # Copyright (c) 2001 CubeSoft Communications, Inc.
 # <http://www.csoft.org>
@@ -46,6 +46,8 @@ LFLAGS?=
 
 YACC?=		yacc
 YFLAGS?=	-d
+
+PROG_SHARE?=
 
 .SUFFIXES: .o .po .so .c .cc .C .cxx .y .s .S .asm .l
 
