@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.9 2003/02/13 11:22:48 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.10 2003/02/17 11:51:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -144,11 +144,6 @@ xcf_read_property(int fd, struct xcf_prop *prop)
 		prop->data.resolution.x = read_float(fd);
 		prop->data.resolution.y = read_float(fd);
 		debug(DEBUG_RESOLUTIONS, "resolution %f x %f\n",
-		    prop->data.resolution.x, prop->data.resolution.y);
-#else
-		prop->data.resolution.x = (float)read_uint32(fd);
-		prop->data.resolution.y = (float)read_uint32(fd);
-		debug(DEBUG_RESOLUTIONS, "resolution %d x %d\n",
 		    prop->data.resolution.x, prop->data.resolution.y);
 #endif
 		break;
