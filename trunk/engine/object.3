@@ -1,4 +1,4 @@
-.\"	$Csoft: object.3,v 1.65 2004/05/29 05:57:07 vedge Exp $
+.\"	$Csoft: object.3,v 1.66 2004/08/25 05:43:35 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -46,7 +46,7 @@ layer is responsible for handling:
 .It
 Memory management
 .It
-Data persistence
+Object archiving (persistence)
 .It
 Interdependencies between objects
 .It
@@ -174,8 +174,7 @@ flag prevents the
 .Xr prop 3
 table from being cleared as part of a load operation.
 .Dv OBJECT_NON_PERSISTENT
-prevents the object and its descendents from being saved as part of a save
-operation.
+prevents the object and its descendents from being archived.
 If this flag is set,
 .Fn object_page_in
 and
@@ -446,10 +445,33 @@ for more information.
 .Fn object_page_out "void *obj" "enum object_page_item item"
 .nr nS 0
 .Pp
+These functions implement archiving of objects (also known as
+"serialization" or "flattening" in object-oriented terminology).
+Persistent object information such as size, dependencies and
+position in the hierarchy are encoded in machine-independent
+format (and usually saved to disk or network).
+.Pp
+The
+.Fn load
+and
+.Fn save
+functions of the generic operation vector are responsible for
+archiving of data specific to the object's type.
+Except for direct subclasses of
+.Nm ,
+.Fn load
+and
+.Fn save
+must invoke the
+.Fn _load
+and
+.Fn _save
+routines of their superclass.
+.Pp
 The
 .Fn object_load
 function loads the state of an object and its descendants from
-machine-independent format.
+an archive.
 The first file found in the search path (the colon-separated
 .Sq load-path
 config setting) is used.
@@ -463,24 +485,26 @@ events (that don't have the
 .Dv TIMEOUT_LOADABLE
 flag set).
 .It
-Load the generic part of
+Load the generic part (the
+.Nm
+class) of
 .Fa obj
 and its descendants.
-Saved child objects found in the data file are each compared against the
+Archived siblings found in the data file are each compared against the
 currently attached objects.
 If a match is found, the
 .Va reinit
 op is called.
-If there is no currently attached object matching a saved object, one is
-dynamically allocated and initialized using the type switch (the
+If there is no currently attached object matching an archived one,
+it is dynamically allocated and initialized using the type switch (the
 .Va typesw[]
 array).
-If a currently attached object has no matching saved object, it is destroyed
-(as long as it is not currently in use).
+If a currently attached object has no archived counterpart, it is\
+destroyed (as long as it is not currently in use).
 .It
 Resolve the dependencies of
 .Fa obj
-and its descendants, so encoded object references may be decoded in the
+and its children, so encoded object references may be decoded in the
 following step.
 .It
 Reload the data of
@@ -493,11 +517,10 @@ dependency table).
 .Pp
 The
 .Fn object_save
-function writes the state of an object and its descendents to
-files/directories in the save directory (the
+function creates an archive of the given object in the save
+directory (the
 .Sq save-path
-config setting),
-in network format.
+config setting).
 .Pp
 The
 .Fn object_page_in
@@ -593,6 +616,8 @@ This event originates from the current parent object.
 The object's name has just been modified.
 .El
 .Sh TROUBLETONS
+The positioning functions should probably be moved to a subclass.
+.Pp
 If the maximum number of references (0xffffffff-2) is reached, the object
 remains resident and the reference count is no longer incremented or
 decremented.
