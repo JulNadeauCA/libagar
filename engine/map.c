@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.6 2002/01/30 18:34:54 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.7 2002/02/01 06:00:07 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -160,6 +160,8 @@ map_focus(struct map *em)
 {
 	curmap = em;
 
+	dprintf("focusing on %s\n", em->obj.name);
+
 	if (mapedit) {
 		char s[128];
 		
@@ -168,6 +170,24 @@ map_focus(struct map *em)
 	} else {
 		SDL_WM_SetCaption(em->obj.name, "mapedit");
 	}
+	
+	map_animset(em, 1);
+	return (0);
+}
+
+int
+map_unfocus(struct map *em)
+{
+	dprintf("unfocusing %s\n", em->obj.name);
+	
+	if (mapedit) {
+		curmapedit->flags = 0;
+	}
+	pthread_mutex_lock(&em->lock);
+	map_animset(em, 0);
+	curmap = NULL;
+	pthread_mutex_unlock(&em->lock);
+
 	return (0);
 }
 
@@ -192,7 +212,8 @@ static int
 map_entry_init(struct map_entry *me, struct object *ob, int offs,
     int meflags, int rflags)
 {
-	memset(me, NULL, sizeof(struct map_entry));
+	memset(me, 0, sizeof(struct map_entry));
+	me->objs = NULL;
 
 	/* Used by the map editor to fill new maps. */
 	if (ob != NULL) {
@@ -213,18 +234,18 @@ map_entry_addref(struct map_entry *me, struct object *ob, int offs, int rflags)
 		perror("map_aref");
 		return (NULL);
 	}
-	naref->index = me->nobjs;
+
 	naref->pobj = ob;
+	naref->index = me->nobjs;
 	naref->offs = offs;
 	naref->flags = rflags;
-	naref->xoffs = 0;
-	naref->yoffs = 0;
-
 	if (rflags & MAPREF_ANIM) {
 		naref->frame = 0;
 		naref->fwait = 0;
 		me->nanims++;
 	}
+	naref->xoffs = 0;
+	naref->yoffs = 0;
 
 	me->objs = g_slist_append(me->objs, (void *)naref);
 	me->nobjs++;
@@ -372,6 +393,11 @@ map_plot_anim(struct map *em, struct anim *anim, int frame, int x, int y)
 	static SDL_Rect rs, rd;
 	static SDL_Surface *s;
 
+	if (anim == NULL) {
+		dprintf("NULL anim\n");
+		abort();
+	}
+
 	s = g_slist_nth_data(anim->frames, frame);
 
 #ifdef DEBUG
@@ -407,7 +433,7 @@ map_animate(Uint32 ival, void *p)
 
 	if (pthread_mutex_lock(&em->lock) != 0) {
 		perror(em->obj.name);
-		return (ival);
+		return (0);
 	}
 	for (y = em->view->mapy, vy = 0;
 	    (y < em->view->maph + em->view->mapy + 1);
@@ -462,17 +488,22 @@ map_animate(Uint32 ival, void *p)
 					map_plot_sprite(em,
 					    g_slist_nth_data(
 					    taref->pobj->sprites, taref->offs),
-					    vx << TILESHIFT, vy << TILESHIFT);
+					    (vx << TILESHIFT) + taref->xoffs,
+					    (vy << TILESHIFT) + taref->yoffs);
 				} else if (taref->flags & MAPREF_ANIM) {
 					struct anim *anim;
-
+					
 					anim = g_slist_nth_data(
 					    taref->pobj->anims, taref->offs);
+					if (anim == NULL) {
+						fatal("NULL anim!\n");
+					}
 					map_plot_anim(em,
 					    g_slist_nth_data(
 					    taref->pobj->anims, taref->offs),
 					    taref->frame,
-					    vx << TILESHIFT, vy << TILESHIFT);
+					    (vx << TILESHIFT) + taref->xoffs,
+					    (vy << TILESHIFT) + taref->yoffs);
 					
 					if (anim->delay > 0 &&
 					    taref->fwait++ > anim->delay) {
@@ -492,8 +523,10 @@ map_animate(Uint32 ival, void *p)
 			}
 			if (mapedit) {
 				mapedit_drawflags(em, me->flags, vx, vy);
+				if (curmapedit->flags & MAPEDIT_TILELIST)
+					mapedit_tilelist(curmapedit);
+				}
 			}
-		}
 	}
 	pthread_mutex_unlock(&em->lock);
 	SDL_UpdateRect(em->view->v, 0, 0, 0, 0);
@@ -604,7 +637,8 @@ map_draw(Uint32 ival, void *p)
 					map_plot_sprite(em,
 					    g_slist_nth_data(
 					    taref->pobj->sprites, taref->offs),
-					    vx << TILESHIFT, vy << TILESHIFT);
+					    (vx << TILESHIFT) + taref->xoffs,
+					    (vy << TILESHIFT) + taref->yoffs);
 				}
 			}
 
@@ -615,12 +649,10 @@ map_draw(Uint32 ival, void *p)
 	}
 
 	if (mapedit) {
-		if (curmapedit->flags & MAPEDIT_TILELIST)
-			mapedit_tilelist(curmapedit);
-		if (curmapedit->flags & MAPEDIT_TILESTACK)
-			mapedit_tilestack(curmapedit);
 		if (curmapedit->flags & MAPEDIT_OBJLIST)
 			mapedit_objlist(curmapedit);
+		if (curmapedit->flags & MAPEDIT_TILESTACK)
+			mapedit_tilestack(curmapedit);
 	}
 	pthread_mutex_unlock(&em->lock);
 
