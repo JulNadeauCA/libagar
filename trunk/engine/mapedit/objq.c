@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.13 2002/08/21 01:18:56 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.14 2002/08/21 04:25:40 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -180,7 +180,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	mv = emalloc(sizeof(struct mapview));
 	mapview_init(mv, med, ob->art->map,
 	    MAPVIEW_CENTER|MAPVIEW_ZOOM|MAPVIEW_TILEMAP|MAPVIEW_GRID|
-	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR|MAPVIEW_EDIT,
+	    MAPVIEW_PROPS|MAPVIEW_SHOW_CURSOR,
 	    100, 100);
 	
 	/*
@@ -217,7 +217,7 @@ objq_select(struct objq *oq, struct mapedit *med, struct editobj *eob)
 	
 	/* Edition */
 	bu = button_new(reg, NULL, SPRITE(med, MAPEDIT_TOOL_EDIT),
-	    BUTTON_STICKY|BUTTON_PRESSED, -1, -1);
+	    BUTTON_STICKY, -1, -1);
 	WIDGET(bu)->flags |= WIDGET_NO_FOCUS;
 	event_new(bu, "button-pushed", 0,
 	    tilemap_option, "%p, %i", mv, MAPEDIT_TOOL_EDIT);
