@@ -1,4 +1,4 @@
-/*	$Csoft: objedit.c,v 1.27 2004/03/10 16:58:35 vedge Exp $	*/
+/*	$Csoft: objedit.c,v 1.28 2004/03/17 12:42:06 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -28,6 +28,7 @@
 
 #include <engine/engine.h>
 #include <engine/typesw.h>
+#include <engine/view.h>
 
 #include <engine/widget/window.h>
 #include <engine/widget/vbox.h>
@@ -112,8 +113,7 @@ close_generic_obj(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
 
-	event_post(NULL, win, "window-destroy", NULL);
-
+	view_detach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
 	object_del_dep(&mapedit.pseudo, oent->obj);
 	free(oent);
@@ -152,8 +152,7 @@ close_obj_data(int argc, union evarg *argv)
 	struct window *win = argv[0].p;
 	struct objent *oent = argv[1].p;
 	
-	event_post(NULL, win, "window-destroy", NULL);
-
+	view_detach(win);
 	TAILQ_REMOVE(&dobjs, oent, objs);
 	object_page_out(oent->obj, OBJECT_DATA);
 	object_del_dep(&mapedit.pseudo, oent->obj);

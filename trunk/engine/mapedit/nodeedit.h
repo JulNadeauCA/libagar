@@ -1,4 +1,4 @@
-/*	$Csoft: nodeedit.h,v 1.6 2003/06/29 11:33:43 vedge Exp $	*/
+/*	$Csoft: nodeedit.h,v 1.7 2004/03/17 12:42:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -10,7 +10,7 @@ struct nodeedit {
 };
 
 __BEGIN_DECLS
-void	nodeedit_init(struct mapview *);
+void	nodeedit_init(struct mapview *, struct window *win);
 void	nodeedit_destroy(struct mapview *);
 __END_DECLS
 

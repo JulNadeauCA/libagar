@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.c,v 1.19 2004/03/10 03:12:37 vedge Exp $	*/
+/*	$Csoft: layedit.c,v 1.20 2004/03/17 12:42:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
@@ -213,7 +213,7 @@ mask_layer(int argc, union evarg *argv)
 }
 
 void
-layedit_init(struct mapview *mv)
+layedit_init(struct mapview *mv, struct window *pwin)
 {
 	struct map *m = mv->map;
 	struct window *win;
@@ -278,12 +278,12 @@ layedit_init(struct mapview *mv)
 
 	mv->layed.layers_tl = tl;
 	mv->layed.win = win;
+	window_attach(pwin, win);
 }
 
 void
 layedit_destroy(struct mapview *mv)
 {
-	view_detach(mv->layed.win);
 }
 
 #endif	/* EDITION */

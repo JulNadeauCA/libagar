@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.h,v 1.2 2004/03/12 04:06:33 vedge Exp $	*/
+/*	$Csoft: mediasel.h,v 1.3 2004/03/17 12:42:06 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MEDIASEL_H_
@@ -24,7 +24,7 @@ struct mediasel {
 };
 
 __BEGIN_DECLS
-void		 mediasel_init(struct mapview *);
+void		 mediasel_init(struct mapview *, struct window *);
 void		 mediasel_destroy(struct mapview *);
 __END_DECLS
 

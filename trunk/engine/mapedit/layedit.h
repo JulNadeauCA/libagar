@@ -1,4 +1,4 @@
-/*	$Csoft: layedit.h,v 1.4 2004/03/10 03:12:37 vedge Exp $	*/
+/*	$Csoft: layedit.h,v 1.5 2004/03/17 12:42:05 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"
@@ -11,7 +11,7 @@ struct layedit {
 };
 
 __BEGIN_DECLS
-void	layedit_init(struct mapview *);
+void	layedit_init(struct mapview *, struct window *);
 void	layedit_poll(int, union evarg *);
 void	layedit_destroy(struct mapview *);
 __END_DECLS
