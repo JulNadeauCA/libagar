@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.70 2002/11/07 04:15:48 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.71 2002/11/12 01:58:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -282,6 +282,7 @@ void
 engine_stop(void)
 {
 	if (view->rootmap != NULL) {
+		dprintf("setting NULL root map\n");
 		pthread_mutex_lock(&view->lock);
 		view->rootmap->map = NULL;
 		pthread_mutex_unlock(&view->lock);

@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.74 2002/11/12 02:25:47 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.75 2002/11/12 02:30:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -98,26 +98,18 @@ view_init(gfx_engine_t ge)
 	pthread_mutexattr_settype(&v->lockattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&v->lock, &v->lockattr);
 
-	switch (v->gfx_engine) {
-	case GFX_ENGINE_TILEBASED:
+	if (v->gfx_engine == GFX_ENGINE_TILEBASED) {
 		v->w -= v->w % TILEW;
 		v->h -= v->h % TILEH;
-		v->margin.w = TILEW;
-		v->margin.h = TILEH;
-		break;
-	case GFX_ENGINE_GUI:
-		v->margin.w = 16;
-		v->margin.h = 16;
-		break;
 	}
 
-	if (v->w < 4*TILEW || v->h < 4*TILEH) {
-		fatal("resolution is minimum %dx%d\n",
-		    4*TILEW, 4*TILEH);
+	if (v->w < 640 || v->h < 480) {
+		fatal("minimum resolution is 640x480\n");
 	}
 
 	switch (v->bpp) {
 	case 8:
+		dprintf("exclusive palette access\n");
 		screenflags |= SDL_HWPALETTE;
 		break;
 	}
@@ -147,25 +139,23 @@ view_init(gfx_engine_t ge)
 		v->rootmap->x = 0;
 		v->rootmap->y = 0;
 		
-		dprintf("GFX_ENGINE_TILEBASED: %dx%d map view\n", mw, mh);
-	
 		/*
-		 * Allocate view masks, precalculate node rectangles, and
-		 * preallocate an array able to hold all possible rectangles
-		 * in a view, for optimization purposes.
+		 * Precalculate node rectangles as well as an array
+		 * able to hold all possible rectangles in a view,
+		 * for optimization purposes.
 		 */
-		v->rootmap->mask = rootmap_alloc_mask(mw, mh);
 		v->rootmap->maprects = rootmap_alloc_maprects(mw, mh);
 		v->rootmap->rects = rootmap_alloc_rects(mw, mh);
-	
+
+		dprintf("precalculated %dx%d rectangles (%d Kb)\n",
+		    mw, mh, (mw*mh * sizeof(SDL_Rect)) / 1024);
+
 		SDL_WM_SetCaption("AGAR (tile-based)", "AGAR");
 		break;
 	case GFX_ENGINE_GUI:
 		SDL_WM_SetCaption("AGAR (GUI)", "AGAR");
-		SDL_ShowCursor(SDL_ENABLE);
 		break;
 	}
-
 	view = v;
 }
 
@@ -212,12 +202,9 @@ view_destroy(void *p)
 	}
 
 	if (v->rootmap != NULL) {
-		deprintf("freeing root map: mask");
-		rootmap_free_mask(v);
-		deprintf(" rects");
+		dprintf("freeing rectangles\n");
 		rootmap_free_maprects(v);
 		free(v->rootmap->rects);
-		deprintf(".\n");
 	}
 
 	pthread_mutex_unlock(&v->lock);
