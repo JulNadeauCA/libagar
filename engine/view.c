@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.72 2002/10/30 17:16:20 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.73 2002/11/09 07:43:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -200,17 +200,24 @@ view_destroy(void *p)
 	
 	pthread_mutex_lock(&v->lock);
 
+	deprintf("freeing windows: ");
 	TAILQ_FOREACH(win, &v->windows, windows) {
+		deprintf(" %s (\"%s\")", OBJECT(win)->name, win->caption);
 		view_detach(win);
 	}
+	deprintf(".\n");
+
 	if (!TAILQ_EMPTY(&view->detach)) {
 		view_detach_queued();
 	}
 
 	if (v->rootmap != NULL) {
+		deprintf("freeing root map: mask");
 		rootmap_free_mask(v);
-		rootmap_free_maprects(v);
+		deprintf(" rects");
+		frootmap_free_maprects(v);
 		free(v->rootmap->rects);
+		deprintf(".\n");
 	}
 
 	pthread_mutex_unlock(&v->lock);
@@ -244,9 +251,8 @@ view_detach(void *child)
 	OBJECT_ASSERT(child, "window");
 
 	/*
-	 * Detach later. This allows windows detach themselves once
-	 * event loop traversal is complete.
-	 * TODO fancier gc
+	 * Allow windows to detach themselves only after event processing
+	 * is complete.
 	 */
 	pthread_mutex_lock(&view->lock);
 	TAILQ_INSERT_HEAD(&view->detach, win, detach);
@@ -293,7 +299,7 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 
 	pthread_mutex_lock(&cached_surfaces_lock);
 
-	/* Cache lookup */
+	/* XXX use a hash table */
 	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
 		if (cs->source_s == ss &&
 		    cs->scaled_s->w == w && cs->scaled_s->h == h) {
@@ -367,7 +373,6 @@ view_scale_surface(SDL_Surface *ss, Uint16 w, Uint16 h)
 	TAILQ_INSERT_HEAD(&cached_surfaces, cs, surfaces);
 	
 	pthread_mutex_unlock(&cached_surfaces_lock);
-
 	return (ds);
 }
 
@@ -385,13 +390,6 @@ view_unused_surface(SDL_Surface *scaled)
 	pthread_mutex_unlock(&cached_surfaces_lock);
 }
 
-static void
-free_cached_surface(struct cached_surface *cs)
-{
-	SDL_FreeSurface(cs->scaled_s);
-	free(cs);
-}
-
 void
 view_invalidate_surface(SDL_Surface *scaled)
 {
@@ -400,8 +398,12 @@ view_invalidate_surface(SDL_Surface *scaled)
 	pthread_mutex_lock(&cached_surfaces_lock);
 	TAILQ_FOREACH(cs, &cached_surfaces, surfaces) {
 		if (cs->scaled_s == scaled) {
-			free_cached_surface(cs);
+			/* Free the surface immediately. */
+			dprintf("surface %p\n", cs->scaled_s);
+			SDL_FreeSurface(cs->scaled_s);
 			TAILQ_REMOVE(&cached_surfaces, cs, surfaces);
+			free(cs);
+
 			pthread_mutex_unlock(&cached_surfaces_lock);
 			return;
 		}
@@ -416,9 +418,13 @@ view_invalidate_surface(SDL_Surface *scaled)
 void
 view_focus(struct window *win)
 {
+	/*
+	 * The window at the tail of the list holds focus (drawn last,
+	 * but receives events first).
+	 */
+	pthread_mutex_lock(&view->lock);
 	TAILQ_REMOVE(&view->windows, win, windows);
 	TAILQ_INSERT_TAIL(&view->windows, win, windows);
-	
-	win->redraw++;
+	pthread_mutex_unlock(&view->lock);
 }
 

@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.87 2002/11/09 21:45:43 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.88 2002/11/10 01:07:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -468,7 +468,7 @@ event_post(void *obp, char *name, const char *fmt, ...)
 		if (neev->flags & EVENT_ASYNC) {
 			pthread_t async_event_th;
 
-			pthread_create(&async_event_th, NULL,
+			Pthread_create(&async_event_th, NULL,
 			    event_post_async, neev);
 		} else {
 			neev->handler(neev->argc, neev->argv);

@@ -1,4 +1,4 @@
-/*	$Csoft: window.h,v 1.41 2002/09/20 02:41:06 vedge Exp $	*/
+/*	$Csoft: window.h,v 1.42 2002/11/09 06:01:27 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <engine/widget/region.h>
@@ -53,7 +53,6 @@ struct window {
 	/*
 	 * Read-write, thread-safe
 	 */
-	int	 redraw;		/* Redraw at next tick */
 	struct	 widget *focus;		/* Focused widget */
 
 	struct	 regionsq regionsh;
@@ -92,7 +91,7 @@ struct window {
 	    (win)->y+(wry), (c), (wa));					\
 } while (/*CONSTCOND*/0)
 
-#else
+#else	/* !DEBUG */
 
 # define WINDOW_PUT_PIXEL(win, wrx, wry, c)				\
  	 VIEW_PUT_PIXEL(view->v, (win)->x+(wrx), (win)->y+(wry),	\
@@ -101,7 +100,7 @@ struct window {
 # define WINDOW_PUT_ALPHAPIXEL(win, wrx, wry, c, wa) \
 	VIEW_PUT_ALPHAPIXEL(view->v, (win)->x+(wrx), (win)->y+(wry), (c), (wa))
 
-#endif
+#endif	/* DEBUG */
 
 #define WINDOW_SURFACE(win)	(view->v)
 
