@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.31 2002/03/17 09:15:00 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.32 2002/03/17 12:02:44 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -372,7 +372,8 @@ object_madd(void *p, Uint32 offs, Uint32 flags, struct input *in,
 		free(pos);
 		return (NULL);
 	}
-	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, 9);
+	/* XXX */
+	mapdir_init(&pos->dir, ob, m, DIR_SCROLLVIEW|DIR_SOFTSCROLL, 3);
 	pos->input = in;
 	if (in != NULL) {
 		in->pos = pos;
