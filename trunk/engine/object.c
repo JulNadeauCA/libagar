@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.122 2003/05/09 01:59:47 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.123 2003/05/18 00:16:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -238,22 +238,22 @@ object_find(void *parentp, char *name)
 
 /* Detach and free child objects. */
 void
-object_free_childs(struct object *ob)
+object_free_childs(struct object *pob)
 {
 	struct object *cob, *ncob;
 
-	pthread_mutex_lock(&ob->lock);
-	for (cob = TAILQ_FIRST(&ob->childs);
-	     cob != TAILQ_END(&ob->childs);
+	pthread_mutex_lock(&pob->lock);
+	for (cob = TAILQ_FIRST(&pob->childs);
+	     cob != TAILQ_END(&pob->childs);
 	     cob = ncob) {
-		ncob = TAILQ_NEXT(ob, cobjs);
-		debug(DEBUG_GC, "%s: freeing %s\n", ob->name, cob->name);
+		ncob = TAILQ_NEXT(cob, cobjs);
+		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
 		object_destroy(cob);
 		if ((cob->flags & OBJECT_STATIC) == 0)
 			free(cob);
 	}
-	TAILQ_INIT(&ob->childs);
-	pthread_mutex_unlock(&ob->lock);
+	TAILQ_INIT(&pob->childs);
+	pthread_mutex_unlock(&pob->lock);
 }
 
 /* Clear an object's property table. */
@@ -310,16 +310,16 @@ void
 object_destroy(void *p)
 {
 	struct object *ob = p;
+
+	object_free_childs(ob);
+	object_free_events(ob);
+	object_free_props(ob);
 	
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
-
+	
 	if (ob->art != NULL)
 		art_unused(ob->art);
-
-	object_free_events(ob);
-	object_free_props(ob);
-	object_free_childs(ob);
 
 	pthread_mutex_destroy(&ob->lock);
 	pthread_mutex_destroy(&ob->events_lock);
@@ -352,6 +352,7 @@ object_load_data(struct object *ob, struct netbuf *buf, int load)
 		object_free_childs(ob);
 
 		nchilds = read_uint32(buf);
+		dprintf("loading %u childs\n", nchilds);
 		for (i = 0; i < nchilds; i++) {
 			char cname[OBJECT_NAME_MAX];
 			char ctype[OBJECT_TYPE_MAX];
