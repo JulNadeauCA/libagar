@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.91 2002/05/19 14:31:06 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.92 2002/05/21 04:36:51 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -269,18 +269,18 @@ mapedit_onattach(void *parent, void *child)
 	med->y = m->defy;
 	mapdir_init(&med->cursor_dir, OBJECT(med), m,
 	    DIR_SCROLLVIEW|DIR_SOFTSCROLL|DIR_STATIC|DIR_PASSTHROUGH, 8);
-	med->tilelist.x = m->view->width - m->tilew;
+	med->tilelist.x = m->view->w - m->tilew;
 	med->tilelist.y = m->tileh;
 	med->tilelist.w = m->tilew;
-	med->tilelist.h = m->view->height - m->tilew;
+	med->tilelist.h = m->view->h - m->tilew;
 	med->tilelist_offs = 0;
 	med->tilestack.x = 0;
 	med->tilestack.y = m->tileh;
 	med->tilestack.w = m->tilew;
-	med->tilestack.h = m->view->height - m->tilew;
+	med->tilestack.h = m->view->h - m->tilew;
 	med->objlist.x = m->tilew;
 	med->objlist.y = 0;
-	med->objlist.w = m->view->width - m->tilew;
+	med->objlist.w = m->view->w - m->tilew;
 	med->objlist.h = m->tileh;
 	med->objlist_offs = 0;
 

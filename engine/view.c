@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.40 2002/05/22 01:23:27 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.41 2002/05/22 02:03:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -77,8 +77,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	case VIEW_MAPNAV:
 		dprintf("map navigation mode\n");
 		v->map = m;
-		v->mapw = (v->width / m->tilew);
-		v->maph = (v->height / m->tileh);
+		v->mapw = (v->w / m->tilew);
+		v->maph = (v->h / m->tileh);
 		v->mapxoffs = 0;
 		v->mapyoffs = 0;
 		v->vmapw = v->mapw - v->mapxoffs;
@@ -87,8 +87,8 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	case VIEW_MAPEDIT:
 		dprintf("map edition mode\n");
 		v->map = m;
-		v->mapw = (v->width / m->tilew);
-		v->maph = (v->height / m->tileh);
+		v->mapw = (v->w / m->tilew);
+		v->maph = (v->h / m->tileh);
 		v->mapxoffs = 1;
 		v->mapyoffs = 1;
 		if (v->map->mapw < v->mapw)
@@ -102,7 +102,7 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 		fatal("bad mode\n");
 	}
 	
-	dprintf("view %dx%d, map view %dx%d at %d,%d\n", v->width, v->height,
+	dprintf("view %dx%d, map view %dx%d at %d,%d\n", v->w, v->h,
 	    v->mapxoffs, v->mapyoffs, v->mapw, v->maph);
 
 	switch (v->depth) {
@@ -114,9 +114,9 @@ view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 	if (caption != NULL) {
 		SDL_WM_SetCaption(caption, "AGAR");
 	}
-	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
+	v->v = SDL_SetVideoMode(v->w, v->h, v->depth, v->flags);
 	if (v->v == NULL) {
-		fatal("SDL: %dx%dx%d: %s\n", v->width, v->height, v->depth,
+		fatal("SDL: %dx%dx%d: %s\n", v->w, v->h, v->depth,
 		    SDL_GetError());
 		return (-1);
 	}
@@ -260,10 +260,10 @@ view_new(int w, int h, int depth, int flags)
 	v = emalloc(sizeof(struct viewport));
 	object_init(&v->obj, "viewport", "main-view", NULL, 0, &viewport_ops);
 	v->fps = -1;
-	v->width = w;
-	v->height = h;
+	v->w = w;
+	v->h = h;
 	v->flags = flags;
-	v->depth = SDL_VideoModeOK(v->width, v->height, depth, flags);
+	v->depth = SDL_VideoModeOK(v->w, v->h, depth, flags);
 	v->map = NULL;
 	v->mapw = 0;
 	v->maph = 0;
@@ -421,6 +421,9 @@ view_attach(void *parent, void *child)
 {
 	struct viewport *view = parent;
 	struct window *win = child;
+
+	OBJECT_ASSERT(parent, "viewport");
+	OBJECT_ASSERT(child, "window");
 
 	/* Notify the child being attached. */
 	if (OBJECT_OPS(win)->onattach != NULL) {
