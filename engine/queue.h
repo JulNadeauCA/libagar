@@ -1,4 +1,4 @@
-/*	$Csoft: queue.h,v 1.3 2002/02/05 06:07:59 vedge Exp $	*/
+/*	$Csoft: queue.h,v 1.4 2002/04/22 02:57:55 vedge Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993
@@ -164,6 +164,17 @@ struct {								\
 		}							\
 	}								\
 } while (0)
+
+#define SLIST_DUP(avar, acount, ahead, atype, afield) do {	\
+		struct atype *sl_dup_e;				\
+		Uint32 sl_dup_i = 0;				\
+								\
+		avar = (struct atype **)emalloc((acount) *	\
+		    sizeof(struct atype *)); 			\
+		SLIST_FOREACH(sl_dup_e, ahead, afield) {	\
+			(avar)[sl_dup_i++] = sl_dup_e;		\
+		}						\
+	} while (/*CONSTCOND*/0)
 
 
 /*
