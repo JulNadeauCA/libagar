@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.5 2002/04/22 04:39:59 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.6 2002/04/23 05:47:01 vedge Exp $	*/
 
 struct widvec {
 	struct	 obvec obvec;
@@ -45,7 +45,13 @@ struct widget {
      (xa) < (WIDGET_ABSX((wida)) + WIDGET((wida))->w) &&	\
      (ya) < (WIDGET_ABSY((wida)) + WIDGET((wida))->h))
 
-void		 widget_init(struct widget *, char *, Uint32, void *,
+/* Sprites. All widgets share the same art. */
+enum {
+	BUTTON_UP = 0,
+	BUTTON_DOWN
+};
+
+void		 widget_init(struct widget *, char *, void *,
 		     struct window *, Sint16, Sint16, Uint16, Uint16);
 int		 widget_link(void *);
 int		 widget_unlink(void *);

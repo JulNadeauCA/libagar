@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.6 2002/04/22 04:44:17 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.7 2002/04/23 07:24:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -43,7 +43,7 @@
 #include "widget.h"
 #include "window.h"
 
-static struct obvec window_vec = {
+static const struct obvec window_vec = {
 	window_destroy,
 	window_load,
 	window_save,
@@ -59,14 +59,13 @@ Uint32 nwindows = 0;
 
 static Uint32 delta = 0, delta2 = 256;
 
-struct window *
-window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
-    Uint32 bgtype, Sint16 x, Sint16 y, Uint16 w, Uint16 h)
+/* XXX fucking insane */
+void
+window_init(struct window *win, struct viewport *view, char *name,
+    char *caption, Uint32 flags, Uint32 bgtype, Sint16 x, Sint16 y,
+    Uint16 w, Uint16 h)
 {
-	struct window *win;
-
-	win = (struct window *)emalloc(sizeof(struct window));
-	object_init(&win->obj, name, 0, &window_vec);
+	object_init(&win->obj, name, NULL, 0, &window_vec);
 
 	win->caption = strdup(caption);
 	win->view = view;
@@ -106,23 +105,17 @@ window_create(struct viewport *view, char *name, char *caption, Uint32 flags,
 	TAILQ_INIT(&win->widgetsh);
 	win->nwidgets = 0;
 
-	if (pthread_mutex_init(&win->widgetslock, NULL) != 0) {
-		perror("widgetslock");
-		return (NULL);
-	}
-	return (win);
+	pthread_mutex_init(&win->widgetslock, NULL);
 }
 
 void
 window_mouse_motion(SDL_Event *ev)
 {
-	dprintf("mouse motion\n");
 }
 
 void
 window_key(SDL_Event *ev)
 {
-	dprintf("key\n");
 }
 
 void
@@ -356,7 +349,7 @@ window_unlink(void *ob)
 	return (0);
 }
 
-int
+void
 window_destroy(void *ob)
 {
 	struct window *win = (struct window *)ob;
@@ -375,10 +368,11 @@ window_destroy(void *ob)
 
 	free(win->caption);
 	view_maskfill(win->view, &win->vmask, -1);
-	win->view->map->redraw++;
+	if (win->view->map != NULL) {
+		win->view->map->redraw++;
+	}
 	
 	pthread_mutex_destroy(&win->widgetslock);
 	free(wids);
-	return (0);
 }
 
