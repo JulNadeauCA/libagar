@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.30 2002/04/26 04:24:51 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.31 2002/05/13 06:51:22 vedge Exp $	*/
 
 struct editref {
 	int	animi;		/* Index into the object's real anim list. */
@@ -78,6 +78,10 @@ struct mapedit {
 	struct	 gendir olistw_dir;	/* Scrolling direction */
 	int	 objlist_offs;
 
+	/*
+	 * Map must be locked before this mutex is acquired, otherwise
+	 * deadlock occurs.
+	 */
 	pthread_mutex_t	lock;		/* Lock on whole structure */
 };
 

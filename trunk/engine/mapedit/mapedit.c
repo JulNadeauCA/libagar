@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.85 2002/05/08 09:42:28 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.86 2002/05/13 06:51:22 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -815,8 +815,9 @@ mapedit_event(void *ob, SDL_Event *ev)
 {
 	struct mapedit *med = ob;
 
-	pthread_mutex_lock(&med->lock);
+	/* Avoid deadlock. */
 	pthread_mutex_lock(&med->map->lock);
+	pthread_mutex_lock(&med->lock);
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
@@ -938,9 +939,10 @@ mapedit_update(void *p)
 	struct mapedit *med = p;
 	Uint32 x, y, moved;
 
-	while (curmapedit != NULL) {	/* XXX unsafe */
-		pthread_mutex_lock(&med->lock);
+	while (curmapedit == med) {
+		/* Avoid deadlock. */
 		pthread_mutex_lock(&med->map->lock);
+		pthread_mutex_lock(&med->lock);
 
 		/* Update the tile list. */
 		moved = gendir_move(&med->listw_dir);
@@ -1000,8 +1002,9 @@ mapedit_update(void *p)
 			med->map->redraw++;
 		}
 
-		pthread_mutex_unlock(&med->map->lock);
 		pthread_mutex_unlock(&med->lock);
+		pthread_mutex_unlock(&med->map->lock);
+
 		SDL_Delay(100);
 	}
 
