@@ -1,4 +1,4 @@
-/*	$Csoft: world.c,v 1.27 2002/04/26 04:24:49 vedge Exp $	*/
+/*	$Csoft: world.c,v 1.28 2002/05/03 20:13:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -119,7 +119,6 @@ world_init(struct world *wo, char *name)
 
 /*
  * Load state of active objects.
- * The world's object list must be locked.
  */
 int
 world_load(void *p, int fd)
@@ -129,6 +128,7 @@ world_load(void *p, int fd)
 
 	/* XXX load the state map */
 
+	pthread_mutex_assert(&wo->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		dprintf("loading %s\n", ob->name);
 
@@ -144,7 +144,6 @@ world_load(void *p, int fd)
 
 /*
  * Save the world!
- * The world's object list must be locked.
  */
 int
 world_save(void *p, int fd)
@@ -152,6 +151,7 @@ world_save(void *p, int fd)
 	struct world *wo = (struct world *)p;
 	struct object *ob;
 
+	pthread_mutex_assert(&wo->lock);
 	SLIST_FOREACH(ob, &world->wobjsh, wobjs) {
 		dprintf("saving %s\n", ob->name);
 
@@ -171,7 +171,6 @@ world_save(void *p, int fd)
 
 /*
  * Destroy the world!
- * The world's object list must be locked.
  */
 void
 world_destroy(void *p)

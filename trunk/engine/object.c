@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.45 2002/05/02 06:23:59 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.46 2002/05/06 02:18:50 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -352,7 +352,6 @@ object_load(void *p)
 		return (0);
 	}
 
-	pthread_mutex_assert(&world->lock);
 	path = savepath(ob->name, ob->saveext);
 	if (path == NULL) {
 		return (-1);
@@ -386,7 +385,6 @@ object_save(void *p)
 		dperror(path);
 		return (-1);
 	}
-	pthread_mutex_assert(&world->lock);
 	if (ob->vec->save(ob, fd) != 0) {
 		close(fd);
 		return (-1);
