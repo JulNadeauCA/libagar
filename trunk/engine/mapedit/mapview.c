@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.136 2003/09/07 07:59:10 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.137 2003/10/10 02:12:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -244,6 +244,7 @@ mapview_map_coords(struct mapview *mv, int *x, int *y)
 		mv->cy = -1;
 }
 
+/* Draw the node property icons. */
 void
 mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
     int mx, int my)
@@ -306,7 +307,8 @@ mapview_draw_props(struct mapview *mv, struct node *node, int x, int y,
 	}
 }
 
-static __inline__ void
+/* Draw the cursor for the selected map edition tool. */
+static void
 mapview_draw_tool_cursor(struct mapview *mv)
 {
 	struct tool *curtool = mapedit.curtool;

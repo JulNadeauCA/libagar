@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.97 2003/09/07 04:15:05 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.98 2003/10/10 02:12:16 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -63,89 +63,110 @@ const struct version config_ver = {
 	5, 0
 };
 
-static int config_notify = 0;			/* GUI notifications */
+const struct object_ops config_ops = {
+	NULL,
+	NULL,
+	NULL,
+	config_load,
+	config_save,
+	NULL
+};
+
+extern int text_composition, text_rightleft, window_freescale, kbd_unitrans;
 
 static void
-config_change_path(int argc, union evarg *argv)
+config_set_path(int argc, union evarg *argv)
 {
+	char path[MAXPATHLEN];
 	struct textbox *tbox = argv[0].p;
 	char *varname = argv[1].s;
-	char *s;
 
-	s = textbox_string(tbox);
-	prop_set_string(config, varname, "%s", s);
-	free(s);
-
+	textbox_copy_string(tbox, path, sizeof(path));
+	prop_set_string(config, varname, "%s", path);
 	WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
-config_change_res(int argc, union evarg *argv)
+config_set_res(int argc, union evarg *argv)
 {
 	struct textbox *tbox = argv[0].p;
 	char *varname = argv[1].s;
-	int i;
 
-	i = textbox_int(tbox);
-	prop_set_int(config, varname, i);
+	prop_set_int(config, varname, textbox_int(tbox));
+	WIDGET(tbox)->flags &= ~(WIDGET_FOCUSED);
 }
 
 static void
-config_save(int argc, union evarg *argv)
+config_set_full_screen(int argc, union evarg *argv)
 {
-	if (object_save(config) == -1)
-		text_msg(MSG_ERROR, "%s", error_get());
+	int enable = argv[1].i;
+	SDL_Event vexp;
+
+	if (view == NULL)
+		return;
+
+	if ((enable && ((view->v->flags & SDL_FULLSCREEN)) == 0) ||
+	   (!enable && ((view->v->flags & SDL_FULLSCREEN)) == 1)) {
+		SDL_WM_ToggleFullScreen(view->v);
+		vexp.type = SDL_VIDEOEXPOSE;
+		SDL_PushEvent(&vexp);
+	}
 }
 
-
 static void
-config_prop_modified(int argc, union evarg *argv)
+config_set_opengl(int argc, union evarg *argv)
 {
-	struct prop *prop = argv[1].p;
+	int enable = argv[1].i;
 
-	if (strcmp(prop->key, "view.full-screen") == 0) {
-		if (view != NULL) {
-			SDL_Event vexp;
-
-			if ((prop->data.i &&
-			    (!(view->v->flags & SDL_FULLSCREEN))) ||
-			   (!prop->data.i &&
-			    ((view->v->flags & SDL_FULLSCREEN)))) {
-				SDL_WM_ToggleFullScreen(view->v);
-				vexp.type = SDL_VIDEOEXPOSE;
-				SDL_PushEvent(&vexp);
-			}
-		}
-	} else if (strcmp(prop->key, "view.opengl") == 0 &&
-	    prop->data.i && config_notify) {
+	if (enable)
 		text_msg(MSG_WARNING,
 		    _("Save the configuration and restart %s for OpenGL mode "
 		      "to take effect"),
 		    proginfo->progname);
-	} else if (strcmp(prop->key, "view.async-blits") == 0 &&
-	    prop->data.i && config_notify) {
+}
+
+static void
+config_set_async_blits(int argc, union evarg *argv)
+{
+	int enable = argv[1].i;
+
+	if (enable)
 		text_msg(MSG_WARNING,
 		    _("Save the configuration and restart %s for async blits "
 		      "to take effect"),
 		    proginfo->progname);
-	} else if (strcmp(prop->key, "input.unicode") == 0) {
-		if (SDL_EnableUNICODE(prop->data.i)) {
-			dprintf("disabled unicode translation\n");
-		} else {
-			dprintf("enabled unicode translation\n");
-		}
+}
+
+static void
+config_set_unitrans(int argc, union evarg *argv)
+{
+	int enable = argv[1].i;
+
+	if (SDL_EnableUNICODE(enable)) {
+		dprintf("disabled unicode translation\n");
+	} else {
+		dprintf("enabled unicode translation\n");
 	}
+}
+
+static void
+save_config(int argc, union evarg *argv)
+{
+	if (object_save(config) == -1)
+		text_msg(MSG_ERROR, "%s", error_get());
+
+	text_msg(MSG_INFO, _("The configuration settings have been saved."));
 }
 
 void
 config_init(struct config *con)
 {
-	char *udatadir;
+	char udatadir[MAXPATHLEN];
 	struct passwd *pwd;
 	struct stat sta;
 
-	object_init(con, "object", "config", NULL);
-	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS;
+	object_init(con, "object", "config", &config_ops);
+	OBJECT(con)->flags |= OBJECT_RELOAD_PROPS|OBJECT_DATA_RESIDENT;
 	OBJECT(con)->save_pfx = NULL;
 
 	prop_set_bool(con, "view.full-screen", 0);
@@ -156,17 +177,16 @@ config_init(struct config *con)
 	prop_set_uint16(con, "view.min-w", 320);
 	prop_set_uint16(con, "view.min-h", 240);
 	prop_set_uint8(con, "view.depth", 32);
-	
 	prop_set_bool(con, "font-engine", 1);
 	prop_set_string(con, "font-engine.default-font", "zekton");
 	prop_set_int(con, "font-engine.default-size", 12);
 	prop_set_int(con, "font-engine.default-style", 0);
-
-	prop_set_bool(con, "input.unicode", 1);
 	prop_set_bool(con, "input.joysticks", 1);
 
 	pwd = getpwuid(getuid());
-	Asprintf(&udatadir, "%s/.%s", pwd->pw_dir, proginfo->progname);
+	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
+	strlcat(udatadir, "/.", sizeof(udatadir));
+	strlcat(udatadir, proginfo->progname, sizeof(udatadir));
 
 	prop_set_string(con, "save-path", "%s", udatadir);
 	prop_set_string(con, "den-path", "%s", SHAREDIR);
@@ -174,17 +194,48 @@ config_init(struct config *con)
 	prop_set_string(con, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
 
 	if (stat(udatadir, &sta) != 0 &&
-	    mkdir(udatadir, 0700) != 0) {
+	    mkdir(udatadir, 0700) != 0)
 		fatal("%s: %s", udatadir, strerror(errno));
-	}
-
-	event_new(con, "prop-modified", config_prop_modified, NULL);
-	free(udatadir);
 }
 
-/* Poll the available input devices. */
+int
+config_load(void *p, struct netbuf *buf)
+{
+	if (version_read(buf, &config_ver, NULL) != 0)
+		return (-1);
+
+	dprintf("load\n");
+	kbd_unitrans = read_uint8(buf);
+	text_composition = read_uint8(buf);
+	window_freescale = read_uint8(buf);
+	text_rightleft = read_uint8(buf);
+	event_idle = read_uint8(buf);
+#ifdef DEBUG
+	engine_debug = read_uint8(buf);
+#endif
+	return (0);
+}
+
+int
+config_save(void *p, struct netbuf *buf)
+{
+	version_write(buf, &config_ver);
+
+	write_uint8(buf, (Uint8)kbd_unitrans);
+	write_uint8(buf, (Uint8)text_composition);
+	write_uint8(buf, (Uint8)window_freescale);
+	write_uint8(buf, (Uint8)text_rightleft);
+	write_uint8(buf, (Uint8)event_idle);
+#ifdef DEBUG
+	write_uint8(buf, (Uint8)engine_debug);
+#else
+	write_uint8(buf, 0);
+#endif
+	return (0);
+}
+
 static void
-config_poll_input(int argc, union evarg *argv)
+config_poll_input_devs(int argc, union evarg *argv)
 {
 	extern struct input_devq input_devs;
 	extern pthread_mutex_t input_lock;
@@ -213,49 +264,42 @@ config_window(struct config *con)
 	win = window_new("config-engine-settings");
 	window_set_caption(win, _("Engine settings"));
 	window_set_closure(win, WINDOW_HIDE);
-
 	hb = hbox_new(win, 0);
 	vb = vbox_new(hb, 0);
 	vbox_set_spacing(vb, 2);
-	{
-		const struct {
-			char *name;
-			char *descr;
-		} settings[] = {
-			{ "view.full-screen", N_("Full screen") },
-			{ "view.async-blits", N_("Asynchronous blits") },
-#ifdef HAVE_OPENGL
-			{ "view.opengl", N_("OpenGL rendering context") },
-#endif
-			{ "input.unicode", N_("Unicode keyboard translation") }
-		};
-		const int nsettings = sizeof(settings) / sizeof(settings[0]);
-		extern int text_composition, text_rightleft, window_freescale;
-		int i;
 
-		for (i = 0; i < nsettings; i++) {
-			cbox = checkbox_new(vb, "%s", _(settings[i].descr));
-			widget_bind(cbox, "state", WIDGET_PROP, config,
-			    settings[i].name);
-		}
+	cbox = checkbox_new(vb, _("Full screen"));
+	widget_bind(cbox, "state", WIDGET_PROP, config, "view.full-screen");
+	event_new(cbox, "checkbox-changed", config_set_full_screen, NULL);
 
-		cbox = checkbox_new(vb, _("Input composition"));
-		widget_bind(cbox, "state", WIDGET_INT, NULL, &text_composition);
-		
-		cbox = checkbox_new(vb, _("Unrestricted window resize"));
-		widget_bind(cbox, "state", WIDGET_INT, NULL, &window_freescale);
+	cbox = checkbox_new(vb, _("Asynchronous blits"));
+	widget_bind(cbox, "state", WIDGET_PROP, config, "view.async-blits");
+	event_new(cbox, "checkbox-changed", config_set_async_blits, NULL);
 
-		cbox = checkbox_new(vb,
-		    _("Right->left (Arabic, Hebrew, ...)"));
-		widget_bind(cbox, "state", WIDGET_INT, NULL, &text_rightleft);
+	cbox = checkbox_new(vb, _("OpenGL rendering context"));
+	widget_bind(cbox, "state", WIDGET_PROP, config, "view.opengl");
+	event_new(cbox, "checkbox-changed", config_set_opengl, NULL);
+
+	cbox = checkbox_new(vb, _("Unicode keyboard translation"));
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &kbd_unitrans);
+	event_new(cbox, "checkbox-changed", config_set_unitrans, NULL);
+
+	cbox = checkbox_new(vb, _("Input composition"));
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &text_composition);
+
+	cbox = checkbox_new(vb, _("Unrestricted window resize"));
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &window_freescale);
+
+	cbox = checkbox_new(vb, _("Right->left (Arabic, Hebrew, ...)"));
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &text_rightleft);
+
+	cbox = checkbox_new(vb, _("Idle time prediction"));
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
 #ifdef DEBUG
-		/* Thread unsafe, but not very dangerous. */
-		cbox = checkbox_new(vb, _("Debugging"));
-		widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
+	cbox = checkbox_new(vb, _("Debugging"));
+	widget_bind(cbox, "state", WIDGET_INT, NULL, &engine_debug);
 #endif
-		cbox = checkbox_new(vb, _("Idle time prediction"));
-		widget_bind(cbox, "state", WIDGET_INT, NULL, &event_idle);
-	}
+
 	vb = vbox_new(hb, 0);
 	vbox_set_spacing(vb, 2);
 	{
@@ -263,7 +307,8 @@ config_window(struct config *con)
 
 		label_new(vb, _("Input devices:"));
 		tl = tlist_new(vb, TLIST_POLL);
-		event_new(tl, "tlist-poll", config_poll_input, NULL);
+		tlist_prescale(tl, "keyboard0", 6);
+		event_new(tl, "tlist-poll", config_poll_input_devs, NULL);
 	}
 
 	vb = vbox_new(win, VBOX_WFILL);
@@ -273,25 +318,25 @@ config_window(struct config *con)
 		tbox = textbox_new(vb, _("Data save dir: "));
 		prop_copy_string(config, "save-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_change_path, "%s",
+		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "save-path");
 	
 		tbox = textbox_new(vb, _("Data load path: "));
 		prop_copy_string(config, "load-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_change_path, "%s",
+		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "load-path");
 	
 		tbox = textbox_new(vb, _("Font path: "));
 		prop_copy_string(config, "font-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_change_path, "%s",
+		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "font-path");
 		
 		tbox = textbox_new(vb, _("Den path: "));
 		prop_copy_string(config, "den-path", path, sizeof(path));
 		textbox_printf(tbox, "%s", path);
-		event_new(tbox, "textbox-return", config_change_path, "%s",
+		event_new(tbox, "textbox-return", config_set_path, "%s",
 		    "den-path");
 	}
 
@@ -301,13 +346,13 @@ config_window(struct config *con)
 
 		tbox = textbox_new(hb, _("Width: "));
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.w"));
-		event_new(tbox, "textbox-return", config_change_res, "%s",
+		event_new(tbox, "textbox-return", config_set_res, "%s",
 		    "view.w");
 		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
 
 		tbox = textbox_new(hb, _("Height: "));
 		textbox_printf(tbox, "%d", prop_get_uint16(config, "view.h"));
-		event_new(tbox, "textbox-return", config_change_res, "%s",
+		event_new(tbox, "textbox-return", config_set_res, "%s",
 		    "view.h");
 		WIDGET(tbox)->flags &= ~(WIDGET_WFILL);
 	}
@@ -322,10 +367,9 @@ config_window(struct config *con)
 		widget_focus(button);
 
 		button = button_new(hb, _("Save"));
-		event_new(button, "button-pushed", config_save, NULL);
+		event_new(button, "button-pushed", save_config, NULL);
 	}
 	config->settings = win;
-	config_notify++;
 }
 
 /* Copy the full pathname to a data file to a fixed-size buffer. */

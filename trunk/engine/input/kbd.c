@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: kbd.c,v 1.1 2003/09/07 00:24:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003 CubeSoft Communications, Inc.
@@ -41,6 +41,8 @@ const struct input_driver kbd_driver = {
 	kbd_event
 };
 
+int kbd_unitrans = 1;				   /* Unicode translation  */
+
 struct kbd *
 kbd_new(int index)
 {
@@ -51,6 +53,7 @@ kbd_new(int index)
 	kbd->index = index;
 	snprintf(name, sizeof(name), "kbd%d", index);
 	input_register(kbd, INPUT_KEYBOARD, name, &kbd_driver);
+	SDL_EnableUNICODE(kbd_unitrans);
 	return (kbd);
 }
 

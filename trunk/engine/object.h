@@ -1,4 +1,4 @@
-/*	$Csoft: object.h,v 1.95 2003/09/17 05:31:18 vedge Exp $	*/
+/*	$Csoft: object.h,v 1.96 2003/10/09 22:39:28 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_
@@ -67,9 +67,7 @@ struct object {
 	char	 type[OBJECT_TYPE_MAX];		/* Type of object */
 	char	 name[OBJECT_NAME_MAX];		/* Identifier */
 	char	*save_pfx;			/* Save dir prefix */
-
-	const struct object_ops	*ops;		/* Generic operations */
-
+	const struct object_ops *ops;		/* Generic operations */
 	int	 flags;
 #define OBJECT_RELOAD_PROPS	0x01	/* Don't free props before load */
 #define OBJECT_NON_PERSISTENT	0x02	/* Never include in saves */

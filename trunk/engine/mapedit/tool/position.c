@@ -1,4 +1,4 @@
-/*	$Csoft: eraser.c,v 1.39 2003/08/29 04:55:43 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.1 2003/09/07 08:03:14 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -27,10 +27,13 @@
  */
 
 #include <engine/engine.h>
+#include <engine/input.h>
 
 #include "position.h"
 
 #include <engine/widget/tlist.h>
+#include <engine/widget/checkbox.h>
+#include <engine/widget/combo.h>
 
 static int	position_cursor(void *, struct mapview *, SDL_Rect *);
 static void	position_effect(void *, struct mapview *, struct map *,
@@ -50,11 +53,81 @@ const struct tool_ops position_ops = {
 	NULL			/* mouse */
 };
 
+static struct tlist_item *
+find_objs(struct tlist *tl, struct object *pob, int depth)
+{
+	char label[TLIST_LABEL_MAX];
+	struct object *cob;
+	struct tlist_item *it;
+
+	strlcpy(label, pob->name, sizeof(label));
+	if (pob->flags & OBJECT_DATA_RESIDENT) {
+		strlcat(label, _(" (resident)"), sizeof(label));
+	}
+	it = tlist_insert_item(tl, OBJECT_ICON(pob), label, pob);
+	it->depth = depth;
+
+	if (!TAILQ_EMPTY(&pob->childs)) {
+		it->flags |= TLIST_HAS_CHILDREN;
+	}
+	if ((it->flags & TLIST_HAS_CHILDREN) &&
+	    tlist_visible_childs(tl, it)) {
+		TAILQ_FOREACH(cob, &pob->childs, cobjs)
+			find_objs(tl, cob, depth+1);
+	}
+	return (it);
+}
+
+static void
+poll_objs(int argc, union evarg *argv)
+{
+	struct tlist *tl = argv[0].p;
+	struct object *pob = argv[1].p;
+
+	lock_linkage();
+	tlist_clear_items(tl);
+	find_objs(tl, pob, 0);
+	tlist_restore_selections(tl);
+	unlock_linkage();
+}
+
+static void
+poll_input_devs(int argc, union evarg *argv)
+{
+	extern struct input_devq input_devs;
+	extern pthread_mutex_t input_lock;
+	struct tlist *tl = argv[0].p;
+	struct input *in;
+
+	pthread_mutex_lock(&input_lock);
+	tlist_clear_items(tl);
+	SLIST_FOREACH(in, &input_devs, inputs) {
+		tlist_insert_item(tl, NULL, in->name, in);
+	}
+	tlist_restore_selections(tl);
+	pthread_mutex_unlock(&input_lock);
+}
+
+static void
+poll_submaps(int argc, union evarg *argv)
+{
+	struct tlist *objs_tl = argv[1].p;
+	struct tlist_item *it;
+	struct object *ob;
+
+	if ((it = tlist_item_selected(objs_tl)) == NULL) {
+		return;
+	}
+	ob = it->p1;
+}
+
 void
 position_init(void *p)
 {
 	struct position *po = p;
 	struct window *win;
+	struct box *bo;
+	struct tlist *tl;
 
 	tool_init(&po->tool, "position", &position_ops, MAPEDIT_TOOL_POSITION);
 
@@ -63,18 +136,40 @@ position_init(void *p)
 	window_set_caption(win, _("Position"));
 	event_new(win, "window-close", tool_window_close, "%p", po);
 
+	tl = tlist_new(win, TLIST_POLL|TLIST_TREE);
+	WIDGET(tl)->flags |= WIDGET_HFILL;
+	tlist_prescale(tl, "XXXXXXXXXXXXXXXX", 5);
+	event_new(tl, "tlist-poll", poll_objs, "%p", world);
+
+	bo = box_new(win, BOX_VERT, BOX_WFILL);
+	{
+		struct checkbox *cb;
+		struct combo *submap_com, *input_com;
+
+		cb = checkbox_new(bo, _("Centered"));
+
+		submap_com = combo_new(bo, _("Submap: "));
+		submap_com->list->flags |= TLIST_POLL;
+		event_new(submap_com->list, "tlist-poll", poll_submaps, "%p",
+		    tl);
+
+		input_com = combo_new(bo, _("Input device: "));
+		input_com->list->flags |= TLIST_POLL;
+		event_new(input_com->list, "tlist-poll", poll_input_devs, NULL);
+	}
 }
 
 static void
 position_effect(void *p, struct mapview *mv, struct map *m, struct node *dn)
 {
 //	struct position *po = p;
+
 }
 
 static int
 position_cursor(void *p, struct mapview *mv, SDL_Rect *rd)
 {
-	/* XXX */
+	/* xxx */
 	return (-1);
 }
 
