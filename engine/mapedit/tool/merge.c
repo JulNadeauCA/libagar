@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.33 2003/05/18 00:17:01 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.34 2003/05/20 12:05:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -263,6 +263,7 @@ merge_window(void *p)
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 
 		bu = button_new(reg, "Create", NULL, BUTTON_NOFOCUS, 25, -1);
+		button_set_padding(bu, 6);
 		event_new(bu, "button-pushed",
 		    merge_create_brush, "%p, %p", mer, name_tbox);
 	}
