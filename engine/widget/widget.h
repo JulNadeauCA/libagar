@@ -1,4 +1,4 @@
-/*	$Csoft: widget.h,v 1.7 2002/04/24 14:08:54 vedge Exp $	*/
+/*	$Csoft: widget.h,v 1.8 2002/04/26 11:40:48 vedge Exp $	*/
 
 struct window;
 
@@ -22,6 +22,7 @@ struct widget {
 	Uint16	w, h;			/* Can be defined by draw routine */
 
 	TAILQ_ENTRY(widget) widgets;	/* Widgets within parent window */
+	TAILQ_ENTRY(widget) uwidgets;	/* Widgets queued for removal */
 };
 
 #define WIDGET(wi)	((struct widget *)(wi))
