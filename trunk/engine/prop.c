@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.16 2002/12/31 05:45:49 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.17 2003/01/01 05:18:34 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -577,6 +577,9 @@ prop_load(void *p, int fd)
 		case PROP_SINT32:
 			prop_set_sint32(ob, key, read_sint32(fd));
 			break;
+		case PROP_INT:
+			prop_set_int(ob, key, (int)read_sint32(fd));
+			break;
 #ifdef SDL_HAS_64BIT_TYPE
 		case PROP_UINT64:
 			prop_set_uint64(ob, key, read_uint64(fd));
@@ -665,6 +668,9 @@ prop_save(void *p, int fd)
 		case PROP_SINT32:
 			buf_write_sint32(buf, prop->data.s32);
 			break;
+		case PROP_INT:
+			buf_write_sint32(buf, (Sint32)prop->data.i);
+			break;
 #ifdef SDL_HAS_64BIT_TYPE
 		case PROP_UINT64:
 			buf_write_uint64(buf, prop->data.u64);
@@ -690,7 +696,6 @@ prop_save(void *p, int fd)
 		case PROP_STRING:
 			buf_write_string(buf, prop->data.s);
 			break;
-		case PROP_INT:
 		case PROP_POINTER:
 			debug(DEBUG_STATE,
 			    "skipped machine-dependent property `%s'\n",
