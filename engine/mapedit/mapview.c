@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.13 2002/07/29 06:32:35 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.14 2002/07/30 22:20:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -142,7 +142,7 @@ mapview_init(struct mapview *mv, struct mapedit *med, struct map *m,
 static __inline__ void
 draw_node_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
 {
-	int x, y, xfac, yfac;
+	int x, y;
 	Uint32 col = 0;
 	Uint8 *src, r1, g1, b1, a1;
 
@@ -167,6 +167,8 @@ draw_node_scaled(struct mapview *mv, SDL_Surface *s, int rx, int ry)
 static __inline__ void
 draw_node_props(struct mapview *mv, struct node *node, int rx, int ry)
 {
+	WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_FRAME_2), rx, ry);
+
 	if (node->flags & NODE_BLOCK) {
 		WIDGET_DRAW(mv, SPRITE(mv->med, MAPEDIT_BLOCK), rx, ry);
 	} else if (node->flags & NODE_WALK) {
@@ -321,15 +323,15 @@ mapview_draw(void *p)
 			}
 			if (mx-mv->mx == mv->mouse.x &&
 			    my-mv->my == mv->mouse.y &&
-			    mv->mouse.x < mv->mw-1 &&
-			    mv->mouse.y < mv->mh-1) {
+			    mv->mouse.x < mv->mw &&
+			    mv->mouse.y < mv->mh) {
 				struct tool *curtool = mv->med->curtool;
 
 				if (curtool != NULL &&
 				    TOOL_OPS(curtool)->tool_cursor != NULL) {
 					TOOL_OPS(curtool)->tool_cursor(curtool,
 					    mv, mx, my);
-				} else if (mv->tilew > 4 && mv->tileh > 4) {
+				} else if (mv->tilew > 6 && mv->tileh > 6) {
 					/* XXX cosmetic */
 					primitives.square(mv,
 					    rx+1, ry+1,
@@ -344,7 +346,8 @@ mapview_draw(void *p)
 			}
 				
 			if ((mv->flags & MAPVIEW_TILEMAP) &&
-			    !TAILQ_EMPTY(&node->nrefsh)) {
+			    !TAILQ_EMPTY(&node->nrefsh) &&
+			    mv->tilew > 6 && mv->tileh > 6) {
 				struct noderef *nref;
 
 				nref = TAILQ_FIRST(&node->nrefsh);
@@ -463,10 +466,9 @@ static void
 mapview_event(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[0].p;
-	struct map *m = mv->map;
 	struct mapedit *med = mv->med;
 	int type = argv[1].i;
-	int button, x, y, xrel, yrel;
+	int button, x, y;
 
 	switch (type) {
 	case WINDOW_MOUSEOUT:
@@ -664,8 +666,6 @@ mapview_scaled(int argc, union evarg *argv)
 static void
 mapview_lostfocus(int argc, union evarg *argv)
 {
-	struct mapview *mv = argv[0].p;
-	
 	if (zoomin_timer != NULL) {
 		SDL_RemoveTimer(zoomin_timer);
 	}

@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.55 2002/07/24 09:29:42 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.56 2002/07/30 22:23:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -58,7 +58,6 @@ static const struct object_ops window_ops = {
 /* XXX struct */
 #include "borders/grey8.h"
 
-static Uint32 delta = 0, delta2 = 256;
 static SDL_Color white = { 255, 255, 255 }; /* XXX fgcolor */
 
 static void	window_move(struct window *, Sint16, Sint16);
@@ -194,13 +193,11 @@ window_init(struct window *win, char *caption, int flags,
 void
 window_draw(struct window *win)
 {
+	SDL_Rect rd;
 	SDL_Surface *v = view->v;
 	struct region *reg;
 	struct widget *wid;
-	int rv, i, i2;
-	Uint32 xo, yo, col = 0;
-	Uint8 expcom;
-	SDL_Rect rd;
+	int i;
 
 	rd.x = win->x;
 	rd.y = win->y;

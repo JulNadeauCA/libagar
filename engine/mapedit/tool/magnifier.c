@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.4 2002/07/21 10:58:17 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.5 2002/07/30 22:19:52 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -167,8 +167,6 @@ void
 magnifier_effect(void *p, struct mapview *mv, Uint32 x, Uint32 y)
 {
 	struct magnifier *mag = p;
-	struct map *m = mv->map;
-	struct mapedit *med = TOOL(mag)->med;
 
 	switch (mag->mode) {
 	case MAGNIFIER_ZOOM_IN:

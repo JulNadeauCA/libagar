@@ -1,4 +1,4 @@
-/*	$Csoft: tilestack.c,v 1.5 2002/07/20 19:10:18 vedge Exp $	*/
+/*	$Csoft: tilestack.c,v 1.6 2002/07/29 06:33:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -154,7 +154,6 @@ tilestack_draw(void *p)
 
 		y += TILEH;
 		if (y + TILEH > WIDGET(ts)->h) {
-			dprintf("y %d > %d\n", y, WIDGET(ts)->h);
 			break;
 		}
 	}

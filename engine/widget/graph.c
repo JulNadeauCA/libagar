@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.7 2002/07/29 05:29:29 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.8 2002/07/30 22:23:57 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -278,7 +278,7 @@ graph_draw(void *p)
 	struct graph *gra = p;
 	struct graph_item *gi;
 	Uint32 x, y, oy, i;
-	Sint32 *val, oval;
+	Sint32 oval;
 
 	primitives.box(gra, 0, 0, WIDGET(gra)->w, WIDGET(gra)->h, 0,
 	    WIDGET_COLOR(gra, FRAME_COLOR));

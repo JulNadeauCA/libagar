@@ -1,4 +1,4 @@
-/*	$Csoft: tool.c,v 1.2 2002/07/09 08:24:42 vedge Exp $	*/
+/*	$Csoft: tool.c,v 1.3 2002/07/21 10:58:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc.
@@ -76,8 +76,6 @@ tool_mapview(void)
 		}
 		TAILQ_FOREACH(reg, &win->regionsh, regions) {
 			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-				int widx, widy;
-
 				if (!WIDGET_FOCUSED(wid)) {
 					continue;
 				}

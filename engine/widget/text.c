@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.23 2002/07/21 10:58:18 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.24 2002/07/24 09:26:10 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -157,7 +157,7 @@ text_render(char *fontname, int fontsize, Uint32 color, char *s)
 {
 	SDL_Surface *su;
 	SDL_Color col;
-	Uint8 r, g, b, a;
+	Uint8 r, g, b;
 	TTF_Font *fon;
 
 #ifdef DEBUG
