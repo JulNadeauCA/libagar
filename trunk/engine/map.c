@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.7 2002/02/01 06:00:07 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.8 2002/02/01 11:55:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -438,36 +438,37 @@ map_animate(Uint32 ival, void *p)
 	for (y = em->view->mapy, vy = 0;
 	    (y < em->view->maph + em->view->mapy + 1);
 	     y++, vy++) {
-#if 1
-		if (mapedit && curmapedit->flags & MAPEDIT_OBJLIST &&
-		    vy == 0) {
+
+		/* XXX */
+		if (mapedit &&
+		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
 			continue;
 		}
-#endif
+	
 		for (x = em->view->mapx, vx = 0;
 		     x < em->view->mapw + em->view->mapx + 1;
 		     x++, vx++) {
 			struct map_entry *me;
 			int i;
-#if 1
-			if (mapedit &&
-			    curmapedit->flags & MAPEDIT_TILELIST &&
-			    vx == em->view->mapw) {
-				continue;
+
+			/* XXX */
+			if (mapedit) {
+				if (vx == em->view->mapw &&
+				    curmapedit->flags & MAPEDIT_TILELIST) {
+					continue;
+				}
+				if (vx == 0 &&
+				    curmapedit->flags & MAPEDIT_TILESTACK) {
+					continue;
+				}
 			}
-#endif
 
 			me = &em->map[x][y];
 
 			if (me->nanims < 1) {
+				/* map_draw() shall handle this. */
 				continue;
 			}
-#if 1
-			if (mapedit && curmapedit->flags & MAPEDIT_TILESTACK &&
-			    vx == 0) {
-				continue;
-			}
-#endif
 
 			for (i = 0; i < me->nobjs; i++) {
 				static struct map_aref *taref;
@@ -592,25 +593,31 @@ map_draw(Uint32 ival, void *p)
 	for (y = em->view->mapy, vy = 0;
 	     y < em->view->maph + em->view->mapy + 1;
 	     y++, vy++) {
-#if 1
-		if (mapedit && curmapedit->flags & MAPEDIT_OBJLIST &&
-		    vy == 0) {
+
+	     	/* XXX */
+		if (mapedit &&
+		    vy == 0 && curmapedit->flags & MAPEDIT_OBJLIST) {
 			continue;
 		}
-#endif
+
 		for (x = em->view->mapx, vx = 0;
 		     x < em->view->mapw + em->view->mapx + 1;
 		     x++, vx++) {
-			struct map_entry *me;
-			struct map_aref *taref;
-			int i;
+			static struct map_entry *me;
+			static struct map_aref *taref;
+			static int i;
 
-#if 1
-			if (mapedit && curmapedit->flags & MAPEDIT_TILESTACK &&
-			    vx == 0) {
-				continue;
+			/* XXX */
+			if (mapedit) {
+				if (vx == 0 &&
+				    curmapedit->flags & MAPEDIT_TILESTACK) {
+					continue;
+				}
+				if (vx == em->view->mapw &&
+				    curmapedit->flags & MAPEDIT_TILELIST) {
+					continue;
+				}
 			}
-#endif
 
 			me = &em->map[x][y];
 
@@ -627,6 +634,9 @@ map_draw(Uint32 ival, void *p)
 				erd.h = em->view->tileh;
 				erd.x = vx * erd.w;
 				erd.y = vy * erd.h;
+				if (curmapedit->flags & MAPEDIT_TILESTACK) {
+					erd.w -= em->view->tilew;
+				}
 				SDL_FillRect(em->view->v, &erd, 25);
 			}
 
