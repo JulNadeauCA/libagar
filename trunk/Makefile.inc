@@ -1,13 +1,11 @@
-#	$Csoft: Makefile.inc,v 1.3 2002/01/30 17:54:04 vedge Exp $
+#	$Csoft: Makefile.inc,v 1.4 2002/02/18 02:01:01 vedge Exp $
 
 CFLAGS+=	-I${TOP}
 CFLAGS+=	-Wall -Werror -Wmissing-prototypes -Wunused -g -DDEBUG
 
+SHAREDIR=	${PREFIX}/share/geggy
+CFLAGS+=	-DSHAREDIR=\"${SHAREDIR}\"
+
 include ${TOP}/libfobj/Makefile.inc
 include ${TOP}/Makefile.config
-
-LIB_SHAREDIR=	${PREFIX}/share/geggy
-PROG_SHAREDIR=	${LIB_SHAREDIR}
-
-CFLAGS+=	-DSHAREDIR=\"${LIB_SHAREDIR}\"
 
