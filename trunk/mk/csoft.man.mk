@@ -52,7 +52,7 @@ depend: depend-subdir
 	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
 	  sed 's,\$$PREFIX,${PREFIX},' | \
 	  sed 's,\$$SHAREDIR,${SHAREDIR},' | \
-	  ${NROFF} -Tascii -mandoc > $@) || (rm -f $@; false)
+	  ${NROFF} -Tascii -mandoc > $@) || (rm -f $@; true)
 
 .1.ps1 .2.ps2 .3.ps3 .4.ps4 .5.ps5 .6.ps6 .7.ps7 .8.ps8 .9.ps9:
 	@echo "${NROFF} -Tps -mandoc $< > $@"
@@ -60,7 +60,7 @@ depend: depend-subdir
 	  sed 's,\$$SYSCONFDIR,${SYSCONFDIR},' | \
 	  sed 's,\$$PREFIX,${PREFIX},' | \
 	  sed 's,\$$SHAREDIR,${SHAREDIR},' | \
-	  ${NROFF} -Tps -mandoc > $@) || (rm -f $@; false)
+	  ${NROFF} -Tps -mandoc > $@) || (rm -f $@; true)
 
 preformat-man:
 	@if [ "${MAN1}" != "" ]; then \
