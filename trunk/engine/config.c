@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.58 2003/01/24 08:25:38 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.59 2003/02/10 03:59:02 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -38,6 +38,7 @@
 #include "version.h"
 #include "config.h"
 #include "view.h"
+#include "map.h"
 #include "world.h"
 
 #include "widget/text.h"
@@ -87,7 +88,6 @@ config_new(void)
 
 	con = emalloc(sizeof(struct config));
 	config_init(con);
-
 	return (con);
 }
 
@@ -218,6 +218,9 @@ config_window(struct config *con)
 		/* XXX thread unsafe */
 		cbox = checkbox_new(reg, -1, "Debugging");
 		widget_bind(cbox, "state", WIDGET_BOOL, NULL, &engine_debug);
+		
+		cbox = checkbox_new(reg, -1, "Node signature checking");
+		widget_bind(cbox, "state", WIDGET_INT, NULL, &map_nodesigs);
 #endif
 	}
 	
