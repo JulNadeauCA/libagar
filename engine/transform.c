@@ -1,4 +1,4 @@
-/*	$Csoft: transform.c,v 1.13 2003/08/31 11:58:07 vedge Exp $	*/
+/*	$Csoft: transform.c,v 1.14 2003/09/04 03:15:47 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -65,8 +65,6 @@ transform_init(struct transform *trans, enum transform_type type,
 		error_set(_("Too many transform args."));
 		return (-1);
 	}
-
-	dprintf("type %d, %d args\n", type, nargs);
 
 	memset(trans, 0, sizeof(struct transform));
 	trans->type = type;
