@@ -203,9 +203,6 @@ mapedit_loadmap(struct mapedit *med)
 	char path[FILENAME_MAX];
 	Uint32 x, y;
 
-	/* The viewport (and the map mask), might change sizes. */
-	text_destroyall();
-
 	mapedit_setpointer(med, 0);
 
 	map_freenodes(map);
