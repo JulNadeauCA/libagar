@@ -1,4 +1,4 @@
-/*	$Csoft: tlist.c,v 1.11 2002/11/12 02:25:47 vedge Exp $	*/
+/*	$Csoft: tlist.c,v 1.12 2002/11/14 00:43:39 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -317,7 +317,10 @@ tlist_mousemotion(int argc, union evarg *argv)
 	int yrel = argv[4].i;
 	Uint8 ms;
 
-	event_forward(sb, "window-mousemotion", argc, argv);
+	if (x > WIDGET(tl)->w - WIDGET(sb)->w) {	/* Scrollbar motion? */
+		event_forward(sb, "window-mousebuttondown", argc, argv);
+		return;
+	}
 
 #if 0
 	ms = SDL_GetMouseState(NULL, NULL);
@@ -375,7 +378,7 @@ tlist_mousebuttondown(int argc, union evarg *argv)
 	index = sb->range.start + (y - sb->range.soft_start) / tl->item_h;
 	dprintf("range.start = %d, y = %d, soft = %d, item_h = %d\n",
 	    sb->range.start, y, sb->range.soft_start, tl->item_h);
-	ti = tlist_item_index(tl, index);
+	ti = tlist_item_index(tl, index + 1);
 	if (ti != NULL) {
 		if (tl->flags & TLIST_MULTI_STICKY ||
 		   ((tl->flags & TLIST_MULTI) &&
