@@ -1,4 +1,4 @@
-/*	$Csoft: shift.c,v 1.8 2003/03/07 03:24:49 vedge Exp $	*/
+/*	$Csoft: shift.c,v 1.9 2003/03/13 01:21:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -62,7 +62,6 @@ shift_init(void *p)
 
 	tool_init(&sh->tool, "shift", &shift_ops);
 	sh->mode = 0;
-	sh->all_layers = 0;
 }
 
 struct window *
@@ -83,8 +82,6 @@ shift_window(void *p)
 	{
 		static const char *modes[] = {
 			"Highest",
-			"Lowest",
-			"Selective",
 			"All",
 			NULL
 		};
@@ -93,21 +90,8 @@ shift_window(void *p)
 
 		rad = radio_new(reg, modes);
 		widget_bind(rad, "value", WIDGET_INT, NULL, &sh->mode);
-
-		cb = checkbox_new(reg, -1, "All layers");
-		widget_bind(cb, "state", WIDGET_INT, NULL, &sh->all_layers);
 	}
 	return (win);
-}
-
-static void
-shift_apply(struct noderef *nref, Sint16 relx, Sint16 rely)
-{
-	if (nref->xcenter + relx < 65535 &&
-	    nref->ycenter + rely < 65535) {
-		nref->xcenter += relx;
-		nref->ycenter += rely;
-	}
 }
 
 void
@@ -115,44 +99,30 @@ shift_mouse(void *p, struct mapview *mv, Sint16 relx, Sint16 rely)
 {
 	struct shift *sh = p;
 	struct tlist_item *it;
-	struct node *node = mv->cur_node;
-	struct noderef *nref;
-	
-	if (TAILQ_EMPTY(&node->nrefs)) {
-		return;
-	}
+	int selx, sely, x, y, w, h;
 
-	switch (sh->mode) {
-	case SHIFT_HIGHEST:
-		nref = TAILQ_LAST(&node->nrefs, noderefq);
-		if ((nref->layer == mv->cur_layer || sh->all_layers)) {
-			shift_apply(nref, relx, rely);
-		}
-		break;
-	case SHIFT_LOWEST:
-		nref = TAILQ_FIRST(&node->nrefs);
-		if ((nref->layer == mv->cur_layer || sh->all_layers)) {
-			shift_apply(nref, relx, rely);
-		}
-		break;
-	case SHIFT_SELECTIVE:
-		TAILQ_FOREACH(it, &mv->nodeed.refs_tl->items, items) {
-			if (it->selected) {
-				nref = it->p1;
-				if ((nref->layer == mv->cur_layer ||
-				    sh->all_layers)) {
-					shift_apply(nref, relx, rely);
+	if (!mapview_get_selection(mv, &selx, &sely, &w, &h))
+		return;
+
+	for (y = sely; y < sely+h; y++) {
+		for (x = selx; x < selx+w; x++) {
+			struct node *node = &mv->map->map[y][x];
+			struct noderef *nref;
+
+			TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+				if (nref->layer != mv->cur_layer)
+					continue;
+
+				if (nref->xcenter + relx < NODEREF_MAX_CENTER &&
+				    nref->ycenter + rely < NODEREF_MAX_CENTER) {
+					nref->xcenter += relx;
+					nref->ycenter += rely;
 				}
+
+				if (sh->mode == SHIFT_HIGHEST)
+					break;
 			}
 		}
-		break;
-	case SHIFT_ALL:
-		TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
-			if ((nref->layer == mv->cur_layer || sh->all_layers)) {
-				shift_apply(nref, relx, rely);
-			}
-		}
-		break;
 	}
 }
 
