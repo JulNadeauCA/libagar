@@ -1,4 +1,4 @@
-/*	$Csoft: xcf.c,v 1.10 2004/03/18 21:27:47 vedge Exp $	*/
+/*	$Csoft: xcf.c,v 1.11 2004/03/20 05:00:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -504,8 +504,7 @@ xcf_insert_surface(struct gfx *gfx, SDL_Surface *su, const char *name,
 			*anim = NULL;
 			if ((su->h > TILESZ || su->w > TILESZ) &&
 			    strstr(name, "(frag)") != NULL) {
-				if (gfx_insert_fragments(gfx, su) == -1)
-					return (-1);
+				gfx_insert_fragments(gfx, su);
 			} else {
 		   		gfx_insert_sprite(gfx, su);
 			}
