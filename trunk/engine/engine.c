@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: engine.c,v 1.1 2002/01/30 12:30:04 vedge Exp $	*/
 
 #include <errno.h>
 #include <stdio.h>
@@ -30,17 +30,19 @@ static void
 printusage(char *progname)
 {
 	fprintf(stderr,
-	    "Usage: %s [-f] [-w width] [-h height] [-d depth] [-j joy#]\n",
-	        progname);
+	    "Usage: %s [-vxf] [-w width] [-h height] [-d depth] [-j joy#]\n",
+	    progname);
 	fprintf(stderr,
-	    "             [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n");
+	    "Usage: %s [-vxf] [-e mapname] [-D mapdesc] [-W mapw] [-H maph]\n",
+	    progname);
 }
 
 int
-engine_init(int argc, char *argv[])
+engine_init(int argc, char *argv[], struct gameinfo *gameinfo)
 {
 	int c, w, h, depth, njoy, flags;
-	
+	extern int xcf_debug;
+
 	njoy = 0;
 	mapedit = 0;
 	w = 640;
@@ -49,8 +51,17 @@ engine_init(int argc, char *argv[])
 	flags = SDL_SWSURFACE;
 	curmap = NULL;
 	
-	while ((c = getopt(argc, argv, "fw:h:d:j:e:D:W:H:")) != -1) {
+	while ((c = getopt(argc, argv, "xvfw:h:d:j:e:D:W:H:")) != -1) {
 		switch (c) {
+		case 'x':
+			xcf_debug++;
+			break;
+		case 'v':
+			printf("AGAR engine v%s\n", ENGINE_VERSION);
+			printf("%s v%d.%d\n", gameinfo->name,
+			    gameinfo->ver[0], gameinfo->ver[1]);
+			printf("%s\n", gameinfo->copyright);
+			exit (255);
 		case 'f':
 			flags |= SDL_FULLSCREEN;
 			break;
@@ -81,7 +92,7 @@ engine_init(int argc, char *argv[])
 			break;
 		default:
 			printusage(argv[0]);
-			return (1);
+			exit(255);
 		}
 	}
 
