@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.76 2004/02/25 18:09:52 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.77 2004/03/18 21:27:48 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -96,7 +96,7 @@ textbox_init(struct textbox *tbox, const char *label)
 	tbox->xpadding = 4;
 	tbox->ypadding = 3;
 	tbox->writeable = 1;
-	tbox->prew = tbox->xpadding*2 + 50;
+	tbox->prew = tbox->xpadding*2 + 50;			/* XXX */
 	tbox->preh = tbox->ypadding*2;
 
 	if (label != NULL) {
@@ -352,6 +352,7 @@ textbox_printf(struct textbox *tbox, const char *fmt, ...)
 	} else {
 		text[0] = '\0';
 	}
+	/* XXX */
 	tbox->pos = 0;
 	tbox->offs = 0;
 	widget_binding_unlock(stringb);
@@ -369,7 +370,7 @@ textbox_string(struct textbox *tbox)
 	return (sd);
 }
 
-/* Copy text to a fixed-size buffer and NUL-terminate. */
+/* Copy text to a fixed-size buffer and always NUL-terminate. */
 size_t
 textbox_copy_string(struct textbox *tbox, char *dst, size_t dst_size)
 {
