@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.12 2002/02/07 05:21:56 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.13 2002/02/07 06:28:00 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -110,11 +110,11 @@ mapedit_create(char *name, char *desc, int mapw, int maph)
 
 	med->tilelist = window_create(map->view,
 	    (map->view->width - tilew), tileh,
-	    tilew, map->view->height,
+	    tilew, map->view->height + tileh,
 	    "Tile list");
 	med->tilestack = window_create(map->view,
-	    0, 0,
-	    tilew, map->view->height,
+	    0, tileh,
+	    tilew, map->view->height + tileh,
 	    "Tile stack");
 	med->objlist = window_create(map->view,
 	    tilew, 0,
