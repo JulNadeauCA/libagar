@@ -1,4 +1,4 @@
-/*	$Csoft	    */
+/*	$Csoft$	    */
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -312,7 +312,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				}
 
 				if ((dir->flags & DIR_SCROLLVIEW) &&
-				    (mainview->mapy - *mapy) <= 0) {
+				    (view->rootmap != NULL) &&
+				    (view->rootmap->y - *mapy) <= 0) {
 				    	view_scroll(m, DIR_UP);
 				}
 				m->map[*mapy][*mapx].overlap--;
@@ -353,8 +354,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					*mapy = m->maph - 1;
 				}
 				if ((dir->flags & DIR_SCROLLVIEW) &&
-				    (mainview->mapy - *mapy) <=
-				     -mainview->maph + 2) {
+				    (view->rootmap != NULL) &&
+				    (view->rootmap->y - *mapy) <=
+				     -view->rootmap->h + 2) {
 					view_scroll(m, DIR_DOWN);
 				}
 				m->map[*mapy][*mapx].overlap--;
@@ -398,7 +400,8 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 				}
 
 				if ((dir->flags & DIR_SCROLLVIEW) &&
-				    (mainview->mapx - *mapx) <= 0) {
+				    (view->rootmap != NULL) &&
+				    (view->rootmap->x - *mapx) <= 0) {
 					view_scroll(m, DIR_LEFT);
 				}
 				m->map[*mapy][*mapx].overlap--;
@@ -440,8 +443,9 @@ mapdir_move(struct mapdir *dir, Uint32 *mapx, Uint32 *mapy)
 					*mapx = m->mapw-1;
 				}
 				if ((dir->flags & DIR_SCROLLVIEW) &&
-				    (mainview->mapx - *mapx) <=
-				     -mainview->mapw + 2) {
+				    (view->rootmap != NULL) &&
+				    (view->rootmap->x - *mapx) <=
+				     -view->rootmap->w + 2) {
 					view_scroll(m, DIR_RIGHT);
 				}
 				m->map[*mapy][*mapx].overlap--;
