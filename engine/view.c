@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.135 2004/03/12 02:51:18 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.136 2004/03/17 12:42:02 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -61,10 +61,7 @@
 struct viewport *view = NULL;
 SDL_PixelFormat *vfmt = NULL;
 
-#ifdef DEBUG
-int	view_debug = 1;
-#define engine_debug view_debug
-#endif
+static void destroy_window(struct window *);
 
 /* Initialize the graphic engine. */
 int
@@ -213,8 +210,7 @@ view_destroy(void)
 	     win != TAILQ_END(&view->windows);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
-		object_destroy(win);
-		free(win);
+		destroy_window(win);
 	}
 
 	/* Free the rectangle caches. */
@@ -269,8 +265,9 @@ view_detach(struct window *win)
 	pthread_mutex_unlock(&view->lock);
 }
 
+/* Release the given window and its child windows. */
 static void
-view_detach_window_queued(struct window *win)
+destroy_window(struct window *win)
 {
 	struct window *subwin, *nsubwin;
 
@@ -278,7 +275,7 @@ view_detach_window_queued(struct window *win)
 	     subwin != TAILQ_END(&win->subwins);
 	     subwin = nsubwin) {
 		nsubwin = TAILQ_NEXT(subwin, swins);
-		view_detach_window_queued(subwin);
+		destroy_window(subwin);
 	}
 
 	window_hide(win);
@@ -297,7 +294,7 @@ view_detach_queued(void)
 	     win != TAILQ_END(&view->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
-		view_detach_window_queued(win);
+		destroy_window(win);
 	}
 	TAILQ_INIT(&view->detach);
 }
