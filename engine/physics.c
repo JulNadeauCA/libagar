@@ -92,7 +92,6 @@ gendir_move(struct gendir *dir)
 		/* Repeat interval */
 		if (dir->offs++ > GENDIR_REPEAT_IVAL) {
 			dir->offs = 0;
-			dprintf("offs\n");
 			return (dir->current);
 		} else {
 			return (0);
