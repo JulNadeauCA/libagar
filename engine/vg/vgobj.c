@@ -1,4 +1,4 @@
-/*	$Csoft: vgedit.c,v 1.2 2004/04/10 03:01:17 vedge Exp $	*/
+/*	$Csoft: vgobj.c,v 1.3 2004/04/10 04:55:17 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -45,155 +45,155 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "vgedit.h"
+#include "vgobj.h"
 
-const struct version vgedit_ver = {
-	"agar vgedit",
+const struct version vgobj_ver = {
+	"agar vgobj",
 	0, 0
 };
 
-const struct object_ops vgedit_ops = {
-	vgedit_init,
+const struct object_ops vgobj_ops = {
+	vgobj_init,
 	NULL,
-	vgedit_destroy,
-	vgedit_load,
-	vgedit_save,
-	vgedit_edit
+	vgobj_destroy,
+	vgobj_load,
+	vgobj_save,
+	vgobj_edit
 };
 
 void
-vgedit_init(void *p, const char *name)
+vgobj_init(void *p, const char *name)
 {
-	struct vgedit *vged = p;
+	struct vgobj *vgo = p;
 
-	object_init(vged, "vgedit", name, &vgedit_ops);
-	vged->vg = vg_new(vged, VG_VISORIGIN);
-	vg_scale(vged->vg, 8, 4, 1);
-	vg_origin(vged->vg, 0, 0);
-	vg_rasterize(vged->vg);
+	object_init(vgo, "vgobj", name, &vgobj_ops);
+	vgo->vg = vg_new(vgo, VG_VISORIGIN);
+	vg_scale(vgo->vg, 8, 4, 1);
+	vg_origin(vgo->vg, 0, 0);
+	vg_rasterize(vgo->vg);
 }
 
 void
-vgedit_destroy(void *p)
+vgobj_destroy(void *p)
 {
-	struct vgedit *vged = p;
+	struct vgobj *vgo = p;
 
-	vg_destroy(vged->vg);
+	vg_destroy(vgo->vg);
 }
 
 int
-vgedit_load(void *p, struct netbuf *buf)
+vgobj_load(void *p, struct netbuf *buf)
 {
-	struct vgedit *vged = p;
+	struct vgobj *vgo = p;
 
-	if (version_read(buf, &vgedit_ver, NULL) != 0)
+	if (version_read(buf, &vgobj_ver, NULL) != 0)
 		return (-1);
 
 	return (0);
 }
 
 int
-vgedit_save(void *p, struct netbuf *buf)
+vgobj_save(void *p, struct netbuf *buf)
 {
-	struct vgedit *vged = p;
+	struct vgobj *vgo = p;
 
-	version_write(buf, &vgedit_ver);
+	version_write(buf, &vgobj_ver);
 	return (0);
 }
 
 static void
 geochg(int argc, union evarg *argv)
 {
-	struct vgedit *vged = argv[1].p;
+	struct vgobj *vgo = argv[1].p;
 
-	vg_scale(vged->vg, vged->vg->w, vged->vg->h, vged->vg->scale);
-	vg_rasterize(vged->vg);
+	vg_scale(vgo->vg, vgo->vg->w, vgo->vg->h, vgo->vg->scale);
+	vg_rasterize(vgo->vg);
 }
 
 static void
 vgchg(int argc, union evarg *argv)
 {
-	struct vgedit *vged = argv[1].p;
+	struct vgobj *vgo = argv[1].p;
 
-	vg_rasterize(vged->vg);
+	vg_rasterize(vgo->vg);
 }
 
 static void
-vgedit_settings(int argc, union evarg *argv)
+vgobj_settings(int argc, union evarg *argv)
 {
 	struct window *pwin = argv[1].p;
-	struct vgedit *vged = argv[2].p;
+	struct vgobj *vgo = argv[2].p;
 	struct window *win;
 	struct mfspinbutton *mfsu;
 	struct fspinbutton *fsu;
 	struct palette *pal;
 	
 	win = window_new(NULL);
-	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(vged)->name);
+	window_set_caption(win, _("Parameters for \"%s\""), OBJECT(vgo)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
 	mfsu = mfspinbutton_new(win, NULL, "x", _("Geometry: "));
-	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vged->vg->w);
-	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vged->vg->h);
+	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vgo->vg->w);
+	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vgo->vg->h);
 	mfspinbutton_set_min(mfsu, 1.0);
 	mfspinbutton_set_increment(mfsu, 0.1);
-	event_new(mfsu, "mfspinbutton-changed", geochg, "%p", vged);
+	event_new(mfsu, "mfspinbutton-changed", geochg, "%p", vgo);
 
 	fsu = fspinbutton_new(win, NULL, _("Scaling factor: "));
-	widget_bind(fsu, "value", WIDGET_DOUBLE, &vged->vg->scale);
+	widget_bind(fsu, "value", WIDGET_DOUBLE, &vgo->vg->scale);
 	fspinbutton_set_min(fsu, 0.1);
 	fspinbutton_set_increment(fsu, 0.1);
-	event_new(fsu, "fspinbutton-changed", geochg, "%p", vged);
+	event_new(fsu, "fspinbutton-changed", geochg, "%p", vgo);
 		
 	mfsu = mfspinbutton_new(win, NULL, ",", _("Point of origin: "));
-	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vged->vg->ox);
-	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vged->vg->oy);
+	widget_bind(mfsu, "xvalue", WIDGET_DOUBLE, &vgo->vg->ox);
+	widget_bind(mfsu, "yvalue", WIDGET_DOUBLE, &vgo->vg->oy);
 	mfspinbutton_set_min(mfsu, 0.0);
 	mfspinbutton_set_increment(mfsu, 0.1);
 	mfspinbutton_set_precision(mfsu, "f", 2);
-	event_new(mfsu, "mfspinbutton-changed", vgchg, "%p", vged);
+	event_new(mfsu, "mfspinbutton-changed", vgchg, "%p", vgo);
 	
 	label_new(win, LABEL_STATIC, _("Background color: "));
 	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "color", WIDGET_UINT32, &vged->vg->fill_color);
-	event_new(pal, "palette-changed", vgchg, "%p", vged);
+	widget_bind(pal, "color", WIDGET_UINT32, &vgo->vg->fill_color);
+	event_new(pal, "palette-changed", vgchg, "%p", vgo);
 	
 	label_new(win, LABEL_STATIC, _("Origin color: "));
 	pal = palette_new(win, PALETTE_RGB);
-	widget_bind(pal, "color", WIDGET_UINT32, &vged->vg->origin_color);
-	event_new(pal, "palette-changed", vgchg, "%p", vged);
+	widget_bind(pal, "color", WIDGET_UINT32, &vgo->vg->origin_color);
+	event_new(pal, "palette-changed", vgchg, "%p", vgo);
 
 	window_attach(pwin, win);
 	window_show(win);
 }
 
 struct window *
-vgedit_edit(void *obj)
+vgobj_edit(void *obj)
 {
 	extern const struct tool line_tool, point_tool;
-	struct vgedit *vged = obj;
+	struct vgobj *vgo = obj;
 	struct window *win;
 	struct mapview *mv;
 	struct toolbar *tbar;
 	struct statusbar *statbar;
 
 	win = window_new(NULL);
-	window_set_caption(win, _("Vector drawing: %s"), OBJECT(vged)->name);
+	window_set_caption(win, _("Vector graphic: %s"), OBJECT(vgo)->name);
 	window_set_closure(win, WINDOW_DETACH);
 
 	tbar = toolbar_new(win, TOOLBAR_HORIZ, 2);
-	toolbar_add_button(tbar, 0, SPRITE(&mapedit, SETTINGS_ICON), 0, 0,
-	    vgedit_settings, "%p, %p", win, vged);
+	toolbar_add_button(tbar, 0, ICON(SETTINGS_ICON), 0, 0,
+	    vgobj_settings, "%p, %p", win, vgo);
 
 	statbar = Malloc(sizeof(struct statusbar), M_OBJECT);
 	statusbar_init(statbar);
 	statusbar_add_label(statbar, LABEL_STATIC, ".");
 
-	mv = mapview_new(win, vged->vg->map, MAPVIEW_EDIT|MAPVIEW_INDEPENDENT,
+	mv = mapview_new(win, vgo->vg->map, MAPVIEW_EDIT|MAPVIEW_INDEPENDENT,
 	    tbar, statbar);
 	mapview_prescale(mv, 4, 4);
-	mapview_reg_tool(mv, &line_tool, vged->vg);
-	mapview_reg_tool(mv, &point_tool, vged->vg);
+	mapview_reg_tool(mv, &line_tool, vgo->vg);
+	mapview_reg_tool(mv, &point_tool, vgo->vg);
 
 	object_attach(win, statbar);
 	return (win);
