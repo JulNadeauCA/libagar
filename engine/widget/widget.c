@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.85 2004/03/31 02:30:04 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.86 2004/04/10 02:34:05 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -818,9 +818,10 @@ widget_clear_focus(void *p)
 }
 
 /* Find the parent window of a widget. */
-static struct window *
-widget_parent_window(struct widget *wid)
+struct window *
+widget_parent_window(void *p)
 {
+	struct widget *wid = p;
 	struct widget *pwid = wid;
 
 	if (OBJECT_TYPE(wid, "window"))

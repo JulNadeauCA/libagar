@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.224 2004/05/06 06:24:27 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.225 2004/05/13 11:01:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -71,7 +71,6 @@ enum {
 static void	window_shown(int, union evarg *);
 static void	window_hidden(int, union evarg *);
 static void	window_clamp(struct window *);
-static void	window_focus(struct window *);
 static void	window_apply_alignment(struct window *);
 static void	winop_move(struct window *, SDL_MouseMotionEvent *);
 static void	winop_resize(int, struct window *, SDL_MouseMotionEvent *);
@@ -598,7 +597,7 @@ winop_move(struct window *win, SDL_MouseMotionEvent *motion)
  * Give focus to a window.
  * The view and window must be locked.
  */
-static void
+void
 window_focus(struct window *win)
 {
 	struct window *lastwin;
