@@ -1,4 +1,4 @@
-/*	$Csoft: merge.c,v 1.23 2003/03/16 04:00:37 vedge Exp $	*/
+/*	$Csoft: merge.c,v 1.24 2003/03/19 02:22:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -268,7 +268,6 @@ merge_effect(void *p, struct mapview *mv, struct node *dst_node)
 
 	/* Avoid circular references. XXX ugly */
 	if (strncmp(OBJECT(dm)->name, "brush(", 6) == 0) {
-		text_msg("Error", "Circular reference");
 		return;
 	}
 
