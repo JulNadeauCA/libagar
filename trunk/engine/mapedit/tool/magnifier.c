@@ -1,4 +1,4 @@
-/*	$Csoft: magnifier.c,v 1.44 2004/05/24 03:26:46 vedge Exp $	*/
+/*	$Csoft: magnifier.c,v 1.45 2004/05/25 07:27:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -34,42 +34,25 @@
 #include <engine/widget/spinbutton.h>
 #include <engine/widget/checkbox.h>
 
-static void magnifier_init(struct tool *);
-static void magnifier_mousebuttondown(struct tool *, int, int, int, int, int);
-
-const struct tool magnifier_tool = {
-	N_("Magnifier"),
-	N_("Zoom in and out specific areas of the map."),
-	MAGNIFIER_TOOL_ICON,
-	MAGNIFIER_CURSOR,
-	magnifier_init,
-	NULL,				/* load */
-	NULL,				/* save */
-	NULL,				/* destroy */
-	NULL,				/* cursor */
-	NULL,				/* effect */
-	NULL,				/* mousemotion */
-	magnifier_mousebuttondown,
-	NULL,				/* mousebuttonup */
-	NULL,				/* keydown */
-	NULL				/* keyup */
-};
-
-static int zoom_spec = 100;
+int magnifier_zoom_toval = 100;
+int magnifier_zoom_inc = 8;
 
 static void
-zoom_specific(int argc, union evarg *argv)
+zoom_to_value(int argc, union evarg *argv)
 {
 	struct mapview *mv = argv[1].p;
 
-	mapview_zoom(mv, zoom_spec);
+	mapview_set_scale(mv, magnifier_zoom_toval);
+	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
 }
 
 static void
-zoom_100(struct tool *t, int state)
+zoom_100pct(struct tool *t, int state)
 {
-	mapview_zoom(t->mv, 100);
-	zoom_spec = 100;
+	struct mapview *mv = t->mv;
+
+	mapview_set_scale(mv, 100);
+	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
 }
 
 static void
@@ -77,9 +60,8 @@ zoom_in(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
-	mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
-	mv->flags &= ~(MAPVIEW_ZOOMING_OUT);
-	mv->flags |= MAPVIEW_ZOOMING_IN;
+	mapview_set_scale(mv, (*mv->zoom)+magnifier_zoom_inc);
+	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
 }
 
 static void
@@ -87,9 +69,8 @@ zoom_out(struct tool *t, int state)
 {
 	struct mapview *mv = t->mv;
 
-	mapview_zoom(mv, *mv->zoom + mv->zoom_inc);
-	mv->flags &= ~(MAPVIEW_ZOOMING_IN);
-	mv->flags |= MAPVIEW_ZOOMING_OUT;
+	mapview_set_scale(mv, (*mv->zoom)-magnifier_zoom_inc);
+	mapview_status(mv, _("%d%% magnification"), *mv->zoom);
 }
 
 static void
@@ -103,33 +84,38 @@ magnifier_init(struct tool *t)
 	win = tool_window(t, "mapedit-tool-magnifier");
 
 	sbu = spinbutton_new(win, _("Zoom %%: "));
-	widget_bind(sbu, "value", WIDGET_INT, &zoom_spec);
+	widget_bind(sbu, "value", WIDGET_INT, &magnifier_zoom_toval);
 	spinbutton_set_min(sbu, 4);
 	spinbutton_set_max(sbu, 600);
-	event_new(sbu, "spinbutton-changed", zoom_specific, "%p", t->mv);
+	spinbutton_set_increment(sbu, magnifier_zoom_inc);
+	event_new(sbu, "spinbutton-changed", zoom_to_value, "%p", t->mv);
 
-	tool_push_status(t, _("Click to [zoom-in/center/zoom-out]"));
-	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_100, 0);
+	sbu = spinbutton_new(win, _("Zoom increment: "));
+	widget_bind(sbu, "value", WIDGET_INT, &magnifier_zoom_inc);
+	spinbutton_set_min(sbu, 1);
+	
+	tool_push_status(t, "[`0' = zoom 100%], [`+' = zoom++], "
+	                    "[`-' = zoom--]");
+
+	tool_bind_key(t, KMOD_NONE, SDLK_0, zoom_100pct, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_EQUALS, zoom_in, 0);
 	tool_bind_key(t, KMOD_NONE, SDLK_MINUS, zoom_out, 0);
 }
 
-static void
-magnifier_mousebuttondown(struct tool *t, int x, int y, int xoff, int yoff,
-    int b)
-{
-	struct mapview *mv = t->mv;
-	int z = *mv->zoom;
-
-	/* XXX logarithmic */
-	if (b == 1) {
-		z += 10;
-	} else if (b == 3) {
-		z -= 10;
-	}
-	mapview_zoom(mv, z);
-	mapview_center(mv, x, y);
-	*mv->ssx = TILESZ+xoff;
-	*mv->ssy = TILESZ+yoff;
-}
-
+const struct tool magnifier_tool = {
+	N_("Magnifier"),
+	N_("Zoom to specific areas on the map."),
+	MAGNIFIER_TOOL_ICON,
+	MAGNIFIER_CURSOR,
+	magnifier_init,
+	NULL,				/* load */
+	NULL,				/* save */
+	NULL,				/* destroy */
+	NULL,				/* cursor */
+	NULL,				/* effect */
+	NULL,				/* mousemotion */
+	NULL,				/* mousebuttondown */
+	NULL,				/* mousebuttonup */
+	NULL,				/* keydown */
+	NULL				/* keyup */
+};
