@@ -1,4 +1,4 @@
-/*	$Csoft: perso.h,v 1.10 2003/06/06 02:49:00 vedge Exp $	*/
+/*	$Csoft: perso.h,v 1.11 2003/06/08 22:48:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PERSO_H_
@@ -14,12 +14,12 @@ struct perso {
 	char		 name[PERSO_NAME_MAX];	/* Name set by user */
 	Uint32		 flags;
 	Uint32		 seed;			/* Random seed */
-	int		 level;			/* Current level */
-	int		 exp;			/* Experience */
+	Sint32		 level;			/* Current level */
+	Uint32		 exp;			/* Experience */
 	int		 age;			/* Age */
 	int		 maxhp, maxmp;		/* Maximum HP/MP */
 	int		 hp, mp;		/* Effective HP/MP */
-	int		 nzuars;		/* Money */
+	Uint32		 nzuars;		/* Money */
 };
 
 #define PERSO(ob)	((struct perso *)(ob))
