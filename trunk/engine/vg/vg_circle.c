@@ -1,4 +1,4 @@
-/*	$Csoft: vg_circle.c,v 1.7 2004/04/23 03:29:47 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.8 2004/05/12 04:53:13 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -94,7 +94,7 @@ static int seq;
 static void
 circle_tool_init(struct tool *t)
 {
-	tool_push_status(t, _("Specify the circle's center point.\n"));
+	tool_push_status(t, _("Specify the circle's center point."));
 	seq = 0;
 	cur_circle = NULL;
 	cur_radius = NULL;
