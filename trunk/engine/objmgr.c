@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.6 2005/02/05 14:39:39 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.7 2005/02/06 05:02:58 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -31,6 +31,7 @@
 #include <engine/view.h>
 
 #include <engine/widget/window.h>
+#include <engine/widget/box.h>
 #include <engine/widget/vbox.h>
 #include <engine/widget/hbox.h>
 #include <engine/widget/button.h>
@@ -40,6 +41,7 @@
 #include <engine/widget/combo.h>
 #include <engine/widget/menu.h>
 #include <engine/widget/bitmap.h>
+#include <engine/widget/label.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -129,6 +131,9 @@ close_obj_generic(int argc, union evarg *argv)
 	TAILQ_REMOVE(&gobjs, oent, objs);
 	object_del_dep(&mapedit.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
+	
+	/* TODO */
+	world_changed = 1;
 }
 
 void
@@ -154,6 +159,9 @@ objmgr_open_generic(struct object *ob)
 	window_show(oent->win);
 
 	event_new(oent->win, "window-close", close_obj_generic, "%p", oent);
+	
+	/* TODO */
+	world_changed = 1;
 }
 
 static void
@@ -169,6 +177,9 @@ close_obj_data(int argc, union evarg *argv)
 	object_page_out(oent->obj, OBJECT_DATA);
 	object_del_dep(&mapedit.pseudo, oent->obj);
 	Free(oent, M_MAPEDIT);
+
+	/* TODO */
+	world_changed = 1;
 }
 
 void
@@ -200,6 +211,9 @@ objmgr_open_data(struct object *ob)
 	window_show(oent->win);
 
 	event_new(oent->win, "window-close", close_obj_data, "%p", oent);
+
+	/* TODO */
+	world_changed = 1;
 }
 
 static void
@@ -232,6 +246,8 @@ obj_op(int argc, union evarg *argv)
 			if (object_load(ob) == -1) {
 				text_msg(MSG_ERROR, "%s: %s", ob->name,
 				    error_get());
+			} else {
+				world_changed = (ob != OBJECT(world));
 			}
 			break;
 		case OBJEDIT_SAVE:
@@ -242,6 +258,7 @@ obj_op(int argc, union evarg *argv)
 				text_tmsg(MSG_INFO, 1000,
 				    _("Object `%s' was saved successfully."),
 				    ob->name);
+				world_changed = (ob != OBJECT(world));
 			}
 			break;
 		case OBJEDIT_DUP:
@@ -255,16 +272,21 @@ obj_op(int argc, union evarg *argv)
 					    ob->name);
 					break;
 				}
-				if ((dob = object_duplicate(ob)) == NULL)
+				if ((dob = object_duplicate(ob)) == NULL) {
 					text_msg(MSG_ERROR, "%s: %s", ob->name,
 					    error_get());
+				} else {
+					world_changed = 1;
+				}
 			}
 			break;
 		case OBJEDIT_MOVE_UP:
 			object_move_up(ob);
+			world_changed = 1;
 			break;
 		case OBJEDIT_MOVE_DOWN:
 			object_move_down(ob);
+			world_changed = 1;
 			break;
 		case OBJEDIT_REINIT:
 			if (it->p1 == world) {
@@ -272,6 +294,7 @@ obj_op(int argc, union evarg *argv)
 			}
 			if (ob->ops->reinit != NULL) {
 				ob->ops->reinit(ob);
+				world_changed = 1;
 			}
 			break;
 		case OBJEDIT_DESTROY:
@@ -295,6 +318,7 @@ obj_op(int argc, union evarg *argv)
 			if ((ob->flags & OBJECT_STATIC) == 0) {
 				Free(ob, M_OBJECT);
 			}
+			world_changed = 1;
 			break;
 		}
 	}
@@ -576,6 +600,92 @@ objmgr_init(void)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
+}
+
+static void
+save_changes(int argc, union evarg *argv)
+{
+	struct window *dlg_win = widget_parent_window(argv[0].p);
+	struct object *obj = argv[1].p;
+	int then_exit = argv[2].i;
+
+	if (object_save(obj) == -1) {
+		text_msg(MSG_ERROR, "%s: %s", obj->name, error_get());
+		return;
+	}
+
+	dprintf("saved `%s'\n", obj->name);
+
+	if (then_exit) {
+		SDL_Event nev;
+
+		nev.type = SDL_USEREVENT;
+		SDL_PushEvent(&nev);
+	} else {
+		text_tmsg(MSG_INFO, 500, _("Object `%s' saved successfully."),
+		    obj->name);
+	}
+}
+
+static void
+discard_changes(int argc, union evarg *argv)
+{
+	struct window *dlg_win = widget_parent_window(argv[0].p);
+	struct object *obj = argv[1].p;
+	int then_exit = argv[2].i;
+
+	if (then_exit) {
+		SDL_Event nev;
+
+		nev.type = SDL_USEREVENT;
+		SDL_PushEvent(&nev);
+	} else {
+		text_tmsg(MSG_INFO, 500, _("Ignoring modifications to `%s'."),
+		    obj->name);
+	}
+}
+
+/*
+ * Present the user with a dialog asking whether to save modifications to
+ * an object and optionally exit afterwards.
+ */
+void
+objmgr_changed_dlg(void *obj, int then_exit)
+{
+	struct window *win;
+	struct box *bo;
+	struct button *b;
+
+	if ((win = window_new(WINDOW_NO_CLOSE|WINDOW_NO_MINIMIZE|WINDOW_MODAL|
+			      WINDOW_NO_RESIZE, "objmgr-changed-dlg"))
+			      == NULL) {
+		return;
+	}
+	window_set_caption(win, _("Save changes?"));
+	label_new(win, LABEL_STATIC, _("The state of `%s' has changed."),
+	    OBJECT(obj)->name);
+	
+	
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
+	{
+		b = button_new(bo, _("Save changes"));
+		event_new(b, "button-pushed", save_changes, "%p,%i", obj,
+		    then_exit);
+		widget_focus(b);
+
+		b = button_new(bo, _("Discard changes"));
+		event_new(b, "button-pushed", discard_changes, "%p,%i", obj,
+		    then_exit);
+	}
+
+	bo = box_new(win, BOX_HORIZ, BOX_HOMOGENOUS|VBOX_WFILL);
+	{
+		b = button_new(bo, _("Cancel"));
+		event_new(b, "button-pushed", window_generic_detach, "%p", win);
+		WIDGET(b)->flags |= WIDGET_WFILL;
+	}
+
+	window_show(win);
 }
 
 void

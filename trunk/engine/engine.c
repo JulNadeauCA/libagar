@@ -1,4 +1,4 @@
-/*	$Csoft: engine.c,v 1.141 2005/01/27 05:46:23 vedge Exp $	*/
+/*	$Csoft: engine.c,v 1.142 2005/02/01 04:03:23 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -74,6 +74,7 @@ pthread_mutexattr_t	recursive_mutexattr;	/* Recursive mutex attributes */
 const char *progname = "untitled";
 struct config *config;
 struct object *world;
+int world_changed = 0;
 pthread_mutex_t linkage_lock;
 struct object engine_icons;
 void (*engine_atexit_func)(void) = NULL;
