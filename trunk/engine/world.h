@@ -1,4 +1,4 @@
-/*	$Csoft: world.h,v 1.15 2002/05/25 08:56:41 vedge Exp $	*/
+/*	$Csoft: world.h,v 1.16 2002/05/31 10:49:52 vedge Exp $	*/
 
 struct world {
 	struct	object obj;
@@ -9,7 +9,8 @@ struct world {
 	char	*sysdatadir;		/* System-wide data directory path */
 
 	/* Read-write, thread-safe */
-	struct	map *curmap;		/* Map being displayed */
+	struct	map *curmap;		/* Map being displayed. If this
+					   becomes NULL, stop the game. */
 	struct	view *curview;		/* Main viewport */
 	SLIST_HEAD(, object) wobjsh;	/* Game objects */
 	int	nobjs;
