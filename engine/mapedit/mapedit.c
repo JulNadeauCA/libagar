@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.202 2004/04/11 03:29:19 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.203 2004/05/24 03:24:53 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -98,7 +98,6 @@ mapedit_init(void)
 	prop_set_uint32(&mapedit, "default-map-height", 16);
 	prop_set_uint32(&mapedit, "default-brush-width", 5);
 	prop_set_uint32(&mapedit, "default-brush-height", 5);
-	prop_set_bool(&mapedit, "sel-bounded-edition", 0);
 
 	/* Create the object editor window. */
 	objedit_init();
@@ -135,6 +134,7 @@ struct window *
 mapedit_settings(void *p)
 {
 	extern int mapview_bg, mapview_bg_moving, mapview_bg_squaresize;
+	extern int mapview_sel_bounded;
 	struct window *win;
 	struct checkbox *cb;
 	struct spinbutton *sb;
@@ -162,8 +162,7 @@ mapedit_settings(void *p)
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
 	{
 		cb = checkbox_new(bo, _("Selection-bounded edition"));
-		widget_bind(cb, "state", WIDGET_PROP, &mapedit,
-		    "sel-bounded-edition");
+		widget_bind(cb, "state", WIDGET_INT, &mapview_sel_bounded);
 	}
 
 	bo = box_new(win, BOX_VERT, BOX_WFILL);
