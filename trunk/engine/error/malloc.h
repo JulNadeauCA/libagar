@@ -1,4 +1,4 @@
-/*	$Csoft: malloc.h,v 1.3 2004/04/21 00:15:24 vedge Exp $	*/
+/*	$Csoft: malloc.h,v 1.4 2004/05/07 01:42:27 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ERROR_MALLOC_H_
@@ -31,14 +31,13 @@ enum {
 	M_INPUT,	/* input devices */
 	M_CAD,		/* cad applications */
 	M_EDA,		/* eda applications */
+	M_GAME,		/* game applications */
 	M_LAST
 };
 
 struct error_mement {
 	size_t msize;			/* Total allocated memory */
-	size_t rsize;			/* Total reallocated memory */
 	unsigned int nallocs;		/* Total number of allocations */
-	unsigned int nreallocs;		/* Total number of reallocations */
 	unsigned int nfrees;		/* Total number of frees */
 };
 
