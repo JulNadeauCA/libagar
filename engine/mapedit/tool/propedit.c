@@ -1,4 +1,4 @@
-/*	$Csoft: propedit.c,v 1.26 2003/03/25 13:48:05 vedge Exp $	*/
+/*	$Csoft: propedit.c,v 1.28 2003/04/18 04:10:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -55,6 +55,7 @@ propedit_set_edge(struct mapview *mv, Uint32 edge)
 		return;
 	}
 
+	dprintf("set edge 0x%x\n", edge);
 	node = &mv->map->map[mv->cy][mv->cx];
 	node->flags &= ~(NODE_EDGE_ANY);
 	node->flags |= edge;
@@ -120,15 +121,15 @@ propedit_init(void *p)
 	struct propedit *pe = p;
 
 	tool_init(&pe->tool, "propedit", &propedit_ops);
-	tool_bind_key(pe, KMOD_NUM, SDLK_7, propedit_edge_nw, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_8, propedit_edge_n, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_9, propedit_edge_ne, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_4, propedit_edge_w, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_5, propedit_edge_none, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_6, propedit_edge_e, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_1, propedit_edge_sw, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_2, propedit_edge_s, 1);
-	tool_bind_key(pe, KMOD_NUM, SDLK_3, propedit_edge_se, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP7, propedit_edge_nw, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP8, propedit_edge_n, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP9, propedit_edge_ne, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP4, propedit_edge_w, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP5, propedit_edge_none, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP6, propedit_edge_e, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP1, propedit_edge_sw, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP2, propedit_edge_s, 1);
+	tool_bind_key(pe, KMOD_NONE, SDLK_KP3, propedit_edge_se, 1);
 
 	pe->mode = PROPEDIT_CLEAR;
 	pe->node_mask = 0;
