@@ -1,4 +1,4 @@
-/*	$Csoft: error.c,v 1.1 2002/05/31 10:39:13 vedge Exp $	*/
+/*	$Csoft: error.c,v 1.2 2002/06/01 02:39:25 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications <http://www.csoft.org>
@@ -28,8 +28,12 @@
 #include <sys/types.h>
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "engine.h"
+#include "error.h"
+
+extern pthread_key_t engine_errorkey;	/* engine.c */
 
 void *
 emalloc(size_t len)
@@ -57,3 +61,27 @@ erealloc(void *ptr, size_t len)
 	return (p);
 }
 
+void
+error_set(const char *fmt, ...)
+{
+	va_list args;
+	char *ekey, *buf;
+	
+	va_start(args, fmt);
+	if (vasprintf(&buf, fmt, args) == -1) {
+		fatal("vasprintf: %s\n", strerror(errno));
+	}
+	va_end(args);
+
+	ekey = (char *)pthread_getspecific(engine_errorkey);
+	if (ekey != NULL) {
+		free(ekey);
+	}
+	pthread_setspecific(engine_errorkey, buf);
+}
+
+const char *
+error_get(void)
+{
+	return ((const char *)pthread_getspecific(engine_errorkey));
+}
