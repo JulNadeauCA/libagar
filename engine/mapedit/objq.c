@@ -1,4 +1,4 @@
-/*	$Csoft: objq.c,v 1.61 2003/04/12 01:45:38 vedge Exp $	*/
+/*	$Csoft: objq.c,v 1.62 2003/04/24 07:04:43 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -177,7 +177,7 @@ objq_insert_tiles(int argc, union evarg *argv)
 		if (map_resize(m,
 		    nw > m->mapw ? nw : m->mapw,
 		    nh > m->maph ? nh : m->maph) == -1) {
-			text_msg("Error growing map", "%s");
+			text_msg("Error growing map", "%s", error_get());
 			continue;
 		}
 
