@@ -1,4 +1,4 @@
-/*	$Csoft: widget.c,v 1.98 2005/03/08 03:18:36 vedge Exp $	*/
+/*	$Csoft: widget.c,v 1.99 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -254,7 +254,7 @@ widget_get_binding(void *widp, const char *name, ...)
 			*(int **)res = (int *)binding->p1;
 			break;
 		case WIDGET_UINT:
-			*(unsigned int **)res = (unsigned int *)binding->p1;
+			*(u_int **)res = (u_int *)binding->p1;
 			break;
 		case WIDGET_UINT8:
 			*(Uint8 **)res = (Uint8 *)binding->p1;
@@ -361,11 +361,11 @@ widget_get_int(void *wid, const char *name)
 	return (rv);
 }
 
-unsigned int
+u_int
 widget_get_uint(void *wid, const char *name)
 {
 	struct widget_binding *b;
-	unsigned int *i, rv;
+	u_int *i, rv;
 
 	if ((b = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
@@ -544,10 +544,10 @@ widget_set_int(void *wid, const char *name, int ni)
 }
 
 void
-widget_set_uint(void *wid, const char *name, unsigned int ni)
+widget_set_uint(void *wid, const char *name, u_int ni)
 {
 	struct widget_binding *binding;
-	unsigned int *i;
+	u_int *i;
 
 	if ((binding = widget_get_binding(wid, name, &i)) == NULL) {
 		fatal("%s", error_get());
@@ -790,7 +790,7 @@ widget_destroy(void *p)
 {
 	struct widget *wid = p;
 	struct widget_binding *bind, *nbind;
-	unsigned int i;
+	u_int i;
 
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL)

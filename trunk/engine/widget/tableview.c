@@ -1,4 +1,4 @@
-/*	$Csoft: tableview.c,v 1.10 2005/02/07 05:37:52 vedge Exp $	*/
+/*	$Csoft: tableview.c,v 1.11 2005/03/09 06:39:21 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 John Blitch
@@ -40,7 +40,7 @@
 
 #include "tableview.h"
 
-#define ID_INVALID ((unsigned int)-1)
+#define ID_INVALID ((u_int)-1)
 
 static struct widget_ops tableview_ops = {
 	{
@@ -73,9 +73,9 @@ static struct tableview_row *row_get(struct tableview_rowq *, rowID);
 static void select_all(struct tableview_rowq *);
 static void deselect_all(struct tableview_rowq *);
 static int count_visible_descendants(struct tableview_rowq *, int);
-static void switch_columns(struct tableview *, unsigned int, unsigned int);
+static void switch_columns(struct tableview *, u_int, u_int);
 static int visible(struct tableview_row *);
-static void render_dyncolumn(struct tableview *, unsigned int);
+static void render_dyncolumn(struct tableview *, u_int);
 static int clicked_header(struct tableview *, int, int, Uint32, void *, void *);
 static int clicked_row(struct tableview *, int, int, Uint32, void *, void *);
 static int draw_column(struct tableview *, int, int, Uint32, void *, void *);
@@ -200,7 +200,7 @@ tableview_col_add(struct tableview * tv, int flags, colID cid,
     const char *label, char *width)
 {
 	struct tableview_column *col;
-	unsigned int i;
+	u_int i;
 	int data_w, label_w;
 
 	if (tv->locked || cid == ID_INVALID)
@@ -274,7 +274,7 @@ out:
 }
 
 void
-tableview_set_update(struct tableview * tv, unsigned int ms)
+tableview_set_update(struct tableview * tv, u_int ms)
 {
 	pthread_mutex_lock(&tv->lock);
 	tv->visible.redraw_rate = ms;
@@ -286,7 +286,7 @@ tableview_row_addfn(struct tableview * tv, int flags,
     struct tableview_row * parent, rowID rid,...)
 {
 	struct tableview_row *row;
-	unsigned int i;
+	u_int i;
 	va_list ap;
 	colID cid;
 	void *data;
@@ -365,7 +365,7 @@ tableview_row_addfn(struct tableview * tv, int flags,
 void
 tableview_row_del(struct tableview * tv, struct tableview_row * row)
 {
-	unsigned int i;
+	u_int i;
 	struct tableview_row *row1, *row2;
 
 	if (NULL == row)
@@ -523,7 +523,7 @@ void
 tableview_destroy(void *p)
 {
 	struct tableview *tv = p;
-	unsigned int i;
+	u_int i;
 
 	pthread_mutex_lock(&tv->lock);
 
@@ -545,7 +545,7 @@ void
 tableview_scale(void *p, int w, int h)
 {
 	struct tableview *tv = p;
-	unsigned int rows_per_view, i;
+	u_int rows_per_view, i;
 
 	pthread_mutex_lock(&tv->lock);
 
@@ -591,7 +591,7 @@ tableview_scale(void *p, int w, int h)
 	}
 	/* calculate widths for TABLEVIEW_COL_FILL cols */
 	{
-		unsigned int fill_cols, nonfill_width, fill_width;
+		u_int fill_cols, nonfill_width, fill_width;
 
 		fill_cols = 0;
 		nonfill_width = 0;
@@ -651,7 +651,7 @@ void
 tableview_draw(void *p)
 {
 	struct tableview *tv = p;
-	unsigned int i;
+	u_int i;
 	int y, update = 0;
 	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 
@@ -713,7 +713,7 @@ foreach_visible_column(struct tableview * tv, visible_do dothis,
     void *arg1, void *arg2)
 {
 	int x, first_col, col_width;
-	unsigned int i;
+	u_int i;
 	int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	int view_edge = (tv->sbar_h ? widget_get_int(tv->sbar_h, "value") : 0);
 
@@ -760,7 +760,7 @@ view_changed(struct tableview * tv)
 	int view_height =
 	WIDGET(tv)->h - (NULL == tv->sbar_h ? 0 : WIDGET(tv->sbar_h)->h);
 	int scrolling_area = WIDGET(tv->sbar_v)->h - tv->sbar_v->button_size*2;
-	unsigned int i;
+	u_int i;
 
 	/* cancel double clicks if what's under it changes it */
 	tv->dblclicked = 0;
@@ -814,7 +814,7 @@ view_changed_check(struct tableview * tv, struct tableview_rowq * in, int depth,
     int filled, int *seen)
 {
 	struct tableview_row *row;
-	unsigned int x = 0;
+	u_int x = 0;
 
 	TAILQ_FOREACH(row, in, siblings) {
 		if (*seen) {
@@ -904,7 +904,7 @@ count_visible_descendants(struct tableview_rowq * in, int i)
 
 /* switch column a with column b */
 static void
-switch_columns(struct tableview * tv, unsigned int a, unsigned int b)
+switch_columns(struct tableview * tv, u_int a, u_int b)
 {
 	struct tableview_column col_tmp;
 
@@ -940,11 +940,11 @@ visible(struct tableview_row * in)
 }
 
 static void
-render_dyncolumn(struct tableview * tv, unsigned int idx)
+render_dyncolumn(struct tableview * tv, u_int idx)
 {
 	char *celltext;
 	struct tableview_row *row;
-	unsigned int i, cidx = tv->column[idx].idx;
+	u_int i, cidx = tv->column[idx].idx;
 
 	for (i = 0; i < tv->visible.count; i++) {
 		if (NULL == (row = tv->visible.items[i].row))
@@ -1015,7 +1015,7 @@ clicked_row(struct tableview * tv, int visible_start, int visible_end,
 
 	/* find the visible row clicked on */
 	{
-		unsigned int row_idx;
+		u_int row_idx;
 		int pix;
 
 		pix = tv->head_height;
@@ -1114,7 +1114,7 @@ draw_column(struct tableview * tv, int visible_start, int visible_end,
 {
 	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	const int *update = (int *) arg1;
-	unsigned int j, cidx = tv->column[idx].idx;
+	u_int j, cidx = tv->column[idx].idx;
 	int y;
 
 	/* draw label for this column */
@@ -1198,7 +1198,7 @@ mousebuttonup(int argc, union evarg * argv)
 	struct tableview *tv = argv[0].p;
 	int coord_x = argv[2].i, coord_y = argv[3].i;
 	int left;
-	unsigned int i;
+	u_int i;
 
 	event_cancel(tv, "column-resize");
 	event_cancel(tv, "column-move");
@@ -1315,7 +1315,7 @@ static void
 columnmove(int argc, union evarg * argv)
 {
 	struct tableview *tv = argv[0].p;
-	unsigned int col = (unsigned int) argv[1].i;
+	u_int col = (u_int) argv[1].i;
 	int left = argv[2].i;
 	int x;
 

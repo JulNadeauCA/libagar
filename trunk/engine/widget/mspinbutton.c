@@ -1,4 +1,4 @@
-/*	$Csoft: mspinbutton.c,v 1.5 2005/01/05 04:44:05 vedge Exp $	*/
+/*	$Csoft: mspinbutton.c,v 1.6 2005/01/30 05:39:11 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -341,9 +341,9 @@ mspinbutton_add_value(struct mspinbutton *sbu, const char *which, int inc)
 			*(int *)value += inc;
 		break;
 	case WIDGET_UINT:
-		if (*(unsigned int *)value+inc >= *min &&
-		    *(unsigned int *)value+inc <= *max)
-			*(unsigned int *)value += inc;
+		if (*(u_int *)value+inc >= *min &&
+		    *(u_int *)value+inc <= *max)
+			*(u_int *)value += inc;
 		break;
 	case WIDGET_UINT8:
 		if (*(Uint8 *)value+inc >= *min &&
@@ -416,14 +416,14 @@ mspinbutton_set_value(struct mspinbutton *sbu, const char *which, ...)
 		break;
 	case WIDGET_UINT:
 		{
-			unsigned int i = va_arg(ap, unsigned int);
+			u_int i = va_arg(ap, unsigned int);
 
-			if (i < (unsigned int)*min) {
-				*(unsigned int *)value = *min;
-			} else if (i > (unsigned int)*max) {
-				*(unsigned int *)value = *max;
+			if (i < (u_int)*min) {
+				*(u_int *)value = *min;
+			} else if (i > (u_int)*max) {
+				*(u_int *)value = *max;
 			} else {
-				*(unsigned int *)value = i;
+				*(u_int *)value = i;
 			}
 		}
 		break;

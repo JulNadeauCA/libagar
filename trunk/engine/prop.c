@@ -1,4 +1,4 @@
-/*	$Csoft: prop.c,v 1.51 2004/05/24 00:36:52 vedge Exp $	*/
+/*	$Csoft: prop.c,v 1.52 2005/01/05 04:44:03 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -168,7 +168,7 @@ prop_set(void *p, const char *key, enum prop_type type, ...)
 }
 
 struct prop *
-prop_set_uint(void *ob, const char *key, unsigned int i)
+prop_set_uint(void *ob, const char *key, u_int i)
 {
 	return (prop_set(ob, key, PROP_UINT, i));
 }
@@ -287,7 +287,7 @@ prop_get(void *obp, const char *key, enum prop_type t, void *p)
 				*(int *)p = prop->data.i;
 				break;
 			case PROP_UINT:
-				*(unsigned int *)p = prop->data.u;
+				*(u_int *)p = prop->data.u;
 				break;
 			case PROP_UINT8:
 				*(Uint8 *)p = prop->data.u8;
@@ -337,10 +337,10 @@ fail:
 	return (NULL);
 }
 
-unsigned int
+u_int
 prop_get_uint(void *p, const char *key)
 {
-	unsigned int i;
+	u_int i;
 
 	if (prop_get(p, key, PROP_UINT, &i) == NULL) {
 		fatal("%s", error_get());
@@ -548,7 +548,7 @@ prop_load(void *p, struct netbuf *buf)
 			prop_set_sint32(ob, key, read_sint32(buf));
 			break;
 		case PROP_UINT:
-			prop_set_uint(ob, key, (unsigned int)read_uint32(buf));
+			prop_set_uint(ob, key, (u_int)read_uint32(buf));
 			break;
 		case PROP_INT:
 			prop_set_int(ob, key, (int)read_sint32(buf));

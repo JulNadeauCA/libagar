@@ -1,4 +1,4 @@
-.\"	$Csoft: spinbutton.3,v 1.3 2004/09/17 03:21:45 vedge Exp $
+.\"	$Csoft: spinbutton.3,v 1.4 2005/01/05 04:44:05 vedge Exp $
 .\"
 .\" Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -42,7 +42,7 @@ The
 .Nm
 widget binds to an integer value of type
 .Dv int ,
-.Dv unsigned int ,
+.Dv u_int ,
 .Dv [SU]int8 ,
 .Dv [SU]int16
 or
@@ -161,10 +161,10 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "unsigned int *value "
+.Bl -tag -compact -width "u_int *value "
 .It Va int *value
 The value to display/edit (WIDGET_INT).
-.It Va unsigned int *value
+.It Va u_int *value
 The value to display/edit (WIDGET_UINT).
 .It Va [SU]int8 *value
 The value to display/edit (WIDGET_[SU]INT8).

@@ -1,4 +1,4 @@
-/*	$Csoft: vg.h,v 1.23 2005/03/03 10:56:45 vedge Exp $	*/
+/*	$Csoft: vg.h,v 1.24 2005/03/05 12:14:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_H_
@@ -271,7 +271,7 @@ struct vg_vertex  *vg_vertex2(struct vg *, double, double);
 struct vg_vertex  *vg_vertex3(struct vg *, double, double, double);
 struct vg_vertex  *vg_vertex4(struct vg *, double, double, double, double);
 void		   vg_vertex_array(struct vg *, const struct vg_vertex *,
-		                   unsigned int);
+		                   u_int);
 #ifdef EDITION
 struct AGMenu;
 struct AGMenuItem;

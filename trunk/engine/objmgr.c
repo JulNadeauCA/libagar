@@ -1,4 +1,4 @@
-/*	$Csoft: objmgr.c,v 1.11 2005/03/10 09:44:02 vedge Exp $	*/
+/*	$Csoft: objmgr.c,v 1.12 2005/03/11 05:28:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -81,7 +81,7 @@ create_obj(int argc, union evarg *argv)
 	view_detach(dlg_win);
 
 	if (name[0] == '\0') {
-		unsigned int nameno = 0;
+		u_int nameno = 0;
 		struct object *ch;
 tryname:
 		snprintf(name, sizeof(name), "%s #%d", t->type, nameno);

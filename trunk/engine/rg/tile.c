@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.28 2005/03/06 04:53:56 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.29 2005/03/11 08:56:15 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -716,7 +716,7 @@ create_pixmap(int argc, union evarg *argv)
 	struct tlist_item *eit;
 	struct pixmap *px;
 	struct tile_element *tel;
-	unsigned int pixno = 0;
+	u_int pixno = 0;
 	struct pixmap *opx;
 
 	px = Malloc(sizeof(struct pixmap), M_RG);
@@ -765,7 +765,7 @@ create_sketch(int argc, union evarg *argv)
 	struct tlist_item *eit;
 	struct sketch *sk, *osk;
 	struct tile_element *tel;
-	unsigned int skno = 0;
+	u_int skno = 0;
 
 	sk = Malloc(sizeof(struct sketch), M_RG);
 	sketch_init(sk, tv->ts, 0);

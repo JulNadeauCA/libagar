@@ -1,4 +1,4 @@
-.\"	$Csoft: prop.3,v 1.13 2004/05/10 05:14:52 vedge Exp $
+.\"	$Csoft: prop.3,v 1.14 2005/01/05 04:44:03 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -83,7 +83,7 @@ enum prop_type {
 .Ft int
 .Fn prop_get_bool "void *obj" "const char *key"
 .Pp
-.Ft "unsigned int"
+.Ft "u_int"
 .Fn prop_get_uint "void *obj" "const char *key"
 .Pp
 .Ft int
@@ -173,7 +173,7 @@ NUL-terminating the result.
 .Fn prop_set_bool "void *obj" "const char *key" "int value"
 .Pp
 .Ft "struct prop *"
-.Fn prop_set_uint "void *obj" "const char *key" "unsigned int value"
+.Fn prop_set_uint "void *obj" "const char *key" "u_int value"
 .Pp
 .Ft "struct prop *"
 .Fn prop_set_int "void *obj" "const char *key" "int value"

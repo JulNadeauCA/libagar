@@ -1,4 +1,4 @@
-/*	$Csoft: object.c,v 1.192 2005/02/05 02:50:23 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.193 2005/02/08 15:47:46 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
@@ -1465,7 +1465,7 @@ object_rename_unique(struct object *obj)
 	char newname[OBJECT_NAME_MAX];
 	size_t len, i;
 	char *c, *num;
-	unsigned int n = 0;
+	u_int n = 0;
 
 rename:
 	num = NULL;

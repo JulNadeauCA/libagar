@@ -1,4 +1,4 @@
-/*	$Csoft: tileview.h,v 1.17 2005/03/06 10:40:32 vedge Exp $	*/
+/*	$Csoft: tileview.h,v 1.18 2005/03/11 08:56:15 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_BG_TILEVIEW_H_
@@ -54,9 +54,9 @@ struct tileview_ctrl {
 
 	enum tileview_val_type	*valtypes;		/* Entry types */
 	union tileview_val	*vals;			/* Values/pointers */
-	unsigned int		nvals;
+	u_int			nvals;
 	struct tileview_handle	*handles;		/* User handles */
-	unsigned int		nhandles;
+	u_int			nhandles;
 	
 	struct event *motion;
 	struct event *buttonup;

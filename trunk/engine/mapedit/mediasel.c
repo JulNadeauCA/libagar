@@ -1,4 +1,4 @@
-/*	$Csoft: mediasel.c,v 1.16 2004/11/30 11:41:30 vedge Exp $	*/
+/*	$Csoft: mediasel.c,v 1.17 2005/01/05 04:44:04 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -267,7 +267,7 @@ import_media(int argc, union evarg *argv)
 		struct node *node;
 		int t, xinc, yinc;
 		Uint32 ind;
-		unsigned int nw, nh;
+		u_int nw, nh;
 		struct map *submap = it->p1;
 		SDL_Surface *srcsu = it->p1;
 		struct gfx_anim *anim = it->p1;
