@@ -1,4 +1,4 @@
-/*	$Csoft$	*/
+/*	$Csoft: colors.c,v 1.1 2005/03/09 06:39:20 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -184,9 +184,6 @@ colors_load(struct netbuf *buf)
 	ncolors = (int)read_uint32(buf);
 	for (i = 0; i < ncolors; i++)
 		colors_border[i] = read_color(buf, vfmt);
-
-	SDL_FillRect(view->v, NULL, COLOR(BG_COLOR));
-	SDL_UpdateRect(view->v, 0, 0, view->v->w, view->v->h);
 }
 
 void
