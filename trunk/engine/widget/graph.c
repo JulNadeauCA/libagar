@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.26 2003/03/25 13:48:08 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.27 2003/04/12 01:45:49 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -29,7 +29,6 @@
 #include <engine/engine.h>
 #include <engine/version.h>
 #include <engine/view.h>
-#include <engine/world.h>
 
 #include "graph.h"
 
@@ -203,16 +202,12 @@ graph_key(int argc, union evarg *argv)
 		gra->xoffs += 10;
 		break;
 	case SDLK_s:
-		pthread_mutex_lock(&world->lock);
 		if (object_save(gra, NULL) == -1)
 			text_msg("Error saving", "%s", error_get());
-		pthread_mutex_unlock(&world->lock);
 		break;
 	case SDLK_l:
-		pthread_mutex_lock(&world->lock);
 		if (object_load(gra, NULL) == -1)
 			text_msg("Error loading", "%s", error_get());
-		pthread_mutex_unlock(&world->lock);
 	default:
 		break;
 	}
