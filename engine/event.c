@@ -1,4 +1,4 @@
-/*	$Csoft: event.c,v 1.114 2002/12/17 01:04:43 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.115 2002/12/17 01:11:35 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -146,9 +146,8 @@ event_update_fps_counter(void)
 {
 	static int einc = 0;
 
-	label_printf(fps_label, "%d/%d ticks, %d events (%dms overhead)",
-	    view->cur_fps_ticks, view->max_fps_ticks, event_count,
-	    event_overhead);
+	label_printf(fps_label, "delay: %dms, gfx: %dms",
+	    view->max_fps_ticks, view->cur_fps_ticks);
 	graph_plot(fps_cur_fps, view->cur_fps_ticks);
 	graph_plot(fps_event_count, event_count * 30 / 10);
 	graph_plot(fps_event_overhead, event_overhead * 2 / 15);
@@ -195,9 +194,16 @@ event_adjust_fps(Uint32 ntick)
 	event_update_fps_counter();
 #endif
 	if (view->cur_fps_ticks < 1) {
-		debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
-		    view->cur_fps_ticks, view->max_fps_ticks);
-		view->cur_fps_ticks = 1;
+		view->cur_fps_ticks = 30;
+		if (--view->max_fps_ticks < view->min_ticks) {
+			debug(DEBUG_UNDERRUNS, "underrun: %d/%d\n",
+			    view->cur_fps_ticks, view->max_fps_ticks);
+			view->max_fps_ticks = view->min_ticks;
+		}
+	} else {
+		if (++view->max_fps_ticks > view->ticks_ceil) {
+			view->max_fps_ticks = view->ticks_ceil;
+		}
 	}
 }
 
@@ -212,7 +218,7 @@ event_loop(void)
 
 	event_init_fps_counter();
 #endif
-	view_set_speed(15);
+	view_set_speed(25, 15);
 
 	ltick = SDL_GetTicks();
 	for (;;) {
@@ -295,8 +301,6 @@ event_loop(void)
 			event_count++;
 			event_overhead = SDL_GetTicks() - eltick;
 #endif
-		} else if (view->gfx_engine == GFX_ENGINE_GUI) {
-			SDL_Delay(10);
 		}
 	}
 }

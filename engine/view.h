@@ -1,4 +1,4 @@
-/*	$Csoft: view.h,v 1.56 2002/12/17 00:06:19 vedge Exp $	*/
+/*	$Csoft: view.h,v 1.57 2002/12/17 00:20:19 vedge Exp $	*/
 /*	Public domain	*/
 
 typedef enum {
@@ -31,8 +31,10 @@ struct viewport {
 	struct viewmap	*rootmap;	/* Non-NULL in game mode */
 	
 	int	w, h, bpp;		/* Viewport geometry */
+	int	min_ticks;		/* Minimum delay */
 	int	max_fps_ticks;		/* Maximum frames/second */
 	int	cur_fps_ticks;		/* Current frames/second */
+	int	ticks_ceil;
 
 	SDL_Rect	*dirty;		/* Video rectangles to update */
 	int		 ndirty;	/* Number of rectangles to update */
@@ -195,7 +197,7 @@ void	 view_attach(void *);
 void	 view_detach(void *);
 void	 view_detach_queued(void);
 void	 view_destroy(void *);
-void	 view_set_speed(int);
+void	 view_set_speed(int, int);
 
 SDL_Surface	*view_surface(int, int, int);
 SDL_Surface	*view_scale_surface(SDL_Surface *, Uint16, Uint16);
