@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.230 2004/09/18 06:16:54 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.231 2004/09/25 01:57:09 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
@@ -448,28 +448,54 @@ window_hidden(int argc, union evarg *argv)
 	/* Remove the focus. XXX cycle */
 	view->focus_win = NULL;
 
-	/* Update the background. */
-	switch (view->gfx_engine) {
-	case GFX_ENGINE_GUI:
-		primitives.rect_filled(win, 0, 0,
-		    WIDGET(win)->w,
-		    WIDGET(win)->h,
-		    BGFILL_COLOR);
-		if (!view->opengl) {
-			SDL_UpdateRect(view->v,
-			    WIDGET(win)->x, WIDGET(win)->y,
-			    WIDGET(win)->w, WIDGET(win)->h);
+	/* Update the background if necessary. */
+	if (!window_surrounded(win)) {
+		switch (view->gfx_engine) {
+		case GFX_ENGINE_GUI:
+			primitives.rect_filled(win, 0, 0,
+			    WIDGET(win)->w,
+			    WIDGET(win)->h,
+			    BGFILL_COLOR);
+			if (!view->opengl) {
+				SDL_UpdateRect(view->v,
+				    WIDGET(win)->x, WIDGET(win)->y,
+				    WIDGET(win)->w, WIDGET(win)->h);
+			}
+			break;
+		case GFX_ENGINE_TILEBASED:
+			rootmap_redraw();
+			break;
 		}
-		break;
-	case GFX_ENGINE_TILEBASED:
-		rootmap_redraw();
-		break;
 	}
 
 	if (win->flags & WINDOW_PERSISTENT)
 		object_save(win);
 
 	event_post(NULL, win, "window-hidden", NULL);
+}
+
+/*
+ * Verify whether a given window resides inside the area of some other
+ * window, to see whether is it necessary to update the background.
+ */
+int
+window_surrounded(struct window *win)
+{
+	struct window *owin;
+
+	TAILQ_FOREACH(owin, &view->windows, windows) {
+		pthread_mutex_lock(&owin->lock);
+		if (owin->visible &&
+		    widget_area(owin, WIDGET(win)->x, WIDGET(win)->y) &&
+		    widget_area(owin,
+		     WIDGET(win)->x + WIDGET(win)->w,
+		     WIDGET(win)->y + WIDGET(win)->h)) {
+			pthread_mutex_unlock(&owin->lock);
+			return (1);
+		}
+		pthread_mutex_unlock(&owin->lock);
+	}
+	return (0);
 }
 
 /* Toggle the visibility of a window. */
