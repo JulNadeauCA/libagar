@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.h,v 1.74 2003/03/05 02:16:32 vedge Exp $	*/
+/*	$Csoft: mapedit.h,v 1.75 2003/03/10 05:49:10 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_MAPEDIT_H_
@@ -21,6 +21,7 @@ enum {
 	MAPEDIT_SHIFT,
 	MAPEDIT_MERGE,
 	MAPEDIT_FILL,
+	MAPEDIT_FLIP,
 	MAPEDIT_NTOOLS
 };
 
@@ -80,7 +81,8 @@ enum {
 	MAPEDIT_TOOL_SELECT,
 	MAPEDIT_TOOL_SHIFT,
 	MAPEDIT_TOOL_MERGE,
-	MAPEDIT_TOOL_FILL
+	MAPEDIT_TOOL_FILL,
+	MAPEDIT_TOOL_FLIP
 };
 
 void	 mapedit_init(void);
