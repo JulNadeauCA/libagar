@@ -1,4 +1,4 @@
-.\"	$Csoft: agar.3,v 1.8 2002/09/16 06:10:51 vedge Exp $
+.\"	$Csoft: agar.3,v 1.9 2002/09/16 15:56:32 vedge Exp $
 .\"
 .\" Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -49,10 +49,12 @@ by providing a well-defined interface.
 .Bl -bullet -width 4n
 The global, recursive mutex
 .Va world->lock ,
-ensures that no game object is attached/detached, as long as it is locked.
+protects the game object list.
 .It
 Since the rendering routines must frequently lock the object list when
-resolving node references, the object list
+resolving
+.Xr map 3
+node references, the object list
 .Va world->wobjs
 and the object count
 .Va world->nobjs
