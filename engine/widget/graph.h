@@ -1,4 +1,4 @@
-/*	$Csoft: graph.h,v 1.11 2003/06/06 02:16:42 vedge Exp $	*/
+/*	$Csoft: graph.h,v 1.12 2003/06/18 00:47:04 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_WIDGET_GRAPH_H_
@@ -56,8 +56,6 @@ void			 graph_free_items(struct graph *);
 
 void	 graph_init(struct graph *, const char *, enum graph_type, int, Sint32);
 void	 graph_destroy(void *);
-int	 graph_load(void *, struct netbuf *);
-int	 graph_save(void *, struct netbuf *);
 void	 graph_draw(void *);
 void	 graph_scale(void *, int, int);
 

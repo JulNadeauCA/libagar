@@ -1,4 +1,4 @@
-/*	$Csoft: graph.c,v 1.36 2003/06/21 06:50:26 vedge Exp $	*/
+/*	$Csoft: graph.c,v 1.37 2003/06/30 01:12:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -43,8 +43,8 @@ const struct widget_ops graph_ops = {
 	{
 		NULL,		/* init */
 		graph_destroy,
-		graph_load,
-		graph_save,
+		NULL,		/* load */
+		NULL,		/* save */
 		NULL		/* edit */
 	},
 	graph_draw,
@@ -106,83 +106,6 @@ graph_init(struct graph *graph, const char *caption, enum graph_type type,
 	event_new(graph, "window-mousebuttondown", graph_focus, NULL);
 }
 
-int
-graph_load(void *p, struct netbuf *buf)
-{
-	struct graph *gra = p;
-	Uint32 nitems, i;
-
-	if (version_read(buf, &graph_ver, NULL) == -1)
-		return (-1);
-
-	gra->type = read_uint32(buf);
-	gra->flags = (int)read_uint32(buf);
-	gra->origin_y = (int)read_uint8(buf);
-	gra->xinc = (int)read_uint8(buf);
-	gra->yrange = read_sint32(buf);
-	gra->xoffs = read_sint32(buf);
-	copy_string(gra->caption, buf, sizeof(gra->caption));
-
-	graph_free_items(gra);
-	nitems = read_uint32(buf);
-	for (i = 0; i < nitems; i++) {
-		char name[GRAPH_ITEM_NAME_MAX];
-		struct graph_item *nitem;
-		Uint32 vi, nvals;
-		Uint8 r, g, b;
-
-		copy_string(name, buf, sizeof(name));
-		r = read_uint8(buf);
-		g = read_uint8(buf);
-		b = read_uint8(buf);
-		nvals = read_uint32(buf);
-		nitem = graph_add_item(gra, name, r, g, b);
-
-		for (vi = 0; vi < nvals; vi++)
-			graph_plot(nitem, read_sint32(buf));
-	}
-
-	dprintf("loaded `%s'\n", gra->caption);
-	return (0);
-}
-
-int
-graph_save(void *p, struct netbuf *buf)
-{
-	struct graph *gra = p;
-	struct graph_item *gi;
-	Uint32 nitems = 0;
-	off_t nitems_offs;
-
-	version_write(buf, &graph_ver);
-	write_uint32(buf, gra->type);
-	write_uint32(buf, (Uint32)gra->flags);
-	write_uint8(buf, (Uint8)gra->origin_y);
-	write_uint8(buf, (Uint8)gra->xinc);
-	write_uint32(buf, gra->yrange);
-	write_sint32(buf, gra->xoffs);
-	write_string(buf, gra->caption);
-	
-	TAILQ_FOREACH(gi, &gra->items, items)
-		nitems++;
-
-	nitems_offs = netbuf_tell(buf);
-	write_uint32(buf, 0);
-	TAILQ_FOREACH(gi, &gra->items, items) {
-		Uint32 i;
-
-		write_string(buf, gi->name);
-		write_uint32(buf, gi->color);
-		write_uint32(buf, gi->nvals);
-		for (i = 0; i < gi->nvals; i++)
-			write_sint32(buf, gi->vals[i]);
-	}
-	pwrite_uint32(buf, nitems, nitems_offs);
-
-	dprintf("saved `%s'\n", gra->caption);
-	return (0);
-}
-
 static void
 graph_key(int argc, union evarg *argv)
 {
@@ -200,13 +123,6 @@ graph_key(int argc, union evarg *argv)
 	case SDLK_RIGHT:
 		gra->xoffs += 10;
 		break;
-	case SDLK_s:
-		if (object_save(gra) == -1)
-			text_msg(MSG_ERROR, "%s", error_get());
-		break;
-	case SDLK_l:
-		if (object_load(gra) == -1)
-			text_msg(MSG_ERROR, "%s", error_get());
 	default:
 		break;
 	}
