@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.2 2002/06/09 10:04:36 vedge Exp $	*/
+/*	$Csoft: config.c,v 1.3 2002/06/12 20:40:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc
@@ -47,7 +47,7 @@
 #include "config.h"
 
 static void
-button_push(int argc, union evarg *argv)
+button_pushed(int argc, union evarg *argv)
 {
 	struct mapedit *med = argv[1].p;
 
@@ -70,6 +70,7 @@ cbox_change(int argc, evargs argv)
 {
 	struct mapedit *med = argv[0].p;
 
+#if 0
 	switch (argv[1].c) {
 	case 'p':		/* Props */
 		mapedit_editflags(med, MAPEDIT_DRAWPROPS);
@@ -78,6 +79,7 @@ cbox_change(int argc, evargs argv)
 		mapedit_editflags(med, MAPEDIT_DRAWGRID);
 		break;
 	}
+#endif
 }
 
 struct window *
@@ -88,32 +90,31 @@ mapedit_config_win(struct mapedit *med)
 	struct checkbox *props_cbox, *grid_cbox;
 	struct button *close_button, *save_button;
 	
-	win = window_new("Map edition settings", WINDOW_TITLEBAR,
-	    WINDOW_GRADIENT,
+	win = window_new("Map edition settings", 0,
 	    20,  20,  60,  60);
-
 	body_reg = region_new(win, REGION_VALIGN|REGION_RIGHT,
 	     0,   0, 100,  80);
 	buttons_reg = region_new(win, REGION_HALIGN|REGION_CENTER,
 	     0,  80, 100,  20);
 	
-	close_button = button_new(buttons_reg, "Close", 0, 50, 100);
-	event_new(close_button, "button-pushed", 0, button_push, "%p %c",
+	close_button = button_new(buttons_reg, "Close", NULL, 0, 50, 100);
+	event_new(close_button, "button-pushed", 0, button_pushed, "%p %c",
 	    med, 'c');
 	
-	save_button = button_new(buttons_reg, "Save", 0, 50, 100);
-	event_new(save_button, "button-pushed", 0, button_push, "%p %c",
+	save_button = button_new(buttons_reg, "Save", NULL, 0, 50, 100);
+	event_new(save_button, "button-pushed", 0, button_pushed, "%p %c",
 	    med, 's');
 
-	props_cbox = checkbox_new(body_reg, "Show node properties",
+#if 0
+	props_cbox = checkbox_new(body_reg, "Show node properties", 50,
 	    (med->flags & MAPEDIT_DRAWPROPS) ? CHECKBOX_PRESSED : 0);
 	event_new(props_cbox, "checkbox-changed", 0, cbox_change, "%c", 'p');
 
-	grid_cbox = checkbox_new(body_reg, "Show map grid",
+	grid_cbox = checkbox_new(body_reg, "Show map grid", 50,
 	    (med->flags & MAPEDIT_DRAWGRID) ? CHECKBOX_PRESSED : 0);
 	event_new(grid_cbox, "checkbox-changed", 0, cbox_change, "%c", 'g');
-
 	win->focus = WIDGET(props_cbox);
+#endif
 
 	return (win);
 }
