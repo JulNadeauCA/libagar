@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.105 2002/07/08 03:16:58 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.106 2002/07/08 07:42:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -53,9 +53,32 @@ static const struct object_ops map_ops = {
 	map_save
 };
 
-static int	nodecmp(struct node *, struct node *);
+static __inline__ int	nodecmp(struct node *, struct node *);
+static __inline__ void	node_init(struct node *);
+static __inline__ void	node_free(struct map *, int, int);
 
 #define VIEW_MAPMASK(vx, vy)	(view->rootmap->mask[(vy)][(vx)])
+
+static __inline__ void
+node_init(struct node *node)
+{
+	memset(node, 0, sizeof(struct node));
+	TAILQ_INIT(&node->nrefsh);
+}
+
+static __inline__ void
+node_free(struct map *m, int x, int y)
+{
+	struct node *_node = &m->map[(y)][(x)];
+	struct noderef *_nref, *_nextnref;
+
+	for (_nref = TAILQ_FIRST(&_node->nrefsh);
+	     _nref != TAILQ_END(&_node->nrefsh);
+	     _nref = _nextnref) {
+		_nextnref = TAILQ_NEXT(_nref, nrefs);
+		free(_nref);
+	}
+}
 
 /*
  * Allocate nodes for the given map geometry.
@@ -65,6 +88,8 @@ void
 map_allocnodes(struct map *m, Uint32 w, Uint32 h)
 {
 	Uint32 i, x, y;
+	struct node *node;
+
 	
 	m->mapw = w;
 	m->maph = h;
@@ -85,10 +110,8 @@ map_allocnodes(struct map *m, Uint32 w, Uint32 h)
 
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			struct node *node = &m->map[y][x];
-	
-			memset(node, 0, sizeof(struct node));
-			TAILQ_INIT(&node->nrefsh);
+ 			node = &m->map[y][x];
+			node_init(node);
 		}
 	}
 }
@@ -104,33 +127,92 @@ map_freenodes(struct map *m)
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
-			struct node *node = &m->map[y][x];
-			struct noderef *nref, *nextnref;
-
-#ifdef DEBUG
-			if (node->nnrefs > 256) {
-				dprintnode(m, x, y, "funny node\n");
-				continue;
-			}
-#endif
-
-			for (nref = TAILQ_FIRST(&node->nrefsh);
-			     nref != TAILQ_END(&node->nrefsh);
-			     nref = nextnref) {
-				nextnref = TAILQ_NEXT(nref, nrefs);
-				free(nref);
-			}
+			node_free(m, x, y);
 		}
 		free(*(m->map + y));
 	}
 	free(m->map);
 }
 
+/*
+ * Shrink a map and destroy excess nodes.
+ * Map must be locked.
+ */
+void
+map_shrink(struct map *m, Uint32 w, Uint32 h)
+{
+	Uint32 x, y;
+	int i;
+	
+	/* Free excess nodes. */
+	for (y = h; y < m->maph; y++) {
+		for (x = w; x < m->mapw; x++) {
+			node_free(m, x, y);
+		}
+	}
+
+	/* Reallocate the two-dimensional node array. */
+	m->map = erealloc(m->map, (w*h) * sizeof(struct node *));
+	if (w < m->mapw) {
+		for (i = 0; i < m->maph; i++) {
+			*(m->map+i) = erealloc(*(m->map+i),
+			    w*sizeof(struct node));
+		}
+	}
+	if (h < m->maph) {
+		for (i = m->maph; i < h; i++) {
+			*(m->map+i) = erealloc(*(m->map+i),
+			    w*sizeof(struct node));
+		}
+	}
+
+	m->mapw = w;
+	m->maph = h;
+}
+
+/*
+ * Grow a map and initialize new nodes.
+ * Map must be locked.
+ */
+void
+map_grow(struct map *m, Uint32 w, Uint32 h)
+{
+	struct node *node;
+	Uint32 x, y;
+	int i;
+
+	/* Reallocate the two-dimensional node array. */
+	m->map = erealloc(m->map, (w*h) * sizeof(struct node *));
+	if (w > m->mapw) {
+		for (i = 0; i < m->maph; i++) {
+			*(m->map+i) = erealloc(*(m->map+i),
+			    w*sizeof(struct node));
+		}
+	}
+	if (h > m->maph) {
+		for (i = m->maph; i < h; i++) {
+			*(m->map+i) = emalloc(w*sizeof(struct node));
+		}
+	}
+
+	/* Initialize the new nodes. */
+	for (y = 0; y < h; y++) {
+		for (x = 0; x < w; x++) {
+			if (x >= m->mapw || y >= m->maph) {
+				node = &m->map[y][x];
+				node_init(node);
+			}
+		}
+	}
+	m->mapw = w;
+	m->maph = h;
+}
+
 void
 map_init(struct map *m, char *name, char *media, Uint32 flags)
 {
 	object_init(&m->obj, "map", name, media,
-	    (media != NULL) ? OBJ_ART|OBJ_OPTMEDIA : 0, &map_ops);
+	    (media != NULL) ? OBJ_OPTMEDIA|OBJ_ART : 0, &map_ops);
 	sprintf(m->obj.saveext, "m");
 	m->flags = (flags != 0) ? flags : MAP_2D;
 	m->redraw = 0;
@@ -619,7 +701,9 @@ map_load(void *ob, int fd)
 
 		pobjs[i] = pob;
 		if (pob != NULL) {
+#if 0
 			dprintf("%s uses: %s\n", OBJECT(m)->name, pob->name);
+#endif
 		} else {
 			warning("cannot translate \"%s\"\n", s);
 		}
@@ -721,7 +805,7 @@ done:
 }
 
 /* Compare the persistent properties of two nodes for compression purposes. */
-static int
+static __inline__ int
 nodecmp(struct node *n1, struct node *n2)
 {
 	struct noderef *nref1, *nref2;
