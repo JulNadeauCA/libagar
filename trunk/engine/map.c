@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.142 2003/02/05 00:42:16 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.143 2003/02/08 00:34:26 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002, 2003 CubeSoft Communications, Inc.
@@ -826,11 +826,6 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 	off_t nrefs_offs;
 	Uint32 nrefs = 0;
 
-#ifdef DEBUG
-	if (strcmp(NODE_MAGIC, node->magic) != 0) {
-		fatal("bad node\n");
-	}
-#endif
 	/* Save the node properties. */
 	buf_write_uint32(buf, node->flags & ~(NODE_EPHEMERAL));
 	buf_write_uint32(buf, 0);			/* Pad: v1 */
@@ -839,6 +834,7 @@ node_save(struct fobj_buf *buf, struct object_table *deps, struct node *node)
 	nrefs_offs = buf->offs;
 	buf_write_uint32(buf, 0);			/* Skip */
 	TAILQ_FOREACH(nref, &node->nrefs, nrefs) {
+		MAP_CHECK_NODEREF(nref);
 		if ((nref->flags & NODEREF_SAVEABLE) == 0)
 			continue;
 		noderef_save(buf, deps, nref);
@@ -892,6 +888,7 @@ map_save(void *p, int fd)
 	/* Write the nodes. */
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {
+			MAP_CHECK_NODE(&m->map[y][x], x, y);
 			node_save(buf, deps, &m->map[y][x]);
 		}
 	}
