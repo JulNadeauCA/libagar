@@ -1,4 +1,4 @@
-/*	$Csoft: tile.c,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: tile.c,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
@@ -48,9 +48,8 @@ tile_init(struct tile *t, const char *name)
 	strlcpy(t->name, name, sizeof(t->name));
 	t->flags = 0;
 	t->used = 0;
-	t->features = NULL;
-	t->nfeatures = 0;
 	t->su = NULL;
+	TAILQ_INIT(&t->features);
 }
 
 void
@@ -98,12 +97,12 @@ tile_scale(struct tileset *ts, struct tile *t, Uint16 w, Uint16 h, Uint8 flags)
 void
 tile_generate(struct tile *t)
 {
+	struct tile_feature *tft;
 	u_int i;
 
 	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
 
-	for (i = 0; i < t->nfeatures; i++) {
-		struct tile_feature *tft = &t->features[i];
+	TAILQ_FOREACH(tft, &t->features, features) {
 		struct feature *ft = tft->ft;
 
 		if (ft->ops->apply != NULL)
@@ -116,52 +115,53 @@ tile_add_feature(struct tile *t, void *ft)
 {
 	struct tile_feature *tft;
 
-	t->features = Realloc(t->features,
-	    sizeof(struct tile_feature)*(t->nfeatures+1));
-	tft = &t->features[t->nfeatures++];
+	tft = Malloc(sizeof(struct tile_feature), M_RG);
 	tft->ft = ft;
 	tft->x = 0;
 	tft->y = 0;
 	tft->visible = 1;
+	TAILQ_INSERT_TAIL(&t->features, tft, features);
 	return (tft);
 }
 
 void
-tile_remove_feature(struct tile *t, void *ftp)
+tile_remove_feature(struct tile *t, void *pft)
 {
-	int i;
+	struct tile_feature *tft;
 
-	for (i = 0; i < t->nfeatures; i++) {
-		struct tile_feature *tft = &t->features[i];
-
-		if (tft->ft == ftp)
+	TAILQ_FOREACH(tft, &t->features, features) {
+		if (tft->ft == pft)
 			break;
 	}
-	/* TODO */
+	if (tft != NULL) {
+		TAILQ_REMOVE(&t->features, tft, features);
+		Free(tft, M_RG);
+	}
 }
 
 void
 tile_save(struct tile *t, struct netbuf *buf)
 {
-	u_int i;
+	Uint32 nfeatures = 0;
+	off_t nfeatures_offs;
+	struct tile_feature *tft;
 
 	write_string(buf, t->name);
 	write_uint8(buf, t->flags);
 	write_uint16(buf, t->su->w);
 	write_uint16(buf, t->su->h);
 
-	dprintf("%s: saving %u features\n", t->name, t->nfeatures);
-
-	write_uint32(buf, (Uint32)t->nfeatures);
-	for (i = 0; i < t->nfeatures; i++) {
-		struct tile_feature *tft = &t->features[i];
-
-		dprintf("%s: saving %s feature\n", t->name, tft->ft->name);
+	nfeatures_offs = netbuf_tell(buf);
+	write_uint32(buf, 0);
+	TAILQ_FOREACH(tft, &t->features, features) {
+		dprintf("%s: saving %s feature ref\n", t->name, tft->ft->name);
 		write_string(buf, tft->ft->name);
 		write_sint32(buf, (Sint32)tft->x);
 		write_sint32(buf, (Sint32)tft->y);
 		write_uint8(buf, (Uint8)tft->visible);
+		nfeatures++;
 	}
+	pwrite_uint32(buf, nfeatures, nfeatures_offs);
 }
 
 int
@@ -269,14 +269,13 @@ poll_features(int argc, union evarg *argv)
 	struct tlist *tl = argv[0].p;
 	struct tileset *ts = argv[1].p;
 	struct tile *t = argv[2].p;
-	u_int i;
+	struct tile_feature *tft;
 
 	tlist_clear_items(tl);
 	pthread_mutex_lock(&ts->lock);
 
-	for (i = 0; i < t->nfeatures; i++) {
+	TAILQ_FOREACH(tft, &t->features, features) {
 		char label[TLIST_LABEL_MAX];
-		struct tile_feature *tft = &t->features[i];
 		struct feature_sketch *fsk;
 		struct feature_pixmap *fpx;
 		struct tlist_item *it;
@@ -340,6 +339,29 @@ edit_feature(int argc, union evarg *argv)
 		struct tile_feature *tft = it->p1;
 
 		feature_edit(tv, tft->ft, pwin);
+	} else if (strcmp(it->class, "sketch") == 0) {
+		//
+	} else if (strcmp(it->class, "pixmap") == 0) {
+		//
+	}
+}
+
+static void
+delete_feature(int argc, union evarg *argv)
+{
+	struct tileset *ts = argv[1].p;
+	struct tile *t = argv[2].p;
+	struct tlist *feat_tl = argv[3].p;
+	struct tlist_item *it = tlist_item_selected(feat_tl);
+	struct tile_feature *tft;
+
+	if (it == NULL)
+		return;
+	
+	if (strcmp(it->class, "feature") == 0) {
+		struct tile_feature *tft = it->p1;
+
+		tile_remove_feature(t, tft->ft);
 	} else if (strcmp(it->class, "sketch") == 0) {
 		//
 	} else if (strcmp(it->class, "pixmap") == 0) {
@@ -411,13 +433,17 @@ tile_edit(struct tileset *ts, struct tile *t)
 			button_set_sticky(fbu, 1);
 			widget_bind(fbu, "state", WIDGET_INT, &tv->edit_mode);
 			WIDGET(fbu)->flags |= WIDGET_WFILL;
+			event_new(fbu, "button-pushed", edit_feature,
+			    "%p,%p,%p", tv, feat_tl, win);
+			
+			fbu = button_new(fbox, _("Delete"));
+			event_new(fbu, "button-pushed", delete_feature,
+			    "%p,%p,%p", ts, t, feat_tl);
+			WIDGET(fbu)->flags |= WIDGET_WFILL;
 		}
 		
 		object_attach(box, tv);
 		widget_focus(tv);
-		
-		event_new(fbu, "button-pushed", edit_feature, "%p,%p,%p", tv,
-		    feat_tl, win);
 	}
 
 	t->used++;

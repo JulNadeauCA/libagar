@@ -1,4 +1,4 @@
-/*	$Csoft: tileset.c,v 1.2 2005/01/17 02:19:28 vedge Exp $	*/
+/*	$Csoft: tileset.c,v 1.3 2005/01/26 02:46:38 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
@@ -349,22 +349,21 @@ poll_tileset(int argc, union evarg *argv)
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		char label[TLIST_LABEL_MAX];
 		struct tlist_item *it;
+		struct tile_feature *tft;
 		struct feature *ft;
-		unsigned int i;
 	
 		snprintf(label, sizeof(label), "%s (%ux%u)", t->name,
 		    t->su->w, t->su->h);
 		it = tlist_insert_item(tl, t->su, label, t);
 		it->depth = 0;
 
-		if (t->nfeatures > 0) {
+		if (!TAILQ_EMPTY(&t->features)) {
 			it->flags |= TLIST_HAS_CHILDREN;
 			if (!tlist_visible_children(tl, it))
 				continue;
 		}
-		
-		for (i = 0; i < t->nfeatures; i++) {
-			struct tile_feature *tft = &t->features[i];
+	
+		TAILQ_FOREACH(tft, &t->features, features) {
 			struct feature *ft = tft->ft;
 			struct feature_sketch *fts;
 
