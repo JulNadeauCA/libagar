@@ -1,4 +1,4 @@
-/*	$Csoft: config.c,v 1.92 2003/06/29 11:33:41 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.93 2003/07/04 12:35:17 vedge Exp $	    */
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -290,34 +290,37 @@ config_window(struct config *con)
 	config_notify++;
 }
 
-/* Return the full pathname to a data file. */
-char *
-config_search_file(const char *path_key, const char *name, const char *ext)
+/* Copy the full pathname to a data file to a fixed-size buffer. */
+int
+config_search_file(const char *path_key, const char *name, const char *ext,
+    char *path, size_t path_len)
 {
+	char file[MAXPATHLEN];
 	struct stat sta;
-	char *path, *dir, *last;
+	char *dir, *last;
 
-	path = prop_get_string(config, path_key);
+	prop_copy_string(config, path_key, path, path_len);
+
 	for (dir = strtok_r(path, ":", &last);
 	     dir != NULL;
 	     dir = strtok_r(NULL, ":", &last)) {
-		char *file;
+		strlcpy(file, dir, sizeof(file));
 
-		if (name[0] == '/') {
-			Asprintf(&file, "%s%s.%s", dir, name, ext);
-		} else {
-			Asprintf(&file, "%s/%s.%s", dir, name, ext);
+		if (name[0] != '/') {
+			strlcat(file, "/", sizeof(file));
 		}
+		strlcat(file, name, sizeof(file));
+		strlcat(file, ".", sizeof(file));
+		strlcat(file, ext, sizeof(file));
 		if (stat(file, &sta) == 0) {
-			return (file);
+			if (strlcpy(path, file, path_len) >= path_len) {
+				error_set(_("The search path is too big."));
+				return (-1);
+			}
+			return (0);
 		}
-		free(file);
 	}
-	free(path);
-
-	path = prop_get_string(config, path_key);
-	error_set("%s.%s is not in <%s>", name, ext, path_key);
-	free(path);
-	return (NULL);
+	error_set(_("Cannot find `%s.%s' in <%s>."), name, ext, path);
+	return (-1);
 }
 
