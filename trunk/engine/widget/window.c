@@ -1,4 +1,4 @@
-/*	$Csoft: window.c,v 1.50 2002/07/09 09:29:21 vedge Exp $	*/
+/*	$Csoft: window.c,v 1.51 2002/07/18 12:09:33 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -548,7 +548,7 @@ window_show_locked(struct window *win)
 	
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			event_post(wid, "shown", "%p", win);
+			event_post(wid, "widget-shown", "%p", win);
 		}
 	}
 	return (prev);
@@ -576,7 +576,7 @@ window_hide_locked(struct window *win)
 	/* Notify child widgets */
 	TAILQ_FOREACH(reg, &win->regionsh, regions) {
 		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
-			event_post(wid, "hidden", "%p", win);
+			event_post(wid, "widget-hidden", "%p", win);
 		}
 	}
 	
@@ -600,11 +600,6 @@ window_hide_locked(struct window *win)
 		break;
 	}
 
-#if 0
-	/* The highest window must be at the tail of the queue. */
-	WINDOW_CYCLE(win);
-	VIEW_REDRAW();
-#endif
 	return (prev);
 }
 
@@ -709,18 +704,14 @@ window_move(struct window *win, Sint16 xrel, Sint16 yrel)
 		moved++;
 	}
 
-	if (win->x < 16) {
+	if (win->x < 16)
 		win->x = 16;
-	}
-	if (win->y < 16) {
+	if (win->y < 16)
 		win->y = 16;
-	}
-	if (win->x+win->w > view->w - 16) {
+	if (win->x+win->w > view->w - 16)
 		win->x = view->w - win->w - 16;
-	}
-	if (win->y+win->h > view->h - 16) {
+	if (win->y+win->h > view->h - 16)
 		win->y = view->h - win->h - 16;
-	}
 
 	if (moved) {
 		switch (view->gfx_engine) {
@@ -742,16 +733,37 @@ window_move(struct window *win, Sint16 xrel, Sint16 yrel)
 	}
 }
 
-/* View must be locked. */
+/*
+ * Give focus to a window.
+ * View must be locked.
+ */
 static void
-cycle_windows(void)
+window_focus(struct window *win)
 {
-	struct window *win;
+	struct window *lastwin;
+	struct region *reg;
+	struct widget *wid;
 
-	win = view->focus_win;
+	lastwin = TAILQ_LAST(&view->windowsh, windowq);
+	if (lastwin != NULL) {
+		event_post(lastwin, "window-lostfocus", NULL);
+
+		TAILQ_FOREACH(reg, &lastwin->regionsh, regions) {
+			TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+				event_post(wid, "widget-lostfocus", NULL);
+			}
+		}
+	}
+
 	TAILQ_REMOVE(&view->windowsh, win, windows);
 	TAILQ_INSERT_TAIL(&view->windowsh, win, windows);
-	view->focus_win = NULL;
+	event_post(win, "window-gainfocus", NULL);
+
+	TAILQ_FOREACH(reg, &lastwin->regionsh, regions) {
+		TAILQ_FOREACH(wid, &reg->widgetsh, widgets) {
+			event_post(wid, "widget-lostfocus", NULL);
+		}
+	}
 }
 
 /*
@@ -905,11 +917,13 @@ window_event_all(SDL_Event *ev)
 					}
 					
 					event_post(wid, "window-mousemotion",
-					    "%i, %i",
+					    "%i, %i, %i, %i",
 					    (int)ev->motion.x -
 					     (wid->x + wid->win->x),
 					    (int)ev->motion.y -
-					     (wid->y + wid->win->y));
+					     (wid->y + wid->win->y),
+					    (int)ev->motion.xrel,
+					    (int)ev->motion.yrel);
 					goto posted;
 				}
 			}
@@ -1023,7 +1037,8 @@ posted:
 
 	/* If the focus was given to another window, update the list. */
 	if (view->focus_win != NULL) {
-		cycle_windows();
+		window_focus(view->focus_win);
+		view->focus_win = NULL;
 	}
 	return (1);
 }
@@ -1127,7 +1142,7 @@ window_resize(struct window *win)
 			if (wid->h > reg->h)
 				wid->h = reg->h;
 
-			event_post(wid, "window-widget-scaled", "%i, %i",
+			event_post(wid, "widget-scaled", "%i, %i",
 			    reg->w, reg->h);
 
 			/* Space widgets */
