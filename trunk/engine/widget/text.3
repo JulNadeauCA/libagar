@@ -1,4 +1,4 @@
-.\"	$Csoft: text.3,v 1.16 2004/05/12 01:02:26 vedge Exp $
+.\"	$Csoft: text.3,v 1.17 2004/08/20 01:31:02 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -174,6 +174,10 @@ functions return the expected surface dimensions for the given text.
 .Fn text_msg "enum text_msg_title title" "const char *format" "..."
 .Pp
 .Ft "void"
+.Fn text_tmsg "enum text_msg_title title" "Uint32 expire" "const char *format" \
+              "..."
+.Pp
+.Ft "void"
 .Fn text_edit_float "enum text_float_type type" "double *fp" "double min" \
                     "double max" "const struct unit *unit" \
 		    "const char *format" "..."
@@ -183,7 +187,12 @@ The
 .Fn text_msg
 function displays a text message window containing the given
 .Xr printf 3
-formatted string.
+formatted string, and an
+.Sq OK
+button.
+The
+.Fn text_tmsg
+variant displays the message for a period of time given in milliseconds.
 .Fa title
 is one of the following:
 .Bd -literal
