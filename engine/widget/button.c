@@ -1,4 +1,4 @@
-/*	$Csoft: button.c,v 1.33 2002/09/06 01:28:47 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.34 2002/09/07 04:36:59 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002 CubeSoft Communications, Inc. <http://www.csoft.org>
@@ -92,12 +92,19 @@ button_init(struct button *b, char *caption, SDL_Surface *image, int flags,
 
 	if (caption != NULL) {
 		b->caption = strdup(caption);
-		/* XXX recolor */
 		b->label_s = text_render(NULL, -1,
 		    WIDGET_COLOR(b, TEXT_COLOR), caption);
 	} else if (image != NULL) {
+		SDL_Surface *is;
+
+		/* Copy the original surface. */
+		is = SDL_ConvertSurface(image, image->format,
+		    SDL_SWSURFACE|SDL_SRCALPHA);
+		if (is == NULL) {
+			fatal("SDL_ConvertSurface: %s\n", SDL_GetError());
+		}
 		b->caption = NULL;
-		b->label_s = image;
+		b->label_s = is;
 	}
 	b->slabel_s = NULL;
 	
