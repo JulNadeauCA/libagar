@@ -1,4 +1,4 @@
-/*	$Csoft: textbox.c,v 1.48 2003/03/24 12:08:45 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.49 2003/03/25 13:48:08 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -240,7 +240,6 @@ textbox_key(int argc, union evarg *argv)
 	struct textbox *tbox = argv[0].p;
 	int keysym = argv[1].i;
 	int keymod = argv[2].i;
-	size_t textlen;
 	int i, modified = 0;
 
 	if (tbox->flags & TEXTBOX_READONLY) {
@@ -253,7 +252,6 @@ textbox_key(int argc, union evarg *argv)
 	}
 
 	pthread_mutex_lock(&tbox->text.lock);
-	textlen = strlen(tbox->text.s);
 	for (i = 0; keycodes[i].key != SDLK_LAST; i++) {
 		const struct keycode *kcode;
 
