@@ -1,4 +1,4 @@
-/*	$Csoft: view.c,v 1.10 2002/02/16 04:55:46 vedge Exp $	*/
+/*	$Csoft: view.c,v 1.11 2002/02/16 05:32:45 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -39,18 +39,54 @@
 struct viewport *mainview;
 
 int
-view_setmap(struct viewport *v, struct map *m)
+view_setmode(struct viewport *v, struct map *m, int mode, char *caption)
 {
+	if (mode > -1) {
+		v->mode = mode;
+	}
+
 	v->fps = 30;	/* XXX pref */
 
-	v->map = m;
-	v->mapw = (v->width / m->tilew);
-	v->maph = (v->height / m->tileh);
+	switch (v->mode) {
+	case VIEW_MAPNAV:
+		dprintf("map navigation mode\n");
+		v->map = m;
+		v->mapw = (v->width / m->tilew);
+		v->maph = (v->height / m->tileh);
+		v->mapxoffs = 0;
+		v->mapyoffs = 0;
+		break;
+	case VIEW_MAPEDIT:
+		dprintf("map edition mode\n");
+		v->map = m;
+		v->mapw = (v->width / m->tilew) - 1;
+		v->maph = (v->height / m->tileh);
+		v->mapxoffs = 1;
+		v->mapyoffs = 1;
+		break;
+	case VIEW_FIGHT:
+		dprintf("off-map fight mode\n");
+		v->map = NULL;
+		v->mapw = -1;
+		v->maph = -1;
+		v->mapxoffs = -1;
+		v->mapyoffs = -1;
+		break;
+	}
 
+	switch (v->depth) {
+	case 8:
+		v->flags |= SDL_HWPALETTE;
+		break;
+	}
+
+	if (caption != NULL) {
+		SDL_WM_SetCaption(caption, "agar");
+	}
 	v->v = SDL_SetVideoMode(v->width, v->height, v->depth, v->flags);
 	if (v->v == NULL) {
-		fatal("SDL: mode %dx%dx%d: %s\n", v->width, v->height,
-		    v->depth, SDL_GetError());
+		fatal("SDL: %dx%dx%d: %s\n", v->width, v->height, v->depth,
+		    SDL_GetError());
 		return (-1);
 	}
 	SDL_ShowCursor((v->flags & SDL_FULLSCREEN) ? 0 : 1);
@@ -63,19 +99,19 @@ view_create(int w, int h, int depth, int flags)
 	struct viewport *v;
 
 	v = emalloc(sizeof(struct viewport));
+	v->fps = -1;
 	v->width = w;
 	v->height = h;
 	v->flags = flags;
-	v->depth = SDL_VideoModeOK(v->width, v->height, depth, v->flags);
-	SLIST_INIT(&v->winsh);
+	v->depth = SDL_VideoModeOK(v->width, v->height, depth, flags);
+	v->map = NULL;
+	v->mapw = 0;
+	v->maph = 0;
 	v->mapx = 0;
 	v->mapy = 0;
-
-	switch (v->depth) {
-	case 8:
-		v->flags |= SDL_HWPALETTE;
-		break;
-	}
+	v->mapxoffs = 0;
+	v->mapyoffs = 0;
+	SLIST_INIT(&v->winsh);
 
 	return (v);
 }
@@ -101,17 +137,19 @@ window_create(struct viewport *view, int x, int y, int w, int h, char *caption)
 	win->x = x;
 	win->y = y;
 	SLIST_INSERT_HEAD(&view->winsh, win, wins);
+	/* XXX lock? */
 
 	return (win);
 }
 
 void
-window_destroy(void *winp, void *arg)
+window_destroy(void *p)
 {
-	struct window *win = (struct window *)winp;
+	struct window *win = (struct window *)p;
 
 	free(win->caption);
 	SDL_FreeSurface(win->v);
+	SLIST_REMOVE(&win->view->winsh, win, window, wins);
 	free(win);
 }
 
@@ -121,8 +159,9 @@ view_destroy(struct viewport *v)
 	struct window *win;
 
 	SLIST_FOREACH(win, &v->winsh, wins) {
-		window_destroy(win, NULL);
+		window_destroy(win);
 	}
+	free(v);
 }
 
 int
@@ -134,7 +173,7 @@ view_fullscreen(struct viewport *v, int full)
 		v->flags &= ~(SDL_FULLSCREEN);
 	}
 	
-	view_setmap(v, v->map);	/* Change video modes */
+	view_setmode(v, v->map, -1, NULL);
 	v->map->redraw++;
 
 	return (0);
@@ -143,12 +182,22 @@ view_fullscreen(struct viewport *v, int full)
 void
 view_center(struct viewport *view, int mapx, int mapy)
 {
-	view->mapx = mapx - (view->mapw / 2);
-	view->mapy = mapy - (view->maph - 2);
-	if (view->mapx <= 0)
-		view->mapx = 0;
-	if (view->mapy <= 0)
-		view->mapy = 0;
+	int nx, ny;
+
+	nx = mapx - (view->mapw / 2);
+	ny = mapy - (view->maph / 2);
+
+	if (nx <= 0)
+		nx = 0;
+	if (nx <= 0)
+		nx = 0;
+	if (nx > (view->map->mapw - view->mapw))
+		nx = (view->map->mapw - view->mapw);
+	if (ny > (view->map->maph - view->maph))
+		ny = (view->map->maph - view->maph);
+
+	view->mapx = nx;
+	view->mapy = ny;
 }
 
 void
