@@ -1,4 +1,4 @@
-/*	$Csoft: map.c,v 1.8 2002/02/01 11:55:47 vedge Exp $	*/
+/*	$Csoft: map.c,v 1.9 2002/02/02 14:50:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -53,8 +53,8 @@ static int	 map_link(void *);
 static int	 map_load(void *, char *);
 static int	 map_save(void *, char *);
 static void	 map_destroy(struct object *);
-static void	 map_entry_destroy(struct map_entry *);
-static int	 map_entry_init(struct map_entry *, struct object *,
+static void	 node_destroy(struct node *);
+static int	 node_init(struct node *, struct object *,
 		     int, int, int);
 static void	 mapedit_drawflags(struct map *, int, int, int);
 static Uint32	 map_draw(Uint32, void *);
@@ -64,91 +64,91 @@ struct map *
 map_create(char *name, char *desc, int flags, int width, int height, char *path)
 {
 	size_t mapsize = 0;
-	struct map *em;
+	struct map *m;
 	int x = 0, y = 0;
 
-	em = (struct map *)malloc(sizeof(struct map));
-	if (em == NULL) {
+	m = (struct map *)malloc(sizeof(struct map));
+	if (m == NULL) {
 		perror("map");
 		return (NULL);
 	}
 
 	/* Initialize the map structure. */
-	object_create(&em->obj, name, desc,
-	    DESTROY_HOOK|LOAD_FUNC|SAVE_FUNC|OBJ_USED);
-	em->obj.destroy_hook = map_destroy;
+	object_create(&m->obj, name, desc,
+	    DESTROY_HOOK|LOAD_FUNC|SAVE_FUNC|OBJ_DEFERGC);
+	m->obj.destroy_hook = map_destroy;
 
-	em->obj.load = map_load;
-	em->obj.save = map_save;
+	m->obj.load = map_load;
+	m->obj.save = map_save;
 
-	em->flags = flags;
-	em->maph = height;
-	em->mapw = width;
-	em->defx = em->mapw / 2;
-	em->defy = em->maph - 1;
-	em->view = mainview;
-	em->view->map = em;
+	m->flags = flags;
+	m->maph = height;
+	m->mapw = width;
+	m->defx = m->mapw / 2;
+	m->defy = m->maph - 1;
+	m->view = mainview;
+	m->view->map = m;
 
-	if (pthread_mutex_init(&em->lock, NULL) != 0) {
+	if (pthread_mutex_init(&m->lock, NULL) != 0) {
 		perror(name);
 		goto maperr;
 	}
 
 	if (path != NULL) {
 		/* Load this map from a file. */
-		map_load(em, path);
-		mapsize = (em->mapw * em->maph) * sizeof(struct map_entry);
+		map_load(m, path);
+		mapsize = (m->mapw * m->maph) * sizeof(struct node);
 	} else {
 		/* Initialize an empty map. */
 		for (y = 0; y < height; y++) {
 			for (x = 0; x < width; x++) {
-				if (map_entry_init(&em->map[x][y], NULL,
-				    0, 0, 0) < 0) {
+				if (node_init(&m->map[x][y], NULL, 0, 0, 0)
+				    < 0) {
 					return (NULL);
 				}
-				mapsize += sizeof(struct map_entry);
+				mapsize += sizeof(struct node);
 			}
 		}
 	}
 	
-	dprintf("%s: geo %dx%d flags 0x%x base %dKb\n", em->obj.name,
-	    em->mapw, em->mapw,
-	    em->flags, (int)mapsize / 1024);
-	dprintf("%s: tilegeo %dx%d origin %dx%d\n", em->obj.name,
-	    em->view->tilew, em->view->tileh,
-	    em->defx, em->defy);
+	dprintf("%s: geo %dx%d flags 0x%x base %dKb\n", m->obj.name,
+	    m->mapw, m->mapw,
+	    m->flags, (int)mapsize / 1024);
+	dprintf("%s: tilegeo %dx%d origin %dx%d\n", m->obj.name,
+	    m->view->tilew, m->view->tileh,
+	    m->defx, m->defy);
 
-	map_link(em);
-	object_link(em);
+	map_link(m);
+	object_link(m);
 
 	/* Synchronize map display. XXX tune */
-	em->view->mapanimt = NULL;
-	em->view->mapdrawt = SDL_AddTimer(15, map_draw, em);
-	if (em->view->mapdrawt == NULL) {
+	m->view->mapanimt = NULL;
+	m->view->mapdrawt = SDL_AddTimer(15, map_draw, m);
+	if (m->view->mapdrawt == NULL) {
 		fatal("SDL_AddTimer: %s\n", SDL_GetError());
 		goto maperr;
 	}
 
-	return (em);
+	return (m);
 maperr:
-	object_destroy(em, NULL);
+	object_destroy(m);
 	return (NULL);
 }
 
 int
-map_animset(struct map *em, int tog)
+map_animset(struct map *m, int tog)
 {
 	if (tog > 0) {
-		em->view->mapanimt = SDL_AddTimer(em->view->fps * 2,
-		    map_animate, em);
-		if (em->view->mapanimt == NULL) {
+		m->view->mapanimt = SDL_AddTimer(m->view->fps * 2,
+		    map_animate, m);
+		if (m->view->mapanimt == NULL) {
 			fatal("SDL_AddTimer: %s\n", SDL_GetError());
 			return (0);
 		}
 	} else {
-		if (em->view->mapanimt != NULL) {
-			SDL_RemoveTimer(em->view->mapanimt);
-			em->view->mapanimt = NULL;
+		if (m->view->mapanimt != NULL) {
+			SDL_RemoveTimer(m->view->mapanimt);
+			m->view->mapanimt = NULL;
 		}
 	}
 
@@ -156,198 +156,243 @@ map_animset(struct map *em, int tog)
 }
 
 int
-map_focus(struct map *em)
+map_focus(struct map *m)
 {
-	curmap = em;
+	curmap = m;
 
-	dprintf("focusing on %s\n", em->obj.name);
+	dprintf("focusing on %s\n", m->obj.name);
 
 	if (mapedit) {
 		char s[128];
 		
-		sprintf(s, "%s (edition)", em->obj.name);
+		sprintf(s, "%s (edition)", m->obj.name);
 		SDL_WM_SetCaption(s, "mapedit");
 	} else {
-		SDL_WM_SetCaption(em->obj.name, "mapedit");
+		SDL_WM_SetCaption(m->obj.name, "mapedit");
 	}
 	
-	map_animset(em, 1);
+	map_animset(m, 1);
 	return (0);
 }
 
 int
-map_unfocus(struct map *em)
+map_unfocus(struct map *m)
 {
-	dprintf("unfocusing %s\n", em->obj.name);
+	dprintf("unfocusing %s\n", m->obj.name);
 	
 	if (mapedit) {
 		curmapedit->flags = 0;
 	}
-	pthread_mutex_lock(&em->lock);
-	map_animset(em, 0);
+	pthread_mutex_lock(&m->lock);
+	map_animset(m, 0);
 	curmap = NULL;
-	pthread_mutex_unlock(&em->lock);
+	pthread_mutex_unlock(&m->lock);
 
 	return (0);
 }
 
 static int
-map_link(void *objp)
+map_link(void *ob)
 {
 	if (pthread_mutex_lock(&world->lock) == 0) {
-		world->maps = g_slist_append(world->maps, objp);
+		SLIST_INSERT_HEAD(&world->wmapsh, (struct map *)ob, wmaps);
 		pthread_mutex_unlock(&world->lock);
 	} else {
 		perror("world");
 		return (-1);
 	}
-	world->nmaps++;
 	return (0);
 }
 
 /*
- * Initialize a map entry.
+ * Initialize a map node.
+ * Must be called on a locked map.
  */
 static int
-map_entry_init(struct map_entry *me, struct object *ob, int offs,
-    int meflags, int rflags)
+node_init(struct node *me, struct object *ob, int offs, int meflags, int rflags)
 {
-	memset(me, 0, sizeof(struct map_entry));
-	me->objs = NULL;
+	memset(me, 0, sizeof(struct node));
+
+	SLIST_INIT(&me->arefsh);
 
 	/* Used by the map editor to fill new maps. */
 	if (ob != NULL) {
-		map_entry_addref(me, ob, offs, rflags);
+		node_addref(me, ob, offs, rflags);
 		me->flags |= meflags;
 	}
 	return (0);
 }
 
-/* Add map entry reference. */
+/*
+ * Allocate and link a map node.
+ * Must be called on a locked map.
+ */
 struct map_aref *
-map_entry_addref(struct map_entry *me, struct object *ob, int offs, int rflags)
+node_addref(struct node *me, struct object *ob, int offs, int rflags)
 {
-	struct map_aref *naref;
+	struct map_aref *aref;
 
-	naref = malloc(sizeof(struct map_aref));
-	if (naref == NULL) {
+	aref = malloc(sizeof(struct map_aref));
+	if (aref == NULL) {
 		perror("map_aref");
 		return (NULL);
 	}
 
-	naref->pobj = ob;
-	naref->index = me->nobjs;
-	naref->offs = offs;
-	naref->flags = rflags;
+	aref->pobj = ob;
+	aref->offs = offs;
+	aref->flags = rflags;
 	if (rflags & MAPREF_ANIM) {
-		naref->frame = 0;
-		naref->fwait = 0;
+		aref->frame = 0;
+		aref->fwait = 0;
 		me->nanims++;
 	}
-	naref->xoffs = 0;
-	naref->yoffs = 0;
+	aref->xoffs = 0;
+	aref->yoffs = 0;
 
-	me->objs = g_slist_append(me->objs, (void *)naref);
-	me->nobjs++;
+	SLIST_INSERT_HEAD(&me->arefsh, aref, marefs);
+	me->narefs++;
 
-	return (naref);
+	dprintf("added ref to %s:%d\n", ob->name, offs);
+
+	return (aref);
 }
 
 /*
- * Delete a map entry reference.
+ * Pop a reference off the stack and return it.
+ * Must be called on a locked map.
  */
-int
-map_entry_delref(struct map_entry *me, struct map_aref *aref)
+struct map_aref *
+node_popref(struct node *me)
 {
+	struct map_aref *aref;
+
+	if (!SLIST_EMPTY(&me->arefsh)) {
+		aref = SLIST_FIRST(&me->arefsh);
+	} else {
+		return (NULL);
+	}
+
+	SLIST_REMOVE(&me->arefsh, aref, map_aref, marefs);
+	me->narefs--;
+
 	if (aref->flags & MAPREF_ANIM) {
 		me->nanims--;
 	}
 
-	me->objs = g_slist_remove(me->objs, aref);
-	me->nobjs--;
-	free(aref);
+	return (aref);
+}
+
+/*
+ * Push a reference onto the stack.
+ * Must be called on a locked map.
+ */
+int
+node_pushref(struct node *me, struct map_aref *aref)
+{
+	SLIST_INSERT_HEAD(&me->arefsh, aref, marefs);
+	me->narefs++;
+
 	return (0);
 }
 
-/* Reinitialize a map to zero. Must be called on a locked map. */
+/*
+ * Delete a map entry reference.
+ * Must be called on a locked map.
+ */
+int
+node_delref(struct node *me, struct map_aref *aref)
+{
+	if (aref->flags & MAPREF_ANIM) {
+		me->nanims--;
+	}
+	
+	dprintf("removed ref to %s:%d\n", aref->pobj->name, aref->offs);
+
+	SLIST_REMOVE(&me->arefsh, aref, map_aref, marefs);
+	me->narefs--;
+	free(aref);
+
+	return (0);
+}
+
+/*
+ * Reinitialize a map to zero.
+ * Must be called on a locked map.
+ */
 void
-map_clean(struct map *em, struct object *ob, int offs, int flags, int rflags)
+map_clean(struct map *m, struct object *ob, int offs, int flags, int rflags)
 {
 	size_t mapsize = 0;
 	int x = 0, y;
 
 	/* XXX redundant */
-	for (y = 0; y < em->maph; y++) {
-		for (x = 0; x < em->mapw ; x++) {
-			map_entry_destroy(&em->map[x][y]);
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw ; x++) {
+			node_destroy(&m->map[x][y]);
 		}
 	}
 	
 	/* Initialize the nodes. */
-	for (y = 0; y < em->maph; y++) {
-		for (x = 0; x < em->mapw; x++) {
-			if (map_entry_init(&em->map[x][y], ob, offs, flags,
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			if (node_init(&m->map[x][y], ob, offs, flags,
 			    rflags) < 0) {
 				return;
 			}
-			mapsize += sizeof(struct map_entry);
+			mapsize += sizeof(struct node);
 		}
 	}
 
 	dprintf("initialized %dx%d map origin at %dx%d\n", x, y,
-	    em->defx, em->defy);
-	em->map[em->defx][em->defy].flags |= MAPENTRY_ORIGIN;
+	    m->defx, m->defy);
+	m->map[m->defx][m->defy].flags |= MAPENTRY_ORIGIN;
 }
 
 static void
 map_destroy(struct object *ob)
 {
-	struct map *em = (struct map *)ob;
+	struct map *m = (struct map *)ob;
 	int x = 0, y;
 
-	/* Disable animations. */
-	map_animset(em, 0);
-	SDL_RemoveTimer(em->view->mapdrawt);
-	em->view->mapdrawt = NULL;
+	map_animset(m, 0);
 
-	/* Unlink the map from the world. */
+	SDL_RemoveTimer(m->view->mapdrawt);
+	m->view->mapdrawt = NULL;
+
+	/* Unlink the map from the active map list. */
 	if (pthread_mutex_lock(&world->lock) == 0) {
-		world->maps = g_slist_remove(world->maps, (void *) ob);
-		world->nmaps--;
+		SLIST_REMOVE(&world->wmapsh, m, map, wmaps);
 		pthread_mutex_unlock(&world->lock);
 	}
 
 	/* XXX redundant */
-	if (pthread_mutex_lock(&em->lock) == 0) {
-		for (y = 0; y < em->maph; y++) {
-			for (x = 0; x < em->mapw ; x++) {
-				map_entry_destroy(&em->map[x][y]);
+	if (pthread_mutex_lock(&m->lock) == 0) {
+		for (y = 0; y < m->maph; y++) {
+			for (x = 0; x < m->mapw ; x++) {
+				node_destroy(&m->map[x][y]);
 			}
 		}
-		pthread_mutex_unlock(&em->lock);
-		pthread_mutex_destroy(&em->lock);
+		pthread_mutex_unlock(&m->lock);
+		pthread_mutex_destroy(&m->lock);
 	} else {
-		perror(em->obj.name);
+		perror(m->obj.name);
 	}
 }
 
+/* Must be called on a lock map. */
 static void
-map_entry_destroy(struct map_entry *me)
+node_destroy(struct node *me)
 {
-	int i;
+	struct map_aref *aref;
 
-	for (i = 0; i < me->nobjs; i++) {
-		struct map_aref *aref;
-
-		aref = g_slist_nth_data(me->objs, i);
-		me->objs = g_slist_remove(me->objs, aref);
+	SLIST_FOREACH(aref, &me->arefsh, marefs) {
 		free(aref);
 	}
 }
 
 /* Draw a sprite at any given location. */
 static __inline__ void
-map_plot_sprite(struct map *em, SDL_Surface *s, int x, int y)
+map_plot_sprite(struct map *m, SDL_Surface *s, int x, int y)
 {
 	static SDL_Rect rs, rd;
 
@@ -366,16 +411,16 @@ map_plot_sprite(struct map *em, SDL_Surface *s, int x, int y)
 	rd.w = s->w;
 	rd.h = s->h;
 
-	if (em->flags & MAP_VARTILEGEO) {
+	if (m->flags & MAP_VARTILEGEO) {
 		/*
 		 * The sprite size should be a multiple of the tile size.
 		 * XXX optimize math.
 		 */
-		if (rd.w > em->view->tilew) {
-			x -= (rs.w / em->view->tilew) / 2;
+		if (rd.w > m->view->tilew) {
+			x -= (rs.w / m->view->tilew) / 2;
 		}
-		if (rd.h > em->view->tileh) {
-			y -= (rs.h / em->view->tileh) / 2;
+		if (rd.h > m->view->tileh) {
+			y -= (rs.h / m->view->tileh) / 2;
 		}
 	}
 
@@ -383,20 +428,22 @@ map_plot_sprite(struct map *em, SDL_Surface *s, int x, int y)
 	rd.x = x;
 	rd.y = y;
 
-	SDL_BlitSurface(s, &rs, em->view->v, &rd);
+	SDL_BlitSurface(s, &rs, m->view->v, &rd);
 }
 
 /* Draw an animation's current frame. */
 static __inline__ void
-map_plot_anim(struct map *em, struct anim *anim, int frame, int x, int y)
+map_plot_anim(struct map *m, struct anim *anim, int frame, int x, int y)
 {
 	static SDL_Rect rs, rd;
 	static SDL_Surface *s;
 
+#ifdef DEBUG
 	if (anim == NULL) {
 		dprintf("NULL anim\n");
 		abort();
 	}
+#endif
 
 	s = g_slist_nth_data(anim->frames, frame);
 
@@ -417,7 +464,7 @@ map_plot_anim(struct map *em, struct anim *anim, int frame, int x, int y)
 	rd.x = x;
 	rd.y = y;
 
-	SDL_BlitSurface(s, &rs, em->view->v, &rd);
+	SDL_BlitSurface(s, &rs, m->view->v, &rd);
 }
 
 /*
@@ -427,16 +474,16 @@ map_plot_anim(struct map *em, struct anim *anim, int frame, int x, int y)
 static Uint32
 map_animate(Uint32 ival, void *p)
 {
-	struct map *em = (struct map *)p;
+	struct map *m = (struct map *)p;
 	int x, y;
 	int vx, vy;
 
-	if (pthread_mutex_lock(&em->lock) != 0) {
-		perror(em->obj.name);
+	if (pthread_mutex_lock(&m->lock) != 0) {
+		perror(m->obj.name);
 		return (0);
 	}
-	for (y = em->view->mapy, vy = 0;
-	    (y < em->view->maph + em->view->mapy + 1);
+	for (y = m->view->mapy, vy = 0;
+	    (y < m->view->maph + m->view->mapy + 1);
 	     y++, vy++) {
 
 		/* XXX */
@@ -445,15 +492,15 @@ map_animate(Uint32 ival, void *p)
 			continue;
 		}
 	
-		for (x = em->view->mapx, vx = 0;
-		     x < em->view->mapw + em->view->mapx + 1;
+		for (x = m->view->mapx, vx = 0;
+		     x < m->view->mapw + m->view->mapx + 1;
 		     x++, vx++) {
-			struct map_entry *me;
-			int i;
+			struct node *me;
+			struct map_aref *aref;
 
 			/* XXX */
 			if (mapedit) {
-				if (vx == em->view->mapw &&
+				if (vx == m->view->mapw &&
 				    curmapedit->flags & MAPEDIT_TILELIST) {
 					continue;
 				}
@@ -463,21 +510,17 @@ map_animate(Uint32 ival, void *p)
 				}
 			}
 
-			me = &em->map[x][y];
+			me = &m->map[x][y];
 
 			if (me->nanims < 1) {
 				/* map_draw() shall handle this. */
 				continue;
 			}
 
-			for (i = 0; i < me->nobjs; i++) {
-				static struct map_aref *taref;
-
-				taref = g_slist_nth_data(me->objs, i);
-
-				if (pthread_mutex_lock(&taref->pobj->lock)
+			SLIST_FOREACH(aref, &me->arefsh, marefs) {
+				if (pthread_mutex_lock(&aref->pobj->lock)
 				    != 0) {
-					perror(taref->pobj->name);
+					perror(aref->pobj->name);
 					continue;
 				}
 				/*
@@ -485,34 +528,34 @@ map_animate(Uint32 ival, void *p)
 				 * bother drawing sprites on tiles
 				 * containing animations.
 				 */
-				if (taref->flags & MAPREF_SPRITE) {
-					map_plot_sprite(em,
+				if (aref->flags & MAPREF_SPRITE) {
+					map_plot_sprite(m,
 					    g_slist_nth_data(
-					    taref->pobj->sprites, taref->offs),
-					    (vx << TILESHIFT) + taref->xoffs,
-					    (vy << TILESHIFT) + taref->yoffs);
-				} else if (taref->flags & MAPREF_ANIM) {
+					    aref->pobj->sprites, aref->offs),
+					    (vx << TILESHIFT) + aref->xoffs,
+					    (vy << TILESHIFT) + aref->yoffs);
+				} else if (aref->flags & MAPREF_ANIM) {
 					struct anim *anim;
-					
+			
 					anim = g_slist_nth_data(
-					    taref->pobj->anims, taref->offs);
+					    aref->pobj->anims, aref->offs);
 					if (anim == NULL) {
 						fatal("NULL anim!\n");
 					}
-					map_plot_anim(em,
+					map_plot_anim(m,
 					    g_slist_nth_data(
-					    taref->pobj->anims, taref->offs),
-					    taref->frame,
-					    (vx << TILESHIFT) + taref->xoffs,
-					    (vy << TILESHIFT) + taref->yoffs);
+					    aref->pobj->anims, aref->offs),
+					    aref->frame,
+					    (vx << TILESHIFT) + aref->xoffs,
+					    (vy << TILESHIFT) + aref->yoffs);
 					
 					if (anim->delay > 0 &&
-					    taref->fwait++ > anim->delay) {
-						if (taref->frame++ >=
+					    aref->fwait++ > anim->delay) {
+						if (aref->frame++ >=
 						    anim->nframes - 1) {
-							taref->frame = 0;
+							aref->frame = 0;
 						}
-						taref->fwait = 0;
+						aref->fwait = 0;
 						/*
 						 * XXX wait the number of
 						 * ticks a blit usually
@@ -520,55 +563,55 @@ map_animate(Uint32 ival, void *p)
 						 */
 					}
 				}
-				pthread_mutex_unlock(&taref->pobj->lock);
+				pthread_mutex_unlock(&aref->pobj->lock);
 			}
 			if (mapedit) {
-				mapedit_drawflags(em, me->flags, vx, vy);
+				mapedit_drawflags(m, me->flags, vx, vy);
 				if (curmapedit->flags & MAPEDIT_TILELIST)
 					mapedit_tilelist(curmapedit);
-				}
 			}
+		}
 	}
-	pthread_mutex_unlock(&em->lock);
-	SDL_UpdateRect(em->view->v, 0, 0, 0, 0);
+	pthread_mutex_unlock(&m->lock);
+	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 
 	return (ival);
 }
 
 static void
-mapedit_drawflags(struct map *em, int flags, int vx, int vy)
+mapedit_drawflags(struct map *m, int flags, int vx, int vy)
 {
 	vx <<= TILESHIFT;
 	vy <<= TILESHIFT;
 
 	if (flags == 0)	{
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_BLOCKED), vx, vy);
 		return;
 	}
 	if (flags & MAPENTRY_ORIGIN)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_ORIGIN), vx, vy);
 	if (flags & MAPENTRY_WALK)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_WALK), vx, vy);
 	if (flags & MAPENTRY_CLIMB)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_CLIMB), vx, vy);
 	if (flags & MAPENTRY_SLIP)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_SLIP), vx, vy);
 	if (flags & MAPENTRY_BIO)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_BIO), vx, vy);
 	if (flags & MAPENTRY_REGEN)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_REGEN), vx, vy);
 	if (flags & MAPENTRY_SLOW)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_SLOW), vx, vy);
 	if (flags & MAPENTRY_HASTE)
-		map_plot_sprite(em, g_slist_nth_data(curmapedit->obj.sprites,
+		map_plot_sprite(m, g_slist_nth_data(curmapedit->obj.sprites,
 		    MAPEDIT_HASTE), vx, vy);
 }
 
@@ -576,22 +619,22 @@ mapedit_drawflags(struct map *em, int flags, int vx, int vy)
 static Uint32
 map_draw(Uint32 ival, void *p)
 {
-	struct map *em = (struct map *)p;
+	struct map *m = (struct map *)p;
 	int x, y;
 	int vx, vy;
 
-	if (em->redraw == 0) {
+	if (m->redraw == 0) {
 		return (ival);
 	}
-	em->redraw = 0;
+	m->redraw = 0;
 
-	if (pthread_mutex_lock(&em->lock) != 0) {
-		perror(em->obj.name);
+	if (pthread_mutex_lock(&m->lock) != 0) {
+		perror(m->obj.name);
 		return (ival);
 	}
 
-	for (y = em->view->mapy, vy = 0;
-	     y < em->view->maph + em->view->mapy + 1;
+	for (y = m->view->mapy, vy = 0;
+	     y < m->view->maph + m->view->mapy + 1;
 	     y++, vy++) {
 
 	     	/* XXX */
@@ -600,12 +643,11 @@ map_draw(Uint32 ival, void *p)
 			continue;
 		}
 
-		for (x = em->view->mapx, vx = 0;
-		     x < em->view->mapw + em->view->mapx + 1;
+		for (x = m->view->mapx, vx = 0;
+		     x < m->view->mapw + m->view->mapx + 1;
 		     x++, vx++) {
-			static struct map_entry *me;
-			static struct map_aref *taref;
-			static int i;
+			static struct node *me;
+			static struct map_aref *aref;
 
 			/* XXX */
 			if (mapedit) {
@@ -613,13 +655,13 @@ map_draw(Uint32 ival, void *p)
 				    curmapedit->flags & MAPEDIT_TILESTACK) {
 					continue;
 				}
-				if (vx == em->view->mapw &&
+				if (vx == m->view->mapw &&
 				    curmapedit->flags & MAPEDIT_TILELIST) {
 					continue;
 				}
 			}
 
-			me = &em->map[x][y];
+			me = &m->map[x][y];
 
 			if (me->nanims > 0) {
 				/* map_animate() shall handle this. */
@@ -630,30 +672,25 @@ map_draw(Uint32 ival, void *p)
 				static SDL_Rect erd;
 
 				/* XXX draw a background on view area. */
-				erd.w = em->view->tilew;
-				erd.h = em->view->tileh;
+				erd.w = m->view->tilew;
+				erd.h = m->view->tileh;
 				erd.x = vx * erd.w;
 				erd.y = vy * erd.h;
-				if (curmapedit->flags & MAPEDIT_TILESTACK) {
-					erd.w -= em->view->tilew;
-				}
-				SDL_FillRect(em->view->v, &erd, 25);
+				SDL_FillRect(m->view->v, &erd, 25);
 			}
 
-			/* XXX inefficient */
-			for (i = 0; i < me->nobjs; i++) {
-				taref = g_slist_nth_data(me->objs, i);
-				if (taref->flags & MAPREF_SPRITE) {
-					map_plot_sprite(em,
+			SLIST_FOREACH(aref, &me->arefsh, marefs) {
+				if (aref->flags & MAPREF_SPRITE) {
+					map_plot_sprite(m,
 					    g_slist_nth_data(
-					    taref->pobj->sprites, taref->offs),
-					    (vx << TILESHIFT) + taref->xoffs,
-					    (vy << TILESHIFT) + taref->yoffs);
+					    aref->pobj->sprites, aref->offs),
+					    (vx << TILESHIFT) + aref->xoffs,
+					    (vy << TILESHIFT) + aref->yoffs);
 				}
 			}
 
 			if (mapedit) {
-				mapedit_drawflags(em, me->flags, vx, vy);
+				mapedit_drawflags(m, me->flags, vx, vy);
 			}
 		}
 	}
@@ -664,9 +701,9 @@ map_draw(Uint32 ival, void *p)
 		if (curmapedit->flags & MAPEDIT_TILESTACK)
 			mapedit_tilestack(curmapedit);
 	}
-	pthread_mutex_unlock(&em->lock);
+	pthread_mutex_unlock(&m->lock);
 
-	SDL_UpdateRect(em->view->v, 0, 0, 0, 0);
+	SDL_UpdateRect(m->view->v, 0, 0, 0, 0);
 
 	return (ival);
 }
@@ -675,29 +712,21 @@ map_draw(Uint32 ival, void *p)
  * Return the map entry reference for the given index.
  */
 struct map_aref *
-map_entry_aref(struct map_entry *me, int index)
+node_arefindex(struct node *me, int index)
 {
-#if 0
-	int i;
+	static int i;
+	struct map_aref *aref;
 
-	/* XXX very stupid */
-	for (i = 0; i < me->nobjs; i++) {
-		struct map_aref *aref;
-
-		aref = g_slist_nth_data(me->objs, i);
-#ifdef DEBUG
-		if (aref == NULL) {
-			/* XXX should not happen */
-			dprintf("NULL aref\n");
-			continue;
-		}
-#endif
-		if (aref->index == index) {
+	/* XXX bsearch */
+	i = 0;
+	SLIST_FOREACH(aref, &me->arefsh, marefs) {
+		if (i++ == index) {
 			return (aref);
 		}
 	}
-#else
-	return (g_slist_nth_data(me->objs, index));
+
+#ifdef DEBUG
+	fatal("nothing at %d\n", index);
 #endif
 	return (NULL);
 }
@@ -707,24 +736,19 @@ map_entry_aref(struct map_entry *me, int index)
  * for ob if offs is -1.
  */
 struct map_aref *
-map_entry_arefobj(struct map_entry *me, struct object *ob, int offs)
+node_arefobj(struct node *me, struct object *ob, int offs)
 {
-	int i;
+	struct map_aref *aref;
 
-	/* XXX inefficient */
-	for (i = 0; i < me->nobjs; i++) {
-		struct map_aref *aref;
-
-		aref = g_slist_nth_data(me->objs, i);
+	/* XXX bsearch */
+	SLIST_FOREACH(aref, &me->arefsh, marefs) {
 		if (aref->pobj == ob && (aref->offs == offs || offs < 0)) {
 			return (aref);
 		}
 	}
 
 #ifdef DEBUG
-	if (offs > -1) {
-		dprintf("no reference to %s:%d\n", ob->name, offs);
-	}
+	dprintf("no reference to %s:%d\n", ob->name, offs);
 #endif
 	return (NULL);
 }
@@ -736,7 +760,7 @@ static int
 map_load(void *ob, char *path)
 {
 	char magic[9];
-	struct map *em = (struct map *)ob;
+	struct map *m = (struct map *)ob;
 	int vermin, vermaj;
 	int f, x, y, refs = 0;
 
@@ -758,25 +782,25 @@ map_load(void *ob, char *path)
 		goto badver;
 
 	/* Read map information. */
-	em->flags = (int) fobj_read_uint32(f);
-	em->mapw  = (int) fobj_read_uint32(f);
-	em->maph  = (int) fobj_read_uint32(f);
-	em->defx  = (int) fobj_read_uint32(f);
-	em->defy  = (int) fobj_read_uint32(f);
-	em->view->tilew = (int) fobj_read_uint32(f);
-	em->view->tileh = (int) fobj_read_uint32(f);
+	m->flags = (int) fobj_read_uint32(f);
+	m->mapw  = (int) fobj_read_uint32(f);
+	m->maph  = (int) fobj_read_uint32(f);
+	m->defx  = (int) fobj_read_uint32(f);
+	m->defy  = (int) fobj_read_uint32(f);
+	m->view->tilew = (int) fobj_read_uint32(f);
+	m->view->tileh = (int) fobj_read_uint32(f);
 
 	dprintf("%s: v%d.%d flags 0x%x geo %dx%d tilegeo %dx%d\n",
-	    path, vermaj, vermin, em->flags, em->mapw, em->maph,
-	    em->view->tilew, em->view->tileh);
+	    path, vermaj, vermin, m->flags, m->mapw, m->maph,
+	    m->view->tilew, m->view->tileh);
 
 	/* Adapt the viewport to this tile geometry. */
-	view_setmode(em->view);
+	view_setmode(m->view);
 
-	for (y = 0; y < em->maph; y++) {
-		for (x = 0; x < em->mapw; x++) {
-			struct map_entry *me = &em->map[x][y];
-			int i, nobjs;
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *me = &m->map[x][y];
+			int i, narefs;
 			
 			/* Read the map entry flags. */
 			me->flags = fobj_read_uint32(f);
@@ -785,9 +809,9 @@ map_load(void *ob, char *path)
 			me->v1 = fobj_read_uint32(f);
 
 			/* Read the reference count. */
-			nobjs = fobj_read_uint32(f);
+			narefs = fobj_read_uint32(f);
 
-			for (i = 0; i < nobjs; i++) {
+			for (i = 0; i < narefs; i++) {
 				struct object *pobj;
 				struct map_aref *naref;
 				char *pobjstr;
@@ -806,8 +830,7 @@ map_load(void *ob, char *path)
 				}
 				free(pobjstr);
 
-				naref = map_entry_addref(me, pobj, offs,
-				    rflags);
+				naref = node_addref(me, pobj, offs, rflags);
 				if (naref == NULL) {
 					return (-1);
 				}
@@ -818,7 +841,7 @@ map_load(void *ob, char *path)
 		}
 	}
 
-	dprintf("%s: %d refs, origin: %dx%d\n", path, refs, em->defx, em->defy);
+	dprintf("%s: %d refs, origin: %dx%d\n", path, refs, m->defx, m->defy);
 	return (0);
 
 badver:
@@ -838,9 +861,8 @@ badmagic:
 int
 map_save(void *ob, char *path)
 {
-	struct map *em = (struct map *)ob;
-	int x = 0, y;
-	int f;
+	struct map *m = (struct map *)ob;
+	int x = 0, y, f;
 	int refs = 0;
 
 	f = open(path, O_WRONLY|O_CREAT|O_TRUNC, 00600);
@@ -855,20 +877,20 @@ map_save(void *ob, char *path)
 	fobj_write_uint32(f, MAP_VERMIN);
 
 	/* Write map information. */
-	fobj_write_uint32(f, em->flags);
-	fobj_write_uint32(f, em->mapw);
-	fobj_write_uint32(f, em->maph);
-	fobj_write_uint32(f, em->defx);
-	fobj_write_uint32(f, em->defy);
-	fobj_write_uint32(f, em->view->tilew);
-	fobj_write_uint32(f, em->view->tileh);
+	fobj_write_uint32(f, m->flags);
+	fobj_write_uint32(f, m->mapw);
+	fobj_write_uint32(f, m->maph);
+	fobj_write_uint32(f, m->defx);
+	fobj_write_uint32(f, m->defy);
+	fobj_write_uint32(f, m->view->tilew);
+	fobj_write_uint32(f, m->view->tileh);
 
 	/*
 	 * Write the map entries.
 	 */
-	for (y = 0; y < em->maph; y++) {
-		for (x = 0; x < em->mapw; x++) {
-			struct map_entry *me = &em->map[x][y];
+	for (y = 0; y < m->maph; y++) {
+		for (x = 0; x < m->mapw; x++) {
+			struct node *me = &m->map[x][y];
 			off_t soffs;
 			int i, count;
 			
@@ -882,10 +904,10 @@ map_save(void *ob, char *path)
 			soffs = lseek(f, 0, SEEK_CUR);
 			lseek(f, sizeof(Uint32), SEEK_CUR);
 
-			for (i = 0, count = 0; i < me->nobjs + 1; i++) {
+			for (i = 0, count = 0; i < me->narefs + 1; i++) {
 				struct map_aref *aref;
 
-				aref = map_entry_aref(me, i);
+				aref = node_arefindex(me, i);
 				if (aref != NULL && aref->flags & MAPREF_SAVE) {
 					fobj_write_string(f, aref->pobj->name);
 					fobj_write_uint32(f, aref->offs);
@@ -903,19 +925,17 @@ map_save(void *ob, char *path)
 	}
 
 	close(f);
-	dprintf("%s: %dx%d, %d refs\n", path, em->mapw, em->maph, refs);
+	dprintf("%s: %dx%d, %d refs\n", path, m->mapw, m->maph, refs);
 
 	return (0);
 }
 
 #ifdef DEBUG
 void
-map_dump_map(void *p, void *arg)
+map_dump(struct map *m)
 {
-	struct map *fm = (struct map *)p;
-
-	printf("%3d. %10s geo %dx%d flags 0x%x\n", fm->obj.id, fm->obj.name,
-	    fm->mapw, fm->maph, fm->flags);
+	printf("%3d. %10s geo %dx%d flags 0x%x\n", m->obj.id, m->obj.name,
+	    m->mapw, m->maph, m->flags);
 }
 #endif /* DEBUG */
 
