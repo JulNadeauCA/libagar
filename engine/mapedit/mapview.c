@@ -1,4 +1,4 @@
-/*	$Csoft: mapview.c,v 1.129 2003/07/09 01:59:42 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.130 2003/07/14 03:40:41 vedge Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 CubeSoft Communications, Inc.
@@ -421,6 +421,10 @@ mapview_draw(void *p)
 
 	pthread_mutex_lock(&m->lock);
 
+	/* Deal with 0x0 maps. */
+	if (mv->map->map == NULL)
+		goto out;
+
 	if (mv->flags & MAPVIEW_INDEPENDENT) {
 		m->zoom = *mv->zoom;
 		m->tilew = *mv->tilew;
@@ -527,6 +531,7 @@ next_layer:
 		m->tilew = old_tilew;
 		m->tileh = old_tileh;
 	}
+out:
 	pthread_mutex_unlock(&m->lock);
 }
 
