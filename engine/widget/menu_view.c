@@ -1,4 +1,4 @@
-/*	$Csoft: menu_view.c,v 1.3 2004/10/07 02:13:14 vedge Exp $	*/
+/*	$Csoft: menu_view.c,v 1.4 2004/10/11 01:54:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -141,7 +141,7 @@ mousebuttonup(int argc, union evarg *argv)
 	int y = 0;
 	int i;
 
-	if (my < 0 || mx < 0 || mx > WIDGET(mview)->w) {
+	if (my < 0 || mx < 0) {
 		goto collapse;
 	}
 	for (i = 0; i < pitem->nsubitems; i++) {
@@ -149,7 +149,7 @@ mousebuttonup(int argc, union evarg *argv)
 		SDL_Surface *label = WIDGET_SURFACE(m, subitem->label);
 
 		y += m->itemh;
-		if (my < y) {
+		if (my < y && mx >= 0 && mx <= WIDGET(mview)->w) {
 			if (subitem->event != NULL) {
 				event_post(NULL, m, subitem->event->name, NULL);
 			}

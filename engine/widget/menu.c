@@ -1,4 +1,4 @@
-/*	$Csoft: menu.c,v 1.4 2004/10/07 02:13:14 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.5 2004/10/11 03:12:18 vedge Exp $	*/
 
 /*
  * Copyright (c) 2004 CubeSoft Communications, Inc.
@@ -251,7 +251,6 @@ ag_menu_add_subitem(struct AGMenuItem *pitem, const char *text,
     SDL_Surface *icon, SDLKey key_equiv, SDLMod key_mod,
     void (*fn)(int, union evarg *), const char *fmt, ...)
 {
-	char evname[EVENT_NAME_MAX];
 	struct AGMenuItem *subitem;
 	struct AGMenu *m = pitem->pmenu;
 	SDL_Surface *text_su;
@@ -281,9 +280,7 @@ ag_menu_add_subitem(struct AGMenuItem *pitem, const char *text,
 	subitem->sel_subitem = NULL;
 	subitem->y = pitem->nsubitems*m->itemh - m->itemh;
 	subitem->pitem = pitem;
-
-	snprintf(evname, sizeof(evname), "select-%p", subitem);
-	subitem->event = event_new(m, evname, fn, NULL);
+	subitem->event = event_new(m, NULL, fn, NULL);
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		for (; *fmt != '\0'; fmt++) {
