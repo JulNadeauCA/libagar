@@ -1,4 +1,4 @@
-.\"	$Csoft: window.3,v 1.7 2002/09/12 09:32:26 vedge Exp $
+.\"	$Csoft: window.3,v 1.8 2002/09/13 11:08:32 vedge Exp $
 .\"
 .\" Copyright (c) 2002 CubeSoft Communications, Inc.
 .\" All rights reserved.
@@ -113,13 +113,13 @@ The
 can be changed at runtime, and may include:
 .Pp
 .Bd -literal
-#define WINDOW_PLAIN		0x01	/* Solid, no borders */
-#define WINDOW_ANIMATE		0x04	/* Redraw each tick */
-#define WINDOW_TITLEBAR		0x08	/* Draw title bar */
-#define WINDOW_ROUNDEDGES	0x10	/* Round edges */
-#define WINDOW_SCALE		0x20	/* Scale regions/widgets */
-#define WINDOW_SHOWN		0x40	/* Visible */
-#define WINDOW_CENTER		0x80	/* Center window */
+#define WINDOW_PLAIN		0x001	/* Solid, no borders */
+#define WINDOW_TITLEBAR		0x008	/* Draw title bar */
+#define WINDOW_ROUNDEDGES	0x010	/* Round edges */
+#define WINDOW_SCALE		0x020	/* Scale regions/widgets */
+#define WINDOW_SHOWN		0x040	/* Visible */
+#define WINDOW_CENTER		0x080	/* Center window */
+#define WINDOW_SAVE_POSITION	0x100	/* Save window position on hide/exit */
 .Ed
 .Pp
 The
