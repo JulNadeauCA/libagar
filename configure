@@ -50,6 +50,10 @@ DEBUG=1
 echo "#ifndef DEBUG" >> engine/config.h
 echo "#define DEBUG $DEBUG" >> engine/config.h
 echo "#endif /* DEBUG */" >> engine/config.h
+LOCKDEBUG=1
+echo "#ifndef LOCKDEBUG" >> engine/config.h
+echo "#define LOCKDEBUG $LOCKDEBUG" >> engine/config.h
+echo "#endif /* LOCKDEBUG */" >> engine/config.h
 for OPT in $@; do
 if [ "$OPT" = "--with-smpeg" ]; then
 WITH_SMPEG=1
