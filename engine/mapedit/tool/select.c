@@ -1,7 +1,7 @@
-/*	$Csoft: select.c,v 1.22 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: select.c,v 1.23 2004/05/25 07:27:04 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

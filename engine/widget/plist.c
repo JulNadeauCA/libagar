@@ -1,7 +1,7 @@
-/*	$Csoft: plist.c,v 1.2 2004/05/24 00:33:35 vedge Exp $	*/
+/*	$Csoft: plist.c,v 1.3 2004/06/18 03:11:30 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

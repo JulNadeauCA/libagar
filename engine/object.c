@@ -1,7 +1,7 @@
-/*	$Csoft: object.c,v 1.186 2004/09/18 06:14:02 vedge Exp $	*/
+/*	$Csoft: object.c,v 1.187 2004/10/16 09:33:48 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

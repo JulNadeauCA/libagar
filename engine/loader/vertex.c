@@ -1,7 +1,7 @@
-/*	$Csoft: color.c,v 1.2 2004/04/30 12:25:42 vedge Exp $	*/
+/*	$Csoft: vertex.c,v 1.1 2004/05/01 00:17:26 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: vg_origin.c,v 1.8 2004/05/25 07:25:23 vedge Exp $	*/
+/*	$Csoft: vg_origin.c,v 1.9 2004/10/06 04:37:09 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

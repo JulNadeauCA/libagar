@@ -1,7 +1,7 @@
-/*	$Csoft: asprintf.c,v 1.2 2004/03/18 21:27:46 vedge Exp $	*/
+/*	$Csoft: asprintf.c,v 1.3 2004/06/18 03:11:22 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

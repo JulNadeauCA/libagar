@@ -1,7 +1,7 @@
-/*	$Csoft: veci.c,v 1.1 2004/06/26 03:42:19 vedge Exp $	*/
+/*	$Csoft: veci.c,v 1.1 2004/11/23 02:32:39 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

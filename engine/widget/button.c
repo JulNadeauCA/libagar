@@ -1,7 +1,7 @@
-/*	$Csoft: button.c,v 1.82 2004/09/12 05:51:44 vedge Exp $	*/
+/*	$Csoft: button.c,v 1.83 2004/09/28 04:26:15 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: dir.c,v 1.2 2004/04/23 10:58:36 vedge Exp $	*/
+/*	$Csoft: dir.c,v 1.3 2004/04/23 12:44:45 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

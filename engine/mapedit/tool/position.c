@@ -1,7 +1,7 @@
-/*	$Csoft: position.c,v 1.16 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: position.c,v 1.17 2004/04/11 03:29:22 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

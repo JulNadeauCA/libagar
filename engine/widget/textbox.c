@@ -1,7 +1,7 @@
-/*	$Csoft: textbox.c,v 1.79 2004/03/26 04:56:55 vedge Exp $	*/
+/*	$Csoft: textbox.c,v 1.80 2004/03/28 06:08:14 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: vg_circle.c,v 1.13 2004/10/06 04:37:09 vedge Exp $	*/
+/*	$Csoft: vg_circle.c,v 1.14 2004/11/25 02:47:17 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: menu.c,v 1.6 2004/10/13 14:41:00 vedge Exp $	*/
+/*	$Csoft: menu.c,v 1.7 2004/11/30 11:36:10 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: flip.c,v 1.22 2004/04/10 02:43:44 vedge Exp $	*/
+/*	$Csoft: flip.c,v 1.23 2004/04/10 21:24:10 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

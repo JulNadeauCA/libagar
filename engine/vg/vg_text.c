@@ -1,7 +1,7 @@
-/*	$Csoft: vg_text.c,v 1.10 2004/05/29 05:33:20 vedge Exp $	*/
+/*	$Csoft: vg_text.c,v 1.11 2004/10/06 04:37:09 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

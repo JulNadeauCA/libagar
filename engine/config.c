@@ -1,7 +1,7 @@
-/*	$Csoft: config.c,v 1.126 2004/09/12 05:57:23 vedge Exp $	    */
+/*	$Csoft: config.c,v 1.127 2004/09/14 11:15:31 vedge Exp $	    */
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

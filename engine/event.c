@@ -1,7 +1,7 @@
-/*	$Csoft: event.c,v 1.190 2004/09/18 06:14:23 vedge Exp $	*/
+/*	$Csoft: event.c,v 1.191 2004/10/13 14:36:00 vedge Exp $	*/
 
 /*
- * Copyright (c) 2001, 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: titlebar.c,v 1.17 2004/09/18 06:37:43 vedge Exp $	*/
+/*	$Csoft: titlebar.c,v 1.18 2004/09/25 01:57:09 vedge Exp $	*/
 
 /*
- * Copyright (c) 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

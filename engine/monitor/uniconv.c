@@ -1,7 +1,7 @@
-/*	$Csoft: uniconv.c,v 1.9 2004/11/22 03:57:07 vedge Exp $	*/
+/*	$Csoft: uniconv.c,v 1.10 2004/11/23 05:11:33 phip Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

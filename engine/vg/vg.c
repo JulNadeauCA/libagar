@@ -1,7 +1,7 @@
-/*	$Csoft: vg.c,v 1.37 2004/11/30 11:50:03 vedge Exp $	*/
+/*	$Csoft: vg.c,v 1.38 2004/12/28 01:48:34 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

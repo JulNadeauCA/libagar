@@ -1,7 +1,7 @@
-/*	$Csoft: mapview.c,v 1.170 2004/12/17 03:19:40 vedge Exp $	*/
+/*	$Csoft: mapview.c,v 1.171 2004/12/28 01:47:16 vedge Exp $	*/
 
 /*
- * Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

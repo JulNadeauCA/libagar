@@ -1,7 +1,7 @@
-/*	$Csoft: toolbar.c,v 1.4 2004/03/28 05:55:38 vedge Exp $	*/
+/*	$Csoft: toolbar.c,v 1.5 2004/04/13 01:21:46 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *

@@ -1,7 +1,7 @@
-/*	$Csoft: vg_snap.c,v 1.3 2004/04/26 07:03:46 vedge Exp $	*/
+/*	$Csoft: vg_ortho.c,v 1.1 2004/04/27 11:43:55 vedge Exp $	*/
 
 /*
- * Copyright (c) 2004 CubeSoft Communications, Inc.
+ * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
  * All rights reserved.
  *
