@@ -1,4 +1,4 @@
-/*	$Csoft: text.c,v 1.6 2002/04/26 04:24:53 vedge Exp $	*/
+/*	$Csoft: text.c,v 1.7 2002/04/30 00:57:36 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001, 2002 CubeSoft Communications, Inc.
@@ -330,7 +330,7 @@ text_tick(Uint32 ival, void *p)
 
 	for (i = 0; i < ntextgc; i++) {
 		te = textgc[i];
-		object_unlink(te);
+		text_unlink(te);
 	}
 
 	return (ival);
@@ -453,7 +453,7 @@ text_msg(Uint8 delay, Uint32 flags, char *fmt, ...)
 	te = emalloc(sizeof(struct text));
 	text_init(te, gx, gy, w, h, flags, delay);
 	if (te != NULL) {
-		object_link(te);
+		text_link(te);
 
 		text_clear(te);
 		text_render(te, buf);
