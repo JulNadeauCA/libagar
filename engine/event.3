@@ -1,4 +1,4 @@
-.\"	$Csoft: event.3,v 1.22 2004/05/10 05:14:52 vedge Exp $
+.\"	$Csoft: event.3,v 1.23 2004/05/10 11:25:03 vedge Exp $
 .\"
 .\" Copyright (c) 2002, 2003, 2004 CubeSoft Communications, Inc.
 .\" <http://www.csoft.org>
@@ -38,14 +38,22 @@
 #include <engine/event.h>
 .Ed
 .Sh DESCRIPTION
-The
+Once an Agar
 .Xr object 3
-structure contains a list of
-.Nm
-structures, which associate specific types of events to event handling
-functions, and stores a list of arguments.
+has registered an event handler function for a specific type of event
+(using the
+.Fn event_new
+function), a call to
+.Fn event_post
+for this type of event will trigger the execution of the event handler
+function.
+It is also possible to delay the execution of the event handler by a given
+number of
+.Sq ticks
+using
+.Fn event_schedule .
 .Pp
-The prototype for event handler functions looks like this:
+The prototype for event handler functions looks like:
 .Pp
 .nr nS 1
 .Ft void
@@ -82,66 +90,89 @@ The
 subsystem also implements the
 .Sq main loop
 used by Agar applications, which performs the following operations:
-.Bl -tag -width "Event processing"
+.Bl -tag -width "SDL event processing "
 .It Video updates
-The display is updated when a counter exceeds a fixed amount of ticks, obtained
-from
-.Xr SDL_GetTicks 3 .
-The time it took for the frame to render is taken in consideration as the
-refresh rate is recalculated, so animations do not vary in speed, for instance.
-Video updates have precedence in the event loop.
-.Pp
-If the frame was too complicated to draw in one cycle, the minimum delay is
-decremented down to the minimum set by
-.Xr view_set_refresh 3 .
-This can be avoided by lowering the frame rate to ensure that the frame is
-rendered in one cycle, or reducing the amount of time spent in rendering
-routines.
-If the last frame was drawn in a reasonable amount of time, the event loop
-calls
+Agar attempts to maintain a stable video refresh rate by periodically
+readjusting the delays.
+This allows animations to run at the same speed under different hardware.
+The nominal refresh rate is selected by
+.Xr view_set_refresh 3 ,
+usually at initialization time.
+If Agar considers that there is enough time left after the refresh cycle, it
+invokes 
 .Xr SDL_Delay 3
-to relinquish the CPU (taking into account the approximative
-.Xr SDL_Delay 3
-granularity).
-.It Event processing
+to relinquish the CPU.
+.It SDL event processing
 SDL events are translated to
 .Nm
-structures, which are sent to the relevant subsystems.
+structures, which are sent to the relevant subsystems, such as the
+.Xr window 3
+system for GUI events and
+.Xr input 3
+for generic input events.
+.It Timeouts
+The
+.Xr timeout 3
+system performs tasks specific to the timing schemes in use.
+Under the default timing scheme, timeouts with a timestamp exceeding the
+current time (as given by
+.Xr SDL_GetTicks 3 )
+are expired.
 .El
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "struct event *"
-.Fn event_new "void *obj, const char *name" "void (*handler)(int argc, union evarg *argv), const char *fmt" "..."
+.Fn event_new "void *obj" "const char *event_name" "void (*handler)(int argc, union evarg *argv)" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn event_remove "void *obj", "const char *name"
+.Fn event_remove "void *obj" "const char *event_name"
 .Pp
 .Ft "int"
-.Fn event_post "void *sndr, void *rcvr, const char *name, const char *fmt" \
-              "..."
+.Fn event_post "void *sndr" "void *rcvr" "const char *event_name" \
+               "const char *fmt" "..."
+.Pp
+.Ft "int"
+.Fn event_schedule "void *sndr" "void *rcvr" "Uint32 ticks" "const char *event_name" \
+                   "const char *fmt" "..."
+.Pp
+.Ft "int"
+.Fn event_resched "void *obj" "const char *event_name" "Uint32 ticks"
+.Pp
+.Ft "int"
+.Fn event_cancel "void *obj" "const char *event_name"
 .Pp
 .Ft "void"
-.Fn event_forward "void *rcvr" "const char *name" "int argc" "union evarg *argv"
+.Fn event_forward "void *rcvr" "const char *event_name" "int argc" "union evarg *argv"
 .nr nS 0
 .Pp
 The
 .Fn event_new
 function registers a new event handler to service events of type
 .Fa name .
-.Fa obj
-will be passed as the first argument to the event handler function.
+If an event handler is already registered for the given event type, it
+is replaced.
+The
 .Fa handler
-points to the event-handling function.
-.Fa fmt
-is a format string and the arguments following it are inserted at the start of
-the
-.Fa evarg
-array, followed by the arguments to
-.Fn event_post .
+argument specifies the event handler function.
 .Pp
-The following sequences are valid in
-.Fa fmt :
-.Bl -tag -compact -width "diouxX"
+The
+.Fa fmt
+format string and subsequent arguments specify a list of arguments to
+insert into the argument vector starting at position 1.
+When the event handler function is invoked, it will be passed those
+arguments as well as any additional arguments inserted into the argument
+vector by
+.Fn event_post
+or
+.Fn event_schedule.
+.Pp
+The format string in
+.Fn event_post
+and
+.Fn event_schedule
+accept the following sequences:
+.Pp
+.Bl -tag -compact -offset indent -width "diouxX "
 .It diouxX
 Converted to
 .Ft int
@@ -164,36 +195,53 @@ Converted to
 .Pp
 The
 .Fn event_remove
-function unregisters the named event handler.
+function removes the named event handler from the list.
+Any future execution of this event handler as scheduled by
+.Fn event_schedule
+will be cancelled.
+If this event handler is currently being executed (in the case of a multi-threaded
+timing scheme), the function waits for its termination.
 .Pp
 The
 .Fn event_post
-function arranges for the event handler associated with
-.Fa name ,
-if any, to be invoked.
+function immediately executes the event handler function associated with the given
+event type, if there is any.
 .Fa fmt
-is a format string and the arguments following it are inserted
-after the arguments registered by
-.Fn event_new
-in the
-.Fa evarg
-array.
+is a format string and the arguments following it are inserted into the argument
+vector passed to the event handler (following the arguments registered by
+.Fn event_new ) .
 .Fn event_post
 returns 1 if an event handler was invoked, or 0 if there is no registered
 event handler for the given event type.
 .Pp
 The
+.Fn event_schedule
+function is similar to
+.Fn event_post ,
+except that the event is scheduled to occur in the given number of ticks
+(the meaning of which is specific to the timing scheme).
+It is not possible to schedule the execution of the same event handler
+multiple times.
+.Fn event_schedule
+returns 0 on success or -1 if no matching event handler was found.
+.Pp
+The
+.Fn event_resched
+function reschedules a previously scheduled event of the given name to
+execute in the given number of ticks, using the same argument vector.
+.Fn event_resched
+returns 0 on success or -1 if there was no matching event handler.
+.Pp
+.Fn event_cancel
+cancels any future execution of a previously scheduled event.
+The function returns -1 if no matching event was found, 1 if a scheduled
+event was cancelled, or 0 if there was nothing to cancel.
+.Pp
+The
 .Fn event_forward
-function forwards the event identified by
-.Fa name
-to object
+function forwards the given event to object
 .Fa obj .
-.Fn event_forward
-is usually called from an event handler, but may also be used to send
-.Sq fake
-events, as an alternative to the
-.Fn event_post
-interface.
+This function is usually called from an event handler.
 .Sh EVENT FLAGS
 .Pp
 Acceptable flags for the
@@ -202,6 +250,7 @@ structure include:
 .Bd -literal
 #define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
 #define EVENT_PROPAGATE	0x02	/* Automatically forward to children */
+#define EVENT_SCHEDULED	0x04	/* Pending execution (read-only flag) */
 .Ed
 .Pp
 .Dv EVENT_ASYNC
@@ -214,10 +263,16 @@ If the
 .Dv EVENT_PROPAGATE
 flag is set, the event is automatically forwarded to every one of the
 receiver's descendants prior to the execution of the receiver's event handler.
+.Pp
+.Dv EVENT_SCHEDULED
+is a read-only flag that is set only if an event of this type has been
+previously scheduled for execution by
+.Fn event_schedule .
 .Sh SEE ALSO
 .Xr agar 3 ,
-.Xr object 3
+.Xr object 3 ,
+.Xr timeout 3
 .Sh HISTORY
 The
 .Nm
-subsystem first appeared in Agar 1.0
+mechanism first appeared in Agar 1.0

@@ -1,4 +1,4 @@
-/*	$Csoft: event.h,v 1.26 2004/05/08 02:36:11 vedge Exp $	*/
+/*	$Csoft: event.h,v 1.27 2004/05/10 11:25:03 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <config/floating_point.h>
@@ -25,14 +25,13 @@ struct event {
 	int	flags;
 #define	EVENT_ASYNC	0x01	/* Event handler runs in own thread */
 #define EVENT_PROPAGATE	0x02	/* Propagate event to descendents */
-
-	Uint32	start;		/* Scheduled start time relative to the
-				   sequence start (for real-time events) */
+#define EVENT_SCHEDULED	0x04	/* Timing-dependent (read-only flag) */
 
 	void		(*handler)(int, union evarg *);
 	union evarg	 argv[EVENT_ARGS_MAX];
-	int		 argc;
+	int		 argc, argc_base;
 
+	struct timeout	 timeout;	/* Timeout (for scheduled events) */
 	TAILQ_ENTRY(event) events;
 };
 
@@ -44,6 +43,11 @@ struct event	*event_new(void *, const char *, void (*)(int, union evarg *),
 void		 event_remove(void *, const char *);
 void		 event_loop(void);
 int		 event_post(void *, void *, const char *, const char *, ...);
+int		 event_schedule(void *, void *, Uint32, const char *,
+		                const char *, ...);
+int		 event_resched(void *, const char *, Uint32);
+int		 event_cancel(void *, const char *);
+__inline__ void	 event_execute(void *, const char *);
 void		 event_forward(void *, const char *, int, union evarg *);
 #ifdef DEBUG
 struct window	*event_fps_window(void);
