@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.61 2002/03/12 16:02:54 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.62 2002/03/13 07:37:19 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -96,6 +96,7 @@ mapedit_create(char *name)
 	med->y = 0;
 	med->mmapx = 0;
 	med->mmapy = 0;
+	med->mtmapx = 0;
 	med->mtmapy = 0;
 	med->cursor_speed = DEFAULT_CURSOR_SPEED;
 	med->listw_speed = DEFAULT_LISTW_SPEED;
@@ -104,6 +105,7 @@ mapedit_create(char *name)
 	med->curoffs = 0;
 	med->curflags = 0;
 	med->tilelist_offs = 0;
+	med->objlist_offs = 0;
 
 	mapdir_init(&med->cursor_dir, (struct object *)med, NULL, -1, -1);
 	gendir_init(&med->listw_dir);
@@ -268,7 +270,6 @@ mapedit_link(void *p)
 	med->tilelist.y = m->tileh;
 	med->tilelist.w = m->tilew;
 	med->tilelist.h = m->view->height;
-
 	med->tilelist_offs = 0;
 
 	med->tilestack.x = 0;
@@ -280,6 +281,7 @@ mapedit_link(void *p)
 	med->objlist.y = 0;
 	med->objlist.w = m->view->width - m->tilew;
 	med->objlist.h = m->tileh;
+	med->objlist_offs = 0;
 
 	view_setmode(m->view, m, VIEW_MAPEDIT, NULL);
 	view_center(m->view, m->defx, m->defy);
@@ -478,15 +480,10 @@ void
 mapedit_tilelist(struct mapedit *med)
 {
 	struct map *m = med->map;
-	static SDL_Rect rs, rd;
+	static SDL_Rect rd;
 	Uint32 i;
 	int sn;
 	
-	rs.w = m->tilew;
-	rs.h = m->tileh;
-	rs.x = 0;
-	rs.y = 0;
-
 	rd = med->tilelist;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, BG_VERTICAL);
 	rd.h = m->tilew;
@@ -503,16 +500,12 @@ mapedit_tilelist(struct mapedit *med)
 		struct editref *ref;
 		struct anim *anim;
 
-		/*
-		 * Obtain the mapedit reference at this offset. If the
-		 * index is negative, wrap.
-		 */
-		/* XXX array */
 		pthread_mutex_lock(&med->curobj->lock);
 		if (sn > -1) {
 			SIMPLEQ_INDEX(ref, &med->curobj->erefsh, erefs,
 			    sn);
 		} else {
+			/* Wrap */
 			SIMPLEQ_INDEX(ref, &med->curobj->erefsh, erefs,
 			    sn + med->curobj->nrefs);
 			if (ref == NULL) {
@@ -522,26 +515,24 @@ mapedit_tilelist(struct mapedit *med)
 		}
 		pthread_mutex_unlock(&med->curobj->lock);
 
-		/* Plot the icon. */
 		switch (ref->type) {
 		case EDITREF_SPRITE:
-			SDL_BlitSurface(ref->p, &rs, m->view->v, &rd);
+			SDL_BlitSurface(ref->p, NULL, m->view->v, &rd);
 			break;
 		case EDITREF_ANIM:
 			anim = (struct anim *)ref->p;
-			SDL_BlitSurface(anim->frames[0], &rs, m->view->v,
-			    &rd);
+			SDL_BlitSurface(anim->frames[0], NULL, m->view->v, &rd);
 			break;
 		}
 
 		if (med->curoffs == sn) {
 			SDL_BlitSurface(
-			    curmapedit->obj.sprites[MAPEDIT_CIRQSEL],
-			    &rs, m->view->v, &rd);
+			    curmapedit->obj.sprites[MAPEDIT_CIRQSEL], NULL,
+			    m->view->v, &rd);
 		} else {
 			SDL_BlitSurface(
-			    curmapedit->obj.sprites[MAPEDIT_GRID],
-			    &rs, m->view->v, &rd);
+			    curmapedit->obj.sprites[MAPEDIT_GRID], NULL,
+			    m->view->v, &rd);
 		}
 nextref:
 		if (++sn >= med->curobj->nrefs) {
@@ -622,14 +613,32 @@ mapedit_objlist(struct mapedit *med)
 	static SDL_Rect rd;
 	struct map *m = med->map;
 	struct editobj *eob;
+	Uint32 i;
+	int sn;
 
 	rd = med->objlist;	/* Structure copy */
 	mapedit_bg(m->view->v, &rd, BG_HORIZONTAL);
+	rd.w = m->tilew;
 	rd.x = m->tilew;
 
-	TAILQ_FOREACH(eob, &med->eobjsh, eobjs) {
-		SDL_BlitSurface(eob->pobj->sprites[0],
-		    NULL, m->view->v, &rd);
+	for (i = 0, sn = med->objlist_offs;
+	     i < (med->objlist.w / m->tilew) - 1;
+	     i++, rd.x += m->tilew) {
+
+		if (sn > -1) {
+			TAILQ_INDEX(eob, &med->eobjsh, eobjs, sn);
+		} else {
+			/* Wrap */
+			TAILQ_INDEX(eob, &med->eobjsh, eobjs,
+			    sn + med->neobjs);
+			if (eob == NULL) {
+				/* XXX hack */
+				goto nextref;
+			}
+		}
+	
+		SDL_BlitSurface(eob->pobj->sprites[0], NULL, m->view->v, &rd);
+
 		if (med->curobj == eob) {
 			SDL_BlitSurface(
 			    med->obj.sprites[MAPEDIT_CIRQSEL],
@@ -639,7 +648,10 @@ mapedit_objlist(struct mapedit *med)
 			    med->obj.sprites[MAPEDIT_GRID],
 			    NULL, m->view->v, &rd);
 		}
-		rd.x += m->tilew;
+nextref:
+		if (++sn >= med->neobjs) {
+			sn = 0;
+		}
 	}
 	SDL_UpdateRect(m->view->v,
 	    med->objlist.x, med->objlist.y,
