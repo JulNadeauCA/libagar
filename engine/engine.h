@@ -1,4 +1,4 @@
-/*	$Csoft: engine.h,v 1.81 2004/04/11 03:29:15 vedge Exp $	*/
+/*	$Csoft: engine.h,v 1.82 2004/04/26 03:21:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ENGINE_H_
@@ -65,6 +65,7 @@
 #include <engine/loader/real.h>
 #include <engine/loader/string.h>
 #include <engine/loader/version.h>
+#include <engine/loader/color.h>
 
 #include <engine/object.h>
 #include <engine/event.h>
@@ -133,7 +134,7 @@ enum gfx_engine {
 };
 
 __BEGIN_DECLS
-int		 engine_preinit(int, char **, struct engine_proginfo *, int);
+int		 engine_preinit(struct engine_proginfo *, int);
 int		 engine_init(enum gfx_engine, enum text_engine);
 void		 engine_destroy(void);
 __inline__ void	 lock_linkage(void);
