@@ -1,0 +1,38 @@
+ 
+              /   ____  ____     ___    _____   \
+        _    |   |  _ || _  |   / _ \  |_   _|   |
+       | |   |   | | |  | | |  [ |_| ]   | |     |
+    -- | |_  |   | | |__| | |  |  _  |   | |     |
+       |___| |   |_|      |_|  |_| |_|   |_|     |
+              \                                 /
+
+What is it?
+-----------
+The mat library implements matrix manipulation routines, such as addition,
+multiplication and factorization. It provides means of solving systems of
+linear algebraic equations using methods such such as Doolittle decomposition
+and Gauss-Jordan decomposition.
+
+Availability
+------------
+You can download the most recent libmat version from the libmat home page
+at http://libmat.csoft.org/.
+
+License
+-------
+libmat is freely distributable under the terms of a two-clause BSD license.
+
+Prerequisites
+-------------
+The mat library requires Agar [http://agar.csoft.org/].
+
+Portability
+-----------
+Thanks to SDL/Agar, mat is portable to many different platforms. For the list
+of official ports and portability notes, see:
+http://mat.csoft.org/portable.html.
+
+Acknowledgements
+----------------
+See: http://mat.csoft.org/credits.html
+
