@@ -1,4 +1,4 @@
-/*	$Csoft: mapedit.c,v 1.60 2002/03/07 13:22:50 vedge Exp $	*/
+/*	$Csoft: mapedit.c,v 1.61 2002/03/12 16:02:54 vedge Exp $	*/
 
 /*
  * Copyright (c) 2001 CubeSoft Communications, Inc.
@@ -204,6 +204,7 @@ mapedit_shadow(struct mapedit *med)
 		fatal("%s: nothing to edit!\n", med->obj.name);
 		return (-1);
 	}
+	return (0);
 fail:
 	pthread_mutex_unlock(&world->lock);
 	return (-1);
